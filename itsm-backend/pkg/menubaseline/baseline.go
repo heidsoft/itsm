@@ -157,6 +157,10 @@ func MenuDefinitions() []MenuSpec {
 		{Name: "向量存储配置", Path: "/admin/vector-store", Icon: "Database", ParentPath: "/admin", PermissionCode: "system:read", SortOrder: 290},
 		{Name: "系统配置", Path: "/admin/system-config", Icon: "Settings", ParentPath: "/admin", PermissionCode: "system:read", SortOrder: 295},
 		{Name: "全局标签", Path: "/admin/tags", Icon: "Tags", ParentPath: "/admin", PermissionCode: "system:read", SortOrder: 298, Description: "全局标签管理"},
+		// 能力矩阵控制台：/api/v1/capabilities 本身是 AUTH_ONLY，但页面是运营/售前
+		// 用来核对「哪些能力还不能对外承诺」的管理视图，与系统配置同域（system:read），
+		// 不给一线角色挂入口——它回答的是发布决策，不是日常作业信息。
+		{Name: "能力矩阵", Path: "/admin/capabilities", Icon: "Target", ParentPath: "/admin", PermissionCode: "system:read", SortOrder: 300, Description: "能力成熟度、部署就绪与健康信号"},
 		{Name: "CMDB 类型", Path: "/admin/cmdb-types", Icon: "Database", ParentPath: "/admin", PermissionCode: "cmdb:write", SortOrder: 315},
 		{Name: "升级规则", Path: "/admin/escalation-rules", Icon: "AlertTriangle", ParentPath: "/admin", PermissionCode: "sla:write", SortOrder: 320},
 		{Name: "升级矩阵", Path: "/admin/escalation-matrices", Icon: "TrendingUp", ParentPath: "/admin", PermissionCode: "sla:read", SortOrder: 325},

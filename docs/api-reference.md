@@ -3502,6 +3502,25 @@ GET    /api/v1/on-call/current?groupId=5&at=2026-10-20T02:00:00Z
 
 `GET /api/v1/capabilities` 的每个条目新增 `health` 对象（`{ok,reason,checkedAt}`），`lastHealthCheckAt` 改为真实探测时间而非请求时刻。探测覆盖数据库连通性（全部能力）、连接器健康（`connector.*`）、租户是否启用身份提供方（`identity.oidc`）；探测失败时 `deploymentReady` 一并置 `false` 并给出 `degradedReason`。`identity.oidc` 此前误标为 `disabled`，现为 `pilot`（SSO/OIDC 已有 11 个端点），是否可用取决于租户配置。
 
+## 能力矩阵 pilotReason（2026-10-22）
+
+`GET /api/v1/capabilities` 对 `maturity=pilot` 的条目下发 `pilotReason`（字符串），回答两件事：**为什么它还不是 GA**，以及**晋升需要补哪块可验证证据**（理由必须以「晋升条件」结尾）。`ga` 条目不下发该字段。
+
+```json
+{
+  "key": "cmdbDiscovery",
+  "maturity": "pilot",
+  "deploymentReady": false,
+  "degradedReason": "deployment dependency is not ready",
+  "pilotReason": "发现任务没有执行者：ClaimDiscoveryJob 仅被单测调用，队列无消费者，任务创建后不会被领取执行；……晋升条件：worker 消费 + 真实账号发现验收。"
+}
+```
+
+- `degradedReason` 与 `pilotReason` 语义不同，**不可互相替代**：前者是「此刻为什么不可用」（会变，修好即消失），后者是「本来就还没承诺」（发布决策）。两者可能同时存在。
+- 该字段是后端强制契约：`pilot` 缺理由、理由里没有「晋升条件」、或 `ga` 条目带理由，都会让 `handlers/capability` 的测试失败——过期理由等于对客户宣称一个已经不存在的问题。
+- 同批晋升：`problem` 与 `template` 由 `pilot` 转 `ga`（问题域的 SLA/评论/关闭证据/KEDB 关联四项阻断均已闭环且装配进生产路径；模板的真实表面是 `/api/v1/tickets/templates` 的 8 个端点 + `/tickets/templates` 页，旧注释引用的通用 `/api/v1/templates` 从未存在）。
+- 运营视图：**管理 → 能力矩阵**（`/admin/capabilities`）展示同一份矩阵（成熟度、部署就绪、探测结果、`pilotReason`），页面只读——成熟度是代码里的发布决策，不应由界面误点改变对外承诺。
+
 ## 版本历史
 
 | 版本 | 日期 | 说明 |
