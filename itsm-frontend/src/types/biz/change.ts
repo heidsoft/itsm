@@ -34,6 +34,8 @@ export interface Change {
   rollbackPlan: string;
   /** 实施结果说明：失败原因 / 回滚原因 / 完成说明（后端 outcome_note）。 */
   outcomeNote?: string;
+  /** 回滚清单（含逐步执行结果）。仅详情接口下发。 */
+  rollbackSteps?: RollbackStep[];
   affectedCis?: string[];
   relatedTickets?: string[];
   createdAt: string;
@@ -120,3 +122,24 @@ export interface ChangeListResponse {
 // 返回的 changeTypeCounts，不得用 total 按比例伪造。
 export type { ChangeStatsResponse as ChangeStats } from '@/lib/api/change-api';
 export type { ChangeTypeCount } from '@/lib/api/change-api';
+
+/** 回滚清单步骤状态。pending=待确认，done=已执行，skipped=不适用，failed=执行失败。 */
+export type RollbackStepStatus = 'pending' | 'done' | 'skipped' | 'failed';
+
+/**
+ * 回滚清单中的一步：计划内容 + 执行结果。
+ *
+ * `resolved` 由后端派生（status !== 'pending'），前端据此算进度，
+ * 不再自己维护一份状态枚举——后端加状态值时前端也不会算错。
+ */
+export interface RollbackStep {
+  id: number;
+  stepNo: number;
+  description: string;
+  status: RollbackStepStatus;
+  note?: string;
+  resolved: boolean;
+  resolvedBy?: number;
+  resolvedByName?: string;
+  resolvedAt?: string;
+}

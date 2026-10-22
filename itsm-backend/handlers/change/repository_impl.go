@@ -27,6 +27,7 @@ type EntRepository struct {
 	approvalRecords *changeApprovalRecordRepository
 	approvalChains  *changeApprovalChainRepository
 	riskAssessments *changeRiskAssessmentRepository
+	rollbackSteps   *changeRollbackStepRepository
 	statusTx        *changeStatusTxRepository
 }
 
@@ -38,6 +39,7 @@ func NewEntRepository(client *ent.Client, db *sql.DB) *EntRepository {
 		approvalRecords: newChangeApprovalRecordRepository(db),
 		approvalChains:  newChangeApprovalChainRepository(db),
 		riskAssessments: newChangeRiskAssessmentRepository(db),
+		rollbackSteps:   newChangeRollbackStepRepository(db),
 		statusTx:        newChangeStatusTxRepository(),
 	}
 }
@@ -736,4 +738,27 @@ func (r *EntRepository) FindOverlappingScheduled(ctx context.Context, tenantID i
 		result = append(result, toDomain(ec))
 	}
 	return result, nil
+}
+
+// ---------------- 回滚清单 ----------------
+
+func (r *EntRepository) ListRollbackSteps(ctx context.Context, changeID, tenantID int) ([]*RollbackStep, error) {
+	if r.rollbackSteps == nil {
+		return nil, fmt.Errorf("change rollback step repository not initialised")
+	}
+	return r.rollbackSteps.ListByChange(ctx, changeID, tenantID)
+}
+
+func (r *EntRepository) ReplaceRollbackSteps(ctx context.Context, changeID, tenantID int, steps []*RollbackStep) error {
+	if r.rollbackSteps == nil {
+		return fmt.Errorf("change rollback step repository not initialised")
+	}
+	return r.rollbackSteps.Replace(ctx, changeID, tenantID, steps)
+}
+
+func (r *EntRepository) ResolveRollbackStep(ctx context.Context, stepID, changeID, tenantID, actorID int, status, note string, now time.Time) (bool, error) {
+	if r.rollbackSteps == nil {
+		return false, fmt.Errorf("change rollback step repository not initialised")
+	}
+	return r.rollbackSteps.Resolve(ctx, stepID, changeID, tenantID, actorID, status, note, now)
 }

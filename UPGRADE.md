@@ -2251,6 +2251,62 @@ cd itsm-backend && go test -count=1 ./handlers/change/ -run "FailRequiresReason|
 cd itsm-backend && go test -count=1 ./service/ -run "CreatePIR_"
 ```
 
+### 1.61 变更回滚清单：失败可回退从「一次状态翻转」变成「逐项确认」（2026-10-22，新端点 + 新表 + 新门禁）
+
+**背景**：能力契约链路 C（受控变更）的最后一条上线门禁是「失败可回退」。此前它只落在一次
+状态翻转上——`rollback_plan` 是一段自由文本，提交门禁只校验非空；写了几步、走到第几步、
+每步成没成，系统一概不知。审计只能看到「状态从 in_progress 变成 rolled_back」，而真实事故里
+最难回答的正是：回滚到第几步了？哪一步没回成？谁确认的？PIR 的「影响是否已复原」因此只能靠记忆填。
+
+**变更一：新增 `change_rollback_steps` 表（一行一步）**
+
+迁移 `itsm-backend/migrations/20261022_change_rollback_steps.sql`（`CREATE TABLE IF NOT EXISTS`，幂等）。
+每步带 `status`（`pending`/`done`/`skipped`/`failed`）、`note`、`resolved_by`、`resolved_at`，
+并有 `(change_id, step_no)` 唯一索引与 `(tenant_id, change_id, step_no)` 查询索引。
+
+> 不复用 007 迁移预建的 `change_rollback_plans.rollback_steps`（JSONB）：逐项确认需要每步独立的
+> 状态/备注/确认人/时间，并要求按行做租户谓词更新与并发 CAS。JSONB 数组只能整段覆盖，
+> 并发确认会互相踩踏，也拿不到「谁在什么时候确认了第 3 步」这一行级事实。
+> （`change_rollback_plans` / `change_rollback_executions` 至今零 Go 引用的空表，本版仍未使用。）
+
+**变更二：新增三个端点**
+
+| 端点 | 权限码 | 说明 |
+|---|---|---|
+| `GET /changes/{id}/rollback-steps` | `change:read` | 按 `stepNo` 升序返回清单 |
+| `PUT /changes/{id}/rollback-steps` | `change:write` | 覆盖式编排，`{"steps":["摘流量","回滚镜像"]}` |
+| `POST /changes/{id}/rollback-steps/{stepId}` | `change:rollback` | `{"status":"done\|skipped\|failed\|pending","note":"..."}` |
+
+`GET /changes/{id}` 响应新增 `rollbackSteps`（`resolved` 为派生字段）。`status=pending` 表示撤销误点。
+
+**变更三：`rolled_back` 增加门禁（行为变更）**
+
+| 场景 | 变更前 | 变更后 |
+|---|---|---|
+| 清单存在且仍有 `pending` 步骤时回滚 | `200`（无证据也照样"已回滚"） | `422`（`ErrRollbackStepsUnresolved`），文案点出还差哪几步，状态不动 |
+| 清单全部已确认（含 `failed`） | `200` | `200`（`failed` 也算确认：回滚失败是真实结果） |
+| 没有清单 | `200` | `200`——应急回滚不能被「你还没编排清单」挡住 |
+| 清单读取失败 | `200` | 拒绝（失败关闭：读不到就无法证明已走完，而回滚不可逆） |
+| 实施开始后改清单 | — | `409`（`ErrRollbackChecklistLocked`）：否则「清空清单→点回滚」即可绕过门禁 |
+| 重复确认同一步 | — | `409`，文案说明已被谁于何时确认，不覆盖前人结论 |
+
+**集成方影响**：已有变更都没有清单，回滚行为不变。若脚本先 `PUT /rollback-steps` 再回滚，
+必须先把每步确认完，否则会收到 `422`；不想留证据的应急场景不要创建清单。
+
+**刻意不做的事**：不提供「由 ITSM 执行回滚脚本」。回滚多在生产高危路径（数据库恢复、流量切换），
+代跑脚本的风险远大于收益；本版承诺的是「可编排、可逐项确认、可审计」，执行仍由人或既定 runbook 完成。
+
+**验证**
+
+```bash
+cd itsm-backend && go test -count=1 ./handlers/change/ -run "RollbackBlockedByPendingStep|RollbackAllowedWhenAllStepsResolved|RollbackWithoutChecklistStillAllowed|RollbackChecklistReadFailureFailsClosed|ReplaceRollbackSteps|ResolveRollbackStep|RollbackStepRepository|ValidateRollbackChecklist"
+cd itsm-frontend && npx jest src/components/change/__tests__/ChangeDetailChecklist.test.tsx
+```
+
+注入回归：临时摘掉 `TransitionStatus` 里的 `validateRollbackChecklist` 调用，
+`RollbackBlockedByPendingStep` 与 `RollbackChecklistReadFailureFailsClosed` 均转红（断言"不得标记已回滚"），
+恢复后全绿——测试锁定的是门禁本身，不是管道。
+
 ## 2. 环境变量变更
 
 本次升级**移除了多个"幽灵配置项"**（在示例文件中声明但代码/Compose 从不读取，用户配置了也不生效），并修正了一个 Grafana 密码安全缺陷。

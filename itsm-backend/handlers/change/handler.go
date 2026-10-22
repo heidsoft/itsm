@@ -161,7 +161,18 @@ func (h *Handler) GetChange(c *gin.Context) {
 		return
 	}
 
-	common.Success(c, toDTO(res))
+	resp := toDTO(res)
+	// 回滚清单随详情下发：前端要据此显示进度、并在清单未走完时禁用「标记已回滚」。
+	// 读取失败只降级为空清单并记录日志——详情页还有其他内容要展示，
+	// 而真正的门禁在 TransitionStatus 里（读不到清单即拒绝回滚），不依赖本字段。
+	if steps, stepErr := h.svc.GetRollbackSteps(c.Request.Context(), id, tenantID); stepErr == nil {
+		resp.RollbackSteps = toRollbackStepDTOs(steps)
+	} else {
+		h.svc.logger.Warnw("GetChange: 读取回滚清单失败，按空清单返回",
+			"error", stepErr, "change_id", id, "tenant_id", tenantID)
+	}
+
+	common.Success(c, resp)
 }
 
 // GetApprovalSummary handles GET /api/v1/changes/:id/approval-summary
@@ -1065,4 +1076,161 @@ func isForbiddenAppErr(err error) bool {
 		return appErr.Code == common.ErrCodeForbidden
 	}
 	return false
+}
+
+// ---------------- 回滚清单（失败可回退的可验证形态） ----------------
+
+// toRollbackStepDTO 把领域步骤映射为响应 DTO。
+// Resolved 是派生字段：前端据此算「还剩几步」，不必自己维护状态枚举，
+// 后端将来加状态值时前端也不会算错。
+func toRollbackStepDTO(step *RollbackStep) dto.RollbackStepResponse {
+	return dto.RollbackStepResponse{
+		ID:             step.ID,
+		StepNo:         step.StepNo,
+		Description:    step.Description,
+		Status:         step.Status,
+		Note:           step.Note,
+		Resolved:       step.Resolved(),
+		ResolvedBy:     step.ResolvedBy,
+		ResolvedByName: step.ResolvedByName,
+		ResolvedAt:     step.ResolvedAt,
+	}
+}
+
+func toRollbackStepDTOs(steps []*RollbackStep) []dto.RollbackStepResponse {
+	out := make([]dto.RollbackStepResponse, 0, len(steps))
+	for _, step := range steps {
+		out = append(out, toRollbackStepDTO(step))
+	}
+	return out
+}
+
+// failableChecklist 把回滚清单相关错误按语义分流：
+// 清单未确认 → 422（该走清单，不是改参数）；清单锁/已被确认 → 409；步骤不存在 → 404。
+// 走 RespondError 会保留 AppError 的 422/4220 与文案——用 Fail 兜底串会把这句
+// 「还差第几步没确认」吞掉，而这正是操作人最需要看到的信息。
+func failRollbackChecklist(c *gin.Context, err error, fallback string) {
+	switch {
+	case errors.Is(err, ErrRollbackStepsUnresolved):
+		common.RespondError(c, err, fallback)
+	case errors.Is(err, ErrRollbackChecklistLocked), errors.Is(err, ErrRollbackStepAlreadyResolved):
+		common.RespondError(c, err, fallback)
+	case errors.Is(err, ErrRollbackStepNotFound):
+		common.Fail(c, common.NotFoundCode, "回滚步骤不存在或不属于该变更")
+	case errors.Is(err, ErrChangeNotFound):
+		common.Fail(c, common.NotFoundCode, "变更不存在")
+	default:
+		common.RespondError(c, err, fallback)
+	}
+}
+
+// GetRollbackSteps handles GET /api/v1/changes/:id/rollback-steps
+//
+//	@Summary	获取变更回滚清单
+//	@Description	返回回滚清单（按执行顺序），含每一步的确认状态、备注、确认人与时间
+//	@Tags	变更管理
+//	@Produce	json
+//	@Security	BearerAuth
+//	@Param	id	path	int	true	"变更ID"
+//	@Success	200	{object}	common.Response{data=[]dto.RollbackStepResponse}
+//	@Failure	404	{object}	common.Response
+//	@Router	/api/v1/changes/{id}/rollback-steps [get]
+func (h *Handler) GetRollbackSteps(c *gin.Context) {
+	id, ok := common.ParsePositiveID(c, "id")
+	if !ok {
+		return
+	}
+	tenantID, ok := tenantIDFromCtx(c)
+	if !ok {
+		return
+	}
+	steps, err := h.svc.GetRollbackSteps(c.Request.Context(), id, tenantID)
+	if err != nil {
+		failRollbackChecklist(c, err, "获取回滚清单失败")
+		return
+	}
+	common.Success(c, toRollbackStepDTOs(steps))
+}
+
+// ReplaceRollbackSteps handles PUT /api/v1/changes/:id/rollback-steps
+//
+//	@Summary	编排变更回滚清单（覆盖式）
+//	@Description	按执行顺序覆盖整张清单。仅在 draft/pending/approved/scheduled 可编排——
+//	@Description	实施开始后清单成为执行依据，要说明偏差请把步骤标记为 skipped 并写依据。
+//	@Tags	变更管理
+//	@Accept	json
+//	@Produce	json
+//	@Security	BearerAuth
+//	@Param	id	path	int	true	"变更ID"
+//	@Param	request	body	dto.ReplaceRollbackStepsRequest	true	"步骤内容数组"
+//	@Success	200	{object}	common.Response{data=[]dto.RollbackStepResponse}
+//	@Failure	409	{object}	common.Response
+//	@Failure	422	{object}	common.Response
+//	@Router	/api/v1/changes/{id}/rollback-steps [put]
+func (h *Handler) ReplaceRollbackSteps(c *gin.Context) {
+	id, ok := common.ParsePositiveID(c, "id")
+	if !ok {
+		return
+	}
+	tenantID, ok := tenantIDFromCtx(c)
+	if !ok {
+		return
+	}
+	var req dto.ReplaceRollbackStepsRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.ParamError(c, "请求体格式错误：steps 应为字符串数组，例如 {\"steps\":[\"摘除流量\",\"回滚镜像\"]}")
+		return
+	}
+	steps, err := h.svc.ReplaceRollbackSteps(c.Request.Context(), id, tenantID, req.Steps)
+	if err != nil {
+		failRollbackChecklist(c, err, "保存回滚清单失败")
+		return
+	}
+	common.Success(c, toRollbackStepDTOs(steps))
+}
+
+// ResolveRollbackStep handles POST /api/v1/changes/:id/rollback-steps/:stepId
+//
+//	@Summary	确认某一步的回滚执行结果
+//	@Description	status=done 已执行、skipped 不适用（必填备注依据）、failed 执行失败（必填备注现象）、
+//	@Description	pending 撤销误操作。只能在 in_progress/failed 状态下确认。
+//	@Tags	变更管理
+//	@Accept	json
+//	@Produce	json
+//	@Security	BearerAuth
+//	@Param	id	path	int	true	"变更ID"
+//	@Param	stepId	path	int	true	"步骤ID"
+//	@Param	request	body	dto.ResolveRollbackStepRequest	true	"确认结果"
+//	@Success	200	{object}	common.Response{data=dto.RollbackStepResponse}
+//	@Failure	409	{object}	common.Response
+//	@Failure	422	{object}	common.Response
+//	@Router	/api/v1/changes/{id}/rollback-steps/{stepId} [post]
+func (h *Handler) ResolveRollbackStep(c *gin.Context) {
+	id, ok := common.ParsePositiveID(c, "id")
+	if !ok {
+		return
+	}
+	stepID, ok := common.ParsePositiveID(c, "stepId")
+	if !ok {
+		return
+	}
+	tenantID, ok := tenantIDFromCtx(c)
+	if !ok {
+		return
+	}
+	userID, ok := userIDFromCtx(c)
+	if !ok {
+		return
+	}
+	var req dto.ResolveRollbackStepRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.ParamError(c, "请求体格式错误：需要 status（done/skipped/failed/pending），跳过或失败时还需 note")
+		return
+	}
+	step, err := h.svc.ResolveRollbackStep(c.Request.Context(), id, tenantID, stepID, userID, req.Status, req.Note)
+	if err != nil {
+		failRollbackChecklist(c, err, "确认回滚步骤失败")
+		return
+	}
+	common.Success(c, toRollbackStepDTO(step))
 }

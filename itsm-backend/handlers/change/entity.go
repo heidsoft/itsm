@@ -133,3 +133,53 @@ type Stats struct {
 	Closed     int         `json:"closed"`
 	ByType     []TypeCount `json:"byType"`
 }
+
+// 回滚清单步骤状态。
+//
+// 与 changes.status 不同，这些状态描述的是「一步回滚动作的实际结果」：
+//   - pending：尚未确认。清单里还有 pending 的步骤时，变更不得被标记为已回滚；
+//   - done：已执行（成功）；
+//   - skipped：本步不适用（必须写明依据，否则事后无法判断是「跳过」还是「漏了」）；
+//   - failed：执行失败（必须写明现象，这正是 PIR 判断影响是否复原的输入）。
+//
+// failed 也算「已确认」：回滚失败是真实结果，把它卡在 pending 只会让人
+// 无法收尾，反而逼迫使用者把失败谎报成完成。
+const (
+	RollbackStepPending = "pending"
+	RollbackStepDone    = "done"
+	RollbackStepSkipped = "skipped"
+	RollbackStepFailed  = "failed"
+)
+
+// IsRollbackStepStatusValid 校验步骤状态取值；未知值一律拒绝（失败关闭），
+// 避免前端拼错状态名后写入无法解释的行。
+func IsRollbackStepStatusValid(status string) bool {
+	switch status {
+	case RollbackStepPending, RollbackStepDone, RollbackStepSkipped, RollbackStepFailed:
+		return true
+	default:
+		return false
+	}
+}
+
+// RollbackStep 是回滚清单的一项：回滚时逐项确认，并留下结果。
+//
+// 清单本身即计划（description 有序），执行结果写在同一行（status/note/
+// resolved_by/resolved_at），因此「计划」与「执行事实」不会分叉成两份记录。
+type RollbackStep struct {
+	ID             int
+	ChangeID       int
+	TenantID       int
+	StepNo         int
+	Description    string
+	Status         string
+	Note           string
+	ResolvedBy     *int
+	ResolvedByName string
+	ResolvedAt     *time.Time
+	CreatedAt      time.Time
+	UpdatedAt      time.Time
+}
+
+// Resolved 表示该步已确认（可继续下一步/可收尾回滚）。
+func (s *RollbackStep) Resolved() bool { return s.Status != RollbackStepPending }

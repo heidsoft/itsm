@@ -49,6 +49,17 @@ type Repository interface {
 	DeleteApprovalChain(ctx context.Context, changeID int, tenantID int) error
 	ReplaceApprovalChain(ctx context.Context, changeID, tenantID int, chain []*ApprovalChain) error
 
+	// Rollback checklist（回滚清单：一行一步，逐项确认与留痕）
+	//
+	// 清单是「失败可回退」的可验证形态：回滚前必须逐项确认，未确认的步骤会
+	// 拦住 rolled_back 状态推进（见 Service.validateRollbackChecklist），
+	// 因此「计划」与「执行事实」不会各写一份。
+	ListRollbackSteps(ctx context.Context, changeID, tenantID int) ([]*RollbackStep, error)
+	ReplaceRollbackSteps(ctx context.Context, changeID, tenantID int, steps []*RollbackStep) error
+	// ResolveRollbackStep 条件更新（仅 pending 可被确认）。返回 false 表示
+	// 该步骤不存在于本租户本变更，或已被别人确认过——调用方据此区分 404/409。
+	ResolveRollbackStep(ctx context.Context, stepID, changeID, tenantID, actorID int, status, note string, now time.Time) (bool, error)
+
 	// Risk Assessment
 	CreateRiskAssessment(ctx context.Context, ra *RiskAssessment) (*RiskAssessment, error)
 	GetRiskAssessment(ctx context.Context, changeID int, tenantID int) (*RiskAssessment, error)

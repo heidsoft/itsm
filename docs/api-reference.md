@@ -1244,6 +1244,48 @@ POST /changes/{id}/cancel
 
 `GET /changes/{id}` 的响应新增 `outcomeNote` 字段（此前不存在，事后结论无处存放）。
 
+#### 回滚清单与失败可回退门禁（`/rollback-steps`）
+
+「失败可回退」此前只落在一次状态翻转上：`rollback_plan` 是一段自由文本，提交门禁只校验
+非空；写了几步、走到第几步、每步成没成，系统一概不知。于是审计里最该被回答的三个问题
+（回滚到哪了 / 哪一步没回成 / 谁确认的）全部无法回答，PIR 的「影响是否已复原」只能靠记忆填。
+
+回滚清单把计划与执行事实收敛到同一行——`change_rollback_steps`，一行一步：
+
+| 端点 | 权限码 | 作用 |
+|---|---|---|
+| `GET /changes/{id}/rollback-steps` | `change:read` | 按 `stepNo` 升序返回清单（含状态、备注、确认人、确认时间） |
+| `PUT /changes/{id}/rollback-steps` | `change:write` | 覆盖式编排，请求体 `{"steps":["摘除流量","回滚镜像"]}`（顺序即序号，空数组=清空） |
+| `POST /changes/{id}/rollback-steps/{stepId}` | `change:rollback` | 逐项确认，请求体 `{"status":"done\|skipped\|failed\|pending","note":"..."}` |
+
+**状态语义**（`pending` / `done` / `skipped` / `failed`）：
+
+- `skipped` 与 `failed` **必须带 `note`**（不适用依据 / 失败现象与残留影响）：
+  没有理由的跳过在审计里与「漏做」无法区分，而漏做正是回滚最危险的形态。
+- `failed` 也算「已确认」：回滚失败是真实结果，卡在 `pending` 只会逼人谎报完成。
+- `status=pending` 表示**撤销误点**：清空确认人与时间，但保留备注作为复核线索。
+
+**门禁与状态约束**：
+
+| 规则 | 行为 |
+|---|---|
+| 清单存在且有 `pending` 步骤时 `POST /changes/{id}/rollback` | `422`（`ErrRollbackStepsUnresolved`），文案点出还差哪几步；状态不动 |
+| 清单存在且全部已确认（含 `failed`） | 放行，`rolled_back` 与 `outcomeNote` 正常落库 |
+| 清单为空 | 放行——应急回滚不能被「你还没编排清单」挡住；此类回滚不留逐项证据 |
+| 清单读取失败 | 拒绝回滚（失败关闭）：读不到就无法证明清单已走完，而回滚不可逆 |
+| 编排清单（`PUT`） | 仅 `draft`/`pending`/`approved`/`scheduled`；实施开始后 `409`（`ErrRollbackChecklistLocked`）。否则「清空清单 → 点回滚」就能绕过门禁 |
+| 逐项确认（`POST`） | 仅 `in_progress`/`failed`；其余状态 `409` |
+| 重复确认同一步 | `409`（`ErrRollbackStepAlreadyResolved`），文案说明已被谁于何时确认——不静默覆盖前人结论 |
+| 跨租户 / 不存在的步骤 | `404`（统一口径，不暴露可枚举信号） |
+
+`GET /changes/{id}` 的响应新增 `rollbackSteps` 数组；`resolved` 为派生字段
+（`status !== "pending"`），客户端据此算进度，不必自己维护状态枚举。
+
+> 与「回滚计划」的分工：`rollbackPlan`（计划页，可存 JSON 的策略/触发条件/责任人/验证方式）
+> 描述**打算怎么做**；回滚清单描述**实际做了什么**。前端「编排回滚清单」会把计划里的
+> `rollbackSteps[].title`（或纯文本的行）预填成清单，由人确认后落库——不做自动拆分，
+> 因为清单会被当作执行依据逐项确认。
+
 #### 审批与会签门禁（`POST /changes/{id}/approve`）
 
 审批通过不是"这一票说了算"，而是按审批链（`change_approval_chains`）求值：

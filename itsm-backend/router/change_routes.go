@@ -30,6 +30,12 @@ func SetupChangeRoutes(tenant *gin.RouterGroup, h *changeHandler.Handler) {
 		changes.POST("/:id/fail", middleware.RequirePermission("change", "write"), h.TransitionStatus)
 		changes.POST("/:id/close", middleware.RequirePermission("change", "write"), h.TransitionStatus)
 		changes.POST("/:id/rollback", middleware.RequirePermission("change", "rollback"), h.TransitionStatus)
+		// 回滚清单：编排（写）与逐项确认（回滚权限）分离。
+		// 编排属于计划工作，与 change:write 同权；逐项确认是对「已经做了什么」的
+		// 事实性声明，归 change:rollback，避免只有编辑权的人替执行人勾结果。
+		changes.GET("/:id/rollback-steps", middleware.RequirePermission("change", "read"), h.GetRollbackSteps)
+		changes.PUT("/:id/rollback-steps", middleware.RequirePermission("change", "write"), h.ReplaceRollbackSteps)
+		changes.POST("/:id/rollback-steps/:stepId", middleware.RequirePermission("change", "rollback"), h.ResolveRollbackStep)
 		changes.POST("/:id/cancel", middleware.RequirePermission("change", "write"), h.TransitionStatus)
 		// 审批
 		changes.GET("/:id/approvals", middleware.RequirePermission("change", "read"), h.GetApprovals)

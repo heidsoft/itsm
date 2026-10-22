@@ -3,6 +3,7 @@
  */
 
 import { httpClient } from './http-client';
+import type { RollbackStep, RollbackStepStatus } from '@/types/biz/change';
 
 // 变更状态类型：与后端 dto.ChangeStatus / ent/schema/change.go 的枚举逐值一致。
 // 历史值 submitted 只在持久化层存在，后端读映射会把它转成 pending，
@@ -71,6 +72,10 @@ export interface Change {
   actualEndDate?: string;
   implementationPlan: string;
   rollbackPlan: string;
+  /** 实施结果说明：失败原因 / 回滚原因 / 完成说明（后端 outcome_note）。 */
+  outcomeNote?: string;
+  /** 回滚清单（含逐步执行结果）。仅详情接口下发。 */
+  rollbackSteps?: RollbackStep[];
   affectedCis: string[];
   relatedTickets: string[];
   createdAt: string;
@@ -342,6 +347,39 @@ export class ChangeApi {
   // 标记实施失败（reason 必填：失败原因写入 outcome_note，进 PIR 与审计）
   static async failChange(id: number, reason: string): Promise<void> {
     return httpClient.post(`/api/v1/changes/${id}/fail`, { reason });
+  }
+
+  // ---- 回滚清单（失败可回退的可验证形态） ----
+
+  // 读取回滚清单（按执行顺序，含每步确认状态/备注/确认人/时间）
+  static async getRollbackSteps(id: number): Promise<RollbackStep[]> {
+    return httpClient.get(`/api/v1/changes/${id}/rollback-steps`);
+  }
+
+  /**
+   * 覆盖式编排回滚清单（按执行顺序）。
+   * 仅在 draft/pending/approved/scheduled 允许——实施开始后清单即执行依据，
+   * 后端会以 409 拒绝改写（要说明偏差请把步骤标记为 skipped 并写依据）。
+   */
+  static async replaceRollbackSteps(id: number, steps: string[]): Promise<RollbackStep[]> {
+    return httpClient.put(`/api/v1/changes/${id}/rollback-steps`, { steps });
+  }
+
+  /**
+   * 确认某一步的回滚执行结果。
+   * skipped / failed 必须带 note（不适用依据 / 失败现象）；
+   * 传 'pending' 表示撤销误点。
+   */
+  static async resolveRollbackStep(
+    id: number,
+    stepId: number,
+    status: RollbackStepStatus,
+    note?: string
+  ): Promise<RollbackStep> {
+    return httpClient.post(`/api/v1/changes/${id}/rollback-steps/${stepId}`, {
+      status,
+      note: note ?? '',
+    });
   }
 
   // 取消变更

@@ -20,6 +20,8 @@ import {
   Empty,
   Tabs,
   Space,
+  Progress,
+  Alert,
   message,
 } from 'antd';
 import { ArrowLeft, CheckCircle, XCircle } from 'lucide-react';
@@ -38,7 +40,7 @@ import {
   ChangeImpactLabels,
   ChangeRiskLabels,
 } from '@/constants/change';
-import type { Change, ApprovalChainItem } from '@/types/biz/change';
+import type { Change, ApprovalChainItem, RollbackStep } from '@/types/biz/change';
 import ReviewStepBadge from '@/components/change-review/ReviewStepBadge';
 import ChangeRiskAssessment from './ChangeRiskAssessment';
 import ChangeCMDBImpactPanel from './ChangeCMDBImpactPanel';
@@ -48,6 +50,15 @@ import { SafeTextBlock } from '@/components/common/SafeContent';
 import { formatDateTime } from '@/lib/formatters';
 
 const { Title, Text, Paragraph } = Typography;
+
+// 回滚步骤状态 → 标签色。pending 用默认灰、done 绿、skipped 橙、failed 红：
+// 颜色只表达"是否已确认 + 是否出问题"，避免把失败和成功混在同一个色系里。
+const rollbackStepColors: Record<string, string> = {
+  pending: 'default',
+  done: 'green',
+  skipped: 'orange',
+  failed: 'red',
+};
 
 const statusColors: Record<string, string> = {
   [ChangeStatus.DRAFT]: 'default',
@@ -76,6 +87,15 @@ const ChangeDetail: React.FC = () => {
   // 实施结果弹窗：回滚与「标记失败」都要求必填原因（后端拒收无原因的 rolled_back/failed），
   // 因此不再让按钮直接发请求，统一走一个带必填校验的弹窗。
   const [outcomeModal, setOutcomeModal] = useState<'rollback' | 'fail' | null>(null);
+  // 回滚清单：逐项确认的弹窗（跳过/失败必须写依据）
+  const [resolvingStep, setResolvingStep] = useState<{
+    step: RollbackStep;
+    status: 'skipped' | 'failed';
+  } | null>(null);
+  const [stepNote, setStepNote] = useState('');
+  // 清单编排弹窗（一行一步）
+  const [planModalOpen, setPlanModalOpen] = useState(false);
+  const [planText, setPlanText] = useState('');
   const [outcomeReason, setOutcomeReason] = useState('');
   const [processing, setProcessing] = useState(false);
   // 写操作 in-flight 标志：按钮 loading 状态要等 render 提交后才生效，
@@ -118,6 +138,30 @@ const ChangeDetail: React.FC = () => {
     change?.status === ChangeStatus.SCHEDULED ||
     change?.status === ChangeStatus.IN_PROGRESS ||
     change?.status === ChangeStatus.FAILED;
+
+  // ---- 回滚清单（失败可回退） ----
+  // 清单即计划：后端按 step_no 有序返回，resolved 由后端派生（status !== 'pending'）。
+  const rollbackSteps: RollbackStep[] = change?.rollbackSteps ?? [];
+  const pendingSteps = rollbackSteps.filter(step => !step.resolved);
+  const resolvedCount = rollbackSteps.length - pendingSteps.length;
+  // 编排只在实施开始前允许：实施开始后清单成为执行依据，后端会以 409 拒绝改写。
+  const canEditChecklist =
+    change?.status === ChangeStatus.DRAFT ||
+    change?.status === ChangeStatus.PENDING ||
+    change?.status === ChangeStatus.APPROVED ||
+    change?.status === ChangeStatus.SCHEDULED;
+  // 逐项确认只在实施中/实施失败时允许（与后端 rollbackStepActionable 一一对应）。
+  const canResolveSteps =
+    change?.status === ChangeStatus.IN_PROGRESS || change?.status === ChangeStatus.FAILED;
+  // 清单还有未确认步骤时，禁止标记已回滚：否则「已回滚」可能只是回滚到一半，
+  // 而 PIR 会据此判定「影响已复原」。后端同样会 422，这里只是把话说在前面。
+  const rollbackBlocked = pendingSteps.length > 0;
+  const rollbackStepLabels: Record<string, string> = {
+    pending: t('changeDetail.stepStatusPending'),
+    done: t('changeDetail.stepStatusDone'),
+    skipped: t('changeDetail.stepStatusSkipped'),
+    failed: t('changeDetail.stepStatusFailed'),
+  };
 
   // 提交审批
   const handleSubmit = async () => {
@@ -400,6 +444,83 @@ const ChangeDetail: React.FC = () => {
     }
   };
 
+  // ---- 回滚清单交互 ----
+
+  /**
+   * 从既有「回滚计划」里捞出步骤，避免让人把同样的内容再敲一遍。
+   *
+   * rollback_plan 存在两种历史形态：计划页写入的 JSON（rollbackSteps[].title），
+   * 以及纯文本。这里都做尽力而为的解析，解析不出来就返回空由用户自己写——
+   * 绝不"猜"出一份看起来像清单的东西：清单会被当成执行依据逐项确认。
+   */
+  const deriveStepsFromPlan = (): string[] => {
+    const raw = (change?.rollbackPlan ?? '').trim();
+    if (!raw) return [];
+    try {
+      const parsed = JSON.parse(raw);
+      const steps = Array.isArray(parsed?.rollbackSteps) ? parsed.rollbackSteps : [];
+      return steps
+        .map((step: { title?: string; description?: string }) =>
+          (step?.title || step?.description || '').trim()
+        )
+        .filter(Boolean);
+    } catch {
+      return raw
+        .split('\n')
+        .map(line => line.replace(/^\s*\d+[.、)]\s*/, '').trim())
+        .filter(Boolean);
+    }
+  };
+
+  const openChecklistEditor = () => {
+    const existing = rollbackSteps.map(step => step.description);
+    const seed = existing.length > 0 ? existing : deriveStepsFromPlan();
+    setPlanText(seed.join('\n'));
+    setPlanModalOpen(true);
+  };
+
+  const handleSaveChecklist = async () => {
+    if (!change || inFlightRef.current) return;
+    const steps = planText
+      .split('\n')
+      .map(line => line.trim())
+      .filter(Boolean);
+    inFlightRef.current = true;
+    setProcessing(true);
+    try {
+      await ChangeApi.replaceRollbackSteps(change.id, steps);
+      message.success(t('changeDetail.checklistSaved'));
+      setPlanModalOpen(false);
+      await loadDetail();
+    } catch (error) {
+      message.error(serverErrorMessage(error, t('changeDetail.checklistSaveFailed')));
+    } finally {
+      inFlightRef.current = false;
+      setProcessing(false);
+    }
+  };
+
+  const handleResolveStep = async (step: RollbackStep, status: RollbackStep['status'], note?: string) => {
+    if (!change || inFlightRef.current) return;
+    inFlightRef.current = true;
+    setProcessing(true);
+    try {
+      await ChangeApi.resolveRollbackStep(change.id, step.id, status, note);
+      message.success(
+        status === 'pending' ? t('changeDetail.stepReset') : t('changeDetail.stepResolved')
+      );
+      setResolvingStep(null);
+      setStepNote('');
+      await loadDetail();
+    } catch (error) {
+      // 409（已被别人确认）与 422（缺依据）都带可行动文案，原样透出。
+      message.error(serverErrorMessage(error, t('changeDetail.stepResolveFailed')));
+    } finally {
+      inFlightRef.current = false;
+      setProcessing(false);
+    }
+  };
+
   if (loading)
     return (
       <Card>
@@ -490,9 +611,12 @@ const ChangeDetail: React.FC = () => {
                     <Button type="primary" loading={processing} onClick={handleComplete}>
                       {t('changeDetail.complete')}
                     </Button>
+                    {/* 清单还有未确认步骤时禁用：后端会 422，这里先让人看见原因，
+                        而不是点完再收到错误。 */}
                     <Button
                       danger
                       loading={processing}
+                      disabled={rollbackBlocked}
                       onClick={() => {
                         setOutcomeReason('');
                         setOutcomeModal('rollback');
@@ -519,9 +643,12 @@ const ChangeDetail: React.FC = () => {
                     <Button type="primary" loading={processing} onClick={handleSchedule}>
                       {t('changeDetail.reschedule')}
                     </Button>
+                    {/* 清单还有未确认步骤时禁用：后端会 422，这里先让人看见原因，
+                        而不是点完再收到错误。 */}
                     <Button
                       danger
                       loading={processing}
+                      disabled={rollbackBlocked}
                       onClick={() => {
                         setOutcomeReason('');
                         setOutcomeModal('rollback');
@@ -685,6 +812,144 @@ const ChangeDetail: React.FC = () => {
               ),
             },
             {
+              key: '4b',
+              label: t('changeDetail.rollbackChecklist'),
+              children: (
+                <div className="py-2" data-testid="rollback-checklist">
+                  {rollbackSteps.length > 0 && (
+                    <div className="mb-4">
+                      <Progress
+                        percent={Math.round((resolvedCount / rollbackSteps.length) * 100)}
+                        status={pendingSteps.length === 0 ? 'success' : 'active'}
+                        format={() =>
+                          t('changeDetail.checklistProgress')
+                            .replace('{resolved}', String(resolvedCount))
+                            .replace('{total}', String(rollbackSteps.length))
+                        }
+                      />
+                    </div>
+                  )}
+
+                  {/* 门禁前置说明：后端同样会 422，这里把"为什么按钮点不动"说清楚 */}
+                  {rollbackBlocked && (
+                    <Alert
+                      type="warning"
+                      showIcon
+                      className="mb-4"
+                      message={t('changeDetail.checklistBlockedHint').replace(
+                        '{count}',
+                        String(pendingSteps.length)
+                      )}
+                    />
+                  )}
+
+                  {rollbackSteps.length === 0 ? (
+                    <Empty
+                      description={t('changeDetail.checklistEmpty')}
+                      image={Empty.PRESENTED_IMAGE_SIMPLE}
+                    >
+                      {canEditChecklist && (
+                        <Button type="primary" onClick={openChecklistEditor}>
+                          {t('changeDetail.checklistEdit')}
+                        </Button>
+                      )}
+                    </Empty>
+                  ) : (
+                    <>
+                      <List
+                        size="small"
+                        dataSource={rollbackSteps}
+                        renderItem={step => (
+                          <List.Item
+                            actions={
+                              canResolveSteps
+                                ? step.resolved
+                                  ? [
+                                      <Button
+                                        key="reset"
+                                        type="link"
+                                        size="small"
+                                        loading={processing}
+                                        onClick={() =>
+                                          handleResolveStep(step, 'pending', step.note)
+                                        }
+                                      >
+                                        {t('changeDetail.stepResetAction')}
+                                      </Button>,
+                                    ]
+                                  : [
+                                      <Button
+                                        key="done"
+                                        type="link"
+                                        size="small"
+                                        loading={processing}
+                                        onClick={() => handleResolveStep(step, 'done')}
+                                      >
+                                        {t('changeDetail.stepDone')}
+                                      </Button>,
+                                      <Button
+                                        key="skipped"
+                                        type="link"
+                                        size="small"
+                                        onClick={() => {
+                                          setStepNote('');
+                                          setResolvingStep({ step, status: 'skipped' });
+                                        }}
+                                      >
+                                        {t('changeDetail.stepSkipped')}
+                                      </Button>,
+                                      <Button
+                                        key="failed"
+                                        type="link"
+                                        size="small"
+                                        danger
+                                        onClick={() => {
+                                          setStepNote('');
+                                          setResolvingStep({ step, status: 'failed' });
+                                        }}
+                                      >
+                                        {t('changeDetail.stepFailed')}
+                                      </Button>,
+                                    ]
+                                : undefined
+                            }
+                          >
+                            <List.Item.Meta
+                              avatar={
+                                <Tag color={rollbackStepColors[step.status]}>
+                                  {t('changeDetail.stepNo').replace('{no}', String(step.stepNo))}
+                                </Tag>
+                              }
+                              title={<Text>{step.description}</Text>}
+                              description={
+                                <Space direction="vertical" size={0}>
+                                  <Text type="secondary">
+                                    {rollbackStepLabels[step.status]}
+                                    {step.resolvedByName
+                                      ? ` · ${step.resolvedByName}`
+                                      : ''}
+                                    {step.resolvedAt
+                                      ? ` · ${dayjs(step.resolvedAt).format('YYYY-MM-DD HH:mm')}`
+                                      : ''}
+                                  </Text>
+                                  {step.note && <Text type="secondary">{step.note}</Text>}
+                                </Space>
+                              }
+                            />
+                          </List.Item>
+                        )}
+                      />
+                      {canEditChecklist && (
+                        <Button className="mt-4" onClick={openChecklistEditor}>
+                          {t('changeDetail.checklistEdit')}
+                        </Button>
+                      )}
+                    </>
+                  )}
+                </div>
+              ),
+            },
+            {
               key: '5',
               label: t('changeDetail.rollbackPlan'),
               children: (
@@ -769,6 +1034,84 @@ const ChangeDetail: React.FC = () => {
             aria-label={
               outcomeModal === 'fail' ? t('changeDetail.failReason') : t('changeDetail.rollbackReason')
             }
+          />
+        </div>
+      </Modal>
+
+      {/* 回滚步骤备注弹窗（跳过/失败必须写依据） */}
+      <Modal
+        title={
+          resolvingStep?.status === 'failed'
+            ? t('changeDetail.stepFailedTitle')
+            : t('changeDetail.stepSkippedTitle')
+        }
+        open={resolvingStep !== null}
+        onCancel={() => {
+          setResolvingStep(null);
+          setStepNote('');
+        }}
+        footer={[
+          <Button
+            key="cancel"
+            onClick={() => {
+              setResolvingStep(null);
+              setStepNote('');
+            }}
+          >
+            {t('changeDetail.cancel')}
+          </Button>,
+          <Button
+            key="confirm"
+            danger={resolvingStep?.status === 'failed'}
+            loading={processing}
+            disabled={!stepNote.trim()}
+            onClick={() => {
+              if (resolvingStep) {
+                handleResolveStep(resolvingStep.step, resolvingStep.status, stepNote);
+              }
+            }}
+          >
+            {t('changeDetail.confirm')}
+          </Button>,
+        ]}
+      >
+        <div className="py-4">
+          <p className="mb-2">
+            {resolvingStep?.status === 'failed'
+              ? t('changeDetail.stepFailedHint')
+              : t('changeDetail.stepSkippedHint')}
+          </p>
+          <Input.TextArea
+            value={stepNote}
+            onChange={e => setStepNote(e.target.value)}
+            placeholder={t('changeDetail.stepNotePlaceholder')}
+            rows={3}
+            aria-label={t('changeDetail.stepNote')}
+          />
+        </div>
+      </Modal>
+
+      {/* 回滚清单编排弹窗（一行一步，按执行顺序） */}
+      <Modal
+        title={t('changeDetail.checklistEdit')}
+        open={planModalOpen}
+        onCancel={() => setPlanModalOpen(false)}
+        footer={[
+          <Button key="cancel" onClick={() => setPlanModalOpen(false)}>
+            {t('changeDetail.cancel')}
+          </Button>,
+          <Button key="confirm" type="primary" loading={processing} onClick={handleSaveChecklist}>
+            {t('changeDetail.save')}
+          </Button>,
+        ]}
+      >
+        <div className="py-4">
+          <p className="mb-2">{t('changeDetail.checklistEditHint')}</p>
+          <Input.TextArea
+            value={planText}
+            onChange={e => setPlanText(e.target.value)}
+            rows={6}
+            aria-label={t('changeDetail.rollbackChecklist')}
           />
         </div>
       </Modal>

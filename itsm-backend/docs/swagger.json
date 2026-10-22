@@ -2522,6 +2522,209 @@
                 }
             }
         },
+        "/api/v1/changes/{id}/rollback-steps": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "返回回滚清单（按执行顺序），含每一步的确认状态、备注、确认人与时间",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "变更管理"
+                ],
+                "summary": "获取变更回滚清单",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "变更ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/dto.RollbackStepResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "按执行顺序覆盖整张清单。仅在 draft/pending/approved/scheduled 可编排——\n实施开始后清单成为执行依据，要说明偏差请把步骤标记为 skipped 并写依据。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "变更管理"
+                ],
+                "summary": "编排变更回滚清单（覆盖式）",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "变更ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "步骤内容数组",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.ReplaceRollbackStepsRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/dto.RollbackStepResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/changes/{id}/rollback-steps/{stepId}": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "status=done 已执行、skipped 不适用（必填备注依据）、failed 执行失败（必填备注现象）、\npending 撤销误操作。只能在 in_progress/failed 状态下确认。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "变更管理"
+                ],
+                "summary": "确认某一步的回滚执行结果",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "变更ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "步骤ID",
+                        "name": "stepId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "确认结果",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.ResolveRollbackStepRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.RollbackStepResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/changes/{id}/schedule": {
             "post": {
                 "security": [
@@ -14251,6 +14454,13 @@
                     "description": "回滚计划",
                     "type": "string"
                 },
+                "rollbackSteps": {
+                    "description": "RollbackSteps 回滚清单（含逐步执行结果）。详情接口下发，列表接口不带\n（列表页不需要，避免 N 次子表查询）。",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.RollbackStepResponse"
+                    }
+                },
                 "status": {
                     "description": "状态",
                     "allOf": [
@@ -17453,6 +17663,18 @@
                 }
             }
         },
+        "dto.ReplaceRollbackStepsRequest": {
+            "type": "object",
+            "properties": {
+                "steps": {
+                    "description": "步骤内容，按执行顺序排列",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
         "dto.ResetPasswordRequest": {
             "type": "object",
             "required": [
@@ -17487,6 +17709,22 @@
                 }
             }
         },
+        "dto.ResolveRollbackStepRequest": {
+            "type": "object",
+            "required": [
+                "status"
+            ],
+            "properties": {
+                "note": {
+                    "description": "skipped/failed 必填",
+                    "type": "string"
+                },
+                "status": {
+                    "description": "pending/done/skipped/failed",
+                    "type": "string"
+                }
+            }
+        },
         "dto.ResourceHealthData": {
             "type": "object",
             "properties": {
@@ -17510,6 +17748,47 @@
                 "version": {
                     "type": "integer",
                     "minimum": 1
+                }
+            }
+        },
+        "dto.RollbackStepResponse": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "description": "步骤内容",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "步骤ID",
+                    "type": "integer"
+                },
+                "note": {
+                    "description": "执行备注（跳过依据/失败现象）",
+                    "type": "string"
+                },
+                "resolved": {
+                    "description": "是否已确认（status != pending）",
+                    "type": "boolean"
+                },
+                "resolvedAt": {
+                    "description": "确认时间",
+                    "type": "string"
+                },
+                "resolvedBy": {
+                    "description": "确认人ID",
+                    "type": "integer"
+                },
+                "resolvedByName": {
+                    "description": "确认人姓名",
+                    "type": "string"
+                },
+                "status": {
+                    "description": "pending/done/skipped/failed",
+                    "type": "string"
+                },
+                "stepNo": {
+                    "description": "步骤序号（从 1 开始）",
+                    "type": "integer"
                 }
             }
         },

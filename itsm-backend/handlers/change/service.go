@@ -889,6 +889,19 @@ func (s *Service) TransitionStatus(ctx context.Context, id, tenantID, userID int
 		return nil, fmt.Errorf("%w: 从 '%s' 到 '%s'", ErrInvalidTransition, c.Status, targetStatus)
 	}
 
+	// 回滚门禁：清单存在则必须逐项确认（2026-10-22，链路 C「失败可回退」）。
+	//
+	// 此前 rolled_back 只需一次状态翻转：回滚计划写了几步、走到哪一步、
+	// 每步成没成，系统一概不知；审计只能看到「从 in_progress 变成 rolled_back」，
+	// PIR 里「影响是否已复原」只能靠人凭记忆填。有了行级清单之后，
+	// 「已回滚」才第一次意味着「清单上的每一步都被某个具体的人确认过」。
+	// 清单为空时放行（应急回滚不能被"你还没编排清单"挡住）。
+	if targetStatus == "rolled_back" {
+		if gateErr := s.validateRollbackChecklist(ctx, id, tenantID); gateErr != nil {
+			return nil, gateErr
+		}
+	}
+
 	// 实施结果说明（outcome_note）。
 	//
 	// failed / rolled_back 必须写原因：这两个状态都表示"没按计划做成"，没有原因的

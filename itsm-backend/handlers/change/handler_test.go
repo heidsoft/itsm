@@ -79,6 +79,12 @@ type mockRepository struct {
 	// submitApprovalErr 是事务失败注入点：让 mock 的 SubmitApprovalRecordTx 直接返回错误，
 	// 用来断言 service 把错误透传出去且不在 mock 上留下任何部分写入。
 	submitApprovalErr error
+	// rollbackSteps 回滚清单（按 change_id）。用内存 map 模拟逐行落库，
+	// 让「未确认步骤拦住 rolled_back」这条门禁能在纯 mock 装配下被断言，
+	// 不必依赖真实 DB。
+	rollbackSteps map[int][]*RollbackStep
+	// rollbackStepsErr 读取失败注入点：门禁必须失败关闭（读不到清单就不许回滚）。
+	rollbackStepsErr error
 }
 
 func newMockRepository() *mockRepository {
@@ -89,6 +95,7 @@ func newMockRepository() *mockRepository {
 		chains:        make(map[int][]*ApprovalChain),
 		nextID:        1,
 		approverValid: true,
+		rollbackSteps: make(map[int][]*RollbackStep),
 	}
 }
 
@@ -1633,4 +1640,62 @@ func TestChangeController_SubmitApproval_UsesAuthenticatedApprover(t *testing.T)
 	for _, a := range repo.approvals {
 		assert.Equal(t, 1, a.ApproverID, "落库审批人必须是认证上下文用户，不能是请求体伪造值")
 	}
+}
+
+// ---------------- 回滚清单（mock 装配） ----------------
+
+func (m *mockRepository) ListRollbackSteps(ctx context.Context, changeID, tenantID int) ([]*RollbackStep, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if m.rollbackStepsErr != nil {
+		return nil, m.rollbackStepsErr
+	}
+	out := make([]*RollbackStep, 0, len(m.rollbackSteps[changeID]))
+	out = append(out, m.rollbackSteps[changeID]...)
+	return out, nil
+}
+
+func (m *mockRepository) ReplaceRollbackSteps(ctx context.Context, changeID, tenantID int, steps []*RollbackStep) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	stored := make([]*RollbackStep, 0, len(steps))
+	for i, step := range steps {
+		copied := *step
+		copied.ID = m.nextID
+		m.nextID++
+		copied.ChangeID, copied.TenantID = changeID, tenantID
+		copied.StepNo = i + 1
+		copied.Status = RollbackStepPending
+		stored = append(stored, &copied)
+	}
+	m.rollbackSteps[changeID] = stored
+	return nil
+}
+
+func (m *mockRepository) ResolveRollbackStep(ctx context.Context, stepID, changeID, tenantID, actorID int, status, note string, now time.Time) (bool, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	steps, ok := m.rollbackSteps[changeID]
+	if !ok {
+		return false, nil
+	}
+	for _, step := range steps {
+		if step.ID != stepID {
+			continue
+		}
+		if step.Status != RollbackStepPending && status != RollbackStepPending {
+			// 条件更新语义：前进只接受 pending 行；status=pending 表示撤销，允许。
+			return false, nil
+		}
+		step.Status = status
+		step.Note = note
+		if actorID > 0 {
+			step.ResolvedBy = &actorID
+			step.ResolvedAt = &now
+		} else {
+			step.ResolvedBy, step.ResolvedAt = nil, nil
+		}
+		return true, nil
+	}
+	return false, nil
 }
