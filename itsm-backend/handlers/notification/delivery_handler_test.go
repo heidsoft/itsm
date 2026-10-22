@@ -19,6 +19,7 @@ import (
 
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
+	"itsm-backend/ent/operationalcommand"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/mattn/go-sqlite3"
@@ -225,4 +226,90 @@ func TestRetryDeliveryRejectsCrossTenantAccess(t *testing.T) {
 	f.engine.ServeHTTP(recorder, httptest.NewRequest(http.MethodPost,
 		fmt.Sprintf("/a/deliveries/%d/retry", foreign.ID), nil))
 	require.Equal(t, http.StatusNotFound, recorder.Code)
+}
+
+// 人工重放的幂等性：同一条 failed 投递被连点两次不能发两条通知。
+//
+// 旧记录刻意保持 failed（失败证据），界面上「重试」按钮永远可点，所以防重复
+// 只能落在服务端：第二次点击必须 409，并且不能真的再入一条重试命令。
+func TestRetryDeliveryRejectsDuplicateWhileRetryInFlight(t *testing.T) {
+	f := newDeliveryFixture(t)
+	failed, _ := seedDelivery(t, f, f.tenantA, f.userA.ID, "feishu", "failed")
+	target := fmt.Sprintf("/a/deliveries/%d/retry", failed.ID)
+
+	recorder := httptest.NewRecorder()
+	f.engine.ServeHTTP(recorder, httptest.NewRequest(http.MethodPost, target, nil))
+	require.Equal(t, http.StatusOK, recorder.Code)
+
+	recorder = httptest.NewRecorder()
+	f.engine.ServeHTTP(recorder, httptest.NewRequest(http.MethodPost, target, nil))
+	require.Equal(t, http.StatusConflict, recorder.Code)
+	require.Contains(t, recorder.Body.String(), "在途重试")
+
+	retries := f.client.OperationalCommand.Query().
+		Where(operationalcommand.IdempotencyKeyContains(":retry:")).CountX(context.Background())
+	require.Equal(t, 1, retries, "重复点击不得产生第二条重试命令")
+}
+
+func TestRetryDeliveryRejectsAfterRetryAlreadySucceeded(t *testing.T) {
+	f := newDeliveryFixture(t)
+	failed, original := seedDelivery(t, f, f.tenantA, f.userA.ID, "email", "failed")
+	// 模拟一次已被 worker 执行完的重试（命令 succeeded）。
+	f.client.OperationalCommand.Create().
+		SetTenantID(f.tenantA).SetCommandType("notification.deliver").
+		SetAggregateType("ticket").SetAggregateID(101).
+		SetIdempotencyKey(original.IdempotencyKey + ":retry:1").
+		SetPayload(original.Payload).SetStatus("succeeded").SaveX(context.Background())
+
+	recorder := httptest.NewRecorder()
+	f.engine.ServeHTTP(recorder, httptest.NewRequest(http.MethodPost,
+		fmt.Sprintf("/a/deliveries/%d/retry", failed.ID), nil))
+	require.Equal(t, http.StatusConflict, recorder.Code)
+	require.Contains(t, recorder.Body.String(), "已重试成功")
+}
+
+// 上一次重试也失败了（dead_letter）说明消息确实没送出去，必须允许再试。
+func TestRetryDeliveryAllowsRetryAfterPreviousRetryExhausted(t *testing.T) {
+	f := newDeliveryFixture(t)
+	failed, original := seedDelivery(t, f, f.tenantA, f.userA.ID, "feishu", "failed")
+	f.client.OperationalCommand.Create().
+		SetTenantID(f.tenantA).SetCommandType("notification.deliver").
+		SetAggregateType("ticket").SetAggregateID(101).
+		SetIdempotencyKey(original.IdempotencyKey + ":retry:1").
+		SetPayload(original.Payload).SetStatus("dead_letter").SaveX(context.Background())
+
+	recorder := httptest.NewRecorder()
+	f.engine.ServeHTTP(recorder, httptest.NewRequest(http.MethodPost,
+		fmt.Sprintf("/a/deliveries/%d/retry", failed.ID), nil))
+	require.Equal(t, http.StatusOK, recorder.Code)
+}
+
+// 前缀判定走 SQL LIKE，幂等键里的 `_` 会被当通配符：一个形态相近但并非派生的键
+// 不能被误判成「已有在途重试」，否则这条失败投递永远重试不了。
+func TestRetryDeliveryIgnoresLookalikeIdempotencyKeys(t *testing.T) {
+	f := newDeliveryFixture(t)
+	ctx := context.Background()
+	command := f.client.OperationalCommand.Create().
+		SetTenantID(f.tenantA).SetCommandType("notification.deliver").
+		SetAggregateType("ticket").SetAggregateID(101).
+		SetIdempotencyKey("ticket_42_created").
+		SetPayload(map[string]interface{}{
+			"resourceType": "ticket", "resourceId": 101, "recipientId": f.userA.ID,
+			"channel": "email", "type": "created", "content": "hello",
+		}).SetStatus("succeeded").SaveX(ctx)
+	delivery := f.client.NotificationDelivery.Create().
+		SetTenantID(f.tenantA).SetOperationalCommandID(command.ID).
+		SetRecipientID(f.userA.ID).SetChannel("email").SetTargetMasked("a@****om").
+		SetStatus("failed").SetAttempt(1).SaveX(ctx)
+	// LIKE 'ticket_42_created:retry:%' 同样命中这一条，但它不是本投递的重试。
+	f.client.OperationalCommand.Create().
+		SetTenantID(f.tenantA).SetCommandType("notification.deliver").
+		SetAggregateType("ticket").SetAggregateID(101).
+		SetIdempotencyKey("ticketX42Xcreated:retry:1").
+		SetPayload(command.Payload).SetStatus("pending").SaveX(ctx)
+
+	recorder := httptest.NewRecorder()
+	f.engine.ServeHTTP(recorder, httptest.NewRequest(http.MethodPost,
+		fmt.Sprintf("/a/deliveries/%d/retry", delivery.ID), nil))
+	require.Equal(t, http.StatusOK, recorder.Code)
 }

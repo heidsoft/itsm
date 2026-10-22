@@ -3501,6 +3501,30 @@ POST /api/v1/notification-deliveries/{id}/retry
 - 列表响应为统一分页信封 `{items,total,page,pageSize,totalPages}`；`targetMasked` 是写入时脱敏后的目标（如 `us****01`），接口不回显明文收件地址。
 - `stats` 按 `channel × status` 聚合，返回 `byStatus` 与 `byChannel[]`；`successRate` 的分母只计已定论的投递（`sent + failed`），`pending` 不计入，避免队列积压把成功率压低。
 - `retry` 只接受 `status=failed`：`sent` 返回 **409**（无需重试），`pending` 返回 **409**（仍在队列中），跨租户或记录不存在返回 **404**。重试不修改旧记录——旧记录保留为失败证据，新命令由 worker 执行后写入一条新的投递记录，因此同一通知可能有多条投递记录（审计设计，不是重复写入）。
+- `retry` 是**幂等**的：同一条投递反复点「重试」会生成多条命令、每条都真实发送一次，因此服务端按「重试命令谱系」拦截——已有 `pending`/`processing` 的重试 → **409**「已有在途重试」；上一次重试已 `succeeded` → **409**「已重试成功」；上一次重试 `dead_letter`/`cancelled`（确实没送出去）才放行。判定依据是重试命令的幂等键 `<原键>:retry:<纳秒>`，不新增投递状态（旧记录保持 `failed` 是刻意的失败证据）。
+
+## 死信人工重放（命令重放与投递重试）
+
+命令总线（`operational_commands`）里状态为 `dead_letter` 的命令表示「worker 重试耗尽仍未完成」。这类命令可能从未进入业务处理（payload 不全、handler 缺失、聚合已删除），也可能是发送环节失败。人工重放的入口分两层，**语义不同，不能互相当成替代**：
+
+| 层 | 端点 | 作用 | 幂等语义 |
+|---|---|---|---|
+| 命令重放 | `POST /api/v1/admin/operations/commands/{id}/replay` | 把一条 `dead_letter`（或 `cancelled`）命令重置回 `pending` | **保留原 `idempotency_key` 与 `fencing_token`**，worker 仍按原身份去重，不会与历史成功的业务写入重复 |
+| 批量重放 | `POST /api/v1/admin/operations/commands/bulk-replay` | 按 `{status,commandType,aggregateType,pageSize}` 匹配后批量重置 | 同上；单次上限 200 条（`maxBulkLimit` 1000），`status` 只允许 `dead_letter`/`cancelled` |
+| 投递重试 | `POST /api/v1/notification-deliveries/{id}/retry` | 以**新幂等键**重新入箱一条失败投递 | 会真实再发一次消息；受上面的「重试谱系」幂等守卫保护 |
+
+```http
+GET  /api/v1/admin/operations/commands?status=dead_letter&commandType=notification.deliver&page=1&pageSize=20
+POST /api/v1/admin/operations/commands/{id}/replay
+POST /api/v1/admin/operations/commands/bulk-replay
+```
+
+- 权限 `system:write`（读列表与重放同权限组），全部按认证租户隔离；每次重放写一条 `audit_log`（`resource=operational_command`、`action=replay`、`body` 含 `previousStatus`）。
+- 列表响应 `data` 为 `{items,total,page,pageSize,summary,byType}`；`summary` 给出 `pending/processing/deadLetter/cancelled/succeeded` 与 `stuckLeases`、`oldestWaitingAt`，是判断「积压还是死信」的依据。
+- 批量重放返回 `{matchedIds,updated,skipped,pageSize}`：`skipped` 是在事务内被并发改状态（例如 worker 恰好复活了该命令）而未能命中的条数，不是错误。
+- 重放不修改 payload，也不重置 `attempt`——`attempt` 是这条命令的历史尝试次数，重置会掩盖真实失败次数；需要清零的语义请新建命令。
+
+产品入口：**管理 → 死信与重放**（`/admin/operations`），两个 Tab 分别对应命令死信与失败投递。此前只有 HTTP 端点，界面里唯一可点的「重放」在租户初始化抽屉里（仅覆盖产品基线安装这一类命令）。
 
 ## 值班排班
 

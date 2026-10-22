@@ -2482,6 +2482,62 @@ cd itsm-backend && go test -count=1 ./connector/ ./handlers/feishu/ ./router/
 去掉过期覆盖分支 → 过期用例转红。既有 `router` 安全契约（同一 nonce 第二次必须 403）
 保持通过——去重仍在 URL Verification 之前，所有回调（含探活）都纳入一次性 nonce。
 
+### 1.66 死信人工重放：从「只有 curl」到产品面，同时堵住重复重试（2026-10-22，行为变更：重试幂等 + 新页面）
+
+命令总线的重放（`/admin/operations/commands/{id}/replay`、`/bulk-replay`）与投递重试
+（`/notification-deliveries/{id}/retry`）两个入口后端一直存在，但产品里唯一可点的
+「重放」是租户初始化抽屉里的那个按钮——它只覆盖「产品基线安装」这一类命令。
+BPMN 服务任务死信、通知投递命令死信、失败投递记录，运维都只能 curl。
+
+这一批补两件事：
+
+**1）新增运维面「管理 → 死信与重放」（`/admin/operations`）**
+
+| Tab | 数据源 | 动作 | 幂等语义 |
+|---|---|---|---|
+| 命令死信 | `GET /admin/operations/commands?status=dead_letter` | 单条重放 / 按筛选批量重放 | 保留原 `idempotency_key` 与 `fencing_token`，worker 仍按原身份去重，不会与历史成功的业务写入重复 |
+| 失败投递 | `GET /notification-deliveries?status=failed` | 单条重试 | 以**新幂等键**入箱，会真实再发一次消息 |
+
+页面顶部共用同一份 `summary`（`deadLetter` / `pending` / `processing` / `stuckLeases`）——
+「积压」和「死信」是两种完全不同的处置，混在一起看会导错方向。
+
+**2）投递重试不再幂等漏洞（行为变更）**
+
+`failed` 投递记录刻意保持 `failed`（失败证据可追溯），所以界面上的「重试」按钮永远可点。
+此前每次点击都会以新幂等键入一条新命令，每条都真实发送一次：
+
+- 运维排障时连点两下 → 收件人收到两条一模一样的通知；
+- 重试成功后记录仍是 `failed`，界面上看不出「已经重试过了」，还会再点第三次。
+
+现在按「重试命令谱系」判定（重试命令的幂等键是 `<原键>:retry:<纳秒>`）：
+
+| 上一次重试的状态 | 结果 |
+|---|---|
+| `pending` / `processing` | **409**「该投递已有在途重试（命令 #N），请等待结果后再决定是否需要再试」 |
+| `succeeded` | **409**「该投递已重试成功（命令 #N），无需再次重试」 |
+| `dead_letter` / `cancelled` | 放行——确实没送出去，必须允许再试 |
+
+判定用 `IdempotencyKeyHasPrefix` 查命令表，**并且必须再用精确前缀复核一次**：前缀谓词走的是
+SQL `LIKE`，幂等键里常见的 `_` 会被当通配符，`ticket_42_created:retry:` 会命中
+`ticketX42Xcreated:retry:`，把无关投递判成「已有在途重试」——那会让这条失败投递永远重试不了。
+
+不新增投递状态字段：命令表已经完整记录重试谱系，给 `notification_deliveries` 加「已重试」
+状态会污染投递状态机（`pending/sent/failed` 是投递事实，不是操作历史）。
+
+**集成方影响**：对同一条失败投递重复调用 `retry` 现在返回 `409`（此前每次都返回 `200` 并真实发送）。
+需要「无论如何再发一次」的场景请先确认收件目标已修复，再单独发通知，不要指望绕过幂等守卫。
+
+**验证**
+
+```bash
+cd itsm-backend && go test -count=1 ./handlers/notification/ ./router/
+cd itsm-frontend && npx tsc --noEmit
+```
+
+新增 4 例：连点两次第二下 409 且只产生一条重试命令、上一次重试成功后 409、上一次重试
+`dead_letter` 时放行、`LIKE` 通配误命中不误判。负证明：把守卫条件短路（`false && blocked`）
+→ 前两例转红。
+
 ## 2. 环境变量变更
 
 本次升级**移除了多个"幽灵配置项"**（在示例文件中声明但代码/Compose 从不读取，用户配置了也不生效），并修正了一个 Grafana 密码安全缺陷。

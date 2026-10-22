@@ -1,6 +1,7 @@
 package notification
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -10,6 +11,7 @@ import (
 	"itsm-backend/common"
 	"itsm-backend/ent"
 	"itsm-backend/ent/notificationdelivery"
+	"itsm-backend/ent/operationalcommand"
 	"itsm-backend/ent/predicate"
 	"itsm-backend/internal/commandbus"
 
@@ -262,6 +264,15 @@ func (h *DeliveryHandler) RetryDelivery(c *gin.Context) {
 		return
 	}
 
+	// 幂等守卫：同一条失败投递被反复点「重试」会生成多条新命令，每条都真实发送一次。
+	// 运维排障时连点两下，收件人就收到两条一模一样的通知——而旧投递记录永远是 failed
+	// （刻意保留失败证据），界面上「重试」按钮永远可点，天然诱导重复点击。
+	// 重试命令的幂等键是 `<原键>:retry:<纳秒>`，据此判断是否已有在途/已处理的重试。
+	if blocked, message := h.existingRetry(c.Request.Context(), tenantID, command.IdempotencyKey); blocked {
+		common.Conflict(c, message, nil)
+		return
+	}
+
 	payload := make(map[string]interface{}, len(command.Payload))
 	for key, value := range command.Payload {
 		payload[key] = value
@@ -295,6 +306,54 @@ func (h *DeliveryHandler) RetryDelivery(c *gin.Context) {
 		"status":     retried.Status,
 		"retriedAt":  time.Now(),
 	})
+}
+
+// existingRetry 判断该投递是否已经有过「还没定论」或「已经处理完」的人工重试。
+//
+// 重试命令以 `<原幂等键>:retry:<纳秒>` 入箱（见 RetryDelivery），因此用前缀关系
+// 就能把它和原始命令、以及原始命令派生出的其它命令区分开。判定语义：
+//   - pending / processing：已有在途重试，再点一次只会再多发一条 → 拒绝；
+//   - succeeded：上一次重试已经被 worker 执行过（发送成功，或因用户偏好跳过），
+//     再点一次必然重复投递 → 拒绝；
+//   - dead_letter / cancelled：上一次确实没送出去，允许再试。
+//
+// 为什么不用状态字段另存标记：delivery 记录刻意保持 failed 不动（失败证据可追溯），
+// 新增「已重试」状态会污染投递状态机；而命令表本身已完整记录重试谱系。
+func (h *DeliveryHandler) existingRetry(ctx context.Context, tenantID int, originalKey string) (bool, string) {
+	prefix := originalKey + ":retry:"
+	attempts, err := h.client.OperationalCommand.Query().
+		Where(
+			operationalcommand.TenantIDEQ(tenantID),
+			operationalcommand.IdempotencyKeyHasPrefix(prefix),
+			operationalcommand.StatusIn(
+				commandbus.StatusPending, commandbus.StatusProcessing, commandbus.StatusSucceeded,
+			),
+		).
+		Order(ent.Desc(operationalcommand.FieldID)).
+		All(ctx)
+	if err != nil {
+		// 查不出既有重试就不放行：宁可让运维重试失败，也不重复给用户发通知。
+		h.logger.Errorw("query existing notification delivery retries", "tenant_id", tenantID, "error", err)
+		return true, "无法确认该投递是否已有重试，为避免重复发送已拒绝本次操作，请稍后重试"
+	}
+	for _, attempt := range attempts {
+		// 前缀谓词走的是 SQL LIKE，幂等键里的 `_` 是通配符，必须再用精确前缀复核一次，
+		// 否则 `a_b:retry:` 会命中 `axb:retry:`，把无关投递判成「已在途」。
+		if !strings.HasPrefix(attempt.IdempotencyKey, prefix) {
+			continue
+		}
+		switch attempt.Status {
+		case commandbus.StatusPending, commandbus.StatusProcessing:
+			return true, fmt.Sprintf(
+				"该投递已有在途重试（命令 #%d，状态 %s），请等待结果后再决定是否需要再试",
+				attempt.ID, attempt.Status)
+		case commandbus.StatusSucceeded:
+			return true, fmt.Sprintf(
+				"该投递已重试成功（命令 #%d），无需再次重试；如仍未收到，请检查收件目标是否变更",
+				attempt.ID)
+		}
+	}
+	return false, ""
 }
 
 func (h *DeliveryHandler) requireTenant(c *gin.Context) (int, bool) {

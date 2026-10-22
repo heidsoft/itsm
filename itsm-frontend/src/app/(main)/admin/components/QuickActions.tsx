@@ -110,6 +110,7 @@ export const QuickActions: React.FC = () => {
       items: [
         { title: '服务目录', desc: '服务项管理', href: '/admin/service-catalogs', color: '#ec4899', icon: BookOpen },
         { title: '通知配置', desc: '消息推送规则', href: '/notifications', color: '#ef4444', icon: Megaphone },
+        { title: '死信与重放', desc: '命令死信重放 / 失败投递重试', href: '/admin/operations', color: '#dc2626', icon: AlertTriangle },
         { title: '工单分类', desc: '分类与模板', href: '/admin/ticket-categories', color: '#64748b', icon: Folder },
         { title: '系统设置', desc: '全局参数配置', href: '/admin/system-config', color: '#0f172a', icon: Cog },
       ],
