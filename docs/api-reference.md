@@ -3368,6 +3368,71 @@ Content-Type: application/json
 - `provider` / `type` / `settings` 一律沿用原实例，不能由请求体指定——否则等于允许借轮换请求改掉 `Init` 走哪个实现。
 - 审计写失败不回滚轮换（密钥已在对方平台换掉，回滚只会造成更大不一致），但会以 error 级别留痕。
 
+## 连接器市场安装与卸载（运行态闭环）
+
+市场里的连接器类商品（`type=connector`）安装时不只是插一条记录，还要把实例真正
+注册进运行态（`connector.Manager`）。这两件事可能一件成一件败，接口的返回语义就是
+把失败如实交出来，而不是「记录写成功就算成功」。
+
+```http
+POST /api/v1/marketplace/items/{itemId}/install
+Authorization: Bearer <accessToken>
+```
+
+`data` 是安装记录（与 `GET /marketplace/installations` 同结构），关键字段：
+
+| 字段 | 含义 |
+|---|---|
+| `status` | `installing` / `active` / `disabled` / `failed` / `uninstalled` |
+| `errorMessage` | 最近一次失败原因。连接器类商品**必看**：`failed` 时这里写着为什么起不来 |
+
+| 情形 | 结果 |
+|---|---|
+| 连接器成功注册进运行态 | `200`，`status=active` |
+| 记录已建但连接器起不来（缺凭据 / provider 未注册 / 端点不可达） | `200`，`status=failed` + `errorMessage`，响应 `message` 提示补全配置 |
+| 商品不存在 / 未发布 | `404` / `400` |
+| 已安装且 `active`/`disabled` | `200` 幂等返回原记录，不重复注册 |
+| 上次停在 `installing`/`failed` | 视为**重试**：重新注册连接器，重复调用安装即是重试入口 |
+| 卸载后重装（历史记录复用） | 同样重新走注册，不会因为「记录已存在」就直接标 `active` |
+
+**失败不返回 4xx 的原因**：资源（安装记录）确实被创建了，`409`/`500` 会让人以为
+什么都没发生。返回 `200 + failed` 让前端能显示「已安装但未就绪 + 原因」，用户补完
+配置点重试即可，安装痕迹也不会丢。
+
+### 补配置即闭环
+
+```http
+PUT /api/v1/marketplace/installations/{itemId}/config
+Authorization: Bearer <accessToken>
+Content-Type: application/json
+
+{ "credentials": { "appId": "cli_xxx", "appSecret": "..." } }
+```
+
+| 情形 | 结果 |
+|---|---|
+| 新配置让连接器成功起来 | `200`；写入配置，`installing`/`failed` 的记录一并转 `active` 并清空 `errorMessage` |
+| 新配置无法初始化 | `409`，**库内保留上一份可用配置**，运行态仍是旧实例 |
+
+顺序是**先让运行态用新配置起来、成功后才落库**。反序会在失败时留下「库是新凭据、
+内存是旧凭据」的分裂状态：用户以为换了 token 已生效，实际仍在用旧的发消息。
+
+### 卸载
+
+```http
+POST /api/v1/marketplace/items/{itemId}/uninstall
+```
+
+| 情形 | 结果 |
+|---|---|
+| 运行实例已注销 | `200`，记录转 `uninstalled` |
+| 未安装 | `404` |
+| 运行实例未能注销（同 `name` 的实例仍在） | `409`，**记录保持原状态**（不会标成 `uninstalled`） |
+
+`Revoke` 以 `(tenant, name, provider)` 为键删实例。历史上 `provider` 若与安装时不一致，
+键就不匹配、实例会残留——此时若照样标 `uninstalled`，界面显示已卸载而连接器仍在用
+活着的凭据收发消息、仍能接收回调。因此卸载后按 `name` 复查运行态，残留即失败关闭。
+
 ## 通知渠道诊断
 
 回答「为什么我没收到通知」的只读接口，权限码 `notification:read`。与投递审计互补：审计回答「发了但失败了」，渠道诊断回答「根本发不出去」。

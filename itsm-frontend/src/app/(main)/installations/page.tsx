@@ -26,7 +26,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/Select';
-import { httpClient } from '@/lib/api/http-client';
+import { httpClient, serverErrorMessage } from '@/lib/api/http-client';
 import type { ConnectorConfig } from '@/lib/services/connector-service';
 import connectorService from '@/lib/services/connector-service';
 import type { TenantInstallation } from '@/lib/services/marketplace-service';
@@ -165,7 +165,9 @@ const InstallationsPage = () => {
       setInstallations(items => items.filter(item => item.id !== installation.id));
     } catch (error) {
       console.error('Failed to uninstall item:', error);
-      message.error(error instanceof Error ? error.message : '卸载失败');
+      // 卸载被拒时后端会说明原因（例如「连接器运行实例未能注销，卸载已中止」），
+      // 折叠成「卸载失败」会让人以为网络问题而反复重试。
+      message.error(serverErrorMessage(error, '卸载失败'));
     }
   };
 
@@ -206,7 +208,9 @@ const InstallationsPage = () => {
       setConnectorConfigs(configRes);
     } catch (error) {
       console.error('Failed to save installation config:', error);
-      message.error(error instanceof Error ? error.message : '保存配置失败');
+      // 后端在「新配置没能让连接器起来」时返回 409 并说明原因，且明确告知
+      // 已保留原配置——这条信息必须原样展示，否则用户会以为保存成功了。
+      message.error(serverErrorMessage(error, '保存配置失败'));
     } finally {
       setSavingId(null);
     }

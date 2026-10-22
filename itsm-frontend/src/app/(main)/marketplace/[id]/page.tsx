@@ -26,6 +26,7 @@ import type {
   MarketplaceItem,
   TenantInstallation,
 } from '@/lib/services/marketplace-service';
+import { serverErrorMessage } from '@/lib/api/http-client';
 import marketplaceService from '@/lib/services/marketplace-service';
 import { useCapabilities } from '@/lib/hooks/useCapabilities';
 
@@ -103,10 +104,21 @@ const MarketplaceDetailPage = () => {
     try {
       const installed = await marketplaceService.installItem(itemId);
       setInstallation(installed);
+      // 安装接口返回的是「安装记录 + 运行态是否就绪」两件事。连接器没起来时
+      // 记录是 failed（不是 4xx），必须如实提示去补配置，不能再报「安装成功」。
+      if (installed.status === 'failed') {
+        message.warning(
+          installed.errorMessage
+            ? `安装未完成：${installed.errorMessage}`
+            : '安装未完成，请在安装列表中补全配置后重试',
+        );
+      } else {
+        message.success('安装成功');
+      }
       router.push('/installations');
     } catch (error) {
       console.error('Failed to install item:', error);
-      message.error(error instanceof Error ? error.message : '安装失败');
+      message.error(serverErrorMessage(error, '安装失败'));
     } finally {
       setInstalling(false);
     }
@@ -127,7 +139,7 @@ const MarketplaceDetailPage = () => {
       message.success('卸载成功');
     } catch (error) {
       console.error('Failed to uninstall item:', error);
-      message.error(error instanceof Error ? error.message : '卸载失败');
+      message.error(serverErrorMessage(error, '卸载失败'));
     }
   };
 

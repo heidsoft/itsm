@@ -150,6 +150,17 @@ func (c *Handler) InstallItem(ctx *gin.Context) {
 			common.NotFoundWithErr(ctx, err, "组件不存在或已被下架")
 		case errors.Is(err, marketplace.ErrMarketplaceItemUnavailable), errors.Is(err, marketplace.ErrMarketplaceInstalledByMissing):
 			common.BadRequestWithErr(ctx, err, "组件当前不可安装")
+		case errors.Is(err, marketplace.ErrMarketplaceConnectorNotReady):
+			// 安装记录已落库并标为 failed（连接器没起来：缺凭据 / provider 未注册 /
+			// 端点不可达）。这里如实返回那条记录，让前端显示「已安装但未就绪 +
+			// errorMessage」，而不是笼统的「安装失败」让人以为压根没装上。
+			if installation != nil {
+				common.SuccessWithMessage(ctx,
+					"安装记录已创建，但连接器未就绪；补全配置后重新安装即可",
+					ToInstallationResponse(installation))
+				return
+			}
+			common.Conflict(ctx, "连接器未就绪："+err.Error(), nil)
 		default:
 			common.RespondError(ctx, err, "安装组件失败")
 		}
@@ -186,6 +197,12 @@ func (c *Handler) UninstallItem(ctx *gin.Context) {
 	if err != nil {
 		if errors.Is(err, marketplace.ErrMarketplaceInstallationAbsent) {
 			common.NotFoundWithErr(ctx, err, "安装记录不存在或已被卸载")
+			return
+		}
+		if errors.Is(err, marketplace.ErrMarketplaceConnectorStillRunning) {
+			// 运行态没能注销就绝不能标 uninstalled——否则界面显示已卸载，
+			// 连接器还在用活着的凭据收发消息。
+			common.Conflict(ctx, "连接器运行实例未能注销，卸载已中止（安装记录保持原状态）："+err.Error(), nil)
 			return
 		}
 		common.RespondError(ctx, err, "卸载组件失败")
@@ -289,6 +306,12 @@ func (c *Handler) UpdateInstallationConfig(ctx *gin.Context) {
 
 	installation, err := c.service.UpdateInstallationConfig(ctx, tenantID, itemID, config)
 	if err != nil {
+		if errors.Is(err, marketplace.ErrMarketplaceConnectorNotReady) {
+			// 新配置没能让运行态起来，DB 保持原配置 —— 必须让人知道「这次没生效」，
+			// 否则会以为换了凭据而实际仍在用旧的。
+			common.Conflict(ctx, "新配置未生效，已保留原配置："+err.Error(), nil)
+			return
+		}
 		common.RespondError(ctx, err, "更新安装配置失败")
 		return
 	}

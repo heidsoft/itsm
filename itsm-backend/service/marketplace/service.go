@@ -31,6 +31,22 @@ var (
 	ErrMarketplaceInstallationAbsent  = errors.New("marketplace installation not found")
 	ErrMarketplaceInstalledByMissing  = errors.New("marketplace installed_by is required")
 	ErrMarketplaceConfigSchemaInvalid = errors.New("config does not match item schema")
+
+	// ErrMarketplaceConnectorNotReady 连接器商品的运行态同步失败。
+	//
+	// 这里的「失败」指的是 marketplace 的安装记录（DB）与 connector.Manager 的
+	// 运行实例（内存）不一致：记录已存在，但连接器没起来（缺凭据/端点不可达/
+	// provider 未注册）。此前该错误被 logger.Warnw 吞掉后照样把状态置 active，
+	// 于是市场页显示「已安装」，而 send/回调/通知投递全部失败——故障现场与
+	// 管理界面相反，排障方向被误导。现在改为显式错误 + 安装记录 failed。
+	ErrMarketplaceConnectorNotReady = errors.New("connector runtime is not ready")
+
+	// ErrMarketplaceConnectorStillRunning 卸载时运行态未真正注销。
+	//
+	// Revoke 以 (tenant, name, provider) 为键删除内存实例；历史上 provider 可能
+	// 被写成与安装时不符的值，导致键不匹配、实例残留，而安装记录已被标成
+	// uninstalled——「以为卸了，实际还在发消息」。卸载必须校验实例确实消失。
+	ErrMarketplaceConnectorStillRunning = errors.New("connector instance is still running after revocation")
 )
 
 // NewService 创建市场服务
@@ -136,11 +152,15 @@ func (s *Service) reactivateUninstalledInstallation(
 		return nil, fmt.Errorf("failed to locate uninstalled history: %w", err)
 	}
 
+	// 复用历史记录：先回到 installing，再走统一的「provision → 状态」路径。
+	//
+	// 旧实现直接 SetStatus(active) 且完全不 provision——卸载后再装，安装记录
+	// 显示已安装，连接器实例却根本不存在，是同一类「记录与运行态分裂」。
 	reactivated, err := s.db.TenantInstallation.UpdateOneID(history.ID).
 		SetInstalledVersion(item.LatestVersion).
-		SetStatus(tenantinstallation.StatusActive).
+		SetStatus(tenantinstallation.StatusInstalling).
 		SetInstalledBy(installedBy).
-		SetErrorMessage("").
+		ClearErrorMessage().
 		SetLastUpdatedAt(time.Now()).
 		Save(ctx)
 	if err != nil {
@@ -160,7 +180,7 @@ func (s *Service) reactivateUninstalledInstallation(
 		"item_id", itemID,
 		"history_id", history.ID,
 	)
-	return reactivated, nil
+	return s.activateInstallation(ctx, item, reactivated, installedBy, reactivated.Config)
 }
 
 // InstallItem 租户安装商品
@@ -182,7 +202,9 @@ func (s *Service) InstallItem(ctx context.Context, tenantID, itemID int, install
 	if installedBy == "" {
 		return nil, ErrMarketplaceInstalledByMissing
 	}
-	// 4) 已存在有效安装则幂等返回当前安装，避免重复安装报错
+	// 4) 已存在安装记录时的两种语义：
+	//    - active / disabled：幂等返回当前安装，避免重复安装报错、也不重复 provision
+	//    - installing / failed：上次没装成（典型是连接器还没填凭据），本次视为重试
 	existingInstallation, err := s.db.TenantInstallation.Query().
 		Where(
 			tenantinstallation.TenantID(tenantID),
@@ -194,9 +216,15 @@ func (s *Service) InstallItem(ctx context.Context, tenantID, itemID int, install
 		if !ent.IsNotFound(err) {
 			return nil, fmt.Errorf("failed to check installation: %w", err)
 		}
-	} else {
+	} else if existingInstallation.Status == tenantinstallation.StatusActive ||
+		existingInstallation.Status == tenantinstallation.StatusDisabled {
 		s.logger.Infow("Item already installed, returning existing installation", "tenant_id", tenantID, "item_id", itemID, "installation_id", existingInstallation.ID)
 		return existingInstallation, nil
+	} else {
+		// 上次停在 installing/failed：把「安装」按钮当成重试入口，而不是无脑返回
+		// 那条永远起不来的记录。
+		s.logger.Infow("Retrying unfinished marketplace installation", "tenant_id", tenantID, "item_id", itemID, "installation_id", existingInstallation.ID, "status", existingInstallation.Status)
+		return s.activateInstallation(ctx, item, existingInstallation, installedBy, existingInstallation.Config)
 	}
 
 	// 5) 尝试创建安装记录（处理 UNIQUE(tenant_id, item_id) 冲突场景：存在历史卸载记录）
@@ -224,22 +252,50 @@ func (s *Service) InstallItem(ctx context.Context, tenantID, itemID int, install
 		s.logger.Warnw("Failed to increment install count", "item_id", itemID, "error", err)
 	}
 
-	// 执行实际安装：如果是连接器类型，provision 到 connector.Manager
-	if err := s.provisionConnector(ctx, item, tenantID, installedBy, nil); err != nil {
-		s.logger.Warnw("Connector provisioning failed during install", "item_id", itemID, "error", err)
-		// 不阻塞安装流程，连接器可在后续配置更新时重新 provision
+	// 执行实际安装：连接器类商品必须在运行态真正 provision 成功才算装完。
+	// 失败时 install 记录保留为 failed + error_message（见 activateInstallation）。
+	return s.activateInstallation(ctx, item, installation, installedBy, nil)
+}
+
+// activateInstallation 把「安装记录」与「连接器运行态」对齐后再落最终状态。
+//
+// 顺序是关键：先 provision，再改状态。反过来的话，provision 失败时记录已经是
+// active，市场页与运行态就永久不一致（旧实现正是如此：Warn 之后照样 SetStatus(active)）。
+// provision 失败时记录留为 failed + error_message：既不丢安装痕迹，也给出可重试入口
+// ——用户补全凭据后可以重新点安装，或直接 PUT config（两者都会重新 provision）。
+func (s *Service) activateInstallation(
+	ctx context.Context,
+	item *ent.MarketplaceItem,
+	installation *ent.TenantInstallation,
+	installedBy string,
+	config map[string]interface{},
+) (*ent.TenantInstallation, error) {
+	if err := s.provisionConnector(ctx, item, installation.TenantID, installedBy, config); err != nil {
+		s.logger.Warnw("Connector provisioning failed during install",
+			"item_id", item.ID, "tenant_id", installation.TenantID, "installation_id", installation.ID, "error", err)
+		failed, updateErr := s.db.TenantInstallation.UpdateOne(installation).
+			SetStatus(tenantinstallation.StatusFailed).
+			SetErrorMessage(err.Error()).
+			SetLastUpdatedAt(time.Now()).
+			Save(ctx)
+		if updateErr != nil {
+			return nil, fmt.Errorf("failed to record installation failure: %w", updateErr)
+		}
+		return failed, fmt.Errorf("%w: %v", ErrMarketplaceConnectorNotReady, err)
 	}
 
-	// 更新安装状态为active
-	installation, err = s.db.TenantInstallation.UpdateOne(installation).
+	active, err := s.db.TenantInstallation.UpdateOne(installation).
 		SetStatus(tenantinstallation.StatusActive).
+		ClearErrorMessage().
+		SetLastUpdatedAt(time.Now()).
 		Save(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to activate installation: %w", err)
 	}
 
-	s.logger.Infow("Item installed successfully", "tenant_id", tenantID, "item_id", itemID, "item_name", item.Name)
-	return installation, nil
+	s.logger.Infow("Item installed successfully",
+		"tenant_id", installation.TenantID, "item_id", item.ID, "item_name", item.Name)
+	return active, nil
 }
 
 // UninstallItem 租户卸载商品
@@ -259,9 +315,13 @@ func (s *Service) UninstallItem(ctx context.Context, tenantID, itemID int) error
 		return fmt.Errorf("failed to find installation: %w", err)
 	}
 
-	// 执行实际卸载：如果是连接器类型，从 connector.Manager 中注销
+	// 执行实际卸载：连接器必须在运行态真正注销。
+	// 失败时不落 uninstalled——否则市场页显示「已卸载」，而连接器仍在收发消息、
+	// 仍能接收回调，是比安装失败更危险的分裂状态（凭据仍活）。
 	if err := s.revokeConnector(ctx, installation, tenantID); err != nil {
-		s.logger.Warnw("Connector revocation failed during uninstall", "item_id", itemID, "error", err)
+		s.logger.Warnw("Connector revocation failed during uninstall",
+			"item_id", itemID, "tenant_id", tenantID, "error", err)
+		return fmt.Errorf("%w: %v", ErrMarketplaceConnectorStillRunning, err)
 	}
 
 	// 更新状态为uninstalled
@@ -343,17 +403,38 @@ func (s *Service) UpdateInstallationConfig(ctx context.Context, tenantID, itemID
 		return nil, fmt.Errorf("%w: %v", ErrMarketplaceConfigSchemaInvalid, err)
 	}
 
-	// 更新配置
-	updated, err := s.db.TenantInstallation.UpdateOne(installation).
-		SetConfig(config).
-		Save(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("failed to update config: %w", err)
+	// 先让运行态用新配置起来，成功后才落库。
+	//
+	// 反序（旧实现：先 SetConfig 再 provision）在 provision 失败时留下
+	// 「DB 是新凭据、内存是旧凭据」的分裂状态——用户以为换了 token 已生效，
+	// 实际仍在用旧的发消息，而唯一的痕迹只有一条 Warn 日志。
+	if err := s.provisionConnector(ctx, item, tenantID, installation.InstalledBy, config); err != nil {
+		s.logger.Warnw("Connector re-provisioning failed during config update",
+			"item_id", itemID, "tenant_id", tenantID, "error", err)
+		// 记录失败原因，但不动 config：运行态与 DB 都还是上一份可用配置。
+		if _, logErr := s.db.TenantInstallation.UpdateOne(installation).
+			SetErrorMessage(err.Error()).
+			SetLastUpdatedAt(time.Now()).
+			Save(ctx); logErr != nil {
+			s.logger.Warnw("Failed to record connector config error", "item_id", itemID, "error", logErr)
+		}
+		return nil, fmt.Errorf("%w: %v", ErrMarketplaceConnectorNotReady, err)
 	}
 
-	// 通知组件配置更新：如果是连接器类型，用新配置重新 provision
-	if err := s.provisionConnector(ctx, item, tenantID, installation.InstalledBy, config); err != nil {
-		s.logger.Warnw("Connector re-provisioning failed during config update", "item_id", itemID, "error", err)
+	update := s.db.TenantInstallation.UpdateOne(installation).
+		SetConfig(config).
+		SetLastUpdatedAt(time.Now()).
+		ClearErrorMessage()
+	// 之前停在 installing/failed 的连接器安装，凭据补齐即视为装好——
+	// 这是「安装失败 → 补配置 → 变可用」闭环的最后一步。
+	if item.Type == marketplaceitem.TypeConnector &&
+		(installation.Status == tenantinstallation.StatusInstalling ||
+			installation.Status == tenantinstallation.StatusFailed) {
+		update = update.SetStatus(tenantinstallation.StatusActive)
+	}
+	updated, err := update.Save(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to update config: %w", err)
 	}
 
 	return updated, nil
@@ -476,6 +557,15 @@ func (s *Service) revokeConnector(ctx context.Context, installation *ent.TenantI
 		Provider: connectorName,
 	}
 	s.connectorManager.Revoke(cfg)
+
+	// 校验运行态确实注销了。Revoke 以 (tenant, name, provider) 为键删实例，
+	// 历史上 provider 若被写成与安装时不同的值，键不匹配 → 实例残留而安装记录
+	// 已被标成 uninstalled。这里按 name 复查，把「假卸载」变成显式错误。
+	for _, running := range s.connectorManager.ListByTenant(tenantID) {
+		if running.Name == connectorName {
+			return fmt.Errorf("%w: %s", ErrMarketplaceConnectorStillRunning, connectorName)
+		}
+	}
 	return nil
 }
 

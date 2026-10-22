@@ -2388,6 +2388,61 @@ cd itsm-backend && go test -count=1 ./handlers/connector/ -run "RotateSecret" \
 不存在 404、Init 失败保留原凭据、落库失败恢复运行态且实例存活、无审计器仍成功、审计失败不回滚。
 负证明：注释掉路由注册行 → `TestConnectorRotateSecretRouteRegistered` 转红（"credential rotation is unreachable"）。
 
+### 1.64 连接器市场安装闭环：记录状态不再代替运行态（2026-10-22，行为变更：安装/配置/卸载语义）
+
+连接器类商品（`type=connector`）安装时要做两件事：写 `tenant_installations` 记录，
+把实例注册进 `connector.Manager`。旧实现只保证第一件——`provisionConnector` 的错误被
+`logger.Warnw` 吞掉后照样把状态置 `active`：
+
+```go
+// 旧实现（已删除）
+if err := s.provisionConnector(...); err != nil {
+    s.logger.Warnw("Connector provisioning failed during install", ...)
+    // 不阻塞安装流程 ← 记录成了 active，运行态里根本没有这个实例
+}
+installation = ...SetStatus(StatusActive).Save(ctx)
+```
+
+后果是故障现场与管理界面相反：市场页显示「已安装」，而发送消息、回调、通知投递全部
+失败，排障方向被误导。同一个病还有三处变体：配置更新（成功落库后才 provision，失败
+只 Warn）、卸载（`Revoke` 失败只 Warn，记录照样 uninstalled）、卸载后重装（复用历史
+记录时**完全不 provision**，直接置 active）。
+
+**现在的语义**
+
+| 动作 | 变更前 | 变更后 |
+|---|---|---|
+| 安装 | provision 失败 → `active`（静默） | `200` + `status=failed` + `error_message`（真实原因），响应 message 提示补配置 |
+| 重复安装（记录 `failed`/`installing`） | 幂等短路，返回那条永远起不来的记录 | **视为重试**，重新注册，成功即 `active` |
+| 卸载后重装 | 复用历史记录并直接 `active`，不注册 | 复用记录但重置为 `installing` 后走统一注册路径 |
+| 更新配置 | 先落库再 provision，失败只 Warn → 「库是新凭据、内存是旧凭据」 | **先 provision 成功再落库**；失败 `409`，库内保留上一份可用配置 |
+| 更新配置（记录原为 `failed`） | 状态不动，永远 failed | 注册成功即转 `active` 并清空 `error_message`（补配置即闭环） |
+| 卸载 | `Revoke` 失败只 Warn，记录照样 `uninstalled` | 按 `name` 复查运行态，残留即 `409` 且**记录保持原状态** |
+
+**为什么安装失败返回 200 而不是 4xx**：安装记录确实被创建了，`409`/`500` 会让人以为
+什么都没发生。返回 `200 + failed` 让前端能显示「已安装但未就绪 + 原因」，安装痕迹也不丢。
+
+**集成方影响**：`POST /marketplace/items/{id}/install` 的响应 `status` 现在可能为
+`failed`（此前恒为 `active`），调用方**必须检查** `status`/`errorMessage`，不能只看 HTTP 码。
+`PUT /marketplace/installations/{id}/config` 与 `POST .../uninstall` 新增 `409` 响应。
+
+**验证**
+
+```bash
+cd itsm-backend && go test -count=1 ./service/marketplace/ ./handlers/marketplace/
+```
+
+覆盖：缺凭据安装 → `failed` 且运行态无实例、成功安装 → `active` 且有实例、`failed`
+状态重复安装 → 重试成功且复用同一记录、补配置 → `failed` 转 `active`、配置更新失败 →
+库保留旧凭据且旧实例存活、正常卸载 → 实例消失、残留实例卸载 → `409` 且记录不变、
+卸载后重装 → 仍走注册（缺凭据时为 `failed`），以及 handler 层两例（`200 + failed` payload、
+配置失败 `409` 文案含「已保留原配置」）。
+
+负证明（三处逐一注入并恢复）：把安装失败改回「Warn 后照样置 active」→ 两个安装用例转红；
+把配置更新改回静默 → 配置用例转红（`expected ErrMarketplaceConnectorNotReady, got <nil>`）；
+去掉卸载后的运行态复查 → 残留用例转红；删掉 handler 的「未就绪」分支 → 用例转红并暴露
+旧行为正是 `500 {"code":5001,"message":"安装组件失败"}`。
+
 ## 2. 环境变量变更
 
 本次升级**移除了多个"幽灵配置项"**（在示例文件中声明但代码/Compose 从不读取，用户配置了也不生效），并修正了一个 Grafana 密码安全缺陷。
