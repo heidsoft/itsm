@@ -116,11 +116,11 @@ type ChangeResponse struct {
 	OutcomeNote        string         `json:"outcomeNote"`            // 实施结果说明（失败原因/回滚原因/完成说明）
 	// RollbackSteps 回滚清单（含逐步执行结果）。详情接口下发，列表接口不带
 	// （列表页不需要，避免 N 次子表查询）。
-	RollbackSteps      []RollbackStepResponse `json:"rollbackSteps,omitempty"` // 回滚清单
-	AffectedCIs        []string       `json:"affectedCis"`            // 受影响的配置项
-	RelatedTickets     []string       `json:"relatedTickets"`         // 相关工单
-	CreatedAt          time.Time      `json:"createdAt"`              // 创建时间
-	UpdatedAt          time.Time      `json:"updatedAt"`              // 更新时间
+	RollbackSteps  []RollbackStepResponse `json:"rollbackSteps,omitempty"` // 回滚清单
+	AffectedCIs    []string               `json:"affectedCis"`             // 受影响的配置项
+	RelatedTickets []string               `json:"relatedTickets"`          // 相关工单
+	CreatedAt      time.Time              `json:"createdAt"`               // 创建时间
+	UpdatedAt      time.Time              `json:"updatedAt"`               // 更新时间
 }
 
 // RollbackStepResponse 回滚清单中的一步（计划内容 + 执行结果）。
@@ -128,15 +128,15 @@ type ChangeResponse struct {
 // resolved 是派生字段：前端据此判断"还有几步没确认"，不必自己维护状态清单，
 // 后端新增状态值时也不会让前端算错。
 type RollbackStepResponse struct {
-	ID             int        `json:"id"`                    // 步骤ID
-	StepNo         int        `json:"stepNo"`                // 步骤序号（从 1 开始）
-	Description    string     `json:"description"`           // 步骤内容
-	Status         string     `json:"status"`                // pending/done/skipped/failed
-	Note           string     `json:"note,omitempty"`        // 执行备注（跳过依据/失败现象）
-	Resolved       bool       `json:"resolved"`              // 是否已确认（status != pending）
-	ResolvedBy     *int       `json:"resolvedBy,omitempty"`  // 确认人ID
+	ID             int        `json:"id"`                       // 步骤ID
+	StepNo         int        `json:"stepNo"`                   // 步骤序号（从 1 开始）
+	Description    string     `json:"description"`              // 步骤内容
+	Status         string     `json:"status"`                   // pending/done/skipped/failed
+	Note           string     `json:"note,omitempty"`           // 执行备注（跳过依据/失败现象）
+	Resolved       bool       `json:"resolved"`                 // 是否已确认（status != pending）
+	ResolvedBy     *int       `json:"resolvedBy,omitempty"`     // 确认人ID
 	ResolvedByName string     `json:"resolvedByName,omitempty"` // 确认人姓名
-	ResolvedAt     *time.Time `json:"resolvedAt,omitempty"`  // 确认时间
+	ResolvedAt     *time.Time `json:"resolvedAt,omitempty"`     // 确认时间
 }
 
 // ReplaceRollbackStepsRequest 覆盖回滚清单（有序，stepNo 由服务端按数组下标生成）。

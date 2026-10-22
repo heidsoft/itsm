@@ -243,5 +243,5 @@ type PromoteProblemKnowledgeRequest struct {
 // 需要立刻看到沉淀结果，草稿也要走评审流。
 type ListProblemKnowledgeResponse struct {
 	Items []*KnowledgeArticleResponse `json:"items"`
-	Total int                                       `json:"total"`
+	Total int                         `json:"total"`
 }

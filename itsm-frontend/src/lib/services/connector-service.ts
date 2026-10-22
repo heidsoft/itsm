@@ -65,6 +65,8 @@ export interface SendConnectorMessageRequest {
 }
 
 export interface ConnectorHealth {
+  name: string;
+  provider: string;
   ok: boolean;
   latencyMs?: number;
   message?: string;
@@ -107,9 +109,16 @@ class ConnectorService {
     return httpClient.post(`${this.baseUrl}/${encodeURIComponent(name)}/send`, payload);
   }
 
-  /** 健康检查（所有实例） */
-  async health(): Promise<Record<string, ConnectorHealth>> {
-    return httpClient.get(`${this.baseUrl}/health`);
+  /** 健康检查（仅当前租户的实例） */
+  /**
+   * 健康检查（仅当前租户的实例）。
+   *
+   * 后端只拨本租户实例，响应按 name/provider 标识，租户号由会话决定；
+   * 这里直接摊平成数组，调用方不需要（也无法）拼租户号去取键。
+   */
+  async health(): Promise<ConnectorHealth[]> {
+    const res = await httpClient.get<{ items?: ConnectorHealth[] }>(`${this.baseUrl}/health`);
+    return res?.items ?? [];
   }
 }
 

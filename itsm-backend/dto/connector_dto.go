@@ -98,13 +98,26 @@ type ActionDTO struct {
 	Value string `json:"value,omitempty"`
 }
 
-// ConnectorHealthDTO 健康检查结果
-type ConnectorHealthDTO struct {
+// ConnectorHealthItemDTO 单个已配置连接器实例的健康结果。
+//
+// 以 name/provider 标识实例，不再把租户号编进 key：早先是 map[tenantID/name/provider]，
+// 前端只能硬编码租户号去取键（导致健康列永远取不到值）。
+// 租户号由请求上下文决定，响应里回显一次即可（见 ConnectorHealthResponse.TenantID）。
+type ConnectorHealthItemDTO struct {
+	Name      string                 `json:"name"`
+	Provider  string                 `json:"provider"`
 	OK        bool                   `json:"ok"`
 	LatencyMs int64                  `json:"latencyMs"`
 	Message   string                 `json:"message,omitempty"`
 	CheckedAt time.Time              `json:"checkedAt"`
 	Extra     map[string]interface{} `json:"extra,omitempty"`
+}
+
+// ConnectorHealthResponse 租户视角的连接器健康快照。
+type ConnectorHealthResponse struct {
+	TenantID  int                      `json:"tenantId"`
+	Items     []ConnectorHealthItemDTO `json:"items"`
+	CheckedAt time.Time                `json:"checkedAt"`
 }
 
 // ConnectorConfigDTO 当前生效的配置（凭据脱敏）

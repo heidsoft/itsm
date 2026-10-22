@@ -135,19 +135,30 @@ describe('ConnectorService', () => {
   });
 
   describe('health', () => {
-    it('should return health status for all connectors', async () => {
+    it('should flatten tenant-scoped health items into an array', async () => {
       const healthData = {
-        slack: { ok: true, latencyMs: 50, checkedAt: '2024-01-01T00:00:00Z' },
-        teams: { ok: false, message: 'Connection timeout', checkedAt: '2024-01-01T00:00:00Z' },
+        tenantId: 1,
+        items: [
+          { name: 'slack', provider: 'slack', ok: true, latencyMs: 50, checkedAt: '2024-01-01T00:00:00Z' },
+          { name: 'teams', provider: 'microsoft', ok: false, message: 'Connection timeout', checkedAt: '2024-01-01T00:00:00Z' },
+        ],
+        checkedAt: '2024-01-01T00:00:00Z',
       };
       mockGet.mockResolvedValue(healthData);
 
       const result = await connectorService.health();
 
       expect(mockGet).toHaveBeenCalledWith('/api/v1/connectors/health');
-      expect(result.slack.ok).toBe(true);
-      expect(result.teams.ok).toBe(false);
-      expect(result.teams.message).toBe('Connection timeout');
+      expect(result).toHaveLength(2);
+      expect(result[0]).toMatchObject({ name: 'slack', provider: 'slack', ok: true });
+      expect(result[1]).toMatchObject({ name: 'teams', provider: 'microsoft', ok: false });
+      expect(result[1].message).toBe('Connection timeout');
+    });
+
+    it('should return an empty array when the backend omits items', async () => {
+      mockGet.mockResolvedValue({ tenantId: 1, checkedAt: '2024-01-01T00:00:00Z' });
+
+      await expect(connectorService.health()).resolves.toEqual([]);
     });
   });
 });

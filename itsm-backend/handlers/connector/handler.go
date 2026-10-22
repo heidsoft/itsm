@@ -1,11 +1,11 @@
 package connector
 
 import (
-	"context"
 	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"sort"
 	"strings"
 	"time"
 
@@ -75,7 +75,7 @@ func (h *Handler) ListMarket(ctx *gin.Context) {
 		installed[cfg.Name] = true
 		enabled[cfg.Name] = cfg.Enabled
 	}
-	health := h.manager.HealthCheckAll(ctx.Request.Context())
+	health := h.manager.HealthCheckTenant(ctx.Request.Context(), tenantID)
 	out := make([]dto.ConnectorManifestDTO, 0, len(mfs))
 	for _, m := range mfs {
 		healthy, checkedAt, lastErr := healthForManifest(health, tenantID, m.Name)
@@ -112,7 +112,7 @@ func (h *Handler) ListMarket(ctx *gin.Context) {
 func (h *Handler) ListConfigs(ctx *gin.Context) {
 	tenantID := ctx.GetInt("tenant_id")
 	cfgs := h.manager.ListByTenant(tenantID)
-	health := h.manager.HealthCheckAll(ctx.Request.Context())
+	health := h.manager.HealthCheckTenant(ctx.Request.Context(), tenantID)
 	out := make([]dto.ConnectorConfigDTO, 0, len(cfgs))
 	for _, cfg := range cfgs {
 		out = append(out, maskConfig(cfg, health))
@@ -184,7 +184,7 @@ func (h *Handler) Provision(ctx *gin.Context) {
 		common.RespondError(ctx, err, "操作失败")
 		return
 	}
-	common.Success(ctx, maskConfig(cfg, h.manager.HealthCheckAll(ctx.Request.Context())))
+	common.Success(ctx, maskConfig(cfg, h.manager.HealthCheckTenant(ctx.Request.Context(), tenantID)))
 }
 
 // Revoke 停用并移除一个连接器实例
@@ -267,41 +267,61 @@ func (h *Handler) Test(ctx *gin.Context) {
 	common.Success(ctx, gin.H{"name": name, "channel": channel, "sent": true})
 }
 
-// Health 所有运行实例健康检查
+// Health 对**当前租户**运行中的连接器实例做健康检查。
+//
+// 安全边界（此前是缺陷）：健康检查会真实拨号到第三方（SMTP / 飞书 / 钉钉），
+// 曾经这里调的是 HealthCheckAll——任何持 connector.read 的租户都能
+//
+//	① 读到其他租户连接器的名字、provider 与在线状态（响应以 tenantID/name/provider 为键）；
+//	② 借一次请求去探测别家租户的端点可达性（等于跨租户连通性探针）。
+//
+// 现在只拨本租户实例（Manager.HealthCheckTenant），响应按 name/provider 标识实例，
+// 租户号由上下文决定并回显一次，前端不必再猜租户号。
 func (h *Handler) Health(ctx *gin.Context) {
-	res := h.manager.HealthCheckAll(context.Background())
-	out := make(map[string]dto.ConnectorHealthDTO, len(res))
-	for k, v := range res {
-		out[k] = dto.ConnectorHealthDTO{
-			OK:        v.OK,
-			LatencyMs: v.LatencyMs,
-			Message:   v.Message,
-			CheckedAt: v.CheckedAt,
-			Extra:     v.Extra,
-		}
-	}
-	common.Success(ctx, out)
-}
-
-// TenantHealth 仅返回当前租户的连接器健康状态 + 最近 Send 成败时间，
-// 避免管理员 health 接口把所有租户的实例暴露给普通租户。
-func (h *Handler) TenantHealth(ctx *gin.Context) {
 	tenantID := ctx.GetInt("tenant_id")
-	res := h.manager.HealthCheckAll(ctx.Request.Context())
-	out := make(map[string]dto.ConnectorHealthDTO)
+	if tenantID <= 0 {
+		common.Fail(ctx, common.AuthFailedCode, "租户信息缺失")
+		return
+	}
+	res := h.manager.HealthCheckTenant(ctx.Request.Context(), tenantID)
+	prefix := fmt.Sprintf("%d/", tenantID)
+	items := make([]dto.ConnectorHealthItemDTO, 0, len(res))
 	for k, v := range res {
-		if !strings.HasPrefix(k, fmt.Sprintf("%d/", tenantID)) {
+		// 双保险：即使 Manager 未来改动漏了租户过滤，也不把别家实例带出去。
+		if !strings.HasPrefix(k, prefix) {
 			continue
 		}
-		out[k] = dto.ConnectorHealthDTO{
+		name, provider, ok := splitInstanceKey(k)
+		if !ok {
+			continue
+		}
+		items = append(items, dto.ConnectorHealthItemDTO{
+			Name:      name,
+			Provider:  provider,
 			OK:        v.OK,
 			LatencyMs: v.LatencyMs,
 			Message:   v.Message,
 			CheckedAt: v.CheckedAt,
 			Extra:     v.Extra,
-		}
+		})
 	}
-	common.Success(ctx, gin.H{"tenantId": tenantID, "items": out})
+	sort.Slice(items, func(i, j int) bool {
+		if items[i].Name != items[j].Name {
+			return items[i].Name < items[j].Name
+		}
+		return items[i].Provider < items[j].Provider
+	})
+	common.Success(ctx, dto.ConnectorHealthResponse{TenantID: tenantID, Items: items, CheckedAt: time.Now()})
+}
+
+// splitInstanceKey 拆分 Manager 的实例键 "tenantID/name/provider"。
+// provider 段整体保留（不按 "/" 再切），避免 provider 值里出现分隔符时被截断。
+func splitInstanceKey(key string) (name, provider string, ok bool) {
+	parts := strings.SplitN(key, "/", 3)
+	if len(parts) != 3 || parts[1] == "" || parts[2] == "" {
+		return "", "", false
+	}
+	return parts[1], parts[2], true
 }
 
 // Lifecycle 连接器生命周期视图
@@ -316,7 +336,7 @@ func (h *Handler) Lifecycle(ctx *gin.Context) {
 	for _, cfg := range configs {
 		configByName[cfg.Name] = cfg
 	}
-	health := h.manager.HealthCheckAll(ctx.Request.Context())
+	health := h.manager.HealthCheckTenant(ctx.Request.Context(), tenantID)
 	manifests := reg.List()
 	out := make([]dto.ConnectorLifecycleDTO, 0, len(manifests))
 	for _, m := range manifests {

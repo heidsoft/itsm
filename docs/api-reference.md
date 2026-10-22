@@ -3317,6 +3317,30 @@ Query Parameters:
 }
 ```
 
+## 连接器健康检查
+
+回答「这个连接器现在通不通」的只读接口，权限码 `connector:read`。
+
+```http
+GET /api/v1/connectors/health
+Authorization: Bearer <accessToken>
+```
+
+`data` 结构：
+
+| 字段 | 说明 |
+|---|---|
+| `tenantId` | 认证租户；响应内容不跨租户 |
+| `items[]` | 本租户运行中的连接器实例（按 `name`、`provider` 排序） |
+| `items[].name` / `provider` | 实例标识，前端按这两个字段定位健康结果 |
+| `items[].ok` / `latencyMs` / `message` / `checkedAt` | 真实健康检查结果（拨号到第三方，5 秒超时） |
+| `items[].extra.lastSendSuccessAt` / `lastSendFailureAt` / `lastSendError` | 最近一次发送成败，来自实例运行时记录 |
+| `checkedAt` | 本次快照时间 |
+
+- 只拨**当前租户**已装配的实例。健康检查会真实拨号，若返回全租户实例，等于给普通租户一个探测其他租户端点可达性的探针；同一约束适用于 `GET /connectors`、`GET /connectors/configs`、`GET /connectors/lifecycle` 以及 `POST /connectors/configs` 的响应。
+- 实例以 `name`/`provider` 标识，租户号不再编进 key。历史响应是 `map["<tenantId>/<name>/<provider>"]`，调用方只能拿租户号拼键——前端就是在这里把租户号硬编码成了 `0`，导致状态列永远取不到结果。
+- 该端点会触发真实拨号（每实例 5 秒超时），实例较多时不要轮询。
+
 ## 通知渠道诊断
 
 回答「为什么我没收到通知」的只读接口，权限码 `notification:read`。与投递审计互补：审计回答「发了但失败了」，渠道诊断回答「根本发不出去」。

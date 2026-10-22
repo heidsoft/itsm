@@ -9,7 +9,7 @@ import { Plus, RotateCcw, CheckCircle, XCircle, Plug, Send, Power } from 'lucide
 import { PageContainer } from '@/app/components/PageContainer';
 import { UsageGuideCard } from '@/components/common/UsageGuideCard';
 import type {
-  ConnectorManifest, ConnectorConfig, SendConnectorMessageRequest,
+  ConnectorManifest, ConnectorConfig, ConnectorHealth, SendConnectorMessageRequest,
 } from '@/lib/services/connector-service';
 import connectorService from '@/lib/services/connector-service';
 import { useI18n } from '@/lib/i18n/useI18n';
@@ -35,7 +35,7 @@ export default function ConnectorsAdminPage() {
   const [tab, setTab] = useState<Tab>('market');
   const [market, setMarket] = useState<ConnectorManifest[]>([]);
   const [instances, setInstances] = useState<ConnectorConfig[]>([]);
-  const [health, setHealth] = useState<Record<string, { ok: boolean; message?: string }>>({});
+  const [health, setHealth] = useState<ConnectorHealth[]>([]);
   const [loading, setLoading] = useState(false);
 
   const [provisionOpen, setProvisionOpen] = useState(false);
@@ -56,11 +56,11 @@ export default function ConnectorsAdminPage() {
       const [m, c, h] = await Promise.all([
         connectorService.list(),
         connectorService.configs(),
-        connectorService.health().catch(() => ({})),
+        connectorService.health().catch(() => [] as ConnectorHealth[]),
       ]);
       setMarket(m);
       setInstances(c);
-      setHealth(h || {});
+      setHealth(h || []);
     } catch (e) {
       message.error(t('connectors.loadFailed', { msg: (e as Error).message }));
     } finally {
@@ -209,7 +209,9 @@ export default function ConnectorsAdminPage() {
         const inst = instanceOf(r);
         if (!inst) return <Tag color="default">{t('connectors.status.notEnabled')}</Tag>;
         if (!inst.enabled) return <Tag color="orange">{t('connectors.status.disabled')}</Tag>;
-        const h = health[`${0}/${r.name}/${r.provider}`];
+        // 健康结果按 name/provider 标识：后端只回本租户实例，
+        // 不再把租户号编进 key（此前这里硬编码 `${0}/...`，租户号恒为 1 → 永远取不到值）
+        const h = health.find((x) => x.name === r.name && x.provider === r.provider);
         return h ? (
           <Tag color={h.ok ? 'green' : 'red'} icon={h.ok ? <CheckCircle /> : <XCircle />}>
             {h.ok ? t('connectors.status.running') : t('connectors.status.error')}

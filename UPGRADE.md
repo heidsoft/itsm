@@ -2307,6 +2307,47 @@ cd itsm-frontend && npx jest src/components/change/__tests__/ChangeDetailCheckli
 `RollbackBlockedByPendingStep` 与 `RollbackChecklistReadFailureFailsClosed` 均转红（断言"不得标记已回滚"），
 恢复后全绿——测试锁定的是门禁本身，不是管道。
 
+### 1.62 连接器健康面跨租户收口（2026-10-22，行为变更：响应形状 + 探测范围）
+
+**缺陷**：`GET /connectors/health` 用的是 `Manager.HealthCheckAll`。任何持 `connector:read` 的租户都能：
+
+1. 读到**全部租户**连接器的 `name/provider/ok`（响应以 `tenantID/name/provider` 为键）；
+2. 借一次请求让服务端去**拨号**别家租户的 SMTP / 飞书 / 钉钉端点（健康检查是真实拨号，5 秒超时）——
+   等于给普通租户一个跨租户连通性探针。
+
+同一缺陷也在 `GET /connectors`、`GET /connectors/configs`、`GET /connectors/lifecycle` 与
+`POST /connectors/configs` 的响应里（这几处输出自身按租户过滤，但**拨号**是全租户的）。
+
+修法早已写好却从未接线：`Manager.HealthCheckTenant` 带着"不能借健康检查探测别家端点"的注释，
+`Handler.TenantHealth` 也做了租户过滤，两者都是**零路由引用**的死代码。
+
+**行为变更**
+
+| 项 | 变更前 | 变更后 |
+|---|---|---|
+| 探测范围 | 全租户实例 | 仅认证租户实例（`HealthCheckTenant`） |
+| 响应形状 | `map["<tenantId>/<name>/<provider>"] → {ok,...}` | `{tenantId, items:[{name, provider, ok, latencyMs, message, checkedAt, extra}], checkedAt}` |
+| 排序 | map 无序 | 按 `name`、`provider` 升序（便于对比/快照） |
+| 其他四个读面 | `HealthCheckAll` | `HealthCheckTenant`（响应形状不变） |
+
+**顺带修掉的前端缺陷**：管理页取健康状态写的是 `health[`${0}/${name}/${provider}`]`，租户号被硬编码成 `0`
+（实际是 `1`），所以键永远匹配不上 —— **健康状态列从未显示过真实结果**，一直回落到"已启用"的绿标。
+现在按 `name`/`provider` 定位，实例异常会显示红标。
+
+**集成方影响**：直接解析 `map` 形态的脚本会取不到值（本来也只能靠猜租户号）。
+改读 `data.items[]`，用 `name` + `provider` 匹配即可；只关心"某个连接器通不通"的调用方也可以直接读
+`GET /connectors`（`installed`/`enabled`/`healthy` 字段一直是对的）。
+
+**验证**
+
+```bash
+cd itsm-backend && go test -count=1 ./handlers/connector/ -run "Health_OnlyProbesCurrentTenant|ConnectorReadEndpoints_OnlyProbeCurrentTenant|Health_ItemsSortedAndIdentifiable"
+cd itsm-frontend && npx jest --coverage=false 'app/\(main\)/admin/connectors'
+```
+
+负证明：`health_scope_test.go` 用计数桩连接器，租户 1 发请求时断言租户 2 的 `HealthCheck` 调用次数为 `0`
+——把 `HealthCheckTenant` 换回 `HealthCheckAll` 该用例立刻转红；前端用例在旧取值方式下也会红（状态列恒为"已启用"）。
+
 ## 2. 环境变量变更
 
 本次升级**移除了多个"幽灵配置项"**（在示例文件中声明但代码/Compose 从不读取，用户配置了也不生效），并修正了一个 Grafana 密码安全缺陷。
