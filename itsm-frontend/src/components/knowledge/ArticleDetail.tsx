@@ -20,6 +20,7 @@ import {
   Modal,
   Rate,
   Input,
+  Tooltip,
 } from 'antd';
 import { ArrowLeft, Pencil, User, Folder, Calendar, CheckCircle, Link2 } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
@@ -51,7 +52,9 @@ const ArticleDetail: React.FC = () => {
   const canWriteArticle = hasPermission('knowledge', 'write');
   const [loading, setLoading] = useState(true);
   const [article, setArticle] = useState<KnowledgeArticle | null>(null);
-  const [actionLoading, setActionLoading] = useState<'publish' | 'unpublish' | null>(null);
+  const [actionLoading, setActionLoading] = useState<
+    'publish' | 'unpublish' | 'submit' | null
+  >(null);
 
   useEffect(() => {
     if (id) {
@@ -121,6 +124,31 @@ const ArticleDetail: React.FC = () => {
     });
   };
 
+  // 提交评审：评审流的前半段此前只有后端端点、UI 无入口，
+  // 作者只能把草稿留在本地状态，审批页永远收不到待办。
+  const handleSubmitReview = () => {
+    if (!article) return;
+    Modal.confirm({
+      title: '确认提交评审？',
+      content: '提交后进入评审队列，须由其他评审人审批通过（不能自审）才会对外可见。',
+      okText: '提交评审',
+      cancelText: '取消',
+      onOk: async () => {
+        setActionLoading('submit');
+        try {
+          const updated = await KnowledgeBaseApi.submitReview(String(article.id));
+          setArticle(updated as unknown as KnowledgeArticle);
+          message.success('已提交评审，等待其他评审人审批');
+        } catch (e: unknown) {
+          const err = e as { message?: string };
+          message.error('提交评审失败：' + (err?.message || '未知错误'));
+        } finally {
+          setActionLoading(null);
+        }
+      },
+    });
+  };
+
   if (loading)
     return (
       <Card>
@@ -150,6 +178,13 @@ const ArticleDetail: React.FC = () => {
       ? KnowledgeStatus.PUBLISHED
       : KnowledgeStatus.DRAFT;
 
+  // 评审阶段是发布按钮的唯一依据（后端 /publish 对未过评审返回 409/4090）。
+  // reviewStatus 缺失时按可见性推断：已发布≈approved，其余≈draft。
+  const reviewStatus: 'draft' | 'under_review' | 'approved' | 'rejected' =
+    article.reviewStatus ?? (status === KnowledgeStatus.PUBLISHED ? 'approved' : 'draft');
+  const canPublish = reviewStatus === 'approved';
+  const canSubmitReview = reviewStatus === 'draft' || reviewStatus === 'rejected';
+
   return (
     <div style={{ padding: '0 0 24px' }}>
       <Breadcrumb style={{ marginBottom: 16 }}>
@@ -173,7 +208,9 @@ const ArticleDetail: React.FC = () => {
               返回列表
             </Button>
             <Space>
-              {canWriteArticle && status === KnowledgeStatus.DRAFT && (
+              {/* 发布 = 评审通过的可见性投影：未过评审时只给「提交评审」，
+                  不再渲染一个必然 409 的发布按钮（后端门禁见 Service.SetArticlePublished）。 */}
+              {canWriteArticle && status === KnowledgeStatus.DRAFT && canPublish && (
                 <Button
                   type="primary"
                   icon={<CheckCircle />}
@@ -182,6 +219,23 @@ const ArticleDetail: React.FC = () => {
                 >
                   发布文章
                 </Button>
+              )}
+              {canWriteArticle && status === KnowledgeStatus.DRAFT && canSubmitReview && (
+                <Button
+                  type="primary"
+                  icon={<CheckCircle />}
+                  onClick={handleSubmitReview}
+                  loading={actionLoading === 'submit'}
+                >
+                  提交评审
+                </Button>
+              )}
+              {canWriteArticle && status === KnowledgeStatus.DRAFT && reviewStatus === 'under_review' && (
+                <Tooltip title="已送审，等待其他评审人审批（不能自审）">
+                  <Button disabled icon={<CheckCircle />}>
+                    评审中
+                  </Button>
+                </Tooltip>
               )}
               {canWriteArticle && status === KnowledgeStatus.PUBLISHED && (
                 <Button

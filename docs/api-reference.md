@@ -1566,6 +1566,36 @@ DELETE /knowledge/articles/{id}
 Authorization: Bearer <accessToken>
 ```
 
+### 发布与评审（发布门禁）
+
+知识文章的对外可见性不是独立开关，而是评审结果的投影（`review_status → is_published`）。
+发布端点对未通过评审的文章返回 `409 / 4090`，不再接受直接发布草稿——
+否则作者可以绕过「不能自审」把未审内容放进 RAG。
+
+```http
+POST /knowledge/articles/{id}/review/submit      # 作者送审：draft|rejected → under_review
+POST /knowledge/articles/{id}/review/approve     # 评审人通过：under_review → approved（自动发布 + 入索引）
+POST /knowledge/articles/{id}/review/reject      # 评审人驳回：必须填写意见；撤回可见性并出索引
+POST /knowledge/articles/{id}/review/withdraw    # 作者撤回：under_review → draft
+POST /knowledge/articles/{id}/review/republish   # 已通过内容被修改后重新送审
+GET  /knowledge/articles/{id}/reviews            # 评审流水（时间倒序）
+
+POST /knowledge/articles/{id}/publish            # 仅 approved 可用；未过评审 409/4090
+POST /knowledge/articles/{id}/unpublish          # 不设门槛：撤下内容永远是安全方向
+```
+
+| 当前 review_status | publish | 结果 |
+|---|---|---|
+| `draft` / `under_review` / `rejected` | `409` `4090` | 先 `review/submit`，由其他评审人 `review/approve` 后自动发布 |
+| `approved`（未发布） | `200` | 恢复可见；已发布再调用为幂等，不重复入索引队列 |
+| `approved`（已发布） | `200` | 幂等返回，不重复产生索引任务 |
+| 任意（`unpublish`） | `200` | 撤回不要求评审状态 |
+
+- **不能自审**：`approve` / `reject` 的操作人不能是文章作者（`403 / 2003`）。
+- **驳回必填意见**：`review/reject` 空意见返回 `400 / 1002`。
+- **可见性与索引同事务**：通过即入索引（RAG 可检索），驳回/撤回即出索引；
+  草稿与评审中的文章不会出现在检索结果里。
+
 ### 知识库搜索
 
 ```http

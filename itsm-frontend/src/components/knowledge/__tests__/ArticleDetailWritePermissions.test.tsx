@@ -74,11 +74,13 @@ describe('ArticleDetail 写操作入口 — 按权限码渲染', () => {
     expect(screen.queryByText('编辑文章')).toBeNull();
   });
 
-  it('持 knowledge:write 时草稿文章给出发布与编辑', async () => {
+  it('持 knowledge:write 时草稿文章给出提交评审与编辑（不再给必然 409 的发布）', async () => {
     mockPermissions.push('knowledge:read', 'knowledge:write');
     await renderDetail();
 
-    expect(await screen.findByText('发布文章')).toBeInTheDocument();
+    // 2026-10-22 发布门禁：未过评审的草稿只能提交评审，发布由审批通过触发。
+    expect(await screen.findByText('提交评审')).toBeInTheDocument();
+    expect(screen.queryByText('发布文章')).toBeNull();
     expect(screen.getByText('编辑文章')).toBeInTheDocument();
   });
 
@@ -87,5 +89,44 @@ describe('ArticleDetail 写操作入口 — 按权限码渲染', () => {
     await renderDetail();
 
     expect(await screen.findByText('编辑文章')).toBeInTheDocument();
+  });
+});
+
+/**
+ * 发布门禁（2026-10-22）：后端 /publish 对 review_status != approved 返回
+ * 409/4090，前端不能继续渲染一个必然失败的发布按钮——按钮形态必须与
+ * 评审阶段一致，否则用户点下去只看到错误。
+ */
+describe('ArticleDetail 发布入口 — 按评审阶段渲染', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockPermissions.length = 0;
+    mockPermissions.push('knowledge:read', 'knowledge:write');
+  });
+
+  it('已通过评审但未发布的文章给出发布入口', async () => {
+    mockGetArticle.mockResolvedValue({ ...draftArticle, reviewStatus: 'approved' });
+    await renderDetail();
+
+    expect(await screen.findByText('发布文章')).toBeInTheDocument();
+    expect(screen.queryByText('提交评审')).toBeNull();
+  });
+
+  it('评审中只给禁用的评审中提示，既不可发布也不可重复提交', async () => {
+    mockGetArticle.mockResolvedValue({ ...draftArticle, reviewStatus: 'under_review' });
+    await renderDetail();
+
+    const label = await screen.findByText('评审中');
+    expect(label.closest('button')).toBeDisabled();
+    expect(screen.queryByText('发布文章')).toBeNull();
+    expect(screen.queryByText('提交评审')).toBeNull();
+  });
+
+  it('已驳回的文章允许修改后重新提交评审', async () => {
+    mockGetArticle.mockResolvedValue({ ...draftArticle, reviewStatus: 'rejected' });
+    await renderDetail();
+
+    expect(await screen.findByText('提交评审')).toBeInTheDocument();
+    expect(screen.queryByText('发布文章')).toBeNull();
   });
 });

@@ -366,16 +366,12 @@ func (h *Handler) setArticlePublished(c *gin.Context, published bool) {
 		return
 	}
 
-	article, err := h.svc.GetArticle(c.Request.Context(), id, tenantID)
+	// 发布门禁在服务层：review_status != approved 时返回 409/4090，
+	// 不让 HTTP 入口成为绕过评审的旁路（见 Service.SetArticlePublished）。
+	res, err := h.svc.SetArticlePublished(c.Request.Context(), id, tenantID, published)
 	if err != nil {
-		common.NotFound(c, "Article not found")
-		return
-	}
-
-	article.IsPublished = published
-	res, err := h.svc.UpdateArticle(c.Request.Context(), article)
-	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		// ent.NotFoundError → 4004/404；评审未通过 → 4090/409。
+		common.RespondError(c, err, "操作失败")
 		return
 	}
 

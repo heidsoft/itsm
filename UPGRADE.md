@@ -2111,6 +2111,27 @@ cd itsm-backend && go test -count=1 ./service/ -run "Provisioning|ExecuteTask|Re
 ```
 
 
+### 1.57 知识发布门禁：发布必须过评审（2026-10-22，行为变更：未过评审 publish 由 200 变 409）
+
+**行为变更：`POST /knowledge/articles/:id/publish` 增加评审门禁**
+
+- `review_status != approved` 的文章调用 publish 返回 **409/`4090`「文章尚未通过评审，不能发布」**。此前该端点直接写 `is_published=true`，等于给评审流开了一条旁路：作者可以绕过「不能自审」（`applyReview` 拒绝作者批自己的稿）把自己写的草稿直接放进 RAG——空壳内容进语料正是 422 质量门要防的事。
+- 正确路径：`POST .../review/submit`（作者送审）→ 由**其他**评审人 `POST .../review/approve`（通过即自动发布，并在**同一事务**内入向量索引）。
+- `unpublish` 不设门槛（撤下内容永远是安全方向）；`approved` 内容可 unpublish 后再 publish 恢复。
+- 已发布文章的重复 publish 改为幂等：不再重复产生向量索引任务。
+
+**集成方影响**
+
+- 若有自动化脚本或外部集成直接调用 publish 去发布草稿，升级后会收到 409，需改为 submit→approve 流程。
+- 前端详情页同步调整：草稿展示「提交评审」，`under_review` 只给禁用提示，`approved` 且未发布才给「发布文章」；知识库此前缺少的「作者送审」入口一并补上（审批页只有 approve/reject）。
+
+**验证**
+
+```bash
+cd itsm-backend && go test -count=1 ./handlers/knowledge/ -run "PublishRequiresApprovedReview|ApprovePublishes|UnpublishAlwaysAllowed|DraftNotRetrievable"
+cd itsm-frontend && npx jest --coverage=false --runInBand ArticleDetail
+```
+
 ## 2. 环境变量变更
 
 本次升级**移除了多个"幽灵配置项"**（在示例文件中声明但代码/Compose 从不读取，用户配置了也不生效），并修正了一个 Grafana 密码安全缺陷。

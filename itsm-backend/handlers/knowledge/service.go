@@ -270,6 +270,46 @@ func (s *Service) UpdateArticle(ctx context.Context, a *Article) (*Article, erro
 	return updated, nil
 }
 
+// SetArticlePublished 发布 / 撤回知识的对外可见性。
+//
+// 发布是「评审通过」的可见性投影，不是独立的开关：
+//
+//   - 发布要求 review_status = approved。否则 /publish 就是一条绕过评审
+//     与防自审（applyReview 拒绝作者批自己的稿）的后门——文档承诺
+//     「发布必须过知识评审流（submit→approve）」，代码必须同样成立。
+//     未过评审返回 409/4090 并给出可行动指引，不静默降级。
+//   - 已发布且已通过评审时幂等返回，不重复入向量同步队列
+//     （重复 publish 不该反复触发索引任务）。
+//   - 撤回不设门槛：把内容从可见面撤下永远是安全方向，
+//     驳回/撤回后 RAG 也必须立刻搜不到（索引删除在 UpdateArticle 内同事务入箱）。
+func (s *Service) SetArticlePublished(ctx context.Context, id, tenantID int, published bool) (*Article, error) {
+	article, err := s.repo.Get(ctx, id, tenantID)
+	if err != nil {
+		return nil, err
+	}
+
+	if published {
+		status := NormalizeReviewStatus(article.ReviewStatus)
+		if status != ReviewStatusApproved {
+			return nil, common.NewBusinessError(
+				common.ConflictCode,
+				"文章尚未通过评审，不能发布",
+				"请先提交评审（review/submit），由其他评审人审批通过（review/approve）后自动发布",
+			)
+		}
+		if article.IsPublished {
+			// 幂等：已发布不再重复入箱，避免索引任务被反复触发。
+			return article, nil
+		}
+	} else if !article.IsPublished {
+		// 撤回已在未发布状态的文章：同样是幂等无操作。
+		return article, nil
+	}
+
+	article.IsPublished = published
+	return s.UpdateArticle(ctx, article)
+}
+
 func (s *Service) DeleteArticle(ctx context.Context, id int, tenantID int) error {
 	s.logger.Infow("Deleting Knowledge Article", "id", id)
 	if s.vectorOutboxEnabled() {

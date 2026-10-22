@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **知识发布门禁：`/publish` 不再绕过评审（2026-10-22，行为变更）**：`POST /knowledge/articles/:id/publish` 此前直接写 `is_published=true`，不校验评审状态——等于给评审流开了一条旁路：作者可以绕过「不能自审」（`applyReview` 拒绝作者批自己的稿）把自己写的草稿直接放进 RAG；而 api-reference 与能力契约都承诺「发布必须过知识评审流（submit→approve）」，代码与文档不一致。修法：新增 `Service.SetArticlePublished`，`review_status != approved` 时返回 **409/4090「文章尚未通过评审，不能发布」** 并给出可行动指引（先 submit，由其他评审人 approve 后自动发布）；`unpublish` 不设门槛（撤下内容永远是安全方向）；已发布文章的重复 publish 改为幂等，不再重复产生向量索引任务。前端同步：草稿展示「提交评审」（此前评审流的作者送审在 UI 里完全没有入口，审批页只有 approve/reject）、`under_review` 只给禁用提示、`approved` 且未发布才给「发布文章」，按钮形态与后端门禁一致。回归锁 `handlers/knowledge/publish_gate_test.go`：三种未过状态发布一律 409 且不留索引任务（负证明：在 HEAD 基线注入旧语义 shim ⇒ 3 子用例转红）、approve 自动发布且重发幂等（基线转红）、撤回无门槛且可恢复、端到端可见性验收（草稿检索 0 条 → 审批通过 1 条 → 撤回 0 条，补上能力契约记的「沉淀→评审→发布→RAG 可检索端到端验收缺口」）。契约见 [docs/api-reference.md](./docs/api-reference.md)「发布与评审（发布门禁）」，行为变更见 `UPGRADE.md` §1.57。
+
 ### Added
 
 - **问题→知识沉淀闭环前端落地（2026-10-22，与 6c6c2687 后端闭环同属一个特性）**：后端端点已在 6c6c2687 交付，本批次补齐用户面——问题详情页新增「知识沉淀」Tab（`components/problem/ProblemKnowledgeTab.tsx`）：反查列表如实标注「草稿/已发布」（沉淀产物恒为 draft，发布须过知识评审流，不把 draft 渲染成已发布）、按创建时间倒序、标签与跳转知识详情；「沉淀为知识」弹窗全字段可选（标题/分类/标签，留空用问题单内容兜底），422 质量门理由（无根因且无解决方案）与 403（无 `knowledge:write`）/503（知识仓储未装配）/404（跨租户）按后端契约原样呈现，不静默假成功；反查失败时只呈现错误 Alert、不渲染空列表——「读不到」与「没有沉淀」同屏会把故障误导成空态。反向同步：知识文章详情页依据 `sourceProblemId` 展示「来源问题」并回链问题详情，与问题页 Tab 构成双向闭环。回归锁：`problem-api.test.ts` 3 项端点契约（路径/方法/空覆盖语义）+ `ProblemKnowledgeTab.test.tsx` 5 项组件用例（草稿标注/空态/沉淀后刷新/422 理由/反查失败），23 项全过，type-check 与 eslint 零告警。产品表面棘轮：C.7.2 预览域基线随 af526bcc 的晋升补降 9→8（此前下调漏同步，留了一个免费名额）。
