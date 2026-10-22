@@ -3341,6 +3341,33 @@ Authorization: Bearer <accessToken>
 - 实例以 `name`/`provider` 标识，租户号不再编进 key。历史响应是 `map["<tenantId>/<name>/<provider>"]`，调用方只能拿租户号拼键——前端就是在这里把租户号硬编码成了 `0`，导致状态列永远取不到结果。
 - 该端点会触发真实拨号（每实例 5 秒超时），实例较多时不要轮询。
 
+## 连接器凭据轮换
+
+轮换一个已配置连接器实例的凭据（飞书的 `appSecret`、企微/钉钉的 `token`、Webhook 的签名密钥等）。权限码 `connector:write`。
+
+```http
+POST /api/v1/connectors/configs/{name}/rotate-secret
+Authorization: Bearer <accessToken>
+Content-Type: application/json
+
+{ "newCredentials": { "appId": "cli_xxx", "appSecret": "new-secret" } }
+```
+
+`data`：`{ name, provider, rotated, rotatedAt, note }`。响应**不回显任何凭据值**（新旧都不回显）。
+
+| 情形 | 结果 |
+|---|---|
+| 成功 | `200`；运行态与库内凭据同时换成新值，并写一条 `audit_log`（`action=rotate_secret`） |
+| `newCredentials` 为空 | `400`，文案说明至少要提交一个字段 |
+| 连接器实例不存在 | `404` |
+| 新凭据无法初始化（必填项缺失 / 第三方拒绝） | `400`，**已保留原凭据**，运行态与库都不动 |
+| 初始化成功但落库失败 | `5xx`，**运行态回滚为原配置**（旧实现是 Revoke，连接器会直接变不可用） |
+
+- **旧凭据立即失效**，不存在「新旧并行」的宽限窗口：三家 IM 的发送与验签都只读一份凭据。要留退路，先在对方平台保留旧密钥，需要时用旧凭据再调一次 `POST /connectors/configs` 覆盖回来（历史实现里的 `gracePeriodHours` 从未被任何代码执行，已移除）。
+- 审计只记录连接器、provider、操作人、时间与**凭据键名**，不写凭据值。
+- `provider` / `type` / `settings` 一律沿用原实例，不能由请求体指定——否则等于允许借轮换请求改掉 `Init` 走哪个实现。
+- 审计写失败不回滚轮换（密钥已在对方平台换掉，回滚只会造成更大不一致），但会以 error 级别留痕。
+
 ## 通知渠道诊断
 
 回答「为什么我没收到通知」的只读接口，权限码 `notification:read`。与投递审计互补：审计回答「发了但失败了」，渠道诊断回答「根本发不出去」。

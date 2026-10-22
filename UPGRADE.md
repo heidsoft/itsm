@@ -2348,6 +2348,46 @@ cd itsm-frontend && npx jest --coverage=false 'app/\(main\)/admin/connectors'
 负证明：`health_scope_test.go` 用计数桩连接器，租户 1 发请求时断言租户 2 的 `HealthCheck` 调用次数为 `0`
 ——把 `HealthCheckTenant` 换回 `HealthCheckAll` 该用例立刻转红；前端用例在旧取值方式下也会红（状态列恒为"已启用"）。
 
+### 1.63 连接器凭据轮换接线（2026-10-22，新端点 + 语义修正）
+
+`Handler.RotateSecret` 的实现在仓库里躺了很久——**没有任何路由指向它**，是个只能读不能调的
+死代码，契约里「租户密钥轮换」因此一直挂在"待验收"。本版把它接成端点：
+
+```http
+POST /api/v1/connectors/configs/{name}/rotate-secret
+{ "newCredentials": { "appSecret": "new-secret" } }
+```
+
+权限码 `connector:write`；成功写 `audit_log`（`resource=connector`、`action=rotate_secret`）。
+
+**语义修正（三处，都是原实现的坑）**
+
+| 项 | 变更前 | 变更后 |
+|---|---|---|
+| `gracePeriodHours` | 请求参数 + 写进 `settings.grace_period_at`，但**全仓没有任何代码读它** —— 假的回滚窗口 | **移除**。明确语义：旧凭据立即失效，不存在新旧并行窗口（三家 IM 收发验签都只读一份凭据） |
+| `settings` 合并 | 直接改 `manager` 内实例共享的 map → 未落库的 `rotated_at` 进了运行态 | 复制后写入（`cloneSettings`） |
+| 落库失败 | `manager.Revoke(cfg)` → 连接器直接不可用 | `manager.Provision(previous)` 恢复旧配置，返回 `5xx` 并提示"已恢复原配置" |
+| 初始化失败 | `RespondError` → 500，文案是套话 | `400` + "新凭据无法初始化，已保留原凭据"，并把错误文案里回显的凭据值脱敏成 `******` |
+| 审计写入 | `RequestBody` 含 `gracePeriodHours` | 只含连接器/provider/操作人/时间/凭据**键名**；审计失败以 error 留痕但不回滚轮换 |
+
+**集成方影响**：请求体不再接受 `gracePeriodHours`（传了会被忽略，不报错）；响应字段由
+`{name, gracePeriodAt, gracePeriodHours, rotated}` 变为 `{name, provider, rotated, rotatedAt, note}`。
+该端点此前无路由，无存量调用方。
+
+**操作建议**：轮换前先在对方平台保留旧密钥（飞书/企微/钉钉控制台可重新启用），
+因为它会立即失效；需要回退时用旧凭据调一次 `POST /connectors/configs` 覆盖回来。
+
+**验证**
+
+```bash
+cd itsm-backend && go test -count=1 ./handlers/connector/ -run "RotateSecret" \
+  && go test -count=1 ./router/ -run "ConnectorRotateSecretRouteRegistered|ConnectorRoutes_PermissionPrecheckResolves"
+```
+
+覆盖：成功轮换（运行态 + 库 + 审计三方一致、响应与审计都不回显凭据）、空凭据 400、
+不存在 404、Init 失败保留原凭据、落库失败恢复运行态且实例存活、无审计器仍成功、审计失败不回滚。
+负证明：注释掉路由注册行 → `TestConnectorRotateSecretRouteRegistered` 转红（"credential rotation is unreachable"）。
+
 ## 2. 环境变量变更
 
 本次升级**移除了多个"幽灵配置项"**（在示例文件中声明但代码/Compose 从不读取，用户配置了也不生效），并修正了一个 Grafana 密码安全缺陷。

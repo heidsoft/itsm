@@ -574,6 +574,7 @@ func precheckRoutePermissions() map[string]map[string]Permission {
 			"/api/v1/connectors/*/send":                         {Resource: "connector", Action: "write"},
 			"/api/v1/connectors/*/test":                         {Resource: "connector", Action: "write"},
 			"/api/v1/connectors/configs":                        {Resource: "connector", Action: "write"},
+			"/api/v1/connectors/configs/*/rotate-secret":        {Resource: "connector", Action: "write"},
 			"/api/v1/dashboard/config":                          {Resource: "dashboard", Action: "admin"},
 			"/api/v1/dashboard/export":                          {Resource: "dashboard", Action: "admin"},
 			"/api/v1/dashboard/layout":                          {Resource: "dashboard", Action: "admin"},

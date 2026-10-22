@@ -32,6 +32,9 @@ type Handler struct {
 
 // NewHandler creates a new connector handler
 func NewHandler(mgr *connector.Manager, reg *connector.Registry, mkt *marketplace.Market, logger *zap.SugaredLogger) *Handler {
+	if logger == nil {
+		logger = zap.NewNop().Sugar()
+	}
 	return &Handler{manager: mgr, market: mkt, registry: reg, logger: logger}
 }
 
@@ -359,73 +362,95 @@ func (h *Handler) Lifecycle(ctx *gin.Context) {
 	common.Success(ctx, gin.H{"items": out, "total": len(out)})
 }
 
-// RotateSecret 触发凭据轮换。
-// body = { newCredentials: {...}, gracePeriodHours: N, actorUserId: int }。
-// 旧凭据在 grace_period_at 之前可以"反悔"：再调一次 Provision 即可；
-// 过期后旧凭据被标记 invalid，旧连接器实例必须重新 Provision。
-// 整条路径写 audit_log（action=rotate_secret），便于审计追责。
+// RotateSecret 轮换一个连接器实例的凭据（立即生效）。
+//
+// 语义（刻意不做「双凭据宽限窗口」）：三家 IM（飞书/企微/钉钉）的 Send 与
+// VerifySignature 都只读一份凭据，服务端无法同时用两套密钥收发与验签，所以不存在
+// 「新旧凭据并行有效」的状态。旧实现写了一个 grace_period_at 字段，但全仓没有
+// 任何代码读它——那是个假的回滚窗口；请求里的 gracePeriodHours 同时被移除。
+// 要留退路只有两条：轮换前在对方平台保留旧密钥（可在控制台再启），或用旧凭据
+// 再调一次 POST /connectors/configs 覆盖回来。
+//
+// 失败处理（两条路径都不留半死状态）：
+//   - 新凭据 Init 失败 → 内存里仍是旧实例，库里也没动，返回 400 并点明"已保留原凭据"；
+//   - Init 成功但落库失败 → 把运行态回滚成旧配置，避免「内存新凭据 / 库里旧凭据」漂移。
+//
+// 审计只记录连接器、provider、操作人、时间与**凭据键名**，绝不写凭据值。
 func (h *Handler) RotateSecret(ctx *gin.Context) {
 	name := ctx.Param("name")
 	tenantID := ctx.GetInt("tenant_id")
 	actorID := ctx.GetInt("user_id")
+	if tenantID <= 0 {
+		common.Fail(ctx, common.AuthFailedCode, "租户信息缺失")
+		return
+	}
+	if name == "" {
+		common.ParamError(ctx, "缺少连接器名称")
+		return
+	}
 
 	var req struct {
-		NewCredentials   map[string]string `json:"newCredentials"`
-		GracePeriodHours int               `json:"gracePeriodHours"`
+		NewCredentials map[string]string `json:"newCredentials"`
 	}
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		common.ParamErrorWithErr(ctx, err, "请求参数错误")
 		return
 	}
 	if len(req.NewCredentials) == 0 {
-		common.Fail(ctx, common.ParamErrorCode, "newCredentials is required")
+		common.Fail(ctx, common.ParamErrorCode, "newCredentials 不能为空：至少要提交一个凭据字段")
 		return
 	}
-	if req.GracePeriodHours < 0 || req.GracePeriodHours > 168 {
-		common.Fail(ctx, common.ParamErrorCode, "gracePeriodHours must be in [0, 168]")
-		return
-	}
-	// 找到现有连接器以决定 provider + settings 合并
-	existing := connector.Config{}
-	for _, cfg := range h.manager.ListByTenant(tenantID) {
-		if cfg.Name == name {
-			existing = cfg
-			break
-		}
-	}
-	if existing.TenantID == 0 {
-		common.NotFound(ctx, "connector instance not found")
-		return
-	}
-	if existing.Settings == nil {
-		existing.Settings = map[string]interface{}{}
-	}
-	graceAt := time.Now().Add(time.Duration(req.GracePeriodHours) * time.Hour)
-	existing.Settings["grace_period_at"] = graceAt
-	existing.Settings["rotated_at"] = time.Now()
-	existing.Credentials = req.NewCredentials
-	existing.UpdatedAt = time.Now()
-
 	if !h.requireStore(ctx) {
 		return
 	}
-	if err := h.manager.Provision(ctx.Request.Context(), existing); err != nil {
-		common.RespondError(ctx, err, "操作失败")
+
+	// provider / type / settings 必须沿用原实例：决定 Init 走哪个实现，不能由请求指定。
+	previous := connector.Config{}
+	found := false
+	for _, cfg := range h.manager.ListByTenant(tenantID) {
+		if cfg.Name == name {
+			previous = cfg
+			found = true
+			break
+		}
+	}
+	if !found {
+		common.NotFound(ctx, "连接器实例不存在："+name)
 		return
 	}
-	if err := h.store.Save(ctx.Request.Context(), existing); err != nil {
-		h.manager.Revoke(existing)
-		common.RespondError(ctx, err, "操作失败")
+
+	rotatedAt := time.Now().UTC()
+	rotated := previous
+	rotated.Credentials = req.NewCredentials
+	// Settings 是 manager 内实例持有的同一个 map：必须复制后再写，
+	// 否则会给运行中的实例塞进一个尚未落库的时间戳（旧实现就是这样）。
+	rotated.Settings = cloneSettings(previous.Settings)
+	rotated.Settings["rotated_at"] = rotatedAt
+	rotated.Settings["rotated_by"] = actorID
+	rotated.UpdatedAt = time.Now()
+
+	if err := h.manager.Provision(ctx.Request.Context(), rotated); err != nil {
+		h.logger.Errorw("connector rotate_secret init failed", "connector", name, "tenant_id", tenantID, "error", err)
+		common.ParamError(ctx, "新凭据无法初始化，已保留原凭据："+redactCredentialValues(err.Error(), req.NewCredentials))
 		return
 	}
-	// 写 audit_log
+	if err := h.store.Save(ctx.Request.Context(), rotated); err != nil {
+		// 落库失败：把运行态改回旧配置，避免内存与库不一致。
+		if restoreErr := h.manager.Provision(ctx.Request.Context(), previous); restoreErr != nil {
+			h.logger.Errorw("connector rotate_secret rollback failed; connector runtime may hold unpersisted credentials",
+				"connector", name, "tenant_id", tenantID, "error", restoreErr)
+		}
+		common.RespondError(ctx, err, "轮换失败：凭据未能持久化，已恢复原配置")
+		return
+	}
+
 	if h.auditRec != nil {
 		body, _ := json.Marshal(map[string]interface{}{
-			"connector":        name,
-			"provider":         existing.Provider,
-			"gracePeriodHours": req.GracePeriodHours,
-			"gracePeriodAt":    graceAt,
-			"actorUserId":      actorID,
+			"connector":      name,
+			"provider":       rotated.Provider,
+			"rotatedAt":      rotatedAt,
+			"actorUserId":    actorID,
+			"credentialKeys": sortedKeys(req.NewCredentials),
 		})
 		if err := h.auditRec.CreateAuditLog(ctx.Request.Context(), &domainCommon.AuditLog{
 			TenantID:    tenantID,
@@ -437,15 +462,53 @@ func (h *Handler) RotateSecret(ctx *gin.Context) {
 			StatusCode:  200,
 			RequestBody: string(body),
 		}); err != nil {
-			h.logger.Warnw("connector rotate_secret audit failed", "connector", name, "error", err)
+			// 审计写失败不回滚轮换：密钥已经在第三方平台换掉，回滚只会造成更大不一致。
+			// 但必须显性留痕，便于事后补审计。
+			h.logger.Errorw("connector rotate_secret audit failed (rotation already applied)",
+				"connector", name, "tenant_id", tenantID, "error", err)
 		}
 	}
+
 	common.Success(ctx, gin.H{
-		"name":             name,
-		"gracePeriodAt":    graceAt,
-		"gracePeriodHours": req.GracePeriodHours,
-		"rotated":          true,
+		"name":      name,
+		"provider":  rotated.Provider,
+		"rotated":   true,
+		"rotatedAt": rotatedAt,
+		"note":      "旧凭据已立即失效；如需回退，用旧凭据再调一次 POST /connectors/configs",
 	})
+}
+
+// cloneSettings 浅拷贝 settings，避免修改 manager 内实例共享的 map。
+func cloneSettings(in map[string]interface{}) map[string]interface{} {
+	out := make(map[string]interface{}, len(in)+2)
+	for k, v := range in {
+		out[k] = v
+	}
+	return out
+}
+
+// redactCredentialValues 把错误文案里出现的凭据值替换掉。
+//
+// Init 失败的错误通常只说"缺哪个键"，但第三方 SDK 的错误偶尔会回显传入的值；
+// 轮换接口会把这句话原样返回给调用方，不能让它变成凭据回显通道。
+func redactCredentialValues(msg string, credentials map[string]string) string {
+	out := msg
+	for _, v := range credentials {
+		if len(v) >= 4 {
+			out = strings.ReplaceAll(out, v, "******")
+		}
+	}
+	return out
+}
+
+// sortedKeys 返回排序后的键名，用于审计「轮换了哪些字段」而不暴露值。
+func sortedKeys(m map[string]string) []string {
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	return keys
 }
 
 // FeishuCallback 飞书事件回调入口

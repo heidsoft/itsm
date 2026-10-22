@@ -16,6 +16,8 @@ func SetupConnectorRoutes(tenant *gin.RouterGroup, h *connectorHandler.Handler) 
 		conns.GET("/lifecycle", middleware.RequirePermission("connector", "read"), h.Lifecycle)
 		conns.POST("/configs", middleware.RequirePermission("connector", "write"), h.Provision)
 		conns.DELETE("/configs/:name", middleware.RequirePermission("connector", "write"), h.Revoke)
+		// 凭据轮换：旧凭据立即失效，失败时保留/恢复原配置（handler 内实现），写 audit_log
+		conns.POST("/configs/:name/rotate-secret", middleware.RequirePermission("connector", "write"), h.RotateSecret)
 		conns.POST("/:name/send", middleware.RequirePermission("connector", "write"), h.Send)
 		conns.POST("/:name/test", middleware.RequirePermission("connector", "write"), h.Test)
 		conns.GET("/health", middleware.RequirePermission("connector", "read"), h.Health)
