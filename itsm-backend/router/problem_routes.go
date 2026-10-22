@@ -26,6 +26,10 @@ func SetupProblemRoutes(tenant *gin.RouterGroup, h *problemHandler.Handler) {
 		problems.GET("/:id/sla", middleware.RequirePermission("problem", "read"), h.GetProblemSLA)
 		problems.GET("/:id/comments", middleware.RequirePermission("problem", "read"), h.GetProblemComments)
 		problems.POST("/:id/comments", middleware.RequirePermission("problem", "write"), h.AddProblemComment)
+		// 知识沉淀闭环：动作语义是「创建知识」，写权限用 knowledge:write，
+		// 不因入口挂在问题域而放宽；反查走 knowledge:read 同理。
+		problems.POST("/:id/knowledge", middleware.RequirePermission("knowledge", "write"), h.PromoteProblemKnowledge)
+		problems.GET("/:id/knowledge", middleware.RequirePermission("knowledge", "read"), h.ListProblemKnowledge)
 		// 关联管理
 		problems.GET("/:id/associations", middleware.RequirePermission("problem", "read"), h.GetAssociations)
 		problems.POST("/:id/associations", middleware.RequirePermission("problem", "write"), h.AddAssociation)

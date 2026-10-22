@@ -443,6 +443,54 @@ func (s *ProblemInvestigationService) GetProblemInvestigationSummary(ctx context
 		KnowledgeArticles: []*dto.ProblemKnowledgeArticleResponse{},
 	}
 
+	// 反向断链补齐（2026-10-22）：knowledge_articles.source_problem_id 落地后，
+	// 摘要里的 KnowledgeArticles 不再是恒空数组——由该问题沉淀的文章（含草稿）
+	// 按创建时间倒序回填。查询失败向上传播，不静默空数据（同上 P0-4 教训）。
+	if kbArticles, err := s.client.KnowledgeArticle.Query().
+		Where(
+			knowledgearticle.TenantID(tenantID),
+			knowledgearticle.SourceProblemID(problemID),
+			knowledgearticle.DeletedAtIsNil(),
+		).
+		Order(ent.Desc(knowledgearticle.FieldCreatedAt)).
+		All(ctx); err != nil {
+		return nil, fmt.Errorf("查询沉淀知识失败: %w", err)
+	} else if len(kbArticles) > 0 {
+		summary.KnowledgeArticles = make([]*dto.ProblemKnowledgeArticleResponse, 0, len(kbArticles))
+		for _, ka := range kbArticles {
+			authorName := ""
+			if name, ok, err := s.users.GetUserName(ctx, ka.AuthorID, tenantID); err == nil && ok {
+				authorName = name
+			}
+			status := "draft"
+			publishedDate := (*time.Time)(nil)
+			if ka.IsPublished {
+				status = "published"
+				publishedDate = &ka.UpdatedAt
+			}
+			tags := []string{}
+			if ka.Tags != "" {
+				tags = strings.Split(ka.Tags, ",")
+			}
+			summary.KnowledgeArticles = append(summary.KnowledgeArticles, &dto.ProblemKnowledgeArticleResponse{
+				ID:             ka.ID,
+				ProblemID:      problemID,
+				ArticleTitle:   ka.Title,
+				ArticleContent: ka.Content,
+				ArticleType:    ka.Category,
+				AuthorID:       ka.AuthorID,
+				AuthorName:     authorName,
+				Status:         status,
+				PublishedDate:  publishedDate,
+				Tags:           tags,
+				ViewCount:      ka.ViewCount,
+				HelpfulCount:   ka.LikeCount,
+				CreatedAt:      ka.CreatedAt,
+				UpdatedAt:      ka.UpdatedAt,
+			})
+		}
+	}
+
 	// 获取调查记录
 	//
 	// 🔴 这里必须把子查询错误向上传播（2026-10-18 缺陷 P0-4）。

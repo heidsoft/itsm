@@ -77,6 +77,9 @@ type KnowledgeArticleResponse struct {
 
 	// 知识可引用性 L2：权威性
 	AuthorityLevel int `json:"authorityLevel"`
+
+	// 来源追溯：文章由哪个问题沉淀而来；空 = 手工创建
+	SourceProblemID *int `json:"sourceProblemId,omitempty"`
 }
 
 // 知识库文章列表请求

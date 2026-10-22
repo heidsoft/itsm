@@ -122,6 +122,11 @@ export interface KnowledgeArticle {
   relatedArticles?: string[]; // 相关文章ID
   relatedTickets?: number[]; // 关联工单ID
 
+  // 来源追溯（2026-10-22 沉淀闭环）：文章由哪个问题沉淀而来；undefined=手工创建。
+  // 后端 knowledge_articles.source_problem_id，裸 ID 引用而非外键——知识是独立资产，
+  // 问题删除不级联删知识。问题详情页「知识沉淀」Tab 与文章详情页「来源问题」共用。
+  sourceProblemId?: number;
+
   // 版本控制
   version: number;
   versionHistory?: ArticleVersion[];

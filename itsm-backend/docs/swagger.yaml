@@ -2888,6 +2888,62 @@ definitions:
         example: 1
         type: integer
     type: object
+  dto.KnowledgeArticleResponse:
+    properties:
+      author:
+        type: string
+      authorityLevel:
+        description: 知识可引用性 L2：权威性
+        type: integer
+      category:
+        type: string
+      content:
+        type: string
+      createdAt:
+        type: string
+      freshness:
+        $ref: '#/definitions/dto.KnowledgeFreshness'
+      id:
+        type: integer
+      lastReviewedAt:
+        type: string
+      reviewIntervalDays:
+        type: integer
+      sourceProblemId:
+        description: 来源追溯：文章由哪个问题沉淀而来；空 = 手工创建
+        type: integer
+      status:
+        type: string
+      tags:
+        items:
+          type: string
+        type: array
+      tenantId:
+        type: integer
+      title:
+        type: string
+      updatedAt:
+        type: string
+      validFrom:
+        description: 知识可引用性 L1：时效性
+        type: string
+      validUntil:
+        type: string
+      views:
+        type: integer
+    type: object
+  dto.KnowledgeFreshness:
+    properties:
+      citable:
+        description: Citable 当前是否可被 RAG 引用
+        type: boolean
+      reviewDueAt:
+        description: ReviewDueAt 下次复核到期时间，未设复核周期时为空
+        type: string
+      verdict:
+        description: Verdict 时效判定结果：ok / not_yet_effective / expired / review_overdue
+        type: string
+    type: object
   dto.ListProblemCommentsResponse:
     properties:
       items:
@@ -2898,6 +2954,15 @@ definitions:
         type: integer
       size:
         type: integer
+      total:
+        type: integer
+    type: object
+  dto.ListProblemKnowledgeResponse:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/dto.KnowledgeArticleResponse'
+        type: array
       total:
         type: integer
     type: object
@@ -3279,6 +3344,17 @@ definitions:
     required:
     - businessId
     - businessType
+    type: object
+  dto.PromoteProblemKnowledgeRequest:
+    properties:
+      category:
+        type: string
+      tags:
+        items:
+          type: string
+        type: array
+      title:
+        type: string
     type: object
   dto.RelationshipStrength:
     enum:
@@ -11532,6 +11608,102 @@ paths:
       security:
       - BearerAuth: []
       summary: 开始调查问题
+      tags:
+      - 问题管理
+  /api/v1/problems/{id}/knowledge:
+    get:
+      description: 列出由该问题沉淀的知识文章（含草稿，创建时间倒序；2026-10-22 起为真实契约，取代调查摘要中恒为空的 KnowledgeArticles
+        缺口）。跨租户/不存在的问题统一 404，不暴露 ID 可枚举信号
+      parameters:
+      - description: 问题ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.ListProblemKnowledgeResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/common.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/common.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/common.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.Response'
+      security:
+      - BearerAuth: []
+      summary: 反查问题沉淀的知识
+      tags:
+      - 问题管理
+    post:
+      consumes:
+      - application/json
+      description: 把问题的现象/根因/临时措施/解决方案组装为知识草稿（2026-10-22 起为真实契约）。全字段可选，空值用问题单内容兜底；沉淀产物为
+        draft，发布须过知识评审流。无根因且无解决方案时 422 拒绝；跨租户/不存在 404；知识仓储未装配 503。权限为 knowledge:write——动作语义是「创建知识」，不因入口在问题域而放宽
+      parameters:
+      - description: 问题ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 可选覆盖项
+        in: body
+        name: request
+        schema:
+          $ref: '#/definitions/dto.PromoteProblemKnowledgeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.KnowledgeArticleResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/common.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/common.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/common.Response'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/common.Response'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/common.Response'
+      security:
+      - BearerAuth: []
+      summary: 问题沉淀为知识
       tags:
       - 问题管理
   /api/v1/problems/{id}/root-cause:

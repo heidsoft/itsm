@@ -8,6 +8,7 @@ import (
 
 	"itsm-backend/common"
 	"itsm-backend/dto"
+	"itsm-backend/handlers/knowledge"
 	"itsm-backend/middleware"
 
 	"github.com/gin-gonic/gin"
@@ -1025,4 +1026,133 @@ func (h *Handler) AddProblemComment(c *gin.Context) {
 		CreatedAt:  created.CreatedAt,
 		UpdatedAt:  created.UpdatedAt,
 	})
+}
+
+// ── 知识沉淀闭环（2026-10-22 落地）────────────────────────────────────────────
+
+// toKnowledgeArticleDTO 知识文章的最小投影。刻意不搬 knowledge.Handler.toArticleDTO
+// 的完整形态（freshness/权威性是知识 handler 的展示职责，依赖其 freshness guard 注入）；
+// 问题详情页只消费「有哪些沉淀、状态如何、能否点进去」。
+func toKnowledgeArticleDTO(a *knowledge.Article) *dto.KnowledgeArticleResponse {
+	if a == nil {
+		return nil
+	}
+	status := "draft"
+	if a.IsPublished {
+		status = "published"
+	}
+	tags := a.Tags
+	if tags == nil {
+		tags = []string{}
+	}
+	return &dto.KnowledgeArticleResponse{
+		ID:              a.ID,
+		Title:           a.Title,
+		Content:         a.Content,
+		Category:        a.Category,
+		Tags:            tags,
+		Status:          status,
+		TenantID:        a.TenantID,
+		CreatedAt:       a.CreatedAt,
+		UpdatedAt:       a.UpdatedAt,
+		SourceProblemID: a.SourceProblemID,
+	}
+}
+
+// PromoteProblemKnowledge handles POST /api/v1/problems/:id/knowledge
+// @Summary 问题沉淀为知识
+// @Description 把问题的现象/根因/临时措施/解决方案组装为知识草稿（2026-10-22 起为真实契约）。全字段可选，空值用问题单内容兜底；沉淀产物为 draft，发布须过知识评审流。无根因且无解决方案时 422 拒绝；跨租户/不存在 404；知识仓储未装配 503。权限为 knowledge:write——动作语义是「创建知识」，不因入口在问题域而放宽
+// @Tags 问题管理
+// @Accept json
+// @Produce json
+// @Param id path int true "问题ID"
+// @Param request body dto.PromoteProblemKnowledgeRequest false "可选覆盖项"
+// @Success 200 {object} common.Response{data=dto.KnowledgeArticleResponse}
+// @Failure 400 {object} common.Response
+// @Failure 401 {object} common.Response
+// @Failure 404 {object} common.Response
+// @Failure 422 {object} common.Response
+// @Failure 503 {object} common.Response
+// @Security BearerAuth
+// @Router /api/v1/problems/{id}/knowledge [post]
+func (h *Handler) PromoteProblemKnowledge(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		common.Fail(c, common.ParamErrorCode, "invalid id")
+		return
+	}
+
+	tenantID, tenantOK := middleware.TenantIDOrUnauthorized(c)
+	if !tenantOK {
+		return
+	}
+	userID := c.GetInt("user_id")
+	if userID <= 0 {
+		common.Fail(c, common.UnauthorizedCode, "未认证的用户")
+		return
+	}
+
+	var req dto.PromoteProblemKnowledgeRequest
+	// body 可为空（全字段可选）：ContentLength>0 才做 JSON 绑定，
+	// 空 body 直接走全兜底路径。
+	if c.Request.ContentLength > 0 {
+		if err := c.ShouldBindJSON(&req); err != nil {
+			common.ParamErrorWithErr(c, err, "请求参数错误")
+			return
+		}
+	}
+
+	article, err := h.service.PromoteToKnowledge(c.Request.Context(), tenantID, id, userID,
+		PromoteKnowledgeInput{Title: req.Title, Category: req.Category, Tags: req.Tags})
+	if err != nil {
+		if errors.Is(err, ErrProblemNotVisible) {
+			common.Fail(c, common.NotFoundErrorCode, "Problem not found")
+			return
+		}
+		common.FailWithErr(c, err, "操作失败")
+		return
+	}
+	common.Success(c, toKnowledgeArticleDTO(article))
+}
+
+// ListProblemKnowledge handles GET /api/v1/problems/:id/knowledge
+// @Summary 反查问题沉淀的知识
+// @Description 列出由该问题沉淀的知识文章（含草稿，创建时间倒序；2026-10-22 起为真实契约，取代调查摘要中恒为空的 KnowledgeArticles 缺口）。跨租户/不存在的问题统一 404，不暴露 ID 可枚举信号
+// @Tags 问题管理
+// @Produce json
+// @Param id path int true "问题ID"
+// @Success 200 {object} common.Response{data=dto.ListProblemKnowledgeResponse}
+// @Failure 400 {object} common.Response
+// @Failure 401 {object} common.Response
+// @Failure 404 {object} common.Response
+// @Failure 500 {object} common.Response
+// @Security BearerAuth
+// @Router /api/v1/problems/{id}/knowledge [get]
+func (h *Handler) ListProblemKnowledge(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		common.Fail(c, common.ParamErrorCode, "invalid id")
+		return
+	}
+
+	tenantID, tenantOK := middleware.TenantIDOrUnauthorized(c)
+	if !tenantOK {
+		return
+	}
+
+	articles, err := h.service.ListProblemKnowledge(c.Request.Context(), tenantID, id)
+	if err != nil {
+		if errors.Is(err, ErrProblemNotVisible) {
+			common.Fail(c, common.NotFoundErrorCode, "Problem not found")
+			return
+		}
+		common.FailWithErr(c, err, "操作失败")
+		return
+	}
+
+	items := make([]*dto.KnowledgeArticleResponse, 0, len(articles))
+	for _, a := range articles {
+		items = append(items, toKnowledgeArticleDTO(a))
+	}
+	common.Success(c, &dto.ListProblemKnowledgeResponse{Items: items, Total: len(items)})
 }

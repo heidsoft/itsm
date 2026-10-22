@@ -236,6 +236,40 @@ export interface ProblemSLA {
   pausedDurationSeconds?: number;
 }
 
+/**
+ * 问题沉淀为知识的请求体（2026-10-22 沉淀闭环落地）。
+ * 镜像 dto.PromoteProblemKnowledgeRequest：全字段可选，
+ * 空值用问题单内容兜底——沉淀降低的是记录成本，不是审核成本。
+ */
+export interface PromoteProblemKnowledgeRequest {
+  title?: string;
+  category?: string;
+  tags?: string[];
+}
+
+/**
+ * 沉淀产物的最小投影，镜像后端问题域 toKnowledgeArticleDTO
+ * （刻意不搬知识 handler 的完整形态：freshness/权威性是知识域的展示职责）。
+ */
+export interface ProblemKnowledgeArticle {
+  id: number;
+  title: string;
+  content: string;
+  category: string;
+  /** draft / published——沉淀产物恒为 draft，发布须过知识评审流 */
+  status: string;
+  tags: string[];
+  sourceProblemId?: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** 反查列表信封：items 含草稿，空列表为 [] 而非 null */
+export interface ListProblemKnowledgeResponse {
+  items: ProblemKnowledgeArticle[];
+  total: number;
+}
+
 export class ProblemApi {
   /**
    * 获取问题列表
@@ -348,6 +382,40 @@ export class ProblemApi {
    */
   static async getProblemSLA(problemId: number): Promise<ProblemSLA> {
     return httpClient.get<ProblemSLA>(`/api/v1/problems/${problemId}/sla`);
+  }
+
+  // ==================== 知识沉淀闭环（2026-10-22 落地） ====================
+
+  /**
+   * 把问题沉淀为知识草稿
+   * 后端: POST /api/v1/problems/:id/knowledge（dto.PromoteProblemKnowledgeRequest 镜像）
+   *
+   * 请求体全字段可选：空值用问题单内容兜底（标题=问题标题、分类=故障排查、
+   * 内容=现象/根因/临时措施/解决方案模板化组装）。产物为 draft，发布须过知识评审流。
+   * 错误语义：422/4220=问题既无根因也无解决方案（质量门）；404/4004=问题不存在或跨租户；
+   * 403=无 knowledge:write；503/5003=知识仓储未装配。
+   */
+  static async promoteProblemKnowledge(
+    problemId: number,
+    req?: PromoteProblemKnowledgeRequest
+  ): Promise<ProblemKnowledgeArticle> {
+    return httpClient.post<ProblemKnowledgeArticle>(
+      `/api/v1/problems/${problemId}/knowledge`,
+      req ?? {}
+    );
+  }
+
+  /**
+   * 反查问题沉淀的知识文章
+   * 后端: GET /api/v1/problems/:id/knowledge（dto.ListProblemKnowledgeResponse 镜像）
+   *
+   * 含草稿——沉淀当事人需要立刻看到沉淀结果；创建时间倒序；
+   * 空列表 items 为 [] 而非 null。404/4004=问题不存在或跨租户。
+   */
+  static async listProblemKnowledge(problemId: number): Promise<ListProblemKnowledgeResponse> {
+    return httpClient.get<ListProblemKnowledgeResponse>(
+      `/api/v1/problems/${problemId}/knowledge`
+    );
   }
 
   // ==================== 趋势分析 ====================

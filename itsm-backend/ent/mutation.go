@@ -76588,6 +76588,8 @@ type KnowledgeArticleMutation struct {
 	addreview_interval_days *int
 	authority_level         *int
 	addauthority_level      *int
+	source_problem_id       *int
+	addsource_problem_id    *int
 	created_at              *time.Time
 	updated_at              *time.Time
 	deleted_at              *time.Time
@@ -77613,6 +77615,76 @@ func (m *KnowledgeArticleMutation) ResetAuthorityLevel() {
 	m.addauthority_level = nil
 }
 
+// SetSourceProblemID sets the "source_problem_id" field.
+func (m *KnowledgeArticleMutation) SetSourceProblemID(i int) {
+	m.source_problem_id = &i
+	m.addsource_problem_id = nil
+}
+
+// SourceProblemID returns the value of the "source_problem_id" field in the mutation.
+func (m *KnowledgeArticleMutation) SourceProblemID() (r int, exists bool) {
+	v := m.source_problem_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSourceProblemID returns the old "source_problem_id" field's value of the KnowledgeArticle entity.
+// If the KnowledgeArticle object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *KnowledgeArticleMutation) OldSourceProblemID(ctx context.Context) (v *int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSourceProblemID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSourceProblemID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSourceProblemID: %w", err)
+	}
+	return oldValue.SourceProblemID, nil
+}
+
+// AddSourceProblemID adds i to the "source_problem_id" field.
+func (m *KnowledgeArticleMutation) AddSourceProblemID(i int) {
+	if m.addsource_problem_id != nil {
+		*m.addsource_problem_id += i
+	} else {
+		m.addsource_problem_id = &i
+	}
+}
+
+// AddedSourceProblemID returns the value that was added to the "source_problem_id" field in this mutation.
+func (m *KnowledgeArticleMutation) AddedSourceProblemID() (r int, exists bool) {
+	v := m.addsource_problem_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearSourceProblemID clears the value of the "source_problem_id" field.
+func (m *KnowledgeArticleMutation) ClearSourceProblemID() {
+	m.source_problem_id = nil
+	m.addsource_problem_id = nil
+	m.clearedFields[knowledgearticle.FieldSourceProblemID] = struct{}{}
+}
+
+// SourceProblemIDCleared returns if the "source_problem_id" field was cleared in this mutation.
+func (m *KnowledgeArticleMutation) SourceProblemIDCleared() bool {
+	_, ok := m.clearedFields[knowledgearticle.FieldSourceProblemID]
+	return ok
+}
+
+// ResetSourceProblemID resets all changes to the "source_problem_id" field.
+func (m *KnowledgeArticleMutation) ResetSourceProblemID() {
+	m.source_problem_id = nil
+	m.addsource_problem_id = nil
+	delete(m.clearedFields, knowledgearticle.FieldSourceProblemID)
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (m *KnowledgeArticleMutation) SetCreatedAt(t time.Time) {
 	m.created_at = &t
@@ -77984,7 +78056,7 @@ func (m *KnowledgeArticleMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *KnowledgeArticleMutation) Fields() []string {
-	fields := make([]string, 0, 21)
+	fields := make([]string, 0, 22)
 	if m.title != nil {
 		fields = append(fields, knowledgearticle.FieldTitle)
 	}
@@ -78039,6 +78111,9 @@ func (m *KnowledgeArticleMutation) Fields() []string {
 	if m.authority_level != nil {
 		fields = append(fields, knowledgearticle.FieldAuthorityLevel)
 	}
+	if m.source_problem_id != nil {
+		fields = append(fields, knowledgearticle.FieldSourceProblemID)
+	}
 	if m.created_at != nil {
 		fields = append(fields, knowledgearticle.FieldCreatedAt)
 	}
@@ -78092,6 +78167,8 @@ func (m *KnowledgeArticleMutation) Field(name string) (ent.Value, bool) {
 		return m.ReviewIntervalDays()
 	case knowledgearticle.FieldAuthorityLevel:
 		return m.AuthorityLevel()
+	case knowledgearticle.FieldSourceProblemID:
+		return m.SourceProblemID()
 	case knowledgearticle.FieldCreatedAt:
 		return m.CreatedAt()
 	case knowledgearticle.FieldUpdatedAt:
@@ -78143,6 +78220,8 @@ func (m *KnowledgeArticleMutation) OldField(ctx context.Context, name string) (e
 		return m.OldReviewIntervalDays(ctx)
 	case knowledgearticle.FieldAuthorityLevel:
 		return m.OldAuthorityLevel(ctx)
+	case knowledgearticle.FieldSourceProblemID:
+		return m.OldSourceProblemID(ctx)
 	case knowledgearticle.FieldCreatedAt:
 		return m.OldCreatedAt(ctx)
 	case knowledgearticle.FieldUpdatedAt:
@@ -78284,6 +78363,13 @@ func (m *KnowledgeArticleMutation) SetField(name string, value ent.Value) error 
 		}
 		m.SetAuthorityLevel(v)
 		return nil
+	case knowledgearticle.FieldSourceProblemID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSourceProblemID(v)
+		return nil
 	case knowledgearticle.FieldCreatedAt:
 		v, ok := value.(time.Time)
 		if !ok {
@@ -78334,6 +78420,9 @@ func (m *KnowledgeArticleMutation) AddedFields() []string {
 	if m.addauthority_level != nil {
 		fields = append(fields, knowledgearticle.FieldAuthorityLevel)
 	}
+	if m.addsource_problem_id != nil {
+		fields = append(fields, knowledgearticle.FieldSourceProblemID)
+	}
 	return fields
 }
 
@@ -78356,6 +78445,8 @@ func (m *KnowledgeArticleMutation) AddedField(name string) (ent.Value, bool) {
 		return m.AddedReviewIntervalDays()
 	case knowledgearticle.FieldAuthorityLevel:
 		return m.AddedAuthorityLevel()
+	case knowledgearticle.FieldSourceProblemID:
+		return m.AddedSourceProblemID()
 	}
 	return nil, false
 }
@@ -78414,6 +78505,13 @@ func (m *KnowledgeArticleMutation) AddField(name string, value ent.Value) error 
 		}
 		m.AddAuthorityLevel(v)
 		return nil
+	case knowledgearticle.FieldSourceProblemID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddSourceProblemID(v)
+		return nil
 	}
 	return fmt.Errorf("unknown KnowledgeArticle numeric field %s", name)
 }
@@ -78448,6 +78546,9 @@ func (m *KnowledgeArticleMutation) ClearedFields() []string {
 	}
 	if m.FieldCleared(knowledgearticle.FieldLastReviewedAt) {
 		fields = append(fields, knowledgearticle.FieldLastReviewedAt)
+	}
+	if m.FieldCleared(knowledgearticle.FieldSourceProblemID) {
+		fields = append(fields, knowledgearticle.FieldSourceProblemID)
 	}
 	if m.FieldCleared(knowledgearticle.FieldDeletedAt) {
 		fields = append(fields, knowledgearticle.FieldDeletedAt)
@@ -78492,6 +78593,9 @@ func (m *KnowledgeArticleMutation) ClearField(name string) error {
 		return nil
 	case knowledgearticle.FieldLastReviewedAt:
 		m.ClearLastReviewedAt()
+		return nil
+	case knowledgearticle.FieldSourceProblemID:
+		m.ClearSourceProblemID()
 		return nil
 	case knowledgearticle.FieldDeletedAt:
 		m.ClearDeletedAt()
@@ -78557,6 +78661,9 @@ func (m *KnowledgeArticleMutation) ResetField(name string) error {
 		return nil
 	case knowledgearticle.FieldAuthorityLevel:
 		m.ResetAuthorityLevel()
+		return nil
+	case knowledgearticle.FieldSourceProblemID:
+		m.ResetSourceProblemID()
 		return nil
 	case knowledgearticle.FieldCreatedAt:
 		m.ResetCreatedAt()

@@ -140,6 +140,11 @@ func AuthorityLevel(v int) predicate.KnowledgeArticle {
 	return predicate.KnowledgeArticle(sql.FieldEQ(FieldAuthorityLevel, v))
 }
 
+// SourceProblemID applies equality check predicate on the "source_problem_id" field. It's identical to SourceProblemIDEQ.
+func SourceProblemID(v int) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldEQ(FieldSourceProblemID, v))
+}
+
 // CreatedAt applies equality check predicate on the "created_at" field. It's identical to CreatedAtEQ.
 func CreatedAt(v time.Time) predicate.KnowledgeArticle {
 	return predicate.KnowledgeArticle(sql.FieldEQ(FieldCreatedAt, v))
@@ -1038,6 +1043,56 @@ func AuthorityLevelLT(v int) predicate.KnowledgeArticle {
 // AuthorityLevelLTE applies the LTE predicate on the "authority_level" field.
 func AuthorityLevelLTE(v int) predicate.KnowledgeArticle {
 	return predicate.KnowledgeArticle(sql.FieldLTE(FieldAuthorityLevel, v))
+}
+
+// SourceProblemIDEQ applies the EQ predicate on the "source_problem_id" field.
+func SourceProblemIDEQ(v int) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldEQ(FieldSourceProblemID, v))
+}
+
+// SourceProblemIDNEQ applies the NEQ predicate on the "source_problem_id" field.
+func SourceProblemIDNEQ(v int) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldNEQ(FieldSourceProblemID, v))
+}
+
+// SourceProblemIDIn applies the In predicate on the "source_problem_id" field.
+func SourceProblemIDIn(vs ...int) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldIn(FieldSourceProblemID, vs...))
+}
+
+// SourceProblemIDNotIn applies the NotIn predicate on the "source_problem_id" field.
+func SourceProblemIDNotIn(vs ...int) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldNotIn(FieldSourceProblemID, vs...))
+}
+
+// SourceProblemIDGT applies the GT predicate on the "source_problem_id" field.
+func SourceProblemIDGT(v int) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldGT(FieldSourceProblemID, v))
+}
+
+// SourceProblemIDGTE applies the GTE predicate on the "source_problem_id" field.
+func SourceProblemIDGTE(v int) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldGTE(FieldSourceProblemID, v))
+}
+
+// SourceProblemIDLT applies the LT predicate on the "source_problem_id" field.
+func SourceProblemIDLT(v int) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldLT(FieldSourceProblemID, v))
+}
+
+// SourceProblemIDLTE applies the LTE predicate on the "source_problem_id" field.
+func SourceProblemIDLTE(v int) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldLTE(FieldSourceProblemID, v))
+}
+
+// SourceProblemIDIsNil applies the IsNil predicate on the "source_problem_id" field.
+func SourceProblemIDIsNil() predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldIsNull(FieldSourceProblemID))
+}
+
+// SourceProblemIDNotNil applies the NotNil predicate on the "source_problem_id" field.
+func SourceProblemIDNotNil() predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldNotNull(FieldSourceProblemID))
 }
 
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.

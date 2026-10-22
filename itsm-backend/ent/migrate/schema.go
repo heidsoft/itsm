@@ -2339,6 +2339,7 @@ var (
 		{Name: "last_reviewed_at", Type: field.TypeTime, Nullable: true},
 		{Name: "review_interval_days", Type: field.TypeInt, Default: 0},
 		{Name: "authority_level", Type: field.TypeInt, Default: 0},
+		{Name: "source_problem_id", Type: field.TypeInt, Nullable: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
@@ -2352,9 +2353,16 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "knowledge_articles_known_errors_knowledge_articles",
-				Columns:    []*schema.Column{KnowledgeArticlesColumns[22]},
+				Columns:    []*schema.Column{KnowledgeArticlesColumns[23]},
 				RefColumns: []*schema.Column{KnownErrorsColumns[0]},
 				OnDelete:   schema.SetNull,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "knowledgearticle_tenant_id_source_problem_id",
+				Unique:  false,
+				Columns: []*schema.Column{KnowledgeArticlesColumns[6], KnowledgeArticlesColumns[19]},
 			},
 		},
 	}

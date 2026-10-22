@@ -51,6 +51,8 @@ const (
 	FieldReviewIntervalDays = "review_interval_days"
 	// FieldAuthorityLevel holds the string denoting the authority_level field in the database.
 	FieldAuthorityLevel = "authority_level"
+	// FieldSourceProblemID holds the string denoting the source_problem_id field in the database.
+	FieldSourceProblemID = "source_problem_id"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
@@ -118,6 +120,7 @@ var Columns = []string{
 	FieldLastReviewedAt,
 	FieldReviewIntervalDays,
 	FieldAuthorityLevel,
+	FieldSourceProblemID,
 	FieldCreatedAt,
 	FieldUpdatedAt,
 	FieldDeletedAt,
@@ -293,6 +296,11 @@ func ByReviewIntervalDays(opts ...sql.OrderTermOption) OrderOption {
 // ByAuthorityLevel orders the results by the authority_level field.
 func ByAuthorityLevel(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldAuthorityLevel, opts...).ToFunc()
+}
+
+// BySourceProblemID orders the results by the source_problem_id field.
+func BySourceProblemID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSourceProblemID, opts...).ToFunc()
 }
 
 // ByCreatedAt orders the results by the created_at field.

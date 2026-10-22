@@ -53,6 +53,8 @@ type KnowledgeArticle struct {
 	ReviewIntervalDays int `json:"review_interval_days,omitempty"`
 	// 权威等级：0 普通 / 10 部门推荐 / 20 官方标准 / 30 唯一真相源
 	AuthorityLevel int `json:"authority_level,omitempty"`
+	// 来源问题ID；空=手工创建，非沉淀
+	SourceProblemID *int `json:"source_problem_id,omitempty"`
 	// 创建时间
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// 更新时间
@@ -124,7 +126,7 @@ func (*KnowledgeArticle) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case knowledgearticle.FieldIsPublished:
 			values[i] = new(sql.NullBool)
-		case knowledgearticle.FieldID, knowledgearticle.FieldAuthorID, knowledgearticle.FieldTenantID, knowledgearticle.FieldReviewerID, knowledgearticle.FieldViewCount, knowledgearticle.FieldLikeCount, knowledgearticle.FieldReviewIntervalDays, knowledgearticle.FieldAuthorityLevel:
+		case knowledgearticle.FieldID, knowledgearticle.FieldAuthorID, knowledgearticle.FieldTenantID, knowledgearticle.FieldReviewerID, knowledgearticle.FieldViewCount, knowledgearticle.FieldLikeCount, knowledgearticle.FieldReviewIntervalDays, knowledgearticle.FieldAuthorityLevel, knowledgearticle.FieldSourceProblemID:
 			values[i] = new(sql.NullInt64)
 		case knowledgearticle.FieldTitle, knowledgearticle.FieldContent, knowledgearticle.FieldCategory, knowledgearticle.FieldTags, knowledgearticle.FieldReviewStatus, knowledgearticle.FieldReviewComment:
 			values[i] = new(sql.NullString)
@@ -265,6 +267,13 @@ func (_m *KnowledgeArticle) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field authority_level", values[i])
 			} else if value.Valid {
 				_m.AuthorityLevel = int(value.Int64)
+			}
+		case knowledgearticle.FieldSourceProblemID:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field source_problem_id", values[i])
+			} else if value.Valid {
+				_m.SourceProblemID = new(int)
+				*_m.SourceProblemID = int(value.Int64)
 			}
 		case knowledgearticle.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -411,6 +420,11 @@ func (_m *KnowledgeArticle) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("authority_level=")
 	builder.WriteString(fmt.Sprintf("%v", _m.AuthorityLevel))
+	builder.WriteString(", ")
+	if v := _m.SourceProblemID; v != nil {
+		builder.WriteString("source_problem_id=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
 	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))

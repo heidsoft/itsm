@@ -2035,6 +2035,26 @@ cd itsm-frontend && npx jest --coverage=false --runInBand TicketDetailUserNames
 cd itsm-backend && go test -count=1 ./handlers/problem/ ./service/sla/
 ```
 
+### 1.56 问题→知识沉淀闭环（2026-10-22，新端点 + 迁移）
+
+**新增端点**
+
+- `POST /api/v1/problems/:id/knowledge`：把问题沉淀为知识草稿。请求体全字段可选（`{title?, category?, tags?}`），空值用问题单内容兜底；产物为 `draft`，发布须过知识评审流。权限 `knowledge:write`（动作语义是「创建知识」）。
+- `GET /api/v1/problems/:id/knowledge`：反查该问题沉淀的知识文章（含草稿，创建时间倒序）。权限 `knowledge:read`。
+- 质量门：问题既无根因也无解决方案时沉淀 `422`/`4220`（无复用价值的空壳文章会污染 RAG 语料）。
+- 跨租户 `problem_id` 在两个方向统一 `404`/`4004`；知识仓储未装配时沉淀 `503`/`5003`。
+- `GET /problem-investigation/problems/:id/summary` 的 `KnowledgeArticles` 字段自此有真实数据（此前恒为空数组）。
+
+**迁移**：`20261022_knowledge_source_problem.sql` —— `knowledge_articles` 增补可空列 `source_problem_id` + 索引 `(tenant_id, source_problem_id)`，幂等可重复执行。裸 ID 引用而非外键：问题删除不级联删知识（沉淀产物是独立资产）。
+
+**消费方注意**：知识文章响应新增 `sourceProblemId` 字段（`omitempty`）；沉淀不是发布——需要对外可见仍要走既有评审端点（`/knowledge/articles/:id/review/submit` → `approve` → `publish`）。
+
+**验证**
+
+```bash
+cd itsm-backend && go test -count=1 ./router/ -run TestProblemKnowledgeRouteContract
+```
+
 ### 1.55 预览域收口批次：服务请求 SLA、变更提交门禁、企微/钉钉连接器转正（2026-10-21，行为变更）
 
 **服务请求 SLA（新端点 + 新写入路径）**

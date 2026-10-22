@@ -252,6 +252,20 @@ func (_c *KnowledgeArticleCreate) SetNillableAuthorityLevel(v *int) *KnowledgeAr
 	return _c
 }
 
+// SetSourceProblemID sets the "source_problem_id" field.
+func (_c *KnowledgeArticleCreate) SetSourceProblemID(v int) *KnowledgeArticleCreate {
+	_c.mutation.SetSourceProblemID(v)
+	return _c
+}
+
+// SetNillableSourceProblemID sets the "source_problem_id" field if the given value is not nil.
+func (_c *KnowledgeArticleCreate) SetNillableSourceProblemID(v *int) *KnowledgeArticleCreate {
+	if v != nil {
+		_c.SetSourceProblemID(*v)
+	}
+	return _c
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (_c *KnowledgeArticleCreate) SetCreatedAt(v time.Time) *KnowledgeArticleCreate {
 	_c.mutation.SetCreatedAt(v)
@@ -575,6 +589,10 @@ func (_c *KnowledgeArticleCreate) createSpec() (*KnowledgeArticle, *sqlgraph.Cre
 	if value, ok := _c.mutation.AuthorityLevel(); ok {
 		_spec.SetField(knowledgearticle.FieldAuthorityLevel, field.TypeInt, value)
 		_node.AuthorityLevel = value
+	}
+	if value, ok := _c.mutation.SourceProblemID(); ok {
+		_spec.SetField(knowledgearticle.FieldSourceProblemID, field.TypeInt, value)
+		_node.SourceProblemID = &value
 	}
 	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(knowledgearticle.FieldCreatedAt, field.TypeTime, value)

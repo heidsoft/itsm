@@ -2442,11 +2442,11 @@ func init() {
 	// knowledgearticle.DefaultAuthorityLevel holds the default value on creation for the authority_level field.
 	knowledgearticle.DefaultAuthorityLevel = knowledgearticleDescAuthorityLevel.Default.(int)
 	// knowledgearticleDescCreatedAt is the schema descriptor for created_at field.
-	knowledgearticleDescCreatedAt := knowledgearticleFields[18].Descriptor()
+	knowledgearticleDescCreatedAt := knowledgearticleFields[19].Descriptor()
 	// knowledgearticle.DefaultCreatedAt holds the default value on creation for the created_at field.
 	knowledgearticle.DefaultCreatedAt = knowledgearticleDescCreatedAt.Default.(func() time.Time)
 	// knowledgearticleDescUpdatedAt is the schema descriptor for updated_at field.
-	knowledgearticleDescUpdatedAt := knowledgearticleFields[19].Descriptor()
+	knowledgearticleDescUpdatedAt := knowledgearticleFields[20].Descriptor()
 	// knowledgearticle.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	knowledgearticle.DefaultUpdatedAt = knowledgearticleDescUpdatedAt.Default.(func() time.Time)
 	// knowledgearticle.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.

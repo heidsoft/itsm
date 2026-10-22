@@ -931,6 +931,9 @@ func NewApplication() *Application {
 
 	// Domain: Knowledge (DDD)
 	knowledgeRepo := knowledge.NewEntRepository(client)
+	// 问题→知识沉淀闭环（2026-10-22）：知识仓储同时注入问题域做沉淀目标。
+	// 放在知识域装配之后是因为 knowledgeRepo 在此处才创建（声明顺序所限）。
+	problemServiceDomain.SetKnowledgeRepository(knowledgeRepo)
 	knowledgeServiceDomain := knowledge.NewService(knowledgeRepo, sugar)
 	// 向量索引同步：发布→索引，取消发布/软删除→移除向量（RemoveArticle 真实删除）。
 	knowledgeServiceDomain.SetRAG(ragService)

@@ -186,16 +186,16 @@ type CreateProblemCommentRequest struct {
 // userName 为服务端投影的显示名（缺省时前端回退 `用户 #id`），
 // 与工单姓名单一投影口径一致——不要求前端再拉一次通讯录。
 type ProblemCommentResponse struct {
-	ID         int       `json:"id"`
-	ProblemID  int       `json:"problemId"`
-	UserID     int       `json:"userId"`
-	UserName   string    `json:"userName,omitempty"`
-	Content    string    `json:"content"`
-	IsInternal bool      `json:"isInternal"`
-	Mentions   []int     `json:"mentions"`
+	ID          int       `json:"id"`
+	ProblemID   int       `json:"problemId"`
+	UserID      int       `json:"userId"`
+	UserName    string    `json:"userName,omitempty"`
+	Content     string    `json:"content"`
+	IsInternal  bool      `json:"isInternal"`
+	Mentions    []int     `json:"mentions"`
 	Attachments []int     `json:"attachments"`
-	CreatedAt  time.Time `json:"createdAt"`
-	UpdatedAt  time.Time `json:"updatedAt"`
+	CreatedAt   time.Time `json:"createdAt"`
+	UpdatedAt   time.Time `json:"updatedAt"`
 }
 
 // ListProblemCommentsResponse 评论列表信封。
@@ -214,15 +214,34 @@ type ListProblemCommentsResponse struct {
 // 调用方必须把 bound=false 与 status=active 区分开（旧 503 桩的契约理由）。
 // status 取值：unbound / active / warning / breached / paused / met。
 type ProblemSLAResponse struct {
-	ProblemID         int        `json:"problemId"`
-	ProblemNumber     string     `json:"problemNumber,omitempty"`
-	Priority          string     `json:"priority"`
-	Bound             bool       `json:"bound"`
-	SLADefinitionID   int        `json:"slaDefinitionId,omitempty"`
-	Status            string     `json:"status"`
-	ResponseDeadline  *time.Time `json:"responseDeadline,omitempty"`
+	ProblemID          int        `json:"problemId"`
+	ProblemNumber      string     `json:"problemNumber,omitempty"`
+	Priority           string     `json:"priority"`
+	Bound              bool       `json:"bound"`
+	SLADefinitionID    int        `json:"slaDefinitionId,omitempty"`
+	Status             string     `json:"status"`
+	ResponseDeadline   *time.Time `json:"responseDeadline,omitempty"`
 	ResolutionDeadline *time.Time `json:"resolutionDeadline,omitempty"`
-	FirstResponseAt   *time.Time `json:"firstResponseAt,omitempty"`
-	ResolvedAt        *time.Time `json:"resolvedAt,omitempty"`
-	PausedDurationSec int        `json:"pausedDurationSeconds,omitempty"`
+	FirstResponseAt    *time.Time `json:"firstResponseAt,omitempty"`
+	ResolvedAt         *time.Time `json:"resolvedAt,omitempty"`
+	PausedDurationSec  int        `json:"pausedDurationSeconds,omitempty"`
+}
+
+// ── 知识沉淀闭环（2026-10-22）─────────────────────────────────────────────────
+
+// PromoteProblemKnowledgeRequest 问题沉淀为知识草稿的请求体。
+// 全部字段可选：空值用问题单内容兜底（标题=问题标题、分类=故障排查、
+// 内容=现象/根因/临时措施/解决方案模板化组装）。
+type PromoteProblemKnowledgeRequest struct {
+	Title    string   `json:"title"`
+	Category string   `json:"category"`
+	Tags     []string `json:"tags"`
+}
+
+// ListProblemKnowledgeResponse 问题沉淀知识反查列表（GET /api/v1/problems/:id/knowledge）。
+// items 为知识域文章 DTO（含 sourceProblemId 回显），含草稿——沉淀当事人
+// 需要立刻看到沉淀结果，草稿也要走评审流。
+type ListProblemKnowledgeResponse struct {
+	Items []*KnowledgeArticleResponse `json:"items"`
+	Total int                                       `json:"total"`
 }

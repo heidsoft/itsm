@@ -9,6 +9,7 @@ import (
 
 	"itsm-backend/common"
 	"itsm-backend/ent"
+	"itsm-backend/handlers/knowledge"
 	"itsm-backend/internal/datascope"
 	"itsm-backend/service"
 	"itsm-backend/service/sla"
@@ -24,6 +25,9 @@ type Service struct {
 	// 与 incident 域同一装配模式：handler 域不自己算 deadline，词汇表与存储收敛在
 	// service 层单一实现；nil 时（单测/旧组装）问题照常创建，只是不带 SLA 绑定。
 	slaSvc *service.TicketSLAService
+	// kbRepo 知识沉淀目标仓储（2026-10-22 沉淀闭环落地）。
+	// nil 时（单测/旧组装）沉淀端点显式 503，反查端点返回空列表。
+	kbRepo KnowledgeSink
 }
 
 // AssigneeValidator 校验受指人属于同一租户且处于在职可用状态。
@@ -51,6 +55,19 @@ func NewService(repo Repository, validator AssigneeValidator, logger *zap.Sugare
 // 装配缺失时问题域降级为「无 SLA 绑定」而非拒绝创建——能力缺失不得阻断主流程。
 func (s *Service) SetSLAService(slaSvc *service.TicketSLAService) {
 	s.slaSvc = slaSvc
+}
+
+// KnowledgeSink 知识沉淀目标的窄接口。由 bootstrap 注入 handlers/knowledge
+// 的 EntRepository 实现——问题域只依赖「建文章 + 按来源反查」两个用例，
+// 不感知知识域的评审/版本/RAG 细节，知识域演进不牵连问题域。
+type KnowledgeSink interface {
+	Create(ctx context.Context, a *knowledge.Article) (*knowledge.Article, error)
+	ListBySourceProblem(ctx context.Context, tenantID, problemID int) ([]*knowledge.Article, error)
+}
+
+// SetKnowledgeRepository 注入知识沉淀目标仓储（装配缺失时沉淀端点显式 503）。
+func (s *Service) SetKnowledgeRepository(kb KnowledgeSink) {
+	s.kbRepo = kb
 }
 
 // bindSLAOnCreate 问题创建后绑定 SLA：按 problem 服务类型 + 优先级匹配 SLA 定义，
@@ -191,6 +208,120 @@ func (s *Service) AddComment(ctx context.Context, tenantID, problemID, userID in
 // ListComments 分页列出问题评论（时间正序）。
 func (s *Service) ListComments(ctx context.Context, tenantID, problemID int, page, size int) ([]*ProblemComment, int, error) {
 	return s.repo.ListComments(ctx, tenantID, problemID, page, size)
+}
+
+// ── 知识沉淀闭环（2026-10-22 落地）────────────────────────────────────────────
+//
+// 问题域与知识域的双向断链是知识域预览期的核心缺口：
+//   - 正向：问题解决后没有「沉淀为知识」的动作，根因/方案散落在问题单里，
+//     RAG 检索不到，同一个故障换个人处理还得重新踩坑；
+//   - 反向：调查摘要里的 KnowledgeArticles 字段恒为空数组（契约存在、实现缺席）。
+//
+// 沉淀产物按知识域既有治理流走：创建即 draft，发布必须过评审——
+// 沉淀降低的是记录成本，不是审核成本。
+
+// PromoteKnowledgeInput 沉淀请求的可选覆盖项。nil/空串字段用问题单内容兜底。
+type PromoteKnowledgeInput struct {
+	Title    string   // 空 = 问题标题
+	Category string   // 空 = 故障排查
+	Tags     []string // 追加在自动标签（问题沉淀 + 问题编号）之后，去重
+}
+
+// PromoteToKnowledge 把问题的根因/解决方案沉淀为知识草稿（POST /problems/:id/knowledge）。
+//
+// 准入门槛：至少要有根因或解决方案之一。没有可复用结论的问题沉淀出来
+// 只是一篇空壳文章，污染 RAG 语料——这是质量门，不是流程绊脚石。
+// 允许同一问题沉淀多篇（不同侧面，如「根因复盘」与「预防指南」），不做唯一性约束。
+func (s *Service) PromoteToKnowledge(ctx context.Context, tenantID, problemID, userID int, in PromoteKnowledgeInput) (*knowledge.Article, error) {
+	p, err := s.repo.Get(ctx, problemID, tenantID)
+	if err != nil {
+		return nil, err
+	}
+
+	rootCause := strings.TrimSpace(p.RootCause)
+	resolution := strings.TrimSpace(p.Resolution)
+	if rootCause == "" && resolution == "" {
+		return nil, common.NewBusinessError(common.UnprocessableEntityCode,
+			"问题尚无根因或解决方案，沉淀为知识没有可复用价值", "root_cause and resolution both empty")
+	}
+
+	title := strings.TrimSpace(in.Title)
+	if title == "" {
+		title = p.Title
+	}
+	category := strings.TrimSpace(in.Category)
+	if category == "" {
+		category = "故障排查"
+	}
+
+	// 内容模板按问题单字段分段组装，空段跳过。
+	var b strings.Builder
+	b.WriteString("## 问题现象\n\n")
+	b.WriteString(strings.TrimSpace(p.Description))
+	b.WriteString("\n")
+	if rootCause != "" {
+		b.WriteString("\n## 根因分析\n\n")
+		b.WriteString(rootCause)
+		b.WriteString("\n")
+	}
+	if wa := strings.TrimSpace(p.Workaround); wa != "" {
+		b.WriteString("\n## 临时措施\n\n")
+		b.WriteString(wa)
+		b.WriteString("\n")
+	}
+	if resolution != "" {
+		b.WriteString("\n## 解决方案\n\n")
+		b.WriteString(resolution)
+		b.WriteString("\n")
+	}
+
+	// 自动标签标明沉淀来源；来源追溯的权威字段是 source_problem_id，标签只服务检索。
+	tags := []string{"问题沉淀", p.ProblemNumber}
+	for _, t := range in.Tags {
+		t = strings.TrimSpace(t)
+		if t == "" {
+			continue
+		}
+		dup := false
+		for _, existing := range tags {
+			if existing == t {
+				dup = true
+				break
+			}
+		}
+		if !dup {
+			tags = append(tags, t)
+		}
+	}
+
+	if s.kbRepo == nil {
+		return nil, common.NewBusinessError(common.ServiceUnavailableCode,
+			"知识沉淀能力未装配", "knowledge repository not wired in bootstrap")
+	}
+
+	return s.kbRepo.Create(ctx, &knowledge.Article{
+		Title:           title,
+		Content:         b.String(),
+		Category:        category,
+		Tags:            tags,
+		AuthorID:        userID,
+		TenantID:        tenantID,
+		IsPublished:     false, // 草稿进评审流，沉淀不等于发布
+		SourceProblemID: &problemID,
+	})
+}
+
+// ListProblemKnowledge 反查问题沉淀的知识文章（GET /problems/:id/knowledge）。
+// 先过问题可见性校验：跨租户问题 ID 与不存在一样返回 not visible，
+// 不给「这篇知识来自别家租户的哪个问题」留探测面。
+func (s *Service) ListProblemKnowledge(ctx context.Context, tenantID, problemID int) ([]*knowledge.Article, error) {
+	if _, err := s.repo.Get(ctx, problemID, tenantID); err != nil {
+		return nil, err
+	}
+	if s.kbRepo == nil {
+		return []*knowledge.Article{}, nil
+	}
+	return s.kbRepo.ListBySourceProblem(ctx, tenantID, problemID)
 }
 
 // validateAssignee 统一受指人同租户/在职校验入口。

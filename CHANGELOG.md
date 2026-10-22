@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **问题→知识沉淀闭环落地（2026-10-22，知识域预览收口）**：问题域与知识域的双向断链补齐——正向新增 `POST /api/v1/problems/:id/knowledge`，把问题的现象/根因/临时措施/解决方案模板化组装为知识草稿（全字段可选，空值用问题单内容兜底；沉淀产物为 draft，发布须过知识评审流——沉淀降低的是记录成本，不是审核成本）；反向新增 `GET /api/v1/problems/:id/knowledge` 反查沉淀文章（含草稿，创建时间倒序），并把问题调查摘要 `GET /problems/:id/investigation/summary` 里恒为空数组的 `KnowledgeArticles` 字段接上真实数据。`knowledge_articles` 新增 `source_problem_id`（迁移 `20261022_knowledge_source_problem.sql`，裸 ID 引用而非外键：沉淀后的知识是独立资产，问题删除不级联删知识；索引 `(tenant_id, source_problem_id)` 支撑反查）。质量门：无根因且无解决方案的问题沉淀 422 拒绝——没有可复用结论的空壳文章只会污染 RAG 语料；允许同一问题沉淀多篇（不同侧面）。权限语义：入口挂在问题域，但动作是「创建知识」，写走 `knowledge:write`、反查走 `knowledge:read`，不因入口放宽。跨租户问题在沉淀与反查两个方向统一 404，不暴露 ID 可枚举信号；知识仓储未装配时沉淀端点显式 503/5003，不静默假成功。契约见 [docs/api-reference.md](./docs/api-reference.md)「问题知识沉淀」。
+
 ### Changed
 
 - **能力矩阵：`notification` 由 Pilot 晋升 GA（2026-10-21）**：阻断项是投递不可观测——投递审计读面（`GET /notification-deliveries` + 失败重试）与渠道诊断（`GET /notifications/channels`）补齐后，配合既有的偏好过滤、幂等键与 outbox 重试，「没收到通知」的三类根因（渠道没装 / 渠道不健康 / 收件人没配目标）都能在一次请求里定位。晋升有测试锁定：`handlers/capability/handler_test.go` 的 `TestPromotedCapabilitiesAreGA`。

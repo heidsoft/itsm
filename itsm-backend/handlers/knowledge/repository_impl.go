@@ -69,6 +69,7 @@ func toDomain(e *ent.KnowledgeArticle) *Article {
 		LastReviewedAt:     e.LastReviewedAt,
 		ReviewIntervalDays: e.ReviewIntervalDays,
 		AuthorityLevel:     e.AuthorityLevel,
+		SourceProblemID:    e.SourceProblemID,
 	}
 }
 
@@ -89,6 +90,7 @@ func (r *EntRepository) Create(ctx context.Context, a *Article) (*Article, error
 		SetNillableLastReviewedAt(a.LastReviewedAt).
 		SetReviewIntervalDays(a.ReviewIntervalDays).
 		SetAuthorityLevel(a.AuthorityLevel).
+		SetNillableSourceProblemID(a.SourceProblemID).
 		Save(ctx)
 	if err != nil {
 		return nil, err
@@ -695,4 +697,26 @@ func (r *EntRepository) GetByIDs(ctx context.Context, tenantID int, ids []int) (
 		}
 	}
 	return result, nil
+}
+
+// ListBySourceProblem 返回由指定问题沉淀的文章（含草稿，创建时间倒序）。
+// 租户过滤在查询里做：跨租户的问题 ID 查不到任何文章，
+// 与问题域可见性校验（ErrProblemNotVisible）共同构成双向防线。
+func (r *EntRepository) ListBySourceProblem(ctx context.Context, tenantID, problemID int) ([]*Article, error) {
+	es, err := r.client.KnowledgeArticle.Query().
+		Where(
+			knowledgearticle.TenantID(tenantID),
+			knowledgearticle.SourceProblemID(problemID),
+			knowledgearticle.DeletedAtIsNil(),
+		).
+		Order(ent.Desc(knowledgearticle.FieldCreatedAt)).
+		All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	articles := make([]*Article, 0, len(es))
+	for _, e := range es {
+		articles = append(articles, toDomain(e))
+	}
+	return articles, nil
 }

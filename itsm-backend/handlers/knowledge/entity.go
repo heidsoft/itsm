@@ -46,6 +46,10 @@ type Article struct {
 	// Freshness 为派生字段，仅在检索/详情响应中填充，用于前端提示「该内容已逾期未复核」。
 	// 不参与写入，写入请以 ValidUntil / LastReviewedAt 等原始字段为准。
 	Freshness string `json:"freshness,omitempty"`
+
+	// 来源追溯：文章由哪个问题沉淀而来。nil = 手工创建。
+	// 裸 ID 引用而非外键：知识是独立资产，问题删除不级联删知识。
+	SourceProblemID *int `json:"sourceProblemId,omitempty"`
 }
 
 // Category represents a knowledge category

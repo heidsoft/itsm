@@ -60,6 +60,8 @@ func (h *Handler) toArticleDTO(a *Article) *dto.KnowledgeArticleResponse {
 		ReviewIntervalDays: a.ReviewIntervalDays,
 		AuthorityLevel:     a.AuthorityLevel,
 		Freshness:          h.describeFreshness(a),
+
+		SourceProblemID: a.SourceProblemID,
 	}
 }
 

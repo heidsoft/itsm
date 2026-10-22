@@ -1042,6 +1042,26 @@ Authorization: Bearer <accessToken>
 - 评论存储为独立表 `problem_comments`（迁移 `20261021_create_problem_comments.sql`），`problem_id` 外键 + 级联删除。历史注记：本端点曾恒定返回 `503/5003` unready（评论无独立存储），2026-10-21 转为真实契约。
 - 无 update/delete 端点（与 incident 评论同一取舍：评论为过程记录，不做编辑审计面）。
 
+### 问题知识沉淀
+
+```http
+POST /problems/{id}/knowledge
+GET /problems/{id}/knowledge
+Authorization: Bearer <accessToken>
+Content-Type: application/json
+```
+
+把问题的现象/根因/临时措施/解决方案沉淀为知识草稿，并支持反查沉淀结果（2026-10-22 落地，补齐问题域与知识域的双向断链）。
+
+- `POST` 请求体全字段可选：`{title?, category?, tags?}`。空值用问题单内容兜底——标题=问题标题、分类=`故障排查`、内容按 `问题现象 / 根因分析 / 临时措施 / 解决方案` 模板分段组装（空段跳过）；tags 自动追加 `问题沉淀` 与问题编号。
+- **质量门**：问题既无根因也无解决方案时 `422`/`4220` 拒绝——没有可复用结论的空壳文章只会污染 RAG 语料。允许同一问题沉淀多篇（不同侧面，如「根因复盘」与「预防指南」）。
+- **沉淀产物为 draft**：`is_published=false`，发布必须过知识评审流（submit→approve）——沉淀降低的是记录成本，不是审核成本。响应回显 `sourceProblemId`（来源追溯的权威字段）。
+- `GET` `200` 返回 `{items, total}`，`items` 为知识文章 DTO（`status` 为 `draft`/`published`），**含草稿**——沉淀当事人需要立刻看到沉淀结果；创建时间倒序。空列表 `items: []`（非 null）。
+- **权限语义**：入口挂在问题域，但动作语义是「创建知识」——写走 `knowledge:write`、反查走 `knowledge:read`，不因入口放宽。
+- **存储**：`knowledge_articles.source_problem_id`（迁移 `20261022_knowledge_source_problem.sql`）。裸 ID 引用而非外键：沉淀后的知识是独立资产，问题删除不级联删知识；引用完整性由业务层校验。
+- **跨租户隔离口径**：沉淀与反查都先校验问题归属，别家租户的 `problem_id` 统一 `404`/`4004`；知识仓储未装配时沉淀 `503`/`5003`（显式失败，不静默假成功）。回归见 `itsm-backend/router/problem_knowledge_route_test.go`。
+- 关联读面：问题调查摘要 `GET /problem-investigation/problems/{id}/summary` 的 `KnowledgeArticles` 字段同源（同一 `source_problem_id`），不再是恒空数组。
+
 ### 服务请求 SLA
 
 ```http

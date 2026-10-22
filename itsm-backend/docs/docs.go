@@ -11305,6 +11305,161 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/problems/{id}/knowledge": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "列出由该问题沉淀的知识文章（含草稿，创建时间倒序；2026-10-22 起为真实契约，取代调查摘要中恒为空的 KnowledgeArticles 缺口）。跨租户/不存在的问题统一 404，不暴露 ID 可枚举信号",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "问题管理"
+                ],
+                "summary": "反查问题沉淀的知识",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "问题ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.ListProblemKnowledgeResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "把问题的现象/根因/临时措施/解决方案组装为知识草稿（2026-10-22 起为真实契约）。全字段可选，空值用问题单内容兜底；沉淀产物为 draft，发布须过知识评审流。无根因且无解决方案时 422 拒绝；跨租户/不存在 404；知识仓储未装配 503。权限为 knowledge:write——动作语义是「创建知识」，不因入口在问题域而放宽",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "问题管理"
+                ],
+                "summary": "问题沉淀为知识",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "问题ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "可选覆盖项",
+                        "name": "request",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/dto.PromoteProblemKnowledgeRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.KnowledgeArticleResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/problems/{id}/root-cause": {
             "put": {
                 "security": [
@@ -16450,6 +16605,88 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.KnowledgeArticleResponse": {
+            "type": "object",
+            "properties": {
+                "author": {
+                    "type": "string"
+                },
+                "authorityLevel": {
+                    "description": "知识可引用性 L2：权威性",
+                    "type": "integer"
+                },
+                "category": {
+                    "type": "string"
+                },
+                "content": {
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "freshness": {
+                    "$ref": "#/definitions/dto.KnowledgeFreshness"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "lastReviewedAt": {
+                    "type": "string"
+                },
+                "reviewIntervalDays": {
+                    "type": "integer"
+                },
+                "sourceProblemId": {
+                    "description": "来源追溯：文章由哪个问题沉淀而来；空 = 手工创建",
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "tenantId": {
+                    "type": "integer"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                },
+                "validFrom": {
+                    "description": "知识可引用性 L1：时效性",
+                    "type": "string"
+                },
+                "validUntil": {
+                    "type": "string"
+                },
+                "views": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.KnowledgeFreshness": {
+            "type": "object",
+            "properties": {
+                "citable": {
+                    "description": "Citable 当前是否可被 RAG 引用",
+                    "type": "boolean"
+                },
+                "reviewDueAt": {
+                    "description": "ReviewDueAt 下次复核到期时间，未设复核周期时为空",
+                    "type": "string"
+                },
+                "verdict": {
+                    "description": "Verdict 时效判定结果：ok / not_yet_effective / expired / review_overdue",
+                    "type": "string"
+                }
+            }
+        },
         "dto.ListProblemCommentsResponse": {
             "type": "object",
             "properties": {
@@ -16464,6 +16701,20 @@ const docTemplate = `{
                 },
                 "size": {
                     "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.ListProblemKnowledgeResponse": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.KnowledgeArticleResponse"
+                    }
                 },
                 "total": {
                     "type": "integer"
@@ -17027,6 +17278,23 @@ const docTemplate = `{
                     "description": "流程变量",
                     "type": "object",
                     "additionalProperties": true
+                }
+            }
+        },
+        "dto.PromoteProblemKnowledgeRequest": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "type": "string"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "title": {
+                    "type": "string"
                 }
             }
         },

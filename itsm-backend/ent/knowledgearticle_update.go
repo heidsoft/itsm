@@ -387,6 +387,33 @@ func (_u *KnowledgeArticleUpdate) AddAuthorityLevel(v int) *KnowledgeArticleUpda
 	return _u
 }
 
+// SetSourceProblemID sets the "source_problem_id" field.
+func (_u *KnowledgeArticleUpdate) SetSourceProblemID(v int) *KnowledgeArticleUpdate {
+	_u.mutation.ResetSourceProblemID()
+	_u.mutation.SetSourceProblemID(v)
+	return _u
+}
+
+// SetNillableSourceProblemID sets the "source_problem_id" field if the given value is not nil.
+func (_u *KnowledgeArticleUpdate) SetNillableSourceProblemID(v *int) *KnowledgeArticleUpdate {
+	if v != nil {
+		_u.SetSourceProblemID(*v)
+	}
+	return _u
+}
+
+// AddSourceProblemID adds value to the "source_problem_id" field.
+func (_u *KnowledgeArticleUpdate) AddSourceProblemID(v int) *KnowledgeArticleUpdate {
+	_u.mutation.AddSourceProblemID(v)
+	return _u
+}
+
+// ClearSourceProblemID clears the value of the "source_problem_id" field.
+func (_u *KnowledgeArticleUpdate) ClearSourceProblemID() *KnowledgeArticleUpdate {
+	_u.mutation.ClearSourceProblemID()
+	return _u
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (_u *KnowledgeArticleUpdate) SetCreatedAt(v time.Time) *KnowledgeArticleUpdate {
 	_u.mutation.SetCreatedAt(v)
@@ -750,6 +777,15 @@ func (_u *KnowledgeArticleUpdate) sqlSave(ctx context.Context) (_node int, err e
 	}
 	if value, ok := _u.mutation.AddedAuthorityLevel(); ok {
 		_spec.AddField(knowledgearticle.FieldAuthorityLevel, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.SourceProblemID(); ok {
+		_spec.SetField(knowledgearticle.FieldSourceProblemID, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedSourceProblemID(); ok {
+		_spec.AddField(knowledgearticle.FieldSourceProblemID, field.TypeInt, value)
+	}
+	if _u.mutation.SourceProblemIDCleared() {
+		_spec.ClearField(knowledgearticle.FieldSourceProblemID, field.TypeInt)
 	}
 	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(knowledgearticle.FieldCreatedAt, field.TypeTime, value)
@@ -1318,6 +1354,33 @@ func (_u *KnowledgeArticleUpdateOne) AddAuthorityLevel(v int) *KnowledgeArticleU
 	return _u
 }
 
+// SetSourceProblemID sets the "source_problem_id" field.
+func (_u *KnowledgeArticleUpdateOne) SetSourceProblemID(v int) *KnowledgeArticleUpdateOne {
+	_u.mutation.ResetSourceProblemID()
+	_u.mutation.SetSourceProblemID(v)
+	return _u
+}
+
+// SetNillableSourceProblemID sets the "source_problem_id" field if the given value is not nil.
+func (_u *KnowledgeArticleUpdateOne) SetNillableSourceProblemID(v *int) *KnowledgeArticleUpdateOne {
+	if v != nil {
+		_u.SetSourceProblemID(*v)
+	}
+	return _u
+}
+
+// AddSourceProblemID adds value to the "source_problem_id" field.
+func (_u *KnowledgeArticleUpdateOne) AddSourceProblemID(v int) *KnowledgeArticleUpdateOne {
+	_u.mutation.AddSourceProblemID(v)
+	return _u
+}
+
+// ClearSourceProblemID clears the value of the "source_problem_id" field.
+func (_u *KnowledgeArticleUpdateOne) ClearSourceProblemID() *KnowledgeArticleUpdateOne {
+	_u.mutation.ClearSourceProblemID()
+	return _u
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (_u *KnowledgeArticleUpdateOne) SetCreatedAt(v time.Time) *KnowledgeArticleUpdateOne {
 	_u.mutation.SetCreatedAt(v)
@@ -1711,6 +1774,15 @@ func (_u *KnowledgeArticleUpdateOne) sqlSave(ctx context.Context) (_node *Knowle
 	}
 	if value, ok := _u.mutation.AddedAuthorityLevel(); ok {
 		_spec.AddField(knowledgearticle.FieldAuthorityLevel, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.SourceProblemID(); ok {
+		_spec.SetField(knowledgearticle.FieldSourceProblemID, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedSourceProblemID(); ok {
+		_spec.AddField(knowledgearticle.FieldSourceProblemID, field.TypeInt, value)
+	}
+	if _u.mutation.SourceProblemIDCleared() {
+		_spec.ClearField(knowledgearticle.FieldSourceProblemID, field.TypeInt)
 	}
 	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(knowledgearticle.FieldCreatedAt, field.TypeTime, value)

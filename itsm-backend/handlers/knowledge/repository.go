@@ -36,6 +36,10 @@ type Repository interface {
 	// GetByIDs returns articles by a list of IDs, preserving the order of IDs.
 	// It filters by tenant and only returns published, non-deleted articles.
 	GetByIDs(ctx context.Context, tenantID int, ids []int) ([]*Article, error)
+	// ListBySourceProblem 返回由指定问题沉淀的文章（含草稿，创建时间倒序）。
+	// 问题详情页「沉淀了哪些知识」反查的主路径；含草稿是因为
+	// 沉淀动作的当事人需要立刻看到沉淀结果（草稿也要走评审流）。
+	ListBySourceProblem(ctx context.Context, tenantID, problemID int) ([]*Article, error)
 }
 
 // Stats represents knowledge base statistics

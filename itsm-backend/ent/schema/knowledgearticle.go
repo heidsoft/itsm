@@ -58,9 +58,21 @@ func (KnowledgeArticle) Fields() []ent.Field {
 		// 0=普通 10=部门推荐 20=官方标准 30=唯一真相源。仅影响检索排序与并列时的取舍，
 		// 不参与准入判定——权威性低不等于不可引用，因此它不能承担正确性职责。
 		field.Int("authority_level").Comment("权威等级：0 普通 / 10 部门推荐 / 20 官方标准 / 30 唯一真相源").Default(0),
+		// ---- 来源追溯：问题沉淀 ----
+		// 记录文章由哪个问题沉淀而来。用裸 ID 而非 ent edge 是刻意的：
+		// 沉淀后的知识是独立资产，问题被删除不应级联删知识，
+		// 跨域外键只会带来误删与迁移耦合，引用完整性交给业务层校验。
+		field.Int("source_problem_id").Comment("来源问题ID；空=手工创建，非沉淀").Optional().Nillable(),
 		field.Time("created_at").Comment("创建时间").Default(time.Now),
 		field.Time("updated_at").Comment("更新时间").Default(time.Now).UpdateDefault(time.Now),
 		field.Time("deleted_at").Comment("软删除时间").Optional().Nillable(),
+	}
+}
+
+func (KnowledgeArticle) Indexes() []ent.Index {
+	return []ent.Index{
+		// 问题详情页反查「沉淀了哪些知识」的主路径。
+		index.Fields("tenant_id", "source_problem_id"),
 	}
 }
 
