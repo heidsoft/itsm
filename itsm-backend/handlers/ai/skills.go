@@ -175,6 +175,7 @@ func (s *TriageSkill) Validate(input interface{}) error {
 func (s *TriageSkill) Execute(ctx context.Context, input interface{}) (interface{}, error) {
 	in, _ := coerceToMap(input)
 	tenantID, _ := inputInt(in, "tenantId", 0)
+	userID, _ := inputInt(in, "userId", 0)
 	title, _ := inputString(in, "title", false)
 	description, _ := inputString(in, "description", false)
 	category, _ := inputString(in, "category", false)
@@ -182,7 +183,7 @@ func (s *TriageSkill) Execute(ctx context.Context, input interface{}) (interface
 	if s.svc == nil {
 		return nil, errors.New("triage skill: underlying service is nil")
 	}
-	return s.svc.TriageTicket(ctx, tenantID, title, description, category, priority)
+	return s.svc.TriageTicket(ctx, tenantID, userID, title, description, category, priority)
 }
 
 // ----------------------------------------------------------------------------

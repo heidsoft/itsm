@@ -59,6 +59,25 @@ func (r *aiTelemetryRepository) SaveFeedback(ctx context.Context, tenantID, user
 	return nil
 }
 
+// SaveAuditLedger 写一条服务端 AI 决策底账（item_type='ai_audit'）并返回行 ID。
+//
+// 与 SaveFeedback（客户端自报）相对：底账由服务端在产出 AI 建议时自动落，
+// accepted 列保持 NULL 表示「尚未决策」，操作者后续经 PATCH /ai/audit-logs/:id
+// 翻转。RETURNING id 让响应能携带 auditId，前端采纳/拒绝直接翻转底账，
+// 不再需要伪造 model 字段二次 POST。
+func (r *aiTelemetryRepository) SaveAuditLedger(ctx context.Context, tenantID, userID int, requestID, kind, inputRef, notes string, score int) (int64, error) {
+	const sqlStr = `
+		INSERT INTO ai_feedbacks (tenant_id, user_id, request_id, kind, query, item_type, item_id, useful, score, notes, accepted)
+		VALUES ($1, $2, $3, $4, $5, 'ai_audit', NULL, false, $6, $7, NULL)
+		RETURNING id
+	`
+	var id int64
+	if err := r.db.QueryRowContext(ctx, sqlStr, tenantID, userID, requestID, kind, inputRef, score, notes).Scan(&id); err != nil {
+		return 0, fmt.Errorf("save ai audit ledger: %w", err)
+	}
+	return id, nil
+}
+
 // UpdateFeedbackAccepted 翻转一条 ai_audit 记录的 accept/reject 决策。
 // 幂等：同值重复调用无副作用。仅对 item_type='ai_audit' 生效。
 func (r *aiTelemetryRepository) UpdateFeedbackAccepted(ctx context.Context, tenantID int64, id int64, accepted bool) error {

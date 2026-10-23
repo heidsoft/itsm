@@ -10,6 +10,11 @@ import (
 	"go.uber.org/zap"
 )
 
+// TriagePromptVersion 是分诊建议的 prompt/口径版本，随响应与服务端 AI 审计底账
+// 一起下发。分词语义、类别枚举或置信度归一化规则变更时必须递增，
+// 采纳率等评估指标才能按版本对齐（与 email-intake-v1 / incident-rca-v1 同一契约）。
+const TriagePromptVersion = "triage-v1"
+
 // guidanceTriageClient defines the interface for Guidance sidecar calls
 // This enables dependency injection for testing
 type guidanceTriageClient interface {
@@ -46,13 +51,26 @@ func (t *TriageService) normalizeResult(result TriageResult) TriageResult {
 }
 
 // TriageResult holds classification suggestions for incidents/tickets
+//
+// Model/PromptVersion 是溯源字段：Model 标注决策来源链路（guidance/llm/keyword，
+// 是「哪条路径给出的建议」而不是具体模型名——网关模型名随配置漂移，不适合做契约），
+// PromptVersion 是口径版本。两者随响应透出并写入服务端 AI 审计底账。
 type TriageResult struct {
-	Category     string  `json:"category"`
-	Priority     string  `json:"priority"`
-	AssigneeID   int     `json:"assigneeId"`
-	Confidence   float64 `json:"confidence"`
-	Explanation  string  `json:"explanation"`
-	SuggestedFix string  `json:"suggestedFix,omitempty"`
+	Category      string  `json:"category"`
+	Priority      string  `json:"priority"`
+	AssigneeID    int     `json:"assigneeId"`
+	Confidence    float64 `json:"confidence"`
+	Explanation   string  `json:"explanation"`
+	SuggestedFix  string  `json:"suggestedFix,omitempty"`
+	Model         string  `json:"model,omitempty"`
+	PromptVersion string  `json:"promptVersion,omitempty"`
+}
+
+// withTrace 给分诊结果补溯源字段（决策链路 + 口径版本）。
+func (t *TriageService) withTrace(r TriageResult, model string) TriageResult {
+	r.Model = model
+	r.PromptVersion = TriagePromptVersion
+	return r
 }
 
 // TriageService provides LLM-powered ticket triage and classification
@@ -160,14 +178,14 @@ func (t *TriageService) SuggestForTenant(ctx context.Context, title, description
 				zap.String("priority", guidanceResult.Priority),
 				zap.Float64("confidence", guidanceResult.Confidence),
 				zap.Float64("latency_ms", guidanceResult.LatencyMs))
-			return t.normalizeResult(TriageResult{
+			return t.withTrace(t.normalizeResult(TriageResult{
 				Category:     guidanceResult.Category,
 				Priority:     guidanceResult.Priority,
 				AssigneeID:   guidanceResult.AssigneeID,
 				Confidence:   guidanceResult.Confidence,
 				Explanation:  guidanceResult.Explanation,
 				SuggestedFix: guidanceResult.SuggestedFix,
-			})
+			}), "guidance")
 		}
 	}
 
@@ -177,9 +195,9 @@ func (t *TriageService) SuggestForTenant(ctx context.Context, title, description
 		if err != nil {
 			t.logger.Warn("TriageService: LLM classification failed, using fallback", zap.Error(err))
 			if t.keywordFallback {
-				return t.keywordBasedSuggest(text)
+				return t.withTrace(t.keywordBasedSuggest(text), "keyword")
 			}
-			return result
+			return t.withTrace(result, "keyword")
 		}
 
 		// LLM-first: use LLM result if confidence is acceptable
@@ -189,19 +207,19 @@ func (t *TriageService) SuggestForTenant(ctx context.Context, title, description
 				t.logger.Info("TriageService: keyword result has higher confidence",
 					zap.Float64("llm_confidence", llmResult.Confidence),
 					zap.Float64("keyword_confidence", keywordResult.Confidence))
-				return keywordResult
+				return t.withTrace(keywordResult, "keyword")
 			}
 		}
 
-		return llmResult
+		return t.withTrace(llmResult, "llm")
 	}
 
 	// Priority 3: Use keyword-based fallback
 	if t.keywordFallback {
-		return t.keywordBasedSuggest(text)
+		return t.withTrace(t.keywordBasedSuggest(text), "keyword")
 	}
 
-	return result
+	return t.withTrace(result, "keyword")
 }
 
 // llmClassify uses LLM for intelligent ticket classification

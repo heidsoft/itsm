@@ -18,6 +18,10 @@ import (
 
 const incidentAnalysisPromptVersion = "incident-rca-v1"
 
+// ticketAnalysisPromptVersion 工单 RCA 的 prompt/口径版本，随响应与 ai_analysis_results
+// 持久化记录一起下发。与 incident-rca-v1 同一契约：分析语义变更必须递增。
+const ticketAnalysisPromptVersion = "ticket-rca-v1"
+
 var allowedRootCauseCategories = map[string]struct{}{
 	"infrastructure": {}, "software": {}, "process": {}, "network": {}, "security": {}, "other": {},
 }
@@ -103,6 +107,7 @@ func (s *RootCauseService) AnalyzeTicket(ctx context.Context, ticketID int, tena
 		AnalysisSummary: analysis.AnalysisSummary,
 		ConfidenceScore: analysis.ConfidenceScore,
 		AnalysisMethod:  analysis.AnalysisMethod,
+		PromptVersion:   ticketAnalysisPromptVersion,
 		GeneratedAt:     analysis.CreatedAt,
 	}
 
@@ -167,6 +172,7 @@ func (s *RootCauseService) GetAnalysisReport(ctx context.Context, ticketID int, 
 		AnalysisSummary: analysis.AnalysisSummary,
 		ConfidenceScore: analysis.ConfidenceScore,
 		AnalysisMethod:  analysis.AnalysisMethod,
+		PromptVersion:   ticketAnalysisPromptVersion,
 		GeneratedAt:     analysis.CreatedAt,
 	}
 

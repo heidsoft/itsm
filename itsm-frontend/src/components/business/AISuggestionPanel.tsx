@@ -10,7 +10,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Typography, Tag, Button, Space, Spin, Progress, Alert } from 'antd';
 import { Sparkles, Check, X, RefreshCw, AlertCircle } from 'lucide-react';
-import { aiTriage, recordAIAudit, type TriageResult } from '@/lib/api/ai-api';
+import { aiTriage, recordAIAudit, aiUpdateAuditAccepted, type TriageResult } from '@/lib/api/ai-api';
 
 const { Text, Paragraph } = Typography;
 
@@ -95,8 +95,16 @@ export function AISuggestionPanel({
   }, [title, description, dismissed]);
 
   // 上报 AI 审计（GA AI trace 契约）：采纳/驳回只更新本地状态会让 /ai/audit-logs 永远是空的。
+  // 优先翻转服务端决策底账（分诊响应携带 auditId，溯源字段由服务端写入，真实可信）；
+  // 仅在旧后端无底账时回退到客户端自报 POST /ai/audit。
   // fire-and-forget：失败仅记 console，不阻塞交互。
   const reportAudit = (accepted: boolean, s: TriageResult) => {
+    if (typeof s.auditId === 'number' && s.auditId > 0) {
+      aiUpdateAuditAccepted(s.auditId, accepted).catch((err) => {
+        console.warn('[AIAudit] 底账翻转失败（不阻塞）', err);
+      });
+      return;
+    }
     recordAIAudit({
       scenario: 'triage',
       inputRef: `ticket:${title}`,

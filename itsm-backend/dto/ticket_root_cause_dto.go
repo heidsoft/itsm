@@ -16,6 +16,7 @@ type TicketRootCauseAnalysisResponse struct {
 	AnalysisSummary string                    `json:"analysisSummary" example:"系统自动分析识别出2个可能的根本原因"`
 	ConfidenceScore float64                   `json:"confidenceScore" example:"0.85"`
 	AnalysisMethod  string                    `json:"analysisMethod" example:"automatic"`
+	PromptVersion   string                    `json:"promptVersion" example:"ticket-rca-v1"`
 	GeneratedAt     time.Time                 `json:"generatedAt" example:"2024-01-01T00:00:00Z"`
 }
 

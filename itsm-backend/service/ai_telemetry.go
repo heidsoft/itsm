@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -88,6 +89,35 @@ func (s *AITelemetryService) SaveFeedback(ctx context.Context, tenantID, userID 
 // UpdateAuditAccepted 翻转 ai_feedbacks.accepted。详见 repository。
 func (s *AITelemetryService) UpdateAuditAccepted(ctx context.Context, tenantID int, id int64, accepted bool) error {
 	return s.repo.UpdateFeedbackAccepted(ctx, int64(tenantID), id, accepted)
+}
+
+// RecordDecisionAudit 写一条服务端 AI 决策底账并返回行 ID。
+//
+// 与 handler 的 RecordAudit（POST /ai/audit，客户端自报 model/promptVersion）
+// 相对，本方法由服务端在产出 AI 建议时调用：confidence 由调用方保证 ∈ [0,1]
+//（超出按 0 处理并钳制 score），notes JSON 键名与 RecordAudit 的写读契约一致
+//（camelCase，见 audit_notes_contract_test.go）。accepted 保持 NULL=未决策，
+// 由操作者经 PATCH /ai/audit-logs/:id 翻转。
+func (s *AITelemetryService) RecordDecisionAudit(ctx context.Context, tenantID, userID int, reqID, scenario, inputRef, promptVersion, model string, confidence float64, suggestion map[string]interface{}) (int64, error) {
+	if s == nil || s.repo == nil {
+		return 0, fmt.Errorf("ai telemetry service not initialized")
+	}
+	if confidence < 0 || confidence > 1 {
+		confidence = 0
+	}
+	notePayload := map[string]interface{}{
+		"promptVersion": promptVersion,
+		"model":         model,
+		"confidence":    confidence,
+		"suggestion":    suggestion,
+		"notes":         "server-generated decision ledger",
+	}
+	noteBytes, err := json.Marshal(notePayload)
+	if err != nil {
+		return 0, fmt.Errorf("marshal ai audit notes: %w", err)
+	}
+	score := int(confidence * 100)
+	return s.repo.SaveAuditLedger(ctx, tenantID, userID, reqID, scenario, inputRef, string(noteBytes), score)
 }
 
 // AIMetrics 指标聚合结果（API JSON 形状）。

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
 	"net/http"
 	"strconv"
 	"time"
@@ -543,6 +544,12 @@ func (h *Handler) RecordAudit(c *gin.Context) {
 		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
+	// 置信度契约统一 0-1：超出区间或 NaN/Inf 一律 400，不再静默 clamp——
+	// 非法值进入 evaluator 的置信度校准分桶会把整个桶污染成"低置信"。
+	if req.Confidence < 0 || req.Confidence > 1 || math.IsNaN(req.Confidence) || math.IsInf(req.Confidence, 0) {
+		common.Fail(c, common.ValidationError, "confidence 必须在 0-1 之间（0 与 1 边界合法）")
+		return
+	}
 
 	tenantID := c.GetInt("tenant_id")
 	if tenantID == 0 {
@@ -757,7 +764,7 @@ func (h *Handler) Triage(c *gin.Context) {
 		return
 	}
 
-	result, err := h.svc.TriageTicket(c.Request.Context(), tenantID, req.Title, req.Description, req.Category, req.Priority)
+	result, err := h.svc.TriageTicket(c.Request.Context(), tenantID, c.GetInt("user_id"), req.Title, req.Description, req.Category, req.Priority)
 	if err != nil {
 		h.svc.logger.Warnw("AI分诊失败，返回降级响应", "error", err, "tenantID", tenantID)
 		common.Success(c, gin.H{

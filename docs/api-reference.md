@@ -41,6 +41,17 @@ POST /api/v1/bpmn/ai/templates/{key}/archive
 
 创建模板会生成新的草稿版本（例如 `1.0.0`、`1.1.0`），编辑只允许作用于草稿；发布成功后状态为 `published`，停用只将最新已发布版本标记为 `archived`，不会删除历史版本。
 
+## AI 智能分诊
+
+需要 `ai:read` 权限。
+
+```http
+POST /api/v1/ai/triage
+{"title":"数据库连接超时","description":"应用无法连接 PostgreSQL"}
+```
+
+响应携带置信度与溯源字段：`suggestions.confidence`（0-1）之外，顶层还有 `promptVersion`（口径版本，当前 `triage-v1`，分词语义变更必须递增）、`model`（决策链路：`guidance`/`llm`/`keyword`）与 `auditId`（服务端决策底账行 ID）。服务端在产出建议时**自动**落一条 `item_type='ai_audit'` 底账（`accepted=NULL` 未决策，溯源字段由服务端写入）；前端采纳/拒绝直接 `PATCH /api/v1/ai/audit-logs/{auditId}` 翻转，不再需要客户端伪造 `model` 二次 POST 自报。底账写失败不阻塞建议返回，仅响应不携带 `auditId`。
+
 ## AI 审计记录
 
 需要 `ai:read` 权限，租户范围只取认证上下文，查询参数中的同名字段不生效。
@@ -52,6 +63,8 @@ GET /api/v1/ai/audit-logs?page=1&pageSize=20&days=90&kind=triage
 分页规则由 `common.GetPaginationFromQuery` 单点决定：缺省 `page=1`、`pageSize=20`，只采纳 `1–100`，越界或非数字回落 20，`page<=0` 归一为 1。响应 `data` 是标准五键列表信封 `{items,total,page,pageSize,totalPages}`，`page`/`pageSize` 回显的是**实际采纳值**而不是客户端原值。`days` 是回溯窗口天数（缺省及非正值均为 90），`kind` 为空时不加该过滤。
 
 `items` 为 `AIAuditEntry`：`id`、`createdAt`、`tenantId`、`userId`、`requestId`、`scenario`、`inputRef`、`promptVersion`、`model`、`confidence`、`accepted`、`suggestion`、`notes`。排序固定为 `created_at DESC, id DESC`；只统计 `item_type='ai_audit'` 的记录，空结果集序列化为 `[]`。缺少租户上下文返回 401 / `2001` 且响应体只有这一份 JSON。
+
+`POST /ai/audit`（客户端自报审计）的 `confidence` 契约统一 0-1：负值、大于 1 返回 400 / `1002`（`0` 与 `1` 边界合法）。此前服务端静默 clamp，非法值进入 evaluator 置信度校准分桶会把桶污染成"低置信"。
 
 ## 通用响应格式
 

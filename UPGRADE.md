@@ -2633,6 +2633,37 @@ cd itsm-backend && go test -count=1 ./service/ -run 'TestServiceQualityReport' \
   && go test -count=1 ./handlers/ -run 'TestParseQualityWindow|TestGetServiceQualityUnwired'
 ```
 
+### 1.70 AI 分诊服务端底账 + 置信度契约收紧（2026-10-23，行为变更：`POST /ai/audit` 越界 confidence 返回 400）
+
+AI 域预览收口（置信度强制化 + 反馈收集）：AI 建议的采纳/拒绝反馈从「前端自报」改为
+「服务端底账」，置信度口径统一 0-1 并在入口强制校验。
+
+**分诊 `POST /api/v1/ai/triage` 响应新增字段**（向后兼容，纯新增）：
+
+- `promptVersion`：口径版本，当前 `triage-v1`（分词语义/类别枚举/置信度归一化变更必须递增）。
+- `model`：决策链路溯源（`guidance` / `llm` / `keyword`），是「哪条路径给出的建议」，
+  不是具体模型名（模型名随配置漂移，不适合做契约）。
+- `auditId`：服务端决策底账行 ID。服务端在产出建议时自动写一条 `item_type='ai_audit'`
+  行（溯源字段由服务端写入，`accepted=NULL` 未决策）。前端采纳/拒绝改为
+  `PATCH /api/v1/ai/audit-logs/{auditId}` 翻转底账——旧后端无 `auditId` 时前端自动
+  回退旧的 `POST /ai/audit` 自报路径。底账写失败不阻塞建议返回。
+
+**行为变更（集成方影响）**：`POST /ai/audit` 的 `confidence` 必须落在 `[0,1]`
+（`0`/`1` 边界合法），越界返回 400 / `1002`，此前是静默 clamp 到 score 0-100。
+非法值进入 evaluator 的置信度校准分桶会把整个桶污染成"低置信"，因此不再容忍。
+
+**顺带修复**：分诊此前调 `Suggest`（内部硬编码 `tenant=1`），Guidance sidecar 拿到
+的租户上下文是错的，现改用租户版 `SuggestForTenant`。工单 RCA 响应补
+`promptVersion`（`ticket-rca-v1`，与 `incident-rca-v1` 同一契约）；RCA/事件分析的
+`ai_analysis_results` 持久化记录此前 `confidence_score` 恒空，现携带真实置信度。
+
+**验证**
+
+```bash
+cd itsm-backend && go test -count=1 ./handlers/ai/ ./service/ -run 'TestTriage|TestRecordAudit_Confidence|TestAIResultTrace'
+cd itsm-frontend && npx tsc --noEmit
+```
+
 ## 2. 环境变量变更
 
 本次升级**移除了多个"幽灵配置项"**（在示例文件中声明但代码/Compose 从不读取，用户配置了也不生效），并修正了一个 Grafana 密码安全缺陷。

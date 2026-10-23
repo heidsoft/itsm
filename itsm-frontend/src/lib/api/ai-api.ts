@@ -9,6 +9,12 @@ export interface TriageResult {
   confidence: number;
   explanation: string;
   urgency?: string;
+  /** 服务端决策底账行 ID：有值时采纳/拒绝直接 PATCH /ai/audit-logs/:id 翻转 */
+  auditId?: number;
+  /** prompt/口径版本（triage-v1） */
+  promptVersion?: string;
+  /** 决策链路：guidance | llm | keyword */
+  model?: string;
 }
 
 export interface RagAnswer {
@@ -84,6 +90,9 @@ export async function aiTriage(title: string, description: string): Promise<Tria
   const res = await httpClient.post<{
     title: string;
     description: string;
+    auditId?: number;
+    promptVersion?: string;
+    model?: string;
     suggestions?: {
       category?: string;
       priority?: string;
@@ -101,6 +110,9 @@ export async function aiTriage(title: string, description: string): Promise<Tria
     explanation: suggestions.reasoning || '',
     urgency: suggestions.urgency,
     assigneeId: 0,
+    auditId: res?.auditId,
+    promptVersion: res?.promptVersion,
+    model: res?.model,
   };
 }
 

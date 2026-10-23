@@ -34,7 +34,20 @@ type Service struct {
 	summarizeService *service.SummarizeService
 	// ent client，用于复用 RBAC hasResourcePermission
 	entClient *ent.Client
+	// auditLedger 服务端 AI 决策底账写口（窄接口，生产实现是 AITelemetryService）。
+	// nil 时分诊不落底账，响应不携带 auditId（降级不阻塞）。
+	auditLedger AuditLedgerWriter
 }
+
+// AuditLedgerWriter 是服务端 AI 决策底账的窄接口：产出 AI 建议时自动落一条
+// item_type='ai_audit' 行（accepted=NULL 未决策），返回行 ID 供操作者经
+// PATCH /ai/audit-logs/:id 翻转采纳/拒绝。生产实现 *service.AITelemetryService。
+type AuditLedgerWriter interface {
+	RecordDecisionAudit(ctx context.Context, tenantID, userID int, reqID, scenario, inputRef, promptVersion, model string, confidence float64, suggestion map[string]interface{}) (int64, error)
+}
+
+// 编译期断言：生产实现满足窄接口。
+var _ AuditLedgerWriter = (*service.AITelemetryService)(nil)
 
 func NewService(
 	repo Repository,
@@ -49,7 +62,7 @@ func NewService(
 	rca *service.RootCauseService,
 	aiTelemetryService *service.AITelemetryService,
 ) *Service {
-	return &Service{
+	s := &Service{
 		repo:               repo,
 		logger:             logger,
 		rag:                rag,
@@ -62,6 +75,16 @@ func NewService(
 		rca:                rca,
 		aiTelemetryService: aiTelemetryService,
 	}
+	// 遥测服务就绪时默认作为底账写口；测试可用 SetAuditLedger 覆盖为 mock。
+	if aiTelemetryService != nil {
+		s.auditLedger = aiTelemetryService
+	}
+	return s
+}
+
+// SetAuditLedger 注入/替换决策底账写口（测试用；bootstrap 走 NewService 默认装配）。
+func (s *Service) SetAuditLedger(l AuditLedgerWriter) {
+	s.auditLedger = l
 }
 
 // SetLLMGateway wires an optional LLM gateway for streaming answers.
@@ -545,7 +568,8 @@ func (s *Service) AnalyzeTicketWithAudit(ctx context.Context, ticketID int, tena
 		return nil, err
 	}
 	prompt := fmt.Sprintf("AnalyzeTicket ticketID=%d", ticketID)
-	s.persistAIResult(ctx, "rca", tenantID, userID, prompt, result, "", 0, 0, nil)
+	confidence, promptVersion, _ := aiResultTrace(result)
+	s.persistAIResult(ctx, "rca", tenantID, userID, prompt+" promptVersion="+promptVersion, result, "", 0, 0, &confidence)
 	return result, nil
 }
 
@@ -562,8 +586,22 @@ func (s *Service) AnalyzeIncidentWithAudit(ctx context.Context, incidentID int, 
 		return nil, err
 	}
 	prompt := fmt.Sprintf("AnalyzeIncident incidentID=%d", incidentID)
-	s.persistAIResult(ctx, "incident_impact", tenantID, userID, prompt, result, "", 0, 0, nil)
+	confidence, promptVersion, _ := aiResultTrace(result)
+	s.persistAIResult(ctx, "incident_impact", tenantID, userID, prompt+" promptVersion="+promptVersion, result, "", 0, 0, &confidence)
 	return result, nil
+}
+
+// aiResultTrace 从 RCA/事件分析响应中提取置信度与 prompt 版本，供持久化与底账使用。
+// 未知类型返回 ok=false（confidence=0，不落置信度语义）。
+func aiResultTrace(result interface{}) (confidence float64, promptVersion string, ok bool) {
+	switch r := result.(type) {
+	case *dto.TicketRootCauseAnalysisResponse:
+		return r.ConfidenceScore, r.PromptVersion, true
+	case *dto.IncidentAIAnalysisResponse:
+		return r.ConfidenceScore, r.PromptVersion, true
+	default:
+		return 0, "", false
+	}
 }
 
 // CreateTicketByAI 通过 AI 解析自然语言描述，智能分析并返回工单创建建议
@@ -779,14 +817,23 @@ func (s *Service) SearchKnowledge(ctx context.Context, tenantID int, query strin
 // 移除内联关键词 fallback，统一委托
 // service/triage_service.go（Guidance → LLM → keyword 三级链）。
 // triageService 不可用时返回 unclassified + confidence=0，不再维护第二套分类枚举。
-func (s *Service) TriageTicket(ctx context.Context, tenantID int, title, description, category, priority string) (interface{}, error) {
+//
+// 置信度/溯源强制化：结果携带 promptVersion/model 溯源字段，并自动落一条服务端
+// AI 决策底账（item_type='ai_audit'，accepted=NULL 未决策）。响应携带 auditId，
+// 前端采纳/拒绝直接 PATCH /ai/audit-logs/:id 翻转底账，不再需要伪造 model
+// 二次 POST 自报。底账写失败不阻塞建议返回（best-effort），仅去掉 auditId。
+func (s *Service) TriageTicket(ctx context.Context, tenantID int, userID int, title, description, category, priority string) (interface{}, error) {
 	s.logger.Infow("Ticket Triage", "title", title, "tenantID", tenantID)
 
 	if s.triageService != nil {
-		result := s.triageService.Suggest(ctx, title, description)
-		return map[string]interface{}{
-			"title":       title,
-			"description": description,
+		// 用租户版 SuggestForTenant：此前调 Suggest 内部硬编码 tenant=1，
+		// Guidance sidecar 拿到的租户上下文是错的。
+		result := s.triageService.SuggestForTenant(ctx, title, description, tenantID)
+		response := map[string]interface{}{
+			"title":         title,
+			"description":   description,
+			"promptVersion": result.PromptVersion,
+			"model":         result.Model,
 			"suggestions": map[string]interface{}{
 				"category":   result.Category,
 				"priority":   result.Priority,
@@ -794,7 +841,24 @@ func (s *Service) TriageTicket(ctx context.Context, tenantID int, title, descrip
 				"reasoning":  result.Explanation,
 				"urgency":    s.determineUrgency(result.Priority),
 			},
-		}, nil
+		}
+		if s.auditLedger != nil {
+			auditID, ledgerErr := s.auditLedger.RecordDecisionAudit(ctx, tenantID, userID,
+				fmt.Sprintf("triage_%d_%d", tenantID, time.Now().UnixNano()),
+				"triage", fmt.Sprintf("ticket:%s", title),
+				result.PromptVersion, result.Model, result.Confidence,
+				map[string]interface{}{
+					"category": result.Category,
+					"priority": result.Priority,
+				},
+			)
+			if ledgerErr != nil {
+				s.logger.Warnw("TriageTicket: audit ledger write failed (best-effort)", "error", ledgerErr)
+			} else {
+				response["auditId"] = auditID
+			}
+		}
+		return response, nil
 	}
 
 	return map[string]interface{}{
@@ -839,6 +903,11 @@ func (s *Service) ListAuditLogs(ctx context.Context, tenantID, page, pageSize in
 		return []service.AIAuditEntry{}, 0, nil
 	}
 	return s.aiTelemetryService.ListAuditLogs(ctx, tenantID, page, pageSize, kind, days)
+}
+
+// ExposeResultTraceForTest 供包外测试验证 aiResultTrace 的类型提取逻辑。
+func ExposeResultTraceForTest(result interface{}) (float64, string, bool) {
+	return aiResultTrace(result)
 }
 
 // parseDate parses date string in YYYY-MM-DD format
