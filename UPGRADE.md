@@ -2800,6 +2800,27 @@ cd itsm-backend && go test -count=1 ./handlers/ticket/ ./dto/ ./router/
 cd itsm-backend && go test -count=1 ./handlers/sla/ ./dto/
 ```
 
+### 1.80 工单读取错误与子任务更新收口（2026-10-24，行为变更：子任务可写字段与 409 语义）
+
+**`GET /api/v1/tickets/{id}`**
+
+- 仅「不存在/跨租户」返回 404 / `code: 4004`；数据库或内部故障返回 500 / `code: 5001`。
+  此前所有错误都是 404，调用方若用 404 判断「已删除」需要接受 500 也可能代表暂时不可读。
+
+**`PUT|PATCH /api/v1/tickets/{id}/subtasks/{subtaskId}`**
+
+- `priority`、`type`、`assigneeId`、`categoryId`、`resolution`、`formFields` 现在真正落库；
+  此前传入被静默丢弃。依赖「子任务不会改这些字段」的自动化需要复核。
+- 版本冲突返回 HTTP 409 / `code: 4090`（`data` 含 `ticketId`/`currentVersion`/`serverVersion`），
+  非法状态迁移同样 409；此前冲突被折叠为 500。非空 `tags` 返回 400/`1001` 并指向
+  `PATCH /tickets/{id}/relations`。
+
+**验证**
+
+```bash
+cd itsm-backend && go test -count=1 ./handlers/ticket/ ./dto/
+```
+
 ## 2. 环境变量变更
 
 本次升级**移除了多个"幽灵配置项"**（在示例文件中声明但代码/Compose 从不读取，用户配置了也不生效），并修正了一个 Grafana 密码安全缺陷。

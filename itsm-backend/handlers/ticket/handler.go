@@ -242,7 +242,9 @@ func (h *Handler) GetTicket(c *gin.Context) {
 		ticket, err = h.service.GetByNumber(ctx, idStr, tenantID)
 	}
 	if err != nil {
-		common.Fail(c, common.NotFoundCode, "工单不存在")
+		// 读取失败不等于「不存在」：驱动故障必须按统一分类上报为 500，
+		// 全部压成 404 会让真实故障在监控里表现为大量客户端错误。
+		common.RespondError(c, err, "获取工单失败")
 		return
 	}
 
@@ -340,71 +342,15 @@ func (h *Handler) UpdateTicket(c *gin.Context) {
 	actorID := c.GetInt("user_id")
 	actorRole := c.GetString("role")
 
-	params := &UpdateParams{Version: req.Version}
-	if req.Title != "" {
-		params.Title = &req.Title
-	}
-	if req.Description != "" {
-		params.Description = &req.Description
-	}
-	if req.Status != "" {
-		params.Status = &req.Status
-	}
-	if req.Priority != "" {
-		params.Priority = &req.Priority
-	}
-	if req.Type != "" {
-		params.Type = &req.Type
-	}
-	if req.AssigneeID > 0 {
-		params.AssigneeID = &req.AssigneeID
-	}
-	if req.CategoryID != nil {
-		params.CategoryID = req.CategoryID
-	}
-	if req.FormFields != nil {
-		params.FormFields = &req.FormFields
-	}
-	if req.Resolution != "" {
-		params.Resolution = &req.Resolution
-	}
-	if len(req.Tags) > 0 {
-		// 本端点没有标签名解析能力；静默丢弃会让调用方以为标签已写入。
-		common.Fail(c, common.ParamErrorCode, "工单标签请使用 PATCH /api/v1/tickets/:id/relations（tagIds）")
+	params, paramErr := buildUpdateParams(&req)
+	if paramErr != nil {
+		common.RespondError(c, paramErr, "请求参数错误")
 		return
 	}
 
 	updated, err := h.service.Update(c.Request.Context(), tenantID, id, params, actorID, actorRole)
 	if err != nil {
-		// 版本冲突必须用 errors.As 解包：service 层 `fmt.Errorf("update ticket: %w")`
-		// 包装后顶层类型断言会漏判，导致乐观锁冲突掉进 500。冲突属于 409(4090)。
-		var conflictErr *common.VersionConflictError
-		if errors.As(err, &conflictErr) {
-			common.Conflict(c, conflictErr.Error(), gin.H{
-				"ticketId":       conflictErr.ResourceID,
-				"currentVersion": conflictErr.CurrentVersion,
-				"serverVersion":  conflictErr.ServerVersion,
-			})
-			return
-		}
-		if strings.Contains(err.Error(), "ticket not found") {
-			common.Fail(c, common.NotFoundCode, "工单不存在")
-			return
-		}
-		if isUserInputUpdateError(err) {
-			common.ParamErrorWithErr(c, err, "请求参数错误")
-			return
-		}
-		if isForbiddenErr(err) {
-			common.RespondError(c, err, "操作失败")
-			return
-		}
-		var bizErr *common.BusinessError
-		if errors.As(err, &bizErr) {
-			common.RespondError(c, err, "操作失败")
-			return
-		}
-		common.FailWithErr(c, err, "操作失败")
+		respondTicketUpdateError(c, err)
 		return
 	}
 
@@ -1094,7 +1040,7 @@ func (h *Handler) UpdateSubtask(c *gin.Context) {
 	// Verify subtask belongs to parent
 	current, err := h.service.Get(c.Request.Context(), subtaskID, tenantID)
 	if err != nil {
-		common.Fail(c, common.NotFoundCode, "子任务不存在")
+		common.RespondError(c, err, "子任务不存在")
 		return
 	}
 	if current.ParentTicketID == nil || *current.ParentTicketID != parentID {
@@ -1102,25 +1048,15 @@ func (h *Handler) UpdateSubtask(c *gin.Context) {
 		return
 	}
 
-	if len(req.Tags) > 0 {
-		common.Fail(c, common.ParamErrorCode, "工单标签请使用 PATCH /api/v1/tickets/:id/relations（tagIds）")
+	params, paramErr := buildUpdateParams(&req)
+	if paramErr != nil {
+		common.RespondError(c, paramErr, "请求参数错误")
 		return
-	}
-
-	params := &UpdateParams{Version: req.Version}
-	if req.Title != "" {
-		params.Title = &req.Title
-	}
-	if req.Description != "" {
-		params.Description = &req.Description
-	}
-	if req.Priority != "" {
-		params.Priority = &req.Priority
 	}
 
 	updated, err := h.service.Update(c.Request.Context(), tenantID, subtaskID, params, actorID, actorRole)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		respondTicketUpdateError(c, err)
 		return
 	}
 
@@ -1274,6 +1210,64 @@ func failTicketOperation(c *gin.Context, err error) {
 		return
 	}
 	common.FailWithErr(c, err, "操作失败")
+}
+
+// buildUpdateParams 把更新请求转换成仓储参数。工单与子任务共用同一份映射，
+// 避免子任务端点只落 title/description/priority、其余字段静默丢弃。
+func buildUpdateParams(req *dto.UpdateTicketRequest) (*UpdateParams, error) {
+	if len(req.Tags) > 0 {
+		// 本端点没有标签名解析能力；静默丢弃会让调用方以为标签已写入。
+		return nil, common.NewBusinessError(common.ParamErrorCode, "工单标签请使用 PATCH /api/v1/tickets/:id/relations（tagIds）", "")
+	}
+	params := &UpdateParams{Version: req.Version}
+	if req.Title != "" {
+		params.Title = &req.Title
+	}
+	if req.Description != "" {
+		params.Description = &req.Description
+	}
+	if req.Status != "" {
+		params.Status = &req.Status
+	}
+	if req.Priority != "" {
+		params.Priority = &req.Priority
+	}
+	if req.Type != "" {
+		params.Type = &req.Type
+	}
+	if req.AssigneeID > 0 {
+		params.AssigneeID = &req.AssigneeID
+	}
+	if req.CategoryID != nil {
+		params.CategoryID = req.CategoryID
+	}
+	if req.FormFields != nil {
+		params.FormFields = &req.FormFields
+	}
+	if req.Resolution != "" {
+		params.Resolution = &req.Resolution
+	}
+	return params, nil
+}
+
+// respondTicketUpdateError 是工单更新（含子任务）的统一错误出口。
+// 版本冲突必须用 errors.As 解包：service 层包装后顶层类型断言会漏判，
+// 乐观锁冲突会掉进 500。其余错误交给统一分类器（403/404/409/500）。
+func respondTicketUpdateError(c *gin.Context, err error) {
+	var conflictErr *common.VersionConflictError
+	if errors.As(err, &conflictErr) {
+		common.Conflict(c, conflictErr.Error(), gin.H{
+			"ticketId":       conflictErr.ResourceID,
+			"currentVersion": conflictErr.CurrentVersion,
+			"serverVersion":  conflictErr.ServerVersion,
+		})
+		return
+	}
+	if isUserInputUpdateError(err) {
+		common.ParamErrorWithErr(c, err, "请求参数错误")
+		return
+	}
+	common.RespondError(c, err, "操作失败")
 }
 
 func isUserInputUpdateError(err error) bool {

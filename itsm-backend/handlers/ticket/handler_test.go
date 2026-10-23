@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
@@ -14,6 +15,7 @@ import (
 
 	"itsm-backend/common"
 	"itsm-backend/dto"
+	"itsm-backend/ent"
 	"itsm-backend/internal/datascope"
 	"itsm-backend/middleware"
 	ticketrepo "itsm-backend/repository/ticket"
@@ -47,6 +49,8 @@ type mockRepository struct {
 	lastNamesTenant int
 	lastNamesIDs    []int
 	namesCalls      int
+	// getErr 让测试注入读取故障，验证 handler 不会把内部错误压成 404。
+	getErr error
 	// Update 调用次数与最后一次参数：用于断言「无变化更新不落库」和
 	// handler 只把真正变化的字段传给仓储。
 	updateCalls      int
@@ -72,12 +76,15 @@ func (m *mockRepository) Create(ctx context.Context, params *CreateParams, tenan
 		Status:       "new",
 		Priority:     params.Priority,
 		Type:         params.Type,
-		RequesterID:  params.RequesterID,
-		AssigneeID:   params.AssigneeID,
-		TenantID:     tenantID,
-		Version:      1,
-		CreatedAt:    time.Now(),
-		UpdatedAt:    time.Now(),
+		RequesterID:    params.RequesterID,
+		AssigneeID:     params.AssigneeID,
+		ParentTicketID: params.ParentTicketID,
+		CategoryID:     params.CategoryID,
+		FormFields:     params.FormFields,
+		TenantID:       tenantID,
+		Version:        1,
+		CreatedAt:      time.Now(),
+		UpdatedAt:      time.Now(),
 	}
 	m.tickets[t.ID] = t
 	return t, nil
@@ -86,9 +93,14 @@ func (m *mockRepository) Create(ctx context.Context, params *CreateParams, tenan
 func (m *mockRepository) GetByID(ctx context.Context, id int, tenantID int) (*Ticket, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
+	if m.getErr != nil {
+		return nil, m.getErr
+	}
 	t, ok := m.tickets[id]
 	if !ok || t.TenantID != tenantID {
-		return nil, errors.New("ticket not found")
+		// 与生产仓储一致：NotFound 必须可被 errors.As 识别，否则统一错误
+		// 分类器只能把它当内部故障返回 500。
+		return nil, fmt.Errorf("ticket not found: %w", &ent.NotFoundError{})
 	}
 	return t, nil
 }
@@ -101,7 +113,7 @@ func (m *mockRepository) GetByNumber(ctx context.Context, ticketNumber string, t
 			return t, nil
 		}
 	}
-	return nil, errors.New("ticket not found")
+	return nil, fmt.Errorf("ticket not found: %w", &ent.NotFoundError{})
 }
 
 func (m *mockRepository) Update(ctx context.Context, id int, params *UpdateParams, tenantID int) (*Ticket, error) {
@@ -109,7 +121,7 @@ func (m *mockRepository) Update(ctx context.Context, id int, params *UpdateParam
 	defer m.mu.Unlock()
 	t, ok := m.tickets[id]
 	if !ok || t.TenantID != tenantID {
-		return nil, errors.New("ticket not found")
+		return nil, fmt.Errorf("ticket not found: %w", &ent.NotFoundError{})
 	}
 	// 乐观锁语义与生产 repository/ticket 对齐：客户端显式传入的版本与当前不一致时，
 	// 返回类型化冲突错误。service 层会再包一层 fmt.Errorf，handler 依赖
@@ -425,6 +437,7 @@ func newTestHarness(t *testing.T) (*gin.Engine, *mockRepository) {
 	api.GET("/tickets/:id", h.GetTicket)
 	api.PUT("/tickets/:id", h.UpdateTicket)
 	api.PATCH("/tickets/:id", h.UpdateTicket)
+	api.PATCH("/tickets/:id/subtasks/:subtask_id", h.UpdateSubtask)
 	api.DELETE("/tickets/:id", h.DeleteTicket)
 	api.POST("/tickets/:id/assign", h.AssignTicket)
 	api.POST("/tickets/:id/escalate", h.EscalateTicket)

@@ -364,7 +364,8 @@ Authorization: Bearer <accessToken>
 
 返回 `data` 直接承载 `dto.TicketResponse`（与列表 item 同一结构，含 `requesterName`/`assigneeName` 投影）。
 `{id}` 同时接受数字 ID 与业务工单号（如 `TKT-202609-000010`）；跨租户与不存在都返回 HTTP 404 / `code: 4004`，
-不区分「无权限」与「不存在」。
+不区分「无权限」与「不存在」。其余故障按统一错误分类返回（例如数据库故障为 HTTP 500 / `code: 5001`），
+2026-10-24 前所有读取错误都被折叠成 404，运维无法区分「工单真的没了」与「服务出故障了」。
 
 ### 更新工单
 
@@ -417,6 +418,28 @@ Content-Type: application/json
 `closedAt`、`firstResponseAt`（未发生时为 `null`/缺省）。解决说明与生命周期时间戳是 SLO 与
 PIR 的证据，不能只写库不返回——`2026-10-22` 前 `buildTicketResponse` 漏映射这四个字段，
 导致 `resolve` 成功后读不到解决说明。
+
+### 更新子任务
+
+```http
+PUT|PATCH /tickets/{id}/subtasks/{subtaskId}
+Authorization: Bearer <accessToken>
+Content-Type: application/json
+
+{
+  "priority": "high",
+  "assigneeId": 9,
+  "version": 3
+}
+```
+
+与工单更新同一套部分更新语义：可写 `title`、`description`、`status`、`priority`、`type`、
+`assigneeId`、`categoryId`、`formFields`、`resolution`，只落库真正变化的字段，`version`
+为乐观锁。`subtaskId` 必须属于路径中的父工单且同租户，否则 400/`1001`；子任务不存在或跨租户
+为 404/`4004`。版本冲突返回 HTTP 409 / `code: 4090`，`data` 含 `ticketId`、`currentVersion`、
+`serverVersion`；非法状态迁移同样是 409；`tags` 返回 400 并指向 `/tickets/{id}/relations`。
+2026-10-24 前该端点只写少数字段，`priority`/`type`/`assigneeId`/`categoryId`/`resolution`/
+`formFields` 传了也不落库，版本冲突还会返回 HTTP 500。
 
 ### 删除工单
 
