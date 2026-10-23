@@ -662,6 +662,9 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 
 		if config.MarketplaceHandler != nil {
 			config.MarketplaceHandler.RegisterRoutes(tenant.(*gin.RouterGroup))
+			// 目录管理（平台上架/下架）走独立权限码 marketplace_catalog:*：
+			// marketplace_items 是全局表，租户管理员不能写（详见 internal/authz/catalog.go）。
+			config.MarketplaceHandler.RegisterCatalogRoutes(tenant.(*gin.RouterGroup))
 		}
 
 		// Connector Controller (连接器/插件/技能市场)

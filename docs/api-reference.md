@@ -3433,6 +3433,66 @@ POST /api/v1/marketplace/items/{itemId}/uninstall
 键就不匹配、实例会残留——此时若照样标 `uninstalled`，界面显示已卸载而连接器仍在用
 活着的凭据收发消息、仍能接收回调。因此卸载后按 `name` 复查运行态，残留即失败关闭。
 
+## 商品目录管理（平台级）
+
+目录（`marketplace_items`）是**全局表**：没有 `tenant_id`，所有租户共享同一份。因此
+「安装」与「上架」是两件事、两个权限码：
+
+| 动作 | 端点前缀 | 权限码 | 授予谁 |
+|---|---|---|---|
+| 浏览、安装/卸载/改配置 | `/api/v1/marketplace/*` | `marketplace:read/write` | 租户管理员 |
+| 上架、下架、改元数据、维护版本 | `/api/v1/marketplace/catalog/*` | `marketplace_catalog:read/write` | 仅 `sysadmin` |
+
+复用 `marketplace:write` 做目录写会让任一租户管理员改写全平台商品：把 `name` 指向未注册
+provider，可让所有租户的安装按钮全部失败。因此目录写独立成面，且**租户管理员不会看到
+对应菜单**（菜单权限码同为 `marketplace_catalog:read`）。
+
+### 端点
+
+| 方法与路径 | 说明 |
+|---|---|
+| `GET /marketplace/catalog/items` | 目录列表，**包含草稿与已下架**；`status` / `type` / `search` / `page` / `pageSize` |
+| `POST /marketplace/catalog/items` | 创建（初始 `draft`，租户不可见） |
+| `GET /marketplace/catalog/items/{id}` | 详情，内联返回 `versions` |
+| `PATCH /marketplace/catalog/items/{id}` | 更新元数据（PATCH 语义：未提交字段不变） |
+| `DELETE /marketplace/catalog/items/{id}` | 删除（仅未上架且从未被安装） |
+| `POST /marketplace/catalog/items/{id}/publish` | 上架（`draft`/`deprecated` → `published`） |
+| `POST /marketplace/catalog/items/{id}/unpublish` | 下架（`published` → `deprecated`） |
+| `GET /marketplace/catalog/items/{id}/versions` | 版本列表（按发布时间倒序） |
+| `POST /marketplace/catalog/items/{id}/versions` | 新增版本（默认 `draft`；`publish=true` 同时发布） |
+| `POST /marketplace/catalog/items/{id}/versions/{version}/publish` | 发布版本并推进 `latestVersion` |
+
+### 四条不变量（接口会拒绝违反它们）
+
+1. **`name`/`type` 创建后不可改**。安装时 `name` 决定连接器 provider（去掉 `-connector`
+   后缀后查注册表），改名等于让已安装租户指向另一个 provider。
+2. **连接器类商品的 `name` 必须对应已注册 provider**。`type=connector` 且 provider 未注册
+   时创建直接 `400`，响应里列出已注册清单——否则商品能上架、能被安装，但 `provision`
+   永远失败，而错误只在租户点安装那一刻出现。标题/描述/图标/能力/配置 Schema 在未显式
+   提供时取运行时 manifest，保证目录描述与代码能力一致。
+3. **`latestVersion` 只能由「发布某个版本」派生**，不能手填。上架时若没有任何已发布版本
+   返回 `409`；发布版本时按发布动作推进（而不是按版本号大小），因此**重新发布旧版本就是
+   回滚**。安装记录写的是 `latestVersion`，这条不变量决定「装的到底是哪个版本」。
+4. **下架不删除**。`deprecated` 条目对租户不可见、不能再安装，但已安装租户的卸载/改配置
+   仍需要读它；删除被限制为「未上架 + 从未被安装」。
+
+### 错误语义
+
+| 情形 | 结果 |
+|---|---|
+| `name` 不合规（非小写字母/数字/连字符） | `400` |
+| 连接器 provider 未注册 | `400`，文案含 provider 名与已注册清单 |
+| 版本号非 `x.y.z`（允许 `-rc.1`），或连接器版本与运行时 manifest 不一致 | `400` |
+| 同名商品 / 同版本号已存在 | `409` |
+| 改 `name`/`type` | `409` |
+| 上架但无已发布版本 | `409`，提示先发布版本 |
+| 删除已上架条目 | `409`，提示先下架 |
+| 删除已被安装的条目 | `409`，文案含安装数 |
+| 条目或版本不存在 | `404` |
+
+`name` 允许 `v` 前缀但入库前统一去掉：`v1.0.0` 与 `1.0.0` 在 `UNIQUE(item_id, version)`
+眼里是两个版本，会让同一版本在目录里出现两行。
+
 ## 入站回调的安全与去重（飞书 / 企微 / 钉钉）
 
 三家 IM 的外部回调都在 `public` 分组（无本系统鉴权），因此安全性完全由「验签 +

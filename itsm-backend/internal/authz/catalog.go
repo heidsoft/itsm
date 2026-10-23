@@ -231,6 +231,18 @@ func Definitions() []PermissionDef {
 		{"survey:read", "查看满意度调查", "survey", "read", "查看问卷定义与响应"},
 		{"marketplace:read", "查看扩展市场", "marketplace", "read", "查看扩展市场条目与安装记录"},
 		{"marketplace:write", "管理扩展市场", "marketplace", "write", "安装、卸载与配置扩展"},
+		// 目录（商品）管理面：与「安装」分成两个权限码，因为两者的作用域不同。
+		//
+		// marketplace_items 是全局表（无 tenant_id），所有租户共享同一份目录；
+		// 而 marketplace:write 已授予租户 admin。若目录写复用该码，任一租户管理员
+		// 都能改写其他租户看到、安装的条目——上架一个 name 指向未注册 provider 的
+		// 连接器商品，就能让全平台安装按钮全部失败。目录写必须是平台级动作，
+		// 因此独立成面并只授予 sysadmin（allPermissionCodes 自动覆盖）。
+		//
+		// 读码同样独立：租户侧只应看到 published 条目（ListItems 已强制），
+		// 草稿/待审条目只对平台运营可见。
+		{"marketplace_catalog:read", "查看商品目录", "marketplace_catalog", "read", "查看含草稿/下架状态的全局商品目录"},
+		{"marketplace_catalog:write", "管理商品目录", "marketplace_catalog", "write", "上架/下架商品、维护版本与元数据（平台级）"},
 		// 租户管理：码空间无语义归宿的独立管理面，
 		// 收敛进 system/system_config 会丢失租户边界，故新增；授予 admin/sysadmin。
 		{"tenant:read", "查看租户", "tenant", "read", "查看租户列表与详情"},

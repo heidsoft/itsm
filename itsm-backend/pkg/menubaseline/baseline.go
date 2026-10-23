@@ -161,6 +161,10 @@ func MenuDefinitions() []MenuSpec {
 		// 用来核对「哪些能力还不能对外承诺」的管理视图，与系统配置同域（system:read），
 		// 不给一线角色挂入口——它回答的是发布决策，不是日常作业信息。
 		{Name: "能力矩阵", Path: "/admin/capabilities", Icon: "Target", ParentPath: "/admin", PermissionCode: "system:read", SortOrder: 300, Description: "能力成熟度、部署就绪与健康信号"},
+		// 商品目录管理：marketplace_catalog:read 只授予 sysadmin。目录是全局表
+		// （无 tenant_id），租户 admin 的 marketplace:read/write 只能安装/卸载，
+		// 不能上架——所以这条菜单对租户管理员不出现，而不是出现了点进去 403。
+		{Name: "商品目录", Path: "/admin/marketplace", Icon: "Store", ParentPath: "/admin", PermissionCode: "marketplace_catalog:read", SortOrder: 302, Description: "扩展商品上架、下架与版本管理（平台级）"},
 		{Name: "CMDB 类型", Path: "/admin/cmdb-types", Icon: "Database", ParentPath: "/admin", PermissionCode: "cmdb:write", SortOrder: 315},
 		{Name: "升级规则", Path: "/admin/escalation-rules", Icon: "AlertTriangle", ParentPath: "/admin", PermissionCode: "sla:write", SortOrder: 320},
 		{Name: "升级矩阵", Path: "/admin/escalation-matrices", Icon: "TrendingUp", ParentPath: "/admin", PermissionCode: "sla:read", SortOrder: 325},

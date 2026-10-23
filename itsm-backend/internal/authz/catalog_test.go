@@ -163,3 +163,41 @@ func TestRuleConfigCodesAreNotWorkflowRead(t *testing.T) {
 		}
 	}
 }
+
+// TestMarketplaceCatalogWriteIsPlatformOnly 锁定「上架」与「安装」的权限边界。
+//
+// marketplace_items 是全局表（无 tenant_id），所有租户共享同一份目录。
+// marketplace:write 已授予租户 admin，用于安装/卸载/改配置——那是租户自己的
+// 运行态。若目录写复用同一个码，任一租户管理员就能改写全平台可见的商品：
+// 把 name 指向未注册 provider、把 latest_version 指向不存在的版本，
+// 或直接下架别人正在用的条目。因此目录写必须是平台级码，只给 sysadmin。
+//
+// 这条测试的作用是防止「顺手把新码加进 admin 授权列表」这类改动——那不会
+// 让任何现有测试变红，却会把跨租户污染面重新打开。
+func TestMarketplaceCatalogWriteIsPlatformOnly(t *testing.T) {
+	roles := BuiltinRolePermissionCodes()
+
+	hasCode := func(role, code string) bool {
+		for _, c := range roles[role] {
+			if c == code {
+				return true
+			}
+		}
+		return false
+	}
+
+	if !hasCode(string(domainrole.SysAdmin), "marketplace_catalog:write") {
+		t.Error("sysadmin 必须持有 marketplace_catalog:write，否则目录无管理面（Pilot 阻断项）")
+	}
+	for _, role := range []string{
+		string(domainrole.Admin), string(domainrole.Manager), string(domainrole.EndUser), string(domainrole.Agent),
+	} {
+		if hasCode(role, "marketplace_catalog:write") {
+			t.Errorf("%s 不应持有 marketplace_catalog:write：目录是全局表，租户角色写入即跨租户污染", role)
+		}
+	}
+	// 安装能力不能被这次拆分误伤：租户 admin 仍要能装。
+	if !hasCode(string(domainrole.Admin), "marketplace:write") {
+		t.Error("admin 必须保留 marketplace:write，否则无法安装/卸载扩展")
+	}
+}

@@ -120,3 +120,53 @@ func TestRoutePrecheckAlignment(t *testing.T) {
 		t.Errorf("precheckMismatchAllowlist 存在失效条目：\n  %s", strings.Join(stale, "\n  "))
 	}
 }
+
+// TestMarketplaceCatalogRoutesUsePlatformPermission 锁定「目录管理」与「租户安装」
+// 走两套权限码。
+//
+// marketplace_items 是全局表（无 tenant_id）。若目录写端点被误挂成
+// marketplace:write，租户 admin 就能改写全平台商品目录：上架一个 name 指向
+// 未注册 provider 的商品，可让所有租户的安装按钮全部失败；下架别人正在用的
+// 条目，可让新安装直接不可用。这个错误不会让任何现有测试变红——路由仍能
+// 注册、预检仍能生成——所以必须显式断言「路径 → 权限码」的绑定。
+func TestMarketplaceCatalogRoutesUsePlatformPermission(t *testing.T) {
+	m := precheckRoutePermissions()
+
+	cases := []struct {
+		method   string
+		path     string
+		resource string
+		action   string
+	}{
+		{"GET", "/api/v1/marketplace/catalog/items", "marketplace_catalog", "read"},
+		{"GET", "/api/v1/marketplace/catalog/items/*", "marketplace_catalog", "read"},
+		{"GET", "/api/v1/marketplace/catalog/items/*/versions", "marketplace_catalog", "read"},
+		{"POST", "/api/v1/marketplace/catalog/items", "marketplace_catalog", "write"},
+		{"PATCH", "/api/v1/marketplace/catalog/items/*", "marketplace_catalog", "write"},
+		{"DELETE", "/api/v1/marketplace/catalog/items/*", "marketplace_catalog", "write"},
+		{"POST", "/api/v1/marketplace/catalog/items/*/publish", "marketplace_catalog", "write"},
+		{"POST", "/api/v1/marketplace/catalog/items/*/unpublish", "marketplace_catalog", "write"},
+		{"POST", "/api/v1/marketplace/catalog/items/*/versions", "marketplace_catalog", "write"},
+		{"POST", "/api/v1/marketplace/catalog/items/*/versions/*/publish", "marketplace_catalog", "write"},
+	}
+	for _, tc := range cases {
+		got, ok := m[tc.method][tc.path]
+		if !ok {
+			t.Errorf("%s %s 缺少预检条目", tc.method, tc.path)
+			continue
+		}
+		if got.Resource != tc.resource || got.Action != tc.action {
+			t.Errorf("%s %s 权限码 = %s:%s，期望 %s:%s",
+				tc.method, tc.path, got.Resource, got.Action, tc.resource, tc.action)
+		}
+	}
+
+	// 安装面保持 marketplace:write：拆分权限码不能顺手把安装也锁到 sysadmin。
+	install, ok := m["POST"]["/api/v1/marketplace/items/*/install"]
+	if !ok {
+		t.Fatal("安装端点预检条目缺失")
+	}
+	if install.Resource != "marketplace" || install.Action != "write" {
+		t.Errorf("安装端点权限码 = %s:%s，期望 marketplace:write", install.Resource, install.Action)
+	}
+}

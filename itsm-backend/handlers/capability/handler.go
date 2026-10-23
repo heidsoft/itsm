@@ -102,8 +102,14 @@ var registry = []definition{
 	// 审计注入），维持 Pilot 的原因是「没有真实租户联调证据」，不是实现缺失。
 	{key: "connector.feishu", maturity: MaturityPilot, built: true, dependencies: []string{"notification"}, readinessEnv: "ITSM_FEISHU_READY",
 		pilotReason: "回调验签只有单测，未与真实飞书租户做生产验收；死信人工重放与市场安装闭环未验收。晋升条件：真实租户收发 + 验签 + 死信重放验收。"},
+	// 市场目录 2026-10-23 补齐管理面：平台级权限码 marketplace_catalog:read/write
+	// （只授 sysadmin，租户 admin 仍只有 marketplace:write 用于安装/卸载）+ 目录项
+	// CRUD + 版本发布/回滚 + 只读控制台 /admin/marketplace。此前目录只有 seeder 能写，
+	// 「应用市场」在客户环境里永远只有出厂那几条商品——这才是它停在 Pilot 的原因。
+	// 仍不申报 GA：skill/plugin 类商品的安装只写一条安装记录，没有分发/装载机制；
+	// auto_upgrade 有字段没有执行路径；dependencies 未做安装期校验。
 	{key: "marketplace", maturity: MaturityPilot, built: true, readOnly: true,
-		pilotReason: "目录项没有管理面：只有 seeder 能写入，管理员无法上架/下架/改版本；且 marketplace:write 已授予租户 Admin，直接开放全局目录写会造成跨租户污染，需先引入平台级权限码。晋升条件：平台级写权限 + 目录项 CRUD。"},
+		pilotReason: "目录管理已闭环（平台上架/下架、版本发布与回滚、控制台），但商品交付语义不完整：skill/plugin 类安装只写安装记录，没有分发/装载机制；auto_upgrade 无升级执行路径；dependencies 未做安装期校验。晋升条件：skill/plugin 装载机制 + 版本升级执行 + 依赖校验。"},
 	{key: "project", maturity: MaturityGA, built: true},
 	{key: "application", maturity: MaturityGA, built: true},
 	// 工单标签（ticket_tags）已完整，缺的是另一套模型的管理面。

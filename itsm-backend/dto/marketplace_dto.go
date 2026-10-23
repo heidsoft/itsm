@@ -19,6 +19,7 @@ type MarketplaceItemResponse struct {
 	Description      string    `json:"description,omitempty"`
 	LongDescription  string    `json:"longDescription,omitempty"`
 	IconURL          string    `json:"iconUrl,omitempty"`
+	Screenshots      []string  `json:"screenshots,omitempty"`
 	Tags             []string  `json:"tags"`
 	Rating           float64   `json:"rating"`
 	InstallCount     int       `json:"installCount"`
@@ -58,6 +59,7 @@ func ToMarketplaceItemResponse(item *ent.MarketplaceItem) *MarketplaceItemRespon
 		Description:      item.Description,
 		LongDescription:  item.LongDescription,
 		IconURL:          item.IconURL,
+		Screenshots:      item.Screenshots,
 		Tags:             item.Tags,
 		Rating:           item.Rating,
 		InstallCount:     item.InstallCount,
@@ -97,3 +99,57 @@ func ToMarketplaceItemResponseList(items []*ent.MarketplaceItem) []*MarketplaceI
 
 // _ 确保引用 marketplaceitem 包，避免 ent 端 import 删除后该 DTO 文件被静默遗漏。
 var _ = marketplaceitem.StatusPublished
+
+// MarketplaceItemVersionResponse 是商品版本的出站 DTO。
+//
+// 版本是目录管理的主要操作对象：上架新版本才会推进 item.latest_version，
+// 而 latest_version 又决定新安装记录的 installed_version。因此版本列表
+// 必须包含 status 与 releasedAt——「哪个版本现在是线上」只能由这两个字段
+// 判断，缺一个就只能靠猜。
+type MarketplaceItemVersionResponse struct {
+	Version          string                 `json:"version"`
+	Changelog        string                 `json:"changelog,omitempty"`
+	DownloadURL      string                 `json:"downloadUrl,omitempty"`
+	ManifestPath     string                 `json:"manifestPath,omitempty"`
+	MinSystemVersion string                 `json:"minSystemVersion,omitempty"`
+	Dependencies     map[string]string      `json:"dependencies,omitempty"`
+	Status           string                 `json:"status"`
+	DownloadCount    int                    `json:"downloadCount"`
+	ReleasedAt       time.Time              `json:"releasedAt"`
+	ConfigSchema     map[string]interface{} `json:"configSchema,omitempty"`
+	CreatedAt        time.Time              `json:"createdAt"`
+	UpdatedAt        time.Time              `json:"updatedAt"`
+}
+
+// ToMarketplaceItemVersionResponse 转换单个版本。
+func ToMarketplaceItemVersionResponse(v *ent.ItemVersion) *MarketplaceItemVersionResponse {
+	if v == nil {
+		return nil
+	}
+	return &MarketplaceItemVersionResponse{
+		Version:          v.Version,
+		Changelog:        v.Changelog,
+		DownloadURL:      v.DownloadURL,
+		ManifestPath:     v.ManifestPath,
+		MinSystemVersion: v.MinSystemVersion,
+		Dependencies:     v.Dependencies,
+		Status:           string(v.Status),
+		DownloadCount:    v.DownloadCount,
+		ReleasedAt:       v.ReleasedAt,
+		ConfigSchema:     v.ConfigSchema,
+		CreatedAt:        v.CreatedAt,
+		UpdatedAt:        v.UpdatedAt,
+	}
+}
+
+// ToMarketplaceItemVersionResponseList 批量转换。
+func ToMarketplaceItemVersionResponseList(items []*ent.ItemVersion) []*MarketplaceItemVersionResponse {
+	out := make([]*MarketplaceItemVersionResponse, 0, len(items))
+	for _, item := range items {
+		if item == nil {
+			continue
+		}
+		out = append(out, ToMarketplaceItemVersionResponse(item))
+	}
+	return out
+}

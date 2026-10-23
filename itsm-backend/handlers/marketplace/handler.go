@@ -2,7 +2,6 @@ package marketplace
 
 import (
 	"errors"
-	"net/http"
 	"strconv"
 
 	"itsm-backend/common"
@@ -103,7 +102,7 @@ func (c *Handler) GetItem(ctx *gin.Context) {
 	itemIDStr := ctx.Param("id")
 	itemID, err := strconv.Atoi(itemIDStr)
 	if err != nil {
-		common.Fail(ctx, http.StatusBadRequest, "invalid item id")
+		common.ParamError(ctx, "invalid item id")
 		return
 	}
 
@@ -130,7 +129,7 @@ func (c *Handler) InstallItem(ctx *gin.Context) {
 	itemIDStr := ctx.Param("id")
 	itemID, err := strconv.Atoi(itemIDStr)
 	if err != nil {
-		common.Fail(ctx, http.StatusBadRequest, "invalid item id")
+		common.ParamError(ctx, "invalid item id")
 		return
 	}
 
@@ -184,7 +183,7 @@ func (c *Handler) UninstallItem(ctx *gin.Context) {
 	itemIDStr := ctx.Param("id")
 	itemID, err := strconv.Atoi(itemIDStr)
 	if err != nil {
-		common.Fail(ctx, http.StatusBadRequest, "invalid item id")
+		common.ParamError(ctx, "invalid item id")
 		return
 	}
 
@@ -252,7 +251,7 @@ func (c *Handler) GetInstallation(ctx *gin.Context) {
 	itemIDStr := ctx.Param("id")
 	itemID, err := strconv.Atoi(itemIDStr)
 	if err != nil {
-		common.Fail(ctx, http.StatusBadRequest, "invalid item id")
+		common.ParamError(ctx, "invalid item id")
 		return
 	}
 
@@ -289,7 +288,7 @@ func (c *Handler) UpdateInstallationConfig(ctx *gin.Context) {
 	itemIDStr := ctx.Param("id")
 	itemID, err := strconv.Atoi(itemIDStr)
 	if err != nil {
-		common.Fail(ctx, http.StatusBadRequest, "invalid item id")
+		common.ParamError(ctx, "invalid item id")
 		return
 	}
 
