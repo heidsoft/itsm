@@ -44,8 +44,9 @@ func (ServiceCatalog) Fields() []ent.Field {
 		field.JSON("available_specs", []string{}).Comment("可选规格").Optional(),
 
 		// 状态。枚举为 enabled/disabled，与前端 service-catalog-api.ts 的 toBackendStatus
-		// 映射一致。历史数据中曾默认写入 active/inactive，需通过迁移脚本统一为
-		// enabled/disabled（详见 migration/sql/20260831_service_catalog_status.sql）。
+		// 映射一致。历史数据中曾默认写入 active/inactive；该收敛从未落成迁移脚本
+		// （曾引用的 migration/sql/20260831_service_catalog_status.sql 并不存在），
+		// 因此消费方（service_request 创建等）至今仍需兼容 "active" 旧值。
 		field.String("status").Comment("状态: enabled|disabled").Default("enabled"),
 		field.Int("tenant_id").Comment("租户ID").Positive(),
 		field.Bool("is_active").Comment("是否激活").Default(true),

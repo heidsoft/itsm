@@ -2,6 +2,8 @@ package change
 
 import (
 	"context"
+	"fmt"
+	"strconv"
 	"testing"
 	"time"
 
@@ -205,8 +207,9 @@ func TestStep4_SubmitForApproval_NoLongerWritesChangeApprovals(t *testing.T) {
 	require.Equal(t, 0, count, "change_approvals should not be written")
 }
 
-// TestStep4_QuorumEvaluation_UsesBPMNDecisions verifies that checkAndTransitionChange
-// uses ProcessApprovalDecision for quorum evaluation.
+// TestStep4_QuorumEvaluation_UsesBPMNDecisions verifies that TransitionStatus（生产唯一
+// 写路径）基于 ProcessApprovalDecision 的历史决策求值 quorum：已有决策 + 最后一票经
+// 桥接落库后，阈值满足即整体 approved。
 func TestStep4_QuorumEvaluation_UsesBPMNDecisions(t *testing.T) {
 	svc, client, _, tenantID := setupChangeChainTest(t)
 	ctx := context.Background()
@@ -230,7 +233,9 @@ func TestStep4_QuorumEvaluation_UsesBPMNDecisions(t *testing.T) {
 	_, err = db.ExecContext(ctx, `UPDATE changes SET status = 'pending' WHERE id = $1 AND tenant_id = $2`, changeID, tenantID)
 	require.NoError(t, err)
 
-	// Insert one approval decision (threshold=1, so this should satisfy quorum)
+	// Insert one approval decision (threshold=1, so this should satisfy quorum).
+	// business_id 必须是该变更的真实 ID：TransitionStatus 的 quorum 求值按
+	// (business_type, business_id) 过滤决策表，占位值会让历史决策对不上号。
 	now := time.Now()
 	_, err = client.ProcessApprovalDecision.Create().
 		SetProcessInstanceID(1).
@@ -240,7 +245,7 @@ func TestStep4_QuorumEvaluation_UsesBPMNDecisions(t *testing.T) {
 		SetProcessDefinitionKey("change_normal_flow").
 		SetNodeKey("Activity_Approve").
 		SetBusinessType("change").
-		SetBusinessID("1").
+		SetBusinessID(strconv.Itoa(changeID)).
 		SetActorID(approver1).
 		SetActorName("Manager 1").
 		SetAction("approve").
@@ -251,13 +256,10 @@ func TestStep4_QuorumEvaluation_UsesBPMNDecisions(t *testing.T) {
 		Save(ctx)
 	require.NoError(t, err)
 
-	// checkAndTransitionChange should transition to approved (quorum satisfied)
-	err = svc.checkAndTransitionChange(ctx, changeID, tenantID)
-	require.NoError(t, err)
-
-	// Verify change status was updated
-	updated, err := svc.repo.Get(ctx, changeID, tenantID)
-	require.NoError(t, err)
+	// 最后一票走生产入口：approver2 的审批经 BPMN 桥接写决策行 → 阈值满足。
+	createChangeBridgeProcessFixture(t, client, tenantID, fmt.Sprintf("step4-%d", changeID), fmt.Sprintf("change:%d", changeID), approver2)
+	updated, err := svc.TransitionStatus(ctx, changeID, tenantID, approver2, "approved", "同意", "manager")
+	require.NoError(t, err, "阈值已由历史决策+本票满足，应放行")
 	require.Equal(t, "approved", updated.Status, "Change should be approved after quorum satisfied")
 }
 

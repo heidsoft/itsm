@@ -3,10 +3,10 @@ package change
 // 审批链 quorum 求值的**唯一**实现。
 //
 // 背景（2026-10-22 收敛）：会签（parallel/all）与阈值（N of M）语义此前只写在
-// checkAndTransitionChange 里，而该函数仅被无路由的 legacy 入口 ProcessApproval
+// legacy 复核器 checkAndTransitionChange 里，而该函数仅被无路由的 ProcessApproval
 // 调用 —— 生产走的是 TransitionStatus，它在桥接完成后直接把状态 CAS 成 approved，
-// 于是「两人会签」的变更被一个人就批掉了。求值逻辑抽成纯函数后，生产路径与
-// 复核路径共用同一份实现，不再存在两套语义。
+// 于是「两人会签」的变更被一个人就批掉了。求值逻辑抽成纯函数后由 TransitionStatus
+// 唯一消费；复核器本身已于 2026-10-23 连同 legacy 入口的最后残骸一并删除。
 
 // levelQuorum 是单个审批层的会签快照。
 type levelQuorum struct {

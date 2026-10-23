@@ -333,6 +333,22 @@ func (r *EntRepository) SetOutcomeNote(ctx context.Context, id, tenantID int, no
 		Exec(ctx)
 }
 
+// UpdateStatusCASWithNote 状态 CAS 与结果说明合成同一条条件 UPDATE（见
+// statusNoteUpdater 注释）。note 为空时只推进状态，语义与 UpdateStatusCAS 一致。
+func (r *EntRepository) UpdateStatusCASWithNote(ctx context.Context, id, tenantID int, expectedStatus, targetStatus, note string) (bool, error) {
+	update := r.client.Change.Update().
+		Where(change.IDEQ(id), change.TenantIDEQ(tenantID), change.StatusEQ(change.Status(expectedStatus))).
+		SetStatus(change.Status(targetStatus))
+	if note != "" {
+		update = update.SetOutcomeNote(note)
+	}
+	affected, err := update.Save(ctx)
+	if err != nil {
+		return false, err
+	}
+	return affected > 0, nil
+}
+
 func (r *EntRepository) Update(ctx context.Context, c *Change) (*Change, error) {
 	// 写路径强制租户隔离，避免越权更新跨租户变更。
 	// 注：change schema 无 deleted_at（物理删），故不附加 DeletedAtIsNil 守卫。

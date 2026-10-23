@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"strconv"
 	"strings"
 	"testing"
 
@@ -53,6 +52,9 @@ func setupChangeChainTest(t *testing.T) (*Service, *ent.Client, *sql.DB, int) {
 		logger:        logger,
 		entClient:     client,
 		approvalChain: service.NewApprovalChainService(client, logger),
+		// 与生产 NewService 同源：审批决定经 BPMN 桥接写 ProcessApprovalDecision。
+		// 未绑定流程实例时桥接是良性 no-op（findApprovalTask 返回 bound=false）。
+		approvalBridge: service.NewBPMNApprovalBridge(client, logger),
 	}
 	return svc, client, db, tenant.ID
 }
@@ -173,27 +175,6 @@ func TestChange_SubmitChange_NoChainFallsBackToCreator(t *testing.T) {
 	require.Equal(t, []int{creator}, approvers, "无激活链时应回退创建人自审（旧逻辑）")
 }
 
-// seedApprovalDecisions 按 approverIDs 注入 ProcessApprovalDecision 审计行（businessType=change）。
-// dc5fbf97 起审批决定由 BPMN bridge 写入 ProcessApprovalDecision（不可变审计表），
-// change_approvals legacy 表已停止写入；测试直接注入审计行驱动 quorum 求值。
-func seedApprovalDecisions(t *testing.T, client *ent.Client, tenantID, changeID, actorID int, approverIDs []int) {
-	t.Helper()
-	ctx := context.Background()
-	for _, aid := range approverIDs {
-		_, err := client.ProcessApprovalDecision.Create().
-			SetProcessInstanceID(changeID).SetProcessTaskID(changeID*100 + aid).
-			SetProcessInstanceKey(fmt.Sprintf("change-evt-%d", changeID)).
-			SetTaskID(fmt.Sprintf("TASK-%d-%d", changeID, aid)).
-			SetProcessDefinitionKey("change").SetNodeKey("Approval_1").
-			SetBusinessType("change").SetBusinessID(strconv.Itoa(changeID)).
-			SetActorID(aid).SetActorName(fmt.Sprintf("approver-%d", aid)).
-			SetAction("approve").SetDecision("approved").
-			SetTenantID(tenantID).Save(ctx)
-		require.NoError(t, err)
-	}
-	_ = actorID
-}
-
 // queryChangeStatus 读取变更当前状态。
 func queryChangeStatus(t *testing.T, client *ent.Client, changeID int) string {
 	t.Helper()
@@ -203,9 +184,8 @@ func queryChangeStatus(t *testing.T, client *ent.Client, changeID int) string {
 }
 
 // TestChange_Advancement_ParallelAllMustApprove 验证：同一级 parallel（会签）要求
-// 全部候选人通过；少一人仍 pending，集齐后整体 approved。
-// dc5fbf97 契约：审批决定以 ProcessApprovalDecision 审计行为权威，
-// quorum 求值由 checkAndTransitionChange 按 (approver, level) 双重匹配驱动。
+// 全部候选人通过；少一人仍 pending，集齐后整体 approved。走 TransitionStatus
+// 生产入口（唯一写路径）：每一票经 BPMN 桥接落审计行后同事务求值。
 func TestChange_Advancement_ParallelAllMustApprove(t *testing.T) {
 	svc, client, db, tenantID := setupChangeChainTest(t)
 	ctx := context.Background()
@@ -220,14 +200,18 @@ func TestChange_Advancement_ParallelAllMustApprove(t *testing.T) {
 	approvers := queryChangeChainApprovers(t, db, changeID, tenantID)
 	require.Equal(t, []int{a, b}, approvers)
 
-	// 仅一人批准 → 仍 pending
-	seedApprovalDecisions(t, client, tenantID, changeID, creator, []int{a})
-	require.NoError(t, svc.checkAndTransitionChange(ctx, changeID, tenantID))
-	require.Equal(t, string(dto.ChangeStatusPending), queryChangeStatus(t, client, changeID), "会签未集齐应仍 pending")
+	// 仅一人批准 → 仍 pending（桥接写决策行，但未达阈值不放行）
+	createChangeBridgeProcessFixture(t, client, tenantID, fmt.Sprintf("par-a-%d", changeID), fmt.Sprintf("change:%d", changeID), a)
+	updated, err := svc.TransitionStatus(ctx, changeID, tenantID, a, "approved", "同意", "manager")
+	require.NoError(t, err, "记录审批决定本身不应报错")
+	require.Equal(t, string(dto.ChangeStatusPending), updated.Status, "会签未集齐应仍 pending")
+	require.Equal(t, string(dto.ChangeStatusPending), queryChangeStatus(t, client, changeID))
 
 	// 第二人批准 → approved（同一任务多行审计，验证唯一索引已放宽）
-	seedApprovalDecisions(t, client, tenantID, changeID, creator, []int{b})
-	require.NoError(t, svc.checkAndTransitionChange(ctx, changeID, tenantID))
+	createChangeBridgeProcessFixture(t, client, tenantID, fmt.Sprintf("par-b-%d", changeID), fmt.Sprintf("change:%d", changeID), b)
+	updated, err = svc.TransitionStatus(ctx, changeID, tenantID, b, "approved", "同意", "manager")
+	require.NoError(t, err)
+	require.Equal(t, string(dto.ChangeStatusApproved), updated.Status)
 	require.Equal(t, string(dto.ChangeStatusApproved), queryChangeStatus(t, client, changeID))
 }
 
@@ -247,9 +231,10 @@ func TestChange_Advancement_OrTwoChooseOne(t *testing.T) {
 	require.Equal(t, []int{a, b}, approvers)
 
 	// 第一人批准即满足阈值 → approved
-	seedApprovalDecisions(t, client, tenantID, changeID, creator, []int{a})
-	require.NoError(t, svc.checkAndTransitionChange(ctx, changeID, tenantID))
-	require.Equal(t, string(dto.ChangeStatusApproved), queryChangeStatus(t, client, changeID))
+	createChangeBridgeProcessFixture(t, client, tenantID, fmt.Sprintf("or-a-%d", changeID), fmt.Sprintf("change:%d", changeID), a)
+	updated, err := svc.TransitionStatus(ctx, changeID, tenantID, a, "approved", "同意", "manager")
+	require.NoError(t, err)
+	require.Equal(t, string(dto.ChangeStatusApproved), updated.Status)
 }
 
 // TestChange_Advancement_ThresholdNofM 验证：parallel 但阈值<N（3 候选需 2 票）的多数决。
@@ -269,14 +254,17 @@ func TestChange_Advancement_ThresholdNofM(t *testing.T) {
 	require.ElementsMatch(t, []int{a, b, c}, approvers)
 
 	// 1 票 → 仍 pending
-	seedApprovalDecisions(t, client, tenantID, changeID, creator, []int{a})
-	require.NoError(t, svc.checkAndTransitionChange(ctx, changeID, tenantID))
-	require.Equal(t, string(dto.ChangeStatusPending), queryChangeStatus(t, client, changeID), "2 票阈值未达时应仍 pending")
+	createChangeBridgeProcessFixture(t, client, tenantID, fmt.Sprintf("nofm-a-%d", changeID), fmt.Sprintf("change:%d", changeID), a)
+	updated, err := svc.TransitionStatus(ctx, changeID, tenantID, a, "approved", "同意", "manager")
+	require.NoError(t, err)
+	require.Equal(t, string(dto.ChangeStatusPending), updated.Status, "2 票阈值未达时应仍 pending")
+	require.Equal(t, string(dto.ChangeStatusPending), queryChangeStatus(t, client, changeID))
 
 	// 2 票 → approved
-	seedApprovalDecisions(t, client, tenantID, changeID, creator, []int{b})
-	require.NoError(t, svc.checkAndTransitionChange(ctx, changeID, tenantID))
-	require.Equal(t, string(dto.ChangeStatusApproved), queryChangeStatus(t, client, changeID), "达到 2 票阈值应 approved")
+	createChangeBridgeProcessFixture(t, client, tenantID, fmt.Sprintf("nofm-b-%d", changeID), fmt.Sprintf("change:%d", changeID), b)
+	updated, err = svc.TransitionStatus(ctx, changeID, tenantID, b, "approved", "同意", "manager")
+	require.NoError(t, err)
+	require.Equal(t, string(dto.ChangeStatusApproved), updated.Status, "达到 2 票阈值应 approved")
 }
 
 // TestChange_Advancement_ReviewResolver 验证：审批链步骤 role=review:REVIEW 时，引擎解析出
@@ -316,10 +304,12 @@ func TestChange_Advancement_ReviewResolver(t *testing.T) {
 	require.ElementsMatch(t, []int{ca, cb}, approvers, "review:REVIEW 步骤应解析出评审组活跃成员")
 
 	// 评审 parallel 全员通过：先一人 → pending，再一人 → approved
-	seedApprovalDecisions(t, client, tenantID, changeID, creator, []int{ca})
-	require.NoError(t, svc.checkAndTransitionChange(ctx, changeID, tenantID))
-	require.Equal(t, string(dto.ChangeStatusPending), queryChangeStatus(t, client, changeID))
-	seedApprovalDecisions(t, client, tenantID, changeID, creator, []int{cb})
-	require.NoError(t, svc.checkAndTransitionChange(ctx, changeID, tenantID))
-	require.Equal(t, string(dto.ChangeStatusApproved), queryChangeStatus(t, client, changeID))
+	createChangeBridgeProcessFixture(t, client, tenantID, fmt.Sprintf("rev-a-%d", changeID), fmt.Sprintf("change:%d", changeID), ca)
+	updated, err := svc.TransitionStatus(ctx, changeID, tenantID, ca, "approved", "同意", "manager")
+	require.NoError(t, err)
+	require.Equal(t, string(dto.ChangeStatusPending), updated.Status)
+	createChangeBridgeProcessFixture(t, client, tenantID, fmt.Sprintf("rev-b-%d", changeID), fmt.Sprintf("change:%d", changeID), cb)
+	updated, err = svc.TransitionStatus(ctx, changeID, tenantID, cb, "approved", "同意", "manager")
+	require.NoError(t, err)
+	require.Equal(t, string(dto.ChangeStatusApproved), updated.Status)
 }

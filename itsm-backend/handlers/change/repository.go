@@ -78,3 +78,12 @@ type Repository interface {
 	// （draft 无排期约束，终态/失败已释放窗口）。
 	FindOverlappingScheduled(ctx context.Context, tenantID int, excludeChangeID int, windowStart, windowEnd time.Time) ([]*Change, error)
 }
+
+// statusNoteUpdater 终态退化路径的组合写原语：状态 CAS 与结果说明合成同一条
+// 条件 UPDATE。仅无事务句柄的装配（mock/legacy）会走到它——有事务句柄时
+// service 在事务内的状态 UPDATE 里直接写 outcome_note。仓储实现本接口即可
+// 消除「状态已 failed、原因为空」的崩溃窗口；未实现的旧 mock 自动退回
+// UpdateStatusCAS + SetOutcomeNote 两段写，行为与历史一致。
+type statusNoteUpdater interface {
+	UpdateStatusCASWithNote(ctx context.Context, id, tenantID int, expectedStatus, targetStatus, note string) (bool, error)
+}

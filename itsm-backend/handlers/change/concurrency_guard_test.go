@@ -38,6 +38,9 @@ func TestQuorumCASMiss_SkipsClobber(t *testing.T) {
 	ctx := context.Background()
 
 	approver := mkChangeUser(t, client, tenantID, "manager")
+	// prior：已投过一票的另一审批人（不在链上，仅作历史决策存在），
+	// 保证本次操作的 approver 仍是待办审批人（未决策）。
+	prior := mkChangeUser(t, client, tenantID, "security_admin")
 	creator := mkChangeUser(t, client, tenantID, "end_user")
 	changeID := mkChangeDraft(t, client, tenantID, creator)
 
@@ -63,8 +66,8 @@ func TestQuorumCASMiss_SkipsClobber(t *testing.T) {
 		SetNodeKey("Activity_Approve").
 		SetBusinessType("change").
 		SetBusinessID(strconv.Itoa(changeID)).
-		SetActorID(approver).
-		SetActorName("Manager").
+		SetActorID(prior).
+		SetActorName("Security Admin").
 		SetAction("approve").
 		SetDecision("approved").
 		SetComment("同意").
@@ -86,8 +89,19 @@ func TestQuorumCASMiss_SkipsClobber(t *testing.T) {
 	_, err = db.ExecContext(ctx, `UPDATE changes SET status = 'cancelled' WHERE id = ? AND tenant_id = ?`, changeID, tenantID)
 	require.NoError(t, err)
 
-	// CAS 未命中 = 状态已被并发修改：必须跳过（nil），不得把 quorum 结论落库。
-	require.NoError(t, svc.checkAndTransitionChange(ctx, changeID, tenantID))
+	// CAS 未命中 = 状态已被并发修改：TransitionStatus 必须 409 上抛
+	// （ErrConcurrentModification），不得把陈旧视图下的 quorum 结论落库。
+	_, err = svc.TransitionStatus(ctx, changeID, tenantID, approver, "approved", "同意", "manager")
+	require.Error(t, err)
+	assert.ErrorIs(t, err, ErrConcurrentModification,
+		"陈旧快照下的状态推进必须以 409 冲突上抛")
+
+	// 决策行随事务回滚：桥接写的这一票不能在 CAS 落败后残留为孤儿审计。
+	var decisionCount int
+	require.NoError(t, db.QueryRowContext(ctx,
+		`SELECT COUNT(*) FROM process_approval_decisions WHERE business_id = $1 AND tenant_id = $2`,
+		strconv.Itoa(changeID), tenantID).Scan(&decisionCount))
+	assert.Equal(t, 1, decisionCount, "只有预先 seed 的一条决策，桥接写入的那条应随回滚消失")
 
 	reloaded, err := realRepo.Get(ctx, changeID, tenantID)
 	require.NoError(t, err)

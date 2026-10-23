@@ -9,6 +9,7 @@ import (
 	"itsm-backend/ent/approvalchain"
 	"itsm-backend/ent/servicecatalog"
 	"itsm-backend/ent/servicecatalogitem"
+	"itsm-backend/ent/sladefinition"
 
 	"go.uber.org/zap"
 )
@@ -27,6 +28,36 @@ func NewServiceCatalogItemService(client *ent.Client, logger *zap.SugaredLogger)
 	}
 }
 
+// validateItemBindings 目录项绑定字段的统一校验：存在性 + 租户归属 + 组合一致性。
+// Create 与 Update 共用同一实现，消除「创建必填、更新可非法」的口径漂移——
+// 此前 Update 可以把 approval_chain_id / sla_id 改成任意整数（不校验存在性，
+// 不校验租户归属），配置面上看似绑定成功、消费面上必然失效的假绑定。
+func (s *ServiceCatalogItemService) validateItemBindings(ctx context.Context, tenantID int, requiresApproval bool, approvalChainID, slaID int) error {
+	if requiresApproval && approvalChainID <= 0 {
+		return fmt.Errorf("approval chain is required when approval is enabled")
+	}
+	if approvalChainID > 0 {
+		exists, queryErr := s.client.ApprovalChain.Query().Where(
+			approvalchain.ID(approvalChainID), approvalchain.TenantID(tenantID), approvalchain.Status("active"),
+		).Exist(ctx)
+		if queryErr != nil || !exists {
+			return fmt.Errorf("active approval chain not found")
+		}
+	}
+	if slaID > 0 {
+		exists, queryErr := s.client.SLADefinition.Query().Where(
+			sladefinition.ID(slaID), sladefinition.TenantID(tenantID),
+		).Exist(ctx)
+		if queryErr != nil {
+			return fmt.Errorf("failed to validate sla binding: %w", queryErr)
+		}
+		if !exists {
+			return fmt.Errorf("sla definition not found in tenant")
+		}
+	}
+	return nil
+}
+
 // CreateServiceCatalogItem 创建服务目录项
 func (s *ServiceCatalogItemService) CreateServiceCatalogItem(ctx context.Context, req *dto.CreateServiceCatalogItemRequest, tenantID int) (*dto.ServiceCatalogItemResponse, error) {
 	// 验证目录是否存在
@@ -39,16 +70,8 @@ func (s *ServiceCatalogItemService) CreateServiceCatalogItem(ctx context.Context
 	if req.EstimatedDays < 0 || req.EstimatedDays > 3650 {
 		return nil, fmt.Errorf("estimated days must be between 0 and 3650")
 	}
-	if req.RequiresApproval && req.ApprovalChainID <= 0 {
-		return nil, fmt.Errorf("approval chain is required when approval is enabled")
-	}
-	if req.ApprovalChainID > 0 {
-		exists, queryErr := s.client.ApprovalChain.Query().Where(
-			approvalchain.ID(req.ApprovalChainID), approvalchain.TenantID(tenantID), approvalchain.Status("active"),
-		).Exist(ctx)
-		if queryErr != nil || !exists {
-			return nil, fmt.Errorf("active approval chain not found")
-		}
+	if err := s.validateItemBindings(ctx, tenantID, req.RequiresApproval, req.ApprovalChainID, req.SlaID); err != nil {
+		return nil, err
 	}
 
 	// 创建服务项
@@ -132,8 +155,8 @@ func (s *ServiceCatalogItemService) ListServiceCatalogItems(ctx context.Context,
 
 // UpdateServiceCatalogItem 更新服务目录项
 func (s *ServiceCatalogItemService) UpdateServiceCatalogItem(ctx context.Context, id int, req *dto.UpdateServiceCatalogItemRequest, tenantID int) (*dto.ServiceCatalogItemResponse, error) {
-	// 验证服务项是否存在
-	_, err := s.client.ServiceCatalogItem.Query().
+	// 验证服务项是否存在（保留实体：绑定字段按「请求 ∪ 现值」的生效状态校验）
+	existing, err := s.client.ServiceCatalogItem.Query().
 		Where(
 			servicecatalogitem.ID(id),
 			servicecatalogitem.TenantID(tenantID),
@@ -144,6 +167,26 @@ func (s *ServiceCatalogItemService) UpdateServiceCatalogItem(ctx context.Context
 			return nil, fmt.Errorf("service item not found")
 		}
 		return nil, fmt.Errorf("failed to get service item: %w", err)
+	}
+
+	// 绑定字段按「生效值」校验：请求未携带的指针字段沿用库中现值——只传
+	// requires_approval=true 而不带 approval_chain_id 时，校验的是合并后的
+	// 最终状态，而不是让缺省字段悄悄绕过一致性要求。与 Create 共用同一
+	// 校验器，两端口径一致。
+	effectiveRequiresApproval := existing.RequiresApproval
+	if req.RequiresApproval != nil {
+		effectiveRequiresApproval = *req.RequiresApproval
+	}
+	effectiveApprovalChainID := existing.ApprovalChainID
+	if req.ApprovalChainID != nil {
+		effectiveApprovalChainID = *req.ApprovalChainID
+	}
+	effectiveSlaID := existing.SLAID
+	if req.SlaID != nil {
+		effectiveSlaID = *req.SlaID
+	}
+	if err := s.validateItemBindings(ctx, tenantID, effectiveRequiresApproval, effectiveApprovalChainID, effectiveSlaID); err != nil {
+		return nil, err
 	}
 
 	// 构建更新查询

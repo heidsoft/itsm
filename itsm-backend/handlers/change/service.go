@@ -567,79 +567,12 @@ func (s *Service) SubmitApproval(ctx context.Context, record *ApprovalRecord, te
 // 再单独改 changes.status、提交后再收口审批链，三段各自成事务且失败只记日志，
 // 会留下"审批记录已落定、变更状态未推进"的半写状态；同时绕过桥接，与流程
 // 权威状态分叉。2026-10-22 收敛删除，quorum 求值统一走 evaluateApprovalQuorum。
-
-func (s *Service) checkAndTransitionChange(ctx context.Context, changeID, tenantID int) error {
-	chain, err := s.repo.GetApprovalChain(ctx, changeID, tenantID)
-	if err != nil {
-		s.logger.Errorw("checkAndTransitionChange: failed to get approval chain", "error", err, "change_id", changeID)
-		return err
-	}
-	history, err := s.GetApprovalHistory(ctx, changeID, tenantID)
-	if err != nil {
-		s.logger.Errorw("checkAndTransitionChange: failed to get approval history", "error", err, "change_id", changeID)
-		return err
-	}
-
-	// 求值统一走 evaluateApprovalQuorum：与生产路径（TransitionStatus）共用
-	// 同一份会签/阈值语义，避免"测试里算 quorum、线上不算"的双实现漂移。
-	outcome := evaluateApprovalQuorum(chain, history)
-	allRequiredSatisfied := outcome.AllRequiredMet
-	anyRequiredRejected := outcome.Rejected
-
-	// 任一必需层被驳回 → 整体驳回
-	if anyRequiredRejected {
-		c, err := s.repo.Get(ctx, changeID, tenantID)
-		if err != nil {
-			return err
-		}
-		target := "rejected"
-		if !service.IsValidChangeStatusTransition(c.Status, target, c.Type) {
-			s.logger.Warnw("checkAndTransitionChange: skip invalid change status transition (reject)",
-				"change_id", changeID, "from", c.Status, "to", target)
-			return nil
-		}
-		// 必须走 CAS：读到的 status 在校验与写入之间的并发窗口里可能已被
-		// 推进/取消，read-then-unconditional-write 会用陈旧校验结果覆盖
-		// 推进后的状态（绕过状态机）。CAS 未命中 = 状态已被并发修改，
-		// 按既有惯例记日志跳过，不落库。
-		ok, err := s.repo.UpdateStatusCAS(ctx, changeID, tenantID, c.Status, target)
-		if err != nil {
-			s.logger.Errorw("checkAndTransitionChange: failed to update change status to rejected", "error", err, "change_id", changeID)
-			return err
-		}
-		if !ok {
-			s.logger.Warnw("checkAndTransitionChange: skip status CAS miss (reject): state moved concurrently",
-				"change_id", changeID, "from", c.Status, "to", target)
-		}
-		return nil
-	}
-
-	// 所有必需层均满足 → 整体批准。空链（未配置审批链）不在此处自动放行：
-	// 该 helper 只做"已有链"的复核，免审路径由状态机与业务门禁决定。
-	if allRequiredSatisfied && !outcome.ChainEmpty {
-		c, err := s.repo.Get(ctx, changeID, tenantID)
-		if err != nil {
-			return err
-		}
-		target := "approved"
-		if !service.IsValidChangeStatusTransition(c.Status, target, c.Type) {
-			s.logger.Warnw("checkAndTransitionChange: skip invalid change status transition (approve)",
-				"change_id", changeID, "from", c.Status, "to", target)
-			return nil
-		}
-		// 同 reject 分支：CAS 防并发窗口内陈旧校验覆盖推进后状态。
-		ok, err := s.repo.UpdateStatusCAS(ctx, changeID, tenantID, c.Status, target)
-		if err != nil {
-			s.logger.Errorw("checkAndTransitionChange: failed to update change status to approved", "error", err, "change_id", changeID)
-			return err
-		}
-		if !ok {
-			s.logger.Warnw("checkAndTransitionChange: skip status CAS miss (approve): state moved concurrently",
-				"change_id", changeID, "from", c.Status, "to", target)
-		}
-	}
-	return nil
-}
+//
+// 2026-10-23 进一步删除其配套复核器 checkAndTransitionChange：它虽无生产路由，
+// 但自带「读状态 → 校验 → 独立 CAS」的第二条状态写路径（无事务、无 BPMN 桥接、
+// 不收口审批链），只差一个调用方就会复活并复现上述半写状态。会签票的累积与
+// 求值唯一入口是 TransitionStatus：最后一票经桥接落审计行后，在同一事务内按
+// evaluateApprovalQuorum 求值并推进状态（见本文件终态/非终态分支）。
 
 func (s *Service) ConfigureWorkflow(ctx context.Context, changeID, tenantID int, items []*ApprovalChain) error {
 	// Clear existing and set new
@@ -1142,29 +1075,42 @@ func (s *Service) TransitionStatus(ctx context.Context, id, tenantID, userID int
 		targetStatus == "failed" || targetStatus == "closed"
 	if isTerminal {
 		if tx == nil {
-			ok, casErr := s.repo.UpdateStatusCAS(ctx, c.ID, tenantID, c.Status, targetStatus)
-			if casErr != nil {
-				return nil, fmt.Errorf("failed to update change status: %w", casErr)
-			}
-			if !ok {
-				return nil, fmt.Errorf("%w: 期望 '%s' → '%s'，但状态已被其他请求修改",
-					ErrConcurrentModification, c.Status, targetStatus)
-			}
-			if outcomeNote != "" {
-				// 退化路径无事务可用：状态已推进，结果说明单独落库。失败仅记日志，
-				// 不把已成功的状态推进报成失败（重试会撞 409 而非补写原因）。
-				if noteErr := s.repo.SetOutcomeNote(ctx, c.ID, tenantID, outcomeNote); noteErr != nil {
-					s.logger.Errorw("TransitionStatus: 记录实施结果说明失败（退化路径）",
-						"error", noteErr, "change_id", id, "tenant_id", tenantID)
+			// 退化路径（entClient==nil 的 mock/legacy 装配）：无事务可依托，但
+			// 「状态与结果说明」仍应合成一次条件 UPDATE——分开写会在两次写之间
+			// 崩溃时留下「状态已 failed、原因为空」的窗口。仓储实现了组合写
+			// （statusNoteUpdater）就用它；未实现（旧 mock）退回两段写，
+			// 与历史行为一致。
+			if noted, canNote := s.repo.(statusNoteUpdater); canNote {
+				ok, casErr := noted.UpdateStatusCASWithNote(ctx, c.ID, tenantID, c.Status, targetStatus, outcomeNote)
+				if casErr != nil {
+					return nil, fmt.Errorf("failed to update change status: %w", casErr)
+				}
+				if !ok {
+					return nil, fmt.Errorf("%w: 期望 '%s' → '%s'，但状态已被其他请求修改",
+						ErrConcurrentModification, c.Status, targetStatus)
+				}
+			} else {
+				ok, casErr := s.repo.UpdateStatusCAS(ctx, c.ID, tenantID, c.Status, targetStatus)
+				if casErr != nil {
+					return nil, fmt.Errorf("failed to update change status: %w", casErr)
+				}
+				if !ok {
+					return nil, fmt.Errorf("%w: 期望 '%s' → '%s'，但状态已被其他请求修改",
+						ErrConcurrentModification, c.Status, targetStatus)
+				}
+				if outcomeNote != "" {
+					// 无事务退化路径里状态已推进，结果说明单独落库。失败仅记日志，
+					// 不把已成功的状态推进报成失败（重试会撞 409 而非补写原因）。
+					if noteErr := s.repo.SetOutcomeNote(ctx, c.ID, tenantID, outcomeNote); noteErr != nil {
+						s.logger.Errorw("TransitionStatus: 记录实施结果说明失败（退化路径）",
+							"error", noteErr, "change_id", id, "tenant_id", tenantID)
+					}
 				}
 			}
 			// 无事务句柄的装配（mock/legacy）没有原子性可依托，仍需收口，
-			// 否则终态变更的审批链会永远停在 pending。失败记日志，不阻断返回：
+			// 否则终态变更的审批链会永远停在 pending。失败重试一次后升级日志：
 			// 状态已经写入终态，此时报错会让调用方误以为可以重试。
-			if closeErr := service.CloseChangeApprovalChains(ctx, id, tenantID); closeErr != nil {
-				s.logger.Errorw("TransitionStatus: 收口审批链失败（无事务句柄，退化路径）",
-					"error", closeErr, "change_id", id, "tenant_id", tenantID)
-			}
+			s.closeChainsDegraded(ctx, id, tenantID)
 			c.Status = targetStatus
 			c.OutcomeNote = outcomeNote
 			return c, nil
@@ -1200,10 +1146,7 @@ func (s *Service) TransitionStatus(ctx context.Context, id, tenantID, userID int
 		}
 		if !rawTxAvailable {
 			// 纯 ent 事务（无 *sql.DB 句柄）：退化为提交后收口并记日志。
-			if closeErr := service.CloseChangeApprovalChains(ctx, id, tenantID); closeErr != nil {
-				s.logger.Errorw("TransitionStatus: 收口审批链失败（纯 ent 事务退化路径）",
-					"error", closeErr, "change_id", id, "tenant_id", tenantID)
-			}
+			s.closeChainsDegraded(ctx, id, tenantID)
 		}
 		c.Status = targetStatus
 		c.OutcomeNote = outcomeNote
@@ -1248,6 +1191,22 @@ func (s *Service) TransitionStatus(ctx context.Context, id, tenantID, userID int
 	// 直接返回携带新状态的内存快照，不做任何二次落库。
 	c.Status = targetStatus
 	return c, nil
+}
+
+// closeChainsDegraded 无事务句柄时的审批链收口兜底（mock/legacy 装配才可达：
+// 生产 EntRepository 恒有原生句柄，收口在事务内完成）。此路径上变更状态已
+// 写入终态，收口失败不能上抛（调用方会误以为可以重试，实际重试必撞 409），
+// 只能重试一次后升级日志，交给运维/补偿任务人工收口。
+func (s *Service) closeChainsDegraded(ctx context.Context, id, tenantID int) {
+	if closeErr := service.CloseChangeApprovalChains(ctx, id, tenantID); closeErr != nil {
+		s.logger.Warnw("TransitionStatus: 收口审批链首次失败（无事务退化路径），重试一次",
+			"error", closeErr, "change_id", id, "tenant_id", tenantID)
+		if retryErr := service.CloseChangeApprovalChains(ctx, id, tenantID); retryErr != nil {
+			s.logger.Errorw("TransitionStatus: 收口审批链失败（无事务退化路径，已重试）——"+
+				"变更已终态但审批链可能仍 pending，需要人工收口",
+				"error", retryErr, "change_id", id, "tenant_id", tenantID)
+		}
+	}
 }
 
 // GetApprovalHistory returns approval records for a change.

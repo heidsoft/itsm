@@ -2538,6 +2538,40 @@ cd itsm-frontend && npx tsc --noEmit
 `dead_letter` 时放行、`LIKE` 通配误命中不误判。负证明：把守卫条件短路（`false && blocked`）
 → 前两例转红。
 
+### 1.68 变更域第二写路径清零 + 服务目录项绑定校验对称化（2026-10-23，行为变更：无效绑定从静默保存变报错）
+
+**变更域（内部收敛，无 API/迁移/配置变化）**：`ProcessApproval` 删除后遗留的复核器
+`checkAndTransitionChange` 整体删除——它自带「读状态 → 独立 CAS」的第二条状态写路径，
+无事务、无 BPMN 桥接、不收口审批链；会签/阈值/并发守卫测试全部改走 `TransitionStatus`
+生产入口。无事务退化路径（mock/legacy 装配才可达）的终态流转把状态与结果说明合并为
+单条条件 UPDATE。自部署用户无感知。
+
+**服务目录项绑定校验对称化（自部署用户需关注）**：`ServiceCatalogItem` 的
+`sla_id` 此前**从未被校验**——可以指向不存在的 SLA；Update 可把 `approval_chain_id`/
+`sla_id` 改成任意整数、`requires_approval` 置 true 可不携带审批链。这些「配置成功、
+消费必失败」的假绑定现在会在保存时报错：
+
+- `sla_id`：必须存在且属于当前租户（否则报 `sla definition not found in tenant`）；
+- `approval_chain_id`：必须存在、属于当前租户且为 active；
+- `requires_approval=true` 时审批链必填（Update 按合并后的生效值判定，未携带的
+  字段沿用库中现值——已有合法绑定的条目改名不受影响）。
+
+此前保存成功的非法绑定不会在升级时被清理，需要自查：
+
+```sql
+SELECT id, name, sla_id FROM service_catalog_items
+WHERE sla_id > 0 AND sla_id NOT IN (SELECT id FROM sla_definitions);
+```
+
+（审批链同理。）查出的脏数据修复方式：更新为合法 ID，或把 `sla_id`/`approval_chain_id`
+清零（ent 的 Optional int 字段 0 表示未绑定）。
+
+**验证**
+
+```bash
+cd itsm-backend && go test -count=1 ./service/ -run 'Binding' && go test -count=1 ./handlers/change/
+```
+
 ## 2. 环境变量变更
 
 本次升级**移除了多个"幽灵配置项"**（在示例文件中声明但代码/Compose 从不读取，用户配置了也不生效），并修正了一个 Grafana 密码安全缺陷。
