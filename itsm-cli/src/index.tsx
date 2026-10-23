@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Box, Text, Newline } from 'ink';
 import { LoginCommand } from './commands/login.js';
 import { TicketsCommand } from './commands/tickets.js';
@@ -26,7 +26,7 @@ import {
 } from './commands/connector.js';
 import { DashboardOverviewCommand } from './commands/admin.js';
 import { isLoggedIn, clearCredentials } from './lib/credentials.js';
-import { apiClient } from './lib/api-client.js';
+
 
 interface CliFlags {
   status?: string;

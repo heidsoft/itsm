@@ -31,7 +31,7 @@ export const ChangeListCommand: React.FC<ListProps> = ({ status, page = 1 }) => 
           { key: 'number', header: 'Number', width: 12 },
           { key: 'title', header: 'Title', width: 35 },
           { key: 'type', header: 'Type', width: 12 },
-          { key: 'risk_level', header: 'Risk', width: 8 },
+          { key: 'riskLevel', header: 'Risk', width: 8 },
           { key: 'status', header: 'Status', width: 12 },
           { key: 'scheduled_at', header: 'Scheduled', width: 20 },
         ]}
@@ -51,20 +51,20 @@ export const ChangeViewCommand: React.FC<ViewProps> = ({ id }) => {
   if (err) return <Text color="red">✗ {err}</Text>;
   if (!data) return <Spinner text={`Loading change ${id}...`} />;
   const rows: [string, string | undefined][] = [
-    ['Number', data.number], ['Title', data.title], ['Type', data.type],
-    ['Risk', data.risk_level], ['Status', data.status], ['Priority', data.priority],
-    ['Assignee', data.assignee_name], ['Implementer', data.implementer_name],
-    ['Scheduled', data.scheduled_at], ['Created', data.created_at], ['Updated', data.updated_at],
+    ['Number', data.changeNumber], ['Title', data.title], ['Type', data.type],
+    ['Risk', data.riskLevel], ['Status', data.status], ['Priority', data.priority],
+    ['Assignee', data.assigneeName], ['Implementer', data.implementerName],
+    ['Scheduled', data.plannedStartDate], ['Created', data.createdAt], ['Updated', data.updatedAt],
   ];
   return (
     <Box flexDirection="column" padding={1}>
-      <Text bold color="cyan">🔧 Change {data.number}</Text>
+      <Text bold color="cyan">🔧 Change {data.changeNumber}</Text>
       <Newline />
       {rows.filter(([, v]) => v).map(([k, v]) => (
         <Box key={k}><Text color="gray">{k.padEnd(12)} </Text><Text>{v}</Text></Box>
       ))}
       {data.description && <Box flexDirection="column" marginTop={1}><Text color="gray">Description</Text><Text>{data.description}</Text></Box>}
-      {data.rollback_plan && <Box flexDirection="column" marginTop={1}><Text color="gray">Rollback</Text><Text>{data.rollback_plan}</Text></Box>}
+      {data.rollbackPlan && <Box flexDirection="column" marginTop={1}><Text color="gray">Rollback</Text><Text>{data.rollbackPlan}</Text></Box>}
     </Box>
   );
 };

@@ -39,7 +39,7 @@ export const ConnectorTestCommand = ({ name }) => {
     const [result, setResult] = useState(null);
     const [err, setErr] = useState('');
     useEffect(() => {
-        apiClient.testConnector(name).then(r => setResult(r)).catch(e => setErr(e.message));
+        apiClient.testConnector(name).then((r) => setResult(r)).catch((e) => setErr(e.message));
     }, []);
     if (err)
         return React.createElement(Text, { color: "red" },
@@ -57,7 +57,7 @@ export const ConnectorHealthCommand = () => {
     const [data, setData] = useState(null);
     const [err, setErr] = useState('');
     useEffect(() => {
-        apiClient.connectorHealth().then(d => setData(d)).catch(e => setErr(e.message));
+        apiClient.connectorHealth().then((d) => setData(d)).catch((e) => setErr(e.message));
     }, []);
     if (err)
         return React.createElement(Text, { color: "red" },
@@ -75,8 +75,8 @@ export const ConnectorSendCommand = ({ name, channel, message }) => {
     const [err, setErr] = useState('');
     useEffect(() => {
         apiClient.sendViaConnector(name, { channel, type: 'text', content: message })
-            .then(r => setResult(r))
-            .catch(e => setErr(e.message));
+            .then((r) => setResult(r))
+            .catch((e) => setErr(e.message));
     }, []);
     if (err)
         return React.createElement(Text, { color: "red" },

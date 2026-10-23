@@ -35,8 +35,8 @@ export const IncidentListCommand = ({ status, priority, page = 1 }) => {
                 { key: 'title', header: 'Title', width: 35 },
                 { key: 'status', header: 'Status', width: 12 },
                 { key: 'priority', header: 'Prio', width: 8 },
-                { key: 'assignee_name', header: 'Assignee', width: 16 },
-                { key: 'sla_status', header: 'SLA', width: 10 },
+                { key: 'assigneeName', header: 'Assignee', width: 16 },
+                { key: 'slaStatus', header: 'SLA', width: 10 },
             ] }),
         React.createElement(Newline, null),
         React.createElement(Text, { dimColor: true },
@@ -59,25 +59,25 @@ export const IncidentViewCommand = ({ id }) => {
     if (!data)
         return React.createElement(Spinner, { text: `Loading incident ${id}...` });
     const rows = [
-        ['Number', data.number],
+        ['Number', data.incidentNumber],
         ['Title', data.title],
         ['Status', data.status],
         ['Priority', data.priority],
         ['Category', data.category],
         ['Severity', data.severity],
-        ['Assignee', data.assignee_name],
-        ['Reporter', data.reporter_name],
-        ['CMDB CI', data.cmdb_ci_name],
-        ['SLA', data.sla_status],
-        ['Due', data.due_date],
-        ['Created', data.created_at],
-        ['Updated', data.updated_at],
-        ['Resolved', data.resolved_at],
+        ['Assignee', data.assigneeName],
+        ['Reporter', data.reporterName],
+        ['CMDB CI', data.relatedCiName],
+        ['SLA', data.slaStatus],
+        ['Due', data.dueDate],
+        ['Created', data.createdAt],
+        ['Updated', data.updatedAt],
+        ['Resolved', data.resolvedAt],
     ];
     return (React.createElement(Box, { flexDirection: "column", padding: 1 },
         React.createElement(Text, { bold: true, color: "cyan" },
             "\uD83D\uDCCB Incident ",
-            data.number),
+            data.incidentNumber),
         React.createElement(Newline, null),
         rows.filter(([, v]) => v !== undefined && v !== '').map(([k, v]) => (React.createElement(Box, { key: k },
             React.createElement(Text, { color: "gray" },
@@ -93,8 +93,8 @@ export const IncidentTriageCommand = ({ title, description }) => {
     const [err, setErr] = useState('');
     useEffect(() => {
         apiClient.aiTriage({ title, description })
-            .then(r => setResult(r))
-            .catch(e => setErr(e.message));
+            .then((r) => setResult(r))
+            .catch((e) => setErr(e.message));
     }, []);
     if (err)
         return React.createElement(Text, { color: "red" },

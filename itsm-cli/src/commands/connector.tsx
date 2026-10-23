@@ -41,7 +41,7 @@ export const ConnectorTestCommand: React.FC<{ name: string }> = ({ name }) => {
   const [result, setResult] = useState<Record<string, unknown> | null>(null);
   const [err, setErr] = useState('');
   useEffect(() => {
-    apiClient.testConnector(name).then(r => setResult(r)).catch(e => setErr(e.message));
+    apiClient.testConnector(name).then((r) => setResult(r as Record<string, unknown>)).catch((e: Error) => setErr(e.message));
   }, []);
   if (err) return <Text color="red">✗ {err}</Text>;
   if (!result) return <Spinner text={`Testing connector ${name}...`} />;
@@ -52,7 +52,7 @@ export const ConnectorHealthCommand: React.FC = () => {
   const [data, setData] = useState<Record<string, unknown> | null>(null);
   const [err, setErr] = useState('');
   useEffect(() => {
-    apiClient.connectorHealth().then(d => setData(d)).catch(e => setErr(e.message));
+    apiClient.connectorHealth().then((d) => setData(d as Record<string, unknown>)).catch((e: Error) => setErr(e.message));
   }, []);
   if (err) return <Text color="red">✗ {err}</Text>;
   if (!data) return <Spinner text="Checking health..." />;
@@ -70,8 +70,8 @@ export const ConnectorSendCommand: React.FC<{ name: string; channel: string; mes
   const [err, setErr] = useState('');
   useEffect(() => {
     apiClient.sendViaConnector(name, { channel, type: 'text', content: message })
-      .then(r => setResult(r))
-      .catch(e => setErr(e.message));
+      .then((r) => setResult(r as Record<string, unknown>))
+      .catch((e: Error) => setErr(e.message));
   }, []);
   if (err) return <Text color="red">✗ {err}</Text>;
   if (!result) return <Spinner text="Sending..." />;

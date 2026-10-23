@@ -24,6 +24,12 @@ Thumbs.db
 *.out
 .gocache/
 bin/
+# Exception: itsm-cli's declared entrypoint — package.json "bin": {"itsm":
+# "./bin/itsm.js"}. The blanket bin/ rule above targets Go build output, but it
+# was also silently swallowing the CLI's only entrypoint: a fresh clone had no
+# way to run `itsm` at all (and `git add itsm-cli/bin/` skips it without a word).
+!itsm-cli/bin/
+!itsm-cli/bin/**
 /pkg/
 vendor/
 !itsm-backend/handlers/vendor/
@@ -143,6 +149,11 @@ covers/
 !itsm-backend/migrations/passwordresettoken*.go
 # Exception: docs-gate security check script (not a secret)
 !scripts/docs-gate/check-hardcoded-passwords.sh
+# Exception: itsm-cli secret *resolution* helper (src/lib/secrets.ts) — source
+# code that resolves and redacts secrets, not a secret itself. It is imported
+# by src/agent/commands/auth.ts; while swallowed by *secret* above, the agent
+# layer compiled locally but could never build from a fresh clone.
+!itsm-cli/src/lib/secrets.ts
 !itsm-backend/ent/passwordresettoken/
 !itsm-backend/ent/passwordresettoken/**
 !itsm-backend/ent/passwordresettoken*.go

@@ -7,7 +7,7 @@ export const SlaStatsCommand = () => {
     const [data, setData] = useState(null);
     const [err, setErr] = useState('');
     useEffect(() => {
-        apiClient.getSLAStats().then(d => setData(d)).catch(e => setErr(e.message));
+        apiClient.getSLAStats().then((d) => setData(d)).catch((e) => setErr(e.message));
     }, []);
     if (err)
         return React.createElement(Text, { color: "red" },
@@ -25,27 +25,34 @@ export const SlaOverdueCommand = () => {
     const [loading, setLoading] = useState(true);
     const [err, setErr] = useState('');
     useEffect(() => {
-        apiClient.getSLAOverdue()
-            .then(d => { setItems(d || []); setLoading(false); })
-            .catch(e => { setErr(e.message); setLoading(false); });
+        apiClient.getSLAViolations()
+            .then((d) => {
+            const raw = d.items ?? (Array.isArray(d) ? d : []);
+            setItems(raw);
+            setLoading(false);
+        })
+            .catch((e) => { setErr(e.message); setLoading(false); });
     }, []);
     if (loading)
-        return React.createElement(Spinner, { text: "Loading overdue tickets..." });
+        return React.createElement(Spinner, { text: "Loading SLA violations..." });
     if (err)
         return React.createElement(Text, { color: "red" },
             "\u2717 ",
             err);
     return (React.createElement(Box, { flexDirection: "column" },
         React.createElement(Text, { bold: true, color: "red" },
-            "\u26A0 Overdue tickets (",
+            "\u26A0 SLA violations (",
             items.length,
             ")"),
         React.createElement(Newline, null),
         React.createElement(Table, { data: items, columns: [
-                { key: 'ticket_number', header: 'Number', width: 12 },
-                { key: 'title', header: 'Title', width: 40 },
-                { key: 'priority', header: 'Prio', width: 8 },
-                { key: 'sla_status', header: 'SLA', width: 12 },
-                { key: 'assignee_name', header: 'Assignee', width: 16 },
-            ] })));
+                { key: 'ticketNumber', header: 'Number', width: 12 },
+                { key: 'ticketTitle', header: 'Title', width: 40 },
+                { key: 'violationType', header: 'Type', width: 14 },
+                { key: 'breachedAt', header: 'Breached', width: 20 },
+            ] }),
+        React.createElement(Newline, null),
+        React.createElement(Text, { dimColor: true },
+            "Raw payload: ",
+            JSON.stringify(items).slice(0, 400))));
 };

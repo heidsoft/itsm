@@ -26,11 +26,11 @@ export function PriorityBadge({ priority }: { priority: string }) {
   return <Text color={color}>{priority.toUpperCase().padEnd(8)}</Text>;
 }
 
-export function TicketRow({ ticket }: { ticket: { ticket_number: string; title: string; status: string; priority: string; assignee_name?: string } }) {
+export function TicketRow({ ticket }: { ticket: { ticketNumber: string; title: string; status: string; priority: string; assigneeName?: string } }) {
   return (
     <Box>
       <Box width={15}>
-        <Text color="cyan">{ticket.ticket_number}</Text>
+        <Text color="cyan">{ticket.ticketNumber}</Text>
       </Box>
       <Box width={35}>
         <Text>{ticket.title.substring(0, 33)}</Text>
@@ -42,7 +42,7 @@ export function TicketRow({ ticket }: { ticket: { ticket_number: string; title: 
         <PriorityBadge priority={ticket.priority} />
       </Box>
       <Box width={15}>
-        <Text dimColor>{ticket.assignee_name ?? '—'}</Text>
+        <Text dimColor>{ticket.assigneeName ?? '—'}</Text>
       </Box>
     </Box>
   );

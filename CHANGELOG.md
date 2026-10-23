@@ -7,6 +7,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Unreleased]
+
+### Added
+
+- **`itsm-cli` 业务流程验收框架：跨端点跑完 ITIL 生命周期并输出可判定证据（2026-10-22，agent 能力）**：此前 CLI 只能证明"某个端点可用"，无法回答"工单/事件/问题/变更/知识/CMDB/服务请求能不能走完生命周期"。新增 `flow list|show|run` 三个命令与 7 个场景（ticket、incident、problem、change、knowledge、cmdb-topology、service-request-fulfillment），复用同一 `apiClient` 调真实后端。verdict 三态：`passed`（正向与负向断言全部成立）、`failed`（产品行为与契约不符，含"负向用例没被拒绝"）、`blocked`（环境/治理前置不满足，如目录项未绑定 BPMN、知识评审需要第二身份）；`failed`/`blocked` 均 exit 5 并携带完整 `details`。失败即停（后续步骤依赖前一步 ID），`teardown` 始终反序执行且失败只记 warning，不掩盖真正失败点；`--keep` 跳过清理，`--report` 落盘证据，`--var` 覆盖场景变量，`runTag` 嵌入创建对象标题便于追溯。负向用例是一等公民：非法状态迁移、跨租户、缺失 CI 必须以声明的 `kind`/`httpStatus` 被拒绝；负向步骤收到 5xx 判 `failed` 而非 `blocked`（不能用"环境问题"掩盖错误分类坏掉）。场景声明的 endpoint 并入命令契约，`check:route-drift` 同样覆盖（206 端点、913 条后端路由全匹配）。回归锁 `tests/flow-runner.test.mjs` 8 例（capture、失败即停、teardown 反序、`expectError` 匹配/不匹配、`blockedWhen` 降级、`--keep`、teardown 失败不改变 verdict、runTag 可排序）。同批补命令面缺口：`incident delete`、`problem resolve`、`request sla|approvals|delete`、`provisioning execute|retry|resolve`、知识评审 6 个动作（submit/approve/reject/withdraw/republish/list）。
+
+- **CLI 按业务码而非 HTTP 状态分类错误（2026-10-22，与 Fixed 中限流/404 条目配套）**：`api-client` 的 `businessKind` 收敛为唯一映射——`2001/2002`→`not_authenticated`、`2003/2004`→`forbidden`、`4004/404`→`not_found`、`4090/409/4220/422`→`conflict`、`4290/429/5003/5010`→`unavailable`、`≥5001`→`internal`、其余→`validation`；`unavailable` 标记 `retryable: true`（限流/声明性不可用值得退避，校验/冲突不值得）。后端历史上仍可能把业务码装在 200 响应体里（存量 handler），按码分类才不会把"资源不存在"报成参数错误。回归锁 `agent-protocol.test.mjs` 新增 200+`4004`/`4290` 两例。
+
+- **`itsm-cli` agent 可用性强化：输入契约可发现、输出可裁剪、自诊断、传输有界（2026-10-22）**：上一批让 CLI「能跑」，这一批解决 agent 真正高频遇到的四类摩擦——猜参数、烧 context、不知道环境状态、调用无边界：
+  1. **`itsm --json schema`（新的输入契约发现面）**：此前 `--help` 只有一句 usage 文本，agent 无法知道有哪些 flag、哪些必填、合法值是什么，只能「调一次、读 400」。现在从命令注册表派生机器可读契约：`schema <command>` 给 positional/flag/body 的参数名、类型、必填、枚举；`schema <domain> --as detail` 给整域；`schema --as tools --domain <d>` 输出 function-calling 工具定义（含 `x-itsm` CLI 映射与高风险标注）。参数来自两层：usage 字符串解析（`<title>` 必填 positional / `[--status s]` 可选 flag，191 命令零手工维护全覆盖）+ 后端 `oneof=` 枚举。枚举生成器 `scripts/gen-enums.mjs` 扫描 `itsm-backend` 271 个 Go 文件，只导出**跨域语义一致**的字段（severity/impact/priority/approvalMode/channel 等 21 个）；`status`/`type`/`action`/`provider`/`channel` 因每域含义不同被白名单排除——**错的枚举比没有枚举更糟**（实测反例：`connector revoke --provider` 是连接器名，套用云厂商枚举会诱导错误调用）。`npm run gen:enums` 生成 `src/agent/enums.generated.ts`，`npm run check:enums` 在 CI 校验表未过期。
+  2. **`itsm --json doctor`（一次调用完成冷启动自检）**：并行探测连通性、版本、身份与 7 个领域（ticket/incident/problem/change/cmdb/knowledge/notification）的读权限，返回 `verdict` ∈ `healthy|degraded|unreachable|unauthenticated`、逐项 `kind`/`ms`/`detail`/`hint` 与 `next` 建议。诊断是结果，因此能产出报告时恒 exit 0；`degraded` 明确区分「身份有效但某域被 RBAC 拒绝」。`doctor` 是 `infra.doctor` 的别名，注册表仍是唯一事实来源。
+  3. **输出体积控制（`--fields` / `--limit` / `--format ndjson`）**：列表响应在协议层裁剪，无需 jq——`--fields id,ticketNumber,assignee.name` 支持点号路径，缺失字段显式补 `null`（防止 agent 把「没返回」误判为「空值」）；`--limit N` 截断并新增 `meta:{returned,total,truncated,projected}` 如实说明是否为全量；`--format ndjson` 一行一条、末尾 `{_meta}`，供大列表流式消费。裁剪只作用于标准列表信封；对单对象或历史非标准列表载荷（如 `admin users` 的 `{users,pagination}`）不静默假装生效，而是回 `meta.shapingSkipped` 如实说明。
+  4. **传输有界（`--timeout` / `--retries` / `--no-retry`）**：单请求默认 30s 硬超时（超时 → exit 1 + 指路 hint），GET/HEAD 默认 2 次重试并尊重 `Retry-After`；**写请求永不自动重试**——后端无 HTTP 层幂等键，盲目重放会重复创建，README 明确要求写超时后先读状态再决定重发。
+  5. **stdout 纯净性守卫**：agent 模式下 `console.log/info/debug` 统一改道 stderr，任何调试输出或第三方库日志都无法污染「恰好一个 JSON 文档」的协议（`ITSM_CLI_AGENT_NO_GUARD=1` 仅供调试关闭）。
+  6. **协议回归测试 `tests/agent-protocol.test.mjs`（16 例）**：进程内 stub 后端 + 真实 `bin/itsm.js`，断言单信封、裁剪与 `meta`、exit 0/1/2/3/4/5/10 全映射、超时文案、幂等 GET 单次重试、高风险写无 `--yes` 时**服务端零请求**、`--dry-run` 不发请求、`--help` 不被门禁拦截、schema 必填与枚举、doctor 报告。`npm run check` 串起 typecheck + 枚举同步 + 路由漂移 + 协议测试。
+
+  同批修掉两个真实缺陷：①**`ITSM_BASE_URL` 只对 `infra/*` 生效**——其余领域命令都走模块级 `apiClient`，其 baseURL 在构造时被钉死为 `localhost:8090`，把 CLI 指向 staging/客户环境时 ticket/incident/cmdb 仍读开发者本机（stub 测试直接暴露：请求打到了真实后端并返回 401）。`ApiClient` 改为按请求解析 `explicit → --base-url → ITSM_BASE_URL → default`，并删除各命令自行 `withBaseURL(resolveRuntimeConfig())` 的重复绑定。②**agent 单次调用 ~4.7s**——`bin/itsm.js` 顶层静态导入 Ink/React/meow，而 agent 模式根本不用 TUI；改为先判 `--json` 再动态导入，调用降到 ~1.0s（本机 `node -e 0` 地板值即 ~0.7s）。文档见 [itsm-cli/README.md](./itsm-cli/README.md)。
+
+### Fixed
+
+- **`itsm-cli` agent 模式四处阻塞修复（2026-10-22，WorkBuddy 无法直调）**：CLI 的 headless 协议（`--json` 单信封 + 语义化退出码）本身完整，但外部 agent 接进来时被四件事挡住，均已修复并实测：
+  1. **`incident close` 恒 400**：CLI 的 `incidentLifecycle` 在无 body 时不发请求体，后端 `Close` 用 `c.ShouldBindJSON` 绑定，空 body 触发 EOF → `400 请求参数错误`。修法：`incidentLifecycle`/`problemLifecycle` 统一兜底 `{}`；同时 `incident close` 补 `--closeNotes`（后端业务校验「请填写关闭说明」，此前命令根本没有这个参数，即使过了绑定也会 400）。`problem investigate`/`incident acknowledge` 受同一空 body 缺陷影响，一并修复。
+  2. **`problem create` 只能传 `--data <json>`**：三个必填字段（title/description/priority）要求调用方手写并转义 JSON，中文场景极易出错。补扁平参数形式 `problem create <title> --description <d> --priority <p>`，`--data` 保留且优先级更高。
+  3. **每进程登录撞限流（10 次/分钟/IP，业务码 2003）**：`ITSM_USERNAME/ITSM_PASSWORD` 是进程内存登录，一次对话跑 10 条命令就被 403 挡住，且错误被吞成误导性的 `401 缺少认证token`。修法：`hydrateAgentToken` 记录真实失败原因（HTTP 状态 + 业务码 + 消息），runner 在 401 上补 hint 区分「限流」与「凭据错」；`auth login` 落盘一次即可全会话复用。
+  4. **access token 15 分钟即断、refresh token 从不使用**：`middleware.AccessTokenTTL=15m` / `RefreshTokenTTL=7d`，CLI 只在启动时读一次凭据，长会话必然 401。补静默续期：请求返回 401 时用存储的 refresh token 调 `POST /api/v1/auth/refresh`（cookie + body 双携带，兼容单次使用 rotation），成功后写回凭据并重放原请求（仅重试一次，防止递归）。`auth login` 同时记录 `expiresAt`，让 `isLoggedIn()` 能拒绝过期 token 而不是拿它去打一次必然失败的请求；`resolveRuntimeConfig` 对「access 过期但仍有 refresh token」的凭据保留 `stored-credentials` 语义，交由续期逻辑接管。
+  5. **凭据文件权限**：`~/.itsm/credentials` 按默认 umask 写入（通常 0644），同机其他用户可读 bearer token。改为目录 `0700` + 文件 `0600`，并对历史文件补 `chmod`。
+  6. **`--help` 被确认门禁拦截（README 声称可用、实际不可用）**：`itsm --json incident close --help` 返回 exit 10「需要确认高风险写」而不是用法，`itsm --json ticket --help` 返回 exit 2「Missing verb」。修法：runner 在风险门禁与参数校验**之前**短路 `--help`/`-h` —— 命中具体命令返回 `{command,summary,usage,endpoints,risk}`，命中域返回该域全部命令清单。agent 查用法不该被要求确认破坏性操作。
+  7. **agent 表面冒烟脚本 `scripts/agent-smoke.mjs`（`npm run smoke:agent`）**：把上述契约变成可回归断言（12 项，含 `--help` 不被 exit 10 拦截、usage 含 `--closeNotes`/`--description`、`problem create` 本地校验、`--dry-run` 预演、高风险写无 `--yes` 必 exit 10、`infra health` 可达、有凭据时认证读可用），`--offline` 可只跑不依赖后端的协议断言。
+  8. **`infra api` 逃生舱不带认证（调试主入口形同虚设）**：`requestRaw` 自建 fetch，只设 `Content-Type` 而从不带 `Authorization`，任何需鉴权的端点一律 401——而它的存在意义正是"打命令面没覆盖的端点"，实际只能用来看 401。修法：`requestRaw` 委托给 `request()`，复用完整认证链（`ITSM_TOKEN` → 存储凭据 → 静默续期）与统一错误分类；GET/HEAD 主动丢弃 body（fetch 禁止）。同时修正 README 的知识搜索示例字段——后端要 `query`/`pageSize`，原示例写 `q`/`limit` 必然 400。
+  实测证据（prod 栈，admin/super_admin）：`ticket create` → `TKT-202610-000036`；`incident create` → `INC-202610-000009` 并走完 `acknowledge → in_progress → resolve → close`；`problem create` → `PRB-20261022-0004`；注入失效 access token 后单条命令内完成续期并返回 200；连续 6 条命令零登录、零限流。
+
+
+### Added
+
+- **`itsm-cli` agent 大输出经管道被截断成非法 JSON + `incident report` 编不过（2026-10-23，提交前验收发现）**：`bin/itsm.js` 以 `process.exit()` 退出，而管道上的 stdout 写入是异步的——agent/测试经管道驱动 CLI 时，26KB 的 `schema --as tools` 信封在 libuv 排空前就被杀死，正好断在第一块 8192 字节，消费方收到 `Unterminated string in JSON`。只有超过管道缓冲的大输出会中招，因此 26 例协议回归里只有 schema 一例转红——而它在真实调用里必然发生。修法：写完先等排空（`process.stdout.write('', cb)`）再退出；不能只设 `process.exitCode`，那样不会停止执行，代码继续落进 TUI 分支，meow 的 banner 会污染「恰好一个 JSON 文档」的协议（此坑在修复过程中真实踩到过一次）。同时补 `ApiClient.incidentReport`（`GET /incidents/stats/report`）：命令早已注册但传输方法缺失，`tsc` 直接 TS2339，整个 agent 层处于**不可构建**状态；命令侧字段从 `startDate/endDate` 对齐为后端真实的 `dateFrom/dateTo`。另修两处 `.gitignore` 静默吞文件：`*secret*` 吞掉被 `auth.ts` import 的 `src/lib/secrets.ts`（fresh clone 编不过）、`bin/` 吞掉 `package.json` `bin` 字段声明的唯一入口 `bin/itsm.js`（fresh clone 根本没有 `itsm` 命令），均按仓库既有例外模式重新放行。
+
 ## [1.6.20] - 2026-10-23
 
 ### Fixed

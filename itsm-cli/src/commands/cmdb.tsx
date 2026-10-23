@@ -54,12 +54,12 @@ export const CmdbViewCommand: React.FC<ViewProps> = ({ id }) => {
     <Box flexDirection="column" padding={1}>
       <Text bold color="cyan">🗄️  CI #{data.id} {data.name}</Text>
       <Newline />
-      <Text>Type:     {data.type}</Text>
+      <Text>Type:     {data.typeName}</Text>
       <Text>Status:   {data.status}</Text>
-      <Text>Owner:    {data.owner ?? '-'}</Text>
+      <Text>Owner:    {data.ownedBy ?? '-'}</Text>
       <Text>Location: {data.location ?? '-'}</Text>
-      <Text>Created:  {data.created_at}</Text>
-      <Text>Updated:  {data.updated_at}</Text>
+      <Text>Created:  {data.createdAt}</Text>
+      <Text>Updated:  {data.updatedAt}</Text>
     </Box>
   );
 };

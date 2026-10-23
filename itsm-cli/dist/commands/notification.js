@@ -10,8 +10,8 @@ export const NotificationListCommand = ({ unread, page = 1 }) => {
     const [err, setErr] = useState('');
     useEffect(() => {
         apiClient.listNotifications({ unread, page, pageSize: 20 })
-            .then(r => { setItems(r.items || []); setTotal(r.total); setUnreadCount(r.unread); setLoading(false); })
-            .catch(e => { setErr(e.message); setLoading(false); });
+            .then(r => { setItems(r.items || []); setTotal(r.total); setUnreadCount(r.unread ?? 0); setLoading(false); })
+            .catch((e) => { setErr(e.message); setLoading(false); });
     }, []);
     if (loading)
         return React.createElement(Spinner, { text: "Loading notifications..." });
@@ -35,7 +35,7 @@ export const NotificationListCommand = ({ unread, page = 1 }) => {
                     " ",
                     n.level?.toUpperCase() || 'INFO',
                     " \u00B7 ",
-                    n.created_at)),
+                    n.createdAt)),
             React.createElement(Text, { bold: true, color: n.read ? 'gray' : 'white' }, n.title),
             n.content && React.createElement(Text, { dimColor: true }, n.content))))));
 };

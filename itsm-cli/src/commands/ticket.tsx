@@ -31,17 +31,17 @@ export const TicketViewCommand: React.FC<TicketViewProps> = ({ id }) => {
 
   return (
     <Box flexDirection="column" padding={1}>
-      <Text bold color="cyan">Ticket #{ticket.ticket_number}</Text>
+      <Text bold color="cyan">Ticket #{ticket.ticketNumber}</Text>
       <Newline />
       {fmt('Title', ticket.title)}
       {fmt('Status', ticket.status)}
       {fmt('Priority', ticket.priority)}
       {fmt('Category', ticket.category)}
-      {fmt('Assignee', ticket.assignee_name)}
-      {fmt('Requester', ticket.requester_name)}
-      {fmt('Created', ticket.created_at)}
-      {fmt('Updated', ticket.updated_at)}
-      {ticket.sla_status && fmt('SLA', ticket.sla_status)}
+      {fmt('Assignee', ticket.assigneeName)}
+      {fmt('Requester', ticket.requesterName)}
+      {fmt('Created', ticket.createdAt)}
+      {fmt('Updated', ticket.updatedAt)}
+      {ticket.slaStatus && fmt('SLA', ticket.slaStatus)}
       <Newline />
       <Text bold>Description:</Text>
       <Text>{ticket.description}</Text>

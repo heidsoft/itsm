@@ -14,91 +14,129 @@ export interface PaginationParams {
   unread?: boolean;
 }
 
-export interface LoginRequest { username: string; password: string }
-
-export interface LoginResponse {
-  token: string;
-  refresh_token: string;
-  user: User;
-  tenant_id: number;
-  tenant_name: string;
+export interface LoginRequest {
+  username: string;
+  password: string;
+  /** Optional: disambiguates when the account belongs to several tenants. */
+  tenantCode?: string;
+  tenantId?: number;
 }
 
-export interface User {
-  id: number; username: string; name: string; email: string;
-  role: string; tenant_id: number;
+/**
+ * Actual backend contract (handlers/common AuthResult): tokens travel in
+ * HttpOnly cookies (`access_token` / `refresh_token`), so the JSON body has
+ * no token fields. The CLI captures the cookie server-side and re-exposes it
+ * as `accessToken` for credentials storage.
+ */
+export interface LoginUser {
+  id: number;
+  username: string;
+  email: string;
+  name: string;
+  role: string;
+  mspRole?: string;
+  department?: string;
+  departmentId?: number;
+  phone?: string;
+  active: boolean;
+  tenantId: number;
+  permissions?: string[];
+}
+
+export interface LoginResponseAuth {
+  expiresIn: number;
+  user: LoginUser;
+  /** Extracted from the Set-Cookie header by the client, not present in the raw body. */
+  accessToken?: string;
+  refreshToken?: string;
+}
+
+export interface User extends LoginUser {}
+
+export interface SwitchTenantResponse {
+  user: LoginUser;
+  tenant: unknown;
 }
 
 export interface Ticket {
   id: number;
-  ticket_number: string;
+  ticketNumber: string;
   title: string;
   description?: string;
   status: string;
   priority: string;
+  type?: string;
   category?: string;
-  assignee_id?: number;
-  assignee_name?: string;
-  requester_name?: string;
-  created_at: string;
-  updated_at: string;
-  sla_status?: string;
-  due_date?: string;
+  categoryId?: number;
+  assigneeId?: number;
+  assigneeName?: string;
+  requesterName?: string;
+  createdAt: string;
+  updatedAt: string;
+  slaStatus?: string;
+  dueDate?: string;
+  version?: number;
 }
 
-export interface TicketListResponse { items: Ticket[]; total: number; page?: number; pageSize?: number }
+export interface TicketListResponse {
+  items: Ticket[];
+  total: number;
+  page?: number;
+  pageSize?: number;
+  totalPages?: number;
+}
 
 export interface CreateTicketRequest { title: string; description: string; priority: string; category?: string }
 
 // ---------- ITILv3 ----------
 export interface Incident {
-  id: number; number: string; title: string; description?: string;
+  id: number; incidentNumber?: string; title: string; description?: string;
   status: string; priority: string; severity?: string;
-  category?: string; assignee_id?: number; assignee_name?: string;
-  reporter_name?: string; cmdb_ci_id?: number; cmdb_ci_name?: string;
-  created_at: string; updated_at: string; resolved_at?: string;
-  sla_status?: string; due_date?: string;
+  category?: string; assigneeId?: number; assigneeName?: string;
+  reporterName?: string; relatedCiName?: string;
+  createdAt: string; updatedAt: string; resolvedAt?: string;
+  slaStatus?: string; dueDate?: string;
 }
-export interface IncidentListResponse { items: Incident[]; total: number; page?: number; pageSize?: number }
+export interface IncidentListResponse { items: Incident[]; total: number; page?: number; pageSize?: number; totalPages?: number }
 
 export interface Change {
-  id: number; number: string; title: string; description?: string;
-  type?: string; risk_level?: string; status: string; priority: string;
-  assignee_name?: string; implementer_name?: string;
-  scheduled_at?: string; created_at: string; updated_at: string;
-  rollback_plan?: string;
+  id: number; changeNumber?: string; title: string; description?: string;
+  type?: string; riskLevel?: string; status: string; priority: string;
+  assigneeName?: string; implementerName?: string;
+  plannedStartDate?: string; createdAt: string; updatedAt: string;
+  rollbackPlan?: string;
 }
-export interface ChangeListResponse { items: Change[]; total: number }
+export interface ChangeListResponse { items: Change[]; total: number; page?: number; pageSize?: number; totalPages?: number }
 
 // ---------- CMDB ----------
 export interface CI {
-  id: number; name: string; type: string; status: string;
-  owner?: string; location?: string;
-  created_at: string; updated_at: string;
+  id: number; name: string; typeName?: string; status: string;
+  ownedBy?: string; location?: string;
+  createdAt: string; updatedAt: string;
 }
-export interface CIListResponse { items: CI[]; total: number }
+export interface CIListResponse { items: CI[]; total: number; page?: number; pageSize?: number; totalPages?: number }
 
 // ---------- Knowledge ----------
 export interface KnowledgeArticle {
   id: number; title: string; summary?: string; content?: string;
-  category?: string; tags?: string[]; author_name?: string;
-  views: number; likes: number; status: string;
-  created_at: string; updated_at: string;
+  category?: string; tags?: string[]; authorName?: string;
+  viewCount?: number; status: string;
+  createdAt: string; updatedAt: string;
 }
-export interface KnowledgeListResponse { items: KnowledgeArticle[]; total: number }
+export interface KnowledgeListResponse { items: KnowledgeArticle[]; total: number; page?: number; pageSize?: number; totalPages?: number }
 
 // ---------- Workflow / Approvals ----------
 export interface ProcessInstance {
-  id: string; process_key: string; business_key?: string;
-  state: string; start_time: string; end_time?: string;
+  id: string; processDefinitionKey?: string; businessKey?: string;
+  state: string; startTime?: string; endTime?: string;
   initiator?: string; variables?: Record<string, unknown>;
 }
-export interface ProcessInstanceListResponse { items: ProcessInstance[]; total: number }
+export interface ProcessInstanceListResponse { items: ProcessInstance[]; total: number; page?: number; pageSize?: number; totalPages?: number }
 
 export interface ApprovalTask {
-  id: string; name: string; process_instance_id?: string;
-  assignee?: string; candidate_groups?: string[];
-  created_at: string; due_date?: string; priority?: string;
+  id: string; name?: string; processInstanceId?: string;
+  assigneeId?: number; assigneeName?: string;
+  createdAt?: string; dueDate?: string; priority?: string;
   status?: string; variables?: Record<string, unknown>;
 }
 export interface ApprovalTaskListResponse { items: ApprovalTask[]; total: number }
@@ -107,9 +145,9 @@ export interface ApprovalTaskListResponse { items: ApprovalTask[]; total: number
 export interface Notification {
   id: number; title: string; content?: string;
   type: string; read: boolean; level?: string;
-  created_at: string;
+  createdAt: string;
 }
-export interface NotificationListResponse { items: Notification[]; total: number; unread: number }
+export interface NotificationListResponse { items: Notification[]; total: number; unread?: number }
 
 // ---------- Connectors / Plugin market ----------
 export interface ConnectorManifest {
@@ -125,4 +163,8 @@ export interface Credentials {
   tenantId?: number;
   tenantName?: string;
   expiresAt?: string;
+  /** Store schema version (2 = hardened atomic store). */
+  version?: number;
+  /** When the store was last written (ISO-8601). */
+  savedAt?: string;
 }

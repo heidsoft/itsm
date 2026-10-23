@@ -27,7 +27,7 @@ export const KnowledgeListCommand: React.FC<{ category?: string; page?: number }
           { key: 'id', header: 'ID', width: 6 },
           { key: 'title', header: 'Title', width: 40 },
           { key: 'category', header: 'Category', width: 14 },
-          { key: 'author_name', header: 'Author', width: 16 },
+          { key: 'authorName', header: 'Author', width: 16 },
           { key: 'views', header: 'Views', width: 6 },
           { key: 'status', header: 'Status', width: 10 },
         ]}
@@ -49,7 +49,7 @@ export const KnowledgeViewCommand: React.FC<{ id: number }> = ({ id }) => {
   return (
     <Box flexDirection="column" padding={1}>
       <Text bold color="cyan">📖 {data.title}</Text>
-      <Text dimColor>by {data.author_name} · {data.created_at}</Text>
+      <Text dimColor>by {data.authorName} · {data.createdAt}</Text>
       <Newline />
       {data.summary && <Text>{data.summary}</Text>}
       <Newline />

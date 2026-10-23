@@ -24,7 +24,7 @@ export function PriorityBadge({ priority }) {
 export function TicketRow({ ticket }) {
     return (React.createElement(Box, null,
         React.createElement(Box, { width: 15 },
-            React.createElement(Text, { color: "cyan" }, ticket.ticket_number)),
+            React.createElement(Text, { color: "cyan" }, ticket.ticketNumber)),
         React.createElement(Box, { width: 35 },
             React.createElement(Text, null, ticket.title.substring(0, 33))),
         React.createElement(Box, { width: 14 },
@@ -32,5 +32,5 @@ export function TicketRow({ ticket }) {
         React.createElement(Box, { width: 10 },
             React.createElement(PriorityBadge, { priority: ticket.priority })),
         React.createElement(Box, { width: 15 },
-            React.createElement(Text, { dimColor: true }, ticket.assignee_name ?? '—'))));
+            React.createElement(Text, { dimColor: true }, ticket.assigneeName ?? '—'))));
 }

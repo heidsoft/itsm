@@ -10,7 +10,13 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsc && node bin/itsm.js",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "npm run build && node --test tests/*.test.mjs",
+    "gen:enums": "node scripts/gen-enums.mjs",
+    "check:enums": "node scripts/gen-enums.mjs --check",
+    "check:route-drift": "npm run build && node scripts/check-route-drift.mjs",
+    "check": "npm run typecheck && npm run check:enums && npm run check:route-drift && npm test",
+    "smoke:agent": "node scripts/agent-smoke.mjs"
   },
   "dependencies": {
     "got": "^14.0.0",

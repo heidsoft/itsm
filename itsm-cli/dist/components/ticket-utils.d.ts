@@ -7,10 +7,10 @@ export declare function PriorityBadge({ priority }: {
 }): React.JSX.Element;
 export declare function TicketRow({ ticket }: {
     ticket: {
-        ticket_number: string;
+        ticketNumber: string;
         title: string;
         status: string;
         priority: string;
-        assignee_name?: string;
+        assigneeName?: string;
     };
 }): React.JSX.Element;

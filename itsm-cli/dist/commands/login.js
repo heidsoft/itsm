@@ -13,14 +13,18 @@ export const LoginCommand = ({ username, password }) => {
         }
         apiClient.login({ username, password })
             .then(result => {
+            if (!result.accessToken) {
+                setMessage('Login succeeded but no access token cookie was returned by the backend');
+                setDone('error');
+                return;
+            }
             saveCredentials({
-                token: result.token,
-                refreshToken: result.refresh_token,
+                token: result.accessToken,
+                refreshToken: result.refreshToken,
                 user: result.user,
-                tenantId: result.tenant_id,
-                tenantName: result.tenant_name,
+                tenantId: result.user.tenantId,
             });
-            setMessage(`Logged in as ${result.user.name} (${result.tenant_name})`);
+            setMessage(`Logged in as ${result.user.name} (token expires in ${result.expiresIn}s)`);
             setDone('ok');
         })
             .catch(err => {

@@ -10,8 +10,13 @@ export const WorkflowInstancesCommand = ({ page = 1 }) => {
     const [err, setErr] = useState('');
     useEffect(() => {
         apiClient.listProcessInstances({ page, pageSize: 20 })
-            .then(r => { setItems(r.items || []); setTotal(r.total); setLoading(false); })
-            .catch(e => { setErr(e.message); setLoading(false); });
+            .then((r) => {
+            const payload = r;
+            setItems(payload.items || []);
+            setTotal(payload.total ?? 0);
+            setLoading(false);
+        })
+            .catch((e) => { setErr(e.message); setLoading(false); });
     }, []);
     if (loading)
         return React.createElement(Spinner, { text: "Loading process instances..." });
@@ -27,9 +32,9 @@ export const WorkflowInstancesCommand = ({ page = 1 }) => {
         React.createElement(Newline, null),
         React.createElement(Table, { data: items, columns: [
                 { key: 'id', header: 'Instance ID', width: 36 },
-                { key: 'process_key', header: 'Process', width: 24 },
+                { key: 'processDefinitionKey', header: 'Process', width: 24 },
                 { key: 'state', header: 'State', width: 10 },
-                { key: 'start_time', header: 'Started', width: 20 },
+                { key: 'startTime', header: 'Started', width: 20 },
             ] })));
 };
 export const WorkflowTasksCommand = () => {
@@ -39,8 +44,14 @@ export const WorkflowTasksCommand = () => {
     const [err, setErr] = useState('');
     useEffect(() => {
         apiClient.listUserTasks()
-            .then(r => { setItems(r.items || []); setTotal(r.total); setLoading(false); })
-            .catch(e => { setErr(e.message); setLoading(false); });
+            .then((r) => {
+            const payload = (r ?? {});
+            const list = Array.isArray(payload.items) ? payload.items : (Array.isArray(r) ? r : []);
+            setItems(list);
+            setTotal(payload.total ?? list.length);
+            setLoading(false);
+        })
+            .catch((e) => { setErr(e.message); setLoading(false); });
     }, []);
     if (loading)
         return React.createElement(Spinner, { text: "Loading tasks..." });
@@ -58,19 +69,19 @@ export const WorkflowTasksCommand = () => {
                 { key: 'id', header: 'Task ID', width: 32 },
                 { key: 'name', header: 'Name', width: 30 },
                 { key: 'priority', header: 'Prio', width: 8 },
-                { key: 'created_at', header: 'Created', width: 20 },
-                { key: 'due_date', header: 'Due', width: 20 },
+                { key: 'createdAt', header: 'Created', width: 20 },
+                { key: 'dueDate', header: 'Due', width: 20 },
             ] }),
         React.createElement(Newline, null),
-        React.createElement(Text, { dimColor: true }, "Use `itsm workflow complete <task-id>` to complete; `itsm workflow approve/reject` for approvals.")));
+        React.createElement(Text, { dimColor: true }, "Use `itsm --json workflow complete <task-id>` or `itsm --json workflow decision <task-id> --action approve`.")));
 };
 export const WorkflowCompleteCommand = ({ id, outcome, comment }) => {
     const [result, setResult] = useState(null);
     const [err, setErr] = useState('');
     useEffect(() => {
-        apiClient.completeTask(id, outcome, comment)
-            .then(r => { setResult(r); })
-            .catch(e => { setErr(e.message); });
+        apiClient.completeTask(id, { outcome, ...(comment ? { comment } : {}) })
+            .then((r) => setResult(r))
+            .catch((e) => setErr(e.message));
     }, []);
     if (err)
         return React.createElement(Text, { color: "red" },
@@ -90,9 +101,15 @@ export const ApprovalListCommand = ({ status }) => {
     const [loading, setLoading] = useState(true);
     const [err, setErr] = useState('');
     useEffect(() => {
-        apiClient.listApprovals(status)
-            .then(r => { setItems(r.items || []); setTotal(r.total); setLoading(false); })
-            .catch(e => { setErr(e.message); setLoading(false); });
+        apiClient.listApprovalRecords(status ? { status } : undefined)
+            .then((r) => {
+            const payload = (r ?? {});
+            const list = Array.isArray(payload.items) ? payload.items : (Array.isArray(r) ? r : []);
+            setItems(list);
+            setTotal(payload.total ?? list.length);
+            setLoading(false);
+        })
+            .catch((e) => { setErr(e.message); setLoading(false); });
     }, []);
     if (loading)
         return React.createElement(Spinner, { text: "Loading approvals..." });
@@ -102,25 +119,26 @@ export const ApprovalListCommand = ({ status }) => {
             err);
     return (React.createElement(Box, { flexDirection: "column" },
         React.createElement(Text, { bold: true, color: "cyan" },
-            "\u270B Pending approvals (",
+            "\u270B Approval records (",
             total,
             ")"),
         React.createElement(Newline, null),
         React.createElement(Table, { data: items, columns: [
                 { key: 'id', header: 'ID', width: 30 },
-                { key: 'name', header: 'Subject', width: 32 },
-                { key: 'priority', header: 'Prio', width: 8 },
-                { key: 'created_at', header: 'Created', width: 20 },
+                { key: 'subject', header: 'Subject', width: 32 },
+                { key: 'status', header: 'Status', width: 12 },
+                { key: 'createdAt', header: 'Created', width: 20 },
             ] }),
         React.createElement(Newline, null),
-        React.createElement(Text, { dimColor: true }, "`itsm workflow approve <id>` / `itsm workflow reject <id>`")));
+        React.createElement(Text, { dimColor: true }, "Approve via `itsm --json ticket workflow-approve <ticketId> --approvalId <n>`.")));
 };
 export const ApprovalActionCommand = ({ id, action, comment }) => {
     const [err, setErr] = useState('');
     const [done, setDone] = useState(false);
     useEffect(() => {
-        const p = action === 'approve' ? apiClient.approveTask(id, comment) : apiClient.rejectTask(id, comment);
-        p.then(() => setDone(true)).catch(e => setErr(e.message));
+        apiClient.decideTask(id, comment ? { action, comment } : { action })
+            .then(() => setDone(true))
+            .catch((e) => setErr(e.message));
     }, []);
     if (err)
         return React.createElement(Text, { color: "red" },

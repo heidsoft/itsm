@@ -12,8 +12,8 @@ export const NotificationListCommand: React.FC<{ unread?: boolean; page?: number
   const [err, setErr] = useState('');
   useEffect(() => {
     apiClient.listNotifications({ unread, page, pageSize: 20 })
-      .then(r => { setItems(r.items || []); setTotal(r.total); setUnreadCount(r.unread); setLoading(false); })
-      .catch(e => { setErr(e.message); setLoading(false); });
+      .then(r => { setItems(r.items || []); setTotal(r.total); setUnreadCount(r.unread ?? 0); setLoading(false); })
+      .catch((e: Error) => { setErr(e.message); setLoading(false); });
   }, []);
   if (loading) return <Spinner text="Loading notifications..." />;
   if (err) return <Text color="red">✗ {err}</Text>;
@@ -26,7 +26,7 @@ export const NotificationListCommand: React.FC<{ unread?: boolean; page?: number
         <Box key={n.id} flexDirection="column" marginBottom={1}>
           <Box>
             <Text color={n.read ? 'gray' : 'yellow'}>
-              {n.read ? '○' : '●'} {n.level?.toUpperCase() || 'INFO'} · {n.created_at}
+              {n.read ? '○' : '●'} {n.level?.toUpperCase() || 'INFO'} · {n.createdAt}
             </Text>
           </Box>
           <Text bold color={n.read ? 'gray' : 'white'}>{n.title}</Text>

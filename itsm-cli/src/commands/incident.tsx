@@ -32,8 +32,8 @@ export const IncidentListCommand: React.FC<ListProps> = ({ status, priority, pag
           { key: 'title', header: 'Title', width: 35 },
           { key: 'status', header: 'Status', width: 12 },
           { key: 'priority', header: 'Prio', width: 8 },
-          { key: 'assignee_name', header: 'Assignee', width: 16 },
-          { key: 'sla_status', header: 'SLA', width: 10 },
+          { key: 'assigneeName', header: 'Assignee', width: 16 },
+          { key: 'slaStatus', header: 'SLA', width: 10 },
         ]}
       />
       <Newline />
@@ -53,24 +53,24 @@ export const IncidentViewCommand: React.FC<ViewProps> = ({ id }) => {
   if (err) return <Text color="red">✗ {err}</Text>;
   if (!data) return <Spinner text={`Loading incident ${id}...`} />;
   const rows: [string, string | number | undefined][] = [
-    ['Number', data.number],
+    ['Number', data.incidentNumber],
     ['Title', data.title],
     ['Status', data.status],
     ['Priority', data.priority],
     ['Category', data.category],
     ['Severity', data.severity],
-    ['Assignee', data.assignee_name],
-    ['Reporter', data.reporter_name],
-    ['CMDB CI', data.cmdb_ci_name],
-    ['SLA', data.sla_status],
-    ['Due', data.due_date],
-    ['Created', data.created_at],
-    ['Updated', data.updated_at],
-    ['Resolved', data.resolved_at],
+    ['Assignee', data.assigneeName],
+    ['Reporter', data.reporterName],
+    ['CMDB CI', data.relatedCiName],
+    ['SLA', data.slaStatus],
+    ['Due', data.dueDate],
+    ['Created', data.createdAt],
+    ['Updated', data.updatedAt],
+    ['Resolved', data.resolvedAt],
   ];
   return (
     <Box flexDirection="column" padding={1}>
-      <Text bold color="cyan">📋 Incident {data.number}</Text>
+      <Text bold color="cyan">📋 Incident {data.incidentNumber}</Text>
       <Newline />
       {rows.filter(([, v]) => v !== undefined && v !== '').map(([k, v]) => (
         <Box key={k}>
@@ -93,8 +93,8 @@ export const IncidentTriageCommand: React.FC<{ title: string; description: strin
   const [err, setErr] = useState('');
   useEffect(() => {
     apiClient.aiTriage({ title, description })
-      .then(r => setResult(r))
-      .catch(e => setErr(e.message));
+      .then((r) => setResult(r as Record<string, unknown>))
+      .catch((e: Error) => setErr(e.message));
   }, []);
   if (err) return <Text color="red">✗ {err}</Text>;
   if (!result) return <Spinner text="AI is triaging..." />;

@@ -34,11 +34,11 @@ export const SearchCommand: React.FC<SearchProps> = ({ query, page = 1 }) => {
   if (error) return <Text color="red">{error}</Text>;
 
   const columns = [
-    { key: 'ticket_number', header: 'ID', width: 14 },
+    { key: 'ticketNumber', header: 'ID', width: 14 },
     { key: 'title', header: 'Title', width: 35 },
     { key: 'status', header: 'Status', width: 14 },
     { key: 'priority', header: 'Prio', width: 10 },
-    { key: 'assignee_name', header: 'Assignee', width: 15 },
+    { key: 'assigneeName', header: 'Assignee', width: 15 },
   ];
 
   return (

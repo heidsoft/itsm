@@ -7,7 +7,7 @@ export const DashboardOverviewCommand: React.FC = () => {
   const [data, setData] = useState<Record<string, unknown> | null>(null);
   const [err, setErr] = useState('');
   useEffect(() => {
-    apiClient.getDashboardOverview().then(d => setData(d)).catch(e => setErr(e.message));
+    apiClient.getDashboardOverview().then((d) => setData(d as Record<string, unknown>)).catch((e: Error) => setErr(e.message));
   }, []);
   if (err) return <Text color="red">✗ {err}</Text>;
   if (!data) return <Spinner text="Loading dashboard..." />;

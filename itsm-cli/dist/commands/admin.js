@@ -6,7 +6,7 @@ export const DashboardOverviewCommand = () => {
     const [data, setData] = useState(null);
     const [err, setErr] = useState('');
     useEffect(() => {
-        apiClient.getDashboardOverview().then(d => setData(d)).catch(e => setErr(e.message));
+        apiClient.getDashboardOverview().then((d) => setData(d)).catch((e) => setErr(e.message));
     }, []);
     if (err)
         return React.createElement(Text, { color: "red" },
