@@ -2,6 +2,7 @@ package cmdb
 
 import (
 	"fmt"
+	"strconv"
 	"time"
 
 	"itsm-backend/common"
@@ -1142,16 +1143,153 @@ func (h *Handler) CreateDiscoverySource(c *gin.Context) {
 	})
 }
 
-// Discovery jobs
+// toDiscoveryJobDetailResponse 是 job 域结构体到操作者 DTO 的唯一映射点
+// （租约字段不外露，见 DiscoveryJobDetailResponse 注释）。
+func toDiscoveryJobDetailResponse(job *DiscoveryJob) *dto.DiscoveryJobDetailResponse {
+	if job == nil {
+		return nil
+	}
+	return &dto.DiscoveryJobDetailResponse{
+		ID:                 job.ID,
+		SourceID:           job.SourceID,
+		Status:             job.Status,
+		Operation:          job.Operation,
+		IdempotencyKey:     job.IdempotencyKey,
+		RequestFingerprint: job.RequestFingerprint,
+		SourceSnapshot:     job.SourceSnapshot,
+		ScopeSnapshot:      job.ScopeSnapshot,
+		CompletedScopes:    job.CompletedScopes,
+		FailedScopes:       job.FailedScopes,
+		SnapshotGeneration: job.SnapshotGeneration,
+		RequestedBy:        job.RequestedBy,
+		ParentJobID:        job.ParentJobID,
+		MaxAttempts:        job.MaxAttempts,
+		Attempt:            job.Attempt,
+		Progress:           job.Progress,
+		ErrorCode:          job.ErrorCode,
+		ErrorMessage:       job.ErrorMessage,
+		CancelRequestedAt:  job.CancelRequestedAt,
+		QueuedAt:           job.QueuedAt,
+		StartedAt:          job.StartedAt,
+		FinishedAt:         job.FinishedAt,
+		Summary:            job.Summary,
+		TenantID:           job.TenantID,
+		CreatedAt:          job.CreatedAt,
+		UpdatedAt:          job.UpdatedAt,
+	}
+}
+
+// Discovery jobs —— 云发现任务面（创建入队 / 列表 / 详情 / 取消 / 重试）。
 func (h *Handler) CreateDiscoveryJob(c *gin.Context) {
+	if h.svc == nil {
+		common.Fail(c, common.ServiceUnavailableCode, "CMDB 服务未装配")
+		return
+	}
 	var req dto.DiscoveryJobRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		common.ParamError(c, "Invalid request body")
 		return
 	}
-	// 商业化收敛期间禁止创建永远停留在 pending 的假任务。真实发现必须先接入
-	// 执行器、状态推进、结果落库、失败重试和审计，再重新开放此入口。
-	common.Fail(c, common.ServiceUnavailableCode, "云资源自动发现尚未通过生产验收，当前服务不可用")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
+	userID := c.GetInt("user_id")
+	job, err := h.svc.CreateDiscoveryJob(c.Request.Context(), tenantID, userID, &req)
+	if err != nil {
+		common.RespondError(c, err, "创建发现任务失败")
+		return
+	}
+	common.Success(c, toDiscoveryJobDetailResponse(job))
+}
+
+func (h *Handler) ListDiscoveryJobs(c *gin.Context) {
+	if h.svc == nil {
+		common.Fail(c, common.ServiceUnavailableCode, "CMDB 服务未装配")
+		return
+	}
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
+	pg := common.GetPaginationFromQuery(c)
+	status := c.Query("status")
+	jobs, total, err := h.svc.ListDiscoveryJobs(c.Request.Context(), tenantID, status, pg.Page, pg.PageSize)
+	if err != nil {
+		common.RespondError(c, err, "查询发现任务失败")
+		return
+	}
+	items := make([]*dto.DiscoveryJobDetailResponse, 0, len(jobs))
+	for _, job := range jobs {
+		items = append(items, toDiscoveryJobDetailResponse(job))
+	}
+	common.SuccessWithPagination(c, items, pg.Page, pg.PageSize, int64(total))
+}
+
+func (h *Handler) GetDiscoveryJobDetail(c *gin.Context) {
+	if h.svc == nil {
+		common.Fail(c, common.ServiceUnavailableCode, "CMDB 服务未装配")
+		return
+	}
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil || id <= 0 {
+		common.ParamError(c, "id 参数非法")
+		return
+	}
+	job, err := h.svc.GetDiscoveryJob(c.Request.Context(), tenantID, id)
+	if err != nil {
+		common.RespondError(c, err, "查询发现任务失败")
+		return
+	}
+	common.Success(c, toDiscoveryJobDetailResponse(job))
+}
+
+func (h *Handler) CancelDiscoveryJob(c *gin.Context) {
+	if h.svc == nil {
+		common.Fail(c, common.ServiceUnavailableCode, "CMDB 服务未装配")
+		return
+	}
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil || id <= 0 {
+		common.ParamError(c, "id 参数非法")
+		return
+	}
+	job, err := h.svc.CancelDiscoveryJob(c.Request.Context(), tenantID, id)
+	if err != nil {
+		common.RespondError(c, err, "取消发现任务失败")
+		return
+	}
+	common.Success(c, toDiscoveryJobDetailResponse(job))
+}
+
+func (h *Handler) RetryDiscoveryJob(c *gin.Context) {
+	if h.svc == nil {
+		common.Fail(c, common.ServiceUnavailableCode, "CMDB 服务未装配")
+		return
+	}
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil || id <= 0 {
+		common.ParamError(c, "id 参数非法")
+		return
+	}
+	job, err := h.svc.RetryDiscoveryJob(c.Request.Context(), tenantID, c.GetInt("user_id"), id)
+	if err != nil {
+		common.RespondError(c, err, "重试发现任务失败")
+		return
+	}
+	common.Success(c, toDiscoveryJobDetailResponse(job))
 }
 
 func (h *Handler) ListDiscoveryResults(c *gin.Context) {

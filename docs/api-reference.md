@@ -2870,6 +2870,29 @@ snake_case `job_id`，与平台 camelCase 规则不一致。
 跨租户 GET/PUT/DELETE 404/`4004` 逐资源文案、DELETE 命中 0 行不再报成功、provider 枚举覆盖三个
 列表与两个写入体、厂商矛盾 400/`4000`、合法写入后派生 identity 回填）。
 
+### 云发现任务（Job 闭环）
+
+`POST /api/v1/cmdb/discovery/jobs` 已从 fail-closed（503）转正：真实校验来源后落
+`discovery_jobs` 行并入队出箱命令 `cmdb.cloud_discovery.run`（**同一事务**——不存在
+没有命令的 queued 僵尸任务）。Worker 认领任务（租约 + fencing token）→ 按来源的
+`serviceCodes × regions` 逐 scope 拉取云资源 → 与 `cloud_resources` 按 `identity_hash`
+diff（create/update/unchanged）→ `discovery_results` 落 diff 证据 → 资源写回并维护
+`first_seen_at/last_seen_at/missing_count`（连续缺失达来源 `staleThreshold` 置
+`lifecycle_state=stale`）→ 终态 `succeeded/partial_failed/failed` + summary。
+
+```http
+POST   /api/v1/cmdb/discovery/jobs            {"sourceId":"ds_1","idempotencyKey":"可选"}
+GET    /api/v1/cmdb/discovery/jobs            ?status=queued&page=1&pageSize=20
+GET    /api/v1/cmdb/discovery/jobs/{id}       详情（progress/completedScopes/failedScopes/summary）
+POST   /api/v1/cmdb/discovery/jobs/{id}/cancel   queued 直接取消；执行中记取消请求（scope 边界生效）
+POST   /api/v1/cmdb/discovery/jobs/{id}/retry    failed/partial_failed 派生新任务（parentJobId 溯源）
+```
+
+权限：读 `cmdb:read`、写 `cmdb:write`。幂等语义：携带 `idempotencyKey` 重复创建返回
+409（Detail 含既有任务 ID）；不携带则每次生成唯一键，手动重跑不受指纹去重限制。
+来源不存在 404、来源/账号停用 400/403。租约字段（leaseOwner/leaseExpiresAt/
+fencingToken/heartbeatAt）是执行器内部协调状态，不对外暴露。
+
 ## 通知接口
 
 ### 获取通知列表

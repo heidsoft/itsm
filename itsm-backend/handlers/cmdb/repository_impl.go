@@ -2,6 +2,8 @@ package cmdb
 
 import (
 	"context"
+	"fmt"
+
 	"time"
 
 	"itsm-backend/ent"
@@ -9,8 +11,10 @@ import (
 	"itsm-backend/ent/cloudresource"
 	"itsm-backend/ent/cloudservice"
 	"itsm-backend/ent/configurationitem"
+	"itsm-backend/ent/discoveryjob"
 	"itsm-backend/ent/discoveryresult"
 	"itsm-backend/ent/discoverysource"
+	"itsm-backend/internal/commandbus"
 )
 
 type EntRepository struct {
@@ -504,6 +508,9 @@ func (r *EntRepository) CreateCloudResource(ctx context.Context, cr *CloudResour
 	if cr.FirstSeenAt != nil {
 		create = create.SetFirstSeenAt(*cr.FirstSeenAt)
 	}
+	if cr.LastSeenAt != nil {
+		create = create.SetLastSeenAt(*cr.LastSeenAt)
+	}
 	e, err := create.Save(ctx)
 	if err != nil {
 		return nil, err
@@ -832,6 +839,391 @@ func optionalTime(value time.Time) *time.Time {
 		return nil
 	}
 	return &value
+}
+
+// discoveryJobFromEnt 是 ent.DiscoveryJob → 域结构体的唯一映射点。
+func discoveryJobFromEnt(e *ent.DiscoveryJob) *DiscoveryJob {
+	return &DiscoveryJob{
+		ID:        e.ID,
+		SourceID:  e.SourceID,
+		Status:    e.Status,
+		Operation: e.Operation, IdempotencyKey: e.IdempotencyKey, RequestFingerprint: e.RequestFingerprint,
+		SourceSnapshot: e.SourceSnapshot, ScopeSnapshot: e.ScopeSnapshot,
+		CompletedScopes: e.CompletedScopes, FailedScopes: e.FailedScopes,
+		SnapshotGeneration: e.SnapshotGeneration, RequestedBy: e.RequestedBy,
+		QueuedAt: optionalTime(e.QueuedAt), HeartbeatAt: optionalTime(e.HeartbeatAt),
+		LeaseOwner: e.LeaseOwner, LeaseExpiresAt: optionalTime(e.LeaseExpiresAt),
+		FencingToken: e.FencingToken, Attempt: e.Attempt, ParentJobID: e.ParentJobID,
+		MaxAttempts: e.MaxAttempts, Progress: e.Progress, ErrorCode: e.ErrorCode,
+		ErrorMessage: e.ErrorMessage, CancelRequestedAt: optionalTime(e.CancelRequestedAt),
+		StartedAt:  optionalTime(e.StartedAt),
+		FinishedAt: optionalTime(e.FinishedAt),
+		Summary:    e.Summary,
+		TenantID:   e.TenantID,
+		CreatedAt:  e.CreatedAt,
+		UpdatedAt:  e.UpdatedAt,
+	}
+}
+
+// discoveryJobApplyCreate 把域结构体的可选字段铺到 ent create builder。
+func discoveryJobApplyCreate(create *ent.DiscoveryJobCreate, job *DiscoveryJob) *ent.DiscoveryJobCreate {
+	if job.Status != "" {
+		create = create.SetStatus(job.Status)
+	}
+	if job.Operation != "" {
+		create = create.SetOperation(job.Operation)
+	}
+	if job.MaxAttempts > 0 {
+		create = create.SetMaxAttempts(job.MaxAttempts)
+	}
+	if job.RequestedBy > 0 {
+		create = create.SetRequestedBy(job.RequestedBy)
+	}
+	if job.ParentJobID > 0 {
+		create = create.SetParentJobID(job.ParentJobID)
+	}
+	if job.QueuedAt != nil {
+		create = create.SetQueuedAt(*job.QueuedAt)
+	}
+	if job.HeartbeatAt != nil {
+		create = create.SetHeartbeatAt(*job.HeartbeatAt)
+	}
+	if job.LeaseExpiresAt != nil {
+		create = create.SetLeaseExpiresAt(*job.LeaseExpiresAt)
+	}
+	if job.CancelRequestedAt != nil {
+		create = create.SetCancelRequestedAt(*job.CancelRequestedAt)
+	}
+	if job.StartedAt != nil {
+		create = create.SetStartedAt(*job.StartedAt)
+	}
+	if job.FinishedAt != nil {
+		create = create.SetFinishedAt(*job.FinishedAt)
+	}
+	if job.Summary != nil {
+		create = create.SetSummary(job.Summary)
+	}
+	return create
+}
+
+// GetDiscoverySource 租户内按 ID 取发现源；跨租户/不存在统一 NotFound。
+func (r *EntRepository) GetDiscoverySource(ctx context.Context, tenantID int, id string) (*DiscoverySource, error) {
+	e, err := r.client.DiscoverySource.Query().
+		Where(discoverysource.TenantID(tenantID), discoverysource.ID(id)).
+		Only(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return &DiscoverySource{
+		ID:             e.ID,
+		Name:           e.Name,
+		SourceType:     e.SourceType,
+		Provider:       e.Provider,
+		CloudAccountID: e.CloudAccountID, ServiceCodes: e.ServiceCodes, Regions: e.Regions,
+		Schedule: e.Schedule, ReconcilePolicy: e.ReconcilePolicy, StaleThreshold: e.StaleThreshold,
+		LastSuccessAt: optionalTime(e.LastSuccessAt),
+		IsActive:      e.Enabled,
+		Description:   e.Description,
+		TenantID:      e.TenantID,
+		CreatedAt:     e.CreatedAt,
+		UpdatedAt:     e.UpdatedAt,
+	}, nil
+}
+
+// TouchDiscoverySourceSuccess 更新发现源最近成功时间（执行器终态写回）。
+func (r *EntRepository) TouchDiscoverySourceSuccess(ctx context.Context, tenantID int, id string, at time.Time) error {
+	n, err := r.client.DiscoverySource.Update().
+		Where(discoverysource.TenantID(tenantID), discoverysource.ID(id)).
+		SetLastSuccessAt(at).
+		SetUpdatedAt(at).
+		Save(ctx)
+	if err != nil {
+		return err
+	}
+	if n == 0 {
+		return &ent.NotFoundError{}
+	}
+	return nil
+}
+
+// CreateDiscoveryJobWithCommand 同一事务内：discovery_jobs 落库 + 出箱命令入队。
+// 「有 job 必有命令」是可靠执行的前提——两步拆开时，job 落库而入队失败会产生
+// 永远停在 queued 的僵尸任务（这正是旧 fail-closed 挡住的东西）。
+func (r *EntRepository) CreateDiscoveryJobWithCommand(ctx context.Context, job *DiscoveryJob, commandType string, payload map[string]interface{}) (*DiscoveryJob, error) {
+	tx, err := r.client.Tx(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("begin discovery job tx: %w", err)
+	}
+	committed := false
+	defer func() {
+		if !committed {
+			_ = tx.Rollback()
+		}
+	}()
+
+	create := tx.DiscoveryJob.Create().
+		SetSourceID(job.SourceID).
+		SetIdempotencyKey(job.IdempotencyKey).
+		SetRequestFingerprint(job.RequestFingerprint).
+		SetSourceSnapshot(job.SourceSnapshot).
+		SetScopeSnapshot(job.ScopeSnapshot).
+		SetCompletedScopes(job.CompletedScopes).
+		SetFailedScopes(job.FailedScopes).
+		SetSnapshotGeneration(job.SnapshotGeneration).
+		SetFencingToken(job.FencingToken).
+		SetAttempt(job.Attempt).
+		SetProgress(job.Progress).
+		SetTenantID(job.TenantID)
+	create = discoveryJobApplyCreate(create, job)
+	e, err := create.Save(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("create discovery job: %w", err)
+	}
+
+	if payload == nil {
+		payload = map[string]interface{}{}
+	}
+	payload["discoveryJobId"] = e.ID
+	payload["tenantId"] = e.TenantID
+	if _, err := commandbus.EnqueueTx(ctx, tx, commandbus.EnqueueRequest{
+		TenantID:       e.TenantID,
+		CommandType:    commandType,
+		AggregateType:  "discovery_job",
+		AggregateID:    e.ID,
+		IdempotencyKey: fmt.Sprintf("discovery-job-%d", e.ID),
+		Payload:        payload,
+	}); err != nil {
+		return nil, fmt.Errorf("enqueue discovery command: %w", err)
+	}
+
+	if err := tx.Commit(); err != nil {
+		return nil, fmt.Errorf("commit discovery job tx: %w", err)
+	}
+	committed = true
+	return discoveryJobFromEnt(e), nil
+}
+
+// GetDiscoveryJob 租户内按 ID 取任务。
+func (r *EntRepository) GetDiscoveryJob(ctx context.Context, tenantID, id int) (*DiscoveryJob, error) {
+	e, err := r.client.DiscoveryJob.Query().
+		Where(discoveryjob.TenantID(tenantID), discoveryjob.ID(id)).
+		Only(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return discoveryJobFromEnt(e), nil
+}
+
+// FindDiscoveryJobByIdempotencyKey 幂等查询：(tenant, source, key) 唯一索引的读面。
+func (r *EntRepository) FindDiscoveryJobByIdempotencyKey(ctx context.Context, tenantID int, sourceID, key string) (*DiscoveryJob, error) {
+	e, err := r.client.DiscoveryJob.Query().
+		Where(discoveryjob.TenantID(tenantID), discoveryjob.SourceID(sourceID), discoveryjob.IdempotencyKey(key)).
+		First(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return discoveryJobFromEnt(e), nil
+}
+
+// ListDiscoveryJobs 分页列出任务；status 为空不过滤。
+func (r *EntRepository) ListDiscoveryJobs(ctx context.Context, tenantID int, status string, page, pageSize int) ([]*DiscoveryJob, int, error) {
+	if page < 1 {
+		page = 1
+	}
+	if pageSize < 1 || pageSize > 100 {
+		pageSize = 20
+	}
+	q := r.client.DiscoveryJob.Query().Where(discoveryjob.TenantID(tenantID))
+	if status != "" {
+		q = q.Where(discoveryjob.Status(status))
+	}
+	total, err := q.Count(ctx)
+	if err != nil {
+		return nil, 0, err
+	}
+	es, err := q.Order(ent.Desc(discoveryjob.FieldCreatedAt), ent.Desc(discoveryjob.FieldID)).
+		Offset((page - 1) * pageSize).
+		Limit(pageSize).
+		All(ctx)
+	if err != nil {
+		return nil, 0, err
+	}
+	results := make([]*DiscoveryJob, 0, len(es))
+	for _, e := range es {
+		results = append(results, discoveryJobFromEnt(e))
+	}
+	return results, total, nil
+}
+
+// UpdateDiscoveryJob 全字段写回（执行器通道）。只按 tenant+id 命中行更新。
+func (r *EntRepository) UpdateDiscoveryJob(ctx context.Context, job *DiscoveryJob) error {
+	if job == nil || job.ID <= 0 {
+		return fmt.Errorf("update discovery job: id required")
+	}
+	update := r.client.DiscoveryJob.Update().
+		Where(discoveryjob.TenantID(job.TenantID), discoveryjob.ID(job.ID)).
+		SetStatus(job.Status).
+		SetCompletedScopes(job.CompletedScopes).
+		SetFailedScopes(job.FailedScopes).
+		SetLeaseOwner(job.LeaseOwner).
+		SetFencingToken(job.FencingToken).
+		SetAttempt(job.Attempt).
+		SetProgress(job.Progress).
+		SetErrorCode(job.ErrorCode).
+		SetErrorMessage(job.ErrorMessage).
+		SetHeartbeatAt(time.Now())
+	if job.LeaseExpiresAt != nil {
+		update = update.SetLeaseExpiresAt(*job.LeaseExpiresAt)
+	} else {
+		update = update.ClearLeaseExpiresAt()
+	}
+	if job.CancelRequestedAt != nil {
+		update = update.SetCancelRequestedAt(*job.CancelRequestedAt)
+	}
+	if job.StartedAt != nil {
+		update = update.SetStartedAt(*job.StartedAt)
+	}
+	if job.FinishedAt != nil {
+		update = update.SetFinishedAt(*job.FinishedAt)
+	}
+	if job.Summary != nil {
+		update = update.SetSummary(job.Summary)
+	}
+	n, err := update.Save(ctx)
+	if err != nil {
+		return err
+	}
+	if n == 0 {
+		return &ent.NotFoundError{}
+	}
+	return nil
+}
+
+// CreateDiscoveryResult 落一条发现 diff 结果。
+func (r *EntRepository) CreateDiscoveryResult(ctx context.Context, res *DiscoveryResult) (*DiscoveryResult, error) {
+	create := r.client.DiscoveryResult.Create().
+		SetJobID(res.JobID).
+		SetAction(res.Action).
+		SetResourceType(res.ResourceType).
+		SetResourceID(res.ResourceID).
+		SetResourceIdentity(res.ResourceIdentity).
+		SetIdentityVersion(res.IdentityVersion).
+		SetResourceSnapshot(res.ResourceSnapshot).
+		SetBeforeHash(res.BeforeHash).
+		SetAfterHash(res.AfterHash).
+		SetDiff(res.Diff).
+		SetStatus(res.Status).
+		SetErrorCode(res.ErrorCode).
+		SetErrorMessage(res.ErrorMessage).
+		SetTenantID(res.TenantID)
+	if res.CIID > 0 {
+		create = create.SetCiID(res.CIID)
+	}
+	if res.Status == "" {
+		create = create.SetStatus("pending")
+	}
+	e, err := create.Save(ctx)
+	if err != nil {
+		return nil, err
+	}
+	res.ID = e.ID
+	res.CreatedAt = e.CreatedAt
+	res.UpdatedAt = e.UpdatedAt
+	return res, nil
+}
+
+// GetCloudResourceByIdentity 按规范身份哈希取资源（diff 现状读取面）。
+func (r *EntRepository) GetCloudResourceByIdentity(ctx context.Context, tenantID int, identityHash string) (*CloudResource, error) {
+	e, err := r.client.CloudResource.Query().
+		Where(cloudresource.TenantID(tenantID), cloudresource.IdentityHash(identityHash)).
+		Only(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return cloudResourceFromEnt(e), nil
+}
+
+// ListCloudResourcesByAccountService 按账号+服务维度列资源（缺失扫描）。
+func (r *EntRepository) ListCloudResourcesByAccountService(ctx context.Context, tenantID, cloudAccountID int, serviceCode string) ([]*CloudResource, error) {
+	es, err := r.client.CloudResource.Query().
+		Where(
+			cloudresource.TenantID(tenantID),
+			cloudresource.CloudAccountID(cloudAccountID),
+			cloudresource.ServiceCode(serviceCode),
+		).
+		All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	results := make([]*CloudResource, 0, len(es))
+	for _, e := range es {
+		results = append(results, cloudResourceFromEnt(e))
+	}
+	return results, nil
+}
+
+// UpdateDiscoveredCloudResource 发现执行器专用写回：全字段 + seen 时间戳。
+func (r *EntRepository) UpdateDiscoveredCloudResource(ctx context.Context, cr *CloudResource) error {
+	if cr == nil || cr.ID <= 0 {
+		return fmt.Errorf("update discovered cloud resource: id required")
+	}
+	now := time.Now()
+	update := r.client.CloudResource.Update().
+		Where(cloudresource.TenantID(cr.TenantID), cloudresource.ID(cr.ID)).
+		SetSourceID(cr.SourceID).
+		SetSourceFingerprint(cr.SourceFingerprint).
+		SetMissingCount(cr.MissingCount).
+		SetResourceName(cr.ResourceName).
+		SetRegion(cr.Region).
+		SetZone(cr.Zone).
+		SetStatus(cr.Status).
+		SetTags(cr.Tags).
+		SetMetadata(cr.Metadata).
+		SetLifecycleState(cr.LifecycleState).
+		SetLastSeenAt(now).
+		SetUpdatedAt(now)
+	e, err := update.Save(ctx)
+	if err != nil {
+		return err
+	}
+	if e == 0 {
+		return &ent.NotFoundError{}
+	}
+	cr.LastSeenAt = &now
+	return nil
+}
+
+// cloudResourceFromEnt ent.CloudResource → 域结构体唯一映射点。
+func cloudResourceFromEnt(e *ent.CloudResource) *CloudResource {
+	return &CloudResource{
+		ID:                 e.ID,
+		CloudAccountID:     e.CloudAccountID,
+		ServiceID:          e.ServiceID,
+		ResourceID:         e.ResourceID,
+		IdentityVersion:    e.IdentityVersion,
+		Provider:           e.Provider,
+		Partition:          e.Partition,
+		CanonicalAccountID: e.CanonicalAccountID,
+		ResourceScope:      e.ResourceScope,
+		ServiceCode:        e.ServiceCode,
+		ResourceType:       e.ResourceType,
+		IdentityHash:       e.IdentityHash,
+		SourceID:           e.SourceID,
+		SourceFingerprint:  e.SourceFingerprint,
+		MissingCount:       e.MissingCount,
+		ResourceName:       e.ResourceName,
+		Region:             e.Region,
+		Zone:               e.Zone,
+		Status:             e.Status,
+		Tags:               e.Tags,
+		Metadata:           e.Metadata,
+		FirstSeenAt:        optionalTime(e.FirstSeenAt),
+		LastSeenAt:         optionalTime(e.LastSeenAt),
+		LifecycleState:     e.LifecycleState,
+		TenantID:           e.TenantID,
+		CreatedAt:          e.CreatedAt,
+		UpdatedAt:          e.UpdatedAt,
+	}
 }
 
 // ciNumberString 安全解引用 ci_number（Optional+Nillable 字段）

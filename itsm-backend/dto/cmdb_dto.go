@@ -416,6 +416,41 @@ type DiscoverySourceResponse struct {
 
 type DiscoveryJobRequest struct {
 	SourceID string `json:"sourceId" binding:"required"`
+	// IdempotencyKey 可选：携带时同键重复创建返回 409（附既有任务 ID）；
+	// 不携带则每次生成唯一键（手动重跑不受指纹去重限制）。
+	IdempotencyKey string `json:"idempotencyKey,omitempty"`
+}
+
+// DiscoveryJobDetailResponse 发现任务详情（操作者读面）。
+// 租约字段（lease_owner/lease_expires_at/fencing_token/heartbeat_at）是执行器
+// 内部协调状态，不对外暴露。
+type DiscoveryJobDetailResponse struct {
+	ID                 int                    `json:"id"`
+	SourceID           string                 `json:"sourceId"`
+	Status             string                 `json:"status"`
+	Operation          string                 `json:"operation"`
+	IdempotencyKey     string                 `json:"idempotencyKey,omitempty"`
+	RequestFingerprint string                 `json:"requestFingerprint,omitempty"`
+	SourceSnapshot     map[string]interface{} `json:"sourceSnapshot,omitempty"`
+	ScopeSnapshot      map[string]interface{} `json:"scopeSnapshot,omitempty"`
+	CompletedScopes    []string               `json:"completedScopes,omitempty"`
+	FailedScopes       []string               `json:"failedScopes,omitempty"`
+	SnapshotGeneration string                 `json:"snapshotGeneration,omitempty"`
+	RequestedBy        int                    `json:"requestedBy,omitempty"`
+	ParentJobID        int                    `json:"parentJobId,omitempty"`
+	MaxAttempts        int                    `json:"maxAttempts"`
+	Attempt            int                    `json:"attempt"`
+	Progress           int                    `json:"progress"`
+	ErrorCode          string                 `json:"errorCode,omitempty"`
+	ErrorMessage       string                 `json:"errorMessage,omitempty"`
+	CancelRequestedAt  *time.Time             `json:"cancelRequestedAt,omitempty"`
+	QueuedAt           *time.Time             `json:"queuedAt,omitempty"`
+	StartedAt          *time.Time             `json:"startedAt,omitempty"`
+	FinishedAt         *time.Time             `json:"finishedAt,omitempty"`
+	Summary            map[string]interface{} `json:"summary,omitempty"`
+	TenantID           int                    `json:"tenantId"`
+	CreatedAt          time.Time              `json:"createdAt"`
+	UpdatedAt          time.Time              `json:"updatedAt"`
 }
 
 type DiscoveryJobResponse struct {

@@ -2664,6 +2664,34 @@ cd itsm-backend && go test -count=1 ./handlers/ai/ ./service/ -run 'TestTriage|T
 cd itsm-frontend && npx tsc --noEmit
 ```
 
+### 1.71 云发现 Job 闭环：`POST /cmdb/discovery/jobs` 从 fail-closed 转正（2026-10-23，新增端点 + 行为变更）
+
+CMDB 云发现此前只有来源 CRUD 与结果读面，`POST /discovery/jobs` 刻意返回 503
+（「禁止创建永远停在 queued 的假任务」）。本版打通完整执行链：
+
+- **创建即入队**：来源/账号校验后，`discovery_jobs` 落库与出箱命令
+  `cmdb.cloud_discovery.run` 入队**同一事务**——不存在没有命令的僵尸任务。
+  携带 `idempotencyKey` 重复创建返回 409；不携带则每次唯一键（手动重跑不受限）。
+- **Job 级执行器**（唯一生产路径）：认领（租约 + fencing token）→ 按来源
+  `serviceCodes × regions` 逐 scope 拉取 → 与 `cloud_resources` 按 `identity_hash`
+  diff → `discovery_results` 落证据 → 资源写回并维护 `first_seen_at/last_seen_at/
+  missing_count`（连续缺失达 `staleThreshold` 置 `stale`）→ 终态 + summary +
+  来源 `last_success_at`。取消在 scope 边界生效。
+- **新读/操作面**：`GET /discovery/jobs`（分页/按状态过滤）、`GET /discovery/jobs/{id}`、
+  `POST .../cancel`、`POST .../retry`（failed/partial_failed → 派生新任务，
+  `parentJobId` 溯源）。租约字段不外露。
+- **旧路径移除**：`Runner.RunAll`（全账号直写 CI、绕过 jobs/results/CloudResource
+  三张表、忽略命令 payload）及其 worker 已删除，`cmdb.cloud_discovery.run` 命令
+  改由 job 级执行器消费（payload 缺 `discoveryJobId` 的历史命令会进死信，可查明后重放）。
+- **当前 provider 面**：阿里云 ECS（capability 端点如实标注）。`schedule` 字段
+  仍无 cron 消费者（保持既有状态，未伪造成已支持）。
+
+**验证**
+
+```bash
+cd itsm-backend && go test -count=1 ./handlers/cmdb/ ./router/
+```
+
 ## 2. 环境变量变更
 
 本次升级**移除了多个"幽灵配置项"**（在示例文件中声明但代码/Compose 从不读取，用户配置了也不生效），并修正了一个 Grafana 密码安全缺陷。

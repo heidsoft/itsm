@@ -3,10 +3,14 @@ package cmdb
 import (
 	"context"
 	"errors"
+	"net/http"
 	"testing"
 	"time"
 
 	"itsm-backend/common"
+	"itsm-backend/dto"
+	"itsm-backend/ent"
+	"itsm-backend/internal/commandbus"
 
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
@@ -46,6 +50,18 @@ type mockRepository struct {
 	listDiscoverySourcesFn  func(ctx context.Context, tenantID int) ([]*DiscoverySource, error)
 	createDiscoveryJobFn    func(ctx context.Context, job *DiscoveryJob) (*DiscoveryJob, error)
 	listDiscoveryResultsFn  func(ctx context.Context, tenantID int, jobID int) ([]*DiscoveryResult, error)
+
+	// Discovery job 执行链路
+	getDiscoverySourceFn                 func(ctx context.Context, tenantID int, id string) (*DiscoverySource, error)
+	createDiscoveryJobWithCommandFn      func(ctx context.Context, job *DiscoveryJob, commandType string, payload map[string]interface{}) (*DiscoveryJob, error)
+	getDiscoveryJobFn                    func(ctx context.Context, tenantID, id int) (*DiscoveryJob, error)
+	findDiscoveryJobByIdempotencyKeyFn   func(ctx context.Context, tenantID int, sourceID, key string) (*DiscoveryJob, error)
+	listDiscoveryJobsFn                  func(ctx context.Context, tenantID int, status string, page, pageSize int) ([]*DiscoveryJob, int, error)
+	updateDiscoveryJobFn                 func(ctx context.Context, job *DiscoveryJob) error
+	createDiscoveryResultFn              func(ctx context.Context, res *DiscoveryResult) (*DiscoveryResult, error)
+	getCloudResourceByIdentityFn         func(ctx context.Context, tenantID int, identityHash string) (*CloudResource, error)
+	listCloudResourcesByAccountServiceFn func(ctx context.Context, tenantID, cloudAccountID int, serviceCode string) ([]*CloudResource, error)
+	updateDiscoveredCloudResourceFn      func(ctx context.Context, cr *CloudResource) error
 }
 
 // 编译期断言：mockRepository 必须实现 Repository 接口
@@ -204,6 +220,84 @@ func (m *mockRepository) ListDiscoveryResults(ctx context.Context, tenantID int,
 		return m.listDiscoveryResultsFn(ctx, tenantID, jobID)
 	}
 	return nil, nil
+}
+
+// ---- Discovery job 执行链路新增的接口方法（默认返回零值/NotFound，测试按需注入 fn）----
+
+func (m *mockRepository) GetDiscoverySource(ctx context.Context, tenantID int, id string) (*DiscoverySource, error) {
+	if m.getDiscoverySourceFn != nil {
+		return m.getDiscoverySourceFn(ctx, tenantID, id)
+	}
+	return nil, &ent.NotFoundError{}
+}
+
+func (m *mockRepository) TouchDiscoverySourceSuccess(ctx context.Context, tenantID int, id string, at time.Time) error {
+	return nil
+}
+
+func (m *mockRepository) CreateDiscoveryJobWithCommand(ctx context.Context, job *DiscoveryJob, commandType string, payload map[string]interface{}) (*DiscoveryJob, error) {
+	if m.createDiscoveryJobWithCommandFn != nil {
+		return m.createDiscoveryJobWithCommandFn(ctx, job, commandType, payload)
+	}
+	job.ID = 1
+	return job, nil
+}
+
+func (m *mockRepository) GetDiscoveryJob(ctx context.Context, tenantID, id int) (*DiscoveryJob, error) {
+	if m.getDiscoveryJobFn != nil {
+		return m.getDiscoveryJobFn(ctx, tenantID, id)
+	}
+	return nil, &ent.NotFoundError{}
+}
+
+func (m *mockRepository) FindDiscoveryJobByIdempotencyKey(ctx context.Context, tenantID int, sourceID, key string) (*DiscoveryJob, error) {
+	if m.findDiscoveryJobByIdempotencyKeyFn != nil {
+		return m.findDiscoveryJobByIdempotencyKeyFn(ctx, tenantID, sourceID, key)
+	}
+	return nil, &ent.NotFoundError{}
+}
+
+func (m *mockRepository) ListDiscoveryJobs(ctx context.Context, tenantID int, status string, page, pageSize int) ([]*DiscoveryJob, int, error) {
+	if m.listDiscoveryJobsFn != nil {
+		return m.listDiscoveryJobsFn(ctx, tenantID, status, page, pageSize)
+	}
+	return nil, 0, nil
+}
+
+func (m *mockRepository) UpdateDiscoveryJob(ctx context.Context, job *DiscoveryJob) error {
+	if m.updateDiscoveryJobFn != nil {
+		return m.updateDiscoveryJobFn(ctx, job)
+	}
+	return nil
+}
+
+func (m *mockRepository) CreateDiscoveryResult(ctx context.Context, res *DiscoveryResult) (*DiscoveryResult, error) {
+	if m.createDiscoveryResultFn != nil {
+		return m.createDiscoveryResultFn(ctx, res)
+	}
+	res.ID = 1
+	return res, nil
+}
+
+func (m *mockRepository) GetCloudResourceByIdentity(ctx context.Context, tenantID int, identityHash string) (*CloudResource, error) {
+	if m.getCloudResourceByIdentityFn != nil {
+		return m.getCloudResourceByIdentityFn(ctx, tenantID, identityHash)
+	}
+	return nil, &ent.NotFoundError{}
+}
+
+func (m *mockRepository) ListCloudResourcesByAccountService(ctx context.Context, tenantID, cloudAccountID int, serviceCode string) ([]*CloudResource, error) {
+	if m.listCloudResourcesByAccountServiceFn != nil {
+		return m.listCloudResourcesByAccountServiceFn(ctx, tenantID, cloudAccountID, serviceCode)
+	}
+	return nil, nil
+}
+
+func (m *mockRepository) UpdateDiscoveredCloudResource(ctx context.Context, cr *CloudResource) error {
+	if m.updateDiscoveredCloudResourceFn != nil {
+		return m.updateDiscoveredCloudResourceFn(ctx, cr)
+	}
+	return nil
 }
 
 // newTestService 构造一个挂载了 mock 仓库的 Service。
@@ -777,17 +871,44 @@ func TestService_Discovery(t *testing.T) {
 		require.Len(t, got, 2)
 	})
 
-	t.Run("CreateDiscoveryJob 透传", func(t *testing.T) {
-		repo := &mockRepository{
-			createDiscoveryJobFn: func(ctx context.Context, job *DiscoveryJob) (*DiscoveryJob, error) {
-				job.ID = 7
-				return job, nil
-			},
-		}
-		svc := newTestService(repo)
-		got, err := svc.CreateDiscoveryJob(context.Background(), &DiscoveryJob{SourceID: "ds-1"})
-		require.NoError(t, err)
-		require.Equal(t, 7, got.ID)
+	t.Run("CreateDiscoveryJob 校验来源与入队", func(t *testing.T) {
+		t.Run("来源不存在返回 404", func(t *testing.T) {
+			svc := newTestService(&mockRepository{})
+			_, err := svc.CreateDiscoveryJob(context.Background(), 1, 9, &dto.DiscoveryJobRequest{SourceID: "ds-x"})
+			require.Error(t, err)
+			appErr, ok := err.(*common.AppError)
+			require.True(t, ok)
+			require.Equal(t, common.ErrCodeNotFound, appErr.Code)
+			require.Equal(t, http.StatusNotFound, appErr.HTTPStatus)
+		})
+
+		t.Run("有效来源落库并入队命令", func(t *testing.T) {
+			var capturedType string
+			var capturedJob *DiscoveryJob
+			repo := &mockRepository{
+				getDiscoverySourceFn: func(ctx context.Context, tenantID int, id string) (*DiscoverySource, error) {
+					return &DiscoverySource{ID: "ds-1", IsActive: true, Provider: "aliyun", CloudAccountID: 5, ServiceCodes: []string{"ecs"}, Regions: []string{"cn-hangzhou"}}, nil
+				},
+				getCloudAccountFn: func(ctx context.Context, tenantID, id int) (*CloudAccount, error) {
+					return &CloudAccount{ID: 5, IsActive: true, CredentialRef: "env://X"}, nil
+				},
+				createDiscoveryJobWithCommandFn: func(ctx context.Context, job *DiscoveryJob, commandType string, payload map[string]interface{}) (*DiscoveryJob, error) {
+					capturedType = commandType
+					capturedJob = job
+					job.ID = 7
+					return job, nil
+				},
+			}
+			svc := newTestService(repo)
+			got, err := svc.CreateDiscoveryJob(context.Background(), 1, 9, &dto.DiscoveryJobRequest{SourceID: "ds-1"})
+			require.NoError(t, err)
+			require.Equal(t, 7, got.ID)
+			require.Equal(t, DiscoveryJobQueued, got.Status)
+			require.Equal(t, commandbus.CommandRunCMDBCloudDiscovery, capturedType)
+			require.Equal(t, DiscoveryJobQueued, capturedJob.Status)
+			require.Equal(t, "ds-1", capturedJob.SourceID)
+			require.NotNil(t, capturedJob.QueuedAt)
+		})
 	})
 
 	t.Run("ListDiscoveryResults 透传", func(t *testing.T) {

@@ -4,11 +4,15 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"strings"
+	"time"
 
 	"itsm-backend/common"
+	"itsm-backend/dto"
 	"itsm-backend/ent"
+	"itsm-backend/internal/commandbus"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -606,15 +610,156 @@ func (s *Service) ListDiscoverySources(ctx context.Context, tenantID int) ([]*Di
 	return result, nil
 }
 
-func (s *Service) CreateDiscoveryJob(ctx context.Context, job *DiscoveryJob) (*DiscoveryJob, error) {
-	s.logger.Infow("Creating discovery job", "source_id", job.SourceID, "tenant_id", job.TenantID)
-	result, err := s.repo.CreateDiscoveryJob(ctx, job)
+// CreateDiscoveryJob 创建发现任务并在同一事务内入队出箱命令。
+//
+// 幂等语义：请求携带 idempotencyKey 时，同 (tenant, operation, source, key) 的
+// 既有任务直接 409 返回原任务（不重复入队）；不携带则每次生成唯一 key
+// （指纹去重会让「重复执行同一来源」永远撞唯一索引，违背手动重跑诉求）。
+func (s *Service) CreateDiscoveryJob(ctx context.Context, tenantID, userID int, req *dto.DiscoveryJobRequest) (*DiscoveryJob, error) {
+	if req == nil || strings.TrimSpace(req.SourceID) == "" {
+		return nil, common.NewValidationError("sourceId is required", nil)
+	}
+	source, err := s.repo.GetDiscoverySource(ctx, tenantID, req.SourceID)
 	if err != nil {
-		s.logger.Errorw("Failed to create discovery job", "error", err, "source_id", job.SourceID)
+		if ent.IsNotFound(err) {
+			return nil, common.NewNotFoundError("discovery source")
+		}
+		return nil, fmt.Errorf("load discovery source: %w", err)
+	}
+	if !source.IsActive {
+		return nil, common.NewValidationError("发现源已停用，无法创建任务", nil)
+	}
+	if source.CloudAccountID > 0 {
+		account, err := s.repo.GetCloudAccount(ctx, tenantID, source.CloudAccountID)
+		if err != nil {
+			if ent.IsNotFound(err) {
+				return nil, common.NewNotFoundError("cloud account")
+			}
+			return nil, fmt.Errorf("load tenant cloud account: %w", err)
+		}
+		if !account.IsActive || account.CredentialRef == "" {
+			return nil, common.NewForbiddenError("cloud account must be configured and active")
+		}
+	}
+
+	if req.IdempotencyKey != "" {
+		existing, err := s.repo.FindDiscoveryJobByIdempotencyKey(ctx, tenantID, source.ID, req.IdempotencyKey)
+		if err != nil && !ent.IsNotFound(err) {
+			return nil, fmt.Errorf("check discovery job idempotency: %w", err)
+		}
+		if existing != nil {
+			return nil, common.NewConflictError("discoveryJob",
+				fmt.Sprintf("相同幂等键的任务已存在（job=%d, status=%s）", existing.ID, existing.Status))
+		}
+	}
+
+	fingerprint := discoveryJobFingerprint(tenantID, source)
+	idemKey := req.IdempotencyKey
+	if idemKey == "" {
+		idemKey = fmt.Sprintf("auto-%d", time.Now().UnixNano())
+	}
+	now := time.Now()
+	job := &DiscoveryJob{
+		SourceID:           source.ID,
+		Status:             DiscoveryJobQueued,
+		Operation:          "full_discovery",
+		IdempotencyKey:     idemKey,
+		RequestFingerprint: fingerprint,
+		SourceSnapshot: map[string]interface{}{
+			"provider":        source.Provider,
+			"cloudAccountId":  source.CloudAccountID,
+			"reconcilePolicy": source.ReconcilePolicy,
+			"staleThreshold":  source.StaleThreshold,
+		},
+		ScopeSnapshot: map[string]interface{}{
+			"serviceCodes": source.ServiceCodes,
+			"regions":      source.Regions,
+		},
+		SnapshotGeneration: "v1",
+		RequestedBy:        userID,
+		QueuedAt:           &now,
+		TenantID:           tenantID,
+	}
+	created, err := s.repo.CreateDiscoveryJobWithCommand(ctx, job, commandbus.CommandRunCMDBCloudDiscovery, nil)
+	if err != nil {
+		s.logger.Errorw("Failed to create discovery job", "error", err, "source_id", source.ID)
 		return nil, err
 	}
-	s.logger.Infow("Discovery job created successfully", "id", result.ID, "source_id", result.SourceID)
-	return result, nil
+	s.logger.Infow("Discovery job created and enqueued", "id", created.ID, "source_id", source.ID)
+	return created, nil
+}
+
+// ListDiscoveryJobs 分页列出发现任务；status 为空不过滤。
+func (s *Service) ListDiscoveryJobs(ctx context.Context, tenantID int, status string, page, pageSize int) ([]*DiscoveryJob, int, error) {
+	return s.repo.ListDiscoveryJobs(ctx, tenantID, status, page, pageSize)
+}
+
+// GetDiscoveryJob 取单个任务详情。
+func (s *Service) GetDiscoveryJob(ctx context.Context, tenantID, id int) (*DiscoveryJob, error) {
+	job, err := s.repo.GetDiscoveryJob(ctx, tenantID, id)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, common.NewNotFoundError("discovery job")
+		}
+		return nil, fmt.Errorf("load discovery job: %w", err)
+	}
+	return job, nil
+}
+
+// CancelDiscoveryJob 取消任务：queued 直接终态取消；执行中只记取消请求，
+// 由执行器在 scope 边界检查生效；终态任务 409。
+func (s *Service) CancelDiscoveryJob(ctx context.Context, tenantID, id int) (*DiscoveryJob, error) {
+	job, err := s.GetDiscoveryJob(ctx, tenantID, id)
+	if err != nil {
+		return nil, err
+	}
+	if err := RequestDiscoveryJobCancellation(job, time.Now()); err != nil {
+		return nil, common.NewConflictError("discoveryJob", fmt.Sprintf("任务已终态（%s），无法取消", job.Status))
+	}
+	if err := s.repo.UpdateDiscoveryJob(ctx, job); err != nil {
+		return nil, fmt.Errorf("persist cancel for job %d: %w", id, err)
+	}
+	return job, nil
+}
+
+// RetryDiscoveryJob 从 failed/partial_failed 任务派生新任务并入队（parent_job_id 溯源）。
+func (s *Service) RetryDiscoveryJob(ctx context.Context, tenantID, userID, id int) (*DiscoveryJob, error) {
+	previous, err := s.GetDiscoveryJob(ctx, tenantID, id)
+	if err != nil {
+		return nil, err
+	}
+	retry, err := NewDiscoveryJobRetry(previous, time.Now())
+	if err != nil {
+		if err == ErrJobAttemptsExhausted {
+			return nil, common.NewConflictError("discoveryJob", "任务重试次数已耗尽")
+		}
+		return nil, common.NewConflictError("discoveryJob", "只有失败（failed/partial_failed）的任务可以重试")
+	}
+	retry.IdempotencyKey = fmt.Sprintf("retry-%d-%d", previous.ID, time.Now().UnixNano())
+	retry.RequestFingerprint = previous.RequestFingerprint
+	retry.QueuedAt = timePointer(time.Now())
+	created, err := s.repo.CreateDiscoveryJobWithCommand(ctx, retry, commandbus.CommandRunCMDBCloudDiscovery, nil)
+	if err != nil {
+		s.logger.Errorw("Failed to retry discovery job", "error", err, "parent", previous.ID)
+		return nil, err
+	}
+	s.logger.Infow("Discovery job retried", "parent", previous.ID, "new", created.ID)
+	return created, nil
+}
+
+// discoveryJobFingerprint 请求指纹：来源声明（provider/账号/服务/区域/策略）的内容哈希。
+func discoveryJobFingerprint(tenantID int, source *DiscoverySource) string {
+	payload, _ := json.Marshal(map[string]interface{}{
+		"tenant":         tenantID,
+		"sourceId":       source.ID,
+		"provider":       source.Provider,
+		"cloudAccountId": source.CloudAccountID,
+		"serviceCodes":   source.ServiceCodes,
+		"regions":        source.Regions,
+		"policy":         source.ReconcilePolicy,
+	})
+	hash := sha256.Sum256(payload)
+	return hex.EncodeToString(hash[:])
 }
 
 func (s *Service) ListDiscoveryResults(ctx context.Context, tenantID int, jobID int) ([]*DiscoveryResult, error) {

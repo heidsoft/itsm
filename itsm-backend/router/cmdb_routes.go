@@ -242,7 +242,11 @@ func SetupCMDBRoutes(
 		{
 			discovery.GET("/sources", config.CMDBHandler.ListDiscoverySources)
 			discovery.POST("/sources", middleware.RequirePermission("cmdb", "write"), config.CMDBHandler.CreateDiscoverySource)
+			discovery.GET("/jobs", config.CMDBHandler.ListDiscoveryJobs)
 			discovery.POST("/jobs", middleware.RequirePermission("cmdb", "write"), config.CMDBHandler.CreateDiscoveryJob)
+			discovery.GET("/jobs/:id", config.CMDBHandler.GetDiscoveryJobDetail)
+			discovery.POST("/jobs/:id/cancel", middleware.RequirePermission("cmdb", "write"), config.CMDBHandler.CancelDiscoveryJob)
+			discovery.POST("/jobs/:id/retry", middleware.RequirePermission("cmdb", "write"), config.CMDBHandler.RetryDiscoveryJob)
 			discovery.GET("/results", middleware.RequirePermission("cmdb", "read"), config.CMDBHandler.ListDiscoveryResults)
 		}
 

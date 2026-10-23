@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"itsm-backend/common"
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
 	cmdbHandler "itsm-backend/handlers/cmdb"
@@ -145,10 +146,12 @@ func TestServiceRequestSLARouteContract(t *testing.T) {
 	t.Run("跨租户 404，未认证 401，非数字 ID 400", func(t *testing.T) {
 		id := createRequest(t, userA, catA.ID)
 
-		// service_request 域的 not-found 契约（与 Get 端点一致）：HTTP 200 + 业务码 404。
+		// service_request 域的 not-found 契约（UPGRADE §1.67 收正后）：
+		// HTTP 404 + 业务码 4004（此前把 HTTP 状态 404 当业务码传入，信封兜底成 HTTP 200）。
 		// 跨租户探不到他租请求，响应无 data（不暴露存在性）。
 		w, env := do(t, http.MethodGet, fmt.Sprintf("/api/v1/service-requests/%d/sla", id), "", userB)
-		assert.Equal(t, 404, env.Code, "跨租户不得探到他租请求: body=%s", string(env.Data))
+		assert.Equal(t, http.StatusNotFound, w, "跨租户必须返回 HTTP 404: body=%s", string(env.Data))
+		assert.Equal(t, common.NotFoundErrorCode, env.Code, "跨租户不得探到他租请求: body=%s", string(env.Data))
 		assert.Empty(t, string(env.Data), "not-found 响应不得携带 data")
 
 		req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/api/v1/service-requests/%d/sla", id), nil)
