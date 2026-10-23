@@ -432,7 +432,10 @@ func (s *IncidentService) createIncident(ctx context.Context, req *dto.CreateInc
 			workflowCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 			defer cancel()
 			if err := s.triggerWorkflowForIncident(workflowCtx, incidentEntity.ID, tenantID); err != nil {
-				s.logger.Warnw("Failed to trigger workflow for incident", "error", err, "incident_id", incidentEntity.ID)
+				// outbox 未启用时这是 at-most-once 触发，失败即该单永久无流程实例。
+				s.logger.Errorw("Failed to trigger workflow for incident (non-outbox fire-and-forget, delivery=at-most-once)",
+					"error", err, "incident_id", incidentEntity.ID,
+					"remedy", "启用 ITSM workflow outbox 或人工调用 /process-trigger 重放")
 			}
 		}()
 	}

@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"sync/atomic"
 	"fmt"
 	"strconv"
 	"testing"
@@ -275,4 +276,131 @@ func TestApproveTicket_RejectBridgesBPMNTask(t *testing.T) {
 	require.Len(t, decisions, 1)
 	assert.Equal(t, "rejected", decisions[0].Decision)
 	assert.Equal(t, "不符合变更窗口", decisions[0].Comment)
+}
+
+// ==================== legacy 路径原子收敛（BPMN 原子收口批次） ====================
+
+// TestApproveTicket_LegacyBridgesBPMNTaskInTransaction legacy 路径（ITSM_APPROVAL_BPMN_FIRST
+// 关闭）下，已绑定流程的工单审批同样把 BPMN 任务完成收进业务事务：终态一致
+//（任务 completed、决策留痕、审批/工单更新），只是工单状态由审批链计数驱动。
+func TestApproveTicket_LegacyBridgesBPMNTaskInTransaction(t *testing.T) {
+	t.Setenv("ITSM_APPROVAL_BPMN_FIRST", "false")
+	client := newApprovalBridgeTestClient(t, "ticket_bridge_legacy")
+	tenantID, actorID := setupBridgeTenantAndActor(t, client, "tk-legacy")
+	svc := NewTicketWorkflowService(client, zaptest.NewLogger(t).Sugar())
+	ctx := context.Background()
+
+	tk, approval := createBridgeTestTicketWithApproval(t, client, tenantID, actorID, "legacy")
+	_, taskID := createBridgeProcessFixture(t, client, tenantID, "tk-legacy1",
+		fmt.Sprintf("ticket:%d", tk.ID), actorID)
+
+	err := svc.ApproveTicket(ctx, &dto.ApproveTicketRequest{
+		TicketID:   tk.ID,
+		ApprovalID: approval.ID,
+		Action:     "approve",
+		Comment:    "legacy 同意",
+	}, actorID, tenantID)
+	require.NoError(t, err)
+
+	task, err := client.ProcessTask.Get(ctx, taskID)
+	require.NoError(t, err)
+	assert.Equal(t, "completed", task.Status)
+
+	updatedApproval, err := client.TicketApproval.Get(ctx, approval.ID)
+	require.NoError(t, err)
+	assert.Equal(t, string(dto.ApprovalStatusApproved), updatedApproval.Status)
+
+	decisions, err := client.ProcessApprovalDecision.Query().All(ctx)
+	require.NoError(t, err)
+	require.Len(t, decisions, 1)
+	assert.Equal(t, "ticket", decisions[0].BusinessType)
+}
+
+// TestApproveTicket_LegacyBridgeFailureRollsBackBusinessWrite 原子性反证：
+// legacy 路径下桥接成功、事务内后续业务写入失败时，业务行与流程任务必须一起回滚——
+// 不允许出现「流程任务已完成、审批行仍是 pending」的永久分叉
+//（旧实现 bridge 在事务外先完成流程任务，此场景必然分叉）。
+func TestApproveTicket_LegacyBridgeFailureRollsBackBusinessWrite(t *testing.T) {
+	t.Setenv("ITSM_APPROVAL_BPMN_FIRST", "false")
+	client := newApprovalBridgeTestClient(t, "ticket_bridge_legacy_rb")
+	tenantID, actorID := setupBridgeTenantAndActor(t, client, "tk-lrb")
+	svc := NewTicketWorkflowService(client, zaptest.NewLogger(t).Sugar())
+	ctx := context.Background()
+
+	tk, approval := createBridgeTestTicketWithApproval(t, client, tenantID, actorID, "lrb")
+	_, taskID := createBridgeProcessFixture(t, client, tenantID, "tk-lrb1",
+		fmt.Sprintf("ticket:%d", tk.ID), actorID)
+
+	// 在 TicketApproval 的下一次 mutation 上注入失败（发生在业务事务内）。
+	var failApprovalMutation int32
+	client.TicketApproval.Use(func(next ent.Mutator) ent.Mutator {
+		return ent.MutateFunc(func(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+			if atomic.LoadInt32(&failApprovalMutation) == 1 {
+				return nil, fmt.Errorf("injected approval write failure")
+			}
+			return next.Mutate(ctx, m)
+		})
+	})
+
+	atomic.StoreInt32(&failApprovalMutation, 1)
+	err := svc.ApproveTicket(ctx, &dto.ApproveTicketRequest{
+		TicketID:   tk.ID,
+		ApprovalID: approval.ID,
+		Action:     "approve",
+		Comment:    "应当整体回滚",
+	}, actorID, tenantID)
+	require.Error(t, err)
+
+	// 流程任务必须仍是待办（桥接完成随业务事务一起回滚）。
+	// 夹具按生产路径把任务直接指派给审批人，初始状态是 assigned 而非 created；
+	// 断言「仍在待办状态集合」比写死字面量更贴近桥接的取单条件。
+	task, err := client.ProcessTask.Get(ctx, taskID)
+	require.NoError(t, err)
+	assert.Contains(t, []string{
+		common.ProcessTaskStatusCreated,
+		common.ProcessTaskStatusAssigned,
+		common.ProcessTaskStatusStarted,
+		common.ProcessTaskStatusDelegated,
+	}, task.Status, "桥接完成必须随业务事务回滚，不得留下已完成的孤儿任务")
+
+	// 审批行保持 pending、工单状态不变。
+	updatedApproval, err := client.TicketApproval.Get(ctx, approval.ID)
+	require.NoError(t, err)
+	assert.Equal(t, string(dto.ApprovalStatusPending), updatedApproval.Status)
+	updatedTicket, err := client.Ticket.Get(ctx, tk.ID)
+	require.NoError(t, err)
+	assert.NotEqual(t, "approved", updatedTicket.Status)
+
+	// 决策留痕不得落库（与流程任务同事务）。
+	decisionCount, err := client.ProcessApprovalDecision.Query().Count(ctx)
+	require.NoError(t, err)
+	assert.Zero(t, decisionCount)
+}
+
+// TestApproveTicket_LegacyUnboundFallsBackToCounting 未绑定流程时 legacy 路径
+// 保持原语义：回退审批链计数裁决（handled=false，不报错）。
+func TestApproveTicket_LegacyUnboundFallsBackToCounting(t *testing.T) {
+	t.Setenv("ITSM_APPROVAL_BPMN_FIRST", "false")
+	client := newApprovalBridgeTestClient(t, "ticket_bridge_unbound")
+	tenantID, actorID := setupBridgeTenantAndActor(t, client, "tk-unb")
+	svc := NewTicketWorkflowService(client, zaptest.NewLogger(t).Sugar())
+	ctx := context.Background()
+
+	tk, approval := createBridgeTestTicketWithApproval(t, client, tenantID, actorID, "unb")
+
+	err := svc.ApproveTicket(ctx, &dto.ApproveTicketRequest{
+		TicketID:   tk.ID,
+		ApprovalID: approval.ID,
+		Action:     "approve",
+		Comment:    "无流程，走计数",
+	}, actorID, tenantID)
+	require.NoError(t, err)
+
+	updatedTicket, err := client.Ticket.Get(ctx, tk.ID)
+	require.NoError(t, err)
+	assert.Equal(t, "approved", updatedTicket.Status, "未绑定流程时回退审批链计数裁决")
+
+	decisionCount, err := client.ProcessApprovalDecision.Query().Count(ctx)
+	require.NoError(t, err)
+	assert.Zero(t, decisionCount)
 }

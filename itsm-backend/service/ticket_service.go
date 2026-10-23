@@ -534,7 +534,11 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 			ctx2, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 			defer cancel()
 			if err := s.triggerWorkflowForTicket(ctx2, tkt, tenantID, workflowDefinitionKey); err != nil {
-				s.logger.Warnw("Workflow trigger failed", "error", err, "ticket_id", tkt.ID)
+				// outbox 未启用时这是 at-most-once 触发，失败即该单永久无流程实例——
+				// 必须按错误级别暴露（附补跑指引），不能用可重试语义的 warn 掩盖。
+				s.logger.Errorw("Workflow trigger failed (non-outbox fire-and-forget, delivery=at-most-once)",
+					"error", err, "ticket_id", tkt.ID,
+					"remedy", "启用 ITSM workflow outbox 或人工调用 /process-trigger 重放")
 			}
 		}()
 	}

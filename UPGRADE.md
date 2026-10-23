@@ -2692,6 +2692,38 @@ CMDB 云发现此前只有来源 CRUD 与结果读面，`POST /discovery/jobs` �
 cd itsm-backend && go test -count=1 ./handlers/cmdb/ ./router/
 ```
 
+### 1.72 BPMN 审批桥接原子收敛：工单 legacy 路径桥接收进业务事务（2026-10-23，行为变更：失败语义不变、分叉窗口关闭）
+
+`ITSM_APPROVAL_BPMN_FIRST=false`（legacy 路径）下，工单审批的 BPMN 桥接此前在
+**业务事务之外**先行执行：先完成流程任务（独立事务提交），之后再开业务事务写
+审批行/工单状态。两段提交之间存在分叉窗口——桥接成功后业务写入一旦失败（校验、
+约束、取消等其他原因），流程任务已完成而审批行仍是 pending，且无任何补偿路径，
+只能人工修数据。BPMNFirst 路径与变更域早已收敛，legacy 是最后一个残留事务边。
+
+- **桥接收进同一事务**：`approveTicketLegacy` 先开事务，approve/reject 桥接改走
+  `CompleteBusinessApprovalTaskWithClient`（与 BPMNFirst/变更域同一事务内桥接原语）——
+  流程任务完成、审批决策留痕与业务写入原子提交/回滚，不再出现「流程已批、业务未批」
+  或「业务已批、流程未批」的孤儿状态。委派（delegate）不涉及事务性业务写入，
+  与 BPMNFirst 一致保持事务外。
+- **三态语义不变**：未绑定流程（`handled=false`）或 bridge 未装配时仍回退审批链
+  计数裁决；「已绑定流程却拿不到可操作待办」仍由 bridge 映射为 conflict 整单 409。
+  对调用方唯一可见的变化是：桥接成功但后续业务写入失败时，流程任务**随业务事务
+  一起回滚**（此前会残留已完成任务）。
+- **建单触发降级语义如实标注**：工单/事件创建的 goroutine 兜底流程触发（outbox
+  未启用时的 at-most-once 路径）失败日志从 `Warn` 升为 `Error`，并附补跑指引
+  （启用 outbox 或人工调 `/process-trigger` 重放）——该失败意味着这一单永久无
+  流程实例，不能用可重试语义的 warn 掩盖。
+- **回归锁**：`ticket_workflow_bpmn_bridge_test.go` 9 例——legacy 同事务桥接
+  （审批行/工单状态/决策留痕/任务完成同批可见）、hook 注入业务写入失败 ⇒ 流程
+  任务随事务回滚不留孤儿任务（原子性反证，旧行为下必红）、unbound 回退计数裁决、
+  BPMNFirst unbound 不得走 fallback、fail-closed 三动作等。
+
+**验证**
+
+```bash
+cd itsm-backend && go test -count=1 ./service/ -run 'TestApproveTicket_'
+```
+
 ## 2. 环境变量变更
 
 本次升级**移除了多个"幽灵配置项"**（在示例文件中声明但代码/Compose 从不读取，用户配置了也不生效），并修正了一个 Grafana 密码安全缺陷。

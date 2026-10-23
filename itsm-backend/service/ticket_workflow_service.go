@@ -549,7 +549,12 @@ func (s *TicketWorkflowService) approveTicketBPMNFirst(
 	return tx.Commit()
 }
 
-// approveTicketLegacy 旧路径：BPMN bridge 在事务外调用，工单状态由 TicketApproval 计数驱动。
+// approveTicketLegacy 旧路径：工单状态由 TicketApproval 计数驱动（未绑定流程时的本意回退）。
+//
+// 事务边界（§原子收敛）：先开事务，BPMN 桥接收进同一事务（CompleteBusinessApprovalTaskWithClient）——
+// 流程任务完成与业务审批写入原子提交/回滚，消除「流程已批、业务未批」的两段提交分叉。
+// 未绑定流程（bridge 返回 handled=false）或 bridge 未装配时保持原语义：回退审批链计数裁决；
+// 「已绑定流程却拿不到可操作待办」由 bridge 映射为 conflict，整单 409 中止。
 func (s *TicketWorkflowService) approveTicketLegacy(
 	ctx context.Context,
 	req *dto.ApproveTicketRequest,
@@ -560,28 +565,11 @@ func (s *TicketWorkflowService) approveTicketLegacy(
 	newApprovalStatus string,
 ) error {
 	bpmnHandled := false
-	// 旧路径以 TicketApproval 计数裁决审批：未接线 bridge 或工单从未绑定流程时，
-	// 回退审批链是这条路径的本意；只有「已绑定流程却拿不到可操作待办」才必须中止，
-	// 否则会绕过流程裁决让流程状态与工单状态分叉（bridge 已把该情形映射为 conflict）。
-	if req.Action == "approve" || req.Action == "reject" {
-		if s.approvalBridge == nil {
-			s.logger.Warnw("BPMN 审批桥接未接线，工单审批回退审批链计数",
-				"ticket_id", req.TicketID, "tenant_id", tenantID, "actor_user_id", userID)
-		} else {
-			handled, bridgeErr := s.approvalBridge.CompleteBusinessApprovalTask(
-				ctx, tenantID, userID, string(dto.BusinessTypeTicket), req.TicketID, req.Action, req.Comment,
-			)
-			if bridgeErr != nil {
-				return fmt.Errorf("同步流程审批任务失败: %w", bridgeErr)
-			}
-			bpmnHandled = handled
-		}
-	}
-
+	// 委派只重分配 BPMN 任务，不涉及事务性业务写入，与 BPMNFirst 一致在事务外执行。
 	if req.Action == "delegate" {
 		if s.approvalBridge == nil {
 			s.logger.Warnw("BPMN 审批桥接未接线，工单委派回退审批链",
-				"ticket_id", req.TicketID, "tenant_id", tenantID, "actor_user_id", userID)
+				"ticket_id", req.TicketID, "tenant_id", tenantID)
 		} else {
 			handled, bridgeErr := s.approvalBridge.DelegateBusinessApprovalTask(
 				ctx, tenantID, userID, string(dto.BusinessTypeTicket), req.TicketID, *req.DelegateToUserID,
@@ -605,6 +593,19 @@ func (s *TicketWorkflowService) approveTicketLegacy(
 	}()
 
 	txClient := tx.Client()
+
+	// 审批决策与业务写入同一事务（此前 bridge 在事务外先完成流程任务、
+	// 之后才开业务事务，中途失败会让流程状态与工单状态永久分叉）。
+	if (req.Action == "approve" || req.Action == "reject") && s.approvalBridge != nil {
+		handled, bridgeErr := s.approvalBridge.CompleteBusinessApprovalTaskWithClient(
+			ctx, txClient, tenantID, userID, string(dto.BusinessTypeTicket), req.TicketID, req.Action, req.Comment,
+		)
+		if bridgeErr != nil {
+			txErr = fmt.Errorf("同步流程审批任务失败: %w", bridgeErr)
+			return txErr
+		}
+		bpmnHandled = handled
+	}
 
 	updateBuilder := txClient.TicketApproval.UpdateOneID(req.ApprovalID).
 		SetStatus(newApprovalStatus).
