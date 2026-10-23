@@ -2572,6 +2572,39 @@ WHERE sla_id > 0 AND sla_id NOT IN (SELECT id FROM sla_definitions);
 cd itsm-backend && go test -count=1 ./service/ -run 'Binding' && go test -count=1 ./handlers/change/
 ```
 
+### 1.69 管理者统一服务质量视图：`GET /api/v1/reports/service-quality`（2026-10-23，新增端点 + 口径版本契约）
+
+报表域预览收口：把散在工作台 KPI、`/reports/sla`、`/reports/incidents`、各单域报表与
+analytics 工单统计里的局部指标聚合成一次请求的管理视图。权限 `dashboard:read`（报表
+资源统一收敛在 dashboard），无迁移、无配置变更。
+
+**响应结构**（`common.Response.data` 为 `service.ServiceQualityReport`）：
+
+- `metricVersion` / `metricVersions`：**口径版本契约**。任何指标的计算语义变更
+  （统计窗口、过滤条件、合规率分母、环比基线）都必须递增对应版本号；下游管理层
+  月报与外部对账脚本应以版本号感知口径变化，禁止凭数字猜语义。首版 `1.0`。
+- `scope`：KPI 行级口径标注（`tenant` / `own`），与工作台 `/dashboard/overview`
+  同一规则（`datascope.ForTicketReader`）——管理者看全租户，坐席看本人。
+- `kpi` / `sla` / `incidentDistribution` / `satisfaction` / `ticketTrend` /
+  `ticketStats` 六块；空集合恒为 `[]` 而非 `null`。
+- `days`：统计窗口，默认 30、钳制 [1, 90]。`ticketStats` 块在 analytics 未装配时
+  显式缺省——可见降级，不冒充全量。
+
+**给下游消费方**：如果你此前在前端把多个报表端点的数字自己拼成管理视图，迁移到本
+端点后请记录首次接入时的 `metricVersion`；后续升级 CHANGELOG 出现「报表口径版本
+递增」字样时，按 UPGRADE 对应小节核对数字含义是否变化。
+
+**导出审计说明**：`POST /api/v1/analytics/export` 的审计由全局审计中间件承载
+（`export` 动作 + 请求体摘要入 `audit_logs`），此前契约里「导出审计缺失」的表述
+经核实为过度报告，本版已如实收敛。
+
+**验证**
+
+```bash
+cd itsm-backend && go test -count=1 ./service/ -run 'TestServiceQualityReport' \
+  && go test -count=1 ./handlers/ -run 'TestParseQualityWindow|TestGetServiceQualityUnwired'
+```
+
 ## 2. 环境变量变更
 
 本次升级**移除了多个"幽灵配置项"**（在示例文件中声明但代码/Compose 从不读取，用户配置了也不生效），并修正了一个 Grafana 密码安全缺陷。

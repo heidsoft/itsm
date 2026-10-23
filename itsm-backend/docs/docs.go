@@ -9607,6 +9607,81 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/marketplace/catalog/items": {
+            "get": {
+                "tags": [
+                    "扩展市场"
+                ],
+                "summary": "目录列表（平台）",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "draft/published/deprecated",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "connector/skill/plugin",
+                        "name": "type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "名称/标题/提供商关键字",
+                        "name": "search",
+                        "in": "query"
+                    }
+                ],
+                "responses": {}
+            },
+            "post": {
+                "summary": "创建目录项（平台）",
+                "responses": {}
+            }
+        },
+        "/api/v1/marketplace/catalog/items/{id}": {
+            "get": {
+                "summary": "目录项详情（平台）",
+                "responses": {}
+            },
+            "delete": {
+                "summary": "删除目录项（平台）",
+                "responses": {}
+            },
+            "patch": {
+                "summary": "更新目录项（平台）",
+                "responses": {}
+            }
+        },
+        "/api/v1/marketplace/catalog/items/{id}/publish": {
+            "post": {
+                "summary": "上架目录项（平台）",
+                "responses": {}
+            }
+        },
+        "/api/v1/marketplace/catalog/items/{id}/unpublish": {
+            "post": {
+                "summary": "下架目录项（平台）",
+                "responses": {}
+            }
+        },
+        "/api/v1/marketplace/catalog/items/{id}/versions": {
+            "get": {
+                "summary": "目录项版本列表（平台）",
+                "responses": {}
+            },
+            "post": {
+                "summary": "新增目录项版本（平台）",
+                "responses": {}
+            }
+        },
+        "/api/v1/marketplace/catalog/items/{id}/versions/{version}/publish": {
+            "post": {
+                "summary": "发布目录项版本（平台）",
+                "responses": {}
+            }
+        },
         "/api/v1/marketplace/installations": {
             "get": {
                 "security": [
@@ -12162,6 +12237,69 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/reports/service-quality": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "把 KPI、SLA 合规、事件分布、满意度、工单趋势与工单统计聚合成一次请求的管理视图（2026-10-23 起为真实契约）。行级口径与工作台一致（scope 字段显式标注 tenant/own）；响应携带 metricVersion/metricVersions 口径版本——任何指标计算语义变更都会递增版本，下游对账以此为准。窗口 days 默认 30、上限 90；analytics 未装配时 ticketStats 块缺省（显式可见降级）",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Dashboard"
+                ],
+                "summary": "管理者统一服务质量视图",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "统计窗口天数（默认 30，上限 90）",
+                        "name": "days",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/service.ServiceQualityReport"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/service-requests/{id}/sla": {
             "get": {
                 "security": [
@@ -12975,6 +13113,35 @@ const docTemplate = `{
                 },
                 "title": {
                     "type": "string"
+                }
+            }
+        },
+        "dto.AnalyticsTicketStatsResponse": {
+            "type": "object",
+            "properties": {
+                "generatedAt": {
+                    "type": "string"
+                },
+                "priorityGroups": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.TicketPriorityGroup"
+                    }
+                },
+                "statusGroups": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.TicketStatusGroup"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                },
+                "trend30d": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.TicketTrendPoint"
+                    }
                 }
             }
         },
@@ -17885,6 +18052,39 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.TicketPriorityGroup": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "priority": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.TicketStatusGroup": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.TicketTrendPoint": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "date": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.TimeImpact": {
             "type": "object",
             "properties": {
@@ -19579,6 +19779,66 @@ const docTemplate = `{
                 }
             }
         },
+        "service.IncidentDistributionData": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "type": "string"
+                },
+                "color": {
+                    "type": "string"
+                },
+                "count": {
+                    "type": "integer"
+                }
+            }
+        },
+        "service.KPIMetricData": {
+            "type": "object",
+            "properties": {
+                "alert": {
+                    "type": "string"
+                },
+                "change": {
+                    "type": "number"
+                },
+                "changeType": {
+                    "type": "string"
+                },
+                "color": {
+                    "type": "string"
+                },
+                "comparable": {
+                    "description": "Comparable 标识环比是否可信：false 表示读取者范围内没有可比的上期基线，\n此时 Change 恒为 0，前端不得渲染\"相比上期\"。",
+                    "type": "boolean"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "scope": {
+                    "description": "Scope 标识本组指标的行级范围：tenant = 全租户，own = 本人创建或受理。",
+                    "type": "string"
+                },
+                "target": {
+                    "type": "number"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "trend": {
+                    "type": "string"
+                },
+                "unit": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "number"
+                }
+            }
+        },
         "service.SLAComplianceData": {
             "type": "object",
             "properties": {
@@ -19601,6 +19861,122 @@ const docTemplate = `{
                     "type": "number"
                 },
                 "totalTickets": {
+                    "type": "integer"
+                }
+            }
+        },
+        "service.SatisfactionData": {
+            "type": "object",
+            "properties": {
+                "month": {
+                    "type": "string"
+                },
+                "rating": {
+                    "type": "number"
+                },
+                "responses": {
+                    "type": "integer"
+                }
+            }
+        },
+        "service.ServiceQualityReport": {
+            "type": "object",
+            "properties": {
+                "generatedAt": {
+                    "type": "string"
+                },
+                "incidentDistribution": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/service.IncidentDistributionData"
+                    }
+                },
+                "kpi": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/service.KPIMetricData"
+                    }
+                },
+                "metricVersion": {
+                    "type": "string"
+                },
+                "metricVersions": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "satisfaction": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/service.SatisfactionData"
+                    }
+                },
+                "scope": {
+                    "description": "KPI 行级口径：tenant | own",
+                    "type": "string"
+                },
+                "sla": {
+                    "$ref": "#/definitions/service.SLAComplianceData"
+                },
+                "ticketStats": {
+                    "description": "analytics 未装配时缺省",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/dto.AnalyticsTicketStatsResponse"
+                        }
+                    ]
+                },
+                "ticketTrend": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/service.TicketTrendData"
+                    }
+                },
+                "window": {
+                    "$ref": "#/definitions/service.ServiceQualityWindow"
+                }
+            }
+        },
+        "service.ServiceQualityWindow": {
+            "type": "object",
+            "properties": {
+                "days": {
+                    "type": "integer"
+                },
+                "from": {
+                    "type": "string"
+                },
+                "to": {
+                    "type": "string"
+                }
+            }
+        },
+        "service.TicketTrendData": {
+            "type": "object",
+            "properties": {
+                "closed": {
+                    "type": "integer"
+                },
+                "completedTickets": {
+                    "type": "integer"
+                },
+                "date": {
+                    "type": "string"
+                },
+                "inProgress": {
+                    "type": "integer"
+                },
+                "newTickets": {
+                    "type": "integer"
+                },
+                "open": {
+                    "type": "integer"
+                },
+                "pendingTickets": {
+                    "type": "integer"
+                },
+                "resolved": {
                     "type": "integer"
                 }
             }

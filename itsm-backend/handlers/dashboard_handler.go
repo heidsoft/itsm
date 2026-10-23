@@ -17,7 +17,9 @@ type DashboardHandler struct {
 	dashboardService *service.DashboardService
 	ticketService    *service.TicketService
 	incidentService  *service.IncidentService
-	logger           *zap.SugaredLogger
+	// qualityService 管理者统一服务质量视图聚合器（2026-10-23 接线；nil → 503）。
+	qualityService *service.ServiceQualityReportService
+	logger         *zap.SugaredLogger
 }
 
 // ErrorResponse 通用错误响应（用于 Swagger 文档声明）
@@ -692,4 +694,56 @@ func (h *DashboardHandler) GetSystemStats(c *gin.Context) {
 		return
 	}
 	common.Success(c, stats)
+}
+
+// SetServiceQualityService 注入管理者统一服务质量视图聚合器（bootstrap 装配；
+// nil 时端点显式 503，不静默假成功）。
+func (h *DashboardHandler) SetServiceQualityService(s *service.ServiceQualityReportService) {
+	h.qualityService = s
+}
+
+// parseQualityWindow 解析并收敛统计窗口：默认 30 天，钳制到 [1, 90]。
+// 独立成纯函数以便无 DB 契约测试。
+func parseQualityWindow(raw string) int {
+	days := 30
+	if raw != "" {
+		if parsed, err := strconv.Atoi(raw); err == nil && parsed > 0 {
+			days = parsed
+		}
+	}
+	if days > service.MaxQualityWindowDays {
+		days = service.MaxQualityWindowDays
+	}
+	return days
+}
+
+// GetServiceQuality handles GET /api/v1/reports/service-quality
+// @Summary 管理者统一服务质量视图
+// @Description 把 KPI、SLA 合规、事件分布、满意度、工单趋势与工单统计聚合成一次请求的管理视图（2026-10-23 起为真实契约）。行级口径与工作台一致（scope 字段显式标注 tenant/own）；响应携带 metricVersion/metricVersions 口径版本——任何指标计算语义变更都会递增版本，下游对账以此为准。窗口 days 默认 30、上限 90；analytics 未装配时 ticketStats 块缺省（显式可见降级）
+// @Tags Dashboard
+// @Produce json
+// @Param days query int false "统计窗口天数（默认 30，上限 90）"
+// @Success 200 {object} common.Response{data=service.ServiceQualityReport}
+// @Failure 401 {object} common.Response
+// @Failure 500 {object} common.Response
+// @Failure 503 {object} common.Response
+// @Security BearerAuth
+// @Router /api/v1/reports/service-quality [get]
+func (h *DashboardHandler) GetServiceQuality(c *gin.Context) {
+	tenantID, tenantOK := middleware.TenantIDOrUnauthorized(c)
+	if !tenantOK {
+		return
+	}
+	if h.qualityService == nil {
+		common.Fail(c, common.ServiceUnavailableCode, "服务质量视图聚合器未装配")
+		return
+	}
+
+	report, err := h.qualityService.Build(c.Request.Context(), tenantID, dashboardViewer(c), parseQualityWindow(c.Query("days")))
+	if err != nil {
+		h.logger.Errorw("failed to build service quality report", "error", err, "tenant_id", tenantID)
+		common.Fail(c, common.InternalErrorCode, "获取服务质量视图失败")
+		return
+	}
+	common.Success(c, report)
 }

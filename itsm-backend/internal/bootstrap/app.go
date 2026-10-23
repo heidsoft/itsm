@@ -564,7 +564,6 @@ func NewApplication() *Application {
 	// 不再依赖全局 rawDB 兜底，便于测试隔离与多连接池演进。
 	dashboardService := service.NewDashboardServiceWithDB(client, database.GetRawDB(), sugar)
 	dashboardHandler := handlers.NewDashboardHandler(dashboardService, ticketService, incidentService, sugar)
-
 	ticketService.EnableSideEffectOutbox()
 	_ = sequenceService // V2 内部通过 Repository.GenerateTicketNumber 使用 sequence；保留为运行时上下文依赖
 
@@ -688,6 +687,10 @@ func NewApplication() *Application {
 		}
 	}
 	analyticsService := service.NewAnalyticsService(client, sugar)
+	// 管理者统一服务质量视图聚合器（2026-10-23）：dashboard 概览 + analytics
+	// 工单统计合成一次请求的管理视图；qualityReportService 自身可容忍 analytics
+	// 缺省（块缺省显式可见），dashboard 在上方恒已装配。
+	dashboardHandler.SetServiceQualityService(service.NewServiceQualityReportService(dashboardService, analyticsService))
 	predictionService := service.NewPredictionService(client, sugar)
 	slaForecastSkill := service.NewSLAForecastSkill(client, llmGateway, sugar)
 	// 市场服务

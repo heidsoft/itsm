@@ -366,6 +366,7 @@ func precheckRoutePermissions() map[string]map[string]Permission {
 			"/api/v1/reports/changes":                              {Resource: "dashboard", Action: "read"},
 			"/api/v1/reports/incidents":                            {Resource: "dashboard", Action: "read"},
 			"/api/v1/reports/problems":                             {Resource: "dashboard", Action: "read"},
+			"/api/v1/reports/service-quality":                      {Resource: "dashboard", Action: "read"},
 			"/api/v1/reports/sla":                                  {Resource: "dashboard", Action: "read"},
 			"/api/v1/reports/tickets":                              {Resource: "dashboard", Action: "read"},
 			"/api/v1/roles":                                        {Resource: "role", Action: "read"},

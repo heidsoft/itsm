@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **管理者有了「一张纸」服务质量视图：`GET /api/v1/reports/service-quality`（2026-10-23，报表域预览收口）**：把散在工作台 KPI、`/reports/sla`、`/reports/incidents`、各单域报表与 analytics 工单统计里的局部指标聚合成一次请求的管理视图——KPI（行级口径与工作台同源，`scope` 显式标注）、SLA 合规、事件分布、满意度、工单趋势、工单统计。响应携带 `metricVersion`/`metricVersions` **口径版本契约**：任何指标的计算语义变更（窗口/过滤/分母/环比基线）必须递增对应版本，管理层月报与外部对账脚本以版本号感知口径变化，不再凭数字猜语义。窗口 `days` 默认 30、上限 90；analytics 未装配时 `ticketStats` 块显式缺省（可见降级，不冒充全量）。导出审计经核实已由全局审计中间件覆盖（`POST /analytics/export` 落 `export` 动作审计行），本批如实收敛该项缺口描述。回归锁：聚合器口径版本/窗口钳制/装配缺失显式报错/空集合落成 JSON 数组 5 例 + handler 窗口解析与未装配 503 2 例。
+
 - **Agent 可以直接操作 ITSM 了：新增零依赖 MCP Server（`itsm-mcp`）（2026-10-23，能力缺口 + 新扩展面）**：此前 WorkBuddy / Claude Desktop 等 MCP 客户端**没有任何入口连到这个系统**——`itsm-skill` 是 `.gitignore` 里的本地目录，`docs/index.md` 把「MCP 技能市场」记为规划中，代码里既无 `tools/call` 端点也无 MCP server。CLI 的 agent 协议只能由能执行 shell 的调用方使用，图形化宿主无能为力。
   - **一个源，两个面**：新增 `itsm-cli/bin/itsm-mcp.js` + `src/mcp/{protocol,server,catalog,invoke,resources,prompts}.ts`，**零 npm 依赖**（手写 JSON-RPC over stdio；`dist/` 已入库，干净克隆直接可跑）。工具 schema **由 CLI 的命令注册表派生**（`CommandSpec.input`），不新增第二份端点表——268 条命令、参数、枚举、风险级别只有一处定义，改 CLI 即改 MCP。
   - **三层工具面，而不是 268 个平铺工具**：20 个精选工具（工单读写/评论/状态机流转、事件分诊、变更审批链、CMDB 搜索与影响分析、知识检索、SLA 概览、我的待办、身份自检）+ `itsm_discover`（中文关键字可检索，按"命令名命中 > 摘要命中"排序）→ `itsm_describe`（取完整入参契约）→ `itsm_call`（执行任意命令）。平铺会让 `tools/list` 本身吃掉上万 token，且近邻工具互相干扰。

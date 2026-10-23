@@ -110,6 +110,25 @@ definitions:
       title:
         type: string
     type: object
+  dto.AnalyticsTicketStatsResponse:
+    properties:
+      generatedAt:
+        type: string
+      priorityGroups:
+        items:
+          $ref: '#/definitions/dto.TicketPriorityGroup'
+        type: array
+      statusGroups:
+        items:
+          $ref: '#/definitions/dto.TicketStatusGroup'
+        type: array
+      total:
+        type: integer
+      trend30d:
+        items:
+          $ref: '#/definitions/dto.TicketTrendPoint'
+        type: array
+    type: object
   dto.AssociatedItemResponse:
     properties:
       id:
@@ -3562,6 +3581,27 @@ definitions:
         description: 提交说明（可选）
         type: string
     type: object
+  dto.TicketPriorityGroup:
+    properties:
+      count:
+        type: integer
+      priority:
+        type: string
+    type: object
+  dto.TicketStatusGroup:
+    properties:
+      count:
+        type: integer
+      status:
+        type: string
+    type: object
+  dto.TicketTrendPoint:
+    properties:
+      count:
+        type: integer
+      date:
+        type: string
+    type: object
   dto.TimeImpact:
     properties:
       hoursSinceCreation:
@@ -4730,6 +4770,48 @@ definitions:
       type:
         type: string
     type: object
+  service.IncidentDistributionData:
+    properties:
+      category:
+        type: string
+      color:
+        type: string
+      count:
+        type: integer
+    type: object
+  service.KPIMetricData:
+    properties:
+      alert:
+        type: string
+      change:
+        type: number
+      changeType:
+        type: string
+      color:
+        type: string
+      comparable:
+        description: |-
+          Comparable 标识环比是否可信：false 表示读取者范围内没有可比的上期基线，
+          此时 Change 恒为 0，前端不得渲染"相比上期"。
+        type: boolean
+      description:
+        type: string
+      id:
+        type: string
+      scope:
+        description: Scope 标识本组指标的行级范围：tenant = 全租户，own = 本人创建或受理。
+        type: string
+      target:
+        type: number
+      title:
+        type: string
+      trend:
+        type: string
+      unit:
+        type: string
+      value:
+        type: number
+    type: object
   service.SLAComplianceData:
     properties:
       atRiskTickets:
@@ -4745,6 +4827,81 @@ definitions:
       responseTimeCompliance:
         type: number
       totalTickets:
+        type: integer
+    type: object
+  service.SatisfactionData:
+    properties:
+      month:
+        type: string
+      rating:
+        type: number
+      responses:
+        type: integer
+    type: object
+  service.ServiceQualityReport:
+    properties:
+      generatedAt:
+        type: string
+      incidentDistribution:
+        items:
+          $ref: '#/definitions/service.IncidentDistributionData'
+        type: array
+      kpi:
+        items:
+          $ref: '#/definitions/service.KPIMetricData'
+        type: array
+      metricVersion:
+        type: string
+      metricVersions:
+        additionalProperties:
+          type: string
+        type: object
+      satisfaction:
+        items:
+          $ref: '#/definitions/service.SatisfactionData'
+        type: array
+      scope:
+        description: KPI 行级口径：tenant | own
+        type: string
+      sla:
+        $ref: '#/definitions/service.SLAComplianceData'
+      ticketStats:
+        allOf:
+        - $ref: '#/definitions/dto.AnalyticsTicketStatsResponse'
+        description: analytics 未装配时缺省
+      ticketTrend:
+        items:
+          $ref: '#/definitions/service.TicketTrendData'
+        type: array
+      window:
+        $ref: '#/definitions/service.ServiceQualityWindow'
+    type: object
+  service.ServiceQualityWindow:
+    properties:
+      days:
+        type: integer
+      from:
+        type: string
+      to:
+        type: string
+    type: object
+  service.TicketTrendData:
+    properties:
+      closed:
+        type: integer
+      completedTickets:
+        type: integer
+      date:
+        type: string
+      inProgress:
+        type: integer
+      newTickets:
+        type: integer
+      open:
+        type: integer
+      pendingTickets:
+        type: integer
+      resolved:
         type: integer
     type: object
   tenantinstallation.Status:
@@ -10712,6 +10869,57 @@ paths:
       summary: 获取事件趋势报表
       tags:
       - 事件管理
+  /api/v1/marketplace/catalog/items:
+    get:
+      parameters:
+      - description: draft/published/deprecated
+        in: query
+        name: status
+        type: string
+      - description: connector/skill/plugin
+        in: query
+        name: type
+        type: string
+      - description: 名称/标题/提供商关键字
+        in: query
+        name: search
+        type: string
+      responses: {}
+      summary: 目录列表（平台）
+      tags:
+      - 扩展市场
+    post:
+      responses: {}
+      summary: 创建目录项（平台）
+  /api/v1/marketplace/catalog/items/{id}:
+    delete:
+      responses: {}
+      summary: 删除目录项（平台）
+    get:
+      responses: {}
+      summary: 目录项详情（平台）
+    patch:
+      responses: {}
+      summary: 更新目录项（平台）
+  /api/v1/marketplace/catalog/items/{id}/publish:
+    post:
+      responses: {}
+      summary: 上架目录项（平台）
+  /api/v1/marketplace/catalog/items/{id}/unpublish:
+    post:
+      responses: {}
+      summary: 下架目录项（平台）
+  /api/v1/marketplace/catalog/items/{id}/versions:
+    get:
+      responses: {}
+      summary: 目录项版本列表（平台）
+    post:
+      responses: {}
+      summary: 新增目录项版本（平台）
+  /api/v1/marketplace/catalog/items/{id}/versions/{version}/publish:
+    post:
+      responses: {}
+      summary: 发布目录项版本（平台）
   /api/v1/marketplace/installations:
     get:
       consumes:
@@ -12298,6 +12506,45 @@ paths:
       summary: 更新项目
       tags:
       - 项目管理
+  /api/v1/reports/service-quality:
+    get:
+      description: 把 KPI、SLA 合规、事件分布、满意度、工单趋势与工单统计聚合成一次请求的管理视图（2026-10-23 起为真实契约）。行级口径与工作台一致（scope
+        字段显式标注 tenant/own）；响应携带 metricVersion/metricVersions 口径版本——任何指标计算语义变更都会递增版本，下游对账以此为准。窗口
+        days 默认 30、上限 90；analytics 未装配时 ticketStats 块缺省（显式可见降级）
+      parameters:
+      - description: 统计窗口天数（默认 30，上限 90）
+        in: query
+        name: days
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/service.ServiceQualityReport'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/common.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.Response'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/common.Response'
+      security:
+      - BearerAuth: []
+      summary: 管理者统一服务质量视图
+      tags:
+      - Dashboard
   /api/v1/service-requests/{id}/sla:
     get:
       description: 读取服务请求的 SLA 状态（2026-10-21 统一绑定落地）。bound=false 表示该请求没有绑定任何 SLA 定义（租户未配置

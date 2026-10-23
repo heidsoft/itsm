@@ -1764,6 +1764,17 @@ GET /sla/violations
 Authorization: Bearer <accessToken>
 ```
 
+### 管理者统一服务质量报表
+
+```http
+GET /api/v1/reports/service-quality?days=30
+Authorization: Bearer <accessToken>
+```
+
+权限 `dashboard:read`（报表资源统一收敛在 dashboard）。把散在各报表页与工作台的局部指标聚合成一次请求的管理视图：`kpi`（行级口径与工作台同源，`scope` 字段显式标注 `tenant`/`own`）、`sla`（合规率/风险/违约数）、`incidentDistribution`、`satisfaction`、`ticketTrend`、`ticketStats`（analytics 工单统计；analytics 未装配时该块显式缺省）。`days` 为统计窗口天数，默认 30、上限 90。
+
+**口径版本契约**：响应携带 `metricVersion`（总体）与 `metricVersions`（各块独立）——任何指标的计算语义变更（窗口、过滤、分母、环比基线）都必须递增对应版本，下游管理层月报与对账脚本以版本号感知口径变化，禁止凭数字猜语义。空集合一律序列化为 `[]` 而非 `null`。导出通道 `POST /api/v1/analytics/export` 的审计由全局审计中间件承载（`export` 动作 + 请求体摘要入 `audit_logs`）。
+
 ### 获取 SLA 合规报表
 
 ```http

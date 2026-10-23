@@ -440,6 +440,9 @@ func SetupReportsRoutes(
 		reports.GET("/tickets", middleware.RequirePermission("dashboard", "read"), h.GetStats)
 		reports.GET("/incidents", middleware.RequirePermission("dashboard", "read"), h.GetIncidentDistribution)
 		reports.GET("/sla", middleware.RequirePermission("dashboard", "read"), h.GetSLAData)
+		// 管理者统一服务质量视图：KPI/SLA/事件分布/满意度/趋势/工单统计一次聚合，
+		// 携带 metricVersion 口径版本（2026-10-23 落地，取代"各报表页自己拼"的现状）。
+		reports.GET("/service-quality", middleware.RequirePermission("dashboard", "read"), h.GetServiceQuality)
 
 		// 问题报表：接问题域真实趋势（problem 未装配时回退工单趋势并显式标注）。
 		reports.GET("/problems", middleware.RequirePermission("dashboard", "read"), func(c *gin.Context) {

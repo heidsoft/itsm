@@ -5,9 +5,11 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"itsm-backend/middleware"
 	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -58,4 +60,26 @@ func TestConvertKPIMetricsCarriesContract(t *testing.T) {
 	require.NoError(t, json.Unmarshal(body, &fields))
 	assert.Contains(t, fields, "comparable")
 	assert.Equal(t, "own", fields["scope"])
+}
+
+// TestParseQualityWindow 统一服务质量视图的窗口解析：默认 30、非法回退、上限钳制。
+func TestParseQualityWindow(t *testing.T) {
+	assert.Equal(t, 30, parseQualityWindow(""))
+	assert.Equal(t, 30, parseQualityWindow("30"))
+	assert.Equal(t, 30, parseQualityWindow("not-a-number"), "非法值回退默认")
+	assert.Equal(t, 7, parseQualityWindow("7"))
+	assert.Equal(t, service.MaxQualityWindowDays, parseQualityWindow("3650"), "超上限钳制")
+}
+
+// TestGetServiceQualityUnwiredIs503 聚合器未装配时显式 503，不得返回空报表假成功。
+func TestGetServiceQualityUnwiredIs503(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	h := NewDashboardHandler(nil, nil, nil, zap.NewNop().Sugar())
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Request = httptest.NewRequest("GET", "/api/v1/reports/service-quality", nil)
+	c.Set(middleware.TenantContextKey, &middleware.TenantContext{TenantID: 1})
+	h.GetServiceQuality(c)
+	assert.Equal(t, 503, w.Code, "未装配必须 503，body=%s", w.Body.String())
 }
