@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"reflect"
 	"time"
 
 	"itsm-backend/common"
@@ -193,11 +194,89 @@ func (s *Service) Update(ctx context.Context, tenantID int, id int, params *Upda
 		}
 	}
 
+	// PATCH 语义下客户端常回传整个表单。未变化的字段必须从落库参数里摘掉：
+	// 仓储对 status 无条件 SetStatus 并重置 resolved_at/closed_at，回传当前状态
+	// 会把已解决工单的解决时间改成此刻；全量无变化时更应直接返回，不推进 version。
+	if !params.ReplaceTags {
+		params = dropUnchangedUpdateParams(params, current)
+		// 版本不一致时不能短路：无变化的载荷同样要返回 409，否则过期客户端
+		// 可以用一次空更新「成功」掩盖自己读到的是旧数据。
+		if isNoChangeUpdate(params) && params.Version == current.Version {
+			return current, nil
+		}
+	}
+
 	updated, err := s.repo.Update(ctx, id, params, tenantID)
 	if err != nil {
 		return nil, fmt.Errorf("update ticket: %w", err)
 	}
 	return updated, nil
+}
+
+// dropUnchangedUpdateParams 把与当前值相同的字段置空，只让真正的变化落库。
+func dropUnchangedUpdateParams(params *UpdateParams, current *Ticket) *UpdateParams {
+	if params.Title != nil && *params.Title == current.Title {
+		params.Title = nil
+	}
+	if params.Description != nil && *params.Description == current.Description {
+		params.Description = nil
+	}
+	if params.Status != nil && *params.Status == current.Status {
+		params.Status = nil
+	}
+	if params.Priority != nil && *params.Priority == current.Priority {
+		params.Priority = nil
+	}
+	if params.Type != nil && *params.Type == current.Type {
+		params.Type = nil
+	}
+	if params.AssigneeID != nil && assigneeIDValue(current.AssigneeID) == *params.AssigneeID {
+		params.AssigneeID = nil
+	}
+	if params.CategoryID != nil && categoryIDValue(current.CategoryID) == *params.CategoryID {
+		params.CategoryID = nil
+	}
+	if params.Resolution != nil && current.Resolution != nil && *params.Resolution == *current.Resolution {
+		params.Resolution = nil
+	}
+	if params.FormFields != nil && formFieldsEqual(*params.FormFields, current.FormFields) {
+		params.FormFields = nil
+	}
+	return params
+}
+
+func isNoChangeUpdate(params *UpdateParams) bool {
+	return params.Title == nil && params.Description == nil && params.Status == nil &&
+		params.Priority == nil && params.Type == nil && params.AssigneeID == nil &&
+		params.CategoryID == nil && params.Resolution == nil && params.FormFields == nil &&
+		!params.ReplaceTags && len(params.TagIDs) == 0
+}
+
+func categoryIDValue(id *int) int {
+	if id == nil {
+		return 0
+	}
+	return *id
+}
+
+func assigneeIDValue(id *int) int {
+	if id == nil {
+		return 0
+	}
+	return *id
+}
+
+func formFieldsEqual(a, b map[string]interface{}) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for k, av := range a {
+		bv, ok := b[k]
+		if !ok || !reflect.DeepEqual(av, bv) {
+			return false
+		}
+	}
+	return true
 }
 
 // Delete soft-deletes a ticket.

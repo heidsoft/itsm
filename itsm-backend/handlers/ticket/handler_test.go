@@ -47,6 +47,10 @@ type mockRepository struct {
 	lastNamesTenant int
 	lastNamesIDs    []int
 	namesCalls      int
+	// Update 调用次数与最后一次参数：用于断言「无变化更新不落库」和
+	// handler 只把真正变化的字段传给仓储。
+	updateCalls      int
+	lastUpdateParams *UpdateParams
 }
 
 func newMockRepository() *mockRepository {
@@ -113,14 +117,37 @@ func (m *mockRepository) Update(ctx context.Context, id int, params *UpdateParam
 	if params.Version != 0 && params.Version != t.Version {
 		return nil, common.NewVersionConflictError("工单", id, params.Version, t.Version)
 	}
+	m.updateCalls++
+	m.lastUpdateParams = params
 	if params.Title != nil {
 		t.Title = *params.Title
+	}
+	if params.Description != nil {
+		t.Description = *params.Description
 	}
 	if params.Status != nil {
 		t.Status = *params.Status
 	}
 	if params.Priority != nil {
 		t.Priority = *params.Priority
+	}
+	if params.Type != nil {
+		t.Type = *params.Type
+	}
+	if params.AssigneeID != nil {
+		assignee := *params.AssigneeID
+		t.AssigneeID = &assignee
+	}
+	if params.CategoryID != nil {
+		category := *params.CategoryID
+		t.CategoryID = &category
+	}
+	if params.Resolution != nil {
+		resolution := *params.Resolution
+		t.Resolution = &resolution
+	}
+	if params.FormFields != nil {
+		t.FormFields = *params.FormFields
 	}
 	t.Version++
 	t.UpdatedAt = time.Now()
@@ -397,6 +424,7 @@ func newTestHarness(t *testing.T) (*gin.Engine, *mockRepository) {
 	api.GET("/tickets", h.ListTickets)
 	api.GET("/tickets/:id", h.GetTicket)
 	api.PUT("/tickets/:id", h.UpdateTicket)
+	api.PATCH("/tickets/:id", h.UpdateTicket)
 	api.DELETE("/tickets/:id", h.DeleteTicket)
 	api.POST("/tickets/:id/assign", h.AssignTicket)
 	api.POST("/tickets/:id/escalate", h.EscalateTicket)

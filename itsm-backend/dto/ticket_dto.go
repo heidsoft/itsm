@@ -28,8 +28,8 @@ type CreateTicketRequest struct {
 // UpdateTicketRequest 更新工单请求
 type UpdateTicketRequest struct {
 	Title       string                 `json:"title" binding:"omitempty,min=2,max=200"`
-	Description string                 `json:"description" binding:"omitempty,min=10,max=5000"`
-	Priority    string                 `json:"priority" binding:"omitempty,oneof=low medium high critical"`
+	Description string                 `json:"description" binding:"omitempty,max=5000"`
+	Priority    string                 `json:"priority" binding:"omitempty,oneof=low medium high critical urgent"`
 	Status      string                 `json:"status" binding:"omitempty,oneof=new open assigned in_progress pending resolved closed cancelled approved rejected"`
 	Type        string                 `json:"type" binding:"omitempty,oneof=incident service_request change ticket problem improvement"`
 	Category    string                 `json:"category" binding:"omitempty"`
@@ -48,21 +48,21 @@ type UpdateTicketRequest struct {
 type ListTicketsRequest struct {
 	Page           int        `json:"page" form:"page"`
 	PageSize       int        `json:"pageSize" form:"pageSize"`
-	Status         string     `json:"status" form:"status"`
-	Priority       string     `json:"priority" form:"priority"`
-	Type           string     `json:"type" form:"type"`               // 工单类型筛选
-	Category       string     `json:"category" form:"category"`       // 分类名称
-	CategoryID     *int       `json:"categoryId" form:"categoryId"`   // 分类ID（优先）
-	AssigneeID     *int       `json:"assigneeId" form:"assigneeId"`   // 处理人ID（可选）
-	RequesterID    *int       `json:"requesterId" form:"requesterId"` // 创建人ID（可选）
+	Status         string     `json:"status" form:"status" binding:"omitempty,oneof=new open assigned in_progress pending resolved closed cancelled approved rejected"`
+	Priority       string     `json:"priority" form:"priority" binding:"omitempty,oneof=low medium high critical urgent"`
+	Type           string     `json:"type" form:"type" binding:"omitempty,oneof=incident service_request change ticket problem improvement"` // 工单类型筛选
+	Category       string     `json:"category" form:"category"`                                                                              // 分类名称
+	CategoryID     *int       `json:"categoryId" form:"categoryId"`                                                                          // 分类ID（优先）
+	AssigneeID     *int       `json:"assigneeId" form:"assigneeId"`                                                                          // 处理人ID（可选）
+	RequesterID    *int       `json:"requesterId" form:"requesterId"`                                                                        // 创建人ID（可选）
 	ParentTicketID *int       `json:"parentTicketId" form:"parentTicketId"`
 	TemplateID     *int       `json:"templateId" form:"templateId"`
 	Keyword        string     `json:"keyword" form:"keyword"`
 	DateFrom       *time.Time `json:"dateFrom" form:"dateFrom"` // 创建时间起始
 	DateTo         *time.Time `json:"dateTo" form:"dateTo"`     // 创建时间截止
 	IsOverdue      bool       `json:"isOverdue" form:"isOverdue"`
-	SortBy         string     `json:"sortBy" form:"sortBy"`
-	SortOrder      string     `json:"sortOrder" form:"sortOrder"`
+	SortBy         string     `json:"sortBy" form:"sortBy" binding:"omitempty,oneof=created_at updated_at title status priority ticket_number"`
+	SortOrder      string     `json:"sortOrder" form:"sortOrder" binding:"omitempty,oneof=asc desc"`
 }
 
 // TicketResponse 工单响应

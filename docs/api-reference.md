@@ -270,9 +270,9 @@ Authorization: Bearer <accessToken>
 Query Parameters:
 - page: 页码 (默认: 1)
 - pageSize: 每页数量 (默认: 20)
-- status: 状态过滤
-- priority: 优先级过滤
-- type: 工单类型过滤
+- status: 状态过滤，`new|open|assigned|in_progress|pending|resolved|closed|cancelled|approved|rejected`
+- priority: 优先级过滤，`low|medium|high|critical|urgent`
+- type: 工单类型过滤，`incident|service_request|change|ticket|problem|improvement`
 - categoryId: 分类过滤（按 ID）
 - assigneeId: 处理人过滤
 - requesterId: 报障人过滤
@@ -280,8 +280,13 @@ Query Parameters:
 - templateId: 模板过滤
 - keyword: 标题或描述关键词
 - isOverdue: 只看超期（`true`）
-- sortBy / sortOrder: 排序字段与方向（`asc` 需显式传，其余按倒序）
+- sortBy / sortOrder: 排序字段与方向（`asc` 需显式传，其余按倒序）；
+  `sortBy` ∈ `created_at|updated_at|title|status|priority|ticket_number`，`sortOrder` ∈ `asc|desc`
 ```
+
+状态、优先级、类型与排序参数均按上表校验，非法值返回 HTTP 400 / `code: 1001`；
+2026-10-24 前这些参数完全不校验，`status=bogus` 会返回 200 + 空列表，调用方无法区分
+「没有此类工单」与「参数写错」。
 
 **响应示例:**
 
@@ -364,7 +369,7 @@ Authorization: Bearer <accessToken>
 ### 更新工单
 
 ```http
-PUT /tickets/{id}
+PUT|PATCH /tickets/{id}
 Authorization: Bearer <accessToken>
 Content-Type: application/json
 
@@ -373,9 +378,27 @@ Content-Type: application/json
   "description": "更新后的描述",
   "status": "in_progress",
   "priority": "medium",
-  "assigneeId": 3
+  "type": "incident",
+  "assigneeId": 3,
+  "version": 7
 }
 ```
+
+`PUT` 与 `PATCH` 是同一个处理入口，均为部分更新语义：
+
+- 可写字段：`title`（2–200）、`description`（≤5000；空串视为未提交，不支持清空）、
+  `status`、`priority`（`low|medium|high|critical|urgent`）、`type`、`assigneeId`、
+  `categoryId`、`formFields`、`resolution`。创建与更新共用同一套优先级/类型词表；
+  2026-10-24 前更新额外要求描述 ≥10 字且不接受 `urgent`，导致前端回传整个编辑表单时
+  保存失败。
+- `tags` 不在本端点受理：按名称绑定标签请走 `POST /tickets/{id}/tags`，
+  关联关系请走 `PATCH /tickets/{id}/relations`；提交非空 `tags` 返回 HTTP 400 / `code: 1001`，
+  不再静默忽略。
+- **只写入真正变化的字段**：与当前值相同的字段不会落库，因此回传当前 `status` 不会把
+  已解决/已关闭工单的 `resolvedAt`/`closedAt` 重置为当前时间。
+- 全部字段都与当前值相同且 `version` 与当前版本一致时，直接返回当前工单，不推进
+  `version`、不刷新 `updatedAt`。`version` 与当前版本不一致时仍返回 HTTP 409 / `code: 4090`，
+  空更新不能用来掩盖过期读取。
 
 ### 更新工单状态
 

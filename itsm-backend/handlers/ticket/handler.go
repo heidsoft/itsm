@@ -353,6 +353,9 @@ func (h *Handler) UpdateTicket(c *gin.Context) {
 	if req.Priority != "" {
 		params.Priority = &req.Priority
 	}
+	if req.Type != "" {
+		params.Type = &req.Type
+	}
 	if req.AssigneeID > 0 {
 		params.AssigneeID = &req.AssigneeID
 	}
@@ -366,7 +369,9 @@ func (h *Handler) UpdateTicket(c *gin.Context) {
 		params.Resolution = &req.Resolution
 	}
 	if len(req.Tags) > 0 {
-		// tags are handled via ReplaceTags=false; tags are set separately
+		// 本端点没有标签名解析能力；静默丢弃会让调用方以为标签已写入。
+		common.Fail(c, common.ParamErrorCode, "工单标签请使用 PATCH /api/v1/tickets/:id/relations（tagIds）")
+		return
 	}
 
 	updated, err := h.service.Update(c.Request.Context(), tenantID, id, params, actorID, actorRole)
@@ -1094,6 +1099,11 @@ func (h *Handler) UpdateSubtask(c *gin.Context) {
 	}
 	if current.ParentTicketID == nil || *current.ParentTicketID != parentID {
 		common.Fail(c, common.ParamErrorCode, "子任务不属于指定的父工单")
+		return
+	}
+
+	if len(req.Tags) > 0 {
+		common.Fail(c, common.ParamErrorCode, "工单标签请使用 PATCH /api/v1/tickets/:id/relations（tagIds）")
 		return
 	}
 

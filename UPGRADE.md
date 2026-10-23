@@ -2763,6 +2763,27 @@ cd itsm-backend && go test -count=1 ./handlers/provisioning/ ./handlers/service_
 cd itsm-cli && npm run check   # 55 例（含 4 例新增的审批链推进场景单测）
 ```
 
+### 1.76 工单更新词表与列表参数收紧（2026-10-24，行为变更：非法输入 200 → 400）
+
+- `PUT|PATCH /api/v1/tickets/{id}` 的 `priority` 现在接受 `urgent`（与创建一致），
+  `description` 不再要求至少 10 个字符（仅上限 5000）。此前紧急工单在详情页保存必然 400。
+- 同一端点提交非空 `tags` 现在返回 HTTP 400 / `code: 1001` 并指向
+  `PATCH /tickets/{id}/relations`。此前该字段被静默忽略，调用方会以为标签已写入。
+- `GET /api/v1/tickets` 的 `status`/`priority`/`type`/`sortBy`/`sortOrder` 按文档词表校验，
+  非法值返回 400。此前返回 200 + 空列表。
+- 更新只落库真正变化的字段；全量回传相同值不再推进 `version`、不再刷新 `updatedAt`，
+  也不会重置已解决/已关闭工单的 `resolvedAt`/`closedAt`。过期 `version` 的空更新仍返回 409。
+
+**集成方影响**：依赖「非法过滤值返回空列表」或「PATCH 标签静默成功」的调用方需要改为
+处理 400；依赖「每次 PATCH 都推进 version」做变更检测的调用方应改用 `updatedAt` 或
+明确写入一个字段。正常的部分更新与全量表单回传行为不变。
+
+**验证**
+
+```bash
+cd itsm-backend && go test -count=1 ./handlers/ticket/ ./dto/ ./router/
+```
+
 ## 2. 环境变量变更
 
 本次升级**移除了多个"幽灵配置项"**（在示例文件中声明但代码/Compose 从不读取，用户配置了也不生效），并修正了一个 Grafana 密码安全缺陷。
