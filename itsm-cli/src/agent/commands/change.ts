@@ -44,7 +44,7 @@ export function changeCommands() {
       const comment = optionalString(ctx.args.flags, 'comment');
       return apiClient.changeLifecycle(requirePositional(ctx.args, 0, 'changeId'), 'approve', comment ? { comment } : undefined);
     }),
-    cmd('change.reject', 'Reject transition (comment/reason)', 'itsm change reject <id> [--reason text]', ['POST /api/v1/changes/:id/reject'], async (ctx) => {
+    cmd('change.reject', 'Reject transition (comment/reason)', 'itsm change reject <id> [--reason text] [--comment text]', ['POST /api/v1/changes/:id/reject'], async (ctx) => {
       const reason = optionalString(ctx.args.flags, 'reason') ?? optionalString(ctx.args.flags, 'comment');
       return apiClient.changeLifecycle(requirePositional(ctx.args, 0, 'changeId'), 'reject', reason ? { reason } : undefined);
     }),

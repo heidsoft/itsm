@@ -19,7 +19,7 @@ export function connectorCommands() {
             return apiClient.provisionConnector(cfg);
         }),
         cmd('connector.revoke', 'Revoke a connector credential (provider from --provider or store default)', 'itsm connector revoke <name> [--provider p]', ['DELETE /api/v1/connectors/configs/:name'], async (ctx) => apiClient.revokeConnector(requirePositional(ctx.args, 0, 'connectorName'), optionalString(ctx.args.flags, 'provider'))),
-        cmd('connector.send', 'Send a message through a connector (type text|markdown|post|card)', 'itsm connector send <name> --channel <ch> --message <text> | --data <json>', ['POST /api/v1/connectors/:name/send'], async (ctx) => {
+        cmd('connector.send', 'Send a message through a connector (type text|markdown|post|card)', 'itsm connector send <name> --channel <ch> --message <text> [--title t] | --data <json>', ['POST /api/v1/connectors/:name/send'], async (ctx) => {
             const name = requirePositional(ctx.args, 0, 'connectorName');
             const data = body(ctx.args);
             if (data)

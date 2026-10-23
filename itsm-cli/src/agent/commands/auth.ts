@@ -298,7 +298,7 @@ export function authCommands() {
     cmd(
       'auth.register',
       'Self-service registration (server assigns the end_user role and tenant; no role/tenant in the body)',
-      'itsm auth register --username <u> --email <e> [--display-name <name>] [--phone <p>] [--company <c>] [--password-stdin]',
+      'itsm auth register --username <u> --email <e> [--display-name <name>] [--phone <p>] [--company <c>] [--password <secret> | --password-stdin | --password-file <path>]',
       ['POST /api/v1/auth/register'],
       async (ctx) => {
         const flags = ctx.args.flags;
@@ -343,7 +343,7 @@ export function authCommands() {
     cmd(
       'auth.reset-password',
       'Complete a password reset (passwordConfirm is derived from the same secret)',
-      'itsm auth reset-password --email <e> --token <t> [--password-stdin]',
+      'itsm auth reset-password --email <e> --token <t> [--password <secret> | --password-stdin | --password-file <path>]',
       ['POST /api/v1/auth/reset-password'],
       async (ctx) => {
         const email = stringFlag(ctx.args.flags, 'email');

@@ -250,7 +250,7 @@ export function authCommands() {
             return { session, menus };
         }),
         // ---------- self-service account lifecycle ----------
-        cmd('auth.register', 'Self-service registration (server assigns the end_user role and tenant; no role/tenant in the body)', 'itsm auth register --username <u> --email <e> [--display-name <name>] [--phone <p>] [--company <c>] [--password-stdin]', ['POST /api/v1/auth/register'], async (ctx) => {
+        cmd('auth.register', 'Self-service registration (server assigns the end_user role and tenant; no role/tenant in the body)', 'itsm auth register --username <u> --email <e> [--display-name <name>] [--phone <p>] [--company <c>] [--password <secret> | --password-stdin | --password-file <path>]', ['POST /api/v1/auth/register'], async (ctx) => {
             const flags = ctx.args.flags;
             const username = stringFlag(flags, 'username', 'u');
             const email = stringFlag(flags, 'email');
@@ -280,7 +280,7 @@ export function authCommands() {
                 throw usageError('Missing --email and --token.');
             return apiClient.validateResetToken({ email, token });
         }),
-        cmd('auth.reset-password', 'Complete a password reset (passwordConfirm is derived from the same secret)', 'itsm auth reset-password --email <e> --token <t> [--password-stdin]', ['POST /api/v1/auth/reset-password'], async (ctx) => {
+        cmd('auth.reset-password', 'Complete a password reset (passwordConfirm is derived from the same secret)', 'itsm auth reset-password --email <e> --token <t> [--password <secret> | --password-stdin | --password-file <path>]', ['POST /api/v1/auth/reset-password'], async (ctx) => {
             const email = stringFlag(ctx.args.flags, 'email');
             const token = stringFlag(ctx.args.flags, 'token');
             if (!email || !token)

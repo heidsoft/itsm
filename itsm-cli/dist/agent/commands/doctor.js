@@ -56,7 +56,7 @@ const PARAMS = [
 ];
 export function doctorCommands() {
     return [
-        cmd('infra.doctor', 'One-call orientation: reachability, version, identity, and per-domain read permission probes', 'itsm doctor [--skipProbes]', [
+        cmd('infra.doctor', 'One-call orientation: reachability, version, identity, and per-domain read permission probes', 'itsm doctor [--skip-probes]', [
             'GET /api/v1/health',
             'GET /api/v1/version',
             'GET /api/v1/auth/me',

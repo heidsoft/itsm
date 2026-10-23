@@ -97,8 +97,9 @@ async function dispatch(argv) {
     // Skip the tokens that composed the command name (e.g. `ticket comments add`), keep the rest.
     return executeSpec(spec, args, args.positional.slice(spec.name.split('.').length));
 }
-/** Shared execution path: dry-run preview → exit-10 gate → run → classify failures. */
+/** Shared execution path: flag contract → dry-run preview → exit-10 gate → run → classify failures. */
 async function executeSpec(spec, args, rest) {
+    validateFlags(spec, args);
     if (args.dryRun) {
         return {
             code: ExitCode.Success,
@@ -158,6 +159,62 @@ async function executeSpec(spec, args, rest) {
         }
         return { code: cliError.exitCode, envelope: failureEnvelope(cliError) };
     }
+}
+/**
+ * Strict flag validation at dispatch.
+ *
+ * `parseArgs` is deliberately permissive (it cannot know the command yet), so
+ * without this check an unknown flag lands in `flags`, is never read by the
+ * command, and the call silently succeeds without the requested effect — a
+ * wrong answer, not an error. The declared contract is `spec.input` (derived
+ * from the usage string plus explicit params), which is the SAME source the
+ * MCP/agent schemas advertise, so a flag accepted here is always visible in
+ * `itsm schema` output and vice versa.
+ *
+ * Single-character names (`-p`) are allowed through: they are legacy aliases
+ * read via `stringFlag(flags, 'password', 'p')` and never advertised.
+ */
+function validateFlags(spec, args) {
+    const known = new Set(spec.input.params.filter((p) => p.kind !== 'positional').map((p) => p.name));
+    // `body()`/`jsonFlag()` accept `--payload` wherever `--data` is declared.
+    if (known.has('data'))
+        known.add('payload');
+    const unknown = Object.keys(args.flags).filter((f) => !known.has(f) && f.length > 1);
+    if (!unknown.length)
+        return;
+    const first = unknown[0];
+    const suggestion = closestName(first, [...known]);
+    const more = unknown.length > 1 ? ` (and ${unknown.length - 1} more: ${unknown.slice(1).map((f) => `--${f}`).join(', ')})` : '';
+    const cliName = spec.name.split('.').join(' ');
+    throw usageError(`Unknown flag '--${first}' for '${spec.name}'${more}` +
+        `${suggestion ? ` — did you mean '--${suggestion}'? ` : ' '}` +
+        `Run 'itsm ${cliName} --help' for the declared contract.`);
+}
+/** Smallest edit distance to a known flag, surfaced only when meaningfully close. */
+function closestName(name, candidates) {
+    let best;
+    let bestDist = Infinity;
+    for (const c of candidates) {
+        const d = editDistance(name, c);
+        if (d < bestDist) {
+            bestDist = d;
+            best = c;
+        }
+    }
+    return bestDist <= Math.max(2, Math.floor(name.length / 3)) ? best : undefined;
+}
+function editDistance(a, b) {
+    const prev = new Array(b.length + 1).fill(0).map((_, i) => i);
+    for (let i = 1; i <= a.length; i++) {
+        let diag = prev[0];
+        prev[0] = i;
+        for (let j = 1; j <= b.length; j++) {
+            const tmp = prev[j];
+            prev[j] = Math.min(prev[j] + 1, prev[j - 1] + 1, diag + (a[i - 1] === b[j - 1] ? 0 : 1));
+            diag = tmp;
+        }
+    }
+    return prev[b.length];
 }
 /** Deterministic, side-effect-free output shaping for agent context budgets. */
 function shapeResult(data, args) {

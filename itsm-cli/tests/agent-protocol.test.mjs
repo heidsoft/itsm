@@ -386,3 +386,48 @@ test('doctor reports reachability, identity and per-domain probes in one call', 
     assert.ok(names.includes(expected), `doctor must probe ${expected}`);
   }
 });
+
+/**
+ * `parseArgs` is permissive because it cannot know the command yet, so before
+ * this guard an unknown flag landed in `flags`, was never read by the command,
+ * and the call silently succeeded without the requested effect — `--bogus 99`
+ * produced a normal 200. For a schema-driven agent that is the worst failure
+ * mode: the filter is dropped and the answer looks authoritative. Validation
+ * runs against `spec.input` — the same contract `itsm schema` advertises — so
+ * the CLI, the JSON protocol and MCP can never disagree about what is legal.
+ */
+test('unknown flags fail loudly with the declared contract pointer', async () => {
+  const result = await run(['--json', 'ticket', 'list', '--bogus', '1']);
+  assert.equal(result.code, 2, 'usage error must exit 2');
+  const env = envelope(result);
+  assert.equal(env.ok, false);
+  assert.equal(env.error.kind, 'usage');
+  assert.match(env.error.message, /--bogus/);
+  assert.match(env.error.message, /itsm ticket list --help/);
+});
+
+test('a near-miss flag gets a did-you-mean suggestion', async () => {
+  const result = await run(['--json', 'ticket', 'list', '--statuz', 'open']);
+  assert.equal(result.code, 2);
+  const env = envelope(result);
+  assert.match(env.error.message, /--statuz/);
+  assert.match(env.error.message, /did you mean '--status'/);
+});
+
+test('declared flags keep working after strict validation', async () => {
+  // ticket.list grew --assigneeId/--requesterId/--keyword/--pageSize in this
+  // change; every one of them must stay accepted (they are in the schema).
+  const result = await run(['--json', 'ticket', 'list', '--status', 'open', '--assigneeId', '1', '--page', '1', '--pageSize', '5', '--limit', '2']);
+  assert.equal(result.code, 0, result.stdout);
+  const env = envelope(result);
+  assert.equal(env.ok, true);
+});
+
+test('the --payload body alias is accepted wherever --data is declared', async () => {
+  // Validation must not sever the undocumented-but-deliberate `--payload`
+  // alias of `--data`; dry-run proves the invocation passes the flag gate.
+  const result = await run(['--json', 'infra', 'api', 'GET', 'version', '--payload', '{}', '--dry-run']);
+  assert.equal(result.code, 0, result.stdout);
+  const env = envelope(result);
+  assert.equal(env.data.dryRun, true);
+});

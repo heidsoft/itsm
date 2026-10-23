@@ -15,7 +15,7 @@ export function incidentCommands() {
             keyword: optionalString(ctx.args.flags, 'keyword'),
         })),
         cmd('incident.get', 'Get incident detail', 'itsm incident get <id>', ['GET /api/v1/incidents/:id'], async (ctx) => apiClient.getIncident(id(ctx))),
-        cmd('incident.create', 'Create an incident (title required)', 'itsm incident create <title> [--priority p] | --data <json>', ['POST /api/v1/incidents'], async (ctx) => {
+        cmd('incident.create', 'Create an incident (title required)', 'itsm incident create <title> [--priority p] [--severity s] [--category c] | --data <json>', ['POST /api/v1/incidents'], async (ctx) => {
             const data = body(ctx.args);
             if (data)
                 return apiClient.createIncident(data);

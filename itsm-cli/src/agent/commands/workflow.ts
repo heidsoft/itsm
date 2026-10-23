@@ -61,7 +61,7 @@ export function workflowCommands() {
       const v = stringFlag(ctx.args.flags, 'variables');
       return apiClient.completeTask(taskId(ctx), v ? variablesOf(ctx.args.flags) : undefined);
     }),
-    cmd('workflow.decision', 'Submit an approval decision: approve | reject | delegate | add_approver', 'itsm workflow decision <taskId> --action approve [--comment text]', ['POST /api/v1/bpmn/tasks/:id/decisions'], async (ctx) => apiClient.decideTask(taskId(ctx), decisionBody(ctx.args.flags))),
+    cmd('workflow.decision', 'Submit an approval decision: approve | reject | delegate | add_approver', 'itsm workflow decision <taskId> --action <a> [--comment text] [--variables <json>] [--delegateToUserId n] [--addApproverUserId n]', ['POST /api/v1/bpmn/tasks/:id/decisions'], async (ctx) => apiClient.decideTask(taskId(ctx), decisionBody(ctx.args.flags))),
     cmd('workflow.cancel', 'Cancel a task (reason required)', 'itsm workflow cancel <taskId> --reason text', ['PUT /api/v1/bpmn/tasks/:id/cancel'], async (ctx) => apiClient.cancelTask(taskId(ctx), requireReason(ctx.args.flags))),
   ];
 }

@@ -27,7 +27,7 @@ export function problemCommands() {
         endDate: optionalString(ctx.args.flags, 'endDate'),
       })
     ),
-    cmd('problem.create', 'Create a problem (title/description/priority required)', 'itsm problem create <title> --description <d> --priority <p> | --data <json>', ['POST /api/v1/problems'], async (ctx) => {
+    cmd('problem.create', 'Create a problem (title/description/priority required)', 'itsm problem create <title> --description <d> --priority <p> [--category c] | --data <json>', ['POST /api/v1/problems'], async (ctx) => {
       const data = body(ctx.args);
       if (data) return apiClient.createProblem(data);
       // Flat-argument form: agents should not have to hand-escape JSON for the

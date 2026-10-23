@@ -45,7 +45,7 @@ function csvStrings(ctx, name) {
 }
 export function ticketCommands() {
     return [
-        cmd('ticket.list', 'List tickets', 'itsm ticket list [--status s] [--priority p] [--page N]', ['GET /api/v1/tickets'], async (ctx) => apiClient.listTickets(listQuery(ctx))),
+        cmd('ticket.list', 'List tickets', 'itsm ticket list [--status s] [--priority p] [--assigneeId n] [--requesterId n] [--keyword k] [--page N] [--pageSize N]', ['GET /api/v1/tickets'], async (ctx) => apiClient.listTickets(listQuery(ctx))),
         cmd('ticket.get', 'Get ticket detail', 'itsm ticket get <id>', ['GET /api/v1/tickets/:id'], async (ctx) => apiClient.getTicket(id(ctx))),
         cmd('ticket.create', 'Create a ticket (priority required: low|medium|high|critical|urgent)', 'itsm ticket create <title> <description> --priority <p> | --data <json>', ['POST /api/v1/tickets'], async (ctx) => {
             const data = body(ctx.args);
@@ -108,8 +108,8 @@ export function ticketCommands() {
         cmd('ticket.ai-summarize', 'AI summary of one ticket (audit-logged)', 'itsm ticket ai-summarize <id>', ['GET /api/v1/ai/tickets/:id/summary'], async (ctx) => apiClient.aiSummarizeTicket(id(ctx))),
         cmd('ticket.overdue', 'Tickets breaching SLA', 'itsm ticket overdue', ['GET /api/v1/tickets/overdue'], async () => apiClient.getOverdueTickets()),
         // ---- /tickets/workflow/* state machine (body carries ticketId) ----
-        cmd('ticket.workflow-accept', 'Accept/claim the ticket assignment', 'itsm ticket workflow-accept <id> [--comment text]', ['POST /api/v1/tickets/workflow/accept'], async (ctx) => apiClient.ticketWorkflowAction('accept', { ticketId: ticketIdFlag(ctx), comment: optionalString(ctx.args.flags, 'comment') })),
-        cmd('ticket.workflow-reject', 'Reject the flow back', 'itsm ticket workflow-reject <id> --reason text --comment text', ['POST /api/v1/tickets/workflow/reject'], async (ctx) => {
+        cmd('ticket.workflow-accept', 'Accept/claim the ticket assignment', 'itsm ticket workflow-accept <id> [--ticketId n] [--comment text]', ['POST /api/v1/tickets/workflow/accept'], async (ctx) => apiClient.ticketWorkflowAction('accept', { ticketId: ticketIdFlag(ctx), comment: optionalString(ctx.args.flags, 'comment') })),
+        cmd('ticket.workflow-reject', 'Reject the flow back', 'itsm ticket workflow-reject <id> [--ticketId n] --reason text --comment text', ['POST /api/v1/tickets/workflow/reject'], async (ctx) => {
             const ticketId = ticketIdFlag(ctx);
             const reason = optionalString(ctx.args.flags, 'reason');
             const comment = optionalString(ctx.args.flags, 'comment');
@@ -117,14 +117,14 @@ export function ticketCommands() {
                 throw usageError('workflow-reject needs --reason and --comment');
             return apiClient.ticketWorkflowAction('reject', { ticketId, reason, comment });
         }),
-        cmd('ticket.workflow-withdraw', 'Withdraw', 'itsm ticket workflow-withdraw <id> --reason text', ['POST /api/v1/tickets/workflow/withdraw'], async (ctx) => {
+        cmd('ticket.workflow-withdraw', 'Withdraw', 'itsm ticket workflow-withdraw <id> [--ticketId n] --reason text', ['POST /api/v1/tickets/workflow/withdraw'], async (ctx) => {
             const ticketId = ticketIdFlag(ctx);
             const reason = optionalString(ctx.args.flags, 'reason');
             if (!reason)
                 throw usageError('workflow-withdraw needs --reason');
             return apiClient.ticketWorkflowAction('withdraw', { ticketId, reason });
         }),
-        cmd('ticket.workflow-forward', 'Forward to another user', 'itsm ticket workflow-forward <id> --toUserId <n> --comment text', ['POST /api/v1/tickets/workflow/forward'], async (ctx) => {
+        cmd('ticket.workflow-forward', 'Forward to another user', 'itsm ticket workflow-forward <id> [--ticketId n] --toUserId <n> --comment text', ['POST /api/v1/tickets/workflow/forward'], async (ctx) => {
             const ticketId = ticketIdFlag(ctx);
             const toUserId = numberFlag(ctx.args.flags, 'toUserId');
             const comment = optionalString(ctx.args.flags, 'comment');
@@ -132,7 +132,7 @@ export function ticketCommands() {
                 throw usageError('workflow-forward needs --toUserId and --comment');
             return apiClient.ticketWorkflowAction('forward', { ticketId, toUserId, comment });
         }),
-        cmd('ticket.workflow-cc', 'Add CCs', 'itsm ticket workflow-cc <id> --ccUsers 1,2,3', ['POST /api/v1/tickets/workflow/cc'], async (ctx) => {
+        cmd('ticket.workflow-cc', 'Add CCs', 'itsm ticket workflow-cc <id> [--ticketId n] --ccUsers 1,2,3', ['POST /api/v1/tickets/workflow/cc'], async (ctx) => {
             const ticketId = ticketIdFlag(ctx);
             const raw = optionalString(ctx.args.flags, 'ccUsers');
             if (!raw)
@@ -142,7 +142,7 @@ export function ticketCommands() {
                 throw usageError('--ccUsers needs at least one numeric id');
             return apiClient.ticketWorkflowAction('cc', { ticketId, ccUsers });
         }),
-        cmd('ticket.workflow-approve', 'Approve workflow step (needs pending approvalId)', 'itsm ticket workflow-approve <id> --approvalId <n> --action approve|reject|delegate [--delegateToUserId <n>]', ['POST /api/v1/tickets/workflow/approve'], async (ctx) => {
+        cmd('ticket.workflow-approve', 'Approve workflow step (needs pending approvalId)', 'itsm ticket workflow-approve <id> [--ticketId n] --approvalId <n> --action approve|reject|delegate [--comment text] [--delegateToUserId <n>]', ['POST /api/v1/tickets/workflow/approve'], async (ctx) => {
             const ticketId = ticketIdFlag(ctx);
             const approvalId = numberFlag(ctx.args.flags, 'approvalId');
             const action = optionalString(ctx.args.flags, 'action') ?? 'approve';
@@ -162,17 +162,17 @@ export function ticketCommands() {
             }
             return apiClient.ticketWorkflowAction('approve', bodyPayload);
         }),
-        cmd('ticket.workflow-resolve', 'Resolve through the workflow path', 'itsm ticket workflow-resolve <id> [--resolution text]', ['POST /api/v1/tickets/workflow/resolve'], async (ctx) => {
+        cmd('ticket.workflow-resolve', 'Resolve through the workflow path', 'itsm ticket workflow-resolve <id> [--ticketId n] [--resolution text]', ['POST /api/v1/tickets/workflow/resolve'], async (ctx) => {
             const ticketId = ticketIdFlag(ctx);
             const resolution = optionalString(ctx.args.flags, 'resolution');
             return apiClient.ticketWorkflowAction('resolve', resolution ? { ticketId, resolution } : { ticketId });
         }),
-        cmd('ticket.workflow-close', 'Close through the workflow path', 'itsm ticket workflow-close <id> [--closeReason text]', ['POST /api/v1/tickets/workflow/close'], async (ctx) => {
+        cmd('ticket.workflow-close', 'Close through the workflow path', 'itsm ticket workflow-close <id> [--ticketId n] [--closeReason text]', ['POST /api/v1/tickets/workflow/close'], async (ctx) => {
             const ticketId = ticketIdFlag(ctx);
             const closeReason = optionalString(ctx.args.flags, 'closeReason');
             return apiClient.ticketWorkflowAction('close', closeReason ? { ticketId, closeReason } : { ticketId });
         }),
-        cmd('ticket.workflow-reopen', 'Reopen (reason required)', 'itsm ticket workflow-reopen <id> --reason text', ['POST /api/v1/tickets/workflow/reopen'], async (ctx) => {
+        cmd('ticket.workflow-reopen', 'Reopen (reason required)', 'itsm ticket workflow-reopen <id> [--ticketId n] --reason text', ['POST /api/v1/tickets/workflow/reopen'], async (ctx) => {
             const ticketId = ticketIdFlag(ctx);
             const reason = optionalString(ctx.args.flags, 'reason');
             if (!reason)
@@ -189,7 +189,7 @@ export function ticketCommands() {
         cmd('ticket.sla-pause', 'Pause the SLA clock (audited)', 'itsm ticket sla-pause <id>', ['PUT /api/v1/tickets/:id/sla/pause'], async (ctx) => apiClient.pauseTicketSLA(id(ctx))),
         cmd('ticket.sla-resume', 'Resume the SLA clock', 'itsm ticket sla-resume <id>', ['PUT /api/v1/tickets/:id/sla/resume'], async (ctx) => apiClient.resumeTicketSLA(id(ctx))),
         cmd('ticket.subtasks.list', 'List child tickets', 'itsm ticket subtasks list <id>', ['GET /api/v1/tickets/:id/subtasks'], async (ctx) => apiClient.listSubtasks(id(ctx))),
-        cmd('ticket.subtasks.create', 'Create a child ticket (title required)', 'itsm ticket subtasks create <id> --title <t> [--priority p] [--assigneeId n] | --data <json>', ['POST /api/v1/tickets/:id/subtasks'], async (ctx) => {
+        cmd('ticket.subtasks.create', 'Create a child ticket (title required)', 'itsm ticket subtasks create <id> --title <t> [--description d] [--type t] [--priority p] [--assigneeId n] | --data <json>', ['POST /api/v1/tickets/:id/subtasks'], async (ctx) => {
             const data = body(ctx.args);
             if (data)
                 return apiClient.createSubtask(id(ctx), data);

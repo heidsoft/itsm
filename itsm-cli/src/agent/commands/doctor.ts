@@ -83,7 +83,7 @@ export function doctorCommands() {
     cmd(
       'infra.doctor',
       'One-call orientation: reachability, version, identity, and per-domain read permission probes',
-      'itsm doctor [--skipProbes]',
+      'itsm doctor [--skip-probes]',
       [
         'GET /api/v1/health',
         'GET /api/v1/version',
