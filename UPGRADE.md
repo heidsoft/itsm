@@ -2821,6 +2821,36 @@ cd itsm-backend && go test -count=1 ./handlers/sla/ ./dto/
 cd itsm-backend && go test -count=1 ./handlers/ticket/ ./dto/
 ```
 
+### 1.81 AI 工具参数统一 camelCase（2026-10-24，行为变更：`aiTools.argsSchema` 参数改名）
+
+`GET /api/v1/cmdb/ontology` 的 `tools[].argsSchema` 与 `ToolRegistry.Execute` 的入参键
+现在全部为 camelCase，与 HTTP API 一致：
+
+| 旧参数 | 新参数 |
+|:---|:---|
+| `ci_id` | `ciId` |
+| `ci_number` | `ciNumber` |
+| `ci_type` | `ciType` |
+| `ticket_id` | `ticketId` |
+| `requester_id` / `user_id` | `requesterId` / `userId` |
+| `assignee_id` | `assigneeId` |
+| `ticket_type_id` | `ticketTypeId` |
+| `default_priority` | `defaultPriority` |
+| `with_relations` | `withRelations` |
+| `source_ci_id` / `target_ci_id` | `sourceCiId` / `targetCiId` |
+| `relationship_type` / `relationship_id` | `relationshipType` / `relationshipId` |
+
+工具返回中的 `ci_id`、`ci_number`、`relationship_id` 同步改为 `ciId`、`ciNumber`、
+`relationshipId`。**集成方影响**：直接构造工具调用（而非读 schema 动态生成）的 agent
+必须改参数名；按 `argsSchema` 自动生成调用的客户端无需改动。`create_ticket` / `update_ticket`
+的 schema 同时补齐了实际读取的字段与 `required`，此前两者几乎是空对象。
+
+**验证**
+
+```bash
+cd itsm-backend && go test -count=1 ./service/ -run 'TestToolSchemas|TestWriteToolSchemas|TestE2E_|TestToolRegistry'
+```
+
 ## 2. 环境变量变更
 
 本次升级**移除了多个"幽灵配置项"**（在示例文件中声明但代码/Compose 从不读取，用户配置了也不生效），并修正了一个 Grafana 密码安全缺陷。

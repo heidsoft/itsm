@@ -83,7 +83,7 @@ func (t *ToolRegistry) canExecuteWriteTool(name string) bool {
 }
 
 // ListToolsForTenant 返回按租户动态化的工具清单。
-// list_cis 的 ci_type 枚举不再硬编码 5 值，
+// list_cis 的 ciType 枚举不再硬编码 5 值，
 // 而是从该租户的 CIType 表实时读取——租户自定义类型（如 serverless）对 Agent 可见。
 // 查询失败或无类型时静默回落到静态清单（fail-open 仅影响参数提示，不影响执行校验）。
 func (t *ToolRegistry) ListToolsForTenant(ctx context.Context, tenantID int) []ToolDefinition {
@@ -116,7 +116,7 @@ func (t *ToolRegistry) ListToolsForTenant(ctx context.Context, tenantID int) []T
 		if !ok {
 			continue
 		}
-		if ct, ok := props["ci_type"].(map[string]interface{}); ok {
+		if ct, ok := props["ciType"].(map[string]interface{}); ok {
 			ct["enum"] = enumVals
 		}
 	}
@@ -181,18 +181,18 @@ func (t *ToolRegistry) ListTools() []ToolDefinition {
 		},
 		{
 			Name:        "list_cis",
-			Description: "列出配置项（CMDB）。支持按 CI 编号精确定位、按名称/资产标签/序列号模糊搜索与按类型过滤，用于定位受影响 IT 资产。ci_type 枚举以 GET /cmdb/ontology 返回的租户实际类型为准",
+			Description: "列出配置项（CMDB）。支持按 CI 编号精确定位、按名称/资产标签/序列号模糊搜索与按类型过滤，用于定位受影响 IT 资产。ciType 枚举以 GET /cmdb/ontology 返回的租户实际类型为准",
 			ReadOnly:    true,
 			Resource:    "cmdb",
 			Action:      "read",
 			ArgsSchema: map[string]interface{}{
 				"type": "object",
 				"properties": map[string]interface{}{
-					"search":    map[string]interface{}{"type": "string", "description": "按名称/资产标签/序列号/厂商/云资源ID模糊搜索"},
-					"ci_number": map[string]interface{}{"type": "string", "description": "CI唯一编号精确匹配（如 CI-202609-000001），优先于 search，多轮对话间用它稳定定位同一资产"},
-					"ci_type":   map[string]interface{}{"type": "string", "description": "CI类型（租户自定义类型见 /cmdb/ontology）", "enum": []any{"server", "database", "application", "network", "storage", "cloud_resource"}},
-					"limit":     map[string]interface{}{"type": "integer", "minimum": 1, "maximum": 100},
-					"offset":    map[string]interface{}{"type": "integer", "minimum": 0},
+					"search":   map[string]interface{}{"type": "string", "description": "按名称/资产标签/序列号/厂商/云资源ID模糊搜索"},
+					"ciNumber": map[string]interface{}{"type": "string", "description": "CI唯一编号精确匹配（如 CI-202609-000001），优先于 search，多轮对话间用它稳定定位同一资产"},
+					"ciType":   map[string]interface{}{"type": "string", "description": "CI类型（租户自定义类型见 /cmdb/ontology）", "enum": []any{"server", "database", "application", "network", "storage", "cloud_resource"}},
+					"limit":    map[string]interface{}{"type": "integer", "minimum": 1, "maximum": 100},
+					"offset":   map[string]interface{}{"type": "integer", "minimum": 0},
 				},
 			},
 			ResultSchema: map[string]interface{}{
@@ -201,17 +201,17 @@ func (t *ToolRegistry) ListTools() []ToolDefinition {
 		},
 		{
 			Name:        "get_ci_tickets",
-			Description: "查询某个配置项（CI）上已关联的工单列表，用于影响面分析与重复报障判断：先用 list_cis 定位 ci_id，再查该资产上的历史/在办工单",
+			Description: "查询某个配置项（CI）上已关联的工单列表，用于影响面分析与重复报障判断：先用 list_cis 定位 ciId，再查该资产上的历史/在办工单",
 			ReadOnly:    true,
 			Resource:    "cmdb",
 			Action:      "read",
 			ArgsSchema: map[string]interface{}{
 				"type": "object",
 				"properties": map[string]interface{}{
-					"ci_id": map[string]interface{}{"type": "integer", "description": "配置项ID，先用 list_cis 定位"},
+					"ciId":  map[string]interface{}{"type": "integer", "description": "配置项ID，先用 list_cis 定位"},
 					"limit": map[string]interface{}{"type": "integer", "minimum": 1, "maximum": 100},
 				},
-				"required": []string{"ci_id"},
+				"required": []string{"ciId"},
 			},
 			ResultSchema: map[string]interface{}{
 				"type": "array",
@@ -226,10 +226,10 @@ func (t *ToolRegistry) ListTools() []ToolDefinition {
 			ArgsSchema: map[string]interface{}{
 				"type": "object",
 				"properties": map[string]interface{}{
-					"ticket_id": map[string]interface{}{"type": "integer", "description": "工单ID"},
-					"ci_id":     map[string]interface{}{"type": "integer", "description": "配置项ID，先用 list_cis 定位"},
+					"ticketId": map[string]interface{}{"type": "integer", "description": "工单ID"},
+					"ciId":     map[string]interface{}{"type": "integer", "description": "配置项ID，先用 list_cis 定位"},
 				},
-				"required": []string{"ticket_id", "ci_id"},
+				"required": []string{"ticketId", "ciId"},
 			},
 			ResultSchema: map[string]interface{}{
 				"type": "object",
@@ -237,15 +237,24 @@ func (t *ToolRegistry) ListTools() []ToolDefinition {
 		},
 		{
 			Name:        "create_ticket",
-			Description: "创建工单（需审批）。可传入 ci_id 将工单关联到 CMDB 中受影响的配置项；ci_id 应先通过 list_cis 定位",
+			Description: "创建工单（需审批）。可传入 ciId 将工单关联到 CMDB 中受影响的配置项；ciId 应先通过 list_cis 定位",
 			ReadOnly:    false,
 			Resource:    "ticket",
 			Action:      "write",
 			ArgsSchema: map[string]interface{}{
 				"type": "object",
 				"properties": map[string]interface{}{
-					"ci_id": map[string]interface{}{"type": "integer", "description": "关联的配置项ID（CMDB 本体链路），先用 list_cis 定位"},
+					"title":        map[string]interface{}{"type": "string", "description": "工单标题"},
+					"description":  map[string]interface{}{"type": "string", "description": "工单描述"},
+					"priority":     map[string]interface{}{"type": "string", "enum": []any{"low", "medium", "high", "critical", "urgent"}, "description": "优先级，默认 medium"},
+					"type":         map[string]interface{}{"type": "string", "description": "工单类型（如 incident/request/change）"},
+					"category":     map[string]interface{}{"type": "string", "description": "工单分类"},
+					"requesterId":  map[string]interface{}{"type": "integer", "description": "请求人用户 ID，缺省为当前调用者"},
+					"assigneeId":   map[string]interface{}{"type": "integer", "description": "处理人用户 ID"},
+					"ticketTypeId": map[string]interface{}{"type": "integer", "description": "工单类型配置 ID（见 /ticket-types）"},
+					"ciId":         map[string]interface{}{"type": "integer", "description": "关联的配置项ID（CMDB 本体链路），先用 list_cis 定位"},
 				},
+				"required": []string{"title"},
 			},
 			ResultSchema: map[string]interface{}{
 				"type": "object",
@@ -253,12 +262,20 @@ func (t *ToolRegistry) ListTools() []ToolDefinition {
 		},
 		{
 			Name:        "update_ticket",
-			Description: "更新工单（需审批）",
+			Description: "更新工单（需审批）：按 ticketId 更新状态、优先级、处理人或解决说明",
 			ReadOnly:    false,
 			Resource:    "ticket",
 			Action:      "write",
 			ArgsSchema: map[string]interface{}{
 				"type": "object",
+				"properties": map[string]interface{}{
+					"ticketId":   map[string]interface{}{"type": "integer", "description": "工单 ID"},
+					"status":     map[string]interface{}{"type": "string", "enum": []any{"new", "open", "assigned", "in_progress", "pending", "resolved", "closed", "cancelled", "approved", "rejected"}, "description": "目标状态；迁移合法性由服务端校验"},
+					"priority":   map[string]interface{}{"type": "string", "enum": []any{"low", "medium", "high", "critical", "urgent"}},
+					"resolution": map[string]interface{}{"type": "string", "description": "解决说明"},
+					"assigneeId": map[string]interface{}{"type": "integer", "description": "处理人用户 ID"},
+				},
+				"required": []string{"ticketId"},
 			},
 			ResultSchema: map[string]interface{}{
 				"type": "object",
@@ -273,12 +290,12 @@ func (t *ToolRegistry) ListTools() []ToolDefinition {
 			ArgsSchema: map[string]interface{}{
 				"type": "object",
 				"properties": map[string]interface{}{
-					"code":             map[string]interface{}{"type": "string", "description": "工单类型编码，小写字母/数字/下划线，如 general_incident"},
-					"name":             map[string]interface{}{"type": "string", "description": "工单类型名称，如 通用事件"},
-					"description":      map[string]interface{}{"type": "string", "description": "类型说明"},
-					"default_priority": map[string]interface{}{"type": "string", "enum": []any{"low", "medium", "high", "critical", "urgent"}},
-					"icon":             map[string]interface{}{"type": "string"},
-					"color":            map[string]interface{}{"type": "string"},
+					"code":            map[string]interface{}{"type": "string", "description": "工单类型编码，小写字母/数字/下划线，如 general_incident"},
+					"name":            map[string]interface{}{"type": "string", "description": "工单类型名称，如 通用事件"},
+					"description":     map[string]interface{}{"type": "string", "description": "类型说明"},
+					"defaultPriority": map[string]interface{}{"type": "string", "enum": []any{"low", "medium", "high", "critical", "urgent"}},
+					"icon":            map[string]interface{}{"type": "string"},
+					"color":           map[string]interface{}{"type": "string"},
 				},
 				"required": []string{"code", "name"},
 			},
@@ -289,21 +306,21 @@ func (t *ToolRegistry) ListTools() []ToolDefinition {
 		// ============================================================
 		// CMDB AI 工具扩展 （get_ci / get_ci_relationships /
 		//   create_ci_relationship / delete_ci_relationship / get_ci_impact）
-		// 全部围绕 CI 业务编号（自然键）或多轮稳定的 ci_id 提供，让 Agent
+		// 全部围绕 CI 业务编号（自然键）或多轮稳定的 ciId 提供，让 Agent
 		// 能完整驱动 CMDB 拓扑编辑与影响面分析。
 		// ============================================================
 		{
 			Name:        "get_ci",
-			Description: "按 CI 编号或 ID 精确获取一个配置项（含完整字段与 1 跳关系摘要）。多轮对话中用 ci_number 稳定定位同一资产，先 list_cis 拿到 ci_number 再 get_ci 取详情最稳妥",
+			Description: "按 CI 编号或 ID 精确获取一个配置项（含完整字段与 1 跳关系摘要）。多轮对话中用 ciNumber 稳定定位同一资产，先 list_cis 拿到 ciNumber 再 get_ci 取详情最稳妥",
 			ReadOnly:    true,
 			Resource:    "cmdb",
 			Action:      "read",
 			ArgsSchema: map[string]interface{}{
 				"type": "object",
 				"properties": map[string]interface{}{
-					"ci_number":      map[string]interface{}{"type": "string", "description": "CI 唯一业务编号（如 CI-202609-000001），与 ci_id 二选一"},
-					"ci_id":          map[string]interface{}{"type": "integer", "description": "CI 数据库 ID，先用 list_cis 定位"},
-					"with_relations": map[string]interface{}{"type": "boolean", "description": "是否返回 1 跳关系摘要（默认 true）"},
+					"ciNumber":      map[string]interface{}{"type": "string", "description": "CI 唯一业务编号（如 CI-202609-000001），与 ciId 二选一"},
+					"ciId":          map[string]interface{}{"type": "integer", "description": "CI 数据库 ID，先用 list_cis 定位"},
+					"withRelations": map[string]interface{}{"type": "boolean", "description": "是否返回 1 跳关系摘要（默认 true）"},
 				},
 			},
 			ResultSchema: map[string]interface{}{
@@ -319,8 +336,8 @@ func (t *ToolRegistry) ListTools() []ToolDefinition {
 			ArgsSchema: map[string]interface{}{
 				"type": "object",
 				"properties": map[string]interface{}{
-					"ci_number": map[string]interface{}{"type": "string", "description": "CI 唯一业务编号"},
-					"ci_id":     map[string]interface{}{"type": "integer", "description": "CI 数据库 ID"},
+					"ciNumber":  map[string]interface{}{"type": "string", "description": "CI 唯一业务编号"},
+					"ciId":      map[string]interface{}{"type": "integer", "description": "CI 数据库 ID"},
 					"direction": map[string]interface{}{"type": "string", "enum": []any{"outgoing", "incoming", "both"}, "description": "出边/入边/双向，默认 both"},
 				},
 			},
@@ -330,20 +347,20 @@ func (t *ToolRegistry) ListTools() []ToolDefinition {
 		},
 		{
 			Name:        "create_ci_relationship",
-			Description: "在两个 CI 之间创建一条关系（需审批）。关系类型见 GET /cmdb/ontology#relationshipTypes 单一源；创建前必须先 list_cis 拿到 source/target 的 ci_id。系统会自动判环（wouldCreateCycle）",
+			Description: "在两个 CI 之间创建一条关系（需审批）。关系类型见 GET /cmdb/ontology#relationshipTypes 单一源；创建前必须先 list_cis 拿到 source/target 的 ciId。系统会自动判环（wouldCreateCycle）",
 			ReadOnly:    false,
 			Resource:    "cmdb",
 			Action:      "write",
 			ArgsSchema: map[string]interface{}{
 				"type": "object",
 				"properties": map[string]interface{}{
-					"source_ci_id":      map[string]interface{}{"type": "integer", "description": "源 CI ID"},
-					"target_ci_id":      map[string]interface{}{"type": "integer", "description": "目标 CI ID"},
-					"relationship_type": map[string]interface{}{"type": "string", "description": "关系类型枚举（如 depends_on/hosts/connects_to/...）"},
-					"strength":          map[string]interface{}{"type": "string", "enum": []any{"strong", "medium", "weak"}, "description": "关系强度"},
-					"description":       map[string]interface{}{"type": "string", "description": "备注"},
+					"sourceCiId":       map[string]interface{}{"type": "integer", "description": "源 CI ID"},
+					"targetCiId":       map[string]interface{}{"type": "integer", "description": "目标 CI ID"},
+					"relationshipType": map[string]interface{}{"type": "string", "description": "关系类型枚举（如 depends_on/hosts/connects_to/...）"},
+					"strength":         map[string]interface{}{"type": "string", "enum": []any{"strong", "medium", "weak"}, "description": "关系强度"},
+					"description":      map[string]interface{}{"type": "string", "description": "备注"},
 				},
-				"required": []string{"source_ci_id", "target_ci_id", "relationship_type"},
+				"required": []string{"sourceCiId", "targetCiId", "relationshipType"},
 			},
 			ResultSchema: map[string]interface{}{
 				"type": "object",
@@ -351,16 +368,16 @@ func (t *ToolRegistry) ListTools() []ToolDefinition {
 		},
 		{
 			Name:        "delete_ci_relationship",
-			Description: "删除一条 CI 关系（需审批）。仅传 relationship_id（先用 get_ci_relationships 查）",
+			Description: "删除一条 CI 关系（需审批）。仅传 relationshipId（先用 get_ci_relationships 查）",
 			ReadOnly:    false,
 			Resource:    "cmdb",
 			Action:      "write",
 			ArgsSchema: map[string]interface{}{
 				"type": "object",
 				"properties": map[string]interface{}{
-					"relationship_id": map[string]interface{}{"type": "integer", "description": "关系 ID"},
+					"relationshipId": map[string]interface{}{"type": "integer", "description": "关系 ID"},
 				},
-				"required": []string{"relationship_id"},
+				"required": []string{"relationshipId"},
 			},
 			ResultSchema: map[string]interface{}{
 				"type": "object",
@@ -375,9 +392,9 @@ func (t *ToolRegistry) ListTools() []ToolDefinition {
 			ArgsSchema: map[string]interface{}{
 				"type": "object",
 				"properties": map[string]interface{}{
-					"ci_number": map[string]interface{}{"type": "string", "description": "CI 唯一业务编号"},
-					"ci_id":     map[string]interface{}{"type": "integer", "description": "CI 数据库 ID"},
-					"hops":      map[string]interface{}{"type": "integer", "minimum": 1, "maximum": 10, "description": "BFS 跳数（默认 3）"},
+					"ciNumber": map[string]interface{}{"type": "string", "description": "CI 唯一业务编号"},
+					"ciId":     map[string]interface{}{"type": "integer", "description": "CI 数据库 ID"},
+					"hops":     map[string]interface{}{"type": "integer", "minimum": 1, "maximum": 10, "description": "BFS 跳数（默认 3）"},
 				},
 			},
 			ResultSchema: map[string]interface{}{
@@ -463,8 +480,8 @@ func (t *ToolRegistry) Execute(ctx context.Context, tenantID int, name string, a
 			offset = int(v)
 		}
 		search, _ := args["search"].(string)
-		ciType, _ := args["ci_type"].(string)
-		ciNumber, _ := args["ci_number"].(string)
+		ciType, _ := args["ciType"].(string)
+		ciNumber, _ := args["ciNumber"].(string)
 		// limit/offset 来自模型构造的工具参数，可能是 0 或负数：limit=0 会让下面的
 		// offset/limit 直接除零 panic，负 offset 会算出负 OFFSET。在工具边界收敛，不留给
 		// 服务层静默兜（服务层的归一只负责页长语义，不负责这个工具的参数语义）。
@@ -485,11 +502,11 @@ func (t *ToolRegistry) Execute(ctx context.Context, tenantID int, name string, a
 			return nil, fmt.Errorf("cmdb service not initialized")
 		}
 		ciID := 0
-		if v, ok := args["ci_id"].(float64); ok {
+		if v, ok := args["ciId"].(float64); ok {
 			ciID = int(v)
 		}
 		if ciID <= 0 {
-			return nil, fmt.Errorf("get_ci_tickets: ci_id is required")
+			return nil, fmt.Errorf("get_ci_tickets: ciId is required")
 		}
 		limit := 20
 		if v, ok := args["limit"].(float64); ok {
@@ -501,15 +518,15 @@ func (t *ToolRegistry) Execute(ctx context.Context, tenantID int, name string, a
 			return nil, fmt.Errorf("cmdb service not initialized")
 		}
 		ciID := 0
-		if v, ok := args["ci_id"].(float64); ok {
+		if v, ok := args["ciId"].(float64); ok {
 			ciID = int(v)
 		}
 		linkTicketID := 0
-		if v, ok := args["ticket_id"].(float64); ok {
+		if v, ok := args["ticketId"].(float64); ok {
 			linkTicketID = int(v)
 		}
 		if ciID <= 0 || linkTicketID <= 0 {
-			return nil, fmt.Errorf("link_ticket_ci: ticket_id and ci_id are required")
+			return nil, fmt.Errorf("link_ticket_ci: ticketId and ciId are required")
 		}
 		if err := t.cmdb.LinkTicketToCI(ctx, tenantID, ciID, linkTicketID); err != nil {
 			return nil, err
@@ -531,24 +548,24 @@ func (t *ToolRegistry) Execute(ctx context.Context, tenantID int, name string, a
 		typ, _ := args["type"].(string)
 		category, _ := args["category"].(string)
 		var requesterID int
-		if v, ok := args["requester_id"].(float64); ok {
+		if v, ok := args["requesterId"].(float64); ok {
 			requesterID = int(v)
-		} else if v, ok := args["user_id"].(float64); ok {
+		} else if v, ok := args["userId"].(float64); ok {
 			requesterID = int(v)
 		}
 		var assigneeID int
-		if v, ok := args["assignee_id"].(float64); ok {
+		if v, ok := args["assigneeId"].(float64); ok {
 			assigneeID = int(v)
 		}
 		var ticketTypeID *int
-		if v, ok := args["ticket_type_id"].(float64); ok {
+		if v, ok := args["ticketTypeId"].(float64); ok {
 			i := int(v)
 			ticketTypeID = &i
 		}
-		// CMDB 本体链路：ci_id 走 ConfigurationItem.tickets 真实外键边绑定，
+		// CMDB 本体链路：ciId 走 ConfigurationItem.tickets 真实外键边绑定，
 		// 不塞 form_fields —— form_fields 会被工单类型的「未定义字段」校验拒绝。
 		var ciID int
-		if v, ok := args["ci_id"].(float64); ok && int(v) > 0 {
+		if v, ok := args["ciId"].(float64); ok && int(v) > 0 {
 			ciID = int(v)
 		}
 		req := &dto.CreateTicketRequest{
@@ -588,17 +605,17 @@ func (t *ToolRegistry) Execute(ctx context.Context, tenantID int, name string, a
 			return nil, fmt.Errorf("ticket service not initialized")
 		}
 		ticketID := 0
-		if v, ok := args["ticket_id"].(float64); ok {
+		if v, ok := args["ticketId"].(float64); ok {
 			ticketID = int(v)
 		}
 		if ticketID == 0 {
-			return nil, fmt.Errorf("update_ticket: ticket_id is required")
+			return nil, fmt.Errorf("update_ticket: ticketId is required")
 		}
 		status, _ := args["status"].(string)
 		priority, _ := args["priority"].(string)
 		resolution, _ := args["resolution"].(string)
 		var assigneeID int
-		if v, ok := args["assignee_id"].(float64); ok {
+		if v, ok := args["assigneeId"].(float64); ok {
 			assigneeID = int(v)
 		}
 		req := &dto.UpdateTicketRequest{
@@ -622,14 +639,14 @@ func (t *ToolRegistry) Execute(ctx context.Context, tenantID int, name string, a
 			return nil, fmt.Errorf("create_ticket_type: code and name are required")
 		}
 		desc, _ := args["description"].(string)
-		defaultPriority, _ := args["default_priority"].(string)
+		defaultPriority, _ := args["defaultPriority"].(string)
 		if defaultPriority == "" {
 			defaultPriority = "medium"
 		}
 		icon, _ := args["icon"].(string)
 		color, _ := args["color"].(string)
 		var userID int
-		if v, ok := args["user_id"].(float64); ok {
+		if v, ok := args["userId"].(float64); ok {
 			userID = int(v)
 		}
 		req := &dto.CreateTicketTypeRequest{
@@ -653,26 +670,26 @@ func (t *ToolRegistry) Execute(ctx context.Context, tenantID int, name string, a
 		if t.cmdb == nil {
 			return nil, fmt.Errorf("cmdb service not initialized")
 		}
-		ciNumber, _ := args["ci_number"].(string)
+		ciNumber, _ := args["ciNumber"].(string)
 		var ciID int
-		if v, ok := args["ci_id"].(float64); ok {
+		if v, ok := args["ciId"].(float64); ok {
 			ciID = int(v)
 		}
 		if ciID == 0 && ciNumber == "" {
-			return nil, fmt.Errorf("get_ci: ci_number or ci_id is required")
+			return nil, fmt.Errorf("get_ci: ciNumber or ciId is required")
 		}
 		withRelations := true
-		if v, ok := args["with_relations"].(bool); ok {
+		if v, ok := args["withRelations"].(bool); ok {
 			withRelations = v
 		}
-		// ci_number 解析：用 list_cis 路径（避免新增 GetCIByNumber，list 已有 ci_number 精确过滤）
+		// ciNumber 解析：用 list_cis 路径（避免新增 GetCIByNumber，list 已有 ciNumber 精确过滤）
 		if ciID == 0 {
 			listResp, err := t.cmdb.ListCIs(ctx, tenantID, &dto.ListCIRequest{Page: 1, PageSize: 1, CINumber: ciNumber})
 			if err != nil {
-				return nil, fmt.Errorf("get_ci: lookup by ci_number failed: %w", err)
+				return nil, fmt.Errorf("get_ci: lookup by ciNumber failed: %w", err)
 			}
 			if len(listResp.Items) == 0 {
-				return map[string]interface{}{"found": false, "ci_number": ciNumber}, nil
+				return map[string]interface{}{"found": false, "ciNumber": ciNumber}, nil
 			}
 			ciID = listResp.Items[0].ID
 		}
@@ -681,7 +698,7 @@ func (t *ToolRegistry) Execute(ctx context.Context, tenantID int, name string, a
 			return nil, err
 		}
 		if ci == nil {
-			return map[string]interface{}{"found": false, "ci_id": ciID}, nil
+			return map[string]interface{}{"found": false, "ciId": ciID}, nil
 		}
 		return map[string]interface{}{"found": true, "ci": ci}, nil
 
@@ -689,13 +706,13 @@ func (t *ToolRegistry) Execute(ctx context.Context, tenantID int, name string, a
 		if t.ciRelationship == nil {
 			return nil, fmt.Errorf("ci relationship service not initialized")
 		}
-		ciNumber, _ := args["ci_number"].(string)
+		ciNumber, _ := args["ciNumber"].(string)
 		var ciID int
-		if v, ok := args["ci_id"].(float64); ok {
+		if v, ok := args["ciId"].(float64); ok {
 			ciID = int(v)
 		}
 		if ciID == 0 && ciNumber == "" {
-			return nil, fmt.Errorf("get_ci_relationships: ci_number or ci_id is required")
+			return nil, fmt.Errorf("get_ci_relationships: ciNumber or ciId is required")
 		}
 		if ciID == 0 {
 			listResp, err := t.cmdb.ListCIs(ctx, tenantID, &dto.ListCIRequest{Page: 1, PageSize: 1, CINumber: ciNumber})
@@ -703,7 +720,7 @@ func (t *ToolRegistry) Execute(ctx context.Context, tenantID int, name string, a
 				return nil, fmt.Errorf("get_ci_relationships: lookup failed: %w", err)
 			}
 			if len(listResp.Items) == 0 {
-				return map[string]interface{}{"found": false, "ci_number": ciNumber}, nil
+				return map[string]interface{}{"found": false, "ciNumber": ciNumber}, nil
 			}
 			ciID = listResp.Items[0].ID
 		}
@@ -728,7 +745,7 @@ func (t *ToolRegistry) Execute(ctx context.Context, tenantID int, name string, a
 			out = nil
 		}
 		return map[string]interface{}{
-			"ci_id":    ciID,
+			"ciId":     ciID,
 			"outgoing": out,
 			"incoming": in,
 			"total":    len(out) + len(in),
@@ -739,18 +756,18 @@ func (t *ToolRegistry) Execute(ctx context.Context, tenantID int, name string, a
 			return nil, fmt.Errorf("cmdb relationship service not initialized")
 		}
 		var sourceID, targetID int
-		if v, ok := args["source_ci_id"].(float64); ok {
+		if v, ok := args["sourceCiId"].(float64); ok {
 			sourceID = int(v)
 		}
-		if v, ok := args["target_ci_id"].(float64); ok {
+		if v, ok := args["targetCiId"].(float64); ok {
 			targetID = int(v)
 		}
 		if sourceID <= 0 || targetID <= 0 {
-			return nil, fmt.Errorf("create_ci_relationship: source_ci_id and target_ci_id are required")
+			return nil, fmt.Errorf("create_ci_relationship: sourceCiId and targetCiId are required")
 		}
-		relType, _ := args["relationship_type"].(string)
+		relType, _ := args["relationshipType"].(string)
 		if relType == "" {
-			return nil, fmt.Errorf("create_ci_relationship: relationship_type is required (see /cmdb/ontology#relationshipTypes)")
+			return nil, fmt.Errorf("create_ci_relationship: relationshipType is required (see /cmdb/ontology#relationshipTypes)")
 		}
 		strength, _ := args["strength"].(string)
 		if strength == "" {
@@ -776,28 +793,28 @@ func (t *ToolRegistry) Execute(ctx context.Context, tenantID int, name string, a
 			return nil, fmt.Errorf("ci relationship service not initialized")
 		}
 		var relID int
-		if v, ok := args["relationship_id"].(float64); ok {
+		if v, ok := args["relationshipId"].(float64); ok {
 			relID = int(v)
 		}
 		if relID <= 0 {
-			return nil, fmt.Errorf("delete_ci_relationship: relationship_id is required")
+			return nil, fmt.Errorf("delete_ci_relationship: relationshipId is required")
 		}
 		if err := t.ciRelationship.DeleteCIRelationship(ctx, relID, tenantID); err != nil {
 			return nil, err
 		}
-		return map[string]interface{}{"deleted": true, "relationship_id": relID}, nil
+		return map[string]interface{}{"deleted": true, "relationshipId": relID}, nil
 
 	case "get_ci_impact":
 		if t.cmdb == nil || t.ciRelationship == nil {
 			return nil, fmt.Errorf("cmdb relationship service not initialized")
 		}
-		ciNumber, _ := args["ci_number"].(string)
+		ciNumber, _ := args["ciNumber"].(string)
 		var ciID int
-		if v, ok := args["ci_id"].(float64); ok {
+		if v, ok := args["ciId"].(float64); ok {
 			ciID = int(v)
 		}
 		if ciID == 0 && ciNumber == "" {
-			return nil, fmt.Errorf("get_ci_impact: ci_number or ci_id is required")
+			return nil, fmt.Errorf("get_ci_impact: ciNumber or ciId is required")
 		}
 		if ciID == 0 {
 			listResp, err := t.cmdb.ListCIs(ctx, tenantID, &dto.ListCIRequest{Page: 1, PageSize: 1, CINumber: ciNumber})
@@ -805,7 +822,7 @@ func (t *ToolRegistry) Execute(ctx context.Context, tenantID int, name string, a
 				return nil, fmt.Errorf("get_ci_impact: lookup failed: %w", err)
 			}
 			if len(listResp.Items) == 0 {
-				return map[string]interface{}{"found": false, "ci_number": ciNumber}, nil
+				return map[string]interface{}{"found": false, "ciNumber": ciNumber}, nil
 			}
 			ciID = listResp.Items[0].ID
 		}
@@ -840,7 +857,7 @@ func (t *ToolRegistry) Execute(ctx context.Context, tenantID int, name string, a
 		return map[string]interface{}{
 			"impact":     impact,
 			"hops":       hops,
-			"ci_id":      ciID,
+			"ciId":       ciID,
 			"explain_ai": explain,
 		}, nil
 

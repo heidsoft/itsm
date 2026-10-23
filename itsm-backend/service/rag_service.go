@@ -927,11 +927,11 @@ func (r *RAGService) AskWithLLMStreamWithTools(
 2. 图谱中的对象编号、状态、关联关系是系统实时数据，可信度高于推测。需要实时数据（当前有哪些工单、事件统计、CI 列表等）时，必须优先调用已提供的工具获取，严禁编造数据。
 3. 你可以调用 create_ticket 创建工单、create_ticket_type 创建工单类型、update_ticket 更新工单；这些写操作会进入审批流，调用后请明确告知用户"已提交、待人工审批（含 invocationId）"，并说明审批通过后才会正式生效。
 4. CMDB 本体关联（故障→配置项→工单）：当用户报告某台设备/数据库/服务/网络故障（如"HIS-DB-01 连接超时""护士站电脑蓝屏""PACS 上传失败"）时，必须先定位受影响的配置项（CI），再把工单挂到该 CI 上，形成 ITSM↔CMDB 本体闭环。操作顺序：
-   (a) 用 list_cis 定位 CI —— 支持 search 按名称/资产标签/序列号/型号/厂商/云资源ID 模糊匹配，也支持 ci_type 按类型过滤（server/database/application/network/storage/cloud_resource）。从返回结果中取 id 作为 ci_id。
-   (b) 建单时带 ci_id：调用 create_ticket 时把 ci_id 一并传入，工单创建后会自动绑定到该配置项。
+   (a) 用 list_cis 定位 CI —— 支持 search 按名称/资产标签/序列号/型号/厂商/云资源ID 模糊匹配，也支持 ciType 按类型过滤（server/database/application/network/storage/cloud_resource）。从返回结果中取 id 作为 ciId。
+   (b) 建单时带 ciId：调用 create_ticket 时把 ciId 一并传入，工单创建后会自动绑定到该配置项。
    (c) 若用户先报障建单、后才说清是哪台设备，用 link_ticket_ci 把已存在的工单补挂到 CI（需审批）。
    (d) 影响面分析：用 get_ci_tickets 查询某个 CI 上已关联的工单，判断是否为重复报障、该资产是否反复故障。这在回答"这台服务器最近怎么老出问题"类问题时是必做步骤。
-   (e) 若 list_cis 未找到匹配 CI，可正常创建工单，并在回答中明确提示用户补充设备名称/资产编号，不要编造 ci_id。`},
+   (e) 若 list_cis 未找到匹配 CI，可正常创建工单，并在回答中明确提示用户补充设备名称/资产编号，不要编造 ciId。`},
 		{Role: "user", Content: prompt},
 	}
 

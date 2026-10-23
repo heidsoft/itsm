@@ -40,7 +40,7 @@ func setupOntologyE2E(t *testing.T) (*ent.Client, *ToolRegistry, context.Context
 		SetStatus("active").SetTenantID(tenant.ID).Save(ctx)
 	require.NoError(t, err)
 
-	// 另一台服务器，用于验证 ci_type 过滤确实生效
+	// 另一台服务器，用于验证 ciType 过滤确实生效
 	_, err = client.ConfigurationItem.Create().
 		SetName("APP-SERVER-02").
 		SetCiTypeID(ciType.ID).SetCiType("server").
@@ -67,7 +67,7 @@ func setupOntologyE2E(t *testing.T) (*ent.Client, *ToolRegistry, context.Context
 }
 
 // TestE2E_AILocatesCIAndCreatesLinkedTicket 端到端验证 AI 本体链路：
-// 用户口语报障 → list_cis 定位 CI → create_ticket 带 ci_id → 工单落库且外键生效。
+// 用户口语报障 → list_cis 定位 CI → create_ticket 带 ciId → 工单落库且外键生效。
 func TestE2E_AILocatesCIAndCreatesLinkedTicket(t *testing.T) {
 	client, reg, ctx, tenantID, userID, _ := setupOntologyE2E(t)
 	defer client.Close()
@@ -84,10 +84,10 @@ func TestE2E_AILocatesCIAndCreatesLinkedTicket(t *testing.T) {
 	ciID := items[0].ID
 	require.Equal(t, "HIS-DB-01", items[0].Name)
 
-	// 步骤 2：验证 ci_type 过滤可区分资产类型（AI 面对同名歧义时的消歧能力）
+	// 步骤 2：验证 ciType 过滤可区分资产类型（AI 面对同名歧义时的消歧能力）
 	servers, err := reg.Execute(ctx, tenantID, "list_cis", map[string]interface{}{
-		"ci_type": "server",
-		"limit":   float64(10),
+		"ciType": "server",
+		"limit":  float64(10),
 	})
 	require.NoError(t, err)
 	serverItems, ok := servers.([]*dto.CIResponse)
@@ -95,18 +95,18 @@ func TestE2E_AILocatesCIAndCreatesLinkedTicket(t *testing.T) {
 	require.Len(t, serverItems, 1)
 	require.Equal(t, "APP-SERVER-02", serverItems[0].Name)
 
-	// 步骤 3：AI 带 ci_id 创建工单
+	// 步骤 3：AI 带 ciId 创建工单
 	res, err := reg.Execute(ctx, tenantID, "create_ticket", map[string]interface{}{
-		"title":        "HIS-DB-01 连接超时",
-		"description":  "护士站反馈 HIS 数据库连接超时，无法开医嘱",
-		"priority":     "high",
-		"ci_id":        float64(ciID),
-		"requester_id": float64(userID),
+		"title":       "HIS-DB-01 连接超时",
+		"description": "护士站反馈 HIS 数据库连接超时，无法开医嘱",
+		"priority":    "high",
+		"ciId":        float64(ciID),
+		"requesterId": float64(userID),
 	})
 	require.NoError(t, err)
 
 	payload, ok := res.(map[string]interface{})
-	require.True(t, ok, "带 ci_id 建单时应返回带 ciLinked 的复合结果")
+	require.True(t, ok, "带 ciId 建单时应返回带 ciLinked 的复合结果")
 	require.Equal(t, true, payload["ciLinked"], "工单应已绑定到 CI")
 	require.Equal(t, ciID, payload["ciId"])
 
@@ -123,7 +123,7 @@ func TestE2E_AILocatesCIAndCreatesLinkedTicket(t *testing.T) {
 
 	// 步骤 5：反查影响面 —— get_ci_tickets 应能看到刚才的工单
 	tickets, err := reg.Execute(ctx, tenantID, "get_ci_tickets", map[string]interface{}{
-		"ci_id": float64(ciID),
+		"ciId": float64(ciID),
 	})
 	require.NoError(t, err)
 	list, ok := tickets.([]map[string]interface{})
@@ -139,30 +139,30 @@ func TestE2E_CreateTicketWithoutCIIDStillSucceeds(t *testing.T) {
 	defer client.Close()
 
 	res, err := reg.Execute(ctx, tenantID, "create_ticket", map[string]interface{}{
-		"title":        "打印机卡纸",
-		"description":  "三楼打印机卡纸",
-		"priority":     "low",
-		"requester_id": float64(userID),
+		"title":       "打印机卡纸",
+		"description": "三楼打印机卡纸",
+		"priority":    "low",
+		"requesterId": float64(userID),
 	})
 	require.NoError(t, err)
 
-	// 无 ci_id 时返回的是纯工单响应，不应强制走复合结果
+	// 无 ciId 时返回的是纯工单响应，不应强制走复合结果
 	ticketResp, ok := res.(*dto.TicketResponse)
-	require.True(t, ok, "未传 ci_id 时应直接返回工单响应，而非带 ciLinked 的复合结果")
+	require.True(t, ok, "未传 ciId 时应直接返回工单响应，而非带 ciLinked 的复合结果")
 	require.NotZero(t, ticketResp.ID)
 }
 
 // TestE2E_CreateTicketWithInvalidCIIDDegradesGracefully
-// ci_id 指向的 CI 不存在时，工单仍应创建成功（有效交付物），仅回传绑定失败提示。
+// ciId 指向的 CI 不存在时，工单仍应创建成功（有效交付物），仅回传绑定失败提示。
 func TestE2E_CreateTicketWithInvalidCIIDDegradesGracefully(t *testing.T) {
 	client, reg, ctx, tenantID, userID, _ := setupOntologyE2E(t)
 	defer client.Close()
 
 	res, err := reg.Execute(ctx, tenantID, "create_ticket", map[string]interface{}{
-		"title":        "未知设备故障",
-		"priority":     "medium",
-		"ci_id":        float64(999999), // 不存在的 CI
-		"requester_id": float64(userID),
+		"title":       "未知设备故障",
+		"priority":    "medium",
+		"ciId":        float64(999999), // 不存在的 CI
+		"requesterId": float64(userID),
 	})
 	require.NoError(t, err, "CI 绑定失败不应导致整个建单失败")
 
@@ -178,15 +178,15 @@ func TestE2E_LinkExistingTicketToCI(t *testing.T) {
 	client, reg, ctx, tenantID, userID, _ := setupOntologyE2E(t)
 	defer client.Close()
 
-	// 先建单（未带 ci_id）
+	// 先建单（未带 ciId）
 	res, err := reg.Execute(ctx, tenantID, "create_ticket", map[string]interface{}{
-		"title":        "系统很卡",
-		"priority":     "medium",
-		"requester_id": float64(userID),
+		"title":       "系统很卡",
+		"priority":    "medium",
+		"requesterId": float64(userID),
 	})
 	require.NoError(t, err)
 	ticketResp, ok := res.(*dto.TicketResponse)
-	require.True(t, ok, "未带 ci_id 时应直接返回工单响应")
+	require.True(t, ok, "未带 ciId 时应直接返回工单响应")
 
 	// 后定位到 CI 并补挂
 	found, err := reg.Execute(ctx, tenantID, "list_cis", map[string]interface{}{"search": "HIS-DB"})
@@ -194,8 +194,8 @@ func TestE2E_LinkExistingTicketToCI(t *testing.T) {
 	ciID := found.([]*dto.CIResponse)[0].ID
 
 	linkRes, err := reg.Execute(ctx, tenantID, "link_ticket_ci", map[string]interface{}{
-		"ticket_id": float64(ticketResp.ID),
-		"ci_id":     float64(ciID),
+		"ticketId": float64(ticketResp.ID),
+		"ciId":     float64(ciID),
 	})
 	require.NoError(t, err)
 	require.Equal(t, true, linkRes.(map[string]interface{})["ciLinked"])

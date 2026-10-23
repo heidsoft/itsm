@@ -2706,7 +2706,7 @@ Authorization: Bearer <accessToken>
 | `ciTypes[]` | 租户下的 CI 类型：`id` / `name` / `description` / `icon` / `color` / `parentTypeId` / `attributeSchema`（合法 JSON 时解析为对象）/ `attributeDefinitions[]` |
 | `relationshipTypes[]` | 受控关系词表：`type` / `name` / `description` / `direction` / `reverse` / `icon` |
 | `statuses[]` / `environments[]` | 生命周期与环境取值 |
-| `tools[]` | CMDB 相关的 AI 工具定义（含 JSON-Schema 参数契约）；`list_cis` 的 `ci_type` 枚举由租户自有 CI 类型动态生成 |
+| `tools[]` | CMDB 相关的 AI 工具定义（含 JSON-Schema 参数契约）；参数键统一为 camelCase（`ciId`/`ciNumber`/`ticketId`/`withRelations` 等），`list_cis` 的 `ciType` 枚举由租户自有 CI 类型动态生成 |
 
 单个 CI 类型的属性定义查询失败只降级该类型（记 warn 日志并置空数组），不影响整体返回。
 
