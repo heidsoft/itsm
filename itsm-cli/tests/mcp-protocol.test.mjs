@@ -33,6 +33,15 @@ const bodies = new Map();
 /** Query strings seen by GET /bpmn/tasks, in call order. */
 const taskQueries = [];
 
+/**
+ * Refresh-token state for the single-use rotation stub.
+ *
+ * The backend revokes a refresh token the moment it is exchanged. `refreshState`
+ * mirrors that: `current` is the only token that will be accepted, and every
+ * successful exchange mints a new pair.
+ */
+const refreshState = { current: 'refresh-0', generation: 0, hits: 0 };
+
 const ok = (res, data) => json(res, 200, { code: 0, message: 'success', data });
 function json(res, status, payload) {
   res.writeHead(status, { 'content-type': 'application/json' });
@@ -61,7 +70,30 @@ async function route(req, res) {
   if (p === '/version') return ok(res, { version: 'v9.9.9', build: 'test' });
   if (p === '/readyz') return ok(res, { status: 'ready' });
 
-  if (req.headers.authorization !== `Bearer ${TOKEN}`) {
+  // Refresh is called without an access token, so it is matched before the
+  // bearer check. Rotation is single-use: the presented token dies here.
+  if (p === '/auth/refresh' && req.method === 'POST') {
+    refreshState.hits += 1;
+    const body = bodies.get(key) ?? {};
+    if (body.refreshToken !== refreshState.current) {
+      return json(res, 401, { code: 2001, message: 'refresh token 已被轮换' });
+    }
+    refreshState.generation += 1;
+    refreshState.current = `refresh-${refreshState.generation}`;
+    const access = `rotated-${refreshState.generation}`;
+    res.writeHead(200, {
+      'content-type': 'application/json',
+      'set-cookie': [
+        `access_token=${access}; Path=/; HttpOnly`,
+        `refresh_token=${refreshState.current}; Path=/; HttpOnly`,
+      ],
+    });
+    return res.end(JSON.stringify({ code: 0, message: 'success', data: {} }));
+  }
+
+  const bearer = req.headers.authorization;
+  const authorized = bearer === `Bearer ${TOKEN}` || bearer === `Bearer rotated-${refreshState.generation}`;
+  if (!authorized) {
     return json(res, 401, { code: 2001, message: '缺少认证token' });
   }
 
@@ -125,18 +157,26 @@ after(async () => {
  * server wrote back. Closing stdin right after the batch doubles as a regression
  * test for the drain path: in-flight calls must still be answered.
  */
-function session(frames) {
+/**
+ * @param overrides keys set to `undefined` are dropped from the child env, so a
+ * test can fall back from `ITSM_TOKEN` to the credential store.
+ */
+function session(frames, overrides = {}) {
+  const env = {
+    ...process.env,
+    ITSM_BASE_URL: baseUrl,
+    ITSM_TOKEN: TOKEN,
+    ITSM_CREDENTIALS_FILE: path.join(HOME, 'credentials'),
+    ITSM_REPO_ROOT: path.resolve(ROOT, '..'),
+    ITSM_MCP_DEBUG: '0',
+    ...overrides,
+  };
+  for (const [k, v] of Object.entries(env)) if (v === undefined) delete env[k];
+
   return new Promise((resolve, reject) => {
     const child = spawn(process.execPath, [BIN], {
       cwd: ROOT,
-      env: {
-        ...process.env,
-        ITSM_BASE_URL: baseUrl,
-        ITSM_TOKEN: TOKEN,
-        ITSM_CREDENTIALS_FILE: path.join(HOME, 'credentials'),
-        ITSM_REPO_ROOT: path.resolve(ROOT, '..'),
-        ITSM_MCP_DEBUG: '0',
-      },
+      env,
       stdio: ['pipe', 'pipe', 'pipe'],
     });
 
@@ -505,4 +545,77 @@ test('itsm_workflow_tasks defaults to pending work, and an explicit status wins'
   // tool titled 待办 must narrow it — otherwise "待办 36 条" is 31 finished ones.
   assert.equal(taskQueries[0].get('status'), 'created', 'default must be pending only');
   assert.equal(taskQueries[1].get('status'), 'completed', 'the caller must be able to override the default');
+});
+
+/**
+ * The access token lives 15 minutes while the refresh token lives 7 days, and
+ * the backend rotates the refresh token on every exchange. A host fires tool
+ * calls in parallel, so one expiry used to produce N concurrent 401s → N
+ * refreshes with the same refresh token → 1 success and N-1 failures that all
+ * claimed "the refresh token was rejected" and told the agent to log in again.
+ * Measured before the fix: 8 parallel calls, 1 passed. The message is the worse
+ * half — the race is self-inflicted, so "log in again" is wrong advice.
+ */
+test('parallel calls that hit an expired token share one refresh instead of racing', async () => {
+  const { writeFileSync } = await import('node:fs');
+  const credFile = path.join(HOME, 'credentials-race');
+  refreshState.current = 'refresh-0';
+  refreshState.generation = 0;
+  refreshState.hits = 0;
+
+  writeFileSync(
+    credFile,
+    JSON.stringify({
+      token: 'expired-access-token',
+      refreshToken: refreshState.current,
+      expiresAt: new Date(Date.now() - 60_000).toISOString(),
+      user: 'agent',
+      version: 2,
+    }),
+    { mode: 0o600 }
+  );
+
+  const frames = [
+    initialize,
+    ...Array.from({ length: 8 }, (_, i) => ({
+      jsonrpc: '2.0',
+      id: `race-${i}`,
+      method: 'tools/call',
+      params: { name: 'itsm_whoami', arguments: {} },
+    })),
+  ];
+
+  // No ITSM_TOKEN: the call must fall back to the credential store and renew
+  // through /auth/refresh, which is the path that raced.
+  const { byId } = await session(frames, { ITSM_TOKEN: undefined, ITSM_CREDENTIALS_FILE: credFile });
+
+  const failures = [];
+  for (let i = 0; i < 8; i++) {
+    const payload = JSON.parse(byId.get(`race-${i}`).result.content[0].text);
+    if (!payload.ok) failures.push(payload.error?.message ?? 'unknown');
+  }
+
+  assert.deepEqual(failures, [], `every parallel call must succeed on a shared refresh:\\n${failures.join('\\n')}`);
+  assert.equal(refreshState.hits, 1, `exactly one exchange for the whole batch, got ${refreshState.hits}`);
+});
+
+/**
+ * "knowledge" is a substring of "acknowledge", so a plain substring score ranks
+ * `incident.acknowledge` level with `knowledge.*` — and the alphabetical
+ * tie-break then puts it first. A host reading the list top-down is told the
+ * acknowledge command is the best answer to 知识.
+ */
+test('a query matching a command name boundary outranks a match buried in another word', async () => {
+  const { byId } = await session([
+    initialize,
+    { jsonrpc: '2.0', id: 'kb-rank', method: 'tools/call', params: { name: 'itsm_discover', arguments: { query: '知识', limit: 5 } } },
+  ]);
+
+  const payload = byId.get('kb-rank').result.structuredContent;
+  assert.ok(payload.commands.length > 0, '查询必须命中');
+  assert.match(
+    payload.commands[0].command,
+    /^knowledge\./,
+    `the top hit should be a knowledge command, got ${payload.commands[0].command}`
+  );
 });

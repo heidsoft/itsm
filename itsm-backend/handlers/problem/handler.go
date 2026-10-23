@@ -1056,6 +1056,10 @@ func toKnowledgeArticleDTO(a *knowledge.Article) *dto.KnowledgeArticleResponse {
 		CreatedAt:       a.CreatedAt,
 		UpdatedAt:       a.UpdatedAt,
 		SourceProblemID: a.SourceProblemID,
+
+		// 沉淀产物恒为 draft，评审通过后才会变成 approved 并允许发布；
+		// 列表要如实标注「草稿/已发布」，缺了评审状态就只能靠 status 猜。
+		ReviewStatus: knowledge.NormalizeReviewStatus(a.ReviewStatus),
 	}
 }
 

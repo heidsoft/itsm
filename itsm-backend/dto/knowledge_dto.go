@@ -68,6 +68,15 @@ type KnowledgeArticleResponse struct {
 	CreatedAt time.Time `json:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt"`
 
+	// 评审状态（draft / under_review / approved / rejected），与 Status 是两条
+	// 独立的轴：Status 由 is_published 派生（草稿 vs 已发布），评审状态描述
+	// 内容是否过审。发布门禁要求 review_status == approved，而历史数据里存在
+	// 「未过评审就已发布」的文章，所以两者都不能靠另一个推出来。
+	// 此前响应里根本没有这个字段：库里有 under_review 的文章，API 消费者却
+	// 只能看到 status=draft，无法判断「卡在评审中」还是「只是没发布」，
+	// 也无法预判 /publish 会不会被 409 拒绝。
+	ReviewStatus string `json:"reviewStatus"`
+
 	// 知识可引用性 L1：时效性
 	ValidFrom          *time.Time          `json:"validFrom,omitempty"`
 	ValidUntil         *time.Time          `json:"validUntil,omitempty"`

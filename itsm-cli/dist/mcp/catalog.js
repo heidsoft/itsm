@@ -456,9 +456,15 @@ export function discoverTools(query, domain, limit) {
             .map((spec) => {
             const name = spec.name.toLowerCase();
             const summary = `${spec.summary} ${spec.usage}`.toLowerCase();
+            // A hit that lands on a name boundary (`knowledge.*` for "知识") is the
+            // capability being asked for. A hit buried inside another word is
+            // noise: "knowledge" is a substring of "acknowledge", so searching
+            // 知识 used to rank `incident.acknowledge` above every knowledge
+            // command, and the tie-break (alphabetical) made it stick.
+            const boundaryHit = needles.some((needle) => name === needle || name.startsWith(`${needle}.`) || name.includes(`.${needle}`) || name.startsWith(`${needle}-`));
             const nameHit = needles.some((needle) => name.includes(needle));
             const summaryHit = needles.some((needle) => summary.includes(needle));
-            return { spec, score: (nameHit ? 3 : 0) + (summaryHit ? 1 : 0) };
+            return { spec, score: (boundaryHit ? 5 : 0) + (nameHit ? 3 : 0) + (summaryHit ? 1 : 0) };
         })
             .sort((a, b) => b.score - a.score || a.spec.name.localeCompare(b.spec.name))
             .map((entry) => entry.spec)

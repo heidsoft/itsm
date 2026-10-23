@@ -1667,6 +1667,18 @@ GET /knowledge/articles/{id}
 Authorization: Bearer <accessToken>
 ```
 
+文章响应同时携带**两条独立的状态轴**，缺一条就无法判断该文章能不能发布、卡在哪一步：
+
+| 字段 | 来源 | 含义 |
+|---|---|---|
+| `status` | 由 `is_published` 派生 | `draft` / `published` —— 只回答「是否对外可见」 |
+| `reviewStatus` | `review_status` | `draft` / `under_review` / `approved` / `rejected` —— 回答「是否过审」 |
+
+`POST /knowledge/articles/{id}/publish` 要求 `review_status == approved`（见「发布与评审」），
+历史数据中存在「已发布但未过评审」的文章，因此**不能用 `status` 反推评审态**，
+也不能用评审态反推是否已发布。空值或未知值在响应里归一为 `draft`。
+`2026-10-23` 前响应里没有 `reviewStatus`，API 消费者只能靠发起一次 publish 试错。
+
 ### 创建知识文章
 
 ```http

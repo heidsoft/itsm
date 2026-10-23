@@ -1,7 +1,7 @@
 // Single transport layer shared by the Ink TUI and the headless agent layer.
 // Every endpoint path is static so the contract scanner (scripts/check-route-contract.mjs)
 // can compare against itsm-backend/router/*.go registrations.
-import { loadCredentials, saveCredentials } from './credentials.js';
+import { isLoggedIn, loadCredentials, saveCredentials } from './credentials.js';
 import { httpStatusToAgentError, CliError } from './errors.js';
 import { redactSecrets } from './secrets.js';
 import type { AgentError, ErrorKind } from './errors.js';
@@ -258,6 +258,68 @@ async function refreshSession(baseURL: string, refreshToken: string): Promise<{ 
   }
 }
 
+/**
+ * Single-flight token renewal.
+ *
+ * The backend rotates the refresh token atomically: the moment one exchange
+ * succeeds, the token every other in-flight request is holding is revoked.
+ * MCP hosts fire tool calls in parallel, so an expired access token used to
+ * produce N concurrent 401s → N refreshes with the same refresh token → 1
+ * success and N-1 failures reporting "the refresh token was rejected".
+ * Measured on this machine: 8 parallel `itsm_whoami` calls, 1 passed.
+ *
+ * Worse than the failure rate is the message: it tells the agent the stored
+ * credentials are dead and to log in again, when in fact the race is entirely
+ * self-inflicted — re-logging in "fixes" it by accident and hides the cause.
+ *
+ * Every 401 now joins one shared exchange and replays with its result.
+ */
+let refreshInFlight: Promise<string | null> | undefined;
+
+async function ensureRefreshedToken(baseURL: string, status: number): Promise<string | null> {
+  if (refreshInFlight) return refreshInFlight;
+
+  refreshInFlight = (async () => {
+    const stored = loadCredentials();
+    if (!stored?.refreshToken) return null;
+
+    // Another request may have completed an exchange between our 401 and this
+    // point; its token is already persisted, so reuse it instead of spending
+    // (and invalidating) yet another refresh token.
+    const latest = loadCredentials();
+    if (latest?.token && latest.token !== stored.token && isLoggedIn()) {
+      return latest.token;
+    }
+
+    const renewed = await refreshSession(baseURL, stored.refreshToken);
+    if (!renewed) return null;
+    // The backend rotates the refresh token atomically (the old one is
+    // revoked). If the response carried no new refresh cookie, the stored
+    // token is already dead — persisting it would make the next renewal fail
+    // with a misleading "session expired".
+    if (!renewed.refreshToken) {
+      throw new CliError({
+        kind: 'not_authenticated',
+        message: 'Session refreshed but no rotated refresh token was returned',
+        httpStatus: status,
+        retryable: false,
+        hint: 'Refusing to persist a consumed refresh token. Run `itsm auth login --password-stdin` once.',
+      });
+    }
+    saveCredentials({
+      ...stored,
+      token: renewed.accessToken,
+      refreshToken: renewed.refreshToken,
+      expiresAt: new Date(Date.now() + REFRESHED_ACCESS_TTL_MS).toISOString(),
+    });
+    return renewed.accessToken;
+  })().finally(() => {
+    refreshInFlight = undefined;
+  });
+
+  return refreshInFlight;
+}
+
 async function request<T>(
   baseURL: string,
   method: string,
@@ -288,42 +350,20 @@ async function request<T>(
 
   if (!res.ok) {
     if (res.status === 401 && allowRefresh) {
-      const stored = loadCredentials();
-      if (stored?.refreshToken) {
-        const renewed = await refreshSession(baseURL, stored.refreshToken);
-        if (renewed) {
-          // The backend rotates the refresh token atomically (the old one is
-          // revoked). If the response carried no new refresh cookie, the
-          // stored token is already dead — persisting it would make the next
-          // renewal fail with a misleading "session expired".
-          if (!renewed.refreshToken) {
-            throw new CliError({
-              kind: 'not_authenticated',
-              message: 'Session refreshed but no rotated refresh token was returned',
-              httpStatus: res.status,
-              retryable: false,
-              hint: 'Refusing to persist a consumed refresh token. Run `itsm auth login --password-stdin` once.',
-            });
-          }
-          saveCredentials({
-            ...stored,
-            token: renewed.accessToken,
-            refreshToken: renewed.refreshToken,
-            expiresAt: new Date(Date.now() + REFRESHED_ACCESS_TTL_MS).toISOString(),
-          });
-          return request(baseURL, method, endpoint, data, params, renewed.accessToken, false);
-        }
-        // The refresh token itself is dead (single-use rotation already consumed,
-        // or past its 7-day TTL). Replaying the request cannot help — say so
-        // instead of surfacing a bare 401 that sends agents in circles.
-        throw new CliError({
-          kind: 'not_authenticated',
-          message: 'Session expired and the refresh token was rejected',
-          httpStatus: res.status,
-          retryable: false,
-          hint: 'Run `itsm auth login --username <u> --password-stdin` once. The stored refresh token is no longer valid (single-use rotation or 7-day expiry).',
-        });
+      const renewedToken = await ensureRefreshedToken(baseURL, res.status);
+      if (renewedToken) {
+        return request(baseURL, method, endpoint, data, params, renewedToken, false);
       }
+      // The refresh token itself is dead (single-use rotation already consumed,
+      // or past its 7-day TTL). Replaying the request cannot help — say so
+      // instead of surfacing a bare 401 that sends agents in circles.
+      throw new CliError({
+        kind: 'not_authenticated',
+        message: 'Session expired and the refresh token was rejected',
+        httpStatus: res.status,
+        retryable: false,
+        hint: 'Run `itsm auth login --username <u> --password-stdin` once. The stored refresh token is no longer valid (single-use rotation or 7-day expiry).',
+      });
     }
     throw new CliError(transportError(res.status, await safeBody(res), endpoint));
   }

@@ -439,6 +439,10 @@ func ToKnowledgeArticleResponse(article *ent.KnowledgeArticle) *KnowledgeArticle
 		TenantID:  article.TenantID,
 		CreatedAt: article.CreatedAt,
 		UpdatedAt: article.UpdatedAt,
+
+		// 评审状态与 status（是否发布）是两条独立的轴，缺了它 API 消费者
+		// 无法区分「草稿」「待评审」「已驳回」。
+		ReviewStatus: string(article.ReviewStatus),
 	}
 
 	// Note: If you need to populate Author name, you'll need to query the user separately

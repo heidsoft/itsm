@@ -54,6 +54,10 @@ func (h *Handler) toArticleDTO(a *Article) *dto.KnowledgeArticleResponse {
 		CreatedAt: a.CreatedAt,
 		UpdatedAt: a.UpdatedAt,
 
+		// 评审状态与发布状态各自独立透出：status 只回答「是否对外可见」，
+		// 发布门禁与前端评审按钮看的是 reviewStatus。
+		ReviewStatus: NormalizeReviewStatus(a.ReviewStatus),
+
 		ValidFrom:          a.ValidFrom,
 		ValidUntil:         a.ValidUntil,
 		LastReviewedAt:     a.LastReviewedAt,
