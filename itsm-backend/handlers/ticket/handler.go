@@ -55,6 +55,16 @@ func buildTicketResponse(t *Ticket) *dto.TicketResponse {
 	if t.CategoryID != nil {
 		resp.CategoryID = *t.CategoryID
 	}
+	if t.Resolution != nil {
+		resp.Resolution = *t.Resolution
+	}
+	// Lifecycle timestamps and resolution text are part of the operator-visible
+	// contract: resolve/close persist them, and the UI shows them on the detail
+	// page. Dropping them here made a resolved ticket look unresolved to any
+	// consumer that only reads the API (found by `itsm flow run ticket-lifecycle`).
+	resp.ResolvedAt = t.ResolvedAt
+	resp.ClosedAt = t.ClosedAt
+	resp.FirstResponseAt = t.FirstResponseAt
 	resp.SLAResponseDeadline = t.SLAResponseDeadline
 	resp.SLAResolutionDeadline = t.SLAResolutionDeadline
 	return resp

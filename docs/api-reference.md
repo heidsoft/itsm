@@ -78,6 +78,7 @@ GET /api/v1/ai/audit-logs?page=1&pageSize=20&days=90&kind=triage
 | 2003 | 权限不足（禁止访问） |
 | 4004 | 资源不存在（含跨租户探测） |
 | 4090 | 状态/版本冲突 |
+| 4290 | 请求限流（HTTP 429；客户端应退避重试，勿与 2003 权限不足混淆） |
 | 5001 | 服务器内部错误 |
 
 ## 认证接口
@@ -375,6 +376,11 @@ Content-Type: application/json
   "resolution": "已重置密码"
 }
 ```
+
+工单详情、列表与状态流转后的读回响应包含 `resolution`、`resolutionCategory`、`resolvedAt`、
+`closedAt`、`firstResponseAt`（未发生时为 `null`/缺省）。解决说明与生命周期时间戳是 SLO 与
+PIR 的证据，不能只写库不返回——`2026-10-22` 前 `buildTicketResponse` 漏映射这四个字段，
+导致 `resolve` 成功后读不到解决说明。
 
 ### 删除工单
 

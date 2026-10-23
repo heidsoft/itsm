@@ -3,10 +3,12 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 	"testing"
 
+	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent/cirelationship"
 	"itsm-backend/ent/enttest"
@@ -522,5 +524,120 @@ func TestCIRelationship_CrossTenantIsolation(t *testing.T) {
 	// 租户B不能删除租户A的关系
 	if err := svc.DeleteCIRelationship(ctx, rel.ID, tenantB.ID); err == nil {
 		t.Fatal("cross-tenant delete should fail")
+	}
+}
+
+// 客户端指向不存在的 CI 是 404（参数/资源问题），不是 500。
+// 曾因裸 fmt.Errorf 未分类，handler 兜底成 500「创建CI关系失败」，
+// `itsm flow run cmdb-topology` 的负向断言因此无法区分「关系非法」与「后端故障」。
+func TestCreateCIRelationship_MissingTargetIsNotFound(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", "file:ci_rel_missing_target?mode=memory&cache=shared&_fk=1")
+	defer client.Close()
+
+	ctx := context.Background()
+	tenant, err := createCMDBTestTenant(ctx, client, "Tenant Missing Target", "tenant-missing-target", "missing-target.example.com")
+	if err != nil {
+		t.Fatalf("创建租户失败: %v", err)
+	}
+	ciType, err := createTestCIType(ctx, client, tenant.ID, "server-missing-target")
+	if err != nil {
+		t.Fatalf("创建CI类型失败: %v", err)
+	}
+	source, err := createTestCI(ctx, client, tenant.ID, ciType.ID, "missing-target-source")
+	if err != nil {
+		t.Fatalf("创建源CI失败: %v", err)
+	}
+
+	svc := NewCIRelationshipService(client, zaptest.NewLogger(t).Sugar())
+	_, err = svc.CreateCIRelationship(ctx, &dto.CreateCIRelationshipRequest{
+		SourceCIID:       source.ID,
+		TargetCIID:       999999999,
+		RelationshipType: dto.DependsOn,
+	}, tenant.ID)
+
+	var appErr *common.AppError
+	if !errors.As(err, &appErr) {
+		t.Fatalf("期望 *common.AppError(404)，实际 %T: %v", err, err)
+	}
+	if appErr.HTTPStatus != 404 {
+		t.Fatalf("HTTPStatus = %d, want 404 (%s)", appErr.HTTPStatus, appErr.Message)
+	}
+}
+
+// 重复关系是冲突（409），不是 500。
+func TestCreateCIRelationship_DuplicateIsConflict(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", "file:ci_rel_duplicate?mode=memory&cache=shared&_fk=1")
+	defer client.Close()
+
+	ctx := context.Background()
+	tenant, err := createCMDBTestTenant(ctx, client, "Tenant Duplicate", "tenant-duplicate", "duplicate.example.com")
+	if err != nil {
+		t.Fatalf("创建租户失败: %v", err)
+	}
+	ciType, err := createTestCIType(ctx, client, tenant.ID, "server-duplicate")
+	if err != nil {
+		t.Fatalf("创建CI类型失败: %v", err)
+	}
+	source, err := createTestCI(ctx, client, tenant.ID, ciType.ID, "duplicate-source")
+	if err != nil {
+		t.Fatalf("创建源CI失败: %v", err)
+	}
+	target, err := createTestCI(ctx, client, tenant.ID, ciType.ID, "duplicate-target")
+	if err != nil {
+		t.Fatalf("创建目标CI失败: %v", err)
+	}
+
+	svc := NewCIRelationshipService(client, zaptest.NewLogger(t).Sugar())
+	req := &dto.CreateCIRelationshipRequest{
+		SourceCIID:       source.ID,
+		TargetCIID:       target.ID,
+		RelationshipType: dto.DependsOn,
+	}
+	if _, err := svc.CreateCIRelationship(ctx, req, tenant.ID); err != nil {
+		t.Fatalf("首次创建关系失败: %v", err)
+	}
+
+	_, err = svc.CreateCIRelationship(ctx, req, tenant.ID)
+	var appErr *common.AppError
+	if !errors.As(err, &appErr) {
+		t.Fatalf("期望 *common.AppError(409)，实际 %T: %v", err, err)
+	}
+	if appErr.HTTPStatus != 409 {
+		t.Fatalf("HTTPStatus = %d, want 409 (%s)", appErr.HTTPStatus, appErr.Message)
+	}
+}
+
+// 自环关系是参数错误（400）。
+func TestCreateCIRelationship_SelfLoopIsValidationError(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", "file:ci_rel_self_loop?mode=memory&cache=shared&_fk=1")
+	defer client.Close()
+
+	ctx := context.Background()
+	tenant, err := createCMDBTestTenant(ctx, client, "Tenant Self Loop", "tenant-self-loop", "self-loop.example.com")
+	if err != nil {
+		t.Fatalf("创建租户失败: %v", err)
+	}
+	ciType, err := createTestCIType(ctx, client, tenant.ID, "server-self-loop")
+	if err != nil {
+		t.Fatalf("创建CI类型失败: %v", err)
+	}
+	ci, err := createTestCI(ctx, client, tenant.ID, ciType.ID, "self-loop-ci")
+	if err != nil {
+		t.Fatalf("创建CI失败: %v", err)
+	}
+
+	svc := NewCIRelationshipService(client, zaptest.NewLogger(t).Sugar())
+	_, err = svc.CreateCIRelationship(ctx, &dto.CreateCIRelationshipRequest{
+		SourceCIID:       ci.ID,
+		TargetCIID:       ci.ID,
+		RelationshipType: dto.DependsOn,
+	}, tenant.ID)
+
+	var appErr *common.AppError
+	if !errors.As(err, &appErr) {
+		t.Fatalf("期望 *common.AppError(400)，实际 %T: %v", err, err)
+	}
+	if appErr.HTTPStatus != 400 {
+		t.Fatalf("HTTPStatus = %d, want 400 (%s)", appErr.HTTPStatus, appErr.Message)
 	}
 }

@@ -31,9 +31,12 @@ const (
 	BadRequestCode          = 4000
 	ConflictCode            = 4090 // 版本冲突
 	UnprocessableEntityCode = 4220
-	InternalErrorCode       = 5001
-	ServerErrorCode         = InternalErrorCode
-	ServiceUnavailableCode  = 5003
+	// RateLimitCode 请求限流（429）。403 表示「你没权限，重试也没用」，429 表示
+	// 「稍后重试」；把限流报成 2003 会让客户端直接放弃而不是退避。
+	RateLimitCode          = 4290
+	InternalErrorCode      = 5001
+	ServerErrorCode        = InternalErrorCode
+	ServiceUnavailableCode = 5003
 	// NotImplementedCode 能力未实现（501）。与 InternalErrorCode 的区别：
 	// 501 是**声明过的产品边界**（capability registry 里 built:false 的能力），
 	// 属于可预期的业务结果；500 是没预料到的故障。把"渠道未实现"报成 500
@@ -71,6 +74,7 @@ var codeStatusPairs = []struct {
 	{UnknownToolCode, http.StatusNotFound},
 	{ConflictCode, http.StatusConflict},
 	{UnprocessableEntityCode, http.StatusUnprocessableEntity},
+	{RateLimitCode, http.StatusTooManyRequests},
 	{InternalErrorCode, http.StatusInternalServerError},
 	{ServiceUnavailableCode, http.StatusServiceUnavailable},
 	{NotImplementedCode, http.StatusNotImplemented},

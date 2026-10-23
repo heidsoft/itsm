@@ -41,7 +41,7 @@ func LoginRateLimiter() gin.HandlerFunc {
 				retryAfter = 1
 			}
 			c.Header("Retry-After", itoa(retryAfter))
-			common.FailWithData(c, common.ForbiddenCode, "登录请求过于频繁，请稍后再试", gin.H{
+			common.FailWithData(c, common.RateLimitCode, "登录请求过于频繁，请稍后再试", gin.H{
 				"retryAfterSeconds": retryAfter,
 			})
 			c.Abort()

@@ -304,7 +304,7 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 					allowed = fallbackLimiter.Allow(clientIP)
 				}
 				if !allowed {
-					common.Fail(c, 429, "请求过于频繁，请稍后再试")
+					common.Fail(c, common.RateLimitCode, "请求过于频繁，请稍后再试")
 					c.Abort()
 					return
 				}

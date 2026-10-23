@@ -184,7 +184,7 @@ func (h *Handler) Get(c *gin.Context) {
 	req, approvals, err := h.service.Get(c.Request.Context(), id, tenantID)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			common.Fail(c, 404, "Not Found")
+			common.Fail(c, common.NotFoundErrorCode, "Not Found")
 		} else if common.IsAppError(err) {
 			common.FailWithErr(c, err, "操作失败")
 		} else {
@@ -545,7 +545,7 @@ func (h *Handler) GetServiceRequestSLA(c *gin.Context) {
 	info, err := h.service.GetServiceRequestSLA(c.Request.Context(), id, tenantID)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			common.Fail(c, 404, "Not Found")
+			common.Fail(c, common.NotFoundErrorCode, "Not Found")
 		} else {
 			common.FailWithErr(c, err, "操作失败")
 		}

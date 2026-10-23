@@ -247,7 +247,21 @@ func TestServiceRequestHandler_Get_InvalidID(t *testing.T) {
 func TestServiceRequestHandler_Get_NotFound(t *testing.T) {
 	r, _, _, _, _ := srSetup(t)
 	resp := srDoReq(t, r, "GET", "/api/v1/service-requests/999999", nil)
-	assert.EqualValues(t, 404, resp.Code, "body=%s", srStr(resp))
+	// 业务码 4004（而非裸 HTTP 404）：404 未登记在 codeStatusPairs，会被兜底成 HTTP 200。
+	assert.EqualValues(t, common.NotFoundErrorCode, resp.Code, "body=%s", srStr(resp))
+}
+
+func TestServiceRequestGetMissingReturnsHTTP404NotFoundCode(t *testing.T) {
+	r, client, _, _, _ := srSetup(t)
+	defer client.Close()
+
+	// 回归：handler 曾调用 common.Fail(c, 404, ...)，把 HTTP 状态码当成业务码。
+	// 404 不在 codeStatusPairs 中，statusForCode 兜底返回 200，于是「资源不存在」
+	// 在传输层是 200 + code 404，agent 无法把它归为 not_found。
+	status, resp := srDoHTTPReq(t, r, "GET", "/api/v1/service-requests/999999", nil)
+
+	require.Equal(t, http.StatusNotFound, status, "缺失的服务请求必须是 HTTP 404")
+	require.Equal(t, common.NotFoundErrorCode, resp.Code, "业务码必须是 4004，而不是裸 404")
 }
 
 func TestServiceRequestHandler_ListApprovals(t *testing.T) {
@@ -334,9 +348,9 @@ func TestServiceRequestHandler_Delete(t *testing.T) {
 	id := srCreateOne(t, r, catID)
 	resp := srDoReq(t, r, "DELETE", "/api/v1/service-requests/"+strconv.Itoa(id), nil)
 	require.Equal(t, common.SuccessCode, resp.Code, "body=%s", srStr(resp))
-	// 删除后再查应 404
+	// 删除后再查应 404（业务码 4004）
 	resp2 := srDoReq(t, r, "GET", "/api/v1/service-requests/"+strconv.Itoa(id), nil)
-	assert.EqualValues(t, 404, resp2.Code, "body=%s", srStr(resp2))
+	assert.EqualValues(t, common.NotFoundErrorCode, resp2.Code, "body=%s", srStr(resp2))
 	stored, err := client.ServiceRequest.Get(context.Background(), id)
 	require.NoError(t, err)
 	require.NotNil(t, stored.DeletedAt)

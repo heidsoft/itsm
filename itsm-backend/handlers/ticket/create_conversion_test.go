@@ -64,3 +64,36 @@ func TestTicketToResponseKeepsSLADeadlines(t *testing.T) {
 	assert.Nil(t, empty.SLAResponseDeadline)
 	assert.Nil(t, empty.SLAResolutionDeadline)
 }
+
+// resolve/close 会把解决方案与生命周期时间戳写入数据库，但 buildTicketResponse
+// 曾经漏拷这四个字段：`itsm flow run ticket-lifecycle` 在 assert `resolution`
+// 时读不到任何值（现象与「解决方案没保存」完全一致），详情页也看不到解决时间。
+// 这是 API 契约缺陷，不是测试数据问题。
+func TestBuildTicketResponseKeepsResolutionAndLifecycleTimestamps(t *testing.T) {
+	resolvedAt := time.Date(2026, 10, 22, 14, 0, 0, 0, time.UTC)
+	closedAt := resolvedAt.Add(30 * time.Minute)
+	firstResponseAt := resolvedAt.Add(-15 * time.Minute)
+	resolution := "重启 worker 并清理连接池"
+
+	ticket := &Ticket{
+		ID:              7,
+		TenantID:        1,
+		Resolution:      &resolution,
+		ResolvedAt:      &resolvedAt,
+		ClosedAt:        &closedAt,
+		FirstResponseAt: &firstResponseAt,
+	}
+
+	got := buildTicketResponse(ticket)
+
+	assert.Equal(t, resolution, got.Resolution, "resolution 必须透出，否则调用方无法确认解决方案")
+	assert.Same(t, &resolvedAt, got.ResolvedAt)
+	assert.Same(t, &closedAt, got.ClosedAt)
+	assert.Same(t, &firstResponseAt, got.FirstResponseAt)
+
+	// 未解决工单保持空值，由 omitempty 隐藏。
+	unresolved := buildTicketResponse(&Ticket{ID: 8, TenantID: 1})
+	assert.Empty(t, unresolved.Resolution)
+	assert.Nil(t, unresolved.ResolvedAt)
+	assert.Nil(t, unresolved.ClosedAt)
+}

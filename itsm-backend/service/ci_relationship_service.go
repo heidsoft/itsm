@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 
+	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/cirelationship"
@@ -56,7 +57,10 @@ func (s *CIRelationshipService) CreateCIRelationship(ctx context.Context, req *d
 		First(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, fmt.Errorf("source CI not found")
+			// 客户端指向不存在的 CI 是 404，不是服务端故障。裸 fmt.Errorf 会被
+			// classifyError 归为未分类错误并兜底成 500，agent/SDK 无法区分
+			// "关系非法" 与 "后端挂了"。
+			return nil, common.NewNotFoundError("源CI")
 		}
 		s.logger.Errorw("Failed to get source CI", "error", err, "ci_id", req.SourceCIID)
 		return nil, fmt.Errorf("failed to get source CI: %w", err)
@@ -68,7 +72,7 @@ func (s *CIRelationshipService) CreateCIRelationship(ctx context.Context, req *d
 		First(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, fmt.Errorf("target CI not found")
+			return nil, common.NewNotFoundError("目标CI")
 		}
 		s.logger.Errorw("Failed to get target CI", "error", err, "ci_id", req.TargetCIID)
 		return nil, fmt.Errorf("failed to get target CI: %w", err)
@@ -88,15 +92,15 @@ func (s *CIRelationshipService) CreateCIRelationship(ctx context.Context, req *d
 		return nil, fmt.Errorf("failed to check relation existence: %w", err)
 	}
 	if exists {
-		return nil, fmt.Errorf("relationship already exists between CI %d and CI %d with type %s",
-			req.SourceCIID, req.TargetCIID, req.RelationshipType)
+		return nil, common.NewConflictError("CI关系",
+			fmt.Sprintf("源CI %d 与目标CI %d 之间已存在类型为 %s 的关系", req.SourceCIID, req.TargetCIID, req.RelationshipType))
 	}
 
 	// 环检测：若 targetCI 已存在通向 sourceCI 的有向路径，则本次插入会形成环
 	// 语义：CI 关系图应是 DAG（拓扑）。对同类型关系（如 depends_on 全局）单独判环。
 	// 实现：从 targetCIID 出发做 DFS，看是否可达 sourceCIID。
 	if req.SourceCIID == req.TargetCIID {
-		return nil, fmt.Errorf("relationship would form self-loop: source and target CI are identical")
+		return nil, common.NewValidationError("源CI和目标CI不能相同", nil)
 	}
 	cyclic, cycleErr := s.wouldCreateCycle(ctx, tenantID, req.SourceCIID, req.TargetCIID, string(req.RelationshipType))
 	if cycleErr != nil {
@@ -105,8 +109,8 @@ func (s *CIRelationshipService) CreateCIRelationship(ctx context.Context, req *d
 		return nil, fmt.Errorf("failed to detect cycle: %w", cycleErr)
 	}
 	if cyclic {
-		return nil, fmt.Errorf("relationship would create a cycle in CI dependency graph (source=%d target=%d type=%s)",
-			req.SourceCIID, req.TargetCIID, req.RelationshipType)
+		return nil, common.NewConflictError("CI关系",
+			fmt.Sprintf("该关系会在 CI 依赖图中形成环（source=%d target=%d type=%s）", req.SourceCIID, req.TargetCIID, req.RelationshipType))
 	}
 
 	// 创建关系
