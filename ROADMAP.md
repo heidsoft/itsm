@@ -1,7 +1,7 @@
 # 🛣️ ITSM Roadmap
 
 > **Source of truth for what is shipping, what is shipping next, and
-> what is parked.** Updated as part of every release. Last synced: 2026-10-21（Pilot 能力生产化：通知域晋升 GA、问题域关闭证据与 KEDB 关联修复、交付链路失败恢复收口）。同步缺口：v1.6.16–v1.6.18 三个版本未做条目级「已落地」回填，下文条目状态以代码与 `CHANGELOG.md` 为准。
+> what is parked.** Updated as part of every release. Last synced: 2026-10-23（v1.6.20 发布：连接器域五批收口——健康面跨租户收口、凭据轮换接线、市场安装运行态闭环、飞书回调持久化去重、死信人工重放产品化；变更域经会签门禁/回滚清单/实施留痕晋升「可用」；知识发布门禁上线；问题域 SLA 与评论 GA；能力矩阵 notification 晋升 GA、problem/template 晋升 Pilot→GA）。同步缺口：v1.6.16–v1.6.20 五个版本未做条目级「已落地」回填，下文条目状态以代码与 `CHANGELOG.md` 为准。
 >
 > Cross-references:
 > - Design outlines: [docs/prd/](./docs/prd)（当前仅 1 篇）+ [plans/](./plans)（专项计划与审计）
