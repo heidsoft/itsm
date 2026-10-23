@@ -163,9 +163,25 @@ func TestSLAHandler_GetStats(t *testing.T) {
 
 	t.Run("无样本时合规率诚实为0而非伪装100", func(t *testing.T) {
 		data := resp.Data.(map[string]interface{})
-		rate, ok := data["overall_compliance_rate"]
+		rate, ok := data["overallComplianceRate"]
 		require.True(t, ok, "body=%s", slaStr(resp))
 		assert.Equal(t, float64(0), rate)
+	})
+
+	t.Run("字段必须是 camelCase 契约", func(t *testing.T) {
+		data := resp.Data.(map[string]interface{})
+		for _, key := range []string{
+			"totalDefinitions", "activeDefinitions", "totalViolations",
+			"openViolations", "overallComplianceRate",
+		} {
+			assert.Contains(t, data, key, "body=%s", slaStr(resp))
+		}
+		for _, legacy := range []string{
+			"total_definitions", "active_definitions", "total_violations",
+			"open_violations", "overall_compliance_rate",
+		} {
+			assert.NotContains(t, data, legacy, "snake_case 字段已废弃: %s", legacy)
+		}
 	})
 }
 

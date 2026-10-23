@@ -11,12 +11,18 @@ type Repository interface {
 	CreateDefinition(ctx context.Context, s *SLADefinition) (*SLADefinition, error)
 	GetDefinition(ctx context.Context, id int, tenantID int) (*SLADefinition, error)
 	ListDefinitions(ctx context.Context, tenantID int, page, size int) ([]*SLADefinition, int, error)
+	// CountDefinitions 统计租户内的定义数；isActive 为 nil 时不过滤启用状态。
+	// 统计面必须用 Count，不能对分页列表取 len——旧实现读 1000 行算总数，
+	// 超过 1000 条的租户会得到一个恒为 1000 的假数字。
+	CountDefinitions(ctx context.Context, tenantID int, isActive *bool) (int, error)
 	UpdateDefinition(ctx context.Context, s *SLADefinition) (*SLADefinition, error)
 	DeleteDefinition(ctx context.Context, id int, tenantID int) error
 
 	// Violations
 	CreateViolation(ctx context.Context, v *SLAViolation) (*SLAViolation, error)
 	ListViolations(ctx context.Context, tenantID int, page, size int, filters map[string]interface{}) ([]*SLAViolation, int, error)
+	// CountViolations 统计租户内的违规数；isResolved 为 nil 时不过滤处理状态。
+	CountViolations(ctx context.Context, tenantID int, isResolved *bool) (int, error)
 	UpdateViolationStatus(ctx context.Context, id int, isResolved bool, notes string, tenantID int) error
 
 	// Metrics

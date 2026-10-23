@@ -100,6 +100,14 @@ func (r *EntRepository) ListDefinitions(ctx context.Context, tenantID int, page,
 	return results, total, nil
 }
 
+func (r *EntRepository) CountDefinitions(ctx context.Context, tenantID int, isActive *bool) (int, error) {
+	q := r.client.SLADefinition.Query().Where(sladefinition.TenantID(tenantID))
+	if isActive != nil {
+		q = q.Where(sladefinition.IsActive(*isActive))
+	}
+	return q.Count(ctx)
+}
+
 func (r *EntRepository) UpdateDefinition(ctx context.Context, s *SLADefinition) (*SLADefinition, error) {
 	e, err := r.client.SLADefinition.UpdateOneID(s.ID).
 		Where(sladefinition.TenantID(s.TenantID)).
@@ -219,6 +227,14 @@ func (r *EntRepository) ListViolations(ctx context.Context, tenantID int, page, 
 		res = append(res, d)
 	}
 	return res, total, nil
+}
+
+func (r *EntRepository) CountViolations(ctx context.Context, tenantID int, isResolved *bool) (int, error) {
+	q := r.client.SLAViolation.Query().Where(slaviolation.TenantID(tenantID))
+	if isResolved != nil {
+		q = q.Where(slaviolation.IsResolved(*isResolved))
+	}
+	return q.Count(ctx)
 }
 
 func (r *EntRepository) UpdateViolationStatus(ctx context.Context, id int, isResolved bool, notes string, tenantID int) error {

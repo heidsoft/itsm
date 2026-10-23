@@ -344,60 +344,53 @@ func (s *Service) GetAlertHistory(ctx context.Context, tenantID int, page, size 
 	return histories, total, nil
 }
 
-// GetSLAStats 获取SLA统计信息
-func (s *Service) GetSLAStats(ctx context.Context, tenantID int) (map[string]interface{}, error) {
-	// 获取总SLA定义数
-	definitions, _, err := s.repo.ListDefinitions(ctx, tenantID, 1, 1000)
+// GetSLAStats 获取SLA统计信息。
+// 字段名是 camelCase 契约；计数走 Count 查询而不是对分页列表取 len，
+// 否则定义/违规超过 1000 条的租户永远看到 1000。
+func (s *Service) GetSLAStats(ctx context.Context, tenantID int) (*dto.SLAStatsResponse, error) {
+	totalDefinitions, err := s.repo.CountDefinitions(ctx, tenantID, nil)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("统计 SLA 定义失败: %w", err)
 	}
-
-	// 获取活跃SLA定义数
-	activeCount := 0
-	for _, def := range definitions {
-		if def.IsActive {
-			activeCount++
-		}
-	}
-
-	// 获取总违规数
-	violations, _, err := s.repo.ListViolations(ctx, tenantID, 1, 1000, map[string]interface{}{})
+	active := true
+	activeDefinitions, err := s.repo.CountDefinitions(ctx, tenantID, &active)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("统计启用的 SLA 定义失败: %w", err)
 	}
 
-	// 获取待处理违规数
-	openViolations := 0
-	for _, v := range violations {
-		if !v.IsResolved {
-			openViolations++
-		}
+	totalViolations, err := s.repo.CountViolations(ctx, tenantID, nil)
+	if err != nil {
+		return nil, fmt.Errorf("统计 SLA 违规失败: %w", err)
+	}
+	unresolved := false
+	openViolations, err := s.repo.CountViolations(ctx, tenantID, &unresolved)
+	if err != nil {
+		return nil, fmt.Errorf("统计未处理 SLA 违规失败: %w", err)
 	}
 
-	// 计算合规率 - 基于总工单数而非违规数
-	// 从 repository 获取总工单数和达标工单数来计算
+	// 合规率基于总工单数与达标工单数。工单统计失败不能被当作
+	// 「没有样本」降级成 0：那会把一次查询故障伪装成「全员不合规」。
 	var complianceRate float64
 	totalTickets, metSLA, err := s.repo.GetTicketStats(ctx, tenantID)
-	if err != nil || totalTickets == 0 {
-		// 如果无法获取工单数据，回退到基于违规的计算；
-		// 完全无样本时诚实返回 0（暂无数据），不伪装成 100% 合规。
-		if len(violations) > 0 {
-			complianceRate = float64(len(violations)-openViolations) / float64(len(violations)) * 100
-		} else {
-			complianceRate = 0
-		}
-	} else {
+	if err != nil {
+		return nil, fmt.Errorf("统计工单达标情况失败: %w", err)
+	}
+	if totalTickets > 0 {
 		complianceRate = float64(metSLA) / float64(totalTickets) * 100
+	} else if totalViolations > 0 {
+		// 完全没有工单样本但存在历史违规时，按违规处理率给出可解释的读数；
+		// 两者都为 0 则诚实返回 0（暂无数据），不伪装成 100% 合规。
+		complianceRate = float64(totalViolations-openViolations) / float64(totalViolations) * 100
 	}
 	// 保留一位小数，避免前端展示原始浮点噪声
 	complianceRate = math.Round(complianceRate*10) / 10
 
-	return map[string]interface{}{
-		"total_definitions":       len(definitions),
-		"active_definitions":      activeCount,
-		"total_violations":        len(violations),
-		"open_violations":         openViolations,
-		"overall_compliance_rate": complianceRate,
+	return &dto.SLAStatsResponse{
+		TotalDefinitions:      totalDefinitions,
+		ActiveDefinitions:     activeDefinitions,
+		TotalViolations:       totalViolations,
+		OpenViolations:        openViolations,
+		OverallComplianceRate: complianceRate,
 	}, nil
 }
 

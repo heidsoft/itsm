@@ -2784,6 +2784,22 @@ cd itsm-cli && npm run check   # 55 例（含 4 例新增的审批链推进场�
 cd itsm-backend && go test -count=1 ./handlers/ticket/ ./dto/ ./router/
 ```
 
+### 1.79 SLA 统计契约收口（2026-10-24，行为变更：`/sla/stats` 字段改名）
+
+- 响应字段全部改为 camelCase，旧 snake_case 键不再返回：`totalDefinitions`、`activeDefinitions`、
+  `totalViolations`、`openViolations`、`overallComplianceRate`。仍按 `total_definitions`
+  等旧键读取的仪表盘/脚本会拿到 `undefined`/空值，必须同步改名。
+- 计数改为数据库 `Count`，不再是「最多取 1000 行再数长度」。数据量超过 1000 的租户，
+  统计值会显著变大——这是修复前被截断的真实值，不是统计口径变化。
+- 计数失败由「静默返回 0」改为 HTTP 500 / `code: 5001`。依赖「调不通时显示零违规」的
+  监控看板需要显式处理失败态。
+
+**验证**
+
+```bash
+cd itsm-backend && go test -count=1 ./handlers/sla/ ./dto/
+```
+
 ## 2. 环境变量变更
 
 本次升级**移除了多个"幽灵配置项"**（在示例文件中声明但代码/Compose 从不读取，用户配置了也不生效），并修正了一个 Grafana 密码安全缺陷。

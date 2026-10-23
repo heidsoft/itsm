@@ -1811,6 +1811,14 @@ GET /api/v1/sla/stats
 Authorization: Bearer <accessToken>
 ```
 
+权限 `sla:read`。响应 `data` 为 `dto.SLAStatsResponse`：`totalDefinitions`（租户内全部策略）、
+`activeDefinitions`（`isActive=true`）、`totalViolations`、`openViolations`（`isResolved=false`）、
+`overallComplianceRate`（0–100，保留一位小数）。计数走数据库 `Count`，不受列表分页上限影响；
+2026-10-24 前统计值来自 `pageSize=1000` 的列表长度，超过 1000 条时恒等于 1000。
+合规率优先按工单达标情况计算（有工单样本时），无工单样本时退化为违规已解决比例；
+两者都无样本时为 `0`。任一计数查询失败返回错误（HTTP 500 / `code: 5001`），
+不会把故障伪装成「零违规、零定义」。
+
 ### 获取 SLA 违规记录
 
 ```http

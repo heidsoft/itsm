@@ -145,6 +145,18 @@ type SLAComplianceReport struct {
 	ReportPeriod      SLAReportPeriod `json:"reportPeriod"`
 }
 
+// SLAStatsResponse 是 GET /sla/stats 的契约。字段必须是 camelCase：
+// 前端 sla-api.ts 早已按 totalDefinitions/activeDefinitions 读取，
+// 后端此前返回 snake_case map，页面拿到的永远是 undefined。
+// 计数来自 Count 查询，不受列表分页上限影响（旧实现最多只看到 1000 行）。
+type SLAStatsResponse struct {
+	TotalDefinitions      int     `json:"totalDefinitions" example:"12"`
+	ActiveDefinitions     int     `json:"activeDefinitions" example:"10"`
+	TotalViolations       int     `json:"totalViolations" example:"37"`
+	OpenViolations        int     `json:"openViolations" example:"4"`
+	OverallComplianceRate float64 `json:"overallComplianceRate" example:"92.5"`
+}
+
 // Existing SLA report DTOs remain unchanged...
 
 type SLASummary struct {
