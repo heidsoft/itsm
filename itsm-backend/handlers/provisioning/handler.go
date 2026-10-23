@@ -53,8 +53,13 @@ func (h *Handler) StartProvisioning(c *gin.Context) {
 
 	task, err := h.provisioningService.CreateTaskFromServiceRequest(c.Request.Context(), id, tenantID, userID)
 	if err != nil {
-		// not-found → 404、状态不符 → 409，其余仍为 500；由 classifyError 统一稳定映射。
-		common.FailWithErr(c, err, "创建交付任务失败")
+		// not-found → 404、状态不符 → 409 且带领域文案，其余仍为 500。
+		// 用 RespondError 而非 FailWithErr：状态守卫的 BusinessError 文案
+		// （「当前状态不允许启动交付（需要 security_approved）」）必须透出——
+		// FailWithErr 会用兜底文案「创建交付任务失败」把它整段吞掉，运维拿到
+		// 409 却不知道该去补审批链还是改状态，只能翻后端日志。未分类的错误
+		// （事务/DB 故障）safeMsg 为空，仍回落兜底文案，不泄内部细节。
+		common.RespondError(c, err, "创建交付任务失败")
 		return
 	}
 

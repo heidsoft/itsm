@@ -2724,6 +2724,45 @@ cd itsm-backend && go test -count=1 ./handlers/cmdb/ ./router/
 cd itsm-backend && go test -count=1 ./service/ -run 'TestApproveTicket_'
 ```
 
+### 1.73 交付启动与审批的「失败/无进展」开始说人话（2026-10-23，行为变更：错误与成功响应的文案）
+
+两处「操作看起来成功、实际什么都没发生」的协议缺陷，来源是全面测试系统功能点时对
+服务目录履约链的端到端验收：
+
+**① 交付启动 409 不带原因（`POST /api/v1/service-requests/:id/provision`）**
+
+状态守卫要求 `security_approved`（三级审批链的履约门禁），但 handler 用
+`common.FailWithErr` 把领域文案「当前状态不允许启动交付（需要 security_approved）」
+替换成了兜底文案「创建交付任务失败」——运维拿到 409 不知道该补审批链还是改状态，
+只能翻后端日志。改为 `common.RespondError`：业务错误透传安全文案，未分类的
+内部错误仍回落兜底文案（不泄细节）。响应码不变（409/4090）。
+
+**② 会签审批 200 但不推进（`POST /api/v1/service-requests/:id/approval`）**
+
+会签层（parallel）一票之后请求状态不变、审批行保持 pending——这是正确的产品语义，
+但响应只有裸 `success`：运维连点「审批」看到的都是成功、状态却原地不动，既不知道
+还需几个人批，也无从判断该继续等人还是去修审批链。现在当「本次审批落在本级且未达
+阈值」时，响应的 `message` 带进度：「本级会签未满足（已批 1/2 人），还需 1 人审批后
+自动进入下一级」。串行审批、已推进、无会签配置的响应形状不变（`message` 为空走
+普通 `success`）。
+
+**集成方影响**：依赖 `message === "创建交付任务失败"` 做分支的客户端需改判
+`httpStatus === 409` 或 `code === 4090`；审批响应读取 `message` 的客户端需容忍
+非空文案（原有字段结构不变）。
+
+**工具链修复（itsm-cli）**：`flow run service-request-fulfillment` 此前只审批一次，
+与产品的三级审批链不同步，verdict 误判 `failed`（实为环境前置：会签层缺可登录的
+审批账号）——现逐级推进整条链，推不动时判 `blocked` 并点名卡住的状态；
+`request status` 的 usage 字符串由 `--status <value>` 改为实际的
+`--data '{"status":"<value>"}'`（照旧写法必 400）。
+
+**验证**
+
+```bash
+cd itsm-backend && go test -count=1 ./handlers/provisioning/ ./handlers/service_request/ ./router/
+cd itsm-cli && npm run check   # 55 例（含 4 例新增的审批链推进场景单测）
+```
+
 ## 2. 环境变量变更
 
 本次升级**移除了多个"幽灵配置项"**（在示例文件中声明但代码/Compose 从不读取，用户配置了也不生效），并修正了一个 Grafana 密码安全缺陷。

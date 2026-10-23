@@ -2,6 +2,7 @@ package service_request
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -305,7 +306,56 @@ func (h *Handler) ApplyApproval(c *gin.Context) {
 		return
 	}
 
+	// 会签未满足时服务端返回 200 但请求状态不变（票已记、级未进）。若只回
+	// Success，运维连点「审批」看到的都是成功、状态却原地不动，既不知道
+	// 还需几个人批，也无从判断该继续等人还是去修审批链。把「已批 X/Y 人」
+	// 显式放到 message 里；已推进或串行审批（无会签配置）时 message 为空，
+	// 走普通 Success，响应形状不变。
+	if req.Action == "approve" && res != nil {
+		if msg := quorumProgressMessage(res, approvals); msg != "" {
+			common.SuccessWithMessage(c, msg, h.toDTO(res, approvals))
+			return
+		}
+	}
+
 	common.Success(c, h.toDTO(res, approvals))
+}
+
+// quorumProgressMessage 在「审批动作落在本级、已记录投票但未达阈值」时给出
+// 会签进度文案，其余情况返回空串。判定与服务层同一口径：node 无 approver_ids
+// 即串行审批（一次即过），不适用会签语义。
+//
+// 为什么要求 approved > 0：本级 pending 且一票未收，说明请求刚从上一级推进
+// 过来（或尚未有人投票），此时提示「会签未满足」会让刚刚批准通过的审批人
+// 误以为自己的票没生效——那句话只属于「我这一级还差人」的场景。
+func quorumProgressMessage(req *ServiceRequest, approvals []*ServiceRequestApproval) string {
+	var current *ServiceRequestApproval
+	for _, a := range approvals {
+		if a.Level == req.CurrentLevel && a.Status == ApprovalStatusPending {
+			current = a
+			break
+		}
+	}
+	if current == nil || current.Node == nil {
+		return ""
+	}
+	nodeIDs, ok := current.Node["approver_ids"].([]interface{})
+	if !ok || len(nodeIDs) == 0 {
+		return ""
+	}
+	// 阈值取不到时按「候选审批人数」兜底，与会签求值处同一口径。
+	threshold := len(nodeIDs)
+	if t, ok := current.Node["quorum_threshold"].(float64); ok && int(t) > 0 {
+		threshold = int(t)
+	}
+	approved := 0
+	if ids, ok := current.Node["approved_ids"].([]interface{}); ok {
+		approved = len(ids)
+	}
+	if approved == 0 || approved >= threshold {
+		return ""
+	}
+	return fmt.Sprintf("本级会签未满足（已批 %d/%d 人），还需 %d 人审批后自动进入下一级", approved, threshold, threshold-approved)
 }
 
 func (h *Handler) ListPending(c *gin.Context) {

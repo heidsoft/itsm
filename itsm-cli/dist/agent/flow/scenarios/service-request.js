@@ -1,22 +1,59 @@
 import { apiClient } from '../../../lib/api-client.js';
 import { blocked, idOf, requireNumber } from '../vars.js';
 /**
- * Service request fulfillment: pick a real catalog offering, submit, approve,
- * provision, then confirm provisioning tasks exist.
+ * Drive a service request's approval chain to the fulfillment gate.
+ *
+ * The product advances one level per approval call (manager → IT → security),
+ * and a parallel (quorum) level needs its other approvers. `read`/`approve` are
+ * injected so the loop is testable without a backend; the scenario wires them to
+ * the real ApiClient.
+ *
+ * Returns the final request state. Throws `blocked()` when a vote stops moving
+ * the status — one identity cannot satisfy a quorum level, which is an
+ * environment gap (no login accounts for the chain's approvers), not a product
+ * failure.
+ */
+export async function approveThroughChain(id, read, approve, maxVotes = 6) {
+    for (let vote = 0; vote < maxVotes; vote++) {
+        const before = await read();
+        const status = before.status;
+        if (status === undefined || status === 'security_approved' || status === 'rejected' || status === 'cancelled') {
+            return before;
+        }
+        await approve();
+        const after = await read();
+        if (after.status === status) {
+            blocked(`approval chain cannot advance past '${status}' with the flow's single identity ` +
+                '(a parallel level needs its other approvers); run this flow with accounts that satisfy the chain');
+        }
+    }
+    return read();
+}
+/**
+ * Service request fulfillment: pick a real catalog offering, submit, approve
+ * the full chain, provision, then confirm provisioning tasks exist.
  *
  * The scenario deliberately reads the catalog instead of hard-coding an id: a
  * hard-coded id makes the flow pass on one developer's database and fail
  * everywhere else, which trains people to ignore it.
+ *
+ * Approval is driven level by level (manager → IT → security), because the
+ * product's fulfillment gate is `security_approved`: a single approve call only
+ * advances one level, and a parallel (quorum) level needs its other approvers.
+ * When the flow's single identity cannot advance the chain further the verdict
+ * is `blocked` with the stuck status named — an environment gap (no login
+ * accounts for the chain's approvers), not a product failure. The backend's own
+ * scenario test covers the full chain with real approver accounts.
  */
 export const serviceRequestFulfillment = {
     name: 'service-request-fulfillment',
-    summary: 'Catalog → request → approval → provisioning → tasks, against a real catalog offering',
+    summary: 'Catalog → request → full approval chain → provisioning → tasks, against a real catalog offering',
     domain: 'service-catalog',
     tags: ['itil', 'fulfillment', 'write'],
     requires: ['at least one enabled service catalog offering'],
     proves: [
         'a request can be submitted from a catalog offering',
-        'approval moves the request out of submitted',
+        'the approval chain advances level by level to the fulfillment gate',
         'provisioning starts and exposes ordered tasks',
     ],
     steps: [
@@ -61,9 +98,17 @@ export const serviceRequestFulfillment = {
             expect: [{ path: 'status', exists: true }],
         },
         {
-            name: 'approve service request',
+            name: 'approve through the full chain',
             endpoint: 'POST /api/v1/service-requests/:id/approval',
-            run: (ctx) => apiClient.serviceRequestApproval(requireNumber(ctx, 'serviceRequestId'), { action: 'approve', comment: 'Flow approval' }),
+            run: async (ctx) => {
+                const id = requireNumber(ctx, 'serviceRequestId');
+                // 审批链是逐级推进的（manager → IT → security），一次审批只走一级；
+                // 会签层（parallel）还需要多人投票。用当前身份尽量推进整条链：
+                // 状态不再变化说明会签层在等其他审批人——那是环境前置（缺可登录的
+                // 审批账号），判 blocked，不判产品失败。单级/串行链则一轮即达
+                // security_approved，直接进入交付。
+                return approveThroughChain(id, () => apiClient.getServiceRequest(id), () => apiClient.serviceRequestApproval(id, { action: 'approve', comment: 'Flow approval' }));
+            },
             // Approval is BPMN-backed and fail-closed: if the catalog offering has no
             // process binding, the backend refuses rather than self-approving. That is
             // correct product behavior, so classify it as blocked, not failed.
@@ -80,9 +125,9 @@ export const serviceRequestFulfillment = {
                 const status = result.status;
                 return [
                     {
-                        check: 'approval moved the request past submitted',
-                        ok: typeof status === 'string' && status !== 'submitted',
-                        expected: 'status != submitted',
+                        check: 'approval chain reached the fulfillment gate (security_approved)',
+                        ok: status === 'security_approved',
+                        expected: 'security_approved',
                         actual: status,
                     },
                 ];
@@ -92,6 +137,14 @@ export const serviceRequestFulfillment = {
             name: 'start provisioning',
             endpoint: 'POST /api/v1/service-requests/:id/provision',
             run: (ctx) => apiClient.startServiceRequestProvisioning(requireNumber(ctx, 'serviceRequestId')),
+            // 状态守卫：链未走完就启动交付必须被拒（409 + 缺哪级审批的文案）。
+            // 走到这里说明上一步的链推进判定与守卫判断不一致——先按环境前置
+            // 记录，不吞掉真正的产品回归（消息不含守卫文案时仍会 failed）。
+            blockedWhen: {
+                httpStatus: 409,
+                messageIncludes: '启动交付',
+                reason: 'approval chain did not reach security_approved; provisioning is correctly refused until it does',
+            },
         },
         {
             name: 'provisioning tasks are exposed',

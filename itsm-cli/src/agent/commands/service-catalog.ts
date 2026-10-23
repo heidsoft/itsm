@@ -14,7 +14,7 @@ export function serviceCatalogCommands() {
     cmd('request.get', 'Service request detail', 'itsm request get <id>', ['GET /api/v1/service-requests/:id'], async (ctx) => apiClient.getServiceRequest(requirePositional(ctx.args, 0, 'requestId'))),
     cmd('request.create', 'Submit a service request (from a catalog offering)', 'itsm request create --data <json>', ['POST /api/v1/service-requests'], async (ctx) => apiClient.createServiceRequest(body(ctx.args) ?? {})),
     cmd('request.update', 'Update a service request', 'itsm request update <id> [--data <json>]', ['PUT /api/v1/service-requests/:id'], async (ctx) => apiClient.updateServiceRequest(requirePositional(ctx.args, 0, 'requestId'), body(ctx.args) ?? {})),
-    cmd('request.status', 'Update fulfillment status', 'itsm request status <id> --status <value>', ['PUT /api/v1/service-requests/:id/status'], async (ctx) => {
+    cmd('request.status', 'Update fulfillment status', 'itsm request status <id> --data \'{"status":"<value>"}\'', ['PUT /api/v1/service-requests/:id/status'], async (ctx) => {
       const requestId = requirePositional(ctx.args, 0, 'requestId');
       const status = body(ctx.args)?.status;
       if (typeof status !== 'string' || !status) throw usageError('Missing required --data status field, e.g. --data \'{"status":"approved"}\'');
