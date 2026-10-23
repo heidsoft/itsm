@@ -42,29 +42,49 @@ export interface CommandInputSchema {
 
 const VALUE_PLACEHOLDER = /^<([^>]+)>$/;
 
+/**
+ * Bare placeholders: `[--status s]`, `[--page N]`, `--title X`.
+ *
+ * `[--status s]` used to be typed as a boolean flag because only `<angle>`
+ * placeholders were recognised, so `itsm --json schema ticket.list` advertised
+ * `status` as boolean. An agent that believed the schema sent `--status` with
+ * no value; `stringFlag` then returned undefined and the filter was dropped
+ * silently — a wrong answer instead of an error. A bare word immediately after
+ * a flag is a value placeholder.
+ *
+ * Values that are themselves enumerations (`--action approve|reject`) contain
+ * `|` and therefore do not match, keeping enum extraction in charge of them.
+ */
+const BARE_PLACEHOLDER = /^[A-Za-z0-9][A-Za-z0-9._@,-]*$/;
+
 /** Split a usage string into top-level tokens, keeping bracketed groups whole. */
 function tokenizeUsage(usage: string): Array<{ text: string; depth: number }> {
   const out: Array<{ text: string; depth: number }> = [];
   let depth = 0;
   let buf = '';
   let tokenDepth = 0;
+  // `<new status>` is one placeholder, not two tokens: splitting on the space
+  // inside the angle brackets lost the type and advertised a boolean flag.
+  let inPlaceholder = false;
   const flush = () => {
     if (buf.trim()) out.push({ text: buf.trim(), depth: tokenDepth });
     buf = '';
   };
   for (const ch of usage) {
-    if (ch === '[') {
+    if (ch === '<') inPlaceholder = true;
+    if (ch === '>') inPlaceholder = false;
+    if (!inPlaceholder && ch === '[') {
       if (!buf) tokenDepth = depth + 1;
       depth++;
       continue;
     }
-    if (ch === ']') {
+    if (!inPlaceholder && ch === ']') {
       depth = Math.max(0, depth - 1);
       flush();
       tokenDepth = 0;
       continue;
     }
-    if (ch === ' ' || ch === '\n' || ch === '\t') {
+    if (!inPlaceholder && (ch === ' ' || ch === '\n' || ch === '\t')) {
       flush();
       tokenDepth = depth;
       continue;
@@ -76,12 +96,21 @@ function tokenizeUsage(usage: string): Array<{ text: string; depth: number }> {
   return out;
 }
 
+/**
+ * Flag typing.
+ *
+ * The placeholder is the strongest signal (`<n>` is a number, `<json>` is a
+ * body, `<s>` is a string). Name heuristics only fill in names whose meaning is
+ * unambiguous — they used to fire on any `*level` suffix, which typed
+ * `riskLevel` as a number even though its values are low|medium|high.
+ */
 function inferFlagType(name: string, placeholder: string | undefined): ParamType {
   if (placeholder === undefined) return 'boolean';
   const p = placeholder.toLowerCase();
   if (p === 'json' || p === 'object') return 'json';
-  if (/^(n|num|number|count|id|level)$/.test(p)) return 'number';
-  if (/(id|ids|size|page|count|level|number)$/i.test(name)) return 'number';
+  if (/^(n|num|number|count|id|level|ids)$/.test(p)) return 'number';
+  if (/(^|\.)(page|pageSize|limit|size)$/.test(name)) return 'number';
+  if (/Id$/.test(name)) return 'number';
   return 'string';
 }
 
@@ -122,6 +151,9 @@ export function deriveParams(usage: string): CommandInputSchema {
       const next = tokens[i + 1];
       if (next && next.depth >= depth && VALUE_PLACEHOLDER.test(next.text)) {
         placeholder = next.text.match(VALUE_PLACEHOLDER)![1];
+        i++;
+      } else if (next && next.depth >= depth && BARE_PLACEHOLDER.test(next.text)) {
+        placeholder = next.text;
         i++;
       }
     }

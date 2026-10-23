@@ -5,10 +5,10 @@ import { usageError } from '../../lib/errors.js';
 /** Service catalog (browse) & service requests (fulfillment lifecycle). */
 export function serviceCatalogCommands() {
     return [
-        cmd('catalog.list', 'Browse service catalog offerings', 'itsm catalog list [--page N]', ['GET /api/v1/service-catalogs'], async (ctx) => apiClient.listServiceCatalog(withPagination(ctx.args))),
+        cmd('catalog.list', 'Browse service catalog offerings', 'itsm catalog list [--page N] [--pageSize N]', ['GET /api/v1/service-catalogs'], async (ctx) => apiClient.listServiceCatalog(withPagination(ctx.args))),
         cmd('catalog.get', 'Catalog item detail', 'itsm catalog get <id>', ['GET /api/v1/service-catalogs/:id'], async (ctx) => apiClient.getServiceCatalogItem(requirePositional(ctx.args, 0, 'catalogId'))),
         cmd('catalog.search', 'Search catalog', 'itsm catalog search <q>', ['GET /api/v1/service-catalogs/search'], async (ctx) => apiClient.searchServiceCatalog(requirePositional(ctx.args, 0, 'query'))),
-        cmd('request.list', 'List service requests', 'itsm request list [--page N]', ['GET /api/v1/service-requests'], async (ctx) => apiClient.listServiceRequests(withPagination(ctx.args))),
+        cmd('request.list', 'List service requests', 'itsm request list [--page N] [--pageSize N]', ['GET /api/v1/service-requests'], async (ctx) => apiClient.listServiceRequests(withPagination(ctx.args))),
         cmd('request.get', 'Service request detail', 'itsm request get <id>', ['GET /api/v1/service-requests/:id'], async (ctx) => apiClient.getServiceRequest(requirePositional(ctx.args, 0, 'requestId'))),
         cmd('request.create', 'Submit a service request (from a catalog offering)', 'itsm request create --data <json>', ['POST /api/v1/service-requests'], async (ctx) => apiClient.createServiceRequest(body(ctx.args) ?? {})),
         cmd('request.update', 'Update a service request', 'itsm request update <id> [--data <json>]', ['PUT /api/v1/service-requests/:id'], async (ctx) => apiClient.updateServiceRequest(requirePositional(ctx.args, 0, 'requestId'), body(ctx.args) ?? {})),

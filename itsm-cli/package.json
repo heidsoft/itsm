@@ -5,7 +5,8 @@
   "type": "module",
   "main": "dist/index.js",
   "bin": {
-    "itsm": "./bin/itsm.js"
+    "itsm": "./bin/itsm.js",
+    "itsm-mcp": "./bin/itsm-mcp.js"
   },
   "scripts": {
     "build": "tsc",
@@ -16,7 +17,9 @@
     "check:enums": "node scripts/gen-enums.mjs --check",
     "check:route-drift": "npm run build && node scripts/check-route-drift.mjs",
     "check": "npm run typecheck && npm run check:enums && npm run check:route-drift && npm test",
-    "smoke:agent": "node scripts/agent-smoke.mjs"
+    "smoke:agent": "node scripts/agent-smoke.mjs",
+    "mcp": "npm run build && node bin/itsm-mcp.js",
+    "smoke:mcp": "node scripts/mcp-smoke.mjs"
   },
   "dependencies": {
     "got": "^14.0.0",

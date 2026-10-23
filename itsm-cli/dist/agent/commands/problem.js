@@ -5,7 +5,7 @@ import { usageError } from '../../lib/errors.js';
 /** Problem management + known error DB — bodies mirror dto/problem_dto.go. */
 export function problemCommands() {
     return [
-        cmd('problem.list', 'List problems', 'itsm problem list [--status s]', ['GET /api/v1/problems'], async (ctx) => apiClient.listProblems({
+        cmd('problem.list', 'List problems', 'itsm problem list [--status s] [--page N] [--pageSize N]', ['GET /api/v1/problems'], async (ctx) => apiClient.listProblems({
             ...withPagination(ctx.args),
             status: optionalString(ctx.args.flags, 'status'),
         })),
@@ -59,7 +59,7 @@ export function problemCommands() {
         }),
         cmd('problem.comments.list', 'Problem comments', 'itsm problem comments list <id>', ['GET /api/v1/problems/:id/comments'], async (ctx) => apiClient.listProblemComments(requirePositional(ctx.args, 0, 'problemId'))),
         cmd('problem.comments.add', 'Add problem comment', 'itsm problem comments add <id> --data <json>', ['POST /api/v1/problems/:id/comments'], async (ctx) => apiClient.addProblemComment(requirePositional(ctx.args, 0, 'problemId'), body(ctx.args) ?? {})),
-        cmd('problem.known-errors.list', 'Known error database', 'itsm problem known-errors list [--q q]', ['GET /api/v1/known-errors'], async (ctx) => apiClient.listKnownErrors({
+        cmd('problem.known-errors.list', 'Known error database', 'itsm problem known-errors list [--q q] [--page N] [--pageSize N]', ['GET /api/v1/known-errors'], async (ctx) => apiClient.listKnownErrors({
             ...withPagination(ctx.args),
             q: optionalString(ctx.args.flags, 'q'),
         })),

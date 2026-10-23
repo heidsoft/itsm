@@ -4,6 +4,8 @@ import type { ParsedArgs } from './args.js';
 import type { CommandSpec } from './spec.js';
 import { describeCommand } from './spec.js';
 import { paramToJsonSchema } from './params.js';
+import { applyShaping } from './shape.js';
+import { addFailureHint } from './hints.js';
 import { ExitCode, classifyError, usageError, successEnvelope, failureEnvelope } from '../lib/errors.js';
 import type { AgentEnvelope } from '../lib/errors.js';
 import { resolveRuntimeConfig, hydrateAgentToken, getAutoLoginFailure } from '../lib/runtime.js';
@@ -196,125 +198,22 @@ async function executeSpec(spec: CommandSpec, args: ParsedArgs, rest: string[]):
 
 /** Deterministic, side-effect-free output shaping for agent context budgets. */
 function shapeResult(data: unknown, args: ParsedArgs): RunResult {
-  const list = extractList(data);
-  if (!list) {
-    // `--fields`/`--limit` on a non-list payload is a caller mistake, not a
-    // silent no-op: say so instead of returning the untrimmed object as if the
-    // request had been honoured.
-    const shapingRequested = Boolean(args.fields?.length) || args.limit !== undefined;
-    if (!shapingRequested) {
-      return { code: ExitCode.Success, envelope: successEnvelope(data) };
-    }
-    return {
-      code: ExitCode.Success,
-      envelope: {
-        ok: true,
-        data,
-        meta: {
-          shapingSkipped: 'payload is not a standard list envelope ({items,total,page,pageSize,totalPages}); --fields/--limit do not apply',
-        },
-      },
-    };
+  const outcome = applyShaping(data, { fields: args.fields, limit: args.limit });
+
+  if (!outcome.isList) {
+    if (!outcome.meta) return { code: ExitCode.Success, envelope: successEnvelope(data) };
+    return { code: ExitCode.Success, envelope: { ok: true, data, meta: outcome.meta } };
   }
-
-  const { fields, limit } = args;
-  const items = limit !== undefined ? list.items.slice(0, limit) : list.items;
-  const shapedItems = fields?.length ? items.map((item) => projectFields(item, fields)) : items;
-
-  const meta: Record<string, unknown> = {
-    returned: shapedItems.length,
-    total: list.total,
-    ...(shapedItems.length < list.total ? { truncated: true } : {}),
-    ...(fields?.length ? { projected: fields } : {}),
-  };
 
   if (args.format === 'ndjson') {
-    return { code: ExitCode.Success, ndjson: [...shapedItems, { _meta: meta }] };
+    return { code: ExitCode.Success, ndjson: [...outcome.items, { _meta: outcome.meta }] };
   }
 
-  const shaped = list.isEnvelope ? { ...(data as Record<string, unknown>), items: shapedItems } : shapedItems;
-  const hasShaping = fields?.length || limit !== undefined;
+  const hasShaping = args.fields?.length || args.limit !== undefined;
   return {
     code: ExitCode.Success,
-    envelope: hasShaping ? { ok: true, data: shaped, meta } : successEnvelope(shaped),
+    envelope: hasShaping ? { ok: true, data: outcome.data, meta: outcome.meta } : successEnvelope(outcome.data),
   };
-}
-
-interface ExtractedList {
-  items: unknown[];
-  total: number;
-  isEnvelope: boolean;
-}
-
-/** Recognise the backend list envelope ({items,total,page,pageSize,totalPages}) or a bare array. */
-function extractList(data: unknown): ExtractedList | undefined {
-  if (Array.isArray(data)) return { items: data, total: data.length, isEnvelope: false };
-  if (data && typeof data === 'object') {
-    const obj = data as Record<string, unknown>;
-    if (Array.isArray(obj['items'])) {
-      const total = typeof obj['total'] === 'number' ? obj['total'] : obj['items'].length;
-      return { items: obj['items'], total, isEnvelope: true };
-    }
-  }
-  return undefined;
-}
-
-/** `--fields id,title,assignee.name` — dotted paths nest, missing fields stay explicit nulls. */
-function projectFields(item: unknown, fields: string[]): unknown {
-  if (!item || typeof item !== 'object' || Array.isArray(item)) return item;
-  const src = item as Record<string, unknown>;
-  const out: Record<string, unknown> = {};
-  for (const path of fields) {
-    const segments = path.split('.').filter(Boolean);
-    let cursor: unknown = src;
-    for (const seg of segments) {
-      cursor = cursor && typeof cursor === 'object' ? (cursor as Record<string, unknown>)[seg] : undefined;
-    }
-    if (segments.length === 1) {
-      out[path] = cursor ?? null;
-      continue;
-    }
-    let target = out;
-    for (const seg of segments.slice(0, -1)) {
-      const next = (target[seg] as Record<string, unknown> | undefined) ?? {};
-      target[seg] = next;
-      target = next;
-    }
-    target[segments[segments.length - 1]] = cursor ?? null;
-  }
-  return out;
-}
-
-/** Attach a next step to failures whose kind would otherwise send an agent in circles. */
-function addFailureHint(err: ReturnType<typeof classifyError>, spec: CommandSpec): void {
-  const agentError = err.agentError;
-  if (agentError.hint) return;
-  switch (agentError.kind) {
-    case 'network':
-      agentError.hint =
-        'Backend unreachable. Confirm ITSM_BASE_URL / --base-url and that the service is up (`itsm --json doctor`). Transport failures are retryable with backoff; writes are not auto-retried to avoid duplicates.';
-      break;
-    case 'forbidden':
-      agentError.hint = `The token is valid but lacks the required permission for ${spec.name}. Ask an administrator for the matching resource:action grant; do not retry with the same identity.`;
-      break;
-    case 'not_found':
-      agentError.hint = `The target does not exist or is outside the caller's tenant. Verify the id with a list command (e.g. \`itsm --json ${spec.name.split('.')[0]} list\`) before retrying.`;
-      break;
-    case 'conflict':
-      agentError.hint = 'State or version conflict: re-read the resource, re-apply the change against the current version, then retry. Do not blindly repeat the same write.';
-      break;
-    case 'validation':
-      agentError.hint = `The backend rejected the payload. Check required fields with \`itsm --json ${spec.name} --help\`.`;
-      break;
-    case 'unavailable':
-      agentError.hint = 'Backend or a dependency is unavailable/degraded. Retry with backoff; surface it as an operational incident if it persists.';
-      break;
-    case 'not_authenticated':
-      // auto-login specifics are filled in by the caller before this point
-      break;
-    default:
-      break;
-  }
 }
 
 function commandCatalog(): Record<string, unknown> {

@@ -6,10 +6,10 @@ import { usageError } from '../../lib/errors.js';
 export function slaCommands() {
     return [
         cmd('sla.stats', 'SLA dashboard totals', 'itsm sla stats', ['GET /api/v1/sla/stats'], async () => apiClient.getSLAStats()),
-        cmd('sla.list', 'List SLA definitions', 'itsm sla list', ['GET /api/v1/sla/definitions'], async (ctx) => apiClient.listSLADefinitions(withPagination(ctx.args))),
+        cmd('sla.list', 'List SLA definitions', 'itsm sla list [--page N] [--pageSize N]', ['GET /api/v1/sla/definitions'], async (ctx) => apiClient.listSLADefinitions(withPagination(ctx.args))),
         cmd('sla.get', 'SLA definition detail', 'itsm sla get <id>', ['GET /api/v1/sla/definitions/:id'], async (ctx) => apiClient.getSLADefinition(requirePositional(ctx.args, 0, 'definitionId'))),
         cmd('sla.metrics', 'SLA metrics', 'itsm sla metrics', ['GET /api/v1/sla/metrics'], async () => apiClient.getSLAMetrics()),
-        cmd('sla.violations', 'SLA violations list (paged)', 'itsm sla violations', ['GET /api/v1/sla/violations'], async (ctx) => apiClient.getSLAViolations(withPagination(ctx.args))),
+        cmd('sla.violations', 'SLA violations list (paged)', 'itsm sla violations [--page N] [--pageSize N]', ['GET /api/v1/sla/violations'], async (ctx) => apiClient.getSLAViolations(withPagination(ctx.args))),
         cmd('sla.monitoring', 'Live SLA monitoring snapshot', 'itsm sla monitoring', ['POST /api/v1/sla/monitoring'], async () => apiClient.getSLAMonitoring()),
         cmd('sla.compliance-report', 'Window compliance report (startDate/endDate REQUIRED by the backend)', 'itsm sla compliance-report --startDate <d> --endDate <d>', ['GET /api/v1/sla/compliance-report'], async (ctx) => {
             // handlers/sla/handler.go:640 rejects a missing range with a 400 rather

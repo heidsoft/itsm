@@ -278,6 +278,24 @@ go run -tags migrate main.go             # 执行迁移
 open http://localhost:8090/swagger/index.html
 ```
 
+### 通过 MCP 接入（Agent 直接操作 ITSM）
+
+`itsm-cli/bin/itsm-mcp.js` 是一个零依赖的 MCP server（stdio / JSON-RPC），把 268 条命令暴露给 WorkBuddy、Claude Desktop 等客户端：20 个精选工具 + `itsm_discover`/`itsm_describe`/`itsm_call` 覆盖全部命令，高风险写操作需显式确认，列表默认裁剪到 50 条。
+
+```json
+{
+  "mcpServers": {
+    "itsm": {
+      "command": "node",
+      "args": ["/path/to/itsm/itsm-cli/bin/itsm-mcp.js"],
+      "env": { "ITSM_BASE_URL": "http://localhost:8090" }
+    }
+  }
+}
+```
+
+启动方式、安全模型、工具清单与排障见 [ITSM MCP Server](./docs/tools/itsm-mcp.md)。
+
 ### 常见场景
 
 | 场景 | 操作 |
@@ -397,7 +415,7 @@ itsm/
 ├── itsm-ai-service/  # AI/RAG 辅助服务
 ├── itsm-agent/       # Agent 扩展
 ├── itsm-skill/       # Skill 扩展
-├── itsm-cli/         # CLI 入口
+├── itsm-cli/         # CLI + Agent 协议 + MCP Server
 ├── docs/             # 产品、架构、开发、部署、测试文档
 ├── scripts/          # 开发、生产、发布与诊断脚本
 └── monitoring/       # Prometheus/Grafana 配置

@@ -1,5 +1,5 @@
 import { cmd } from '../spec.js';
-import { requirePositional, withPagination, body } from '../helpers.js';
+import { requirePositional, withPagination, body, stringFlag, numberFlag } from '../helpers.js';
 import { apiClient } from '../../lib/api-client.js';
 import { usageError } from '../../lib/errors.js';
 
@@ -7,7 +7,7 @@ import { usageError } from '../../lib/errors.js';
 
 export function knowledgeCommands() {
   return [
-    cmd('knowledge.list', 'List articles', 'itsm knowledge list', ['GET /api/v1/knowledge/articles'], async (ctx) => apiClient.listKnowledge(withPagination(ctx.args) as never)),
+    cmd('knowledge.list', 'List articles', 'itsm knowledge list [--page N] [--pageSize N]', ['GET /api/v1/knowledge/articles'], async (ctx) => apiClient.listKnowledge(withPagination(ctx.args) as never)),
     cmd('knowledge.get', 'Article detail (with source attribution)', 'itsm knowledge get <id>', ['GET /api/v1/knowledge/articles/:id'], async (ctx) => apiClient.getKnowledgeArticle(requirePositional(ctx.args, 0, 'articleId'))),
     cmd('knowledge.create', 'Create article (draft)', 'itsm knowledge create --data <json>', ['POST /api/v1/knowledge/articles'], async (ctx) => apiClient.createKnowledgeArticle(body(ctx.args) ?? {})),
     cmd('knowledge.update', 'Update article', 'itsm knowledge update <id> [--data <json>]', ['PUT /api/v1/knowledge/articles/:id'], async (ctx) => apiClient.updateKnowledgeArticle(requirePositional(ctx.args, 0, 'articleId'), body(ctx.args) ?? {})),
@@ -31,7 +31,10 @@ export function knowledgeCommands() {
     ),
     cmd('knowledge.reviews', 'Review records for an article', 'itsm knowledge reviews <id>', ['GET /api/v1/knowledge/articles/:id/reviews'], async (ctx) => apiClient.listKnowledgeReviews(requirePositional(ctx.args, 0, 'articleId'))),
     cmd('knowledge.unpublish', 'Unpublish article', 'itsm knowledge unpublish <id>', ['POST /api/v1/knowledge/articles/:id/unpublish'], async (ctx) => apiClient.knowledgeLifecycle(requirePositional(ctx.args, 0, 'articleId'), 'unpublish')),
-    cmd('knowledge.search', 'Search articles (RAG retrieval respects permissions/time window)', 'itsm knowledge search <q>', ['POST /api/v1/knowledge/search'], async (ctx) => apiClient.searchKnowledge(requirePositional(ctx.args, 0, 'query'), withPagination(ctx.args))),
+    cmd('knowledge.search', 'Search articles (RAG retrieval respects permissions/time window)', 'itsm knowledge search <q> [--category c] [--pageSize N]', ['POST /api/v1/knowledge/search'], async (ctx) => apiClient.searchKnowledge(requirePositional(ctx.args, 0, 'query'), {
+      category: stringFlag(ctx.args.flags, 'category'),
+      pageSize: numberFlag(ctx.args.flags, 'pageSize'),
+    })),
     cmd('knowledge.versions', 'Article version history', 'itsm knowledge versions <id>', ['GET /api/v1/knowledge/articles/:id/versions'], async (ctx) => apiClient.listKnowledgeVersions(requirePositional(ctx.args, 0, 'articleId'))),
     cmd('knowledge.categories', 'Category tree', 'itsm knowledge categories', ['GET /api/v1/knowledge/categories'], async () => apiClient.listKnowledgeCategories()),
     cmd('knowledge.stats', 'Knowledge statistics', 'itsm knowledge stats', ['GET /api/v1/knowledge/stats'], async () => apiClient.getKnowledgeStats()),

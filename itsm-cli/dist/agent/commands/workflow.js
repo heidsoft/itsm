@@ -1,5 +1,5 @@
 import { cmd } from '../spec.js';
-import { requirePositional, body, stringFlag } from '../helpers.js';
+import { requirePositional, body, stringFlag, withPagination } from '../helpers.js';
 import { apiClient } from '../../lib/api-client.js';
 import { usageError } from '../../lib/errors.js';
 /** BPMN workflow engine — bodies mirror handlers/bpmn inline contracts. */
@@ -42,7 +42,21 @@ export function workflowCommands() {
             const reason = requireReason(ctx.args.flags);
             return apiClient.processInstanceAction(requirePositional(ctx.args, 0, 'instanceId'), 'terminate', { reason });
         }),
-        cmd('workflow.tasks', 'My active human tasks', 'itsm workflow tasks', ['GET /api/v1/bpmn/tasks'], async () => apiClient.listUserTasks()),
+        cmd('workflow.tasks', 'My workflow tasks (all statuses unless --status is given)', 'itsm workflow tasks [--status s] [--processDefinitionKey k] [--page N] [--pageSize N]', ['GET /api/v1/bpmn/tasks'], async (ctx) => {
+            const params = {};
+            const { page, pageSize } = withPagination(ctx.args);
+            if (page !== undefined)
+                params['page'] = page;
+            if (pageSize !== undefined)
+                params['pageSize'] = pageSize;
+            const status = stringFlag(ctx.args.flags, 'status');
+            if (status !== undefined)
+                params['status'] = status;
+            const definitionKey = stringFlag(ctx.args.flags, 'processDefinitionKey');
+            if (definitionKey !== undefined)
+                params['processDefinitionKey'] = definitionKey;
+            return apiClient.listUserTasks(params);
+        }),
         cmd('workflow.task', 'Task detail', 'itsm workflow task <taskId>', ['GET /api/v1/bpmn/tasks/:id'], async (ctx) => apiClient.getTask(taskId(ctx))),
         cmd('workflow.claim', 'Claim an unassigned task (no body; user from auth)', 'itsm workflow claim <taskId>', ['PUT /api/v1/bpmn/tasks/:id/claim'], async (ctx) => apiClient.claimTask(taskId(ctx))),
         cmd('workflow.assign', 'Assign a task to a user', 'itsm workflow assign <taskId> --assigneeId <n>', ['PUT /api/v1/bpmn/tasks/:id/assign'], async (ctx) => apiClient.assignTask(taskId(ctx), requireNumber(ctx.args.flags, 'assigneeId'))),

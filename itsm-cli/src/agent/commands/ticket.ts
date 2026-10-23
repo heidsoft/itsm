@@ -63,13 +63,13 @@ export function ticketCommands() {
     }),
     cmd('ticket.update', 'Partial update (PATCH passthrough; version carries the optimistic lock)', 'itsm ticket update <id> --data <json>', ['PATCH /api/v1/tickets/:id'], async (ctx) => apiClient.updateTicket(id(ctx), body(ctx.args) ?? {})),
     cmd('ticket.delete', 'Delete a ticket', 'itsm ticket delete <id>', ['DELETE /api/v1/tickets/:id'], async (ctx) => apiClient.deleteTicket(id(ctx))),
-    cmd('ticket.search', 'Ticket search (backend param: keyword)', 'itsm ticket search <query>', ['GET /api/v1/tickets/search'], async (ctx) => {
+    cmd('ticket.search', 'Ticket search (backend param: keyword)', 'itsm ticket search <query> [--page N] [--pageSize N]', ['GET /api/v1/tickets/search'], async (ctx) => {
       const q = requirePositional(ctx.args, 0, 'query');
       return apiClient.searchTickets(q, withPagination(ctx.args) as never);
     }),
     cmd('ticket.stats', 'Ticket aggregate statistics', 'itsm ticket stats', ['GET /api/v1/tickets/stats'], async () => apiClient.getTicketStats()),
     cmd('ticket.cc-my', 'Tickets where the current user is CC', 'itsm ticket cc-my', ['GET /api/v1/tickets/cc/my'], async () => apiClient.getMyCC()),
-    cmd('ticket.approval-records', 'Approval records across tickets', 'itsm ticket approval-records [--ticketId n] [--workflowId n] [--status s]', ['GET /api/v1/tickets/approval/records'], async (ctx) =>
+    cmd('ticket.approval-records', 'Approval records across tickets', 'itsm ticket approval-records [--ticketId n] [--workflowId n] [--status s] [--page N] [--pageSize N]', ['GET /api/v1/tickets/approval/records'], async (ctx) =>
       apiClient.getApprovalRecords({
         ...withPagination(ctx.args),
         ticketId: optionalNumber(ctx.args.flags, 'ticketId'),
@@ -99,7 +99,7 @@ export function ticketCommands() {
     cmd('ticket.workflow-state', 'Current workflow state machine view', 'itsm ticket workflow-state <id>', ['GET /api/v1/tickets/:id/workflow/state'], async (ctx) => apiClient.getTicketWorkflowState(id(ctx))),
     cmd('ticket.sla', 'SLA timers for one ticket', 'itsm ticket sla <id>', ['GET /api/v1/tickets/:id/sla'], async (ctx) => apiClient.getTicketSLA(id(ctx))),
     cmd('ticket.comments.list', 'List comments', 'itsm ticket comments list <id>', ['GET /api/v1/tickets/:id/comments'], async (ctx) => apiClient.listTicketComments(requirePositional(ctx.args, 0, 'ticketId'))),
-    cmd('ticket.comments.add', 'Add comment (content 1-5000)', 'itsm ticket comments add <id> --content <text> | --data <json>', ['POST /api/v1/tickets/:id/comments'], async (ctx) => {
+    cmd('ticket.comments.add', 'Add comment (content 1-5000)', 'itsm ticket comments add <id> --content <text> [--internal] | --data <json>', ['POST /api/v1/tickets/:id/comments'], async (ctx) => {
       const tid = requirePositional(ctx.args, 0, 'ticketId');
       const content = stringFlag(ctx.args.flags, 'content') ?? body(ctx.args)?.content;
       if (typeof content !== 'string' || !content) throw usageError('Missing required --content');
@@ -140,7 +140,7 @@ export function ticketCommands() {
       if (!ccUsers.length) throw usageError('--ccUsers needs at least one numeric id');
       return apiClient.ticketWorkflowAction('cc', { ticketId, ccUsers });
     }),
-    cmd('ticket.workflow-approve', 'Approve workflow step (needs pending approvalId)', 'itsm ticket workflow-approve <id> --approvalId <n> --action approve|reject|delegate', ['POST /api/v1/tickets/workflow/approve'], async (ctx) => {
+    cmd('ticket.workflow-approve', 'Approve workflow step (needs pending approvalId)', 'itsm ticket workflow-approve <id> --approvalId <n> --action approve|reject|delegate [--delegateToUserId <n>]', ['POST /api/v1/tickets/workflow/approve'], async (ctx) => {
       const ticketId = ticketIdFlag(ctx);
       const approvalId = numberFlag(ctx.args.flags, 'approvalId');
       const action = optionalString(ctx.args.flags, 'action') ?? 'approve';
@@ -233,7 +233,7 @@ export function ticketCommands() {
       const comment = optionalString(ctx.args.flags, 'comment');
       return apiClient.submitTicketRating(id(ctx), comment ? { rating, comment } : { rating });
     }),
-    cmd('ticket.rating-stats', 'Rating distribution statistics', 'itsm ticket rating-stats', ['GET /api/v1/tickets/rating-stats'], async (ctx) => apiClient.getRatingStats(withPagination(ctx.args))),
+    cmd('ticket.rating-stats', 'Rating distribution statistics', 'itsm ticket rating-stats [--page N] [--pageSize N]', ['GET /api/v1/tickets/rating-stats'], async (ctx) => apiClient.getRatingStats(withPagination(ctx.args))),
     cmd('ticket.configuration-items', 'CIs linked to the ticket', 'itsm ticket configuration-items <id>', ['GET /api/v1/tickets/:id/configuration-items'], async (ctx) => apiClient.getTicketConfigurationItems(id(ctx))),
     cmd('ticket.dependencies', 'Dependency impact (parent chain, children, related)', 'itsm ticket dependencies <id>', ['GET /api/v1/tickets/:id/dependencies'], async (ctx) => apiClient.getTicketDependencies(id(ctx))),
     cmd('ticket.notifications', 'Ticket-scoped notification history', 'itsm ticket notifications <id>', ['GET /api/v1/tickets/:id/notifications'], async (ctx) => apiClient.listTicketNotifications(id(ctx))),

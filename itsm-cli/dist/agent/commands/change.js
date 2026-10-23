@@ -6,7 +6,7 @@ import { usageError } from '../../lib/errors.js';
 const ACTIONS = ['submit', 'schedule', 'start', 'complete', 'close', 'rollback', 'cancel', 'fail'];
 export function changeCommands() {
     return [
-        cmd('change.list', 'List changes', 'itsm change list [--status s] [--riskLevel r]', ['GET /api/v1/changes'], async (ctx) => apiClient.listChanges({
+        cmd('change.list', 'List changes', 'itsm change list [--status s] [--riskLevel r] [--page N] [--pageSize N]', ['GET /api/v1/changes'], async (ctx) => apiClient.listChanges({
             ...withPagination(ctx.args),
             status: optionalString(ctx.args.flags, 'status'),
             riskLevel: optionalString(ctx.args.flags, 'riskLevel'),
@@ -63,7 +63,7 @@ export function changeCommands() {
             }
             return apiClient.createChangePIR(requirePositional(ctx.args, 0, 'changeId'), payload);
         }),
-        cmd('change.pir-list', 'List PIRs across changes', 'itsm change pir-list', ['GET /api/v1/changes/pirs'], async (ctx) => apiClient.listChangePIRs(withPagination(ctx.args))),
+        cmd('change.pir-list', 'List PIRs across changes', 'itsm change pir-list [--page N] [--pageSize N]', ['GET /api/v1/changes/pirs'], async (ctx) => apiClient.listChangePIRs(withPagination(ctx.args))),
         cmd('change.pir-update', 'Update a PIR (keyed by pirId, not changeId)', 'itsm change pir-update <pirId> --data <json>', ['PUT /api/v1/changes/pir/:id'], async (ctx) => apiClient.updateChangePIR(requirePositional(ctx.args, 0, 'pirId'), body(ctx.args) ?? {})),
         cmd('change.approval-summary', 'Approval chain summary for one change', 'itsm change approval-summary <id>', ['GET /api/v1/changes/:id/approval-summary'], async (ctx) => apiClient.getChangeApprovalSummary(requirePositional(ctx.args, 0, 'changeId'))),
         cmd('change.risk-assessment', 'Full risk assessment (richer than /risk)', 'itsm change risk-assessment <id>', ['GET /api/v1/changes/:id/risk-assessment'], async (ctx) => apiClient.getChangeRiskAssessment(requirePositional(ctx.args, 0, 'changeId'))),

@@ -2,6 +2,8 @@ import { registry, domains, findCommandByTokens } from './registry.js';
 import { parseArgs } from './args.js';
 import { describeCommand } from './spec.js';
 import { paramToJsonSchema } from './params.js';
+import { applyShaping } from './shape.js';
+import { addFailureHint } from './hints.js';
 import { ExitCode, classifyError, usageError, successEnvelope, failureEnvelope } from '../lib/errors.js';
 import { resolveRuntimeConfig, hydrateAgentToken, getAutoLoginFailure } from '../lib/runtime.js';
 import { configureTransport, configureBaseURL } from '../lib/api-client.js';
@@ -159,115 +161,20 @@ async function executeSpec(spec, args, rest) {
 }
 /** Deterministic, side-effect-free output shaping for agent context budgets. */
 function shapeResult(data, args) {
-    const list = extractList(data);
-    if (!list) {
-        // `--fields`/`--limit` on a non-list payload is a caller mistake, not a
-        // silent no-op: say so instead of returning the untrimmed object as if the
-        // request had been honoured.
-        const shapingRequested = Boolean(args.fields?.length) || args.limit !== undefined;
-        if (!shapingRequested) {
+    const outcome = applyShaping(data, { fields: args.fields, limit: args.limit });
+    if (!outcome.isList) {
+        if (!outcome.meta)
             return { code: ExitCode.Success, envelope: successEnvelope(data) };
-        }
-        return {
-            code: ExitCode.Success,
-            envelope: {
-                ok: true,
-                data,
-                meta: {
-                    shapingSkipped: 'payload is not a standard list envelope ({items,total,page,pageSize,totalPages}); --fields/--limit do not apply',
-                },
-            },
-        };
+        return { code: ExitCode.Success, envelope: { ok: true, data, meta: outcome.meta } };
     }
-    const { fields, limit } = args;
-    const items = limit !== undefined ? list.items.slice(0, limit) : list.items;
-    const shapedItems = fields?.length ? items.map((item) => projectFields(item, fields)) : items;
-    const meta = {
-        returned: shapedItems.length,
-        total: list.total,
-        ...(shapedItems.length < list.total ? { truncated: true } : {}),
-        ...(fields?.length ? { projected: fields } : {}),
-    };
     if (args.format === 'ndjson') {
-        return { code: ExitCode.Success, ndjson: [...shapedItems, { _meta: meta }] };
+        return { code: ExitCode.Success, ndjson: [...outcome.items, { _meta: outcome.meta }] };
     }
-    const shaped = list.isEnvelope ? { ...data, items: shapedItems } : shapedItems;
-    const hasShaping = fields?.length || limit !== undefined;
+    const hasShaping = args.fields?.length || args.limit !== undefined;
     return {
         code: ExitCode.Success,
-        envelope: hasShaping ? { ok: true, data: shaped, meta } : successEnvelope(shaped),
+        envelope: hasShaping ? { ok: true, data: outcome.data, meta: outcome.meta } : successEnvelope(outcome.data),
     };
-}
-/** Recognise the backend list envelope ({items,total,page,pageSize,totalPages}) or a bare array. */
-function extractList(data) {
-    if (Array.isArray(data))
-        return { items: data, total: data.length, isEnvelope: false };
-    if (data && typeof data === 'object') {
-        const obj = data;
-        if (Array.isArray(obj['items'])) {
-            const total = typeof obj['total'] === 'number' ? obj['total'] : obj['items'].length;
-            return { items: obj['items'], total, isEnvelope: true };
-        }
-    }
-    return undefined;
-}
-/** `--fields id,title,assignee.name` — dotted paths nest, missing fields stay explicit nulls. */
-function projectFields(item, fields) {
-    if (!item || typeof item !== 'object' || Array.isArray(item))
-        return item;
-    const src = item;
-    const out = {};
-    for (const path of fields) {
-        const segments = path.split('.').filter(Boolean);
-        let cursor = src;
-        for (const seg of segments) {
-            cursor = cursor && typeof cursor === 'object' ? cursor[seg] : undefined;
-        }
-        if (segments.length === 1) {
-            out[path] = cursor ?? null;
-            continue;
-        }
-        let target = out;
-        for (const seg of segments.slice(0, -1)) {
-            const next = target[seg] ?? {};
-            target[seg] = next;
-            target = next;
-        }
-        target[segments[segments.length - 1]] = cursor ?? null;
-    }
-    return out;
-}
-/** Attach a next step to failures whose kind would otherwise send an agent in circles. */
-function addFailureHint(err, spec) {
-    const agentError = err.agentError;
-    if (agentError.hint)
-        return;
-    switch (agentError.kind) {
-        case 'network':
-            agentError.hint =
-                'Backend unreachable. Confirm ITSM_BASE_URL / --base-url and that the service is up (`itsm --json doctor`). Transport failures are retryable with backoff; writes are not auto-retried to avoid duplicates.';
-            break;
-        case 'forbidden':
-            agentError.hint = `The token is valid but lacks the required permission for ${spec.name}. Ask an administrator for the matching resource:action grant; do not retry with the same identity.`;
-            break;
-        case 'not_found':
-            agentError.hint = `The target does not exist or is outside the caller's tenant. Verify the id with a list command (e.g. \`itsm --json ${spec.name.split('.')[0]} list\`) before retrying.`;
-            break;
-        case 'conflict':
-            agentError.hint = 'State or version conflict: re-read the resource, re-apply the change against the current version, then retry. Do not blindly repeat the same write.';
-            break;
-        case 'validation':
-            agentError.hint = `The backend rejected the payload. Check required fields with \`itsm --json ${spec.name} --help\`.`;
-            break;
-        case 'unavailable':
-            agentError.hint = 'Backend or a dependency is unavailable/degraded. Retry with backoff; surface it as an operational incident if it persists.';
-            break;
-        case 'not_authenticated':
-            // auto-login specifics are filled in by the caller before this point
-            break;
-        default:
-            break;
-    }
 }
 function commandCatalog() {
     return {

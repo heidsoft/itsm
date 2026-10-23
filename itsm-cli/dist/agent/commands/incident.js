@@ -8,7 +8,7 @@ function id(ctx) {
 }
 export function incidentCommands() {
     return [
-        cmd('incident.list', 'List incidents', 'itsm incident list [--status s] [--priority p] [--keyword k]', ['GET /api/v1/incidents'], async (ctx) => apiClient.listIncidents({
+        cmd('incident.list', 'List incidents', 'itsm incident list [--status s] [--priority p] [--keyword k] [--page N] [--pageSize N]', ['GET /api/v1/incidents'], async (ctx) => apiClient.listIncidents({
             ...withPagination(ctx.args),
             status: optionalString(ctx.args.flags, 'status'),
             priority: optionalString(ctx.args.flags, 'priority'),
@@ -77,7 +77,7 @@ export function incidentCommands() {
         }),
         cmd('incident.stats', 'Incident aggregate statistics', 'itsm incident stats', ['GET /api/v1/incidents/stats'], async () => apiClient.getIncidentStats()),
         cmd('incident.comments.list', 'Incident comments', 'itsm incident comments list <id>', ['GET /api/v1/incidents/:id/comments'], async (ctx) => apiClient.listIncidentComments(requirePositional(ctx.args, 0, 'incidentId'))),
-        cmd('incident.comments.add', 'Add incident comment', 'itsm incident comments add <id> --content <text> | --data <json>', ['POST /api/v1/incidents/:id/comments'], async (ctx) => {
+        cmd('incident.comments.add', 'Add incident comment', 'itsm incident comments add <id> --content <text> [--internal] | --data <json>', ['POST /api/v1/incidents/:id/comments'], async (ctx) => {
             const tid = requirePositional(ctx.args, 0, 'incidentId');
             const content = stringFlag(ctx.args.flags, 'content') ?? body(ctx.args)?.content;
             if (typeof content !== 'string' || !content)
