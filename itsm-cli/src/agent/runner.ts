@@ -10,6 +10,7 @@ import { ExitCode, classifyError, usageError, successEnvelope, failureEnvelope }
 import type { AgentEnvelope } from '../lib/errors.js';
 import { resolveRuntimeConfig, hydrateAgentToken, getAutoLoginFailure } from '../lib/runtime.js';
 import { configureTransport, configureBaseURL } from '../lib/api-client.js';
+import { isClosedStreamError, writeStderrLine } from '../lib/streams.js';
 
 /**
  * Headless runner — the entire agent protocol lives here:
@@ -34,6 +35,7 @@ interface RunResult {
 }
 
 export async function runAgent(argv: string[]): Promise<number> {
+  installStreamErrorGuards();
   installStdoutGuard();
   let result: RunResult;
   try {
@@ -56,6 +58,22 @@ export async function runAgent(argv: string[]): Promise<number> {
 }
 
 /**
+ * An async EPIPE on stdout/stderr would otherwise surface as an unhandled
+ * 'error' event and kill the process mid-run (skipping flow teardown).
+ */
+function installStreamErrorGuards(): void {
+  for (const stream of [process.stdout, process.stderr]) {
+    stream.on('error', (err: NodeJS.ErrnoException) => {
+      if (isClosedStreamError(err)) return;
+      // Keep unexpected I/O failures loud instead of turning them into silence.
+      process.nextTick(() => {
+        throw err;
+      });
+    });
+  }
+}
+
+/**
  * stdout carries exactly one JSON document. Any stray console.log — ours, a
  * dependency's, or a future debug line — would corrupt that contract, so in
  * agent mode every console channel is rerouted to stderr.
@@ -64,7 +82,7 @@ function installStdoutGuard(): void {
   if (process.env['ITSM_CLI_AGENT_NO_GUARD'] === '1') return;
   const toStderr = (...args: unknown[]) => {
     const line = args.map((a) => (typeof a === 'string' ? a : JSON.stringify(a))).join(' ');
-    process.stderr.write(`${line}\n`);
+    writeStderrLine(line);
   };
   console.log = toStderr;
   console.info = toStderr;

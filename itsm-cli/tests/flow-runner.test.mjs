@@ -242,6 +242,45 @@ test('a failing teardown is a warning and never masks the verdict', async () => 
   assert.match(report.warnings[0], /teardown step 'delete' failed/);
 });
 
+test('a closed progress sink does not abort the run or skip teardown', async () => {
+  const ran = [];
+  const closedPipe = Object.assign(new Error('write EPIPE'), { code: 'EPIPE' });
+
+  const report = await runScenario(
+    scenario({
+      steps: [
+        {
+          name: 'create',
+          run: async () => {
+            ran.push('create');
+            return { id: 9 };
+          },
+          capture: (result) => ({ thingId: result.id }),
+        },
+        {
+          name: 'advance',
+          run: async () => {
+            ran.push('advance');
+            return { ok: true };
+          },
+        },
+      ],
+      teardown: [
+        {
+          name: 'cleanup',
+          run: async () => {
+            ran.push('cleanup');
+          },
+        },
+      ],
+    }),
+    { log: () => { throw closedPipe; } }
+  );
+
+  assert.equal(report.verdict, 'passed');
+  assert.deepEqual(ran, ['create', 'advance', 'cleanup'], 'a lost log consumer must not lose the cleanup');
+});
+
 test('makeRunTag is sortable and unique enough for artifact tracing', () => {
   const a = makeRunTag();
   const b = makeRunTag();

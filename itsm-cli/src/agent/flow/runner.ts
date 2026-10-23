@@ -1,5 +1,6 @@
 import { classifyError } from '../../lib/errors.js';
 import type { AgentError } from '../../lib/errors.js';
+import { isClosedStreamError, writeStderrLine } from '../../lib/streams.js';
 import { evaluateExpectations } from './assertions.js';
 import type { Assertion, FlowContext, FlowScenario, FlowStep, ScenarioReport, StepReport } from './types.js';
 
@@ -75,10 +76,20 @@ function matchesExpectedError(expected: NonNullable<FlowStep['expectError']>, er
   return { ok: failures.length === 0, failures, agentError };
 }
 
+// 进度输出失败不能变成业务步骤失败：日志接收方先关闭管道时，
+// 这次运行仍要执行 teardown 并写出证据。
+function logProgress(ctx: FlowContext, message: string): void {
+  try {
+    ctx.log(message);
+  } catch (err) {
+    if (!isClosedStreamError(err)) throw err;
+  }
+}
+
 async function runStep(step: FlowStep, ctx: FlowContext, opts: RunScenarioOptions): Promise<StepReport> {
   const started = Date.now();
-  ctx.log(`→ ${step.name}`);
   try {
+    logProgress(ctx, `→ ${step.name}`);
     const result = await step.run(ctx);
     const assertions = [
       ...evaluateExpectations(step.expect ?? [], result),
@@ -198,26 +209,29 @@ export async function runScenario(scenario: FlowScenario, opts: RunScenarioOptio
   const ctx: FlowContext = {
     vars: { ...(opts.vars ?? {}) },
     tag,
-    log: opts.log ?? ((message) => process.stderr.write(`${message}\n`)),
+    log: opts.log ?? writeStderrLine,
   };
 
   const steps: StepReport[] = [];
-  for (const step of scenario.steps) {
-    const report = await runStep(step, ctx, opts);
-    steps.push(report);
-    if (!report.ok) break;
-  }
-
   const teardown: StepReport[] = [];
   const warnings: string[] = [];
-  if (!opts.keep && scenario.teardown?.length) {
-    for (const step of [...scenario.teardown].reverse()) {
+  // teardown 放在 finally：任何未预期异常都不能把已创建的记录留在环境里。
+  try {
+    for (const step of scenario.steps) {
       const report = await runStep(step, ctx, opts);
-      teardown.push(report);
-      if (!report.ok) warnings.push(`teardown step '${step.name}' failed: ${report.error?.message ?? 'assertion failed'}`);
+      steps.push(report);
+      if (!report.ok) break;
     }
-  } else if (opts.keep) {
-    warnings.push(`artifacts retained (--keep); run tag '${tag}' identifies them`);
+  } finally {
+    if (!opts.keep && scenario.teardown?.length) {
+      for (const step of [...scenario.teardown].reverse()) {
+        const report = await runStep(step, ctx, opts);
+        teardown.push(report);
+        if (!report.ok) warnings.push(`teardown step '${step.name}' failed: ${report.error?.message ?? 'assertion failed'}`);
+      }
+    } else if (opts.keep) {
+      warnings.push(`artifacts retained (--keep); run tag '${tag}' identifies them`);
+    }
   }
 
   const failed = steps.find((s) => !s.ok);

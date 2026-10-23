@@ -14,6 +14,7 @@ export function changeCommands() {
         cmd('change.get', 'Change detail', 'itsm change get <id>', ['GET /api/v1/changes/:id'], async (ctx) => apiClient.getChange(requirePositional(ctx.args, 0, 'changeId'))),
         cmd('change.create', 'Create a change request (title required)', 'itsm change create --data <json>', ['POST /api/v1/changes'], async (ctx) => apiClient.createChange(body(ctx.args) ?? {})),
         cmd('change.update', 'Pointer-field update', 'itsm change update <id> --data <json>', ['PUT /api/v1/changes/:id'], async (ctx) => apiClient.updateChange(requirePositional(ctx.args, 0, 'changeId'), body(ctx.args) ?? {})),
+        cmd('change.delete', 'Delete a change request', 'itsm change delete <id>', ['DELETE /api/v1/changes/:id'], async (ctx) => apiClient.deleteChange(requirePositional(ctx.args, 0, 'changeId'))),
         cmd('change.assign', 'Assign (assigneeId required)', 'itsm change assign <id> --assigneeId <n>', ['POST /api/v1/changes/:id/assign'], async (ctx) => {
             const assigneeId = numberFlag(ctx.args.flags, 'assigneeId');
             if (!assigneeId)
