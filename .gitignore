@@ -204,6 +204,19 @@ deploy/
 dist/
 build-output/
 
+# Exception (must stay AFTER the dist/ rule above — later rules win): itsm-cli
+# runs straight from dist. bin/itsm.js imports ../dist/agent/runner.js (agent
+# mode) and ../dist/index.js (TUI), and package.json declares bin with no
+# prepare/publish pipeline, so dist is a runtime artifact, not a build cache.
+# While dist/ swallowed the agent layer's compiled output, a fresh clone could
+# run neither mode (MODULE_NOT_FOUND on dist/agent/runner.js) — the agent
+# surface only ever existed on machines that had compiled locally. 42 dist
+# files were already committed before the rule landed, so tracking the rest
+# completes an existing policy rather than introducing a new one.
+# itsm-backend/dist and itsm-frontend/dist stay ignored (deployed images).
+!itsm-cli/dist/
+!itsm-cli/dist/**
+
 # Pre-built binaries (any platform)
 *.binary
 itsm-*-linux-*
