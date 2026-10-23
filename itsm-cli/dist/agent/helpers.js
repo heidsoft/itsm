@@ -1,8 +1,8 @@
-import { stringFlag, numberFlag, booleanFlag, jsonFlag, requirePositional, } from './args.js';
+import { stringFlag, numberFlag, numberListFlag, booleanFlag, jsonFlag, requirePositional, } from './args.js';
 import { notAuthenticatedError, usageError } from '../lib/errors.js';
 import { loadCredentials } from '../lib/credentials.js';
 /** Shared helpers used by every domain command module. */
-export { stringFlag, numberFlag, booleanFlag, jsonFlag, jsonFlag as bodyFlag, requirePositional };
+export { stringFlag, numberFlag, numberListFlag, booleanFlag, jsonFlag, jsonFlag as bodyFlag, requirePositional };
 function asArgContext(args) {
     return 'flags' in args ? args : { positional: [], flags: args };
 }

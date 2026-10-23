@@ -241,7 +241,18 @@ export declare class ApiClient {
     createCI(data: unknown): Promise<unknown>;
     updateCI(id: number | string, data: unknown): Promise<unknown>;
     deleteCI(id: number | string): Promise<void>;
-    searchCIs(q: string, params?: Record<string, unknown>): Promise<unknown>;
+    /**
+     * Keyword CI search. GET /cmdb/cis is the live endpoint (`search` is its
+     * keyword param); POST /cmdb/cis/search is deprecated *and* only accepts a
+     * structured envelope — a bare `{q}` there trips the `page: min=1` binding.
+     */
+    searchCIsByKeyword(q: string, params?: PaginationParams): Promise<CIListResponse>;
+    /**
+     * Structured CI search (filters/sort). `page` is defaulted because the
+     * backend binds `min=1` while an omitted page arrives as 0 → 400, so a
+     * filters-only body would be rejected for a field the caller never set.
+     */
+    searchCIs(filters: Record<string, unknown>): Promise<unknown>;
     getCIStats(): Promise<unknown>;
     listCITypes(params?: Record<string, string | number | boolean | undefined>): Promise<unknown>;
     getCITopology(id: number | string): Promise<unknown>;
@@ -261,10 +272,26 @@ export declare class ApiClient {
     createCIType(data: unknown): Promise<unknown>;
     updateCIType(id: number | string, data: unknown): Promise<unknown>;
     deleteCIType(id: number | string): Promise<void>;
+    getCIType(id: number | string): Promise<unknown>;
+    listCITypeAttributes(id: number | string): Promise<unknown>;
+    listRelationshipTypes(): Promise<unknown>;
+    getCMDBOntology(): Promise<unknown>;
+    getCMDBCapabilities(): Promise<unknown>;
+    getCMDBReconciliation(params?: Record<string, string | number | boolean | undefined>): Promise<unknown>;
+    batchUpdateCIs(ids: number[], data: unknown): Promise<unknown>;
+    batchUpdateCILifecycle(ids: number[], data: unknown): Promise<unknown>;
     listKnowledge(params?: PaginationParams & {
         category?: string;
     }): Promise<KnowledgeListResponse>;
-    searchKnowledge(q: string, params?: Record<string, string | number | boolean | undefined>): Promise<KnowledgeListResponse>;
+    /**
+     * The backend binds `query` with `binding:"required"` and reads paging from
+     * the JSON body (not the query string), so `{q}` — or `pageSize` passed as a
+     * query param — is a 400.
+     */
+    searchKnowledge(query: string, opts?: {
+        category?: string;
+        pageSize?: number;
+    }): Promise<KnowledgeListResponse>;
     getKnowledgeArticle(id: number | string): Promise<KnowledgeArticle>;
     createKnowledgeArticle(data: unknown): Promise<unknown>;
     updateKnowledgeArticle(id: number | string, data: unknown): Promise<unknown>;
@@ -294,7 +321,16 @@ export declare class ApiClient {
     processInstanceAction(id: string, action: 'suspend' | 'resume' | 'terminate', data?: unknown): Promise<unknown>;
     listBPMNDefinitions(params?: Record<string, string | number | boolean | undefined>): Promise<unknown>;
     getBPMNDefinition(key: string): Promise<unknown>;
-    listUserTasks(): Promise<unknown>;
+    /**
+     * `GET /bpmn/tasks` is "my tasks" (assignee/candidate identity comes from the
+     * token, never from the query). `status` is optional server-side and — when
+     * omitted — returns completed tasks too, so a caller that means "待办" has to
+     * say so.
+     */
+    listUserTasks(params?: PaginationParams & {
+        status?: string;
+        processDefinitionKey?: string;
+    }): Promise<unknown>;
     getTask(id: string): Promise<unknown>;
     assignTask(id: string, assigneeId: number): Promise<unknown>;
     decideTask(id: string, data: Record<string, unknown>): Promise<unknown>;

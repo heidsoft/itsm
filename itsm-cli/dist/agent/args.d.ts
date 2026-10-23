@@ -34,6 +34,16 @@ export declare function parseArgs(argv: string[]): ParsedArgs;
 export declare function stringFlag(flags: ParsedArgs['flags'], ...names: string[]): string | undefined;
 export declare function booleanFlag(flags: ParsedArgs['flags'], ...names: string[]): boolean | undefined;
 export declare function numberFlag(flags: ParsedArgs['flags'], ...names: string[]): number | undefined;
+/**
+ * Comma-separated integer list (`--ids 1,2,3`).
+ *
+ * numberFlag cannot serve this: Number("1,2,3") is NaN, so a bulk flag would be
+ * silently reported as missing and the command would exit 2 on a valid call.
+ * Returns undefined when absent or when any segment is not a finite integer —
+ * a partially-valid list is worse than none, since it would silently update the
+ * wrong subset of records.
+ */
+export declare function numberListFlag(flags: ParsedArgs['flags'], ...names: string[]): number[] | undefined;
 export declare function requirePositional(args: ArgContext, index: number, label: string): string;
 /** Parse a JSON argument supplied inline (e.g. --data '{"summary":"..."}'). */
 export declare function jsonFlag(flags: ParsedArgs['flags'], names?: string[]): Record<string, unknown> | undefined;

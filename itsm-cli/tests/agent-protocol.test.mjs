@@ -324,6 +324,23 @@ test('a command with backend-required query params fails locally with exit 2', a
   assert.equal(hits.get('/changes/calendar') ?? 0, before, 'no request may be sent for a usage error');
 });
 
+test('comma-separated id lists parse, and a partially-invalid list is rejected', async () => {
+  // numberFlag cannot serve bulk flags: Number("1,2,3") is NaN, so --ids would be
+  // reported as missing and a valid bulk call would exit 2. A list that is only
+  // partly numeric must fail closed — accepting [1] from "1,abc" would silently
+  // operate on the wrong subset of records.
+  const { numberListFlag } = await import('../dist/agent/args.js');
+  assert.deepEqual(numberListFlag({ ids: '1,2,3' }, 'ids'), [1, 2, 3]);
+  assert.deepEqual(numberListFlag({ ids: '1, 2 , 3' }, 'ids'), [1, 2, 3]);
+  assert.deepEqual(numberListFlag({ ids: '7' }, 'ids'), [7]);
+  assert.equal(numberListFlag({ ids: 'abc' }, 'ids'), undefined);
+  assert.equal(numberListFlag({ ids: '1,abc' }, 'ids'), undefined);
+  assert.equal(numberListFlag({}, 'ids'), undefined);
+
+  const r = await run(['--json', 'cmdb', 'tags', 'add', '1', '--tagIds', '1,2,3']);
+  assert.notEqual(r.code, 2, 'a well-formed list must not be reported as missing');
+});
+
 // ---------------------------------------------------------------------------
 // Discovery surfaces
 // ---------------------------------------------------------------------------

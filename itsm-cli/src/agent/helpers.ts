@@ -1,6 +1,7 @@
 import {
   stringFlag,
   numberFlag,
+  numberListFlag,
   booleanFlag,
   jsonFlag,
   requirePositional,
@@ -11,7 +12,7 @@ import { loadCredentials } from '../lib/credentials.js';
 
 /** Shared helpers used by every domain command module. */
 
-export { stringFlag, numberFlag, booleanFlag, jsonFlag, jsonFlag as bodyFlag, requirePositional };
+export { stringFlag, numberFlag, numberListFlag, booleanFlag, jsonFlag, jsonFlag as bodyFlag, requirePositional };
 
 export interface PaginatedQuery extends Record<string, string | number | boolean | undefined> {}
 

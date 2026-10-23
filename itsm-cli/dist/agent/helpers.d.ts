@@ -1,7 +1,7 @@
-import { stringFlag, numberFlag, booleanFlag, jsonFlag, requirePositional } from './args.js';
+import { stringFlag, numberFlag, numberListFlag, booleanFlag, jsonFlag, requirePositional } from './args.js';
 import type { ArgContext } from './args.js';
 /** Shared helpers used by every domain command module. */
-export { stringFlag, numberFlag, booleanFlag, jsonFlag, jsonFlag as bodyFlag, requirePositional };
+export { stringFlag, numberFlag, numberListFlag, booleanFlag, jsonFlag, jsonFlag as bodyFlag, requirePositional };
 export interface PaginatedQuery extends Record<string, string | number | boolean | undefined> {
 }
 /** Accept either {positional, flags} or a bare flags record. */

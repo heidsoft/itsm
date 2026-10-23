@@ -146,6 +146,31 @@ export function numberFlag(flags, ...names) {
     }
     return undefined;
 }
+/**
+ * Comma-separated integer list (`--ids 1,2,3`).
+ *
+ * numberFlag cannot serve this: Number("1,2,3") is NaN, so a bulk flag would be
+ * silently reported as missing and the command would exit 2 on a valid call.
+ * Returns undefined when absent or when any segment is not a finite integer —
+ * a partially-valid list is worse than none, since it would silently update the
+ * wrong subset of records.
+ */
+export function numberListFlag(flags, ...names) {
+    for (const n of names) {
+        const v = flags[n];
+        const raw = Array.isArray(v) ? v.map(String) : typeof v === 'number' || typeof v === 'string' ? [String(v)] : undefined;
+        if (!raw || raw.length === 0)
+            continue;
+        const parts = raw.flatMap((s) => s.split(',')).map((s) => s.trim()).filter((s) => s !== '');
+        if (parts.length === 0)
+            continue;
+        const nums = parts.map(Number);
+        if (nums.some((x) => !Number.isFinite(x)))
+            return undefined;
+        return nums;
+    }
+    return undefined;
+}
 export function requirePositional(args, index, label) {
     const v = args.positional[index];
     if (v === undefined || v === '') {

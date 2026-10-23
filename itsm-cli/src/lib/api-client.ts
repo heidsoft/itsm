@@ -971,8 +971,21 @@ export class ApiClient {
     return request(this.baseURL, 'PUT', `/cmdb/cis/${id}`, data);
   }
   async deleteCI(id: number | string): Promise<void> { await request<void>(this.baseURL, 'DELETE', `/cmdb/cis/${id}`); }
-  async searchCIs(q: string, params?: Record<string, unknown>): Promise<unknown> {
-    return request(this.baseURL, 'POST', '/cmdb/cis/search', q ? { q } : params, undefined);
+  /**
+   * Keyword CI search. GET /cmdb/cis is the live endpoint (`search` is its
+   * keyword param); POST /cmdb/cis/search is deprecated *and* only accepts a
+   * structured envelope — a bare `{q}` there trips the `page: min=1` binding.
+   */
+  async searchCIsByKeyword(q: string, params?: PaginationParams): Promise<CIListResponse> {
+    return request<CIListResponse>(this.baseURL, 'GET', '/cmdb/cis', undefined, { search: q, ...params });
+  }
+  /**
+   * Structured CI search (filters/sort). `page` is defaulted because the
+   * backend binds `min=1` while an omitted page arrives as 0 → 400, so a
+   * filters-only body would be rejected for a field the caller never set.
+   */
+  async searchCIs(filters: Record<string, unknown>): Promise<unknown> {
+    return request(this.baseURL, 'POST', '/cmdb/cis/search', { page: 1, pageSize: 20, ...filters });
   }
   async getCIStats(): Promise<unknown> { return request(this.baseURL, 'GET', '/cmdb/cis/stats'); }
   async listCITypes(params?: Record<string, string | number | boolean | undefined>): Promise<unknown> {
@@ -1031,13 +1044,42 @@ export class ApiClient {
   async deleteCIType(id: number | string): Promise<void> {
     await request<void>(this.baseURL, 'DELETE', `/cmdb/ci-types/${id}`);
   }
+  async getCIType(id: number | string): Promise<unknown> {
+    return request(this.baseURL, 'GET', `/cmdb/ci-types/${id}`);
+  }
+  async listCITypeAttributes(id: number | string): Promise<unknown> {
+    return request(this.baseURL, 'GET', `/cmdb/ci-types/${id}/attributes`);
+  }
+  async listRelationshipTypes(): Promise<unknown> {
+    // Not paged: the handler returns a fixed type dictionary.
+    return request(this.baseURL, 'GET', '/cmdb/relationship-types');
+  }
+  async getCMDBOntology(): Promise<unknown> { return request(this.baseURL, 'GET', '/cmdb/ontology'); }
+  async getCMDBCapabilities(): Promise<unknown> { return request(this.baseURL, 'GET', '/cmdb/capabilities'); }
+  async getCMDBReconciliation(params?: Record<string, string | number | boolean | undefined>): Promise<unknown> {
+    return request(this.baseURL, 'GET', '/cmdb/reconciliation', undefined, params);
+  }
+  async batchUpdateCIs(ids: number[], data: unknown): Promise<unknown> {
+    return request(this.baseURL, 'PUT', '/cmdb/cis/batch', { ids, ...(data as object) });
+  }
+  async batchUpdateCILifecycle(ids: number[], data: unknown): Promise<unknown> {
+    return request(this.baseURL, 'PUT', '/cmdb/cis/batch/lifecycle', { ids, ...(data as object) });
+  }
 
   // ---------- Knowledge ----------
   async listKnowledge(params?: PaginationParams & { category?: string }): Promise<KnowledgeListResponse> {
     return request<KnowledgeListResponse>(this.baseURL, 'GET', '/knowledge/articles', undefined, params as Record<string, string | number | undefined>);
   }
-  async searchKnowledge(q: string, params?: Record<string, string | number | boolean | undefined>): Promise<KnowledgeListResponse> {
-    return request<KnowledgeListResponse>(this.baseURL, 'POST', '/knowledge/search', { q }, params);
+  /**
+   * The backend binds `query` with `binding:"required"` and reads paging from
+   * the JSON body (not the query string), so `{q}` — or `pageSize` passed as a
+   * query param — is a 400.
+   */
+  async searchKnowledge(query: string, opts?: { category?: string; pageSize?: number }): Promise<KnowledgeListResponse> {
+    const payload: Record<string, unknown> = { query };
+    if (opts?.category) payload['category'] = opts.category;
+    if (opts?.pageSize !== undefined) payload['pageSize'] = opts.pageSize;
+    return request<KnowledgeListResponse>(this.baseURL, 'POST', '/knowledge/search', payload);
   }
   async getKnowledgeArticle(id: number | string): Promise<KnowledgeArticle> {
     return request<KnowledgeArticle>(this.baseURL, 'GET', `/knowledge/articles/${id}`);
@@ -1116,8 +1158,14 @@ export class ApiClient {
   async getBPMNDefinition(key: string): Promise<unknown> {
     return request(this.baseURL, 'GET', `/bpmn/process-definitions/${key}`);
   }
-  async listUserTasks(): Promise<unknown> {
-    return request(this.baseURL, 'GET', '/bpmn/tasks');
+  /**
+   * `GET /bpmn/tasks` is "my tasks" (assignee/candidate identity comes from the
+   * token, never from the query). `status` is optional server-side and — when
+   * omitted — returns completed tasks too, so a caller that means "待办" has to
+   * say so.
+   */
+  async listUserTasks(params?: PaginationParams & { status?: string; processDefinitionKey?: string }): Promise<unknown> {
+    return request(this.baseURL, 'GET', '/bpmn/tasks', undefined, params as Record<string, string | number | boolean | undefined>);
   }
   async getTask(id: string): Promise<unknown> {
     return request(this.baseURL, 'GET', `/bpmn/tasks/${id}`);
