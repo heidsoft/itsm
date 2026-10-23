@@ -85,6 +85,11 @@ function route(req, res) {
     return setTimeout(() => ok(res, { slow: true }), 400);
   }
 
+  // Read-only command whose verb names a mutation (risk-derivation regression lock).
+  if (p === '/changes/1/rollback-steps' && req.method === 'GET') return ok(res, { steps: [] });
+  if (p === '/changes/1/rollback' && req.method === 'POST') return ok(res, { status: 'rolled_back' });
+  if (p === '/changes/calendar' && req.method === 'GET') return ok(res, { items: [] });
+
   return json(res, 404, { code: 3001, message: `stub has no route for ${req.method} ${p}` });
 }
 
@@ -291,6 +296,32 @@ test('--help short-circuits the risk gate', async () => {
   assert.equal(env.data.command, 'ticket.delete');
   assert.equal(env.data.requiresConfirmation, true);
   assert.ok(env.data.input.params.some((p) => p.name === 'id' && p.required && p.kind === 'positional'));
+});
+
+test('a read-only command is never gated, even when its verb names a mutation', async () => {
+  // Regression: risk was derived from the verb alone, so change.rollback-steps
+  // (GET /changes/:id/rollback-steps) matched /rollback/ and demanded --yes just to
+  // list a checklist. HTTP method now wins over the verb regex.
+  const before = hits.get('/changes/1/rollback-steps') ?? 0;
+  const r = await run(['--json', 'change', 'rollback-steps', '1']);
+  assert.equal(r.code, 0, r.stdout);
+  assert.equal(envelope(r).ok, true);
+  assert.equal(hits.get('/changes/1/rollback-steps') ?? 0, before + 1);
+
+  // The guard itself must stay intact for real mutations.
+  const gated = await run(['--json', 'change', 'rollback', '1']);
+  assert.equal(gated.code, 10);
+});
+
+test('a command with backend-required query params fails locally with exit 2', async () => {
+  // dto.ChangeCalendarRequest binds startDate/endDate as required; sending them
+  // costs one round trip to learn that, and page/pageSize do not exist here.
+  const before = hits.get('/changes/calendar') ?? 0;
+  const r = await run(['--json', 'change', 'calendar']);
+  assert.equal(r.code, 2);
+  assert.equal(envelope(r).error.kind, 'usage');
+  assert.match(envelope(r).error.message, /startDate/);
+  assert.equal(hits.get('/changes/calendar') ?? 0, before, 'no request may be sent for a usage error');
 });
 
 // ---------------------------------------------------------------------------

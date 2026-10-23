@@ -14,6 +14,19 @@ export function problemCommands() {
       })
     ),
     cmd('problem.get', 'Get problem detail', 'itsm problem get <id>', ['GET /api/v1/problems/:id'], async (ctx) => apiClient.getProblem(requirePositional(ctx.args, 0, 'problemId'))),
+    cmd('problem.stats', 'Problem aggregate counters (total/open/inProgress/resolved/closed)', 'itsm problem stats', ['GET /api/v1/problems/stats'], async () => apiClient.getProblemStats()),
+    cmd('problem.trend', 'Problem trend over a window', 'itsm problem trend [--startDate d] [--endDate d]', ['GET /api/v1/problems/trend'], async (ctx) =>
+      apiClient.getProblemTrends({
+        startDate: optionalString(ctx.args.flags, 'startDate'),
+        endDate: optionalString(ctx.args.flags, 'endDate'),
+      })
+    ),
+    cmd('problem.hotspots', 'Problem hotspots over a window', 'itsm problem hotspots [--startDate d] [--endDate d]', ['GET /api/v1/problems/hotspots'], async (ctx) =>
+      apiClient.getProblemHotspots({
+        startDate: optionalString(ctx.args.flags, 'startDate'),
+        endDate: optionalString(ctx.args.flags, 'endDate'),
+      })
+    ),
     cmd('problem.create', 'Create a problem (title/description/priority required)', 'itsm problem create <title> --description <d> --priority <p> | --data <json>', ['POST /api/v1/problems'], async (ctx) => {
       const data = body(ctx.args);
       if (data) return apiClient.createProblem(data);

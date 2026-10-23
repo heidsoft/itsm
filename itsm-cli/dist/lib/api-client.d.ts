@@ -97,6 +97,8 @@ export declare class ApiClient {
     searchTickets(query: string, params?: PaginationParams): Promise<TicketListResponse>;
     getOverdueTickets(): Promise<Ticket[]>;
     getTicketStats(): Promise<unknown>;
+    getMyCC(): Promise<unknown>;
+    getApprovalRecords(params?: Record<string, string | number | boolean | undefined>): Promise<unknown>;
     assignTicket(id: number | string, assigneeId: number | string): Promise<unknown>;
     resolveTicket(id: number | string, data?: Record<string, unknown>): Promise<unknown>;
     closeTicket(id: number | string, data?: Record<string, unknown>): Promise<unknown>;
@@ -173,6 +175,9 @@ export declare class ApiClient {
     updateProblemRootCause(id: number | string, data: unknown): Promise<unknown>;
     updateProblemSolution(id: number | string, data: unknown): Promise<unknown>;
     listProblemComments(id: number | string): Promise<unknown>;
+    getProblemStats(): Promise<unknown>;
+    getProblemTrends(params?: Record<string, string | number | boolean | undefined>): Promise<unknown>;
+    getProblemHotspots(params?: Record<string, string | number | boolean | undefined>): Promise<unknown>;
     addProblemComment(id: number | string, data: unknown): Promise<unknown>;
     listKnownErrors(params?: Record<string, string | number | boolean | undefined>): Promise<unknown>;
     getKnownError(id: number | string): Promise<unknown>;
@@ -190,6 +195,7 @@ export declare class ApiClient {
     updateChangeRisk(id: number | string, data: unknown): Promise<unknown>;
     getChangePIR(id: number | string): Promise<unknown>;
     createChangePIR(id: number | string, data: Record<string, unknown>): Promise<unknown>;
+    updateChangePIR(pirId: number | string, data: Record<string, unknown>): Promise<unknown>;
     getChangeApprovalSummary(id: number | string): Promise<unknown>;
     createChangeApproval(id: number | string, data: Record<string, unknown>): Promise<unknown>;
     getChangeRiskAssessment(id: number | string): Promise<unknown>;
@@ -278,6 +284,7 @@ export declare class ApiClient {
     getSLAMonitoring(): Promise<unknown>;
     getSLAPerformance(): Promise<unknown>;
     getSLAAlertHistory(): Promise<unknown>;
+    getSLAComplianceReport(params?: Record<string, string | number | boolean | undefined>): Promise<unknown>;
     checkSLACompliance(ticketId: number | string): Promise<unknown>;
     listSLATemplates(): Promise<unknown>;
     installSLATemplate(key: string): Promise<unknown>;

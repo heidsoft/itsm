@@ -39,8 +39,15 @@ export interface CommandContext {
         dryRun: boolean;
     };
 }
-/** Derive risk from the verb when a spec doesn't declare it. */
-export declare function deriveRisk(verb: string): RiskLevel;
+/**
+ * Derive risk from the verb when a spec doesn't declare it.
+ *
+ * `methods` is the set of HTTP methods the command's endpoints declare. The verb
+ * regex alone mis-classified read-only commands whose names happen to contain a
+ * mutating word — `change.rollback-steps` (GET /changes/:id/rollback-steps) was
+ * flagged high-risk and demanded --yes just to list a checklist. Method wins.
+ */
+export declare function deriveRisk(verb: string, methods?: ReadonlySet<string>): RiskLevel;
 /** Compact builder for command specs — keeps domain modules declarative. */
 export declare function cmd(name: string, summary: string, usage: string, endpoints: string[], run: (ctx: CommandContext) => Promise<unknown>, risk?: RiskLevel, meta?: CommandMeta): CommandSpec;
 /** One command rendered for agents: what it does, what it needs, what it costs. */

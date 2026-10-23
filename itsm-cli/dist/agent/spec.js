@@ -9,8 +9,20 @@
  */
 import { deriveParams, mergeParams, extractEnums, applyEnums } from './params.js';
 const RISK_SKIP = new Set(['read', 'list', 'get', 'view', 'search', 'stats', 'health']);
-/** Derive risk from the verb when a spec doesn't declare it. */
-export function deriveRisk(verb) {
+/** Read-only HTTP methods can never be gated, whatever the verb is named. */
+const READ_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
+/**
+ * Derive risk from the verb when a spec doesn't declare it.
+ *
+ * `methods` is the set of HTTP methods the command's endpoints declare. The verb
+ * regex alone mis-classified read-only commands whose names happen to contain a
+ * mutating word — `change.rollback-steps` (GET /changes/:id/rollback-steps) was
+ * flagged high-risk and demanded --yes just to list a checklist. Method wins.
+ */
+export function deriveRisk(verb, methods) {
+    const onlyReads = methods && methods.size > 0 && [...methods].every((m) => READ_METHODS.has(m));
+    if (onlyReads)
+        return 'normal';
     if (RISK_SKIP.has(verb))
         return 'normal';
     if (/delete|revoke|terminate|cancel|close|bulk|batch|rollback|replay|archive|install/.test(verb))
@@ -18,6 +30,15 @@ export function deriveRisk(verb) {
     if (/create|update|patch|assign|resolve|approve|reject|submit|complete|claim|start|schedule|publish|send|provision|enable|disable|restore|reopen|escalate|withdraw|pause|resume|unpublish|status|accept|forward|convert/.test(verb))
         return 'write';
     return 'normal';
+}
+function methodsOf(endpoints) {
+    const methods = new Set();
+    for (const e of endpoints) {
+        const m = e.match(/^([A-Z]+)\s/);
+        if (m)
+            methods.add(m[1]);
+    }
+    return methods.size > 0 ? methods : undefined;
 }
 /** Compact builder for command specs — keeps domain modules declarative. */
 export function cmd(name, summary, usage, endpoints, run, risk, meta) {
@@ -30,7 +51,7 @@ export function cmd(name, summary, usage, endpoints, run, risk, meta) {
         summary,
         usage,
         endpoints,
-        risk: risk ?? deriveRisk(verb),
+        risk: risk ?? deriveRisk(verb, methodsOf(endpoints)),
         examples: meta?.examples,
         input: { params, ...(derived.body ? { body: derived.body } : {}) },
         bodyFields: meta?.bodyFields,

@@ -537,6 +537,11 @@ export class ApiClient {
         return request(this.baseURL, 'GET', '/tickets/overdue');
     }
     async getTicketStats() { return request(this.baseURL, 'GET', '/tickets/stats'); }
+    async getMyCC() { return request(this.baseURL, 'GET', '/tickets/cc/my'); }
+    async getApprovalRecords(params) {
+        // dto.GetApprovalRecordsRequest: ticketId / workflowId / status filters plus paging.
+        return request(this.baseURL, 'GET', '/tickets/approval/records', undefined, params);
+    }
     async assignTicket(id, assigneeId) {
         // The backend binds AssignTicketRequest.AssigneeID as int; sending the CLI's
         // positional string produced `{"assigneeId":"1"}` and a 400. Coerce here so
@@ -736,6 +741,13 @@ export class ApiClient {
     async listProblemComments(id) {
         return request(this.baseURL, 'GET', `/problems/${id}/comments`);
     }
+    async getProblemStats() { return request(this.baseURL, 'GET', '/problems/stats'); }
+    async getProblemTrends(params) {
+        return request(this.baseURL, 'GET', '/problems/trend', undefined, params);
+    }
+    async getProblemHotspots(params) {
+        return request(this.baseURL, 'GET', '/problems/hotspots', undefined, params);
+    }
     async addProblemComment(id, data) {
         return request(this.baseURL, 'POST', `/problems/${id}/comments`, data);
     }
@@ -777,6 +789,10 @@ export class ApiClient {
     }
     async createChangePIR(id, data) {
         return request(this.baseURL, 'POST', `/changes/${id}/pir`, data);
+    }
+    async updateChangePIR(pirId, data) {
+        // Keyed by the PIR's own id, not the change id (dto/change_pir_dto.go).
+        return request(this.baseURL, 'PUT', `/changes/pir/${pirId}`, data);
     }
     async getChangeApprovalSummary(id) {
         return request(this.baseURL, 'GET', `/changes/${id}/approval-summary`);
@@ -1004,6 +1020,11 @@ export class ApiClient {
     async getSLAMonitoring() { return request(this.baseURL, 'POST', '/sla/monitoring'); }
     async getSLAPerformance() { return request(this.baseURL, 'GET', '/sla/performance'); }
     async getSLAAlertHistory() { return request(this.baseURL, 'GET', '/sla/alert-history'); }
+    async getSLAComplianceReport(params) {
+        // startDate/endDate are mandatory here (handlers/sla/handler.go:640) — unlike
+        // most list endpoints, omitting them is a 400, not an empty default range.
+        return request(this.baseURL, 'GET', '/sla/compliance-report', undefined, params);
+    }
     async checkSLACompliance(ticketId) {
         return request(this.baseURL, 'POST', `/sla/check-compliance/${ticketId}`);
     }

@@ -68,6 +68,15 @@ export function ticketCommands() {
       return apiClient.searchTickets(q, withPagination(ctx.args) as never);
     }),
     cmd('ticket.stats', 'Ticket aggregate statistics', 'itsm ticket stats', ['GET /api/v1/tickets/stats'], async () => apiClient.getTicketStats()),
+    cmd('ticket.cc-my', 'Tickets where the current user is CC', 'itsm ticket cc-my', ['GET /api/v1/tickets/cc/my'], async () => apiClient.getMyCC()),
+    cmd('ticket.approval-records', 'Approval records across tickets', 'itsm ticket approval-records [--ticketId n] [--workflowId n] [--status s]', ['GET /api/v1/tickets/approval/records'], async (ctx) =>
+      apiClient.getApprovalRecords({
+        ...withPagination(ctx.args),
+        ticketId: optionalNumber(ctx.args.flags, 'ticketId'),
+        workflowId: optionalNumber(ctx.args.flags, 'workflowId'),
+        status: optionalString(ctx.args.flags, 'status'),
+      })
+    ),
     cmd('ticket.assign', 'Assign to a technician', 'itsm ticket assign <id> --assigneeId <n>', ['POST /api/v1/tickets/:id/assign'], async (ctx) => {
       const assigneeId = numberFlag(ctx.args.flags, 'assigneeId');
       if (!assigneeId) throw usageError('Missing required flag --assigneeId <number>');

@@ -1,9 +1,9 @@
 import { cmd } from '../spec.js';
-import { requirePositional, withPagination, optionalString, body, numberFlag } from '../helpers.js';
+import { requirePositional, withPagination, optionalString, optionalBool, body, numberFlag } from '../helpers.js';
 import { apiClient } from '../../lib/api-client.js';
 import { usageError } from '../../lib/errors.js';
 /** Change lifecycle — bodies mirror dto/change_dto.go. Status verbs map directly. */
-const ACTIONS = ['submit', 'schedule', 'start', 'complete', 'close', 'rollback', 'cancel'];
+const ACTIONS = ['submit', 'schedule', 'start', 'complete', 'close', 'rollback', 'cancel', 'fail'];
 export function changeCommands() {
     return [
         cmd('change.list', 'List changes', 'itsm change list [--status s] [--riskLevel r]', ['GET /api/v1/changes'], async (ctx) => apiClient.listChanges({
@@ -42,6 +42,42 @@ export function changeCommands() {
         cmd('change.risk', 'Change risk assessment', 'itsm change risk <id>', ['GET /api/v1/changes/:id/risk'], async (ctx) => apiClient.getChangeRisk(requirePositional(ctx.args, 0, 'changeId'))),
         cmd('change.risk-update', 'Update risk assessment', 'itsm change risk-update <id> --data <json>', ['PUT /api/v1/changes/:id/risk'], async (ctx) => apiClient.updateChangeRisk(requirePositional(ctx.args, 0, 'changeId'), body(ctx.args) ?? {})),
         cmd('change.pir', 'Post-implementation review', 'itsm change pir <id>', ['GET /api/v1/changes/:id/pir'], async (ctx) => apiClient.getChangePIR(requirePositional(ctx.args, 0, 'changeId'))),
+        cmd('change.pir-create', 'Create a PIR (overallResult required: successful|partially_successful|failed)', 'itsm change pir-create <changeId> --overallResult <r> [--objectivesAchieved true|false] [--successSummary t] [--issuesEncountered t] [--lessonsLearned t] [--improvementRecommendations t] | --data <json>', ['POST /api/v1/changes/:id/pir'], async (ctx) => {
+            // Backend gate: a PIR only exists after the change is implemented/completed
+            // ("尚未实施完成，不能做实施后回顾"). Flat args first so the required
+            // overallResult does not force hand-escaped JSON.
+            const data = body(ctx.args);
+            if (data)
+                return apiClient.createChangePIR(requirePositional(ctx.args, 0, 'changeId'), data);
+            const overallResult = optionalString(ctx.args.flags, 'overallResult');
+            if (!overallResult)
+                throw usageError('Missing --overallResult (successful|partially_successful|failed)');
+            const payload = { overallResult };
+            const objectives = optionalBool(ctx.args.flags, 'objectivesAchieved');
+            if (objectives !== undefined)
+                payload['objectivesAchieved'] = objectives;
+            for (const f of ['successSummary', 'issuesEncountered', 'lessonsLearned', 'improvementRecommendations']) {
+                const v = optionalString(ctx.args.flags, f);
+                if (v)
+                    payload[f] = v;
+            }
+            return apiClient.createChangePIR(requirePositional(ctx.args, 0, 'changeId'), payload);
+        }),
+        cmd('change.pir-list', 'List PIRs across changes', 'itsm change pir-list', ['GET /api/v1/changes/pirs'], async (ctx) => apiClient.listChangePIRs(withPagination(ctx.args))),
+        cmd('change.pir-update', 'Update a PIR (keyed by pirId, not changeId)', 'itsm change pir-update <pirId> --data <json>', ['PUT /api/v1/changes/pir/:id'], async (ctx) => apiClient.updateChangePIR(requirePositional(ctx.args, 0, 'pirId'), body(ctx.args) ?? {})),
+        cmd('change.approval-summary', 'Approval chain summary for one change', 'itsm change approval-summary <id>', ['GET /api/v1/changes/:id/approval-summary'], async (ctx) => apiClient.getChangeApprovalSummary(requirePositional(ctx.args, 0, 'changeId'))),
+        cmd('change.risk-assessment', 'Full risk assessment (richer than /risk)', 'itsm change risk-assessment <id>', ['GET /api/v1/changes/:id/risk-assessment'], async (ctx) => apiClient.getChangeRiskAssessment(requirePositional(ctx.args, 0, 'changeId'))),
+        cmd('change.cmdb-impact', 'CI blast radius for one change', 'itsm change cmdb-impact <id>', ['GET /api/v1/changes/:id/cmdb-impact'], async (ctx) => apiClient.getChangeCMDBImpact(requirePositional(ctx.args, 0, 'changeId'))),
+        cmd('change.rollback-steps', 'Rollback checklist', 'itsm change rollback-steps <id>', ['GET /api/v1/changes/:id/rollback-steps'], async (ctx) => apiClient.getChangeRollbackSteps(requirePositional(ctx.args, 0, 'changeId'))),
+        cmd('change.calendar', 'Change calendar view (startDate/endDate REQUIRED, format YYYY-MM-DD)', 'itsm change calendar --startDate <YYYY-MM-DD> --endDate <YYYY-MM-DD> [--status s]', ['GET /api/v1/changes/calendar'], async (ctx) => {
+            // dto.ChangeCalendarRequest binds startDate/endDate as required; no page/pageSize
+            // exists on this endpoint, so passing pagination would 400 on ShouldBindQuery.
+            const startDate = optionalString(ctx.args.flags, 'startDate');
+            const endDate = optionalString(ctx.args.flags, 'endDate');
+            if (!startDate || !endDate)
+                throw usageError('Missing --startDate and/or --endDate (both required, format YYYY-MM-DD)');
+            return apiClient.listChangeCalendar({ startDate, endDate, status: optionalString(ctx.args.flags, 'status') });
+        }),
         cmd('change.stats', 'Change aggregate statistics', 'itsm change stats', ['GET /api/v1/changes/stats'], async () => apiClient.getChangeStats()),
     ];
 }
