@@ -47,16 +47,22 @@ type GroupResponse struct {
 	UpdatedAt   time.Time `json:"updatedAt"`
 }
 
-// PagedGroupsResponse 分页组响应
+// PagedGroupsResponse 分页组响应（标准列表信封）
 type PagedGroupsResponse struct {
-	Groups     []*GroupResponse   `json:"groups"`
-	Pagination PaginationResponse `json:"pagination"`
+	Items      []*GroupResponse `json:"items"`
+	Total      int64            `json:"total"`
+	Page       int              `json:"page"`
+	PageSize   int              `json:"pageSize"`
+	TotalPages int              `json:"totalPages"`
 }
 
-// GroupMembersResponse 组成员响应
+// GroupMembersResponse 组成员响应（标准列表信封）
 type GroupMembersResponse struct {
-	Members    []*UserDTO         `json:"members"`
-	Pagination PaginationResponse `json:"pagination"`
+	Items      []*UserDTO `json:"items"`
+	Total      int64      `json:"total"`
+	Page       int        `json:"page"`
+	PageSize   int        `json:"pageSize"`
+	TotalPages int        `json:"totalPages"`
 }
 
 // UserDTO 用户简略信息（用于组成员）

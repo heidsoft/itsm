@@ -197,7 +197,7 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
     setLoadingUsers(true);
     try {
       const response = (await UserApi.getUsers({ page: 1, pageSize: 100 }));
-      const users = (response.users || []).map((u: any) => ({
+      const users = (response.items || []).map((u: any) => ({
         id: u.id,
         name: u.name || u.username || t('workflow.designer.unknownUser'),
         username: u.username,
@@ -237,7 +237,7 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
       const tenantId = httpClient.getTenantId();
       if (!tenantId) throw new Error('缺少有效租户上下文');
       const response = await GroupAPI.getGroups({ page: 1, pageSize: 100, tenantId });
-      const groups = (response.groups || []).map((g: any) => ({
+      const groups = (response.items || []).map((g: any) => ({
         id: g.id,
         name: g.name || t('workflow.designer.unnamedGroup'),
         description: g.description,

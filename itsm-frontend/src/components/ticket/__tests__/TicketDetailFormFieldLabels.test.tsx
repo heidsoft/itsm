@@ -53,7 +53,7 @@ jest.mock('@/lib/api/ticketTypeApi', () => ({
 }));
 
 jest.mock('@/lib/hooks/useUserListQuery', () => ({
-  useUserListQuery: () => ({ isLoading: false, data: { users: [] } }),
+  useUserListQuery: () => ({ isLoading: false, data: { items: [] } }),
 }));
 
 jest.mock('@/lib/store/auth-store', () => ({

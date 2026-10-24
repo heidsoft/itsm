@@ -37,7 +37,7 @@ export const UserSelect: React.FC<UserSelectProps> = ({
         pageSize: 100,
         search: search || '',
       });
-      setUsers(response.users || []);
+      setUsers(response.items || []);
     } catch (error) {
       message.error('获取用户列表失败');
     } finally {

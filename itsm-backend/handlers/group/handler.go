@@ -116,14 +116,13 @@ func (h *Handler) ListGroups(c *gin.Context) {
 		})
 	}
 
+	pagination := common.NewPaginationResponse(req.Page, req.PageSize, int64(total))
 	response := &dto.PagedGroupsResponse{
-		Groups: groupResponses,
-		Pagination: dto.PaginationResponse{
-			Page:       req.Page,
-			PageSize:   req.PageSize,
-			Total:      total,
-			TotalPages: (total + req.PageSize - 1) / req.PageSize,
-		},
+		Items:      groupResponses,
+		Total:      pagination.Total,
+		Page:       pagination.Page,
+		PageSize:   pagination.PageSize,
+		TotalPages: pagination.TotalPages,
 	}
 
 	common.Success(c, response)
@@ -354,7 +353,7 @@ func (h *Handler) RemoveUserFromGroup(c *gin.Context) {
 // @Param id path int true "组ID"
 // @Param page query int false "页码" default(1)
 // @Param pageSize query int false "每页数量" default(20)
-// @Success 200 {object} common.Response{data=dto.PagedUsersResponse}
+// @Success 200 {object} common.Response{data=dto.GroupMembersResponse}
 // @Failure 400 {object} common.Response
 // @Router /api/v1/groups/{id}/members [get]
 func (h *Handler) GetGroupMembers(c *gin.Context) {
@@ -393,14 +392,13 @@ func (h *Handler) GetGroupMembers(c *gin.Context) {
 		})
 	}
 
+	pageInfo := common.NewPaginationResponse(page, pageSize, int64(total))
 	response := &dto.GroupMembersResponse{
-		Members: userDTOs,
-		Pagination: dto.PaginationResponse{
-			Page:       page,
-			PageSize:   pageSize,
-			Total:      total,
-			TotalPages: (total + pageSize - 1) / pageSize,
-		},
+		Items:      userDTOs,
+		Total:      pageInfo.Total,
+		Page:       pageInfo.Page,
+		PageSize:   pageInfo.PageSize,
+		TotalPages: pageInfo.TotalPages,
 	}
 
 	common.Success(c, response)

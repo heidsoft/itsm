@@ -2163,6 +2163,8 @@ Query Parameters:
 - role: 角色过滤
 ```
 
+响应 `data` 为统一分页信封 `{items,total,page,pageSize,totalPages}`，`items` 元素为 `UserDetailResponse`；旧的 `users` 与 `pagination` 键已移除（`pagination.totalPage` 单数从未是后端字段）。破坏性变更见 [UPGRADE §1.84](../UPGRADE.md)。
+
 ### 获取用户详情
 
 ```http
@@ -2267,6 +2269,21 @@ Content-Type: application/json
 | 目标行不属于调用者租户 | 404 | `4004` |
 
 
+## 用户组接口
+
+```http
+GET    /api/v1/groups?page&pageSize&search        # 组列表，权限 group:read
+GET    /api/v1/groups/{id}                        # 组详情，权限 group:read
+POST   /api/v1/groups                             # 新建组，权限 group:write
+PUT    /api/v1/groups/{id}                        # 更新组，权限 group:write
+DELETE /api/v1/groups/{id}                        # 删除组，权限 group:write
+GET    /api/v1/groups/{id}/members?page&pageSize  # 组成员分页，权限 group:read
+POST   /api/v1/groups/{id}/members                # 添加成员，权限 group:write，body {userId}
+DELETE /api/v1/groups/{id}/members                # 移除成员，权限 group:write，body {userId}
+```
+
+`GET /groups` 与 `GET /groups/{id}/members` 的 `data` 均为 `{items,total,page,pageSize,totalPages}`：列表元素分别是 `GroupResponse`（`id`/`name`/`description`/`tenantId`/`createdAt`/`updatedAt`）与 `UserDTO`。不存在 `groups`、`members`、`pagination` 键——旧形状已在 [UPGRADE §1.84](../UPGRADE.md) 中退役。
+
 ## 角色接口
 
 ### 获取角色列表
@@ -2315,6 +2332,16 @@ Query Parameters:
 `active`/`inactive` 两个取值；不存在 `roles`、`page_size`、`isActive` 这些键，前端读取时不得做多字段兼容。
 同一资源的创建/更新/删除/授权在 `/api/v1/roles`、`/api/v1/roles/{id}`、`/api/v1/roles/{id}/permissions`，
 分别需要 `role:write` 与 `role:delete`。
+
+### 权限字典
+
+```http
+GET /api/v1/permissions
+Authorization: Bearer <accessToken>
+# 权限 permission:read
+```
+
+`data` 为不分页的完整集合 `{items,total}`，`items[]` 为 `PermissionResponse`（`id`/`code`/`name`/`description`/`resource`/`action`/`tenantId`/`createdAt`），授权时传 `code`。此前同时返回的 `permissions` 纯码值数组已移除；该端点没有 `page`/`pageSize`/`totalPages`，不要按分页信封校验必填（[UPGRADE §1.84](../UPGRADE.md)）。
 
 ## 团队管理接口
 
@@ -3724,7 +3751,7 @@ POST /api/v1/admin/operations/commands/bulk-cancel
 ```
 
 - 权限 `system:write`（读列表与重放同权限组），全部按认证租户隔离；每次重放写一条 `audit_log`（`resource=operational_command`、`action=replay`、`body` 含 `previousStatus`）。
-- 列表响应 `data` 为 `{items,total,page,pageSize,summary,byType}`；`summary` 给出 `pending/processing/deadLetter/cancelled/succeeded` 与 `stuckLeases`、`oldestWaitingAt`，是判断「积压还是死信」的依据。
+- 列表响应 `data` 为 `{items,total,page,pageSize,totalPages,summary,byType}`；`summary`/`byType` 是聚合附加字段，不是分页元数据。`summary` 给出 `pending/processing/deadLetter/cancelled/succeeded` 与 `stuckLeases`、`oldestWaitingAt`，是判断「积压还是死信」的依据。
 - 批量重放返回 `{matchedIds,updated,skipped,pageSize}`：`skipped` 是在事务内被并发改状态（例如 worker 恰好复活了该命令）而未能命中的条数，不是错误。
 - 重放不修改 payload，也不重置 `attempt`——`attempt` 是这条命令的历史尝试次数，重置会掩盖真实失败次数；需要清零的语义请新建命令。
 

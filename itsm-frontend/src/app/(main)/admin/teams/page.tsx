@@ -97,7 +97,7 @@ export default function TeamManagement() {
       .then(response => {
         if (cancelled) return;
         setUsers(
-          response.users.map(user => ({
+          response.items.map(user => ({
             label: user.name || user.username,
             value: user.id,
           }))

@@ -70,7 +70,7 @@ export default function CreateIncidentPage() {
       setUsersLoading(true);
       try {
         const response = await UserApi.getUsers({ page: 1, pageSize: 100 });
-        setUsers(response.users || []);
+        setUsers(response.items || []);
       } catch (error) {
         // 用户列表加载失败不阻塞页面，使用空列表
         setUsers([]);

@@ -260,19 +260,13 @@ func (s *UserService) ListUsers(ctx context.Context, req *dto.ListUsersRequest, 
 		})
 	}
 
+	pagination := common.NewPaginationResponse(req.Page, req.PageSize, int64(total))
 	response := &dto.PagedUsersResponse{
-		Users: userResponses,
-		Pagination: dto.PaginationResponse{
-			Page:     req.Page,
-			PageSize: req.PageSize,
-			Total:    total,
-			TotalPages: func() int {
-				if req.PageSize > 0 {
-					return (total + req.PageSize - 1) / req.PageSize
-				}
-				return 0
-			}(),
-		},
+		Items:      userResponses,
+		Total:      pagination.Total,
+		Page:       pagination.Page,
+		PageSize:   pagination.PageSize,
+		TotalPages: pagination.TotalPages,
 	}
 
 	s.logger.Infof("用户列表查询成功: total=%d, returned=%d", total, len(users))

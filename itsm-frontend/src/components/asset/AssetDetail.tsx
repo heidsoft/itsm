@@ -87,7 +87,7 @@ const AssetDetail: React.FC = () => {
     setUsersLoading(true);
     try {
       const response = await UserApi.getUsers({ pageSize: 100 });
-      setUsers(response.users || []);
+      setUsers(response.items || []);
     } catch (error) {
       console.error('Failed to load users:', error);
       message.error('加载用户列表失败');

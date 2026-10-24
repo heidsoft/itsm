@@ -17,6 +17,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 )
 
@@ -282,7 +283,7 @@ func TestListUsers_AcceptsPageSize1000(t *testing.T) {
 	// groups 页面 Member Transfer 一次要拉 500 个成员；页长上限低于它时请求被拒、
 	// 错误被前端 .catch 吞掉，Transfer 会显示 0 用户。
 	m := &mockUserService{}
-	m.On("ListUsers", mock.Anything, mock.Anything, 1).Return(&dto.PagedUsersResponse{Users: []*dto.UserDetailResponse{}}, nil)
+	m.On("ListUsers", mock.Anything, mock.Anything, 1).Return(&dto.PagedUsersResponse{Items: []*dto.UserDetailResponse{}}, nil)
 	h, _ := newTestHandler(m)
 
 	w := httptest.NewRecorder()
@@ -293,6 +294,18 @@ func TestListUsers_AcceptsPageSize1000(t *testing.T) {
 	h.ListUsers(c)
 
 	assert.Equal(t, http.StatusOK, w.Code, "pageSize=1000 应被允许，body=%s", w.Body.String())
+
+	var body struct {
+		Data map[string]json.RawMessage `json:"data"`
+	}
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &body))
+	keys := make([]string, 0, len(body.Data))
+	for k := range body.Data {
+		keys = append(keys, k)
+	}
+	assert.ElementsMatch(t, []string{"items", "total", "page", "pageSize", "totalPages"}, keys)
+	assert.NotContains(t, body.Data, "users")
+	assert.NotContains(t, body.Data, "pagination")
 }
 
 func TestListUsers_RejectsPageSize1001(t *testing.T) {

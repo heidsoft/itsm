@@ -48,7 +48,7 @@ const TicketBatchOperations: React.FC<TicketBatchOperationsProps> = ({
   const assignees = useUserListQuery({ pageSize: 100, enabled: hasPermission('ticket', 'assign') });
   const assigneeOptions = useMemo(
     () =>
-      (assignees.data?.users ?? []).map(user => ({
+      (assignees.data?.items ?? []).map(user => ({
         value: user.id,
         label: `${user.name || user.username}${user.department ? ` (${user.department})` : ''}`,
       })),

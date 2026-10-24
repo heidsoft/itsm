@@ -96,7 +96,7 @@ describe('RoleAPI', () => {
 
   describe('getPermissions', () => {
     it('should get permissions list', async () => {
-      mockGet.mockResolvedValue({ permissions: ['read:tickets', 'write:tickets'] });
+      mockGet.mockResolvedValue({ items: [{ code: 'read:tickets' }, { code: 'write:tickets' }] });
       const res = await RoleAPI.getPermissions();
       expect(mockGet).toHaveBeenCalledWith('/api/v1/permissions');
       expect(res).toEqual(['read:tickets', 'write:tickets']);
@@ -106,17 +106,9 @@ describe('RoleAPI', () => {
   describe('getPermissionCatalog', () => {
     it('should get permission catalog with items', async () => {
       const items = [{ id: 1, code: 'read:tickets', name: 'Read Tickets', resource: 'tickets', action: 'read' }];
-      mockGet.mockResolvedValue({ permissions: [], items });
+      mockGet.mockResolvedValue({ items });
       const res = await RoleAPI.getPermissionCatalog();
       expect(res).toEqual(items);
-    });
-
-    it('should fallback to parsing permissions when items missing', async () => {
-      mockGet.mockResolvedValue({ permissions: ['tickets:read'] });
-      const res = await RoleAPI.getPermissionCatalog();
-      expect(res[0].code).toBe('tickets:read');
-      expect(res[0].resource).toBe('tickets');
-      expect(res[0].action).toBe('read');
     });
   });
 

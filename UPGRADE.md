@@ -2887,6 +2887,36 @@ cd itsm-backend && go test -count=1 ./service/ -run 'TestToolSchemas|TestWriteTo
 cd itsm-backend && go test -count=1 ./handlers/sla/ -run 'TestSLAHandler_Violations_AndMetrics'
 ```
 
+### 1.84 列表响应统一标准信封：`users`/`groups`/`members`/`permissions` 旧集合键退役（2026-10-24，破坏性变更）
+
+**问题**：全站列表契约是 `data: {items,total,page,pageSize,totalPages}`，但用户、用户组与权限字典三个端点各自为政，按标准信封读取的调用方只能拿到空列表。
+
+| 端点 | 变更前 | 变更后 |
+|:---|:---|:---|
+| `GET /api/v1/users` | `data.users[]` + `data.pagination{page,pageSize,total,totalPage}` | `data.{items,total,page,pageSize,totalPages}` |
+| `GET /api/v1/groups` | `data.groups[]` + `data.pagination{...}` | 同上 |
+| `GET /api/v1/groups/{id}/members` | `data.members[]` + `data.pagination{...}` | 同上 |
+| `GET /api/v1/permissions` | `data.permissions[]`（纯码值）+ 权限对象数组 | `data.{items:[{id,code,name,description,resource,action,tenantId,createdAt}],total}` |
+| `GET /api/v1/admin/operations/commands` | `{items,total,page,pageSize,summary,byType}` | 追加 `totalPages` |
+
+`pagination.totalPage`（单数）此前与后端返回的 `totalPages` 也不一致，前端旧类型把真值读成 `undefined`。
+
+**升级动作**：
+
+- 读取 `data.users` / `data.groups` / `data.members` 的脚本改为 `data.items`；
+- 读取 `data.pagination.total` / `data.pagination.pageSize` / `data.pagination.totalPage` 的脚本改读顶层 `data.total` / `data.pageSize` / `data.totalPages`；
+- 读取 `data.permissions` 的脚本改读 `data.items[].code`。权限字典是**不分页的完整集合**，只返回 `{items,total}`，没有 `page`/`pageSize`/`totalPages`——不要按分页信封校验必填；
+- 运维命令列表新增 `totalPages`，原有 `summary`/`byType` 保留，属于聚合附加字段。
+
+**未变更**：分页参数、权限码、排序与过滤语义均未变化，本次只改响应形状。仓库内前端 API client、页面、测试与 Swagger 已同批更新。
+
+**验证**
+
+```bash
+cd itsm-backend && go test -count=1 ./handlers/user/ ./handlers/group/ ./handlers/rbac/ ./handlers/operations/ ./service/
+cd itsm-frontend && npm run type-check
+```
+
 ## 2. 环境变量变更
 
 本次升级**移除了多个"幽灵配置项"**（在示例文件中声明但代码/Compose 从不读取，用户配置了也不生效），并修正了一个 Grafana 密码安全缺陷。

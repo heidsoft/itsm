@@ -88,7 +88,7 @@ describe('useIncidentBatchOps', () => {
 
   it('openAssignModal lazily fetches the user list and opens the modal', async () => {
     (UserApi.getUsers as jest.Mock).mockResolvedValue({
-      users: [
+      items: [
         { id: 1, name: 'Alice', username: 'alice' },
         { id: 2, name: 'Bob', username: 'bob' },
       ],

@@ -2540,6 +2540,21 @@ definitions:
       updatedAt:
         type: string
     type: object
+  dto.GroupMembersResponse:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/dto.UserDTO'
+        type: array
+      page:
+        type: integer
+      pageSize:
+        type: integer
+      total:
+        type: integer
+      totalPages:
+        type: integer
+    type: object
   dto.GroupResponse:
     properties:
       createdAt:
@@ -3083,24 +3098,25 @@ definitions:
     type: object
   dto.PagedGroupsResponse:
     properties:
-      groups:
+      items:
         items:
           $ref: '#/definitions/dto.GroupResponse'
         type: array
-      pagination:
-        $ref: '#/definitions/dto.PaginationResponse'
+      page:
+        type: integer
+      pageSize:
+        type: integer
+      total:
+        type: integer
+      totalPages:
+        type: integer
     type: object
   dto.PagedUsersResponse:
     properties:
-      pagination:
-        $ref: '#/definitions/dto.PaginationResponse'
-      users:
+      items:
         items:
           $ref: '#/definitions/dto.UserDetailResponse'
         type: array
-    type: object
-  dto.PaginationResponse:
-    properties:
       page:
         type: integer
       pageSize:
@@ -9381,7 +9397,7 @@ paths:
             - $ref: '#/definitions/common.Response'
             - properties:
                 data:
-                  $ref: '#/definitions/dto.PagedUsersResponse'
+                  $ref: '#/definitions/dto.GroupMembersResponse'
               type: object
         "400":
           description: Bad Request

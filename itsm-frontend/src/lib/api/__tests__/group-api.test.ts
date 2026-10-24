@@ -21,7 +21,7 @@ describe('GroupAPI', () => {
 
   describe('getGroups', () => {
     it('should get groups with params', async () => {
-      const resp = { groups: [], pagination: { page: 1, pageSize: 10, total: 0, totalPage: 0 } };
+      const resp = { items: [], total: 0, page: 1, pageSize: 10, totalPages: 0 };
       mockGet.mockResolvedValue(resp);
       const result = await GroupAPI.getGroups({ page: 1, pageSize: 10 });
       expect(mockGet).toHaveBeenCalledWith('/api/v1/groups', { page: 1, pageSize: 10 });
@@ -29,7 +29,7 @@ describe('GroupAPI', () => {
     });
 
     it('should get groups without params', async () => {
-      mockGet.mockResolvedValue({ groups: [] });
+      mockGet.mockResolvedValue({ items: [], total: 0, page: 1, pageSize: 10, totalPages: 0 });
       await GroupAPI.getGroups();
       expect(mockGet).toHaveBeenCalledWith('/api/v1/groups', {});
     });
@@ -73,13 +73,13 @@ describe('GroupAPI', () => {
 
   describe('getMembers', () => {
     it('should get members with params', async () => {
-      mockGet.mockResolvedValue({ members: [], pagination: {} });
+      mockGet.mockResolvedValue({ items: [], total: 0, page: 1, pageSize: 20, totalPages: 0 });
       await GroupAPI.getMembers(1, { page: 1, pageSize: 20 });
       expect(mockGet).toHaveBeenCalledWith('/api/v1/groups/1/members', { page: 1, pageSize: 20 });
     });
 
     it('should get members without params', async () => {
-      mockGet.mockResolvedValue({ members: [] });
+      mockGet.mockResolvedValue({ items: [], total: 0, page: 1, pageSize: 20, totalPages: 0 });
       await GroupAPI.getMembers(1);
       expect(mockGet).toHaveBeenCalledWith('/api/v1/groups/1/members', {});
     });

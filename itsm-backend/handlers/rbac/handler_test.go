@@ -776,6 +776,39 @@ func TestAssignPermissions_CrossTenantSentinel_Mock(t *testing.T) {
 	role.AssertExpectations(t)
 }
 
+func TestListPermissions_StandardListEnvelope_Mock(t *testing.T) {
+	perm := &mockPermissionService{}
+	h := newMockRbacHandler(t, &mockRoleService{}, perm, &mockMenuService{})
+	perm.On("ListPermissions", mock.Anything, 1, "").Return([]*dto.PermissionResponse{
+		{ID: 1, Code: "ticket:read", Resource: "ticket", Action: "read"},
+		{ID: 2, Code: "ticket:write", Resource: "ticket", Action: "write"},
+	}, nil)
+
+	w, c := mockCtx(http.MethodGet, "/api/v1/permissions", "", 1)
+	h.ListPermissions(c)
+
+	require.Equal(t, http.StatusOK, w.Code)
+	var resp struct {
+		Code int                        `json:"code"`
+		Data map[string]json.RawMessage `json:"data"`
+	}
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
+	require.Zero(t, resp.Code)
+
+	keys := make([]string, 0, len(resp.Data))
+	for k := range resp.Data {
+		keys = append(keys, k)
+	}
+	assert.ElementsMatch(t, []string{"items", "total"}, keys)
+	assert.NotContains(t, resp.Data, "permissions")
+	assert.NotContains(t, resp.Data, "page")
+	assert.NotContains(t, resp.Data, "pageSize")
+
+	var total int
+	require.NoError(t, json.Unmarshal(resp.Data["total"], &total))
+	assert.Equal(t, 2, total)
+}
+
 func TestGetUserMenus_Unauthenticated_Mock(t *testing.T) {
 	menu := &mockMenuService{}
 	h := newMockRbacHandler(t, &mockRoleService{}, &mockPermissionService{}, menu)

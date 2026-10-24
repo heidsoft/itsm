@@ -48,7 +48,7 @@ jest.mock('@/lib/api/ticket-approval-api', () => ({
 }));
 
 jest.mock('@/lib/hooks/useUserListQuery', () => ({
-  useUserListQuery: () => ({ isLoading: false, data: { users: [] } }),
+  useUserListQuery: () => ({ isLoading: false, data: { items: [] } }),
 }));
 
 // 每个用例改这份权限清单，其余 fixture 复用同一张工单。

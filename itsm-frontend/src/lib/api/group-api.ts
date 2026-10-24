@@ -29,23 +29,19 @@ export interface GetGroupsParams {
 }
 
 export interface PagedGroupsResponse {
-  groups: Group[];
-  pagination: {
-    page: number;
-    pageSize: number;
-    total: number;
-    totalPage: number;
-  };
+  items: Group[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
 }
 
 export interface GroupMembersResponse {
-  members: User[];
-  pagination: {
-    page: number;
-    pageSize: number;
-    total: number;
-    totalPage: number;
-  };
+  items: User[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
 }
 
 export class GroupAPI {

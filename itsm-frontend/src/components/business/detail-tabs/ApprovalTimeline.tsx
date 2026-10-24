@@ -101,7 +101,7 @@ export const ApprovalTimeline: React.FC<ApprovalTimelineProps> = ({
     setUserSearchLoading(true);
     try {
       const res = await UserApi.getUsers({ page: 1, pageSize: 20, search: kw });
-      const list = (res.users || []).map((u) => ({
+      const list = (res.items || []).map((u) => ({
         id: u.id,
         name: u.name,
         username: u.username,

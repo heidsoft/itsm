@@ -44,7 +44,7 @@ jest.mock('@/lib/api/ticket-approval-api', () => ({
 
 // 通讯录按弹窗启用；本用例只校验详情投影，mock 成空目录即可。
 jest.mock('@/lib/hooks/useUserListQuery', () => ({
-  useUserListQuery: () => ({ isLoading: false, data: { users: [] } }),
+  useUserListQuery: () => ({ isLoading: false, data: { items: [] } }),
 }));
 
 jest.mock('@/lib/store/auth-store', () => ({

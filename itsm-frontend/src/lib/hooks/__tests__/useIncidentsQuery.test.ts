@@ -48,7 +48,7 @@ describe('useIncidentsQuery', () => {
       total: 1,
     });
     (UserApi.getUsers as jest.Mock).mockResolvedValue({
-      users: [{ id: 7, name: 'Alice', username: 'alice' }],
+      items: [{ id: 7, name: 'Alice', username: 'alice' }],
     });
 
     const { result } = renderHook(() => useIncidentsQuery({ search: '' }), { wrapper });
@@ -66,7 +66,7 @@ describe('useIncidentsQuery', () => {
 
   it('sets loadError=true on failure', async () => {
     (IncidentAPI.listIncidents as jest.Mock).mockRejectedValue(new Error('boom'));
-    (UserApi.getUsers as jest.Mock).mockResolvedValue({ users: [] });
+    (UserApi.getUsers as jest.Mock).mockResolvedValue({ items: [] });
 
     const { result } = renderHook(() => useIncidentsQuery({ search: '' }), { wrapper });
 
@@ -97,7 +97,7 @@ describe('useIncidentsQuery', () => {
       .mockResolvedValueOnce({ items: [mockIncident()], total: 1 })
       .mockRejectedValueOnce(new Error('boom'));
 
-    (UserApi.getUsers as jest.Mock).mockResolvedValue({ users: [] });
+    (UserApi.getUsers as jest.Mock).mockResolvedValue({ items: [] });
 
     const { result } = renderHook(() => useIncidentsQuery({ search: '' }), { wrapper });
     await waitFor(() => expect(result.current.loading).toBe(false));
@@ -113,7 +113,7 @@ describe('useIncidentsQuery', () => {
 
   it('refetches when filter inputs change', async () => {
     (IncidentAPI.listIncidents as jest.Mock).mockResolvedValue({ items: [], total: 0 });
-    (UserApi.getUsers as jest.Mock).mockResolvedValue({ users: [] });
+    (UserApi.getUsers as jest.Mock).mockResolvedValue({ items: [] });
 
     const { result, rerender } = renderHook(
       ({ status }: { status?: string }) => useIncidentsQuery({ search: '', status }),
@@ -132,7 +132,7 @@ describe('useIncidentsQuery', () => {
 
   it('setPage() updates page and pageSize', async () => {
     (IncidentAPI.listIncidents as jest.Mock).mockResolvedValue({ items: [], total: 0 });
-    (UserApi.getUsers as jest.Mock).mockResolvedValue({ users: [] });
+    (UserApi.getUsers as jest.Mock).mockResolvedValue({ items: [] });
 
     const { result } = renderHook(() => useIncidentsQuery({ search: '' }), { wrapper });
     await waitFor(() => expect(result.current.loading).toBe(false));

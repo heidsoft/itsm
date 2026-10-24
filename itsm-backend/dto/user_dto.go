@@ -82,18 +82,13 @@ type UserDetailResponse struct {
 	UpdatedAt time.Time `json:"updatedAt"`
 }
 
-// PagedUsersResponse 分页用户响应
+// PagedUsersResponse 分页用户响应（标准列表信封）
 type PagedUsersResponse struct {
-	Users      []*UserDetailResponse `json:"users"`
-	Pagination PaginationResponse    `json:"pagination"`
-}
-
-// PaginationResponse 分页响应
-type PaginationResponse struct {
-	Page       int `json:"page"`
-	PageSize   int `json:"pageSize"`
-	Total      int `json:"total"`
-	TotalPages int `json:"totalPages"`
+	Items      []*UserDetailResponse `json:"items"`
+	Total      int64                 `json:"total"`
+	Page       int                   `json:"page"`
+	PageSize   int                   `json:"pageSize"`
+	TotalPages int                   `json:"totalPages"`
 }
 
 // ChangeUserStatusRequest 更改用户状态请求

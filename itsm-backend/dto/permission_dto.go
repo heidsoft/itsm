@@ -11,6 +11,12 @@ type CreatePermissionRequest struct {
 	Action      string `json:"action" binding:"required"`
 }
 
+// PermissionListResponse 权限字典响应（不分页，只含 items/total）
+type PermissionListResponse struct {
+	Items []*PermissionResponse `json:"items"`
+	Total int                   `json:"total"`
+}
+
 // PermissionResponse 权限响应
 type PermissionResponse struct {
 	ID          int       `json:"id"`

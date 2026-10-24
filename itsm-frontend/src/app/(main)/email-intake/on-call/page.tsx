@@ -75,8 +75,8 @@ export default function OnCallPage() {
         emailIntakeService.shifts(),
       ]);
       setSchedules(s.items);
-      setGroups((g.groups || []).map((gr) => ({ id: gr.id, name: gr.name })));
-      setUsers((u.users || []).map((usr) => ({ id: usr.id, name: usr.name || usr.username, email: usr.email })));
+      setGroups((g.items || []).map((gr) => ({ id: gr.id, name: gr.name })));
+      setUsers((u.items || []).map((usr) => ({ id: usr.id, name: usr.name || usr.username, email: usr.email })));
       setShifts(sh.items || []);
 
       // Load current on-call for each schedule

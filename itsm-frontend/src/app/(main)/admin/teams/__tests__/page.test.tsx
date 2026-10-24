@@ -81,12 +81,11 @@ describe('团队管理页 — 成员链路', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockedGetUsers.mockResolvedValue({
-      users: [
+      items: [
         { id: 10, username: 'alice', name: '爱丽丝' },
         { id: 11, username: 'bob', name: '鲍勃' },
         { id: 20, username: 'carol', name: '卡罗尔' },
       ],
-      pagination: { page: 1, pageSize: 100, total: 3, totalPage: 1 },
     });
   });
 

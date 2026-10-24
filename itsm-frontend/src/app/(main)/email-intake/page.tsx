@@ -123,7 +123,7 @@ export default function EmailIntakePage() {
       if (scheduleResult.status === 'fulfilled') setSchedules(scheduleResult.value.items ?? []);
       if (userResult.status === 'fulfilled')
         setUsers(
-          (userResult.value.users || []).map((u) => ({
+          (userResult.value.items || []).map((u) => ({
             id: u.id,
             name: u.name || u.username,
             email: u.email,

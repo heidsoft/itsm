@@ -336,10 +336,10 @@ func TestListUsers_WithFilters_TableDriven(t *testing.T) {
 
 			require.NoError(t, err)
 			require.NotNil(t, resp)
-			assert.Equal(t, tt.wantTotal, resp.Pagination.Total)
+			assert.Equal(t, int64(tt.wantTotal), resp.Total)
 
 			if tt.wantTotal > 0 {
-				assert.Len(t, resp.Users, min(tt.req.PageSize, tt.wantTotal))
+				assert.Len(t, resp.Items, min(tt.req.PageSize, tt.wantTotal))
 			}
 		})
 	}

@@ -97,7 +97,7 @@ export function useIncidentsQuery(
         try {
           const usersResponse = await UserApi.getUsers({ pageSize: 100 });
           if (requestIdRef.current !== requestId) return;
-          usersResponse.users.forEach(user => userMap.set(user.id, user.name));
+          usersResponse.items.forEach(user => userMap.set(user.id, user.name));
         } catch {
           // intentionally swallowed — UI degrades to id-only reporter
         }

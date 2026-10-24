@@ -195,7 +195,7 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
       setLoadingUsers(true);
       try {
         const res = await UserApi.getUsers({ pageSize: 100 });
-        setUsers(res.users || []);
+        setUsers(res.items || []);
       } catch (e) {
         // 用户获取失败时降级为展示 ID，不阻断详情页
         setUsers([]);

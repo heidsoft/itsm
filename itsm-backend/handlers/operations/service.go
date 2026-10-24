@@ -48,6 +48,7 @@ type Page struct {
 	Total      int               `json:"total"`
 	Page       int               `json:"page"`
 	PageSize   int               `json:"pageSize"`
+	TotalPages int               `json:"totalPages"`
 	Summary    CommandSummary    `json:"summary"`
 	ByTypeRows []CommandTypeStat `json:"byType,omitempty"`
 }
@@ -183,7 +184,14 @@ func (s *Service) List(ctx context.Context, request ListRequest) (*Page, error) 
 	if err != nil {
 		return nil, err
 	}
-	return &Page{Items: items, Total: total, Page: request.Page, PageSize: request.PageSize, Summary: summary, ByTypeRows: byType}, nil
+	totalPages := 0
+	if request.PageSize > 0 {
+		totalPages = (total + request.PageSize - 1) / request.PageSize
+	}
+	return &Page{
+		Items: items, Total: total, Page: request.Page, PageSize: request.PageSize,
+		TotalPages: totalPages, Summary: summary, ByTypeRows: byType,
+	}, nil
 }
 
 func (s *Service) Get(ctx context.Context, tenantID, commandID int) (*CommandDTO, error) {

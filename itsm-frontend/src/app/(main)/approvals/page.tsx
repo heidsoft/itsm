@@ -277,7 +277,7 @@ export default function ApprovalsCenterPage() {
     setUserLoading(true);
     try {
       const res = await UserApi.getUsers({ page: 1, pageSize: 200 });
-      setUserOptions(res.users.filter((u) => u.id !== user?.id && u.active));
+      setUserOptions(res.items.filter((u) => u.id !== user?.id && u.active));
     } catch {
       message.error('加载用户列表失败');
     } finally {
@@ -309,7 +309,7 @@ export default function ApprovalsCenterPage() {
     setAddApproverUserLoading(true);
     try {
       const res = await UserApi.getUsers({ page: 1, pageSize: 200 });
-      setAddApproverUserOptions(res.users.filter((u) => u.id !== user?.id && u.active));
+      setAddApproverUserOptions(res.items.filter((u) => u.id !== user?.id && u.active));
     } catch {
       message.error('加载用户列表失败');
     } finally {

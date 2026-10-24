@@ -205,7 +205,7 @@ export default function WorkflowNodeInspector({
       if (!cancelledRef.current) {
         setUsers(prev => {
           const existingIds = new Set(prev.map(u => u.id));
-          const incoming = (resp.users as ApiUser[]).filter(u => !existingIds.has(u.id));
+          const incoming = (resp.items as ApiUser[]).filter(u => !existingIds.has(u.id));
           return [...prev, ...incoming];
         });
       }
@@ -226,7 +226,7 @@ export default function WorkflowNodeInspector({
       if (!cancelledRef.current) {
         setGroups(prev => {
           const existingIds = new Set(prev.map(g => g.id));
-          const incoming = (resp.groups || []).filter(g => !existingIds.has(g.id));
+          const incoming = (resp.items || []).filter(g => !existingIds.has(g.id));
           return [...prev, ...incoming];
         });
       }
@@ -272,8 +272,8 @@ export default function WorkflowNodeInspector({
           GroupAPI.getGroups({ page: 1, pageSize: 100, tenantId, search: '' }),
         ]);
         if (!cancelled) {
-          setUsers((userResp.users as ApiUser[]) || []);
-          setGroups(groupResp.groups || []);
+          setUsers((userResp.items as ApiUser[]) || []);
+          setGroups(groupResp.items || []);
         }
       } catch (err) {
         console.error('加载用户/组列表失败:', err);

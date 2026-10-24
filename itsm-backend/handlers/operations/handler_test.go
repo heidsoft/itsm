@@ -33,17 +33,21 @@ func TestHandlerListUsesCamelCaseContractAndTenantScope(t *testing.T) {
 	var response struct {
 		Code int `json:"code"`
 		Data struct {
-			Items    []map[string]interface{} `json:"items"`
-			Total    int                      `json:"total"`
-			PageSize int                      `json:"pageSize"`
-			Summary  map[string]interface{}   `json:"summary"`
-			ByType   []map[string]interface{} `json:"byType"`
+			Items      []map[string]interface{} `json:"items"`
+			Total      int                      `json:"total"`
+			Page       int                      `json:"page"`
+			PageSize   int                      `json:"pageSize"`
+			TotalPages int                      `json:"totalPages"`
+			Summary    map[string]interface{}   `json:"summary"`
+			ByType     []map[string]interface{} `json:"byType"`
 		} `json:"data"`
 	}
 	require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &response))
 	require.Zero(t, response.Code)
 	require.Equal(t, 1, response.Data.Total)
+	require.Equal(t, 1, response.Data.Page)
 	require.Equal(t, 10, response.Data.PageSize)
+	require.Equal(t, 1, response.Data.TotalPages)
 	require.Len(t, response.Data.Items, 1)
 	require.Contains(t, response.Data.Items[0], "commandType")
 	require.NotContains(t, response.Data.Items[0], "command_type")

@@ -48,7 +48,7 @@ describe('CreateTicketPage 工单分类加载', () => {
     mockedCmdb.getAllCIs.mockResolvedValue([] as never);
     // 建单页还会拉用户与部门目录，与本次修复无关，按各自 DTO 形态给空集。
     mockedHttp.get.mockImplementation((url: string) =>
-      Promise.resolve(url.includes('/users') ? { users: [] } : []),
+      Promise.resolve(url.includes('/users') ? { items: [] } : []),
     );
   });
 

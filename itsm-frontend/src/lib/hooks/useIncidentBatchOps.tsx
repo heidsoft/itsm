@@ -121,7 +121,7 @@ export function useIncidentBatchOps({
       try {
         const res = await UserApi.getUsers({ pageSize: 100 });
         setAssignUserOptions(
-          (res.users || []).map(u => ({ label: u.name || u.username, value: u.id }))
+          (res.items || []).map(u => ({ label: u.name || u.username, value: u.id }))
         );
       } catch (error) {
         console.warn('load users for assign failed', error);

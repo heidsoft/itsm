@@ -47,7 +47,7 @@ jest.mock('@/lib/hooks/useUserListQuery', () => ({
   useUserListQuery: () => ({
     isLoading: false,
     data: {
-      users: [
+      items: [
         { id: 1, username: 'admin', name: '系统管理员', department: 'IT部门' },
         { id: 2, username: 'zhangsan', name: '张三', department: '运维部' },
       ],

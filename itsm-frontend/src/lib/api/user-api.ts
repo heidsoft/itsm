@@ -141,13 +141,11 @@ export interface ListUsersParams {
 }
 
 export interface PagedUsersResponse {
-  users: User[];
-  pagination: {
-    page: number;
-    pageSize: number;
-    total: number;
-    totalPage: number;
-  };
+  items: User[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
 }
 
 export interface UserStatsResponse {

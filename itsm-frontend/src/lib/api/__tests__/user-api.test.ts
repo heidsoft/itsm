@@ -28,7 +28,7 @@ describe('UserApi', () => {
 
   describe('getUsers', () => {
     it('should get users with params', async () => {
-      const resp = { users: [], pagination: { page: 1, pageSize: 10, total: 0, totalPage: 0 } };
+      const resp = { items: [], total: 0, page: 1, pageSize: 10, totalPages: 0 };
       mockGet.mockResolvedValue(resp);
       const result = await UserApi.getUsers({ page: 1, pageSize: 10 });
       expect(mockGet).toHaveBeenCalledWith('/api/v1/users', { page: 1, pageSize: 10 });
@@ -36,7 +36,7 @@ describe('UserApi', () => {
     });
 
     it('should get users without params', async () => {
-      mockGet.mockResolvedValue({ users: [], pagination: {} });
+      mockGet.mockResolvedValue({ items: [], total: 0, page: 1, pageSize: 10, totalPages: 0 });
       await UserApi.getUsers();
       expect(mockGet).toHaveBeenCalledWith('/api/v1/users', {});
     });

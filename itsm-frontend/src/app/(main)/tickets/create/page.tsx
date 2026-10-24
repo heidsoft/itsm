@@ -189,14 +189,14 @@ export default function CreateTicketPage() {
 
   useEffect(() => {
     Promise.allSettled([
-      httpClient.get<{ users?: UserOption[] }>('/api/v1/users', { page: 1, pageSize: 200, status: 'active' }),
+      httpClient.get<{ items?: UserOption[] }>('/api/v1/users', { page: 1, pageSize: 200, status: 'active' }),
       httpClient.get<DepartmentOption[]>('/api/v1/departments', { page: 1, pageSize: 200 }),
       CMDBApi.getAllCIs({}, 200),
     ]).then(([users, departments, cis]) =>
       setReferenceOptions({
         user:
           users.status === 'fulfilled'
-            ? (users.value.users ?? []).map((item) => ({
+            ? (users.value.items ?? []).map((item) => ({
                 label: item.name ?? item.username,
                 value: item.id,
               }))

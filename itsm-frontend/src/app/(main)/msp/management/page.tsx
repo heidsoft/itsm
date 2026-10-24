@@ -72,14 +72,12 @@ export default function MSPManagementPage() {
       const [allocRes, custRes, usersRes] = await Promise.all([
         MSPService.getAllocations(),
         MSPService.getCustomers(),
-        UserApi.getUsers({ page: 1, pageSize: 200 }).catch(() => ({ users: [] })),
+        UserApi.getUsers({ page: 1, pageSize: 200 }).catch(() => ({ items: [] })),
       ]);
       setAllocations(allocRes.allocations);
       setCustomers(custRes.customers);
 
-      // 从用户 API 获取完整用户列表 - 处理多种返回格式
-      type UsersResponse = { users?: { id: number; username?: string; name?: string }[]; data?: { users?: { id: number; username?: string; name?: string }[] } };
-      const allUsers = (usersRes as UsersResponse)?.users || (usersRes as UsersResponse)?.data?.users || [];
+      const allUsers = usersRes.items;
       if (allUsers.length > 0) {
         setMSPUsers(allUsers.map((u) => ({ id: u.id, username: u.username || u.name || '' })));
       } else {

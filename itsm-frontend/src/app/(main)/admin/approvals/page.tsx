@@ -121,7 +121,7 @@ export default function ApprovalManagement() {
     try {
       const data = await UserApi.getUsers({ pageSize: 200 });
       setUsers(
-        (data.users || []).map((u) => ({
+        (data.items || []).map((u) => ({
           id: u.id,
           name: u.name || u.username,
           email: u.email,

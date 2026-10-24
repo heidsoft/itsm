@@ -64,31 +64,16 @@ export class RoleAPI {
     await httpClient.delete<void>(`/api/v1/roles/${id}`);
   }
 
-  // 获取所有权限列表
+  // 获取所有权限码
   static async getPermissions(): Promise<string[]> {
-    const response = await httpClient.get<{ permissions: string[] }>('/api/v1/permissions');
-    return response.permissions;
+    const response = await httpClient.get<{ items: PermissionCatalogItem[]; total: number }>('/api/v1/permissions');
+    return response.items.map(item => item.code);
   }
 
   // 获取权限目录，包含 ID、资源、动作等元数据，用于真实角色授权
   static async getPermissionCatalog(): Promise<PermissionCatalogItem[]> {
-    const response = await httpClient.get<{
-      permissions: string[];
-      items?: PermissionCatalogItem[];
-    }>('/api/v1/permissions');
-    return (
-      response.items ||
-      response.permissions.map(code => {
-        const [resource, action] = code.split(':');
-        return {
-          id: 0,
-          code,
-          name: code,
-          resource: resource || '',
-          action: action || '',
-        };
-      })
-    );
+    const response = await httpClient.get<{ items: PermissionCatalogItem[]; total: number }>('/api/v1/permissions');
+    return response.items;
   }
 
   // 初始化当前租户的默认权限字典

@@ -21,13 +21,13 @@ import type { BpmnNodeSelection } from '@/components/workflow/BPMNDesigner';
 // component will try to make real HTTP calls in useEffect().
 jest.mock('@/lib/api/user-api', () => ({
   UserApi: {
-    getUsers: jest.fn().mockResolvedValue({ users: [] }),
+    getUsers: jest.fn().mockResolvedValue({ items: [] }),
   },
 }));
 
 jest.mock('@/lib/api/group-api', () => ({
   GroupAPI: {
-    getGroups: jest.fn().mockResolvedValue({ groups: [] }),
+    getGroups: jest.fn().mockResolvedValue({ items: [] }),
   },
 }));
 
@@ -79,7 +79,7 @@ function buildApprovalUserTaskSelection(
 describe('WorkflowNodeInspector — 审批语义 panel', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    (UserApi.getUsers as jest.Mock).mockResolvedValue({ users: [] });
+    (UserApi.getUsers as jest.Mock).mockResolvedValue({ items: [] });
   });
 
   it('renders the 审批语义 panel for UserTask nodes with default taskPurpose=work', async () => {

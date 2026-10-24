@@ -106,12 +106,12 @@ func TestListGroups_IgnoresTenantIDQueryParam(t *testing.T) {
 	require.Equal(t, http.StatusOK, baselineStatus)
 	baseline := decodeGroups(t, baselineEnv)
 
-	assert.Equal(t, 2, spoofed.Pagination.Total, "只能看到本租户的 2 个组")
-	assert.Equal(t, baseline.Pagination.Total, spoofed.Pagination.Total)
-	assert.Equal(t, len(baseline.Groups), len(spoofed.Groups))
+	assert.Equal(t, int64(2), spoofed.Total, "只能看到本租户的 2 个组")
+	assert.Equal(t, baseline.Total, spoofed.Total)
+	assert.Equal(t, len(baseline.Items), len(spoofed.Items))
 
-	seen := make(map[string]bool, len(spoofed.Groups))
-	for _, g := range spoofed.Groups {
+	seen := make(map[string]bool, len(spoofed.Items))
+	for _, g := range spoofed.Items {
 		assert.Equal(t, tenantA, g.TenantID, "响应中不得出现他租户的组")
 		assert.True(t, strings.HasPrefix(g.Name, "A-"), "只应返回 tenantA 的组: %s", g.Name)
 		seen[g.Name] = true
@@ -145,8 +145,20 @@ func TestListGroups_TenantBSeesOnlyOwnGroups(t *testing.T) {
 	require.Equal(t, http.StatusOK, status)
 	resp := decodeGroups(t, env)
 
-	assert.Equal(t, 3, resp.Pagination.Total)
-	for _, g := range resp.Groups {
+	assert.Equal(t, int64(3), resp.Total)
+	assert.Equal(t, 1, resp.Page)
+	assert.Equal(t, 10, resp.PageSize)
+	assert.Equal(t, 1, resp.TotalPages)
+
+	var raw map[string]interface{}
+	require.NoError(t, json.Unmarshal(env.Data, &raw))
+	keys := make([]string, 0, len(raw))
+	for k := range raw {
+		keys = append(keys, k)
+	}
+	assert.ElementsMatch(t, []string{"items", "total", "page", "pageSize", "totalPages"}, keys)
+
+	for _, g := range resp.Items {
 		assert.Equal(t, tenantB, g.TenantID)
 		assert.True(t, strings.HasPrefix(g.Name, "B-"), "只应返回 tenantB 的组: %s", g.Name)
 	}

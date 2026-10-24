@@ -54,6 +54,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **列表响应用领域名当集合键：`users`/`groups`/`members`/`permissions` 与全站信封不一致（2026-10-24，API 契约缺陷，CLI/MCP 实测暴露）**：`GET /users`、`GET /groups`、`GET /groups/{id}/members` 把列表放在领域名键下、把分页塞进 `pagination` 对象，`GET /permissions` 返回裸码值数组外加 `permissions` 别名，按标准 `{items,total,page,pageSize,totalPages}` 读取的调用方全部拿到空列表。现在三个分页端点统一为标准五键信封（移除 `users`/`groups`/`members`/`pagination`），权限字典改为不分页的 `{items,total}`（`items[].code` 是授权码，不伪造分页字段），`GET /admin/operations/commands` 补上缺失的 `totalPages`（`summary`/`byType` 作为聚合附加字段保留）；顺带修正 `GroupMembersResponse` 的 Swagger 注解（此前误标为 `PagedUsersResponse`）与前端 `totalPage`/`pagination.total` 的读法。破坏性变更与迁移对照见 UPGRADE.md §1.84。
+
 - **`GET /api/v1/sla/metrics` 用空列表伪装「已采集」（2026-10-24，能力状态缺陷，CLI/MCP 实测暴露）**：`sla_metrics` 表只有读路径、没有任何写入方（`CreateMetric` 全仓零生产调用），端点永远返回 `{"metrics":[],"count":0}` 的 200 成功——调用方无法区分「采集正常且无异常」和「根本没有采集」。现在按已声明边界返回 HTTP 501 / `code: 5010`，并在消息中指向真实可用的 `GET /api/v1/sla/performance`、`POST /api/v1/sla/monitoring`、`GET /api/v1/sla/stats`。同步删除不可达的 `Service.GetSLAMetrics`、仓储 `CreateMetric`/`GetMetrics`、领域 `SLAMetric`、`dto.CreateSLAMetricRequest`/`SLAMetricResponse`，前端无调用方的 `SLAApi.getSLAMetrics` 一并移除；CLI 的 `itsm sla metrics` 保留并如实透传 501，建议改用 `sla performance` / `sla monitoring` / `sla stats`。表结构保留，后续接入采集任务时再恢复端点。回归锁 1 例：断言 HTTP 501、`code=5010` 且消息包含替代端点。
 
 - **死信可以直接取消：cancel 放行 `dead_letter`（2026-10-24）**：此前 cancel/bulk-cancel 只放行 pending/processing，清理死信必须先 replay 回 pending（worker 可能在两跳之间真的重新执行一次）再 cancel。prod 257 条死信归因处置实测被 409 挡住。现在单条与批量 cancel 均放行 dead_letter（终态仍拒绝），fencing/审计语义不变。回归锁 `handlers/operations/service_test.go` 2 例。UPGRADE §1.82。

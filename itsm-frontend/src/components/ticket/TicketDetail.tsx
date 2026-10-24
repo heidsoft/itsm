@@ -294,7 +294,7 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
     pageSize: 100,
     enabled: canAssignTicket && (assignModalVisible || ccModalVisible),
   });
-  const users = (usersQuery.data?.users ?? []) as User[];
+  const users = (usersQuery.data?.items ?? []) as User[];
   const loadingUsers = usersQuery.isLoading;
 
   // Get ticket SLA info

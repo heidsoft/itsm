@@ -97,11 +97,11 @@ const UserManagement: React.FC = () => {
         search: filters.search || undefined,
       };
       const response = await UserApi.getUsers(params);
-      setUsers(response.users);
-      setPagination(prev => ({ ...prev, total: response.pagination.total }));
+      setUsers(response.items);
+      setPagination(prev => ({ ...prev, total: response.total }));
 
       // 从用户数据派生部门列表（去重+排序）
-      const depts = Array.from(new Set(response.users.map((u: User) => u.department).filter(Boolean) as string[])).sort();
+      const depts = Array.from(new Set(response.items.map((u: User) => u.department).filter(Boolean) as string[])).sort();
       setDepartments(depts);
 
       const userStats = await UserApi.getUserStats(currentTenant?.id);

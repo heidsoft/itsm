@@ -2,7 +2,6 @@ package rbac
 
 import (
 	"errors"
-	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -314,15 +313,14 @@ func (h *Handler) ListPermissions(c *gin.Context) {
 		return
 	}
 
-	// Keep the string array for legacy callers and expose catalog details for real RBAC assignment
-	permStrings := make([]string, len(perms))
 	permItems := make([]*dto.PermissionResponse, len(perms))
 	for i, p := range perms {
-		permStrings[i] = fmt.Sprintf("%s:%s", p.Resource, p.Action)
 		permItems[i] = p
 	}
 
-	common.Success(c, gin.H{"permissions": permStrings, "items": permItems})
+	// 权限字典是不分页的完整集合：只返回 {items,total}，不伪造 page/pageSize/totalPages；
+	// 也不再同时返回 permissions 字符串别名（码值在 items[].code）。
+	common.Success(c, &dto.PermissionListResponse{Items: permItems, Total: len(permItems)})
 }
 
 // InitDefaultPermissions initializes default permissions

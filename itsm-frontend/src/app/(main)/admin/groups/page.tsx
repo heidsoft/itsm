@@ -67,10 +67,10 @@ const GroupManagement: React.FC = () => {
         pageSize: pagination.pageSize,
         search: search || undefined,
       });
-      setGroups(response.groups);
+      setGroups(response.items);
       setPagination(prev => ({
         ...prev,
-        total: response.pagination.total,
+        total: response.total,
       }));
     } catch (error) {
       console.error('Failed to load groups:', error);
@@ -146,8 +146,8 @@ const GroupManagement: React.FC = () => {
     setLoadingMembers(true);
     try {
       const response = await GroupAPI.getMembers(groupId, { page: 1, pageSize: 100 });
-      setGroupMembers(response.members || []);
-      setSelectedUserIds(response.members?.map(m => String(m.id)) || []);
+      setGroupMembers(response.items || []);
+      setSelectedUserIds(response.items?.map(m => String(m.id)) || []);
     } catch (error) {
       console.error('Failed to load group members:', error);
       message.error(t('groups.messages.loadMembersFailed'));
@@ -160,7 +160,7 @@ const GroupManagement: React.FC = () => {
   const loadAllUsers = async () => {
     try {
       const response = await UserApi.getUsers({ page: 1, pageSize: 500 });
-      setAllUsers(response.users || []);
+      setAllUsers(response.items || []);
     } catch (error) {
       console.error('Failed to load users:', error);
       message.error(t('groups.messages.loadFailed'));

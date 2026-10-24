@@ -7182,7 +7182,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/dto.PagedUsersResponse"
+                                            "$ref": "#/definitions/dto.GroupMembersResponse"
                                         }
                                     }
                                 }
@@ -16543,6 +16543,29 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.GroupMembersResponse": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.UserDTO"
+                    }
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "pageSize": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                },
+                "totalPages": {
+                    "type": "integer"
+                }
+            }
+        },
         "dto.GroupResponse": {
             "type": "object",
             "properties": {
@@ -17324,34 +17347,35 @@ const docTemplate = `{
         "dto.PagedGroupsResponse": {
             "type": "object",
             "properties": {
-                "groups": {
+                "items": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/dto.GroupResponse"
                     }
                 },
-                "pagination": {
-                    "$ref": "#/definitions/dto.PaginationResponse"
+                "page": {
+                    "type": "integer"
+                },
+                "pageSize": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                },
+                "totalPages": {
+                    "type": "integer"
                 }
             }
         },
         "dto.PagedUsersResponse": {
             "type": "object",
             "properties": {
-                "pagination": {
-                    "$ref": "#/definitions/dto.PaginationResponse"
-                },
-                "users": {
+                "items": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/dto.UserDetailResponse"
                     }
-                }
-            }
-        },
-        "dto.PaginationResponse": {
-            "type": "object",
-            "properties": {
+                },
                 "page": {
                     "type": "integer"
                 },

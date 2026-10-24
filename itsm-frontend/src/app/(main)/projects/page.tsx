@@ -71,7 +71,7 @@ export default function ProjectsPage() {
     try {
       const response = await UserApi.getUsers({ page: 1, pageSize: 100 });
       setUserOptions(
-        response.users.map(user => ({
+        response.items.map(user => ({
           label: user.name || user.username,
           value: user.id,
         }))

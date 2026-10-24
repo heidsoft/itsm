@@ -76,7 +76,7 @@ const ChangeReviewManagementPage: React.FC = () => {
     setUserSearch('');
     try {
       const res = await UserApi.getUsers({ page: 1, pageSize: 50, search: '' });
-      setUsers(res.users ?? []);
+      setUsers(res.items ?? []);
     } catch {
       setUsers([]);
     }
