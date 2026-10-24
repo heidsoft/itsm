@@ -109,7 +109,7 @@ type ConnectorHealthItemDTO struct {
 	OK        bool                   `json:"ok"`
 	LatencyMs int64                  `json:"latencyMs"`
 	Message   string                 `json:"message,omitempty"`
-	CheckedAt time.Time              `json:"checkedAt"`
+	CheckedAt *time.Time             `json:"checkedAt,omitempty"` // 未知时省略，不输出 Go 零值时间
 	Extra     map[string]interface{} `json:"extra,omitempty"`
 }
 

@@ -304,7 +304,7 @@ func (h *Handler) Health(ctx *gin.Context) {
 			OK:        v.OK,
 			LatencyMs: v.LatencyMs,
 			Message:   v.Message,
-			CheckedAt: v.CheckedAt,
+			CheckedAt: nonZeroTime(v.CheckedAt),
 			Extra:     v.Extra,
 		})
 	}
@@ -581,28 +581,35 @@ func maskConfig(cfg connector.Config, health map[string]connector.HealthStatus) 
 
 func healthForConfig(health map[string]connector.HealthStatus, cfg connector.Config) (bool, *time.Time, string) {
 	key := fmt.Sprintf("%d/%s/%s", cfg.TenantID, cfg.Name, cfg.Provider)
-	if h, ok := health[key]; ok {
-		checkedAt := h.CheckedAt
-		if h.OK {
-			return true, &checkedAt, ""
+	hs, ok := health[key]
+	if !ok {
+		return false, nil, ""
+	}
+	if hs.OK {
+		return true, nonZeroTime(hs.CheckedAt), ""
+	}
+	return false, nonZeroTime(hs.CheckedAt), hs.Message
+}
+
+func healthForManifest(health map[string]connector.HealthStatus, tenantID int, name string) (bool, *time.Time, string) {
+	for key, hs := range health {
+		prefix := fmt.Sprintf("%d/%s/", tenantID, name)
+		if len(key) >= len(prefix) && key[:len(prefix)] == prefix {
+			if hs.OK {
+				return true, nonZeroTime(hs.CheckedAt), ""
+			}
+			return false, nonZeroTime(hs.CheckedAt), hs.Message
 		}
-		return false, &checkedAt, h.Message
 	}
 	return false, nil, ""
 }
 
-func healthForManifest(health map[string]connector.HealthStatus, tenantID int, name string) (bool, *time.Time, string) {
-	for key, h := range health {
-		prefix := fmt.Sprintf("%d/%s/", tenantID, name)
-		if len(key) >= len(prefix) && key[:len(prefix)] == prefix {
-			checkedAt := h.CheckedAt
-			if h.OK {
-				return true, &checkedAt, ""
-			}
-			return false, &checkedAt, h.Message
-		}
+// nonZeroTime 把"未检查"表示为 nil，而不是指针指向 Go 零值时间。
+func nonZeroTime(t time.Time) *time.Time {
+	if t.IsZero() {
+		return nil
 	}
-	return false, nil, ""
+	return &t
 }
 
 func connectorLifecycle(installed, enabled, healthy bool, lastErr string) string {

@@ -3530,6 +3530,7 @@ Authorization: Bearer <accessToken>
 | `checkedAt` | 本次快照时间 |
 
 - 只拨**当前租户**已装配的实例。健康检查会真实拨号，若返回全租户实例，等于给普通租户一个探测其他租户端点可达性的探针；同一约束适用于 `GET /connectors`、`GET /connectors/configs`、`GET /connectors/lifecycle` 以及 `POST /connectors/configs` 的响应。
+- `items[].checkedAt` 由 Manager 在实际检查完成时统一落戳，不会出现 `0001-01-01T00:00:00Z`；市场 / 配置 / 生命周期视图的 `lastCheckedAt` 在从未检查过时省略字段。
 - 实例以 `name`/`provider` 标识，租户号不再编进 key。历史响应是 `map["<tenantId>/<name>/<provider>"]`，调用方只能拿租户号拼键——前端就是在这里把租户号硬编码成了 `0`，导致状态列永远取不到结果。
 - 该端点会触发真实拨号（每实例 5 秒超时），实例较多时不要轮询。
 

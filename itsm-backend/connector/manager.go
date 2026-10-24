@@ -238,6 +238,11 @@ func (m *Manager) healthCheckInstances(ctx context.Context, insts []*instance) m
 		cctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 		status := ins.conn.HealthCheck(cctx)
 		cancel()
+		if status.CheckedAt.IsZero() {
+			// 探针实现可以不起草时间戳，但"刚刚检查过"这一事实由 Manager 掌握。
+			// 由这里统一落戳，避免 API 把 0001-01-01 当成最后检查时间返回。
+			status.CheckedAt = time.Now()
+		}
 		if status.Extra == nil {
 			status.Extra = map[string]interface{}{}
 		}
