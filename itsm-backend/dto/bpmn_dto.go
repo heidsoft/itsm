@@ -114,8 +114,8 @@ type BPMNProcessInstanceResponse struct {
 	CurrentActivityName     string                 `json:"currentActivityName"`
 	Variables               map[string]interface{} `json:"variables"`
 	StartTime               time.Time              `json:"startTime"`
-	EndTime                 time.Time              `json:"endTime,omitempty"`
-	SuspendedTime           time.Time              `json:"suspendedTime,omitempty"`
+	EndTime                 *time.Time             `json:"endTime,omitempty"`
+	SuspendedTime           *time.Time             `json:"suspendedTime,omitempty"`
 	SuspendedReason         string                 `json:"suspendedReason"`
 	TenantID                int                    `json:"tenantId"`
 	Version                 int                    `json:"version"`
@@ -151,8 +151,8 @@ func ToBPMNProcessInstanceResponse(p *ent.ProcessInstance) *BPMNProcessInstanceR
 		CurrentActivityName:     p.CurrentActivityName,
 		Variables:               p.Variables,
 		StartTime:               p.StartTime,
-		EndTime:                 p.EndTime,
-		SuspendedTime:           p.SuspendedTime,
+		EndTime:                 timeToPtr(p.EndTime),
+		SuspendedTime:           timeToPtr(p.SuspendedTime),
 		SuspendedReason:         p.SuspendedReason,
 		TenantID:                p.TenantID,
 		Version:                 p.Version,

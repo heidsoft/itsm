@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"itsm-backend/common"
 	"itsm-backend/ent"
@@ -135,6 +136,35 @@ func TestListProcessInstancesReturnsItemsEnvelopeWithAddressableKey(t *testing.T
 	require.True(t, ok)
 	assert.Equal(t, "PI-leave_flow-24", item["instanceId"], "列表项必须透出可寻址的 PI-* 键")
 	assert.Equal(t, "24", item["id"], "数字 Ent ID 只作为字段透出，不是寻址键")
+}
+
+// 未发生的结束/挂起时间必须省略，而不是输出 Go 零值 0001-01-01T00:00:00Z。
+// 运行中的实例被消费方当成「已排期/已结束」是最典型的零值时间误读。
+func TestListProcessInstancesOmitsUnsetTimes(t *testing.T) {
+	r, engine := newInstanceContractRouter(t)
+	started := time.Date(2026, 1, 1, 10, 0, 0, 0, time.UTC)
+	finished := time.Date(2026, 1, 1, 12, 0, 0, 0, time.UTC)
+	engine.instanceSvc.instances = []*ent.ProcessInstance{
+		{ID: 1, ProcessInstanceID: "PI-running", Status: "running", StartTime: started},
+		{ID: 2, ProcessInstanceID: "PI-completed", Status: "completed", StartTime: started, EndTime: finished},
+	}
+	engine.instanceSvc.total = 2
+
+	w := doRequest(t, r, http.MethodGet, "/api/v1/bpmn/process-instances", nil)
+	require.Equal(t, http.StatusOK, w.Code, "body=%s", w.Body.String())
+
+	env := decodeResponseEnvelope(t, w)
+	data := env["data"].(map[string]interface{})
+	items := data["items"].([]interface{})
+	require.Len(t, items, 2)
+
+	running := items[0].(map[string]interface{})
+	assert.NotContains(t, running, "endTime")
+	assert.NotContains(t, running, "suspendedTime")
+
+	completed := items[1].(map[string]interface{})
+	assert.Equal(t, finished.Format(time.RFC3339), completed["endTime"])
+	assert.NotContains(t, completed, "suspendedTime")
 }
 
 // 生命周期错误语义：领域冲突 409/4090、not-found 404/4004，不得兜底 500/5001。
