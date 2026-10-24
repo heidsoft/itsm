@@ -3119,3 +3119,89 @@ A: 常规部署不需要 MinIO。仅在使用对象存储时加 `--profile stora
 ```bash
 cd itsm-backend && go test -count=1 ./internal/commandbus/
 ```
+
+### 1.86 工单搜索 / 逾期列表补行级数据范围（2026-10-24，安全修复：此前任何角色可读全租户工单）
+
+`GET /api/v1/tickets/search` 与 `GET /api/v1/tickets/overdue` 是**工单列表的过滤视图**，
+不是独立的读取通道，但此前的实现完全不接当前用户与角色：
+
+- `Search` / `GetOverdueTickets` 不接收 `currentUserID`/`currentRole`，也就无法下传 DataScope；
+- `DataScopeAll`（无过滤）恰好是 `DataScope` 的**零值**，`dataScopePredicates` 对它返回 nil；
+- 于是普通角色（列表本应被收窄为「本人创建或受理」）用 `/tickets/search?q=x`
+  或 `/tickets/overdue` 就能读到全租户工单，与 `/tickets` 列表口径直接矛盾。
+
+**修复**：`FindOverduePage` / `FindOverdue` / `Search` 全链路补 `scope` + `viewerID`，
+两端点在 handler 层取 `user_id`/`role` 下传，与 `List` 共用 `dataScopeForRole`。
+身份缺失（`viewerID<=0`）仍按 datascope 的不变量 **fail-closed** 收窄为空集，不退回全量。
+
+**回归锁**：`handlers/ticket/search_overdue_datascope_test.go` 逐角色断言管理角色拿到
+全量档、其余角色拿到收窄档且确实看不到他人工单（mock 若重新忽略 `ds/currentUserID`
+会立即失败），另有无身份兜底用例；仓储层 `TestRepository_FindOverduePage_DataScope`
+锁住本人/无关人员/匿名三种视角。
+
+**验证**
+
+```bash
+cd itsm-backend && go test -count=1 ./handlers/ticket/ ./repository/ticket/
+```
+
+### 1.87 事件创建补受指人同租户校验（2026-10-24，安全修复：此前可指派给别家租户员工）
+
+客户端请求体里的 `assignee_id` 可指向任意租户的用户。`handlers/incident` 的 Update 路径
+早有 `productionService.ValidateAssignee` 把关，**Create 却完全没有**——创建事件单时能把
+单据指派给别家租户的员工，单据详情随后把该用户暴露出来，形成跨租户信息暴露面。
+对照问题域：`problem/service.go` 的 Create 显式写了这条校验并注明原因。
+
+**修复**：Create 复用同一实现，且**校验排在编号生成之前**——请求最终会被拒时不应消耗一个
+序列号，也不应在开了事务之后再回滚。`s.productionService` 为 nil 时跳过（与 Update 一致的
+约定；生产装配阶段该依赖恒由 `internal/bootstrap/app.go` 注入）。
+
+**回归锁**：`handlers/incident/create_assignee_tenant_test.go`——跨租户受指人被拒且不落库、
+同租户在职受指人不被误拒。
+
+### 1.88 变更单常规更新加乐观锁（2026-10-24，一致性修复：五域唯一裸写）
+
+change schema 没有 `version` 列，而 `repo.Update` 此前只带租户谓词，handler 又是
+「读快照 → 合并请求字段 → 全列回写」。后果是审批刚推进的状态会被一个并发的字段编辑
+用陈旧快照**静默覆盖回去**；对照 incident（`VersionEQ+AddVersion`）、problem
+（`StatusEQ` CAS）、service_request（`VersionEQ`）都有并发控制，change 是五域里唯一的裸写。
+
+**修复**：
+
+- `repo.Update` 的 `WHERE` 增加 `StatusEQ`——**状态即版本号**：这条 UPDATE 只在本行状态
+  自读取后未变时才命中；
+- `service.UpdateChange` 把待写状态钉死为读取时的当前值，明确「常规更新不是状态推进入口，
+  状态的唯一写路径是 `TransitionStatus`（+ BPMN 桥接）」；
+- 未命中（并发审批抢先改掉状态）时返回 **409 冲突**而不是 404——报 404 会让调用方误以为
+  单子被删了，从而发起重试或错误清理。
+
+**回归锁**：`handlers/change/update_status_cas_test.go`——并发推进时冲突失败且状态不被回退、
+字段编辑也不半途落库；以及调用方试图顺手改状态时被钉回当前值。
+
+**验证**
+
+```bash
+cd itsm-backend && go test -count=1 ./handlers/change/
+```
+
+### 1.89 前端五处交互与契约修复（2026-10-24，写操作安全 / 数据源一致性 / 错误可见性）
+
+1. **写操作不再自动重试（最危险的一条）**：`QueryProvider` 此前对 mutation 设了
+   `retry: 1`。写请求一旦重试就可能重复生效——典型场景是「服务端已受理但响应超时/断连」，
+   客户端看到失败而服务端已经落库，1 秒后的自动重放会再写一次，审批决策、建单直接重复。
+   现在 mutation `retry: 0`；query 仍可重试，但只对「可能自愈」的失败重试（网络错误 /
+   5xx / 429），4xx 是服务端明确拒绝，重试只是让用户多等几秒并刷错误日志。
+2. **批量删除加二次确认**：单条删除有确认弹窗、CMDB 有 Popconfirm，唯独影响面最大的
+   批量删除此前点了就删。现在弹窗明示条数与不可恢复性。
+3. **变更列表改为单一数据源**：`/changes` 页面自己拉一份用于分页与空态，`ChangeList`
+   内部再拉一份用于表格——同一数据两个源、两次请求，筛选/翻页时两个响应竞态，会出现
+   「分页显示 37 条但表体还是上一页」这类自相矛盾的界面。现在 `ChangeList` 支持受控模式
+   （传 `items`/`total`/`loading` 即退化为纯展示），页面只发一次请求。
+4. **CMDB 两个 react-query 页面补错误态**：云账号页与对账页只消费 `data`/`isLoading`，
+   接口 500/403 时显示「共 0 个账号」或对账指标全 0——看起来像「很干净」，实际是根本没
+   取到数据。现在失败时显示可行动文案 + 重试按钮，对账指标显示 `—` 而不是 0。
+5. **分页上限契约显式化**：后端 `common.MaxPageSize = 100` 会**静默截断**更大的 pageSize，
+   前端却有 17 处直接写 `pageSize: 200/500/1000`，读代码的人会以为真的取到了那么多条
+   （大租户下表现为选人下拉缺项、对账漏行，且界面无任何提示）。统一改为
+   `BACKEND_MAX_PAGE_SIZE`（`src/lib/api/pagination.ts`），让上限在调用处可见；
+   真正需要全量时应改走 `fetchAllPages` 分页循环，而不是调大这个值。

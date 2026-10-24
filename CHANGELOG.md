@@ -54,6 +54,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **工单搜索 / 逾期列表补行级数据范围（2026-10-24，安全）**：两端点此前不接 currentUserID/currentRole，`DataScopeAll`（无过滤）恰好是 DataScope 零值，普通角色可用 `/tickets/search?q=x` 或 `/tickets/overdue` 读到全租户工单，与 `/tickets` 列表口径矛盾。全链路补 scope+viewerID，身份缺失仍 fail-closed。回归锁 `handlers/ticket/search_overdue_datascope_test.go` + 仓储层 DataScope 用例。UPGRADE §1.86。
+
+- **事件创建补受指人同租户校验（2026-10-24，安全）**：Update 早有 `ValidateAssignee`，Create 完全没有——可把事件单指派给别家租户员工形成跨租户暴露面。校验排在编号生成之前，被拒请求不消耗序列号。回归锁 `handlers/incident/create_assignee_tenant_test.go`。UPGRADE §1.87。
+
+- **变更单常规更新加乐观锁（2026-10-24，一致性）**：change schema 无 version 列，`repo.Update` 此前只带租户谓词，handler 又是读快照-合并-全列回写，审批刚推进的状态会被并发编辑用陈旧快照静默回退（五域唯一裸写）。现在 WHERE 带 `StatusEQ`（状态即版本号），service 把待写状态钉死为读取时的当前值，未命中返回 409 而非 404。回归锁 `handlers/change/update_status_cas_test.go`。UPGRADE §1.88。
+
+- **前端五处交互与契约修复（2026-10-24）**：① `QueryProvider` mutation 由 `retry:1` 改为 `retry:0`——写请求重试会让「服务端已受理但响应丢失」的审批决策/建单重复生效；query 改为只对网络错误/5xx/429 重试。② 批量删除加二次确认（影响面最大的写操作此前点了就删）。③ 变更列表改为单一数据源：`ChangeList` 新增受控模式，页面不再发第二份请求，消除「分页总数与表体矛盾」。④ CMDB 云账号页与对账页补错误态，失败不再伪装成「共 0 个账号」/指标全 0。⑤ 17 处超过后端上限的 `pageSize: 200/500/1000` 统一改为 `BACKEND_MAX_PAGE_SIZE`（后端 `MaxPageSize=100` 会静默截断）。回归锁 `src/lib/providers/__tests__/query-retry-policy.test.tsx`。UPGRADE §1.89。
+
 - **工单搜索与逾期列表返回裸数组，调用方无法翻页也拿不到总数（2026-10-24，API 契约缺陷，CLI/MCP 实测暴露）**：`GET /api/v1/tickets/search` 与 `GET /api/v1/tickets/overdue` 直接返回 `[]Ticket`，与全站列表契约 `data: {items,total,page,pageSize,totalPages}` 不一致；按标准信封读取的客户端只能得到空列表，传入 `page`/`pageSize` 也被静默忽略。现在两个端点统一走 `common.SuccessWithPagination`，分页参数归一化后下传：搜索不再固定截断前 100 条，逾期查询补 `Count` 与 `LIMIT/OFFSET`，并以 `(created_at, id)` 作为稳定次序键，同一时间戳下翻页不会重复或漏单。`repository/ticket` 新增 `FindOverduePage`，原 `FindOverdue` 继续供统计调用并复用同一谓词。回归锁：`handlers/ticket` 2 例（信封键集合、`total` 不被当前页截断、分页参数下传）、`repository/ticket` 1 例（跨页无重复/漏单、未逾期不计入 `total`）。UPGRADE §1.85。
 
 - **连接器健康时间戳把 Go 零值时间当成真实时间返回（2026-10-24，API 契约缺陷，CLI/MCP 实测暴露）**：`GET /api/v1/connectors/health` 的 `items[].checkedAt` 与市场/配置/生命周期视图的 `lastCheckedAt` 直接透传 `HealthStatus.CheckedAt`，而 Webhook / Console 探针从不填该字段，于是 `itsm --json connector health` 与 `connector list` 返回 `0001-01-01T00:00:00Z`，调用方无法区分「刚刚检查过」与「从未检查」。修法分两层：`Manager.healthCheckInstances` 在探针返回后补戳实际检查时刻（探针可以不起草时间，但「刚刚检查过」这一事实由 Manager 掌握），API 边界再用 `nonZeroTime` 把零值映射为 `nil`，`ConnectorHealthItemDTO.checkedAt` 改为可选字段（未知时省略，不再输出零值时间）。回归锁：`connector` 1 例（探针不填时间时 Manager 必须落戳）、`handlers/connector` 3 例（health / market / lifecycle 响应不含 `0001-01-01`，且 helper 对零值返回 nil）。契约见 [docs/api-reference.md](./docs/api-reference.md)「连接器健康检查」。
