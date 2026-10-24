@@ -3,6 +3,7 @@
  */
 
 import { httpClient } from './http-client';
+import { BACKEND_MAX_PAGE_SIZE } from './pagination';
 import type {
   WorkflowDefinition,
   WorkflowInstance,
@@ -581,7 +582,7 @@ export class WorkflowApi {
       const res = await httpClient.get<{ items: BpmnTaskRaw[] }>('/api/v1/bpmn/tasks', {
         processInstanceId: instanceId,
         page: 1,
-        pageSize: 100,
+        pageSize: BACKEND_MAX_PAGE_SIZE,
       });
 
       // 转换为 WorkflowTask 格式

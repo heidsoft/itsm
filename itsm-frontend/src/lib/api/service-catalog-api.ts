@@ -17,6 +17,8 @@ import type {
   CreateServiceRequestRequest,
   ServiceQuery,
   ServiceRequestQuery,
+  ServiceRequest,
+  ServiceRequestStatus,
 } from '@/types/service-catalog';
 
 // 必须是字符串字面量：派生模板常量无法被 api-contract 扫描器静态解析。
@@ -38,11 +40,143 @@ const MAX_PAGE_SIZE = 100;
 
 /** GET /api/v1/service-catalogs 的信封；集合键只有 items，页长只有 pageSize。 */
 interface ServiceCatalogListEnvelope {
-  items: unknown[];
+  items: ServiceCatalogRaw[];
   total: number;
   page: number;
   pageSize: number;
   totalPages: number;
+}
+
+/**
+ * 后端 `dto.ServiceCatalogResponse` 的原始形状。
+ *
+ * 此前 `toServiceItem(raw: any)` 让调用方可以对着任意字段名读写，`raw.statu`
+ * 这类拼写错误要到运行时才表现为「状态永远是 retired」。这里把后端会返回的字段
+ * 显式列出来，可选性按后端是否恒定返回标注（关联 ID 恒定返回但可能是 0）。
+ */
+interface ServiceCatalogRaw {
+  id?: number | string;
+  name?: string;
+  category?: string;
+  status?: string;
+  description?: string;
+  ciTypeId?: number | string | null;
+  cloudServiceId?: number | string | null;
+  serviceType?: string;
+  requiresApproval?: boolean;
+  approvalLevel?: number;
+  approvers?: Array<number | string> | null;
+  slaResponseTime?: number;
+  slaResolutionTime?: number;
+  sortOrder?: number;
+  price?: number;
+  unit?: string;
+  /** 字符串承载的整数「天数」，不是小时。 */
+  deliveryTime?: string | number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+/**
+ * 后端服务请求响应的原始形状。
+ *
+ * `id` / `status` / `priority` 标为必填：它们由后端恒定返回，也是 `ServiceRequest`
+ * 的必填字段——标成可选会让 `toServiceRequest` 的返回值缺字段而必须加断言。
+ * 其余字段在「未关联 / 未填」时可能整体缺席，一律可选且用 `??` 兜底。
+ */
+interface ServiceRequestRaw {
+  id: number;
+  status: ServiceRequestStatus;
+  priority: ServiceRequest['priority'];
+  catalogId?: number | string;
+  serviceId?: number | string;
+  requestNumber?: string;
+  serviceName?: string;
+  title?: string;
+  reason?: string;
+  category?: string;
+  requesterId?: number | string;
+  requestedBy?: number | string;
+  requesterName?: string;
+  requestedByName?: string;
+  requestedByEmail?: string;
+  ciId?: number | null;
+  formData?: Record<string, unknown>;
+  costCenter?: string;
+  dataClassification?: string;
+  needsPublicIp?: boolean;
+  needsPublicIP?: boolean;
+  sourceIpWhitelist?: string[];
+  sourceIPWhitelist?: string[];
+  complianceAck?: boolean;
+  currentLevel?: number;
+  totalLevels?: number;
+  expireAt?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  catalog?: { id?: number | string; name?: string; category?: string; description?: string };
+  requester?: { id?: number | string; name?: string; email?: string };
+}
+
+/**
+ * `toServiceRequest` 在后端原始字段之上补齐的派生字段。
+ *
+ * 服务请求详情页消费的是「后端字段 + 这些派生字段」的并集，缺了任一半都渲染
+ * 不出完整信息，所以派生部分单独命名与后端原始形状区分开。
+ */
+export interface ServiceRequestDerivedFields {
+  requestNumber: string;
+  /** 请求人展示名。ServiceRequest 只有 requestedByName，但后端与派生逻辑
+   *  都同时产出 requesterName，详情页按 requesterName 读取。 */
+  requesterName?: string;
+  requestedBy?: number | string;
+  requestedByName: string;
+  catalogId?: number | string;
+  requesterId?: number | string;
+  catalog?: { id?: number | string; name?: string; category?: string; description?: string };
+  requester?: { id?: number | string; name?: string; email?: string };
+  ciId?: number | null;
+  costCenter?: string;
+  dataClassification?: string;
+  needsPublicIp?: boolean;
+  sourceIpWhitelist?: string[];
+  complianceAck?: boolean;
+  currentLevel?: number;
+  totalLevels?: number;
+  expireAt?: string;
+}
+
+/**
+ * 服务请求详情的**线上形状**。
+ *
+ * 刻意不写成 `ServiceRequest`：域类型有三处与后端实际返回不符，直接用会把错误
+ * 的形状固化成契约——
+ *   - `createdAt`/`updatedAt` 声明为 `Date`，后端返回 ISO 字符串；
+ *   - `requestedBy` 声明为 `number`，未关联时后端给 undefined；
+ *   - `approvals[]` 声明的是 `{approverId,approverName,status}`，后端实际返回
+ *     `{id,level,step,status}`（审批是按层级推进的，没有 level 就无法判断
+ *     当前停在第几级）。
+ * 此前这里一律是 `any`，差异被藏了起来；现在按实际返回声明，需要 `Date` 的
+ * 调用方自行 `new Date(...)`。
+ */
+export type ServiceRequestDetail = Omit<
+  ServiceRequest,
+  'createdAt' | 'updatedAt' | 'requestedBy' | 'approvals'
+> &
+  ServiceRequestDerivedFields & {
+    createdAt?: string;
+    updatedAt?: string;
+    approvals?: ServiceRequestApprovalRecord[];
+  };
+
+/** 服务请求审批记录（`GET /api/v1/service-requests/:id` 的 approvals[]）。 */
+export interface ServiceRequestApprovalRecord {
+  id: number;
+  level: number;
+  step: string;
+  status: string;
+  approverName?: string;
+  comment?: string;
 }
 
 export class ServiceCatalogApi {
@@ -81,7 +215,7 @@ export class ServiceCatalogApi {
     return s;
   }
 
-  private static toServiceItem(raw: any): ServiceItem {
+  private static toServiceItem(raw: ServiceCatalogRaw): ServiceItem {
     // 后端 dto.ServiceCatalogResponse 是契约唯一来源。
     // deliveryTime 是字符串承载的整数「天数」，不是小时，也不再冒充 availability.responseTime。
     const deliveryDays = Number(raw?.deliveryTime);
@@ -118,7 +252,7 @@ export class ServiceCatalogApi {
   }
 
    
-  private static toServiceRequest(raw: any): any {
+  private static toServiceRequest(raw: ServiceRequestRaw): ServiceRequestDetail {
     const catalogId = raw?.catalogId ?? raw?.serviceId;
     const requesterId = raw?.requesterId ?? raw?.requestedBy;
     const createdAt = raw?.createdAt;
@@ -251,7 +385,7 @@ export class ServiceCatalogApi {
    * 获取单个服务
    */
   static async getService(id: string): Promise<ServiceItem> {
-    const resp = await httpClient.get<any>(`/api/v1/service-catalogs/${id}`);
+    const resp = await httpClient.get<ServiceCatalogRaw>(`/api/v1/service-catalogs/${id}`);
     return ServiceCatalogApi.toServiceItem(resp);
   }
 
@@ -281,7 +415,7 @@ export class ServiceCatalogApi {
       deliveryTime: String(request.deliveryDays ?? 1),
       status: ServiceCatalogApi.toBackendStatus(request.status) || 'enabled',
     };
-    const resp = await httpClient.post<any>('/api/v1/service-catalogs', payload);
+    const resp = await httpClient.post<ServiceCatalogRaw>('/api/v1/service-catalogs', payload);
     return ServiceCatalogApi.toServiceItem(resp);
   }
 
@@ -319,7 +453,7 @@ export class ServiceCatalogApi {
     const st = ServiceCatalogApi.toBackendStatus(request.status);
     if (st) payload.status = st;
 
-    const resp = await httpClient.put<any>(`/api/v1/service-catalogs/${id}`, payload);
+    const resp = await httpClient.put<ServiceCatalogRaw>(`/api/v1/service-catalogs/${id}`, payload);
     return ServiceCatalogApi.toServiceItem(resp);
   }
 
@@ -334,7 +468,7 @@ export class ServiceCatalogApi {
    * 发布服务
    */
   static async publishService(id: string): Promise<ServiceItem> {
-    const resp = await httpClient.put<any>(`/api/v1/service-catalogs/${id}`, {
+    const resp = await httpClient.put<ServiceCatalogRaw>(`/api/v1/service-catalogs/${id}`, {
       status: 'enabled',
     });
     return ServiceCatalogApi.toServiceItem(resp);
@@ -344,7 +478,7 @@ export class ServiceCatalogApi {
    * 停用服务
    */
   static async retireService(id: string): Promise<ServiceItem> {
-    const resp = await httpClient.put<any>(`/api/v1/service-catalogs/${id}`, {
+    const resp = await httpClient.put<ServiceCatalogRaw>(`/api/v1/service-catalogs/${id}`, {
       status: 'disabled',
     });
     return ServiceCatalogApi.toServiceItem(resp);
@@ -372,7 +506,7 @@ export class ServiceCatalogApi {
    * 同一资源在本文件与 `service-request-api.ts` 各有一套客户端实体，已登记为待收敛债务。
    */
   static async getServiceRequests(query?: ServiceRequestQuery): Promise<{
-    items: unknown[];
+    items: ServiceRequestDetail[];
     total: number;
     page: number;
     pageSize: number;
@@ -391,7 +525,7 @@ export class ServiceCatalogApi {
       : ServiceCatalogApi.toBackendRequestStatus(requestedStatus);
 
     const resp = await httpClient.get<{
-      items: unknown[];
+      items: ServiceRequestRaw[];
       total: number;
       page: number;
       pageSize: number;
@@ -413,15 +547,15 @@ export class ServiceCatalogApi {
   /**
    * 获取单个服务请求
    */
-  static async getServiceRequest(id: number): Promise<any> {
-    const resp = await httpClient.get<any>(`/api/v1/service-requests/${id}`);
+  static async getServiceRequest(id: number): Promise<ServiceRequestDetail> {
+    const resp = await httpClient.get<ServiceRequestRaw>(`/api/v1/service-requests/${id}`);
     return ServiceCatalogApi.toServiceRequest(resp);
   }
 
   /**
    * 创建服务请求
    */
-  static async createServiceRequest(request: CreateServiceRequestRequest): Promise<any> {
+  static async createServiceRequest(request: CreateServiceRequestRequest): Promise<ServiceRequestDetail> {
     // 前端 CreateServiceRequestRequest: { serviceId, formData, ... }
     // 后端 CreateServiceRequestRequest: { catalog_id, title, reason, form_data, ... , compliance_ack }
     const reason =
@@ -495,8 +629,8 @@ export class ServiceCatalogApi {
   /**
    * 获取服务请求详情（包含审批历史）
    */
-  static async getServiceRequestDetail(id: number): Promise<any> {
-    const response = await httpClient.get(`/api/v1/service-requests/${id}`);
+  static async getServiceRequestDetail(id: number): Promise<ServiceRequestDetail> {
+    const response = await httpClient.get<ServiceRequestDetail>(`/api/v1/service-requests/${id}`);
     return response;
   }
 

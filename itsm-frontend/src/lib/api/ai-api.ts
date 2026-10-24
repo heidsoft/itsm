@@ -397,6 +397,46 @@ export interface SolutionSearchRequest {
   limit?: number;
 }
 
+/**
+ * 知识库检索返回的原始条目形状（`POST /api/v1/ai/rag/search` 的 items[]）。
+ *
+ * 后端对同一语义有过三种字段名（content / snippet / text），前端必须全部兼容，
+ * 但此前用 `any[]` 表达，读代码的人看不出到底要兼容哪几个。
+ */
+interface RagSearchRawItem {
+  id?: number | string;
+  title?: string;
+  source?: string;
+  snippet?: string;
+  content?: string;
+  text?: string;
+  score?: number;
+}
+
+/** 全局搜索返回的原始结果条目（`GET /api/v1/global-search` 的 results[]）。 */
+interface GlobalSearchRawResult {
+  id?: number | string;
+  type?: string;
+  title?: string;
+  description?: string;
+  status?: string | number;
+  ticketNumber?: string | number;
+  number?: string | number;
+}
+
+/**
+ * `POST /api/v1/ai/chat` 的响应。
+ *
+ * 字段名与后端 `handlers/ai/handler.go` 拼的 `gin.H{"answers", "conversationId"}`
+ * 一致。answers 的元素形态不固定（RAG 命中时是对象，无命中时是空数组），
+ * 所以声明为 unknown[] 而不是某个具体类型——把它写成 `RagAnswer[]` 会让
+ * 「字符串条目」这种合法形态在类型层面消失。
+ */
+export interface AiChatResponse {
+  answers?: unknown[];
+  conversationId?: number;
+}
+
 export interface SearchResult {
   id: number;
   title: string;
@@ -447,7 +487,7 @@ export async function aiSuggestSolutions(
   request: SolutionSearchRequest
 ): Promise<SolutionSuggestion[]> {
   const limit = request.limit && request.limit > 0 ? request.limit : 5;
-  const res = await httpClient.post<{ items: any[]; degraded?: boolean }>(
+  const res = await httpClient.post<{ items: RagSearchRawItem[]; degraded?: boolean }>(
     `/api/v1/ai/rag/search`,
     {
       query: request.query,
@@ -482,12 +522,12 @@ export async function aiIntelligentSearch(
   incidents: SearchResult[];
   suggestions: string[];
 }> {
-  const res = await httpClient.get<{ results: Array<any>; total: number }>(
+  const res = await httpClient.get<{ results: GlobalSearchRawResult[]; total: number }>(
     `/api/v1/global-search?q=${encodeURIComponent(query)}`
   );
   const results = Array.isArray(res?.results) ? res.results : [];
 
-  const normalize = (r: any): SearchResult => ({
+  const normalize = (r: GlobalSearchRawResult): SearchResult => ({
     id: Number(r?.id || 0),
     type: String(r?.type || ''),
     title: String(r?.title || ''),
@@ -786,8 +826,8 @@ export class AIApi {
     query: string;
     conversationId?: number;
     limit?: number;
-  }): Promise<any> {
-    return httpClient.post(`/api/v1/ai/chat`, {
+  }): Promise<AiChatResponse> {
+    return httpClient.post<AiChatResponse>(`/api/v1/ai/chat`, {
       query: params.query,
       limit: params.limit,
       conversationId: params.conversationId,

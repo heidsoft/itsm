@@ -8,6 +8,7 @@ import type { Ticket, TicketStatus, TicketPriority } from '@/lib/api/types';
 import { TicketAPI } from '@/lib/api/ticket-api';
 import { usePermissions } from '@/lib/hooks/use-permissions';
 import { useUserListQuery } from '@/lib/hooks/useUserListQuery';
+import { BACKEND_MAX_PAGE_SIZE } from '@/lib/api/pagination';
 import { TicketStatusConfig, TicketPriorityConfig } from '@/constants/taxonomy';
 const { Text } = Typography;
 
@@ -45,7 +46,7 @@ const TicketBatchOperations: React.FC<TicketBatchOperationsProps> = ({
 }) => {
   const { hasPermission } = usePermissions();
   // 处理人下拉复用带缓存的用户列表查询，不再使用写死的示例姓名。
-  const assignees = useUserListQuery({ pageSize: 100, enabled: hasPermission('ticket', 'assign') });
+  const assignees = useUserListQuery({ pageSize: BACKEND_MAX_PAGE_SIZE, enabled: hasPermission('ticket', 'assign') });
   const assigneeOptions = useMemo(
     () =>
       (assignees.data?.items ?? []).map(user => ({

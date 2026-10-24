@@ -8,6 +8,7 @@ import {
   type WorkflowTemplate,
   type CreateWorkflowTemplateRequest,
 } from '@/lib/api/bpmn-workflow-template-api';
+import { BACKEND_MAX_PAGE_SIZE } from '@/lib/api/pagination';
 
 const { Text } = Typography;
 
@@ -46,7 +47,7 @@ export default function WorkflowTemplateCatalog() {
   const load = async () => {
     setLoading(true);
     try {
-      const result = await BPMNWorkflowTemplateApi.list({ ...filters, page: 1, pageSize: 100 });
+      const result = await BPMNWorkflowTemplateApi.list({ ...filters, page: 1, pageSize: BACKEND_MAX_PAGE_SIZE });
       setItems(result.items);
     } catch {
       message.error('加载模板目录失败');

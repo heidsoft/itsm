@@ -155,7 +155,11 @@ const MyRequestsPage = () => {
         status: status === 'all' ? undefined : (status as ServiceRequestStatus),
       });
 
-      setRequests(data.items as ServiceRequest[]);
+      // 本页的 ServiceRequest 是早期按页面字段攒的局部视图，与 API 层线上形状
+      // （ServiceRequestDetail）已经漂移（本页要求 reason 必填，API 层不保证）。
+      // 显式 as unknown as 是为了让这处漂移**可见**：此前 API 返回 any，编译器
+      // 根本无从发现两套形状不一致。收敛两套类型属独立工作项。
+      setRequests(data.items as unknown as ServiceRequest[]);
       setTotal(data.total);
       setTotalPages(Math.max(1, data.totalPages));
     } catch (error) {

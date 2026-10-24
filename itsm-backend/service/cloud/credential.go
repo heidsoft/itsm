@@ -52,6 +52,13 @@ type ResolvedCredential struct {
 	SessionToken    string
 	RoleARN         string
 	SessionName     string
+	// BearerToken 承载「直接用令牌访问」的一类凭据：K8s APIServer 的
+	// ServiceAccount token、以及其它走 Bearer 鉴权的私有云。AK/SK 那套字段
+	// 对这类凭据没有语义，复用它们只会让读代码的人误以为要签名。
+	BearerToken string
+	// Endpoint 该凭据对应的服务端点（K8s APIServer 地址等）。云厂商的端点由
+	// SDK 按 region 推导，不需要这个字段。
+	Endpoint string
 }
 
 // ParseCredentialRef 解析原始 JSON 字符串
@@ -75,11 +82,44 @@ func ResolveCredential(ctx context.Context, provider, credentialRef string) (*Re
 		return ResolveAWSCredential(ctx, credentialRef)
 	case "tencent":
 		return resolveTencentCredential(ctx, credentialRef)
+	case "k8s":
+		return ResolveKubernetesCredential(ctx, credentialRef)
+	case "volcengine":
+		return nil, fmt.Errorf("volcengine credential resolver not implemented")
 	case "azure":
 		return nil, fmt.Errorf("azure credential resolver not implemented")
 	default:
 		return nil, fmt.Errorf("unsupported provider: %s", provider)
 	}
+}
+
+// ResolveKubernetesCredential 解析 Kubernetes APIServer 凭据。
+//
+// 凭据体形如：
+//
+//	{"type":"token","token":"<ServiceAccount token>","api_server":"https://10.0.0.1:6443"}
+//
+// api_server 与令牌一起存放：两者是配套的，拆开放会让「换了个集群但沿用旧
+// token」这类配置错误在运行时才表现为 401。
+func ResolveKubernetesCredential(_ context.Context, credentialRef string) (*ResolvedCredential, error) {
+	data, err := ParseCredentialRef(credentialRef)
+	if err != nil {
+		return nil, err
+	}
+	if data["type"] != "token" {
+		return nil, fmt.Errorf("unknown k8s credential type: %v", data["type"])
+	}
+	cred := &ResolvedCredential{Provider: "k8s"}
+	cred.BearerToken, _ = data["token"].(string)
+	if cred.BearerToken == "" {
+		return nil, fmt.Errorf("token required for k8s token credential type")
+	}
+	cred.Endpoint, _ = data["api_server"].(string)
+	if cred.Endpoint == "" {
+		// 集群内访问时的默认端点（Pod 里用 ServiceAccount 发现的情形）。
+		cred.Endpoint = "https://kubernetes.default.svc"
+	}
+	return cred, nil
 }
 
 // ResolveAliyunCredential 解析阿里云凭据

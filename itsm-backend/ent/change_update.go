@@ -424,6 +424,26 @@ func (_u *ChangeUpdate) SetUpdatedAt(v time.Time) *ChangeUpdate {
 	return _u
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (_u *ChangeUpdate) SetDeletedAt(v time.Time) *ChangeUpdate {
+	_u.mutation.SetDeletedAt(v)
+	return _u
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (_u *ChangeUpdate) SetNillableDeletedAt(v *time.Time) *ChangeUpdate {
+	if v != nil {
+		_u.SetDeletedAt(*v)
+	}
+	return _u
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (_u *ChangeUpdate) ClearDeletedAt() *ChangeUpdate {
+	_u.mutation.ClearDeletedAt()
+	return _u
+}
+
 // AddProblemIDs adds the "problems" edge to the Problem entity by IDs.
 func (_u *ChangeUpdate) AddProblemIDs(ids ...int) *ChangeUpdate {
 	_u.mutation.AddProblemIDs(ids...)
@@ -766,6 +786,12 @@ func (_u *ChangeUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(change.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if value, ok := _u.mutation.DeletedAt(); ok {
+		_spec.SetField(change.FieldDeletedAt, field.TypeTime, value)
+	}
+	if _u.mutation.DeletedAtCleared() {
+		_spec.ClearField(change.FieldDeletedAt, field.TypeTime)
 	}
 	if _u.mutation.ProblemsCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -1358,6 +1384,26 @@ func (_u *ChangeUpdateOne) SetUpdatedAt(v time.Time) *ChangeUpdateOne {
 	return _u
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (_u *ChangeUpdateOne) SetDeletedAt(v time.Time) *ChangeUpdateOne {
+	_u.mutation.SetDeletedAt(v)
+	return _u
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (_u *ChangeUpdateOne) SetNillableDeletedAt(v *time.Time) *ChangeUpdateOne {
+	if v != nil {
+		_u.SetDeletedAt(*v)
+	}
+	return _u
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (_u *ChangeUpdateOne) ClearDeletedAt() *ChangeUpdateOne {
+	_u.mutation.ClearDeletedAt()
+	return _u
+}
+
 // AddProblemIDs adds the "problems" edge to the Problem entity by IDs.
 func (_u *ChangeUpdateOne) AddProblemIDs(ids ...int) *ChangeUpdateOne {
 	_u.mutation.AddProblemIDs(ids...)
@@ -1730,6 +1776,12 @@ func (_u *ChangeUpdateOne) sqlSave(ctx context.Context) (_node *Change, err erro
 	}
 	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(change.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if value, ok := _u.mutation.DeletedAt(); ok {
+		_spec.SetField(change.FieldDeletedAt, field.TypeTime, value)
+	}
+	if _u.mutation.DeletedAtCleared() {
+		_spec.ClearField(change.FieldDeletedAt, field.TypeTime)
 	}
 	if _u.mutation.ProblemsCleared() {
 		edge := &sqlgraph.EdgeSpec{

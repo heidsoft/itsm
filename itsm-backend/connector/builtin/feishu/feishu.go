@@ -4,10 +4,17 @@ package feishu
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 
 	"itsm-backend/connector"
 )
+
+// maxCallbackBody 事件回调请求体的读取上限。
+//
+// 飞书事件体通常几 KB，但回调端点必须假设「有人往这里打流量」：不设上限的
+// io.ReadAll 会把内存交给对端控制。超限按 413 拒绝，不去解析。
+const maxCallbackBody = 1 << 20 // 1 MiB
 
 // Compile-time assertions
 var (
@@ -19,9 +26,17 @@ var (
 // 自动处理 URL Verification 和签名校验
 func (f *Feishu) HTTPHandler(r *connector.Router) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		body := make([]byte, req.ContentLength)
-		if _, err := req.Body.Read(body); err != nil && err.Error() != "EOF" {
+		// 原实现是 `body := make([]byte, req.ContentLength); req.Body.Read(body)`，
+		// 有两个硬伤：①chunked 请求 ContentLength 为 -1，make([]byte, -1) 直接
+		// panic；②Read 不保证一次读满，大事件体只拿到前一段，JSON 解析失败。
+		// 改为限额 ReadAll。
+		body, err := io.ReadAll(io.LimitReader(req.Body, maxCallbackBody+1))
+		if err != nil {
 			http.Error(w, "read body", http.StatusBadRequest)
+			return
+		}
+		if len(body) > maxCallbackBody {
+			http.Error(w, "request body too large", http.StatusRequestEntityTooLarge)
 			return
 		}
 		// URL Verification

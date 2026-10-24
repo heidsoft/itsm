@@ -10,6 +10,7 @@ import { History, AlertTriangle, CheckCircle, XCircle, Bug, GitCompare } from 'l
 import { WorkflowAPI } from '@/lib/api/workflow-api';
 import { BPMNAIApi } from '@/lib/api/bpmn-ai-api';
 import { UserApi } from '@/lib/api/user-api';
+import { BACKEND_MAX_PAGE_SIZE } from '@/lib/api/pagination';
 import { RoleAPI } from '@/lib/api/role-api';
 import { GroupAPI } from '@/lib/api/group-api';
 import { httpClient } from '@/lib/api/http-client';
@@ -189,8 +190,8 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
   const loadUserList = async () => {
     setLoadingUsers(true);
     try {
-      const response = (await UserApi.getUsers({ page: 1, pageSize: 100 }));
-      const users = (response.items || []).map((u: any) => ({
+      const response = await UserApi.getUsers({ page: 1, pageSize: BACKEND_MAX_PAGE_SIZE });
+      const users = (response.items || []).map(u => ({
         id: u.id,
         name: u.name || u.username || t('workflow.designer.unknownUser'),
         username: u.username,

@@ -822,6 +822,7 @@ var (
 		{Name: "related_tickets", Type: field.TypeJSON, Nullable: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
 		{Name: "standard_change_changes", Type: field.TypeInt, Nullable: true},
 	}
 	// ChangesTable holds the schema information for the "changes" table.
@@ -832,7 +833,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "changes_standard_changes_changes",
-				Columns:    []*schema.Column{ChangesColumns[23]},
+				Columns:    []*schema.Column{ChangesColumns[24]},
 				RefColumns: []*schema.Column{StandardChangesColumns[0]},
 				OnDelete:   schema.SetNull,
 			},

@@ -25,8 +25,7 @@ import dayjs from 'dayjs';
 
 import type { License } from '@/lib/api/asset-api';
 import { AssetApi } from '@/lib/api/asset-api';
-import type { User as UserType } from '@/lib/api/user-api';
-import { UserApi } from '@/lib/api/user-api';
+import { useUserPickerQuery } from '@/lib/hooks/useUserListQuery';
 
 const { Title, Text } = Typography;
 
@@ -60,8 +59,8 @@ const LicenseDetail: React.FC = () => {
   const [license, setLicense] = useState<License | null>(null);
   const [assignModalVisible, setAssignModalVisible] = useState(false);
   const [selectedUsers, setSelectedUsers] = useState<number[]>([]);
-  const [users, setUsers] = useState<UserType[]>([]);
-  const [usersLoading, setUsersLoading] = useState(false);
+  // 选人下拉走共享缓存（5 分钟内不重复请求），不再「开一次弹窗拉一次」。
+  const { users, isLoading: usersLoading } = useUserPickerQuery();
 
   useEffect(() => {
     if (id) {
@@ -79,19 +78,6 @@ const LicenseDetail: React.FC = () => {
       message.error('加载许可证详情失败');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const loadUsers = async () => {
-    setUsersLoading(true);
-    try {
-      const response = await UserApi.getUsers({ pageSize: 100 });
-      setUsers(response.items || []);
-    } catch (error) {
-      console.error('Failed to load users:', error);
-      message.error('加载用户列表失败');
-    } finally {
-      setUsersLoading(false);
     }
   };
 
@@ -276,10 +262,7 @@ const LicenseDetail: React.FC = () => {
           {license.status === 'active' && license.availableQuantity > 0 && (
             <Button
               icon={<UserIcon />}
-              onClick={() => {
-                loadUsers();
-                setAssignModalVisible(true);
-              }}
+              onClick={() => setAssignModalVisible(true)}
             >
               分配给用户
             </Button>

@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"itsm-backend/ent"
+	"itsm-backend/ent/change"
 	"itsm-backend/ent/incident"
 	"itsm-backend/ent/problem"
 	"itsm-backend/ent/servicerequest"
@@ -11,7 +12,7 @@ import (
 )
 
 // RegisterSoftDeleteInterceptors 为带 deleted_at 字段的业务实体（ticket / incident /
-// problem / servicerequest）注册全局查询拦截器，确保：
+// problem / servicerequest / change）注册全局查询拦截器，确保：
 //
 //   - 所有 Query（List / Get / First / Only）默认附加 DeletedAtIsNil() 条件，
 //     避免软删除记录出现在列表、详情、带边（WithXxx）的关联查询结果中。
@@ -38,6 +39,10 @@ func RegisterSoftDeleteInterceptors(client *ent.Client) {
 				q.Where(problem.DeletedAtIsNil())
 			case *ent.ServiceRequestQuery:
 				q.Where(servicerequest.DeletedAtIsNil())
+			case *ent.ChangeQuery:
+				// change 是最后一个补齐软删字段的业务实体：此前物理删会让 PIR /
+				// 评审成员 / 回滚步骤 / 审批链成为孤儿，且已用编号可被复用。
+				q.Where(change.DeletedAtIsNil())
 			}
 			return next.Query(ctx, query)
 		})

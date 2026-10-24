@@ -247,6 +247,39 @@ export interface ListIncidentsRequest extends ListQueryParams {
 
 export type ListIncidentsResponse = PaginationResponse<Incident>;
 
+/**
+ * `GET /api/v1/incidents/{id}/events` 的单条活动记录。
+ *
+ * 字段名与后端 `handlers/incident/handler.go: GetIncidentEvents` 拼的 `gin.H`
+ * 逐字段对齐。此前这里声明为 `any[]`，调用方拿到的是「数组的数组」这种
+ * 完全没有字段保障的类型，拼错字段名要到运行时才炸。
+ */
+export interface IncidentEventRecord {
+  id: number;
+  incidentId: number;
+  eventType: string;
+  eventName: string;
+  description: string;
+  occurredAt: string;
+  createdAt: string;
+}
+
+/**
+ * `GET /api/v1/incidents/{id}/metrics` 的单事件指标快照。
+ *
+ * 注意与 `IncidentMetrics`（租户全量标量：总数/均值/MTTA/MTTR）是**两套口径**，
+ * 名字刻意区分开，避免误用。字段名沿用后端 snake_case，不做重命名——重命名
+ * 会让读代码的人对不上后端 handler 里的 `gin.H`。
+ */
+export interface IncidentMetricsSnapshot {
+  incident_id: number;
+  resolution_time_hours: number;
+  sla_violations: number;
+  uptime_percentage: number;
+  metrics_count: number;
+  checked_at: string;
+}
+
 export interface IncidentMetrics {
   // camelCase
   totalIncidents?: number;
@@ -880,14 +913,18 @@ export class IncidentAPI {
   }
 
   // 获取事件活动记录
-  static async getIncidentEvents(incidentId: number): Promise<any[]> {
-    const response = await httpClient.get<any[]>(`/api/v1/incidents/${incidentId}/events`);
+  static async getIncidentEvents(incidentId: number): Promise<IncidentEventRecord[]> {
+    const response = await httpClient.get<IncidentEventRecord[]>(
+      `/api/v1/incidents/${incidentId}/events`
+    );
     return response;
   }
 
   // 获取事件指标
-  static async getIncidentMetricsData(incidentId: number): Promise<any> {
-    const response = await httpClient.get<any>(`/api/v1/incidents/${incidentId}/metrics`);
+  static async getIncidentMetricsData(incidentId: number): Promise<IncidentMetricsSnapshot> {
+    const response = await httpClient.get<IncidentMetricsSnapshot>(
+      `/api/v1/incidents/${incidentId}/metrics`
+    );
     return response;
   }
 
@@ -900,9 +937,9 @@ export class IncidentAPI {
       notifyUsers?: number[];
       autoAssign?: boolean;
     }
-  ): Promise<any> {
+  ): Promise<Incident> {
     // 后端 DTO 要求 body 携带 incidentId（binding:"required"），必须显式合入
-    const response = await httpClient.post<any>(`/api/v1/incidents/${id}/escalate`, {
+    const response = await httpClient.post<Incident>(`/api/v1/incidents/${id}/escalate`, {
       ...data,
       incidentId: id,
     });

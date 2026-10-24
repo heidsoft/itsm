@@ -108,7 +108,7 @@ import (
 	"itsm-backend/router"
 	"itsm-backend/service"
 	cloudruntime "itsm-backend/service/cloud"
-	cloudaliyun "itsm-backend/service/cloud/aliyun"
+	cloudadapters "itsm-backend/service/cloud/adapters"
 	slaEngine "itsm-backend/service/sla"
 
 	"github.com/gin-gonic/gin"
@@ -868,7 +868,10 @@ func NewApplication() *Application {
 	// Domain: CMDB (DDD)
 	cmdbRepo := cmdb.NewEntRepository(client)
 	cloudAdapterRegistry := cloudruntime.NewRegistry()
-	cloudAdapterRegistry.Register(cloudaliyun.NewAliyunECSAdapter(sugar))
+	// 统一装配点：新增厂商适配器只改 service/cloud/adapters，不要把
+	// Register 调用散落到启动流程里（散落之后「到底注册了谁」只能靠全局搜索，
+	// 漏一个provider 的表现是所有发现任务静默失败）。
+	cloudadapters.RegisterAll(cloudAdapterRegistry, sugar)
 	tenantSecretResolver := cloudruntime.NewConfigTenantSecretResolver(cfg.CloudDiscovery.TenantSecrets)
 	// Job 级发现执行器：消费 `cmdb.cloud_discovery.run` 出箱命令（payload 携带
 	// discoveryJobId），按 discovery_jobs 状态机认领/推进/写结果。

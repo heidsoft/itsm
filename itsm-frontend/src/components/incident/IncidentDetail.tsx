@@ -31,8 +31,7 @@ import dayjs from 'dayjs';
 
 import { IncidentAPI } from '@/lib/api/';
 import type { CreateIncidentClassificationRequest } from '@/lib/api/incident-api';
-import { UserApi } from '@/lib/api/user-api';
-import type { User } from '@/lib/api/user-api';
+import { useUserPickerQuery } from '@/lib/hooks/useUserListQuery';
 import {
   IncidentStatus,
   IncidentStatusLabels,
@@ -108,8 +107,9 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
   const [resolveForm] = Form.useForm();
 
   // ===== 指派：用户列表 + 指派弹窗状态 =====
-  const [users, setUsers] = useState<User[]>([]);
-  const [loadingUsers, setLoadingUsers] = useState(false);
+  // 与其余选人下拉共用同一份 React Query 缓存（5 分钟内不重复请求），
+  // 不再各页面各拉一次。
+  const { users, isLoading: loadingUsers } = useUserPickerQuery();
   const [assignModalVisible, setAssignModalVisible] = useState(false);
   const [assigning, setAssigning] = useState(false);
   const [assignForm] = Form.useForm<{ assigneeId: number }>();
@@ -188,23 +188,6 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
   useEffect(() => {
     loadData();
   }, [id]);
-
-  // 加载用户列表，用于负责人/报告人姓名展示与指派选择
-  useEffect(() => {
-    const loadUsers = async () => {
-      setLoadingUsers(true);
-      try {
-        const res = await UserApi.getUsers({ pageSize: 100 });
-        setUsers(res.items || []);
-      } catch (e) {
-        // 用户获取失败时降级为展示 ID，不阻断详情页
-        setUsers([]);
-      } finally {
-        setLoadingUsers(false);
-      }
-    };
-    loadUsers();
-  }, []);
 
   // 用户 ID → 姓名（找不到时回退为 #ID）
   const getUserName = (userId?: number | null) => {

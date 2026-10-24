@@ -26,8 +26,7 @@ import dayjs from 'dayjs';
 
 import type { Asset } from '@/lib/api/asset-api';
 import { AssetApi } from '@/lib/api/asset-api';
-import type { User as UserType } from '@/lib/api/user-api';
-import { UserApi } from '@/lib/api/user-api';
+import { useUserPickerQuery } from '@/lib/hooks/useUserListQuery';
 
 const { Title, Text } = Typography;
 
@@ -61,8 +60,8 @@ const AssetDetail: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [asset, setAsset] = useState<Asset | null>(null);
   const [assignModalVisible, setAssignModalVisible] = useState(false);
-  const [users, setUsers] = useState<UserType[]>([]);
-  const [usersLoading, setUsersLoading] = useState(false);
+  // 选人下拉走共享缓存（5 分钟内不重复请求），不再「开一次弹窗拉一次」。
+  const { users, isLoading: usersLoading } = useUserPickerQuery();
   const [form] = Form.useForm();
 
   useEffect(() => {
@@ -80,19 +79,6 @@ const AssetDetail: React.FC = () => {
       message.error('加载资产详情失败');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const loadUsers = async () => {
-    setUsersLoading(true);
-    try {
-      const response = await UserApi.getUsers({ pageSize: 100 });
-      setUsers(response.items || []);
-    } catch (error) {
-      console.error('Failed to load users:', error);
-      message.error('加载用户列表失败');
-    } finally {
-      setUsersLoading(false);
     }
   };
 
@@ -247,10 +233,7 @@ const AssetDetail: React.FC = () => {
           {asset.status === 'available' && (
             <Button
               icon={<UserIcon />}
-              onClick={() => {
-                loadUsers();
-                setAssignModalVisible(true);
-              }}
+              onClick={() => setAssignModalVisible(true)}
             >
               分配资产
             </Button>

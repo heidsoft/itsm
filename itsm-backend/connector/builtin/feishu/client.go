@@ -22,6 +22,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strings"
 	"sync"
 	"time"
 
@@ -32,6 +33,11 @@ const (
 	BaseURLCN   = "https://open.feishu.cn"
 	BaseURLIntl = "https://open.larksuite.com"
 	DefaultTTL  = 110 * time.Minute // token 官方 TTL 2h，提前 10 分钟刷新
+	// tokenRefreshMargin 距过期多久就开始换新。官方 TTL 2h，留 5 分钟余量覆盖
+	// 「换到 token 后网络抖动，实际生效晚于本地记录」的窗口。
+	tokenRefreshMargin = 5 * time.Minute
+	// maxResponseBytes 单个响应的读取上限，防止异常响应把内存吃满。
+	maxResponseBytes = 4 << 20 // 4 MiB
 )
 
 type Client struct {
@@ -67,25 +73,31 @@ func NewClient(baseURL, appID, appSecret, verifyTok, encryptKey string) *Client 
 }
 
 // Token 获取当前可用的 tenant_access_token（自动刷新）
+//
+// 刷新用互斥锁而不是 singleflight：飞书的 tenant_access_token 是租户级共享
+// 凭据，N 个并发请求在过期窗口内各自去换会互相把对方刚换到的 token 挤掉，
+// 表现为偶发 401。锁内串行化后，只有第一个请求真的去换，其余直接用新值。
 func (c *Client) Token(ctx context.Context) (string, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	if c.token != "" && time.Until(c.expire) > 5*time.Minute {
+	if c.token != "" && time.Until(c.expire) > tokenRefreshMargin {
 		return c.token, nil
 	}
+	if err := c.refreshTenantToken(ctx); err != nil {
+		return "", err
+	}
+	return c.token, nil
+}
+
+func (c *Client) refreshTenantToken(ctx context.Context) error {
 	body, _ := json.Marshal(map[string]string{
 		"app_id":     c.appID,
 		"app_secret": c.appSecret,
 	})
-	req, _ := http.NewRequestWithContext(ctx, http.MethodPost,
-		c.baseURL+"/open-apis/auth/v3/tenant_access_token/internal", bytes.NewReader(body))
-	req.Header.Set("Content-Type", "application/json; charset=utf-8")
-	resp, err := c.hc.Do(req)
+	raw, err := c.postRaw(ctx, "/open-apis/auth/v3/tenant_access_token/internal", body, "")
 	if err != nil {
-		return "", err
+		return err
 	}
-	defer resp.Body.Close()
-	raw, _ := io.ReadAll(resp.Body)
 	var out struct {
 		Code              int    `json:"code"`
 		Msg               string `json:"msg"`
@@ -93,39 +105,118 @@ func (c *Client) Token(ctx context.Context) (string, error) {
 		Expire            int    `json:"expire"`
 	}
 	if err := json.Unmarshal(raw, &out); err != nil {
-		return "", fmt.Errorf("feishu: decode token resp: %w", err)
+		return fmt.Errorf("feishu: decode token resp: %w", err)
 	}
 	if out.Code != 0 {
-		return "", fmt.Errorf("feishu: token api error code=%d msg=%s", out.Code, out.Msg)
+		return fmt.Errorf("feishu: token api error code=%d msg=%s", out.Code, out.Msg)
 	}
 	c.token = out.TenantAccessToken
 	c.expire = time.Now().Add(time.Duration(out.Expire) * time.Second)
-	return c.token, nil
+	return nil
+}
+
+// getAppAccessToken 获取 app_access_token。
+//
+// ⚠️ 原实现直接 `return c.Token(ctx)`（即拿 tenant_access_token 顶替），
+// 注释里写着「先这样，需要时再实现」。但飞书的 OAuth 换码/刷新端点
+// （/open-apis/authen/v1/access_token、refresh_access_token）只认
+// **app_access_token**：用 tenant token 调用会返回 code=99991663 之类的鉴权
+// 失败，而返回值又被当成「用户未授权」处理——OAuth 链路是整条断的，且错误
+// 指向错误的方向。这里按官方端点补齐。
+func (c *Client) getAppAccessToken(ctx context.Context) (string, error) {
+	body, _ := json.Marshal(map[string]string{
+		"app_id":     c.appID,
+		"app_secret": c.appSecret,
+	})
+	raw, err := c.postRaw(ctx, "/open-apis/auth/v3/app_access_token/internal", body, "")
+	if err != nil {
+		return "", err
+	}
+	var out struct {
+		Code            int    `json:"code"`
+		Msg             string `json:"msg"`
+		AppAccessToken  string `json:"app_access_token"`
+		Expire          int    `json:"expire"`
+		TenantAppAccess string `json:"tenant_app_access_token"`
+	}
+	if err := json.Unmarshal(raw, &out); err != nil {
+		return "", fmt.Errorf("feishu: decode app token resp: %w", err)
+	}
+	if out.Code != 0 {
+		return "", fmt.Errorf("feishu: app token api error code=%d msg=%s", out.Code, out.Msg)
+	}
+	return out.AppAccessToken, nil
+}
+
+// postRaw 发一个 JSON POST 并返回**已校验过状态码**的响应体。
+//
+// 关键点：必须先看 resp.StatusCode。飞书网关在限流/鉴权失败时返回的是带
+// code 的 JSON（HTTP 200 之外的状态码也有），原实现不判状态码就把 body 往
+// 结构体里 unmarshal，网关返回 HTML/空体时报的是「decode xxx resp: invalid
+// character '<'」——错误信息指向 JSON 解析，实际是 401/429，排查方向完全错。
+func (c *Client) postRaw(ctx context.Context, path string, body []byte, bearer string) ([]byte, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.baseURL+path, bytes.NewReader(body))
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Content-Type", "application/json; charset=utf-8")
+	if bearer != "" {
+		req.Header.Set("Authorization", "Bearer "+bearer)
+	}
+	return c.do(req)
+}
+
+func (c *Client) do(req *http.Request) ([]byte, error) {
+	resp, err := c.hc.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	raw, err := io.ReadAll(io.LimitReader(resp.Body, maxResponseBytes))
+	if err != nil {
+		return nil, fmt.Errorf("feishu: read %s resp: %w", req.URL.Path, err)
+	}
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		// 带上状态码与响应体片段：限流（429）与鉴权（401）在飞书侧都有明确
+		// 语义，截断后一起报出来，调用方才知道该重试还是改配置。
+		return nil, fmt.Errorf("feishu: %s %s http=%d body=%s", req.Method, req.URL.Path,
+			resp.StatusCode, truncateForLog(raw, 256))
+	}
+	return raw, nil
+}
+
+func truncateForLog(raw []byte, n int) string {
+	s := strings.TrimSpace(string(raw))
+	if len(s) > n {
+		return s[:n] + "..."
+	}
+	return s
 }
 
 func (c *Client) doJSON(ctx context.Context, method, path string, in, out interface{}) error {
-	var body io.Reader
+	var body []byte
 	if in != nil {
-		raw, _ := json.Marshal(in)
-		body = bytes.NewReader(raw)
+		body, _ = json.Marshal(in)
 	}
 	tok, err := c.Token(ctx)
 	if err != nil {
 		return err
 	}
-	req, _ := http.NewRequestWithContext(ctx, method, c.baseURL+path, body)
-	req.Header.Set("Content-Type", "application/json; charset=utf-8")
-	req.Header.Set("Authorization", "Bearer "+tok)
-	resp, err := c.hc.Do(req)
+	req, err := http.NewRequestWithContext(ctx, method, c.baseURL+path, bytes.NewReader(body))
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
-	raw, _ := io.ReadAll(resp.Body)
-	if out != nil {
-		if err := json.Unmarshal(raw, out); err != nil {
-			return fmt.Errorf("feishu: decode %s resp: %w", path, err)
-		}
+	req.Header.Set("Content-Type", "application/json; charset=utf-8")
+	req.Header.Set("Authorization", "Bearer "+tok)
+	raw, err := c.do(req)
+	if err != nil {
+		return err
+	}
+	if out == nil {
+		return nil
+	}
+	if err := json.Unmarshal(raw, out); err != nil {
+		return fmt.Errorf("feishu: decode %s resp: %w", path, err)
 	}
 	return nil
 }
@@ -300,13 +391,10 @@ func (c *Client) ExchangeOAuthCode(ctx context.Context, code string) (*OAuthToke
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Set("Authorization", "Bearer "+appToken)
-	resp, err := c.hc.Do(req)
+	raw, err := c.postRaw(ctx, "/open-apis/authen/v1/access_token", body, appToken)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
-	raw, _ := io.ReadAll(resp.Body)
 	var out struct {
 		Code int                 `json:"code"`
 		Msg  string              `json:"msg"`
@@ -334,13 +422,10 @@ func (c *Client) RefreshOAuthToken(ctx context.Context, refreshToken string) (*O
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Set("Authorization", "Bearer "+appToken)
-	resp, err := c.hc.Do(req)
+	raw, err := c.postRaw(ctx, "/open-apis/authen/v1/refresh_access_token", body, appToken)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
-	raw, _ := io.ReadAll(resp.Body)
 	var out struct {
 		Code int                 `json:"code"`
 		Msg  string              `json:"msg"`
@@ -353,10 +438,4 @@ func (c *Client) RefreshOAuthToken(ctx context.Context, refreshToken string) (*O
 		return nil, fmt.Errorf("feishu: refresh token api error code=%d msg=%s", out.Code, out.Msg)
 	}
 	return out.Data, nil
-}
-
-// getAppAccessToken gets the app access token (used for OAuth operations)
-func (c *Client) getAppAccessToken(ctx context.Context) (string, error) {
-	// We can reuse the tenant access token for now, but if we need app-specific, we can implement it
-	return c.Token(ctx)
 }

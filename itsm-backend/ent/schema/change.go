@@ -101,6 +101,14 @@ func (Change) Fields() []ent.Field {
 			Comment("更新时间").
 			Default(time.Now).
 			UpdateDefault(time.Now),
+		// 软删除标记。change 此前是全域唯一没有该字段的业务实体，删除走物理删，
+		// 会让 PIR / 评审成员 / 回滚步骤 / 审批链成为孤儿（无级联、无清理），
+		// 已用过的变更编号也可被复用。加上字段后由
+		// database.RegisterSoftDeleteInterceptors 统一屏蔽读路径。
+		field.Time("deleted_at").
+			Comment("删除时间").
+			Optional().
+			Nillable(),
 	}
 }
 

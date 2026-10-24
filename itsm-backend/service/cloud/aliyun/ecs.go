@@ -13,6 +13,13 @@ import (
 	"itsm-backend/service/cloud"
 )
 
+// Provider / ServiceCodeECS 供装配层（service/cloud/adapters）与能力清单引用，
+// 避免注册处再写一遍字符串字面量。
+const (
+	Provider       = "aliyun"
+	ServiceCodeECS = "ecs"
+)
+
 // AliyunECSAdapter 阿里云 ECS 发现适配器
 type AliyunECSAdapter struct {
 	logger *zap.SugaredLogger
@@ -27,8 +34,8 @@ func NewAliyunECSAdapter(logger *zap.SugaredLogger) *AliyunECSAdapter {
 	return &AliyunECSAdapter{logger: logger}
 }
 
-func (*AliyunECSAdapter) Provider() string    { return "aliyun" }
-func (*AliyunECSAdapter) ServiceCode() string { return "ecs" }
+func (*AliyunECSAdapter) Provider() string    { return Provider }
+func (*AliyunECSAdapter) ServiceCode() string { return ServiceCodeECS }
 func (a *AliyunECSAdapter) Close()            {}
 
 func (a *AliyunECSAdapter) InitClients(ctx context.Context, account *ent.CloudAccount, regions []string) (map[string]cloud.Client, error) {

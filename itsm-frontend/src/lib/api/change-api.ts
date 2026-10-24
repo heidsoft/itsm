@@ -2,8 +2,19 @@
  * 变更管理 API 服务
  */
 
-import { httpClient } from './http-client';
+import { httpClient, ApiRequestError } from './http-client';
 import type { RollbackStep, RollbackStepStatus } from '@/types/biz/change';
+
+/**
+ * 判定「资源不存在」。
+ *
+ * 直接写 `error?.response?.status === 404` 是在猜 axios 的内部结构：本项目
+ * 的 `httpClient` 抛的是 `ApiRequestError`（status/code 在实例上），没有
+ * `response` 字段——这个判断从来就没命中过，getPIR 的 404 分支是死代码。
+ */
+function isNotFound(error: unknown): boolean {
+  return error instanceof ApiRequestError && error.status === 404;
+}
 
 // 变更状态类型：与后端 dto.ChangeStatus / ent/schema/change.go 的枚举逐值一致。
 // 历史值 submitted 只在持久化层存在，后端读映射会把它转成 pending，
@@ -23,6 +34,37 @@ export type ChangeStatus =
 
 // 变更类型
 export type ChangeType = 'normal' | 'standard' | 'emergency';
+
+/**
+ * 标准变更模板摘要（`GET /api/v1/changes/templates`，后端待注册）。
+ *
+ * 字段刻意只声明到「够用」为止：端点尚未上线，声明一个想象中的完整契约只会把
+ * 猜测固化成类型。后端补齐时按 `dto.StandardChangeResponse` 扩展。
+ */
+export interface ChangeTemplate {
+  id: number;
+  name: string;
+  description?: string;
+  changeType?: ChangeType;
+  riskLevel?: ChangeRisk;
+}
+
+/** 变更关联工单（`GET /api/v1/changes/:id/tickets`，后端待注册）。 */
+export interface ChangeRelatedTicket {
+  id: number;
+  title?: string;
+  status?: string;
+  priority?: string;
+}
+
+/** 变更实施日志条目（`GET /api/v1/changes/:id/logs`，后端待注册）。 */
+export interface ChangeImplementationLog {
+  id: number;
+  changeId?: number;
+  action?: string;
+  operator?: string;
+  createdAt?: string;
+}
 
 // 变更优先级
 export type ChangePriority = 'low' | 'medium' | 'high' | 'critical';
@@ -398,8 +440,13 @@ export class ChangeApi {
   }
 
   // 获取变更模板
-  static async getChangeTemplates(): Promise<any[]> {
-    return httpClient.get('/api/v1/changes/templates');
+  //
+  // ⚠️ 后端 `router/change_routes.go` 目前**没有**注册 `/changes/templates`，
+  // 该缺口由 `@/config/product-capabilities` 的 `changeClassification` 禁用契约
+  // 跟踪（标准变更模板实际落在 `/api/v1/standard-changes`）。本方法当前无调用方，
+  // 保留是为了后端补齐后能直接对接；不要在新代码里依赖它。
+  static async getChangeTemplates(): Promise<ChangeTemplate[]> {
+    return httpClient.get<ChangeTemplate[]>('/api/v1/changes/templates');
   }
 
   // 从模板创建变更
@@ -430,9 +477,9 @@ export class ChangeApi {
     });
   }
 
-  // 获取变更关联工单
-  static async getRelatedTickets(id: number): Promise<any[]> {
-    return httpClient.get(`/api/v1/changes/${id}/tickets`);
+  // 获取变更关联工单（后端 /changes/:id/tickets 尚未注册，见 getChangeTemplates 说明）
+  static async getRelatedTickets(id: number): Promise<ChangeRelatedTicket[]> {
+    return httpClient.get<ChangeRelatedTicket[]>(`/api/v1/changes/${id}/tickets`);
   }
 
   // 获取日历视图数据
@@ -473,9 +520,9 @@ export class ChangeApi {
     return httpClient.put(`/api/v1/changes/${id}/risk`, data);
   }
 
-  // 获取变更实施日志
-  static async getImplementationLogs(id: number): Promise<any[]> {
-    return httpClient.get(`/api/v1/changes/${id}/logs`);
+  // 获取变更实施日志（后端 /changes/:id/logs 尚未注册，见 getChangeTemplates 说明）
+  static async getImplementationLogs(id: number): Promise<ChangeImplementationLog[]> {
+    return httpClient.get<ChangeImplementationLog[]>(`/api/v1/changes/${id}/logs`);
   }
 
   // ==================== PIR (Post-Implementation Review) ====================
@@ -494,8 +541,10 @@ export class ChangeApi {
   static async getPIR(changeId: number): Promise<PIRResponse | null> {
     try {
       return await httpClient.get<PIRResponse>(`/api/v1/changes/${changeId}/pir`);
-    } catch (error: any) {
-      if (error?.response?.status === 404) {
+    } catch (error) {
+      // 变更未建 PIR 是正常业务状态（404），不是异常；其余错误照常上抛。
+      // 这里只按「是不是 404」判定，不假设错误一定有 response 字段。
+      if (isNotFound(error)) {
         return null;
       }
       throw error;

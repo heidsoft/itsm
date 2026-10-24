@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Button, Calendar as AntCalendar, App, Pagination, Select, Card, Empty, Tag, Spin } from 'antd';
+import React, { useState, useEffect, useCallback, useMemo, Suspense } from 'react';
+import { Button, Calendar as AntCalendar, App, Pagination, Select, Card, Empty, Tag, Spin, Skeleton } from 'antd';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import {
@@ -16,7 +16,7 @@ import {
   RotateCcw,
   Search,
 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
   BusinessPageTemplate,
   type PageStats,
@@ -25,6 +25,7 @@ import ChangeList from '@/components/change/ChangeList';
 import { ChangeApi, type Change, type ChangeCalendarItem, type ChangeStatus } from '@/lib/api/change-api';
 import type { Change as ChangeRow } from '@/types/biz/change';
 import { buildCsv, csvDate, downloadCsv, fetchAllPages, type CsvColumn } from '@/lib/utils/csv-export';
+import { BACKEND_MAX_PAGE_SIZE } from '@/lib/api/pagination';
 import { useI18n } from '@/lib/i18n/useI18n';
 import {
   UnifiedKanbanBoard,
@@ -33,8 +34,59 @@ import {
 
 type View = 'list' | 'kanban' | 'calendar';
 
+const VIEWS: readonly View[] = ['list', 'kanban', 'calendar'];
+const DEFAULT_PAGE_SIZE = 10;
+
+/** URL 里的视图参数不可信（手工改、旧书签），非法值一律退回列表视图。 */
+function parseView(raw: string | null): View {
+  return raw && (VIEWS as readonly string[]).includes(raw) ? (raw as View) : 'list';
+}
+
+function parsePositiveInt(raw: string | null, fallback: number): number {
+  const n = Number(raw);
+  return Number.isInteger(n) && n > 0 ? n : fallback;
+}
+
+/**
+ * 把当前筛选/视图/分页写回 URL。
+ *
+ * 不基于 `searchParams` 增量改写，而是按当前状态**全量重建**查询串：本页拥有
+ * 这几个参数的全部语义，全量重建既保证 URL 与界面永不脱节（不会残留已清空的
+ * 筛选），也避免「读 searchParams → 写 URL → 触发重渲染 → 再读」的回环。
+ *
+ * 用 `replace` 而不是 `push`：翻页/筛选不污染浏览器历史，否则用户要点十几次
+ * 后退才能离开列表。
+ */
+function buildChangesQuery(state: {
+  view: View;
+  search: string;
+  status?: ChangeStatus;
+  risk?: string;
+  page: number;
+  pageSize: number;
+}): string {
+  const params = new URLSearchParams();
+  // 只写非默认值，保持 URL 可读、可手改
+  if (state.view !== 'list') params.set('view', state.view);
+  if (state.search) params.set('search', state.search);
+  if (state.status) params.set('status', state.status);
+  if (state.risk) params.set('risk', state.risk);
+  if (state.page !== 1) params.set('page', String(state.page));
+  if (state.pageSize !== DEFAULT_PAGE_SIZE) params.set('pageSize', String(state.pageSize));
+  return params.toString();
+}
+
 export default function ChangesPage() {
+  return (
+    <Suspense fallback={<Skeleton active paragraph={{ rows: 6 }} />}>
+      <ChangesPageContent />
+    </Suspense>
+  );
+}
+
+function ChangesPageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { t } = useI18n();
   const { message } = App.useApp();
 
@@ -129,12 +181,29 @@ export default function ChangesPage() {
 
   const [statsLoading, setStatsLoading] = useState(false);
 
-  const [searchKeyword, setSearchKeyword] = useState('');
-  const [statusFilter, setStatusFilter] = useState<ChangeStatus | undefined>(undefined);
-  const [riskFilter, setRiskFilter] = useState<string | undefined>(undefined);
+  // 初始值从 URL 恢复：带筛选条件的链接可直接分享/收藏，刷新也不丢筛选。
+  // 只取挂载时那一次——之后本页是全量重建 URL 的一方，再读就是回环。
+  const initialUrlState = useMemo(
+    () => ({
+      view: parseView(searchParams.get('view')),
+      search: searchParams.get('search') ?? '',
+      status: searchParams.get('status') ?? undefined,
+      risk: searchParams.get('risk') ?? undefined,
+      page: parsePositiveInt(searchParams.get('page'), 1),
+      pageSize: parsePositiveInt(searchParams.get('pageSize'), DEFAULT_PAGE_SIZE),
+    }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  );
+
+  const [searchKeyword, setSearchKeyword] = useState(initialUrlState.search);
+  const [statusFilter, setStatusFilter] = useState<ChangeStatus | undefined>(
+    initialUrlState.status as ChangeStatus | undefined
+  );
+  const [riskFilter, setRiskFilter] = useState<string | undefined>(initialUrlState.risk);
   const [showFilters, setShowFilters] = useState(false);
 
-  const [activeView, setActiveView] = useState<View>('list');
+  const [activeView, setActiveView] = useState<View>(initialUrlState.view);
   const [changes, setChanges] = useState<Change[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadError, setLoadError] = useState(false);
@@ -147,9 +216,28 @@ export default function ChangesPage() {
   const [selectedDate, setSelectedDate] = useState<Dayjs>(dayjs());
 
   // 分页
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [page, setPage] = useState(initialUrlState.page);
+  const [pageSize, setPageSize] = useState(initialUrlState.pageSize);
   const [total, setTotal] = useState(0);
+
+  // 状态 → URL。筛选/视图/分页任一变化都同步，使当前界面可分享、可恢复。
+  useEffect(() => {
+    const query = buildChangesQuery({
+      view: activeView,
+      search: searchKeyword,
+      status: statusFilter,
+      risk: riskFilter,
+      page,
+      pageSize,
+    });
+    const next = query ? `/changes?${query}` : '/changes';
+    try {
+      router.replace(next, { scroll: false });
+    } catch (navErr) {
+      // URL 同步失败不影响列表本身可用，只记日志
+      console.error('[nav]', navErr);
+    }
+  }, [activeView, searchKeyword, statusFilter, riskFilter, page, pageSize, router]);
 
   // ====== 数据获取 ======
   const fetchChanges = useCallback(async () => {
@@ -219,7 +307,7 @@ export default function ChangesPage() {
     try {
       const response = await ChangeApi.getChanges({
         page: 1,
-        pageSize: 100,
+        pageSize: BACKEND_MAX_PAGE_SIZE,
         status: statusFilter,
         riskLevel: riskFilter,
         search: searchKeyword,

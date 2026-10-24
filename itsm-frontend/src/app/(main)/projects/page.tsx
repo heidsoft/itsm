@@ -21,6 +21,7 @@ import { projectService } from '@/lib/services/project-service';
 import { departmentService } from '@/lib/services/department-service';
 import type { Department } from '@/lib/services/department-service';
 import { UserApi } from '@/lib/api/user-api';
+import { BACKEND_MAX_PAGE_SIZE } from '@/lib/api/pagination';
 import { useI18n } from '@/lib/i18n';
 
 const { RangePicker } = DatePicker;
@@ -69,7 +70,7 @@ export default function ProjectsPage() {
 
   const fetchUserOptions = async () => {
     try {
-      const response = await UserApi.getUsers({ page: 1, pageSize: 100 });
+      const response = await UserApi.getUsers({ page: 1, pageSize: BACKEND_MAX_PAGE_SIZE });
       setUserOptions(
         response.items.map(user => ({
           label: user.name || user.username,

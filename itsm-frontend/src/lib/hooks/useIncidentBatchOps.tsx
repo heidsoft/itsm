@@ -6,6 +6,7 @@ import { UserPlus, CheckCircle, XCircle, Trash2 } from 'lucide-react';
 
 import { IncidentAPI } from '@/lib/api/incident-api';
 import { UserApi } from '@/lib/api/user-api';
+import { BACKEND_MAX_PAGE_SIZE } from '@/lib/api/pagination';
 import type { BatchAction } from '@/components/business/BatchActionBar';
 
 export interface UseIncidentBatchOpsOptions {
@@ -119,7 +120,7 @@ export function useIncidentBatchOps({
     setAssignModalOpen(true);
     if (assignUserOptions.length === 0) {
       try {
-        const res = await UserApi.getUsers({ pageSize: 100 });
+        const res = await UserApi.getUsers({ pageSize: BACKEND_MAX_PAGE_SIZE });
         setAssignUserOptions(
           (res.items || []).map(u => ({ label: u.name || u.username, value: u.id }))
         );

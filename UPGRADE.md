@@ -3253,6 +3253,96 @@ change 是全域唯一没有 `deleted_at` 的实体，删除走物理删，会�
 `go generate ./ent` 会重写 **854 个生成文件**（格式化前 +75 万行，gofmt 后仍有 852 个文件的
 import 分组噪声），无法以可审阅的 diff 交付，因此本批先做上面的错误语义收口，软删单独排期。
 
+
+### 1.91 change 软删、云发现装配收敛与 K8s 适配器、飞书链路缺陷（2026-10-24，含 DDL 与行为变更）
+
+承接 `output/product-code-review-2026-10-24.md` 的剩余项。**本批包含一次建表变更与
+一处删除语义变更**，升级时必须按顺序执行。
+
+**1. change 由物理删改为软删（行为变更，需 DDL）**
+
+`changes` 表新增 `deleted_at timestamptz NULL`。此前 change 是全域唯一没有软删字段的
+业务实体，删除走物理删：
+
+- PIR / 评审成员 / 回滚步骤 / 审批链全部成为孤儿（无级联、无清理任务）；
+- 已用过的变更编号可被复用——审计上「CHG-20261024-0031 被删过一次又重新出现」是硬伤。
+
+现在 `DELETE /api/v1/changes/:id` 写 `deleted_at`，读路径由
+`database.RegisterSoftDeleteInterceptors` 统一附加 `DeletedAtIsNil()`，删除后列表、
+详情、统计都不再出现，语义与 ticket/incident/problem/service_request 四域一致。
+
+升级步骤（顺序不能反）：
+
+```sql
+ALTER TABLE changes ADD COLUMN IF NOT EXISTS deleted_at timestamptz NULL;
+CREATE INDEX IF NOT EXISTS idx_changes_deleted_at ON changes (deleted_at) WHERE deleted_at IS NULL;
+```
+
+存量数据无需回填：`deleted_at IS NULL` 即未删除。
+
+> 关于 ent 重新生成：本批实测过一次关键诊断——在**未改 schema** 的干净树上跑
+> `go generate ./ent` 产出 **0 个文件改动**。此前记录的「854 个生成文件噪声」是
+> 生成过程被超时中断、文件写到一半留下的半成品，不是版本漂移。加上
+> `deleted_at` 后完整跑完的生成结果是 **8 个文件 / +232/−3，且全部是 change
+> 相关**。所以「ent 不能重新生成」这个结论作废；以后再遇到生成噪声，先确认
+> 生成是否完整跑完。
+
+**2. 云发现适配器装配收敛 + 新增 Kubernetes 适配器**
+
+- **装配收敛**：`Register` 调用原先直接写在 `internal/bootstrap/app.go` 里，新增厂商
+  要去启动流程改代码，「到底注册了谁」只能靠全局搜索。改为统一入口
+  `service/cloud/adapters.RegisterAll`，并导出 `SupportedProviders()` 让「未接入」
+  成为可查询的事实（AWS / 腾讯云 / 火山 / 华为云 / Azure 显式标 `notImplemented`），
+  避免为不支持的厂商配半天凭据才发现跑不通。
+- **新增 K8s 适配器**（provider `k8s`，serviceCode `pod`）：列 namespace 当作 region、
+  列 Pod 按 `continue` 分页，走 APIServer REST + Bearer token。**刻意不引 client-go**：
+  只读发现用不到 Informer/缓存/kubeconfig 那一套，引它只带来 ~40 个间接依赖。
+  命名空间级 ServiceAccount 列不了全集群 namespace（403）时退化为只发现 `default`，
+  而不是让整个 job 失败。
+- **厂商归一补齐**：`NormalizeProvider` 增加 `volcengine`（含 volc/火山别名）与
+  `k8s`（含 kubernetes/kube 别名）。
+
+凭据形态（存在 `cloud_accounts.credential_ref`）：
+
+```json
+{"type":"token","token":"<ServiceAccount token>","api_server":"https://10.0.0.1:6443"}
+```
+
+`api_server` 缺省为 `https://kubernetes.default.svc`（集群内访问）。APIServer 使用
+自签 CA 时需要把 CA 装到宿主机信任库——适配器不提供 `insecure_skip_verify` 开关，
+避免为了「跑通」把 TLS 校验整体关掉。
+
+**3. 飞书链路三处缺陷（未迁官方 SDK，理由见下）**
+
+- **OAuth 整条断链**：`getAppAccessToken` 原实现是 `return c.Token(ctx)`（拿
+  `tenant_access_token` 顶替），而飞书的换码/刷新端点只认 `app_access_token`。
+  结果是 OAuth 授权必然失败，且错误被当成「用户未授权」处理，排查方向是错的。
+  已按官方端点 `/open-apis/auth/v3/app_access_token/internal` 补齐。
+- **响应状态码不判**：`doJSON` 原来直接 `json.Unmarshal(resp.Body)`，网关返回 401/429
+  （HTML 或空体）时报的是「decode xxx resp: invalid character '<'」，把鉴权/限流
+  问题伪装成响应结构变更。现在先看 `resp.StatusCode`，错误带 `http=<码>` 与响应片段。
+- **回调读 body 会 panic**：`body := make([]byte, req.ContentLength)` 在 chunked 请求
+  （ContentLength = -1）时直接 panic；且单次 `Read` 不保证读满，大事件体会解析失败。
+  改为限额 `io.ReadAll`（1 MiB 上限）。
+
+> **为什么不迁 `larksuite/oapi-sdk-go`**：迁移要引入新依赖并重写 connector/message/
+> 三个文件与全部调用点，而本批能修掉的三处都是**具体缺陷**——它们不会因为换了 SDK
+> 而自动消失（签名校验、token 缓存、消息幂等 `uuid` 都已正确实现）。先修缺陷、留
+> 迁移为独立工作项，收益/风险比更高。
+
+**验证**
+
+```bash
+cd itsm-backend && go build ./... \
+  && go test ./connector/builtin/feishu/ ./service/cloud/... ./handlers/change/ ./database/
+```
+
+**仍未接入（需签名或官方 SDK，独立工作项）**
+
+AWS（SigV4）、腾讯云（TC3-HMAC-SHA256）、火山（SigV4 变体）的发现适配器。三者凭据
+解析已就绪（`cloud.ResolveCredential` 支持 aws/tencent），缺的是签名实现与适配器本体；
+`SupportedProviders()` 已把它们标为 `notImplemented`，前端可据此展示「暂不支持」。
+
 ## 2. 环境变量变更
 
 本次升级**移除了多个"幽灵配置项"**（在示例文件中声明但代码/Compose 从不读取，用户配置了也不生效），并修正了一个 Grafana 密码安全缺陷。

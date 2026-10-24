@@ -24400,6 +24400,7 @@ type ChangeMutation struct {
 	appendrelated_tickets []string
 	created_at            *time.Time
 	updated_at            *time.Time
+	deleted_at            *time.Time
 	clearedFields         map[string]struct{}
 	problems              map[int]struct{}
 	removedproblems       map[int]struct{}
@@ -25541,6 +25542,55 @@ func (m *ChangeMutation) ResetUpdatedAt() {
 	m.updated_at = nil
 }
 
+// SetDeletedAt sets the "deleted_at" field.
+func (m *ChangeMutation) SetDeletedAt(t time.Time) {
+	m.deleted_at = &t
+}
+
+// DeletedAt returns the value of the "deleted_at" field in the mutation.
+func (m *ChangeMutation) DeletedAt() (r time.Time, exists bool) {
+	v := m.deleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedAt returns the old "deleted_at" field's value of the Change entity.
+// If the Change object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ChangeMutation) OldDeletedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
+	}
+	return oldValue.DeletedAt, nil
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (m *ChangeMutation) ClearDeletedAt() {
+	m.deleted_at = nil
+	m.clearedFields[change.FieldDeletedAt] = struct{}{}
+}
+
+// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
+func (m *ChangeMutation) DeletedAtCleared() bool {
+	_, ok := m.clearedFields[change.FieldDeletedAt]
+	return ok
+}
+
+// ResetDeletedAt resets all changes to the "deleted_at" field.
+func (m *ChangeMutation) ResetDeletedAt() {
+	m.deleted_at = nil
+	delete(m.clearedFields, change.FieldDeletedAt)
+}
+
 // AddProblemIDs adds the "problems" edge to the Problem entity by ids.
 func (m *ChangeMutation) AddProblemIDs(ids ...int) {
 	if m.problems == nil {
@@ -25791,7 +25841,7 @@ func (m *ChangeMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ChangeMutation) Fields() []string {
-	fields := make([]string, 0, 22)
+	fields := make([]string, 0, 23)
 	if m.change_number != nil {
 		fields = append(fields, change.FieldChangeNumber)
 	}
@@ -25858,6 +25908,9 @@ func (m *ChangeMutation) Fields() []string {
 	if m.updated_at != nil {
 		fields = append(fields, change.FieldUpdatedAt)
 	}
+	if m.deleted_at != nil {
+		fields = append(fields, change.FieldDeletedAt)
+	}
 	return fields
 }
 
@@ -25910,6 +25963,8 @@ func (m *ChangeMutation) Field(name string) (ent.Value, bool) {
 		return m.CreatedAt()
 	case change.FieldUpdatedAt:
 		return m.UpdatedAt()
+	case change.FieldDeletedAt:
+		return m.DeletedAt()
 	}
 	return nil, false
 }
@@ -25963,6 +26018,8 @@ func (m *ChangeMutation) OldField(ctx context.Context, name string) (ent.Value, 
 		return m.OldCreatedAt(ctx)
 	case change.FieldUpdatedAt:
 		return m.OldUpdatedAt(ctx)
+	case change.FieldDeletedAt:
+		return m.OldDeletedAt(ctx)
 	}
 	return nil, fmt.Errorf("unknown Change field %s", name)
 }
@@ -26126,6 +26183,13 @@ func (m *ChangeMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetUpdatedAt(v)
 		return nil
+	case change.FieldDeletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedAt(v)
+		return nil
 	}
 	return fmt.Errorf("unknown Change field %s", name)
 }
@@ -26231,6 +26295,9 @@ func (m *ChangeMutation) ClearedFields() []string {
 	if m.FieldCleared(change.FieldRelatedTickets) {
 		fields = append(fields, change.FieldRelatedTickets)
 	}
+	if m.FieldCleared(change.FieldDeletedAt) {
+		fields = append(fields, change.FieldDeletedAt)
+	}
 	return fields
 }
 
@@ -26280,6 +26347,9 @@ func (m *ChangeMutation) ClearField(name string) error {
 		return nil
 	case change.FieldRelatedTickets:
 		m.ClearRelatedTickets()
+		return nil
+	case change.FieldDeletedAt:
+		m.ClearDeletedAt()
 		return nil
 	}
 	return fmt.Errorf("unknown Change nullable field %s", name)
@@ -26354,6 +26424,9 @@ func (m *ChangeMutation) ResetField(name string) error {
 		return nil
 	case change.FieldUpdatedAt:
 		m.ResetUpdatedAt()
+		return nil
+	case change.FieldDeletedAt:
+		m.ResetDeletedAt()
 		return nil
 	}
 	return fmt.Errorf("unknown Change field %s", name)

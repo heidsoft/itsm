@@ -99,6 +99,10 @@ func NormalizeProvider(provider string) string {
 		return "aws"
 	case "azure":
 		return "azure"
+	case "volcengine", "volc", "volcano", "火山":
+		return "volcengine"
+	case "kubernetes", "k8s", "kube":
+		return "k8s"
 	case "onprem", "private", "private_cloud":
 		return "onprem"
 	default:
@@ -119,6 +123,10 @@ func ProviderDisplayName(provider string) string {
 		return "AWS"
 	case "azure":
 		return "Azure"
+	case "volcengine":
+		return "火山引擎"
+	case "k8s":
+		return "Kubernetes"
 	case "onprem":
 		return "私有云"
 	default:

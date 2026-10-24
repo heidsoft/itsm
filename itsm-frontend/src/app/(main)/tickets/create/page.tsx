@@ -45,6 +45,7 @@ import { TicketCategoryApi } from '@/lib/api/ticket-category-api';
 import { useI18n } from '@/lib/i18n';
 import { httpClient, isPermissionDeniedError } from '@/lib/api/http-client';
 import { CMDBApi } from '@/lib/api/cmdb-api';
+import { UserApi } from '@/lib/api/user-api';
 import { TicketTypeApi } from '@/lib/api/ticketTypeApi';
 import type { CustomFieldDefinition } from '@/types/ticket-type';
 import { BACKEND_MAX_PAGE_SIZE } from '@/lib/api/pagination';
@@ -65,12 +66,6 @@ type RuntimeTicketType = {
   workflowDefinitionKey?: string;
   fields: CustomFieldDefinition[];
 };
-
-interface UserOption {
-  id: number;
-  name?: string;
-  username: string;
-}
 
 interface DepartmentOption {
   id: number;
@@ -194,7 +189,10 @@ export default function CreateTicketPage() {
 
   useEffect(() => {
     Promise.allSettled([
-      httpClient.get<{ items?: UserOption[] }>('/api/v1/users', { page: 1, pageSize: BACKEND_MAX_PAGE_SIZE, status: 'active' }),
+      // 走 UserApi 而不是裸 httpClient.get('/api/v1/users')：用户列表在本项目里
+      // 曾有三种取法（裸 httpClient / UserApi / useUserListQuery），端点路径与
+      // 分页上限各写各的。统一到 UserApi 后，路径与分页常量只有一处定义。
+      UserApi.getUsers({ page: 1, pageSize: BACKEND_MAX_PAGE_SIZE, status: 'active' }),
       httpClient.get<DepartmentOption[]>('/api/v1/departments', { page: 1, pageSize: BACKEND_MAX_PAGE_SIZE }),
       CMDBApi.getAllCIs({}, 200),
     ]).then(([users, departments, cis]) =>

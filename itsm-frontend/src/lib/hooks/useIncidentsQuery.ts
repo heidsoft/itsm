@@ -6,6 +6,7 @@ import { App } from 'antd';
 import { IncidentAPI } from '@/lib/api/incident-api';
 import type { Incident, ListIncidentsRequest } from '@/lib/api/incident-api';
 import { UserApi } from '@/lib/api/user-api';
+import { BACKEND_MAX_PAGE_SIZE } from '@/lib/api/pagination';
 
 export interface IncidentFilters {
   readonly search: string;
@@ -95,7 +96,7 @@ export function useIncidentsQuery(
       const userMap = new Map<number, string>();
       if (needsUserEnrichment) {
         try {
-          const usersResponse = await UserApi.getUsers({ pageSize: 100 });
+          const usersResponse = await UserApi.getUsers({ pageSize: BACKEND_MAX_PAGE_SIZE });
           if (requestIdRef.current !== requestId) return;
           usersResponse.items.forEach(user => userMap.set(user.id, user.name));
         } catch {

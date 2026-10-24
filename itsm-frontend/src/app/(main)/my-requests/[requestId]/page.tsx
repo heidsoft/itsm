@@ -35,7 +35,7 @@ interface ServiceRequestDetail {
   status: string;
   currentLevel?: number;
   totalLevels?: number;
-  ciId?: number;
+  ciId?: number | null;
   title?: string;
   reason?: string;
   dataClassification?: string;

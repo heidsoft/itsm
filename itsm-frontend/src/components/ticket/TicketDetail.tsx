@@ -14,6 +14,7 @@ import { TicketApprovalApi } from '@/lib/api/ticket-approval-api';
 import { TicketTypeApi } from '@/lib/api/ticketTypeApi';
 import type { Ticket } from '@/lib/api/api-config';
 import type { User } from '@/lib/api/user-api';
+import { BACKEND_MAX_PAGE_SIZE } from '@/lib/api/pagination';
 import { useUserListQuery } from '@/lib/hooks/useUserListQuery';
 import {
   ArrowLeft,
@@ -291,7 +292,7 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
   // 通讯录只在真的打开选人弹窗时拉：详情接口已投影处理人/申请人姓名，
   // 无 assign 权限的角色不再因为详情页而全量读取用户目录。
   const usersQuery = useUserListQuery({
-    pageSize: 100,
+    pageSize: BACKEND_MAX_PAGE_SIZE,
     enabled: canAssignTicket && (assignModalVisible || ccModalVisible),
   });
   const users = (usersQuery.data?.items ?? []) as User[];
@@ -387,7 +388,7 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
         const recRes = await TicketApprovalApi.getApprovalRecords({
           ticketId: resolvedTicketId!,
           page: 1,
-          pageSize: 100,
+          pageSize: BACKEND_MAX_PAGE_SIZE,
         });
         const myPending = (recRes.items || []).find(
           (r) =>

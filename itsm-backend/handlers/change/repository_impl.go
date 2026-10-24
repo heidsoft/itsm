@@ -430,13 +430,20 @@ func (r *EntRepository) Update(ctx context.Context, c *Change) (*Change, error) 
 }
 
 func (r *EntRepository) Delete(ctx context.Context, id int, tenantID int) error {
-	// 物理删除：change 是全域唯一没有 deleted_at 的实体，改成软删要动 ent
-	// schema 并重新生成（生成噪声见 UPGRADE §1.90），本轮先修「删了个寂寞
-	// 还报成功」——0 行命中（不存在或不属于本租户）此前返回 nil，调用方拿到
-	// 200 却什么都没删。
-	affected, err := r.client.Change.Delete().
+	// 软删除：写 deleted_at 而不是物理删。
+	//
+	// change 此前是全域唯一没有 deleted_at 的业务实体，物理删会让 PIR / 评审
+	// 成员 / 回滚步骤 / 审批链成为孤儿（无级联、无清理），已用过的变更编号也
+	// 可被复用——审计上「CHG-20261024-0031 被删过一次又重新出现」是硬伤。
+	// 读路径由 database.RegisterSoftDeleteInterceptors 统一屏蔽，删除后列表与
+	// 详情都不会再出现，语义与其余四个域一致。
+	//
+	// 幂等说明：重复删除同一条会再次写 deleted_at，但第一次之后该行已被读
+	// 拦截器屏蔽，前置校验（见 service）会先命中「不存在」，不会二次生效。
+	affected, err := r.client.Change.Update().
 		Where(change.ID(id), change.TenantID(tenantID)).
-		Exec(ctx)
+		SetDeletedAt(time.Now()).
+		Save(ctx)
 	if err != nil {
 		return err
 	}

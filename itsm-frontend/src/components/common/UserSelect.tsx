@@ -1,10 +1,14 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Select, Avatar, Spin, message } from 'antd';
-import { UserApi } from '@/lib/api/user-api';
+import { Select, Avatar, Spin, Typography } from 'antd';
 import type { User } from '@/lib/api/user-api';
+import { useUserPickerQuery } from '@/lib/hooks/useUserListQuery';
+import { truncationHint } from '@/lib/api/pagination';
 import { User as UserIcon } from 'lucide-react';
+
+const { Text } = Typography;
+
 interface UserSelectProps {
   value?: number[];
   onChange?: (userIds: number[]) => void;
@@ -15,6 +19,9 @@ interface UserSelectProps {
   allowClear?: boolean;
 }
 
+/** 搜索防抖间隔：避免每敲一个字符就打一次用户列表接口。 */
+const SEARCH_DEBOUNCE_MS = 300;
+
 export const UserSelect: React.FC<UserSelectProps> = ({
   value,
   onChange,
@@ -24,52 +31,40 @@ export const UserSelect: React.FC<UserSelectProps> = ({
   disabled = false,
   allowClear = true,
 }) => {
-  const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [searchValue, setSearchValue] = useState('');
-
-  // 获取用户列表
-  const fetchUsers = async (search?: string) => {
-    try {
-      setLoading(true);
-      const response = await UserApi.getUsers({
-        page: 1,
-        pageSize: 100,
-        search: search || '',
-      });
-      setUsers(response.items || []);
-    } catch (error) {
-      message.error('获取用户列表失败');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [searchInput, setSearchInput] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
 
   useEffect(() => {
-    fetchUsers();
-  }, []);
+    const timer = setTimeout(() => setDebouncedSearch(searchInput.trim()), SEARCH_DEBOUNCE_MS);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
 
-  // 搜索用户
-  const handleSearch = (value: string) => {
-    setSearchValue(value);
-    if (value) {
-      fetchUsers(value);
-    } else {
-      fetchUsers();
-    }
-  };
+  // 走 React Query：同一份参数在 5 分钟内共享缓存，页面上多个选人下拉不会
+  // 各自重复请求一次用户列表。
+  const { users, truncated, total, isFetching, isError } = useUserPickerQuery({
+    search: debouncedSearch || undefined,
+  });
 
-  // 过滤用户
-  const filteredUsers = useMemo(() => {
-    if (!searchValue) return users;
-    const lowerSearch = searchValue.toLowerCase();
-    return users.filter(
-      user =>
-        user.name?.toLowerCase().includes(lowerSearch) ||
-        user.username?.toLowerCase().includes(lowerSearch) ||
-        user.email?.toLowerCase().includes(lowerSearch)
-    );
-  }, [users, searchValue]);
+  const options = useMemo(
+    () =>
+      users.map(user => ({
+        value: user.id,
+        label: (
+          <div className="flex items-center space-x-2">
+            <Avatar size="small" icon={<UserIcon size={14} />}>
+              {user.name?.[0] || user.username?.[0]}
+            </Avatar>
+            <div className="flex flex-col">
+              <span className="text-sm font-medium">{user.name || user.username}</span>
+              {user.email && <span className="text-xs text-gray-500">{user.email}</span>}
+            </div>
+          </div>
+        ),
+      })),
+    [users]
+  );
+
+  const hint = truncationHint(total, users.length);
 
   return (
     <Select
@@ -82,17 +77,22 @@ export const UserSelect: React.FC<UserSelectProps> = ({
       allowClear={allowClear}
       showSearch
       filterOption={false}
-      onSearch={handleSearch}
-      notFoundContent={loading ? <Spin size="small" /> : '未找到用户'}
+      onSearch={setSearchInput}
+      notFoundContent={isFetching ? <Spin size="small" /> : isError ? '用户列表加载失败' : '未找到用户'}
       optionLabelProp="label"
-     options={filteredUsers.map(user => ({ value: user.id, label: <div className="flex items-center space-x-2">
-            <Avatar size="small" icon={<UserIcon size={14} />}>
-              {user.name?.[0] || user.username?.[0]}
-            </Avatar>
-            <div className="flex flex-col">
-              <span className="text-sm font-medium">{user.name || user.username}</span>
-              {user.email && <span className="text-xs text-gray-500">{user.email}</span>}
+      options={options}
+      dropdownRender={menu => (
+        <>
+          {menu}
+          {hint && (
+            <div className="border-t border-gray-200 px-3 py-2">
+              <Text type="warning" className="text-xs">
+                {hint}
+              </Text>
             </div>
-          </div> }))} />
+          )}
+        </>
+      )}
+    />
   );
 };
