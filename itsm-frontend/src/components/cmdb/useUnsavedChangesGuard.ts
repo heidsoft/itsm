@@ -71,5 +71,9 @@ export function useUnsavedChangesGuard(router: { push: (href: string) => void; b
       dirtyRef.current = false;
     },
     handleCancel: () => confirmLeave(() => router.back()),
+    // 供「程序化跳转到指定路由」的按钮使用：handleCancel 只能回退一页，而
+    // 取消按钮通常要回到列表页，那条路径不经过站内 <a>、也不触发 popstate，
+    // 守卫的三通道都拦不住，必须由调用方显式包一层。
+    confirmLeave,
   };
 }

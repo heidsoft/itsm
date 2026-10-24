@@ -3105,6 +3105,154 @@ cd itsm-backend && go test -count=1 ./handlers/ticket/ ./repository/ticket/
 cd itsm-frontend && npm run type-check
 ```
 
+
+### 1.86 工单搜索 / 逾期列表补行级数据范围（2026-10-24，安全修复：此前任何角色可读全租户工单）
+
+`GET /api/v1/tickets/search` 与 `GET /api/v1/tickets/overdue` 是**工单列表的过滤视图**，
+不是独立的读取通道，但此前的实现完全不接当前用户与角色：
+
+- `Search` / `GetOverdueTickets` 不接收 `currentUserID`/`currentRole`，也就无法下传 DataScope；
+- `DataScopeAll`（无过滤）恰好是 `DataScope` 的**零值**，`dataScopePredicates` 对它返回 nil；
+- 于是普通角色（列表本应被收窄为「本人创建或受理」）用 `/tickets/search?q=x`
+  或 `/tickets/overdue` 就能读到全租户工单，与 `/tickets` 列表口径直接矛盾。
+
+**修复**：`FindOverduePage` / `FindOverdue` / `Search` 全链路补 `scope` + `viewerID`，
+两端点在 handler 层取 `user_id`/`role` 下传，与 `List` 共用 `dataScopeForRole`。
+身份缺失（`viewerID<=0`）仍按 datascope 的不变量 **fail-closed** 收窄为空集，不退回全量。
+
+**回归锁**：`handlers/ticket/search_overdue_datascope_test.go` 逐角色断言管理角色拿到
+全量档、其余角色拿到收窄档且确实看不到他人工单（mock 若重新忽略 `ds/currentUserID`
+会立即失败），另有无身份兜底用例；仓储层 `TestRepository_FindOverduePage_DataScope`
+锁住本人/无关人员/匿名三种视角。
+
+**验证**
+
+```bash
+cd itsm-backend && go test -count=1 ./handlers/ticket/ ./repository/ticket/
+```
+
+### 1.87 事件创建补受指人同租户校验（2026-10-24，安全修复：此前可指派给别家租户员工）
+
+客户端请求体里的 `assignee_id` 可指向任意租户的用户。`handlers/incident` 的 Update 路径
+早有 `productionService.ValidateAssignee` 把关，**Create 却完全没有**——创建事件单时能把
+单据指派给别家租户的员工，单据详情随后把该用户暴露出来，形成跨租户信息暴露面。
+对照问题域：`problem/service.go` 的 Create 显式写了这条校验并注明原因。
+
+**修复**：Create 复用同一实现，且**校验排在编号生成之前**——请求最终会被拒时不应消耗一个
+序列号，也不应在开了事务之后再回滚。`s.productionService` 为 nil 时跳过（与 Update 一致的
+约定；生产装配阶段该依赖恒由 `internal/bootstrap/app.go` 注入）。
+
+**回归锁**：`handlers/incident/create_assignee_tenant_test.go`——跨租户受指人被拒且不落库、
+同租户在职受指人不被误拒。
+
+### 1.88 变更单常规更新加乐观锁（2026-10-24，一致性修复：五域唯一裸写）
+
+change schema 没有 `version` 列，而 `repo.Update` 此前只带租户谓词，handler 又是
+「读快照 → 合并请求字段 → 全列回写」。后果是审批刚推进的状态会被一个并发的字段编辑
+用陈旧快照**静默覆盖回去**；对照 incident（`VersionEQ+AddVersion`）、problem
+（`StatusEQ` CAS）、service_request（`VersionEQ`）都有并发控制，change 是五域里唯一的裸写。
+
+**修复**：
+
+- `repo.Update` 的 `WHERE` 增加 `StatusEQ`——**状态即版本号**：这条 UPDATE 只在本行状态
+  自读取后未变时才命中；
+- `service.UpdateChange` 把待写状态钉死为读取时的当前值，明确「常规更新不是状态推进入口，
+  状态的唯一写路径是 `TransitionStatus`（+ BPMN 桥接）」；
+- 未命中（并发审批抢先改掉状态）时返回 **409 冲突**而不是 404——报 404 会让调用方误以为
+  单子被删了，从而发起重试或错误清理。
+
+**回归锁**：`handlers/change/update_status_cas_test.go`——并发推进时冲突失败且状态不被回退、
+字段编辑也不半途落库；以及调用方试图顺手改状态时被钉回当前值。
+
+**验证**
+
+```bash
+cd itsm-backend && go test -count=1 ./handlers/change/
+```
+
+### 1.89 前端五处交互与契约修复（2026-10-24，写操作安全 / 数据源一致性 / 错误可见性）
+
+1. **写操作不再自动重试（最危险的一条）**：`QueryProvider` 此前对 mutation 设了
+   `retry: 1`。写请求一旦重试就可能重复生效——典型场景是「服务端已受理但响应超时/断连」，
+   客户端看到失败而服务端已经落库，1 秒后的自动重放会再写一次，审批决策、建单直接重复。
+   现在 mutation `retry: 0`；query 仍可重试，但只对「可能自愈」的失败重试（网络错误 /
+   5xx / 429），4xx 是服务端明确拒绝，重试只是让用户多等几秒并刷错误日志。
+2. **批量删除加二次确认**：单条删除有确认弹窗、CMDB 有 Popconfirm，唯独影响面最大的
+   批量删除此前点了就删。现在弹窗明示条数与不可恢复性。
+3. **变更列表改为单一数据源**：`/changes` 页面自己拉一份用于分页与空态，`ChangeList`
+   内部再拉一份用于表格——同一数据两个源、两次请求，筛选/翻页时两个响应竞态，会出现
+   「分页显示 37 条但表体还是上一页」这类自相矛盾的界面。现在 `ChangeList` 支持受控模式
+   （传 `items`/`total`/`loading` 即退化为纯展示），页面只发一次请求。
+4. **CMDB 两个 react-query 页面补错误态**：云账号页与对账页只消费 `data`/`isLoading`，
+   接口 500/403 时显示「共 0 个账号」或对账指标全 0——看起来像「很干净」，实际是根本没
+   取到数据。现在失败时显示可行动文案 + 重试按钮，对账指标显示 `—` 而不是 0。
+5. **分页上限契约显式化**：后端 `common.MaxPageSize = 100` 会**静默截断**更大的 pageSize，
+   前端却有 17 处直接写 `pageSize: 200/500/1000`，读代码的人会以为真的取到了那么多条
+   （大租户下表现为选人下拉缺项、对账漏行，且界面无任何提示）。统一改为
+   `BACKEND_MAX_PAGE_SIZE`（`src/lib/api/pagination.ts`），让上限在调用处可见；
+   真正需要全量时应改走 `fetchAllPages` 分页循环，而不是调大这个值。
+
+
+### 1.90 审查 P2 批次：编号原子化、错误分级归位、删除语义收紧（2026-10-24，缺陷修复 + 两处行为变更）
+
+承接 `output/product-code-review-2026-10-24.md` 的 P2 清单（后端 6 条）。均为低风险收口，
+其中两条会改变对外错误码，升级时前端需要同步认知。
+
+**1. 编号写入并入创建事务（problem / change）**
+
+`Create` 原先是「先 INSERT、再单独 UPDATE 编号」两步，且第二步失败被静默吞掉（注释声称
+「可后台补偿」，但代码库里没有补偿任务）。后果是留下一条**没有编号**的记录：列表编号为
+空白、按编号检索永远命中不到，而调用方收到的是 200。现在两者在同一事务内完成，编号写入
+失败随事务回滚，创建直接失败并由调用方重试。
+
+编号本身仍是 `PRB/CHG-YYYYMMDD-<ID>`，格式与日序列语义未变。
+
+**2. `GET /api/v1/tickets/:id/sla` 不再把一切错误压成 404（行为变更）**
+
+此前任何 error 都返回 `404 工单不存在`，包括 DB 驱动故障。真实故障在监控里表现为一片
+客户端错误，调用方也会按「记录不存在」去重/跳过。改为与 `GET /api/v1/tickets/:id` 同一
+口径走 `RespondError`：驱动故障 → 500，记录不存在 → 404。
+
+**3. `DELETE /api/v1/changes/:id` 对不存在的记录返回 404（行为变更）**
+
+此前 service 返回裸 `fmt.Errorf("change not found")`，`RespondError` 无法分类 → **500**；
+而仓储层对「0 行命中」也返回 nil，删了个寂寞却报成功。现在仓储校验影响行数、service 用
+`common.NewNotFoundError`，删除不存在的记录是 404，不是服务端故障。
+
+配套修正了 `handlers/change/handler_test.go` 的 mock：它原先返回 `http.ErrMissingFile`
+（非生产语义），把「500 才是正确」这个错误结论锁进了测试；现在返回 `*ent.NotFoundError`，
+与真实 ent 仓储一致。
+
+**4. service_request 审批读取补租户条件 + 删除死代码**
+
+`GetApprovalWithClient` 增加 `TenantIDEQ`（纵深防御：上游一旦漏收敛，不会读到别家租户的
+审批行）。不带的非事务版 `GetApproval` 全仓无调用点，已删除，避免被误用。
+
+**5. problem 更新补齐 `workaround` / `assigneeId`**
+
+service 层早就支持这两个字段（且 `assigneeId` 带与 Create 同强度的同租户校验），但 DTO 与
+handler 没有透传，接口上「改受理人」「记临时规避方案」做不到。现在 `PUT /api/v1/problems/:id`
+接受这两个可选字段；不传与旧行为一致。
+
+**6. `CreateSubtask` 用 `errors.As` 取代顶层类型断言**
+
+`err.(*common.BusinessError)` 只能匹配未包装的错误。service 的校验错误一旦被
+`fmt.Errorf("%w")` 或事务包装就漏判，409/403 的业务拒绝会被降级成 500。
+
+**验证**
+
+```bash
+cd itsm-backend && go build ./... && go test -count=1 ./handlers/change/ ./handlers/service_request/ ./handlers/problem/
+```
+
+**仍未处理（需 DDL，不在本批）**
+
+change 是全域唯一没有 `deleted_at` 的实体，删除走物理删，会让 PIR / 评审成员 / 回滚步骤 /
+审批链成为孤儿（无级联、无清理），历史编号也可被复用。改成软删需要：ent schema 加字段 →
+重新生成 → `database.RegisterSoftDeleteInterceptors` 的硬编码清单加一项。实测
+`go generate ./ent` 会重写 **854 个生成文件**（格式化前 +75 万行，gofmt 后仍有 852 个文件的
+import 分组噪声），无法以可审阅的 diff 交付，因此本批先做上面的错误语义收口，软删单独排期。
+
 ## 2. 环境变量变更
 
 本次升级**移除了多个"幽灵配置项"**（在示例文件中声明但代码/Compose 从不读取，用户配置了也不生效），并修正了一个 Grafana 密码安全缺陷。

@@ -100,13 +100,13 @@ func TestUpdateApprovalWithClient_StaleVersionRejected_FreshRetrySucceeds(t *tes
 	require.ElementsMatch(t, []interface{}{101.0}, quorumApprovedIDs(t, client, ctx, approval.ID))
 
 	// service 层重试路径：重读最新行（version 2）→ 合并第二票 → CAS 命中。
-	fresh, err := repo.GetApprovalWithClient(ctx, client, 1, 1)
+	fresh, err := repo.GetApprovalWithClient(ctx, client, 1, 1, tenantID)
 	require.NoError(t, err)
 	require.Equal(t, 2, fresh.Version)
 	require.NoError(t, repo.UpdateApprovalWithClient(ctx, client, appendVote(fresh, 102)))
 	require.ElementsMatch(t, []interface{}{101.0, 102.0}, quorumApprovedIDs(t, client, ctx, approval.ID), "两票必须共存，quorum 才可能达标")
 
-	final, err := repo.GetApprovalWithClient(ctx, client, 1, 1)
+	final, err := repo.GetApprovalWithClient(ctx, client, 1, 1, tenantID)
 	require.NoError(t, err)
 	require.Equal(t, 3, final.Version)
 }

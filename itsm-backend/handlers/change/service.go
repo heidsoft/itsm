@@ -196,7 +196,10 @@ func (s *Service) DeleteChange(ctx context.Context, id int, tenantID int, actorI
 		if err != nil && !ent.IsNotFound(err) {
 			return err
 		}
-		return fmt.Errorf("change not found")
+		// 用 AppError(404) 而不是裸 fmt.Errorf：裸错误未分类，RespondError 会
+		// 按内部错误返回 500，于是「删除一条不存在的变更」在监控里表现为服务端
+		// 故障，前端也会提示重试——这是客户端错误，必须是 404。
+		return common.NewNotFoundError("变更单")
 	}
 	if !datascope.CanWriteResource(actorID, actorRole, existing.CreatedBy, existing.AssigneeID) {
 		return common.NewForbiddenError("无权限删除该变更单：仅创建人、受理人或管理员可操作")

@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"itsm-backend/common"
 	"itsm-backend/ent"
 	"itsm-backend/ent/change"
 	entuser "itsm-backend/ent/user"
@@ -105,17 +106,21 @@ func toDomain(ec *ent.Change) *Change {
 	}
 }
 
-// assignChangeNumber best-effort 生成变更编号（CHG-YYYYMMDD-XXXX，租户内日序列）。
-// 编号写入失败不阻断创建流程，可由后台任务补偿。
-func (r *EntRepository) assignChangeNumber(ctx context.Context, ec *ent.Change) {
+// assignChangeNumber 生成变更编号（CHG-YYYYMMDD-XXXX，租户内日序列）。
+//
+// 必须在创建变更的同一事务内调用：旧实现在事务提交之后才补写编号，且失败直接
+// return（无日志、无补偿任务），会留下一条没有编号的变更单——列表编号为空白、
+// 按编号检索永远命中不到，调用方却收到 200。现在编号写入失败会随事务一起回滚。
+func (r *EntRepository) assignChangeNumber(ctx context.Context, client *ent.Client, ec *ent.Change) error {
 	if ec == nil || ec.ChangeNumber != "" {
-		return
+		return nil
 	}
 	number := fmt.Sprintf("CHG-%s-%04d", time.Now().Format("20060102"), ec.ID)
-	if _, err := r.client.Change.UpdateOneID(ec.ID).SetChangeNumber(number).Save(ctx); err != nil {
-		return
+	if _, err := client.Change.UpdateOneID(ec.ID).SetChangeNumber(number).Save(ctx); err != nil {
+		return fmt.Errorf("写入变更编号失败: %w", err)
 	}
 	ec.ChangeNumber = number
+	return nil
 }
 
 // hydrateUsers loads all users referenced by the supplied changes in one
@@ -166,7 +171,19 @@ func (r *EntRepository) hydrateUsers(ctx context.Context, changes []*Change, ten
 }
 
 func (r *EntRepository) Create(ctx context.Context, c *Change) (*Change, error) {
-	ec, err := r.client.Change.Create().
+	// 编号与主体行同生共死（见 assignChangeNumber 注释），因此本方法也走事务。
+	tx, err := r.client.Tx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	rollback := func(cause error) (*Change, error) {
+		if rbErr := tx.Rollback(); rbErr != nil {
+			return nil, fmt.Errorf("%w; rollback: %v", cause, rbErr)
+		}
+		return nil, cause
+	}
+
+	ec, err := tx.Change.Create().
 		SetTitle(c.Title).
 		SetDescription(c.Description).
 		SetJustification(c.Justification).
@@ -186,9 +203,14 @@ func (r *EntRepository) Create(ctx context.Context, c *Change) (*Change, error) 
 		AddAffectedCiIDs(parseAffectedCIIDs(c.AffectedCIs)...).
 		Save(ctx)
 	if err != nil {
-		return nil, err
+		return rollback(err)
 	}
-	r.assignChangeNumber(ctx, ec)
+	if err := r.assignChangeNumber(ctx, tx.Client(), ec); err != nil {
+		return rollback(err)
+	}
+	if err := tx.Commit(); err != nil {
+		return rollback(err)
+	}
 	result := toDomain(ec)
 	if err := r.hydrateUsers(ctx, []*Change{result}, c.TenantID); err != nil {
 		return nil, err
@@ -228,10 +250,12 @@ func (r *EntRepository) CreateWithWorkflowCommand(ctx context.Context, c *Change
 	if err != nil {
 		return rollback(err)
 	}
+	if err := r.assignChangeNumber(ctx, tx.Client(), ec); err != nil {
+		return rollback(err)
+	}
 	if err := tx.Commit(); err != nil {
 		return rollback(err)
 	}
-	r.assignChangeNumber(ctx, ec)
 	result := toDomain(ec)
 	if err := r.hydrateUsers(ctx, []*Change{result}, c.TenantID); err != nil {
 		return nil, err
@@ -406,10 +430,20 @@ func (r *EntRepository) Update(ctx context.Context, c *Change) (*Change, error) 
 }
 
 func (r *EntRepository) Delete(ctx context.Context, id int, tenantID int) error {
-	_, err := r.client.Change.Delete().
+	// 物理删除：change 是全域唯一没有 deleted_at 的实体，改成软删要动 ent
+	// schema 并重新生成（生成噪声见 UPGRADE §1.90），本轮先修「删了个寂寞
+	// 还报成功」——0 行命中（不存在或不属于本租户）此前返回 nil，调用方拿到
+	// 200 却什么都没删。
+	affected, err := r.client.Change.Delete().
 		Where(change.ID(id), change.TenantID(tenantID)).
 		Exec(ctx)
-	return err
+	if err != nil {
+		return err
+	}
+	if affected != 1 {
+		return common.NewNotFoundError("变更单")
+	}
+	return nil
 }
 
 func (r *EntRepository) GetStats(ctx context.Context, tenantID int) (*Stats, error) {

@@ -413,23 +413,20 @@ func (r *EntRepository) Delete(ctx context.Context, req *ServiceRequest) error {
 		Exec(ctx)
 }
 
-func (r *EntRepository) GetApproval(ctx context.Context, requestID int, level int) (*ServiceRequestApproval, error) {
-	app, err := r.client.ServiceRequestApproval.Query().
-		Where(servicerequestapproval.ServiceRequestID(requestID)).
-		Where(servicerequestapproval.Level(level)).
-		Where(servicerequestapproval.Status("pending")). // Ideally we query by ID or just logic, but this matches logic
-		First(ctx)
-	if err != nil {
-		return nil, err
-	}
-	return r.toDomainApproval(app), nil
-}
-
-func (r *EntRepository) GetApprovalWithClient(ctx context.Context, txc *ent.Client, requestID int, level int) (*ServiceRequestApproval, error) {
+// GetApprovalWithClient 在事务内按「所属请求 + 层级 + pending」读取审批记录。
+//
+// tenantID 是纵深防御：调用点拿到的 requestID 来自已按租户收敛的请求，但审批
+// 行本身带 tenant_id，带上该条件可避免上游一旦漏收敛就读到别家租户的审批记录
+// （与同文件 UpdateApproval 的三守卫保持一致）。
+//
+// 非事务版 GetApproval 已删除：整个代码库只有本函数被使用，留一个不带租户条件
+// 的同名变体只会让人误用。
+func (r *EntRepository) GetApprovalWithClient(ctx context.Context, txc *ent.Client, requestID int, level int, tenantID int) (*ServiceRequestApproval, error) {
 	app, err := txc.ServiceRequestApproval.Query().
 		Where(servicerequestapproval.ServiceRequestIDEQ(requestID)).
 		Where(servicerequestapproval.Level(level)).
 		Where(servicerequestapproval.Status(ApprovalStatusPending)).
+		Where(servicerequestapproval.TenantIDEQ(tenantID)).
 		First(ctx)
 	if err != nil {
 		return nil, err

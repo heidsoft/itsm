@@ -14,6 +14,11 @@ type CreateProblemRequest struct {
 }
 
 // UpdateProblemRequest 更新问题请求
+//
+// AssigneeID / Workaround 曾长期缺失：service 层 Update 早就支持这两个字段
+// （且 AssigneeID 带与 Create 同强度的同租户校验），但 DTO 与 handler 没有
+// 透传，导致「改受理人」「记录临时规避方案」在接口上做不到——只能通过
+// UpdateResolution 之类专用端点绕，或者直接改库。
 type UpdateProblemRequest struct {
 	Title       *string `json:"title" binding:"omitempty,min=2,max=200"`
 	Description *string `json:"description" binding:"omitempty,min=10,max=5000"`
@@ -22,6 +27,8 @@ type UpdateProblemRequest struct {
 	Category    *string `json:"category" binding:"omitempty"`
 	RootCause   *string `json:"rootCause" binding:"omitempty"`
 	Impact      *string `json:"impact" binding:"omitempty"`
+	Workaround  *string `json:"workaround" binding:"omitempty,max=5000"`
+	AssigneeID  *int    `json:"assigneeId" binding:"omitempty"`
 }
 
 // UpdateProblemRootCauseRequest 记录问题根因。

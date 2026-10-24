@@ -444,7 +444,7 @@ func (s *Service) ApplyApproval(ctx context.Context, id, tenantID, actorID int, 
 			// 写冲突即重读最新 approved_ids 重新合并，两票不再互相覆盖导致 quorum 永不达标。
 			quorumMet := false
 			for attempt := 0; attempt < 3; attempt++ {
-				if fresh, ferr := s.repo.GetApprovalWithClient(ctx, tx.Client(), id, currentApproval.Level); ferr == nil && fresh != nil && fresh.Node != nil {
+				if fresh, ferr := s.repo.GetApprovalWithClient(ctx, tx.Client(), id, currentApproval.Level, tenantID); ferr == nil && fresh != nil && fresh.Node != nil {
 					currentApproval = fresh
 				}
 

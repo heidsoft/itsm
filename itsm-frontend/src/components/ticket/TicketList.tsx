@@ -9,6 +9,7 @@ import dayjs from 'dayjs';
 import { useRouter } from 'next/navigation';
 
 import { TicketApi } from '@/lib/api/ticket-api';
+import { serverErrorMessage } from '@/lib/api/http-client';
 import type { Ticket } from '@/lib/api/types';
 import { useTickets } from '@/lib/hooks/useTickets';
 import type { TicketQueryFilters } from '@/lib/hooks/useTickets';
@@ -84,6 +85,9 @@ const TicketList: React.FC<TicketListProps> = ({
   const [filterValues, setFilterValues] = useState<TicketFilterValues>(DEFAULT_FILTER_VALUES);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [ticketToDelete, setTicketToDelete] = useState<Ticket | null>(null);
+  // 删除请求在途。此前确认按钮点下去没有任何反馈，慢请求会让使用者以为没点到
+  // 而连点，进而触发第二次删除（第二次会因为记录已删而失败，提示却含糊）。
+  const [deleting, setDeleting] = useState(false);
   // Keyboard-driven active row. `hoveredIndex` is independent so mouse hover
   // never tramples the keyboard cursor — they were racing in v1.
   const [activeRowIndex, setActiveRowIndex] = useState(0);
@@ -224,8 +228,10 @@ const TicketList: React.FC<TicketListProps> = ({
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
       message.success('导出成功');
-    } catch {
-      message.error('导出失败');
+    } catch (error) {
+      // 「导出失败」四个字让使用者无法判断是筛选条件太大、权限不足还是后端故障。
+      // 服务端 message 在 400/403/422 上都是可行动的，优先透出。
+      message.error(serverErrorMessage(error, '导出失败'));
     }
   }, [filters, message]);
 
@@ -252,16 +258,20 @@ const TicketList: React.FC<TicketListProps> = ({
 
   const handleConfirmDelete = useCallback(
     async (ticket: Ticket) => {
+      setDeleting(true);
       try {
         await deleteTicket(ticket.id);
-        message.success('删除成功');
+        // 成功/失败的 toast 由 useTickets.deleteTicket 统一给出（含服务端可行动
+        // 原因）。这里再 toast 一次会出现「工单删除成功」与「删除成功」两条。
         setDeleteModalVisible(false);
         setTicketToDelete(null);
       } catch {
-        message.error('删除失败');
+        // 失败提示同样由 hook 给出；弹窗保持打开，便于使用者看清原因后重试。
+      } finally {
+        setDeleting(false);
       }
     },
-    [deleteTicket, message]
+    [deleteTicket]
   );
 
   const columns = useMemo(
@@ -407,6 +417,7 @@ const TicketList: React.FC<TicketListProps> = ({
       <TicketDeleteModal
         open={deleteModalVisible}
         ticket={ticketToDelete}
+        loading={deleting}
         onConfirm={handleConfirmDelete}
         onCancel={() => {
           setDeleteModalVisible(false);

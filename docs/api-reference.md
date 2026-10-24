@@ -3869,12 +3869,16 @@ POST /api/v1/notification-deliveries/{id}/retry
 |---|---|---|---|
 | 命令重放 | `POST /api/v1/admin/operations/commands/{id}/replay` | 把一条 `dead_letter`（或 `cancelled`）命令重置回 `pending` | **保留原 `idempotency_key` 与 `fencing_token`**，worker 仍按原身份去重，不会与历史成功的业务写入重复 |
 | 批量重放 | `POST /api/v1/admin/operations/commands/bulk-replay` | 按 `{status,commandType,aggregateType,pageSize}` 匹配后批量重置 | 同上；单次上限 200 条（`maxBulkLimit` 1000），`status` 只允许 `dead_letter`/`cancelled` |
+| 命令取消 | `POST /api/v1/admin/operations/commands/{id}/cancel` | 把一条 `pending`/`processing`/`dead_letter` 命令置为 `cancelled` | `fencing_token`+1、清 lease；`dead_letter` 可直接取消（重试耗尽后的自然终态，无需先 replay） |
+| 批量取消 | `POST /api/v1/admin/operations/commands/bulk-cancel` | 按 `{status,commandType,aggregateType,pageSize}` 匹配后批量取消 | `status` 允许 `processing`/`pending`/`dead_letter`；终态（`succeeded` 等）拒绝 |
 | 投递重试 | `POST /api/v1/notification-deliveries/{id}/retry` | 以**新幂等键**重新入箱一条失败投递 | 会真实再发一次消息；受上面的「重试谱系」幂等守卫保护 |
 
 ```http
 GET  /api/v1/admin/operations/commands?status=dead_letter&commandType=notification.deliver&page=1&pageSize=20
 POST /api/v1/admin/operations/commands/{id}/replay
 POST /api/v1/admin/operations/commands/bulk-replay
+POST /api/v1/admin/operations/commands/{id}/cancel
+POST /api/v1/admin/operations/commands/bulk-cancel
 ```
 
 - 权限 `system:write`（读列表与重放同权限组），全部按认证租户隔离；每次重放写一条 `audit_log`（`resource=operational_command`、`action=replay`、`body` 含 `previousStatus`）。

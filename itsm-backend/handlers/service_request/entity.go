@@ -86,8 +86,8 @@ type Repository interface {
 	Delete(ctx context.Context, req *ServiceRequest) error
 
 	// Approval related
-	GetApproval(ctx context.Context, requestID int, level int) (*ServiceRequestApproval, error)
-	GetApprovalWithClient(ctx context.Context, txc *ent.Client, requestID int, level int) (*ServiceRequestApproval, error)
+	// GetApprovalWithClient 带 tenantID 纵深防御；非事务版已删除（无调用点）。
+	GetApprovalWithClient(ctx context.Context, txc *ent.Client, requestID int, level int, tenantID int) (*ServiceRequestApproval, error)
 	UpdateApproval(ctx context.Context, approval *ServiceRequestApproval) error
 	UpdateApprovalWithClient(ctx context.Context, txc *ent.Client, approval *ServiceRequestApproval) error
 	UpdateRequestAndApproval(ctx context.Context, req *ServiceRequest, approval *ServiceRequestApproval) error

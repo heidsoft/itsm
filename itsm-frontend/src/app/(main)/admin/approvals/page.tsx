@@ -29,7 +29,7 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import type { ColumnsType } from 'antd/es/table';
-import { httpClient } from '@/lib/api/http-client';
+import { httpClient, serverErrorMessage } from '@/lib/api/http-client';
 import { UserApi } from '@/lib/api/user-api';
 import { WorkflowApi } from '@/lib/api/workflow-api';
 import { BACKEND_MAX_PAGE_SIZE } from '@/lib/api/pagination';
@@ -97,7 +97,7 @@ export default function ApprovalManagement() {
       });
     } catch (error) {
       console.error('Failed to load workflows:', error);
-      message.error('加载审批工作流失败');
+      message.error(serverErrorMessage(error, '加载审批工作流失败'));
     } finally {
       setFetching(false);
     }
@@ -115,6 +115,8 @@ export default function ApprovalManagement() {
     } catch (error) {
       console.error('Failed to load BPMN workflows:', error);
       setBpmnWorkflows([]);
+      // 此前只 console.error：下拉为空会被读成「还没建流程」，实际是没取到。
+      message.error(serverErrorMessage(error, '加载 BPMN 工作流定义失败'));
     }
   }, []);
 
@@ -130,6 +132,7 @@ export default function ApprovalManagement() {
       );
     } catch (error) {
       console.error('Failed to load users:', error);
+      message.error(serverErrorMessage(error, '加载用户列表失败，审批人下拉可能为空'));
     }
   }, []);
 
@@ -168,7 +171,7 @@ export default function ApprovalManagement() {
       loadWorkflows();
     } catch (error) {
       console.error('Failed to save workflow:', error);
-      message.error('保存审批工作流失败');
+      message.error(serverErrorMessage(error, '保存审批工作流失败'));
     } finally {
       setLoading(false);
     }
@@ -182,7 +185,7 @@ export default function ApprovalManagement() {
       loadWorkflows();
     } catch (error) {
       console.error('Failed to delete workflow:', error);
-      message.error('删除审批工作流失败');
+      message.error(serverErrorMessage(error, '删除审批工作流失败'));
     }
   };
 
@@ -211,7 +214,7 @@ export default function ApprovalManagement() {
       loadWorkflows();
     } catch (error) {
       console.error('Failed to toggle status:', error);
-      message.error('状态切换失败');
+      message.error(serverErrorMessage(error, '状态切换失败'));
     }
   };
 

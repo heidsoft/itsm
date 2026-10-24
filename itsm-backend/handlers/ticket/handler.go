@@ -679,7 +679,10 @@ func (h *Handler) GetTicketSLAInfo(c *gin.Context) {
 	}
 	slaInfo, err := h.service.GetTicketSLAInfo(c.Request.Context(), id, tenantID)
 	if err != nil {
-		common.Fail(c, common.NotFoundCode, "工单不存在")
+		// 与 GetTicket 同一口径：驱动故障必须按统一分类上报为 500。全部压成
+		// 404 会让 DB 故障在监控里表现为一片客户端错误，也会让调用方误判
+		// 「工单不存在」而反复重试。
+		common.RespondError(c, err, "获取工单 SLA 信息失败")
 		return
 	}
 
@@ -1016,7 +1019,10 @@ func (h *Handler) CreateSubtask(c *gin.Context) {
 
 	ticket, err := h.service.CreateSubtask(c.Request.Context(), tenantID, parentID, params)
 	if err != nil {
-		if businessErr, ok := err.(*common.BusinessError); ok {
+		// errors.As 而非顶层类型断言：service 的校验错误常被 fmt.Errorf("%w")
+		// 或事务包装一层，断言会漏判并把 409/403 的业务拒绝降级成 500。
+		var businessErr *common.BusinessError
+		if errors.As(err, &businessErr) {
 			common.Fail(c, businessErr.Code, businessErr.Message)
 			return
 		}

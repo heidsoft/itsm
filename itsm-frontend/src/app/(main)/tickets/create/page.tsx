@@ -22,6 +22,7 @@ import {
   InputNumber,
 } from 'antd';
 import AppSelect from '@/components/ui/AppSelect';
+import { useUnsavedChangesGuard } from '@/components/cmdb/useUnsavedChangesGuard';
 import {
   ArrowLeft,
   Container,
@@ -129,6 +130,9 @@ export default function CreateTicketPage() {
   const { message } = App.useApp();
   const { t } = useI18n();
   const [form] = Form.useForm();
+  // 与 CMDB 新建/编辑页同一套守卫：站内链接、浏览器后退、关闭标签页三通道拦截。
+  // 工单表单字段多（类型切换还会重置一部分），误关一次的成本很高。
+  const { markDirty, clearDirty, handleCancel, confirmLeave } = useUnsavedChangesGuard(router);
   const [loading, setLoading] = useState(false);
   const [ticketTypes, setTicketTypes] = useState<RuntimeTicketType[]>([]);
   const [ticketTypesLoading, setTicketTypesLoading] = useState(true);
@@ -339,6 +343,8 @@ export default function CreateTicketPage() {
       });
 
       message.success('工单创建成功');
+      // 已落库，跳转不应再被「未保存」守卫拦截。
+      clearDirty();
       try {
         router.push(`/tickets/${created.id}`);
       } catch (navErr) {
@@ -449,7 +455,7 @@ export default function CreateTicketPage() {
           <Space align='center' style={{ width: '100%' }}>
             <Button
               icon={<ArrowLeft className='w-4 h-4' />}
-              onClick={() => router.back()}
+              onClick={handleCancel}
               aria-label='返回上一页'
             >
               返回
@@ -507,7 +513,13 @@ export default function CreateTicketPage() {
 
           {/* 右侧：表单 */}
           <Col xs={24} md={14}>
-            <Form form={form} layout='vertical' aria-label='工单表单' requiredMark='optional'>
+            <Form
+              form={form}
+              layout='vertical'
+              aria-label='工单表单'
+              requiredMark='optional'
+              onValuesChange={markDirty}
+            >
               {/* 已选类型提示 */}
               {selectedType && (
                 <Card
@@ -798,12 +810,15 @@ export default function CreateTicketPage() {
               >
                 <Button
                   onClick={() => {
-                    try {
-                      router.push('/tickets');
-                    } catch (navErr) {
-                      console.error('[nav]', navErr);
-                      message.error('导航失败，请稍后重试');
-                    }
+                    // 程序化跳转不经过守卫的站内链接/后退通道，显式包一层。
+                    confirmLeave(() => {
+                      try {
+                        router.push('/tickets');
+                      } catch (navErr) {
+                        console.error('[nav]', navErr);
+                        message.error('导航失败，请稍后重试');
+                      }
+                    });
                   }}
                   size='large'
                   aria-label='取消创建，返回工单列表'

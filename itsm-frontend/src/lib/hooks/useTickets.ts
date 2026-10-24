@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { message } from 'antd';
 import type { Ticket, GetTicketsParams } from '@/lib/api/ticket-api';
+import { serverErrorMessage } from '@/lib/api/http-client';
 import { ticketService } from '../../lib/services/ticket-service';
 
 /**
@@ -179,11 +180,12 @@ export const useTickets = (): UseTicketsReturn => {
     async (id: number) => {
       try {
         await ticketService.deleteTicket(id);
-        message.success('Ticket deleted successfully');
+        // 提示由本 hook 统一给出（TicketKanban 等调用方不自绘 toast），
+        // 因此调用方不要再 toast 一次，否则会出现两条相互矛盾的提示。
+        message.success('工单删除成功');
         await refreshData();
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Failed to delete ticket';
-        message.error(errorMessage);
+        message.error(serverErrorMessage(err, '删除工单失败'));
         throw err;
       }
     },

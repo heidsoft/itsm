@@ -21,6 +21,7 @@ import (
 
 	"itsm-backend/common"
 	"itsm-backend/dto"
+	"itsm-backend/ent"
 	"itsm-backend/internal/datascope"
 	"itsm-backend/middleware"
 )
@@ -113,7 +114,10 @@ func (m *mockRepository) Get(ctx context.Context, id int, tenantID int) (*Change
 	defer m.mu.Unlock()
 	c, ok := m.changes[id]
 	if !ok || c.TenantID != tenantID {
-		return nil, http.ErrMissingFile
+		// 真实仓储（ent）在查不到时返回 *ent.NotFoundError，service 依赖
+		// ent.IsNotFound 把它归类为 404。此前这里返回 http.ErrMissingFile，
+		// service 无法分类 → 500，测试因此锁住了一个不存在于生产的行为。
+		return nil, &ent.NotFoundError{}
 	}
 	// 返回深拷贝，确保调用方对返回实体的修改不会污染仓储当前持久化状态。
 	// 这样 Service.UpdateChange 中"读取当前状态 vs 传入请求状态"的差异对比才有意义。
@@ -932,10 +936,12 @@ func TestChangeController_DeleteChange(t *testing.T) {
 			expectedCode:   common.SuccessCode,
 		},
 		{
-			name:           "删除不存在的变更应返回500",
+			// 删除不存在的记录是客户端错误：此前 service 返回裸 fmt.Errorf，
+			// RespondError 无法分类 → 500，在监控里伪装成服务端故障。
+			name:           "删除不存在的变更应返回404",
 			changeID:       "999",
-			expectedStatus: http.StatusInternalServerError,
-			expectedCode:   common.InternalErrorCode,
+			expectedStatus: http.StatusNotFound,
+			expectedCode:   common.NotFoundCode,
 		},
 		{
 			name:           "无效ID应返回400",

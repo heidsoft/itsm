@@ -191,7 +191,22 @@ func (r *EntRepository) RemoveAssociation(ctx context.Context, tenantID, problem
 }
 
 func (r *EntRepository) Create(ctx context.Context, p *Problem) (*Problem, error) {
-	create := r.client.Problem.Create().
+	// 编号与主体行必须同生共死。旧实现是「先插入、再单独 UPDATE 编号」，且
+	// UPDATE 失败被静默吞掉（注释声称可后台补偿，但代码库里没有补偿任务），
+	// 结果是留下一条没有编号的问题单：列表/详情编号为空白，按编号检索永远
+	// 命中不到，而调用方拿到的是 200。改为同一事务内完成。
+	tx, err := r.client.Tx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	rollback := func(cause error) (*Problem, error) {
+		if rbErr := tx.Rollback(); rbErr != nil {
+			return nil, fmt.Errorf("%w; rollback: %v", cause, rbErr)
+		}
+		return nil, cause
+	}
+
+	create := tx.Problem.Create().
 		SetTitle(p.Title).
 		SetDescription(p.Description).
 		SetStatus(p.Status).
@@ -212,13 +227,15 @@ func (r *EntRepository) Create(ctx context.Context, p *Problem) (*Problem, error
 
 	saved, err := create.Save(ctx)
 	if err != nil {
-		return nil, err
+		return rollback(err)
 	}
 	// 生成问题编号（PRB-YYYYMMDD-XXXX，租户内日序列）
 	number := fmt.Sprintf("PRB-%s-%04d", time.Now().Format("20060102"), saved.ID)
-	if _, err := r.client.Problem.UpdateOneID(saved.ID).SetProblemNumber(number).Save(ctx); err != nil {
-		// 编号写失败不阻断创建（可后台补偿），仅记录
-		return r.toDomain(saved), nil
+	if _, err := tx.Problem.UpdateOneID(saved.ID).SetProblemNumber(number).Save(ctx); err != nil {
+		return rollback(fmt.Errorf("写入问题编号失败: %w", err))
+	}
+	if err := tx.Commit(); err != nil {
+		return rollback(err)
 	}
 	saved.ProblemNumber = number
 	return r.toDomain(saved), nil

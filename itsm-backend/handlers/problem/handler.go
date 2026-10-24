@@ -514,6 +514,14 @@ func (h *Handler) Update(c *gin.Context) {
 	if req.Impact != nil {
 		updates.Impact = *req.Impact
 	}
+	if req.Workaround != nil {
+		updates.Workaround = *req.Workaround
+	}
+	// AssigneeID 用指针整体透传（含「清空」语义由 service 的 >0 判定收敛），
+	// 不在 handler 里再判一次 0，避免两条路径对同一输入给出不同结论。
+	if req.AssigneeID != nil {
+		updates.AssigneeID = req.AssigneeID
+	}
 
 	updated, err := h.service.Update(c.Request.Context(), tenantID, id, updates, actorID, actorRole)
 	if err != nil {
