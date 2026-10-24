@@ -44,10 +44,14 @@ func TestScenario6_TenantIsolationCrossDomain(t *testing.T) {
 	// 否则 CreateIncident 的 fire-and-forget goroutine 会与本用例后续事务争抢共享内存表。
 	incidentSvc.EnableWorkflowOutbox()
 	incidentSvc.EnableRulesOutbox()
-	// 问题域必须走 router 实际装配的那个实现（router/problem_routes.go 构造同一个
-	// problem.NewService(problem.NewEntRepository(client), service.NewTicketServiceForTest(client, logger), logger)）：
-	// service.NewProblemService 没有任何生产构造点，用它做场景测试等于测一条不存在的链路。
-	problemSvc := problemdomain.NewService(problemdomain.NewEntRepository(client), service.NewTicketServiceForTest(client, logger), logger)
+	// 问题域必须走 bootstrap 实际装配的构造签名：仓储 + Ent 客户端 + 受指人校验器。
+	// service.NewProblemService 没有生产构造点，用它做场景测试等于测一条不存在的链路。
+	problemSvc := problemdomain.NewService(
+		problemdomain.NewEntRepository(client),
+		client,
+		service.NewTicketServiceForTest(client, logger),
+		logger,
+	)
 	knowledgeSvc := service.NewKnowledgeService(client, logger)
 	policySvc := service.NewSLAPolicyService(client)
 

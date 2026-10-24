@@ -39,10 +39,14 @@ func TestScenario2_IncidentProblemKnowledgeLoop(t *testing.T) {
 	// 共享内存表，触发 "database table is locked: incidents" 的偶发失败。
 	incidentSvc.EnableWorkflowOutbox()
 	incidentSvc.EnableRulesOutbox()
-	// 问题域走 router 实际装配的那个实现（router/problem_routes.go 构造同一个
-	// problem.NewService(problem.NewEntRepository(client), service.NewTicketServiceForTest(client, logger), logger)）；service.NewProblemService
-	// 没有任何生产构造点，测它证明不了业务流。
-	problemSvc := problemdomain.NewService(problemdomain.NewEntRepository(client), service.NewTicketServiceForTest(client, logger), logger)
+	// 问题域走 bootstrap 实际装配的构造签名：仓储 + Ent 客户端 + 受指人校验器。
+	// service.NewProblemService 没有生产构造点，测它证明不了业务流。
+	problemSvc := problemdomain.NewService(
+		problemdomain.NewEntRepository(client),
+		client,
+		service.NewTicketServiceForTest(client, logger),
+		logger,
+	)
 	knowledgeSvc := service.NewKnowledgeService(client, logger)
 
 	// tenant A 在闭环里创建的问题 ID，供后面的跨租户拒绝用例复用；
