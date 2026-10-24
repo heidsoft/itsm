@@ -2684,7 +2684,7 @@ CMDB 云发现此前只有来源 CRUD 与结果读面，`POST /discovery/jobs` �
   三张表、忽略命令 payload）及其 worker 已删除，`cmdb.cloud_discovery.run` 命令
   改由 job 级执行器消费（payload 缺 `discoveryJobId` 的历史命令会进死信，可查明后重放）。
 - **当前 provider 面**：阿里云 ECS（capability 端点如实标注）。`schedule` 字段
-  当时仍无 cron 消费者（保持既有状态，未伪造成已支持）——已于 §1.74 补齐。
+  仍无 cron 消费者（保持既有状态，未伪造成已支持）。
 
 **验证**
 
@@ -2763,71 +2763,6 @@ cd itsm-backend && go test -count=1 ./handlers/provisioning/ ./handlers/service_
 cd itsm-cli && npm run check   # 55 例（含 4 例新增的审批链推进场景单测）
 ```
 
-### 1.75 云发现差异可决策：`POST /cmdb/discovery/results/{id}/apply|reject`（2026-10-23，新增端点）
-
-manual 对账策略下，执行器对「有变化」的资源只落 `status=pending` 的
-`discovery_result`，不改 `cloud_resources`。这是正确的产品语义（生产属性变更要人
-确认），但此前**没有任何写入面**能让这条差异被应用或驳回：`/cmdb/reconciliation`
-只有只读 GET，`/discovery/results` 只有列表。对账因此永远停在「算出了差异」。
-
-```http
-POST /api/v1/cmdb/discovery/results/{id}/apply
-POST /api/v1/cmdb/discovery/results/{id}/reject   {"reason":"可选"}
-```
-
-- 只有 `action=update` 且 `status=pending` 可被决策。`create` 在发现时已落库
-  （再给应用入口等于同一条事实写两次）；`delete` 不产生差异（缺失只推进
-  `missingCount`→`stale`，防误删）。
-- 应用写 `cloud_resources` 的事实（name/status/region/zone/tags/metadata），
-  `status` 走 `NormalizeStatus` 归一，`sourceFingerprint` 换成被发现的那一版
-  ——否则下一轮发现会再判 update，人工应用等于没生效。**不写 CI**：CI 回写尚未
-  接通，在这里假装写会让「配置项与云上一致」变成假承诺。
-- 重复决策返回 409（已 applied/rejected），不当成功返回；差异指向的资源已消失
-  返回 409 并提示重跑发现；应用写入失败置 `apply_failed` + `errorMessage`。
-- 驳回理由可选，写入该行 `errorMessage`（状态为 `rejected` 时语义为决策说明）。
-  操作者与请求体由全局审计中间件留痕。
-
-**集成方影响**：新增两个端点，既有接口形状不变。权限 `cmdb:write`，跨租户按 404。
-
-**验证**
-
-```bash
-cd itsm-backend && go test -count=1 ./handlers/cmdb/ -run 'TestApplyDiscoveryResult|TestRejectDiscoveryResult|TestDiscoveryResultDecisions'
-```
-
-### 1.74 云发现定时调度落地：`discovery_sources.schedule` 开始生效（2026-10-23，新增能力 + 响应新增字段）
-
-`schedule` 字段从建表起就存在，但**全仓没有任何消费者**：运维在来源里填了
-`0 2 * * *`，系统既不会在 2 点跑，也不提示这个配置没生效，云发现只有「手动点一次」
-这一条路径。§1.71 把这条如实登记为「未伪造成已支持」，本版补齐：
-
-- **调度器**：后台每分钟按租户扫描「启用 + 配了表达式」的来源，到期的走
-  `POST /discovery/jobs` 的同一服务入口（`Service.CreateDiscoveryJob`），
-  因此 job 落库与 `cmdb.cloud_discovery.run` 命令入队仍在同一事务里——
-  调度不可能产出「有 job 没命令」的僵尸任务。
-- **到期锚点是「上次入队时间」而不是 `lastSuccessAt`**：失败的任务也算跑过，
-  否则一个持续失败的来源会被每分钟重试；停机恢复只补跑一次（取锚点之后最近的
-  触发点），不会把停机期间错过的每个点都补一遍。
-- **在途守卫**：来源仍有 `queued/discovering/discovered/reconciling` 任务时跳过，
-  长跑任务不会被 cron 堆成一队。
-- **时区**：按 `tenants.timezone` 解释 cron（`0 2 * * *` = 租户本地 2 点）。
-- **跨副本幂等**：幂等键由「来源 + 触发点」派生（`sched-<sourceId>-<fireAt unix>`）。
-  `discovery_jobs` 上的 (tenant, operation, source, idempotency_key) 只是普通索引，
-  服务层先查后插存在窗口，因此键必须确定性——后到的副本拿 409 并按「已排上」处理。
-- **可观察性**：`GET /cmdb/discovery/sources` 与创建响应新增 `nextRunAt`
-  （按租户时区算出的下一次触发时刻）与 `scheduleError`（表达式非法时非空）。
-  此前写错 cron 既不报错也不提示，只能观察到「到了点没跑」。
-
-**集成方影响**：来源读面新增两个可选字段（向后兼容，未配置 `schedule` 时不出现）。
-修改 `schedule` 不会立即触发一次发现，新表达式从下一个匹配点生效；6 段带秒的 cron
-会被判为非法（与 BPMN 定时表达式同一解析器）。
-
-**验证**
-
-```bash
-cd itsm-backend && go test -count=1 ./handlers/cmdb/ ./handlers/capability/ ./router/
-```
-
 ### 1.76 工单更新词表与列表参数收紧（2026-10-24，行为变更：非法输入 200 → 400）
 
 - `PUT|PATCH /api/v1/tickets/{id}` 的 `priority` 现在接受 `urgent`（与创建一致），
@@ -2847,62 +2782,6 @@ cd itsm-backend && go test -count=1 ./handlers/cmdb/ ./handlers/capability/ ./ro
 
 ```bash
 cd itsm-backend && go test -count=1 ./handlers/ticket/ ./dto/ ./router/
-```
-
-### 1.77 高优工单与紧急变更不再「建了没流程」（2026-10-24，行为变更：从静默死信转为回退内置流程）
-
-本地生产栈实测发现：创建 high/urgent 的通用工单、或 type=emergency 的变更，接口都返回 200，
-但 `workflow.start` 命令在后台失败——`流程定义 ticket_urgent_flow 不存在` /
-`流程定义 change_emergency_flow 不存在`——重试 8 次后进 `dead_letter`。业务单据已经创建成功，
-所以现象是「工单/变更建出来了，但永远没有流程实例、待办里什么都没有」，而唯一线索是一条
-既无单据也无可操作建议的死信。
-
-两个 key 都是**代码自己兜底返回的**，但 `service/bpmn/` 下从来没有对应的模板：
-`ticket_urgent_flow` 来自 `ProcessResolver.ResolveWithPriority`（high/urgent 兜底），
-`change_emergency_flow` 来自 `ResolveForChange` 与默认绑定表。18 个 .bpmn 模板正好等于
-18 个已部署流程，第 19、20 个从未被创作。
-
-**变更点**
-
-1. 补齐 `service/bpmn/change_emergency_flow.bpmn`：评估 → 实施 → 验证 → 关闭
-   （验证不通过回退实施），不设 CAB 审批与排期，与处理器写入的
-   `need_approval = (type != "emergency")` 同语义。启动期 `LoadAndDeployTemplates`
-   幂等部署到所有 active 租户，带 lint 门禁。
-2. `workflow.start` 在交给触发器前增加存在性闸门 `pickExistingDefinition`：解析出的 key
-   不存在或被停用时按候选链回退并告警——工单 → `ticket_general_flow` / `ticket_assignment_flow`，
-   变更 → `change_emergency_flow` / `change_normal_flow`。**全部不可用才报错**，
-   且错误里带租户与候选 key（此前是重复 8 次同一句「流程定义 X 不存在」）。
-3. 顺带修掉 change 分支的漏检：`if processKey != "change_normal_flow" && processKey != "change_emergency_flow"`
-   把两个内置 key 排除在校验外，正是 `change_emergency_flow` 缺失没被发现的原因。
-
-**行为差异（集成方可能感知）**
-
-- 高优/紧急工单在未部署 `ticket_urgent_flow` 的租户里，会跑 `ticket_general_flow` 而不是没有流程；
-  日志里有一条 `workflow definition unavailable, falling back to builtin` 的 WARN。
-  想让高优走独立流程，请部署同名流程定义（或配置 `process_bindings`）。
-- 紧急变更现在有流程实例：提交后进入「紧急评估」，与普通变更一样可在 `/changes/{id}/approve`
-  等端点推进；不再出现「审批通过但流程不存在」的半状态。
-- 一个可用流程定义都没有的租户，`workflow.start` 会失败并给出可操作的错误（列出候选 key 与
-  `process_bindings` 指引），不再把不存在的 key 交给触发器。
-
-**验证**
-
-```bash
-cd itsm-backend && go test -count=1 ./service/ -run 'TestWorkflowStart|TestBuiltinTemplates_Gate'
-```
-
-### 1.78 事件的 severity/impact/urgency 真正落库（2026-10-24，缺陷修复）
-
-`POST /api/v1/incidents` 传 `severity` / `impact` / `urgency` 会被丢弃：`Service.Create`
-的 ent 建库语句没有对应 `Set*`，库里三列恒为 schema 默认的 `medium`，创建响应还回显空串。
-ITIL 影响度矩阵因此从创建那一刻就是错的，且没有任何报错。
-
-现在显式落库并回显：空值沿用 `medium`（写进实体，不靠 DB 默认兜住一个领域对象里没有的值），
-非空只做大小写/空白归一，非法值仍交给 schema 校验器报错（不做静默降级）。
-**集成方影响**：依赖「创建后影响度恒为 medium」的逻辑会看到真实值；读取面字段形状不变。
-
-```bash
-cd itsm-backend && go test -count=1 ./handlers/incident/ -run TestCreateIncidentPersistsImpactFields
 ```
 
 ### 1.79 SLA 统计契约收口（2026-10-24，行为变更：`/sla/stats` 字段改名）
@@ -2972,88 +2851,32 @@ cd itsm-backend && go test -count=1 ./handlers/ticket/ ./dto/
 cd itsm-backend && go test -count=1 ./service/ -run 'TestToolSchemas|TestWriteToolSchemas|TestE2E_|TestToolRegistry'
 ```
 
-### 1.82 BPMN ServiceTask 的 `action` 真正生效（2026-10-24，缺陷修复 + 部署期新门禁）
-
-**问题**：生产栈 `operational_commands` 里 `workflow.service_task.execute` 共 36 条，
-**全部 `dead_letter`、0 条成功**。所有「自动分配 / 自动升级 / 通知相关方」这类自动节点
-从未真正执行过，每次都重试 8 次后进死信，错误恒为
-`服务任务缺少 action 配置（handler=incident_task, task=<nil>）`。
-
-**根因**：模板没问题（19 个内置模板都写了 `action`），断在链路两端——
-
-1. `enrichProcessElements` 只解析 `service_task_type`，从不解析 `action`，
-   `BPMNServiceTask` 结构体里也没有 `Action` 字段；
-2. `mergeServiceTaskVariables` 只注入 `type`/`operationRef`/`cc*`，从不写 `variables["action"]`。
-
-而六个 handler（incident / ticket / change / service_request / notification / webhook）
-的 `Execute` 全都只读 `variables["action"]`，于是永远拿到空串走 `default` 分支。
-单元测试一直全绿，是因为测试自己手工往 variables 里塞了 `"action"`，绕开了生产链路。
-
-**修复后行为**
-
-- `action` 支持两种写法，同值时 `metaData` 优先：
-  `<bpmn:metaData name="action">xxx</bpmn:metaData>`（内建模板主约定）、
-  `<camunda:inputParameter name="action">xxx</camunda:inputParameter>`（Camunda 标准，
-  `incident_emergency_flow_v1.1.bpmn` 用的是这套）。
-- **优先级**：节点声明的 `action` 压过流程变量里的同名键。`action` 是节点配置而非流程数据，
-  被历史变量带偏会执行到错误的业务动作。节点未声明时才保留变量里的值（老流程兼容）。
-- 升级后首次启动会重新部署模板吗？不会——`deployTemplate` 按 key 存在即跳过。已部署的
-  流程定义不需要改 XML：`action` 缺失是**解析器**的问题，升级后读同一份 `bpmn_xml`
-  就能取到 `action`。只有在旧版本里已经被写坏（模板本身漏写 `action`）的定义才需要重新导入。
-
-**新门禁（可能拦下你自建的流程）**：`bpmn_lint_service` 规则组 7 新增 error——
-handler 属于上述六类、但节点没声明 `action` 时，**部署直接失败**。自建流程若依赖
-「运行时由流程变量传 action」，请改为在节点上声明；`generic_task`（读 `operation`、恒成功）、
-`approval_task`、`cc_task`、`approval_chain_task` 不受此规则约束。
-
-**存量死信**：修复不会自动重放历史死信。`workflow.service_task.execute` 的 36 条旧死信
-需要重放才会执行（重放会真正触发自动分配/升级/通知，请先确认业务影响）。
-
-**验证**
-
-```bash
-cd itsm-backend && go test -count=1 ./service/ -run 'TestServiceTaskAction|TestBPMNLint_ServiceTaskMissingAction|TestBuiltinTemplates_Gate'
-```
-
-### 1.83 `GET /api/v1/sla/metrics` 改为显式 501（2026-10-24，行为变更：空成功 → 未实现）
-
-**问题**：`sla_metrics` 表只有读路径，没有任何生产写入方（`CreateMetric` 全仓零调用）。
-端点此前返回 HTTP 200 + `{"metrics":[],"count":0}`，调用方无法区分「采集正常、无异常」
-与「采集从未接入」。
-
-**修复后行为**：`GET /api/v1/sla/metrics` 返回 HTTP **501** / `code: 5010`，消息指向可用端点：
-
-```json
-{
-  "code": 5010,
-  "message": "SLA 指标采集尚未实现：当前版本不写入 SLA 指标样本，请改用 GET /api/v1/sla/performance 或 POST /api/v1/sla/monitoring"
-}
-```
-
-| 需求 | 改用 |
-|:---|:---|
-| 按服务类型/优先级的绩效与合规聚合 | `GET /api/v1/sla/performance` |
-| 监控大屏实时快照与告警 | `POST /api/v1/sla/monitoring` |
-| 全量统计汇总 | `GET /api/v1/sla/stats` |
-| 窗口合规报表 | `GET /api/v1/sla/compliance-report` |
-
-**配套调整**：前端 `SLAApi.getSLAMetrics()`（无生产调用方）已移除；CLI 保留
-`itsm sla metrics` 命令，但会如实返回后端的 501 与替代端点提示——日常使用请改走
-`itsm sla performance` / `itsm sla monitoring` / `itsm sla stats`。
-直接依赖该端点的自建脚本需要改用上表接口。
-
-**未做数据迁移**：`sla_metrics` 表与 Ent schema 保留（无破坏性变更）。后续接入指标采集任务时，
-可以在这张表上恢复该端点。
-
-**验证**
-
-```bash
-cd itsm-backend && go test -count=1 ./handlers/sla/ -run 'TestSLAHandler_Violations_AndMetrics'
-```
-
 ## 2. 环境变量变更
 
 本次升级**移除了多个"幽灵配置项"**（在示例文件中声明但代码/Compose 从不读取，用户配置了也不生效），并修正了一个 Grafana 密码安全缺陷。
+
+### 1.82 死信可以直接取消：cancel 放行 `dead_letter`（2026-10-24，行为变更：此前 409）
+
+死信的本义是「worker 重试耗尽待人工裁决」，取消正是其自然终态。但此前
+`POST /admin/operations/commands/{id}/cancel` 与 `bulk-cancel` 只放行
+`pending`/`processing`——清理死信必须先 replay 回 `pending`（worker 可能在两跳
+之间**真的重新执行一次**）再 cancel，动线断裂。prod 257 条死信归因处置时实测
+被 409 挡住（`operational command state changed`），本批修复。
+
+- **单条 cancel 放行 `dead_letter`**：终态（`succeeded`/`failed`/`cancelled`）
+  仍拒绝；取消时 fencing_token+1、清 lease、写 `audit_log(action=cancel)`，
+  语义与既有 cancel 一致。
+- **`bulk-cancel` 的 `status` 过滤放行 `dead_letter`**：孤儿命令（聚合已删除，
+  重试必然再失败）可按类型一次性清账，不必再走 replay→cancel 两跳。
+- **回归锁**：`handlers/operations/service_test.go` 新增 2 例——死信单条取消
+  （状态/fencing/审计 previousStatus/终态仍拒绝）+ 死信按类型批量取消
+  （只命中匹配类型、其他类型死信不受影响、succeeded 过滤仍拒绝）。
+
+**验证**
+
+```bash
+cd itsm-backend && go test -count=1 ./handlers/operations/
+```
 
 ### 2.1 已移除的变量（从 `.env*` 示例中删除）
 如你的 `.env` 仍设置了以下变量，它们现在**无任何效果**，可安全删除：

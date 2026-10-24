@@ -1849,27 +1849,6 @@ GET /sla/violations
 Authorization: Bearer <accessToken>
 ```
 
-### SLA 指标（未实现，显式 501）
-
-```http
-GET /api/v1/sla/metrics
-Authorization: Bearer <accessToken>
-```
-
-权限 `sla:read`。该端点读取的 `sla_metrics` 表当前没有写入方（无指标采集任务），
-因此不再返回空列表的 200 成功，而是返回 HTTP 501 / `code: 5010`：
-
-```json
-{
-  "code": 5010,
-  "message": "SLA 指标采集尚未实现：当前版本不写入 SLA 指标样本，请改用 GET /api/v1/sla/performance 或 POST /api/v1/sla/monitoring"
-}
-```
-
-按需求改用：绩效聚合 `GET /api/v1/sla/performance`、实时快照 `POST /api/v1/sla/monitoring`、
-全量汇总 `GET /api/v1/sla/stats`、窗口报表 `GET /api/v1/sla/compliance-report`。
-`slaDefinitionId`、`metricType` 查询参数不再生效。
-
 ### 管理者统一服务质量报表
 
 ```http
@@ -2980,65 +2959,6 @@ POST   /api/v1/cmdb/discovery/jobs/{id}/retry    failed/partial_failed 派生新
 来源不存在 404、来源/账号停用 400/403。租约字段（leaseOwner/leaseExpiresAt/
 fencingToken/heartbeatAt）是执行器内部协调状态，不对外暴露。
 
-### 云发现差异决策（apply / reject）
-
-manual 对账策略下，执行器对「有变化」的资源只落一条 `status=pending` 的
-`discovery_result`，**不改** `cloud_resources`（生产属性变更要人确认）。此前没有任何
-写入面能让这条差异被应用或驳回——对账停在「算出了差异」，账合不上。
-
-```http
-POST /api/v1/cmdb/discovery/results/{id}/apply     # 应用差异（写回 CloudResource）
-POST /api/v1/cmdb/discovery/results/{id}/reject    {"reason":"可选"}
-GET  /api/v1/cmdb/discovery/results?job_id=42      # 列出差异（含 diff 与 status）
-```
-
-- **只有 `action=update` 且 `status=pending` 可被决策**：`create` 在发现时已落库，
-  `delete` 根本不产生（缺失只推进 `missingCount`→`stale`，防误删）。
-- **应用写的是 `cloud_resources` 的事实**（name/status/region/zone/tags/metadata +
-  `sourceFingerprint` 换成被发现的那一版），**不写 CI**——CI 回写尚未接通，
-  在这里假装写 CI 会让「配置项与云上一致」变成假承诺。
-- **重复决策 409**：已 `applied`/`rejected` 再点不会产生第二次写入，也不当成功返回
-  （否则会掩盖「这条差异早被驳回过」）。
-- **资源已消失 409**：差异指向的 `identityHash` 在 `cloud_resources` 里找不到时
-  提示重跑发现，不自动重建（重建是 `create` 语义，需要新的发现事实）。
-- 应用写入失败时该行置 `apply_failed` 并留 `errorMessage`，不会静默留在 pending。
-- 驳回理由可选，写入该行 `errorMessage`（状态为 `rejected` 时语义为决策说明）；
-  操作者与请求体由全局审计中间件留痕。
-
-权限：`cmdb:write`。跨租户访问按 404 处理（不暴露可枚举信号）。
-
-### 云发现调度（`discovery_sources.schedule`）
-
-`schedule` 从建表起就存在，但此前**没有任何消费者**——填了 cron 既不生效、也不报错，
-云发现只能手动触发。现在由后台调度器每分钟消费一次：
-
-- **表达式**：5 段 cron（`0 2 * * *`）、`@every 24h` 等描述符、ISO 8601 cycle（`R/PT6H`）。
-  6 段带秒的 cron 会被拒绝（与 BPMN 定时表达式同一解析器，秒级巡检无业务意义）。
-- **时区**：按租户 `tenants.timezone` 解释。`0 2 * * *` 是租户本地时间 2 点，
-  不是 UTC 2 点。
-- **到期判定**：以该来源**最近一次任务的入队时间**为锚点，而不是 `lastSuccessAt`——
-  失败的任务也算跑过，否则一个持续失败的来源会被每分钟重试一次。停机后恢复只补跑
-  一次（取锚点之后最近的触发点），不会把停机期间错过的每个触发点都补一遍。
-- **在途守卫**：来源还有非终态任务（`queued`/`discovering`/`discovered`/`reconciling`）
-  时跳过，避免长跑任务被 cron 堆成一队。
-- **幂等**：调度任务按「来源 + 触发点」派生幂等键（`sched-<sourceId>-<fireAt unix>`），
-  多副本同时扫描同一触发点时后到者拿 409 并按「已排上」处理，不产生重复任务。
-
-来源读面新增两个字段，让「配了没反应」在保存那一刻就能看见：
-
-```json
-{
-  "id": "ds_1",
-  "schedule": "0 2 * * *",
-  "nextRunAt": "2026-10-23T18:00:00Z",   // 下一次会排任务的时刻（UTC，按租户时区计算）
-  "scheduleError": "无法识别的定时表达式: ..."  // 仅表达式非法时出现
-}
-```
-
-`nextRunAt` 未配置 `schedule` 时省略；`scheduleError` 非空表示**该来源永远不会被自动
-触发**，需修正表达式（调度器会跳过它并告警，不影响同租户其他来源）。修改 `schedule`
-不会立即触发一次发现——新表达式从下一个匹配点开始生效。
-
 ## 通知接口
 
 ### 获取通知列表
@@ -3770,12 +3690,16 @@ POST /api/v1/notification-deliveries/{id}/retry
 |---|---|---|---|
 | 命令重放 | `POST /api/v1/admin/operations/commands/{id}/replay` | 把一条 `dead_letter`（或 `cancelled`）命令重置回 `pending` | **保留原 `idempotency_key` 与 `fencing_token`**，worker 仍按原身份去重，不会与历史成功的业务写入重复 |
 | 批量重放 | `POST /api/v1/admin/operations/commands/bulk-replay` | 按 `{status,commandType,aggregateType,pageSize}` 匹配后批量重置 | 同上；单次上限 200 条（`maxBulkLimit` 1000），`status` 只允许 `dead_letter`/`cancelled` |
+| 命令取消 | `POST /api/v1/admin/operations/commands/{id}/cancel` | 把一条 `pending`/`processing`/`dead_letter` 命令置为 `cancelled` | `fencing_token`+1、清 lease；`dead_letter` 可直接取消（重试耗尽后的自然终态，无需先 replay） |
+| 批量取消 | `POST /api/v1/admin/operations/commands/bulk-cancel` | 按 `{status,commandType,aggregateType,pageSize}` 匹配后批量取消 | `status` 允许 `processing`/`pending`/`dead_letter`；终态（`succeeded` 等）拒绝 |
 | 投递重试 | `POST /api/v1/notification-deliveries/{id}/retry` | 以**新幂等键**重新入箱一条失败投递 | 会真实再发一次消息；受上面的「重试谱系」幂等守卫保护 |
 
 ```http
 GET  /api/v1/admin/operations/commands?status=dead_letter&commandType=notification.deliver&page=1&pageSize=20
 POST /api/v1/admin/operations/commands/{id}/replay
 POST /api/v1/admin/operations/commands/bulk-replay
+POST /api/v1/admin/operations/commands/{id}/cancel
+POST /api/v1/admin/operations/commands/bulk-cancel
 ```
 
 - 权限 `system:write`（读列表与重放同权限组），全部按认证租户隔离；每次重放写一条 `audit_log`（`resource=operational_command`、`action=replay`、`body` 含 `previousStatus`）。
