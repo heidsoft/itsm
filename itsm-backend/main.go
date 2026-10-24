@@ -29,7 +29,7 @@ import (
 // 当程序启动时，首先执行这个函数
 func main() {
 	// 部署模式 gating:private 部署时关掉 /api/v1/msp/* 路由族。
-	// 在 NewApplication 之前完成,确保 router 注册到的 msp 路径在请求进入时 404。
+	// 在 NewApplication 之前完成；请求进入时返回 capability disabled(503)。
 	middleware.ApplyDeploymentMode(os.Getenv("DEPLOYMENT_MODE"))
 
 	if os.Getenv("ITSM_BOOTSTRAP_ONLY") == "true" {

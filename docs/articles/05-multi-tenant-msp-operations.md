@@ -700,7 +700,7 @@ admin 角色不再自动获得 MSP 访问权；MSP 身份判定改为"租户类�
 
 `middleware.ApplyDeploymentMode(mode)` 把 `DEPLOYMENT_MODE` env 映射到 `mspEnabled`：
 
-- `private`：MSP 路由族（`/api/v1/msp/*`）整族返回 404，避免私有化部署意外暴露客户管理面；
+- `private`：MSP 路由族（`/api/v1/msp/*`）保留路由但拒绝调用，返回 `503` + `code: 5003` + `data.capability = "msp"`、`data.state = "disabled"`，让调用方区分「部署形态未启用」与「资源不存在」；
 - `saas` / `saas_msp` / 空 / 未知值：MSP 保持开启，typo 不会悄悄关掉 MSP。
 
 `main.go` 启动时在 `NewApplication` 之前调用，避免 router 注册完后才生效。

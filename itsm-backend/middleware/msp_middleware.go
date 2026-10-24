@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"itsm-backend/common"
 	"itsm-backend/ent"
 	"itsm-backend/ent/mspallocation"
 	"itsm-backend/ent/tenant"
@@ -23,7 +24,7 @@ func IsMSPStaff(tenantType string, mspRole string) bool {
 }
 
 // MSPMiddleware 在请求进入 MSP 路由族时构造 MSPContext：
-//  1. 门控 mspEnabled（private 部署直接 404）
+//  1. 门控 mspEnabled（private 部署返回 capability 不可用，而不是 404）
 //  2. 解析 user_id / 加载用户与租户
 //  3. 仅当租户类型为 msp_provider 且 msp_role 非空才认定 MSP 身份
 //  4. 拉取有效 MSPAllocation，写入 AllowedCustomers
@@ -34,9 +35,15 @@ func IsMSPStaff(tenantType string, mspRole string) bool {
 func MSPMiddleware(client *ent.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if !mspEnabled {
-			c.JSON(http.StatusNotFound, gin.H{
-				"code":    http.StatusNotFound,
-				"message": "MSP routes are disabled in this deployment mode",
+			// 部署形态关闭了 MSP：路由存在但能力不可用。404 会让调用方以为
+			// 资源不存在而重试创建；503 + capability 状态才能区分「没开」和「没有」。
+			c.JSON(http.StatusServiceUnavailable, gin.H{
+				"code":    common.ServiceUnavailableCode,
+				"message": "MSP 能力在当前部署形态下未启用",
+				"data": gin.H{
+					"capability": "msp",
+					"state":      "disabled",
+				},
 			})
 			c.Abort()
 			return
