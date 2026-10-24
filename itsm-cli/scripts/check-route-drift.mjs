@@ -10,7 +10,7 @@
  *
  * Usage: node scripts/check-route-drift.mjs [--quiet]
  */
-import { readFileSync, readdirSync } from 'fs';
+import { existsSync, readFileSync, readdirSync } from 'fs';
 import { fileURLToPath } from 'url';
 import path from 'path';
 
@@ -96,3 +96,56 @@ if (missing.length) {
 }
 console.log(`✓ Route drift check passed: ${cliEndpoints.size} CLI endpoints all match backend registrations.`);
 console.log(`  (backend scan covered ${backend.size} routes across ${handlersGoFiles.length} Go files)`);
+
+// --- 4. Reverse direction: backend routes no command reaches -----------------
+//
+// The forward check can only fail when the CLI names a route the backend lacks
+// — the opposite direction was never tested, so an entire backend family could
+// ship with zero CLI coverage and every gate stayed green. The whole cloud /
+// discovery surface (27 routes: cloud accounts, services, resources, discovery
+// sources/jobs/results/providers/health) was exactly that: reachable from the
+// web UI, invisible to `itsm` and to every MCP client.
+//
+// Absolute coverage is not the goal — 68% of routes are still uncovered and
+// closing that is a product decision, not a build gate. What must never happen
+// silently is *regression*, so the uncovered count is ratcheted: it may fall,
+// and may only rise in a commit that raises this baseline and states why.
+const baselineFile = process.env['ITSM_ROUTE_COVERAGE_BASELINE'] ?? path.join(here, 'route-coverage-baseline.txt');
+const uncovered = [...backend].filter((ep) => !cliEndpoints.has(ep) && !aliasesWanted.has(ep)).sort();
+
+const baselineRaw = existsSync(baselineFile) ? readFileSync(baselineFile, 'utf-8') : '';
+const baselineMatch = baselineRaw.match(/^uncovered=(\d+)/m);
+if (!baselineMatch) {
+  console.error(`✗ 缺少或未解析到覆盖率基线：${baselineFile}`);
+  console.error('  需要形如 `uncovered=<n>  # 理由` 的一行。空基线会让反向检查静默失效。');
+  process.exit(1);
+}
+const want = Number(baselineMatch[1]);
+if (!Number.isInteger(want)) {
+  console.error(`✗ 基线 uncovered 不是整数：${baselineMatch[1]}`);
+  process.exit(1);
+}
+
+const byFamily = new Map();
+for (const ep of uncovered) {
+  const family = ep.split(' ')[1].split('/').slice(0, 4).join('/');
+  byFamily.set(family, (byFamily.get(family) ?? 0) + 1);
+}
+const quiet = process.argv.includes('--quiet');
+if (!quiet) {
+  console.log(`  未覆盖 ${uncovered.length} / ${backend.size} 条后端路由（基线 ${want}），按域：`);
+  for (const [family, n] of [...byFamily.entries()].sort((a, b) => b[1] - a[1]).slice(0, 10)) {
+    console.log(`    ${String(n).padStart(4)}  ${family}`);
+  }
+}
+
+if (uncovered.length > want) {
+  console.error(`✗ 路由覆盖率回退：未覆盖 ${uncovered.length} > 基线 ${want}（新增 +${uncovered.length - want}）`);
+  console.error('  新增后端路由必须同时接入 CLI 命令；确属有意不接入时，在同一 commit 上调基线并写明理由。');
+  for (const ep of uncovered.slice(0, 40)) console.error(`  ${ep}`);
+  process.exit(1);
+}
+if (uncovered.length < want) {
+  console.log(`  未覆盖数已下降（${uncovered.length} < 基线 ${want}），建议同步下调基线以保持棘轮有效。`);
+}
+console.log(`✓ Reverse coverage check passed: ${uncovered.length} uncovered ≤ baseline ${want}.`);

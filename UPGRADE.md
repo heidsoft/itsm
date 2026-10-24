@@ -3498,6 +3498,69 @@ cd itsm-backend && go test ./dto/... ./service/cloud/... ./handlers/cmdb/... \
 go run ./cmd/authz-gen
 ```
 
+### 1.94 云与发现能力接入 `itsm-cli` / `itsm-mcp`（2026-10-25）
+
+云账号、云服务、云资源与发现流水线共 **27 条后端路由，此前一条都没有 CLI 命令**。
+网页上能用，`itsm` 与所有 MCP 客户端找不到——包括上一批刚补的
+`GET /api/v1/cmdb/discovery/providers` 能力清单。
+
+**为什么会静默这么久**
+
+`scripts/check-route-drift.mjs` 只在**一个方向**上校验：CLI 声明的每条端点都必须能在
+后端找到。断言写的是「后端是 URL 契约的唯一真源」，于是只在 CLI 引用了后端没有的路由
+时失败。**反方向从来没有检查过**：后端新增一族路由而 CLI 零覆盖，所有门禁全绿。
+
+这不是覆盖率目标没定，是**缺陷方向没被覆盖**。实测下来后端 932 条路由里 CLI 只覆盖
+301 条（68% 未覆盖），而云/发现这一族是 27 / 27 全未覆盖。
+
+**本次接入**
+
+新增 `cloud.*` 命令域（`src/agent/commands/cloud.ts`，27 条）：
+
+| 组 | 命令 | 说明 |
+|---|---|---|
+| 能力清单 | `cloud.providers`、`cloud.discovery.health` | 厂商发现能力矩阵与流水线健康 |
+| 云账号 | `cloud.accounts.{list,get,create,update,delete}` | 不分页，选择器数据源 |
+| 云服务 | `cloud.services.{list,get,create,update,delete}` | 同上 |
+| 云资源 | `cloud.resources.{list,get,create,update,delete}` | 分页，六个过滤器 |
+| 发现来源 | `cloud.discovery.sources.{list,create}` | |
+| 发现任务 | `cloud.discovery.jobs.{list,get,create,cancel,retry}` | |
+| 发现结果 | `cloud.discovery.results.{list,apply,reject}` | |
+
+MCP 精选工具 +4：`itsm_cloud_providers`、`itsm_cloud_accounts_list`、
+`itsm_cloud_resources_list`、`itsm_discovery_jobs_list`；`itsm_discover` 补中文同义词
+（云 / 多云 / 云厂商 / 云账号 / 云资源 / 发现 / 厂商），否则用中文查「云」一条都命中不了。
+
+**风险分级按语义而非动词**
+
+`deriveRisk` 是从动词名推的（`delete|create|update|…`）。两个命令会因此分级错误，
+已显式声明：`cloud.discovery.jobs.retry`（`retry` 不在词表里 → 会被推导成 normal，
+但它会新建任务）与 `cloud.discovery.results.apply`（`apply` 同理，而它**会写 CMDB**）。
+三个 `delete` 与 `jobs.cancel` 保持 high-risk，走 `--yes` 门。
+
+**反向覆盖检查（棘轮）**
+
+`check-route-drift.mjs` 增加第四节：统计后端有、CLI 没有的路由，与
+`scripts/route-coverage-baseline.txt` 比对，语义与门禁 C.6.4 一致——
+
+- `current > baseline` → **FAIL**（必须在同一 commit 上调基线并写明理由）
+- `current <= baseline` → PASS（下降是好事，提示同步下调）
+
+本次 632 → **605**。目标不是 100% 覆盖：存量缺口（bpmn / ai / dashboard /
+email-intake 等）是产品决策，不是构建门禁。要拦的是**静默回退**——新增后端路由必须
+同时接入 CLI。
+
+计数口径与脚本完全一致（后端从 `router/` 与 `handlers/` 静态扫描，CLI 取
+`dist/agent/registry.js`）。该口径是启发式的、含噪声，但是确定性的，作为棘轮有效。
+**上调前必须按脚本口径实测**，不要凭直觉改数——这与 C.6.4 上踩过的坑是同一类。
+
+已反向验证：把基线从 605 调到 604，检查立刻变红并给出未覆盖清单。
+
+```bash
+cd itsm-cli && npm run check     # typecheck + enums + 双向漂移 + flags/positionals 审计 + 73 项协议测试
+node scripts/check-route-drift.mjs
+```
+
 ## 2. 环境变量变更
 
 本次升级**移除了多个"幽灵配置项"**（在示例文件中声明但代码/Compose 从不读取，用户配置了也不生效），并修正了一个 Grafana 密码安全缺陷。

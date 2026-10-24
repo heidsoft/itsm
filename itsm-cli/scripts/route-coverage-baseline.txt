@@ -1,0 +1,24 @@
+# CLI 路由覆盖率棘轮基线（check-route-drift.mjs 反向检查）
+#
+# 语义：这是**上限**，只允许下降，不允许无声明增长。
+#   current > baseline  -> FAIL（必须在同一个 commit 里显式上调基线并说明理由）
+#   current <= baseline -> PASS（下降是好事，不会失败）
+#
+# 为什么要有反向检查：正向检查只在「CLI 引用了后端没有的路由」时失败，反方向
+# 从未被校验。结果是一整族后端能力可以带着零 CLI 覆盖率上线而所有门禁全绿——
+# 云/发现（cloud accounts/services/resources + discovery sources/jobs/results/
+# providers/health，共 27 条路由）就是这么静默的：网页上能用，`itsm` 与所有
+# MCP 客户端找不到。
+#
+# 目标不是 100% 覆盖（存量缺口是产品决策，不是构建门禁），而是**不许静默回退**：
+# 新增后端路由必须同时接入 CLI 命令，否则本检查变红。
+#
+# 计数口径：与 scripts/check-route-drift.mjs 完全一致——后端从 itsm-backend/router
+# 与 itsm-backend/handlers 两个目录静态扫描（变量→分组前缀链式解析），CLI 侧取
+# dist/agent/registry.js 里每条命令声明的 endpoints（`:param` 归一为 `{}`）。
+# 该口径是启发式的，会有噪声（handlers 目录下非路由注册的误报），但它是确定性的，
+# 所以作为棘轮有效。**上调前必须按脚本口径实测，不要凭直觉改数。**
+#
+# 格式：key=value  # 说明
+
+uncovered=605  # 2026-10-25 基线建立：接入 cloud.* 27 条命令（云账号/云服务/云资源各 5 条 + 发现来源 2 条 + 发现任务 5 条 + 发现结果 3 条 + providers/health 各 1 条），未覆盖由 632 降至 605，云/发现族归零。存量缺口（bpmn / ai / dashboard / email-intake 等）属既有未接入面，不作为本次目标。

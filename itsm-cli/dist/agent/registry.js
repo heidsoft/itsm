@@ -8,6 +8,7 @@ import { changeCommands } from './commands/change.js';
 import { releaseCommands } from './commands/release.js';
 import { serviceCatalogCommands } from './commands/service-catalog.js';
 import { cmdbCommands } from './commands/cmdb.js';
+import { cloudCommands } from './commands/cloud.js';
 import { knowledgeCommands } from './commands/knowledge.js';
 import { slaCommands } from './commands/sla.js';
 import { workflowCommands } from './commands/workflow.js';
@@ -33,6 +34,7 @@ function buildRegistry() {
         ...releaseCommands(),
         ...serviceCatalogCommands(),
         ...cmdbCommands(),
+        ...cloudCommands(),
         ...knowledgeCommands(),
         ...slaCommands(),
         ...workflowCommands(),

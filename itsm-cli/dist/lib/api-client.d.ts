@@ -283,6 +283,43 @@ export declare class ApiClient {
     getCMDBReconciliation(params?: Record<string, string | number | boolean | undefined>): Promise<unknown>;
     batchUpdateCIs(ids: number[], data: unknown): Promise<unknown>;
     batchUpdateCILifecycle(ids: number[], data: unknown): Promise<unknown>;
+    listCloudProviders(): Promise<unknown>;
+    getDiscoveryHealth(): Promise<unknown>;
+    listCloudAccounts(params?: {
+        provider?: string;
+    }): Promise<unknown>;
+    getCloudAccount(id: number | string): Promise<unknown>;
+    createCloudAccount(data: unknown): Promise<unknown>;
+    updateCloudAccount(id: number | string, data: unknown): Promise<unknown>;
+    deleteCloudAccount(id: number | string): Promise<void>;
+    listCloudServices(params?: {
+        provider?: string;
+    }): Promise<unknown>;
+    getCloudService(id: number | string): Promise<unknown>;
+    createCloudService(data: unknown): Promise<unknown>;
+    updateCloudService(id: number | string, data: unknown): Promise<unknown>;
+    deleteCloudService(id: number | string): Promise<void>;
+    listCloudResources(params?: Record<string, string | number | boolean | undefined>): Promise<unknown>;
+    getCloudResource(id: number | string): Promise<unknown>;
+    createCloudResource(data: unknown): Promise<unknown>;
+    updateCloudResource(id: number | string, data: unknown): Promise<unknown>;
+    deleteCloudResource(id: number | string): Promise<void>;
+    listDiscoverySources(): Promise<unknown>;
+    createDiscoverySource(data: unknown): Promise<unknown>;
+    listDiscoveryJobs(params?: {
+        status?: string;
+        page?: number;
+        pageSize?: number;
+    }): Promise<unknown>;
+    getDiscoveryJob(id: number | string): Promise<unknown>;
+    createDiscoveryJob(data: unknown): Promise<unknown>;
+    cancelDiscoveryJob(id: number | string): Promise<unknown>;
+    retryDiscoveryJob(id: number | string): Promise<unknown>;
+    listDiscoveryResults(params?: PaginationParams & {
+        jobId?: number;
+    }): Promise<unknown>;
+    applyDiscoveryResult(id: number | string): Promise<unknown>;
+    rejectDiscoveryResult(id: number | string, reason?: string): Promise<unknown>;
     listKnowledge(params?: PaginationParams & {
         category?: string;
     }): Promise<KnowledgeListResponse>;

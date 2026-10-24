@@ -126,6 +126,30 @@ const CURATED = [
         description: '从某个配置项出发做有界关系遍历，回答“改动它会影响谁”。变更风险评估的核心依据。',
     },
     {
+        command: 'cloud.providers',
+        tool: 'itsm_cloud_providers',
+        title: '云厂商发现能力清单',
+        description: '列出全部云厂商及其自动发现能力（notImplemented=true 表示可以建账号、手工登记资源，但不会自动发现）。建云账号前先查，避免为不支持的厂商配半天凭据。',
+    },
+    {
+        command: 'cloud.accounts.list',
+        tool: 'itsm_cloud_accounts_list',
+        title: '云账号列表',
+        description: '列出云账号（不分页，是 CI 表单与云资源页的选择器数据源）。可按 provider 过滤。',
+    },
+    {
+        command: 'cloud.resources.list',
+        tool: 'itsm_cloud_resources_list',
+        title: '云资源列表',
+        description: '分页列出云资源，可按 provider / cloudAccountId / serviceId / region / status / search 过滤。',
+    },
+    {
+        command: 'cloud.discovery.jobs.list',
+        tool: 'itsm_discovery_jobs_list',
+        title: '发现任务列表',
+        description: '列出云发现任务，可按 status 过滤。查某次发现的进度与失败原因用 itsm_call 调 cloud.discovery.jobs.get。',
+    },
+    {
         command: 'knowledge.search',
         tool: 'itsm_knowledge_search',
         title: '知识库检索',
@@ -159,7 +183,7 @@ const META_TOOLS = [
                 query: { type: 'string', description: '关键字，匹配命令名与摘要（中英文均可），如 审批 / approval / 影响 / impact' },
                 domain: {
                     type: 'string',
-                    description: '限定域，如 ticket / incident / change / cmdb / knowledge / sla / workflow / admin / request / release / problem',
+                    description: '限定域，如 ticket / incident / change / cmdb / cloud / knowledge / sla / workflow / admin / request / release / problem',
                 },
                 limit: { type: 'integer', minimum: 1, maximum: 100, description: '最多返回多少条，默认 25' },
             },
@@ -394,6 +418,7 @@ const ZH_SYNONYMS = [
     [/发布|上线/, ['release']],
     [/服务请求|申请|目录/, ['request', 'catalog']],
     [/配置项|资产|拓扑|关系/, ['cmdb', 'ci ', 'topology', 'relationship']],
+    [/云|多云|云厂商|云账号|云资源|发现|厂商/, ['cloud', 'provider', 'discovery']],
     [/知识|文章|文档库|faq/i, ['knowledge', 'article']],
     [/sla|服务水平|时效|违约|合规/i, ['sla', 'violation', 'compliance']],
     [/工作流|流程|待办|任务|会签/, ['workflow', 'process', 'task', 'approv']],

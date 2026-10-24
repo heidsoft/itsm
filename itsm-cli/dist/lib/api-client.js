@@ -1042,6 +1042,106 @@ export class ApiClient {
     async batchUpdateCILifecycle(ids, data) {
         return request(this.baseURL, 'PUT', '/cmdb/cis/batch/lifecycle', { ids, ...data });
     }
+    // ---------- Cloud / discovery ----------
+    //
+    // Cloud accounts / services / resources and the discovery pipeline live under
+    // /cmdb/cloud-* and /cmdb/discovery/*. They were shipped with no CLI reach
+    // (the drift check only fired when the CLI named a route the backend lacked,
+    // never the reverse), so a whole product family was invisible to agents.
+    async listCloudProviders() {
+        return request(this.baseURL, 'GET', '/cmdb/discovery/providers');
+    }
+    async getDiscoveryHealth() {
+        return request(this.baseURL, 'GET', '/cmdb/discovery/health');
+    }
+    // Accounts and services are *selector* endpoints: not paginated, returned whole
+    // as the data source for CI-form cascades. Passing page/pageSize would be a
+    // no-op at best and misleading at worst, so they are not accepted here.
+    async listCloudAccounts(params) {
+        return request(this.baseURL, 'GET', '/cmdb/cloud-accounts', undefined, params);
+    }
+    async getCloudAccount(id) {
+        return request(this.baseURL, 'GET', `/cmdb/cloud-accounts/${id}`);
+    }
+    async createCloudAccount(data) {
+        return request(this.baseURL, 'POST', '/cmdb/cloud-accounts', data);
+    }
+    async updateCloudAccount(id, data) {
+        return request(this.baseURL, 'PUT', `/cmdb/cloud-accounts/${id}`, data);
+    }
+    async deleteCloudAccount(id) {
+        await request(this.baseURL, 'DELETE', `/cmdb/cloud-accounts/${id}`);
+    }
+    async listCloudServices(params) {
+        return request(this.baseURL, 'GET', '/cmdb/cloud-services', undefined, params);
+    }
+    async getCloudService(id) {
+        return request(this.baseURL, 'GET', `/cmdb/cloud-services/${id}`);
+    }
+    async createCloudService(data) {
+        return request(this.baseURL, 'POST', '/cmdb/cloud-services', data);
+    }
+    async updateCloudService(id, data) {
+        return request(this.baseURL, 'PUT', `/cmdb/cloud-services/${id}`, data);
+    }
+    async deleteCloudService(id) {
+        await request(this.baseURL, 'DELETE', `/cmdb/cloud-services/${id}`);
+    }
+    async listCloudResources(params) {
+        return request(this.baseURL, 'GET', '/cmdb/cloud-resources', undefined, params);
+    }
+    async getCloudResource(id) {
+        return request(this.baseURL, 'GET', `/cmdb/cloud-resources/${id}`);
+    }
+    async createCloudResource(data) {
+        return request(this.baseURL, 'POST', '/cmdb/cloud-resources', data);
+    }
+    async updateCloudResource(id, data) {
+        return request(this.baseURL, 'PUT', `/cmdb/cloud-resources/${id}`, data);
+    }
+    async deleteCloudResource(id) {
+        await request(this.baseURL, 'DELETE', `/cmdb/cloud-resources/${id}`);
+    }
+    async listDiscoverySources() {
+        return request(this.baseURL, 'GET', '/cmdb/discovery/sources');
+    }
+    async createDiscoverySource(data) {
+        return request(this.baseURL, 'POST', '/cmdb/discovery/sources', data);
+    }
+    async listDiscoveryJobs(params) {
+        return request(this.baseURL, 'GET', '/cmdb/discovery/jobs', undefined, params);
+    }
+    async getDiscoveryJob(id) {
+        return request(this.baseURL, 'GET', `/cmdb/discovery/jobs/${id}`);
+    }
+    async createDiscoveryJob(data) {
+        return request(this.baseURL, 'POST', '/cmdb/discovery/jobs', data);
+    }
+    async cancelDiscoveryJob(id) {
+        return request(this.baseURL, 'POST', `/cmdb/discovery/jobs/${id}/cancel`, {});
+    }
+    async retryDiscoveryJob(id) {
+        return request(this.baseURL, 'POST', `/cmdb/discovery/jobs/${id}/retry`, {});
+    }
+    // `job_id` (snake) is what the handler reads off the query string; the DTO
+    // field is an int, so an absent/unparseable value must be omitted rather than
+    // sent as 0 — 0 would read as "filter by job 0" and return nothing.
+    async listDiscoveryResults(params) {
+        const query = {};
+        if (params?.jobId !== undefined)
+            query['job_id'] = params.jobId;
+        if (params?.page !== undefined)
+            query['page'] = params.page;
+        if (params?.pageSize !== undefined)
+            query['pageSize'] = params.pageSize;
+        return request(this.baseURL, 'GET', '/cmdb/discovery/results', undefined, query);
+    }
+    async applyDiscoveryResult(id) {
+        return request(this.baseURL, 'POST', `/cmdb/discovery/results/${id}/apply`, {});
+    }
+    async rejectDiscoveryResult(id, reason) {
+        return request(this.baseURL, 'POST', `/cmdb/discovery/results/${id}/reject`, reason ? { reason } : {});
+    }
     // ---------- Knowledge ----------
     async listKnowledge(params) {
         return request(this.baseURL, 'GET', '/knowledge/articles', undefined, params);
