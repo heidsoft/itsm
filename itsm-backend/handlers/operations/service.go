@@ -218,15 +218,18 @@ func (s *Service) BulkReplay(ctx context.Context, filter BulkFilter, actor Actor
 	return s.bulkTransition(ctx, filter, actor, true)
 }
 
-// BulkCancel 强制撤离处理中或挂起的命令；leaseExpired=true 时仅取消 lease 过期
-// 且未被 heartbeat 续约的 processing 命令，避免误杀正在跑的命令。
+// BulkCancel 强制撤离处理中、挂起或已死信的命令；leaseExpired=true 时仅取消
+// lease 过期且未被 heartbeat 续约的 processing 命令，避免误杀正在跑的命令。
+// dead_letter 允许直接取消：死信的本义是「重试耗尽待人工裁决」，取消正是其
+// 自然终态——否则清理死信必须先 replay 回 pending（worker 可能在两跳之间
+// 真的重新执行一次）再 cancel，动线断裂且引入不必要的执行风险。
 func (s *Service) BulkCancel(ctx context.Context, filter BulkFilter, actor Actor) (*BulkResult, error) {
 	if err := filter.validate(); err != nil {
 		return nil, err
 	}
 	if filter.Status == "" {
 		filter.Status = commandbus.StatusProcessing
-	} else if filter.Status != commandbus.StatusProcessing && filter.Status != commandbus.StatusPending {
+	} else if filter.Status != commandbus.StatusProcessing && filter.Status != commandbus.StatusPending && filter.Status != commandbus.StatusDeadLetter {
 		return nil, ErrInvalidState
 	}
 	return s.bulkTransition(ctx, filter, actor, false)
@@ -250,7 +253,9 @@ func (s *Service) transition(ctx context.Context, tenantID, commandID int, actor
 	if replay && command.Status != commandbus.StatusDeadLetter && command.Status != StatusCancelled {
 		return nil, ErrInvalidState
 	}
-	if !replay && command.Status != commandbus.StatusPending && command.Status != commandbus.StatusProcessing {
+	// cancel 允许 pending/processing/dead_letter：死信是「重试耗尽待人工裁决」，
+	// 取消是其自然终态（与 BulkCancel 的放行一致）；终态 succeeded/failed/cancelled 仍拒绝。
+	if !replay && command.Status != commandbus.StatusPending && command.Status != commandbus.StatusProcessing && command.Status != commandbus.StatusDeadLetter {
 		return nil, ErrInvalidState
 	}
 	update := tx.OperationalCommand.UpdateOneID(command.ID).

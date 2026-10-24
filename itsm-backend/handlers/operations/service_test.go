@@ -274,3 +274,71 @@ func TestSummaryExposesStuckLeaseAndFailureRate(t *testing.T) {
 	require.Equal(t, 1, bpmnRow.FailedRecent)
 	require.InDelta(t, 0.5, bpmnRow.FailureRate, 0.001)
 }
+
+// 死信的本义是「重试耗尽待人工裁决」，取消正是其自然终态。此前 cancel 只放行
+// pending/processing，清理死信必须先 replay 回 pending（worker 可能在两跳之间
+// 真的重新执行一次）再 cancel——prod 257 条死信归因处置时实测被 409 挡住。
+func TestCancelAllowsDeadLetterAsTerminalDecision(t *testing.T) {
+	client := newOperationsTestClient(t)
+	command := createCommand(t, client, 1, commandbus.StatusDeadLetter)
+	_, err := client.OperationalCommand.UpdateOneID(command.ID).
+		SetAttempt(8).SetLastError("load notification ticket: ent: ticket not found").
+		SetCompletedAt(time.Now()).Save(context.Background())
+	require.NoError(t, err)
+	service := NewService(client)
+	now := time.Now().Add(time.Minute)
+	service.now = func() time.Time { return now }
+
+	actor := Actor{UserID: 9, Path: "/api/v1/admin/operations/commands/1/cancel", Method: "POST"}
+	got, err := service.Cancel(context.Background(), 1, command.ID, actor)
+	require.NoError(t, err)
+	require.Equal(t, StatusCancelled, got.Status)
+	require.Equal(t, command.FencingToken+1, got.FencingToken)
+	require.Empty(t, got.LeaseOwner)
+
+	audit, err := client.AuditLog.Query().Where(
+		auditlog.TenantIDEQ(1), auditlog.ActionEQ("cancel"),
+	).Only(context.Background())
+	require.NoError(t, err)
+	require.Contains(t, *audit.RequestBody, "previousStatus")
+
+	// 终态仍然拒绝：succeeded 不能被 cancel
+	_, err = service.Cancel(context.Background(), 1, createCommand(t, client, 1, commandbus.StatusSucceeded).ID, actor)
+	require.True(t, errors.Is(err, ErrInvalidState))
+}
+
+// BulkCancel 按 dead_letter 过滤批量取消（孤儿命令批量清账的主通道），并保持
+// 既有守卫：非法状态（succeeded）仍拒绝。
+func TestBulkCancelAllowsDeadLetterFilter(t *testing.T) {
+	client := newOperationsTestClient(t)
+	orphan := createCommand(t, client, 1, commandbus.StatusDeadLetter)
+	_, err := client.OperationalCommand.UpdateOneID(orphan.ID).
+		SetCommandType("notification.deliver").Save(context.Background())
+	require.NoError(t, err)
+	other := createCommandAt(t, client, 1, commandbus.StatusDeadLetter, 11)
+	_, err = client.OperationalCommand.UpdateOneID(other.ID).
+		SetCommandType("workflow.start").Save(context.Background())
+	require.NoError(t, err)
+	service := NewService(client)
+
+	result, err := service.BulkCancel(context.Background(), BulkFilter{
+		TenantID: 1, Status: commandbus.StatusDeadLetter, CommandType: "notification.deliver", PageSize: 100,
+	}, Actor{UserID: 9, Path: "/api/v1/admin/operations/commands/bulk-cancel", Method: "POST"})
+	require.NoError(t, err)
+	require.Equal(t, 1, result.Updated)
+	require.Equal(t, []int{orphan.ID}, result.MatchedIDs)
+
+	got, err := client.OperationalCommand.Get(context.Background(), orphan.ID)
+	require.NoError(t, err)
+	require.Equal(t, StatusCancelled, got.Status)
+	// 不同类型的死信不受影响
+	untouched, err := client.OperationalCommand.Get(context.Background(), other.ID)
+	require.NoError(t, err)
+	require.Equal(t, commandbus.StatusDeadLetter, untouched.Status)
+
+	// 非法状态守卫仍在：succeeded 过滤拒绝
+	_, err = service.BulkCancel(context.Background(), BulkFilter{
+		TenantID: 1, Status: commandbus.StatusSucceeded, PageSize: 100,
+	}, Actor{})
+	require.True(t, errors.Is(err, ErrInvalidState))
+}
