@@ -115,6 +115,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 
+### Fixed
+
+- **聚合删除不再制造死信：命令消费端对 not found 幂等短路（2026-10-24）**：根治死信归因报告（`output/dead-letter-triage-2026-10-24.md`）暴露的缺陷①。worker 在 `fail()` 中同时识别 `*ent.NotFoundError` 与 `*common.AppError(ErrCodeNotFound)`，目标聚合已删除时直接置 `cancelled`（终态）而非走满 8 次重试进 `dead_letter`。耗尽重试的真实错误仍进 dead_letter（值得告警），瞬时错误仍 pending 重试。回归锁 `internal/commandbus/commandbus_test.go` 3 例。UPGRADE §1.85。
+
+
 ## [1.6.20] - 2026-10-23
 
 ### Fixed

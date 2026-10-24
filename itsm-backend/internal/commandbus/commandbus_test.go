@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"itsm-backend/common"
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
 	"itsm-backend/ent/operationalcommand"
@@ -116,9 +117,9 @@ func TestEnqueueRejectsDuplicateIdempotencyKey(t *testing.T) {
 	require.True(t, ent.IsConstraintError(err))
 }
 
-// TestWorkerDeadLettersNotFoundImmediately 资源不存在（聚合已删除）属于永久失败，
-// worker 必须立即 dead_letter，不得无谓重试占用调度轮次。
-func TestWorkerDeadLettersNotFoundImmediately(t *testing.T) {
+// TestWorkerCancelsGoneAggregateImmediately 资源不存在（聚合已删除）属于永久失败，
+// worker 必须立即 cancelled（而非 dead_letter），不得无谓重试占用调度轮次，也不得污染死信队列。
+func TestWorkerCancelsGoneAggregateImmediately(t *testing.T) {
 	client := newCommandTestClient(t)
 	ctx := context.Background()
 	registry := NewRegistry()
@@ -140,6 +141,53 @@ func TestWorkerDeadLettersNotFoundImmediately(t *testing.T) {
 
 	stored, err := client.OperationalCommand.Get(ctx, cmd.ID)
 	require.NoError(t, err)
-	require.Equal(t, StatusDeadLetter, stored.Status, "not-found 应一次失败即 dead_letter")
+	require.Equal(t, StatusCancelled, stored.Status, "聚合已删除应一次失败即 cancelled")
 	require.Equal(t, 1, calls, "不得重试")
+}
+
+// TestWorkerCancelsCommonAppErrorNotFoundImmediately 领域层 common.NewNotFoundError
+// 返回的 *common.AppError 也必须被识别为「聚合已删除」，直接 cancelled。
+// 这是 prod 死信 208 条孤儿命令的真实错误类型（"ticket not found" 等），
+// 修复前因未被 errors.As(*ent.NotFoundError) 识别而走满 8 次重试才进死信。
+func TestWorkerCancelsCommonAppErrorNotFoundImmediately(t *testing.T) {
+	client := newCommandTestClient(t)
+	ctx := context.Background()
+	registry := NewRegistry()
+	calls := 0
+	require.NoError(t, registry.Register(CommandDeliverNotification, func(_ context.Context, _ *ent.OperationalCommand) error {
+		calls++
+		return common.NewNotFoundError("ticket")
+	}))
+	cmd, err := Enqueue(ctx, client, EnqueueRequest{
+		TenantID: 1, CommandType: CommandDeliverNotification,
+		AggregateType: "ticket", AggregateID: 404, IdempotencyKey: "ticket:404:notify",
+	})
+	require.NoError(t, err)
+
+	worker := NewWorker(client, registry, zap.NewNop().Sugar(), "worker-a")
+	processed, err := worker.RunOnce(ctx)
+	require.NoError(t, err)
+	require.True(t, processed)
+
+	stored, err := client.OperationalCommand.Get(ctx, cmd.ID)
+	require.NoError(t, err)
+	require.Equal(t, StatusCancelled, stored.Status, "*common.AppError(NotFound) 应直接 cancelled")
+	require.Equal(t, 1, calls, "不得重试")
+
+	// 对照：普通瞬时错误仍应重试（pending），而非 cancelled / dead_letter。
+	registry2 := NewRegistry()
+	require.NoError(t, registry2.Register("transient.fail", func(context.Context, *ent.OperationalCommand) error {
+		return errors.New("downstream timeout")
+	}))
+	cmd2, err := Enqueue(ctx, client, EnqueueRequest{
+		TenantID: 2, CommandType: "transient.fail",
+		AggregateType: "ticket", AggregateID: 5, IdempotencyKey: "ticket:5:transient", MaxAttempts: 3,
+	})
+	require.NoError(t, err)
+	worker2 := NewWorker(client, registry2, zap.NewNop().Sugar(), "worker-b")
+	_, err = worker2.RunOnce(ctx)
+	require.NoError(t, err)
+	stored2, err := client.OperationalCommand.Get(ctx, cmd2.ID)
+	require.NoError(t, err)
+	require.Equal(t, StatusPending, stored2.Status, "瞬时错误应继续重试（pending）")
 }

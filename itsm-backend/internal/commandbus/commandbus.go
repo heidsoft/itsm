@@ -10,6 +10,7 @@ import (
 	"sync"
 	"time"
 
+	"itsm-backend/common"
 	"itsm-backend/common/tenantctx"
 	"itsm-backend/ent"
 	"itsm-backend/ent/operationalcommand"
@@ -22,6 +23,7 @@ const (
 	StatusProcessing = "processing"
 	StatusSucceeded  = "succeeded"
 	StatusDeadLetter = "dead_letter"
+	StatusCancelled  = "cancelled"
 
 	CommandStartBPMN               = "workflow.start"
 	CommandExecuteBPMNServiceTask  = "workflow.service_task.execute"
@@ -335,11 +337,16 @@ func (w *Worker) heartbeat(ctx context.Context, cmd *ent.OperationalCommand, can
 
 func (w *Worker) fail(ctx context.Context, cmd *ent.OperationalCommand, cause error) error {
 	status := StatusPending
-	// 资源不存在（如聚合已被删除）是永久性失败，重试只会产生噪音并拖到 dead_letter。
-	// outbox 模式下命令与业务同事务写入，执行时聚合不可见即意味着已删除，重试无意义。
-	var notFound *ent.NotFoundError
-	if cmd.Attempt >= cmd.MaxAttempts || errors.As(cause, &notFound) {
+	// 两类终态分支：
+	//  1) 耗尽重试次数（Attempt >= MaxAttempts）：真实的瞬时/配置错误反复失败，仍进 dead_letter
+	//     供人工排查——这部分是「值得告警」的死信。
+	//  2) 目标聚合已不存在（被删除）：outbox 模式下命令与业务同事务写入，执行时聚合不可见即意味着
+	//     已删除，重试毫无意义。这类命令直接置为 cancelled（终态、与人工取消同义），不再污染
+	//     死信队列、不再触发死信告警（prod 曾因此一次性制造 200+ 条死信）。
+	if cmd.Attempt >= cmd.MaxAttempts {
 		status = StatusDeadLetter
+	} else if isAggregateGone(cause) {
+		status = StatusCancelled
 	}
 	delay := time.Duration(math.Min(math.Pow(2, float64(cmd.Attempt)), 300)) * time.Second
 	update := w.client.OperationalCommand.UpdateOneID(cmd.ID).
@@ -372,4 +379,21 @@ func truncateError(err error) string {
 		return message[:2000]
 	}
 	return message
+}
+
+// isAggregateGone 判断命令失败是否因为目标聚合已不存在（被删除）。
+// 命中即视为命令已无意义，worker 应直接置为 cancelled 而非 dead_letter。
+// 覆盖两类错误：ent 原生 *ent.NotFoundError，以及领域层 common.NewNotFoundError
+// 返回的 *common.AppError（ErrCodeNotFound）——后者是 handler 在聚合缺失时的实际返回，
+// 之前因未被 errors.As 识别而走满 8 次重试才进死信，正是缺陷①的根因。
+func isAggregateGone(err error) bool {
+	var notFound *ent.NotFoundError
+	if errors.As(err, &notFound) {
+		return true
+	}
+	var appErr *common.AppError
+	if errors.As(err, &appErr) && appErr.Code == common.ErrCodeNotFound {
+		return true
+	}
+	return false
 }

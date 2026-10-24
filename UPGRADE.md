@@ -3070,3 +3070,28 @@ A: 该目标已重命名为安全的 `make db-reset`（见 3）。
 
 **Q: MinIO 启动失败？**
 A: 常规部署不需要 MinIO。仅在使用对象存储时加 `--profile storage`（见 4.2）。
+
+### 1.85 聚合删除不再制造死信：命令消费端对 not found 幂等短路（2026-10-24，行为变更：此前进 dead_letter）
+
+缺陷①根治：删除工单/变更/用户等聚合时，已入队的 `notification.deliver` / `workflow.start` / `rules`
+命令不再走满 8 次重试才进死信——worker 在 `fail()` 里识别「目标聚合已不存在」，直接把命令置为
+`cancelled`（终态、与人工取消同义），既不污染死信队列、也不触发死信告警。
+
+- **识别两类 not found**：`*ent.NotFoundError`（ent 原生）与领域层 `common.NewNotFoundError`
+  返回的 `*common.AppError`（`ErrCodeNotFound`）——后者是 handler 在聚合缺失时的实际返回
+  （prod 死信 208 条孤儿命令的 `ticket not found` / `user not found` 等），修复前因未被
+  `errors.As(*ent.NotFoundError)` 识别而走满重试。见 `internal/commandbus/commandbus.go` 的
+  `isAggregateGone`。
+- **边界不变**：耗尽重试次数（`Attempt >= MaxAttempts`）的真实瞬时/配置错误仍进 `dead_letter`
+  （这部分才是「值得告警」的死信）；普通瞬时错误仍 `pending` 重试。只有「聚合已删除」这一类改 `cancelled`。
+- **回归锁**：`internal/commandbus/commandbus_test.go` 3 例——ent NotFound→cancelled、
+  common.AppError NotFound→cancelled、对照瞬时错误仍 pending（重试边界无误）。
+  `go test ./internal/commandbus/` 全绿。
+- **对照 §1.82**：死信取消已放行 `dead_letter`；本批让「聚合删除」这一类根本不再产生死信。两者配合，
+  未来清理死信只需处理真正异常的命令。
+
+**验证**
+
+```bash
+cd itsm-backend && go test -count=1 ./internal/commandbus/
+```
