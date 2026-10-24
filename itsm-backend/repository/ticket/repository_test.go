@@ -1002,21 +1002,71 @@ func TestRepository_FindOverduePage(t *testing.T) {
 		Save(fx.ctx)
 	require.NoError(t, err)
 
-	page1, total, err := fx.repo.FindOverduePage(fx.ctx, fx.tenant.ID, 1, 2)
+	// DataScopeAll 是既有分页口径的对照：不加行级过滤，行为与修复前一致。
+	page1, total, err := fx.repo.FindOverduePage(fx.ctx, fx.tenant.ID, 1, 2, datascope.DataScopeAll, 0)
 	require.NoError(t, err)
 	assert.Equal(t, 3, total, "total 必须是未截断的逾期总数")
 	require.Len(t, page1, 2)
 	assert.Equal(t, created[0], page1[0].ID, "created_at 相同时按 ID 稳定排序")
 	assert.Equal(t, created[1], page1[1].ID)
 
-	page2, total2, err := fx.repo.FindOverduePage(fx.ctx, fx.tenant.ID, 2, 2)
+	page2, total2, err := fx.repo.FindOverduePage(fx.ctx, fx.tenant.ID, 2, 2, datascope.DataScopeAll, 0)
 	require.NoError(t, err)
 	assert.Equal(t, 3, total2)
 	require.Len(t, page2, 1)
 	assert.Equal(t, created[2], page2[0].ID)
 
-	empty, total3, err := fx.repo.FindOverduePage(fx.ctx, fx.tenant.ID, 3, 2)
+	empty, total3, err := fx.repo.FindOverduePage(fx.ctx, fx.tenant.ID, 3, 2, datascope.DataScopeAll, 0)
 	require.NoError(t, err)
 	assert.Equal(t, 3, total3)
 	assert.Empty(t, empty)
+}
+
+// TestRepository_FindOverduePage_DataScope 锁定逾期列表的行级权限：
+// 逾期列表是工单列表的一个过滤视图，普通角色只能看到本人创建/受理的逾期工单，
+// 不得退化为全租户可读（此前 /tickets/overdue 绕过 DataScope）。
+func TestRepository_FindOverduePage_DataScope(t *testing.T) {
+	fx := newRepoFixture(t)
+	defer fx.client.Close()
+
+	// 三张逾期工单全部由 fx.user 创建。
+	for i := 0; i < 3; i++ {
+		tkt, err := fx.repo.Create(fx.ctx, &CreateParams{
+			Title:       fmt.Sprintf("overdue scoped %d", i),
+			Priority:    PriorityMedium,
+			Type:        TypeIncident,
+			RequesterID: fx.user.ID,
+		}, fx.tenant.ID)
+		require.NoError(t, err)
+
+		_, err = fx.client.SLAState.Create().
+			SetTenantID(fx.tenant.ID).
+			SetAggregateType("ticket").
+			SetAggregateID(tkt.ID).
+			SetResolutionDeadline(time.Now().Add(-time.Hour)).
+			SetStatus("active").
+			Save(fx.ctx)
+		require.NoError(t, err)
+	}
+
+	// 本人视角：三张均可见（创建人命中 OwnedOrAssigned）。
+	mine, mineTotal, err := fx.repo.FindOverduePage(fx.ctx, fx.tenant.ID, 1, 10,
+		datascope.DataScopeOwnedOrAssigned, fx.user.ID)
+	require.NoError(t, err)
+	assert.Equal(t, 3, mineTotal)
+	assert.Len(t, mine, 3)
+
+	// 同租户无关人员视角：一张都看不到。
+	other, otherTotal, err := fx.repo.FindOverduePage(fx.ctx, fx.tenant.ID, 1, 10,
+		datascope.DataScopeOwnedOrAssigned, fx.user.ID+9999)
+	require.NoError(t, err)
+	assert.Equal(t, 0, otherTotal)
+	assert.Empty(t, other)
+
+	// 身份缺失（viewerID<=0）时 fail-closed 收窄为空集，而不是退回全量。
+	anon, anonTotal, err := fx.repo.FindOverduePage(fx.ctx, fx.tenant.ID, 1, 10,
+		datascope.DataScopeOwnedOrAssigned, 0)
+	require.NoError(t, err)
+	assert.Equal(t, 0, anonTotal)
+	assert.Empty(t, anon)
 }

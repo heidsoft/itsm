@@ -260,16 +260,18 @@ func (r *EntRepository) FindByAssignee(ctx context.Context, assigneeID int, tena
 	return r.toDomainList(ts), nil
 }
 
-func (r *EntRepository) FindOverdue(ctx context.Context, tenantID int, page, size int) ([]*Ticket, int, error) {
-	ts, total, err := r.repo.FindOverduePage(ctx, tenantID, page, size)
+func (r *EntRepository) FindOverdue(ctx context.Context, tenantID int, page, size int, scope datascope.DataScope, viewerID int) ([]*Ticket, int, error) {
+	ts, total, err := r.repo.FindOverduePage(ctx, tenantID, page, size, scope, viewerID)
 	if err != nil {
 		return nil, 0, err
 	}
 	return r.toDomainList(ts), total, nil
 }
 
-func (r *EntRepository) Search(ctx context.Context, keyword string, tenantID int, page, size int) ([]*Ticket, int, error) {
-	fp := &ticket.FilterParams{Keyword: keyword}
+func (r *EntRepository) Search(ctx context.Context, keyword string, tenantID int, page, size int, scope datascope.DataScope, viewerID int) ([]*Ticket, int, error) {
+	// 关键字只是多了一个过滤条件，行级范围必须与 List 一致，
+	// 否则 /tickets/search 会成为绕过 DataScope 的后门。
+	fp := &ticket.FilterParams{Keyword: keyword, DataScope: scope, CurrentUserID: viewerID}
 	result, err := r.repo.List(ctx, tenantID, fp, &base.QueryParams{Page: page, PageSize: size})
 	if err != nil {
 		return nil, 0, err

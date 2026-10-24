@@ -63,6 +63,12 @@ type mockRepository struct {
 	lastSearchSize  int
 	lastOverduePage int
 	lastOverdueSize int
+	// Search/FindOverdue 同样要落 DataScope：它们是工单列表的过滤视图，
+	// mock 忽略 ds/currentUserID 时「非管理角色读到租户全量」不会被任何测试发现。
+	lastSearchDataScope  datascope.DataScope
+	lastSearchUserID     int
+	lastOverdueDataScope datascope.DataScope
+	lastOverdueUserID    int
 }
 
 func newMockRepository() *mockRepository {
@@ -259,34 +265,63 @@ func (m *mockRepository) FindByAssignee(ctx context.Context, assigneeID int, ten
 	return out, nil
 }
 
-func (m *mockRepository) FindOverdue(ctx context.Context, tenantID int, page, size int) ([]*Ticket, int, error) {
+func (m *mockRepository) FindOverdue(ctx context.Context, tenantID int, page, size int, ds datascope.DataScope, currentUserID int) ([]*Ticket, int, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.lastOverduePage = page
 	m.lastOverdueSize = size
+	m.lastOverdueDataScope = ds
+	m.lastOverdueUserID = currentUserID
+
+	// 行级谓词与 List 一致：非全量角色只看本人创建/受理的单据，身份缺失 fail closed。
+	if ds != datascope.DataScopeAll && currentUserID <= 0 {
+		return nil, 0, nil
+	}
 
 	out := make([]*Ticket, 0, len(m.overdueIDs))
 	for _, id := range m.overdueIDs {
-		if t, ok := m.tickets[id]; ok && t.TenantID == tenantID {
-			out = append(out, t)
+		t, ok := m.tickets[id]
+		if !ok || t.TenantID != tenantID {
+			continue
 		}
+		if ds != datascope.DataScopeAll {
+			assigned := t.AssigneeID != nil && *t.AssigneeID == currentUserID
+			if t.RequesterID != currentUserID && !assigned {
+				continue
+			}
+		}
+		out = append(out, t)
 	}
 	sort.Slice(out, func(i, j int) bool { return out[i].ID < out[j].ID })
 	return pageOf(out, page, size), len(out), nil
 }
 
-func (m *mockRepository) Search(ctx context.Context, keyword string, tenantID int, page, size int) ([]*Ticket, int, error) {
+func (m *mockRepository) Search(ctx context.Context, keyword string, tenantID int, page, size int, ds datascope.DataScope, currentUserID int) ([]*Ticket, int, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.lastSearchPage = page
 	m.lastSearchSize = size
+	m.lastSearchDataScope = ds
+	m.lastSearchUserID = currentUserID
+
+	// 行级谓词与 List 一致。
+	if ds != datascope.DataScopeAll && currentUserID <= 0 {
+		return nil, 0, nil
+	}
 
 	var out []*Ticket
 	for _, t := range m.tickets {
-		if t.TenantID == tenantID {
-			if contains(t.Title, keyword) || contains(t.Description, keyword) {
-				out = append(out, t)
+		if t.TenantID != tenantID {
+			continue
+		}
+		if ds != datascope.DataScopeAll {
+			assigned := t.AssigneeID != nil && *t.AssigneeID == currentUserID
+			if t.RequesterID != currentUserID && !assigned {
+				continue
 			}
+		}
+		if contains(t.Title, keyword) || contains(t.Description, keyword) {
+			out = append(out, t)
 		}
 	}
 	sort.Slice(out, func(i, j int) bool { return out[i].ID < out[j].ID })

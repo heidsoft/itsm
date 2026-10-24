@@ -608,7 +608,10 @@ func (h *Handler) SearchTickets(c *gin.Context) {
 		return
 	}
 	pagination := common.GetPaginationFromQuery(c)
-	tickets, total, err := h.service.Search(c.Request.Context(), keyword, tenantID, pagination.Page, pagination.PageSize)
+	// 搜索沿用列表的行级数据范围（DataScope），避免 /tickets/search 成为绕权后门。
+	currentUserID := c.GetInt("user_id")
+	currentRole := c.GetString("role")
+	tickets, total, err := h.service.Search(c.Request.Context(), keyword, tenantID, pagination.Page, pagination.PageSize, currentUserID, currentRole)
 	if err != nil {
 		common.FailWithErr(c, err, "操作失败")
 		return
@@ -625,7 +628,10 @@ func (h *Handler) GetOverdueTickets(c *gin.Context) {
 		return
 	}
 	pagination := common.GetPaginationFromQuery(c)
-	tickets, total, err := h.service.GetOverdueTickets(c.Request.Context(), tenantID, pagination.Page, pagination.PageSize)
+	// 逾期列表沿用与列表相同的行级数据范围；此前缺失 DataScope，普通角色可读全租户逾期工单。
+	currentUserID := c.GetInt("user_id")
+	currentRole := c.GetString("role")
+	tickets, total, err := h.service.GetOverdueTickets(c.Request.Context(), tenantID, pagination.Page, pagination.PageSize, currentUserID, currentRole)
 	if err != nil {
 		common.FailWithErr(c, err, "操作失败")
 		return

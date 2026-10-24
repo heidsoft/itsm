@@ -352,8 +352,14 @@ func (r *EntRepository) UpdateStatusCASWithNote(ctx context.Context, id, tenantI
 func (r *EntRepository) Update(ctx context.Context, c *Change) (*Change, error) {
 	// 写路径强制租户隔离，避免越权更新跨租户变更。
 	// 注：change schema 无 deleted_at（物理删），故不附加 DeletedAtIsNil 守卫。
+	//
+	// StatusEQ 是乐观锁：change schema 没有 version 列，状态即版本号。
+	// 调用方（service.UpdateChange）把 c.Status 固定为读取时看到的当前状态，
+	// 于是这条 UPDATE 只在本行状态自读取后未变时才命中；若期间被审批推进
+	// （TransitionStatus）抢先改掉状态，affected==0，Save 返回 NotFoundError，
+	// 由 service 翻译成 409 冲突——而不是用陈旧快照把刚推进的状态静默回退。
 	update := r.client.Change.UpdateOneID(c.ID).
-		Where(change.TenantIDEQ(c.TenantID)).
+		Where(change.TenantIDEQ(c.TenantID), change.StatusEQ(change.Status(c.Status))).
 		SetTitle(c.Title).
 		SetDescription(c.Description).
 		SetJustification(c.Justification).

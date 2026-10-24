@@ -699,7 +699,11 @@ func (r *EntRepository) FindOverdue(ctx context.Context, tenantID int) ([]*Ticke
 }
 
 // FindOverduePage 查询逾期工单分页；ID 作为次序键保证翻页结果稳定。
-func (r *EntRepository) FindOverduePage(ctx context.Context, tenantID int, page, size int) ([]*Ticket, int, error) {
+//
+// scope/viewerID 与 List 使用同一套行级数据范围：逾期列表是「工单列表的一个
+// 过滤视图」，而不是一条新的读取通道。此前它只带租户+SLA 谓词，普通角色可
+// 通过 /tickets/overdue 读到全租户逾期工单，与 /tickets 列表口径直接矛盾。
+func (r *EntRepository) FindOverduePage(ctx context.Context, tenantID int, page, size int, scope datascope.DataScope, viewerID int) ([]*Ticket, int, error) {
 	preds, err := r.overdueTicketPredicates(ctx, tenantID)
 	if err != nil {
 		return nil, 0, err
@@ -707,6 +711,9 @@ func (r *EntRepository) FindOverduePage(ctx context.Context, tenantID int, page,
 	if preds == nil {
 		return []*Ticket{}, 0, nil
 	}
+	// 收窄为「当前可见范围内」的逾期工单。DataScopeAll 返回 nil（不加过滤）；
+	// 身份缺失（viewerID<=0）时 dataScopePredicates 返回 IDEQ(-1) 收窄为空集。
+	preds = append(preds, dataScopePredicates(scope, viewerID)...)
 
 	query := r.Client().Ticket.Query().Where(preds...)
 	total, err := query.Clone().Count(ctx)

@@ -122,7 +122,26 @@ func (s *Service) UpdateChange(ctx context.Context, c *Change, actorID int, acto
 			)
 		}
 	}
-	return s.repo.Update(ctx, c)
+
+	// 常规更新不是状态推进入口：状态的唯一写路径是 TransitionStatus（+ BPMN 桥接）。
+	// 这里把待写状态钉死为读取时看到的当前值，一是杜绝调用方用陈旧快照把审批
+	// 刚推进的状态覆盖回去，二是让仓储的 StatusEQ 谓词成为真正的乐观锁
+	// （change 无 version 列，状态即版本号）。
+	c.Status = existing.Status
+
+	updated, err := s.repo.Update(ctx, c)
+	if err != nil {
+		// 仓储的 StatusEQ 未命中：并发的状态推进（审批/驳回/撤回）抢在本更新之前
+		// 落库。这不是「记录不存在」，而是版本冲突——报 404 会让调用方误以为单子
+		// 被删了，从而发起重试或错误清理。
+		var notFound *ent.NotFoundError
+		if errors.As(err, &notFound) {
+			return nil, common.NewConflictError("change",
+				fmt.Sprintf("变更单状态已由 %q 变为其他值（可能正被审批推进），请刷新后重试", existing.Status))
+		}
+		return nil, err
+	}
+	return updated, nil
 }
 
 // governanceFieldsAlwaysEditable 列示即使在已提审状态下也允许修改的字段（运营类非治理字段）。

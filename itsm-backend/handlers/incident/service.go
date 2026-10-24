@@ -166,6 +166,21 @@ func (s *Service) SetProcessTriggerService(triggerService ProcessTriggerServiceI
 func (s *Service) Create(ctx context.Context, tenantID int, i *Incident) (*Incident, error) {
 	s.logger.Infow("Creating incident", "title", i.Title, "tenant_id", tenantID)
 
+	// 受指人来自客户端请求体，可指向任意租户的用户。Update 路径已有同租户校验
+	// （见下方 Update），Create 此前完全没有——创建事件单时能把单据指派给别家
+	// 租户的员工，形成跨租户信息暴露面。这里复用同一实现。
+	//
+	// 校验刻意排在编号生成之前：请求最终会被拒时不应消耗一个序列号，
+	// 也不应在开了事务之后再回滚。
+	//
+	// s.productionService 为 nil 时跳过（与 Update 一致的约定）：生产装配阶段
+	// 该依赖恒由 internal/bootstrap/app.go 注入，nil 只出现在单测里。
+	if i.AssigneeID != nil && *i.AssigneeID > 0 && s.productionService != nil {
+		if err := s.productionService.ValidateAssignee(ctx, *i.AssigneeID, tenantID); err != nil {
+			return nil, fmt.Errorf("处理人不存在或不可用: %w", err)
+		}
+	}
+
 	// Generate number
 	year, month, _ := time.Now().Date()
 	number, err := s.repo.GenerateIncidentNumber(ctx, tenantID, year, int(month))

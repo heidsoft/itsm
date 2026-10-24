@@ -21,8 +21,11 @@ type Repository interface {
 
 	// Business queries
 	FindByAssignee(ctx context.Context, assigneeID int, tenantID int) ([]*Ticket, error)
-	FindOverdue(ctx context.Context, tenantID int, page, size int) ([]*Ticket, int, error)
-	Search(ctx context.Context, keyword string, tenantID int, page, size int) ([]*Ticket, int, error)
+	// FindOverdue / Search 接受与 List 相同的行级数据范围：两者都是工单列表的
+	// 一个过滤视图（逾期筛选 / 关键字筛选），不是独立的读取通道。缺了 scope/viewerID
+	// 就会退化成「任何角色都能读到全租户工单」，与 /tickets 列表口径矛盾。
+	FindOverdue(ctx context.Context, tenantID int, page, size int, scope datascope.DataScope, viewerID int) ([]*Ticket, int, error)
+	Search(ctx context.Context, keyword string, tenantID int, page, size int, scope datascope.DataScope, viewerID int) ([]*Ticket, int, error)
 
 	// GetUserNamesByIDs 按当前租户批量读取用户显示名（id -> name），
 	// 供响应里的 requesterName/assigneeName 投影。查不到的 ID 不进映射。

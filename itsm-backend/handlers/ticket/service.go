@@ -402,13 +402,16 @@ func lifecycleError(err error) error {
 }
 
 // Search searches tickets by keyword.
-func (s *Service) Search(ctx context.Context, keyword string, tenantID int, page, size int) ([]*Ticket, int, error) {
-	return s.repo.Search(ctx, keyword, tenantID, page, size)
+// currentUserID/currentRole 与 List 同源：关键字搜索只是多一个过滤条件，
+// 行级范围必须一致，否则普通角色可借 /tickets/search 读到全租户工单。
+func (s *Service) Search(ctx context.Context, keyword string, tenantID int, page, size int, currentUserID int, currentRole string) ([]*Ticket, int, error) {
+	return s.repo.Search(ctx, keyword, tenantID, page, size, dataScopeForRole(currentRole), currentUserID)
 }
 
 // GetOverdueTickets returns overdue tickets.
-func (s *Service) GetOverdueTickets(ctx context.Context, tenantID int, page, size int) ([]*Ticket, int, error) {
-	return s.repo.FindOverdue(ctx, tenantID, page, size)
+// 同 Search：逾期列表是工单列表的过滤视图，沿用同一套 DataScope。
+func (s *Service) GetOverdueTickets(ctx context.Context, tenantID int, page, size int, currentUserID int, currentRole string) ([]*Ticket, int, error) {
+	return s.repo.FindOverdue(ctx, tenantID, page, size, dataScopeForRole(currentRole), currentUserID)
 }
 
 // GetTicketsByAssignee returns tickets assigned to a specific user.
