@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#05070f" />
+  <title>PIXEL MECHA DUEL · 像素机甲对战</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <main class="arcade">
+    <div class="cabinet-top">
+      <span class="led led-a"></span>
+      <div class="marquee">
+        <span class="marquee-mark">◈</span>
+        PIXEL MECHA DUEL
+        <span class="marquee-sub">ARCADE · 2P</span>
+      </div>
+      <span class="led led-b"></span>
+    </div>
+
+    <div class="screen-frame">
+      <div class="screen" id="screen">
+        <canvas id="game" width="640" height="360" aria-label="像素机甲对战游戏画面"></canvas>
+        <div class="crt-scanlines" aria-hidden="true"></div>
+        <div class="crt-glare" aria-hidden="true"></div>
+
+        <!-- 标题菜单 -->
+        <section class="overlay menu-overlay" id="menu">
+          <div class="menu-inner">
+            <p class="eyebrow">// ARCADE COMBAT SYSTEM · 1989</p>
+            <h1 class="game-title"><span>PIXEL</span> MECHA <em>DUEL</em></h1>
+            <p class="tagline">像素机甲 · 三回合决斗 · 先取两胜</p>
+
+            <div class="mode-row">
+              <button class="btn btn-primary" data-mode="ai" type="button">
+                <span class="btn-label">单人 · VS AI</span>
+                <span class="btn-sub">推荐 · 电脑对手</span>
+              </button>
+              <button class="btn" data-mode="pvp" type="button">
+                <span class="btn-label">双人 · 本地对战</span>
+                <span class="btn-sub">同一键盘 · 同屏</span>
+              </button>
+            </div>
+
+            <div class="keyguide">
+              <div class="keyguide-row">
+                <b class="tag tag-p1">P1</b>
+                <span class="key">A</span><span class="key">D</span> 移动
+                <span class="key">J</span> 攻击
+                <span class="key">K</span> 防御
+              </div>
+              <div class="keyguide-row">
+                <b class="tag tag-p2">P2</b>
+                <span class="key">←</span><span class="key">→</span> 移动
+                <span class="key">1</span> 攻击
+                <span class="key">2</span> 防御
+              </div>
+            </div>
+
+            <p class="mobile-note">本作使用键盘操作，建议在桌面端体验</p>
+            <p class="menu-hint">选择模式 · 即刻开战</p>
+          </div>
+        </section>
+
+        <!-- 比赛结果 -->
+        <section class="overlay result-overlay hidden" id="result">
+          <div class="result-inner">
+            <p class="eyebrow">MATCH COMPLETE</p>
+            <h2 class="result-title" id="result-title">VICTORY</h2>
+            <p class="result-line" id="result-line">AZURE-01 WINS</p>
+            <p class="result-score" id="result-score">2 : 0</p>
+            <div class="result-actions">
+              <button class="btn btn-primary" id="btn-rematch" type="button">再战一场</button>
+              <button class="btn" id="btn-title" type="button">返回标题</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- 暂停 -->
+        <section class="overlay pause-overlay hidden" id="pause">
+          <div class="pause-inner">
+            <p class="eyebrow">SYSTEM HALTED</p>
+            <h2 class="pause-title">PAUSED</h2>
+            <div class="pause-actions">
+              <button class="btn btn-primary" id="btn-resume" type="button">继续战斗</button>
+              <button class="btn" id="btn-restart" type="button">重新开始</button>
+              <button class="btn btn-ghost" id="btn-quit" type="button">返回标题</button>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <footer class="deck">
+      <div class="deck-status">
+        <span class="status-dot"></span>
+        <span id="status-text">待机中 · 选择对战模式</span>
+      </div>
+      <div class="deck-keys" aria-hidden="true">
+        <span><b class="tag tag-p1">P1</b> A/D 移动 · J 攻击 · K 防御</span>
+        <span><b class="tag tag-p2">P2</b> ←/→ 移动 · 1 攻击 · 2 防御</span>
+      </div>
+      <div class="deck-actions">
+        <button class="dock-btn" id="btn-sound" type="button" aria-pressed="true">♪ 音效 ON</button>
+        <button class="dock-btn" id="btn-pause" type="button">▮▮ 暂停 P</button>
+      </div>
+    </footer>
+  </main>
+
+  <script src="js/config.js"></script>
+  <script src="js/input.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/effects.js"></script>
+  <script src="js/fighter.js"></script>
+  <script src="js/ai.js"></script>
+  <script src="js/render.js"></script>
+  <script src="js/game.js"></script>
+</body>
+</html>
