@@ -36,6 +36,7 @@ import {
   type OnCallSchedule,
 } from '@/lib/services/emailIntakeService';
 import { UserApi } from '@/lib/api/user-api';
+import { BACKEND_MAX_PAGE_SIZE } from '@/lib/api/pagination';
 
 interface User {
   id: number;
@@ -113,7 +114,7 @@ export default function EmailIntakePage() {
           emailIntakeService.sourceOrganizations(),
           emailIntakeService.externalContractReferences(),
           emailIntakeService.schedules(),
-          UserApi.getUsers({ pageSize: 200 }),
+          UserApi.getUsers({ pageSize: BACKEND_MAX_PAGE_SIZE }),
         ]);
       if (customerResult.status === 'fulfilled') setCustomers(customerResult.value.items ?? []);
       if (contractResult.status === 'fulfilled') setContracts(contractResult.value.items ?? []);

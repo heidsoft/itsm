@@ -19,6 +19,7 @@ import { Plus } from 'lucide-react';
 import MSPService from '@/lib/services/msp-service';
 import { UserApi } from '@/lib/api/user-api';
 import type { MSPAllocation, CreateAllocationRequest } from '@/types/msp';
+import { BACKEND_MAX_PAGE_SIZE } from '@/lib/api/pagination';
 export default function MSPManagementPage() {
   const { message } = App.useApp();
   const [form] = Form.useForm();
@@ -72,7 +73,7 @@ export default function MSPManagementPage() {
       const [allocRes, custRes, usersRes] = await Promise.all([
         MSPService.getAllocations(),
         MSPService.getCustomers(),
-        UserApi.getUsers({ page: 1, pageSize: 200 }).catch(() => ({ items: [] })),
+        UserApi.getUsers({ page: 1, pageSize: BACKEND_MAX_PAGE_SIZE }).catch(() => ({ items: [] })),
       ]);
       setAllocations(allocRes.allocations);
       setCustomers(custRes.customers);

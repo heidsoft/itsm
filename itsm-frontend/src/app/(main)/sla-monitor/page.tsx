@@ -20,6 +20,7 @@ import { SLAMonitorDashboard } from '@/components/business/SLAMonitorDashboard';
 import { AlertTriangle, CheckCircle, Clock, RefreshCw, TrendingUp } from 'lucide-react';
 import { SLAApi } from '@/lib/api/sla-api';
 import type { SLADefinition, SLAViolation } from '@/lib/api/sla-api';
+import { BACKEND_MAX_PAGE_SIZE } from '@/lib/api/pagination';
 
 const { Title, Text } = Typography;
 
@@ -82,8 +83,8 @@ const SLAMonitorPage = () => {
     try {
       const [statsData, violationResp, definitionResp] = await Promise.all([
         SLAApi.getSLAStats(),
-        SLAApi.getSLAViolations({ page: 1, pageSize: 200 }),
-        SLAApi.getSLADefinitions({ page: 1, pageSize: 200 }),
+        SLAApi.getSLAViolations({ page: 1, pageSize: BACKEND_MAX_PAGE_SIZE }),
+        SLAApi.getSLADefinitions({ page: 1, pageSize: BACKEND_MAX_PAGE_SIZE }),
       ]);
 
       setStats({

@@ -61,13 +61,44 @@ interface ChangeListProps {
   /** 受控分页：嵌入模式（showHeader=false）下由父级 Pagination 驱动 */
   page?: number;
   pageSize?: number;
+  /**
+   * 受控数据：父级传入后组件不再自己发请求，只负责渲染。
+   *
+   * 嵌入模式下父级（/changes）原本自己拉一份数据用于分页与空态，组件内部再拉
+   * 一份用于表格——同一份数据两个源、两次请求，筛选或翻页时两个响应竞态，
+   * 会出现「分页显示 37 条但表体是上一页」这类自相矛盾的界面。父级传 items
+   * 即声明「数据我负责」，组件退化为纯展示。
+   */
+  items?: Change[];
+  /** 受控总数（配合 items 使用） */
+  total?: number;
+  /** 受控加载态（配合 items 使用） */
+  loading?: boolean;
+  /**
+   * 数据发生变化需要父级重新拉取（受控模式下删除成功后触发）。
+   * 受控时组件内 loadData 是空操作，删除后若不通知父级，界面会停留在旧数据。
+   */
+  onDataChange?: () => void;
 }
 
-const ChangeList: React.FC<ChangeListProps> = ({ showHeader = true, search, status, risk, page, pageSize }) => {
+const ChangeList: React.FC<ChangeListProps> = ({
+  showHeader = true,
+  search,
+  status,
+  risk,
+  page,
+  pageSize,
+  items,
+  total,
+  loading: loadingProp,
+  onDataChange,
+}) => {
   const router = useRouter();
+  const isControlled = items !== undefined;
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<Change[]>([]);
-  const [total, setTotal] = useState(0);
+  // 非受控模式下的总数；受控模式读父级传入的 total  prop。
+  const [internalTotal, setInternalTotal] = useState(0);
   const [form] = Form.useForm();
 
   const [query, setQuery] = useState<ChangeQuery>({
@@ -87,6 +118,8 @@ const ChangeList: React.FC<ChangeListProps> = ({ showHeader = true, search, stat
   }, [search, status, risk, form]);
 
   const loadData = async () => {
+    // 受控模式下数据由父级提供，组件内不得再发请求（否则就是第二份数据源）。
+    if (isControlled) return;
     setLoading(true);
     try {
       const values = await form.validateFields().catch(() => ({}));
@@ -96,7 +129,7 @@ const ChangeList: React.FC<ChangeListProps> = ({ showHeader = true, search, stat
         riskLevel: risk || undefined,
       });
       setData(resp.items as unknown as Change[]);
-      setTotal(resp.total);
+      setInternalTotal(resp.total);
     } catch (error) {
       // 只在有实际错误时显示失败消息，不是因为表单验证导致的
       if (
@@ -154,6 +187,7 @@ const ChangeList: React.FC<ChangeListProps> = ({ showHeader = true, search, stat
           await ChangeApi.deleteChange(id);
           notify.success('变更已删除');
           loadData();
+          onDataChange?.();
         } catch (error) {
           notify.error(error, { context: '删除变更' });
         }
@@ -239,6 +273,11 @@ const ChangeList: React.FC<ChangeListProps> = ({ showHeader = true, search, stat
     },
   ];
 
+  // 受控模式用父级给的数据与加载态，非受控模式用组件自己拉的那份。
+  const rows = isControlled ? (items as Change[]) : data;
+  const rowTotal = isControlled ? (total ?? rows.length) : internalTotal;
+  const spinning = isControlled ? Boolean(loadingProp) : loading;
+
   // When embedded in BusinessPageTemplate (showHeader=false), render a bare table
   // without Card wrapper, search form, or internal pagination.
   if (!showHeader) {
@@ -246,8 +285,8 @@ const ChangeList: React.FC<ChangeListProps> = ({ showHeader = true, search, stat
       <Table
         rowKey="id"
         columns={columns}
-        dataSource={data}
-        loading={loading}
+        dataSource={rows}
+        loading={spinning}
         pagination={false}
         scroll={{ x: 1000 }}
         getPopupContainer={node => node.parentElement || document.body}
@@ -304,7 +343,7 @@ const ChangeList: React.FC<ChangeListProps> = ({ showHeader = true, search, stat
           </Form.Item>
         </Form>
 
-        {data.length === 0 && !loading ? (
+        {rows.length === 0 && !spinning ? (
           <Empty description="暂无变更记录" image={Empty.PRESENTED_IMAGE_SIMPLE}>
             <Button type="primary" onClick={() => router.push('/changes/new')}>
               创建变更
@@ -314,12 +353,12 @@ const ChangeList: React.FC<ChangeListProps> = ({ showHeader = true, search, stat
           <Table
             rowKey="id"
             columns={columns}
-            dataSource={data}
-            loading={loading}
+            dataSource={rows}
+            loading={spinning}
             pagination={{
               current: query.page,
               pageSize: query.pageSize,
-              total: total,
+              total: rowTotal,
               showSizeChanger: true,
               showQuickJumper: true,
               showTotal: total => `共 ${total} 条记录`,

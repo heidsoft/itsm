@@ -4,6 +4,7 @@ import React, { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
+  Alert,
   App,
   Breadcrumb,
   Button,
@@ -20,6 +21,7 @@ import type { ColumnsType } from 'antd/es/table';
 import CISearchSelect, { type CISelectOption } from '@/components/cmdb/CISearchSelect';
 import { CMDBApi } from '@/lib/api/cmdb-api';
 import { CMDB_KEYS, useCloudServicesQuery, useReconciliationQuery } from '@/lib/hooks/useCMDB';
+import { serverErrorMessage } from '@/lib/api/http-client';
 import type { CloudResource, ConfigurationItem } from '@/types/biz/cmdb';
 
 const summaryLabels = [
@@ -40,6 +42,10 @@ export default function ReconciliationPage() {
   const servicesQuery = useCloudServicesQuery();
 
   const loading = reconQuery.isLoading || servicesQuery.isLoading;
+  // 失败必须显式呈现：只消费 data 时，接口 500/403 会让「资源总数/孤儿CI」等
+  // 指标一律显示 0，看起来像是「对账很干净」，实际是根本没取到数据。
+  const reconError = reconQuery.isError;
+  const reconErrorText = serverErrorMessage(reconQuery.error, '加载对账数据失败，请重试');
 
   const summary = reconQuery.data?.summary ?? null;
   const unboundResources = reconQuery.data?.unboundResources ?? [];
@@ -206,13 +212,35 @@ export default function ReconciliationPage() {
         ]}
       />
 
+      {reconError && (
+        <Alert
+          type="error"
+          showIcon
+          style={{ marginBottom: 16 }}
+          message={reconErrorText}
+          action={
+            <Button size="small" onClick={() => reconQuery.refetch()}>
+              重试
+            </Button>
+          }
+        />
+      )}
+
       <Card style={{ marginBottom: 16 }}>
         <Space size="large" wrap>
           {summaryLabels.map(item => (
             <Statistic
               key={item.key}
               title={item.label}
-              value={summary ? ((summary as unknown as Record<string, number>)[item.key] ?? 0) : 0}
+              // 取数失败时显示「—」而不是 0：0 会被读成「没有问题」，
+              // 而真实含义是「不知道」。
+              value={
+                reconError
+                  ? '—'
+                  : summary
+                    ? ((summary as unknown as Record<string, number>)[item.key] ?? 0)
+                    : 0
+              }
             />
           ))}
         </Space>

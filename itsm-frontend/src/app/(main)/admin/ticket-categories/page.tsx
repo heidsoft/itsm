@@ -38,6 +38,7 @@ import { TicketCategoryApi } from '@/lib/api/ticket-category-api';
 import { WorkflowApi } from '@/lib/api/workflow-api';
 import { CommonApi } from '@/lib/api/common-api';
 import { buildCategoryTree, collectDescendantIds } from './categoryTreeUtils';
+import { BACKEND_MAX_PAGE_SIZE } from '@/lib/api/pagination';
 
 const { TextArea } = Input;
 const { Title, Text } = Typography;
@@ -118,7 +119,7 @@ const TicketCategoryManagementPage = () => {
   const loadCategories = async () => {
     setLoading(true);
     try {
-      const data = await TicketCategoryApi.getCategories({ page: 1, pageSize: 500 });
+      const data = await TicketCategoryApi.getCategories({ page: 1, pageSize: BACKEND_MAX_PAGE_SIZE });
       const list = normalizeCategories(data.items);
       setCategories(list);
     } catch (error) {

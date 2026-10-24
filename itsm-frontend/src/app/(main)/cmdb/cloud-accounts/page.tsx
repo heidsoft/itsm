@@ -4,6 +4,7 @@ import React, { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
+  Alert,
   App,
   Breadcrumb,
   Button,
@@ -23,6 +24,7 @@ import { Search, Plus, Pencil, Trash2, RotateCcw } from 'lucide-react';
 
 import { CMDBApi } from '@/lib/api/cmdb-api';
 import { CMDB_KEYS, useCloudAccountsQuery } from '@/lib/hooks/useCMDB';
+import { serverErrorMessage } from '@/lib/api/http-client';
 import type { CloudAccount } from '@/types/biz/cmdb';
 
 const providerOptions = [
@@ -45,6 +47,10 @@ export default function CloudAccountPage() {
   const accountsQuery = useCloudAccountsQuery();
   const data = accountsQuery.data?.items ?? [];
   const loading = accountsQuery.isLoading;
+  // 失败必须显式呈现：只消费 data/isLoading 时，接口 500/403 会退化成
+  // 「共 0 个账号」的空表，用户无法区分「真的没数据」和「加载失败」。
+  const loadError = accountsQuery.isError;
+  const loadErrorText = serverErrorMessage(accountsQuery.error, '加载云账号失败，请重试');
 
   const [createOpen, setCreateOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
@@ -300,14 +306,37 @@ export default function CloudAccountPage() {
             新增云账号
           </Button>
         </Space>
-        <span className='ml-auto text-sm text-gray-500'>共 {filteredData.length} 个账号</span>
+        {loadError ? (
+          <span className='ml-auto text-sm text-red-500'>数据加载失败</span>
+        ) : (
+          <span className='ml-auto text-sm text-gray-500'>共 {filteredData.length} 个账号</span>
+        )}
       </div>
+
+      {loadError && (
+        <Alert
+          type='error'
+          showIcon
+          className='mb-4'
+          message={loadErrorText}
+          action={
+            <Button size='small' onClick={() => accountsQuery.refetch()}>
+              重试
+            </Button>
+          }
+        />
+      )}
 
       <Table
         rowKey='id'
         loading={loading}
-        dataSource={filteredData}
+        dataSource={loadError ? [] : filteredData}
         columns={columns}
+        locale={
+          loadError
+            ? { emptyText: '数据加载失败，请点击上方“重试”' }
+            : undefined
+        }
         pagination={{
           pageSize: 10,
           showSizeChanger: true,

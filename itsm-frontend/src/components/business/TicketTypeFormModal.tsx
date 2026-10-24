@@ -30,6 +30,7 @@ import type {
 import { CustomFieldType } from '@/types/ticket-type';
 import type { ListAssignmentRulesResponse } from '@/lib/api/ticket-assignment-api';
 import { useI18n } from '@/lib/i18n/useI18n';
+import { BACKEND_MAX_PAGE_SIZE } from '@/lib/api/pagination';
 
 const { TextArea } = Input;
 
@@ -152,8 +153,8 @@ export const TicketTypeFormModal: React.FC<TicketTypeFormModalProps> = ({
 
       const [slaResponse, categoryResponse, workflowResponse, ruleResponse] = await Promise.all([
         SLAApi.getSLADefinitions(),
-        httpClient.get<any>('/api/v1/ticket-categories', { page: 1, pageSize: 200, isActive: true }),
-        httpClient.get<any>('/api/v1/bpmn/process-definitions', { page: 1, pageSize: 200, isActive: true }),
+        httpClient.get<any>('/api/v1/ticket-categories', { page: 1, pageSize: BACKEND_MAX_PAGE_SIZE, isActive: true }),
+        httpClient.get<any>('/api/v1/bpmn/process-definitions', { page: 1, pageSize: BACKEND_MAX_PAGE_SIZE, isActive: true }),
         httpClient.get<ListAssignmentRulesResponse>('/api/v1/tickets/assignment-rules'),
       ]);
 

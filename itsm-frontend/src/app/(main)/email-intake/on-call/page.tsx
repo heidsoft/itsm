@@ -33,6 +33,7 @@ import {
 } from '@/lib/services/emailIntakeService';
 import { GroupAPI } from '@/lib/api/group-api';
 import { UserApi } from '@/lib/api/user-api';
+import { BACKEND_MAX_PAGE_SIZE } from '@/lib/api/pagination';
 
 const { Title, Text } = Typography;
 
@@ -71,7 +72,7 @@ export default function OnCallPage() {
       const [s, g, u, sh] = await Promise.all([
         emailIntakeService.schedules(),
         GroupAPI.getGroups({ pageSize: 100 }),
-        UserApi.getUsers({ pageSize: 200 }),
+        UserApi.getUsers({ pageSize: BACKEND_MAX_PAGE_SIZE }),
         emailIntakeService.shifts(),
       ]);
       setSchedules(s.items);

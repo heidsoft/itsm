@@ -32,6 +32,7 @@ import type { ColumnsType } from 'antd/es/table';
 import { httpClient } from '@/lib/api/http-client';
 import { UserApi } from '@/lib/api/user-api';
 import { WorkflowApi } from '@/lib/api/workflow-api';
+import { BACKEND_MAX_PAGE_SIZE } from '@/lib/api/pagination';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -119,7 +120,7 @@ export default function ApprovalManagement() {
 
   const loadUsers = useCallback(async () => {
     try {
-      const data = await UserApi.getUsers({ pageSize: 200 });
+      const data = await UserApi.getUsers({ pageSize: BACKEND_MAX_PAGE_SIZE });
       setUsers(
         (data.items || []).map((u) => ({
           id: u.id,

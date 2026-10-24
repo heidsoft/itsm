@@ -28,6 +28,7 @@ import { Edit, Plus, Search, Trash2, UserPlus, Users, User as UserIcon, X, Check
 import { GroupAPI, type Group } from '@/lib/api/group-api';
 import { UserApi, type User, PRIMARY_ROLE_OPTIONS, PRIMARY_ROLE_LABEL } from '@/lib/api/user-api';
 import { useI18n } from '@/lib/i18n/useI18n';
+import { BACKEND_MAX_PAGE_SIZE } from '@/lib/api/pagination';
 
 const { Title, Text } = Typography;
 const { Search: AntSearch } = Input;
@@ -159,7 +160,7 @@ const GroupManagement: React.FC = () => {
   // 加载所有用户（用于添加成员）
   const loadAllUsers = async () => {
     try {
-      const response = await UserApi.getUsers({ page: 1, pageSize: 500 });
+      const response = await UserApi.getUsers({ page: 1, pageSize: BACKEND_MAX_PAGE_SIZE });
       setAllUsers(response.items || []);
     } catch (error) {
       console.error('Failed to load users:', error);

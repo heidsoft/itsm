@@ -29,6 +29,7 @@ import {
   readDocumentationText,
   readReferenceId,
 } from '../bpmnPropertyWrite';
+import { BACKEND_MAX_PAGE_SIZE } from '@/lib/api/pagination';
 
 const { Text } = Typography;
 const { TextArea } = Input;
@@ -201,7 +202,7 @@ export default function WorkflowNodeInspector({
   const loadUsers = useCallback(async (search = '') => {
     setLoadingUsers(true);
     try {
-      const resp = await UserApi.getUsers({ page: 1, pageSize: 200, search });
+      const resp = await UserApi.getUsers({ page: 1, pageSize: BACKEND_MAX_PAGE_SIZE, search });
       if (!cancelledRef.current) {
         setUsers(prev => {
           const existingIds = new Set(prev.map(u => u.id));
@@ -268,7 +269,7 @@ export default function WorkflowNodeInspector({
         const tenantId = httpClient.getTenantId();
         if (!tenantId) throw new Error('缺少有效租户上下文');
         const [userResp, groupResp] = await Promise.all([
-          UserApi.getUsers({ page: 1, pageSize: 200, search: '' }),
+          UserApi.getUsers({ page: 1, pageSize: BACKEND_MAX_PAGE_SIZE, search: '' }),
           GroupAPI.getGroups({ page: 1, pageSize: 100, tenantId, search: '' }),
         ]);
         if (!cancelled) {

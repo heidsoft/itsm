@@ -6,12 +6,13 @@ import type {
   UpdateSystemConfigRequest,
   GetSystemConfigsParams,
 } from './api-config';
+import { BACKEND_MAX_PAGE_SIZE } from '@/lib/api/pagination';
 
 export class SystemConfigAPI {
   // 编辑器默认请求最多 1000 项；显式分页参数优先。
   static async getConfigs(params?: GetSystemConfigsParams): Promise<SystemConfigListResponse> {
     return httpClient.get<SystemConfigListResponse>('/api/v1/system-configs', {
-      pageSize: 1000,
+      pageSize: BACKEND_MAX_PAGE_SIZE,
       ...params,
     });
   }

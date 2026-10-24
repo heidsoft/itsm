@@ -173,14 +173,7 @@ const TicketList: React.FC<TicketListProps> = ({
     void fetchTickets(filters);
   }, [fetchTickets, filters]);
 
-  const handleBatchDelete = useCallback(async () => {
-    if (selection.count === 0) {
-      message.warning('请选择要删除的工单');
-      return;
-    }
-    // batchDeleteTickets now uses Promise.allSettled internally and toasts
-    // every failure path itself, so this call only throws on the post-delete
-    // refresh — and even then, partial success has already been reported.
+  const runBatchDelete = useCallback(async () => {
     const ids = selection.toArray();
     const result = await batchDeleteTickets(ids);
     // Successful deletes are already gone; keep failed ids selected so the
@@ -190,7 +183,34 @@ const TicketList: React.FC<TicketListProps> = ({
     } else {
       selection.clear();
     }
-  }, [selection, batchDeleteTickets, message]);
+  }, [selection, batchDeleteTickets]);
+
+  // 批量删除是列表页影响面最大的写操作（一次可删掉当页全部选中项），
+  // 单条删除有确认弹窗、CMDB 有 Popconfirm，唯独批量删除此前点了就删。
+  const handleBatchDelete = useCallback(() => {
+    if (selection.count === 0) {
+      message.warning('请选择要删除的工单');
+      return;
+    }
+    const count = selection.count;
+    modal.confirm({
+      title: `批量删除 ${count} 个工单？`,
+      content: '删除后工单及其关联数据不可恢复。若部分工单因状态或权限限制无法删除，系统会在结果中单独列出。',
+      okText: `确认删除 ${count} 个`,
+      cancelText: '取消',
+      okButtonProps: { danger: true },
+      onOk: async () => {
+        // batchDeleteTickets uses Promise.allSettled internally and toasts
+        // every failure path itself, so this only throws on the post-delete
+        // refresh — and even then, partial success has already been reported.
+        try {
+          await runBatchDelete();
+        } catch {
+          // 失败明细已由 hook 内的 toast 报告；这里只防止未捕获拒绝终止确认流程。
+        }
+      },
+    });
+  }, [selection, modal, message, runBatchDelete]);
 
   const handleExport = useCallback(async () => {
     try {

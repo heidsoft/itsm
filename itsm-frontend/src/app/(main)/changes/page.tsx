@@ -23,6 +23,7 @@ import {
 } from '@/components/layout/BusinessPageTemplate';
 import ChangeList from '@/components/change/ChangeList';
 import { ChangeApi, type Change, type ChangeCalendarItem, type ChangeStatus } from '@/lib/api/change-api';
+import type { Change as ChangeRow } from '@/types/biz/change';
 import { buildCsv, csvDate, downloadCsv, fetchAllPages, type CsvColumn } from '@/lib/utils/csv-export';
 import { useI18n } from '@/lib/i18n/useI18n';
 import {
@@ -343,6 +344,11 @@ export default function ChangesPage() {
     </div>
   );
 
+  // 受控数据源：列表由本页统一拉取一次，ChangeList 只负责渲染。
+  //
+  // 此前 ChangeList 内部还会再拉一次（用于表格），本页另拉一份（用于分页与空态），
+  // 同一份数据两个源、两次请求；筛选/翻页时两个响应竞态，会出现「分页显示 37 条
+  // 但表体还是上一页」这类自相矛盾的界面。传入 items 即声明数据由本页负责。
   const renderListContent = () => (
     <ChangeList
       showHeader={false}
@@ -351,6 +357,13 @@ export default function ChangesPage() {
       risk={riskFilter}
       page={page}
       pageSize={pageSize}
+      // 边界显式转换：本页持有 API 层的 Change，ChangeList 的列定义按
+      // types/biz/change 编写（两者的 type 枚举口径不同，同一份数据在
+      // ChangeList 内部取数时本来就要做一次 as unknown as 转换）。
+      items={changes as unknown as ChangeRow[]}
+      total={total}
+      loading={loading}
+      onDataChange={fetchChanges}
     />
   );
 

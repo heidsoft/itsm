@@ -46,6 +46,7 @@ import { httpClient, isPermissionDeniedError } from '@/lib/api/http-client';
 import { CMDBApi } from '@/lib/api/cmdb-api';
 import { TicketTypeApi } from '@/lib/api/ticketTypeApi';
 import type { CustomFieldDefinition } from '@/types/ticket-type';
+import { BACKEND_MAX_PAGE_SIZE } from '@/lib/api/pagination';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -189,8 +190,8 @@ export default function CreateTicketPage() {
 
   useEffect(() => {
     Promise.allSettled([
-      httpClient.get<{ items?: UserOption[] }>('/api/v1/users', { page: 1, pageSize: 200, status: 'active' }),
-      httpClient.get<DepartmentOption[]>('/api/v1/departments', { page: 1, pageSize: 200 }),
+      httpClient.get<{ items?: UserOption[] }>('/api/v1/users', { page: 1, pageSize: BACKEND_MAX_PAGE_SIZE, status: 'active' }),
+      httpClient.get<DepartmentOption[]>('/api/v1/departments', { page: 1, pageSize: BACKEND_MAX_PAGE_SIZE }),
       CMDBApi.getAllCIs({}, 200),
     ]).then(([users, departments, cis]) =>
       setReferenceOptions({
@@ -222,7 +223,7 @@ export default function CreateTicketPage() {
     setCategoryLoading(true);
     setCategoryError(null);
     try {
-      const res = await TicketCategoryApi.getCategories({ isActive: true, pageSize: 200 });
+      const res = await TicketCategoryApi.getCategories({ isActive: true, pageSize: BACKEND_MAX_PAGE_SIZE });
       setCategoryOptions(
         res.items.filter(c => c.isActive !== false).map(c => ({ label: c.name, value: c.name }))
       );
