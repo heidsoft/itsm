@@ -343,6 +343,12 @@ func (e *DiscoveryJobExecutor) runScope(ctx context.Context, job *DiscoveryJob, 
 	}
 	missingNow := 0
 	for _, ex := range existing {
+		// 缺失扫描的 scope 是“账号 + 服务 + Region”。此前查询只按账号/服务，
+		// 多 Region 来源会把其它 Region 的资源全部当作本轮缺失，连续几次后
+		// 误置 stale。空 Region 的历史数据保留兼容；有 Region 的必须精确匹配。
+		if region := strings.TrimSpace(ex.Region); region != "" && !strings.EqualFold(region, sc.region) {
+			continue
+		}
 		if _, seen := seenIdentities[ex.IdentityHash]; seen {
 			continue
 		}

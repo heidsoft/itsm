@@ -248,6 +248,10 @@ func SetupCMDBRoutes(
 			discovery.POST("/jobs/:id/cancel", middleware.RequirePermission("cmdb", "write"), config.CMDBHandler.CancelDiscoveryJob)
 			discovery.POST("/jobs/:id/retry", middleware.RequirePermission("cmdb", "write"), config.CMDBHandler.RetryDiscoveryJob)
 			discovery.GET("/results", middleware.RequirePermission("cmdb", "read"), config.CMDBHandler.ListDiscoveryResults)
+			// 差异决策面：manual 策略下 update 只记 pending，此前没有应用入口，
+			// 差异永远停在「待人工确认」——对账闭环差这一步。
+			discovery.POST("/results/:id/apply", middleware.RequirePermission("cmdb", "write"), config.CMDBHandler.ApplyDiscoveryResult)
+			discovery.POST("/results/:id/reject", middleware.RequirePermission("cmdb", "write"), config.CMDBHandler.RejectDiscoveryResult)
 		}
 
 		// ------------------------------ 对账相关路由 ------------------------------

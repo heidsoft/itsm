@@ -8,6 +8,7 @@ import { Layout, Tabs, Form, Modal, Tag, Button, Space, Typography, Switch, App 
 import { useRouter, useSearchParams } from 'next/navigation';
 import { History, AlertTriangle, CheckCircle, XCircle, Bug, GitCompare } from 'lucide-react';
 import { WorkflowAPI } from '@/lib/api/workflow-api';
+import { BPMNAIApi } from '@/lib/api/bpmn-ai-api';
 import { UserApi } from '@/lib/api/user-api';
 import { RoleAPI } from '@/lib/api/role-api';
 import { GroupAPI } from '@/lib/api/group-api';
@@ -27,6 +28,7 @@ import WorkflowAIModal from './WorkflowAIModal';
 
 import type { BpmnNodeSelection } from '../BPMNDesigner';
 import type { WorkflowDefinition, WorkflowVersion, ApprovalConfig } from './WorkflowTypes';
+import { mergeLintIssues, type ValidationIssue } from './workflowValidation';
 
 const { Content } = Layout;
 const { Text, Title } = Typography;
@@ -34,15 +36,6 @@ const { Text, Title } = Typography;
 interface WorkflowDesignerProps {
   workflowId?: string;
   initialXML?: string;
-}
-
-// 校验问题类型
-interface ValidationIssue {
-  type: 'error' | 'warning' | 'info';
-  message: string;
-  elementId?: string;
-  elementType?: string;
-  elementName?: string;
 }
 
 // 默认 BPMN XML
@@ -424,7 +417,24 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
 
     setValidating(true);
     try {
-      const issues = (await api.validate()) as ValidationIssue[];
+      const localIssues = (await api.validate()) as ValidationIssue[];
+      let issues = localIssues;
+
+      // 本地规则只覆盖画布结构；taskPurpose、审批拒绝策略等语义规则由后端
+      // lint 统一裁决，这里合并结果，避免设计器把后端 warning 显示成“通过”。
+      const xml = await api.getXML();
+      if (xml) {
+        try {
+          const lint = await BPMNAIApi.lintBPMN(xml);
+          issues = mergeLintIssues(localIssues, lint.issues);
+        } catch (error) {
+          console.error('后端流程校验失败:', error);
+          issues = mergeLintIssues(localIssues, [
+            { severity: 'info', category: 'backend', message: t('workflow.designer.validationBackendUnavailable') },
+          ]);
+        }
+      }
+
       setValidationIssues(issues);
       
       if (issues.length > 0) {
@@ -720,6 +730,9 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
   // Tab 切换
   const handleTabChange = (key: string) => {
     setActiveTab(key);
+    if (key === 'validation') {
+      void validateWorkflow();
+    }
   };
 
   // 未保存离开拦截：浏览器刷新/关闭时
@@ -932,7 +945,11 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
                       </Space>
                     </div>
 
-                    {validationIssues.length === 0 ? (
+                    {validating ? (
+                      <div className="text-center py-12">
+                        <Text type="secondary">{t('workflow.designer.validationRunning')}</Text>
+                      </div>
+                    ) : validationIssues.length === 0 ? (
                       <div className="text-center py-12">
                         <CheckCircle className="text-4xl text-green-500 mb-2" />
                         <Title level={4}>{t('workflow.designer.validationPassTitle')}</Title>

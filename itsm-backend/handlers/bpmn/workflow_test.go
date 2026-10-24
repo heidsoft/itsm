@@ -62,6 +62,10 @@ func (f *fakeTaskService) GetTaskByID(ctx context.Context, id int) (*ent.Process
 	return &ent.ProcessTask{ID: id, TaskVariables: f.taskVariables}, nil
 }
 
+func (f *fakeTaskService) AuthorizeTaskAccess(ctx context.Context, task *ent.ProcessTask, requireActor bool) error {
+	return nil
+}
+
 func (f *fakeTaskService) CompleteTaskByID(ctx context.Context, id int, variables map[string]interface{}) error {
 	f.completeByIDCalls++
 	f.completeByIDVars = append(f.completeByIDVars, variables)

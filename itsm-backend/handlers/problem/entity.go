@@ -68,41 +68,45 @@ type PriorityCount struct {
 
 // CategoryCount represents a category and its count.
 type CategoryCount struct {
-	Category string
-	Count    int
+	Category string `json:"category"`
+	Count    int    `json:"count"`
 }
 
 // MonthlyCount represents a monthly count for trend analysis.
 type MonthlyCount struct {
-	Month    string
-	Count    int
-	Resolved int
-	Open     int
+	Month    string `json:"month"`
+	Count    int    `json:"count"`
+	Resolved int    `json:"resolved"`
+	Open     int    `json:"open"`
 }
 
 // ProblemTrendData holds trend analytics data.
+//
+// 该结构体经 GetTrends 直接序列化进 API 响应，字段必须带 camelCase json tag：
+// Go 默认按字段名输出 PascalCase（实测 problem.trend 曾整包 PascalCase，
+// agent 只能猜字段名）。tag 名与 dto/problem_trend_dto.go 保持一致。
 type ProblemTrendData struct {
-	Period                 string
-	TotalProblems          int
-	ResolvedProblems       int
-	OpenProblems           int
-	ResolutionRate         float64
-	AvgResolutionTimeHours float64
-	CategoryBreakdown      map[string]int
-	PriorityBreakdown      map[string]int
-	TrendDirection         string
-	TopCategories          []CategoryCount
-	MonthlyTrend           []MonthlyCount
+	Period                 string            `json:"period"`
+	TotalProblems          int               `json:"totalProblems"`
+	ResolvedProblems       int               `json:"resolvedProblems"`
+	OpenProblems           int               `json:"openProblems"`
+	ResolutionRate         float64           `json:"resolutionRate"`
+	AvgResolutionTimeHours float64           `json:"avgResolutionTimeHours"`
+	CategoryBreakdown      map[string]int    `json:"categoryBreakdown"`
+	PriorityBreakdown      map[string]int    `json:"priorityBreakdown"`
+	TrendDirection         string            `json:"trendDirection"`
+	TopCategories          []CategoryCount   `json:"topCategories"`
+	MonthlyTrend           []MonthlyCount    `json:"monthlyTrend"`
 }
 
 // ProblemHotspotData holds hotspot analytics data.
 type ProblemHotspotData struct {
-	PeriodStart       string
-	PeriodEnd         string
-	CategoryBreakdown map[string]int
-	PriorityBreakdown map[string]int
-	Hotspots          []string
-	AvgPerCategory    float64
+	PeriodStart       string         `json:"periodStart"`
+	PeriodEnd         string         `json:"periodEnd"`
+	CategoryBreakdown map[string]int `json:"categoryBreakdown"`
+	PriorityBreakdown map[string]int `json:"priorityBreakdown"`
+	Hotspots          []string       `json:"hotspots"`
+	AvgPerCategory    float64        `json:"avgPerCategory"`
 }
 
 // ProblemComment 问题评论/处理纪要（2026-10-21 GA 阻断项落地）。

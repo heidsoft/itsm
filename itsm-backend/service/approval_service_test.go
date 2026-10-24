@@ -91,10 +91,13 @@ func TestApprovalService_RetiredTaskWorker(t *testing.T) {
 			).OnlyX(ctx)
 			client.OperationalCommand.UpdateOneID(cmd.ID).SetMaxAttempts(2).SaveX(ctx)
 			instance = client.ProcessInstance.GetX(ctx, instance.ID)
+			// 只统计业务实体变更（OperationalCommand 是命令簿记；ProcessInstance
+			// 的 exactly-once 执行权/尝试计数是引擎内部簿记——ServiceTask 事务
+			// 收敛引入，handler 失败时登记后即清除，不改变流程状态）。
 			businessMutations := 0
 			client.Use(func(next ent.Mutator) ent.Mutator {
 				return ent.MutateFunc(func(ctx context.Context, mutation ent.Mutation) (ent.Value, error) {
-					if mutation.Type() != "OperationalCommand" {
+					if mutation.Type() != "OperationalCommand" && mutation.Type() != "ProcessInstance" {
 						businessMutations++
 					}
 					return next.Mutate(ctx, mutation)

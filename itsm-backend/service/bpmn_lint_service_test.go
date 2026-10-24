@@ -412,3 +412,34 @@ func TestBPMNLint_BoundaryTimerMissingAttachedToRef(t *testing.T) {
 		t.Fatal("缺 attachedToRef 的边界定时事件应产生 events error")
 	}
 }
+
+// TestBPMNLint_MissingTaskPurposeWarns 未声明 taskPurpose 的用户任务应给出 warning，
+// 引擎虽按 work 兜底，但审批节点必须显式声明，避免静默降级为普通任务。
+func TestBPMNLint_MissingTaskPurposeWarns(t *testing.T) {
+	xml := `<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  targetNamespace="http://test">
+  <bpmn:process id="p_purpose" name="用途" isExecutable="true">
+    <bpmn:startEvent id="S1"/>
+    <bpmn:userTask id="T1" name="处理" candidateUsers="alice"/>
+    <bpmn:endEvent id="E1"/>
+    <bpmn:sequenceFlow id="F1" sourceRef="S1" targetRef="T1"/>
+    <bpmn:sequenceFlow id="F2" sourceRef="T1" targetRef="E1"/>
+  </bpmn:process>
+</bpmn:definitions>`
+	svc := NewBPMNLintService()
+	result, err := svc.LintBPMNXML([]byte(xml))
+	if err != nil {
+		t.Fatalf("解析失败: %v", err)
+	}
+	found := false
+	for _, issue := range result.Issues {
+		if issue.Category == "tasks" && issue.Severity == "warning" && issue.ElementID == "T1" &&
+			strings.Contains(issue.Message, "taskPurpose") {
+			found = true
+		}
+	}
+	if !found {
+		t.Fatal("未声明 taskPurpose 的用户任务应产生 tasks warning")
+	}
+}

@@ -16,6 +16,7 @@ import (
 	"itsm-backend/ent/processinstance"
 	"itsm-backend/ent/processtask"
 	"itsm-backend/ent/user"
+	"itsm-backend/middleware"
 	"itsm-backend/service/bpmn"
 
 	"go.uber.org/zap"
@@ -114,6 +115,64 @@ func (s *bpmnTaskService) completeTaskEngine() *CustomProcessEngine {
 	return NewCustomProcessEngine(s.client, s.logger).(*CustomProcessEngine)
 }
 
+// authorizeTaskAccess 收口任务对象级授权。
+//
+// 路由层的 task:read/task:update 只是资源级门槛；同一租户内还必须验证
+// 当前操作人是任务的 assignee/candidate，或是显式的 task:admin。
+// 后台任务必须携带 tenantctx 系统上下文，不能因为缺少 user_id 而静默放行。
+func (s *bpmnTaskService) AuthorizeTaskAccess(ctx context.Context, task *ent.ProcessTask, requireActor bool) error {
+	if task == nil {
+		return common.NewBusinessError(common.NotFoundCode, "任务不存在", "")
+	}
+	if tenantctx.IsSystemBypass(ctx) {
+		return nil
+	}
+	userID, _ := ctx.Value(bpmn.BPMNUserIDContextKey).(int)
+	if userID <= 0 {
+		return common.NewBusinessError(common.UnauthorizedCode, "缺少执行人身份，无法校验任务归属", "")
+	}
+	if role, ok := middleware.RBACRoleFromContext(ctx); ok &&
+		middleware.AuthorizeResourceForRole(ctx, s.client, role, "task", "admin", task.TenantID) {
+		return nil
+	}
+	actor, actorErr := s.client.User.Query().Where(user.ID(userID), user.TenantID(task.TenantID)).Only(ctx)
+	if actorErr != nil {
+		return common.NewBusinessError(common.ForbiddenCode, "当前用户不属于任务所在租户", "")
+	}
+	if identityMatchesTaskUser(task.TaskVariables["assigned_by"], actor) {
+		return nil
+	}
+	if err := s.completeTaskEngine().authorizeTaskActorWithClient(ctx, s.client, task); err == nil {
+		return nil
+	}
+	// 委托后原处理人仍应能读取自己处理过的任务；写操作仍只允许当前
+	// assignee/candidate 或 task:admin，避免原处理人继续改写任务。
+	if !requireActor {
+		if identityMatchesTaskUser(task.TaskVariables["delegated_from"], actor) {
+			return nil
+		}
+	}
+	return common.NewBusinessError(common.ForbiddenCode, "当前用户不是该任务的处理人或候选人", "")
+}
+
+func identityMatchesTaskUser(value interface{}, actor *ent.User) bool {
+	if actor == nil {
+		return false
+	}
+	switch identity := value.(type) {
+	case string:
+		return identity == strconv.Itoa(actor.ID) || identity == actor.Username || identity == actor.Email
+	case int:
+		return identity == actor.ID
+	case int64:
+		return int(identity) == actor.ID
+	case float64:
+		return int(identity) == actor.ID
+	default:
+		return false
+	}
+}
+
 // GetTask 根据任务ID (BPMN标准task_id字符串)获取任务
 func (s *bpmnTaskService) GetTask(ctx context.Context, taskID string) (*ent.ProcessTask, error) {
 	// 租户上下文必须显式有效（>0），fail-closed
@@ -127,7 +186,6 @@ func (s *bpmnTaskService) GetTask(ctx context.Context, taskID string) (*ent.Proc
 	if err != nil {
 		return nil, fmt.Errorf("获取任务失败: %w", err)
 	}
-
 	return task, nil
 }
 
@@ -144,7 +202,6 @@ func (s *bpmnTaskService) GetTaskByID(ctx context.Context, id int) (*ent.Process
 	if err != nil {
 		return nil, fmt.Errorf("获取任务失败: %w", err)
 	}
-
 	return task, nil
 }
 
@@ -352,6 +409,11 @@ func (s *bpmnTaskService) AssignTask(ctx context.Context, taskID string, assigne
 	if err != nil {
 		return err
 	}
+	if strings.TrimSpace(task.Assignee) != "" && task.Assignee != "0" {
+		if err := s.AuthorizeTaskAccess(ctx, task, true); err != nil {
+			return err
+		}
+	}
 
 	// 租户隔离：任务必须属于当前租户
 	if task.TenantID != tenantID {
@@ -368,10 +430,16 @@ func (s *bpmnTaskService) AssignTask(ctx context.Context, taskID string, assigne
 		return fmt.Errorf("分配目标用户校验失败: %w", err)
 	}
 
+	taskVars := make(map[string]interface{}, len(task.TaskVariables)+1)
+	for key, value := range task.TaskVariables {
+		taskVars[key] = value
+	}
+	taskVars["assigned_by"] = strconv.Itoa(actorID)
 	_, err = s.client.ProcessTask.UpdateOne(task).
 		SetAssignee(assignee).
 		SetStatus(common.ProcessTaskStatusAssigned).
 		SetAssignedTime(time.Now()).
+		SetTaskVariables(taskVars).
 		Save(ctx)
 
 	return err
@@ -403,6 +471,11 @@ func (s *bpmnTaskService) ReassignTask(ctx context.Context, taskID string, newAs
 	if err != nil {
 		return fmt.Errorf("任务不存在或不属于当前租户: %w", err)
 	}
+	if strings.TrimSpace(task.Assignee) != "" && task.Assignee != "0" {
+		if err := s.AuthorizeTaskAccess(ctx, task, true); err != nil {
+			return err
+		}
+	}
 	if task.Status != common.ProcessTaskStatusCreated && task.Status != common.ProcessTaskStatusAssigned && task.Status != common.ProcessTaskStatusStarted && task.Status != "running" {
 		return fmt.Errorf("任务状态 %s 不允许重新分配", task.Status)
 	}
@@ -423,10 +496,16 @@ func (s *bpmnTaskService) ReassignTask(ctx context.Context, taskID string, newAs
 		return fmt.Errorf("任务所属流程实例不存在或租户不一致")
 	}
 	previousAssignee := task.Assignee
+	taskVars := make(map[string]interface{}, len(task.TaskVariables)+1)
+	for key, value := range task.TaskVariables {
+		taskVars[key] = value
+	}
+	taskVars["assigned_by"] = strconv.Itoa(actorID)
 	if _, err = tx.ProcessTask.UpdateOne(task).
 		SetAssignee(strconv.Itoa(assignee.ID)).
 		SetStatus(common.ProcessTaskStatusAssigned).
 		SetAssignedTime(time.Now()).
+		SetTaskVariables(taskVars).
 		Save(ctx); err != nil {
 		return fmt.Errorf("重新分配任务失败: %w", err)
 	}
@@ -661,6 +740,9 @@ func (s *bpmnTaskService) CancelTask(ctx context.Context, taskID string, reason 
 	if err != nil {
 		return err
 	}
+	if err := s.AuthorizeTaskAccess(ctx, task, true); err != nil {
+		return err
+	}
 
 	// 已完成/已取消的任务不允许翻转成 cancelled，避免审计口径被覆盖。
 	updated, err := s.client.ProcessTask.Update().
@@ -693,12 +775,37 @@ func (s *bpmnTaskService) SetTaskVariables(ctx context.Context, taskID string, v
 	if err != nil {
 		return err
 	}
+	if err := s.AuthorizeTaskAccess(ctx, task, true); err != nil {
+		return err
+	}
 
+	merged := make(map[string]interface{}, len(task.TaskVariables)+len(variables))
+	for key, value := range task.TaskVariables {
+		merged[key] = value
+	}
+	for key, value := range variables {
+		if managedTaskVariable(key) {
+			return fmt.Errorf("流程内部任务变量 %s 不允许通过 API 覆盖", key)
+		}
+		merged[key] = value
+	}
 	_, err = s.client.ProcessTask.UpdateOne(task).
-		SetTaskVariables(variables).
+		SetTaskVariables(merged).
 		Save(ctx)
 
 	return err
+}
+
+func managedTaskVariable(key string) bool {
+	switch key {
+	case "taskPurpose", "approvalMode", "approvalThreshold", "timeoutAction",
+		"allowDelegate", "allowAddApprover", "commentRequiredOnReject",
+		"assignmentState", "assignmentSource", "assignmentReason", "candidateExpansionError",
+		"assigned_by", "delegated_from":
+		return true
+	default:
+		return false
+	}
 }
 
 func (s *bpmnTaskService) HandleTaskTimeout(ctx context.Context, taskID string) error {

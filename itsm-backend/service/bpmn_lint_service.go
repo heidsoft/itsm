@@ -24,6 +24,23 @@ func NewBPMNLintService() *BPMNLintService {
 	return &BPMNLintService{parser: NewBPMNParser()}
 }
 
+// actionRequiringServiceTaskTypes 是「Execute 只从 variables["action"] 取动作」的
+// handler 集合，与 service/bpmn 下六个 handler 的 switch 一一对应：
+// incident_handler / ticket_handler / change_handler / service_request_handler /
+// notification_handler / webhook_handler。
+//
+// 不在此列的：generic_task（读 operation，恒成功）、approval_task、cc_task、
+// approval_chain_task（走各自的任务语义，不看 action）。
+// 新增依赖 action 的 handler 时必须同步加到这里，否则 lint 会放过漏配的模板。
+var actionRequiringServiceTaskTypes = map[string]bool{
+	"incident_task":        true,
+	"ticket_task":          true,
+	"change_task":          true,
+	"service_request_task": true,
+	"notification_task":    true,
+	"webhook_task":         true,
+}
+
 // LintBPMNXML 校验一段 BPMN XML，返回结构化结果。
 // XML 无法解析时返回 error（调用方应视为 400 类参数错误）；
 // 语义问题一律进入 Issues（Error 级 issue 不应部署）。
@@ -121,6 +138,13 @@ func (s *BPMNLintService) lintProcess(process *BPMNProcess, result *dto.BPMNLint
 	for _, task := range process.UserTasks {
 		if strings.EqualFold(strings.TrimSpace(task.TaskPurpose), "rework") {
 			continue
+		}
+		if strings.TrimSpace(task.TaskPurpose) == "" {
+			result.Issues = append(result.Issues, &dto.BPMNLintIssue{
+				Severity: "warning", Category: "tasks",
+				ElementID: task.ID, ElementName: task.Name,
+				Message: fmt.Sprintf("用户任务 %s 未声明 taskPurpose，引擎将按 work 处理；审批节点必须显式声明 approval", display(task.Name, task.ID)),
+			})
 		}
 		if task.Assignee == "" && task.CandidateUsers == "" && task.CandidateGroups == "" {
 			result.Issues = append(result.Issues, &dto.BPMNLintIssue{
@@ -242,6 +266,20 @@ func (s *BPMNLintService) lintProcess(process *BPMNProcess, result *dto.BPMNLint
 				ElementID: st.ID, ElementName: st.Name,
 				Message: fmt.Sprintf("服务任务 %s 使用 %q 标准标注但未配置 metaData service_task_type，将按名称寻址 handler（找不到即 dead_letter）",
 					display(st.Name, st.ID), st.Implementation),
+			})
+		}
+
+		// 依赖 variables["action"] 的 handler：节点没声明 action 就必然落 default
+		// 分支、重试 8 次后进 dead_letter。2026-10-24 生产栈实测 36/36 全死信
+		// 就是这个原因（模板声明了 action，但解析器/合并器两端都没接上）。
+		// 现在解析与注入都修好了，这条 lint 把「模板漏写 action」挡在部署期。
+		if actionRequiringServiceTaskTypes[st.ServiceTaskType] && strings.TrimSpace(st.Action) == "" {
+			result.Issues = append(result.Issues, &dto.BPMNLintIssue{
+				Severity: "error", Category: "tasks",
+				ElementID: st.ID, ElementName: st.Name,
+				Message: fmt.Sprintf("服务任务 %s 的 handler=%s 只认 variables[\"action\"]，但节点没有声明 action："+
+					"请加 <metaData name=\"action\">动作名</metaData>（或 camunda:inputParameter），否则运行时必然死信",
+					display(st.Name, st.ID), st.ServiceTaskType),
 			})
 		}
 	}

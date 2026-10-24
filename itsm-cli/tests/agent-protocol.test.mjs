@@ -195,6 +195,24 @@ test('unknown command exits 2 with a usage envelope', async () => {
   assert.match(env.error.message, /Unknown command/);
 });
 
+/**
+ * Regression: `itsm connector configs garbage` resolved the command, dropped the
+ * trailing token, and returned ok:true — the agent believed a per-connector
+ * config had been fetched while its argument was silently discarded. This is the
+ * positional twin of the unknown-flag check: undeclared positionals are refused
+ * before any request leaves the process.
+ */
+test('an undeclared positional argument exits 2 before any request', async () => {
+  const before = hits.get('/connectors/configs') ?? 0;
+  const r = await run(['--json', 'connector', 'configs', 'garbage']);
+  assert.equal(r.code, 2);
+  const env = envelope(r);
+  assert.equal(env.ok, false);
+  assert.equal(env.error.kind, 'usage');
+  assert.match(env.error.message, /Unexpected positional argument 'garbage'/);
+  assert.equal(hits.get('/connectors/configs') ?? 0, before, 'no request may be sent for a usage error');
+});
+
 test('401 exits 3, 403 exits 4, 404/409/400 exit 5 with distinct kinds', async () => {
   const auth = envelope(await run(['--json', 'ticket', 'list'], { ITSM_TOKEN: 'wrong-token' }));
   assert.equal(auth.error.kind, 'not_authenticated');

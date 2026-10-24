@@ -73,6 +73,12 @@ export function readStdinSecret(label) {
  * other is how an agent ends up authenticating with a stale credential.
  */
 export function resolveSecret(source) {
+    if (source.literal !== undefined && source.rejectLiteral) {
+        const flag = source.literalFlag ?? `--${source.label.replace(/\s+/g, '-')}`;
+        throw usageError(`Refusing ${flag} on the command line: argv is visible in shell history and the process table. ` +
+            `Pipe the ${source.label} with --${source.label.replace(/\s+/g, '-')}-stdin, ` +
+            `or pass --${source.label.replace(/\s+/g, '-')}-file /path (mode 0600).`);
+    }
     const explicit = [source.literal !== undefined, Boolean(source.stdin), Boolean(source.file)].filter(Boolean).length;
     if (explicit > 1) {
         throw usageError(`Provide only one source for ${source.label} (--flag, --*-stdin, or --*-file).`);

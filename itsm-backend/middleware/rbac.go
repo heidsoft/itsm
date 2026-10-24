@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"strconv"
 	"strings"
@@ -109,13 +110,43 @@ var PermissionConfig = struct {
 	EnableCache: true,
 }
 
+// logPermissionLoadFailure 权限加载失败必须可观测：本函数只在 DB/上下文错误时调用，
+// 空权限集（显式撤销）不在此列。错误原文只落安全分类，避免把 SQL 细节带进日志。
+func logPermissionLoadFailure(roleName string, tenantID int, err error) {
+	class := "db_error"
+	switch {
+	case errors.Is(err, context.Canceled):
+		class = "context_canceled"
+	case errors.Is(err, context.DeadlineExceeded):
+		class = "context_deadline"
+	}
+	zap.S().Warnw("RBAC: role permission load failed, request denied without caching",
+		"role", roleName, "tenant_id", tenantID, "error_class", class)
+}
+
+// cacheRolePermissions 写入角色权限缓存。
+// 加载失败（DB 报错、请求 ctx 取消）必须与「DB 显式配置了空权限集」区分：
+// 空集在 DBOnly 下表示撤销该角色全部权限，是合法状态、可以缓存；
+// 而失败时缓存空集会把整个 role+tenant 在 TTL 窗口内锁死为 deny-all。
+func cacheRolePermissions(cacheKey string, perms []Permission, loadErr error) {
+	if loadErr != nil && len(perms) == 0 {
+		return
+	}
+	permissionCacheLock.Lock()
+	permissionCache[cacheKey] = &cachedPermission{
+		permissions: perms,
+		expiresAt:   time.Now().Add(permissionCacheTTL),
+	}
+	permissionCacheLock.Unlock()
+}
+
 // loadRolePermissionsFromDB 从数据库加载角色的权限
 // 直接从 role_permissions 联表查询，支持多租户
 // ctx 由调用方传入（请求链路为请求 ctx），不再使用 context.Background()
-func loadRolePermissionsFromDB(ctx context.Context, client *ent.Client, roleName string, tenantID int) []Permission {
+func loadRolePermissionsFromDB(ctx context.Context, client *ent.Client, roleName string, tenantID int) ([]Permission, error) {
 	// 如果 client 为 nil，直接返回空权限
 	if client == nil {
-		return nil
+		return nil, nil
 	}
 
 	cacheKey := roleName + "_" + strconv.Itoa(tenantID)
@@ -125,13 +156,14 @@ func loadRolePermissionsFromDB(ctx context.Context, client *ent.Client, roleName
 	if cached, exists := permissionCache[cacheKey]; exists {
 		if time.Now().Before(cached.expiresAt) {
 			permissionCacheLock.RUnlock()
-			return cached.permissions
+			return cached.permissions, nil
 		}
 	}
 	permissionCacheLock.RUnlock()
 
 	// 从数据库加载: 通过 role_permissions 联表查询
 	var perms []Permission
+	var loadErr error
 
 	// 首先查找角色ID
 	roleEntity, err := client.Role.Query().
@@ -148,6 +180,9 @@ func loadRolePermissionsFromDB(ctx context.Context, client *ent.Client, roleName
 		rolePerms, err := client.RolePermission.Query().
 			Where(rolepermission.RoleIDEQ(roleID), rolepermission.TenantID(tenantID)).
 			All(ctx)
+		if err != nil {
+			loadErr = err
+		}
 
 		if err == nil && len(rolePerms) > 0 {
 			// 提取permission_id列表
@@ -161,7 +196,9 @@ func loadRolePermissionsFromDB(ctx context.Context, client *ent.Client, roleName
 				Where(permission.IDIn(permIDs...), permission.TenantID(tenantID)).
 				All(ctx)
 
-			if err == nil {
+			if err != nil {
+				loadErr = err
+			} else {
 				for _, p := range permsData {
 					perms = append(perms, Permission{
 						Resource: p.Resource,
@@ -170,17 +207,16 @@ func loadRolePermissionsFromDB(ctx context.Context, client *ent.Client, roleName
 				}
 			}
 		}
+	} else if err != nil && !ent.IsNotFound(err) {
+		loadErr = err
 	}
 
-	// 存入缓存（带TTL）
-	permissionCacheLock.Lock()
-	permissionCache[cacheKey] = &cachedPermission{
-		permissions: perms,
-		expiresAt:   time.Now().Add(permissionCacheTTL),
+	cacheRolePermissions(cacheKey, perms, loadErr)
+	if loadErr != nil {
+		logPermissionLoadFailure(roleName, tenantID, loadErr)
 	}
-	permissionCacheLock.Unlock()
 
-	return perms
+	return perms, loadErr
 }
 
 // invalidatePermissionCache 使指定角色的缓存失效
@@ -205,10 +241,10 @@ func InvalidateAllPermissionCaches() {
 // AssignPermissions 的写入侧。若 role_permission 无数据，则 fallback 到
 // loadRolePermissionsFromDB（旧 Permission 表直查）。
 // ctx 由调用方传入（请求链路为请求 ctx），不再使用 context.Background()
-func loadPermissionsFromDB(ctx context.Context, client *ent.Client, roleName string, tenantID int) []Permission {
+func loadPermissionsFromDB(ctx context.Context, client *ent.Client, roleName string, tenantID int) ([]Permission, error) {
 	// 如果 client 为 nil，直接返回空权限（将使用默认权限）
 	if client == nil {
-		return nil
+		return nil, nil
 	}
 
 	cacheKey := roleName + "_" + strconv.Itoa(tenantID)
@@ -218,13 +254,14 @@ func loadPermissionsFromDB(ctx context.Context, client *ent.Client, roleName str
 	if cached, exists := permissionCache[cacheKey]; exists {
 		if time.Now().Before(cached.expiresAt) {
 			permissionCacheLock.RUnlock()
-			return cached.permissions
+			return cached.permissions, nil
 		}
 	}
 	permissionCacheLock.RUnlock()
 
 	// 从 role_permission 关联 + permission 权威表加载（见函数头注释）
 	var perms []Permission
+	var loadErr error
 
 	// 首先查找角色ID
 	roleEntity, err := client.Role.Query().
@@ -241,6 +278,9 @@ func loadPermissionsFromDB(ctx context.Context, client *ent.Client, roleName str
 		rolePerms, err := client.RolePermission.Query().
 			Where(rolepermission.RoleIDEQ(roleID), rolepermission.TenantID(tenantID)).
 			All(ctx)
+		if err != nil {
+			loadErr = err
+		}
 
 		if err == nil && len(rolePerms) > 0 {
 			// 提取permission_id列表
@@ -254,7 +294,9 @@ func loadPermissionsFromDB(ctx context.Context, client *ent.Client, roleName str
 				Where(permission.IDIn(permIDs...), permission.TenantID(tenantID)).
 				All(ctx)
 
-			if err == nil {
+			if err != nil {
+				loadErr = err
+			} else {
 				for _, p := range permsData {
 					perms = append(perms, Permission{
 						Resource: p.Resource,
@@ -263,29 +305,32 @@ func loadPermissionsFromDB(ctx context.Context, client *ent.Client, roleName str
 				}
 			}
 		}
+	} else if err != nil && !ent.IsNotFound(err) {
+		loadErr = err
 	}
 
 	// 如果仍然没有权限，fallback到旧的方式
 	if len(perms) == 0 {
-		perms = loadRolePermissionsFromDB(ctx, client, roleName, tenantID)
+		fallbackPerms, fallbackErr := loadRolePermissionsFromDB(ctx, client, roleName, tenantID)
+		perms = append(perms, fallbackPerms...)
+		if fallbackErr != nil {
+			loadErr = fallbackErr
+		}
 	}
 
-	// 存入缓存（带TTL）
-	permissionCacheLock.Lock()
-	permissionCache[cacheKey] = &cachedPermission{
-		permissions: perms,
-		expiresAt:   time.Now().Add(permissionCacheTTL),
+	cacheRolePermissions(cacheKey, perms, loadErr)
+	if loadErr != nil {
+		logPermissionLoadFailure(roleName, tenantID, loadErr)
 	}
-	permissionCacheLock.Unlock()
 
-	return perms
+	return perms, loadErr
 }
 
 // loadPermissionsFromDBDBOnlyState DBOnly 模式下区分三种状态，让 loadPermissionsByMode
 // 决定是 fail-closed（unavailable / configured）、走硬编码兜底（unconfigured）。
 //
 // 三态语义（详见 loadPermissionsByMode 注释）：
-//   - permissionDBOnlyUnavailable   : DB 不可用，调用方必须 fail-closed
+//   - permissionDBOnlyUnavailable   : DB 不可用（含查询报错/ctx 取消），调用方必须 fail-closed
 //   - permissionDBOnlyUnconfigured  : DB 可用但角色行不存在，走硬编码兜底
 //   - permissionDBOnlyConfigured    : DB 角色行存在，perms 以 DB 为准（空集=显式撤销，fail-closed）
 //
@@ -303,13 +348,34 @@ func loadPermissionsFromDBDBOnlyState(ctx context.Context, client *ent.Client, r
 			role.TenantID(tenantID),
 		).
 		Only(ctx)
-	if err != nil || roleEntity == nil {
-		// DB 可用但没角色行（典型：租户未跑 RBAC 初始化）
+	if ent.IsNotFound(err) || (err == nil && roleEntity == nil) {
+		// 只有整个租户还没有任何 Role 行时才视为“未初始化”并使用默认基线；
+		// 租户已有角色但当前 role 行缺失，视为该角色被撤销/迁移异常，
+		// 必须按显式空权限集 fail-closed，不能重新发放默认权限。
+		roleCount, countErr := client.Role.Query().
+			Where(role.TenantIDEQ(tenantID)).
+			Count(ctx)
+		if countErr != nil {
+			logPermissionLoadFailure(roleName, tenantID, countErr)
+			return permissionDBOnlyUnavailable, nil
+		}
+		if roleCount > 0 {
+			return permissionDBOnlyConfigured, nil
+		}
 		return permissionDBOnlyUnconfigured, nil
+	}
+	if err != nil {
+		// 查询本身失败（连接错误、ctx 取消、同 code 多行）：不能当成「未配置」走硬编码，
+		// 否则瞬时故障变成 fail-open。
+		logPermissionLoadFailure(roleName, tenantID, err)
+		return permissionDBOnlyUnavailable, nil
 	}
 
 	// 角色行存在：以 DB 实际权限集合为准（空集=显式撤销，仍 fail-closed）
-	perms := loadPermissionsFromDB(ctx, client, roleName, tenantID)
+	perms, loadErr := loadPermissionsFromDB(ctx, client, roleName, tenantID)
+	if loadErr != nil {
+		return permissionDBOnlyUnavailable, nil
+	}
 	return permissionDBOnlyConfigured, perms
 }
 
@@ -720,7 +786,7 @@ func loadPermissionsByMode(ctx context.Context, client *ent.Client, role string,
 		return RoleDefaultPermissions(role)
 	case PermissionConfigModeMerge:
 		// 合并数据库和默认权限（并集）
-		dbPerms := loadPermissionsFromDB(ctx, client, role, tenantID)
+		dbPerms, _ := loadPermissionsFromDB(ctx, client, role, tenantID)
 		defaultPerms := RoleDefaultPermissions(role)
 		if len(defaultPerms) == 0 {
 			return dbPerms
@@ -748,7 +814,7 @@ func loadPermissionsByMode(ctx context.Context, client *ent.Client, role string,
 		fallthrough
 	default:
 		// 默认（仅 dev/test 环境）：先数据库（role_permission+permission 表），为空则使用默认权限
-		dbPerms := loadPermissionsFromDB(ctx, client, role, tenantID)
+		dbPerms, _ := loadPermissionsFromDB(ctx, client, role, tenantID)
 		if len(dbPerms) > 0 {
 			return dbPerms
 		}

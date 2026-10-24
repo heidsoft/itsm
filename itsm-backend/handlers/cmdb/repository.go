@@ -59,11 +59,28 @@ type Repository interface {
 	CreateDiscoveryJobWithCommand(ctx context.Context, job *DiscoveryJob, commandType string, payload map[string]interface{}) (*DiscoveryJob, error)
 	GetDiscoveryJob(ctx context.Context, tenantID, id int) (*DiscoveryJob, error)
 	FindDiscoveryJobByIdempotencyKey(ctx context.Context, tenantID int, sourceID, key string) (*DiscoveryJob, error)
+	// ListScheduledDiscoverySources 返回「启用且配置了调度表达式」的来源，
+	// 是 cron 调度器的唯一扫描入口（未配置 schedule 的来源不会被自动触发）。
+	ListScheduledDiscoverySources(ctx context.Context, tenantID int) ([]*DiscoverySource, error)
+	// LatestDiscoveryJobForSource 取该来源最近一次任务（按入队时间倒序）。
+	// 调度器用它做两件事：判断是否有在途任务、确定「上次跑过」的时间锚点。
+	LatestDiscoveryJobForSource(ctx context.Context, tenantID int, sourceID string) (*DiscoveryJob, error)
+	// LatestScheduledDiscoveryJobForSource 只取自动调度任务，避免手动任务
+	// 抢占 cron 锚点后跳过某个应执行的触发点。
+	LatestScheduledDiscoveryJobForSource(ctx context.Context, tenantID int, sourceID string) (*DiscoveryJob, error)
 	ListDiscoveryJobs(ctx context.Context, tenantID int, status string, page, pageSize int) ([]*DiscoveryJob, int, error)
 	// UpdateDiscoveryJob 全字段写回（执行器 claim/进度/终态推进的持久化通道）。
 	UpdateDiscoveryJob(ctx context.Context, job *DiscoveryJob) error
 	CreateDiscoveryResult(ctx context.Context, res *DiscoveryResult) (*DiscoveryResult, error)
 	ListDiscoveryResults(ctx context.Context, tenantID int, jobID int) ([]*DiscoveryResult, error)
+	// GetDiscoveryResult / UpdateDiscoveryResult 是人工差异决策（apply/reject）的读写面。
+	// manual 对账策略下 update 只落 pending 结果，没有这两条通道，差异永远停在
+	// 「待人工确认」——发现算得再准，账也合不上。
+	GetDiscoveryResult(ctx context.Context, tenantID, id int) (*DiscoveryResult, error)
+	UpdateDiscoveryResult(ctx context.Context, res *DiscoveryResult) error
+	// TransitionDiscoveryResult 以 fromStatus 做 CAS，防止 apply/reject 并发
+	// 重复决策；返回受影响行数，0 表示状态已被其他操作者改变。
+	TransitionDiscoveryResult(ctx context.Context, tenantID, id int, fromStatus, toStatus, errorCode, errorMessage string) (int, error)
 	// GetCloudResourceByIdentity 按规范身份哈希取资源（发现 diff 的现状读取面）。
 	GetCloudResourceByIdentity(ctx context.Context, tenantID int, identityHash string) (*CloudResource, error)
 	// ListCloudResourcesByAccountService 按账号+服务维度列资源（缺失扫描：

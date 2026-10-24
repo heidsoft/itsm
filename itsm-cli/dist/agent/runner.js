@@ -118,6 +118,7 @@ async function dispatch(argv) {
 /** Shared execution path: flag contract → dry-run preview → exit-10 gate → run → classify failures. */
 async function executeSpec(spec, args, rest) {
     validateFlags(spec, args);
+    validatePositionals(spec, rest);
     if (args.dryRun) {
         return {
             code: ExitCode.Success,
@@ -197,6 +198,16 @@ function validateFlags(spec, args) {
     // `body()`/`jsonFlag()` accept `--payload` wherever `--data` is declared.
     if (known.has('data'))
         known.add('payload');
+    // Policy denials come first: a secret on argv should explain WHY it is
+    // refused and point at the safe channel, not read as a typo.
+    if (spec.denyFlags) {
+        for (const flag of Object.keys(args.flags)) {
+            const reason = spec.denyFlags[flag];
+            if (!reason)
+                continue;
+            throw usageError(`Refusing '--${flag}' on the command line for '${spec.name}': ${reason}`);
+        }
+    }
     const unknown = Object.keys(args.flags).filter((f) => !known.has(f) && f.length > 1);
     if (!unknown.length)
         return;
@@ -208,8 +219,25 @@ function validateFlags(spec, args) {
         `${suggestion ? ` — did you mean '--${suggestion}'? ` : ' '}` +
         `Run 'itsm ${cliName} --help' for the declared contract.`);
 }
-/** Smallest edit distance to a known flag, surfaced only when meaningfully close. */
-function closestName(name, candidates) {
+/**
+ * Strict positional validation at dispatch — the mirror of `validateFlags`.
+ *
+ * Only *extra* positionals are rejected (a declared-but-unused one is harmless).
+ * Without this, `itsm connector configs garbage` resolves to `connector.configs`,
+ * never reads the trailing token, and returns ok:true — the agent believes a
+ * per-connector config was fetched when the argument was silently dropped.
+ * Under-declared positionals are caught statically by `audit-positionals.mjs`.
+ */
+function validatePositionals(spec, rest) {
+    const declared = spec.input.params.filter((p) => p.kind === 'positional');
+    if (rest.length <= declared.length)
+        return;
+    const expected = declared.map((p) => `<${p.name}>`).join(' ');
+    const cliName = spec.name.split('.').join(' ');
+    throw usageError(`Unexpected positional argument '${rest[declared.length]}' for '${spec.name}'` +
+        ` — this command takes ${declared.length ? expected : 'no positional arguments'} (usage: ${spec.usage}).`);
+}
+/** Smallest edit distance to a known flag, surfaced only when meaningfully close. */ function closestName(name, candidates) {
     let best;
     let bestDist = Infinity;
     for (const c of candidates) {
@@ -416,11 +444,14 @@ function manifestEnvelope() {
             ITSM_USERNAME: 'non-interactive login (paired with ITSM_PASSWORD or ITSM_PASSWORD_FILE)',
             ITSM_PASSWORD: 'password for non-interactive login (visible to same-user processes)',
             ITSM_PASSWORD_FILE: 'path to a 0600 file containing the password (preferred over ITSM_PASSWORD)',
+            ITSM_RESET_TOKEN: 'password-reset token read from the environment (prefer ITSM_RESET_TOKEN_FILE)',
+            ITSM_RESET_TOKEN_FILE: 'path to a 0600 file containing a password-reset token',
             ITSM_CREDENTIALS_FILE: 'override the credential store path (default ~/.itsm/credentials)',
             ITSM_ALLOW_INSECURE_HTTP: 'set to 1 to allow sending credentials over non-loopback plaintext HTTP (not recommended)',
             ITSM_CLI_AGENT_NO_GUARD: 'set to 1 to disable the stdout guard (debugging only)',
         },
         authSecurity: {
+            argvSecrets: 'password/reset-token flags are refused with exit 2 (argv leaks via shell history and ps); use --password-stdin/--password-file, --token-stdin, --reset-token-stdin/--reset-token-file',
             credentialStore: '0700 dir / 0600 file, atomic writes, symlink writes refused',
             transport: 'credentials are refused over http:// unless the host is loopback or ITSM_ALLOW_INSECURE_HTTP=1',
             logout: 'revokes the refresh token server-side before deleting the local store',

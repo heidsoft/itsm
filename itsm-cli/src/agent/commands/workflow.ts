@@ -1,5 +1,5 @@
 import { cmd } from '../spec.js';
-import { requirePositional, body, stringFlag, withPagination } from '../helpers.js';
+import { requirePositional, body, stringFlag, optionalString, withPagination } from '../helpers.js';
 import { apiClient } from '../../lib/api-client.js';
 import { usageError } from '../../lib/errors.js';
 import type { CommandContext } from '../spec.js';
@@ -12,9 +12,20 @@ function taskId(ctx: CommandContext): string {
 
 export function workflowCommands() {
   return [
-    cmd('workflow.definitions', 'List process definitions', 'itsm workflow definitions', ['GET /api/v1/bpmn/process-definitions'], async (ctx) => apiClient.listBPMNDefinitions()),
+    cmd('workflow.definitions', 'List process definitions (paged; backend binds key/category/isActive/page/pageSize)', 'itsm workflow definitions [--page N] [--pageSize N] [--key k] [--category c]', ['GET /api/v1/bpmn/process-definitions'], async (ctx) =>
+      apiClient.listBPMNDefinitions({
+        ...withPagination(ctx.args),
+        key: optionalString(ctx.args, 'key'),
+        category: optionalString(ctx.args, 'category'),
+      } as never)),
     cmd('workflow.definition', 'Process definition detail (by key)', 'itsm workflow definition <key>', ['GET /api/v1/bpmn/process-definitions/:key'], async (ctx) => apiClient.getBPMNDefinition(requirePositional(ctx.args, 0, 'key'))),
-    cmd('workflow.instances', 'List process instances', 'itsm workflow instances', ['GET /api/v1/bpmn/process-instances'], async (ctx) => apiClient.listProcessInstances()),
+    cmd('workflow.instances', 'List process instances (paged; backend binds processDefinitionKey/status/businessKey/page/pageSize)', 'itsm workflow instances [--page N] [--pageSize N] [--processDefinitionKey k] [--status s] [--businessKey b]', ['GET /api/v1/bpmn/process-instances'], async (ctx) =>
+      apiClient.listProcessInstances({
+        ...withPagination(ctx.args),
+        processDefinitionKey: optionalString(ctx.args, 'processDefinitionKey'),
+        status: optionalString(ctx.args, 'status'),
+        businessKey: optionalString(ctx.args, 'businessKey'),
+      } as never)),
     cmd('workflow.instance', 'Process instance detail', 'itsm workflow instance <id>', ['GET /api/v1/bpmn/process-instances/:id'], async (ctx) => apiClient.getProcessInstance(taskId(ctx))),
     cmd('workflow.start', 'Start an instance (processDefinitionKey required)', 'itsm workflow start <processDefinitionKey> [--businessKey k] [--variables <json>] | --data <json>', ['POST /api/v1/bpmn/process-instances'], async (ctx) => {
       const data = body(ctx.args);

@@ -798,7 +798,7 @@ func (c *WorkflowHandler) GetTask(ctx *gin.Context) {
 
 	// 先尝试解析为数字ID（数据库自增ID）
 	id, err := strconv.Atoi(taskID)
-	var task interface{}
+	var task *ent.ProcessTask
 	if err == nil {
 		// 数字ID，使用GetTaskByID
 		task, err = c.processEngine.TaskService().GetTaskByID(workflowCtx, id)
@@ -810,8 +810,12 @@ func (c *WorkflowHandler) GetTask(ctx *gin.Context) {
 		common.NotFoundWithErr(ctx, err, "任务不存在")
 		return
 	}
+	if err := c.processEngine.TaskService().AuthorizeTaskAccess(workflowCtx, task, false); err != nil {
+		common.RespondError(ctx, err, "任务不可访问")
+		return
+	}
 
-	common.Success(ctx, task)
+	common.Success(ctx, dto.ToBPMNTaskResponse(task, nil))
 }
 
 // AssignTask 分配任务

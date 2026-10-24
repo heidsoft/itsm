@@ -316,10 +316,17 @@ func (r *EntRepository) List(ctx context.Context, tenantID int, page, size int, 
 }
 
 func (r *EntRepository) Update(ctx context.Context, p *Problem, expectedStatus string) (*Problem, error) {
+	return r.UpdateTx(ctx, r.client, p, expectedStatus)
+}
+
+// UpdateTx 与 Update 同语义，但写入走调用方事务绑定的 Ent client，
+// 供「业务写入 + BPMN 桥接」组成同一事务（问题域生命周期原子推进）。
+// 不创建/提交/回滚事务，最终结果由事务所有者决定。
+func (r *EntRepository) UpdateTx(ctx context.Context, txc *ent.Client, p *Problem, expectedStatus string) (*Problem, error) {
 	// CAS：problem 无 version 列，用读取时状态锚定校验-写入并发窗口。
 	// 注意区分两种 NotFound 成因：工件真的不存在/已软删（透传原始错误，
 	// service 映射 404）vs 工件还在但状态已被并发推进（类型化冲突，409）。
-	update := r.client.Problem.UpdateOneID(p.ID).
+	update := txc.Problem.UpdateOneID(p.ID).
 		Where(problem.TenantIDEQ(p.TenantID), problem.DeletedAtIsNil(), problem.StatusEQ(expectedStatus)).
 		SetTitle(p.Title).
 		SetDescription(p.Description).

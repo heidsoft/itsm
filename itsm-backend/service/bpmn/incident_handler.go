@@ -132,6 +132,13 @@ func (h *IncidentServiceTaskHandler) createIncident(ctx context.Context, variabl
 }
 
 // assignIncident 分配事件
+//
+// 与 ticket_handler.assignTicket 对齐：没有处理人就不能写库。
+// 此前这里直接 SetAssigneeID(assigneeID)，而 assignee_id 在 incident schema 里是
+// Optional 的普通 int 列——传 0 会真的把 assignee_id 写成 0（一个不存在的用户），
+// 库不报错、页面上却显示「已分配给某人」，是比报错更难查的坏数据。
+// 本代码库没有自动派单实现（无 auto-assign 服务），「自动分配」节点必须有外部
+// 传入的 assignee_id 才能落地；拿不到就明确失败并指出缺哪个变量。
 func (h *IncidentServiceTaskHandler) assignIncident(ctx context.Context, variables map[string]interface{}) (*dto.ServiceTaskResult, error) {
 	incidentID := GetIntFromVars(variables, "incident_id")
 	assigneeID := GetIntFromVars(variables, "assignee_id")
@@ -140,8 +147,21 @@ func (h *IncidentServiceTaskHandler) assignIncident(ctx context.Context, variabl
 		return nil, fmt.Errorf("分配事件失败: %w", err)
 	}
 
-	if _, err := h.getIncidentByIDWithTenant(ctx, incidentID, tenantID); err != nil {
+	inc, err := h.getIncidentByIDWithTenant(ctx, incidentID, tenantID)
+	if err != nil {
 		return nil, err
+	}
+
+	// 没传处理人时沿用事件当前处理人（可能是受理时已指派的），仍然没有才失败。
+	if assigneeID <= 0 && inc.AssigneeID > 0 {
+		assigneeID = inc.AssigneeID
+	}
+	if assigneeID <= 0 {
+		return nil, fmt.Errorf(
+			"分配事件失败: 未指定处理人（incident_id=%d, tenant=%d）："+
+				"请在触发流程时通过 variables.assignee_id 传入处理人，或改用 userTask 让人工分配",
+			incidentID, tenantID,
+		)
 	}
 
 	_, err = h.client.Incident.UpdateOneID(incidentID).

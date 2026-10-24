@@ -17,6 +17,7 @@
  * free and cannot drift from the CLI contract.
  */
 import { registry } from '../agent/registry.js';
+import { describeCommand } from '../agent/spec.js';
 /**
  * Curated hot path. Anything not here stays reachable through `itsm_call` —
  * the list is about discovery cost, not about capability.
@@ -494,17 +495,12 @@ export function describeTool(command) {
         const suggestion = suggestCommand(command);
         throw new Error(`未知命令 '${command}'${suggestion ? `，是否要 '${suggestion}'？` : ''}。先用 itsm_discover 检索可用命令。`);
     }
+    // Delegate to the CLI's own describeCommand: `itsm --json schema <cmd>` and
+    // `itsm_describe` must return ONE contract shape. Hand-rolling a second
+    // projection here previously dropped `input.deniedFlags` — the record that
+    // tells a host `--password` is refused and which channel to use instead.
     return {
-        command: spec.name,
-        summary: spec.summary,
-        usage: spec.usage,
-        risk: spec.risk,
-        requiresConfirmation: spec.risk === 'high-risk-write',
-        endpoints: spec.endpoints,
-        params: spec.input.params,
-        ...(spec.input.body ? { body: spec.input.body } : {}),
-        ...(spec.bodyFields?.length ? { bodyFields: spec.bodyFields } : {}),
-        examples: spec.examples ?? [],
+        ...describeCommand(spec),
         nativeTool: CURATED.find((c) => c.command === spec.name)?.tool,
     };
 }

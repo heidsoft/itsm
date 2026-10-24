@@ -520,6 +520,8 @@ func newTestHarness(t *testing.T) (*gin.Engine, *mockRepository) {
 	api.GET("/tickets/stats", h.GetTicketStats)
 	api.GET("/tickets/search", h.SearchTickets)
 	api.GET("/tickets/overdue", h.GetOverdueTickets)
+	api.GET("/tickets/assignee/:assignee_id", h.GetTicketsByAssignee)
+	api.GET("/tickets/:id/subtasks", h.GetSubtasks)
 
 	return r, repo
 }

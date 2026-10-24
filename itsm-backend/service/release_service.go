@@ -13,6 +13,7 @@ import (
 	"itsm-backend/ent/change"
 	"itsm-backend/ent/release"
 	"itsm-backend/ent/user"
+	"itsm-backend/internal/commandbus"
 	"itsm-backend/internal/datascope"
 
 	"go.uber.org/zap"
@@ -23,6 +24,14 @@ type ReleaseService struct {
 	client         *ent.Client
 	logger         *zap.SugaredLogger
 	approvalBridge *BPMNApprovalBridge
+	// workflowOutboxEnabled 启用后，CreateRelease 在业务事务内以 transactional
+	// outbox 落 CommandStartBPMN 命令（幂等键 release:<id>:workflow:start），
+	// 由命令总线异步启动 release_approval_flow，保证「发布已建、流程必起」。
+	// 未启用时退化为 goroutine fire-and-forget（at-most-once，失败仅错误日志
+	// + 补跑指引），仅兼容单测/旧组装；生产组装只走持久化命令路径。
+	workflowOutboxEnabled bool
+	// processTriggerSvc 仅用于 outbox 未启用时的兼容触发路径。
+	processTriggerSvc ProcessTriggerServiceInterface
 }
 
 // NewReleaseService 创建发布管理服务
@@ -36,6 +45,16 @@ func NewReleaseService(client *ent.Client, logger *zap.SugaredLogger) *ReleaseSe
 		svc.approvalBridge = NewBPMNApprovalBridge(client, logger)
 	}
 	return svc
+}
+
+// EnableWorkflowOutbox 启用发布创建的流程启动事务外发箱：
+// CreateRelease 在同一事务内落 CommandStartBPMN 命令，替代 goroutine
+// at-most-once 触发（与 ticket/incident 同口径）。
+func (s *ReleaseService) EnableWorkflowOutbox() { s.workflowOutboxEnabled = true }
+
+// SetProcessTriggerService 设置流程触发服务（仅 outbox 未启用时的兼容路径使用）。
+func (s *ReleaseService) SetProcessTriggerService(triggerService ProcessTriggerServiceInterface) {
+	s.processTriggerSvc = triggerService
 }
 
 // validateReferences 校验关联变更/负责人属于同一租户。
@@ -137,6 +156,21 @@ func (s *ReleaseService) CreateRelease(ctx context.Context, req *dto.CreateRelea
 		releaseEntity = updated
 	}
 
+	// 发布创建即启动审批流（release_approval_flow）：outbox 启用时命令与业务
+	// 写入同事务，失败整单回滚——不会出现「发布已建、无流程实例」的悬挂态；
+	// 幂等键 release:<id>:workflow:start 保证命令重放不重复起流。
+	if s.workflowOutboxEnabled {
+		if _, err := commandbus.EnqueueTx(ctx, tx, commandbus.EnqueueRequest{
+			TenantID: tenantID, CommandType: commandbus.CommandStartBPMN,
+			AggregateType: "release", AggregateID: releaseEntity.ID,
+			IdempotencyKey: fmt.Sprintf("release:%d:workflow:start", releaseEntity.ID),
+			Payload:        map[string]interface{}{"businessType": "release", "businessId": releaseEntity.ID},
+		}); err != nil {
+			s.logger.Errorw("Failed to enqueue release workflow command", "error", err, "release_id", releaseEntity.ID)
+			return nil, fmt.Errorf("enqueue release workflow: %w", err)
+		}
+	}
+
 	if err := tx.Commit(); err != nil {
 		s.logger.Errorw("Failed to commit release transaction", "error", err, "tenant_id", tenantID)
 		return nil, fmt.Errorf("failed to create release: %w", err)
@@ -152,8 +186,57 @@ func (s *ReleaseService) CreateRelease(ctx context.Context, req *dto.CreateRelea
 	response := dto.ToReleaseResponse(releaseEntity)
 	response.CreatedByName = creatorName
 
+	// 兼容未启用 outbox 的单元测试/旧组装；生产组装只允许持久化命令路径。
+	// 与 ticket/incident 同款语义：goroutine at-most-once 触发，失败即该单
+	// 永久无流程实例，必须按错误级别暴露并附补跑指引。
+	if s.processTriggerSvc != nil && !s.workflowOutboxEnabled {
+		go func() {
+			workflowCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+			defer cancel()
+			if err := s.triggerWorkflowForRelease(workflowCtx, releaseEntity.ID, tenantID); err != nil {
+				s.logger.Errorw("Failed to trigger workflow for release (non-outbox fire-and-forget, delivery=at-most-once)",
+					"error", err, "release_id", releaseEntity.ID,
+					"remedy", "启用 ITSM workflow outbox 或人工调用 /process-trigger 重放")
+			}
+		}()
+	}
+
 	s.logger.Infow("Release created successfully", "release_id", releaseEntity.ID, "tenant_id", tenantID, "release_number", releaseNumber)
 	return response, nil
+}
+
+// triggerWorkflowForRelease 为发布触发审批工作流（outbox 未启用时的兼容路径）。
+// 流程 key 与变量形状与 WorkflowStartCommandHandler 的 release 分支保持一致，
+// 保证两条起流路径（outbox 命令 / 兼容触发）产生同一契约的流程实例。
+func (s *ReleaseService) triggerWorkflowForRelease(ctx context.Context, releaseID int, tenantID int) error {
+	rel, err := s.client.Release.Query().
+		Where(release.IDEQ(releaseID), release.TenantIDEQ(tenantID)).
+		Only(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to get release: %w", err)
+	}
+
+	triggerReq := &dto.ProcessTriggerRequest{
+		BusinessType:         dto.BusinessTypeRelease,
+		BusinessID:           rel.ID,
+		ProcessDefinitionKey: "release_approval_flow",
+		Variables: map[string]interface{}{
+			"release_id": rel.ID, "release_number": rel.ReleaseNumber, "title": rel.Title,
+			"description": rel.Description, "type": rel.Type, "severity": rel.Severity,
+			"environment": rel.Environment, "status": string(rel.Status), "created_by": rel.CreatedBy,
+			"requires_approval": rel.RequiresApproval, "is_emergency": rel.IsEmergency,
+		},
+		TriggeredBy: fmt.Sprintf("%d", rel.CreatedBy),
+		TriggeredAt: time.Now(),
+		TenantID:    tenantID,
+	}
+
+	if _, err := s.processTriggerSvc.TriggerProcess(ctx, triggerReq); err != nil {
+		return fmt.Errorf("failed to trigger workflow: %w", err)
+	}
+
+	s.logger.Infow("Workflow triggered for release", "release_id", rel.ID, "release_number", rel.ReleaseNumber, "tenant_id", tenantID)
+	return nil
 }
 
 // generateReleaseNumber 服务端生成发布编号（REL-YYYYMMDD-xxxxxx），

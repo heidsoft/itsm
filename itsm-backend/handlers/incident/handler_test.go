@@ -144,7 +144,9 @@ func (m *mockRepository) GenerateIncidentNumber(ctx context.Context, tenantID, y
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.numberCounter++
-	return "INC-2026-0001", nil
+	// 真实实现返回全局唯一编号（incidents.incident_number 上有唯一索引），
+	// mock 也必须唯一，否则「连续创建两张事件」的用例会撞唯一约束。
+	return fmt.Sprintf("INC-2026-%04d", m.numberCounter), nil
 }
 
 func (m *mockRepository) CountByPeriod(ctx context.Context, tenantID int, start, end time.Time) (int, error) {

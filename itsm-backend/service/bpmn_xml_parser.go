@@ -38,7 +38,13 @@ func (p *BPMNParser) ParseXML(xmlData []byte) (*BPMNDefinitions, error) {
 // enrichProcessElements 解析器后处理：
 //  1. 收集各元素的 <outgoing> 声明到 process.OutgoingDecls（elementID -> flow ids）；
 //  2. 解析 serviceTask 扩展元素 <metaData name="service_task_type"> 到
-//     ServiceTask.ServiceTaskType，供 serviceTaskReference 优先匹配内部 handler。
+//     ServiceTask.ServiceTaskType，供 serviceTaskReference 优先匹配内部 handler；
+//  3. 解析 serviceTask 扩展元素 <metaData name="action"> 到 ServiceTask.Action，
+//     由 mergeServiceTaskVariables 注入 variables["action"] 供 handler 消费。
+//
+// 第 3 步缺失过一段时间：模板都写了 action，但解析器只认 service_task_type，
+// handler 又只读 variables["action"]，链路两头都不通——结果是所有 serviceTask
+// 在生产里 100% 死信，而单元测试因为手工塞 variables["action"] 全绿。
 func (p *BPMNParser) enrichProcessElements(xmlData []byte, definitions *BPMNDefinitions) {
 	// 原始形态：任何携带 id 的元素都可能有 outgoing 子标签
 	type rawElement struct {
@@ -52,6 +58,18 @@ func (p *BPMNParser) enrichProcessElements(xmlData []byte, definitions *BPMNDefi
 				Name  string `xml:"name,attr"`
 				Value string `xml:",chardata"`
 			} `xml:"metaData"`
+			// Camunda 标准写法：<camunda:inputOutput><camunda:inputParameter
+			// name="action">xxx</camunda:inputParameter></camunda:inputOutput>。
+			// 内建模板主要用 metaData，但 incident_emergency_flow_v1.1.bpmn
+			// 用的是这套标准写法——只认 metaData 会让它整条链路的 serviceTask
+			// 全部取不到 action。Go 的 xml 解码在未指定命名空间时按 local name
+			// 匹配，因此这里不必写 camunda 前缀。
+			InputOutput struct {
+				InputParameter []struct {
+					Name  string `xml:"name,attr"`
+					Value string `xml:",chardata"`
+				} `xml:"inputParameter"`
+			} `xml:"inputOutput"`
 		} `xml:"extensionElements"`
 	}
 	type rawProcess struct {
@@ -94,8 +112,25 @@ func (p *BPMNParser) enrichProcessElements(xmlData []byte, definitions *BPMNDefi
 					continue
 				}
 				for _, md := range rst.ExtensionElems.MetaData {
-					if md.Name == "service_task_type" && md.Value != "" {
-						st.ServiceTaskType = strings.TrimSpace(md.Value)
+					switch md.Name {
+					case "service_task_type":
+						if md.Value != "" {
+							st.ServiceTaskType = strings.TrimSpace(md.Value)
+						}
+					case "action":
+						if md.Value != "" {
+							st.Action = strings.TrimSpace(md.Value)
+						}
+					}
+				}
+				// metaData 里没有 action 时，回落到 Camunda 标准 inputParameter。
+				// 两种写法同值时以 metaData 为准（内建模板的主约定）。
+				if st.Action == "" {
+					for _, p := range rst.ExtensionElems.InputOutput.InputParameter {
+						if p.Name == "action" && p.Value != "" {
+							st.Action = strings.TrimSpace(p.Value)
+							break
+						}
 					}
 				}
 			}

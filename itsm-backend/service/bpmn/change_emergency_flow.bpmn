@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                 xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                 xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                 xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+                 targetNamespace="http://bpmn.io/schema/bpmn">
+
+  <!--
+    紧急变更流程（change_emergency_flow）。
+
+    为什么存在这个文件：service/process_resolver.go 的 ResolveForChange 在
+    type=emergency 时兜底返回本 key，bpmn_process_binding_service 的默认绑定表
+    也把它写成 emergency 的目标，bpmn_template_service 还为它预留了模板元信息——
+    但 service/bpmn/ 下从来没有对应的 .bpmn 载体。结果是：建一张紧急变更，
+    workflow.start 立刻报「流程定义 change_emergency_flow 不存在」，重试 8 次
+    后进 dead_letter，变更永远没有流程实例。
+
+    语义（「快速审批路径」，见 handlers/change/service.go 的 workflow hint：
+    「紧急变更建议启用快速审批路径，并在实施后自动创建 PIR 任务」）：
+      - 只保留一级紧急审批（Activity_EmergencyApproval），不走 CAB 全会；
+      - 不设排期节点：紧急变更没有窗口期，批准即实施；
+      - 保留 评估 → 审批 → 实施 → 验证 → 关闭，验证不通过回退实施；
+      - 驳回有独立出口（Activity_Reject → 结束），不留悬空分支。
+
+    为什么必须有审批节点（2026-10-24 实测）：SubmitChange 对任何类型都会建审批链
+    （change_approval_chains 一条 pending），而审批桥接
+    （BPMNApprovalBridge.findApprovalTaskWithClient）只认流程里真实存在的待办
+    user_task。若流程无审批节点，/changes/{id}/approve 会返回 409
+    「流程已绑定但当前没有可处理的审批待办」，变更永久卡在 pending——所以
+    「免审批」不是这个代码库的语义，只能是「少一级、快一步」。
+  -->
+  <bpmn:process id="change_emergency_flow" name="紧急变更流程" isExecutable="true">
+    <bpmn:extensionElements>
+      <bpmn:metaData name="category">change</bpmn:metaData>
+      <bpmn:metaData name="sub_category">emergency</bpmn:metaData>
+      <bpmn:metaData name="version">1.0.0</bpmn:metaData>
+      <bpmn:metaData name="description">紧急变更快速处理流程（单级紧急审批，跳过 CAB 与排期）</bpmn:metaData>
+    </bpmn:extensionElements>
+
+    <!-- 开始事件：紧急变更申请 -->
+    <bpmn:startEvent id="StartEvent_1" name="紧急变更申请">
+      <bpmn:outgoing>Flow_1</bpmn:outgoing>
+    </bpmn:startEvent>
+
+    <!-- 紧急评估：影响面与回滚预案 -->
+    <bpmn:userTask id="Activity_Assessment" name="紧急评估">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="service_task_type">change_task</bpmn:metaData>
+        <bpmn:metaData name="action">update_change</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_1</bpmn:incoming>
+      <bpmn:outgoing>Flow_2</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- 单级紧急审批：快速审批路径，不走 CAB 全会 -->
+    <bpmn:userTask id="Activity_EmergencyApproval" name="紧急审批">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="service_task_type">change_task</bpmn:metaData>
+        <bpmn:metaData name="action">approve_change</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_2</bpmn:incoming>
+      <bpmn:outgoing>Flow_ApprovalResult</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- 审批结果网关 -->
+    <bpmn:exclusiveGateway id="Gateway_ApprovalResult" name="审批结果?">
+      <bpmn:incoming>Flow_ApprovalResult</bpmn:incoming>
+      <bpmn:outgoing>Flow_Implement</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Reject</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <!-- 驳回处理 -->
+    <bpmn:userTask id="Activity_Reject" name="紧急变更驳回">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="service_task_type">change_task</bpmn:metaData>
+        <bpmn:metaData name="action">reject_change</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Reject</bpmn:incoming>
+      <bpmn:outgoing>Flow_EndReject</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- 实施 -->
+    <bpmn:userTask id="Activity_Implement" name="紧急实施">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="service_task_type">change_task</bpmn:metaData>
+        <bpmn:metaData name="action">implement_change</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Implement</bpmn:incoming>
+      <bpmn:incoming>Flow_BackToImplement</bpmn:incoming>
+      <bpmn:outgoing>Flow_3</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- 验证 -->
+    <bpmn:userTask id="Activity_Verify" name="紧急变更验证">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="service_task_type">change_task</bpmn:metaData>
+        <bpmn:metaData name="action">verify_change</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_3</bpmn:incoming>
+      <bpmn:outgoing>Flow_4</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- 验证结果网关 -->
+    <bpmn:exclusiveGateway id="Gateway_VerifyResult" name="验证结果?">
+      <bpmn:incoming>Flow_4</bpmn:incoming>
+      <bpmn:outgoing>Flow_Close</bpmn:outgoing>
+      <bpmn:outgoing>Flow_BackToImplement</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <!-- 回退实施：验证未通过时回到实施，不另起流程 -->
+    <bpmn:sequenceFlow id="Flow_BackToImplement" sourceRef="Gateway_VerifyResult" targetRef="Activity_Implement">
+      <bpmn:conditionExpression><![CDATA[${variables['verify_passed'] != true}]]></bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+
+    <!-- 关闭：补记录，供事后 CAB 复盘 / PIR -->
+    <bpmn:userTask id="Activity_Close" name="关闭紧急变更">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="service_task_type">change_task</bpmn:metaData>
+        <bpmn:metaData name="action">close_change</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Close</bpmn:incoming>
+      <bpmn:outgoing>Flow_End</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- 结束事件 -->
+    <bpmn:endEvent id="EndEvent_1" name="紧急变更完成">
+      <bpmn:incoming>Flow_End</bpmn:incoming>
+      <bpmn:incoming>Flow_EndReject</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <!-- 连线 -->
+    <bpmn:sequenceFlow id="Flow_1" sourceRef="StartEvent_1" targetRef="Activity_Assessment" />
+    <bpmn:sequenceFlow id="Flow_2" sourceRef="Activity_Assessment" targetRef="Activity_EmergencyApproval" />
+    <bpmn:sequenceFlow id="Flow_ApprovalResult" sourceRef="Activity_EmergencyApproval" targetRef="Gateway_ApprovalResult" />
+    <bpmn:sequenceFlow id="Flow_Implement" sourceRef="Gateway_ApprovalResult" targetRef="Activity_Implement">
+      <bpmn:conditionExpression><![CDATA[${variables['approvalResult'] == 'approved'}]]></bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Reject" sourceRef="Gateway_ApprovalResult" targetRef="Activity_Reject">
+      <bpmn:conditionExpression><![CDATA[${variables['approvalResult'] != 'approved'}]]></bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_EndReject" sourceRef="Activity_Reject" targetRef="EndEvent_1" />
+    <bpmn:sequenceFlow id="Flow_3" sourceRef="Activity_Implement" targetRef="Activity_Verify" />
+    <bpmn:sequenceFlow id="Flow_4" sourceRef="Activity_Verify" targetRef="Gateway_VerifyResult" />
+    <bpmn:sequenceFlow id="Flow_Close" sourceRef="Gateway_VerifyResult" targetRef="Activity_Close">
+      <bpmn:conditionExpression><![CDATA[${variables['verify_passed'] == true}]]></bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_End" sourceRef="Activity_Close" targetRef="EndEvent_1" />
+  </bpmn:process>
+</bpmn:definitions>

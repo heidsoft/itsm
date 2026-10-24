@@ -144,6 +144,13 @@ for (const file of readdirSync(CMD_DIR).filter((f) => f.endsWith('.ts')).sort())
     const runBody = arrayEnd >= 0 ? scoped.slice(0, arrayEnd) : scoped;
     const read = flagsReadIn(runBody, helpers);
 
+    // `denyFlags` are read only to reject them with a security explanation
+    // (secrets must not travel on argv). They are intentionally absent from the
+    // usage string, so subtract them instead of reporting a schema gap.
+    for (const block of closure.matchAll(/denyFlags:\s*\{([^}]*)\}/g)) {
+      for (const key of block[1].matchAll(/([A-Za-z][\w-]*)\s*:/g)) read.delete(key[1]);
+    }
+
     const undeclared = [...read]
       .filter((f) => !declared.has(f) && !DECLARED_ALIASES.has(f))
       .sort();

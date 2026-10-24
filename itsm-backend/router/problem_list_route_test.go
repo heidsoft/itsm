@@ -57,7 +57,7 @@ func TestProblemListRouteEnvelopeAndPagination(t *testing.T) {
 	t.Cleanup(func() { client.Close() })
 
 	logger := zaptest.NewLogger(t).Sugar()
-	handler := problemHandler.NewHandler(problemHandler.NewService(problemHandler.NewEntRepository(client), service.NewTicketServiceForTest(client, logger), logger))
+	handler := problemHandler.NewHandler(problemHandler.NewService(problemHandler.NewEntRepository(client), client, service.NewTicketServiceForTest(client, logger), logger))
 
 	gin.SetMode(gin.TestMode)
 	r := gin.New()

@@ -627,7 +627,9 @@ export class ApiClient {
     await request<void>(this.baseURL, 'DELETE', `/tickets/${id}`);
   }
   async searchTickets(query: string, params?: PaginationParams): Promise<TicketListResponse> {
-    return request<TicketListResponse>(this.baseURL, 'GET', '/tickets/search', undefined, { ...params, keyword: query } as unknown as Record<string, string | number | boolean | undefined>);
+    // The backend binds `c.Query("q")` (handlers/ticket/handler.go SearchTickets).
+    // Sending `keyword` yields 400 搜索关键词不能为空 for every query.
+    return request<TicketListResponse>(this.baseURL, 'GET', '/tickets/search', undefined, { ...params, q: query } as unknown as Record<string, string | number | boolean | undefined>);
   }
   async getOverdueTickets(): Promise<Ticket[]> {
     return request<Ticket[]>(this.baseURL, 'GET', '/tickets/overdue');
@@ -728,8 +730,8 @@ export class ApiClient {
   async getTicketConfigurationItems(id: number | string): Promise<unknown> {
     return request(this.baseURL, 'GET', `/tickets/${id}/configuration-items`);
   }
-  async getTicketDependencies(id: number | string): Promise<unknown> {
-    return request(this.baseURL, 'GET', `/tickets/${id}/dependencies`);
+  async getTicketDependencies(id: number | string, params: { action: 'close' | 'delete' | 'change_status'; newStatus?: string }): Promise<unknown> {
+    return request(this.baseURL, 'GET', `/tickets/${id}/dependencies`, undefined, params);
   }
   async listTicketNotifications(id: number | string): Promise<unknown> {
     return request(this.baseURL, 'GET', `/tickets/${id}/notifications`);
@@ -1337,6 +1339,13 @@ export class ApiClient {
   async bulkCancelOperationalCommands(data: Record<string, unknown>): Promise<unknown> {
     return request(this.baseURL, 'POST', '/admin/operations/commands/bulk-cancel', data);
   }
+
+  // ---------- Timers (SLA / escalation durable timers) ----------
+  async listTimers(params?: Record<string, string | number | boolean | undefined>): Promise<unknown> {
+    return request(this.baseURL, 'GET', '/timers', undefined, params);
+  }
+  async getTimerStats(): Promise<unknown> { return request(this.baseURL, 'GET', '/timers/stats'); }
+  async getTimer(id: number | string): Promise<unknown> { return request(this.baseURL, 'GET', `/timers/${id}`); }
 
   // ---------- MSP (cross-tenant) ----------
   async getMSPStatus(): Promise<unknown> { return request(this.baseURL, 'GET', '/msp/status'); }

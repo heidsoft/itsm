@@ -58,6 +58,7 @@ type ProcessInstanceService interface {
 type TaskService interface {
 	GetTask(ctx context.Context, taskID string) (*ent.ProcessTask, error)
 	GetTaskByID(ctx context.Context, id int) (*ent.ProcessTask, error)
+	AuthorizeTaskAccess(ctx context.Context, task *ent.ProcessTask, requireActor bool) error
 	CompleteTaskByID(ctx context.Context, id int, variables map[string]interface{}) error
 	ClaimTask(ctx context.Context, taskID string, userID string) error
 	ClaimTaskByID(ctx context.Context, id int, userID int) error

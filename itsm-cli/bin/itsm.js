@@ -34,7 +34,7 @@ const cli = meow(
   ITSM CLI — AI-Native ITSM command line
 
   Interactive (TUI)
-    $ itsm login -u <user> -p <pass>
+    $ itsm login -u <user>                             Password is prompted (never a flag)
     $ itsm tickets --status open                       List tickets
     $ itsm incident triage --title X --description Y   AI triage
     $ itsm sla stats                                   SLA dashboard
@@ -72,8 +72,8 @@ const cli = meow(
       comment: { type: 'string' },
       unread: { type: 'boolean' },
       page: { type: 'number' },
-      username: { type: 'string' },
-      password: { type: 'string' },
+      username: { type: 'string', shortFlag: 'u' },
+      password: { type: 'string', shortFlag: 'p' },
       assigneeId: { type: 'string' },
       requesterId: { type: 'string' },
       data: { type: 'string' },

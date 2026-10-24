@@ -55,6 +55,7 @@ export function cmd(name, summary, usage, endpoints, run, risk, meta) {
         examples: meta?.examples,
         input: { params, ...(derived.body ? { body: derived.body } : {}) },
         bodyFields: meta?.bodyFields,
+        ...(meta?.denyFlags ? { denyFlags: meta.denyFlags } : {}),
         run,
     };
 }
@@ -72,6 +73,7 @@ export function describeCommand(spec) {
             params: spec.input.params,
             ...(spec.input.body ? { body: spec.input.body } : {}),
             ...(spec.bodyFields?.length ? { bodyFields: spec.bodyFields } : {}),
+            ...(spec.denyFlags ? { deniedFlags: spec.denyFlags } : {}),
             required: required.map((p) => p.name),
         },
         examples: spec.examples ?? [],

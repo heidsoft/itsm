@@ -1816,6 +1816,10 @@ POST /knowledge/articles/{id}/unpublish          # 不设门槛：撤下内容�
 - **驳回必填意见**：`review/reject` 空意见返回 `400 / 1002`。
 - **可见性与索引同事务**：通过即入索引（RAG 可检索），驳回/撤回即出索引；
   草稿与评审中的文章不会出现在检索结果里。
+- **向量索引能力未就绪时如实降级**：接了向量后端但 embedding 未配置时，发布/更新不会入
+  `knowledge.vector.sync` 队列（避免注定失败的命令重试到死信）；更新已发布文章改为入 `delete`
+  撤掉旧索引，防止检索返回过期内容。评审与发布本身不受影响，配置补齐后重新发布或修改即恢复索引。
+  关键词检索后端不需要向量，不受该判定影响。
 
 ### 知识库搜索
 
@@ -1906,6 +1910,24 @@ Authorization: Bearer <accessToken>
 
 **口径版本契约**：响应携带 `metricVersion`（总体）与 `metricVersions`（各块独立）——任何指标的计算语义变更（窗口、过滤、分母、环比基线）都必须递增对应版本，下游管理层月报与对账脚本以版本号感知口径变化，禁止凭数字猜语义。空集合一律序列化为 `[]` 而非 `null`。导出通道 `POST /api/v1/analytics/export` 的审计由全局审计中间件承载（`export` 动作 + 请求体摘要入 `audit_logs`）。
 
+### 获取 SLA 绩效聚合
+
+```http
+GET /api/v1/sla/performance?dimension=serviceType&startDate=2026-10-01&endDate=2026-10-24&page=1&pageSize=20
+Authorization: Bearer <accessToken>
+```
+
+权限 `sla:read`。监控大屏「各服务类型绩效」「各优先级绩效」的数据源。`dimension` 只接受
+`serviceType`（默认）/`priority`，非法值 400/1001；`serviceType`、`priority` 是可选的种群预过滤
+（先限制统计范围再分页，不是对当前页做二次筛选）。`startDate`/`endDate` 可选，接受 RFC3339 或
+裸日期 `YYYY-MM-DD`：裸日期按 UTC 解释，`startDate` 取当日 00:00:00、`endDate` 取当日
+`23:59:59.999999999`（包含当天），与 `/changes/calendar`、MSP 报表的日期过滤同口径；非法值
+400/1001，未传时窗口为最近 24 小时。响应 `data` 是标准分页信封附加 `dimension` 与 `truncated`：
+`{items, total, page, pageSize, totalPages, dimension, truncated}`，行结构为
+`SLAPerformanceRow`（`key`、`totalTickets`、`resolvedTickets`、`resolutionRate`、`metSlaTickets`、
+`violatedTickets`、`complianceRate`、响应/解决的样本数与达标率、平均分钟数）。
+`truncated=true` 表示窗口内工单数命中扫描上限、分母已被截断，指标只能按「至少这么多」解读。
+
 ### 获取 SLA 合规报表
 
 ```http
@@ -1913,7 +1935,9 @@ GET /api/v1/sla/compliance-report?startDate=2026-01-01T00:00:00Z&endDate=2026-01
 Authorization: Bearer <accessToken>
 ```
 
-权限 `sla:read`。`startDate`/`endDate` 必填且必须是 RFC3339 完整时间戳：只传 `2026-01-31` 这类 date-only 值会被判为非法并返回 400 / code 1001，不会退化成「统计全部时间」。响应 `data` 为 `dto.SLAComplianceReport`：`totalTickets`、`metSla`、`violatedSla`、`complianceRate`、`avgResponseTime`、`avgResolutionTime`、`reportPeriod`。该端点与 `GET /api/v1/sla/stats` 口径不同（报表按窗口内的工单计率，stats 为全量口径），调用方不得在前者失败时静默改用后者数字冒充同一指标。
+权限 `sla:read`。`startDate`/`endDate` 必填，接受 RFC3339 或裸日期 `YYYY-MM-DD`：裸日期按 UTC
+解释，`startDate` 取当日 00:00:00、`endDate` 取当日 `23:59:59.999999999`（包含当天）；两种写法
+都不会退化成「统计全部时间」，非法日期返回 400 / code 1001。响应 `data` 为 `dto.SLAComplianceReport`：`totalTickets`、`metSla`、`violatedSla`、`complianceRate`、`avgResponseTime`、`avgResolutionTime`、`reportPeriod`。该端点与 `GET /api/v1/sla/stats` 口径不同（报表按窗口内的工单计率，stats 为全量口径），调用方不得在前者失败时静默改用后者数字冒充同一指标。
 
 ### SLA 定义（`/api/v1/sla/definitions` 家族）
 
@@ -2119,6 +2143,9 @@ GET /api/v1/bpmn/tasks?status=&processDefinitionKey=&page=1&pageSize=20
 - `DELETE /api/v1/bpmn/process-definitions/{key}?version=` 同理：仍有 running/suspended 活跃实例
   → 409/`4090`；只剩历史实例 → 409/`4090`（`process_instances.process_definition_id` 是必填外键，
   删除会破坏历史），无实例的版本才真正删除。
+- 响应中的 `endTime`/`suspendedTime` 是可选字段：时间尚未发生（running 未结束、非挂起无挂起时刻）
+  时整个键省略，不再输出 Go 零值 `0001-01-01T00:00:00Z`；已结束/已挂起时按 RFC3339 返回。
+  调用方应以「键是否存在」判断时间是否发生，不能把零值时间当成真实时间。
 
   以上均属调用方可见的行为变更，升级注意事项见 [UPGRADE.md](../UPGRADE.md) §1.46。
 
@@ -2966,7 +2993,9 @@ Authorization: Bearer <accessToken>
 拼错的厂商名现在是 400，不再静默落库、到发现阶段才表现为「没有适配器」。
 
 云账号响应只外露 `hasCredential` 布尔值，`credentialRef`（含 access key 等凭据引用）从不进入
-接口边界；创建/更新请求仍可写入该字段。云表面的租户一律只取认证上下文
+接口边界；创建/更新请求仍可写入该字段。`secret://` 引用必须属于当前租户
+（`secret://tenant-<tenantId>/...`），试点环境仅额外允许固定 `env://ITSM_ALIYUN`
+allowlist；`PUT` 传空字符串可显式清空凭据引用。云表面的租户一律只取认证上下文
 （`handlerctx.ResolveTenantID`）：缺租户上下文即 fail closed，不再用 `c.GetInt("tenant_id")` 的 0
 去查「租户 0」的数据。
 
@@ -3031,6 +3060,65 @@ POST   /api/v1/cmdb/discovery/jobs/{id}/retry    failed/partial_failed 派生新
 409（Detail 含既有任务 ID）；不携带则每次生成唯一键，手动重跑不受指纹去重限制。
 来源不存在 404、来源/账号停用 400/403。租约字段（leaseOwner/leaseExpiresAt/
 fencingToken/heartbeatAt）是执行器内部协调状态，不对外暴露。
+
+### 云发现差异决策（apply / reject）
+
+manual 对账策略下，执行器对「有变化」的资源只落一条 `status=pending` 的
+`discovery_result`，**不改** `cloud_resources`（生产属性变更要人确认）。此前没有任何
+写入面能让这条差异被应用或驳回——对账停在「算出了差异」，账合不上。
+
+```http
+POST /api/v1/cmdb/discovery/results/{id}/apply     # 应用差异（写回 CloudResource）
+POST /api/v1/cmdb/discovery/results/{id}/reject    {"reason":"可选"}
+GET  /api/v1/cmdb/discovery/results?job_id=42      # 列出差异（含 diff 与 status）
+```
+
+- **只有 `action=update` 且 `status=pending` 可被决策**：`create` 在发现时已落库，
+  `delete` 根本不产生（缺失只推进 `missingCount`→`stale`，防误删）。
+- **应用写的是 `cloud_resources` 的事实**（name/status/region/zone/tags/metadata +
+  `sourceFingerprint` 换成被发现的那一版），**不写 CI**——CI 回写尚未接通，
+  在这里假装写 CI 会让「配置项与云上一致」变成假承诺。
+- **重复决策 409**：已 `applied`/`rejected` 再点不会产生第二次写入，也不当成功返回
+  （否则会掩盖「这条差异早被驳回过」）。
+- **资源已消失 409**：差异指向的 `identityHash` 在 `cloud_resources` 里找不到时
+  提示重跑发现，不自动重建（重建是 `create` 语义，需要新的发现事实）。
+- 应用写入失败时该行置 `apply_failed` 并留 `errorMessage`，不会静默留在 pending。
+- 驳回理由可选，写入该行 `errorMessage`（状态为 `rejected` 时语义为决策说明）；
+  操作者与请求体由全局审计中间件留痕。
+
+权限：`cmdb:write`。跨租户访问按 404 处理（不暴露可枚举信号）。
+
+### 云发现调度（`discovery_sources.schedule`）
+
+`schedule` 从建表起就存在，但此前**没有任何消费者**——填了 cron 既不生效、也不报错，
+云发现只能手动触发。现在由后台调度器每分钟消费一次：
+
+- **表达式**：5 段 cron（`0 2 * * *`）、`@every 24h` 等描述符、ISO 8601 cycle（`R/PT6H`）。
+  6 段带秒的 cron 会被拒绝（与 BPMN 定时表达式同一解析器，秒级巡检无业务意义）。
+- **时区**：按租户 `tenants.timezone` 解释。`0 2 * * *` 是租户本地时间 2 点，
+  不是 UTC 2 点。
+- **到期判定**：以该来源**最近一次任务的入队时间**为锚点，而不是 `lastSuccessAt`——
+  失败的任务也算跑过，否则一个持续失败的来源会被每分钟重试一次。停机后恢复只补跑
+  一次（取锚点之后最近的触发点），不会把停机期间错过的每个触发点都补一遍。
+- **在途守卫**：来源还有非终态任务（`queued`/`discovering`/`discovered`/`reconciling`）
+  时跳过，避免长跑任务被 cron 堆成一队。
+- **幂等**：调度任务按「来源 + 触发点」派生幂等键（`sched-<sourceId>-<fireAt unix>`），
+  多副本同时扫描同一触发点时后到者拿 409 并按「已排上」处理，不产生重复任务。
+
+来源读面新增两个字段，让「配了没反应」在保存那一刻就能看见：
+
+```json
+{
+  "id": "ds_1",
+  "schedule": "0 2 * * *",
+  "nextRunAt": "2026-10-23T18:00:00Z",   // 下一次会排任务的时刻（UTC，按租户时区计算）
+  "scheduleError": "无法识别的定时表达式: ..."  // 仅表达式非法时出现
+}
+```
+
+`nextRunAt` 未配置 `schedule` 时省略；`scheduleError` 非空表示**该来源永远不会被自动
+触发**，需修正表达式（调度器会跳过它并告警，不影响同租户其他来源）。修改 `schedule`
+不会立即触发一次发现——新表达式从下一个匹配点开始生效。
 
 ## 通知接口
 
@@ -3433,6 +3521,23 @@ Query Parameters:
 | `GET /api/v1/msp/reports/performance` | `{items, total}` | 同上 |
 | `GET /api/v1/msp/allocations/history` | `{items, total, page, pageSize, totalPages}` | 标准分页信封，元素是 `MSPAllocationDTO` |
 
+### MSP 能力开关（部署形态）
+
+`DEPLOYMENT_MODE=private` 时 `/api/v1/msp/*` 路由仍然注册，但整个路由族被门控拒绝。
+响应是 HTTP 503 / `code: 5003`，`data` 显式给出能力状态：
+
+```json
+{
+  "code": 5003,
+  "message": "MSP 能力在当前部署形态下未启用",
+  "data": { "capability": "msp", "state": "disabled" }
+}
+```
+
+这不是 404：路由存在，只是当前部署形态没有启用该能力。调用方应据 `data.state` 区分
+「未启用」与「客户/分配记录不存在」，不要重试创建；运维侧对应配置项是 `DEPLOYMENT_MODE`。
+`saas`、`saas_msp` 或留空时 MSP 路由正常放行，原有身份与分配校验不变。
+
 ### MSP 报表的口径与限制
 
 两个报表接口的响应行是 `MSPCustomerReportResponse` / `MSPPerformanceReportResponse`：
@@ -3764,16 +3869,12 @@ POST /api/v1/notification-deliveries/{id}/retry
 |---|---|---|---|
 | 命令重放 | `POST /api/v1/admin/operations/commands/{id}/replay` | 把一条 `dead_letter`（或 `cancelled`）命令重置回 `pending` | **保留原 `idempotency_key` 与 `fencing_token`**，worker 仍按原身份去重，不会与历史成功的业务写入重复 |
 | 批量重放 | `POST /api/v1/admin/operations/commands/bulk-replay` | 按 `{status,commandType,aggregateType,pageSize}` 匹配后批量重置 | 同上；单次上限 200 条（`maxBulkLimit` 1000），`status` 只允许 `dead_letter`/`cancelled` |
-| 命令取消 | `POST /api/v1/admin/operations/commands/{id}/cancel` | 把一条 `pending`/`processing`/`dead_letter` 命令置为 `cancelled` | `fencing_token`+1、清 lease；`dead_letter` 可直接取消（重试耗尽后的自然终态，无需先 replay） |
-| 批量取消 | `POST /api/v1/admin/operations/commands/bulk-cancel` | 按 `{status,commandType,aggregateType,pageSize}` 匹配后批量取消 | `status` 允许 `processing`/`pending`/`dead_letter`；终态（`succeeded` 等）拒绝 |
 | 投递重试 | `POST /api/v1/notification-deliveries/{id}/retry` | 以**新幂等键**重新入箱一条失败投递 | 会真实再发一次消息；受上面的「重试谱系」幂等守卫保护 |
 
 ```http
 GET  /api/v1/admin/operations/commands?status=dead_letter&commandType=notification.deliver&page=1&pageSize=20
 POST /api/v1/admin/operations/commands/{id}/replay
 POST /api/v1/admin/operations/commands/bulk-replay
-POST /api/v1/admin/operations/commands/{id}/cancel
-POST /api/v1/admin/operations/commands/bulk-cancel
 ```
 
 - 权限 `system:write`（读列表与重放同权限组），全部按认证租户隔离；每次重放写一条 `audit_log`（`resource=operational_command`、`action=replay`、`body` 含 `previousStatus`）。

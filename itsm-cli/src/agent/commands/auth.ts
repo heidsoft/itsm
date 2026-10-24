@@ -36,6 +36,8 @@ function expiresAtFrom(seconds: number | undefined): string | undefined {
 function passwordFromFlags(flags: Record<string, string | boolean | number>): string {
   const password = resolveSecret({
     literal: stringFlag(flags, 'password', 'p'),
+    rejectLiteral: true,
+    literalFlag: '--password',
     stdin: booleanFlag(flags, 'password-stdin') === true,
     file: stringFlag(flags, 'password-file'),
     fileEnv: 'ITSM_PASSWORD_FILE',
@@ -50,9 +52,37 @@ function passwordFromFlags(flags: Record<string, string | boolean | number>): st
   return password;
 }
 
+/**
+ * Password-reset tokens are single-use secrets, so they follow the same rule as
+ * passwords: stdin or a 0600 file, never argv.
+ */
+function resetTokenFromFlags(flags: Record<string, string | boolean | number>): string {
+  const token = resolveSecret({
+    literal: stringFlag(flags, 'token'),
+    rejectLiteral: true,
+    literalFlag: '--token',
+    stdin: booleanFlag(flags, 'reset-token-stdin') === true,
+    file: stringFlag(flags, 'reset-token-file'),
+    fileEnv: 'ITSM_RESET_TOKEN_FILE',
+    valueEnv: 'ITSM_RESET_TOKEN',
+    label: 'reset token',
+  });
+  if (!token) {
+    throw usageError(
+      'Missing reset token. Pipe it with --reset-token-stdin, or pass --reset-token-file /path (mode 0600).'
+    );
+  }
+  return token;
+}
+
 function credentialSummary() {
   return describeCredentialStore();
 }
+
+const PASSWORD_ARGV_DENIAL =
+  'argv is visible in shell history and the process table; use --password-stdin or --password-file <0600 path>';
+const RESET_TOKEN_ARGV_DENIAL =
+  'reset tokens are single-use secrets and argv leaks through shell history/ps; use --reset-token-stdin or --reset-token-file <0600 path>';
 
 export function authCommands() {
   return [
@@ -60,7 +90,7 @@ export function authCommands() {
     cmd(
       'auth.login',
       'Authenticate and store credentials (password via stdin/file; or --token-stdin for a pre-issued token)',
-      'itsm auth login [--username <u>] [--password <p> | --password-stdin | --password-file <path>] [--token-stdin] [--tenant-code <code>] [--tenant-id <n>]',
+      'itsm auth login [--username <u>] [--password-stdin | --password-file <path>] [--token-stdin] [--tenant-code <code>] [--tenant-id <n>]',
       ['POST /api/v1/auth/login', 'GET /api/v1/auth/me'],
       async (ctx) => {
         const flags = ctx.args.flags;
@@ -132,7 +162,9 @@ export function authCommands() {
           refreshable: Boolean(result.refreshToken),
           credentialStore: credentialSummary(),
         };
-      }
+      },
+      undefined,
+      { denyFlags: { password: PASSWORD_ARGV_DENIAL, p: PASSWORD_ARGV_DENIAL } }
     ),
     cmd(
       'auth.refresh',
@@ -298,7 +330,7 @@ export function authCommands() {
     cmd(
       'auth.register',
       'Self-service registration (server assigns the end_user role and tenant; no role/tenant in the body)',
-      'itsm auth register --username <u> --email <e> [--display-name <name>] [--phone <p>] [--company <c>] [--password <secret> | --password-stdin | --password-file <path>]',
+      'itsm auth register --username <u> --email <e> [--display-name <name>] [--phone <p>] [--company <c>] [--password-stdin | --password-file <path>]',
       ['POST /api/v1/auth/register'],
       async (ctx) => {
         const flags = ctx.args.flags;
@@ -314,7 +346,9 @@ export function authCommands() {
           ...(stringFlag(flags, 'company') ? { company: stringFlag(flags, 'company') } : {}),
         });
         return redactObject(result);
-      }
+      },
+      undefined,
+      { denyFlags: { password: PASSWORD_ARGV_DENIAL, p: PASSWORD_ARGV_DENIAL } }
     ),
     cmd(
       'auth.forgot-password',
@@ -330,28 +364,31 @@ export function authCommands() {
     ),
     cmd(
       'auth.validate-reset-token',
-      'Check a password-reset token before showing the reset form',
-      'itsm auth validate-reset-token --email <e> --token <t>',
+      'Check a password-reset token before showing the reset form (token via stdin/file)',
+      'itsm auth validate-reset-token --email <e> [--reset-token-stdin | --reset-token-file <path>]',
       ['POST /api/v1/auth/validate-reset-token'],
       async (ctx) => {
         const email = stringFlag(ctx.args.flags, 'email');
-        const token = stringFlag(ctx.args.flags, 'token');
-        if (!email || !token) throw usageError('Missing --email and --token.');
-        return apiClient.validateResetToken({ email, token });
-      }
+        if (!email) throw usageError('Missing --email.');
+        return apiClient.validateResetToken({ email, token: resetTokenFromFlags(ctx.args.flags) });
+      },
+      undefined,
+      { denyFlags: { token: RESET_TOKEN_ARGV_DENIAL } }
     ),
     cmd(
       'auth.reset-password',
       'Complete a password reset (passwordConfirm is derived from the same secret)',
-      'itsm auth reset-password --email <e> --token <t> [--password <secret> | --password-stdin | --password-file <path>]',
+      'itsm auth reset-password --email <e> [--reset-token-stdin | --reset-token-file <path>] [--password-stdin | --password-file <path>]',
       ['POST /api/v1/auth/reset-password'],
       async (ctx) => {
         const email = stringFlag(ctx.args.flags, 'email');
-        const token = stringFlag(ctx.args.flags, 'token');
-        if (!email || !token) throw usageError('Missing --email and --token.');
+        if (!email) throw usageError('Missing --email.');
+        const token = resetTokenFromFlags(ctx.args.flags);
         const password = passwordFromFlags(ctx.args.flags);
         return apiClient.resetPassword({ email, token, password, passwordConfirm: password });
-      }
+      },
+      undefined,
+      { denyFlags: { token: RESET_TOKEN_ARGV_DENIAL, password: PASSWORD_ARGV_DENIAL, p: PASSWORD_ARGV_DENIAL } }
     ),
 
     // ---------- SSO (OIDC) ----------

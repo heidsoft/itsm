@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"itsm-backend/common"
+	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/handlers/knowledge"
 	"itsm-backend/internal/datascope"
@@ -28,6 +29,20 @@ type Service struct {
 	// kbRepo 知识沉淀目标仓储（2026-10-22 沉淀闭环落地）。
 	// nil 时（单测/旧组装）沉淀端点显式 503，反查端点返回空列表。
 	kbRepo KnowledgeSink
+	// entClient 直连 Ent 客户端，用于在业务事务内驱动 BPMN 桥接
+	// （问题生命周期动作推进流程待办，与工单/事件/变更同一原语）。
+	entClient *ent.Client
+	// approvalBridge 问题生命周期动作（调查/解决/关闭）→ BPMN 流程待办桥。
+	// nil 时（单测/旧组装/仓储未实现原子更新器）问题域照常流转，
+	// 只是流程实例不随动——未接线不是阻断项，分叉由盘点工具暴露。
+	approvalBridge *service.BPMNApprovalBridge
+}
+
+// atomicProblemUpdater 是支持「业务写入 + BPMN 桥接同一事务」的仓储能力
+// （变更域 atomicApprovalSubmitter 的同构模式）。未实现时（mock/旧仓储）
+// 问题域退回非原子路径：桥接在业务提交后执行，分叉风险由盘点工具暴露。
+type atomicProblemUpdater interface {
+	UpdateTx(ctx context.Context, txc *ent.Client, p *Problem, expectedStatus string) (*Problem, error)
 }
 
 // AssigneeValidator 校验受指人属于同一租户且处于在职可用状态。
@@ -43,12 +58,18 @@ func (s *Service) IsNotFound(err error) bool {
 	return ent.IsNotFound(err)
 }
 
-func NewService(repo Repository, validator AssigneeValidator, logger *zap.SugaredLogger) *Service {
-	return &Service{
+func NewService(repo Repository, entClient *ent.Client, validator AssigneeValidator, logger *zap.SugaredLogger) *Service {
+	svc := &Service{
 		repo:      repo,
+		entClient: entClient,
 		validator: validator,
 		logger:    logger,
 	}
+	if entClient != nil {
+		// 问题生命周期动作统一桥接到 BPMN 流程待办，避免流程实例悬挂。
+		svc.approvalBridge = service.NewBPMNApprovalBridge(entClient, logger)
+	}
+	return svc
 }
 
 // SetSLAService 注入 SLA 服务（截止时间计算 + sla_states 持久化）。
@@ -517,6 +538,47 @@ func (s *Service) Update(ctx context.Context, tenantID int, id int, p *Problem, 
 		}
 	}
 
+	// 生命周期状态跃迁（investigating/resolved/closed）需要把 BPMN 流程待办
+	// 一起推进。与工单/事件/变更同一模式：桥接收进业务同一事务
+	// （AdvanceBusinessWorkflowWithClient），杜绝「流程已推进、业务写入失败」
+	// 的两段提交分叉。仓储未实现原子更新器（mock/旧实现）时不桥接——
+	// 「业务已推进、流程未推进」可由存量待办盘点工具兜底修复，
+	// 而事务外桥接制造的是不可自动修复的反向分叉，两者取安全侧。
+	if isProblemLifecycleAction(p.Status) && p.Status != expectedStatus && s.approvalBridge != nil {
+		if updater, ok := s.repo.(atomicProblemUpdater); ok {
+			tx, txErr := s.entClient.Tx(ctx)
+			if txErr != nil {
+				return nil, fmt.Errorf("start problem workflow transaction: %w", txErr)
+			}
+			defer func() { _ = tx.Rollback() }()
+			result, err := updater.UpdateTx(ctx, tx.Client(), existing, expectedStatus)
+			if err != nil {
+				if errors.Is(err, ErrProblemStatusMoved) {
+					return nil, common.NewBusinessError(
+						common.ConflictCode,
+						"问题单状态已被并发修改，请刷新后重试",
+						fmt.Sprintf("期望状态 '%s'", expectedStatus),
+					)
+				}
+				return nil, err
+			}
+			if err := s.advanceProblemWorkflow(ctx, tx.Client(), id, actorID, tenantID, p.Status); err != nil {
+				return nil, err
+			}
+			if err := tx.Commit(); err != nil {
+				return nil, err
+			}
+			// SLA 解决时间戳保持事务外（与既有非原子路径同序）：SLA 存储
+			// 不是同一事务的参与者，其失败不得回滚问题状态。
+			if enteredResolvedFreshly {
+				s.recordResolutionOnSLA(ctx, tenantID, id, time.Now())
+			}
+			return result, nil
+		}
+		s.logger.Warnw("problem repository lacks atomic workflow update; lifecycle flows without bridging",
+			"problem_id", id, "tenant_id", tenantID, "status", p.Status)
+	}
+
 	result, err := s.repo.Update(ctx, existing, expectedStatus)
 	if err != nil {
 		if errors.Is(err, ErrProblemStatusMoved) {
@@ -534,6 +596,41 @@ func (s *Service) Update(ctx context.Context, tenantID int, id int, p *Problem, 
 		s.recordResolutionOnSLA(ctx, tenantID, id, time.Now())
 	}
 	return result, nil
+}
+
+// isProblemLifecycleAction 判断状态跃迁是否需要推进 BPMN 流程待办。
+// 与事件域同一取舍：只推进「前向生命周期动作」，字段级更新（标题/描述/优先级）
+// 不触发桥接；状态不变（current==next）的幂等调用也不触发。
+func isProblemLifecycleAction(status string) bool {
+	switch status {
+	case "investigating", "identified", "resolved", "closed":
+		return true
+	default:
+		return false
+	}
+}
+
+// advanceProblemWorkflow 在调用方事务内把问题生命周期动作推进到 BPMN 流程。
+// 三态语义（与 AdvanceBusinessWorkflowWithClient 一致）：
+//   - (false, nil) 问题从未绑定流程 → 业务事务照常提交；
+//   - (true, nil)  已推进流程待办 → 业务状态与流程状态原子一致；
+//   - (_, err)    已绑定流程但推进失败（无待办/越权/引擎错误）→ 整单回滚。
+func (s *Service) advanceProblemWorkflow(ctx context.Context, txc *ent.Client, problemID, actorID, tenantID int, action string) error {
+	variables := map[string]interface{}{
+		"problem_id":    problemID,
+		"problemAction": action,
+	}
+	handled, err := s.approvalBridge.AdvanceBusinessWorkflowWithClient(
+		ctx, txc, tenantID, actorID, string(dto.BusinessTypeProblem), problemID, variables, 1,
+	)
+	if err != nil {
+		return fmt.Errorf("同步流程任务失败: %w", err)
+	}
+	if handled {
+		s.logger.Infow("Problem lifecycle bridged to BPMN task",
+			"problem_id", problemID, "tenant_id", tenantID, "action", action, "actor_id", actorID)
+	}
+	return nil
 }
 
 // InvestigateProblem starts the investigation lifecycle for a problem.

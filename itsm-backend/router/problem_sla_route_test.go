@@ -57,7 +57,7 @@ func TestProblemSLARouteContract(t *testing.T) {
 	repo := problemHandler.NewEntRepository(client)
 	slaSvc := service.NewTicketSLAService(client, logger)
 	slaSvc.SetSLAStore(sla.NewStore(client, sla.NewEngine(nil)))
-	probSvc := problemHandler.NewService(repo, service.NewTicketServiceForTest(client, logger), logger)
+	probSvc := problemHandler.NewService(repo, client, service.NewTicketServiceForTest(client, logger), logger)
 	probSvc.SetSLAService(slaSvc)
 
 	gin.SetMode(gin.TestMode)

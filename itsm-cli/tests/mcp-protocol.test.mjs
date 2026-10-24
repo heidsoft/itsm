@@ -28,6 +28,8 @@ let server;
 let baseUrl;
 /** "METHOD /path" → hit count, for "no request was sent" assertions. */
 const hits = new Map();
+/** "METHOD /path" → last query string, for "did the query param match the binding" assertions. */
+const queries = new Map();
 /** "METHOD /path" → last JSON body, for "did the field name match the DTO" assertions. */
 const bodies = new Map();
 /** Query strings seen by GET /bpmn/tasks, in call order. */
@@ -61,6 +63,7 @@ async function route(req, res) {
   const p = url.pathname.replace(/^\/api\/v1/, '');
   const key = `${req.method} ${p}`;
   hits.set(key, (hits.get(key) ?? 0) + 1);
+  queries.set(key, url.searchParams);
 
   if (req.method === 'POST') {
     const raw = await readBody(req);
@@ -122,6 +125,15 @@ async function route(req, res) {
       return json(res, 400, { code: 1001, message: '参数错误' });
     }
     return ok(res, { items: [], total: 0 });
+  }
+  // Ticket search: handlers/ticket/handler.go binds `c.Query("q")` — a
+  // `keyword` query is rejected with 400 搜索关键词不能为空, so the stub refuses
+  // any search that does not carry `q`.
+  if (p === '/tickets/search' && req.method === 'GET') {
+    if (!url.searchParams.get('q')) {
+      return json(res, 400, { code: 1001, message: '搜索关键词不能为空' });
+    }
+    return ok(res, { items: [{ id: 1, ticketNumber: 'TKT-1', title: 'printer driver' }], total: 1, page: 1, pageSize: 20, totalPages: 1 });
   }
   if (p === '/tickets' && req.method === 'GET') {
     const items = Array.from({ length: 80 }, (_, i) => ({
@@ -375,11 +387,27 @@ test('describe returns the CLI contract, and misses carry a suggestion', async (
   const described = JSON.parse(byId.get(11).result.content[0].text);
   assert.equal(described.command, 'ticket.create');
   assert.deepEqual(described.requiresConfirmation, false);
-  assert.ok(described.params.some((p) => p.name === 'priority' && p.required));
+  assert.ok(described.input.params.some((p) => p.name === 'priority' && p.required));
 
   const miss = byId.get(12).result;
   assert.equal(miss.isError, true);
   assert.match(JSON.parse(miss.content[0].text).error.message, /ticket\.create/);
+});
+
+/**
+ * Regression: `itsm_describe` used to re-project the spec by hand and dropped
+ * `input.deniedFlags`, so an MCP host could not learn that `--password` /
+ * `--token` are refused on argv (and why) without reading the CLI docs — the
+ * one place where the safety contract must be discoverable, not just enforced.
+ */
+test('describe carries the argv-secret refusal contract the CLI schema exposes', async () => {
+  const { byId } = await session([
+    initialize,
+    { jsonrpc: '2.0', id: 90, method: 'tools/call', params: { name: 'itsm_describe', arguments: { command: 'auth.login' } } },
+  ]);
+  const described = JSON.parse(byId.get(90).result.content[0].text);
+  assert.ok(described.input?.deniedFlags?.password, 'the host must see which argv flags are refused');
+  assert.match(described.input.deniedFlags.password, /password-stdin/);
 });
 
 test('resources: capability map is live, unknown URIs are a protocol error', async () => {
@@ -499,6 +527,25 @@ test('knowledge search sends `query`, the field the backend binds as required', 
 });
 
 /**
+ * Regression: `ticket search` used to send `keyword` while
+ * `handlers/ticket/handler.go SearchTickets` binds `c.Query("q")`, so every
+ * search returned 400 搜索关键词不能为空 — a command that looked implemented,
+ * appeared in the catalog and the MCP tool list, and could never succeed.
+ */
+test('ticket search sends `q`, the field the backend binds', async () => {
+  const { byId } = await session([
+    initialize,
+    { jsonrpc: '2.0', id: 'ts', method: 'tools/call', params: { name: 'itsm_call', arguments: { command: 'ticket.search', params: { q: 'VPN' } } } },
+  ]);
+
+  const payload = JSON.parse(byId.get('ts').result.content[0].text);
+  assert.equal(payload.ok, true, payload.error?.message);
+  const q = queries.get('GET /tickets/search');
+  assert.equal(q?.get('q'), 'VPN', 'the search keyword must travel as `q`');
+  assert.ok(!q?.has('keyword'), '`keyword` is not bound by the handler and yields 400');
+});
+
+/**
  * The usage string is the only source of a command's parameter list, and the
  * CLI's own parser silently ignores undeclared flags. A flag the implementation
  * reads but the usage never advertises is therefore invisible to every
@@ -515,7 +562,10 @@ test('every flag a command reads is declared in its usage', async () => {
 
   for (const file of readdirSync(dir).filter((f) => f.endsWith('.ts'))) {
     const src = readFileSync(path.join(dir, file), 'utf8');
-    const marks = [...src.matchAll(/cmd\('([^']+)'/g)];
+    // Allow `cmd(\n  'name',` — multi-line registrations are common. Without \s*
+    // a single formatted call silently swallows the whole next block and blames
+    // the previous command for flags it never reads.
+    const marks = [...src.matchAll(/cmd\(\s*'([^']+)'/g)];
     marks.forEach((m, i) => {
       const spec = specs.get(m[1]);
       if (!spec) return;

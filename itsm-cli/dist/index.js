@@ -20,7 +20,7 @@ const HelpScreen = () => (React.createElement(Box, { flexDirection: "column", pa
     React.createElement(Text, null, "AI-Native ITSM \u00B7 React for CLIs \u00B7 built with Ink"),
     React.createElement(Newline, null),
     React.createElement(Text, { bold: true }, "Auth"),
-    React.createElement(Text, { dimColor: true }, "  itsm login -u <user> -p <pass>       Login"),
+    React.createElement(Text, { dimColor: true }, "  itsm login -u <user>                  Login (password prompted)"),
     React.createElement(Text, { dimColor: true }, "  itsm me                              Who am I"),
     React.createElement(Text, { dimColor: true }, "  itsm logout                          Logout"),
     React.createElement(Newline, null),
@@ -220,7 +220,7 @@ export default function App({ cli }) {
     if (!isLoggedIn() && cmd !== 'logout') {
         return (React.createElement(Box, { flexDirection: "column", padding: 1 },
             React.createElement(Text, { color: "red" }, "Not logged in"),
-            React.createElement(Text, null, "Run: itsm login -u <username> -p <password>")));
+            React.createElement(Text, null, "Run: itsm login -u <username>   (password is prompted, never passed as a flag)")));
     }
     return React.createElement(Router, { input: input, flags: flags });
 }

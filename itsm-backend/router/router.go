@@ -282,7 +282,9 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 	if os.Getenv("ENABLE_SWAGGER") == "true" {
 		r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	}
-	// 全局中间件
+	// 全局中间件。
+	// Logger/Recovery 只在这里装配一次——调用方必须传 gin.New() 的引擎
+	// （bootstrap 曾用 gin.Default()，与这里的 Use 叠加导致每个请求记两行日志）。
 	r.Use(gin.Logger())
 	r.Use(gin.Recovery())
 	r.Use(middleware.CORSMiddleware())

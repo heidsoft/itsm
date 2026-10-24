@@ -568,7 +568,9 @@ export class ApiClient {
         await request(this.baseURL, 'DELETE', `/tickets/${id}`);
     }
     async searchTickets(query, params) {
-        return request(this.baseURL, 'GET', '/tickets/search', undefined, { ...params, keyword: query });
+        // The backend binds `c.Query("q")` (handlers/ticket/handler.go SearchTickets).
+        // Sending `keyword` yields 400 搜索关键词不能为空 for every query.
+        return request(this.baseURL, 'GET', '/tickets/search', undefined, { ...params, q: query });
     }
     async getOverdueTickets() {
         return request(this.baseURL, 'GET', '/tickets/overdue');
@@ -669,8 +671,8 @@ export class ApiClient {
     async getTicketConfigurationItems(id) {
         return request(this.baseURL, 'GET', `/tickets/${id}/configuration-items`);
     }
-    async getTicketDependencies(id) {
-        return request(this.baseURL, 'GET', `/tickets/${id}/dependencies`);
+    async getTicketDependencies(id, params) {
+        return request(this.baseURL, 'GET', `/tickets/${id}/dependencies`, undefined, params);
     }
     async listTicketNotifications(id) {
         return request(this.baseURL, 'GET', `/tickets/${id}/notifications`);
@@ -1266,6 +1268,12 @@ export class ApiClient {
     async bulkCancelOperationalCommands(data) {
         return request(this.baseURL, 'POST', '/admin/operations/commands/bulk-cancel', data);
     }
+    // ---------- Timers (SLA / escalation durable timers) ----------
+    async listTimers(params) {
+        return request(this.baseURL, 'GET', '/timers', undefined, params);
+    }
+    async getTimerStats() { return request(this.baseURL, 'GET', '/timers/stats'); }
+    async getTimer(id) { return request(this.baseURL, 'GET', `/timers/${id}`); }
     // ---------- MSP (cross-tenant) ----------
     async getMSPStatus() { return request(this.baseURL, 'GET', '/msp/status'); }
     async getMSPContext() { return request(this.baseURL, 'GET', '/msp/context'); }

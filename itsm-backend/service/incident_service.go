@@ -80,6 +80,11 @@ type IncidentService struct {
 	workflowOutboxEnabled bool
 	rulesOutboxEnabled    bool
 	slaSvc                *TicketSLAService
+	// approvalBridge 把事件生命周期动作（确认/解决/关闭）桥接到 BPMN 流程待办，
+	// 与工单/变更/服务请求同一原语（AdvanceBusinessWorkflowWithClient，事务内）。
+	// nil 时（单测/旧组装）生命周期照常流转，只是流程实例不随动——与工单域
+	// 未装配 bridge 时的降级语义一致：未接线不是阻断项，分叉由盘点工具暴露。
+	approvalBridge *BPMNApprovalBridge
 }
 
 // SetSLAService 注入SLA服务，用于创建Incident时自动绑定SLA策略
@@ -88,11 +93,49 @@ func (s *IncidentService) SetSLAService(sla *TicketSLAService) {
 }
 
 func NewIncidentService(client *ent.Client, logger *zap.SugaredLogger, slaSvc *TicketSLAService) *IncidentService {
-	return &IncidentService{
+	svc := &IncidentService{
 		client: client,
 		logger: logger,
 		slaSvc: slaSvc,
 	}
+	if client != nil {
+		// 事件生命周期动作统一桥接到 BPMN 流程待办，避免流程实例悬挂
+		// （acknowledge/resolve/close 与工单 accept/resolve/close 同构）。
+		svc.approvalBridge = NewBPMNApprovalBridge(client, logger)
+	}
+	return svc
+}
+
+// advanceIncidentWorkflow 在调用方事务内把事件生命周期动作推进到 BPMN 流程。
+// 三态语义（与 AdvanceBusinessWorkflowWithClient 一致）：
+//   - (false, nil) 事件从未绑定流程 → 业务事务照常提交（存量/未配置租户的本意回退）；
+//   - (true, nil)  已推进流程待办 → 业务状态与流程状态原子一致；
+//   - (_, err)    已绑定流程但推进失败（无待办/越权/引擎错误）→ 整单回滚。
+//
+// 刻意在事务内调用：bridge 完成放在业务事务外会重现工单域已消除的两段提交分叉
+// （流程已推进、业务写入失败 → 流程状态永久领先业务状态）。
+func (s *IncidentService) advanceIncidentWorkflow(ctx context.Context, txc *ent.Client, incidentID, userID, tenantID int, action string, extra map[string]interface{}) error {
+	if s.approvalBridge == nil {
+		return nil
+	}
+	variables := map[string]interface{}{
+		"incident_id":    incidentID,
+		"incidentAction": action,
+	}
+	for k, v := range extra {
+		variables[k] = v
+	}
+	handled, err := s.approvalBridge.AdvanceBusinessWorkflowWithClient(
+		ctx, txc, tenantID, userID, string(dto.BusinessTypeIncident), incidentID, variables, 1,
+	)
+	if err != nil {
+		return fmt.Errorf("同步流程任务失败: %w", err)
+	}
+	if handled {
+		s.logger.Infow("Incident lifecycle bridged to BPMN task",
+			"incident_id", incidentID, "tenant_id", tenantID, "action", action, "actor_user_id", userID)
+	}
+	return nil
 }
 
 // SetProcessTriggerService 设置流程触发服务
@@ -1644,6 +1687,10 @@ func (s *IncidentService) AcknowledgeIncident(ctx context.Context, id, userID, t
 	}, tenantID); err != nil {
 		return fmt.Errorf("create acknowledgement event: %w", err)
 	}
+	// BPMN 桥接：确认动作随业务事务原子推进流程待办（无绑定时为 no-op）。
+	if err := s.advanceIncidentWorkflow(ctx, tx.Client(), id, userID, tenantID, "acknowledge", nil); err != nil {
+		return err
+	}
 	return tx.Commit()
 }
 
@@ -1717,6 +1764,11 @@ func (s *IncidentService) ResolveIncident(ctx context.Context, id, userID, tenan
 	}, tenantID); err != nil {
 		return fmt.Errorf("create resolution event: %w", err)
 	}
+	// BPMN 桥接：解决动作随业务事务原子推进流程待办（无绑定时为 no-op）。
+	if err := s.advanceIncidentWorkflow(ctx, tx.Client(), id, userID, tenantID, "resolve",
+		map[string]interface{}{"resolution": strings.TrimSpace(resolution), "rootCause": strings.TrimSpace(rootCause)}); err != nil {
+		return err
+	}
 	return tx.Commit()
 }
 
@@ -1763,6 +1815,11 @@ func (s *IncidentService) CloseIncident(ctx context.Context, id, userID, tenantI
 		UserID: &userID, Source: "user",
 	}, tenantID); err != nil {
 		return fmt.Errorf("create closure event: %w", err)
+	}
+	// BPMN 桥接：关闭动作随业务事务原子推进流程待办（无绑定时为 no-op）。
+	if err := s.advanceIncidentWorkflow(ctx, tx.Client(), id, userID, tenantID, "close",
+		map[string]interface{}{"closeNotes": strings.TrimSpace(closeNotes)}); err != nil {
+		return err
 	}
 	return tx.Commit()
 }

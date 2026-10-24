@@ -15,6 +15,13 @@ export interface CommandMeta {
     examples?: string[];
     /** Names of the backend DTO fields `--data` accepts, when worth advertising. */
     bodyFields?: string[];
+    /**
+     * Flags that must be REJECTED with a specific explanation instead of being
+     * reported as merely unknown. Used for secrets: `--password` on argv is a
+     * security defect, and the caller deserves the reason plus the safe channel.
+     * Map of flag → reason shown to the user.
+     */
+    denyFlags?: Record<string, string>;
 }
 export interface CommandSpec {
     name: string;
@@ -29,6 +36,8 @@ export interface CommandSpec {
     input: CommandInputSchema;
     /** Backend DTO fields accepted in `--data`, when declared. */
     bodyFields?: string[];
+    /** Flags rejected by policy (secrets on argv), with the reason. */
+    denyFlags?: Record<string, string>;
     run: (ctx: CommandContext) => Promise<unknown>;
 }
 export interface CommandContext {

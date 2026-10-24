@@ -1,6 +1,7 @@
 package cmdb
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"time"
@@ -8,16 +9,30 @@ import (
 	"itsm-backend/common"
 	"itsm-backend/common/handlerctx"
 	"itsm-backend/dto"
+	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
 )
 
 type Handler struct {
 	svc *Service
+	// locationFor 用于把来源的 cron 表达式换算成「下次运行时间」回显给运维。
+	// 与调度器同口径（租户时区），否则界面上的时间和实际触发时间会差 8 小时。
+	locationFor func(context.Context, int) *time.Location
 }
 
 func NewHandler(svc *Service) *Handler {
-	return &Handler{svc: svc}
+	return &Handler{
+		svc:         svc,
+		locationFor: func(context.Context, int) *time.Location { return service.ResolveLocation("") },
+	}
+}
+
+// SetScheduleLocationResolver 注入租户时区解析（生产实现读 tenants.timezone）。
+func (h *Handler) SetScheduleLocationResolver(fn func(context.Context, int) *time.Location) {
+	if fn != nil {
+		h.locationFor = fn
+	}
 }
 
 // The methods below expose the production CMDB use cases through the domain
@@ -511,12 +526,12 @@ func (h *Handler) CreateCloudAccount(c *gin.Context) {
 		common.ParamError(c, "Invalid request body")
 		return
 	}
-	if err := validateTenantCredentialRef(req.CredentialRef); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
-		return
-	}
 	tenantID, ok := handlerctx.ResolveTenantID(c)
 	if !ok {
+		return
+	}
+	if err := validateTenantCredentialRef(req.CredentialRef, tenantID); err != nil {
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 	isActive := true
@@ -824,8 +839,8 @@ func (h *Handler) UpdateCloudAccount(c *gin.Context) {
 		return
 	}
 	credentialRef := existing.CredentialRef
-	if req.CredentialRef != nil && *req.CredentialRef != "" {
-		if err := validateTenantCredentialRef(*req.CredentialRef); err != nil {
+	if req.CredentialRef != nil {
+		if err := validateTenantCredentialRef(*req.CredentialRef, tenantID); err != nil {
 			common.ParamErrorWithErr(c, err, "请求参数错误")
 			return
 		}
@@ -1078,7 +1093,10 @@ func (h *Handler) ListDiscoverySources(c *gin.Context) {
 		return
 	}
 	resp := make([]*dto.DiscoverySourceResponse, 0, len(list))
+	now := time.Now()
+	loc := h.locationFor(c.Request.Context(), tenantID)
 	for _, item := range list {
+		nextRunAt, scheduleErr := schedulePreview(item.Schedule, now, loc)
 		resp = append(resp, &dto.DiscoverySourceResponse{
 			ID:             item.ID,
 			Name:           item.Name,
@@ -1088,6 +1106,7 @@ func (h *Handler) ListDiscoverySources(c *gin.Context) {
 			Description:    item.Description,
 			CloudAccountID: item.CloudAccountID, ServiceCodes: item.ServiceCodes, Regions: item.Regions,
 			Schedule: item.Schedule, ReconcilePolicy: item.ReconcilePolicy, StaleThreshold: item.StaleThreshold,
+			NextRunAt: nextRunAt, ScheduleError: scheduleErr,
 			LastSuccessAt: item.LastSuccessAt,
 			TenantID:      item.TenantID,
 			CreatedAt:     item.CreatedAt,
@@ -1127,6 +1146,7 @@ func (h *Handler) CreateDiscoverySource(c *gin.Context) {
 		common.RespondError(c, err, "操作失败")
 		return
 	}
+	nextRunAt, scheduleErr := schedulePreview(res.Schedule, time.Now(), h.locationFor(c.Request.Context(), tenantID))
 	common.Success(c, &dto.DiscoverySourceResponse{
 		ID:             res.ID,
 		Name:           res.Name,
@@ -1136,6 +1156,7 @@ func (h *Handler) CreateDiscoverySource(c *gin.Context) {
 		Description:    res.Description,
 		CloudAccountID: res.CloudAccountID, ServiceCodes: res.ServiceCodes, Regions: res.Regions,
 		Schedule: res.Schedule, ReconcilePolicy: res.ReconcilePolicy, StaleThreshold: res.StaleThreshold,
+		NextRunAt: nextRunAt, ScheduleError: scheduleErr,
 		LastSuccessAt: res.LastSuccessAt,
 		TenantID:      res.TenantID,
 		CreatedAt:     res.CreatedAt,
@@ -1323,4 +1344,81 @@ func (h *Handler) ListDiscoveryResults(c *gin.Context) {
 		})
 	}
 	common.Success(c, resp)
+}
+
+// 差异决策面（apply / reject）。manual 对账策略下 update 只落 pending 结果，
+// 此前没有任何写入面，差异永远停在「待人工确认」。
+func (h *Handler) ApplyDiscoveryResult(c *gin.Context) {
+	if h.svc == nil {
+		common.Fail(c, common.ServiceUnavailableCode, "CMDB 服务未装配")
+		return
+	}
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil || id <= 0 {
+		common.ParamError(c, "id 参数非法")
+		return
+	}
+	result, err := h.svc.ApplyDiscoveryResult(c.Request.Context(), tenantID, c.GetInt("user_id"), id)
+	if err != nil {
+		common.RespondError(c, err, "应用发现差异失败")
+		return
+	}
+	common.Success(c, toDiscoveryResultResponse(result))
+}
+
+func (h *Handler) RejectDiscoveryResult(c *gin.Context) {
+	if h.svc == nil {
+		common.Fail(c, common.ServiceUnavailableCode, "CMDB 服务未装配")
+		return
+	}
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil || id <= 0 {
+		common.ParamError(c, "id 参数非法")
+		return
+	}
+	var req dto.DiscoveryResultRejectRequest
+	// 理由可选：body 可以为空，只有带了非法 JSON 时才报参数错误。
+	if c.Request.ContentLength > 0 {
+		if err := c.ShouldBindJSON(&req); err != nil {
+			common.ParamError(c, "Invalid request body")
+			return
+		}
+	}
+	result, err := h.svc.RejectDiscoveryResult(c.Request.Context(), tenantID, c.GetInt("user_id"), id, req.Reason)
+	if err != nil {
+		common.RespondError(c, err, "驳回发现差异失败")
+		return
+	}
+	common.Success(c, toDiscoveryResultResponse(result))
+}
+
+// toDiscoveryResultResponse 是差异域结构体到响应 DTO 的唯一映射点。
+func toDiscoveryResultResponse(item *DiscoveryResult) *dto.DiscoveryResultResponse {
+	if item == nil {
+		return nil
+	}
+	return &dto.DiscoveryResultResponse{
+		ID:               item.ID,
+		JobID:            item.JobID,
+		CIID:             item.CIID,
+		Action:           item.Action,
+		ResourceType:     item.ResourceType,
+		ResourceID:       item.ResourceID,
+		ResourceIdentity: item.ResourceIdentity, IdentityVersion: item.IdentityVersion,
+		ResourceSnapshot: item.ResourceSnapshot, BeforeHash: item.BeforeHash, AfterHash: item.AfterHash,
+		Diff:      item.Diff,
+		Status:    item.Status,
+		ErrorCode: item.ErrorCode, ErrorMessage: item.ErrorMessage,
+		TenantID:  item.TenantID,
+		CreatedAt: item.CreatedAt,
+		UpdatedAt: item.UpdatedAt,
+	}
 }

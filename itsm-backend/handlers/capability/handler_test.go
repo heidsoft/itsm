@@ -147,6 +147,57 @@ func TestPromotedCapabilitiesAreGA(t *testing.T) {
 	}
 }
 
+// TestPilotReasonsDoNotCiteClosedBlockers 锁定「理由不得引用已闭环的阻断项」。
+//
+// 这是 2026-10-22 那条教训的可执行版本：注释会腐烂，接口字段不会，但接口字段
+// 同样会腐烂——只要有人修完阻断项却忘了改理由。此前的实例是 problem 的
+// 「SLA 仍 503」与 template 的「/api/v1/templates 未注册」，两者在代码里都
+// 已不成立。2026-10-23 又出现两例：云发现执行器与 cron 调度落地后，
+// cmdbDiscovery 的理由仍写着「队列无消费者」；AI 三契约落地后，ai 的理由
+// 仍写着「confidence/prompt 版本未强制」。
+//
+// 因此把「已修好的事实」写成禁词表：一旦这些能力重新把旧结论写回理由，
+// 测试立即失败，逼作者去核对当前代码。
+func TestPilotReasonsDoNotCiteClosedBlockers(t *testing.T) {
+	closedBlockers := map[string][]string{
+		// 2026-10-23：Job 级执行器消费 cmdb.cloud_discovery.run，
+		// DiscoveryScheduler 消费 discovery_sources.schedule。
+		"cmdbDiscovery":      {"队列无消费者", "没有执行者", "仅被单测调用", "worker 消费"},
+		"cmdbReconciliation": {"发现链路没有消费者", "只能对空集", "没有确认/驳回的写入面"},
+		// 2026-10-23：分诊/RCA 已强制 promptVersion + model + confidence + 底账。
+		"ai": {"confidence、接受/拒绝反馈", "evaluator 未接入调用链"},
+	}
+	byKey := make(map[string]definition, len(registry))
+	for _, item := range registry {
+		byKey[item.key] = item
+	}
+	for key, phrases := range closedBlockers {
+		item, ok := byKey[key]
+		require.Truef(t, ok, "能力矩阵缺少条目: %s", key)
+		for _, phrase := range phrases {
+			require.NotContainsf(t, item.pilotReason, phrase,
+				"%s 的理由引用了已闭环的阻断项 %q，请按当前代码重写", key, phrase)
+		}
+	}
+}
+
+// TestReportCapabilityIsTracked 锁定报表域在矩阵中的存在。
+//
+// 报表此前只在 docs/product 的能力契约表里（报表/运营 = Pilot），矩阵里没有
+// 这一行——而矩阵才是前端与控制台的事实源，缺行等于这个域对客户不可见。
+func TestReportCapabilityIsTracked(t *testing.T) {
+	var found *definition
+	for i := range registry {
+		if registry[i].key == "report" {
+			found = &registry[i]
+			break
+		}
+	}
+	require.NotNil(t, found, "报表域必须在能力矩阵中可查")
+	require.Equal(t, MaturityPilot, found.maturity)
+	require.Contains(t, found.pilotReason, "晋升条件")
+}
+
 // TestPilotReasonsAreCurrentAndActionable 把「为什么还是 Pilot」从 Go 注释
 // 提升为接口契约的一部分，并强制它可执行。
 //

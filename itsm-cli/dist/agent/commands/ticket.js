@@ -60,8 +60,11 @@ export function ticketCommands() {
         }),
         cmd('ticket.update', 'Partial update (PATCH passthrough; version carries the optimistic lock)', 'itsm ticket update <id> --data <json>', ['PATCH /api/v1/tickets/:id'], async (ctx) => apiClient.updateTicket(id(ctx), body(ctx.args) ?? {})),
         cmd('ticket.delete', 'Delete a ticket', 'itsm ticket delete <id>', ['DELETE /api/v1/tickets/:id'], async (ctx) => apiClient.deleteTicket(id(ctx))),
-        cmd('ticket.search', 'Ticket search (backend param: keyword)', 'itsm ticket search <query> [--page N] [--pageSize N]', ['GET /api/v1/tickets/search'], async (ctx) => {
-            const q = requirePositional(ctx.args, 0, 'query');
+        // The positional is named `q` because that is the field the backend binds
+        // (handlers/ticket/handler.go SearchTickets reads c.Query("q")), so the MCP
+        // argument name and the wire field are the same string — as with knowledge.search.
+        cmd('ticket.search', 'Ticket search (the backend binds the keyword as `q`)', 'itsm ticket search <q> [--page N] [--pageSize N]', ['GET /api/v1/tickets/search'], async (ctx) => {
+            const q = requirePositional(ctx.args, 0, 'q');
             return apiClient.searchTickets(q, withPagination(ctx.args));
         }),
         cmd('ticket.stats', 'Ticket aggregate statistics', 'itsm ticket stats', ['GET /api/v1/tickets/stats'], async () => apiClient.getTicketStats()),
@@ -252,7 +255,20 @@ export function ticketCommands() {
         }),
         cmd('ticket.rating-stats', 'Rating distribution statistics', 'itsm ticket rating-stats [--page N] [--pageSize N]', ['GET /api/v1/tickets/rating-stats'], async (ctx) => apiClient.getRatingStats(withPagination(ctx.args))),
         cmd('ticket.configuration-items', 'CIs linked to the ticket', 'itsm ticket configuration-items <id>', ['GET /api/v1/tickets/:id/configuration-items'], async (ctx) => apiClient.getTicketConfigurationItems(id(ctx))),
-        cmd('ticket.dependencies', 'Dependency impact (parent chain, children, related)', 'itsm ticket dependencies <id>', ['GET /api/v1/tickets/:id/dependencies'], async (ctx) => apiClient.getTicketDependencies(id(ctx))),
+        cmd('ticket.dependencies', 'Dependency impact for a pending action (close|delete|change_status; parent chain, children, related)', 'itsm ticket dependencies <id> --action close|delete|change_status [--newStatus <status>]', ['GET /api/v1/tickets/:id/dependencies'], async (ctx) => {
+            // dto.RelationImpactAnalysisRequest binds action as required,oneof=...
+            // A bare GET is a guaranteed 400: the endpoint answers "what breaks if I
+            // do this", so the action is part of the question, not an optional filter.
+            const action = optionalString(ctx.args.flags, 'action');
+            if (action !== 'close' && action !== 'delete' && action !== 'change_status') {
+                throw usageError('Missing --action (close|delete|change_status)');
+            }
+            const newStatus = optionalString(ctx.args.flags, 'newStatus');
+            if (action === 'change_status' && !newStatus) {
+                throw usageError('--action change_status requires --newStatus <status>');
+            }
+            return apiClient.getTicketDependencies(id(ctx), { action, ...(newStatus ? { newStatus } : {}) });
+        }),
         cmd('ticket.notifications', 'Ticket-scoped notification history', 'itsm ticket notifications <id>', ['GET /api/v1/tickets/:id/notifications'], async (ctx) => apiClient.listTicketNotifications(id(ctx))),
         cmd('ticket.notify', 'Send a ticket notification (email|sms|webhook)', 'itsm ticket notify <id> --type email|sms|webhook [--recipients a@x,b@y] [--template t] [--data <json>]', ['POST /api/v1/tickets/:id/notifications'], async (ctx) => {
             const type = optionalString(ctx.args.flags, 'type');

@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"itsm-backend/dto"
@@ -12,6 +13,7 @@ import (
 	"itsm-backend/ent/problem"
 	"itsm-backend/ent/processdefinition"
 	"itsm-backend/ent/processinstance"
+	"itsm-backend/ent/release"
 	"itsm-backend/ent/servicerequest"
 	"itsm-backend/ent/ticket"
 
@@ -77,6 +79,13 @@ func (h *WorkflowStartCommandHandler) Handle(ctx context.Context, cmd *ent.Opera
 		if processKey == "" {
 			processKey = "ticket_general_flow"
 		}
+		// 解析器（尤其 ResolveWithPriority 的 ticket_urgent_flow 兜底）与绑定表都可能
+		// 指向租户未部署的 key；统一在此校验并回退通用工单流程，避免 workflow.start
+		// 反复重试后进死信、工单永远没有流程实例。
+		processKey, err = h.pickExistingDefinition(ctx, cmd.TenantID, processKey, "ticket_general_flow", "ticket_assignment_flow")
+		if err != nil {
+			return err
+		}
 		variables := map[string]interface{}{
 			"ticket_id": tkt.ID, "ticket_number": tkt.TicketNumber, "title": tkt.Title,
 			"description": tkt.Description, "priority": tkt.Priority, "status": tkt.Status,
@@ -140,22 +149,12 @@ func (h *WorkflowStartCommandHandler) Handle(ctx context.Context, cmd *ent.Opera
 		if processKey == "" {
 			processKey = fallbackKey
 		}
-		// 路由/显式指定可能指向租户未部署的自定义流程定义；不存在时回退内置流程
-		// 并告警，避免 workflow.start 命令反复重试卡死变更的生命周期。
-		if processKey != "change_normal_flow" && processKey != "change_emergency_flow" {
-			defExists, derr := h.client.ProcessDefinition.Query().Where(
-				processdefinition.TenantIDEQ(cmd.TenantID),
-				processdefinition.IsActive(true),
-				processdefinition.Key(processKey),
-			).Exist(ctx)
-			if derr != nil {
-				return fmt.Errorf("check process definition %s: %w", processKey, derr)
-			}
-			if !defExists {
-				h.logger.Warnw("change workflow route points to missing process definition, falling back to builtin",
-					"change_id", ch.ID, "tenant_id", cmd.TenantID, "routed_key", processKey, "fallback_key", fallbackKey)
-				processKey = fallbackKey
-			}
+		// 路由/显式指定可能指向租户未部署的自定义流程定义，内置 key 也可能被租户
+		// 停用——两种都统一校验：不存在则回退（emergency 先试 change_emergency_flow，
+		// 再退 change_normal_flow），避免 workflow.start 反复重试卡死变更生命周期。
+		processKey, err = h.pickExistingDefinition(ctx, cmd.TenantID, processKey, fallbackKey, "change_normal_flow")
+		if err != nil {
+			return err
 		}
 		req = &dto.ProcessTriggerRequest{
 			BusinessType: dto.BusinessTypeChange, BusinessID: ch.ID, ProcessDefinitionKey: processKey,
@@ -186,6 +185,25 @@ func (h *WorkflowStartCommandHandler) Handle(ctx context.Context, cmd *ent.Opera
 			},
 			TriggeredBy: fmt.Sprintf("%d", sr.RequesterID), TriggeredAt: time.Now(), TenantID: cmd.TenantID,
 		}
+	case "release":
+		rel, err := h.client.Release.Query().Where(release.IDEQ(cmd.AggregateID), release.TenantIDEQ(cmd.TenantID)).Only(ctx)
+		if err != nil {
+			return fmt.Errorf("load release for workflow: %w", err)
+		}
+		// 发布域无路由绑定 resolver，固定走默认绑定 release → release_approval_flow
+		//（见 bpmn_process_binding_service.go 默认绑定表）；与 problem 分支同口径。
+		// 发布创建即进入审批流：未显式指定时按默认绑定启动，使 /approve 的 BPMN
+		// 任务完成桥接（ApplyReleaseApproval）有流程实例可落。
+		req = &dto.ProcessTriggerRequest{
+			BusinessType: dto.BusinessTypeRelease, BusinessID: rel.ID, ProcessDefinitionKey: "release_approval_flow",
+			Variables: map[string]interface{}{
+				"release_id": rel.ID, "release_number": rel.ReleaseNumber, "title": rel.Title,
+				"description": rel.Description, "type": rel.Type, "severity": rel.Severity,
+				"environment": rel.Environment, "status": string(rel.Status), "created_by": rel.CreatedBy,
+				"requires_approval": rel.RequiresApproval, "is_emergency": rel.IsEmergency,
+			},
+			TriggeredBy: fmt.Sprintf("%d", rel.CreatedBy), TriggeredAt: time.Now(), TenantID: cmd.TenantID,
+		}
 	default:
 		return fmt.Errorf("unsupported workflow aggregate type %q", cmd.AggregateType)
 	}
@@ -202,4 +220,56 @@ func (h *WorkflowStartCommandHandler) definitionAvailable(ctx context.Context, t
 		processdefinition.IsActive(true),
 		processdefinition.Key(key),
 	).Exist(ctx)
+}
+
+// pickExistingDefinition 返回 key 与 fallbacks 中第一个在租户下真实存在且启用的流程 key。
+//
+// 为什么需要这道闸（2026-10-24 本地生产栈实测）：
+//
+//	ProcessTriggerService.TriggerProcess 在定义缺失时只返回普通 error，
+//	commandbus 一律视为可重试（默认 8 次）后进 dead_letter。而业务单据此时
+//	已经创建成功——用户看到「工单建了但永远没有流程」，运维看到一条既无单据
+//	也无可操作建议的死信。两处真实故障都是这条路径：
+//	  · ticket 高/紧急优先级 → ProcessResolver.ResolveWithPriority 兜底
+//	    ticket_urgent_flow，而 service/bpmn/ 下从来没有这个模板；
+//	  · 紧急变更 → ResolveForChange 兜底 change_emergency_flow，同样没有模板
+//	    （本轮已补 bpmn/change_emergency_flow.bpmn，但租户可能自行停用/删除，
+//	     仍需兜底）。
+//
+// 语义：只有「解析出的 key 与所有 fallback 都不可用」才算真失败；此时返回的
+// error 会列出全部候选 key 与租户，让死信本身具备可操作性，而不是重复 8 次
+// 同一句「流程定义 X 不存在」。
+func (h *WorkflowStartCommandHandler) pickExistingDefinition(ctx context.Context, tenantID int, key string, fallbacks ...string) (string, error) {
+	candidates := make([]string, 0, len(fallbacks)+1)
+	seen := make(map[string]bool, len(fallbacks)+1)
+	for _, candidate := range append([]string{key}, fallbacks...) {
+		candidate = strings.TrimSpace(candidate)
+		if candidate == "" || seen[candidate] {
+			continue
+		}
+		seen[candidate] = true
+		candidates = append(candidates, candidate)
+	}
+	if len(candidates) == 0 {
+		return "", fmt.Errorf("no workflow definition key resolved for tenant %d", tenantID)
+	}
+
+	for _, candidate := range candidates {
+		available, err := h.definitionAvailable(ctx, tenantID, candidate)
+		if err != nil {
+			return "", fmt.Errorf("check process definition %s: %w", candidate, err)
+		}
+		if available {
+			if candidate != key {
+				h.logger.Warnw("workflow definition unavailable, falling back to builtin",
+					"tenant_id", tenantID, "resolved_key", key, "fallback_key", candidate)
+			}
+			return candidate, nil
+		}
+	}
+	return "", fmt.Errorf(
+		"tenant %d 没有任何可用的流程定义（候选 %v 均不存在或已停用）："+
+			"请确认内置模板已部署（启动日志 bpmn-template-bootstrap-deploy），或为该业务类型配置 process_bindings",
+		tenantID, candidates,
+	)
 }

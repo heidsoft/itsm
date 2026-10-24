@@ -16,6 +16,7 @@ type Handler struct {
 	aiGenerator    *AIGeneratorHandler
 	template       *WorkflowTemplateHandler
 	lint           *LintHandler
+	inventory      *InventoryHandler
 }
 
 func NewHandler(
@@ -26,6 +27,7 @@ func NewHandler(
 	aiGenerator *AIGeneratorHandler,
 	template *WorkflowTemplateHandler,
 	lint *LintHandler,
+	inventory *InventoryHandler,
 ) *Handler {
 	return &Handler{
 		workflow:       workflow,
@@ -35,6 +37,7 @@ func NewHandler(
 		aiGenerator:    aiGenerator,
 		template:       template,
 		lint:           lint,
+		inventory:      inventory,
 	}
 }
 
@@ -65,6 +68,9 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 	}
 	if h.monitoring != nil {
 		h.monitoring.RegisterRoutes(r)
+	}
+	if h.inventory != nil {
+		h.inventory.RegisterRoutes(r)
 	}
 }
 

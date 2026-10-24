@@ -81,18 +81,31 @@ var registry = []definition{
 	{key: "cmdb.ciTypes", maturity: MaturityGA, built: true, dependencies: []string{"cmdb"}},
 	{key: "cmdb.relationships", maturity: MaturityGA, built: true, dependencies: []string{"cmdb"}},
 	{key: "cmdb.topology", maturity: MaturityGA, built: true, dependencies: []string{"cmdb"}},
-	// 云发现缺的不是接口而是执行者：ClaimDiscoveryJob 只在测试里被调用，队列没有消费者，
-	// 任务建完不会有人领取。
+	// 云发现 2026-10-23 两条阻断项闭环：① 执行者——Job 级执行器消费
+	// `cmdb.cloud_discovery.run`（租约认领/diff/证据落库/终态），旧 Runner.RunAll
+	// 删除；② 调度——`discovery_sources.schedule` 此前全仓无消费者，现已由
+	// DiscoveryScheduler 每分钟按租户时区消费（到期判定、在途守卫、跨副本幂等键）。
+	// 仍不申报 GA：适配器只有阿里云 ECS 一种，发现结果只落 CloudResource
+	// 不回写配置项（CMDB 与云上事实仍是两套账），真实账号未验收。
 	{key: "cmdbDiscovery", maturity: MaturityPilot, built: true, dependencies: []string{"cmdb"}, readinessEnv: "ITSM_CMDB_DISCOVERY_READY",
-		pilotReason: "发现任务没有执行者：ClaimDiscoveryJob 仅被单测调用，队列无消费者，任务创建后不会被领取执行；真实云凭据下的全量/增量发现未联调。晋升条件：worker 消费 + 真实账号发现验收。"},
+		pilotReason: "执行链与定时调度已闭环（Job 执行器 + 每分钟 cron 消费 schedule），但适配器只有阿里云 ECS 一种（其他 provider/服务在执行器里按「无适配器」记 scope 失败）；发现结果只落 CloudResource、不回写配置项，CMDB 与云上事实仍是两套账；真实账号下的全量与增量发现未验收。晋升条件：两种以上真实云服务适配器 + 发现结果回写 CI + 真实账号发现验收。"},
 	{key: "cmdbReconciliation", maturity: MaturityPilot, built: true, dependencies: []string{"cmdb", "cmdbDiscovery"}, readinessEnv: "ITSM_CMDB_DISCOVERY_READY",
-		pilotReason: "对账依赖发现任务产出的结果集，而发现链路没有消费者，对账只能对空集；差异合并策略缺少真实数据验收。晋升条件：先打通 cmdbDiscovery 执行链。"},
+		pilotReason: "差异能算、能决策（POST /discovery/results/:id/apply|reject），但应用只写 CloudResource 不写配置项——CI 回写未接通，对账后 CMDB 与云上事实仍是两套账；差异合并策略也缺少真实数据验收。晋升条件：CI 回写 + 真实数据对账验收。"},
 	{key: "workflow", maturity: MaturityGA, built: true},
 	{key: "sla", maturity: MaturityGA, built: true},
+	// 报表域此前只在能力契约表里（报表/运营 = Pilot），矩阵里根本没有这一行——
+	// 矩阵是前端与控制台的唯一事实源，缺行等于这个域对客户不可见。
+	// 2026-10-23 服务质量视图落地后补行，理由按当前仍缺的两项写。
+	{key: "report", maturity: MaturityPilot, built: true,
+		pilotReason: "管理者服务质量视图（GET /reports/service-quality）已把 KPI/SLA/事件分布/满意度/趋势/工单统计聚合成单请求并携带 metricVersion 口径版本；但 MSP 跨租户汇总边界未定义（服务商视角拿不到下属租户的合并口径），导出只有动作级审计、缺少导出行数与数据范围摘要。晋升条件：MSP 汇总口径 + 导出产物审计。"},
 	{key: "knowledge", maturity: MaturityPilot, built: true,
 		pilotReason: "发布版本语义未收敛（历史版本可对比/回滚，但「线上是哪个版本」没有唯一事实源）；分类可见性的跨角色检索未做端到端验收；召回率（典型问题集）缺人工验收口径。晋升条件：版本发布语义 + 跨角色检索验收。"},
+	// AI 2026-10-23 三契约落地（分诊 + 工单 RCA）：响应带 promptVersion/model/auditId，
+	// 服务端自动落 ai_audit 底账（accepted=NULL），采纳/拒绝走 PATCH 翻转；
+	// confidence 统一 0-1 并入口校验。仍不申报 GA：这套契约只覆盖分诊与 RCA，
+	// chat/摘要/analytics/prediction/agent 工具没有同等约束；evaluator 仍无门禁。
 	{key: "ai", maturity: MaturityPilot, built: true, readinessEnv: "ITSM_AI_READY",
-		pilotReason: "confidence、接受/拒绝反馈、prompt 与 model 版本未在每个 AI 能力上强制写入审计；evaluator 未接入调用链；高风险动作仍只能人工确认。晋升条件：审计字段强制化 + evaluator 接线。"},
+		pilotReason: "分诊与工单 RCA 已强制 promptVersion/model/confidence 并落 ai_audit 底账（采纳/拒绝经 PATCH 翻转，不再由前端自报）；但 chat、摘要、analytics、prediction、agent 工具仍未强制同一套溯源字段；ai_llm_calls 无 tenant/request 关联，成本与延迟无法按租户归集；evaluator 仍是只读报表，没有「健康分下降即阻断发布」的门禁。晋升条件：其余 AI 能力补齐溯源三契约 + LLM 调用按租户归集 + evaluator 进门禁。"},
 	// 通知域 2026-10-20/21 闭环三件事：投递审计读面（GET /notification-deliveries）、
 	// 失败重试（保留旧记录作失败证据）、渠道诊断（GET /notifications/channels：
 	// 渠道是否装配 / 是否健康 / 用户目标是否就绪）。加上既有的偏好过滤、

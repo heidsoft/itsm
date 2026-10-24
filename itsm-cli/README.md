@@ -27,10 +27,11 @@ itsm --json infra health
 itsm --json infra version
 itsm --json infra ready
 
-# 登录（三选一）
-itsm --json auth login --username admin --password '...'   # 写入 ~/.itsm/credentials
-ITSM_TOKEN=<jwt> itsm --json ticket get 42                 # 静态注入，无需登录文件
-ITSM_USERNAME=admin ITSM_PASSWORD='...' itsm --json ticket list   # 自动登录（内存）
+# 登录（密码只从 stdin 或 0600 文件读，永不进入 argv）
+read -rs ITSM_PW && printf %s "$ITSM_PW" | itsm --json auth login --username admin --password-stdin   # 写入 ~/.itsm/credentials
+itsm --json auth login --username admin --password-file ~/.itsm/admin.pw   # 文件必须 chmod 600
+ITSM_TOKEN_FILE=~/.itsm/token itsm --json ticket get 42                   # 预发令牌，0600 文件
+ITSM_USERNAME=admin ITSM_PASSWORD_FILE=~/.itsm/admin.pw itsm --json ticket list   # 自动登录（内存，不落盘）
 
 # 核心 CRUD 与生命周期
 itsm --json ticket create '打印机故障' '3楼打印机卡纸无法打印' --priority high
@@ -67,6 +68,23 @@ itsm --json infra api POST /knowledge/search --data '{"query":"打印机","pageS
 > 静默续期并重放一次（refresh token 单次使用，rotation 后的新值会写回凭据）。
 > 自动登录失败不再被吞成「缺少认证token」——错误会带真实原因（如 `auto-login failed: HTTP 403 / code 2003`）与绕行建议。
 > 任意写命令加 `--dry-run` 可预演：只回显 `{command, risk, endpoints}`，不发请求。
+
+### 认证与凭据安全
+
+- **密码/令牌不进 argv**：`--password`、`--token` 会被显式拒绝（exit 2），并提示安全通道。可用
+  `--password-stdin` / `--password-file`、`--token-stdin`、`--reset-token-stdin` / `--reset-token-file`，
+  或 `ITSM_PASSWORD_FILE`、`ITSM_TOKEN_FILE`、`ITSM_RESET_TOKEN_FILE`。
+- **TUI 登录改为遮蔽输入**：`itsm login -u admin` 交互输入密码，或 `printf %s "$PW" | itsm login -u admin`。
+  旧写法 `-p <password>` 已拒绝，避免 shell history 与 `ps` 泄漏。
+- **凭据文件防篡改**：目录 0700、文件 0600；同目录临时文件 + `rename` 原子写；拒绝写入 symlink；
+  读取时校验 owner，发现权限过宽自动收紧；`ITSM_CREDENTIALS_FILE` 可指向 CI 的临时路径。
+  `auth status` 的 `credentialStore` 会报告 path/mode/owner/symlink 是否安全。
+- **明文 HTTP 默认拒绝**：向非 loopback 的 `http://` 发送密码或令牌会以 exit 2 失败；
+  loopback 例外用于本地开发，遗留内网需显式 `ITSM_ALLOW_INSECURE_HTTP=1`。URL 内嵌 userinfo 一律拒绝。
+- **令牌不出现在任何输出**：`auth login/refresh/status/logout/switch-tenant` 均不返回
+  `accessToken` / `refreshToken`，错误体会统一脱敏。
+- **登出会吊销服务端会话**：`auth logout` 先带 `Cookie: refresh_token=...` 调后端吊销，再删除本地文件；
+  仅清本地用 `--local-only`。`auth refresh` 要求后端轮换出新 refresh token，否则判定失败。
 
 ### 退出码协议
 
@@ -143,7 +161,7 @@ itsm --json schema --as tools --domain cmdb # function-calling 工具定义
 参数来源有两层：
 
 1. **usage 字符串解析**：`<title>` → 必填 positional，`[--status s]` → 可选 flag，
-   `--data <json>` → body。190+ 命令零手工维护全覆盖。
+   `--data <json>` → body。300+ 命令零手工维护全覆盖。
 2. **后端 `oneof=` 枚举**：`scripts/gen-enums.mjs` 扫描 `itsm-backend` 的 DTO，
    只导出**跨域语义一致**的字段（如 `severity`/`impact`/`priority`）。
    `status`/`type`/`action` 这类每个域含义不同的字段刻意不导出——**宁可没有，也不给错的值**。
@@ -211,8 +229,11 @@ verdict 三态：
 | 变量 | 作用 |
 |------|------|
 | `ITSM_BASE_URL` | 覆盖后端地址（默认 `http://localhost:8090`） |
-| `ITSM_TOKEN` | Agent 身份静态注入（优先级最高） |
-| `ITSM_USERNAME` / `ITSM_PASSWORD` | 无 token 时的自动登录（进程内存，不落盘） |
+| `ITSM_TOKEN` / `ITSM_TOKEN_FILE` | Agent 身份静态注入；文件版必须是 0600 |
+| `ITSM_USERNAME` + `ITSM_PASSWORD_FILE` | 无 token 时的自动登录（进程内存，不落盘；优先文件而非明文变量） |
+| `ITSM_CREDENTIALS_FILE` | 覆盖凭据库路径（CI 挂载临时卷时使用） |
+| `ITSM_RESET_TOKEN_FILE` | 密码重置令牌文件（0600），替代 argv `--token` |
+| `ITSM_ALLOW_INSECURE_HTTP` | 设为 `1` 才允许向非 loopback 的明文 HTTP 发送凭据（遗留内网，不推荐） |
 | `ITSM_CLI_AGENT_NO_GUARD` | 设为 `1` 关闭 stdout 守卫（仅调试用，会允许 stray log 污染协议流） |
 
 认证链的优先级：`--base-url` > 环境变量 > `~/.itsm/credentials`。
@@ -232,7 +253,7 @@ node bin/itsm-mcp.js --describe  # 只打印工具面，不进协议循环
 
 工具面分两层：20 个精选工具（工单读写与状态机流转、事件分诊、变更审批链、CMDB 影响分析、
 知识检索、SLA 概览、我的待办、身份自检）+ `itsm_discover` → `itsm_describe` → `itsm_call`
-覆盖全部 268 条命令。**schema 由 `CommandSpec.input` 派生**（不新增第二份端点表），
+覆盖全部 302 条命令。**schema 由 `CommandSpec.input` 派生**（不新增第二份端点表），
 风险门与 `exit 10` 同源：高风险写缺 `confirm` 时**不发请求**，且永不自动重试。
 列表默认裁剪 50 条并给出 `total`/`truncated`；resources 提供实时能力清单与 4 篇产品文档，
 prompts 提供队列梳理 / 事件复盘 / 变更风险评审三条操作规程。
@@ -246,9 +267,9 @@ node scripts/mcp-smoke.mjs                # 打真实实例的只读冒烟；--o
 
 ## 命令面速览
 
-完整目录以 `itsm --json commands` 为准（208 命令，直接从代码注册表生成）。主要 domain：
+完整目录以 `itsm --json commands` 为准（302 命令，直接从代码注册表生成）。主要 domain：
 
-`infra`（健康/版本/能力/全局搜索/原始API/**doctor 自检**） · `auth`（login/status/switch-tenant） · `ticket`（CRUD + workflow 状态机 + 评论 + AI） · `incident` · `problem`（含 known-errors） · `change`（全生命周期） · `release` · `request`/`catalog`（服务请求） · `cmdb`（CI/关系/拓扑/影响分析） · `knowledge` · `sla` · `workflow`（BPMN） · `notification`（含投递审计） · `connector`（集成市场） · `admin`（用户/租户/RBAC/审计/MSP）
+`infra`（健康/版本/能力/全局搜索/原始API/**doctor 自检**） · `auth`（登录/刷新/状态/登出/切租户/注册/密码重置/SSO） · `ticket`（CRUD + workflow 状态机 + 评论 + 子任务 + 关系 + SLA + 评分 + AI） · `incident`（含根因/分类/影响评估/重大事件/事件流/报告） · `problem`（含 known-errors） · `change`（全生命周期 + 审批链 + 风险评估 + CMDB 影响 + 回滚清单 + PIR + 变更日历） · `release` · `request`/`catalog`（服务请求与目录 CRUD） · `cmdb`（CI/关系/拓扑/影响分析/标签/版本回退/CI 类型） · `knowledge` · `sla` · `workflow`（BPMN） · `notification`（含投递审计） · `connector`（集成市场） · `admin`（用户/租户/RBAC/审计/MSP/**可靠副作用命令总线**/定时器）
 
 `itsm --json doctor` 是 `infra.doctor` 的别名，注册表仍是唯一事实来源。
 
@@ -258,7 +279,7 @@ node scripts/mcp-smoke.mjs                # 打真实实例的只读冒烟；--o
 
 ```bash
 cd itsm-cli && npm run check
-# = typecheck + 枚举表同步 + 路由漂移 + 对外流程验收 + 25 条协议/流程回归测试
+# = typecheck + 枚举表同步 + 路由漂移 + flag/positional 声明审计 + 73 条协议/流程/安全回归测试
 ```
 
 ### 路由漂移检查
@@ -282,6 +303,28 @@ cd itsm-cli && npm run check:enums   # CI：表过期则 fail
 生产物是 `src/agent/enums.generated.ts`（勿手改）。白名单只收录跨域语义一致的字段；
 `status`/`type`/`action`/`provider`/`channel` 因每个域含义不同而被排除。
 
+### 声明与实现一致性
+
+```bash
+cd itsm-cli && npm run audit:flags         # implementation 读到的每个 flag 必须在 usage 里声明
+cd itsm-cli && npm run audit:positionals   # implementation 读到的每个 positional 必须在 usage 里声明
+```
+
+两者都从 `dist/agent/registry.js` 派生，与 `itsm schema` / `itsm_describe` 看到的是同一份契约。
+运行时还有第三道闸：未声明的 flag 与多余 positional 一律 exit 2（见 `validateFlags` / `validatePositionals`）。
+
+### 产品功能点审查（对着真机跑）
+
+```bash
+cd itsm-cli && npm run audit:product           # 报告写入 ../output/itsm-cli-product-audit-<date>.md
+cd itsm-cli && npm run audit:product -- --strict  # 有违规即 exit 1（可接 CI 的夜间任务）
+```
+
+只读探测（119 条）覆盖全部领域的 list/get/stats + 负向路径 + 协议断言，逐条比对本仓库自己声明的 API 契约：
+字段命名（camelCase / 持久化列名泄漏）、零值时间、列表信封 `{items,total,page,pageSize,totalPages}`、
+成功信封必须带 data、列表给出的 id 必须能被详情端点取回、能力禁用与日期格式的语义一致性。
+写操作只用 `--dry-run` 与 exit-10 闸门断言，不会对后端产生任何写入。
+
 ### 协议回归测试
 
 ```bash
@@ -292,6 +335,10 @@ cd itsm-cli && npm test
 单一 JSON 信封、`--limit/--fields/--format ndjson` 裁剪与 `meta`、exit 0/1/2/3/4/5/10 全映射、
 超时、幂等 GET 重试、高风险写无 `--yes` 时**零请求**、`--dry-run` 不发请求、
 `--help` 不被风险门禁拦截、`schema` 必填参数与枚举、`doctor` 报告。
+
+`tests/auth-security.test.mjs` 锁定认证安全不变量：`--password` / `--token` 在 argv 上被显式拒绝且零请求、
+密码文件必须 0600、凭据库写入为 0600 且拒绝穿过 symlink、令牌不出现在 stdout、
+非 loopback 的明文 HTTP 在发送凭据前以 exit 2 拒绝、`ITSM_ALLOW_INSECURE_HTTP=1` 才放行。
 
 `tests/flow-runner.test.mjs` 用合成场景驱动流程 runner，锁定判定语义：capture 上下文、
 失败即停、teardown 必执行且反序、`expectError` 只接受声明的拒绝、负向步骤收到 5xx 判 `failed`

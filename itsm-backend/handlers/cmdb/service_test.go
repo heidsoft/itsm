@@ -49,7 +49,15 @@ type mockRepository struct {
 	createDiscoverySourceFn func(ctx context.Context, ds *DiscoverySource) (*DiscoverySource, error)
 	listDiscoverySourcesFn  func(ctx context.Context, tenantID int) ([]*DiscoverySource, error)
 	createDiscoveryJobFn    func(ctx context.Context, job *DiscoveryJob) (*DiscoveryJob, error)
-	listDiscoveryResultsFn  func(ctx context.Context, tenantID int, jobID int) ([]*DiscoveryResult, error)
+	// 调度器扫描面：默认「没有配置调度的来源」/「没有历史任务」，
+	// 需要真实行为的用例走 sqlite 端到端（discovery_scheduler_test.go）。
+	listScheduledDiscoverySourcesFn        func(ctx context.Context, tenantID int) ([]*DiscoverySource, error)
+	latestDiscoveryJobForSourceFn          func(ctx context.Context, tenantID int, sourceID string) (*DiscoveryJob, error)
+	latestScheduledDiscoveryJobForSourceFn func(ctx context.Context, tenantID int, sourceID string) (*DiscoveryJob, error)
+	getDiscoveryResultFn                   func(ctx context.Context, tenantID, id int) (*DiscoveryResult, error)
+	updateDiscoveryResultFn                func(ctx context.Context, res *DiscoveryResult) error
+	transitionDiscoveryResultFn            func(ctx context.Context, tenantID, id int, fromStatus, toStatus, errorCode, errorMessage string) (int, error)
+	listDiscoveryResultsFn                 func(ctx context.Context, tenantID int, jobID int) ([]*DiscoveryResult, error)
 
 	// Discovery job 执行链路
 	getDiscoverySourceFn                 func(ctx context.Context, tenantID int, id string) (*DiscoverySource, error)
@@ -208,11 +216,55 @@ func (m *mockRepository) ListDiscoverySources(ctx context.Context, tenantID int)
 	return nil, nil
 }
 
+// 调度器扫描入口：默认返回空集（未配置 schedule），需要时由用例注入。
+func (m *mockRepository) ListScheduledDiscoverySources(ctx context.Context, tenantID int) ([]*DiscoverySource, error) {
+	if m.listScheduledDiscoverySourcesFn != nil {
+		return m.listScheduledDiscoverySourcesFn(ctx, tenantID)
+	}
+	return nil, nil
+}
+
+func (m *mockRepository) LatestDiscoveryJobForSource(ctx context.Context, tenantID int, sourceID string) (*DiscoveryJob, error) {
+	if m.latestDiscoveryJobForSourceFn != nil {
+		return m.latestDiscoveryJobForSourceFn(ctx, tenantID, sourceID)
+	}
+	return nil, &ent.NotFoundError{}
+}
+
+func (m *mockRepository) LatestScheduledDiscoveryJobForSource(ctx context.Context, tenantID int, sourceID string) (*DiscoveryJob, error) {
+	if m.latestScheduledDiscoveryJobForSourceFn != nil {
+		return m.latestScheduledDiscoveryJobForSourceFn(ctx, tenantID, sourceID)
+	}
+	return nil, &ent.NotFoundError{}
+}
+
 func (m *mockRepository) CreateDiscoveryJob(ctx context.Context, job *DiscoveryJob) (*DiscoveryJob, error) {
 	if m.createDiscoveryJobFn != nil {
 		return m.createDiscoveryJobFn(ctx, job)
 	}
 	return job, nil
+}
+
+// 差异决策读写面：默认「没有这条差异」，需要真实行为的用例走 sqlite 端到端。
+func (m *mockRepository) GetDiscoveryResult(ctx context.Context, tenantID, id int) (*DiscoveryResult, error) {
+	if m.getDiscoveryResultFn != nil {
+		return m.getDiscoveryResultFn(ctx, tenantID, id)
+	}
+	return nil, &ent.NotFoundError{}
+}
+
+func (m *mockRepository) UpdateDiscoveryResult(ctx context.Context, res *DiscoveryResult) error {
+	if m.updateDiscoveryResultFn != nil {
+		return m.updateDiscoveryResultFn(ctx, res)
+	}
+	return nil
+}
+
+func (m *mockRepository) TransitionDiscoveryResult(ctx context.Context, tenantID, id int, fromStatus, toStatus, errorCode, errorMessage string) (int, error) {
+	if m.transitionDiscoveryResultFn != nil {
+		return m.transitionDiscoveryResultFn(ctx, tenantID, id, fromStatus, toStatus, errorCode, errorMessage)
+	}
+	return 1, nil
 }
 
 func (m *mockRepository) ListDiscoveryResults(ctx context.Context, tenantID int, jobID int) ([]*DiscoveryResult, error) {

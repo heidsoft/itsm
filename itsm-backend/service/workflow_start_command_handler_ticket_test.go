@@ -26,6 +26,9 @@ func newTicketRouteFixture(t *testing.T) (*ent.Client, context.Context, int, int
 	client, ctx := setupChangeWorkflowTest(t)
 	tenant, err := createRouteTestTenant(ctx, client, fmt.Sprintf("ticket-%d", nextRouteTestSeq()))
 	require.NoError(t, err)
+	// 生产基线：内置模板由 BPMNTemplateService 在每个 active 租户部署，
+	// ticket_general_flow 必然存在。fixture 若不造它，测的就不是真实环境。
+	deployTicketDefinition(t, client, ctx, tenant.ID, "ticket_general_flow")
 	return client, ctx, tenant.ID, createRouteUser(t, client, ctx, tenant.ID)
 }
 
@@ -111,6 +114,7 @@ func TestWorkflowStart_TicketRouting(t *testing.T) {
 		disableKey  bool
 		routeKey    string
 		deployRoute bool
+		extraDeploy []string
 		wantKey     string
 	}{
 		{
@@ -135,7 +139,15 @@ func TestWorkflowStart_TicketRouting(t *testing.T) {
 		},
 		{
 			name: "无绑定_高优先级走内置加急流程", priority: "high",
-			wantKey: "ticket_urgent_flow",
+			extraDeploy: []string{"ticket_urgent_flow"},
+			wantKey:     "ticket_urgent_flow",
+		},
+		{
+			// 2026-10-24 生产实测：ProcessResolver.ResolveWithPriority 对 high/urgent
+			// 兜底返回 ticket_urgent_flow，而内置模板里从来没有这个 key。若不回退，
+			// workflow.start 重试 8 次进 dead_letter，工单永远没有流程实例。
+			name: "无绑定_高优先级但加急流程未部署_回退通用流程", priority: "high",
+			wantKey: "ticket_general_flow",
 		},
 	}
 
@@ -143,6 +155,9 @@ func TestWorkflowStart_TicketRouting(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			client, ctx, tenantID, requesterID := newTicketRouteFixture(t)
 
+			for _, key := range tc.extraDeploy {
+				deployTicketDefinition(t, client, ctx, tenantID, key)
+			}
 			if tc.deployKey {
 				def := deployTicketDefinition(t, client, ctx, tenantID, tc.payloadKey)
 				if tc.disableKey {
@@ -186,6 +201,8 @@ func TestWorkflowStart_TicketRouting_TenantIsolation(t *testing.T) {
 	require.NoError(t, err)
 
 	deployTicketDefinition(t, client, ctx, tenantB.ID, "shared_name_flow")
+	// 租户 A 的内置流程是生产基线；隔离语义是「不命中 B 的同名流程」。
+	deployTicketDefinition(t, client, ctx, tenantA.ID, "ticket_general_flow")
 
 	tkt := createTicketForRouteTest(t, client, ctx, tenantA.ID, createRouteUser(t, client, ctx, tenantA.ID), "medium")
 	cmd := createTicketRouteCommand(t, client, ctx, tkt.ID, tenantA.ID, map[string]interface{}{
@@ -198,4 +215,28 @@ func TestWorkflowStart_TicketRouting_TenantIsolation(t *testing.T) {
 
 	require.Len(t, trigger.reqs, 1)
 	assert.Equal(t, "ticket_general_flow", trigger.reqs[0].ProcessDefinitionKey)
+}
+
+// TestWorkflowStart_NoDefinitionAnywhere_FailsActionably 锁死「一个可用定义都没有」
+// 时的失败语义：必须报错（而不是把不存在的 key 交给触发器后反复重试），
+// 且错误里要能直接看出租户与候选 key——死信是运维唯一能看到的东西。
+func TestWorkflowStart_NoDefinitionAnywhere_FailsActionably(t *testing.T) {
+	client, ctx := setupChangeWorkflowTest(t)
+	tenant, err := createRouteTestTenant(ctx, client, fmt.Sprintf("empty-%d", nextRouteTestSeq()))
+	require.NoError(t, err)
+
+	tkt := createTicketForRouteTest(t, client, ctx, tenant.ID, createRouteUser(t, client, ctx, tenant.ID), "high")
+	cmd := createTicketRouteCommand(t, client, ctx, tkt.ID, tenant.ID, map[string]interface{}{
+		"businessType": "ticket", "businessId": tkt.ID,
+	})
+
+	trigger := &fakeWorkflowTrigger{}
+	handler := NewWorkflowStartCommandHandler(client, trigger, NewProcessResolver(client, nil), zaptest.NewLogger(t).Sugar())
+
+	err = handler.Handle(ctx, cmd)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), fmt.Sprintf("tenant %d", tenant.ID))
+	assert.Contains(t, err.Error(), "ticket_general_flow")
+	assert.Contains(t, err.Error(), "process_bindings")
+	assert.Empty(t, trigger.reqs, "定义缺失时不得把不存在的 key 交给触发器")
 }

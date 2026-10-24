@@ -16,11 +16,13 @@
     "gen:enums": "node scripts/gen-enums.mjs",
     "check:enums": "node scripts/gen-enums.mjs --check",
     "check:route-drift": "npm run build && node scripts/check-route-drift.mjs",
-    "check": "npm run typecheck && npm run check:enums && npm run check:route-drift && npm run audit:flags && npm test",
+    "check": "npm run typecheck && npm run check:enums && npm run check:route-drift && npm run audit:flags && npm run audit:positionals && npm test",
     "smoke:agent": "node scripts/agent-smoke.mjs",
     "mcp": "npm run build && node bin/itsm-mcp.js",
     "smoke:mcp": "node scripts/mcp-smoke.mjs",
-    "audit:flags": "node scripts/audit-flags.mjs"
+    "audit:flags": "node scripts/audit-flags.mjs",
+    "audit:positionals": "node scripts/audit-positionals.mjs",
+    "audit:product": "node scripts/audit-product.mjs"
   },
   "dependencies": {
     "got": "^14.0.0",

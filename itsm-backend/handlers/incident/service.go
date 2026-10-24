@@ -217,6 +217,9 @@ func (s *Service) Create(ctx context.Context, tenantID int, i *Incident) (*Incid
 		SetDescription(i.Description).
 		SetStatus(i.Status).
 		SetPriority(i.Priority).
+		SetSeverity(normalizeImpactField(i.Severity)).
+		SetImpact(normalizeImpactField(i.Impact)).
+		SetUrgency(normalizeImpactField(i.Urgency)).
 		SetReporterID(i.ReporterID).
 		SetNillableAssigneeID(i.AssigneeID).
 		SetCategory(i.Category).
@@ -236,6 +239,9 @@ func (s *Service) Create(ctx context.Context, tenantID int, i *Incident) (*Incid
 		Description:    createdEnt.Description,
 		Status:         createdEnt.Status,
 		Priority:       createdEnt.Priority,
+		Severity:       createdEnt.Severity,
+		Impact:         createdEnt.Impact,
+		Urgency:        createdEnt.Urgency,
 		ReporterID:     createdEnt.ReporterID,
 		AssigneeID:     i.AssigneeID,
 		Category:       createdEnt.Category,
@@ -280,6 +286,22 @@ func (s *Service) Create(ctx context.Context, tenantID int, i *Incident) (*Incid
 	}
 
 	return created, nil
+}
+
+// normalizeImpactField 归一 severity / impact / urgency 三个 ITIL 影响度字段。
+//
+// 为什么需要它（2026-10-24 本地生产栈实测）：Create 的 ent 建库语句此前完全没写
+// 这三个字段，调用方传 high 也会被数据库默认值覆盖成 medium，而创建响应又回显
+// 空串——「影响度矩阵」在创建这一刻就是错的，且没有任何报错。现在显式落库：
+// 空值沿用 schema 的 medium 默认（写进实体，让响应与库一致，而不是靠 DB 默认
+// 兜住一个领域对象里没有的值）；非空值只做大小写/空白归一，非法值仍交给 ent
+// schema 的校验器报错，不做静默降级。
+func normalizeImpactField(value string) string {
+	normalized := strings.ToLower(strings.TrimSpace(value))
+	if normalized == "" {
+		return "medium"
+	}
+	return normalized
 }
 
 // inferIncidentPriority provides a deterministic fallback when an operator or

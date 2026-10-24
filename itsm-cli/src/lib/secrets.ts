@@ -71,6 +71,10 @@ export function readStdinSecret(label: string): string {
 export interface SecretSource {
   /** Literal flag value. Least safe: visible in argv. */
   literal?: string;
+  /** When true, a literal value is rejected outright instead of used. */
+  rejectLiteral?: boolean;
+  /** Flag name quoted in the rejection message (defaults to `--${label}`). */
+  literalFlag?: string;
   /** Read the secret from stdin (preferred for scripts). */
   stdin?: boolean;
   /** Read the secret from a file (mode checked when possible). */
@@ -94,6 +98,14 @@ export interface SecretSource {
  * other is how an agent ends up authenticating with a stale credential.
  */
 export function resolveSecret(source: SecretSource): string | undefined {
+  if (source.literal !== undefined && source.rejectLiteral) {
+    const flag = source.literalFlag ?? `--${source.label.replace(/\s+/g, '-')}`;
+    throw usageError(
+      `Refusing ${flag} on the command line: argv is visible in shell history and the process table. ` +
+        `Pipe the ${source.label} with --${source.label.replace(/\s+/g, '-')}-stdin, ` +
+        `or pass --${source.label.replace(/\s+/g, '-')}-file /path (mode 0600).`
+    );
+  }
   const explicit = [source.literal !== undefined, Boolean(source.stdin), Boolean(source.file)].filter(Boolean).length;
   if (explicit > 1) {
     throw usageError(`Provide only one source for ${source.label} (--flag, --*-stdin, or --*-file).`);

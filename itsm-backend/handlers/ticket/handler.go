@@ -659,7 +659,10 @@ func (h *Handler) GetTicketsByAssignee(c *gin.Context) {
 		return
 	}
 
-	common.Success(c, h.ticketListToResponse(c.Request.Context(), tenantID, tickets))
+	// 未分页的服务端全量返回：page=1、pageSize=total 表达"单页全量"，
+	// 空结果由 NewPaginationResponse 归一化（pageSize→默认值、totalPages→0）。
+	common.SuccessWithPagination(c, h.ticketListToResponse(c.Request.Context(), tenantID, tickets),
+		1, len(tickets), int64(len(tickets)))
 }
 
 // GetTicketSLAInfo handles GET /api/v1/tickets/:id/sla
@@ -973,7 +976,10 @@ func (h *Handler) GetSubtasks(c *gin.Context) {
 		return
 	}
 
-	common.Success(c, h.ticketListToResponse(c.Request.Context(), tenantID, tickets))
+	// 未分页的服务端全量返回：page=1、pageSize=total 表达"单页全量"，
+	// 空结果由 NewPaginationResponse 归一化（pageSize→默认值、totalPages→0）。
+	common.SuccessWithPagination(c, h.ticketListToResponse(c.Request.Context(), tenantID, tickets),
+		1, len(tickets), int64(len(tickets)))
 }
 
 // CreateSubtask handles POST /api/v1/tickets/:id/subtasks

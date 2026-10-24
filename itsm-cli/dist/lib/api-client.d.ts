@@ -128,7 +128,10 @@ export declare class ApiClient {
     submitTicketRating(id: number | string, data: Record<string, unknown>): Promise<unknown>;
     getRatingStats(params?: Record<string, string | number | boolean | undefined>): Promise<unknown>;
     getTicketConfigurationItems(id: number | string): Promise<unknown>;
-    getTicketDependencies(id: number | string): Promise<unknown>;
+    getTicketDependencies(id: number | string, params: {
+        action: 'close' | 'delete' | 'change_status';
+        newStatus?: string;
+    }): Promise<unknown>;
     listTicketNotifications(id: number | string): Promise<unknown>;
     sendTicketNotification(id: number | string, data: Record<string, unknown>): Promise<unknown>;
     getTicketWorkflowHistory(id: number | string): Promise<unknown>;
@@ -393,6 +396,9 @@ export declare class ApiClient {
     cancelOperationalCommand(id: number | string): Promise<unknown>;
     bulkReplayOperationalCommands(data: Record<string, unknown>): Promise<unknown>;
     bulkCancelOperationalCommands(data: Record<string, unknown>): Promise<unknown>;
+    listTimers(params?: Record<string, string | number | boolean | undefined>): Promise<unknown>;
+    getTimerStats(): Promise<unknown>;
+    getTimer(id: number | string): Promise<unknown>;
     getMSPStatus(): Promise<unknown>;
     getMSPContext(): Promise<unknown>;
     listMSPCustomers(): Promise<unknown>;

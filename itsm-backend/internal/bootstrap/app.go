@@ -142,6 +142,10 @@ type Application struct {
 	SLAMonitorService *service.SLAMonitorService
 	EscalationService *service.EscalationService
 
+	// DiscoveryScheduler 消费 discovery_sources.schedule，为到期来源排上发现任务。
+	// 与 HTTP 路由共用同一个 cmdb.Service，调度不会产出「有 job 无命令」的任务。
+	DiscoveryScheduler *cmdb.DiscoveryScheduler
+
 	// backgroundWG 跟踪由 startBackgroundTasks 启动的所有后台 goroutine。
 	// 在 Stop() 中等待它们退出，避免应用关闭时强制杀死进行中的任务。
 	backgroundWG sync.WaitGroup
@@ -578,6 +582,7 @@ func NewApplication() *Application {
 
 	// Release & Asset Management Services
 	releaseService := service.NewReleaseService(client, sugar)
+	releaseService.EnableWorkflowOutbox()
 	assetService := service.NewAssetService(client, sugar)
 	assetLicenseService := service.NewAssetLicenseService(client, sugar)
 	// CMDB Services
@@ -792,6 +797,8 @@ func NewApplication() *Application {
 
 	// BPMN Lint Handler（流程校验真源：设计器校验按钮与 AI 生成后自动 Lint 共用）
 	bpmnLintHandler := bpmnHandler.NewLintHandler()
+	// BPMN Inventory Handler（存量待办盘点：管理面只读，不含自动迁移）
+	bpmnInventoryHandler := bpmnHandler.NewInventoryHandler(client)
 	bpmnHTTPHandler := bpmnHandler.NewHandler(
 		bpmnWorkflowHandler,
 		bpmnProcessTriggerHandler,
@@ -800,6 +807,7 @@ func NewApplication() *Application {
 		bpmnAIGeneratorHandler,
 		bpmnTemplateHandler,
 		bpmnLintHandler,
+		bpmnInventoryHandler,
 	)
 
 	// A2UI Ticket Controller (AI-driven UI表单)
@@ -826,6 +834,9 @@ func NewApplication() *Application {
 	// Set process trigger service for workflow integration (after processTriggerService is declared)
 	ticketService.SetProcessTriggerService(processTriggerService)
 	incidentService.SetProcessTriggerService(processTriggerService)
+	// release 域起流只走 outbox（EnableWorkflowOutbox 已启用），此处仍注入
+	// trigger service：未启用 outbox 的组装（单测/灰度回退）才走兼容触发路径。
+	releaseService.SetProcessTriggerService(processTriggerService)
 
 	// 初始化模板并部署默认流程
 	// 多租户语义:默认流程模板与流程绑定是每租户的基础设施,
@@ -872,6 +883,16 @@ func NewApplication() *Application {
 		WorkerReady:             discoveryJobExecutor != nil,
 	})
 	cmdbHandler := cmdb.NewHandler(cmdbServiceDomain)
+	// 云发现调度器：消费 discovery_sources.schedule。此前该字段全仓无消费者，
+	// 运维填了 cron 既不生效也无任何反馈，云发现只能手动点。
+	// 调度走 Service.CreateDiscoveryJob（job 落库与命令入队同事务），
+	// 时区按 tenants.timezone 解释（cron 语义是租户本地时间）。
+	discoveryLocationFor := func(ctx context.Context, tenantID int) *time.Location {
+		return service.LoadTenantLocation(ctx, client, tenantID)
+	}
+	cmdbHandler.SetScheduleLocationResolver(discoveryLocationFor)
+	discoveryScheduler := cmdb.NewDiscoveryScheduler(cmdbRepo, cmdbServiceDomain, sugar)
+	discoveryScheduler.SetLocationResolver(discoveryLocationFor)
 
 	// Approval Chain Service（供服务请求审批链求值引擎消费）
 	approvalChainService := service.NewApprovalChainService(client, sugar)
@@ -909,7 +930,7 @@ func NewApplication() *Application {
 
 	// Domain: Problem (DDD)
 	problemRepo := problem.NewEntRepository(client)
-	problemServiceDomain := problem.NewService(problemRepo, ticketService, sugar) // 受指人校验复用 ticketService.ValidateAssignee（同租户+在职），与 datascope 写权限互补
+	problemServiceDomain := problem.NewService(problemRepo, client, ticketService, sugar) // 受指人校验复用 ticketService.ValidateAssignee（同租户+在职），与 datascope 写权限互补
 	// SLA 注入（2026-10-21 GA 阻断项落地）：问题创建即按 problem 服务类型绑定
 	// sla_states，resolved/closed 时打解决时间戳。装配缺失时问题域降级为无 SLA
 	// 绑定，不阻断创建。
@@ -1186,7 +1207,11 @@ func NewApplication() *Application {
 			}
 		}
 	}
-	r := gin.Default()
+	// gin.New() 而非 gin.Default()：Logger/Recovery 由 router.SetupRoutes 统一装配。
+	// 此前用 gin.Default() 已装一遍，SetupRoutes 里又 Use 了一遍，导致每个请求
+	// 被记录两行访问日志（2026-10-24 生产栈实测），基于日志的 QPS/错误率统计
+	// 也随之翻倍。中间件只保留一处来源。
+	r := gin.New()
 	if err := r.SetTrustedProxies(defaultTrustedProxies); err != nil {
 		sugar.Warnw("failed to set trusted proxies, falling back to default", "error", err)
 	}
@@ -1358,6 +1383,9 @@ func NewApplication() *Application {
 		// SLA 后台定时扫描复用这两个已注入实例，不再自建私有副本。
 		SLAMonitorService: slaMonitorService,
 		EscalationService: escalationService,
+
+		// 云发现 cron 调度器（与 HTTP 路由共用同一 Service 实例）
+		DiscoveryScheduler: discoveryScheduler,
 	}
 }
 
@@ -1804,8 +1832,47 @@ func (app *Application) startBackgroundTasks(ctx context.Context) {
 		}
 	})
 
-	// BPMN task timeout scanner（恢复兜底）。主路径是 task_due 定时器
-	// （createUserTask 注册、到期由 TimerEventHandler 分发四动作）；本扫描器每 2 分钟
+	// 云发现 cron 调度：每分钟为「配置了 schedule 且到期」的来源排上发现任务。
+	//
+	// 扫描按租户进行而不是一次跨租户查询：cron 要按 tenants.timezone 解释，
+	// job 与命令也都带租户归属，逐租户收窄上下文才能保证不串租户。
+	// 单租户失败只记日志，不影响其他租户（一个账户停用的来源不该让全平台停摆）。
+	if app.DiscoveryScheduler != nil {
+		safeGo("cmdb-discovery-scheduler", func() {
+			ticker := time.NewTicker(time.Minute)
+			defer ticker.Stop()
+			for {
+				select {
+				case <-ctx.Done():
+					return
+				case <-ticker.C:
+				}
+				sysCtx := tenantctx.SystemContext(ctx, "bootstrap:cmdb-discovery-scheduler",
+					"enqueue due cloud discovery jobs across all tenants")
+				tenants, err := app.DBClient.Tenant.Query().All(sysCtx)
+				if err != nil {
+					app.Logger.Warnw("discovery scheduler tenant scan failed", "error", err)
+					continue
+				}
+				now := time.Now()
+				for _, t := range tenants {
+					tenantCtx := tenantctx.WithTenantID(sysCtx, t.ID)
+					result, err := app.DiscoveryScheduler.RunTenant(tenantCtx, t.ID, now)
+					if err != nil {
+						app.Logger.Warnw("discovery scheduling failed", "error", err, "tenant_id", t.ID)
+						continue
+					}
+					if result.Created > 0 {
+						app.Logger.Infow("discovery scheduling completed",
+							"tenant_id", t.ID, "scanned", result.Scanned,
+							"created", result.Created, "failed", result.Failed)
+					}
+				}
+			}
+		})
+	}
+
+	// BPMN task timeout scanner（恢复兜底）。主路径是 task_due 定时器	// （createUserTask 注册、到期由 TimerEventHandler 分发四动作）；本扫描器每 2 分钟
 	// 兜底处理无 timer 的任务（注册失败、timer 丢失、功能关闭的部署）。
 	// dispatchTimeoutAction 带 claim-once 条件更新，双路径下同一任务只生效一次。
 	safeGo("bpmn-timeout-scanner", func() {

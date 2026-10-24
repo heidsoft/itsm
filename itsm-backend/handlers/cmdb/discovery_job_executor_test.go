@@ -43,10 +43,11 @@ func TestDiscoveryJobsHandler_ServiceNotWiredFailsClosed(t *testing.T) {
 
 // fakeDiscoveryAdapter 返回固定资源序列，供执行器端到端测试。
 type fakeDiscoveryAdapter struct {
-	provider    string
-	serviceCode string
-	regions     []string
-	resources   []cloud.DiscoveredResource
+	provider          string
+	serviceCode       string
+	regions           []string
+	resources         []cloud.DiscoveredResource
+	resourcesByRegion map[string][]cloud.DiscoveredResource
 }
 
 func (f *fakeDiscoveryAdapter) Provider() string    { return f.provider }
@@ -61,9 +62,12 @@ func (f *fakeDiscoveryAdapter) InitClients(_ context.Context, _ *ent.CloudAccoun
 func (f *fakeDiscoveryAdapter) ListRegions(_ context.Context, _ *ent.CloudAccount) ([]string, error) {
 	return f.regions, nil
 }
-func (f *fakeDiscoveryAdapter) DiscoverRegion(_ context.Context, _ *ent.CloudAccount, _ string, _ cloud.Client, nextToken string) (*cloud.PageResult, error) {
+func (f *fakeDiscoveryAdapter) DiscoverRegion(_ context.Context, _ *ent.CloudAccount, region string, _ cloud.Client, nextToken string) (*cloud.PageResult, error) {
 	if nextToken != "" {
 		return &cloud.PageResult{Resources: nil}, nil
+	}
+	if f.resourcesByRegion != nil {
+		return &cloud.PageResult{Resources: f.resourcesByRegion[region]}, nil
 	}
 	return &cloud.PageResult{Resources: f.resources}, nil
 }
@@ -234,6 +238,54 @@ func TestDiscoveryJobExecutor_EndToEnd(t *testing.T) {
 	updatedSource, err := repo.GetDiscoverySource(ctx, tenantID, "ds-disc-exec")
 	require.NoError(t, err)
 	require.NotNil(t, updatedSource.LastSuccessAt)
+}
+
+func TestDiscoveryJobExecutor_MultiRegionMissingScanIsRegionScoped(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", "file:discovery_multiregion?mode=memory&cache=shared&_fk=1")
+	defer client.Close()
+	ctx := context.Background()
+	repo := NewEntRepository(client)
+
+	tenantID, accountID, _ := seedDiscoveryEnv(t, repo, "disc-multiregion")
+	require.NoError(t, client.DiscoverySource.UpdateOneID("ds-disc-multiregion").
+		SetRegions([]string{"cn-hangzhou", "cn-beijing"}).Exec(ctx))
+	svc := NewService(repo, nil, nopLogger())
+
+	adapter := &fakeDiscoveryAdapter{
+		provider: "aliyun", serviceCode: "ecs",
+		regions: []string{"cn-hangzhou", "cn-beijing"},
+		resourcesByRegion: map[string][]cloud.DiscoveredResource{
+			"cn-hangzhou": {{BaseResource: cloud.BaseResource{ResourceID: "hz-1", Region: "cn-hangzhou", Status: "Running"}, CloudServiceCode: "ecs"}},
+			"cn-beijing":  {{BaseResource: cloud.BaseResource{ResourceID: "bj-1", Region: "cn-beijing", Status: "Running"}, CloudServiceCode: "ecs"}},
+		},
+	}
+	executor := NewDiscoveryJobExecutor(repo, &fakeRegistry{adapter: adapter}, &fakeResolver{}, nopLogger())
+
+	first, err := svc.CreateDiscoveryJob(ctx, tenantID, 9, &dto.DiscoveryJobRequest{SourceID: "ds-disc-multiregion"})
+	require.NoError(t, err)
+	require.NoError(t, executor.Execute(ctx, tenantID, first.ID))
+
+	// 第二轮北京资源确实缺失，但杭州资源仍存在。缺失扫描只能推进北京资源。
+	adapter.resourcesByRegion["cn-beijing"] = nil
+	second, err := svc.CreateDiscoveryJob(ctx, tenantID, 9, &dto.DiscoveryJobRequest{SourceID: "ds-disc-multiregion"})
+	require.NoError(t, err)
+	require.NoError(t, executor.Execute(ctx, tenantID, second.ID))
+
+	resources, err := repo.ListCloudResourcesByAccountService(ctx, tenantID, accountID, "ecs")
+	require.NoError(t, err)
+	require.Len(t, resources, 2)
+	for _, resource := range resources {
+		switch resource.ResourceID {
+		case "hz-1":
+			require.Zero(t, resource.MissingCount, "杭州资源不得因北京 scope 被判缺失")
+			require.Equal(t, "active", resource.LifecycleState)
+		case "bj-1":
+			require.Equal(t, 1, resource.MissingCount)
+			require.Equal(t, "active", resource.LifecycleState)
+		default:
+			t.Fatalf("unexpected resource %s", resource.ResourceID)
+		}
+	}
 }
 
 // 取消与重试语义：queued 可直接取消；终态再取消 409；failed 可派生重试任务。

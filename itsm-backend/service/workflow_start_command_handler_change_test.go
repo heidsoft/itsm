@@ -182,6 +182,12 @@ func TestWorkflowStart_ChangeRouting(t *testing.T) {
 			tenant, err := createRouteTestTenant(ctx, client, fmt.Sprint(routeTestSeqCounter))
 			require.NoError(t, err)
 
+			// 生产基线：内置模板由 BPMNTemplateService 部署到每个 active 租户，
+			// change_normal_flow / change_emergency_flow 必然存在。fixture 不造它们，
+			// 测的就不是真实环境（回退目标本身不存在时应当报错，见 pickExistingDefinition）。
+			createDeployedDefinition(t, ctx, client, tenant.ID, "change_normal_flow")
+			createDeployedDefinition(t, ctx, client, tenant.ID, "change_emergency_flow")
+
 			if tc.deployTarget {
 				key := tc.bindingKey
 				if key == "" {
@@ -231,6 +237,11 @@ func TestWorkflowStart_ChangeRouting_TenantIsolation(t *testing.T) {
 	require.NoError(t, err)
 	tenantB, err := createRouteTestTenant(ctx, client, "b")
 	require.NoError(t, err)
+
+	// 租户 A 的内置流程是生产基线（每个 active 租户都会被部署），
+	// 隔离语义说的是「不能命中租户 B 的自定义流程」，不是「A 什么都没有」。
+	createDeployedDefinition(t, ctx, client, tenantA.ID, "change_normal_flow")
+	createDeployedDefinition(t, ctx, client, tenantA.ID, "change_emergency_flow")
 
 	// 租户 B 配置了 standard → 自定义流程；租户 A 不配置。
 	dep, err := client.ProcessDeployment.Create().

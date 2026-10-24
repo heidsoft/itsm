@@ -169,8 +169,17 @@ func (e *CustomProcessEngine) CompleteTaskWithClient(ctx context.Context, txc *e
 	if err != nil {
 		return err
 	}
-	_, err = e.completeTaskWithClient(ctx, txc, tenantID, taskID, variables)
-	return err
+	task, err := e.completeTaskWithClient(ctx, txc, tenantID, taskID, variables)
+	if err != nil {
+		return err
+	}
+	// 任务完成审计与完成动作同事务（与 CompleteTask 一致）。此前该路径不记审计，
+	// 生命周期推进（acknowledge/resolve/close 等非审批动作）不留操作人痕迹——
+	// 审批有决策行兜底，生命周期动作什么都没有，审计链断裂。
+	if err := e.recordTaskCompletedAudit(ctx, txc, task, variables); err != nil {
+		return fmt.Errorf("记录任务完成审计失败: %w", err)
+	}
+	return nil
 }
 
 func (e *CustomProcessEngine) completeTaskWithClient(ctx context.Context, txc *ent.Client, tenantID int, taskID string, variables map[string]interface{}) (*ent.ProcessTask, error) {
@@ -365,6 +374,50 @@ func (e *CustomProcessEngine) mergeVariablesInTx(ctx context.Context, txc *ent.C
 	return updated, nil
 }
 
+// updateProcessInstanceVariablesCAS 以 ProcessInstance.version 做条件更新。
+//
+// 流程变量是 JSON 整体字段，多个并行任务/ServiceTask 同时 read-modify-write
+// 时不能用无条件 UpdateOneID；否则后提交者会覆盖先提交者的 _done_、
+// occurrence、补偿登记等引擎状态。CAS 冲突时重新读取并重试调用方的 mutate。
+func updateProcessInstanceVariablesCAS(
+	ctx context.Context,
+	client *ent.Client,
+	instanceID, tenantID int,
+	mutate func(map[string]interface{}) error,
+) (*ent.ProcessInstance, error) {
+	if client == nil || instanceID <= 0 || tenantID <= 0 || mutate == nil {
+		return nil, fmt.Errorf("invalid process instance variable update")
+	}
+	const maxAttempts = 4
+	for attempt := 0; attempt < maxAttempts; attempt++ {
+		inst, err := client.ProcessInstance.Query().
+			Where(processinstance.IDEQ(instanceID), processinstance.TenantIDEQ(tenantID)).
+			Only(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("查询流程实例失败: %w", err)
+		}
+		vars := make(map[string]interface{}, len(inst.Variables)+4)
+		for key, value := range inst.Variables {
+			vars[key] = value
+		}
+		if err := mutate(vars); err != nil {
+			return nil, err
+		}
+		updated, err := client.ProcessInstance.UpdateOneID(inst.ID).
+			Where(processinstance.VersionEQ(inst.Version)).
+			SetVariables(vars).
+			SetVersion(inst.Version + 1).
+			Save(ctx)
+		if err == nil {
+			return updated, nil
+		}
+		if !ent.IsNotFound(err) {
+			return nil, fmt.Errorf("更新流程实例变量失败: %w", err)
+		}
+	}
+	return nil, fmt.Errorf("流程实例版本冲突（ID=%d），请重试", instanceID)
+}
+
 func (e *CustomProcessEngine) recordApprovalDecision(ctx context.Context, txc *ent.Client, instance *ent.ProcessInstance, task *ent.ProcessTask, variables map[string]interface{}) error {
 	action, _ := variables["approvalAction"].(string)
 	if action == "" {
@@ -514,6 +567,13 @@ func (e *CustomProcessEngine) handleElement(ctx context.Context, txc *ent.Client
 		e.logger.Infow("Found user task, creating task", "taskID", task.ID, "taskName", task.Name)
 		return e.createUserTask(ctx, txc, instance, process, task)
 	} else if endEvent := e.findEndEvent(process, elementID); endEvent != nil {
+		// 补偿结束事件：先逆序补偿已登记活动，再走结束路径。
+		// 补偿失败 fail-closed（不 completeProcess，不留半补偿状态）。
+		if endEvent.CompensateEventDefinition != nil {
+			if err := e.runCompensation(ctx, txc, instance, endEvent.CompensateEventDefinition); err != nil {
+				return err
+			}
+		}
 		e.markElementDone(ctx, txc, instance, elementID)
 		return e.completeProcess(ctx, txc, instance)
 	} else if gateway := e.findParallelGateway(process, elementID); gateway != nil {
@@ -526,6 +586,13 @@ func (e *CustomProcessEngine) handleElement(ctx context.Context, txc *ent.Client
 		e.markElementDone(ctx, txc, instance, elementID)
 		return e.executeStep(ctx, txc, instance, process, elementID, instance.Variables)
 	} else if serviceTask := e.findServiceTask(process, elementID); serviceTask != nil {
+		// isForCompensation 活动只作为补偿处理器存在，主流程到达时跳过。
+		if serviceTask.IsForCompensation {
+			e.logger.Debugw("skipping compensation-only service task on main flow",
+				"instance", instance.ID, "element", elementID)
+			e.markElementDone(ctx, txc, instance, elementID)
+			return e.executeStep(ctx, txc, instance, process, elementID, instance.Variables)
+		}
 		return e.enqueueServiceTaskCommand(ctx, txc, instance, serviceTask)
 	} else if intermediateEvent := e.findIntermediateEvent(process, elementID); intermediateEvent != nil {
 		return e.handleIntermediateCatchEvent(ctx, txc, instance, process, intermediateEvent)
@@ -571,12 +638,16 @@ func (e *CustomProcessEngine) enqueueServiceTaskCommand(ctx context.Context, txc
 	}
 	occurrences := intMapVariable(instance.Variables, "_serviceTaskOccurrences")
 	occurrence := occurrences[task.ID] + 1
-	occurrences[task.ID] = occurrence
-	instance.Variables["_serviceTaskOccurrences"] = occurrences
-	if _, err := txc.ProcessInstance.UpdateOneID(instance.ID).
-		SetVariables(instance.Variables).Save(ctx); err != nil {
+	updated, err := updateProcessInstanceVariablesCAS(ctx, txc, instance.ID, instance.TenantID, func(vars map[string]interface{}) error {
+		current := intMapVariable(vars, "_serviceTaskOccurrences")
+		current[task.ID] = occurrence
+		vars["_serviceTaskOccurrences"] = current
+		return nil
+	})
+	if err != nil {
 		return fmt.Errorf("持久化 ServiceTask occurrence 失败: %w", err)
 	}
+	instance.Variables = updated.Variables
 	idempotencyKey := fmt.Sprintf("%d:workflow.service_task:%d:%s:%d", instance.TenantID, instance.ID, task.ID, occurrence)
 	if _, err := commandbus.Enqueue(ctx, txc, commandbus.EnqueueRequest{
 		TenantID: instance.TenantID, CommandType: commandbus.CommandExecuteBPMNServiceTask,
@@ -615,6 +686,67 @@ func intMapVariable(variables map[string]interface{}, key string) map[string]int
 	return result
 }
 
+// serviceTaskBusinessIDAliases 把引擎注入的标准流程变量 business_type 映射到
+// 各 ServiceTaskHandler 实际读取的类型化 ID 键。
+//
+// 背景（2026-10-24 生产栈实测，action 链路修好之后暴露的第二处断点）：
+//
+//	ProcessTriggerService 写入的流程变量是 business_id / business_type / business_key，
+//	而 handler 一律读 incident_id / change_id / ticket_id / request_id：
+//	  incident_handler.go:  incidentID := GetIntFromVars(variables, "incident_id")
+//	  change_handler.go:    changeID  := GetIntFromVars(variables, "change_id")
+//	  ticket_handler.go:    ticketID  := ... "ticket_id"
+//	  service_request_handler.go: ... "request_id"
+//	两边从来没接上，于是即使 action 解析成功，所有「要操作业务单据」的服务任务
+//	都必然报「无效的事件ID: 0」/「无效的变更ID: 0」——看起来像数据问题，其实是键名没对齐。
+//
+// 只补缺失键，绝不覆盖显式传入的值：调用方在 trigger.variables 里自己写的
+// incident_id（比如指向关联事件）必须优先于 business_id。
+var serviceTaskBusinessIDAliases = map[string][]string{
+	"ticket":          {"ticket_id"},
+	"change":          {"change_id"},
+	"incident":        {"incident_id"},
+	"service_request": {"request_id", "service_request_id"},
+	"problem":         {"problem_id"},
+	"release":         {"release_id"},
+}
+
+// injectBusinessIDAliases 按 business_type 补齐 handler 侧的类型化 ID 键。
+func injectBusinessIDAliases(variables map[string]interface{}) {
+	businessID, ok := variableInt(variables["business_id"])
+	if !ok || businessID <= 0 {
+		return
+	}
+	businessType, _ := variables["business_type"].(string)
+	aliases := serviceTaskBusinessIDAliases[strings.ToLower(strings.TrimSpace(businessType))]
+	for _, key := range aliases {
+		if existing, ok := variableInt(variables[key]); ok && existing > 0 {
+			continue // 显式传入的值优先
+		}
+		variables[key] = businessID
+	}
+}
+
+// variableInt 把流程变量里的数值转成 int。
+// 流程变量经 JSON/jsonb 往返后是 float64，但直接构造（如 process-trigger 的
+// variables 或测试）时可能是 int / int64，两种都要认。
+func variableInt(value interface{}) (int, bool) {
+	switch number := value.(type) {
+	case int:
+		return number, true
+	case int32:
+		return int(number), true
+	case int64:
+		return int(number), true
+	case float64:
+		return int(number), true
+	case float32:
+		return int(number), true
+	default:
+		return 0, false
+	}
+}
+
 func mergeServiceTaskVariables(instanceVariables map[string]interface{}, task *BPMNServiceTask) map[string]interface{} {
 	variables := make(map[string]interface{}, len(instanceVariables)+12)
 	for key, value := range instanceVariables {
@@ -623,6 +755,13 @@ func mergeServiceTaskVariables(instanceVariables map[string]interface{}, task *B
 	if task == nil {
 		return variables
 	}
+	// 节点声明的 action 优先于流程变量里的同名键：action 是「这个节点要做什么」，
+	// 属于节点配置而非流程数据，被历史变量带偏会执行到错误的业务动作。
+	// 节点没声明时才保留流程变量里的 action（老流程兼容）。
+	if task.Action != "" {
+		variables["action"] = task.Action
+	}
+	injectBusinessIDAliases(variables)
 	if task.Type != "" {
 		variables["type"] = task.Type
 	}
@@ -657,6 +796,236 @@ func mergeServiceTaskVariables(instanceVariables map[string]interface{}, task *B
 // UserTask 创建与分配
 // ---------------------------------------------------------------------------
 
+const (
+	taskAssignmentAssigned   = "assigned"
+	taskAssignmentPool       = "pool"
+	taskAssignmentUnassigned = "unassigned"
+)
+
+// taskAssignment 是任务分配的结果与证据；state/source/reason 会写入 task_variables，
+// 供「待指派」视图、告警和事后排障使用。
+type taskAssignment struct {
+	assignee       string
+	candidateUsers string
+	state          string
+	source         string
+	reason         string
+	expansionError string
+}
+
+func normalizeTaskPurpose(purpose string) string {
+	if p := strings.ToLower(strings.TrimSpace(purpose)); p != "" {
+		return p
+	}
+	return "work"
+}
+
+// variableUserID 从流程变量提取用户标识；数字按整数格式化，字符串原样返回。
+func variableUserID(instance *ent.ProcessInstance, key string) string {
+	if instance == nil {
+		return ""
+	}
+	switch val := instance.Variables[key].(type) {
+	case float64:
+		if val > 0 {
+			return strconv.FormatFloat(val, 'f', 0, 64)
+		}
+	case int:
+		if val > 0 {
+			return strconv.Itoa(val)
+		}
+	case string:
+		if v := strings.TrimSpace(val); v != "" && v != "0" {
+			return v
+		}
+	}
+	return ""
+}
+
+// requesterIdentitySet 返回可用于剔除自审批的发起人标识集合（ID/用户名/邮箱）。
+// 候选池里可能用用户名写发起人，仅比较 requester_id 会漏过滤，因此数字 ID 需要
+// 回查租户内用户资料补全。
+func (e *CustomProcessEngine) requesterIdentitySet(ctx context.Context, txc *ent.Client, instance *ent.ProcessInstance) map[string]bool {
+	identities := map[string]bool{}
+	requester := variableUserID(instance, "requester_id")
+	if requester == "" {
+		requester = variableUserID(instance, "triggered_by")
+	}
+	if requester != "" {
+		identities[requester] = true
+	}
+	if triggeredBy := variableUserID(instance, "triggered_by"); triggeredBy != "" {
+		identities[triggeredBy] = true
+	}
+	if id, err := strconv.Atoi(requester); err == nil && id > 0 {
+		u, err := txc.User.Query().
+			Where(user.ID(id), user.TenantID(instance.TenantID)).
+			Select(user.FieldUsername, user.FieldEmail).
+			Only(ctx)
+		if err == nil {
+			if u.Username != "" {
+				identities[u.Username] = true
+			}
+			if u.Email != "" {
+				identities[u.Email] = true
+			}
+		}
+	}
+	return identities
+}
+
+// filterCandidateUsers 从逗号分隔的候选用户中剔除发起人；removed 表示确实有剔除。
+func filterCandidateUsers(csv string, excluded map[string]bool) (string, bool) {
+	if len(excluded) == 0 || strings.TrimSpace(csv) == "" {
+		return csv, false
+	}
+	users := splitNonEmptyCSV(csv)
+	kept := make([]string, 0, len(users))
+	removed := false
+	for _, u := range users {
+		if excluded[u] {
+			removed = true
+			continue
+		}
+		kept = append(kept, u)
+	}
+	if !removed {
+		return csv, false
+	}
+	return strings.Join(kept, ","), true
+}
+
+// resolveTaskAssignment 按 BPMN 声明解析任务分配。
+//
+// 优先级：静态 assignee → 声明的候选池 → purpose 兜底。声明了候选池的任务不会
+// 被发起人兜底抢占；审批任务在任何路径都不允许落到发起人，没有可用审批人就
+// 如实留空待指派，而不是退回发起人。
+func (e *CustomProcessEngine) resolveTaskAssignment(ctx context.Context, txc *ent.Client, instance *ent.ProcessInstance, task *BPMNUserTask) taskAssignment {
+	purpose := normalizeTaskPurpose(task.TaskPurpose)
+	isApproval := purpose == "approval"
+	declaredCandidates := strings.TrimSpace(task.CandidateUsers) != "" || strings.TrimSpace(task.CandidateGroups) != ""
+
+	result := taskAssignment{candidateUsers: strings.TrimSpace(task.CandidateUsers)}
+
+	if e.groupResolver != nil && strings.TrimSpace(task.CandidateGroups) != "" {
+		_, groupUsernames, err := e.groupResolver.ExpandGroupsToUsers(ctx, instance.TenantID, task.CandidateGroups)
+		if err != nil {
+			result.expansionError = err.Error()
+			e.logger.Warnw("候选组展开失败，任务不采用发起人兜底",
+				"taskID", task.ID,
+				"candidateGroups", task.CandidateGroups,
+				"error", err,
+			)
+		} else {
+			result.candidateUsers = e.groupResolver.MergeCandidateUsers(task.CandidateUsers, groupUsernames)
+			e.logger.Infow("候选组已展开",
+				"taskID", task.ID,
+				"candidateGroups", task.CandidateGroups,
+				"expandedUsers", groupUsernames,
+			)
+		}
+	}
+
+	var requesterIdentities map[string]bool
+	if isApproval {
+		requesterIdentities = e.requesterIdentitySet(ctx, txc, instance)
+	}
+
+	if assignee := strings.TrimSpace(task.Assignee); assignee != "" {
+		if isApproval && requesterIdentities[assignee] {
+			result.reason = "self_approval_filtered"
+		} else {
+			result.assignee = assignee
+			result.state = taskAssignmentAssigned
+			result.source = "bpmn_assignee"
+			return result
+		}
+	}
+
+	if declaredCandidates {
+		result.source = "bpmn_candidates"
+		if isApproval {
+			filtered, removed := filterCandidateUsers(result.candidateUsers, requesterIdentities)
+			result.candidateUsers = filtered
+			if removed && result.reason == "" {
+				result.reason = "requester_filtered_from_pool"
+			}
+		}
+		if strings.TrimSpace(result.candidateUsers) != "" {
+			result.state = taskAssignmentPool
+			return result
+		}
+		if result.expansionError != "" && strings.TrimSpace(task.CandidateGroups) != "" {
+			// 展开失败但组已声明：组成员仍可通过 candidateGroups 看到任务，
+			// 只是无法精确展开成候选人列表。
+			result.state = taskAssignmentPool
+			if result.reason == "" {
+				result.reason = "candidate_expansion_failed"
+			}
+			return result
+		}
+		result.state = taskAssignmentUnassigned
+		if result.reason == "" {
+			result.reason = "candidate_pool_empty"
+		}
+		e.logger.Warnw("任务候选池为空，任务待指派",
+			"taskID", task.ID, "taskName", task.Name, "purpose", purpose, "reason", result.reason)
+		return result
+	}
+
+	if isApproval {
+		if candidate := variableUserID(instance, "assignee_id"); candidate != "" {
+			if requesterIdentities[candidate] {
+				result.reason = "self_approval_filtered"
+			} else {
+				result.assignee = candidate
+				result.state = taskAssignmentAssigned
+				result.source = "assignee_id_variable"
+				return result
+			}
+		}
+		if candidate := e.getDefaultAssignee(ctx, instance, task); candidate != "" {
+			if requesterIdentities[candidate] {
+				result.reason = "self_approval_filtered"
+			} else {
+				result.assignee = candidate
+				result.state = taskAssignmentAssigned
+				result.source = "assignment_rule"
+				return result
+			}
+		}
+		result.state = taskAssignmentUnassigned
+		result.source = "none"
+		if result.reason == "" {
+			result.reason = "no_approver_available"
+		}
+		e.logger.Warnw("审批任务没有可用审批人，任务待指派",
+			"taskID", task.ID, "taskName", task.Name, "purpose", purpose, "reason", result.reason)
+		return result
+	}
+
+	for _, key := range []string{"requester_id", "triggered_by", "assignee_id"} {
+		if candidate := variableUserID(instance, key); candidate != "" {
+			result.assignee = candidate
+			result.state = taskAssignmentAssigned
+			result.source = key
+			return result
+		}
+	}
+	if candidate := e.getDefaultAssignee(ctx, instance, task); candidate != "" {
+		result.assignee = candidate
+		result.state = taskAssignmentAssigned
+		result.source = "assignment_rule"
+		return result
+	}
+	result.state = taskAssignmentUnassigned
+	result.source = "none"
+	result.reason = "no_assignment_source"
+	e.logger.Warnw("任务没有可用处理人，任务待指派",
+		"taskID", task.ID, "taskName", task.Name, "purpose", purpose)
+	return result
+}
+
 func (e *CustomProcessEngine) createUserTask(ctx context.Context, txc *ent.Client, instance *ent.ProcessInstance, process *BPMNProcess, task *BPMNUserTask) error {
 	// 幂等：同实例同节点已存在未结束任务时直接复用，避免 CompleteTask 流程推进失败重试时重复创建任务
 	// 必须使用事务客户端：CompleteTask 事务内刚创建的任务对外不可见，用 e.client 会漏读导致重复创建
@@ -671,91 +1040,11 @@ func (e *CustomProcessEngine) createUserTask(ctx context.Context, txc *ent.Clien
 		return nil
 	}
 
-	// 自动分配逻辑：优先级 BPMN定义 > 流程变量(request/assignee) > 默认分配
-	assignee := task.Assignee
-
-	// 辅助函数：从变量中提取用户ID
-	getUserID := func(key string) string {
-		if v, ok := instance.Variables[key]; ok {
-			switch val := v.(type) {
-			case float64:
-				// JSON numbers are float64
-				if val > 0 {
-					return strconv.FormatFloat(val, 'f', 0, 64)
-				}
-			case int:
-				if val > 0 {
-					return strconv.Itoa(val)
-				}
-			case string:
-				if val != "" && val != "0" {
-					return val
-				}
-			}
-		}
-		return ""
-	}
-
-	// 返工任务（to_requester 拒绝策略）必须分配给原始发起人，不走默认分配
-	if assignee == "" && strings.EqualFold(strings.TrimSpace(task.TaskPurpose), "rework") {
-		if requester := getUserID("requester_id"); requester != "" {
-			assignee = requester
-		} else if triggeredBy := getUserID("triggered_by"); triggeredBy != "" {
-			assignee = triggeredBy
-		}
-		if assignee != "" {
-			e.logger.Infow("返工任务已分配给发起人", "taskID", task.ID, "assignee", assignee)
-		}
-	}
-
-	// 如果BPMN没有定义分配人，从流程变量中获取
-	if assignee == "" {
-		isApproval := strings.EqualFold(strings.TrimSpace(task.TaskPurpose), "approval")
-		if isApproval {
-			// 审批节点禁止回退到发起人（自审批防护）：
-			// 跳过 requester_id 和 triggered_by，直接从 assignee_id 和默认分配获取。
-			assignee = getUserID("assignee_id")
-			if assignee == "" {
-				assignee = e.getDefaultAssignee(ctx, instance, task)
-			}
-		} else {
-			// 非审批节点：保持原有回退链
-			assignee = getUserID("requester_id")
-			if assignee == "" {
-				assignee = getUserID("triggered_by")
-			}
-			if assignee == "" {
-				assignee = getUserID("assignee_id")
-			}
-			if assignee == "" {
-				assignee = e.getDefaultAssignee(ctx, instance, task)
-			}
-		}
-	}
-
-	// 展开 candidateGroups 为具体用户，合并到 candidate_users。
-	// 这样「我的待办」接口才有可能查到分配给我的任务。
-	expandedCandidateUsers := task.CandidateUsers
-	if e.groupResolver != nil && strings.TrimSpace(task.CandidateGroups) != "" {
-		_, groupUsernames, err := e.groupResolver.ExpandGroupsToUsers(ctx, instance.TenantID, task.CandidateGroups)
-		if err != nil {
-			// 解析失败：记录警告但不阻塞流程，以免审批组配置漂移导致整个流程中断
-			e.logger.Warnw(
-				"审批组展开失败，继续仅使用 BPMN candidateUsers",
-				"taskID", task.ID,
-				"candidateGroups", task.CandidateGroups,
-				"error", err,
-			)
-		} else {
-			expandedCandidateUsers = e.groupResolver.MergeCandidateUsers(task.CandidateUsers, groupUsernames)
-			e.logger.Infow(
-				"审批组已展开",
-				"taskID", task.ID,
-				"candidateGroups", task.CandidateGroups,
-				"expandedUsers", groupUsernames,
-			)
-		}
-	}
+	// 分配语义（D5：BPMN 唯一权威）：
+	// 1. BPMN 静态 assignee；
+	// 2. 声明了 candidateUsers/candidateGroups → 进入候选池，assignee 留空由候选人认领；
+	// 3. 两者都没有才按 taskPurpose 兜底，审批节点绝不回退发起人。
+	assignment := e.resolveTaskAssignment(ctx, txc, instance, task)
 
 	// Use instance.ID (auto-generated integer) for the relationship
 	taskConfig := map[string]interface{}{
@@ -764,8 +1053,12 @@ func (e *CustomProcessEngine) createUserTask(ctx context.Context, txc *ent.Clien
 		"timeoutAction": task.TimeoutAction, "allowDelegate": task.AllowDelegate,
 		"allowAddApprover":        task.AllowAddApprover,
 		"commentRequiredOnReject": task.CommentRequiredOnReject,
+		"assignmentState":         assignment.state,
+		"assignmentSource":        assignment.source,
+		"assignmentReason":        assignment.reason,
+		"candidateExpansionError": assignment.expansionError,
 	}
-	createdTask, err := txc.ProcessTask.Create().
+	create := txc.ProcessTask.Create().
 		SetTaskID(fmt.Sprintf("TASK-%s-%d", task.ID, time.Now().UnixNano())).
 		SetProcessInstanceID(instance.ID).
 		SetProcessDefinitionKey(instance.ProcessDefinitionKey).
@@ -773,19 +1066,22 @@ func (e *CustomProcessEngine) createUserTask(ctx context.Context, txc *ent.Clien
 		SetTaskName(task.Name).
 		SetTaskType("user_task").
 		SetStatus("created").
-		SetAssignee(assignee).
-		SetCandidateUsers(expandedCandidateUsers).
+		SetCandidateUsers(assignment.candidateUsers).
 		SetCandidateGroups(task.CandidateGroups).
 		SetFormKey(task.FormKey).
 		SetTaskVariables(taskConfig).
 		SetTenantID(instance.TenantID).
-		SetCreatedTime(time.Now()).
-		Save(ctx)
+		SetCreatedTime(time.Now())
+	// 空 assignee 不落库，保持 NULL 语义：认领路径用 AssigneeIsNil() 识别未指派任务。
+	if assignment.assignee != "" {
+		create.SetAssignee(assignment.assignee)
+	}
+	createdTask, err := create.Save(ctx)
 	if err != nil {
 		return fmt.Errorf("创建用户任务失败: %w", err)
 	}
 	if task.TaskPurpose == "approval" && task.ApprovalMode != "" && task.ApprovalMode != "single" {
-		approvers := splitNonEmptyCSV(expandedCandidateUsers)
+		approvers := splitNonEmptyCSV(assignment.candidateUsers)
 		if len(approvers) > 1 {
 			threshold := task.ApprovalThreshold
 			switch task.ApprovalMode {
@@ -803,7 +1099,11 @@ func (e *CustomProcessEngine) createUserTask(ctx context.Context, txc *ent.Clien
 			}
 		}
 	}
-	e.logger.Infow("User task created with auto-assignment", "taskID", task.ID, "taskName", task.Name, "assignee", assignee)
+	e.logger.Infow("User task created",
+		"taskID", task.ID, "taskName", task.Name,
+		"assignee", assignment.assignee,
+		"assignmentState", assignment.state,
+		"assignmentSource", assignment.source)
 
 	// R1（autoApproveRoles）：流程级审批配置声明 auto_approve_roles 时，
 	// 若发起人（requester_id/triggered_by）角色命中名单，任务创建即由系统身份
@@ -1673,17 +1973,20 @@ func (e *CustomProcessEngine) markElementDone(ctx context.Context, txc *ent.Clie
 }
 
 func (e *CustomProcessEngine) markElementDoneStrict(ctx context.Context, txc *ent.Client, instance *ent.ProcessInstance, elementID string) error {
-	if instance.Variables == nil {
-		instance.Variables = map[string]interface{}{}
+	updated, err := updateProcessInstanceVariablesCAS(ctx, txc, instance.ID, instance.TenantID, func(vars map[string]interface{}) error {
+		done, ok := vars["_done_"].(map[string]interface{})
+		if !ok {
+			done = map[string]interface{}{}
+			vars["_done_"] = done
+		}
+		done[elementID] = true
+		return nil
+	})
+	if err != nil {
+		return err
 	}
-	done, ok := instance.Variables["_done_"].(map[string]interface{})
-	if !ok {
-		done = map[string]interface{}{}
-		instance.Variables["_done_"] = done
-	}
-	done[elementID] = true
-	_, err := txc.ProcessInstance.UpdateOneID(instance.ID).SetVariables(instance.Variables).Save(ctx)
-	return err
+	instance.Variables = updated.Variables
+	return nil
 }
 
 // allIncomingBranchesCompleted 判断汇聚网关的所有入边分支是否均已结束。

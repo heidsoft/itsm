@@ -7,6 +7,10 @@ export declare function readStdinSecret(label: string): string;
 export interface SecretSource {
     /** Literal flag value. Least safe: visible in argv. */
     literal?: string;
+    /** When true, a literal value is rejected outright instead of used. */
+    rejectLiteral?: boolean;
+    /** Flag name quoted in the rejection message (defaults to `--${label}`). */
+    literalFlag?: string;
     /** Read the secret from stdin (preferred for scripts). */
     stdin?: boolean;
     /** Read the secret from a file (mode checked when possible). */

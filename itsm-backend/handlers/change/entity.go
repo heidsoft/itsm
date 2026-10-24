@@ -47,20 +47,20 @@ type User struct {
 
 // ApprovalChain represents an item in the approval workflow
 type ApprovalChain struct {
-	ID           int
-	ChangeID     int
-	TenantID     int
-	Level        int
-	ApproverID   int
-	ApproverName string
-	Role         string
-	Status       string
-	IsRequired   bool
+	ID           int    `json:"id"`
+	ChangeID     int    `json:"changeId"`
+	TenantID     int    `json:"tenantId"`
+	Level        int    `json:"level"`
+	ApproverID   int    `json:"approverId"`
+	ApproverName string `json:"approverName"`
+	Role         string `json:"role"`
+	Status       string `json:"status"`
+	IsRequired   bool   `json:"isRequired"`
 	// Quorum 元数据（014 迁移新增）：本层法定人数语义。
 	// ApprovalType: serial|parallel|all|or；Threshold: 本层需要的批准人数。
-	ApprovalType string
-	Threshold    int
-	CreatedAt    time.Time
+	ApprovalType string    `json:"approvalType"`
+	Threshold    int       `json:"threshold"`
+	CreatedAt    time.Time `json:"createdAt"`
 }
 
 // ApprovalLevelPlan 是提交审批时的一层计划（来自引擎求值或旧逻辑兼容）。

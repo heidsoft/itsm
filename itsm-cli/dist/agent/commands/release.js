@@ -1,11 +1,15 @@
 import { cmd } from '../spec.js';
-import { requirePositional, optionalString, body } from '../helpers.js';
+import { requirePositional, optionalString, withPagination, body } from '../helpers.js';
 import { apiClient } from '../../lib/api-client.js';
 import { usageError } from '../../lib/errors.js';
 /** Release management — bodies mirror dto/release_dto.go (reject/rollback need reason). */
 export function releaseCommands() {
     return [
-        cmd('release.list', 'List releases', 'itsm release list', [], async (ctx) => apiClient.listReleases()),
+        cmd('release.list', 'List releases (paged; backend binds page/pageSize/status/type)', 'itsm release list [--page N] [--pageSize N] [--status value] [--type value]', ['GET /api/v1/releases'], async (ctx) => apiClient.listReleases({
+            ...withPagination(ctx.args),
+            status: optionalString(ctx.args, 'status'),
+            type: optionalString(ctx.args, 'type'),
+        })),
         cmd('release.get', 'Release detail', 'itsm release get <id>', ['GET /api/v1/releases/:id'], async (ctx) => apiClient.getRelease(requirePositional(ctx.args, 0, 'releaseId'))),
         cmd('release.create', 'Create a release (releaseNumber + title required)', 'itsm release create --data <json>', ['POST /api/v1/releases'], async (ctx) => apiClient.createRelease(body(ctx.args) ?? {})),
         cmd('release.update', 'Pointer-field update', 'itsm release update <id> --data <json>', ['PUT /api/v1/releases/:id'], async (ctx) => apiClient.updateRelease(requirePositional(ctx.args, 0, 'releaseId'), body(ctx.args) ?? {})),

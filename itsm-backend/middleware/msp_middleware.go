@@ -51,8 +51,10 @@ func MSPMiddleware(client *ent.Client) gin.HandlerFunc {
 		// 1. 从上下文中获取当前用户 ID (由 AuthMiddleware 设置)
 		userIDVal, exists := c.Get("user_id")
 		if !exists {
-			// 非认证用户，继续后续处理（可能由 AuthMiddleware 处理）
-			c.Next()
+			// MSP 中间件必须 fail closed：AuthMiddleware 漏接或顺序错误时，
+			// 不能把匿名请求继续交给跨租户处理器。
+			common.AuthFailed(c, "缺少认证用户上下文")
+			c.Abort()
 			return
 		}
 

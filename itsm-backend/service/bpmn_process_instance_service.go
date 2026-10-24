@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"itsm-backend/ent"
@@ -143,10 +144,15 @@ func (s *bpmnProcessInstanceService) SetProcessInstanceVariables(ctx context.Con
 		return err
 	}
 
-	_, err = s.client.ProcessInstance.UpdateOne(instance).
-		SetVariables(variables).
-		Save(ctx)
-
+	_, err = updateProcessInstanceVariablesCAS(ctx, s.client, instance.ID, instance.TenantID, func(vars map[string]interface{}) error {
+		for key, value := range variables {
+			if strings.HasPrefix(key, "_") {
+				return fmt.Errorf("流程内部变量 %s 不允许通过 API 覆盖", key)
+			}
+			vars[key] = value
+		}
+		return nil
+	})
 	return err
 }
 

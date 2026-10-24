@@ -3,6 +3,7 @@ package cmdb
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"time"
 
@@ -814,24 +815,88 @@ func (r *EntRepository) ListDiscoveryResults(ctx context.Context, tenantID int, 
 	}
 	results := make([]*DiscoveryResult, 0, len(es))
 	for _, e := range es {
-		results = append(results, &DiscoveryResult{
-			ID:               e.ID,
-			JobID:            e.JobID,
-			CIID:             e.CiID,
-			Action:           e.Action,
-			ResourceType:     e.ResourceType,
-			ResourceID:       e.ResourceID,
-			ResourceIdentity: e.ResourceIdentity, IdentityVersion: e.IdentityVersion,
-			ResourceSnapshot: e.ResourceSnapshot, BeforeHash: e.BeforeHash, AfterHash: e.AfterHash,
-			Diff:      e.Diff,
-			Status:    e.Status,
-			ErrorCode: e.ErrorCode, ErrorMessage: e.ErrorMessage,
-			TenantID:  e.TenantID,
-			CreatedAt: e.CreatedAt,
-			UpdatedAt: e.UpdatedAt,
-		})
+		results = append(results, discoveryResultFromEnt(e))
 	}
 	return results, nil
+}
+
+func discoveryResultFromEnt(e *ent.DiscoveryResult) *DiscoveryResult {
+	if e == nil {
+		return nil
+	}
+	return &DiscoveryResult{
+		ID:               e.ID,
+		JobID:            e.JobID,
+		CIID:             e.CiID,
+		Action:           e.Action,
+		ResourceType:     e.ResourceType,
+		ResourceID:       e.ResourceID,
+		ResourceIdentity: e.ResourceIdentity, IdentityVersion: e.IdentityVersion,
+		ResourceSnapshot: e.ResourceSnapshot, BeforeHash: e.BeforeHash, AfterHash: e.AfterHash,
+		Diff:      e.Diff,
+		Status:    e.Status,
+		ErrorCode: e.ErrorCode, ErrorMessage: e.ErrorMessage,
+		TenantID:  e.TenantID,
+		CreatedAt: e.CreatedAt,
+		UpdatedAt: e.UpdatedAt,
+	}
+}
+
+// GetDiscoveryResult 租户内按 ID 取单条差异（人工决策的读取面）。
+func (r *EntRepository) GetDiscoveryResult(ctx context.Context, tenantID, id int) (*DiscoveryResult, error) {
+	e, err := r.client.DiscoveryResult.Query().
+		Where(discoveryresult.TenantID(tenantID), discoveryresult.ID(id)).
+		Only(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return discoveryResultFromEnt(e), nil
+}
+
+// UpdateDiscoveryResult 写回差异的处理状态与错误摘要（人工应用/驳回的持久化通道）。
+func (r *EntRepository) UpdateDiscoveryResult(ctx context.Context, res *DiscoveryResult) error {
+	if res == nil || res.ID <= 0 {
+		return fmt.Errorf("discovery result id is required")
+	}
+	update := r.client.DiscoveryResult.UpdateOneID(res.ID).
+		Where(discoveryresult.TenantID(res.TenantID)).
+		SetStatus(res.Status)
+	if res.ErrorCode != "" {
+		update = update.SetErrorCode(res.ErrorCode)
+	} else {
+		update = update.ClearErrorCode()
+	}
+	if res.ErrorMessage != "" {
+		update = update.SetErrorMessage(res.ErrorMessage)
+	} else {
+		update = update.ClearErrorMessage()
+	}
+	return update.Exec(ctx)
+}
+
+// TransitionDiscoveryResult 以状态 CAS 更新差异决策状态。
+func (r *EntRepository) TransitionDiscoveryResult(ctx context.Context, tenantID, id int, fromStatus, toStatus, errorCode, errorMessage string) (int, error) {
+	if tenantID <= 0 || id <= 0 || fromStatus == "" || toStatus == "" {
+		return 0, fmt.Errorf("discovery result transition requires tenant, id, and statuses")
+	}
+	update := r.client.DiscoveryResult.Update().
+		Where(
+			discoveryresult.TenantID(tenantID),
+			discoveryresult.ID(id),
+			discoveryresult.StatusEQ(fromStatus),
+		).
+		SetStatus(toStatus)
+	if errorCode != "" {
+		update = update.SetErrorCode(errorCode)
+	} else {
+		update = update.ClearErrorCode()
+	}
+	if errorMessage != "" {
+		update = update.SetErrorMessage(errorMessage)
+	} else {
+		update = update.ClearErrorMessage()
+	}
+	return update.Save(ctx)
 }
 
 func optionalTime(value time.Time) *time.Time {
@@ -1018,6 +1083,76 @@ func (r *EntRepository) GetDiscoveryJob(ctx context.Context, tenantID, id int) (
 func (r *EntRepository) FindDiscoveryJobByIdempotencyKey(ctx context.Context, tenantID int, sourceID, key string) (*DiscoveryJob, error) {
 	e, err := r.client.DiscoveryJob.Query().
 		Where(discoveryjob.TenantID(tenantID), discoveryjob.SourceID(sourceID), discoveryjob.IdempotencyKey(key)).
+		First(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return discoveryJobFromEnt(e), nil
+}
+
+// ListScheduledDiscoverySources 返回启用且配置了调度表达式的来源。
+//
+// 空串与纯空白都视为「未配置」：cron 解析器会把空白表达式判为非法，若放进
+// 扫描集，调度器每分钟都会为一个没配调度的来源告警一次。
+func (r *EntRepository) ListScheduledDiscoverySources(ctx context.Context, tenantID int) ([]*DiscoverySource, error) {
+	es, err := r.client.DiscoverySource.Query().
+		Where(
+			discoverysource.TenantID(tenantID),
+			discoverysource.Enabled(true),
+			discoverysource.ScheduleNotNil(),
+			discoverysource.ScheduleNEQ(""),
+		).
+		Order(ent.Asc(discoverysource.FieldID)).
+		All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	results := make([]*DiscoverySource, 0, len(es))
+	for _, e := range es {
+		if strings.TrimSpace(e.Schedule) == "" {
+			continue
+		}
+		results = append(results, &DiscoverySource{
+			ID:             e.ID,
+			Name:           e.Name,
+			SourceType:     e.SourceType,
+			Provider:       e.Provider,
+			CloudAccountID: e.CloudAccountID, ServiceCodes: e.ServiceCodes, Regions: e.Regions,
+			Schedule: e.Schedule, ReconcilePolicy: e.ReconcilePolicy, StaleThreshold: e.StaleThreshold,
+			LastSuccessAt: optionalTime(e.LastSuccessAt),
+			IsActive:      e.Enabled,
+			Description:   e.Description,
+			TenantID:      e.TenantID,
+			CreatedAt:     e.CreatedAt,
+			UpdatedAt:     e.UpdatedAt,
+		})
+	}
+	return results, nil
+}
+
+// LatestDiscoveryJobForSource 取来源最近一次任务（入队时间倒序，同刻按 ID 倒序）。
+// 没有任何任务时返回 ent.NotFoundError，由调用方按「从未跑过」处理。
+func (r *EntRepository) LatestDiscoveryJobForSource(ctx context.Context, tenantID int, sourceID string) (*DiscoveryJob, error) {
+	e, err := r.client.DiscoveryJob.Query().
+		Where(discoveryjob.TenantID(tenantID), discoveryjob.SourceID(sourceID)).
+		Order(ent.Desc(discoveryjob.FieldQueuedAt), ent.Desc(discoveryjob.FieldID)).
+		First(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return discoveryJobFromEnt(e), nil
+}
+
+// LatestScheduledDiscoveryJobForSource 取最近一次由 cron 调度器创建的任务。
+func (r *EntRepository) LatestScheduledDiscoveryJobForSource(ctx context.Context, tenantID int, sourceID string) (*DiscoveryJob, error) {
+	prefix := "sched-" + sourceID + "-"
+	e, err := r.client.DiscoveryJob.Query().
+		Where(
+			discoveryjob.TenantID(tenantID),
+			discoveryjob.SourceID(sourceID),
+			discoveryjob.IdempotencyKeyHasPrefix(prefix),
+		).
+		Order(ent.Desc(discoveryjob.FieldQueuedAt), ent.Desc(discoveryjob.FieldID)).
 		First(ctx)
 	if err != nil {
 		return nil, err

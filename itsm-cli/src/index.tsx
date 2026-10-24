@@ -54,7 +54,7 @@ const HelpScreen: React.FC = () => (
     <Text>AI-Native ITSM · React for CLIs · built with Ink</Text>
     <Newline />
     <Text bold>Auth</Text>
-    <Text dimColor>  itsm login -u &lt;user&gt; -p &lt;pass&gt;       Login</Text>
+    <Text dimColor>  itsm login -u &lt;user&gt;                  Login (password prompted)</Text>
     <Text dimColor>  itsm me                              Who am I</Text>
     <Text dimColor>  itsm logout                          Logout</Text>
     <Newline />
@@ -254,7 +254,7 @@ export default function App({ cli }: { cli: { input: string[]; flags: CliFlags }
     return (
       <Box flexDirection="column" padding={1}>
         <Text color="red">Not logged in</Text>
-        <Text>Run: itsm login -u &lt;username&gt; -p &lt;password&gt;</Text>
+        <Text>Run: itsm login -u &lt;username&gt;   (password is prompted, never passed as a flag)</Text>
       </Box>
     );
   }

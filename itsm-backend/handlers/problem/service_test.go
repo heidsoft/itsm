@@ -24,7 +24,7 @@ func setupProblemHandlerTest(t *testing.T) (*ent.Client, *Service, context.Conte
 	// 受指人校验器与生产同构：直接复用 service.TicketService 的实现（同租户+在职），
 	// 保证跨租户注入回归测试测的是真实校验逻辑。
 	validator := service.NewTicketServiceForTest(client, zaptest.NewLogger(t).Sugar())
-	return client, NewService(repo, validator, zaptest.NewLogger(t).Sugar()), context.Background()
+	return client, NewService(repo, client, validator, zaptest.NewLogger(t).Sugar()), context.Background()
 }
 
 func createProblemHandlerTenant(t *testing.T, ctx context.Context, client *ent.Client, suffix string) *ent.Tenant {
@@ -353,7 +353,7 @@ func TestProblemServiceUpdate_StatusMoved_MapConflict(t *testing.T) {
 	_, err = client.Problem.UpdateOneID(p.ID).SetStatus("resolved").Save(ctx)
 	require.NoError(t, err)
 
-	movedSvc := NewService(&staleViewProblemRepo{Repository: realRepo, view: view}, service.validator, service.logger)
+	movedSvc := NewService(&staleViewProblemRepo{Repository: realRepo, view: view}, client, service.validator, service.logger)
 	// 带上关闭证据，让校验通过、真正走到 CAS：本用例要验证的是并发冲突，
 	// 不是关闭证据缺失。
 	_, err = movedSvc.Update(ctx, tenant.ID, p.ID, &Problem{Status: "closed", RootCause: "根因", Resolution: "解决方案"}, owner.ID, "manager")

@@ -76,6 +76,16 @@ type BPMNEndEvent struct {
 	MessageRef string `xml:"messageRef,attr"`
 	SignalRef  string `xml:"signalRef,attr"`
 	ErrorRef   string `xml:"errorRef,attr"`
+	// CompensateEventDefinition 补偿结束事件：到达时对已登记的补偿范围
+	// 执行逆序补偿，再走正常结束路径。activityRef 非空时只补偿指定活动。
+	CompensateEventDefinition *BPMNCompensateEventDefinition `xml:"compensateEventDefinition"`
+}
+
+// BPMNCompensateEventDefinition 补偿事件定义。
+// ActivityRef 语义（BPMN 2.0）：空 = 补偿当前范围内所有已登记活动；
+// 非空 = 只补偿指定的活动（必须已登记，否则 fail-closed）。
+type BPMNCompensateEventDefinition struct {
+	ActivityRef string `xml:"activityRef,attr"`
 }
 
 // GetID 获取ID
@@ -147,6 +157,18 @@ type BPMNServiceTask struct {
 	// （见 serviceTaskReference），使「##WebService」等 BPMN 标准标注
 	// 不再劫持内部 handler 寻址。
 	ServiceTaskType string `xml:"-"`
+	// Action 该节点要执行的具体动作，来自扩展元素
+	// <metaData name="action">xxx</metaData>。
+	//
+	// 六个 ServiceTaskHandler（incident/ticket/change/service_request/
+	// notification/webhook）的 Execute 都只认 variables["action"]，
+	// 因此解析后必须由 mergeServiceTaskVariables 注入 variables。
+	// 2026-10-24 生产栈实测：本字段缺失导致所有 serviceTask 取到空串、
+	// 36/36 全部重试 8 次后进 dead_letter（0 成功）。
+	Action string `xml:"-"`
+	// IsForCompensation 补偿专用活动标记（isForCompensation="true"）：
+	// 主流程到达时跳过执行，只作为补偿处理器被补偿触发器调用。
+	IsForCompensation bool `xml:"isForCompensation,attr"`
 }
 
 // GetID 获取ID
@@ -357,6 +379,8 @@ type BPMNBoundaryEvent struct {
 	AttachedToRef        string                    `xml:"attachedToRef,attr"`
 	CancelActivity       bool                      `xml:"cancelActivity,attr"`
 	TimerEventDefinition *BPMNTimerEventDefinition `xml:"timerEventDefinition"`
+	// CompensateEventDefinition 补偿边界事件：挂在活动上的补偿触发器。
+	CompensateEventDefinition *BPMNCompensateEventDefinition `xml:"compensateEventDefinition"`
 }
 
 // GetID 获取ID

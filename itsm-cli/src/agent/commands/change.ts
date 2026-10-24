@@ -90,6 +90,61 @@ export function changeCommands() {
         return apiClient.listChangeCalendar({ startDate, endDate, status: optionalString(ctx.args.flags, 'status') });
       }
     ),
+    cmd(
+      'change.approvals-create',
+      'Record an approval decision for a change (changeId comes from the path)',
+      'itsm change approvals-create <id> [--comment <text>]',
+      ['POST /api/v1/changes/:id/approvals'],
+      async (ctx) => {
+        // dto.CreateChangeApprovalRequest binds with ShouldBindJSON, so an empty
+        // request body is EOF → 400. Always send an object.
+        const comment = optionalString(ctx.args.flags, 'comment');
+        const overrides = body(ctx.args) ?? {};
+        const payload: Record<string, unknown> = { ...overrides };
+        if (comment !== undefined) payload['comment'] = comment;
+        payload['changeId'] = requirePositional(ctx.args, 0, 'changeId');
+        return apiClient.createChangeApproval(requirePositional(ctx.args, 0, 'changeId'), payload);
+      }
+    ),
+    cmd(
+      'change.rollback-steps-replace',
+      'Overwrite the ordered rollback checklist (empty array clears it; before implementation only)',
+      'itsm change rollback-steps-replace <id> --data \'{"steps":["stop app","restore db"]}\'',
+      ['PUT /api/v1/changes/:id/rollback-steps'],
+      async (ctx) => {
+        // dto.ReplaceRollbackStepsRequest.Steps is string[] and is NOT binding:"required",
+        // so an explicit [] is the documented way to clear the checklist.
+        const payload = body(ctx.args);
+        if (!payload || !Array.isArray(payload['steps'])) {
+          throw usageError('Missing --data with a "steps" array of strings. Usage: itsm change rollback-steps-replace <id> --data \'{"steps":[...]}\'');
+        }
+        if (!(payload['steps'] as unknown[]).every((s) => typeof s === 'string')) {
+          throw usageError('"steps" must be an array of strings');
+        }
+        return apiClient.replaceChangeRollbackSteps(requirePositional(ctx.args, 0, 'changeId'), payload['steps'] as string[]);
+      }
+    ),
+    cmd(
+      'change.rollback-step-resolve',
+      'Confirm one rollback step result (note required for skipped/failed)',
+      'itsm change rollback-step-resolve <id> <stepId> --status done [--note <text>]',
+      ['POST /api/v1/changes/:id/rollback-steps/:stepId'],
+      async (ctx) => {
+        const status = optionalString(ctx.args.flags, 'status');
+        if (!status) throw usageError('Missing --status (pending|done|skipped|failed)');
+        const note = optionalString(ctx.args.flags, 'note');
+        if ((status === 'skipped' || status === 'failed') && !note) {
+          throw usageError(`--note is required when --status ${status}`);
+        }
+        const payload: Record<string, unknown> = { status };
+        if (note !== undefined) payload['note'] = note;
+        return apiClient.resolveChangeRollbackStep(
+          requirePositional(ctx.args, 0, 'changeId'),
+          requirePositional(ctx.args, 1, 'stepId'),
+          payload
+        );
+      }
+    ),
     cmd('change.stats', 'Change aggregate statistics', 'itsm change stats', ['GET /api/v1/changes/stats'], async () => apiClient.getChangeStats()),
   ];
 }

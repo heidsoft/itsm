@@ -390,16 +390,22 @@ type DiscoverySourceRequest struct {
 }
 
 type DiscoverySourceResponse struct {
-	ID              string     `json:"id"`
-	Name            string     `json:"name"`
-	SourceType      string     `json:"sourceType"`
-	Provider        string     `json:"provider,omitempty"`
-	IsActive        bool       `json:"isActive"`
-	Description     string     `json:"description,omitempty"`
-	CloudAccountID  int        `json:"cloudAccountId,omitempty"`
-	ServiceCodes    []string   `json:"serviceCodes,omitempty"`
-	Regions         []string   `json:"regions,omitempty"`
-	Schedule        string     `json:"schedule,omitempty"`
+	ID             string   `json:"id"`
+	Name           string   `json:"name"`
+	SourceType     string   `json:"sourceType"`
+	Provider       string   `json:"provider,omitempty"`
+	IsActive       bool     `json:"isActive"`
+	Description    string   `json:"description,omitempty"`
+	CloudAccountID int      `json:"cloudAccountId,omitempty"`
+	ServiceCodes   []string `json:"serviceCodes,omitempty"`
+	Regions        []string `json:"regions,omitempty"`
+	Schedule       string   `json:"schedule,omitempty"`
+	// NextRunAt 是调度器下一次会为该来源排任务的时刻（按租户时区计算）。
+	// 未配置 schedule 时省略。
+	NextRunAt *time.Time `json:"nextRunAt,omitempty"`
+	// ScheduleError 只在调度表达式无法解析时出现：配了表达式却永远不会触发，
+	// 必须在保存那一刻就可见，而不是等到「到了点没跑」再排查。
+	ScheduleError   string     `json:"scheduleError,omitempty"`
 	ReconcilePolicy string     `json:"reconcilePolicy"`
 	StaleThreshold  int        `json:"staleThreshold"`
 	LastSuccessAt   *time.Time `json:"lastSuccessAt,omitempty"`
@@ -496,6 +502,12 @@ type DiscoveryResultResponse struct {
 	Type      string    `json:"type,omitempty"`
 	CreatedAt time.Time `json:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt"`
+}
+
+// DiscoveryResultRejectRequest 驳回一条待确认差异。理由可选——强制填写会让
+// 运维在噪声差异上随手填「-」，反而污染记录。
+type DiscoveryResultRejectRequest struct {
+	Reason string `json:"reason,omitempty"`
 }
 
 // Reconciliation DTOs

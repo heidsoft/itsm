@@ -23,6 +23,7 @@ import (
 // 双向棘轮：模板被删（ready 变少）或补了同名 .bpmn（ready 变多）都必须显式改本基线，
 // 避免清单与部署能力悄悄漂移。
 var readyCatalogKeysBaseline = []string{
+	"change_emergency_flow",
 	"change_normal_flow",
 	"incident_emergency_flow",
 	"release_approval_flow",
@@ -32,7 +33,6 @@ var readyCatalogKeysBaseline = []string{
 // 补齐模板后本条目必须删除，否则测试失败（防止基线变成永久挡箭牌）。
 var unreadyCatalogKeysBaseline = []string{
 	"budget_approval_flow",
-	"change_emergency_flow",
 	"change_requirement_flow",
 	"expense_approval_flow",
 	"leave_approval_flow",
@@ -107,8 +107,9 @@ func TestInitDepartmentDefaultBindings_BindsOnlyDeployableKeys(t *testing.T) {
 		keys = append(keys, b.ProcessDefinitionKey)
 	}
 	sort.Strings(keys)
-	// 4 条 operations 清单里 change_emergency_flow 无载体，只能落 3 条。
-	assert.Equal(t, []string{"change_normal_flow", "incident_emergency_flow", "incident_emergency_flow"}, keys)
+	// 4 条 operations 清单现在全部有载体（2026-10-24 补了 change_emergency_flow.bpmn），
+	// 因此 4 条都落绑定；incident_emergency_flow 在清单里出现两次，故也出现两次。
+	assert.Equal(t, []string{"change_emergency_flow", "change_normal_flow", "incident_emergency_flow", "incident_emergency_flow"}, keys)
 
 	// 幂等：重复初始化不产生重复绑定。
 	require.NoError(t, svc.InitDepartmentDefaultBindings(ctx, tenantID, 500, "operations"))
@@ -116,7 +117,7 @@ func TestInitDepartmentDefaultBindings_BindsOnlyDeployableKeys(t *testing.T) {
 		Where(processbinding.TenantID(tenantID), processbinding.DepartmentID(500)).
 		Count(ctx)
 	require.NoError(t, err)
-	assert.Equal(t, 3, count)
+	assert.Equal(t, len(keys), count)
 }
 
 func TestInitDepartmentDefaultBindings_WithoutTemplateCarrierIsExplicitFailure(t *testing.T) {

@@ -50,17 +50,17 @@ func setupProblemKnowledgeRoute(t *testing.T) (*gin.Engine, *ent.Client, *ent.Us
 		SetPasswordHash("hash").SetRole("super_admin").SetActive(true).SetTenantID(tenantB.ID).SaveX(ctx)
 
 	kbRepo := knowledgeHandler.NewEntRepository(client)
-	probSvc := problem.NewService(problem.NewEntRepository(client), nil, logger)
+	probSvc := problem.NewService(problem.NewEntRepository(client), client, nil, logger)
 	probSvc.SetKnowledgeRepository(kbRepo)
 
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
 	const secret = "problem-kb-secret"
 	SetupRoutes(r, &RouterConfig{
-		JWTSecret:       secret,
-		Logger:          logger,
-		Client:          client,
-		ProblemHandler:  problem.NewHandler(probSvc),
+		JWTSecret:        secret,
+		Logger:           logger,
+		Client:           client,
+		ProblemHandler:   problem.NewHandler(probSvc),
 		KnowledgeHandler: knowledgeHandler.NewHandler(knowledgeHandler.NewService(kbRepo, logger)),
 	})
 	return r, client, userA, stranger, secret
@@ -107,13 +107,13 @@ func TestProblemKnowledgeRouteContract(t *testing.T) {
 		require.Equal(t, http.StatusOK, w, "body=%s", string(env.Data))
 
 		var article struct {
-			ID              int    `json:"id"`
-			Title           string `json:"title"`
-			Category        string `json:"category"`
-			Status          string `json:"status"`
-			SourceProblemID *int   `json:"sourceProblemId"`
+			ID              int      `json:"id"`
+			Title           string   `json:"title"`
+			Category        string   `json:"category"`
+			Status          string   `json:"status"`
+			SourceProblemID *int     `json:"sourceProblemId"`
 			Tags            []string `json:"tags"`
-			Content         string `json:"content"`
+			Content         string   `json:"content"`
 		}
 		require.NoError(t, json.Unmarshal(env.Data, &article))
 		require.NotNil(t, article.SourceProblemID, "来源追溯字段必须回显")
@@ -177,7 +177,7 @@ func TestProblemKnowledgeRouteContract(t *testing.T) {
 
 	t.Run("知识仓储未装配时沉淀端点显式 503，不静默假成功", func(t *testing.T) {
 		bare := gin.New()
-		probSvcNoKb := problem.NewService(problem.NewEntRepository(client), nil, zaptest.NewLogger(t).Sugar())
+		probSvcNoKb := problem.NewService(problem.NewEntRepository(client), client, nil, zaptest.NewLogger(t).Sugar())
 		// 裸路由 + 注入鉴权上下文：本场景只验证「装配缺失」分支，
 		// 不复刻完整 JWT/权限栈（那是其他用例的职责）。
 		bare.Use(func(c *gin.Context) {

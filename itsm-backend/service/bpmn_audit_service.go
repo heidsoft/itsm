@@ -39,6 +39,7 @@ const (
 	AuditActionTaskCompleted     = "completed"
 	AuditActionTaskCancelled     = "cancelled"
 	AuditActionTaskEscalated     = "escalated"
+	AuditActionCompensated       = "compensated"
 	AuditActionTaskReassigned    = "reassigned"
 	AuditActionVariableChanged   = "variable_changed"
 	AuditActionActivityStarted   = "activity_started"

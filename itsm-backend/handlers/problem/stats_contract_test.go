@@ -123,7 +123,7 @@ func TestProblemStatsDistributionsAreAuthoritative(t *testing.T) {
 	createProblem(tenantB, userB, "open", "high", "PRB-B-1")
 	createProblem(tenantB, userB, "resolved", "high", "PRB-B-2")
 
-	handler := NewHandler(NewService(NewEntRepository(client), service.NewTicketServiceForTest(client, zaptest.NewLogger(t).Sugar()), zaptest.NewLogger(t).Sugar()))
+	handler := NewHandler(NewService(NewEntRepository(client), client, service.NewTicketServiceForTest(client, zaptest.NewLogger(t).Sugar()), zaptest.NewLogger(t).Sugar()))
 
 	get := func(tb *testing.T, tenantID int) problemStatsShape {
 		tb.Helper()
@@ -208,7 +208,7 @@ func TestProblemStatsFailsClosedWithoutTenantContext(t *testing.T) {
 	client := enttest.Open(t, "sqlite3", "file:problem_stats_failclosed?mode=memory&cache=shared&_fk=1")
 	defer client.Close()
 
-	handler := NewHandler(NewService(NewEntRepository(client), service.NewTicketServiceForTest(client, zaptest.NewLogger(t).Sugar()), zaptest.NewLogger(t).Sugar()))
+	handler := NewHandler(NewService(NewEntRepository(client), client, service.NewTicketServiceForTest(client, zaptest.NewLogger(t).Sugar()), zaptest.NewLogger(t).Sugar()))
 	r := gin.New()
 	r.GET("/api/v1/problems/stats", func(c *gin.Context) { handler.GetStats(c) })
 

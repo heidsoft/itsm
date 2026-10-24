@@ -1107,6 +1107,19 @@ func TestChangeController_GetApprovalSummary(t *testing.T) {
 
 	// Create test data
 	change := createTestChange(repo, 1, 1)
+	repo.chains[change.ID] = []*ApprovalChain{{
+		ID:           7,
+		ChangeID:     change.ID,
+		TenantID:     1,
+		Level:        1,
+		ApproverID:   2,
+		ApproverName: "审批人",
+		Role:         "approver",
+		Status:       "pending",
+		IsRequired:   true,
+		ApprovalType: "serial",
+		Threshold:    1,
+	}}
 
 	req, _ := http.NewRequest("GET", "/api/v1/changes/"+strconv.Itoa(change.ID)+"/approval-summary", nil)
 	w := httptest.NewRecorder()
@@ -1118,6 +1131,22 @@ func TestChangeController_GetApprovalSummary(t *testing.T) {
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	require.NoError(t, err)
 	assert.Equal(t, common.SuccessCode, response.Code)
+
+	// The summary carries domain structs straight to the wire, so the JSON tags
+	// on ApprovalChain are the entire API contract. Without them Go emits
+	// `ApproverID`/`ChangeID` and the frontend/CLI silently lose the field.
+	data, ok := response.Data.(map[string]interface{})
+	require.True(t, ok, "data must be an object")
+	chain, ok := data["chain"].([]interface{})
+	require.True(t, ok, "chain must be an array")
+	require.Len(t, chain, 1)
+	item, ok := chain[0].(map[string]interface{})
+	require.True(t, ok)
+	assert.Equal(t, float64(2), item["approverId"])
+	assert.Equal(t, "审批人", item["approverName"])
+	assert.Equal(t, float64(7), item["id"])
+	assert.NotContains(t, item, "ApproverID", "camelCase contract: no PascalCase field may leak")
+	assert.NotContains(t, item, "ChangeID")
 }
 
 func TestSubmitChangeAtomicFailureLeavesDraftUnchanged(t *testing.T) {
