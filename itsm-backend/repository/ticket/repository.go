@@ -33,6 +33,8 @@ type Repository interface {
 	FindByAssignee(ctx context.Context, assigneeID int, tenantID int) ([]*Ticket, error)
 	FindByRequester(ctx context.Context, requesterID int, tenantID int) ([]*Ticket, error)
 	FindOverdue(ctx context.Context, tenantID int) ([]*Ticket, error)
+	// FindOverduePage 是 FindOverdue 的分页形态，total 为未截断的逾期总数。
+	FindOverduePage(ctx context.Context, tenantID int, page, size int) ([]*Ticket, int, error)
 	// CountByStatus / CountByPriority 接受与 List 相同的行级数据范围，
 	// 让工作台卡片读数与列表结果共用一个口径；scope 语义见 dataScopePredicates。
 	CountByStatus(ctx context.Context, tenantID int, scope datascope.DataScope, viewerID int) (map[Status]int, error)

@@ -405,13 +405,19 @@ export class TicketApi {
   }
 
   // Search tickets
-  static async searchTickets(query: string): Promise<Ticket[]> {
-    return httpClient.get<Ticket[]>('/api/v1/tickets/search', { q: query });
+  static async searchTickets(
+    query: string,
+    params?: { page?: number; pageSize?: number },
+  ): Promise<TicketListResponse> {
+    return httpClient.get<TicketListResponse>('/api/v1/tickets/search', { q: query, ...params });
   }
 
   // Get overdue tickets
-  static async getOverdueTickets(): Promise<Ticket[]> {
-    return httpClient.get<Ticket[]>('/api/v1/tickets/overdue');
+  static async getOverdueTickets(params?: {
+    page?: number;
+    pageSize?: number;
+  }): Promise<TicketListResponse> {
+    return httpClient.get<TicketListResponse>('/api/v1/tickets/overdue', params);
   }
 
   // Get subtasks (child tickets)

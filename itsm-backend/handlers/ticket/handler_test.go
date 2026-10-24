@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"sort"
 	"strconv"
 	"sync"
 	"testing"
@@ -55,6 +56,13 @@ type mockRepository struct {
 	// handler 只把真正变化的字段传给仓储。
 	updateCalls      int
 	lastUpdateParams *UpdateParams
+	// overdueIDs 是 FindOverdue 的 fixture；Search/FindOverdue 记录分页参数，
+	// 用来断言 handler 把归一化后的分页完整下传、total 不被当前页截断。
+	overdueIDs      []int
+	lastSearchPage  int
+	lastSearchSize  int
+	lastOverduePage int
+	lastOverdueSize int
 }
 
 func newMockRepository() *mockRepository {
@@ -69,13 +77,13 @@ func (m *mockRepository) Create(ctx context.Context, params *CreateParams, tenan
 	defer m.mu.Unlock()
 	m.nextID++
 	t := &Ticket{
-		ID:           m.nextID,
-		TicketNumber: "TKT-" + time.Now().Format("20060102") + "-001",
-		Title:        params.Title,
-		Description:  params.Description,
-		Status:       "new",
-		Priority:     params.Priority,
-		Type:         params.Type,
+		ID:             m.nextID,
+		TicketNumber:   "TKT-" + time.Now().Format("20060102") + "-001",
+		Title:          params.Title,
+		Description:    params.Description,
+		Status:         "new",
+		Priority:       params.Priority,
+		Type:           params.Type,
 		RequesterID:    params.RequesterID,
 		AssigneeID:     params.AssigneeID,
 		ParentTicketID: params.ParentTicketID,
@@ -251,13 +259,28 @@ func (m *mockRepository) FindByAssignee(ctx context.Context, assigneeID int, ten
 	return out, nil
 }
 
-func (m *mockRepository) FindOverdue(ctx context.Context, tenantID int) ([]*Ticket, error) {
-	return []*Ticket{}, nil
-}
-
-func (m *mockRepository) Search(ctx context.Context, keyword string, tenantID int) ([]*Ticket, error) {
+func (m *mockRepository) FindOverdue(ctx context.Context, tenantID int, page, size int) ([]*Ticket, int, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
+	m.lastOverduePage = page
+	m.lastOverdueSize = size
+
+	out := make([]*Ticket, 0, len(m.overdueIDs))
+	for _, id := range m.overdueIDs {
+		if t, ok := m.tickets[id]; ok && t.TenantID == tenantID {
+			out = append(out, t)
+		}
+	}
+	sort.Slice(out, func(i, j int) bool { return out[i].ID < out[j].ID })
+	return pageOf(out, page, size), len(out), nil
+}
+
+func (m *mockRepository) Search(ctx context.Context, keyword string, tenantID int, page, size int) ([]*Ticket, int, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.lastSearchPage = page
+	m.lastSearchSize = size
+
 	var out []*Ticket
 	for _, t := range m.tickets {
 		if t.TenantID == tenantID {
@@ -266,7 +289,22 @@ func (m *mockRepository) Search(ctx context.Context, keyword string, tenantID in
 			}
 		}
 	}
-	return out, nil
+	sort.Slice(out, func(i, j int) bool { return out[i].ID < out[j].ID })
+	return pageOf(out, page, size), len(out), nil
+}
+
+// pageOf 与仓储分页口径一致：total 是未截断的匹配数，越界页返回空集合。
+func pageOf(tickets []*Ticket, page, size int) []*Ticket {
+	total := len(tickets)
+	start := (page - 1) * size
+	if start >= total {
+		return []*Ticket{}
+	}
+	end := start + size
+	if end > total {
+		end = total
+	}
+	return tickets[start:end]
 }
 
 func (m *mockRepository) GetUserNamesByIDs(ctx context.Context, tenantID int, ids []int) (map[int]string, error) {
@@ -446,6 +484,7 @@ func newTestHarness(t *testing.T) (*gin.Engine, *mockRepository) {
 	api.PUT("/tickets/:id/status", h.UpdateTicketStatus)
 	api.GET("/tickets/stats", h.GetTicketStats)
 	api.GET("/tickets/search", h.SearchTickets)
+	api.GET("/tickets/overdue", h.GetOverdueTickets)
 
 	return r, repo
 }
@@ -910,6 +949,90 @@ func TestHandler_SearchTickets_EmptyKeyword(t *testing.T) {
 		map[string]string{"X-Test-TenantID": "1", "X-Test-UserID": "7"},
 	)
 	assert.Equal(t, 400, w.Code)
+}
+
+// TestHandler_SearchTickets_StandardListEnvelope 固定住搜索接口的契约：
+// 曾经返回裸数组，调用方无法翻页也拿不到总数。现在必须是标准信封，
+// total 为未截断的匹配数，分页参数原样下传仓储。
+func TestHandler_SearchTickets_StandardListEnvelope(t *testing.T) {
+	r, repo := newTestHarness(t)
+	for i := 1; i <= 3; i++ {
+		seedTicketWith(t, r, dto.CreateTicketRequest{
+			Title:    "keyword hit " + strconv.Itoa(i),
+			Priority: "low",
+		})
+	}
+	seedTicketWith(t, r, dto.CreateTicketRequest{Title: "unrelated", Priority: "low"})
+
+	w := doJSON(t, r, http.MethodGet,
+		"/api/v1/tickets/search?q=keyword&page=2&pageSize=2", nil,
+		map[string]string{"X-Test-TenantID": "1", "X-Test-UserID": "7"},
+	)
+	require.Equal(t, 200, w.Code, w.Body.String())
+
+	var got listEnvelope
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &got))
+	assert.Equal(t, 0, got.Code)
+	assert.Len(t, got.Data.Items, 1)
+	assert.Equal(t, 3, got.Data.Total, "total 必须是全部匹配数，而不是当前页条数")
+	assert.Equal(t, 2, got.Data.Page)
+	assert.Equal(t, 2, got.Data.PageSize)
+	assert.Equal(t, 2, got.Data.TotalPages)
+
+	// 键集合固定：不得再混入 tickets/list 等领域名集合键。
+	var raw map[string]json.RawMessage
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &raw))
+	var data map[string]json.RawMessage
+	require.NoError(t, json.Unmarshal(raw["data"], &data))
+	assert.ElementsMatch(t, []string{"items", "total", "page", "pageSize", "totalPages"}, keysOf(data))
+
+	repo.mu.Lock()
+	defer repo.mu.Unlock()
+	assert.Equal(t, 2, repo.lastSearchPage)
+	assert.Equal(t, 2, repo.lastSearchSize)
+}
+
+// TestHandler_GetOverdueTickets_StandardListEnvelope 与搜索共用同一契约：
+// 逾期列表同样是分页信封，而不是无法翻页的裸数组。
+func TestHandler_GetOverdueTickets_StandardListEnvelope(t *testing.T) {
+	r, repo := newTestHarness(t)
+	seedTickets(t, r, 3)
+
+	repo.mu.Lock()
+	repo.overdueIDs = []int{1, 2, 3}
+	repo.mu.Unlock()
+
+	w := doJSON(t, r, http.MethodGet, "/api/v1/tickets/overdue?pageSize=2", nil,
+		map[string]string{"X-Test-TenantID": "1", "X-Test-UserID": "7"})
+	require.Equal(t, 200, w.Code, w.Body.String())
+
+	var got listEnvelope
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &got))
+	assert.Equal(t, 0, got.Code)
+	assert.Len(t, got.Data.Items, 2)
+	assert.Equal(t, 3, got.Data.Total)
+	assert.Equal(t, 1, got.Data.Page)
+	assert.Equal(t, 2, got.Data.PageSize)
+	assert.Equal(t, 2, got.Data.TotalPages)
+
+	var raw map[string]json.RawMessage
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &raw))
+	var data map[string]json.RawMessage
+	require.NoError(t, json.Unmarshal(raw["data"], &data))
+	assert.ElementsMatch(t, []string{"items", "total", "page", "pageSize", "totalPages"}, keysOf(data))
+
+	repo.mu.Lock()
+	defer repo.mu.Unlock()
+	assert.Equal(t, 1, repo.lastOverduePage)
+	assert.Equal(t, 2, repo.lastOverdueSize)
+}
+
+func keysOf(m map[string]json.RawMessage) []string {
+	out := make([]string, 0, len(m))
+	for k := range m {
+		out = append(out, k)
+	}
+	return out
 }
 
 // listEnvelope 只声明本用例要断言的信封键；items 用 json.RawMessage 以免耦合工单字段。

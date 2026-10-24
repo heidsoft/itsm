@@ -260,21 +260,21 @@ func (r *EntRepository) FindByAssignee(ctx context.Context, assigneeID int, tena
 	return r.toDomainList(ts), nil
 }
 
-func (r *EntRepository) FindOverdue(ctx context.Context, tenantID int) ([]*Ticket, error) {
-	ts, err := r.repo.FindOverdue(ctx, tenantID)
+func (r *EntRepository) FindOverdue(ctx context.Context, tenantID int, page, size int) ([]*Ticket, int, error) {
+	ts, total, err := r.repo.FindOverduePage(ctx, tenantID, page, size)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
-	return r.toDomainList(ts), nil
+	return r.toDomainList(ts), total, nil
 }
 
-func (r *EntRepository) Search(ctx context.Context, keyword string, tenantID int) ([]*Ticket, error) {
+func (r *EntRepository) Search(ctx context.Context, keyword string, tenantID int, page, size int) ([]*Ticket, int, error) {
 	fp := &ticket.FilterParams{Keyword: keyword}
-	result, err := r.repo.List(ctx, tenantID, fp, &base.QueryParams{Page: 1, PageSize: 100})
+	result, err := r.repo.List(ctx, tenantID, fp, &base.QueryParams{Page: page, PageSize: size})
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
-	return r.toDomainList(result.Data), nil
+	return r.toDomainList(result.Data), result.Total, nil
 }
 
 // 分布输出的词表基准顺序（itsm-backend/common/constants.go 工单状态机 +

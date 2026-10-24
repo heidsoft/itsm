@@ -157,19 +157,38 @@ describe('TicketApi', () => {
   });
 
   describe('searchTickets', () => {
-    it('should search tickets', async () => {
-      mockGet.mockResolvedValue([{ id: 1 }]);
-      const result = await TicketApi.searchTickets('test');
-      expect(mockGet).toHaveBeenCalledWith('/api/v1/tickets/search', { q: 'test' });
-      expect(result).toHaveLength(1);
+    it('should search tickets with the standard list envelope', async () => {
+      const envelope = {
+        items: [{ id: 1 }],
+        total: 1,
+        page: 1,
+        pageSize: 20,
+        totalPages: 1,
+      };
+      mockGet.mockResolvedValue(envelope);
+      const result = await TicketApi.searchTickets('test', { page: 1, pageSize: 20 });
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/tickets/search', {
+        q: 'test',
+        page: 1,
+        pageSize: 20,
+      });
+      expect(result.items).toHaveLength(1);
+      expect(result.total).toBe(1);
     });
   });
 
   describe('getOverdueTickets', () => {
-    it('should get overdue tickets', async () => {
-      mockGet.mockResolvedValue([]);
-      await TicketApi.getOverdueTickets();
-      expect(mockGet).toHaveBeenCalledWith('/api/v1/tickets/overdue');
+    it('should get overdue tickets with the standard list envelope', async () => {
+      mockGet.mockResolvedValue({
+        items: [],
+        total: 0,
+        page: 1,
+        pageSize: 20,
+        totalPages: 0,
+      });
+      const result = await TicketApi.getOverdueTickets({ page: 1, pageSize: 20 });
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/tickets/overdue', { page: 1, pageSize: 20 });
+      expect(result.items).toEqual([]);
     });
   });
 

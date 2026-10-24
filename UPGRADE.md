@@ -2917,6 +2917,30 @@ cd itsm-backend && go test -count=1 ./handlers/user/ ./handlers/group/ ./handler
 cd itsm-frontend && npm run type-check
 ```
 
+### 1.85 工单搜索 / 逾期列表改为标准分页信封（2026-10-24，破坏性变更）
+
+**问题**：`GET /api/v1/tickets/search` 与 `GET /api/v1/tickets/overdue` 返回裸数组 `data: []`，与全站列表契约不一致。调用方按 `data.items` 读取会得到空集合；传入 `page`/`pageSize` 也不生效——搜索在服务端被硬截断为前 100 条，逾期查询返回全量。
+
+| 端点 | 变更前 | 变更后 |
+|:---|:---|:---|
+| `GET /api/v1/tickets/search?q=...` | `data: Ticket[]`（最多 100 条） | `data: {items,total,page,pageSize,totalPages}` |
+| `GET /api/v1/tickets/overdue` | `data: Ticket[]`（全量） | 同上 |
+
+**升级动作**：
+
+- 把 `data` 当数组遍历的脚本改为 `data.items`，总数从 `data.total` 读取；
+- 需要全量结果时按 `totalPages` 翻页（`page` 从 1 开始，`pageSize` 缺省 20、上限 100）；
+- 逾期列表排序固定为 `created_at ASC, id ASC`。此前仅按 `created_at` 排序，同一时间戳下的翻页顺序不稳定；搜索的排序与过滤语义未变。
+
+**未变更**：权限码（`ticket:read`）、`q` 参数、逾期判定口径（SLA 已过期且工单未关闭/取消/解决）。
+
+**验证**
+
+```bash
+cd itsm-backend && go test -count=1 ./handlers/ticket/ ./repository/ticket/
+cd itsm-frontend && npm run type-check
+```
+
 ## 2. 环境变量变更
 
 本次升级**移除了多个"幽灵配置项"**（在示例文件中声明但代码/Compose 从不读取，用户配置了也不生效），并修正了一个 Grafana 密码安全缺陷。

@@ -607,13 +607,15 @@ func (h *Handler) SearchTickets(c *gin.Context) {
 	if !ok {
 		return
 	}
-	tickets, err := h.service.Search(c.Request.Context(), keyword, tenantID)
+	pagination := common.GetPaginationFromQuery(c)
+	tickets, total, err := h.service.Search(c.Request.Context(), keyword, tenantID, pagination.Page, pagination.PageSize)
 	if err != nil {
 		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
-	common.Success(c, h.ticketListToResponse(c.Request.Context(), tenantID, tickets))
+	common.SuccessWithPagination(c, h.ticketListToResponse(c.Request.Context(), tenantID, tickets),
+		pagination.Page, pagination.PageSize, int64(total))
 }
 
 // GetOverdueTickets handles GET /api/v1/tickets/overdue
@@ -622,13 +624,15 @@ func (h *Handler) GetOverdueTickets(c *gin.Context) {
 	if !ok {
 		return
 	}
-	tickets, err := h.service.GetOverdueTickets(c.Request.Context(), tenantID)
+	pagination := common.GetPaginationFromQuery(c)
+	tickets, total, err := h.service.GetOverdueTickets(c.Request.Context(), tenantID, pagination.Page, pagination.PageSize)
 	if err != nil {
 		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
-	common.Success(c, h.ticketListToResponse(c.Request.Context(), tenantID, tickets))
+	common.SuccessWithPagination(c, h.ticketListToResponse(c.Request.Context(), tenantID, tickets),
+		pagination.Page, pagination.PageSize, int64(total))
 }
 
 // GetTicketsByAssignee handles GET /api/v1/tickets/assignee/:assignee_id

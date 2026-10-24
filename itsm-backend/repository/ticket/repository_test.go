@@ -957,3 +957,66 @@ func TestTicketStateMachine_SingleSourceOfTruth(t *testing.T) {
 		}
 	}
 }
+
+// TestRepository_FindOverduePage 锁定分页口径：total 是全部逾期工单数而非当前页条数，
+// 每页数量受限，且翻页不会重复或漏单（created_at 相同时按 ID 兜底排序）。
+func TestRepository_FindOverduePage(t *testing.T) {
+	fx := newRepoFixture(t)
+	defer fx.client.Close()
+
+	var created []int
+	for i := 0; i < 3; i++ {
+		tkt, err := fx.repo.Create(fx.ctx, &CreateParams{
+			Title:       fmt.Sprintf("overdue %d", i),
+			Priority:    PriorityMedium,
+			Type:        TypeIncident,
+			RequesterID: fx.user.ID,
+		}, fx.tenant.ID)
+		require.NoError(t, err)
+		created = append(created, tkt.ID)
+
+		_, err = fx.client.SLAState.Create().
+			SetTenantID(fx.tenant.ID).
+			SetAggregateType("ticket").
+			SetAggregateID(tkt.ID).
+			SetResolutionDeadline(time.Now().Add(-time.Hour)).
+			SetStatus("active").
+			Save(fx.ctx)
+		require.NoError(t, err)
+	}
+
+	// SLA 未到期（或状态不活跃）的工单不得计入逾期总数。
+	notOverdue, err := fx.repo.Create(fx.ctx, &CreateParams{
+		Title:       "not overdue",
+		Priority:    PriorityMedium,
+		Type:        TypeIncident,
+		RequesterID: fx.user.ID,
+	}, fx.tenant.ID)
+	require.NoError(t, err)
+	_, err = fx.client.SLAState.Create().
+		SetTenantID(fx.tenant.ID).
+		SetAggregateType("ticket").
+		SetAggregateID(notOverdue.ID).
+		SetResolutionDeadline(time.Now().Add(time.Hour)).
+		SetStatus("active").
+		Save(fx.ctx)
+	require.NoError(t, err)
+
+	page1, total, err := fx.repo.FindOverduePage(fx.ctx, fx.tenant.ID, 1, 2)
+	require.NoError(t, err)
+	assert.Equal(t, 3, total, "total 必须是未截断的逾期总数")
+	require.Len(t, page1, 2)
+	assert.Equal(t, created[0], page1[0].ID, "created_at 相同时按 ID 稳定排序")
+	assert.Equal(t, created[1], page1[1].ID)
+
+	page2, total2, err := fx.repo.FindOverduePage(fx.ctx, fx.tenant.ID, 2, 2)
+	require.NoError(t, err)
+	assert.Equal(t, 3, total2)
+	require.Len(t, page2, 1)
+	assert.Equal(t, created[2], page2[0].ID)
+
+	empty, total3, err := fx.repo.FindOverduePage(fx.ctx, fx.tenant.ID, 3, 2)
+	require.NoError(t, err)
+	assert.Equal(t, 3, total3)
+	assert.Empty(t, empty)
+}

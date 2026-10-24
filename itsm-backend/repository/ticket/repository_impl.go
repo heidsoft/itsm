@@ -645,10 +645,10 @@ func (r *EntRepository) FindByRequester(ctx context.Context, requesterID int, te
 	return toDomainModels(entities), nil
 }
 
-// FindOverdue 查询逾期工单
-func (r *EntRepository) FindOverdue(ctx context.Context, tenantID int) ([]*Ticket, error) {
+// overdueTicketPredicates 是逾期工单的权威口径：SLA 已过期且工单仍未终结。
+// 分页与非分页查询必须共用，否则 total 与实际列表会各说一套。
+func (r *EntRepository) overdueTicketPredicates(ctx context.Context, tenantID int) ([]predicate.Ticket, error) {
 	now := time.Now()
-	// get overdue ticket IDs from sla_states
 	slaStates, err := r.Client().SLAState.Query().
 		Where(
 			slastate.TenantIDEQ(tenantID),
@@ -662,28 +662,68 @@ func (r *EntRepository) FindOverdue(ctx context.Context, tenantID int) ([]*Ticke
 		return nil, fmt.Errorf("find overdue SLA states: %w", err)
 	}
 	if len(slaStates) == 0 {
-		return []*Ticket{}, nil
+		return nil, nil
 	}
 	aggIDs := make([]int, len(slaStates))
 	for i, s := range slaStates {
 		aggIDs[i] = s.AggregateID
 	}
 
-	// fetch tickets by those IDs
+	return []predicate.Ticket{
+		ticket.TenantID(tenantID),
+		ticket.DeletedAtIsNil(),
+		ticket.IDIn(aggIDs...),
+		ticket.StatusNotIn(string(StatusClosed), string(StatusCancelled), string(StatusResolved)),
+	}, nil
+}
+
+// FindOverdue 查询逾期工单
+func (r *EntRepository) FindOverdue(ctx context.Context, tenantID int) ([]*Ticket, error) {
+	preds, err := r.overdueTicketPredicates(ctx, tenantID)
+	if err != nil {
+		return nil, err
+	}
+	if preds == nil {
+		return []*Ticket{}, nil
+	}
+
 	entities, err := r.Client().Ticket.Query().
-		Where(
-			ticket.TenantID(tenantID),
-			ticket.DeletedAtIsNil(),
-			ticket.IDIn(aggIDs...),
-			ticket.StatusNotIn(string(StatusClosed), string(StatusCancelled), string(StatusResolved)),
-		).
-		Order(ent.Asc(ticket.FieldCreatedAt)).
+		Where(preds...).
+		Order(ent.Asc(ticket.FieldCreatedAt), ent.Asc(ticket.FieldID)).
 		All(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("find overdue tickets: %w", err)
 	}
 
 	return toDomainModels(entities), nil
+}
+
+// FindOverduePage 查询逾期工单分页；ID 作为次序键保证翻页结果稳定。
+func (r *EntRepository) FindOverduePage(ctx context.Context, tenantID int, page, size int) ([]*Ticket, int, error) {
+	preds, err := r.overdueTicketPredicates(ctx, tenantID)
+	if err != nil {
+		return nil, 0, err
+	}
+	if preds == nil {
+		return []*Ticket{}, 0, nil
+	}
+
+	query := r.Client().Ticket.Query().Where(preds...)
+	total, err := query.Clone().Count(ctx)
+	if err != nil {
+		return nil, 0, fmt.Errorf("count overdue tickets: %w", err)
+	}
+
+	entities, err := query.
+		Order(ent.Asc(ticket.FieldCreatedAt), ent.Asc(ticket.FieldID)).
+		Offset((page - 1) * size).
+		Limit(size).
+		All(ctx)
+	if err != nil {
+		return nil, 0, fmt.Errorf("find overdue tickets: %w", err)
+	}
+
+	return toDomainModels(entities), total, nil
 }
 
 // dataScopePredicates 返回行级数据权限谓词，供 List 与统计共用。

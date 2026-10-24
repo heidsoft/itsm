@@ -575,6 +575,31 @@ GET /api/v1/tickets/stats
 - `byStatus`/`byPriority` 只含真实存在的取值，顺序按后端词表基准，词表外的历史值按字母序追加；两者各自求和恒等于 `total`，且严格按租户过滤（`handlers/ticket/stats_contract_test.go` 锁死这几条）。
 - 报表要分布就读这两个字段。禁止改成前端拉一页列表自己数：页长之外的工作量会被静默截断，界面却仍然把它当成全量读数。
 
+### 工单搜索
+
+```http
+GET /api/v1/tickets/search?q={keyword}&page=1&pageSize=20
+```
+
+按标题/描述关键字检索本租户工单，返回标准分页信封（`{items,total,page,pageSize,totalPages}`）。
+
+- `q` 必填，空白返回 400/`1001`。
+- 分页参数与 `GET /api/v1/tickets` 相同：`page` 从 1 开始，`pageSize` 缺省 20、上限 100。
+- 本接口的 `item` 与工单列表一致（含 `requesterName`/`assigneeName` 投影）。
+- 权限：`ticket:read`。
+
+### 逾期工单
+
+```http
+GET /api/v1/tickets/overdue?page=1&pageSize=20
+```
+
+返回 SLA 已过期且工单仍未终结（非 `closed`/`cancelled`/`resolved`）的工单，同样使用标准分页信封。
+
+- `total` 是全部逾期工单数，不是当前页条数；排序固定为 `created_at ASC, id ASC`，翻页稳定。
+- 逾期判定以 `sla_states.resolution_deadline < now` 且 `status=active` 为准，与 `GET /api/v1/tickets/stats` 的 `overdue` 读数同源。
+- 权限：`ticket:read`。
+
 ## 工单分类接口
 
 分类是工单的主数据，也是建单选路的一个真实输入：`workflowDefinitionKey` 决定该分类下工单默认启动哪个 BPMN 流程。

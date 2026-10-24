@@ -402,13 +402,13 @@ func lifecycleError(err error) error {
 }
 
 // Search searches tickets by keyword.
-func (s *Service) Search(ctx context.Context, keyword string, tenantID int) ([]*Ticket, error) {
-	return s.repo.Search(ctx, keyword, tenantID)
+func (s *Service) Search(ctx context.Context, keyword string, tenantID int, page, size int) ([]*Ticket, int, error) {
+	return s.repo.Search(ctx, keyword, tenantID, page, size)
 }
 
 // GetOverdueTickets returns overdue tickets.
-func (s *Service) GetOverdueTickets(ctx context.Context, tenantID int) ([]*Ticket, error) {
-	return s.repo.FindOverdue(ctx, tenantID)
+func (s *Service) GetOverdueTickets(ctx context.Context, tenantID int, page, size int) ([]*Ticket, int, error) {
+	return s.repo.FindOverdue(ctx, tenantID, page, size)
 }
 
 // GetTicketsByAssignee returns tickets assigned to a specific user.
