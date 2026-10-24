@@ -393,6 +393,11 @@ func TestSLAHandler_ComplianceReport(t *testing.T) {
 		assert.Equal(t, common.SuccessCode, resp.Code, "body=%s", slaStr(resp))
 	})
 
+	t.Run("裸日期与 change.calendar 使用同一 wire 格式", func(t *testing.T) {
+		resp := doSLAReq(t, r, "GET", "/api/v1/sla/compliance-report?startDate=2026-01-01&endDate=2026-12-31", nil, false)
+		assert.Equal(t, common.SuccessCode, resp.Code, "body=%s", slaStr(resp))
+	})
+
 	t.Run("缺少日期应返回参数错误", func(t *testing.T) {
 		resp := doSLAReq(t, r, "GET", "/api/v1/sla/compliance-report", nil, false)
 		assert.Equal(t, common.ParamErrorCode, resp.Code, "body=%s", slaStr(resp))
@@ -402,6 +407,33 @@ func TestSLAHandler_ComplianceReport(t *testing.T) {
 		resp := doSLAReq(t, r, "GET", "/api/v1/sla/compliance-report?start_date=notadate&end_date=2026-12-31T23:59:59Z", nil, false)
 		assert.Equal(t, common.ParamErrorCode, resp.Code, "body=%s", slaStr(resp))
 	})
+}
+
+func TestParseSLADateFilter(t *testing.T) {
+	cases := []struct {
+		name     string
+		value    string
+		endOfDay bool
+		want     time.Time
+		wantErr  bool
+	}{
+		{"empty stays zero", "", false, time.Time{}, false},
+		{"rfc3339 normalized to UTC", "2026-01-01T12:30:00+08:00", false, time.Date(2026, 1, 1, 4, 30, 0, 0, time.UTC), false},
+		{"bare start date", "2026-01-01", false, time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC), false},
+		{"bare end date is inclusive", "2026-01-31", true, time.Date(2026, 1, 31, 23, 59, 59, 999999999, time.UTC), false},
+		{"invalid date", "2026-13-01", false, time.Time{}, true},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got, err := parseSLADateFilter(tc.value, tc.endOfDay)
+			if tc.wantErr {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+			assert.True(t, tc.want.Equal(got), "want %s, got %s", tc.want, got)
+		})
+	}
 }
 
 func TestSLAHandler_Violations_AndMetrics(t *testing.T) {
@@ -425,6 +457,16 @@ func TestSLAHandler_Violations_AndMetrics(t *testing.T) {
 	t.Run("按已解决/未解决过滤违规记录", func(t *testing.T) {
 		resp := doSLAReq(t, r, "GET", "/api/v1/sla/violations?is_resolved=false", nil, false)
 		assert.Equal(t, common.SuccessCode, resp.Code, "body=%s", slaStr(resp))
+	})
+
+	t.Run("绩效查询接受裸日期", func(t *testing.T) {
+		resp := doSLAReq(t, r, "GET", "/api/v1/sla/performance?startDate=2026-01-01&endDate=2026-12-31", nil, false)
+		assert.Equal(t, common.SuccessCode, resp.Code, "body=%s", slaStr(resp))
+	})
+
+	t.Run("绩效查询格式错误仍返回参数错误", func(t *testing.T) {
+		resp := doSLAReq(t, r, "GET", "/api/v1/sla/performance?startDate=2026-13-01", nil, false)
+		assert.Equal(t, common.ParamErrorCode, resp.Code, "body=%s", slaStr(resp))
 	})
 
 	t.Run("指标采集未实现时返回 501 而不是空成功", func(t *testing.T) {

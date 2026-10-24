@@ -461,14 +461,14 @@ func (h *Handler) GetSLAPerformance(c *gin.Context) {
 		dimension = SLADimensionServiceType
 	}
 
-	start, err := parseSLATimeParam(c.Query("startDate"))
+	start, err := parseSLADateFilter(c.Query("startDate"), false)
 	if err != nil {
-		common.ParamError(c, "startDate 格式非法，请使用 RFC3339，例如 2026-01-01T00:00:00Z")
+		common.ParamError(c, "startDate 格式非法，请使用 YYYY-MM-DD 或 RFC3339")
 		return
 	}
-	end, err := parseSLATimeParam(c.Query("endDate"))
+	end, err := parseSLADateFilter(c.Query("endDate"), true)
 	if err != nil {
-		common.ParamError(c, "endDate 格式非法，请使用 RFC3339，例如 2026-01-31T23:59:59Z")
+		common.ParamError(c, "endDate 格式非法，请使用 YYYY-MM-DD 或 RFC3339")
 		return
 	}
 	pg := common.GetPaginationFromQuery(c)
@@ -525,6 +525,28 @@ func parseSLATimeParam(value string) (time.Time, error) {
 		return time.Time{}, err
 	}
 	return parsed.UTC(), nil
+}
+
+// parseSLADateFilter 解析查询参数的日期过滤，接受 RFC3339 或裸日期 YYYY-MM-DD。
+// 裸日期按 UTC 解释：start 取当日 00:00:00，end 取当日 23:59:59.999999999，
+// 与 /changes/calendar 的日期过滤口径一致；过去只收 RFC3339 会把同一语义的
+// 两个过滤端点拆成两套 wire 格式。
+func parseSLADateFilter(value string, endOfDay bool) (time.Time, error) {
+	value = strings.TrimSpace(value)
+	if value == "" {
+		return time.Time{}, nil
+	}
+	if parsed, err := time.Parse(time.RFC3339, value); err == nil {
+		return parsed.UTC(), nil
+	}
+	day, err := time.Parse("2006-01-02", value)
+	if err != nil {
+		return time.Time{}, err
+	}
+	if endOfDay {
+		day = day.AddDate(0, 0, 1).Add(-time.Nanosecond)
+	}
+	return day.UTC(), nil
 }
 
 // failSLAQuery 把 service 层的稳定错误映射为 HTTP status 与业务 code，
@@ -631,14 +653,14 @@ func (h *Handler) GetSLAComplianceReport(c *gin.Context) {
 	}
 
 	// Parse ISO 8601 timestamps
-	startDate, err := time.Parse(time.RFC3339, startDateStr)
+	startDate, err := parseSLADateFilter(startDateStr, false)
 	if err != nil {
-		common.ParamError(c, "invalid startDate format, use ISO 8601 (e.g., 2024-01-01T00:00:00Z)")
+		common.ParamError(c, "invalid startDate format, use YYYY-MM-DD or RFC3339 (e.g., 2024-01-01T00:00:00Z)")
 		return
 	}
-	endDate, err := time.Parse(time.RFC3339, endDateStr)
+	endDate, err := parseSLADateFilter(endDateStr, true)
 	if err != nil {
-		common.ParamError(c, "invalid endDate format, use ISO 8601 (e.g., 2024-01-31T23:59:59Z)")
+		common.ParamError(c, "invalid endDate format, use YYYY-MM-DD or RFC3339 (e.g., 2024-01-31T23:59:59Z)")
 		return
 	}
 
