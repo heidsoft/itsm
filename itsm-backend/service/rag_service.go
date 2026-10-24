@@ -62,6 +62,26 @@ func (r *RAGService) SetVectorStore(store connectorVector.VectorStore) {
 	}
 }
 
+// HasVectorBackend reports whether a vector store is physically wired,
+// independent of whether vector search is enabled or the embedder is configured.
+func (r *RAGService) HasVectorBackend() bool {
+	return r != nil && (r.vectorStore != nil || r.vectors != nil)
+}
+
+// VectorIndexReady reports whether a vector index write can be attempted:
+// vector search must be enabled with a backend wired, and the embedder must be
+// configured. This is a configuration check, not a health probe; callers use it
+// to avoid enqueueing durable work that can only fail until redeployment.
+func (r *RAGService) VectorIndexReady() bool {
+	if r == nil || !r.useVector || !r.HasVectorBackend() || r.embedder == nil {
+		return false
+	}
+	if readiness, ok := r.embedder.(EmbeddingReadiness); ok {
+		return readiness.EmbeddingConfigured()
+	}
+	return true
+}
+
 // SetOntologyService installs the ontology graph service. When installed,
 // AskWithLLMStream recognizes business entities (tickets/incidents/CIs/...)
 // in the user query and injects their 1-hop relation neighborhood into the
@@ -990,9 +1010,11 @@ func parseToolArgs(s string) map[string]any {
 // It writes to both the connector store and the legacy store and reports any
 // partial failure so callers do not mistake an incomplete index for success.
 func (r *RAGService) IndexArticle(ctx context.Context, tenantID int, articleID int, title, content string) error {
-	// If both vector and embedder are disabled, skip silently
-	if !r.useVector || (r.vectorStore == nil && r.vectors == nil) {
-		r.logger.Debugw("RAGService: vector indexing disabled")
+	// 能力未就绪时索引写入不可能成功。入队侧已按同一判定避免制造注定失败的任务；
+	// 这里兜住「入队后配置被撤掉」：命令以无事可做结束，而不是重试到死信。
+	if !r.VectorIndexReady() {
+		r.logger.Debugw("RAGService: vector indexing unavailable, skipping index write",
+			"article_id", articleID, "tenant_id", tenantID)
 		return nil
 	}
 

@@ -17,6 +17,13 @@ type Embedder interface {
 	Embed(text string) ([]float32, error)
 }
 
+// EmbeddingReadiness is implemented by embedders that can report whether they
+// hold the configuration required to generate embeddings. It is a local check,
+// not a network probe: a configured provider can still fail at request time.
+type EmbeddingReadiness interface {
+	EmbeddingConfigured() bool
+}
+
 // EmbeddingPipeline scans knowledge articles and closed incidents to produce vectors.
 type EmbeddingPipeline struct {
 	client   *ent.Client

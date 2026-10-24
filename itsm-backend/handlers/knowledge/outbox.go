@@ -22,6 +22,13 @@ func (s *Service) entRepository() (*EntRepository, error) {
 	return repo, nil
 }
 
+// vectorIndexBlocked reports a wired vector backend whose embedder cannot
+// generate vectors. Enqueueing a sync in that state only burns retries until the
+// command dead-letters, so it must not be treated as pending work.
+func (s *Service) vectorIndexBlocked() bool {
+	return s.rag != nil && s.rag.HasVectorBackend() && !s.rag.VectorIndexReady()
+}
+
 func (s *Service) createWithVectorOutbox(ctx context.Context, article *Article) (*Article, error) {
 	if _, err := s.entRepository(); err != nil {
 		return nil, err
@@ -36,7 +43,10 @@ func (s *Service) createWithVectorOutbox(ctx context.Context, article *Article) 
 		return nil, err
 	}
 	if created.IsPublished {
-		if err := enqueueVectorSyncTx(ctx, tx, created, vectorIndexSync); err != nil {
+		if s.vectorIndexBlocked() {
+			s.logger.Warnw("knowledge article published without vector indexing: embedder is not configured",
+				"article_id", created.ID, "tenant_id", created.TenantID)
+		} else if err := enqueueVectorSyncTx(ctx, tx, created, vectorIndexSync); err != nil {
 			return nil, err
 		}
 	}
@@ -59,9 +69,16 @@ func (s *Service) updateWithVectorOutbox(ctx context.Context, article *Article) 
 	if err != nil {
 		return nil, err
 	}
+	// 默认入删除：未发布，以及「已发布但 embedding 不可用」都必须清掉旧索引，
+	// 只有能力就绪的发布才入同步。
 	action := vectorIndexDelete
 	if updated.IsPublished {
-		action = vectorIndexSync
+		if s.vectorIndexBlocked() {
+			s.logger.Warnw("knowledge article published while embedder is not configured; invalidating vector index",
+				"article_id", updated.ID, "tenant_id", updated.TenantID)
+		} else {
+			action = vectorIndexSync
+		}
 	}
 	if err := enqueueVectorSyncTx(ctx, tx, updated, action); err != nil {
 		return nil, err

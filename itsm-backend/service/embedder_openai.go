@@ -7,6 +7,7 @@ import (
 	"errors"
 	"net/http"
 	"os"
+	"strings"
 )
 
 // OpenAIEmbedder implements real embeddings call using OpenAI-compatible API
@@ -42,6 +43,10 @@ type embeddingResponse struct {
 	Data []struct {
 		Embedding []float64 `json:"embedding"`
 	} `json:"data"`
+}
+
+func (e *OpenAIEmbedder) EmbeddingConfigured() bool {
+	return e != nil && strings.TrimSpace(e.apiKey) != ""
 }
 
 func (e *OpenAIEmbedder) Embed(text string) ([]float32, error) {
