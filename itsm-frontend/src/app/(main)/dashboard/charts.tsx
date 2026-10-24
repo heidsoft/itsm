@@ -38,6 +38,8 @@ const PROVIDER_LABEL_MAP: Record<string, string> = {
   tencent: '腾讯云',
   azure: 'Azure',
   aws: 'AWS',
+  volcengine: '火山引擎',
+  k8s: 'Kubernetes',
   onprem: '私有云',
   private: '私有云',
   gcp: 'GCP',

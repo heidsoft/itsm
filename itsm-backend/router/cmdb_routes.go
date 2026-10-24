@@ -242,6 +242,9 @@ func SetupCMDBRoutes(
 		{
 			discovery.GET("/sources", config.CMDBHandler.ListDiscoverySources)
 			discovery.POST("/sources", middleware.RequirePermission("cmdb", "write"), config.CMDBHandler.CreateDiscoverySource)
+			// 厂商发现能力清单：前端厂商下拉与「哪些厂商暂不支持自动发现」的数据源。
+			// 只读常量集，组级 cmdb:read 即足够。
+			discovery.GET("/providers", config.CMDBHandler.ListCloudProviders)
 			discovery.GET("/jobs", config.CMDBHandler.ListDiscoveryJobs)
 			discovery.POST("/jobs", middleware.RequirePermission("cmdb", "write"), config.CMDBHandler.CreateDiscoveryJob)
 			discovery.GET("/jobs/:id", config.CMDBHandler.GetDiscoveryJobDetail)

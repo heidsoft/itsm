@@ -41,78 +41,11 @@ func RegisterAll(reg *cloud.Registry, logger *zap.SugaredLogger) {
 	reg.Register(volcengine.NewAdapter(logger))
 }
 
-// ProviderSupport 描述一个厂商当前的发现能力。
+// SupportedProviders 返回当前注册表的能力矩阵，见 cloud.Registry.SupportedProviders。
 //
-// 目的是让「未接入」成为**可查询的事实**，而不是等到 job 失败时抛一句
-// no adapter registered。API 与前端据此展示「暂不支持」，避免用户为不支持的
-// 厂商配半天凭据。
-type ProviderSupport struct {
-	Provider     string   `json:"provider"`
-	DisplayName  string   `json:"displayName"`
-	ServiceCodes []string `json:"serviceCodes"`
-	// NotImplemented 为 true 表示厂商标识已识别，但适配器尚未接入。
-	NotImplemented bool `json:"notImplemented"`
-}
-
-// SupportedProviders 返回当前注册表实际具备发现能力的厂商清单。
-func SupportedProviders(reg *cloud.Registry) []ProviderSupport {
-	if reg == nil {
-		return nil
-	}
-	out := []ProviderSupport{
-		{
-			Provider:       aliyun.Provider,
-			DisplayName:    cloud.ProviderDisplayName(aliyun.Provider),
-			ServiceCodes:   []string{aliyun.ServiceCodeECS},
-			NotImplemented: false,
-		},
-		{
-			Provider:       kubernetes.Provider,
-			DisplayName:    cloud.ProviderDisplayName(kubernetes.Provider),
-			ServiceCodes:   []string{kubernetes.ServiceCode},
-			NotImplemented: false,
-		},
-		{
-			Provider:       aws.Provider,
-			DisplayName:    cloud.ProviderDisplayName(aws.Provider),
-			ServiceCodes:   []string{aws.ServiceCodeEC2},
-			NotImplemented: false,
-		},
-		{
-			Provider:       tencent.Provider,
-			DisplayName:    cloud.ProviderDisplayName(tencent.Provider),
-			ServiceCodes:   []string{tencent.ServiceCodeCVM},
-			NotImplemented: false,
-		},
-		{
-			Provider:       volcengine.Provider,
-			DisplayName:    cloud.ProviderDisplayName(volcengine.Provider),
-			ServiceCodes:   []string{volcengine.ServiceCodeECS},
-			NotImplemented: false,
-		},
-		// 华为云 / Azure 仍未接入：两家各有自己的签名体系（AK/SK 签名与
-		// OAuth2 + HMAC），不是「照抄现成的」就能落地，故继续显式标缺口而不是
-		// 注册一个跑不通的适配器。
-		{Provider: "huawei", DisplayName: cloud.ProviderDisplayName("huawei"), NotImplemented: true},
-		{Provider: "azure", DisplayName: cloud.ProviderDisplayName("azure"), NotImplemented: true},
-	}
-	// 只保留真的能从注册表取到适配器的条目，防止清单与实现脱节。
-	implemented := make([]ProviderSupport, 0, len(out))
-	for _, p := range out {
-		if p.NotImplemented {
-			implemented = append(implemented, p)
-			continue
-		}
-		ok := false
-		for _, code := range p.ServiceCodes {
-			if reg.HasAdapter(p.Provider, code) {
-				ok = true
-				break
-			}
-		}
-		if ok {
-			implemented = append(implemented, p)
-		}
-	}
-	return implemented
+// 保留本函数只为装配侧调用方便；真源在注册表（按 cloud.KnownProviders 逐个问
+// 「装了没有」），本包不再维护第二份条目清单——此前这里硬编码五条 implemented +
+// 两条 notImplemented，新增适配器只要忘了同步改这里，能力清单就会说谎。
+func SupportedProviders(reg *cloud.Registry) []cloud.ProviderSupport {
+	return reg.SupportedProviders()
 }

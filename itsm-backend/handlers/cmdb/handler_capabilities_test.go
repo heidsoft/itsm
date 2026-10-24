@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"itsm-backend/middleware"
+	"itsm-backend/service/cloud"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
@@ -18,6 +19,26 @@ type capabilityAdapterInspector struct{ ready bool }
 
 func (i capabilityAdapterInspector) HasAdapter(provider, serviceCode string) bool {
 	return i.ready && provider == "aliyun" && serviceCode == "ecs"
+}
+
+// SupportedProviders 与 HasAdapter 同源：ready=false 时一个厂商都拿不到适配器，
+// 但清单仍须按 KnownProviders 全量返回（未接入标 true），不能返回空切片——
+// 空切片会被读成「本产品不认任何厂商」。
+func (i capabilityAdapterInspector) SupportedProviders() []cloud.ProviderSupport {
+	out := make([]cloud.ProviderSupport, 0, len(cloud.KnownProviders))
+	for _, p := range cloud.KnownProviders {
+		codes := []string{}
+		if i.ready && p == "aliyun" {
+			codes = []string{"ecs"}
+		}
+		out = append(out, cloud.ProviderSupport{
+			Provider:       p,
+			DisplayName:    cloud.ProviderDisplayName(p),
+			ServiceCodes:   codes,
+			NotImplemented: len(codes) == 0,
+		})
+	}
+	return out
 }
 
 func TestGetCapabilitiesUsesAuthenticatedTenantAndReportsUnreadyRuntime(t *testing.T) {

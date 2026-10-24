@@ -1,5 +1,7 @@
 package dto
 
+import "itsm-backend/service/cloud"
+
 // 本文件只声明云账号/云服务/云资源三个列表端点的响应契约与云资源列表的查询参数。
 //
 // `/api/v1/cloud/*` 那套与 `/api/v1/cmdb/cloud-*` 平行的表面（handlers/cloud、
@@ -13,7 +15,7 @@ package dto
 // Provider 走枚举校验：过去 handler 直接 c.Query("provider") 把任意字符串塞进精确匹配，
 // 拼错的厂商名表现为「这个租户没有云账号」的空列表，而不是请求错误。
 type ListCloudSelectorRequest struct {
-	Provider string `form:"provider" binding:"omitempty,oneof=aliyun tencent huawei aws azure onprem"`
+	Provider string `form:"provider" binding:"omitempty,oneof=aliyun tencent huawei aws azure volcengine k8s onprem"`
 }
 
 // ListCloudResourcesRequest 云资源列表查询参数（GET /api/v1/cmdb/cloud-resources）。
@@ -22,7 +24,7 @@ type ListCloudSelectorRequest struct {
 // common.GetPaginationFromQuery（缺省 1/20，越界回落默认页长）。在请求 DTO 上再挂一套
 // binding 夹紧就是第三套页长真相，两套规则会分叉。
 type ListCloudResourcesRequest struct {
-	Provider       string `form:"provider" binding:"omitempty,oneof=aliyun tencent huawei aws azure onprem" comment:"云厂商过滤"`
+	Provider       string `form:"provider" binding:"omitempty,oneof=aliyun tencent huawei aws azure volcengine k8s onprem" comment:"云厂商过滤"`
 	CloudAccountID int    `form:"cloudAccountId" comment:"云账号ID过滤"`
 	ServiceID      int    `form:"serviceId" comment:"云服务类型ID过滤"`
 	Region         string `form:"region" comment:"Region过滤"`
@@ -89,5 +91,16 @@ type CloudAccountListResponse struct {
 // 同 CloudAccountListResponse：作为 CI 表单的级联选择数据源整份返回，不分页。
 type CloudServiceListResponse struct {
 	Items []*CloudServiceResponse `json:"items"`
+	Total int                     `json:"total"`
+}
+
+// CloudProvidersResponse 云厂商发现能力清单（GET /api/v1/cmdb/discovery/providers）。
+//
+// 刻意全量返回 cloud.KnownProviders 而不是只返回「有适配器」的：厂商能不能建云账号
+// 与能不能自动发现是两件事，前端下拉要前者、能力提示要后者。若只回后者，新接入的
+// 厂商在建账号下拉里就会消失（DTO 枚举与这份清单由守卫测试强制同源）。
+// 不分页：厂商全集是有限常量集，分页只会让调用方误以为还有下一页。
+type CloudProvidersResponse struct {
+	Items []cloud.ProviderSupport `json:"items"`
 	Total int                     `json:"total"`
 }

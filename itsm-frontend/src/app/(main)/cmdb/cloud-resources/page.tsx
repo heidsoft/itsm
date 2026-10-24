@@ -25,12 +25,16 @@ import CISearchSelect, { type CISelectOption } from '@/components/cmdb/CISearchS
 import { CMDB_KEYS, useCloudResourcesQuery, useCloudServicesQuery } from '@/lib/hooks/useCMDB';
 import type { CloudResource } from '@/types/biz/cmdb';
 
+// 与后端 cloud.KnownProviders 同源（后端 dto 枚举由守卫测试强制对齐）。
+// 火山引擎与 k8s 的发现适配器已接入，缺这两项时前端根本选不到、能力等于零。
 const providerOptions = [
   { value: 'aliyun', label: '阿里云' },
   { value: 'huawei', label: '华为云' },
   { value: 'tencent', label: '腾讯云' },
   { value: 'azure', label: 'Azure' },
   { value: 'aws', label: 'AWS' },
+  { value: 'volcengine', label: '火山引擎' },
+  { value: 'k8s', label: 'Kubernetes' },
   { value: 'onprem', label: '私有云' },
 ];
 

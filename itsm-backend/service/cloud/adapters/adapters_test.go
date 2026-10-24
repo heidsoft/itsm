@@ -47,7 +47,7 @@ func TestSupportedProviders_UnimplementedAreFlagged(t *testing.T) {
 	RegisterAll(reg, zap.NewNop().Sugar())
 
 	list := SupportedProviders(reg)
-	byProvider := make(map[string]ProviderSupport, len(list))
+	byProvider := make(map[string]cloud.ProviderSupport, len(list))
 	for _, p := range list {
 		byProvider[p.Provider] = p
 	}
@@ -73,14 +73,24 @@ func TestSupportedProviders_UnimplementedAreFlagged(t *testing.T) {
 	}
 }
 
-// TestSupportedProviders_DropsUnregistered 覆盖：清单只保留真的能从注册表取到
-// 适配器的厂商。注册被漏掉时清单同步收缩，不会出现「清单说支持、执行却报
-// no adapter registered」的自相矛盾。
-func TestSupportedProviders_DropsUnregistered(t *testing.T) {
+// TestSupportedProviders_FlagsUnregisteredInsteadOfDropping 覆盖：注册表里没有
+// 适配器的厂商必须被标成未接入，而不是从清单里消失。
+//
+// 消失会被读成「还没做清单」，标出才是「已知缺口」；而且清单一旦按「有没有适配器」
+// 过滤，新接入的厂商在前端建号下拉里就会凭空消失——正是 2026-10-24 实测到的缺陷。
+func TestSupportedProviders_FlagsUnregisteredInsteadOfDropping(t *testing.T) {
 	empty := cloud.NewRegistry()
-	for _, p := range SupportedProviders(empty) {
-		if !p.NotImplemented && p.Provider == aliyun.Provider {
-			t.Fatal("aliyun must not be listed as available when it is not registered")
+	list := SupportedProviders(empty)
+	// 先钉住「不收缩」：空注册表也必须回全集，否则就是上面那条失效方式。
+	if len(list) != len(cloud.KnownProviders) {
+		t.Fatalf("清单必须是厂商全集: got %d want %d", len(list), len(cloud.KnownProviders))
+	}
+	for _, p := range list {
+		if !p.NotImplemented {
+			t.Fatalf("%s 在空注册表里不得标为已接入", p.Provider)
+		}
+		if p.ServiceCodes == nil {
+			t.Fatalf("%s 的 serviceCodes 应为 [] 而非 null（前端渲染会判空）", p.Provider)
 		}
 	}
 }

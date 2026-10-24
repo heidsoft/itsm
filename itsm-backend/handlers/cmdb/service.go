@@ -13,6 +13,7 @@ import (
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/internal/commandbus"
+	"itsm-backend/service/cloud"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -25,8 +26,14 @@ type Service struct {
 	discoveryRuntime DiscoveryRuntime
 }
 
+// DiscoveryAdapterInspector 云发现适配器注册表在 CMDB 域内的窄接口。
+//
+// 之所以要有 SupportedProviders：只靠 HasAdapter，域内无法回答「本产品一共认哪些
+// 厂商」，而这个问题决定前端下拉里该出现哪些选项。两者合成一个接口而不是拆成可选
+// 接口——可选项一旦缺失就会静默降级成「没有厂商」，那正是要防的失效方式。
 type DiscoveryAdapterInspector interface {
 	HasAdapter(provider, serviceCode string) bool
+	SupportedProviders() []cloud.ProviderSupport
 }
 
 type DiscoveryRuntime struct {
@@ -53,6 +60,29 @@ func (s *Service) GetDiscoveryHealth() CapabilityStatus {
 		state = "unready"
 	}
 	return CapabilityStatus{Key: "cmdbDiscovery", State: state, BuildCapability: true, DeploymentReadiness: ready, ActorPermission: true, MissingRequirements: missing}
+}
+
+// ListCloudProviders 返回本产品识别的云厂商清单及其发现能力。
+//
+// 「识别得到」与「能自动发现」是两件事：厂商进了这张清单才能建云账号（DTO 枚举由
+// 守卫测试与本清单对齐），notImplemented=true 表示可以手工登记资源但不会自动发现。
+// 此前这两件事分属两处清单且互不知情，表现为「适配器已接入但账号建不了」。
+func (s *Service) ListCloudProviders() []cloud.ProviderSupport {
+	if s.discoveryRuntime.Adapters == nil {
+		// 注册表未装配时不能返回空切片：那会被读成「本产品不认任何厂商」，
+		// 而真实情况是「认得、但都没接适配器」。全量标未接入才是实话。
+		out := make([]cloud.ProviderSupport, 0, len(cloud.KnownProviders))
+		for _, p := range cloud.KnownProviders {
+			out = append(out, cloud.ProviderSupport{
+				Provider:       p,
+				DisplayName:    cloud.ProviderDisplayName(p),
+				ServiceCodes:   []string{},
+				NotImplemented: true,
+			})
+		}
+		return out
+	}
+	return s.discoveryRuntime.Adapters.SupportedProviders()
 }
 
 func NewService(repo Repository, productionSvc *ProductionService, logger *zap.SugaredLogger) *Service {

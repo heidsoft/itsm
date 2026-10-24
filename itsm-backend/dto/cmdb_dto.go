@@ -233,7 +233,7 @@ type UpdateCILifecycleRequest struct {
 // NormalizeProvider 归一化，不作为可写入的取值。
 type CloudServiceRequest struct {
 	ParentID         int                    `json:"parentId,omitempty"`
-	Provider         string                 `json:"provider" binding:"required,oneof=aliyun tencent huawei aws azure onprem"`
+	Provider         string                 `json:"provider" binding:"required,oneof=aliyun tencent huawei aws azure volcengine k8s onprem"`
 	Category         string                 `json:"category,omitempty"`
 	ServiceCode      string                 `json:"serviceCode" binding:"required"`
 	ServiceName      string                 `json:"serviceName" binding:"required"`
@@ -271,7 +271,7 @@ type CloudServiceResponse struct {
 
 // CloudAccount DTOs
 type CloudAccountRequest struct {
-	Provider        string   `json:"provider" binding:"required,oneof=aliyun tencent huawei aws azure onprem"`
+	Provider        string   `json:"provider" binding:"required,oneof=aliyun tencent huawei aws azure volcengine k8s onprem"`
 	AccountID       string   `json:"accountId" binding:"required"`
 	AccountName     string   `json:"accountName" binding:"required"`
 	CredentialRef   string   `json:"credentialRef,omitempty"`

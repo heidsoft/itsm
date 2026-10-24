@@ -3412,6 +3412,92 @@ cd itsm-backend && go build ./... \
   && go test ./service/cloud/... ./handlers/cmdb/... ./handlers/change/
 ```
 
+### 1.93 云厂商发现能力端点，与「接好了但用不了」的枚举漂移（2026-10-24）
+
+**新增端点**
+
+```
+GET /api/v1/cmdb/discovery/providers      # cmdb:read（继承 /discovery 组级声明）
+```
+
+```json
+{
+  "code": 0, "message": "success",
+  "data": {
+    "total": 8,
+    "items": [
+      {"provider":"aliyun",     "displayName":"阿里云",     "serviceCodes":["ecs"], "notImplemented":false},
+      {"provider":"volcengine", "displayName":"火山引擎",   "serviceCodes":["ecs"], "notImplemented":false},
+      {"provider":"huawei",     "displayName":"华为云",     "serviceCodes":[],      "notImplemented":true}
+    ]
+  }
+}
+```
+
+响应**全量返回厂商全集**，而不是只回「有适配器」的。这是本端点最容易写错的一处：
+若按「有没有适配器」过滤，新接入的厂商会从建号下拉里凭空消失（下文那条缺陷就是
+这个失效方式的前端版本）。`notImplemented=true` 的语义是「可以建云账号、可以手工
+登记资源，但不会自动发现」——把「配了账号也不会发现」从事后失败变成事前可见。
+
+端点不含租户数据，但仍要求租户上下文（与 `/api/v1/cmdb/*` 其余端点同口径）：
+未认证请求不应探测出本实例支持哪些云厂商。
+
+**上一批的空头支票（已更正）**
+
+§1.92 写过「`SupportedProviders()` 已把它们标为 `notImplemented`，前端可据此展示
+暂不支持」。这句话**没有代码支撑**：该函数当时只有装配代码与单测消费，没有任何
+HTTP 端点，前端无从调用。本次补上端点后这句话才成立。写「可据此」这类话之前必须
+先确认调用点存在。
+
+**顺带实测出的缺陷：适配器接好了，产品面用不了**
+
+补端点时核对厂商清单，发现 `volcengine` 与 `k8s` 两个适配器（§1.91/§1.92 刚接入）
+**根本无法被使用**——`dto` 里 4 处 provider 枚举还停留在六个旧值：
+
+```go
+binding:"omitempty,oneof=aliyun tencent huawei aws azure onprem"   // cloud_dto.go ×2
+binding:"required,oneof=aliyun tencent huawei aws azure onprem"     // cmdb_dto.go ×2
+```
+
+`POST /api/v1/cmdb/cloud-accounts` 传 `provider=volcengine` 会被 400 拒掉，前端
+4 处厂商下拉同样没有这两项。发现能力等于零。
+
+这类漂移**不会有任何编译错误**，也不会让任何既有测试变红——它只表现为「功能做完
+了但用户用不了」，是本项目最难靠肉眼发现的一类缺陷。
+
+修法分两层：
+
+1. **补值**：后端 4 处枚举 + 前端 4 处下拉（云账号/云服务/云资源三个页面 + 仪表盘
+   厂商名映射）+ CI 编辑器的 i18n 中英各 2 条。
+2. **补守卫**：`dto/cloud_provider_enum_guard_test.go` 扫描 `dto/` 源码里每一处
+   provider `oneof`，**逐处**（不是取并集——并集会掩盖「其中一处漏改」）与
+   `cloud.KnownProviders` 比对。守卫本身也有防假绿：扫描器一处都没找到时直接失败。
+
+**厂商全集下沉为单一真源**
+
+此前 `NormalizeProvider` 只做字符串归一（alibaba→aliyun），回答不了「本产品一共认
+哪些厂商」。新增 `cloud.KnownProviders` 作为全集，`Registry.SupportedProviders()`
+按「逐个问注册表装了没有」推导矩阵，`service/cloud/adapters` 里那份硬编码条目清单
+（5 条 implemented + 2 条 notImplemented）随之删除——它正是「注册了新适配器但忘了
+同步清单」的第二种写法。
+
+**升级注意事项**
+
+- 无需改配置或执行迁移，本次只新增端点并放宽两处枚举取值。
+- 若你的前端自行维护了云厂商下拉，请补齐 `volcengine` / `k8s` 两项；后端枚举已放宽，
+  前端不补的话这两个厂商仍然选不到（能力在，入口不在）。
+- 新增厂商的标准动作现在是三处，缺一处守卫会红：`cloud.KnownProviders` → `dto` 的
+  4 处 `oneof`（守卫测试强制）→ 适配器 `RegisterAll`。
+
+**验证**
+
+```bash
+cd itsm-backend && go test ./dto/... ./service/cloud/... ./handlers/cmdb/... \
+  ./middleware/... ./router/...
+# 新增/改动任何 RequirePermission 声明后：
+go run ./cmd/authz-gen
+```
+
 ## 2. 环境变量变更
 
 本次升级**移除了多个"幽灵配置项"**（在示例文件中声明但代码/Compose 从不读取，用户配置了也不生效），并修正了一个 Grafana 密码安全缺陷。

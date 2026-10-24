@@ -165,6 +165,26 @@ func (h *Handler) GetCapabilities(c *gin.Context) {
 	}}})
 }
 
+// ListCloudProviders 云厂商发现能力清单。
+//
+// @Summary  云厂商发现能力清单
+// @Description 返回本产品识别的云厂商全集及各自的发现能力。清单是全量（含未接入的），notImplemented=true 表示可以建云账号/手工登记资源但不会自动发现——把「配了账号也不会发现」从事后失败变成事前可见。与云账号/云服务的 provider 枚举同源（守卫测试强制对齐）。
+// @Tags CMDB-云资源
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} common.Response{data=dto.CloudProvidersResponse}
+// @Failure 401 {object} common.Response "租户上下文缺失"
+// @Router /api/v1/cmdb/discovery/providers [get]
+func (h *Handler) ListCloudProviders(c *gin.Context) {
+	if _, ok := handlerctx.ResolveTenantID(c); !ok {
+		return
+	}
+	// 清单本身不含租户数据，但仍要求租户上下文：与 /api/v1/cmdb/* 其余端点同口径，
+	// 未认证请求不应探测到本实例支持哪些云厂商。
+	items := h.svc.ListCloudProviders()
+	common.Success(c, &dto.CloudProvidersResponse{Items: items, Total: len(items)})
+}
+
 func (h *Handler) GetDiscoveryHealth(c *gin.Context) {
 	health := h.svc.GetDiscoveryHealth()
 	common.Success(c, health)

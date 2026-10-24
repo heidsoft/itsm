@@ -32,6 +32,8 @@ export const buildCloudProviderOptions = (t: TranslationFn) => [
   { label: t('ciEditor.cloudProviderOptions.tencent'), value: 'tencent' },
   { label: t('ciEditor.cloudProviderOptions.azure'), value: 'azure' },
   { label: t('ciEditor.cloudProviderOptions.aws'), value: 'aws' },
+  { label: t('ciEditor.cloudProviderOptions.volcengine'), value: 'volcengine' },
+  { label: t('ciEditor.cloudProviderOptions.k8s'), value: 'k8s' },
   { label: t('ciEditor.cloudProviderOptions.onprem'), value: 'onprem' },
 ];
 

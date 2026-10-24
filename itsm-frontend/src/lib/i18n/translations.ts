@@ -1271,6 +1271,8 @@ export const translations = {
         tencent: '腾讯云',
         azure: 'Azure',
         aws: 'AWS',
+        volcengine: '火山引擎',
+        k8s: 'Kubernetes',
         onprem: '私有云',
       },
       // 云资源同步状态
@@ -6328,6 +6330,8 @@ export const translations = {
         tencent: 'Tencent Cloud',
         azure: 'Azure',
         aws: 'AWS',
+        volcengine: 'Volcengine',
+        k8s: 'Kubernetes',
         onprem: 'Private Cloud',
       },
       cloudSyncStatusOptions: {

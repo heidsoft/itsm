@@ -193,6 +193,7 @@ func precheckRoutePermissions() map[string]map[string]Permission {
 			"/api/v1/cmdb/discovery/health":                        {Resource: "cmdb", Action: "read"},
 			"/api/v1/cmdb/discovery/jobs":                          {Resource: "cmdb", Action: "read"},
 			"/api/v1/cmdb/discovery/jobs/*":                        {Resource: "cmdb", Action: "read"},
+			"/api/v1/cmdb/discovery/providers":                     {Resource: "cmdb", Action: "read"},
 			"/api/v1/cmdb/discovery/results":                       {Resource: "cmdb", Action: "read"},
 			"/api/v1/cmdb/discovery/sources":                       {Resource: "cmdb", Action: "read"},
 			"/api/v1/cmdb/export":                                  {Resource: "cmdb", Action: "read"},

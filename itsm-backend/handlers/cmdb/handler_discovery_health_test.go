@@ -5,6 +5,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"itsm-backend/service/cloud"
+
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
@@ -14,6 +16,16 @@ type readyAdapterInspector struct{}
 
 func (readyAdapterInspector) HasAdapter(provider, serviceCode string) bool {
 	return provider == "aliyun" && serviceCode == "ecs"
+}
+
+// SupportedProviders 声明本替身「装了什么」：只有阿里云 ECS。
+// 必须与 HasAdapter 说同一件事——两处口径不一致正是能力清单会撒谎的根源。
+func (readyAdapterInspector) SupportedProviders() []cloud.ProviderSupport {
+	return []cloud.ProviderSupport{{
+		Provider:     "aliyun",
+		DisplayName:  cloud.ProviderDisplayName("aliyun"),
+		ServiceCodes: []string{"ecs"},
+	}}
 }
 
 func TestDiscoveryHealthReportsInitializedWorker(t *testing.T) {
