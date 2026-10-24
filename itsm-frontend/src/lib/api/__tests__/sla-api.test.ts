@@ -196,18 +196,6 @@ describe('SLAApi', () => {
     });
   });
 
-  describe('getSLAMetrics', () => {
-    it('should get metric records with camelCase query', async () => {
-      mockGet.mockResolvedValue({ metrics: [{ id: 1 }], count: 1 });
-      const result = await SLAApi.getSLAMetrics({ slaDefinitionId: 3, metricType: 'response_time' });
-      expect(mockGet).toHaveBeenCalledWith('/api/v1/sla/metrics', {
-        slaDefinitionId: '3',
-        metricType: 'response_time',
-      });
-      expect(result.count).toBe(1);
-    });
-  });
-
   describe('getSLAAlerts', () => {
     it('should return real alert items from monitoring', async () => {
       mockPost.mockResolvedValue({

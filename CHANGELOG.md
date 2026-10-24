@@ -54,6 +54,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **`GET /api/v1/sla/metrics` 用空列表伪装「已采集」（2026-10-24，能力状态缺陷，CLI/MCP 实测暴露）**：`sla_metrics` 表只有读路径、没有任何写入方（`CreateMetric` 全仓零生产调用），端点永远返回 `{"metrics":[],"count":0}` 的 200 成功——调用方无法区分「采集正常且无异常」和「根本没有采集」。现在按已声明边界返回 HTTP 501 / `code: 5010`，并在消息中指向真实可用的 `GET /api/v1/sla/performance`、`POST /api/v1/sla/monitoring`、`GET /api/v1/sla/stats`。同步删除不可达的 `Service.GetSLAMetrics`、仓储 `CreateMetric`/`GetMetrics`、领域 `SLAMetric`、`dto.CreateSLAMetricRequest`/`SLAMetricResponse`，前端无调用方的 `SLAApi.getSLAMetrics` 一并移除；CLI 的 `itsm sla metrics` 保留并如实透传 501，建议改用 `sla performance` / `sla monitoring` / `sla stats`。表结构保留，后续接入采集任务时再恢复端点。回归锁 1 例：断言 HTTP 501、`code=5010` 且消息包含替代端点。
+
 - **死信可以直接取消：cancel 放行 `dead_letter`（2026-10-24）**：此前 cancel/bulk-cancel 只放行 pending/processing，清理死信必须先 replay 回 pending（worker 可能在两跳之间真的重新执行一次）再 cancel。prod 257 条死信归因处置实测被 409 挡住。现在单条与批量 cancel 均放行 dead_letter（终态仍拒绝），fencing/审计语义不变。回归锁 `handlers/operations/service_test.go` 2 例。UPGRADE §1.82。
 
 - **AI 工具参数用 snake_case，诱导 agent 形成第二套方言（2026-10-24，AI 契约缺陷）**：`GET /cmdb/ontology` 的 `aiTools[].argsSchema` 与 `ToolRegistry.Execute` 的解析都用 `ci_id`/`ci_number`/`ticket_id`/`with_relations` 等 snake_case——HTTP API 早已统一 camelCase，模型照着 schema 构造调用就与其余接口不一致。全部改为 camelCase（`ciId`/`ciNumber`/`ciType`/`ticketId`/`requesterId`/`assigneeId`/`ticketTypeId`/`withRelations`/`sourceCiId`/`targetCiId`/`relationshipType`/`relationshipId`/`defaultPriority`），工具返回中的 `ci_id`/`ci_number`/`relationship_id` 同步改名；`create_ticket`/`update_ticket` 的 `argsSchema` 补齐 Execute 实际读取的字段与 `required`（此前 `create_ticket` 只声明 `ciId`，连 `title` 都查不到）。新增守卫测试遍历全部工具，断言参数与 `required` 不含下划线且必填项已声明。直接按旧参数名调用 AI 工具的 agent 需要改名。

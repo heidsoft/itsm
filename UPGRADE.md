@@ -2851,6 +2851,42 @@ cd itsm-backend && go test -count=1 ./handlers/ticket/ ./dto/
 cd itsm-backend && go test -count=1 ./service/ -run 'TestToolSchemas|TestWriteToolSchemas|TestE2E_|TestToolRegistry'
 ```
 
+### 1.83 `GET /api/v1/sla/metrics` 改为显式 501（2026-10-24，行为变更：空成功 → 未实现）
+
+**问题**：`sla_metrics` 表只有读路径，没有任何生产写入方（`CreateMetric` 全仓零调用）。
+端点此前返回 HTTP 200 + `{"metrics":[],"count":0}`，调用方无法区分「采集正常、无异常」
+与「采集从未接入」。
+
+**修复后行为**：`GET /api/v1/sla/metrics` 返回 HTTP **501** / `code: 5010`，消息指向可用端点：
+
+```json
+{
+  "code": 5010,
+  "message": "SLA 指标采集尚未实现：当前版本不写入 SLA 指标样本，请改用 GET /api/v1/sla/performance 或 POST /api/v1/sla/monitoring"
+}
+```
+
+| 需求 | 改用 |
+|:---|:---|
+| 按服务类型/优先级的绩效与合规聚合 | `GET /api/v1/sla/performance` |
+| 监控大屏实时快照与告警 | `POST /api/v1/sla/monitoring` |
+| 全量统计汇总 | `GET /api/v1/sla/stats` |
+| 窗口合规报表 | `GET /api/v1/sla/compliance-report` |
+
+**配套调整**：前端 `SLAApi.getSLAMetrics()`（无生产调用方）已移除；CLI 保留
+`itsm sla metrics` 命令，但会如实返回后端的 501 与替代端点提示——日常使用请改走
+`itsm sla performance` / `itsm sla monitoring` / `itsm sla stats`。
+直接依赖该端点的自建脚本需要改用上表接口。
+
+**未做数据迁移**：`sla_metrics` 表与 Ent schema 保留（无破坏性变更）。后续接入指标采集任务时，
+可以在这张表上恢复该端点。
+
+**验证**
+
+```bash
+cd itsm-backend && go test -count=1 ./handlers/sla/ -run 'TestSLAHandler_Violations_AndMetrics'
+```
+
 ## 2. 环境变量变更
 
 本次升级**移除了多个"幽灵配置项"**（在示例文件中声明但代码/Compose 从不读取，用户配置了也不生效），并修正了一个 Grafana 密码安全缺陷。

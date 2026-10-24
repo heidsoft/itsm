@@ -427,9 +427,11 @@ func TestSLAHandler_Violations_AndMetrics(t *testing.T) {
 		assert.Equal(t, common.SuccessCode, resp.Code, "body=%s", slaStr(resp))
 	})
 
-	t.Run("SLA 指标查询成功", func(t *testing.T) {
-		resp := doSLAReq(t, r, "GET", "/api/v1/sla/metrics?metric_type=response", nil, false)
-		assert.Equal(t, common.SuccessCode, resp.Code, "body=%s", slaStr(resp))
+	t.Run("指标采集未实现时返回 501 而不是空成功", func(t *testing.T) {
+		status, resp := doSLAReqStatus(t, r, "GET", "/api/v1/sla/metrics?metricType=response")
+		assert.Equal(t, http.StatusNotImplemented, status, "body=%s", slaStr(resp))
+		assert.Equal(t, common.NotImplementedCode, resp.Code, "body=%s", slaStr(resp))
+		assert.Contains(t, resp.Message, "/api/v1/sla/performance")
 	})
 
 	t.Run("告警历史查询成功", func(t *testing.T) {
@@ -617,6 +619,17 @@ func doSLAReq(t *testing.T, r *gin.Engine, method, path string, body interface{}
 	var resp common.Response
 	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
 	return &resp
+}
+
+func doSLAReqStatus(t *testing.T, r *gin.Engine, method, path string) (int, *common.Response) {
+	t.Helper()
+	req, err := http.NewRequest(method, path, nil)
+	require.NoError(t, err)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+	var resp common.Response
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
+	return w.Code, &resp
 }
 
 func itoaSLA(i int) string { return strconv.Itoa(i) }

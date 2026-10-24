@@ -326,30 +326,15 @@ func (h *Handler) DeleteAlertRule(c *gin.Context) {
 }
 
 // GetSLAMetrics handles GET /api/v1/sla/metrics
+//
+// sla_metrics 表没有写入方（无指标采集任务），读它只会返回空列表。空成功会让
+// 调用方误以为「已采集且无异常」，因此按已声明边界返回 501。
 func (h *Handler) GetSLAMetrics(c *gin.Context) {
-	tenantIDVal, ok := handlerctx.ResolveTenantID(c)
-	if !ok {
+	if _, ok := handlerctx.ResolveTenantID(c); !ok {
 		return
 	}
-	filters := make(map[string]interface{})
-	// 查询参数契约为 camelCase，与前端 API client 保持逐字段一致。
-	if slaID := c.Query("slaDefinitionId"); slaID != "" {
-		id, _ := strconv.Atoi(slaID)
-		filters["sla_definition_id"] = id
-	}
-	if metricType := c.Query("metricType"); metricType != "" {
-		filters["metric_type"] = metricType
-	}
-
-	res, err := h.svc.GetSLAMetrics(c.Request.Context(), tenantIDVal, filters)
-	if err != nil {
-		failSLAQuery(c, err, "获取SLA指标失败")
-		return
-	}
-	common.Success(c, gin.H{
-		"metrics": res,
-		"count":   len(res),
-	})
+	common.Fail(c, common.NotImplementedCode,
+		"SLA 指标采集尚未实现：当前版本不写入 SLA 指标样本，请改用 GET /api/v1/sla/performance 或 POST /api/v1/sla/monitoring")
 }
 
 // queryParam 优先读 camelCase（前端 HTTP 契约统一使用 camelCase），

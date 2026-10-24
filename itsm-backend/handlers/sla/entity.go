@@ -158,18 +158,6 @@ type SLAPerformanceRow struct {
 	AverageResolutionMinutes float64 `json:"averageResolutionMinutes"`
 }
 
-// SLAMetric represents SLA performance indicators
-type SLAMetric struct {
-	ID              int       `json:"id"`
-	SLADefinitionID int       `json:"slaDefinitionId"`
-	MetricType      string    `json:"metricType"`
-	MetricName      string    `json:"metricName"`
-	MetricValue     float64   `json:"metricValue"`
-	Unit            string    `json:"unit"`
-	MeasurementTime time.Time `json:"measurementTime"`
-	TenantID        int       `json:"tenantId"`
-}
-
 // SLAAlertRule defines when to trigger an alert before violation
 type SLAAlertRule struct {
 	ID                   int      `json:"id"`

@@ -1849,6 +1849,27 @@ GET /sla/violations
 Authorization: Bearer <accessToken>
 ```
 
+### SLA 指标（未实现，显式 501）
+
+```http
+GET /api/v1/sla/metrics
+Authorization: Bearer <accessToken>
+```
+
+权限 `sla:read`。该端点读取的 `sla_metrics` 表当前没有写入方（无指标采集任务），
+因此不再返回空列表的 200 成功，而是返回 HTTP 501 / `code: 5010`：
+
+```json
+{
+  "code": 5010,
+  "message": "SLA 指标采集尚未实现：当前版本不写入 SLA 指标样本，请改用 GET /api/v1/sla/performance 或 POST /api/v1/sla/monitoring"
+}
+```
+
+按需求改用：绩效聚合 `GET /api/v1/sla/performance`、实时快照 `POST /api/v1/sla/monitoring`、
+全量汇总 `GET /api/v1/sla/stats`、窗口报表 `GET /api/v1/sla/compliance-report`。
+`slaDefinitionId`、`metricType` 查询参数不再生效。
+
 ### 管理者统一服务质量报表
 
 ```http

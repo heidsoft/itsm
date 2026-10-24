@@ -25,10 +25,6 @@ type Repository interface {
 	CountViolations(ctx context.Context, tenantID int, isResolved *bool) (int, error)
 	UpdateViolationStatus(ctx context.Context, id int, isResolved bool, notes string, tenantID int) error
 
-	// Metrics
-	CreateMetric(ctx context.Context, m *SLAMetric) (*SLAMetric, error)
-	GetMetrics(ctx context.Context, tenantID int, filters map[string]interface{}) ([]*SLAMetric, error)
-
 	// GetSLAMonitoring 返回监控大屏的指标快照。start/end 是强制的统计窗口，
 	// 实现必须将其下推到查询，不得忽略窗口参数。
 	GetSLAMonitoring(ctx context.Context, tenantID int, start, end time.Time) (*SLAMonitoringData, error)

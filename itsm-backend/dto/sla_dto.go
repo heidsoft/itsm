@@ -97,30 +97,6 @@ type SLAViolationResponse struct {
 	UpdatedAt       time.Time  `json:"updatedAt" example:"2024-01-01T00:00:00Z"`
 }
 
-// SLA指标相关DTO
-type CreateSLAMetricRequest struct {
-	SLADefinitionID int                    `json:"slaDefinitionId" binding:"required" example:"1"`
-	MetricType      string                 `json:"metricType" binding:"required" example:"response_time"`
-	MetricName      string                 `json:"metricName" binding:"required" example:"平均响应时间"`
-	MetricValue     float64                `json:"metricValue" binding:"required" example:"25.5"`
-	Unit            string                 `json:"unit" example:"分钟"`
-	Metadata        map[string]interface{} `json:"metadata" example:"{\"source\":\"system\"}"`
-}
-
-type SLAMetricResponse struct {
-	ID              int                    `json:"id" example:"1"`
-	SLADefinitionID int                    `json:"slaDefinitionId" example:"1"`
-	MetricType      string                 `json:"metricType" example:"response_time"`
-	MetricName      string                 `json:"metricName" example:"平均响应时间"`
-	MetricValue     float64                `json:"metricValue" example:"25.5"`
-	Unit            string                 `json:"unit" example:"分钟"`
-	MeasurementTime time.Time              `json:"measurementTime" example:"2024-01-01T00:00:00Z"`
-	Metadata        map[string]interface{} `json:"metadata"`
-	TenantID        int                    `json:"tenantId" example:"1"`
-	CreatedAt       time.Time              `json:"createdAt" example:"2024-01-01T00:00:00Z"`
-	UpdatedAt       time.Time              `json:"updatedAt" example:"2024-01-01T00:00:00Z"`
-}
-
 // SLAMonitoringRequest 监控大屏指标查询。窗口缺省时服务端使用最近 30 天。
 // 监控接口只按认证中间件注入的租户上下文 + 时间窗口聚合，不接受请求体里的
 // slaDefinitionId / ticketId 等自报字段，避免跨范围注入。

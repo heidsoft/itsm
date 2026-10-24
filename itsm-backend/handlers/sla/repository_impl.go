@@ -14,7 +14,6 @@ import (
 	"itsm-backend/ent/slaalerthistory"
 	"itsm-backend/ent/slaalertrule"
 	"itsm-backend/ent/sladefinition"
-	"itsm-backend/ent/slametric"
 	"itsm-backend/ent/slastate"
 	"itsm-backend/ent/slaviolation"
 	"itsm-backend/ent/ticket"
@@ -391,59 +390,6 @@ func (r *EntRepository) ListAlertHistory(ctx context.Context, tenantID int, page
 		res = append(res, toSLAAlertHistoryDomain(e))
 	}
 	return res, total, nil
-}
-
-// --- Metrics ---
-
-func toSLAMetricDomain(e *ent.SLAMetric) *SLAMetric {
-	if e == nil {
-		return nil
-	}
-	return &SLAMetric{
-		ID:              e.ID,
-		SLADefinitionID: e.SLADefinitionID,
-		MetricType:      e.MetricType,
-		MetricName:      e.MetricName,
-		MetricValue:     e.MetricValue,
-		Unit:            e.Unit,
-		MeasurementTime: e.MeasurementTime,
-		TenantID:        e.TenantID,
-	}
-}
-
-func (r *EntRepository) CreateMetric(ctx context.Context, m *SLAMetric) (*SLAMetric, error) {
-	e, err := r.client.SLAMetric.Create().
-		SetSLADefinitionID(m.SLADefinitionID).
-		SetMetricType(m.MetricType).
-		SetMetricName(m.MetricName).
-		SetMetricValue(m.MetricValue).
-		SetUnit(m.Unit).
-		SetMeasurementTime(m.MeasurementTime).
-		SetTenantID(m.TenantID).
-		Save(ctx)
-	if err != nil {
-		return nil, err
-	}
-	return toSLAMetricDomain(e), nil
-}
-
-func (r *EntRepository) GetMetrics(ctx context.Context, tenantID int, filters map[string]interface{}) ([]*SLAMetric, error) {
-	q := r.client.SLAMetric.Query().Where(slametric.TenantID(tenantID))
-	if val, ok := filters["sla_definition_id"]; ok {
-		q = q.Where(slametric.SLADefinitionID(val.(int)))
-	}
-	if val, ok := filters["metric_type"]; ok {
-		q = q.Where(slametric.MetricType(val.(string)))
-	}
-	es, err := q.All(ctx)
-	if err != nil {
-		return nil, err
-	}
-	var res []*SLAMetric
-	for _, e := range es {
-		res = append(res, toSLAMetricDomain(e))
-	}
-	return res, nil
 }
 
 // monitoringScanLimit 是单次聚合允许扫描的工单上限。命中上限时 truncated=true，

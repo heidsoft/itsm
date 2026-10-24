@@ -179,10 +179,6 @@ func (s *Service) UpdateSLAViolationStatus(ctx context.Context, id int, isResolv
 
 // Metrics
 
-func (s *Service) GetSLAMetrics(ctx context.Context, tenantID int, filters map[string]interface{}) ([]*SLAMetric, error) {
-	return s.repo.GetMetrics(ctx, tenantID, filters)
-}
-
 func (s *Service) GetSLAMonitoring(ctx context.Context, tenantID int, start, end time.Time) (*SLAMonitoringData, error) {
 	if tenantID <= 0 {
 		return nil, ErrTenantRequired

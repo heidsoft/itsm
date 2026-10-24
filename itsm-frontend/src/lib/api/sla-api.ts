@@ -195,18 +195,6 @@ export interface SLAPerformanceResult {
   truncated: boolean;
 }
 
-/** GET /api/v1/sla/metrics 的单条指标记录（SLA 指标表，非时间序列） */
-export interface SLAMetricRecord {
-  id: number;
-  slaDefinitionId: number;
-  metricType: string;
-  metricName: string;
-  metricValue: number;
-  unit: string;
-  measurementTime: string;
-  tenantId: number;
-}
-
 /**
  * POST /api/v1/sla/definitions 与 PUT /api/v1/sla/definitions/:id 的请求体。
  * 字段与后端 dto.CreateSLADefinitionRequest / UpdateSLADefinitionRequest 一致；
@@ -420,28 +408,6 @@ export class SLAApi {
       totalPages: response?.totalPages ?? 0,
       dimension: params.dimension,
       truncated: response?.truncated ?? false,
-    };
-  }
-
-  // 获取SLA度量记录
-  // 契约：GET /api/v1/sla/metrics，返回 SLA 指标表记录；后端没有按日时间序列端点，
-  // 因此本方法不提供 trendData，趋势图必须等真实时间序列接口后再做。
-  static async getSLAMetrics(params?: {
-    slaDefinitionId?: number;
-    metricType?: string;
-  }): Promise<{ metrics: SLAMetricRecord[]; count: number }> {
-    const query: Record<string, string> = {};
-    if (params?.slaDefinitionId) query.slaDefinitionId = String(params.slaDefinitionId);
-    if (params?.metricType) query.metricType = params.metricType;
-
-    const response = await httpClient.get<{
-      metrics?: SLAMetricRecord[];
-      count?: number;
-    }>('/api/v1/sla/metrics', query);
-
-    return {
-      metrics: response?.metrics ?? [],
-      count: response?.count ?? 0,
     };
   }
 
