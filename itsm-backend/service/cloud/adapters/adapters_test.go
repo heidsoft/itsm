@@ -7,7 +7,10 @@ import (
 
 	"itsm-backend/service/cloud"
 	"itsm-backend/service/cloud/aliyun"
+	"itsm-backend/service/cloud/aws"
 	"itsm-backend/service/cloud/kubernetes"
+	"itsm-backend/service/cloud/tencent"
+	"itsm-backend/service/cloud/volcengine"
 )
 
 // TestRegisterAll_AdaptersBecomeReachable 回归：注册是云发现的必要前提。
@@ -23,6 +26,9 @@ func TestRegisterAll_AdaptersBecomeReachable(t *testing.T) {
 	for _, tc := range []struct{ provider, service string }{
 		{aliyun.Provider, aliyun.ServiceCodeECS},
 		{kubernetes.Provider, kubernetes.ServiceCode},
+		{aws.Provider, aws.ServiceCodeEC2},
+		{tencent.Provider, tencent.ServiceCodeCVM},
+		{volcengine.Provider, volcengine.ServiceCodeECS},
 	} {
 		if _, err := reg.RequireAdapter(tc.provider, tc.service); err != nil {
 			t.Fatalf("expected %s/%s to be registered: %v", tc.provider, tc.service, err)
@@ -45,15 +51,22 @@ func TestSupportedProviders_UnimplementedAreFlagged(t *testing.T) {
 	for _, p := range list {
 		byProvider[p.Provider] = p
 	}
-	for _, p := range []string{"aliyun", "k8s", "aws", "tencent", "volcengine"} {
+	for _, p := range []string{"aliyun", "k8s", "aws", "tencent", "volcengine", "huawei", "azure"} {
 		if _, ok := byProvider[p]; !ok {
 			t.Fatalf("expected %s in capability list, got %v", p, byProvider)
 		}
 	}
-	if byProvider["aliyun"].NotImplemented {
-		t.Fatal("aliyun is implemented and must not be flagged")
+	// 三家新接入的厂商（AWS SigV4 / 腾讯 TC3 / 火山 HMAC-SHA256）与已有的一样，
+	// 都已注册真实适配器，不该再被标成未实现。
+	for _, p := range []string{"aliyun", "k8s", "aws", "tencent", "volcengine"} {
+		if byProvider[p].NotImplemented {
+			t.Fatalf("%s is implemented and must not be flagged", p)
+		}
+		if len(byProvider[p].ServiceCodes) == 0 {
+			t.Fatalf("%s must advertise its service codes", p)
+		}
 	}
-	for _, p := range []string{"aws", "tencent", "volcengine"} {
+	for _, p := range []string{"huawei", "azure"} {
 		if !byProvider[p].NotImplemented {
 			t.Fatalf("%s has no adapter and must be flagged as not implemented", p)
 		}

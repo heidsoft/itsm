@@ -15,7 +15,10 @@ import (
 
 	"itsm-backend/service/cloud"
 	"itsm-backend/service/cloud/aliyun"
+	"itsm-backend/service/cloud/aws"
 	"itsm-backend/service/cloud/kubernetes"
+	"itsm-backend/service/cloud/tencent"
+	"itsm-backend/service/cloud/volcengine"
 )
 
 // RegisterAll 把所有内建适配器注册进 reg。
@@ -26,10 +29,16 @@ func RegisterAll(reg *cloud.Registry, logger *zap.SugaredLogger) {
 	if reg == nil {
 		return
 	}
-	// 阿里云：仅 ECS（实例）已实现。
+	// 阿里云：仅 ECS（实例）已实现，走官方 SDK。
 	reg.Register(aliyun.NewAliyunECSAdapter(logger))
 	// Kubernetes：只读发现 Pod，走 APIServer REST，不引 client-go。
 	reg.Register(kubernetes.NewAdapter(logger))
+	// AWS：EC2 只读发现，SigV4 手写签名，不引 aws-sdk-go-v2。
+	reg.Register(aws.NewAdapter(logger))
+	// 腾讯云：CVM 只读发现，TC3-HMAC-SHA256 手写签名。
+	reg.Register(tencent.NewAdapter(logger))
+	// 火山引擎：ECS 只读发现，HMAC-SHA256 签名（与 SigV4 同骨架、不同细节）。
+	reg.Register(volcengine.NewAdapter(logger))
 }
 
 // ProviderSupport 描述一个厂商当前的发现能力。
@@ -63,13 +72,27 @@ func SupportedProviders(reg *cloud.Registry) []ProviderSupport {
 			ServiceCodes:   []string{kubernetes.ServiceCode},
 			NotImplemented: false,
 		},
-		// 以下厂商标识已在 cloud.NormalizeProvider 归一，凭据解析/ACCOUNT 模型
-		// 也已就绪，但发现适配器未接入：接入 AWS/Tencent/火山需要各自的签名
-		// （SigV4 / TC3）或官方 SDK，属于独立工作项，不应以「注册了但跑不通」
-		// 的方式假装支持。
-		{Provider: "aws", DisplayName: cloud.ProviderDisplayName("aws"), NotImplemented: true},
-		{Provider: "tencent", DisplayName: cloud.ProviderDisplayName("tencent"), NotImplemented: true},
-		{Provider: "volcengine", DisplayName: cloud.ProviderDisplayName("volcengine"), NotImplemented: true},
+		{
+			Provider:       aws.Provider,
+			DisplayName:    cloud.ProviderDisplayName(aws.Provider),
+			ServiceCodes:   []string{aws.ServiceCodeEC2},
+			NotImplemented: false,
+		},
+		{
+			Provider:       tencent.Provider,
+			DisplayName:    cloud.ProviderDisplayName(tencent.Provider),
+			ServiceCodes:   []string{tencent.ServiceCodeCVM},
+			NotImplemented: false,
+		},
+		{
+			Provider:       volcengine.Provider,
+			DisplayName:    cloud.ProviderDisplayName(volcengine.Provider),
+			ServiceCodes:   []string{volcengine.ServiceCodeECS},
+			NotImplemented: false,
+		},
+		// 华为云 / Azure 仍未接入：两家各有自己的签名体系（AK/SK 签名与
+		// OAuth2 + HMAC），不是「照抄现成的」就能落地，故继续显式标缺口而不是
+		// 注册一个跑不通的适配器。
 		{Provider: "huawei", DisplayName: cloud.ProviderDisplayName("huawei"), NotImplemented: true},
 		{Provider: "azure", DisplayName: cloud.ProviderDisplayName("azure"), NotImplemented: true},
 	}

@@ -85,7 +85,7 @@ func ResolveCredential(ctx context.Context, provider, credentialRef string) (*Re
 	case "k8s":
 		return ResolveKubernetesCredential(ctx, credentialRef)
 	case "volcengine":
-		return nil, fmt.Errorf("volcengine credential resolver not implemented")
+		return ResolveVolcengineCredential(ctx, credentialRef)
 	case "azure":
 		return nil, fmt.Errorf("azure credential resolver not implemented")
 	default:
@@ -191,17 +191,68 @@ func ResolveAWSCredential(ctx context.Context, credentialRef string) (*ResolvedC
 		return nil, err
 	}
 	cred := &ResolvedCredential{Provider: "aws"}
+	// endpoint 可选：AWS 的地域端点本来由 SDK 推导，但 VPC endpoint / 本地栈
+	// 这类部署必须显式给，不给就推导不出。
+	cred.Endpoint, _ = data["endpoint"].(string)
 	switch data["type"] {
 	case "keys":
 		cred.AccessKeyID, _ = data["access_key_id"].(string)
 		cred.AccessKeySecret, _ = data["secret_access_key"].(string)
+		cred.SessionToken, _ = data["session_token"].(string)
+		// 原先只校验 secret 没校验 id：漏填 access_key_id 会得到一个「看起来
+		// 解析成功」的空 AK，签出来的请求必然 AuthFailure，而错误指向的是签名
+		// 而不是配置。两把钥匙都要校验。
+		if cred.AccessKeyID == "" {
+			return nil, fmt.Errorf("access_key_id required for aws keys credential type")
+		}
 		if cred.AccessKeySecret == "" {
-			return nil, fmt.Errorf("secret_access_key required for keys credential type")
+			return nil, fmt.Errorf("secret_access_key required for aws keys credential type")
 		}
 	case "iam_role":
-		// IAM Role 不需要 AK/SK，由元数据服务自动提供
+		// 此前这一支直接返回空凭据：调用方拿到一份 AK/SK 都是空字符串的
+		// ResolvedCredential，SigV4 照签不误，请求必然失败且错误指向签名算法。
+		// 真实的 IAM Role 要走实例元数据服务（IMDS）取临时凭据，这里没有实现，
+		// 所以显式报错而不是静默产出一份无效凭据——fail closed。
+		return nil, fmt.Errorf("aws iam_role credential type is not supported: instance metadata service (IMDS) credential retrieval is not implemented, use type=keys instead")
 	default:
 		return nil, fmt.Errorf("unknown aws credential type: %v", data["type"])
+	}
+	return cred, nil
+}
+
+// ResolveVolcengineCredential 解析火山引擎凭据。
+//
+// 凭据体形如：
+//
+//	{"type":"ak","access_key_id":"AKLT...","access_key_secret":"..."}
+//	{"type":"sts","access_key_id":...,"access_key_secret":...,"session_token":"..."}
+func ResolveVolcengineCredential(_ context.Context, credentialRef string) (*ResolvedCredential, error) {
+	data, err := ParseCredentialRef(credentialRef)
+	if err != nil {
+		return nil, err
+	}
+	cred := &ResolvedCredential{Provider: "volcengine"}
+	// endpoint 可选：默认走公共接入点 open.volcengineapi.com，专有/地域接入点
+	// （如 ecs.cn-beijing.volcengineapi.com）可显式指定。
+	cred.Endpoint, _ = data["endpoint"].(string)
+	switch data["type"] {
+	case "ak", "sts":
+		cred.AccessKeyID, _ = data["access_key_id"].(string)
+		cred.AccessKeySecret, _ = data["access_key_secret"].(string)
+		if data["type"] == "sts" {
+			cred.SessionToken, _ = data["session_token"].(string)
+			if cred.SessionToken == "" {
+				return nil, fmt.Errorf("session_token required for volcengine sts credential type")
+			}
+		}
+		if cred.AccessKeyID == "" {
+			return nil, fmt.Errorf("access_key_id required for volcengine %v credential type", data["type"])
+		}
+		if cred.AccessKeySecret == "" {
+			return nil, fmt.Errorf("access_key_secret required for volcengine %v credential type", data["type"])
+		}
+	default:
+		return nil, fmt.Errorf("unknown volcengine credential type: %v", data["type"])
 	}
 	return cred, nil
 }
@@ -213,6 +264,8 @@ func resolveTencentCredential(ctx context.Context, credentialRef string) (*Resol
 		return nil, err
 	}
 	cred := &ResolvedCredential{Provider: "tencent"}
+	// endpoint 可选：默认是腾讯云的公共接入点，私有化/金融专区等接入点必须显式给。
+	cred.Endpoint, _ = data["endpoint"].(string)
 	switch data["type"] {
 	case "ak":
 		cred.AccessKeyID, _ = data["secret_id"].(string)

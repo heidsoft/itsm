@@ -3337,11 +3337,80 @@ cd itsm-backend && go build ./... \
   && go test ./connector/builtin/feishu/ ./service/cloud/... ./handlers/change/ ./database/
 ```
 
-**仍未接入（需签名或官方 SDK，独立工作项）**
+**仍未接入（独立工作项）**
 
-AWS（SigV4）、腾讯云（TC3-HMAC-SHA256）、火山（SigV4 变体）的发现适配器。三者凭据
-解析已就绪（`cloud.ResolveCredential` 支持 aws/tencent），缺的是签名实现与适配器本体；
-`SupportedProviders()` 已把它们标为 `notImplemented`，前端可据此展示「暂不支持」。
+华为云（AK/SK 签名）与 Azure（OAuth2 + HMAC）的发现适配器——两家各有自己的签名体系，
+不是「照抄现成的」就能落地，`SupportedProviders()` 把它们标为 `notImplemented`。
+
+> ⚠️ 更正上一版的一句过度声明：原先写「`SupportedProviders()` 已标 notImplemented，
+> 前端可据此展示暂不支持」。实际上该函数**只有装配代码与单测消费**，并没有对应
+> 的 HTTP 端点，前端拿不到这份清单。它是代码层的能力清单（避免「清单说支持、
+> 执行却报 no adapter registered」的自相矛盾），**不是已上线的接口**。要真正让
+> 前端展示，还需新增一条只读端点并登记授权，属独立工作项。
+
+### 1.92 云发现补齐 AWS / 腾讯云 / 火山引擎（2026-10-24，P2-7 收尾）
+
+承接 §1.91 剩下的三家。**本次无 DDL、无行为变更**，只是新增能力。
+
+**新增适配器**
+
+| 厂商 | provider / serviceCode | 接口 | 签名 |
+| --- | --- | --- | --- |
+| AWS | `aws` / `ec2` | EC2 Query API（XML） | SigV4（`AWS4-HMAC-SHA256`） |
+| 腾讯云 | `tencent` / `cvm` | `cvm.tencentcloudapi.com`（JSON） | TC3-HMAC-SHA256 |
+| 火山引擎 | `volcengine` / `ecs` | `open.volcengineapi.com`（JSON） | HMAC-SHA256（SigV4 变体） |
+
+三家都**手写签名、不引官方 SDK**。理由与 §1.91 的 K8s 一致：只读发现只需要
+「签一次请求」，而 aws-sdk-go-v2 / tencentcloud-sdk-go / volc-sdk 会带进整套
+endpoint 解析、重试、凭证链与数十个间接依赖。签名原语抽到
+`service/cloud/signing`，保证「规范请求怎么拼」只有一处实现。
+
+**火山与 SigV4 的三处差异**（混用不会报错、只会 403，所以单独列出）：
+
+1. 算法名是 `HMAC-SHA256`，不是 `AWS4-HMAC-SHA256`；
+2. 凭据范围以 `request` 结尾，不是 `aws4_request`；
+3. 派生密钥时**不给日期加 `AWS4` 盐**：`kDate = HMAC(kSecret, Date)`。
+
+**凭据体格式**
+
+```jsonc
+// AWS
+{"type":"keys","access_key_id":"AKIA...","secret_access_key":"...","endpoint":"可选"}
+// 腾讯云
+{"type":"ak","secret_id":"AKID...","secret_key":"...","endpoint":"可选"}
+// 火山引擎
+{"type":"ak","access_key_id":"AKLT...","access_key_secret":"...","endpoint":"可选"}
+{"type":"sts","access_key_id":"...","access_key_secret":"...","session_token":"..."}
+```
+
+`endpoint` 三家都支持，用于 VPC endpoint / 专有或地域接入点。AWS 的中国区地域
+（`cn-*`）会自动使用 `amazonaws.com.cn` 后缀，无需配置。
+
+**行为变更（fail closed，可能影响既有配置）**
+
+- AWS `type=iam_role` **不再被接受**：此前它返回一份 AK/SK 皆空、却被判为合法的
+  凭据。在没有任何消费者时空凭据无害；AWS 适配器落地后它会被直接送进 SigV4，
+  产出必然失败、且错误指向签名算法的请求。真实 IAM Role 要走实例元数据服务
+  （IMDSv2），而本产品通常并不跑在 EC2 上，故显式报错并说明改用 `type=keys`。
+- AWS 现在同时校验 `access_key_id` 与 `secret_access_key`（此前只校验后者）。
+
+**测试覆盖的诚实边界**
+
+| 厂商 | 官方向量 | 锁到哪一层 |
+| --- | --- | --- |
+| AWS | 有（General Reference 示例） | 规范请求哈希 + 待签名串 + **最终签名** |
+| 腾讯云 | 有，但 SecretId/SecretKey 被打码 | 规范请求哈希 + 待签名串（**最终签名无法复现**） |
+| 火山引擎 | **未公开** | Authorization 语法 + 三处与 SigV4 的差异 |
+
+也就是说：火山的签名**没有经过官方向量验证**，只有结构验证。第一次接真实火山
+账号时若出现 403，优先怀疑这三处差异而不是网络或权限。
+
+**验证**
+
+```bash
+cd itsm-backend && go build ./... \
+  && go test ./service/cloud/... ./handlers/cmdb/... ./handlers/change/
+```
 
 ## 2. 环境变量变更
 
