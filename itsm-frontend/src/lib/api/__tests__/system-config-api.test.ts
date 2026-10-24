@@ -1,4 +1,5 @@
 import { SystemConfigAPI } from '@/lib/api/system-config-api';
+import { BACKEND_MAX_PAGE_SIZE } from '@/lib/api/pagination';
 import { httpClient } from '@/lib/api/http-client';
 import type { SystemStats } from '@/types/dashboard';
 
@@ -31,7 +32,10 @@ describe('SystemConfigAPI', () => {
       const expected = { items: [], total: 0, page: 1, pageSize: 10, totalPages: 0 };
       mockGet.mockResolvedValue(expected);
       const res = await SystemConfigAPI.getConfigs();
-      expect(mockGet).toHaveBeenCalledWith('/api/v1/system-configs', { pageSize: 1000 });
+      // 后端 MaxPageSize=100 会静默截断，写死 1000 只会让读代码的人误以为
+      // 真的取到了 1000 条。断言引用同一个常量，避免实现与测试二次漂移。
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/system-configs', { pageSize: BACKEND_MAX_PAGE_SIZE });
+      expect(BACKEND_MAX_PAGE_SIZE).toBe(100);
       expect(res).toEqual(expected);
     });
   });

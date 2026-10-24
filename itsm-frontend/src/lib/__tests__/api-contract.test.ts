@@ -50,6 +50,38 @@ const KNOWN_UNMATCHED_FRONTEND_PATHS: ReadonlyArray<SkipEntry> = [
 ];
 
 /**
+ * 分段匹配器的已知假阳性。
+ *
+ * `segmentsMatch` 允许「前端动态段 ↔ 后端静态段」任意配对，于是两侧都有动态段
+ * 但位置错开时，两个不相关的路径会互相「吃掉」。实测案例（2026-10-24）：
+ *
+ *   前端  /api/v1/changes/templates/${templateId}/create
+ *         → [changes, templates, ${dyn}, create]
+ *   后端  /changes/:id/rollback-steps/:stepId
+ *         → [changes, :id, rollback-steps, :stepId]
+ *   逐段：changes==changes ✓ / templates↔:id（后端动态）✓ /
+ *         ${dyn}↔rollback-steps（前端动态）✓ / create↔:stepId（后端动态）✓
+ *   → 判定「已匹配」，但后端从未注册任何 /changes/templates 路由
+ *     （router/ 下检索 templates 只有 dashboard 与 ticket 两组）。
+ *
+ * 后果不是误报，而是漏报：这条真实缺口被判成已匹配，于是
+ * DISABLED_API_CONTRACTS 里 changeClassification 那条永远拿不到命中，
+ * 「清单不能留死条目」的断言反而失败了。
+ *
+ * 这里不放松匹配规则——实测收紧为「动态段必须一一对应」会把 32 条未匹配
+ * 放大到 74 条（其中多数是分组前缀解析的解析缺口，不是真实漂移），
+ * 得不偿失。改为把个别确认过的假阳性显式登记，路径仍在缺口统计口径内，
+ * 只是不再依赖匹配器去「看见」它。
+ */
+const MATCHER_FALSE_POSITIVES: ReadonlyArray<SkipEntry> = [
+  {
+    path: '/api/v1/changes/templates/${templateId}/create',
+    reason:
+      '被 /changes/:id/rollback-steps/:stepId 错配（两侧动态段位置错开）；后端无 /changes/templates 路由，缺口真实存在',
+  },
+];
+
+/**
  * Heuristic: a path that begins with a template-literal placeholder
  * (`${someBase}/...`) cannot be statically resolved without knowing
  * `someBase` at runtime. Examples found in the codebase:
@@ -272,7 +304,10 @@ describe('API contract: frontend ↔ backend routes', () => {
       // Skip known unmatched (TODO entries).
       if (KNOWN_UNMATCHED_FRONTEND_PATHS.some((e) => e.path === p.path)) continue;
       const parserGap = startsWithDynamicBase(p.forMatching);
-      if (!isMatched(p.forMatching, backend)) {
+      // 登记过的假阳性按「未匹配」处理，让它继续走下面的 disabled 清单判定，
+      // 而不是像 KNOWN_UNMATCHED 那样直接跳过——否则清单条目会变成死条目。
+      const maskedFalsePositive = MATCHER_FALSE_POSITIVES.some((e) => e.path === p.path);
+      if (maskedFalsePositive || !isMatched(p.forMatching, backend)) {
         const disabledIndex = DISABLED_API_CONTRACTS.findIndex(
           contract =>
             contract.file === file &&
