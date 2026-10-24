@@ -126,6 +126,9 @@ test-coverage-guard.json
 # Local run/test artifacts — audit reports and test outputs, not source.
 # (History kept locally; tracked copies were removed from the index.)
 output/
+# 根目录运行期上传的附件（真实/测试数据），不入仓。
+# 只锚定根目录：itsm-backend/uploads 存有已入库的测试夹具。
+/uploads/
 
 # Screenshots (auto-generated during testing)
 *.png
@@ -178,6 +181,7 @@ graphify-out/cache/
 .codex/
 .codex-loop/
 .workbuddy/
+.workbuddy-ai/
 .playwright-cli/
 
 # Python / Test
