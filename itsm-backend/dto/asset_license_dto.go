@@ -58,7 +58,7 @@ type UpdateLicenseRequest struct {
 	SupportContact *string  `json:"supportContact"` // 支持联系方式
 	RenewalCost    *string  `json:"renewalCost"`    // 续费成本
 	Notes          *string  `json:"notes"`          // 备注
-	Users          []int    `json:"users"`          // 授权用户列表
+	Users          *[]int   `json:"users"`          // 授权用户列表：未传保持不变，空数组表示清空
 	Tags           []string `json:"tags"`           // 标签
 }
 

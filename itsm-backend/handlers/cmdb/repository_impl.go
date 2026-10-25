@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"itsm-backend/ent"
+	"itsm-backend/ent/citype"
 	"itsm-backend/ent/cloudaccount"
 	"itsm-backend/ent/cloudresource"
 	"itsm-backend/ent/cloudservice"
@@ -647,6 +648,39 @@ func (r *EntRepository) GetCIByCloudResourceRefID(ctx context.Context, tenantID 
 	return toCIDomain(e), nil
 }
 
+func (r *EntRepository) FindCIByCloudResourceIdentity(ctx context.Context, tenantID int, provider, cloudResourceID string) (*ConfigurationItem, error) {
+	if strings.TrimSpace(cloudResourceID) == "" {
+		return nil, &ent.NotFoundError{}
+	}
+	e, err := r.client.ConfigurationItem.Query().
+		Where(
+			configurationitem.TenantID(tenantID),
+			configurationitem.CloudProviderEQ(provider),
+			configurationitem.CloudResourceIDEQ(cloudResourceID),
+		).
+		Order(ent.Asc(configurationitem.FieldID)).
+		All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if len(e) == 1 {
+		return toCIDomain(e[0]), nil
+	}
+	// 多条同名命中说明资源身份不够区分（例如不同集群里的同名 Pod）。链接错的
+	// CI 会静默改掉一台机器的台账，重复建一条至少还能被对账看见并人工合并。
+	return nil, &ent.NotFoundError{}
+}
+
+func (r *EntRepository) GetCITypeIDByName(ctx context.Context, tenantID int, name string) (int, error) {
+	e, err := r.client.CIType.Query().
+		Where(citype.TenantIDEQ(tenantID), citype.NameEQ(name), citype.IsActive(true)).
+		First(ctx)
+	if err != nil {
+		return 0, err
+	}
+	return e.ID, nil
+}
+
 // Discovery
 func (r *EntRepository) CreateDiscoverySource(ctx context.Context, ds *DiscoverySource) (*DiscoverySource, error) {
 	create := r.client.DiscoverySource.Create().
@@ -861,6 +895,9 @@ func (r *EntRepository) UpdateDiscoveryResult(ctx context.Context, res *Discover
 	update := r.client.DiscoveryResult.UpdateOneID(res.ID).
 		Where(discoveryresult.TenantID(res.TenantID)).
 		SetStatus(res.Status)
+	if res.CIID > 0 {
+		update = update.SetCiID(res.CIID)
+	}
 	if res.ErrorCode != "" {
 		update = update.SetErrorCode(res.ErrorCode)
 	} else {

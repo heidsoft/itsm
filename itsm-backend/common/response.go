@@ -42,6 +42,11 @@ const (
 	// 属于可预期的业务结果；500 是没预料到的故障。把"渠道未实现"报成 500
 	// 会让监控告警被已知边界问题刷屏，也会让调用方误以为是自己请求出错。
 	NotImplementedCode = 5010
+	// MethodNotAllowedCode 请求方法不被允许（405）。与 NotFoundCode 的区别：
+	// 路径存在、只是动词用错（如对只读端点发 DELETE）时，报 404 会让调用方
+	// 以为「接口不存在」而去翻文档，实际是方法用错。此码配合
+	// gin.Engine.HandleMethodNotAllowed 使用，见 router.SetupRoutes。
+	MethodNotAllowedCode = 4050
 	// AI 工具 RBAC 校验
 	ToolPermissionDeniedCode = 2004 // 工具权限不足
 	UnknownToolCode          = 2005 // 未知工具
@@ -72,6 +77,7 @@ var codeStatusPairs = []struct {
 	{ToolPermissionDeniedCode, http.StatusForbidden},
 	{NotFoundCode, http.StatusNotFound},
 	{UnknownToolCode, http.StatusNotFound},
+	{MethodNotAllowedCode, http.StatusMethodNotAllowed},
 	{ConflictCode, http.StatusConflict},
 	{UnprocessableEntityCode, http.StatusUnprocessableEntity},
 	{RateLimitCode, http.StatusTooManyRequests},

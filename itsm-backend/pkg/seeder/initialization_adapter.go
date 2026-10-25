@@ -176,10 +176,16 @@ func ProductionInitializers(seeder *Seeder) ([]initialization.Initializer, error
 			if err := transactional.seedCITypes(ctx); err != nil {
 				return err
 			}
+			if err := transactional.seedCloudServiceTypes(ctx); err != nil {
+				return err
+			}
 			return nil
 		},
 		verify: func(ctx context.Context, target *Seeder) error {
-			return target.verifyCMDBTemplates(ctx)
+			if err := target.verifyCMDBTemplates(ctx); err != nil {
+				return err
+			}
+			return target.verifyCloudServiceTypes(ctx)
 		},
 	}
 	extension := &productionComponentInitializer{

@@ -32,8 +32,8 @@ func (f *fakeQualityDashboard) GetTicketTrend(ctx context.Context, tenantID, day
 func newFakeQualityDashboard() *fakeQualityDashboard {
 	return &fakeQualityDashboard{
 		overview: &DashboardOverviewData{
-			KPIMetrics: []KPIMetricData{{ID: "total-tickets", Value: 5, Comparable: true, Scope: "tenant"}},
-			SLAData:    &SLAComplianceData{ComplianceRate: 0.95, TotalTickets: 100, CompliantTickets: 95},
+			KPIMetrics:           []KPIMetricData{{ID: "total-tickets", Value: 5, Comparable: true, Scope: "tenant"}},
+			SLAData:              &SLAComplianceData{ComplianceRate: 0.95, TotalTickets: 100, CompliantTickets: 95},
 			IncidentDistribution: []IncidentDistributionData{{Category: "network", Count: 3}},
 			SatisfactionData:     []SatisfactionData{{Month: "2026-10", Rating: 4.5, Responses: 12}},
 		},
@@ -41,7 +41,9 @@ func newFakeQualityDashboard() *fakeQualityDashboard {
 	}
 }
 
-func qualityViewer() DashboardViewer { return DashboardViewer{UserID: 7, Role: "admin", ScopeAll: true} }
+func qualityViewer() DashboardViewer {
+	return DashboardViewer{UserID: 7, Role: "admin", ScopeAll: true}
+}
 
 // TestServiceQualityReport_MetricVersionContract 锁定口径版本契约：
 // 总体版本 + 各块版本必须存在——下游（管理层月报、外部对账脚本）以版本号

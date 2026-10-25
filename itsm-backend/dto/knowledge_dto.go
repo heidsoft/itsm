@@ -100,6 +100,35 @@ type ListKnowledgeArticlesRequest struct {
 	Search   string `form:"search"`
 }
 
+// KnowledgeSearchItem 知识检索结果项。
+//
+// 历史实现用 map 手拼响应，key 直接写成 is_published / relevance_score /
+// created_at 等 snake_case，等于把持久化列名泄漏成 API 字段；调用方按
+// camelCase 契约读取时全部读到 undefined。这里用 DTO 固定字段名。
+type KnowledgeSearchItem struct {
+	ID             int       `json:"id"`
+	Title          string    `json:"title"`
+	Category       string    `json:"category"`
+	Snippet        string    `json:"snippet"`
+	Tags           []string  `json:"tags"`
+	IsPublished    bool      `json:"isPublished"`
+	RelevanceScore float64   `json:"relevanceScore"`
+	CreatedAt      time.Time `json:"createdAt"`
+	UpdatedAt      time.Time `json:"updatedAt"`
+}
+
+// KnowledgeSearchResponse 知识检索响应。
+//
+// 检索是 top-N（limit 上限 50）而非分页遍历：total 是本次返回条数，
+// truncated 明确告知「还有更多结果被 limit 截断」，避免调用方把截断结果
+// 当成全集（C3「截断不可判断」）。
+type KnowledgeSearchResponse struct {
+	Items     []KnowledgeSearchItem `json:"items"`
+	Total     int                   `json:"total"`
+	Limit     int                   `json:"limit"`
+	Truncated bool                  `json:"truncated"`
+}
+
 // KnowledgeStatsResponse 知识库统计响应
 type KnowledgeStatsResponse struct {
 	Total      int             `json:"total"`      // 总文章数

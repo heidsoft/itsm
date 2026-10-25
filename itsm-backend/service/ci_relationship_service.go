@@ -179,6 +179,24 @@ func (s *CIRelationshipService) GetCIRelationshipByID(ctx context.Context, id, t
 
 // ListCIRelationshipsByCIID 根据CI ID获取关系列表
 func (s *CIRelationshipService) ListCIRelationshipsByCIID(ctx context.Context, ciID, tenantID int, direction string) ([]*dto.CIRelationshipResponse, error) {
+	// 未知 CI 不能返回 ok:true + []：调用方（CLI/MCP/agent）无法区分
+	// 「该 CI 确实没有关系」与「CI 不存在 / 跨租户 / ID 写错」。
+	// 存在性口径与 GetCIByID 一致：同租户且未报废。
+	exists, err := s.client.ConfigurationItem.Query().
+		Where(
+			configurationitem.IDEQ(ciID),
+			configurationitem.TenantIDEQ(tenantID),
+			configurationitem.LifecycleStatusNEQ(common.CILifecycleStatusScrapped),
+		).
+		Exist(ctx)
+	if err != nil {
+		s.logger.Errorw("Failed to check CI existence", "error", err, "ci_id", ciID, "tenant_id", tenantID)
+		return nil, fmt.Errorf("failed to check configuration item: %w", err)
+	}
+	if !exists {
+		return nil, common.NewNotFoundError("配置项")
+	}
+
 	query := s.client.CIRelationship.Query().
 		Where(cirelationship.TenantIDEQ(tenantID), cirelationship.IsActiveEQ(true))
 

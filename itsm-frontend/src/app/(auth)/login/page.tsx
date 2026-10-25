@@ -20,7 +20,6 @@ import {
   Flex,
 } from 'antd';
 import { antdTheme } from '@/lib/antd-theme';
-import { message } from 'antd';
 import { AuthService } from '@/lib/services/auth-service';
 import { AuthAPI, type SSOProviderBrief } from '@/lib/api/auth-api';
 import { logger } from '@/lib/env';
@@ -81,7 +80,7 @@ function LoginForm() {
     try {
       const result = await AuthAPI.initiateSSOLogin(providerCode);
       if (!result.success || !result.redirectUrl) {
-        setError(result.error || 'SSO 登录发起失败，请使用账号密码登录');
+        setError(result.error || t('auth.login.ssoFailed'));
         setSsoLoading(null);
         return;
       }
@@ -89,7 +88,7 @@ function LoginForm() {
       window.location.href = result.redirectUrl;
     } catch (err) {
       logger.error('SSO 登录发起失败:', err);
-      setError(err instanceof Error ? err.message : 'SSO 登录发起失败');
+      setError(err instanceof Error ? err.message : t('auth.login.ssoFailed'));
       setSsoLoading(null);
     }
   };
@@ -135,35 +134,34 @@ function LoginForm() {
     setError('');
 
     try {
-      const success = await AuthService.login(values.username, values.password);
+      const result = await AuthService.login(values.username, values.password);
 
-      if (success) {
+      if (result.ok) {
+        setLoading(false);
         logger.info('认证信息已存储，准备跳转');
         try {
           router.push(redirectPath);
         } catch (navErr) {
           logger.error('导航失败:', navErr);
-          message.error('导航失败，请稍后重试');
+          setError(t('auth.login.navFailed'));
         }
         logger.info('已执行跳转命令');
-      } else {
-        setError(t('auth.login.loginFailed'));
-      }
-    } catch (err) {
-      logger.error('登录错误:', err);
-      const e = err as Error & { retryAfterSeconds?: number };
-      // 限流响应携带 retryAfterSeconds 时启动倒计时，让按钮显示剩余秒数。
-      if (typeof e.retryAfterSeconds === 'number' && e.retryAfterSeconds > 0) {
-        setError(`${e.message}（${e.retryAfterSeconds} 秒后自动恢复）`);
-        startCountdown(e.retryAfterSeconds);
         return;
       }
-      setError(e instanceof Error ? e.message : t('auth.login.loginFailed'));
-    } finally {
-      if (countdown === 0) {
-        setLoading(false);
+
+      // 限流：按钮显示剩余秒数，倒计时结束后再放开 loading。
+      if (result.retryAfterSeconds && result.retryAfterSeconds > 0) {
+        setError(`${result.message}${t('auth.login.retryIn', { seconds: result.retryAfterSeconds })}`);
+        startCountdown(result.retryAfterSeconds);
+        return;
       }
+
+      setError(result.message || t('auth.login.loginFailedUnknown'));
+    } catch (err) {
+      logger.error('登录错误:', err);
+      setError(err instanceof Error ? err.message : t('auth.login.loginFailedUnknown'));
     }
+    setLoading(false);
   };
 
   return (
@@ -178,12 +176,14 @@ function LoginForm() {
       {/* 默认账号提示：开发环境使用 admin/admin123，生产环境必须修改 */}
       {process.env.NODE_ENV === 'development' && (
         <Alert
-          title='开发环境默认账号'
+          title={t('auth.login.devAccountTitle')}
           description={
             <span>
-              用户名：<strong>admin</strong>　密码：<strong>admin123</strong>
+              {t('auth.login.devAccountUsername')}
+              <strong>admin</strong> · {t('auth.login.devAccountPassword')}
+              <strong>admin123</strong>
               <br />
-              生产环境部署前必须修改默认密码、JWT_SECRET、数据库密码。
+              {t('auth.login.devAccountWarning')}
             </span>
           }
           type='info'
@@ -196,8 +196,8 @@ function LoginForm() {
       {/* 会话过期提示 */}
       {isExpired && (
         <Alert
-          title='会话已过期'
-          description='您的会话已过期，请重新登录。'
+          title={t('auth.login.sessionExpiredTitle')}
+          description={t('auth.login.sessionExpiredDescription')}
           type='warning'
           className='mb-5'
           showIcon
@@ -278,7 +278,7 @@ function LoginForm() {
             icon={<ArrowRight size={14} />}
           >
             {countdown > 0
-              ? `请等待 ${countdown} 秒`
+              ? t('auth.login.waitSeconds', { seconds: countdown })
               : loading
                 ? t('auth.login.loggingIn')
                 : t('auth.login.loginButton')}
@@ -290,7 +290,7 @@ function LoginForm() {
       {ssoProviders.length > 0 && (
         <>
           <Divider plain className='!my-5'>
-            <Text className='text-gray-400 text-xs'>或使用企业账号登录</Text>
+            <Text className='text-gray-400 text-xs'>{t('auth.login.ssoDivider')}</Text>
           </Divider>
           <div className='flex flex-col gap-2'>
             {ssoProviders.map(provider => (
@@ -329,6 +329,7 @@ function LoginForm() {
  * 使用统一的设计系统和 Ant Design 组件，保持与系统内部一致的视觉风格
  */
 export default function LoginPage() {
+  const { t } = useI18n();
   return (
     <ConfigProvider theme={antdTheme}>
       <div className='min-h-screen flex items-center justify-center p-5 bg-gradient-to-br from-gray-50 to-blue-50'>
@@ -344,7 +345,7 @@ export default function LoginPage() {
                     AI-Native ITSM
                   </Title>
                   <Text className='!text-white/90 !text-sm block !mb-8'>
-                    AI 驱动的 IT 服务管理系统
+                    {t('auth.login.brandTagline')}
                   </Text>
 
                   <Space orientation='vertical' size='middle' className='w-full'>
@@ -354,9 +355,11 @@ export default function LoginPage() {
                       </div>
                       <div>
                         <Text className='!text-white !font-semibold !text-sm block'>
-                          企业级安全
+                          {t('auth.login.brandSecurityTitle')}
                         </Text>
-                        <Text className='!text-white/80 !text-xs'>多层安全防护</Text>
+                        <Text className='!text-white/80 !text-xs'>
+                          {t('auth.login.brandSecurityDescription')}
+                        </Text>
                       </div>
                     </Flex>
 
@@ -366,9 +369,11 @@ export default function LoginPage() {
                       </div>
                       <div>
                         <Text className='!text-white !font-semibold !text-sm block'>
-                          智能自动化
+                          {t('auth.login.brandAutomationTitle')}
                         </Text>
-                        <Text className='!text-white/80 !text-xs'>AI 驱动流程</Text>
+                        <Text className='!text-white/80 !text-xs'>
+                          {t('auth.login.brandAutomationDescription')}
+                        </Text>
                       </div>
                     </Flex>
                   </Space>
@@ -384,7 +389,7 @@ export default function LoginPage() {
                     className='rounded-xl shadow-xl border-none'
                     styles={{ body: { padding: '40px' } }}
                   >
-                    <div className='text-center py-20 text-gray-400'>加载中...</div>
+                    <div className='text-center py-20 text-gray-400'>{t('auth.login.loading')}</div>
                   </Card>
                 }
               >

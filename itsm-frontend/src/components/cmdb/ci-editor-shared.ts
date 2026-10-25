@@ -39,6 +39,7 @@ export const buildCloudProviderOptions = (t: TranslationFn) => [
 
 export const buildCloudSyncStatusOptions = (t: TranslationFn) => [
   { label: t('ciEditor.cloudSyncStatusOptions.success'), value: 'success' },
+  { label: t('ciEditor.cloudSyncStatusOptions.stale'), value: 'stale' },
   { label: t('ciEditor.cloudSyncStatusOptions.failed'), value: 'failed' },
   { label: t('ciEditor.cloudSyncStatusOptions.unknown'), value: 'unknown' },
 ];

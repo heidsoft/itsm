@@ -63,14 +63,15 @@ describe('登录页 SSO 入口', () => {
 
     expect(await screen.findByRole('button', { name: /Okta 企业登录/ })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Azure AD/ })).toBeInTheDocument();
-    expect(screen.getByText('或使用企业账号登录')).toBeInTheDocument();
+    // useI18n 被 mock 成恒等函数，分隔文案断言 i18n key 本身
+    expect(screen.getByText('auth.login.ssoDivider')).toBeInTheDocument();
   });
 
   it('没有提供方时不渲染 SSO 区块（账号密码登录保持纯净）', async () => {
     render(<LoginPage />);
 
     await waitFor(() => expect(mockListSSOProviders).toHaveBeenCalled());
-    expect(screen.queryByText('或使用企业账号登录')).not.toBeInTheDocument();
+    expect(screen.queryByText('auth.login.ssoDivider')).not.toBeInTheDocument();
   });
 
   it('点击提供方按钮发起登录并整页跳转到授权 URL', async () => {

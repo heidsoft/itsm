@@ -47,6 +47,13 @@ type Repository interface {
 	DeleteCloudResource(ctx context.Context, id int, tenantID int) (int, error)
 	ListCIsForReconciliation(ctx context.Context, tenantID int) ([]*ConfigurationItem, error)
 	GetCIByCloudResourceRefID(ctx context.Context, tenantID int, cloudResourceRefID int) (*ConfigurationItem, error)
+	// FindCIByCloudResourceIdentity 按 (provider, 云上资源ID) 找已有配置项。
+	// 手工/导入建的 CI 没有 cloud_resource_ref_id，靠这一路把它们和云上资源
+	// 对上，否则同一台实例会既在 CMDB 里躺着、又被发现再建一条。
+	FindCIByCloudResourceIdentity(ctx context.Context, tenantID int, provider, cloudResourceID string) (*ConfigurationItem, error)
+	// GetCITypeIDByName 取该租户下某个 CI 类型的 ID（发现回写选择落点用）。
+	// 只读目录查询；CI 类型的写规则仍在 CI 域。
+	GetCITypeIDByName(ctx context.Context, tenantID int, name string) (int, error)
 
 	// Discovery
 	CreateDiscoverySource(ctx context.Context, ds *DiscoverySource) (*DiscoverySource, error)

@@ -4,7 +4,7 @@
 
 An open-source IT service management system for enterprises, covering ITIL core processes with BPMN workflow orchestration, CMDB, SLA, knowledge base, and multi-tenancy.
 
-[![Go](https://img.shields.io/badge/Go-1.25+-00ADD8?style=flat&logo=go)](https://golang.org)
+[![Go](https://img.shields.io/badge/Go-1.25.13-00ADD8?style=flat&logo=go)](https://golang.org)
 [![Next.js](https://img.shields.io/badge/Next.js-15.5-000000?style=flat&logo=nextdotjs)](https://nextjs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-6.0-3178C6?style=flat&logo=typescript)](https://typescriptlang.org)
 [![License](https://img.shields.io/badge/License-Apache_2.0-yellowgreen?style=flat)](LICENSE)
@@ -15,6 +15,8 @@ An open-source IT service management system for enterprises, covering ITIL core 
 **[简体中文](./README.md)** · **English**
 
 </div>
+
+> **Translation status**: `README.md` (Simplified Chinese) is the single source of truth for project content; this file is its English counterpart and must stay in sync with it — section structure, the capability/maturity table, and every command/tool count. If the two disagree, the Chinese README wins and this file is the one to fix. Product UI text is Chinese-first through v1.6.x (see the language note under Quick Start).
 
 ## Table of Contents
 
@@ -30,6 +32,7 @@ An open-source IT service management system for enterprises, covering ITIL core 
 - [Usage Examples](#usage-examples)
   - [API Examples](#api-examples)
   - [Common Development Commands](#common-development-commands)
+  - [MCP Integration](#mcp-integration-let-an-agent-drive-itsm)
   - [Common Scenarios](#common-scenarios)
 - [Core Business Flows](#core-business-flows)
 - [Reliable Execution Architecture](#reliable-execution-architecture)
@@ -72,17 +75,18 @@ Key design choices:
 |:---|:---:|:---|
 | Tickets & Incidents | Available | Status transitions, dispatch, SLA, BPMN binding, tenant isolation |
 | Ticket Types & Dynamic Forms | Available | Custom fields, form presets, Workflow/SLA bindings |
-| Change Management | Preview | Risk assessment, approval chains, rollback plans, PIR; atomic approval/business-state consistency remains open |
-| Problems & Known Errors | Preview | Root cause analysis, workarounds, linked incidents, knowledge distillation |
-| Service Catalog & Requests | Preview | Catalog management, request approvals, service tasks |
+| Change Management | Available | Risk assessment, approval chains, rollback plans, PIR. Submission gates (critical CIs / open incidents force `high` risk plus window-conflict blocking) are closed; the approval path is atomic and quorum/threshold/multi-level chains take effect on `/approve` (returns `pending` below threshold), with terminal transitions in the same transaction. Outcomes are recorded truthfully (`/fail` requires a failure/rollback reason into `outcomeNote`; PIR only opens for completed/rolled_back/failed), and rollback is verifiable step by step (`/rollback-steps`: done/skipped/failed with note, confirmer and timestamp) — the rollback cannot be marked done while steps are unconfirmed, and the checklist locks once implementation starts |
+| Problems & Known Errors | Available | Root cause analysis, workarounds, linked incidents, SLA (same engine as tickets/incidents), comments, knowledge distillation |
+| Service Catalog & Requests | Preview | Catalog management, request approvals, service tasks. Fulfilment is "failure is terminal" — execution is claimed atomically (repeat execution returns 409 instead of double-delivering), failures are retryable (capped at 5 attempts), and manual adjudication is recorded when automatic retry is exhausted; delivery providers are still stubs with no real cloud API behind them |
 | CMDB | Available | CI types, configuration items, relationships, topology, impact analysis |
-| CMDB Cloud Discovery | Preview | Alibaba Cloud adapter, auto-discovery and sync |
+| CMDB Cloud Discovery | Preview | Aliyun/CVM/AWS/Volcengine/K8s auto-discovery; diffs update cloud resources then write back configuration items by cloud service type (unmapped types are skipped, CIs missing required attributes wait for manual entry, vanished resources only mark sync stale) |
 | BPMN & Approvals | Preview | Process definitions, instances, tasks, variables, execution history |
 | SLA | Available | Policies, deadlines, warnings, violation statistics |
-| Knowledge & RAG | Preview | Article management, keyword/vector search, Q&A fallback |
+| Knowledge & RAG | Preview | Article management, keyword/vector search, Q&A fallback, problem→knowledge capture (`POST /problems/:id/knowledge`, drafts enter review), publish gate (cannot publish before review; passing adds to retrieval, rejection removes it) |
 | AI Assistance | Preview | LLM Gateway, triage, summarization, RAG |
-| Notifications & Connectors | Preview | In-app notifications, delivery audit, connector framework |
+| Notifications & Connectors | Preview | In-app notifications (already usable), delivery audit, channel diagnostics; Feishu / WeCom / DingTalk connectors implemented (pilot — deployment readiness declared via READY env vars) |
 | RBAC / Multi-Tenancy | Available | Role permissions, endpoint ACL, tenant isolation, audit logs |
+| Reporting & Operations | Preview | SLA and incident partial metrics, dashboard; a unified management-level view is still pending |
 
 > **Maturity legend**: **Available** = core features complete, ready for production validation; **Preview** = feature is implemented but still being polished — evaluate limitations before production use. See module docs for detailed constraints and acceptance criteria.
 
@@ -274,6 +278,26 @@ go run -tags migrate main.go             # Run migration
 open http://localhost:8090/swagger/index.html
 ```
 
+### MCP Integration (Let an Agent Drive ITSM)
+
+`itsm-cli/bin/itsm-mcp.js` is a zero-dependency MCP server (stdio / JSON-RPC) that exposes the same **330 commands** to clients such as WorkBuddy or Claude Desktop: **27 curated tools** plus `itsm_discover` / `itsm_describe` / `itsm_call`, which together cover the entire command surface. High-risk writes require explicit confirmation, and list responses are trimmed to 50 items by default (`meta` carries `total` and `truncated`; page with `limit`/`pageSize` when you need more).
+
+> The command and tool counts above are taken from live output — `node itsm-cli/bin/itsm.js --json schema | jq .data.count` and `node itsm-cli/bin/itsm-mcp.js --describe`. Both grow as routes are added, so this document does not enumerate them.
+
+```json
+{
+  "mcpServers": {
+    "itsm": {
+      "command": "node",
+      "args": ["/path/to/itsm/itsm-cli/bin/itsm-mcp.js"],
+      "env": { "ITSM_BASE_URL": "http://localhost:8090" }
+    }
+  }
+}
+```
+
+See [ITSM MCP Server](./docs/tools/itsm-mcp.md) for startup, the security model, the tool list and troubleshooting.
+
 ### Common Scenarios
 
 | Scenario | Operation |
@@ -365,6 +389,11 @@ export VECTOR_STORE_CONFIG=etc/vector-store/config.yaml
 Configuration supports `${ENV_VAR}` expansion. When `fallback: true` is enabled, the system automatically falls back to keyword search when the primary store is unavailable.
 
 ## Screenshots
+
+The ticket list is the service desk's main entry point: status, priority, SLA countdown, assignee
+and inline actions in a single screen, with list/board/analytics view switching and bulk assignment.
+
+![Ticket Management](./docs/images/02-工单管理.png)
 
 | Incidents & Problems | Changes & CMDB |
 |:---:|:---:|

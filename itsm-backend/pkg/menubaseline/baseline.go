@@ -35,7 +35,7 @@ func MenuDefinitions() []MenuSpec {
 		{Name: "资产管理", Path: "/assets", Icon: "Monitor", ParentPath: "", PermissionCode: "asset:read", SortOrder: 80, Description: "IT 资产管理"},
 		{Name: "SLA 管理", Path: "/sla", Icon: "Calendar", ParentPath: "", PermissionCode: "sla:read", SortOrder: 90, Description: "SLA 监控与配置"},
 		{Name: "工作流", Path: "/workflow", Icon: "GitMerge", ParentPath: "", PermissionCode: "workflow:read", SortOrder: 100, Description: "工作流自动化"},
-		{Name: "AI 助手", Path: "/ai/chat", Icon: "Bot", ParentPath: "", PermissionCode: "ai:read", SortOrder: 110, Description: "AI 助手"},
+		{Name: "AI 中心", Path: "/ai/chat", Icon: "Bot", ParentPath: "", PermissionCode: "ai:read", SortOrder: 110, Description: "AI 助手与 AI 能力中心"},
 		// 待我审批与审批中心指向同一个页面（/approvals/pending 只做 redirect），
 		// 该页只消费 GET /bpmn/tasks，实测无任何 approval:* 调用，故按数据源取 task:read。
 		// 旧码 approval:read 只授配置角色，且 /approvals 挂在 /workflow 下会落进 admin 桶
@@ -53,18 +53,33 @@ func MenuDefinitions() []MenuSpec {
 		{Name: "项目管理", Path: "/projects", Icon: "GanttChart", ParentPath: "", PermissionCode: "project:read", SortOrder: 170, Description: "项目管理"},
 		{Name: "应用与服务", Path: "/applications", Icon: "Layers", ParentPath: "", PermissionCode: "application:read", SortOrder: 175, Description: "应用系统与微服务管理"},
 
+		// ===== 子菜单：应用市场 · 配置面（2026-10-25 从系统管理归位）=====
+		{Name: "连接器/插件市场", Path: "/admin/connectors", Icon: "Plug", ParentPath: "/marketplace", PermissionCode: "connector:write", SortOrder: 10},
+		{Name: "技能注册表", Path: "/admin/skills", Icon: "Wand2", ParentPath: "/marketplace", PermissionCode: "marketplace:write", SortOrder: 20, Description: "AI 技能清单与 manifest 管理"},
+		// 商品目录管理：marketplace_catalog:read 只授予 sysadmin。目录是全局表
+		// （无 tenant_id），租户 admin 的 marketplace:read/write 只能安装/卸载，
+		// 不能上架——所以这条菜单对租户管理员不出现，而不是出现了点进去 403。
+		{Name: "商品目录", Path: "/admin/marketplace", Icon: "Store", ParentPath: "/marketplace", PermissionCode: "marketplace_catalog:read", SortOrder: 30, Description: "扩展商品上架、下架与版本管理（平台级）"},
+
 		// ===== 顶级独立业务条线菜单 =====
 		{Name: "审计日志", Path: "/audit-logs", Icon: "Shield", ParentPath: "", PermissionCode: "audit:read", SortOrder: 210, Description: "审计日志"},
 		{Name: "通知配置", Path: "/notifications", Icon: "Bell", ParentPath: "", PermissionCode: "notification:read", SortOrder: 212, Description: "通知配置"},
 
 		// ===== 子菜单：工单管理 =====
 		{Name: "工单类型", Path: "/tickets/types", Icon: "ClipboardList", ParentPath: "/tickets", PermissionCode: "ticket_type:read", SortOrder: 21},
-		{Name: "工单统计", Path: "/tickets/analytics", Icon: "BarChart3", ParentPath: "/tickets", PermissionCode: "ticket:read", SortOrder: 22, Description: "工单统计视图"},
+		// 页面主数据源是 GET /api/v1/analytics/tickets，接口要求 report:read（router/ticket_routes.go）。
+		// 挂在 ticket:read 上时 agent 看得到入口、点进去就 403（实测 code 2003）。
+		{Name: "工单统计", Path: "/tickets/analytics", Icon: "BarChart3", ParentPath: "/tickets", PermissionCode: "report:read", SortOrder: 22, Description: "工单统计视图"},
 		{Name: "工单仪表盘", Path: "/tickets/dashboard", Icon: "LayoutDashboard", ParentPath: "/tickets", PermissionCode: "ticket:read", SortOrder: 23, Description: "工单综合仪表盘"},
 		{Name: "我的抄送", Path: "/tickets/cc", Icon: "Mail", ParentPath: "/tickets", PermissionCode: "ticket:read", SortOrder: 24, Description: "抄送给我的工单"},
 		// 页面数据源是 GET /api/v1/tickets/templates，接口要求 ticket_template:read。
 		// 挂在 ticket:write 上让只写自己工单的最终用户拿到入口后立刻 403（实测 code 2003）。
 		{Name: "工单模板", Path: "/tickets/templates", Icon: "Copy", ParentPath: "/tickets", PermissionCode: "ticket_template:read", SortOrder: 25, Description: "工单模板管理"},
+
+		// ===== 子菜单：工单管理 · 配置面（2026-10-25 从系统管理归位）=====
+		{Name: "工单分类", Path: "/admin/ticket-categories", Icon: "Tag", ParentPath: "/tickets", PermissionCode: "ticket_category:update", SortOrder: 30},
+		{Name: "工单分配规则", Path: "/admin/tickets/assignment-rules", Icon: "GitBranch", ParentPath: "/tickets", PermissionCode: "assignment_rule:write", SortOrder: 35},
+		{Name: "工单自动化规则", Path: "/admin/tickets/automation-rules", Icon: "Zap", ParentPath: "/tickets", PermissionCode: "automation_rule:write", SortOrder: 40},
 
 		// ===== 子菜单：事件管理 =====
 		{Name: "新建事件", Path: "/incidents/create", Icon: "Plus", ParentPath: "/incidents", PermissionCode: "incident:write", SortOrder: 32},
@@ -76,6 +91,8 @@ func MenuDefinitions() []MenuSpec {
 		// ===== 子菜单：变更管理 =====
 		{Name: "新建变更", Path: "/changes/new", Icon: "Plus", ParentPath: "/changes", PermissionCode: "change:write", SortOrder: 52},
 		{Name: "实施后审查", Path: "/changes/pirs", Icon: "ClipboardCheck", ParentPath: "/changes", PermissionCode: "change:read", SortOrder: 53, Description: "变更实施后审查 (PIR)"},
+		// ===== 子菜单：变更管理 · 配置面（2026-10-25 从系统管理归位）=====
+		{Name: "评审组管理", Path: "/admin/change-review", Icon: "Users", ParentPath: "/changes", PermissionCode: "change:read", SortOrder: 60},
 
 		// ===== 子菜单：知识库 =====
 		{Name: "新建文章", Path: "/knowledge/articles/new", Icon: "Plus", ParentPath: "/knowledge", PermissionCode: "knowledge:write", SortOrder: 63},
@@ -89,6 +106,8 @@ func MenuDefinitions() []MenuSpec {
 
 		// ===== 子菜单：服务目录 =====
 		{Name: "待我审批-目录", Path: "/service-catalog/approvals", Icon: "CheckCircle", ParentPath: "/service-catalog", PermissionCode: "service:read", SortOrder: 72},
+		// ===== 子菜单：服务目录 · 配置面（2026-10-25 从系统管理归位）=====
+		{Name: "服务目录管理", Path: "/admin/service-catalogs", Icon: "Boxes", ParentPath: "/service-catalog", PermissionCode: "service_catalog:read", SortOrder: 80},
 
 		// ===== 子菜单：CMDB =====
 		{Name: "配置项列表", Path: "/cmdb/cis", Icon: "Server", ParentPath: "/cmdb", PermissionCode: "cmdb:read", SortOrder: 751},
@@ -100,6 +119,8 @@ func MenuDefinitions() []MenuSpec {
 		{Name: "云服务目录", Path: "/cmdb/cloud-services", Icon: "CloudDrizzle", ParentPath: "/cmdb", PermissionCode: "cmdb:read", SortOrder: 757, Description: "云服务产品目录"},
 		{Name: "Service Graph", Path: "/cmdb/registry", Icon: "Compass", ParentPath: "/cmdb", PermissionCode: "cmdb:read", SortOrder: 758, Description: "Service Graph 注册表"},
 		{Name: "云资源核对", Path: "/cmdb/reconciliation", Icon: "RefreshCw", ParentPath: "/cmdb", PermissionCode: "cmdb:write", SortOrder: 759, Description: "云资源与 CI 核对"},
+		// ===== 子菜单：CMDB · 配置面（2026-10-25 从系统管理归位）=====
+		{Name: "CMDB 类型", Path: "/admin/cmdb-types", Icon: "Database", ParentPath: "/cmdb", PermissionCode: "cmdb:write", SortOrder: 770},
 
 		// ===== 子菜单：资产管理 =====
 		{Name: "新建资产", Path: "/assets/new", Icon: "Plus", ParentPath: "/assets", PermissionCode: "asset:write", SortOrder: 82},
@@ -108,6 +129,11 @@ func MenuDefinitions() []MenuSpec {
 		// ===== 子菜单：SLA =====
 		{Name: "SLA 监控", Path: "/sla-monitor", Icon: "Activity", ParentPath: "/sla", PermissionCode: "sla:read", SortOrder: 92},
 		{Name: "SLA 配置", Path: "/workflow/sla", Icon: "Clock", ParentPath: "/sla", PermissionCode: "sla:write", SortOrder: 93},
+		// ===== 子菜单：SLA · 配置面（2026-10-25 从系统管理归位）=====
+		{Name: "升级规则", Path: "/admin/escalation-rules", Icon: "AlertTriangle", ParentPath: "/sla", PermissionCode: "sla:write", SortOrder: 100},
+		{Name: "升级矩阵", Path: "/admin/escalation-matrices", Icon: "TrendingUp", ParentPath: "/sla", PermissionCode: "sla:read", SortOrder: 105},
+		{Name: "SLA 模板", Path: "/admin/sla-templates", Icon: "Layers", ParentPath: "/sla", PermissionCode: "sla:write", SortOrder: 110},
+		{Name: "SLA 定义", Path: "/admin/sla-definitions", Icon: "Clock", ParentPath: "/sla", PermissionCode: "sla:write", SortOrder: 115},
 
 		// ===== 子菜单：工作流 =====
 		{Name: "流程设计器", Path: "/workflow/designer", Icon: "Edit", ParentPath: "/workflow", PermissionCode: "workflow:write", SortOrder: 102},
@@ -117,9 +143,12 @@ func MenuDefinitions() []MenuSpec {
 		{Name: "节点瓶颈分析", Path: "/workflow/bottlenecks", Icon: "BarChart3", ParentPath: "/workflow", PermissionCode: "workflow:read", SortOrder: 106},
 		// 与 /admin/tickets/automation-rules 是同一个配置面的两个入口，按管理面取
 		// automation_rule:write：只读角色拿到菜单后每个写按钮都会 403。
-		{Name: "自动化规则", Path: "/workflow/automation", Icon: "Zap", ParentPath: "/workflow", PermissionCode: "automation_rule:write", SortOrder: 107},
+		{Name: "流程触发器", Path: "/workflow/automation", Icon: "Zap", ParentPath: "/workflow", PermissionCode: "automation_rule:write", SortOrder: 107},
 		{Name: "审批中心", Path: "/approvals", Icon: "CheckSquare", ParentPath: "/workflow", PermissionCode: "task:read", SortOrder: 108},
 		{Name: "操作日志", Path: "/workflow/audit", Icon: "ClipboardList", ParentPath: "/workflow", PermissionCode: "audit:read", SortOrder: 109},
+		// ===== 子菜单：工作流 · 配置面（2026-10-25 从系统管理归位）=====
+		{Name: "工作流配置", Path: "/admin/workflows", Icon: "GitBranch", ParentPath: "/workflow", PermissionCode: "workflow:write", SortOrder: 120},
+		{Name: "审批链", Path: "/admin/approval-chains", Icon: "Link", ParentPath: "/workflow", PermissionCode: "approval:write", SortOrder: 125},
 
 		// ===== 子菜单：AI 助手 =====
 		{Name: "AI 创建工单", Path: "/tickets/ai-create", Icon: "Sparkles", ParentPath: "/ai/chat", PermissionCode: "ai:read", SortOrder: 112},
@@ -135,7 +164,7 @@ func MenuDefinitions() []MenuSpec {
 		// ===== 顶级管理菜单 =====
 		{Name: "系统管理", Path: "/admin", Icon: "Settings", ParentPath: "", PermissionCode: "system:write", SortOrder: 200, Description: "系统管理"},
 
-		// ===== 子菜单：系统管理 =====
+		// ===== 子菜单：系统管理（组织/权限/平台配置，2026-10-25 精简）=====
 		{Name: "系统概览", Path: "/admin/overview", Icon: "LayoutDashboard", ParentPath: "/admin", PermissionCode: "system:write", SortOrder: 201},
 		{Name: "用户管理", Path: "/admin/users", Icon: "Users", ParentPath: "/admin", PermissionCode: "user:read", SortOrder: 210},
 		{Name: "角色管理", Path: "/admin/roles", Icon: "Shield", ParentPath: "/admin", PermissionCode: "role:read", SortOrder: 220},
@@ -143,17 +172,7 @@ func MenuDefinitions() []MenuSpec {
 		{Name: "租户管理", Path: "/admin/tenants", Icon: "Building", ParentPath: "/admin", PermissionCode: "system:write", SortOrder: 235},
 		{Name: "部门管理", Path: "/admin/departments", Icon: "Building", ParentPath: "/admin", PermissionCode: "department:read", SortOrder: 240},
 		{Name: "团队管理", Path: "/admin/teams", Icon: "Users", ParentPath: "/admin", PermissionCode: "team:read", SortOrder: 250},
-		{Name: "评审组管理", Path: "/admin/change-review", Icon: "Users", ParentPath: "/admin", PermissionCode: "change:read", SortOrder: 255},
-		{Name: "工单分类", Path: "/admin/ticket-categories", Icon: "Tag", ParentPath: "/admin", PermissionCode: "ticket_category:update", SortOrder: 260},
-		// 规则配置页原先挂在 ticket:read（人人有码）与 workflow:write（租管没有）上，
-		// 而接口要求 system_config:*：菜单可见性与接口授权三套口径，实测 it_admin
-		// 打开页面即 403。现在菜单码与接口同域，写码入口见 baseline_guard_test。
-		{Name: "工单分配规则", Path: "/admin/tickets/assignment-rules", Icon: "GitBranch", ParentPath: "/admin", PermissionCode: "assignment_rule:write", SortOrder: 265},
-		{Name: "自动化规则", Path: "/admin/tickets/automation-rules", Icon: "Zap", ParentPath: "/admin", PermissionCode: "automation_rule:write", SortOrder: 270},
-		{Name: "审批链", Path: "/admin/approval-chains", Icon: "Link", ParentPath: "/admin", PermissionCode: "approval:write", SortOrder: 275},
 		{Name: "权限管理", Path: "/admin/permissions", Icon: "Lock", ParentPath: "/admin", PermissionCode: "role:write", SortOrder: 280},
-		{Name: "连接器/插件市场", Path: "/admin/connectors", Icon: "Plug", ParentPath: "/admin", PermissionCode: "connector:write", SortOrder: 285},
-		{Name: "技能注册表", Path: "/admin/skills", Icon: "Wand2", ParentPath: "/admin", PermissionCode: "marketplace:write", SortOrder: 287, Description: "AI 技能清单与 manifest 管理"},
 		{Name: "向量存储配置", Path: "/admin/vector-store", Icon: "Database", ParentPath: "/admin", PermissionCode: "system:read", SortOrder: 290},
 		{Name: "系统配置", Path: "/admin/system-config", Icon: "Settings", ParentPath: "/admin", PermissionCode: "system:read", SortOrder: 295},
 		{Name: "全局标签", Path: "/admin/tags", Icon: "Tags", ParentPath: "/admin", PermissionCode: "system:read", SortOrder: 298, Description: "全局标签管理"},
@@ -161,17 +180,6 @@ func MenuDefinitions() []MenuSpec {
 		// 用来核对「哪些能力还不能对外承诺」的管理视图，与系统配置同域（system:read），
 		// 不给一线角色挂入口——它回答的是发布决策，不是日常作业信息。
 		{Name: "能力矩阵", Path: "/admin/capabilities", Icon: "Target", ParentPath: "/admin", PermissionCode: "system:read", SortOrder: 300, Description: "能力成熟度、部署就绪与健康信号"},
-		// 商品目录管理：marketplace_catalog:read 只授予 sysadmin。目录是全局表
-		// （无 tenant_id），租户 admin 的 marketplace:read/write 只能安装/卸载，
-		// 不能上架——所以这条菜单对租户管理员不出现，而不是出现了点进去 403。
-		{Name: "商品目录", Path: "/admin/marketplace", Icon: "Store", ParentPath: "/admin", PermissionCode: "marketplace_catalog:read", SortOrder: 302, Description: "扩展商品上架、下架与版本管理（平台级）"},
-		{Name: "CMDB 类型", Path: "/admin/cmdb-types", Icon: "Database", ParentPath: "/admin", PermissionCode: "cmdb:write", SortOrder: 315},
-		{Name: "升级规则", Path: "/admin/escalation-rules", Icon: "AlertTriangle", ParentPath: "/admin", PermissionCode: "sla:write", SortOrder: 320},
-		{Name: "升级矩阵", Path: "/admin/escalation-matrices", Icon: "TrendingUp", ParentPath: "/admin", PermissionCode: "sla:read", SortOrder: 325},
-		{Name: "SLA 模板", Path: "/admin/sla-templates", Icon: "Layers", ParentPath: "/admin", PermissionCode: "sla:write", SortOrder: 330},
-		{Name: "服务目录管理", Path: "/admin/service-catalogs", Icon: "Boxes", ParentPath: "/admin", PermissionCode: "service_catalog:read", SortOrder: 335},
-		{Name: "SLA 定义", Path: "/admin/sla-definitions", Icon: "Clock", ParentPath: "/admin", PermissionCode: "sla:write", SortOrder: 340},
 		{Name: "菜单管理", Path: "/admin/menus", Icon: "Menu", ParentPath: "/admin", PermissionCode: "system:write", SortOrder: 345},
-		{Name: "工作流配置", Path: "/admin/workflows", Icon: "GitBranch", ParentPath: "/admin", PermissionCode: "workflow:write", SortOrder: 350},
 	}
 }

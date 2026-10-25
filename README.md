@@ -30,6 +30,7 @@
 - [使用示例](#使用示例)
   - [API 调用示例](#api-调用示例)
   - [常用开发命令](#常用开发命令)
+  - [通过 MCP 接入](#通过-mcp-接入agent-直接操作-itsm)
   - [常见场景](#常见场景)
 - [核心业务流程](#核心业务流程)
 - [可靠执行架构](#可靠执行架构)
@@ -76,7 +77,7 @@
 | 问题与 Known Error | 可用 | 根因分析、临时方案、关联事件、SLA（与工单/事件同一引擎）、评论、知识沉淀 |
 | 服务目录与请求 | 预览 | 目录管理、请求审批、服务任务；交付链路已收口「失败即终态」——执行权原子领取（重复执行 409 不再二次交付）、失败可重试（尝试次数封顶 5 次）、自动重试走不通时可人工判定并留痕；交付 Provider 仍为 Stub，未接真实云 API |
 | CMDB | 可用 | CI 类型、配置项、关系、拓扑、影响分析 |
-| CMDB 云发现 | 预览 | 阿里云适配，自动发现和同步 |
+| CMDB 云发现 | 预览 | 阿里云/腾讯云/AWS/火山引擎/K8s 五类资源自动发现，差异落云资源后按云服务类型回写配置项（表外类型显式跳过、必填属性凑不齐时转人工补全、资源失联只标同步滞后不改生命周期）；真实账号下的全量与增量发现尚未验收 |
 | BPMN 与审批 | 预览 | 流程定义、实例、任务、变量、执行历史 |
 | SLA | 可用 | 策略、截止时间、预警、违规统计 |
 | 知识与 RAG | 预览 | 文章管理、关键词/向量检索、问答降级、问题→知识沉淀（`POST /problems/:id/knowledge`，草稿进评审流）、发布门禁（未过评审不可发布，通过即入检索、驳回即出检索） |
@@ -280,7 +281,9 @@ open http://localhost:8090/swagger/index.html
 
 ### 通过 MCP 接入（Agent 直接操作 ITSM）
 
-`itsm-cli/bin/itsm-mcp.js` 是一个零依赖的 MCP server（stdio / JSON-RPC），把 268 条命令暴露给 WorkBuddy、Claude Desktop 等客户端：20 个精选工具 + `itsm_discover`/`itsm_describe`/`itsm_call` 覆盖全部命令，高风险写操作需显式确认，列表默认裁剪到 50 条。
+`itsm-cli/bin/itsm-mcp.js` 是一个零依赖的 MCP server（stdio / JSON-RPC），把 **330 条命令**暴露给 WorkBuddy、Claude Desktop 等客户端：**27 个精选工具** + `itsm_discover`/`itsm_describe`/`itsm_call` 覆盖全部命令，高风险写操作需显式确认，列表默认裁剪到 50 条（`meta` 里带 `total` 与 `truncated`，需要更多请用 `limit`/`pageSize` 分页取）。
+
+> 上面的命令数与工具数以 `node itsm-cli/bin/itsm.js --json schema | jq .data.count` 和 `node itsm-cli/bin/itsm-mcp.js --describe` 的实测输出为准——两者随路由增加而变化，本文档不逐条列举。
 
 ```json
 {
@@ -387,6 +390,11 @@ export VECTOR_STORE_CONFIG=etc/vector-store/config.yaml
 配置支持 `${ENV_VAR}` 展开。启用 `fallback: true` 后，主存储不可用时会自动回退到关键词检索。
 
 ## 界面预览
+
+工单是服务台的主入口：列表页把状态、优先级、SLA 倒计时、处理人和行内操作收在同一屏，
+支持列表/看板/分析三种视图切换与批量分派。
+
+![工单管理](./docs/images/02-工单管理.png)
 
 | 事件与问题 | 变更与 CMDB |
 |:---:|:---:|

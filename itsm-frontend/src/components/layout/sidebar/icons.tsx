@@ -63,6 +63,26 @@ import {
   Edit,
   Menu,
   Plug,
+  // 以下 16 个与 itsm-backend/pkg/menubaseline/baseline.go 的 Icon 取值对齐。
+  // 曾经漏注册导致这些菜单在侧边栏渲染成"无图标"（getIconByName 返回 undefined），
+  // 而 /admin/menus 的图标选择器只列 iconMap 的键，运营在 UI 里无法自行补救。
+  // 新增图标时必须同步两边，回归测试见 __tests__/icon-map-parity.test.ts。
+  BookCopy,
+  ClipboardCheck,
+  CloudDrizzle,
+  CloudLightning,
+  Compass,
+  Copy,
+  GanttChart,
+  Globe,
+  Mail,
+  Package,
+  PieChart,
+  Share2,
+  ShieldAlert,
+  ShieldCheck,
+  Tags,
+  Wand2,
 } from 'lucide-react';
 
 // 图标样式
@@ -129,6 +149,22 @@ export const iconMap: Record<string, React.ReactNode> = {
   Edit: <Edit style={iconStyle} />,
   Menu: <Menu style={iconStyle} />,
   Plug: <Plug style={iconStyle} />,
+  BookCopy: <BookCopy style={iconStyle} />,
+  ClipboardCheck: <ClipboardCheck style={iconStyle} />,
+  CloudDrizzle: <CloudDrizzle style={iconStyle} />,
+  CloudLightning: <CloudLightning style={iconStyle} />,
+  Compass: <Compass style={iconStyle} />,
+  Copy: <Copy style={iconStyle} />,
+  GanttChart: <GanttChart style={iconStyle} />,
+  Globe: <Globe style={iconStyle} />,
+  Mail: <Mail style={iconStyle} />,
+  Package: <Package style={iconStyle} />,
+  PieChart: <PieChart style={iconStyle} />,
+  Share2: <Share2 style={iconStyle} />,
+  ShieldAlert: <ShieldAlert style={iconStyle} />,
+  ShieldCheck: <ShieldCheck style={iconStyle} />,
+  Tags: <Tags style={iconStyle} />,
+  Wand2: <Wand2 style={iconStyle} />,
 };
 
 /**

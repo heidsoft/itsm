@@ -175,3 +175,43 @@ func TestMenuBaseline_RuleConfigMenusUseRuleCodes(t *testing.T) {
 		}
 	}
 }
+
+// 工单统计页的菜单归属。
+//
+// 页面主数据源 GET /api/v1/analytics/tickets 要求 report:read；基线曾挂在 ticket:read 上，
+// 于是持有 ticket:read、不持有 report:read 的坐席看得到入口，点进去就是 code 2003（2026-10-24
+// 本地生产栈实测），页面再把 403 渲染成全 0。
+func TestMenuBaseline_TicketAnalyticsMenuUsesReportRead(t *testing.T) {
+	var code string
+	for _, spec := range menubaseline.MenuDefinitions() {
+		if spec.Path == "/tickets/analytics" {
+			code = spec.PermissionCode
+		}
+	}
+	if code == "" {
+		t.Fatalf("菜单基线缺少 /tickets/analytics 条目")
+	}
+	if code != "report:read" {
+		t.Errorf("菜单 /tickets/analytics 的权限码是 %q，应为页面数据源要求的 report:read", code)
+	}
+
+	holds := func(role, c string) bool {
+		for _, x := range authz.BuiltinRolePermissionCodes()[role] {
+			if x == c {
+				return true
+			}
+		}
+		return false
+	}
+	// 报表页要有真正的读者，否则改码等于把页面藏起来。
+	for _, role := range []string{domainrole.Admin, domainrole.ITAdmin, domainrole.Manager} {
+		if !holds(role, "report:read") {
+			t.Errorf("角色 %q 不持有 report:read，工单统计页对其完全没有入口", role)
+		}
+	}
+	// 反向锁：不要为了让坐席看得懂这个页面而给他们补 report:read——
+	// 那会连带放开整个报表中心。坐席视角的统计入口是独立工作面，不在本条断言范围内。
+	if holds(domainrole.Agent, "report:read") {
+		t.Errorf("agent 持有 report:read，报表中心整套页面会一起进入坐席侧边栏")
+	}
+}

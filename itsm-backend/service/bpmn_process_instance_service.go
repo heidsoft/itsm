@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -68,9 +69,13 @@ type bpmnProcessInstanceService struct {
 
 // Queries
 
-// GetProcessInstance 按 BPMN processInstanceId（PI-* 业务键，schema 全局唯一）读取实例。
-// /process-instances/:id 家族里 suspend/resume/terminate/approval-history 与 monitoring
-// 表面都以该键寻址；数字 Ent ID 仅出现在响应 DTO 的 id 字段，不再是任何端点的寻址键。
+// GetProcessInstance 读取流程实例。
+//
+// 主寻址键是 BPMN processInstanceId（PI-* 业务键，schema 全局唯一），
+// suspend/resume/terminate/approval-history 与 monitoring 表面都以该键寻址。
+// 列表响应的 id 是数字 Ent ID：调用方（CLI/MCP/agent）天然会拿列表里的 id
+// 再调详情，只认 PI-* 会让这个 id 变成「必 404」的陷阱。因此数字形态在
+// 租户内按主键兜底解析；非数字或查不到仍返回 not found。
 func (s *bpmnProcessInstanceService) GetProcessInstance(ctx context.Context, processInstanceID string) (*ent.ProcessInstance, error) {
 	tenantID, err := requireBPMNTenantContext(ctx)
 	if err != nil {
@@ -79,10 +84,23 @@ func (s *bpmnProcessInstanceService) GetProcessInstance(ctx context.Context, pro
 	instance, err := s.client.ProcessInstance.Query().
 		Where(processinstance.ProcessInstanceID(processInstanceID), processinstance.TenantID(tenantID)).
 		First(ctx)
-	if err != nil {
+	if err == nil {
+		return instance, nil
+	}
+	if !ent.IsNotFound(err) {
 		return nil, fmt.Errorf("获取流程实例失败: %w", err)
 	}
 
+	numericID, convErr := strconv.Atoi(processInstanceID)
+	if convErr != nil || numericID <= 0 {
+		return nil, fmt.Errorf("获取流程实例失败: %w", err)
+	}
+	instance, byIDErr := s.client.ProcessInstance.Query().
+		Where(processinstance.IDEQ(numericID), processinstance.TenantID(tenantID)).
+		First(ctx)
+	if byIDErr != nil {
+		return nil, fmt.Errorf("获取流程实例失败: %w", byIDErr)
+	}
 	return instance, nil
 }
 

@@ -337,15 +337,6 @@ func (h *Handler) GetSLAMetrics(c *gin.Context) {
 		"SLA 指标采集尚未实现：当前版本不写入 SLA 指标样本，请改用 GET /api/v1/sla/performance 或 POST /api/v1/sla/monitoring")
 }
 
-// queryParam 优先读 camelCase（前端 HTTP 契约统一使用 camelCase），
-// 再回退 snake_case，避免同名双轨参数。
-func queryParam(c *gin.Context, camel, snake string) string {
-	if v := c.Query(camel); v != "" {
-		return v
-	}
-	return c.Query(snake)
-}
-
 // GetSLAViolations handles GET /api/v1/sla/violations
 func (h *Handler) GetSLAViolations(c *gin.Context) {
 	tenantIDVal, ok := handlerctx.ResolveTenantID(c)
@@ -353,18 +344,18 @@ func (h *Handler) GetSLAViolations(c *gin.Context) {
 		return
 	}
 	filters := make(map[string]interface{})
-	if isResolved := queryParam(c, "isResolved", "is_resolved"); isResolved != "" {
+	if isResolved := c.Query("isResolved"); isResolved != "" {
 		if val, err := strconv.ParseBool(isResolved); err == nil {
 			filters["is_resolved"] = val
 		}
 	}
-	if severity := queryParam(c, "severity", "severity"); severity != "" {
+	if severity := c.Query("severity"); severity != "" {
 		filters["severity"] = severity
 	}
-	if violationType := queryParam(c, "violationType", "violation_type"); violationType != "" {
+	if violationType := c.Query("violationType"); violationType != "" {
 		filters["violation_type"] = violationType
 	}
-	if slaID := queryParam(c, "slaDefinitionId", "sla_definition_id"); slaID != "" {
+	if slaID := c.Query("slaDefinitionId"); slaID != "" {
 		if id, _ := strconv.Atoi(slaID); id > 0 {
 			filters["sla_definition_id"] = id
 		}
@@ -644,8 +635,8 @@ func (h *Handler) GetSLAComplianceReport(c *gin.Context) {
 
 	// Parse query parameters.
 	// camelCase 是查询参数的契约写法，snake_case 仅兼容存量调用方。
-	startDateStr := queryParam(c, "startDate", "start_date")
-	endDateStr := queryParam(c, "endDate", "end_date")
+	startDateStr := c.Query("startDate")
+	endDateStr := c.Query("endDate")
 
 	if startDateStr == "" || endDateStr == "" {
 		common.ParamError(c, "startDate and endDate are required")

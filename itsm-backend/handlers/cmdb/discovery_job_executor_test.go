@@ -158,7 +158,7 @@ func TestDiscoveryJobExecutor_EndToEnd(t *testing.T) {
 				CloudServiceCode: "ecs"},
 		},
 	}
-	executor := NewDiscoveryJobExecutor(repo, &fakeRegistry{adapter: adapter}, &fakeResolver{}, nopLogger())
+	executor := NewDiscoveryJobExecutor(repo, &fakeRegistry{adapter: adapter}, &fakeResolver{}, nil, nopLogger())
 
 	require.NoError(t, executor.Execute(ctx, tenantID, created.ID))
 
@@ -259,7 +259,7 @@ func TestDiscoveryJobExecutor_MultiRegionMissingScanIsRegionScoped(t *testing.T)
 			"cn-beijing":  {{BaseResource: cloud.BaseResource{ResourceID: "bj-1", Region: "cn-beijing", Status: "Running"}, CloudServiceCode: "ecs"}},
 		},
 	}
-	executor := NewDiscoveryJobExecutor(repo, &fakeRegistry{adapter: adapter}, &fakeResolver{}, nopLogger())
+	executor := NewDiscoveryJobExecutor(repo, &fakeRegistry{adapter: adapter}, &fakeResolver{}, nil, nopLogger())
 
 	first, err := svc.CreateDiscoveryJob(ctx, tenantID, 9, &dto.DiscoveryJobRequest{SourceID: "ds-disc-multiregion"})
 	require.NoError(t, err)

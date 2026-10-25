@@ -206,12 +206,13 @@ type ProblemCommentResponse struct {
 }
 
 // ListProblemCommentsResponse 评论列表信封。
-// 键名与工单评论列表一致（items/total/page/size），前端可复用同一渲染组件。
+// 键名与工单评论列表一致（items/total/page/pageSize/totalPages），前端可复用同一渲染组件。
 type ListProblemCommentsResponse struct {
-	Items []*ProblemCommentResponse `json:"items"`
-	Total int                       `json:"total"`
-	Page  int                       `json:"page"`
-	Size  int                       `json:"size"`
+	Items      []*ProblemCommentResponse `json:"items"`
+	Total      int                       `json:"total"`
+	Page       int                       `json:"page"`
+	PageSize   int                       `json:"pageSize"`
+	TotalPages int                       `json:"totalPages"`
 }
 
 // ProblemSLAResponse 问题 SLA 读面（GET /api/v1/problems/:id/sla）。

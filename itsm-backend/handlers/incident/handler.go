@@ -1314,6 +1314,7 @@ func (h *IncidentHandler) toDTO(i *Incident, slaState *ent.SLAState) *dto.Incide
 		ImpactAnalysis:        impactAnalysis,
 		RootCause:             rootCause,
 		ResolutionSteps:       resolutionSteps,
+		Resolution:            resolutionText(resolutionSteps),
 		DetectedAt:            i.DetectedAt,
 		ResolvedAt:            i.ResolvedAt,
 		SLADefinitionID:       slaDefinitionID,
@@ -1334,6 +1335,22 @@ func (h *IncidentHandler) toDTO(i *Incident, slaState *ent.SLAState) *dto.Incide
 		CreatedAt:             i.CreatedAt,
 		UpdatedAt:             i.UpdatedAt,
 	}
+}
+
+// resolutionText 从解决步骤里取「最后一条已完成步骤」的描述，作为平字段
+// resolution 下发。事件没有独立 resolution 列：resolve 动作把说明写成最后一条
+// status=completed 的步骤，因此两者同源；这里只做派生，不新建存储副本。
+// 仍处于 pending / in_progress 的步骤不算解决说明。
+func resolutionText(steps []dto.ResolutionStep) string {
+	for i := len(steps) - 1; i >= 0; i-- {
+		if steps[i].Status != "completed" {
+			continue
+		}
+		if text := strings.TrimSpace(steps[i].Description); text != "" {
+			return text
+		}
+	}
+	return ""
 }
 
 // GetStats 获取事件统计数据（兼容前端）。

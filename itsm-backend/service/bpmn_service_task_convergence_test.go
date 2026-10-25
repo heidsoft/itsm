@@ -42,6 +42,7 @@ func (h *countingHandler) GetHandlerID() string { return "test_convergence_handl
 func (h *countingHandler) Validate(context.Context, map[string]interface{}) error {
 	return nil
 }
+
 func (h *countingHandler) Execute(_ context.Context, _ *ent.ProcessTask, variables map[string]interface{}) (*dto.ServiceTaskResult, error) {
 	h.calls++
 	if h.crashFlag != nil {
@@ -201,6 +202,7 @@ func (h *failingHandler) GetHandlerID() string { return "test_convergence_handle
 func (h *failingHandler) Validate(context.Context, map[string]interface{}) error {
 	return nil
 }
+
 func (h *failingHandler) Execute(context.Context, *ent.ProcessTask, map[string]interface{}) (*dto.ServiceTaskResult, error) {
 	h.calls++
 	return nil, assert.AnError

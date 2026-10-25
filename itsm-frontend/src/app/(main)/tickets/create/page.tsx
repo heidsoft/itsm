@@ -151,6 +151,10 @@ export default function CreateTicketPage() {
   const [aiError, setAiError] = useState<string | null>(null);
   // 分类下拉选项：从后端 TicketCategory 主数据动态拉取，避免前后端分类词表零重合
   const [categoryOptions, setCategoryOptions] = useState<{ label: string; value: string }[]>([]);
+  // AI triage 返回的分类是**英文 code**（network/database/…），而下拉选项的 value
+  // 是分类**名称**（网络故障/数据库问题/…）。缺这张 code→name 映射时，AI 建议
+  // 永远匹配不上下拉项，分类字段不会被回填（2026-10-25 浏览器实测）。
+  const [categoryNameByCode, setCategoryNameByCode] = useState<Record<string, string>>({});
   const [categoryLoading, setCategoryLoading] = useState(false);
   const [categoryError, setCategoryError] = useState<{ denied: boolean; detail: string } | null>(
     null
@@ -226,11 +230,18 @@ export default function CreateTicketPage() {
     setCategoryError(null);
     try {
       const res = await TicketCategoryApi.getCategories({ isActive: true, pageSize: BACKEND_MAX_PAGE_SIZE });
-      setCategoryOptions(
-        res.items.filter(c => c.isActive !== false).map(c => ({ label: c.name, value: c.name }))
+      const active = res.items.filter(c => c.isActive !== false);
+      setCategoryOptions(active.map(c => ({ label: c.name, value: c.name })));
+      // 同时记录 code → name，供 AI triage 把英文分类 slug 翻译成下拉可选值
+      setCategoryNameByCode(
+        active.reduce<Record<string, string>>((acc, c) => {
+          if (c.code) acc[c.code] = c.name;
+          return acc;
+        }, {})
       );
     } catch (e) {
       setCategoryOptions([]);
+      setCategoryNameByCode({});
       setCategoryError({
         denied: isPermissionDeniedError(e),
         detail: e instanceof Error ? e.message : '',
@@ -361,20 +372,33 @@ export default function CreateTicketPage() {
   };
 
   // AI 智能分类
+  //
+  // 只校验 AI 真正需要的字段（标题/描述），**不得**调用 form.validateFields()：
+  // 那会连带校验当前工单类型的全部必填动态字段（账号类型/目标系统/用户名…），
+  // 校验不通过时抛出异常被下面的 catch 吞掉，界面弹出「AI 分类服务暂时不可用」——
+  // 把「表单还没填完」误报成「服务故障」，用户和运维都会被带偏（2026-10-25 实测）。
   const handleAITriage = async () => {
+    const values = form.getFieldsValue(['title', 'description', 'category', 'priority']) as {
+      title?: string;
+      description?: string;
+      category?: string;
+      priority?: string;
+    };
+
+    const title = (values.title || (selectedType ? `${selectedType.name}请求` : '')).trim();
+    const description = (values.description || '').trim();
+
+    if (!title) {
+      // 只标红标题本身，不牵连其它必填项
+      form.setFields([{ name: 'title', errors: ['请先填写标题，AI 需要它才能判断分类'] }]);
+      message.warning('请先填写标题');
+      return;
+    }
+
+    setAiLoading(true);
+    setAiError(null);
+
     try {
-      const values = await form.validateFields();
-      const title = values.title || (selectedType ? `${selectedType.name}请求` : '');
-      const description = values.description || '';
-
-      if (!title) {
-        message.warning('请先填写标题');
-        return;
-      }
-
-      setAiLoading(true);
-      setAiError(null);
-
       const response = await httpClient.post<any>('/api/v1/ai/triage', {
         title,
         description,
@@ -382,24 +406,49 @@ export default function CreateTicketPage() {
         priority: values.priority,
       });
 
-      if (response?.suggestions) {
-        setAiSuggestions(response.suggestions);
-        // 自动应用建议：分类仅在与后端主数据匹配时回填，
-        // 否则 AI 返回的英文 slug（database/network/…）与 TicketCategory 名称不匹配会导致提交失败
-        if (
-          response.suggestions.category &&
-          categoryOptions.some(o => o.value === response.suggestions.category)
-        ) {
-          form.setFieldValue('category', response.suggestions.category);
-        }
-        if (response.suggestions.priority) {
-          form.setFieldValue('priority', response.suggestions.priority);
-        }
-        message.success('AI 分类建议已应用');
+      if (!response?.suggestions) {
+        setAiError('AI 未返回分类建议，请补充描述后重试');
+        return;
+      }
+
+      const suggestion = response.suggestions;
+      setAiSuggestions(suggestion);
+
+      // 分类回填：AI 给的是 code（network），下拉 value 是 name（网络故障），
+      // 必须经 code→name 映射后再判断是否可选，否则建议会被静默丢弃。
+      const categoryName =
+        categoryNameByCode[suggestion.category] ??
+        (categoryOptions.some(o => o.value === suggestion.category) ? suggestion.category : undefined);
+
+      const applied: string[] = [];
+      if (categoryName) {
+        form.setFieldValue('category', categoryName);
+        applied.push(`分类「${categoryName}」`);
+      }
+      if (suggestion.priority) {
+        form.setFieldValue('priority', suggestion.priority);
+        applied.push(`优先级「${priorityLabel(suggestion.priority)}」`);
+      }
+
+      // 成功提示必须反映**实际回填了什么**，不能无条件报成功：
+      // 分类匹配不上时只说分类没回填，避免用户以为已生效。
+      if (applied.length > 0) {
+        message.success(`AI 建议已应用：${applied.join('、')}`);
+      }
+      if (!categoryName && suggestion.category) {
+        message.warning(
+          `AI 建议分类「${suggestion.category}」不在当前分类主数据中，未自动回填，请手动选择`
+        );
       }
     } catch (e: unknown) {
       console.error('AI triage error:', e);
-      setAiError('AI 分类服务暂时不可用');
+      // 区分「服务不可用」与「请求被拒」：只有网络/5xx 才是服务问题
+      const status = (e as { status?: number })?.status;
+      setAiError(
+        status && status >= 400 && status < 500
+          ? 'AI 分类请求被拒绝，请刷新页面后重试'
+          : 'AI 分类服务暂时不可用，请稍后重试'
+      );
     } finally {
       setAiLoading(false);
     }
@@ -801,8 +850,72 @@ export default function CreateTicketPage() {
                 </Card>
               )}
 
+              {/* AI 智能分类区域
+                  放在提交按钮之前：它是「填表辅助」而不是「提交后动作」。
+                  原先排在取消/创建工单之后，用户看到按钮就以为表单结束，
+                  而且它要回填的「分类」字段在很上方，操作与结果分处两屏。 */}
+              <Card
+                size='small'
+                className='mt-4'
+                title={
+                  <span className='flex items-center gap-2'>
+                    <Sparkles className='w-4 h-4 text-yellow-500' />
+                    AI 辅助分类
+                  </span>
+                }
+              >
+                <Spin spinning={aiLoading}>
+                  {aiError && <Alert title={aiError} type='warning' showIcon className='mb-2' />}
+                  {aiSuggestions ? (
+                    <div className='space-y-2'>
+                      <div className='flex flex-wrap gap-2'>
+                        {aiSuggestions.category && (
+                          <Tag color='blue'>
+                            分类: {categoryNameByCode[aiSuggestions.category] ?? aiSuggestions.category}
+                          </Tag>
+                        )}
+                        {aiSuggestions.priority && (
+                          <Tag
+                            color={
+                              ['urgent', 'critical'].includes(aiSuggestions.priority) ? 'red' : 'orange'
+                            }
+                          >
+                            优先级: {priorityLabel(aiSuggestions.priority)}
+                          </Tag>
+                        )}
+                        {aiSuggestions.urgency && (
+                          <Tag color='purple'>紧急度: {priorityLabel(aiSuggestions.urgency)}</Tag>
+                        )}
+                      </div>
+                      {aiSuggestions.reasoning && (
+                        <Text type='secondary' className='text-sm'>
+                          {aiSuggestions.reasoning}
+                        </Text>
+                      )}
+                      {aiSuggestions.confidence && (
+                        <Text type='secondary' className='text-xs'>
+                          置信度: {Math.round(aiSuggestions.confidence * 100)}%
+                        </Text>
+                      )}
+                    </div>
+                  ) : (
+                    <Text type='secondary'>获取AI智能分类建议</Text>
+                  )}
+                </Spin>
+                <Button
+                  type='default'
+                  icon={<Sparkles className='w-4 h-4' />}
+                  onClick={handleAITriage}
+                  loading={aiLoading}
+                  className='mt-2'
+                  block
+                >
+                  获取 AI 建议
+                </Button>
+              </Card>
+
               <div
-                className='flex flex-col-reverse gap-3 sm:flex-row sm:justify-end'
+                className='mt-4 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end'
                 role='group'
                 aria-label='表单操作按钮'
               >
@@ -834,61 +947,6 @@ export default function CreateTicketPage() {
                   创建工单
                 </Button>
               </div>
-
-              {/* AI 智能分类区域 */}
-              <Card
-                size='small'
-                className='mt-4'
-                title={
-                  <span className='flex items-center gap-2'>
-                    <Sparkles className='w-4 h-4 text-yellow-500' />
-                    AI 辅助分类
-                  </span>
-                }
-              >
-                <Spin spinning={aiLoading}>
-                  {aiError && <Alert title={aiError} type='warning' showIcon className='mb-2' />}
-                  {aiSuggestions ? (
-                    <div className='space-y-2'>
-                      <div className='flex flex-wrap gap-2'>
-                        {aiSuggestions.category && (
-                          <Tag color='blue'>分类: {aiSuggestions.category}</Tag>
-                        )}
-                        {aiSuggestions.priority && (
-                          <Tag color={aiSuggestions.priority === 'urgent' ? 'red' : 'orange'}>
-                            优先级: {aiSuggestions.priority}
-                          </Tag>
-                        )}
-                        {aiSuggestions.urgency && (
-                          <Tag color='purple'>紧急度: {aiSuggestions.urgency}</Tag>
-                        )}
-                      </div>
-                      {aiSuggestions.reasoning && (
-                        <Text type='secondary' className='text-sm'>
-                          {aiSuggestions.reasoning}
-                        </Text>
-                      )}
-                      {aiSuggestions.confidence && (
-                        <Text type='secondary' className='text-xs'>
-                          置信度: {Math.round(aiSuggestions.confidence * 100)}%
-                        </Text>
-                      )}
-                    </div>
-                  ) : (
-                    <Text type='secondary'>获取AI智能分类建议</Text>
-                  )}
-                </Spin>
-                <Button
-                  type='default'
-                  icon={<Sparkles className='w-4 h-4' />}
-                  onClick={handleAITriage}
-                  loading={aiLoading}
-                  className='mt-2'
-                  block
-                >
-                  获取 AI 建议
-                </Button>
-              </Card>
             </Form>
           </Col>
         </Row>

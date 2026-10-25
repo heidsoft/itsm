@@ -43,13 +43,19 @@ func TestProblemCommentsContract(t *testing.T) {
 	require.Equal(t, http.StatusOK, w.Code, w.Body.String())
 	var empty struct {
 		Data struct {
-			Items []*ProblemComment `json:"items"`
-			Total int               `json:"total"`
+			Items      []*ProblemComment `json:"items"`
+			Total      int               `json:"total"`
+			Page       int               `json:"page"`
+			PageSize   int               `json:"pageSize"`
+			TotalPages int               `json:"totalPages"`
 		} `json:"data"`
 	}
 	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &empty))
 	assert.Empty(t, empty.Data.Items)
 	assert.Equal(t, 0, empty.Data.Total)
+	assert.Equal(t, 1, empty.Data.Page)
+	assert.Equal(t, 20, empty.Data.PageSize)
+	assert.Equal(t, 0, empty.Data.TotalPages)
 
 	// 写入：内容 Trim、内部备注标志、@提及与附件引用原样回显
 	w = httptest.NewRecorder()

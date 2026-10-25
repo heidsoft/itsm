@@ -19,6 +19,7 @@ import {
   App,
   Spin,
   Empty,
+  Alert,
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import {
@@ -40,11 +41,22 @@ import { RotateCcw, FileSpreadsheet } from 'lucide-react';
 import dayjs from 'dayjs';
 import type { TicketAnalyticsResponse } from '@/lib/services/analytics-service';
 import { ticketAnalyticsService } from '@/lib/services/analytics-service';
-import { ticketService, TicketStatsResponse } from '@/lib/services/ticket-service';
+import { ticketService } from '@/lib/services/ticket-service';
+import { isPermissionDeniedError, serverErrorMessage } from '@/lib/api/http-client';
 import { TicketDeepAnalytics } from '@/components/business/TicketDeepAnalytics';
 
 const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
+
+type LoadNotice = {
+  fatal: boolean;
+  denied: boolean;
+  // 两个数据源权限不同，提示里必须说清缺的是哪一块、要哪个权限码，
+  // 否则使用者只能看到「获取分析数据失败」。
+  source: string;
+  permission: string;
+  detail: string;
+};
 
 const TicketAnalytics: React.FC = () => {
   const [loading, setLoading] = useState(false);
@@ -55,6 +67,10 @@ const TicketAnalytics: React.FC = () => {
     dayjs(),
   ]);
   const [analyticsData, setAnalyticsData] = useState<TicketAnalyticsResponse | null>(null);
+  // GET /tickets/stats 只要 ticket:read，GET /analytics/tickets 要 report:read。
+  // 之前用 Promise.all + 全 0 兜底：坐席点进来（菜单码曾错挂 ticket:read）就被 403
+  // 打回一屏 0，把「没有权限」渲染成「这个租户没有工单」。
+  const [loadNotice, setLoadNotice] = useState<LoadNotice | null>(null);
   const [activeTab, setActiveTab] = useState('overview');
 
   function getInitialData(): TicketAnalyticsResponse {
@@ -78,46 +94,75 @@ const TicketAnalytics: React.FC = () => {
     };
   }
 
-  // 获取数据
   const fetchData = useCallback(async () => {
     setLoading(true);
-    try {
-      const [analyticsRes, statsRes] = await Promise.all([
-        ticketAnalyticsService.getAnalytics({
-          dateFrom: dateRange[0].format('YYYY-MM-DD'),
-          dateTo: dateRange[1].format('YYYY-MM-DD'),
-        }),
-        ticketService.getTicketStats(),
-      ]);
+    const [analyticsResult, statsResult] = await Promise.allSettled([
+      ticketAnalyticsService.getAnalytics({
+        dateFrom: dateRange[0].format('YYYY-MM-DD'),
+        dateTo: dateRange[1].format('YYYY-MM-DD'),
+      }),
+      ticketService.getTicketStats(),
+    ]);
 
-      // 适配后端返回格式到前端期望的格式
-      const adaptedData: TicketAnalyticsResponse = {
-        totalTickets: statsRes.total || analyticsRes.totalTickets || 0,
-        openTickets: statsRes.open || analyticsRes.openTickets || 0,
-        resolvedTickets: statsRes.resolved || analyticsRes.resolvedTickets || 0,
-        closedTickets: analyticsRes.closedTickets || 0,
-        overdueTickets: statsRes.overdue || analyticsRes.overdueTickets || 0,
-        dailyTrend: analyticsRes.dailyTrend || [],
-        statusDistribution: analyticsRes.statusDistribution || [],
-        priorityDistribution: analyticsRes.priorityDistribution || [],
-        typeDistribution: analyticsRes.typeDistribution || [],
-        processingTimeStats: analyticsRes.processingTimeStats || {
-          avgProcessingTime: 0,
-          avgResolutionTime: 0,
-          slaComplianceRate: 0,
-        },
-        teamPerformance: analyticsRes.teamPerformance || [],
-        hotCategories: analyticsRes.hotCategories || [],
-      };
+    const analytics = analyticsResult.status === 'fulfilled' ? analyticsResult.value : null;
+    const stats = statsResult.status === 'fulfilled' ? statsResult.value : null;
 
-      setAnalyticsData(adaptedData);
-    } catch (error) {
-      console.error('Failed to fetch analytics data:', error);
-      message.error('获取分析数据失败');
-      setAnalyticsData(getInitialData());
-    } finally {
+    // 两边都失败才是整页失败：此时不渲染任何数字，避免 0 冒充统计结果。
+    if (!analytics && !stats) {
+      const reasons = [analyticsResult, statsResult]
+        .filter((r): r is PromiseRejectedResult => r.status === 'rejected')
+        .map((r) => r.reason);
+      const deniedError = reasons.find(isPermissionDeniedError);
+      const error = deniedError ?? reasons[0];
+      setAnalyticsData(null);
+      setLoadNotice({
+        fatal: true,
+        denied: Boolean(deniedError),
+        source: '工单分析数据',
+        permission: 'report:read / ticket:read',
+        detail: serverErrorMessage(error, '后端未能返回工单统计。'),
+      });
       setLoading(false);
+      return;
     }
+
+    // stats 是租户全量、不随日期筛选变化；analytics 是所选窗口的明细。
+    // 口径差异由下方提示说明，不再用 || 把 0 当成缺失值。
+    const adaptedData: TicketAnalyticsResponse = {
+      totalTickets: stats?.total ?? analytics?.totalTickets ?? 0,
+      openTickets: stats?.open ?? analytics?.openTickets ?? 0,
+      resolvedTickets: stats?.resolved ?? analytics?.resolvedTickets ?? 0,
+      closedTickets: stats?.closed ?? analytics?.closedTickets ?? 0,
+      overdueTickets: stats?.overdue ?? analytics?.overdueTickets ?? 0,
+      dailyTrend: analytics?.dailyTrend ?? [],
+      statusDistribution: analytics?.statusDistribution ?? [],
+      priorityDistribution: analytics?.priorityDistribution ?? [],
+      typeDistribution: analytics?.typeDistribution ?? [],
+      processingTimeStats: analytics?.processingTimeStats ?? getInitialData().processingTimeStats,
+      teamPerformance: analytics?.teamPerformance ?? [],
+      hotCategories: analytics?.hotCategories ?? [],
+    };
+
+    setAnalyticsData(adaptedData);
+    if (analytics && stats) {
+      setLoadNotice(null);
+    } else {
+      // analytics 缺失 → 日期窗口内的趋势/分布看不了（report:read）；
+      // stats 缺失 → 只剩窗口口径（ticket:read）。两者文案与权限码不同，分开给。
+      const missing = analytics
+        ? { source: '工单总量', permission: 'ticket:read' }
+        : { source: '日期窗口内的趋势与分布', permission: 'report:read' };
+      const failed = analytics ? statsResult : analyticsResult;
+      const error = failed.status === 'rejected' ? failed.reason : undefined;
+      setLoadNotice({
+        fatal: false,
+        denied: isPermissionDeniedError(error),
+        source: missing.source,
+        permission: missing.permission,
+        detail: serverErrorMessage(error, '后端未能返回该数据源。'),
+      });
+    }
+    setLoading(false);
   }, [dateRange]);
 
   useEffect(() => {
@@ -216,6 +261,37 @@ const TicketAnalytics: React.FC = () => {
       ),
     },
   ];
+
+  const noticeAlert = loadNotice && (
+    <Alert
+      className="mb-4"
+      type={loadNotice.denied ? 'warning' : 'error'}
+      showIcon
+      title={loadNotice.denied ? `${loadNotice.source}没有访问权限` : `${loadNotice.source}加载失败`}
+      description={
+        loadNotice.denied
+          ? `${loadNotice.detail}。该数据源需要 ${loadNotice.permission}，请联系管理员为当前角色开放该权限；缺少的数据块不等于租户里没有工单。`
+          : `${loadNotice.detail}。请稍后重试；若持续失败，请联系管理员查看后端日志。`
+      }
+      action={
+        <Button size="small" icon={<RotateCcw />} onClick={fetchData} loading={loading}>
+          重试
+        </Button>
+      }
+    />
+  );
+
+  // 整页失败：不渲染 KPI 卡片和图表，0 会被读成「这个租户没有工单」。
+  if (loadNotice?.fatal) {
+    return (
+      <div className="p-6">
+        <Title level={2} className="mb-4">
+          工单分析
+        </Title>
+        {noticeAlert}
+      </div>
+    );
+  }
 
   if (!analyticsData) {
     return (
@@ -423,6 +499,8 @@ const TicketAnalytics: React.FC = () => {
           </Space>
         </div>
       </div>
+
+      {noticeAlert}
 
       <Spin spinning={loading}>
         <Tabs

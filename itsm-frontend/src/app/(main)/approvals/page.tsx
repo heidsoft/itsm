@@ -46,6 +46,7 @@ import { httpClient } from '@/lib/api/http-client';
 import { WorkflowApi, type BpmnMyTask } from '@/lib/api/workflow-api';
 import { UserApi, type User } from '@/lib/api/user-api';
 import { useAuthStore } from '@/lib/store/auth-store';
+import { useI18n } from '@/lib/i18n/useI18n';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 
@@ -59,36 +60,43 @@ const { TextArea } = Input;
 // 待处理任务状态（后端 status：created/assigned/started 均视为待办）
 const PENDING_TASK_STATUSES = new Set(['created', 'assigned', 'started', 'pending']);
 
-const taskStatusMap: Record<string, { text: string; color: string }> = {
-  created: { text: '待领取', color: 'gold' },
-  assigned: { text: '已分配', color: 'blue' },
-  started: { text: '处理中', color: 'processing' },
-  pending: { text: '待处理', color: 'gold' },
-  completed: { text: '已完成', color: 'green' },
-  cancelled: { text: '已取消', color: 'default' },
+const taskStatusColorMap: Record<string, string> = {
+  created: 'gold',
+  assigned: 'blue',
+  started: 'processing',
+  pending: 'gold',
+  completed: 'green',
+  cancelled: 'default',
 };
 
-// 业务类型 → 展示名 + 详情路由
-const businessTypeMap: Record<string, { label: string; url: (id: number) => string }> = {
-  ticket: { label: '工单', url: (id) => `/tickets/${id}` },
-  change: { label: '变更', url: (id) => `/changes/${id}` },
-  incident: { label: '事件', url: (id) => `/incidents/${id}` },
-  problem: { label: '问题', url: (id) => `/problems/${id}` },
-  service_request: { label: '服务请求', url: (id) => `/service-requests/${id}` },
+const taskStatusKeyMap: Record<string, string> = {
+  created: 'statusCreated',
+  assigned: 'statusAssigned',
+  started: 'statusStarted',
+  pending: 'statusPending',
+  completed: 'statusCompleted',
+  cancelled: 'statusCancelled',
 };
 
-function getBusinessLink(task: BpmnMyTask): { label: string; url: string } | null {
-  if (task.businessType && task.businessId) {
-    const meta = businessTypeMap[task.businessType];
-    if (meta) {
-      return { label: `${meta.label} #${task.businessId}`, url: meta.url(task.businessId) };
-    }
-  }
-  // 流程实例统一以 PI-* 业务键寻址（processInstanceKey）；数字 Ent ID 不再是任何端点的寻址键。
-  if (task.processInstanceKey) {
-    return { label: `流程实例 #${task.processInstanceKey}`, url: `/workflow/instances/${task.processInstanceKey}` };
-  }
-  return null;
+const taskPurposeKeyMap: Record<string, string> = {
+  approval: 'purposeApproval',
+  work: 'purposeWork',
+  rework: 'purposeRework',
+};
+
+// 业务类型 → i18n key + 详情路由
+const businessTypeMap: Record<string, { labelKey: string; url: (id: number) => string }> = {
+  ticket: { labelKey: 'bizTicket', url: (id) => `/tickets/${id}` },
+  change: { labelKey: 'bizChange', url: (id) => `/changes/${id}` },
+  incident: { labelKey: 'bizIncident', url: (id) => `/incidents/${id}` },
+  problem: { labelKey: 'bizProblem', url: (id) => `/problems/${id}` },
+  service_request: { labelKey: 'bizServiceRequest', url: (id) => `/service-requests/${id}` },
+};
+
+// 引擎按 taskPurpose 决定任务语义：未声明一律按 work 处理（P0-1 D2），
+// 因此只有显式 approval 才使用「批准」文案，其余按「完成」呈现。
+function isApprovalTask(task?: BpmnMyTask): boolean {
+  return (task?.taskPurpose || '').toLowerCase() === 'approval';
 }
 
 // ==================== 旧业务参考视图（只读） ====================
@@ -121,8 +129,15 @@ const priorityColorMap: Record<string, string> = {
   low: 'green',
 };
 
+const legacyTypeMeta: Record<LegacyPendingItem['type'], { labelKey: string; icon: React.ReactNode }> = {
+  ticket: { labelKey: 'bizTicket', icon: <FileText className="w-3 h-3 inline mr-1" /> },
+  change: { labelKey: 'bizChange', icon: <Wrench className="w-3 h-3 inline mr-1" /> },
+  service_request: { labelKey: 'bizServiceRequest', icon: <Headphones className="w-3 h-3 inline mr-1" /> },
+};
+
 export default function ApprovalsCenterPage() {
-  const { message, modal } = App.useApp();
+  const { message } = App.useApp();
+  const { t } = useI18n();
   const { user } = useAuthStore();
 
   // BPMN 待办
@@ -153,6 +168,39 @@ export default function ApprovalsCenterPage() {
   const [legacyItems, setLegacyItems] = useState<LegacyPendingItem[]>([]);
   const [activeTab, setActiveTab] = useState('bpmn-tasks');
 
+  const getBusinessLink = useCallback(
+    (task: BpmnMyTask): { label: string; url: string } | null => {
+      if (task.businessType && task.businessId) {
+        const meta = businessTypeMap[task.businessType];
+        if (meta) {
+          return { label: `${t(`approvalCenter.${meta.labelKey}`)} #${task.businessId}`, url: meta.url(task.businessId) };
+        }
+      }
+      // 流程实例统一以 PI-* 业务键寻址（processInstanceKey）；数字 Ent ID 不再是任何端点的寻址键。
+      if (task.processInstanceKey) {
+        return {
+          label: t('approvalCenter.processInstanceRef', { key: task.processInstanceKey }),
+          url: `/workflow/instances/${task.processInstanceKey}`,
+        };
+      }
+      return null;
+    },
+    [t]
+  );
+
+  const statusTag = useCallback(
+    (status: string) => {
+      const key = (status || '').toLowerCase();
+      const labelKey = taskStatusKeyMap[key];
+      return (
+        <Tag color={taskStatusColorMap[key] || 'default'}>
+          {labelKey ? t(`approvalCenter.${labelKey}`) : status}
+        </Tag>
+      );
+    },
+    [t]
+  );
+
   const loadTasks = useCallback(async () => {
     setTaskLoading(true);
     try {
@@ -160,11 +208,11 @@ export default function ApprovalsCenterPage() {
       // 后端仅支持单状态过滤，这里客户端过滤出待处理任务
       setTasks(res.items.filter((t) => PENDING_TASK_STATUSES.has((t.status || '').toLowerCase())));
     } catch {
-      message.error('加载流程待办失败');
+      message.error(t('approvalCenter.loadTasksFailed'));
     } finally {
       setTaskLoading(false);
     }
-  }, [message]);
+  }, [message, t]);
 
   const loadLegacy = useCallback(async () => {
     setLegacyLoading(true);
@@ -177,20 +225,20 @@ export default function ApprovalsCenterPage() {
         httpClient.get<{ items?: RawListItem[] }>('/api/v1/service-requests', { status: 'pending', page: 1, pageSize: 20 }).catch(() => ({ items: [] as RawListItem[] })),
       ]);
       const items: LegacyPendingItem[] = [
-        ...(ticketsResp.items ?? []).filter((t) => t.id != null).map((t) => ({
-          id: t.id!,
+        ...(ticketsResp.items ?? []).filter((it) => it.id != null).map((it) => ({
+          id: it.id!,
           type: 'ticket' as const,
-          title: t.title || `工单 #${t.id}`,
-          status: t.status || 'unknown',
-          priority: t.priority,
-          createdAt: t.createdAt || '',
-          url: `/tickets/${t.id}`,
-          requester: t.requesterName,
+          title: it.title || `${t('approvalCenter.bizTicket')} #${it.id}`,
+          status: it.status || 'unknown',
+          priority: it.priority,
+          createdAt: it.createdAt || '',
+          url: `/tickets/${it.id}`,
+          requester: it.requesterName,
         })),
         ...(changesResp.items ?? []).filter((c) => c.id != null).map((c) => ({
           id: c.id!,
           type: 'change' as const,
-          title: c.title || `变更 #${c.id}`,
+          title: c.title || `${t('approvalCenter.bizChange')} #${c.id}`,
           status: c.status || 'unknown',
           priority: c.priority,
           createdAt: c.scheduledStart || c.createdAt || '',
@@ -200,7 +248,7 @@ export default function ApprovalsCenterPage() {
         ...(srResp.items ?? []).filter((s) => s.id != null).map((s) => ({
           id: s.id!,
           type: 'service_request' as const,
-          title: s.title || `服务请求 #${s.id}`,
+          title: s.title || `${t('approvalCenter.bizServiceRequest')} #${s.id}`,
           status: s.status || 'unknown',
           priority: s.priority,
           createdAt: s.createdAt || '',
@@ -210,11 +258,11 @@ export default function ApprovalsCenterPage() {
       ];
       setLegacyItems(items);
     } catch {
-      message.error('加载业务待审列表失败');
+      message.error(t('approvalCenter.loadLegacyFailed'));
     } finally {
       setLegacyLoading(false);
     }
-  }, [message]);
+  }, [message, t]);
 
   useEffect(() => {
     loadTasks();
@@ -231,10 +279,10 @@ export default function ApprovalsCenterPage() {
     setClaiming(task.id);
     try {
       await WorkflowApi.claimMyTask(task.id);
-      message.success('任务已领取');
+      message.success(t('approvalCenter.claimed'));
       loadTasks();
     } catch (e) {
-      message.error(e instanceof Error ? e.message : '领取任务失败');
+      message.error(e instanceof Error ? e.message : t('approvalCenter.claimFailed'));
     } finally {
       setClaiming(null);
     }
@@ -251,7 +299,7 @@ export default function ApprovalsCenterPage() {
     if (!decision) return;
     const comment = decisionComment.trim();
     if (decision.action === 'reject' && !comment) {
-      message.warning('拒绝时必须填写审批意见');
+      message.warning(t('approvalCenter.rejectCommentRequired'));
       return;
     }
     setSubmitting(true);
@@ -260,12 +308,18 @@ export default function ApprovalsCenterPage() {
         action: decision.action,
         comment,
       });
-      message.success(decision.action === 'approve' ? '已批准' : '已拒绝');
+      if (decision.action === 'reject') {
+        message.success(t('approvalCenter.rejectedDone'));
+      } else {
+        message.success(
+          isApprovalTask(decision.task) ? t('approvalCenter.approvedDone') : t('approvalCenter.completedDone')
+        );
+      }
       setDecision(null);
       loadTasks();
       loadLegacy();
     } catch (e) {
-      message.error(e instanceof Error ? e.message : '提交审批决策失败');
+      message.error(e instanceof Error ? e.message : t('approvalCenter.decisionFailed'));
     } finally {
       setSubmitting(false);
     }
@@ -279,7 +333,7 @@ export default function ApprovalsCenterPage() {
       const res = await UserApi.getUsers({ page: 1, pageSize: 200 });
       setUserOptions(res.items.filter((u) => u.id !== user?.id && u.active));
     } catch {
-      message.error('加载用户列表失败');
+      message.error(t('approvalCenter.usersLoadFailed'));
     } finally {
       setUserLoading(false);
     }
@@ -293,11 +347,11 @@ export default function ApprovalsCenterPage() {
         action: 'delegate',
         delegateToUserId,
       });
-      message.success('任务已委托');
+      message.success(t('approvalCenter.delegated'));
       setDelegation(null);
       loadTasks();
     } catch (e) {
-      message.error(e instanceof Error ? e.message : '委托失败');
+      message.error(e instanceof Error ? e.message : t('approvalCenter.delegateFailed'));
     } finally {
       setSubmitting(false);
     }
@@ -311,7 +365,7 @@ export default function ApprovalsCenterPage() {
       const res = await UserApi.getUsers({ page: 1, pageSize: 200 });
       setAddApproverUserOptions(res.items.filter((u) => u.id !== user?.id && u.active));
     } catch {
-      message.error('加载用户列表失败');
+      message.error(t('approvalCenter.usersLoadFailed'));
     } finally {
       setAddApproverUserLoading(false);
     }
@@ -325,11 +379,11 @@ export default function ApprovalsCenterPage() {
         action: 'add_approver',
         addApproverUserId,
       });
-      message.success('加签成功');
+      message.success(t('approvalCenter.addApproverDone'));
       setAddApprover(null);
       loadTasks();
     } catch (e) {
-      message.error(e instanceof Error ? e.message : '加签失败');
+      message.error(e instanceof Error ? e.message : t('approvalCenter.addApproverFailed'));
     } finally {
       setSubmitting(false);
     }
@@ -338,20 +392,27 @@ export default function ApprovalsCenterPage() {
   // BPMN 待办表格列
   const taskColumns: ColumnsType<BpmnMyTask> = [
     {
-      title: '任务',
+      title: t('approvalCenter.colTask'),
       dataIndex: 'taskName',
       key: 'taskName',
-      render: (text: string, record: BpmnMyTask) => (
-        <div>
-          <div className="font-medium text-gray-900">{text || record.taskDefinitionKey}</div>
-          {record.taskPurpose && (
-            <Text type="secondary" className="text-xs">{record.taskPurpose}</Text>
-          )}
-        </div>
-      ),
+      // 必须给显式宽度：其余列都是固定宽，scroll.x 又小于这些宽度之和，
+      // 唯一自适应的一列会被压到接近 0px，中文按单字换行（2026-10-25 实测
+      // 审批中心出现「任/务」「请/求/受/理」竖排）。
+      width: 160,
+      render: (text: string, record: BpmnMyTask) => {
+        const purposeKey = taskPurposeKeyMap[(record.taskPurpose || '').toLowerCase()];
+        return (
+          <div>
+            <div className="font-medium text-gray-900">{text || record.taskDefinitionKey}</div>
+            {purposeKey && (
+              <Text type="secondary" className="text-xs">{t(`approvalCenter.${purposeKey}`)}</Text>
+            )}
+          </div>
+        );
+      },
     },
     {
-      title: '业务单据',
+      title: t('approvalCenter.colBusiness'),
       key: 'business',
       width: 180,
       render: (_: unknown, record: BpmnMyTask) => {
@@ -366,7 +427,7 @@ export default function ApprovalsCenterPage() {
       },
     },
     {
-      title: '流程',
+      title: t('approvalCenter.colProcess'),
       dataIndex: 'processDefinitionKey',
       key: 'processDefinitionKey',
       width: 180,
@@ -374,111 +435,112 @@ export default function ApprovalsCenterPage() {
       render: (key: string) => key ? <Tag icon={<GitBranch className="w-3 h-3 inline mr-1" />}>{key}</Tag> : '-',
     },
     {
-      title: '状态',
+      title: t('approvalCenter.colStatus'),
       dataIndex: 'status',
       key: 'status',
       width: 100,
-      render: (status: string) => {
-        const meta = taskStatusMap[(status || '').toLowerCase()];
-        return <Tag color={meta?.color || 'default'}>{meta?.text || status}</Tag>;
-      },
+      render: (status: string) => statusTag(status),
     },
     {
-      title: '负责人',
+      title: t('approvalCenter.colOwner'),
       dataIndex: 'assignee',
       key: 'assignee',
-      width: 110,
+      // 「系统管理员」这类 5 字姓名在 110px 里会折成三行，放宽到 130 并允许省略
+      width: 130,
+      ellipsis: true,
       responsive: ['md'],
       render: (assignee: string, record: BpmnMyTask) =>
         record.assigneeName ||
-        (assignee ? '未识别' : <Text type="secondary">未领取</Text>),
+        (assignee ? t('approvalCenter.ownerUnknown') : <Text type="secondary">{t('approvalCenter.ownerUnclaimed')}</Text>),
     },
     {
-      title: '创建时间',
+      title: t('approvalCenter.colCreated'),
       dataIndex: 'createdTime',
       key: 'createdTime',
       width: 130,
       responsive: ['xl'],
-      render: (t: string) => t ? (
-        <Tooltip title={dayjs(t).format('YYYY-MM-DD HH:mm:ss')}>
-          <span className="text-gray-500">{dayjs(t).fromNow()}</span>
+      render: (value: string) => value ? (
+        <Tooltip title={dayjs(value).format('YYYY-MM-DD HH:mm:ss')}>
+          <span className="text-gray-500">{dayjs(value).fromNow()}</span>
         </Tooltip>
       ) : '-',
     },
     {
-      title: '操作',
+      title: t('approvalCenter.colActions'),
       key: 'action',
       width: 280,
-      render: (_: unknown, record: BpmnMyTask) => (
-        <Space size="small">
-          {!record.assignee && (
+      // 审批页的主操作（完成/驳回/领取）必须常驻可见：列宽改到 1160 之后
+      // 表格会横向滚动，不固定这一列就要先滚到最右才能处理待办。
+      fixed: 'right',
+      render: (_: unknown, record: BpmnMyTask) => {
+        const approval = isApprovalTask(record);
+        return (
+          <Space size="small">
+            {!record.assignee && (
+              <Button
+                size="small"
+                icon={<Hand className="w-3 h-3" />}
+                loading={claiming === record.id}
+                onClick={() => handleClaim(record)}
+              >
+                {t('approvalCenter.claim')}
+              </Button>
+            )}
             <Button
+              type="primary"
               size="small"
-              icon={<Hand className="w-3 h-3" />}
-              loading={claiming === record.id}
-              onClick={() => handleClaim(record)}
+              icon={<Check className="w-3 h-3" />}
+              onClick={() => openDecision(record, 'approve')}
+              className="!bg-green-500 !border-green-500 hover:!bg-green-600 hover:!border-green-600"
             >
-              领取
+              {approval ? t('approvalCenter.approve') : t('approvalCenter.complete')}
             </Button>
-          )}
-          <Button
-            type="primary"
-            size="small"
-            icon={<Check className="w-3 h-3" />}
-            onClick={() => openDecision(record, 'approve')}
-            className="!bg-green-500 !border-green-500 hover:!bg-green-600 hover:!border-green-600"
-          >
-            批准
-          </Button>
-          <Button
-            danger
-            size="small"
-            icon={<X className="w-3 h-3" />}
-            onClick={() => openDecision(record, 'reject')}
-          >
-            拒绝
-          </Button>
-          {!!((record.taskVariables as Record<string, unknown>)?.allowDelegate) && (
             <Button
+              danger
               size="small"
-              icon={<ArrowRightLeft className="w-3 h-3" />}
-              onClick={() => openDelegation(record)}
+              icon={<X className="w-3 h-3" />}
+              onClick={() => openDecision(record, 'reject')}
             >
-              委托
+              {t('approvalCenter.reject')}
             </Button>
-          )}
-          {!!((record.taskVariables as Record<string, unknown>)?.allowAddApprover) && (
-            <Button
-              size="small"
-              icon={<UserPlus className="w-3 h-3" />}
-              onClick={() => openAddApprover(record)}
-            >
-              加签
-            </Button>
-          )}
-        </Space>
-      ),
+            {!!((record.taskVariables as Record<string, unknown>)?.allowDelegate) && (
+              <Button
+                size="small"
+                icon={<ArrowRightLeft className="w-3 h-3" />}
+                onClick={() => openDelegation(record)}
+              >
+                {t('approvalCenter.delegate')}
+              </Button>
+            )}
+            {!!((record.taskVariables as Record<string, unknown>)?.allowAddApprover) && (
+              <Button
+                size="small"
+                icon={<UserPlus className="w-3 h-3" />}
+                onClick={() => openAddApprover(record)}
+              >
+                {t('approvalCenter.addApprover')}
+              </Button>
+            )}
+          </Space>
+        );
+      },
     },
   ];
 
   // 旧业务参考视图表格列（只读，仅提供跳转）
   const legacyColumns: ColumnsType<LegacyPendingItem> = [
     {
-      title: '类型',
+      title: t('approvalCenter.colType'),
       dataIndex: 'type',
       key: 'type',
       width: 100,
       render: (type: LegacyPendingItem['type']) => {
-        const map: Record<LegacyPendingItem['type'], { label: string; icon: React.ReactNode }> = {
-          ticket: { label: '工单', icon: <FileText className="w-3 h-3 inline mr-1" /> },
-          change: { label: '变更', icon: <Wrench className="w-3 h-3 inline mr-1" /> },
-          service_request: { label: '服务请求', icon: <Headphones className="w-3 h-3 inline mr-1" /> },
-        };
-        return <Tag>{map[type].icon}{map[type].label}</Tag>;
+        const meta = legacyTypeMeta[type];
+        return <Tag>{meta.icon}{t(`approvalCenter.${meta.labelKey}`)}</Tag>;
       },
     },
     {
-      title: '标题',
+      title: t('approvalCenter.colTitle'),
       dataIndex: 'title',
       key: 'title',
       render: (text: string, record: LegacyPendingItem) => (
@@ -488,21 +550,21 @@ export default function ApprovalsCenterPage() {
       ),
     },
     {
-      title: '优先级',
+      title: t('approvalCenter.colPriority'),
       dataIndex: 'priority',
       key: 'priority',
       width: 90,
       render: (p: string) => p ? <Tag color={priorityColorMap[p] || 'default'}>{p.toUpperCase()}</Tag> : '-',
     },
     {
-      title: '状态',
+      title: t('approvalCenter.colStatus'),
       dataIndex: 'status',
       key: 'status',
       width: 100,
       render: (s: string) => <Tag color="gold">{s}</Tag>,
     },
     {
-      title: '申请人',
+      title: t('approvalCenter.colRequester'),
       dataIndex: 'requester',
       key: 'requester',
       width: 110,
@@ -510,24 +572,24 @@ export default function ApprovalsCenterPage() {
       render: (name: string) => name || '-',
     },
     {
-      title: '创建时间',
+      title: t('approvalCenter.colCreated'),
       dataIndex: 'createdAt',
       key: 'createdAt',
       width: 130,
       responsive: ['lg'],
-      render: (t: string) => t ? (
-        <Tooltip title={dayjs(t).format('YYYY-MM-DD HH:mm:ss')}>
-          <span className="text-gray-500">{dayjs(t).fromNow()}</span>
+      render: (value: string) => value ? (
+        <Tooltip title={dayjs(value).format('YYYY-MM-DD HH:mm:ss')}>
+          <span className="text-gray-500">{dayjs(value).fromNow()}</span>
         </Tooltip>
       ) : '-',
     },
     {
-      title: '操作',
+      title: t('approvalCenter.colActions'),
       key: 'action',
       width: 90,
       render: (_: unknown, record: LegacyPendingItem) => (
         <Link href={record.url}>
-          <Button size="small" icon={<ExternalLink className="w-3 h-3" />}>查看</Button>
+          <Button size="small" icon={<ExternalLink className="w-3 h-3" />}>{t('approvalCenter.view')}</Button>
         </Link>
       ),
     },
@@ -541,6 +603,27 @@ export default function ApprovalsCenterPage() {
     </div>
   );
 
+  const pagination = {
+    pageSize: 10,
+    showSizeChanger: true,
+    showTotal: (total: number) => t('approvalCenter.totalCount', { total }),
+  };
+
+  const decisionIsApproval = isApprovalTask(decision?.task);
+  const decisionTitle = !decision
+    ? ''
+    : decision.action === 'reject'
+      ? t('approvalCenter.rejectTitle')
+      : decisionIsApproval
+        ? t('approvalCenter.approveTitle')
+        : t('approvalCenter.completeTitle');
+  const decisionOkText =
+    decision?.action === 'reject'
+      ? t('approvalCenter.confirmReject')
+      : decisionIsApproval
+        ? t('approvalCenter.confirmApprove')
+        : t('approvalCenter.confirmComplete');
+
   return (
     <div className="p-4 md:p-6">
       {/* 头部区域 */}
@@ -550,9 +633,11 @@ export default function ApprovalsCenterPage() {
             <CheckCircle className="text-xl md:text-2xl text-blue-500" />
           </div>
           <div>
-            <Title level={3} className="!mb-0 !text-xl md:!text-2xl">审批中心</Title>
+            <Title level={3} className="!mb-0 !text-xl md:!text-2xl">{t('approvalCenter.title')}</Title>
             <Text type="secondary" className="text-sm">
-              {user?.username ? `${user.username}，` : ''}您有 {tasks.length} 项流程待办
+              {user?.username
+                ? t('approvalCenter.greetingWithName', { username: user.username, count: tasks.length })
+                : t('approvalCenter.greeting', { count: tasks.length })}
             </Text>
           </div>
         </div>
@@ -561,7 +646,7 @@ export default function ApprovalsCenterPage() {
           onClick={handleRefresh}
           loading={taskLoading || legacyLoading}
         >
-          刷新
+          {t('approvalCenter.refresh')}
         </Button>
       </div>
 
@@ -571,7 +656,7 @@ export default function ApprovalsCenterPage() {
           <Card className="border-l-4 border-l-blue-500">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-xs md:text-sm text-gray-500">流程待办</div>
+                <div className="text-xs md:text-sm text-gray-500">{t('approvalCenter.statProcessTasks')}</div>
                 <div className="text-2xl md:text-3xl font-bold text-blue-600">{tasks.length}</div>
               </div>
               <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-blue-50 flex items-center justify-center">
@@ -584,7 +669,7 @@ export default function ApprovalsCenterPage() {
           <Card className="border-l-4 border-l-gold-500">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-xs md:text-sm text-gray-500">待领取</div>
+                <div className="text-xs md:text-sm text-gray-500">{t('approvalCenter.statClaimable')}</div>
                 <div className="text-2xl md:text-3xl font-bold text-amber-500">
                   {tasks.filter((t) => !t.assignee).length}
                 </div>
@@ -599,7 +684,7 @@ export default function ApprovalsCenterPage() {
           <Card className="border-l-4 border-l-purple-500">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-xs md:text-sm text-gray-500">业务待审（参考）</div>
+                <div className="text-xs md:text-sm text-gray-500">{t('approvalCenter.statLegacy')}</div>
                 <div className="text-2xl md:text-3xl font-bold text-purple-600">{legacyItems.length}</div>
               </div>
               <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-purple-50 flex items-center justify-center">
@@ -620,7 +705,7 @@ export default function ApprovalsCenterPage() {
               key: 'bpmn-tasks',
               label: (
                 <span className="flex items-center gap-2">
-                  <GitBranch /> 流程待办
+                  <GitBranch /> {t('approvalCenter.tabProcessTasks')}
                   <Badge count={tasks.length} showZero={false} />
                 </span>
               ),
@@ -631,14 +716,16 @@ export default function ApprovalsCenterPage() {
                   rowKey="id"
                   dataSource={tasks}
                   columns={taskColumns}
-                  pagination={{ pageSize: 10, showSizeChanger: true, showTotal: (total) => `共 ${total} 项` }}
-                  scroll={{ x: 900 }}
+                  pagination={pagination}
+                  // 必须 >= 各列固定宽度之和（160+180+180+100+130+130+280=1160），
+                  // 否则自适应列被压扁，中文逐字换行。
+                  scroll={{ x: 1160 }}
                   locale={{
                     emptyText: (
                       <div className="py-12 text-center">
                         <Clock className="mx-auto mb-3 text-gray-300 w-10 h-10" />
-                        <div className="text-gray-500 mb-1">暂无流程待办</div>
-                        <Text type="secondary" className="text-sm">当前没有分配给您或待您领取的审批任务</Text>
+                        <div className="text-gray-500 mb-1">{t('approvalCenter.emptyTasksTitle')}</div>
+                        <Text type="secondary" className="text-sm">{t('approvalCenter.emptyTasksDesc')}</Text>
                       </div>
                     ),
                   }}
@@ -649,14 +736,14 @@ export default function ApprovalsCenterPage() {
               key: 'legacy',
               label: (
                 <span className="flex items-center gap-2">
-                  <FileText /> 业务待审（参考）
+                  <FileText /> {t('approvalCenter.tabLegacy')}
                   <Badge count={legacyItems.length} showZero={false} color="#999" />
                 </span>
               ),
               children: (
                 <div>
                   <div className="mb-3 px-3 py-2 bg-amber-50 border border-amber-200 rounded text-sm text-amber-700">
-                    此视图为业务单据状态参考，审批操作请在「流程待办」中完成，以保证流程实例正常推进。
+                    {t('approvalCenter.legacyNotice')}
                   </div>
                   {legacyLoading ? (
                     <LoadingSkeleton />
@@ -665,7 +752,7 @@ export default function ApprovalsCenterPage() {
                       rowKey={(r) => `${r.type}-${r.id}`}
                       dataSource={legacyItems}
                       columns={legacyColumns}
-                      pagination={{ pageSize: 10, showSizeChanger: true, showTotal: (total) => `共 ${total} 项` }}
+                      pagination={pagination}
                       scroll={{ x: 800 }}
                     />
                   )}
@@ -678,43 +765,54 @@ export default function ApprovalsCenterPage() {
 
       {/* 审批决策弹窗 */}
       <Modal
-        title={decision?.action === 'approve' ? '批准任务' : '拒绝任务'}
+        title={decisionTitle}
         open={!!decision}
         onOk={submitDecision}
         onCancel={() => setDecision(null)}
-        okText={decision?.action === 'approve' ? '确认批准' : '确认拒绝'}
+        okText={decisionOkText}
         okButtonProps={{
           danger: decision?.action === 'reject',
           loading: submitting,
         }}
-        cancelText="取消"
+        cancelText={t('approvalCenter.cancel')}
         destroyOnHidden
       >
         {decision && (
           <div className="space-y-3">
             <div>
-              <Text type="secondary">任务：</Text>
+              <Text type="secondary">{t('approvalCenter.lblTask')}</Text>
               <Text strong>{decision.task.taskName || decision.task.taskDefinitionKey}</Text>
             </div>
             {(() => {
               const link = getBusinessLink(decision.task);
               return link ? (
                 <div>
-                  <Text type="secondary">业务单据：</Text>
+                  <Text type="secondary">{t('approvalCenter.lblBusiness')}</Text>
                   <Link href={link.url} className="text-blue-600">{link.label}</Link>
                 </div>
               ) : null;
             })()}
             <div>
               <Text type="secondary">
-                审批意见{decision.action === 'reject' ? '（必填）' : '（选填）'}：
+                {decision.action === 'reject' || decisionIsApproval
+                  ? t('approvalCenter.lblApprovalComment')
+                  : t('approvalCenter.lblWorkComment')}
+                {decision.action === 'reject'
+                  ? t('approvalCenter.commentRequiredSuffix')
+                  : t('approvalCenter.commentOptionalSuffix')}
               </Text>
               <TextArea
                 rows={3}
                 className="mt-1"
                 value={decisionComment}
                 onChange={(e) => setDecisionComment(e.target.value)}
-                placeholder={decision.action === 'reject' ? '请填写拒绝原因' : '可填写审批意见'}
+                placeholder={
+                  decision.action === 'reject'
+                    ? t('approvalCenter.placeholderReject')
+                    : decisionIsApproval
+                      ? t('approvalCenter.placeholderApprove')
+                      : t('approvalCenter.placeholderWork')
+                }
                 maxLength={500}
                 showCount
               />
@@ -725,35 +823,35 @@ export default function ApprovalsCenterPage() {
 
       {/* 委托弹窗 */}
       <Modal
-        title="委托任务"
+        title={t('approvalCenter.delegateTitle')}
         open={!!delegation}
         onOk={submitDelegation}
         onCancel={() => setDelegation(null)}
-        okText="确认委托"
+        okText={t('approvalCenter.confirmDelegate')}
         okButtonProps={{ disabled: !delegateToUserId, loading: submitting }}
-        cancelText="取消"
+        cancelText={t('approvalCenter.cancel')}
         destroyOnHidden
       >
         {delegation && (
           <div className="space-y-3">
             <div>
-              <Text type="secondary">任务：</Text>
+              <Text type="secondary">{t('approvalCenter.lblTask')}</Text>
               <Text strong>{delegation.task.taskName || delegation.task.taskDefinitionKey}</Text>
             </div>
             {(() => {
               const link = getBusinessLink(delegation.task);
               return link ? (
                 <div>
-                  <Text type="secondary">业务单据：</Text>
+                  <Text type="secondary">{t('approvalCenter.lblBusiness')}</Text>
                   <Link href={link.url} className="text-blue-600">{link.label}</Link>
                 </div>
               ) : null;
             })()}
             <div>
-              <Text type="secondary">委托给：</Text>
+              <Text type="secondary">{t('approvalCenter.lblDelegateTo')}</Text>
               <Select
                 className="mt-1 w-full"
-                placeholder="选择被委托人"
+                placeholder={t('approvalCenter.placeholderSelectDelegate')}
                 loading={userLoading}
                 value={delegateToUserId}
                 onChange={setDelegateToUserId}
@@ -763,11 +861,11 @@ export default function ApprovalsCenterPage() {
                   value: u.id,
                   label: `${u.name}（${u.username}）`,
                 }))}
-                notFoundContent={userLoading ? '加载中…' : '无可用用户'}
+                notFoundContent={userLoading ? t('approvalCenter.loading') : t('approvalCenter.noUsers')}
               />
             </div>
             <div className="text-xs text-gray-400">
-              委托后任务将转交给被委托人处理，原负责人不再收到该任务。
+              {t('approvalCenter.delegateHint')}
             </div>
           </div>
         )}
@@ -775,35 +873,35 @@ export default function ApprovalsCenterPage() {
 
       {/* 加签弹窗 */}
       <Modal
-        title="加签审批人"
+        title={t('approvalCenter.addApproverTitle')}
         open={!!addApprover}
         onOk={submitAddApprover}
         onCancel={() => setAddApprover(null)}
-        okText="确认加签"
+        okText={t('approvalCenter.confirmAddApprover')}
         okButtonProps={{ disabled: !addApproverUserId, loading: submitting }}
-        cancelText="取消"
+        cancelText={t('approvalCenter.cancel')}
         destroyOnHidden
       >
         {addApprover && (
           <div className="space-y-3">
             <div>
-              <Text type="secondary">任务：</Text>
+              <Text type="secondary">{t('approvalCenter.lblTask')}</Text>
               <Text strong>{addApprover.task.taskName || addApprover.task.taskDefinitionKey}</Text>
             </div>
             {(() => {
               const link = getBusinessLink(addApprover.task);
               return link ? (
                 <div>
-                  <Text type="secondary">业务单据：</Text>
+                  <Text type="secondary">{t('approvalCenter.lblBusiness')}</Text>
                   <Link href={link.url} className="text-blue-600">{link.label}</Link>
                 </div>
               ) : null;
             })()}
             <div>
-              <Text type="secondary">加签给：</Text>
+              <Text type="secondary">{t('approvalCenter.lblAddApproverTo')}</Text>
               <Select
                 className="mt-1 w-full"
-                placeholder="选择加签审批人"
+                placeholder={t('approvalCenter.placeholderSelectAddApprover')}
                 loading={addApproverUserLoading}
                 value={addApproverUserId}
                 onChange={setAddApproverUserId}
@@ -813,11 +911,11 @@ export default function ApprovalsCenterPage() {
                   value: u.id,
                   label: `${u.name}（${u.username}）`,
                 }))}
-                notFoundContent={addApproverUserLoading ? '加载中…' : '无可用用户'}
+                notFoundContent={addApproverUserLoading ? t('approvalCenter.loading') : t('approvalCenter.noUsers')}
               />
             </div>
             <div className="text-xs text-gray-400">
-              加签后将新增一位并行审批人，不影响当前审批进度。
+              {t('approvalCenter.addApproverHint')}
             </div>
           </div>
         )}

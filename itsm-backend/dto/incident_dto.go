@@ -102,30 +102,37 @@ type EscalateMajorIncidentRequest struct {
 }
 
 type IncidentResponse struct {
-	ID                    int                    `json:"id" example:"1"`
-	Title                 string                 `json:"title" example:"服务器CPU使用率过高"`
-	Description           string                 `json:"description" binding:"omitempty,max=5000" example:"生产环境Web服务器CPU使用率持续超过90%"`
-	Status                string                 `json:"status" example:"new"`
-	Priority              string                 `json:"priority" example:"high"`
-	Severity              string                 `json:"severity" example:"high"`
-	Impact                string                 `json:"impact" example:"medium"`
-	Urgency               string                 `json:"urgency" example:"medium"`
-	IncidentNumber        string                 `json:"incidentNumber" example:"INC-000001"`
-	ReporterID            int                    `json:"reporterId" example:"1"`
-	ReporterName          string                 `json:"reporterName,omitempty" example:"张三"`
-	AssigneeID            *int                   `json:"assigneeId" example:"2"`
-	AssigneeName          string                 `json:"assigneeName,omitempty" example:"李四"`
-	AssignmentGroupID     *int                   `json:"assignmentGroupId,omitempty"`
-	EmailConversationID   *int                   `json:"emailConversationId,omitempty"`
-	ConfigurationItemID   *int                   `json:"configurationItemId,omitempty" example:"3"`
-	RelatedCIs            []CIInfo               `json:"relatedCIs"`
-	Category              string                 `json:"category" example:"performance"`
-	Subcategory           string                 `json:"subcategory" example:"cpu"`
-	ServiceType           string                 `json:"serviceType,omitempty" example:"application"`
-	FailureType           string                 `json:"failureType,omitempty" example:"hardware"`
-	ImpactAnalysis        *ImpactAnalysis        `json:"impactAnalysis"`
-	RootCause             *RootCause             `json:"rootCause"`
-	ResolutionSteps       []ResolutionStep       `json:"resolutionSteps"`
+	ID                  int              `json:"id" example:"1"`
+	Title               string           `json:"title" example:"服务器CPU使用率过高"`
+	Description         string           `json:"description" binding:"omitempty,max=5000" example:"生产环境Web服务器CPU使用率持续超过90%"`
+	Status              string           `json:"status" example:"new"`
+	Priority            string           `json:"priority" example:"high"`
+	Severity            string           `json:"severity" example:"high"`
+	Impact              string           `json:"impact" example:"medium"`
+	Urgency             string           `json:"urgency" example:"medium"`
+	IncidentNumber      string           `json:"incidentNumber" example:"INC-000001"`
+	ReporterID          int              `json:"reporterId" example:"1"`
+	ReporterName        string           `json:"reporterName,omitempty" example:"张三"`
+	AssigneeID          *int             `json:"assigneeId" example:"2"`
+	AssigneeName        string           `json:"assigneeName,omitempty" example:"李四"`
+	AssignmentGroupID   *int             `json:"assignmentGroupId,omitempty"`
+	EmailConversationID *int             `json:"emailConversationId,omitempty"`
+	ConfigurationItemID *int             `json:"configurationItemId,omitempty" example:"3"`
+	RelatedCIs          []CIInfo         `json:"relatedCIs"`
+	Category            string           `json:"category" example:"performance"`
+	Subcategory         string           `json:"subcategory" example:"cpu"`
+	ServiceType         string           `json:"serviceType,omitempty" example:"application"`
+	FailureType         string           `json:"failureType,omitempty" example:"hardware"`
+	ImpactAnalysis      *ImpactAnalysis  `json:"impactAnalysis"`
+	RootCause           *RootCause       `json:"rootCause"`
+	ResolutionSteps     []ResolutionStep `json:"resolutionSteps"`
+	// Resolution 是解决说明的平字段，与工单的 resolution 对齐。
+	//
+	// 事件没有独立的 resolution 列：resolve 动作把说明写成 resolutionSteps
+	// 最后一条 status=completed 的步骤（见 service.IncidentService.ResolveIncident），
+	// 因此这里从步骤派生、不落第二份副本，避免两处说明不一致。全量步骤仍通过
+	// resolutionSteps 返回。
+	Resolution            string                 `json:"resolution,omitempty"`
 	Version               int                    `json:"version" example:"1"`
 	DetectedAt            time.Time              `json:"detectedAt" example:"2024-01-01T00:00:00Z"`
 	ResolvedAt            *time.Time             `json:"resolvedAt,omitempty" example:"2024-01-01T12:00:00Z"`

@@ -11,6 +11,7 @@ import (
 	"itsm-backend/ent"
 	"itsm-backend/ent/operationalcommand"
 	"itsm-backend/internal/commandbus"
+	toolsexec "itsm-backend/service"
 )
 
 const StatusCancelled = "cancelled"
@@ -266,6 +267,13 @@ func (s *Service) transition(ctx context.Context, tenantID, commandID int, actor
 	if !replay && command.Status != commandbus.StatusPending && command.Status != commandbus.StatusProcessing && command.Status != commandbus.StatusDeadLetter {
 		return nil, ErrInvalidState
 	}
+	invocationRecovered := false
+	if replay && command.CommandType == commandbus.CommandExecuteAITool && command.AggregateType == "tool_invocation" {
+		invocationRecovered, err = toolsexec.RecoverInterruptedToolInvocationTx(ctx, tx, tenantID, command.AggregateID)
+		if err != nil {
+			return nil, fmt.Errorf("recover AI tool invocation: %w", err)
+		}
+	}
 	update := tx.OperationalCommand.UpdateOneID(command.ID).
 		Where(operationalcommand.TenantIDEQ(tenantID), operationalcommand.FencingTokenEQ(command.FencingToken)).
 		AddFencingToken(1).ClearLeaseOwner().ClearLeaseExpiresAt()
@@ -285,6 +293,7 @@ func (s *Service) transition(ctx context.Context, tenantID, commandID int, actor
 	}
 	body, err := json.Marshal(map[string]interface{}{
 		"commandId": command.ID, "previousStatus": command.Status, "idempotencyKey": command.IdempotencyKey,
+		"invocationRecovered": invocationRecovered,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("marshal command audit: %w", err)
@@ -340,6 +349,13 @@ func (s *Service) bulkTransition(ctx context.Context, filter BulkFilter, actor A
 	updatedIDs := make([]int, 0, len(matched))
 	skipped := 0
 	for _, cmd := range matched {
+		invocationRecovered := false
+		if replay && cmd.CommandType == commandbus.CommandExecuteAITool && cmd.AggregateType == "tool_invocation" {
+			invocationRecovered, err = toolsexec.RecoverInterruptedToolInvocationTx(ctx, tx, filter.TenantID, cmd.AggregateID)
+			if err != nil {
+				return nil, fmt.Errorf("recover AI tool invocation for command %d: %w", cmd.ID, err)
+			}
+		}
 		upd := tx.OperationalCommand.UpdateOneID(cmd.ID).
 			Where(operationalcommand.TenantIDEQ(filter.TenantID), operationalcommand.FencingTokenEQ(cmd.FencingToken)).
 			AddFencingToken(1).ClearLeaseOwner().ClearLeaseExpiresAt()
@@ -358,7 +374,7 @@ func (s *Service) bulkTransition(ctx context.Context, filter BulkFilter, actor A
 		}
 		body, mErr := json.Marshal(map[string]interface{}{
 			"commandId": cmd.ID, "previousStatus": cmd.Status, "idempotencyKey": cmd.IdempotencyKey,
-			"bulkFilter": filter, "newStatus": saved.Status,
+			"bulkFilter": filter, "newStatus": saved.Status, "invocationRecovered": invocationRecovered,
 		})
 		if mErr != nil {
 			return nil, fmt.Errorf("marshal bulk audit: %w", mErr)

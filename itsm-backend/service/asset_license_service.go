@@ -212,16 +212,19 @@ func (s *AssetLicenseService) UpdateLicense(ctx context.Context, id, tenantID in
 
 	usedQuantity := licenseEntity.UsedQuantity
 	seatsTouched := req.TotalQuantity != nil
-	if len(req.Users) > 0 {
+	if req.Users != nil {
 		// 全量替换授权列表：与 AssignUsers 的「静默跳过无效 id」不同，
 		// 这里不能丢弃调用方明确提交的 id——静默丢弃会连带移除同名用户。
-		valid, invalid, err := s.normalizeLicenseUsers(ctx, tenantID, req.Users)
+		valid, invalid, err := s.normalizeLicenseUsers(ctx, tenantID, *req.Users)
 		if err != nil {
 			s.logger.Errorw("Failed to validate license assignees", "error", err, "license_id", id)
 			return nil, fmt.Errorf("failed to validate license assignees: %w", err)
 		}
 		if len(invalid) > 0 {
 			return nil, common.NewBusinessError(common.BadRequestCode, "授权用户列表包含无效或跨租户用户", "")
+		}
+		if valid == nil {
+			valid = []int{}
 		}
 		usedQuantity = len(valid)
 		update.SetUsers(valid).SetUsedQuantity(usedQuantity)

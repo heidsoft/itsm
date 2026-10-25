@@ -64,8 +64,8 @@ func TestConfigurationItemService_LifecycleDraftToOnline(t *testing.T) {
 		configurationitemhistory.OperationEQ("lifecycle_update"),
 	).First(ctx)
 	require.NoError(t, err)
-	require.Equal(t, common.CILifecycleStatusDraft, hist.Before["lifecycle_status"])
-	require.Equal(t, common.CILifecycleStatusOnline, hist.After["lifecycle_status"])
+	require.Equal(t, common.CILifecycleStatusDraft, hist.Before["lifecycleStatus"])
+	require.Equal(t, common.CILifecycleStatusOnline, hist.After["lifecycleStatus"])
 }
 
 func TestConfigurationItemService_LifecycleSameStatusIdempotent(t *testing.T) {
@@ -183,7 +183,7 @@ func TestConfigurationItemService_LifecycleRetireFullPath(t *testing.T) {
 	require.NoError(t, err)
 	require.Contains(t, hist.Remark, "[retire:manual]")
 	require.Contains(t, hist.Remark, "asset disposal")
-	require.Equal(t, common.CILifecycleStatusScrapped, hist.After["lifecycle_status"])
+	require.Equal(t, common.CILifecycleStatusScrapped, hist.After["lifecycleStatus"])
 }
 
 func TestConfigurationItemService_LifecycleRetireRequiresControlledReason(t *testing.T) {

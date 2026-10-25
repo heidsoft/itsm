@@ -35,6 +35,25 @@ func (e *ToolExecutor) HandleCommand(ctx context.Context, cmd *ent.OperationalCo
 	return e.ExecuteApprovedInvocation(ctx, cmd.AggregateID, cmd.TenantID)
 }
 
+// RecoverInterruptedToolInvocationTx 只在操作员显式重放死信时解锁中断的调用。
+// running 可能表示副作用已发生但结果未回写，因此普通 worker 重试不得调用它。
+func RecoverInterruptedToolInvocationTx(ctx context.Context, tx *ent.Tx, tenantID, invocationID int) (bool, error) {
+	affected, err := tx.ToolInvocation.Update().
+		Where(
+			toolinvocation.ID(invocationID),
+			toolinvocation.TenantIDEQ(tenantID),
+			toolinvocation.ApprovalStateEQ("approved"),
+			toolinvocation.StatusEQ("running"),
+		).
+		SetStatus("failed").
+		SetError("操作员确认重放中断执行").
+		Save(ctx)
+	if err != nil {
+		return false, fmt.Errorf("recover interrupted tool invocation %d: %w", invocationID, err)
+	}
+	return affected > 0, nil
+}
+
 func (e *ToolExecutor) ExecuteApprovedInvocation(ctx context.Context, invocationID, tenantID int) error {
 	if e.client == nil || e.tools == nil {
 		return fmt.Errorf("tool executor is not configured")

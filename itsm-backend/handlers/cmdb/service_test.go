@@ -36,14 +36,16 @@ type mockRepository struct {
 	deleteCloudAccountFn func(ctx context.Context, id int, tenantID int) (int, error)
 
 	// Cloud resources
-	listCloudResourcesFn        func(ctx context.Context, tenantID int, filter CloudResourceFilter) ([]*CloudResource, error)
-	listCloudResourcesPageFn    func(ctx context.Context, tenantID int, filter CloudResourceFilter, page int, pageSize int) ([]*CloudResource, int, error)
-	getCloudResourceFn          func(ctx context.Context, tenantID int, id int) (*CloudResource, error)
-	createCloudResourceFn       func(ctx context.Context, cr *CloudResource) (*CloudResource, error)
-	updateCloudResourceFn       func(ctx context.Context, cr *CloudResource) (*CloudResource, error)
-	deleteCloudResourceFn       func(ctx context.Context, id int, tenantID int) (int, error)
-	listCIsForReconciliationFn  func(ctx context.Context, tenantID int) ([]*ConfigurationItem, error)
-	getCIByCloudResourceRefIDFn func(ctx context.Context, tenantID int, cloudResourceRefID int) (*ConfigurationItem, error)
+	listCloudResourcesFn            func(ctx context.Context, tenantID int, filter CloudResourceFilter) ([]*CloudResource, error)
+	listCloudResourcesPageFn        func(ctx context.Context, tenantID int, filter CloudResourceFilter, page int, pageSize int) ([]*CloudResource, int, error)
+	getCloudResourceFn              func(ctx context.Context, tenantID int, id int) (*CloudResource, error)
+	createCloudResourceFn           func(ctx context.Context, cr *CloudResource) (*CloudResource, error)
+	updateCloudResourceFn           func(ctx context.Context, cr *CloudResource) (*CloudResource, error)
+	deleteCloudResourceFn           func(ctx context.Context, id int, tenantID int) (int, error)
+	listCIsForReconciliationFn      func(ctx context.Context, tenantID int) ([]*ConfigurationItem, error)
+	getCIByCloudResourceRefIDFn     func(ctx context.Context, tenantID int, cloudResourceRefID int) (*ConfigurationItem, error)
+	findCIByCloudResourceIdentityFn func(ctx context.Context, tenantID int, provider, cloudResourceID string) (*ConfigurationItem, error)
+	getCITypeIDByNameFn             func(ctx context.Context, tenantID int, name string) (int, error)
 
 	// Discovery
 	createDiscoverySourceFn func(ctx context.Context, ds *DiscoverySource) (*DiscoverySource, error)
@@ -200,6 +202,20 @@ func (m *mockRepository) GetCIByCloudResourceRefID(ctx context.Context, tenantID
 		return m.getCIByCloudResourceRefIDFn(ctx, tenantID, cloudResourceRefID)
 	}
 	return nil, nil
+}
+
+func (m *mockRepository) FindCIByCloudResourceIdentity(ctx context.Context, tenantID int, provider, cloudResourceID string) (*ConfigurationItem, error) {
+	if m.findCIByCloudResourceIdentityFn != nil {
+		return m.findCIByCloudResourceIdentityFn(ctx, tenantID, provider, cloudResourceID)
+	}
+	return nil, &ent.NotFoundError{}
+}
+
+func (m *mockRepository) GetCITypeIDByName(ctx context.Context, tenantID int, name string) (int, error) {
+	if m.getCITypeIDByNameFn != nil {
+		return m.getCITypeIDByNameFn(ctx, tenantID, name)
+	}
+	return 0, &ent.NotFoundError{}
 }
 
 func (m *mockRepository) CreateDiscoverySource(ctx context.Context, ds *DiscoverySource) (*DiscoverySource, error) {

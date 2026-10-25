@@ -1,6 +1,7 @@
 package authz
 
 import (
+	"sort"
 	"testing"
 
 	domainrole "itsm-backend/domain/role"
@@ -199,5 +200,47 @@ func TestMarketplaceCatalogWriteIsPlatformOnly(t *testing.T) {
 	// 安装能力不能被这次拆分误伤：租户 admin 仍要能装。
 	if !hasCode(string(domainrole.Admin), "marketplace:write") {
 		t.Error("admin 必须保留 marketplace:write，否则无法安装/卸载扩展")
+	}
+}
+
+// TestTicketTypeManageImpliesInstallPreset 锁定「能建类型就必须能装预设」的口径。
+//
+// InstallPreset 的写入就是 CreateTicketType + 一条审计（service/ticket_type_service.go），
+// 而 POST /api/v1/ticket-types 只按 ticket_type:manage 授权。install_preset 因此严格窄于
+// manage，不构成安全边界；只授 manage 的角色会在前端「安装」按钮上稳定 403
+// （2026-10-24 实测：it_admin 与租户 admin 有 manage 无 install_preset，预设库能打开、
+// 每个安装都 code 2003）。反向仍需守住：只有 read 的坐席不得拿到这两个写码。
+func TestTicketTypeManageImpliesInstallPreset(t *testing.T) {
+	roles := BuiltinRolePermissionCodes()
+
+	hasCode := func(codes []string, code string) bool {
+		for _, c := range codes {
+			if c == code {
+				return true
+			}
+		}
+		return false
+	}
+
+	names := make([]string, 0, len(roles))
+	for role := range roles {
+		names = append(names, role)
+	}
+	sort.Strings(names)
+	for _, role := range names {
+		codes := roles[role]
+		if hasCode(codes, "ticket_type:manage") && !hasCode(codes, "ticket_type:install_preset") {
+			t.Errorf("%s 持 ticket_type:manage 却无 install_preset：可以自建类型却不能装预设，安装按钮恒 403", role)
+		}
+	}
+
+	agent := roles[string(domainrole.Agent)]
+	if !hasCode(agent, "ticket_type:read") {
+		t.Error("agent 必须持 ticket_type:read，否则建单页类型下拉与预设库都不可读")
+	}
+	for _, code := range []string{"ticket_type:manage", "ticket_type:install_preset", "ticket_type:archive"} {
+		if hasCode(agent, code) {
+			t.Errorf("agent 不应持有 %s：坐席按口径只能读工单类型配置", code)
+		}
 	}
 }

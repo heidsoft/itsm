@@ -382,9 +382,10 @@ func TestEntRepository_UpdateAlertRuleScopesUpdateByTenant(t *testing.T) {
 func TestSLAHandler_ComplianceReport(t *testing.T) {
 	r, _, _ := setupSLAHandler(t)
 
-	t.Run("snake_case 起始日期格式", func(t *testing.T) {
+	t.Run("snake_case 别名不再被接受", func(t *testing.T) {
+		// 同名参数双轨会让同一请求存在两套口径；查询参数只认 camelCase。
 		resp := doSLAReq(t, r, "GET", "/api/v1/sla/compliance-report?start_date=2026-01-01T00:00:00Z&end_date=2026-12-31T23:59:59Z", nil, false)
-		assert.Equal(t, common.SuccessCode, resp.Code, "body=%s", slaStr(resp))
+		assert.Equal(t, common.ParamErrorCode, resp.Code, "body=%s", slaStr(resp))
 	})
 
 	t.Run("camelCase 起始日期格式也应被识别", func(t *testing.T) {

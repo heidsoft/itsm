@@ -176,7 +176,10 @@ func BuiltinRolePermissionCodes() map[string][]string {
 			// 模板路由按 create/update 分码；admin 靠 write⇒同义补齐可达，it_admin 既无
 			// write 也无细分码，只授 read 会让「配置模板」变成只能看不能改。
 			// 删除码不在此处：抹掉存量模板留给租户管理员与目录管理员。
-			"ticket_type:manage", "ticket_category:read", "ticket_tag:read",
+			// install_preset 需显式授予：安装预设走 CreateTicketType + 审计，
+			// 严格窄于已有 manage（POST /ticket-types 也只要求 manage）。只授 manage 时，
+			// 配置角色能开预设库、点每个「安装」都 403（本地 prod 栈实测 code 2003）。
+			"ticket_type:manage", "ticket_type:install_preset", "ticket_category:read", "ticket_tag:read",
 			"ticket_template:read", "ticket_template:create", "ticket_template:update",
 			"sla:read", "sla:write", "workflow:read", "workflow:write", "bpmn:read",
 			// 规则配置面属流程运营职责；此前接口挂在 system_config:* 上，
@@ -213,7 +216,7 @@ func BuiltinRolePermissionCodes() map[string][]string {
 			"ticket_category:read", "ticket_category:write", "ticket_category:delete",
 			"ticket_tag:read", "ticket_tag:write", "ticket_tag:delete",
 			"ticket_template:read", "ticket_template:write", "ticket_template:delete",
-			"ticket_type:read", "ticket_type:write", "ticket_type:create", "ticket_type:update", "ticket_type:delete", "ticket_type:manage", "ticket_type:archive",
+			"ticket_type:read", "ticket_type:write", "ticket_type:create", "ticket_type:update", "ticket_type:delete", "ticket_type:manage", "ticket_type:install_preset", "ticket_type:archive",
 			"user:read", "user:write", "user:delete",
 			"dashboard:read", "dashboard:admin",
 			"knowledge:read", "knowledge:write", "knowledge:admin",

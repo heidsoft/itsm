@@ -1,6 +1,7 @@
 package dto
 
 import (
+	"encoding/json"
 	"testing"
 	"time"
 
@@ -73,5 +74,53 @@ func TestToCIResponse_ZeroTimeLeavesNilPointers(t *testing.T) {
 	}
 	if res.ExpireAt != nil {
 		t.Errorf("ExpireAt should be nil for zero time, got %v", *res.ExpireAt)
+	}
+}
+
+// 回归：CIResponse.LastDiscovered 曾是 time.Time + omitempty ——
+// encoding/json 不会把结构体零值当作 empty，于是「从未被发现」的 CI 会下发
+// 0001-01-01T00:00:00Z，调用方无法区分「没发现过」和「真的在那天发现过」。
+func TestToCIResponse_LastDiscoveredOmittedWhenZero(t *testing.T) {
+	ci := &ent.ConfigurationItem{ID: 3, Name: "never-discovered", Status: "active"}
+
+	raw, err := json.Marshal(ToCIResponse(ci))
+	if err != nil {
+		t.Fatalf("marshal failed: %v", err)
+	}
+
+	var payload map[string]interface{}
+	if err := json.Unmarshal(raw, &payload); err != nil {
+		t.Fatalf("unmarshal failed: %v", err)
+	}
+	if _, exists := payload["lastDiscovered"]; exists {
+		t.Fatalf("zero lastDiscovered must be omitted, got %v (raw=%s)", payload["lastDiscovered"], raw)
+	}
+	if res := ToCIResponse(ci); res.LastDiscovered != nil {
+		t.Fatalf("LastDiscovered should be nil for zero time, got %v", *res.LastDiscovered)
+	}
+}
+
+func TestToCIResponse_LastDiscoveredKeptWhenSet(t *testing.T) {
+	discovered := time.Date(2026, 10, 20, 8, 30, 0, 0, time.UTC)
+	ci := &ent.ConfigurationItem{ID: 4, Name: "discovered", Status: "active", LastDiscovered: discovered}
+
+	res := ToCIResponse(ci)
+	if res.LastDiscovered == nil {
+		t.Fatal("LastDiscovered should not be nil when set")
+	}
+	if !res.LastDiscovered.Equal(discovered) {
+		t.Fatalf("LastDiscovered = %v, want %v", *res.LastDiscovered, discovered)
+	}
+
+	raw, err := json.Marshal(res)
+	if err != nil {
+		t.Fatalf("marshal failed: %v", err)
+	}
+	var payload map[string]interface{}
+	if err := json.Unmarshal(raw, &payload); err != nil {
+		t.Fatalf("unmarshal failed: %v", err)
+	}
+	if got, exists := payload["lastDiscovered"]; !exists || got != discovered.Format(time.RFC3339) {
+		t.Fatalf("lastDiscovered = %v (exists=%v), want %s", got, exists, discovered.Format(time.RFC3339))
 	}
 }

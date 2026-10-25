@@ -85,12 +85,15 @@ var registry = []definition{
 	// `cmdb.cloud_discovery.run`（租约认领/diff/证据落库/终态），旧 Runner.RunAll
 	// 删除；② 调度——`discovery_sources.schedule` 此前全仓无消费者，现已由
 	// DiscoveryScheduler 每分钟按租户时区消费（到期判定、在途守卫、跨副本幂等键）。
-	// 仍不申报 GA：适配器只有阿里云 ECS 一种，发现结果只落 CloudResource
-	// 不回写配置项（CMDB 与云上事实仍是两套账），真实账号未验收。
+	// 2026-10-25 复核适配器数量：「只有阿里云 ECS 一种」已过期，注册表装了
+	// aliyun/ecs、tencent/cvm、aws/ec2、volcengine/ecs、k8s/pod 五个。
+	// 同批补上 cloud_services 产品基线（cmdb-core 组件按注册表装配结果预置，
+	// 与适配器由守卫测试双向锁定）——此前全仓无 INSERT 与 seed，新租户的
+	// 发现任务会在 scope 解析处整批失败。CI 回写接通后，剩下的阻断项是真实账号验收。
 	{key: "cmdbDiscovery", maturity: MaturityPilot, built: true, dependencies: []string{"cmdb"}, readinessEnv: "ITSM_CMDB_DISCOVERY_READY",
-		pilotReason: "执行链与定时调度已闭环（Job 执行器 + 每分钟 cron 消费 schedule），但适配器只有阿里云 ECS 一种（其他 provider/服务在执行器里按「无适配器」记 scope 失败）；发现结果只落 CloudResource、不回写配置项，CMDB 与云上事实仍是两套账；真实账号下的全量与增量发现未验收。晋升条件：两种以上真实云服务适配器 + 发现结果回写 CI + 真实账号发现验收。"},
+		pilotReason: "执行链与定时调度已闭环（Job 执行器 + 每分钟 cron 消费 schedule），五个厂商适配器已装配，云服务类型基线随 cmdb-core 预置，发现结果按「云服务类型 → CI 类型」映射回写配置项（表外类型显式跳过，必填属性凑不齐时不建账、留给人工录入）；但真实账号下的全量与增量发现未验收，这类需要人工补全的资源也还没有录入入口。晋升条件：真实账号发现验收 + 人工补全入口。"},
 	{key: "cmdbReconciliation", maturity: MaturityPilot, built: true, dependencies: []string{"cmdb", "cmdbDiscovery"}, readinessEnv: "ITSM_CMDB_DISCOVERY_READY",
-		pilotReason: "差异能算、能决策（POST /discovery/results/:id/apply|reject），但应用只写 CloudResource 不写配置项——CI 回写未接通，对账后 CMDB 与云上事实仍是两套账；差异合并策略也缺少真实数据验收。晋升条件：CI 回写 + 真实数据对账验收。"},
+		pilotReason: "差异能算、能决策（POST /discovery/results/:id/apply|reject），应用后同步刷新配置项并把反查 ID 记在差异上；但回写目前只覆盖基线内的云主机/Pod 类型，云上连续缺失只把配置项标成同步滞后、不给出退役建议，且缺少真实数据验收。晋升条件：真实数据对账验收 + 覆盖更多资源类型。"},
 	{key: "workflow", maturity: MaturityGA, built: true},
 	{key: "sla", maturity: MaturityGA, built: true},
 	// 报表域此前只在能力契约表里（报表/运营 = Pilot），矩阵里根本没有这一行——

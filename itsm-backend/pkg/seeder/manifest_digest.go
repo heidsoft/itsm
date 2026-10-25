@@ -105,10 +105,17 @@ func manifestDigestInputs(component string) ([]string, error) {
 		return inputs, nil
 
 	case "cmdb-core":
-		inputs := make([]string, 0, len(ciTypeDefinitions()))
+		inputs := make([]string, 0, len(ciTypeDefinitions())+len(cloudServiceTypeDefinitions()))
 		for _, ciType := range ciTypeDefinitions() {
 			inputs = append(inputs, fmt.Sprintf("ci-type-default=%s|%s|%s|%s",
 				ciType.Name, ciType.Description, ciType.Icon, ciType.Color))
+		}
+		// 云服务类型入摘要：否则已初始化的部署看到的 cmdb-core 校验和不变，
+		// 新补的发现基线永远不会落到存量租户上。
+		for _, svc := range cloudServiceTypeDefinitions() {
+			inputs = append(inputs, fmt.Sprintf("cloud-service-type-default=%s|%s|%s|%s|%s|%s|%s",
+				svc.Provider, svc.Category, svc.ServiceCode, svc.ServiceName,
+				svc.ResourceTypeCode, svc.ResourceTypeName, svc.APIVersion))
 		}
 		return inputs, nil
 

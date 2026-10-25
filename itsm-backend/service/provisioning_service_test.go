@@ -2,9 +2,11 @@ package service
 
 import (
 	"context"
+	"errors"
 	"strings"
 	"testing"
 
+	"itsm-backend/common"
 	"itsm-backend/domain/provisioning"
 	domainSR "itsm-backend/domain/servicerequest"
 	"itsm-backend/ent"
@@ -116,4 +118,48 @@ func TestCreateTaskFromServiceRequestRejectsNonApprovedState(t *testing.T) {
 	cmdCount, err := client.OperationalCommand.Query().Count(ctx)
 	require.NoError(t, err)
 	require.Zero(t, cmdCount, "tx 失败时不应留 operational_command 行")
+}
+
+func TestCreateTaskFromServiceRequestRejectsSecondProvisioning(t *testing.T) {
+	client := newProvisioningTestClient(t)
+	defer client.Close()
+	ctx := context.Background()
+	tenantID, requesterID := seedProvisioningPrerequisites(t, ctx, client)
+
+	catalog, err := client.ServiceCatalog.Create().
+		SetTenantID(tenantID).
+		SetName("provisioning").
+		SetStatus("enabled").
+		Save(ctx)
+	require.NoError(t, err)
+
+	req, err := client.ServiceRequest.Create().
+		SetTenantID(tenantID).
+		SetCatalogID(catalog.ID).
+		SetRequesterID(requesterID).
+		SetTitle("Need ECS").
+		SetStatus(string(domainSR.StatusSecurityApproved)).
+		Save(ctx)
+	require.NoError(t, err)
+
+	svc := NewProvisioningService(client, zaptest.NewLogger(t).Sugar())
+	_, err = svc.CreateTaskFromServiceRequest(ctx, req.ID, tenantID, requesterID)
+	require.NoError(t, err)
+
+	// 第二次调用必须被 CAS 挡在创建任务之前，而不是先建 task 再发现状态已变。
+	_, err = svc.CreateTaskFromServiceRequest(ctx, req.ID, tenantID, requesterID)
+	require.Error(t, err)
+	var bizErr *common.BusinessError
+	require.True(t, errors.As(err, &bizErr))
+	require.Equal(t, common.ConflictCode, bizErr.Code)
+
+	count, err := client.ProvisioningTask.Query().Count(ctx)
+	require.NoError(t, err)
+	require.Equal(t, 1, count, "同一服务请求只能有一条交付任务")
+
+	cmdCount, err := client.OperationalCommand.Query().
+		Where(operationalcommand.AggregateTypeEQ("provisioning_task")).
+		Count(ctx)
+	require.NoError(t, err)
+	require.Equal(t, 1, cmdCount, "重复调用不得额外入箱执行命令")
 }

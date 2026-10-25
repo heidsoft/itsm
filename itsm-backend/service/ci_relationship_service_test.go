@@ -514,8 +514,12 @@ func TestCIRelationship_CrossTenantIsolation(t *testing.T) {
 		t.Fatalf("tenant B should see 0 relationships, got %d", listB.Total)
 	}
 	byCI, err := svc.ListCIRelationshipsByCIID(ctx, ciA1.ID, tenantB.ID, "all")
-	if err != nil {
-		t.Fatalf("tenant B list by CI failed: %v", err)
+	if err == nil {
+		t.Fatal("tenant B must not get an empty success for tenant A's CI; unknown CI is 404")
+	}
+	var appErr *common.AppError
+	if !errors.As(err, &appErr) || appErr.Code != common.ErrCodeNotFound {
+		t.Fatalf("cross-tenant list by CI should be not-found, got: %v", err)
 	}
 	if len(byCI) != 0 {
 		t.Fatalf("tenant B should see 0 relationships for tenant A CI, got %d", len(byCI))

@@ -317,12 +317,16 @@ func (h *Handler) queryTime(c *gin.Context, key string) (*time.Time, bool) {
 // 参数类 → 400，冲突类 → 409，不存在 → 404，其余 → 500（不泄露内部细节）。
 func (h *Handler) fail(c *gin.Context, err error, fallback string) {
 	switch {
-	case errors.Is(err, ErrInvalidShift), errors.Is(err, ErrInvalidSchedule):
-		common.ParamError(c, err.Error())
-	case errors.Is(err, ErrOverlappingShift), errors.Is(err, ErrScheduleHasShift):
-		common.Conflict(c, err.Error(), nil)
+	case errors.Is(err, ErrInvalidShift):
+		common.ParamErrorWithErr(c, err, "值班班次参数无效")
+	case errors.Is(err, ErrInvalidSchedule):
+		common.ParamErrorWithErr(c, err, "值班计划参数无效")
+	case errors.Is(err, ErrOverlappingShift):
+		common.Conflict(c, "班次时间与已有班次重叠", nil)
+	case errors.Is(err, ErrScheduleHasShift):
+		common.Conflict(c, "排班仍包含班次，无法删除", nil)
 	case errors.Is(err, ErrScheduleNotFound), errors.Is(err, ErrShiftNotFound):
-		common.NotFound(c, err.Error())
+		common.NotFound(c, "值班计划或班次不存在")
 	case errors.Is(err, ErrNoOnCall):
 		common.NotFound(c, "该支持组当前没有值班人")
 	default:

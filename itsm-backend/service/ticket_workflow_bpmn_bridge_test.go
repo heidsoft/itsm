@@ -2,9 +2,9 @@ package service
 
 import (
 	"context"
-	"sync/atomic"
 	"fmt"
 	"strconv"
+	"sync/atomic"
 	"testing"
 
 	"itsm-backend/common"
@@ -282,7 +282,7 @@ func TestApproveTicket_RejectBridgesBPMNTask(t *testing.T) {
 
 // TestApproveTicket_LegacyBridgesBPMNTaskInTransaction legacy 路径（ITSM_APPROVAL_BPMN_FIRST
 // 关闭）下，已绑定流程的工单审批同样把 BPMN 任务完成收进业务事务：终态一致
-//（任务 completed、决策留痕、审批/工单更新），只是工单状态由审批链计数驱动。
+// （任务 completed、决策留痕、审批/工单更新），只是工单状态由审批链计数驱动。
 func TestApproveTicket_LegacyBridgesBPMNTaskInTransaction(t *testing.T) {
 	t.Setenv("ITSM_APPROVAL_BPMN_FIRST", "false")
 	client := newApprovalBridgeTestClient(t, "ticket_bridge_legacy")
@@ -319,7 +319,7 @@ func TestApproveTicket_LegacyBridgesBPMNTaskInTransaction(t *testing.T) {
 // TestApproveTicket_LegacyBridgeFailureRollsBackBusinessWrite 原子性反证：
 // legacy 路径下桥接成功、事务内后续业务写入失败时，业务行与流程任务必须一起回滚——
 // 不允许出现「流程任务已完成、审批行仍是 pending」的永久分叉
-//（旧实现 bridge 在事务外先完成流程任务，此场景必然分叉）。
+// （旧实现 bridge 在事务外先完成流程任务，此场景必然分叉）。
 func TestApproveTicket_LegacyBridgeFailureRollsBackBusinessWrite(t *testing.T) {
 	t.Setenv("ITSM_APPROVAL_BPMN_FIRST", "false")
 	client := newApprovalBridgeTestClient(t, "ticket_bridge_legacy_rb")

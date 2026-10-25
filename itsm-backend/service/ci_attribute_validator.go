@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math"
 	"strconv"
@@ -22,6 +23,10 @@ import (
 // 系统预置的 CI 属性定义统一挂在该租户下，供所有租户共享；
 // 查询时显式带上该租户作为兜底，而非隐式回退。
 const globalAttributeDefinitionTenantID = 1
+
+// ErrCIAttributeValidation 标记「属性值不符合该 CI 类型的定义」（缺必填、类型/枚举不通过、唯一冲突）。
+// 调用方（如云发现回写 CI）据此区分「数据要人补录」和写入失败，不得靠匹配错误文案。
+var ErrCIAttributeValidation = errors.New("ci attribute validation")
 
 // CIAttributeValidator 基于 CIAttributeDefinition 元数据对 CI 动态属性做归一化与校验。
 // 校验内容：类型强转、默认值填充、必填、validation_rules（枚举/长度/数值范围/pattern）、唯一性。
@@ -89,7 +94,7 @@ func (v *CIAttributeValidator) NormalizeAttributes(ctx context.Context, tenantID
 		}
 
 		if def.Required && (!exists || value == nil || isBlankAttributeString(value)) {
-			return nil, fmt.Errorf("属性 %s 为必填项", def.DisplayName)
+			return nil, fmt.Errorf("属性 %s 为必填项 (%w)", def.DisplayName, ErrCIAttributeValidation)
 		}
 		if !exists || value == nil {
 			continue
@@ -97,7 +102,7 @@ func (v *CIAttributeValidator) NormalizeAttributes(ctx context.Context, tenantID
 
 		normalizedValue, err := normalizeAttributeValue(def, value)
 		if err != nil {
-			return nil, fmt.Errorf("属性 %s 校验失败: %w", def.DisplayName, err)
+			return nil, fmt.Errorf("属性 %s 校验失败: %w (%w)", def.DisplayName, err, ErrCIAttributeValidation)
 		}
 		normalized[name] = normalizedValue
 
@@ -107,7 +112,7 @@ func (v *CIAttributeValidator) NormalizeAttributes(ctx context.Context, tenantID
 				return nil, fmt.Errorf("校验属性 %s 唯一性失败: %w", def.DisplayName, err)
 			}
 			if duplicate {
-				return nil, fmt.Errorf("属性 %s 的值必须唯一", def.DisplayName)
+				return nil, fmt.Errorf("属性 %s 的值必须唯一 (%w)", def.DisplayName, ErrCIAttributeValidation)
 			}
 		}
 	}

@@ -3,9 +3,11 @@ package service
 import (
 	"context"
 	"testing"
+	"time"
 
 	_ "github.com/mattn/go-sqlite3"
 
+	"itsm-backend/common"
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
 
@@ -219,6 +221,71 @@ func TestApplicationService_DeleteMicroservice_Success(t *testing.T) {
 	// Verify deletion (filtered by tenantID)
 	services, _ := service.ListMicroservices(ctx, tenantID)
 	assert.Len(t, services, 0)
+}
+
+func TestApplicationService_RejectsCrossTenantReferences(t *testing.T) {
+	client, service, ctx := setupApplicationTest(t)
+	defer client.Close()
+
+	tenantA, err := client.Tenant.Create().
+		SetName("Tenant A").SetCode("AA").SetDomain("aa.test").SetStatus("active").Save(ctx)
+	require.NoError(t, err)
+	tenantB, err := client.Tenant.Create().
+		SetName("Tenant B").SetCode("AB").SetDomain("ab.test").SetStatus("active").Save(ctx)
+	require.NoError(t, err)
+
+	projectB, err := client.Project.Create().
+		SetName("Project B").SetCode("PROJ-B").SetTenantID(tenantB.ID).SetStartDate(time.Now()).Save(ctx)
+	require.NoError(t, err)
+	appB, err := service.CreateApplication(ctx, "App B", "APP-B", "web", 0, tenantB.ID)
+	require.NoError(t, err)
+
+	// 创建时引用别家项目/应用 → 参数错误，不得落库
+	_, err = service.CreateApplication(ctx, "Leak", "LEAK-1", "web", projectB.ID, tenantA.ID)
+	var bizErr *common.BusinessError
+	require.ErrorAs(t, err, &bizErr)
+	assert.Equal(t, common.ParamErrorCode, bizErr.Code)
+
+	_, err = service.CreateMicroservice(ctx, "Leak", "LEAK-2", "go", "gin", appB.ID, tenantA.ID)
+	require.ErrorAs(t, err, &bizErr)
+	assert.Equal(t, common.ParamErrorCode, bizErr.Code)
+
+	appA, err := service.CreateApplication(ctx, "App A", "APP-A", "web", 0, tenantA.ID)
+	require.NoError(t, err)
+	msA, err := service.CreateMicroservice(ctx, "Svc A", "SVC-A", "go", "gin", appA.ID, tenantA.ID)
+	require.NoError(t, err)
+
+	// 更新时同样不得改挂到别家资源
+	_, err = service.UpdateApplication(ctx, appA.ID, nil, nil, nil, &projectB.ID, tenantA.ID)
+	require.ErrorAs(t, err, &bizErr)
+	assert.Equal(t, common.ParamErrorCode, bizErr.Code)
+
+	_, err = service.UpdateMicroservice(ctx, msA.ID, nil, nil, nil, nil, &appB.ID, tenantA.ID)
+	require.ErrorAs(t, err, &bizErr)
+	assert.Equal(t, common.ParamErrorCode, bizErr.Code)
+
+	// 跨租户更新/删除目标：查不到，资源保持不变
+	newName := "hijacked"
+	_, err = service.UpdateApplication(ctx, appA.ID, &newName, nil, nil, nil, tenantB.ID)
+	require.Error(t, err)
+	require.True(t, ent.IsNotFound(err))
+
+	err = service.DeleteMicroservice(ctx, msA.ID, tenantB.ID)
+	require.ErrorAs(t, err, &bizErr)
+	assert.Equal(t, common.NotFoundCode, bizErr.Code)
+
+	// 同租户内改挂 / 清空引用均可用
+	projectA, err := client.Project.Create().
+		SetName("Project A").SetCode("PROJ-A").SetTenantID(tenantA.ID).SetStartDate(time.Now()).Save(ctx)
+	require.NoError(t, err)
+	updated, err := service.UpdateApplication(ctx, appA.ID, nil, nil, nil, &projectA.ID, tenantA.ID)
+	require.NoError(t, err)
+	assert.Equal(t, projectA.ID, updated.ProjectID)
+
+	clearRef := 0
+	updated, err = service.UpdateApplication(ctx, appA.ID, nil, nil, nil, &clearRef, tenantA.ID)
+	require.NoError(t, err)
+	assert.Zero(t, updated.ProjectID)
 }
 
 // Ensure logger is used (silences unused warning)

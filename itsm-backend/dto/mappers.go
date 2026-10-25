@@ -3,6 +3,7 @@ package dto
 import (
 	"encoding/json"
 	"strings"
+	"time"
 
 	"itsm-backend/ent"
 	"itsm-backend/ent/schema"
@@ -938,7 +939,7 @@ func ToCIResponse(ci *ent.ConfigurationItem) *CIResponse {
 		AssignedTo:         ci.AssignedTo,
 		OwnedBy:            ci.OwnedBy,
 		DiscoverySource:    ci.DiscoverySource,
-		LastDiscovered:     ci.LastDiscovered,
+		LastDiscovered:     nonZeroTimePtr(ci.LastDiscovered),
 		Source:             ci.Source,
 		Attributes:         ci.Attributes,
 		CloudProvider:      ci.CloudProvider,
@@ -1207,4 +1208,14 @@ func ToCITagResponseList(tags []*ent.CITag) []*CITagResponse {
 		res[i] = ToCITagResponse(tag)
 	}
 	return res
+}
+
+// nonZeroTimePtr 把「可选但非指针」的 Ent 时间字段归一化为响应指针：
+// 零值表示该时间从未发生（例如从未被发现的 CI），必须整键省略，而不是下发
+// 0001-01-01T00:00:00Z 让调用方把它当成真实时间参与排序或告警。
+func nonZeroTimePtr(t time.Time) *time.Time {
+	if t.IsZero() {
+		return nil
+	}
+	return &t
 }

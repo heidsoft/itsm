@@ -309,7 +309,7 @@ func TestAssetLicenseService_UpdateLicenseSeatInvariant(t *testing.T) {
 			SetStatus("active").SetTenantID(tenantA.ID).SaveX(ctx)
 
 		updated, err := licenseService.UpdateLicense(ctx, lic.ID, tenantA.ID, &dto.UpdateLicenseRequest{
-			Users: []int{userA1.ID, userA2.ID, userA1.ID},
+			Users: &[]int{userA1.ID, userA2.ID, userA1.ID},
 		})
 		require.NoError(t, err)
 		require.Equal(t, 2, updated.UsedQuantity)
@@ -318,10 +318,22 @@ func TestAssetLicenseService_UpdateLicenseSeatInvariant(t *testing.T) {
 
 		// 删掉一个用户后席位回落；不是全量替换，不能靠「不传」清空。
 		updated, err = licenseService.UpdateLicense(ctx, lic.ID, tenantA.ID, &dto.UpdateLicenseRequest{
-			Users: []int{userA1.ID},
+			Users: &[]int{userA1.ID},
 		})
 		require.NoError(t, err)
 		require.Equal(t, 1, updated.UsedQuantity)
+
+		name := "仅改名称"
+		updated, err = licenseService.UpdateLicense(ctx, lic.ID, tenantA.ID, &dto.UpdateLicenseRequest{Name: &name})
+		require.NoError(t, err)
+		require.Equal(t, 1, updated.UsedQuantity, "未传 users 不得清空现有授权")
+		require.Equal(t, []int{userA1.ID}, updated.Users)
+
+		updated, err = licenseService.UpdateLicense(ctx, lic.ID, tenantA.ID, &dto.UpdateLicenseRequest{Users: &[]int{}})
+		require.NoError(t, err)
+		require.Zero(t, updated.UsedQuantity)
+		require.Empty(t, updated.Users)
+		require.Equal(t, string(dto.LicenseStatusActive), updated.Status)
 	})
 
 	t.Run("无效或跨租户用户整单拒绝", func(t *testing.T) {
@@ -329,7 +341,7 @@ func TestAssetLicenseService_UpdateLicenseSeatInvariant(t *testing.T) {
 			SetStatus("active").SetTenantID(tenantA.ID).SaveX(ctx)
 
 		_, err := licenseService.UpdateLicense(ctx, lic.ID, tenantA.ID, &dto.UpdateLicenseRequest{
-			Users: []int{userA1.ID, userB.ID},
+			Users: &[]int{userA1.ID, userB.ID},
 		})
 		requireBusinessCode(t, err, common.BadRequestCode)
 
@@ -343,7 +355,7 @@ func TestAssetLicenseService_UpdateLicenseSeatInvariant(t *testing.T) {
 			SetStatus("active").SetTenantID(tenantA.ID).SaveX(ctx)
 
 		_, err := licenseService.UpdateLicense(ctx, lic.ID, tenantA.ID, &dto.UpdateLicenseRequest{
-			Users: []int{userA1.ID, userA2.ID},
+			Users: &[]int{userA1.ID, userA2.ID},
 		})
 		requireBusinessCode(t, err, common.ConflictCode)
 

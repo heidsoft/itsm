@@ -214,7 +214,13 @@ type ChangeApprovalChain struct {
 
 // ChangeRiskAssessment 变更风险评估
 type ChangeRiskAssessment struct {
-	ID                 int        `json:"id"`                 // 风险评估ID
+	// Assessed 显式表达「该变更是否已录入风险评估」。
+	//
+	// 未评估是合法领域状态，但历史实现返回 data:null —— 调用方无法区分
+	// 「未评估」「变更不存在」「能力缺失」。现在恒返回对象，由该字段判别；
+	// 未评估时 id 为 0 且被省略，不会出现 id:0 的假记录。
+	Assessed           bool       `json:"assessed"`           // 是否已录入风险评估
+	ID                 int        `json:"id,omitempty"`       // 风险评估ID（未评估时省略）
 	ChangeID           int        `json:"changeId"`           // 变更ID
 	RiskLevel          ChangeRisk `json:"riskLevel"`          // 风险等级
 	RiskDescription    string     `json:"riskDescription"`    // 风险描述

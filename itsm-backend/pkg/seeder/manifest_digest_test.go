@@ -31,7 +31,7 @@ func TestComponentChecksumCoversInCodeManifests(t *testing.T) {
 		inputs, err := manifestDigestInputs(component)
 		require.NoError(t, err)
 		if len(inputs) == 0 {
-			// cmdb-core and extension-core seed purely from the JSON manifest.
+			// extension-core seeds purely from the JSON manifest.
 			assert.Equal(t, configOnlyChecksum(payload, component), baseline, component)
 			continue
 		}
@@ -67,7 +67,12 @@ func TestManifestDigestInputsCoverTheirComponents(t *testing.T) {
 
 	cmdb, err := manifestDigestInputs("cmdb-core")
 	require.NoError(t, err)
-	assert.Len(t, cmdb, len(ciTypeDefinitions()))
+	assert.Len(t, cmdb, len(ciTypeDefinitions())+len(cloudServiceTypeDefinitions()))
+	// 发现基线必须进摘要：只加 seed helper 不改校验和的话，存量安装的
+	// cmdb-core 会被判成「已按同一版本装好」，新租户能建账号但发现任务
+	// 永远在 load cloud service 处失败。
+	assert.True(t, hasPrefixFrom(cmdb, "cloud-service-type-default="),
+		"云服务类型基线未进入 cmdb-core 摘要")
 
 	workflow, err := manifestDigestInputs("workflow-core")
 	require.NoError(t, err)

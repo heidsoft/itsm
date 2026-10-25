@@ -55,6 +55,16 @@ export default function WorkbenchPage() {
   const { t } = useI18n();
   const user = useAuthStore(s => s.user);
 
+  // t() 在键缺失时原样返回键名。优先级/状态是后端枚举，租户可能新增未登记的值，
+  // 此时回退成原始枚举值（可读的英文标识）而不是把 i18n key 抛到界面上。
+  const labelOr = useCallback(
+    (key: string, fallback: string) => {
+      const v = t(key);
+      return v === key ? fallback : v;
+    },
+    [t]
+  );
+
   const [items, setItems] = useState<WorkbenchItem[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -131,24 +141,21 @@ export default function WorkbenchPage() {
         dataIndex: 'priority',
         width: 100,
         render: (p: string) => (
-          <Tag color={priorityColor[p]}>
-            {t(`workbench.phases.${p}`) === p ? p : t(`workbench.phases.${p}`)}
-          </Tag>
+          <Tag color={priorityColor[p]}>{labelOr(`workbench.priorities.${p}`, p)}</Tag>
         ),
       },
       {
         title: t('workbench.columns.status'),
         dataIndex: 'status',
         width: 120,
+        render: (s: string) => labelOr(`workbench.statuses.${s}`, s),
       },
       {
         title: t('workbench.columns.phase'),
         dataIndex: 'phase',
         width: 100,
         render: (p: string) => (
-          <Tag color={phaseColor[p]}>
-            {t(`workbench.phases.${p}`)}
-          </Tag>
+          <Tag color={phaseColor[p]}>{labelOr(`workbench.phases.${p}`, p)}</Tag>
         ),
       },
       {
@@ -158,7 +165,7 @@ export default function WorkbenchPage() {
         render: (v: string) => new Date(v).toLocaleString(),
       },
     ],
-    [t]
+    [t, labelOr]
   );
 
   const filterContent = (
@@ -179,7 +186,7 @@ export default function WorkbenchPage() {
           style={{ minWidth: 180 }}
           options={PHASE_OPTIONS.map(p => ({
             value: p,
-            label: t(`workbench.phases.${p}`),
+            label: labelOr(`workbench.phases.${p}`, p),
           }))}
         />
       </div>
@@ -199,7 +206,7 @@ export default function WorkbenchPage() {
           style={{ minWidth: 160 }}
           options={PRIORITY_OPTIONS.map(p => ({
             value: p,
-            label: p,
+            label: labelOr(`workbench.priorities.${p}`, p),
           }))}
         />
       </div>

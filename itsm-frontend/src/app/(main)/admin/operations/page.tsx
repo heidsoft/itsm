@@ -237,12 +237,12 @@ export default function OperationsPage() {
         render: (value?: string) =>
           value ? (
             <Tooltip title={value}>
-              <Text type="danger" ellipsis style={{ maxWidth: 320, display: 'inline-block' }}>
+              <Text type='danger' ellipsis style={{ maxWidth: 320, display: 'inline-block' }}>
                 {value}
               </Text>
             </Tooltip>
           ) : (
-            <Text type="secondary">—</Text>
+            <Text type='secondary'>—</Text>
           ),
       },
       {
@@ -258,15 +258,21 @@ export default function OperationsPage() {
         fixed: 'right',
         render: (_: unknown, row) => (
           <Popconfirm
-            title="重新入箱这条命令？"
-            description="使用原始 payload 与幂等键重跑一次，不会产生重复业务数据。"
-            okText="重放"
-            cancelText="取消"
+            title={
+              row.commandType === 'ai.tool.execute' ? '确认重放 AI 写工具？' : '重新入箱这条命令？'
+            }
+            description={
+              row.commandType === 'ai.tool.execute'
+                ? `将恢复工具调用 #${row.aggregateId} 并使用原幂等键重跑。若中断前已写入业务数据，重放可能再次执行，请先核对对象与审计。`
+                : '使用原始 payload 与幂等键重跑一次；是否重复副作用取决于具体命令的幂等保护。'
+            }
+            okText='重放'
+            cancelText='取消'
             onConfirm={() => handleReplay(row)}
           >
             <Button
-              size="small"
-              type="link"
+              size='small'
+              type='link'
               icon={<RotateCcw size={14} />}
               loading={replayingId === row.id}
               disabled={row.status !== 'dead_letter' && row.status !== 'cancelled'}
@@ -315,12 +321,12 @@ export default function OperationsPage() {
         render: (value: string | undefined, row) =>
           value ? (
             <Tooltip title={value}>
-              <Text type="danger" ellipsis style={{ maxWidth: 360, display: 'inline-block' }}>
+              <Text type='danger' ellipsis style={{ maxWidth: 360, display: 'inline-block' }}>
                 {row.errorCode ? `[${row.errorCode}] ${value}` : value}
               </Text>
             </Tooltip>
           ) : (
-            <Text type="secondary">—</Text>
+            <Text type='secondary'>—</Text>
           ),
       },
       {
@@ -336,15 +342,15 @@ export default function OperationsPage() {
         fixed: 'right',
         render: (_: unknown, row) => (
           <Popconfirm
-            title="重新发送这条通知？"
-            description="会真实调用连接器发送一次；若已有在途或已成功的重试，服务端会拒绝。"
-            okText="重试"
-            cancelText="取消"
+            title='重新发送这条通知？'
+            description='会真实调用连接器发送一次；若已有在途或已成功的重试，服务端会拒绝。'
+            okText='重试'
+            cancelText='取消'
             onConfirm={() => handleRetryDelivery(row)}
           >
             <Button
-              size="small"
-              type="link"
+              size='small'
+              type='link'
               icon={<RefreshCw size={14} />}
               loading={retryingId === row.id}
             >
@@ -358,21 +364,22 @@ export default function OperationsPage() {
   );
 
   return (
-    <div className="space-y-6">
+    <div className='space-y-6'>
       <div>
         <Title level={3} style={{ marginBottom: 4 }}>
           死信与投递重放
         </Title>
-        <Text type="secondary">
-          命令总线与通知投递的失败兜底：命令死信用原幂等键重放（不会重复写业务数据），失败投递重试会真实再发一次消息。
+        <Text type='secondary'>
+          命令死信保留原幂等键重放，失败投递重试会真实再发一次消息；AI
+          写工具中断后重放前需先核对业务结果。
         </Text>
       </div>
 
       <Row gutter={[16, 16]}>
         <Col xs={12} md={6}>
-          <Card size="small">
+          <Card size='small'>
             <Statistic
-              title="死信命令"
+              title='死信命令'
               value={summary?.deadLetter ?? 0}
               valueStyle={{ color: (summary?.deadLetter ?? 0) > 0 ? '#cf1322' : undefined }}
               prefix={<AlertTriangle size={16} />}
@@ -380,19 +387,19 @@ export default function OperationsPage() {
           </Card>
         </Col>
         <Col xs={12} md={6}>
-          <Card size="small">
-            <Statistic title="待处理" value={summary?.pending ?? 0} />
+          <Card size='small'>
+            <Statistic title='待处理' value={summary?.pending ?? 0} />
           </Card>
         </Col>
         <Col xs={12} md={6}>
-          <Card size="small">
-            <Statistic title="处理中" value={summary?.processing ?? 0} />
+          <Card size='small'>
+            <Statistic title='处理中' value={summary?.processing ?? 0} />
           </Card>
         </Col>
         <Col xs={12} md={6}>
-          <Card size="small">
+          <Card size='small'>
             <Statistic
-              title="租约卡住"
+              title='租约卡住'
               value={summary?.stuckLeases ?? 0}
               valueStyle={{ color: (summary?.stuckLeases ?? 0) > 0 ? '#d46b08' : undefined }}
             />
@@ -401,18 +408,19 @@ export default function OperationsPage() {
       </Row>
 
       <Alert
-        type="info"
+        type='info'
         showIcon
-        message="重放的边界"
+        message='重放的边界'
         description={
           <span>
-            「命令死信」重放保留原幂等键，worker 仍按原身份去重；「失败投递」重试会以新幂等键再入箱一次，
-            因此服务端对同一条投递做了防重复：已有在途重试或上一次重试已成功时返回 409，页面会直接显示原因。
+            「命令死信」重放保留原幂等键，worker 仍按原身份去重；AI 写工具若在中断前已产生副作用，
+            重放仍可能再次执行，必须先核对业务对象与审计。「失败投递」已有在途重试或上一次重试成功时返回
+            409。
           </span>
         }
       />
 
-      <Card size="small">
+      <Card size='small'>
         <Tabs
           activeKey={activeTab}
           onChange={setActiveTab}
@@ -421,7 +429,7 @@ export default function OperationsPage() {
               key: 'commands',
               label: '命令死信',
               children: (
-                <div className="space-y-4">
+                <div className='space-y-4'>
                   <Space wrap>
                     <Select
                       value={commandStatus}
@@ -435,7 +443,7 @@ export default function OperationsPage() {
                     <Input
                       allowClear
                       style={{ width: 240 }}
-                      placeholder="按命令类型过滤，如 notification.deliver"
+                      placeholder='按命令类型过滤，如 notification.deliver'
                       value={commandTypeDraft}
                       onChange={event => setCommandTypeDraft(event.target.value)}
                       onPressEnter={() => {
@@ -461,14 +469,14 @@ export default function OperationsPage() {
                     </Button>
                     <Popconfirm
                       title={`批量重放 ${commandTotal} 条命令？`}
-                      description="按当前筛选条件（含命令类型）匹配，单次最多 200 条；幂等键保持不变。"
-                      okText="全部重放"
-                      cancelText="取消"
+                      description='按当前筛选条件匹配，单次最多 200 条并保留幂等键；包含 AI 写工具时，请先逐条核对中断前是否已写入业务数据。'
+                      okText='全部重放'
+                      cancelText='取消'
                       onConfirm={handleBulkReplay}
                       disabled={commandTotal === 0 || commandStatus !== 'dead_letter'}
                     >
                       <Button
-                        type="primary"
+                        type='primary'
                         danger
                         icon={<RotateCcw size={14} />}
                         loading={bulkReplaying}
@@ -480,13 +488,13 @@ export default function OperationsPage() {
                   </Space>
 
                   <Table<OperationalCommand>
-                    rowKey="id"
-                    size="small"
+                    rowKey='id'
+                    size='small'
                     loading={commandsLoading}
                     columns={commandColumns}
                     dataSource={commands}
                     scroll={{ x: 1100 }}
-                    locale={{ emptyText: <Empty description="没有匹配的命令" /> }}
+                    locale={{ emptyText: <Empty description='没有匹配的命令' /> }}
                     pagination={{
                       current: commandPage,
                       pageSize: commandPageSize,
@@ -511,7 +519,7 @@ export default function OperationsPage() {
                 </Space>
               ),
               children: (
-                <div className="space-y-4">
+                <div className='space-y-4'>
                   <Space wrap>
                     <Select
                       value={deliveryChannel}
@@ -529,17 +537,17 @@ export default function OperationsPage() {
                     >
                       刷新
                     </Button>
-                    <Text type="secondary">共 {deliveryTotal} 条失败记录</Text>
+                    <Text type='secondary'>共 {deliveryTotal} 条失败记录</Text>
                   </Space>
 
                   <Table<NotificationDelivery>
-                    rowKey="id"
-                    size="small"
+                    rowKey='id'
+                    size='small'
                     loading={deliveriesLoading}
                     columns={deliveryColumns}
                     dataSource={deliveries}
                     scroll={{ x: 1000 }}
-                    locale={{ emptyText: <Empty description="没有失败的投递记录" /> }}
+                    locale={{ emptyText: <Empty description='没有失败的投递记录' /> }}
                     pagination={{
                       current: deliveryPage,
                       pageSize: deliveryPageSize,

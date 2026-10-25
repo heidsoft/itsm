@@ -29,6 +29,26 @@ import { AIApi, TriageResult } from '@/lib/api/ai-api';
 
 const { Title, Paragraph } = Typography;
 
+// 首次登录引导里的 AI 分诊演示直接打印枚举值会显示 network / high，
+// 对新用户来说既不可读也看不出这是中文产品，这里补一层展示映射。
+const TRIAGE_LABELS: Record<string, string> = {
+  network: '网络故障',
+  hardware: '硬件故障',
+  software: '软件故障',
+  database: '数据库问题',
+  security: '安全问题',
+  performance: '性能问题',
+  config: '配置问题',
+  other: '其他',
+  critical: '紧急',
+  urgent: '紧急',
+  high: '高',
+  medium: '中',
+  low: '低',
+};
+
+const triageLabel = (value: string): string => TRIAGE_LABELS[value] ?? value;
+
 type StepKey = 'welcome' | 'first-ticket' | 'catalog' | 'cmdb' | 'ai-triage' | 'done';
 
 const STEPS: Array<{ key: StepKey; title: string; icon: React.ReactNode }> = [
@@ -224,7 +244,7 @@ function AITriageStep() {
         <Space orientation="vertical" style={{ width: '100%' }}>
           <textarea value={description} onChange={(event) => setDescription(event.target.value)} rows={3} style={{ width: '100%', padding: 8 }} aria-label="问题描述" />
           <Button type="primary" icon={<Bot size={16} />} loading={loading} onClick={runTriage}>运行 AI 分诊</Button>
-          {result && <Alert type="success" title={`分类：${result.category} · 优先级：${result.priority}`} description={`置信度 ${(result.confidence * 100).toFixed(0)}%${result.explanation ? ` · ${result.explanation}` : ''}`} />}
+          {result && <Alert type="success" title={`分类：${triageLabel(result.category)} · 优先级：${triageLabel(result.priority)}`} description={`置信度 ${(result.confidence * 100).toFixed(0)}%${result.explanation ? ` · ${result.explanation}` : ''}`} />}
         </Space>
       </Card>
     </Space>

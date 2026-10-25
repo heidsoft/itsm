@@ -14,6 +14,7 @@ import (
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
 	"itsm-backend/ent/ticket"
+	"itsm-backend/ent/ticketworkflowrecord"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -591,6 +592,77 @@ func TestTicketWorkflowService_RejectTicket_GuardsAndWhitelist(t *testing.T) {
 	badTarget := "closed"
 	err = service.RejectTicket(ctx, &dto.RejectTicketRequest{TicketID: tk2.ID, Reason: "r", Comment: "c", ReturnToStatus: &badTarget}, user.ID, tenant.ID)
 	assertWorkflowConflict(t, err, common.ConflictCode)
+}
+
+func TestTicketWorkflowService_ForwardTicket_RejectsCrossTenantRecipient(t *testing.T) {
+	service, client, ctx := setupTicketWorkflowTest(t)
+	defer client.Close()
+
+	tenantA, err := createTicketWorkflowTestTenant(ctx, client, "fwa")
+	require.NoError(t, err)
+	tenantB, err := createTicketWorkflowTestTenant(ctx, client, "fwb")
+	require.NoError(t, err)
+	operator, err := createTicketWorkflowTestUser(ctx, client, tenantA.ID, "fwaop")
+	require.NoError(t, err)
+	recipientA, err := createTicketWorkflowTestUser(ctx, client, tenantA.ID, "fwarec")
+	require.NoError(t, err)
+	recipientB, err := createTicketWorkflowTestUser(ctx, client, tenantB.ID, "fwb")
+	require.NoError(t, err)
+
+	tk, err := createTicketWorkflowTestTicket(ctx, client, tenantA.ID, operator.ID, "in_progress")
+	require.NoError(t, err)
+
+	// 跨租户接收人：拒绝且工单、版本、流转记录均不变化
+	err = service.ForwardTicket(ctx, &dto.ForwardTicketRequest{
+		TicketID: tk.ID, ToUserID: recipientB.ID, Comment: "x", TransferOwnership: true,
+	}, operator.ID, tenantA.ID)
+	assertWorkflowConflict(t, err, common.ParamErrorCode)
+
+	fresh, err := client.Ticket.Get(ctx, tk.ID)
+	require.NoError(t, err)
+	assert.Equal(t, tk.AssigneeID, fresh.AssigneeID)
+	assert.Equal(t, tk.Version, fresh.Version)
+	records, err := client.TicketWorkflowRecord.Query().
+		Where(ticketworkflowrecord.TicketIDEQ(tk.ID)).
+		Count(ctx)
+	require.NoError(t, err)
+	assert.Zero(t, records)
+
+	// 停用账号同样不是合法接收人
+	inactive, err := client.User.Create().
+		SetUsername("fwinactive").
+		SetEmail("fwinactive@test.com").
+		SetName("Inactive").
+		SetPasswordHash("hashedpassword").
+		SetRole("agent").
+		SetActive(false).
+		SetTenantID(tenantA.ID).
+		Save(ctx)
+	require.NoError(t, err)
+	err = service.ForwardTicket(ctx, &dto.ForwardTicketRequest{
+		TicketID: tk.ID, ToUserID: inactive.ID, Comment: "x",
+	}, operator.ID, tenantA.ID)
+	assertWorkflowConflict(t, err, common.ParamErrorCode)
+
+	// 同租户接收人：转移所有权在同一事务内完成，版本自增并留下流转记录
+	err = service.ForwardTicket(ctx, &dto.ForwardTicketRequest{
+		TicketID: tk.ID, ToUserID: recipientA.ID, Comment: "hand over", TransferOwnership: true,
+	}, operator.ID, tenantA.ID)
+	require.NoError(t, err)
+
+	fresh, err = client.Ticket.Get(ctx, tk.ID)
+	require.NoError(t, err)
+	assert.Equal(t, recipientA.ID, fresh.AssigneeID)
+	assert.Equal(t, tk.Version+1, fresh.Version)
+
+	record, err := client.TicketWorkflowRecord.Query().
+		Where(ticketworkflowrecord.TicketIDEQ(tk.ID)).
+		Only(ctx)
+	require.NoError(t, err)
+	assert.Equal(t, string(dto.WorkflowActionForward), record.Action)
+	assert.Equal(t, operator.ID, record.FromUserID)
+	assert.Equal(t, recipientA.ID, record.ToUserID)
+	assert.Equal(t, true, record.Metadata["transferOwnership"])
 }
 
 func TestMapTicketSaveErr_MapsNotFoundToVersionConflict(t *testing.T) {

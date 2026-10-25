@@ -432,7 +432,7 @@ func precheckRoutePermissions() map[string]map[string]Permission {
 			"/api/v1/ticket-categories/tree":                       {Resource: "ticket_category", Action: "read"},
 			"/api/v1/ticket-tags":                                  {Resource: "ticket_tag", Action: "read"},
 			"/api/v1/ticket-tags/*":                                {Resource: "ticket_tag", Action: "read"},
-			"/api/v1/ticket-type-presets":                          {Resource: "ticket_type", Action: "manage"},
+			"/api/v1/ticket-type-presets":                          {Resource: "ticket_type", Action: "read"},
 			"/api/v1/ticket-types":                                 {Resource: "ticket", Action: "read"},
 			"/api/v1/ticket-types/*":                               {Resource: "ticket", Action: "read"},
 			"/api/v1/tickets":                                      {Resource: "ticket", Action: "read"},

@@ -3,6 +3,10 @@ import { API_BASE_URL } from '@/lib/api/api-config';
 import { useAuthStore } from '@/lib/store/auth-store';
 import { loadSession, logoutSession, refreshSession, type SessionOutcome } from '@/lib/api/session-api';
 
+export type LoginResult =
+  | { ok: true }
+  | { ok: false; message: string; retryAfterSeconds?: number };
+
 /**
  * 认证入口。凭证只存在于后端下发的 httpOnly cookie 里，前端既不读取也不写入：
  * 登录态的唯一真相是 GET /api/v1/auth/session（见 lib/api/session-api.ts）。
@@ -143,12 +147,15 @@ export class AuthService {
   /**
    * 登录。响应只给出 `{user, expiresIn}`（凭证走 httpOnly cookie），
    * 因此成功后回到会话端点确认后端真正接受了它下发的 cookie，并取得租户范围与权限。
+   *
+   * 失败必须带出后端原因：登录页只返回 false 时，用户看到的是通用「登录失败」，
+   * 无法区分密码错误、限流和会话故障。
    */
   static async login(
     username: string,
     password: string,
     tenantCode?: string
-  ): Promise<boolean> {
+  ): Promise<LoginResult> {
     try {
       await this.makeRequest<{ user: User; expiresIn: number }>('/api/v1/auth/login', {
         method: 'POST',
@@ -162,25 +169,21 @@ export class AuthService {
       const outcome = await loadSession();
       if (outcome.state === 'authenticated') {
         AuthService.applySession(outcome.user, outcome.tenants);
-        return true;
+        return { ok: true };
       }
       if (outcome.state === 'unavailable') {
         // 后端已接受凭据，但会话查询失败不能谎报「登录成功」，也不能说成密码错误。
-        throw new Error('登录已接受，但暂时无法确认会话，请稍后重试');
+        return { ok: false, message: '登录已接受，但暂时无法确认会话，请稍后重试' };
       }
-      return false;
+      return { ok: false, message: '登录已被接受，但会话未能建立，请重试或联系管理员' };
     } catch (error) {
-      // retryAfterSeconds 由 makeRequest 附加到 Error 上，LoginForm 据此展示倒计时。
-      // 只对限流错误 rethrow，其他登录失败（凭证错误、网络错误）按调用方契约返回 false。
       const e = error as Error & { retryAfterSeconds?: number };
-      if (typeof e.retryAfterSeconds === 'number' && e.retryAfterSeconds > 0) {
-        throw e;
-      }
-      if (e.message.includes('暂时无法确认会话')) {
-        throw e;
-      }
-      console.error('Login failed:', error);
-      return false;
+      // retryAfterSeconds 由 makeRequest 从 429 信封带出，LoginForm 据此展示倒计时。
+      return {
+        ok: false,
+        message: e.message || '登录失败',
+        retryAfterSeconds: e.retryAfterSeconds,
+      };
     }
   }
 

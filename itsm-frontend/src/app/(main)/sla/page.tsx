@@ -184,7 +184,10 @@ export default function SLAPage() {
           <Card>
             <Statistic
               title={t('sla.avgResponseTime')}
-              value={report?.avgResponseTime ?? 0}
+              // 后端返回的是浮点分钟数；不设 precision 时 Statistic 会原样打印
+              // 7.862243183333334 这种全精度值，直接把卡片撑爆（2026-10-25 实测）。
+              value={Number.isFinite(report?.avgResponseTime) ? report!.avgResponseTime : 0}
+              precision={1}
               suffix={t('sla.minutes')}
             />
           </Card>
@@ -193,7 +196,8 @@ export default function SLAPage() {
           <Card>
             <Statistic
               title={t('sla.mttr')}
-              value={report?.avgResolutionTime ?? 0}
+              value={Number.isFinite(report?.avgResolutionTime) ? report!.avgResolutionTime : 0}
+              precision={1}
               suffix={t('sla.minutes')}
             />
           </Card>

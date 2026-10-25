@@ -2,11 +2,13 @@ package operations
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
+	"itsm-backend/ent/auditlog"
 	"itsm-backend/internal/commandbus"
 	"itsm-backend/middleware"
 
@@ -153,4 +155,76 @@ func TestHandlerBulkCancelRejectsWrongStatus(t *testing.T) {
 		http.MethodPost, "/bulk-cancel", bytes.NewReader(body),
 	))
 	require.Equal(t, http.StatusConflict, recorder.Code)
+}
+
+func TestHandlerReplayRecoversInterruptedAITool(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	client := newOperationsTestClient(t)
+	ctx := context.Background()
+	invocation := createInterruptedAIToolInvocation(t, client, "single-recovery")
+	command, err := client.OperationalCommand.Create().
+		SetTenantID(invocation.TenantID).SetCommandType(commandbus.CommandExecuteAITool).
+		SetAggregateType("tool_invocation").SetAggregateID(invocation.ID).
+		SetIdempotencyKey("tool_invocation:1:execute").SetPayload(map[string]interface{}{"invocationId": invocation.ID}).
+		SetStatus(commandbus.StatusDeadLetter).SetAttempt(1).SetMaxAttempts(1).
+		SetLastError("tool invocation is not claimable").Save(ctx)
+	require.NoError(t, err)
+
+	handler := NewHandler(NewService(client))
+	router := gin.New()
+	router.POST("/commands/:id/replay", func(c *gin.Context) {
+		c.Set(middleware.TenantContextKey, &middleware.TenantContext{TenantID: invocation.TenantID})
+		c.Set("tenant_id", invocation.TenantID)
+		c.Set("user_id", invocation.UserID)
+		c.Set("request_id", "req-ai-recovery")
+		handler.Replay(c)
+	})
+	recorder := httptest.NewRecorder()
+	router.ServeHTTP(recorder, httptest.NewRequest(http.MethodPost, "/commands/1/replay", nil))
+	require.Equal(t, http.StatusOK, recorder.Code, recorder.Body.String())
+	var response struct {
+		Code int `json:"code"`
+		Data struct {
+			Status         string `json:"status"`
+			IdempotencyKey string `json:"idempotencyKey"`
+		} `json:"data"`
+	}
+	require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &response))
+	require.Zero(t, response.Code)
+	require.Equal(t, commandbus.StatusPending, response.Data.Status)
+	require.Equal(t, command.IdempotencyKey, response.Data.IdempotencyKey)
+
+	storedInvocation, err := client.ToolInvocation.Get(ctx, invocation.ID)
+	require.NoError(t, err)
+	require.Equal(t, "failed", storedInvocation.Status)
+	require.Equal(t, "操作员确认重放中断执行", *storedInvocation.Error)
+	storedCommand, err := client.OperationalCommand.Get(ctx, command.ID)
+	require.NoError(t, err)
+	require.Equal(t, commandbus.StatusPending, storedCommand.Status)
+	require.Equal(t, command.FencingToken+1, storedCommand.FencingToken)
+	audit, err := client.AuditLog.Query().Where(
+		auditlog.TenantIDEQ(invocation.TenantID), auditlog.ActionEQ("replay"), auditlog.ResourceEQ("operational_command"),
+	).Only(ctx)
+	require.NoError(t, err)
+	require.Equal(t, invocation.UserID, audit.UserID)
+	require.Contains(t, *audit.RequestBody, `"invocationRecovered":true`)
+}
+
+func TestReplayDoesNotRecoverAnotherTenantsInvocation(t *testing.T) {
+	client := newOperationsTestClient(t)
+	ctx := context.Background()
+	invocation := createInterruptedAIToolInvocation(t, client, "cross-tenant-recovery")
+	commandTenantID := invocation.TenantID + 1
+	command, err := client.OperationalCommand.Create().
+		SetTenantID(commandTenantID).SetCommandType(commandbus.CommandExecuteAITool).
+		SetAggregateType("tool_invocation").SetAggregateID(invocation.ID).
+		SetIdempotencyKey("tool_invocation:cross-tenant:execute").SetPayload(map[string]interface{}{"invocationId": invocation.ID}).
+		SetStatus(commandbus.StatusDeadLetter).SetMaxAttempts(1).Save(ctx)
+	require.NoError(t, err)
+
+	_, err = NewService(client).Replay(ctx, commandTenantID, command.ID, Actor{UserID: invocation.UserID, Path: "/replay", Method: http.MethodPost})
+	require.NoError(t, err)
+	unchanged, err := client.ToolInvocation.Get(ctx, invocation.ID)
+	require.NoError(t, err)
+	require.Equal(t, "running", unchanged.Status)
 }

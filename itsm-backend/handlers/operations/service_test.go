@@ -41,6 +41,23 @@ func createCommandAt(t *testing.T, client *ent.Client, tenantID int, status stri
 	return command
 }
 
+func createInterruptedAIToolInvocation(t *testing.T, client *ent.Client, label string) *ent.ToolInvocation {
+	t.Helper()
+	ctx := context.Background()
+	tenant, err := client.Tenant.Create().
+		SetName(label).SetCode(label).SetDomain(label + ".test").SetStatus("active").Save(ctx)
+	require.NoError(t, err)
+	user, err := client.User.Create().
+		SetUsername("operator-" + label).SetEmail("operator-" + label + "@test.local").
+		SetName("Operator").SetPasswordHash("hash").SetActive(true).SetTenantID(tenant.ID).Save(ctx)
+	require.NoError(t, err)
+	invocation, err := client.ToolInvocation.Create().
+		SetTenantID(tenant.ID).SetUserID(user.ID).SetToolName("update_ticket").SetArguments(`{}`).
+		SetStatus("running").SetNeedsApproval(true).SetApprovalState("approved").Save(ctx)
+	require.NoError(t, err)
+	return invocation
+}
+
 func TestServiceIsTenantScopedAndSanitizesPayload(t *testing.T) {
 	client := newOperationsTestClient(t)
 	command := createCommand(t, client, 1, commandbus.StatusPending)
@@ -183,6 +200,30 @@ func TestBulkReplayRestoresCommandsAndKeepsIdempotencyKey(t *testing.T) {
 		Where(auditlog.ActionEQ("bulk_replay")).All(context.Background())
 	require.NoError(t, err)
 	require.Len(t, audits, 2)
+}
+
+func TestBulkReplayRecoversInterruptedAITool(t *testing.T) {
+	client := newOperationsTestClient(t)
+	ctx := context.Background()
+	invocation := createInterruptedAIToolInvocation(t, client, "bulk-recovery")
+	command, err := client.OperationalCommand.Create().
+		SetTenantID(invocation.TenantID).SetCommandType(commandbus.CommandExecuteAITool).
+		SetAggregateType("tool_invocation").SetAggregateID(invocation.ID).
+		SetIdempotencyKey("tool_invocation:bulk:execute").SetPayload(map[string]interface{}{"invocationId": invocation.ID}).
+		SetStatus(commandbus.StatusDeadLetter).SetAttempt(1).SetMaxAttempts(1).Save(ctx)
+	require.NoError(t, err)
+
+	result, err := NewService(client).BulkReplay(ctx, BulkFilter{TenantID: invocation.TenantID, PageSize: 10}, Actor{
+		UserID: invocation.UserID, Path: "/bulk-replay", Method: "POST",
+	})
+	require.NoError(t, err)
+	require.Equal(t, []int{command.ID}, result.MatchedIDs)
+	stored, err := client.ToolInvocation.Get(ctx, invocation.ID)
+	require.NoError(t, err)
+	require.Equal(t, "failed", stored.Status)
+	audit, err := client.AuditLog.Query().Where(auditlog.ActionEQ("bulk_replay")).Only(ctx)
+	require.NoError(t, err)
+	require.Contains(t, *audit.RequestBody, `"invocationRecovered":true`)
 }
 
 func TestBulkReplayRejectsWrongStatusAndEmptyFilter(t *testing.T) {

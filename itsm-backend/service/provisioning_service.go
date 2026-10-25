@@ -99,6 +99,25 @@ func (s *ProvisioningService) CreateTaskFromServiceRequest(ctx context.Context, 
 		resourceType = strings.ToLower(strings.TrimSpace(fmt.Sprint(v)))
 	}
 
+	// 原子占用：只有仍处于 security_approved 的服务请求才能被推进到 provisioning。
+	// 必须先 CAS 再建任务——若按「先建 task、最后无条件改状态」的顺序，两个并发
+	// 调用会各自创建一条交付任务，同一份资源被交付两次。CAS 的 RowsAffected
+	// 让输的一方在写任务前就失败。
+	affected, err := tx.ServiceRequest.Update().
+		Where(
+			servicerequest.ID(serviceRequestID),
+			servicerequest.TenantID(tenantID),
+			servicerequest.StatusEQ(domainServiceRequest.StatusSecurityApproved),
+		).
+		SetStatus("provisioning").
+		Save(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("更新服务请求状态失败: %w", err)
+	}
+	if affected == 0 {
+		return nil, common.NewBusinessError(common.ConflictCode, "服务请求已被其他操作推进，请刷新后重试", "")
+	}
+
 	task, err := tx.ProvisioningTask.Create().
 		SetTenantID(tenantID).
 		SetServiceRequestID(serviceRequestID).
@@ -109,14 +128,6 @@ func (s *ProvisioningService) CreateTaskFromServiceRequest(ctx context.Context, 
 		Save(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("创建交付任务失败: %w", err)
-	}
-
-	// 回写 ServiceRequest 状态为 provisioning
-	if err := tx.ServiceRequest.Update().
-		Where(servicerequest.ID(serviceRequestID), servicerequest.TenantID(tenantID)).
-		SetStatus("provisioning").
-		Exec(ctx); err != nil {
-		return nil, fmt.Errorf("更新服务请求状态失败: %w", err)
 	}
 
 	// 入箱：worker 重载 task 后调 ExecuteTask 实际跑 provider。同一 task ID

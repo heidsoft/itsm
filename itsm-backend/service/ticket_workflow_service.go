@@ -251,27 +251,53 @@ func (s *TicketWorkflowService) WithdrawTicket(ctx context.Context, req *dto.Wit
 	return nil
 }
 
-// ForwardTicket 转发工单
+// ForwardTicket 转发工单（事务保护，负责人变更与流转记录原子提交）
 func (s *TicketWorkflowService) ForwardTicket(ctx context.Context, req *dto.ForwardTicketRequest, userID, tenantID int) error {
 	s.logger.Infow("Forwarding ticket", "ticket_id", req.TicketID, "to_user_id", req.ToUserID, "user_id", userID)
 
-	_, err := s.getTicket(ctx, req.TicketID, tenantID)
+	tk, err := s.getTicket(ctx, req.TicketID, tenantID)
 	if err != nil {
 		return err
 	}
 
-	// 如果转移所有权，更新assignee
+	// 接收人必须是当前租户的激活用户，避免把工单指向跨租户或已停用账号
+	recipientOK, err := s.client.User.Query().
+		Where(user.ID(req.ToUserID), user.TenantIDEQ(tenantID), user.Active(true)).
+		Exist(ctx)
+	if err != nil {
+		return fmt.Errorf("校验转发接收人失败: %w", err)
+	}
+	if !recipientOK {
+		return common.NewBusinessError(common.ParamErrorCode, "转发接收人不存在、未激活或不属于当前租户", "")
+	}
+
+	tx, err := s.client.Tx(ctx)
+	if err != nil {
+		return fmt.Errorf("开启事务失败: %w", err)
+	}
+	var txErr error
+	defer func() {
+		if txErr != nil {
+			tx.Rollback()
+		}
+	}()
+
+	txClient := tx.Client()
+
+	// 转移所有权时按租户 + 版本条件更新，防止并发覆盖
 	if req.TransferOwnership {
-		_, err = s.client.Ticket.UpdateOneID(req.TicketID).
+		_, err = txClient.Ticket.UpdateOneID(req.TicketID).
+			Where(ticket.TenantIDEQ(tenantID), ticket.DeletedAtIsNil(), ticket.VersionEQ(tk.Version)).
 			SetAssigneeID(req.ToUserID).
+			SetVersion(tk.Version + 1).
 			Save(ctx)
 		if err != nil {
-			return fmt.Errorf("failed to forward ticket: %w", err)
+			txErr = mapTicketSaveErr(err, req.TicketID, tk.Version)
+			return txErr
 		}
 	}
 
-	// 记录流转记录
-	err = s.createWorkflowRecord(ctx, &dto.TicketWorkflowRecord{
+	err = s.createWorkflowRecordWithClient(ctx, txClient, &dto.TicketWorkflowRecord{
 		TicketID:  req.TicketID,
 		Action:    dto.WorkflowActionForward,
 		Operator:  dto.WorkflowUserInfo{ID: userID},
@@ -280,11 +306,19 @@ func (s *TicketWorkflowService) ForwardTicket(ctx context.Context, req *dto.Forw
 		Comment:   req.Comment,
 		CreatedAt: time.Now(),
 		Metadata: map[string]interface{}{
-			"transfer_ownership": req.TransferOwnership,
+			"transferOwnership": req.TransferOwnership,
 		},
 	}, tenantID)
+	if err != nil {
+		txErr = fmt.Errorf("记录流转记录失败: %w", err)
+		return txErr
+	}
 
-	return err
+	txErr = tx.Commit()
+	if txErr != nil {
+		return fmt.Errorf("提交转发事务失败: %w", txErr)
+	}
+	return txErr
 }
 
 // CCTicket 抄送工单

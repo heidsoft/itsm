@@ -274,7 +274,7 @@ func TestTriage_Suggest_Guidance_NormalizesEmptyFields(t *testing.T) {
 		},
 	}
 
-	result := svc.Suggest(context.Background(), "无法判断", "")
+	result := svc.SuggestForTenant(context.Background(), "无法判断", "", 1)
 
 	assert.Equal(t, "general", result.Category)
 	assert.Equal(t, "medium", result.Priority)
@@ -295,34 +295,12 @@ func TestTriage_Suggest_Guidance_NormalizesInvalidEnumsAndConfidence(t *testing.
 		},
 	}
 
-	result := svc.Suggest(context.Background(), "费用系统故障", "")
+	result := svc.SuggestForTenant(context.Background(), "费用系统故障", "", 1)
 
 	assert.Equal(t, "general", result.Category)
 	assert.Equal(t, "medium", result.Priority)
 	assert.Equal(t, 0, result.AssigneeID)
 	assert.Equal(t, 0.6, result.Confidence)
-}
-
-func TestTriage_BatchSuggest(t *testing.T) {
-	svc := NewTriageService(nil, zap.NewNop())
-
-	tickets := []struct {
-		ID          int
-		Title       string
-		Description string
-	}{
-		{ID: 1, Title: "WiFi cannot connect", Description: "cannot上网"},
-		{ID: 2, Title: "mysql connection failed", Description: "database cannot respond"},
-	}
-
-	results, err := svc.BatchSuggest(context.Background(), tickets)
-
-	assert.NoError(t, err)
-	assert.Len(t, results, 2)
-	assert.Equal(t, 1, results[0].ID)
-	assert.Equal(t, "network", results[0].Result.Category)
-	assert.Equal(t, 2, results[1].ID)
-	assert.Equal(t, "database", results[1].Result.Category)
 }
 
 // newTriageServiceWithGuidance creates a TriageService wired with a fake guidance client.
@@ -345,7 +323,7 @@ func TestTriage_Suggest_Guidance_Error_FallsBackToLLM(t *testing.T) {
 	guidance := &fakeGuidanceClient{err: errors.New("sidecar unreachable")}
 
 	svc := newTriageServiceWithGuidance(gateway, guidance)
-	result := svc.Suggest(context.Background(), "发现恶意请求", "sql injection attempt")
+	result := svc.SuggestForTenant(context.Background(), "发现恶意请求", "sql injection attempt", 1)
 
 	assert.Equal(t, 1, guidance.callCount, "guidance should be consulted exactly once")
 	assert.Equal(t, "security", result.Category)
@@ -366,7 +344,7 @@ func TestTriage_Suggest_Guidance_Error_FallsBackToKeyword(t *testing.T) {
 
 	svc := newTriageServiceWithGuidance(gateway, guidance)
 	// "mysql" should trigger the database keyword bucket even when both upstream paths fail.
-	result := svc.Suggest(context.Background(), "mysql connection failed", "database unreachable")
+	result := svc.SuggestForTenant(context.Background(), "mysql connection failed", "database unreachable", 1)
 
 	assert.Equal(t, 1, guidance.callCount)
 	assert.Equal(t, "database", result.Category)
@@ -386,7 +364,7 @@ func TestTriage_Suggest_Guidance_NormalizesEmptyCategory(t *testing.T) {
 	gateway := NewLLMGateway(nil, nil, nil, "test")
 	svc := newTriageServiceWithGuidance(gateway, guidance)
 
-	result := svc.Suggest(context.Background(), "anything", "anything")
+	result := svc.SuggestForTenant(context.Background(), "anything", "anything", 1)
 
 	assert.Equal(t, "general", result.Category)
 	assert.Equal(t, "high", result.Priority)
@@ -405,7 +383,7 @@ func TestTriage_Suggest_Guidance_NormalizesInvalidCategory(t *testing.T) {
 	gateway := NewLLMGateway(nil, nil, nil, "test")
 	svc := newTriageServiceWithGuidance(gateway, guidance)
 
-	result := svc.Suggest(context.Background(), "anything", "anything")
+	result := svc.SuggestForTenant(context.Background(), "anything", "anything", 1)
 
 	assert.Equal(t, "general", result.Category)
 }
@@ -422,7 +400,7 @@ func TestTriage_Suggest_Guidance_NormalizesOutOfRangeConfidence(t *testing.T) {
 	gateway := NewLLMGateway(nil, nil, nil, "test")
 	svc := newTriageServiceWithGuidance(gateway, guidance)
 
-	result := svc.Suggest(context.Background(), "anything", "anything")
+	result := svc.SuggestForTenant(context.Background(), "anything", "anything", 1)
 
 	assert.Equal(t, 0.6, result.Confidence)
 	assert.Equal(t, 102, result.AssigneeID)
@@ -442,7 +420,7 @@ func TestTriage_Suggest_Guidance_Success_PreservesAssignee(t *testing.T) {
 	gateway := NewLLMGateway(nil, nil, nil, "test")
 	svc := newTriageServiceWithGuidance(gateway, guidance)
 
-	result := svc.Suggest(context.Background(), "anything", "anything")
+	result := svc.SuggestForTenant(context.Background(), "anything", "anything", 1)
 
 	assert.Equal(t, "database", result.Category)
 	assert.Equal(t, 999, result.AssigneeID)
@@ -475,7 +453,7 @@ func TestTriage_Suggest_GuidanceError_FallsBackToLLM(t *testing.T) {
 		err: errors.New("Guidance sidecar network error"),
 	}
 
-	result := svc.Suggest(context.Background(), "SQL注入攻击检测", "")
+	result := svc.SuggestForTenant(context.Background(), "SQL注入攻击检测", "", 1)
 
 	assert.Equal(t, "security", result.Category)
 	assert.Equal(t, "critical", result.Priority)
@@ -496,7 +474,7 @@ func TestTriage_Suggest_GuidanceErrorAndLLMError_FallsBackToKeyword(t *testing.T
 		err: errors.New("Guidance sidecar network error"),
 	}
 
-	result := svc.Suggest(context.Background(), "MySQL连接失败", "数据库无法访问")
+	result := svc.SuggestForTenant(context.Background(), "MySQL连接失败", "数据库无法访问", 1)
 
 	assert.Equal(t, "database", result.Category)
 	assert.Equal(t, 101, result.AssigneeID)

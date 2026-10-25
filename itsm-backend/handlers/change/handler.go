@@ -7,6 +7,7 @@ import (
 
 	"itsm-backend/common"
 	"itsm-backend/dto"
+	"itsm-backend/ent"
 	"itsm-backend/internal/datascope"
 	"itsm-backend/middleware"
 
@@ -226,6 +227,16 @@ func (h *Handler) GetRiskAssessment(c *gin.Context) {
 		return
 	}
 
+	// 变更不存在必须 404：不能把「变更不存在」伪装成「尚未评估」。
+	if _, err := h.svc.GetChange(c.Request.Context(), id, tenantID); err != nil {
+		if ent.IsNotFound(err) {
+			common.NotFound(c, "变更不存在")
+			return
+		}
+		common.RespondError(c, err, "获取变更失败")
+		return
+	}
+
 	ra, err := h.svc.GetRisk(c.Request.Context(), id, tenantID)
 	if err != nil {
 		common.RespondError(c, err, "获取风险评估失败")
@@ -233,11 +244,14 @@ func (h *Handler) GetRiskAssessment(c *gin.Context) {
 	}
 
 	if ra == nil {
-		common.Success(c, nil)
+		// 未评估是合法领域状态，必须显式表达：历史实现返回 data:null，
+		// 调用方无法区分「未评估」与「能力缺失/无权限」，CLI 只能报 ok:true。
+		common.Success(c, dto.ChangeRiskAssessment{ChangeID: id, Assessed: false})
 		return
 	}
 
 	common.Success(c, dto.ChangeRiskAssessment{
+		Assessed:           true,
 		ID:                 ra.ID,
 		ChangeID:           ra.ChangeID,
 		RiskLevel:          dto.ChangeRisk(ra.RiskLevel),

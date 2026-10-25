@@ -46,8 +46,10 @@ func TestGetCapabilitiesUsesAuthenticatedTenantAndReportsUnreadyRuntime(t *testi
 	capturedTenantID := 0
 	repo := &mockRepository{listCloudAccountsFn: func(_ context.Context, tenantID int, provider string) ([]*CloudAccount, error) {
 		capturedTenantID = tenantID
-		require.Equal(t, "aliyun", provider)
-		return []*CloudAccount{{TenantID: tenantID, Provider: provider, IsActive: true, CredentialRef: "secret://tenant-42/aliyun-prod"}}, nil
+		// 空 provider = 不按厂商过滤：就绪判定要看「有没有任一已接入厂商的账号」，
+		// 锁死阿里云会让只配腾讯云/AWS 的租户被报成未配置。
+		require.Equal(t, "", provider)
+		return []*CloudAccount{{TenantID: tenantID, Provider: "aliyun", IsActive: true, CredentialRef: "secret://tenant-42/aliyun-prod"}}, nil
 	}}
 	svc := NewServiceWithDiscoveryRuntime(repo, nil, zap.NewNop().Sugar(), DiscoveryRuntime{
 		Adapters: capabilityAdapterInspector{ready: true},

@@ -2,14 +2,127 @@ package capability
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/gin-gonic/gin"
+	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/require"
+
+	"itsm-backend/connector"
 )
+
+// fakeHealthConnector 让 HealthCheck 结果取决于实例所属租户，用于验证探测的租户边界。
+type fakeHealthConnector struct {
+	tenantID    int
+	failTenants map[int]bool
+}
+
+func (f *fakeHealthConnector) Manifest() connector.Manifest {
+	return connector.Manifest{
+		Name:                "feishu",
+		Version:             "test",
+		Provider:            "test",
+		Type:                connector.TypeIM,
+		RequiredPermissions: []string{"send_message"},
+	}
+}
+
+func (f *fakeHealthConnector) Init(_ context.Context, cfg connector.Config) error {
+	f.tenantID = cfg.TenantID
+	return nil
+}
+
+func (f *fakeHealthConnector) Send(context.Context, *connector.Message) error { return nil }
+
+func (f *fakeHealthConnector) HealthCheck(context.Context) connector.HealthStatus {
+	if f.failTenants[f.tenantID] {
+		return connector.HealthStatus{OK: false, Message: "tenant endpoint down", CheckedAt: time.Now()}
+	}
+	return connector.HealthStatus{OK: true, CheckedAt: time.Now()}
+}
+
+func (f *fakeHealthConnector) Close() error { return nil }
+
+func newConnectorProbe(t *testing.T) *Prober {
+	t.Helper()
+
+	registry := connector.NewRegistry()
+	failTenants := map[int]bool{2: true}
+	registry.Register(func() connector.Connector {
+		return &fakeHealthConnector{failTenants: failTenants}
+	})
+	manager := connector.NewManager(registry, nil)
+	t.Cleanup(manager.CloseAll)
+
+	ctx := context.Background()
+	require.NoError(t, manager.Provision(ctx, connector.Config{
+		TenantID: 1, Name: "feishu", Provider: "feishu", Enabled: true,
+	}))
+	require.NoError(t, manager.Provision(ctx, connector.Config{
+		TenantID: 2, Name: "feishu", Provider: "dingtalk", Enabled: true,
+	}))
+
+	db, err := sql.Open("sqlite3", ":memory:")
+	require.NoError(t, err)
+	require.NoError(t, db.PingContext(ctx))
+	t.Cleanup(func() { _ = db.Close() })
+
+	return NewProber(db, nil, manager, nil)
+}
+
+// 健康探测必须按租户隔离：租户 1 的健康检查不能复用租户 2 的结果，
+// 也不能因为租户 2 的连接器故障把租户 1 判为不健康。
+func TestProberConnectorHealthIsTenantScoped(t *testing.T) {
+	prober := newConnectorProbe(t)
+	ctx := context.Background()
+
+	healthy := prober.HealthFor(ctx, "connector.feishu", 1)
+	require.True(t, healthy.OK)
+
+	failing := prober.HealthFor(ctx, "connector.feishu", 2)
+	require.False(t, failing.OK)
+	require.Equal(t, "tenant endpoint down", failing.Reason)
+
+	// 未配置该连接器的租户不能被伪报为健康
+	unconfigured := prober.HealthFor(ctx, "connector.feishu", 3)
+	require.False(t, unconfigured.OK)
+	require.Contains(t, unconfigured.Reason, "尚未启用")
+}
+
+// Manager 的 key 是 tenantID/name/provider；能力键只有 name，不能直接用 name 索引。
+func TestConnectorHealthMatchesManagerKey(t *testing.T) {
+	statuses := map[string]connector.HealthStatus{
+		"1/other/feishu":  {OK: false, Message: "wrong name"},
+		"2/feishu/feishu": {OK: true},
+	}
+
+	status, found := connectorHealth(statuses, "feishu")
+	require.True(t, found)
+	require.True(t, status.OK)
+
+	statuses["1/feishu/feishu"] = connector.HealthStatus{OK: false, Message: "down"}
+	status, found = connectorHealth(statuses, "feishu")
+	require.True(t, found)
+	require.False(t, status.OK)
+	require.Equal(t, "down", status.Message)
+}
+
+func TestProberConnectorWithoutRuntimeIsUnhealthy(t *testing.T) {
+	db, err := sql.Open("sqlite3", ":memory:")
+	require.NoError(t, err)
+	require.NoError(t, db.Ping())
+	defer db.Close()
+
+	prober := NewProber(db, nil, nil, nil)
+	health := prober.HealthFor(context.Background(), "connector.feishu", 1)
+	require.False(t, health.OK)
+	require.Equal(t, "连接器运行时未装配", health.Reason)
+}
 
 // 没有数据库连接时不得返回「健康」：这正是旧实现 LastHealthCheckAt = time.Now()
 // 的问题——它让调用方以为探测过且一切正常。

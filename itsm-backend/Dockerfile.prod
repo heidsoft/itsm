@@ -28,6 +28,12 @@ ARG GOSUMDB=sum.golang.org
 # Alpine APK mirror: override to official (dl-cdn.alpinelinux.org) outside China
 ARG APK_MIRROR=https://mirrors.aliyun.com/alpine
 
+# VERSION 必须在此显式声明为 ARG，否则下面 ldflags 里的 ${VERSION:-dev}
+# 取不到 --build-arg 传入的值，二进制内嵌版本恒为 "dev"。
+# 运行时 compose 会用 APP_VERSION 环境变量覆盖显示值，所以这个缺陷只在
+# 「不走 compose 直接 docker run」时暴露——正是最容易漏检的路径。
+ARG VERSION=dev
+
 ENV CGO_ENABLED=0 \
     GOOS=${TARGETOS} \
     GOARCH=${TARGETARCH} \

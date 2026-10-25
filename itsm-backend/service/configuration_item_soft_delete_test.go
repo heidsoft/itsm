@@ -58,7 +58,7 @@ func TestConfigurationItemService_DeleteCIRetiresAndPreservesAudit(t *testing.T)
 		configurationitemhistory.OperationEQ("delete"),
 	).Only(ctx)
 	require.NoError(t, err)
-	require.Equal(t, common.CILifecycleStatusScrapped, deleteHistory.After["lifecycle_status"])
+	require.Equal(t, common.CILifecycleStatusScrapped, deleteHistory.After["lifecycleStatus"])
 }
 
 func TestConfigurationItemService_DeleteCIRollsBackWhenAuditFails(t *testing.T) {

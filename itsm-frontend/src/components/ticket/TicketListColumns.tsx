@@ -36,12 +36,22 @@ export const PRIORITY_CONFIG: Readonly<Record<string, StatusConfig>> = projectSt
   TicketPriorityConfig
 );
 
-/** 工单 ITIL 类型显示名，仅覆盖后端 type 词表中的 ITIL 主类型。 */
+/**
+ * 工单类型显示名，必须覆盖后端 `type` 词表的全部取值
+ * （见 dto.CreateTicketRequest 的 oneof：incident / service_request / change / ticket / problem / improvement）。
+ *
+ * `ticket` 与 `improvement` 不属于 ITSMMainType 的 ITIL 主类型，曾经因此漏配，
+ * 而列渲染是 `TICKET_TYPE_CONFIG[type] ?? type`——漏配即回落成原始枚举，
+ * 表格「类型」列直接显示英文 `ticket`，同列的 incident 却显示「事件」。
+ * 新增后端类型值时，这里必须同步补齐，__tests__ 里有对应断言锁住词表覆盖率。
+ */
 export const TICKET_TYPE_CONFIG: Readonly<Record<string, string>> = {
   [ITSMMainType.INCIDENT]: ITSMMainTypeConfig[ITSMMainType.INCIDENT].label,
   [ITSMMainType.SERVICE_REQUEST]: ITSMMainTypeConfig[ITSMMainType.SERVICE_REQUEST].label,
   [ITSMMainType.PROBLEM]: ITSMMainTypeConfig[ITSMMainType.PROBLEM].label,
   [ITSMMainType.CHANGE]: ITSMMainTypeConfig[ITSMMainType.CHANGE].label,
+  ticket: '工单',
+  improvement: '持续改进',
 };
 
 // Terminal statuses hide the "close" action. `cancelled` is also terminal -

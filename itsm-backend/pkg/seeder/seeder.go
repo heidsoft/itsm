@@ -774,6 +774,7 @@ func (s *Seeder) SeedAll(ctx context.Context) {
 	attempt("service-catalog-items", s.seedServiceCatalogItems)
 	attempt("ticket-types", s.seedTicketTypes)               // 初始化工单类型
 	attempt("ci-types", s.seedCITypes)                       // 初始化CI类型
+	attempt("cloud-service-types", s.seedCloudServiceTypes)  // 云服务类型：发现执行器按 provider+serviceCode 查这张表
 	attempt("incident-categories", s.seedIncidentCategories) // 初始化事件分类
 	attempt("standard-changes", s.seedStandardChanges)       // 初始化标准变更模板
 	attempt("ticket-tags", s.seedTicketTags)                 // 初始化标签

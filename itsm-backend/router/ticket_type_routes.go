@@ -18,6 +18,9 @@ func SetupTicketTypeRoutes(tenant *gin.RouterGroup, h *ticketTypeHandler.Handler
 	tenant.POST("/ticket-types/:id/disable", middleware.RequirePermission("ticket_type", "manage"), h.DisableTicketType)
 	tenant.POST("/ticket-types/:id/clone", middleware.RequirePermission("ticket_type", "manage"), h.CloneTicketType)
 	tenant.POST("/ticket-types/:id/restore", middleware.RequirePermission("ticket_type", "manage"), h.RestoreTicketType)
-	tenant.GET("/ticket-type-presets", middleware.RequirePermission("ticket_type", "manage"), h.ListPresets)
+	// 预设库是产品内置模板，读取口径按 authz catalog 对 ticket_type:read 的定义
+	// （「查看工单类型和预设」）；安装另按 install_preset 单独授权。
+	// 之前挂 manage 时，只有 ticket_type:read 的坐席连预设列表都 403（本地 prod 栈实测 code 2003）。
+	tenant.GET("/ticket-type-presets", middleware.RequirePermission("ticket_type", "read"), h.ListPresets)
 	tenant.POST("/ticket-type-presets/:presetId/install", middleware.RequirePermission("ticket_type", "install_preset"), h.InstallPreset)
 }

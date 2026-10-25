@@ -52,6 +52,7 @@ func (h *compensationHandler) GetHandlerID() string { return h.id }
 func (h *compensationHandler) Validate(context.Context, map[string]interface{}) error {
 	return nil
 }
+
 func (h *compensationHandler) Execute(_ context.Context, _ *ent.ProcessTask, variables map[string]interface{}) (*dto.ServiceTaskResult, error) {
 	if compensate, _ := variables["_compensate"].(bool); compensate {
 		h.compensations++

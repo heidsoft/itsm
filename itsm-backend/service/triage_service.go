@@ -150,13 +150,18 @@ func NewTriageServiceWithConfig(gateway *LLMGateway, logger *zap.Logger, fallbac
 	return svc
 }
 
-// Suggest returns classification suggestions using LLM
+// Suggest 是无租户上下文的分诊入口，仅供离线工具与单元测试使用。
+// 生产请求必须使用 SuggestForTenant：缺少租户时不向 guidance 发起租户级查询。
 func (t *TriageService) Suggest(ctx context.Context, title, description string) TriageResult {
-	return t.SuggestForTenant(ctx, title, description, 1)
+	return t.suggest(ctx, title, description, 0, false)
 }
 
 // SuggestForTenant returns classification suggestions scoped to a tenant.
 func (t *TriageService) SuggestForTenant(ctx context.Context, title, description string, tenantID int) TriageResult {
+	return t.suggest(ctx, title, description, tenantID, tenantID > 0)
+}
+
+func (t *TriageService) suggest(ctx context.Context, title, description string, tenantID int, useGuidance bool) TriageResult {
 	text := strings.ToLower(title + " " + description)
 
 	result := TriageResult{
@@ -168,7 +173,7 @@ func (t *TriageService) SuggestForTenant(ctx context.Context, title, description
 	}
 
 	// Priority 1: Use Guidance sidecar for constrained generation
-	if t.guidanceClient != nil {
+	if useGuidance && t.guidanceClient != nil {
 		guidanceResult, err := t.guidanceClient.Triage(ctx, title, description, tenantID)
 		if err != nil {
 			t.logger.Warn("TriageService: Guidance sidecar failed, falling back", zap.Error(err))
@@ -388,34 +393,6 @@ func containsAny(text string, substrings ...string) bool {
 		}
 	}
 	return false
-}
-
-// BatchSuggest processes multiple tickets for triage suggestions
-func (t *TriageService) BatchSuggest(ctx context.Context, tickets []struct {
-	ID          int
-	Title       string
-	Description string
-}) ([]struct {
-	ID     int
-	Result TriageResult
-}, error,
-) {
-	results := make([]struct {
-		ID     int
-		Result TriageResult
-	}, len(tickets))
-
-	for i, ticket := range tickets {
-		results[i] = struct {
-			ID     int
-			Result TriageResult
-		}{
-			ID:     ticket.ID,
-			Result: t.Suggest(ctx, ticket.Title, ticket.Description),
-		}
-	}
-
-	return results, nil
 }
 
 // TriageWithMetadata includes timing and method information

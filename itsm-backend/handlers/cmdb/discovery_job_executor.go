@@ -35,26 +35,29 @@ var _ DiscoveryAdapterProvider = (*cloud.Registry)(nil)
 // 与旧 Runner.RunAll 的区别：RunAll 直接 upsert CI、绕过 discovery_jobs/results/
 // CloudResource 三张表，且忽略命令 payload；本执行器是唯一生产路径。
 type DiscoveryJobExecutor struct {
-	repo     Repository
-	adapters DiscoveryAdapterProvider
-	resolver cloud.TenantSecretResolver
-	logger   *zap.SugaredLogger
-	workerID string
-	leaseTTL time.Duration
+	repo        Repository
+	adapters    DiscoveryAdapterProvider
+	resolver    cloud.TenantSecretResolver
+	ciProjector *DiscoveryCIProjector
+	logger      *zap.SugaredLogger
+	workerID    string
+	leaseTTL    time.Duration
 }
 
-func NewDiscoveryJobExecutor(repo Repository, adapters DiscoveryAdapterProvider, resolver cloud.TenantSecretResolver, logger *zap.SugaredLogger) *DiscoveryJobExecutor {
+// ciProjector 允许为 nil（CI 域未装配），此时每条资源记一次 ciUnavailable 而不是静默不回写。
+func NewDiscoveryJobExecutor(repo Repository, adapters DiscoveryAdapterProvider, resolver cloud.TenantSecretResolver, ciProjector *DiscoveryCIProjector, logger *zap.SugaredLogger) *DiscoveryJobExecutor {
 	if logger == nil {
 		logger = zap.NewNop().Sugar()
 	}
 	ttl := 5 * time.Minute
 	return &DiscoveryJobExecutor{
-		repo:     repo,
-		adapters: adapters,
-		resolver: resolver,
-		logger:   logger,
-		workerID: fmt.Sprintf("discovery-%s-%d", hostnameShort(), os.Getpid()),
-		leaseTTL: ttl,
+		repo:        repo,
+		adapters:    adapters,
+		resolver:    resolver,
+		ciProjector: ciProjector,
+		logger:      logger,
+		workerID:    fmt.Sprintf("discovery-%s-%d", hostnameShort(), os.Getpid()),
+		leaseTTL:    ttl,
 	}
 }
 
@@ -139,6 +142,7 @@ func (e *DiscoveryJobExecutor) Execute(ctx context.Context, tenantID, jobID int)
 	}
 	var (
 		created, updated, unchanged, discovered, missing int
+		ciCounts                                         ciProjectionCounts
 		failedScopes                                     []string
 		completedScopes                                  []string
 	)
@@ -165,7 +169,7 @@ func (e *DiscoveryJobExecutor) Execute(ctx context.Context, tenantID, jobID int)
 			}
 		}
 
-		nCreated, nUpdated, nUnchanged, nDiscovered, nMissing, scopeErr := e.runScope(ctx, job, source, accountEnt, sc)
+		nCreated, nUpdated, nUnchanged, nDiscovered, nMissing, scopeErr := e.runScope(ctx, job, source, accountEnt, sc, &ciCounts)
 		discovered += nDiscovered
 		created += nCreated
 		updated += nUpdated
@@ -195,6 +199,7 @@ func (e *DiscoveryJobExecutor) Execute(ctx context.Context, tenantID, jobID int)
 	summary["unchanged"] = unchanged
 	summary["missing"] = missing
 	summary["failedScopes"] = failedScopes
+	ciCounts.mergeInto(summary)
 
 	now = time.Now()
 	var finalStatus string
@@ -284,7 +289,7 @@ func (e *DiscoveryJobExecutor) resolveScopes(ctx context.Context, source *Discov
 }
 
 // runScope 执行一个 scope：拉取 → diff → 落库 → 缺失扫描。
-func (e *DiscoveryJobExecutor) runScope(ctx context.Context, job *DiscoveryJob, source *DiscoverySource, account *ent.CloudAccount, sc discoveryScope) (created, updated, unchanged, discovered, missing int, err error) {
+func (e *DiscoveryJobExecutor) runScope(ctx context.Context, job *DiscoveryJob, source *DiscoverySource, account *ent.CloudAccount, sc discoveryScope, ciCounts *ciProjectionCounts) (created, updated, unchanged, discovered, missing int, err error) {
 	provider := cloud.NormalizeProvider(source.Provider)
 	adapter, ok := e.adapters.Get(provider, sc.serviceCode)
 	if !ok {
@@ -314,7 +319,7 @@ func (e *DiscoveryJobExecutor) runScope(ctx context.Context, job *DiscoveryJob, 
 		for i := range page.Resources {
 			res := &page.Resources[i]
 			discovered++
-			action, derr := e.applyResource(ctx, job, source, account, svcDef, sc, res)
+			action, projection, derr := e.applyResource(ctx, job, source, account, svcDef, sc, res)
 			if derr != nil {
 				e.logger.Warnw("apply discovered resource failed", "job", job.ID, "resource", res.ResourceID, "error", derr)
 				continue
@@ -327,6 +332,7 @@ func (e *DiscoveryJobExecutor) runScope(ctx context.Context, job *DiscoveryJob, 
 			default:
 				unchanged++
 			}
+			ciCounts.add(projection)
 			idHash := resourceIdentityHash(account.TenantID, provider, account.AccountID, sc.region, sc.serviceCode, svcDef.ResourceTypeCode, res.ResourceID)
 			seenIdentities[idHash] = struct{}{}
 		}
@@ -353,20 +359,26 @@ func (e *DiscoveryJobExecutor) runScope(ctx context.Context, job *DiscoveryJob, 
 			continue
 		}
 		ex.MissingCount++
+		turnedStale := false
 		if ex.LifecycleState != "stale" && source.StaleThreshold > 0 && ex.MissingCount >= source.StaleThreshold {
 			ex.LifecycleState = "stale"
+			turnedStale = true
 		}
 		if err := e.repo.UpdateDiscoveredCloudResource(ctx, ex); err != nil {
 			e.logger.Warnw("missing scan update failed", "resource", ex.ID, "error", err)
 			continue
 		}
 		missingNow++
+		if turnedStale {
+			ciCounts.addStale(e.ciProjector.MarkStale(ctx, ex))
+		}
 	}
 	return created, updated, unchanged, discovered, missingNow, nil
 }
 
-// applyResource 对单个发现资源做 diff + 落库，返回 action（create/update/unchanged）。
-func (e *DiscoveryJobExecutor) applyResource(ctx context.Context, job *DiscoveryJob, source *DiscoverySource, account *ent.CloudAccount, svcDef *CloudService, sc discoveryScope, res *cloud.DiscoveredResource) (string, error) {
+// applyResource 对单个发现资源做 diff + 落库 + CI 回写，返回 action（create/update/unchanged）
+// 与本次回写结果（未触发回写时为零值 outcome）。
+func (e *DiscoveryJobExecutor) applyResource(ctx context.Context, job *DiscoveryJob, source *DiscoverySource, account *ent.CloudAccount, svcDef *CloudService, sc discoveryScope, res *cloud.DiscoveredResource) (string, CIProjectionOutcome, error) {
 	provider := cloud.NormalizeProvider(source.Provider)
 	identityHash := resourceIdentityHash(account.TenantID, provider, account.AccountID, sc.region, sc.serviceCode, svcDef.ResourceTypeCode, res.ResourceID)
 	fingerprint := resourceFingerprint(res)
@@ -374,7 +386,7 @@ func (e *DiscoveryJobExecutor) applyResource(ctx context.Context, job *Discovery
 
 	existing, err := e.repo.GetCloudResourceByIdentity(ctx, account.TenantID, identityHash)
 	if err != nil && !ent.IsNotFound(err) {
-		return "", fmt.Errorf("load resource by identity: %w", err)
+		return "", CIProjectionOutcome{}, fmt.Errorf("load resource by identity: %w", err)
 	}
 
 	if existing == nil {
@@ -404,11 +416,14 @@ func (e *DiscoveryJobExecutor) applyResource(ctx context.Context, job *Discovery
 			LifecycleState:     "active",
 			TenantID:           account.TenantID,
 		}
-		if _, err := e.repo.CreateCloudResource(ctx, cr); err != nil {
-			return "", fmt.Errorf("create cloud resource: %w", err)
+		saved, err := e.repo.CreateCloudResource(ctx, cr)
+		if err != nil {
+			return "", CIProjectionOutcome{}, fmt.Errorf("create cloud resource: %w", err)
 		}
+		projection := e.ciProjector.Project(ctx, saved)
 		if _, err := e.repo.CreateDiscoveryResult(ctx, &DiscoveryResult{
 			JobID:            job.ID,
+			CIID:             projection.CIID,
 			Action:           "create",
 			ResourceType:     cr.ResourceType,
 			ResourceID:       cr.ResourceID,
@@ -420,19 +435,28 @@ func (e *DiscoveryJobExecutor) applyResource(ctx context.Context, job *Discovery
 			Status:           "applied",
 			TenantID:         account.TenantID,
 		}); err != nil {
-			return "", fmt.Errorf("create discovery result: %w", err)
+			return "", projection, fmt.Errorf("create discovery result: %w", err)
 		}
-		return "create", nil
+		return "create", projection, nil
 	}
 
 	// 已存在：指纹一致 → unchanged（仍要清零缺失计数 + 刷新 last_seen）。
 	if existing.SourceFingerprint == fingerprint {
+		wasStale := existing.LifecycleState == "stale"
 		existing.MissingCount = 0
 		existing.SourceID = source.ID
-		if err := e.repo.UpdateDiscoveredCloudResource(ctx, existing); err != nil {
-			return "", fmt.Errorf("touch unchanged resource: %w", err)
+		if wasStale {
+			// 资源回来了就要从 stale 回到 active，否则下一轮内容没变化时
+			// 它会永远停在「缺失」，配置项也跟着被误标。
+			existing.LifecycleState = "active"
 		}
-		return "unchanged", nil
+		if err := e.repo.UpdateDiscoveredCloudResource(ctx, existing); err != nil {
+			return "", CIProjectionOutcome{}, fmt.Errorf("touch unchanged resource: %w", err)
+		}
+		if !wasStale {
+			return "unchanged", CIProjectionOutcome{}, nil
+		}
+		return "unchanged", e.ciProjector.Project(ctx, existing), nil
 	}
 
 	// 有变化：按 reconcile_policy 决定是否自动应用。
@@ -449,6 +473,7 @@ func (e *DiscoveryJobExecutor) applyResource(ctx context.Context, job *Discovery
 
 	manual := source.ReconcilePolicy == string(cloud.ReconcileManual)
 	resultStatus := "applied"
+	var projection CIProjectionOutcome
 	if manual {
 		resultStatus = "pending"
 	} else {
@@ -463,11 +488,13 @@ func (e *DiscoveryJobExecutor) applyResource(ctx context.Context, job *Discovery
 		existing.MissingCount = 0
 		existing.LifecycleState = "active"
 		if err := e.repo.UpdateDiscoveredCloudResource(ctx, existing); err != nil {
-			return "", fmt.Errorf("apply resource update: %w", err)
+			return "", CIProjectionOutcome{}, fmt.Errorf("apply resource update: %w", err)
 		}
+		projection = e.ciProjector.Project(ctx, existing)
 	}
 	if _, err := e.repo.CreateDiscoveryResult(ctx, &DiscoveryResult{
 		JobID:            job.ID,
+		CIID:             projection.CIID,
 		Action:           "update",
 		ResourceType:     existing.ResourceType,
 		ResourceID:       existing.ResourceID,
@@ -480,9 +507,9 @@ func (e *DiscoveryJobExecutor) applyResource(ctx context.Context, job *Discovery
 		Status:           resultStatus,
 		TenantID:         account.TenantID,
 	}); err != nil {
-		return "", fmt.Errorf("create update result: %w", err)
+		return "", projection, fmt.Errorf("create update result: %w", err)
 	}
-	return "update", nil
+	return "update", projection, nil
 }
 
 func (e *DiscoveryJobExecutor) findCloudService(ctx context.Context, tenantID int, provider, serviceCode string) (*CloudService, error) {

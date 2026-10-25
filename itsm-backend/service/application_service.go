@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"time"
 
+	"itsm-backend/common"
 	"itsm-backend/ent"
 	"itsm-backend/ent/application"
 	"itsm-backend/ent/microservice"
+	"itsm-backend/ent/project"
 )
 
 type ApplicationService struct {
@@ -18,9 +20,46 @@ func NewApplicationService(client *ent.Client) *ApplicationService {
 	return &ApplicationService{client: client}
 }
 
+// validateProjectTenant 校验项目引用属于当前租户，避免写入跨租户外键。
+func (s *ApplicationService) validateProjectTenant(ctx context.Context, projectID, tenantID int) error {
+	if projectID <= 0 {
+		return nil
+	}
+	exists, err := s.client.Project.Query().
+		Where(project.IDEQ(projectID), project.TenantIDEQ(tenantID)).
+		Exist(ctx)
+	if err != nil {
+		return fmt.Errorf("检查所属项目失败: %w", err)
+	}
+	if !exists {
+		return common.NewBusinessError(common.ParamErrorCode, "所属项目不存在或不属于当前租户", "")
+	}
+	return nil
+}
+
+// validateApplicationTenant 校验应用引用属于当前租户（且未被软删除）。
+func (s *ApplicationService) validateApplicationTenant(ctx context.Context, appID, tenantID int) error {
+	if appID <= 0 {
+		return nil
+	}
+	exists, err := s.client.Application.Query().
+		Where(application.IDEQ(appID), application.TenantIDEQ(tenantID), application.DeletedAtIsNil()).
+		Exist(ctx)
+	if err != nil {
+		return fmt.Errorf("检查所属应用失败: %w", err)
+	}
+	if !exists {
+		return common.NewBusinessError(common.ParamErrorCode, "所属应用不存在或不属于当前租户", "")
+	}
+	return nil
+}
+
 // Application Methods
 
 func (s *ApplicationService) CreateApplication(ctx context.Context, name, code, appType string, projectID, tenantID int) (*ent.Application, error) {
+	if err := s.validateProjectTenant(ctx, projectID, tenantID); err != nil {
+		return nil, err
+	}
 	codeExists, err := s.client.Application.Query().
 		Where(application.CodeEQ(code), application.TenantIDEQ(tenantID), application.DeletedAtIsNil()).
 		Exist(ctx)
@@ -52,14 +91,19 @@ func (s *ApplicationService) ListApplications(ctx context.Context, tenantID int)
 // Microservice Methods
 
 func (s *ApplicationService) CreateMicroservice(ctx context.Context, name, code, language, framework string, appID, tenantID int) (*ent.Microservice, error) {
-	return s.client.Microservice.Create().
+	if err := s.validateApplicationTenant(ctx, appID, tenantID); err != nil {
+		return nil, err
+	}
+	create := s.client.Microservice.Create().
 		SetName(name).
 		SetCode(code).
 		SetLanguage(language).
 		SetFramework(framework).
-		SetApplicationID(appID).
-		SetTenantID(tenantID).
-		Save(ctx)
+		SetTenantID(tenantID)
+	if appID > 0 {
+		create = create.SetApplicationID(appID)
+	}
+	return create.Save(ctx)
 }
 
 // UpdateApplication 更新应用
@@ -76,7 +120,14 @@ func (s *ApplicationService) UpdateApplication(ctx context.Context, id int, name
 		return nil, err
 	}
 
-	update := s.client.Application.UpdateOneID(id).Where(application.DeletedAtIsNil())
+	if projectID != nil {
+		if err := s.validateProjectTenant(ctx, *projectID, tenantID); err != nil {
+			return nil, err
+		}
+	}
+
+	update := s.client.Application.UpdateOneID(id).
+		Where(application.DeletedAtIsNil(), application.TenantIDEQ(tenantID))
 	if name != nil {
 		update = update.SetName(*name)
 	}
@@ -96,34 +147,36 @@ func (s *ApplicationService) UpdateApplication(ctx context.Context, id int, name
 		update = update.SetType(*appType)
 	}
 	if projectID != nil {
-		update = update.SetProjectID(*projectID)
+		if *projectID == 0 {
+			update = update.ClearProjectID()
+		} else {
+			update = update.SetProjectID(*projectID)
+		}
 	}
 
-	return update.Save(ctx)
+	updated, err := update.Save(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, common.NewBusinessError(common.NotFoundCode, "应用不存在", "")
+		}
+		return nil, fmt.Errorf("更新应用失败: %w", err)
+	}
+	return updated, nil
 }
 
-// DeleteApplication 删除应用
+// DeleteApplication 删除应用（软删除，租户条件更新）
 func (s *ApplicationService) DeleteApplication(ctx context.Context, id int, tenantID int) error {
-	// 检查应用是否存在且属于当前租户
-	exists, err := s.client.Application.Query().
-		Where(
-			application.IDEQ(id),
-			application.TenantIDEQ(tenantID),
-			application.DeletedAtIsNil(),
-		).
-		Exist(ctx)
-	if err != nil {
-		return err
-	}
-	if !exists {
-		return fmt.Errorf("应用不存在: id=%d", id)
-	}
-
-	_, err = s.client.Application.UpdateOneID(id).
+	_, err := s.client.Application.UpdateOneID(id).
 		Where(application.TenantIDEQ(tenantID), application.DeletedAtIsNil()).
 		SetDeletedAt(time.Now()).
 		Save(ctx)
-	return err
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return common.NewBusinessError(common.NotFoundCode, "应用不存在", "")
+		}
+		return fmt.Errorf("删除应用失败: %w", err)
+	}
+	return nil
 }
 
 // ListMicroservices 获取微服务列表
@@ -146,7 +199,13 @@ func (s *ApplicationService) UpdateMicroservice(ctx context.Context, id int, nam
 		return nil, err
 	}
 
-	update := s.client.Microservice.UpdateOneID(id)
+	if appID != nil {
+		if err := s.validateApplicationTenant(ctx, *appID, tenantID); err != nil {
+			return nil, err
+		}
+	}
+
+	update := s.client.Microservice.UpdateOneID(id).Where(microservice.TenantIDEQ(tenantID))
 	if name != nil {
 		update = update.SetName(*name)
 	}
@@ -160,28 +219,33 @@ func (s *ApplicationService) UpdateMicroservice(ctx context.Context, id int, nam
 		update = update.SetFramework(*framework)
 	}
 	if appID != nil {
-		update = update.SetApplicationID(*appID)
+		if *appID == 0 {
+			update = update.ClearApplicationID()
+		} else {
+			update = update.SetApplicationID(*appID)
+		}
 	}
 
-	return update.Save(ctx)
+	updated, err := update.Save(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, common.NewBusinessError(common.NotFoundCode, "微服务不存在", "")
+		}
+		return nil, fmt.Errorf("更新微服务失败: %w", err)
+	}
+	return updated, nil
 }
 
 // DeleteMicroservice 删除微服务
 func (s *ApplicationService) DeleteMicroservice(ctx context.Context, id int, tenantID int) error {
-	// 检查微服务是否存在且属于当前租户
-	exists, err := s.client.Microservice.Query().
-		Where(
-			microservice.IDEQ(id),
-			microservice.TenantIDEQ(tenantID),
-		).
-		Exist(ctx)
+	deleted, err := s.client.Microservice.Delete().
+		Where(microservice.IDEQ(id), microservice.TenantIDEQ(tenantID)).
+		Exec(ctx)
 	if err != nil {
-		return err
+		return fmt.Errorf("删除微服务失败: %w", err)
 	}
-	if !exists {
-		return fmt.Errorf("微服务不存在: id=%d", id)
+	if deleted == 0 {
+		return common.NewBusinessError(common.NotFoundCode, "微服务不存在", "")
 	}
-
-	// 删除微服务
-	return s.client.Microservice.DeleteOneID(id).Exec(ctx)
+	return nil
 }

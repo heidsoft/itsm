@@ -5,6 +5,8 @@ import (
 	"testing"
 	"time"
 
+	"itsm-backend/common"
+	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
 
 	"github.com/stretchr/testify/assert"
@@ -173,6 +175,70 @@ func TestProjectService_UpdateProject(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, project)
 	assert.Equal(t, newName, project.Name)
+}
+
+func TestProjectService_UpdateProject_RejectsCrossTenantReferences(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", testDSN())
+	defer client.Close()
+
+	projectService := NewProjectService(client)
+	ctx := context.Background()
+
+	tenantA, err := client.Tenant.Create().
+		SetName("Tenant A").SetCode("PA").SetDomain("pa.test").SetStatus("active").Save(ctx)
+	require.NoError(t, err)
+	tenantB, err := client.Tenant.Create().
+		SetName("Tenant B").SetCode("PB").SetDomain("pb.test").SetStatus("active").Save(ctx)
+	require.NoError(t, err)
+
+	deptA, err := client.Department.Create().
+		SetName("Dept A").SetCode("DA").SetTenantID(tenantA.ID).Save(ctx)
+	require.NoError(t, err)
+	deptB, err := client.Department.Create().
+		SetName("Dept B").SetCode("DB").SetTenantID(tenantB.ID).Save(ctx)
+	require.NoError(t, err)
+	managerA, err := client.User.Create().
+		SetUsername("mgr-a").SetEmail("mgr-a@pa.test").SetName("Manager A").
+		SetPasswordHash("x").SetRole("agent").SetActive(true).SetTenantID(tenantA.ID).Save(ctx)
+	require.NoError(t, err)
+	managerB, err := client.User.Create().
+		SetUsername("mgr-b").SetEmail("mgr-b@pb.test").SetName("Manager B").
+		SetPasswordHash("x").SetRole("agent").SetActive(true).SetTenantID(tenantB.ID).Save(ctx)
+	require.NoError(t, err)
+
+	target, err := client.Project.Create().
+		SetName("Target").SetCode("TARGET").SetTenantID(tenantA.ID).
+		SetDepartmentID(deptA.ID).SetManagerID(managerA.ID).SetStartDate(time.Now()).Save(ctx)
+	require.NoError(t, err)
+
+	// 跨租户部门 / 经理：参数错误，项目保持原值
+	_, err = projectService.UpdateProject(ctx, target.ID, nil, nil, &deptB.ID, nil, tenantA.ID)
+	var bizErr *common.BusinessError
+	require.ErrorAs(t, err, &bizErr)
+	assert.Equal(t, common.ParamErrorCode, bizErr.Code)
+
+	_, err = projectService.UpdateProject(ctx, target.ID, nil, nil, nil, &managerB.ID, tenantA.ID)
+	require.ErrorAs(t, err, &bizErr)
+	assert.Equal(t, common.ParamErrorCode, bizErr.Code)
+
+	fresh, err := client.Project.Get(ctx, target.ID)
+	require.NoError(t, err)
+	assert.Equal(t, deptA.ID, fresh.DepartmentID)
+	assert.Equal(t, managerA.ID, fresh.ManagerID)
+
+	// 跨租户更新目标：查不到，不得写入
+	newName := "hijacked"
+	_, err = projectService.UpdateProject(ctx, target.ID, &newName, nil, nil, nil, tenantB.ID)
+	require.Error(t, err)
+	require.True(t, ent.IsNotFound(err))
+
+	// 同租户更新成功；0 表示清空可选引用
+	cleared := 0
+	updated, err := projectService.UpdateProject(ctx, target.ID, &newName, nil, &cleared, &cleared, tenantA.ID)
+	require.NoError(t, err)
+	assert.Equal(t, newName, updated.Name)
+	assert.Zero(t, updated.DepartmentID)
+	assert.Zero(t, updated.ManagerID)
 }
 
 func TestProjectService_DeleteProject(t *testing.T) {

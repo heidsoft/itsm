@@ -118,7 +118,7 @@ seedMenus → menu 表（tenant_id + path 唯一）
 | sort | path | name | permission | icon |
 |-----:|------|------|------------|------|
 | 21 | `/tickets/types` | 工单类型 | `ticket_type:read` | ClipboardList |
-| 22 | `/tickets/analytics` | 工单统计 | `ticket:read` | BarChart3 |
+| 22 | `/tickets/analytics` | 工单统计 | `report:read` | BarChart3 |
 | 23 | `/tickets/dashboard` | 工单仪表盘 | `ticket:read` | LayoutDashboard |
 | 24 | `/tickets/cc` | 我的抄送 | `ticket:read` | Mail |
 | 25 | `/tickets/templates` | 工单模板 | `ticket_template:read` | Copy |
@@ -127,6 +127,11 @@ seedMenus → menu 表（tenant_id + path 唯一）
 > `GET /api/v1/tickets/templates` 要求 `ticket_template:read`；只写自己工单的最终用户
 > 拿到入口后必然 403（本地生产栈实测 `code 2003`）。守卫见
 > `itsm-backend/pkg/menubaseline/baseline_guard_test.go`。
+
+> 2026-10-24：`/tickets/analytics` 此前挂 `ticket:read`，而页面主数据源
+> `GET /api/v1/analytics/tickets` 要求 `report:read`；坐席看得到入口、点进去就是
+> `code 2003`，页面又把 403 渲染成一屏 0。菜单码改取数据源真实码，未给坐席补
+> `report:read`（那会连带放开整个报表中心）。守卫同上。
 
 ### 3.3 事件管理 `/incidents`
 

@@ -880,7 +880,9 @@ func NewApplication() *Application {
 	// Job 级发现执行器：消费 `cmdb.cloud_discovery.run` 出箱命令（payload 携带
 	// discoveryJobId），按 discovery_jobs 状态机认领/推进/写结果。
 	// 旧 Runner.RunAll（全账号直写 CI、绕过 jobs/results/CloudResource）不再是生产路径。
-	discoveryJobExecutor := cmdb.NewDiscoveryJobExecutor(cmdbRepo, cloudAdapterRegistry, tenantSecretResolver, sugar)
+	// CI 回写走 service.ConfigurationItemService，保住发号、历史与属性校验。
+	discoveryCIProjector := cmdb.NewDiscoveryCIProjector(cmdbRepo, configurationItemService, sugar)
+	discoveryJobExecutor := cmdb.NewDiscoveryJobExecutor(cmdbRepo, cloudAdapterRegistry, tenantSecretResolver, discoveryCIProjector, sugar)
 	if err := commandRegistry.Register(commandbus.CommandRunCMDBCloudDiscovery, discoveryJobExecutor.Handle); err != nil {
 		sugar.Fatalw("Failed to register CMDB cloud discovery worker", "error", err)
 	}
@@ -888,6 +890,7 @@ func NewApplication() *Application {
 		Adapters:                cloudAdapterRegistry,
 		CredentialResolverReady: tenantSecretResolver != nil,
 		WorkerReady:             discoveryJobExecutor != nil,
+		CIProjector:             discoveryCIProjector,
 	})
 	cmdbHandler := cmdb.NewHandler(cmdbServiceDomain)
 	// 云发现调度器：消费 discovery_sources.schedule。此前该字段全仓无消费者，

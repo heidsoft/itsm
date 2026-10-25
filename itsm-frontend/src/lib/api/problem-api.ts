@@ -209,7 +209,8 @@ export interface ListProblemCommentsResponse {
   items: ProblemComment[];
   total: number;
   page: number;
-  size: number;
+  pageSize: number;
+  totalPages: number;
 }
 
 // ==================== 问题 SLA（2026-10-21 GA 落地） ====================
@@ -355,7 +356,7 @@ export class ProblemApi {
    */
   static async getProblemComments(
     problemId: number,
-    params?: { page?: number; size?: number }
+    params?: { page?: number; pageSize?: number }
   ): Promise<ListProblemCommentsResponse> {
     return httpClient.get<ListProblemCommentsResponse>(
       `/api/v1/problems/${problemId}/comments`,

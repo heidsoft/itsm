@@ -94,7 +94,19 @@ func (s *ProjectService) UpdateProject(ctx context.Context, id int, name, code *
 		return nil, err
 	}
 
-	update := s.client.Project.UpdateOneID(id)
+	// 新引用必须属于当前租户；0 表示显式清空，不参与引用校验
+	var deptRef, managerRef int
+	if deptID != nil {
+		deptRef = *deptID
+	}
+	if managerID != nil {
+		managerRef = *managerID
+	}
+	if err := s.validateRefTenant(ctx, tenantID, managerRef, deptRef); err != nil {
+		return nil, err
+	}
+
+	update := s.client.Project.UpdateOneID(id).Where(project.TenantIDEQ(tenantID))
 	if name != nil {
 		update = update.SetName(*name)
 	}
@@ -102,13 +114,28 @@ func (s *ProjectService) UpdateProject(ctx context.Context, id int, name, code *
 		update = update.SetCode(*code)
 	}
 	if deptID != nil {
-		update = update.SetDepartmentID(*deptID)
+		if *deptID == 0 {
+			update = update.ClearDepartmentID()
+		} else {
+			update = update.SetDepartmentID(*deptID)
+		}
 	}
 	if managerID != nil {
-		update = update.SetManagerID(*managerID)
+		if *managerID == 0 {
+			update = update.ClearManagerID()
+		} else {
+			update = update.SetManagerID(*managerID)
+		}
 	}
 
-	return update.Save(ctx)
+	updated, err := update.Save(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, common.NewBusinessError(common.NotFoundCode, "项目不存在", "")
+		}
+		return nil, fmt.Errorf("update project %d: %w", id, err)
+	}
+	return updated, nil
 }
 
 // DeleteProject 删除项目

@@ -290,6 +290,21 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 	r.Use(middleware.CORSMiddleware())
 	r.Use(middleware.PrometheusMetricsMiddleware())
 
+	// 未匹配路径/方法的兜底响应。
+	// gin 默认对未匹配路径返回 text/plain "404 page not found"，与全站
+	// {code,message,data} 信封不一致：前端 httpClient、itsm-cli、MCP 客户端按
+	// JSON 解析时会走进"响应结构变更"分支，把「接口不存在」误报成解析失败
+	// （与 CHANGELOG 里飞书 doJSON 不判状态码、把 401 报成 decode 失败同类）。
+	// 开启 HandleMethodNotAllowed 后，路径存在但动词用错返回 405，而不是
+	// 同样伪装成「资源不存在」。
+	r.HandleMethodNotAllowed = true
+	r.NoRoute(func(c *gin.Context) {
+		common.Fail(c, common.NotFoundCode, "接口不存在")
+	})
+	r.NoMethod(func(c *gin.Context) {
+		common.Fail(c, common.MethodNotAllowedCode, "请求方法不被允许")
+	})
+
 	// 安全中间件
 	// 速率限制：优先使用 Redis 限流器（分布式环境），否则使用内存限流器
 	if config.RedisRateLimiter != nil {

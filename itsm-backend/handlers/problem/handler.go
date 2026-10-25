@@ -916,7 +916,7 @@ func (h *Handler) GetProblemSLA(c *gin.Context) {
 // @Produce json
 // @Param id path int true "问题ID"
 // @Param page query int false "页码" default(1)
-// @Param size query int false "每页数量" default(20)
+// @Param pageSize query int false "每页数量" default(20)
 // @Success 200 {object} common.Response{data=dto.ListProblemCommentsResponse}
 // @Failure 400 {object} common.Response
 // @Failure 401 {object} common.Response
@@ -936,10 +936,9 @@ func (h *Handler) GetProblemComments(c *gin.Context) {
 		return
 	}
 
-	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	size, _ := strconv.Atoi(c.DefaultQuery("size", "20"))
+	pg := common.GetPaginationFromQuery(c)
 
-	items, total, err := h.service.ListComments(c.Request.Context(), tenantID, id, page, size)
+	items, total, err := h.service.ListComments(c.Request.Context(), tenantID, id, pg.Page, pg.PageSize)
 	if err != nil {
 		// 仓储层对跨租户/不存在/已删除的问题统一返回哨兵错误 → 404。
 		if errors.Is(err, ErrProblemNotVisible) {
@@ -950,24 +949,29 @@ func (h *Handler) GetProblemComments(c *gin.Context) {
 		return
 	}
 
+	totalPages := 0
+	if total > 0 {
+		totalPages = (total + pg.PageSize - 1) / pg.PageSize
+	}
 	resp := &dto.ListProblemCommentsResponse{
-		Items: make([]*dto.ProblemCommentResponse, 0, len(items)),
-		Total: total,
-		Page:  page,
-		Size:  size,
+		Items:      make([]*dto.ProblemCommentResponse, 0, len(items)),
+		Total:      total,
+		Page:       pg.Page,
+		PageSize:   pg.PageSize,
+		TotalPages: totalPages,
 	}
 	for _, cm := range items {
 		resp.Items = append(resp.Items, &dto.ProblemCommentResponse{
-			ID:         cm.ID,
-			ProblemID:  cm.ProblemID,
-			UserID:     cm.UserID,
-			UserName:   cm.UserName,
-			Content:    cm.Content,
-			IsInternal: cm.IsInternal,
-			Mentions:   cm.Mentions,
+			ID:          cm.ID,
+			ProblemID:   cm.ProblemID,
+			UserID:      cm.UserID,
+			UserName:    cm.UserName,
+			Content:     cm.Content,
+			IsInternal:  cm.IsInternal,
+			Mentions:    cm.Mentions,
 			Attachments: cm.Attachments,
-			CreatedAt:  cm.CreatedAt,
-			UpdatedAt:  cm.UpdatedAt,
+			CreatedAt:   cm.CreatedAt,
+			UpdatedAt:   cm.UpdatedAt,
 		})
 	}
 	common.Success(c, resp)
@@ -1023,16 +1027,16 @@ func (h *Handler) AddProblemComment(c *gin.Context) {
 	}
 
 	common.Success(c, &dto.ProblemCommentResponse{
-		ID:         created.ID,
-		ProblemID:  created.ProblemID,
-		UserID:     created.UserID,
-		UserName:   created.UserName,
-		Content:    created.Content,
-		IsInternal: created.IsInternal,
-		Mentions:   created.Mentions,
+		ID:          created.ID,
+		ProblemID:   created.ProblemID,
+		UserID:      created.UserID,
+		UserName:    created.UserName,
+		Content:     created.Content,
+		IsInternal:  created.IsInternal,
+		Mentions:    created.Mentions,
 		Attachments: created.Attachments,
-		CreatedAt:  created.CreatedAt,
-		UpdatedAt:  created.UpdatedAt,
+		CreatedAt:   created.CreatedAt,
+		UpdatedAt:   created.UpdatedAt,
 	})
 }
 

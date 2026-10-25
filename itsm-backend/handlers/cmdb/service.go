@@ -40,13 +40,50 @@ type DiscoveryRuntime struct {
 	Adapters                DiscoveryAdapterInspector
 	CredentialResolverReady bool
 	WorkerReady             bool
+	// CIProjector 为 nil 表示 CI 域未装配；此时差异只写 CloudResource，
+	// 而不是假装配置项已经跟上。
+	CIProjector *DiscoveryCIProjector
+}
+
+// hasAnyDiscoveryAdapter 问注册表「装了几个适配器」，而不是问某个具体厂商。
+// 此前这里硬编码 HasAdapter("aliyun","ecs")，厂商从一家扩到五家后，只配了腾讯云
+// 或 AWS 的租户会被判成 disabled。
+func (s *Service) hasAnyDiscoveryAdapter() bool {
+	if s.discoveryRuntime.Adapters == nil {
+		return false
+	}
+	for _, support := range s.discoveryRuntime.Adapters.SupportedProviders() {
+		if !support.NotImplemented {
+			return true
+		}
+	}
+	return false
+}
+
+// providerHasDiscoveryAdapter 报告该厂商是否真的能自动发现。
+// 未知或空 provider 一律判否：把「配了账号但不会自动发现」算成就绪，就会让能力
+// 状态说假话，而这类账号的真实结局是任务跑起来才抛 no adapter。
+func (s *Service) providerHasDiscoveryAdapter(provider string) bool {
+	if s.discoveryRuntime.Adapters == nil {
+		return false
+	}
+	normalized := cloud.NormalizeProvider(provider)
+	if normalized == "" {
+		return false
+	}
+	for _, support := range s.discoveryRuntime.Adapters.SupportedProviders() {
+		if support.Provider == normalized {
+			return !support.NotImplemented
+		}
+	}
+	return false
 }
 
 func (s *Service) GetDiscoveryHealth() CapabilityStatus {
-	adapterReady := s.discoveryRuntime.Adapters != nil && s.discoveryRuntime.Adapters.HasAdapter("aliyun", "ecs")
+	adapterReady := s.hasAnyDiscoveryAdapter()
 	missing := make([]string, 0, 3)
 	if !adapterReady {
-		missing = append(missing, "aliyunEcsAdapter")
+		missing = append(missing, "discoveryAdapter")
 	}
 	if !s.discoveryRuntime.CredentialResolverReady {
 		missing = append(missing, "tenantSecretResolver")
@@ -236,9 +273,9 @@ func (s *Service) GetDiscoveryCapability(ctx context.Context, tenantID int) (*Ca
 		return nil, fmt.Errorf("tenant ID is required")
 	}
 	missing := make([]string, 0, 4)
-	adapterReady := s.discoveryRuntime.Adapters != nil && s.discoveryRuntime.Adapters.HasAdapter("aliyun", "ecs")
+	adapterReady := s.hasAnyDiscoveryAdapter()
 	if !adapterReady {
-		missing = append(missing, "aliyunEcsAdapter")
+		missing = append(missing, "discoveryAdapter")
 	}
 	if !s.discoveryRuntime.CredentialResolverReady {
 		missing = append(missing, "tenantSecretResolver")
@@ -246,19 +283,19 @@ func (s *Service) GetDiscoveryCapability(ctx context.Context, tenantID int) (*Ca
 	if !s.discoveryRuntime.WorkerReady {
 		missing = append(missing, "discoveryWorker")
 	}
-	accounts, err := s.repo.ListCloudAccounts(ctx, tenantID, "aliyun")
+	accounts, err := s.repo.ListCloudAccounts(ctx, tenantID, "")
 	if err != nil {
 		return nil, err
 	}
 	tenantReady := false
 	for _, account := range accounts {
-		if account.IsActive && account.CredentialRef != "" {
+		if account.IsActive && account.CredentialRef != "" && s.providerHasDiscoveryAdapter(account.Provider) {
 			tenantReady = true
 			break
 		}
 	}
 	if !tenantReady {
-		missing = append(missing, "tenantCloudAccount")
+		missing = append(missing, "cloudAccountWithDiscoveryAdapter")
 	}
 	deploymentReady := adapterReady && s.discoveryRuntime.CredentialResolverReady && s.discoveryRuntime.WorkerReady
 	state := "ready"

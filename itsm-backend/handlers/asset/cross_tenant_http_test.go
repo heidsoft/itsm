@@ -334,6 +334,31 @@ func TestLicenseTenantIsolation(t *testing.T) {
 		require.Equal(t, 0, lic.UsedQuantity, "被拒绝的更新不得改已用数")
 	})
 
+	t.Run("显式空用户列表释放最后席位", func(t *testing.T) {
+		lic := fx.client.AssetLicense.Create().SetName("待清空许可证").SetTotalQuantity(1).
+			SetUsers([]int{fx.userA.ID}).SetUsedQuantity(1).
+			SetStatus("depleted").SetTenantID(fx.tenantA.ID).SaveX(ctx)
+		w := fx.do(t, http.MethodPut, fmt.Sprintf("%s/%d", base, lic.ID), fx.userA, `{"users":[]}`)
+		require.Equal(t, http.StatusOK, w.Code, "body=%s", w.Body.String())
+		env := decodeEnvelope(t, w)
+		require.Zero(t, env.Code)
+		var updated struct {
+			UsedQuantity      int    `json:"usedQuantity"`
+			AvailableQuantity int    `json:"availableQuantity"`
+			Users             []int  `json:"users"`
+			Status            string `json:"status"`
+		}
+		require.NoError(t, json.Unmarshal(env.Data, &updated))
+		require.Zero(t, updated.UsedQuantity)
+		require.Equal(t, 1, updated.AvailableQuantity)
+		require.Empty(t, updated.Users)
+		require.Equal(t, "active", updated.Status)
+		after, err := fx.client.AssetLicense.Get(ctx, lic.ID)
+		require.NoError(t, err)
+		require.Empty(t, after.Users)
+		require.Zero(t, after.UsedQuantity)
+	})
+
 	t.Run("替换用户含跨租户id整单400", func(t *testing.T) {
 		w := fx.do(t, http.MethodPut, fmt.Sprintf("%s/%d", base, fx.licA1.ID), fx.userA,
 			`{"users":[`+fmt.Sprint(fx.userA.ID)+`,`+fmt.Sprint(fx.stranger.ID)+`]}`)

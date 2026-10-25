@@ -23,8 +23,8 @@ import (
 //   - 只有 `action=update` 且 `status=pending` 的差异可被决策。create 在发现时
 //     已落库（无需确认）；delete 根本不会产生（缺失只推进 missing_count→stale，
 //     防误删）。
-//   - 应用是**写 CloudResource 的事实**，不写 CI：CI 回写尚未接通（capability
-//     的阻断项之一），在这里假装写 CI 会让「配置项与云上一致」变成假承诺。
+//   - 应用先写 CloudResource 的事实，再回写配置项。回写失败只留日志：差异的「应用」
+//     针对云上事实，配置项是下游账，不能因为它没记上就把已生效的写入翻成失败。
 //   - 应用以 `resource_identity` 定位资源，而不是 result.resource_id：身份哈希
 //     是发现的唯一身份口径（含租户/账号/区域/服务/类型），按 resource_id 找会
 //     在跨区域重名时命中错的资源。
@@ -36,7 +36,7 @@ const (
 	DiscoveryResultApplyFailed = "apply_failed"
 )
 
-// ApplyDiscoveryResult 把一条 pending 差异应用到 CloudResource。
+// ApplyDiscoveryResult 把一条 pending 差异应用到 CloudResource，并回写配置项。
 //
 // 幂等语义：只有 pending 能被应用；已 applied/rejected 返回 409（重复点击不该
 // 产生第二次写入，也不该被当成成功——那会掩盖「这条差异其实早被驳回过」）。
@@ -77,6 +77,7 @@ func (s *Service) ApplyDiscoveryResult(ctx context.Context, tenantID, userID, id
 		s.failApplyingDiscoveryResult(ctx, tenantID, id, "apply_failed", err.Error())
 		return nil, fmt.Errorf("apply discovery result %d: %w", id, err)
 	}
+	projection := s.discoveryRuntime.CIProjector.Project(ctx, resource)
 
 	changed, err := s.repo.TransitionDiscoveryResult(
 		ctx, tenantID, id, DiscoveryResultApplying, DiscoveryResultApplied, "", "",
@@ -92,9 +93,17 @@ func (s *Service) ApplyDiscoveryResult(ctx context.Context, tenantID, userID, id
 	result.Status = DiscoveryResultApplied
 	result.ErrorCode = ""
 	result.ErrorMessage = ""
+	result.CIID = projection.CIID
+	if projection.CIID > 0 {
+		if err := s.repo.UpdateDiscoveryResult(ctx, result); err != nil {
+			s.logger.Warnw("failed to attach configuration item to discovery result",
+				"error", err, "result_id", id, "ci_id", projection.CIID, "tenant_id", tenantID)
+		}
+	}
 	s.logger.Infow("discovery difference applied",
 		"tenant_id", tenantID, "result_id", id, "user_id", userID,
-		"resource_identity", result.ResourceIdentity)
+		"resource_identity", result.ResourceIdentity,
+		"ci_projection", projection.Status, "ci_id", projection.CIID)
 	return result, nil
 }
 

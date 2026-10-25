@@ -21,6 +21,23 @@ const { TextArea } = Input;
 const PRIORITY_VALUES = ['critical', 'high', 'medium', 'low'];
 const CATEGORY_VALUES = IncidentCategoryOptions.map(option => option.value);
 
+// AI 建议标签的展示文案。此前标签直接打印枚举值，界面出现
+// 「优先级：high」「分类：hardware」这类英文标识，与下方中文下拉自相矛盾。
+const PRIORITY_LABELS: Record<string, string> = {
+  critical: '紧急',
+  high: '高',
+  medium: '中',
+  low: '低',
+};
+const CATEGORY_LABELS: Record<string, string> = IncidentCategoryOptions.reduce<
+  Record<string, string>
+>((acc, option) => {
+  acc[option.value] = option.label;
+  return acc;
+}, {});
+
+const labelOf = (map: Record<string, string>, value: string): string => map[value] ?? value;
+
 // CI状态中文映射
 const ciStatusNameMap: Record<string, string> = {
   active: '活跃',
@@ -327,13 +344,19 @@ export default function CreateIncidentPage() {
                             <Space orientation="vertical" size={4} style={{ width: '100%' }}>
                               <Space wrap size={4}>
                                 {aiSuggestion.priority && (
-                                  <Tag color="red">优先级：{aiSuggestion.priority}</Tag>
+                                  <Tag color="red">
+                                    优先级：{labelOf(PRIORITY_LABELS, aiSuggestion.priority)}
+                                  </Tag>
                                 )}
                                 {aiSuggestion.urgency && (
-                                  <Tag color="orange">紧急度：{aiSuggestion.urgency}</Tag>
+                                  <Tag color="orange">
+                                    紧急度：{labelOf(PRIORITY_LABELS, aiSuggestion.urgency)}
+                                  </Tag>
                                 )}
                                 {aiSuggestion.category && (
-                                  <Tag color="purple">分类：{aiSuggestion.category}</Tag>
+                                  <Tag color="purple">
+                                    分类：{labelOf(CATEGORY_LABELS, aiSuggestion.category)}
+                                  </Tag>
                                 )}
                               </Space>
                               {aiSuggestion.explanation && (

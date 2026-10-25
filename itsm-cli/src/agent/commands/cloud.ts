@@ -98,9 +98,10 @@ export function cloudCommands() {
         ...(pageSize !== undefined ? { pageSize } : {}),
       });
     }),
-    // Applying writes discovered state into CMDB (creating/updating/linking CIs),
-    // so it is a write even though the verb is absent from the risk lexicon.
-    cmd('cloud.discovery.results.apply', 'Apply a discovery result into CMDB', 'itsm cloud discovery results apply <id>', ['POST /api/v1/cmdb/discovery/results/:id/apply'], async (ctx) => apiClient.applyDiscoveryResult(requirePositional(ctx.args, 0, 'id')), 'write'),
+    // A write because it mutates the cloud resource record — but it does not touch
+    // configuration items: CI writeback is not implemented, so an agent must not
+    // report "CMDB now matches the cloud" after this call.
+    cmd('cloud.discovery.results.apply', 'Apply a pending discovery diff to the cloud resource record (does not update CIs)', 'itsm cloud discovery results apply <id>', ['POST /api/v1/cmdb/discovery/results/:id/apply'], async (ctx) => apiClient.applyDiscoveryResult(requirePositional(ctx.args, 0, 'id')), 'write'),
     cmd('cloud.discovery.results.reject', 'Reject a discovery result', 'itsm cloud discovery results reject <id> [--reason <s>]', ['POST /api/v1/cmdb/discovery/results/:id/reject'], async (ctx) => apiClient.rejectDiscoveryResult(requirePositional(ctx.args, 0, 'id'), optionalString(ctx.args.flags, 'reason'))),
   ];
 }

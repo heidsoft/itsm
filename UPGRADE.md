@@ -3561,6 +3561,137 @@ cd itsm-cli && npm run check     # typecheck + enums + 双向漂移 + flags/posi
 node scripts/check-route-drift.mjs
 ```
 
+### 1.95 云服务类型基线：发现链路的隐藏前置数据（2026-10-25，含启动期写入）
+
+**现象。** 五家厂商适配器都装配好了（§1.92/§1.93），但任何租户的云发现任务都在
+scope 解析阶段整批失败：
+
+```
+load cloud service ecs: ... not found
+```
+
+**根因。** `DiscoveryJobExecutor.runScope` 每跑一个 scope，都要先按
+`tenant_id + provider + service_code` 查到一条 `cloud_services` 才能把资源落到
+正确的资源类型上；查不到就中止。而这张表此前**没有任何生产代码写入过**——
+`CloudService.Create()` 只出现在单测里，seeder 零引用，迁移零 INSERT。
+它是「手工登记云资源类型」的产品功能入口（`POST /api/v1/cmdb/cloud-services`），
+从来没人把它当成发现链路的前置条件。
+
+**本次变更。** 云服务类型成为 `cmdb-core` 组件的产品基线，按
+`service/cloud/adapters.RegisterAll` 的实际装配结果预置 5 条：
+
+| provider | service_code | resource_type_code | api_version |
+|---|---|---|---|
+| aliyun | ecs | instance | 2014-05-26 |
+| tencent | cvm | instance | 2017-03-12 |
+| aws | ec2 | instance | 2016-11-15 |
+| volcengine | ecs | instance | 2020-04-01 |
+| k8s | pod | pod | v1 |
+
+- 写入按 `(tenant_id, provider, service_code, resource_type_code)` 唯一索引判存在性，
+  **已存在的行一律不动**：租户给预置类型改的名称、分类、停用状态归租户所有。
+- 条目带 `is_system=true`，便于与租户自建类型区分。
+- 清单**不接 JSON 种子配置覆盖**：条目内容取决于运行时装配了哪些适配器，
+  让配置能凭空增删厂商就会与注册表分叉。守卫测试
+  `pkg/seeder/cloud_service_baseline_guard_test.go` 双向锁定两边同源。
+- `cmdb-core` 的校验和包含这批条目，因此**存量安装的 `source_checksum` 会变**，
+  重放该组件是预期行为而不是异常；`verify` 也新增这一项，缺行即该组件校验失败。
+
+**升级影响与操作。**
+
+- 服务启动的内联初始化只跑 **platform scope**（默认租户）。已有租户不会在重启时
+  自动补上这批行——这与本仓库所有 per-tenant 基线的既有口径一致，不是本次新增的限制。
+- 新租户经创建时下发的 `tenant.bootstrap.install` 命令自动获得基线
+  （消费者调用 `ProvisionTenant`，与手工重跑是同一条路径）。
+- 存量租户的补录用 `cmd/provision_tenant`：它重放同一套组件、幂等、只补缺项，
+  已存在的云服务类型不会被覆盖。先核对状态再补：
+
+```bash
+cd itsm-backend
+go run ./cmd/initialize -action verify -release-version "$ITSM_RELEASE_VERSION"
+go run ./cmd/provision_tenant -tenant-id <已有租户ID>
+```
+
+`GET /api/v1/tenants/:id/initialization` 逐组件读回**实时校验**结果（不是历史版本标记），
+补录前后可在不登机器的情况下核对 `cmdb-core` 是否通过。
+
+**无 DDL。** 表、列、索引均未变动，本次只补数据。
+
+**验证。** 升级后确认基线已落地，再跑一次发现任务：
+
+```sql
+SELECT tenant_id, provider, service_code, resource_type_code, is_system
+FROM cloud_services ORDER BY tenant_id, provider;
+```
+
+```bash
+cd itsm-backend && go test ./pkg/seeder/... ./handlers/cmdb/... ./handlers/capability/...
+```
+
+### 1.96 云发现结果回写配置项（2026-10-25，行为变更，无 DDL）
+
+**变化。** §1.95 把发现链路跑通之后，任务只写 `cloud_resources` 与
+`discovery_results`，配置项始终要人工录入——CMDB 与云上事实是两套账。现在发现会
+按「云服务类型 → CI 类型」把资源落成配置项：新建、刷新，并在资源连续缺失时把已
+链接的配置项标成同步滞后。
+
+**映射范围。** 只登记产品基线里确实存在的 CI 类型，映射键是 `serviceCode|resourceType`：
+
+| 云服务 | CI 类型 |
+|---|---|
+| aliyun/ecs、tencent/cvm、aws/ec2、volcengine/ecs（`instance`） | `cloud_vm` |
+| k8s/pod（`pod`） | `kubernetes` |
+
+表外的资源（OSS 桶、RDS 等）显式跳过并给出原因，不会凭空造 CI 类型，也不会把云主机
+塞进 `server`。守卫测试
+`pkg/seeder/cloud_service_baseline_guard_test.go::TestDiscoveryCIProjectionMatchesBaseline`
+双向锁定：映射键必须能在 §1.95 的云服务基线里找到，目标 CI 类型必须在租户 CI 类型
+基线里存在。
+
+**两条产品口径（已拍板）。**
+
+- 动态属性只从云标签推断（`env`/`owner`/`cost-center` 等），环境只在无歧义时回填。
+  凑不齐 CI 类型的必填属性就不建账，记 `deferred` 交人工补全，**不臆造值**。
+- 资源连续缺失（`missing_count` 达阈值）只把配置项的 `cloud_sync_status` 置为
+  `stale`，**不动 `lifecycle_status`**——退役是人的决定；资源回来后自动回到 `success`。
+
+**可见契约。**
+
+- 任务 `summary` 新增 7 个计数：`ciCreated`、`ciUpdated`、`ciDeferred`、`ciSkipped`、
+  `ciFailed`、`ciUnavailable`、`ciStaleMarked`，每条都带原因（如
+  `unmapped_resource_type=oss|bucket`、`ci_type_missing=cloud_vm(tenant=3)`）。
+- `discovery_results.ci_id` 现在会被写入，差异可反查配置项；响应字段 `ciId` 早已存在，
+  不是新增契约。
+- 手工对账 `POST /api/v1/cmdb/discovery/results/:id/apply` 在 CAS 到 `applied` 后同步
+  回写配置项；`reject` 行为不变。
+- `reconcile_policy=manual` 的资源在待决阶段不回写，只有应用后才建账。
+
+**失败语义。** 回写永远不让发现任务失败：CI 域未装配记 `unavailable`，写库错误记
+`failed`，两者都只留日志与计数。`discovered_wins` 与 `manual` 两条路径都如此。
+
+**顺带修的缺陷。** 执行器的 `unchanged` 分支此前从不把 `lifecycle_state` 从 `stale`
+改回 `active`——资源回来后永远停在 stale；现在回归即复位，并顺带把配置项的
+`cloud_sync_status` 刷回 `success`。
+
+**升级影响。**
+
+- 无需迁移或改配置；首次发现会开始创建真实配置项，请先确认目标租户已装上 `cmdb-core`
+  基线（§1.95），否则映射到的 CI 类型不存在，全部记 `skipped`。
+- 已手工录入的同类云资源不会被自动识别为同一配置项：链接按
+  `cloud_resource_ref_id` → `(tenant, provider, cloud_resource_id)` 顺序解析，命中多条
+  时**故意不链接**（歧义交人判断），因此历史重复登记需人工合并。
+- 前端 CI 编辑器「云资源同步状态」下拉新增 `stale`（滞后），此前该值无法选择也无法
+  显示。
+
+**验证。**
+
+```bash
+cd itsm-backend && go test ./handlers/cmdb/... ./pkg/seeder/... ./handlers/capability/...
+```
+
+E2E 覆盖：首轮建账、次轮改名但保留人工填写的描述与成本中心、第三轮标 stale、资源
+回来后复位、手工对账应用后回填 `ci_id`、必填属性缺失时 `ciDeferred=1` 且任务仍成功。
+
 ## 2. 环境变量变更
 
 本次升级**移除了多个"幽灵配置项"**（在示例文件中声明但代码/Compose 从不读取，用户配置了也不生效），并修正了一个 Grafana 密码安全缺陷。

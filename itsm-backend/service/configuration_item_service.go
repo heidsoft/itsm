@@ -116,6 +116,9 @@ func (s *ConfigurationItemService) CreateCI(ctx context.Context, req *dto.Create
 	if req.Source != "" {
 		create.SetSource(req.Source)
 	}
+	if req.LastDiscovered != nil {
+		create.SetLastDiscovered(*req.LastDiscovered)
+	}
 	if req.Description != "" {
 		create.SetDescription(req.Description)
 	}
@@ -526,6 +529,9 @@ func (s *ConfigurationItemService) UpdateCI(ctx context.Context, id, tenantID in
 	}
 	if req.Source != "" {
 		update.SetSource(req.Source)
+	}
+	if req.LastDiscovered != nil {
+		update.SetLastDiscovered(*req.LastDiscovered)
 	}
 	if req.Description != "" {
 		update.SetDescription(req.Description)

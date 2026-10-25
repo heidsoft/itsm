@@ -92,6 +92,7 @@ type CreateCIRequest struct {
 	OwnedBy            string                 `json:"ownedBy,omitempty"`
 	DiscoverySource    string                 `json:"discoverySource,omitempty"`
 	Source             string                 `json:"source,omitempty"`
+	LastDiscovered     *time.Time             `json:"lastDiscovered,omitempty"`
 	CloudProvider      string                 `json:"cloudProvider,omitempty"`
 	CloudAccountID     string                 `json:"cloudAccountId,omitempty"`
 	CloudRegion        string                 `json:"cloudRegion,omitempty"`
@@ -115,25 +116,28 @@ type CreateCIRequest struct {
 
 // CIResponse 配置项响应
 type CIResponse struct {
-	ID                 int                    `json:"id"`
-	CINumber           string                 `json:"ciNumber,omitempty"`
-	Name               string                 `json:"name"`
-	Type               string                 `json:"type"`
-	CITypeID           int                    `json:"ciTypeId"`
-	Description        string                 `json:"description"`
-	Status             string                 `json:"status"`
-	Environment        string                 `json:"environment,omitempty"`
-	Criticality        string                 `json:"criticality,omitempty"`
-	AssetTag           string                 `json:"assetTag,omitempty"`
-	Attributes         map[string]interface{} `json:"attributes,omitempty"`
-	SerialNumber       string                 `json:"serialNumber,omitempty"`
-	Model              string                 `json:"model,omitempty"`
-	Vendor             string                 `json:"vendor,omitempty"`
-	Location           string                 `json:"location,omitempty"`
-	AssignedTo         string                 `json:"assignedTo,omitempty"`
-	OwnedBy            string                 `json:"ownedBy,omitempty"`
-	DiscoverySource    string                 `json:"discoverySource,omitempty"`
-	LastDiscovered     time.Time              `json:"lastDiscovered,omitempty"`
+	ID              int                    `json:"id"`
+	CINumber        string                 `json:"ciNumber,omitempty"`
+	Name            string                 `json:"name"`
+	Type            string                 `json:"type"`
+	CITypeID        int                    `json:"ciTypeId"`
+	Description     string                 `json:"description"`
+	Status          string                 `json:"status"`
+	Environment     string                 `json:"environment,omitempty"`
+	Criticality     string                 `json:"criticality,omitempty"`
+	AssetTag        string                 `json:"assetTag,omitempty"`
+	Attributes      map[string]interface{} `json:"attributes,omitempty"`
+	SerialNumber    string                 `json:"serialNumber,omitempty"`
+	Model           string                 `json:"model,omitempty"`
+	Vendor          string                 `json:"vendor,omitempty"`
+	Location        string                 `json:"location,omitempty"`
+	AssignedTo      string                 `json:"assignedTo,omitempty"`
+	OwnedBy         string                 `json:"ownedBy,omitempty"`
+	DiscoverySource string                 `json:"discoverySource,omitempty"`
+	// LastDiscovered 用指针表达「从未被发现」：time.Time 的 omitempty 不生效，
+	// 零值会被序列化成 0001-01-01T00:00:00Z，调用方无法区分「没发现过」和
+	// 「真的在这一天发现过」。
+	LastDiscovered     *time.Time             `json:"lastDiscovered,omitempty"`
 	Source             string                 `json:"source,omitempty"`
 	CloudProvider      string                 `json:"cloudProvider,omitempty"`
 	CloudAccountID     string                 `json:"cloudAccountId,omitempty"`
@@ -194,6 +198,7 @@ type UpdateCIRequest struct {
 	OwnedBy            string                 `json:"ownedBy,omitempty"`
 	DiscoverySource    string                 `json:"discoverySource,omitempty"`
 	Source             string                 `json:"source,omitempty"`
+	LastDiscovered     *time.Time             `json:"lastDiscovered,omitempty"`
 	CloudProvider      string                 `json:"cloudProvider,omitempty"`
 	CloudAccountID     string                 `json:"cloudAccountId,omitempty"`
 	CloudRegion        string                 `json:"cloudRegion,omitempty"`

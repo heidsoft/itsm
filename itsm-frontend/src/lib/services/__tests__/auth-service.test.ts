@@ -161,7 +161,7 @@ describe('AuthService', () => {
 
         const result = await AuthService.login('testuser', 'password123', 'test');
 
-        expect(result).toBe(true);
+        expect(result).toEqual({ ok: true });
         expect(mockFetch).toHaveBeenNthCalledWith(
           1,
           expect.stringContaining('/api/v1/auth/login'),
@@ -181,46 +181,52 @@ describe('AuthService', () => {
         expect(body).not.toHaveProperty('rememberMe');
       });
 
-      it('后端接受凭证但会话查询失败时抛错，不谎报登录成功', async () => {
+      it('后端接受凭证但会话查询失败时不谎报登录成功，并给出可重试原因', async () => {
         mockFetch.mockResolvedValueOnce(loginAccepted());
         mockFetch.mockResolvedValueOnce(SESSION_UNAVAILABLE);
 
-        await expect(AuthService.login('testuser', 'password123')).rejects.toThrow('暂时无法确认会话');
+        const result = await AuthService.login('testuser', 'password123');
+
+        expect(result.ok).toBe(false);
+        expect(result).toMatchObject({ message: expect.stringContaining('暂时无法确认会话') });
         expect(mockLogin).not.toHaveBeenCalled();
       });
 
-      it('会话端点判定未登录时按登录失败返回', async () => {
+      it('会话端点判定未登录时说明会话未建立，而不是笼统的登录失败', async () => {
         mockFetch.mockResolvedValueOnce(loginAccepted());
         mockFetch.mockResolvedValueOnce(SESSION_UNAUTHENTICATED);
 
         const result = await AuthService.login('testuser', 'password123');
 
-        expect(result).toBe(false);
+        expect(result).toEqual({
+          ok: false,
+          message: expect.stringContaining('会话未能建立'),
+        });
         expect(mockLogin).not.toHaveBeenCalled();
       });
 
-      it('should return false on login failure', async () => {
+      it('登录失败必须带出后端原因，不能只返回通用失败', async () => {
         mockFetch.mockResolvedValueOnce({
           ok: false,
           status: 401,
-          json: () => Promise.resolve({ code: 2001, message: 'Invalid credentials' }),
+          json: () => Promise.resolve({ code: 2001, message: '用户名或密码错误' }),
         });
 
         const result = await AuthService.login('wronguser', 'wrongpass');
 
-        expect(result).toBe(false);
+        expect(result).toEqual({ ok: false, message: '用户名或密码错误', retryAfterSeconds: undefined });
       });
 
-      it('should handle network errors gracefully', async () => {
+      it('should report network errors as a failure reason', async () => {
         mockFetch.mockRejectedValueOnce(new Error('Network error'));
 
         const result = await AuthService.login('testuser', 'password');
 
-        expect(result).toBe(false);
+        expect(result).toEqual({ ok: false, message: 'Network error', retryAfterSeconds: undefined });
       });
 
-      it('限流 403 必须带出 retryAfterSeconds 供 LoginForm 倒计时', async () => {
-        // LoginRateLimiter 用 FailWithData 返回 403 + data.retryAfterSeconds。
+      it('限流响应必须带出 retryAfterSeconds 供 LoginForm 倒计时', async () => {
+        // LoginRateLimiter 用 FailWithData 返回 429 + data.retryAfterSeconds。
         // 只解析 2xx 响应体会把倒计时丢掉，页面只能显示一句通用失败。
         mockFetch.mockResolvedValueOnce({
           ok: false,
@@ -233,7 +239,8 @@ describe('AuthService', () => {
             }),
         });
 
-        await expect(AuthService.login('testuser', 'password')).rejects.toMatchObject({
+        await expect(AuthService.login('testuser', 'password')).resolves.toMatchObject({
+          ok: false,
           message: '登录请求过于频繁，请稍后再试',
           retryAfterSeconds: 42,
         });

@@ -73,6 +73,30 @@ func parseAffectedCIIDs(raw []string) []int {
 	return ids
 }
 
+// nilIfZeroInt 把 Ent 的非指针零值映射为 nil。
+//
+// Ent 的 Optional() 字段生成 Go 值类型（int），未设置时是 0；直接取址会让
+// API 下发 assigneeId: 0。0 不是合法用户 ID，调用方会误判为「已分配给 0 号
+// 用户」并继续反查姓名（结果恒为 null），也无法与「未分配」区分。
+func nilIfZeroInt(v int) *int {
+	if v <= 0 {
+		return nil
+	}
+	return &v
+}
+
+// nilIfZeroTime 把 Ent 的非指针零值时间映射为 nil。
+//
+// Ent 的 Optional() Time 字段未设置时是 time.Time{}，直接取址会让 API 下发
+// 0001-01-01T00:00:00Z —— 调用方无法区分「未排期」和「排在公元 1 年」，
+// 日历/甘特视图会出现远古条目。
+func nilIfZeroTime(v time.Time) *time.Time {
+	if v.IsZero() {
+		return nil
+	}
+	return &v
+}
+
 // Map ent entity to domain entity
 func toDomain(ec *ent.Change) *Change {
 	if ec == nil {
@@ -89,13 +113,13 @@ func toDomain(ec *ent.Change) *Change {
 		Priority:           ec.Priority,
 		ImpactScope:        ec.ImpactScope,
 		RiskLevel:          ec.RiskLevel,
-		AssigneeID:         &ec.AssigneeID,
+		AssigneeID:         nilIfZeroInt(ec.AssigneeID),
 		CreatedBy:          ec.CreatedBy,
 		TenantID:           ec.TenantID,
-		PlannedStartDate:   &ec.PlannedStartDate,
-		PlannedEndDate:     &ec.PlannedEndDate,
-		ActualStartDate:    &ec.ActualStartDate,
-		ActualEndDate:      &ec.ActualEndDate,
+		PlannedStartDate:   nilIfZeroTime(ec.PlannedStartDate),
+		PlannedEndDate:     nilIfZeroTime(ec.PlannedEndDate),
+		ActualStartDate:    nilIfZeroTime(ec.ActualStartDate),
+		ActualEndDate:      nilIfZeroTime(ec.ActualEndDate),
 		ImplementationPlan: ec.ImplementationPlan,
 		RollbackPlan:       ec.RollbackPlan,
 		OutcomeNote:        ec.OutcomeNote,

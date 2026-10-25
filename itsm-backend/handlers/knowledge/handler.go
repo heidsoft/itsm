@@ -514,24 +514,28 @@ func (h *Handler) SearchArticles(c *gin.Context) {
 		return
 	}
 
-	items := make([]interface{}, 0, len(articles))
+	items := make([]dto.KnowledgeSearchItem, 0, len(articles))
 	for _, a := range articles {
-		items = append(items, map[string]interface{}{
-			"id":              a.ID,
-			"title":           a.Title,
-			"category":        a.Category,
-			"snippet":         snippet(a.Content, 200),
-			"tags":            a.Tags,
-			"is_published":    a.IsPublished,
-			"relevance_score": a.RelevanceScore,
-			"created_at":      a.CreatedAt,
-			"updated_at":      a.UpdatedAt,
+		items = append(items, dto.KnowledgeSearchItem{
+			ID:             a.ID,
+			Title:          a.Title,
+			Category:       a.Category,
+			Snippet:        snippet(a.Content, 200),
+			Tags:           a.Tags,
+			IsPublished:    a.IsPublished,
+			RelevanceScore: a.RelevanceScore,
+			CreatedAt:      a.CreatedAt,
+			UpdatedAt:      a.UpdatedAt,
 		})
 	}
 
-	common.Success(c, gin.H{
-		"items": items,
-		"total": len(items),
+	// 检索是 top-N，不是分页遍历：total 只代表本次返回条数，
+	// 是否还有更多由 truncated 明示（items 打满 limit 即视为被截断）。
+	common.Success(c, dto.KnowledgeSearchResponse{
+		Items:     items,
+		Total:     len(items),
+		Limit:     limit,
+		Truncated: len(items) >= limit,
 	})
 }
 

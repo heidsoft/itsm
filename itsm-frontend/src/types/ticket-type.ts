@@ -274,4 +274,5 @@ export interface TicketTypeListResponse {
   total: number;
   page: number;
   pageSize: number;
+  totalPages: number;
 }

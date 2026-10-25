@@ -430,8 +430,9 @@ func (h *Handler) RotateSecret(ctx *gin.Context) {
 	rotated.UpdatedAt = time.Now()
 
 	if err := h.manager.Provision(ctx.Request.Context(), rotated); err != nil {
-		h.logger.Errorw("connector rotate_secret init failed", "connector", name, "tenant_id", tenantID, "error", err)
-		common.ParamError(ctx, "新凭据无法初始化，已保留原凭据："+redactCredentialValues(err.Error(), req.NewCredentials))
+		h.logger.Errorw("connector rotate_secret init failed", "connector", name, "tenant_id", tenantID,
+			"error", redactCredentialValues(err.Error(), req.NewCredentials))
+		common.ParamError(ctx, "新凭据无法初始化，已保留原凭据")
 		return
 	}
 	if err := h.store.Save(ctx.Request.Context(), rotated); err != nil {
@@ -536,12 +537,18 @@ func (h *Handler) FeishuCallback(ctx *gin.Context) {
 		"X-Lark-Signature":         ctx.GetHeader("X-Lark-Signature"),
 	}
 	if err := rcv.VerifySignature(headers, body); err != nil {
-		ctx.JSON(401, gin.H{"code": -1, "msg": err.Error()})
+		if h.logger != nil {
+			h.logger.Warnw("Feishu callback signature verification failed", "error", err, "remote_ip", ctx.ClientIP())
+		}
+		ctx.JSON(401, gin.H{"code": -1, "msg": "invalid signature"})
 		return
 	}
 	msg, err := rcv.ParseInbound(body)
 	if err != nil {
-		ctx.JSON(400, gin.H{"code": -1, "msg": err.Error()})
+		if h.logger != nil {
+			h.logger.Warnw("Feishu callback payload parsing failed", "error", err, "remote_ip", ctx.ClientIP())
+		}
+		ctx.JSON(400, gin.H{"code": -1, "msg": "invalid payload"})
 		return
 	}
 	if msg.Type == "url_verification" {

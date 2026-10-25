@@ -631,7 +631,7 @@ func TestSLAHandler_PerformanceByPriorityAndFilters(t *testing.T) {
 
 func TestSLAHandler_PerformanceValidatesInput(t *testing.T) {
 	_, client, tenantID := setupSLAHandler(t)
-	f := seedSLAMonitoringFixture(t, client, tenantID)
+	seedSLAMonitoringFixture(t, client, tenantID)
 	engine := slaEngineForTenant(t, client, tenantID)
 
 	t.Run("不支持的维度返回参数错误", func(t *testing.T) {
@@ -641,7 +641,7 @@ func TestSLAHandler_PerformanceValidatesInput(t *testing.T) {
 	})
 
 	t.Run("时间格式非法返回参数错误", func(t *testing.T) {
-		resp, status := doSLAReqRaw(t, engine, http.MethodGet, "/api/v1/sla/performance?startDate="+f.start.Format("2006-01-02"), nil)
+		resp, status := doSLAReqRaw(t, engine, http.MethodGet, "/api/v1/sla/performance?startDate=not-a-date", nil)
 		assert.Equal(t, common.ParamErrorCode, resp.Code, "body=%s", slaStr(resp))
 		assert.Equal(t, http.StatusBadRequest, status)
 	})
