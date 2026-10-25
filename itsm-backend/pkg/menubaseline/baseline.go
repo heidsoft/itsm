@@ -14,13 +14,16 @@ type MenuSpec struct {
 }
 
 // MenuDefinitions 返回完整菜单基线。
-// 菜单规格与前端 menu-config.ts 的 getMenuConfig() 保持一致：
-// - 服务运营 / 服务保障 / 报告分析 / 自动化 / AI / 扩展模块 / MSP与发布
-// - 系统管理（admin 域，路径以 /admin 开头由 buildMenuTree 归到 admin 域）
+// 菜单完全由数据库驱动：seeder/ProvisionTenant 把本基线写入各租户 menus 表，
+// 前端经 GET /api/v1/auth/menus 消费，不再维护静态菜单配置。
+// 主桶/管理桶的划分见 service/menu_service.go 的 isAdminMenu（按顶级路径 /admin、/system、/workflow）。
 func MenuDefinitions() []MenuSpec {
 	return []MenuSpec{
 		// ===== 顶级主菜单（parent_path 为空） =====
 		{Name: "服务台", Path: "/dashboard", Icon: "LayoutDashboard", PermissionCode: "", SortOrder: 10, Description: "服务台概览"},
+		// 个人工作台：页面早已存在（数据源 GET /api/v1/workbench，要求 dashboard:read），
+		// 但从未挂过菜单，0 入口 0 引用，功能对用户不可达。
+		{Name: "工作台", Path: "/workbench", Icon: "List", ParentPath: "", PermissionCode: "dashboard:read", SortOrder: 12, Description: "个人工作台"},
 		{Name: "服务请求", Path: "/service-requests", Icon: "FileText", ParentPath: "", PermissionCode: "ticket:read", SortOrder: 20, Description: "服务请求管理"},
 		{Name: "工单管理", Path: "/tickets", Icon: "FileText", ParentPath: "", PermissionCode: "ticket:read", SortOrder: 23, Description: "工单管理"},
 		{Name: "我的请求", Path: "/my-requests", Icon: "User", ParentPath: "", PermissionCode: "ticket:read", SortOrder: 25, Description: "我的服务请求"},
@@ -85,6 +88,9 @@ func MenuDefinitions() []MenuSpec {
 		{Name: "新建事件", Path: "/incidents/create", Icon: "Plus", ParentPath: "/incidents", PermissionCode: "incident:write", SortOrder: 32},
 
 		// ===== 子菜单：问题管理 =====
+		// 页面 /problems/new 早已存在；其余六域（事件/变更/发布/资产/CI/知识）都有
+		// 「新建X」快捷入口，问题域缺失会让从菜单建问题这条路径不可达。
+		{Name: "新建问题", Path: "/problems/new", Icon: "Plus", ParentPath: "/problems", PermissionCode: "problem:write", SortOrder: 41},
 		{Name: "已知错误", Path: "/problems/known-errors", Icon: "AlertCircle", ParentPath: "/problems", PermissionCode: "problem:read", SortOrder: 42},
 		{Name: "问题趋势", Path: "/problems/trends", Icon: "TrendingUp", ParentPath: "/problems", PermissionCode: "problem:read", SortOrder: 43, Description: "问题趋势分析"},
 
@@ -171,10 +177,15 @@ func MenuDefinitions() []MenuSpec {
 		{Name: "组管理", Path: "/admin/groups", Icon: "Users", ParentPath: "/admin", PermissionCode: "group:read", SortOrder: 230},
 		{Name: "租户管理", Path: "/admin/tenants", Icon: "Building", ParentPath: "/admin", PermissionCode: "system:write", SortOrder: 235},
 		{Name: "部门管理", Path: "/admin/departments", Icon: "Building", ParentPath: "/admin", PermissionCode: "department:read", SortOrder: 240},
+		// 页面主数据源 GET /api/v1/departments/:id/processes（department:read）；
+		// 页面还会列 /api/v1/process-bindings（bpmn:read），与租管持码集重合。
+		{Name: "部门流程", Path: "/admin/department-processes", Icon: "Workflow", ParentPath: "/admin", PermissionCode: "department:read", SortOrder: 245, Description: "部门级流程配置"},
 		{Name: "团队管理", Path: "/admin/teams", Icon: "Users", ParentPath: "/admin", PermissionCode: "team:read", SortOrder: 250},
 		{Name: "权限管理", Path: "/admin/permissions", Icon: "Lock", ParentPath: "/admin", PermissionCode: "role:write", SortOrder: 280},
 		{Name: "向量存储配置", Path: "/admin/vector-store", Icon: "Database", ParentPath: "/admin", PermissionCode: "system:read", SortOrder: 290},
 		{Name: "系统配置", Path: "/admin/system-config", Icon: "Settings", ParentPath: "/admin", PermissionCode: "system:read", SortOrder: 295},
+		// 域配置继承视图：数据源 GET /api/v1/domain-configs 与 /effective（均为 bpmn:read）。
+		{Name: "配置继承", Path: "/admin/config-inheritance", Icon: "ArrowLeftRight", ParentPath: "/admin", PermissionCode: "bpmn:read", SortOrder: 296, Description: "域流程配置继承关系"},
 		{Name: "全局标签", Path: "/admin/tags", Icon: "Tags", ParentPath: "/admin", PermissionCode: "system:read", SortOrder: 298, Description: "全局标签管理"},
 		// 能力矩阵控制台：/api/v1/capabilities 本身是 AUTH_ONLY，但页面是运营/售前
 		// 用来核对「哪些能力还不能对外承诺」的管理视图，与系统配置同域（system:read），

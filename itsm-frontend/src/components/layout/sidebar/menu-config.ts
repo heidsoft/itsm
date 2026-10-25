@@ -44,7 +44,7 @@ export const capabilityPathRules: Array<[string, string]> = [
   ['/projects', 'project'],
   ['/applications', 'application'],
   ['/admin/tags', 'tag'],
-  ['/templates', 'template'],
+  ['/tickets/templates', 'template'],
 ];
 
 export function capabilityForPath(path?: string): string | undefined {
