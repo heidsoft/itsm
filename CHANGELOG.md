@@ -44,6 +44,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **菜单基线补到 104 条后，seeder 冷校验仍钉在 100 条（2026-10-25，随 10104fea2 漏随）**：该断言的作用就是「改基线必须同步这里」，10104fea2 补挂 4 条零入口菜单却只删掉了旧数字未换新数字，`TestColdVerifyExpectationsAreDeterministicAndIndependent` 因此红在本地全量套件。数字更新为 104 并在注释里按来源列清 4 条新增（`/workbench`、`/problems/new`、`/admin/department-processes`、`/admin/config-inheritance`），下次增删仍能看出漂移出自哪一批。
+
+- **云发现调度 E2E 测试每分钟约 3% 概率偶发红（2026-10-25，CI 于 13:56:01 命中）**：`TestDiscoveryScheduler_EndToEnd` 以 `time.Now()` 起算、第三轮只推进 2 秒，而调度表达式是每分钟 cron；锚点 `QueuedAt` 由服务层用真实时钟落库，测试无法注入。运行一旦落在分钟内最后 2 秒，`now+2s` 就跨过下一个整分边界，调度器判「下一周期已到」并排上任务——**调度器是对的，断言错了**。改为把整个场景钉在当前分钟中点（`Truncate(time.Minute)+30s`），第三轮取同一时点、第四轮 +2 分钟，结果不再依赖运行时刻；另在纯函数层补一条确定性子测试把这条边界算术钉死（锚点 02:00:58.4：+1.5s 不到期、+2s 到期），防止后来者反过来去压制正常触发。验证：同一时钟位（分钟内 58.3s）旧二进制复现 CI 原样失败、修复后二进制通过，59.95s/0.04s/30s 等位置复跑均通过。
+
 - **存量租户菜单基线漂移（2026-10-25，本地生产栈实测发现）**：菜单 reconcile 只覆盖两条路径——平台租户靠启动 `seedMenus`、新租户靠创建时 `ProvisionTenant`——基线变更不会传播到存量非平台租户。实测租户 2 停留在 2026-10-25 配置面归位前的结构：13 个配置菜单（工单分类/CMDB 类型/连接器/SLA 配置面等）仍挂「系统管理」，且缺能力矩阵、商品目录、技能注册表 3 条入口。已走官方通道 `cmd/provision_tenant -tenant-id 2` 全组件重装修复（事务 + 审计 + 幂等 upsert，保留运营侧 `is_visible`/`is_enabled`），修复后两租户路径与父子关系均与基线零差异。机制上不做启动自动改写：漂移检测用只读的 `AuditTenantBaselines`（`baseline_audit.go`），修复保持显式运维动作，与既有「审计发现 → 人工决策 → forward-fix」设计一致。
 
 - **`template` 能力治理映射指向重定向桩，禁用 template 能力时工单模板菜单不会被屏蔽（2026-10-25）**：`menu-config.ts` 的 `capabilityPathRules` 用 `['/templates','template']` 做前缀匹配，但 `/templates` 页面早已改为重定向到 `/tickets/templates` 的桩页，真实页面路径不以 `/templates` 开头——规则永远匹配不到目标，`template` capability 置 `disabled` 时「工单模板」菜单照常显示，违反「能力禁用必须屏蔽入口」的治理约定。改为直接映射 `['/tickets/templates','template']`。
