@@ -5393,6 +5393,49 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/cmdb/discovery/providers": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "返回本产品识别的云厂商全集及各自的发现能力。清单是全量（含未接入的），notImplemented=true 表示可以建云账号/手工登记资源但不会自动发现——把「配了账号也不会发现」从事后失败变成事前可见。与云账号/云服务的 provider 枚举同源（守卫测试强制对齐）。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CMDB-云资源"
+                ],
+                "summary": "云厂商发现能力清单",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.CloudProvidersResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "租户上下文缺失",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/cmdb/export": {
             "get": {
                 "description": "查询历史导出任务列表",
@@ -11470,7 +11513,7 @@ const docTemplate = `{
                         "type": "integer",
                         "default": 20,
                         "description": "每页数量",
-                        "name": "size",
+                        "name": "pageSize",
                         "in": "query"
                     }
                 ],
@@ -12949,6 +12992,26 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "cloud.ProviderSupport": {
+            "type": "object",
+            "properties": {
+                "displayName": {
+                    "type": "string"
+                },
+                "notImplemented": {
+                    "type": "boolean"
+                },
+                "provider": {
+                    "type": "string"
+                },
+                "serviceCodes": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
         "common.Response": {
             "type": "object",
             "properties": {
@@ -13941,6 +14004,7 @@ const docTemplate = `{
                     }
                 },
                 "lastDiscovered": {
+                    "description": "LastDiscovered 用指针表达「从未被发现」：time.Time 的 omitempty 不生效，\n零值会被序列化成 0001-01-01T00:00:00Z，调用方无法区分「没发现过」和\n「真的在这一天发现过」。",
                     "type": "string"
                 },
                 "lifecycleStatus": {
@@ -14691,6 +14755,10 @@ const docTemplate = `{
         "dto.ChangeRiskAssessment": {
             "type": "object",
             "properties": {
+                "assessed": {
+                    "description": "Assessed 显式表达「该变更是否已录入风险评估」。\n\n未评估是合法领域状态，但历史实现返回 data:null —— 调用方无法区分\n「未评估」「变更不存在」「能力缺失」。现在恒返回对象，由该字段判别；\n未评估时 id 为 0 且被省略，不会出现 id:0 的假记录。",
+                    "type": "boolean"
+                },
                 "changeId": {
                     "description": "变更ID",
                     "type": "integer"
@@ -14704,7 +14772,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "description": "风险评估ID",
+                    "description": "风险评估ID（未评估时省略）",
                     "type": "integer"
                 },
                 "impactAnalysis": {
@@ -14954,6 +15022,8 @@ const docTemplate = `{
                         "huawei",
                         "aws",
                         "azure",
+                        "volcengine",
+                        "k8s",
                         "onprem"
                     ]
                 },
@@ -15021,6 +15091,20 @@ const docTemplate = `{
                 },
                 "updatedAt": {
                     "type": "string"
+                }
+            }
+        },
+        "dto.CloudProvidersResponse": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/cloud.ProviderSupport"
+                    }
+                },
+                "total": {
+                    "type": "integer"
                 }
             }
         },
@@ -15209,6 +15293,8 @@ const docTemplate = `{
                         "huawei",
                         "aws",
                         "azure",
+                        "volcengine",
+                        "k8s",
                         "onprem"
                     ]
                 },
@@ -15510,6 +15596,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "expireAt": {
+                    "type": "string"
+                },
+                "lastDiscovered": {
                     "type": "string"
                 },
                 "lifecycleStatus": {
@@ -17017,6 +17106,10 @@ const docTemplate = `{
                     "type": "string",
                     "example": "张三"
                 },
+                "resolution": {
+                    "description": "Resolution 是解决说明的平字段，与工单的 resolution 对齐。\n\n事件没有独立的 resolution 列：resolve 动作把说明写成 resolutionSteps\n最后一条 status=completed 的步骤（见 service.IncidentService.ResolveIncident），\n因此这里从步骤派生、不落第二份副本，避免两处说明不一致。全量步骤仍通过\nresolutionSteps 返回。",
+                    "type": "string"
+                },
                 "resolutionSteps": {
                     "type": "array",
                     "items": {
@@ -17127,6 +17220,10 @@ const docTemplate = `{
                 "reviewIntervalDays": {
                     "type": "integer"
                 },
+                "reviewStatus": {
+                    "description": "评审状态（draft / under_review / approved / rejected），与 Status 是两条\n独立的轴：Status 由 is_published 派生（草稿 vs 已发布），评审状态描述\n内容是否过审。发布门禁要求 review_status == approved，而历史数据里存在\n「未过评审就已发布」的文章，所以两者都不能靠另一个推出来。\n此前响应里根本没有这个字段：库里有 under_review 的文章，API 消费者却\n只能看到 status=draft，无法判断「卡在评审中」还是「只是没发布」，\n也无法预判 /publish 会不会被 409 拒绝。",
+                    "type": "string"
+                },
                 "sourceProblemId": {
                     "description": "来源追溯：文章由哪个问题沉淀而来；空 = 手工创建",
                     "type": "integer"
@@ -17190,10 +17287,13 @@ const docTemplate = `{
                 "page": {
                     "type": "integer"
                 },
-                "size": {
+                "pageSize": {
                     "type": "integer"
                 },
                 "total": {
+                    "type": "integer"
+                },
+                "totalPages": {
                     "type": "integer"
                 }
             }
@@ -18418,6 +18518,9 @@ const docTemplate = `{
                 "expireAt": {
                     "type": "string"
                 },
+                "lastDiscovered": {
+                    "type": "string"
+                },
                 "lifecycleStatus": {
                     "description": "生命周期管理",
                     "type": "string"
@@ -18790,6 +18893,9 @@ const docTemplate = `{
         "dto.UpdateProblemRequest": {
             "type": "object",
             "properties": {
+                "assigneeId": {
+                    "type": "integer"
+                },
                 "category": {
                     "type": "string"
                 },
@@ -18814,6 +18920,10 @@ const docTemplate = `{
                     "type": "string",
                     "maxLength": 200,
                     "minLength": 2
+                },
+                "workaround": {
+                    "type": "string",
+                    "maxLength": 5000
                 }
             }
         },

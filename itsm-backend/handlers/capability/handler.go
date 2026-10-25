@@ -74,8 +74,10 @@ var registry = []definition{
 	{key: "change", maturity: MaturityGA, built: true, dependencies: []string{"workflow"}},
 	// 服务请求维持 Pilot，阻断项不在交付状态机（那一层 2026-10-21 已收口）：
 	// 真正没解决的是「交付本身是不是真的」。
-	{key: "serviceRequest", maturity: MaturityPilot, built: true, dependencies: []string{"workflow", "notification"},
-		pilotReason: "交付 Provider 仍是 StubProvider，不会真正创建云资源；多步交付中途失败后的资源回滚/补偿未实现；目录项到 CI Type、交付模板、BPMN、SLA 的绑定口径仍分散。晋升条件：接真实 provider + 补偿动作 + 目录项绑定统一。"},
+	{
+		key: "serviceRequest", maturity: MaturityPilot, built: true, dependencies: []string{"workflow", "notification"},
+		pilotReason: "交付 Provider 仍是 StubProvider，不会真正创建云资源；多步交付中途失败后的资源回滚/补偿未实现；目录项到 CI Type、交付模板、BPMN、SLA 的绑定口径仍分散。晋升条件：接真实 provider + 补偿动作 + 目录项绑定统一。",
+	},
 	{key: "cmdb", maturity: MaturityGA, built: true},
 	{key: "cmdb.configurationItems", maturity: MaturityGA, built: true, dependencies: []string{"cmdb"}},
 	{key: "cmdb.ciTypes", maturity: MaturityGA, built: true, dependencies: []string{"cmdb"}},
@@ -90,25 +92,35 @@ var registry = []definition{
 	// 同批补上 cloud_services 产品基线（cmdb-core 组件按注册表装配结果预置，
 	// 与适配器由守卫测试双向锁定）——此前全仓无 INSERT 与 seed，新租户的
 	// 发现任务会在 scope 解析处整批失败。CI 回写接通后，剩下的阻断项是真实账号验收。
-	{key: "cmdbDiscovery", maturity: MaturityPilot, built: true, dependencies: []string{"cmdb"}, readinessEnv: "ITSM_CMDB_DISCOVERY_READY",
-		pilotReason: "执行链与定时调度已闭环（Job 执行器 + 每分钟 cron 消费 schedule），五个厂商适配器已装配，云服务类型基线随 cmdb-core 预置，发现结果按「云服务类型 → CI 类型」映射回写配置项（表外类型显式跳过，必填属性凑不齐时不建账、留给人工录入）；但真实账号下的全量与增量发现未验收，这类需要人工补全的资源也还没有录入入口。晋升条件：真实账号发现验收 + 人工补全入口。"},
-	{key: "cmdbReconciliation", maturity: MaturityPilot, built: true, dependencies: []string{"cmdb", "cmdbDiscovery"}, readinessEnv: "ITSM_CMDB_DISCOVERY_READY",
-		pilotReason: "差异能算、能决策（POST /discovery/results/:id/apply|reject），应用后同步刷新配置项并把反查 ID 记在差异上；但回写目前只覆盖基线内的云主机/Pod 类型，云上连续缺失只把配置项标成同步滞后、不给出退役建议，且缺少真实数据验收。晋升条件：真实数据对账验收 + 覆盖更多资源类型。"},
+	{
+		key: "cmdbDiscovery", maturity: MaturityPilot, built: true, dependencies: []string{"cmdb"}, readinessEnv: "ITSM_CMDB_DISCOVERY_READY",
+		pilotReason: "执行链与定时调度已闭环（Job 执行器 + 每分钟 cron 消费 schedule），五个厂商适配器已装配，云服务类型基线随 cmdb-core 预置，发现结果按「云服务类型 → CI 类型」映射回写配置项（表外类型显式跳过，必填属性凑不齐时不建账、留给人工录入）；但真实账号下的全量与增量发现未验收，这类需要人工补全的资源也还没有录入入口。晋升条件：真实账号发现验收 + 人工补全入口。",
+	},
+	{
+		key: "cmdbReconciliation", maturity: MaturityPilot, built: true, dependencies: []string{"cmdb", "cmdbDiscovery"}, readinessEnv: "ITSM_CMDB_DISCOVERY_READY",
+		pilotReason: "差异能算、能决策（POST /discovery/results/:id/apply|reject），应用后同步刷新配置项并把反查 ID 记在差异上；但回写目前只覆盖基线内的云主机/Pod 类型，云上连续缺失只把配置项标成同步滞后、不给出退役建议，且缺少真实数据验收。晋升条件：真实数据对账验收 + 覆盖更多资源类型。",
+	},
 	{key: "workflow", maturity: MaturityGA, built: true},
 	{key: "sla", maturity: MaturityGA, built: true},
 	// 报表域此前只在能力契约表里（报表/运营 = Pilot），矩阵里根本没有这一行——
 	// 矩阵是前端与控制台的唯一事实源，缺行等于这个域对客户不可见。
 	// 2026-10-23 服务质量视图落地后补行，理由按当前仍缺的两项写。
-	{key: "report", maturity: MaturityPilot, built: true,
-		pilotReason: "管理者服务质量视图（GET /reports/service-quality）已把 KPI/SLA/事件分布/满意度/趋势/工单统计聚合成单请求并携带 metricVersion 口径版本；但 MSP 跨租户汇总边界未定义（服务商视角拿不到下属租户的合并口径），导出只有动作级审计、缺少导出行数与数据范围摘要。晋升条件：MSP 汇总口径 + 导出产物审计。"},
-	{key: "knowledge", maturity: MaturityPilot, built: true,
-		pilotReason: "发布版本语义未收敛（历史版本可对比/回滚，但「线上是哪个版本」没有唯一事实源）；分类可见性的跨角色检索未做端到端验收；召回率（典型问题集）缺人工验收口径。晋升条件：版本发布语义 + 跨角色检索验收。"},
+	{
+		key: "report", maturity: MaturityPilot, built: true,
+		pilotReason: "管理者服务质量视图（GET /reports/service-quality）已把 KPI/SLA/事件分布/满意度/趋势/工单统计聚合成单请求并携带 metricVersion 口径版本；但 MSP 跨租户汇总边界未定义（服务商视角拿不到下属租户的合并口径），导出只有动作级审计、缺少导出行数与数据范围摘要。晋升条件：MSP 汇总口径 + 导出产物审计。",
+	},
+	{
+		key: "knowledge", maturity: MaturityPilot, built: true,
+		pilotReason: "发布版本语义未收敛（历史版本可对比/回滚，但「线上是哪个版本」没有唯一事实源）；分类可见性的跨角色检索未做端到端验收；召回率（典型问题集）缺人工验收口径。晋升条件：版本发布语义 + 跨角色检索验收。",
+	},
 	// AI 2026-10-23 三契约落地（分诊 + 工单 RCA）：响应带 promptVersion/model/auditId，
 	// 服务端自动落 ai_audit 底账（accepted=NULL），采纳/拒绝走 PATCH 翻转；
 	// confidence 统一 0-1 并入口校验。仍不申报 GA：这套契约只覆盖分诊与 RCA，
 	// chat/摘要/analytics/prediction/agent 工具没有同等约束；evaluator 仍无门禁。
-	{key: "ai", maturity: MaturityPilot, built: true, readinessEnv: "ITSM_AI_READY",
-		pilotReason: "分诊与工单 RCA 已强制 promptVersion/model/confidence 并落 ai_audit 底账（采纳/拒绝经 PATCH 翻转，不再由前端自报）；但 chat、摘要、analytics、prediction、agent 工具仍未强制同一套溯源字段；ai_llm_calls 无 tenant/request 关联，成本与延迟无法按租户归集；evaluator 仍是只读报表，没有「健康分下降即阻断发布」的门禁。晋升条件：其余 AI 能力补齐溯源三契约 + LLM 调用按租户归集 + evaluator 进门禁。"},
+	{
+		key: "ai", maturity: MaturityPilot, built: true, readinessEnv: "ITSM_AI_READY",
+		pilotReason: "分诊与工单 RCA 已强制 promptVersion/model/confidence 并落 ai_audit 底账（采纳/拒绝经 PATCH 翻转，不再由前端自报）；但 chat、摘要、analytics、prediction、agent 工具仍未强制同一套溯源字段；ai_llm_calls 无 tenant/request 关联，成本与延迟无法按租户归集；evaluator 仍是只读报表，没有「健康分下降即阻断发布」的门禁。晋升条件：其余 AI 能力补齐溯源三契约 + LLM 调用按租户归集 + evaluator 进门禁。",
+	},
 	// 通知域 2026-10-20/21 闭环三件事：投递审计读面（GET /notification-deliveries）、
 	// 失败重试（保留旧记录作失败证据）、渠道诊断（GET /notifications/channels：
 	// 渠道是否装配 / 是否健康 / 用户目标是否就绪）。加上既有的偏好过滤、
@@ -116,21 +128,27 @@ var registry = []definition{
 	{key: "notification", maturity: MaturityGA, built: true},
 	// 三家连接器代码同层级（Send/HealthCheck/VerifySignature/ParseInbound + 回调路由 +
 	// 审计注入），维持 Pilot 的原因是「没有真实租户联调证据」，不是实现缺失。
-	{key: "connector.feishu", maturity: MaturityPilot, built: true, dependencies: []string{"notification"}, readinessEnv: "ITSM_FEISHU_READY",
-		pilotReason: "回调验签只有单测，未与真实飞书租户做生产验收；死信人工重放与市场安装闭环未验收。晋升条件：真实租户收发 + 验签 + 死信重放验收。"},
+	{
+		key: "connector.feishu", maturity: MaturityPilot, built: true, dependencies: []string{"notification"}, readinessEnv: "ITSM_FEISHU_READY",
+		pilotReason: "回调验签只有单测，未与真实飞书租户做生产验收；死信人工重放与市场安装闭环未验收。晋升条件：真实租户收发 + 验签 + 死信重放验收。",
+	},
 	// 市场目录 2026-10-23 补齐管理面：平台级权限码 marketplace_catalog:read/write
 	// （只授 sysadmin，租户 admin 仍只有 marketplace:write 用于安装/卸载）+ 目录项
 	// CRUD + 版本发布/回滚 + 只读控制台 /admin/marketplace。此前目录只有 seeder 能写，
 	// 「应用市场」在客户环境里永远只有出厂那几条商品——这才是它停在 Pilot 的原因。
 	// 仍不申报 GA：skill/plugin 类商品的安装只写一条安装记录，没有分发/装载机制；
 	// auto_upgrade 有字段没有执行路径；dependencies 未做安装期校验。
-	{key: "marketplace", maturity: MaturityPilot, built: true, readOnly: true,
-		pilotReason: "目录管理已闭环（平台上架/下架、版本发布与回滚、控制台），但商品交付语义不完整：skill/plugin 类安装只写安装记录，没有分发/装载机制；auto_upgrade 无升级执行路径；dependencies 未做安装期校验。晋升条件：skill/plugin 装载机制 + 版本升级执行 + 依赖校验。"},
+	{
+		key: "marketplace", maturity: MaturityPilot, built: true, readOnly: true,
+		pilotReason: "目录管理已闭环（平台上架/下架、版本发布与回滚、控制台），但商品交付语义不完整：skill/plugin 类安装只写安装记录，没有分发/装载机制；auto_upgrade 无升级执行路径；dependencies 未做安装期校验。晋升条件：skill/plugin 装载机制 + 版本升级执行 + 依赖校验。",
+	},
 	{key: "project", maturity: MaturityGA, built: true},
 	{key: "application", maturity: MaturityGA, built: true},
 	// 工单标签（ticket_tags）已完整，缺的是另一套模型的管理面。
-	{key: "tag", maturity: MaturityPilot, built: true,
-		pilotReason: "工单标签（ticket_tags）CRUD、工单绑定与 /admin/tags 页已完整；但组织标签（tags 表，挂项目/应用/微服务/部门/团队）只由 seeder 写入，没有任何管理面，两套标签模型并存。晋升条件：组织标签管理面或与工单标签收敛。"},
+	{
+		key: "tag", maturity: MaturityPilot, built: true,
+		pilotReason: "工单标签（ticket_tags）CRUD、工单绑定与 /admin/tags 页已完整；但组织标签（tags 表，挂项目/应用/微服务/部门/团队）只由 seeder 写入，没有任何管理面，两套标签模型并存。晋升条件：组织标签管理面或与工单标签收敛。",
+	},
 	// 2026-10-22 晋升 GA：模板的真实表面是 /api/v1/tickets/templates 的 8 个端点
 	// （列表/分类/创建/详情/更新/状态/复制/删除，权限码 ticket_template:*），
 	// 前端 /tickets/templates 页（903 行）+ handler 测试齐备，菜单基线也已同码。
@@ -140,18 +158,24 @@ var registry = []definition{
 	// SSO/OIDC 已完整实现（router/sso_routes.go 的 11 个端点 + handlers/auth/sso_*.go），
 	// 此前误标为 disabled/built:false，会让按矩阵门控的界面隐藏一个可用能力。
 	// 是否真正可用取决于租户有没有启用身份提供方，由 HealthFor 如实报告。
-	{key: "identity.oidc", maturity: MaturityPilot, built: true,
-		pilotReason: "SSO/OIDC 端点与服务齐备，但没有与真实 IdP 的端到端联调证据（现有覆盖为服务单测与路由测试）；租户未启用 IdP 时 health 会如实降级。晋升条件：至少一家真实 IdP 的登录/回调/换票验收。"},
+	{
+		key: "identity.oidc", maturity: MaturityPilot, built: true,
+		pilotReason: "SSO/OIDC 端点与服务齐备，但没有与真实 IdP 的端到端联调证据（现有覆盖为服务单测与路由测试）；租户未启用 IdP 时 health 会如实降级。晋升条件：至少一家真实 IdP 的登录/回调/换票验收。",
+	},
 	// 企微/钉钉连接器（2026-10-21 Disabled→Pilot 转正）：Send/HealthCheck/VerifySignature/
 	// ParseInbound 四项核心与飞书同层级实现（connector/builtin/{wecom,dingtalk}，编译期
 	// 接口断言），回调路由与审计注入已在 bootstrap 装配（app.go Connector 段 → RouterConfig
 	// → RegisterRoutes）。渠道诊断（GET /notifications/channels）对两渠道返回真实健康信号。
 	// 与 feishu 同款 readinessEnv 门控：部署是否就绪由 ITSM_WECOM_READY / ITSM_DINGTALK_READY
 	// 如实申报，代码能力不再按「未包含在商业发布」隐藏。
-	{key: "connector.wecom", maturity: MaturityPilot, built: true, dependencies: []string{"notification"}, readinessEnv: "ITSM_WECOM_READY",
-		pilotReason: "回调验签与消息收发未与真实企业微信租户联调；OAuth 授权、任务双向同步等飞书级深度集成未做。晋升条件：真实租户收发 + 验签验收。"},
-	{key: "connector.dingtalk", maturity: MaturityPilot, built: true, dependencies: []string{"notification"}, readinessEnv: "ITSM_DINGTALK_READY",
-		pilotReason: "回调验签与消息收发未与真实钉钉租户联调；工作通知/待办同步等深度集成未做。晋升条件：真实租户收发 + 验签验收。"},
+	{
+		key: "connector.wecom", maturity: MaturityPilot, built: true, dependencies: []string{"notification"}, readinessEnv: "ITSM_WECOM_READY",
+		pilotReason: "回调验签与消息收发未与真实企业微信租户联调；OAuth 授权、任务双向同步等飞书级深度集成未做。晋升条件：真实租户收发 + 验签验收。",
+	},
+	{
+		key: "connector.dingtalk", maturity: MaturityPilot, built: true, dependencies: []string{"notification"}, readinessEnv: "ITSM_DINGTALK_READY",
+		pilotReason: "回调验签与消息收发未与真实钉钉租户联调；工作通知/待办同步等深度集成未做。晋升条件：真实租户收发 + 验签验收。",
+	},
 }
 
 // NewHandler 返回能力矩阵端点。

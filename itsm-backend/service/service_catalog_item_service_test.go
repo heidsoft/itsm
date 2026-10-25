@@ -211,6 +211,6 @@ func TestUpdateServiceCatalogItem_BindingValidationSymmetric(t *testing.T) {
 	})
 }
 
-func itemPtrInt(i int) *int      { return &i }
-func itemPtrBool(b bool) *bool   { return &b }
+func itemPtrInt(i int) *int          { return &i }
+func itemPtrBool(b bool) *bool       { return &b }
 func itemPtrString(s string) *string { return &s }

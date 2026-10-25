@@ -11,10 +11,11 @@ import (
 // 背景（由 MCP 实测发现）：库里存在 review_status = under_review 的文章，
 // 而 KnowledgeArticleResponse 只有由 is_published 派生的 status（draft /
 // published）。两条轴缺一条，API 消费者就只能看到 status=draft，于是：
-//   · 分不清「卡在评审中」和「只是没发布」；
-//   · 无法预判 POST /knowledge/articles/:id/publish 会不会被 409 拒绝
-//     （发布门禁要求 review_status == approved）；
-//   · 前端的「提交评审 / 审批」按钮只能靠额外请求试出来。
+//
+//	· 分不清「卡在评审中」和「只是没发布」；
+//	· 无法预判 POST /knowledge/articles/:id/publish 会不会被 409 拒绝
+//	  （发布门禁要求 review_status == approved）；
+//	· 前端的「提交评审 / 审批」按钮只能靠额外请求试出来。
 //
 // 与工单的 buildTicketResponse 漏映射是同一类缺陷：写进库了，读不出来。
 func TestToArticleDTOKeepsReviewStatus(t *testing.T) {

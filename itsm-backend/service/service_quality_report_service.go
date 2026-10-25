@@ -45,17 +45,17 @@ type ServiceQualityWindow struct {
 // 全部复用既有服务的既有口径（聚合为主，不发明新指标）——这是它与各单域报表的
 // 唯一区别，也是 metric_version 存在的原因：聚合器的稳定性独立于各域。
 type ServiceQualityReport struct {
-	MetricVersion  string            `json:"metricVersion"`
-	MetricVersions map[string]string `json:"metricVersions"`
-	GeneratedAt    time.Time         `json:"generatedAt"`
+	MetricVersion  string               `json:"metricVersion"`
+	MetricVersions map[string]string    `json:"metricVersions"`
+	GeneratedAt    time.Time            `json:"generatedAt"`
 	Window         ServiceQualityWindow `json:"window"`
-	Scope          string            `json:"scope"` // KPI 行级口径：tenant | own
+	Scope          string               `json:"scope"` // KPI 行级口径：tenant | own
 
-	KPI                  []KPIMetricData            `json:"kpi"`
-	SLA                  *SLAComplianceData         `json:"sla"`
-	IncidentDistribution []IncidentDistributionData `json:"incidentDistribution"`
-	Satisfaction         []SatisfactionData         `json:"satisfaction"`
-	TicketTrend          []TicketTrendData          `json:"ticketTrend"`
+	KPI                  []KPIMetricData                   `json:"kpi"`
+	SLA                  *SLAComplianceData                `json:"sla"`
+	IncidentDistribution []IncidentDistributionData        `json:"incidentDistribution"`
+	Satisfaction         []SatisfactionData                `json:"satisfaction"`
+	TicketTrend          []TicketTrendData                 `json:"ticketTrend"`
 	TicketStats          *dto.AnalyticsTicketStatsResponse `json:"ticketStats,omitempty"` // analytics 未装配时缺省
 }
 
@@ -115,16 +115,16 @@ func (s *ServiceQualityReportService) Build(ctx context.Context, tenantID int, v
 	}
 
 	report := &ServiceQualityReport{
-		MetricVersion:  ServiceQualityMetricVersion,
-		MetricVersions: serviceQualityBlockVersions,
-		GeneratedAt:    to,
-		Window:         ServiceQualityWindow{Days: days, From: from, To: to},
-		Scope:          viewer.scopeKey(),
-		KPI:            overview.KPIMetrics,
-		SLA:            overview.SLAData,
+		MetricVersion:        ServiceQualityMetricVersion,
+		MetricVersions:       serviceQualityBlockVersions,
+		GeneratedAt:          to,
+		Window:               ServiceQualityWindow{Days: days, From: from, To: to},
+		Scope:                viewer.scopeKey(),
+		KPI:                  overview.KPIMetrics,
+		SLA:                  overview.SLAData,
 		IncidentDistribution: overview.IncidentDistribution,
-		Satisfaction:   overview.SatisfactionData,
-		TicketTrend:    trend,
+		Satisfaction:         overview.SatisfactionData,
+		TicketTrend:          trend,
 	}
 	if report.KPI == nil {
 		report.KPI = []KPIMetricData{}

@@ -13,10 +13,10 @@ import (
 	"itsm-backend/ent/emailconversation"
 	"itsm-backend/ent/externalcontractreference"
 	"itsm-backend/ent/group"
-	oncall "itsm-backend/handlers/on_call"
 	"itsm-backend/ent/servicecustomer"
 	"itsm-backend/ent/sourceorganization"
 	"itsm-backend/ent/supportcontract"
+	oncall "itsm-backend/handlers/on_call"
 )
 
 const (
@@ -275,8 +275,10 @@ func containsNormalized(values []string, needle string) bool {
 //
 // 规范入口是 /api/v1/on-call/*（handlers/on_call）；/email-intake/on-call/*
 // 作为历史路径保留，二者共用同一个 on_call.Service 实例，不存在两套语义。
-type OnCallService = oncall.Service
-type CurrentOnCall = oncall.CurrentOnCall
+type (
+	OnCallService = oncall.Service
+	CurrentOnCall = oncall.CurrentOnCall
+)
 
 var (
 	ErrOverlappingShift = oncall.ErrOverlappingShift

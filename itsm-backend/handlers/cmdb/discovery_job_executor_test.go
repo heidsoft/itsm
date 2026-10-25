@@ -59,9 +59,11 @@ func (f *fakeDiscoveryAdapter) InitClients(_ context.Context, _ *ent.CloudAccoun
 	}
 	return clients, nil
 }
+
 func (f *fakeDiscoveryAdapter) ListRegions(_ context.Context, _ *ent.CloudAccount) ([]string, error) {
 	return f.regions, nil
 }
+
 func (f *fakeDiscoveryAdapter) DiscoverRegion(_ context.Context, _ *ent.CloudAccount, region string, _ cloud.Client, nextToken string) (*cloud.PageResult, error) {
 	if nextToken != "" {
 		return &cloud.PageResult{Resources: nil}, nil
@@ -152,10 +154,14 @@ func TestDiscoveryJobExecutor_EndToEnd(t *testing.T) {
 	adapter := &fakeDiscoveryAdapter{
 		provider: "aliyun", serviceCode: "ecs", regions: []string{"cn-hangzhou"},
 		resources: []cloud.DiscoveredResource{
-			{BaseResource: cloud.BaseResource{ResourceID: "i-1", ResourceName: "web-1", Region: "cn-hangzhou", Status: "Running"},
-				CloudServiceCode: "ecs"},
-			{BaseResource: cloud.BaseResource{ResourceID: "i-2", ResourceName: "db-1", Region: "cn-hangzhou", Status: "Stopped"},
-				CloudServiceCode: "ecs"},
+			{
+				BaseResource:     cloud.BaseResource{ResourceID: "i-1", ResourceName: "web-1", Region: "cn-hangzhou", Status: "Running"},
+				CloudServiceCode: "ecs",
+			},
+			{
+				BaseResource:     cloud.BaseResource{ResourceID: "i-2", ResourceName: "db-1", Region: "cn-hangzhou", Status: "Stopped"},
+				CloudServiceCode: "ecs",
+			},
 		},
 	}
 	executor := NewDiscoveryJobExecutor(repo, &fakeRegistry{adapter: adapter}, &fakeResolver{}, nil, nopLogger())
@@ -193,10 +199,14 @@ func TestDiscoveryJobExecutor_EndToEnd(t *testing.T) {
 
 	// 第二轮：i-1 改名（update diff）、i-2 不变（unchanged）。
 	adapter.resources = []cloud.DiscoveredResource{
-		{BaseResource: cloud.BaseResource{ResourceID: "i-1", ResourceName: "web-1-renamed", Region: "cn-hangzhou", Status: "Running"},
-			CloudServiceCode: "ecs"},
-		{BaseResource: cloud.BaseResource{ResourceID: "i-2", ResourceName: "db-1", Region: "cn-hangzhou", Status: "Stopped"},
-			CloudServiceCode: "ecs"},
+		{
+			BaseResource:     cloud.BaseResource{ResourceID: "i-1", ResourceName: "web-1-renamed", Region: "cn-hangzhou", Status: "Running"},
+			CloudServiceCode: "ecs",
+		},
+		{
+			BaseResource:     cloud.BaseResource{ResourceID: "i-2", ResourceName: "db-1", Region: "cn-hangzhou", Status: "Stopped"},
+			CloudServiceCode: "ecs",
+		},
 	}
 	second, err := svc.CreateDiscoveryJob(ctx, tenantID, 9, &dto.DiscoveryJobRequest{SourceID: "ds-disc-exec"})
 	require.NoError(t, err)

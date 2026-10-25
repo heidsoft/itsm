@@ -86,17 +86,17 @@ type MonthlyCount struct {
 // Go 默认按字段名输出 PascalCase（实测 problem.trend 曾整包 PascalCase，
 // agent 只能猜字段名）。tag 名与 dto/problem_trend_dto.go 保持一致。
 type ProblemTrendData struct {
-	Period                 string            `json:"period"`
-	TotalProblems          int               `json:"totalProblems"`
-	ResolvedProblems       int               `json:"resolvedProblems"`
-	OpenProblems           int               `json:"openProblems"`
-	ResolutionRate         float64           `json:"resolutionRate"`
-	AvgResolutionTimeHours float64           `json:"avgResolutionTimeHours"`
-	CategoryBreakdown      map[string]int    `json:"categoryBreakdown"`
-	PriorityBreakdown      map[string]int    `json:"priorityBreakdown"`
-	TrendDirection         string            `json:"trendDirection"`
-	TopCategories          []CategoryCount   `json:"topCategories"`
-	MonthlyTrend           []MonthlyCount    `json:"monthlyTrend"`
+	Period                 string          `json:"period"`
+	TotalProblems          int             `json:"totalProblems"`
+	ResolvedProblems       int             `json:"resolvedProblems"`
+	OpenProblems           int             `json:"openProblems"`
+	ResolutionRate         float64         `json:"resolutionRate"`
+	AvgResolutionTimeHours float64         `json:"avgResolutionTimeHours"`
+	CategoryBreakdown      map[string]int  `json:"categoryBreakdown"`
+	PriorityBreakdown      map[string]int  `json:"priorityBreakdown"`
+	TrendDirection         string          `json:"trendDirection"`
+	TopCategories          []CategoryCount `json:"topCategories"`
+	MonthlyTrend           []MonthlyCount  `json:"monthlyTrend"`
 }
 
 // ProblemHotspotData holds hotspot analytics data.
@@ -113,16 +113,16 @@ type ProblemHotspotData struct {
 // 与工单评论同构但独立成表：问题评论的读者是处理团队，可见性规则与
 // 含客户沟通的工单评论不同（详见 ent/schema/problem_comment.go 头注）。
 type ProblemComment struct {
-	ID         int
-	ProblemID  int
-	UserID     int
-	Content    string
-	IsInternal bool
-	Mentions   []int
+	ID          int
+	ProblemID   int
+	UserID      int
+	Content     string
+	IsInternal  bool
+	Mentions    []int
 	Attachments []int
-	TenantID   int
-	CreatedAt  time.Time
-	UpdatedAt  time.Time
+	TenantID    int
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
 	// 展示字段（非持久化）：列表查询时批量投影，缺省时前端回退 `用户 #id`
 	UserName string
 }
@@ -134,15 +134,15 @@ type ProblemComment struct {
 // （租户未配置 problem 类型定义或优先级无匹配）——这是「没配 SLA」的如实回答，
 // 不是「SLA 正常」；调用方不得把 Bound=false 读成未超时。
 type ProblemSLAInfo struct {
-	ProblemID         int
-	ProblemNumber     string
-	Priority          string
-	Bound             bool
-	SLADefinitionID   int
-	Status            string // pending/active/paused/breached/met
-	ResponseDeadline  *time.Time
+	ProblemID          int
+	ProblemNumber      string
+	Priority           string
+	Bound              bool
+	SLADefinitionID    int
+	Status             string // pending/active/paused/breached/met
+	ResponseDeadline   *time.Time
 	ResolutionDeadline *time.Time
-	FirstResponseAt   *time.Time
-	ResolvedAt        *time.Time
-	PausedDurationSec int
+	FirstResponseAt    *time.Time
+	ResolvedAt         *time.Time
+	PausedDurationSec  int
 }

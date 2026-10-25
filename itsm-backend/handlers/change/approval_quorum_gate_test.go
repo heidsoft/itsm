@@ -67,10 +67,14 @@ func TestTransitionStatus_ParallelQuorumNotMet_StaysPending(t *testing.T) {
 	c.Status = "pending"
 	persistChangeInEntClient(t, entClient, c)
 	require.NoError(t, repo.ReplaceApprovalChain(ctx, c.ID, tenantID, []*ApprovalChain{
-		{ID: 1, ChangeID: c.ID, TenantID: tenantID, Level: 1, ApproverID: actorA, Role: "approver",
-			Status: "pending", IsRequired: true, ApprovalType: "parallel", Threshold: 2, CreatedAt: time.Now()},
-		{ID: 2, ChangeID: c.ID, TenantID: tenantID, Level: 1, ApproverID: actorB, Role: "approver",
-			Status: "pending", IsRequired: true, ApprovalType: "parallel", Threshold: 2, CreatedAt: time.Now()},
+		{
+			ID: 1, ChangeID: c.ID, TenantID: tenantID, Level: 1, ApproverID: actorA, Role: "approver",
+			Status: "pending", IsRequired: true, ApprovalType: "parallel", Threshold: 2, CreatedAt: time.Now(),
+		},
+		{
+			ID: 2, ChangeID: c.ID, TenantID: tenantID, Level: 1, ApproverID: actorB, Role: "approver",
+			Status: "pending", IsRequired: true, ApprovalType: "parallel", Threshold: 2, CreatedAt: time.Now(),
+		},
 	}))
 	createChangeBridgeProcessFixture(t, entClient, tenantID, "qm1",
 		fmt.Sprintf("change:%d", c.ID), actorA)
@@ -96,10 +100,14 @@ func TestTransitionStatus_ParallelQuorumMet_Approves(t *testing.T) {
 	c.Status = "pending"
 	persistChangeInEntClient(t, entClient, c)
 	require.NoError(t, repo.ReplaceApprovalChain(ctx, c.ID, tenantID, []*ApprovalChain{
-		{ID: 1, ChangeID: c.ID, TenantID: tenantID, Level: 1, ApproverID: actorA, Role: "approver",
-			Status: "pending", IsRequired: true, ApprovalType: "parallel", Threshold: 2, CreatedAt: time.Now()},
-		{ID: 2, ChangeID: c.ID, TenantID: tenantID, Level: 1, ApproverID: actorB, Role: "approver",
-			Status: "pending", IsRequired: true, ApprovalType: "parallel", Threshold: 2, CreatedAt: time.Now()},
+		{
+			ID: 1, ChangeID: c.ID, TenantID: tenantID, Level: 1, ApproverID: actorA, Role: "approver",
+			Status: "pending", IsRequired: true, ApprovalType: "parallel", Threshold: 2, CreatedAt: time.Now(),
+		},
+		{
+			ID: 2, ChangeID: c.ID, TenantID: tenantID, Level: 1, ApproverID: actorB, Role: "approver",
+			Status: "pending", IsRequired: true, ApprovalType: "parallel", Threshold: 2, CreatedAt: time.Now(),
+		},
 	}))
 	// b 已经批过（第一票）
 	seedBridgeDecision(t, entClient, tenantID, c.ID, actorB, "approved")
@@ -127,9 +135,11 @@ func TestTransitionStatus_ThresholdNotMet_StaysPending(t *testing.T) {
 	persistChangeInEntClient(t, entClient, c)
 	chain := make([]*ApprovalChain, 0, 3)
 	for i, id := range []int{actorA, actorB, actorC} {
-		chain = append(chain, &ApprovalChain{ID: i + 1, ChangeID: c.ID, TenantID: tenantID, Level: 1,
+		chain = append(chain, &ApprovalChain{
+			ID: i + 1, ChangeID: c.ID, TenantID: tenantID, Level: 1,
 			ApproverID: id, Role: "approver", Status: "pending", IsRequired: true,
-			ApprovalType: "parallel", Threshold: 2, CreatedAt: time.Now()})
+			ApprovalType: "parallel", Threshold: 2, CreatedAt: time.Now(),
+		})
 	}
 	require.NoError(t, repo.ReplaceApprovalChain(ctx, c.ID, tenantID, chain))
 	createChangeBridgeProcessFixture(t, entClient, tenantID, "qm3",
@@ -154,10 +164,14 @@ func TestTransitionStatus_RejectedDecisionBlocksApprove(t *testing.T) {
 	c.Status = "pending"
 	persistChangeInEntClient(t, entClient, c)
 	require.NoError(t, repo.ReplaceApprovalChain(ctx, c.ID, tenantID, []*ApprovalChain{
-		{ID: 1, ChangeID: c.ID, TenantID: tenantID, Level: 1, ApproverID: actorA, Role: "approver",
-			Status: "pending", IsRequired: true, ApprovalType: "any", Threshold: 1, CreatedAt: time.Now()},
-		{ID: 2, ChangeID: c.ID, TenantID: tenantID, Level: 1, ApproverID: actorB, Role: "approver",
-			Status: "pending", IsRequired: true, ApprovalType: "any", Threshold: 1, CreatedAt: time.Now()},
+		{
+			ID: 1, ChangeID: c.ID, TenantID: tenantID, Level: 1, ApproverID: actorA, Role: "approver",
+			Status: "pending", IsRequired: true, ApprovalType: "any", Threshold: 1, CreatedAt: time.Now(),
+		},
+		{
+			ID: 2, ChangeID: c.ID, TenantID: tenantID, Level: 1, ApproverID: actorB, Role: "approver",
+			Status: "pending", IsRequired: true, ApprovalType: "any", Threshold: 1, CreatedAt: time.Now(),
+		},
 	}))
 	seedBridgeDecision(t, entClient, tenantID, c.ID, actorB, "rejected")
 	createChangeBridgeProcessFixture(t, entClient, tenantID, "qm4",
@@ -245,10 +259,14 @@ func TestTransitionStatus_QuorumWithoutWorkflowInstance_FailsClosed(t *testing.T
 	c.Status = "pending"
 	persistChangeInEntClient(t, entClient, c)
 	require.NoError(t, repo.ReplaceApprovalChain(ctx, c.ID, tenantID, []*ApprovalChain{
-		{ID: 1, ChangeID: c.ID, TenantID: tenantID, Level: 1, ApproverID: actorA, Role: "approver",
-			Status: "pending", IsRequired: true, ApprovalType: "parallel", Threshold: 2, CreatedAt: time.Now()},
-		{ID: 2, ChangeID: c.ID, TenantID: tenantID, Level: 1, ApproverID: actorB, Role: "approver",
-			Status: "pending", IsRequired: true, ApprovalType: "parallel", Threshold: 2, CreatedAt: time.Now()},
+		{
+			ID: 1, ChangeID: c.ID, TenantID: tenantID, Level: 1, ApproverID: actorA, Role: "approver",
+			Status: "pending", IsRequired: true, ApprovalType: "parallel", Threshold: 2, CreatedAt: time.Now(),
+		},
+		{
+			ID: 2, ChangeID: c.ID, TenantID: tenantID, Level: 1, ApproverID: actorB, Role: "approver",
+			Status: "pending", IsRequired: true, ApprovalType: "parallel", Threshold: 2, CreatedAt: time.Now(),
+		},
 	}))
 	// 故意不建流程实例：桥接必然返回 handled=false，走纯业务回退。
 
@@ -275,10 +293,14 @@ func TestTransitionStatus_SingleVoteSufficientWithoutInstance_Approves(t *testin
 	c.Status = "pending"
 	persistChangeInEntClient(t, entClient, c)
 	require.NoError(t, repo.ReplaceApprovalChain(ctx, c.ID, tenantID, []*ApprovalChain{
-		{ID: 1, ChangeID: c.ID, TenantID: tenantID, Level: 1, ApproverID: actorA, Role: "approver",
-			Status: "pending", IsRequired: true, ApprovalType: "any", Threshold: 1, CreatedAt: time.Now()},
-		{ID: 2, ChangeID: c.ID, TenantID: tenantID, Level: 1, ApproverID: actorB, Role: "approver",
-			Status: "pending", IsRequired: true, ApprovalType: "any", Threshold: 1, CreatedAt: time.Now()},
+		{
+			ID: 1, ChangeID: c.ID, TenantID: tenantID, Level: 1, ApproverID: actorA, Role: "approver",
+			Status: "pending", IsRequired: true, ApprovalType: "any", Threshold: 1, CreatedAt: time.Now(),
+		},
+		{
+			ID: 2, ChangeID: c.ID, TenantID: tenantID, Level: 1, ApproverID: actorB, Role: "approver",
+			Status: "pending", IsRequired: true, ApprovalType: "any", Threshold: 1, CreatedAt: time.Now(),
+		},
 	}))
 
 	updated, err := svc.TransitionStatus(ctx, c.ID, tenantID, actorA, "approved", "同意", "agent")
@@ -296,10 +318,14 @@ func TestTransitionStatus_QuorumWithoutEntClient_FailsClosed(t *testing.T) {
 	c := createTestChange(repo, tenantID, actorA)
 	c.Status = "pending"
 	require.NoError(t, repo.ReplaceApprovalChain(ctx, c.ID, tenantID, []*ApprovalChain{
-		{ID: 1, ChangeID: c.ID, TenantID: tenantID, Level: 1, ApproverID: actorA, Role: "approver",
-			Status: "pending", IsRequired: true, ApprovalType: "parallel", Threshold: 2, CreatedAt: time.Now()},
-		{ID: 2, ChangeID: c.ID, TenantID: tenantID, Level: 1, ApproverID: actorB, Role: "approver",
-			Status: "pending", IsRequired: true, ApprovalType: "parallel", Threshold: 2, CreatedAt: time.Now()},
+		{
+			ID: 1, ChangeID: c.ID, TenantID: tenantID, Level: 1, ApproverID: actorA, Role: "approver",
+			Status: "pending", IsRequired: true, ApprovalType: "parallel", Threshold: 2, CreatedAt: time.Now(),
+		},
+		{
+			ID: 2, ChangeID: c.ID, TenantID: tenantID, Level: 1, ApproverID: actorB, Role: "approver",
+			Status: "pending", IsRequired: true, ApprovalType: "parallel", Threshold: 2, CreatedAt: time.Now(),
+		},
 	}))
 
 	_, err := svc.TransitionStatus(ctx, c.ID, tenantID, actorA, "approved", "同意", "agent")

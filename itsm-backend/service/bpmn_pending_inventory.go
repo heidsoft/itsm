@@ -44,42 +44,42 @@ type PendingInventorySummary struct {
 
 // PendingTaskItem 单条待办任务。
 type PendingTaskItem struct {
-	TaskID           string  `json:"taskId"`
-	TaskName         string  `json:"taskName"`
-	TaskType         string  `json:"taskType"`
-	Status           string  `json:"status"`
-	Assignee         string  `json:"assignee"`
-	ProcessKey       string  `json:"processKey"`
-	NodeKey          string  `json:"nodeKey"`
-	InstanceID       int     `json:"instanceId"`
-	InstanceKey      string  `json:"instanceKey"`
-	BusinessKey      string  `json:"businessKey"`
-	CreatedAt        string  `json:"createdAt"`
-	DwellHours       float64 `json:"dwellHours"`
-	Stale            bool    `json:"stale"`
+	TaskID      string  `json:"taskId"`
+	TaskName    string  `json:"taskName"`
+	TaskType    string  `json:"taskType"`
+	Status      string  `json:"status"`
+	Assignee    string  `json:"assignee"`
+	ProcessKey  string  `json:"processKey"`
+	NodeKey     string  `json:"nodeKey"`
+	InstanceID  int     `json:"instanceId"`
+	InstanceKey string  `json:"instanceKey"`
+	BusinessKey string  `json:"businessKey"`
+	CreatedAt   string  `json:"createdAt"`
+	DwellHours  float64 `json:"dwellHours"`
+	Stale       bool    `json:"stale"`
 }
 
 // PendingProcessGroup 按流程定义聚合的待办分布。
 type PendingProcessGroup struct {
-	ProcessKey        string  `json:"processKey"`
-	PendingTasks      int     `json:"pendingTasks"`
-	StaleTasks        int     `json:"staleTasks"`
-	OldestDwellHours  float64 `json:"oldestDwellHours"`
+	ProcessKey       string  `json:"processKey"`
+	PendingTasks     int     `json:"pendingTasks"`
+	StaleTasks       int     `json:"staleTasks"`
+	OldestDwellHours float64 `json:"oldestDwellHours"`
 }
 
 // OrphanInstanceItem 孤儿实例：业务对象已终态、流程实例仍未结束。
 type OrphanInstanceItem struct {
-	InstanceID      int     `json:"instanceId"`
-	InstanceKey     string  `json:"instanceKey"`
-	BusinessKey     string  `json:"businessKey"`
-	BusinessType    string  `json:"businessType"`
-	BusinessID      int     `json:"businessId"`
-	BusinessStatus  string  `json:"businessStatus"`
-	InstanceStatus  string  `json:"instanceStatus"`
-	ProcessKey      string  `json:"processKey"`
-	StartedAt       string  `json:"startedAt"`
-	DwellHours      float64 `json:"dwellHours"`
-	Reason          string  `json:"reason"`
+	InstanceID     int     `json:"instanceId"`
+	InstanceKey    string  `json:"instanceKey"`
+	BusinessKey    string  `json:"businessKey"`
+	BusinessType   string  `json:"businessType"`
+	BusinessID     int     `json:"businessId"`
+	BusinessStatus string  `json:"businessStatus"`
+	InstanceStatus string  `json:"instanceStatus"`
+	ProcessKey     string  `json:"processKey"`
+	StartedAt      string  `json:"startedAt"`
+	DwellHours     float64 `json:"dwellHours"`
+	Reason         string  `json:"reason"`
 }
 
 // PendingWorkflowInventory 盘点结果。
@@ -136,9 +136,9 @@ var terminalBusinessStatuses = map[string]map[string]struct{}{
 		common.ProblemStatusClosed: {},
 	},
 	"change": {
-		common.ChangeStatusClosed:     {},
-		common.ChangeStatusCancelled:  {},
-		common.ChangeStatusRejected:   {},
+		common.ChangeStatusClosed:    {},
+		common.ChangeStatusCancelled: {},
+		common.ChangeStatusRejected:  {},
 	},
 	"release": {
 		"completed":   {},
@@ -212,17 +212,17 @@ func BuildPendingWorkflowInventory(ctx context.Context, client *ent.Client, tena
 			inventory.Summary.UnassignedTasks++
 		}
 		inventory.PendingTasks = append(inventory.PendingTasks, PendingTaskItem{
-			TaskID:      task.TaskID,
-			TaskName:    task.TaskName,
-			TaskType:    task.TaskType,
-			Status:      task.Status,
-			Assignee:    task.Assignee,
-			ProcessKey:  task.ProcessDefinitionKey,
-			NodeKey:     task.TaskDefinitionKey,
-			InstanceID:  task.ProcessInstanceID,
-			CreatedAt:   createdAt.Format(time.RFC3339),
-			DwellHours:  roundHours(dwell),
-			Stale:       stale,
+			TaskID:     task.TaskID,
+			TaskName:   task.TaskName,
+			TaskType:   task.TaskType,
+			Status:     task.Status,
+			Assignee:   task.Assignee,
+			ProcessKey: task.ProcessDefinitionKey,
+			NodeKey:    task.TaskDefinitionKey,
+			InstanceID: task.ProcessInstanceID,
+			CreatedAt:  createdAt.Format(time.RFC3339),
+			DwellHours: roundHours(dwell),
+			Stale:      stale,
 		})
 		group, ok := groupIndex[task.ProcessDefinitionKey]
 		if !ok {

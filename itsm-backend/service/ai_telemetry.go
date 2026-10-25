@@ -95,8 +95,8 @@ func (s *AITelemetryService) UpdateAuditAccepted(ctx context.Context, tenantID i
 //
 // 与 handler 的 RecordAudit（POST /ai/audit，客户端自报 model/promptVersion）
 // 相对，本方法由服务端在产出 AI 建议时调用：confidence 由调用方保证 ∈ [0,1]
-//（超出按 0 处理并钳制 score），notes JSON 键名与 RecordAudit 的写读契约一致
-//（camelCase，见 audit_notes_contract_test.go）。accepted 保持 NULL=未决策，
+// （超出按 0 处理并钳制 score），notes JSON 键名与 RecordAudit 的写读契约一致
+// （camelCase，见 audit_notes_contract_test.go）。accepted 保持 NULL=未决策，
 // 由操作者经 PATCH /ai/audit-logs/:id 翻转。
 func (s *AITelemetryService) RecordDecisionAudit(ctx context.Context, tenantID, userID int, reqID, scenario, inputRef, promptVersion, model string, confidence float64, suggestion map[string]interface{}) (int64, error) {
 	if s == nil || s.repo == nil {

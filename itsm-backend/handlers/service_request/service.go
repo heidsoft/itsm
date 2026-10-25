@@ -285,7 +285,7 @@ func (s *Service) Create(ctx context.Context, tenantID, requesterID int, catalog
 	if created == nil {
 		created, err = s.repo.Create(ctx, newReq, approvals)
 		if err != nil {
-			 s.logger.Errorw("Failed to create service request", "error", err)
+			s.logger.Errorw("Failed to create service request", "error", err)
 			return nil, common.NewInternalError("Failed to create service request", err)
 		}
 	}

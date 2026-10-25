@@ -25,12 +25,15 @@ for PATTERN in "${PATTERNS[@]}"; do
     # - 注释 (// 或 *)
     # - i18n 翻译文件 (translations.ts 是源头，不是渲染)
     # - throw new Error (内部错误，不直接展示给用户)
+    # - 测试夹具 (__tests__/ 与 *.test.*)：断言后端真实文案，不进渲染路径
     RESULT=$(grep -rnF "$PATTERN" itsm-frontend/src/ 2>/dev/null \
         | grep -v '^\s*//' \
         | grep -v '^\s*\*' \
         | grep -v 'translations\.ts' \
         | grep -v 'throw new Error' \
         | grep -v 'console\.' \
+        | grep -v '__tests__/' \
+        | grep -v '\.test\.tsx\?:' \
         || true)
     if [ -n "$RESULT" ]; then
         HITS="${HITS}${RESULT}\n"
