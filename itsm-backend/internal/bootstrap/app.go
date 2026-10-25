@@ -719,7 +719,11 @@ func NewApplication() *Application {
 
 	// AI Tools
 	toolRegistry := service.NewToolRegistry(ragService, incidentService, configurationItemService, client)
-	toolQueue := service.NewToolQueue(client, toolRegistry, 100, sugar)
+	// 审批通过的写工具走 durable command 执行：进程退出或队列拥塞不再丢失调用。
+	toolExecutor := service.NewToolExecutor(client, toolRegistry, sugar)
+	if err := commandRegistry.Register(commandbus.CommandExecuteAITool, toolExecutor.HandleCommand); err != nil {
+		sugar.Fatalw("Failed to register AI tool execution command handler", "error", err)
+	}
 	// 写工具（create_ticket/update_ticket/create_ticket_type）需要领域服务支撑；ticketService 已就绪，此处注入。
 	toolRegistry.SetTicketService(ticketService)
 	// CMDB 关系类工具（get_ci/get_ci_relationships/create_ci_relationship/delete_ci_relationship/get_ci_impact）需要 CIRelationshipService
@@ -982,7 +986,7 @@ func NewApplication() *Application {
 
 	// AI Domain
 	aiRepo := ai.NewEntRepository(client)
-	aiServiceDomain := ai.NewService(aiRepo, sugar, ragService, toolRegistry, toolQueue, analyticsService, predictionService, slaForecastSkill, triageService, rootCauseService, aiTelemetryService)
+	aiServiceDomain := ai.NewService(aiRepo, sugar, ragService, toolRegistry, analyticsService, predictionService, slaForecastSkill, triageService, rootCauseService, aiTelemetryService)
 	aiServiceDomain.SetLLMGateway(llmGateway)
 	// SummarizeService 通过 ai.summarize skill 被 SkillRegistry 消费（handlers/ai/skills.go），
 	// 必须在这里显式装配，否则定义存在而生产路径无调用点。
@@ -1179,7 +1183,6 @@ func NewApplication() *Application {
 	// Cloud Service & Controller
 	// 工单类型服务就绪后注入工具注册表与审批队列，使 create_ticket_type 可经审批流执行。
 	toolRegistry.SetTicketTypeService(ticketTypeService)
-	toolQueue.SetTicketTypeService(ticketTypeService)
 
 	// WebSocket Service
 	wsService := service.NewWebSocketService(sugar)
@@ -1673,6 +1676,9 @@ func (app *Application) Run() {
 	}
 	if mode == ProcessModeWorker {
 		<-rootCtx.Done()
+		// 取消信号只负责通知；不等待会让进程在 outbox worker 处理到一半时退出，
+		// 命令只能等租约过期后才被重新领取。
+		app.StopBackgroundTasks()
 		app.Logger.Info("worker shutdown completed")
 		return
 	}
@@ -1695,6 +1701,7 @@ func (app *Application) Run() {
 		if err := server.Shutdown(shutdownCtx); err != nil {
 			app.Logger.Errorw("API graceful shutdown failed", "error", err)
 		}
+		app.StopBackgroundTasks()
 	case err := <-serverErrors:
 		if err != nil && err != http.ErrServerClosed {
 			app.Logger.Fatalw("API server failed", "error", err)

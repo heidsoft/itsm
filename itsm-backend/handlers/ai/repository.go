@@ -19,7 +19,7 @@ type Repository interface {
 	// Tool Invocations
 	CreateToolInvocation(ctx context.Context, i *ToolInvocation) (*ToolInvocation, error)
 	GetToolInvocation(ctx context.Context, id int, tenantID int) (*ToolInvocation, error)
-	UpdateToolInvocation(ctx context.Context, i *ToolInvocation) (*ToolInvocation, error)
+	DecideToolInvocation(ctx context.Context, id, tenantID, actorID int, approve bool, reason string) (*ToolInvocation, error)
 	ListToolInvocations(ctx context.Context, tenantID int, state string) ([]*ToolInvocation, error)
 
 	// Root Cause Analysis

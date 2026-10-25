@@ -23,7 +23,6 @@ type Service struct {
 	rag                *service.RAGService
 	llmGateway         *service.LLMGateway
 	tools              *service.ToolRegistry
-	queue              *service.ToolQueue
 	analytics          *service.AnalyticsService
 	prediction         *service.PredictionService
 	slaForecastSkill   *service.SLAForecastSkill
@@ -54,7 +53,6 @@ func NewService(
 	logger *zap.SugaredLogger,
 	rag *service.RAGService,
 	tools *service.ToolRegistry,
-	queue *service.ToolQueue,
 	analytics *service.AnalyticsService,
 	prediction *service.PredictionService,
 	slaForecastSkill *service.SLAForecastSkill,
@@ -67,7 +65,6 @@ func NewService(
 		logger:             logger,
 		rag:                rag,
 		tools:              tools,
-		queue:              queue,
 		analytics:          analytics,
 		prediction:         prediction,
 		slaForecastSkill:   slaForecastSkill,
@@ -259,36 +256,17 @@ func (s *Service) recordToolAudit(ctx context.Context, tenantID, userID int, rol
 	}
 }
 
+// ApproveTool 审批一次工具调用。
+// 审批状态与待执行任务在同一事务内落库（见 Repository.DecideToolInvocation），
+// 因此通过审批不会再因为进程退出或队列满而丢失执行。
 func (s *Service) ApproveTool(ctx context.Context, id int, tenantID, userID int, approve bool, reason string) (string, error) {
-	inv, err := s.repo.GetToolInvocation(ctx, id, tenantID)
-	if err != nil {
+	if _, err := s.repo.DecideToolInvocation(ctx, id, tenantID, userID, approve, reason); err != nil {
 		return "", err
 	}
-
-	if !approve {
-		inv.ApprovalState = "rejected"
-		inv.ApprovalReason = reason
-		_, err = s.repo.UpdateToolInvocation(ctx, inv)
-		return "rejected", err
+	if approve {
+		return "approved", nil
 	}
-
-	inv.ApprovalState = "approved"
-	inv.ApprovedBy = userID
-	now := time.Now()
-	inv.ApprovedAt = &now
-	_, err = s.repo.UpdateToolInvocation(ctx, inv)
-	if err != nil {
-		return "", err
-	}
-
-	if s.queue != nil {
-		s.queue.Enqueue(service.ToolJob{
-			InvocationID: inv.ID,
-			TenantID:     tenantID,
-		})
-	}
-
-	return "approved", nil
+	return "rejected", nil
 }
 
 // Chat and RAG
@@ -610,7 +588,7 @@ func (s *Service) CreateTicketByAI(ctx context.Context, description string, tena
 
 	// 使用 Triage 服务分析描述，提取分类和优先级
 	if s.triageService != nil {
-		result := s.triageService.Suggest(ctx, description, description)
+		result := s.triageService.SuggestForTenant(ctx, description, description, tenantID)
 		return map[string]interface{}{
 			"suggested_title":    description,
 			"suggested_category": result.Category,

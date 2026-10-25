@@ -133,6 +133,33 @@ func TestE2E_AILocatesCIAndCreatesLinkedTicket(t *testing.T) {
 	require.Equal(t, "HIS-DB-01 连接超时", list[0]["title"])
 }
 
+// TestE2E_UpdateTicketResolvesCurrentVersion 工具参数缺 version 时必须读取当前版本再 CAS；
+// 否则 UpdateTicket 会以「缺少 version 字段」拒绝每次 AI 更新。
+func TestE2E_UpdateTicketResolvesCurrentVersion(t *testing.T) {
+	client, reg, ctx, tenantID, userID, _ := setupOntologyE2E(t)
+	defer client.Close()
+
+	res, err := reg.Execute(ctx, tenantID, "create_ticket", map[string]interface{}{
+		"title":       "VPN 无法连接",
+		"priority":    "medium",
+		"requesterId": float64(userID),
+	})
+	require.NoError(t, err)
+	ticketResp, ok := res.(*dto.TicketResponse)
+	require.True(t, ok)
+
+	updated, err := reg.Execute(ctx, tenantID, "update_ticket", map[string]interface{}{
+		"ticketId":   float64(ticketResp.ID),
+		"status":     "in_progress",
+		"resolution": "已定位到网关配置",
+	})
+	require.NoError(t, err)
+	updatedResp, ok := updated.(*dto.TicketResponse)
+	require.True(t, ok)
+	require.Equal(t, "in_progress", updatedResp.Status)
+	require.Equal(t, "已定位到网关配置", updatedResp.Resolution)
+}
+
 // TestE2E_CreateTicketWithoutCIIDStillSucceeds 未定位到 CI 时不应阻断建单。
 func TestE2E_CreateTicketWithoutCIIDStillSucceeds(t *testing.T) {
 	client, reg, ctx, tenantID, userID, _ := setupOntologyE2E(t)

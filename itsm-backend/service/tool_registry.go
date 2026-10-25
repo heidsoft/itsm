@@ -60,9 +60,8 @@ func (t *ToolRegistry) GetTool(name string) *ToolDefinition {
 	return nil
 }
 
-// canExecuteWriteTool 判断某工具能否交由 ToolRegistry.Execute 统一执行。
-// ToolQueue 审批通过后会调用它决定是否委派：写工具要求对应领域服务已注入，
-// 未注入时返回 false，让 ToolQueue 回落到内联实现。
+// canExecuteWriteTool 判断某工具的领域依赖是否已注入。
+// 写工具要求对应领域服务就绪；未注入时工具执行会明确失败，而不是静默成功。
 func (t *ToolRegistry) canExecuteWriteTool(name string) bool {
 	td := t.GetTool(name)
 	if td == nil || td.ReadOnly {
@@ -274,6 +273,7 @@ func (t *ToolRegistry) ListTools() []ToolDefinition {
 					"priority":   map[string]interface{}{"type": "string", "enum": []any{"low", "medium", "high", "critical", "urgent"}},
 					"resolution": map[string]interface{}{"type": "string", "description": "解决说明"},
 					"assigneeId": map[string]interface{}{"type": "integer", "description": "处理人用户 ID"},
+					"version":    map[string]interface{}{"type": "integer", "description": "工单版本号（乐观锁），缺省时读取当前版本"},
 				},
 				"required": []string{"ticketId"},
 			},
@@ -618,11 +618,31 @@ func (t *ToolRegistry) Execute(ctx context.Context, tenantID int, name string, a
 		if v, ok := args["assigneeId"].(float64); ok {
 			assigneeID = int(v)
 		}
+		// UpdateTicket 要求显式版本号；调用方没带时读当前版本再 CAS，
+		// 与并发写冲突时仍由乐观锁返回 conflict，不会静默覆盖。
+		version := 0
+		if v, ok := args["version"].(float64); ok {
+			version = int(v)
+		}
+		if version <= 0 {
+			if t.client == nil {
+				return nil, fmt.Errorf("update_ticket: ticket client not initialized")
+			}
+			current, err := t.client.Ticket.Query().
+				Where(ticket.IDEQ(ticketID), ticket.TenantIDEQ(tenantID)).
+				Select(ticket.FieldVersion).
+				Only(ctx)
+			if err != nil {
+				return nil, err
+			}
+			version = current.Version
+		}
 		req := &dto.UpdateTicketRequest{
 			Status:     status,
 			Priority:   priority,
 			Resolution: resolution,
 			AssigneeID: assigneeID,
+			Version:    version,
 		}
 		updated, err := t.ticket.UpdateTicket(ctx, ticketID, req, tenantID, 0, "") // 0=系统操作，跳过 DataScope
 		if err != nil {

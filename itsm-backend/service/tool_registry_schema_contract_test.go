@@ -41,9 +41,11 @@ func TestToolSchemasUseCamelCaseArguments(t *testing.T) {
 func TestWriteToolSchemasDeclareExecutedArguments(t *testing.T) {
 	reg := NewToolRegistry(nil, nil, nil, nil)
 	want := map[string][]string{
-		"create_ticket": {"title", "description", "priority", "type", "category",
-			"requesterId", "assigneeId", "ticketTypeId", "ciId"},
-		"update_ticket": {"ticketId", "status", "priority", "resolution", "assigneeId"},
+		"create_ticket": {
+			"title", "description", "priority", "type", "category",
+			"requesterId", "assigneeId", "ticketTypeId", "ciId",
+		},
+		"update_ticket": {"ticketId", "status", "priority", "resolution", "assigneeId", "version"},
 	}
 	byName := make(map[string]ToolDefinition)
 	for _, td := range reg.ListTools() {

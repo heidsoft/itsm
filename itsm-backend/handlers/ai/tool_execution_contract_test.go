@@ -21,7 +21,7 @@ func TestExecuteToolReportsPendingApproval(t *testing.T) {
 	defer client.Close()
 	tenant := client.Tenant.Create().SetName("Tools").SetCode("tools").SetDomain("tools.test").SaveX(context.Background())
 	user := client.User.Create().SetUsername("operator").SetEmail("operator@example.com").SetName("Operator").SetPasswordHash("hash").SetTenantID(tenant.ID).SaveX(context.Background())
-	svc := ai.NewService(ai.NewEntRepository(client), zap.NewNop().Sugar(), nil, service.NewToolRegistry(nil, nil, nil, nil), nil, nil, nil, nil, nil, nil, nil)
+	svc := ai.NewService(ai.NewEntRepository(client), zap.NewNop().Sugar(), nil, service.NewToolRegistry(nil, nil, nil, nil), nil, nil, nil, nil, nil, nil)
 	svc.SetEntClient(client)
 	h := ai.NewHandler(svc)
 	r := gin.New()

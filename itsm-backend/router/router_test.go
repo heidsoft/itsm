@@ -43,7 +43,7 @@ func TestSetupRoutes_IncidentAIAnalysis_ProductionRouteTenantScopeAndContract(t 
 
 	logger := zaptest.NewLogger(t).Sugar()
 	rca := service.NewRootCauseService(client, logger)
-	aiService := ai.NewService(nil, logger, nil, nil, nil, nil, nil, nil, nil, rca, nil)
+	aiService := ai.NewService(nil, logger, nil, nil, nil, nil, nil, nil, rca, nil)
 	aiHandler := ai.NewHandler(aiService)
 	const secret = "incident-ai-route-secret"
 	r := gin.New()

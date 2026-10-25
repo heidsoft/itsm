@@ -41,6 +41,7 @@ const (
 	CommandProcessIntakeEmail      = "email_intake.message.process"
 	CommandSyncKnowledgeVector     = "knowledge.vector.sync"
 	CommandTenantBootstrapInstall  = "tenant.bootstrap.install"
+	CommandExecuteAITool           = "ai.tool.execute"
 )
 
 var ErrLeaseLost = errors.New("operational command lease lost")
@@ -98,6 +99,18 @@ type EnqueueRequest struct {
 	MaxAttempts    int
 }
 
+// validateEnqueueRequest 校验命令身份，并在上下文携带租户时拒绝跨租户入箱。
+// 原生 SQL 路径绕过了 ent 的写守卫，这里补齐同等约束。
+func validateEnqueueRequest(ctx context.Context, req EnqueueRequest) error {
+	if req.TenantID <= 0 || req.AggregateID <= 0 || req.CommandType == "" || req.AggregateType == "" || req.IdempotencyKey == "" {
+		return fmt.Errorf("invalid operational command")
+	}
+	if tid, ok := tenantctx.TenantID(ctx); ok && !tenantctx.IsSystemBypass(ctx) && tid != req.TenantID {
+		return fmt.Errorf("tenant guard: enqueue command for tenant %d in tenant %d context (cross-tenant enqueue blocked)", req.TenantID, tid)
+	}
+	return nil
+}
+
 func Enqueue(ctx context.Context, client *ent.Client, req EnqueueRequest) (*ent.OperationalCommand, error) {
 	return enqueue(ctx, client.OperationalCommand.Create(), req)
 }
@@ -106,39 +119,59 @@ func EnqueueTx(ctx context.Context, tx *ent.Tx, req EnqueueRequest) (*ent.Operat
 	return enqueue(ctx, tx.OperationalCommand.Create(), req)
 }
 
-// EnqueueTxIdempotent 在 *ent.Tx 内入箱命令，并保证不会因幂等键冲突而弄脏事务。
+// EnqueueTxIdempotent 在 *ent.Tx 内入箱命令；幂等键已存在是正常返回，不是错误。
 //
-// 为什么必须有这个变体：operational_commands 上有
-// (tenant_id, command_type, idempotency_key) 唯一索引。若在事务内直接 INSERT 撞上该索引，
-// PostgreSQL 会把整条事务标记为 aborted(25P02)，此后该事务内的任何语句（包括 COMMIT）
-// 都会失败——业务写入（如 SLA 违规记录、预警历史）会被连坐回滚。
-// 由于 ent 未开启 sql/upsert 特性，无法生成 ON CONFLICT DO NOTHING，
-// 因此改为「事务内先查后插」：同一事务的语句是串行执行的，先查后插在该事务内是安全的。
+// operational_commands 上有 (tenant_id, command_type, idempotency_key) 唯一索引。
+// 事务内先查后插挡不住并发：两个未提交事务都查不到行时会同时 INSERT，输的一方撞
+// 唯一约束，PostgreSQL 随即把整条事务标记为 aborted(25P02)，同事务内的业务写入
+// （SLA 违规记录、预警历史、审批链）会被连坐回滚。
+// 因此这里用单条 INSERT ... ON CONFLICT DO NOTHING 做原子判重：冲突在语句级被
+// 吞掉，事务保持可用，RowsAffected==0 即表示命令已存在。
 //
 // 返回值：命令实体、是否已存在（true 表示命中幂等、本次未插入）、错误。
 func EnqueueTxIdempotent(ctx context.Context, tx *ent.Tx, req EnqueueRequest) (*ent.OperationalCommand, bool, error) {
 	if tx == nil {
 		return nil, false, fmt.Errorf("EnqueueTxIdempotent requires non-nil tx")
 	}
-	if req.TenantID <= 0 || req.AggregateID <= 0 || req.CommandType == "" || req.AggregateType == "" || req.IdempotencyKey == "" {
-		return nil, false, fmt.Errorf("invalid operational command")
+	if err := validateEnqueueRequest(ctx, req); err != nil {
+		return nil, false, err
 	}
-	exists, err := tx.OperationalCommand.Query().
+	payload, err := json.Marshal(req.Payload)
+	if err != nil {
+		return nil, false, fmt.Errorf("marshal operational command payload: %w", err)
+	}
+	maxAttempts := req.MaxAttempts
+	if maxAttempts <= 0 {
+		maxAttempts = 8
+	}
+	now := time.Now()
+	// 原生语句不经过 ent 的租户写守卫，validateEnqueueRequest 已先行校验上下文租户。
+	result, err := tx.ExecContext(ctx, `
+		INSERT INTO operational_commands
+			(tenant_id, command_type, aggregate_type, aggregate_id, idempotency_key, payload,
+			 status, attempt, max_attempts, available_at, fencing_token, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, 'pending', 0, $7, $8, 0, $8, $8)
+		ON CONFLICT (tenant_id, command_type, idempotency_key) DO NOTHING
+	`, req.TenantID, req.CommandType, req.AggregateType, req.AggregateID, req.IdempotencyKey, string(payload), maxAttempts, now)
+	if err != nil {
+		return nil, false, fmt.Errorf("insert operational command: %w", err)
+	}
+	inserted, err := result.RowsAffected()
+	if err != nil {
+		return nil, false, fmt.Errorf("inspect operational command insert: %w", err)
+	}
+	if inserted == 0 {
+		return nil, true, nil
+	}
+	cmd, err := tx.OperationalCommand.Query().
 		Where(
 			operationalcommand.TenantIDEQ(req.TenantID),
 			operationalcommand.CommandTypeEQ(req.CommandType),
 			operationalcommand.IdempotencyKeyEQ(req.IdempotencyKey),
 		).
-		Exist(ctx)
+		Only(ctx)
 	if err != nil {
-		return nil, false, fmt.Errorf("check existing operational command: %w", err)
-	}
-	if exists {
-		return nil, true, nil
-	}
-	cmd, err := enqueue(ctx, tx.OperationalCommand.Create(), req)
-	if err != nil {
-		return nil, false, err
+		return nil, false, fmt.Errorf("load enqueued operational command: %w", err)
 	}
 	return cmd, false, nil
 }
@@ -151,8 +184,8 @@ func EnqueueSQLTx(ctx context.Context, tx *sql.Tx, req EnqueueRequest) error {
 	if tx == nil {
 		return fmt.Errorf("operational command SQL transaction is required")
 	}
-	if req.TenantID <= 0 || req.AggregateID <= 0 || req.CommandType == "" || req.AggregateType == "" || req.IdempotencyKey == "" {
-		return fmt.Errorf("invalid operational command")
+	if err := validateEnqueueRequest(ctx, req); err != nil {
+		return err
 	}
 	maxAttempts := req.MaxAttempts
 	if maxAttempts <= 0 {
@@ -163,11 +196,14 @@ func EnqueueSQLTx(ctx context.Context, tx *sql.Tx, req EnqueueRequest) error {
 		return fmt.Errorf("marshal operational command payload: %w", err)
 	}
 	now := time.Now()
+	// 幂等键重复必须是正常返回：裸 INSERT 撞唯一约束会让调用方整条事务 aborted，
+	// 审批链、变更状态等业务写入被连坐回滚。ON CONFLICT 在语句级吞掉重复。
 	_, err = tx.ExecContext(ctx, `
 		INSERT INTO operational_commands
 			(tenant_id, command_type, aggregate_type, aggregate_id, idempotency_key, payload,
 			 status, attempt, max_attempts, available_at, fencing_token, created_at, updated_at)
 		VALUES ($1, $2, $3, $4, $5, $6, 'pending', 0, $7, $8, 0, $8, $8)
+		ON CONFLICT (tenant_id, command_type, idempotency_key) DO NOTHING
 	`, req.TenantID, req.CommandType, req.AggregateType, req.AggregateID, req.IdempotencyKey, string(payload), maxAttempts, now)
 	if err != nil {
 		return fmt.Errorf("insert operational command: %w", err)

@@ -60,7 +60,7 @@ func newAuditLogsRouter(t *testing.T, db *sql.DB, tenantID int, withTenant bool)
 	t.Helper()
 
 	telemetry := service.NewAITelemetryService(db)
-	svc := aidomain.NewService(nil, zap.NewNop().Sugar(), nil, nil, nil, nil, nil, nil, nil, nil, telemetry)
+	svc := aidomain.NewService(nil, zap.NewNop().Sugar(), nil, nil, nil, nil, nil, nil, nil, telemetry)
 	h := aidomain.NewHandler(svc)
 
 	gin.SetMode(gin.TestMode)

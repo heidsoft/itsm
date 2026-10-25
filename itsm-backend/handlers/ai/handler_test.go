@@ -36,7 +36,7 @@ func (m mockTriageLLMProvider) Chat(ctx context.Context, model string, messages 
 func setupTriageHandlerRouter(triageService *service.TriageService, withTenant bool) *gin.Engine {
 	gin.SetMode(gin.TestMode)
 
-	svc := ai.NewService(nil, zap.NewNop().Sugar(), nil, nil, nil, nil, nil, nil, triageService, nil, nil)
+	svc := ai.NewService(nil, zap.NewNop().Sugar(), nil, nil, nil, nil, nil, triageService, nil, nil)
 	h := ai.NewHandler(svc)
 
 	r := gin.New()
@@ -55,7 +55,7 @@ func TestCreateTicketByAI_Handler(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	// 使用构造函数初始化 Service（Logger 通过参数传入，避免访问未导出字段）
-	svc := ai.NewService(nil, zap.L().Sugar(), nil, nil, nil, nil, nil, nil, nil, nil, nil)
+	svc := ai.NewService(nil, zap.L().Sugar(), nil, nil, nil, nil, nil, nil, nil, nil)
 	h := ai.NewHandler(svc)
 
 	r := gin.New()
@@ -91,7 +91,7 @@ func TestCreateTicketByAI_Handler(t *testing.T) {
 func TestSummarizeTicket_RouteExists(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
-	svc := ai.NewService(nil, zap.L().Sugar(), nil, nil, nil, nil, nil, nil, nil, nil, nil)
+	svc := ai.NewService(nil, zap.L().Sugar(), nil, nil, nil, nil, nil, nil, nil, nil)
 	h := ai.NewHandler(svc)
 
 	// 验证方法存在（编译期保证）
@@ -183,7 +183,7 @@ func TestTriage_Handler_RequiresTitle(t *testing.T) {
 
 func TestAnalyzeIncident_Handler_UnwiredServiceReturnsUnavailable(t *testing.T) {
 	gin.SetMode(gin.TestMode)
-	svc := ai.NewService(nil, zap.NewNop().Sugar(), nil, nil, nil, nil, nil, nil, nil, nil, nil)
+	svc := ai.NewService(nil, zap.NewNop().Sugar(), nil, nil, nil, nil, nil, nil, nil, nil)
 	h := ai.NewHandler(svc)
 	r := gin.New()
 	r.POST("/api/v1/ai/incidents/:id/analyze", func(c *gin.Context) {
@@ -218,7 +218,7 @@ func setupKnowledgeSearchRouter(client *ent.Client) *gin.Engine {
 		HybridSearch: false,
 		MaxResults:   10,
 	})
-	svc := ai.NewService(nil, zap.NewNop().Sugar(), rag, nil, nil, nil, nil, nil, nil, nil, nil)
+	svc := ai.NewService(nil, zap.NewNop().Sugar(), rag, nil, nil, nil, nil, nil, nil, nil)
 	h := ai.NewHandler(svc)
 
 	r := gin.New()

@@ -97,8 +97,14 @@ func (m *rbacMockRepo) GetToolInvocation(_ context.Context, _ int, _ int) (*ai.T
 	return nil, nil
 }
 
-func (m *rbacMockRepo) UpdateToolInvocation(_ context.Context, i *ai.ToolInvocation) (*ai.ToolInvocation, error) {
-	return i, nil
+func (m *rbacMockRepo) DecideToolInvocation(_ context.Context, id, _, _ int, approve bool, reason string) (*ai.ToolInvocation, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	state := "rejected"
+	if approve {
+		state = "approved"
+	}
+	return &ai.ToolInvocation{ID: id, ApprovalState: state, ApprovalReason: reason}, nil
 }
 
 func (m *rbacMockRepo) CreateRCA(_ context.Context, r *ai.RootCauseAnalysis) (*ai.RootCauseAnalysis, error) {
@@ -138,7 +144,7 @@ func newRBACTestEnv(t *testing.T) *rbacTestEnv {
 	repo := &rbacMockRepo{}
 	// NewToolRegistry 全部依赖 nil：测试只用写工具（create_ticket），不会调用 Execute
 	tools := service.NewToolRegistry(nil, nil, nil, nil)
-	svc := ai.NewService(repo, zap.NewNop().Sugar(), nil, tools, nil, nil, nil, nil, nil, nil, nil)
+	svc := ai.NewService(repo, zap.NewNop().Sugar(), nil, tools, nil, nil, nil, nil, nil, nil)
 	// 非空 ent client（HardcodeOnly 不使用，仅满足 Gate 2 的 != nil 守卫）
 	svc.SetEntClient(&ent.Client{})
 

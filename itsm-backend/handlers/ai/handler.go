@@ -907,7 +907,8 @@ func (h *Handler) ApproveTool(c *gin.Context) {
 
 	state, err := h.svc.ApproveTool(c.Request.Context(), id, tenantID, userID, req.Approve, req.Reason)
 	if err != nil {
-		common.Fail(c, common.NotFoundCode, "invocation not found or operation failed")
+		// 不存在是 404，重复审批是 409，其余内部错误 500——不能一律折叠成 404。
+		common.RespondError(c, err, "工具调用审批失败")
 		return
 	}
 	common.Success(c, gin.H{"invocationId": id, "approvalState": state})

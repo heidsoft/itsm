@@ -2,7 +2,8 @@
  * AI-Native ITSM: Tool RBAC Gate 2 and approval workflow.
  *
  * Production chain under test:
- * /api/v1/agent/tools/* -> AI Handler -> AI Service -> ToolInvocation repository/ToolQueue.
+ * /api/v1/agent/tools/* -> AI Handler -> AI Service -> ToolInvocation repository
+ *   -> operational_commands (ai.tool.execute) -> ToolExecutor.
  *
  * Real API contract:
  *

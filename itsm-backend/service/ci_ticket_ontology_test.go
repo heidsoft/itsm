@@ -180,7 +180,7 @@ func TestToolRegistry_NewOntologyToolsDeclared(t *testing.T) {
 func TestToolRegistry_CanExecuteWriteToolRequiresDependency(t *testing.T) {
 	reg := NewToolRegistry(nil, nil, nil, nil)
 
-	// 领域服务未注入时，不得宣称自己能执行 —— 否则 ToolQueue 委派过来会在运行时 panic
+	// 领域服务未注入时，不得宣称自己能执行 —— 否则执行器委派过来会在运行时失败
 	require.False(t, reg.canExecuteWriteTool("create_ticket"))
 	require.False(t, reg.canExecuteWriteTool("link_ticket_ci"))
 	require.False(t, reg.canExecuteWriteTool("create_ticket_type"))

@@ -30,7 +30,7 @@ type ToolInvocation struct {
 	ConversationID int        `json:"conversationId"`
 	ToolName       string     `json:"toolName"`
 	Arguments      string     `json:"arguments"` // JSON string
-	Status         string     `json:"status"`    // pending, running, completed, failed
+	Status         string     `json:"status"`    // pending, running, done, failed
 	Result         *string    `json:"result"`
 	Error          *string    `json:"error"`
 	NeedsApproval  bool       `json:"needsApproval"`

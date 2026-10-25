@@ -54,7 +54,7 @@ func setupTriageRouterWithLedger(t *testing.T, ledger ai.AuditLedgerWriter) *gin
 	t.Helper()
 	gin.SetMode(gin.TestMode)
 	triageService := service.NewTriageService(nil, zap.NewNop())
-	svc := ai.NewService(nil, zap.NewNop().Sugar(), nil, nil, nil, nil, nil, nil, triageService, nil, nil)
+	svc := ai.NewService(nil, zap.NewNop().Sugar(), nil, nil, nil, nil, nil, triageService, nil, nil)
 	if ledger != nil {
 		svc.SetAuditLedger(ledger)
 	}
@@ -131,7 +131,7 @@ func TestTriage_LedgerFailureDoesNotBlockSuggestion(t *testing.T) {
 	require.Equal(t, http.StatusOK, w.Code)
 
 	var resp struct {
-		Code int `json:"code"`
+		Code int                    `json:"code"`
 		Data map[string]interface{} `json:"data"`
 	}
 	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
@@ -163,7 +163,7 @@ func TestTriage_NoLedger_OmitsAuditId(t *testing.T) {
 // 不再静默 clamp——非法值进入 evaluator 置信度校准分桶会把桶污染成"低置信"。
 func TestRecordAudit_ConfidenceRangeValidation(t *testing.T) {
 	gin.SetMode(gin.TestMode)
-	svc := ai.NewService(nil, zap.NewNop().Sugar(), nil, nil, nil, nil, nil, nil, nil, nil, nil)
+	svc := ai.NewService(nil, zap.NewNop().Sugar(), nil, nil, nil, nil, nil, nil, nil, nil)
 	h := ai.NewHandler(svc)
 	r := gin.New()
 	r.POST("/api/v1/ai/audit", func(c *gin.Context) {

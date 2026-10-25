@@ -2,14 +2,17 @@ package ai
 
 import (
 	"context"
+	"fmt"
 	"time"
 
+	"itsm-backend/common"
 	"itsm-backend/ent"
 	"itsm-backend/ent/aianalysisresult"
 	"itsm-backend/ent/conversation"
 	"itsm-backend/ent/message"
 	"itsm-backend/ent/rootcauseanalysis"
 	"itsm-backend/ent/toolinvocation"
+	"itsm-backend/internal/commandbus"
 )
 
 type EntRepository struct {
@@ -208,30 +211,65 @@ func (r *EntRepository) ListToolInvocations(ctx context.Context, tenantID int, s
 	return out, nil
 }
 
-func (r *EntRepository) UpdateToolInvocation(ctx context.Context, i *ToolInvocation) (*ToolInvocation, error) {
-	update := r.client.ToolInvocation.UpdateOneID(i.ID).
-		SetStatus(i.Status).
-		SetApprovalState(i.ApprovalState).
-		SetApprovalReason(i.ApprovalReason).
-		SetApprovedBy(i.ApprovedBy).
-		SetPermissionCheck(i.PermissionCheck).
-		SetPermissionReason(i.PermissionReason)
-
-	if i.Result != nil {
-		update.SetResult(*i.Result)
-	}
-	if i.Error != nil {
-		update.SetError(*i.Error)
-	}
-	if i.ApprovedAt != nil {
-		update.SetApprovedAt(*i.ApprovedAt)
-	}
-
-	e, err := update.Save(ctx)
+// DecideToolInvocation 原子推进审批状态。批准时在同一事务内写入 ai.tool.execute 命令：
+// 审批落库但命令没入箱，会让调用永远停在 pending，且没有可恢复的记录。
+// 审批状态用 pending 条件更新做 CAS，重复审批返回业务冲突而不是再次入箱。
+func (r *EntRepository) DecideToolInvocation(ctx context.Context, id, tenantID, actorID int, approve bool, reason string) (*ToolInvocation, error) {
+	tx, err := r.client.Tx(ctx)
 	if err != nil {
 		return nil, err
 	}
-	return toToolInvocationDomain(e), nil
+	defer tx.Rollback()
+
+	existing, err := tx.ToolInvocation.Query().
+		Where(toolinvocation.ID(id), toolinvocation.TenantIDEQ(tenantID)).
+		Only(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if existing.ApprovalState != "pending" {
+		return nil, common.NewBusinessError(common.ConflictCode, "该工具调用已审批，不能重复处理", "")
+	}
+
+	state := "rejected"
+	if approve {
+		state = "approved"
+	}
+	update := tx.ToolInvocation.UpdateOneID(id).
+		Where(toolinvocation.TenantIDEQ(tenantID), toolinvocation.ApprovalStateEQ("pending")).
+		SetApprovalState(state).
+		SetApprovalReason(reason)
+	// approved_by/approved_at 只在批准时写入；拒绝时留着会让人误读成「谁批准了」。
+	if approve {
+		update.SetApprovedBy(actorID).SetApprovedAt(time.Now())
+	}
+	updated, err := update.Save(ctx)
+	if ent.IsNotFound(err) {
+		return nil, common.NewBusinessError(common.ConflictCode, "该工具调用已审批，不能重复处理", "")
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	if approve {
+		if _, _, err := commandbus.EnqueueTxIdempotent(ctx, tx, commandbus.EnqueueRequest{
+			TenantID:       tenantID,
+			CommandType:    commandbus.CommandExecuteAITool,
+			AggregateType:  "tool_invocation",
+			AggregateID:    id,
+			IdempotencyKey: fmt.Sprintf("tool_invocation:%d:execute", id),
+			// 工具副作用不可幂等：失败进死信等人工判定，不能自动重试。
+			MaxAttempts: 1,
+			Payload:     map[string]interface{}{"invocationId": id},
+		}); err != nil {
+			return nil, fmt.Errorf("enqueue ai tool execution: %w", err)
+		}
+	}
+
+	if err := tx.Commit(); err != nil {
+		return nil, err
+	}
+	return toToolInvocationDomain(updated), nil
 }
 
 // Root Cause Analysis

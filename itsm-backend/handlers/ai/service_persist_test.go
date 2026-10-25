@@ -57,7 +57,7 @@ func newPersistFailEnv(t *testing.T) (*ai.Service, *persistFailMockRepo) {
 	t.Helper()
 	repo := &persistFailMockRepo{rbacMockRepo: &rbacMockRepo{}}
 	tools := service.NewToolRegistry(nil, nil, nil, nil)
-	svc := ai.NewService(repo, zap.NewNop().Sugar(), nil, tools, nil, nil, nil, nil, nil, nil, nil)
+	svc := ai.NewService(repo, zap.NewNop().Sugar(), nil, tools, nil, nil, nil, nil, nil, nil)
 	svc.SetEntClient(&ent.Client{})
 
 	prevMode := middleware.PermissionConfig.Mode

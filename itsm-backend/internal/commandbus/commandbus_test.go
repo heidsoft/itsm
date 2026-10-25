@@ -2,12 +2,14 @@ package commandbus
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"testing"
 	"time"
 
 	"itsm-backend/common"
+	"itsm-backend/common/tenantctx"
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
 	"itsm-backend/ent/operationalcommand"
@@ -190,4 +192,93 @@ func TestWorkerCancelsCommonAppErrorNotFoundImmediately(t *testing.T) {
 	stored2, err := client.OperationalCommand.Get(ctx, cmd2.ID)
 	require.NoError(t, err)
 	require.Equal(t, StatusPending, stored2.Status, "瞬时错误应继续重试（pending）")
+}
+
+func TestEnqueueTxIdempotentTreatsDuplicateKeyAsSkipped(t *testing.T) {
+	client := newCommandTestClient(t)
+	ctx := context.Background()
+	req := EnqueueRequest{
+		TenantID: 7, CommandType: CommandDeliverNotification,
+		AggregateType: "ticket", AggregateID: 11, IdempotencyKey: "notification:dup",
+		Payload: map[string]interface{}{"recipientId": 3},
+	}
+
+	first, err := client.Tx(ctx)
+	require.NoError(t, err)
+	cmd, skipped, err := EnqueueTxIdempotent(ctx, first, req)
+	require.NoError(t, err)
+	require.False(t, skipped)
+	require.NotNil(t, cmd)
+	require.Equal(t, req.IdempotencyKey, cmd.IdempotencyKey)
+	require.NoError(t, first.Commit())
+
+	second, err := client.Tx(ctx)
+	require.NoError(t, err)
+	cmd, skipped, err = EnqueueTxIdempotent(ctx, second, req)
+	require.NoError(t, err)
+	require.True(t, skipped)
+	require.Nil(t, cmd)
+
+	// 重复键必须只让该语句无操作，事务仍然可用；先查后插+撞约束会在这里把事务弄脏。
+	other := req
+	other.IdempotencyKey = "notification:other"
+	_, skipped, err = EnqueueTxIdempotent(ctx, second, other)
+	require.NoError(t, err)
+	require.False(t, skipped)
+	require.NoError(t, second.Commit())
+
+	count, err := client.OperationalCommand.Query().
+		Where(operationalcommand.IdempotencyKeyIn(req.IdempotencyKey, other.IdempotencyKey)).
+		Count(ctx)
+	require.NoError(t, err)
+	require.Equal(t, 2, count)
+}
+
+func TestEnqueueTxIdempotentRejectsCrossTenantContext(t *testing.T) {
+	client := newCommandTestClient(t)
+	ctx := tenantctx.WithTenantID(context.Background(), 1)
+	tx, err := client.Tx(ctx)
+	require.NoError(t, err)
+	defer tx.Rollback()
+
+	_, _, err = EnqueueTxIdempotent(ctx, tx, EnqueueRequest{
+		TenantID: 2, CommandType: CommandDeliverNotification,
+		AggregateType: "ticket", AggregateID: 9, IdempotencyKey: "notification:cross-tenant",
+	})
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "cross-tenant")
+}
+
+func TestEnqueueSQLTxIgnoresDuplicateKey(t *testing.T) {
+	dsn := fmt.Sprintf("file:commandbus-sql-%s?mode=memory&cache=shared&_fk=1", t.Name())
+	client := enttest.Open(t, dialect.SQLite, dsn)
+	defer client.Close()
+	db, err := sql.Open("sqlite3", dsn)
+	require.NoError(t, err)
+	defer db.Close()
+
+	ctx := context.Background()
+	req := EnqueueRequest{
+		TenantID: 3, CommandType: CommandDeliverNotification,
+		AggregateType: "change", AggregateID: 5, IdempotencyKey: "notification:change-5",
+		Payload: map[string]interface{}{"recipientId": 8},
+	}
+	exec := func() error {
+		tx, err := db.BeginTx(ctx, nil)
+		if err != nil {
+			return err
+		}
+		if err := EnqueueSQLTx(ctx, tx, req); err != nil {
+			_ = tx.Rollback()
+			return err
+		}
+		return tx.Commit()
+	}
+
+	require.NoError(t, exec())
+	require.NoError(t, exec(), "duplicate idempotency key must not abort the business transaction")
+
+	count, err := client.OperationalCommand.Query().Count(ctx)
+	require.NoError(t, err)
+	require.Equal(t, 1, count)
 }

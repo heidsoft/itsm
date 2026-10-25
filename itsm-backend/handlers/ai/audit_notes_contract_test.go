@@ -58,7 +58,7 @@ func newAuditNotesDB(t *testing.T) *sql.DB {
 func TestRecordAuditPromptVersionSurvivesRoundTrip(t *testing.T) {
 	db := newAuditNotesDB(t)
 	telemetry := service.NewAITelemetryService(db)
-	svc := ai.NewService(nil, zap.NewNop().Sugar(), nil, nil, nil, nil, nil, nil, nil, nil, telemetry)
+	svc := ai.NewService(nil, zap.NewNop().Sugar(), nil, nil, nil, nil, nil, nil, nil, telemetry)
 	h := ai.NewHandler(svc)
 
 	gin.SetMode(gin.TestMode)
