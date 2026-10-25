@@ -192,7 +192,14 @@ func TestDiscoveryScheduler_EndToEnd(t *testing.T) {
 	_, _ = seedScheduledSource(t, repo, "sched-noschedule", "", true)
 
 	sched := NewDiscoveryScheduler(repo, NewService(repo, nil, nopLogger()), nopLogger())
-	now := time.Now()
+	// QueuedAt 由服务层用真实 time.Now() 落库（service.go:728），测试无法注入，
+	// 而它正是后续轮次的 cron 锚点。若直接拿 time.Now() 当 now，运行落在分钟内
+	// 最后两秒时 now+2s 会跨过下一个整分边界，第三轮会被正确判定为「已到期」，
+	// 断言却要求不重排 ⇒ 每分钟约 3% 概率偶发红（CI 于 13:56:01 命中）。
+	// 把整个场景钉在当前分钟中点：锚点之后第一个触发点落在 [+60s,+120s]，
+	// 第三轮（+30s）必然未到期，第四轮（+150s）必然到期，与运行时刻无关。
+	minute := time.Now().Truncate(time.Minute)
+	now := minute.Add(30 * time.Second)
 
 	result, err := sched.RunTenant(ctx, tenantID, now)
 	require.NoError(t, err)
@@ -223,11 +230,11 @@ func TestDiscoveryScheduler_EndToEnd(t *testing.T) {
 	require.Zero(t, result.Created)
 	require.Equal(t, 1, result.Skipped)
 
-	// 上一轮结束（终态）后，同一分钟窗口内也不该立刻重排：
-	// 锚点已推进到「刚排过」的时刻，下一次是下一个分钟边界。
+	// 上一轮结束（终态）后，同一时点仍不该立刻重排：
+	// 锚点已推进到「刚排过」的时刻，下一次触发点在下一个整分。
 	_, err = client.DiscoveryJob.UpdateOneID(jobs[0].ID).SetStatus(DiscoveryJobSucceeded).Save(ctx)
 	require.NoError(t, err)
-	result, err = sched.RunTenant(ctx, tenantID, now.Add(2*time.Second))
+	result, err = sched.RunTenant(ctx, tenantID, now)
 	require.NoError(t, err)
 	require.Zero(t, result.Created)
 
