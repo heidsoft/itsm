@@ -62,6 +62,24 @@ func TestPlanDiscoveryRun(t *testing.T) {
 		require.Equal(t, time.Date(2026, 10, 24, 2, 0, 0, 0, cst).UTC(), plan.FireAt.UTC())
 	})
 
+	t.Run("每分钟调度：跨过整分边界即算下一次到期", func(t *testing.T) {
+		// EndToEnd 用例曾在运行时刻落在分钟内最后 2 秒时偶发红。根因不是调度器：
+		// 锚点 02:00:58.4 之后最近的触发点是 02:01:00，now 只要越过它就是货真价实的
+		// 下一个周期。这里把这条边界算术钉死，防止有人反过来去「压制」正常触发。
+		anchor := time.Date(2026, 10, 23, 2, 0, 58, 400_000_000, cst)
+		boundary := time.Date(2026, 10, 23, 2, 1, 0, 0, cst)
+
+		plan, err := planDiscoveryRun("* * * * *", &anchor, DiscoveryJobSucceeded, anchor.Add(1500*time.Millisecond), cst, time.Minute)
+		require.NoError(t, err)
+		require.False(t, plan.Due, "尚未越过下一个整分，不得重排")
+		require.Equal(t, boundary.UTC(), plan.FireAt.UTC())
+
+		plan, err = planDiscoveryRun("* * * * *", &anchor, DiscoveryJobSucceeded, anchor.Add(2*time.Second), cst, time.Minute)
+		require.NoError(t, err)
+		require.True(t, plan.Due, "已越过下一个整分，必须算作新的一次触发")
+		require.Equal(t, boundary.UTC(), plan.FireAt.UTC())
+	})
+
 	t.Run("停机两天后补跑一次而不是补跑两天", func(t *testing.T) {
 		stale := now.Add(-48 * time.Hour)
 		plan, err := planDiscoveryRun("0 2 * * *", &stale, DiscoveryJobSucceeded, now, cst, grace)
