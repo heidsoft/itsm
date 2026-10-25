@@ -390,7 +390,9 @@ func (h *Handler) UpdateLicense(c *gin.Context) {
 	license, err := h.licenseSvc.UpdateLicense(c.Request.Context(), licenseID, tenantID, &req)
 	if err != nil {
 		h.logger.Errorw("Update license failed", "error", err, "license_id", licenseID)
-		common.FailWithErr(c, err, "操作失败")
+		// RespondError 保留领域错误自带的业务码与文案：直接改已用席位是 4000，
+		// 席位不足/并发冲突是 4090，不能都降级成「操作失败」。
+		common.RespondError(c, err, "操作失败")
 		return
 	}
 	if license == nil {

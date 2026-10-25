@@ -12,6 +12,8 @@
 //     用户 id；跨租户或无效 id 静默跳过（与站内通知收件人语义一致），不写
 //     license.Users、不占席位。
 //   - [L4 已修复] 席位不足 / 并发扣减冲突映射 409/4090（业务冲突，不再 500）。
+//   - [L5 已修复] PUT /licenses/:id 拒绝直接写 usedQuantity（4000）；替换 users 时按
+//     去重后的租户内用户数重算已用席位，超出总数为 4090 且整单拒绝、不部分写入。
 //   - 同租分配去重 + 幂等：重复提交同一批用户不得再扣席位。
 package asset_test
 
@@ -320,6 +322,39 @@ func TestLicenseTenantIsolation(t *testing.T) {
 		w := fx.do(t, http.MethodPut, fmt.Sprintf("%s/%d", base, fx.licB1.ID), fx.userA, `{"name":"越权改"}`)
 		require.Equal(t, http.StatusNotFound, w.Code)
 		require.Equal(t, 4004, decodeEnvelope(t, w).Code)
+	})
+
+	t.Run("直接改已用数量是400且零副作用", func(t *testing.T) {
+		// used_quantity 只能由分配/替换用户推导，不允许经通用更新直接写入。
+		w := fx.do(t, http.MethodPut, fmt.Sprintf("%s/%d", base, fx.licA1.ID), fx.userA, `{"usedQuantity":3}`)
+		require.Equal(t, http.StatusBadRequest, w.Code, "body=%s", w.Body.String())
+		require.Equal(t, 4000, decodeEnvelope(t, w).Code)
+		lic, err := fx.client.AssetLicense.Get(ctx, fx.licA1.ID)
+		require.NoError(t, err)
+		require.Equal(t, 0, lic.UsedQuantity, "被拒绝的更新不得改已用数")
+	})
+
+	t.Run("替换用户含跨租户id整单400", func(t *testing.T) {
+		w := fx.do(t, http.MethodPut, fmt.Sprintf("%s/%d", base, fx.licA1.ID), fx.userA,
+			`{"users":[`+fmt.Sprint(fx.userA.ID)+`,`+fmt.Sprint(fx.stranger.ID)+`]}`)
+		require.Equal(t, http.StatusBadRequest, w.Code, "body=%s", w.Body.String())
+		require.Equal(t, 4000, decodeEnvelope(t, w).Code)
+		lic, err := fx.client.AssetLicense.Get(ctx, fx.licA1.ID)
+		require.NoError(t, err)
+		require.Empty(t, lic.Users, "整单拒绝不得部分写入")
+		require.Equal(t, 0, lic.UsedQuantity)
+	})
+
+	t.Run("缩容到已分配以下409", func(t *testing.T) {
+		lic := fx.client.AssetLicense.Create().SetName("待缩容许可证").SetTotalQuantity(5).
+			SetUsers([]int{fx.userA.ID}).SetUsedQuantity(1).
+			SetStatus("active").SetTenantID(fx.tenantA.ID).SaveX(ctx)
+		w := fx.do(t, http.MethodPut, fmt.Sprintf("%s/%d", base, lic.ID), fx.userA, `{"totalQuantity":0}`)
+		require.Equal(t, http.StatusConflict, w.Code, "body=%s", w.Body.String())
+		require.Equal(t, 4090, decodeEnvelope(t, w).Code)
+		after, err := fx.client.AssetLicense.Get(ctx, lic.ID)
+		require.NoError(t, err)
+		require.Equal(t, 5, after.TotalQuantity)
 	})
 
 	t.Run("跨租户Delete是404掩码且零副作用", func(t *testing.T) {

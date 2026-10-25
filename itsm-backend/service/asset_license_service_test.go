@@ -255,6 +255,127 @@ func TestAssetLicenseService_UpdateLicense(t *testing.T) {
 	})
 }
 
+// UpdateLicense 不得绕过席位不变量：已用数只能由分配/替换用户推导。
+func TestAssetLicenseService_UpdateLicenseSeatInvariant(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", testDSN())
+	defer client.Close()
+
+	logger := zaptest.NewLogger(t).Sugar()
+	licenseService := NewAssetLicenseService(client, logger)
+
+	ctx := context.Background()
+
+	tenantA, err := client.Tenant.Create().SetName("Tenant A").SetCode("lic-a").
+		SetDomain("a.test").SetStatus("active").Save(ctx)
+	require.NoError(t, err)
+	tenantB, err := client.Tenant.Create().SetName("Tenant B").SetCode("lic-b").
+		SetDomain("b.test").SetStatus("active").Save(ctx)
+	require.NoError(t, err)
+
+	mkUser := func(tenantID int, name string) *ent.User {
+		return client.User.Create().SetUsername(name).SetEmail(name + "@test.com").SetName(name).
+			SetPasswordHash("hash").SetRole("end_user").SetActive(true).SetTenantID(tenantID).SaveX(ctx)
+	}
+	userA1 := mkUser(tenantA.ID, "lic-user-a1")
+	userA2 := mkUser(tenantA.ID, "lic-user-a2")
+	userB := mkUser(tenantB.ID, "lic-user-b")
+
+	requireBusinessCode := func(t *testing.T, err error, want int) {
+		t.Helper()
+		var bizErr *common.BusinessError
+		require.ErrorAs(t, err, &bizErr)
+		require.Equal(t, want, bizErr.Code)
+	}
+
+	reload := func(t *testing.T, id int) *ent.AssetLicense {
+		t.Helper()
+		lic, err := client.AssetLicense.Get(ctx, id)
+		require.NoError(t, err)
+		return lic
+	}
+
+	t.Run("拒绝直接修改已用数量", func(t *testing.T) {
+		lic := client.AssetLicense.Create().SetName("直接改已用").SetTotalQuantity(10).
+			SetStatus("active").SetTenantID(tenantA.ID).SaveX(ctx)
+
+		used := 5
+		_, err := licenseService.UpdateLicense(ctx, lic.ID, tenantA.ID, &dto.UpdateLicenseRequest{UsedQuantity: &used})
+		requireBusinessCode(t, err, common.BadRequestCode)
+		require.Equal(t, 0, reload(t, lic.ID).UsedQuantity)
+	})
+
+	t.Run("替换授权用户按去重后人数重算席位", func(t *testing.T) {
+		lic := client.AssetLicense.Create().SetName("替换用户").SetTotalQuantity(10).
+			SetStatus("active").SetTenantID(tenantA.ID).SaveX(ctx)
+
+		updated, err := licenseService.UpdateLicense(ctx, lic.ID, tenantA.ID, &dto.UpdateLicenseRequest{
+			Users: []int{userA1.ID, userA2.ID, userA1.ID},
+		})
+		require.NoError(t, err)
+		require.Equal(t, 2, updated.UsedQuantity)
+		require.Equal(t, 8, updated.AvailableQuantity)
+		require.ElementsMatch(t, []int{userA1.ID, userA2.ID}, reload(t, lic.ID).Users)
+
+		// 删掉一个用户后席位回落；不是全量替换，不能靠「不传」清空。
+		updated, err = licenseService.UpdateLicense(ctx, lic.ID, tenantA.ID, &dto.UpdateLicenseRequest{
+			Users: []int{userA1.ID},
+		})
+		require.NoError(t, err)
+		require.Equal(t, 1, updated.UsedQuantity)
+	})
+
+	t.Run("无效或跨租户用户整单拒绝", func(t *testing.T) {
+		lic := client.AssetLicense.Create().SetName("跨租用户").SetTotalQuantity(10).
+			SetStatus("active").SetTenantID(tenantA.ID).SaveX(ctx)
+
+		_, err := licenseService.UpdateLicense(ctx, lic.ID, tenantA.ID, &dto.UpdateLicenseRequest{
+			Users: []int{userA1.ID, userB.ID},
+		})
+		requireBusinessCode(t, err, common.BadRequestCode)
+
+		after := reload(t, lic.ID)
+		require.Empty(t, after.Users)
+		require.Equal(t, 0, after.UsedQuantity)
+	})
+
+	t.Run("替换后超过总数是409且不落库", func(t *testing.T) {
+		lic := client.AssetLicense.Create().SetName("席位不足").SetTotalQuantity(1).
+			SetStatus("active").SetTenantID(tenantA.ID).SaveX(ctx)
+
+		_, err := licenseService.UpdateLicense(ctx, lic.ID, tenantA.ID, &dto.UpdateLicenseRequest{
+			Users: []int{userA1.ID, userA2.ID},
+		})
+		requireBusinessCode(t, err, common.ConflictCode)
+
+		after := reload(t, lic.ID)
+		require.Empty(t, after.Users)
+		require.Equal(t, 0, after.UsedQuantity)
+	})
+
+	t.Run("总数不得缩到已分配席位以下", func(t *testing.T) {
+		lic := client.AssetLicense.Create().SetName("缩容").SetTotalQuantity(10).
+			SetUsers([]int{userA1.ID, userA2.ID}).SetUsedQuantity(2).
+			SetStatus("active").SetTenantID(tenantA.ID).SaveX(ctx)
+
+		shrunk := 1
+		_, err := licenseService.UpdateLicense(ctx, lic.ID, tenantA.ID, &dto.UpdateLicenseRequest{TotalQuantity: &shrunk})
+		requireBusinessCode(t, err, common.ConflictCode)
+		require.Equal(t, 10, reload(t, lic.ID).TotalQuantity)
+	})
+
+	t.Run("扩容后从depleted恢复active", func(t *testing.T) {
+		lic := client.AssetLicense.Create().SetName("扩容").SetTotalQuantity(1).
+			SetUsers([]int{userA1.ID}).SetUsedQuantity(1).
+			SetStatus(string(dto.LicenseStatusDepleted)).SetTenantID(tenantA.ID).SaveX(ctx)
+
+		grown := 5
+		updated, err := licenseService.UpdateLicense(ctx, lic.ID, tenantA.ID, &dto.UpdateLicenseRequest{TotalQuantity: &grown})
+		require.NoError(t, err)
+		require.Equal(t, string(dto.LicenseStatusActive), updated.Status)
+		require.Equal(t, 4, updated.AvailableQuantity)
+	})
+}
+
 func TestAssetLicenseService_DeleteLicense(t *testing.T) {
 	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()

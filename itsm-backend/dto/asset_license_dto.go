@@ -49,7 +49,7 @@ type UpdateLicenseRequest struct {
 	Vendor         *string  `json:"vendor"`         // 供应商
 	LicenseType    *string  `json:"licenseType"`    // 许可证类型
 	TotalQuantity  *int     `json:"totalQuantity"`  // 总数量
-	UsedQuantity   *int     `json:"usedQuantity"`   // 已使用数量
+	UsedQuantity   *int     `json:"usedQuantity"`   // 只读：由分配操作维护，传值会被拒绝
 	AssetID        *int     `json:"assetId"`        // 关联的资产ID
 	PurchaseDate   *string  `json:"purchaseDate"`   // 采购日期
 	PurchasePrice  *float64 `json:"purchasePrice"`  // 采购价格

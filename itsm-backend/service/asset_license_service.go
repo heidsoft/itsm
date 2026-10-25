@@ -137,7 +137,11 @@ func (s *AssetLicenseService) ListLicenses(ctx context.Context, tenantID int, pa
 	}, nil
 }
 
-// UpdateLicense 更新许可证
+// UpdateLicense 更新许可证。
+//
+// used_quantity 是分配操作维护的派生值：允许直接写会让「已用 > 总数」或
+// 「已用 != len(users)」绕过 AssignUsers 的席位校验。这里拒绝直接改已用数，
+// 替换授权用户时按去重后的用户数重算席位，并用 used_quantity 条件更新做并发保护。
 func (s *AssetLicenseService) UpdateLicense(ctx context.Context, id, tenantID int, req *dto.UpdateLicenseRequest) (*dto.LicenseResponse, error) {
 	licenseEntity, err := s.client.AssetLicense.Query().
 		Where(assetlicense.IDEQ(id), assetlicense.TenantIDEQ(tenantID)).
@@ -150,7 +154,12 @@ func (s *AssetLicenseService) UpdateLicense(ctx context.Context, id, tenantID in
 		return nil, fmt.Errorf("failed to get license: %w", err)
 	}
 
-	update := licenseEntity.Update()
+	if req.UsedQuantity != nil {
+		return nil, common.NewBusinessError(common.BadRequestCode, "已使用数量由许可证分配操作维护，不能直接修改", "")
+	}
+
+	update := s.client.AssetLicense.Update().
+		Where(assetlicense.IDEQ(id), assetlicense.TenantIDEQ(tenantID))
 
 	if req.Name != nil {
 		update.SetName(*req.Name)
@@ -163,12 +172,6 @@ func (s *AssetLicenseService) UpdateLicense(ctx context.Context, id, tenantID in
 	}
 	if req.LicenseType != nil {
 		update.SetLicenseType(*req.LicenseType)
-	}
-	if req.TotalQuantity != nil {
-		update.SetTotalQuantity(*req.TotalQuantity)
-	}
-	if req.UsedQuantity != nil {
-		update.SetUsedQuantity(*req.UsedQuantity)
 	}
 	if req.AssetID != nil {
 		update.SetAssetID(*req.AssetID)
@@ -194,17 +197,72 @@ func (s *AssetLicenseService) UpdateLicense(ctx context.Context, id, tenantID in
 	if req.Notes != nil {
 		update.SetNotes(*req.Notes)
 	}
-	if len(req.Users) > 0 {
-		update.SetUsers(req.Users)
-	}
 	if len(req.Tags) > 0 {
 		update.SetTags(req.Tags)
 	}
 
-	updated, err := update.Save(ctx)
+	totalQuantity := licenseEntity.TotalQuantity
+	if req.TotalQuantity != nil {
+		if *req.TotalQuantity < 0 {
+			return nil, common.NewBusinessError(common.BadRequestCode, "总数量不能为负数", "")
+		}
+		totalQuantity = *req.TotalQuantity
+		update.SetTotalQuantity(totalQuantity)
+	}
+
+	usedQuantity := licenseEntity.UsedQuantity
+	seatsTouched := req.TotalQuantity != nil
+	if len(req.Users) > 0 {
+		// 全量替换授权列表：与 AssignUsers 的「静默跳过无效 id」不同，
+		// 这里不能丢弃调用方明确提交的 id——静默丢弃会连带移除同名用户。
+		valid, invalid, err := s.normalizeLicenseUsers(ctx, tenantID, req.Users)
+		if err != nil {
+			s.logger.Errorw("Failed to validate license assignees", "error", err, "license_id", id)
+			return nil, fmt.Errorf("failed to validate license assignees: %w", err)
+		}
+		if len(invalid) > 0 {
+			return nil, common.NewBusinessError(common.BadRequestCode, "授权用户列表包含无效或跨租户用户", "")
+		}
+		usedQuantity = len(valid)
+		update.SetUsers(valid).SetUsedQuantity(usedQuantity)
+		seatsTouched = true
+	}
+
+	if usedQuantity > totalQuantity {
+		return nil, common.NewBusinessError(common.ConflictCode,
+			fmt.Sprintf("总数量 %d 小于已分配用户数 %d", totalQuantity, usedQuantity), "")
+	}
+
+	if usedQuantity >= totalQuantity {
+		update.SetStatus(string(dto.LicenseStatusDepleted))
+	} else if licenseEntity.Status == string(dto.LicenseStatusDepleted) {
+		update.SetStatus(string(dto.LicenseStatusActive))
+	}
+
+	if seatsTouched {
+		// 读到的 used_quantity 必须仍是写入时的值：并发分配先提交时本次放弃，
+		// 不得把对方刚占用的席位覆盖掉。
+		update.Where(assetlicense.UsedQuantityEQ(licenseEntity.UsedQuantity))
+	}
+
+	affected, err := update.Save(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to update license", "error", err, "license_id", id)
 		return nil, fmt.Errorf("failed to update license: %w", err)
+	}
+	if affected == 0 {
+		if seatsTouched {
+			return nil, common.NewBusinessError(common.ConflictCode, "席位已被其他请求占用，请重试", "")
+		}
+		return nil, ErrLicenseNotFound
+	}
+
+	updated, err := s.client.AssetLicense.Query().
+		Where(assetlicense.IDEQ(id), assetlicense.TenantIDEQ(tenantID)).
+		First(ctx)
+	if err != nil {
+		s.logger.Errorw("Failed to reload license", "error", err, "license_id", id)
+		return nil, fmt.Errorf("failed to reload license: %w", err)
 	}
 
 	return dto.ToLicenseResponse(updated), nil
@@ -258,18 +316,57 @@ func (s *AssetLicenseService) GetLicenseStats(ctx context.Context, tenantID int)
 	return stats, nil
 }
 
+// normalizeLicenseUsers 对授权用户 id 去重，并按本租户归属拆分。
+// valid 是本租户真实存在的用户（保持首次出现顺序），invalid 是其余 id。
+func (s *AssetLicenseService) normalizeLicenseUsers(ctx context.Context, tenantID int, userIDs []int) (valid, invalid []int, err error) {
+	seen := make(map[int]struct{}, len(userIDs))
+	unique := make([]int, 0, len(userIDs))
+	for _, uid := range userIDs {
+		if _, ok := seen[uid]; ok {
+			continue
+		}
+		seen[uid] = struct{}{}
+		unique = append(unique, uid)
+	}
+	if len(unique) == 0 {
+		return nil, nil, nil
+	}
+
+	existing, err := s.client.User.Query().
+		Where(user.IDIn(unique...), user.TenantIDEQ(tenantID)).
+		IDs(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+	existingSet := make(map[int]struct{}, len(existing))
+	for _, uid := range existing {
+		existingSet[uid] = struct{}{}
+	}
+
+	valid = make([]int, 0, len(unique))
+	for _, uid := range unique {
+		if _, ok := existingSet[uid]; ok {
+			valid = append(valid, uid)
+		} else {
+			invalid = append(invalid, uid)
+		}
+	}
+	return valid, invalid, nil
+}
+
 // AssignUsers 分配许可证给用户
 // read-modify-write 用事务 + 原子 UPDATE 条件检查，避免并发请求下席位超发。
 // 同时对传入的 userIDs 去重，避免重复分配的用户计入新增席位。
 func (s *AssetLicenseService) AssignUsers(ctx context.Context, id, tenantID int, userIDs []int) (*dto.LicenseResponse, error) {
-	// 1. 传入 userIDs 先去重（本次请求中的重复用户）
-	seen := make(map[int]struct{}, len(userIDs))
-	deduped := make([]int, 0, len(userIDs))
-	for _, uid := range userIDs {
-		if _, ok := seen[uid]; !ok {
-			seen[uid] = struct{}{}
-			deduped = append(deduped, uid)
-		}
+	// 1. 去重并校验租户归属：跨租户或无效 id 静默跳过（与站内通知收件人语义一致，
+	// B5 锚点），防止他租用户 id 被写进 license.Users（跨租户引用注入面）。
+	deduped, invalid, err := s.normalizeLicenseUsers(ctx, tenantID, userIDs)
+	if err != nil {
+		s.logger.Errorw("Failed to validate license assignees", "error", err, "license_id", id)
+		return nil, fmt.Errorf("failed to validate license assignees: %w", err)
+	}
+	if len(invalid) > 0 {
+		s.logger.Infow("Skipped license assignees outside tenant", "license_id", id, "invalid_user_ids", invalid)
 	}
 	if len(deduped) == 0 {
 		// 无有效新增用户，直接返回原记录
@@ -284,42 +381,6 @@ func (s *AssetLicenseService) AssignUsers(ctx context.Context, id, tenantID int,
 		}
 		return dto.ToLicenseResponse(licenseEntity), nil
 	}
-
-	// 1.5 校验待分配用户的租户归属：只保留本租户真实存在的用户 id。
-	// 跨租户或无效 id 静默跳过（与站内通知收件人语义一致，B5 锚点），
-	// 防止他租用户 id 被写进 license.Users（跨租户引用注入面）。
-	validIDs, err := s.client.User.Query().
-		Where(user.IDIn(deduped...), user.TenantIDEQ(tenantID)).
-		IDs(ctx)
-	if err != nil {
-		s.logger.Errorw("Failed to validate license assignees", "error", err, "license_id", id)
-		return nil, fmt.Errorf("failed to validate license assignees: %w", err)
-	}
-	validSet := make(map[int]struct{}, len(validIDs))
-	for _, uid := range validIDs {
-		validSet[uid] = struct{}{}
-	}
-	filtered := make([]int, 0, len(deduped))
-	for _, uid := range deduped {
-		if _, ok := validSet[uid]; ok {
-			filtered = append(filtered, uid)
-		}
-	}
-	deduped = filtered
-	if len(deduped) == 0 {
-		// 请求里没有本租户有效用户：视同 no-op，直接返回原记录
-		licenseEntity, err := s.client.AssetLicense.Query().
-			Where(assetlicense.IDEQ(id), assetlicense.TenantIDEQ(tenantID)).
-			First(ctx)
-		if err != nil {
-			if ent.IsNotFound(err) {
-				return nil, ErrLicenseNotFound
-			}
-			return nil, fmt.Errorf("failed to get license: %w", err)
-		}
-		return dto.ToLicenseResponse(licenseEntity), nil
-	}
-
 	// 2. 事务：在同一事务内 FOR UPDATE 读 + 条件 UPDATE，防止并发超发
 	tx, err := s.client.Tx(ctx)
 	if err != nil {
