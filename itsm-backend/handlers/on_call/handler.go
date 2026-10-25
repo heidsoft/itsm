@@ -73,9 +73,7 @@ func (h *Handler) CreateSchedule(c *gin.Context) {
 		common.ParamErrorWithErr(c, err, "参数错误")
 		return
 	}
-	schedule, err := h.service.CreateSchedule(c.Request.Context(), tenantID, ScheduleInput{
-		GroupID: req.GroupID, Name: req.Name, Timezone: req.Timezone, Status: req.Status,
-	})
+	schedule, err := h.service.CreateSchedule(c.Request.Context(), tenantID, ScheduleInput(req))
 	if err != nil {
 		h.fail(c, err, "创建值班排班失败")
 		return

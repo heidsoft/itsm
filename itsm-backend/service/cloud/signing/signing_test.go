@@ -1,6 +1,11 @@
 package signing
 
-import "testing"
+import (
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/hex"
+	"testing"
+)
 
 func TestURIEncodeKeepsUnreservedCharacters(t *testing.T) {
 	if got := URIEncode("aZ0-_.~", false); got != "aZ0-_.~" {
@@ -73,7 +78,12 @@ func TestHMACSHA256IsChainable(t *testing.T) {
 	if string(k1) == string(k2) {
 		t.Fatal("不同消息得到相同摘要")
 	}
-	if HMACSHA256Hex([]byte("secret"), "x") != HMACSHA256Hex([]byte("secret"), "x") {
-		t.Fatal("同输入应得到同输出")
+	// 同一纯函数调两次必然相等，断言它恒真、抓不到回归；换成与标准库对拍，
+	// 才能锁住 Hex 包装没有把 key/msg 传反或改动摘要字节。
+	m := hmac.New(sha256.New, []byte("secret"))
+	m.Write([]byte("x"))
+	want := hex.EncodeToString(m.Sum(nil))
+	if got := HMACSHA256Hex([]byte("secret"), "x"); got != want {
+		t.Fatalf("HMACSHA256Hex 与标准库结果不一致\n got: %q\nwant: %q", got, want)
 	}
 }

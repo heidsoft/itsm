@@ -314,9 +314,7 @@ func (h *Handler) ListPermissions(c *gin.Context) {
 	}
 
 	permItems := make([]*dto.PermissionResponse, len(perms))
-	for i, p := range perms {
-		permItems[i] = p
-	}
+	copy(permItems, perms)
 
 	// 权限字典是不分页的完整集合：只返回 {items,total}，不伪造 page/pageSize/totalPages；
 	// 也不再同时返回 permissions 字符串别名（码值在 items[].code）。

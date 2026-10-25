@@ -17,8 +17,7 @@ import (
 // 「decode /open-apis/im/v1/messages resp: invalid character '<'」，排查方向
 // 从「鉴权失败」被误导成「响应结构变了」。
 func TestDoJSON_HTTPStatusIsSurfaced(t *testing.T) {
-	var srv *httptest.Server
-	srv = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if strings.HasSuffix(r.URL.Path, "/tenant_access_token/internal") {
 			_, _ = w.Write([]byte(`{"code":0,"tenant_access_token":"t-1","expire":7200}`))
 			return

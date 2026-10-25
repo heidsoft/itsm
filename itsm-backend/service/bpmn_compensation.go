@@ -240,17 +240,6 @@ func compensationOrder(variables map[string]interface{}, registered map[string]c
 	return reversed
 }
 
-// hasCompensationBoundaryEvents 检查流程是否声明了补偿边界事件。
-// 本引擎不执行边界补偿触发协议——发布期提示，避免模板作者误以为已支持。
-func hasCompensationBoundaryEvents(process *BPMNProcess) bool {
-	for _, event := range process.BoundaryEvents {
-		if event.CompensateEventDefinition != nil {
-			return true
-		}
-	}
-	return false
-}
-
 // pendingCompensationTargets 返回尚未补偿的已登记活动（盘点/诊断用）。
 func pendingCompensationTargets(variables map[string]interface{}) []string {
 	registered := compensationEntries(variables)
