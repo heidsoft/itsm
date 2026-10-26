@@ -6,6 +6,7 @@ import type { MenuProps } from 'antd';
 import { User, Settings, LogOut } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/lib/store/auth-store';
+import { PRIMARY_ROLE_LABEL } from '@/lib/api/user-api';
 import { DESIGN } from '@/design-system/tokens';
 import styles from './Header.module.css';
 
@@ -43,8 +44,9 @@ export const UserMenuDropdown: React.FC<UserMenuDropdownProps> = ({
 
   const displayName = user?.name || user?.username || '';
   const userInitial = displayName.charAt(0).toUpperCase() || 'U';
-  const roleText =
-    user?.role === 'admin' ? '管理员' : user?.role === 'super_admin' ? '超级管理员' : '用户';
+  // 角色标识统一走 PRIMARY_ROLE_LABEL（与侧边栏用户卡一致，审计报告 3.3-⑦）；
+  // 未知 code 回退原值而非笼统「用户」，避免 admin 与最终用户显示同名。
+  const roleText = PRIMARY_ROLE_LABEL[user?.role ?? ''] || user?.role || '最终用户';
   const roleColor = user?.role === 'admin' || user?.role === 'super_admin' ? '#3b82f6' : '#64748b';
 
   const handleMenuClick: MenuProps['onClick'] = ({ key }) => {

@@ -52,6 +52,8 @@ export interface AIMetrics {
   byKind: Record<string, number>;
   avgResponseTimeSeconds: number;
   llmCallCount?: number;
+  /** 本租户窗口内 LLM 调用的估算 token 总消耗（租户口径，非平台） */
+  totalTokens: number;
   responseTimeAvailable?: boolean;
 }
 

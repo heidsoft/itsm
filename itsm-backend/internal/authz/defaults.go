@@ -14,7 +14,8 @@ import (
 //   - super_admin 保留 *:* 通配（与 Login ["*"] 旁路口径一致）；
 //   - sysadmin 不用 *:* 字面通配，改用 allPermissionCodes() 枚举口径
 //     （与 configured 态 DB 实际授权一致）；
-//   - msp_* 为 GetMSPRBACRole 映射的运行时角色，在此显式列出默认集。
+//   - msp_* 已并入 BuiltinRolePermissionCodes()，因此自动派生、不再单独列条目
+//     （此前只在兜底表里有、DB 播种没有，DBOnly 态下 MSP 角色是空集）。
 //
 // 词表外的角色（含已退役的 legacy security，存量数据由迁移改值）不在本表。
 //
@@ -31,30 +32,6 @@ var rolePermissionDefaults = func() map[string][]string {
 
 	// 平台超管：通配旁路（DB 播种侧不依赖此条目）。
 	defaults[domainrole.SuperAdmin] = []string{"*:*"}
-
-	// MSP 场景（middleware.GetMSPRBACRole 的映射目标角色）。
-	defaults[domainrole.MspViewer] = []string{
-		"msp:read", "msp_customer:read", "msp_ticket:read",
-		"msp_allocation:read", "msp_report:read",
-	}
-	defaults[domainrole.MspTech] = []string{
-		"msp:read", "msp_customer:read", "msp_ticket:read", "msp_ticket:write",
-		"msp_allocation:read", "msp_report:read",
-	}
-	defaults[domainrole.MspSpecialist] = []string{
-		"msp:read", "msp_customer:read", "msp_customer:write",
-		"msp_ticket:read", "msp_ticket:write",
-		"msp_allocation:read", "msp_report:read",
-	}
-	defaults[domainrole.MspManager] = []string{
-		"msp:read", "msp:write", "msp_customer:read", "msp_customer:write",
-		"msp_ticket:read", "msp_ticket:write",
-		"msp_allocation:read", "msp_allocation:write",
-		"msp_report:read", "msp_report:write",
-	}
-	defaults[domainrole.MspAdmin] = []string{
-		"msp:*", "msp_customer:*", "msp_ticket:*", "msp_allocation:*", "msp_report:*",
-	}
 
 	return defaults
 }()

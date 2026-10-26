@@ -303,7 +303,9 @@ func (r *EntRepository) Get(ctx context.Context, id int, tenantID int) (*Change,
 }
 
 func (r *EntRepository) List(ctx context.Context, tenantID int, page, size int, status, search, riskLevel string, dataScope datascope.DataScope, currentUserID int) ([]*Change, int, error) {
-	q := r.client.Change.Query().Where(change.TenantID(tenantID))
+	// DeletedAtIsNil：与 ticket 等域一致的显式软删过滤（纵深防御——全局拦截器
+	// database.RegisterSoftDeleteInterceptors 已覆盖，这里显式声明不依赖装配点）。
+	q := r.client.Change.Query().Where(change.TenantID(tenantID), change.DeletedAtIsNil())
 
 	if status != "" && status != "全部" {
 		q = q.Where(change.StatusEQ(change.Status(status)))
@@ -399,7 +401,8 @@ func (r *EntRepository) UpdateStatusCASWithNote(ctx context.Context, id, tenantI
 
 func (r *EntRepository) Update(ctx context.Context, c *Change) (*Change, error) {
 	// 写路径强制租户隔离，避免越权更新跨租户变更。
-	// 注：change schema 无 deleted_at（物理删），故不附加 DeletedAtIsNil 守卫。
+	// change 已补齐软删字段（见 Delete），读路径由全局拦截器屏蔽软删行；
+	// 这里按 ID 定向更新，软删行被拦截器排除后自然表现为「不存在」。
 	//
 	// StatusEQ 是乐观锁：change schema 没有 version 列，状态即版本号。
 	// 调用方（service.UpdateChange）把 c.Status 固定为读取时看到的当前状态，

@@ -53,11 +53,16 @@ func TestBuiltinRolePermissionCodes_Guard(t *testing.T) {
 			"notification:write", "dashboard:read", "service_catalog:read",
 			"change:write", "alert:read", "group:read", "bpmn:read",
 		},
+		// end_user 2026-10-26 收敛为自助门户最小集（15 码）：旧口径「其余资源一律只读」
+		// 让最终用户拿着 user:read 等管理面读码，菜单据此渲染系统管理入口。
+		// 被移除的码登记在 authz.RetiredRolePermissionCodes，播种器从既有安装撤销。
 		"end_user": {
-			"notification:write", "dashboard:read", "ai:read", "ai:write",
-			"sla:read", "org:read", "department:read",
-			"cmdb:read", "incident:read", "change:read", "problem:read",
-			"bpmn:read", "release:read", "asset:read", "license:read",
+			"ticket:read", "ticket:write", "ticket:create", "ticket:update",
+			"ticket_category:read", "workflow:read",
+			"knowledge:read", "service_catalog:read",
+			"service_request:read", "service_request:write",
+			"notification:read", "notification:write",
+			"dashboard:read", "ai:read", "ai:write",
 		},
 		// 规则配置面（自动化/分配规则）从 system_config:* 迁出后，管理角色必须持有新码：
 		// 一旦回收，租管与 it_admin 的规则页会重新变成「菜单可见、接口 403」。
@@ -79,12 +84,28 @@ func TestBuiltinRolePermissionCodes_Guard(t *testing.T) {
 
 	defaults := authz.RolePermissionDefaults()
 
-	// 契约 4 前置：仅存在于运行时、不进 roles 表的 MSP 协作角色必须有显式默认集。
-	// super_admin 走 Login ["*"] 旁路，但兜底默认仍必须非空。
-	nonSeededRoles := []string{"super_admin", "msp_viewer", "msp_tech", "msp_specialist", "msp_manager", "msp_admin"}
+	// 契约 4 前置：super_admin 走 Login ["*"] 旁路，但兜底默认仍必须非空。
+	// msp_* 已并入 BuiltinRolePermissionCodes()（2026-10-26），因此不再属于
+	// 「仅存在于运行时」的角色——它们与词表角色一样必须由 DB 播种。
+	nonSeededRoles := []string{"super_admin"}
 	for _, role := range nonSeededRoles {
 		if len(defaults[role]) == 0 {
 			t.Errorf("角色 %q 在 authz.RolePermissionDefaults() 中缺失或为空：删除 middleware.RolePermissions 后该角色 unconfigured 兜底将全 403", role)
+		}
+	}
+
+	// MSP 协作角色必须有非空 DB 码集，否则 DBOnly 配置态下 provider_admin/provider_agent
+	// 映射到 msp_manager/msp_tech 后进 MSP 模块即 403（审计 3.2-⑦）。
+	for _, role := range domainrole.MSP {
+		set := roleCodes[role]
+		if len(set) == 0 {
+			t.Errorf("MSP 角色 %q 在 builtinRolePermissionCodes() 中缺失或为空集：DBOnly 态下 MSP 员工将全 403", role)
+			continue
+		}
+		for _, code := range set {
+			if _, exists := defByCode[code]; !exists {
+				t.Errorf("MSP 角色 %q 引用的权限码 %q 不在 permissionDefinitions() 清单中", role, code)
+			}
 		}
 	}
 

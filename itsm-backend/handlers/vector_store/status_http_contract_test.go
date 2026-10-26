@@ -1,7 +1,9 @@
 // Package vector_store 的状态面 HTTP 契约回归（B10.1）。
 //
 // 路由与权限码：/api/v1/system/vector-store（system_config_routes.go 内注册）
-// GET 默认状态 → system:read；POST /test 连通性诊断 → system:write。
+// GET 默认状态 → system_config:read；POST /test 连通性诊断 → system_config:write
+// （租户配置域；旧 system:read/write 是平台运维码，只有 sysadmin 持有，
+// 会让菜单可见的租管进页面即 403）。
 //
 // 锁定语义（既有正确面防回归，本域无行为变更）：
 //   - [VS1] 未配置 env：capability=unconfigured、backend=keyword、

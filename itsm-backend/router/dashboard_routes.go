@@ -411,7 +411,9 @@ func SetupDashboardRoutes(tenant *gin.RouterGroup, h *handlers.DashboardHandler,
 	}
 }
 
-// SetupReportsRoutes 注册报表路由。权限资源名同样收敛到 dashboard。
+// SetupReportsRoutes 注册报表路由。权限资源名取 report：报表是管理/分析面，
+// 与菜单「报表中心」同码。dashboard:read 是全角色基线（服务台落地页需要它），
+// 挂在报表上等于把整套报表接口开放给最终用户。
 //
 // 各报表必须接**本域真实**的统计/趋势端点。此前 problems 与 changes 都挂在
 // h.GetTicketTrend（工单趋势）上，属于语义错配：报表名与返回数据不是同一业务对象。
@@ -424,7 +426,7 @@ func SetupReportsRoutes(
 ) {
 	reports := tenant.Group("/reports")
 	{
-		reports.GET("", middleware.RequirePermission("dashboard", "read"), func(c *gin.Context) {
+		reports.GET("", middleware.RequirePermission("report", "read"), func(c *gin.Context) {
 			common.Success(c, gin.H{
 				"items": []gin.H{
 					{"id": "tickets", "name": "工单报表", "path": "/reports/tickets"},
@@ -437,15 +439,15 @@ func SetupReportsRoutes(
 				},
 			})
 		})
-		reports.GET("/tickets", middleware.RequirePermission("dashboard", "read"), h.GetStats)
-		reports.GET("/incidents", middleware.RequirePermission("dashboard", "read"), h.GetIncidentDistribution)
-		reports.GET("/sla", middleware.RequirePermission("dashboard", "read"), h.GetSLAData)
+		reports.GET("/tickets", middleware.RequirePermission("report", "read"), h.GetStats)
+		reports.GET("/incidents", middleware.RequirePermission("report", "read"), h.GetIncidentDistribution)
+		reports.GET("/sla", middleware.RequirePermission("report", "read"), h.GetSLAData)
 		// 管理者统一服务质量视图：KPI/SLA/事件分布/满意度/趋势/工单统计一次聚合，
 		// 携带 metricVersion 口径版本（2026-10-23 落地，取代"各报表页自己拼"的现状）。
-		reports.GET("/service-quality", middleware.RequirePermission("dashboard", "read"), h.GetServiceQuality)
+		reports.GET("/service-quality", middleware.RequirePermission("report", "read"), h.GetServiceQuality)
 
 		// 问题报表：接问题域真实趋势（problem 未装配时回退工单趋势并显式标注）。
-		reports.GET("/problems", middleware.RequirePermission("dashboard", "read"), func(c *gin.Context) {
+		reports.GET("/problems", middleware.RequirePermission("report", "read"), func(c *gin.Context) {
 			if problemHandler == nil {
 				c.Set("reports_fallback", "problem")
 				h.GetTicketTrend(c)
@@ -455,7 +457,7 @@ func SetupReportsRoutes(
 		})
 
 		// 变更报表：接变更域真实统计（change 未装配时回退工单趋势并显式标注）。
-		reports.GET("/changes", middleware.RequirePermission("dashboard", "read"), func(c *gin.Context) {
+		reports.GET("/changes", middleware.RequirePermission("report", "read"), func(c *gin.Context) {
 			if changeHandler == nil {
 				c.Set("reports_fallback", "change")
 				h.GetTicketTrend(c)

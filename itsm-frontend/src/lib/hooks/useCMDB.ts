@@ -6,7 +6,11 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { message } from 'antd';
 import { CMDBApi } from '@/lib/api/cmdb-api';
 import { CIRelationshipAPI } from '@/lib/api/cmdb-relationship';
-import type { GetCIListRequest, GetCloudResourcesRequest } from '@/lib/api/cmdb-api';
+import type {
+  GetCIListRequest,
+  GetCloudResourcesRequest,
+  RegisterPendingDiscoveryResourceRequest,
+} from '@/lib/api/cmdb-api';
 import type { GraphQuery, ImpactAnalysisRequest } from '@/types/cmdb';
 import type { ReconciliationResponse } from '@/types/biz/cmdb';
 
@@ -250,6 +254,31 @@ export function useReconciliationQuery() {
     queryFn: () =>
       CMDBApi.getReconciliationResults() as unknown as Promise<ReconciliationResponse>,
     staleTime: 60000,
+  });
+}
+
+// 云发现人工补全队列（必填属性凑不齐的 deferred 资源）
+export function usePendingDiscoveryResourcesQuery(params?: { page?: number; pageSize?: number }) {
+  return useQuery({
+    queryKey: [...CMDB_KEYS.discovery(), 'pending-resources', params],
+    queryFn: () => CMDBApi.getPendingDiscoveryResources(params),
+    staleTime: 30000,
+  });
+}
+
+// 补录建账。反馈文案由调用方（页面）用 App.useApp() 呈现，hook 不碰静态 message。
+export function useRegisterPendingDiscoveryResourceMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: RegisterPendingDiscoveryResourceRequest }) =>
+      CMDBApi.registerPendingDiscoveryResource(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: [...CMDB_KEYS.discovery(), 'pending-resources'],
+      });
+      queryClient.invalidateQueries({ queryKey: CMDB_KEYS.cis() });
+      queryClient.invalidateQueries({ queryKey: CMDB_KEYS.stats() });
+    },
   });
 }
 

@@ -1,10 +1,33 @@
 'use client';
 
 import React from 'react';
-import { Alert, App, Badge, Button, Card, Col, Row, Space, Table, Tabs, Tag, Typography } from 'antd';
+import {
+  Alert,
+  App,
+  Badge,
+  Button,
+  Card,
+  Col,
+  Form,
+  Input,
+  Modal,
+  Row,
+  Select,
+  Space,
+  Table,
+  Tabs,
+  Tag,
+  Typography,
+} from 'antd';
 import { Cloud, Database, RefreshCw, Server, Sparkles } from 'lucide-react';
 
-import type { CMDBRuntimeCapability } from '@/lib/api/cmdb-api';
+import type {
+  CMDBRuntimeCapability,
+  PendingDiscoveryAttribute,
+  PendingDiscoveryResource,
+  RegisterPendingDiscoveryResourceRequest,
+} from '@/lib/api/cmdb-api';
+import { ApiRequestError } from '@/lib/api/http-client';
 import { ManagementPageHeader } from '@/components/ui/ManagementPageHeader';
 import { StatsOverview, type StatsOverviewItem } from '@/components/ui/StatsOverview';
 import {
@@ -13,9 +36,165 @@ import {
   useCloudServicesQuery,
   useDiscoveryHistoryQuery,
   useDiscoverySourcesQuery,
+  usePendingDiscoveryResourcesQuery,
+  useRegisterPendingDiscoveryResourceMutation,
 } from '@/lib/hooks/useCMDB';
 
 const { Text } = Typography;
+
+const ENVIRONMENT_OPTIONS = [
+  { value: 'production', label: '生产' },
+  { value: 'staging', label: '预发' },
+  { value: 'development', label: '开发' },
+];
+
+// 必填属性的初始值：优先沿用云标签命中的现值，其次回落属性默认值。
+// 两者都填过的属性即便云端本已满足也允许操作员覆盖——后端按「提交值优先」合并。
+const initialAttrValue = (attr: PendingDiscoveryAttribute): string =>
+  attr.currentValue || attr.defaultValue || '';
+
+interface CompletionFormValues {
+  name?: string;
+  environment?: string;
+  assignedTo?: string;
+  attributes?: Record<string, string>;
+}
+
+interface CompletionModalProps {
+  resource: PendingDiscoveryResource | null;
+  onClose: () => void;
+}
+
+function CompletionModal({ resource, onClose }: CompletionModalProps) {
+  const { message } = App.useApp();
+  const [form] = Form.useForm<CompletionFormValues>();
+  const registerMutation = useRegisterPendingDiscoveryResourceMutation();
+  const [submitting, setSubmitting] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!resource) return;
+    form.resetFields();
+    const attributes: Record<string, string> = {};
+    resource.requiredAttributes.forEach(attr => {
+      const value = initialAttrValue(attr);
+      if (value) attributes[attr.name] = value;
+    });
+    form.setFieldsValue({
+      name: resource.resourceName,
+      attributes,
+    });
+  }, [resource, form]);
+
+  const handleClose = () => {
+    if (submitting) return;
+    onClose();
+  };
+
+  const handleSubmit = async () => {
+    if (!resource) return;
+    let values: CompletionFormValues;
+    try {
+      values = await form.validateFields();
+    } catch {
+      return; // 校验失败由表单就地提示
+    }
+
+    const attributes: Record<string, unknown> = {};
+    Object.entries(values.attributes ?? {}).forEach(([key, value]) => {
+      // 只提交非空值：空串会覆盖云端已推断的标签，破坏后端合并语义。
+      if (typeof value === 'string' && value.trim() !== '') attributes[key] = value.trim();
+    });
+
+    const payload: RegisterPendingDiscoveryResourceRequest = { attributes };
+    if (values.name?.trim()) payload.name = values.name.trim();
+    if (values.environment) payload.environment = values.environment;
+    if (values.assignedTo?.trim()) payload.assignedTo = values.assignedTo.trim();
+
+    setSubmitting(true);
+    try {
+      const ci = await registerMutation.mutateAsync({ id: resource.id, data: payload });
+      message.success(`已建账：${ci.name}`);
+      onClose();
+    } catch (error) {
+      if (error instanceof ApiRequestError) {
+        if (error.status === 400 || error.code === 4000) {
+          // 必填/属性校验失败：保留弹窗与已填内容，让操作员补齐。
+          message.error(error.message || '必填属性未补齐，请检查后重试');
+        } else if (error.status === 409 || error.code === 4090) {
+          message.warning('该云资源已建账，列表稍后自动刷新');
+          onClose();
+        } else if (error.status === 503 || error.code === 5003) {
+          message.warning('人工补全暂不可用：发现回写服务未装配');
+        } else if (error.status === 404 || error.code === 4004) {
+          message.error('云资源不存在或不属于当前租户');
+          onClose();
+        } else {
+          message.error(error.message || '补录建账失败');
+        }
+      } else {
+        message.error(error instanceof Error ? error.message : '补录建账失败');
+      }
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <Modal
+      title={resource ? `补录建账：${resource.resourceId}` : '补录建账'}
+      open={!!resource}
+      okText="建账"
+      confirmLoading={submitting}
+      cancelText="取消"
+      onCancel={handleClose}
+      onOk={handleSubmit}
+      destroyOnHidden
+    >
+      {resource ? (
+        <>
+          <Text type="secondary">
+            目标 CI 类型：{resource.targetCiType}；缺失必填项：
+            {resource.missingAttributeNames.join('、') || '（已预填，可覆盖）'}
+          </Text>
+          <Form form={form} layout="vertical" className="mt-4" disabled={submitting}>
+            <Form.Item name="name" label="CI 名称">
+              <Input placeholder="留空则沿用云资源名称" allowClear />
+            </Form.Item>
+            <Form.Item name="environment" label="环境">
+              <Select
+                placeholder="留空则沿用标签推断"
+                options={ENVIRONMENT_OPTIONS}
+                allowClear
+              />
+            </Form.Item>
+            <Form.Item name="assignedTo" label="负责人">
+              <Input placeholder="留空则沿用标签推断" allowClear />
+            </Form.Item>
+            {resource.requiredAttributes.map(attr => (
+              <Form.Item
+                key={attr.name}
+                name={['attributes', attr.name]}
+                label={attr.displayName || attr.name}
+                tooltip={attr.helpText || undefined}
+                rules={[{ required: true, message: `${attr.displayName || attr.name} 为必填项` }]}
+              >
+                {attr.enumValues && attr.enumValues.length > 0 ? (
+                  <Select
+                    placeholder={attr.placeholder || '请选择'}
+                    options={attr.enumValues.map(value => ({ value, label: value }))}
+                    allowClear
+                  />
+                ) : (
+                  <Input placeholder={attr.placeholder || '请输入'} allowClear />
+                )}
+              </Form.Item>
+            ))}
+          </Form>
+        </>
+      ) : null}
+    </Modal>
+  );
+}
 
 const normalizeList = <T,>(response: unknown): T[] => {
   if (Array.isArray(response)) return response as T[];
@@ -30,16 +209,26 @@ const normalizeList = <T,>(response: unknown): T[] => {
 export default function ServiceGraphRegistryPage() {
   const { message } = App.useApp();
 
+  const [pendingPage, setPendingPage] = React.useState(1);
+  const [pendingPageSize, setPendingPageSize] = React.useState(8);
+  const [completionTarget, setCompletionTarget] = React.useState<PendingDiscoveryResource | null>(
+    null,
+  );
+
   // React Query：5 路数据并行加载（替代手写 Promise.all + setState）
   const sourcesQuery = useDiscoverySourcesQuery();
   const servicesQuery = useCloudServicesQuery();
   const accountsQuery = useCloudAccountsQuery();
   const historyQuery = useDiscoveryHistoryQuery();
   const capabilitiesQuery = useCapabilitiesQuery();
+  const pendingQuery = usePendingDiscoveryResourcesQuery({
+    page: pendingPage,
+    pageSize: pendingPageSize,
+  });
 
   const queries = [sourcesQuery, servicesQuery, accountsQuery, historyQuery, capabilitiesQuery];
   const loading = queries.some(q => q.isLoading);
-  const fetching = queries.some(q => q.isFetching);
+  const fetching = queries.some(q => q.isFetching) || pendingQuery.isFetching;
   const hasError = queries.some(q => q.isError);
 
   React.useEffect(() => {
@@ -50,12 +239,14 @@ export default function ServiceGraphRegistryPage() {
 
   const handleRefresh = () => {
     queries.forEach(q => q.refetch());
+    pendingQuery.refetch();
   };
 
   const discoverySources = normalizeList<Record<string, unknown>>(sourcesQuery.data);
   const cloudServices = servicesQuery.data?.items ?? [];
   const cloudAccounts = accountsQuery.data?.items ?? [];
   const discoveryHistory = normalizeList<Record<string, unknown>>(historyQuery.data);
+  const pendingResources = pendingQuery.data?.items ?? [];
 
   const discoveryCapability: CMDBRuntimeCapability | null =
     capabilitiesQuery.data?.items.find(item => item.key === 'cmdbDiscovery') ?? null;
@@ -93,6 +284,13 @@ export default function ServiceGraphRegistryPage() {
       value: discoveryHistory.length,
       prefix: <Server className="text-orange-500 mr-2" />,
       accentColor: '#fa8c16',
+    },
+    {
+      key: 'pending',
+      title: '待建账资源',
+      value: pendingQuery.data?.total ?? 0,
+      prefix: <Cloud className="text-rose-500 mr-2" />,
+      accentColor: '#f5222d',
     },
   ];
 
@@ -212,6 +410,69 @@ export default function ServiceGraphRegistryPage() {
     },
   ];
 
+  const pendingColumns = [
+    {
+      title: '资源ID',
+      dataIndex: 'resourceId',
+      key: 'resourceId',
+    },
+    {
+      title: '名称',
+      dataIndex: 'resourceName',
+      key: 'resourceName',
+      render: (value: string) => value || '-',
+    },
+    {
+      title: '厂商',
+      dataIndex: 'provider',
+      key: 'provider',
+    },
+    {
+      title: '区域',
+      dataIndex: 'region',
+      key: 'region',
+      render: (value: string) => value || '-',
+    },
+    {
+      title: '目标 CI 类型',
+      dataIndex: 'targetCiType',
+      key: 'targetCiType',
+      render: (value: string) => <Tag color="geekblue">{value || '-'}</Tag>,
+    },
+    {
+      title: '缺失必填项',
+      dataIndex: 'missingAttributeNames',
+      key: 'missingAttributeNames',
+      render: (values: string[]) =>
+        values?.length ? (
+          <Space size={4} wrap>
+            {values.map(name => (
+              <Tag key={name} color="red">
+                {name}
+              </Tag>
+            ))}
+          </Space>
+        ) : (
+          <Text type="secondary">已预填</Text>
+        ),
+    },
+    {
+      title: '最后发现',
+      dataIndex: 'lastSeenAt',
+      key: 'lastSeenAt',
+      render: (value?: string) => (value ? new Date(value).toLocaleString('zh-CN') : '-'),
+    },
+    {
+      title: '操作',
+      key: 'action',
+      render: (_: unknown, record: PendingDiscoveryResource) => (
+        <Button type="link" onClick={() => setCompletionTarget(record)}>
+          补录建账
+        </Button>
+      ),
+    },
+  ];
+
   return (
     <div className="space-y-6 p-6">
       <ManagementPageHeader
@@ -288,9 +549,34 @@ export default function ServiceGraphRegistryPage() {
               label: '发现历史',
               children: <Table rowKey="id" columns={historyColumns} dataSource={discoveryHistory} pagination={{ pageSize: 8 }} />,
             },
+            {
+              key: 'pending',
+              label: `待建账资源${pendingQuery.data?.total ? ` (${pendingQuery.data.total})` : ''}`,
+              children: (
+                <Table
+                  rowKey="id"
+                  columns={pendingColumns}
+                  dataSource={pendingResources}
+                  loading={pendingQuery.isLoading || pendingQuery.isFetching}
+                  locale={{ emptyText: '没有需要人工补全的云资源' }}
+                  pagination={{
+                    current: pendingPage,
+                    pageSize: pendingPageSize,
+                    total: pendingQuery.data?.total ?? 0,
+                    showSizeChanger: true,
+                    onChange: (page, pageSize) => {
+                      setPendingPage(page);
+                      setPendingPageSize(pageSize ?? 8);
+                    },
+                  }}
+                />
+              ),
+            },
           ]}
         />
       </Card>
+
+      <CompletionModal resource={completionTarget} onClose={() => setCompletionTarget(null)} />
     </div>
   );
 }

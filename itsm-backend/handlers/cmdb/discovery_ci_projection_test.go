@@ -59,7 +59,7 @@ func projectorWith(repo Repository, writer DiscoveryCIWriter) *DiscoveryCIProjec
 		}
 		return 99, nil
 	}
-	return NewDiscoveryCIProjector(repo, writer, nopLogger())
+	return NewDiscoveryCIProjector(repo, writer, nil, nopLogger())
 }
 
 func TestDiscoveryCIProjectorCreatesFromTags(t *testing.T) {
@@ -121,7 +121,7 @@ func TestDiscoveryCIProjectorSkipsUnmappedAndUnconfigured(t *testing.T) {
 	t.Run("ci type missing in tenant", func(t *testing.T) {
 		repo := &mockRepository{}
 		writer := &fakeCIWriter{}
-		p := NewDiscoveryCIProjector(repo, writer, nopLogger())
+		p := NewDiscoveryCIProjector(repo, writer, nil, nopLogger())
 
 		outcome := p.Project(context.Background(), projectedResource())
 
@@ -193,7 +193,7 @@ func TestDiscoveryCIProjectorMarkStale(t *testing.T) {
 
 	t.Run("linked ci gets stale sync status", func(t *testing.T) {
 		writer := &fakeCIWriter{}
-		outcome := NewDiscoveryCIProjector(staleRepo(&ConfigurationItem{ID: 300}), writer, nopLogger()).
+		outcome := NewDiscoveryCIProjector(staleRepo(&ConfigurationItem{ID: 300}), writer, nil, nopLogger()).
 			MarkStale(context.Background(), projectedResource())
 
 		require.Equal(t, CIProjectionUpdated, outcome.Status)
@@ -206,7 +206,7 @@ func TestDiscoveryCIProjectorMarkStale(t *testing.T) {
 
 	t.Run("already stale writes nothing", func(t *testing.T) {
 		writer := &fakeCIWriter{}
-		outcome := NewDiscoveryCIProjector(staleRepo(&ConfigurationItem{ID: 300, CloudSyncStatus: CISyncStatusStale}), writer, nopLogger()).
+		outcome := NewDiscoveryCIProjector(staleRepo(&ConfigurationItem{ID: 300, CloudSyncStatus: CISyncStatusStale}), writer, nil, nopLogger()).
 			MarkStale(context.Background(), projectedResource())
 
 		require.Equal(t, CIProjectionSkipped, outcome.Status)
@@ -217,7 +217,7 @@ func TestDiscoveryCIProjectorMarkStale(t *testing.T) {
 	t.Run("without a linked ci there is nothing to mark", func(t *testing.T) {
 		writer := &fakeCIWriter{}
 		repo := &mockRepository{}
-		outcome := NewDiscoveryCIProjector(repo, writer, nopLogger()).
+		outcome := NewDiscoveryCIProjector(repo, writer, nil, nopLogger()).
 			MarkStale(context.Background(), projectedResource())
 
 		require.Equal(t, CIProjectionSkipped, outcome.Status)

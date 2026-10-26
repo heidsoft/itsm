@@ -2,6 +2,7 @@ package cmdb
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strconv"
 	"time"
@@ -1441,4 +1442,152 @@ func toDiscoveryResultResponse(item *DiscoveryResult) *dto.DiscoveryResultRespon
 		CreatedAt: item.CreatedAt,
 		UpdatedAt: item.UpdatedAt,
 	}
+}
+
+// ListPendingDiscoveryResources handles GET /api/v1/cmdb/discovery/pending-resources
+//
+// @Summary  待人工补全的云资源列表
+// @Description 发现回写因必填属性凑不齐而 deferred 的资源；含目标 CI 类型、每条必填属性的现状（是否满足、标签现值）。全集推导在 projector，分页在这里做切片，total 是诚实的补全队列长度。
+// @Tags CMDB-云发现
+// @Produce json
+// @Security BearerAuth
+// @Param page query int false "页码，缺省 1"
+// @Param pageSize query int false "页长，缺省 20，最大 100"
+// @Success 200 {object} common.Response{data=dto.ListResponse[dto.PendingDiscoveryResourceResponse]}
+// @Failure 401 {object} common.Response "租户上下文缺失"
+// @Failure 503 {object} common.Response "发现回写未装配"
+// @Router /api/v1/cmdb/discovery/pending-resources [get]
+func (h *Handler) ListPendingDiscoveryResources(c *gin.Context) {
+	if h.svc == nil {
+		common.Fail(c, common.ServiceUnavailableCode, "CMDB 服务未装配")
+		return
+	}
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
+	pending, err := h.svc.ListPendingDiscoveryResources(c.Request.Context(), tenantID)
+	if err != nil {
+		if errors.Is(err, ErrDiscoveryProjectorNotWired) {
+			common.Fail(c, common.ServiceUnavailableCode, "人工补全不可用：发现回写服务未装配")
+			return
+		}
+		common.RespondError(c, err, "查询待补全资源失败")
+		return
+	}
+
+	page, pageSize := cmdbPagination(c)
+	total := len(pending)
+	start := (page - 1) * pageSize
+	if start > total {
+		start = total
+	}
+	end := start + pageSize
+	if end > total {
+		end = total
+	}
+	items := make([]dto.PendingDiscoveryResourceResponse, 0, end-start)
+	for _, item := range pending[start:end] {
+		items = append(items, toPendingDiscoveryResourceResponse(item))
+	}
+	common.Success(c, &dto.ListResponse[dto.PendingDiscoveryResourceResponse]{
+		Items:      items,
+		Total:      total,
+		Page:       page,
+		PageSize:   pageSize,
+		TotalPages: (total + pageSize - 1) / pageSize,
+	})
+}
+
+// RegisterPendingDiscoveryResource handles POST /api/v1/cmdb/discovery/pending-resources/:id/register
+//
+// @Summary  人工补全建账
+// @Description 用补录属性把一条待建账云资源写成配置项；云标签打底、提交值覆盖同名键。校验/发号/历史走 CI 域唯一入口，已链接资源返回 409。
+// @Tags CMDB-云发现
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "云资源ID"
+// @Param body body dto.RegisterPendingDiscoveryResourceRequest true "补全内容"
+// @Success 200 {object} common.Response{data=dto.CIResponse}
+// @Failure 400 {object} common.Response "必填属性仍不齐 / 类型未映射"
+// @Failure 401 {object} common.Response "租户上下文缺失"
+// @Failure 404 {object} common.Response "云资源不存在或不属于当前租户"
+// @Failure 409 {object} common.Response "资源已关联配置项"
+// @Failure 503 {object} common.Response "发现回写未装配"
+// @Router /api/v1/cmdb/discovery/pending-resources/{id}/register [post]
+func (h *Handler) RegisterPendingDiscoveryResource(c *gin.Context) {
+	if h.svc == nil {
+		common.Fail(c, common.ServiceUnavailableCode, "CMDB 服务未装配")
+		return
+	}
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil || id <= 0 {
+		common.ParamError(c, "id 参数非法")
+		return
+	}
+	var req dto.RegisterPendingDiscoveryResourceRequest
+	// 允许空 body：全部沿用标签推断值，只对「已链接/未映射」等情况做裁定。
+	if c.Request.ContentLength > 0 {
+		if err := c.ShouldBindJSON(&req); err != nil {
+			common.ParamErrorWithErr(c, err, "请求参数错误")
+			return
+		}
+	}
+	created, err := h.svc.RegisterPendingDiscoveryResource(c.Request.Context(), tenantID, id, c.GetInt("user_id"), ManualCompletionRequest{
+		Name:        req.Name,
+		Environment: req.Environment,
+		AssignedTo:  req.AssignedTo,
+		Attributes:  req.Attributes,
+	})
+	if err != nil {
+		if errors.Is(err, ErrDiscoveryProjectorNotWired) {
+			common.Fail(c, common.ServiceUnavailableCode, "人工补全不可用：发现回写服务未装配")
+			return
+		}
+		common.RespondError(c, err, "人工补全建账失败")
+		return
+	}
+	common.Success(c, created)
+}
+
+func toPendingDiscoveryResourceResponse(item *PendingDiscoveryResource) dto.PendingDiscoveryResourceResponse {
+	resp := dto.PendingDiscoveryResourceResponse{
+		RequiredAttributes:    make([]dto.PendingDiscoveryAttributeResponse, 0, len(item.Attributes)),
+		MissingAttributeNames: item.MissingAttributeNames(),
+		TargetCiType:          item.TargetCITypeName,
+		TargetCiTypeID:        item.TargetCITypeID,
+	}
+	if res := item.Resource; res != nil {
+		resp.ID = res.ID
+		resp.ResourceID = res.ResourceID
+		resp.ResourceName = res.ResourceName
+		resp.Provider = res.Provider
+		resp.Region = res.Region
+		resp.Zone = res.Zone
+		resp.Status = res.Status
+		resp.ServiceCode = res.ServiceCode
+		resp.ResourceType = res.ResourceType
+		resp.SourceID = res.SourceID
+		resp.Tags = res.Tags
+		resp.LastSeenAt = res.LastSeenAt
+	}
+	for _, attr := range item.Attributes {
+		resp.RequiredAttributes = append(resp.RequiredAttributes, dto.PendingDiscoveryAttributeResponse{
+			Name:         attr.Name,
+			DisplayName:  attr.DisplayName,
+			DataType:     attr.DataType,
+			EnumValues:   attr.EnumValues,
+			DefaultValue: attr.DefaultValue,
+			Placeholder:  attr.Placeholder,
+			HelpText:     attr.HelpText,
+			Satisfied:    attr.Satisfied,
+			CurrentValue: attr.CurrentValue,
+		})
+	}
+	return resp
 }

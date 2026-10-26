@@ -515,6 +515,49 @@ type DiscoveryResultRejectRequest struct {
 	Reason string `json:"reason,omitempty"`
 }
 
+// PendingDiscoveryAttributeResponse 是待补全资源上一条必填属性的现状。
+// satisfied=false 即「需要人工补录」；currentValue 来自云标签，用于前端预填。
+type PendingDiscoveryAttributeResponse struct {
+	Name         string   `json:"name"`
+	DisplayName  string   `json:"displayName"`
+	DataType     string   `json:"dataType"`
+	EnumValues   []string `json:"enumValues"`
+	DefaultValue string   `json:"defaultValue"`
+	Placeholder  string   `json:"placeholder"`
+	HelpText     string   `json:"helpText"`
+	Satisfied    bool     `json:"satisfied"`
+	CurrentValue string   `json:"currentValue"`
+}
+
+// PendingDiscoveryResourceResponse 一条「发现 deferred、等待人工补全建账」的云资源。
+type PendingDiscoveryResourceResponse struct {
+	ID                    int                                 `json:"id"`
+	ResourceID            string                              `json:"resourceId"`
+	ResourceName          string                              `json:"resourceName"`
+	Provider              string                              `json:"provider"`
+	Region                string                              `json:"region"`
+	Zone                  string                              `json:"zone"`
+	Status                string                              `json:"status"`
+	ServiceCode           string                              `json:"serviceCode"`
+	ResourceType          string                              `json:"resourceType"`
+	SourceID              string                              `json:"sourceId"`
+	Tags                  map[string]string                   `json:"tags,omitempty"`
+	LastSeenAt            *time.Time                          `json:"lastSeenAt,omitempty"`
+	TargetCiType          string                              `json:"targetCiType"`
+	TargetCiTypeID        int                                 `json:"targetCiTypeId"`
+	RequiredAttributes    []PendingDiscoveryAttributeResponse `json:"requiredAttributes"`
+	MissingAttributeNames []string                            `json:"missingAttributeNames"`
+}
+
+// RegisterPendingDiscoveryResourceRequest 人工补全建账的提交内容。
+// 可选字段留空表示沿用云标签推断结果；attributes 与标签同名键按提交值覆盖。
+type RegisterPendingDiscoveryResourceRequest struct {
+	Name        string                 `json:"name,omitempty"`
+	Environment string                 `json:"environment,omitempty" binding:"omitempty,oneof=production staging development"`
+	AssignedTo  string                 `json:"assignedTo,omitempty"`
+	Attributes  map[string]interface{} `json:"attributes,omitempty"`
+}
+
 // Reconciliation DTOs
 type ReconciliationSummary struct {
 	ResourceTotal        int `json:"resourceTotal"`

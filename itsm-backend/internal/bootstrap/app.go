@@ -368,6 +368,13 @@ func NewApplication() *Application {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
 
+	// 软删读屏蔽（ticket/incident/problem/service_request/change）：运行时服务端
+	// 统一注册查询拦截器，软删记录不再出现在列表/详情/统计。此前该拦截器
+	// 已定义但从未接线，导致 change 域（唯一没有显式 DeletedAtIsNil 的域）
+	// 软删后仍在列表可见。init/种子工具（InitializeStorage、provision_tenant）
+	// 刻意不注册——迁移与巡检需要全量可见。
+	database.RegisterSoftDeleteInterceptors(client)
+
 	// 6. 初始化服务层 & 控制器
 	// 这部分代码量较大，为了简化，我们先在这里进行组装，后续可以进一步拆分为 wires / container
 
@@ -881,7 +888,7 @@ func NewApplication() *Application {
 	// discoveryJobId），按 discovery_jobs 状态机认领/推进/写结果。
 	// 旧 Runner.RunAll（全账号直写 CI、绕过 jobs/results/CloudResource）不再是生产路径。
 	// CI 回写走 service.ConfigurationItemService，保住发号、历史与属性校验。
-	discoveryCIProjector := cmdb.NewDiscoveryCIProjector(cmdbRepo, configurationItemService, sugar)
+	discoveryCIProjector := cmdb.NewDiscoveryCIProjector(cmdbRepo, configurationItemService, configurationItemService, sugar)
 	discoveryJobExecutor := cmdb.NewDiscoveryJobExecutor(cmdbRepo, cloudAdapterRegistry, tenantSecretResolver, discoveryCIProjector, sugar)
 	if err := commandRegistry.Register(commandbus.CommandRunCMDBCloudDiscovery, discoveryJobExecutor.Handle); err != nil {
 		sugar.Fatalw("Failed to register CMDB cloud discovery worker", "error", err)

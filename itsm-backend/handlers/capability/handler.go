@@ -94,7 +94,7 @@ var registry = []definition{
 	// 发现任务会在 scope 解析处整批失败。CI 回写接通后，剩下的阻断项是真实账号验收。
 	{
 		key: "cmdbDiscovery", maturity: MaturityPilot, built: true, dependencies: []string{"cmdb"}, readinessEnv: "ITSM_CMDB_DISCOVERY_READY",
-		pilotReason: "执行链与定时调度已闭环（Job 执行器 + 每分钟 cron 消费 schedule），五个厂商适配器已装配，云服务类型基线随 cmdb-core 预置，发现结果按「云服务类型 → CI 类型」映射回写配置项（表外类型显式跳过，必填属性凑不齐时不建账、留给人工录入）；但真实账号下的全量与增量发现未验收，这类需要人工补全的资源也还没有录入入口。晋升条件：真实账号发现验收 + 人工补全入口。",
+		pilotReason: "执行链与定时调度已闭环（Job 执行器 + 每分钟 cron 消费 schedule），五个厂商适配器已装配，云服务类型基线随 cmdb-core 预置，发现结果按「云服务类型 → CI 类型」映射回写配置项（表外类型显式跳过，必填属性凑不齐时不建账）；凑不齐必填项的资源已有补录入口（GET /discovery/pending-resources 列出属性缺口，POST .../register 补录建账）。但真实账号下的全量与增量发现未验收。晋升条件：真实账号发现验收。",
 	},
 	{
 		key: "cmdbReconciliation", maturity: MaturityPilot, built: true, dependencies: []string{"cmdb", "cmdbDiscovery"}, readinessEnv: "ITSM_CMDB_DISCOVERY_READY",
@@ -115,11 +115,14 @@ var registry = []definition{
 	},
 	// AI 2026-10-23 三契约落地（分诊 + 工单 RCA）：响应带 promptVersion/model/auditId，
 	// 服务端自动落 ai_audit 底账（accepted=NULL），采纳/拒绝走 PATCH 翻转；
-	// confidence 统一 0-1 并入口校验。仍不申报 GA：这套契约只覆盖分诊与 RCA，
-	// chat/摘要/analytics/prediction/agent 工具没有同等约束；evaluator 仍无门禁。
+	// confidence 统一 0-1 并入口校验。2026-10-26 LLM 调用按租户归集：
+	// ai_llm_calls 增 tenant_id/request_id（迁移 20261026），LLMObserver 从请求 ctx
+	// 回填归属，/ai/metrics 改租户口径（无归因行时如实 responseTimeAvailable=false）。
+	// 仍不申报 GA：溯源三契约只覆盖分诊与 RCA，chat/摘要/analytics/prediction/agent
+	// 工具没有同等约束；evaluator 仍无门禁；token 计量无配额告警与单价口径。
 	{
 		key: "ai", maturity: MaturityPilot, built: true, readinessEnv: "ITSM_AI_READY",
-		pilotReason: "分诊与工单 RCA 已强制 promptVersion/model/confidence 并落 ai_audit 底账（采纳/拒绝经 PATCH 翻转，不再由前端自报）；但 chat、摘要、analytics、prediction、agent 工具仍未强制同一套溯源字段；ai_llm_calls 无 tenant/request 关联，成本与延迟无法按租户归集；evaluator 仍是只读报表，没有「健康分下降即阻断发布」的门禁。晋升条件：其余 AI 能力补齐溯源三契约 + LLM 调用按租户归集 + evaluator 进门禁。",
+		pilotReason: "分诊与工单 RCA 已强制 promptVersion/model/confidence 并落 ai_audit 底账（采纳/拒绝经 PATCH 翻转，不再由前端自报）；LLM 调用已按租户归集（ai_llm_calls 带 tenant_id/request_id，/ai/metrics 为租户口径；升级前的历史行无法回填归因，按哨兵值排除、租户无归因行时如实报不可用）。但 chat、摘要、analytics、prediction、agent 工具仍未强制同一套溯源字段；token 用量只有计量、没有配额告警与单价口径；evaluator 仍是只读报表，没有「健康分下降即阻断发布」的门禁。晋升条件：其余 AI 能力补齐溯源三契约 + 租户配额告警 + evaluator 进门禁。",
 	},
 	// 通知域 2026-10-20/21 闭环三件事：投递审计读面（GET /notification-deliveries）、
 	// 失败重试（保留旧记录作失败证据）、渠道诊断（GET /notifications/channels：

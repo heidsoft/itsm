@@ -3692,6 +3692,76 @@ cd itsm-backend && go test ./handlers/cmdb/... ./pkg/seeder/... ./handlers/capab
 E2E 覆盖：首轮建账、次轮改名但保留人工填写的描述与成本中心、第三轮标 stale、资源
 回来后复位、手工对账应用后回填 `ci_id`、必填属性缺失时 `ciDeferred=1` 且任务仍成功。
 
+### 1.97 LLM 调用按租户归集（2026-10-26，含 DDL：迁移 `20261026_add_ai_llm_calls_tenant_request`）
+
+**变化。** `ai_llm_calls` 此前没有任何租户维度（tenant_guard 按「网关级可观测性」豁免），
+AI 成本与延迟只有全平台口径；`GET /api/v1/ai/metrics` 还把平台平均延迟混在单租户指标里。
+现在网关每次调用都从请求上下文回填 `tenant_id` / `request_id`（新增两列 +
+`(tenant_id, created_at)` 索引），`/ai/metrics` 的 `avgResponseTimeSeconds`、`llmCallCount`
+改为本租户窗口口径，并新增 `totalTokens`。
+
+**升级动作。** 无需人工操作，启动/`migrate up` 自动执行新迁移。注意两点：
+① 存量行无法回填归因（写入时没有任何可 join 的字段），统一落哨兵值 `tenant_id=0`，
+按租户聚合时排除——升级后租户若此前无 LLM 调用，`responseTimeAvailable` 会如实转为
+`false`，这是归因修复而非回归；② `X-Request-Id` 此前从未全局装配（`RequestIDMiddleware`
+只定义未注册，审计行的 request_id 恒为空），现已挂上全局中间件链，响应头新增该字段，
+客户端可复用它把一次请求的多次模型调用串起来。
+
+**验证。**
+
+```bash
+cd itsm-backend && go test ./service/ ./middleware/ ./router/ ./migration/ ./internal/schema/ ./handlers/capability/...
+```
+
+回归锁覆盖：ctx 归因写入、无租户落哨兵 0、取消的 ctx 不吞观测行、聚合排除他租
+户与窗口外行、空窗口如实全零、网关透传 ctx、中间件注入与真实路由装配。
+
+### 1.98 云发现人工补全入口（2026-10-26，纯新增 API，无 DDL）
+
+**变化。** §1.96 让发现按映射回写配置项，并定下「凑不齐 CI 类型必填属性就不建账、
+记 `deferred` 交人工补全」的口径。但那次只把 `ciDeferred` 写进任务摘要的计数，
+没有任何入口说明是哪些资源、缺哪些属性，也没有补录路径——deferred 资源就此沉底。
+本次补上这条闭环：把「待人工补全」从摘要里的一个数字变成一张可操作、可建账的队列。
+
+**新增接口。**
+
+- `GET /api/v1/cmdb/discovery/pending-resources`（继承组级 `cmdb:read`，分页信封
+  `{items,total,page,pageSize,totalPages}`）列出「已映射到 CI 类型、但因必填属性凑不齐
+  而未建账」的云资源。每条给出目标 CI 类型、必填属性现状（`satisfied`、云标签命中的
+  `currentValue`、`enumValues`、`defaultValue`）与 `missingAttributeNames` 缺失名单。
+  已建账、未映射类型、CI 类型缺失三种资源都不入队，口径与投影阶段一致。
+- `POST /api/v1/cmdb/discovery/pending-resources/:id/register`（`cmdb:write`）按提交值补录
+  建账：请求体 `{name?, environment?, assignedTo?, attributes?}`，可选字段留空沿用云标签
+  推断，`attributes` 与标签同名键按提交值覆盖；成功后回链 `cloud_resource_ref_id`，
+  返回标准 `CIResponse`（含 `ciNumber`）。
+
+**必填只有一个来源。** 补录队列算「缺哪些属性」与建账时的必填校验读的是同一份有效属性
+定义查询（`CIAttributeValidator`：继承链子覆盖父、租户覆盖全局），不会出现「列表说缺、
+建账说够」的双轨。
+
+**失败语义。** 缺租户上下文 fail closed；跨租户读取被隔离，跨租户补录返回 404；属性校验
+不过返回 400；资源已建账返回 409；回写服务未装配返回 503（`人工补全不可用`），而非假装
+空成功。
+
+**前端。** 「服务图谱注册中心」（`/cmdb/registry`）新增「待建账资源」页签与补录弹窗：
+必填项就地校验、枚举走下拉、预填云标签现值，并按 400（补齐后重试）/ 409（已建账，刷新
+列表）/ 503（服务未装配）分别提示，不再把三种失败混成一句「操作失败」。
+
+**升级影响。** 无需迁移或改配置；仅新增两个只读/写入端点与对应前端页签。存量 deferred
+资源在下一次打开该页签时即出现在队列里，无需重跑发现。
+
+**验证。**
+
+```bash
+cd itsm-backend && go test ./handlers/cmdb/... ./service/ ./router/ ./handlers/capability/...
+cd itsm-frontend && npm run test:unit -- --runTestsByPath src/lib/api/__tests__/cmdb-api.test.ts \
+  src/lib/__tests__/api-contract.test.ts && npm run type-check
+```
+
+回归锁覆盖：投影口径排除（已建账/未映射/类型缺失）、成功建账（CI 编号、回链、人工环境
+覆盖标签、默认值自动补齐）、失败语义（校验 400 / 冲突 409 / 未装配 503）与真实路由下的
+跨租户读写隔离。
+
 ## 2. 环境变量变更
 
 本次升级**移除了多个"幽灵配置项"**（在示例文件中声明但代码/Compose 从不读取，用户配置了也不生效），并修正了一个 Grafana 密码安全缺陷。

@@ -3146,6 +3146,21 @@ definitions:
       totalPages:
         type: integer
     type: object
+  dto.ListResponse-dto_PendingDiscoveryResourceResponse:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/dto.PendingDiscoveryResourceResponse'
+        type: array
+      page:
+        type: integer
+      pageSize:
+        type: integer
+      total:
+        type: integer
+      totalPages:
+        type: integer
+    type: object
   dto.MultiCloudResourceData:
     properties:
       name:
@@ -3186,6 +3201,70 @@ definitions:
         type: integer
       totalPages:
         type: integer
+    type: object
+  dto.PendingDiscoveryAttributeResponse:
+    properties:
+      currentValue:
+        type: string
+      dataType:
+        type: string
+      defaultValue:
+        type: string
+      displayName:
+        type: string
+      enumValues:
+        items:
+          type: string
+        type: array
+      helpText:
+        type: string
+      name:
+        type: string
+      placeholder:
+        type: string
+      satisfied:
+        type: boolean
+    type: object
+  dto.PendingDiscoveryResourceResponse:
+    properties:
+      id:
+        type: integer
+      lastSeenAt:
+        type: string
+      missingAttributeNames:
+        items:
+          type: string
+        type: array
+      provider:
+        type: string
+      region:
+        type: string
+      requiredAttributes:
+        items:
+          $ref: '#/definitions/dto.PendingDiscoveryAttributeResponse'
+        type: array
+      resourceId:
+        type: string
+      resourceName:
+        type: string
+      resourceType:
+        type: string
+      serviceCode:
+        type: string
+      sourceId:
+        type: string
+      status:
+        type: string
+      tags:
+        additionalProperties:
+          type: string
+        type: object
+      targetCiType:
+        type: string
+      targetCiTypeId:
+        type: integer
+      zone:
+        type: string
     type: object
   dto.PreviewBPMNRequest:
     properties:
@@ -3460,6 +3539,22 @@ definitions:
           type: string
         type: array
       title:
+        type: string
+    type: object
+  dto.RegisterPendingDiscoveryResourceRequest:
+    properties:
+      assignedTo:
+        type: string
+      attributes:
+        additionalProperties: true
+        type: object
+      environment:
+        enum:
+        - production
+        - staging
+        - development
+        type: string
+      name:
         type: string
     type: object
   dto.RelationshipStrength:
@@ -8328,6 +8423,98 @@ paths:
       summary: 更新云服务类型
       tags:
       - CMDB-云资源
+  /api/v1/cmdb/discovery/pending-resources:
+    get:
+      description: 发现回写因必填属性凑不齐而 deferred 的资源；含目标 CI 类型、每条必填属性的现状（是否满足、标签现值）。全集推导在
+        projector，分页在这里做切片，total 是诚实的补全队列长度。
+      parameters:
+      - description: 页码，缺省 1
+        in: query
+        name: page
+        type: integer
+      - description: 页长，缺省 20，最大 100
+        in: query
+        name: pageSize
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.ListResponse-dto_PendingDiscoveryResourceResponse'
+              type: object
+        "401":
+          description: 租户上下文缺失
+          schema:
+            $ref: '#/definitions/common.Response'
+        "503":
+          description: 发现回写未装配
+          schema:
+            $ref: '#/definitions/common.Response'
+      security:
+      - BearerAuth: []
+      summary: 待人工补全的云资源列表
+      tags:
+      - CMDB-云发现
+  /api/v1/cmdb/discovery/pending-resources/{id}/register:
+    post:
+      consumes:
+      - application/json
+      description: 用补录属性把一条待建账云资源写成配置项；云标签打底、提交值覆盖同名键。校验/发号/历史走 CI 域唯一入口，已链接资源返回 409。
+      parameters:
+      - description: 云资源ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 补全内容
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.RegisterPendingDiscoveryResourceRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.CIResponse'
+              type: object
+        "400":
+          description: 必填属性仍不齐 / 类型未映射
+          schema:
+            $ref: '#/definitions/common.Response'
+        "401":
+          description: 租户上下文缺失
+          schema:
+            $ref: '#/definitions/common.Response'
+        "404":
+          description: 云资源不存在或不属于当前租户
+          schema:
+            $ref: '#/definitions/common.Response'
+        "409":
+          description: 资源已关联配置项
+          schema:
+            $ref: '#/definitions/common.Response'
+        "503":
+          description: 发现回写未装配
+          schema:
+            $ref: '#/definitions/common.Response'
+      security:
+      - BearerAuth: []
+      summary: 人工补全建账
+      tags:
+      - CMDB-云发现
   /api/v1/cmdb/discovery/providers:
     get:
       description: 返回本产品识别的云厂商全集及各自的发现能力。清单是全量（含未接入的），notImplemented=true 表示可以建云账号/手工登记资源但不会自动发现——把「配了账号也不会发现」从事后失败变成事前可见。与云账号/云服务的

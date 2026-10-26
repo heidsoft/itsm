@@ -292,12 +292,13 @@ func TestColdVerifyExpectationsAreDeterministicAndIndependent(t *testing.T) {
 	permissions, menus, grants := identityRBACExpectations()
 	require.Equal(t, AllDefinedPermissionCodes(), permissions)
 	// 菜单面基线：menubaseline 增删菜单时必须同步这里的数字。
-	// 104 = 98（2026-10-22 前）+ 能力矩阵控制台（/admin/capabilities）
+	// 103 = 98（2026-10-22 前）+ 能力矩阵控制台（/admin/capabilities）
 	//       + 商品目录管理（/admin/marketplace，2026-10-23）
 	//       + 零入口页面补挂 4 条（10104fea2，2026-10-25：/workbench、
-	//         /problems/new、/admin/department-processes、/admin/config-inheritance）。
-	require.Len(t, menuDefinitions(), 104)
-	require.Len(t, menus, 104)
+	//         /problems/new、/admin/department-processes、/admin/config-inheritance）
+	//       - 审批中心（/approvals，2026-10-26 去重：与顶级「我的待办」同页）。
+	require.Len(t, menuDefinitions(), 103)
+	require.Len(t, menus, 103)
 	for code, expected := range authz.BuiltinRolePermissionCodes() {
 		require.ElementsMatch(t, expected, grants[code], code)
 	}

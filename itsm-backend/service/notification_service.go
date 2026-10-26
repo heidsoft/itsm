@@ -117,7 +117,9 @@ func (s *NotificationService) MarkNotificationRead(ctx context.Context, req *dto
 		Save(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return fmt.Errorf("通知不存在或无权限")
+			// 必须返回分类错误（404），普通 fmt.Errorf 会被 RespondError 兜底成 500，
+			// 违反「业务拒绝禁 500」约定。
+			return common.NewNotFoundError("通知")
 		}
 		return fmt.Errorf("标记已读失败: %w", err)
 	}
@@ -148,7 +150,8 @@ func (s *NotificationService) DeleteNotification(ctx context.Context, req *dto.D
 		Exec(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return fmt.Errorf("通知不存在或无权限")
+			// 删他人通知与删不存在通知同态：404 而非 500（不暴露资源归属信息）。
+			return common.NewNotFoundError("通知")
 		}
 		return fmt.Errorf("删除通知失败: %w", err)
 	}

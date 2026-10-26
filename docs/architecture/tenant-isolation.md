@@ -32,7 +32,6 @@ MSP 场景（operator tenant / customer tenant / delegated scope）与跨租户
 | `schema_migrations` | 迁移历史表，全局唯一 |
 | `user_roles` / `role_permissions` / `role_permissions_join` | 平台级 RBAC 关系表，受租户过滤拦截会破坏单点授权 |
 | `*_tags` 系列 | 用户可自定义标签，颜色/标签云跨租户共享是合理设计 |
-| `ai_llm_calls` | LLM 网关级可观测性，与租户无关（见 `service/ai_telemetry.go`） |
 | `knowledge_article_participants` / `sessions` / `version` | 协作快照，session id 是天然唯一键 |
 | `msp_allocations` | MSP 模式下的租户-服务分配，是租户维度之上的概念 |
 

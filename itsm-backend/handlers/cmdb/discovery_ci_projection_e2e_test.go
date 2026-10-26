@@ -41,7 +41,7 @@ func TestDiscoveryCIProjectionEndToEnd(t *testing.T) {
 
 	ciSvc := service.NewConfigurationItemService(client, logger,
 		service.NewCIHistoryService(client, logger), service.NewCITagService(client, logger))
-	projector := NewDiscoveryCIProjector(repo, ciSvc, logger)
+	projector := NewDiscoveryCIProjector(repo, ciSvc, ciSvc, logger)
 	svc := NewServiceWithDiscoveryRuntime(repo, nil, nopLogger(), DiscoveryRuntime{CIProjector: projector})
 
 	adapter := &fakeDiscoveryAdapter{
@@ -164,7 +164,7 @@ func TestApplyDiscoveryResultProjectsCI(t *testing.T) {
 
 	ciSvc := service.NewConfigurationItemService(client, logger,
 		service.NewCIHistoryService(client, logger), service.NewCITagService(client, logger))
-	projector := NewDiscoveryCIProjector(repo, ciSvc, logger)
+	projector := NewDiscoveryCIProjector(repo, ciSvc, ciSvc, logger)
 	svc := NewServiceWithDiscoveryRuntime(repo, nil, nopLogger(), DiscoveryRuntime{CIProjector: projector})
 
 	adapter := &fakeDiscoveryAdapter{
@@ -231,7 +231,7 @@ func TestDiscoveryCIProjectionDefersRequiredAttributes(t *testing.T) {
 
 	ciSvc := service.NewConfigurationItemService(client, logger,
 		service.NewCIHistoryService(client, logger), service.NewCITagService(client, logger))
-	projector := NewDiscoveryCIProjector(repo, ciSvc, logger)
+	projector := NewDiscoveryCIProjector(repo, ciSvc, ciSvc, logger)
 	svc := NewServiceWithDiscoveryRuntime(repo, nil, nopLogger(), DiscoveryRuntime{CIProjector: projector})
 
 	adapter := &fakeDiscoveryAdapter{

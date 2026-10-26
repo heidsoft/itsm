@@ -227,6 +227,101 @@ func TestNormalizeAttributesInheritance(t *testing.T) {
 	}
 }
 
+// TestRequiredAttributesSharesNormalizeSemantics 钉住「必填项事实来源只有一份」：
+// RequiredAttributes 必须走与 NormalizeAttributes 相同的继承链合并（子覆盖父、租户覆盖全局），
+// 否则待补全队列会告诉运营「缺 A」，CreateCI 却按另一套规则打回。
+func TestRequiredAttributesSharesNormalizeSemantics(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", "file:attr_validator_required?mode=memory&cache=shared&_fk=1")
+	defer client.Close()
+	ctx := context.Background()
+
+	// 全局定义租户是 1；测试租户必须避开 1，否则「租户覆盖全局」同名合并无从验证
+	if _, err := client.Tenant.Create().SetName("Global").SetCode("global").
+		SetDomain("global.example.com").SetStatus("active").Save(ctx); err != nil {
+		t.Fatal(err)
+	}
+	tenant, err := createCMDBTestTenant(ctx, client, "Req Tenant", "req-tenant", "req.example.com")
+	if err != nil {
+		t.Fatal(err)
+	}
+	parent, err := createTestCIType(ctx, client, tenant.ID, "req-parent")
+	if err != nil {
+		t.Fatal(err)
+	}
+	child, err := client.CIType.Create().
+		SetName("req-child").SetTenantID(tenant.ID).SetParentTypeID(parent.ID).Save(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// 父层：全局 owner（非必填）先入表，租户同名 owner（必填）覆盖——与 NormalizeAttributes 同口径
+	if _, err := createTestAttrDefinition(ctx, client, globalAttributeDefinitionTenantID, parent.ID,
+		"owner", "全局负责人", "string", false, false, "", ""); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := createTestAttrDefinition(ctx, client, tenant.ID, parent.ID,
+		"owner", "租户负责人", "string", true, false, "", ""); err != nil {
+		t.Fatal(err)
+	}
+	// 父层必填、displayOrder 更大，排后面
+	if _, err := createTestAttrDefinition(ctx, client, tenant.ID, parent.ID,
+		"responsible", "负责人", "string", true, false, "", ""); err != nil {
+		t.Fatal(err)
+	}
+	// 子层：枚举必填带可选值；非必填 note 不应出现；带默认值的 region 必填但可自动满足
+	envDef, err := createTestAttrDefinition(ctx, client, tenant.ID, child.ID,
+		"env", "环境", "enum", true, false, "", `{"enum_values":["prod","dev"]}`)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := envDef.Update().SetDisplayOrder(1).Exec(ctx); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := createTestAttrDefinition(ctx, client, tenant.ID, child.ID,
+		"note", "备注", "string", false, false, "", ""); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := createTestAttrDefinition(ctx, client, tenant.ID, child.ID,
+		"region", "地域", "string", true, false, "cn-hangzhou", ""); err != nil {
+		t.Fatal(err)
+	}
+
+	validator := NewCIAttributeValidator(client)
+	got, err := validator.RequiredAttributes(ctx, tenant.ID, child.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	names := make([]string, 0, len(got))
+	for _, req := range got {
+		names = append(names, req.Name)
+	}
+	// 排序按 displayOrder 再按 name：owner/responsible/region 均为 0（name 升序），env 为 1 排最后
+	want := []string{"owner", "region", "responsible", "env"}
+	if strings.Join(names, ",") != strings.Join(want, ",") {
+		t.Fatalf("required names = %v, want %v", names, want)
+	}
+	byName := map[string]CIAttributeRequirement{}
+	for _, req := range got {
+		byName[req.Name] = req
+	}
+	if byName["owner"].DisplayName != "租户负责人" {
+		t.Fatalf("owner 覆盖语义漂移: %+v", byName["owner"])
+	}
+	if byName["region"].DefaultValue != "cn-hangzhou" {
+		t.Fatalf("region 默认值未透传: %+v", byName["region"])
+	}
+	if strings.Join(byName["env"].EnumValues, ",") != "prod,dev" {
+		t.Fatalf("env 枚举可选值未解析: %+v", byName["env"].EnumValues)
+	}
+
+	// 与 CreateCI 行为对齐：按队列补全（缺省项填值、带默认值的留空）应能通过校验
+	supplied := map[string]interface{}{"owner": "张三", "responsible": "李四", "env": "prod"}
+	if _, err := validator.NormalizeAttributes(ctx, tenant.ID, child.ID, supplied, 0); err != nil {
+		t.Fatalf("按 RequiredAttributes 补全后 NormalizeAttributes 仍打回: %v", err)
+	}
+}
+
 // TestCreateCIRejectsInvalidAttributes 校验接入线上路径：CreateCI 前置属性校验
 func TestCreateCIRejectsInvalidAttributes(t *testing.T) {
 	client := enttest.Open(t, "sqlite3", "file:attr_validator_createci?mode=memory&cache=shared&_fk=1")

@@ -81,19 +81,20 @@ type CIProjectionOutcome struct {
 }
 
 type DiscoveryCIProjector struct {
-	repo   Repository
-	writer DiscoveryCIWriter
-	logger *zap.SugaredLogger
+	repo         Repository
+	writer       DiscoveryCIWriter
+	requirements CIRequirementReader
+	logger       *zap.SugaredLogger
 
 	mu        sync.Mutex
 	ciTypeIDs map[string]int
 }
 
-func NewDiscoveryCIProjector(repo Repository, writer DiscoveryCIWriter, logger *zap.SugaredLogger) *DiscoveryCIProjector {
+func NewDiscoveryCIProjector(repo Repository, writer DiscoveryCIWriter, requirements CIRequirementReader, logger *zap.SugaredLogger) *DiscoveryCIProjector {
 	if logger == nil {
 		logger = zap.NewNop().Sugar()
 	}
-	return &DiscoveryCIProjector{repo: repo, writer: writer, logger: logger, ciTypeIDs: map[string]int{}}
+	return &DiscoveryCIProjector{repo: repo, writer: writer, requirements: requirements, logger: logger, ciTypeIDs: map[string]int{}}
 }
 
 // Project 把一条已落库的云资源写成配置项（没有则建、有则更新发现字段）。

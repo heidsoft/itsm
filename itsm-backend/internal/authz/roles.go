@@ -186,26 +186,28 @@ func BuiltinRolePermissionCodes() map[string][]string {
 			// it_admin 看得到菜单却恒 403（实测 code 2003）。
 			"automation_rule:read", "automation_rule:write",
 			"assignment_rule:read", "assignment_rule:write",
+			// department:read：分配/自动化规则配置页需要部门下拉数据，
+			// 此前 it_admin 配规则却读不到部门列表（菜单可见接口 403）。
+			"department:read",
 			"service_catalog:read", "release:read", "notification:read", "notification:write",
 			"dashboard:read", "group:read", "approval:read",
 			// AI 分派建议/摘要是 IT 运营一线工具，其余运营角色（agent/manager/end_user）均持 ai:read。
 			"ai:read",
 		},
-		// 最终用户：写面只限自己的工单/服务请求，其余资源一律只读。
+		// 最终用户：自助门户最小集——只覆盖「我的工单/服务请求/知识库/通知/仪表盘/AI」
+		// 自助旅程。2026-10-26 收敛：旧口径「其余资源一律只读」让 end_user 拿着
+		// user:read/org:read/cmdb:read 等管理面读码，菜单层据此把「系统管理>用户管理」
+		// 等 52 个入口全部渲染给最终用户（实测），且用户列表属敏感数据。被移除的码
+		// 已登记到 RetiredRolePermissionCodes，播种器会从既有安装撤销。
 		domainrole.EndUser: {
 			"ticket:read", "ticket:write", "ticket:create", "ticket:update",
 			// 建单页分类下拉（/ticket-categories）与工单详情流转进度（state-v2）
-			// 属最终用户旅程，按「其余资源一律只读」口径授予只读码。
+			// 属最终用户旅程，按需授予只读码。
 			"ticket_category:read", "workflow:read",
 			"knowledge:read", "service_catalog:read",
 			"service_request:read", "service_request:write",
-			"notification:read", "user:read",
+			"notification:read",
 			"notification:write", "dashboard:read", "ai:read", "ai:write",
-			// system_config:read 已撤：前端只有 /admin/system-config 会读它，最终用户没有该入口，
-			// 持码却等于能整表读取 SMTP/密码策略/2FA 等租户级配置。
-			"sla:read", "org:read", "department:read",
-			"cmdb:read", "incident:read", "change:read", "problem:read",
-			"bpmn:read", "release:read", "asset:read", "license:read",
 		},
 		// 租户管理员（users.role=admin 对齐）。middleware 的 admin 兜底表已删除，
 		// 本条目即 admin 权限的唯一来源；缺条目会让 roles 表 admin 行成为空集，
@@ -279,6 +281,41 @@ func BuiltinRolePermissionCodes() map[string][]string {
 			"bpmn:read",
 			"task:read", "task:update",
 		},
+		// MSP 协作角色（Tier 3，roles 表种子，经 user_roles 边叠加）。
+		//
+		// 此前只在 authz.RolePermissionDefaults() 里给了编译期默认集，没有进本表 →
+		// 播种器不写 role_permissions → DBOnly 配置态下这五个角色是空集，MSP 员工
+		// （provider_admin/provider_agent 经 GetMSPRBACRole 映射到 msp_manager/msp_tech）
+		// 打开 MSP 模块即全 403（审计 3.2-⑦）。
+		//
+		// 码集只覆盖 MSP 模块自身（msp*），不携带租户内的工单/CMDB 等业务码：
+		// MSP 员工在客户租户里的作业权限由客户租户的角色授予，不靠协作角色越界。
+		domainrole.MspViewer: {
+			"msp:read", "msp_customer:read", "msp_ticket:read",
+			"msp_allocation:read", "msp_report:read",
+		},
+		domainrole.MspTech: {
+			"msp:read", "msp_customer:read", "msp_ticket:read", "msp_ticket:write",
+			"msp_allocation:read", "msp_report:read",
+		},
+		domainrole.MspSpecialist: {
+			"msp:read", "msp_customer:read", "msp_customer:write",
+			"msp_ticket:read", "msp_ticket:write",
+			"msp_allocation:read", "msp_report:read",
+		},
+		domainrole.MspManager: {
+			"msp:read", "msp:write", "msp_customer:read", "msp_customer:write",
+			"msp_ticket:read", "msp_ticket:write",
+			"msp_allocation:read", "msp_allocation:write",
+			"msp_report:read", "msp_report:write",
+		},
+		domainrole.MspAdmin: {
+			"msp:read", "msp:write",
+			"msp_customer:read", "msp_customer:write",
+			"msp_ticket:read", "msp_ticket:write",
+			"msp_allocation:read", "msp_allocation:write",
+			"msp_report:read", "msp_report:write",
+		},
 	}
 
 	// 任务面基线。
@@ -303,6 +340,14 @@ func BuiltinRolePermissionCodes() map[string][]string {
 		if codes, ok := m[role]; ok {
 			m[role] = appendMissingCodes(codes, "task:admin")
 		}
+	}
+
+	// 服务台基线。
+	// /dashboard（服务台）是所有内置角色的登录落地页：菜单权限码为空对全员可见，
+	// 页面数据源却要求 dashboard:read——technician 等未持码角色登录后第一眼就是
+	// 「仪表盘加载失败：权限不足」（prod 实测）。落地页属全角色旅程，设为基线。
+	for role, codes := range m {
+		m[role] = appendMissingCodes(codes, "dashboard:read")
 	}
 
 	// 同义动作补齐：路由按细分动作（create/update/…）声明 RequirePermission，
@@ -406,6 +451,14 @@ func RetiredRolePermissionCodes() map[string][]string {
 	return map[string][]string{
 		// GET /api/v1/system-configs 整表返回 SMTP、密码策略、2FA 等租户级配置，
 		// 前端只有 /admin/system-config 读它，最终用户没有该入口。
-		domainrole.EndUser: {"system_config:read"},
+		domainrole.EndUser: {
+			"system_config:read",
+			// 2026-10-26 自助门户收敛：管理面读码整体撤出 end_user，
+			// 否则菜单层会把系统管理/变更/发布/CMDB 等入口渲染给最终用户，
+			// 且 user:read 等于向最终用户开放用户列表数据。
+			"user:read", "org:read", "department:read", "sla:read",
+			"cmdb:read", "incident:read", "change:read", "problem:read",
+			"bpmn:read", "release:read", "asset:read", "license:read",
+		},
 	}
 }

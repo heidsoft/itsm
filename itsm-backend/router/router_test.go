@@ -13,6 +13,7 @@ import (
 	"itsm-backend/ent/enttest"
 	"itsm-backend/handlers/ai"
 	assetHandler "itsm-backend/handlers/asset"
+	cmdbHandler "itsm-backend/handlers/cmdb"
 	domainCommon "itsm-backend/handlers/common"
 	groupHandler "itsm-backend/handlers/group"
 	notificationHandler "itsm-backend/handlers/notification"
@@ -132,6 +133,33 @@ func TestSetupRoutes_NoPanic(t *testing.T) {
 	assert.NotPanics(t, func() {
 		SetupRoutes(r, cfg)
 	}, "SetupRoutes should not panic with nil controllers")
+}
+
+// TestSetupRoutes_RequestIDMiddlewareAssembled 装配守卫：RequestIDMiddleware
+// 曾长期只存在定义、从未挂上全局链，导致 audit/request 归因拿到的 request_id
+// 恒为空。任何请求经过真实路由都必须带回 X-Request-Id。
+func TestSetupRoutes_RequestIDMiddlewareAssembled(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", "file:router_reqid?mode=memory&cache=shared&_fk=1")
+	defer client.Close()
+	logger := zaptest.NewLogger(t).Sugar()
+
+	gin.SetMode(gin.TestMode)
+	r := gin.New()
+	require.NotPanics(t, func() {
+		SetupRoutes(r, &RouterConfig{JWTSecret: "test-secret", Logger: logger, Client: client})
+	})
+
+	rec := httptest.NewRecorder()
+	req := httptest.NewRequest("GET", "/api/v1/health", nil)
+	r.ServeHTTP(rec, req)
+
+	assert.NotEmpty(t, rec.Header().Get("X-Request-Id"), "全局链必须装配 RequestIDMiddleware")
+
+	rec2 := httptest.NewRecorder()
+	req2 := httptest.NewRequest("GET", "/api/v1/health", nil)
+	req2.Header.Set("X-Request-Id", "assembled-guard-id")
+	r.ServeHTTP(rec2, req2)
+	assert.Equal(t, "assembled-guard-id", rec2.Header().Get("X-Request-Id"), "调用方自带的 request id 必须原样透传，用于把一次请求的多次 LLM 调用串起来")
 }
 
 func TestSetupRoutes_AllControllersNil(t *testing.T) {
@@ -277,6 +305,36 @@ func TestSetupRoutes_DashboardHandlerNil(t *testing.T) {
 	r := gin.New()
 
 	assert.NotPanics(t, func() { SetupRoutes(r, cfg) })
+}
+
+// 云发现人工补全入口的两条路由必须经真实 SetupRoutes 注册（组级 cmdb:read +
+// 写动作 cmdb:write），前端契约与 docs-gate 都以这里注册的 URL 为唯一事实源。
+func TestSetupRoutes_CMDBDiscoveryManualCompletionRegistered(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", "file:router_cmdb_manual_completion?mode=memory&cache=shared&_fk=1")
+	defer client.Close()
+	logger := zaptest.NewLogger(t).Sugar()
+
+	cfg := &RouterConfig{
+		JWTSecret:   "test-secret",
+		Logger:      logger,
+		Client:      client,
+		CMDBHandler: cmdbHandler.NewHandler(nil),
+	}
+
+	gin.SetMode(gin.TestMode)
+	r := gin.New()
+	SetupRoutes(r, cfg)
+
+	registered := make(map[string]bool)
+	for _, route := range r.Routes() {
+		registered[route.Method+" "+route.Path] = true
+	}
+	for _, want := range []string{
+		"GET /api/v1/cmdb/discovery/pending-resources",
+		"POST /api/v1/cmdb/discovery/pending-resources/:id/register",
+	} {
+		assert.True(t, registered[want], "%s 应注册", want)
+	}
 }
 
 func TestSetupRoutes_CMDBControllerNil(t *testing.T) {

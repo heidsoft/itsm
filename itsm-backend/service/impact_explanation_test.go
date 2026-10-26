@@ -30,7 +30,7 @@ func (alwaysAllowLimiter) Allow(nTokens int) bool { return true }
 
 type nopObserver struct{}
 
-func (nopObserver) Observe(_ string, _ string, _ int, _ time.Duration, _ error) {}
+func (nopObserver) Observe(_ context.Context, _ string, _ string, _ int, _ time.Duration, _ error) {}
 
 // TestImpactExplanation_FailOpenNoLLM 无 LLM 配置时 ExplainImpact 不报错、不 panic、返回 nil
 func TestImpactExplanation_FailOpenNoLLM(t *testing.T) {

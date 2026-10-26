@@ -245,16 +245,19 @@ func TestContract_PracticeSeedCoversOverlayRoles(t *testing.T) {
 }
 
 // TestContract_AuthzRoleKeysMatchVocabulary 契约 3：internal/authz 的角色键集合
-// 必须与词表分层一致——权限绑定权威源覆盖 All \ {super_admin} ∪ Practice
-// （超管走 Login ["*"] 旁路，播种侧不需要条目），兜底默认集在此基础上
-// 再覆盖 MSP 与 super_admin 通配。词表外的键即「兜底表养幽灵角色」的入口。
+// 必须与词表分层一致——权限绑定权威源覆盖 All \ {super_admin} ∪ Practice ∪ MSP
+// （超管走 Login ["*"] 旁路，播种侧不需要条目）。
+//
+// MSP 角色自 2026-10-26 起也进权威源：它们此前只有编译期兜底、没有 DB 权限行，
+// DBOnly 配置态下 msp_* 是空集，MSP 员工进 MSP 模块即全 403。
+// 词表外的键即「兜底表养幽灵角色」的入口。
 func TestContract_AuthzRoleKeysMatchVocabulary(t *testing.T) {
 	binding := authz.BuiltinRolePermissionCodes()
 	bindingKeys := map[string]bool{}
 	for code := range binding {
 		bindingKeys[code] = true
 	}
-	bindingExpected := make([]string, 0, len(role.All)+len(role.Practice))
+	bindingExpected := make([]string, 0, len(role.All)+len(role.Practice)+len(role.MSP))
 	for _, code := range role.All {
 		if code == role.SuperAdmin {
 			continue // 通配旁路，见 defaults.go
@@ -262,6 +265,7 @@ func TestContract_AuthzRoleKeysMatchVocabulary(t *testing.T) {
 		bindingExpected = append(bindingExpected, code)
 	}
 	bindingExpected = append(bindingExpected, role.Practice...)
+	bindingExpected = append(bindingExpected, role.MSP...)
 	assertExactSet(t, "authz 权限绑定角色键", bindingKeys, bindingExpected)
 	assertNoRetired(t, "authz 权限绑定角色键", bindingKeys)
 

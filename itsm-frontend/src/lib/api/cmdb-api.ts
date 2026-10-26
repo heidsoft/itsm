@@ -120,6 +120,48 @@ export interface CloudAccountListResponse {
   total: number;
 }
 
+// —— 云发现人工补全入口（与后端 dto.PendingDiscoveryResourceResponse 等逐字段一致）——
+
+export interface PendingDiscoveryAttribute {
+  name: string;
+  displayName: string;
+  dataType: string;
+  enumValues: string[];
+  defaultValue: string;
+  placeholder: string;
+  helpText: string;
+  satisfied: boolean;
+  currentValue: string;
+}
+
+export interface PendingDiscoveryResource {
+  id: number;
+  resourceId: string;
+  resourceName: string;
+  provider: string;
+  region: string;
+  zone: string;
+  status: string;
+  serviceCode: string;
+  resourceType: string;
+  sourceId: string;
+  tags?: Record<string, string>;
+  lastSeenAt?: string;
+  targetCiType: string;
+  targetCiTypeId: number;
+  requiredAttributes: PendingDiscoveryAttribute[];
+  missingAttributeNames: string[];
+}
+
+export type PendingDiscoveryResourceListResponse = PaginationResponse<PendingDiscoveryResource>;
+
+export interface RegisterPendingDiscoveryResourceRequest {
+  name?: string;
+  environment?: string;
+  assignedTo?: string;
+  attributes?: Record<string, unknown>;
+}
+
 const CMDB_BASE = '/api/v1/cmdb';
 // 必须是字符串字面量：派生模板常量无法被 api-contract 扫描器静态解析。
 const CIS_BASE = '/api/v1/cmdb/cis';
@@ -420,6 +462,26 @@ export class CMDBApi {
 
   static async runDiscoveryRule(ruleId: string): Promise<void> {
     return httpClient.post(`${CMDB_BASE}/discovery/jobs`, { sourceId: ruleId });
+  }
+
+  // 人工补全入口：发现 deferred（必填属性凑不齐）的资源队列与补录建账。
+  static async getPendingDiscoveryResources(
+    params?: { page?: number; pageSize?: number },
+  ): Promise<PendingDiscoveryResourceListResponse> {
+    return httpClient.get<PendingDiscoveryResourceListResponse>(
+      `${CMDB_BASE}/discovery/pending-resources`,
+      params,
+    );
+  }
+
+  static async registerPendingDiscoveryResource(
+    id: number,
+    data: RegisterPendingDiscoveryResourceRequest,
+  ): Promise<ConfigurationItem> {
+    return httpClient.post<ConfigurationItem>(
+      `${CMDB_BASE}/discovery/pending-resources/${id}/register`,
+      data,
+    );
   }
 
   // ==================== Batch ====================

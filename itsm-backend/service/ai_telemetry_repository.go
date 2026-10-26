@@ -5,15 +5,17 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"time"
 
 	"go.uber.org/zap"
 )
 
 // aiTelemetryRepository 封装 AI 遥测相关 raw SQL。
 //
-// 设计原因：ai_feedbacks / ai_llm_calls 两张表暂无 Ent schema（platform-level
-// 数据，刻意不带 tenant_id），保留 raw SQL 但集中在一个 repository 内，便于：
-//  1. 强制时间窗口与平台级聚合一致；
+// 设计原因：ai_feedbacks / ai_llm_calls 两张表暂无 Ent schema，保留 raw SQL
+// 但集中在一个 repository 内，便于：
+//  1. 强制时间窗口与聚合口径一致（ai_llm_calls 自 20261026 迁移起带
+//     tenant_id/request_id，租户归因只在这一个写入口落地）；
 //  2. 表结构变更只改本文件；
 //  3. 单元测试只需 mock 本仓储。
 type aiTelemetryRepository struct {
@@ -28,12 +30,19 @@ func newAITelemetryRepository(db *sql.DB) *aiTelemetryRepository {
 }
 
 // ObserveLLMCall 在 ai_llm_calls 写一条 LLM 调用记录。
-func (r *aiTelemetryRepository) ObserveLLMCall(ctx context.Context, provider, model string, tokens int, latencyMs int64, success bool) error {
+//
+// tenantID<=0 落哨兵值 0（系统调用/无法归属的请求）；requestID 为空落 ”。
+// 按租户聚合的读路径排除 0，见 migrations/20261026_add_ai_llm_calls_tenant_request.sql。
+func (r *aiTelemetryRepository) ObserveLLMCall(ctx context.Context, tenantID int, requestID, provider, model string, tokens int, latencyMs int64, success bool) error {
 	const query = `
-		INSERT INTO ai_llm_calls (provider, model, tokens, latency_ms, success)
-		VALUES ($1, $2, $3, $4, $5)
+		INSERT INTO ai_llm_calls (tenant_id, request_id, provider, model, tokens, latency_ms, success)
+		VALUES ($1, $2, $3, $4, $5, $6, $7)
 	`
-	if _, err := r.db.ExecContext(ctx, query, provider, model, tokens, latencyMs, success); err != nil {
+	attributedTenant := tenantID
+	if attributedTenant < 0 {
+		attributedTenant = 0
+	}
+	if _, err := r.db.ExecContext(ctx, query, attributedTenant, requestID, provider, model, tokens, latencyMs, success); err != nil {
 		return fmt.Errorf("observe llm call: %w", err)
 	}
 	return nil
@@ -146,10 +155,37 @@ func (r *aiTelemetryRepository) AggregateFeedback(ctx context.Context, tenantID,
 	return agg, nil
 }
 
-// LLMCallAggregate 平台级（无 tenant）LLM 调用延迟聚合。
-type LLMCallAggregate struct {
-	AvgLatencySeconds float64
+// TenantLLMStats 单租户窗口内的 LLM 调用统计。
+type TenantLLMStats struct {
 	CallCount         int
+	SuccessCount      int
+	TotalTokens       int
+	AvgLatencySeconds float64
+}
+
+// AggregateTenantLLMStats 计算指定租户自 since 起的 LLM 调用统计。
+// tenant_id=0 是「系统调用/无法归属」哨兵值，任何传入的真实租户都 >0，
+// 因此哨兵行天然被排除；租户无归因行时返回全零 + ok 结果，由调用方按
+// responseTimeAvailable=false 如实降级，不得回退到平台均值冒充。
+func (r *aiTelemetryRepository) AggregateTenantLLMStats(ctx context.Context, tenantID int, since time.Time) (*TenantLLMStats, error) {
+	const query = `
+		SELECT COUNT(*),
+		       COUNT(CASE WHEN success THEN 1 END),
+		       COALESCE(SUM(latency_ms), 0),
+		       COALESCE(SUM(tokens), 0)
+		FROM ai_llm_calls
+		WHERE tenant_id = $1 AND created_at >= $2
+	`
+	out := &TenantLLMStats{}
+	var sumLatencyMs int64
+	if err := r.db.QueryRowContext(ctx, query, tenantID, since).
+		Scan(&out.CallCount, &out.SuccessCount, &sumLatencyMs, &out.TotalTokens); err != nil {
+		return nil, fmt.Errorf("aggregate tenant llm stats: %w", err)
+	}
+	if out.CallCount > 0 {
+		out.AvgLatencySeconds = float64(sumLatencyMs) / float64(out.CallCount) / 1000.0
+	}
+	return out, nil
 }
 
 // CountAIAuditLogs 通过 audit_logs 在指定租户下统计"近 lookbackDays 内、含 ai 动作"的条数。
@@ -165,20 +201,6 @@ func (r *aiTelemetryRepository) CountAIAuditLogs(ctx context.Context, tenantID, 
 		return 0, fmt.Errorf("count ai audit logs: %w", err)
 	}
 	return total, nil
-}
-
-// AggregateLLMLatency 计算全平台 LLM 平均延迟（秒）。
-func (r *aiTelemetryRepository) AggregateLLMLatency(ctx context.Context, lookbackDays int) (*LLMCallAggregate, error) {
-	const query = `
-		SELECT COALESCE(AVG(latency_ms)::float / 1000.0, 0), COUNT(*)
-		FROM ai_llm_calls
-		WHERE created_at >= NOW() - INTERVAL '1 day' * $1
-	`
-	agg := &LLMCallAggregate{}
-	if err := r.db.QueryRowContext(ctx, query, lookbackDays).Scan(&agg.AvgLatencySeconds, &agg.CallCount); err != nil {
-		return nil, fmt.Errorf("aggregate llm latency: %w", err)
-	}
-	return agg, nil
 }
 
 func nullableInt(p *int) interface{} {

@@ -219,6 +219,9 @@ func (h *Handler) TestConnection(c *gin.Context) {
 
 func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 	root := rg.Group("/system/vector-store")
-	root.GET("", middleware.RequirePermission("system", "read"), h.GetStatus)
-	root.POST("/test", middleware.RequirePermission("system", "write"), h.TestConnection)
+	// 向量存储是租户级配置面（与 /system-configs 同域），权限码取 system_config:*。
+	// 旧码 system:read/write 只有 sysadmin 持有，而菜单「向量存储配置」靠
+	// system→system_config 的资源别名才显示给租管——结果菜单可见、接口 403。
+	root.GET("", middleware.RequirePermission("system_config", "read"), h.GetStatus)
+	root.POST("/test", middleware.RequirePermission("system_config", "write"), h.TestConnection)
 }

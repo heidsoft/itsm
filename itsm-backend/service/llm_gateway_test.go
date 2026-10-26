@@ -7,6 +7,8 @@ import (
 	"testing"
 	"time"
 
+	"itsm-backend/common/tenantctx"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -72,9 +74,11 @@ type Observation struct {
 	Tokens   int
 	Latency  time.Duration
 	Err      error
+	TenantID int // 网关必须把请求 ctx 原样交给观察者，供其回填租户归因
 }
 
-func (m *MockObserver) Observe(provider string, model string, tokens int, latency time.Duration, err error) {
+func (m *MockObserver) Observe(ctx context.Context, provider string, model string, tokens int, latency time.Duration, err error) {
+	tenantID, _ := tenantctx.TenantID(ctx)
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.Records = append(m.Records, Observation{
@@ -83,6 +87,7 @@ func (m *MockObserver) Observe(provider string, model string, tokens int, latenc
 		Tokens:   tokens,
 		Latency:  latency,
 		Err:      err,
+		TenantID: tenantID,
 	})
 }
 
@@ -292,8 +297,8 @@ func TestNoopObserver_Observe_NoPanic(t *testing.T) {
 	observer := NoopObserver{}
 
 	// 不应 panic
-	observer.Observe("provider", "model", 100, time.Millisecond, nil)
-	observer.Observe("provider", "model", 100, time.Millisecond, errors.New("error"))
+	observer.Observe(context.Background(), "provider", "model", 100, time.Millisecond, nil)
+	observer.Observe(context.Background(), "provider", "model", 100, time.Millisecond, errors.New("error"))
 }
 
 // ==================== RateLimitError 测试 ====================

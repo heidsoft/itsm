@@ -287,6 +287,9 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 	// （bootstrap 曾用 gin.Default()，与这里的 Use 叠加导致每个请求记两行日志）。
 	r.Use(gin.Logger())
 	r.Use(gin.Recovery())
+	// Request ID 必须在全局链装配：recovery.go/audit.go 一直在读 "request_id"，
+	// 但本注册从未发生，审计行与 LLM 调用归因拿到的一直是空串。
+	r.Use(middleware.RequestIDMiddleware())
 	r.Use(middleware.CORSMiddleware())
 	r.Use(middleware.PrometheusMetricsMiddleware())
 

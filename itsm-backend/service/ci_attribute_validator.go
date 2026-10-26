@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -39,10 +40,20 @@ func NewCIAttributeValidator(client *ent.Client) *CIAttributeValidator {
 	return &CIAttributeValidator{client: client}
 }
 
-// NormalizeAttributes 按 CI 类型（含父类型继承链）的属性定义归一化并校验 attributes。
-// existingID 为更新场景下当前 CI 的 ID（用于唯一性校验时排除自身），创建场景传 0。
-// 返回归一化后的属性集合；校验失败返回面向用户的中文错误。
-func (v *CIAttributeValidator) NormalizeAttributes(ctx context.Context, tenantID, ciTypeID int, attributes map[string]interface{}, existingID int) (map[string]interface{}, error) {
+// CIAttributeRequirement 描述某个 CI 类型（含继承链）上一条必填属性定义的补录所需信息。
+type CIAttributeRequirement struct {
+	Name         string   `json:"name"`
+	DisplayName  string   `json:"displayName"`
+	DataType     string   `json:"dataType"`
+	EnumValues   []string `json:"enumValues"`
+	DefaultValue string   `json:"defaultValue"`
+	Placeholder  string   `json:"placeholder"`
+	HelpText     string   `json:"helpText"`
+}
+
+// collectEffectiveAttributeDefinitions 解析 CI 类型继承链并按「根→叶、租户覆盖全局」合并出生效定义。
+// 这是「该类型要求哪些属性」的唯一事实来源：NormalizeAttributes 与必填项查询共用，禁止另写一份查询。
+func (v *CIAttributeValidator) collectEffectiveAttributeDefinitions(ctx context.Context, tenantID, ciTypeID int) (map[string]*ent.CIAttributeDefinition, error) {
 	typeIDs, err := v.resolveCITypeChain(ctx, ciTypeID, tenantID)
 	if err != nil {
 		return nil, err
@@ -68,6 +79,56 @@ func (v *CIAttributeValidator) NormalizeAttributes(ctx context.Context, tenantID
 		for _, def := range defs {
 			definitionMap[def.Name] = def
 		}
+	}
+	return definitionMap, nil
+}
+
+// RequiredAttributes 返回该 CI 类型（含继承链）当前生效的必填属性定义，按 display_order、name 稳定排序。
+// 有默认值的必填项调用方应视为「可自动满足」：NormalizeAttributes 会在缺值时填充默认值。
+func (v *CIAttributeValidator) RequiredAttributes(ctx context.Context, tenantID, ciTypeID int) ([]CIAttributeRequirement, error) {
+	definitionMap, err := v.collectEffectiveAttributeDefinitions(ctx, tenantID, ciTypeID)
+	if err != nil {
+		return nil, err
+	}
+	defs := make([]*ent.CIAttributeDefinition, 0, len(definitionMap))
+	for _, def := range definitionMap {
+		if def.Required {
+			defs = append(defs, def)
+		}
+	}
+	sort.Slice(defs, func(i, j int) bool {
+		if defs[i].DisplayOrder != defs[j].DisplayOrder {
+			return defs[i].DisplayOrder < defs[j].DisplayOrder
+		}
+		return defs[i].Name < defs[j].Name
+	})
+
+	requirements := make([]CIAttributeRequirement, 0, len(defs))
+	for _, def := range defs {
+		rules, err := parseValidationRules(def.ValidationRules)
+		if err != nil {
+			return nil, fmt.Errorf("属性 %s 验证规则格式错误: %w", def.DisplayName, err)
+		}
+		requirements = append(requirements, CIAttributeRequirement{
+			Name:         def.Name,
+			DisplayName:  def.DisplayName,
+			DataType:     def.Type,
+			EnumValues:   stringListFromRule(rules, "enum_values"),
+			DefaultValue: def.DefaultValue,
+			Placeholder:  def.Placeholder,
+			HelpText:     def.HelpText,
+		})
+	}
+	return requirements, nil
+}
+
+// NormalizeAttributes 按 CI 类型（含父类型继承链）的属性定义归一化并校验 attributes。
+// existingID 为更新场景下当前 CI 的 ID（用于唯一性校验时排除自身），创建场景传 0。
+// 返回归一化后的属性集合；校验失败返回面向用户的中文错误。
+func (v *CIAttributeValidator) NormalizeAttributes(ctx context.Context, tenantID, ciTypeID int, attributes map[string]interface{}, existingID int) (map[string]interface{}, error) {
+	definitionMap, err := v.collectEffectiveAttributeDefinitions(ctx, tenantID, ciTypeID)
+	if err != nil {
+		return nil, err
 	}
 	if len(definitionMap) == 0 {
 		if attributes == nil {

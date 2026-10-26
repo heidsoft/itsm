@@ -630,16 +630,24 @@ const UserManagement: React.FC = () => {
           </Row>
           <Row gutter={16}>
             <Col span={12}>
-              <Form.Item name="role" label="主角色" initialValue="end_user">
+              <Form.Item
+                name="role"
+                label="主角色"
+                initialValue="end_user"
+                // 角色分层（后端 domain/role 包）：主角色只有 Tier 1 内置 10 值；
+                // 变更经理/问题经理/知识经理/CMDB管理员/服务目录管理员及 5 个 MSP
+                // 角色是 Tier 2/3 叠加角色（副角色），设计上不进主角色词表。
+                tooltip="主角色仅含平台内置角色。变更经理、问题经理、CMDB 管理员等专职角色属「附加角色」，请在右侧 RBAC 角色中叠加授予。"
+              >
                 <Select placeholder="请选择主角色" options={PRIMARY_ROLE_OPTIONS} />
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item name="roleIds" label="RBAC 角色（可多选）">
+              <Form.Item name="roleIds" label="附加角色（可多选）" tooltip="专职经理角色（变更/问题/知识/CMDB/服务目录）与 MSP 协作角色在此叠加授予，与主角色权限取并集。">
                 <Select
                   mode="multiple"
                   allowClear
-                  placeholder="请选择 RBAC 角色"
+                  placeholder="请选择附加角色"
                   optionFilterProp="label"
                   options={rbacRoles.map(r => ({ value: r.id, label: r.name }))}
                 />
@@ -716,11 +724,11 @@ const UserManagement: React.FC = () => {
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item name="roleIds" label="RBAC 角色（可多选）">
+              <Form.Item name="roleIds" label="附加角色（可多选）" tooltip="专职经理角色（变更/问题/知识/CMDB/服务目录）与 MSP 协作角色在此叠加授予，与主角色权限取并集。">
                 <Select
                   mode="multiple"
                   allowClear
-                  placeholder="请选择 RBAC 角色"
+                  placeholder="请选择附加角色"
                   optionFilterProp="label"
                   options={rbacRoles.map(r => ({ value: r.id, label: r.name }))}
                 />

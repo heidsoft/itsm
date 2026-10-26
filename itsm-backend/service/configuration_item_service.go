@@ -55,6 +55,12 @@ func NewConfigurationItemService(client *ent.Client, logger *zap.SugaredLogger, 
 	}
 }
 
+// ListRequiredCIAttributes 返回该 CI 类型（含继承链）生效的必填属性定义。
+// 事实来源是 CIAttributeValidator，与 CreateCI/UpdateCI 的校验共用同一份查询，避免两处规则漂移。
+func (s *ConfigurationItemService) ListRequiredCIAttributes(ctx context.Context, tenantID, ciTypeID int) ([]CIAttributeRequirement, error) {
+	return s.attrValidator.RequiredAttributes(ctx, tenantID, ciTypeID)
+}
+
 // CreateCI 创建配置项
 func (s *ConfigurationItemService) CreateCI(ctx context.Context, req *dto.CreateCIRequest, tenantID int) (*dto.CIResponse, error) {
 	ciTypeID := req.CITypeID

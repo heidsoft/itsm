@@ -67,8 +67,10 @@ type TokenLimiter interface {
 	Allow(nTokens int) bool
 }
 
+// Observe 记录一次网关调用。ctx 是发起调用的请求上下文：观察者从中回填
+// tenant/request 归属（tenant_id=0 表示系统调用等无法归属的请求，见 ai_llm_calls 迁移注释）。
 type Observer interface {
-	Observe(provider string, model string, tokens int, latency time.Duration, err error)
+	Observe(ctx context.Context, provider string, model string, tokens int, latency time.Duration, err error)
 }
 
 func NewLLMGateway(p LLMProvider, l TokenLimiter, o Observer, providerName string) *LLMGateway {
@@ -186,13 +188,13 @@ func (g *LLMGateway) Chat(ctx context.Context, model string, messages []LLMMessa
 	}
 	if g.limiter != nil && !g.limiter.Allow(tokens) {
 		if g.observer != nil {
-			g.observer.Observe("", model, tokens, time.Since(start), ErrRateLimited)
+			g.observer.Observe(ctx, "", model, tokens, time.Since(start), ErrRateLimited)
 		}
 		return "", ErrRateLimited
 	}
 	out, err := g.retryableChat(ctx, model, messages)
 	if g.observer != nil {
-		g.observer.Observe(g.providerName, model, tokens, time.Since(start), err)
+		g.observer.Observe(ctx, g.providerName, model, tokens, time.Since(start), err)
 	}
 	return out, err
 }
@@ -212,7 +214,7 @@ func (g *LLMGateway) ChatStream(ctx context.Context, model string, messages []LL
 	}
 	if g.limiter != nil && !g.limiter.Allow(tokens) {
 		if g.observer != nil {
-			g.observer.Observe(g.providerName, model, tokens, time.Since(start), ErrRateLimited)
+			g.observer.Observe(ctx, g.providerName, model, tokens, time.Since(start), ErrRateLimited)
 		}
 		return ErrRateLimited
 	}
@@ -222,7 +224,7 @@ func (g *LLMGateway) ChatStream(ctx context.Context, model string, messages []LL
 		// 重试会造成内容重复。瞬时错误交由调用方（前端断线重连）兜底。
 		err := streamer.ChatStream(ctx, model, messages, callback)
 		if g.observer != nil {
-			g.observer.Observe(g.providerName, model, tokens, time.Since(start), err)
+			g.observer.Observe(ctx, g.providerName, model, tokens, time.Since(start), err)
 		}
 		return err
 	}
@@ -230,7 +232,7 @@ func (g *LLMGateway) ChatStream(ctx context.Context, model string, messages []LL
 	// Fallback: run a normal Chat and emit the whole response as one chunk.
 	out, err := g.retryableChat(ctx, model, messages)
 	if g.observer != nil {
-		g.observer.Observe(g.providerName, model, tokens, time.Since(start), err)
+		g.observer.Observe(ctx, g.providerName, model, tokens, time.Since(start), err)
 	}
 	if err != nil {
 		return err
@@ -260,13 +262,13 @@ func (g *LLMGateway) ChatStreamWithTools(ctx context.Context, model string, mess
 		}
 		if g.limiter != nil && !g.limiter.Allow(tokens) {
 			if g.observer != nil {
-				g.observer.Observe(g.providerName, model, tokens, time.Since(start), ErrRateLimited)
+				g.observer.Observe(ctx, g.providerName, model, tokens, time.Since(start), ErrRateLimited)
 			}
 			return ErrRateLimited
 		}
 		err := p.ChatStreamWithTools(ctx, model, messages, tools, callback, onToolCalls)
 		if g.observer != nil {
-			g.observer.Observe(g.providerName, model, tokens, time.Since(start), err)
+			g.observer.Observe(ctx, g.providerName, model, tokens, time.Since(start), err)
 		}
 		return err
 	}
@@ -304,4 +306,4 @@ func (l *FixedWindowLimiter) Allow(n int) bool { return n <= l.capacity }
 
 type NoopObserver struct{}
 
-func (NoopObserver) Observe(_ string, _ string, _ int, _ time.Duration, _ error) {}
+func (NoopObserver) Observe(_ context.Context, _ string, _ string, _ int, _ time.Duration, _ error) {}

@@ -5386,6 +5386,157 @@
                 }
             }
         },
+        "/api/v1/cmdb/discovery/pending-resources": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "发现回写因必填属性凑不齐而 deferred 的资源；含目标 CI 类型、每条必填属性的现状（是否满足、标签现值）。全集推导在 projector，分页在这里做切片，total 是诚实的补全队列长度。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CMDB-云发现"
+                ],
+                "summary": "待人工补全的云资源列表",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "页码，缺省 1",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "页长，缺省 20，最大 100",
+                        "name": "pageSize",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.ListResponse-dto_PendingDiscoveryResourceResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "租户上下文缺失",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "503": {
+                        "description": "发现回写未装配",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/cmdb/discovery/pending-resources/{id}/register": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "用补录属性把一条待建账云资源写成配置项；云标签打底、提交值覆盖同名键。校验/发号/历史走 CI 域唯一入口，已链接资源返回 409。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CMDB-云发现"
+                ],
+                "summary": "人工补全建账",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "云资源ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "补全内容",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.RegisterPendingDiscoveryResourceRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.CIResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "必填属性仍不齐 / 类型未映射",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "租户上下文缺失",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "云资源不存在或不属于当前租户",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "409": {
+                        "description": "资源已关联配置项",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "503": {
+                        "description": "发现回写未装配",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/cmdb/discovery/providers": {
             "get": {
                 "security": [
@@ -17420,6 +17571,29 @@
                 }
             }
         },
+        "dto.ListResponse-dto_PendingDiscoveryResourceResponse": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.PendingDiscoveryResourceResponse"
+                    }
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "pageSize": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                },
+                "totalPages": {
+                    "type": "integer"
+                }
+            }
+        },
         "dto.MultiCloudResourceData": {
             "type": "object",
             "properties": {
@@ -17480,6 +17654,103 @@
                 },
                 "totalPages": {
                     "type": "integer"
+                }
+            }
+        },
+        "dto.PendingDiscoveryAttributeResponse": {
+            "type": "object",
+            "properties": {
+                "currentValue": {
+                    "type": "string"
+                },
+                "dataType": {
+                    "type": "string"
+                },
+                "defaultValue": {
+                    "type": "string"
+                },
+                "displayName": {
+                    "type": "string"
+                },
+                "enumValues": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "helpText": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "placeholder": {
+                    "type": "string"
+                },
+                "satisfied": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "dto.PendingDiscoveryResourceResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "lastSeenAt": {
+                    "type": "string"
+                },
+                "missingAttributeNames": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "provider": {
+                    "type": "string"
+                },
+                "region": {
+                    "type": "string"
+                },
+                "requiredAttributes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.PendingDiscoveryAttributeResponse"
+                    }
+                },
+                "resourceId": {
+                    "type": "string"
+                },
+                "resourceName": {
+                    "type": "string"
+                },
+                "resourceType": {
+                    "type": "string"
+                },
+                "serviceCode": {
+                    "type": "string"
+                },
+                "sourceId": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "tags": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "targetCiType": {
+                    "type": "string"
+                },
+                "targetCiTypeId": {
+                    "type": "integer"
+                },
+                "zone": {
+                    "type": "string"
                 }
             }
         },
@@ -17879,6 +18150,29 @@
                     }
                 },
                 "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.RegisterPendingDiscoveryResourceRequest": {
+            "type": "object",
+            "properties": {
+                "assignedTo": {
+                    "type": "string"
+                },
+                "attributes": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "environment": {
+                    "type": "string",
+                    "enum": [
+                        "production",
+                        "staging",
+                        "development"
+                    ]
+                },
+                "name": {
                     "type": "string"
                 }
             }

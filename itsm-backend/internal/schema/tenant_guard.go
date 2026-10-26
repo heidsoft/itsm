@@ -59,7 +59,8 @@ type ExemptTable struct {
 //   - schema_migrations：迁移历史表，全局唯一
 //   - user_roles / role_permissions / role_permissions_join：RBAC 关系表，
 //     平台级 RBAC 不应被租户过滤拦截（汇总见 docs/architecture/tenant-isolation.md）
-//   - ai_llm_calls：LLM 网关级可观测性，与租户无关（service/ai_telemetry.go 注释）
+//   - ai_llm_calls：20261026 迁移补上 tenant_id/request_id 后已按租户归因，
+//     不再是豁免对象（tenant_id=0 为系统/无法归属调用哨兵值）
 //   - knowledge_article_participants/sessions/version：协作快照，session id 是天然唯一键
 //   - msp_allocations：MSP 模式下的租户-服务分配，是租户维度之上的概念
 var TenantExemptTables = []ExemptTable{
@@ -81,8 +82,8 @@ var TenantExemptTables = []ExemptTable{
 	{TableName: "team_tags", Reason: "标签云跨租户共享", Owner: "platform", Scope: "derived", ReviewedAt: time.Date(2026, 9, 8, 0, 0, 0, 0, time.UTC)},
 	// RBAC 平台级关系表
 	{TableName: "user_roles", Reason: "平台级 RBAC 关系，不应被租户过滤拦截（ADR 0001）", Owner: "rbac", Scope: "platform", ReviewedAt: time.Date(2026, 9, 8, 0, 0, 0, 0, time.UTC)},
-	// AI 网关级观测
-	{TableName: "ai_llm_calls", Reason: "LLM 网关级可观测性，与租户无关（service/ai_telemetry.go）", Owner: "ai", Scope: "platform", ReviewedAt: time.Date(2026, 9, 8, 0, 0, 0, 0, time.UTC)},
+	// AI 网关级观测：ai_llm_calls 自 20261026 迁移起带 tenant_id（0=系统/无法归属哨兵），
+	// 已从豁免清单移除；写入口唯一在 service.LLMObserver。
 	// 协作快照/版本
 	{TableName: "knowledge_article_participants", Reason: "协作会话快照，session_id 天然唯一", Owner: "knowledge", Scope: "derived", ReviewedAt: time.Date(2026, 9, 8, 0, 0, 0, 0, time.UTC)},
 	{TableName: "knowledge_article_session_participants", Reason: "协作会话快照", Owner: "knowledge", Scope: "derived", ReviewedAt: time.Date(2026, 9, 8, 0, 0, 0, 0, time.UTC)},

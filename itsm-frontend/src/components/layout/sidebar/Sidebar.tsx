@@ -9,6 +9,7 @@ import React, { useEffect } from 'react';
 import { App, Layout, Skeleton, theme } from 'antd';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuthStore, useAuthStoreHydration } from '@/lib/store/auth-store';
+import { PRIMARY_ROLE_LABEL } from '@/lib/api/user-api';
 import { LAYOUT_CONFIG } from '@/config/layout.config';
 import styles from './Sidebar.module.css';
 import type { MenuItem } from './menu-config';
@@ -240,7 +241,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse, mobile 
             <div className={styles.userAvatar}>{user?.name?.[0] || user?.username?.[0] || 'U'}</div>
             <div className={styles.userDetails}>
               <div className={styles.userName}>{user?.name || user?.username}</div>
-              <div className={styles.userRole}>{user?.role || 'user'}</div>
+              <div className={styles.userRole}>
+                {/* 角色标识与头部 chip 统一走 PRIMARY_ROLE_LABEL 中文映射（审计报告 3.3-⑦：
+                    此前裸显英文码 capitalize，「End_user」「Technician」与头部「用户」不一致） */}
+                {PRIMARY_ROLE_LABEL[user?.role ?? ''] || user?.role || '最终用户'}
+              </div>
             </div>
           </div>
         </div>

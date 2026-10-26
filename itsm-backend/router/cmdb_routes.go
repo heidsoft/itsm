@@ -255,6 +255,10 @@ func SetupCMDBRoutes(
 			// 差异永远停在「待人工确认」——对账闭环差这一步。
 			discovery.POST("/results/:id/apply", middleware.RequirePermission("cmdb", "write"), config.CMDBHandler.ApplyDiscoveryResult)
 			discovery.POST("/results/:id/reject", middleware.RequirePermission("cmdb", "write"), config.CMDBHandler.RejectDiscoveryResult)
+			// 人工补全入口：发现 deferred（必填属性凑不齐）的资源此前只有任务摘要里的计数，
+			// 没有运营路径；这里补齐「列出来 + 补录建账」两步。
+			discovery.GET("/pending-resources", config.CMDBHandler.ListPendingDiscoveryResources)
+			discovery.POST("/pending-resources/:id/register", middleware.RequirePermission("cmdb", "write"), config.CMDBHandler.RegisterPendingDiscoveryResource)
 		}
 
 		// ------------------------------ 对账相关路由 ------------------------------

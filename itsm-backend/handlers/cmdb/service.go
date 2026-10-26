@@ -629,6 +629,23 @@ func (s *Service) GetReconciliation(ctx context.Context, tenantID int) (*Reconci
 	return result, nil
 }
 
+// ListPendingDiscoveryResources 返回「发现 deferred、需要人工补全属性」的云资源全集。
+// 推导规则只在 DiscoveryCIProjector 一处；分页由 handler 负责。
+func (s *Service) ListPendingDiscoveryResources(ctx context.Context, tenantID int) ([]*PendingDiscoveryResource, error) {
+	if s.discoveryRuntime.CIProjector == nil {
+		return nil, ErrDiscoveryProjectorNotWired
+	}
+	return s.discoveryRuntime.CIProjector.ListPending(ctx, tenantID)
+}
+
+// RegisterPendingDiscoveryResource 用人工补录的属性把一条待建账云资源写成配置项。
+func (s *Service) RegisterPendingDiscoveryResource(ctx context.Context, tenantID, resourceID, operatorID int, req ManualCompletionRequest) (*dto.CIResponse, error) {
+	if s.discoveryRuntime.CIProjector == nil {
+		return nil, ErrDiscoveryProjectorNotWired
+	}
+	return s.discoveryRuntime.CIProjector.CompleteManually(ctx, tenantID, resourceID, operatorID, req)
+}
+
 // Discovery
 func (s *Service) CreateDiscoverySource(ctx context.Context, ds *DiscoverySource) (*DiscoverySource, error) {
 	if ds == nil || ds.TenantID <= 0 {

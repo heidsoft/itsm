@@ -6,6 +6,7 @@ import (
 
 	_ "github.com/mattn/go-sqlite3"
 
+	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
@@ -369,7 +370,10 @@ func TestNotificationService_MarkNotificationRead_NotFound(t *testing.T) {
 
 	err = service.MarkNotificationRead(ctx, req)
 	require.Error(t, err)
-	assert.Contains(t, err.Error(), "通知不存在或无权限")
+	// 必须是分类错误（404 AppError）：普通 error 会被 RespondError 兜底成 500。
+	var markAppErr *common.AppError
+	require.ErrorAs(t, err, &markAppErr)
+	assert.Equal(t, 404, markAppErr.HTTPStatus)
 }
 
 // ==================== 标记全部已读测试 ====================
@@ -470,7 +474,10 @@ func TestNotificationService_DeleteNotification_NotFound(t *testing.T) {
 
 	err = service.DeleteNotification(ctx, req)
 	require.Error(t, err)
-	assert.Contains(t, err.Error(), "通知不存在或无权限")
+	// 删他人通知与删不存在通知同态：必须是 404 分类错误而非未分类 500。
+	var delAppErr *common.AppError
+	require.ErrorAs(t, err, &delAppErr)
+	assert.Equal(t, 404, delAppErr.HTTPStatus)
 }
 
 // ==================== 获取未读数量测试 ====================

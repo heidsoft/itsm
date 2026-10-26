@@ -50,7 +50,7 @@ var precheckFallbackPolicies = map[string]map[string]Permission{
 		"/api/v1/org/*":                {Resource: "org", Action: "read"},
 		"/api/v1/process-trigger/*":    {Resource: "bpmn", Action: "read"},
 		"/api/v1/provisioning-tasks/*": {Resource: "service_request", Action: "read"},
-		"/api/v1/reports/*":            {Resource: "dashboard", Action: "read"},
+		"/api/v1/reports/*":            {Resource: "report", Action: "read"},
 		"/api/v1/service-catalog":      {Resource: "service_catalog", Action: "read"},
 		"/api/v1/sla/*":                {Resource: "sla", Action: "read"},
 		"/api/v1/system/*":             {Resource: "system_config", Action: "read"},

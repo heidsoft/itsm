@@ -508,6 +508,50 @@ describe('CMDBApi', () => {
     });
   });
 
+  describe('getPendingDiscoveryResources', () => {
+    it('读取人工补全队列的五键分页信封，路径与方法逐字匹配后端路由', async () => {
+      mockGet.mockResolvedValue({
+        items: [{ id: 7, resourceId: 'i-need', targetCiType: 'cloud_vm', requiredAttributes: [], missingAttributeNames: ['owner'] }],
+        total: 1,
+        page: 1,
+        pageSize: 20,
+        totalPages: 1,
+      });
+      const result = await CMDBApi.getPendingDiscoveryResources({ page: 1, pageSize: 20 });
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/cmdb/discovery/pending-resources', {
+        page: 1,
+        pageSize: 20,
+      });
+      expect(result.items).toHaveLength(1);
+      expect(result.items[0].missingAttributeNames).toEqual(['owner']);
+      expect(result.total).toBe(1);
+      expect(result.totalPages).toBe(1);
+    });
+
+    it('不传分页时发送 undefined 参数，交由后端默认', async () => {
+      mockGet.mockResolvedValue({ items: [], total: 0, page: 1, pageSize: 20, totalPages: 0 });
+      await CMDBApi.getPendingDiscoveryResources();
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/cmdb/discovery/pending-resources', undefined);
+    });
+  });
+
+  describe('registerPendingDiscoveryResource', () => {
+    it('把资源 ID 放进路径段、属性放进请求体', async () => {
+      mockPost.mockResolvedValue({ id: 100, name: 'vm-01' });
+      const result = await CMDBApi.registerPendingDiscoveryResource(7, {
+        name: 'vm-01',
+        environment: 'production',
+        attributes: { owner: '张三' },
+      });
+      expect(mockPost).toHaveBeenCalledWith('/api/v1/cmdb/discovery/pending-resources/7/register', {
+        name: 'vm-01',
+        environment: 'production',
+        attributes: { owner: '张三' },
+      });
+      expect(result.id).toBe(100);
+    });
+  });
+
   describe('batchCreateCIs', () => {
     it('should batch create CIs', async () => {
       mockPost.mockResolvedValue({ id: 1, name: 'S1' });

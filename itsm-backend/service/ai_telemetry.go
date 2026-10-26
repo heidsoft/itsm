@@ -7,8 +7,10 @@ import (
 	"fmt"
 	"time"
 
+	"itsm-backend/common/tenantctx"
 	"itsm-backend/ent"
 	"itsm-backend/ent/auditlog"
+	"itsm-backend/middleware"
 
 	"go.uber.org/zap"
 )
@@ -22,8 +24,8 @@ import (
 //
 // 所有 SQL 集中在 ai_telemetry_repository.go，未来表结构变更只改一处。
 //
-// db / repo 双字段保留：repo 承载 5 个写/聚合方法（ObserveLLMCall/SaveFeedback/
-// AggregateFeedback/CountAIAuditLogs/AggregateLLMLatency），db 给 ai_evaluator.go
+// db / repo 双字段保留：repo 承载写/聚合方法（ObserveLLMCall/SaveFeedback/
+// AggregateFeedback/CountAIAuditLogs/AggregateTenantLLMStats），db 给 ai_evaluator.go
 // 的若干读路径（loadFeedbackSamples / loadPlatformStats / listFeedback / countFeedback）
 // 提供直连，这些读路径不再额外拆一层 repository。
 type AITelemetryService struct {
@@ -56,11 +58,12 @@ func (s *AITelemetryService) SetSkillRegistry(reg *SkillRegistry) {
 }
 
 // LLMObserver implements the LLMGateway Observer interface. Every gateway call
-// (success, rate-limited or failed) is recorded into ai_llm_calls so that
-// GetMetrics can report a real avg_response_time_seconds instead of a constant.
-// The gateway is tenant-agnostic, so the table intentionally carries no
-// tenant_id; latency metrics are platform-level, while tenant-scoped counters
-// keep coming from audit_logs / ai_feedbacks.
+// (success, rate-limited or failed) is recorded into ai_llm_calls with the
+// tenant/request attribution recovered from the call context, so that
+// GetMetrics can report a tenant-scoped avg_response_time_seconds and token
+// cost instead of a platform-wide constant-mixed number. Calls without a
+// tenant context (system jobs, background prompts) keep tenant_id=0 and are
+// excluded from tenant aggregates — honest empty beats fake attribution.
 type LLMObserver struct {
 	repo   *aiTelemetryRepository
 	logger *zap.SugaredLogger
@@ -71,10 +74,15 @@ func NewLLMObserver(db *sql.DB, logger *zap.SugaredLogger) *LLMObserver {
 	return &LLMObserver{repo: newAITelemetryRepository(db), logger: logger}
 }
 
-func (o *LLMObserver) Observe(provider string, model string, tokens int, latency time.Duration, err error) {
+func (o *LLMObserver) Observe(ctx context.Context, provider string, model string, tokens int, latency time.Duration, err error) {
 	success := err == nil
-	if obsErr := o.repo.ObserveLLMCall(context.Background(), provider, model, tokens, latency.Milliseconds(), success); obsErr != nil {
-		safeLog(o.logger, "failed to record LLM call metric", "error", obsErr, "provider", provider)
+	tenantID, _ := tenantctx.TenantID(ctx)
+	requestID, _ := middleware.RequestIDFromContext(ctx)
+	// WithoutCancel：调用方超时/取消不能让观测行写不进库，但 ctx 里的
+	// tenant/request 归属必须保留（旧实现用 context.Background() 丢掉了归属值）。
+	writeCtx := context.WithoutCancel(ctx)
+	if obsErr := o.repo.ObserveLLMCall(writeCtx, tenantID, requestID, provider, model, tokens, latency.Milliseconds(), success); obsErr != nil {
+		safeLog(o.logger, "failed to record LLM call metric", "error", obsErr, "provider", provider, "tenant_id", tenantID)
 	}
 }
 
@@ -133,6 +141,7 @@ type AIMetrics struct {
 	ByKind                 map[string]interface{} `json:"byKind"`
 	AvgResponseTimeSeconds float64                `json:"avgResponseTimeSeconds"`
 	LLMCallCount           int                    `json:"llmCallCount"`
+	TotalTokens            int                    `json:"totalTokens"`
 	ResponseTimeAvailable  bool                   `json:"responseTimeAvailable"`
 }
 
@@ -168,15 +177,18 @@ func (s *AITelemetryService) GetMetrics(ctx context.Context, tenantID int, lookb
 	}
 	out.ByKind = byKind
 
-	// Average LLM latency from ai_llm_calls (platform-level, recorded by LLMObserver).
-	// Kept tenant-agnostic: the gateway is wired before any tenant context exists.
-	latencyAgg, err := s.repo.AggregateLLMLatency(ctx, lookbackDays)
+	// Tenant-scoped LLM latency/cost from ai_llm_calls (rows attributed by
+	// LLMObserver). Rows written before tenant attribution existed carry
+	// tenant_id=0 and are excluded: a tenant with no attributed rows gets
+	// responseTimeAvailable=false instead of another tenant's latency.
+	stats, err := s.repo.AggregateTenantLLMStats(ctx, tenantID, time.Now().AddDate(0, 0, -lookbackDays))
 	if err != nil {
 		return nil, err
 	}
-	out.AvgResponseTimeSeconds = latencyAgg.AvgLatencySeconds
-	out.LLMCallCount = latencyAgg.CallCount
-	out.ResponseTimeAvailable = latencyAgg.CallCount > 0
+	out.AvgResponseTimeSeconds = stats.AvgLatencySeconds
+	out.LLMCallCount = stats.CallCount
+	out.TotalTokens = stats.TotalTokens
+	out.ResponseTimeAvailable = stats.CallCount > 0
 
 	return out, nil
 }

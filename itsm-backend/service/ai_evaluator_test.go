@@ -39,6 +39,8 @@ func newTelemetryTestDB(t *testing.T) (*sql.DB, *AITelemetryService) {
 		CREATE TABLE IF NOT EXISTS ai_llm_calls (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			created_at TIMESTAMP,
+			tenant_id INT NOT NULL DEFAULT 0,
+			request_id TEXT NOT NULL DEFAULT '',
 			provider TEXT,
 			model TEXT,
 			tokens INT,
