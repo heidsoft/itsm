@@ -221,8 +221,19 @@ export interface TransportOperationError extends CliError {
   // Marker interface: all errors thrown from ApiClient are classified CliErrors.
 }
 
-export function transportError(status: number, message: string, endpoint: string): AgentError {
-  return httpStatusToAgentError(status, message || `request to ${endpoint} failed`);
+export function transportError(
+  status: number,
+  message: string,
+  endpoint: string,
+  capability?: string,
+  capabilityState?: string,
+): AgentError {
+  const err = httpStatusToAgentError(status, message || `request to ${endpoint} failed`);
+  // 后端能力门控（HTTP 503 + {data:{capability,state}}）的显式状态透传：
+  // 只有非空字符串才透传，凭空编造能力名和状态都属于伪造契约。
+  if (capability) err.capability = capability;
+  if (capabilityState) err.capabilityState = capabilityState;
+  return err;
 }
 
 /** Access-token lifetime (mirrors middleware.AccessTokenTTL = 15m on the backend). */
@@ -365,17 +376,30 @@ async function request<T>(
         hint: 'Run `itsm auth login --username <u> --password-stdin` once. The stored refresh token is no longer valid (single-use rotation or 7-day expiry).',
       });
     }
-    throw new CliError(transportError(res.status, await safeBody(res), endpoint));
+    // 失败响应体只读一次：除 message 外同时取后端能力门控的显式状态
+    // （HTTP 503 + {code:5003, data:{capability,state}}），供错误信封透传。
+    const [message, capability, capabilityState] = await safeBodyDetails(res);
+    throw new CliError(transportError(res.status, message, endpoint, capability, capabilityState));
   }
 
   const json = (await res.json()) as { code: number; message: string; data: T };
   if (json.code !== 0) {
     const kind = businessKind(json.code);
+    // 部分门控以 HTTP 200 + 非零 code 返回（历史 handler 仍存在），data 里同样
+    // 可能携带 {capability, state}——按同样契约透传，存在性由门控响应自己担保。
+    const gate =
+      json.data && typeof json.data === 'object'
+        ? (json.data as { capability?: unknown; state?: unknown })
+        : undefined;
+    const capability = gate && typeof gate.capability === 'string' ? gate.capability : undefined;
+    const capabilityState = gate && typeof gate.state === 'string' ? gate.state : undefined;
     throw new CliError({
       kind,
       message: (json.message || `business error ${json.code}`).trim(),
       httpStatus: res.status,
       businessCode: json.code,
+      capability,
+      capabilityState,
       // A declared outage/limit is worth retrying with backoff; a validation or
       // conflict is not (the same payload will fail the same way).
       retryable: kind === 'unavailable',
@@ -413,6 +437,32 @@ async function safeBody(res: Response): Promise<string> {
     }
   } catch {
     return '';
+  }
+}
+
+/**
+ * Read the failure body once and return (sanitized message, capability, state).
+ *
+ * The capability gate answers with `{code, message, data:{capability, state}}`;
+ * dropping `data` on the floor turns "MSP is disabled in this deployment" into a
+ * bare kind=unavailable, which callers cannot tell apart from a mere outage.
+ */
+async function safeBodyDetails(res: Response): Promise<[string, string | undefined, string | undefined]> {
+  try {
+    const text = await res.text();
+    try {
+      const json = JSON.parse(text) as {
+        message?: string;
+        data?: { capability?: string; state?: string };
+      };
+      const capability = typeof json.data?.capability === 'string' ? json.data.capability : undefined;
+      const state = typeof json.data?.state === 'string' ? json.data.state : undefined;
+      return [redactSecrets(json.message ?? text), capability, state];
+    } catch {
+      return [redactSecrets(text), undefined, undefined];
+    }
+  } catch {
+    return ['', undefined, undefined];
   }
 }
 
@@ -1204,6 +1254,31 @@ export class ApiClient {
   }
   async rejectDiscoveryResult(id: number | string, reason?: string): Promise<unknown> {
     return request(this.baseURL, 'POST', `/cmdb/discovery/results/${id}/reject`, reason ? { reason } : {});
+  }
+
+  /**
+   * Discovery could not auto-create CIs for these resources (missing required
+   * attributes); they wait for a human/agent to complete the record via
+   * registerPendingDiscoveryResource. Standard `{items,total,page,pageSize,
+   * totalPages}` list (query: page/pageSize).
+   */
+  async listPendingDiscoveryResources(params?: PaginationParams): Promise<unknown> {
+    const query: Record<string, string | number | undefined> = {};
+    if (params?.page !== undefined) query['page'] = params.page;
+    if (params?.pageSize !== undefined) query['pageSize'] = params.pageSize;
+    return request(this.baseURL, 'GET', '/cmdb/discovery/pending-resources', undefined, query);
+  }
+  /**
+   * Turn one pending resource into a CI. Body is optional — omitting it keeps
+   * the tag-inferred values; per-key `attributes` override same-named tags.
+   * `environment` accepts exactly production | staging | development.
+   * 409 when the resource is already linked to a CI.
+   */
+  async registerPendingDiscoveryResource(
+    id: number | string,
+    data?: { name?: string; environment?: 'production' | 'staging' | 'development'; assignedTo?: string; attributes?: Record<string, unknown> },
+  ): Promise<unknown> {
+    return request(this.baseURL, 'POST', `/cmdb/discovery/pending-resources/${id}/register`, data ?? {});
   }
 
   // ---------- Knowledge ----------

@@ -82,9 +82,19 @@ export function cloudCommands() {
                 ...(pageSize !== undefined ? { pageSize } : {}),
             });
         }),
-        // Applying writes discovered state into CMDB (creating/updating/linking CIs),
-        // so it is a write even though the verb is absent from the risk lexicon.
-        cmd('cloud.discovery.results.apply', 'Apply a discovery result into CMDB', 'itsm cloud discovery results apply <id>', ['POST /api/v1/cmdb/discovery/results/:id/apply'], async (ctx) => apiClient.applyDiscoveryResult(requirePositional(ctx.args, 0, 'id')), 'write'),
+        // A write because it mutates the cloud resource record — but it does not touch
+        // configuration items: CI writeback is not implemented, so an agent must not
+        // report "CMDB now matches the cloud" after this call.
+        cmd('cloud.discovery.results.apply', 'Apply a pending discovery diff to the cloud resource record (does not update CIs)', 'itsm cloud discovery results apply <id>', ['POST /api/v1/cmdb/discovery/results/:id/apply'], async (ctx) => apiClient.applyDiscoveryResult(requirePositional(ctx.args, 0, 'id')), 'write'),
         cmd('cloud.discovery.results.reject', 'Reject a discovery result', 'itsm cloud discovery results reject <id> [--reason <s>]', ['POST /api/v1/cmdb/discovery/results/:id/reject'], async (ctx) => apiClient.rejectDiscoveryResult(requirePositional(ctx.args, 0, 'id'), optionalString(ctx.args.flags, 'reason'))),
+        // --- Deferred resources (manual completion) ------------------------------
+        // Discovery could not auto-create a CI when required attributes are missing;
+        // these listings are the queue an agent drains item by item.
+        cmd('cloud.discovery.pending.list', 'List cloud resources deferred to manual completion (missing required attributes)', 'itsm cloud discovery pending list [--page N] [--pageSize N]', ['GET /api/v1/cmdb/discovery/pending-resources'], async (ctx) => apiClient.listPendingDiscoveryResources(withPagination(ctx.args))),
+        // Writes a real configuration item — the terminal step of the discovery
+        // loop. Empty body keeps tag-inferred values; --data may override name,
+        // environment (production|staging|development), assignedTo, or individual
+        // attributes. Already-linked resources come back as 409.
+        cmd('cloud.discovery.pending.register', 'Complete a deferred cloud resource: create its configuration item (empty --data keeps tag-inferred values)', 'itsm cloud discovery pending register <id> [--data <json>]', ['POST /api/v1/cmdb/discovery/pending-resources/:id/register'], async (ctx) => apiClient.registerPendingDiscoveryResource(requirePositional(ctx.args, 0, 'id'), body(ctx.args) ?? {}), 'write'),
     ];
 }

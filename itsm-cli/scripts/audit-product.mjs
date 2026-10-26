@@ -552,9 +552,11 @@ for (const probe of PROBES) {
   if (probe.capabilityDisabled) {
     if (env.ok !== false) {
       flag('violation', 'capability-state', name, 'a capability disabled in this deployment must be refused, not returned as success', repro);
-    } else {
-      flag('warning', 'capability-state', name, `disabled capability reported as kind=${env.error.kind} (http ${env.error.httpStatus}) — contract wants an explicit capability state (disabled/unconfigured/unready), not not_found`, repro);
-    }
+    } else if (!env.error.capability) {
+      // 拒绝但没有给出「哪个能力、什么状态」——调用方只能从 kind 猜测，
+      // 把「部署没启用」当成资源不存在或后端故障。
+      flag('warning', 'capability-state', name, `disabled capability reported as kind=${env.error.kind} (http ${env.error.httpStatus}) without an explicit capability/state field — contract wants {capability, state} (disabled/unconfigured/unready), not just a kind`, repro);
+    } // else: 错误信封显式携带 {capability, capabilityState}，符合契约
     continue;
   }
   if (probe.negative) {

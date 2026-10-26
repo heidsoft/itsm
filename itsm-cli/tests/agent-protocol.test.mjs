@@ -81,6 +81,21 @@ function route(req, res) {
     }
     return ok(res, { recovered: true });
   }
+  // Capability gates must surface their explicit state, not just kind=unavailable.
+  if (p === '/boom/capability-gate') {
+    return json(res, 503, {
+      code: 5003,
+      message: 'MSP 能力在当前部署形态下未启用',
+      data: { capability: 'msp', state: 'disabled' },
+    });
+  }
+  if (p === '/boom/capability-gate-200') {
+    return json(res, 200, {
+      code: 5003,
+      message: 'MSP 能力在当前部署形态下未启用',
+      data: { capability: 'msp', state: 'disabled' },
+    });
+  }
   if (p === '/boom/slow') {
     return setTimeout(() => ok(res, { slow: true }), 400);
   }
@@ -255,6 +270,22 @@ test('unreachable backend exits 1 and is marked retryable', async () => {
   const env = envelope(r);
   assert.equal(env.error.kind, 'network');
   assert.equal(env.error.retryable, true);
+});
+
+// 回归：能力门控的显式状态必须透传。修复前错误信封只有 kind=unavailable，
+// 调用方无法区分「这个部署没启用该能力」与「后端故障」，agent 会按后者
+// 一直退避重试。
+test('a capability gate carries its explicit capability state in the error envelope', async () => {
+  for (const route of ['/boom/capability-gate', '/boom/capability-gate-200']) {
+    const r = await api('GET', route);
+    assert.equal(r.code, 5, `${route}: a rejected request exits 5 (kind=unavailable)`);
+    const env = envelope(r);
+    assert.equal(env.ok, false);
+    assert.equal(env.error.kind, 'unavailable');
+    assert.equal(env.error.capability, 'msp', `${route} must name the disabled capability`);
+    assert.equal(env.error.capabilityState, 'disabled', `${route} must carry the gate state`);
+    assert.equal(env.error.retryable, true, 'transport-level hint unchanged');
+  }
 });
 
 test('--timeout bounds a slow request and explains the fix', async () => {

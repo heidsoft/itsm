@@ -267,9 +267,9 @@ node scripts/mcp-smoke.mjs                # 打真实实例的只读冒烟；--o
 
 ## 命令面速览
 
-完整目录以 `itsm --json commands` 为准（302 命令，直接从代码注册表生成）。主要 domain：
+完整目录以 `itsm --json commands` 为准（332 命令，直接从代码注册表生成）。主要 domain：
 
-`infra`（健康/版本/能力/全局搜索/原始API/**doctor 自检**） · `auth`（登录/刷新/状态/登出/切租户/注册/密码重置/SSO） · `ticket`（CRUD + workflow 状态机 + 评论 + 子任务 + 关系 + SLA + 评分 + AI） · `incident`（含根因/分类/影响评估/重大事件/事件流/报告） · `problem`（含 known-errors） · `change`（全生命周期 + 审批链 + 风险评估 + CMDB 影响 + 回滚清单 + PIR + 变更日历） · `release` · `request`/`catalog`（服务请求与目录 CRUD） · `cmdb`（CI/关系/拓扑/影响分析/标签/版本回退/CI 类型） · `knowledge` · `sla` · `workflow`（BPMN） · `notification`（含投递审计） · `connector`（集成市场） · `admin`（用户/租户/RBAC/审计/MSP/**可靠副作用命令总线**/定时器）
+`infra`（健康/版本/能力/全局搜索/原始API/**doctor 自检**） · `auth`（登录/刷新/状态/登出/切租户/注册/密码重置/SSO） · `ticket`（CRUD + workflow 状态机 + 评论 + 子任务 + 关系 + SLA + 评分 + AI） · `incident`（含根因/分类/影响评估/重大事件/事件流/报告） · `problem`（含 known-errors） · `change`（全生命周期 + 审批链 + 风险评估 + CMDB 影响 + 回滚清单 + PIR + 变更日历） · `release` · `request`/`catalog`（服务请求与目录 CRUD） · `cmdb`（CI/关系/拓扑/影响分析/标签/版本回退/CI 类型） · `cloud`（云账号/服务/资源 + 发现源/任务/结果 + **deferred 资源人工补全建账**） · `knowledge` · `sla` · `workflow`（BPMN） · `notification`（含投递审计） · `connector`（集成市场） · `admin`（用户/租户/RBAC/审计/MSP/**可靠副作用命令总线**/定时器）
 
 `itsm --json doctor` 是 `infra.doctor` 的别名，注册表仍是唯一事实来源。
 

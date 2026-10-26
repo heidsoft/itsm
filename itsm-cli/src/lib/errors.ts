@@ -47,6 +47,16 @@ export interface AgentError {
   /** Extra machine-readable context (e.g. risk description for confirmation_required). */
   risk?: unknown;
   /**
+   * Capability identifier when the backend refused the request with an explicit
+   * capability state gate (HTTP 503 + `{data:{capability,state}}`, e.g. the MSP
+   * routes in a private deployment). Carrying these through lets callers tell
+   * "this deployment has the feature turned off" apart from "the resource does
+   * not exist" or "the backend is broken", instead of just seeing kind=unavailable.
+   */
+  capability?: string;
+  /** One of the backend capability states: disabled / unconfigured / unready. */
+  capabilityState?: string;
+  /**
    * Structured evidence for failures that carry a report (currently `flow run`).
    * Kept separate from `risk` so consumers never have to sniff the shape.
    */

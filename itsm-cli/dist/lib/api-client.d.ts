@@ -32,7 +32,7 @@ export declare function getTransportConfig(): TransportConfig;
 export declare function setExternalTokenProvider(fn: () => string | undefined): void;
 export interface TransportOperationError extends CliError {
 }
-export declare function transportError(status: number, message: string, endpoint: string): AgentError;
+export declare function transportError(status: number, message: string, endpoint: string, capability?: string, capabilityState?: string): AgentError;
 export declare class ApiClient {
     private explicitBaseURL?;
     constructor(explicitBaseURL?: string | undefined);
@@ -320,6 +320,25 @@ export declare class ApiClient {
     }): Promise<unknown>;
     applyDiscoveryResult(id: number | string): Promise<unknown>;
     rejectDiscoveryResult(id: number | string, reason?: string): Promise<unknown>;
+    /**
+     * Discovery could not auto-create CIs for these resources (missing required
+     * attributes); they wait for a human/agent to complete the record via
+     * registerPendingDiscoveryResource. Standard `{items,total,page,pageSize,
+     * totalPages}` list (query: page/pageSize).
+     */
+    listPendingDiscoveryResources(params?: PaginationParams): Promise<unknown>;
+    /**
+     * Turn one pending resource into a CI. Body is optional — omitting it keeps
+     * the tag-inferred values; per-key `attributes` override same-named tags.
+     * `environment` accepts exactly production | staging | development.
+     * 409 when the resource is already linked to a CI.
+     */
+    registerPendingDiscoveryResource(id: number | string, data?: {
+        name?: string;
+        environment?: 'production' | 'staging' | 'development';
+        assignedTo?: string;
+        attributes?: Record<string, unknown>;
+    }): Promise<unknown>;
     listKnowledge(params?: PaginationParams & {
         category?: string;
     }): Promise<KnowledgeListResponse>;
