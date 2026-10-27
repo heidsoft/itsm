@@ -3,6 +3,14 @@
 # 默认写法）会与 dev 栈的服务名冲突并互相顶掉容器（表现为 dev up 后 prod 502，反之亦然）。
 name: itsm-prod
 
+# 日志上限：json-file 默认无界，单机部署下迟早把磁盘写满（写满 = PG 只读 = 全站故障）。
+# 50m × 5 = 每服务最多 250 MB，7 个服务约 1.75 GB 封顶，可预测。
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "50m"
+    max-file: "5"
+
 services:
   # PostgreSQL 数据库（生产环境）
   postgres:
@@ -28,6 +36,9 @@ services:
       retries: 5
       start_period: 30s
     restart: always
+    logging: *default-logging
+    mem_limit: "2g"
+    cpus: "2.0"
 
   # Redis 缓存（生产环境）
   redis:
@@ -58,6 +69,9 @@ services:
       timeout: 3s
       retries: 5
     restart: always
+    logging: *default-logging
+    mem_limit: "2560m"
+    cpus: "1.0"
 
   # MinIO 对象存储（可选，默认不启动）
   #
@@ -86,6 +100,9 @@ services:
       retries: 5
       start_period: 30s
     restart: always
+    logging: *default-logging
+    mem_limit: "512m"
+    cpus: "1.0"
 
   # ITSM 后端服务（生产环境）
   itsm-init:
@@ -140,6 +157,9 @@ services:
     networks:
       - itsm-prod-network
     restart: "no"
+    logging: *default-logging
+    mem_limit: "512m"
+    cpus: "2.0"
 
   # ITSM 后端服务（生产环境）
   itsm-backend:
@@ -270,6 +290,9 @@ services:
       retries: 3
       start_period: 60s
     restart: always
+    logging: *default-logging
+    mem_limit: "1g"
+    cpus: "2.0"
 
   # Guidance sidecar（受限 JSON 生成）。复用 itsm-ai-service：POST /triage 提供
   # 与后端 GuidanceClient 兼容的分类响应，GET /health 提供健康检查。
@@ -303,6 +326,9 @@ services:
       retries: 3
       start_period: 30s
     restart: always
+    logging: *default-logging
+    mem_limit: "1g"
+    cpus: "2.0"
 
   # 可靠命令、SLA、升级和索引调度器。与 API 使用同一镜像但不监听 HTTP。
   itsm-worker:
@@ -369,6 +395,9 @@ services:
       start_period: 10s
     stop_grace_period: 35s
     restart: always
+    logging: *default-logging
+    mem_limit: "512m"
+    cpus: "1.0"
 
   # ITSM 前端服务（生产环境）
   itsm-frontend:
@@ -416,6 +445,9 @@ services:
       retries: 3
       start_period: 30s
     restart: always
+    logging: *default-logging
+    mem_limit: "512m"
+    cpus: "1.0"
 
   # Nginx 反向代理（生产环境）
   nginx:
@@ -443,6 +475,9 @@ services:
       timeout: 5s
       retries: 3
     restart: always
+    logging: *default-logging
+    mem_limit: "256m"
+    cpus: "1.0"
 
   # ============================================
   # Monitoring Stack (opt-in via "monitoring" profile)
@@ -483,6 +518,9 @@ services:
       timeout: 5s
       retries: 3
     restart: always
+    logging: *default-logging
+    mem_limit: "1g"
+    cpus: "1.0"
 
   alertmanager:
     image: prom/alertmanager:v0.26.0
@@ -509,6 +547,9 @@ services:
       timeout: 5s
       retries: 3
     restart: always
+    logging: *default-logging
+    mem_limit: "256m"
+    cpus: "0.5"
 
   alert-webhook:
     build:
@@ -532,6 +573,9 @@ services:
       timeout: 5s
       retries: 3
     restart: always
+    logging: *default-logging
+    mem_limit: "128m"
+    cpus: "0.5"
 
   grafana:
     image: grafana/grafana:10.1.0
@@ -560,6 +604,9 @@ services:
       timeout: 5s
       retries: 3
     restart: always
+    logging: *default-logging
+    mem_limit: "512m"
+    cpus: "1.0"
 
   # Exporters: collect metrics from infrastructure components.
   # All under "monitoring" profile.
@@ -577,6 +624,9 @@ services:
     networks:
       - itsm-prod-network
     restart: always
+    logging: *default-logging
+    mem_limit: "128m"
+    cpus: "0.5"
 
   redis-exporter:
     image: oliver006/redis_exporter:v1.58.0
@@ -592,6 +642,9 @@ services:
     networks:
       - itsm-prod-network
     restart: always
+    logging: *default-logging
+    mem_limit: "128m"
+    cpus: "0.5"
 
   node-exporter:
     image: prom/node-exporter:v1.7.0
@@ -611,6 +664,9 @@ services:
     networks:
       - itsm-prod-network
     restart: always
+    logging: *default-logging
+    mem_limit: "128m"
+    cpus: "0.5"
 
 volumes:
   # 卷必须 external 指向既有数据卷：拆分项目名（-p itsm-prod）后 compose

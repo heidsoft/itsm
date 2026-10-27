@@ -98,11 +98,16 @@ func EnsureOperationalIndexes(ctx context.Context, db *sql.DB) error {
 	return errors.Join(errs...)
 }
 
-// duplicateIndexPairs 是「完全重复索引」的收敛表，每项为 {保留, 删除}。
+// duplicateIndexPairs 是「重复索引」的收敛表，每项为 {保留, 删除}。
 //
-// 判据是列、唯一性、谓词、排序方向四项全同（用 pg_get_indexdef 去掉索引名后
-// 逐字比较 + indoption + indisunique），因此删除任一侧都不会改变任何查询的计划
-// 可选性。2026-10-27 生产库实测 32 对，冗余侧累计 1861 次扫描 / 368 kB。
+// 判据分两类，两类都保证删除冗余侧不改变任何查询的计划可选性：
+//
+//	A. 完全重复：列、唯一性、谓词、排序方向四项全同（pg_get_indexdef 去掉索引名
+//	   后逐字比较 + indoption + indisunique）。2026-10-27 生产库实测 32 对，
+//	   冗余侧累计 1861 次扫描 / 368 kB。
+//	B. 唯一覆盖：列与顺序、谓词、排序方向全同，仅唯一性不同——非唯一侧被唯一侧
+//	   完全覆盖（唯一 btree 能服务非唯一 btree 的全部查找）。这类只有 1 对，
+//	   见下方 initialization_component_attempts。
 //
 // 根因是三份「补索引」批次脚本按名字判断缺失：add_missing_indexes.sql /
 // add_missing_indexes_batch2.sql / 20261027_prod_schema_guards.sql 看到「没有叫
@@ -120,6 +125,12 @@ func EnsureOperationalIndexes(ctx context.Context, db *sql.DB) error {
 // cloud_resources_account_resource_lookup_idx，但 ent schema 仍声明着它，
 // 于是每次 bootstrap 又建回来——生产库因此有两份、首装库只有一份。该对保留
 // 迁移那份，并已从 ent/schema/cloud_resource.go 移除声明。
+//
+// 第五处属 B 类（initialization_component_attempts）：008_add_initialization_ledger
+// 的建表语句自带 UNIQUE(run_id, component, attempt)，紧接着又 CREATE INDEX
+// idx_init_attempts_run_component 建在同一组列上。后者从第一天起就是纯冗余。
+// 该迁移的 checksum 已固化（migration/migrator.go 对 mismatch 硬失败），不能改源，
+// 只能收敛；保留约束索引那份。
 //
 // 为什么不是一份 migrations/*.sql：无日期脚本（add_missing_indexes*）按字符串
 // 排序落在所有 YYYYMMDD_* 之后，任何日期化「删除型」迁移都会被它们随后重建，
@@ -143,6 +154,7 @@ var duplicateIndexPairs = [][2]string{
 	{"emailoutboundmessage_tenant_id_status_created_at", "email_outbound_messages_delivery_idx"},
 	{"inboundemailmessage_tenant_id_processing_status_received_at", "inbound_email_messages_processing_idx"},
 	{"idx_incident_related_incidents_incident_id", "idx_inc_related_inc"},
+	{"initialization_component_attempts_run_id_component_attempt_key", "idx_init_attempts_run_component"},
 	{"knowledgearticlereview_article_id_created_at", "idx_knowledge_article_reviews_article_created"},
 	{"knowledgearticlereview_tenant_id_article_id", "idx_knowledge_article_reviews_tenant_article"},
 	{"knowledgearticle_tenant_id_source_problem_id", "idx_knowledge_articles_source_problem"},

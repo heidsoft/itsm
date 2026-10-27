@@ -124,16 +124,21 @@ done
 SEQ="$(psql_scalar "SELECT count(*) FROM pg_class WHERE relkind = 'S' AND relname = 'incident_number_seq'")"
 [ "$SEQ" = "1" ] || fail "incident_number_seq 缺失；事件编号会退回 COUNT+1 并发复用"
 
-# 索引撞车：同一张表上不允许存在两份「列、唯一性、谓词、排序方向完全相同」的索引。
+# 索引撞车：同一张表上不允许存在两份「列、谓词、排序方向完全相同」的索引。
 # 判据不能只看列名——列相同但排序方向或谓词不同的两条索引服务不同查询，合并会退化。
-# 这类重复的成本是双写两棵 B 树 + 规划器候选集翻倍，且不会有任何功能报错，
-# 只能靠对账发现（2026-10-27 生产库实测 32 对）。ent 那份由 auto-migrate 每次部署
-# 重建，手写那份由 migrations/20261028_drop_duplicate_indexes.sql 删除，此处守住结果。
+# 唯一性刻意不参与判据：唯一 btree 能服务非唯一 btree 的全部查找，所以「唯一 + 非唯一」
+# 同列同序也是纯冗余（008_add_initialization_ledger 的 UNIQUE(run_id,component,attempt)
+# 配一条同列 CREATE INDEX 就是这种情况）。
+# 这类重复的成本是双写两棵 B 树 + 规划器候选集翻倍，且不会有任何功能报错，只能靠对账
+# 发现（2026-10-27 生产库实测 32 对完全重复 + 1 对唯一覆盖）。收敛动作在
+# database.EnsureIndexConvergence（InitializeStorage 末尾）执行——不能写成日期化迁移，
+# 因为无日期的 add_missing_indexes* 按字符串排序落在其后，会把删掉的索引又建回来。
+# 此处守住收敛后的结果。
 DUP_INDEXES="$(psql_scalar "
 WITH idx AS (
   SELECT i.indrelid::regclass::text AS tbl, c.relname AS idx,
          regexp_replace(pg_get_indexdef(i.indexrelid),
-                        '^CREATE (UNIQUE )?INDEX (\S+) ON (\S+) ', 'CREATE \1INDEX ON \3 ') AS sem,
+                        '^CREATE (UNIQUE )?INDEX (\S+) ON (\S+) ', 'CREATE INDEX ON \3 ') AS sem,
          i.indoption::text AS opt, i.indisunique AS uniq
   FROM pg_index i JOIN pg_class c ON c.oid = i.indexrelid
   WHERE i.indrelid IN (SELECT oid FROM pg_class
@@ -142,24 +147,25 @@ WITH idx AS (
 )
 SELECT count(*) FROM idx a JOIN idx b
   ON a.tbl = b.tbl AND a.idx < b.idx
-WHERE a.sem = b.sem AND a.opt = b.opt AND a.uniq = b.uniq")"
+WHERE a.sem = b.sem AND a.opt = b.opt")"
 if [ "${DUP_INDEXES:-0}" != "0" ]; then
   psql_scalar "
 WITH idx AS (
   SELECT i.indrelid::regclass::text AS tbl, c.relname AS idx,
          regexp_replace(pg_get_indexdef(i.indexrelid),
-                        '^CREATE (UNIQUE )?INDEX (\S+) ON (\S+) ', 'CREATE \1INDEX ON \3 ') AS sem,
+                        '^CREATE (UNIQUE )?INDEX (\S+) ON (\S+) ', 'CREATE INDEX ON \3 ') AS sem,
          i.indoption::text AS opt, i.indisunique AS uniq
   FROM pg_index i JOIN pg_class c ON c.oid = i.indexrelid
   WHERE i.indrelid IN (SELECT oid FROM pg_class
                        WHERE relkind = 'r' AND relnamespace = 'public'::regnamespace)
     AND NOT i.indisprimary
 )
-SELECT a.tbl || ': ' || a.idx || ' == ' || b.idx FROM idx a JOIN idx b
+SELECT a.tbl || ': ' || a.idx || ' (unique=' || a.uniq || ') == '
+       || b.idx || ' (unique=' || b.uniq || ')' FROM idx a JOIN idx b
   ON a.tbl = b.tbl AND a.idx < b.idx
-WHERE a.sem = b.sem AND a.opt = b.opt AND a.uniq = b.uniq
+WHERE a.sem = b.sem AND a.opt = b.opt
 ORDER BY a.tbl" >&2 || true
-  fail "首装库存在 $DUP_INDEXES 对完全重复的索引（见上方清单）；重复索引只增加写放大，不提供任何查询能力"
+  fail "首装库存在 $DUP_INDEXES 对重复索引（见上方清单）；重复索引只增加写放大，不提供任何查询能力"
 fi
 
 log "PASS: 迁移 $MIGRATIONS 条（空 checksum 0）、活跃流程定义 ${DEFS}、活跃流程绑定 ${BINDINGS}（悬空 ${DANGLING}）、运营性索引/序列 4/4、重复索引 0 对"
