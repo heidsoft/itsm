@@ -309,5 +309,11 @@ tmp-audit/
 # One-shot AI code review artifacts at backend root (CMDB/BPMN/...) — keep local, never commit
 itsm-backend/audit*.md
 
+# One-shot browser QA scripts under frontend/scripts (tmp-*.mjs) — keep local.
+# These are throwaway route-walk helpers that may embed prod credentials; they are
+# intentionally not tracked. Durable equivalents belong under tests/e2e/ with
+# credentials read from env vars.
+itsm-frontend/scripts/tmp-*.mjs
+
 # migration-lint compiled binary (build artifact, keep local)
 itsm-backend/migration-lint
