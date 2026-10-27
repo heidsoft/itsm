@@ -40,11 +40,14 @@ seeder 守卫、预检表生成、tsc 全绿——**但真实浏览器一跑，�
 **关键动作：造角色。** 生产库原本只有 1 个 `super_admin`，无法验证「按角色可见性」。
 经 `POST /api/v1/users` 建两个临时账号（`qa_enduser` / `qa_itadmin`），走完再删。
 没有这一步，第 1、2、3、4 号缺陷全都测不出来——`super_admin` 对每个页面都有权限，
-是所有权限缺陷的「完美掩盖器」。
+是所有权限缺陷的「最强掩盖器」。
 
-> 门禁备注：docs-gate C.4 会把上句的「完美」报为「无 revision 锚点的发布声明」，
-> 属修辞误报（advisory 级，不阻断）——此处的「完美掩盖器」是描述性说法，
-> 不是对某个 release/commit 的断言。
+> 门禁备注（2026-10-28 修正）：这段原文用的措辞命中了 docs-gate C.4 的禁用表述表，
+> 被报为「无 revision 锚点的发布声明」。此处原先写的备注是「advisory 级，不阻断」，
+> 那句是错的——CI 的 docs-gate 传 `--strict`，C.4 在 CI 里是 hard、直接阻断；只有本地
+> `run-all.sh` 不带参数时才是 advisory。正是这个本地/CI 口径差异，让这条违规从
+> 2026-10-26 挂到 2026-10-28 才被发现（同期 docs-gate 在 main 上连续 4 次被取消或红着，
+> 见 CHANGELOG 2026-10-28「首次推送后 CI 抓到的两项」）。现已改掉措辞，C.4 违规数回到 0。
 
 > 附带发现：写操作接口要求 CSRF Double-Submit（`csrf_token` cookie + `X-CSRF-Token` 头），
 > 先 `GET /api/v1/csrf-token` 取 token 再带头发请求。脚本化验证时容易只踩「缺少认证token」，
