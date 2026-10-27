@@ -139,11 +139,15 @@ var registry = []definition{
 	// （只授 sysadmin，租户 admin 仍只有 marketplace:write 用于安装/卸载）+ 目录项
 	// CRUD + 版本发布/回滚 + 只读控制台 /admin/marketplace。此前目录只有 seeder 能写，
 	// 「应用市场」在客户环境里永远只有出厂那几条商品——这才是它停在 Pilot 的原因。
+	// 2026-10-27 依赖闸门双边落地：安装前校验待装版本声明的依赖已在同租户
+	// 安装且版本满足（缺口逐项 409）；卸载前反向检查是否仍被 active/disabled
+	// 的已安装组件依赖（列出依赖方 409），并在 revoke 连接器之前判定。
 	// 仍不申报 GA：skill/plugin 类商品的安装只写一条安装记录，没有分发/装载机制；
-	// auto_upgrade 有字段没有执行路径；dependencies 未做安装期校验。
+	// auto_upgrade 有字段没有执行路径；存量安装未做一次性对齐（闸门之前落库的
+	// 记录可能已悬空），升级时的重新校验也无处挂载（升级本身尚未实现）。
 	{
 		key: "marketplace", maturity: MaturityPilot, built: true, readOnly: true,
-		pilotReason: "目录管理已闭环（平台上架/下架、版本发布与回滚、控制台），但商品交付语义不完整：skill/plugin 类安装只写安装记录，没有分发/装载机制；auto_upgrade 无升级执行路径；dependencies 未做安装期校验。晋升条件：skill/plugin 装载机制 + 版本升级执行 + 依赖校验。",
+		pilotReason: "目录管理已闭环（平台上架/下架、版本发布与回滚、控制台），依赖闸门已双向落地（安装前校验前置组件与版本、卸载前拦截被依赖的组件，缺口逐项返回 409）。但商品交付语义仍不完整：skill/plugin 类安装只写安装记录，没有分发/装载机制；auto_upgrade 无升级执行路径；依赖闸门不回溯存量安装，升级时的重新校验也无处挂载。晋升条件：skill/plugin 装载机制 + 版本升级执行 + 存量依赖对齐。",
 	},
 	{key: "project", maturity: MaturityGA, built: true},
 	{key: "application", maturity: MaturityGA, built: true},

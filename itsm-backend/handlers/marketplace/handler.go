@@ -160,6 +160,10 @@ func (c *Handler) InstallItem(ctx *gin.Context) {
 				return
 			}
 			common.Conflict(ctx, "连接器未就绪："+err.Error(), nil)
+		case errors.Is(err, marketplace.ErrMarketplaceDependencyUnsatisfied):
+			// 前置组件缺失/版本不符属于业务冲突而非参数错误：商品本身可装，
+			// 只是依赖链没满足。明细由 service 逐项拼好，直接展示给管理员。
+			common.Conflict(ctx, err.Error(), nil)
 		default:
 			common.RespondError(ctx, err, "安装组件失败")
 		}
@@ -196,6 +200,12 @@ func (c *Handler) UninstallItem(ctx *gin.Context) {
 	if err != nil {
 		if errors.Is(err, marketplace.ErrMarketplaceInstallationAbsent) {
 			common.NotFoundWithErr(ctx, err, "安装记录不存在或已被卸载")
+			return
+		}
+		if errors.Is(err, marketplace.ErrMarketplaceItemRequiredByDependents) {
+			// 与安装期依赖闸门对称：前置被拆掉会让依赖它的组件悬空，
+			// 但记录仍显示 active。卸载被拒时安装记录保持原状。
+			common.Conflict(ctx, err.Error(), nil)
 			return
 		}
 		if errors.Is(err, marketplace.ErrMarketplaceConnectorStillRunning) {

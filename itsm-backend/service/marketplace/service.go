@@ -32,6 +32,15 @@ var (
 	ErrMarketplaceInstalledByMissing  = errors.New("marketplace installed_by is required")
 	ErrMarketplaceConfigSchemaInvalid = errors.New("config does not match item schema")
 
+	// ErrMarketplaceDependencyUnsatisfied 待装版本声明的依赖在当前租户内未满足。
+	// 这是业务冲突（409）而非参数错误：商品本身可安装，只是前置组件没装或版本不符。
+	// 具体缺口见 DependencyUnsatisfiedError.Problems（可逐项展示给管理员）。
+	ErrMarketplaceDependencyUnsatisfied = errors.New("marketplace dependency unsatisfied")
+
+	// ErrMarketplaceItemRequiredByDependents 目标组件仍被同租户内其他已安装组件依赖。
+	// 与安装期闸门对称：能装的链路，也要能拦住把中间环节拆掉的卸载。
+	ErrMarketplaceItemRequiredByDependents = errors.New("marketplace item is required by installed dependents")
+
 	// ErrMarketplaceConnectorNotReady 连接器商品的运行态同步失败。
 	//
 	// 这里的「失败」指的是 marketplace 的安装记录（DB）与 connector.Manager 的
@@ -222,9 +231,20 @@ func (s *Service) InstallItem(ctx context.Context, tenantID, itemID int, install
 		return existingInstallation, nil
 	} else {
 		// 上次停在 installing/failed：把「安装」按钮当成重试入口，而不是无脑返回
-		// 那条永远起不来的记录。
+		// 那条永远起不来的记录。重试前同样要过依赖闸门，否则会把一条本不该
+		// 成立的安装记录推向 active。
+		if err := s.validateDependencies(ctx, tenantID, item.ID, item.Name, item.LatestVersion); err != nil {
+			return nil, err
+		}
 		s.logger.Infow("Retrying unfinished marketplace installation", "tenant_id", tenantID, "item_id", itemID, "installation_id", existingInstallation.ID, "status", existingInstallation.Status)
 		return s.activateInstallation(ctx, item, existingInstallation, installedBy, existingInstallation.Config)
+	}
+
+	// 依赖闸门：版本声明的依赖必须已在当前租户安装且版本满足。
+	// 放在落安装记录之前——先写记录再校验失败会留下一条永远起不来的 installing 行，
+	// 让「没装上」和「装了一半」在界面上不可区分。
+	if err := s.validateDependencies(ctx, tenantID, item.ID, item.Name, item.LatestVersion); err != nil {
+		return nil, err
 	}
 
 	// 5) 尝试创建安装记录（处理 UNIQUE(tenant_id, item_id) 冲突场景：存在历史卸载记录）
@@ -313,6 +333,23 @@ func (s *Service) UninstallItem(ctx context.Context, tenantID, itemID int) error
 			return ErrMarketplaceInstallationAbsent
 		}
 		return fmt.Errorf("failed to find installation: %w", err)
+	}
+
+	// 反向依赖闸门：先确认没有已安装组件依赖它，再动运行态。
+	// 顺序不能反——先 revoke 连接器再判定不允许卸载，会留下
+	// 「安装记录还是 active、连接器已经没了」的分裂状态。
+	item, err := s.db.MarketplaceItem.Get(ctx, itemID)
+	if err != nil && !ent.IsNotFound(err) {
+		return fmt.Errorf("failed to load item: %w", err)
+	}
+	if err == nil {
+		dependents, depErr := s.findDependents(ctx, tenantID, itemID, item.Name)
+		if depErr != nil {
+			return depErr
+		}
+		if len(dependents) > 0 {
+			return &DependentsBlockUninstallError{Dependents: dependents}
+		}
 	}
 
 	// 执行实际卸载：连接器必须在运行态真正注销。

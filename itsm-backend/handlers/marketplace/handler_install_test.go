@@ -12,8 +12,10 @@ import (
 	"time"
 
 	"itsm-backend/connector"
+	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
 	"itsm-backend/ent/marketplaceitem"
+	"itsm-backend/ent/tenantinstallation"
 	"itsm-backend/middleware"
 	marketplaceService "itsm-backend/service/marketplace"
 
@@ -56,6 +58,7 @@ func (s *handlerStubConnector) Close() error { return nil }
 type handlerFixture struct {
 	handler *Handler
 	itemID  int
+	client  *ent.Client
 }
 
 func newHandlerFixture(t *testing.T, name string) *handlerFixture {
@@ -84,7 +87,7 @@ func newHandlerFixture(t *testing.T, name string) *handlerFixture {
 		t.Fatalf("create item: %v", err)
 	}
 
-	return &handlerFixture{handler: NewHandler(svc), itemID: item.ID}
+	return &handlerFixture{handler: NewHandler(svc), itemID: item.ID, client: client}
 }
 
 // newContext 构造带租户/用户上下文的 gin 上下文（放行 middleware 的 fail-closed 校验）。
@@ -154,5 +157,88 @@ func TestUpdateConfigHandler_ConflictsWhenProvisionFails(t *testing.T) {
 	}
 	if !strings.Contains(rec2.Body.String(), "已保留原配置") {
 		t.Fatalf("conflict message must state that the previous config is kept, got %s", rec2.Body.String())
+	}
+}
+
+// TestInstallItemHandler_DependencyUnsatisfiedReturns409 依赖缺口是业务冲突：
+// 商品本身可装，缺的是前置链条，handler 必须映射成 409 并把逐项明细交给前端，
+// 而不是折成 500「安装组件失败」让管理员无从下手。
+func TestInstallItemHandler_DependencyUnsatisfiedReturns409(t *testing.T) {
+	f := newHandlerFixture(t, "handlerdep")
+
+	dependent, err := f.client.MarketplaceItem.Create().
+		SetName("handlerdep-dependent").
+		SetType(marketplaceitem.TypeConnector).
+		SetTitle("Dependent").
+		SetProvider("Open Source").
+		SetLatestVersion("1.0.0").
+		SetStatus(marketplaceitem.StatusPublished).
+		Save(context.Background())
+	if err != nil {
+		t.Fatalf("create dependent item: %v", err)
+	}
+	if _, err := f.client.ItemVersion.Create().
+		SetItemID(dependent.ID).
+		SetVersion("1.0.0").
+		SetDependencies(map[string]string{"handlerdep": ">=1.0.0"}).
+		Save(context.Background()); err != nil {
+		t.Fatalf("create dependent version: %v", err)
+	}
+
+	c, rec := newContext(http.MethodPost, "/marketplace/items/1/install", "", strconv.Itoa(dependent.ID))
+	f.handler.InstallItem(c)
+
+	if rec.Code != http.StatusConflict {
+		t.Fatalf("expected 409 for unsatisfied dependency, got %d: %s", rec.Code, rec.Body.String())
+	}
+	if !strings.Contains(rec.Body.String(), "未安装") || !strings.Contains(rec.Body.String(), "handlerdep") {
+		t.Fatalf("conflict message must list the missing prerequisite, got %s", rec.Body.String())
+	}
+}
+
+// TestUninstallItemHandler_DependentsBlockReturns409 被依赖的组件不许卸：
+// 卸掉之后依赖方仍标 active，实际调用全部失败。
+func TestUninstallItemHandler_DependentsBlockReturns409(t *testing.T) {
+	f := newHandlerFixture(t, "handlerundep")
+	ctx := context.Background()
+
+	dependent, err := f.client.MarketplaceItem.Create().
+		SetName("handlerundep-dependent").
+		SetType(marketplaceitem.TypeConnector).
+		SetTitle("Dependent").
+		SetProvider("Open Source").
+		SetLatestVersion("1.0.0").
+		SetStatus(marketplaceitem.StatusPublished).
+		Save(ctx)
+	if err != nil {
+		t.Fatalf("create dependent item: %v", err)
+	}
+	if _, err := f.client.ItemVersion.Create().
+		SetItemID(dependent.ID).
+		SetVersion("1.0.0").
+		SetDependencies(map[string]string{"handlerundep": "1.0.0"}).
+		Save(ctx); err != nil {
+		t.Fatalf("create dependent version: %v", err)
+	}
+	for _, itemID := range []int{f.itemID, dependent.ID} {
+		if _, err := f.client.TenantInstallation.Create().
+			SetTenantID(1).
+			SetItemID(itemID).
+			SetInstalledVersion("1.0.0").
+			SetStatus(tenantinstallation.StatusActive).
+			SetInstalledBy("1001").
+			Save(ctx); err != nil {
+			t.Fatalf("create installation for item %d: %v", itemID, err)
+		}
+	}
+
+	c, rec := newContext(http.MethodPost, "/marketplace/items/1/uninstall", "", strconv.Itoa(f.itemID))
+	f.handler.UninstallItem(c)
+
+	if rec.Code != http.StatusConflict {
+		t.Fatalf("expected 409 when dependents are installed, got %d: %s", rec.Code, rec.Body.String())
+	}
+	if !strings.Contains(rec.Body.String(), "Dependent") {
+		t.Fatalf("conflict message must list the dependents, got %s", rec.Body.String())
 	}
 }
