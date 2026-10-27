@@ -270,6 +270,7 @@ func precheckRoutePermissions() map[string]map[string]Permission {
 			"/api/v1/email-intake/support-contracts":               {Resource: "support_contract", Action: "read"},
 			"/api/v1/escalation-matrices":                          {Resource: "sla", Action: "read"},
 			"/api/v1/feishu/oauth/auth-url":                        {Resource: "connector", Action: "write"},
+			"/api/v1/global-search":                                {Resource: "dashboard", Action: "read"},
 			"/api/v1/groups":                                       {Resource: "group", Action: "read"},
 			"/api/v1/groups/*":                                     {Resource: "group", Action: "read"},
 			"/api/v1/groups/*/members":                             {Resource: "group", Action: "read"},

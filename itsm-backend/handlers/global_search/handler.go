@@ -59,7 +59,7 @@ func (h *Handler) Search(ctx *gin.Context) {
 		return
 	}
 
-	response, err := h.service.Search(ctx.Request.Context(), tenantID, keyword)
+	response, err := h.service.Search(ctx.Request.Context(), tenantID, keyword, middleware.GetContextRoles(ctx))
 	if err != nil {
 		common.Fail(ctx, common.InternalErrorCode, "搜索失败")
 		return
@@ -68,9 +68,15 @@ func (h *Handler) Search(ctx *gin.Context) {
 	common.Success(ctx, response)
 }
 
+// RegisterRoutes 注册全局搜索路由。
+//
+// 显式 RequirePermission：全局搜索是跨域聚合面，读权限码取 dashboard:read
+//（与工作台同族的「聚合读面」语义）。此前这条路由没有任何权限声明，
+// RBAC 中间件只能按路径推断出 global-search:read —— 该码不在 authz 词表、
+// 无人持有，DBOnly 下即除 super_admin 外全员 403，功能实际不可用。
 func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 	search := r.Group("/global-search")
 	{
-		search.GET("", h.Search)
+		search.GET("", middleware.RequirePermission("dashboard", "read"), h.Search)
 	}
 }

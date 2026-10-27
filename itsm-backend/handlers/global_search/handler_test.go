@@ -51,6 +51,12 @@ func newSearchRouter(client *ent.Client, tenantID int) *gin.Engine {
 	router := gin.New()
 	router.Use(func(ctx *gin.Context) {
 		ctx.Set(middleware.TenantContextKey, &middleware.TenantContext{TenantID: tenantID})
+		// 路由现已挂 dashboard:read（跨域聚合读面），RequirePermission 需要
+		// role / tenant_id / client 三件上下文；super_admin 直通。
+		ctx.Set("role", "super_admin")
+		ctx.Set("user_id", 1)
+		ctx.Set("tenant_id", tenantID)
+		ctx.Set("client", client)
 		ctx.Next()
 	})
 	NewHandler(NewService(client)).RegisterRoutes(router.Group("/api/v1"))

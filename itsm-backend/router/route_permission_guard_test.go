@@ -61,6 +61,70 @@ var writeRouteExemptions = map[string]string{
 	"account_routes.go PUT /profile":         "自助改资料，仅作用于调用者本人且字段白名单不含角色/状态/用户名",
 }
 
+// readRouteExemptions 白名单：明确接受「无行内权限中间件」的读路由。
+//
+// 键格式：`<相对路径> <METHOD> <路径>`。只允许四类，且必须写明理由：
+//  1. 公开面（健康检查、bootstrap 状态、CSRF token、Swagger 文档）——
+//     登录前或纯技术端点，不返回业务数据；
+//  2. 身份自省面（/auth/me、/auth/session、/auth/profile、/auth/tenants）——
+//     仅需已认证身份，授权依据是「调用者与自身/自身租户的归属关系」；
+//  3. 外部 OAuth 回调（飞书）——凭 provider 侧的 state/code 校验；
+//  4. 分组级已挂权限中间件但不在本扫描器可识别形式内的路由。
+//
+// 为什么读路由也要守：此前只有写路由受守卫覆盖，读路由无任何声明时
+// 只能靠 RBAC 中间件的路径预检兜底，而预检推出的资源名可能不在权限词表
+// （global-search 即是如此：推出的 global-search:read 无人持有，DBOnly 下
+// 除 super_admin 外全员 403，功能实际不可用）。读路由同样可能返回跨域
+// 敏感数据（全局搜索返回标题与描述正文），无声明即无授权依据。
+var readRouteExemptions = map[string]string{
+	// —— 1. 公开面：纯技术端点，不返回业务数据 ——
+	"router.go GET /health":                                              "健康检查，不含业务数据",
+	"router.go GET /healthz":                                             "健康检查别名，K8s/常见探针路径",
+	"router.go GET /readyz":                                              "就绪探针，只回初始化布尔状态，供编排层摘流",
+	"router.go GET /version":                                             "版本号与构建渠道，前端版本提示用",
+	"router.go GET /metrics":                                             "Prometheus 抓取面，仅 AuthMiddleware 不含业务数据；prod 未映射宿主端口",
+	"router.go GET /csrf-token":                                          "CSRF token 下发，本身就是鉴权凭据的载体",
+	"router.go GET /swagger/*any":                                        "Swagger 文档面，仅描述 API 形状",
+	"bootstrap_routes.go GET /status":                                    "初始化状态探测，只回布尔状态",
+	"../handlers/bpmn/dashboard.go GET /metrics":                         "BPMN 仪表盘读面，路由由 SetupRoutes 统一挂 bpmn:read",
+	"../handlers/bpmn/dashboard.go GET /process/:key/metrics":            "同上",
+	"../handlers/bpmn/dashboard.go GET /sla/violations":                  "同上",
+	"../handlers/bpmn/dashboard.go GET /sla/compliance":                  "同上",
+	"../handlers/bpmn/dashboard.go GET /tenant/stats":                    "同上",
+	"../handlers/bpmn/dashboard.go GET /bottlenecks":                     "同上",
+	"../handlers/bpmn/monitoring.go GET /metrics":                        "BPMN 监控读面，路由由 SetupRoutes 统一挂 bpmn:read",
+	"../handlers/bpmn/monitoring.go GET /metrics/:processKey":            "同上",
+	"../handlers/bpmn/monitoring.go GET /instances/:instanceId/status":   "同上",
+	"../handlers/bpmn/monitoring.go GET /instances/status":               "同上",
+	"../handlers/bpmn/monitoring.go GET /instances/:instanceId/timeline": "同上",
+	"../handlers/bpmn/monitoring.go GET /performance":                    "同上",
+	"../handlers/bpmn/monitoring.go GET /performance/alerts":             "同上",
+	"../handlers/bpmn/monitoring.go GET /health":                         "同上",
+
+	// —— 2. 身份自省面：只需已认证身份 + 归属校验 ——
+	"common_system_routes.go GET /me":      "当前登录用户自身信息",
+	"common_system_routes.go GET /session": "当前会话自身信息",
+	"common_system_routes.go GET /tenants": "当前用户已归属的租户列表",
+	"common_system_routes.go GET /menus":   "当前用户可见菜单（按其权限码过滤）",
+	"common_system_routes.go GET /profile": "当前用户自身资料",
+	"sso_routes.go GET /sso/identities":    "列出调用者本人已绑定的外部身份，仅影响自己",
+
+	// —— 3. 外部 OAuth 回调 / 登录前发现面 ——
+	"feishu_routes.go GET /feishu/oauth/callback/:instance_id": "飞书 OAuth 回调，凭 provider 侧 state/code 校验",
+	"sso_routes.go GET /auth/sso/providers":                    "登录页拉取已启用的 SSO 提供方，会话尚未建立",
+
+	// —— 4. 其他 ——
+	// 能力发现面：hasPermission 在 RBAC 主链路里显式放行（middleware/rbac.go
+	// 的 `/api/v1/capabilities` 分支），理由是 UI 需要先知道「哪些能力可用」
+	// 才能决定渲染什么——给它挂权限码会形成循环依赖。返回的是成熟度与就绪
+	// 元数据，allowedActions 已按角色裁剪。
+	"router.go GET /capabilities":                       "能力发现面，RBAC 主链路显式放行，仅回成熟度/就绪元数据",
+	"router.go GET /ws/notifications":                   "WebSocket 连接端点，凭一次性短期票据认证（/ws/ticket 颁发）",
+	"msp_routes.go GET /status":                         "MSP 状态探测，模块未装配时返回能力声明",
+	"../handlers/marketplace/handler.go GET /items":     "市场目录读面，分组级已挂 marketplace:read",
+	"../handlers/marketplace/handler.go GET /items/:id": "同上",
+}
+
 type scannedRoute struct {
 	file    string
 	line    int
@@ -132,8 +196,82 @@ func TestWriteRoutesRequirePermission(t *testing.T) {
 	}
 }
 
+// TestReadRoutesRequirePermission 守卫：所有读路由必须显式挂权限中间件。
+//
+// 判定口径与 TestWriteRoutesRequirePermission 完全一致（同一套扫描器），
+// 区别只在方法集与白名单。读路由此前完全不在守卫覆盖内，导致两类问题：
+//   - 无声明 → RBAC 路径预检推出的资源名可能不在权限词表（global-search
+//     推出 global-search:read，无人持有，DBOnly 下除 super_admin 外全员 403，
+//     功能实际不可用）；
+//   - 有声明但声明得宽 → 跨域聚合读面（全局搜索、工作台）用一枚读码
+//     换来全域内容，越权读不可见。
+func TestReadRoutesRequirePermission(t *testing.T) {
+	routes := scanRoutesWithMethods(t, map[string]bool{"GET": true, "HEAD": true})
+
+	var unprotected []scannedRoute
+	for _, r := range routes {
+		if r.hasPerm {
+			continue
+		}
+		if _, ok := readRouteExemptions[r.file+" "+r.method+" "+r.path]; ok {
+			continue
+		}
+		unprotected = append(unprotected, r)
+	}
+
+	if len(unprotected) > 0 {
+		sort.Slice(unprotected, func(i, j int) bool {
+			if unprotected[i].file != unprotected[j].file {
+				return unprotected[i].file < unprotected[j].file
+			}
+			return unprotected[i].line < unprotected[j].line
+		})
+		var sb strings.Builder
+		sb.WriteString("以下读路由未挂权限中间件（仅有路径预检兜底 → 低权角色可能读到跨域数据）：\n")
+		for _, r := range unprotected {
+			sb.WriteString("  " + r.file + ":" + strconv.Itoa(r.line) + "  " +
+				r.method + " " + r.path + "   (接收者: " + r.recv + ")\n")
+		}
+		sb.WriteString("\n修复方式：路由参数里加 middleware.RequirePermission(\"<resource>\", \"read\")。\n")
+		sb.WriteString("如确属公开面或仅需已认证身份，请加入 readRouteExemptions 并写明理由。")
+		t.Error(sb.String())
+	}
+
+	// 白名单防腐化：每条都必须命中真实路由，且写明理由。
+	matched := make(map[string]bool, len(readRouteExemptions))
+	for _, r := range routes {
+		key := r.file + " " + r.method + " " + r.path
+		if _, ok := readRouteExemptions[key]; ok {
+			matched[key] = true
+		}
+	}
+	var stale []string
+	for key, reason := range readRouteExemptions {
+		if strings.TrimSpace(reason) == "" {
+			stale = append(stale, key+" —— 缺少豁免理由")
+		}
+		if !matched[key] {
+			stale = append(stale, key+" —— 未命中任何已注册路由（路由改名/删除后请同步白名单）")
+		}
+	}
+	if len(stale) > 0 {
+		sort.Strings(stale)
+		t.Errorf("readRouteExemptions 存在失效条目：\n  %s", strings.Join(stale, "\n  "))
+	}
+}
+
 // scanRouteRegistrations 解析路由注册源码，返回所有写方法路由调用。
 func scanRouteRegistrations(t *testing.T) []scannedRoute {
+	t.Helper()
+	return scanRoutesWithMethods(t, map[string]bool{"POST": true, "PUT": true, "PATCH": true, "DELETE": true})
+}
+
+// scanRoutesWithMethods 解析路由注册源码，返回指定方法集的路由调用。
+//
+// 方法集参数化：写路由与读路由各用一个守卫，但共用同一套 AST 判定逻辑
+// （行内 RequirePermission / 分组级权限中间件）。两套判定必须同源——
+// 分叉的扫描器会各自漂移，最终两边的「已保护」定义对不上。
+func scanRoutesWithMethods(t *testing.T, methods map[string]bool) []scannedRoute {
 	t.Helper()
 
 	var files []string
@@ -150,8 +288,6 @@ func scanRouteRegistrations(t *testing.T) []scannedRoute {
 		}
 	}
 	sort.Strings(files)
-
-	writeMethods := map[string]bool{"POST": true, "PUT": true, "PATCH": true, "DELETE": true}
 
 	var out []scannedRoute
 	for _, file := range files {
@@ -206,7 +342,7 @@ func scanRouteRegistrations(t *testing.T) []scannedRoute {
 				return true
 			}
 			sel, ok := call.Fun.(*ast.SelectorExpr)
-			if !ok || !writeMethods[sel.Sel.Name] {
+			if !ok || !methods[sel.Sel.Name] {
 				return true
 			}
 			recvIdent, ok := sel.X.(*ast.Ident)
