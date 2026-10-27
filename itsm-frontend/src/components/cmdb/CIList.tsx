@@ -34,6 +34,7 @@ import {
   useCITypesQuery,
   useDeleteCIMutation,
 } from '@/lib/hooks/useCMDB';
+import { useOperationPermissions } from '@/lib/hooks/use-permissions';
 const statusColors: Record<string, string> = {
   [CIStatus.ACTIVE]: 'green',
   [CIStatus.INACTIVE]: 'default',
@@ -44,6 +45,12 @@ const statusColors: Record<string, string> = {
 const CIList: React.FC = () => {
   const router = useRouter();
   const { message } = App.useApp();
+  // 写操作按 cmdb:write / cmdb:delete 门控：只读角色不该看到点了就 403 的按钮
+  // （审计 3.2-⑥ 按钮级门控）。
+  const { cmdb: cmdbPerms } = useOperationPermissions();
+  const canCreateCI = cmdbPerms.canCreate();
+  const canUpdateCI = cmdbPerms.canUpdate();
+  const canDeleteCI = cmdbPerms.canDelete();
   const [filters, setFilters] = useState<{
     search: string;
     ciTypeId?: number;
@@ -252,23 +259,27 @@ const CIList: React.FC = () => {
       width: 120,
       render: (_: unknown, record: ConfigurationItem) => (
         <Space size="small">
-          <Tooltip title="编辑">
-            <Button
-              type="text"
-              icon={<Pencil />}
-              aria-label="编辑"
-              onClick={() => router.push(`/cmdb/cis/${record.id}/edit`)}
-            />
-          </Tooltip>
-          <Tooltip title="删除">
-            <Button
-              type="text"
-              danger
-              icon={<Trash2 />}
-              aria-label="删除"
-              onClick={() => handleDelete(record.id)}
-            />
-          </Tooltip>
+          {canUpdateCI && (
+            <Tooltip title="编辑">
+              <Button
+                type="text"
+                icon={<Pencil />}
+                aria-label="编辑"
+                onClick={() => router.push(`/cmdb/cis/${record.id}/edit`)}
+              />
+            </Tooltip>
+          )}
+          {canDeleteCI && (
+            <Tooltip title="删除">
+              <Button
+                type="text"
+                danger
+                icon={<Trash2 />}
+                aria-label="删除"
+                onClick={() => handleDelete(record.id)}
+              />
+            </Tooltip>
+          )}
         </Space>
       ),
     },
@@ -312,14 +323,16 @@ const CIList: React.FC = () => {
               刷新
             </Button>
           </Space>
-          <Button
-            type="primary"
-            icon={<Plus />}
-            className="ml-auto"
-            onClick={() => router.push('/cmdb/cis/create')}
-          >
-            录入资产
-          </Button>
+          {canCreateCI && (
+            <Button
+              type="primary"
+              icon={<Plus />}
+              className="ml-auto"
+              onClick={() => router.push('/cmdb/cis/create')}
+            >
+              录入资产
+            </Button>
+          )}
         </div>
 
         {/* 批量操作工具栏 */}
@@ -332,9 +345,11 @@ const CIList: React.FC = () => {
               <Button size="small" icon={<Download />} onClick={handleExport}>
                 导出
               </Button>
-              <Button size="small" danger icon={<Trash2 />} onClick={handleBatchDelete}>
-                批量删除
-              </Button>
+              {canDeleteCI && (
+                <Button size="small" danger icon={<Trash2 />} onClick={handleBatchDelete}>
+                  批量删除
+                </Button>
+              )}
             </Space>
             <Button size="small" type="link" onClick={() => setSelectedRowKeys([])}>
               取消选择

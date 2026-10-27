@@ -577,9 +577,11 @@ export default function EmailIntakePage() {
     <div className='space-y-5'>
       <div>
         <Title level={2} className='!mb-1'>
-          邮件智能报障
+          客户与合同
         </Title>
-        <Text type='secondary'>AI 负责提取，客户、分部和合同规则负责授权开单。</Text>
+        <Text type='secondary'>
+          AI 邮件报障工作台：客户、支持合同与来源组织主数据，AI 负责提取，客户与合同规则负责授权开单。
+        </Text>
       </div>
       <Alert
         type='info'

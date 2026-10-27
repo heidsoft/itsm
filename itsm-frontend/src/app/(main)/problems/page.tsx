@@ -20,6 +20,7 @@ import ProblemList from '@/components/problem/ProblemList';
 import { ProblemApi, type Problem } from '@/lib/api/problem-api';
 import { buildCsv, csvDate, downloadCsv, fetchAllPages, type CsvColumn } from '@/lib/utils/csv-export';
 import { useI18n } from '@/lib/i18n/useI18n';
+import { useOperationPermissions } from '@/lib/hooks/use-permissions';
 import {
   UnifiedKanbanBoard,
   type KanbanColumnConfig,
@@ -31,6 +32,10 @@ export default function ProblemListPage() {
   const router = useRouter();
   const { t } = useI18n();
   const { message } = App.useApp();
+  const { problem: problemPerms } = useOperationPermissions();
+  // 建单按钮按 problem:write 门控（后端 POST /problems 同码），
+  // 避免只读角色点进去被 403（审计 3.2-⑥ 按钮级门控覆盖薄）。
+  const canCreateProblem = problemPerms.canCreate();
 
   const kanbanColumns = useMemo<KanbanColumnConfig<Problem>[]>(
     () => [
@@ -355,11 +360,15 @@ export default function ProblemListPage() {
       showViewSwitch={true}
       activeView={activeView}
       onViewChange={view => setActiveView(view as View)}
-      primaryAction={{
-        label: t('problems.create'),
-        onClick: handleCreate,
-        icon: <Plus className="w-4 h-4" />,
-      }}
+      primaryAction={
+        canCreateProblem
+          ? {
+              label: t('problems.create'),
+              onClick: handleCreate,
+              icon: <Plus className="w-4 h-4" />,
+            }
+          : undefined
+      }
       extraActions={[
         {
           key: 'refresh',

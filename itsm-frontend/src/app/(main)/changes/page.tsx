@@ -27,6 +27,7 @@ import type { Change as ChangeRow } from '@/types/biz/change';
 import { buildCsv, csvDate, downloadCsv, fetchAllPages, type CsvColumn } from '@/lib/utils/csv-export';
 import { BACKEND_MAX_PAGE_SIZE } from '@/lib/api/pagination';
 import { useI18n } from '@/lib/i18n/useI18n';
+import { useOperationPermissions } from '@/lib/hooks/use-permissions';
 import {
   UnifiedKanbanBoard,
   type KanbanColumnConfig,
@@ -87,6 +88,10 @@ export default function ChangesPage() {
 function ChangesPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  // 新建/空态入口按 change:write 门控：只读角色不该看到点了就 403 的按钮
+  // （审计 3.2-⑥ 按钮级门控）。
+  const { change: changePerms } = useOperationPermissions();
+  const canCreateChange = changePerms.canCreate();
   const { t } = useI18n();
   const { message } = App.useApp();
 
@@ -614,11 +619,11 @@ function ChangesPageContent() {
         content: renderFilters(),
       }}
       showViewSwitch={false}
-      primaryAction={{
+      primaryAction={canCreateChange ? {
         label: t('changes.create'),
         onClick: handleCreate,
         icon: <Plus className="w-4 h-4" />,
-      }}
+      } : undefined}
       extraActions={[
         {
           key: 'refresh',
@@ -639,10 +644,10 @@ function ChangesPageContent() {
       onRetry={handleRefresh}
       empty={activeView !== 'calendar' && changes.length === 0 && !loading}
       emptyDescription={t('changes.emptyText')}
-      emptyAction={{
+      emptyAction={canCreateChange ? {
         label: t('changes.createFirst'),
         onClick: handleCreate,
-      }}
+      } : undefined}
     >
       <div className="flex gap-2 mb-4">
         <Button

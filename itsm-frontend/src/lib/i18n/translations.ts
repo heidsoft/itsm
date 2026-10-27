@@ -4505,7 +4505,7 @@ export const translations = {
     },
     // 审批中心（/approvals 页面，数据源为 BPMN 流程待办）
     approvalCenter: {
-      title: '审批中心',
+      title: '我的待办',
       greeting: '当前有 {count} 项待处理流程任务',
       greetingWithName: '{username}，当前有 {count} 项待处理流程任务',
       refresh: '刷新',
@@ -9499,7 +9499,7 @@ export const translations = {
     },
     // Approval center (/approvals page, backed by BPMN process tasks)
     approvalCenter: {
-      title: 'Approval Center',
+      title: 'My To-dos',
       greeting: '{count} process task(s) are waiting for you',
       greetingWithName: '{username}, {count} process task(s) are waiting for you',
       refresh: 'Refresh',

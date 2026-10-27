@@ -17,6 +17,7 @@ import type { Incident } from '@/lib/api/types';
 import { IncidentAPI, type Incident as IncidentApiItem } from '@/lib/api/incident-api';
 import { buildCsv, csvDate, downloadCsv, fetchAllPages, type CsvColumn } from '@/lib/utils/csv-export';
 import { useI18n } from '@/lib/i18n/useI18n';
+import { useOperationPermissions } from '@/lib/hooks/use-permissions';
 
 import { IncidentList } from './components/IncidentList';
 import { IncidentFilters } from './components/IncidentFilters';
@@ -31,6 +32,9 @@ export default function IncidentsPage() {
   const router = useRouter();
   const { t } = useI18n();
   const { message } = App.useApp();
+  const { incident: incidentPerms } = useOperationPermissions();
+  // 建单按钮按 incident:write 门控（后端 POST /incidents 同码）。
+  const canCreateIncident = incidentPerms.canCreate();
 
   const kanbanColumns = useMemo<KanbanColumnConfig<Incident>[]>(
     () => [
@@ -258,11 +262,15 @@ export default function IncidentsPage() {
       showViewSwitch={true}
       activeView={activeView}
       onViewChange={view => setActiveView(view as View)}
-      primaryAction={{
-        label: t('incidents.create'),
-        onClick: handleCreate,
-        icon: <Plus className='w-4 h-4' />,
-      }}
+      primaryAction={
+        canCreateIncident
+          ? {
+              label: t('incidents.create'),
+              onClick: handleCreate,
+              icon: <Plus className='w-4 h-4' />,
+            }
+          : undefined
+      }
       extraActions={[
         {
           key: 'refresh',

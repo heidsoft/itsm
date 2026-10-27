@@ -178,12 +178,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse, mobile 
   const mainMenus = deduplicateMenus(filterByCapability(rawMainMenus));
   const adminMenus = deduplicateMenus(filterByCapability(rawAdminMenus));
 
-  const { hasPermission } = useAuthStore.getState();
-  const isAdmin =
-    hasPermission('user:write') ||
-    hasPermission('role:write') ||
-    hasPermission('system_config:write') ||
-    hasPermission('ticket_type:manage');
+  // 管理区可见性由后端菜单桶驱动：/auth/menus 已按权限码把管理项分到 admin 桶，
+  // 桶里有条目就渲染。此前这里硬编码 user:write/role:write/system_config:write/
+  // ticket_type:manage 四码，与菜单声明的权限码是两套口径——it_admin 因
+  // ticket_type:manage 渲染出空的管理区，而真正该看到的人反而可能被挡（审计 3.2-⑤）。
+  const isAdmin = adminMenus.length > 0;
 
   return (
     <Sider

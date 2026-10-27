@@ -8,11 +8,15 @@ import AssetList from '@/components/asset/AssetList';
 import { AssetApi } from '@/lib/api/asset-api';
 import BusinessPageTemplate from '@/components/layout/BusinessPageTemplate';
 import { useI18n } from '@/lib/i18n/useI18n';
+import { usePermissions } from '@/lib/hooks/use-permissions';
 
 export default function AssetsPage() {
   const router = useRouter();
   const { message } = App.useApp();
   const { t } = useI18n();
+  // 资产录入按 asset:write 门控（后端 POST /assets 同码）。
+  const { hasPermission } = usePermissions();
+  const canCreateAsset = hasPermission('asset', 'write') || hasPermission('asset', 'create');
   const [loading, setLoading] = useState(true);
   const [searchValue, setSearchValue] = useState('');
   const [stats, setStats] = useState({
@@ -80,11 +84,15 @@ export default function AssetsPage() {
       searchPlaceholder={t('assets.searchPlaceholder')}
       searchValue={searchValue}
       onSearch={setSearchValue}
-      primaryAction={{
-        label: t('assets.addAsset'),
-        icon: <Plus className="h-4 w-4" />,
-        onClick: () => router.push('/assets/new'),
-      }}
+      primaryAction={
+        canCreateAsset
+          ? {
+              label: t('assets.addAsset'),
+              icon: <Plus className="h-4 w-4" />,
+              onClick: () => router.push('/assets/new'),
+            }
+          : undefined
+      }
       showViewSwitch={false}
     >
       <AssetList showActions={false} />

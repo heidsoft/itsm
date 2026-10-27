@@ -169,11 +169,19 @@ export const useRoutePermissions = () => {
 export const useOperationPermissions = () => {
   const { hasPermission } = usePermissions();
 
+  // 「能不能写」的口径与后端路由一致：
+  // 后端各域路由按 change:write / knowledge:write / cmdb:write 声明写操作，
+  // 只有工单族另有 create/update 细分码（write ⇒ create/update 同义派生）。
+  // 只查 create/update 会让「持 change:write 的人看不到新建变更按钮」，
+  // 所以写动作统一先看 write，再回落到细分动作码。
+  const canWrite = (resource: string) =>
+    hasPermission(resource, 'write') || hasPermission(resource, 'create');
+
   // 工单操作权限
   const ticketPermissions = {
     canView: () => hasPermission('ticket', 'read'),
-    canCreate: () => hasPermission('ticket', 'create'),
-    canUpdate: () => hasPermission('ticket', 'update'),
+    canCreate: () => canWrite('ticket'),
+    canUpdate: () => hasPermission('ticket', 'write') || hasPermission('ticket', 'update'),
     canDelete: () => hasPermission('ticket', 'delete'),
     canAssign: () => hasPermission('ticket', 'assign'),
     canEscalate: () => hasPermission('ticket', 'escalate'),
@@ -187,8 +195,8 @@ export const useOperationPermissions = () => {
   // 事件操作权限
   const incidentPermissions = {
     canView: () => hasPermission('incident', 'read'),
-    canCreate: () => hasPermission('incident', 'create'),
-    canUpdate: () => hasPermission('incident', 'update'),
+    canCreate: () => canWrite('incident'),
+    canUpdate: () => hasPermission('incident', 'write') || hasPermission('incident', 'update'),
     canDelete: () => hasPermission('incident', 'delete'),
     canAssign: () => hasPermission('incident', 'assign'),
     canEscalate: () => hasPermission('incident', 'escalate'),
@@ -200,8 +208,8 @@ export const useOperationPermissions = () => {
   // 问题操作权限
   const problemPermissions = {
     canView: () => hasPermission('problem', 'read'),
-    canCreate: () => hasPermission('problem', 'create'),
-    canUpdate: () => hasPermission('problem', 'update'),
+    canCreate: () => canWrite('problem'),
+    canUpdate: () => hasPermission('problem', 'write') || hasPermission('problem', 'update'),
     canDelete: () => hasPermission('problem', 'delete'),
     canAssign: () => hasPermission('problem', 'assign'),
     canResolve: () => hasPermission('problem', 'resolve'),
@@ -211,8 +219,8 @@ export const useOperationPermissions = () => {
   // 变更操作权限
   const changePermissions = {
     canView: () => hasPermission('change', 'read'),
-    canCreate: () => hasPermission('change', 'create'),
-    canUpdate: () => hasPermission('change', 'update'),
+    canCreate: () => canWrite('change'),
+    canUpdate: () => hasPermission('change', 'write') || hasPermission('change', 'update'),
     canDelete: () => hasPermission('change', 'delete'),
     canApprove: () => hasPermission('change', 'approve'),
     canReject: () => hasPermission('change', 'reject'),
@@ -223,22 +231,22 @@ export const useOperationPermissions = () => {
   // 知识库操作权限
   const knowledgePermissions = {
     canView: () => hasPermission('knowledge', 'read'),
-    canCreate: () => hasPermission('knowledge', 'create'),
-    canUpdate: () => hasPermission('knowledge', 'update'),
+    canCreate: () => canWrite('knowledge'),
+    canUpdate: () => hasPermission('knowledge', 'write') || hasPermission('knowledge', 'update'),
     canDelete: () => hasPermission('knowledge', 'delete'),
-    canPublish: () => hasPermission('knowledge', 'publish'),
+    canPublish: () => hasPermission('knowledge', 'publish') || hasPermission('knowledge', 'write'),
     canArchive: () => hasPermission('knowledge', 'archive'),
   };
 
   // CMDB操作权限
   const cmdbPermissions = {
     canView: () => hasPermission('cmdb', 'read'),
-    canCreate: () => hasPermission('cmdb', 'create'),
-    canUpdate: () => hasPermission('cmdb', 'update'),
+    canCreate: () => canWrite('cmdb'),
+    canUpdate: () => hasPermission('cmdb', 'write') || hasPermission('cmdb', 'update'),
     canDelete: () => hasPermission('cmdb', 'delete'),
-    canManage: () => hasPermission('cmdb', 'manage'),
-    canImport: () => hasPermission('cmdb', 'import'),
-    canExport: () => hasPermission('cmdb', 'export'),
+    canManage: () => hasPermission('cmdb', 'write') || hasPermission('cmdb', 'manage'),
+    canImport: () => hasPermission('cmdb', 'import') || hasPermission('cmdb', 'write'),
+    canExport: () => hasPermission('cmdb', 'export') || hasPermission('cmdb', 'read'),
   };
 
   // 用户管理权限

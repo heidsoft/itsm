@@ -98,7 +98,8 @@ describe('审批中心文案', () => {
 
     await renderPage();
 
-    expect(await screen.findByText('Approval Center')).toBeInTheDocument();
+    // 标题与菜单同名（菜单 2026-10-26 改「我的待办」后页面标题同步，避免点菜单进到另一个名字）
+    expect(await screen.findByText('My To-dos')).toBeInTheDocument();
     expect(screen.getByRole('columnheader', { name: 'Status' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Approve' })).toBeInTheDocument();
 

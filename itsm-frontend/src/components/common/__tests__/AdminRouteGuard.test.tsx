@@ -4,8 +4,9 @@
  * 锁定准入口径：/admin 页面对非 admin/super_admin 角色按后端菜单判定——
  * 菜单树里有该路径即放行（服务端已按权限码过滤菜单），否则 403。
  * 例外：ADMIN_ROUTE_PERMISSIONS 声明的页面（如 /admin/cmdb-types）按
- * 后端路由同款权限码放行，因为「系统管理」分组要求 system:write，
- * 菜单树不会向只持单页权限码的用户返回这些子路径。
+ * 后端路由同款权限码放行——该页真实授权码是 cmdb:write，与「系统管理」
+ * 分组自 2026-10-26 起统一取的 system_config:read 不同，
+ * 菜单树不会向只持单页权限码的用户返回该子路径。
  */
 
 import React from 'react';
@@ -100,6 +101,41 @@ describe('AdminRouteGuard', () => {
   it('菜单树没有目标路径时渲染 403', () => {
     mockUsePathname.mockReturnValue('/admin/tenants');
     mockMenusQuery.data = { main: [], admin: [{ ...leaf('/admin/cmdb-types'), children: [] }] };
+
+    render(
+      <AdminRouteGuard>
+        <div>PAGE_CONTENT</div>
+      </AdminRouteGuard>
+    );
+
+    expect(screen.queryByText('PAGE_CONTENT')).not.toBeInTheDocument();
+    expect(screen.getByText('403')).toBeInTheDocument();
+  });
+
+  it('路径挂在主桶父级下时也放行（/admin/sla-templates 属「SLA 管理」子项）', () => {
+    mockUsePathname.mockReturnValue('/admin/sla-templates');
+    mockMenusQuery.data = {
+      main: [
+        {
+          ...leaf('/sla'),
+          children: [{ ...leaf('/admin/sla-templates'), children: [] }],
+        },
+      ],
+      admin: [],
+    };
+
+    render(
+      <AdminRouteGuard>
+        <div>PAGE_CONTENT</div>
+      </AdminRouteGuard>
+    );
+
+    expect(screen.getByText('PAGE_CONTENT')).toBeInTheDocument();
+  });
+
+  it('两个桶都没有目标路径时仍然 403', () => {
+    mockUsePathname.mockReturnValue('/admin/sla-templates');
+    mockMenusQuery.data = { main: [{ ...leaf('/sla'), children: [] }], admin: [] };
 
     render(
       <AdminRouteGuard>

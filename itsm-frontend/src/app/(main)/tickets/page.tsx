@@ -18,6 +18,7 @@ import {
   getDefaultFilters,
 } from '@/lib/utils/filter-persistence';
 import { useI18n } from '@/lib/i18n/useI18n';
+import { useOperationPermissions } from '@/lib/hooks/use-permissions';
 
 const { Title, Text } = Typography;
 
@@ -29,6 +30,10 @@ function TicketsPageContent() {
   const [activeTab, setActiveTab] = useState('list');
   const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
   const { message } = App.useApp();
+  // 新建按钮按 ticket:write/create 门控：只读角色（审计员等）不该看到
+  // 一个点进去就 403 的入口（审计 3.2-⑥ 按钮级门控）。
+  const { ticket: ticketPerms } = useOperationPermissions();
+  const canCreateTicket = ticketPerms.canCreate();
 
   // 从 localStorage 恢复筛选条件
   const [advancedFilters, setAdvancedFilters] = useState<Partial<TicketQueryFilters>>(() => {
@@ -223,11 +228,13 @@ function TicketsPageContent() {
                   {t('tickets.slaWarning')}
                 </Button>
               </Badge>
-              <Link href='/tickets/create'>
-                <Button type='primary' icon={<Plus />}>
-                  {t('tickets.create')}
-                </Button>
-              </Link>
+              {canCreateTicket && (
+                <Link href='/tickets/create'>
+                  <Button type='primary' icon={<Plus />}>
+                    {t('tickets.create')}
+                  </Button>
+                </Link>
+              )}
             </Space>
           </div>
 

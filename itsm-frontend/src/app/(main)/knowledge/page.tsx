@@ -34,6 +34,7 @@ import { KnowledgeBaseApi } from '@/lib/api/knowledge-base-api';
 import { ArticleStatus, type KnowledgeArticle } from '@/types/knowledge-base';
 import { httpClient } from '@/lib/api/http-client';
 import { useI18n } from '@/lib/i18n/useI18n';
+import { useOperationPermissions } from '@/lib/hooks/use-permissions';
 
 const { Title, Text } = Typography;
 
@@ -63,6 +64,9 @@ export default function KnowledgePage() {
   const router = useRouter();
   const { t } = useI18n();
   const { message } = App.useApp();
+  // 新建文章按 knowledge:write 门控（审计 3.2-⑥ 按钮级门控）。
+  const { knowledge: knowledgePerms } = useOperationPermissions();
+  const canCreateArticle = knowledgePerms.canCreate();
   const [activeTab, setActiveTab] = useState('list');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -369,14 +373,16 @@ export default function KnowledgePage() {
             style={{ width: 300 }}
             onPressEnter={handleAISearch}
           />
-          <Button
-            type="primary"
-            icon={<Plus className="w-4 h-4" />}
-            size="large"
-            onClick={() => router.push('/knowledge/articles/new')}
-          >
-            {t('knowledgeBase.createArticle')}
-          </Button>
+          {canCreateArticle && (
+            <Button
+              type="primary"
+              icon={<Plus className="w-4 h-4" />}
+              size="large"
+              onClick={() => router.push('/knowledge/articles/new')}
+            >
+              {t('knowledgeBase.createArticle')}
+            </Button>
+          )}
         </div>
       </div>
 

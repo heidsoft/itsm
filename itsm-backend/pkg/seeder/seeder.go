@@ -2031,6 +2031,10 @@ func (s *Seeder) seedMenuAndPermissionFixes(ctx context.Context) {
 		"/sla/overview":               "/sla",
 		"/email-intake/conversations": "/email-intake",
 		"/knowledge/articles":         "/knowledge",
+		// 审批待办去重（2026-10-26）：/approvals/pending 只是 redirect 到 /approvals 的兼容壳，
+		// 基线已删除该菜单；存量数据里它仍以顶级「待我审批」存在，会与新「我的待办」重复。
+		// 目标 /approvals 一定存在 → 走 dupCount>0 分支删除旧条目。
+		"/approvals/pending": "/approvals",
 	}
 
 	for oldPath, newPath := range menuPathFixes {
