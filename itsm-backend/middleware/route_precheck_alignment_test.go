@@ -121,6 +121,49 @@ func TestRoutePrecheckAlignment(t *testing.T) {
 	}
 }
 
+// TestPrecheckFallbackPoliciesMatchRegisteredRoutes 守卫：族级回退策略不得指向已不存在的路由族。
+//
+// precheckFallbackPolicies 是手写策略，与生成条目不同——路由改名或删除后它不会
+// 跟着变，也不会报错。死条目有两种危害：轻的是白占一条策略让人以为该族受保护，
+// 重的是继续用一个过时的 (resource, action) 拒绝一条已改口径的路径，而这类
+// 错配只会在某个低权角色被 403 时才被发现。
+//
+// 判定：每个 (method, pattern) 必须至少命中一条已注册路由（用与运行时同一套
+// matchPath 语义，避免守卫与运行时各自解释通配符）。
+func TestPrecheckFallbackPoliciesMatchRegisteredRoutes(t *testing.T) {
+	routes, err := ScanAllRoutes()
+	if err != nil {
+		t.Fatalf("扫描注册路由失败: %v", err)
+	}
+	if len(routes) == 0 {
+		t.Fatal("扫描结果为空——扫描器失效时本守卫会假绿，必须先修扫描器")
+	}
+
+	var dead []string
+	for method, pairs := range precheckFallbackPolicies {
+		for pattern := range pairs {
+			hit := false
+			for _, r := range routes {
+				if r.Method != method {
+					continue
+				}
+				if matchPath(pattern, r.FullPath) {
+					hit = true
+					break
+				}
+			}
+			if !hit {
+				dead = append(dead, method+" "+pattern)
+			}
+		}
+	}
+	if len(dead) > 0 {
+		sort.Strings(dead)
+		t.Errorf("以下回退策略未命中任何已注册路由（路由改名/删除后请同步 precheckFallbackPolicies）：\n  %s",
+			strings.Join(dead, "\n  "))
+	}
+}
+
 // TestMarketplaceCatalogRoutesUsePlatformPermission 锁定「目录管理」与「租户安装」
 // 走两套权限码。
 //

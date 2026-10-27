@@ -235,27 +235,33 @@ func TestGetPermissionFromPath(t *testing.T) {
 	})
 }
 
-// TestPatchMethodUsesUpdateContract 要求 PATCH 在 ResourceActionMap 中登记：漏登记时
-// SmartCheckPermission L3 会把复数路径段 "tickets" 推断为资源名，导致
-// ticket:write/update 权限真实存在的非通配角色（l1/l2/manager）被 RBACMiddleware 误拒 403。
+// TestPatchMethodUsesUpdateContract 要求每条**已注册**的 PATCH 路由在 ResourceActionMap
+// 中有显式条目：漏登记时 SmartCheckPermission L3 会把复数路径段 "tickets" 推断为资源名，
+// 导致 ticket:write/update 权限真实存在的非通配角色（l1/l2/manager）被 RBACMiddleware 误拒 403。
+//
+// 用例从注册路由派生而不是手写假设路径。此前这里硬编码了 PATCH /incidents|/problems|/changes
+// 三条——这三条路由在本仓库根本不存在（更新一律走 PUT），却靠 precheckFallbackPolicies 里
+// 一整块从未命中的 PATCH 族维持绿灯；那 22 条死条目随后又成了「未来路由的埋雷」。
+// 现在改成扫描真实路由：有 PATCH 路由就必须有映射，没有路由就不需要映射。
 func TestPatchMethodUsesUpdateContract(t *testing.T) {
-	cases := []struct {
-		method   string
-		path     string
-		resource string
-		action   string
-	}{
-		{"PATCH", "/api/v1/tickets/123", "ticket", "update"},
-		{"PATCH", "/api/v1/incidents/1", "incident", "write"},
-		{"PATCH", "/api/v1/problems/1", "problem", "write"},
-		{"PATCH", "/api/v1/changes/1", "change", "write"},
+	// 基线：唯一一条带动作语义的 PATCH 路由必须解析为 update（而非 write）。
+	perm := getPermissionFromPath("PATCH", "/api/v1/tickets/123")
+	require.NotNil(t, perm, "PATCH /api/v1/tickets/123 必须有显式 RBAC 映射，不得回退到 URL 推断")
+	assert.Equal(t, "ticket", perm.Resource)
+	assert.Equal(t, "update", perm.Action)
+
+	routes, err := ScanAllRoutes()
+	require.NoError(t, err)
+	patched := 0
+	for _, r := range routes {
+		if r.Method != "PATCH" {
+			continue
+		}
+		patched++
+		assert.NotNil(t, getPermissionFromPath(r.Method, r.FullPath),
+			"PATCH %s 已注册但预检无映射——L3 URL 推断会把复数段当资源名，非通配角色会被误拒", r.FullPath)
 	}
-	for _, tc := range cases {
-		perm := getPermissionFromPath(tc.method, tc.path)
-		require.NotNil(t, perm, "%s %s 必须有显式 RBAC 映射，不得回退到 URL 推断", tc.method, tc.path)
-		assert.Equal(t, tc.resource, perm.Resource)
-		assert.Equal(t, tc.action, perm.Action)
-	}
+	require.NotZero(t, patched, "扫描结果里没有 PATCH 路由——扫描器失效时本用例会假绿")
 }
 
 // TestReleaseEndpointsHaveExplicitRBACMapping 要求 ResourceActionMap 收录 releases：
@@ -279,7 +285,6 @@ func TestReleaseEndpointsHaveExplicitRBACMapping(t *testing.T) {
 		{"POST", "/api/v1/releases/1/approve", "release", "approve"},
 		{"POST", "/api/v1/releases/1/reject", "release", "approve"},
 		{"POST", "/api/v1/releases/1/rollback", "release", "rollback"},
-		{"PATCH", "/api/v1/releases/1", "release", "write"},
 		{"DELETE", "/api/v1/releases/1", "release", "delete"},
 	}
 	for _, tc := range cases {

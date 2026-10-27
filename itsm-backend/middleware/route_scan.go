@@ -55,17 +55,38 @@ func ScanUnresolvedPermissionRoutes() ([]DeclaredRoute, error) {
 	return unresolved, err
 }
 
+// ScanAllRoutes 返回仓库里注册的全部路由（含未挂权限声明的），Resource/Action 为空。
+//
+// 用途：校验显式回退策略（precheckFallbackPolicies）没有指向已不存在的路由族。
+// 回退条目是手写策略，路由改名/删除后它不会报错——它会静默变成死条目，
+// 或者更糟：继续用一个过时的 (resource, action) 去拒绝一条已改口径的路径。
+func ScanAllRoutes() ([]DeclaredRoute, error) {
+	all, _, err := scanPermissionRoutesAll()
+	return all, err
+}
+
 func scanPermissionRoutes() ([]DeclaredRoute, []DeclaredRoute, error) {
-	// 以本文件位置锚定仓库内 itsm-backend 目录，调用方 cwd 无关
+	return scanPermissionRoutesFrom(scanBaseDir(), false)
+}
+
+func scanPermissionRoutesAll() ([]DeclaredRoute, []DeclaredRoute, error) {
+	return scanPermissionRoutesFrom(scanBaseDir(), true)
+}
+
+// scanBaseDir 以本文件位置锚定仓库内 itsm-backend 目录，调用方 cwd 无关。
+func scanBaseDir() string {
 	_, thisFile, _, ok := runtime.Caller(0)
 	if !ok {
-		return nil, nil, fmt.Errorf("无法定位 route_scan.go 所在目录")
+		return "."
 	}
-	base := filepath.Dir(thisFile)
-	return scanDeclaredPermissionRoutesFrom(base)
+	return filepath.Dir(thisFile)
 }
 
 func scanDeclaredPermissionRoutesFrom(base string) ([]DeclaredRoute, []DeclaredRoute, error) {
+	return scanPermissionRoutesFrom(base, false)
+}
+
+func scanPermissionRoutesFrom(base string, collectAll bool) ([]DeclaredRoute, []DeclaredRoute, error) {
 	var files []string
 	for _, pattern := range []string{filepath.Join(base, "..", "router", "*.go"), filepath.Join(base, "..", "handlers", "*", "*.go")} {
 		matches, err := filepath.Glob(pattern)
@@ -220,7 +241,7 @@ func scanDeclaredPermissionRoutesFrom(base string) ([]DeclaredRoute, []DeclaredR
 				if len(perms) == 0 {
 					perms = groupDecl[recv.Name]
 				}
-				if len(perms) == 0 {
+				if len(perms) == 0 && !collectAll {
 					return true
 				}
 
@@ -247,6 +268,18 @@ func scanDeclaredPermissionRoutesFrom(base string) ([]DeclaredRoute, []DeclaredR
 							RouteLine: fset.Position(call.Pos()).Line,
 						})
 					}
+					return true
+				}
+
+				if len(perms) == 0 {
+					// collectAll：未声明的路由也登记（Resource/Action 留空），
+					// 供回退策略对账使用。
+					out = append(out, DeclaredRoute{
+						File:      rel,
+						Method:    sel.Sel.Name,
+						FullPath:  full,
+						RouteLine: fset.Position(call.Pos()).Line,
+					})
 					return true
 				}
 
