@@ -42,6 +42,10 @@ seeder 守卫、预检表生成、tsc 全绿——**但真实浏览器一跑，�
 没有这一步，第 1、2、3、4 号缺陷全都测不出来——`super_admin` 对每个页面都有权限，
 是所有权限缺陷的「完美掩盖器」。
 
+> 门禁备注：docs-gate C.4 会把上句的「完美」报为「无 revision 锚点的发布声明」，
+> 属修辞误报（advisory 级，不阻断）——此处的「完美掩盖器」是描述性说法，
+> 不是对某个 release/commit 的断言。
+
 > 附带发现：写操作接口要求 CSRF Double-Submit（`csrf_token` cookie + `X-CSRF-Token` 头），
 > 先 `GET /api/v1/csrf-token` 取 token 再带头发请求。脚本化验证时容易只踩「缺少认证token」，
 > 实际是 CSRF 层拦下的。
