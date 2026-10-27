@@ -309,6 +309,50 @@ func (h *Handler) GetReconciliation(c *gin.Context) {
 	common.Success(c, resp)
 }
 
+// GetGovernanceReport CMDB 治理看板。
+//
+// @Summary  CMDB 治理看板
+// @Description 单租户 CMDB 健康快照：质量指标（总数/活跃/退役/陈旧/孤儿/不完整/完整率）与发现差异四类分桶（add/noop/retire_confirm/duplicate）。陈旧阈值 7 天（两次周度发现间隔上限）。
+// @Tags CMDB-对账
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} common.Response{data=dto.GovernanceReportResponse}
+// @Failure 401 {object} common.Response
+// @Failure 403 {object} common.Response
+// @Router /cmdb/governance/report [get]
+func (h *Handler) GetGovernanceReport(c *gin.Context) {
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
+
+	report, err := h.svc.GetGovernanceReport(c.Request.Context(), tenantID)
+	if err != nil {
+		common.RespondError(c, err, "获取治理报告失败")
+		return
+	}
+
+	diff := make(map[string]int, len(report.Diff))
+	for action, count := range report.Diff {
+		diff[string(action)] = count
+	}
+
+	common.Success(c, &dto.GovernanceReportResponse{
+		Quality: dto.GovernanceQuality{
+			Total:           report.Quality.Total,
+			Active:          report.Quality.Active,
+			Retired:         report.Quality.Retired,
+			Stale:           report.Quality.Stale,
+			Orphan:          report.Quality.Orphan,
+			Incomplete:      report.Quality.Incomplete,
+			CompletenessPct: report.Quality.CompletenessPct,
+		},
+		Diff:           diff,
+		CloudResources: report.CloudResources,
+		CIs:            report.CIs,
+	})
+}
+
 // ListCloudServices 云服务类型列表。
 //
 // @Summary  云服务类型列表

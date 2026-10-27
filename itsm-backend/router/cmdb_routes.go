@@ -263,5 +263,7 @@ func SetupCMDBRoutes(
 
 		// ------------------------------ 对账相关路由 ------------------------------
 		cmdb.GET("/reconciliation", middleware.RequirePermission("cmdb", "read"), config.CMDBHandler.GetReconciliation)
+		// 治理看板：质量指标 + 发现差异分桶（read 面，与对账同权）。
+		cmdb.GET("/governance/report", middleware.RequirePermission("cmdb", "read"), config.CMDBHandler.GetGovernanceReport)
 	}
 }

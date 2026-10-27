@@ -3038,6 +3038,29 @@ snake_case `job_id`，与平台 camelCase 规则不一致。
 跨租户 GET/PUT/DELETE 404/`4004` 逐资源文案、DELETE 命中 0 行不再报成功、provider 枚举覆盖三个
 列表与两个写入体、厂商矛盾 400/`4000`、合法写入后派生 identity 回填）。
 
+### CMDB 治理看板
+
+```http
+GET /api/v1/cmdb/governance/report
+```
+
+单租户 CMDB 健康快照，读面权限 `cmdb:read`（与对账同权）。数据面与 `GET /cmdb/reconciliation`
+同源（云资源全集 + 权威 CI 全集），在其之上消费治理纯函数：
+
+- `quality`：总数/活跃/退役（`lifecycle_status=scrapped`）/陈旧（同步时间超 7 天）/孤儿
+  （无 owner、无 assignee、无任何来源）/不完整/完整率（百分比，0.01 精度）。
+- `diff`：发现差异四类分桶——`add`（发现侧新增未建账）/`noop`（已关联指纹未变）/
+  `retire_confirm`（上次发现的资源本批消失，待人工确认退役）/`duplicate`（同批重复，告警）。
+- `cloudResources` / `cis`：两侧全集行数。
+
+空租户返回全 0 快照（`diff` 四桶全在且为 0），不是 `null`。陈旧阈值固定 7 天
+（两次周度发现的间隔上限）；租户级配置化待有真实需求再走 `system_configs`，不预造配置面。
+
+契约锁：`handlers/cmdb/governance_report_test.go`（三面数据同源、空租户全 0、读取失败上抛）
+与 `router/cmdb_governance_route_test.go`（真实路由三态：无 `cmdb:read` 403、跨租户只见
+自己的快照、camelCase 响应键）。CLI 侧 `cmdb.governance report` 命令同步接入（路由覆盖率
+棘轮 605 基线保持不变）。
+
 ### 云发现任务（Job 闭环）
 
 `POST /api/v1/cmdb/discovery/jobs` 已从 fail-closed（503）转正：真实校验来源后落

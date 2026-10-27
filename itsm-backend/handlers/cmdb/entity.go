@@ -199,3 +199,12 @@ type ReconciliationResult struct {
 	OrphanCIs        []*ConfigurationItem  `json:"orphanCis"`
 	UnlinkedCIs      []*ConfigurationItem  `json:"unlinkedCis"`
 }
+
+// GovernanceReport 治理看板快照：质量指标（data_governance.QualityMetrics）
+// 与发现差异分桶（data_governance.CountByAction 的键值投影）同源产出。
+type GovernanceReport struct {
+	Quality        QualityMetrics               `json:"quality"`
+	Diff           map[ReconciliationAction]int `json:"diff"`
+	CloudResources int                          `json:"cloudResources"`
+	CIs            int                          `json:"cis"`
+}

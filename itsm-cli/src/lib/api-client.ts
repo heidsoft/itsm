@@ -1151,6 +1151,9 @@ export class ApiClient {
   async getCMDBReconciliation(params?: Record<string, string | number | boolean | undefined>): Promise<unknown> {
     return request(this.baseURL, 'GET', '/cmdb/reconciliation', undefined, params);
   }
+  async getCMDBGovernanceReport(): Promise<unknown> {
+    return request(this.baseURL, 'GET', '/cmdb/governance/report');
+  }
   async batchUpdateCIs(ids: number[], data: unknown): Promise<unknown> {
     return request(this.baseURL, 'PUT', '/cmdb/cis/batch', { ids, ...(data as object) });
   }

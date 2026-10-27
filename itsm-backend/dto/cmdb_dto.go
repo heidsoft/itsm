@@ -574,6 +574,25 @@ type ReconciliationResponse struct {
 	UnlinkedCIs      []*CIResponse            `json:"unlinkedCIs"`
 }
 
+// GovernanceQuality 治理看板质量指标（与 handlers/cmdb.QualityMetrics 同构）。
+type GovernanceQuality struct {
+	Total           int     `json:"total"`
+	Active          int     `json:"active"`
+	Retired         int     `json:"retired"`
+	Stale           int     `json:"stale"`
+	Orphan          int     `json:"orphan"`
+	Incomplete      int     `json:"incomplete"`
+	CompletenessPct float64 `json:"completenessPct"`
+}
+
+// GovernanceReportResponse 治理看板响应：质量指标 + 发现差异四类分桶。
+type GovernanceReportResponse struct {
+	Quality        GovernanceQuality `json:"quality"`
+	Diff           map[string]int    `json:"diff"`
+	CloudResources int               `json:"cloudResources"`
+	CIs            int               `json:"cis"`
+}
+
 // CIHistoryResponse CI历史记录响应
 type CIHistoryResponse struct {
 	ID            int                    `json:"id"`

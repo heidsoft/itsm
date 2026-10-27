@@ -629,6 +629,35 @@ func (s *Service) GetReconciliation(ctx context.Context, tenantID int) (*Reconci
 	return result, nil
 }
 
+// GetGovernanceReport 产出单租户 CMDB 治理看板：质量指标 + 发现差异分类汇总。
+//
+// 数据面与 GetReconciliation 同源（云资源全集 + 权威 CI 全集），在其之上消费
+// data_governance.go 的三个纯函数——此前它们只有单测消费，治理指标没有任何
+// HTTP 表面。staleThreshold 固定 7 天（两次周度发现的间隔上限），如需租户级
+// 配置化再走 system_configs，不在本批造第二套配置入口。
+func (s *Service) GetGovernanceReport(ctx context.Context, tenantID int) (*GovernanceReport, error) {
+	const staleThreshold = 7 * 24 * time.Hour
+	now := time.Now()
+
+	resources, err := s.repo.ListCloudResources(ctx, tenantID, CloudResourceFilter{})
+	if err != nil {
+		return nil, err
+	}
+	cis, err := s.repo.ListCIsForReconciliation(ctx, tenantID)
+	if err != nil {
+		return nil, err
+	}
+
+	entries := DiffReconciliation(cis, resources)
+	report := &GovernanceReport{
+		Quality:        ComputeQualityMetrics(cis, staleThreshold, now),
+		Diff:           CountByAction(entries),
+		CloudResources: len(resources),
+		CIs:            len(cis),
+	}
+	return report, nil
+}
+
 // ListPendingDiscoveryResources 返回「发现 deferred、需要人工补全属性」的云资源全集。
 // 推导规则只在 DiscoveryCIProjector 一处；分页由 handler 负责。
 func (s *Service) ListPendingDiscoveryResources(ctx context.Context, tenantID int) ([]*PendingDiscoveryResource, error) {

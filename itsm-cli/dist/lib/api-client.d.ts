@@ -281,6 +281,7 @@ export declare class ApiClient {
     getCMDBOntology(): Promise<unknown>;
     getCMDBCapabilities(): Promise<unknown>;
     getCMDBReconciliation(params?: Record<string, string | number | boolean | undefined>): Promise<unknown>;
+    getCMDBGovernanceReport(): Promise<unknown>;
     batchUpdateCIs(ids: number[], data: unknown): Promise<unknown>;
     batchUpdateCILifecycle(ids: number[], data: unknown): Promise<unknown>;
     listCloudProviders(): Promise<unknown>;

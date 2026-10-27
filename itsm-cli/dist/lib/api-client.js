@@ -1079,6 +1079,9 @@ export class ApiClient {
     async getCMDBReconciliation(params) {
         return request(this.baseURL, 'GET', '/cmdb/reconciliation', undefined, params);
     }
+    async getCMDBGovernanceReport() {
+        return request(this.baseURL, 'GET', '/cmdb/governance/report');
+    }
     async batchUpdateCIs(ids, data) {
         return request(this.baseURL, 'PUT', '/cmdb/cis/batch', { ids, ...data });
     }

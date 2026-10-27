@@ -41,6 +41,7 @@ export function cmdbCommands() {
     cmd('cmdb.ontology', 'CMDB ontology (CI types + attribute definitions, versioned)', 'itsm cmdb ontology', ['GET /api/v1/cmdb/ontology'], async () => apiClient.getCMDBOntology()),
     cmd('cmdb.capabilities', 'CMDB build capabilities (discovery, reconciliation, …)', 'itsm cmdb capabilities', ['GET /api/v1/cmdb/capabilities'], async () => apiClient.getCMDBCapabilities()),
     cmd('cmdb.reconciliation', 'Cloud resource reconciliation summary (aggregate, not paged)', 'itsm cmdb reconciliation', ['GET /api/v1/cmdb/reconciliation'], async () => apiClient.getCMDBReconciliation()),
+    cmd('cmdb.governance.report', 'CMDB governance report (quality metrics + discovery diff buckets)', 'itsm cmdb governance report', ['GET /api/v1/cmdb/governance/report'], async () => apiClient.getCMDBGovernanceReport()),
     cmd('cmdb.type.get', 'One CI type schema', 'itsm cmdb type get <id>', ['GET /api/v1/cmdb/ci-types/:id'], async (ctx) => apiClient.getCIType(requirePositional(ctx.args, 0, 'ciTypeId'))),
     cmd('cmdb.type.attributes', 'Attribute definitions of one CI type', 'itsm cmdb type attributes <ciTypeId>', ['GET /api/v1/cmdb/ci-types/:id/attributes'], async (ctx) => apiClient.listCITypeAttributes(requirePositional(ctx.args, 0, 'ciTypeId'))),
     cmd('cmdb.type.create', 'Create a CI type', 'itsm cmdb type create --data <json>', ['POST /api/v1/cmdb/ci-types'], async (ctx) => apiClient.createCIType(body(ctx.args) ?? {})),
