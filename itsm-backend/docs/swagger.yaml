@@ -2561,6 +2561,36 @@ definitions:
           $ref: '#/definitions/dto.RelationshipTypeInfo'
         type: array
     type: object
+  dto.GovernanceQuality:
+    properties:
+      active:
+        type: integer
+      completenessPct:
+        type: number
+      incomplete:
+        type: integer
+      orphan:
+        type: integer
+      retired:
+        type: integer
+      stale:
+        type: integer
+      total:
+        type: integer
+    type: object
+  dto.GovernanceReportResponse:
+    properties:
+      cis:
+        type: integer
+      cloudResources:
+        type: integer
+      diff:
+        additionalProperties:
+          type: integer
+        type: object
+      quality:
+        $ref: '#/definitions/dto.GovernanceQuality'
+    type: object
   dto.GroupDetailResponse:
     properties:
       createdAt:
@@ -13248,6 +13278,35 @@ paths:
       summary: 获取用户统计
       tags:
       - 用户管理
+  /cmdb/governance/report:
+    get:
+      description: 单租户 CMDB 健康快照：质量指标（总数/活跃/退役/陈旧/孤儿/不完整/完整率）与发现差异四类分桶（add/noop/retire_confirm/duplicate）。陈旧阈值
+        7 天（两次周度发现间隔上限）。
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.GovernanceReportResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/common.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/common.Response'
+      security:
+      - BearerAuth: []
+      summary: CMDB 治理看板
+      tags:
+      - CMDB-对账
 securityDefinitions:
   BearerAuth:
     in: header

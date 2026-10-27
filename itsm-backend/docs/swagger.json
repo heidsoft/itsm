@@ -13133,6 +13133,55 @@
                     }
                 }
             }
+        },
+        "/cmdb/governance/report": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "单租户 CMDB 健康快照：质量指标（总数/活跃/退役/陈旧/孤儿/不完整/完整率）与发现差异四类分桶（add/noop/retire_confirm/duplicate）。陈旧阈值 7 天（两次周度发现间隔上限）。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CMDB-对账"
+                ],
+                "summary": "CMDB 治理看板",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.GovernanceReportResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -16744,6 +16793,52 @@
                     "items": {
                         "$ref": "#/definitions/dto.RelationshipTypeInfo"
                     }
+                }
+            }
+        },
+        "dto.GovernanceQuality": {
+            "type": "object",
+            "properties": {
+                "active": {
+                    "type": "integer"
+                },
+                "completenessPct": {
+                    "type": "number"
+                },
+                "incomplete": {
+                    "type": "integer"
+                },
+                "orphan": {
+                    "type": "integer"
+                },
+                "retired": {
+                    "type": "integer"
+                },
+                "stale": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.GovernanceReportResponse": {
+            "type": "object",
+            "properties": {
+                "cis": {
+                    "type": "integer"
+                },
+                "cloudResources": {
+                    "type": "integer"
+                },
+                "diff": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                },
+                "quality": {
+                    "$ref": "#/definitions/dto.GovernanceQuality"
                 }
             }
         },
