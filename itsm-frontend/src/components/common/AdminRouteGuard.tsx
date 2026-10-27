@@ -21,13 +21,27 @@ const ADMIN_ROUTE_PERMISSIONS: Record<string, string> = {
   '/admin/cmdb-types': 'cmdb:write',
 };
 
+// 菜单准入面：除 /admin 外，还有少数「纯管理/分析面」顶级页面。它们没有独立
+// 前端路由守卫，而菜单本身按权限码过滤（/reports → report:read）。直连 URL 时
+// 必须做同口径拦截，否则 end_user 会看到一个「页面在、数据全 403」的空壳
+// （审计遗留项：/reports 无路由守卫，2026-10-27 收口）。
+// 值 = 该前缀对应的菜单路径；子页面（/reports/tickets 等）不单独建菜单，
+// 统一按根路径判定。
+const MENU_GATED_ROOTS: Record<string, string> = {
+  '/reports': '/reports',
+};
+
 export function AdminRouteGuard({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { isAdmin, hasPermission } = usePermissions();
   const router = useRouter();
   const { data: menus, isLoading } = useUserMenusQuery();
 
-  if (pathname.startsWith('/admin') && !isAdmin()) {
+  if (isAdmin()) {
+    return <>{children}</>;
+  }
+
+  if (pathname.startsWith('/admin')) {
     const routePermission = ADMIN_ROUTE_PERMISSIONS[pathname];
     if (routePermission) {
       const separatorIndex = routePermission.indexOf(':');
@@ -41,11 +55,7 @@ export function AdminRouteGuard({ children }: { children: React.ReactNode }) {
     }
     // 深链硬刷新时菜单请求在途，先等结果再判定，避免误闪 403
     if (isLoading) {
-      return (
-        <div className="flex min-h-[50vh] items-center justify-center">
-          <Spin />
-        </div>
-      );
+      return <MenuLoading />;
     }
     // 菜单桶按「根祖先」分桶，不按自身 path 前缀：配置项类型/SLA 模板/工单分类等
     // 一批 /admin/* 页面挂在「配置管理」「SLA 管理」「工单管理」等主桶父级下，
@@ -53,9 +63,31 @@ export function AdminRouteGuard({ children }: { children: React.ReactNode }) {
     if (!menuContainsPath(menus?.admin, pathname) && !menuContainsPath(menus?.main, pathname)) {
       return <DeniedResult router={router} />;
     }
+    return <>{children}</>;
+  }
+
+  const gatedRoot = Object.keys(MENU_GATED_ROOTS).find(
+    root => pathname === root || pathname.startsWith(`${root}/`)
+  );
+  if (gatedRoot) {
+    if (isLoading) {
+      return <MenuLoading />;
+    }
+    const menuPath = MENU_GATED_ROOTS[gatedRoot];
+    if (!menuContainsPath(menus?.admin, menuPath) && !menuContainsPath(menus?.main, menuPath)) {
+      return <DeniedResult router={router} />;
+    }
   }
 
   return <>{children}</>;
+}
+
+function MenuLoading() {
+  return (
+    <div className="flex min-h-[50vh] items-center justify-center">
+      <Spin />
+    </div>
+  );
 }
 
 function DeniedResult({ router }: { router: ReturnType<typeof useRouter> }) {

@@ -174,4 +174,62 @@ describe('AdminRouteGuard', () => {
 
     expect(screen.getByText('PAGE_CONTENT')).toBeInTheDocument();
   });
+
+  // /reports 是纯分析面（菜单取 report:read），end_user/technician 不持该码，
+  // 菜单里没有它。此前没有路由守卫，直连 URL 会渲染一个数据全 403 的空壳。
+  describe('/reports 菜单准入', () => {
+    it('菜单含 /reports 时放行', () => {
+      mockUsePathname.mockReturnValue('/reports');
+      mockMenusQuery.data = { main: [{ ...leaf('/reports'), children: [] }], admin: [] };
+
+      render(
+        <AdminRouteGuard>
+          <div>PAGE_CONTENT</div>
+        </AdminRouteGuard>
+      );
+
+      expect(screen.getByText('PAGE_CONTENT')).toBeInTheDocument();
+    });
+
+    it('菜单不含 /reports 时渲染 403（end_user 直连 URL）', () => {
+      mockUsePathname.mockReturnValue('/reports');
+      mockMenusQuery.data = { main: [{ ...leaf('/dashboard'), children: [] }], admin: [] };
+
+      render(
+        <AdminRouteGuard>
+          <div>PAGE_CONTENT</div>
+        </AdminRouteGuard>
+      );
+
+      expect(screen.queryByText('PAGE_CONTENT')).not.toBeInTheDocument();
+      expect(screen.getByText('403')).toBeInTheDocument();
+    });
+
+    it('子页面按根路径判定（/reports/tickets 不单独建菜单）', () => {
+      mockUsePathname.mockReturnValue('/reports/tickets');
+      mockMenusQuery.data = { main: [{ ...leaf('/reports'), children: [] }], admin: [] };
+
+      render(
+        <AdminRouteGuard>
+          <div>PAGE_CONTENT</div>
+        </AdminRouteGuard>
+      );
+
+      expect(screen.getByText('PAGE_CONTENT')).toBeInTheDocument();
+    });
+
+    it('菜单请求在途时等待，不闪 403', () => {
+      mockUsePathname.mockReturnValue('/reports');
+      mockMenusQuery.isLoading = true;
+
+      const { container } = render(
+        <AdminRouteGuard>
+          <div>PAGE_CONTENT</div>
+        </AdminRouteGuard>
+      );
+
+      expect(screen.queryByText('PAGE_CONTENT')).not.toBeInTheDocument();
+      expect(container.querySelector('.ant-spin')).toBeInTheDocument();
+    });
+  });
 });
