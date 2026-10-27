@@ -112,5 +112,17 @@ BINDINGS="$(psql_scalar 'SELECT count(*) FROM process_bindings WHERE is_active =
 DANGLING="$(psql_scalar 'SELECT count(*) FROM process_bindings b LEFT JOIN process_definitions d ON d.key = b.process_definition_key AND d.tenant_id = b.tenant_id AND d.is_active = true WHERE b.is_active = true AND d.id IS NULL')"
 [ "$DANGLING" = "0" ] || fail "有 $DANGLING 条活跃流程绑定指向未部署的流程定义（首装会在这条不变量上回滚）"
 
-log "PASS: 迁移 $MIGRATIONS 条（空 checksum 0）、活跃流程定义 $DEFS、活跃流程绑定 $BINDINGS（悬空 $DANGLING）"
+# 运营性索引/序列：不属于 ent schema，但承担正确性约束（事件编号唯一、SLA 违规防重）。
+# 这组 DDL 曾挂在数据库连接路径上——空卷首装时表还不存在，四条语句全部失败并被
+# "non-fatal" 日志吞掉且不再重试，于是全新安装永久缺这三个索引（2026-10-27 空库首装
+# 与生产库对账实测）。创建点已移到 InitializeStorage 末尾，这里断言它们真的存在，
+# 而不是「日志说建了」。
+for obj in sla_violation_unique_open_idx sla_violation_ticket_type_idx incidents_tenant_number_idx; do
+  PRESENT="$(psql_scalar "SELECT count(*) FROM pg_indexes WHERE schemaname = 'public' AND indexname = '$obj'")"
+  [ "$PRESENT" = "1" ] || fail "运营性索引 $obj 缺失；首装环境的防重约束不成立"
+done
+SEQ="$(psql_scalar "SELECT count(*) FROM pg_class WHERE relkind = 'S' AND relname = 'incident_number_seq'")"
+[ "$SEQ" = "1" ] || fail "incident_number_seq 缺失；事件编号会退回 COUNT+1 并发复用"
+
+log "PASS: 迁移 $MIGRATIONS 条（空 checksum 0）、活跃流程定义 $DEFS、活跃流程绑定 $BINDINGS（悬空 $DANGLING）、运营性索引/序列 4/4"
 log "空卷首装链路与关键不变量成立"

@@ -1525,6 +1525,14 @@ func InitializeStorage(cfg *config.Config, client *ent.Client, sugar *zap.Sugare
 		sugar.Infow("seed completed", "deployment_mode", cfg.Deployment.Mode, "initialization_run_id", runID)
 	}
 
+	// 运营性索引/序列必须在 schema 与迁移之后创建：它们不属于 ent schema，
+	// 但承担事件编号唯一、SLA 违规防重的正确性约束。挂在连接路径上时空库必然
+	// 失败（表还不存在）且错误被吞掉，首装环境会永久缺这三个索引。
+	if err := database.EnsureOperationalIndexes(ctx, database.GetRawDB()); err != nil {
+		return fmt.Errorf("ensure operational indexes: %w", err)
+	}
+	sugar.Infow("operational indexes ensured")
+
 	return nil
 }
 

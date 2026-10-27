@@ -202,14 +202,16 @@ seeder 守卫、预检表生成、tsc 全绿——**但真实浏览器一跑，�
 
 ## 六、遗留
 
-| 项 | 现状 | 建议 |
+> 2026-10-27 收口：下表中前两项已闭环（`83f6f1930` / `62087dc9b`），QA 账号一项已判定不处理。
+
+| 项 | 现状 | 处置 |
 |---|------|------|
-| `/reports` 无路由守卫 | `end_user` 可直接访问 URL，页面数据全 403 | 复用 `AdminRouteGuard` 思路给 `/reports` 加菜单桶准入 |
-| `precheck_fallback.go` 的 `POST /api/v1/reports*` → `dashboard:admin` | 当前无该 POST 路由，属惰性条目 | 下次动报表路由时一并改 `report:*` |
+| ~~`/reports` 无路由守卫~~ | ✅ 已闭环：`AdminRouteGuard` 增加 `MENU_GATED_ROOTS`，`/reports` 及子页按根路径判定菜单可见性；补 4 例回归（含「end_user 直连 URL 得 403」） | `83f6f1930` |
+| ~~`precheck_fallback.go` 的 `POST /api/v1/reports*` → `dashboard:admin`~~ | ✅ 已闭环：该条与另外 54 条同为死条目，整批删除；新增 `TestPrecheckFallbackPoliciesMatchRegisteredRoutes` 防复发 | `62087dc9b` |
 | MSP 五角色 | 已播种（8–13 条码），但生产未开 MSP 模块 | 开 MSP 部署模式后按 provider 角色补一轮走查 |
-| 空态门控单测 | 只有静态守卫 + 浏览器走查，无组件级单测 | 若要重构 `LoadingEmptyError`，先补组件测试 |
+| 空态门控单测 | 只有静态守卫（禁字面量 `showAction: true`）+ 浏览器走查，无组件级单测 | 若要重构 `LoadingEmptyError`，先补组件测试 |
 | 「客户与合同」页仍有「值班配置」Tab | 与「值班排班移入事件管理」的决策擦边：Tab 只放两个 PoC 按钮（新增排班/新增班次），真正可用的排班管理在 `/email-intake/on-call` | 需产品确认：是保留为「合同驱动的排班配置」入口，还是直接删掉消除重复 |
-| 临时 QA 账号 | `qa_enduser`(22) / `qa_itadmin`(23) 已删除，但应用是软删除（`active=false`），行仍在 `users` 表 | 若要求表干净，需 DBA 评估审计外键后硬删 |
+| 临时 QA 账号 | `qa_enduser`(22) / `qa_itadmin`(23) 软删（`active=false`），行仍在 `users` 表 | **判定不硬删**：全库扫过 19 个 FK + 全部 50 个用户引用列，仅 `user_roles`(2 行) 与 `audit_logs`(7 行) 命中；`audit_logs` 既无 FK 也无 username 冗余列，硬删会让这 7 条审计记录指向不存在的用户。软删行本身就是「账号已停用」的正确表达，保留 |
 
 ---
 

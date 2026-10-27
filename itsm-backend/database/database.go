@@ -6,7 +6,8 @@ package database
 import (
 	"context"      // Go标准库，用于处理上下文（超时、取消等）
 	"database/sql" // Go标准库，提供数据库操作的通用接口
-	"fmt"          // Go标准库，用于格式化字符串
+	"errors"
+	"fmt" // Go标准库，用于格式化字符串
 	"log"
 	"time" // Go标准库，用于时间处理
 
@@ -20,6 +21,82 @@ import (
 )
 
 var rawDB *sql.DB
+
+// EnsureOperationalIndexes 创建运营性索引与序列（幂等）。
+//
+// 这些对象不属于 ent schema，但承担数据正确性约束：
+//   - sla_violation_unique_open_idx：同一 (ticket_id, violation_type) 在未解决状态下
+//     只能有一条违规，是 SLA Monitor 跨实例竞态的最后一道防线（服务层把唯一冲突
+//     识别为幂等跳过）；部分索引条件允许已解决后再次触发新违规。
+//   - sla_violation_ticket_type_idx：按工单查违规的常规索引。
+//   - incident_number_seq + incidents_tenant_number_idx：保证 INC-YYYYMM-NNNNNN
+//     后缀唯一且单调递增，消除「COUNT+1 并发复用 / 删除回退 / UTC 窗口错乱」。
+//
+// 必须在 schema 与迁移之后调用（bootstrap.InitializeStorage 末尾）。它同时仍挂在
+// 数据库连接路径上做 best-effort，但那里空库必然失败：表还没建出来，四条 DDL 全部
+// 报错并被 "non-fatal" 日志吞掉，之后不再重试。2026-10-27 用空库首装与生产库对账，
+// 全新安装缺上述三个索引——事件编号与 SLA 违规的防重约束在首装环境形同虚设。
+func EnsureOperationalIndexes(ctx context.Context, db *sql.DB) error {
+	if db == nil {
+		return errors.New("ensure operational indexes: nil database handle")
+	}
+
+	stmts := []struct {
+		name string
+		sql  string
+	}{
+		{
+			name: "sla_violation_unique_open_idx",
+			sql: `
+				CREATE UNIQUE INDEX IF NOT EXISTS sla_violation_unique_open_idx
+				ON sla_violations (ticket_id, violation_type)
+				WHERE is_resolved = false;`,
+		},
+		{
+			name: "sla_violation_ticket_type_idx",
+			sql: `
+				CREATE INDEX IF NOT EXISTS sla_violation_ticket_type_idx
+				ON sla_violations (ticket_id, violation_type);`,
+		},
+		{
+			name: "incident_number_seq",
+			sql:  `CREATE SEQUENCE IF NOT EXISTS incident_number_seq;`,
+		},
+		{
+			// 播种为「已存在事件编号的最大数字后缀 + 1」，避免与历史编号碰撞。
+			// 表为空时 setval(1, false)：下一次 nextval 返回 1（is_called=false），
+			// 而不是被 GREATEST 抬到 2 白白跳过 000001。
+			//
+			// 历史实现写的是 setval(seq, 0)——序列下界是 1，该调用恒报
+			// "value 0 is out of bounds"，被 non-fatal 日志吞掉；也就是说
+			// 空库首装从来没有真正播种过序列，恢复带数据的环境后极易撞号。
+			name: "incident_number_seq.seed",
+			sql: `
+				WITH m AS (
+					SELECT COALESCE(MAX(CAST(substring(incident_number FROM 12) AS BIGINT)), 0) AS v
+					FROM incidents
+					WHERE incident_number ~ '^INC-[0-9]{6}-[0-9]{6}$'
+				)
+				SELECT setval('incident_number_seq', GREATEST(v, 1), v > 0) FROM m;`,
+		},
+		{
+			name: "incidents_tenant_number_idx",
+			sql: `
+				CREATE UNIQUE INDEX IF NOT EXISTS incidents_tenant_number_idx
+				ON incidents (tenant_id, incident_number)
+				WHERE incident_number IS NOT NULL;`,
+		},
+	}
+
+	var errs []error
+	for _, s := range stmts {
+		if _, err := db.ExecContext(ctx, s.sql); err != nil {
+			errs = append(errs, fmt.Errorf("%s: %w", s.name, err))
+		}
+	}
+	return errors.Join(errs...)
+}
+
 
 // rlsDriver 保存最后一次初始化的 RLS 装饰器实例，供 /internal/rls-stats
 // 等诊断端点读取运行时统计。为 nil 表示未启用 RLS 或未初始化。
@@ -105,50 +182,13 @@ func InitDatabase(cfg *config.DatabaseConfig) (*ent.Client, error) {
 
 	// Schema is owned by the explicit bootstrap migration job. Application
 	// startup must remain read-only with respect to database structure.
-
-	// SLA violation 部分唯一索引：
-	// 防止同一 (ticket_id, violation_type) 在“未解决”状态下被多个 worker / 实例
-	// 重复创建。这是 SLA Monitor Service 跨实例竞态保护的最后一道防线：
-	// CheckSLAViolations 内部的预加载 existingViolationMap 是“乐观检查”，真正
-	// 的互斥由数据库唯一约束保证；服务层将唯一冲突识别为幂等跳过。
-	// 部分索引条件 is_resolved = false 允许同一工单在已解决后再次触发新违规。
-	if _, err := db.ExecContext(ctx, `
-            CREATE UNIQUE INDEX IF NOT EXISTS sla_violation_unique_open_idx
-            ON sla_violations (ticket_id, violation_type)
-            WHERE is_resolved = false;
-        `); err != nil {
-		log.Printf("create sla_violation unique open index failed (non-fatal): %v", err)
-	}
-	// 同时加一个常规索引支持按工单查违规的查询路径
-	if _, err := db.ExecContext(ctx, `
-            CREATE INDEX IF NOT EXISTS sla_violation_ticket_type_idx
-            ON sla_violations (ticket_id, violation_type);
-        `); err != nil {
-		log.Printf("create sla_violation ticket_type index failed (non-fatal): %v", err)
-	}
-
-	// 事件编号序列：保证 INC-YYYYMM-NNNNNN 后缀全局唯一、单调递增，
-	// 彻底消除「COUNT+1 并发复用 / 删除回退 / UTC 窗口错乱」三类编号冲突。
-	// 播种为「已存在事件编号的最大数字后缀 + 1」，避免与历史编号碰撞；历史库
-	// 为空或 incidents 表尚未创建时从 1 开始（best-effort，失败仅告警）。
-	if _, err := db.ExecContext(ctx, `CREATE SEQUENCE IF NOT EXISTS incident_number_seq`); err != nil {
-		log.Printf("create incident_number_seq failed (non-fatal): %v", err)
-	} else if _, err := db.ExecContext(ctx, `
-		SELECT setval('incident_number_seq', COALESCE((
-			SELECT MAX(CAST(substring(incident_number FROM 12) AS BIGINT))
-			FROM incidents
-			WHERE incident_number ~ '^INC-[0-9]{6}-[0-9]{6}$'
-		), 0))
-	`); err != nil {
-		log.Printf("seed incident_number_seq failed (non-fatal, sequence starts at 1): %v", err)
-	}
-	// 事件编号唯一索引兜底（部分索引：仅约束非空编号）。
-	if _, err := db.ExecContext(ctx, `
-		CREATE UNIQUE INDEX IF NOT EXISTS incidents_tenant_number_idx
-		ON incidents (tenant_id, incident_number)
-		WHERE incident_number IS NOT NULL
-	`); err != nil {
-		log.Printf("create incidents unique number index failed (non-fatal): %v", err)
+	//
+	// 例外只有一处：EnsureOperationalIndexes 里那几条 CREATE INDEX/SEQUENCE。
+	// 它们挂在连接路径上是为了兼容「早于 bootstrap job 就存在」的历史库，
+	// 空库时必然失败（表还不存在）——所以真正的创建点在 InitializeStorage
+	// 的末尾，这里只做 best-effort，失败仅告警，不阻断连接。
+	if err := EnsureOperationalIndexes(ctx, db); err != nil {
+		log.Printf("ensure operational indexes skipped at connect time (expected on empty database; bootstrap job creates them after schema): %v", err)
 	}
 
 	// Compatibility fix: if legacy column "author" exists and is NOT NULL, relax constraint to allow inserts via current schema (author_id)
