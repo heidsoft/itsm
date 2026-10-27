@@ -207,7 +207,7 @@ seeder 守卫、预检表生成、tsc 全绿——**但真实浏览器一跑，�
 | 项 | 现状 | 处置 |
 |---|------|------|
 | ~~`/reports` 无路由守卫~~ | ✅ 已闭环：`AdminRouteGuard` 增加 `MENU_GATED_ROOTS`，`/reports` 及子页按根路径判定菜单可见性；补 4 例回归（含「end_user 直连 URL 得 403」） | `83f6f1930` |
-| ~~`precheck_fallback.go` 的 `POST /api/v1/reports*` → `dashboard:admin`~~ | ✅ 已闭环：该条与另外 54 条同为死条目，整批删除；新增 `TestPrecheckFallbackPoliciesMatchRegisteredRoutes` 防复发 | `62087dc9b` |
+| ~~`precheck_fallback.go` 的 `POST /api/v1/reports*` → `dashboard:admin`~~ | ✅ 已闭环：该条与另外 49 条同为死条目，整批删除（113→63 条）；新增 `TestPrecheckFallbackPoliciesMatchRegisteredRoutes` 防复发 | `62087dc9b` |
 | MSP 五角色 | 已播种（8–13 条码），但生产未开 MSP 模块 | 开 MSP 部署模式后按 provider 角色补一轮走查 |
 | 空态门控单测 | 只有静态守卫（禁字面量 `showAction: true`）+ 浏览器走查，无组件级单测 | 若要重构 `LoadingEmptyError`，先补组件测试 |
 | 「客户与合同」页仍有「值班配置」Tab | 与「值班排班移入事件管理」的决策擦边：Tab 只放两个 PoC 按钮（新增排班/新增班次），真正可用的排班管理在 `/email-intake/on-call` | 需产品确认：是保留为「合同驱动的排班配置」入口，还是直接删掉消除重复 |

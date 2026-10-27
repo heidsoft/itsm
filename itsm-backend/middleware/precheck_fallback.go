@@ -18,10 +18,10 @@ package middleware
 //
 // 条目必须命中真实路由：TestPrecheckFallbackPoliciesMatchRegisteredRoutes 会用
 // 与运行时同一套 matchPath 语义对账，未命中任何已注册路由的条目直接判红。
-// 2026-10-27 据此清掉 55 条死条目（整块 PATCH 族、/api/v1/ticket-templates*
-// 旧路径族、以及 base 与 /* 错位的一批）。死条目的危害不是「不生效」，而是
-// 会变成未来路由的埋雷：一旦有人补上 POST /reports/export，就会继承一条
-// dashboard:admin 的过时口径，而错配只会在某个低权角色被 403 时才暴露。
+// 2026-10-27 据此清掉 50 条死条目（113→63：整块 24 条 PATCH 族、7 条
+// /api/v1/ticket-templates* 旧路径族、以及 base 与 /* 错位的一批）。死条目的
+// 危害不是「不生效」，而是会变成未来路由的埋雷：一旦有人补上 POST /reports/export，
+// 就会继承一条 dashboard:admin 的过时口径，而错配只会在某个低权角色被 403 时才暴露。
 var precheckFallbackPolicies = map[string]map[string]Permission{
 	"DELETE": {
 		"/api/v1/applications/*": {Resource: "application", Action: "write"},
@@ -59,7 +59,7 @@ var precheckFallbackPolicies = map[string]map[string]Permission{
 	},
 	"PATCH": {
 		// 全仓只有 8 条 PATCH 路由（工单关系/子任务、审批、AI 审计、市场目录），
-		// 全部已由路由级声明覆盖；此前那 22 条「PATCH /<资源>/*」是 REST 教科书
+		// 全部已由路由级声明覆盖；此前那 24 条「PATCH /<资源>/*」是 REST 教科书
 		// 式的想当然，本仓库的更新一律走 PUT。
 	},
 	"POST": {
