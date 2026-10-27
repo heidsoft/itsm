@@ -7,6 +7,7 @@ import (
 	"itsm-backend/common"
 	"itsm-backend/common/handlerctx"
 	"itsm-backend/internal/datascope"
+	"itsm-backend/middleware"
 
 	"github.com/gin-gonic/gin"
 )
@@ -53,6 +54,9 @@ func (h *Handler) Query(c *gin.Context) {
 		PageSize:  pg.PageSize,
 		DataScope: scope,
 		ViewerID:  viewerID,
+		// 域级权限过滤：工作台跨域聚合工单/事件/问题/变更，路由层的
+		// dashboard:read 只说明能看仪表盘，不代表能看各业务域。
+		Roles: middleware.GetContextRoles(c),
 	}
 
 	if assigneeIDStr := c.Query("assigneeId"); assigneeIDStr != "" {

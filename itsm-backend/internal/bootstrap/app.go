@@ -1343,7 +1343,10 @@ func NewApplication() *Application {
 		GlobalSearchHandler: globalSearchHandler.NewHandler(globalSearchHandler.NewService(client)),
 
 		// Workbench (统一工作台)
-		WorkbenchHandler: workbenchHandler.NewHandler(workbenchHandler.NewService(workbenchHandler.NewRepository(database.GetRawDB()))),
+		// 注入 client：跨域聚合面的域级权限过滤需要读 role_permissions
+		// （middleware.AuthorizeResource），未注入会退化成「只看仪表盘权限=
+		// 能看全部域」，即 workbench 此前残留的跨域越权读。
+		WorkbenchHandler: workbenchHandler.NewHandler(workbenchHandler.NewServiceWithClient(workbenchHandler.NewRepository(database.GetRawDB()), client)),
 
 		// Standard Change Handler
 		StandardChangeHandler: standardChangeHandler,

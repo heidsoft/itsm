@@ -39,6 +39,10 @@ type WorkbenchQuery struct {
 	DataScope datascope.DataScope `json:"-"`
 	// ViewerID 是当前访问者 ID，用于 owner/assignee 维度过滤。
 	ViewerID int `json:"-"`
+
+	// Roles 是访问者的全部生效角色（主角色 + 附加角色），用于域级权限过滤。
+	// 由 handler 从 gin 上下文取（middleware.GetContextRoles）。
+	Roles []string `json:"-"`
 }
 
 // WorkbenchResponse represents the paginated workbench response.
