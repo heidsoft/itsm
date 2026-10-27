@@ -207,10 +207,23 @@ func TestIncidentCreationUsesFormalRuleEngine(t *testing.T) {
 			Count(ctx)
 		return countErr == nil && count == 1
 	}, 2*time.Second, 20*time.Millisecond)
-	execution, err := client.IncidentRuleExecution.Query().
-		Where(incidentruleexecution.IncidentIDEQ(created.ID)).
-		Only(ctx)
-	require.NoError(t, err)
+
+	// execution 行由规则 goroutine 在 metric 之后落库（先执行 action 再记
+	// execution）。SQLite 共享内存库写锁未释放时读会得到
+	// "database table is locked"——CI 慢机上 CreateIncident 返回后 goroutine
+	// 仍在写，此刻直接 Query 必然撞锁。这是读撞写锁的瞬态而非失败：轮询
+	// 直到行出现，锁错误视为「还没写完」继续等。
+	var execution *ent.IncidentRuleExecution
+	require.Eventually(t, func() bool {
+		e, err := client.IncidentRuleExecution.Query().
+			Where(incidentruleexecution.IncidentIDEQ(created.ID)).
+			Only(ctx)
+		if err != nil {
+			return false
+		}
+		execution = e
+		return true
+	}, 5*time.Second, 20*time.Millisecond)
 	assert.Equal(t, "completed", execution.Status)
 }
 

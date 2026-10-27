@@ -37,14 +37,15 @@ import (
 )
 
 type fixture struct {
-	engine  *gin.Engine
-	client  *ent.Client
-	secret  string
-	tenantA *ent.Tenant
-	tenantB *ent.Tenant
-	userA   *ent.User
-	userB   *ent.User
-	endUser *ent.User
+	engine    *gin.Engine
+	client    *ent.Client
+	secret    string
+	tenantA   *ent.Tenant
+	tenantB   *ent.Tenant
+	userA     *ent.User
+	userB     *ent.User
+	endUser   *ent.User
+	agentUser *ent.User
 }
 
 func newFixture(t *testing.T) *fixture {
@@ -64,6 +65,9 @@ func newFixture(t *testing.T) *fixture {
 		SetPasswordHash("hash").SetRole("super_admin").SetActive(true).SetTenantID(tenantB.ID).SaveX(ctx)
 	endUser := client.User.Create().SetUsername("matrix-a-enduser").SetEmail("matrix-a-end@example.com").SetName("EndUser A").
 		SetPasswordHash("hash").SetRole("end_user").SetActive(true).SetTenantID(tenantA.ID).SaveX(ctx)
+	// 「有 sla:read、无 sla:write」的读写分权样本（end_user 的 sla:read 已退役）。
+	agentUser := client.User.Create().SetUsername("matrix-a-agent").SetEmail("matrix-a-agent@example.com").SetName("Agent A").
+		SetPasswordHash("hash").SetRole("agent").SetActive(true).SetTenantID(tenantA.ID).SaveX(ctx)
 
 	gin.SetMode(gin.TestMode)
 	engine := gin.New()
@@ -82,7 +86,7 @@ func newFixture(t *testing.T) *fixture {
 	return &fixture{
 		engine: engine, client: client, secret: secret,
 		tenantA: tenantA, tenantB: tenantB,
-		userA: userA, userB: userB, endUser: endUser,
+		userA: userA, userB: userB, endUser: endUser, agentUser: agentUser,
 	}
 }
 
@@ -175,12 +179,14 @@ func TestEscalationMatrixHTTPContract(t *testing.T) {
 	})
 
 	t.Run("矩阵面权限码读写分权", func(t *testing.T) {
-		// sla:{read,write}；end_user 按 authz 编译期默认集持有 sla:read
-		// （SLA/矩阵属租户配置读面），不持有 sla:write → PUT 必须 403。
-		w := fx.do(t, http.MethodGet, base, fx.endUser)
+		// sla:{read,write}。end_user 的 sla:read 已随 2026-10-26 自助门户收敛
+		// 退役（管理面读码整体撤出，RetiredRolePermissionCodes 有登记），
+		// 不能再当「有读无写」样本。改用 agent：authz 默认集持 sla:read
+		// （坐席需看 SLA 时限）不持 sla:write → GET 200、PUT 403。
+		w := fx.do(t, http.MethodGet, base, fx.agentUser)
 		require.Equal(t, http.StatusOK, w.Code, "body=%s", w.Body.String())
 
-		w = fx.do(t, http.MethodPut, base, fx.endUser, `{}`)
+		w = fx.do(t, http.MethodPut, base, fx.agentUser, `{}`)
 		require.Equal(t, http.StatusForbidden, w.Code, "body=%s", w.Body.String())
 		require.Equal(t, 2003, decodeEnvelope(t, w).Code)
 	})
