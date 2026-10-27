@@ -79,7 +79,6 @@ func (CMDBImportTask) Edges() []ent.Edge {
 // Indexes of the CMDBImportTask.
 func (CMDBImportTask) Indexes() []ent.Index {
 	return []ent.Index{
-		index.Fields("task_id").Unique(),
 		index.Fields("tenant_id"),
 		index.Fields("status"),
 		index.Fields("operator_id"),

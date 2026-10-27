@@ -72,8 +72,6 @@ func (ProcessVariable) Edges() []ent.Edge {
 // Indexes of the ProcessVariable.
 func (ProcessVariable) Indexes() []ent.Index {
 	return []ent.Index{
-		index.Fields("variable_id").
-			Unique(),
 		index.Fields("process_instance_id"),
 		index.Fields("task_id"),
 		index.Fields("variable_name"),

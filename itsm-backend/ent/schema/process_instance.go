@@ -104,8 +104,6 @@ func (ProcessInstance) Edges() []ent.Edge {
 // Indexes of the ProcessInstance.
 func (ProcessInstance) Indexes() []ent.Index {
 	return []ent.Index{
-		index.Fields("process_instance_id").
-			Unique(),
 		index.Fields("business_key"),
 		index.Fields("process_definition_key"),
 		index.Fields("process_definition_id"),

@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt" // Go标准库，用于格式化字符串
 	"log"
+	"regexp"
 	"time" // Go标准库，用于时间处理
 
 	"itsm-backend/config"       // 自定义配置包
@@ -97,6 +98,117 @@ func EnsureOperationalIndexes(ctx context.Context, db *sql.DB) error {
 	return errors.Join(errs...)
 }
 
+// duplicateIndexPairs 是「完全重复索引」的收敛表，每项为 {保留, 删除}。
+//
+// 判据是列、唯一性、谓词、排序方向四项全同（用 pg_get_indexdef 去掉索引名后
+// 逐字比较 + indoption + indisunique），因此删除任一侧都不会改变任何查询的计划
+// 可选性。2026-10-27 生产库实测 32 对，冗余侧累计 1861 次扫描 / 368 kB。
+//
+// 根因是三份「补索引」批次脚本按名字判断缺失：add_missing_indexes.sql /
+// add_missing_indexes_batch2.sql / 20261027_prod_schema_guards.sql 看到「没有叫
+// idx_ticket_types_tenant 的索引」就补一条，而 ent 早已为同一列建过
+// tickettype_tenant_id——名字不同、定义相同。其中 6 对是 ent 自己造成的：字段上
+// 写了 .Unique()（生成 <表>_<列>_key），又在 Indexes() 里写了一遍
+// index.Fields(<列>).Unique()（生成 <实体>_<列>）。
+//
+// 收敛方向：保留 ent 声明的那一份。ent 的 auto-migrate 在 ITSM_BOOTSTRAP_ONLY
+// 初始化容器里每次部署都跑，删掉它必然被重建，手写索引删掉就是删掉。
+//
+// 三处例外（表不由 ent 管理，两份都是手写）：change_pi_rs /
+// incident_related_incidents / ticket_comments，保留更早的功能迁移那份。
+// 第四处方向相反（cloud_resources）：20260829 迁移已显式 DROP ent 那份并改建
+// cloud_resources_account_resource_lookup_idx，但 ent schema 仍声明着它，
+// 于是每次 bootstrap 又建回来——生产库因此有两份、首装库只有一份。该对保留
+// 迁移那份，并已从 ent/schema/cloud_resource.go 移除声明。
+//
+// 为什么不是一份 migrations/*.sql：无日期脚本（add_missing_indexes*）按字符串
+// 排序落在所有 YYYYMMDD_* 之后，任何日期化「删除型」迁移都会被它们随后重建，
+// 首装环境因此永远收敛不掉（首装门禁实测：日期化迁移先跑，幸存方都还不存在）。
+// 这三份脚本的 checksum 已在生产账本里固化，不能改写内容。所以收敛放在迁移流
+// 之后的 InitializeStorage 末尾，与 EnsureOperationalIndexes 同一挂载点。
+var duplicateIndexPairs = [][2]string{
+	{"idx_change_pi_rs_tenant_id", "idx_change_pi_rs_tenant"},
+	{"cirelationship_tenant_id", "idx_ci_relationships_tenant_id"},
+	{"cloud_resources_account_resource_lookup_idx", "cloudresource_cloud_account_id_resource_id"},
+	{"cloudresource_tenant_id_identity_hash", "cloud_resources_identity_expand_idx"},
+	{"cmdb_export_tasks_task_id_key", "cmdbexporttask_task_id"},
+	{"cmdb_import_tasks_task_id_key", "cmdbimporttask_task_id"},
+	{"configurationitem_tenant_id_source_id", "configuration_items_source_expand_idx"},
+	{"discoveryjob_status_lease_expires_at", "discovery_jobs_claim_idx"},
+	{"discoveryjob_tenant_id_operation_source_id_idempotency_key", "discovery_jobs_idempotency_expand_idx"},
+	{"discoveryresult_tenant_id_job_id_resource_identity", "discovery_results_identity_expand_idx"},
+	{"discoverysource_tenant_id_cloud_account_id", "discovery_sources_tenant_cloud_account_idx"},
+	{"domainconfig_tenant_id_config_type_config_key", "idx_domain_config_lookup"},
+	{"domainconfig_tenant_id_department_id_team_id", "idx_domain_config_scope"},
+	{"emailoutboundmessage_tenant_id_status_created_at", "email_outbound_messages_delivery_idx"},
+	{"inboundemailmessage_tenant_id_processing_status_received_at", "inbound_email_messages_processing_idx"},
+	{"idx_incident_related_incidents_incident_id", "idx_inc_related_inc"},
+	{"knowledgearticlereview_article_id_created_at", "idx_knowledge_article_reviews_article_created"},
+	{"knowledgearticlereview_tenant_id_article_id", "idx_knowledge_article_reviews_tenant_article"},
+	{"knowledgearticle_tenant_id_source_problem_id", "idx_knowledge_articles_source_problem"},
+	{"oncallshift_tenant_id_schedule_id_start_at_end_at", "on_call_shifts_lookup_idx"},
+	{"processbinding_tenant_id_busin_3b376c1950cea2bb24c7d1dc673951a4", "idx_process_binding_routing"},
+	{"process_execution_histories_history_id_key", "processexecutionhistory_history_id"},
+	{"process_instances_process_instance_id_key", "processinstance_process_instance_id"},
+	{"process_tasks_task_id_key", "processtask_task_id"},
+	{"process_variables_variable_id_key", "processvariable_variable_id"},
+	{"ticket_comment_ticket_id_idx", "idx_tkt_cmt_ticket"},
+	{"ticket_tenant_id_ticket_type_id", "idx_tickets_tenant_ticket_type"},
+	{"tickettype_status", "idx_ticket_types_status"},
+	{"tickettype_tenant_id", "idx_ticket_types_tenant"},
+	{"tickettype_tenant_id_sort_order", "idx_ticket_types_tenant_sort"},
+	{"workflowtemplate_tenant_id_domain_status", "idx_workflow_templates_domain"},
+	{"workflowtemplate_tenant_id_is_public", "idx_workflow_templates_public"},
+}
+
+// safeIndexName 只放行小写标识符，避免把外部字符串拼进 DDL。
+var safeIndexName = regexp.MustCompile(`^[a-z_][a-z0-9_]*$`)
+
+// EnsureIndexConvergence 删除 duplicateIndexPairs 里的冗余索引（幂等），返回删除条数。
+//
+// 每一对先断言「保留方存在」再删「冗余方」：保留方缺失说明环境形态与假设不符
+// （例如某份建索引的迁移被跳过），此时删冗余方会让该访问路径彻底没有索引。
+// 这种情况记成错误而非静默跳过——收敛失败要让部署看得见。
+//
+// 必须在全部迁移（含无日期脚本）之后调用，见 duplicateIndexPairs 的注释。
+func EnsureIndexConvergence(ctx context.Context, db *sql.DB) (int, error) {
+	if db == nil {
+		return 0, errors.New("ensure index convergence: nil database handle")
+	}
+
+	var errs []error
+	dropped := 0
+	for _, pair := range duplicateIndexPairs {
+		keep, redundant := pair[0], pair[1]
+		if !safeIndexName.MatchString(keep) || !safeIndexName.MatchString(redundant) {
+			errs = append(errs, fmt.Errorf("index convergence: 非法索引名 %q/%q", keep, redundant))
+			continue
+		}
+
+		var keepExists bool
+		if err := db.QueryRowContext(ctx,
+			`SELECT to_regclass($1) IS NOT NULL`, keep).Scan(&keepExists); err != nil {
+			errs = append(errs, fmt.Errorf("index convergence: 探测 %s: %w", keep, err))
+			continue
+		}
+		if !keepExists {
+			errs = append(errs, fmt.Errorf(
+				"index convergence: 保留方 %s 不存在，拒绝删除 %s（会让该访问路径失去索引）",
+				keep, redundant))
+			continue
+		}
+
+		res, err := db.ExecContext(ctx, `DROP INDEX IF EXISTS `+redundant)
+		if err != nil {
+			errs = append(errs, fmt.Errorf("index convergence: 删除 %s: %w", redundant, err))
+			continue
+		}
+		if n, err := res.RowsAffected(); err == nil && n > 0 {
+			dropped++
+		}
+	}
+	return dropped, errors.Join(errs...)
+}
 
 // rlsDriver 保存最后一次初始化的 RLS 装饰器实例，供 /internal/rls-stats
 // 等诊断端点读取运行时统计。为 nil 表示未启用 RLS 或未初始化。

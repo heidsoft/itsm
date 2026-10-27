@@ -1533,6 +1533,15 @@ func InitializeStorage(cfg *config.Config, client *ent.Client, sugar *zap.Sugare
 	}
 	sugar.Infow("operational indexes ensured")
 
+	// 索引撞车收敛：必须在全部迁移（含 add_missing_indexes* 这类无日期脚本）之后。
+	// 那些脚本按字符串排序落在所有 YYYYMMDD_* 之后，若把收敛写成日期化迁移，首装时
+	// 会先于它们执行——幸存方还不存在、删掉的也会被重建，永远收敛不掉。
+	droppedIndexes, err := database.EnsureIndexConvergence(ctx, database.GetRawDB())
+	if err != nil {
+		return fmt.Errorf("ensure index convergence: %w", err)
+	}
+	sugar.Infow("duplicate indexes converged", "dropped", droppedIndexes)
+
 	return nil
 }
 

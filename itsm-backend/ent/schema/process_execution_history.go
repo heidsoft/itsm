@@ -86,8 +86,6 @@ func (ProcessExecutionHistory) Edges() []ent.Edge {
 // Indexes of the ProcessExecutionHistory.
 func (ProcessExecutionHistory) Indexes() []ent.Index {
 	return []ent.Index{
-		index.Fields("history_id").
-			Unique(),
 		index.Fields("process_instance_id"),
 		index.Fields("process_definition_key"),
 		index.Fields("activity_id"),

@@ -76,7 +76,6 @@ func (CMDBExportTask) Edges() []ent.Edge {
 // Indexes of the CMDBExportTask.
 func (CMDBExportTask) Indexes() []ent.Index {
 	return []ent.Index{
-		index.Fields("task_id").Unique(),
 		index.Fields("tenant_id"),
 		index.Fields("status"),
 		index.Fields("operator_id"),

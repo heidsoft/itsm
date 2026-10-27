@@ -61,7 +61,7 @@ trap cleanup EXIT
 command -v docker >/dev/null 2>&1 || fail "docker 不可用"
 docker info >/dev/null 2>&1 || fail "docker daemon 未运行"
 
-log "project=$PROJECT run=$GATE_RUN_ID（全新命名卷，不复用任何既有数据）"
+log "project=$PROJECT run=${GATE_RUN_ID}（全新命名卷，不复用任何既有数据）"
 "${COMPOSE[@]}" down -v --remove-orphans >/dev/null 2>&1 || true
 
 # 用 ${BUILD_FLAG:+--build} 而不是空数组：macOS 自带 bash 3.2 在 set -u 下展开空数组会直接
@@ -124,5 +124,43 @@ done
 SEQ="$(psql_scalar "SELECT count(*) FROM pg_class WHERE relkind = 'S' AND relname = 'incident_number_seq'")"
 [ "$SEQ" = "1" ] || fail "incident_number_seq 缺失；事件编号会退回 COUNT+1 并发复用"
 
-log "PASS: 迁移 $MIGRATIONS 条（空 checksum 0）、活跃流程定义 $DEFS、活跃流程绑定 $BINDINGS（悬空 $DANGLING）、运营性索引/序列 4/4"
+# 索引撞车：同一张表上不允许存在两份「列、唯一性、谓词、排序方向完全相同」的索引。
+# 判据不能只看列名——列相同但排序方向或谓词不同的两条索引服务不同查询，合并会退化。
+# 这类重复的成本是双写两棵 B 树 + 规划器候选集翻倍，且不会有任何功能报错，
+# 只能靠对账发现（2026-10-27 生产库实测 32 对）。ent 那份由 auto-migrate 每次部署
+# 重建，手写那份由 migrations/20261028_drop_duplicate_indexes.sql 删除，此处守住结果。
+DUP_INDEXES="$(psql_scalar "
+WITH idx AS (
+  SELECT i.indrelid::regclass::text AS tbl, c.relname AS idx,
+         regexp_replace(pg_get_indexdef(i.indexrelid),
+                        '^CREATE (UNIQUE )?INDEX (\S+) ON (\S+) ', 'CREATE \1INDEX ON \3 ') AS sem,
+         i.indoption::text AS opt, i.indisunique AS uniq
+  FROM pg_index i JOIN pg_class c ON c.oid = i.indexrelid
+  WHERE i.indrelid IN (SELECT oid FROM pg_class
+                       WHERE relkind = 'r' AND relnamespace = 'public'::regnamespace)
+    AND NOT i.indisprimary
+)
+SELECT count(*) FROM idx a JOIN idx b
+  ON a.tbl = b.tbl AND a.idx < b.idx
+WHERE a.sem = b.sem AND a.opt = b.opt AND a.uniq = b.uniq")"
+if [ "${DUP_INDEXES:-0}" != "0" ]; then
+  psql_scalar "
+WITH idx AS (
+  SELECT i.indrelid::regclass::text AS tbl, c.relname AS idx,
+         regexp_replace(pg_get_indexdef(i.indexrelid),
+                        '^CREATE (UNIQUE )?INDEX (\S+) ON (\S+) ', 'CREATE \1INDEX ON \3 ') AS sem,
+         i.indoption::text AS opt, i.indisunique AS uniq
+  FROM pg_index i JOIN pg_class c ON c.oid = i.indexrelid
+  WHERE i.indrelid IN (SELECT oid FROM pg_class
+                       WHERE relkind = 'r' AND relnamespace = 'public'::regnamespace)
+    AND NOT i.indisprimary
+)
+SELECT a.tbl || ': ' || a.idx || ' == ' || b.idx FROM idx a JOIN idx b
+  ON a.tbl = b.tbl AND a.idx < b.idx
+WHERE a.sem = b.sem AND a.opt = b.opt AND a.uniq = b.uniq
+ORDER BY a.tbl" >&2 || true
+  fail "首装库存在 $DUP_INDEXES 对完全重复的索引（见上方清单）；重复索引只增加写放大，不提供任何查询能力"
+fi
+
+log "PASS: 迁移 $MIGRATIONS 条（空 checksum 0）、活跃流程定义 ${DEFS}、活跃流程绑定 ${BINDINGS}（悬空 ${DANGLING}）、运营性索引/序列 4/4、重复索引 0 对"
 log "空卷首装链路与关键不变量成立"

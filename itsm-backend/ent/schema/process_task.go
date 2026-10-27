@@ -108,8 +108,6 @@ func (ProcessTask) Edges() []ent.Edge {
 // Indexes of the ProcessTask.
 func (ProcessTask) Indexes() []ent.Index {
 	return []ent.Index{
-		index.Fields("task_id").
-			Unique(),
 		index.Fields("process_instance_id"),
 		index.Fields("process_definition_key"),
 		index.Fields("task_definition_key"),

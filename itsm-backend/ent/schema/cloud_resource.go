@@ -95,10 +95,18 @@ func (CloudResource) Edges() []ent.Edge {
 }
 
 // Indexes of the CloudResource.
+//
+// 注意：(cloud_account_id, resource_id) 的查找索引**不在这里声明**。
+// migrations/20260829_cmdb_discovery_governance_contract.sql 用
+// `cloud_resources_account_resource_lookup_idx` 建立了同定义的索引，并显式
+// DROP 了 ent 生成的 `cloudresource_cloud_account_id_resource_id`（原意是用
+// 规范化唯一键取代按行 ID 的唯一性，只保留一条非唯一查找索引兼容旧读路径）。
+// 但 schema 里若继续声明这条索引，每次 bootstrap 的 auto-migrate 都会把它建
+// 回来，生产库于是长期同时持有两份完全相同的索引，而首装库只有迁移那一份——
+// 环境之间悄悄分叉。声明权收归迁移，此处只留注释。
 func (CloudResource) Indexes() []ent.Index {
 	return []ent.Index{
 		index.Fields("tenant_id"),
-		index.Fields("cloud_account_id", "resource_id"),
 		index.Fields("service_id"),
 		index.Fields("region"),
 		index.Fields("tenant_id", "identity_hash"),

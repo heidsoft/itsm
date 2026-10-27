@@ -674,11 +674,6 @@ var (
 		PrimaryKey: []*schema.Column{CmdbExportTasksColumns[0]},
 		Indexes: []*schema.Index{
 			{
-				Name:    "cmdbexporttask_task_id",
-				Unique:  true,
-				Columns: []*schema.Column{CmdbExportTasksColumns[1]},
-			},
-			{
 				Name:    "cmdbexporttask_tenant_id",
 				Unique:  false,
 				Columns: []*schema.Column{CmdbExportTasksColumns[12]},
@@ -727,11 +722,6 @@ var (
 		Columns:    CmdbImportTasksColumns,
 		PrimaryKey: []*schema.Column{CmdbImportTasksColumns[0]},
 		Indexes: []*schema.Index{
-			{
-				Name:    "cmdbimporttask_task_id",
-				Unique:  true,
-				Columns: []*schema.Column{CmdbImportTasksColumns[1]},
-			},
 			{
 				Name:    "cmdbimporttask_tenant_id",
 				Unique:  false,
@@ -983,11 +973,6 @@ var (
 				Name:    "cloudresource_tenant_id",
 				Unique:  false,
 				Columns: []*schema.Column{CloudResourcesColumns[22]},
-			},
-			{
-				Name:    "cloudresource_cloud_account_id_resource_id",
-				Unique:  false,
-				Columns: []*schema.Column{CloudResourcesColumns[25], CloudResourcesColumns[1]},
 			},
 			{
 				Name:    "cloudresource_service_id",
@@ -3447,11 +3432,6 @@ var (
 		},
 		Indexes: []*schema.Index{
 			{
-				Name:    "processexecutionhistory_history_id",
-				Unique:  true,
-				Columns: []*schema.Column{ProcessExecutionHistoriesColumns[1]},
-			},
-			{
 				Name:    "processexecutionhistory_process_instance_id",
 				Unique:  false,
 				Columns: []*schema.Column{ProcessExecutionHistoriesColumns[17]},
@@ -3536,11 +3516,6 @@ var (
 			},
 		},
 		Indexes: []*schema.Index{
-			{
-				Name:    "processinstance_process_instance_id",
-				Unique:  true,
-				Columns: []*schema.Column{ProcessInstancesColumns[1]},
-			},
 			{
 				Name:    "processinstance_business_key",
 				Unique:  false,
@@ -3630,11 +3605,6 @@ var (
 			},
 		},
 		Indexes: []*schema.Index{
-			{
-				Name:    "processtask_task_id",
-				Unique:  true,
-				Columns: []*schema.Column{ProcessTasksColumns[1]},
-			},
 			{
 				Name:    "processtask_process_instance_id",
 				Unique:  false,
@@ -3796,11 +3766,6 @@ var (
 			},
 		},
 		Indexes: []*schema.Index{
-			{
-				Name:    "processvariable_variable_id",
-				Unique:  true,
-				Columns: []*schema.Column{ProcessVariablesColumns[1]},
-			},
 			{
 				Name:    "processvariable_process_instance_id",
 				Unique:  false,
