@@ -2,6 +2,8 @@ package feishu
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -28,7 +30,20 @@ type Handler struct {
 	inboundDedup     *connector.InboundDedup
 	replayMu         sync.Mutex
 	replayed         map[string]time.Time
+	oauthStateMu     sync.Mutex
+	oauthStates      map[string]oauthStateEntry
 }
+
+// oauthStateEntry 是一次 OAuth 授权的服务端 state 绑定。state 必须是不可猜测的
+// 随机串，且与发起时的租户/连接器实例/用户绑定、单次消费，回调时据此防 CSRF。
+type oauthStateEntry struct {
+	tenantID   int
+	instanceID string
+	userID     int
+	expiresAt  time.Time
+}
+
+const oauthStateTTL = 10 * time.Minute
 
 func NewHandler(
 	connectorManager *connector.Manager,
@@ -42,6 +57,7 @@ func NewHandler(
 		marketplace:      marketplace,
 		logger:           logger,
 		replayed:         make(map[string]time.Time),
+		oauthStates:      make(map[string]oauthStateEntry),
 	}
 }
 
@@ -96,9 +112,14 @@ func (h *Handler) GetOAuthAuthURL(ctx *gin.Context) {
 	if redirectURI == "" {
 		redirectURI = fmt.Sprintf("%s://%s/api/v1/feishu/oauth/callback/%s", requestScheme(ctx), ctx.Request.Host, fc.CallbackInstanceID())
 	}
-	state := ctx.Query("state")
-	if state == "" {
-		state = fmt.Sprintf("tenant_id=%d&user_id=%d", tenantID, ctx.GetInt("user_id"))
+	// state 由服务端生成不可猜测的随机串并绑定租户/实例/用户，回调时单次消费校验。
+	// 绝不信任客户端传入的 state，也不再回退到可枚举的 tenant_id/user_id 拼接——
+	// 那等于让攻击者用猜得到的 state 把自己的 OAuth 授权塞进受害者的连接器（CSRF）。
+	state, err := h.issueOAuthState(tenantID, fc.CallbackInstanceID(), ctx.GetInt("user_id"))
+	if err != nil {
+		h.logger.Errorw("Failed to issue Feishu OAuth state", "tenant_id", tenantID, "err", err)
+		common.Fail(ctx, common.InternalErrorCode, "生成授权状态失败，请稍后重试")
+		return
 	}
 	common.Success(ctx, &dto.FeishuOAuthAuthURLResponse{
 		AuthURL:     fc.GetOAuthAuthURL(redirectURI, state),
@@ -117,6 +138,14 @@ func (h *Handler) OAuthCallback(ctx *gin.Context) {
 	fc, tenantID, ok := h.getFeishuConnectorPublic(ctx)
 	if !ok {
 		common.Fail(ctx, common.ParamErrorCode, "Invalid request")
+		return
+	}
+	// 校验并单次消费 state：必须与发起时绑定的租户/实例一致，缺失、伪造、过期或
+	// 重放一律拒绝（403），且必须在换取 token 之前——否则 CSRF 授权码已被兑换。
+	state := ctx.Query("state")
+	if !h.consumeOAuthState(state, fc.CallbackInstanceID(), tenantID) {
+		h.logger.Warnw("Rejected Feishu OAuth callback with invalid state", "tenant_id", tenantID)
+		common.Fail(ctx, common.ForbiddenCode, "授权状态无效或已过期，请重新发起授权")
 		return
 	}
 	token, err := fc.ExchangeOAuthCode(ctx.Request.Context(), code)
@@ -260,6 +289,53 @@ func (h *Handler) Webhook(ctx *gin.Context) {
 
 // errWebhookReplay 表示时间戳越界或 nonce 已消费：这是攻击/重投信号，不是服务故障。
 var errWebhookReplay = errors.New("feishu webhook replay")
+
+// issueOAuthState 生成不可猜测的随机 state，并绑定发起时的租户/连接器实例/用户。
+//
+// 内存存储是单进程语义：多副本部署下回调落到另一副本会因查不到 state 而拒绝
+// （fail-closed，安全但牺牲可用性），HA 需要共享存储或会话粘滞，与 webhook 去重
+// 的内存回退同一局限。这里不引入新持久表，保持改动 scoped。
+func (h *Handler) issueOAuthState(tenantID int, instanceID string, userID int) (string, error) {
+	buf := make([]byte, 32)
+	if _, err := rand.Read(buf); err != nil {
+		return "", err
+	}
+	state := hex.EncodeToString(buf)
+	now := time.Now()
+	h.oauthStateMu.Lock()
+	defer h.oauthStateMu.Unlock()
+	for k, e := range h.oauthStates {
+		if now.After(e.expiresAt) {
+			delete(h.oauthStates, k)
+		}
+	}
+	h.oauthStates[state] = oauthStateEntry{
+		tenantID:   tenantID,
+		instanceID: instanceID,
+		userID:     userID,
+		expiresAt:  now.Add(oauthStateTTL),
+	}
+	return state, nil
+}
+
+// consumeOAuthState 单次消费 state：命中即删除（无论校验是否通过），再校验过期与
+// 租户/实例绑定。缺失、未知、过期、重放或绑定不符一律返回 false。
+func (h *Handler) consumeOAuthState(state, instanceID string, tenantID int) bool {
+	if state == "" {
+		return false
+	}
+	h.oauthStateMu.Lock()
+	defer h.oauthStateMu.Unlock()
+	entry, ok := h.oauthStates[state]
+	if !ok {
+		return false
+	}
+	delete(h.oauthStates, state)
+	if time.Now().After(entry.expiresAt) {
+		return false
+	}
+	return entry.tenantID == tenantID && entry.instanceID == instanceID
+}
 
 // consumeWebhookNonce 做两件事：校验时间戳窗口，并消费 nonce（一次性）。
 //

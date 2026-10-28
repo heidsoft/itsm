@@ -200,26 +200,14 @@ func TriageTop1Accuracy(t *testing.T, cases []TriageCase) float64 {
 	return float64(hits) / float64(len(cases))
 }
 
-// SummarizeROUGE computes ROUGE-L recall against expected topics.
-//
-// The eval-mode fixture combines the message stream into a candidate
-// summary (deterministic, no LLM call) and we score recall against the
-// expected topics by character-level LCS (the standard ROUGE-L unit)
-// averaged across cases.
-//
-// Goal: ≥0.6 per Stage 2 PR-2.2 (require.GreaterOrEqual enforces the gate).
-//
-// Char-level LCS credits partial matches (e.g. "登录页" inside
-// "登录页面"), which substring-containment fails on. When a future swap
-// to the real LLM gateway changes the candidate generation, only the
-// candidate text varies — the metric stays standard.
-func SummarizeROUGE(_ *testing.T, cases []SummarizeCase, _ func(string) string) float64 {
+// SummarizeROUGE averages character-level ROUGE-L recall of generated summaries against expected topics.
+func SummarizeROUGE(_ *testing.T, cases []SummarizeCase, summarize func(string) string) float64 {
 	if len(cases) == 0 {
 		return 0
 	}
 	total := 0.0
 	for _, tc := range cases {
-		candidate := strings.Join(tc.Messages, " ")
+		candidate := summarize(strings.Join(tc.Messages, " "))
 		refTokens := tokenize(strings.Join(tc.ExpectedTopics, " "))
 		candTokens := tokenize(candidate)
 		if tc.MaxLength > 0 && len(candTokens) > tc.MaxLength {
@@ -362,6 +350,55 @@ func PredictionROCAUC(_ *testing.T, cases []PredictionCase) float64 {
 }
 
 // ===== go test 入口 =====
+
+func TestSummarizeROUGE_UsesGeneratedCandidates(t *testing.T) {
+	cases := []SummarizeCase{
+		{Messages: []string{"  A服务\t异常", "已恢复\n"}, ExpectedTopics: []string{"服务恢复"}},
+		{Messages: []string{"B网络", "仍中断"}, ExpectedTopics: []string{"网络中断"}},
+	}
+	wantInputs := []string{"  A服务\t异常 已恢复\n", "B网络 仍中断"}
+	tests := []struct {
+		name      string
+		outputs   []string
+		wantScore float64
+	}{
+		{name: "correct", outputs: []string{"服务恢复", "网络中断"}, wantScore: 1},
+		{name: "empty", outputs: []string{"", ""}, wantScore: 0},
+		{name: "unrelated", outputs: []string{"xyz", "xyz"}, wantScore: 0},
+		{name: "mixed", outputs: []string{"服务恢复", ""}, wantScore: 0.5},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var inputs []string
+			score := SummarizeROUGE(t, cases, func(input string) string {
+				index := len(inputs)
+				require.Less(t, index, len(tt.outputs), "generator called too many times")
+				inputs = append(inputs, input)
+				return tt.outputs[index]
+			})
+			require.Equal(t, tt.wantScore, score)
+			require.Equal(t, wantInputs, inputs, "generator must receive each unmodified joined message stream once")
+		})
+	}
+}
+
+func TestSummarizeROUGE_EmptyCases(t *testing.T) {
+	for _, tt := range []struct {
+		name  string
+		cases []SummarizeCase
+	}{
+		{name: "nil"},
+		{name: "empty", cases: []SummarizeCase{}},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			score := SummarizeROUGE(t, tt.cases, func(string) string {
+				t.Fatal("generator must not be called without cases")
+				return ""
+			})
+			require.Zero(t, score)
+		})
+	}
+}
 
 // TestEval_Triage_Top1Accuracy 锁定 triage 评估的 top-1 accuracy 下界
 func TestEval_Triage_Top1Accuracy(t *testing.T) {

@@ -10,6 +10,7 @@ import (
 	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
+	"itsm-backend/ent/slaviolation"
 	"itsm-backend/ent/ticket"
 
 	"go.uber.org/zap"
@@ -89,7 +90,11 @@ func (s *AnalyticsService) GetDeepAnalytics(ctx context.Context, req *dto.DeepAn
 	dataPoints := s.analyzeByDimensions(allTickets, req.Dimensions, req.Metrics, req.GroupBy)
 
 	// 计算汇总数据
-	summary := s.calculateSummary(allTickets)
+	summary, err := s.calculateSummary(ctx, tenantID, allTickets)
+	if err != nil {
+		s.logger.Errorw("Failed to calculate analytics summary", "error", err)
+		return nil, fmt.Errorf("failed to calculate summary: %w", err)
+	}
 
 	response := &dto.DeepAnalyticsResponse{
 		Data:        dataPoints,
@@ -208,7 +213,7 @@ func (s *AnalyticsService) calculateMetrics(point dto.AnalyticsDataPoint, ticket
 }
 
 // calculateSummary 计算汇总数据
-func (s *AnalyticsService) calculateSummary(tickets []*ent.Ticket) dto.AnalyticsSummary {
+func (s *AnalyticsService) calculateSummary(ctx context.Context, tenantID int, tickets []*ent.Ticket) (dto.AnalyticsSummary, error) {
 	summary := dto.AnalyticsSummary{
 		Total: len(tickets),
 	}
@@ -242,9 +247,26 @@ func (s *AnalyticsService) calculateSummary(tickets []*ent.Ticket) dto.Analytics
 		summary.AvgResolutionTime = totalResolutionTime / float64(resolutionCount)
 	}
 
-	// 计算SLA合规率（简化版，实际需要查询SLA定义）
+	// SLA 合规率：权威事实是 SLAViolation 记录（由 SLA 监控域写入），
+	// 有违规记录的工单即不合规，合规率 = (总数 - 有违规的工单数) / 总数。
+	// 不能用解决率冒充——已解决可能超时违规，未解决也可能仍在 SLA 内。
+	// 查询失败上抛，不伪造数字（与 Dashboard 口径一致：按 ticket_id 去重）。
 	if len(tickets) > 0 {
-		summary.SLACompliance = float64(resolvedCount) / float64(len(tickets)) * 100
+		ids := make([]int, 0, len(tickets))
+		for _, t := range tickets {
+			ids = append(ids, t.ID)
+		}
+		violations, err := s.client.SLAViolation.Query().
+			Where(slaviolation.TenantIDEQ(tenantID), slaviolation.TicketIDIn(ids...)).
+			All(ctx)
+		if err != nil {
+			return dto.AnalyticsSummary{}, fmt.Errorf("query sla violations for analytics summary: %w", err)
+		}
+		breached := make(map[int]struct{}, len(violations))
+		for _, v := range violations {
+			breached[v.TicketID] = struct{}{}
+		}
+		summary.SLACompliance = float64(len(tickets)-len(breached)) / float64(len(tickets)) * 100
 	}
 
 	// 计算客户满意度（基于评分）
@@ -260,7 +282,7 @@ func (s *AnalyticsService) calculateSummary(tickets []*ent.Ticket) dto.Analytics
 		summary.CustomerSatisfaction = totalRating / float64(ratingCount)
 	}
 
-	return summary
+	return summary, nil
 }
 
 // ExportAnalytics 导出分析数据

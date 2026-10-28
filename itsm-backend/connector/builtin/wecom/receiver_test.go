@@ -97,8 +97,9 @@ func TestWeComVerifySignatureRejectsMissingCallbackToken(t *testing.T) {
 }
 
 func TestWeComParseInboundURLVerification(t *testing.T) {
-	w := newTestWeCom(t, "token-1")
-	body := []byte(`{"echostr":"echo-1"}`)
+	// echostr 是密文：配置 EncodingAESKey 后必须解密成明文 echo 原样返回。
+	w := newCryptoWeCom(t, "corp-id")
+	body := []byte(`{"echostr":"` + encryptForTest(t, testEncodingAESKey, "echo-1", "corp-id") + `"}`)
 	msg, err := w.ParseInbound(body)
 	require.NoError(t, err)
 	require.Equal(t, "url_verification", msg.Type)

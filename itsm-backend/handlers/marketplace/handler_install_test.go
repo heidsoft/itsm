@@ -11,6 +11,7 @@ import (
 	"testing"
 	"time"
 
+	"itsm-backend/common"
 	"itsm-backend/connector"
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
@@ -21,6 +22,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
 )
 
@@ -241,4 +243,152 @@ func TestUninstallItemHandler_DependentsBlockReturns409(t *testing.T) {
 	if !strings.Contains(rec.Body.String(), "Dependent") {
 		t.Fatalf("conflict message must list the dependents, got %s", rec.Body.String())
 	}
+}
+
+func marketplaceRouteRequest(f *handlerFixture, tenantID int, role, method, path, body string) *httptest.ResponseRecorder {
+	r := gin.New()
+	r.Use(func(c *gin.Context) {
+		c.Set("client", f.client)
+		c.Set("role", role)
+		c.Set("user_id", 1001)
+		if tenantID > 0 {
+			c.Set("tenant_id", tenantID)
+			c.Set(middleware.TenantContextKey, &middleware.TenantContext{TenantID: tenantID})
+		}
+		c.Next()
+	})
+	f.handler.RegisterRoutes(r.Group("/api/v1"))
+	req := httptest.NewRequest(method, path, strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+	return rec
+}
+
+func TestMarketplaceRoutes_UnsupportedDelivery(t *testing.T) {
+	for _, itemType := range []marketplaceitem.Type{marketplaceitem.TypeSkill, marketplaceitem.TypePlugin} {
+		for _, tc := range []struct {
+			name               string
+			method             string
+			tenantID           int
+			role               string
+			installationStatus tenantinstallation.Status
+			wantStatus         int
+			wantCode           int
+		}{
+			{"install", http.MethodPost, 1, "super_admin", "", http.StatusNotImplemented, common.NotImplementedCode},
+			{"config", http.MethodPut, 1, "super_admin", tenantinstallation.StatusActive, http.StatusNotImplemented, common.NotImplementedCode},
+			{"missing_config", http.MethodPut, 1, "super_admin", "", http.StatusNotFound, common.NotFoundCode},
+			{"uninstalled_config", http.MethodPut, 1, "super_admin", tenantinstallation.StatusUninstalled, http.StatusNotFound, common.NotFoundCode},
+			{"cross_tenant_config", http.MethodPut, 2, "super_admin", tenantinstallation.StatusActive, http.StatusNotFound, common.NotFoundCode},
+			{"install_forbidden", http.MethodPost, 1, "marketplace_no_permissions", "", http.StatusForbidden, common.ForbiddenCode},
+			{"config_forbidden", http.MethodPut, 1, "marketplace_no_permissions", tenantinstallation.StatusActive, http.StatusForbidden, common.ForbiddenCode},
+			{"install_no_tenant", http.MethodPost, 0, "super_admin", "", http.StatusUnauthorized, common.AuthFailedCode},
+			{"config_no_tenant", http.MethodPut, 0, "super_admin", tenantinstallation.StatusActive, http.StatusUnauthorized, common.AuthFailedCode},
+		} {
+			t.Run(string(itemType)+"/"+tc.name, func(t *testing.T) {
+				f := newHandlerFixture(t, "unsupported_"+string(itemType)+"_"+tc.name)
+				ctx := context.Background()
+				_, err := f.client.MarketplaceItem.UpdateOneID(f.itemID).SetType(itemType).Save(ctx)
+				require.NoError(t, err)
+				itemID := strconv.Itoa(f.itemID)
+				path := "/api/v1/marketplace/items/" + itemID + "/install"
+				if tc.method == http.MethodPut {
+					path = "/api/v1/marketplace/installations/" + itemID + "/config"
+				}
+				var existing *ent.TenantInstallation
+				if tc.installationStatus != "" {
+					existing, err = f.client.TenantInstallation.Create().
+						SetTenantID(1).SetItemID(f.itemID).SetInstalledVersion("1.0.0").
+						SetStatus(tc.installationStatus).SetInstalledBy("1001").
+						SetConfig(map[string]interface{}{"token": "stored-test-token"}).Save(ctx)
+					require.NoError(t, err)
+					existing, err = f.client.TenantInstallation.Get(ctx, existing.ID)
+					require.NoError(t, err)
+				}
+
+				rec := marketplaceRouteRequest(f, tc.tenantID, tc.role, tc.method, path, `{"token":"submitted-test-token"}`)
+				require.Equal(t, tc.wantStatus, rec.Code, rec.Body.String())
+				var payload common.Response
+				require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &payload))
+				require.Equal(t, tc.wantCode, payload.Code)
+				require.Nil(t, payload.Data)
+				require.NotEmpty(t, payload.Message)
+				require.NotContains(t, rec.Body.String(), "test-token")
+				count, err := f.client.TenantInstallation.Query().Count(ctx)
+				require.NoError(t, err)
+				if existing == nil {
+					require.Zero(t, count)
+				} else {
+					require.Equal(t, 1, count)
+					current, err := f.client.TenantInstallation.Get(ctx, existing.ID)
+					require.NoError(t, err)
+					before, err := json.Marshal(existing)
+					require.NoError(t, err)
+					after, err := json.Marshal(current)
+					require.NoError(t, err)
+					require.JSONEq(t, string(before), string(after))
+				}
+			})
+		}
+	}
+}
+
+func TestMarketplaceRoutes_UnsupportedHistoryCanBeReadAndUninstalled(t *testing.T) {
+	for _, itemType := range []marketplaceitem.Type{marketplaceitem.TypeSkill, marketplaceitem.TypePlugin} {
+		t.Run(string(itemType), func(t *testing.T) {
+			f := newHandlerFixture(t, "history_"+string(itemType))
+			ctx := context.Background()
+			_, err := f.client.MarketplaceItem.UpdateOneID(f.itemID).SetType(itemType).SetInstallCount(1).Save(ctx)
+			require.NoError(t, err)
+			installation, err := f.client.TenantInstallation.Create().
+				SetTenantID(1).SetItemID(f.itemID).SetInstalledVersion("1.0.0").
+				SetStatus(tenantinstallation.StatusActive).SetInstalledBy("1001").
+				SetConfig(map[string]interface{}{"token": "historical-test-token"}).Save(ctx)
+			require.NoError(t, err)
+			itemID := strconv.Itoa(f.itemID)
+			rec := marketplaceRouteRequest(f, 1, "super_admin", http.MethodGet, "/api/v1/marketplace/installations/"+itemID, "")
+			require.Equal(t, http.StatusOK, rec.Code)
+			var payload struct {
+				Code int                  `json:"code"`
+				Data InstallationResponse `json:"data"`
+			}
+			require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &payload))
+			require.Zero(t, payload.Code)
+			require.Equal(t, 1, payload.Data.TenantID)
+			require.Equal(t, f.itemID, payload.Data.ItemID)
+			require.Equal(t, "***", payload.Data.Config["token"])
+			require.NotContains(t, rec.Body.String(), "historical-test-token")
+			require.NotContains(t, rec.Body.String(), "tenant_id")
+
+			rec = marketplaceRouteRequest(f, 1, "super_admin", http.MethodPost, "/api/v1/marketplace/items/"+itemID+"/uninstall", "")
+			require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
+			current, err := f.client.TenantInstallation.Get(ctx, installation.ID)
+			require.NoError(t, err)
+			require.Equal(t, tenantinstallation.StatusUninstalled, current.Status)
+		})
+	}
+}
+
+func TestMarketplaceRoutes_ConnectorInstallAndConfigure(t *testing.T) {
+	f := newHandlerFixture(t, "route_connector")
+	itemID := strconv.Itoa(f.itemID)
+	rec := marketplaceRouteRequest(f, 1, "super_admin", http.MethodPost, "/api/v1/marketplace/items/"+itemID+"/install", "")
+	require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
+	var payload struct {
+		Code int                  `json:"code"`
+		Data InstallationResponse `json:"data"`
+	}
+	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &payload))
+	require.Zero(t, payload.Code)
+	require.Equal(t, "failed", payload.Data.Status)
+
+	rec = marketplaceRouteRequest(f, 1, "super_admin", http.MethodPut, "/api/v1/marketplace/installations/"+itemID+"/config", `{"credentials":{"token":"connector-test-token"}}`)
+	require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
+	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &payload))
+	require.Zero(t, payload.Code)
+	require.Equal(t, "active", payload.Data.Status)
+	require.Equal(t, 1, payload.Data.TenantID)
+	require.Equal(t, f.itemID, payload.Data.ItemID)
+	require.NotContains(t, rec.Body.String(), "connector-test-token")
 }

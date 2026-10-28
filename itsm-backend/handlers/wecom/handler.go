@@ -88,8 +88,9 @@ func (h *Handler) Webhook(c *gin.Context) {
 		}
 		_ = h.dedup.MarkProcessed(c.Request.Context(), tenantID, "wecom", msg.MessageID, "received")
 	}
+	// 解密后 msg.Content 是用户消息正文：日志只留类型与消息 ID，不落明文正文（隐私）。
 	h.logger.Infow("wecom inbound",
-		"tenant_id", tenantID, "type", msg.Type, "content", msg.Content)
+		"tenant_id", tenantID, "type", msg.Type, "message_id", msg.MessageID)
 	c.JSON(200, gin.H{"errcode": 0, "errmsg": "ok"})
 }
 

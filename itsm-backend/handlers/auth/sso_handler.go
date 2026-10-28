@@ -37,7 +37,7 @@ func (h *Handler) SSOInitiate(c *gin.Context) {
 
 	response, err := h.sso.Initiate(c.Request.Context(), req.Provider, req.TenantCode, bindUserID)
 	if err != nil {
-		common.AuthFailedWithErr(c, err, "SSO 登录发起失败")
+		common.RespondError(c, err, "SSO 登录发起失败")
 		return
 	}
 	common.Success(c, response)

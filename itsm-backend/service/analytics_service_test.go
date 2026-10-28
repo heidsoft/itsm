@@ -390,7 +390,8 @@ func TestAnalyticsService_CalculateSummary(t *testing.T) {
 		tickets = append(tickets, ticket)
 	}
 
-	summary := service.calculateSummary(tickets)
+	summary, err := service.calculateSummary(ctx, testTenant.ID, tickets)
+	require.NoError(t, err)
 	assert.Equal(t, 5, summary.Total)
 	assert.Equal(t, 3, summary.Resolved)
 }

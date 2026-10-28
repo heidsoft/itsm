@@ -142,13 +142,15 @@ func (c *Handler) InstallItem(ctx *gin.Context) {
 		return
 	}
 
-	installation, err := c.service.InstallItem(ctx, tenantID, itemID, strconv.Itoa(userID))
+	installation, err := c.service.InstallItem(ctx.Request.Context(), tenantID, itemID, strconv.Itoa(userID))
 	if err != nil {
 		switch {
 		case errors.Is(err, marketplace.ErrMarketplaceItemNotFound):
 			common.NotFoundWithErr(ctx, err, "组件不存在或已被下架")
 		case errors.Is(err, marketplace.ErrMarketplaceItemUnavailable), errors.Is(err, marketplace.ErrMarketplaceInstalledByMissing):
 			common.BadRequestWithErr(ctx, err, "组件当前不可安装")
+		case errors.Is(err, marketplace.ErrMarketplaceDeliveryUnsupported):
+			common.Fail(ctx, common.NotImplementedCode, "技能与插件尚不支持分发和加载，暂不可安装或配置")
 		case errors.Is(err, marketplace.ErrMarketplaceConnectorNotReady):
 			// 安装记录已落库并标为 failed（连接器没起来：缺凭据 / provider 未注册 /
 			// 端点不可达）。这里如实返回那条记录，让前端显示「已安装但未就绪 +
@@ -313,8 +315,16 @@ func (c *Handler) UpdateInstallationConfig(ctx *gin.Context) {
 		return
 	}
 
-	installation, err := c.service.UpdateInstallationConfig(ctx, tenantID, itemID, config)
+	installation, err := c.service.UpdateInstallationConfig(ctx.Request.Context(), tenantID, itemID, config)
 	if err != nil {
+		if errors.Is(err, marketplace.ErrMarketplaceInstallationAbsent) {
+			common.NotFoundWithErr(ctx, err, "安装记录不存在或已被卸载")
+			return
+		}
+		if errors.Is(err, marketplace.ErrMarketplaceDeliveryUnsupported) {
+			common.Fail(ctx, common.NotImplementedCode, "技能与插件尚不支持分发和加载，暂不可安装或配置")
+			return
+		}
 		if errors.Is(err, marketplace.ErrMarketplaceConnectorNotReady) {
 			// 新配置没能让运行态起来，DB 保持原配置 —— 必须让人知道「这次没生效」，
 			// 否则会以为换了凭据而实际仍在用旧的。

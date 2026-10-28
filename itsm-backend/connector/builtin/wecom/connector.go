@@ -5,6 +5,7 @@ import (
 	"crypto/sha1"
 	"encoding/hex"
 	"encoding/json"
+	"encoding/xml"
 	"fmt"
 	"sort"
 	"strconv"
@@ -159,8 +160,12 @@ func sha1Hex(parts ...string) string {
 	return hex.EncodeToString(h.Sum(nil))
 }
 
-// ParseInbound 解析企业微信回调 body：保留 raw + msg_signature + echostr/encrypt。
-// 真正的密文解密在 Handler 层（需要回调 token + aes_key 与 corp 配置一致的 PKCS#7）。
+// ParseInbound 解析企业微信回调 body：先验签（Handler 已做），再解密。
+//
+// url_verification 的 echostr 与事件回调的 msg_encrypt 都是密文，必须用配置的
+// EncodingAESKey 解密：前者还原出明文 echo 原样返回，后者解出 XML 再归一化为
+// InboundMessage。解密时校验 receiveid 与配置 corpid 一致，拒绝跨企业伪造。
+// 未配置 encoding_aes_key 或解密失败一律返回错误（fail-closed），绝不把密文当明文放行。
 func (w *WeCom) ParseInbound(body []byte) (*connector.InboundMessage, error) {
 	var base struct {
 		ToUserName string `json:"ToUserName"`
@@ -171,26 +176,87 @@ func (w *WeCom) ParseInbound(body []byte) (*connector.InboundMessage, error) {
 	if err := json.Unmarshal(body, &base); err != nil {
 		return nil, fmt.Errorf("wecom: parse inbound: %w", err)
 	}
+
+	aesKey, err := decodeAESKey(w.aesKey)
+	if err != nil {
+		return nil, err
+	}
+	corpID := w.cfg.Credentials["corp_id"]
+
 	if base.EchoStr != "" {
+		echo, receiveID, decErr := decryptMessage(aesKey, base.EchoStr)
+		if decErr != nil {
+			return nil, fmt.Errorf("wecom: decrypt echostr: %w", decErr)
+		}
+		if corpID != "" && receiveID != corpID {
+			return nil, fmt.Errorf("wecom: echostr receiveid mismatch")
+		}
 		return &connector.InboundMessage{
 			Type:       "url_verification",
-			Content:    base.EchoStr,
+			Content:    string(echo),
 			ReceivedAt: time.Now(),
 			Extras:     map[string]interface{}{"raw": base},
 		}, nil
 	}
-	if base.Encrypt == "" && base.MsgEncrypt == "" {
+
+	ciphertext := base.Encrypt
+	if ciphertext == "" {
+		ciphertext = base.MsgEncrypt
+	}
+	if ciphertext == "" {
 		return nil, fmt.Errorf("wecom: unknown event payload")
+	}
+	plaintext, receiveID, err := decryptMessage(aesKey, ciphertext)
+	if err != nil {
+		return nil, fmt.Errorf("wecom: decrypt event: %w", err)
+	}
+	if corpID != "" && receiveID != corpID {
+		return nil, fmt.Errorf("wecom: event receiveid mismatch")
+	}
+
+	var event wecomEventXML
+	if err := xml.Unmarshal(plaintext, &event); err != nil {
+		return nil, fmt.Errorf("wecom: parse decrypted xml: %w", err)
+	}
+	msgType := event.MsgType
+	if msgType == "" {
+		msgType = "event"
+	}
+	messageID := event.MsgID
+	if messageID == "" {
+		// 事件回调通常没有 MsgId；用确定性字段合成去重键，避免重放绕过 Handler 去重。
+		messageID = fmt.Sprintf("%d:%s:%s:%s", event.CreateTime, event.FromUserName, event.Event, event.EventKey)
 	}
 	return &connector.InboundMessage{
 		ConnectorType: connector.TypeIM,
 		ConnectorName: "wecom",
-		Type:          "encrypted_event",
-		Content:       base.Encrypt + base.MsgEncrypt,
-		Raw:           body,
+		Type:          msgType,
+		Content:       event.Content,
+		UserID:        event.FromUserName,
+		MessageID:     messageID,
+		Raw:           plaintext,
 		ReceivedAt:    time.Now(),
-		Extras:        map[string]interface{}{"toUserName": base.ToUserName, "raw": base},
+		Extras: map[string]interface{}{
+			"toUserName": base.ToUserName,
+			"event":      event.Event,
+			"eventKey":   event.EventKey,
+			"agentId":    event.AgentID,
+			"createTime": event.CreateTime,
+		},
 	}, nil
+}
+
+// wecomEventXML 是解密后消息体的 XML 结构（文本消息与事件回调共用）。
+type wecomEventXML struct {
+	ToUserName   string `xml:"ToUserName"`
+	FromUserName string `xml:"FromUserName"`
+	CreateTime   int64  `xml:"CreateTime"`
+	MsgType      string `xml:"MsgType"`
+	Content      string `xml:"Content"`
+	MsgID        string `xml:"MsgId"`
+	Event        string `xml:"Event"`
+	EventKey     string `xml:"EventKey"`
+	AgentID      string `xml:"AgentID"`
 }
 
 func mathabs(v int64) int64 {

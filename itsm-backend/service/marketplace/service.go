@@ -31,6 +31,7 @@ var (
 	ErrMarketplaceInstallationAbsent  = errors.New("marketplace installation not found")
 	ErrMarketplaceInstalledByMissing  = errors.New("marketplace installed_by is required")
 	ErrMarketplaceConfigSchemaInvalid = errors.New("config does not match item schema")
+	ErrMarketplaceDeliveryUnsupported = errors.New("marketplace item delivery is not implemented")
 
 	// ErrMarketplaceDependencyUnsatisfied 待装版本声明的依赖在当前租户内未满足。
 	// 这是业务冲突（409）而非参数错误：商品本身可安装，只是前置组件没装或版本不符。
@@ -210,6 +211,9 @@ func (s *Service) InstallItem(ctx context.Context, tenantID, itemID int, install
 	// 3) 安装人记录不可为空
 	if installedBy == "" {
 		return nil, ErrMarketplaceInstalledByMissing
+	}
+	if item.Type != marketplaceitem.TypeConnector {
+		return nil, ErrMarketplaceDeliveryUnsupported
 	}
 	// 4) 已存在安装记录时的两种语义：
 	//    - active / disabled：幂等返回当前安装，避免重复安装报错、也不重复 provision
@@ -433,6 +437,9 @@ func (s *Service) UpdateInstallationConfig(ctx context.Context, tenantID, itemID
 	item, err := s.db.MarketplaceItem.Get(ctx, itemID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get marketplace item: %w", err)
+	}
+	if item.Type != marketplaceitem.TypeConnector {
+		return nil, ErrMarketplaceDeliveryUnsupported
 	}
 
 	// 验证配置是否符合商品的 ConfigSchema

@@ -119,10 +119,10 @@ var registry = []definition{
 	// ai_llm_calls 增 tenant_id/request_id（迁移 20261026），LLMObserver 从请求 ctx
 	// 回填归属，/ai/metrics 改租户口径（无归因行时如实 responseTimeAvailable=false）。
 	// 仍不申报 GA：溯源三契约只覆盖分诊与 RCA，chat/摘要/analytics/prediction/agent
-	// 工具没有同等约束；evaluator 仍无门禁；token 计量无配额告警与单价口径。
+	// 工具没有同等约束；评测阈值只覆盖离线 fixture，未验证生产候选；token 计量无配额告警与单价口径。
 	{
 		key: "ai", maturity: MaturityPilot, built: true, readinessEnv: "ITSM_AI_READY",
-		pilotReason: "分诊与工单 RCA 已强制 promptVersion/model/confidence 并落 ai_audit 底账（采纳/拒绝经 PATCH 翻转，不再由前端自报）；LLM 调用已按租户归集（ai_llm_calls 带 tenant_id/request_id，/ai/metrics 为租户口径；升级前的历史行无法回填归因，按哨兵值排除、租户无归因行时如实报不可用）。但 chat、摘要、analytics、prediction、agent 工具仍未强制同一套溯源字段；token 用量只有计量、没有配额告警与单价口径；evaluator 仍是只读报表，没有「健康分下降即阻断发布」的门禁。晋升条件：其余 AI 能力补齐溯源三契约 + 租户配额告警 + evaluator 进门禁。",
+		pilotReason: "分诊与工单 RCA 已强制 promptVersion/model/confidence 并落 ai_audit 底账（采纳/拒绝经 PATCH 翻转，不再由前端自报）；LLM 调用已按租户归集（ai_llm_calls 带 tenant_id/request_id，/ai/metrics 为租户口径；升级前的历史行无法回填归因，按哨兵值排除、租户无归因行时如实报不可用）。但 chat、摘要、analytics、prediction、agent 工具仍未强制同一套溯源字段；token 用量只有计量、没有配额告警与单价口径；evaluator 已有离线阈值测试且摘要评分会调用候选生成器，但默认摘要仍是原文拼接、RAG 使用期望答案、预测分值取自数据集，尚不能证明生产质量。晋升条件：其余 AI 能力补齐溯源三契约 + 租户配额告警 + 真实候选评测门禁。",
 	},
 	// 通知域 2026-10-20/21 闭环三件事：投递审计读面（GET /notification-deliveries）、
 	// 失败重试（保留旧记录作失败证据）、渠道诊断（GET /notifications/channels：
@@ -142,12 +142,12 @@ var registry = []definition{
 	// 2026-10-27 依赖闸门双边落地：安装前校验待装版本声明的依赖已在同租户
 	// 安装且版本满足（缺口逐项 409）；卸载前反向检查是否仍被 active/disabled
 	// 的已安装组件依赖（列出依赖方 409），并在 revoke 连接器之前判定。
-	// 仍不申报 GA：skill/plugin 类商品的安装只写一条安装记录，没有分发/装载机制；
+	// skill/plugin 缺少分发/装载机制，安装与配置入口返回 501，不再创建有效安装记录。
 	// auto_upgrade 有字段没有执行路径；存量安装未做一次性对齐（闸门之前落库的
 	// 记录可能已悬空），升级时的重新校验也无处挂载（升级本身尚未实现）。
 	{
 		key: "marketplace", maturity: MaturityPilot, built: true, readOnly: true,
-		pilotReason: "目录管理已闭环（平台上架/下架、版本发布与回滚、控制台），依赖闸门已双向落地（安装前校验前置组件与版本、卸载前拦截被依赖的组件，缺口逐项返回 409）。但商品交付语义仍不完整：skill/plugin 类安装只写安装记录，没有分发/装载机制；auto_upgrade 无升级执行路径；依赖闸门不回溯存量安装，升级时的重新校验也无处挂载。晋升条件：skill/plugin 装载机制 + 版本升级执行 + 存量依赖对齐。",
+		pilotReason: "目录管理已闭环（平台上架/下架、版本发布与回滚、控制台），依赖闸门已双向落地（安装前校验前置组件与版本、卸载前拦截被依赖的组件，缺口逐项返回 409）。但商品交付语义仍不完整：skill/plugin 缺少分发/装载机制，安装与配置明确返回 501，历史记录仍可查看和卸载；auto_upgrade 无升级执行路径；依赖闸门不回溯存量安装，升级时的重新校验也无处挂载。晋升条件：skill/plugin 装载机制 + 版本升级执行 + 存量依赖对齐。",
 	},
 	{key: "project", maturity: MaturityGA, built: true},
 	{key: "application", maturity: MaturityGA, built: true},

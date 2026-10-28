@@ -488,17 +488,22 @@ func (r *EntRepository) RestoreVersion(ctx context.Context, articleID, version, 
 		return nil, err
 	}
 
-	// 恢复前为当前正文建快照，保证历史链不断（与共享 service 的语义一致）。
-	// 快照失败不阻断恢复：恢复是用户显式动作，正文覆写优先。
-	if snapshotErr := r.createVersionSnapshot(ctx, article, "恢复前版本"); snapshotErr != nil {
-		_ = snapshotErr
+	// 恢复前为当前正文建快照，保证历史链不断。快照失败必须阻断恢复：
+	// 否则覆写后旧正文无处可寻，历史链出现不可恢复的空洞。
+	if err := r.createVersionSnapshot(ctx, article, "恢复前版本"); err != nil {
+		return nil, err
 	}
 
+	// 恢复是内容变更：旧正文未经重新评审不得继续对外可见。
+	// 回到 draft 并撤销发布，由作者重新走 submit→approve；
+	// 旧索引的清理在 service 的向量删除 outbox 中同事务完成。
 	updated, err := r.client.KnowledgeArticle.UpdateOne(article).
 		SetTitle(versionEntity.Title).
 		SetContent(versionEntity.Content).
 		SetCategory(versionEntity.Category).
 		SetTags(versionEntity.Tags).
+		SetIsPublished(false).
+		SetReviewStatus(knowledgearticle.ReviewStatus(ReviewStatusDraft)).
 		Save(ctx)
 	if err != nil {
 		return nil, err

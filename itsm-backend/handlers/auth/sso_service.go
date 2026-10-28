@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/ssoidentity"
@@ -73,29 +74,29 @@ func (s *SSOService) Initiate(ctx context.Context, providerCode, tenantCode stri
 		return nil, err
 	}
 	if provider.ClientID == "" {
-		return nil, fmt.Errorf("提供方 %s 未配置 client_id", provider.Code)
+		return nil, common.NewBusinessError(common.ServiceUnavailableCode, fmt.Sprintf("提供方 %s 未配置 client_id，请联系管理员", provider.Code), "")
 	}
 	if strings.TrimSpace(provider.RedirectURI) == "" {
-		return nil, fmt.Errorf("提供方 %s 未配置回调地址", provider.Code)
+		return nil, common.NewBusinessError(common.ServiceUnavailableCode, fmt.Sprintf("提供方 %s 未配置回调地址，请联系管理员", provider.Code), "")
 	}
 
 	endpoints, err := s.oidc.resolveEndpoints(ctx, provider.ID, provider.Issuer, provider.AuthorizationEndpoint, provider.TokenEndpoint, provider.UserinfoEndpoint, provider.JwksURI)
 	if err != nil {
 		s.markProviderError(ctx, provider.ID, err)
-		return nil, fmt.Errorf("提供方 %s 端点解析失败: %w", provider.Code, err)
+		return nil, common.NewBusinessError(common.ServiceUnavailableCode, fmt.Sprintf("提供方 %s 端点解析失败，请稍后重试或联系管理员", provider.Code), "")
 	}
 
 	state, err := randomTokenHex(32)
 	if err != nil {
-		return nil, fmt.Errorf("生成 state 失败: %w", err)
+		return nil, common.NewBusinessError(common.InternalErrorCode, "生成登录状态失败", "")
 	}
 	nonce, err := randomTokenHex(32)
 	if err != nil {
-		return nil, fmt.Errorf("生成 nonce 失败: %w", err)
+		return nil, common.NewBusinessError(common.InternalErrorCode, "生成登录状态失败", "")
 	}
 	verifier, err := randomTokenBase64URL(32)
 	if err != nil {
-		return nil, fmt.Errorf("生成 PKCE verifier 失败: %w", err)
+		return nil, common.NewBusinessError(common.InternalErrorCode, "生成登录状态失败", "")
 	}
 	challengeSum := sha256.Sum256([]byte(verifier))
 	challenge := base64.RawURLEncoding.EncodeToString(challengeSum[:])
@@ -114,7 +115,7 @@ func (s *SSOService) Initiate(ctx context.Context, providerCode, tenantCode stri
 		CreatedAt:  time.Now(),
 	}
 	if err := s.states.Save(ctx, state, record, SSOStateTTL); err != nil {
-		return nil, fmt.Errorf("保存登录状态失败: %w", err)
+		return nil, common.NewBusinessError(common.ServiceUnavailableCode, "登录状态服务暂不可用，请稍后重试", "")
 	}
 
 	scopes := strings.TrimSpace(provider.Scopes)
@@ -626,21 +627,21 @@ func (s *SSOService) resolveProviderForLogin(ctx context.Context, providerCode, 
 	if strings.TrimSpace(tenantCode) != "" {
 		tenantEntity, err := s.client.Tenant.Query().Where(tenant.CodeEQ(tenantCode)).Only(ctx)
 		if err != nil {
-			return nil, fmt.Errorf("租户不存在")
+			return nil, common.NewBusinessError(common.NotFoundCode, "租户不存在", "")
 		}
 		query = query.Where(ssoprovider.TenantIDEQ(tenantEntity.ID))
 	}
 	providers, err := query.Order(ent.Asc(ssoprovider.FieldID)).All(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("查询提供方失败")
+		return nil, common.NewBusinessError(common.InternalErrorCode, "查询提供方失败", "")
 	}
 	switch len(providers) {
 	case 0:
-		return nil, fmt.Errorf("SSO 提供方 %s 不存在或未启用", code)
+		return nil, common.NewBusinessError(common.NotFoundCode, fmt.Sprintf("SSO 提供方 %s 不存在或未启用", code), "")
 	case 1:
 		return providers[0], nil
 	default:
-		return nil, fmt.Errorf("提供方编码 %s 在多个租户下启用，请携带租户编码后重试", code)
+		return nil, common.NewBusinessError(common.BadRequestCode, fmt.Sprintf("提供方编码 %s 在多个租户下启用，请携带租户编码后重试", code), "")
 	}
 }
 

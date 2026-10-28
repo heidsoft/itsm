@@ -161,8 +161,19 @@ func (s *Service) GetVersion(ctx context.Context, articleID, version, tenantID i
 }
 
 // RestoreVersion 恢复文章到指定版本。
+//
+// 恢复是内容变更：仓储层会把文章重置为 draft 并撤销发布，这里在同事务
+// 入向量删除任务清理旧索引，避免未经重新评审的旧内容继续被 RAG 检索。
 func (s *Service) RestoreVersion(ctx context.Context, articleID, version, tenantID, userID int) (*Article, error) {
-	a, err := s.repo.RestoreVersion(ctx, articleID, version, tenantID, userID)
+	var (
+		a   *Article
+		err error
+	)
+	if s.vectorOutboxEnabled() {
+		a, err = s.restoreWithVectorOutbox(ctx, articleID, version, tenantID, userID)
+	} else {
+		a, err = s.repo.RestoreVersion(ctx, articleID, version, tenantID, userID)
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -259,6 +270,22 @@ func (s *Service) UpdateArticle(ctx context.Context, a *Article) (*Article, erro
 	// XSS 消毒
 	a.Title = common.SanitizeText(a.Title)
 	a.Content = common.SanitizeHTML(a.Content)
+	// 发布门禁：PUT 的 status=published 与 /publish 是同一可见性投影，
+	// 必须同样要求评审通过，否则 status 字段就是绕过评审与防自审的后门。
+	// 读权威当前状态而非入参，避免客户端自带 reviewStatus 蒙混过关。
+	if a.IsPublished {
+		current, err := s.repo.Get(ctx, a.ID, a.TenantID)
+		if err != nil {
+			return nil, err
+		}
+		if NormalizeReviewStatus(current.ReviewStatus) != ReviewStatusApproved {
+			return nil, common.NewBusinessError(
+				common.ConflictCode,
+				"文章尚未通过评审，不能发布",
+				"请先提交评审（review/submit），由其他评审人审批通过（review/approve）后自动发布",
+			)
+		}
+	}
 	s.logger.Infow("Updating Knowledge Article", "id", a.ID, "title", a.Title)
 	if s.vectorOutboxEnabled() {
 		return s.updateWithVectorOutbox(ctx, a)

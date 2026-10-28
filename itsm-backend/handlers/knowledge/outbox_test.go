@@ -7,6 +7,7 @@ import (
 	connectorVector "itsm-backend/connector/vector"
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
+	"itsm-backend/ent/knowledgearticle"
 	"itsm-backend/ent/operationalcommand"
 	"itsm-backend/internal/commandbus"
 	"itsm-backend/service"
@@ -126,6 +127,13 @@ func TestUpdateArticle_PublishedWithoutEmbedderInvalidatesIndex(t *testing.T) {
 		Title: "runbook", Content: "restart safely", Category: "操作指南",
 		AuthorID: 1, TenantID: 7, IsPublished: true,
 	})
+	require.NoError(t, err)
+
+	// 模拟一篇已通过评审的发布文章：发布门禁要求 approved，
+	// 这里直接置状态而非走 approve 流程，避免额外的同步任务干扰单命令断言。
+	_, err = client.KnowledgeArticle.UpdateOneID(created.ID).
+		SetReviewStatus(knowledgearticle.ReviewStatus(ReviewStatusApproved)).
+		Save(ctx)
 	require.NoError(t, err)
 
 	created.Title = "runbook v2"

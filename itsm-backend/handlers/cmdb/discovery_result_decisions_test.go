@@ -114,6 +114,45 @@ func TestApplyDiscoveryResultWritesResourceFacts(t *testing.T) {
 	require.Contains(t, appErr.Detail, "已处理")
 }
 
+func TestApplyDiscoveryResultRejectsStaleSnapshot(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", "file:discovery_decide_stale?mode=memory&cache=shared&_fk=1")
+	defer client.Close()
+	ctx := context.Background()
+	repo := NewEntRepository(client)
+	tenant, err := client.Tenant.Create().SetName("T").SetCode("decide-s").SetDomain("decide-s.example.com").SetStatus("active").Save(ctx)
+	require.NoError(t, err)
+
+	resourceID, resultID := seedPendingUpdate(t, repo, tenant.ID, "identity-stale")
+	svc := NewService(repo, nil, nopLogger())
+
+	// 发现之后、人工决策之前，资源已被另一轮发现/手工改动推进到更新的一版。
+	resource, err := repo.GetCloudResourceByIdentity(ctx, tenant.ID, "identity-stale")
+	require.NoError(t, err)
+	resource.SourceFingerprint = "newer-hash"
+	resource.ResourceName = "newer-name"
+	_, err = repo.UpdateCloudResource(ctx, resource)
+	require.NoError(t, err)
+
+	// 过期快照不得覆写更新的事实：fail-closed 要求重跑发现。
+	_, err = svc.ApplyDiscoveryResult(ctx, tenant.ID, 9, resultID)
+	require.Error(t, err)
+	var appErr *common.AppError
+	require.ErrorAs(t, err, &appErr)
+	require.Equal(t, common.ErrCodeConflict, appErr.Code)
+	require.Contains(t, appErr.Detail, "重跑发现")
+
+	got, err := repo.GetCloudResourceByIdentity(ctx, tenant.ID, "identity-stale")
+	require.NoError(t, err)
+	require.Equal(t, resourceID, got.ID)
+	require.Equal(t, "newer-name", got.ResourceName, "过期快照不得盖掉更新的资源名")
+	require.Equal(t, "newer-hash", got.SourceFingerprint, "过期快照不得回退指纹")
+
+	failed, err := repo.GetDiscoveryResult(ctx, tenant.ID, resultID)
+	require.NoError(t, err)
+	require.Equal(t, DiscoveryResultApplyFailed, failed.Status, "过期应用必须落 apply_failed 而非静默成功")
+	require.Equal(t, "resource_changed", failed.ErrorCode)
+}
+
 func TestRejectDiscoveryResultKeepsResourceUntouched(t *testing.T) {
 	client := enttest.Open(t, "sqlite3", "file:discovery_decide_reject?mode=memory&cache=shared&_fk=1")
 	defer client.Close()

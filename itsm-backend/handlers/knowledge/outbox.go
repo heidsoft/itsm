@@ -89,6 +89,29 @@ func (s *Service) updateWithVectorOutbox(ctx context.Context, article *Article) 
 	return updated, nil
 }
 
+func (s *Service) restoreWithVectorOutbox(ctx context.Context, articleID, version, tenantID, userID int) (*Article, error) {
+	if _, err := s.entRepository(); err != nil {
+		return nil, err
+	}
+	tx, err := s.client.Tx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+	restored, err := (&EntRepository{client: tx.Client()}).RestoreVersion(ctx, articleID, version, tenantID, userID)
+	if err != nil {
+		return nil, err
+	}
+	// 恢复后文章回到 draft 且撤销发布，旧索引必须同事务清理。
+	if err := enqueueVectorSyncTx(ctx, tx, restored, vectorIndexDelete); err != nil {
+		return nil, err
+	}
+	if err := tx.Commit(); err != nil {
+		return nil, err
+	}
+	return restored, nil
+}
+
 func (s *Service) deleteWithVectorOutbox(ctx context.Context, id, tenantID int) error {
 	if _, err := s.entRepository(); err != nil {
 		return err

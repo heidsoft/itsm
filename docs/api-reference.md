@@ -259,6 +259,29 @@ Content-Type: application/json
 }
 ```
 
+### SSO 登录发起（OIDC）
+
+```http
+POST /api/v1/auth/sso/initiate
+Content-Type: application/json
+
+{ "provider": "default", "tenantCode": "acme" }
+```
+
+`provider` 缺省 `default`；`tenantCode` 可选，用于多租户下消歧同编码提供方。成功返回
+`{redirectUrl, state, provider}`，`state` 由服务端单次消费（回调时校验）。
+
+发起阶段的失败按语义分类，不再一律兜底成 `401`：
+
+| 情形 | HTTP / 业务码 |
+|---|---|
+| 提供方未配置 `clientId`/回调地址，或 OIDC 端点解析（discovery）失败、状态存储不可用 | `503` / `5003`（运维不可用，非凭证错误） |
+| 提供方不存在或未启用、租户编码不存在 | `404` / `4004` |
+| 同编码提供方在多个租户下启用且未携带 `tenantCode` | `400` / `4000`（fail-closed，要求消歧） |
+
+`503` 与 `401` 的区分让运维能从状态码判断「IdP 没配好/不可达」还是「凭证不对」。
+回调（`/auth/sso/callback`）的认证失败仍稳定返回 `401`。
+
 ## 工单接口
 
 ### 获取工单列表
@@ -1780,6 +1803,11 @@ Content-Type: application/json
 }
 ```
 
+可选 `status` 字段（`draft` / `published`）与 `/publish` 是同一可见性投影，受同一发布门禁约束：
+把文章改为 `published` 要求 `reviewStatus == approved`，否则返回 `409 / 4090`（与 `/publish` 一致），
+不会留下「绕过评审直接发布」的第二条入口。改为 `draft`（撤回）不设门槛。
+门禁读取服务端权威评审态，客户端自带的 `reviewStatus` 不能蒙混过关。
+
 ### 删除知识文章
 
 ```http
@@ -1820,6 +1848,22 @@ POST /knowledge/articles/{id}/unpublish          # 不设门槛：撤下内容�
   `knowledge.vector.sync` 队列（避免注定失败的命令重试到死信）；更新已发布文章改为入 `delete`
   撤掉旧索引，防止检索返回过期内容。评审与发布本身不受影响，配置补齐后重新发布或修改即恢复索引。
   关键词检索后端不需要向量，不受该判定影响。
+
+### 版本历史与恢复
+
+```http
+GET  /knowledge/articles/{id}/versions                       # 版本快照列表（版本号倒序）
+GET  /knowledge/articles/{id}/versions/compare?from=&to=     # 两个版本对比
+POST /knowledge/articles/{id}/versions/{version}/restore     # 恢复到指定版本
+```
+
+恢复是**内容变更**，不是单纯的可见性开关：
+
+- 恢复前先把当前正文存为新版本快照，历史链不断；快照写入失败会**阻断恢复**（不静默吞错），
+  避免覆写后旧正文无处可寻。
+- 恢复后文章重置为 `reviewStatus = draft`、`isPublished = false`——旧正文未经重新评审不得继续对外可见，
+  需由作者重新走 `review/submit → review/approve` 才能再次发布。
+- 同一事务入向量 `delete` 任务清理旧索引，防止未经评审的旧内容继续被 RAG 检索命中。
 
 ### 知识库搜索
 
@@ -3105,6 +3149,11 @@ GET  /api/v1/cmdb/discovery/results?job_id=42      # 列出差异（含 diff 与
   （否则会掩盖「这条差异早被驳回过」）。
 - **资源已消失 409**：差异指向的 `identityHash` 在 `cloud_resources` 里找不到时
   提示重跑发现，不自动重建（重建是 `create` 语义，需要新的发现事实）。
+- **快照过期 409**：差异是基于 `beforeHash` 那一版资源算出来的。若应用时资源的
+  `sourceFingerprint` 已不等于 `beforeHash`（发现后又被另一轮发现自动应用、手工改动，
+  或另一条差异先被应用），说明快照已过期——拒绝覆写并提示重跑发现，该行置 `apply_failed`
+  （`errorCode=resource_changed`），避免用过期快照悄悄盖掉更新的事实。缺 `beforeHash`
+  无法证明新鲜，同样拒绝。
 - 应用写入失败时该行置 `apply_failed` 并留 `errorMessage`，不会静默留在 pending。
 - 驳回理由可选，写入该行 `errorMessage`（状态为 `rejected` 时语义为决策说明）；
   操作者与请求体由全局审计中间件留痕。
@@ -3710,9 +3759,10 @@ Authorization: Bearer <accessToken>
 | 情形 | 结果 |
 |---|---|
 | 连接器成功注册进运行态 | `200`，`status=active` |
+| 技能或插件（`type=skill/plugin`）尚无分发、加载实现 | `501`，`code=5010`；不新增安装记录、不重试或激活历史记录、不增加安装计数 |
 | 记录已建但连接器起不来（缺凭据 / provider 未注册 / 端点不可达） | `200`，`status=failed` + `errorMessage`，响应 `message` 提示补全配置 |
 | 商品不存在 / 未发布 | `404` / `400` |
-| 已安装且 `active`/`disabled` | `200` 幂等返回原记录，不重复注册 |
+| 连接器已安装且 `active`/`disabled` | `200` 幂等返回原记录，不重复注册 |
 | 上次停在 `installing`/`failed` | 视为**重试**：重新注册连接器，重复调用安装即是重试入口 |
 | 卸载后重装（历史记录复用） | 同样重新走注册，不会因为「记录已存在」就直接标 `active` |
 | 待装版本声明的依赖未满足（前置未安装 / 版本不符 / 自依赖） | `409`，`message` 逐项列出缺口，**不落安装记录** |
@@ -3749,6 +3799,10 @@ Content-Type: application/json
 |---|---|
 | 新配置让连接器成功起来 | `200`；写入配置，`installing`/`failed` 的记录一并转 `active` 并清空 `errorMessage` |
 | 新配置无法初始化 | `409`，**库内保留上一份可用配置**，运行态仍是旧实例 |
+| 技能或插件的历史安装记录 | `501`，`code=5010`；配置、状态和时间戳保持不变 |
+| 安装记录不存在、已卸载或属于其他租户 | `404`，`code=4004` |
+
+技能和插件仍可浏览目录；历史安装记录可查看、卸载，但历史 `active` 状态不代表已经加载运行，本次不批量改写存量数据。
 
 顺序是**先让运行态用新配置起来、成功后才落库**。反序会在失败时留下「库是新凭据、
 内存是旧凭据」的分裂状态：用户以为换了 token 已生效，实际仍在用旧的发消息。
@@ -3862,6 +3916,36 @@ provider，可让所有租户的安装按钮全部失败。因此目录写独立
 
 去重表由后台任务每 10 分钟清理过期行（此前 `CleanupExpired` 只有单测调用，
 表只增不减）。
+
+### 企微入站解密（url_verification 与事件回调）
+
+企微回调 body 是密文（`Encrypt`/`echostr`），由连接器用 `encoding_aes_key` 解密
+（AES-256-CBC，43 位 base64 密钥补 `=` 解出 32 字节，IV 取密钥前 16 字节，PKCS#7
+块大小 **32**——企微约定而非 AES 的 16）。解密在 `connector/builtin/wecom`（持有密钥），
+handler 只做验签与透传：
+
+- **URL 验证**（`echostr`）：`echostr` 本身是密文，解密后校验 `receiveid == corp_id`，
+  返回**明文** echo。此前把密文原样回显，企微后台保存回调配置永远校验失败。
+- **事件回调**（`Encrypt`）：解密 → 校验 `receiveid` → 解析 XML 为结构化字段
+  （`MsgType`/`Content`/`UserID`/`MessageID`）。无 `MsgId` 的事件（如菜单点击）按
+  `CreateTime:FromUserName:Event:EventKey` 合成去重键，不再因缺 ID 而漏去重。
+- `encoding_aes_key` 未配置或 `receiveid` 与 `corp_id` 不符一律 fail-closed 拒绝。
+- handler 入站日志只记 `message_id`，不再打印解密后的消息正文（隐私）。
+
+仍是预览能力：入站解密与去重已可用，但「消息 → 工单/事件」的业务派发尚未接线。
+
+### 飞书 OAuth 授权回调（state 防 CSRF）
+
+与上面的 webhook 事件回调不同，OAuth 授权回调（`GET /api/v1/feishu/oauth/callback/:instance_id`）
+换取的是用户授权 token 并写回连接器配置，安全性由 **一次性 state** 保证：
+
+- `GET /api/v1/feishu/oauth/auth-url`（权限 `connector:write`）由服务端生成不可猜测的随机
+  `state`，绑定发起时的租户/连接器实例/用户，随 `authUrl` 一起下发；**不再信任客户端传入的
+  state，也不再回退到可枚举的 `tenant_id/user_id` 拼接**。
+- 回调在换取 token **之前**校验并单次消费 `state`：缺失、伪造、过期（10 分钟）、重放或
+  租户/实例绑定不符一律 `403`（业务码 `2003`）。命中即删除，正确绑定也只能用一次。
+- state 存储是进程内 map（与 webhook 去重的内存回退同一局限）：多副本部署下回调落到另一副本
+  会因查不到 state 而拒绝（fail-closed，安全但牺牲可用性），HA 需共享存储或会话粘滞。
 
 ## 通知渠道诊断
 

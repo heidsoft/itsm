@@ -736,7 +736,10 @@ func (s *DashboardService) GetDashboardOverview(ctx context.Context, tenantID in
 	slaCompliance, err := s.GetSLAComplianceData(ctx, tenantID)
 	if err != nil {
 		s.logger.Errorw("Failed to get SLA compliance data", "error", err)
-		slaCompliance = &SLAComplianceData{}
+		// 与工单趋势/事件分布/满意度同口径：真实查询失败必须上抛，
+		// 不能降级成全 0 的「假成功」——0% 合规率会被误读成「全部超时」，
+		// 与「无工单」「采集失败」无法区分，掩盖了真正的故障。
+		return nil, fmt.Errorf("获取SLA合规数据失败: %w", err)
 	}
 
 	// 获取满意度数据（最近4个月）

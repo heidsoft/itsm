@@ -241,8 +241,6 @@ func TestDeleteCatalogItem_Guards(t *testing.T) {
 	assert.True(t, errors.Is(err, ErrCatalogItemInstalled), "got %v", err)
 }
 
-// 版本推进与回滚：发布新版本推进 latest_version；重新发布旧版本即回滚。
-// 安装记录写的是 latest_version，所以这条不变量决定「装的是哪个版本」。
 func TestPublishItemVersion_AdvanceAndRollback(t *testing.T) {
 	svc, _ := newCatalogService(t, "catalog_version_advance")
 	ctx := context.Background()
@@ -271,10 +269,9 @@ func TestPublishItemVersion_AdvanceAndRollback(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "1.1.0", afterPublish.Item.LatestVersion)
 
-	// 安装记录使用 latest_version，且该版本在版本表里存在。
 	installation, err := svc.InstallItem(ctx, 7, itemID, "1001")
-	require.NoError(t, err)
-	assert.Equal(t, "1.1.0", installation.InstalledVersion)
+	require.ErrorIs(t, err, ErrMarketplaceDeliveryUnsupported)
+	require.Nil(t, installation)
 
 	// 回滚：重新发布 1.0.0。
 	rolledBack, err := svc.PublishItemVersion(ctx, itemID, "1.0.0")

@@ -72,6 +72,16 @@ func (s *Service) ApplyDiscoveryResult(ctx context.Context, tenantID, userID, id
 		return nil, fmt.Errorf("load cloud resource by identity: %w", err)
 	}
 
+	// 快照新鲜度校验：差异是基于 BeforeHash 那一版资源算出来的。从发现到人工
+	// 决策之间，资源可能被另一轮发现自动应用、被手工改过，或另一条差异先被应用，
+	// 此时 SourceFingerprint 已不等于 BeforeHash。直接覆写会用过期快照悄悄盖掉
+	// 更新的事实，必须 fail-closed 要求重跑发现（缺基线哈希同样无法证明新鲜）。
+	if result.BeforeHash == "" || resource.SourceFingerprint != result.BeforeHash {
+		s.failApplyingDiscoveryResult(ctx, tenantID, id, "resource_changed", "资源在差异生成后已变化，快照过期")
+		return nil, common.NewConflictError("discoveryResult",
+			"资源自差异生成后已发生变化，当前快照已过期，请重跑发现后再决策")
+	}
+
 	applyDiscoveredSnapshot(resource, result)
 	if _, err := s.repo.UpdateCloudResource(ctx, resource); err != nil {
 		s.failApplyingDiscoveryResult(ctx, tenantID, id, "apply_failed", err.Error())

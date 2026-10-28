@@ -1,13 +1,23 @@
 # 🛣️ ITSM Roadmap
 
 > **Source of truth for what is shipping, what is shipping next, and
-> what is parked.** Updated as part of every release. Last synced: 2026-10-27（v1.6.16–v1.6.20 五版本条目级回填完成——此前该区间只有 CHANGELOG 无 ROADMAP 条目；v1.6.21–v1.6.34 的增量以 `CHANGELOG.md` 为准，待下个发布节点统一回填。同日：v1.7 两项提前收口确认——AI Evaluator CI gate（v1.6.16 落地，四指标阈值已进 backend-ci）与 Skill Registry UI（v1.6.16 落地）。P0 数据库结构护栏迁移 `20261027_prod_schema_guards.sql` 落地 29 索引/唯一键）。
+> what is parked.** Updated as part of every release. Last synced: 2026-10-29（v1.6.16–v1.6.20 五版本条目级回填完成——此前该区间只有 CHANGELOG 无 ROADMAP 条目；v1.6.21–v1.6.34 的增量以 `CHANGELOG.md` 为准，待下个发布节点统一回填。同日：v1.7 两项提前收口确认——AI Evaluator CI gate（v1.6.16 落地，四指标阈值已进 backend-ci）与 Skill Registry UI（v1.6.16 落地）。P0 数据库结构护栏迁移 `20261027_prod_schema_guards.sql` 落地 29 索引/唯一键）。
 >
 > Cross-references:
 > - Design outlines: [docs/prd/](./docs/prd)（当前仅 1 篇）+ [plans/](./plans)（专项计划与审计）
 > - v1.0 GA readiness: 历史验收文档已于 2026-10-12 移除（`Status: historical`，结论不得复用于当前版本）；当前发布判断见 [文档状态与事实源](./docs/documentation-governance.md)
 > - Architecture: [docs/architecture/](./docs/architecture)
 > - Open issues & milestones: GitHub [Issues](https://github.com/heidsoft/itsm/issues) and [Projects](https://github.com/heidsoft/itsm/projects)
+
+### 当前未发布改进（2026-10-29）
+
+- 应用市场：技能、插件缺少加载器时拒绝安装和配置，保留历史记录的查看与卸载；路由回归覆盖租户、权限及连接器原有流程，服务回归覆盖各安装状态下不写入数据。
+- AI 评测：摘要评分改为调用候选生成器，空摘要、无关摘要和混合质量输出均有回归测试；仍是离线评测基础，不作为生产模型验收。
+- 知识库：堵住更新文章与恢复历史版本两条绕过评审的发布旁路，恢复版本重置为草稿并同事务清理旧索引。
+- CMDB：对账应用差异前校验资源快照新鲜度，指纹已变化时拒绝覆写（409），避免用过期快照盖掉更新的云上事实。
+- 报表：`slaCompliance` 改按权威 SLA 违规记录计算，不再用解决率冒充合规率；工作台读取 SLA 失败上抛而非静默填零。
+- 身份与连接器：SSO（OIDC）发起按语义分类失败（503/404/400）；飞书 OAuth 回调补一次性 state 防 CSRF；企微入站回调真正解密（URL 验证返回明文 echo、事件解出结构化字段），入站日志不再打印消息正文。
+- 上述连接器与身份能力仍为预览：入站解密/验签/去重已可用，但「消息→工单」业务派发、真实交付机制和生产候选评测尚未完成。
 
 ---
 

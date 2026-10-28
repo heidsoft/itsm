@@ -84,6 +84,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- 应用市场不再把尚无加载器的技能和插件标为安装成功：安装、配置返回 `501`，历史记录保留供查看和卸载；配置接口对不存在或其他租户的记录返回 `404`。
+- AI 摘要评估改为评分候选生成器的实际输出，补充空摘要、无关摘要等反例；离线指标仍不代表生产模型质量。
+- 知识库堵住两条绕过评审的发布旁路：更新文章的 `status=published` 现在与 `/publish` 一样要求评审通过（否则 `409`）；恢复历史版本会重置为草稿并撤销发布、同事务清理旧索引，旧内容须重新送审才能再次可见。
+- CMDB 对账应用差异前校验快照新鲜度：资源指纹自差异生成后已变化时拒绝覆写（`409`，置 `apply_failed`），避免用过期快照盖掉更新的云上事实，提示重跑发现。
+- 深度分析汇总的 `slaCompliance` 改为按权威 SLA 违规记录计算（违规工单去重后占比），不再用「解决率」冒充合规率；工作台概览读取 SLA 数据失败时返回错误，不再静默填零伪装成 100% 合规。C.6.4 棘轮 `service_go_files` 365→367 同 commit 上调（两个回归锁测试文件，纯测试增量）。
+- SSO（OIDC）登录发起按语义分类失败：提供方未配置或端点解析失败返回 `503`、提供方不存在/未启用返回 `404`、跨租户同编码未消歧返回 `400`，不再一律兜底成 `401`，便于运维区分「IdP 没配好」与「凭证不对」。
+- 飞书 OAuth 授权回调补上 state 防 CSRF：发起阶段改由服务端生成不可猜测的随机 state（绑定租户/实例/用户），回调在换取 token 前单次消费校验，缺失/伪造/过期/重放一律 `403`；此前回调完全不校验 state、且发起回退到可枚举的 `tenant_id/user_id` 拼接。
+- 企微入站回调真正解密：URL 验证此前把密文 `echostr` 当明文原样回显，企微后台保存回调配置永远校验失败；现由连接器按企微约定（AES-256-CBC、PKCS#7 块 32）解密并校验 `receiveid`，事件回调解出结构化字段（无 `MsgId` 时合成去重键），密钥未配置或 `receiveid` 不符 fail-closed。入站日志不再打印解密后的消息正文。仍是预览：业务派发尚未接线。
+
 - **docs-gate C.4 违规：复盘稿里的修辞命中了禁用表述表（2026-10-28，挂了两天才被发现）**：`docs/delivery/retro-menu-permission-remediation-2026-10-26.md` 用「完美掩盖器」形容 `super_admin` 对权限缺陷的遮蔽效应，命中了 `check-release-claims.sh` 的禁用表述表（`完美`），且上下文 ±5 行内没有 commit SHA / 日期 / 镜像 digest 锚点，C.4 判为「无 revision 锚点的发布声明」。**真正的问题不是措辞，是当时写下的一段备注**——原文写着「属修辞误报（advisory 级，不阻断）」，而 CI 的 `docs-gate` 传的是 `--strict`，C.4 在 CI 里是 hard、会直接阻断；只有本地 `run-all.sh` 不带参数时才是 advisory。这个本地/CI 口径差异让一条早已存在的违规在本地永远显示绿灯。同期 docs-gate 在 main 上连续 4 次被取消或红着（`34359386d` / `191dc4dc0` / `bad1c8a79` / `d7c5dc38c`），所以从未有人看到这条 FAIL。修法：措辞改为「最强掩盖器」，并把那段错误备注改写成记录这次口径差异本身。验证：`check-release-claims.sh --strict` 违规 3 → 0；`run-all.sh --strict`（**与 CI 同款模式**）7 total / 0 failed。教训：本地跑门禁必须带 CI 用的那个参数，否则测的不是同一个门禁。
 
 - **首次推送后 CI 抓到的两项：gofumpt 格式与 Swagger 漂移（2026-10-28）**：本地 8 个提交从未推送，因此 `backend-ci` 与 `api-contract-check` 从未验证过它们——`origin/main` 一直是 `bad1c8a79`，而生产跑的是本地分支。推送后立刻红了两个必过项，都是「只在 CI 里才看得见」的形态：① `handlers/global_search/handler.go` 的一行注释 `//（与工作台…` 在 `//` 与全角括号之间缺空格，`gofumpt -l .` 会列出该文件而本地从未跑过格式检查；② `itsm-backend/docs/` 落后于 handler 注解，缺的是 `bad1c8a79` 新增的 `GET /api/v1/cmdb/governance/report`（`dto.GovernanceReportResponse`）——该端点的注解写了、生成产物没重新生成，`api-contract-check` 在 `bad1c8a79` 上就已经红过一次，因为没有后续推送所以一直没被发现。修法：`gofumpt -w handlers/global_search/handler.go`；`make swagger-gen` 重新生成 `docs/{docs.go,swagger.json,swagger.yaml}`（+59 行 yaml，新增 `/cmdb/governance/report` 路径）。验证：`gofumpt -l .` 无输出、重复执行 `make swagger-gen` 产物字节一致（幂等）、`go build ./...` 通过、`handlers/global_search` 测试通过。**根因不是这两个格式问题，是「不推送 = 必过检查不生效」**——这条与 P0-1 是同一个问题。
