@@ -799,7 +799,7 @@ func NewApplication() *Application {
 	// BPMN AI Generator Service & Handler (AI驱动的流程生成)
 	// Timer Store 必须在部署服务之前创建：流程部署时注册 Timer Start Event 依赖它。
 	timerStore := service.NewDBTimerStore(client, sugar)
-	bpmnDeploymentService := service.NewBPMNDeploymentServiceWithTimerStore(client, timerStore)
+	bpmnDeploymentService := service.NewBPMNDeploymentServiceWithTimerStore(client, timerStore, sugar)
 	bpmnAIGeneratorService := service.NewBPMNAIGeneratorService(llmGateway, bpmnDeploymentService, bpmnTemplateService)
 	bpmnAIGeneratorHandler := bpmnHandler.NewAIGeneratorHandler(bpmnAIGeneratorService)
 	bpmnTemplateCatalog := service.NewBPMNWorkflowTemplateCatalog(database.GetRawDB())

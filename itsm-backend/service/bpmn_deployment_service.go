@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"go.uber.org/zap"
 	"itsm-backend/ent"
 	"itsm-backend/ent/processdefinition"
 	"itsm-backend/ent/processdeployment"
@@ -18,22 +19,26 @@ type BPMNDeploymentService struct {
 	client     *ent.Client
 	parser     *BPMNParser
 	timerStore TimerStore
+	logger     *zap.SugaredLogger
 }
 
-// NewBPMNDeploymentService 创建BPMN部署服务实例
+// NewBPMNDeploymentService 创建BPMN部署服务实例（不带定时器存储，不注册定时启动）。
 func NewBPMNDeploymentService(client *ent.Client) *BPMNDeploymentService {
 	return &BPMNDeploymentService{
 		client: client,
 		parser: NewBPMNParser(),
+		logger: zap.NewNop().Sugar(),
 	}
 }
 
-// NewBPMNDeploymentServiceWithTimerStore 创建带定时器存储的BPMN部署服务实例
-func NewBPMNDeploymentServiceWithTimerStore(client *ent.Client, timerStore TimerStore) *BPMNDeploymentService {
+// NewBPMNDeploymentServiceWithTimerStore 创建带定时器存储的BPMN部署服务实例。
+// logger 用于定时器注册失败时的结构化告警，须传入进程配置的 logger（全局 zap.S() 未初始化）。
+func NewBPMNDeploymentServiceWithTimerStore(client *ent.Client, timerStore TimerStore, logger *zap.SugaredLogger) *BPMNDeploymentService {
 	return &BPMNDeploymentService{
 		client:     client,
 		parser:     NewBPMNParser(),
 		timerStore: timerStore,
+		logger:     logger,
 	}
 }
 
@@ -78,12 +83,12 @@ func (s *BPMNDeploymentService) DeployProcessDefinition(ctx context.Context, req
 		return nil, fmt.Errorf("创建流程定义失败: %w", err)
 	}
 
-	// 注册开始定时器事件
+	// 定时器注册失败不阻断部署（定义已落库，重新部署可重建时间表，与设计器发布口径一致），
+	// 但必须结构化告警：否则带定时启动的流程会静默永不自动启动，运维无从发现。
 	if s.timerStore != nil {
 		if err := s.registerStartTimers(ctx, definitions, processDef.Key, req.TenantID); err != nil {
-			// 定时器注册失败不影响部署成功，只记录警告
-			// TODO: 考虑是否需要回滚部署
-			fmt.Printf("警告: 注册开始定时器失败: %v\n", err)
+			s.logger.Warnw("failed to sync timer-start schedule on deployment",
+				"error", err, "process_key", processDef.Key, "tenant_id", req.TenantID)
 		}
 	}
 

@@ -2,6 +2,8 @@ package service
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"testing"
 	"time"
 
@@ -9,7 +11,9 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/zap"
 	"go.uber.org/zap/zaptest"
+	"go.uber.org/zap/zaptest/observer"
 
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
@@ -254,7 +258,7 @@ func TestRegisterStartTimers_OnDeployment(t *testing.T) {
 	ctx := context.Background()
 
 	timerStore := NewDBTimerStore(client, logger)
-	deploymentService := NewBPMNDeploymentServiceWithTimerStore(client, timerStore)
+	deploymentService := NewBPMNDeploymentServiceWithTimerStore(client, timerStore, logger)
 
 	// Deploy process with start timer
 	deployment, err := deploymentService.DeployProcessDefinition(ctx, &DeployProcessDefinitionRequest{
@@ -311,7 +315,7 @@ func TestRegisterStartTimers_OnlyStartTimers(t *testing.T) {
 	ctx := context.Background()
 
 	timerStore := NewDBTimerStore(client, logger)
-	deploymentService := NewBPMNDeploymentServiceWithTimerStore(client, timerStore)
+	deploymentService := NewBPMNDeploymentServiceWithTimerStore(client, timerStore, logger)
 
 	// Deploy process with multiple timer types
 	deployment, err := deploymentService.DeployProcessDefinition(ctx, &DeployProcessDefinitionRequest{
@@ -331,4 +335,54 @@ func TestRegisterStartTimers_OnlyStartTimers(t *testing.T) {
 	// Should only have 1 timer (the start timer), not 3
 	assert.Equal(t, 1, len(timers), "Only start timers should be registered on deployment")
 	assert.Equal(t, string(TimerTypeStart), timers[0].TimerType)
+}
+
+// failingCreateTimerStore 让 Create 失败，其余方法沿用真实 DBTimerStore，
+// 用于验证部署时定时器注册失败的可观测性。
+type failingCreateTimerStore struct {
+	*DBTimerStore
+}
+
+func (s *failingCreateTimerStore) Create(ctx context.Context, req *CreateTimerRequest) (*ent.ProcessTimer, error) {
+	return nil, errors.New("simulated timer store failure")
+}
+
+// 关键回归：部署带 start timer 的流程时，若定时器注册失败，必须留下结构化告警
+// （含 process_key/tenant_id/error），而不是 fmt.Printf 吞掉。生产入口
+// POST /api/v1/bpmn/ai/generate?autoDeploy=true → GenerateBPMN → DeployProcessDefinition
+// 复用此路径；静默吞错会让定时启动的流程永不自动启动且运维不可见。
+// 非阻断语义与设计器 PublishProcessDefinition 一致：定义已落库，重新部署可重建时间表。
+func TestRegisterStartTimers_FailureIsObservable(t *testing.T) {
+	client := newTimerExtractorTestClient(t, "register-start-timers-failure")
+	tenantID := createTimerTenant(t, client, "rsf")
+	ctx := context.Background()
+
+	core, observed := observer.New(zap.WarnLevel)
+	logger := zap.New(core).Sugar()
+
+	store := &failingCreateTimerStore{DBTimerStore: NewDBTimerStore(client, logger)}
+	deploymentService := NewBPMNDeploymentServiceWithTimerStore(client, store, logger)
+
+	deployment, err := deploymentService.DeployProcessDefinition(ctx, &DeployProcessDefinitionRequest{
+		Name:     "Test Process",
+		BPMNXML:  testBPMNWithStartTimer,
+		TenantID: tenantID,
+	})
+	require.NoError(t, err, "定时器注册失败不阻断部署")
+	require.NotNil(t, deployment)
+
+	logs := observed.FilterMessage("failed to sync timer-start schedule on deployment").All()
+	require.Len(t, logs, 1, "定时器注册失败必须产生一条结构化告警，不得静默吞错")
+	entry := logs[0]
+	assert.Equal(t, zap.WarnLevel, entry.Level)
+	fields := entry.ContextMap()
+	assert.Equal(t, "test_proc", fields["process_key"])
+	assert.Equal(t, int64(tenantID), fields["tenant_id"])
+	assert.Contains(t, fmt.Sprint(fields["error"]), "simulated timer store failure")
+
+	// 确认真的走了失败路径：没有 pending 定时器被注册。
+	timers, total, err := store.List(ctx, TimerListFilter{TenantID: tenantID, Status: "pending"})
+	require.NoError(t, err)
+	assert.Equal(t, 0, total)
+	assert.Empty(t, timers)
 }
