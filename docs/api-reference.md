@@ -3934,6 +3934,21 @@ handler 只做验签与透传：
 
 仍是预览能力：入站解密与去重已可用，但「消息 → 工单/事件」的业务派发尚未接线。
 
+### 钉钉入站验签（fail-closed）
+
+钉钉 Stream 回调验签为 `HMAC-SHA256(app_secret, timestamp + "\n" + body)`，签名与
+时间戳取自 `Timestamp`/`Signature` 头（兼容小写），时间窗 ±5 分钟：
+
+- **缺少 `Timestamp` 或 `Signature` 头一律拒绝 `403`**。此前两者都缺失时按"探活豁免"
+  直接放行，任何知道有效 `instance_id` 的未认证调用方都能注入事件、污染去重表，或借
+  `url_verification` 探测实例并取回 echo；现已与企微/飞书一致 fail-closed。
+- `url_verification` 探活同样必须带合法签名，不存在合法的无签名回调。
+- 签名比较使用 `hmac.Equal` 常量时间比较，避免时序侧信道。
+- 验签失败写 `audit_log`（header 经 `RedactHeaders` 屏蔽 signature/token/secret），
+  入站日志只记 `type`/`user`/`chat`，不打印消息正文。
+
+仍是预览能力：验签与去重已可用，「消息 → 工单/事件」的业务派发尚未接线。
+
 ### 飞书 OAuth 授权回调（state 防 CSRF）
 
 与上面的 webhook 事件回调不同，OAuth 授权回调（`GET /api/v1/feishu/oauth/callback/:instance_id`）

@@ -83,7 +83,8 @@ func (d *DingTalk) HealthCheck(ctx context.Context) connector.HealthStatus {
 func (d *DingTalk) Close() error { return nil }
 
 // VerifySignature 钉钉 stream 回调验签：HMAC-SHA256(secret, timestamp + "\n" + body)
-// + timestamp 5 分钟窗口（防重放）。同时支持 url_verification 探活（无头可空）。
+// + timestamp 5 分钟窗口（防重放）。缺少 timestamp/signature 头一律拒绝（fail-closed）：
+// url_verification 探活同样带签名，不存在合法的无签名回调。
 func (d *DingTalk) VerifySignature(headers map[string]string, body []byte) error {
 	if d.client == nil {
 		return fmt.Errorf("dingtalk: not initialized")
@@ -95,10 +96,6 @@ func (d *DingTalk) VerifySignature(headers map[string]string, body []byte) error
 	sig := headers["Signature"]
 	if sig == "" {
 		sig = headers["signature"]
-	}
-	// 探活事件允许无签名
-	if ts == "" && sig == "" {
-		return nil
 	}
 	if ts == "" || sig == "" {
 		return fmt.Errorf("dingtalk: missing signature headers")

@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **钉钉回调验签 fail-open**：`VerifySignature` 此前在 timestamp/signature 头都缺失时直接放行（"探活豁免"），任何知道有效 `instance_id` 的未认证调用方都能注入事件、污染去重表，或借 `url_verification` 探测实例并取回 echo。改为缺头一律拒绝（403），与企微/飞书 fail-closed 一致；签名比较改用 `hmac.Equal` 常量时间比较。回归覆盖连接器层与生产 webhook 入口（无签名业务事件、无签名探活均 403，合法签名事件仍 200）。钉钉连接器仍为预览，未接业务分发。
+
 ## [1.6.35] - 2026-10-29
 
 ### Added

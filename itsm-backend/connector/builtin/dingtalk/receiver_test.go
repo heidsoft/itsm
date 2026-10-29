@@ -4,7 +4,7 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/base64"
-	"strings"
+	"strconv"
 	"testing"
 	"time"
 
@@ -83,21 +83,26 @@ func TestDingTalkParseInboundEventCallback(t *testing.T) {
 	require.Equal(t, "c-1", msg.ChatID)
 }
 
-func mustSprint(v int64) string {
-	b := make([]byte, 0, 20)
-	neg := v < 0
-	if neg {
-		v = -v
+func TestDingTalkVerifySignatureRejectsMissingHeaders(t *testing.T) {
+	d := newTestDingTalk(t, "secret-1")
+	body := []byte(`{"EventType":"event_callback","EventId":"e-x"}`)
+	ts := mustSprint(time.Now().UnixMilli())
+	validSig := sign("secret-1", ts, body)
+	cases := []struct {
+		name    string
+		headers map[string]string
+	}{
+		{"both absent", map[string]string{}},
+		{"only signature", map[string]string{"Signature": validSig}},
+		{"only timestamp", map[string]string{"Timestamp": ts}},
 	}
-	if v == 0 {
-		b = append(b, '0')
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := d.VerifySignature(tc.headers, body)
+			require.Error(t, err, "缺少签名头必须 fail-closed，不得当作无签名探活放行")
+			require.Contains(t, err.Error(), "missing signature headers")
+		})
 	}
-	for v > 0 {
-		b = append([]byte{byte('0' + v%10)}, b...)
-		v /= 10
-	}
-	if neg {
-		b = append([]byte{'-'}, b...)
-	}
-	return strings.TrimSpace(string(b))
 }
+
+func mustSprint(v int64) string { return strconv.FormatInt(v, 10) }

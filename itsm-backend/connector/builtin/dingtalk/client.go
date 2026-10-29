@@ -152,7 +152,7 @@ func (c *Client) VerifyStreamSignature(timestamp, signature string, body []byte)
 	mac.Write([]byte("\n"))
 	mac.Write(body)
 	expected := base64.StdEncoding.EncodeToString(mac.Sum(nil))
-	return signature == expected
+	return hmac.Equal([]byte(expected), []byte(signature))
 }
 
 // helper: sort map keys for stable JSON

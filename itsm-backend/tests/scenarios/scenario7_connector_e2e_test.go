@@ -2,10 +2,13 @@ package scenarios
 
 import (
 	"context"
+	"crypto/aes"
+	"crypto/cipher"
 	"crypto/hmac"
 	"crypto/sha1"
 	"crypto/sha256"
 	"encoding/base64"
+	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -26,7 +29,7 @@ import (
 //
 // 覆盖：
 //   - 飞书 HMAC-SHA256 事件签名校验（合法/非法/空参数）
-//   - 钉钉 Stream 签名校验（合法/非法/5 分钟窗口/探活免签）
+//   - 钉钉 Stream 签名校验（合法/非法/5 分钟窗口/缺头拒绝）
 //   - 企微 SHA1 签名校验（合法/非法/排序拼接）
 //   - Manager Provision / Send / Revoke 生命周期
 //   - Router 入站消息去重（5 分钟 TTL）
@@ -130,8 +133,8 @@ func TestScenario7_ConnectorE2E(t *testing.T) {
 		}
 
 		probeHeaders := map[string]string{}
-		if err := dt.VerifySignature(probeHeaders, body); err != nil {
-			t.Fatalf("探活事件（无签名头）应放行: %v", err)
+		if err := dt.VerifySignature(probeHeaders, body); err == nil {
+			t.Fatal("无签名头的探活事件应被拒绝（fail-closed），不得放行")
 		}
 	})
 
@@ -239,29 +242,52 @@ func TestScenario7_ConnectorE2E(t *testing.T) {
 		cfg := connector.Config{
 			TenantID: 1, Name: "wecom", Provider: "wecom", Enabled: true,
 			Credentials: map[string]string{
-				"corp_id": "c", "corp_secret": "s", "callback_token": "t",
+				"corp_id": "corp-1", "corp_secret": "s", "callback_token": "t",
+				"encoding_aes_key": scenarioAESKey,
 			},
 		}
-		_ = wc.Init(ctx, cfg)
+		if err := wc.Init(ctx, cfg); err != nil {
+			t.Fatalf("init wecom: %v", err)
+		}
 
-		echoBody, _ := json.Marshal(map[string]interface{}{"echostr": "echo-test"})
+		// echostr 是密文：解密后才是企微期望原样返回的明文 echo。
+		echoBody, _ := json.Marshal(map[string]string{
+			"echostr": sealWeCom(t, "echo-test", "corp-1"),
+		})
 		msg, err := wc.ParseInbound(echoBody)
 		if err != nil {
-			t.Fatalf("解析企微 echostr 失败: %v", err)
+			t.Fatalf("解析企微加密 echostr 失败: %v", err)
 		}
 		if msg.Type != "url_verification" || msg.Content != "echo-test" {
-			t.Fatalf("企微 url_verification 解析不正确: type=%s content=%s", msg.Type, msg.Content)
+			t.Fatalf("企微 url_verification 应返回解密明文: type=%s content=%s", msg.Type, msg.Content)
 		}
 
-		eventBody, _ := json.Marshal(map[string]interface{}{
-			"ToUserName": "corp", "Encrypt": "enc1", "msg_encrypt": "enc2",
+		// 事件回调密文必须解密成结构化消息，而非把密文当 encrypted_event 放行。
+		const xml = `<xml><ToUserName><![CDATA[corp-1]]></ToUserName>` +
+			`<FromUserName><![CDATA[user-9]]></FromUserName>` +
+			`<CreateTime>1700000000</CreateTime>` +
+			`<MsgType><![CDATA[text]]></MsgType>` +
+			`<Content><![CDATA[报修：打印机卡纸]]></Content>` +
+			`<MsgId>1234567890</MsgId></xml>`
+		eventBody, _ := json.Marshal(map[string]string{
+			"Encrypt": sealWeCom(t, xml, "corp-1"),
 		})
 		msg, err = wc.ParseInbound(eventBody)
 		if err != nil {
 			t.Fatalf("解析企微加密事件失败: %v", err)
 		}
-		if msg.Type != "encrypted_event" {
-			t.Fatalf("企微加密事件 type 应为 encrypted_event, 实际 %s", msg.Type)
+		if msg.Type != "text" || msg.Content != "报修：打印机卡纸" || msg.UserID != "user-9" {
+			t.Fatalf("企微事件应解密为结构化字段: type=%s content=%s user=%s", msg.Type, msg.Content, msg.UserID)
+		}
+
+		// 未配置 encoding_aes_key 必须 fail-closed，绝不把密文当明文放行。
+		wcNoKey := wecom.New()
+		_ = wcNoKey.Init(ctx, connector.Config{
+			TenantID: 1, Name: "wecom", Provider: "wecom", Enabled: true,
+			Credentials: map[string]string{"corp_id": "corp-1", "corp_secret": "s", "callback_token": "t"},
+		})
+		if _, err := wcNoKey.ParseInbound(echoBody); err == nil {
+			t.Fatal("未配置 encoding_aes_key 时解析密文应失败（fail-closed）")
 		}
 	})
 
@@ -464,4 +490,35 @@ func joinStrings(parts []string) string {
 		result += p
 	}
 	return result
+}
+
+// scenarioAESKey 是 43 字符 EncodingAESKey（补 "=" 后 base64 解出 32 字节密钥）。
+const scenarioAESKey = "abcdefghijklmnopqrstuvwxyz0123456789ABCDEFG"
+
+// sealWeCom 独立构造企微密文（16 随机 + 4 大端长度 + 消息 + receiveid，PKCS#7 块 32
+// 填充，AES-256-CBC，IV=密钥前 16 字节），喂给生产解密路径，避免自加密自解密的同义反复。
+func sealWeCom(t *testing.T, msg, receiveID string) string {
+	t.Helper()
+	key, err := base64.StdEncoding.DecodeString(scenarioAESKey + "=")
+	if err != nil {
+		t.Fatalf("decode aes key: %v", err)
+	}
+	raw := make([]byte, 0, 16+4+len(msg)+len(receiveID)+32)
+	raw = append(raw, []byte("0123456789abcdef")...)
+	lenBuf := make([]byte, 4)
+	binary.BigEndian.PutUint32(lenBuf, uint32(len(msg)))
+	raw = append(raw, lenBuf...)
+	raw = append(raw, []byte(msg)...)
+	raw = append(raw, []byte(receiveID)...)
+	pad := 32 - len(raw)%32
+	for i := 0; i < pad; i++ {
+		raw = append(raw, byte(pad))
+	}
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		t.Fatalf("aes cipher: %v", err)
+	}
+	out := make([]byte, len(raw))
+	cipher.NewCBCEncrypter(block, key[:aes.BlockSize]).CryptBlocks(out, raw)
+	return base64.StdEncoding.EncodeToString(out)
 }
