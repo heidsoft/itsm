@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
 
@@ -85,12 +86,14 @@ func (c *Client) sendRobot(ctx context.Context, msg *connector.Message) error {
 	case "markdown":
 		body["markdown"] = map[string]interface{}{"content": buildMarkdown(msg)}
 	case "card", "news":
+		// picurl 为可选字段：metadata 缺失或 image 非字符串时按空串处理，绝不能用未检查的类型断言。
+		picurl, _ := msg.Metadata["image"].(string)
 		body["news"] = map[string]interface{}{
 			"articles": []map[string]string{{
 				"title":       msg.Title,
 				"description": msg.Content,
 				"url":         ifEmpty(firstActionURL(msg), "https://example.com"),
-				"picurl":      msg.Metadata["image"].(string),
+				"picurl":      picurl,
 			}},
 		}
 	default:
@@ -100,21 +103,36 @@ func (c *Client) sendRobot(ctx context.Context, msg *connector.Message) error {
 			"mentioned_mobile_list": mentionedMobile(msg),
 		}
 	}
-	raw, _ := json.Marshal(body)
-	req, _ := http.NewRequestWithContext(ctx, "POST", msg.Channel, strings.NewReader(string(raw)))
+	raw, err := json.Marshal(body)
+	if err != nil {
+		return fmt.Errorf("wecom: marshal robot message: %w", err)
+	}
+	req, err := http.NewRequestWithContext(ctx, "POST", msg.Channel, strings.NewReader(string(raw)))
+	if err != nil {
+		return fmt.Errorf("wecom: build robot request: %w", err)
+	}
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := c.hc.Do(req)
 	if err != nil {
-		return err
+		return fmt.Errorf("wecom: robot send: %w", err)
 	}
 	defer resp.Body.Close()
-	buf := make([]byte, 1024)
-	n, _ := resp.Body.Read(buf)
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return fmt.Errorf("wecom: read robot response: %w", err)
+	}
+	// 传输层结果必须校验：HTML 网关错误页或非 2xx 都不能被当成发送成功。
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return fmt.Errorf("wecom: robot send http status=%d", resp.StatusCode)
+	}
 	var out struct {
 		ErrCode int    `json:"errcode"`
 		ErrMsg  string `json:"errmsg"`
 	}
-	_ = json.Unmarshal(buf[:n], &out)
+	// 解析失败即失败：不得吞掉 unmarshal 错误让 errcode 保持 0 伪装成功（消息会静默丢失）。
+	if err := json.Unmarshal(respBody, &out); err != nil {
+		return fmt.Errorf("wecom: robot response not JSON: %w", err)
+	}
 	if out.ErrCode != 0 {
 		return fmt.Errorf("wecom: robot send failed code=%d msg=%s", out.ErrCode, out.ErrMsg)
 	}
