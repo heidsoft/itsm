@@ -132,7 +132,7 @@ extract_changelog_section() {
     fi
   done < "$file"
 
-  echo "$section" | sed '/^$/d' | head -100
+  echo "$section" | sed '/^$/d' | awk 'NR<=100'
 }
 
 RELEASE_NOTES=$(extract_changelog_section "$VERSION_NO_V" "$CHANGELOG")
