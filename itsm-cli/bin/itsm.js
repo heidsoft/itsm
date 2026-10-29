@@ -7,7 +7,63 @@
 // ~3.9s to load, which an agent paying it on every one of dozens of calls would
 // experience as a broken tool. Keeping the agent branch dependency-free takes a
 // call from ~4.7s to ~0.8s.
+import { readdirSync, statSync } from 'node:fs';
+import { relative, resolve, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
 const argv = process.argv.slice(2);
+
+// Build-staleness guard (dist/ 长期政策与陈旧防线，2026-10-29)。
+//
+// dist/ 是被 .gitignore 明文豁免并跟踪的运行时产物（保证 fresh clone 直接可跑
+// bin/itsm.js），代价是「改了 src 忘 npm run build 就静默跑旧编译产物」——
+// 曾实际发生过：src 补全命令面已提交，dist 还是旧版，agent 表现与代码不符。
+// 守卫把这一失效变成显式拒绝：src 树里任一文件比 dist 产物新则退出 70
+// (BSD EX_SOFTWARE，协议 exit codes 0-6/10 之外)，stderr 给出修复指令。
+// fresh clone 场景 git checkout 让两端 mtime 一致，不误报。
+function newestMtime(dir) {
+  let newest = 0;
+  for (const name of readdirSync(dir, { withFileTypes: true })) {
+    const full = resolve(dir, name.name);
+    if (name.isDirectory()) {
+      newest = Math.max(newest, newestMtime(full));
+    } else {
+      newest = Math.max(newest, statSync(full).mtimeMs);
+    }
+  }
+  return newest;
+}
+
+const cliRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+let staleReason = '';
+try {
+  const runner = resolve(cliRoot, 'dist/agent/runner.js');
+  let maxSrc = 0;
+  let maxDist = 0;
+  try {
+    maxSrc = newestMtime(resolve(cliRoot, 'src'));
+  } catch {
+    staleReason = 'src/ 不存在（安装不完整）';
+  }
+  try {
+    maxDist = statSync(runner).mtimeMs;
+  } catch {
+    staleReason = 'dist/agent/runner.js 缺失——dist 未构建';
+  }
+  // 1s 容差吸收 git checkout 的瞬时 mtime 波动
+  if (!staleReason && maxSrc - maxDist > 1000) {
+    staleReason = 'src/ 比 dist 新（最后一次编辑后没有 npm run build）';
+  }
+} catch (err) {
+  staleReason = `守卫自身失败: ${err && err.message}`;
+}
+if (staleReason) {
+  process.stderr.write(
+    `itsm: ${staleReason}\n修复：cd ${relative(process.cwd(), cliRoot) || 'itsm-cli'} && npm install && npm run build\n`,
+  );
+  process.exit(70);
+}
+
 
 if (argv.includes('--json')) {
   const { runAgent } = await import('../dist/agent/runner.js');
