@@ -183575,6 +183575,7 @@ type UserMutation struct {
 	feishu_open_id                  *string
 	password_hash                   *string
 	active                          *bool
+	deleted_at                      *time.Time
 	created_at                      *time.Time
 	updated_at                      *time.Time
 	msp_role                        *user.MspRole
@@ -184147,6 +184148,55 @@ func (m *UserMutation) OldActive(ctx context.Context) (v bool, err error) {
 // ResetActive resets all changes to the "active" field.
 func (m *UserMutation) ResetActive() {
 	m.active = nil
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (m *UserMutation) SetDeletedAt(t time.Time) {
+	m.deleted_at = &t
+}
+
+// DeletedAt returns the value of the "deleted_at" field in the mutation.
+func (m *UserMutation) DeletedAt() (r time.Time, exists bool) {
+	v := m.deleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedAt returns the old "deleted_at" field's value of the User entity.
+// If the User object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UserMutation) OldDeletedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
+	}
+	return oldValue.DeletedAt, nil
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (m *UserMutation) ClearDeletedAt() {
+	m.deleted_at = nil
+	m.clearedFields[user.FieldDeletedAt] = struct{}{}
+}
+
+// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
+func (m *UserMutation) DeletedAtCleared() bool {
+	_, ok := m.clearedFields[user.FieldDeletedAt]
+	return ok
+}
+
+// ResetDeletedAt resets all changes to the "deleted_at" field.
+func (m *UserMutation) ResetDeletedAt() {
+	m.deleted_at = nil
+	delete(m.clearedFields, user.FieldDeletedAt)
 }
 
 // SetTenantID sets the "tenant_id" field.
@@ -185377,7 +185427,7 @@ func (m *UserMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *UserMutation) Fields() []string {
-	fields := make([]string, 0, 16)
+	fields := make([]string, 0, 17)
 	if m.username != nil {
 		fields = append(fields, user.FieldUsername)
 	}
@@ -185407,6 +185457,9 @@ func (m *UserMutation) Fields() []string {
 	}
 	if m.active != nil {
 		fields = append(fields, user.FieldActive)
+	}
+	if m.deleted_at != nil {
+		fields = append(fields, user.FieldDeletedAt)
 	}
 	if m.tenant != nil {
 		fields = append(fields, user.FieldTenantID)
@@ -185454,6 +185507,8 @@ func (m *UserMutation) Field(name string) (ent.Value, bool) {
 		return m.PasswordHash()
 	case user.FieldActive:
 		return m.Active()
+	case user.FieldDeletedAt:
+		return m.DeletedAt()
 	case user.FieldTenantID:
 		return m.TenantID()
 	case user.FieldCreatedAt:
@@ -185495,6 +185550,8 @@ func (m *UserMutation) OldField(ctx context.Context, name string) (ent.Value, er
 		return m.OldPasswordHash(ctx)
 	case user.FieldActive:
 		return m.OldActive(ctx)
+	case user.FieldDeletedAt:
+		return m.OldDeletedAt(ctx)
 	case user.FieldTenantID:
 		return m.OldTenantID(ctx)
 	case user.FieldCreatedAt:
@@ -185585,6 +185642,13 @@ func (m *UserMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetActive(v)
+		return nil
+	case user.FieldDeletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedAt(v)
 		return nil
 	case user.FieldTenantID:
 		v, ok := value.(int)
@@ -185685,6 +185749,9 @@ func (m *UserMutation) ClearedFields() []string {
 	if m.FieldCleared(user.FieldFeishuOpenID) {
 		fields = append(fields, user.FieldFeishuOpenID)
 	}
+	if m.FieldCleared(user.FieldDeletedAt) {
+		fields = append(fields, user.FieldDeletedAt)
+	}
 	if m.FieldCleared(user.FieldMspRole) {
 		fields = append(fields, user.FieldMspRole)
 	}
@@ -185716,6 +185783,9 @@ func (m *UserMutation) ClearField(name string) error {
 		return nil
 	case user.FieldFeishuOpenID:
 		m.ClearFeishuOpenID()
+		return nil
+	case user.FieldDeletedAt:
+		m.ClearDeletedAt()
 		return nil
 	case user.FieldMspRole:
 		m.ClearMspRole()
@@ -185760,6 +185830,9 @@ func (m *UserMutation) ResetField(name string) error {
 		return nil
 	case user.FieldActive:
 		m.ResetActive()
+		return nil
+	case user.FieldDeletedAt:
+		m.ResetDeletedAt()
 		return nil
 	case user.FieldTenantID:
 		m.ResetTenantID()

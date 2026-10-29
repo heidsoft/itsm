@@ -2307,6 +2307,13 @@ DELETE /users/{id}
 Authorization: Bearer <accessToken>
 ```
 
+**语义（2026-10-29 起，与停用分离）**：删除是软删写 `deleted_at`（并置 `active=false`、
+吊销存量 token）——被删用户从管理列表、搜索与所有用户关联查询中消失，**不可**通过
+`PUT /users/{id}/status` 重新启用（对已删除用户的启用操作按「用户不存在」返回 404）。
+「停用」（`PUT /users/{id}/status`）只置 `active=false`，用户仍可见、可随时重新启用。
+存量 `active=false` 的历史数据一律按停用对待（`deleted_at` 为 NULL）。
+数据库形态见 `itsm-backend/migrations/20261029_users_soft_delete.sql`。
+
 > `role` 取值是封闭词表，单一源在后端 `domain/role`：`super_admin` / `admin` / `sysadmin` /
 > `security_admin` / `audit_admin` / `it_admin` / `manager` / `agent` / `technician` / `end_user`
 > （`user` 是前端别名，服务端归一为 `end_user`）。传其他值返回参数错误。

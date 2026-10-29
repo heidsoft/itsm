@@ -417,19 +417,26 @@ func (s *UserService) DeleteUser(ctx context.Context, id int, tenantID int) erro
 		return err
 	}
 
-	// 软删除 - 设置为非激活状态
+	// 软删语义（2026-10-29）：deleted_at 与「停用」分离。
+	//   删除 = active=false + deleted_at=now —— 读路径经 RegisterSoftDeleteInterceptors
+	//          屏蔽（管理列表/搜索/WithXxx 关联），且启用 toggle 不可见、无法复活；
+	//   停用 = 仅 active=false（ChangeUserStatus），仍可见可重新启用。
+	// active=false 保留为纵深：登录复核 u.Active（handlers/common/service.go），
+	// 即使任何路径绕过拦截器读到行，被删用户也无法登录。
+	now := time.Now()
 	err = s.client.User.UpdateOneID(id).
 		Where(user.TenantIDEQ(tenantID)).
 		SetActive(false).
+		SetDeletedAt(now).
 		Exec(ctx)
 	if err != nil {
 		return fmt.Errorf("删除用户失败: %w", err)
 	}
 
-	// 立即吊销全部存量 access token：软删只是 SetActive(false)，AuthMiddleware 纯 JWT
-	// 验签不查 Active，不吊销的话被删用户在 token 有效期内仍可调用仅 AuthMiddleware
-	// 保护的路由（/users/profile、/auth/tenants、WS 等）。
-	if revokeErr := middleware.InvalidateUserTokens(ctx, id, time.Now()); revokeErr != nil {
+	// 立即吊销全部存量 access token：软删只是标记 + SetActive(false)，AuthMiddleware
+	// 纯 JWT 验签不查 Active，不吊销的话被删用户在 token 有效期内仍可调用仅
+	// AuthMiddleware 保护的路由（/users/profile、/auth/tenants、WS 等）。
+	if revokeErr := middleware.InvalidateUserTokens(ctx, id, now); revokeErr != nil {
 		s.logger.Errorw("删除用户后吊销存量token失败", "user_id", id, "error", revokeErr)
 	} else {
 		s.logger.Infow("用户已删除，存量access token已吊销", "user_id", id)

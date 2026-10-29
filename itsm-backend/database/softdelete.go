@@ -9,6 +9,7 @@ import (
 	"itsm-backend/ent/problem"
 	"itsm-backend/ent/servicerequest"
 	"itsm-backend/ent/ticket"
+	"itsm-backend/ent/user"
 )
 
 // RegisterSoftDeleteInterceptors 为带 deleted_at 字段的业务实体（ticket / incident /
@@ -43,6 +44,11 @@ func RegisterSoftDeleteInterceptors(client *ent.Client) {
 				// change 是最后一个补齐软删字段的业务实体：此前物理删会让 PIR /
 				// 评审成员 / 回滚步骤 / 审批链成为孤儿，且已用编号可被复用。
 				q.Where(change.DeletedAtIsNil())
+			case *ent.UserQuery:
+				// users 软删（2026-10-29）：DELETE /api/v1/users/:id 写 deleted_at，
+				// 与「停用」（active=false，仍可见可启用）语义分离。登录查询同样
+				// 经此拦截器——被删用户以任何凭据都查不到，不只是登不进。
+				q.Where(user.DeletedAtIsNil())
 			}
 			return next.Query(ctx, query)
 		})

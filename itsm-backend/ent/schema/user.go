@@ -56,6 +56,17 @@ func (User) Fields() []ent.Field {
 		field.Bool("active").
 			Comment("是否激活").
 			Default(true),
+		// 软删标记：users 域「删除/停用语义分离」（2026-10-29）。此前
+		// DeleteUser 与 ChangeUserStatus(false) 都只写 active=false，账号在管理
+		// 列表里以「已停用」出现、且可被 toggle 重新启用——无法区分「管理员
+		// 明确删除」与「临时停用」。加字段后：删除 = active=false + deleted_at
+		// （读路径经 RegisterSoftDeleteInterceptors 屏蔽）；停用语义不变。
+		// 存量 active=false 行一律不回填（分不清历史上是删除还是停用，
+		// 继续按停用对待）。
+		field.Time("deleted_at").
+			Comment("删除时间").
+			Optional().
+			Nillable(),
 		field.Int("tenant_id").
 			Comment("租户ID").
 			Positive(),

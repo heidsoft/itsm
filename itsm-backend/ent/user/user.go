@@ -35,6 +35,8 @@ const (
 	FieldPasswordHash = "password_hash"
 	// FieldActive holds the string denoting the active field in the database.
 	FieldActive = "active"
+	// FieldDeletedAt holds the string denoting the deleted_at field in the database.
+	FieldDeletedAt = "deleted_at"
 	// FieldTenantID holds the string denoting the tenant_id field in the database.
 	FieldTenantID = "tenant_id"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
@@ -220,6 +222,7 @@ var Columns = []string{
 	FieldFeishuOpenID,
 	FieldPasswordHash,
 	FieldActive,
+	FieldDeletedAt,
 	FieldTenantID,
 	FieldCreatedAt,
 	FieldUpdatedAt,
@@ -400,6 +403,11 @@ func ByPasswordHash(opts ...sql.OrderTermOption) OrderOption {
 // ByActive orders the results by the active field.
 func ByActive(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldActive, opts...).ToFunc()
+}
+
+// ByDeletedAt orders the results by the deleted_at field.
+func ByDeletedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldDeletedAt, opts...).ToFunc()
 }
 
 // ByTenantID orders the results by the tenant_id field.

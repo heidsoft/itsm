@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **users 域删除/停用语义分离（2026-10-29，DB 审计 P3）**：users 表此前没有 `deleted_at`，「删除用户」走 `service/user_service.go.DeleteUser` 只写 `active=false` + 吊销 token——与「停用用户」完全同态：被删用户在管理列表以「已停用」出现、toggle 启用即可复活。现删除 = `active=false` + `deleted_at`，读路径经 `database.RegisterSoftDeleteInterceptors` 对 `UserQuery` 附加 `DeletedAtIsNil()`（管理列表/搜索/WithXxx 关联查询统一屏蔽，登录查询同经拦截器——被删用户以任何凭据都查不到）；停用语义不变（仍可见可启用）。存量 `active=false` 行不回填（分不清历史删除/停用，一律按停用对待）。ent schema 增补 `field.Time("deleted_at")`，迁移 `migrations/20261029_users_soft_delete.sql`（列 + `idx_users_deleted_at` 部分索引，幂等），已应用生产库并记账（checksum `5d5ba63a6426`），0 非法索引、readyz 通过。回归 `service/user_soft_delete_test.go`：删除后从列表消失/不可复活/停用可见可启用三断言，实证修复前红（旧实现对同一测试列表仍含已删用户）→ 修复后绿；service/database/handlers(user,common,auth)/middleware 全包测试通过。
+- **itsm-cli bin 构建陈旧守卫（2026-10-29）**：`dist/` 是 .gitignore 明文豁免并跟踪的运行时产物（保证 fresh clone 直接可跑 bin，刻意政策不变），代价是「改了 src 忘 `npm run build` 就静默跑旧编译产物」——曾实际发生并误导 agent 判定。`bin/itsm.js` 顶部新增守卫：`src/` 任一文件比 `dist` 产物新（1s 容差吸收 git checkout mtime 波动）或 `dist/agent/runner.js` 缺失时，stderr 给出修复指令并以 exit 70（BSD EX_SOFTWARE，在 agent 协议 exit codes 0-6/10 之外）拒绝执行，实效验证 stale→70 / build 后→0。
+
 ## [1.6.36] - 2026-10-29
 
 ### Fixed
