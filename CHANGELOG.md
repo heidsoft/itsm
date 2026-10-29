@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.6.35] - 2026-10-29
+
 ### Added
 
 - **RLS 深度防御扩面：5 张事务主表补齐策略（2026-10-28，DB 审计 P2-1 第一段）**：175 张表只有 21 张启用 RLS，而 tickets/incidents/problems/changes/configuration_items 五张最热的事务表全部不在列（`DB 审计 §3-P2-1`/`§5-第5步`）。`itsm-backend/migrations/20261028_rls_core_tables.sql` 按既有 21 张表的统一姿态补齐：`ENABLE ROW LEVEL SECURITY` + 非 FORCE + 策略名 `tenant_isolation_<table>` + 谓词 `tenant_id = get_current_tenant_id()`（helper 已由 019 批次对齐到 `app.current_tenant`，与 `database/rls/driver.go` 注入变量同名；未设/RESET/非法值 fail-closed 拒绝）。前置 DO 守卫断言 helper 存在，避免在未重放 001–022 权威流（`migration/migrations.go`，与磁盘日期化流并行双轨）的空库上误执行、防止 helper 出现第二份可漂移来源。**零行为变化**：应用以 superuser 连接（无条件绕过 RLS），姿态与 21 张既有表一致，effective enforcement 留给后续 `RLS_MODE=shadow→enforce` + `itsm_app` 非 owner 角色的独立变更窗（`database/rls/migrations/001_roles.sql` 的角色模型就绪）。已应用生产库（`pg_policy` 修前 0 → 修后各 1，全库 RLS 表 21→26，`SELECT` 回归正常，账本 checksum `1f83dfcade24`）。002 试点（changes 的 FORCE 形态）只验证过开发库、未落本库，本批按统一姿态补齐而非引入 FORCE，理由在文件头注。
