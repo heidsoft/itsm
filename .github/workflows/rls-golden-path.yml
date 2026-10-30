@@ -53,8 +53,12 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v7
         with:
-          go-version: '1.25'
+          # 跟随 go.mod 的 go 指令，不在此硬编码版本号：
+          # 硬编码的 1.25 与 go.mod 的 go 1.26.10 冲突，go test 会直接拒载
+          # （go.mod requires go >= 1.26.10）。版本升级时无需再改这里。
+          go-version-file: itsm-backend/go.mod
           cache: true
+          cache-dependency-path: itsm-backend/go.sum
 
       - name: Start PostgreSQL 17 (pgvector)
         run: |

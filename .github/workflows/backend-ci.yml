@@ -135,11 +135,17 @@ jobs:
           staticcheck_bin="$(go env GOPATH)/bin/staticcheck"
           go list ./... | grep -v -e '^itsm-backend/migrations$' -e '^itsm-backend/migrations/' | xargs "$staticcheck_bin"
 
+      - name: Go toolchain consistency
+        # Go 版本只有一个真相源：itsm-backend/go.mod 的 go 指令。
+        # 工作流的 setup-go、Dockerfile 基础镜像、lint 工具缓存键三处引用点
+        # 若与 go.mod 脱钩，工具链升级会同时打红多个工作流
+        # （2026-10-30 实证：升 1.26.10 时四处脱钩、三个工作流变红）。
+        run: bash scripts/check-go-toolchain-consistency.sh
+
       - name: Code quality checks
         run: |
           cd itsm-backend
           echo "=== File Size Check (>800 lines) ==="
-
           # Identify newly added files in this PR/commit
           if [ "${{ github.event_name }}" = "pull_request" ]; then
             BASE_SHA="${{ github.event.pull_request.base.sha }}"
