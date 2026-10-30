@@ -109,6 +109,10 @@ itsm-frontend/docs/ui-audit/inventory.json
 # Timestamped backup artifacts (e.g. .env.prod.bak.1786752666) — may contain
 # real secrets (JWT/DB/MinIO keys). Never commit these.
 *.bak.*
+# 同一意图的另一种时间戳写法（.env.prod.bak-20261031_063945）：外部工具
+# 备份 env 时用连字符，`*.bak.*` 覆盖不到，会留下一个含真实密钥的未跟踪文件。
+.env*.bak-*
+.env*.bak_*
 
 # Debug files (generated during development)
 # Note: docs/images/*.png are product screenshots and should NOT be ignored
