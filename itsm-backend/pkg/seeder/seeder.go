@@ -37,10 +37,10 @@ import (
 	"itsm-backend/ent/sladefinition"
 	"itsm-backend/ent/slapolicy"
 	"itsm-backend/ent/standardchange"
-	"itsm-backend/ent/tickettag"
 	"itsm-backend/ent/team"
 	"itsm-backend/ent/tenant"
 	"itsm-backend/ent/ticketcategory"
+	"itsm-backend/ent/tickettag"
 	"itsm-backend/ent/tickettype"
 	"itsm-backend/ent/ticketview"
 	"itsm-backend/ent/user"
@@ -73,7 +73,7 @@ var (
 	_ = ticketcategory.NameEQ    // Used to ensure ticketcategory package is imported
 	_ = knownerror.TitleEQ       // Used to ensure knownerror package is imported
 	_ = standardchange.TitleEQ   // Used to ensure standardchange package is imported
-	_ = tickettag.NameEQ          // Used to ensure tickettag package is imported
+	_ = tickettag.NameEQ         // Used to ensure tickettag package is imported
 	_ = assetlicense.NameEQ      // Used to ensure assetlicense package is imported
 	_ = release.TitleEQ          // Used to ensure release package is imported
 	_ = slapolicy.NameEQ         // Used to ensure slapolicy package is imported
