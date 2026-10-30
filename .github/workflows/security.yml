@@ -24,6 +24,10 @@ jobs:
   gosec:
     name: Go Security Scan
     runs-on: ubuntu-latest
+    # 显式设上限：此前没有 timeout 设置，job 在 11 分钟时被环境杀掉，
+    # 日志只留下 "Cleaning up orphan processes"，看不出是超时还是 OOM——
+    # 显式上限至少让失败原因可读（cancel vs 扫描结果）。
+    timeout-minutes: 30
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -45,7 +49,12 @@ jobs:
           # 实测扫 ./itsm-backend/... 24 分钟仍未跑完，CI 里 8 分钟被清理——
           # 该 job 长期红灯的真实原因是「超时」而非「问题多」。排除生成代码后
           # 扫描能在分钟级完成，结果才谈得上有意义。
-          args: '-fmt sarif -out gosec-results.sarif -exclude-dir=ent ./itsm-backend/...'
+          # -tests=false：不加载测试包。测试文件会额外拉进 httptest/testify/mock
+          # 与仓库内测试辅助包，实测是最大的内存杠杆（gowid 的包图会整体放大）。
+          # gosec 需要把整份程序做类型检查，而 ent 的 154 张表被几乎所有业务包
+          # 依赖——即使 -exclude-dir=ent 跳过报告，类型信息仍要加载，所以闸门
+          # 必须落在「减少包图」而不是「跳过文件」。
+          args: '-fmt sarif -out gosec-results.sarif -exclude-dir=ent -tests=false ./itsm-backend/...'
 
       - name: Upload gosec results
         if: always()
