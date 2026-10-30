@@ -53,19 +53,25 @@ jobs:
 
       - name: Set up Go
         uses: actions/setup-go@v7
+        id: setup-go
         with:
           go-version-file: itsm-backend/go.mod
           cache: true
           cache-dependency-path: itsm-backend/go.sum
 
       # Cache compiled lint tools so we don't recompile gofumpt/staticcheck
-      # on every run. Keyed on go.mod so a toolchain bump invalidates cleanly.
+      # on every run. Keyed on the *resolved* Go version (not go.mod hash):
+      # a binary built by go1.25 cannot analyze the go1.26 stdlib (FIPS
+      # vendor files refuse to compile), and the old restore-keys prefix
+      # silently revived the stale binary across toolchain bumps. Binding
+      # the key to the real toolchain version makes the bump invalidate the
+      # cache instead of the lint job.
       - name: Cache Go lint tools
         uses: actions/cache@v4
         with:
           path: ~/go/bin
-          key: go-lint-tools-${{ hashFiles('itsm-backend/go.mod') }}
-          restore-keys: go-lint-tools-
+          key: go-lint-tools-${{ steps.setup-go.outputs.go-version }}-${{ hashFiles('itsm-backend/go.mod') }}
+          restore-keys: go-lint-tools-${{ steps.setup-go.outputs.go-version }}-
 
       - name: Install gofumpt (pinned)
         # Pinned for determinism: @latest previously let upstream changes

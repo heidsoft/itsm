@@ -9,11 +9,11 @@
 
 | 项 | 值 | 来源 |
 |---|---|---|
-| `itsm-backend/go.mod` 中 `go` 指令 | `1.25.13` | `itsm-backend/go.mod:3` |
-| CI 安装版本 | `1.25.13`（按 `go-version-file` 自动跟随） | `.github/workflows/backend-ci.yml` 多处 `actions/setup-go@v7` |
+| `itsm-backend/go.mod` 中 `go` 指令 | `1.26.10` | `itsm-backend/go.mod:3` |
+| CI 安装版本 | `1.26.10`（按 `go-version-file` 自动跟随） | `.github/workflows/backend-ci.yml` 多处 `actions/setup-go@v7` |
 | GH Actions 公共 README badge | `Go 1.25.13` | `README.md:9` |
-| Dockerfile.prod 基础镜像 | `mirror.gcr.io/library/golang:1.25.13-alpine` | `itsm-backend/Dockerfile.prod:16` |
-| Dockerfile dev 基础镜像 | `golang:1.25.13-alpine` | `itsm-backend/Dockerfile:18` |
+| Dockerfile.prod 基础镜像 | `mirror.gcr.io/library/golang:1.26.10-alpine` | `itsm-backend/Dockerfile.prod:16` |
+| Dockerfile dev 基础镜像 | `golang:1.26.10-alpine` | `itsm-backend/Dockerfile:18` |
 | 本地开发机 | 通常 `1.25.x` 系列但与上游有偏差 | 2026-06 审计记录 macOS Go `1.25.6`（原文已删） |
 | README 给出的提示 | `GOTOOLCHAIN=auto go test ./...` | `README.md:248` |
 
@@ -36,7 +36,7 @@ CI 端通过 `actions/setup-go@v7` + `go-version-file: itsm-backend/go.mod` 直�
 | **本地 vet** | `cd itsm-backend && go vet ./...` | 根 Makefile 无 vet 目标；`itsm-backend/Makefile` 有 `make vet` |
 | **本地 lint** | `make lint-backend` | `cd itsm-backend && golangci-lint run`（CI 的 staticcheck 步骤另在 `.github/workflows/backend-ci.yml`） |
 | **本地 build** | `make build-backend` | 构建后端 **Docker 镜像**；纯二进制用 `cd itsm-backend && go build -o itsm ./main.go` |
-| **Docker** | `Dockerfile.prod` / `Dockerfile` | 已固定 `golang:1.25.13-alpine`，无需 `GOTOOLCHAIN` |
+| **Docker** | `Dockerfile.prod` / `Dockerfile` | 已固定 `golang:1.26.10-alpine`，无需 `GOTOOLCHAIN` |
 | **国内网络** | `export GOPROXY=https://goproxy.cn,direct && export GOSUMDB=sum.golang.org.cn` | 与 `Dockerfile.prod` 一致，可避免 toolchain 自动下载失败 |
 
 ## 4. 关键变更点（本 PR 落地）
