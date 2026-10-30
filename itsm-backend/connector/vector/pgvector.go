@@ -59,7 +59,7 @@ func (s *pgVectorStore) Search(ctx context.Context, req SearchRequest) (SearchRe
 		clause = " WHERE " + strings.Join(where, " AND ")
 	}
 	args = append(args, topK(req.TopK, DefaultTopK))
-	query := fmt.Sprintf("SELECT id, content, metadata, embedding %s $1 AS distance FROM %s%s ORDER BY embedding %s $1 LIMIT $%d", op, s.table, clause, op, len(args))
+	query := fmt.Sprintf("SELECT id, content, metadata, embedding %s $1 AS distance FROM %s%s ORDER BY embedding %s $1 LIMIT $%d", op, s.table, clause, op, len(args)) // #nosec G201 -- 值走 $N 参数化；内嵌的 metadata 键经 validIdentifier(^[A-Za-z_][A-Za-z0-9_]*$) 白名单校验，非法键 fail closed
 	rows, err := s.db.QueryContext(ctx, query, args...)
 	if err != nil {
 		return SearchResponse{}, fmt.Errorf("pgvector search: %w", err)
@@ -114,6 +114,7 @@ func (s *pgVectorStore) Insert(ctx context.Context, req InsertRequest) error {
 		return err
 	}
 	defer tx.Rollback()
+	// #nosec G201 -- 表名来自构造期配置（非用户输入），值全部走 $1..$4 参数化。
 	q := fmt.Sprintf("INSERT INTO %s (id,content,embedding,metadata) VALUES ($1,$2,$3,$4) ON CONFLICT (id) DO UPDATE SET content=EXCLUDED.content,embedding=EXCLUDED.embedding,metadata=EXCLUDED.metadata", s.table)
 	for _, c := range req.Chunks {
 		if s.dimension > 0 && len(c.Vector) != s.dimension {

@@ -65,6 +65,11 @@ type IncidentMetricsReadModel struct {
 }
 
 func NewService(repo Repository, client *ent.Client, productionSvc *service.IncidentService, monitoringSvc *service.IncidentMonitoringService, alertingSvc *service.IncidentAlertingService, rootCauseSvc *service.RootCauseAnalysisService, slaMonitor *service.SLAMonitorService, logger *zap.SugaredLogger) *Service {
+	if logger == nil {
+		// 兜底：审计事件写失败时要用 logger 报错，nil logger 会在错误路径上
+		// 二次 panic，把「记录失败」变成「服务崩溃」。
+		logger = zap.NewNop().Sugar()
+	}
 	return &Service{
 		repo:              repo,
 		client:            client,
@@ -468,7 +473,9 @@ func (s *Service) updateIncident(ctx context.Context, tenantID int, id int, upda
 		return nil, err
 	}
 
-	s.repo.CreateEvent(ctx, &IncidentEvent{
+	// 审计事件尽力而为：上面的 Update 已生效，此处返回错误会让调用方误判
+	// 整个操作失败（状态不一致）。改为记录日志让失败可见（gosec G104）。
+	if _, err := s.repo.CreateEvent(ctx, &IncidentEvent{
 		IncidentID:  id,
 		EventType:   "update",
 		EventName:   "事件更新",
@@ -476,7 +483,9 @@ func (s *Service) updateIncident(ctx context.Context, tenantID int, id int, upda
 		OccurredAt:  time.Now(),
 		TenantID:    tenantID,
 		Source:      "system",
-	})
+	}); err != nil {
+		s.logger.Errorw("记录事件更新审计事件失败", "incident_id", id, "tenant_id", tenantID, "error", err)
+	}
 
 	return updated, nil
 }
@@ -512,7 +521,8 @@ func (s *Service) escalateIncident(ctx context.Context, tenantID int, id int, le
 		return nil, err
 	}
 
-	s.repo.CreateEvent(ctx, &IncidentEvent{
+	// 同上：审计事件尽力而为，失败记日志而不阻断（gosec G104）。
+	if _, err := s.repo.CreateEvent(ctx, &IncidentEvent{
 		IncidentID:  id,
 		EventType:   "escalation",
 		EventName:   "事件升级",
@@ -524,7 +534,9 @@ func (s *Service) escalateIncident(ctx context.Context, tenantID int, id int, le
 		OccurredAt: time.Now(),
 		TenantID:   tenantID,
 		Source:     "system",
-	})
+	}); err != nil {
+		s.logger.Errorw("记录事件升级审计事件失败", "incident_id", id, "tenant_id", tenantID, "error", err)
+	}
 
 	return updated, nil
 }

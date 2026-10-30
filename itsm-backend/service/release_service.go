@@ -242,7 +242,7 @@ func (s *ReleaseService) triggerWorkflowForRelease(ctx context.Context, releaseI
 // generateReleaseNumber 服务端生成发布编号（REL-YYYYMMDD-xxxxxx），
 // 不依赖客户端传入，避免越权/编号冲突。
 func (s *ReleaseService) generateReleaseNumber(tenantID int) string {
-	randPart := fmt.Sprintf("%06d", rand.Intn(1000000))
+	randPart := fmt.Sprintf("%06d", rand.Intn(1000000)) // #nosec G404 -- 业务编号（REL-YYYYMMDD-xxxxxx）的可读随机段，非安全令牌
 	return fmt.Sprintf("REL-%s-%s", time.Now().Format("20060102"), randPart)
 }
 

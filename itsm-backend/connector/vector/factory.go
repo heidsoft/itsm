@@ -28,7 +28,7 @@ func LoadConfig(source string) (VectorStoreConfig, error) {
 	}
 	body := []byte(source)
 	if info, err := os.Stat(source); err == nil && !info.IsDir() {
-		body, err = os.ReadFile(source)
+		body, err = os.ReadFile(source) // #nosec G304 -- source 是运维配置的向量库配置文件路径，非用户可控输入
 		if err != nil {
 			return cfg, fmt.Errorf("read vector config: %w", err)
 		}

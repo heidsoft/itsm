@@ -41,6 +41,14 @@ func NewRepository(db *sql.DB) Repository {
 	return &repositoryImpl{db: db}
 }
 
+// Query 聚合四域条目并分页返回。
+//
+// SQL 由本函数内的固定字面量与占位符拼成：所有用户输入（assignee_id、priority、
+// record_type、status 等）都经 nextArg() 变成 $N 占位符并进 args，LIMIT/OFFSET 用
+// %d 格式化 int（类型层面不可注入）。gosec G201 只看得到 fmt.Sprintf 拼 SQL 的
+// 形态，看不到占位符来源，故在此按函数抑制并把依据写明。
+//
+// #nosec G201
 func (r *repositoryImpl) Query(ctx context.Context, query WorkbenchQuery) (*WorkbenchResponse, error) {
 	argIndex := 0
 	nextArg := func() string {

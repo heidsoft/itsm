@@ -138,7 +138,12 @@ func (c *ProcessTriggerHandler) CancelProcess(ctx *gin.Context) {
 	var req struct {
 		Reason string `json:"reason"`
 	}
-	ctx.ShouldBindJSON(&req)
+	// 绑定失败必须显式拦截：非法 body 会让 reason 变空串，取消流程时丢掉
+	// 取消理由却仍返回成功（gosec G104）。
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		common.ParamErrorWithErr(ctx, err, "请求参数错误")
+		return
+	}
 
 	tenantID, tenantOK := middleware.TenantIDOrUnauthorized(ctx)
 	if !tenantOK {
@@ -165,7 +170,11 @@ func (c *ProcessTriggerHandler) SuspendProcess(ctx *gin.Context) {
 	var req struct {
 		Reason string `json:"reason"`
 	}
-	ctx.ShouldBindJSON(&req)
+	// 同上：绑定失败会让挂起理由丢失（gosec G104）。
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		common.ParamErrorWithErr(ctx, err, "请求参数错误")
+		return
+	}
 
 	tenantID, tenantOK := middleware.TenantIDOrUnauthorized(ctx)
 	if !tenantOK {

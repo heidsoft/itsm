@@ -50,6 +50,8 @@ func (s *qdrantStore) Search(ctx context.Context, req SearchRequest) (SearchResp
 		return SearchResponse{}, err
 	}
 	//lint:ignore SA1019 qdrant-go-client v2 still uses deprecated Search method, migration to QueryPoints pending
+	// #nosec G115 -- topK() 保证返回值非负（n>0 取 n，否则取 fallback，否则取 DefaultTopK），
+	// int -> uint64 不会翻转成巨大值。
 	resp, err := s.client.GetPointsClient().Search(ctx, &q.SearchPoints{CollectionName: s.collection, Vector: req.Vector, Filter: filter, Limit: uint64(topK(req.TopK, DefaultTopK)), WithPayload: q.NewWithPayload(true)})
 	if err != nil {
 		return SearchResponse{}, fmt.Errorf("qdrant search: %w", err)

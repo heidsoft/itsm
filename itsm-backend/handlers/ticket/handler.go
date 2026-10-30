@@ -928,7 +928,12 @@ func (h *Handler) CopyTicketTemplate(c *gin.Context) {
 	var req struct {
 		Name string `json:"name"`
 	}
-	c.ShouldBindJSON(&req)
+	// 绑定失败必须显式拦截：否则非法 body 会让 req 保持零值，复制出一个
+	// 空名模板且调用方拿到 200（gosec G104）。
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.ParamErrorWithErr(c, err, "请求参数错误")
+		return
+	}
 
 	tenantID, ok := handlerctx.ResolveTenantID(c)
 	if !ok {

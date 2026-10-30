@@ -14,8 +14,8 @@ import (
 )
 
 const (
-	accessTokenRevocationPrefix  = "jwt:revoked:"
-	refreshTokenRevocationPrefix = "jwt:revoked:refresh:"
+	accessTokenRevocationPrefix  = "jwt:revoked:"         // #nosec G101 -- Redis 键前缀，非凭据
+	refreshTokenRevocationPrefix = "jwt:revoked:refresh:" // #nosec G101 -- Redis 键前缀，非凭据
 	// legacyRefreshBlacklistPrefix 只读兼容：切换前 refresh 吊销写在
 	// handlers/common 的 Redis-only 黑名单里（键名含明文 JWT）。本版本起不再写入，
 	// 条目 TTL 不超过 refresh 生命周期（7 天），过期后该分支必然不再命中，可整段删除。

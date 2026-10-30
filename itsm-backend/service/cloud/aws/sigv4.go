@@ -14,7 +14,7 @@ const (
 	sigV4Algorithm   = "AWS4-HMAC-SHA256"
 	sigV4Terminator  = "aws4_request"
 	sigV4DateHeader  = "X-Amz-Date"
-	sigV4TokenHeader = "X-Amz-Security-Token"
+	sigV4TokenHeader = "X-Amz-Security-Token" // #nosec G101 -- HTTP 头名，非凭据
 )
 
 // sigv4Signer 计算 AWS Signature Version 4 签名。

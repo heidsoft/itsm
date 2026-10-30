@@ -16,11 +16,11 @@ const (
 	// CSRFTokenCookieName CSRF token cookie 名称。
 	// Cookie 名与 form 字段名属于 HTTP 传输协议层（非 JSON API 字段），
 	// 保留 snake_case；JSON 响应体字段一律 camelCase（见 CSRFTokenEndpoint）。
-	CSRFTokenCookieName = "csrf_token"
+	CSRFTokenCookieName = "csrf_token" // #nosec G101 -- Cookie 名，非凭据
 	// CSRFTokenHeaderName CSRF token header 名称
-	CSRFTokenHeaderName = "X-CSRF-Token"
+	CSRFTokenHeaderName = "X-CSRF-Token" // #nosec G101 -- HTTP 头名，非凭据
 	// CSRFTokenFormName CSRF token form 字段名称（协议层，同上不打 camelCase）
-	CSRFTokenFormName = "csrf_token"
+	CSRFTokenFormName = "csrf_token" // #nosec G101 -- form 字段名，非凭据
 )
 
 // CSRFConfig CSRF 配置

@@ -1110,7 +1110,12 @@ func (c *WorkflowHandler) RollbackVersion(ctx *gin.Context) {
 	var req struct {
 		Reason string `json:"reason"`
 	}
-	ctx.ShouldBindJSON(&req)
+	// 绑定失败必须显式拦截：非法 body 会让回滚理由为空串，回滚却仍成功
+	// （gosec G104）。
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		common.ParamErrorWithErr(ctx, err, "请求参数错误")
+		return
+	}
 
 	err = c.versionService.RollbackToVersion(ctx, processKey, version, tenantID, req.Reason)
 	if err != nil {

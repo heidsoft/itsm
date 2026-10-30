@@ -109,7 +109,7 @@ func scanPermissionRoutesFrom(base string, collectAll bool) ([]DeclaredRoute, []
 	var out []DeclaredRoute
 	var unresolved []DeclaredRoute
 	for _, file := range files {
-		src, err := os.ReadFile(file)
+		src, err := os.ReadFile(file) // #nosec G304 -- file 来自上面硬编码 Glob 模式命中的仓库源码文件，非用户可控路径
 		if err != nil {
 			return nil, nil, fmt.Errorf("read %s: %w", file, err)
 		}
