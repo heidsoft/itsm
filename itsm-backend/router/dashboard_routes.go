@@ -413,20 +413,50 @@ func SetupDashboardRoutes(tenant *gin.RouterGroup, h *handlers.DashboardHandler,
 	}
 }
 
+// reportEntry 是一条报表目录项。
+//
+// requiresCMDB / requiresCatalog 标记该报表依赖哪个域的装配：域未装配时对应
+// 路由不注册，清单也不能再宣传它。只把「清单」与「路由」收敛成同一份事实源
+// 还不够——清单是**静态**的，而路由随域装配**动态**变化；不做这层过滤，
+// 「点了就 404」会以「域未装配的部署」这种更隐蔽的形式回来。
+type reportEntry struct {
+	ID              string
+	Name            string
+	Path            string
+	requiresCMDB    bool
+	requiresCatalog bool
+}
+
 // reportCatalog 是报表清单的唯一事实源：列表接口与路由守卫测试共用它。
 //
 // 此前清单内联在列表接口里，而实际只注册了 5 条路由——cmdb-quality 与
 // catalog-usage 有列表项没路由，点开就是 404。内联写法让「清单」与「路由」
 // 成为两份互不相干的文本，谁也不会因为对方缺失而失败。提取成变量后，
 // 守卫测试可以逐条断言每个 path 都真的注册了。
-var reportCatalog = []gin.H{
-	{"id": "tickets", "name": "工单报表", "path": "/reports/tickets"},
-	{"id": "incidents", "name": "事件报表", "path": "/reports/incidents"},
-	{"id": "problems", "name": "问题报表", "path": "/reports/problems"},
-	{"id": "changes", "name": "变更报表", "path": "/reports/changes"},
-	{"id": "sla", "name": "SLA报表", "path": "/reports/sla"},
-	{"id": "cmdb-quality", "name": "CMDB质量报表", "path": "/reports/cmdb-quality"},
-	{"id": "catalog-usage", "name": "服务目录使用报表", "path": "/reports/catalog-usage"},
+var reportCatalog = []reportEntry{
+	{ID: "tickets", Name: "工单报表", Path: "/reports/tickets"},
+	{ID: "incidents", Name: "事件报表", Path: "/reports/incidents"},
+	{ID: "problems", Name: "问题报表", Path: "/reports/problems"},
+	{ID: "changes", Name: "变更报表", Path: "/reports/changes"},
+	{ID: "sla", Name: "SLA报表", Path: "/reports/sla"},
+	{ID: "cmdb-quality", Name: "CMDB质量报表", Path: "/reports/cmdb-quality", requiresCMDB: true},
+	{ID: "catalog-usage", Name: "服务目录使用报表", Path: "/reports/catalog-usage", requiresCatalog: true},
+}
+
+// availableReports 返回当前装配下**真的可打开**的报表清单。
+// 返回体只含对外契约字段（id/name/path），依赖标记是内部路由事实，不外泄。
+func availableReports(cmdbWired, catalogWired bool) []gin.H {
+	items := make([]gin.H, 0, len(reportCatalog))
+	for _, entry := range reportCatalog {
+		if entry.requiresCMDB && !cmdbWired {
+			continue
+		}
+		if entry.requiresCatalog && !catalogWired {
+			continue
+		}
+		items = append(items, gin.H{"id": entry.ID, "name": entry.Name, "path": entry.Path})
+	}
+	return items
 }
 
 // SetupReportsRoutes 注册报表路由。权限资源名取 report：报表是管理/分析面，
@@ -447,7 +477,7 @@ func SetupReportsRoutes(
 	reports := tenant.Group("/reports")
 	{
 		reports.GET("", middleware.RequirePermission("report", "read"), func(c *gin.Context) {
-			common.Success(c, gin.H{"items": reportCatalog})
+			common.Success(c, gin.H{"items": availableReports(cmdbHandler != nil, catalogHandler != nil)})
 		})
 		reports.GET("/tickets", middleware.RequirePermission("report", "read"), h.GetStats)
 		reports.GET("/incidents", middleware.RequirePermission("report", "read"), h.GetIncidentDistribution)

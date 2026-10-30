@@ -63,11 +63,41 @@ func TestReportsCatalogHasNoDeadLinks(t *testing.T) {
 
 	require.NotEmpty(t, reportCatalog, "报表清单不能为空，否则这条守卫会零命中地通过")
 	for _, item := range reportCatalog {
-		id, _ := item["id"].(string)
-		path, _ := item["path"].(string)
-		require.NotEmpty(t, path, "报表 %q 缺 path", id)
-		require.True(t, registered["GET /api/v1/t"+path],
-			"报表清单里的 %q 承诺了 path=%s，但没有注册任何对应路由（点了就是 404）", id, path)
+		require.NotEmpty(t, item.Path, "报表 %q 缺 path", item.ID)
+		require.True(t, registered["GET /api/v1/t"+item.Path],
+			"报表清单里的 %q 承诺了 path=%s，但没有注册任何对应路由（点了就是 404）", item.ID, item.Path)
+	}
+}
+
+// TestReportsCatalogHidesUnwiredDomains 清单必须与「实际注册的路由」一致，
+// 而不是与「静态清单」一致。
+//
+// 清单是静态的，路由随域装配动态变化：CMDB / 服务目录域未装配时对应路由不
+// 注册，清单若照旧宣传这两张报表，前端报表中心就会渲染出两张点了 404 的卡片
+// ——正是本次修复要消灭的那类死链，只是触发条件从「忘了注册」变成「域未装配」。
+func TestReportsCatalogHidesUnwiredDomains(t *testing.T) {
+	ids := func(items []gin.H) map[string]bool {
+		out := make(map[string]bool, len(items))
+		for _, item := range items {
+			id, _ := item["id"].(string)
+			out[id] = true
+		}
+		return out
+	}
+
+	full := ids(availableReports(true, true))
+	for _, item := range reportCatalog {
+		require.True(t, full[item.ID], "域已装配时清单应包含 %q", item.ID)
+	}
+
+	partial := ids(availableReports(false, false))
+	require.False(t, partial["cmdb-quality"], "CMDB 域未装配时清单不得宣传该报表")
+	require.False(t, partial["catalog-usage"], "服务目录域未装配时清单不得宣传该报表")
+	require.True(t, partial["tickets"], "不依赖域装配的报表仍应在清单里")
+
+	// 对外契约字段只有 id/name/path：内部依赖标记不得泄漏进响应。
+	for _, item := range availableReports(true, true) {
+		require.Len(t, item, 3, "报表清单项只允许 id/name/path 三个字段")
 	}
 }
 

@@ -33,6 +33,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
   守卫：`router/reports_catalog_route_test.go` 逐条断言清单里每个 `path` 都真的注册了（零命中直接失败，防止清单被清空后守卫空转）；反向验证（把 CMDB 那条注册去掉）即红。API 文档 `docs/api-reference.md` 新增「报表目录」段，列明每条的 id / path / 数据源 / 权限。全仓编译与 router 全包测试通过。
 
+  复审时补了这层修复的**残留面**：清单是静态的，路由却随域装配动态变化。CMDB / 服务目录域未装配时对应路由不注册，清单若照旧宣传这两张报表，前端报表中心就会渲染出两张点了 404 的卡片——正是本次要消灭的死链，只是触发条件从「忘了注册」变成「域未装配」。现清单改为 `[]reportEntry`（带内部依赖标记），由 `availableReports(cmdbWired, catalogWired)` 动态过滤；响应仍只含 `id`/`name`/`path` 三个对外字段，依赖标记不外泄。`TestReportsCatalogHidesUnwiredDomains` 锁定该行为（含「只允许三字段」断言）。
+
 ## [1.6.37] - 2026-10-30
 
 ### Fixed
