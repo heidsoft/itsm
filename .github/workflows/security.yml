@@ -24,9 +24,12 @@ jobs:
   gosec:
     name: Go Security Scan
     runs-on: ubuntu-latest
-    # 显式设上限：此前没有 timeout 设置，job 在 11 分钟时被环境杀掉，
-    # 日志只留下 "Cleaning up orphan processes"，看不出是超时还是 OOM——
-    # 显式上限至少让失败原因可读（cancel vs 扫描结果）。
+    # 只在每周定时与手动触发时跑：全仓 gosec 实测 8 分 50 秒、峰值 152% CPU
+    # （本机 16GB 才勉强跑完；标准 runner 是 2 核 7GB，多次在 8~11 分钟被环境
+    # 杀掉且没走到 Upload SARIF——等于每次推送都白烧 10 分钟还拿不到结果）。
+    # 与其让它长期以「被杀」的形态挂在每个 push 上，不如放到有 30 分钟预算的
+    # 定时通道里，让它真正产出 SARIF。其余 6 个 job 仍每次推送都跑。
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     timeout-minutes: 30
     steps:
       - name: Checkout
