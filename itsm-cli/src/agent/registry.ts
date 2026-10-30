@@ -18,6 +18,7 @@ import { connectorCommands } from './commands/connector.js';
 import { adminCommands } from './commands/admin.js';
 import { doctorCommands } from './commands/doctor.js';
 import { flowCommands } from './commands/flow.js';
+import { reportCommands } from './commands/report.js';
 
 /**
  * Single source of truth for the agent command surface.
@@ -46,6 +47,7 @@ function buildRegistry(): CommandSpec[] {
     ...adminCommands(),
     ...doctorCommands(),
     ...flowCommands(),
+    ...reportCommands(),
   ];
 
   const seen = new Set<string>();

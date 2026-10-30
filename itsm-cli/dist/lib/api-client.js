@@ -1257,6 +1257,18 @@ export class ApiClient {
         return request(this.baseURL, 'GET', `/knowledge/articles/${id}/versions`);
     }
     async getKnowledgeStats() { return request(this.baseURL, 'GET', '/knowledge/stats'); }
+    // ---------- Reports ----------
+    // 报表目录是「当前装配下真的可打开」的清单（cmdb-quality / catalog-usage 在
+    // 对应域未装配时不会出现）。逐条报表各接一个命令，避免只覆盖清单而漏掉实体。
+    async getReportCatalog() { return request(this.baseURL, 'GET', '/reports'); }
+    async getServiceQualityReport() { return request(this.baseURL, 'GET', '/reports/service-quality'); }
+    async getTicketReport() { return request(this.baseURL, 'GET', '/reports/tickets'); }
+    async getIncidentReport() { return request(this.baseURL, 'GET', '/reports/incidents'); }
+    async getSLAReport() { return request(this.baseURL, 'GET', '/reports/sla'); }
+    async getProblemReport() { return request(this.baseURL, 'GET', '/reports/problems'); }
+    async getChangeReport() { return request(this.baseURL, 'GET', '/reports/changes'); }
+    async getCMDBQualityReport() { return request(this.baseURL, 'GET', '/reports/cmdb-quality'); }
+    async getCatalogUsageReport() { return request(this.baseURL, 'GET', '/reports/catalog-usage'); }
     // ---------- SLA ----------
     async getSLAStats() { return request(this.baseURL, 'GET', '/sla/stats'); }
     async listSLADefinitions(params) {

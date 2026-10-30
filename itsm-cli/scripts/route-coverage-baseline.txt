@@ -21,4 +21,4 @@
 #
 # 格式：key=value  # 说明
 
-uncovered=605  # 2026-10-25 基线建立：接入 cloud.* 27 条命令（云账号/云服务/云资源各 5 条 + 发现来源 2 条 + 发现任务 5 条 + 发现结果 3 条 + providers/health 各 1 条），未覆盖由 632 降至 605，云/发现族归零。存量缺口（bpmn / ai / dashboard / email-intake 等）属既有未接入面，不作为本次目标。
+uncovered=598  # 2026-10-31 接入 report.* 9 条命令（目录 + 服务质量 + 工单/事件/SLA/问题/变更报表 + CMDB 质量 + 服务目录使用），未覆盖 605→598。此前 0459e863f 新增的两条报表路由（cmdb-quality / catalog-usage）未接 CLI，棘轮先红（607）——按「新增路由必须接入 CLI」补齐，而不是上调基线。存量缺口（bpmn / ai / dashboard / email-intake 等）仍属既有未接入面。

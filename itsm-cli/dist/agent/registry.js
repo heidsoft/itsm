@@ -17,6 +17,7 @@ import { connectorCommands } from './commands/connector.js';
 import { adminCommands } from './commands/admin.js';
 import { doctorCommands } from './commands/doctor.js';
 import { flowCommands } from './commands/flow.js';
+import { reportCommands } from './commands/report.js';
 /**
  * Single source of truth for the agent command surface.
  * `itsm commands --json`, help text, and the route-drift check all derive
@@ -43,6 +44,7 @@ function buildRegistry() {
         ...adminCommands(),
         ...doctorCommands(),
         ...flowCommands(),
+        ...reportCommands(),
     ];
     const seen = new Set();
     for (const spec of specs) {

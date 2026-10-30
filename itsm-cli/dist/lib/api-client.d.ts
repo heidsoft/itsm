@@ -363,6 +363,15 @@ export declare class ApiClient {
     listKnowledgeCategories(): Promise<unknown>;
     listKnowledgeVersions(id: number | string): Promise<unknown>;
     getKnowledgeStats(): Promise<unknown>;
+    getReportCatalog(): Promise<unknown>;
+    getServiceQualityReport(): Promise<unknown>;
+    getTicketReport(): Promise<unknown>;
+    getIncidentReport(): Promise<unknown>;
+    getSLAReport(): Promise<unknown>;
+    getProblemReport(): Promise<unknown>;
+    getChangeReport(): Promise<unknown>;
+    getCMDBQualityReport(): Promise<unknown>;
+    getCatalogUsageReport(): Promise<unknown>;
     getSLAStats(): Promise<unknown>;
     listSLADefinitions(params?: Record<string, string | number | boolean | undefined>): Promise<unknown>;
     getSLADefinition(id: number | string): Promise<unknown>;

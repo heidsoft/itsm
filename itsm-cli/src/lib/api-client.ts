@@ -1329,6 +1329,19 @@ export class ApiClient {
   }
   async getKnowledgeStats(): Promise<unknown> { return request(this.baseURL, 'GET', '/knowledge/stats'); }
 
+  // ---------- Reports ----------
+  // 报表目录是「当前装配下真的可打开」的清单（cmdb-quality / catalog-usage 在
+  // 对应域未装配时不会出现）。逐条报表各接一个命令，避免只覆盖清单而漏掉实体。
+  async getReportCatalog(): Promise<unknown> { return request(this.baseURL, 'GET', '/reports'); }
+  async getServiceQualityReport(): Promise<unknown> { return request(this.baseURL, 'GET', '/reports/service-quality'); }
+  async getTicketReport(): Promise<unknown> { return request(this.baseURL, 'GET', '/reports/tickets'); }
+  async getIncidentReport(): Promise<unknown> { return request(this.baseURL, 'GET', '/reports/incidents'); }
+  async getSLAReport(): Promise<unknown> { return request(this.baseURL, 'GET', '/reports/sla'); }
+  async getProblemReport(): Promise<unknown> { return request(this.baseURL, 'GET', '/reports/problems'); }
+  async getChangeReport(): Promise<unknown> { return request(this.baseURL, 'GET', '/reports/changes'); }
+  async getCMDBQualityReport(): Promise<unknown> { return request(this.baseURL, 'GET', '/reports/cmdb-quality'); }
+  async getCatalogUsageReport(): Promise<unknown> { return request(this.baseURL, 'GET', '/reports/catalog-usage'); }
+
   // ---------- SLA ----------
   async getSLAStats(): Promise<unknown> { return request(this.baseURL, 'GET', '/sla/stats'); }
   async listSLADefinitions(params?: Record<string, string | number | boolean | undefined>): Promise<unknown> {
