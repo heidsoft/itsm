@@ -9,7 +9,9 @@ import (
 	"itsm-backend/common"
 	"itsm-backend/handlers"
 	changeHandler "itsm-backend/handlers/change"
+	cmdbHandler "itsm-backend/handlers/cmdb"
 	problemHandler "itsm-backend/handlers/problem"
+	service_catalog "itsm-backend/handlers/service_catalog"
 	ticketHandler "itsm-backend/handlers/ticket"
 	"itsm-backend/middleware"
 )
@@ -411,6 +413,22 @@ func SetupDashboardRoutes(tenant *gin.RouterGroup, h *handlers.DashboardHandler,
 	}
 }
 
+// reportCatalog 是报表清单的唯一事实源：列表接口与路由守卫测试共用它。
+//
+// 此前清单内联在列表接口里，而实际只注册了 5 条路由——cmdb-quality 与
+// catalog-usage 有列表项没路由，点开就是 404。内联写法让「清单」与「路由」
+// 成为两份互不相干的文本，谁也不会因为对方缺失而失败。提取成变量后，
+// 守卫测试可以逐条断言每个 path 都真的注册了。
+var reportCatalog = []gin.H{
+	{"id": "tickets", "name": "工单报表", "path": "/reports/tickets"},
+	{"id": "incidents", "name": "事件报表", "path": "/reports/incidents"},
+	{"id": "problems", "name": "问题报表", "path": "/reports/problems"},
+	{"id": "changes", "name": "变更报表", "path": "/reports/changes"},
+	{"id": "sla", "name": "SLA报表", "path": "/reports/sla"},
+	{"id": "cmdb-quality", "name": "CMDB质量报表", "path": "/reports/cmdb-quality"},
+	{"id": "catalog-usage", "name": "服务目录使用报表", "path": "/reports/catalog-usage"},
+}
+
 // SetupReportsRoutes 注册报表路由。权限资源名取 report：报表是管理/分析面，
 // 与菜单「报表中心」同码。dashboard:read 是全角色基线（服务台落地页需要它），
 // 挂在报表上等于把整套报表接口开放给最终用户。
@@ -423,21 +441,13 @@ func SetupReportsRoutes(
 	h *handlers.DashboardHandler,
 	problemHandler *problemHandler.Handler,
 	changeHandler *changeHandler.Handler,
+	cmdbHandler *cmdbHandler.Handler,
+	catalogHandler *service_catalog.Handler,
 ) {
 	reports := tenant.Group("/reports")
 	{
 		reports.GET("", middleware.RequirePermission("report", "read"), func(c *gin.Context) {
-			common.Success(c, gin.H{
-				"items": []gin.H{
-					{"id": "tickets", "name": "工单报表", "path": "/reports/tickets"},
-					{"id": "incidents", "name": "事件报表", "path": "/reports/incidents"},
-					{"id": "problems", "name": "问题报表", "path": "/reports/problems"},
-					{"id": "changes", "name": "变更报表", "path": "/reports/changes"},
-					{"id": "sla", "name": "SLA报表", "path": "/reports/sla"},
-					{"id": "cmdb-quality", "name": "CMDB质量报表", "path": "/reports/cmdb-quality"},
-					{"id": "catalog-usage", "name": "服务目录使用报表", "path": "/reports/catalog-usage"},
-				},
-			})
+			common.Success(c, gin.H{"items": reportCatalog})
 		})
 		reports.GET("/tickets", middleware.RequirePermission("report", "read"), h.GetStats)
 		reports.GET("/incidents", middleware.RequirePermission("report", "read"), h.GetIncidentDistribution)
@@ -465,5 +475,25 @@ func SetupReportsRoutes(
 			}
 			changeHandler.GetStats(c)
 		})
+
+		// 下面两条此前只有列表项、没有路由——报表列表自报了 7 张报表，实际只注册
+		// 了 5 条，点开 cmdb-quality / catalog-usage 就是 404。数据源其实一直存在
+		// （CMDB 治理看板、服务目录统计），这里按域装配情况接上。
+		//
+		// 权限是双闸门：report:read 表示「能进报表页」，域权限表示「能看这个域的
+		// 数据」。只挂 report:read 会让一个没有 cmdb:read 的用户借报表页读到 CMDB
+		// 治理数据——报表页不是权限的旁路。
+		if cmdbHandler != nil {
+			reports.GET("/cmdb-quality",
+				middleware.RequirePermission("report", "read"),
+				middleware.RequirePermission("cmdb", "read"),
+				cmdbHandler.GetGovernanceReport)
+		}
+		if catalogHandler != nil {
+			reports.GET("/catalog-usage",
+				middleware.RequirePermission("report", "read"),
+				middleware.RequirePermission("service_catalog", "read"),
+				catalogHandler.Stats)
+		}
 	}
 }

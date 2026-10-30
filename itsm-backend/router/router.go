@@ -702,7 +702,7 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 
 		// ==================== Reports 报表 ====================
 		if config.DashboardHandler != nil {
-			SetupReportsRoutes(tenant.(*gin.RouterGroup), config.DashboardHandler, config.ProblemHandler, config.ChangeHandler)
+			SetupReportsRoutes(tenant.(*gin.RouterGroup), config.DashboardHandler, config.ProblemHandler, config.ChangeHandler, config.CMDBHandler, config.ServiceCatalogHandler)
 		}
 
 		// ==================== Surveys 客户满意度调查 ====================
