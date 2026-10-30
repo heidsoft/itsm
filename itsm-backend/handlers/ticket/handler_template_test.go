@@ -1,9 +1,11 @@
 package ticket
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"net/http"
+	"net/http/httptest"
 	"strconv"
 	"testing"
 
@@ -207,4 +209,55 @@ func TestTemplateRoutes_ActivateAndWorkflowSteps(t *testing.T) {
 	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &createResp))
 	require.NotNil(t, createResp.Data.IsActive)
 	assert.False(t, *createResp.Data.IsActive, "停用模板的副本仍应是停用")
+}
+
+// TestCopyTicketTemplateRejectsMalformedBody 复制模板此前丢弃了 ShouldBindJSON
+// 的返回错误：body 非法时 req 保持零值，调用方指定的副本名被静默丢弃（服务层
+// 回退为「源模板 - 副本」），复制照样成功并返回 200——请求被部分执行，而调用方
+// 以为自己的参数生效了。现在必须显式拒绝，且不得留下半成品。
+func TestCopyTicketTemplateRejectsMalformedBody(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", "file:ticket-template-copy-badbody?mode=memory&cache=shared&_fk=1")
+	defer client.Close()
+
+	gin.SetMode(gin.TestMode)
+	svc := NewService(nil, service.NewTicketServiceForTest(client, zaptest.NewLogger(t).Sugar()), nil, zap.NewNop().Sugar())
+	h := NewHandler(svc)
+
+	r := gin.New()
+	api := r.Group("/api/v1", func(c *gin.Context) {
+		c.Set(middleware.TenantContextKey, &middleware.TenantContext{TenantID: 1})
+		c.Set("user_id", 7)
+		c.Next()
+	})
+	api.POST("/tickets/templates", h.CreateTicketTemplate)
+	api.POST("/tickets/templates/:id/copy", h.CopyTicketTemplate)
+
+	// 先建一个真实模板：修复前的 bug 只有在「源模板存在」时才会显形
+	// （不存在时服务层会返回 404，掩盖了「空名复制」这个真实后果）。
+	w := doJSON(t, r, http.MethodPost, "/api/v1/tickets/templates", map[string]interface{}{
+		"name": "源模板", "category": "hardware", "priority": "medium",
+	}, nil)
+	require.Equal(t, http.StatusOK, w.Code, w.Body.String())
+	var created struct {
+		Data struct {
+			ID int `json:"id"`
+		} `json:"data"`
+	}
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &created))
+	require.Positive(t, created.Data.ID)
+
+	// 非法 body 的复制请求必须被拒绝。
+	req := httptest.NewRequest(http.MethodPost,
+		"/api/v1/tickets/templates/"+strconv.Itoa(created.Data.ID)+"/copy",
+		bytes.NewBufferString("{not-json"))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+	require.Equal(t, http.StatusBadRequest, rec.Code,
+		"非法 body 必须拒绝，不能静默丢掉调用方指定的副本名；body=%s", rec.Body.String())
+
+	// 反面断言：不得留下任何复制行（修复前这里会多出一行空名模板）。
+	count, err := client.TicketTemplate.Query().Count(context.Background())
+	require.NoError(t, err)
+	assert.Equal(t, 1, count, "请求被拒绝时不得产生副本，只应保留源模板")
 }

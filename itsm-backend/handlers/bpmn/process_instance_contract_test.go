@@ -5,14 +5,18 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
 	"itsm-backend/common"
 	"itsm-backend/ent"
+	"itsm-backend/ent/enttest"
+	"itsm-backend/middleware"
 	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
+	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -211,5 +215,40 @@ func TestProcessLifecycleMapsConflictAndNotFound(t *testing.T) {
 			env := decodeResponseEnvelope(t, w)
 			assert.Equal(t, float64(tc.wantBiz), env["code"], "body=%s", w.Body.String())
 		})
+	}
+}
+
+// TestProcessTriggerActionsRejectMalformedBody 流程取消/挂起（真实生产入口
+// POST /api/v1/bpmn/process-trigger/{cancel,suspend}/:instance_id）此前丢弃了
+// ShouldBindJSON 的返回错误：body 非法时 req 保持零值，取消/挂起理由变成空串，
+// 流程照样被取消/挂起，而调用方拿到 200——理由丢失且无人知晓。
+// 现在必须显式拒绝（4xx），而不是「成功但语义残缺」。
+func TestProcessTriggerActionsRejectMalformedBody(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", "file:bpmn_trigger_badbody?mode=memory&cache=shared&_fk=1")
+	defer client.Close()
+
+	gin.SetMode(gin.TestMode)
+	ctrl := NewProcessTriggerHandler(service.NewProcessTriggerService(client, &fakeProcessEngine{}), nil, nil)
+	r := gin.New()
+	r.Use(func(c *gin.Context) {
+		c.Set(middleware.TenantContextKey, &middleware.TenantContext{TenantID: 11})
+		c.Set("user_id", 7)
+		c.Next()
+	})
+	g := r.Group("/api/v1/bpmn/process-trigger")
+	g.POST("/cancel/:instance_id", ctrl.CancelProcess)
+	g.POST("/suspend/:instance_id", ctrl.SuspendProcess)
+
+	for _, path := range []string{
+		"/api/v1/bpmn/process-trigger/cancel/1",
+		"/api/v1/bpmn/process-trigger/suspend/1",
+	} {
+		req := httptest.NewRequest(http.MethodPost, path, strings.NewReader("{not-json"))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+
+		require.Equal(t, http.StatusBadRequest, w.Code,
+			"%s 收到非法 body 必须拒绝，不能以空 reason 继续执行；body=%s", path, w.Body.String())
 	}
 }

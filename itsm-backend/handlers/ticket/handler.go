@@ -928,8 +928,9 @@ func (h *Handler) CopyTicketTemplate(c *gin.Context) {
 	var req struct {
 		Name string `json:"name"`
 	}
-	// 绑定失败必须显式拦截：否则非法 body 会让 req 保持零值，复制出一个
-	// 空名模板且调用方拿到 200（gosec G104）。
+	// 绑定失败必须显式拦截：否则非法 body 会让 req 保持零值，调用方指定的
+	// 副本名被静默丢弃（服务层回退为「源模板 - 副本」），复制照样成功并返回
+	// 200——请求被部分执行，而调用方以为自己的参数生效了（gosec G104）。
 	if err := c.ShouldBindJSON(&req); err != nil {
 		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return

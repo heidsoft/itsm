@@ -16,6 +16,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
+	"go.uber.org/zap/zaptest/observer"
 )
 
 // -----------------------------------------------------------------------------
@@ -33,9 +35,10 @@ type slaMockRepository struct {
 	nextID        int
 
 	// failure injection
-	failCreateErr    error
-	failNumberErr    error
-	failListRulesErr error
+	failCreateErr      error
+	failNumberErr      error
+	failListRulesErr   error
+	failCreateEventErr error
 }
 
 func newSLAMockRepository() *slaMockRepository {
@@ -151,6 +154,9 @@ func (m *slaMockRepository) GetReport(ctx context.Context, tenantID int, period 
 func (m *slaMockRepository) CreateEvent(ctx context.Context, e *IncidentEvent) (*IncidentEvent, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
+	if m.failCreateEventErr != nil {
+		return nil, m.failCreateEventErr
+	}
 	m.events = append(m.events, e)
 	return e, nil
 }
@@ -483,4 +489,55 @@ func (m *slaMockRepository) CountTenantSLAViolations(ctx context.Context, tenant
 
 func (m *slaMockRepository) GetUserNamesByIDs(ctx context.Context, tenantID int, ids []int) (map[int]string, error) {
 	return map[int]string{}, nil
+}
+
+// TestService_AuditEventFailureStaysObservable 审计事件写失败必须「可见但不阻断」。
+//
+// 业务更新先落库、审计事件后写；若把审计失败当成整体失败返回，调用方会以为
+// 更新没生效（实际已生效），状态不一致比静默更糟。但「不返回错误」不等于
+// 「可以忽略」——失败必须留下日志，否则事件链断裂无人知晓，这正是 gosec
+// G104 指出的缺陷：错误被丢弃后既没有返回值也没有可观测信号。
+//
+// 修复前两处 CreateEvent 的错误直接丢弃，日志断言会红；修复后绿。
+func TestService_AuditEventFailureStaysObservable(t *testing.T) {
+	auditErr := errors.New("audit store down")
+
+	// update 路径
+	t.Run("update", func(t *testing.T) {
+		repo := newSLAMockRepository()
+		repo.incidents[1] = &Incident{
+			ID: 1, TenantID: 1, Title: "原始标题", Status: "new", ReporterID: 101,
+		}
+		repo.failCreateEventErr = auditErr
+
+		core, logs := observer.New(zapcore.ErrorLevel)
+		svc := NewService(repo, nil, nil, nil, nil, nil, nil, zap.New(core).Sugar())
+
+		updated, err := svc.Update(context.Background(), 1, 1,
+			&Incident{Title: "新标题"}, 101, "end_user")
+		require.NoError(t, err, "审计写失败不得让已生效的业务更新返回错误")
+		require.Equal(t, "新标题", updated.Title, "业务更新必须已经生效")
+
+		require.Equal(t, 1, logs.FilterMessage("记录事件更新审计事件失败").Len(),
+			"审计写失败必须留下错误日志，不能静默吞掉")
+	})
+
+	// escalate 路径
+	t.Run("escalate", func(t *testing.T) {
+		repo := newSLAMockRepository()
+		repo.incidents[1] = &Incident{
+			ID: 1, TenantID: 1, Title: "事件", Status: "new", ReporterID: 101,
+		}
+		repo.failCreateEventErr = auditErr
+
+		core, logs := observer.New(zapcore.ErrorLevel)
+		svc := NewService(repo, nil, nil, nil, nil, nil, nil, zap.New(core).Sugar())
+
+		updated, err := svc.Escalate(context.Background(), 1, 1, 2, "SLA 超时", 101, "end_user")
+		require.NoError(t, err, "审计写失败不得让已生效的升级返回错误")
+		require.Equal(t, 2, updated.EscalationLevel, "升级必须已经生效")
+
+		require.Equal(t, 1, logs.FilterMessage("记录事件升级审计事件失败").Len(),
+			"审计写失败必须留下错误日志，不能静默吞掉")
+	})
 }
