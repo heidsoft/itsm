@@ -37,7 +37,7 @@ import (
 	"itsm-backend/ent/sladefinition"
 	"itsm-backend/ent/slapolicy"
 	"itsm-backend/ent/standardchange"
-	"itsm-backend/ent/tag"
+	"itsm-backend/ent/tickettag"
 	"itsm-backend/ent/team"
 	"itsm-backend/ent/tenant"
 	"itsm-backend/ent/ticketcategory"
@@ -73,7 +73,7 @@ var (
 	_ = ticketcategory.NameEQ    // Used to ensure ticketcategory package is imported
 	_ = knownerror.TitleEQ       // Used to ensure knownerror package is imported
 	_ = standardchange.TitleEQ   // Used to ensure standardchange package is imported
-	_ = tag.NameEQ               // Used to ensure tag package is imported
+	_ = tickettag.NameEQ          // Used to ensure tickettag package is imported
 	_ = assetlicense.NameEQ      // Used to ensure assetlicense package is imported
 	_ = release.TitleEQ          // Used to ensure release package is imported
 	_ = slapolicy.NameEQ         // Used to ensure slapolicy package is imported
@@ -2468,8 +2468,18 @@ func (s *Seeder) seedStandardChanges(ctx context.Context) error {
 	return nil
 }
 
-// seedTicketTags 初始化标签种子数据
-// seedTicketTags reconciles the tag baseline per tenant and per code.
+// seedTicketTags 初始化工单标签种子数据。
+//
+// 写入 ticket_tags 表（工单标签域的唯一事实源，service.TicketTagService 的
+// CRUD 与 ResolveTagIDsByNames 全部读写这张表，前端 /admin/tags 页消费
+// 的也是它）。此前这里写的是 tags 表（组织标签）——那张表没有任何管理面
+// 与读取方（BindTagToEntity 无调用方，五张 join 表 prod 实测全 0），等于
+// 每个新环境都把 15 个工单标签种进一张死表，而工单标签页打开是空的。
+// 2026-10-30 修正（tag 域 pilotReason「两套标签模型并存」的账实分离面）。
+//
+// ticket_tags 无 code 列（对账键是 name），组织标签表里那批错放的行
+// 不做迁移：目标表以 name 幂等补种即可，历史错放行的清理见
+// initialization_adapter 的对账注释。
 func (s *Seeder) seedTicketTags(ctx context.Context) error {
 	t, err := s.baselineTenant(ctx)
 	if err != nil {
@@ -2478,25 +2488,25 @@ func (s *Seeder) seedTicketTags(ctx context.Context) error {
 
 	created := 0
 	for _, ticketTag := range s.expectedTicketTags() {
-		exists, err := s.client.Tag.Query().
-			Where(tag.TenantIDEQ(t.ID), tag.CodeEQ(ticketTag.Code)).
+		// 幂等键用 (tenant_id, name)：ticket_tags 没有 code 列，
+		// 且 name 是该域对外的唯一标识（创建/更新/解析全按 name）。
+		exists, err := s.client.TicketTag.Query().
+			Where(tickettag.TenantIDEQ(t.ID), tickettag.NameEQ(ticketTag.Name)).
 			Exist(ctx)
 		if err != nil {
-			return fmt.Errorf("check ticket tag %s: %w", ticketTag.Code, err)
+			return fmt.Errorf("check ticket tag %s: %w", ticketTag.Name, err)
 		}
 		if exists {
 			continue
 		}
-		if _, err := s.client.Tag.Create().
+		if _, err := s.client.TicketTag.Create().
 			SetName(ticketTag.Name).
-			SetCode(ticketTag.Code).
 			SetDescription(ticketTag.Description).
 			SetColor(ticketTag.Color).
+			SetIsActive(true).
 			SetTenantID(t.ID).
-			SetCreatedAt(time.Now()).
-			SetUpdatedAt(time.Now()).
 			Save(ctx); err != nil {
-			return fmt.Errorf("seed ticket tag %s: %w", ticketTag.Code, err)
+			return fmt.Errorf("seed ticket tag %s: %w", ticketTag.Name, err)
 		}
 		created++
 	}

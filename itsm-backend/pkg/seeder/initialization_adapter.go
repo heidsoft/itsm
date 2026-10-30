@@ -28,8 +28,8 @@ import (
 	"itsm-backend/ent/slaalertrule"
 	"itsm-backend/ent/sladefinition"
 	"itsm-backend/ent/standardchange"
-	"itsm-backend/ent/tag"
 	"itsm-backend/ent/ticketcategory"
+	"itsm-backend/ent/tickettag"
 	"itsm-backend/ent/tickettype"
 	"itsm-backend/ent/user"
 	"itsm-backend/internal/initialization"
@@ -541,14 +541,17 @@ func (s *Seeder) verifyITILTemplates(ctx context.Context) error {
 		}
 	}
 	for _, expected := range s.expectedTicketTags() {
-		exists, err := s.client.Tag.Query().Where(
-			tag.TenantIDEQ(tenantID), tag.CodeEQ(expected.Code),
+		// 断言 ticket_tags 表（工单标签域的事实源），幂等键与 seedTicketTags
+		// 一致用 (tenant_id, name)。此前断言 tags 表（组织标签）——那张表
+		// 没有读取方，断言永远绿却掩盖了「种子写错表」的账实分离。
+		exists, err := s.client.TicketTag.Query().Where(
+			tickettag.TenantIDEQ(tenantID), tickettag.NameEQ(expected.Name),
 		).Exist(ctx)
 		if err != nil {
-			return fmt.Errorf("verify ticket tag %s: %w", expected.Code, err)
+			return fmt.Errorf("verify ticket tag %s: %w", expected.Name, err)
 		}
 		if !exists {
-			return fmt.Errorf("verify ticket tags: missing %s", expected.Code)
+			return fmt.Errorf("verify ticket tags: missing %s", expected.Name)
 		}
 	}
 	for _, expected := range ticketTypeDefinitions() {
