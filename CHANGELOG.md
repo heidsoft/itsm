@@ -35,6 +35,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
   复审时补了这层修复的**残留面**：清单是静态的，路由却随域装配动态变化。CMDB / 服务目录域未装配时对应路由不注册，清单若照旧宣传这两张报表，前端报表中心就会渲染出两张点了 404 的卡片——正是本次要消灭的死链，只是触发条件从「忘了注册」变成「域未装配」。现清单改为 `[]reportEntry`（带内部依赖标记），由 `availableReports(cmdbWired, catalogWired)` 动态过滤；响应仍只含 `id`/`name`/`path` 三个对外字段，依赖标记不外泄。`TestReportsCatalogHidesUnwiredDomains` 锁定该行为（含「只允许三字段」断言）。
 
+- **Workflow action 引用全部钉版本（2026-10-31）**：`security.yml` 里 gosec 已钉 `v2.30.0`，但 trivy（两处）仍是 `@master`、trufflehog 是 `@main`——浮动分支引用让两次运行的扫描结果不可复现，也无法回答「这次跑的是哪个版本」。现统一钉到 `trivy-action@v0.36.0` 与 `trufflehog@v3.99.7`，并新增 `scripts/check-workflow-action-pinning.sh`：远程 action 的 ref 必须是版本 tag 或 40 位 SHA，本地 action 与 `docker://` 除外；脚本自带自检（放行 `v4`/`v0.36.0`/SHA，拦截 `main`/`master`/`latest`/分支名），零命中直接失败防假绿。反向验证：注入 `actions/checkout@master` 即精确报出文件行号并 exit 1。守卫挂在 backend-ci（与 Go 工具链一致性守卫同处）。
+
 ## [1.6.37] - 2026-10-30
 
 ### Fixed

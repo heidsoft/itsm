@@ -73,8 +73,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
+      # 与 gosec 同理钉住版本：@master 是浮动分支，上游一次提交就能在两次运行
+      # 之间改变扫描结果（甚至改变默认 trivy 版本），报告无法复现。
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: 'fs'
           scan-ref: '.'
@@ -97,7 +99,7 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Run Trivy gate
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: 'fs'
           scan-ref: '.'
@@ -187,7 +189,9 @@ jobs:
         with:
           fetch-depth: 0
 
+      # 钉住 release tag：@main 是浮动分支，上游一次合并就改变扫描行为，
+      # 且 `uses: ...@main` 无法回答「这次扫描跑的是哪个版本」。
       - name: Run TruffleHog
-        uses: trufflesecurity/trufflehog@main
+        uses: trufflesecurity/trufflehog@v3.99.7
         with:
           path: ./

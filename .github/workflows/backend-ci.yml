@@ -142,6 +142,12 @@ jobs:
         # （2026-10-30 实证：升 1.26.10 时四处脱钩、三个工作流变红）。
         run: bash scripts/check-go-toolchain-consistency.sh
 
+      - name: Workflow action pinning
+        # 远程 action 必须是版本 tag 或 40 位 SHA：@master/@main 会让扫描与构建
+        # 结果在两次运行之间变化（2026-10-31 实证：gosec 钉了版本，trivy 与
+        # trufflehog 仍是浮动分支——靠 review 记不住，交给机器守）。
+        run: bash scripts/check-workflow-action-pinning.sh
+
       - name: Code quality checks
         run: |
           cd itsm-backend
