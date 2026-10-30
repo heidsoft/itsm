@@ -109,9 +109,13 @@ var registry = []definition{
 		key: "report", maturity: MaturityPilot, built: true,
 		pilotReason: "管理者服务质量视图（GET /reports/service-quality）已把 KPI/SLA/事件分布/满意度/趋势/工单统计聚合成单请求并携带 metricVersion 口径版本；但 MSP 跨租户汇总边界未定义（服务商视角拿不到下属租户的合并口径），导出只有动作级审计、缺少导出行数与数据范围摘要。晋升条件：MSP 汇总口径 + 导出产物审计。",
 	},
+	// 2026-10-30 「线上是哪个版本」已收敛到 published_version 指针：发布时
+	// （评审通过 /publish / PUT status 三条入口）在同一事务内为即将上线的正文
+	// 落版本快照并把指针指过去，撤回与恢复清指针。发布时刻的正文从此在版本
+	// 表里有对应行，指针是唯一事实源；客户端自带的 publishedVersion 一律忽略。
 	{
 		key: "knowledge", maturity: MaturityPilot, built: true,
-		pilotReason: "发布版本语义未收敛（历史版本可对比/回滚，但「线上是哪个版本」没有唯一事实源）；分类可见性的跨角色检索未做端到端验收；召回率（典型问题集）缺人工验收口径。晋升条件：版本发布语义 + 跨角色检索验收。",
+		pilotReason: "发布版本语义已收敛：published_version 指向发布时刻落的版本快照，三条发布入口（评审通过 /publish / PUT status=published）与撤回、恢复统一维护该指针，撤回与恢复清指针，客户端无法伪造；但分类可见性的跨角色检索未做端到端验收，召回率（典型问题集）缺人工验收口径。晋升条件：跨角色检索验收 + 召回率人工口径。",
 	},
 	// AI 2026-10-23 三契约落地（分诊 + 工单 RCA）：响应带 promptVersion/model/auditId，
 	// 服务端自动落 ai_audit 底账（accepted=NULL），采纳/拒绝走 PATCH 翻转；
@@ -152,9 +156,13 @@ var registry = []definition{
 	{key: "project", maturity: MaturityGA, built: true},
 	{key: "application", maturity: MaturityGA, built: true},
 	// 工单标签（ticket_tags）已完整，缺的是另一套模型的管理面。
+	// 2026-10-30 修掉一处真实污染：initialization 种子把**工单标签基线写进了
+	// 组织标签表**（tags），verify 也断言 tags——而工单标签域读写的是 ticket_tags。
+	// 后果是每个新环境的工单标签种子都落进死表（生产实测 tags 15 行全是错放的
+	// 工单标签、ticket_tags 0 行）。现已改为写 ticket_tags，并加守卫测试锁表。
 	{
 		key: "tag", maturity: MaturityPilot, built: true,
-		pilotReason: "工单标签（ticket_tags）CRUD、工单绑定与 /admin/tags 页已完整；但组织标签（tags 表，挂项目/应用/微服务/部门/团队）只由 seeder 写入，没有任何管理面，两套标签模型并存。晋升条件：组织标签管理面或与工单标签收敛。",
+		pilotReason: "工单标签（ticket_tags）CRUD、工单绑定与 /admin/tags 页已完整，种子基线也不再错写进组织标签表；但组织标签（tags 表，挂项目/应用/微服务/部门/团队）仍无任何管理面——整套 TagService 从未被装配，两张表并存且组织标签侧无写入口。晋升条件：组织标签管理面或与工单标签收敛。",
 	},
 	// 2026-10-22 晋升 GA：模板的真实表面是 /api/v1/tickets/templates 的 8 个端点
 	// （列表/分类/创建/详情/更新/状态/复制/删除，权限码 ticket_template:*），

@@ -9,6 +9,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **预览（pilot）域债务首批：知识「线上版本」事实源 + 工单标签种子写错表（2026-10-30）**：
+
+  *知识：发布此前只翻 `is_published` 布尔位，而版本表存的是「更新前快照」*——发布时刻的正文在版本表里没有对应行，于是「线上内容属于哪个版本」没有任何地方能回答。知识被 RAG 引用、被工单引用后，「我当时引的是哪一版」就是审计问题，不能靠猜。
+
+  修法是给 `knowledge_articles` 加 `published_version` 指针（迁移 `20261030_knowledge_published_version.sql`，幂等、不回填存量），并在**三条发布入口**上统一维护：评审通过（`TransitionReview`）、`POST /publish`（`SetArticlePublished`）、`PUT` 的 `status=published`（`UpdateArticle`）。三条都必须在**同一事务**内「落快照 → 指过去 → 翻可见性」：只维护其中一条，另外两条就会让指针与事实脱节，比没有指针更危险——因为指针看起来是权威的。撤回（`/publish` 与评审驳回）与版本恢复同样清指针：撤下后线上已无内容，保留指针会指向一个已不可见的版本号。
+
+  两条实现细节值得记：① ent 的 `tx.Client().Tx()` 会另开一个**独立**事务而不是 savepoint，所以指针逻辑拆成接受 client 的包级函数（`publishWithPointerTx` / `unpublishWithPointerTx` / `updateTx`），事务边界外置，让「指针」与「向量索引任务入箱」同生共死；② 客户端自带的 `publishedVersion` 一律忽略——指针是系统事实，否则任何一次 PUT 都能改写「线上是哪个版本」的答案。
+
+  守卫：`handlers/knowledge/published_version_pointer_test.go` 7 个用例覆盖三条入口 + 撤回/驳回/恢复 + 伪造防护；反向验证（把主路径的 `SetPublishedVersion` 去掉）会让其中 6 个转红。
+
+  *标签：initialization 种子把工单标签基线写进了组织标签表*。 `seedTicketTags` 与 initialization 的 verify 都断言 `tags` 表，而工单标签域读写的是 `ticket_tags`——生产实测 `tags` 15 行（全是错放的工单标签种子）、`ticket_tags` 0 行。后果是每个新环境的工单标签种子都落进一张没有任何写入口的死表，`/admin/tags` 与工单打标签只能靠服务里的「按需补种」兜底。现改为写 `ticket_tags`，并加 `pkg/seeder/ticket_tags_seed_test.go` 锁定「种子落在哪张表」（反向验证：改回旧表名即红）。生产库已把错放的 15 行补种进 `ticket_tags`（只插不删）。
+
+  能力矩阵两处 `pilotReason` 同步更新：knowledge 的「版本发布语义」与 tag 的「种子错写」两项已消，剩余晋升条件改写为「跨角色检索验收 + 召回率人工口径」与「组织标签管理面或收敛」。
+
 ## [1.6.37] - 2026-10-30
 
 ### Fixed
