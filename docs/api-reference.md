@@ -1954,6 +1954,32 @@ Authorization: Bearer <accessToken>
 
 **口径版本契约**：响应携带 `metricVersion`（总体）与 `metricVersions`（各块独立）——任何指标的计算语义变更（窗口、过滤、分母、环比基线）都必须递增对应版本，下游管理层月报与对账脚本以版本号感知口径变化，禁止凭数字猜语义。空集合一律序列化为 `[]` 而非 `null`。导出通道 `POST /api/v1/analytics/export` 的审计由全局审计中间件承载（`export` 动作 + 请求体摘要入 `audit_logs`）。
 
+### 报表目录（GET /api/v1/reports）
+
+```http
+GET /api/v1/reports
+Authorization: Bearer <accessToken>
+```
+
+权限 `report:read`。返回报表清单，`items[].path` 是前端跳转依据。
+
+**清单与路由必须对齐**：此前 `cmdb-quality` 与 `catalog-usage` 只有清单项、没有注册路由，
+点开就是 404，而没有任何关口会发现（清单是内联字面量，与路由注册是两份互不相干的文本）。
+现清单提取为服务端唯一事实源 `reportCatalog`，并由路由守卫测试逐条断言每个 `path` 都真的注册了。
+
+| id | path | 数据源 | 权限 |
+|:---|:---|:---|:---|
+| tickets | `/reports/tickets` | 工单统计 | `report:read` |
+| incidents | `/reports/incidents` | 事件分布 | `report:read` |
+| problems | `/reports/problems` | 问题趋势（问题域未装配时回退工单趋势并标注） | `report:read` |
+| changes | `/reports/changes` | 变更统计（变更域未装配时回退工单趋势并标注） | `report:read` |
+| sla | `/reports/sla` | SLA 数据 | `report:read` |
+| cmdb-quality | `/reports/cmdb-quality` | CMDB 治理看板（与 `GET /api/v1/cmdb/governance/report` 同源） | `report:read` + `cmdb:read` |
+| catalog-usage | `/reports/catalog-usage` | 服务目录统计（与 `GET /api/v1/service-catalog/stats` 同源） | `report:read` + `service_catalog:read` |
+
+后两条挂双闸门：报表页不是权限的旁路，借报表入口读 CMDB 治理数据仍需 `cmdb:read`。
+域未装配时对应路由不注册（宁可从路由表消失，也不注册一条必然 500 的端点）。
+
 ### 获取 SLA 绩效聚合
 
 ```http

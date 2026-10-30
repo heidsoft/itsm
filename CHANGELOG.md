@@ -25,6 +25,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
   能力矩阵两处 `pilotReason` 同步更新：knowledge 的「版本发布语义」与 tag 的「种子错写」两项已消，剩余晋升条件改写为「跨角色检索验收 + 召回率人工口径」与「组织标签管理面或收敛」。
 
+- **报表目录死链修复（2026-10-30，预览域债务第二批）**：`GET /reports` 的清单自报 7 张报表，其中 `cmdb-quality` 与 `catalog-usage` **只有清单项、没有注册路由**——界面上摆着两个点了就 404 的入口，而没有任何一道关口会发现。根因是清单内联在列表接口里（一坨字面量），与路由注册是两份互不相干的文本：谁改了都不会让对方失败。
+
+  修法两层：① 清单提取为包级 `reportCatalog`，列表接口与守卫测试共用同一份事实源；② 两条遗漏的报表接上**既有**数据源（CMDB 治理看板 `GetGovernanceReport`、服务目录统计 `Stats`）——数据一直在，只是没人把它接到报表入口。权限挂双闸门 `report:read` + 域 `read`：只挂 `report:read` 会让没有 `cmdb:read` 的用户借报表页读到 CMDB 治理数据，报表页不是权限的旁路。域未装配时对应路由不注册（宁可从路由表消失，也不注册一条必然 500 的端点）。
+
+  守卫：`router/reports_catalog_route_test.go` 逐条断言清单里每个 `path` 都真的注册了（零命中直接失败，防止清单被清空后守卫空转）；反向验证（把 CMDB 那条注册去掉）即红。API 文档 `docs/api-reference.md` 新增「报表目录」段，列明每条的 id / path / 数据源 / 权限。全仓编译与 router 全包测试通过。
+
 ## [1.6.37] - 2026-10-30
 
 ### Fixed

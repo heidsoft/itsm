@@ -105,9 +105,13 @@ var registry = []definition{
 	// 报表域此前只在能力契约表里（报表/运营 = Pilot），矩阵里根本没有这一行——
 	// 矩阵是前端与控制台的唯一事实源，缺行等于这个域对客户不可见。
 	// 2026-10-23 服务质量视图落地后补行，理由按当前仍缺的两项写。
+	// 2026-10-30 清单死链已修：报表目录原本自报 7 张报表，其中 cmdb-quality 与
+	// catalog-usage 只有清单项、没有注册路由（点了 404）。清单提取为 reportCatalog
+	// 由接口与守卫测试共用，两条报表接上既有数据源（CMDB 治理看板 / 服务目录
+	// 统计），并挂 report:read + 域 read 双闸门——报表页不是权限的旁路。
 	{
 		key: "report", maturity: MaturityPilot, built: true,
-		pilotReason: "管理者服务质量视图（GET /reports/service-quality）已把 KPI/SLA/事件分布/满意度/趋势/工单统计聚合成单请求并携带 metricVersion 口径版本；但 MSP 跨租户汇总边界未定义（服务商视角拿不到下属租户的合并口径），导出只有动作级审计、缺少导出行数与数据范围摘要。晋升条件：MSP 汇总口径 + 导出产物审计。",
+		pilotReason: "管理者服务质量视图（GET /reports/service-quality）已把 KPI/SLA/事件分布/满意度/趋势/工单统计聚合成单请求并携带 metricVersion 口径版本；报表目录也不再有死链（清单与路由共用同一份 reportCatalog，守卫测试逐条断言每个 path 都已注册）。但 MSP 跨租户汇总边界仍未定义（服务商视角拿不到下属租户的合并口径），导出只有动作级审计、缺少导出行数与数据范围摘要。晋升条件：MSP 汇总口径 + 导出产物审计。",
 	},
 	// 2026-10-30 「线上是哪个版本」已收敛到 published_version 指针：发布时
 	// （评审通过 /publish / PUT status 三条入口）在同一事务内为即将上线的正文
