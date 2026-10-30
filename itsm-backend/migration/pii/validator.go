@@ -75,7 +75,3 @@ func firstWord(s string) string {
 	}
 	return fields[0]
 }
-
-func isAlphaNumeric(b byte) bool {
-	return (b >= 'a' && b <= 'z') || (b >= 'A' && b <= 'Z') || (b >= '0' && b <= '9') || b == '_'
-}
