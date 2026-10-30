@@ -3,6 +3,8 @@ package migration
 import (
 	"regexp"
 	"strings"
+
+	"itsm-backend/migration/sqlsplit"
 )
 
 // txControlStmtRe 匹配语句边界上的事务控制语句（BEGIN;/COMMIT;/START TRANSACTION;/
@@ -45,11 +47,11 @@ func stripEmbeddedTxControl(sql string) string {
 
 		switch c := sql[i]; {
 		case c == '\'':
-			j := scanSingleQuoted(sql, i)
+			j := sqlsplit.ScanSingleQuoted(sql, i)
 			out.WriteString(sql[i:j])
 			i = j
-		case c == '$' && dollarTagLength(sql, i) > 0:
-			j := scanDollarQuoted(sql, i)
+		case c == '$' && sqlsplit.DollarTagLength(sql, i) > 0:
+			j := sqlsplit.ScanDollarQuoted(sql, i)
 			out.WriteString(sql[i:j])
 			i = j
 		case c == '-' && i+1 < n && sql[i+1] == '-':
@@ -60,7 +62,7 @@ func stripEmbeddedTxControl(sql string) string {
 			out.WriteString(sql[i:j])
 			i = j
 		case c == '/' && i+1 < n && sql[i+1] == '*':
-			j := skipBlockComment(sql, i)
+			j := sqlsplit.SkipBlockComment(sql, i)
 			out.WriteString(sql[i:j])
 			i = j
 		case c == ';':
@@ -86,71 +88,10 @@ func skipWhitespaceAndComments(sql string, i int) int {
 				i++
 			}
 		case c == '/' && i+1 < n && sql[i+1] == '*':
-			i = skipBlockComment(sql, i)
+			i = sqlsplit.SkipBlockComment(sql, i)
 		default:
 			return i
 		}
 	}
 	return i
-}
-
-func skipBlockComment(sql string, i int) int {
-	n := len(sql)
-	j := i + 2
-	for j+1 < n && !(sql[j] == '*' && sql[j+1] == '/') {
-		j++
-	}
-	if j+1 < n {
-		return j + 2
-	}
-	return n
-}
-
-// scanSingleQuoted 返回 i 处单引号字符串字面量（含成对 ” 转义）的结束偏移。
-func scanSingleQuoted(sql string, i int) int {
-	n := len(sql)
-	j := i + 1
-	for j < n {
-		if sql[j] == '\'' {
-			if j+1 < n && sql[j+1] == '\'' {
-				j += 2
-				continue
-			}
-			return j + 1
-		}
-		j++
-	}
-	return n
-}
-
-// dollarTagLength 返回 i 处 dollar-quote 开启标签（$$ 或 $tag$）的长度；不是标签则返回 0。
-func dollarTagLength(sql string, i int) int {
-	n := len(sql)
-	j := i + 1
-	for j < n && (isASCIILetter(sql[j]) || isASCIIDigit(sql[j]) || sql[j] == '_') {
-		j++
-	}
-	if j < n && sql[j] == '$' {
-		return j - i + 1
-	}
-	return 0
-}
-
-// scanDollarQuoted 返回 i 处 dollar-quoted 体（含首尾标签）的结束偏移；
-// 未闭合时原样保留到文件尾，避免误截断。
-func scanDollarQuoted(sql string, i int) int {
-	tagLen := dollarTagLength(sql, i)
-	tag := sql[i : i+tagLen]
-	if k := strings.Index(sql[i+tagLen:], tag); k >= 0 {
-		return i + tagLen + k + tagLen
-	}
-	return len(sql)
-}
-
-func isASCIILetter(c byte) bool {
-	return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')
-}
-
-func isASCIIDigit(c byte) bool {
-	return c >= '0' && c <= '9'
 }

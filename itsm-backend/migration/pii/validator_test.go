@@ -4,6 +4,8 @@ import (
 	"strings"
 	"testing"
 
+	"itsm-backend/migration/sqlsplit"
+
 	"github.com/stretchr/testify/require"
 )
 
@@ -102,13 +104,13 @@ func TestCheckNotNullDefaultsCaseInsensitive(t *testing.T) {
 }
 
 func TestSplitSQLStatementsHandlesSemicolonsInStrings(t *testing.T) {
-	parts := splitSQLStatements(`INSERT INTO t VALUES ('a;b'); INSERT INTO t VALUES ('c');`)
+	parts := sqlsplit.SplitStatements(`INSERT INTO t VALUES ('a;b'); INSERT INTO t VALUES ('c');`)
 	require.Len(t, parts, 2)
 	require.True(t, strings.Contains(parts[0], "('a;b')"))
 }
 
 func TestStripSQLCommentsRemovesLineComments(t *testing.T) {
-	got := stripSQLComments("SELECT 1; -- inline comment\nSELECT 2;")
+	got := sqlsplit.StripComments("SELECT 1; -- inline comment\nSELECT 2;")
 	require.False(t, strings.Contains(got, "inline comment"))
 	require.True(t, strings.Contains(got, "SELECT 1"))
 }

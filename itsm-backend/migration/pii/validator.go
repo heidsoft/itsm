@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+
+	"itsm-backend/migration/sqlsplit"
 )
 
 // NotNullViolation 描述一个 NOT NULL 但缺少 DEFAULT 的新列，
@@ -38,10 +40,10 @@ func (v NotNullViolation) String() string {
 // 多语句支持：分号分隔；注释行（-- 开头）跳过。
 func CheckNotNullDefaults(sql string) ([]NotNullViolation, error) {
 	var violations []NotNullViolation
-	stmts := splitSQLStatements(sql)
+	stmts := sqlsplit.SplitStatements(sql)
 	addRe := regexp.MustCompile(`(?is)\bALTER\s+TABLE\s+(?:` + "`" + `|"+)?([a-zA-Z0-9_]+)(?:` + "`" + `|"+)?\s+ADD\s+COLUMN\s+(?:` + "`" + `|"+)?([a-zA-Z0-9_]+)(?:` + "`" + `|"+)?\s+([^\n;]+)`)
 	for _, stmt := range stmts {
-		stripped := stripSQLComments(stmt)
+		stripped := sqlsplit.StripComments(stmt)
 		if stripped == "" {
 			continue
 		}
@@ -64,98 +66,6 @@ func CheckNotNullDefaults(sql string) ([]NotNullViolation, error) {
 		}
 	}
 	return violations, nil
-}
-
-// splitSQLStatements 按分号切 SQL；保留 $tag$ 与引号内的分号不被误切。
-func splitSQLStatements(sql string) []string {
-	out := []string{}
-	var b strings.Builder
-	inSingle, inDouble, inDollar := false, false, false
-	for i := 0; i < len(sql); i++ {
-		c := sql[i]
-		switch {
-		case inDollar:
-			b.WriteByte(c)
-			if c == '$' && i+1 < len(sql) && (sql[i+1] == '$' || isAlphaNumeric(sql[i+1])) {
-				// 简化：dollar 标签结束条件忽略；正常 SQL 中 ADD COLUMN 不会落在 dollar 体内
-				if i+1 < len(sql) && sql[i+1] == '$' {
-					b.WriteByte(sql[i+1])
-					i++
-					inDollar = false
-				}
-			}
-		case inSingle:
-			b.WriteByte(c)
-			if c == '\'' {
-				inSingle = false
-			}
-		case inDouble:
-			b.WriteByte(c)
-			if c == '"' {
-				inDouble = false
-			}
-		case c == '\'':
-			b.WriteByte(c)
-			inSingle = true
-		case c == '"':
-			b.WriteByte(c)
-			inDouble = true
-		case c == '$':
-			b.WriteByte(c)
-			if i+1 < len(sql) && sql[i+1] == '$' {
-				b.WriteByte(sql[i+1])
-				i++
-				inDollar = true
-			}
-		case c == ';':
-			out = append(out, b.String())
-			b.Reset()
-		default:
-			b.WriteByte(c)
-		}
-	}
-	if rest := strings.TrimSpace(b.String()); rest != "" {
-		out = append(out, rest)
-	}
-	return out
-}
-
-// stripSQLComments 去掉行注释；-- 之后整行（不含引号内）的字符丢弃。
-func stripSQLComments(sql string) string {
-	var b strings.Builder
-	inSingle, inDouble := false, false
-	for i := 0; i < len(sql); i++ {
-		c := sql[i]
-		switch {
-		case inSingle:
-			b.WriteByte(c)
-			if c == '\'' {
-				inSingle = false
-			}
-		case inDouble:
-			b.WriteByte(c)
-			if c == '"' {
-				inDouble = false
-			}
-		case c == '\'':
-			b.WriteByte(c)
-			inSingle = true
-		case c == '"':
-			b.WriteByte(c)
-			inDouble = true
-		case c == '-' && i+1 < len(sql) && sql[i+1] == '-':
-			// 跳过到换行
-			for i < len(sql) && sql[i] != '\n' {
-				i++
-			}
-			if i < len(sql) {
-				b.WriteByte('\n')
-			}
-		default:
-			b.WriteByte(c)
-		}
-	}
-	return b.String()
 }
 
 func firstWord(s string) string {

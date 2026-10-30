@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"go.uber.org/zap"
+	"itsm-backend/migration/sqlsplit"
 )
 
 // Migration represents a single database migration
@@ -143,7 +144,7 @@ func (m *Migrator) ApplyMigration(ctx context.Context, mig Migration) error {
 	// CREATE INDEX CONCURRENTLY 不能在事务块内执行（PG 25001）：
 	// 此类迁移走非事务路径，逐条语句执行 + 逐条落账（账本 INSERT 独立提交）。
 	// 半失败场景：已建索引可幂等重建（IF NOT EXISTS），账本未记则重跑补齐。
-	if strings.Contains(strings.ToUpper(sql), "CONCURRENTLY") {
+	if needsNonTransactional(sql) {
 		return m.applyNonTransactional(ctx, mig, sql)
 	}
 
@@ -190,14 +191,26 @@ func checksumSQL(sql string) string {
 	return hex.EncodeToString(sum[:])
 }
 
+// needsNonTransactional 判断该迁移是否必须走「事务外逐语句执行」路径。
+//
+// 判定必须基于「去掉注释后的 SQL」：迁移脚本的注释里常出现 CONCURRENTLY 字样
+// （20261028_rls_core_tables.sql 的第 26 行写着「无 CONCURRENTLY / 数据回填」），
+// 全文匹配会把这类本可在事务内执行的迁移误判到非事务路径——而那条路径的逐语句
+// 执行对 dollar-quoted 体不友好，等于用一句注释换来一次全新安装中断
+// （2026-10-30 fresh-install-gate run 40985843148 实证）。
+func needsNonTransactional(sql string) bool {
+	return strings.Contains(strings.ToUpper(sqlsplit.StripComments(sql)), "CONCURRENTLY")
+}
+
 // applyNonTransactional 执行含 CONCURRENTLY 的迁移：整个文件在事务外逐语句跑，
-// 全部成功后单独落账。语句按分号切分（该文件不含函数体/ dollar-quoted 字符串）。
+// 全部成功后单独落账。语句按 SplitSQLStatements 切分——该切分器识别 dollar-quoted
+// 体与引号内的分号（DO $$ ... $$; 块不会被切碎）。
 func (m *Migrator) applyNonTransactional(ctx context.Context, mig Migration, sql string) error {
 	m.logger.Infow("Applying migration (non-transactional, contains CONCURRENTLY)",
 		"version", mig.Version, "description", mig.Description)
 
 	started := time.Now()
-	for _, stmt := range splitSQLStatements(stripEmbeddedTxControl(sql)) {
+	for _, stmt := range sqlsplit.SplitStatements(stripEmbeddedTxControl(sql)) {
 		trimmed := strings.TrimSpace(stmt)
 		if trimmed == "" || trimmed == ";" {
 			continue
@@ -220,10 +233,11 @@ func (m *Migrator) applyNonTransactional(ctx context.Context, mig Migration, sql
 	return nil
 }
 
-// splitSQLStatements 按分号切分 SQL（不处理函数体；CONCURRENTLY 索引脚本不含）。
-func splitSQLStatements(sql string) []string {
-	return strings.Split(sql, ";")
-}
+// splitSQLStatements 已移至 sqlsplit.go 并更名为导出的 SplitSQLStatements：
+// 原实现是朴素的 strings.Split(sql, ";")，会把 dollar-quoted 体与引号内的分号
+// 当成语句边界（2026-10-30 fresh-install-gate 实证：DO $$ ... $$; 块被切碎，
+// PostgreSQL 报 unterminated dollar-quoted string，整条初始化链中断）。
+// 薄封装已删除，调用点一律使用 SplitSQLStatements。
 
 // RollbackMigration rolls back a single migration
 func (m *Migrator) RollbackMigration(ctx context.Context, mig Migration) error {
