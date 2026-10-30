@@ -19,7 +19,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
   两条实现细节值得记：① ent 的 `tx.Client().Tx()` 会另开一个**独立**事务而不是 savepoint，所以指针逻辑拆成接受 client 的包级函数（`publishWithPointerTx` / `unpublishWithPointerTx` / `updateTx`），事务边界外置，让「指针」与「向量索引任务入箱」同生共死；② 客户端自带的 `publishedVersion` 一律忽略——指针是系统事实，否则任何一次 PUT 都能改写「线上是哪个版本」的答案。
 
-  守卫：`handlers/knowledge/published_version_pointer_test.go` 7 个用例覆盖三条入口 + 撤回/驳回/恢复 + 伪造防护；反向验证（把主路径的 `SetPublishedVersion` 去掉）会让其中 6 个转红。
+  复审时发现还有**第四条**会改变线上正文的路径：已发布文章的**在线更新**（`PUT` 保持 `published`、只改 title/content/category/tags）。它不翻转 `is_published`，看起来「没有发布动作」，因此不在最初三条之内——但线上正文确实换了，指针会停在发布时那份旧快照上，给出一个与线上内容不一致的答案。这类脱节比没有指针更危险，因为指针看起来是权威的。`updateTx` 因此补了第三分支：正文类字段有变化则落新快照（变更摘要 `发布版本（在线更新）`）并移动指针；只改时效/权威性等非正文属性时不落快照，避免每次复核都制造空版本。回归 `TestEditingPublishedArticleMovesPointer` 实证前红（指针停在 v1、正文已是 v2）→ 后绿。
+
+  守卫：`handlers/knowledge/published_version_pointer_test.go` 8 个用例覆盖三条发布入口 + 在线更新 + 撤回/驳回/恢复 + 伪造防护；反向验证（把主路径的 `SetPublishedVersion` 去掉）会让其中 6 个转红。
 
   *标签：initialization 种子把工单标签基线写进了组织标签表*。 `seedTicketTags` 与 initialization 的 verify 都断言 `tags` 表，而工单标签域读写的是 `ticket_tags`——生产实测 `tags` 15 行（全是错放的工单标签种子）、`ticket_tags` 0 行。后果是每个新环境的工单标签种子都落进一张没有任何写入口的死表，`/admin/tags` 与工单打标签只能靠服务里的「按需补种」兜底。现改为写 `ticket_tags`，并加 `pkg/seeder/ticket_tags_seed_test.go` 锁定「种子落在哪张表」（反向验证：改回旧表名即红）。生产库已把错放的 15 行补种进 `ticket_tags`（只插不删）。
 

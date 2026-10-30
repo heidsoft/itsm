@@ -115,11 +115,13 @@ var registry = []definition{
 	},
 	// 2026-10-30 「线上是哪个版本」已收敛到 published_version 指针：发布时
 	// （评审通过 /publish / PUT status 三条入口）在同一事务内为即将上线的正文
-	// 落版本快照并把指针指过去，撤回与恢复清指针。发布时刻的正文从此在版本
-	// 表里有对应行，指针是唯一事实源；客户端自带的 publishedVersion 一律忽略。
+	// 落版本快照并把指针指过去；已发布文章的在线更新（正文类字段变化但不翻转
+	// is_published）同样落新快照并移动指针，撤回与恢复清指针。发布时刻及此后
+	// 每次线上正文变更在版本表里都有对应行，指针是唯一事实源；客户端自带的
+	// publishedVersion 一律忽略。
 	{
 		key: "knowledge", maturity: MaturityPilot, built: true,
-		pilotReason: "发布版本语义已收敛：published_version 指向发布时刻落的版本快照，三条发布入口（评审通过 /publish / PUT status=published）与撤回、恢复统一维护该指针，撤回与恢复清指针，客户端无法伪造；但分类可见性的跨角色检索未做端到端验收，召回率（典型问题集）缺人工验收口径。晋升条件：跨角色检索验收 + 召回率人工口径。",
+		pilotReason: "发布版本语义已收敛：published_version 指向线上正文对应的版本快照，三条发布入口（评审通过 /publish / PUT status=published）与已发布文章的在线更新统一维护该指针，撤回与恢复清指针，客户端无法伪造；但分类可见性的跨角色检索未做端到端验收，召回率（典型问题集）缺人工验收口径。晋升条件：跨角色检索验收 + 召回率人工口径。",
 	},
 	// AI 2026-10-23 三契约落地（分诊 + 工单 RCA）：响应带 promptVersion/model/auditId，
 	// 服务端自动落 ai_audit 底账（accepted=NULL），采纳/拒绝走 PATCH 翻转；

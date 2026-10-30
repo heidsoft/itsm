@@ -187,8 +187,16 @@ func updateTx(ctx context.Context, client *ent.Client, a *Article) (*Article, er
 		return nil, err
 	}
 
-	// 翻转方向：false→true 落快照并指向它；true→false 清指针。
-	// 快照必须在正文被覆写**之前**按「即将上线的内容」落，否则快照存的是旧正文。
+	// 指针维护覆盖三条会改变「线上正文」的形态：
+	//   false→true          发布：为即将上线的正文落快照并指过去；
+	//   true→true + 正文变化  在线更新：线上内容已经变了，指针必须跟着走；
+	//   true→false          撤回：清指针。
+	// 快照按「即将上线的内容」落（用入参而非当前行），否则存的是被覆写前的旧正文。
+	//
+	// 在线更新这条最容易漏：它不翻转 is_published，看起来「没有发布动作」，
+	// 但线上正文确实换了——不移动指针就会让 published_version 指向一份与线上
+	// 不一致的旧快照，而指针恰恰是「我当时引的是哪一版」的唯一答案。
+	// 只改时效/权威性等非正文属性时不落快照，避免每次复核都制造一个空版本。
 	var publishVersion *int
 	clearPointer := false
 	switch {
@@ -206,6 +214,23 @@ func updateTx(ctx context.Context, client *ent.Client, a *Article) (*Article, er
 			return nil, fmt.Errorf("create publish snapshot: %w", err)
 		}
 		publishVersion = &version
+	case a.IsPublished && current.IsPublished:
+		if current.Title != a.Title || current.Content != a.Content ||
+			current.Category != a.Category || current.Tags != tagsStr {
+			snapshot := &ent.KnowledgeArticle{
+				ID:       a.ID,
+				Title:    a.Title,
+				Content:  a.Content,
+				Category: a.Category,
+				Tags:     tagsStr,
+				AuthorID: a.AuthorID,
+			}
+			version, err := (&EntRepository{client: client}).createVersionSnapshotTx(ctx, client, snapshot, "发布版本（在线更新）")
+			if err != nil {
+				return nil, fmt.Errorf("create online update snapshot: %w", err)
+			}
+			publishVersion = &version
+		}
 	case !a.IsPublished && current.IsPublished:
 		clearPointer = true
 	}

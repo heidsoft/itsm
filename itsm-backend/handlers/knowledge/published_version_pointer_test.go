@@ -243,3 +243,49 @@ func TestPublishPointerSnapshotGrows(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, "第二版", snap.Content, "指针必须指向第二次发布时刻的正文")
 }
+
+// TestEditingPublishedArticleMovesPointer 已发布文章的在线更新必须把指针带走。
+//
+// 发布后的在线更新是第四条会改变「线上正文」的路径：它不翻转 is_published，
+// 只改 title/content/category/tags。若此时不落新快照、不移动指针，
+// published_version 仍指向发布时那份旧正文——「线上是哪个版本」会给出一个
+// 与线上内容不一致的答案。这类脱节比没有指针更危险：指针看起来是权威的，
+// 而引用它做审计的人不会知道它已经过期。
+func TestEditingPublishedArticleMovesPointer(t *testing.T) {
+	ctx := context.Background()
+	svc, _ := newPublishTestService(t, "file:pubptr_online_edit?mode=memory&cache=shared&_fk=1")
+
+	created, err := svc.CreateArticle(ctx, &Article{
+		Title: "磁盘扩容", Content: "第一版：先扩只读副本", Category: "运维",
+		AuthorID: 1, TenantID: publishTestTenant,
+	})
+	require.NoError(t, err)
+	_, err = svc.SubmitReview(ctx, created.ID, publishTestTenant, 1, "")
+	require.NoError(t, err)
+	published, err := svc.ApproveReview(ctx, created.ID, publishTestTenant, 2, "")
+	require.NoError(t, err)
+	require.NotNil(t, published.PublishedVersion)
+	firstVersion := *published.PublishedVersion
+
+	// 已发布状态下直接改正文：这是知识维护的常态（补充步骤、修错别字），
+	// 不改可见性，因此不会触发「发布」分支。
+	edited, err := svc.UpdateArticle(ctx, &Article{
+		ID: created.ID, TenantID: publishTestTenant, AuthorID: 1,
+		Title: "磁盘扩容", Content: "第二版：先扩只读副本再切主", Category: "运维",
+		IsPublished: true,
+	})
+	require.NoError(t, err)
+	require.True(t, edited.IsPublished)
+	require.NotNil(t, edited.PublishedVersion)
+	require.Greater(t, *edited.PublishedVersion, firstVersion,
+		"线上正文已变，指针必须指向新落的快照，而不是发布时那份旧正文")
+
+	live, err := svc.GetArticle(ctx, created.ID, publishTestTenant)
+	require.NoError(t, err)
+	require.Equal(t, "第二版：先扩只读副本再切主", live.Content)
+
+	snap, err := svc.GetVersion(ctx, created.ID, *edited.PublishedVersion, publishTestTenant)
+	require.NoError(t, err)
+	require.Equal(t, live.Content, snap.Content,
+		"指针指向的版本内容必须与线上正文一致——这是「线上是哪个版本」的全部意义")
+}

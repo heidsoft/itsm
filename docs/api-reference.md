@@ -1767,11 +1767,17 @@ Authorization: Bearer <accessToken>
 |---|---|---|
 | `status` | 由 `is_published` 派生 | `draft` / `published` —— 只回答「是否对外可见」 |
 | `reviewStatus` | `review_status` | `draft` / `under_review` / `approved` / `rejected` —— 回答「是否过审」 |
+| `publishedVersion` | `published_version` | 线上正文对应的版本号；缺省/`null` = 从未发布或已撤回 —— 回答「线上是哪个版本」 |
 
 `POST /knowledge/articles/{id}/publish` 要求 `review_status == approved`（见「发布与评审」），
 历史数据中存在「已发布但未过评审」的文章，因此**不能用 `status` 反推评审态**，
 也不能用评审态反推是否已发布。空值或未知值在响应里归一为 `draft`。
 `2026-10-23` 前响应里没有 `reviewStatus`，API 消费者只能靠发起一次 publish 试错。
+
+`publishedVersion` 是**系统事实，只读**：它指向「线上正文」那一份版本快照，用于回答
+「这条知识当时引的是哪一版」（RAG 引用、工单引用后的审计问题）。客户端提交的
+`publishedVersion` 一律忽略——否则任何一次 `PUT` 都能改写「线上是哪个版本」的答案。
+存量文章（迁移前发布）该字段为空，如实表示「无发布版本记录」，不做事后推断回填。
 
 ### 创建知识文章
 
@@ -1807,6 +1813,13 @@ Content-Type: application/json
 把文章改为 `published` 要求 `reviewStatus == approved`，否则返回 `409 / 4090`（与 `/publish` 一致），
 不会留下「绕过评审直接发布」的第二条入口。改为 `draft`（撤回）不设门槛。
 门禁读取服务端权威评审态，客户端自带的 `reviewStatus` 不能蒙混过关。
+
+**已发布文章的在线更新会移动 `publishedVersion`。** 补充步骤、修错别字这类改动不翻转
+`status`，看起来「没有发布动作」，但线上正文确实换了——此时系统在同一事务内为**新正文**
+落一份快照（变更摘要 `发布版本（在线更新）`）并把指针指过去。否则指针会停在发布时那份
+旧快照上，给出一个与线上内容不一致的答案。只改时效/权威性等非正文属性（`validFrom`、
+`validUntil`、`reviewIntervalDays`、`authorityLevel`）时不落快照，避免每次复核都制造一个
+空版本。撤回同样清空指针：撤下后线上已无内容，保留指针会指向一个不可见的版本号。
 
 ### 删除知识文章
 
