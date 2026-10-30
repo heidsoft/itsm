@@ -29,6 +29,8 @@ const (
 	FieldTenantID = "tenant_id"
 	// FieldIsPublished holds the string denoting the is_published field in the database.
 	FieldIsPublished = "is_published"
+	// FieldPublishedVersion holds the string denoting the published_version field in the database.
+	FieldPublishedVersion = "published_version"
 	// FieldReviewStatus holds the string denoting the review_status field in the database.
 	FieldReviewStatus = "review_status"
 	// FieldReviewerID holds the string denoting the reviewer_id field in the database.
@@ -109,6 +111,7 @@ var Columns = []string{
 	FieldAuthorID,
 	FieldTenantID,
 	FieldIsPublished,
+	FieldPublishedVersion,
 	FieldReviewStatus,
 	FieldReviewerID,
 	FieldReviewedAt,
@@ -241,6 +244,11 @@ func ByTenantID(opts ...sql.OrderTermOption) OrderOption {
 // ByIsPublished orders the results by the is_published field.
 func ByIsPublished(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldIsPublished, opts...).ToFunc()
+}
+
+// ByPublishedVersion orders the results by the published_version field.
+func ByPublishedVersion(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldPublishedVersion, opts...).ToFunc()
 }
 
 // ByReviewStatus orders the results by the review_status field.

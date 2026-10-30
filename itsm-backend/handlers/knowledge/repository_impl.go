@@ -2,6 +2,7 @@ package knowledge
 
 import (
 	"context"
+	"fmt"
 	"sort"
 	"strings"
 	"time"
@@ -70,6 +71,7 @@ func toDomain(e *ent.KnowledgeArticle) *Article {
 		ReviewIntervalDays: e.ReviewIntervalDays,
 		AuthorityLevel:     e.AuthorityLevel,
 		SourceProblemID:    e.SourceProblemID,
+		PublishedVersion:   e.PublishedVersion,
 	}
 }
 
@@ -147,9 +149,68 @@ func (r *EntRepository) List(ctx context.Context, tenantID int, page, size int, 
 	return results, total, nil
 }
 
+// Update 更新文章正文与属性。
+//
+// 事务边界外置（见 updateTx）：向量 outbox 路径要把「正文更新」与「索引
+// 任务入箱」放进同一事务，这里自开事务会导致两层独立事务、外层回滚时内层
+// 已提交的错位。
 func (r *EntRepository) Update(ctx context.Context, a *Article) (*Article, error) {
+	tx, err := r.client.Tx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+	updated, err := updateTx(ctx, tx.Client(), a)
+	if err != nil {
+		return nil, err
+	}
+	if err := tx.Commit(); err != nil {
+		return nil, err
+	}
+	return updated, nil
+}
+
+// updateTx 在给定客户端上执行更新，并在可见性翻转时同步维护「线上版本」指针。
+//
+// 指针必须在这里也维护：PUT 的 status=published 与 /publish 是同一可见性投影
+// （UpdateArticle 已对两者施加相同的评审门禁），若只维护其中一个入口，另一
+// 个入口就会让「线上是哪个版本」的答案与事实脱节。
+func updateTx(ctx context.Context, client *ent.Client, a *Article) (*Article, error) {
 	tagsStr := strings.Join(a.Tags, ",")
-	u := r.client.KnowledgeArticle.UpdateOneID(a.ID).
+
+	// 读权威当前可见性，判定是否翻转。不采纳入参 PublishedVersion：
+	// 指针是系统事实，任何 PUT 都不该能改写线上版本的指向。
+	current, err := client.KnowledgeArticle.Query().
+		Where(knowledgearticle.ID(a.ID), knowledgearticle.TenantID(a.TenantID), knowledgearticle.DeletedAtIsNil()).
+		Only(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// 翻转方向：false→true 落快照并指向它；true→false 清指针。
+	// 快照必须在正文被覆写**之前**按「即将上线的内容」落，否则快照存的是旧正文。
+	var publishVersion *int
+	clearPointer := false
+	switch {
+	case a.IsPublished && !current.IsPublished:
+		snapshot := &ent.KnowledgeArticle{
+			ID:       a.ID,
+			Title:    a.Title,
+			Content:  a.Content,
+			Category: a.Category,
+			Tags:     tagsStr,
+			AuthorID: a.AuthorID,
+		}
+		version, err := (&EntRepository{client: client}).createVersionSnapshotTx(ctx, client, snapshot, "发布版本")
+		if err != nil {
+			return nil, fmt.Errorf("create publish snapshot: %w", err)
+		}
+		publishVersion = &version
+	case !a.IsPublished && current.IsPublished:
+		clearPointer = true
+	}
+
+	u := client.KnowledgeArticle.UpdateOneID(a.ID).
 		Where(knowledgearticle.TenantID(a.TenantID), knowledgearticle.DeletedAtIsNil()).
 		SetTitle(a.Title).
 		SetContent(a.Content).
@@ -177,6 +238,13 @@ func (r *EntRepository) Update(ctx context.Context, a *Article) (*Article, error
 		u = u.SetLastReviewedAt(*a.LastReviewedAt)
 	} else {
 		u = u.ClearLastReviewedAt()
+	}
+	// 指针写入必须与 is_published 同一次 Save：分成两条语句会出现
+	// 「线上已换版本但指针还指着上一个」的中间态。
+	if publishVersion != nil {
+		u = u.SetPublishedVersion(*publishVersion)
+	} else if clearPointer {
+		u = u.ClearPublishedVersion()
 	}
 
 	e, err := u.Save(ctx)
@@ -260,9 +328,25 @@ func (r *EntRepository) TransitionReview(
 		// 通过评审 = 对外可见；驳回 = 撤回可见性。
 		// 必须同时改 is_published，否则会出现 review_status=approved
 		// 但 is_published=false 的矛盾状态——审核通过却搜不到。
-		if toStatus == ReviewStatusApproved {
+		//
+		// 可见性翻转时同步维护「线上版本」指针：评审通过是发布的主路径
+		// （/publish 与 PUT 是另外两条），漏了这条就等于主路径上的线上内容
+		// 没有版本身份。指针与 is_published 同一次 Save，不产生中间态。
+		switch {
+		case toStatus == ReviewStatusApproved && !current.IsPublished:
+			version, err := (&EntRepository{client: tx.Client()}).
+				createVersionSnapshotTx(ctx, tx.Client(), current, "发布版本")
+			if err != nil {
+				_ = tx.Rollback()
+				return nil, fmt.Errorf("create publish snapshot: %w", err)
+			}
+			upd = upd.SetIsPublished(true).SetPublishedVersion(version)
+		case (toStatus == ReviewStatusRejected || toStatus == ReviewStatusDraft) && current.IsPublished:
+			// 撤下后线上已无内容，指针必须一起清。
+			upd = upd.SetIsPublished(false).ClearPublishedVersion()
+		case toStatus == ReviewStatusApproved:
 			upd = upd.SetIsPublished(true)
-		} else if toStatus == ReviewStatusRejected || toStatus == ReviewStatusDraft {
+		default:
 			upd = upd.SetIsPublished(false)
 		}
 
@@ -504,6 +588,9 @@ func (r *EntRepository) RestoreVersion(ctx context.Context, articleID, version, 
 		SetTags(versionEntity.Tags).
 		SetIsPublished(false).
 		SetReviewStatus(knowledgearticle.ReviewStatus(ReviewStatusDraft)).
+		// 撤回后线上已无内容：指针必须一起清，否则「线上是哪个版本」
+		// 会指向一个已经不可见的版本号。
+		ClearPublishedVersion().
 		Save(ctx)
 	if err != nil {
 		return nil, err
@@ -511,9 +598,10 @@ func (r *EntRepository) RestoreVersion(ctx context.Context, articleID, version, 
 	return toDomain(updated), nil
 }
 
-// createVersionSnapshot 为文章当前正文创建一个新版本快照。
-func (r *EntRepository) createVersionSnapshot(ctx context.Context, article *ent.KnowledgeArticle, changeSummary string) error {
-	latest, _ := r.client.KnowledgeArticleVersion.Query().
+// createVersionSnapshotTx 在指定客户端上为文章当前正文创建版本快照，返回新版本号。
+// tx 语义由调用方决定（生产路径传事务客户端，保证快照与指针同生共死）。
+func (r *EntRepository) createVersionSnapshotTx(ctx context.Context, client *ent.Client, article *ent.KnowledgeArticle, changeSummary string) (int, error) {
+	latest, _ := client.KnowledgeArticleVersion.Query().
 		Where(knowledgearticleversion.ArticleID(article.ID)).
 		Order(ent.Desc(knowledgearticleversion.FieldVersion)).
 		First(ctx)
@@ -521,7 +609,7 @@ func (r *EntRepository) createVersionSnapshot(ctx context.Context, article *ent.
 	if latest != nil {
 		nextVersion = latest.Version + 1
 	}
-	_, err := r.client.KnowledgeArticleVersion.Create().
+	_, err := client.KnowledgeArticleVersion.Create().
 		SetArticleID(article.ID).
 		SetVersion(nextVersion).
 		SetTitle(article.Title).
@@ -531,7 +619,100 @@ func (r *EntRepository) createVersionSnapshot(ctx context.Context, article *ent.
 		SetAuthorID(article.AuthorID).
 		SetChangeSummary(changeSummary).
 		Save(ctx)
+	return nextVersion, err
+}
+
+// createVersionSnapshot 为文章当前正文创建一个新版本快照。
+func (r *EntRepository) createVersionSnapshot(ctx context.Context, article *ent.KnowledgeArticle, changeSummary string) error {
+	_, err := r.createVersionSnapshotTx(ctx, r.client, article, changeSummary)
 	return err
+}
+
+// publishWithPointerTx 在给定客户端上执行「发布」三步：
+//
+//  1. 为即将上线的正文落版本快照（发布时刻的内容从此在版本表有对应行）；
+//  2. published_version 指向该快照；
+//  3. is_published 翻 true。
+//
+// 此前发布只翻布尔位，版本表存的又是「更新前快照」——线上正文的版本身份
+// 无处可查，「线上是哪个版本」这个问题没有唯一事实源。三步必须同一事务：
+// 指针指向不存在的快照、或快照落了而指针没更新，都会让答案与事实脱节。
+//
+// client 由调用方给出而非内部自开事务：ent 的 tx.Client().Tx() 会另开一个
+// 独立事务（不是 savepoint），外层回滚时内层已提交。service 的向量 outbox
+// 路径要把「指针」与「索引任务」放进同一个事务，所以事务边界必须外置。
+func publishWithPointerTx(ctx context.Context, client *ent.Client, id, tenantID int) (*Article, error) {
+	article, err := client.KnowledgeArticle.Query().Where(
+		knowledgearticle.ID(id),
+		knowledgearticle.TenantID(tenantID),
+		knowledgearticle.DeletedAtIsNil(),
+	).Only(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	version, err := (&EntRepository{client: client}).createVersionSnapshotTx(ctx, client, article, "发布版本")
+	if err != nil {
+		return nil, fmt.Errorf("create publish snapshot: %w", err)
+	}
+
+	updated, err := client.KnowledgeArticle.UpdateOneID(id).
+		SetIsPublished(true).
+		SetPublishedVersion(version).
+		Save(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return toDomain(updated), nil
+}
+
+// unpublishWithPointerTx 撤回发布：清指针 + 翻 is_published。
+// 指针必须清：撤回后线上已无内容，保留指针会让「线上是哪个版本」
+// 得到一个已不可见的版本号。
+func unpublishWithPointerTx(ctx context.Context, client *ent.Client, id, tenantID int) (*Article, error) {
+	updated, err := client.KnowledgeArticle.UpdateOneID(id).
+		Where(knowledgearticle.TenantID(tenantID), knowledgearticle.DeletedAtIsNil()).
+		SetIsPublished(false).
+		ClearPublishedVersion().
+		Save(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return toDomain(updated), nil
+}
+
+// PublishWithPointer 发布文章并建立「线上版本」指针。
+func (r *EntRepository) PublishWithPointer(ctx context.Context, id, tenantID int) (*Article, error) {
+	tx, err := r.client.Tx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+	updated, err := publishWithPointerTx(ctx, tx.Client(), id, tenantID)
+	if err != nil {
+		return nil, err
+	}
+	if err := tx.Commit(); err != nil {
+		return nil, err
+	}
+	return updated, nil
+}
+
+// UnpublishWithPointer 撤回发布并清除「线上版本」指针。
+func (r *EntRepository) UnpublishWithPointer(ctx context.Context, id, tenantID int) (*Article, error) {
+	tx, err := r.client.Tx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+	updated, err := unpublishWithPointerTx(ctx, tx.Client(), id, tenantID)
+	if err != nil {
+		return nil, err
+	}
+	if err := tx.Commit(); err != nil {
+		return nil, err
+	}
+	return updated, nil
 }
 
 func (r *EntRepository) Delete(ctx context.Context, id int, tenantID int) error {

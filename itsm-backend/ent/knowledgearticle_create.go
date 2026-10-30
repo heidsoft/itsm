@@ -98,6 +98,20 @@ func (_c *KnowledgeArticleCreate) SetNillableIsPublished(v *bool) *KnowledgeArti
 	return _c
 }
 
+// SetPublishedVersion sets the "published_version" field.
+func (_c *KnowledgeArticleCreate) SetPublishedVersion(v int) *KnowledgeArticleCreate {
+	_c.mutation.SetPublishedVersion(v)
+	return _c
+}
+
+// SetNillablePublishedVersion sets the "published_version" field if the given value is not nil.
+func (_c *KnowledgeArticleCreate) SetNillablePublishedVersion(v *int) *KnowledgeArticleCreate {
+	if v != nil {
+		_c.SetPublishedVersion(*v)
+	}
+	return _c
+}
+
 // SetReviewStatus sets the "review_status" field.
 func (_c *KnowledgeArticleCreate) SetReviewStatus(v knowledgearticle.ReviewStatus) *KnowledgeArticleCreate {
 	_c.mutation.SetReviewStatus(v)
@@ -545,6 +559,10 @@ func (_c *KnowledgeArticleCreate) createSpec() (*KnowledgeArticle, *sqlgraph.Cre
 	if value, ok := _c.mutation.IsPublished(); ok {
 		_spec.SetField(knowledgearticle.FieldIsPublished, field.TypeBool, value)
 		_node.IsPublished = value
+	}
+	if value, ok := _c.mutation.PublishedVersion(); ok {
+		_spec.SetField(knowledgearticle.FieldPublishedVersion, field.TypeInt, value)
+		_node.PublishedVersion = &value
 	}
 	if value, ok := _c.mutation.ReviewStatus(); ok {
 		_spec.SetField(knowledgearticle.FieldReviewStatus, field.TypeEnum, value)

@@ -162,6 +162,33 @@ func (_u *KnowledgeArticleUpdate) SetNillableIsPublished(v *bool) *KnowledgeArti
 	return _u
 }
 
+// SetPublishedVersion sets the "published_version" field.
+func (_u *KnowledgeArticleUpdate) SetPublishedVersion(v int) *KnowledgeArticleUpdate {
+	_u.mutation.ResetPublishedVersion()
+	_u.mutation.SetPublishedVersion(v)
+	return _u
+}
+
+// SetNillablePublishedVersion sets the "published_version" field if the given value is not nil.
+func (_u *KnowledgeArticleUpdate) SetNillablePublishedVersion(v *int) *KnowledgeArticleUpdate {
+	if v != nil {
+		_u.SetPublishedVersion(*v)
+	}
+	return _u
+}
+
+// AddPublishedVersion adds value to the "published_version" field.
+func (_u *KnowledgeArticleUpdate) AddPublishedVersion(v int) *KnowledgeArticleUpdate {
+	_u.mutation.AddPublishedVersion(v)
+	return _u
+}
+
+// ClearPublishedVersion clears the value of the "published_version" field.
+func (_u *KnowledgeArticleUpdate) ClearPublishedVersion() *KnowledgeArticleUpdate {
+	_u.mutation.ClearPublishedVersion()
+	return _u
+}
+
 // SetReviewStatus sets the "review_status" field.
 func (_u *KnowledgeArticleUpdate) SetReviewStatus(v knowledgearticle.ReviewStatus) *KnowledgeArticleUpdate {
 	_u.mutation.SetReviewStatus(v)
@@ -712,6 +739,15 @@ func (_u *KnowledgeArticleUpdate) sqlSave(ctx context.Context) (_node int, err e
 	if value, ok := _u.mutation.IsPublished(); ok {
 		_spec.SetField(knowledgearticle.FieldIsPublished, field.TypeBool, value)
 	}
+	if value, ok := _u.mutation.PublishedVersion(); ok {
+		_spec.SetField(knowledgearticle.FieldPublishedVersion, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedPublishedVersion(); ok {
+		_spec.AddField(knowledgearticle.FieldPublishedVersion, field.TypeInt, value)
+	}
+	if _u.mutation.PublishedVersionCleared() {
+		_spec.ClearField(knowledgearticle.FieldPublishedVersion, field.TypeInt)
+	}
 	if value, ok := _u.mutation.ReviewStatus(); ok {
 		_spec.SetField(knowledgearticle.FieldReviewStatus, field.TypeEnum, value)
 	}
@@ -1126,6 +1162,33 @@ func (_u *KnowledgeArticleUpdateOne) SetNillableIsPublished(v *bool) *KnowledgeA
 	if v != nil {
 		_u.SetIsPublished(*v)
 	}
+	return _u
+}
+
+// SetPublishedVersion sets the "published_version" field.
+func (_u *KnowledgeArticleUpdateOne) SetPublishedVersion(v int) *KnowledgeArticleUpdateOne {
+	_u.mutation.ResetPublishedVersion()
+	_u.mutation.SetPublishedVersion(v)
+	return _u
+}
+
+// SetNillablePublishedVersion sets the "published_version" field if the given value is not nil.
+func (_u *KnowledgeArticleUpdateOne) SetNillablePublishedVersion(v *int) *KnowledgeArticleUpdateOne {
+	if v != nil {
+		_u.SetPublishedVersion(*v)
+	}
+	return _u
+}
+
+// AddPublishedVersion adds value to the "published_version" field.
+func (_u *KnowledgeArticleUpdateOne) AddPublishedVersion(v int) *KnowledgeArticleUpdateOne {
+	_u.mutation.AddPublishedVersion(v)
+	return _u
+}
+
+// ClearPublishedVersion clears the value of the "published_version" field.
+func (_u *KnowledgeArticleUpdateOne) ClearPublishedVersion() *KnowledgeArticleUpdateOne {
+	_u.mutation.ClearPublishedVersion()
 	return _u
 }
 
@@ -1708,6 +1771,15 @@ func (_u *KnowledgeArticleUpdateOne) sqlSave(ctx context.Context) (_node *Knowle
 	}
 	if value, ok := _u.mutation.IsPublished(); ok {
 		_spec.SetField(knowledgearticle.FieldIsPublished, field.TypeBool, value)
+	}
+	if value, ok := _u.mutation.PublishedVersion(); ok {
+		_spec.SetField(knowledgearticle.FieldPublishedVersion, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedPublishedVersion(); ok {
+		_spec.AddField(knowledgearticle.FieldPublishedVersion, field.TypeInt, value)
+	}
+	if _u.mutation.PublishedVersionCleared() {
+		_spec.ClearField(knowledgearticle.FieldPublishedVersion, field.TypeInt)
 	}
 	if value, ok := _u.mutation.ReviewStatus(); ok {
 		_spec.SetField(knowledgearticle.FieldReviewStatus, field.TypeEnum, value)

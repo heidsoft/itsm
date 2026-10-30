@@ -76718,6 +76718,8 @@ type KnowledgeArticleMutation struct {
 	tenant_id               *int
 	addtenant_id            *int
 	is_published            *bool
+	published_version       *int
+	addpublished_version    *int
 	review_status           *knowledgearticle.ReviewStatus
 	reviewer_id             *int
 	addreviewer_id          *int
@@ -77184,6 +77186,76 @@ func (m *KnowledgeArticleMutation) OldIsPublished(ctx context.Context) (v bool, 
 // ResetIsPublished resets all changes to the "is_published" field.
 func (m *KnowledgeArticleMutation) ResetIsPublished() {
 	m.is_published = nil
+}
+
+// SetPublishedVersion sets the "published_version" field.
+func (m *KnowledgeArticleMutation) SetPublishedVersion(i int) {
+	m.published_version = &i
+	m.addpublished_version = nil
+}
+
+// PublishedVersion returns the value of the "published_version" field in the mutation.
+func (m *KnowledgeArticleMutation) PublishedVersion() (r int, exists bool) {
+	v := m.published_version
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPublishedVersion returns the old "published_version" field's value of the KnowledgeArticle entity.
+// If the KnowledgeArticle object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *KnowledgeArticleMutation) OldPublishedVersion(ctx context.Context) (v *int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPublishedVersion is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPublishedVersion requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPublishedVersion: %w", err)
+	}
+	return oldValue.PublishedVersion, nil
+}
+
+// AddPublishedVersion adds i to the "published_version" field.
+func (m *KnowledgeArticleMutation) AddPublishedVersion(i int) {
+	if m.addpublished_version != nil {
+		*m.addpublished_version += i
+	} else {
+		m.addpublished_version = &i
+	}
+}
+
+// AddedPublishedVersion returns the value that was added to the "published_version" field in this mutation.
+func (m *KnowledgeArticleMutation) AddedPublishedVersion() (r int, exists bool) {
+	v := m.addpublished_version
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearPublishedVersion clears the value of the "published_version" field.
+func (m *KnowledgeArticleMutation) ClearPublishedVersion() {
+	m.published_version = nil
+	m.addpublished_version = nil
+	m.clearedFields[knowledgearticle.FieldPublishedVersion] = struct{}{}
+}
+
+// PublishedVersionCleared returns if the "published_version" field was cleared in this mutation.
+func (m *KnowledgeArticleMutation) PublishedVersionCleared() bool {
+	_, ok := m.clearedFields[knowledgearticle.FieldPublishedVersion]
+	return ok
+}
+
+// ResetPublishedVersion resets all changes to the "published_version" field.
+func (m *KnowledgeArticleMutation) ResetPublishedVersion() {
+	m.published_version = nil
+	m.addpublished_version = nil
+	delete(m.clearedFields, knowledgearticle.FieldPublishedVersion)
 }
 
 // SetReviewStatus sets the "review_status" field.
@@ -78202,7 +78274,7 @@ func (m *KnowledgeArticleMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *KnowledgeArticleMutation) Fields() []string {
-	fields := make([]string, 0, 22)
+	fields := make([]string, 0, 23)
 	if m.title != nil {
 		fields = append(fields, knowledgearticle.FieldTitle)
 	}
@@ -78223,6 +78295,9 @@ func (m *KnowledgeArticleMutation) Fields() []string {
 	}
 	if m.is_published != nil {
 		fields = append(fields, knowledgearticle.FieldIsPublished)
+	}
+	if m.published_version != nil {
+		fields = append(fields, knowledgearticle.FieldPublishedVersion)
 	}
 	if m.review_status != nil {
 		fields = append(fields, knowledgearticle.FieldReviewStatus)
@@ -78291,6 +78366,8 @@ func (m *KnowledgeArticleMutation) Field(name string) (ent.Value, bool) {
 		return m.TenantID()
 	case knowledgearticle.FieldIsPublished:
 		return m.IsPublished()
+	case knowledgearticle.FieldPublishedVersion:
+		return m.PublishedVersion()
 	case knowledgearticle.FieldReviewStatus:
 		return m.ReviewStatus()
 	case knowledgearticle.FieldReviewerID:
@@ -78344,6 +78421,8 @@ func (m *KnowledgeArticleMutation) OldField(ctx context.Context, name string) (e
 		return m.OldTenantID(ctx)
 	case knowledgearticle.FieldIsPublished:
 		return m.OldIsPublished(ctx)
+	case knowledgearticle.FieldPublishedVersion:
+		return m.OldPublishedVersion(ctx)
 	case knowledgearticle.FieldReviewStatus:
 		return m.OldReviewStatus(ctx)
 	case knowledgearticle.FieldReviewerID:
@@ -78431,6 +78510,13 @@ func (m *KnowledgeArticleMutation) SetField(name string, value ent.Value) error 
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetIsPublished(v)
+		return nil
+	case knowledgearticle.FieldPublishedVersion:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPublishedVersion(v)
 		return nil
 	case knowledgearticle.FieldReviewStatus:
 		v, ok := value.(knowledgearticle.ReviewStatus)
@@ -78551,6 +78637,9 @@ func (m *KnowledgeArticleMutation) AddedFields() []string {
 	if m.addtenant_id != nil {
 		fields = append(fields, knowledgearticle.FieldTenantID)
 	}
+	if m.addpublished_version != nil {
+		fields = append(fields, knowledgearticle.FieldPublishedVersion)
+	}
 	if m.addreviewer_id != nil {
 		fields = append(fields, knowledgearticle.FieldReviewerID)
 	}
@@ -78581,6 +78670,8 @@ func (m *KnowledgeArticleMutation) AddedField(name string) (ent.Value, bool) {
 		return m.AddedAuthorID()
 	case knowledgearticle.FieldTenantID:
 		return m.AddedTenantID()
+	case knowledgearticle.FieldPublishedVersion:
+		return m.AddedPublishedVersion()
 	case knowledgearticle.FieldReviewerID:
 		return m.AddedReviewerID()
 	case knowledgearticle.FieldViewCount:
@@ -78615,6 +78706,13 @@ func (m *KnowledgeArticleMutation) AddField(name string, value ent.Value) error 
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.AddTenantID(v)
+		return nil
+	case knowledgearticle.FieldPublishedVersion:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddPublishedVersion(v)
 		return nil
 	case knowledgearticle.FieldReviewerID:
 		v, ok := value.(int)
@@ -78675,6 +78773,9 @@ func (m *KnowledgeArticleMutation) ClearedFields() []string {
 	if m.FieldCleared(knowledgearticle.FieldTags) {
 		fields = append(fields, knowledgearticle.FieldTags)
 	}
+	if m.FieldCleared(knowledgearticle.FieldPublishedVersion) {
+		fields = append(fields, knowledgearticle.FieldPublishedVersion)
+	}
 	if m.FieldCleared(knowledgearticle.FieldReviewerID) {
 		fields = append(fields, knowledgearticle.FieldReviewerID)
 	}
@@ -78721,6 +78822,9 @@ func (m *KnowledgeArticleMutation) ClearField(name string) error {
 		return nil
 	case knowledgearticle.FieldTags:
 		m.ClearTags()
+		return nil
+	case knowledgearticle.FieldPublishedVersion:
+		m.ClearPublishedVersion()
 		return nil
 	case knowledgearticle.FieldReviewerID:
 		m.ClearReviewerID()
@@ -78774,6 +78878,9 @@ func (m *KnowledgeArticleMutation) ResetField(name string) error {
 		return nil
 	case knowledgearticle.FieldIsPublished:
 		m.ResetIsPublished()
+		return nil
+	case knowledgearticle.FieldPublishedVersion:
+		m.ResetPublishedVersion()
 		return nil
 	case knowledgearticle.FieldReviewStatus:
 		m.ResetReviewStatus()

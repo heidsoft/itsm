@@ -50,6 +50,11 @@ type Article struct {
 	// 来源追溯：文章由哪个问题沉淀而来。nil = 手工创建。
 	// 裸 ID 引用而非外键：知识是独立资产，问题删除不级联删知识。
 	SourceProblemID *int `json:"sourceProblemId,omitempty"`
+
+	// PublishedVersion 指向发布时刻落的版本快照：回答「线上是哪个版本」。
+	// nil = 从未发布或已撤回。读取路径填充；发布/撤回由仓储层维护，
+	// 客户端传入的值一律忽略（否则任何 PUT 都能改写线上版本的指向）。
+	PublishedVersion *int `json:"publishedVersion,omitempty"`
 }
 
 // Category represents a knowledge category

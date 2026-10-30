@@ -90,6 +90,11 @@ func IsPublished(v bool) predicate.KnowledgeArticle {
 	return predicate.KnowledgeArticle(sql.FieldEQ(FieldIsPublished, v))
 }
 
+// PublishedVersion applies equality check predicate on the "published_version" field. It's identical to PublishedVersionEQ.
+func PublishedVersion(v int) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldEQ(FieldPublishedVersion, v))
+}
+
 // ReviewerID applies equality check predicate on the "reviewer_id" field. It's identical to ReviewerIDEQ.
 func ReviewerID(v int) predicate.KnowledgeArticle {
 	return predicate.KnowledgeArticle(sql.FieldEQ(FieldReviewerID, v))
@@ -538,6 +543,56 @@ func IsPublishedEQ(v bool) predicate.KnowledgeArticle {
 // IsPublishedNEQ applies the NEQ predicate on the "is_published" field.
 func IsPublishedNEQ(v bool) predicate.KnowledgeArticle {
 	return predicate.KnowledgeArticle(sql.FieldNEQ(FieldIsPublished, v))
+}
+
+// PublishedVersionEQ applies the EQ predicate on the "published_version" field.
+func PublishedVersionEQ(v int) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldEQ(FieldPublishedVersion, v))
+}
+
+// PublishedVersionNEQ applies the NEQ predicate on the "published_version" field.
+func PublishedVersionNEQ(v int) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldNEQ(FieldPublishedVersion, v))
+}
+
+// PublishedVersionIn applies the In predicate on the "published_version" field.
+func PublishedVersionIn(vs ...int) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldIn(FieldPublishedVersion, vs...))
+}
+
+// PublishedVersionNotIn applies the NotIn predicate on the "published_version" field.
+func PublishedVersionNotIn(vs ...int) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldNotIn(FieldPublishedVersion, vs...))
+}
+
+// PublishedVersionGT applies the GT predicate on the "published_version" field.
+func PublishedVersionGT(v int) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldGT(FieldPublishedVersion, v))
+}
+
+// PublishedVersionGTE applies the GTE predicate on the "published_version" field.
+func PublishedVersionGTE(v int) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldGTE(FieldPublishedVersion, v))
+}
+
+// PublishedVersionLT applies the LT predicate on the "published_version" field.
+func PublishedVersionLT(v int) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldLT(FieldPublishedVersion, v))
+}
+
+// PublishedVersionLTE applies the LTE predicate on the "published_version" field.
+func PublishedVersionLTE(v int) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldLTE(FieldPublishedVersion, v))
+}
+
+// PublishedVersionIsNil applies the IsNil predicate on the "published_version" field.
+func PublishedVersionIsNil() predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldIsNull(FieldPublishedVersion))
+}
+
+// PublishedVersionNotNil applies the NotNil predicate on the "published_version" field.
+func PublishedVersionNotNil() predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldNotNull(FieldPublishedVersion))
 }
 
 // ReviewStatusEQ applies the EQ predicate on the "review_status" field.

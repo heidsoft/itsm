@@ -333,8 +333,16 @@ func (s *Service) SetArticlePublished(ctx context.Context, id, tenantID int, pub
 		return article, nil
 	}
 
-	article.IsPublished = published
-	return s.UpdateArticle(ctx, article)
+	// 可见性翻转走专用的指针路径：发布要在同事务内落「线上版本」快照并
+	// 指向它，撤回要清指针。此前复用 UpdateArticle 只翻布尔位，线上正文
+	// 的版本身份无处可查——knowledge 域的 pilot 项之一。
+	if s.vectorOutboxEnabled() {
+		return s.setPublishedWithVectorOutbox(ctx, id, tenantID, published)
+	}
+	if published {
+		return s.repo.PublishWithPointer(ctx, id, tenantID)
+	}
+	return s.repo.UnpublishWithPointer(ctx, id, tenantID)
 }
 
 func (s *Service) DeleteArticle(ctx context.Context, id int, tenantID int) error {

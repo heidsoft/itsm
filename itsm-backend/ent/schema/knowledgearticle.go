@@ -20,6 +20,13 @@ func (KnowledgeArticle) Fields() []ent.Field {
 		field.Int("author_id").Comment("作者ID").Positive(),
 		field.Int("tenant_id").Comment("租户ID").Positive(),
 		field.Bool("is_published").Comment("是否发布").Default(false),
+		// ---- 发布版本指针：线上内容的唯一事实源 ----
+		// 回答「线上是哪个版本」。此前发布只是把 is_published 翻成 true，
+		// 版本表里存的又是「更新前快照」——发布时刻的内容在版本表没有
+		// 对应行，「线上跑的是哪一版」无解（knowledge 域 pilotReason 第一项）。
+		// 语义：发布时先为「即将上线的正文」落一条快照，再把指针指过去；
+		// 撤回与恢复（恢复会强制回 draft）清空指针。nil = 从未发布或已撤回。
+		field.Int("published_version").Comment("线上版本号；空=从未发布或已撤回").Optional().Nillable(),
 		// ---- 评审状态机（最小闭环）----
 		// 流转：draft --submit--> under_review --approve--> published
 		//                ↑                    └--reject--> rejected --resubmit--> under_review

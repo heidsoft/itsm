@@ -10,6 +10,15 @@ type Repository interface {
 	Get(ctx context.Context, id int, tenantID int) (*Article, error)
 	List(ctx context.Context, tenantID int, page, size int, category, search, status string) ([]*Article, int, error)
 	Update(ctx context.Context, a *Article) (*Article, error)
+	// PublishWithPointer 发布文章并建立「线上版本」指针：同事务内为即将上线的
+	// 正文落版本快照、把 published_version 指向它、翻 is_published。
+	// 有了它，「线上是哪个版本」才有唯一事实源——此前发布只翻布尔位，
+	// 版本表存的又是「更新前快照」，发布时刻的内容在版本表里没有对应行。
+	PublishWithPointer(ctx context.Context, id, tenantID int) (*Article, error)
+	// UnpublishWithPointer 撤回发布并清指针：撤回后线上已无内容，
+	// 保留指针会让「线上是哪个版本」指向一个已不可见的版本号。
+	// 撤回不设评审门槛——把内容从可见面撤下永远是安全方向。
+	UnpublishWithPointer(ctx context.Context, id, tenantID int) (*Article, error)
 	Delete(ctx context.Context, id int, tenantID int) error
 	// MarkReviewed 记录一次内容复核：把 last_reviewed_at 置为当前时间。
 	// 这是 L1 时效管控的闭环动作——声明了复核周期的知识逾期后会被 RAG 过滤，

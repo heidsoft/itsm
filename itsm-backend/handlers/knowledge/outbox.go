@@ -65,12 +65,58 @@ func (s *Service) updateWithVectorOutbox(ctx context.Context, article *Article) 
 		return nil, err
 	}
 	defer tx.Rollback()
-	updated, err := (&EntRepository{client: tx.Client()}).Update(ctx, article)
+	// 用 updateTx 而非 EntRepository.Update：后者会自开一个独立事务，
+	// 外层回滚时它已提交，指针与索引任务就不再同生共死。
+	updated, err := updateTx(ctx, tx.Client(), article)
 	if err != nil {
 		return nil, err
 	}
 	// 默认入删除：未发布，以及「已发布但 embedding 不可用」都必须清掉旧索引，
 	// 只有能力就绪的发布才入同步。
+	action := vectorIndexDelete
+	if updated.IsPublished {
+		if s.vectorIndexBlocked() {
+			s.logger.Warnw("knowledge article published while embedder is not configured; invalidating vector index",
+				"article_id", updated.ID, "tenant_id", updated.TenantID)
+		} else {
+			action = vectorIndexSync
+		}
+	}
+	if err := enqueueVectorSyncTx(ctx, tx, updated, action); err != nil {
+		return nil, err
+	}
+	if err := tx.Commit(); err != nil {
+		return nil, err
+	}
+	return updated, nil
+}
+
+// setPublishedWithVectorOutbox 发布 / 撤回，并把「线上版本」指针与索引任务
+// 放进同一事务。
+//
+// 同事务的理由与 updateWithVectorOutbox 一致但更关键：一旦指针与索引分属
+// 两个事务，就可能出现「指针说线上是 v3，索引里还是 v2 的正文」——而撤回
+// 场景下反过来更危险：指针清了、索引删除没入库，RAG 仍会引用已撤下的内容。
+func (s *Service) setPublishedWithVectorOutbox(ctx context.Context, id, tenantID int, published bool) (*Article, error) {
+	if _, err := s.entRepository(); err != nil {
+		return nil, err
+	}
+	tx, err := s.client.Tx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+
+	var updated *Article
+	if published {
+		updated, err = publishWithPointerTx(ctx, tx.Client(), id, tenantID)
+	} else {
+		updated, err = unpublishWithPointerTx(ctx, tx.Client(), id, tenantID)
+	}
+	if err != nil {
+		return nil, err
+	}
+
 	action := vectorIndexDelete
 	if updated.IsPublished {
 		if s.vectorIndexBlocked() {

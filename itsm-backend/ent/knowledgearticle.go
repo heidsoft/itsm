@@ -31,6 +31,8 @@ type KnowledgeArticle struct {
 	TenantID int `json:"tenant_id,omitempty"`
 	// 是否发布
 	IsPublished bool `json:"is_published,omitempty"`
+	// 线上版本号；空=从未发布或已撤回
+	PublishedVersion *int `json:"published_version,omitempty"`
 	// 评审状态：draft 草稿 / under_review 评审中 / approved 已通过 / rejected 已驳回
 	ReviewStatus knowledgearticle.ReviewStatus `json:"review_status,omitempty"`
 	// 最近一次评审人ID；空=未评审
@@ -126,7 +128,7 @@ func (*KnowledgeArticle) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case knowledgearticle.FieldIsPublished:
 			values[i] = new(sql.NullBool)
-		case knowledgearticle.FieldID, knowledgearticle.FieldAuthorID, knowledgearticle.FieldTenantID, knowledgearticle.FieldReviewerID, knowledgearticle.FieldViewCount, knowledgearticle.FieldLikeCount, knowledgearticle.FieldReviewIntervalDays, knowledgearticle.FieldAuthorityLevel, knowledgearticle.FieldSourceProblemID:
+		case knowledgearticle.FieldID, knowledgearticle.FieldAuthorID, knowledgearticle.FieldTenantID, knowledgearticle.FieldPublishedVersion, knowledgearticle.FieldReviewerID, knowledgearticle.FieldViewCount, knowledgearticle.FieldLikeCount, knowledgearticle.FieldReviewIntervalDays, knowledgearticle.FieldAuthorityLevel, knowledgearticle.FieldSourceProblemID:
 			values[i] = new(sql.NullInt64)
 		case knowledgearticle.FieldTitle, knowledgearticle.FieldContent, knowledgearticle.FieldCategory, knowledgearticle.FieldTags, knowledgearticle.FieldReviewStatus, knowledgearticle.FieldReviewComment:
 			values[i] = new(sql.NullString)
@@ -196,6 +198,13 @@ func (_m *KnowledgeArticle) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field is_published", values[i])
 			} else if value.Valid {
 				_m.IsPublished = value.Bool
+			}
+		case knowledgearticle.FieldPublishedVersion:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field published_version", values[i])
+			} else if value.Valid {
+				_m.PublishedVersion = new(int)
+				*_m.PublishedVersion = int(value.Int64)
 			}
 		case knowledgearticle.FieldReviewStatus:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -377,6 +386,11 @@ func (_m *KnowledgeArticle) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("is_published=")
 	builder.WriteString(fmt.Sprintf("%v", _m.IsPublished))
+	builder.WriteString(", ")
+	if v := _m.PublishedVersion; v != nil {
+		builder.WriteString("published_version=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
 	builder.WriteString(", ")
 	builder.WriteString("review_status=")
 	builder.WriteString(fmt.Sprintf("%v", _m.ReviewStatus))

@@ -2315,6 +2315,7 @@ var (
 		{Name: "author_id", Type: field.TypeInt},
 		{Name: "tenant_id", Type: field.TypeInt},
 		{Name: "is_published", Type: field.TypeBool, Default: false},
+		{Name: "published_version", Type: field.TypeInt, Nullable: true},
 		{Name: "review_status", Type: field.TypeEnum, Enums: []string{"draft", "under_review", "approved", "rejected"}, Default: "draft"},
 		{Name: "reviewer_id", Type: field.TypeInt, Nullable: true},
 		{Name: "reviewed_at", Type: field.TypeTime, Nullable: true},
@@ -2340,7 +2341,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "knowledge_articles_known_errors_knowledge_articles",
-				Columns:    []*schema.Column{KnowledgeArticlesColumns[23]},
+				Columns:    []*schema.Column{KnowledgeArticlesColumns[24]},
 				RefColumns: []*schema.Column{KnownErrorsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
@@ -2349,7 +2350,7 @@ var (
 			{
 				Name:    "knowledgearticle_tenant_id_source_problem_id",
 				Unique:  false,
-				Columns: []*schema.Column{KnowledgeArticlesColumns[6], KnowledgeArticlesColumns[19]},
+				Columns: []*schema.Column{KnowledgeArticlesColumns[6], KnowledgeArticlesColumns[20]},
 			},
 		},
 	}
