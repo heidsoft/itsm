@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"sync"
 	"testing"
 	"time"
 
@@ -39,7 +40,12 @@ func (f *fakeHealthConnector) Init(_ context.Context, cfg connector.Config) erro
 
 func (f *fakeHealthConnector) Send(context.Context, *connector.Message) error { return nil }
 
-func (f *fakeHealthConnector) HealthCheck(context.Context) connector.HealthStatus {
+func (f *fakeHealthConnector) HealthCheck(ctx context.Context) connector.HealthStatus {
+	// 真实连接器会把拨号失败（含 ctx 取消）报成不健康；测试替身必须同样敏感，
+	// 否则无法证明探测链路没有把发起请求的取消传进共享快照。
+	if err := ctx.Err(); err != nil {
+		return connector.HealthStatus{OK: false, Message: err.Error(), CheckedAt: time.Now()}
+	}
 	if f.failTenants[f.tenantID] {
 		return connector.HealthStatus{OK: false, Message: "tenant endpoint down", CheckedAt: time.Now()}
 	}
@@ -133,6 +139,61 @@ func TestProberWithoutDatabaseReportsUnhealthy(t *testing.T) {
 	require.False(t, health.OK)
 	require.NotEmpty(t, health.Reason)
 	require.False(t, health.CheckedAt.IsZero())
+}
+
+// 快照是跨请求共享的缓存：发起刷新的请求被取消时，不能把「数据库不可达」
+// 写进快照，让所有租户在 TTL 内一起降级。
+func TestProberSnapshotIgnoresCallerCancellation(t *testing.T) {
+	prober := newConnectorProbe(t)
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	health := prober.HealthFor(ctx, "ticket", 1)
+	require.True(t, health.OK, "调用方取消不等于数据库不可达: %s", health.Reason)
+}
+
+// 连接器探测同样跑在共享快照上：健康检查不能随发起请求取消而中断，
+// 否则一次用户断开就会把该租户的连接器判为故障并缓存 30s。
+func TestProberConnectorProbeIgnoresCallerCancellation(t *testing.T) {
+	prober := newConnectorProbe(t)
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	health := prober.HealthFor(ctx, "connector.feishu", 1)
+	require.True(t, health.OK, "调用方取消不等于连接器故障: %s", health.Reason)
+
+	// 缓存里必须存真实结果：后续正常请求读到的仍是健康。
+	require.True(t, prober.HealthFor(context.Background(), "connector.feishu", 1).OK)
+}
+
+// 并发请求共享同一次探测：既验证 -race 下无数据竞争，也验证结果不被串扰。
+func TestProberConcurrentRequestsShareProbeSnapshot(t *testing.T) {
+	prober := newConnectorProbe(t)
+
+	const workers = 20
+	results := make(chan bool, workers)
+	var wg sync.WaitGroup
+	for i := 0; i < workers; i++ {
+		tenantID := 1 + i%2
+		wg.Add(1)
+		go func(tenantID int) {
+			defer wg.Done()
+			results <- prober.HealthFor(context.Background(), "connector.feishu", tenantID).OK
+		}(tenantID)
+	}
+	wg.Wait()
+	close(results)
+
+	var healthy, unhealthy int
+	for ok := range results {
+		if ok {
+			healthy++
+		} else {
+			unhealthy++
+		}
+	}
+	require.Equal(t, workers/2, healthy)
+	require.Equal(t, workers/2, unhealthy)
 }
 
 // 探测到不健康时，矩阵必须把 deploymentReady 拉回 false，并透出原因。

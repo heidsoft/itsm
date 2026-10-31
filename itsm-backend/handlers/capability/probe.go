@@ -49,8 +49,10 @@ type Prober struct {
 	ttl        time.Duration
 	now        func() time.Time
 
-	mu       sync.Mutex
-	snapshot *probeSnapshot
+	mu                sync.Mutex
+	snapshot          *probeSnapshot
+	refreshing        chan struct{}
+	connectorInflight map[int]chan struct{}
 }
 
 // NewProber 创建探测器。任何依赖为 nil 都允许：缺失的依赖不会伪造健康，
@@ -62,55 +64,105 @@ func NewProber(db *sql.DB, client *ent.Client, connectors *connector.Manager, lo
 	return &Prober{
 		db: db, client: client, connectors: connectors, logger: logger,
 		ttl: 30 * time.Second, now: time.Now,
+		connectorInflight: map[int]chan struct{}{},
 	}
 }
 
 // snapshotFor 返回 TTL 内的探测快照。
+//
+// 数据库 ping 在锁外执行：它最长 2s，持锁会让所有租户的 /capabilities 请求
+// 排在同一次探测后面。并发刷新由 refreshing 去重，等待者共享同一次结果。
 func (p *Prober) snapshotFor(ctx context.Context) *probeSnapshot {
-	p.mu.Lock()
-	defer p.mu.Unlock()
-	now := p.now()
-	if p.snapshot != nil && now.Sub(p.snapshot.at) < p.ttl {
-		return p.snapshot
-	}
+	for {
+		p.mu.Lock()
+		now := p.now()
+		if p.snapshot != nil && now.Sub(p.snapshot.at) < p.ttl {
+			snapshot := p.snapshot
+			p.mu.Unlock()
+			return snapshot
+		}
+		wait := p.refreshing
+		if wait != nil {
+			p.mu.Unlock()
+			<-wait
+			continue
+		}
+		done := make(chan struct{})
+		p.refreshing = done
+		p.mu.Unlock()
 
+		snapshot := p.probeDatabase(ctx)
+
+		p.mu.Lock()
+		p.snapshot = snapshot
+		p.refreshing = nil
+		close(done)
+		p.mu.Unlock()
+		return snapshot
+	}
+}
+
+func (p *Prober) probeDatabase(ctx context.Context) *probeSnapshot {
 	snapshot := &probeSnapshot{
-		at:                now,
+		at:                p.now(),
 		dbOK:              true,
 		connectorByTenant: map[int]map[string]connector.HealthStatus{},
 	}
 	if p.db == nil {
 		snapshot.dbOK = false
 		snapshot.dbReason = "数据库连接未装配"
-	} else {
-		probeCtx, cancel := context.WithTimeout(ctx, 2*time.Second)
-		defer cancel()
-		if err := p.db.PingContext(probeCtx); err != nil {
-			snapshot.dbOK = false
-			snapshot.dbReason = "数据库不可达"
-			p.logger.Warnw("capability health probe: database unreachable", "error", err)
-		}
+		return snapshot
 	}
-	p.snapshot = snapshot
+	// 快照是跨请求共享的缓存：发起刷新的请求取消时，不能把「数据库不可达」
+	// 写进去让所有租户降级 30s。超时由这里自己兜住。
+	probeCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 2*time.Second)
+	defer cancel()
+	if err := p.db.PingContext(probeCtx); err != nil {
+		snapshot.dbOK = false
+		snapshot.dbReason = "数据库不可达"
+		p.logger.Warnw("capability health probe: database unreachable", "error", err)
+	}
 	return snapshot
 }
 
 // connectorStatuses 返回指定租户的连接器健康快照。
-// 外部拨号在锁外不可并发去重，因此与旧实现一样在持有快照锁时完成单次探测。
+// 拨号在锁外执行，且按租户去重：一个租户的连接器超时不能阻塞其他租户。
 func (p *Prober) connectorStatuses(ctx context.Context, tenantID int) map[string]connector.HealthStatus {
 	if p.connectors == nil {
 		return nil
 	}
 	p.snapshotFor(ctx)
-	p.mu.Lock()
-	defer p.mu.Unlock()
-	snapshot := p.snapshot
-	if statuses, ok := snapshot.connectorByTenant[tenantID]; ok {
+
+	for {
+		p.mu.Lock()
+		snapshot := p.snapshot
+		if statuses, ok := snapshot.connectorByTenant[tenantID]; ok {
+			p.mu.Unlock()
+			return statuses
+		}
+		if wait := p.connectorInflight[tenantID]; wait != nil {
+			p.mu.Unlock()
+			<-wait
+			continue
+		}
+		done := make(chan struct{})
+		p.connectorInflight[tenantID] = done
+		p.mu.Unlock()
+
+		// 同样不能随发起请求取消，否则一次断开会把该租户的连接器
+		// 判为故障并缓存 30s；单次拨号超时由 Manager 按连接器控制。
+		statuses := p.connectors.HealthCheckTenant(context.WithoutCancel(ctx), tenantID)
+
+		p.mu.Lock()
+		// 拨号期间快照可能已因 TTL 过期被替换，写入当前快照。
+		if p.snapshot != nil {
+			p.snapshot.connectorByTenant[tenantID] = statuses
+		}
+		delete(p.connectorInflight, tenantID)
+		close(done)
+		p.mu.Unlock()
 		return statuses
 	}
-	statuses := p.connectors.HealthCheckTenant(ctx, tenantID)
-	snapshot.connectorByTenant[tenantID] = statuses
-	return statuses
 }
 
 // connectorHealth 在租户级健康快照中查找指定连接器名称。
