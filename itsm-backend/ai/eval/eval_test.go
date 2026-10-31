@@ -43,27 +43,6 @@ type TriageCase struct {
 	Tags          []string `json:"tags"`
 }
 
-// SummarizeCase golden case for summarize 评估
-type SummarizeCase struct {
-	ID             string   `json:"id"`
-	TicketID       string   `json:"ticket_id"`
-	Messages       []string `json:"messages"`
-	ExpectedTopics []string `json:"expected_topics"`
-	MaxLength      int      `json:"max_length"`
-	MinLength      int      `json:"min_length"`
-}
-
-// PredictionCase golden case for SLA breach prediction 评估
-type PredictionCase struct {
-	ID                      string                 `json:"id"`
-	TicketID                string                 `json:"ticket_id"`
-	Features                map[string]interface{} `json:"features"`
-	ExpectedBreachWithinSLA bool                   `json:"expected_breach_within_sla"`
-	BreachProbabilityMin    float64                `json:"breach_probability_min"`
-	BreachProbabilityMax    float64                `json:"breach_probability_max"`
-	HorizonMinutes          int                    `json:"horizon_minutes"`
-}
-
 // TriageResult is the eval-mode fixture result. In production, this is
 // returned by the LLM gateway with --eval-mode flag enabled.
 type TriageResult struct {
@@ -193,73 +172,6 @@ func TriageTop1Accuracy(t *testing.T, cases []TriageCase) float64 {
 	return float64(hits) / float64(len(cases))
 }
 
-// SummarizeROUGE averages character-level ROUGE-L recall of generated summaries against expected topics.
-func SummarizeROUGE(_ *testing.T, cases []SummarizeCase, summarize func(string) string) float64 {
-	if len(cases) == 0 {
-		return 0
-	}
-	total := 0.0
-	for _, tc := range cases {
-		candidate := summarize(strings.Join(tc.Messages, " "))
-		refTokens := tokenize(strings.Join(tc.ExpectedTopics, " "))
-		candTokens := tokenize(candidate)
-		if tc.MaxLength > 0 && len(candTokens) > tc.MaxLength {
-			candTokens = candTokens[:tc.MaxLength]
-		}
-		refRunes := []rune(strings.Join(refTokens, ""))
-		candRunes := []rune(strings.Join(candTokens, ""))
-		if len(refRunes) == 0 {
-			total += 1 // vacuous pass when no expected topics
-			continue
-		}
-		lcsLen := lcsLengthRunes(refRunes, candRunes)
-		if lcsLen == 0 {
-			continue
-		}
-		total += float64(lcsLen) / float64(len(refRunes)) // recall
-	}
-	return total / float64(len(cases))
-}
-
-// lcsLengthRunes is the rune-level LCS used for ROUGE-L. Kept separate from
-// lcsLength (string-token variant) so callers can pick the granularity.
-func lcsLengthRunes(a, b []rune) int {
-	if len(a) == 0 || len(b) == 0 {
-		return 0
-	}
-	dp := make([][]int, len(a)+1)
-	for i := range dp {
-		dp[i] = make([]int, len(b)+1)
-	}
-	for i := 1; i <= len(a); i++ {
-		for j := 1; j <= len(b); j++ {
-			if a[i-1] == b[j-1] {
-				dp[i][j] = dp[i-1][j-1] + 1
-			} else if dp[i-1][j] > dp[i][j-1] {
-				dp[i][j] = dp[i-1][j]
-			} else {
-				dp[i][j] = dp[i][j-1]
-			}
-		}
-	}
-	return dp[len(a)][len(b)]
-}
-
-// tokenize splits a string on whitespace and case-folds so token comparison
-// is case-insensitive. Empty tokens are dropped.
-func tokenize(s string) []string {
-	s = strings.ToLower(s)
-	parts := strings.Fields(s)
-	out := make([]string, 0, len(parts))
-	for _, p := range parts {
-		if p == "" {
-			continue
-		}
-		out = append(out, p)
-	}
-	return out
-}
-
 // RAGHitRate computes hit rate for top-K retrieval against expected docs.
 // Goal: ≥70% per Stage 2 PR-2.2.
 //
@@ -267,22 +179,22 @@ func tokenize(s string) []string {
 // stub 退化（返回空 / 与 expected 不重叠）时 hit-rate 自然下降，门禁真实生效。
 // stub 接 RAGCase 而非 (query,topK)：eval-mode 下 stub 需要根据 case
 // 上下文（如 fixture 期望文档）才能返回有意义的候选列表。
-func RAGHitRate(_ *testing.T, cases []RAGCase, stub func(RAGCase) []string) float64 {
+func RAGHitRate(_ *testing.T, cases []RAGCase, retriever func(RAGCase) []string) float64 {
 	if len(cases) == 0 {
 		return 0
 	}
 	hits := 0
 	for _, tc := range cases {
-		got := stub(tc)
-		if len(got) == 0 || len(tc.ExpectedDocIDs) == 0 {
+		got := retriever(tc)
+		if len(got) == 0 || len(tc.ExpectedRefs) == 0 {
 			continue
 		}
-		expected := make(map[string]struct{}, len(tc.ExpectedDocIDs))
-		for _, id := range tc.ExpectedDocIDs {
-			expected[id] = struct{}{}
+		expected := make(map[string]struct{}, len(tc.ExpectedRefs))
+		for _, ref := range tc.ExpectedRefs {
+			expected[NormalizeRef(ref)] = struct{}{}
 		}
 		for _, id := range got {
-			if _, ok := expected[id]; ok {
+			if _, ok := expected[NormalizeRef(id)]; ok {
 				hits++
 				break
 			}
@@ -297,7 +209,12 @@ func RAGHitRate(_ *testing.T, cases []RAGCase, stub func(RAGCase) []string) floa
 // score 取 case.BreachProbabilityMin（dataset 自带 0-1 概率区间）；
 // label 取 case.ExpectedBreachWithinSLA。当 dataset 设计为
 // 正样本 score > 负样本 score 时 AUC=1.0，混合时返回真实 U/(P*N)。
-func PredictionROCAUC(_ *testing.T, cases []PredictionCase) float64 {
+// PredictionROCAUC 用**真实预测器**产出的分数计算 AUC。
+//
+// 此前分数直接取数据集自带的 breach_probability_min——分数与标签构造上一致
+// （期望违约的给 0.7、不违约的给 0.2），AUC 恒 1.00，那个门禁不测任何生产
+// 代码。现在 predictor 参数注入真实的生产 SLABreachPredictor。
+func PredictionROCAUC(_ *testing.T, cases []PredictionCase, predictor *service.SLABreachPredictor) float64 {
 	if len(cases) == 0 {
 		return 0
 	}
@@ -305,9 +222,17 @@ func PredictionROCAUC(_ *testing.T, cases []PredictionCase) float64 {
 		score float64
 		label bool
 	}
-	pairs := make([]pair, len(cases))
-	for i, c := range cases {
-		pairs[i] = pair{c.BreachProbabilityMin, c.ExpectedBreachWithinSLA}
+	pairs := make([]pair, 0, len(cases))
+	for _, c := range cases {
+		risk, err := predictor.Predict(predictionFeatures(c))
+		if err != nil {
+			// 特征非法的样本跳过：分数缺失比编造分数诚实。
+			continue
+		}
+		pairs = append(pairs, pair{risk.Probability, c.ExpectedBreachWithinSLA})
+	}
+	if len(pairs) == 0 {
+		return 0
 	}
 	sort.Slice(pairs, func(i, j int) bool { return pairs[i].score < pairs[j].score })
 
@@ -342,6 +267,44 @@ func PredictionROCAUC(_ *testing.T, cases []PredictionCase) float64 {
 	return u / (float64(pos) * float64(neg))
 }
 
+// predictionFeatures 把 JSON 特征映射为预测器输入。
+//
+// 类型断言失败时返回零值特征，Predict 会对非法输入报错并跳过该样本——
+// 比在映射层猜默认值诚实。
+func predictionFeatures(c PredictionCase) service.SLABreachFeatures {
+	f := service.SLABreachFeatures{
+		Priority:       str(c.Features["priority"]),
+		HorizonMinutes: c.HorizonMinutes,
+		CreatedHour:    int(fl(c.Features["created_hour"])),
+		Weekday:        int(fl(c.Features["weekday"])),
+	}
+	if v, ok := c.Features["historical_avg_resolution_hours"]; ok {
+		f.HistoricalAvgResolutionHours = fl(v)
+	}
+	if v, ok := c.Features["similar_tickets_last_30d"]; ok {
+		f.SimilarTicketsLast30d = int(fl(v))
+	}
+	return f
+}
+
+func str(v interface{}) string {
+	if s, ok := v.(string); ok {
+		return s
+	}
+	return ""
+}
+
+func fl(v interface{}) float64 {
+	switch n := v.(type) {
+	case float64:
+		return n
+	case int:
+		return float64(n)
+	default:
+		return 0
+	}
+}
+
 // ===== go test 入口 =====
 
 func TestSummarizeROUGE_UsesGeneratedCandidates(t *testing.T) {
@@ -363,7 +326,7 @@ func TestSummarizeROUGE_UsesGeneratedCandidates(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var inputs []string
-			score := SummarizeROUGE(t, cases, func(input string) string {
+			score := SummarizeROUGE(cases, func(input string) string {
 				index := len(inputs)
 				require.Less(t, index, len(tt.outputs), "generator called too many times")
 				inputs = append(inputs, input)
@@ -384,7 +347,7 @@ func TestSummarizeROUGE_EmptyCases(t *testing.T) {
 		{name: "empty", cases: []SummarizeCase{}},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
-			score := SummarizeROUGE(t, tt.cases, func(string) string {
+			score := SummarizeROUGE(tt.cases, func(string) string {
 				t.Fatal("generator must not be called without cases")
 				return ""
 			})
@@ -409,34 +372,66 @@ func TestEval_Summarize_ROUGE(t *testing.T) {
 	//「把 messages 拼起来当候选」——候选就是输入本身，门禁在自我实现下
 	// 恒满分，把真实实现改坏也照样绿（见 gate_guard_test.go）。
 	gen := SummarizeCandidateGenerator(service.NewSummarizeService(nil, zap.NewNop()))
-	rouge := SummarizeROUGE(t, cases, gen)
-	t.Logf("summarize ROUGE-L (topic coverage, mode=%s): %.2f (cases=%d)", EvalMode(), rouge, len(cases))
+	rouge := SummarizeROUGE(cases, gen)
+	t.Logf("summarize ROUGE-L (topic coverage): %.2f (cases=%d)", rouge, len(cases))
 	require.GreaterOrEqual(t, rouge, 0.6, "summarize ROUGE-L 应 ≥0.6，实际 %.2f", rouge)
 }
 
 // TestEval_RAG_HitRate 锁定 RAG 评估的 hit-rate 下界
 func TestEval_RAG_HitRate(t *testing.T) {
 	cases := LoadRAGCases(t)
-	// 候选必须是**真实检索器的产出**，不能是期望答案。此前 stub 直接返回
-	// case.ExpectedDocIDs —— 候选即答案，hit-rate 恒为 1.00，门禁测不出任何
-	// 退化。降级模式用确定性但与期望不同的候选（生产验收接真实 RAGService）。
-	retriever := func(c RAGCase) []string { return DegradedRAGCandidates(c) }
-	hit := RAGHitRate(t, cases, retriever)
-	t.Logf("RAG hit-rate (mode=%s): %.2f (cases=%d)", EvalMode(), hit, len(cases))
-	// 候选真实性：若候选就是期望答案，这次评测无效（详见 gate_guard_test.go）。
+	corpus := LoadEvalCorpus(t)
+	// 候选来自**真实检索器**：语料建进内存库，用生产的 service.RAGService
+	// 关键词路径检索（真实 SQL + 真实租户/发布/软删/时效过滤）。
+	//
+	// 此前 stub 直接返回期望答案 —— 候选即答案，hit-rate 恒为 1.00，门禁测不出
+	// 任何退化；而「用虚构 doc ID（KB-001）当期望」则让任何真实检索器的
+	// 命中率必然为 0——两头都不成立。现在期望按**文章标题**引用（与库的 ID
+	// 解耦），同一份数据集既能在 CI 内存库跑，也能在接真实知识库的生产
+	// 验收里跑。
+	retriever := newCorpusRetriever(t, corpus)
+	search := func(c RAGCase) []string { return retriever.Retrieve(context.Background(), c) }
+	hit := RAGHitRate(t, cases, search)
+	t.Logf("RAG hit-rate (真实检索, corpus=%d articles): %.2f (cases=%d)",
+		len(corpus.Articles), hit, len(cases))
+	// 候选真实性：真实检索的命中的必须都在语料里存在。
+	//
+	// 这里不用「候选集合 ≠ 期望集合」判真实检索：top_k=1 且期望只有 1 篇时，
+	// 真实检索的产物必然等于期望集合——两者在数据上不可区分，用它判会误杀
+	// 正确的召回。稳定可靠的判据是「命中的标题都在语料里」。
 	for _, tc := range cases {
-		report := DetectGoldenDocIDs(retriever(tc), tc.ExpectedDocIDs)
-		require.Falsef(t, report.UsedGolden, "case %s 的候选就是期望答案：%s", tc.ID, report.Detail)
+		ok, detail := VerifyRetrievedAreRealCorpus(retriever.RetrievedTitles(context.Background(), tc), corpus)
+		require.Truef(t, ok, "case %s 的检索候选不真实：%s", tc.ID, detail)
 	}
-	require.GreaterOrEqual(t, hit, 0.0, "RAG hit-rate 不应为负")
+	// 真实检索的召回率必须达标——这是「知识库能不能被问出来」的真实答案。
+	require.GreaterOrEqual(t, hit, 0.8, "RAG hit-rate 应 ≥0.8，实际 %.2f", hit)
+
+	// 机制性判据：检索器必须**真的查过库**。
+	//
+	// 数据形状（候选集合 ≠ 期望集合）在期望全部指向语料里的文章时不可用——
+	// 真实检索恰好全召回与「抄期望答案」会得到完全相同的候选列表。查询计数
+	// 不依赖数据形状：真实检索每个 case 都要查一次库，stub 一次都不查。
+	require.GreaterOrEqual(t, retriever.QueryCount(), len(cases),
+		"检索器查询次数少于用例数——候选不是真实检索的产出（至少有 case 没查库）")
 }
 
 // TestEval_Prediction_ROCAUC 锁定 SLA breach 预测 ROC AUC 下界
 func TestEval_Prediction_ROCAUC(t *testing.T) {
 	cases := LoadPredictionCases(t)
-	auc := PredictionROCAUC(t, cases)
-	t.Logf("prediction ROC AUC: %.2f (cases=%d)", auc, len(cases))
+	// 分数来自**生产预测器**（service.SLABreachPredictor）：AUC 衡量的是
+	// 「预测器排序 vs 人工标注」的一致性。此前分数直接取数据集自带的
+	// breach_probability_min——分数与标签构造上一致，AUC 恒 1.00，那个门禁
+	// 不测任何生产代码。
+	predictor := service.NewSLABreachPredictor()
+	auc := PredictionROCAUC(t, cases, predictor)
+	t.Logf("prediction ROC AUC (真实预测器): %.2f (cases=%d)", auc, len(cases))
 	require.GreaterOrEqual(t, auc, 0.75, "prediction ROC AUC 应 ≥0.75，实际 %.2f", auc)
+	// 标注依据必须逐条留存：没有依据的标签无法审阅，也无法在预测器演进后
+	// 判断「标签是当时的判断还是拍脑袋」。
+	for _, tc := range cases {
+		require.NotEmptyf(t, tc.AnnotationBasis,
+			"case %s 缺少标注依据（annotation_basis）——标签必须可审阅", tc.ID)
+	}
 }
 
 // TestEval_RegressionSnapshots 锁定当前 eval 结果到 golden snapshot
@@ -453,15 +448,40 @@ func TestEval_RegressionSnapshots(t *testing.T) {
 	snaps = append(snaps, snapshot{"triage", len(triageCases), "top1", TriageTop1Accuracy(t, triageCases)})
 	sumCases := LoadSummarizeCases(t)
 	sumGen := SummarizeCandidateGenerator(service.NewSummarizeService(nil, zap.NewNop()))
-	snaps = append(snaps, snapshot{"summarize", len(sumCases), "rougeL", SummarizeROUGE(t, sumCases, sumGen)})
+	snaps = append(snaps, snapshot{"summarize", len(sumCases), "rougeL", SummarizeROUGE(sumCases, sumGen)})
 	ragCases := LoadRAGCases(t)
-	ragRetriever := func(c RAGCase) []string { return DegradedRAGCandidates(c) }
+	ragSvc := newCorpusRetriever(t, LoadEvalCorpus(t))
+	ragRetriever := func(c RAGCase) []string { return ragSvc.Retrieve(context.Background(), c) }
 	snaps = append(snaps, snapshot{"rag", len(ragCases), "hitRate", RAGHitRate(t, ragCases, ragRetriever)})
 	predCases := LoadPredictionCases(t)
-	snaps = append(snaps, snapshot{"prediction", len(predCases), "rocAuc", PredictionROCAUC(t, predCases)})
+	snaps = append(snaps, snapshot{"prediction", len(predCases), "rocAuc", PredictionROCAUC(t, predCases, service.NewSLABreachPredictor())})
 
 	// 输出表格，便于 CI summary
 	for _, s := range snaps {
 		t.Logf("  %-12s cases=%-3d %-8s = %.3f", s.Task, s.Cases, s.Metric, s.Value)
 	}
+}
+
+// LoadEvalCorpus 载入 RAG 评测语料（真实知识文章）。
+//
+// 语料是「库里有什么」，用例是「该检索到什么」——两者分离，避免「为了命中
+// 而写语料」的自我循环。
+func LoadEvalCorpus(t *testing.T) *RAGCorpus {
+	t.Helper()
+	corpus, err := LoadRAGCorpus(DefaultCorpusPath())
+	require.NoError(t, err, "评测语料必须存在")
+	return corpus
+}
+
+// newCorpusRetriever 用语料建内存库并装配真实检索器。
+//
+// 每个用例用独立的库名，避免共享缓存的内存库互相污染（用例之间会建不同的
+// 文章，串了会让召回率变得不可复现）。
+func newCorpusRetriever(t *testing.T, corpus *RAGCorpus) *RealRAGRetriever {
+	t.Helper()
+	dsn := "file:eval_corpus_" + NormalizeRef(t.Name()) + "?mode=memory&cache=shared&_fk=1"
+	retriever, err := NewRealRAGRetriever(dsn, corpus, zap.NewNop().Sugar())
+	require.NoError(t, err)
+	t.Cleanup(retriever.Close)
+	return retriever
 }

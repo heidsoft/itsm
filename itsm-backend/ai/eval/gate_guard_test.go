@@ -1,6 +1,7 @@
 package eval
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 	"strings"
@@ -43,14 +44,65 @@ func TestGateCandidatesAreNotGoldenAnswers(t *testing.T) {
 			"case %s 的摘要候选就是期望答案：%s（候选=%q）", tc.ID, report.Detail, candidate)
 	}
 
-	// RAG：降级候选不得等于期望文档集合。
+	// RAG：真实检索的候选必须是语料里真实存在的文章。
+	//
+	// 对真实检索器，「候选≠期望」不是可靠判据（top_k=1 时真实召回与抄答案
+	// 在数据上不可区分）；可靠判据是「命中的标题都在语料里」——真实检索不会
+	// 凭空造出语料外的标题。
 	ragCases := LoadRAGCases(t)
+	corpus := LoadEvalCorpus(t)
+	retriever := newCorpusRetriever(t, corpus)
 	for _, tc := range ragCases {
-		candidate := DegradedRAGCandidates(tc)
-		report := DetectGoldenDocIDs(candidate, tc.ExpectedDocIDs)
-		require.Falsef(t, report.UsedGolden,
-			"case %s 的检索候选就是期望答案：%s", tc.ID, report.Detail)
+		ok, detail := VerifyRetrievedAreRealCorpus(retriever.RetrievedTitles(context.Background(), tc), corpus)
+		require.Truef(t, ok, "case %s 的检索候选不真实：%s", tc.ID, detail)
 	}
+
+	// 而对**外部注入的 stub**，自我实现检测仍然有效：候选不得就是期望答案。
+	// 这正是上一轮抓出「stub 返回 ExpectedDocIDs」的那条守卫。
+	for _, tc := range ragCases {
+		report := DetectGoldenDocIDs(tc.ExpectedRefs, tc.ExpectedRefs)
+		require.Truef(t, report.UsedGolden,
+			"case %s：把期望答案当候选必须被自我实现检测抓到", tc.ID)
+	}
+}
+
+// TestExpectedRefsPointToRealCorpus 守「期望引用必须指向真实存在的语料」。
+//
+// 此前期望写的是虚构 ID（KB-001、KB-020……），库里根本没有这些文档——
+// 于是任何真实检索器的命中率必然为 0，而用期望答案当候选又让指标恒满分。
+// 期望指向不存在的语料是一种「看起来在测、实际测不到」的配置错误：门禁会
+// 一直绿，但绿得没有意义。现在期望按文章标题引用，必须在语料里真实存在。
+func TestExpectedRefsPointToRealCorpus(t *testing.T) {
+	corpus := LoadEvalCorpus(t)
+	titles := corpus.CorpusTitles()
+
+	ragCases := LoadRAGCases(t)
+	require.NotEmpty(t, ragCases, "RAG 用例集不应为空")
+	for _, tc := range ragCases {
+		require.NotEmptyf(t, tc.ExpectedRefs,
+			"case %s 没有期望引用：期望为空时 hit-rate 恒为 0，门禁测不到东西", tc.ID)
+		for _, ref := range tc.ExpectedRefs {
+			_, ok := titles[NormalizeRef(ref)]
+			require.Truef(t, ok,
+				"case %s 的期望引用 %q 不在语料里——期望指向不存在的文档，召回率必然为 0", tc.ID, ref)
+		}
+	}
+
+	// 语料里也必须有「不该被召回」的干扰文章：只有期望文章时，任何检索器
+	// 都能满分，hit-rate 同样没有区分力。
+	require.Greater(t, len(corpus.Articles), expectedRefCount(ragCases),
+		"语料只有期望文章，没有干扰文章——检索器随便返回什么都能命中")
+}
+
+// expectedRefCount 统计用例集引用的去重期望文章数。
+func expectedRefCount(cases []RAGCase) int {
+	seen := map[string]struct{}{}
+	for _, c := range cases {
+		for _, ref := range c.ExpectedRefs {
+			seen[NormalizeRef(ref)] = struct{}{}
+		}
+	}
+	return len(seen)
 }
 
 // TestDetectGoldenDetectsSelfImplementation 验证检测器本身有效：
@@ -83,21 +135,25 @@ func TestGateDetectsDegradation(t *testing.T) {
 
 	// 正常候选（生产降级路径）
 	gen := SummarizeCandidateGenerator(nil)
-	good := SummarizeROUGE(t, sumCases, gen)
+	good := SummarizeROUGE(sumCases, gen)
 
 	// 退化候选：返回空串
-	bad := SummarizeROUGE(t, sumCases, func(string) string { return "" })
+	bad := SummarizeROUGE(sumCases, func(string) string { return "" })
 	assert.Less(t, bad, good,
 		"候选退化为空时 ROUGE 必须下降——若不降，说明该门禁测不出退化")
 
 	// 退化候选：返回无关文本
-	irrelevant := SummarizeROUGE(t, sumCases, func(string) string { return "zzz" })
+	irrelevant := SummarizeROUGE(sumCases, func(string) string { return "zzz" })
 	assert.Less(t, irrelevant, good,
 		"候选退化为无关文本时 ROUGE 必须下降")
 
 	ragCases := LoadRAGCases(t)
 	require.NotEmpty(t, ragCases, "RAG 数据集不应为空")
-	goodHit := RAGHitRate(t, ragCases, func(c RAGCase) []string { return DegradedRAGCandidates(c) })
+	// 复用同一个检索器：同名 dsn 的共享内存库会撞租户 code 唯一约束。
+	ragRetriever := newCorpusRetriever(t, LoadEvalCorpus(t))
+	goodHit := RAGHitRate(t, ragCases, func(c RAGCase) []string {
+		return ragRetriever.Retrieve(context.Background(), c)
+	})
 	badHit := RAGHitRate(t, ragCases, func(c RAGCase) []string { return nil })
 	assert.Less(t, badHit, goodHit,
 		"候选退化为空时 hit-rate 必须下降——若不降，说明该门禁测不出退化")

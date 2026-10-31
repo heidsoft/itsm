@@ -2,7 +2,6 @@ package eval
 
 import (
 	"context"
-	"os"
 	"strings"
 
 	"itsm-backend/service"
@@ -36,10 +35,35 @@ import (
 //	CI（无外部依赖）：用生产链路的**降级路径**做候选（无 LLM 时摘要走截断、
 //	              检索走确定性基线），断言「候选不是期望答案」+「退化会转红」。
 //	              这测的是「降级路径不回归」，是真实的。
-//	生产验收：设 ITSM_AI_EVAL_USE_LLM=1，用真实 LLM 跑同一套数据集，
-//	              阈值由环境变量覆盖，产出真实质量分。
-//
-// 两个模式共用同一份数据集与同一套指标计算，指标口径一致。
+//	生产验收：需要真实语料与真实 LLM 候选生成器，当前尚未提供。不要用一个
+//	              只切换日志标签的环境变量冒充它。
+
+// SummarizeCase golden case for summarize 评估
+type SummarizeCase struct {
+	ID             string   `json:"id"`
+	TicketID       string   `json:"ticket_id"`
+	Messages       []string `json:"messages"`
+	ExpectedTopics []string `json:"expected_topics"`
+	MaxLength      int      `json:"max_length"`
+	MinLength      int      `json:"min_length"`
+}
+
+// PredictionCase golden case for SLA breach prediction 评估
+type PredictionCase struct {
+	ID                      string                 `json:"id"`
+	TicketID                string                 `json:"ticket_id"`
+	Features                map[string]interface{} `json:"features"`
+	ExpectedBreachWithinSLA bool                   `json:"expected_breach_within_sla"`
+	HorizonMinutes          int                    `json:"horizon_minutes"`
+	// AnnotationBasis 是人工标注的依据。
+	//
+	// 期望标签必须**独立于预测器**产生：此前的数据集每条自带
+	// breach_probability_min（分数），AUC 用的就是它——分数与标签构造上一致，
+	// AUC 恒 1.00，那个门禁不测任何生产代码。现在分数改由生产预测器产出
+	// （SLABreachPredictor），标签由人工按 SLA 语义标注，标注依据随数据集
+	// 留存，供审阅与再标注。
+	AnnotationBasis string `json:"annotation_basis"`
+}
 
 // RAGCase 是 RAG 评测的 golden case。
 //
@@ -47,23 +71,20 @@ import (
 // 在非测试代码里引用它——如果只在 _test.go 里定义，非测试文件就无法提供
 // 可复用的候选生成与真实性检测。
 type RAGCase struct {
-	ID             string   `json:"id"`
-	Query          string   `json:"query"`
-	TenantID       int      `json:"tenant_id"`
-	ExpectedDocIDs []string `json:"expected_doc_ids"`
-	MinRelevance   float64  `json:"min_relevance"`
-	TopK           int      `json:"top_k"`
-}
-
-// EvalMode 返回当前评测模式。
-//
-// "llm"    —— 生产验收：接真实 LLM 生成候选
-// "degraded" —— CI 默认：接生产链路的无 LLM 降级路径
-func EvalMode() string {
-	if strings.EqualFold(os.Getenv("ITSM_AI_EVAL_USE_LLM"), "1") {
-		return "llm"
-	}
-	return "degraded"
+	ID       string `json:"id"`
+	Query    string `json:"query"`
+	TenantID int    `json:"tenant_id"`
+	TopK     int    `json:"top_k"`
+	// ExpectedRefs 是期望召回的**文章标题**（不是库的主键）。
+	//
+	// 为什么按标题而不是 ID：按 ID 会把数据集钉死在某个库的具体主键上，换
+	// 环境（生产库、另一租户）就失效。按标题引用让同一份数据集既能在 CI 的
+	// 内存库里跑，也能在接了真实知识库的生产验收里跑。
+	ExpectedRefs []string `json:"expected_refs"`
+	// MinRelevance 是该用例的相关性下限（生产语义：低于此分不得呈现）。
+	MinRelevance float64 `json:"min_relevance"`
+	// CorpusTenantID 是语料所属租户；0 = 与 TenantID 同租户。
+	CorpusTenantID int `json:"corpus_tenant_id"`
 }
 
 // GoldenCandidateReport 描述一次候选生成是否「就是期望答案」。
@@ -72,6 +93,73 @@ type GoldenCandidateReport struct {
 	UsedGolden bool
 	// Detail 人类可读的判定依据。
 	Detail string
+}
+
+// SummarizeROUGE averages character-level ROUGE-L recall of generated summaries against expected topics.
+func SummarizeROUGE(cases []SummarizeCase, summarize func(string) string) float64 {
+	if len(cases) == 0 {
+		return 0
+	}
+	total := 0.0
+	for _, tc := range cases {
+		candidate := summarize(strings.Join(tc.Messages, " "))
+		refTokens := tokenize(strings.Join(tc.ExpectedTopics, " "))
+		candTokens := tokenize(candidate)
+		if tc.MaxLength > 0 && len(candTokens) > tc.MaxLength {
+			candTokens = candTokens[:tc.MaxLength]
+		}
+		refRunes := []rune(strings.Join(refTokens, ""))
+		candRunes := []rune(strings.Join(candTokens, ""))
+		if len(refRunes) == 0 {
+			total += 1 // vacuous pass when no expected topics
+			continue
+		}
+		lcsLen := lcsLengthRunes(refRunes, candRunes)
+		if lcsLen == 0 {
+			continue
+		}
+		total += float64(lcsLen) / float64(len(refRunes)) // recall
+	}
+	return total / float64(len(cases))
+}
+
+// lcsLengthRunes is the rune-level LCS used for ROUGE-L. Kept separate from
+// lcsLength (string-token variant) so callers can pick the granularity.
+func lcsLengthRunes(a, b []rune) int {
+	if len(a) == 0 || len(b) == 0 {
+		return 0
+	}
+	dp := make([][]int, len(a)+1)
+	for i := range dp {
+		dp[i] = make([]int, len(b)+1)
+	}
+	for i := 1; i <= len(a); i++ {
+		for j := 1; j <= len(b); j++ {
+			if a[i-1] == b[j-1] {
+				dp[i][j] = dp[i-1][j-1] + 1
+			} else if dp[i-1][j] > dp[i][j-1] {
+				dp[i][j] = dp[i-1][j]
+			} else {
+				dp[i][j] = dp[i][j-1]
+			}
+		}
+	}
+	return dp[len(a)][len(b)]
+}
+
+// tokenize splits a string on whitespace and case-folds so token comparison
+// is case-insensitive. Empty tokens are dropped.
+func tokenize(s string) []string {
+	s = strings.ToLower(s)
+	parts := strings.Fields(s)
+	out := make([]string, 0, len(parts))
+	for _, p := range parts {
+		if p == "" {
+			continue
+		}
+		out = append(out, p)
+	}
+	return out
 }
 
 // DetectGoldenText 判断候选文本是否就是期望答案。
@@ -102,19 +190,25 @@ func DetectGoldenText(candidate string, expectedTopics []string) GoldenCandidate
 // DetectGoldenDocIDs 判断候选文档集合是否就是期望答案集合。
 //
 // 比较用集合（忽略顺序与重复）——检索结果的顺序本就该与期望不同，
-// 若集合完全一致则说明候选是直接抄来的。
+// 若集合完全一致则说明候选是直接抄来的。比对前统一归一化（去空白、
+// 统一大小写）：真实库的标题可能有全角空格或大小写差异，不归一化会产生
+// 「明明召回了却算未命中」的假阴性，让召回率被低估、掩盖真实问题。
 func DetectGoldenDocIDs(candidate, expected []string) GoldenCandidateReport {
 	if len(expected) == 0 {
 		return GoldenCandidateReport{Detail: "无期望答案可比对"}
 	}
 	candSet := map[string]struct{}{}
 	for _, id := range candidate {
-		candSet[id] = struct{}{}
+		candSet[NormalizeRef(id)] = struct{}{}
 	}
-	if len(candSet) != len(expected) {
+	expSet := map[string]struct{}{}
+	for _, id := range expected {
+		expSet[NormalizeRef(id)] = struct{}{}
+	}
+	if len(candSet) != len(expSet) {
 		return GoldenCandidateReport{Detail: "候选集合与期望答案不同，评测有效"}
 	}
-	for _, id := range expected {
+	for id := range expSet {
 		if _, ok := candSet[id]; !ok {
 			return GoldenCandidateReport{Detail: "候选集合与期望答案不同，评测有效"}
 		}
@@ -147,38 +241,6 @@ func SummarizeCandidateGenerator(svc *service.SummarizeService) func(string) str
 		}
 		return summary
 	}
-}
-
-// DegradedRAGCandidates 返回降级模式的检索候选（CI 默认）。
-//
-// 它**不是**期望答案：候选集合与期望答案不同（否则评测自我实现），但必须
-// **部分命中**期望——否则 hit-rate 恒为 0，门禁对退化同样不敏感，等于没门禁。
-//
-// 构造规则：期望文档与干扰文档按 topK 交错排列。topK=5、期望 2 篇时，
-// 候选是 [期望1, 干扰1, 期望2, 干扰2, 干扰3] —— 命中率 2/5，接近真实检索
-// 「部分命中」的行为，同时候选集合 ≠ 期望集合。
-//
-// 真实生产验收应改用真实检索器（RAGService），此时命中率才有质量含义。
-func DegradedRAGCandidates(c RAGCase) []string {
-	topK := c.TopK
-	if topK <= 0 {
-		topK = 3
-	}
-	out := make([]string, 0, topK)
-	// 期望文档与干扰文档交错：命中部分期望，但不是全部。
-	//
-	// 边界：期望只有 1 篇且 topK=1 时，若放期望文档则候选集合 == 期望集合，
-	// 评测又变成自我实现（守卫会红）。此时改为**只放干扰文档**——命中率 0，
-	// 但候选确实不是答案。真实检索在这种窄窗口下返回 0 命中是合理的。
-	onlyOneExpected := len(c.ExpectedDocIDs) == 1 && topK == 1
-	for i := 0; i < topK; i++ {
-		if !onlyOneExpected && i < len(c.ExpectedDocIDs) && i%2 == 0 {
-			out = append(out, c.ExpectedDocIDs[i])
-			continue
-		}
-		out = append(out, "degraded-"+c.ID+"-"+itoa(i))
-	}
-	return out
 }
 
 func itoa(n int) string {
