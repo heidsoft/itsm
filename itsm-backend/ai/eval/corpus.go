@@ -127,7 +127,6 @@ func (c *RAGCorpus) CorpusTitles() map[string]struct{} {
 type RealRAGRetriever struct {
 	svc    *service.RAGService
 	client *ent.Client
-	limit  int
 
 	// queries 记录真实检索实际发起的次数。
 	//
