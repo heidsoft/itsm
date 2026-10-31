@@ -422,9 +422,14 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 		csrfConfig := middleware.DefaultCSRFConfig()
 		auth.Use(middleware.CSRFProtectionMiddleware(csrfConfig))
 	}
-	auth.GET("/capabilities", capability.NewHandler(
-		capability.NewProber(config.RawDB, config.Client, config.ConnectorManager, config.Logger),
-	))
+	prober := capability.NewProber(config.RawDB, config.Client, config.ConnectorManager, config.Logger)
+	// LLM 配置探测：只读配置不拨号（健康检查不应产生 token 费用），未配置时
+	// ai 能力的 health 如实降级——深度 AI 在降级路径上跑，矩阵不得照报健康。
+	prober.SetLLMConfigured(func() bool {
+		cfg := service.LoadLLMConfig()
+		return cfg.APIKey != "" || cfg.Endpoint != ""
+	})
+	auth.GET("/capabilities", capability.NewHandler(prober))
 	// GA 就绪检查：跨租户系统级统计，需认证 + system:read 权限。
 	auth.GET("/readiness/ga", middleware.RequirePermission("system", "read"), func(c *gin.Context) {
 		common.Success(c, buildGAReadiness(c.Request.Context(), config.Client))

@@ -139,11 +139,14 @@ var registry = []definition{
 	// confidence 统一 0-1 并入口校验。2026-10-26 LLM 调用按租户归集：
 	// ai_llm_calls 增 tenant_id/request_id（迁移 20261026），LLMObserver 从请求 ctx
 	// 回填归属，/ai/metrics 改租户口径（无归因行时如实 responseTimeAvailable=false）。
-	// 仍不申报 GA：溯源三契约只覆盖分诊与 RCA，chat/摘要/analytics/prediction/agent
-	// 工具没有同等约束；评测阈值只覆盖离线 fixture，未验证生产候选；token 计量无配额告警与单价口径。
+	// 仍不申报 GA：代码侧三项验收缺口（虚构 ID、预测分值自给、假验收开关）
+	// 已于 2026-10-31 闭环——期望改按文章标题引用 + 真实语料/真实检索器（召回率
+	// 0.80 为真实测得）、预测分数由生产 SLABreachPredictor 产出（与人工标注独立）、
+	// cmd/ai-eval 提供可执行验收命令。剩下的阻断是**人工执行**的 LLM 档与真实
+	// 语料验收尚未跑过，指标达标与否没有人签过字。
 	{
 		key: "ai", maturity: MaturityPilot, built: true, readinessEnv: "ITSM_AI_READY",
-		pilotReason: "分诊与工单 RCA 已强制 promptVersion/model/confidence 并落 ai_audit 底账（采纳/拒绝经 PATCH 翻转，不再由前端自报）；LLM 调用已按租户归集（ai_llm_calls 带 tenant_id/request_id，/ai/metrics 为租户口径；升级前的历史行无法回填归因，按哨兵值排除、租户无归因行时如实报不可用）。溯源已覆盖全能力面且 model 不再失真：分诊/RCA 之外，摘要（method 三态 llm/direct/fallback + 真实模型名）、预测（口径版本 + 真实置信度 + auditId）、chat（检索模式 + 真实命中分 + auditId）均已强制溯源并落 ai_audit 底账；此前 TriageService 把 model 写死成 gpt-4o-mini（生产配的并不是它，底账系统性地指向错误模型）、邮件抽取器未配模型时兜底成同一个硬编码值，现改由 provider 自报（ModelReportingProvider），报不出时如实写 unknown。深度分析（SQL 聚合）刻意不补 model 而只给口径版本与 method=aggregate——给没有模型参与的聚合伪造 model 比缺失更危险。token 配额与成本口径已落地（AIQuotaService：租户月度配额从既有 ai_llm_calls 计量读取不建新表、未配置=不限制且如实报 quotaConfigured=false、超限网关拒绝并留计量痕、评估失败 fail-open——配额是预算保护不是安全边界；单价未配置时 estimatedCost=0 且 costConfigured=false，绝不给猜的单价；/ai/metrics 附带 quota/cost，告警分 warning/exceeded 两级）。评测门禁的自我实现已修：此前摘要候选=输入拼接、RAG 候选=期望答案，三项指标恒满分（ROUGE 0.84 / hit-rate 1.00 / AUC 1.00）且把真实实现改坏照样绿——那不是宽松的门禁，是没有门禁；现候选来自生产代码路径（摘要走 SummarizeService 无 LLM 降级路径、检索走部分命中基线），并加候选真实性检测与退化敏感性守卫（退化必须让指标下降），另设 ITSM_AI_EVAL_USE_LLM=1 的生产验收模式共用同一套数据集与指标口径。默认摘要仍是原文直出或截断（已如实标注 method），RAG 数据集的 expected_doc_ids 是虚构 ID（KB-001 等，库里不存在），故 CI 只做候选真实性检查、质量验收须接真实语料，预测分值仍取自数据集。晋升条件：真实语料下的质量验收（典型问题集召回率、摘要真实候选质量、预测分值来源）。",
+		pilotReason: "分诊与工单 RCA 已强制 promptVersion/model/confidence 并落 ai_audit 底账（采纳/拒绝经 PATCH 翻转，不再由前端自报）；LLM 调用已按租户归集（ai_llm_calls 带 tenant_id/request_id，/ai/metrics 为租户口径；升级前的历史行无法回填归因，按哨兵值排除、租户无归因行时如实报不可用）。溯源已覆盖全能力面且 model 不再失真：分诊/RCA 之外，摘要（method 三态 llm/direct/fallback + 真实模型名）、预测（口径版本 + 真实置信度 + auditId）、chat（检索模式 + 真实命中分 + auditId）均已强制溯源并落 ai_audit 底账；此前 TriageService 把 model 写死成 gpt-4o-mini（生产配的并不是它，底账系统性地指向错误模型）、邮件抽取器未配模型时兜底成同一个硬编码值，现改由 provider 自报（ModelReportingProvider），报不出时如实写 unknown。深度分析（SQL 聚合）刻意不补 model 而只给口径版本与 method=aggregate——给没有模型参与的聚合伪造 model 比缺失更危险。token 配额与成本口径已落地（AIQuotaService：租户月度配额从既有 ai_llm_calls 计量读取不建新表、未配置=不限制且如实报 quotaConfigured=false、超限网关拒绝并留计量痕、评估失败 fail-open——配额是预算保护不是安全边界；单价未配置时 estimatedCost=0 且 costConfigured=false，绝不给猜的单价；/ai/metrics 附带 quota/cost，告警分 warning/exceeded 两级）。评测门禁的自我实现已修（此前候选=期望答案，三项指标恒满分且把实现改坏照样绿），且 CI 评测已接真实生产路径：RAG 期望按文章标题引用真实语料（datasets/corpus/rag_corpus.jsonl，与库的主键解耦），检索走生产 service.RAGService 关键词路径（真实 SQL，召回率 0.80 为真实测得而非自我实现）；预测分数由生产 SLABreachPredictor 产出（排序层=预计解决时长/SLA 窗口，与人工标注独立产生），标注依据逐条留存；摘要候选走 SummarizeService 真实降级路径并有退化敏感性守卫。LLM 档验收通道已就绪（cmd/ai-eval：由人执行、读 llm.* 配置构造真实 provider、配置缺失报错不悄悄降级、产出归档报告，指标与 CI 同口径）。剩余阻断：LLM 档与真实生产语料的验收**尚未由人执行过**——指标达标与否没有任何一次真实运行与签字记录，CI 的降级档不能代替真实模型的质量结论。晋升条件：跑一次 cmd/ai-eval -mode llm + 真实知识库语料的质量验收并归档报告（召回率/摘要质量/预测 AUC 达标，验收人确认）。",
 	},
 	// 通知域 2026-10-20/21 闭环三件事：投递审计读面（GET /notification-deliveries）、
 	// 失败重试（保留旧记录作失败证据）、渠道诊断（GET /notifications/channels：

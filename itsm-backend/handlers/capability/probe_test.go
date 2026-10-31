@@ -261,3 +261,69 @@ func TestRegistryInvariants(t *testing.T) {
 	require.True(t, exists)
 	_ = sso
 }
+
+// TestAICapabilityHealthReflectsLLMConfig 锁定 ai 能力的 LLM 配置健康维度。
+//
+// 此前 HealthFor 对 key="ai" 没有任何分支：LLM 完全未配置时矩阵照报健康，
+// 而分诊/RAG 问答/摘要实际全跑在降级路径上——那是对调用方的谎报（按矩阵
+// 门控的界面会把降级路径当完整能力呈现）。现在未配置即如实降级。
+func TestAICapabilityHealthReflectsLLMConfig(t *testing.T) {
+	t.Run("llm 未配置时 ai 健康降级", func(t *testing.T) {
+		prober := NewProber(nil, nil, nil, nil)
+		prober.SetLLMConfigured(func() bool { return false })
+		health := prober.HealthFor(context.Background(), "ai", 7)
+		require.NotNil(t, health)
+		require.False(t, health.OK)
+		require.NotEmpty(t, health.Reason)
+	})
+	t.Run("llm 已配置时 ai 健康", func(t *testing.T) {
+		// db 是 ai 健康的前置层：db 不可达时所有能力都判不健康（提前返回），
+		// 走不到 LLM 分支。这里给一个真实可 ping 的内存库，隔离 LLM 维度。
+		db, err := sql.Open("sqlite3", "file:capability_ai_health?mode=memory&cache=shared")
+		require.NoError(t, err)
+		t.Cleanup(func() { _ = db.Close() })
+		prober := NewProber(db, nil, nil, nil)
+		prober.SetLLMConfigured(func() bool { return true })
+		health := prober.HealthFor(context.Background(), "ai", 7)
+		require.NotNil(t, health)
+		require.True(t, health.OK)
+	})
+	t.Run("探测未装配时不谎报健康", func(t *testing.T) {
+		prober := NewProber(nil, nil, nil, nil)
+		health := prober.HealthFor(context.Background(), "ai", 7)
+		require.NotNil(t, health)
+		require.False(t, health.OK, "探测函数未装配时不得对 ai 能力伪造健康")
+	})
+	t.Run("handler 集成：llm 未配置时矩阵降级 ai 并扣掉 manage", func(t *testing.T) {
+		gin.SetMode(gin.TestMode)
+		prober := NewProber(nil, nil, nil, nil)
+		prober.SetLLMConfigured(func() bool { return false })
+
+		engine := gin.New()
+		engine.GET("/capabilities", func(c *gin.Context) {
+			c.Set("tenant_id", 7)
+			c.Set("role", "admin")
+			NewHandler(prober)(c)
+		})
+		recorder := httptest.NewRecorder()
+		engine.ServeHTTP(recorder, httptest.NewRequest(http.MethodGet, "/capabilities", nil))
+		require.Equal(t, http.StatusOK, recorder.Code)
+
+		var response struct {
+			Data struct {
+				Items []Capability `json:"items"`
+			} `json:"data"`
+		}
+		require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &response))
+		byKey := map[string]Capability{}
+		for _, item := range response.Data.Items {
+			byKey[item.Key] = item
+		}
+		ai := byKey["ai"]
+		require.False(t, ai.DeploymentReady, "LLM 未配置时 ai 不得声称部署就绪")
+		require.NotEmpty(t, ai.DegradedReason)
+		require.NotNil(t, ai.Health)
+		require.False(t, ai.Health.OK)
+		require.NotContains(t, ai.AllowedActions, "manage", "健康降级时不得下发管理动作")
+	})
+}

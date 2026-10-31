@@ -36,11 +36,14 @@ type probeSnapshot struct {
 
 // Prober 负责产出能力健康信号。
 //
-// 探测分三层：
+// 探测分四层：
 //  1. 数据库连通性（db.PingContext）——所有域能力的前置依赖；
 //  2. 连接器健康（connector.Manager.HealthCheckTenant）——仅 connector.* 能力消费，
 //     按租户探测，避免租户级只读接口成为跨租户连通性探针；
-//  3. 租户级配置（SSO provider 是否启用）——按租户查询，不缓存（单条索引计数）。
+//  3. 租户级配置（SSO provider 是否启用）——按租户查询，不缓存（单条索引计数）；
+//  4. LLM 配置（llm.* 是否可用）——仅 ai 能力消费。不真实拨号到模型端点：
+//     拨号要花 token 与秒级延迟，健康检查不应产生费用；这里只回答「配置在不在」，
+//     配置缺失意味着分诊/摘要/RAG 问答等深度 AI 全部跑在降级路径上。
 type Prober struct {
 	db         *sql.DB
 	client     *ent.Client
@@ -48,6 +51,9 @@ type Prober struct {
 	logger     *zap.SugaredLogger
 	ttl        time.Duration
 	now        func() time.Time
+	// llmConfigured 报告 LLM 配置是否可用。nil 时视为不可配置（不谎报健康，
+	// 与其他缺失依赖的处理一致）。
+	llmConfigured func() bool
 
 	mu                sync.Mutex
 	snapshot          *probeSnapshot
@@ -67,6 +73,12 @@ func NewProber(db *sql.DB, client *ent.Client, connectors *connector.Manager, lo
 		connectorInflight: map[int]chan struct{}{},
 	}
 }
+
+// SetLLMConfigured 注入 LLM 配置探测函数。
+//
+// 独立 setter 而非加进 NewProber 参数：装配点（router）能拿到 service.LoadLLMConfig，
+// 但 NewProber 的签名已被多处测试复用；注入的可测试性也更直接（测试传闭包）。
+func (p *Prober) SetLLMConfigured(fn func() bool) { p.llmConfigured = fn }
 
 // snapshotFor 返回 TTL 内的探测快照。
 //
@@ -234,6 +246,16 @@ func (p *Prober) HealthFor(ctx context.Context, key string, tenantID int) *Healt
 		} else if !configured {
 			health.OK = false
 			health.Reason = "当前租户尚未启用身份提供方"
+		}
+	case key == "ai":
+		// LLM 未配置不是部署故障（降级路径是产品语义），但对「AI 能力健康」
+		// 而言必须如实可见：矩阵若照报健康，调用方会把降级路径当完整能力卖。
+		if p.llmConfigured == nil {
+			health.OK = false
+			health.Reason = "LLM 配置探测未装配"
+		} else if !p.llmConfigured() {
+			health.OK = false
+			health.Reason = "LLM 未配置（llm.*）：深度 AI 走降级路径，分诊/RAG 问答/摘要不经过模型"
 		}
 	}
 	return health

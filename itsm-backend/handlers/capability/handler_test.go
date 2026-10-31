@@ -257,7 +257,12 @@ func TestPilotReasonsDoNotCiteClosedBlockers(t *testing.T) {
 		"cmdbDiscovery":      {"队列无消费者", "没有执行者", "仅被单测调用", "worker 消费"},
 		"cmdbReconciliation": {"发现链路没有消费者", "只能对空集", "没有确认/驳回的写入面"},
 		// 2026-10-23：分诊/RCA 已强制 promptVersion + model + confidence + 底账。
-		"ai": {"confidence、接受/拒绝反馈", "evaluator 未接入调用链"},
+		// 2026-10-31：仿真「生产验收模式」的 ITSM_AI_EVAL_USE_LLM 只会切换日志标签，已移除；
+		// 同日代码侧三项验收缺口闭环（a9dbec0aa）——RAG 期望改按文章标题引用真实语料
+		// （不再是虚构 ID）、预测分数由生产 SLABreachPredictor 产出（不再取自数据集自带
+		// probability）、LLM 档验收命令 cmd/ai-eval 已就绪。这些表述不得再出现在理由里。
+		"ai": {"confidence、接受/拒绝反馈", "evaluator 未接入调用链", "ITSM_AI_EVAL_USE_LLM", "生产验收模式",
+			"expected_doc_ids 是虚构 ID", "expected_doc_ids 为虚构 ID", "预测分值仍取自数据集", "没有可用的真实 LLM 候选生成器"},
 		// 2026-10-24：ServiceTask action 两端口径接通；2026-10-23 工单审批桥接
 		// 收进业务事务；发布创建与 workflow.start 同事务入队。这些不再是缺口。
 		"workflow": {"ServiceTask action 链路未打通", "工单审批桥接非原子", "release 域自动起流"},
