@@ -37,11 +37,19 @@ type AITelemetryService struct {
 	skillRegistry *SkillRegistry
 	// entClient 可选；为 nil 时 GetMetrics 的 audit_logs 聚合回退到 sql 计数。
 	entClient *ent.Client
+	// quota 可选（AIQuotaService）；注入后 GetMetrics 附带配额用量与成本口径。
+	// 为 nil 时 metrics 不含 quota/cost 字段——是「未装配」，如实省略。
+	quota *AIQuotaService
 }
 
 // NewAITelemetryService 创建 AI 遥测服务。
 func NewAITelemetryService(db *sql.DB) *AITelemetryService {
 	return &AITelemetryService{db: db, repo: newAITelemetryRepository(db)}
+}
+
+// SetAIQuotaService 注入配额服务（bootstrap 装配）。
+func (s *AITelemetryService) SetAIQuotaService(q *AIQuotaService) {
+	s.quota = q
 }
 
 // SetEntClient 注入 Ent client，供 GetMetrics 中 audit_logs 聚合使用。
@@ -143,6 +151,10 @@ type AIMetrics struct {
 	LLMCallCount           int                    `json:"llmCallCount"`
 	TotalTokens            int                    `json:"totalTokens"`
 	ResponseTimeAvailable  bool                   `json:"responseTimeAvailable"`
+	// Quota 月度配额用量（nil = 配额服务未装配，如实省略）。
+	Quota *QuotaUsage `json:"quota,omitempty"`
+	// Cost 成本估算口径（nil = 配额服务未装配）。
+	Cost *CostEstimate `json:"cost,omitempty"`
 }
 
 // GetMetrics retrieves AI usage metrics for a tenant.
@@ -190,8 +202,19 @@ func (s *AITelemetryService) GetMetrics(ctx context.Context, tenantID int, lookb
 	out.TotalTokens = stats.TotalTokens
 	out.ResponseTimeAvailable = stats.CallCount > 0
 
+	// 配额与成本（配额服务未装配时保持 nil——是「没配」，不是「零」）。
+	if s.quota != nil {
+		if usage, qErr := s.quota.Evaluate(ctx, tenantID); qErr == nil {
+			out.Quota = usage
+		}
+		// 成本按同一 lookback 窗口的实际 token 用量估算，口径与上方统计一致。
+		out.Cost = costPtr(s.quota.EstimateCost(int64(stats.TotalTokens)))
+	}
+
 	return out, nil
 }
+
+func costPtr(c CostEstimate) *CostEstimate { return &c }
 
 // countAIAuditLogs 通过 Ent 在 audit_logs 中统计"近 lookbackDays 内、含 ai 动作"的条数。
 // 当未注入 entClient 时回退到 aiTelemetryRepository（仅在新旧 bootstrap 共存期）。

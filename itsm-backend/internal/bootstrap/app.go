@@ -646,6 +646,22 @@ func NewApplication() *Application {
 	// 供 /api/v1/ai/metrics 输出真实的 avg_response_time_seconds。
 	llmObserver := service.NewLLMObserver(database.GetRawDB(), sugar)
 	llmGateway := service.NewLLMGateway(llmProvider, llmLimiter, llmObserver, llmConfig.Provider)
+	// 租户月度 token 配额（AIQuotaService）：数据源是既有 ai_llm_calls 计量，
+	// 不新建表。配额/单价经环境变量配置（ITSM_AI_TOKEN_MONTHLY_QUOTA /
+	// ITSM_AI_TOKEN_PRICE_PER_1K 等），未配置 = 不限制但 metrics 如实报
+	// quotaConfigured=false。注入点有两个：网关（执行闸，超限拒绝）与遥测服务
+	// （读面，metrics 携带用量/告警/成本）——同一个实例，读写一处配置。
+	aiQuotaService := service.NewAIQuotaService(database.GetRawDB())
+	llmGateway.SetAIQuotaService(aiQuotaService)
+	if snap := aiQuotaService.Snapshot(); snap.MonthlyCap > 0 {
+		sugar.Infow("AI tenant token quota wired",
+			"monthly_cap", snap.MonthlyCap,
+			"warn_ratio", snap.WarnRatio,
+			"price_per_1k", snap.PricePer1K,
+			"cost_configured", snap.CostConfigured)
+	} else {
+		sugar.Infow("AI tenant token quota NOT configured (unlimited); set ITSM_AI_TOKEN_MONTHLY_QUOTA to enable")
+	}
 	a2uiService := service.NewA2UITicketService(llmGateway)
 
 	vectorStore := service.NewVectorStore(database.GetRawDB())
@@ -664,6 +680,8 @@ func NewApplication() *Application {
 		sugar.Infow("pluggable vector store initialized")
 	}
 	aiTelemetryService := service.NewAITelemetryService(database.GetRawDB())
+	// metrics 读面附带配额用量与成本口径（与网关共用同一配额实例）。
+	aiTelemetryService.SetAIQuotaService(aiQuotaService)
 
 	// 同步初始化：向量扩展检测与 vectors 表准备。
 	// 使用带超时的 context，避免 pgvector 不可用时阻塞整个启动流程。

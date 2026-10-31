@@ -6,6 +6,8 @@ import (
 	"strings"
 	"time"
 
+	"itsm-backend/common/tenantctx"
+
 	openai "github.com/sashabaranov/go-openai"
 )
 
@@ -15,6 +17,9 @@ type LLMGateway struct {
 	limiter      TokenLimiter
 	observer     Observer
 	providerName string
+	// quota 可选（AIQuotaService）：注入后每次调用前执行租户月度配额检查。
+	// 为 nil 时无配额限制——旧部署行为不变。
+	quota *AIQuotaService
 }
 
 type LLMProvider interface {
@@ -90,6 +95,36 @@ type Observer interface {
 
 func NewLLMGateway(p LLMProvider, l TokenLimiter, o Observer, providerName string) *LLMGateway {
 	return &LLMGateway{provider: p, limiter: l, observer: o, providerName: providerName}
+}
+
+// SetAIQuotaService 注入配额服务（bootstrap 装配；不注入 = 不限制）。
+func (g *LLMGateway) SetAIQuotaService(q *AIQuotaService) {
+	g.quota = q
+}
+
+// ErrQuotaExceeded 租户月度 token 配额已耗尽。调用方应映射为 429 而非 500：
+// 这是明确的业务拒绝（预算用完），不是服务故障。
+var ErrQuotaExceeded = errors.New("tenant monthly token quota exceeded")
+
+// checkQuota 租户配额闸：超限返回 ErrQuotaExceeded，未装配/未配置/无租户
+// 归属/评估失败时放行。评估失败 fail-open 的取舍：配额是预算保护不是安全
+// 边界，DB 抖动不该让 AI 全体不可用——偶尔超一点代价远小于全禁。
+func (g *LLMGateway) checkQuota(ctx context.Context, model string, tokens int, start time.Time) error {
+	if g.quota == nil {
+		return nil
+	}
+	tenantID, ok := tenantctx.TenantID(ctx)
+	if !ok || tenantID <= 0 {
+		return nil
+	}
+	allowed, _, err := g.quota.Check(ctx, tenantID)
+	if err != nil || allowed {
+		return nil // fail-open，见注释
+	}
+	if g.observer != nil {
+		g.observer.Observe(ctx, g.providerName, model, tokens, time.Since(start), ErrQuotaExceeded)
+	}
+	return ErrQuotaExceeded
 }
 
 // EffectiveModel 返回一次调用真正会用到的模型名，供溯源字段使用。
@@ -225,12 +260,20 @@ func (g *LLMGateway) retryableChat(ctx context.Context, model string, messages [
 	return "", err
 }
 
+// Chat 走网关的一次非流式调用。
+//
+// 三道闸按序执行：租户月度配额（超限拒绝）→ 单请求大小闸（过大 429）→ provider。
+// 配额闸从 ctx 取租户归属（tenantctx）；系统调用（无租户）不受配额限制——
+// 它们不消耗租户预算，也没有可归属的配额主体。
 func (g *LLMGateway) Chat(ctx context.Context, model string, messages []LLMMessage) (string, error) {
 	start := time.Now()
 	// naive tokens estimation
 	tokens := 0
 	for _, m := range messages {
 		tokens += len([]rune(m.Content)) / 4
+	}
+	if err := g.checkQuota(ctx, model, tokens, start); err != nil {
+		return "", err
 	}
 	if g.limiter != nil && !g.limiter.Allow(tokens) {
 		if g.observer != nil {
@@ -257,6 +300,9 @@ func (g *LLMGateway) ChatStream(ctx context.Context, model string, messages []LL
 	tokens := 0
 	for _, m := range messages {
 		tokens += len([]rune(m.Content)) / 4
+	}
+	if err := g.checkQuota(ctx, model, tokens, start); err != nil {
+		return err
 	}
 	if g.limiter != nil && !g.limiter.Allow(tokens) {
 		if g.observer != nil {

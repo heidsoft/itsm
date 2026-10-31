@@ -66,6 +66,56 @@ GET /api/v1/ai/audit-logs?page=1&pageSize=20&days=90&kind=triage
 
 `POST /ai/audit`（客户端自报审计）的 `confidence` 契约统一 0-1：负值、大于 1 返回 400 / `1002`（`0` 与 `1` 边界合法）。此前服务端静默 clamp，非法值进入 evaluator 置信度校准分桶会把桶污染成"低置信"。
 
+## AI 配额与成本
+
+需要 `ai:read` 权限。
+
+```http
+GET /api/v1/ai/metrics?days=7
+```
+
+响应除既有的调用次数、token 总量、平均响应时间外，新增两个可选对象（配额服务未装配时整体省略，不是空对象）：
+
+```json
+{
+  "quota": {
+    "quotaConfigured": true,
+    "monthlyQuota": 2000000,
+    "tokensUsed": 1850000,
+    "tokensRemaining": 150000,
+    "usedRatio": 0.925,
+    "alert": "warning",
+    "alertMessage": "本月 token 用量 1850000 已达配额 2000000 的 92%"
+  },
+  "cost": {
+    "costConfigured": true,
+    "totalTokens": 1850000,
+    "estimatedCost": 3.7,
+    "currency": "CNY",
+    "pricePer1k": 0.002
+  }
+}
+```
+
+**字段语义**（三条诚实原则，缺一不可）：
+
+- `quota.quotaConfigured=false` 表示**未配置配额**——不限制调用，但也不装作有限额。此时 `monthlyQuota`/`alert` 无意义，不返回。`usedRatio` 与 `tokensUsed` 仍照实聚合。
+- `cost.costConfigured=false` 表示**未配置单价**——`estimatedCost` 恒为 0 而非猜测值。成本数字会被拿去做预算决策，猜错比没有更糟。
+- `quota.alert` 三态：`""`（未到阈值）/ `warning`（达到预警比例，默认 80%）/ `exceeded`（已超配额）。
+
+**执行语义**：租户月度配额超限时，LLM 网关拒绝新的 AI 调用并返回 `quota_exceeded`（SSE 流式路径在 `event: error` 的 `reason` 字段给出）。拒绝会照常记入 `ai_llm_calls` 计量（`success=false`），不静默消失。配额评估失败时**放行**（fail-open）——配额是预算保护不是安全边界，数据库抖动不该让 AI 全体不可用。
+
+**配置**（环境变量，全部可选；未配置即不限制）：
+
+| 变量 | 含义 | 默认 |
+|:---|:---|:---|
+| `ITSM_AI_TOKEN_MONTHLY_QUOTA` | 租户月度 token 配额上限 | 未设置 = 不限制 |
+| `ITSM_AI_TOKEN_WARN_RATIO` | 预警阈值比例（0,1] | `0.8` |
+| `ITSM_AI_TOKEN_PRICE_PER_1K` | 每千 token 单价 | 未设置 = 成本口径未配置 |
+| `ITSM_AI_TOKEN_PRICE_CURRENCY` | 币种 | `CNY` |
+
+配额用量从既有 `ai_llm_calls` 计量读取，**不新建记账表**——两套并行记账必然漂移。
+
 ## 通用响应格式
 
 所有 API 响应遵循以下格式：

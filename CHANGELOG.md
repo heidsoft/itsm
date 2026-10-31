@@ -11,6 +11,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **AI 中心：租户 token 配额、成本口径与告警（2026-10-31）**：
+
+  AI 能力矩阵最后一条代码可修的晋升条件（token 用量只有计量、没有配额告警与单价口径）落地。
+
+  *为什么不新建表*：配额是「对既有计量的新读法」，不是一套并行记账。两套记账必然漂移，届时没人知道哪个准——用量、配额、成本三个数字全部从既有 `ai_llm_calls` 聚合而来。
+
+  *三条诚实原则*（都是「缺信息时如实说没有」而不是「给个看起来像样的值」）：
+
+  - **未配置配额 = 不限制，但如实报 `quotaConfigured=false`**：不装作有限额，也不装作无限额——是「没配」。此时 `monthlyQuota` 与 `alert` 不返回，用量照实聚合。
+  - **未配置单价 = `estimatedCost=0` 且 `costConfigured=false`**：成本数字会被拿去做预算决策，猜错比没有更糟。宁可让运营去补配置，也不给一个看着像真的单价。
+  - **配额评估失败 fail-open**：配额是预算保护不是安全边界，DB 抖动不该让 AI 全体不可用。偶尔超一点的代价远小于全禁。这里与权限判断的 fail-closed 取舍**故意相反**，已在代码注释里写明理由。
+
+  *执行闸*：租户月度配额超限时 LLM 网关拒绝新的调用（`ErrQuotaExceeded`，SSE 流式路径在 `event: error` 里给出 `reason=quota_exceeded` 与可行动文案），拒绝照常记入 `ai_llm_calls` 计量（`success=false`）——不静默消失，否则「为什么突然没有 AI 了」无从追查。系统调用（无租户归属）不受配额限制。
+
+  *告警两级*：`warning`（达阈值比例，默认 80%）与 `exceeded`（已超配额），随 `/api/v1/ai/metrics` 的 `quota` 对象返回，并带人类可读的 `alertMessage`。
+
+  配置经环境变量（`ITSM_AI_TOKEN_MONTHLY_QUOTA` / `ITSM_AI_TOKEN_WARN_RATIO` / `ITSM_AI_TOKEN_PRICE_PER_1K` / `ITSM_AI_TOKEN_PRICE_CURRENCY`），装配处对「未配置」有显式日志，避免「以为配了其实没配」。`docs/api-reference.md` 新增「AI 配额与成本」段，列明字段语义、三态 alert、四个环境变量与 fail-open 取舍。
+
+  守卫 10 个用例（`service/ai_quota_test.go`）覆盖：未配置态诚实、预警阈值、超限拒绝、月窗口不吞上月用量（10 月 31 日的坑）、评估失败 fail-open（含网关层）、单价不猜、单价已配时计算正确、网关拒绝留计量痕、无租户不受限、未注入时行为不变。两处反向验证均确认转红：把 fail-open 改成 fail-closed、把默认单价改成猜值。
+
+  能力矩阵 AI 条目的晋升条件相应收敛为「真实候选评测门禁」——这一项需要真实语料与人工验收口径，代码无法自证。
+
 - **AI/向量域引用列是 int4，与全库 bigint 混用让索引失效（2026-10-31）**：全库 138 张带 `tenant_id` 的表里 136 张是 `bigint`，只有 `ai_feedbacks` 与 `vectors` 是 `integer`，其引用列（`user_id`/`item_id`/`object_id`）同样是 int4。int4 与 int8 混用在 JOIN 时触发隐式转换，会让 `tenant_id` 上的索引在部分执行计划里失效——索引建了却用不上，只在慢查询里体现。根因是两条建表链路没有共同规范：这两张表由 020 的手写 DDL 创建（`tenant_id INT`），而 ent 的 `field.Int` 生成 bigint。同类隐患还有两处被「ent 抢先建表 + `CREATE TABLE IF NOT EXISTS` 变空操作」掩盖的手写 DDL（`domain_configs`、`ci_relationships.tenant_id` 都写的 `INTEGER`），在「磁盘迁移先于 ent 建表」的 fresh 库上会真的落成 int4。现新增 `20261031_ai_vector_bigint.sql`：泛化段把所有 `public.*.tenant_id` 的 int4 统一转 bigint（含 future 手写表），显式段处理审计点名的 `ai_feedbacks.user_id/item_id` 与 `vectors.object_id`，末尾自检不变量未达成即 `RAISE EXCEPTION`（避免账本记一笔"已应用"而索引仍失效）。实测发现并解决一个迁移级障碍：PostgreSQL 拒绝修改被 RLS policy 引用的列类型，故迁移先按 `pg_policies` 无损捕获、摘除、改类型、再逐字符装回（不按 `tenant_isolation_<table>` 约定猜谓词）。回滚脚本先检查 int4 值域，越界显式拒绝，并声明 `tenant_id` 的 int8 统一不回滚（回到 int4 是回归）。回归：`migration/tenant_id_bigint_test.go` 断言迁移保留泛化段而非硬编码表名列表、自检存在、回滚具备有损保护，并拦截 20261031 之后新增迁移再声明 int4 `tenant_id`（注入探针迁移即红）。dev 库实测：全库 int4 `tenant_id` 归零，`ai_analysis_result` 的 RLS 策略摘除后原样重建，up→down→up 往返通过。
 
 - **状态枚举存在互相矛盾的权威源，数据库可写入任意未知状态（2026-10-31）**：状态值散落在四处——`common`/`dto` 常量、各域状态机、ent schema 默认值、存量数据——彼此没有任何一致性机制。实测三处漂移：① `common.ProblemStatusNew = "new"` 是幽灵常量，问题域创建、状态机、报表全用 `open`，任何人按常量写入都会与事实冲突；② `changes.status` 同时存在 `pending`（API/DTO）与 `submitted`（状态机）两个待审批写法；③ `service_requests` 真实词表是审批链 9 态，ent 字段注释却写着另一套。更根本的是数据库没有任何 CHECK：写入 `bogus_status` 会静默成功，只会在报表里归入「其他」、状态机里被当终态、前端显示空白。现以 `common/status_vocabulary.go` 为唯一事实源，把 6 个状态列（tickets/incidents/problems/changes/service_requests/knowledge_articles）落成 CHECK 约束（`NOT VALID` + 守卫式 `VALIDATE`，存量脏数据不阻塞升级但保留 `NOT VALID` 并告警），删除幽灵常量 `ProblemStatusNew` 改为 `ProblemStatusOpen`，新增 `ProblemStatusInProgress` 并标注为仅兼容存量的 legacy 值；`changes` 的 `pending`/`submitted` 两个写法都保留在约束内并在注释中记录待收敛。状态机迁移表由函数内字面量提为包级变量，使守卫测试能枚举「状态机实际承认的值集合」并与 CHECK 词表做包含断言。回归：`common/status_vocabulary_test.go` 解析迁移 SQL 与 Go 清单双向逐值比对（只改一侧即红）、legacy 值必须在允许集合内、状态机与导出常量不得产生词表外的值；problem/service_request/service 三域各自断言状态机 ⊆ 词表。dev 库实测：5 条约束 `convalidated=t`，`UPDATE tickets SET status='bogus_status'` 报 `violates check constraint "ck_tickets_status_vocabulary"`；反向验证从 SQL 删掉 `rejected` 后守卫测试精确报出该列差异。

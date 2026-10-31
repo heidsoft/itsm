@@ -250,7 +250,16 @@ func (h *Handler) ChatStream(c *gin.Context) {
 		tenantID, userID, role, req.Query, req.PageSize, req.ConversationID, onSources, onDelta)
 	if err != nil {
 		h.svc.logger.Warnw("AI ChatStream 失败", "error", err, "tenantID", tenantID)
-		writeEvent("error", map[string]string{"message": err.Error()})
+		// 配额/限流拒绝携带可行动文案：SSE 已 200 开头，客户端只能靠 event 里
+		// 的语义字段区分「稍后再试（预算）」与「服务故障」。
+		payload := map[string]string{"message": err.Error()}
+		if errors.Is(err, service.ErrQuotaExceeded) {
+			payload["reason"] = "quota_exceeded"
+			payload["message"] = "本月 AI token 配额已用完，请联系管理员调整配额或下月再试"
+		} else if errors.Is(err, service.ErrRateLimited) {
+			payload["reason"] = "rate_limited"
+		}
+		writeEvent("error", payload)
 		return
 	}
 	writeEvent("done", map[string]int{"conversationId": convID})
