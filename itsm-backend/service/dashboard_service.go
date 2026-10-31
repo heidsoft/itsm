@@ -807,11 +807,23 @@ func (s *DashboardService) GetDashboardOverview(ctx context.Context, tenantID in
 //     不再把"上月 0、本月有值"折算成 +100% 的捏造增长；
 //  4. 待处理/处理中/超时是时点存量快照，库里没有历史快照，一律 comparable=false。
 func (s *DashboardService) getKPIMetrics(ctx context.Context, tenantID int, viewer DashboardViewer) ([]KPIMetricData, error) {
-	now := time.Now()
-	lastMonth := now.AddDate(0, -1, 0)
-	lastMonthStart := time.Date(lastMonth.Year(), lastMonth.Month(), 1, 0, 0, 0, 0, time.Local)
-	lastMonthEnd := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, time.Local).Add(-time.Second)
-	thisMonthStart := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, time.Local)
+	return s.getKPIMetricsAt(ctx, tenantID, viewer, time.Now())
+}
+
+// kpiMonthWindows 按自然月切出本期与上期窗口。上期起点必须从本月 1 日回退：
+// 从当天回退时 AddDate 会把 10-31 归一化成 10-01（9 月没有 31 日），两期窗口重叠，
+// 仓库层会以 "lastMonthStart 必须早于 thisMonthStart" 拒绝整个看板。
+func kpiMonthWindows(now time.Time) (lastMonthStart, lastMonthEnd, thisMonthStart time.Time) {
+	thisMonthStart = time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, time.Local)
+	lastMonthStart = thisMonthStart.AddDate(0, -1, 0)
+	lastMonthEnd = thisMonthStart.Add(-time.Second)
+	return lastMonthStart, lastMonthEnd, thisMonthStart
+}
+
+func (s *DashboardService) getKPIMetricsAt(
+	ctx context.Context, tenantID int, viewer DashboardViewer, now time.Time,
+) ([]KPIMetricData, error) {
+	lastMonthStart, lastMonthEnd, thisMonthStart := kpiMonthWindows(now)
 
 	scope := viewer.ticketScope()
 

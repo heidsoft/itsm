@@ -101,11 +101,59 @@ func kpiByID(t *testing.T, metrics []KPIMetricData, id string) KPIMetricData {
 }
 
 func kpiWindow() (lastMonthStart, thisMonthStart time.Time) {
-	now := time.Now()
-	thisMonthStart = time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, time.Local)
-	lastMonth := now.AddDate(0, -1, 0)
-	lastMonthStart = time.Date(lastMonth.Year(), lastMonth.Month(), 1, 0, 0, 0, 0, time.Local)
+	lastMonthStart, _, thisMonthStart = kpiMonthWindows(time.Now())
 	return lastMonthStart, thisMonthStart
+}
+
+// TestKPIMonthWindows_EndOfMonth 锁定月末的窗口切分：上期起点必须是上月 1 日。
+// 修复前从当天回退，10-31 会被归一化成 10-01，上期窗口塌回本月，看板整页 500。
+func TestKPIMonthWindows_EndOfMonth(t *testing.T) {
+	for _, day := range []time.Time{
+		time.Date(2026, 10, 31, 15, 4, 5, 0, time.Local),
+		time.Date(2026, 5, 31, 23, 59, 59, 0, time.Local),
+		time.Date(2026, 3, 31, 12, 0, 0, 0, time.Local),
+		time.Date(2026, 3, 30, 12, 0, 0, 0, time.Local),
+		time.Date(2026, 1, 31, 9, 0, 0, 0, time.Local),
+		time.Date(2024, 3, 31, 9, 0, 0, 0, time.Local),
+	} {
+		t.Run(day.Format("2006-01-02"), func(t *testing.T) {
+			lastMonthStart, lastMonthEnd, thisMonthStart := kpiMonthWindows(day)
+
+			wantThisMonthStart := time.Date(day.Year(), day.Month(), 1, 0, 0, 0, 0, time.Local)
+			wantLastMonthStart := wantThisMonthStart.AddDate(0, -1, 0)
+
+			assert.Equal(t, wantThisMonthStart, thisMonthStart)
+			assert.Equal(t, wantLastMonthStart, lastMonthStart, "上期起点必须是上月 1 日")
+			assert.Equal(t, 1, lastMonthStart.Day())
+			assert.Equal(t, wantThisMonthStart.Add(-time.Second), lastMonthEnd)
+			assert.True(t, lastMonthStart.Before(thisMonthStart), "上期窗口必须早于本期")
+		})
+	}
+}
+
+// TestDashboardService_KPIMonthWindowOnMonthEnd 走生产路径 getKPIMetricsAt：
+// 以 10-31 为"现在"时，传给聚合 SQL 的本期/上期起点必须分别是 10-01 / 09-01。
+// 修复前两个参数相同，仓库层直接拒绝，看板与报表全部 5001。
+func TestDashboardService_KPIMonthWindowOnMonthEnd(t *testing.T) {
+	f := newKPIFixture(t)
+	tenant, err := createDashboardTestTenant(f.ctx, f.client, "kpi-month-end")
+	require.NoError(t, err)
+	f.tenantID = tenant.ID
+	user := newKPIUser(t, f.ctx, f.client, tenant.ID, "month-end")
+	viewer := DashboardViewer{UserID: user.ID, Role: "agent"}
+
+	thisMonthStart := time.Date(2026, 10, 1, 0, 0, 0, 0, time.Local)
+	lastMonthStart := time.Date(2026, 9, 1, 0, 0, 0, 0, time.Local)
+	f.mock.ExpectQuery(`.+`).WithArgs(tenant.ID, thisMonthStart, lastMonthStart, user.ID).
+		WillReturnRows(sqlmock.NewRows([]string{"a", "b", "c", "d", "e", "f"}).AddRow(0, 0, 0, 0, 0, 0))
+	f.mock.ExpectQuery(`.+`).WithArgs(tenant.ID, lastMonthStart, thisMonthStart, user.ID).
+		WillReturnRows(sqlmock.NewRows([]string{"total", "met"}).AddRow(0, 0))
+
+	metrics, err := f.service.getKPIMetricsAt(f.ctx, f.tenantID, viewer,
+		time.Date(2026, 10, 31, 15, 4, 5, 0, time.Local))
+	require.NoError(t, err)
+	require.NoError(t, f.mock.ExpectationsWereMet())
+	assert.Len(t, metrics, 8)
 }
 
 // TestDashboardService_KPIUsesViewerTicketScope 工作台 KPI 的工单计数必须与工单列表用同一
