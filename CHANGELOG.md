@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **状态枚举存在互相矛盾的权威源，数据库可写入任意未知状态（2026-10-31）**：状态值散落在四处——`common`/`dto` 常量、各域状态机、ent schema 默认值、存量数据——彼此没有任何一致性机制。实测三处漂移：① `common.ProblemStatusNew = "new"` 是幽灵常量，问题域创建、状态机、报表全用 `open`，任何人按常量写入都会与事实冲突；② `changes.status` 同时存在 `pending`（API/DTO）与 `submitted`（状态机）两个待审批写法；③ `service_requests` 真实词表是审批链 9 态，ent 字段注释却写着另一套。更根本的是数据库没有任何 CHECK：写入 `bogus_status` 会静默成功，只会在报表里归入「其他」、状态机里被当终态、前端显示空白。现以 `common/status_vocabulary.go` 为唯一事实源，把 6 个状态列（tickets/incidents/problems/changes/service_requests/knowledge_articles）落成 CHECK 约束（`NOT VALID` + 守卫式 `VALIDATE`，存量脏数据不阻塞升级但保留 `NOT VALID` 并告警），删除幽灵常量 `ProblemStatusNew` 改为 `ProblemStatusOpen`，新增 `ProblemStatusInProgress` 并标注为仅兼容存量的 legacy 值；`changes` 的 `pending`/`submitted` 两个写法都保留在约束内并在注释中记录待收敛。状态机迁移表由函数内字面量提为包级变量，使守卫测试能枚举「状态机实际承认的值集合」并与 CHECK 词表做包含断言。回归：`common/status_vocabulary_test.go` 解析迁移 SQL 与 Go 清单双向逐值比对（只改一侧即红）、legacy 值必须在允许集合内、状态机与导出常量不得产生词表外的值；problem/service_request/service 三域各自断言状态机 ⊆ 词表。dev 库实测：5 条约束 `convalidated=t`，`UPDATE tickets SET status='bogus_status'` 报 `violates check constraint "ck_tickets_status_vocabulary"`；反向验证从 SQL 删掉 `rejected` 后守卫测试精确报出该列差异。
+
 - **预览（pilot）域债务首批：知识「线上版本」事实源 + 工单标签种子写错表（2026-10-30）**：
 
   *知识：发布此前只翻 `is_published` 布尔位，而版本表存的是「更新前快照」*——发布时刻的正文在版本表里没有对应行，于是「线上内容属于哪个版本」没有任何地方能回答。知识被 RAG 引用、被工单引用后，「我当时引的是哪一版」就是审计问题，不能靠猜。

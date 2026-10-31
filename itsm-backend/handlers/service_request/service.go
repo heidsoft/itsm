@@ -875,23 +875,27 @@ func isValidServiceRequestOperationalTransition(current, next string) bool {
 	if current == next {
 		return true
 	}
-	transitions := map[string]map[string]struct{}{
-		SRStatusSubmitted:        {SRStatusCancelled: {}},
-		SRStatusManagerApproved:  {SRStatusCancelled: {}},
-		SRStatusITApproved:       {SRStatusCancelled: {}},
-		SRStatusSecurityApproved: {SRStatusProvisioning: {}, SRStatusCancelled: {}},
-		SRStatusProvisioning:     {SRStatusDelivered: {}, SRStatusFailed: {}},
-		SRStatusFailed:           {SRStatusProvisioning: {}, SRStatusCancelled: {}},
-		SRStatusRejected:         {},
-		SRStatusDelivered:        {},
-		SRStatusCancelled:        {},
-	}
-	allowed, ok := transitions[current]
+	allowed, ok := serviceRequestStatusTransitions[current]
 	if !ok {
 		return false
 	}
 	_, ok = allowed[next]
 	return ok
+}
+
+// serviceRequestStatusTransitions 是服务请求运营状态机的单一事实源。
+// 提为包级变量以便守卫测试枚举「状态机实际承认的值集合」，与
+// common.StatusVocabulary 的数据库 CHECK 词表做包含关系断言。
+var serviceRequestStatusTransitions = map[string]map[string]struct{}{
+	SRStatusSubmitted:        {SRStatusCancelled: {}},
+	SRStatusManagerApproved:  {SRStatusCancelled: {}},
+	SRStatusITApproved:       {SRStatusCancelled: {}},
+	SRStatusSecurityApproved: {SRStatusProvisioning: {}, SRStatusCancelled: {}},
+	SRStatusProvisioning:     {SRStatusDelivered: {}, SRStatusFailed: {}},
+	SRStatusFailed:           {SRStatusProvisioning: {}, SRStatusCancelled: {}},
+	SRStatusRejected:         {},
+	SRStatusDelivered:        {},
+	SRStatusCancelled:        {},
 }
 
 // GetServiceRequestSLA 读取服务请求的 SLA 状态（2026-10-21 统一绑定落地）。

@@ -100,19 +100,7 @@ func IsValidIncidentStatusTransition(currentStatus, newStatus string) bool {
 	if currentStatus == newStatus {
 		return true
 	}
-	validTransitions := map[string][]string{
-		IncidentStatusNew:          {IncidentStatusAcknowledged, IncidentStatusAssigned, IncidentStatusInProgress, IncidentStatusCancelled},
-		IncidentStatusAcknowledged: {IncidentStatusInProgress, IncidentStatusOnHold, IncidentStatusCancelled},
-		IncidentStatusAssigned:     {IncidentStatusInProgress, IncidentStatusEscalated, IncidentStatusOnHold, IncidentStatusCancelled},
-		IncidentStatusInProgress:   {IncidentStatusResolved, IncidentStatusEscalated, IncidentStatusOnHold, IncidentStatusCancelled},
-		IncidentStatusTriaged:      {IncidentStatusInProgress, IncidentStatusEscalated, IncidentStatusOnHold, IncidentStatusCancelled},
-		IncidentStatusEscalated:    {IncidentStatusInProgress, IncidentStatusOnHold, IncidentStatusCancelled},
-		IncidentStatusOnHold:       {IncidentStatusInProgress, IncidentStatusCancelled},
-		IncidentStatusResolved:     {IncidentStatusClosed, IncidentStatusInProgress, IncidentStatusCancelled},
-		IncidentStatusClosed:       {},
-		IncidentStatusCancelled:    {},
-	}
-	allowed, ok := validTransitions[currentStatus]
+	allowed, ok := incidentStatusTransitions[currentStatus]
 	if !ok {
 		return false
 	}
@@ -122,6 +110,23 @@ func IsValidIncidentStatusTransition(currentStatus, newStatus string) bool {
 		}
 	}
 	return false
+}
+
+// incidentStatusTransitions 是事件状态机的单一事实源。
+// 提为包级变量而非函数内字面量，是为了让守卫测试能枚举「状态机实际承认的
+// 值集合」，与 status_vocabulary.go 的 CHECK 词表做包含关系断言——函数内
+// 字面量无法被外部观察，词表漂移就只能靠人工 review 发现。
+var incidentStatusTransitions = map[string][]string{
+	IncidentStatusNew:          {IncidentStatusAcknowledged, IncidentStatusAssigned, IncidentStatusInProgress, IncidentStatusCancelled},
+	IncidentStatusAcknowledged: {IncidentStatusInProgress, IncidentStatusOnHold, IncidentStatusCancelled},
+	IncidentStatusAssigned:     {IncidentStatusInProgress, IncidentStatusEscalated, IncidentStatusOnHold, IncidentStatusCancelled},
+	IncidentStatusInProgress:   {IncidentStatusResolved, IncidentStatusEscalated, IncidentStatusOnHold, IncidentStatusCancelled},
+	IncidentStatusTriaged:      {IncidentStatusInProgress, IncidentStatusEscalated, IncidentStatusOnHold, IncidentStatusCancelled},
+	IncidentStatusEscalated:    {IncidentStatusInProgress, IncidentStatusOnHold, IncidentStatusCancelled},
+	IncidentStatusOnHold:       {IncidentStatusInProgress, IncidentStatusCancelled},
+	IncidentStatusResolved:     {IncidentStatusClosed, IncidentStatusInProgress, IncidentStatusCancelled},
+	IncidentStatusClosed:       {},
+	IncidentStatusCancelled:    {},
 }
 
 // IsValidTicketStatusTransition 校验工单状态转换是否合法。
@@ -147,19 +152,7 @@ func IsValidTicketStatusTransition(currentStatus, newStatus string) bool {
 	if currentStatus == newStatus {
 		return true
 	}
-	validTransitions := map[string][]string{
-		TicketStatusNew:        {TicketStatusOpen, TicketStatusAssigned, TicketStatusInProgress, TicketStatusCancelled, TicketStatusRejected},
-		TicketStatusAssigned:   {TicketStatusInProgress, TicketStatusPending, TicketStatusResolved, TicketStatusCancelled, TicketStatusRejected},
-		TicketStatusOpen:       {TicketStatusInProgress, TicketStatusPending, TicketStatusResolved, TicketStatusCancelled, TicketStatusRejected},
-		TicketStatusInProgress: {TicketStatusResolved, TicketStatusPending, TicketStatusCancelled, TicketStatusRejected},
-		TicketStatusPending:    {TicketStatusInProgress, TicketStatusResolved, TicketStatusOpen, TicketStatusCancelled, TicketStatusRejected},
-		TicketStatusResolved:   {TicketStatusClosed, TicketStatusInProgress, TicketStatusOpen},
-		TicketStatusClosed:     {},
-		TicketStatusCancelled:  {},
-		TicketStatusApproved:   {TicketStatusInProgress, TicketStatusResolved, TicketStatusClosed},
-		TicketStatusRejected:   {TicketStatusOpen, TicketStatusCancelled},
-	}
-	allowed, ok := validTransitions[currentStatus]
+	allowed, ok := ticketStatusTransitions[currentStatus]
 	if !ok {
 		return false
 	}
@@ -171,15 +164,42 @@ func IsValidTicketStatusTransition(currentStatus, newStatus string) bool {
 	return false
 }
 
+// ticketStatusTransitions 是工单状态机的单一事实源（提为包级变量以便守卫
+// 测试枚举，理由同 incidentStatusTransitions）。
+var ticketStatusTransitions = map[string][]string{
+	TicketStatusNew:        {TicketStatusOpen, TicketStatusAssigned, TicketStatusInProgress, TicketStatusCancelled, TicketStatusRejected},
+	TicketStatusAssigned:   {TicketStatusInProgress, TicketStatusPending, TicketStatusResolved, TicketStatusCancelled, TicketStatusRejected},
+	TicketStatusOpen:       {TicketStatusInProgress, TicketStatusPending, TicketStatusResolved, TicketStatusCancelled, TicketStatusRejected},
+	TicketStatusInProgress: {TicketStatusResolved, TicketStatusPending, TicketStatusCancelled, TicketStatusRejected},
+	TicketStatusPending:    {TicketStatusInProgress, TicketStatusResolved, TicketStatusOpen, TicketStatusCancelled, TicketStatusRejected},
+	TicketStatusResolved:   {TicketStatusClosed, TicketStatusInProgress, TicketStatusOpen},
+	TicketStatusClosed:     {},
+	TicketStatusCancelled:  {},
+	TicketStatusApproved:   {TicketStatusInProgress, TicketStatusResolved, TicketStatusClosed},
+	TicketStatusRejected:   {TicketStatusOpen, TicketStatusCancelled},
+}
+
 // ===================================
 // Problem Status Constants
 // ===================================
+//
+// 权威词表：open → investigating/identified → resolved → closed。
+// 与 handlers/problem 的状态机、ent schema 默认值（"open"）、报表词表
+// （problemStatusOrder）一致，并由 status_vocabulary.go 纳入 CHECK 约束。
+//
+// 历史注意：这里曾经定义 ProblemStatusNew = "new"，但问题域没有任何代码
+// 写入 "new"（创建时一律用 "open"），它只是一个与事实不符的幽灵常量。
+// 2026-10-31 删除并改为 ProblemStatusOpen——枚举存在两份互相矛盾的写法，
+// 比缺少枚举更危险：调用方按常量写入会立刻被 CHECK 约束拒绝。
 const (
-	ProblemStatusNew           = "new"
+	ProblemStatusOpen          = "open"
 	ProblemStatusInvestigating = "investigating" // 调查中
 	ProblemStatusIdentified    = "identified"    // 已识别
 	ProblemStatusResolved      = "resolved"
 	ProblemStatusClosed        = "closed"
+	// ProblemStatusInProgress 是存量别名：旧数据可能停留在此状态，
+	// 状态机只允许它迁出到规范状态，新代码不得写入。
+	ProblemStatusInProgress = "in_progress"
 )
 
 // ===================================

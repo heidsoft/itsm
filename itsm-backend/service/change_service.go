@@ -53,45 +53,21 @@ func IsValidChangeStatusTransition(currentStatus, newStatus, changeType string) 
 	newStatus = normalizeChangeTransitionStatus(newStatus)
 
 	// 基础转换规则（适用于所有变更类型）
-	baseTransitions := map[string][]string{
-		common.ChangeStatusRejected:        {},                          // 被拒绝后不允许转换
-		common.ChangeStatusCompleted:       {common.ChangeStatusClosed}, // 已完成 → 可显式关闭以归档
-		common.ChangeStatusCancelled:       {},                          // 已取消不允许转换
-		string(dto.ChangeStatusRolledBack): {common.ChangeStatusClosed}, // 已回滚 → 也可归档
-		common.ChangeStatusClosed:          {},                          // 已关闭为终态
-	}
+	// 提为包级变量（见文件末尾）以便守卫测试枚举「状态机承认的全部值」，
+	// 与 common.status_vocabulary.go 的 CHECK 词表做包含关系断言。
+	baseTransitions := changeBaseTransitions
 
 	// 不同变更类型的特殊转换规则
 	var typeSpecificTransitions map[string][]string
 	switch changeType {
 	case string(dto.ChangeTypeStandard):
 		// 标准变更：预授权，可以跳过审批步骤
-		typeSpecificTransitions = map[string][]string{
-			common.ChangeStatusDraft:      {common.ChangeStatusSubmitted, common.ChangeStatusApproved, common.ChangeStatusScheduled, common.ChangeStatusInProgress, common.ChangeStatusCancelled},
-			common.ChangeStatusSubmitted:  {common.ChangeStatusApproved, common.ChangeStatusRejected, common.ChangeStatusCancelled},
-			common.ChangeStatusApproved:   {common.ChangeStatusScheduled, common.ChangeStatusInProgress, common.ChangeStatusCancelled},
-			common.ChangeStatusScheduled:  {common.ChangeStatusInProgress, common.ChangeStatusCancelled},
-			common.ChangeStatusInProgress: {common.ChangeStatusCompleted, common.ChangeStatusFailed, string(dto.ChangeStatusRolledBack), common.ChangeStatusCancelled},
-			common.ChangeStatusFailed:     {common.ChangeStatusScheduled, string(dto.ChangeStatusRolledBack), common.ChangeStatusCancelled},
-		}
+		typeSpecificTransitions = changeStandardTransitions
 	case string(dto.ChangeTypeEmergency):
 		// 紧急变更：可以跳过多个步骤，快速实施
-		typeSpecificTransitions = map[string][]string{
-			common.ChangeStatusDraft:      {common.ChangeStatusSubmitted, common.ChangeStatusApproved, common.ChangeStatusInProgress, common.ChangeStatusCancelled},
-			common.ChangeStatusSubmitted:  {common.ChangeStatusApproved, common.ChangeStatusRejected, common.ChangeStatusCancelled},
-			common.ChangeStatusApproved:   {common.ChangeStatusInProgress, common.ChangeStatusCancelled},
-			common.ChangeStatusInProgress: {common.ChangeStatusCompleted, common.ChangeStatusFailed, string(dto.ChangeStatusRolledBack), common.ChangeStatusCancelled},
-			common.ChangeStatusFailed:     {common.ChangeStatusScheduled, string(dto.ChangeStatusRolledBack), common.ChangeStatusCancelled},
-		}
+		typeSpecificTransitions = changeEmergencyTransitions
 	default: // 普通变更：严格的ITIL流程
-		typeSpecificTransitions = map[string][]string{
-			common.ChangeStatusDraft:      {common.ChangeStatusSubmitted, common.ChangeStatusCancelled},
-			common.ChangeStatusSubmitted:  {common.ChangeStatusApproved, common.ChangeStatusRejected, common.ChangeStatusCancelled},
-			common.ChangeStatusApproved:   {common.ChangeStatusScheduled, common.ChangeStatusCancelled},
-			common.ChangeStatusScheduled:  {common.ChangeStatusInProgress, common.ChangeStatusCancelled},
-			common.ChangeStatusInProgress: {common.ChangeStatusCompleted, common.ChangeStatusFailed, string(dto.ChangeStatusRolledBack), common.ChangeStatusCancelled},
-			common.ChangeStatusFailed:     {common.ChangeStatusScheduled, string(dto.ChangeStatusRolledBack), common.ChangeStatusCancelled},
-		}
+		typeSpecificTransitions = changeNormalTransitions
 	}
 
 	// 合并基础规则和类型特定规则
@@ -115,4 +91,51 @@ func IsValidChangeStatusTransition(currentStatus, newStatus, changeType string) 
 		}
 	}
 	return false
+}
+
+// ---------------------------------------------------------------------------
+// 变更状态机迁移表（包级事实源）
+//
+// 提为包级变量而非函数内字面量，是为了让守卫测试能枚举「状态机实际承认的
+// 值集合」，与 common.StatusVocabulary 的数据库 CHECK 词表做包含关系断言。
+// 函数内字面量无法被外部观察，词表漂移就只能靠人工 review 发现——而
+// 状态机新增一个值、数据库约束没跟上时，mock 单测全绿、生产写入撞 23514。
+// ---------------------------------------------------------------------------
+
+// changeBaseTransitions 适用于所有变更类型的终态/归档规则。
+var changeBaseTransitions = map[string][]string{
+	common.ChangeStatusRejected:        {},                          // 被拒绝后不允许转换
+	common.ChangeStatusCompleted:       {common.ChangeStatusClosed}, // 已完成 → 可显式关闭以归档
+	common.ChangeStatusCancelled:       {},                          // 已取消不允许转换
+	string(dto.ChangeStatusRolledBack): {common.ChangeStatusClosed}, // 已回滚 → 也可归档
+	common.ChangeStatusClosed:          {},                          // 已关闭为终态
+}
+
+// changeStandardTransitions 标准变更：预授权，可以跳过审批步骤。
+var changeStandardTransitions = map[string][]string{
+	common.ChangeStatusDraft:      {common.ChangeStatusSubmitted, common.ChangeStatusApproved, common.ChangeStatusScheduled, common.ChangeStatusInProgress, common.ChangeStatusCancelled},
+	common.ChangeStatusSubmitted:  {common.ChangeStatusApproved, common.ChangeStatusRejected, common.ChangeStatusCancelled},
+	common.ChangeStatusApproved:   {common.ChangeStatusScheduled, common.ChangeStatusInProgress, common.ChangeStatusCancelled},
+	common.ChangeStatusScheduled:  {common.ChangeStatusInProgress, common.ChangeStatusCancelled},
+	common.ChangeStatusInProgress: {common.ChangeStatusCompleted, common.ChangeStatusFailed, string(dto.ChangeStatusRolledBack), common.ChangeStatusCancelled},
+	common.ChangeStatusFailed:     {common.ChangeStatusScheduled, string(dto.ChangeStatusRolledBack), common.ChangeStatusCancelled},
+}
+
+// changeEmergencyTransitions 紧急变更：可以跳过多个步骤，快速实施。
+var changeEmergencyTransitions = map[string][]string{
+	common.ChangeStatusDraft:      {common.ChangeStatusSubmitted, common.ChangeStatusApproved, common.ChangeStatusInProgress, common.ChangeStatusCancelled},
+	common.ChangeStatusSubmitted:  {common.ChangeStatusApproved, common.ChangeStatusRejected, common.ChangeStatusCancelled},
+	common.ChangeStatusApproved:   {common.ChangeStatusInProgress, common.ChangeStatusCancelled},
+	common.ChangeStatusInProgress: {common.ChangeStatusCompleted, common.ChangeStatusFailed, string(dto.ChangeStatusRolledBack), common.ChangeStatusCancelled},
+	common.ChangeStatusFailed:     {common.ChangeStatusScheduled, string(dto.ChangeStatusRolledBack), common.ChangeStatusCancelled},
+}
+
+// changeNormalTransitions 普通变更：严格的 ITIL 流程。
+var changeNormalTransitions = map[string][]string{
+	common.ChangeStatusDraft:      {common.ChangeStatusSubmitted, common.ChangeStatusCancelled},
+	common.ChangeStatusSubmitted:  {common.ChangeStatusApproved, common.ChangeStatusRejected, common.ChangeStatusCancelled},
+	common.ChangeStatusApproved:   {common.ChangeStatusScheduled, common.ChangeStatusCancelled},
+	common.ChangeStatusScheduled:  {common.ChangeStatusInProgress, common.ChangeStatusCancelled},
+	common.ChangeStatusInProgress: {common.ChangeStatusCompleted, common.ChangeStatusFailed, string(dto.ChangeStatusRolledBack), common.ChangeStatusCancelled},
+	common.ChangeStatusFailed:     {common.ChangeStatusScheduled, string(dto.ChangeStatusRolledBack), common.ChangeStatusCancelled},
 }

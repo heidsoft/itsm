@@ -702,21 +702,25 @@ func isValidProblemStatusTransition(current, next string) bool {
 	if current == next {
 		return true
 	}
-	transitions := map[string]map[string]struct{}{
-		"open":          {"investigating": {}, "identified": {}, "resolved": {}},
-		"investigating": {"identified": {}, "resolved": {}},
-		"identified":    {"investigating": {}, "resolved": {}},
-		"resolved":      {"investigating": {}, "closed": {}},
-		"closed":        {},
-		// 兼容存量 in_progress 数据，仅允许进入规范状态。
-		"in_progress": {"identified": {}, "resolved": {}},
-	}
-	allowed, ok := transitions[current]
+	allowed, ok := problemStatusTransitions[current]
 	if !ok {
 		return false
 	}
 	_, ok = allowed[next]
 	return ok
+}
+
+// problemStatusTransitions 是问题状态机的单一事实源。
+// 提为包级变量以便守卫测试枚举「状态机实际承认的值集合」，与
+// common.StatusVocabulary 的数据库 CHECK 词表做包含关系断言。
+var problemStatusTransitions = map[string]map[string]struct{}{
+	"open":          {"investigating": {}, "identified": {}, "resolved": {}},
+	"investigating": {"identified": {}, "resolved": {}},
+	"identified":    {"investigating": {}, "resolved": {}},
+	"resolved":      {"investigating": {}, "closed": {}},
+	"closed":        {},
+	// 兼容存量 in_progress 数据，仅允许进入规范状态。
+	"in_progress": {"identified": {}, "resolved": {}},
 }
 
 func uniquePositiveIDs(ids []int) []int {
