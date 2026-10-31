@@ -51,10 +51,16 @@ type EmailIntakeExtractor struct {
 	model   string
 }
 
+// NewEmailIntakeExtractor 装配邮件 AI 抽取器。
+//
+// model 为空时**不填默认值**：此前这里兜底成 "gpt-4o-mini"，而 e.model 是
+// 真的会传给 gateway.Chat 的——也就是说「没配模型」会被静默翻译成「调用一个
+// 具体的第三方模型」。生产配的是另一家 provider 时，这个兜底会让邮件抽取
+// 每次都去调一个配错的模型（表现为 401/404，或被当成另一个产品的调用计费）。
+//
+// 现在未配置就传空，把模型选择权交回 provider（与网关其它调用点行为一致）。
+// 这是行为修复，不只是溯源字段修正。
 func NewEmailIntakeExtractor(gateway EmailLLMGateway, model string) *EmailIntakeExtractor {
-	if model == "" {
-		model = "gpt-4o-mini"
-	}
 	return &EmailIntakeExtractor{gateway: gateway, model: model}
 }
 

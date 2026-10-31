@@ -10,6 +10,7 @@ import (
 
 	"itsm-backend/dto"
 	"itsm-backend/ent"
+	"itsm-backend/ent/ticket"
 	"itsm-backend/metrics"
 	"itsm-backend/middleware"
 	"itsm-backend/service"
@@ -126,6 +127,10 @@ var ErrToolPermissionDenied = fmt.Errorf("tool permission denied")
 var ErrUnknownTool = fmt.Errorf("unknown tool")
 
 var ErrToolUnavailable = fmt.Errorf("tool authorization dependencies unavailable")
+
+// ErrRAGUnavailable RAG 检索服务未装配。此前 rag 为 nil 时 Chat 直接解引用
+// 崩溃；现在返回错误，由 handler 的降级分支接住（返回空结果而不是 500）。
+var ErrRAGUnavailable = fmt.Errorf("rag retrieval service unavailable")
 
 // ExecuteTool 执行 AI 工具
 // userID 和 role 用于 Gate 2 RBAC 校验
@@ -274,6 +279,13 @@ func (s *Service) ApproveTool(ctx context.Context, id int, tenantID, userID int,
 func (s *Service) Chat(ctx context.Context, tenantID, userID int, query string, limit int, convID int) (interface{}, int, error) {
 	s.logger.Infow("AI Chat", "query", query, "tenantID", tenantID)
 
+	// RAG 未装配时返回错误而不是 panic：此前直接 s.rag.Ask(...) 在 rag 为 nil
+	// 时解引用崩溃（nil receiver 上的字段访问）。生产装配一定会注入，但装配
+	// 缺口不该以 500 + 崩溃的形式暴露——handler 已有降级分支可接住错误。
+	if s.rag == nil {
+		return nil, 0, ErrRAGUnavailable
+	}
+
 	items, err := s.rag.Ask(ctx, tenantID, query, limit)
 	if err != nil {
 		return nil, 0, err
@@ -335,6 +347,105 @@ func (s *Service) Chat(ctx context.Context, tenantID, userID int, query string, 
 	}
 
 	return items, convID, nil
+}
+
+// ragAskPromptVersion 是 RAG 问答的检索口径版本：换 embedding 模型、换召回
+// 策略（top-k / 阈值 / 融合权重）都必须换它，否则底账里新旧口径的答案混在一起，
+// 事后无法解释「为什么那批答案质量明显不同」。
+const ragAskPromptVersion = "rag-ask-v1"
+
+// ChatResult 是带检索溯源的问答结果。
+//
+// Model 是**检索模式**（hybrid/vector/keyword）而不是生成模型：RAG 问答的答案
+// 片段来自知识库检索，不经过生成模型。把它写成某个模型名就是伪造归因。
+// Confidence 是命中片段里的最高分（真实检索分，0 表示无命中）。
+type ChatResult struct {
+	Answers        interface{} `json:"answers"`
+	ConversationID int         `json:"conversationId"`
+	AuditID        int64       `json:"auditId,omitempty"`
+	PromptVersion  string      `json:"promptVersion"`
+	Model          string      `json:"model"`
+	Confidence     float64     `json:"confidence"`
+}
+
+// ChatWithTrace 在 Chat 之上补检索溯源并落服务端决策底账。
+//
+// 为什么单独一个方法而不是改 Chat 的签名：Chat 的 (answers, convID, error)
+// 三元组被 handler、skill、测试多处使用，改动面大；溯源是新增能力，
+// 独立入口不影响既有调用。
+//
+// 底账照落但 confidence 是真实检索分：无命中时为 0——「问了但库里没有」是最
+// 需要被记录的一类情况，否则它会被当成「AI 答得不好」而不是「知识库缺内容」。
+func (s *Service) ChatWithTrace(ctx context.Context, tenantID, userID int, query string, limit, convID int) (*ChatResult, error) {
+	answers, cid, err := s.Chat(ctx, tenantID, userID, query, limit, convID)
+	if err != nil {
+		return nil, err
+	}
+
+	mode := "unknown"
+	if s.rag != nil {
+		mode = s.rag.Mode()
+	}
+	confidence := topRetrievalScore(answers)
+
+	out := &ChatResult{
+		Answers:        answers,
+		ConversationID: cid,
+		PromptVersion:  ragAskPromptVersion,
+		Model:          mode,
+		Confidence:     confidence,
+	}
+	if s.auditLedger == nil {
+		return out, nil
+	}
+	auditID, ledgerErr := s.auditLedger.RecordDecisionAudit(ctx, tenantID, userID,
+		fmt.Sprintf("chat_%d_%d", tenantID, time.Now().UnixNano()),
+		"chat", fmt.Sprintf("query:%s", truncateForRef(query, 120)),
+		ragAskPromptVersion, mode, confidence,
+		map[string]interface{}{
+			"retrievalMode": mode,
+			"hitCount":      hitCount(answers),
+		},
+	)
+	if ledgerErr != nil {
+		s.logger.Warnw("Chat: audit ledger write failed (best-effort)", "error", ledgerErr)
+		return out, nil
+	}
+	out.AuditID = auditID
+	return out, nil
+}
+
+// topRetrievalScore 取命中片段里的最高分作为检索置信度。
+// 取不到（无命中 / 结构不符）时返回 0——「没有可信命中」是实情，不是缺失。
+func topRetrievalScore(answers interface{}) float64 {
+	items, ok := answers.([]map[string]any)
+	if !ok {
+		return 0
+	}
+	var best float64
+	for _, it := range items {
+		if sc, ok := it["score"].(float64); ok && sc > best {
+			best = sc
+		}
+	}
+	return best
+}
+
+func hitCount(answers interface{}) int {
+	if items, ok := answers.([]map[string]any); ok {
+		return len(items)
+	}
+	return 0
+}
+
+// truncateForRef 把用户输入截断后作为底账的 inputRef：原样入库会让一条超长
+// query 占满底账字段，截断到 120 字符足够定位又不至于膨胀。
+func truncateForRef(s string, max int) string {
+	runes := []rune(s)
+	if len(runes) <= max {
+		return s
+	}
+	return string(runes[:max]) + "…"
 }
 
 // chatWritableTools 是允许注入聊天路径的写工具白名单。
@@ -614,14 +725,106 @@ func (s *Service) CreateTicketByAI(ctx context.Context, description string, tena
 	}, nil
 }
 
+// defaultSummaryMaxLen 是摘要的目标字数上限。
+const defaultSummaryMaxLen = 200
+
 // SummarizeTicket B9: AI 工单总结。
 //
-// 把 SummarizeService 接入装配图（之前 NewSummarizeService 在
-// 生产装配路径零调用点，是 404 行死代码）。本函数仍委托 rca 处理 ent 反查与编排，
-// SummarizeService 通过 ai.summarize skill 独立被 SkillRegistry 消费（见 skills.go），
-// 二者职责解耦：rca 负责按 ticketID 拉上下文，SummarizeService 负责"按文本 + metadata"摘要。
-func (s *Service) SummarizeTicket(ctx context.Context, ticketID int, tenantID int) (interface{}, error) {
+// 此前这里只委托 rca，而 SetSummarizeService 的注释却写着「优先走
+// SummarizeService.SummarizeWithMetadata」——装配与实现不一致：summarizeService
+// 被注入后从未被调用（死装配）。后果是摘要永远走 rca 那条路，而 rca 的默认
+// 产物是**字段拼接**（method=fallback），没有任何字段能区分「模型生成的摘要」
+// 与「拼出来的原文」。这就是能力矩阵里「默认摘要仍是原文拼接」的由来。
+//
+// 现在按注释真正接上：SummarizeService 产出 method/model/promptVersion 三件套
+// （llm / direct / fallback 如实区分），失败再兜底 rca。两条路径都落服务端 AI
+// 决策底账并带出 auditId，操作者可经 PATCH /ai/audit-logs/:id 翻转采纳/拒绝。
+//
+// userID 为 0 表示无用户上下文（如 skill 调用），底账照落（user_id=0 是实情，
+// 不是缺失），不因拿不到用户就放弃溯源。
+func (s *Service) SummarizeTicket(ctx context.Context, ticketID int, tenantID int, userID int) (interface{}, error) {
+	if s.summarizeService != nil && s.entClient != nil {
+		text, err := s.buildTicketSummaryText(ctx, ticketID, tenantID)
+		if err != nil {
+			s.logger.Warnw("SummarizeTicket: 组装摘要输入失败，兜底 rca", "error", err, "ticketID", ticketID)
+		} else {
+			meta, mErr := s.summarizeService.SummarizeWithMetadata(ctx, text, defaultSummaryMaxLen)
+			if mErr != nil || meta == nil {
+				s.logger.Warnw("SummarizeTicket: SummarizeService 失败，兜底 rca", "error", mErr, "ticketID", ticketID)
+			} else {
+				return s.withSummaryAudit(ctx, ticketID, tenantID, userID, meta.Summary, meta.Method, meta.PromptVersion, meta.Model, meta.Confidence), nil
+			}
+		}
+	}
 	return s.rca.SummarizeTicket(ctx, ticketID, tenantID)
+}
+
+// buildTicketSummaryText 组装喂给摘要模型的工单文本。
+//
+// 与 rca 里的那份拼接是两处独立实现：rca 拼的是「fallback 展示文案」（人读的
+// 一行状态描述），这里拼的是「模型输入」（结构化字段）。两者目的不同，不共用——
+// 把 fallback 文案当模型输入会让模型复述状态字段而不是概括问题。
+func (s *Service) buildTicketSummaryText(ctx context.Context, ticketID, tenantID int) (string, error) {
+	if s.entClient == nil {
+		return "", fmt.Errorf("ent client not initialized")
+	}
+	tk, err := s.entClient.Ticket.Query().
+		Where(ticket.IDEQ(ticketID), ticket.TenantIDEQ(tenantID)).
+		Only(ctx)
+	if err != nil {
+		return "", err
+	}
+	var b strings.Builder
+	b.WriteString("工单号：")
+	b.WriteString(tk.TicketNumber)
+	b.WriteString("\n标题：")
+	b.WriteString(tk.Title)
+	if tk.Description != "" {
+		b.WriteString("\n描述：")
+		b.WriteString(tk.Description)
+	}
+	b.WriteString("\n状态：")
+	b.WriteString(tk.Status)
+	b.WriteString("\n优先级：")
+	b.WriteString(tk.Priority)
+	return b.String(), nil
+}
+
+// withSummaryAudit 给摘要结果补溯源字段并落服务端决策底账。
+//
+// confidence 对摘要恒为 0（生成类产出没有自评分数，硬填就是编造），底账的
+// notes 里显式标注 confidenceNotApplicable + method，让事后看底账的人知道
+// 「这条记录的 0 是不适用，不是模型给了零分」。method=direct/fallback 时也照落：
+// 恰恰是这些「不是模型产出」的摘要最需要被记录——否则采纳率会把它当成 AI 表现。
+func (s *Service) withSummaryAudit(ctx context.Context, ticketID, tenantID, userID int, summary, method, promptVersion, model string, confidence float64) map[string]interface{} {
+	resp := map[string]interface{}{
+		"ticketId":      ticketID,
+		"summary":       summary,
+		"method":        method,
+		"promptVersion": promptVersion,
+		"model":         model,
+		"confidence":    confidence,
+		"generatedAt":   time.Now().Format(time.RFC3339),
+	}
+	if s.auditLedger == nil {
+		return resp
+	}
+	auditID, err := s.auditLedger.RecordDecisionAudit(ctx, tenantID, userID,
+		fmt.Sprintf("summary_%d_%d", tenantID, time.Now().UnixNano()),
+		"summary", fmt.Sprintf("ticket:%d", ticketID),
+		promptVersion, model, confidence,
+		map[string]interface{}{
+			"method":                  method,
+			"confidenceNotApplicable": true,
+			"summaryChars":            len([]rune(summary)),
+		},
+	)
+	if err != nil {
+		s.logger.Warnw("SummarizeTicket: audit ledger write failed (best-effort)", "error", err)
+		return resp
+	}
+	resp["auditId"] = auditID
+	return resp
 }
 
 func (s *Service) GetAnalysisReport(ctx context.Context, ticketID int, tenantID int) (interface{}, error) {
@@ -630,11 +833,34 @@ func (s *Service) GetAnalysisReport(ctx context.Context, ticketID int, tenantID 
 
 // Analytics and Prediction
 
+// analyticsMetricVersion 是深度分析的统计口径版本。
+const analyticsMetricVersion = "deep-analytics-v1"
+
+// GetDeepAnalytics 深度分析。
+//
+// 它是 SQL 聚合，不是 AI 生成——所以这里只补口径版本与 method="aggregate"，
+// **不补 model**。此前能力矩阵把 analytics 与 chat/摘要并列为「缺溯源字段」，
+// 但给聚合结果加一个 model 字段只会制造假溯源：客户端会以为这是某模型的建议，
+// 而实际没有任何模型参与。诚实标注「这是聚合，口径版本是 X」才是它该有的溯源。
 func (s *Service) GetDeepAnalytics(ctx context.Context, req *dto.DeepAnalyticsRequest, tenantID int) (interface{}, error) {
-	return s.analytics.GetDeepAnalytics(ctx, req, tenantID)
+	res, err := s.analytics.GetDeepAnalytics(ctx, req, tenantID)
+	if err != nil {
+		return nil, err
+	}
+	if res != nil {
+		res.MetricVersion = analyticsMetricVersion
+		res.Method = "aggregate"
+	}
+	return res, nil
 }
 
-func (s *Service) GetTrendPrediction(ctx context.Context, req *dto.TrendPredictionRequest, tenantID int) (interface{}, error) {
+// slaForecastPromptVersion 是 SLA 趋势预测的口径版本。
+//
+// 预测值会被拿去做容量与风险决策，「这组数按什么口径算的」必须可追：换了
+// 预测算法或平滑参数而不换版本号，底账里新旧口径的预测就无法区分。
+const slaForecastPromptVersion = "sla-forecast-v1"
+
+func (s *Service) GetTrendPrediction(ctx context.Context, req *dto.TrendPredictionRequest, tenantID int, userID int) (interface{}, error) {
 	// 前端不带 timeRange 时默认为「过去 6 个月 → 今天」。
 	// 否则 req.TimeRange[0/1] 会 panic,与 prediction_service.go 行为对齐。
 	if len(req.TimeRange) != 2 {
@@ -660,18 +886,58 @@ func (s *Service) GetTrendPrediction(ctx context.Context, req *dto.TrendPredicti
 			// "predictedValue" 不一致。出口做一层转译，保留 SLAForecastSkill 的
 			// 全部增强字段（insights / seasonality / trend / anomalyDates），
 			// 同时让前端 SLATrendPredictionCard 的 predictedValue 字段拿到真值。
-			return normalizeForecastOutput(output), nil
+			model, confidence := "", 0.0
+			if output != nil {
+				model, confidence = output.Model, output.Confidence
+			}
+			auditID := s.recordForecastAudit(ctx, tenantID, userID,
+				fmt.Sprintf("trend:%s", req.PredictionType), model, confidence)
+			return normalizeForecastOutput(output, slaForecastPromptVersion, auditID), nil
 		}
 		// Fall back to legacy prediction service on error
 		s.logger.Warnw("SLAForecastSkill failed, falling back to legacy", "error", err)
 	}
-	return s.prediction.GetTrendPrediction(ctx, req, tenantID)
+
+	res, err := s.prediction.GetTrendPrediction(ctx, req, tenantID)
+	if err != nil {
+		return nil, err
+	}
+	// 兜底路同样补溯源：legacy 预测服务产出的数同样会被拿去决策，
+	// 没有口径版本就等于有一批预测来源不明。
+	if res != nil {
+		res.PromptVersion = slaForecastPromptVersion
+		res.AuditID = s.recordForecastAudit(ctx, tenantID, userID,
+			fmt.Sprintf("trend:%s", req.PredictionType), res.Model, res.Confidence)
+	}
+	return res, nil
+}
+
+// recordForecastAudit 落一条预测决策底账并返回行 ID；底账不可用时返回 0
+// （best-effort：预测结果照常返回，只是这次没有底账 ID）。
+//
+// 预测与分诊同源地落 ai_audit：采纳/拒绝统一走 PATCH /ai/audit-logs/:id，
+// 不再由前端自报。confidence 直接取 ForecastOutput 的真实计算值——它与分诊
+// 不同，预测本来就有可计算的置信度（不是生成类产出）。
+func (s *Service) recordForecastAudit(ctx context.Context, tenantID, userID int, inputRef, model string, confidence float64) int64 {
+	if s.auditLedger == nil {
+		return 0
+	}
+	auditID, err := s.auditLedger.RecordDecisionAudit(ctx, tenantID, userID,
+		fmt.Sprintf("forecast_%d_%d", tenantID, time.Now().UnixNano()),
+		"forecast", inputRef, slaForecastPromptVersion, model, confidence,
+		map[string]interface{}{"model": model},
+	)
+	if err != nil {
+		s.logger.Warnw("forecast: audit ledger write failed (best-effort)", "error", err)
+		return 0
+	}
+	return auditID
 }
 
 // normalizeForecastOutput 把 SLAForecastSkill.ForecastOutput 转译为 dto 契约
 // （predictions[i].predictedValue 而非 predicted）。同时保留 SLAForecastSkill
 // 的 AI 增强字段（insights/seasonality/trend/anomalyDates）作为额外元数据。
-func normalizeForecastOutput(output *service.ForecastOutput) interface{} {
+func normalizeForecastOutput(output *service.ForecastOutput, promptVersion string, auditID int64) interface{} {
 	if output == nil {
 		return output
 	}
@@ -692,6 +958,9 @@ func normalizeForecastOutput(output *service.ForecastOutput) interface{} {
 		Seasonality  map[string]bool `json:"seasonality"`
 		Trend        string          `json:"trend"`
 		AnomalyDates []string        `json:"anomalyDates"`
+		// 溯源：口径版本 + 服务端决策底账 ID（0 = 底账不可用，如实不填）
+		PromptVersion string `json:"promptVersion,omitempty"`
+		AuditID       int64  `json:"auditId,omitempty"`
 	}
 	points := make([]predictionDTO, 0, len(output.Predictions))
 	for _, p := range output.Predictions {
@@ -705,19 +974,21 @@ func normalizeForecastOutput(output *service.ForecastOutput) interface{} {
 		})
 	}
 	return forecastDTO{
-		Predictions:  points,
-		Confidence:   output.Confidence,
-		Model:        output.Model,
-		GeneratedAt:  time.Now().UTC().Format(time.RFC3339),
-		Insights:     output.Insights,
-		Seasonality:  output.Seasonality,
-		Trend:        output.Trend,
-		AnomalyDates: output.AnomalyDates,
+		Predictions:   points,
+		Confidence:    output.Confidence,
+		Model:         output.Model,
+		GeneratedAt:   time.Now().UTC().Format(time.RFC3339),
+		Insights:      output.Insights,
+		Seasonality:   output.Seasonality,
+		Trend:         output.Trend,
+		AnomalyDates:  output.AnomalyDates,
+		PromptVersion: promptVersion,
+		AuditID:       auditID,
 	}
 }
 
 // GetForecastInsights returns AI-generated insights for SLA forecasting
-func (s *Service) GetForecastInsights(ctx context.Context, req *dto.TrendPredictionRequest, tenantID int) (interface{}, error) {
+func (s *Service) GetForecastInsights(ctx context.Context, req *dto.TrendPredictionRequest, tenantID int, userID int) (interface{}, error) {
 	if s.slaForecastSkill == nil {
 		return nil, fmt.Errorf("SLAForecastSkill not initialized")
 	}
@@ -734,7 +1005,11 @@ func (s *Service) GetForecastInsights(ctx context.Context, req *dto.TrendPredict
 		return nil, err
 	}
 
-	// Return insights-focused response
+	// Return insights-focused response（同样带溯源字段：洞察会被直接展示给
+	// 管理者并据此做决策，没有口径版本就没有办法解释「为什么上个月这么说、
+	// 这个月又那么说」）。
+	auditID := s.recordForecastAudit(ctx, tenantID, userID,
+		fmt.Sprintf("insights:%s", req.PredictionType), output.Model, output.Confidence)
 	return map[string]interface{}{
 		"confidence":    output.Confidence,
 		"model":         output.Model,
@@ -742,6 +1017,8 @@ func (s *Service) GetForecastInsights(ctx context.Context, req *dto.TrendPredict
 		"seasonality":   output.Seasonality,
 		"trend":         output.Trend,
 		"anomaly_dates": output.AnomalyDates,
+		"promptVersion": slaForecastPromptVersion,
+		"auditId":       auditID,
 	}, nil
 }
 

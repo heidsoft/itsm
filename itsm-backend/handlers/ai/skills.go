@@ -401,7 +401,9 @@ func (s *SummarizeSkill) Execute(ctx context.Context, input interface{}) (interf
 	if s.svc == nil {
 		return nil, errors.New("summarize skill: underlying service is nil")
 	}
-	return s.svc.SummarizeTicket(ctx, ticketID, tenantID)
+	// skill 调用没有用户上下文：userID 传 0，底账照落（user_id=0 是实情，
+	// 不是缺失）——不因拿不到用户就放弃溯源。
+	return s.svc.SummarizeTicket(ctx, ticketID, tenantID, 0)
 }
 
 // ----------------------------------------------------------------------------
@@ -633,7 +635,8 @@ func (s *TrendPredictionSkill) Execute(ctx context.Context, input interface{}) (
 	if s.svc == nil {
 		return nil, errors.New("trend_prediction skill: underlying service is nil")
 	}
-	return s.svc.GetTrendPrediction(ctx, req, tenantID)
+	// skill 调用无用户上下文：userID 传 0，底账照落。
+	return s.svc.GetTrendPrediction(ctx, req, tenantID, 0)
 }
 
 // ----------------------------------------------------------------------------

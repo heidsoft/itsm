@@ -72,6 +72,10 @@ func toOpenAIMessages(messages []LLMMessage) ([]openai.ChatCompletionMessage, []
 	return msgs, tools
 }
 
+// Model 自报本 provider 实际使用的模型，供 AI 审计底账溯源。
+// 返回调用方最近一次显式指定的模型，或构造时配置的模型（调用方未指定时）。
+func (p *OpenAIProvider) Model() string { return p.model }
+
 func (p *OpenAIProvider) Chat(ctx context.Context, model string, messages []LLMMessage) (string, error) {
 	if model != "" {
 		p.model = model
@@ -268,6 +272,9 @@ func NewStreamingOpenAIProvider(apiKey, endpoint, model string) *StreamingOpenAI
 	}
 }
 
+// Model 自报本 provider 实际使用的模型，供 AI 审计底账溯源。
+func (p *StreamingOpenAIProvider) Model() string { return p.model }
+
 func (p *StreamingOpenAIProvider) ChatStream(ctx context.Context, model string, messages []LLMMessage, callback func(string)) error {
 	if model != "" {
 		p.model = model
@@ -324,6 +331,10 @@ func NewAzureProvider(apiKey, endpoint, deploymentID string) *AzureProvider {
 		apiVersion:   "2024-02-15-preview",
 	}
 }
+
+// Model 自报本 provider 实际使用的模型。Azure 用 deployment 名而非模型名，
+// 溯源时如实报 deployment ID——它在 Azure 侧就是「这次调用用的哪个模型」。
+func (p *AzureProvider) Model() string { return p.deploymentID }
 
 func (p *AzureProvider) Chat(ctx context.Context, model string, messages []LLMMessage) (string, error) {
 	actualModel := p.deploymentID
@@ -423,6 +434,9 @@ type MiniMaxAnthropicResponse struct {
 	StopReason string `json:"stopReason"`
 }
 
+// Model 自报本 provider 实际使用的模型，供 AI 审计底账溯源。
+func (p *MiniMaxProvider) Model() string { return p.model }
+
 func (p *MiniMaxProvider) Chat(ctx context.Context, model string, messages []LLMMessage) (string, error) {
 	if model != "" {
 		p.model = model
@@ -516,6 +530,10 @@ type OllamaChatResponse struct {
 	EvalCount     int      `json:"evalCount,omitempty"`
 	StopReasons   []string `json:"stopReason,omitempty"`
 }
+
+// LocalProvider 有意不实现 ModelReportingProvider：本地 Ollama 的模型完全由
+// 调用方每次入参决定，provider 自身没有「配置模型」可言。与其返回一个猜的
+// 默认值，不如让网关如实回退到 unknown（或调用方显式传入的那个 model）。
 
 func (p *LocalProvider) Chat(ctx context.Context, model string, messages []LLMMessage) (string, error) {
 	req := OllamaChatRequest{

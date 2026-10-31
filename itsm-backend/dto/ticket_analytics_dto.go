@@ -22,6 +22,14 @@ type DeepAnalyticsResponse struct {
 	Data        []AnalyticsDataPoint `json:"data"`
 	Summary     AnalyticsSummary     `json:"summary"`
 	GeneratedAt time.Time            `json:"generatedAt" example:"2024-01-01T00:00:00Z"`
+	// MetricVersion 是统计口径版本，Method 固定为 "aggregate"。
+	//
+	// 这里刻意**没有** model 字段：深度分析是 SQL 聚合，不是模型产出。给它
+	// 编造一个 model 会让客户端以为这是一条可追溯的「AI 建议」，而实际上
+	// 没有任何模型参与——伪造的溯源比缺失的溯源更危险，因为它看起来权威。
+	// 口径版本才是它真正需要的：换聚合算法/时间口径时必须能区分新旧结果。
+	MetricVersion string `json:"metricVersion,omitempty"`
+	Method        string `json:"method,omitempty"`
 }
 
 type AnalyticsDataPoint struct {

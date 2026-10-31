@@ -555,10 +555,20 @@ func (s *RootCauseService) SummarizeTicket(ctx context.Context, ticketID int, te
 		}
 	}
 
+	// 溯源字段与 SummarizeService 对齐：promptVersion 是口径版本，modelName 是
+	// 真实模型（fallback 路径没有模型参与，留空——留空是实情，不是漏填）。
+	// 兜底路径同样要带：它在 SummarizeService 不可用时才是实际出口，
+	// 没有溯源就等于有一条「AI 摘要」来源不明。
+	modelName := ""
+	if method == "llm" && s.gateway != nil {
+		modelName = s.gateway.EffectiveModel("")
+	}
 	return map[string]interface{}{
 		"ticket_id":     ticketID,
 		"summary":       summary,
 		"method":        method,
+		"promptVersion": SummarizePromptVersion,
+		"model":         modelName,
 		"comment_count": commentCount,
 		"generated_at":  time.Now().Format(time.RFC3339),
 	}, nil

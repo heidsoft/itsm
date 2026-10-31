@@ -153,7 +153,10 @@ func (h *Handler) Chat(c *gin.Context) {
 	// 不注入则按匿名处理，已纳管的受限分类一律不可见（fail-closed）。
 	chatCtx := knowledgeaccess.WithViewer(c.Request.Context(), knowledgeaccess.Viewer{UserID: userID, Role: role})
 
-	answers, convID, err := h.svc.Chat(chatCtx, tenantID, userID, req.Query, req.PageSize, req.ConversationID)
+	// ChatWithTrace 在 Chat 之上补检索溯源（口径版本 / 检索模式 / 命中分）
+	// 并落服务端决策底账。答案片段来自知识库检索，model 记的是检索模式而不是
+	// 生成模型——写成模型名就是伪造归因。
+	result, err := h.svc.ChatWithTrace(chatCtx, tenantID, userID, req.Query, req.PageSize, req.ConversationID)
 	if err != nil {
 		// RAG 失败时降级处理：返回空结果而非 500 错误，避免前端崩溃
 		h.svc.logger.Warnw("AI Chat RAG 检索失败，返回降级响应", "error", err, "tenantID", tenantID)
@@ -167,8 +170,12 @@ func (h *Handler) Chat(c *gin.Context) {
 	}
 
 	common.Success(c, gin.H{
-		"answers":        answers,
-		"conversationId": convID,
+		"answers":        result.Answers,
+		"conversationId": result.ConversationID,
+		"promptVersion":  result.PromptVersion,
+		"model":          result.Model,
+		"confidence":     result.Confidence,
+		"auditId":        result.AuditID,
 	})
 }
 
@@ -399,7 +406,9 @@ func (h *Handler) GetTrendPrediction(c *gin.Context) {
 	if !ok {
 		return
 	}
-	res, err := h.svc.GetTrendPrediction(c.Request.Context(), &req, tenantID)
+	// userID 用于把预测底账归属到具体操作者：谁依据这组预测做了决策，事后可追。
+	userID := c.GetInt("user_id")
+	res, err := h.svc.GetTrendPrediction(c.Request.Context(), &req, tenantID, userID)
 	if err != nil {
 		common.FailWithErr(c, err, "操作失败")
 		return
@@ -473,8 +482,11 @@ func (h *Handler) SummarizeTicket(c *gin.Context) {
 		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
 		return
 	}
+	// userID 用于把决策底账归属到具体操作者：谁采纳/拒绝了这条 AI 建议，
+	// 事后要能追到人。取不到时传 0（skill 等无用户上下文的调用同此）。
+	userID := c.GetInt("user_id")
 
-	summary, err := h.svc.SummarizeTicket(c.Request.Context(), id, tenantID)
+	summary, err := h.svc.SummarizeTicket(c.Request.Context(), id, tenantID, userID)
 	if err != nil {
 		h.svc.logger.Warnw("AI摘要失败，返回降级响应", "error", err, "ticketID", id)
 		common.Success(c, gin.H{

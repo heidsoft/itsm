@@ -28,6 +28,21 @@ type StreamingLLMProvider interface {
 	ChatStream(ctx context.Context, model string, messages []LLMMessage, callback func(string)) error
 }
 
+// ModelReportingProvider is an optional capability: providers that can report
+// the model they will actually use when the caller passes an empty model.
+//
+// 为什么需要它：绝大多数调用点都是 gateway.Chat(ctx, "", messages)——不指定
+// 模型，由 provider 用自己配置的那一个。于是「这次决策是哪个模型产出的」在
+// 调用侧无从得知。此前 TriageService 用一个硬编码常量 "gpt-4o-mini" 填这个
+// 字段，而生产配的并不是它：AI 审计底账里的 model 因此是假的。
+//
+// 假的溯源比没有溯源更危险——底账看起来是权威的，事后追责时却指向错误的模型。
+// 不能报模型的 provider（如完全依赖调用方入参的本地 Ollama）就不实现本接口，
+// gateway 如实回退到 unknown，而不是给一个看起来像真的常量。
+type ModelReportingProvider interface {
+	Model() string
+}
+
 // ToolCallingStreamProvider is an optional capability: providers that support
 // declaring tools (function calling) AND streaming. The provider receives the
 // declared tools, streams text deltas through callback, and reports any tool
@@ -75,6 +90,37 @@ type Observer interface {
 
 func NewLLMGateway(p LLMProvider, l TokenLimiter, o Observer, providerName string) *LLMGateway {
 	return &LLMGateway{provider: p, limiter: l, observer: o, providerName: providerName}
+}
+
+// EffectiveModel 返回一次调用真正会用到的模型名，供溯源字段使用。
+//
+// 优先级：调用方显式指定的 model（非空即权威）→ provider 自报的配置模型
+// （实现 ModelReportingProvider）→ "unknown"。
+//
+// 最后一级不猜：AI 审计底账的 model 字段用于事后追责（「这条建议是哪个模型
+// 产出的」），填一个编造的名字会让底账在关键时刻指向错误的模型。宁可写
+// unknown 让运维去补配置，也不要写假值。
+func (g *LLMGateway) EffectiveModel(model string) string {
+	if model != "" {
+		return model
+	}
+	if g == nil || g.provider == nil {
+		return "unknown"
+	}
+	if mp, ok := g.provider.(ModelReportingProvider); ok {
+		if m := mp.Model(); m != "" {
+			return m
+		}
+	}
+	return "unknown"
+}
+
+// ProviderName 返回网关的 provider 标识，供溯源与遥测使用。
+func (g *LLMGateway) ProviderName() string {
+	if g == nil {
+		return ""
+	}
+	return g.providerName
 }
 
 // llmRetryPolicy 控制瞬时错误的自动重试。

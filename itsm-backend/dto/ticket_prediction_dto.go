@@ -15,6 +15,10 @@ type TrendPredictionResponse struct {
 	Confidence  float64               `json:"confidence" example:"0.85"`
 	Model       string                `json:"model" example:"arima"`
 	GeneratedAt time.Time             `json:"generatedAt" example:"2024-01-01T00:00:00Z"`
+	// 溯源字段：口径版本与服务端决策底账 ID。预测值会被拿去做容量/风险决策，
+	// 「这组数是谁按什么口径算的」必须可追；auditId 让操作者能 PATCH 翻转采纳。
+	PromptVersion string `json:"promptVersion,omitempty"`
+	AuditID       int64  `json:"auditId,omitempty"`
 }
 
 type PredictionDataPoint struct {

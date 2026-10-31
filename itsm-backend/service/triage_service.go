@@ -53,8 +53,17 @@ func (t *TriageService) normalizeResult(result TriageResult) TriageResult {
 // TriageResult holds classification suggestions for incidents/tickets
 //
 // Model/PromptVersion 是溯源字段：Model 标注决策来源链路（guidance/llm/keyword，
-// 是「哪条路径给出的建议」而不是具体模型名——网关模型名随配置漂移，不适合做契约），
-// PromptVersion 是口径版本。两者随响应透出并写入服务端 AI 审计底账。
+// 是「哪条路径给出的建议」而不是具体模型名），PromptVersion 是口径版本。
+// 两者随响应透出并写入服务端 AI 审计底账。
+//
+// ModelName 是另一回事：**具体模型名**。此前这里没有它，于是 SuggestWithMetadata
+// 往 Model 字段里塞了一个硬编码的 "gpt-4o-mini"——而生产配的并不是它，AI 审计
+// 底账里的模型名因此是假的。假溯源比没有溯源更危险：底账看起来权威，事后追责
+// 却指向错误的模型。现在两个维度各占一个字段，链路归链路、模型归模型。
+//
+// ModelName 由 gateway.EffectiveModel() 得出；无法从 provider 取到时报
+// "unknown"，绝不猜。keyword/guidance 路径没有模型参与，字段留空（是实情，
+// 不是缺失）。
 type TriageResult struct {
 	Category      string  `json:"category"`
 	Priority      string  `json:"priority"`
@@ -63,6 +72,7 @@ type TriageResult struct {
 	Explanation   string  `json:"explanation"`
 	SuggestedFix  string  `json:"suggestedFix,omitempty"`
 	Model         string  `json:"model,omitempty"`
+	ModelName     string  `json:"modelName,omitempty"`
 	PromptVersion string  `json:"promptVersion,omitempty"`
 }
 
@@ -266,6 +276,9 @@ IMPORTANT: Respond with ONLY valid JSON in this exact format, no other text:
 	if err != nil {
 		return TriageResult{}, fmt.Errorf("LLM classification failed: %w", err)
 	}
+	// 调用成功后立刻取真实模型名：本次调用没指定 model，实际用的是 provider
+	// 配置的那一个，只有网关能报出来。放在解析之前，避免解析失败时丢掉归属。
+	effectiveModel := t.gateway.EffectiveModel("")
 
 	resp = strings.TrimSpace(resp)
 	resp = strings.TrimPrefix(resp, "```json")
@@ -299,6 +312,9 @@ IMPORTANT: Respond with ONLY valid JSON in this exact format, no other text:
 		_ = json.Unmarshal([]byte(resp), &snake)
 		classification.SuggestedFix = snake.SuggestedFix
 	}
+
+	// 归属本次决策的真实模型名（可能被 LLM 自己吐出的 JSON 覆盖，因此放在解析之后）。
+	classification.ModelName = effectiveModel
 
 	// Normalize and validate enum values using shared helper
 	return t.normalizeResult(classification), nil
@@ -441,7 +457,9 @@ func (t *TriageService) SuggestWithMetadata(ctx context.Context, title, descript
 
 	result.Result = llmResult
 	result.Method = "llm"
-	result.Model = "gpt-4o-mini"
+	// 真实模型名，不再是硬编码常量：硬编码会让审计底账在换模型之后继续
+	// 指向旧模型。取不到时报 "unknown"（EffectiveModel 的语义），不猜。
+	result.Model = llmResult.ModelName
 	result.Latency = time.Since(start)
 
 	return result, nil
