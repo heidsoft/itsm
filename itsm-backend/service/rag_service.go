@@ -189,6 +189,22 @@ func NewRAGServiceWithAutoConfig(client *ent.Client, vectors *VectorStore, embed
 }
 
 // Ask performs retrieval augmented generation over knowledge articles
+// Mode 返回本次检索实际走的模式（hybrid / vector / keyword），供 AI 审计底账
+// 溯源：同一个问题在向量库不可用时会退化到关键词检索，召回质量差别很大——
+// 底账里记下模式，事后才能解释「为什么这次答案质量明显偏低」。
+func (r *RAGService) Mode() string {
+	switch {
+	case r.hybridSearch:
+		return "hybrid"
+	case r.useVector:
+		return "vector"
+	case r.useKeyword:
+		return "keyword"
+	default:
+		return "keyword"
+	}
+}
+
 func (r *RAGService) Ask(ctx context.Context, tenantID int, query string, limit int) ([]map[string]any, error) {
 	if limit <= 0 {
 		limit = 5
