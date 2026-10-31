@@ -12,7 +12,11 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-const acceptanceVersion = "2026.08-private-preview"
+// acceptanceVersion 是能力矩阵最近一次对账的日期（YYYY.MM.DD）：核对 registry
+// 成熟度、README/商业契约口径、pilotReason 与对应回归证据。它不是发布版本，
+// 也不代表全部能力已验收；但不得早于 CHANGELOG 最新发布版本，发版未复核矩阵
+// 会让 TestAcceptanceVersionIsNotBehindLatestRelease 失败。
+const acceptanceVersion = "2026.10.31"
 
 type Maturity string
 
@@ -50,7 +54,6 @@ type definition struct {
 	built        bool
 	dependencies []string
 	readinessEnv string
-	readOnly     bool
 	// pilotReason 仅 pilot 条目必填，且必须是「当前仍然成立」的阻断项 +
 	// 可验证的晋升条件；ga 条目必须留空（留着就是过期理由）。
 	// 由 TestPilotReasonsAreCurrentAndActionable 强制。
@@ -100,7 +103,15 @@ var registry = []definition{
 		key: "cmdbReconciliation", maturity: MaturityPilot, built: true, dependencies: []string{"cmdb", "cmdbDiscovery"}, readinessEnv: "ITSM_CMDB_DISCOVERY_READY",
 		pilotReason: "差异能算、能决策（POST /discovery/results/:id/apply|reject），应用后同步刷新配置项并把反查 ID 记在差异上；但回写目前只覆盖基线内的云主机/Pod 类型，云上连续缺失只把配置项标成同步滞后、不给出退役建议，且缺少真实数据验收。晋升条件：真实数据对账验收 + 覆盖更多资源类型。",
 	},
-	{key: "workflow", maturity: MaturityGA, built: true},
+	// 2026-10-31 运行时降为 Pilot，与 README 成熟度表、商业能力契约对齐：
+	// 此前矩阵对客户下发 GA，但问题域创建从不落 workflow.start 命令
+	// （WorkflowStartCommandHandler 的 problem 分支无生产者，生命周期仅在已有
+	// 实例时桥接），ServiceTask 外部副作用与流程完成仍分属两个事务，补偿只支持
+	// 结束事件驱动且无内置模板。
+	{
+		key: "workflow", maturity: MaturityPilot, built: true,
+		pilotReason: "流程定义、绑定、实例、任务、变量与历史齐备，工单与事件已使用持久化 command/outbox 启动流程，但运行时仍有跨域缺口：问题域创建不落 workflow.start（problem 分支无生产者，生命周期仅在已有实例时桥接）、ServiceTask 外部副作用与流程完成分属两个事务、补偿只支持结束事件驱动且无内置模板、存量 pending 待办与跨域实例级 E2E 未补。晋升条件：问题域 workflow.start 生产者 + ServiceTask 与流程完成同事务 + 补偿内置模板 + 跨域实例级 E2E。",
+	},
 	{key: "sla", maturity: MaturityGA, built: true},
 	// 报表域此前只在能力契约表里（报表/运营 = Pilot），矩阵里根本没有这一行——
 	// 矩阵是前端与控制台的唯一事实源，缺行等于这个域对客户不可见。
@@ -121,7 +132,7 @@ var registry = []definition{
 	// publishedVersion 一律忽略。
 	{
 		key: "knowledge", maturity: MaturityPilot, built: true,
-		pilotReason: "发布版本语义已收敛：published_version 指向线上正文对应的版本快照，三条发布入口（评审通过 /publish / PUT status=published）与已发布文章的在线更新统一维护该指针，撤回与恢复清指针，客户端无法伪造；但分类可见性的跨角色检索未做端到端验收，召回率（典型问题集）缺人工验收口径。晋升条件：跨角色检索验收 + 召回率人工口径。",
+		pilotReason: "发布版本语义已收敛：published_version 指向线上正文对应的版本快照，三条发布入口（评审通过 /publish / PUT status=published）与已发布文章的在线更新统一维护该指针，撤回与恢复清指针，客户端无法伪造；2026-10-31 分类可见性也已在列表、详情、分类、统计、推荐/最近、检索与问题页反查读面统一收口：SQL 先过滤后分页（total 真实）、作者豁免、权限状态不可得时失败关闭，跨角色回归已覆盖。但知识检索仍缺人工验收口径：典型问题集召回率与真实语料下的引用质量未做验收。晋升条件：典型问题集召回率人工验收 + 真实语料引用质量验收。",
 	},
 	// AI 2026-10-23 三契约落地（分诊 + 工单 RCA）：响应带 promptVersion/model/auditId，
 	// 服务端自动落 ai_audit 底账（accepted=NULL），采纳/拒绝走 PATCH 翻转；
@@ -132,7 +143,7 @@ var registry = []definition{
 	// 工具没有同等约束；评测阈值只覆盖离线 fixture，未验证生产候选；token 计量无配额告警与单价口径。
 	{
 		key: "ai", maturity: MaturityPilot, built: true, readinessEnv: "ITSM_AI_READY",
-		pilotReason: "分诊与工单 RCA 已强制 promptVersion/model/confidence 并落 ai_audit 底账（采纳/拒绝经 PATCH 翻转，不再由前端自报）；LLM 调用已按租户归集（ai_llm_calls 带 tenant_id/request_id，/ai/metrics 为租户口径；升级前的历史行无法回填归因，按哨兵值排除、租户无归因行时如实报不可用）。但 chat、摘要、analytics、prediction、agent 工具仍未强制同一套溯源字段；token 用量只有计量、没有配额告警与单价口径；evaluator 已有离线阈值测试且摘要评分会调用候选生成器，但默认摘要仍是原文拼接、RAG 使用期望答案、预测分值取自数据集，尚不能证明生产质量。晋升条件：其余 AI 能力补齐溯源三契约 + 租户配额告警 + 真实候选评测门禁。",
+		pilotReason: "分诊与工单 RCA 已强制 promptVersion/model/confidence 并落 ai_audit 底账（采纳/拒绝经 PATCH 翻转，不再由前端自报）；LLM 调用已按租户归集（ai_llm_calls 带 tenant_id/request_id，/ai/metrics 为租户口径；升级前的历史行无法回填归因，按哨兵值排除、租户无归因行时如实报不可用）。溯源已覆盖全能力面且 model 不再失真：分诊/RCA 之外，摘要（method 三态 llm/direct/fallback + 真实模型名）、预测（口径版本 + 真实置信度 + auditId）、chat（检索模式 + 真实命中分 + auditId）均已强制溯源并落 ai_audit 底账；此前 TriageService 把 model 写死成 gpt-4o-mini（生产配的并不是它，底账系统性地指向错误模型）、邮件抽取器未配模型时兜底成同一个硬编码值，现改由 provider 自报（ModelReportingProvider），报不出时如实写 unknown。深度分析（SQL 聚合）刻意不补 model 而只给口径版本与 method=aggregate——给没有模型参与的聚合伪造 model 比缺失更危险。token 配额与成本口径已落地（AIQuotaService：租户月度配额从既有 ai_llm_calls 计量读取不建新表、未配置=不限制且如实报 quotaConfigured=false、超限网关拒绝并留计量痕、评估失败 fail-open——配额是预算保护不是安全边界；单价未配置时 estimatedCost=0 且 costConfigured=false，绝不给猜的单价；/ai/metrics 附带 quota/cost，告警分 warning/exceeded 两级）。评测门禁的自我实现已修：此前摘要候选=输入拼接、RAG 候选=期望答案，三项指标恒满分（ROUGE 0.84 / hit-rate 1.00 / AUC 1.00）且把真实实现改坏照样绿——那不是宽松的门禁，是没有门禁；现候选来自生产代码路径（摘要走 SummarizeService 无 LLM 降级路径、检索走部分命中基线），并加候选真实性检测与退化敏感性守卫（退化必须让指标下降），另设 ITSM_AI_EVAL_USE_LLM=1 的生产验收模式共用同一套数据集与指标口径。默认摘要仍是原文直出或截断（已如实标注 method），RAG 数据集的 expected_doc_ids 是虚构 ID（KB-001 等，库里不存在），故 CI 只做候选真实性检查、质量验收须接真实语料，预测分值仍取自数据集。晋升条件：真实语料下的质量验收（典型问题集召回率、摘要真实候选质量、预测分值来源）。",
 	},
 	// 通知域 2026-10-20/21 闭环三件事：投递审计读面（GET /notification-deliveries）、
 	// 失败重试（保留旧记录作失败证据）、渠道诊断（GET /notifications/channels：
@@ -143,7 +154,7 @@ var registry = []definition{
 	// 审计注入），维持 Pilot 的原因是「没有真实租户联调证据」，不是实现缺失。
 	{
 		key: "connector.feishu", maturity: MaturityPilot, built: true, dependencies: []string{"notification"}, readinessEnv: "ITSM_FEISHU_READY",
-		pilotReason: "回调验签只有单测，未与真实飞书租户做生产验收；死信人工重放与市场安装闭环未验收。晋升条件：真实租户收发 + 验签 + 死信重放验收。",
+		pilotReason: "Send/HealthCheck/VerifySignature/ParseInbound 与入站去重、回调路由、审计注入齐备，死信重放（/admin/operations）与市场安装闭环也已接通；但这些覆盖仍停在单测与路由测试，未与真实飞书租户做生产验收，也没有在真实渠道故障下演练过死信重放。晋升条件：真实租户收发 + 验签 + 一次真实故障的死信重放演练。",
 	},
 	// 市场目录 2026-10-23 补齐管理面：平台级权限码 marketplace_catalog:read/write
 	// （只授 sysadmin，租户 admin 仍只有 marketplace:write 用于安装/卸载）+ 目录项
@@ -156,7 +167,7 @@ var registry = []definition{
 	// auto_upgrade 有字段没有执行路径；存量安装未做一次性对齐（闸门之前落库的
 	// 记录可能已悬空），升级时的重新校验也无处挂载（升级本身尚未实现）。
 	{
-		key: "marketplace", maturity: MaturityPilot, built: true, readOnly: true,
+		key: "marketplace", maturity: MaturityPilot, built: true,
 		pilotReason: "目录管理已闭环（平台上架/下架、版本发布与回滚、控制台），依赖闸门已双向落地（安装前校验前置组件与版本、卸载前拦截被依赖的组件，缺口逐项返回 409）。但商品交付语义仍不完整：skill/plugin 缺少分发/装载机制，安装与配置明确返回 501，历史记录仍可查看和卸载；auto_upgrade 无升级执行路径；依赖闸门不回溯存量安装，升级时的重新校验也无处挂载。晋升条件：skill/plugin 装载机制 + 版本升级执行 + 存量依赖对齐。",
 	},
 	{key: "project", maturity: MaturityGA, built: true},
@@ -242,7 +253,7 @@ func NewHandler(prober *Prober) gin.HandlerFunc {
 			actions := []string{}
 			if item.built && item.maturity != MaturityDisabled && tenantReady {
 				actions = append(actions, "read")
-				if admin && !item.readOnly && deploymentReady {
+				if admin && deploymentReady {
 					actions = append(actions, "manage")
 				}
 			}

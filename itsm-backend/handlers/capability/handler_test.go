@@ -4,8 +4,12 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
+	"regexp"
 	"strings"
 	"testing"
+	"time"
 	"unicode/utf8"
 
 	"github.com/gin-gonic/gin"
@@ -30,24 +34,55 @@ func TestHandlerReturnsTenantAwareCapabilityContract(t *testing.T) {
 	var response struct {
 		Code int `json:"code"`
 		Data struct {
-			Items []Capability `json:"items"`
+			Items             []Capability `json:"items"`
+			AcceptanceVersion string       `json:"acceptanceVersion"`
 		} `json:"data"`
 	}
 	require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &response))
 	require.Zero(t, response.Code)
 	require.NotEmpty(t, response.Data.Items)
+	require.Equal(t, acceptanceVersion, response.Data.AcceptanceVersion)
+	for _, item := range response.Data.Items {
+		require.Equal(t, acceptanceVersion, item.AcceptanceVersion)
+	}
 
 	byKey := make(map[string]Capability)
 	for _, item := range response.Data.Items {
 		byKey[item.Key] = item
 	}
 	require.Equal(t, MaturityPilot, byKey["marketplace"].Maturity)
-	require.Equal(t, []string{"read"}, byKey["marketplace"].AllowedActions)
+	require.Equal(t, []string{"read", "manage"}, byKey["marketplace"].AllowedActions)
 	require.False(t, byKey["connector.feishu"].DeploymentReady)
 	require.NotEmpty(t, byKey["connector.feishu"].DegradedReason)
 	// SSO/OIDC 已实现 11 个端点，矩阵不得再声明为 disabled。
 	require.Equal(t, MaturityPilot, byKey["identity.oidc"].Maturity)
 	require.Equal(t, []string{"read", "manage"}, byKey["identity.oidc"].AllowedActions)
+}
+
+// acceptanceVersion 是能力矩阵对外的验收基线，不是内部备注：值改了但商业契约
+// 没改（或反之）会让售前拿到一份两端不一致的承诺，因此两边必须同源。
+func TestAcceptanceVersionMatchesCommercialContract(t *testing.T) {
+	raw, err := os.ReadFile(filepath.Join("..", "..", "..", "docs", "product", "itsm-commercial-capability-contract.md"))
+	require.NoError(t, err)
+	doc := string(raw)
+	require.Contains(t, doc, "`acceptanceVersion`")
+	require.Contains(t, doc, "`"+acceptanceVersion+"`", "商业能力契约未声明当前验收基线")
+}
+
+// 发版即重新确认能力矩阵：acceptanceVersion 早于最新发布版本，说明矩阵已经
+// 跨过至少一个版本没有被复核，继续对外宣称旧基线就是在卖上一版的事实。
+func TestAcceptanceVersionIsNotBehindLatestRelease(t *testing.T) {
+	raw, err := os.ReadFile(filepath.Join("..", "..", "..", "CHANGELOG.md"))
+	require.NoError(t, err)
+	match := regexp.MustCompile(`(?m)^## \[(\d+\.\d+\.\d+)\] - (\d{4}-\d{2}-\d{2})\s*$`).FindSubmatch(raw)
+	require.Len(t, match, 3, "CHANGELOG 缺少带日期的发布版本标题")
+	releaseDate, err := time.Parse("2006-01-02", string(match[2]))
+	require.NoError(t, err)
+	acceptedAt, err := time.Parse("2006.01.02", acceptanceVersion)
+	require.NoError(t, err, "acceptanceVersion 必须是 YYYY.MM.DD")
+	require.False(t, acceptedAt.Before(releaseDate),
+		"能力矩阵验收基线 %s 早于最新发布 %s（%s）：发版时必须复核矩阵并同批更新",
+		acceptanceVersion, string(match[2]), string(match[1]))
 }
 
 func TestHandlerDoesNotGrantActionsWithoutTenant(t *testing.T) {
@@ -69,8 +104,43 @@ func TestHandlerDoesNotGrantActionsWithoutTenant(t *testing.T) {
 	}
 }
 
-// 没有实现证据的能力不得申报 GA。2026-10-22 盘点后仍维持 Pilot 的是标签：
-// 工单标签完整，但组织标签（tags 表）只由 seeder 写入、没有管理面。
+// marketplace 的 manage 反映租户 admin 的 marketplace:write，而不是平台目录管理权：
+// 普通成员只能读；商品目录上架/下架仍由 marketplace_catalog:* 独占授予 sysadmin。
+func TestMarketplaceManageFollowsTenantAdminPermission(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	actionsFor := func(role string) []string {
+		router := gin.New()
+		router.GET("/capabilities", func(c *gin.Context) {
+			c.Set("tenant_id", 7)
+			c.Set("role", role)
+			NewHandler(nil)(c)
+		})
+		recorder := httptest.NewRecorder()
+		router.ServeHTTP(recorder, httptest.NewRequest(http.MethodGet, "/capabilities", nil))
+		require.Equal(t, http.StatusOK, recorder.Code)
+
+		var response struct {
+			Data struct {
+				Items []Capability `json:"items"`
+			} `json:"data"`
+		}
+		require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &response))
+		for _, item := range response.Data.Items {
+			if item.Key == "marketplace" {
+				return item.AllowedActions
+			}
+		}
+		require.FailNow(t, "能力矩阵缺少 marketplace 条目")
+		return nil
+	}
+
+	require.Equal(t, []string{"read", "manage"}, actionsFor("admin"))
+	require.Equal(t, []string{"read"}, actionsFor("technician"))
+}
+
+// 没有实现证据的能力不得申报 GA。标签维持 Pilot：工单标签完整，但组织标签
+// （tags 表）只由 seeder 写入、没有管理面。workflow 的 Pilot 理由见
+// TestWorkflowCapabilityStaysPilotUntilBridgingIsClosed。
 // 模板此前被「通用 /api/v1/templates 从未注册」这条幽灵缺陷卡住——前端仓库里
 // 既没有 template-api.ts，也没有任何该路径调用，实际表面是
 // /api/v1/tickets/templates 的 8 个端点 + /tickets/templates 页，已具备 GA 证据。
@@ -102,6 +172,28 @@ func TestUnprovenCapabilitiesAreNotDeclaredGA(t *testing.T) {
 	}
 	require.Equal(t, MaturityPilot, byKey["tag"].Maturity)
 	require.NotEmpty(t, byKey["tag"].PilotReason)
+}
+
+// TestWorkflowCapabilityStaysPilotUntilBridgingIsClosed 锁定 2026-10-31 的运行时降级。
+//
+// 矩阵此前把 workflow 申报为 GA，而 README 成熟度表与商业能力契约都写 Pilot。
+// 矩阵是前端与控制台的事实源：谎报 GA 会让运营把 BPMN 当成已验收能力交付。
+// 当前真实缺口（问题域无 workflow.start 生产者、补偿无内置模板、ServiceTask
+// 副作用在完成事务之外、缺跨域实例级 E2E）全部写进 pilotReason；等这些项逐个
+// 闭环并拿到证据后，才允许连同本测试一起晋升。
+func TestWorkflowCapabilityStaysPilotUntilBridgingIsClosed(t *testing.T) {
+	var found *definition
+	for i := range registry {
+		if registry[i].key == "workflow" {
+			found = &registry[i]
+			break
+		}
+	}
+	require.NotNil(t, found, "能力矩阵缺少 workflow 条目")
+	require.Equal(t, MaturityPilot, found.maturity, "workflow 未补齐跨域闭环前不得申报 GA")
+	require.True(t, found.built)
+	require.Contains(t, found.pilotReason, "晋升条件")
+	require.Contains(t, found.pilotReason, "问题域")
 }
 
 // TestPromotedCapabilitiesAreGA 锁定 2026-10-21 的通知域 GA 晋升：
@@ -166,6 +258,13 @@ func TestPilotReasonsDoNotCiteClosedBlockers(t *testing.T) {
 		"cmdbReconciliation": {"发现链路没有消费者", "只能对空集", "没有确认/驳回的写入面"},
 		// 2026-10-23：分诊/RCA 已强制 promptVersion + model + confidence + 底账。
 		"ai": {"confidence、接受/拒绝反馈", "evaluator 未接入调用链"},
+		// 2026-10-24：ServiceTask action 两端口径接通；2026-10-23 工单审批桥接
+		// 收进业务事务；发布创建与 workflow.start 同事务入队。这些不再是缺口。
+		"workflow": {"ServiceTask action 链路未打通", "工单审批桥接非原子", "release 域自动起流"},
+		// 2026-10-22：命令死信/失败投递重放产品面与市场安装/配置/卸载闭环落地。
+		"connector.feishu": {"死信重放未实现", "市场安装闭环未验收", "死信人工重放与市场安装闭环未验收"},
+		// 2026-10-31：分类可见性已在全部知识读面收口并补齐跨角色回归。
+		"knowledge": {"分类可见性的跨角色检索未做端到端验收", "版本化发布", "发布版本语义未收敛"},
 	}
 	byKey := make(map[string]definition, len(registry))
 	for _, item := range registry {

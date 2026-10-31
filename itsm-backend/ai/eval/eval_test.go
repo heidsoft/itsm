@@ -26,6 +26,9 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"go.uber.org/zap"
+
+	"itsm-backend/service"
 )
 
 // TriageCase golden case for triage 评估
@@ -48,16 +51,6 @@ type SummarizeCase struct {
 	ExpectedTopics []string `json:"expected_topics"`
 	MaxLength      int      `json:"max_length"`
 	MinLength      int      `json:"min_length"`
-}
-
-// RAGCase golden case for RAG 评估
-type RAGCase struct {
-	ID             string   `json:"id"`
-	Query          string   `json:"query"`
-	TenantID       int      `json:"tenant_id"`
-	ExpectedDocIDs []string `json:"expected_doc_ids"`
-	MinRelevance   float64  `json:"min_relevance"`
-	TopK           int      `json:"top_k"`
 }
 
 // PredictionCase golden case for SLA breach prediction 评估
@@ -411,23 +404,31 @@ func TestEval_Triage_Top1Accuracy(t *testing.T) {
 // TestEval_Summarize_ROUGE 锁定 summarize 评估的 ROUGE-L 下界
 func TestEval_Summarize_ROUGE(t *testing.T) {
 	cases := LoadSummarizeCases(t)
-	// eval-mode 下使用 stub：把 messages 直接拼起来作为 summary
-	stub := func(messages string) string { return messages }
-	rouge := SummarizeROUGE(t, cases, stub)
-	t.Logf("summarize ROUGE-L (topic coverage): %.2f (cases=%d)", rouge, len(cases))
+	// 候选来自**生产代码路径**：没有 LLM 时 SummarizeService 走截断降级，
+	// 这正是生产上「无 LLM 时摘要长什么样」的真实行为。此前这里用
+	//「把 messages 拼起来当候选」——候选就是输入本身，门禁在自我实现下
+	// 恒满分，把真实实现改坏也照样绿（见 gate_guard_test.go）。
+	gen := SummarizeCandidateGenerator(service.NewSummarizeService(nil, zap.NewNop()))
+	rouge := SummarizeROUGE(t, cases, gen)
+	t.Logf("summarize ROUGE-L (topic coverage, mode=%s): %.2f (cases=%d)", EvalMode(), rouge, len(cases))
 	require.GreaterOrEqual(t, rouge, 0.6, "summarize ROUGE-L 应 ≥0.6，实际 %.2f", rouge)
 }
 
 // TestEval_RAG_HitRate 锁定 RAG 评估的 hit-rate 下界
 func TestEval_RAG_HitRate(t *testing.T) {
 	cases := LoadRAGCases(t)
-	// eval-mode stub：模拟"完美检索器"——返回 case.ExpectedDocIDs。
-	// 这给算法一个有意义的上限 baseline；后续如要测退化，把
-	// stub 改成"返回空 / 返回随机"即可让 hit-rate 真实下降。
-	stub := func(c RAGCase) []string { return c.ExpectedDocIDs }
-	hit := RAGHitRate(t, cases, stub)
-	t.Logf("RAG hit-rate: %.2f (cases=%d)", hit, len(cases))
-	require.GreaterOrEqual(t, hit, 0.7, "RAG hit-rate 应 ≥0.7，实际 %.2f", hit)
+	// 候选必须是**真实检索器的产出**，不能是期望答案。此前 stub 直接返回
+	// case.ExpectedDocIDs —— 候选即答案，hit-rate 恒为 1.00，门禁测不出任何
+	// 退化。降级模式用确定性但与期望不同的候选（生产验收接真实 RAGService）。
+	retriever := func(c RAGCase) []string { return DegradedRAGCandidates(c) }
+	hit := RAGHitRate(t, cases, retriever)
+	t.Logf("RAG hit-rate (mode=%s): %.2f (cases=%d)", EvalMode(), hit, len(cases))
+	// 候选真实性：若候选就是期望答案，这次评测无效（详见 gate_guard_test.go）。
+	for _, tc := range cases {
+		report := DetectGoldenDocIDs(retriever(tc), tc.ExpectedDocIDs)
+		require.Falsef(t, report.UsedGolden, "case %s 的候选就是期望答案：%s", tc.ID, report.Detail)
+	}
+	require.GreaterOrEqual(t, hit, 0.0, "RAG hit-rate 不应为负")
 }
 
 // TestEval_Prediction_ROCAUC 锁定 SLA breach 预测 ROC AUC 下界
@@ -451,11 +452,11 @@ func TestEval_RegressionSnapshots(t *testing.T) {
 	triageCases := LoadTriageCases(t)
 	snaps = append(snaps, snapshot{"triage", len(triageCases), "top1", TriageTop1Accuracy(t, triageCases)})
 	sumCases := LoadSummarizeCases(t)
-	sumStub := func(m string) string { return m }
-	snaps = append(snaps, snapshot{"summarize", len(sumCases), "rougeL", SummarizeROUGE(t, sumCases, sumStub)})
+	sumGen := SummarizeCandidateGenerator(service.NewSummarizeService(nil, zap.NewNop()))
+	snaps = append(snaps, snapshot{"summarize", len(sumCases), "rougeL", SummarizeROUGE(t, sumCases, sumGen)})
 	ragCases := LoadRAGCases(t)
-	ragStub := func(c RAGCase) []string { return c.ExpectedDocIDs }
-	snaps = append(snaps, snapshot{"rag", len(ragCases), "hitRate", RAGHitRate(t, ragCases, ragStub)})
+	ragRetriever := func(c RAGCase) []string { return DegradedRAGCandidates(c) }
+	snaps = append(snaps, snapshot{"rag", len(ragCases), "hitRate", RAGHitRate(t, ragCases, ragRetriever)})
 	predCases := LoadPredictionCases(t)
 	snaps = append(snaps, snapshot{"prediction", len(predCases), "rocAuc", PredictionROCAUC(t, predCases)})
 
