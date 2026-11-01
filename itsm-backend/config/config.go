@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/joho/godotenv"
@@ -26,6 +27,14 @@ type Config struct {
 	Deployment     DeploymentConfig     `mapstructure:"deployment"`
 	RLS            RLSConfig            `mapstructure:"rls"`
 	CloudDiscovery CloudDiscoveryConfig `mapstructure:"cloud_discovery"`
+	CloudSignal    CloudSignalConfig    `mapstructure:"cloud_signal"`
+}
+
+// CloudSignalConfig 控制云信号（CloudMonitor 告警 / 云安全中心漏洞）的后台同步。
+type CloudSignalConfig struct {
+	// AutomationReporterID 是自动建单使用的上报人。它是部署侧配置，
+	// 不接受请求参数；为 0 时不自动建单，告警仍然落库供人工处理。
+	AutomationReporterID int `mapstructure:"automation_reporter_id"`
 }
 
 // CloudDiscoveryConfig contains deployment-owned credential material used to
@@ -258,6 +267,7 @@ func LoadConfig() (*Config, error) {
 	viper.Set("admin", rawConfig["admin"])
 	viper.Set("deployment", rawConfig["deployment"])
 	viper.Set("cloud_discovery", rawConfig["cloud_discovery"])
+	viper.Set("cloud_signal", rawConfig["cloud_signal"])
 
 	// 重新绑定到 Config 结构
 	var config Config
@@ -283,6 +293,11 @@ func LoadConfig() (*Config, error) {
 	config.Deployment.Mode = getEnvWithDefault("DEPLOYMENT_MODE", config.Deployment.Mode)
 	config.Deployment.AutoMigrate = getEnvBoolWithDefault("ITSM_AUTO_MIGRATE", config.Deployment.AutoMigrate)
 	config.Deployment.AutoSeed = getEnvBoolWithDefault("ITSM_AUTO_SEED", config.Deployment.AutoSeed)
+	if value := getEnvWithDefault("CLOUD_SIGNAL_AUTOMATION_REPORTER_ID", ""); value != "" {
+		if id, err := strconv.Atoi(strings.TrimSpace(value)); err == nil {
+			config.CloudSignal.AutomationReporterID = id
+		}
+	}
 
 	// RLS 三档开关，默认 off（零风险）。
 	config.RLS.Mode = getEnvWithDefault("RLS_MODE", config.RLS.Mode)

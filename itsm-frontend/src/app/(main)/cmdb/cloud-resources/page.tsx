@@ -7,6 +7,7 @@ import {
   Breadcrumb,
   Button,
   Card,
+  Descriptions,
   Form,
   Input,
   Modal,
@@ -17,7 +18,7 @@ import {
   App,
   Tooltip,
 } from 'antd';
-import { Search, Plus, Eye, RotateCcw } from 'lucide-react';
+import { Search, Plus, Eye, RotateCcw, ShieldAlert } from 'lucide-react';
 import dayjs from 'dayjs';
 
 import { CMDBApi } from '@/lib/api/cmdb-api';
@@ -58,6 +59,74 @@ const cloudResourceStatusTextMap: Record<string, string> = {
   pending: '处理中',
   failed: '失败',
 };
+
+// 发现适配器写入 metadata 的字段名（snake_case）→ 展示标签。
+// 各厂商字段并不完全一致，未登记的键按原文展示，避免静默丢字段。
+const cloudMetadataLabels: Record<string, string> = {
+  instance_type: '实例规格',
+  instance_type_family: '规格族',
+  cpu: 'vCPU',
+  memory: '内存 (MiB)',
+  memory_gib: '内存 (GiB)',
+  os_type: '系统类型',
+  os_name: '操作系统',
+  host_name: '主机名',
+  hostname: '主机名',
+  image_id: '镜像 ID',
+  public_ip_address: '公网 IP',
+  public_ip_addresses: '公网 IP',
+  public_ip: '公网 IP',
+  inner_ip_address: '内网 IP',
+  private_ip_address: '内网 IP',
+  private_ip_addresses: '内网 IP',
+  private_ip: '内网 IP',
+  primary_ip: '主 IP',
+  eip_ip_address: '弹性 IP',
+  eip_bandwidth: '弹性 IP 带宽 (Mbps)',
+  vpc_id: 'VPC',
+  vswitch_id: '交换机',
+  subnet_id: '子网',
+  security_groups: '安全组',
+  instance_charge_type: '计费方式',
+  charge_type: '计费方式',
+  expired_time: '到期时间',
+  start_time: '启动时间',
+  availability_zone: '可用区',
+  architecture: '架构',
+  key_pair_name: '密钥对',
+  key_name: '密钥对',
+  serial_number: '序列号',
+  io_optimized: 'IO 优化',
+  deletion_protection: '删除保护',
+  spot_strategy: '抢占策略',
+  gpu_spec: 'GPU 规格',
+  gpu_amount: 'GPU 数量',
+  instance_network_type: '网络类型',
+  description: '描述',
+};
+
+const cloudMetadataOrder = Object.keys(cloudMetadataLabels);
+
+function formatMetadataValue(value: unknown): string {
+  if (value === null || value === undefined || value === '') return '-';
+  if (Array.isArray(value)) {
+    return value.length > 0 ? value.map(item => formatMetadataValue(item)).join('、') : '-';
+  }
+  if (typeof value === 'boolean') return value ? '是' : '否';
+  if (typeof value === 'object') return JSON.stringify(value);
+  return String(value);
+}
+
+function collectMetadataEntries(metadata?: Record<string, unknown>): Array<[string, unknown]> {
+  if (!metadata) return [];
+  const rank = (key: string) => {
+    const index = cloudMetadataOrder.indexOf(key);
+    return index === -1 ? cloudMetadataOrder.length : index;
+  };
+  return Object.entries(metadata)
+    .filter(([, value]) => value !== null && value !== undefined && value !== '')
+    .sort(([left], [right]) => rank(left) - rank(right));
+}
 
 interface AppliedFilters {
   provider?: string;
@@ -116,6 +185,10 @@ export default function CloudResourcePage() {
   const [bindCIOption, setBindCIOption] = useState<CISelectOption | undefined>(undefined);
   const [selectedRow, setSelectedRow] = useState<CloudResource | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
+  const selectedMetadata = useMemo(
+    () => collectMetadataEntries(selectedRow?.metadata),
+    [selectedRow],
+  );
 
   // 查看资源详情
   const handleViewDetail = (record: CloudResource) => {
@@ -330,7 +403,12 @@ export default function CloudResourcePage() {
             </Space>
           </Form.Item>
         </Form>
-        <span className='ml-auto text-sm text-gray-500'>共 {total} 条资源</span>
+        <Space className='ml-auto'>
+          <span className='text-sm text-gray-500'>共 {total} 条资源</span>
+          <Button icon={<ShieldAlert />} onClick={() => router.push('/cmdb/cloud-signals')}>
+            安全与告警
+          </Button>
+        </Space>
       </div>
 
       <Table
@@ -408,6 +486,19 @@ export default function CloudResourcePage() {
             关闭
           </Button>,
           <Button
+            key='signals'
+            icon={<ShieldAlert />}
+            onClick={() => {
+              if (selectedRow?.resourceId) {
+                router.push(
+                  `/cmdb/cloud-signals?tab=vulnerabilities&instanceId=${encodeURIComponent(selectedRow.resourceId)}`,
+                );
+              }
+            }}
+          >
+            安全与告警
+          </Button>,
+          <Button
             key='create'
             type='primary'
             icon={<Plus />}
@@ -420,7 +511,7 @@ export default function CloudResourcePage() {
             新建CI
           </Button>,
         ]}
-        width={560}
+        width={720}
       >
         {selectedRow && (
           <div className='space-y-3'>
@@ -470,6 +561,33 @@ export default function CloudResourcePage() {
                 </div>
               </div>
             </div>
+
+            {selectedMetadata.length > 0 && (
+              <div>
+                <div className='text-sm text-gray-500 mb-2'>实例详情</div>
+                <Descriptions bordered size='small' column={2}>
+                  {selectedMetadata.map(([key, value]) => (
+                    <Descriptions.Item key={key} label={cloudMetadataLabels[key] || key}>
+                      {formatMetadataValue(value)}
+                    </Descriptions.Item>
+                  ))}
+                </Descriptions>
+              </div>
+            )}
+
+            {selectedRow.tags && Object.keys(selectedRow.tags).length > 0 && (
+              <div>
+                <div className='text-sm text-gray-500 mb-2'>标签</div>
+                <Space wrap>
+                  {Object.entries(selectedRow.tags).map(([key, value]) => (
+                    <Tag key={key}>
+                      {key}
+                      {value ? `=${value}` : ''}
+                    </Tag>
+                  ))}
+                </Space>
+              </div>
+            )}
           </div>
         )}
       </Modal>

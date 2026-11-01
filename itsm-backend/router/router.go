@@ -32,6 +32,7 @@ import (
 	"itsm-backend/handlers/capability"
 	"itsm-backend/handlers/change"
 	"itsm-backend/handlers/change_review"
+	"itsm-backend/handlers/cloudsignal"
 	"itsm-backend/handlers/cmdb"
 	domainCommon "itsm-backend/handlers/common"
 	connectorHandler "itsm-backend/handlers/connector"
@@ -227,6 +228,8 @@ type RouterConfig struct {
 	ServiceCatalogHandler *service_catalog.Handler
 	ServiceRequestHandler *service_request.Handler
 	CMDBHandler           *cmdb.Handler
+	// CloudSignalHandler 暴露云监控告警与安全漏洞的读面/本地状态流转/同步健康。
+	CloudSignalHandler *cloudsignal.Handler
 
 	ProblemHandler      *problem.Handler
 	ChangeHandler       *change.Handler
@@ -584,6 +587,11 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 		// ==================== CMDB ====================
 		if config.CMDBHandler != nil {
 			SetupCMDBRoutes(tenant.(*gin.RouterGroup), config)
+		}
+
+		// ==================== Cloud Signals (云监控告警 / 安全漏洞) ====================
+		if config.CloudSignalHandler != nil {
+			SetupCloudSignalRoutes(tenant.(*gin.RouterGroup), config.CloudSignalHandler)
 		}
 
 		// ==================== Asset Licenses ====================

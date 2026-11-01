@@ -36,6 +36,7 @@ const SEGMENT_LABELS: Record<string, string> = {
   'cloud-accounts': '云账号',
   'cloud-resources': '云资源',
   'cloud-services': '云服务',
+  'cloud-signals': '云安全与告警',
   reconciliation: '同步对账',
   registry: '注册表',
   relationships: 'CI 关系',

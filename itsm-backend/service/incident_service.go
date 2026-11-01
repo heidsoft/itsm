@@ -170,6 +170,12 @@ func (s *IncidentService) CreateIncident(ctx context.Context, req *dto.CreateInc
 	return s.createIncident(ctx, req, tenantID, userID, incidentCreateOptions{})
 }
 
+// CreateAutomatedIncident 供系统集成（云监控建单桥等）使用：reporter 是自动化
+// 账号，is_automated 置 true，让报表能区分人工建单与自动建单。
+func (s *IncidentService) CreateAutomatedIncident(ctx context.Context, req *dto.CreateIncidentRequest, tenantID, reporterID int) (*dto.IncidentResponse, error) {
+	return s.createIncident(ctx, req, tenantID, reporterID, incidentCreateOptions{isAutomated: true})
+}
+
 func (s *IncidentService) CreateFromEmail(ctx context.Context, tenantID int, command EmailIncidentCommand) (*dto.IncidentResponse, error) {
 	if command.ConversationID <= 0 || command.SupportContractID <= 0 || command.ReporterUserID <= 0 {
 		return nil, errors.New("email conversation, support contract and automation reporter are required")

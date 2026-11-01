@@ -146,6 +146,9 @@ type Application struct {
 	// 与 HTTP 路由共用同一个 cmdb.Service，调度不会产出「有 job 无命令」的任务。
 	DiscoveryScheduler *cmdb.DiscoveryScheduler
 
+	// CloudSignal 云监控告警 / 安全漏洞的后台同步与自动建单桥。
+	CloudSignal *cloudSignalRuntime
+
 	// backgroundWG 跟踪由 startBackgroundTasks 启动的所有后台 goroutine。
 	// 在 Stop() 中等待它们退出，避免应用关闭时强制杀死进行中的任务。
 	backgroundWG sync.WaitGroup
@@ -929,6 +932,21 @@ func NewApplication() *Application {
 	discoveryScheduler := cmdb.NewDiscoveryScheduler(cmdbRepo, cmdbServiceDomain, sugar)
 	discoveryScheduler.SetLocationResolver(discoveryLocationFor)
 
+	// 云信号同步：告警/漏洞按租户轮询，P1/P2 告警自动建事件。
+	// reporter 未配置时告警照常落库，只是不建单；能力状态在 sync-state 上可见，
+	// 不用「0 条结果」冒充成功。
+	cloudSignalRuntime := newCloudSignalRuntime(
+		database.GetRawDB(),
+		cmdbCloudAccountSource{repo: cmdbRepo},
+		incidentService,
+		cfg.CloudSignal.AutomationReporterID,
+		tenantSecretResolver,
+		sugar,
+	)
+	if cloudSignalRuntime != nil && cfg.CloudSignal.AutomationReporterID <= 0 {
+		sugar.Warnw("cloud alert bridge disabled: CLOUD_SIGNAL_AUTOMATION_REPORTER_ID is not set")
+	}
+
 	// Approval Chain Service（供服务请求审批链求值引擎消费）
 	approvalChainService := service.NewApprovalChainService(client, sugar)
 	// 将审批链求值器注入 BPMN Service Task handler（配置与编排分离）
@@ -1302,6 +1320,7 @@ func NewApplication() *Application {
 		BPMNHandler:                  bpmnHTTPHandler,
 		A2UIHandler:                  a2uiHandler.NewHandler(a2uiService, sugar),
 		CMDBHandler:                  cmdbHandler,
+		CloudSignalHandler:           cloudSignalRuntime.HTTPHandler(),
 		TicketCategoryHandler:        ticketCategoryHandler.NewHandler(ticketCategoryService, sugar),
 		TicketTypeHandler:            ticketTypeHandler.NewHandler(ticketTypeService, sugar),
 		TicketTagHandler:             ticketTagHandler.NewHandler(ticketTagService, sugar),
@@ -1423,6 +1442,9 @@ func NewApplication() *Application {
 
 		// 云发现 cron 调度器（与 HTTP 路由共用同一 Service 实例）
 		DiscoveryScheduler: discoveryScheduler,
+
+		// 云监控告警 / 安全漏洞同步与建单桥
+		CloudSignal: cloudSignalRuntime,
 	}
 }
 
@@ -1925,6 +1947,52 @@ func (app *Application) startBackgroundTasks(ctx context.Context) {
 							"tenant_id", t.ID, "scanned", result.Scanned,
 							"created", result.Created, "failed", result.Failed)
 					}
+				}
+			}
+		})
+	}
+
+	// 云信号同步：告警与建单桥每分钟一轮，漏洞全量扫描每 30 分钟一轮。
+	// 逐租户收窄上下文；单租户失败只影响自己，不阻塞其他租户。
+	if app.CloudSignal != nil {
+		runForTenants := func(name string, run func(context.Context, int)) {
+			sysCtx := tenantctx.SystemContext(ctx, "bootstrap:"+name,
+				"poll cloud signals for all tenants")
+			tenants, err := app.DBClient.Tenant.Query().All(sysCtx)
+			if err != nil {
+				app.Logger.Warnw("cloud signal tenant scan failed", "task", name, "error", err)
+				return
+			}
+			for _, t := range tenants {
+				if ctx.Err() != nil {
+					return
+				}
+				run(tenantctx.WithTenantID(sysCtx, t.ID), t.ID)
+			}
+		}
+
+		safeGo("cloud-signal-alarm-sync", func() {
+			ticker := time.NewTicker(time.Minute)
+			defer ticker.Stop()
+			for {
+				runForTenants("cloud-signal-alarm-sync", app.CloudSignal.runAlarmRound)
+				select {
+				case <-ctx.Done():
+					return
+				case <-ticker.C:
+				}
+			}
+		})
+
+		safeGo("cloud-signal-vulnerability-sync", func() {
+			ticker := time.NewTicker(30 * time.Minute)
+			defer ticker.Stop()
+			for {
+				runForTenants("cloud-signal-vulnerability-sync", app.CloudSignal.runVulnerabilityRound)
+				select {
+				case <-ctx.Done():
+					return
+				case <-ticker.C:
 				}
 			}
 		})

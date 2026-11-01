@@ -3288,6 +3288,49 @@ GET  /api/v1/cmdb/discovery/results?job_id=42      # 列出差异（含 diff 与
 触发**，需修正表达式（调度器会跳过它并告警，不影响同租户其他来源）。修改 `schedule`
 不会立即触发一次发现——新表达式从下一个匹配点开始生效。
 
+### 云信号（云监控告警 / 安全漏洞）
+
+云账号此前只服务资源发现：ECS 上的安全漏洞看不到，CloudMonitor 告警也只停在云控制台。
+现在由后台按租户轮询两类信号，并以标准契约暴露读面与本地状态流转。权限沿用
+`cmdb:read` / `cmdb:write`——云信号与 CMDB 共用同一批云账号，不单独维护一套权限词表。
+
+```http
+GET  /api/v1/cloud-signals/alerts?status=firing&severity=P1&cloudAccountId=3&search=CPU&page=1&pageSize=20
+POST /api/v1/cloud-signals/alerts/{id}/acknowledge
+POST /api/v1/cloud-signals/alerts/{id}/resolve
+
+GET  /api/v1/cloud-signals/vulnerabilities?vulnType=cve&severity=critical&instanceId=i-xxx&status=open
+GET  /api/v1/cloud-signals/vulnerabilities/summary
+POST /api/v1/cloud-signals/vulnerabilities/{id}/ignore
+POST /api/v1/cloud-signals/vulnerabilities/{id}/reopen
+
+GET  /api/v1/cloud-signals/sync-status
+```
+
+- **数据来源**：CloudMonitor `DescribeAlertLogs` 写入 `alerts`（`source=cloudmonitor`），
+  云安全中心 `DescribeVulnerabilities` 写入 `security_findings`。告警每分钟、漏洞每 30 分钟
+  轮询一次，不依赖 EventBridge 推送，也不占用命令总线。
+- **漏洞口径**：同步 `cve`/`sys`/`cms` 的未修复与修复中状态，CVSS 分数分档为
+  `critical`/`high`/`medium`/`low`/`unknown`。每轮完整拉取后把本轮未再出现的未修复项
+  标记 `fixed`；被截断的轮次不清扫，避免把「没拉到」当成「已修复」。漏洞按
+  `(provider, instanceId)` 关联已发现的配置项，关联失败不影响同步结果。
+- **告警建单**：P1/P2 告警由后台条件认领（含重试上限）后自动创建事件，重复轮询按告警
+  ID 复用既有事件，不会重复建单。报告人由 `CLOUD_SIGNAL_AUTOMATION_REPORTER_ID` 指定；
+  未配置时告警照常入库但不建单，启动日志会给出显式提示。
+- **本地状态机**：告警 `firing → acknowledged → resolved`，只有触发中可认领，
+  触发中/已认领可关闭；漏洞 `open`/`fixing` 可忽略，`fixed`/`ignored` 可重新打开。
+  非法迁移 409，不存在 404，过滤值不在词表 400。
+- **同步健康**：`sync-status` 按账号 × 信号返回 `unconfigured`（未配置凭据）/
+  `unavailable`（最近一次失败）/ `ready`。空列表不代表同步成功，页面应读状态而不是只看条数。
+- **响应**：列表为标准 `{items,total,page,pageSize,totalPages}`；`sync-status` 不分页，
+  但同样返回五键（`page` 固定为 1）。按名称/告警 ID 搜索的长度上限为 200 字符。
+- **多选过滤**：`status`、`severity` 以重复键传参（`status=open&status=fixing`），
+  不接受逗号分隔——服务端按重复键绑定为数组，拼成 `status=open,fixing` 会按非法枚举值返回 400。
+
+本期不含 ECS 事件与监控指标趋势。契约锁：`handlers/cloudsignal/handler_test.go`
+（信封键、camelCase、404/409/400 映射）、`handlers/cloudsignal/service_test.go`
+（状态机与过滤校验）、`router/cloudsignal_routes_test.go`（路由注册）。
+
 ## 通知接口
 
 ### 获取通知列表

@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **云信号接入：安全漏洞与云监控告警进入 ITSM 主流程（2026-11-01）**：云账号此前只用于资源发现，ECS 上的安全漏洞看不到，CloudMonitor 告警也不会变成事件。现按租户后台轮询两类信号：① 漏洞同步调用云安全中心 `DescribeVulnerabilities`（cve/sys/cms 的未修复与修复中），按 CVSS 分档落 `security_findings`，每轮完整拉取后把本轮未再出现的未修复项标记为已修复，截断轮次不清扫；按 `(provider, instanceId)` 关联已发现的配置项，关联失败不影响同步。② 告警同步调用 CloudMonitor `DescribeAlertLogs` 落 `alerts`（`source=cloudmonitor`），P1/P2 告警经条件认领后自动建事件，重复轮询按告警 ID 复用既有事件，不重复建单；报告人由 `CLOUD_SIGNAL_AUTOMATION_REPORTER_ID` 指定，未配置时告警照常入库、不建单。③ 新增 `/api/v1/cloud-signals` 读面与本地流转（告警列表/认领/关闭，漏洞列表/统计/忽略/重新打开，同步健康状态），权限沿用 `cmdb:read`/`cmdb:write`，分页与 400/404/409 语义按全站契约；同步状态区分 unconfigured/unavailable/ready，空结果不会被当成同步成功。④ 前端新增 `/cmdb/cloud-signals` 页面：告警与漏洞两个列表页签、按账号汇总的同步状态分级提示、认领/关闭告警与忽略/重新打开漏洞，写操作按 `cmdb:write` 授权；云资源列表的详情弹窗补齐 ECS 实例字段与标签展示，并可直接带 `instanceId` 跳到该实例的漏洞列表。本期不含 ECS 事件与监控指标趋势。回归：`handlers/cloudsignal/*_test.go`、`router/cloudsignal_routes_test.go`、前端 `src/lib/api/__tests__/cloudsignal-api.test.ts` 与 `http-client.test.ts`（数组参数按重复键序列化），并重新生成 `rbac_precheck_gen.go` 与 `docs/acl-manifest.yaml`。
+
 ### Fixed
 
 - **AI 中心：评测门禁的自我实现已修——此前那不是门禁，是没有门禁（2026-10-31）**：

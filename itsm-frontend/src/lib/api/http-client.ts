@@ -604,9 +604,16 @@ class HttpClient {
     if (params) {
       const searchParams = new URLSearchParams();
       Object.entries(params as Record<string, unknown>).forEach(([key, value]) => {
-        if (value !== undefined && value !== null) {
-          searchParams.append(key, String(value));
+        if (value === undefined || value === null) return;
+        // 数组按重复键展开：Gin 的 []string 绑定只认 status=a&status=b，
+        // 拼成 status=a,b 会被当成单个非法枚举值。
+        if (Array.isArray(value)) {
+          value.forEach(item => {
+            if (item !== undefined && item !== null) searchParams.append(key, String(item));
+          });
+          return;
         }
+        searchParams.append(key, String(value));
       });
       url += `?${searchParams.toString()}`;
     }

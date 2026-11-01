@@ -135,6 +135,20 @@ describe('httpClient', () => {
       expect(url).not.toContain('alsoUnused');
     });
 
+    it('expands array params into repeated keys', async () => {
+      fetchMock.mockResolvedValueOnce(jsonResponse({ code: 0, message: 'ok', data: [] }));
+
+      await httpClient.get('/api/v1/cloud-signals/alerts', {
+        status: ['firing', 'acknowledged'],
+        page: 1,
+      });
+
+      const [url] = fetchMock.mock.calls[0];
+      expect(url).toContain('status=firing&status=acknowledged');
+      expect(url).not.toContain('status=firing%2Cacknowledged');
+      expect(url).toContain('page=1');
+    });
+
     it('returns camelCase data when backend sends snake_case', async () => {
       fetchMock.mockResolvedValueOnce(
         jsonResponse({

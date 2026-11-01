@@ -80,6 +80,7 @@ export { CommonApi } from './common-api';
 
 // 配置管理
 export { CMDBApi } from './cmdb-api';
+export { CloudSignalApi } from './cloudsignal-api';
 export { SystemConfigAPI } from './system-config-api';
 
 // SLA

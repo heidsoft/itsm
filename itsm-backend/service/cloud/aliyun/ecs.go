@@ -114,11 +114,7 @@ func (a *AliyunECSAdapter) DiscoverRegion(ctx context.Context, account *ent.Clou
 	token := nextToken
 
 	for {
-		req := &ecs.DescribeInstancesRequest{}
-		req.MaxResults = tea.Int32(100)
-		if token != "" {
-			req.NextToken = tea.String(token)
-		}
+		req := buildDescribeInstancesRequest(region, token)
 
 		resp, err := ecsClient.ecs.DescribeInstancesWithOptions(req, runtimeOptions())
 		if err != nil {
@@ -143,6 +139,16 @@ func (a *AliyunECSAdapter) DiscoverRegion(ctx context.Context, account *ent.Clou
 	}
 
 	return &cloud.PageResult{Resources: allResources}, nil
+}
+
+// DescribeInstances 的 RegionId 是必填项，客户端配置里的 RegionId 不会自动填充请求体。
+func buildDescribeInstancesRequest(region, nextToken string) *ecs.DescribeInstancesRequest {
+	req := &ecs.DescribeInstancesRequest{RegionId: tea.String(region)}
+	req.MaxResults = tea.Int32(100)
+	if nextToken != "" {
+		req.NextToken = tea.String(nextToken)
+	}
+	return req
 }
 
 func (*AliyunECSAdapter) ValidateCredential(ctx context.Context, account *ent.CloudAccount) error {
@@ -177,6 +183,54 @@ func derefInt32(i *int32) int64 {
 		return 0
 	}
 	return int64(*i)
+}
+
+func derefBool(b *bool) bool {
+	if b == nil {
+		return false
+	}
+	return *b
+}
+
+// EipAddress 与 VpcAttributes 只在对应网络形态下返回，经典网络或未绑定公网 IP 的
+// 实例上为 nil，直接取内部字段会 panic。
+func extractEip(inst *ecs.DescribeInstancesResponseBodyInstancesInstance) (ip, allocationID string, bandwidth int64) {
+	if inst.EipAddress == nil {
+		return "", "", 0
+	}
+	return derefString(inst.EipAddress.IpAddress), derefString(inst.EipAddress.AllocationId), derefInt32(inst.EipAddress.Bandwidth)
+}
+
+func extractVpc(inst *ecs.DescribeInstancesResponseBodyInstancesInstance) (vpcID, vswitchID, natIP string, privateIPs []string) {
+	if inst.VpcAttributes == nil {
+		return "", "", "", nil
+	}
+	a := inst.VpcAttributes
+	if a.PrivateIpAddress != nil {
+		for _, ip := range a.PrivateIpAddress.IpAddress {
+			if ip != nil {
+				privateIPs = append(privateIPs, *ip)
+			}
+		}
+	}
+	return derefString(a.VpcId), derefString(a.VSwitchId), derefString(a.NatIpAddress), privateIPs
+}
+
+func extractOperationLocks(inst *ecs.DescribeInstancesResponseBodyInstancesInstance) []map[string]string {
+	if inst.OperationLocks == nil {
+		return nil
+	}
+	locks := make([]map[string]string, 0, len(inst.OperationLocks.LockReason))
+	for _, l := range inst.OperationLocks.LockReason {
+		if l == nil {
+			continue
+		}
+		locks = append(locks, map[string]string{
+			"reason":  derefString(l.LockReason),
+			"message": derefString(l.LockMsg),
+		})
+	}
+	return locks
 }
 
 func extractInnerIPs(inst *ecs.DescribeInstancesResponseBodyInstancesInstance) []string {
@@ -251,25 +305,48 @@ func mapStatus(status string) string {
 }
 
 func transformInstance(inst *ecs.DescribeInstancesResponseBodyInstancesInstance, region string) cloud.DiscoveredResource {
+	eipIP, eipAllocationID, eipBandwidth := extractEip(inst)
+	vpcID, vswitchID, natIP, privateIPs := extractVpc(inst)
+
 	extra := map[string]interface{}{
 		"instance_type":              derefString(inst.InstanceType),
+		"instance_type_family":       derefString(inst.InstanceTypeFamily),
 		"cpu":                        derefInt32(inst.Cpu),
 		"memory":                     derefInt32(inst.Memory),
 		"image_id":                   derefString(inst.ImageId),
 		"serial_number":              derefString(inst.SerialNumber),
 		"instance_charge_type":       derefString(inst.InstanceChargeType),
+		"instance_network_type":      derefString(inst.InstanceNetworkType),
+		"io_optimized":               derefBool(inst.IoOptimized),
+		"host_name":                  derefString(inst.HostName),
 		"os_type":                    derefString(inst.OSType),
+		"os_name":                    derefString(inst.OSName),
+		"key_pair_name":              derefString(inst.KeyPairName),
+		"resource_group_id":          derefString(inst.ResourceGroupId),
+		"spot_strategy":              derefString(inst.SpotStrategy),
+		"credit_specification":       derefString(inst.CreditSpecification),
+		"gpu_spec":                   derefString(inst.GPUSpec),
+		"gpu_amount":                 derefInt32(inst.GPUAmount),
+		"start_time":                 derefString(inst.StartTime),
+		"auto_release_time":          derefString(inst.AutoReleaseTime),
+		"expired_time":               derefString(inst.ExpiredTime),
+		"deletion_protection":        derefBool(inst.DeletionProtection),
+		"stopped_mode":               derefString(inst.StoppedMode),
+		"internet_charge_type":       derefString(inst.InternetChargeType),
 		"internet_max_bandwidth_in":  derefInt32(inst.InternetMaxBandwidthIn),
 		"internet_max_bandwidth_out": derefInt32(inst.InternetMaxBandwidthOut),
-		"eip_ip_address":             derefString(inst.EipAddress.IpAddress),
+		"eip_ip_address":             eipIP,
+		"eip_allocation_id":          eipAllocationID,
+		"eip_bandwidth":              eipBandwidth,
 		"public_ip_address":          extractPublicIPs(inst),
 		"inner_ip_address":           extractInnerIPs(inst),
-		"vpc_id":                     derefString(inst.VpcAttributes.VpcId),
-		"vswitch_id":                 derefString(inst.VpcAttributes.VSwitchId),
+		"vpc_id":                     vpcID,
+		"vswitch_id":                 vswitchID,
+		"nat_ip_address":             natIP,
+		"private_ip_address":         privateIPs,
 		"security_groups":            extractSecurityGroupIDs(inst),
-		"instance_network_type":      derefString(inst.InstanceNetworkType),
+		"operation_locks":            extractOperationLocks(inst),
 		"description":                derefString(inst.Description),
-		"expired_time":               derefString(inst.ExpiredTime),
 	}
 
 	return cloud.DiscoveredResource{
