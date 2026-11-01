@@ -162,6 +162,47 @@ export interface RegisterPendingDiscoveryResourceRequest {
   attributes?: Record<string, unknown>;
 }
 
+// —— 发现任务读面（与后端 dto.DiscoveryJobDetailResponse 逐字段一致） ——
+
+// 一个 (serviceCode, region) 执行单元失败的结构化归因。
+export interface DiscoveryScopeFailure {
+  serviceCode: string;
+  region: string;
+  errorCode?: string;
+  message?: string;
+}
+
+export interface DiscoveryJobSummary {
+  discovered?: number;
+  created?: number;
+  updated?: number;
+  unchanged?: number;
+  missing?: number;
+  pending?: number;
+  pendingDuplicates?: number;
+  applyFailed?: number;
+  failedScopes?: string[];
+  failedScopeDetails?: DiscoveryScopeFailure[];
+}
+
+export interface DiscoveryJob {
+  id: number;
+  sourceId: string;
+  status: string;
+  progress: number;
+  errorCode?: string;
+  errorMessage?: string;
+  queuedAt?: string;
+  startedAt?: string;
+  finishedAt?: string;
+  failedScopes?: string[];
+  summary?: DiscoveryJobSummary;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type DiscoveryJobListResponse = PaginationResponse<DiscoveryJob>;
+
 const CMDB_BASE = '/api/v1/cmdb';
 // 必须是字符串字面量：派生模板常量无法被 api-contract 扫描器静态解析。
 const CIS_BASE = '/api/v1/cmdb/cis';
@@ -456,8 +497,10 @@ export class CMDBApi {
     return httpClient.get(`${CMDB_BASE}/discovery/sources`);
   }
 
-  static async getDiscoveryHistory(ruleId?: string): Promise<Array<Record<string, unknown>>> {
-    return httpClient.get(`${CMDB_BASE}/discovery/results`, ruleId ? { jobId: ruleId } : undefined);
+  // 发现历史 = 发现任务列表。每轮发现一条任务，失败范围与归因在 summary 里，
+  // 不要用 /discovery/results（那是逐资源差异，没有任务状态和起止时间）。
+  static async getDiscoveryHistory(): Promise<DiscoveryJobListResponse> {
+    return httpClient.get<DiscoveryJobListResponse>(`${CMDB_BASE}/discovery/jobs`);
   }
 
   static async runDiscoveryRule(ruleId: string): Promise<void> {

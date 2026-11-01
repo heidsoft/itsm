@@ -487,16 +487,10 @@ describe('CMDBApi', () => {
   });
 
   describe('getDiscoveryHistory', () => {
-    it('should get discovery history with ruleId', async () => {
-      mockGet.mockResolvedValue([]);
-      await CMDBApi.getDiscoveryHistory('rule1');
-      expect(mockGet).toHaveBeenCalledWith('/api/v1/cmdb/discovery/results', { jobId: 'rule1' });
-    });
-
-    it('should get all discovery history without ruleId', async () => {
-      mockGet.mockResolvedValue([]);
+    it('should list discovery jobs', async () => {
+      mockGet.mockResolvedValue({ items: [], total: 0, page: 1, pageSize: 20, totalPages: 0 });
       await CMDBApi.getDiscoveryHistory();
-      expect(mockGet).toHaveBeenCalledWith('/api/v1/cmdb/discovery/results', undefined);
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/cmdb/discovery/jobs');
     });
   });
 

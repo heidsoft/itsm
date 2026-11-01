@@ -11,6 +11,7 @@ import {
   Form,
   Input,
   Modal,
+  Popover,
   Row,
   Select,
   Space,
@@ -23,6 +24,8 @@ import { Cloud, Database, RefreshCw, Server, Sparkles } from 'lucide-react';
 
 import type {
   CMDBRuntimeCapability,
+  DiscoveryJob,
+  DiscoveryScopeFailure,
   PendingDiscoveryAttribute,
   PendingDiscoveryResource,
   RegisterPendingDiscoveryResourceRequest,
@@ -30,6 +33,7 @@ import type {
 import { ApiRequestError } from '@/lib/api/http-client';
 import { ManagementPageHeader } from '@/components/ui/ManagementPageHeader';
 import { StatsOverview, type StatsOverviewItem } from '@/components/ui/StatsOverview';
+import { formatDateTime } from '@/lib/formatters';
 import {
   useCapabilitiesQuery,
   useCloudAccountsQuery,
@@ -52,6 +56,24 @@ const ENVIRONMENT_OPTIONS = [
 // 两者都填过的属性即便云端本已满足也允许操作员覆盖——后端按「提交值优先」合并。
 const initialAttrValue = (attr: PendingDiscoveryAttribute): string =>
   attr.currentValue || attr.defaultValue || '';
+
+// 状态字符串由执行器落库，展示层只做翻译，不要用 success 之类的展示词反推后端状态。
+const DISCOVERY_JOB_STATUS: Record<string, { label: string; color: string }> = {
+  queued: { label: '排队中', color: 'default' },
+  discovering: { label: '发现中', color: 'processing' },
+  discovered: { label: '已发现', color: 'blue' },
+  reconciling: { label: '对账中', color: 'processing' },
+  succeeded: { label: '成功', color: 'green' },
+  partial_failed: { label: '部分失败', color: 'orange' },
+  failed: { label: '失败', color: 'red' },
+  cancelled: { label: '已取消', color: 'default' },
+};
+
+const discoveryJobStatusMeta = (status: string) =>
+  DISCOVERY_JOB_STATUS[status] ?? { label: status || '-', color: 'default' };
+
+const discoveryScopeFailures = (record: DiscoveryJob): DiscoveryScopeFailure[] =>
+  record.summary?.failedScopeDetails ?? [];
 
 interface CompletionFormValues {
   name?: string;
@@ -245,7 +267,7 @@ export default function ServiceGraphRegistryPage() {
   const discoverySources = normalizeList<Record<string, unknown>>(sourcesQuery.data);
   const cloudServices = servicesQuery.data?.items ?? [];
   const cloudAccounts = accountsQuery.data?.items ?? [];
-  const discoveryHistory = normalizeList<Record<string, unknown>>(historyQuery.data);
+  const discoveryHistory = historyQuery.data?.items ?? [];
   const pendingResources = pendingQuery.data?.items ?? [];
 
   const discoveryCapability: CMDBRuntimeCapability | null =
@@ -394,19 +416,60 @@ export default function ServiceGraphRegistryPage() {
       title: '状态',
       dataIndex: 'status',
       key: 'status',
-      render: (value: string) => <Tag color={value === 'success' ? 'green' : value === 'failed' ? 'red' : 'blue'}>{value || '-'}</Tag>,
+      render: (value: string) => {
+        const meta = discoveryJobStatusMeta(value);
+        return <Tag color={meta.color}>{meta.label}</Tag>;
+      },
+    },
+    {
+      title: '失败原因',
+      key: 'failure',
+      render: (_: unknown, record: DiscoveryJob) => {
+        const failures = discoveryScopeFailures(record);
+        if (failures.length > 0) {
+          return (
+            <Popover
+              title="失败范围"
+              content={
+                <div className="max-w-md space-y-2">
+                  {failures.map((item, index) => (
+                    <div key={`${item.serviceCode}-${item.region}-${index}`} className="text-xs">
+                      <div className="font-medium">
+                        {item.serviceCode}/{item.region}
+                        <span className="ml-1 text-gray-500">{item.errorCode || 'scope_failed'}</span>
+                      </div>
+                      <div className="break-all text-gray-600">{item.message || '-'}</div>
+                    </div>
+                  ))}
+                </div>
+              }
+            >
+              <Tag color="red" className="cursor-pointer">
+                {failures.length} 个范围失败
+              </Tag>
+            </Popover>
+          );
+        }
+        if (record.errorMessage) {
+          return <Text type="danger">{record.errorMessage}</Text>;
+        }
+        if (record.errorCode) {
+          return <Text type="danger">{record.errorCode}</Text>;
+        }
+        return '-';
+      },
     },
     {
       title: '开始时间',
       dataIndex: 'startedAt',
       key: 'startedAt',
-      render: (value?: string) => (value ? new Date(value).toLocaleString('zh-CN') : '-'),
+      render: (value?: string) => formatDateTime(value) || '-',
     },
     {
       title: '结束时间',
       dataIndex: 'finishedAt',
       key: 'finishedAt',
-      render: (value?: string) => (value ? new Date(value).toLocaleString('zh-CN') : '-'),
+      render: (value?: string) => formatDateTime(value) || '-',
     },
   ];
 
@@ -460,7 +523,7 @@ export default function ServiceGraphRegistryPage() {
       title: '最后发现',
       dataIndex: 'lastSeenAt',
       key: 'lastSeenAt',
-      render: (value?: string) => (value ? new Date(value).toLocaleString('zh-CN') : '-'),
+      render: (value?: string) => formatDateTime(value) || '-',
     },
     {
       title: '操作',
@@ -511,7 +574,7 @@ export default function ServiceGraphRegistryPage() {
             <Card size="small" className="h-full bg-slate-50">
               <Text type="secondary">最后刷新</Text>
               <div className="mt-2 text-lg font-semibold">
-                {refreshAt ? new Date(refreshAt).toLocaleString('zh-CN') : '-'}
+                {formatDateTime(refreshAt) || '-'}
               </div>
             </Card>
           </Col>

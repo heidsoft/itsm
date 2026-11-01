@@ -61,12 +61,15 @@ func TestScenario10_ServiceCatalogFullLoop(t *testing.T) {
 	// ========== 1. Create service catalog ==========
 	t.Run("create service catalog", func(t *testing.T) {
 		cat, err := scSvc.Create(ctx, &service_catalog.ServiceCatalog{
-			Name:         "ECS 云服务器",
-			Category:     "compute",
-			Description:  "弹性计算服务",
-			Status:       "enabled",
-			DeliveryTime: 3,
-			TenantID:     tid,
+			Name: "ECS 云服务器",
+			// 本场景验的是三级审批全链路：目录必须声明需要审批，
+			// 否则按免审批语义直接进入履约门禁，审批行不会生成。
+			RequiresApproval: true,
+			Category:         "compute",
+			Description:      "弹性计算服务",
+			Status:           "enabled",
+			DeliveryTime:     3,
+			TenantID:         tid,
 		})
 		require.NoError(t, err)
 		require.NotZero(t, cat.ID)

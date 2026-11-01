@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -141,18 +142,21 @@ func (e *DiscoveryJobExecutor) Execute(ctx context.Context, tenantID, jobID int)
 		"discovered": 0, "created": 0, "updated": 0, "unchanged": 0, "missing": 0,
 	}
 	var (
-		created, updated, unchanged, discovered, missing int
-		ciCounts                                         ciProjectionCounts
-		failedScopes                                     []string
-		completedScopes                                  []string
+		counts           discoveryScopeCounts
+		ciCounts         ciProjectionCounts
+		failedScopes     []string
+		completedScopes  []string
+		failedDetails    []discoveryScopeFailure
+		firstScopeCode   string
+		firstScopeReason string
 	)
 
-	scopes, err := e.resolveScopes(ctx, source, accountEnt)
+	scopes, emptyReason, err := e.resolveScopes(ctx, source, accountEnt)
 	if err != nil {
 		return e.failJob(ctx, job, "scope_resolution_failed", err.Error())
 	}
 	if len(scopes) == 0 {
-		return e.failJob(ctx, job, "no_scopes", "scope 解析为空（serviceCodes 与可用适配器无交集）")
+		return e.failJob(ctx, job, "no_scopes", emptyReason)
 	}
 
 	scopeFailed := false
@@ -169,15 +173,22 @@ func (e *DiscoveryJobExecutor) Execute(ctx context.Context, tenantID, jobID int)
 			}
 		}
 
-		nCreated, nUpdated, nUnchanged, nDiscovered, nMissing, scopeErr := e.runScope(ctx, job, source, accountEnt, sc, &ciCounts)
-		discovered += nDiscovered
-		created += nCreated
-		updated += nUpdated
-		unchanged += nUnchanged
-		missing += nMissing
+		scopeErr := e.runScope(ctx, job, source, accountEnt, sc, &ciCounts, &counts)
 		if scopeErr != nil {
 			scopeFailed = true
-			failedScopes = append(failedScopes, fmt.Sprintf("%s:%s", sc.serviceCode, sc.region))
+			code := scopeErrorCode(scopeErr)
+			message := truncateScopeMessage(scopeErr.Error(), 400)
+			if firstScopeCode == "" {
+				firstScopeCode = code
+				firstScopeReason = message
+			}
+			failedScopes = append(failedScopes, sc.serviceCode+"/"+sc.region)
+			failedDetails = append(failedDetails, discoveryScopeFailure{
+				ServiceCode: sc.serviceCode,
+				Region:      sc.region,
+				ErrorCode:   code,
+				Message:     message,
+			})
 			e.logger.Warnw("discovery scope failed", "job", jobID, "scope", sc.serviceCode+"/"+sc.region, "error", scopeErr)
 		} else {
 			completedScopes = append(completedScopes, sc.serviceCode+"/"+sc.region)
@@ -193,12 +204,18 @@ func (e *DiscoveryJobExecutor) Execute(ctx context.Context, tenantID, jobID int)
 		}
 	}
 
-	summary["discovered"] = discovered
-	summary["created"] = created
-	summary["updated"] = updated
-	summary["unchanged"] = unchanged
-	summary["missing"] = missing
+	summary["discovered"] = counts.discovered
+	summary["created"] = counts.created
+	summary["updated"] = counts.updated
+	summary["unchanged"] = counts.unchanged
+	summary["missing"] = counts.missing
+	summary["pending"] = counts.pending
+	summary["pendingDuplicates"] = counts.pendingDuplicates
+	summary["applyFailed"] = counts.applyFailed
 	summary["failedScopes"] = failedScopes
+	if len(failedDetails) > 0 {
+		summary["failedScopeDetails"] = failedDetails
+	}
 	ciCounts.mergeInto(summary)
 
 	now = time.Now()
@@ -222,6 +239,15 @@ func (e *DiscoveryJobExecutor) Execute(ctx context.Context, tenantID, jobID int)
 		// 已是终态或非法迁移：记录但不让命令重试（避免重复执行）。
 		e.logger.Warnw("discovery job final transition skipped", "job", jobID, "from", job.Status, "to", finalStatus, "error", err)
 	}
+	if finalStatus == DiscoveryJobFailed {
+		// 全部 scope 失败时此前只留 status=failed，错误详情在 summary 里但
+		// errorCode/errorMessage 为空，前端与告警都没有可展示的原因。
+		job.ErrorCode = firstScopeCode
+		if job.ErrorCode == "" {
+			job.ErrorCode = "all_scopes_failed"
+		}
+		job.ErrorMessage = firstScopeReason
+	}
 	job.Summary = summary
 	if err := e.repo.UpdateDiscoveryJob(ctx, job); err != nil {
 		return fmt.Errorf("persist final state for job %d: %w", jobID, err)
@@ -241,24 +267,73 @@ type discoveryScope struct {
 	region      string
 }
 
+// discoveryScopeCounts 是 job 级计数，按 scope 累加。
+type discoveryScopeCounts struct {
+	created, updated, unchanged, discovered, missing int
+	applyFailed, pending, pendingDuplicates          int
+}
+
+// discoveryScopeFailure 是一个失败 scope 的持久化摘要。此前 scope 错误只进
+// Warn 日志，而生产 LOG_LEVEL=error 时日志根本不写，任务只剩 failedScopes 的
+// 「服务/地域」，运维无法判断是超时、鉴权还是接口变更。
+type discoveryScopeFailure struct {
+	ServiceCode string `json:"serviceCode"`
+	Region      string `json:"region"`
+	ErrorCode   string `json:"errorCode"`
+	Message     string `json:"message"`
+}
+
+// scopeRunError 给 scope 内错误挂稳定错误码，供 summary 与前端展示；原始错误
+// 仍通过 Unwrap 保留，日志与 errors.Is 判断不受影响。
+type scopeRunError struct {
+	code string
+	err  error
+}
+
+func (e *scopeRunError) Error() string { return e.err.Error() }
+func (e *scopeRunError) Unwrap() error { return e.err }
+
+func scopeFailure(code, format string, args ...interface{}) error {
+	return &scopeRunError{code: code, err: fmt.Errorf(format, args...)}
+}
+
+func scopeErrorCode(err error) string {
+	var sfe *scopeRunError
+	if errors.As(err, &sfe) && sfe.code != "" {
+		return sfe.code
+	}
+	return "scope_failed"
+}
+
+// truncateScopeMessage 只保留排障所需的头部，避免把整段供应商报文写进任务摘要。
+func truncateScopeMessage(message string, limit int) string {
+	message = strings.Join(strings.Fields(message), " ")
+	if limit <= 0 || len([]rune(message)) <= limit {
+		return message
+	}
+	return string([]rune(message)[:limit]) + "…"
+}
+
 // resolveScopes 计算 serviceCodes × regions 执行矩阵：
 // region 取 source 声明 ∩ 账号白名单（白名单非空时），source 未声明则由
-// adapter ListRegions 发现。
-func (e *DiscoveryJobExecutor) resolveScopes(ctx context.Context, source *DiscoverySource, account *ent.CloudAccount) ([]discoveryScope, error) {
-	codes := source.ServiceCodes
-	if len(codes) == 0 {
-		return nil, nil
-	}
+// adapter ListRegions 发现。矩阵为空时第二个返回值给出具体成因。
+func (e *DiscoveryJobExecutor) resolveScopes(ctx context.Context, source *DiscoverySource, account *ent.CloudAccount) ([]discoveryScope, string, error) {
 	whitelist := map[string]struct{}{}
 	for _, r := range account.RegionWhitelist {
 		whitelist[strings.ToLower(strings.TrimSpace(r))] = struct{}{}
 	}
 	var scopes []discoveryScope
-	for _, code := range codes {
+	// 被账号白名单挡掉的地域单独记账：否则「地域写错」会伪装成「适配器缺失」。
+	var excludedByWhitelist []string
+	// 未声明 regions 且 provider 侧查不到地域的 serviceCode，同样单独记账。
+	var regionsUnavailable []string
+	hasServiceCode := false
+	for _, code := range source.ServiceCodes {
 		code = strings.ToLower(strings.TrimSpace(code))
 		if code == "" {
 			continue
 		}
+		hasServiceCode = true
 		regions := source.Regions
 		if len(regions) == 0 {
 			adapter, ok := e.adapters.Get(cloud.NormalizeProvider(source.Provider), code)
@@ -268,9 +343,12 @@ func (e *DiscoveryJobExecutor) resolveScopes(ctx context.Context, source *Discov
 			}
 			rs, err := adapter.ListRegions(ctx, account)
 			if err != nil {
-				return nil, fmt.Errorf("ListRegions(%s): %w", code, err)
+				return nil, "", fmt.Errorf("ListRegions(%s): %w", code, err)
 			}
 			regions = rs
+			if len(regions) == 0 {
+				regionsUnavailable = append(regionsUnavailable, code)
+			}
 		}
 		for _, region := range regions {
 			region = strings.ToLower(strings.TrimSpace(region))
@@ -279,34 +357,49 @@ func (e *DiscoveryJobExecutor) resolveScopes(ctx context.Context, source *Discov
 			}
 			if len(whitelist) > 0 {
 				if _, ok := whitelist[region]; !ok {
+					excludedByWhitelist = append(excludedByWhitelist, code+"/"+region)
 					continue
 				}
 			}
 			scopes = append(scopes, discoveryScope{serviceCode: code, region: region})
 		}
 	}
-	return scopes, nil
+	if len(scopes) > 0 {
+		return scopes, "", nil
+	}
+	switch {
+	case !hasServiceCode:
+		return nil, "发现源未配置 serviceCodes", nil
+	case len(excludedByWhitelist) > 0:
+		return nil, fmt.Sprintf("地域被云账号 regionWhitelist(%s) 排除: %s",
+			strings.Join(account.RegionWhitelist, ","), strings.Join(excludedByWhitelist, ",")), nil
+	case len(regionsUnavailable) > 0:
+		return nil, fmt.Sprintf("未声明 regions 且 provider 未返回可用地域: %s",
+			strings.Join(regionsUnavailable, ",")), nil
+	default:
+		return nil, "scope 解析为空（未得到有效 serviceCode × region 组合，检查 source.regions 是否为空值）", nil
+	}
 }
 
 // runScope 执行一个 scope：拉取 → diff → 落库 → 缺失扫描。
-func (e *DiscoveryJobExecutor) runScope(ctx context.Context, job *DiscoveryJob, source *DiscoverySource, account *ent.CloudAccount, sc discoveryScope, ciCounts *ciProjectionCounts) (created, updated, unchanged, discovered, missing int, err error) {
+func (e *DiscoveryJobExecutor) runScope(ctx context.Context, job *DiscoveryJob, source *DiscoverySource, account *ent.CloudAccount, sc discoveryScope, ciCounts *ciProjectionCounts, counts *discoveryScopeCounts) error {
 	provider := cloud.NormalizeProvider(source.Provider)
 	adapter, ok := e.adapters.Get(provider, sc.serviceCode)
 	if !ok {
-		return 0, 0, 0, 0, 0, fmt.Errorf("no adapter for %s/%s", provider, sc.serviceCode)
+		return scopeFailure("adapter_missing", "no adapter for %s/%s", provider, sc.serviceCode)
 	}
 	svcDef, err := e.findCloudService(ctx, account.TenantID, provider, sc.serviceCode)
 	if err != nil {
-		return 0, 0, 0, 0, 0, fmt.Errorf("load cloud service %s: %w", sc.serviceCode, err)
+		return scopeFailure("cloud_service_unavailable", "load cloud service %s: %w", sc.serviceCode, err)
 	}
 
 	clients, err := adapter.InitClients(ctx, account, []string{sc.region})
 	if err != nil {
-		return 0, 0, 0, 0, 0, fmt.Errorf("InitClients: %w", err)
+		return scopeFailure("client_init_failed", "InitClients: %w", err)
 	}
 	client := clients[sc.region]
 	if client == nil {
-		return 0, 0, 0, 0, 0, fmt.Errorf("adapter returned no client for region %s", sc.region)
+		return scopeFailure("client_missing", "adapter returned no client for region %s", sc.region)
 	}
 
 	seenIdentities := map[string]struct{}{}
@@ -314,27 +407,34 @@ func (e *DiscoveryJobExecutor) runScope(ctx context.Context, job *DiscoveryJob, 
 	for {
 		page, err := adapter.DiscoverRegion(ctx, account, sc.region, client, nextToken)
 		if err != nil {
-			return created, updated, unchanged, discovered, missing, fmt.Errorf("DiscoverRegion: %w", err)
+			return scopeFailure("discover_region_failed", "DiscoverRegion: %w", err)
 		}
 		for i := range page.Resources {
 			res := &page.Resources[i]
-			discovered++
+			counts.discovered++
+			idHash := resourceIdentityHash(account.TenantID, provider, account.AccountID, sc.region, sc.serviceCode, svcDef.ResourceTypeCode, res.ResourceID)
+			// 先登记「本轮见过」再回写：回写失败（DB/CI 抖动）不能让已存在的资源
+			// 被缺失扫描推进 missing_count，否则连续几轮写失败会把资源误标 stale。
+			seenIdentities[idHash] = struct{}{}
 			action, projection, derr := e.applyResource(ctx, job, source, account, svcDef, sc, res)
 			if derr != nil {
+				counts.applyFailed++
 				e.logger.Warnw("apply discovered resource failed", "job", job.ID, "resource", res.ResourceID, "error", derr)
 				continue
 			}
 			switch action {
 			case "create":
-				created++
+				counts.created++
 			case "update":
-				updated++
+				counts.updated++
+			case "pending":
+				counts.pending++
+			case "pending_duplicate":
+				counts.pendingDuplicates++
 			default:
-				unchanged++
+				counts.unchanged++
 			}
 			ciCounts.add(projection)
-			idHash := resourceIdentityHash(account.TenantID, provider, account.AccountID, sc.region, sc.serviceCode, svcDef.ResourceTypeCode, res.ResourceID)
-			seenIdentities[idHash] = struct{}{}
 		}
 		if page.NextToken == "" {
 			break
@@ -345,7 +445,7 @@ func (e *DiscoveryJobExecutor) runScope(ctx context.Context, job *DiscoveryJob, 
 	// 缺失扫描：本轮没见到的存量资源推进 missing_count，超阈值置 stale。
 	existing, err := e.repo.ListCloudResourcesByAccountService(ctx, account.TenantID, account.ID, sc.serviceCode)
 	if err != nil {
-		return created, updated, unchanged, discovered, missing, fmt.Errorf("list resources for missing scan: %w", err)
+		return scopeFailure("missing_scan_failed", "list resources for missing scan: %w", err)
 	}
 	missingNow := 0
 	for _, ex := range existing {
@@ -373,7 +473,8 @@ func (e *DiscoveryJobExecutor) runScope(ctx context.Context, job *DiscoveryJob, 
 			ciCounts.addStale(e.ciProjector.MarkStale(ctx, ex))
 		}
 	}
-	return created, updated, unchanged, discovered, missingNow, nil
+	counts.missing += missingNow
+	return nil
 }
 
 // applyResource 对单个发现资源做 diff + 落库 + CI 回写，返回 action（create/update/unchanged）
@@ -472,10 +573,21 @@ func (e *DiscoveryJobExecutor) applyResource(ctx context.Context, job *Discovery
 	}
 
 	manual := source.ReconcilePolicy == string(cloud.ReconcileManual)
-	resultStatus := "applied"
+	resultStatus := DiscoveryResultApplied
+	action := "update"
 	var projection CIProjectionOutcome
 	if manual {
-		resultStatus = "pending"
+		// manual 下资源指纹要等人工应用才前进，下一轮发现会算出完全相同的
+		// 一条 update。只抑制指纹相同的重复行；云上内容再变仍会产生新差异。
+		pending, err := e.repo.FindPendingDiscoveryResult(ctx, account.TenantID, identityHash, fingerprint)
+		if err != nil && !ent.IsNotFound(err) {
+			return "", CIProjectionOutcome{}, fmt.Errorf("load pending discovery result: %w", err)
+		}
+		if pending != nil {
+			return "pending_duplicate", CIProjectionOutcome{}, nil
+		}
+		resultStatus = DiscoveryResultPending
+		action = "pending"
 	} else {
 		existing.ResourceName = res.ResourceName
 		existing.Status = cloud.NormalizeStatus(res.Status)
@@ -509,7 +621,7 @@ func (e *DiscoveryJobExecutor) applyResource(ctx context.Context, job *Discovery
 	}); err != nil {
 		return "", projection, fmt.Errorf("create update result: %w", err)
 	}
-	return "update", projection, nil
+	return action, projection, nil
 }
 
 func (e *DiscoveryJobExecutor) findCloudService(ctx context.Context, tenantID int, provider, serviceCode string) (*CloudService, error) {

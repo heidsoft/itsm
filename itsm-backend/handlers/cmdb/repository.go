@@ -80,6 +80,10 @@ type Repository interface {
 	UpdateDiscoveryJob(ctx context.Context, job *DiscoveryJob) error
 	CreateDiscoveryResult(ctx context.Context, res *DiscoveryResult) (*DiscoveryResult, error)
 	ListDiscoveryResults(ctx context.Context, tenantID int, jobID int) ([]*DiscoveryResult, error)
+	// FindPendingDiscoveryResult 按规范身份 + 目标指纹找未决的 update 差异。
+	// manual 对账策略下资源指纹在被人工应用前不会前进，同一差异会被每轮发现
+	// 重复算出；执行器用它抑制重复待办，而不是让人工 inbox 无限堆积。
+	FindPendingDiscoveryResult(ctx context.Context, tenantID int, resourceIdentity, afterHash string) (*DiscoveryResult, error)
 	// GetDiscoveryResult / UpdateDiscoveryResult 是人工差异决策（apply/reject）的读写面。
 	// manual 对账策略下 update 只落 pending 结果，没有这两条通道，差异永远停在
 	// 「待人工确认」——发现算得再准，账也合不上。

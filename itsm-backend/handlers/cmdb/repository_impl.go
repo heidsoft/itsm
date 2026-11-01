@@ -853,6 +853,24 @@ func (r *EntRepository) ListDiscoveryResults(ctx context.Context, tenantID int, 
 	return results, nil
 }
 
+// FindPendingDiscoveryResult 按规范身份 + 目标指纹找未决的 update 差异。
+func (r *EntRepository) FindPendingDiscoveryResult(ctx context.Context, tenantID int, resourceIdentity, afterHash string) (*DiscoveryResult, error) {
+	e, err := r.client.DiscoveryResult.Query().
+		Where(
+			discoveryresult.TenantID(tenantID),
+			discoveryresult.ResourceIdentity(resourceIdentity),
+			discoveryresult.ActionEQ("update"),
+			discoveryresult.StatusEQ("pending"),
+			discoveryresult.AfterHash(afterHash),
+		).
+		Order(ent.Desc(discoveryresult.FieldID)).
+		First(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return discoveryResultFromEnt(e), nil
+}
+
 func discoveryResultFromEnt(e *ent.DiscoveryResult) *DiscoveryResult {
 	if e == nil {
 		return nil

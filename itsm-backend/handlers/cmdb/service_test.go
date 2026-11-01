@@ -60,6 +60,7 @@ type mockRepository struct {
 	updateDiscoveryResultFn                func(ctx context.Context, res *DiscoveryResult) error
 	transitionDiscoveryResultFn            func(ctx context.Context, tenantID, id int, fromStatus, toStatus, errorCode, errorMessage string) (int, error)
 	listDiscoveryResultsFn                 func(ctx context.Context, tenantID int, jobID int) ([]*DiscoveryResult, error)
+	findPendingDiscoveryResultFn           func(ctx context.Context, tenantID int, resourceIdentity, afterHash string) (*DiscoveryResult, error)
 
 	// Discovery job 执行链路
 	getDiscoverySourceFn                 func(ctx context.Context, tenantID int, id string) (*DiscoverySource, error)
@@ -288,6 +289,13 @@ func (m *mockRepository) ListDiscoveryResults(ctx context.Context, tenantID int,
 		return m.listDiscoveryResultsFn(ctx, tenantID, jobID)
 	}
 	return nil, nil
+}
+
+func (m *mockRepository) FindPendingDiscoveryResult(ctx context.Context, tenantID int, resourceIdentity, afterHash string) (*DiscoveryResult, error) {
+	if m.findPendingDiscoveryResultFn != nil {
+		return m.findPendingDiscoveryResultFn(ctx, tenantID, resourceIdentity, afterHash)
+	}
+	return nil, &ent.NotFoundError{}
 }
 
 // ---- Discovery job 执行链路新增的接口方法（默认返回零值/NotFound，测试按需注入 fn）----

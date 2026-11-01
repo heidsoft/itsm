@@ -149,10 +149,10 @@ export function useDiscoveryRulesQuery() {
   });
 }
 
-export function useDiscoveryHistoryQuery(ruleId?: string) {
+export function useDiscoveryHistoryQuery() {
   return useQuery({
-    queryKey: [...CMDB_KEYS.discovery(), 'history', ruleId],
-    queryFn: () => CMDBApi.getDiscoveryHistory(ruleId),
+    queryKey: [...CMDB_KEYS.discovery(), 'history'],
+    queryFn: () => CMDBApi.getDiscoveryHistory(),
     staleTime: 60000,
   });
 }

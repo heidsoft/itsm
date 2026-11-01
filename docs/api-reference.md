@@ -3224,6 +3224,16 @@ POST   /api/v1/cmdb/discovery/jobs/{id}/retry    failed/partial_failed 派生新
 来源不存在 404、来源/账号停用 400/403。租约字段（leaseOwner/leaseExpiresAt/
 fencingToken/heartbeatAt）是执行器内部协调状态，不对外暴露。
 
+失败归因：每个失败 scope 在 `summary.failedScopeDetails` 里记
+`{serviceCode, region, errorCode, message}`（`message` 截断至 400 字符），
+`failedScopes` 用 `serviceCode/region`；全部 scope 失败时任务级 `errorCode`/
+`errorMessage` 回填首个失败原因。scope 级 `errorCode` 取
+`adapter_missing`/`cloud_service_unavailable`/`client_init_failed`/`client_missing`/
+`discover_region_failed`/`missing_scan_failed`。scope 矩阵解析为空时 `errorCode=no_scopes`，
+`errorMessage` 按真实成因区分：未配 `serviceCodes`、地域被云账号 `regionWhitelist`
+排除（附白名单与被剔除的 `serviceCode/region`）、未声明 `regions` 且 provider 未返回
+可用地域。summary 计数另含 `pending`/`pendingDuplicates`/`applyFailed`。
+
 ### 云发现差异决策（apply / reject）
 
 manual 对账策略下，执行器对「有变化」的资源只落一条 `status=pending` 的
@@ -3450,6 +3460,7 @@ Authorization: Bearer <accessToken>
 ```
 
 - `phase` 取值 `draft|submitted|active|resolved|closed`，逗号分隔。阶段到各域 `status` 的映射由 `service/lifecycle` 单点提供并展开成 SQL 谓词，因此 `total`、分页与过滤同口径（不是在分页之后于内存里过滤）。
+- `excludePhase` 取值同 `phase`，逗号分隔，是「未关闭」语义的反向过滤：按域把被排除的阶段映射回 `status` 集合后用 `NOT IN` 排除，其余阶段一律保留。与 `phase`（白名单）互斥使用——前端未显式勾选阶段时默认传 `excludePhase=closed,resolved`，而不是枚举 `draft,submitted,active` 白名单：白名单会漏掉状态无法映射到已知阶段的 `unknown` 单据以及未来新增的阶段；`unknown` 不在任何排除集内，因此天然保留。
 - `recordType` 取值 `incident|change|problem|ticket`；`priority`、`assigneeId` 为可选过滤，`assigneeId` 非法值当前被忽略。
 - `page` 缺省 1，`pageSize` 缺省 20 且只采纳 `1..100`，越界回落默认值而不是报错。
 - 租户上下文取自认证会话，缺失返回 2001 / HTTP 401；该路由实测没有 `RequirePermission` 声明。
@@ -4216,6 +4227,23 @@ GET    /api/v1/on-call/current?groupId=5&at=2026-10-20T02:00:00Z
 - 该字段是后端强制契约：`pilot` 缺理由、理由里没有「晋升条件」、或 `ga` 条目带理由，都会让 `handlers/capability` 的测试失败——过期理由等于对客户宣称一个已经不存在的问题。
 - 同批晋升：`problem` 与 `template` 由 `pilot` 转 `ga`（问题域的 SLA/评论/关闭证据/KEDB 关联四项阻断均已闭环且装配进生产路径；模板的真实表面是 `/api/v1/tickets/templates` 的 8 个端点 + `/tickets/templates` 页，旧注释引用的通用 `/api/v1/templates` 从未存在）。
 - 运营视图：**管理 → 能力矩阵**（`/admin/capabilities`）展示同一份矩阵（成熟度、部署就绪、探测结果、`pilotReason`），页面只读——成熟度是代码里的发布决策，不应由界面误点改变对外承诺。
+
+## 能力矩阵 acceptanceVersion（2026-10-31）
+
+`GET /api/v1/capabilities` 的 `acceptanceVersion` 从 `2026.08-private-preview` 改为 `2026.10.31`，语义固定为**能力矩阵最近一次对账日期**（`YYYY.MM.DD`）：核对 registry 成熟度、README/商业契约口径、`pilotReason` 与对应回归证据。它是契约级基线，不是发布版本，也不代表全部能力已验收。
+
+- 顶层响应与每个条目下发同一个值；单条能力是否可承诺仍看 `maturity`、`deploymentReady`、`pilotReason` 与 `health`。
+- 与 `docs/product/itsm-commercial-capability-contract.md` 同源：代码与文档任一侧漏改会让 `handlers/capability` 测试失败。
+- 不得早于 CHANGELOG 最新发布版本日期；发版未复核矩阵同样会失败，防止基线再次滞后数月。
+- 运营视图 **管理 → 能力矩阵** 顶部展示该基线；无租户上下文时仍展示，因为它反映的是部署级契约事实。
+
+## 退役端点（2026-10-31）
+
+| 端点 | 退役原因 | 替代 |
+|------|----------|------|
+| `GET /api/v1/problem-knowledge-articles/problems/{id}` | 路径带 `problemID` 却不使用，返回租户内全部知识文章，无法回答「该问题沉淀了哪些知识」；前端调用方为 0 | `GET /api/v1/problems/{id}/knowledge`（按 `source_problem_id` 过滤 + 问题可见性 + 分类权限） |
+
+路由表守卫 `itsm-backend/router/problem_investigation_route_test.go` 锁死该端点不再注册。
 
 ## 版本历史
 

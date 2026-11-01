@@ -162,8 +162,14 @@ describe('useCMDB hooks', () => {
 
   describe('useDiscoveryHistoryQuery', () => {
     it('fetches discovery history', async () => {
-      mockApi.getDiscoveryHistory.mockResolvedValue([] as any);
-      const { result } = renderHook(() => useDiscoveryHistoryQuery('rule-1'), { wrapper: createWrapper() });
+      mockApi.getDiscoveryHistory.mockResolvedValue({
+        items: [],
+        total: 0,
+        page: 1,
+        pageSize: 20,
+        totalPages: 0,
+      });
+      const { result } = renderHook(() => useDiscoveryHistoryQuery(), { wrapper: createWrapper() });
       await waitFor(() => expect(result.current.isSuccess).toBe(true));
     });
   });

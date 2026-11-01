@@ -3,6 +3,7 @@ package cmdb
 import (
 	"bytes"
 	"context"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -48,6 +49,7 @@ type fakeDiscoveryAdapter struct {
 	regions           []string
 	resources         []cloud.DiscoveredResource
 	resourcesByRegion map[string][]cloud.DiscoveredResource
+	discoverErrRegion map[string]error
 }
 
 func (f *fakeDiscoveryAdapter) Provider() string    { return f.provider }
@@ -65,6 +67,9 @@ func (f *fakeDiscoveryAdapter) ListRegions(_ context.Context, _ *ent.CloudAccoun
 }
 
 func (f *fakeDiscoveryAdapter) DiscoverRegion(_ context.Context, _ *ent.CloudAccount, region string, _ cloud.Client, nextToken string) (*cloud.PageResult, error) {
+	if err, ok := f.discoverErrRegion[region]; ok && err != nil {
+		return nil, err
+	}
 	if nextToken != "" {
 		return &cloud.PageResult{Resources: nil}, nil
 	}
@@ -364,4 +369,279 @@ func TestDiscoveryJobIdempotencyConflict(t *testing.T) {
 	require.Equal(t, common.ErrCodeConflict, appErr.Code)
 	require.Contains(t, appErr.Detail, "job=")
 	require.NotEqual(t, 0, first.ID)
+}
+
+// createExtraDiscoverySource 在同一账号下建第二个来源，用于多地域/不同对账策略场景。
+func createExtraDiscoverySource(t *testing.T, repo Repository, tenantID, accountID int, id string, regions []string, policy string) {
+	t.Helper()
+	_, err := repo.CreateDiscoverySource(context.Background(), &DiscoverySource{
+		ID: id, Name: "测试源 " + id, SourceType: "api", Provider: "aliyun",
+		CloudAccountID: accountID, ServiceCodes: []string{"ecs"}, Regions: regions,
+		ReconcilePolicy: policy, StaleThreshold: 2, IsActive: true, TenantID: tenantID,
+	})
+	require.NoError(t, err)
+}
+
+// identityFailingRepo 只让指定身份的资源读取失败，模拟发现过程中数据库抖动。
+type identityFailingRepo struct {
+	Repository
+	failHash string
+}
+
+func (r *identityFailingRepo) GetCloudResourceByIdentity(ctx context.Context, tenantID int, identityHash string) (*CloudResource, error) {
+	if identityHash == r.failHash {
+		return nil, errors.New("db temporarily unavailable")
+	}
+	return r.Repository.GetCloudResourceByIdentity(ctx, tenantID, identityHash)
+}
+
+// 单个 scope 失败必须把稳定错误码与净化后的原因落进任务摘要：生产 LOG_LEVEL=error
+// 时 Warn 日志根本不写，此前只剩 failedScopes 的「服务/地域」无法排障。
+func TestDiscoveryJobExecutor_RecordsFailedScopeReason(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", "file:discovery_scope_fail?mode=memory&cache=shared&_fk=1")
+	defer client.Close()
+	ctx := context.Background()
+	repo := NewEntRepository(client)
+	tenantID, accountID, _ := seedDiscoveryEnv(t, repo, "scope-fail")
+	createExtraDiscoverySource(t, repo, tenantID, accountID, "ds-extra-scope-fail", []string{"cn-hangzhou", "cn-beijing"}, "discovered_wins")
+
+	svc := NewService(repo, nil, nopLogger())
+	job, err := svc.CreateDiscoveryJob(ctx, tenantID, 9, &dto.DiscoveryJobRequest{SourceID: "ds-extra-scope-fail"})
+	require.NoError(t, err)
+
+	adapter := &fakeDiscoveryAdapter{
+		provider: "aliyun", serviceCode: "ecs",
+		resourcesByRegion: map[string][]cloud.DiscoveredResource{
+			"cn-hangzhou": {{
+				BaseResource:     cloud.BaseResource{ResourceID: "i-1", ResourceName: "web-1", Region: "cn-hangzhou", Status: "Running"},
+				CloudServiceCode: "ecs",
+			}},
+		},
+		discoverErrRegion: map[string]error{"cn-beijing": errors.New("dial tcp: i/o timeout")},
+	}
+	executor := NewDiscoveryJobExecutor(repo, &fakeRegistry{adapter: adapter}, &fakeResolver{}, nil, nopLogger())
+	require.NoError(t, executor.Execute(ctx, tenantID, job.ID))
+
+	got, err := repo.GetDiscoveryJob(ctx, tenantID, job.ID)
+	require.NoError(t, err)
+	require.Equal(t, DiscoveryJobPartialFailed, got.Status)
+	require.Equal(t, []string{"ecs/cn-beijing"}, got.FailedScopes)
+	require.EqualValues(t, 1, got.Summary["created"])
+
+	details, ok := got.Summary["failedScopeDetails"].([]interface{})
+	require.True(t, ok, "failedScopeDetails 必须作为数组落库")
+	require.Len(t, details, 1)
+	first := details[0].(map[string]interface{})
+	require.Equal(t, "ecs", first["serviceCode"])
+	require.Equal(t, "cn-beijing", first["region"])
+	require.Equal(t, "discover_region_failed", first["errorCode"])
+	require.Contains(t, first["message"], "i/o timeout")
+}
+
+// 所有 scope 都失败时，errorCode/errorMessage 也要带上首个失败原因，而不是空着。
+func TestDiscoveryJobExecutor_AllScopesFailedCarriesReason(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", "file:discovery_all_scope_fail?mode=memory&cache=shared&_fk=1")
+	defer client.Close()
+	ctx := context.Background()
+	repo := NewEntRepository(client)
+	tenantID, accountID, _ := seedDiscoveryEnv(t, repo, "all-scope-fail")
+	createExtraDiscoverySource(t, repo, tenantID, accountID, "ds-all-fail", []string{"cn-beijing"}, "discovered_wins")
+
+	svc := NewService(repo, nil, nopLogger())
+	job, err := svc.CreateDiscoveryJob(ctx, tenantID, 9, &dto.DiscoveryJobRequest{SourceID: "ds-all-fail"})
+	require.NoError(t, err)
+
+	adapter := &fakeDiscoveryAdapter{
+		provider: "aliyun", serviceCode: "ecs",
+		discoverErrRegion: map[string]error{"cn-beijing": errors.New("signature mismatch")},
+	}
+	executor := NewDiscoveryJobExecutor(repo, &fakeRegistry{adapter: adapter}, &fakeResolver{}, nil, nopLogger())
+	require.NoError(t, executor.Execute(ctx, tenantID, job.ID))
+
+	got, err := repo.GetDiscoveryJob(ctx, tenantID, job.ID)
+	require.NoError(t, err)
+	require.Equal(t, DiscoveryJobFailed, got.Status)
+	require.Equal(t, "discover_region_failed", got.ErrorCode)
+	require.Contains(t, got.ErrorMessage, "signature mismatch")
+}
+
+// 回写失败不能把「本轮确实看到」的资源推进 missing_count，否则连续几轮写失败
+// 会把资源误标 stale。
+func TestDiscoveryJobExecutor_ApplyFailureDoesNotMarkMissing(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", "file:discovery_apply_fail?mode=memory&cache=shared&_fk=1")
+	defer client.Close()
+	ctx := context.Background()
+	repo := NewEntRepository(client)
+	tenantID, _, _ := seedDiscoveryEnv(t, repo, "apply-fail")
+
+	adapter := &fakeDiscoveryAdapter{
+		provider: "aliyun", serviceCode: "ecs",
+		resources: []cloud.DiscoveredResource{{
+			BaseResource:     cloud.BaseResource{ResourceID: "i-1", ResourceName: "web-1", Region: "cn-hangzhou", Status: "Running"},
+			CloudServiceCode: "ecs",
+		}},
+	}
+	svc := NewService(repo, nil, nopLogger())
+	first, err := svc.CreateDiscoveryJob(ctx, tenantID, 9, &dto.DiscoveryJobRequest{SourceID: "ds-apply-fail"})
+	require.NoError(t, err)
+	require.NoError(t, NewDiscoveryJobExecutor(repo, &fakeRegistry{adapter: adapter}, &fakeResolver{}, nil, nopLogger()).Execute(ctx, tenantID, first.ID))
+
+	resource, err := repo.GetCloudResourceByIdentity(ctx, tenantID, resourceIdentityHash(tenantID, "aliyun", "acc-apply-fail", "cn-hangzhou", "ecs", "instance", "i-1"))
+	require.NoError(t, err)
+	require.NotZero(t, resource.ID)
+
+	second, err := svc.CreateDiscoveryJob(ctx, tenantID, 9, &dto.DiscoveryJobRequest{SourceID: "ds-apply-fail"})
+	require.NoError(t, err)
+	failing := &identityFailingRepo{Repository: repo, failHash: resource.IdentityHash}
+	require.NoError(t, NewDiscoveryJobExecutor(failing, &fakeRegistry{adapter: adapter}, &fakeResolver{}, nil, nopLogger()).Execute(ctx, tenantID, second.ID))
+
+	job, err := repo.GetDiscoveryJob(ctx, tenantID, second.ID)
+	require.NoError(t, err)
+	require.Equal(t, DiscoveryJobSucceeded, job.Status)
+	require.EqualValues(t, 1, job.Summary["applyFailed"])
+
+	after, err := repo.GetCloudResourceByIdentity(ctx, tenantID, resource.IdentityHash)
+	require.NoError(t, err)
+	require.Zero(t, after.MissingCount, "本轮见过的资源不得被缺失扫描计数")
+	require.Equal(t, "active", after.LifecycleState)
+	require.EqualValues(t, 0, job.Summary["missing"])
+}
+
+// manual 对账下资源指纹在人工应用前不前进，同一差异会被逐轮重算；必须只保留
+// 一条待决结果，否则 inbox 无限堆积同一件事。
+func TestDiscoveryJobExecutor_ManualPolicyDeduplicatesPendingResult(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", "file:discovery_manual_dedup?mode=memory&cache=shared&_fk=1")
+	defer client.Close()
+	ctx := context.Background()
+	repo := NewEntRepository(client)
+	tenantID, accountID, _ := seedDiscoveryEnv(t, repo, "manual-dedup")
+	createExtraDiscoverySource(t, repo, tenantID, accountID, "ds-manual", []string{"cn-hangzhou"}, "manual")
+
+	adapter := &fakeDiscoveryAdapter{
+		provider: "aliyun", serviceCode: "ecs",
+		resources: []cloud.DiscoveredResource{{
+			BaseResource:     cloud.BaseResource{ResourceID: "i-1", ResourceName: "web-1", Region: "cn-hangzhou", Status: "Running"},
+			CloudServiceCode: "ecs",
+		}},
+	}
+	svc := NewService(repo, nil, nopLogger())
+	executor := NewDiscoveryJobExecutor(repo, &fakeRegistry{adapter: adapter}, &fakeResolver{}, nil, nopLogger())
+
+	first, err := svc.CreateDiscoveryJob(ctx, tenantID, 9, &dto.DiscoveryJobRequest{SourceID: "ds-manual"})
+	require.NoError(t, err)
+	require.NoError(t, executor.Execute(ctx, tenantID, first.ID))
+
+	adapter.resources[0].ResourceName = "web-1-renamed"
+	second, err := svc.CreateDiscoveryJob(ctx, tenantID, 9, &dto.DiscoveryJobRequest{SourceID: "ds-manual"})
+	require.NoError(t, err)
+	require.NoError(t, executor.Execute(ctx, tenantID, second.ID))
+	job2, err := repo.GetDiscoveryJob(ctx, tenantID, second.ID)
+	require.NoError(t, err)
+	require.Equal(t, DiscoveryJobSucceeded, job2.Status)
+	require.EqualValues(t, 1, job2.Summary["pending"])
+	require.EqualValues(t, 0, job2.Summary["pendingDuplicates"])
+
+	third, err := svc.CreateDiscoveryJob(ctx, tenantID, 9, &dto.DiscoveryJobRequest{SourceID: "ds-manual"})
+	require.NoError(t, err)
+	require.NoError(t, executor.Execute(ctx, tenantID, third.ID))
+	job3, err := repo.GetDiscoveryJob(ctx, tenantID, third.ID)
+	require.NoError(t, err)
+	require.EqualValues(t, 0, job3.Summary["pending"])
+	require.EqualValues(t, 1, job3.Summary["pendingDuplicates"])
+
+	results, err := repo.ListDiscoveryResults(ctx, tenantID, third.ID)
+	require.NoError(t, err)
+	require.Empty(t, results, "重复发现不得再落一条 pending 差异")
+
+	all, err := repo.ListDiscoveryResults(ctx, tenantID, 0)
+	require.NoError(t, err)
+	pending := 0
+	for _, r := range all {
+		if r.Action == "update" && r.Status == DiscoveryResultPending {
+			pending++
+		}
+	}
+	require.Equal(t, 1, pending)
+}
+
+// 地域拼错被账号白名单剔除时，任务不得只报「serviceCodes 与可用适配器无交集」：
+// 那句话把配置错误指向了适配器装配，而真实原因是白名单。
+func TestDiscoveryJobExecutor_WhitelistExcludedRegionNamesWhitelist(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", "file:discovery_whitelist_reason?mode=memory&cache=shared&_fk=1")
+	defer client.Close()
+	ctx := context.Background()
+	repo := NewEntRepository(client)
+	tenantID, accountID, _ := seedDiscoveryEnv(t, repo, "whitelist-reason")
+	_, err := client.CloudAccount.UpdateOneID(accountID).SetRegionWhitelist([]string{"cn-beijing"}).Save(ctx)
+	require.NoError(t, err)
+	createExtraDiscoverySource(t, repo, tenantID, accountID, "ds-typo-region", []string{"cn-not-a-region"}, "discovered_wins")
+
+	svc := NewService(repo, nil, nopLogger())
+	job, err := svc.CreateDiscoveryJob(ctx, tenantID, 9, &dto.DiscoveryJobRequest{SourceID: "ds-typo-region"})
+	require.NoError(t, err)
+	adapter := &fakeDiscoveryAdapter{provider: "aliyun", serviceCode: "ecs", regions: []string{"cn-beijing"}}
+	require.NoError(t, NewDiscoveryJobExecutor(repo, &fakeRegistry{adapter: adapter}, &fakeResolver{}, nil, nopLogger()).Execute(ctx, tenantID, job.ID))
+
+	got, err := repo.GetDiscoveryJob(ctx, tenantID, job.ID)
+	require.NoError(t, err)
+	require.Equal(t, DiscoveryJobFailed, got.Status)
+	require.Equal(t, "no_scopes", got.ErrorCode)
+	require.Contains(t, got.ErrorMessage, "regionWhitelist(cn-beijing)")
+	require.Contains(t, got.ErrorMessage, "ecs/cn-not-a-region")
+	require.NotContains(t, got.ErrorMessage, "适配器无交集")
+}
+
+func TestDiscoveryJobExecutor_EmptyScopeReasons(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", "file:discovery_empty_reason?mode=memory&cache=shared&_fk=1")
+	defer client.Close()
+	repo := NewEntRepository(client)
+	adapter := &fakeDiscoveryAdapter{provider: "aliyun", serviceCode: "ecs"}
+	executor := NewDiscoveryJobExecutor(repo, &fakeRegistry{adapter: adapter}, &fakeResolver{}, nil, nopLogger())
+	ctx := context.Background()
+
+	tests := []struct {
+		name     string
+		source   *DiscoverySource
+		account  *ent.CloudAccount
+		expected string
+	}{
+		{
+			name:     "未配置 serviceCodes",
+			source:   &DiscoverySource{Provider: "aliyun", Regions: []string{"cn-hangzhou"}},
+			account:  &ent.CloudAccount{},
+			expected: "发现源未配置 serviceCodes",
+		},
+		{
+			name:     "serviceCodes 全为空白",
+			source:   &DiscoverySource{Provider: "aliyun", ServiceCodes: []string{"", "  "}, Regions: []string{"cn-hangzhou"}},
+			account:  &ent.CloudAccount{},
+			expected: "发现源未配置 serviceCodes",
+		},
+		{
+			name:     "地域被白名单剔除",
+			source:   &DiscoverySource{Provider: "aliyun", ServiceCodes: []string{"ecs"}, Regions: []string{"cn-shanghai"}},
+			account:  &ent.CloudAccount{RegionWhitelist: []string{"cn-beijing"}},
+			expected: "regionWhitelist(cn-beijing)",
+		},
+		{
+			name:     "未声明地域且 provider 查不到地域",
+			source:   &DiscoverySource{Provider: "aliyun", ServiceCodes: []string{"ecs"}},
+			account:  &ent.CloudAccount{},
+			expected: "provider 未返回可用地域: ecs",
+		},
+		{
+			name:     "regions 全为空白",
+			source:   &DiscoverySource{Provider: "aliyun", ServiceCodes: []string{"ecs"}, Regions: []string{"  "}},
+			account:  &ent.CloudAccount{},
+			expected: "未得到有效 serviceCode × region 组合",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			scopes, reason, err := executor.resolveScopes(ctx, tt.source, tt.account)
+			require.NoError(t, err)
+			require.Empty(t, scopes)
+			require.Contains(t, reason, tt.expected)
+		})
+	}
 }

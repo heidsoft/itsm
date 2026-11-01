@@ -78,6 +78,12 @@ func TestOrchestrator_AutoCreatesOneIncidentAndDurableReply(t *testing.T) {
 	client.SupportContract.Create().SetTenantID(tenant.ID).SetCustomerID(customer.ID).SetContractNumber("SUP-1").SetNormalizedContractNumber("sup1").SetStatus("active").SaveX(ctx)
 
 	incidentService := service.NewIncidentService(client, zaptest.NewLogger(t).Sugar(), nil)
+	// 与 internal/bootstrap/app.go:479-480 一致：生产组装的 incidentService 走事务型 outbox，
+	// 并把同一个实例注入 orchestrator（app.go:1079）。不开启时 CreateFromEmail 会落到
+	// fire-and-forget goroutine 分支，后台写库和本用例下一步事务抢同一张共享内存表，
+	// 在并行跑全量套件时偶发 "database table is locked: incidents"。
+	incidentService.EnableWorkflowOutbox()
+	incidentService.EnableRulesOutbox()
 	extractor := NewEmailIntakeExtractor(fakeEmailLLM{output: `{"intent":"report_incident","sourceOrganizationName":"","customerName":"上海ABC有限公司","branchName":"","reportedContractNumber":"SUP-1","title":"MPLS线路中断","description":"链路中断","occurredAt":"","impact":"high","urgency":"high","missingFields":[],"confidence":0.96}`}, "test-model")
 	orchestrator := NewEmailIntakeOrchestrator(client, extractor, incidentService, OrchestratorConfig{Mode: ModeAutoCreate, AutomationReporterUserID: reporter.ID, DefaultAssignmentGroupID: &group.ID})
 	email := ReceivedEmail{SenderAuthenticated: true, MailboxInstanceKey: "mailbox-1", UIDValidity: 10, UID: 20, ExternalMessageID: "<message@example.com>", FromAddress: "customer@example.com", ToAddresses: []string{"noc@example.com"}, Subject: "报障", PlainText: "线路中断", RawMIME: []byte("raw"), ReceivedAt: now}
