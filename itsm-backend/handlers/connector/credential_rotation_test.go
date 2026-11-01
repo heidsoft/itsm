@@ -63,7 +63,7 @@ func (s *rotateStub) Init(_ context.Context, cfg connector.Config) error {
 	for k, v := range cfg.Credentials {
 		cp[k] = v
 	}
-	*(s.lastInit) = cp
+	*s.lastInit = cp
 	s.mu.Unlock()
 	return nil
 }

@@ -2981,6 +2981,517 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/cloud-signals/alerts": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "按状态、级别、云账号与关键字过滤。默认按触发时间倒序，分页口径与全站一致。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "云信号"
+                ],
+                "summary": "云监控告警列表",
+                "parameters": [
+                    {
+                        "type": "array",
+                        "items": {
+                            "enum": [
+                                "firing",
+                                "acknowledged",
+                                "resolved"
+                            ],
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "description": "告警状态",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "enum": [
+                                "P1",
+                                "P2",
+                                "P3",
+                                "P4"
+                            ],
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "description": "告警级别",
+                        "name": "severity",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "云账号 ID",
+                        "name": "cloudAccountId",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "按名称、告警 ID、描述搜索",
+                        "name": "search",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "页码，从 1 开始",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "每页条数，最大 200",
+                        "name": "pageSize",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/common.ListResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/cloud-signals/alerts/{id}/acknowledge": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "云信号"
+                ],
+                "summary": "认领云监控告警",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "告警记录 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/cloudsignal.AlertResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "404": {
+                        "description": "告警不存在",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "409": {
+                        "description": "告警已不是触发状态",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/cloud-signals/alerts/{id}/resolve": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "云信号"
+                ],
+                "summary": "关闭云监控告警",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "告警记录 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/cloudsignal.AlertResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "404": {
+                        "description": "告警不存在",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "409": {
+                        "description": "告警已关闭",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/cloud-signals/sync-status": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "未配置凭据的账号返回 unconfigured，同步失败返回 unavailable，最近一次成功为 ready。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "云信号"
+                ],
+                "summary": "云信号同步状态",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/common.ListResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/cloud-signals/vulnerabilities": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "按状态、严重度、漏洞类型、实例与云账号过滤。默认按严重度、最近发现时间排序。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "云信号"
+                ],
+                "summary": "安全漏洞列表",
+                "parameters": [
+                    {
+                        "type": "array",
+                        "items": {
+                            "enum": [
+                                "open",
+                                "fixing",
+                                "fixed",
+                                "ignored"
+                            ],
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "description": "漏洞状态",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "enum": [
+                                "critical",
+                                "high",
+                                "medium",
+                                "low",
+                                "unknown"
+                            ],
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "description": "严重度",
+                        "name": "severity",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "cve",
+                            "sys",
+                            "cms",
+                            "app",
+                            "emg"
+                        ],
+                        "type": "string",
+                        "description": "漏洞类型",
+                        "name": "vulnType",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "ECS 实例 ID",
+                        "name": "instanceId",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "云账号 ID",
+                        "name": "cloudAccountId",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "按名称、CVE 编号搜索",
+                        "name": "search",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "页码",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "每页条数，最大 200",
+                        "name": "pageSize",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/common.ListResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/cloud-signals/vulnerabilities/summary": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "只统计 open/fixing 的漏洞，已修复存量不计入。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "云信号"
+                ],
+                "summary": "安全漏洞统计",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/cloudsignal.FindingSummary"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/cloud-signals/vulnerabilities/{id}/ignore": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "云信号"
+                ],
+                "summary": "忽略安全漏洞",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "漏洞记录 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/cloudsignal.FindingResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "404": {
+                        "description": "漏洞不存在",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "409": {
+                        "description": "漏洞已修复或已忽略",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/cloud-signals/vulnerabilities/{id}/reopen": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "云信号"
+                ],
+                "summary": "重新打开安全漏洞",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "漏洞记录 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/cloudsignal.FindingResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "404": {
+                        "description": "漏洞不存在",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "409": {
+                        "description": "漏洞仍在未修复队列",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/cmdb/attributes": {
             "post": {
                 "description": "创建新的CI属性定义",
@@ -13210,6 +13721,171 @@ const docTemplate = `{
                         "type": "string"
                     }
                 }
+            }
+        },
+        "cloudsignal.AlertResponse": {
+            "type": "object",
+            "properties": {
+                "acknowledgedAt": {
+                    "type": "string"
+                },
+                "alertId": {
+                    "type": "string"
+                },
+                "annotations": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "firedAt": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "labels": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "name": {
+                    "type": "string"
+                },
+                "resolvedAt": {
+                    "type": "string"
+                },
+                "service": {
+                    "type": "string"
+                },
+                "severity": {
+                    "type": "string"
+                },
+                "sourceIp": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
+        "cloudsignal.FindingResponse": {
+            "type": "object",
+            "properties": {
+                "aliasName": {
+                    "type": "string"
+                },
+                "ciId": {
+                    "type": "integer"
+                },
+                "ciName": {
+                    "type": "string"
+                },
+                "ciNumber": {
+                    "type": "string"
+                },
+                "cloudAccountId": {
+                    "type": "integer"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "cvssScore": {
+                    "type": "number"
+                },
+                "findingKey": {
+                    "type": "string"
+                },
+                "firstSeenAt": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "instanceId": {
+                    "type": "string"
+                },
+                "instanceName": {
+                    "type": "string"
+                },
+                "internetIp": {
+                    "type": "string"
+                },
+                "intranetIp": {
+                    "type": "string"
+                },
+                "lastSeenAt": {
+                    "type": "string"
+                },
+                "lastSyncedAt": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "necessity": {
+                    "type": "string"
+                },
+                "provider": {
+                    "type": "string"
+                },
+                "region": {
+                    "type": "string"
+                },
+                "resolvedAt": {
+                    "type": "string"
+                },
+                "severity": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                },
+                "uuid": {
+                    "type": "string"
+                },
+                "vulnType": {
+                    "type": "string"
+                }
+            }
+        },
+        "cloudsignal.FindingSummary": {
+            "type": "object",
+            "properties": {
+                "bySeverity": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                },
+                "byStatus": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "common.ListResponse": {
+            "type": "object",
+            "properties": {
+                "items": {}
             }
         },
         "common.Response": {

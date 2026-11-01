@@ -192,8 +192,10 @@ func TestAlarmSyncFirstRunScansLookbackAndPersists(t *testing.T) {
 		total: 3,
 		pages: map[int][]aliyun.CloudMonitorAlertLog{
 			1: {
-				{LogID: "log-1", AlertTime: "2026-11-01 09:00:00", Level: "CRITICAL", RuleName: "CPU 打满",
-					InstanceID: "i-bp1", InstanceName: "web-01", Product: "ECS", MetricName: "cpu_total"},
+				{
+					LogID: "log-1", AlertTime: "2026-11-01 09:00:00", Level: "CRITICAL", RuleName: "CPU 打满",
+					InstanceID: "i-bp1", InstanceName: "web-01", Product: "ECS", MetricName: "cpu_total",
+				},
 				{LogID: "log-2", AlertTime: "2026-11-01 09:10:00", Level: "WARN", RuleName: "磁盘使用率高"},
 			},
 			2: {

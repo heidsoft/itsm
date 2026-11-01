@@ -184,10 +184,14 @@ func TestHandlerFindingSummaryDefaultsEmptyMaps(t *testing.T) {
 
 func TestHandlerSyncStatusListsBothKinds(t *testing.T) {
 	states := &fakeSyncStateRepository{states: map[SignalKind][]*SyncState{
-		SignalKindAlarm: {{CloudAccountID: 3, AccountName: "生产账号", Provider: "aliyun",
-			SignalKind: SignalKindAlarm, State: SyncStateReady, ItemsSynced: 12}},
-		SignalKindVulnerability: {{CloudAccountID: 3, AccountName: "生产账号", Provider: "aliyun",
-			SignalKind: SignalKindVulnerability, State: SyncStateUnconfigured}},
+		SignalKindAlarm: {{
+			CloudAccountID: 3, AccountName: "生产账号", Provider: "aliyun",
+			SignalKind: SignalKindAlarm, State: SyncStateReady, ItemsSynced: 12,
+		}},
+		SignalKindVulnerability: {{
+			CloudAccountID: 3, AccountName: "生产账号", Provider: "aliyun",
+			SignalKind: SignalKindVulnerability, State: SyncStateUnconfigured,
+		}},
 	}}
 	r := newTestRouter(t, NewService(&fakeAlertRepository{}, &fakeFindingRepository{}, states, nil))
 
