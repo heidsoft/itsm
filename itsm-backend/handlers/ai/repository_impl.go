@@ -50,9 +50,11 @@ func (r *EntRepository) CreateConversation(ctx context.Context, c *Conversation)
 	return toConversationDomain(e), nil
 }
 
-func (r *EntRepository) GetConversation(ctx context.Context, id int, tenantID int) (*Conversation, error) {
+func (r *EntRepository) GetConversation(ctx context.Context, id int, tenantID int, userID int) (*Conversation, error) {
+	// 租户 + 属主双谓词：会话是用户私有的（列表按 userID 过滤），只校验租户
+	// 会让同租户内任意用户按 id 读走他人对话。
 	e, err := r.client.Conversation.Query().
-		Where(conversation.ID(id), conversation.TenantID(tenantID)).
+		Where(conversation.ID(id), conversation.TenantID(tenantID), conversation.UserID(userID)).
 		Only(ctx)
 	if err != nil {
 		return nil, err
@@ -75,9 +77,11 @@ func (r *EntRepository) ListConversations(ctx context.Context, tenantID int, use
 	return res, nil
 }
 
-func (r *EntRepository) DeleteConversation(ctx context.Context, id int, tenantID int) error {
+func (r *EntRepository) DeleteConversation(ctx context.Context, id int, tenantID int, userID int) error {
+	// 与读面同口径：租户 + 属主。删除也是所有权操作——同租户内 A 用户不应
+	// 能删掉 B 用户的会话。
 	_, err := r.client.Conversation.Delete().
-		Where(conversation.ID(id), conversation.TenantID(tenantID)).
+		Where(conversation.ID(id), conversation.TenantID(tenantID), conversation.UserID(userID)).
 		Exec(ctx)
 	return err
 }
@@ -111,9 +115,12 @@ func (r *EntRepository) CreateMessage(ctx context.Context, m *Message) (*Message
 	return toMessageDomain(e), nil
 }
 
-func (r *EntRepository) GetMessages(ctx context.Context, conversationID int) ([]*Message, error) {
+func (r *EntRepository) GetMessages(ctx context.Context, conversationID int, tenantID int) ([]*Message, error) {
+	// 租户过滤经 conversation 边做：message 表自身没有 tenant_id 字段，
+	// 不带边谓词就是无边界读取——任何已知 conversation_id 都能读走消息。
 	es, err := r.client.Message.Query().
-		Where(message.ConversationID(conversationID)).
+		Where(message.ConversationID(conversationID),
+			message.HasConversationWith(conversation.TenantID(tenantID))).
 		Order(ent.Asc(message.FieldCreatedAt)).
 		All(ctx)
 	if err != nil {

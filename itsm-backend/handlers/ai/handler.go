@@ -292,14 +292,21 @@ func (h *Handler) GetConversation(c *gin.Context) {
 		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
 		return
 	}
+	userID := c.GetInt("user_id")
+	if userID <= 0 || c.GetString("role") == "" {
+		common.AuthFailed(c, "缺少有效身份上下文")
+		return
+	}
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		common.ParamError(c, "无效的会话ID")
 		return
 	}
-	messages, err := h.svc.GetConversationMessages(c.Request.Context(), id, tenantID)
+	// 会话是用户私有的：校验租户 + 属主。他人会话与不存在都走同一条 404 路径，
+	// 不通过错误差异暴露「这个 id 是否存在」。
+	messages, err := h.svc.GetConversationMessages(c.Request.Context(), id, tenantID, userID)
 	if err != nil {
-		common.FailWithErr(c, err, "获取会话详情失败")
+		common.NotFound(c, "会话不存在")
 		return
 	}
 	common.Success(c, gin.H{"items": messages})
@@ -312,13 +319,18 @@ func (h *Handler) DeleteConversation(c *gin.Context) {
 		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
 		return
 	}
+	userID := c.GetInt("user_id")
+	if userID <= 0 || c.GetString("role") == "" {
+		common.AuthFailed(c, "缺少有效身份上下文")
+		return
+	}
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		common.ParamError(c, "无效的会话ID")
 		return
 	}
-	if err := h.svc.DeleteConversation(c.Request.Context(), id, tenantID); err != nil {
-		common.FailWithErr(c, err, "删除会话失败")
+	if err := h.svc.DeleteConversation(c.Request.Context(), id, tenantID, userID); err != nil {
+		common.NotFound(c, "会话不存在")
 		return
 	}
 	common.Success(c, nil)

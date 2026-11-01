@@ -286,7 +286,15 @@ func (s *Service) Chat(ctx context.Context, tenantID, userID int, query string, 
 		return nil, 0, ErrRAGUnavailable
 	}
 
-	items, err := s.rag.Ask(ctx, tenantID, query, limit)
+	// 记忆层：回读本会话历史，抽出的实体/短语作为**补充检索路**。
+	//
+	// 此前每轮只用当前 query 检索，「它怎么修」这类指代必然落空——表在、
+	// 历史在，只是从没读回。补充路独立检索（不拼接 query：关键词检索是
+	// 整串包含，拼接会让当前 query 也命不中），记忆召回的条目带
+	// fromMemory 标注，与「库里写着」的权威内容区分开。
+	memory := s.recallConversationMemory(ctx, tenantID, userID, convID)
+
+	items, err := s.rag.AskMulti(ctx, tenantID, query, memory.Queries, limit)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -557,7 +565,12 @@ func (s *Service) ChatStream(
 		}
 	}
 
-	if err := s.rag.AskWithLLMStreamWithTools(ctx, tenantID, query, s.llmGateway, limit, tools, wrappedSources, wrappedDelta, execTool); err != nil {
+	// 记忆层（与 Chat 同口径）：会话历史抽出的实体/短语作为补充检索路。
+	memory := s.recallConversationMemory(ctx, tenantID, userID, convID)
+
+	if err := s.rag.AskWithLLMStreamWithToolsMulti(
+		ctx, tenantID, query, memory.Queries, s.llmGateway, limit, tools,
+		wrappedSources, wrappedDelta, execTool); err != nil {
 		return 0, "", err
 	}
 
@@ -629,20 +642,23 @@ func (s *Service) ListConversations(ctx context.Context, tenantID, userID int) (
 	return s.repo.ListConversations(ctx, tenantID, userID)
 }
 
-func (s *Service) GetConversation(ctx context.Context, id, tenantID int) (*Conversation, error) {
-	return s.repo.GetConversation(ctx, id, tenantID)
+func (s *Service) GetConversation(ctx context.Context, id, tenantID, userID int) (*Conversation, error) {
+	return s.repo.GetConversation(ctx, id, tenantID, userID)
 }
 
-func (s *Service) GetConversationMessages(ctx context.Context, convID, tenantID int) ([]*Message, error) {
-	_, err := s.repo.GetConversation(ctx, convID, tenantID)
-	if err != nil {
+// GetConversationMessages 读会话内的消息。
+//
+// 先按「租户 + 属主」校验会话存在——会话是用户私有的，同租户内他人无权
+// 读取；未命中时返回空切片与错误，由调用方转成 404（不暴露会话是否存在）。
+func (s *Service) GetConversationMessages(ctx context.Context, convID, tenantID, userID int) ([]*Message, error) {
+	if _, err := s.repo.GetConversation(ctx, convID, tenantID, userID); err != nil {
 		return nil, err
 	}
-	return s.repo.GetMessages(ctx, convID)
+	return s.repo.GetMessages(ctx, convID, tenantID)
 }
 
-func (s *Service) DeleteConversation(ctx context.Context, id, tenantID int) error {
-	return s.repo.DeleteConversation(ctx, id, tenantID)
+func (s *Service) DeleteConversation(ctx context.Context, id, tenantID, userID int) error {
+	return s.repo.DeleteConversation(ctx, id, tenantID, userID)
 }
 
 // Root Cause Analysis

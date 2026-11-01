@@ -271,6 +271,92 @@ func (r *RAGService) Ask(ctx context.Context, tenantID int, query string, limit 
 	return r.rankByAuthority(ctx, tenantID, results), nil
 }
 
+// AskMulti 多路检索：当前 query 与补充 query（会话记忆抽出的实体/短语）
+// 各自走一遍完整检索语义，结果合并去重。
+//
+// 为什么是「多路」而不是「拼接成一个 query」：关键词检索是**整串包含**
+// （TitleContainsFold OR ContentContainsFold），把记忆拼进当前 query 会让
+// 原本能命中的 query 直接命不中——记忆越强，检索越差。各路独立检索后
+// 合并，一路不命中不影响另一路。
+//
+// 补充路的召回结果带 fromMemory=true 与 memoryQuery 标注：它们是「我们之前
+// 聊过」的上下文线索，不是「库里写着」的权威内容，调用方必须能区分。
+//
+// 补充路失败不影响主路：记忆是增强不是依赖。
+func (r *RAGService) AskMulti(
+	ctx context.Context,
+	tenantID int,
+	query string,
+	supplemental []string,
+	limit int,
+) ([]map[string]any, error) {
+	if limit <= 0 {
+		limit = 5
+	}
+
+	primary, err := r.Ask(ctx, tenantID, query, limit)
+	if err != nil {
+		return nil, err
+	}
+	if len(supplemental) == 0 {
+		return primary, nil
+	}
+
+	seen := make(map[string]struct{}, len(primary))
+	for _, item := range primary {
+		seen[ragResultKey(item)] = struct{}{}
+	}
+
+	out := primary
+	for _, sq := range supplemental {
+		if sq == "" || sq == query {
+			continue
+		}
+		items, err := r.Ask(ctx, tenantID, sq, limit)
+		if err != nil {
+			// 补充路失败只记录不抛出：主路结果仍然可用。
+			r.logger.Warnw("RAGService AskMulti: supplemental query failed",
+				"supplemental_query", sq, "tenant_id", tenantID, "error", err)
+			continue
+		}
+		for _, item := range items {
+			key := ragResultKey(item)
+			if _, ok := seen[key]; ok {
+				continue
+			}
+			seen[key] = struct{}{}
+			marked := make(map[string]any, len(item)+2)
+			for k, v := range item {
+				marked[k] = v
+			}
+			marked["fromMemory"] = true
+			marked["memoryQuery"] = sq
+			out = append(out, marked)
+		}
+	}
+	return out, nil
+}
+
+// isMemoryItem 判断检索条目是否来自会话记忆补充路。
+func isMemoryItem(item map[string]any) bool {
+	if item == nil {
+		return false
+	}
+	v, ok := item["fromMemory"].(bool)
+	return ok && v
+}
+
+// ragResultKey 是检索结果的身份键（跨路去重用）。
+func ragResultKey(item map[string]any) string {
+	typ, _ := item["object_type"].(string)
+	id, _ := item["id"].(int)
+	if id == 0 {
+		title, _ := item["title"].(string)
+		return typ + ":" + title
+	}
+	return fmt.Sprintf("%s:%d", typ, id)
+}
+
 // rankByAuthority 按 L2 权威性融合分对检索结果重排（仅调序，不增删条目）。
 //
 // 融合分 = 相关性为主 + 权威等级受控加成（≤0.2）+ 更新时间平局微调（≤0.0012）。
@@ -786,6 +872,24 @@ func (r *RAGService) AskWithLLMStream(
 	onSources func(sources []map[string]any),
 	onDelta func(delta string),
 ) error {
+	return r.AskWithLLMStreamMulti(ctx, tenantID, query, nil, gateway, maxResults, onSources, onDelta)
+}
+
+// AskWithLLMStreamMulti 是带**补充检索路**的流式问答（无工具路径）。
+//
+// supplemental 是会话记忆抽出的实体/短语：当前 query 之外再走几路独立
+// 检索，命中项合并进上下文并标注 fromMemory。各路独立检索而非拼接 query，
+// 因为关键词检索是整串包含，拼接会让当前 query 也命不中。
+func (r *RAGService) AskWithLLMStreamMulti(
+	ctx context.Context,
+	tenantID int,
+	query string,
+	supplemental []string,
+	gateway *LLMGateway,
+	maxResults int,
+	onSources func(sources []map[string]any),
+	onDelta func(delta string),
+) error {
 	if maxResults <= 0 {
 		maxResults = 5
 	}
@@ -796,7 +900,7 @@ func (r *RAGService) AskWithLLMStream(
 		onSources = func([]map[string]any) {}
 	}
 
-	docs, err := r.Ask(ctx, tenantID, query, maxResults)
+	docs, err := r.AskMulti(ctx, tenantID, query, supplemental, maxResults)
 	if err != nil {
 		return fmt.Errorf("retrieval failed: %w", err)
 	}
@@ -854,6 +958,12 @@ func (r *RAGService) AskWithLLMStream(
 	contextBuilder.WriteString("基于以下知识库内容回答用户问题：\n\n")
 	for i, doc := range docs {
 		contextBuilder.WriteString(fmt.Sprintf("【文档%d】%v\n", i+1, doc["title"]))
+		if isMemoryItem(doc) {
+			// 记忆条目必须显式标注：它是「本次会话此前提到过的上下文线索」，
+			// 不是「知识库里写着的内容」。不标注的话模型会把两者当同一权威
+			// 来源，编造出「文档里写了」的说法——那是伪造溯源。
+			contextBuilder.WriteString("（来源：会话记忆上下文线索，非知识库正文）\n")
+		}
 		contextBuilder.WriteString(fmt.Sprintf("内容：%v\n\n", doc["snippet"]))
 	}
 	// 本体图谱块：业务实体及其关系邻居（若有）
@@ -903,8 +1013,34 @@ func (r *RAGService) AskWithLLMStreamWithTools(
 	onDelta func(delta string),
 	execTool func(name string, args map[string]any) (any, error),
 ) error {
+	return r.AskWithLLMStreamWithToolsMulti(
+		ctx, tenantID, query, nil, gateway, maxResults, tools, onSources, onDelta, execTool)
+}
+
+// AskWithLLMStreamWithToolsMulti 是带**补充检索路**的流式问答。
+//
+// supplemental 是会话记忆抽出的实体/短语（见 handlers/ai/memory.go）：当前
+// query 之外再走几路独立检索，命中项合并进上下文并标注 fromMemory。
+//
+// 为什么不把记忆拼进 query：关键词检索是整串包含，拼接会让当前 query 也
+// 命不中。各路独立检索后合并，一路不命中不影响另一路。
+//
+// 记忆条目在 prompt 里会被显式区分（「来自会话记忆的上下文线索」），不能让
+// 模型把「我们之前聊过」当成「知识库里写着」——那是伪造权威。
+func (r *RAGService) AskWithLLMStreamWithToolsMulti(
+	ctx context.Context,
+	tenantID int,
+	query string,
+	supplemental []string,
+	gateway *LLMGateway,
+	maxResults int,
+	tools []LLMTool,
+	onSources func(sources []map[string]any),
+	onDelta func(delta string),
+	execTool func(name string, args map[string]any) (any, error),
+) error {
 	if gateway == nil || len(tools) == 0 {
-		return r.AskWithLLMStream(ctx, tenantID, query, gateway, maxResults, onSources, onDelta)
+		return r.AskWithLLMStreamMulti(ctx, tenantID, query, supplemental, gateway, maxResults, onSources, onDelta)
 	}
 	if maxResults <= 0 {
 		maxResults = 5
@@ -916,8 +1052,8 @@ func (r *RAGService) AskWithLLMStreamWithTools(
 		onSources = func([]map[string]any) {}
 	}
 
-	// 检索（与 AskWithLLMStream 一致：KB + 本体增强）
-	docs, err := r.Ask(ctx, tenantID, query, maxResults)
+	// 检索（与 AskWithLLMStream 一致：KB + 本体增强；此处额外合并记忆补充路）
+	docs, err := r.AskMulti(ctx, tenantID, query, supplemental, maxResults)
 	if err != nil {
 		return fmt.Errorf("retrieval failed: %w", err)
 	}
@@ -937,6 +1073,11 @@ func (r *RAGService) AskWithLLMStreamWithTools(
 		contextBuilder.WriteString("基于以下知识库内容回答用户问题：\n\n")
 		for i, doc := range docs {
 			contextBuilder.WriteString(fmt.Sprintf("【文档%d】%v\n", i+1, doc["title"]))
+			if isMemoryItem(doc) {
+				// 见 AskWithLLMStreamMulti 的同名注释：记忆条目必须与知识库
+				// 正文区分，否则模型会把「聊过」说成「文档里写着」。
+				contextBuilder.WriteString("（来源：会话记忆上下文线索，非知识库正文）\n")
+			}
 			contextBuilder.WriteString(fmt.Sprintf("内容：%v\n\n", doc["snippet"]))
 		}
 	} else {

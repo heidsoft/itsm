@@ -57,7 +57,7 @@ func (m *rbacMockRepo) CreateConversation(_ context.Context, c *ai.Conversation)
 	return c, nil
 }
 
-func (m *rbacMockRepo) GetConversation(_ context.Context, _ int, _ int) (*ai.Conversation, error) {
+func (m *rbacMockRepo) GetConversation(_ context.Context, _ int, _ int, _ int) (*ai.Conversation, error) {
 	return nil, nil
 }
 
@@ -65,7 +65,7 @@ func (m *rbacMockRepo) ListConversations(_ context.Context, _ int, _ int) ([]*ai
 	return nil, nil
 }
 
-func (m *rbacMockRepo) DeleteConversation(_ context.Context, _ int, _ int) error {
+func (m *rbacMockRepo) DeleteConversation(_ context.Context, _ int, _ int, _ int) error {
 	return nil
 }
 
@@ -89,7 +89,7 @@ func (m *rbacMockRepo) CreateMessage(_ context.Context, msg *ai.Message) (*ai.Me
 	return msg, nil
 }
 
-func (m *rbacMockRepo) GetMessages(_ context.Context, _ int) ([]*ai.Message, error) {
+func (m *rbacMockRepo) GetMessages(_ context.Context, _ int, _ int) ([]*ai.Message, error) {
 	return nil, nil
 }
 
