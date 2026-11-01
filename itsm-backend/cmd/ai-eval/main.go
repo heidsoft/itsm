@@ -18,6 +18,11 @@
 //	# 指定输出目录（默认 ./ai-eval-report）：
 //	go run ./cmd/ai-eval -mode llm -out /tmp/report
 //
+//	# 从生产库导出指定租户的已发布知识文章为语料格式（验收语料准备第一步）：
+//	go run ./cmd/ai-eval -export-corpus -tenant 1 -out-corpus ./my-eval/corpus/rag_corpus.jsonl
+//	# 期望引用（rag.jsonl 的 expected_refs）须人工标注，见
+//	# docs/operations/ai-eval-corpus-guide.md
+//
 // 输出为 JSON 报告：每个评测项给出指标、样本数、模式与候选来源说明，
 // 并附机器可读的结论（passed / mode / basis）。报告落在输出目录，供
 // 验收归档；CI 不消费 LLM 档（外部依赖不稳定，不该挡合并）。
@@ -63,6 +68,16 @@ type report struct {
 }
 
 func main() {
+	// -export-corpus 是独立子命令（从生产库导出语料，不跑评测）：
+	// flag 包不能表达「带自己 flag 集的子命令」，在解析主 flag 前先看一眼。
+	if len(os.Args) > 1 && os.Args[1] == "-export-corpus" {
+		if err := runExport(os.Args[2:]); err != nil {
+			fmt.Fprintf(os.Stderr, "ai-eval: %v\n", err)
+			os.Exit(1)
+		}
+		return
+	}
+
 	mode := flag.String("mode", "degraded", "评测档位：degraded（无 LLM）或 llm（真实 LLM，需 llm.* 配置）")
 	outDir := flag.String("out", "ai-eval-report", "报告输出目录")
 	datasets := flag.String("datasets", "ai/eval/datasets", "数据集目录（相对工作目录）")
