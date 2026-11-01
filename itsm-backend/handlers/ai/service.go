@@ -11,6 +11,7 @@ import (
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/ticket"
+	"itsm-backend/internal/knowledgeaccess"
 	"itsm-backend/metrics"
 	"itsm-backend/middleware"
 	"itsm-backend/service"
@@ -299,6 +300,13 @@ func (s *Service) Chat(ctx context.Context, tenantID, userID int, query string, 
 		return nil, 0, err
 	}
 
+	// 情景记忆：历史工单的处置经验（RAG 的关键词检索只覆盖知识文章，
+	// 历史结论一直躺在库里不被召回）。
+	episodes := s.recallEpisodes(ctx, tenantID, userID, chatRole(ctx), query)
+	if len(episodes) > 0 {
+		items = mergeMemoryResults(items, episodesToResults(episodes), "")
+	}
+
 	// Persist conversation
 	if convID == 0 {
 		conv, err := s.repo.CreateConversation(ctx, &Conversation{
@@ -568,9 +576,13 @@ func (s *Service) ChatStream(
 	// 记忆层（与 Chat 同口径）：会话历史抽出的实体/短语作为补充检索路。
 	memory := s.recallConversationMemory(ctx, tenantID, userID, convID)
 
+	// 情景记忆：历史工单的处置经验。ChatStream 有显式 role 参数（流式路径
+	// 的权限判定走这里），行级范围与 Chat 同口径。
+	episodes := s.recallEpisodes(ctx, tenantID, userID, role, query)
+
 	if err := s.rag.AskWithLLMStreamWithToolsMulti(
 		ctx, tenantID, query, memory.Queries, s.llmGateway, limit, tools,
-		wrappedSources, wrappedDelta, execTool); err != nil {
+		wrappedSources, wrappedDelta, execTool, episodesToResults(episodes)); err != nil {
 		return 0, "", err
 	}
 
@@ -636,6 +648,22 @@ func (s *Service) ChatStream(
 	}
 
 	return convID, captured.String(), nil
+}
+
+// chatRole 从上下文取当前用户的角色，供 DataScope 判定工单行级可见范围。
+//
+// 角色来自知识访问者身份（handler 已注入 knowledgeaccess.WithViewer）——
+// 与 RAG 的分类可见性过滤同一套身份来源，避免「知识按身份过滤、工单按
+// 另一套过滤」的口径分裂。
+//
+// 上下文无身份时返回空串：datascope.ForTicketReader 对空角色返回最保守档
+// （本人创建或分配给本人），不会放宽到全租户。权限不可得时收窄是唯一安全的
+// 方向——放宽会把用户无权查看的工单处置喂给 LLM。
+func chatRole(ctx context.Context) string {
+	if v, ok := knowledgeaccess.ViewerFrom(ctx); ok {
+		return v.Role
+	}
+	return ""
 }
 
 func (s *Service) ListConversations(ctx context.Context, tenantID, userID int) ([]*Conversation, error) {

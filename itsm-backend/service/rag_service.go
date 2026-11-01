@@ -337,6 +337,15 @@ func (r *RAGService) AskMulti(
 	return out, nil
 }
 
+// isEpisodeItem 判断检索条目是否来自情景记忆（历史工单处置经验）。
+func isEpisodeItem(item map[string]any) bool {
+	if item == nil {
+		return false
+	}
+	typ, _ := item["object_type"].(string)
+	return typ == "ticket_experience"
+}
+
 // isMemoryItem 判断检索条目是否来自会话记忆补充路。
 func isMemoryItem(item map[string]any) bool {
 	if item == nil {
@@ -872,7 +881,7 @@ func (r *RAGService) AskWithLLMStream(
 	onSources func(sources []map[string]any),
 	onDelta func(delta string),
 ) error {
-	return r.AskWithLLMStreamMulti(ctx, tenantID, query, nil, gateway, maxResults, onSources, onDelta)
+	return r.AskWithLLMStreamMulti(ctx, tenantID, query, nil, gateway, maxResults, onSources, onDelta, nil)
 }
 
 // AskWithLLMStreamMulti 是带**补充检索路**的流式问答（无工具路径）。
@@ -889,6 +898,7 @@ func (r *RAGService) AskWithLLMStreamMulti(
 	maxResults int,
 	onSources func(sources []map[string]any),
 	onDelta func(delta string),
+	extraDocs []map[string]any,
 ) error {
 	if maxResults <= 0 {
 		maxResults = 5
@@ -904,6 +914,9 @@ func (r *RAGService) AskWithLLMStreamMulti(
 	if err != nil {
 		return fmt.Errorf("retrieval failed: %w", err)
 	}
+	// 情景经验（历史工单处置结论）：由调用方按 DataScope 过滤后传入，
+	// 与知识库条目区分标注，不参与权威性重排（非 kb 类型）。
+	docs = append(docs, extraDocs...)
 
 	// 本体增强：识别 query 中的业务实体（工单号/事件号/CI 名等），
 	// 做 1 跳关系扩展，实体卡注入 sources、图谱事实注入 prompt。
@@ -958,7 +971,12 @@ func (r *RAGService) AskWithLLMStreamMulti(
 	contextBuilder.WriteString("基于以下知识库内容回答用户问题：\n\n")
 	for i, doc := range docs {
 		contextBuilder.WriteString(fmt.Sprintf("【文档%d】%v\n", i+1, doc["title"]))
-		if isMemoryItem(doc) {
+		switch {
+		case isEpisodeItem(doc):
+			// 情景经验：历史工单的处置结论。必须与知识库正文区分——
+			// 它是同类问题的**先例**，不是标准流程。
+			contextBuilder.WriteString("（来源：历史工单处置经验，非知识库正文；可信度低于知识库文档）\n")
+		case isMemoryItem(doc):
 			// 记忆条目必须显式标注：它是「本次会话此前提到过的上下文线索」，
 			// 不是「知识库里写着的内容」。不标注的话模型会把两者当同一权威
 			// 来源，编造出「文档里写了」的说法——那是伪造溯源。
@@ -1014,7 +1032,7 @@ func (r *RAGService) AskWithLLMStreamWithTools(
 	execTool func(name string, args map[string]any) (any, error),
 ) error {
 	return r.AskWithLLMStreamWithToolsMulti(
-		ctx, tenantID, query, nil, gateway, maxResults, tools, onSources, onDelta, execTool)
+		ctx, tenantID, query, nil, gateway, maxResults, tools, onSources, onDelta, execTool, nil)
 }
 
 // AskWithLLMStreamWithToolsMulti 是带**补充检索路**的流式问答。
@@ -1038,9 +1056,10 @@ func (r *RAGService) AskWithLLMStreamWithToolsMulti(
 	onSources func(sources []map[string]any),
 	onDelta func(delta string),
 	execTool func(name string, args map[string]any) (any, error),
+	extraDocs []map[string]any,
 ) error {
 	if gateway == nil || len(tools) == 0 {
-		return r.AskWithLLMStreamMulti(ctx, tenantID, query, supplemental, gateway, maxResults, onSources, onDelta)
+		return r.AskWithLLMStreamMulti(ctx, tenantID, query, supplemental, gateway, maxResults, onSources, onDelta, extraDocs)
 	}
 	if maxResults <= 0 {
 		maxResults = 5
@@ -1057,6 +1076,8 @@ func (r *RAGService) AskWithLLMStreamWithToolsMulti(
 	if err != nil {
 		return fmt.Errorf("retrieval failed: %w", err)
 	}
+	// 情景经验（历史工单处置结论），来源标注同无工具路径。
+	docs = append(docs, extraDocs...)
 	var ontologyBlock string
 	if r.ontology != nil {
 		oc := r.ontology.ExtractAndExpand(ctx, tenantID, query)
@@ -1073,7 +1094,10 @@ func (r *RAGService) AskWithLLMStreamWithToolsMulti(
 		contextBuilder.WriteString("基于以下知识库内容回答用户问题：\n\n")
 		for i, doc := range docs {
 			contextBuilder.WriteString(fmt.Sprintf("【文档%d】%v\n", i+1, doc["title"]))
-			if isMemoryItem(doc) {
+			switch {
+			case isEpisodeItem(doc):
+				contextBuilder.WriteString("（来源：历史工单处置经验，非知识库正文；可信度低于知识库文档）\n")
+			case isMemoryItem(doc):
 				// 见 AskWithLLMStreamMulti 的同名注释：记忆条目必须与知识库
 				// 正文区分，否则模型会把「聊过」说成「文档里写着」。
 				contextBuilder.WriteString("（来源：会话记忆上下文线索，非知识库正文）\n")

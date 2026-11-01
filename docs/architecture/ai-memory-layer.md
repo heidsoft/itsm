@@ -28,12 +28,19 @@ ITSM 的对应关系：
 | 层级 | OpenViking | ITSM 的实现 | 状态 |
 |---|---|---|---|
 | 短期 session | 会话上下文 + TTL | 会话历史回读 → 抽实体/短语 → 多路检索补充 | ★ 本次落地 |
-| 情景 episodic | 捕获的交互轨迹 | `ai_analysis_results`（分诊/RCA/摘要历史）、`root_cause_analyses` | 已有 |
+| 情景 episodic | 捕获的交互轨迹 | 历史工单处置经验（`tickets.resolution` + `root_cause_analyses`） | ★ 本次落地 |
 | 长期 semantic | 向量索引 + 知识库 | RAGService + KnowledgeArticle + 本体图谱 | 已有 |
 | 程序性 procedural | Skills / 规则 | `handlers/ai/skills.go` + `builtin_skills.go` + 工具注册表 | 已有 |
 
-**缺口只在短期层**。这也是本次改动的全部范围：短期层不新建表、不引入新
-依赖，只把已有数据接进回答链路。
+短期层与情景层是本次落地范围：都不新建表、不引入新依赖，只把已有数据接进
+回答链路。
+
+- **短期层**：会话历史（`messages` 表）→ 抽实体/短语 → 多路检索补充；
+- **情景层**：历史工单的处置结论（`tickets.resolution`）→ 按标题关键词匹配 →
+  作为独立来源的上下文块进 prompt。
+
+两层的分工：短期层回答「我们刚才说了什么」，情景层回答「这个租户以前怎么
+处理过同类问题」。
 
 ## 3. 三条不可让步的原则
 
@@ -71,7 +78,62 @@ ContentContainsFold(query)`）。如果把历史拼进当前 query：
 不标的后果是模型把「我们之前聊过」说成「文档里写着」——那是**伪造溯源**，
 比没有记忆更危险。
 
-## 4. 记忆抽取规则
+## 4. 情景层：历史工单处置经验
+
+「上次这个故障是怎么解决的？」是 ITSM 里最高频的问题之一，但系统此前答不了
+——RAG 的关键词检索**只覆盖知识文章**（`keywordSearch` 查的是
+`knowledge_articles`），历史工单的处置结论（`tickets.resolution`）与根因分析
+（`root_cause_analyses.analysis_summary`）都躺在库里，从未被召回。
+
+### 4.1 过滤链（顺序即安全边界）
+
+| 顺序 | 过滤 | 为什么 |
+|---|---|---|
+| 1 | 租户 | 跨租户绝对不可见 |
+| 2 | 未软删 | 软删工单不应作为先例 |
+| 3 | 已解决/已关闭 **且** `resolution` 非空 | 未解决的工单没有「经验」可言；把进行中的描述当经验会误导模型 |
+| 4 | `datascope.ApplyTicketFilter` 行级范围 | **工单是业务数据**：把用户无权查看的工单处置喂给 LLM 等于绕过权限外泄内容 |
+| 5 | 标题关键词匹配 | 相关性 |
+
+第 4 条是情景层与短期层最大的区别：短期层读的是自己的会话，情景层读的是
+**业务数据**，必须经行级范围过滤。权限不可得时**收窄**是唯一安全的方向——
+`datascope.ForTicketReader` 对空角色返回最保守档（本人创建或分配给本人），
+不会放宽到全租户。
+
+### 4.2 关键词为什么是候选列表
+
+工单标题常是**多词短语**（「CDN 回源超时」），用户问的却是「CDN 回源超时
+怎么办」：
+
+- 只取最长片段 → 削掉限定词（「CDN」被切掉），标题里没有「怎么办」，命不中；
+- 只取单词 → 「CDN」能命中但过于宽泛，把不相关的工单拉进来。
+
+所以按空格切词后生成相邻词组合（3 词、2 词优先，单词兜底），**逐个独立
+检索、命中即止**——把候选 OR 在一起会让泛用词稀释结果。命中够数后不再放宽
+关键词：更宽的匹配只会引入噪声。
+
+### 4.3 来源标注
+
+情景召回的条目形态与知识库条目一致（便于前端统一渲染引用），但：
+
+- `object_type=ticket_experience`（知识库正文是 `kb`）；
+- `fromMemory=true`、`memorySource=ticket_experience`、带 `ticket_number`；
+- 进 LLM prompt 时标注「（来源：历史工单处置经验，非知识库正文；可信度低于
+  知识库文档）」，并要求模型引用时注明工单号。
+
+不标的话模型会把历史工单结论说成「知识库文档里写了」——那是伪造溯源。历史
+结论是同类问题的**先例**，不是标准流程。
+
+### 4.4 边界
+
+| 场景 | 行为 |
+|:---|:---|
+| 没有已解决工单 / 无相关标题 | 返回空，不报错（这是正常结果） |
+| 用户无权查看该工单 | 行级过滤挡住，表现为「没有历史经验」 |
+| 召回查询失败 | 记 Warn 日志，返回已召回的部分；不阻断回答 |
+| `entClient` 未装配 | 返回空（无数据源即无经验，不猜） |
+
+## 5. 短期层：记忆抽取规则
 
 从最近若干轮会话消息（默认 6 轮，回读上限 200 字符/条）里抽取补充检索词：
 
@@ -91,7 +153,7 @@ ContentContainsFold(query)`）。如果把历史拼进当前 query：
 - **补充词限量**（默认 3 条）。记忆不是越多越好：整段历史塞进检索既慢，又
   会挤掉当前 query 的有效命中。
 
-## 5. 边界与失败处理
+## 6. 边界与失败处理
 
 | 场景 | 行为 |
 |---|---|
@@ -105,7 +167,7 @@ ContentContainsFold(query)`）。如果把历史拼进当前 query：
 记忆是**增强**，不是**依赖**。任何一步失败都必须降级到「无记忆」，而不是
 让整个问答失败。
 
-## 6. 相关但独立的三件事
+## 7. 相关但独立的三件事
 
 避免把它们混为一谈：
 
@@ -117,7 +179,7 @@ ContentContainsFold(query)`）。如果把历史拼进当前 query：
   记忆层（记忆层的验证在 `handlers/ai/memory_test.go` 与
   `service/rag_multi_test.go`）。
 
-## 7. 验证方式
+## 8. 验证方式
 
 | 层次 | 测试 | 锁住什么 |
 |---|---|---|
@@ -127,3 +189,7 @@ ContentContainsFold(query)`）。如果把历史拼进当前 query：
 | 去重 | `TestAskMulti_DeduplicatesAcrossRoutes` | 同一文档不跨路重复 |
 | 降级 | `TestAskMulti_SupplementalFailureDoesNotBreakPrimary` | 补充路失败不影响主路 |
 | 越权 | `handlers/ai/conversation_tenant_guard_test.go` | 会话读面按租户 + 属主双校验 |
+| 情景权限 | `TestEpisodeRecallRespectsDataScope` | agent 不得召回他人工单经验；管理角色可以 |
+| 情景门槛 | `TestEpisodeRecallOnlyResolvedWithConclusion` | 只有已解决且有处置结论的工单才是经验 |
+| 情景隔离 | `TestEpisodeRecallRejectsCrossTenant` / `TestEpisodeRecallSkipsSoftDeleted` | 跨租户与软删工单不进召回 |
+| 情景标注 | `TestEpisodeResultsCarrySource` / `TestEpisodePromptBlockMarksSource` | 来源标注与工单号不得丢 |
