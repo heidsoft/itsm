@@ -379,7 +379,10 @@ func TestTenantScope_RepositoryMatrix(t *testing.T) {
 				return row.ID
 			},
 			probe: func(ctx context.Context, env *matrixEnv, id, tenantID int) error {
-				_, err := ai.NewEntRepository(env.client).GetConversation(ctx, id, tenantID)
+				// 会话是用户私有的：读取按「租户 + 属主」双谓词，正控制用会话
+				// 属主（env.userA）的 id，否则会把「属主不匹配」误读成
+				// 「租户不可见」——那样测的就不是租户边界了。
+				_, err := ai.NewEntRepository(env.client).GetConversation(ctx, id, tenantID, env.userA.ID)
 				return err
 			},
 		},
