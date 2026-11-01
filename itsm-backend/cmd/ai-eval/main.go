@@ -47,6 +47,7 @@ import (
 	"go.uber.org/zap"
 
 	"itsm-backend/ai/eval"
+	"itsm-backend/config"
 	"itsm-backend/service"
 )
 
@@ -104,7 +105,24 @@ func run(mode, outDir, datasets string) error {
 	var sumGen func(string) string
 	basis := "生产 SummarizeService 无 LLM 降级路径（截断）"
 	if mode == "llm" {
+		// viper 是全局单例：必须先 LoadConfig（读 config.yaml + 解析 ${ENV:default}
+		// 占位 + godotenv），否则 LoadLLMConfig 拿到的全是空串——LLM 档验收
+		// 一直报「配置为空」的直接根因就是这里没初始化。
+		if _, err := config.LoadConfig(); err != nil {
+			return fmt.Errorf("LLM 档需要读取 llm.* 配置: %w", err)
+		}
 		gateway, err := newGatewayFromConfig()
+		if err == nil {
+			// 连通性探测：SummarizeService 在 LLM 调用失败时会静默降级到
+			// 截断（err=nil），单看指标无法区分「真实 LLM 摘要」与「降级
+			// 截断」——两档分数完全一致就是降级产物。LLM 档是**人工验收**
+			// 的证据，绝不能把降级路径的分数当真实模型的质量结论归档。
+			// 探测失败直接拒绝产出报告（退出码 1），让验收人知道「没跑成」，
+			// 而不是拿一份假绿报告签字。
+			if probeErr := probeLLMConnectivity(gateway); probeErr != nil {
+				return fmt.Errorf("LLM 档连通性探测失败（不产出报告，这可能是限流/网络/凭据问题）: %w", probeErr)
+			}
+		}
 		if err != nil {
 			return fmt.Errorf("LLM 档需要可用的 llm.* 配置: %w", err)
 		}
@@ -227,6 +245,26 @@ func newGatewayFromConfig() (*service.LLMGateway, error) {
 		return nil, fmt.Errorf("无法按配置构造 provider（provider=%q）", cfg.Provider)
 	}
 	return service.NewLLMGateway(provider, nil, nil, cfg.Provider), nil
+}
+
+// probeLLMConnectivity 用最小调用验证 LLM 真实可达。
+//
+// 为什么必须探测：SummarizeService 的降级语义是「LLM 失败 → 截断，err=nil」，
+// 评测层无从感知。没有这道探测，限流/断网/坏凭据都会产出一份与降级档
+// 分数相同的「LLM 档报告」——那是假验收，比没有报告更糟。
+func probeLLMConnectivity(gateway *service.LLMGateway) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	defer cancel()
+	resp, err := gateway.Chat(ctx, "", []service.LLMMessage{
+		{Role: "user", Content: "请回复：ok"},
+	})
+	if err != nil {
+		return err
+	}
+	if strings.TrimSpace(resp) == "" {
+		return fmt.Errorf("LLM 返回空响应")
+	}
+	return nil
 }
 
 func mustLoad[T any](path string) T {
