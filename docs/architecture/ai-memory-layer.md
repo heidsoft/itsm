@@ -133,7 +133,45 @@ ContentContainsFold(query)`）。如果把历史拼进当前 query：
 | 召回查询失败 | 记 Warn 日志，返回已召回的部分；不阻断回答 |
 | `entClient` 未装配 | 返回空（无数据源即无经验，不猜） |
 
-## 5. 短期层：记忆抽取规则
+## 5. 渐进式披露：摘要层与全文下钻
+
+参照 OpenViking 的「Read the summary before the source」（L0 摘要 / L1 概览 /
+L2 全文），知识检索分两层：
+
+| 层 | 内容 | 获取方式 |
+|---|---|---|
+| 摘要层 | `snippet`（正文截断到 160 字符） | 检索命中即返回 |
+| 全文层 | `content`（完整正文） | AI 工具 `get_kb_article` 按需下钻 |
+
+### 5.1 为什么此前下钻不了
+
+检索命中后模型拿到的是截断片段，遇到需要细节的问题（具体步骤、参数、例外
+条件）就答不了——而它**没有任何办法下钻**：工具清单里只有 `list_kb`（检索），
+没有「读全文」。这正是 OpenViking 说的 evidence gap 无法闭合。
+
+### 5.2 信号位与下钻路径
+
+- 检索结果带 `truncated`（是否截断）与 `contentLength`（正文长度）——没有
+  这两个字段，模型无从判断片段是不是完整的，会拿着半截内容当全文硬答；
+- 截断条目在 prompt 里标注「（以下内容为节选，末尾可能有省略）」；
+- **有工具路径**（provider 支持工具调用）prompt 引导「调用 get_kb_article 按
+  文档 id 读取完整正文」；
+- **无工具路径不能承诺「可以调工具」**——那时根本没有工具可用。空承诺比不
+  提示更糟：模型会说自己要调用工具，然后**编造工具的返回内容**。该路径如实
+  说明「只有节选」，让模型在片段范围内作答并声明信息不完整。
+
+### 5.3 读与检索走同一套准入
+
+`RAGService.GetArticleFull` 与 `keywordSearch` 共用同一套过滤（租户/未软删/
+已发布/时效/分类可见性含作者豁免）。**读与检索口径必须一致**，否则会出现：
+「检索命中了但工具读不到」（模型困惑、反复重试）或「工具能读到但检索永远
+命中不了」（那是一条绕过权限的读通道）。工具层不重复实现准入——两处各自
+实现必然漂移。
+
+读不到时返回错误而非空内容：空内容会让模型把「读不到」当成「这篇文章没有
+正文」，然后基于空输入编造答案。
+
+## 6. 短期层：记忆抽取规则
 
 从最近若干轮会话消息（默认 6 轮，回读上限 200 字符/条）里抽取补充检索词：
 
@@ -153,7 +191,7 @@ ContentContainsFold(query)`）。如果把历史拼进当前 query：
 - **补充词限量**（默认 3 条）。记忆不是越多越好：整段历史塞进检索既慢，又
   会挤掉当前 query 的有效命中。
 
-## 6. 边界与失败处理
+## 7. 边界与失败处理
 
 | 场景 | 行为 |
 |---|---|
@@ -167,7 +205,7 @@ ContentContainsFold(query)`）。如果把历史拼进当前 query：
 记忆是**增强**，不是**依赖**。任何一步失败都必须降级到「无记忆」，而不是
 让整个问答失败。
 
-## 7. 相关但独立的三件事
+## 8. 相关但独立的三件事
 
 避免把它们混为一谈：
 
@@ -179,7 +217,7 @@ ContentContainsFold(query)`）。如果把历史拼进当前 query：
   记忆层（记忆层的验证在 `handlers/ai/memory_test.go` 与
   `service/rag_multi_test.go`）。
 
-## 8. 验证方式
+## 9. 验证方式
 
 | 层次 | 测试 | 锁住什么 |
 |---|---|---|
@@ -193,3 +231,8 @@ ContentContainsFold(query)`）。如果把历史拼进当前 query：
 | 情景门槛 | `TestEpisodeRecallOnlyResolvedWithConclusion` | 只有已解决且有处置结论的工单才是经验 |
 | 情景隔离 | `TestEpisodeRecallRejectsCrossTenant` / `TestEpisodeRecallSkipsSoftDeleted` | 跨租户与软删工单不进召回 |
 | 情景标注 | `TestEpisodeResultsCarrySource` / `TestEpisodePromptBlockMarksSource` | 来源标注与工单号不得丢 |
+| 披露一致性 | `TestGetArticleFull_MatchesRetrievalVisibility` | 检索能看到的，全文也能读到（同一篇文章两条路） |
+| 披露准入 | `TestGetArticleFull_RejectsUnpublishedAndDeleted` / `TestGetArticleFull_RejectsCrossTenant` | 草稿/软删/跨租户不可读 |
+| 披露可见性 | `TestGetArticleFullMatchesKnowledgeGuard` | 受限分类在无权时：检索与全文**都**读不到 |
+| 信号位 | `TestSearchResultsCarryTruncationSignal` | 长文必须带 truncated=true 与 contentLength |
+| 工具端到端 | `TestGetKbArticleToolExecutesThroughService` | 完整链路（RBAC→审计→执行）可拿到全文 |

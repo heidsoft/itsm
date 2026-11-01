@@ -337,6 +337,18 @@ func (r *RAGService) AskMulti(
 	return out, nil
 }
 
+// isTruncatedItem 判断检索条目是否只给出了节选（正文被截断）。
+//
+// 这是渐进式披露的信号位：有它，模型才知道「可以下钻取全文」；没它，
+// 模型只能拿半截内容硬答。
+func isTruncatedItem(item map[string]any) bool {
+	if item == nil {
+		return false
+	}
+	v, ok := item["truncated"].(bool)
+	return ok && v
+}
+
 // isEpisodeItem 判断检索条目是否来自情景记忆（历史工单处置经验）。
 func isEpisodeItem(item map[string]any) bool {
 	if item == nil {
@@ -364,6 +376,101 @@ func ragResultKey(item map[string]any) string {
 		return typ + ":" + title
 	}
 	return fmt.Sprintf("%s:%d", typ, id)
+}
+
+// GetArticleFull 按主键读一篇知识文章的**全文**。
+//
+// 为什么需要它：检索命中后返回的是 snippet（正文截断到 ~200 字符），模型
+// 拿到的是「摘要层」——遇到需要细节的问题（具体步骤、参数、例外条件）就
+// 答不了，而它**没有任何办法下钻**：工具清单里只有 list_kb（检索），没有
+// 「读全文」。这正是 OpenViking 说的 evidence gap 无法闭合。
+//
+// 准入规则与 keywordSearch **完全一致**（同一个入口、同一套过滤）：
+//  1. 租户（跨租户绝对不可见）；
+//  2. 未软删；
+//  3. 已发布（草稿不进 RAG 结果，也不该被 AI 读到）；
+//  4. 时效（未生效/已失效排除，复核逾期同样排除）；
+//  5. 分类可见性（含作者豁免）。
+//
+// 「读」与「检索」走同一套规则是关键：如果两者口径不同，就会出现
+// 「检索命中了但工具读不到」或「工具能读到但检索永远命中不了」——
+// 前者让模型困惑，后者是绕过权限的读通道。
+//
+// 未命中时返回错误（不返回空内容）：模型据此知道「读不到」，而不是把空
+// 当成「这篇文章没有正文」。
+func (r *RAGService) GetArticleFull(ctx context.Context, tenantID, articleID int) (map[string]any, error) {
+	if r == nil || r.client == nil {
+		return nil, fmt.Errorf("knowledge base not available")
+	}
+	if tenantID <= 0 || articleID <= 0 {
+		return nil, fmt.Errorf("invalid article reference")
+	}
+
+	q := r.client.KnowledgeArticle.Query().
+		Where(ka.ID(articleID), ka.TenantIDEQ(tenantID), ka.DeletedAtIsNil(), ka.IsPublished(true))
+
+	if r.freshness != nil {
+		q = q.Where(r.freshness.SQLPredicate())
+	}
+
+	// 分类可见性：与 keywordSearch 同口径。SQL 层先排除无权分类（保证
+	// limit 语义准确），作者豁免在下面逐条判定。
+	viewer, hasViewer := knowledgeaccess.ViewerFrom(ctx)
+	if !hasViewer {
+		viewer = knowledgeaccess.Viewer{}
+	}
+	if denied := r.deniedCategories(ctx, tenantID); len(denied) > 0 {
+		if len(denied) == 1 && denied[0] == denyAllSentinel {
+			q = q.Where(ka.CategoryEQ(""))
+		} else if viewer.UserID > 0 {
+			q = q.Where(ka.Or(
+				ka.CategoryNotIn(denied...),
+				ka.AuthorIDEQ(viewer.UserID),
+			))
+		} else {
+			q = q.Where(ka.CategoryNotIn(denied...))
+		}
+	}
+
+	article, err := q.Only(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, fmt.Errorf("知识文章不存在或不可见: id=%d", articleID)
+		}
+		return nil, fmt.Errorf("read knowledge article failed: %w", err)
+	}
+
+	// 作者豁免：受限分类里自己写的文章仍可见（与检索一致）。
+	if r.knowledgeGuard != nil && article.Category != "" {
+		if !r.knowledgeGuard.CanReadCategory(ctx, tenantID, viewer, article.Category, article.AuthorID) {
+			return nil, fmt.Errorf("知识文章不存在或不可见: id=%d", articleID)
+		}
+	}
+
+	// 复核逾期：SQL 谓词表达不了，在 Go 侧判定（与检索同一口径）。
+	if r.freshness != nil {
+		kept, dropped := r.freshness.FilterArticles([]*ent.KnowledgeArticle{article})
+		if dropped > 0 || len(kept) == 0 {
+			return nil, fmt.Errorf("知识文章不存在或不可见: id=%d", articleID)
+		}
+	}
+
+	out := map[string]any{
+		"object_type": "kb",
+		"id":          article.ID,
+		"title":       article.Title,
+		"content":     article.Content,
+		"category":    article.Category,
+		"tags":        article.Tags,
+		"authority":   article.AuthorityLevel,
+	}
+	if article.PublishedVersion != nil {
+		out["publishedVersion"] = *article.PublishedVersion
+	}
+	if !article.UpdatedAt.IsZero() {
+		out["updatedAt"] = article.UpdatedAt.Format(time.RFC3339)
+	}
+	return out, nil
 }
 
 // rankByAuthority 按 L2 权威性融合分对检索结果重排（仅调序，不增删条目）。
@@ -555,12 +662,14 @@ func (r *RAGService) vectorSearch(ctx context.Context, tenantID int, query strin
 		}
 
 		item := map[string]any{
-			"object_type": objType,
-			"id":          objID,
-			"snippet":     snippet(vectorResult.Content, 200),
-			"source":      vectorResult.Source,
-			"score":       similarity,
-			"search_type": "vector",
+			"object_type":   objType,
+			"id":            objID,
+			"snippet":       snippet(vectorResult.Content, 200),
+			"truncated":     len([]rune(vectorResult.Content)) > 200,
+			"contentLength": len([]rune(vectorResult.Content)),
+			"source":        vectorResult.Source,
+			"score":         similarity,
+			"search_type":   "vector",
 		}
 		// 连接器后端失败回退到 legacy 时必须在结果上可观测（能力状态与失败语义规则）
 		if legacyFallback {
@@ -799,6 +908,11 @@ func (r *RAGService) keywordSearch(ctx context.Context, tenantID int, query stri
 			"snippet":     snippet(a.Content, 160),
 			"score":       score,
 			"search_type": "keyword",
+			// 渐进式披露的信号位：告诉调用方「这只是摘要层，后面还有正文」。
+			// 缺失这两个字段时模型无从判断该不该下钻，只能拿截断片段硬答——
+			// 那正是 OpenViking 说的 evidence gap 无法闭合。
+			"truncated":     len([]rune(a.Content)) > snippetLimit,
+			"contentLength": len([]rune(a.Content)),
 		})
 	}
 
@@ -969,6 +1083,7 @@ func (r *RAGService) AskWithLLMStreamMulti(
 
 	var contextBuilder strings.Builder
 	contextBuilder.WriteString("基于以下知识库内容回答用户问题：\n\n")
+	truncatedHint := false
 	for i, doc := range docs {
 		contextBuilder.WriteString(fmt.Sprintf("【文档%d】%v\n", i+1, doc["title"]))
 		switch {
@@ -982,7 +1097,19 @@ func (r *RAGService) AskWithLLMStreamMulti(
 			// 来源，编造出「文档里写了」的说法——那是伪造溯源。
 			contextBuilder.WriteString("（来源：会话记忆上下文线索，非知识库正文）\n")
 		}
+		if isTruncatedItem(doc) {
+			truncatedHint = true
+			contextBuilder.WriteString("（以下内容为节选，末尾可能有省略）\n")
+		}
 		contextBuilder.WriteString(fmt.Sprintf("内容：%v\n\n", doc["snippet"]))
+	}
+	if truncatedHint {
+		// 无工具路径不能承诺「可以调工具」——那时根本没有工具可用。
+		// 空承诺比不提示更糟：模型会说自己要调用 get_kb_article，然后编造
+		// 它的返回内容。这里如实说明「只有节选」，让它在片段范围内作答，
+		// 必要时说明信息不完整。
+		contextBuilder.WriteString("提示：部分文档只给出节选。若问题需要具体步骤、参数或例外条件，\n" +
+			"请在可见范围内作答，并说明当前依据的是节选内容。\n\n")
 	}
 	// 本体图谱块：业务实体及其关系邻居（若有）
 	if ontologyBlock != "" {
@@ -1092,6 +1219,7 @@ func (r *RAGService) AskWithLLMStreamWithToolsMulti(
 	var contextBuilder strings.Builder
 	if len(docs) > 0 {
 		contextBuilder.WriteString("基于以下知识库内容回答用户问题：\n\n")
+		truncatedHint := false
 		for i, doc := range docs {
 			contextBuilder.WriteString(fmt.Sprintf("【文档%d】%v\n", i+1, doc["title"]))
 			switch {
@@ -1102,7 +1230,15 @@ func (r *RAGService) AskWithLLMStreamWithToolsMulti(
 				// 正文区分，否则模型会把「聊过」说成「文档里写着」。
 				contextBuilder.WriteString("（来源：会话记忆上下文线索，非知识库正文）\n")
 			}
+			if isTruncatedItem(doc) {
+				truncatedHint = true
+				contextBuilder.WriteString("（以下内容为节选，末尾可能有省略）\n")
+			}
 			contextBuilder.WriteString(fmt.Sprintf("内容：%v\n\n", doc["snippet"]))
+		}
+		if truncatedHint {
+			contextBuilder.WriteString("提示：部分文档只给出节选。若问题需要具体步骤、参数或例外条件，\n" +
+				"请调用 get_kb_article 按文档 id 读取完整正文后再作答。\n\n")
 		}
 	} else {
 		contextBuilder.WriteString("知识库未检索到相关内容。如用户需要实时业务数据（工单/事件/CI 等），请优先使用工具查询。\n\n")
@@ -1323,6 +1459,13 @@ func (r *RAGService) CheckHealth(ctx context.Context) map[string]interface{} {
 }
 
 // snippet extracts a preview from content
+// snippetLimit 是关键词检索返回给模型的正文片段长度（字符数）。
+//
+// 它是「摘要层」的长度上限：模型先看片段判断相关性，需要细节时用
+// get_kb_article 取全文（渐进式披露）。定得太小会让片段答不了问题，
+// 定得太大则每次都把全文塞进上下文，浪费 token 且稀释注意力。
+const snippetLimit = 160
+
 func snippet(s string, n int) string {
 	if n <= 0 {
 		n = 160

@@ -162,6 +162,28 @@ func (t *ToolRegistry) ListTools() []ToolDefinition {
 			},
 		},
 		{
+			Name: "get_kb_article",
+			Description: "读取知识库文章的完整正文。检索结果只给片段（正文被截断），" +
+				"当片段末尾带「...」或问题需要具体步骤/参数/例外条件时，用检索结果里的 id 调用本工具取全文。",
+			ReadOnly: true,
+			Resource: "knowledge",
+			Action:   "read",
+			ArgsSchema: map[string]interface{}{
+				"type": "object",
+				"properties": map[string]interface{}{
+					"id": map[string]interface{}{
+						"type":        "integer",
+						"description": "文章 ID，来自 list_kb 或检索结果的 id 字段",
+						"minimum":     1,
+					},
+				},
+				"required": []string{"id"},
+			},
+			ResultSchema: map[string]interface{}{
+				"type": "object",
+			},
+		},
+		{
 			Name:        "list_tickets",
 			Description: "列出当前租户的工单（分页，按创建时间倒序）",
 			ReadOnly:    true,
@@ -439,6 +461,21 @@ func (t *ToolRegistry) Execute(ctx context.Context, tenantID int, name string, a
 			limit = int(v)
 		}
 		return t.rag.Ask(ctx, tenantID, q, limit)
+	case "get_kb_article":
+		id := 0
+		switch v := args["id"].(type) {
+		case float64:
+			id = int(v)
+		case int:
+			id = v
+		}
+		if id <= 0 {
+			return nil, fmt.Errorf("get_kb_article 需要正整数 id")
+		}
+		// 准入规则由 RAGService.GetArticleFull 统一承担（与检索同一套过滤：
+		// 租户/未软删/已发布/时效/分类可见性），工具层不重复实现——两处
+		// 各自实现必然漂移。
+		return t.rag.GetArticleFull(ctx, tenantID, id)
 	case "list_tickets":
 		page := 1
 		if v, ok := args["page"].(float64); ok {
