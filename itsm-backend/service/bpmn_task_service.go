@@ -13,6 +13,7 @@ import (
 	"itsm-backend/ent"
 	"itsm-backend/ent/predicate"
 	"itsm-backend/ent/processapprovaldecision"
+	"itsm-backend/ent/processdefinition"
 	"itsm-backend/ent/processinstance"
 	"itsm-backend/ent/processtask"
 	"itsm-backend/ent/user"
@@ -374,6 +375,46 @@ func (s *bpmnTaskService) ListUserTaskViews(ctx context.Context, req *ListUserTa
 		for _, resp := range responses {
 			if id, err := strconv.Atoi(strings.TrimSpace(resp.Assignee)); err == nil {
 				resp.AssigneeName = nameByID[id]
+			}
+		}
+	}
+
+	// 批量回填流程定义显示名：审批中心「流程」列不能直接暴露 processDefinitionKey
+	// （ticket_general_flow 这类工程标识）。同一 key 可能有多个版本，优先取 is_latest。
+	if req.TenantID > 0 {
+		defKeys := make([]string, 0, len(responses))
+		seenKey := make(map[string]bool, len(responses))
+		for _, resp := range responses {
+			if key := strings.TrimSpace(resp.ProcessDefinitionKey); key != "" && !seenKey[key] {
+				seenKey[key] = true
+				defKeys = append(defKeys, key)
+			}
+		}
+		if len(defKeys) > 0 {
+			defs, err := s.client.ProcessDefinition.Query().
+				Where(
+					processdefinition.KeyIn(defKeys...),
+					processdefinition.TenantID(req.TenantID),
+				).
+				Select(processdefinition.FieldID, processdefinition.FieldKey, processdefinition.FieldName, processdefinition.FieldIsLatest).
+				All(ctx)
+			if err != nil {
+				return nil, 0, fmt.Errorf("加载流程定义名称失败: %w", err)
+			}
+			nameByKey := make(map[string]string, len(defs))
+			latestSeen := make(map[string]bool, len(defs))
+			for _, def := range defs {
+				// 已记录 is_latest 版本的名称后不再被旧版本覆盖
+				if latestSeen[def.Key] {
+					continue
+				}
+				nameByKey[def.Key] = def.Name
+				if def.IsLatest {
+					latestSeen[def.Key] = true
+				}
+			}
+			for _, resp := range responses {
+				resp.ProcessDefinitionName = nameByKey[resp.ProcessDefinitionKey]
 			}
 		}
 	}

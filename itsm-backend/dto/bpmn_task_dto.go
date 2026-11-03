@@ -10,28 +10,31 @@ import (
 
 // BPMNTaskResponse 「我的待办」任务视图：任务字段 + 所属流程实例的业务上下文（camelCase）
 type BPMNTaskResponse struct {
-	ID                   int                    `json:"id"`
-	TaskID               string                 `json:"taskId"`
-	TaskDefinitionKey    string                 `json:"taskDefinitionKey"`
-	TaskName             string                 `json:"taskName"`
-	TaskType             string                 `json:"taskType"`
-	Status               string                 `json:"status"`
-	Priority             string                 `json:"priority"`
-	Assignee             string                 `json:"assignee"`
-	AssigneeName         string                 `json:"assigneeName,omitempty"`
-	CandidateUsers       string                 `json:"candidateUsers"`
-	CandidateGroups      string                 `json:"candidateGroups"`
-	ProcessInstanceID    int                    `json:"processInstanceId"`
-	ProcessInstanceKey   string                 `json:"processInstanceKey"`
-	ProcessDefinitionKey string                 `json:"processDefinitionKey"`
-	BusinessKey          string                 `json:"businessKey"`
-	BusinessType         string                 `json:"businessType"`
-	BusinessID           int                    `json:"businessId"`
-	TaskPurpose          string                 `json:"taskPurpose"`
-	FormKey              string                 `json:"formKey,omitempty"`
-	TaskVariables        map[string]interface{} `json:"taskVariables,omitempty"`
-	DueDate              *time.Time             `json:"dueDate,omitempty"`
-	CreatedTime          time.Time              `json:"createdTime"`
+	ID                   int    `json:"id"`
+	TaskID               string `json:"taskId"`
+	TaskDefinitionKey    string `json:"taskDefinitionKey"`
+	TaskName             string `json:"taskName"`
+	TaskType             string `json:"taskType"`
+	Status               string `json:"status"`
+	Priority             string `json:"priority"`
+	Assignee             string `json:"assignee"`
+	AssigneeName         string `json:"assigneeName,omitempty"`
+	CandidateUsers       string `json:"candidateUsers"`
+	CandidateGroups      string `json:"candidateGroups"`
+	ProcessInstanceID    int    `json:"processInstanceId"`
+	ProcessInstanceKey   string `json:"processInstanceKey"`
+	ProcessDefinitionKey string `json:"processDefinitionKey"`
+	// ProcessDefinitionName 流程定义显示名（如「工单通用流程」），由 service 层批量回填；
+	// 定义缺失时留空，前端回退展示 Key。
+	ProcessDefinitionName string                 `json:"processDefinitionName,omitempty"`
+	BusinessKey           string                 `json:"businessKey"`
+	BusinessType          string                 `json:"businessType"`
+	BusinessID            int                    `json:"businessId"`
+	TaskPurpose           string                 `json:"taskPurpose"`
+	FormKey               string                 `json:"formKey,omitempty"`
+	TaskVariables         map[string]interface{} `json:"taskVariables,omitempty"`
+	DueDate               *time.Time             `json:"dueDate,omitempty"`
+	CreatedTime           time.Time              `json:"createdTime"`
 }
 
 // parseBusinessKey 解析 "ticket:123" 形式的 businessKey

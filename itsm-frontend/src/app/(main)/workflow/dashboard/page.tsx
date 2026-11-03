@@ -46,6 +46,22 @@ import { useI18n } from '@/lib/i18n';
 
 const { RangePicker } = DatePicker;
 
+// 任务状态是后端枚举（created/assigned/completed/...），统一映射中文，不在表格里直出英文。
+const taskStatusLabel: Record<string, string> = {
+  created: '已创建',
+  pending: '待处理',
+  assigned: '已分配',
+  claimed: '已领取',
+  in_progress: '处理中',
+  running: '执行中',
+  completed: '已完成',
+  cancelled: '已取消',
+  terminated: '已终止',
+  failed: '已失败',
+  skipped: '已跳过',
+  suspended: '已挂起',
+};
+
 export default function BPMNDashboardPage() {
   const { t } = useI18n();
   const { message } = App.useApp();
@@ -149,7 +165,9 @@ export default function BPMNDashboardPage() {
       title: t('workflow.status') || '状态',
       dataIndex: 'status',
       key: 'status',
-      render: (status: string) => <Tag color={getStatusColor(status)}>{status}</Tag>,
+      render: (status: string) => (
+        <Tag color={getStatusColor(status)}>{taskStatusLabel[status] ?? status}</Tag>
+      ),
     },
     {
       title: t('workflow.count') || '数量',

@@ -15,8 +15,13 @@ import {
   Pause,
   Copy,
 } from 'lucide-react';
-import type { ApprovalChain} from '@/types/approval-chain';
-import { ApprovalChainFilters } from '@/types/approval-chain';
+import type { ApprovalChain } from '@/types/approval-chain';
+import {
+  APPROVAL_TYPE_LABELS,
+  entityTypeLabel,
+  type ApprovalType,
+} from '@/types/approval-chain';
+import { formatDateTime } from '@/lib/formatters';
 import type { TableColumn, ActionButton } from '@/types/common';
 
 interface ApprovalChainTableProps {
@@ -70,6 +75,13 @@ export function ApprovalChainTable({
         ),
       },
       {
+        key: 'entityType',
+        title: '适用对象',
+        dataIndex: 'entityType',
+        width: 100,
+        render: (value: unknown) => <Tag>{entityTypeLabel(value as string)}</Tag>,
+      },
+      {
         key: 'status',
         title: '状态',
         dataIndex: 'isActive',
@@ -81,12 +93,31 @@ export function ApprovalChainTable({
         ),
       },
       {
+        key: 'approvalType',
+        title: '审批方式',
+        dataIndex: 'steps',
+        width: 180,
+        render: (value: unknown, record: ApprovalChain) => {
+          const types = Array.from(
+            new Set((record.steps ?? []).map(step => step.approvalType || 'serial'))
+          ) as ApprovalType[];
+          if (types.length === 0) return <span className="text-gray-400">-</span>;
+          return (
+            <Space size={4} wrap>
+              {types.map(type => (
+                <Tag key={type}>{APPROVAL_TYPE_LABELS[type] ?? type}</Tag>
+              ))}
+            </Space>
+          );
+        },
+      },
+      {
         key: 'steps',
         title: '步骤数',
         dataIndex: 'steps',
         width: 100,
         render: (value: unknown) => (
-          <span className="font-medium">{(value as any[])?.length || 0}</span>
+          <span className="font-medium">{(value as ApprovalChain['steps'])?.length || 0}</span>
         ),
       },
       {
@@ -94,14 +125,14 @@ export function ApprovalChainTable({
         title: '创建时间',
         dataIndex: 'createdAt',
         width: 150,
-        render: (value: unknown) => new Date(value as string).toLocaleString(),
+        render: (value: unknown) => formatDateTime(value as string),
       },
       {
         key: 'updatedAt',
         title: '更新时间',
         dataIndex: 'updatedAt',
         width: 150,
-        render: (value: unknown) => new Date(value as string).toLocaleString(),
+        render: (value: unknown) => formatDateTime(value as string),
       },
       {
         key: 'actions',
@@ -250,7 +281,7 @@ export function ApprovalChainTable({
         }
         rowSelection={rowSelection}
         rowKey="id"
-        scroll={{ x: 800 }}
+        scroll={{ x: 1100 }}
         size="middle"
       />
     </div>

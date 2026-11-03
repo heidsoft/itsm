@@ -41,14 +41,35 @@ export interface ApprovalStep extends BaseEntity {
   conditionAmountMax?: number;
 }
 
-export type ApprovalType = 'serial' | 'parallel';
+/**
+ * 与后端 approval_chain_evaluation.go 一致：
+ * serial 逐层串行（层内阈值 1）；parallel/all 为会签（阈值默认=本层审批人数）；or 为或签（阈值 1）。
+ */
+export type ApprovalType = 'serial' | 'parallel' | 'all' | 'or';
 
 export type FallbackAction = 'block' | 'auto_approve' | 'escalate' | 'auto_reject';
 
 export const APPROVAL_TYPE_LABELS: Record<ApprovalType, string> = {
-  serial: '或签',
-  parallel: '会签',
+  serial: '顺序审批',
+  parallel: '并行会签（达到阈值通过）',
+  all: '全员通过（会签）',
+  or: '任一通过（或签）',
 };
+
+/** 会签类审批方式需要配置阈值；serial/or 的阈值在后端恒为 1 */
+export const QUORUM_APPROVAL_TYPES: ApprovalType[] = ['parallel', 'all'];
+
+export const ENTITY_TYPE_LABELS: Record<string, string> = {
+  ticket: '工单',
+  incident: '事件',
+  problem: '问题',
+  change: '变更',
+  service_request: '服务请求',
+};
+
+/** 未指定时按默认工单展示；未知取值原样回显，避免把其它实体类型误标成工单 */
+export const entityTypeLabel = (entityType?: string): string =>
+  entityType ? ENTITY_TYPE_LABELS[entityType] ?? entityType : ENTITY_TYPE_LABELS.ticket;
 
 export const FALLBACK_ACTION_LABELS: Record<FallbackAction, string> = {
   block: '阻断（无人可审时报错）',
@@ -57,7 +78,16 @@ export const FALLBACK_ACTION_LABELS: Record<FallbackAction, string> = {
   auto_reject: '自动拒绝',
 };
 
-export const APPROVAL_CONDITION_PRIORITIES = ['low', 'medium', 'high', 'urgent', 'critical'] as const;
+/** 与 ITSM 实体 priority 实际取值一致（后端按不区分大小写比较） */
+export const APPROVAL_CONDITION_PRIORITIES = ['low', 'medium', 'high', 'critical'] as const;
+
+/** 优先级展示文案；配置值与后端比较仍使用英文枚举 */
+export const PRIORITY_LABELS: Record<string, string> = {
+  low: '低',
+  medium: '中',
+  high: '高',
+  critical: '紧急',
+};
 
 export interface ApprovalChainStats {
   total: number;

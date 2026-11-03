@@ -894,6 +894,11 @@ func TestAuthorizeTaskActor_NoActorRequiresSystemContext(t *testing.T) {
 	// 后台任务显式声明系统上下文后仍可执行（超时扫描、会签父任务推进等）。
 	sysCtx := tenantctx.SystemContext(ctx, "test:bpmn-system-actor", "verify privileged path")
 	assert.NoError(t, engine.authorizeTaskActor(sysCtx, task))
+
+	// 交付收口只放开归属校验：不得顺带把 RLS 切到系统旁路。
+	advanceCtx := bpmn.WithBPMNSystemAdvance(ctx)
+	assert.NoError(t, engine.authorizeTaskActor(advanceCtx, task))
+	assert.False(t, tenantctx.IsSystemBypass(advanceCtx), "BPMN 系统推进必须保留租户 RLS 范围")
 }
 
 func TestClaimTask_ValidatesCandidatesAndExistingAssignee(t *testing.T) {

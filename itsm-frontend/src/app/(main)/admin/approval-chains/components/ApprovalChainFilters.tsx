@@ -6,8 +6,9 @@
 
 import React, { useState, useCallback } from 'react';
 import { Card, Row, Col, Input, Select, Button, Space } from 'antd';
-import { RefreshCw, Filter } from 'lucide-react';
+import { RefreshCw, Filter, Plus } from 'lucide-react';
 import type { ApprovalChainFilters as ApprovalChainFiltersType } from '@/types/approval-chain';
+import { ENTITY_TYPE_LABELS } from '@/types/approval-chain';
 import { useDebouncedCallback } from '@/lib/component-utils';
 
 const { Search } = Input;
@@ -16,6 +17,7 @@ interface ApprovalChainFiltersProps {
   filters: ApprovalChainFiltersType;
   onFilterChange: (filters: ApprovalChainFiltersType) => void;
   onRefresh: () => void;
+  onCreate?: () => void;
   loading?: boolean;
 }
 
@@ -23,6 +25,7 @@ export function ApprovalChainFilters({
   filters,
   onFilterChange,
   onRefresh,
+  onCreate,
   loading = false,
 }: ApprovalChainFiltersProps) {
   const [localFilters, setLocalFilters] = useState<ApprovalChainFiltersType>(filters);
@@ -49,6 +52,15 @@ export function ApprovalChainFilters({
     [localFilters, onFilterChange]
   );
 
+  const handleEntityTypeChange = useCallback(
+    (entityType?: string) => {
+      const newFilters = { ...localFilters, entityType: entityType || undefined };
+      setLocalFilters(newFilters);
+      onFilterChange(newFilters);
+    },
+    [localFilters, onFilterChange]
+  );
+
   const handleReset = useCallback(() => {
     const resetFilters: ApprovalChainFiltersType = {};
     setLocalFilters(resetFilters);
@@ -68,6 +80,23 @@ export function ApprovalChainFilters({
             onChange={e => handleSearch(e.target.value)}
             onSearch={handleSearch}
             allowClear
+          />
+        </Col>
+
+        <Col xs={24} sm={12} md={8} lg={6}>
+          <div className="mb-2">
+            <span className="text-sm font-medium text-gray-700">适用对象</span>
+          </div>
+          <Select
+            placeholder="选择适用对象"
+            value={localFilters.entityType}
+            onChange={handleEntityTypeChange}
+            style={{ width: '100%' }}
+            allowClear
+            options={Object.entries(ENTITY_TYPE_LABELS).map(([value, label]) => ({
+              value,
+              label,
+            }))}
           />
         </Col>
 
@@ -99,6 +128,11 @@ export function ApprovalChainFilters({
             <Button icon={<Filter className="w-4 h-4" />} onClick={handleReset}>
               重置
             </Button>
+            {onCreate && (
+              <Button type="primary" icon={<Plus className="w-4 h-4" />} onClick={onCreate}>
+                创建审批链
+              </Button>
+            )}
           </Space>
         </Col>
       </Row>

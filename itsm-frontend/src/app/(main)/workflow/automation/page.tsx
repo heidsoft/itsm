@@ -46,6 +46,7 @@ import type {
 import { TicketAutomationRuleApi } from '@/lib/api/ticket-automation-rule-api';
 import { isPermissionDeniedError } from '@/lib/api/http-client';
 import { useI18n } from '@/lib/i18n';
+import { formatDateTime } from '@/lib/formatters';
 
 const { Title, Text } = Typography;
 const WorkflowAutomationPage = () => {
@@ -253,7 +254,7 @@ const WorkflowAutomationPage = () => {
       key: 'createdAt',
       width: 150,
       render: (date: string) => (
-        <div className='text-sm'>{new Date(date).toLocaleDateString('zh-CN')}</div>
+        <div className='text-sm'>{formatDateTime(date)}</div>
       ),
     },
     {

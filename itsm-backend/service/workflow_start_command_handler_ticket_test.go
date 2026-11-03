@@ -80,14 +80,24 @@ func createTicketRouteCommand(t *testing.T, client *ent.Client, ctx context.Cont
 // deployTicketDefinition 部署流程定义并返回它，便于用例再把 is_active 关掉。
 func deployTicketDefinition(t *testing.T, client *ent.Client, ctx context.Context, tenantID int, key string) *ent.ProcessDefinition {
 	t.Helper()
+	return deployTicketDefinitionWithCategory(t, client, ctx, tenantID, key, "")
+}
+
+// deployTicketDefinitionWithCategory 部署带 domain category 的定义，用于验证跨域绑定拦截。
+func deployTicketDefinitionWithCategory(t *testing.T, client *ent.Client, ctx context.Context, tenantID int, key, category string) *ent.ProcessDefinition {
+	t.Helper()
 	dep, err := client.ProcessDeployment.Create().
 		SetDeploymentID(fmt.Sprintf("dep-ticket-%s-%d", key, tenantID)).
 		SetDeploymentName("deploy " + key).
 		SetTenantID(tenantID).Save(ctx)
 	require.NoError(t, err)
-	def, err := client.ProcessDefinition.Create().
+	create := client.ProcessDefinition.Create().
 		SetKey(key).SetName("流程 " + key).SetBpmnXML([]byte("<definitions/>")).
-		SetDeploymentID(dep.ID).SetTenantID(tenantID).Save(ctx)
+		SetDeploymentID(dep.ID).SetTenantID(tenantID)
+	if category != "" {
+		create = create.SetCategory(category)
+	}
+	def, err := create.Save(ctx)
 	require.NoError(t, err)
 	return def
 }
@@ -187,6 +197,43 @@ func TestWorkflowStart_TicketRouting(t *testing.T) {
 			assert.Equal(t, tc.wantKey, trigger.reqs[0].ProcessDefinitionKey)
 			assert.Equal(t, dto.BusinessTypeTicket, trigger.reqs[0].BusinessType)
 			assert.Equal(t, tenantID, trigger.reqs[0].TenantID)
+		})
+	}
+}
+
+// TestWorkflowStart_TicketRouting_RejectsOtherDomainFlow 指向别的域流程的绑定必须回退：
+// incident_emergency_flow 的 incident_task 按 incident_id 写库，工单聚合拿不到该变量，
+// 8 次重试后进死信（2026-10-31 本地 prod 栈实测：ticket→incident_emergency_flow）。
+func TestWorkflowStart_TicketRouting_RejectsOtherDomainFlow(t *testing.T) {
+	for _, tc := range []struct {
+		name       string
+		viaBinding bool
+	}{
+		{"类型绑定指向事件流程", true},
+		{"payload 显式指定事件流程", false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			client, ctx, tenantID, requesterID := newTicketRouteFixture(t)
+			deployTicketDefinitionWithCategory(t, client, ctx, tenantID, "incident_emergency_flow", "incident")
+
+			tkt := createTicketForRouteTest(t, client, ctx, tenantID, requesterID, "medium")
+			payload := map[string]interface{}{"businessType": "ticket", "businessId": tkt.ID}
+			if tc.viaBinding {
+				addTicketBinding(t, client, ctx, tenantID, "incident_emergency_flow")
+			} else {
+				payload["workflowDefinitionKey"] = "incident_emergency_flow"
+			}
+			cmd := createTicketRouteCommand(t, client, ctx, tkt.ID, tenantID, payload)
+
+			trigger := &fakeWorkflowTrigger{}
+			handler := NewWorkflowStartCommandHandler(client, trigger, NewProcessResolver(client, nil), zaptest.NewLogger(t).Sugar())
+			require.NoError(t, handler.Handle(ctx, cmd))
+
+			require.Len(t, trigger.reqs, 1)
+			assert.Equal(t, "ticket_general_flow", trigger.reqs[0].ProcessDefinitionKey)
+			assert.Equal(t, tkt.ID, trigger.reqs[0].Variables["ticket_id"])
+			_, leaked := trigger.reqs[0].Variables["incident_id"]
+			assert.False(t, leaked, "工单流程变量不得带事件域 ID")
 		})
 	}
 }

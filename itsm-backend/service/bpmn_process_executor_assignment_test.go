@@ -207,3 +207,60 @@ func TestCreateUserTaskPersistsUnassignedMarker(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, 1, nilAssignee, "未指派任务的 assignee 必须是 NULL，认领路径依赖 AssigneeIsNil")
 }
+
+func TestResolveTaskAssignmentApprovalPlanSuppliesLevelApprovers(t *testing.T) {
+	engine, ctx, client, tenantID, instance := newAssignmentTestEnv(t, "approval-plan-level")
+	requester := newAssignmentUser(t, client, tenantID, "requester")
+	manager := newAssignmentUser(t, client, tenantID, "manager")
+	itApprover := newAssignmentUser(t, client, tenantID, "it-approver")
+	setAssignmentRequester(instance, requester)
+	instance.Variables["approval_plan"] = []interface{}{
+		map[string]interface{}{"level": 1, "approver_ids": []interface{}{float64(manager.ID)}, "threshold": 1},
+		map[string]interface{}{"level": 2, "approver_ids": []interface{}{float64(itApprover.ID)}, "threshold": 1},
+	}
+
+	assignment := engine.resolveTaskAssignment(ctx, client, instance, &BPMNUserTask{
+		ID: "Approval_L2", Name: "IT 审批", TaskPurpose: "approval", ApprovalLevel: 2,
+	})
+
+	assert.Equal(t, taskAssignmentPool, assignment.state)
+	assert.Equal(t, "approval_plan", assignment.source)
+	assert.Equal(t, strconv.Itoa(itApprover.ID), assignment.candidateUsers, "只取本级审批人，不得混入其他层级")
+}
+
+func TestResolveTaskAssignmentApprovalPlanFiltersRequester(t *testing.T) {
+	engine, ctx, client, tenantID, instance := newAssignmentTestEnv(t, "approval-plan-filter")
+	requester := newAssignmentUser(t, client, tenantID, "requester")
+	manager := newAssignmentUser(t, client, tenantID, "manager")
+	setAssignmentRequester(instance, requester)
+	instance.Variables["approval_plan"] = []interface{}{
+		map[string]interface{}{"level": 1, "approver_ids": []interface{}{requester.Username, manager.Username}, "threshold": 2},
+	}
+
+	assignment := engine.resolveTaskAssignment(ctx, client, instance, &BPMNUserTask{
+		ID: "Approval_L1", Name: "经理审批", TaskPurpose: "approval", ApprovalLevel: 1,
+	})
+
+	assert.Equal(t, taskAssignmentPool, assignment.state)
+	assert.Equal(t, "approval_plan", assignment.source)
+	assert.Equal(t, manager.Username, assignment.candidateUsers)
+	assert.Equal(t, "requester_filtered_from_pool", assignment.reason)
+}
+
+func TestResolveTaskAssignmentApprovalPlanMissingLevelStaysUnassigned(t *testing.T) {
+	engine, ctx, client, tenantID, instance := newAssignmentTestEnv(t, "approval-plan-missing-level")
+	requester := newAssignmentUser(t, client, tenantID, "requester")
+	manager := newAssignmentUser(t, client, tenantID, "manager")
+	setAssignmentRequester(instance, requester)
+	instance.Variables["approval_plan"] = []interface{}{
+		map[string]interface{}{"level": 1, "approver_ids": []interface{}{float64(manager.ID)}, "threshold": 1},
+	}
+
+	assignment := engine.resolveTaskAssignment(ctx, client, instance, &BPMNUserTask{
+		ID: "Approval_L2", Name: "IT 审批", TaskPurpose: "approval", ApprovalLevel: 2,
+	})
+
+	assert.Equal(t, taskAssignmentUnassigned, assignment.state)
+	assert.Empty(t, assignment.assignee, "审批计划缺层级时不得回退到发起人")
+	assert.Equal(t, "no_approver_available", assignment.reason)
+}

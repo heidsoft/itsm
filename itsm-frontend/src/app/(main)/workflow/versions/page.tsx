@@ -10,6 +10,7 @@ import { LoadingEmptyError } from '@/components/ui/LoadingEmptyError';
 import { ManagementNotice, ManagementPageHeader } from '@/components/ui/ManagementPageHeader';
 import { StatsOverview } from '@/components/ui/StatsOverview';
 import { WorkflowAPI } from '@/lib/api/workflow-api';
+import { formatDateTime as formatStandardDateTime } from '@/lib/formatters';
 
 type VersionRow = {
   id: string;
@@ -22,7 +23,8 @@ type VersionRow = {
   updatedAt: string;
 };
 
-const formatDateTime = (value?: string) => (value ? new Date(value).toLocaleString('zh-CN') : '-');
+// 全站时间统一为 YYYY-MM-DD HH:mm，避免 zh-CN locale 的斜杠格式与其它页并存。
+const formatDateTime = (value?: string) => formatStandardDateTime(value) || '-';
 
 // 工作流版本状态映射
 const workflowVersionStatusMap: Record<string, { text: string; color: string }> = {

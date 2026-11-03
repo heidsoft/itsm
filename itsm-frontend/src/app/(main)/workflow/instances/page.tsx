@@ -12,6 +12,7 @@ import { StatsOverview } from '@/components/ui/StatsOverview';
 import { WorkflowApi } from '@/lib/api/workflow-api';
 import { WorkflowInstanceDetail } from '@/components/workflow/WorkflowInstanceDetail';
 import type { WorkflowDefinition } from '@/types/workflow';
+import { formatDateTime } from '@/lib/formatters';
 
 type InstanceRow = {
   id: string;
@@ -39,15 +40,6 @@ const statusTextMap: Record<string, string> = {
   failed: '失败',
 };
 
-const formatDateTime = (value?: string | Date): string => {
-  if (!value) return '-';
-  const date = typeof value === 'string' ? new Date(value) : value;
-  if (Number.isNaN(date.getTime()) || date.getTime() < 0) {
-    return '-';
-  }
-  return date.toLocaleString('zh-CN');
-};
-
 export default function WorkflowInstancesPage() {
   return (
     <Suspense fallback={<div className="p-6 text-center text-gray-500">加载中…</div>}>
@@ -60,6 +52,10 @@ function WorkflowInstancesContent() {
   const { message, modal } = App.useApp();
   const searchParams = useSearchParams();
   const urlWorkflowId = searchParams.get('workflowId') || searchParams.get('processDefinitionKey') || '';
+  // 「查看流程实例」从业务详情跳转时会带 businessKey（如 ticket:42）+ instanceId，
+  // 后端 GET /bpmn/process-instances 支持 businessKey 精确过滤，用它收敛到该单据的实例。
+  const urlBusinessKey = searchParams.get('businessKey') || '';
+  const urlInstanceId = searchParams.get('instanceId') || '';
   const [loading, setLoading] = useState(false);
   const [instances, setInstances] = useState<InstanceRow[]>([]);
   const [stats, setStats] = useState({
@@ -98,6 +94,7 @@ function WorkflowInstancesContent() {
       const [instanceResponse, statsResponse] = await Promise.all([
         WorkflowApi.getInstances({
           workflowId: keyword || undefined,
+          businessKey: urlBusinessKey || undefined,
           status,
           page: 1,
           pageSize: 50,
@@ -110,10 +107,8 @@ function WorkflowInstancesContent() {
 
       const rows = (instanceResponse.instances || []).map(instance => ({
         id: instance.id,
-        businessKey:
-          (instance as unknown as Record<string, string>).businessKey ||
-          instance.workflowId ||
-          '-',
+        // 业务键缺失时明确显示 '-',不得用流程 Key 冒充业务键。
+        businessKey: instance.businessKey || '-',
         processDefinitionKey: instance.workflowId || '-',
         status: String(instance.status),
         startTime: instance.startTime?.toISOString(),
@@ -187,7 +182,15 @@ function WorkflowInstancesContent() {
 
   useEffect(() => {
     loadData();
-  }, [keyword, status]);
+  }, [keyword, status, urlBusinessKey]);
+
+  // 从业务详情带 instanceId 跳转时直接打开该实例详情，而不是只落在实例列表。
+  useEffect(() => {
+    if (!urlInstanceId) return;
+    setSelectedInstanceId(urlInstanceId);
+    setSelectedInstanceSummary(null);
+    setDetailModalVisible(true);
+  }, [urlInstanceId]);
 
   const columns = useMemo(
     () => [
@@ -222,14 +225,14 @@ function WorkflowInstancesContent() {
         dataIndex: 'startTime',
         key: 'startTime',
         width: 180,
-        render: (value: string) => formatDateTime(value),
+        render: (value: string) => formatDateTime(value) || '-',
       },
       {
         title: '结束时间',
         dataIndex: 'endTime',
         key: 'endTime',
         width: 180,
-        render: (value: string) => formatDateTime(value),
+        render: (value: string) => formatDateTime(value) || '-',
       },
       {
         title: '操作',

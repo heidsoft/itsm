@@ -432,7 +432,11 @@ export default function ApprovalsCenterPage() {
       key: 'processDefinitionKey',
       width: 180,
       responsive: ['lg'],
-      render: (key: string) => key ? <Tag icon={<GitBranch className="w-3 h-3 inline mr-1" />}>{key}</Tag> : '-',
+      // 优先显示后端回填的流程定义名；定义缺失回退 Key，不丢排查信息
+      render: (key: string, record: BpmnMyTask) => {
+        const label = record.processDefinitionName || key;
+        return label ? <Tag icon={<GitBranch className="w-3 h-3 inline mr-1" />}>{label}</Tag> : '-';
+      },
     },
     {
       title: t('approvalCenter.colStatus'),

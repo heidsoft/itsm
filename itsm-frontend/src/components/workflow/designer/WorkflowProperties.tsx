@@ -24,6 +24,7 @@ import {
 const { Text } = Typography;
 import { Info } from 'lucide-react';
 import { Eye, GitBranch, Users } from 'lucide-react';
+import { formatDateTime } from '@/lib/formatters';
 import type {
   WorkflowDefinition,
   WorkflowVersion,
@@ -163,7 +164,7 @@ export default function WorkflowProperties({
                       <Text strong>版本 {version.version}</Text>
                       <div className="text-sm text-gray-500 mt-1">{version.changeLog}</div>
                       <div className="text-xs text-gray-400 mt-1">
-                        {new Date(version.createdAt).toLocaleString()} - {version.createdBy}
+                        {formatDateTime(version.createdAt)} - {version.createdBy}
                       </div>
                     </div>
                     <Space>

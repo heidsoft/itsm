@@ -39,7 +39,9 @@ interface WorkflowDesignerProps {
   initialXML?: string;
 }
 
-// 默认 BPMN XML
+// 默认 BPMN XML：真正的空白流程（开始 → 结束）
+// 预置无受理人的用户任务会让新建流程立刻产生「未配置执行人 / 未声明 taskPurpose」等校验告警，
+// 空白模板应当能直接存为草稿，由用户按需拖入节点。
 const getDefaultBPMNXML = () => {
   return `<?xml version="1.0" encoding="UTF-8"?>
 <bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
@@ -48,42 +50,33 @@ const getDefaultBPMNXML = () => {
                   xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
                   id="Definitions_1"
                   targetNamespace="http://bpmn.io/schema/bpmn">
-  <bpmn:process id="Process_1" isExecutable="true">
+  <bpmn:process id="Process_1" name="服务流程" isExecutable="true">
     <bpmn:startEvent id="StartEvent_1" name="开始">
       <bpmn:outgoing>Flow_1</bpmn:outgoing>
     </bpmn:startEvent>
-    <bpmn:userTask id="UserTask_1" name="提交申请">
-      <bpmn:incoming>Flow_1</bpmn:incoming>
-      <bpmn:outgoing>Flow_2</bpmn:outgoing>
-    </bpmn:userTask>
-    <bpmn:userTask id="UserTask_2" name="审核">
-      <bpmn:incoming>Flow_2</bpmn:incoming>
-      <bpmn:outgoing>Flow_3</bpmn:outgoing>
-    </bpmn:userTask>
     <bpmn:endEvent id="EndEvent_1" name="结束">
-      <bpmn:incoming>Flow_3</bpmn:incoming>
+      <bpmn:incoming>Flow_1</bpmn:incoming>
     </bpmn:endEvent>
-    <bpmn:sequenceFlow id="Flow_1" sourceRef="StartEvent_1" targetRef="UserTask_1" />
-    <bpmn:sequenceFlow id="Flow_2" sourceRef="UserTask_1" targetRef="UserTask_2" />
-    <bpmn:sequenceFlow id="Flow_3" sourceRef="UserTask_2" targetRef="EndEvent_1" />
+    <bpmn:sequenceFlow id="Flow_1" sourceRef="StartEvent_1" targetRef="EndEvent_1" />
   </bpmn:process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_1">
       <bpmndi:BPMNShape id="StartEvent_1_di" bpmnElement="StartEvent_1">
-        <dc:Bounds x="152" y="102" width="36" height="36" />
+        <dc:Bounds x="180" y="160" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="158" y="145" width="24" height="14" />
+          <dc:Bounds x="186" y="203" width="24" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="UserTask_1_di" bpmnElement="UserTask_1">
-        <dc:Bounds x="240" y="80" width="100" height="80" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="UserTask_2_di" bpmnElement="UserTask_2">
-        <dc:Bounds x="400" y="80" width="100" height="80" />
-      </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="EndEvent_1_di" bpmnElement="EndEvent_1">
-        <dc:Bounds x="552" y="102" width="36" height="36" />
+        <dc:Bounds x="432" y="160" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="439" y="203" width="24" height="14" />
+        </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_1_di" bpmnElement="Flow_1">
+        <di:waypoint x="216" y="178" />
+        <di:waypoint x="432" y="178" />
+      </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>
 </bpmn:definitions>`;

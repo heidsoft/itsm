@@ -31,6 +31,7 @@ import type {
   QueryAuditLogsRequest,
 } from '@/lib/api/bpmn-dashboard-api';
 import BPMNDashboardApi from '@/lib/api/bpmn-dashboard-api';
+import { formatDateTime } from '@/lib/formatters';
 import { useI18n } from '@/lib/i18n';
 
 const { RangePicker } = DatePicker;
@@ -131,7 +132,7 @@ export default function AuditLogsPage() {
       dataIndex: 'timestamp',
       key: 'timestamp',
       width: 180,
-      render: (val: string) => new Date(val).toLocaleString(),
+      render: (val: string) => formatDateTime(val) || '-',
     },
     {
       title: t('bpmn.audit.action') || '操作',
@@ -303,7 +304,7 @@ export default function AuditLogsPage() {
         {selectedLog && (
           <Descriptions column={2} bordered size="small">
             <Descriptions.Item label="时间" span={2}>
-              {new Date(selectedLog.timestamp).toLocaleString()}
+              {formatDateTime(selectedLog.timestamp) || '-'}
             </Descriptions.Item>
             <Descriptions.Item label="操作">
               <Tag color={getActionColor(selectedLog.action)}>{selectedLog.action}</Tag>
@@ -371,7 +372,7 @@ export default function AuditLogsPage() {
                   <div className="text-sm text-gray-500 mt-1">
                     <Space>
                       <User size={12} /> {log.userName}
-                      <Clock size={12} /> {new Date(log.timestamp).toLocaleString()}
+                      <Clock size={12} /> {formatDateTime(log.timestamp) || '-'}
                     </Space>
                   </div>
                 </div>

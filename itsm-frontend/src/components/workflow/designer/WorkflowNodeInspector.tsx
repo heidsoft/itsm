@@ -309,7 +309,7 @@ export default function WorkflowNodeInspector({
                 type="text"
                 size="small"
                 icon={<RefreshCw className="w-3 h-3" />}
-                aria-label="重读节点属性"
+                aria-label="刷新节点属性"
                 onClick={onRefresh}
               />
             </Tooltip>
@@ -384,6 +384,14 @@ export default function WorkflowNodeInspector({
     (selection.businessObject?.eventDefinitions as BpmnEventDefinition[])?.some(d => d.$type === 'bpmn:ConditionalEventDefinition');
   const isTerminateEvent = (selection.businessObject?.eventDefinitions as BpmnEventDefinition[])?.some(d => d.$type === 'bpmn:TerminateEventDefinition');
   const isCancelEvent = (selection.businessObject?.eventDefinitions as BpmnEventDefinition[])?.some(d => d.$type === 'bpmn:CancelEventDefinition');
+
+  // 边界/开始事件仅在未挂接其它互斥事件定义时提供「定时」开关，
+  // 开关状态必须回读真实 TimerEventDefinition，否则关闭后无法再次生效。
+  const hasNonTimerEventDefinition = Boolean(
+    isMessageEvent || isSignalEvent || isErrorEvent || isEscalationEvent ||
+    isConditionalEvent || isTerminateEvent || isCancelEvent
+  );
+  const currentHasTimerDefinition = hasTimerDefinition(bo);
 
   // 通用属性
   const currentName = (bo.name as string) || '';
@@ -465,8 +473,12 @@ export default function WorkflowNodeInspector({
 
   // 调用活动属性
   const currentCalledElement = (bo.calledElement as string) || '';
-  const currentInheritVariables = (bo.inheritVariables as boolean) || true;
-  const currentInheritBusinessKey = (bo.inheritBusinessKey as boolean) || true;
+  // 未配置时默认开启（与调用活动的期望默认一致）；显式写 false 必须保持 false，
+  // 不能用 `|| true` 把关闭状态吞掉。
+  const currentInheritVariables =
+    bo.inheritVariables === undefined ? true : Boolean(bo.inheritVariables);
+  const currentInheritBusinessKey =
+    bo.inheritBusinessKey === undefined ? true : Boolean(bo.inheritBusinessKey);
 
   // 事务子流程属性
   const currentTransactionMethod = (bo.transactionMethod as string) || 'standard';
@@ -591,7 +603,7 @@ export default function WorkflowNodeInspector({
             icon={<RefreshCw className="w-3 h-3" />}
             onClick={onRefresh}
           >
-            重读
+            刷新
           </Button>
         )
       }
@@ -1372,7 +1384,7 @@ export default function WorkflowNodeInspector({
           <>
             <Divider className="my-2" />
 
-            {(isBoundaryEvent || isStartEvent) && !isTimerEvent && (
+            {(isBoundaryEvent || isStartEvent) && !hasNonTimerEventDefinition && (
               <div className="mb-2">
                 <Text strong className="text-sm flex items-center mb-2">
                   <Clock className="w-3.5 h-3.5 mr-1" />
@@ -1381,13 +1393,22 @@ export default function WorkflowNodeInspector({
                 <Switch
                   size="small"
                   aria-label={isBoundaryEvent ? '定时边界事件' : '定时启动事件'}
-                  checked={false}
+                  checked={currentHasTimerDefinition}
                   onChange={checked => {
-                    if (checked) apply({ timeDuration: 'PT1H' });
+                    if (checked) {
+                      apply({ timeDuration: 'PT1H', timeDate: '', timeCycle: '' });
+                    } else {
+                      // 清空三种表达式后 normalizeTimerExpressions 会移除 TimerEventDefinition
+                      apply({ timeDuration: '', timeDate: '', timeCycle: '' });
+                    }
                   }}
                 />
                 <Text type="secondary" className="text-xs ml-2">
-                  {isBoundaryEvent ? '开启后任务超时将中断并走异常路径' : '开启后按周期自动启动流程'}
+                  {currentHasTimerDefinition
+                    ? '已启用，关闭将移除定时器配置'
+                    : isBoundaryEvent
+                      ? '开启后任务超时将中断并走异常路径'
+                      : '开启后按周期自动启动流程'}
                 </Text>
               </div>
             )}

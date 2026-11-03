@@ -367,6 +367,8 @@ export interface WorkflowInstance {
   version: number;
   status: WorkflowInstanceStatus;
   ticketId?: number;
+  /** 业务键（如 ticket:42），由启动流程时写入，实例列表按它回溯业务单据 */
+  businessKey?: string;
   currentNodeId?: string;
   variables: Record<string, any>;
   startTime: Date;

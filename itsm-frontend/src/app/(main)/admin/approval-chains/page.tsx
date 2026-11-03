@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useCallback, useEffect } from 'react';
-import { App, Modal, Tag, Typography } from 'antd';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
+import { Alert, App, Tag, Typography } from 'antd';
 import { ApprovalChainStatsCards } from './components/ApprovalChainStats';
 import { ApprovalChainFilters } from './components/ApprovalChainFilters';
 import { ApprovalChainTable } from './components/ApprovalChainTable';
@@ -10,10 +10,18 @@ import type {
   ApprovalChain,
   ApprovalChainFilters as Filters,
   ApprovalChainStats,
+  ApprovalStep,
   ApprovalType,
   FallbackAction,
 } from '@/types/approval-chain';
+import {
+  APPROVAL_TYPE_LABELS,
+  FALLBACK_ACTION_LABELS,
+  entityTypeLabel,
+} from '@/types/approval-chain';
 import { httpClient } from '@/lib/api/http-client';
+import { UserApi } from '@/lib/api/user-api';
+import { RoleAPI } from '@/lib/api/role-api';
 
 const { Text } = Typography;
 
@@ -67,7 +75,7 @@ const normalizeChain = (chain: BackendApprovalChain): ApprovalChain => ({
     id: index + 1,
     chainId: chain.id,
     level: step.level || index + 1,
-    stepOrder: step.level || index + 1,
+    stepOrder: index + 1,
     stepName: step.name || `步骤 ${index + 1}`,
     approverType: step.role ? 'role' : 'user',
     approverId: step.approverId || 0,
@@ -92,7 +100,8 @@ const toBackendPayload = (data: ApprovalChainSubmitData, fallback?: ApprovalChai
   entityType: data.entityType || fallback?.entityType || 'ticket',
   status: data.isActive ?? fallback?.isActive ? 'active' : 'inactive',
   chain: (data.steps || fallback?.steps || []).map((step, index) => ({
-    level: index + 1,
+    // 同层级步骤由后端合并为一个会签/或签层，level 必须按用户配置保留
+    level: step.level || index + 1,
     approverId: step.approverType === 'user' && step.approverId > 0 ? step.approverId : undefined,
     role: step.approverType === 'role' ? step.approverName : '',
     name: step.stepName || `步骤 ${index + 1}`,
@@ -109,7 +118,7 @@ const toBackendPayload = (data: ApprovalChainSubmitData, fallback?: ApprovalChai
 });
 
 export default function ApprovalChainsPage() {
-  const { message } = App.useApp();
+  const { message, modal } = App.useApp();
 
   // 临时错误处理函数
   const handleError = (error: unknown, errorMessage?: string) => {
@@ -232,51 +241,100 @@ export default function ApprovalChainsPage() {
     setModalVisible(true);
   }, []);
 
-  // 处理查看审批链
-  const handleViewChain = useCallback((chain: ApprovalChain) => {
-    Modal.info({
-      title: '审批链详情',
-      width: 640,
-      content: (
-        <div className="space-y-3 pt-2">
-          <p>
-            <Text strong>名称：</Text>
-            {chain.name}
-          </p>
-          <p>
-            <Text strong>适用对象：</Text>
-            <Tag>{chain.entityType || 'ticket'}</Tag>
-          </p>
-          <p>
-            <Text strong>状态：</Text>
-            <Tag color={chain.isActive ? 'green' : 'red'}>{chain.isActive ? '启用' : '停用'}</Tag>
-          </p>
-          <p>
-            <Text strong>描述：</Text>
-            {chain.description || '-'}
-          </p>
-          <div>
-            <Text strong>审批步骤：</Text>
-            <ol className="mt-2 list-decimal pl-5">
-              {(chain.steps ?? []).map(step => (
-                <li key={`${chain.id}-${step.stepOrder}`}>
-                  {step.stepName}：
-                  {step.approverType === 'user'
-                    ? step.approverName || (step.approverId ? `用户 #${step.approverId}` : '未指定审批人')
-                    : step.approverName || '未指定审批角色'}
-                </li>
-              ))}
-            </ol>
-          </div>
-        </div>
-      ),
-    });
+  // 审批人/角色名称映射：仅在首次查看详情时拉取并缓存，避免列表页常态 N+1 请求
+  const referenceRef = useRef<{ users: Record<number, string>; roles: Record<string, string> } | null>(
+    null
+  );
+
+  const loadReferenceData = useCallback(async () => {
+    if (referenceRef.current) return referenceRef.current;
+    try {
+      const [userResponse, roleResponse] = await Promise.all([
+        UserApi.getUsers({ page: 1, pageSize: 200 }),
+        RoleAPI.getRoles({ page: 1, pageSize: 200 }),
+      ]);
+      const users: Record<number, string> = {};
+      for (const user of userResponse.items || []) {
+        users[user.id] = user.name || user.username;
+      }
+      const roles: Record<string, string> = {};
+      for (const role of roleResponse.items) {
+        roles[role.code || role.name] = role.name;
+      }
+      referenceRef.current = { users, roles };
+    } catch {
+      // 名称解析失败时回退显示 ID / 角色 code，不阻断查看详情
+      referenceRef.current = { users: {}, roles: {} };
+    }
+    return referenceRef.current;
   }, []);
+
+  const approverLabel = useCallback(
+    (
+      step: ApprovalStep,
+      maps: { users: Record<number, string>; roles: Record<string, string> }
+    ): string => {
+      if (step.approverType === 'role') {
+        return maps.roles[step.approverName] || step.approverName || '未指定审批角色';
+      }
+      return maps.users[step.approverId] || (step.approverId ? `用户 #${step.approverId}` : '未指定审批人');
+    },
+    []
+  );
+
+  // 处理查看审批链
+  const handleViewChain = useCallback(
+    async (chain: ApprovalChain) => {
+      const maps = await loadReferenceData();
+      modal.info({
+        title: '审批链详情',
+        width: 640,
+        content: (
+          <div className="space-y-3 pt-2">
+            <p>
+              <Text strong>名称：</Text>
+              {chain.name}
+            </p>
+            <p>
+              <Text strong>适用对象：</Text>
+              <Tag>{entityTypeLabel(chain.entityType)}</Tag>
+            </p>
+            <p>
+              <Text strong>状态：</Text>
+              <Tag color={chain.isActive ? 'green' : 'red'}>{chain.isActive ? '启用' : '停用'}</Tag>
+            </p>
+            <p>
+              <Text strong>描述：</Text>
+              {chain.description || '-'}
+            </p>
+            <div>
+              <Text strong>审批步骤：</Text>
+              <ol className="mt-2 list-decimal pl-5">
+                {(chain.steps ?? []).map(step => (
+                  <li key={`${chain.id}-${step.stepOrder}`}>
+                    {step.stepName}（层级 {step.level}）：{approverLabel(step, maps)}
+                    {step.approvalType
+                      ? ` · ${APPROVAL_TYPE_LABELS[step.approvalType as ApprovalType] ?? step.approvalType}`
+                      : ''}
+                    {step.threshold ? ` · 阈值 ${step.threshold}` : ''}
+                    {step.fallbackAction
+                      ? ` · 兜底：${FALLBACK_ACTION_LABELS[step.fallbackAction as FallbackAction]}`
+                      : ''}
+                  </li>
+                ))}
+              </ol>
+            </div>
+          </div>
+        ),
+      });
+    },
+    [loadReferenceData, approverLabel, modal]
+  );
 
   // 处理删除审批链
   const handleDeleteChain = useCallback(
     (chain: ApprovalChain) => {
-      Modal.confirm({
+      modal.confirm({
         title: '确认删除',
         content: `确定要删除审批链"${chain.name}"吗？此操作不可撤销。`,
         okText: '确认删除',
@@ -294,7 +352,7 @@ export default function ApprovalChainsPage() {
         },
       });
     },
-    [loadChains, loadStats]
+    [loadChains, loadStats, modal, message]
   );
 
   // 处理切换状态
@@ -334,31 +392,57 @@ export default function ApprovalChainsPage() {
     [loadChains, loadStats]
   );
 
-  // 处理批量删除
+  // 处理批量删除：部分失败必须保留失败项供重试（Promise.all 会在首个失败时丢掉其余结果）
   const handleBatchDelete = useCallback(
     (ids: React.Key[]) => {
-      Modal.confirm({
+      modal.confirm({
         title: '确认批量删除',
         content: `确定要删除选中的 ${ids.length} 个审批链吗？此操作不可撤销。`,
         okText: '确认删除',
         okType: 'danger',
         cancelText: '取消',
         onOk: async () => {
-          try {
-            await Promise.all(
-              ids.map(id => httpClient.delete(`/api/v1/approval-chains/${String(id)}`))
-            );
-            message.success('批量删除成功');
-            setSelectedRowKeys([]);
-            loadChains();
-            loadStats();
-          } catch (error) {
-            handleError(error, '批量删除失败');
+          const results = await Promise.allSettled(
+            ids.map(id =>
+              httpClient
+                .delete(`/api/v1/approval-chains/${String(id)}`)
+                .then(() => ({ id, ok: true as const }))
+                .catch((error: unknown) => ({ id, ok: false as const, error }))
+            )
+          );
+          const failedIds: React.Key[] = [];
+          let firstError: unknown = null;
+          results.forEach((result, index) => {
+            if (result.status === 'rejected') {
+              failedIds.push(ids[index]);
+              firstError = firstError ?? result.reason;
+              return;
+            }
+            if (result.value.ok) return;
+            // 用原始 ids 回填，避免从结果对象再取一次 key 造成类型扩散
+            failedIds.push(ids[index]);
+            firstError = firstError ?? result.value.error;
+          });
+
+          const successCount = ids.length - failedIds.length;
+          if (successCount > 0) {
+            message.success(`已删除 ${successCount} 个审批链`);
           }
+          if (failedIds.length > 0) {
+            const reason =
+              firstError instanceof Error && firstError.message ? `：${firstError.message}` : '';
+            message.error(`${failedIds.length} 个审批链删除失败，已保留选中项可重试${reason}`);
+            // 仅保留失败项，成功项不再参与后续批量操作
+            setSelectedRowKeys(failedIds);
+          } else {
+            setSelectedRowKeys([]);
+          }
+          loadChains();
+          loadStats();
         },
       });
     },
-    [loadChains, loadStats]
+    [loadChains, loadStats, modal, message]
   );
 
   // 处理模态框提交
@@ -399,6 +483,14 @@ export default function ApprovalChainsPage() {
 
   return (
     <div className="space-y-6">
+      {/* 定位说明：本页只配置 BPMN 审批节点的「审批人规则」，流程流转/分支/超时由流程设计器编排 */}
+      <Alert
+        type="info"
+        showIcon
+        title="本页配置 BPMN 审批节点的审批人规则（审批人/会签/或签/兜底），流程的流转、分支与超时请在「流程设计器」中编排。"
+        className="mb-4"
+      />
+
       {/* 统计卡片 */}
       <ApprovalChainStatsCards stats={stats} loading={statsLoading} />
 
@@ -407,6 +499,7 @@ export default function ApprovalChainsPage() {
         filters={filters}
         onFilterChange={handleFilterChange}
         onRefresh={handleRefresh}
+        onCreate={handleCreateChain}
         loading={loading}
       />
 

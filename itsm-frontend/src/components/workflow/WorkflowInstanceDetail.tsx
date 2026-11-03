@@ -18,16 +18,8 @@ import { ArrowLeft, Clock, MessageSquare, RefreshCw, User } from 'lucide-react';
 import { LoadingEmptyError } from '@/components/ui/LoadingEmptyError';
 import { WorkflowApi } from '@/lib/api/workflow-api';
 import BPMNDashboardApi, { type ProcessAuditLog } from '@/lib/api/bpmn-dashboard-api';
+import { formatDateTime } from '@/lib/formatters';
 import type { NodeInstance, WorkflowInstance } from '@/types/workflow';
-
-const formatDateTime = (value?: string | Date | null): string => {
-  if (!value) return '-';
-  const date = typeof value === 'string' ? new Date(value) : value;
-  if (Number.isNaN(date.getTime()) || date.getTime() < 0) {
-    return '-';
-  }
-  return date.toLocaleString('zh-CN');
-};
 
 const formatDuration = (ms: number): string => {
   if (!Number.isFinite(ms) || ms < 0) return '-';
@@ -54,12 +46,73 @@ const statusTextMap: Record<string, string> = {
 };
 
 const taskStatusColorMap: Record<string, string> = {
+  created: 'default',
+  assigned: 'cyan',
   pending: 'gold',
   inProgress: 'blue',
+  in_progress: 'blue',
   completed: 'green',
   failed: 'red',
   cancelled: 'gray',
   skipped: 'gray',
+};
+
+const taskStatusTextMap: Record<string, string> = {
+  created: '已创建',
+  pending: '待处理',
+  assigned: '已分配',
+  claimed: '已领取',
+  inprogress: '处理中',
+  completed: '已完成',
+  failed: '已失败',
+  cancelled: '已取消',
+  skipped: '已跳过',
+};
+
+// 节点类型在任务表里可能是 user_task（后端）或 userTask（BPMN），统一归一化后映射中文。
+const nodeTypeTextMap: Record<string, string> = {
+  startevent: '开始事件',
+  endevent: '结束事件',
+  usertask: '用户任务',
+  servicetask: '服务任务',
+  scripttask: '脚本任务',
+  manualtask: '人工任务',
+  exclusivegateway: '排他网关',
+  parallelgateway: '并行网关',
+  inclusivegateway: '包容网关',
+  eventbasedgateway: '事件网关',
+  subprocess: '子流程',
+  callactivity: '调用活动',
+};
+
+const normalizeType = (type?: string | null) => (type || '').replace(/[_-]/g, '').toLowerCase();
+
+const getNodeTypeText = (type?: string | null) => {
+  const normalized = normalizeType(type);
+  return nodeTypeTextMap[normalized] ?? (type || '-');
+};
+
+// 审计动作来自后端枚举（PROCESS_STARTED 等），直接 replace 下划线仍是英文，
+// 运维面板需要中文；未收录的动作保留原文（下划线转空格）作为确定性兜底。
+const auditActionTextMap: Record<string, string> = {
+  PROCESS_STARTED: '流程已启动',
+  PROCESS_COMPLETED: '流程已完成',
+  PROCESS_SUSPENDED: '流程已挂起',
+  PROCESS_RESUMED: '流程已恢复',
+  PROCESS_TERMINATED: '流程已终止',
+  TASK_CREATED: '任务已创建',
+  TASK_ASSIGNED: '任务已分配',
+  TASK_COMPLETED: '任务已完成',
+  TASK_FAILED: '任务失败',
+  TASK_SKIPPED: '任务已跳过',
+  VARIABLE_UPDATED: '变量已更新',
+  GATEWAY_PASSED: '网关已通过',
+  SEQUENCE_FLOW_TAKEN: '顺序流已执行',
+};
+
+const getAuditActionText = (action?: string | null) => {
+  if (!action) return '-';
+  return auditActionTextMap[action.toUpperCase()] ?? action.replace(/_/g, ' ');
 };
 
 const auditActionColorMap: Record<string, string> = {
@@ -182,14 +235,18 @@ export const WorkflowInstanceDetail: React.FC<WorkflowInstanceDetailProps> = ({
         dataIndex: 'nodeType',
         key: 'nodeType',
         width: 100,
-        render: (value: string) => (value ? value.replace('_', ' ') : '-'),
+        render: (value: string) => getNodeTypeText(value),
       },
       {
         title: '状态',
         dataIndex: 'status',
         key: 'status',
         width: 100,
-        render: (value: string) => <Tag color={taskStatusColorMap[value] || 'default'}>{value}</Tag>,
+        render: (value: string) => (
+          <Tag color={taskStatusColorMap[value] || 'default'}>
+            {taskStatusTextMap[normalizeType(value)] ?? value}
+          </Tag>
+        ),
       },
       {
         title: '处理人',
@@ -203,14 +260,14 @@ export const WorkflowInstanceDetail: React.FC<WorkflowInstanceDetailProps> = ({
         dataIndex: 'createdAt',
         key: 'createdAt',
         width: 180,
-        render: (value: string) => formatDateTime(value),
+        render: (value: string) => formatDateTime(value) || '-',
       },
       {
         title: '截止时间',
         dataIndex: 'dueDate',
         key: 'dueDate',
         width: 180,
-        render: (value: string) => (value ? formatDateTime(value) : '-'),
+        render: (value: string) => formatDateTime(value) || '-',
       },
     ],
     []
@@ -233,8 +290,8 @@ export const WorkflowInstanceDetail: React.FC<WorkflowInstanceDetailProps> = ({
                 {statusTextMap[summary.status] || summary.status}
               </Tag>
             </Descriptions.Item>
-            <Descriptions.Item label="启动时间">{formatDateTime(summary.startTime)}</Descriptions.Item>
-            <Descriptions.Item label="结束时间">{formatDateTime(summary.endTime)}</Descriptions.Item>
+            <Descriptions.Item label="启动时间">{formatDateTime(summary.startTime) || '-'}</Descriptions.Item>
+            <Descriptions.Item label="结束时间">{formatDateTime(summary.endTime) || '-'}</Descriptions.Item>
             {summary.startTime && (
               <Descriptions.Item label="持续时间">
                 {summary.endTime
@@ -289,7 +346,7 @@ export const WorkflowInstanceDetail: React.FC<WorkflowInstanceDetailProps> = ({
             <div className="max-h-[500px] overflow-y-auto pr-2">
               <Timeline
                 items={auditLogs.map((log, index) => {
-                  const actionColor = auditActionColorMap[log.action] || 'gray';
+                  const actionColor = auditActionColorMap[(log.action || '').toUpperCase()] || 'gray';
                   return {
                     color: actionColor,
                     children: (
@@ -298,12 +355,12 @@ export const WorkflowInstanceDetail: React.FC<WorkflowInstanceDetailProps> = ({
                           <Space>
                             <Badge color={actionColor} />
                             <span className="font-medium text-sm">
-                              {(log.action || '').replace(/_/g, ' ')}
+                              {getAuditActionText(log.action)}
                             </span>
                             {log.activityName && <Tag>{log.activityName}</Tag>}
                           </Space>
                           <span className="text-xs text-gray-500">
-                            {formatDateTime(log.timestamp)}
+                            {formatDateTime(log.timestamp) || '-'}
                           </span>
                         </div>
 

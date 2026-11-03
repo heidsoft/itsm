@@ -104,7 +104,8 @@ export interface BottleneckTask {
 export interface SlowestPath {
   pathId: string;
   pathName: string;
-  totalDuration: string;
+  /** 路径总耗时（秒）；后端不再输出 time.Duration 的纳秒原始值 */
+  totalDurationSeconds: number;
   taskCount: number;
   bottleneckTasks: string[];
   optimization: string;

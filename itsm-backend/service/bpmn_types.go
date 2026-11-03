@@ -106,17 +106,20 @@ type BPMNTimerEventDefinition struct {
 
 // BPMNUserTask 用户任务
 type BPMNUserTask struct {
-	ID                      string `xml:"id,attr"`
-	Name                    string `xml:"name,attr"`
-	Assignee                string `xml:"assignee,attr"`
-	CandidateUsers          string `xml:"candidateUsers,attr"`
-	CandidateGroups         string `xml:"candidateGroups,attr"`
-	Priority                int    `xml:"priority,attr"`
-	FormKey                 string `xml:"formKey,attr"`
-	DueDate                 string `xml:"dueDate,attr"`
-	TaskPurpose             string `xml:"taskPurpose,attr"`
-	ApprovalMode            string `xml:"approvalMode,attr"`
-	ApprovalThreshold       int    `xml:"approvalThreshold,attr"`
+	ID                string `xml:"id,attr"`
+	Name              string `xml:"name,attr"`
+	Assignee          string `xml:"assignee,attr"`
+	CandidateUsers    string `xml:"candidateUsers,attr"`
+	CandidateGroups   string `xml:"candidateGroups,attr"`
+	Priority          int    `xml:"priority,attr"`
+	FormKey           string `xml:"formKey,attr"`
+	DueDate           string `xml:"dueDate,attr"`
+	TaskPurpose       string `xml:"taskPurpose,attr"`
+	ApprovalMode      string `xml:"approvalMode,attr"`
+	ApprovalThreshold int    `xml:"approvalThreshold,attr"`
+	// ApprovalLevel 声明该审批节点对应审批链的第几级，审批人从流程变量
+	// approval_plan 按层级解析；0 表示不参与变量驱动（沿用静态分配）。
+	ApprovalLevel           int    `xml:"approvalLevel,attr"`
 	RejectStrategy          string `xml:"rejectStrategy,attr"`
 	TimeoutAction           string `xml:"timeoutAction,attr"`
 	AllowDelegate           bool   `xml:"allowDelegate,attr"`

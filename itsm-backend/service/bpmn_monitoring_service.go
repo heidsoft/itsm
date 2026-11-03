@@ -112,13 +112,16 @@ type BottleneckTask struct {
 }
 
 // SlowestPath 最慢路径
+//
+// totalDurationSeconds 以秒为单位输出：time.Duration 直接序列化会变成纳秒整数
+// （7200000000000），前端无法直接展示，也会让 API 契约与其它 *Seconds 字段不一致。
 type SlowestPath struct {
-	PathID          string        `json:"pathId"`
-	PathName        string        `json:"pathName"`
-	TotalDuration   time.Duration `json:"totalDuration"`
-	TaskCount       int           `json:"taskCount"`
-	BottleneckTasks []string      `json:"bottleneckTasks"`
-	Optimization    string        `json:"optimization"`
+	PathID               string   `json:"pathId"`
+	PathName             string   `json:"pathName"`
+	TotalDurationSeconds int64    `json:"totalDurationSeconds"`
+	TaskCount            int      `json:"taskCount"`
+	BottleneckTasks      []string `json:"bottleneckTasks"`
+	Optimization         string   `json:"optimization"`
 }
 
 // ResourceConstraint 资源约束
@@ -838,12 +841,12 @@ func (s *BPMNMonitoringService) identifySlowestPaths(ctx context.Context, req *P
 	// 由于路径分析比较复杂，这里提供基础框架
 	return []*SlowestPath{
 		{
-			PathID:          "path-1",
-			PathName:        "标准审批路径",
-			TotalDuration:   time.Hour * 2,
-			TaskCount:       5,
-			BottleneckTasks: []string{"审批任务"},
-			Optimization:    "优化审批流程，减少审批环节",
+			PathID:               "path-1",
+			PathName:             "标准审批路径",
+			TotalDurationSeconds: int64((time.Hour * 2) / time.Second),
+			TaskCount:            5,
+			BottleneckTasks:      []string{"审批任务"},
+			Optimization:         "优化审批流程，减少审批环节",
 		},
 	}, nil
 }

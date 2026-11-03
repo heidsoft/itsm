@@ -460,11 +460,14 @@ func (e *CustomProcessEngine) authorizeTaskActor(ctx context.Context, task *ent.
 }
 
 func (e *CustomProcessEngine) authorizeTaskActorWithClient(ctx context.Context, client *ent.Client, task *ent.ProcessTask) error {
+	// 系统推进（如交付完成后关闭「执行服务」待办）不校验个人归属，但仍保留操作人用于审计。
+	// 只认显式的 BPMN 系统推进标记；tenantctx 系统旁路会要求 RLS 走 BYPASSRLS 连接，
+	// 不能拿来绕归属校验。
+	if tenantctx.IsSystemBypass(ctx) || bpmn.IsBPMNSystemAdvance(ctx) {
+		return nil
+	}
 	userID, _ := ctx.Value(bpmn.BPMNUserIDContextKey).(int)
 	if userID <= 0 {
-		if tenantctx.IsSystemBypass(ctx) {
-			return nil
-		}
 		return common.NewBusinessError(common.UnauthorizedCode, "缺少执行人身份，无法校验任务归属", "")
 	}
 	actor, err := client.User.Query().Where(user.ID(userID)).Only(ctx)
@@ -820,6 +823,69 @@ func normalizeTaskPurpose(purpose string) string {
 	return "work"
 }
 
+// approvalPlanCandidateUsers 从流程变量 approval_plan 读取指定层级的审批人 CSV。
+//
+// 变量结构由应用层写入：
+//
+//	approval_plan = [{level, approver_ids, threshold, step}, ...]
+//
+// level <= 0 或变量缺失时返回 ok=false，调用方回退原有分配语义。
+func approvalPlanCandidateUsers(instance *ent.ProcessInstance, level int) (string, bool) {
+	if instance == nil || level <= 0 {
+		return "", false
+	}
+	raw, ok := instance.Variables["approval_plan"]
+	if !ok || raw == nil {
+		return "", false
+	}
+	entries, ok := raw.([]interface{})
+	if !ok {
+		return "", false
+	}
+	for _, entry := range entries {
+		planned, ok := entry.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		plannedLevel, ok := variableInt(planned["level"])
+		if !ok || plannedLevel != level {
+			continue
+		}
+		ids, ok := planned["approver_ids"].([]interface{})
+		if !ok {
+			return "", true
+		}
+		users := make([]string, 0, len(ids))
+		for _, id := range ids {
+			if value := variableUserIDFromValue(id); value != "" {
+				users = append(users, value)
+			}
+		}
+		return strings.Join(users, ","), true
+	}
+	return "", false
+}
+
+func variableUserIDFromValue(raw interface{}) string {
+	switch val := raw.(type) {
+	case float64:
+		if val > 0 {
+			return strconv.FormatFloat(val, 'f', 0, 64)
+		}
+	case int:
+		if val > 0 {
+			return strconv.Itoa(val)
+		}
+	case int64:
+		if val > 0 {
+			return strconv.FormatInt(val, 10)
+		}
+	case string:
+		return strings.TrimSpace(val)
+	}
+	return ""
+}
+
 // variableUserID 从流程变量提取用户标识；数字按整数格式化，字符串原样返回。
 func variableUserID(instance *ent.ProcessInstance, key string) string {
 	if instance == nil {
@@ -974,6 +1040,28 @@ func (e *CustomProcessEngine) resolveTaskAssignment(ctx context.Context, txc *en
 	}
 
 	if isApproval {
+		// 变量驱动：审批节点声明了 approvalLevel 时，审批人来自流程变量
+		// approval_plan 的对应层级。应用层在启动流程时把审批链解析结果写入变量，
+		// 引擎只负责按层级取人；声明了静态 assignee/candidate 的仍以 BPMN 为准。
+		if candidates, ok := approvalPlanCandidateUsers(instance, task.ApprovalLevel); ok {
+			filtered, removed := filterCandidateUsers(candidates, requesterIdentities)
+			result.candidateUsers = filtered
+			result.source = "approval_plan"
+			if removed && result.reason == "" {
+				result.reason = "requester_filtered_from_pool"
+			}
+			if strings.TrimSpace(filtered) != "" {
+				result.state = taskAssignmentPool
+				return result
+			}
+			result.state = taskAssignmentUnassigned
+			if result.reason == "" {
+				result.reason = "approval_plan_empty_after_filter"
+			}
+			e.logger.Warnw("审批计划未给出可用审批人，任务待指派",
+				"taskID", task.ID, "taskName", task.Name, "approvalLevel", task.ApprovalLevel)
+			return result
+		}
 		if candidate := variableUserID(instance, "assignee_id"); candidate != "" {
 			if requesterIdentities[candidate] {
 				result.reason = "self_approval_filtered"

@@ -52,6 +52,27 @@ const bottleneckTypeLabel: Record<string, string> = {
   resource: '资源受限',
 };
 
+// 严重程度、资源类型、约束类型都是后端枚举，统一映射中文，不直接回显原始值。
+const severityLabel: Record<string, string> = {
+  low: '低',
+  medium: '中',
+  high: '高',
+  critical: '严重',
+};
+
+const resourceTypeLabel: Record<string, string> = {
+  human: '人工',
+  system: '系统',
+  external: '外部',
+};
+
+const constraintTypeLabel: Record<string, string> = {
+  capacity: '处理容量',
+  skill: '技能匹配',
+  permission: '权限',
+  dependency: '外部依赖',
+};
+
 function formatSeconds(s: number): string {
   if (!s || s <= 0) return '-';
   if (s < 60) return `${s} 秒`;
@@ -74,7 +95,7 @@ export default function BottlenecksPage() {
     slowestPaths: Array<{
       pathId: string;
       pathName: string;
-      totalDuration: string;
+      totalDurationSeconds: number;
       taskCount: number;
       bottleneckTasks: string[];
       optimization: string;
@@ -315,7 +336,7 @@ export default function BottlenecksPage() {
               <Card>
                 <Statistic
                   title="严重程度"
-                  value={analysis?.severity?.toUpperCase() ?? '-'}
+                  value={severityLabel[analysis?.severity ?? 'low'] ?? analysis?.severity ?? '-'}
                   styles={{ content: { color: severityColorMap[analysis?.severity ?? 'low'] ?? 'green' } }}
                   prefix={<AlertTriangle />}
                 />
@@ -385,9 +406,10 @@ export default function BottlenecksPage() {
                   { title: '路径', dataIndex: 'pathName', key: 'pathName' },
                   {
                     title: '总耗时',
-                    dataIndex: 'totalDuration',
-                    key: 'totalDuration',
+                    dataIndex: 'totalDurationSeconds',
+                    key: 'totalDurationSeconds',
                     width: 120,
+                    render: (value: number) => formatSeconds(value),
                   },
                   { title: '任务数', dataIndex: 'taskCount', key: 'taskCount', width: 100 },
                   {
@@ -418,7 +440,12 @@ export default function BottlenecksPage() {
                 rowKey={r => `${r.resourceType}-${r.resourceName}`}
                 dataSource={analysis.resourceConstraints}
                 columns={[
-                  { title: '类型', dataIndex: 'resourceType', key: 'resourceType' },
+                  {
+                    title: '类型',
+                    dataIndex: 'resourceType',
+                    key: 'resourceType',
+                    render: (v: string) => resourceTypeLabel[v] ?? v,
+                  },
                   { title: '资源', dataIndex: 'resourceName', key: 'resourceName' },
                   {
                     title: '利用率',
@@ -438,7 +465,9 @@ export default function BottlenecksPage() {
                     title: '约束',
                     dataIndex: 'constraintType',
                     key: 'constraintType',
-                    render: (v: string) => <Tag color="orange">{v}</Tag>,
+                    render: (v: string) => (
+                      <Tag color="orange">{constraintTypeLabel[v] ?? v}</Tag>
+                    ),
                   },
                 ]}
                 pagination={false}

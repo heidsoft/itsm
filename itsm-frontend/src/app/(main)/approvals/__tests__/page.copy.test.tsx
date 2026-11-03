@@ -49,6 +49,30 @@ jest.mock('@/lib/store/auth-store', () => ({
   useAuthStore: () => ({ user: { id: 1, username: 'alice', name: 'Alice' } }),
 }));
 
+// jest.setup 全局 mock 的 dayjs 没有 fromNow/extend，「创建时间」列命中断点后会渲染崩溃；
+// 本页面不使用 DatePicker，这里回到真实 dayjs 并挂 relativeTime 插件。
+jest.mock('dayjs', () => {
+  const actual = jest.requireActual('dayjs');
+  const plugin = jest.requireActual('dayjs/plugin/relativeTime');
+  const factory = actual.default ?? actual;
+  factory.extend(plugin.default ?? plugin);
+  return actual;
+});
+
+// 全局 jest.setup 的 matchMedia 恒 false，会让 responsive:['lg'/'md'] 列（流程/负责人）
+// 在 jsdom 中整列消失；本文件在首次渲染前改为命中全部断点，保证所有列可断言。
+// antd responsiveObserver 在首次订阅时缓存断点结果，因此必须在文件级、任何 render 前覆盖。
+window.matchMedia = jest.fn().mockImplementation(query => ({
+  matches: true,
+  media: query,
+  onchange: null,
+  addListener: jest.fn(),
+  removeListener: jest.fn(),
+  addEventListener: jest.fn(),
+  removeEventListener: jest.fn(),
+  dispatchEvent: jest.fn(),
+}));
+
 import ApprovalsCenterPage from '../page';
 
 function task(overrides: Record<string, unknown>) {
@@ -145,6 +169,30 @@ describe('审批中心文案', () => {
     expect(await screen.findByText('批准任务')).toBeInTheDocument();
     expect(screen.getByText('审批意见（可选）')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '确认批准' })).toBeInTheDocument();
+  });
+
+  it('流程列优先显示定义显示名，缺失时回退 Key（D10）', async () => {
+    mockListMyApprovalTasks.mockResolvedValue({
+      items: [
+        task({
+          id: 201,
+          taskId: 'TASK-201',
+          processDefinitionKey: 'ticket_general_flow',
+          processDefinitionName: '工单通用流程',
+        }),
+        task({ id: 202, taskId: 'TASK-202', processDefinitionKey: 'ghost_flow' }),
+      ],
+      total: 2,
+      page: 1,
+      size: 100,
+    });
+
+    await renderPage();
+
+    expect(await screen.findByText('工单通用流程')).toBeInTheDocument();
+    // 有显示名的不再暴露工程 Key；无定义的回退展示 Key 便于排查
+    expect(screen.queryByText('ticket_general_flow')).not.toBeInTheDocument();
+    expect(screen.getByText('ghost_flow')).toBeInTheDocument();
   });
 
   it('提交工作节点时调用 decisions 接口并反馈已完成', async () => {

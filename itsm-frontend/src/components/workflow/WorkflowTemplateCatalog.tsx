@@ -9,6 +9,7 @@ import {
   type CreateWorkflowTemplateRequest,
 } from '@/lib/api/bpmn-workflow-template-api';
 import { BACKEND_MAX_PAGE_SIZE } from '@/lib/api/pagination';
+import { formatDateTime } from '@/lib/formatters';
 
 const { Text } = Typography;
 
@@ -187,7 +188,7 @@ export default function WorkflowTemplateCatalog() {
           { title: '业务域', dataIndex: 'domain', render: (value: string) => DOMAIN_OPTIONS.find(option => option.value === value)?.label || value },
           { title: '版本', dataIndex: 'version' },
           { title: '状态', dataIndex: 'status', render: (value: string) => <Tag color={STATUS_LABELS[value]?.color}>{STATUS_LABELS[value]?.label || value}</Tag> },
-          { title: '更新时间', dataIndex: 'updatedAt' },
+          { title: '更新时间', dataIndex: 'updatedAt', render: (value: string) => formatDateTime(value) },
           { title: '操作', key: 'actions', render: (_: unknown, item: WorkflowTemplate) => <Space>
             <Button type="text" icon={<Eye size={16} />} aria-label="查看详情" onClick={() => showDetail(item)} />
             {item.status === 'draft' && <Button type="text" icon={<Edit size={16} />} aria-label="编辑草稿" onClick={() => openEdit(item)} />}
@@ -212,7 +213,7 @@ export default function WorkflowTemplateCatalog() {
         <Table rowKey="id" dataSource={versions} pagination={false} columns={[
           { title: '版本', dataIndex: 'version' },
           { title: '状态', dataIndex: 'status', render: (value: string) => <Tag color={STATUS_LABELS[value]?.color}>{STATUS_LABELS[value]?.label || value}</Tag> },
-          { title: '更新时间', dataIndex: 'updatedAt' },
+          { title: '更新时间', dataIndex: 'updatedAt', render: (value: string) => formatDateTime(value) },
           { title: 'BPMN', dataIndex: 'bpmnXml', render: (value: string) => value ? '已配置' : '缺失' },
         ]} />
       </Modal>
@@ -225,7 +226,7 @@ export default function WorkflowTemplateCatalog() {
             <Descriptions.Item label="版本">{detailItem.version}</Descriptions.Item>
             <Descriptions.Item label="状态"><Tag color={STATUS_LABELS[detailItem.status]?.color}>{STATUS_LABELS[detailItem.status]?.label || detailItem.status}</Tag></Descriptions.Item>
             <Descriptions.Item label="对租户用户可见">{detailItem.isPublic ? '是' : '否'}</Descriptions.Item>
-            <Descriptions.Item label="创建时间">{detailItem.createdAt}</Descriptions.Item>
+            <Descriptions.Item label="创建时间">{formatDateTime(detailItem.createdAt)}</Descriptions.Item>
             <Descriptions.Item label="描述" span={2}>{detailItem.description || '—'}</Descriptions.Item>
             <Descriptions.Item label="BPMN XML" span={2}>
               {detailItem.bpmnXml ? (

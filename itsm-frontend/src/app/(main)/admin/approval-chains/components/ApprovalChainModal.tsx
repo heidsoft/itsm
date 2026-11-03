@@ -9,15 +9,16 @@ import {
   Modal,
   Form,
   Input,
+  InputNumber,
   Switch,
   Button,
   Steps,
   Card,
   Space,
   Select,
-  Divider,
+  Collapse,
   Typography,
-  message,
+  App,
   Row,
   Col,
   Spin,
@@ -28,6 +29,16 @@ import type {
   ApprovalStep,
   CreateApprovalChainRequest,
   UpdateApprovalChainRequest,
+  FallbackAction,
+} from '@/types/approval-chain';
+import {
+  APPROVAL_TYPE_LABELS,
+  QUORUM_APPROVAL_TYPES,
+  FALLBACK_ACTION_LABELS,
+  APPROVAL_CONDITION_PRIORITIES,
+  PRIORITY_LABELS,
+  ENTITY_TYPE_LABELS,
+  type ApprovalType,
 } from '@/types/approval-chain';
 import { FormField } from '@/types/common';
 import { UserApi } from '@/lib/api/user-api';
@@ -56,6 +67,8 @@ export function ApprovalChainModal({
   loading = false,
 }: ApprovalChainModalProps) {
   const [form] = Form.useForm();
+  // 反馈 API 必须取自 App 上下文，静态 message 不继承主题与 locale
+  const { message } = App.useApp();
   const [currentStep, setCurrentStep] = useState(0);
   const [steps, setSteps] = useState<
     Omit<ApprovalStep, 'id' | 'chainId' | 'createdAt' | 'updatedAt'>[]
@@ -66,17 +79,20 @@ export function ApprovalChainModal({
   const [rolesLoading, setRolesLoading] = useState(false);
 
   // 获取可选审批用户（远程搜索）
-  const fetchUsers = useCallback(async (search?: string) => {
-    try {
-      setUsersLoading(true);
-      const response = await UserApi.getUsers({ page: 1, pageSize: 100, search: search || '' });
-      setUsers(response.items || []);
-    } catch (error) {
-      message.error('获取用户列表失败');
-    } finally {
-      setUsersLoading(false);
-    }
-  }, []);
+  const fetchUsers = useCallback(
+    async (search?: string) => {
+      try {
+        setUsersLoading(true);
+        const response = await UserApi.getUsers({ page: 1, pageSize: 100, search: search || '' });
+        setUsers(response.items || []);
+      } catch (error) {
+        message.error('获取用户列表失败');
+      } finally {
+        setUsersLoading(false);
+      }
+    },
+    [message]
+  );
 
   // 获取可选审批角色
   const fetchRoles = useCallback(async () => {
@@ -89,7 +105,7 @@ export function ApprovalChainModal({
     } finally {
       setRolesLoading(false);
     }
-  }, []);
+  }, [message]);
 
   useEffect(() => {
     if (visible) {
@@ -179,7 +195,7 @@ export function ApprovalChainModal({
     } catch (error) {
       // 表单验证失败
     }
-  }, [form, steps, onSubmit, resetForm]);
+  }, [form, steps, onSubmit, resetForm, message]);
 
   // 添加步骤
   const handleAddStep = useCallback(() => {
@@ -192,6 +208,7 @@ export function ApprovalChainModal({
       approverName: '',
       isRequired: true,
       approvalType: 'serial',
+      fallbackAction: 'block',
     };
     setSteps(prev => [...prev, newStep]);
   }, [steps.length]);
@@ -208,6 +225,11 @@ export function ApprovalChainModal({
 
   // 渲染步骤配置
   const renderStepConfig = useCallback(() => {
+    const approvalTypeOptions = (Object.keys(APPROVAL_TYPE_LABELS) as ApprovalType[]).map(value => ({
+      value,
+      label: APPROVAL_TYPE_LABELS[value],
+    }));
+
     return (
       <div className="space-y-4">
         <div className="flex justify-between items-center">
@@ -240,6 +262,23 @@ export function ApprovalChainModal({
             </div>
 
             <Row gutter={16}>
+              <Col span={8}>
+                <div className="mb-2">
+                  <Text strong>审批层级</Text>
+                </div>
+                <InputNumber
+                  aria-label={`步骤 ${index + 1} 审批层级`}
+                  value={step.level ?? index + 1}
+                  onChange={value => handleUpdateStep(index, 'level', value ?? index + 1)}
+                  min={1}
+                  max={20}
+                  style={{ width: '100%' }}
+                />
+                <Text type="secondary" className="text-xs mt-1 block">
+                  同一层级的多个步骤按「审批方式」合并
+                </Text>
+              </Col>
+
               <Col span={8}>
                 <div className="mb-2">
                   <Text strong>审批人类型</Text>
@@ -305,32 +344,198 @@ export function ApprovalChainModal({
                   />
                 )}
               </Col>
+            </Row>
 
-              <Col span={8}>
+            <Row gutter={16} className="mt-4">
+              <Col span={12}>
                 <div className="mb-2">
                   <Text strong>审批方式</Text>
                 </div>
                 <Select
+                  aria-label={`步骤 ${index + 1} 审批方式`}
                   value={step.approvalType || 'serial'}
                   onChange={value => handleUpdateStep(index, 'approvalType', value)}
                   style={{ width: '100%' }}
-                  options={[
-                    { value: 'serial', label: '或签（任一人通过）' },
-                    { value: 'parallel', label: '会签（多人通过）' },
-                  ]}
+                  options={approvalTypeOptions}
+                />
+              </Col>
+
+              <Col span={6}>
+                <div className="mb-2">
+                  <Text strong>通过阈值</Text>
+                </div>
+                <InputNumber
+                  aria-label={`步骤 ${index + 1} 通过阈值`}
+                  value={step.threshold}
+                  onChange={value => handleUpdateStep(index, 'threshold', value ?? undefined)}
+                  min={1}
+                  max={50}
+                  placeholder="默认按本层人数"
+                  disabled={!QUORUM_APPROVAL_TYPES.includes(step.approvalType || 'serial')}
+                  style={{ width: '100%' }}
+                />
+              </Col>
+
+              <Col span={6}>
+                <div className="mb-2">
+                  <Text strong>是否必审</Text>
+                </div>
+                <Switch
+                  aria-label="该步骤是否为必审步骤"
+                  checked={step.isRequired}
+                  onChange={checked => handleUpdateStep(index, 'isRequired', checked)}
+                  checkedChildren="必审"
+                  unCheckedChildren="可选"
                 />
               </Col>
             </Row>
 
-            <div className="mt-4">
-              <Switch
-                aria-label="该步骤是否为必审步骤"
-                checked={step.isRequired}
-                onChange={checked => handleUpdateStep(index, 'isRequired', checked)}
-                checkedChildren="必审"
-                unCheckedChildren="可选"
-              />
-            </div>
+            <Collapse
+              size="small"
+              className="mt-3"
+              items={[
+                {
+                  key: 'advanced',
+                  label: '高级配置（兜底策略 / 生效条件）',
+                  children: (
+                    <div className="space-y-3">
+                      <Row gutter={16}>
+                        <Col span={8}>
+                          <div className="mb-2">
+                            <Text strong>无人可审时的兜底</Text>
+                          </div>
+                          <Select
+                            aria-label={`步骤 ${index + 1} 兜底策略`}
+                            value={step.fallbackAction || 'block'}
+                            onChange={value =>
+                              handleUpdateStep(index, 'fallbackAction', value as FallbackAction)
+                            }
+                            style={{ width: '100%' }}
+                            options={(Object.keys(FALLBACK_ACTION_LABELS) as FallbackAction[]).map(
+                              value => ({ value, label: FALLBACK_ACTION_LABELS[value] })
+                            )}
+                          />
+                        </Col>
+
+                        {step.fallbackAction === 'escalate' && (
+                          <>
+                            <Col span={8}>
+                              <div className="mb-2">
+                                <Text strong>兜底审批人</Text>
+                              </div>
+                              <Select
+                                showSearch
+                                filterOption={false}
+                                onSearch={fetchUsers}
+                                value={step.fallbackApproverId || undefined}
+                                placeholder="搜索并选择兜底审批用户"
+                                style={{ width: '100%' }}
+                                loading={usersLoading}
+                                notFoundContent={usersLoading ? <Spin size="small" /> : '未找到用户'}
+                                optionLabelProp="label"
+                                allowClear
+                                options={users.map(user => ({
+                                  value: user.id,
+                                  label: user.name || user.username,
+                                }))}
+                                onChange={(userId: number) => {
+                                  handleUpdateStep(index, 'fallbackApproverId', userId || 0);
+                                }}
+                              />
+                            </Col>
+
+                            <Col span={8}>
+                              <div className="mb-2">
+                                <Text strong>兜底审批角色</Text>
+                              </div>
+                              <Select
+                                showSearch
+                                optionFilterProp="label"
+                                value={step.fallbackRole || undefined}
+                                placeholder="选择兜底审批角色"
+                                style={{ width: '100%' }}
+                                loading={rolesLoading}
+                                allowClear
+                                options={roles.map(role => ({
+                                  value: role.code || role.name,
+                                  label: role.name,
+                                }))}
+                                onChange={(roleKey: string) =>
+                                  handleUpdateStep(index, 'fallbackRole', roleKey || '')
+                                }
+                              />
+                            </Col>
+                          </>
+                        )}
+                      </Row>
+
+                      <Row gutter={16}>
+                        <Col span={12}>
+                          <div className="mb-2">
+                            <Text strong>生效优先级</Text>
+                          </div>
+                          <Select
+                            mode="multiple"
+                            aria-label={`步骤 ${index + 1} 生效优先级`}
+                            value={step.conditionPriorities}
+                            placeholder="留空表示不按优先级过滤"
+                            style={{ width: '100%' }}
+                            allowClear
+                            options={APPROVAL_CONDITION_PRIORITIES.map(value => ({
+                              value,
+                              label: PRIORITY_LABELS[value] ?? value,
+                            }))}
+                            onChange={value =>
+                              handleUpdateStep(
+                                index,
+                                'conditionPriorities',
+                                (value as string[]).length > 0 ? value : undefined
+                              )
+                            }
+                          />
+                        </Col>
+
+                        <Col span={6}>
+                          <div className="mb-2">
+                            <Text strong>金额下限</Text>
+                          </div>
+                          <InputNumber
+                            aria-label={`步骤 ${index + 1} 金额下限`}
+                            value={step.conditionAmountMin}
+                            onChange={value =>
+                              handleUpdateStep(index, 'conditionAmountMin', value ?? undefined)
+                            }
+                            min={0}
+                            placeholder="不限"
+                            style={{ width: '100%' }}
+                          />
+                        </Col>
+
+                        <Col span={6}>
+                          <div className="mb-2">
+                            <Text strong>金额上限</Text>
+                          </div>
+                          <InputNumber
+                            aria-label={`步骤 ${index + 1} 金额上限`}
+                            value={step.conditionAmountMax}
+                            onChange={value =>
+                              handleUpdateStep(index, 'conditionAmountMax', value ?? undefined)
+                            }
+                            min={0}
+                            placeholder="不限"
+                            style={{ width: '100%' }}
+                          />
+                        </Col>
+                      </Row>
+
+                      <Text type="secondary" className="text-xs block">
+                        留空的兜底审批人/角色表示按角色解析；金额与优先级条件命中才适用本步骤。
+                      </Text>
+                    </div>
+                  ),
+                },
+              ]}
+            />
           </Card>
         ))}
 
@@ -341,7 +546,17 @@ export function ApprovalChainModal({
         )}
       </div>
     );
-  }, [steps, handleAddStep, handleRemoveStep, handleUpdateStep]);
+  }, [
+    steps,
+    handleAddStep,
+    handleRemoveStep,
+    handleUpdateStep,
+    fetchUsers,
+    users,
+    usersLoading,
+    roles,
+    rolesLoading,
+  ]);
 
   // 步骤配置
   const stepItems = [
@@ -360,9 +575,10 @@ export function ApprovalChainModal({
       title={editingChain ? '编辑审批链' : '创建审批链'}
       open={visible}
       onCancel={onCancel}
-      onOk={handleSubmit}
-      confirmLoading={loading}
+      // 只保留向导内部的一套操作区：默认 footer 的「确定」与「创建/更新」重复提交
+      footer={null}
       width={800}
+      styles={{ body: { maxHeight: '65vh', overflowY: 'auto' } }}
       destroyOnHidden
     >
       <Steps
@@ -375,8 +591,12 @@ export function ApprovalChainModal({
         }))}
       />
 
-      {currentStep === 0 && (
-        <Form form={form} layout="vertical" preserve={false}>
+      {/*
+        Form 必须始终挂载，两个步骤仅用 display:none 切换：
+        否则 step 0 ↔ step 1 切换时 Form 卸载，name/description/entityType/isActive 被清空。
+      */}
+      <Form form={form} layout="vertical" component="div">
+        <div style={{ display: currentStep === 0 ? 'block' : 'none' }}>
           <Form.Item
             name="name"
             label="审批链名称"
@@ -402,16 +622,16 @@ export function ApprovalChainModal({
             initialValue="ticket"
             rules={[{ required: true, message: '请选择适用对象' }]}
           >
-            <Select placeholder="请选择适用对象" options={[{ value: 'ticket', label: '工单' }, { value: 'incident', label: '事件' }, { value: 'problem', label: '问题' }, { value: 'change', label: '变更' }]} />
+            <Select placeholder="请选择适用对象" options={Object.entries(ENTITY_TYPE_LABELS).map(([value, label]) => ({ value, label }))} />
           </Form.Item>
 
           <Form.Item name="isActive" label="状态" valuePropName="checked" initialValue={true}>
             <Switch checkedChildren="启用" unCheckedChildren="禁用" />
           </Form.Item>
-        </Form>
-      )}
+        </div>
+      </Form>
 
-      {currentStep === 1 && renderStepConfig()}
+      <div style={{ display: currentStep === 1 ? 'block' : 'none' }}>{renderStepConfig()}</div>
 
       <div className="flex justify-between mt-6">
         <Button onClick={onCancel}>取消</Button>

@@ -333,6 +333,8 @@ export interface BpmnMyTask {
   processInstanceId: number;
   processInstanceKey?: string;
   processDefinitionKey?: string;
+  // 流程定义显示名（如「工单通用流程」）；定义缺失时为空，UI 回退展示 Key
+  processDefinitionName?: string;
   businessKey?: string;
   businessType?: string;
   businessId?: number;
@@ -1067,6 +1069,7 @@ export class WorkflowApi {
    */
   static async getInstances(params?: {
     workflowId?: string;
+    businessKey?: string;
     ticketId?: number;
     status?: string;
     page?: number;
@@ -1088,6 +1091,7 @@ export class WorkflowApi {
 
     const query: Record<string, string | number> = {};
     if (params?.workflowId) query.processDefinitionKey = params.workflowId;
+    if (params?.businessKey) query.businessKey = params.businessKey;
     if (params?.status) query.status = params.status;
     if (params?.page) query.page = params.page;
     if (params?.pageSize) query.pageSize = params.pageSize;
@@ -1112,6 +1116,7 @@ export class WorkflowApi {
       workflowName: '',
       version: 1,
       status: (item.status as WorkflowInstanceStatus) || WorkflowInstanceStatus.RUNNING,
+      businessKey: item.businessKey || undefined,
       variables: {},
       startTime: item.startTime ? new Date(item.startTime) : new Date(),
       endTime: item.endTime ? new Date(item.endTime) : undefined,
