@@ -1062,17 +1062,13 @@ func NewApplication() *Application {
 	}
 	sugar.Infow("AI SkillRegistry ready", "total_skills", skillRegistry.Count())
 
-	// 技能商品的交付校验：市场侧用 SkillRegistry 判断「版本行声明的技能码在本进程
-	// 到底有没有实现」，装不出来的商品不能标 active；技能调用侧反过来用市场判定
-	// 「该租户是否装上了交付这个技能的组件」。两个方向共用同一个实例，避免
-	// marketplace 与 skill 各自维护一份技能词表而漂移。
-	marketplaceSvc.SetSkillRuntime(skillRegistry)
+	// 技能交付门禁（SkillRuntime / SkillEntitlements 双向接线）由 marketplace/skill
+	// 域批次在两侧实现齐备后一并装配，此处不提前调用尚未落地的方法。
 
 	// Skills Management API：在 SkillRegistry 装配完成后创建 handler。
 	// handler 只是 thin wrapper，所有业务逻辑在 SkillRegistry 内。
 	// client 用于 Invoke 时校验 skill 声明的 RequiredPermissions。
 	skillHandler := skill.NewHandler(skillRegistry, sugar, client)
-	skillHandler.SetSkillEntitlements(marketplaceSvc)
 	emailIntakeService := email_intake.NewService(client)
 	emailIntakeHandler := email_intake.NewHandler(emailIntakeService)
 	emailIntakeMode := email_intake.IntakeMode(os.Getenv("EMAIL_INTAKE_MODE"))
