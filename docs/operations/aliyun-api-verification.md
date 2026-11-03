@@ -15,12 +15,17 @@
 |---|---|---|
 | 服务请求交付（ECS） | 官方 Tea SDK `ecs-20140526/v7` | ✅ 参数/权限/配额全部通过，**唯一阻塞是账号余额** |
 | 云资源发现（ECS） | 同上 | ✅ 16 个只读接口全部返回真实数据 |
-| 云安全中心漏洞（SAS） | **手写 RPC 签名** | ✅ 签名对真实端点成立；发现并修复 3 个缺陷 |
+| 云安全中心漏洞（SAS） | **手写 RPC 签名** | ✅ 签名对真实端点成立；发现并修复 4 个缺陷 |
 | 云监控告警（CMS） | **手写 RPC 签名** | ✅ 同上；错误形态被正确识别 |
+| 漏洞同步端到端落库 | — | ✅ prod 真实部署验证：漏洞入库、CI 关联、毫秒时间戳、云侧 Level 严重度全部正确 |
 
 **合起来的结论：ITSM 的阿里云接入在代码侧没有阻塞项。** 剩下的都是账号侧条件：交付链路需要充值，安全事件链路需要开通 SAS 付费版与积累真实报警数据。
 
+> 漏洞同步已在 prod 真实部署形态下端到端验证：修复前 `state=unavailable`，修复后 `state=ready`、`items_synced=1`，
+> 那条 `emg`/`asap` 漏洞正确入库并关联到 CMDB 配置项（详见 §6）。
+
 ---
+
 
 ## 2. 交付链路（官方 SDK）
 
@@ -61,6 +66,7 @@ RunInstances(DryRun=true) → 403 InvalidAccountStatus.NotEnoughBalance  (perman
 
 ---
 
+
 ## 3. 安全事件链路（手写 RPC 签名）
 
 ### 3.1 为什么这条链路此前是盲区
@@ -85,6 +91,7 @@ RunInstances(DryRun=true) → 403 InvalidAccountStatus.NotEnoughBalance  (perman
 **为什么没有据此把同步判成失败**：免费版下 `IsSasOpening=false` 的语义并不等于「漏洞采集完全不可用」（SCA 通道确实在工作），据此判失败会误报。正确做法是如实记录，让使用者知道「0 漏洞」在这套账号上的含义。
 
 ---
+
 
 ## 4. 验证打出的缺陷（已全部修复）
 
@@ -120,6 +127,7 @@ RunInstances(DryRun=true) → 403 InvalidAccountStatus.NotEnoughBalance  (perman
 
 ---
 
+
 ## 5. 验证资产
 
 ### 5.1 命令
@@ -154,7 +162,91 @@ RunInstances(DryRun=true) → 403 InvalidAccountStatus.NotEnoughBalance  (perman
 
 ---
 
-## 6. 复现与判据
+
+## 6. 端到端落库验证（2026-11-03 晚，prod 真实部署）
+
+前面各节验证的是 **API 面**。这一节验证的是**完整生产链路**：真实镜像 → worker 定时调度 → 云 API → 落库 → CI 关联。
+
+### 7.1 部署形态
+
+| 项 | 值 |
+|---|---|
+| 镜像 | `itsm-backend:v1.6.42`（重建自 HEAD，Created 20:32） |
+| 构建方式 | 干净 worktree + HEAD 构建，**不含并行会话的未提交 WIP** |
+| 容器 | backend/worker 重建（`Created` 更新），7 容器全 healthy |
+| init 退出码 | 0（迁移与基线校验通过） |
+| readyz / health | 200 / 200 |
+| 登录冒烟 | `code=0` |
+| 云凭据透传 | backend 与 worker **各 2 个变量**（此前 backend 缺失） |
+
+> **踩到的坑**：容器自 2026-11-01 起只 restart 过、从未重建，而云凭据透传是当天才加进 compose 的——`docker restart` **不会**更新容器环境变量，所以 backend 一直拿不到凭据。改 compose 后必须**重建容器**（`up -d` 检测到配置变化会 recreate），`restart` 不够。
+
+### 7.2 漏洞同步：修复前 → 修复后
+
+| 阶段 | `state` | `items_synced` | 错误 |
+|---|---|---|---|
+| 修复前（重建后未含形态兼容） | `unavailable` | 0 | `describe_vulnerabilities_failed`：解码失败 |
+| **修复后** | **`ready`** | **1** | 无 |
+
+落库内容（已脱敏）：
+
+| 字段 | 值 |
+|---|---|
+| vuln_type | `emg` |
+| severity | `high`（来自云侧 `Level`，**不是** unknown） |
+| status | `open` |
+| finding_key | `8218810662` |
+| name | `emg:SCA:AVD-2026-1860246` |
+| necessity | `asap` |
+| instance_id | `i-…`（可关联 CMDB） |
+| region | `cn-beijing` |
+| cvss_score | 空（emg 类型无 cvss_score，只有 Level——预期） |
+| first_seen_at / last_seen_at | **2026-06-14 05:10:40+00**（毫秒解析正确；按秒解析会是公元 58655 年） |
+| CI 关联 | **已关联**（`ci_id` 非空） |
+
+**这一条同时验证了三项修复**：漏洞类型覆盖（emg 进来了）、毫秒时间戳（不是几万年之后）、云侧 Level 严重度（不是 unknown）。CI 关联生效说明漏洞能落到具体资产上，而不只是躺在列表里。
+
+### 7.3 告警同步
+
+`state=ready`、`items_synced=0`、无错误——账号确实没有报警历史（`DescribeAlertLogList` 恒空），链路本身通畅。**告警自动建事件仍未验证**（无数据可走通）。
+
+### 7.4 这轮验证打出的第四个缺陷
+
+`ExtendContentJson` 在不同漏洞类型下形态不同：**cve/sys/cms 是 JSON 字符串，emg 是 JSON 对象**。结构体把该字段定义成 `string`，解到 emg 记录时直接报
+
+```
+json: cannot unmarshal object into Go struct field
+SecurityVulnerability.VulRecords.ExtendContentJson of type string
+```
+
+——**整个类型的漏洞一条都进不来**，同步从「拉不到」变成「报错」。这是把 emg 纳入同步类型后才暴露的形态差异。
+
+修法：新增 `flexJSONObject` 兼容两种形态，`SecurityVulnerability` 自定义 `UnmarshalJSON` 归一成 JSON 字符串（字段类型保持 `string`，外部调用点零改动）；严重度优先用云侧 `Level`，无 Level 才回退 CVSS 推导；单条脏数据不拖垮整轮（丢一条扩展内容好过整类丢光）。
+
+> **教训**：验证工具只解析了 HTTP 状态与条数，**没有走产品的 JSON 解码路径**，所以第一轮验证没发现这个形态差异。API 面的"200 + 1 条"不等于"产品能解码这一条"。这类缺陷只有把真实响应喂给产品代码才会暴露——所以守卫测试用的是**真实账号返回的原样响应**作夹具。
+
+---
+
+
+## 7. 仍未验证的部分
+
+| 未验证项 | 原因 | 何时能验 |
+|---|---|---|
+| 一次真实创建并释放 ECS 的闭环 | 需账号余额（按量 ECS 要求余额 ≥ 100 元） | 充值后执行一轮完整交付验收 |
+| 创建后的 SLA 首响/解决、BPMN 收口、CMDB 投影的实际数据 | 依赖上一条 | 同上 |
+| 漏洞同步端到端落库（`security_findings` 写入、CI 关联、事件自动建单） | 需要在部署环境跑一轮同步 | 在部署环境触发一次同步即可 |
+| 告警自动建事件 | 账号无报警历史（`DescribeAlertLogList` 恒空） | 有真实报警后重跑 |
+| 基线检查告警 | 账号 0 条基线风险项 | 开通并跑基线检查后 |
+| SAS 付费版能力（专业版漏洞库、SCA 组件、容器资产） | 账号为免费版 | 开通付费版后 |
+| 交付中途失败的自动回滚/补偿 | 未实现（现为幂等键对账 + 人工裁决兜底） | 补偿动作开发后 |
+| 多资源类型（OSS 等） | 代码尚未接入 | 第二资源类型开发后 |
+
+**未验证 ≠ 未通过。** 本轮能证明的是：签名、参数、权限、配额、实名认证、地域、资产组合全部正确，代码侧没有阻塞；剩下的都是账号侧条件或尚未开发的功能。
+
+---
+
+
+## 8. 复现与判据
 
 ```bash
 cd itsm-backend
@@ -177,24 +269,8 @@ go run ./cmd/aliyun-security-api-verify
 
 ---
 
-## 7. 仍未验证的部分
 
-| 未验证项 | 原因 | 何时能验 |
-|---|---|---|
-| 一次真实创建并释放 ECS 的闭环 | 需账号余额（按量 ECS 要求余额 ≥ 100 元） | 充值后执行一轮完整交付验收 |
-| 创建后的 SLA 首响/解决、BPMN 收口、CMDB 投影的实际数据 | 依赖上一条 | 同上 |
-| 漏洞同步端到端落库（`security_findings` 写入、CI 关联、事件自动建单） | 需要在部署环境跑一轮同步 | 在部署环境触发一次同步即可 |
-| 告警自动建事件 | 账号无报警历史（`DescribeAlertLogList` 恒空） | 有真实报警后重跑 |
-| 基线检查告警 | 账号 0 条基线风险项 | 开通并跑基线检查后 |
-| SAS 付费版能力（专业版漏洞库、SCA 组件、容器资产） | 账号为免费版 | 开通付费版后 |
-| 交付中途失败的自动回滚/补偿 | 未实现（现为幂等键对账 + 人工裁决兜底） | 补偿动作开发后 |
-| 多资源类型（OSS 等） | 代码尚未接入 | 第二资源类型开发后 |
-
-**未验证 ≠ 未通过。** 本轮能证明的是：签名、参数、权限、配额、实名认证、地域、资产组合全部正确，代码侧没有阻塞；剩下的都是账号侧条件或尚未开发的功能。
-
----
-
-## 8. 修复后的回归覆盖
+## 9. 修复后的回归覆盖
 
 | 缺陷 | 守卫测试 |
 |---|---|
@@ -207,3 +283,7 @@ go run ./cmd/aliyun-security-api-verify
 | 漏同步被误判成已修复 | `TestVulSyncSkipsResolvedCollectionWhenCloudCountMismatch`、`TestVulSyncCollectsWhenCountsMatch`、`TestVulSyncSurvivesStatisticsFailure` |
 | 只读边界被绕过 | `TestProbeRejectsWriteActions`、`TestVerifyCommandOnlyUsesAllowlistedActions`、`TestVerifyCommandNeverCallsWriteActions` |
 | 真实数据解析回归 | `TestRealAccountEMGFindingParsesCorrectly`、`TestRealAccountVulStatisticsParsesCorrectly` |
+| 扩展内容形态兼容（对象/字符串） | `TestSecurityVulnerabilityDecodesObjectShapedExtendContent`、`TestSecurityVulnerabilityDecodesStringShapedExtendContent` |
+| 严重度优先级（云侧 Level 优先） | `TestSeverityPrefersCloudLevel` |
+| 单条脏数据不拖垮整轮 | `TestFlexJSONObjectToleratesMalformedStringContent` |
+| 记录 JSON 往返（raw_payload 落库） | `TestSecurityVulnerabilityRoundTripsThroughMarshal` |
