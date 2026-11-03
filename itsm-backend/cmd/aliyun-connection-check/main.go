@@ -6,6 +6,14 @@ package main
 // 地域可达、交付 RunInstances 需要的四类参数（镜像/交换机/安全组/实例规格）
 // 在目标地域真实存在。探测结果直接填进服务请求表单，供完整交付验收使用。
 //
+// 存在性一律判返回条数，不判 err：阿里云 Describe* 对不存在的 ID 返回
+// HTTP 200 + 空列表（2026-11-03 真实账号实测），只看错误会把「不存在」
+// 当成「查到」。
+//
+// 需要连写 API 的参数/权限/配额校验链一起看时，用 cmd/aliyun-sdk-api-verify：
+// 它多加 RunInstances(DryRun=true)，同样零费用，能直接区分「参数链问题」
+// 与「账号余额问题」。
+//
 // 用法（凭据经 env://ITSM_ALIYUN 从环境变量读取，值不落命令行）：
 //
 //	export ITSM_ALIYUN_ACCESS_KEY_ID=... ITSM_ALIYUN_ACCESS_KEY_SECRET=...

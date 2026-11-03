@@ -17,6 +17,10 @@ func TestIsPermanentAliyunCode(t *testing.T) {
 		"InvalidParameter.Mismatch",
 		"Forbidden.RAM",
 		"OperationDenied.NoStock",
+		// 2026-11-03 真实账号验证实测：地域配错时云侧返回 400
+		// 「The specified endpoint can't operate this region」，此前被判可重试。
+		"InvalidOperation.NotSupportedEndpoint",
+		"InvalidOperation.RegionNotSupported",
 	}
 	for _, code := range permanent {
 		if !isPermanentAliyunCode(code) {
@@ -32,6 +36,10 @@ func TestIsPermanentAliyunCode(t *testing.T) {
 		"InternalError",
 		"RequestTimeout",
 		"UnknownError",
+		// InvalidOperation 命名空间下还有「实例状态冲突、资源正在变更」这类
+		// 临时拒绝，等状态变化后重试有意义，不能整段判永久。
+		"InvalidOperation.IncorrectInstanceStatus",
+		"InvalidOperation.ResourceInUse",
 	}
 	for _, code := range retryable {
 		if isPermanentAliyunCode(code) {

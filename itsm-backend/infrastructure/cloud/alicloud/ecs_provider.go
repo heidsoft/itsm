@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -250,9 +251,62 @@ func runtimeOptions() *dara.RuntimeOptions {
 	}
 }
 
+// BuildDryRunRequest 用生产交付的同一套参数解析/构造逻辑，生成一次
+// RunInstances DryRun 校验请求。DryRun=true 时阿里云只检查必填参数、请求格式、
+// RAM 权限、服务限制与可用 ECS 资源，不创建实例、不产生费用；校验通过时云侧
+// 返回 DryRunOperation 错误码（这是成功信号，调用方需单独识别）。
+//
+// 单独导出是为了让「只读 API 验证」与「交付前预检」复用同一份构造逻辑，
+// 避免验证跑通的参数与真正交付的参数在字段上漂移（例如 ImageId 失效、
+// SystemDisk 漏传、Tag 谱系缺失）。Execute 里的前置校验在这里同样生效。
+func BuildDryRunRequest(req cloud.ExecuteRequest) (*ecs.RunInstancesRequest, error) {
+	params, err := parseECSLaunchParams(req.Payload)
+	if err != nil {
+		return nil, err
+	}
+	if strings.TrimSpace(req.Region) == "" {
+		return nil, fmt.Errorf("交付参数缺少 regionId")
+	}
+	if strings.TrimSpace(req.ClientToken) == "" {
+		return nil, fmt.Errorf("交付任务缺少幂等键，拒绝发起校验")
+	}
+	runReq := buildRunInstancesRequest(req, params)
+	runReq.DryRun = tea.Bool(true)
+	return runReq, nil
+}
+
+// SDKErrorClass 是一次 SDK 错误的可行动分类结果，供交付失败处理、只读验证
+// 工具与排障复用，避免各处重复实现错误码提取规则而漂移。
+type SDKErrorClass struct {
+	Code      string // 业务错误码；空表示不是 SDK 业务错误（多为网络/超时）
+	Permanent bool   // 重试期望收益为零，调用方必须停止自动重投
+	Detail    string // 脱敏后的对账文案：code/requestId/截断消息，不含请求体
+}
+
+// ClassifySDKError 把 SDK 错误收敛成三元组。Detail 复用交付失败写审计时
+// 的同一套脱敏逻辑，保证验证工具看到的文案与线上任务错误一致。
+//
+// err 为 nil 是合法输入：只读校验里「非法参数却返回成功」正是要被记录的
+// 结果，分类函数必须 fail-safe 返回空分类，不能让观测工具崩在错误处理上。
+func ClassifySDKError(err error) SDKErrorClass {
+	if err == nil {
+		return SDKErrorClass{}
+	}
+	code := aliyunErrorCode(err)
+	return SDKErrorClass{
+		Code:      code,
+		Permanent: isPermanentAliyunCode(code),
+		Detail:    describeAliyunError(err),
+	}
+}
+
 // describeAliyunError 只保留错误码、请求 ID 和截断后的消息，
 // 避免把请求体（可能含密码）或完整响应写进任务错误和审计。
+// nil 输入返回空串：错误处理函数本身不允许成为新的故障点。
 func describeAliyunError(err error) string {
+	if err == nil {
+		return ""
+	}
 	var sdkErr *tea.SDKError
 	if errors.As(err, &sdkErr) {
 		code := tea.StringValue(sdkErr.Code)
@@ -292,7 +346,19 @@ func requestIDFromSDKError(err *tea.SDKError) string {
 	return payload.RequestId
 }
 
+// sensitiveValuePattern 匹配云侧错误消息里可能回显的请求参数值。阿里云部分
+// 业务错误会把触发错误的参数原样带回 message，交付请求里含 Password /
+// AccessKeySecret 时，只做空白折叠会把凭据写进任务错误和审计日志。
+//
+// 只列确定高危的键名：code= / requestId= / message= 是对账证据，绝不能误脱敏；
+// \b 边界避免把 secretId、tokenType 这类含敏感词根的业务字段一起吃掉。
+// 键名后的 "? 与分隔符前的空白用来覆盖 JSON 形态 "Password":"xxx"——
+// 云侧返回体是 JSON，只认 password=xxx 会漏掉最常见的泄露来源。
+var sensitiveValuePattern = regexp.MustCompile(`(?i)\b(password|passwd|pwd|access[_-]?key[_-]?secret|secret|token|api[_-]?key|private[_-]?key|credential|authorization)\b"?\s*[=:]\s*"?([^\s,;"'}&]+)"?`)
+
 func sanitizeMessage(message string) string {
+	// 先脱敏再折叠/截断：若先截断，敏感值可能被切成半截反而绕过匹配。
+	message = sensitiveValuePattern.ReplaceAllString(message, "$1=[REDACTED]")
 	message = strings.Join(strings.Fields(message), " ")
 	return truncate(message, 300)
 }
@@ -354,6 +420,12 @@ func aliyunErrorCode(err error) string {
 // 清单只收确定性的业务拒绝：账号状态、配额、资源不存在、参数非法、权限不足。
 // 限流（Throttling.*）、ServiceUnavailable、InternalError、超时都不在列——那些
 // 重试有意义，误判成永久错误会让一次网络抖动变成「交付永久失败」。
+//
+// 2026-11-03 真实账号验证补入 InvalidOperation.NotSupportedEndpoint / RegionNotSupported：
+// 地域配置错误时云侧返回 400「The specified endpoint can't operate this region」，
+// 此前不在清单里会被判可重试，同一份错配置被重投 5 次。只列这两个确切前缀而不是
+// 整个 InvalidOperation.*：该命名空间下还有「实例状态冲突、资源正在变更」这类
+// 临时性拒绝，等状态变化后重试是有意义的。
 var permanentAliyunCodePrefixes = []string{
 	"InvalidAccountStatus.",
 	"QuotaExceeded.",
@@ -363,6 +435,8 @@ var permanentAliyunCodePrefixes = []string{
 	"InvalidImageId.",
 	"InvalidInstanceType.",
 	"InvalidRegionId.",
+	"InvalidOperation.NotSupportedEndpoint",
+	"InvalidOperation.RegionNotSupported",
 	"Forbidden.",
 	"OperationDenied.",
 	"InvalidInstanceChargeType.",
