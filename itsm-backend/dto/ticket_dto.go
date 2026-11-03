@@ -125,6 +125,9 @@ type TicketPriorityCount struct {
 }
 
 // TicketStatsResponse 工单统计响应
+//
+// 这是工单统计的唯一契约：计数器、分布、趋势、SLA 读数共用同一次请求的
+// 行级数据范围与时间窗口，禁止前端再拼第二个数据源补齐页面上的卡片。
 type TicketStatsResponse struct {
 	Total        int `json:"total"`
 	Open         int `json:"open"`
@@ -134,10 +137,50 @@ type TicketStatsResponse struct {
 	Pending      int `json:"pending"`
 	HighPriority int `json:"highPriority"`
 	Overdue      int `json:"overdue"`
-	// ByStatus/ByPriority 为租户全量分组计数，只含真实存在的取值；
-	// 报表分布必须用它，禁止改成前端拉一页数据自己数（页长外的工作量会被静默截断）。
+	// ByStatus/ByPriority 是与计数器同一范围、同一窗口的分组计数，
+	// 只含真实存在的取值；报表分布必须用它，禁止改成前端拉一页数据自己数
+	// （页长外的工作量会被静默截断）。紧急/关键这类单点 KPI 也从这里取，
+	// 不再另立 urgent/critical 标量字段，避免同一数字出现两套口径。
 	ByStatus   []TicketStatusCount   `json:"byStatus"`
 	ByPriority []TicketPriorityCount `json:"byPriority"`
+	// Scope 是本次统计跟随的行级数据范围，词表与 datascope 一致：
+	// all（租户全量）/ department / owner（本人创建或受理）。
+	Scope string `json:"scope"`
+	// Window 回显实际生效的时间窗口；请求未带日期时缺省，表示不限窗口。
+	// 页面必须显示它，否则「最近 30 天」和「全部」在屏幕上长得一样。
+	Window *TicketStatsWindowResponse `json:"window,omitempty"`
+	// DailyTrend 仅在带窗口的请求里返回；缺省表示本次未取趋势，
+	// 不是「窗口内没有工单」——两者在前端必须能区分。
+	DailyTrend []TicketDailyTrendPoint `json:"dailyTrend,omitempty"`
+	// SLA 是窗口内的 SLA 达标读数（租户口径，见 sla.scope）。缺省表示
+	// SLA 计时服务未接入或读数失败，属于「没取到」，前端不得渲染成 0%。
+	SLA *TicketSLAComplianceResponse `json:"sla,omitempty"`
+}
+
+// TicketStatsWindowResponse 统计窗口回显（闭区间日 + 天数）
+type TicketStatsWindowResponse struct {
+	DateFrom string `json:"dateFrom"`
+	DateTo   string `json:"dateTo"`
+	Days     int    `json:"days"`
+}
+
+// TicketDailyTrendPoint 按天的新建/解决读数
+type TicketDailyTrendPoint struct {
+	Date     string `json:"date"`
+	Created  int    `json:"created"`
+	Resolved int    `json:"resolved"`
+}
+
+// TicketSLAComplianceResponse 窗口内的 SLA 达标与处理时长读数
+type TicketSLAComplianceResponse struct {
+	ComplianceRate     float64 `json:"complianceRate"`
+	SampledTickets     int     `json:"sampledTickets"`
+	ViolatedTickets    int     `json:"violatedTickets"`
+	AvgResponseMinutes float64 `json:"avgResponseMinutes"`
+	AvgResolutionHours float64 `json:"avgResolutionHours"`
+	WindowDays         int     `json:"windowDays"`
+	// Scope 固定为 tenant：SLA 达标率按租户全量计算，不跟随登录者的数据范围。
+	Scope string `json:"scope"`
 }
 
 // AnalyticsTicketStatsResponse 工单分析统计响应（/api/v1/analytics/tickets）

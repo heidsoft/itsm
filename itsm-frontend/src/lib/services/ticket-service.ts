@@ -10,6 +10,7 @@ import type {
   AssignTicketRequest,
   TicketExportRequest,
   GetTicketsParams,
+  GetTicketStatsParams,
   TicketStatsResponse,
 } from '@/lib/api/ticket-api';
 
@@ -30,6 +31,8 @@ export type {
   // 筛选/分页参数的唯一名字：与后端 dto.ListTicketsRequest 一致，
   // 不再保留 size / search / created_after 等第二套别名。
   GetTicketsParams,
+  // 统计窗口参数：与后端 GET /tickets/stats 的 dateFrom/dateTo 一致。
+  GetTicketStatsParams,
 };
 
 // 工单评论接口
@@ -90,8 +93,9 @@ class TicketService {
   }
 
   // 获取工单统计
-  async getTicketStats(): Promise<TicketStatsResponse> {
-    return httpClient.get<TicketStatsResponse>(`${this.baseUrl}/stats`);
+  // 不传日期保持「可见范围内全量」旧口径；带日期时计数器/分布/趋势/SLA 共用同一窗口。
+  async getTicketStats(params?: GetTicketStatsParams): Promise<TicketStatsResponse> {
+    return httpClient.get<TicketStatsResponse>(`${this.baseUrl}/stats`, params);
   }
 
   // 分配工单

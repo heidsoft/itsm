@@ -696,7 +696,7 @@ func TestRepository_CountByStatus(t *testing.T) {
 		RequesterID: fx.user.ID,
 	}, fx.tenant.ID)
 
-	counts, err := fx.repo.CountByStatus(fx.ctx, fx.tenant.ID, datascope.DataScopeAll, 0)
+	counts, err := fx.repo.CountByStatus(fx.ctx, fx.tenant.ID, datascope.DataScopeAll, 0, nil)
 	require.NoError(t, err)
 	assert.Contains(t, counts, StatusNew)
 	assert.Contains(t, counts, StatusOpen)
@@ -714,10 +714,102 @@ func TestRepository_CountByPriority(t *testing.T) {
 		RequesterID: fx.user.ID,
 	}, fx.tenant.ID)
 
-	counts, err := fx.repo.CountByPriority(fx.ctx, fx.tenant.ID, datascope.DataScopeAll, 0)
+	counts, err := fx.repo.CountByPriority(fx.ctx, fx.tenant.ID, datascope.DataScopeAll, 0, nil)
 	require.NoError(t, err)
 	assert.Contains(t, counts, PriorityCritical)
 }
+
+// TestRepository_StatsWindowAndTrend 锁住统计窗口与趋势的仓储口径。
+//
+// 两条序列必须独立落桶：created 按 created_at、resolved 按 resolved_at。
+// 把「本窗口解决」实现成「本窗口新建且解决」时，窗口前创建、窗口内解决的工单
+// 会从趋势里消失，趋势图的解决线永远低于已解决卡片，而两处的 SQL 都「没毛病」。
+func TestRepository_StatsWindowAndTrend(t *testing.T) {
+	fx := newRepoFixture(t)
+	defer fx.client.Close()
+
+	now := time.Now()
+	dayStart := func(offset int) time.Time {
+		return time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.Local).AddDate(0, 0, offset)
+	}
+	mk := func(number string, createdAt time.Time, resolvedAt *time.Time, status string) {
+		create := fx.client.Ticket.Create().
+			SetTitle(number).
+			SetTicketNumber(number).
+			SetStatus(status).
+			SetPriority(string(PriorityMedium)).
+			SetType(string(TypeIncident)).
+			SetRequesterID(fx.user.ID).
+			SetTenantID(fx.tenant.ID).
+			SetCreatedAt(createdAt)
+		if resolvedAt != nil {
+			create = create.SetResolvedAt(*resolvedAt)
+		}
+		_, err := create.Save(fx.ctx)
+		require.NoError(t, err)
+	}
+
+	// 窗口外创建、窗口内解决：只进 resolved 序列。
+	mk("W-OUT-RESOLVED", dayStart(-8), ptr(dayStart(0).Add(2*time.Hour)), string(StatusResolved))
+	// 窗口外创建且未解决：两条序列都不该有它。
+	mk("W-OUT-OPEN", dayStart(-8), nil, string(StatusOpen))
+	// 窗口内：昨天新建 1 张，今天新建 2 张（其中 1 张今天解决）。
+	mk("W-YESTERDAY", dayStart(-1), nil, string(StatusOpen))
+	mk("W-TODAY-OPEN", dayStart(0).Add(1*time.Hour), nil, string(StatusOpen))
+	mk("W-TODAY-RESOLVED", dayStart(0).Add(3*time.Hour), ptr(dayStart(0).Add(4*time.Hour)), string(StatusResolved))
+
+	today := StatsWindow{From: dayStart(0), To: dayStart(1).Add(-time.Nanosecond)}
+
+	t.Run("计数器按 created_at 收窄", func(t *testing.T) {
+		counts, err := fx.repo.CountByStatus(fx.ctx, fx.tenant.ID, datascope.DataScopeAll, 0, &today)
+		require.NoError(t, err)
+		assert.Equal(t, 2, sumStatusCounts(counts), "今天新建的 2 张之外都不该进窗口计数")
+		assert.Equal(t, 1, counts[StatusResolved])
+		assert.Equal(t, 1, counts[StatusOpen])
+
+		all, err := fx.repo.CountByStatus(fx.ctx, fx.tenant.ID, datascope.DataScopeAll, 0, nil)
+		require.NoError(t, err)
+		assert.Equal(t, 5, sumStatusCounts(all), "nil 窗口保持可见范围内全量口径")
+	})
+
+	t.Run("今日趋势的解决数包含窗口前创建的工单", func(t *testing.T) {
+		trend, err := fx.repo.TrendByDay(fx.ctx, fx.tenant.ID, datascope.DataScopeAll, 0, today)
+		require.NoError(t, err)
+		require.Len(t, trend, 1)
+		assert.Equal(t, dayStart(0).Format("2006-01-02"), trend[0].Date)
+		assert.Equal(t, 2, trend[0].Created)
+		assert.Equal(t, 2, trend[0].Resolved, "窗口前创建、今日解决的工单必须计入今日解决数")
+	})
+
+	t.Run("跨日窗口逐日补零", func(t *testing.T) {
+		window := StatsWindow{From: dayStart(-2), To: dayStart(0).Add(24*time.Hour - time.Nanosecond)}
+		trend, err := fx.repo.TrendByDay(fx.ctx, fx.tenant.ID, datascope.DataScopeAll, 0, window)
+		require.NoError(t, err)
+		require.Len(t, trend, 3, "没有工单的日子要画成 0，不能断点")
+		assert.Equal(t, []int{0, 1, 2}, []int{trend[0].Created, trend[1].Created, trend[2].Created})
+		assert.Equal(t, []int{0, 0, 2}, []int{trend[0].Resolved, trend[1].Resolved, trend[2].Resolved})
+	})
+
+	t.Run("窗口与行级数据范围叠加", func(t *testing.T) {
+		counts, err := fx.repo.CountByStatus(fx.ctx, fx.tenant.ID, datascope.DataScopeOwnedOrAssigned, fx.user.ID, &today)
+		require.NoError(t, err)
+		assert.Equal(t, 2, sumStatusCounts(counts))
+
+		// 他人创建的工单不会因为窗口命中而泄漏。
+		other, err := fx.repo.CountByStatus(fx.ctx, fx.tenant.ID, datascope.DataScopeOwnedOrAssigned, fx.user.ID+999, &today)
+		require.NoError(t, err)
+		assert.Zero(t, sumStatusCounts(other))
+	})
+
+	t.Run("跨度过大fail closed", func(t *testing.T) {
+		tooWide := StatsWindow{From: dayStart(-400), To: dayStart(0)}
+		_, err := fx.repo.TrendByDay(fx.ctx, fx.tenant.ID, datascope.DataScopeAll, 0, tooWide)
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "trend window too large")
+	})
+}
+
+func ptr[T any](v T) *T { return &v }
 
 func sumStatusCounts(counts map[Status]int) int {
 	total := 0
@@ -763,25 +855,25 @@ func TestRepository_CountsShareListDataScope(t *testing.T) {
 		require.NoError(t, err)
 	}
 
-	own, err := fx.repo.CountByStatus(fx.ctx, fx.tenant.ID, datascope.DataScopeOwnedOrAssigned, fx.user.ID)
+	own, err := fx.repo.CountByStatus(fx.ctx, fx.tenant.ID, datascope.DataScopeOwnedOrAssigned, fx.user.ID, nil)
 	require.NoError(t, err)
 	assert.Equal(t, 1, sumStatusCounts(own), "统计只能覆盖本人创建的工单")
 
-	all, err := fx.repo.CountByStatus(fx.ctx, fx.tenant.ID, datascope.DataScopeAll, 0)
+	all, err := fx.repo.CountByStatus(fx.ctx, fx.tenant.ID, datascope.DataScopeAll, 0, nil)
 	require.NoError(t, err)
 	assert.Equal(t, 2, sumStatusCounts(all))
 
 	// 身份缺失 fail closed，不能回落到租户全量。
-	none, err := fx.repo.CountByStatus(fx.ctx, fx.tenant.ID, datascope.DataScopeOwnedOrAssigned, 0)
+	none, err := fx.repo.CountByStatus(fx.ctx, fx.tenant.ID, datascope.DataScopeOwnedOrAssigned, 0, nil)
 	require.NoError(t, err)
 	assert.Zero(t, sumStatusCounts(none))
 
-	ownPriority, err := fx.repo.CountByPriority(fx.ctx, fx.tenant.ID, datascope.DataScopeOwnedOrAssigned, bob.ID)
+	ownPriority, err := fx.repo.CountByPriority(fx.ctx, fx.tenant.ID, datascope.DataScopeOwnedOrAssigned, bob.ID, nil)
 	require.NoError(t, err)
 	assert.Equal(t, 1, sumPriorityCounts(ownPriority))
 
 	// 仓储层未实现的档位按最窄档处理，而不是放宽成全量。
-	unknown, err := fx.repo.CountByStatus(fx.ctx, fx.tenant.ID, datascope.DataScope(99), fx.user.ID)
+	unknown, err := fx.repo.CountByStatus(fx.ctx, fx.tenant.ID, datascope.DataScope(99), fx.user.ID, nil)
 	require.NoError(t, err)
 	assert.Equal(t, 1, sumStatusCounts(unknown))
 }

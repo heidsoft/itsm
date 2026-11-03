@@ -17,6 +17,7 @@ import (
 	"itsm-backend/ent/enttest"
 	"itsm-backend/middleware"
 	ticketrepo "itsm-backend/repository/ticket"
+	"itsm-backend/service"
 )
 
 func TestTicketStatsCountsOverdueWithinTenant(t *testing.T) {
@@ -74,17 +75,44 @@ type nameCount struct {
 	Count int
 }
 
+// statsWindowShape/statsTrendShape/statsSLAShape 是带窗口请求才会出现的契约段。
+type statsWindowShape struct {
+	DateFrom string `json:"dateFrom"`
+	DateTo   string `json:"dateTo"`
+	Days     int    `json:"days"`
+}
+
+type statsTrendShape struct {
+	Date     string `json:"date"`
+	Created  int    `json:"created"`
+	Resolved int    `json:"resolved"`
+}
+
+type statsSLAShape struct {
+	ComplianceRate     float64 `json:"complianceRate"`
+	SampledTickets     int     `json:"sampledTickets"`
+	ViolatedTickets    int     `json:"violatedTickets"`
+	AvgResponseMinutes float64 `json:"avgResponseMinutes"`
+	AvgResolutionHours float64 `json:"avgResolutionHours"`
+	WindowDays         int     `json:"windowDays"`
+	Scope              string  `json:"scope"`
+}
+
 // statsShape 是 /api/v1/tickets/stats 响应 data 的完整形状。
 // 逐字段断言，禁止用“包含某字段”这种宽松校验掩盖分布缺失。
 type statsShape struct {
-	Total        int `json:"total"`
-	Open         int `json:"open"`
-	InProgress   int `json:"inProgress"`
-	Resolved     int `json:"resolved"`
-	Closed       int `json:"closed"`
-	Pending      int `json:"pending"`
-	HighPriority int `json:"highPriority"`
-	Overdue      int `json:"overdue"`
+	Total        int               `json:"total"`
+	Open         int               `json:"open"`
+	InProgress   int               `json:"inProgress"`
+	Resolved     int               `json:"resolved"`
+	Closed       int               `json:"closed"`
+	Pending      int               `json:"pending"`
+	HighPriority int               `json:"highPriority"`
+	Overdue      int               `json:"overdue"`
+	Scope        string            `json:"scope"`
+	Window       *statsWindowShape `json:"window"`
+	DailyTrend   []statsTrendShape `json:"dailyTrend"`
+	SLA          *statsSLAShape    `json:"sla"`
 	ByStatus     []struct {
 		Status string `json:"status"`
 		Count  int    `json:"count"`
@@ -231,9 +259,15 @@ func TestTicketStatsDistributionsAreAuthoritative(t *testing.T) {
 	require.Equal(t, a.Total, sumNameCounts(a.priorities()), "优先级分布之和必须等于总数")
 
 	require.Equal(t,
-		[]string{"byPriority", "byStatus", "closed", "highPriority", "inProgress", "open", "overdue", "pending", "resolved", "total"},
+		[]string{"byPriority", "byStatus", "closed", "highPriority", "inProgress", "open", "overdue", "pending", "resolved", "scope", "total"},
 		a.Keys,
 	)
+	// 未带日期时不返回 window/dailyTrend/sla：口径必须能被前端区分，
+	// 空数组和 0 会被读成「窗口内确实没有工单」。
+	require.Nil(t, a.Window, "未传日期不得回显窗口")
+	require.Nil(t, a.DailyTrend, "未传日期不得返回趋势数组")
+	require.Nil(t, a.SLA, "未传日期不得返回 SLA 读数")
+	require.Equal(t, "all", a.Scope, "管理角色统计口径必须是租户全量")
 
 	// 租户 B 只看见自己的工单：分布不能跨租户泄漏。
 	b := get(t, tenantB.tenantID)
@@ -317,4 +351,209 @@ func TestOrderedNamesKeepsVocabularyOrderAndAppendsUnknown(t *testing.T) {
 	require.Equal(t, []string{"medium", "high", "critical", "zzz_legacy"}, orderedNames(counts, ticketPriorityOrder))
 	require.NotNil(t, orderedNames(map[string]int{}, ticketStatusOrder))
 	require.Empty(t, orderedNames(map[string]int{"open": 0}, ticketStatusOrder))
+}
+
+func timePtr(v time.Time) *time.Time { return &v }
+
+// statsEnvelope 是一次 /tickets/stats 请求的完整结果：HTTP 状态、业务码与 data。
+// 契约测试必须三者都断言，只看 data 会把 400 的空 body 读成「统计为 0」。
+type statsEnvelope struct {
+	httpStatus int
+	code       int
+	message    string
+	data       statsShape
+}
+
+// TestTicketStatsWindowedContract 锁住带窗口的 /tickets/stats 契约。
+//
+// 合并工单仪表盘后，这个端点是工单统计页的唯一数据源：窗口、趋势、SLA 三段
+// 必须由它一起给出。任何一段回落到第二个数据源，同一屏就会重新出现两种口径
+// （卡片是本人可见 12 张、趋势图是租户全量 300 张）。
+func TestTicketStatsWindowedContract(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", "file:ticket_stats_window?mode=memory&cache=shared&_fk=1")
+	defer client.Close()
+	ctx := context.Background()
+
+	tenantA := client.Tenant.Create().SetName("win-a").SetCode("win-a").SetDomain("win-a.test").SaveX(ctx)
+	tenantB := client.Tenant.Create().SetName("win-b").SetCode("win-b").SetDomain("win-b.test").SaveX(ctx)
+	alice := client.User.Create().SetUsername("win-alice").SetEmail("alice@win.test").SetName("alice").SetPasswordHash("hash").SetTenantID(tenantA.ID).SaveX(ctx)
+	bob := client.User.Create().SetUsername("win-bob").SetEmail("bob@win.test").SetName("bob").SetPasswordHash("hash").SetTenantID(tenantA.ID).SaveX(ctx)
+	carol := client.User.Create().SetUsername("win-carol").SetEmail("carol@win.test").SetName("carol").SetPasswordHash("hash").SetTenantID(tenantB.ID).SaveX(ctx)
+	slaDef := client.SLADefinition.Create().SetName("win-sla").SetResponseTime(30).SetResolutionTime(240).SetTenantID(tenantA.ID).SaveX(ctx)
+
+	now := time.Now()
+	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.Local)
+	label := today.Format("2006-01-02")
+
+	mk := func(number string, tenantID, requesterID int, createdAt time.Time, resolvedAt *time.Time) int {
+		create := client.Ticket.Create().
+			SetTitle(number).
+			SetTicketNumber(number).
+			SetStatus("open").
+			SetPriority("medium").
+			SetRequesterID(requesterID).
+			SetTenantID(tenantID).
+			SetCreatedAt(createdAt)
+		if resolvedAt != nil {
+			create = create.SetStatus("resolved").SetResolvedAt(*resolvedAt)
+		}
+		return create.SaveX(ctx).ID
+	}
+
+	// 今天 2 张（alice 已解决 + bob 未解决），8 天前 1 张落在窗口外，
+	// 另 1 张属于租户 B：任何一条都不该被窗口的 2 张覆盖或泄漏。
+	resolvedToday := mk("WIN-1", tenantA.ID, alice.ID, today.Add(time.Hour), timePtr(today.Add(2*time.Hour)))
+	mk("WIN-2", tenantA.ID, bob.ID, today.Add(3*time.Hour), nil)
+	mk("WIN-3", tenantA.ID, alice.ID, today.AddDate(0, 0, -8), nil)
+	mk("WIN-B", tenantB.ID, carol.ID, today.Add(time.Hour), nil)
+
+	client.SLAViolation.Create().
+		SetSLADefinitionID(slaDef.ID).
+		SetTicketID(resolvedToday).
+		SetViolationType("resolution").
+		SetTenantID(tenantA.ID).
+		SaveX(ctx)
+
+	h := NewHandler(NewService(
+		NewEntRepository(ticketrepo.NewEntRepository(client, zap.NewNop().Sugar()), client),
+		nil,
+		service.NewSLAMonitorService(client, zap.NewNop().Sugar()),
+		zap.NewNop().Sugar(),
+	))
+
+	get := func(tb *testing.T, query string, tenantID, userID int, role string) statsEnvelope {
+		tb.Helper()
+		r := gin.New()
+		r.GET("/api/v1/tickets/stats", func(c *gin.Context) {
+			c.Set("tenant_id", tenantID)
+			c.Set(middleware.TenantContextKey, &middleware.TenantContext{TenantID: tenantID})
+			c.Set("user_id", userID)
+			c.Set("role", role)
+			h.GetTicketStats(c)
+		})
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, httptest.NewRequest(http.MethodGet, "/api/v1/tickets/stats?"+query, nil))
+
+		var envelope struct {
+			Code    int             `json:"code"`
+			Message string          `json:"message"`
+			Data    json.RawMessage `json:"data"`
+		}
+		require.NoError(tb, json.Unmarshal(w.Body.Bytes(), &envelope))
+		out := statsEnvelope{httpStatus: w.Code, code: envelope.Code, message: envelope.Message}
+		if w.Code == http.StatusOK {
+			require.NoError(tb, json.Unmarshal(envelope.Data, &out.data))
+		}
+		return out
+	}
+
+	t.Run("窗口内计数器/分布/趋势共用同一口径", func(t *testing.T) {
+		got := get(t, "dateFrom="+label+"&dateTo="+label, tenantA.ID, alice.ID, "admin")
+		require.Equal(t, http.StatusOK, got.httpStatus, got.message)
+		require.Zero(t, got.code)
+		require.Equal(t, 2, got.data.Total, "窗口外的历史工单不得计入")
+		require.Equal(t, "all", got.data.Scope)
+		require.NotNil(t, got.data.Window)
+		require.Equal(t, statsWindowShape{DateFrom: label, DateTo: label, Days: 1}, *got.data.Window)
+
+		// 分布之和 == 窗口总数：两侧谓词不一致时这里必然对不上。
+		require.Equal(t, got.data.Total, sumNameCounts(got.data.statuses()))
+		require.Equal(t, got.data.Total, sumNameCounts(got.data.priorities()))
+
+		require.Len(t, got.data.DailyTrend, 1)
+		require.Equal(t, statsTrendShape{Date: label, Created: 2, Resolved: 1}, got.data.DailyTrend[0])
+	})
+
+	t.Run("SLA 读数随窗口返回并标注租户口径", func(t *testing.T) {
+		got := get(t, "dateFrom="+label+"&dateTo="+label, tenantA.ID, alice.ID, "admin")
+		require.NotNil(t, got.data.SLA, "带窗口的请求必须给出 SLA 读数，否则页面只能继续硬编码 0")
+		require.Equal(t, 2, got.data.SLA.SampledTickets, "SLA 抽样只数窗口内新建的工单，且不跨租户")
+		require.Equal(t, 1, got.data.SLA.ViolatedTickets)
+		require.InDelta(t, 50.0, got.data.SLA.ComplianceRate, 0.01)
+		require.Equal(t, "tenant", got.data.SLA.Scope, "SLA 是租户口径，页面必须把它和统计范围一起显示")
+		require.Equal(t, 1, got.data.SLA.WindowDays)
+	})
+
+	t.Run("不传日期保持全量口径且不返回窗口段", func(t *testing.T) {
+		got := get(t, "", tenantA.ID, alice.ID, "admin")
+		require.Equal(t, http.StatusOK, got.httpStatus, got.message)
+		require.Equal(t, 3, got.data.Total)
+		require.Nil(t, got.data.Window)
+		require.Nil(t, got.data.DailyTrend)
+		require.Nil(t, got.data.SLA)
+	})
+
+	t.Run("窗口跟随行级数据范围", func(t *testing.T) {
+		got := get(t, "dateFrom="+label+"&dateTo="+label, tenantA.ID, alice.ID, "end_user")
+		require.Equal(t, http.StatusOK, got.httpStatus, got.message)
+		require.Equal(t, "owner", got.data.Scope)
+		require.Equal(t, 1, got.data.Total, "bob 今天建的工单不能出现在 alice 的统计里")
+		require.Len(t, got.data.DailyTrend, 1)
+		require.Equal(t, 1, got.data.DailyTrend[0].Created)
+	})
+
+	t.Run("窗口统计不跨租户", func(t *testing.T) {
+		got := get(t, "dateFrom="+label+"&dateTo="+label, tenantB.ID, carol.ID, "admin")
+		require.Equal(t, http.StatusOK, got.httpStatus, got.message)
+		// 租户 A 的 3 张（含窗口内 2 张）都不得进租户 B 的读数，只剩 B 自己的 WIN-B。
+		require.Equal(t, 1, got.data.Total)
+		require.Len(t, got.data.DailyTrend, 1)
+		require.Equal(t, 1, got.data.DailyTrend[0].Created)
+		require.Zero(t, got.data.DailyTrend[0].Resolved)
+		require.NotNil(t, got.data.SLA)
+		require.Equal(t, 1, got.data.SLA.SampledTickets, "SLA 抽样同样按租户收窄")
+		require.Zero(t, got.data.SLA.ViolatedTickets)
+	})
+
+	t.Run("窗口参数非法返回 400 而不是静默回落", func(t *testing.T) {
+		yesterday := today.AddDate(0, 0, -1).Format("2006-01-02")
+		tooWide := today.AddDate(-2, 0, 0).Format("2006-01-02")
+		cases := []struct {
+			name    string
+			query   string
+			message string
+		}{
+			{"只传 dateFrom", "dateFrom=" + label, "dateFrom 与 dateTo 必须同时提供"},
+			{"只传 dateTo", "dateTo=" + label, "dateFrom 与 dateTo 必须同时提供"},
+			{"区间倒置", "dateFrom=" + label + "&dateTo=" + yesterday, "dateFrom 不能晚于 dateTo"},
+			{"格式非法", "dateFrom=2026%2F01%2F01&dateTo=" + label, "dateFrom 格式错误"},
+			{"跨度过大", "dateFrom=" + tooWide + "&dateTo=" + label, "统计窗口最长 366 天"},
+		}
+		for _, tc := range cases {
+			t.Run(tc.name, func(t *testing.T) {
+				got := get(t, tc.query, tenantA.ID, alice.ID, "admin")
+				require.Equal(t, http.StatusBadRequest, got.httpStatus, tc.query)
+				require.Equal(t, 1001, got.code)
+				require.Contains(t, got.message, tc.message)
+			})
+		}
+	})
+}
+
+// TestResolveStatsWindowBoundaries 锁住窗口边界的两处易错点：
+// 上界必须覆盖当日最后一刻（List 用 LTE 比较 created_at），
+// 都不传日期必须返回 nil 而不是默认 30 天——否则工作台卡片会在无人改筛选时变小。
+func TestResolveStatsWindowBoundaries(t *testing.T) {
+	now := time.Date(2026, 11, 1, 15, 4, 5, 0, time.Local)
+
+	missing, err := ResolveStatsWindow("", "", now)
+	require.NoError(t, err)
+	require.Nil(t, missing, "未传日期不得补默认窗口")
+
+	window, err := ResolveStatsWindow("2026-11-01", "2026-11-01", now)
+	require.NoError(t, err)
+	require.NotNil(t, window)
+	require.Equal(t, time.Date(2026, 11, 1, 0, 0, 0, 0, time.Local), window.From)
+	require.Equal(t, "2026-11-01 23:59:59", window.To.Format("2006-01-02 15:04:05"),
+		"上界必须含当日整天，否则今天 00:00 之后创建的工单会被 LTE 排除")
+
+	echo := StatsWindowEcho(window)
+	require.Equal(t, &TicketStatsWindow{DateFrom: "2026-11-01", DateTo: "2026-11-01", Days: 1}, echo)
+
+	// RFC3339 带时区也要归一到本地整日，与 YYYY-MM-DD 同口径。
+	rfc, err := ResolveStatsWindow("2026-10-31T00:00:00Z", "2026-11-01T12:00:00Z", now)
+	require.NoError(t, err)
+	require.Equal(t, time.Date(2026, 10, 31, 0, 0, 0, 0, time.Local), rfc.From)
+	require.Equal(t, "2026-11-01", StatsWindowEcho(rfc).DateTo)
+	require.Equal(t, 2, StatsWindowEcho(rfc).Days)
 }

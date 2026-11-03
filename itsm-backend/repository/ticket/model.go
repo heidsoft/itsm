@@ -188,6 +188,23 @@ type FilterParams struct {
 	CurrentUserID int
 }
 
+// StatsWindow 工单统计的时间窗口，语义与 FilterParams.DateFrom/DateTo 一致：
+// 按 created_at 落在 [From, To] 内收窄。调用方负责把 To 补齐到当日 23:59:59，
+// 否则「今天」这一天的工单会被排除（列比较是 LTE，不含时分秒的当日零点）。
+type StatsWindow struct {
+	From time.Time
+	To   time.Time
+}
+
+// TrendPoint 按天聚合的工单趋势读数。
+// Created 按 created_at 落桶，Resolved 按 resolved_at 落桶，两者都受同一窗口与
+// 行级数据范围约束；序列独立，因此窗口外的老工单在本窗口内解决仍会出现在 Resolved。
+type TrendPoint struct {
+	Date     string `json:"date"`
+	Created  int    `json:"created"`
+	Resolved int    `json:"resolved"`
+}
+
 // CreateParams 工单创建参数
 type CreateParams struct {
 	Title          string

@@ -7,6 +7,7 @@ import { TicketTypeFormModal } from '@/components/business/TicketTypeFormModal';
 import { TicketTypeApi } from '@/lib/api/ticketTypeApi';
 import { isPermissionDeniedError, serverErrorMessage } from '@/lib/api/http-client';
 import { usePermissions } from '@/lib/hooks/use-permissions';
+import { formatDateTime } from '@/lib/formatters';
 import type { CreateTicketTypeRequest, TicketTypeDefinition, TicketTypePresetDefinition, UpdateTicketTypeRequest } from '@/types/ticket-type';
 
 const { Title, Text } = Typography;
@@ -126,7 +127,7 @@ export default function TicketTypesPage() {
       { title: 'SLA', dataIndex: 'slaEnabled', width: 80, render: (value: boolean) => value ? '已绑定' : '-' },
 	  { title: '排序', dataIndex: 'sortOrder', width: 64 },
       { title: '状态', dataIndex: 'status', width: 96, render: (value: string, item) => item.archivedAt ? <Tag color="default">已归档</Tag> : <Tag color={value === 'active' ? 'green' : 'default'}>{value === 'active' ? '启用' : '停用'}</Tag> },
-      { title: '更新时间', dataIndex: 'updatedAt', width: 170, render: (value: string) => value ? new Date(value).toLocaleString() : '-' },
+      { title: '更新时间', dataIndex: 'updatedAt', width: 170, render: (value: string) => formatDateTime(value) || '-' },
       { title: '操作', width: 240, fixed: 'right', render: (_, item) => !canManage ? <Text type="secondary">只读</Text> : item.archivedAt ? <Space><Button size="small" type="primary" ghost icon={<RotateCcw className="h-3.5 w-3.5" />} onClick={() => restore(item)}>恢复</Button></Space> : <Space><Button size="small" icon={<Pencil className="h-3.5 w-3.5" />} onClick={() => { setEditing(item); setOpen(true); }}>编辑</Button><Button size="small" icon={<Copy className="h-3.5 w-3.5" />} onClick={() => clone(item)}>复制</Button><Switch size="small" aria-label={`切换工单类型 ${item.name} 的启用状态`} checked={item.status === 'active'} onChange={async enabled => { try { await TicketTypeApi.setEnabled(item.id, enabled); message.success(enabled ? '工单类型已启用' : '工单类型已停用'); await load(); } catch (error) { message.error(describeFailure(error, '操作失败', 'ticket_type:manage')); } }} /></Space> },
     ]} />
   </Card><TicketTypeFormModal visible={open} editingType={editing} onCancel={() => { setOpen(false); setEditing(null); }} onSubmit={save} /><Modal title="工单类型预设库" open={presetOpen} footer={null} onCancel={() => setPresetOpen(false)}>

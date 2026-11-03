@@ -39,8 +39,13 @@ type Repository interface {
 	FindOverduePage(ctx context.Context, tenantID int, page, size int, scope datascope.DataScope, viewerID int) ([]*Ticket, int, error)
 	// CountByStatus / CountByPriority 接受与 List 相同的行级数据范围，
 	// 让工作台卡片读数与列表结果共用一个口径；scope 语义见 dataScopePredicates。
-	CountByStatus(ctx context.Context, tenantID int, scope datascope.DataScope, viewerID int) (map[Status]int, error)
-	CountByPriority(ctx context.Context, tenantID int, scope datascope.DataScope, viewerID int) (map[Priority]int, error)
+	// window 为 nil 时统计可见范围内全部工单，非 nil 时按 created_at 落在窗口内收窄。
+	CountByStatus(ctx context.Context, tenantID int, scope datascope.DataScope, viewerID int, window *StatsWindow) (map[Status]int, error)
+	CountByPriority(ctx context.Context, tenantID int, scope datascope.DataScope, viewerID int, window *StatsWindow) (map[Priority]int, error)
+	// TrendByDay 按天返回窗口内的新建数与解决数。两条序列各按自己的事件时间落桶
+	// （created_at / resolved_at），因此窗口外的老工单在窗口内被解决时，仍会计入
+	// 当日 resolved —— 否则趋势图会把「本周解决」画成「本周新建且本周解决」。
+	TrendByDay(ctx context.Context, tenantID int, scope datascope.DataScope, viewerID int, window StatsWindow) ([]TrendPoint, error)
 
 	// 编号生成
 	GenerateTicketNumber(ctx context.Context, tenantID int) (string, error)

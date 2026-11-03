@@ -72,6 +72,32 @@ func TestMenuBaseline_ApprovalTodoMenuIsSingleEntry(t *testing.T) {
 	}
 }
 
+// 工单统计是唯一入口，工单仪表盘不得再作为菜单存在。
+//
+// /tickets/dashboard 与 /tickets/analytics 展示同一批指标（总量/待处理/已解决/SLA/优先级分布），
+// 且前者满是假控件（时间范围选择器不进请求、SLA 阈值 Rate 只存组件 state、趋势图渲染
+// 「共 N 个数据点」文字）。2026-11-01 决定页面删除、菜单退役，端点保留给其他消费方。
+// 基线补齐与 seedMenus 都是 add-only，不会删存量行，因此存量库由
+// migrations/20261101_retire_ticket_dashboard_menu.sql 停用；两端要同时锁住，
+// 否则下次有人「顺手补个仪表盘菜单」又会回到两个入口一个目的地。
+func TestMenuBaseline_TicketDashboardMenuRetired(t *testing.T) {
+	for _, spec := range menubaseline.MenuDefinitions() {
+		if spec.Path == "/tickets/dashboard" {
+			t.Errorf("菜单基线仍有 /tickets/dashboard（%q）：该页面已退役，工单统计是唯一入口", spec.Name)
+		}
+	}
+
+	var analyticsCode string
+	for _, spec := range menubaseline.MenuDefinitions() {
+		if spec.Path == "/tickets/analytics" {
+			analyticsCode = spec.PermissionCode
+		}
+	}
+	if analyticsCode == "" {
+		t.Fatalf("菜单基线缺少 /tickets/analytics 条目，退役仪表盘后工单域没有任何统计入口")
+	}
+}
+
 // 工单模板页的菜单归属。
 //
 // 页面数据源是 GET /api/v1/tickets/templates，接口要求 ticket_template:read；
@@ -176,11 +202,14 @@ func TestMenuBaseline_RuleConfigMenusUseRuleCodes(t *testing.T) {
 	}
 }
 
-// 工单统计页的菜单归属。
+// 工单统计页的菜单权限码。
 //
-// 页面主数据源 GET /api/v1/analytics/tickets 要求 report:read；基线曾挂在 ticket:read 上，
-// 于是持有 ticket:read、不持有 report:read 的坐席看得到入口，点进去就是 code 2003（2026-10-24
-// 本地生产栈实测），页面再把 403 渲染成全 0。
+// 主数据源已收敛为 GET /api/v1/tickets/stats（ticket:read，随登录者行级数据范围收窄），
+// 但同页的「深度分析」与「导出」走 POST /tickets/analytics/{deep,export}
+// （middleware/rbac_precheck_gen.go：report:read / ticket:export）。
+// 菜单按页面最高要求的入口取 report:read：挂在 ticket:read 上时坐席看得到入口、
+// 点进去深度分析就是 code 2003（2026-10-24 本地生产栈实测），页面再把 403 渲染成全 0。
+// 坐席视角的统计入口是独立工作面（其数据范围本就只有本人可见工单），不在本条断言范围内。
 func TestMenuBaseline_TicketAnalyticsMenuUsesReportRead(t *testing.T) {
 	var code string
 	for _, spec := range menubaseline.MenuDefinitions() {
@@ -307,7 +336,9 @@ func TestMenuBaseline_CustomerContractChildren(t *testing.T) {
 			names[spec.Path] = spec.Name
 		}
 	}
-	want := []string{"/email-intake/customers", "/email-intake/contracts", "/email-intake/sources"}
+	// 客户主数据子页使用语义化顶级 URL（/customers /support-contracts /source-organizations），
+	// 仍挂在「客户与合同」父菜单下，避免 /email-intake/xxx 把客户主数据藏进报障入口。
+	want := []string{"/customers", "/support-contracts", "/source-organizations"}
 	if len(children) != len(want) {
 		t.Errorf("/email-intake 下有 %d 个子项（%v），应为 %d 个客户主数据子项", len(children), names, len(want))
 	}
@@ -316,13 +347,13 @@ func TestMenuBaseline_CustomerContractChildren(t *testing.T) {
 			t.Errorf("/email-intake 缺少子项 %s", p)
 		}
 	}
-	if _, ok := children["/email-intake/on-call"]; ok {
+	if _, ok := children["/on-call"]; ok {
 		t.Errorf("值班排班仍挂在客户主数据下：它是事件响应排班，应归事件管理")
 	}
 
 	var onCallParent string
 	for _, spec := range menubaseline.MenuDefinitions() {
-		if spec.Path == "/email-intake/on-call" {
+		if spec.Path == "/on-call" {
 			onCallParent = spec.ParentPath
 		}
 	}

@@ -90,6 +90,41 @@ type PriorityCount struct {
 	Count    int    `json:"count"`
 }
 
+// DailyTrendPoint 按天的新建/解决读数，日期为本地时区的 YYYY-MM-DD。
+type DailyTrendPoint struct {
+	Date     string `json:"date"`
+	Created  int    `json:"created"`
+	Resolved int    `json:"resolved"`
+}
+
+// TicketSLACompliance 是统计窗口内的 SLA 达标读数。
+//
+// 它是指针：nil 表示 SLA 计时服务未接入或读数失败，属于「没取到」，
+// 不能塌成 ComplianceRate=0 —— 0% 会被读成「全部工单都超时」，与故障无法区分。
+//
+// Scope 固定为 tenant：SLA 达标率按租户全量计算，不跟随登录者的行级数据范围。
+// 页面必须把这句口径显示出来，否则同一屏会出现两种范围。
+type TicketSLACompliance struct {
+	ComplianceRate     float64 `json:"complianceRate"`
+	SampledTickets     int     `json:"sampledTickets"`
+	ViolatedTickets    int     `json:"violatedTickets"`
+	AvgResponseMinutes float64 `json:"avgResponseMinutes"`
+	AvgResolutionHours float64 `json:"avgResolutionHours"`
+	WindowDays         int     `json:"windowDays"`
+	Scope              string  `json:"scope"`
+}
+
+// SLAScopeTenant 是 SLA 达标读数唯一的口径取值（租户口径）。
+const SLAScopeTenant = "tenant"
+
+// TicketStatsWindow 回显本次统计实际使用的时间窗口，供页面标注读数口径。
+// DateFrom/DateTo 是闭区间日（YYYY-MM-DD），Days 是天数（含首尾两天）。
+type TicketStatsWindow struct {
+	DateFrom string `json:"dateFrom"`
+	DateTo   string `json:"dateTo"`
+	Days     int    `json:"days"`
+}
+
 // TicketStats holds aggregated ticket statistics per tenant
 type TicketStats struct {
 	OverdueTickets    int `json:"overdueTickets"`
@@ -104,6 +139,16 @@ type TicketStats struct {
 	AvgResolutionMin  int `json:"avgResolutionMin"`
 	// ByStatus/ByPriority 只包含真实存在的取值（来自分组计数），
 	// 顺序按词表基准，词表外的历史值按字母序追加。
+	// 两者与上面的计数器共用同一套行级数据范围与时间窗口。
 	ByStatus   []StatusCount   `json:"byStatus"`
 	ByPriority []PriorityCount `json:"byPriority"`
+	// DailyTrend 仅在请求带时间窗口时填充；nil 表示本次未取趋势。
+	DailyTrend []DailyTrendPoint    `json:"dailyTrend,omitempty"`
+	SLA        *TicketSLACompliance `json:"sla,omitempty"`
+	// Window 回显本次实际生效的统计窗口；nil 表示未限制窗口。
+	// 页面必须把它显示出来，否则「最近 30 天」和「全部」在屏幕上长得一样。
+	Window *TicketStatsWindow `json:"window,omitempty"`
+	// Scope 是计数器与分布跟随的行级数据范围（all/department/owner），
+	// 与 GET /api/v1/tickets 列表使用同一判定。
+	Scope string `json:"scope"`
 }

@@ -751,8 +751,20 @@ func dataScopePredicates(scope datascope.DataScope, viewerID int) []predicate.Ti
 	}
 }
 
+// windowPredicates 把可选统计窗口翻译成与 List 完全相同的 created_at 谓词，
+// 保证「统计卡片」与「列表页同筛选」读数一致。nil 表示不限窗口。
+func windowPredicates(window *StatsWindow) []predicate.Ticket {
+	if window == nil {
+		return nil
+	}
+	return []predicate.Ticket{
+		ticket.CreatedAtGTE(window.From),
+		ticket.CreatedAtLTE(window.To),
+	}
+}
+
 // CountByStatus 按状态统计工单数量
-func (r *EntRepository) CountByStatus(ctx context.Context, tenantID int, scope datascope.DataScope, viewerID int) (map[Status]int, error) {
+func (r *EntRepository) CountByStatus(ctx context.Context, tenantID int, scope datascope.DataScope, viewerID int, window *StatsWindow) (map[Status]int, error) {
 	// 使用 Ent 的聚合功能
 	type statusCount struct {
 		Status string `json:"status"`
@@ -763,6 +775,7 @@ func (r *EntRepository) CountByStatus(ctx context.Context, tenantID int, scope d
 	err := r.Client().Ticket.Query().
 		Where(ticket.TenantID(tenantID), ticket.DeletedAtIsNil()).
 		Where(dataScopePredicates(scope, viewerID)...).
+		Where(windowPredicates(window)...).
 		GroupBy(ticket.FieldStatus).
 		Aggregate(ent.Count()).
 		Scan(ctx, &results)
@@ -779,7 +792,7 @@ func (r *EntRepository) CountByStatus(ctx context.Context, tenantID int, scope d
 }
 
 // CountByPriority 按优先级统计工单数量
-func (r *EntRepository) CountByPriority(ctx context.Context, tenantID int, scope datascope.DataScope, viewerID int) (map[Priority]int, error) {
+func (r *EntRepository) CountByPriority(ctx context.Context, tenantID int, scope datascope.DataScope, viewerID int, window *StatsWindow) (map[Priority]int, error) {
 	type priorityCount struct {
 		Priority string `json:"priority"`
 		Count    int    `json:"count"`
@@ -789,6 +802,7 @@ func (r *EntRepository) CountByPriority(ctx context.Context, tenantID int, scope
 	err := r.Client().Ticket.Query().
 		Where(ticket.TenantID(tenantID), ticket.DeletedAtIsNil()).
 		Where(dataScopePredicates(scope, viewerID)...).
+		Where(windowPredicates(window)...).
 		GroupBy(ticket.FieldPriority).
 		Aggregate(ent.Count()).
 		Scan(ctx, &results)
@@ -803,6 +817,77 @@ func (r *EntRepository) CountByPriority(ctx context.Context, tenantID int, scope
 
 	return counts, nil
 }
+
+// TrendByDay 按天返回窗口内的新建数与解决数。
+//
+// 只 Select 时间列并在 Go 侧落桶，而不是逐日发 Count 查询：30 天窗口按天循环是
+// 60 次查询，而按 date 函数分组需要在 Postgres 与 SQLite 之间维护两套方言
+// （Ent 的 GroupBy 不接受表达式）。落桶的代价只是窗口内的时间列本身。
+//
+// created 序列按 created_at、resolved 序列按 resolved_at 各自落桶，两者都受同一
+// 租户谓词与行级数据范围约束；resolved 独立落桶，因此窗口前创建、本窗口内解决的
+// 工单仍会出现在 resolved 序列上。
+func (r *EntRepository) TrendByDay(ctx context.Context, tenantID int, scope datascope.DataScope, viewerID int, window StatsWindow) ([]TrendPoint, error) {
+	steps := int(window.To.Sub(window.From).Hours()/24) + 1
+	if steps < 1 {
+		steps = 1
+	}
+	if steps > maxTrendDays {
+		return nil, fmt.Errorf("trend window too large: %d days (max %d)", steps, maxTrendDays)
+	}
+
+	type createdRow struct {
+		CreatedAt time.Time `json:"created_at"`
+	}
+	type resolvedRow struct {
+		ResolvedAt time.Time `json:"resolved_at"`
+	}
+
+	baseQuery := func() *ent.TicketQuery {
+		return r.Client().Ticket.Query().
+			Where(ticket.TenantID(tenantID), ticket.DeletedAtIsNil()).
+			Where(dataScopePredicates(scope, viewerID)...)
+	}
+
+	var createdRows []createdRow
+	if err := baseQuery().
+		Where(ticket.CreatedAtGTE(window.From), ticket.CreatedAtLTE(window.To)).
+		Select(ticket.FieldCreatedAt).
+		Scan(ctx, &createdRows); err != nil {
+		return nil, fmt.Errorf("trend created query: %w", err)
+	}
+	createdCounts := make(map[string]int, len(createdRows))
+	for _, row := range createdRows {
+		createdCounts[row.CreatedAt.Format("2006-01-02")]++
+	}
+
+	var resolvedRows []resolvedRow
+	if err := baseQuery().
+		Where(ticket.ResolvedAtNotNil(), ticket.ResolvedAtGTE(window.From), ticket.ResolvedAtLTE(window.To)).
+		Select(ticket.FieldResolvedAt).
+		Scan(ctx, &resolvedRows); err != nil {
+		return nil, fmt.Errorf("trend resolved query: %w", err)
+	}
+	resolvedCounts := make(map[string]int, len(resolvedRows))
+	for _, row := range resolvedRows {
+		resolvedCounts[row.ResolvedAt.Format("2006-01-02")]++
+	}
+
+	// 按窗口逐日补零：图表横轴缺日会让「今天没人提单」和「今天没取到数」看起来一样。
+	points := make([]TrendPoint, 0, steps)
+	for i := 0; i < steps; i++ {
+		day := window.From.AddDate(0, 0, i).Format("2006-01-02")
+		points = append(points, TrendPoint{
+			Date:     day,
+			Created:  createdCounts[day],
+			Resolved: resolvedCounts[day],
+		})
+	}
+	return points, nil
+}
+
+// maxTrendDays 限制趋势窗口，避免调用方传一年区间把整表时间列拉进内存。
+const maxTrendDays = 366
 
 // GenerateTicketNumber 生成工单编号
 // 格式: TKT-YYYYMM-XXXXXX

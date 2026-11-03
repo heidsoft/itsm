@@ -22,6 +22,7 @@ import (
 	"itsm-backend/ent/department"
 	"itsm-backend/ent/group"
 	"itsm-backend/ent/processinstance"
+	"itsm-backend/ent/sladefinition"
 	"itsm-backend/ent/slastate"
 	entTicket "itsm-backend/ent/ticket"
 	"itsm-backend/ent/ticketcategory"
@@ -1504,7 +1505,7 @@ func (s *TicketService) CloseTicket(ctx context.Context, ticketID int, tenantID 
 // 遗留路径：签名中没有操作者身份，只能给出租户全量口径。
 // 路由上真正生效的是 handlers/ticket 的 GetStats（带行级数据范围），本方法仅测试可达。
 func (s *TicketService) GetTicketStats(ctx context.Context, tenantID int) (*dto.TicketStatsResponse, error) {
-	statusCounts, err := s.repo.CountByStatus(ctx, tenantID, datascope.DataScopeAll, 0)
+	statusCounts, err := s.repo.CountByStatus(ctx, tenantID, datascope.DataScopeAll, 0, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -1758,9 +1759,16 @@ func (s *TicketService) GetTicketSLAInfo(ctx context.Context, ticketID int, tena
 		}
 	}
 
-	// 获取 SLA 定义名称（通过 ent 客户端查询）
+	// 获取 SLA 定义名称：定义 ID 来自 sla_states/工单内联字段，必须带 tenant 谓词，
+	// 否则跨租户定义 ID 会把别的租户的名称投影到当前租户响应里。
 	if info.SLADefinitionID > 0 && s.client != nil {
-		sla, err := s.client.SLADefinition.Get(ctx, info.SLADefinitionID)
+		sla, err := s.client.SLADefinition.Query().
+			Where(
+				sladefinition.ID(info.SLADefinitionID),
+				sladefinition.TenantID(tenantID),
+			).
+			Select(sladefinition.FieldName).
+			Only(ctx)
 		if err == nil && sla != nil {
 			info.SLADefinitionName = sla.Name
 		}

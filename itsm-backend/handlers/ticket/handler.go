@@ -5,6 +5,7 @@ import (
 	"errors"
 	"strconv"
 	"strings"
+	"time"
 
 	"itsm-backend/common"
 	"itsm-backend/common/handlerctx"
@@ -146,6 +147,7 @@ func ticketStatsToDTO(s *TicketStats) *dto.TicketStatsResponse {
 		Pending:      s.PendingTickets,
 		HighPriority: s.HighTickets,
 		Overdue:      s.OverdueTickets,
+		Scope:        s.Scope,
 		ByStatus:     make([]dto.TicketStatusCount, 0, len(s.ByStatus)),
 		ByPriority:   make([]dto.TicketPriorityCount, 0, len(s.ByPriority)),
 	}
@@ -154,6 +156,35 @@ func ticketStatsToDTO(s *TicketStats) *dto.TicketStatsResponse {
 	}
 	for _, item := range s.ByPriority {
 		out.ByPriority = append(out.ByPriority, dto.TicketPriorityCount{Priority: item.Priority, Count: item.Count})
+	}
+	if s.Window != nil {
+		out.Window = &dto.TicketStatsWindowResponse{
+			DateFrom: s.Window.DateFrom,
+			DateTo:   s.Window.DateTo,
+			Days:     s.Window.Days,
+		}
+	}
+	// nil 与空数组在这里含义不同：nil 表示本次没取趋势，空数组表示窗口内确实没有工单。
+	if s.DailyTrend != nil {
+		out.DailyTrend = make([]dto.TicketDailyTrendPoint, 0, len(s.DailyTrend))
+		for _, point := range s.DailyTrend {
+			out.DailyTrend = append(out.DailyTrend, dto.TicketDailyTrendPoint{
+				Date:     point.Date,
+				Created:  point.Created,
+				Resolved: point.Resolved,
+			})
+		}
+	}
+	if s.SLA != nil {
+		out.SLA = &dto.TicketSLAComplianceResponse{
+			ComplianceRate:     s.SLA.ComplianceRate,
+			SampledTickets:     s.SLA.SampledTickets,
+			ViolatedTickets:    s.SLA.ViolatedTickets,
+			AvgResponseMinutes: s.SLA.AvgResponseMinutes,
+			AvgResolutionHours: s.SLA.AvgResolutionHours,
+			WindowDays:         s.SLA.WindowDays,
+			Scope:              s.SLA.Scope,
+		}
 	}
 	return out
 }
@@ -448,16 +479,26 @@ func (h *Handler) BatchDeleteTickets(c *gin.Context) {
 
 // GetStats handles GET /api/v1/tickets/stats
 // 身份只取认证上下文，统计范围与 GET /api/v1/tickets 列表一致。
+// dateFrom/dateTo 成对提供时按创建时间窗口收窄计数器、超期、分布与趋势；
+// 都不传保持「可见范围内全量」的旧口径（工作台卡片依赖它）。
 func (h *Handler) GetTicketStats(c *gin.Context) {
 	tenantID, ok := handlerctx.ResolveTenantID(c)
 	if !ok {
 		return
 	}
 
+	window, err := ResolveStatsWindow(c.Query("dateFrom"), c.Query("dateTo"), time.Now())
+	if err != nil {
+		// RespondError 而非 FailWithErr：窗口参数错误要说清是哪一端缺失或非法，
+		// 压成「操作失败」会让调用方以为端点没实现日期筛选。
+		common.RespondError(c, err, "统计时间窗口参数错误")
+		return
+	}
+
 	currentUserID := c.GetInt("user_id")
 	currentRole := c.GetString("role")
 
-	stats, err := h.service.GetStats(c.Request.Context(), tenantID, currentUserID, currentRole)
+	stats, err := h.service.GetStats(c.Request.Context(), tenantID, currentUserID, currentRole, window)
 	if err != nil {
 		common.FailWithErr(c, err, "操作失败")
 		return

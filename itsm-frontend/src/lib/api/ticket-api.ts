@@ -209,6 +209,35 @@ export interface TicketPriorityCount {
   count: number;
 }
 
+/** 对应后端 dto.TicketStatsWindowResponse（窗口回显，未传日期时缺省） */
+export interface TicketStatsWindow {
+  dateFrom: string;
+  dateTo: string;
+  days: number;
+}
+
+/** 对应后端 dto.TicketDailyTrendPoint */
+export interface TicketDailyTrendPoint {
+  date: string;
+  created: number;
+  resolved: number;
+}
+
+/** 对应后端 dto.TicketSLAComplianceResponse（租户口径，见 scope） */
+export interface TicketSLACompliance {
+  complianceRate: number;
+  sampledTickets: number;
+  violatedTickets: number;
+  avgResponseMinutes: number;
+  avgResolutionHours: number;
+  windowDays: number;
+  /** 固定为 'tenant'：SLA 达标率按租户全量计算，不跟随登录者的行级数据范围。 */
+  scope: string;
+}
+
+/** 统计范围取值，与后端 dto.TicketStatsResponse.scope 词表一致。 */
+export type TicketStatsScope = 'all' | 'department' | 'owner';
+
 /** 对应后端 dto.TicketStatsResponse */
 export interface TicketStatsResponse {
   total: number;
@@ -223,6 +252,20 @@ export interface TicketStatsResponse {
   // 报表分布必须用它：前端拉一页列表自己数会被页长静默截断。
   byStatus: TicketStatusCount[];
   byPriority: TicketPriorityCount[];
+  /** 计数器与分布跟随的行级数据范围，与 GET /api/v1/tickets 列表同一判定。 */
+  scope: TicketStatsScope;
+  /** 本次实际生效的统计窗口；未传日期时缺省，表示「可见范围内全量」。 */
+  window?: TicketStatsWindow;
+  /** 仅带窗口时返回；缺省表示本次未取趋势，不等于窗口内没有工单。 */
+  dailyTrend?: TicketDailyTrendPoint[];
+  /** 仅带窗口时返回；缺省表示 SLA 计时服务未接入或读数失败，不得渲染成 0%。 */
+  sla?: TicketSLACompliance;
+}
+
+/** 对应 GET /api/v1/tickets/stats 的查询参数：dateFrom/dateTo 必须成对提供。 */
+export interface GetTicketStatsParams {
+  dateFrom?: string;
+  dateTo?: string;
 }
 
 /**
@@ -765,8 +808,10 @@ export class TicketApi {
   }
 
   // Get ticket statistics
-  static async getTicketStats(): Promise<TicketStatsResponse> {
-    return httpClient.get('/api/v1/tickets/stats');
+  // 不传日期时后端保持「可见范围内全量」旧口径（工作台/列表页卡片依赖这一点）；
+  // dateFrom/dateTo 必须成对提供，缺一端后端返回 400 而不是静默补全。
+  static async getTicketStats(params?: GetTicketStatsParams): Promise<TicketStatsResponse> {
+    return httpClient.get<TicketStatsResponse>('/api/v1/tickets/stats', params);
   }
 
   // Export tickets

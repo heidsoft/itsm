@@ -617,13 +617,18 @@ Authorization: Bearer <accessToken>
 
 ### 工单聚合统计
 
-工单域的租户级聚合端点，与仪表板章节的 `GET /dashboard/ticket-stats` 不是同一个接口。
+工单域的行级聚合端点，与仪表板章节的 `GET /dashboard/ticket-stats` 不是同一个接口。
+它是工单统计页（`/tickets/analytics`）的唯一数据源：计数器、分布、趋势、SLA 读数共用同一次请求的数据范围与时间窗口，前端不再拼第二个数据源补齐卡片。
 
 ```http
-GET /api/v1/tickets/stats
+GET /api/v1/tickets/stats?dateFrom=2026-10-03&dateTo=2026-11-01
 ```
 
-`data` 是租户全量的聚合计数，不是列表，因此不带任何分页字段：
+| 查询参数 | 说明 |
+| --- | --- |
+| `dateFrom` / `dateTo` | 统计窗口，按 `created_at` 过滤；必须成对提供，否则 400/`1001`。接受 `YYYY-MM-DD` 或 RFC3339，日期按本地时区展开为整天（`dateTo` 含当天 23:59:59.999999999）。窗口最长 366 天，超出即 400/`1001`。 |
+
+两者都不传时保持旧语义：可见范围内全量、不带 `window`、不带 `dailyTrend`、不带 `sla`。
 
 ```json
 {
@@ -639,7 +644,19 @@ GET /api/v1/tickets/stats
     "highPriority": 12,
     "overdue": 7,
     "byStatus": [{ "status": "in_progress", "count": 40 }],
-    "byPriority": [{ "priority": "high", "count": 12 }]
+    "byPriority": [{ "priority": "high", "count": 12 }],
+    "scope": "all",
+    "window": { "dateFrom": "2026-10-03", "dateTo": "2026-11-01", "days": 30 },
+    "dailyTrend": [{ "date": "2026-11-01", "created": 3, "resolved": 1 }],
+    "sla": {
+      "complianceRate": 91.4,
+      "sampledTickets": 7,
+      "violatedTickets": 1,
+      "avgResponseMinutes": 42,
+      "avgResolutionHours": 8.5,
+      "windowDays": 30,
+      "scope": "tenant"
+    }
   }
 }
 ```
@@ -647,6 +664,11 @@ GET /api/v1/tickets/stats
 - `open` 含 `new`；`overdue` 由 `sla_states` 判定，工单状态词表里并没有 `overdue` 这个取值。
 - `byStatus`/`byPriority` 只含真实存在的取值，顺序按后端词表基准，词表外的历史值按字母序追加；两者各自求和恒等于 `total`，且严格按租户过滤（`handlers/ticket/stats_contract_test.go` 锁死这几条）。
 - 报表要分布就读这两个字段。禁止改成前端拉一页列表自己数：页长之外的工作量会被静默截断，界面却仍然把它当成全量读数。
+- `scope` 是本次统计跟随的行级数据范围，与 `GET /api/v1/tickets` 列表同一判定（`datascope.ForTicketReader`）：`all`（租户全量）/ `department` / `owner`（本人创建或受理）。
+- `window` 回显实际生效的窗口；缺省表示未限窗口。页面必须显示它，否则「最近 30 天」和「全部」在屏幕上长得一样。
+- `dailyTrend` 仅在带窗口的请求里返回，按天补齐为 0。`data` 里缺该键表示本次未取趋势，空数组表示窗口内确实没有工单，两者含义不同。
+- `sla` 是同一窗口内的 SLA 达标读数，口径为**租户全量**（`sla.scope = "tenant"`），不跟随登录者的数据范围；缺省表示 SLA 计时服务未接入或读数失败，属「没取到」，消费方不得渲染成 0%。
+- 权限：`ticket:read`（`sla` 读数复用同一权限，不额外要求 `sla:read`）。
 
 ### 工单搜索
 

@@ -1,360 +1,364 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  Card,
-  Row,
-  Col,
-  Statistic,
-  Table,
-  Select,
-  DatePicker,
-  Button,
-  Space,
-  Typography,
-  Tag,
-  Progress,
-  Tabs,
-  Tooltip,
-  App,
-  Spin,
-  Empty,
   Alert,
+  Button,
+  Card,
+  Col,
+  Empty,
+  Progress,
+  Row,
+  Space,
+  Spin,
+  Statistic,
+  Tabs,
+  Tag,
+  Typography,
+  DatePicker,
 } from 'antd';
-import type { ColumnsType } from 'antd/es/table';
 import {
-  BarChart,
   Bar,
-  LineChart,
-  Line,
-  PieChart,
-  Pie,
+  BarChart,
+  CartesianGrid,
   Cell,
+  Legend,
+  Line,
+  LineChart,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip as RechartsTooltip,
   XAxis,
   YAxis,
-  CartesianGrid,
-  Tooltip as RechartsTooltip,
-  Legend,
-  ResponsiveContainer,
 } from 'recharts';
-import { RotateCcw, FileSpreadsheet } from 'lucide-react';
+import { RotateCcw } from 'lucide-react';
 import dayjs from 'dayjs';
-import type { TicketAnalyticsResponse } from '@/lib/services/analytics-service';
-import { ticketAnalyticsService } from '@/lib/services/analytics-service';
-import { ticketService } from '@/lib/services/ticket-service';
+import { TicketApi } from '@/lib/api/ticket-api';
+import type { TicketStatsResponse } from '@/lib/api/ticket-api';
 import { isPermissionDeniedError, serverErrorMessage } from '@/lib/api/http-client';
+import {
+  TicketPriority,
+  TicketPriorityConfig,
+  TicketStatus,
+  TicketStatusConfig,
+} from '@/constants/taxonomy';
 import { TicketDeepAnalytics } from '@/components/business/TicketDeepAnalytics';
 
 const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
 
-type LoadNotice = {
-  fatal: boolean;
-  denied: boolean;
-  // 两个数据源权限不同，提示里必须说清缺的是哪一块、要哪个权限码，
-  // 否则使用者只能看到「获取分析数据失败」。
-  source: string;
-  permission: string;
-  detail: string;
+// 图表配色按枚举键取，不按下标轮转：下标轮转会随租户词表外的历史取值漂移。
+const STATUS_COLORS: Record<TicketStatus, string> = {
+  [TicketStatus.NEW]: '#1890ff',
+  [TicketStatus.OPEN]: '#fa8c16',
+  [TicketStatus.ASSIGNED]: '#2f54eb',
+  [TicketStatus.IN_PROGRESS]: '#13c2c2',
+  [TicketStatus.PENDING]: '#faad14',
+  [TicketStatus.RESOLVED]: '#52c41a',
+  [TicketStatus.CLOSED]: '#722ed1',
+  [TicketStatus.CANCELLED]: '#8c8c8c',
+  [TicketStatus.APPROVED]: '#389e0d',
+  [TicketStatus.REJECTED]: '#ff4d4f',
 };
 
+const PRIORITY_COLORS: Record<TicketPriority, string> = {
+  [TicketPriority.LOW]: '#52c41a',
+  [TicketPriority.MEDIUM]: '#faad14',
+  [TicketPriority.HIGH]: '#fa541c',
+  [TicketPriority.URGENT]: '#ff4d4f',
+  [TicketPriority.CRITICAL]: '#cf1322',
+};
+
+const UNKNOWN_COLOR = '#d9d9d9';
+
+const SCOPE_LABELS: Record<TicketStatsResponse['scope'], string> = {
+  all: '租户全量工单',
+  department: '本部门可见工单',
+  owner: '本人创建或受理的工单',
+};
+
+interface Slice {
+  key: string;
+  name: string;
+  value: number;
+  color: string;
+}
+
+function statusLabel(status: string): string {
+  return (Object.values(TicketStatus) as string[]).includes(status)
+    ? TicketStatusConfig[status as TicketStatus].label
+    : status;
+}
+
+function priorityLabel(priority: string): string {
+  return (Object.values(TicketPriority) as string[]).includes(priority)
+    ? TicketPriorityConfig[priority as TicketPriority].label
+    : priority;
+}
+
+// 后端已按词表顺序返回且只含真实存在的取值，前端不再二次聚合、补零或排序。
+function toStatusSlices(byStatus: TicketStatsResponse['byStatus']): Slice[] {
+  return byStatus.map((entry) => ({
+    key: entry.status,
+    name: statusLabel(entry.status),
+    value: entry.count,
+    color:
+      (Object.values(TicketStatus) as string[]).includes(entry.status)
+        ? STATUS_COLORS[entry.status as TicketStatus]
+        : UNKNOWN_COLOR,
+  }));
+}
+
+function toPrioritySlices(byPriority: TicketStatsResponse['byPriority']): Slice[] {
+  return byPriority.map((entry) => ({
+    key: entry.priority,
+    name: priorityLabel(entry.priority),
+    value: entry.count,
+    color:
+      (Object.values(TicketPriority) as string[]).includes(entry.priority)
+        ? PRIORITY_COLORS[entry.priority as TicketPriority]
+        : UNKNOWN_COLOR,
+  }));
+}
+
+function percentage(value: number, total: number): number {
+  return total > 0 ? (value / total) * 100 : 0;
+}
+
+type LoadState =
+  | { kind: 'loading' }
+  | { kind: 'error'; denied: boolean; reason: string }
+  | { kind: 'ready'; stats: TicketStatsResponse };
+
 const TicketAnalytics: React.FC = () => {
-  const [loading, setLoading] = useState(false);
-  const [exporting, setExporting] = useState(false);
-  const { message } = App.useApp();
   const [dateRange, setDateRange] = useState<[dayjs.Dayjs, dayjs.Dayjs]>([
-    dayjs().subtract(30, 'day'),
+    dayjs().subtract(29, 'day'),
     dayjs(),
   ]);
-  const [analyticsData, setAnalyticsData] = useState<TicketAnalyticsResponse | null>(null);
-  // GET /tickets/stats 只要 ticket:read，GET /analytics/tickets 要 report:read。
-  // 之前用 Promise.all + 全 0 兜底：坐席点进来（菜单码曾错挂 ticket:read）就被 403
-  // 打回一屏 0，把「没有权限」渲染成「这个租户没有工单」。
-  const [loadNotice, setLoadNotice] = useState<LoadNotice | null>(null);
+  const [state, setState] = useState<LoadState>({ kind: 'loading' });
   const [activeTab, setActiveTab] = useState('overview');
-
-  function getInitialData(): TicketAnalyticsResponse {
-    return {
-      totalTickets: 0,
-      openTickets: 0,
-      resolvedTickets: 0,
-      closedTickets: 0,
-      overdueTickets: 0,
-      dailyTrend: [],
-      statusDistribution: [],
-      priorityDistribution: [],
-      typeDistribution: [],
-      processingTimeStats: {
-        avgProcessingTime: 0,
-        avgResolutionTime: 0,
-        slaComplianceRate: 0,
-      },
-      teamPerformance: [],
-      hotCategories: [],
-    };
-  }
+  // 改窗口会立刻重取；若旧请求后返回，会把上一个窗口的数字盖到新窗口上。
+  const requestIdRef = useRef(0);
 
   const fetchData = useCallback(async () => {
-    setLoading(true);
-    const [analyticsResult, statsResult] = await Promise.allSettled([
-      ticketAnalyticsService.getAnalytics({
+    const requestId = ++requestIdRef.current;
+    setState({ kind: 'loading' });
+    try {
+      const stats = await TicketApi.getTicketStats({
         dateFrom: dateRange[0].format('YYYY-MM-DD'),
         dateTo: dateRange[1].format('YYYY-MM-DD'),
-      }),
-      ticketService.getTicketStats(),
-    ]);
-
-    const analytics = analyticsResult.status === 'fulfilled' ? analyticsResult.value : null;
-    const stats = statsResult.status === 'fulfilled' ? statsResult.value : null;
-
-    // 两边都失败才是整页失败：此时不渲染任何数字，避免 0 冒充统计结果。
-    if (!analytics && !stats) {
-      const reasons = [analyticsResult, statsResult]
-        .filter((r): r is PromiseRejectedResult => r.status === 'rejected')
-        .map((r) => r.reason);
-      const deniedError = reasons.find(isPermissionDeniedError);
-      const error = deniedError ?? reasons[0];
-      setAnalyticsData(null);
-      setLoadNotice({
-        fatal: true,
-        denied: Boolean(deniedError),
-        source: '工单分析数据',
-        permission: 'report:read / ticket:read',
-        detail: serverErrorMessage(error, '后端未能返回工单统计。'),
       });
-      setLoading(false);
-      return;
-    }
-
-    // stats 是租户全量、不随日期筛选变化；analytics 是所选窗口的明细。
-    // 口径差异由下方提示说明，不再用 || 把 0 当成缺失值。
-    const adaptedData: TicketAnalyticsResponse = {
-      totalTickets: stats?.total ?? analytics?.totalTickets ?? 0,
-      openTickets: stats?.open ?? analytics?.openTickets ?? 0,
-      resolvedTickets: stats?.resolved ?? analytics?.resolvedTickets ?? 0,
-      closedTickets: stats?.closed ?? analytics?.closedTickets ?? 0,
-      overdueTickets: stats?.overdue ?? analytics?.overdueTickets ?? 0,
-      dailyTrend: analytics?.dailyTrend ?? [],
-      statusDistribution: analytics?.statusDistribution ?? [],
-      priorityDistribution: analytics?.priorityDistribution ?? [],
-      typeDistribution: analytics?.typeDistribution ?? [],
-      processingTimeStats: analytics?.processingTimeStats ?? getInitialData().processingTimeStats,
-      teamPerformance: analytics?.teamPerformance ?? [],
-      hotCategories: analytics?.hotCategories ?? [],
-    };
-
-    setAnalyticsData(adaptedData);
-    if (analytics && stats) {
-      setLoadNotice(null);
-    } else {
-      // analytics 缺失 → 日期窗口内的趋势/分布看不了（report:read）；
-      // stats 缺失 → 只剩窗口口径（ticket:read）。两者文案与权限码不同，分开给。
-      const missing = analytics
-        ? { source: '工单总量', permission: 'ticket:read' }
-        : { source: '日期窗口内的趋势与分布', permission: 'report:read' };
-      const failed = analytics ? statsResult : analyticsResult;
-      const error = failed.status === 'rejected' ? failed.reason : undefined;
-      setLoadNotice({
-        fatal: false,
+      if (requestId !== requestIdRef.current) return;
+      setState({ kind: 'ready', stats });
+    } catch (error) {
+      if (requestId !== requestIdRef.current) return;
+      setState({
+        kind: 'error',
         denied: isPermissionDeniedError(error),
-        source: missing.source,
-        permission: missing.permission,
-        detail: serverErrorMessage(error, '后端未能返回该数据源。'),
+        reason: serverErrorMessage(error, '后端未能返回工单统计。'),
       });
     }
-    setLoading(false);
   }, [dateRange]);
 
   useEffect(() => {
-    fetchData();
-  }, [dateRange, fetchData]);
+    void fetchData();
+  }, [fetchData]);
 
-  // 导出数据
-  const handleExport = async (format: 'csv' | 'excel' | 'pdf' = 'excel') => {
-    setExporting(true);
-    try {
-      const blob = await ticketAnalyticsService.exportAnalytics({
-        dateFrom: dateRange[0].format('YYYY-MM-DD'),
-        dateTo: dateRange[1].format('YYYY-MM-DD'),
-        format,
-      });
-
-      // 创建下载链接
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `工单分析_${dateRange[0].format('YYYYMMDD')}_${dateRange[1].format('YYYYMMDD')}.${format === 'excel' ? 'xlsx' : format}`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-
-      message.success('导出成功');
-    } catch (error) {
-      console.error('Export failed:', error);
-      // 服务端给出的业务文案要透出来，否则参数错误、权限不足和后端故障都只剩
-      // 「导出失败，请重试」，运维和用户都无从判断。
-      message.error(error instanceof Error && error.message ? error.message : '导出失败，请重试');
-    } finally {
-      setExporting(false);
-    }
-  };
-
-  // 计算百分比
-  const calculatePercentage = (value: number, total: number) => {
-    return total > 0 ? (value / total) * 100 : 0;
-  };
-
-  // 团队表现表格列
-  const teamColumns: ColumnsType<TicketAnalyticsResponse['teamPerformance'][number]> = [
-    {
-      title: '处理人',
-      dataIndex:'assigneeName',
-      key:'assigneeName',
-    },
-    {
-      title: '处理工单数',
-      dataIndex:'totalHandled',
-      key:'totalHandled',
-      sorter: (a, b) => a.totalHandled - b.totalHandled,
-    },
-    {
-      title: '已解决',
-      dataIndex: 'resolved',
-      key: 'resolved',
-    },
-    {
-      title: '平均响应时间(小时)',
-      dataIndex:'avgResponseTime',
-      key:'avgResponseTime',
-      render: (time: number) => time?.toFixed(1) || '-',
-    },
-    {
-      title: '平均解决时间(小时)',
-      dataIndex:'avgResolutionTime',
-      key:'avgResolutionTime',
-      render: (time: number) => time?.toFixed(1) || '-',
-    },
-  ];
-
-  // 热门类别表格列
-  const categoryColumns: ColumnsType<TicketAnalyticsResponse['hotCategories'][number]> = [
-    {
-      title: '类别',
-      dataIndex: 'category',
-      key: 'category',
-    },
-    {
-      title: '工单数量',
-      dataIndex: 'count',
-      key: 'count',
-      sorter: (a, b) => a.count - b.count,
-    },
-    {
-      title: '趋势',
-      dataIndex: 'trend',
-      key: 'trend',
-      render: (trend: string) => (
-        <Tag color={trend === 'up' ? 'green' : trend === 'down' ? 'red' : 'default'}>
-          {trend === 'up' ? '上升' : trend === 'down' ? '下降' : '持平'}
-        </Tag>
-      ),
-    },
-  ];
-
-  const noticeAlert = loadNotice && (
-    <Alert
-      className="mb-4"
-      type={loadNotice.denied ? 'warning' : 'error'}
-      showIcon
-      title={loadNotice.denied ? `${loadNotice.source}没有访问权限` : `${loadNotice.source}加载失败`}
-      description={
-        loadNotice.denied
-          ? `${loadNotice.detail}。该数据源需要 ${loadNotice.permission}，请联系管理员为当前角色开放该权限；缺少的数据块不等于租户里没有工单。`
-          : `${loadNotice.detail}。请稍后重试；若持续失败，请联系管理员查看后端日志。`
-      }
-      action={
-        <Button size="small" icon={<RotateCcw />} onClick={fetchData} loading={loading}>
-          重试
-        </Button>
-      }
-    />
+  const renderShell = (content: React.ReactNode) => (
+    <div className="p-6">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <Title level={2} className="!mb-0">
+          工单统计
+        </Title>
+        <Space>
+          <RangePicker
+            value={dateRange}
+            onChange={(dates) => {
+              if (dates && dates[0] && dates[1]) {
+                setDateRange([dates[0], dates[1]]);
+              }
+            }}
+            format="YYYY-MM-DD"
+            allowClear={false}
+          />
+          <Button icon={<RotateCcw />} onClick={fetchData} loading={state.kind === 'loading'}>
+            刷新数据
+          </Button>
+        </Space>
+      </div>
+      {content}
+    </div>
   );
 
-  // 整页失败：不渲染 KPI 卡片和图表，0 会被读成「这个租户没有工单」。
-  if (loadNotice?.fatal) {
-    return (
-      <div className="p-6">
-        <Title level={2} className="mb-4">
-          工单分析
-        </Title>
-        {noticeAlert}
+  // 失败态不渲染任何数字：一屏 0 会被读成「这个租户没有工单」。
+  if (state.kind === 'error') {
+    return renderShell(
+      <Alert
+        type={state.denied ? 'warning' : 'error'}
+        showIcon
+        title={state.denied ? '工单统计没有访问权限' : '工单统计加载失败'}
+        description={
+          state.denied
+            ? `${state.reason}。该页面的计数器、分布与趋势都来自 GET /api/v1/tickets/stats，需要 ticket:read；请联系管理员为当前角色开放该权限。缺少数据不等于租户里没有工单。`
+            : `${state.reason}。请稍后重试；若持续失败，请联系管理员查看后端日志。`
+        }
+        action={
+          <Button size="small" icon={<RotateCcw />} onClick={fetchData}>
+            重试
+          </Button>
+        }
+      />
+    );
+  }
+
+  if (state.kind === 'loading') {
+    return renderShell(
+      <div className="flex min-h-[400px] items-center justify-center">
+        <Spin size="large" description="加载工单统计..." />
       </div>
     );
   }
 
-  if (!analyticsData) {
-    return (
-      <div className="p-6 flex justify-center items-center min-h-[400px]">
-        <Spin size="large" />
-      </div>
-    );
-  }
+  const { stats } = state;
+  const statusSlices = toStatusSlices(stats.byStatus);
+  const prioritySlices = toPrioritySlices(stats.byPriority);
+  const statusTotal = statusSlices.reduce((acc, slice) => acc + slice.value, 0);
+  const priorityTotal = prioritySlices.reduce((acc, slice) => acc + slice.value, 0);
 
-  // 饼图/bar 图 tooltip 占比分母（early-return 之后 analyticsData 必非空，
-  // 普通计算即可，避免在条件分支后才调用 Hook）
-  const statusTotal = (analyticsData.statusDistribution ?? []).reduce((acc, s) => acc + s.value, 0);
-  const priorityTotal = (analyticsData.priorityDistribution ?? []).reduce((acc, p) => acc + p.value, 0);
+  // 后端把 scope 锁定在 all/department/owner（handlers/ticket/stats_contract_test.go）。
+  // 词表外的值如实显示原始值，不冒充「租户全量」，否则口径提示本身就是错的。
+  const scopeText = SCOPE_LABELS[stats.scope] ?? `未识别的数据范围 ${stats.scope}`;
+  const windowText = stats.window
+    ? `${stats.window.dateFrom} 至 ${stats.window.dateTo}（${stats.window.days} 天，按创建时间）`
+    : '全部时间（按创建时间）';
 
-  // 总览 tab：KPI + 趋势 + 分布图
+  const kpiCards = [
+    { title: '工单总数', value: stats.total, color: '#1890ff' },
+    { title: '待处理', value: stats.open, color: STATUS_COLORS[TicketStatus.OPEN] },
+    { title: '处理中', value: stats.inProgress, color: STATUS_COLORS[TicketStatus.IN_PROGRESS] },
+    { title: '挂起', value: stats.pending, color: STATUS_COLORS[TicketStatus.PENDING] },
+    { title: '已解决', value: stats.resolved, color: STATUS_COLORS[TicketStatus.RESOLVED] },
+    { title: '已关闭', value: stats.closed, color: STATUS_COLORS[TicketStatus.CLOSED] },
+    { title: '高优先级', value: stats.highPriority, color: PRIORITY_COLORS[TicketPriority.HIGH] },
+    {
+      title: '已超期',
+      value: stats.overdue,
+      color: stats.overdue > 0 ? '#cf1322' : undefined,
+    },
+  ];
+
   const overviewTab = (
     <Space orientation="vertical" size="middle" className="w-full">
+      <div className="rounded-md border border-gray-200 bg-white px-4 py-3">
+        <Text type="secondary">
+          统计口径：{scopeText}；时间窗口 {windowText}。本页所有卡片、分布与趋势共用这同一次查询，
+          不含其他数据源。
+        </Text>
+      </div>
+
       <Row gutter={[16, 16]}>
-        <Col xs={12} sm={8} lg={4}>
-          <Card size="small">
-            <Statistic title="工单总数" value={analyticsData.totalTickets} />
-          </Card>
-        </Col>
-        <Col xs={12} sm={8} lg={4}>
-          <Card size="small">
-            <Statistic title="待处理" value={analyticsData.openTickets} />
-          </Card>
-        </Col>
-        <Col xs={12} sm={8} lg={4}>
-          <Card size="small">
-            <Statistic title="已解决" value={analyticsData.resolvedTickets} />
-          </Card>
-        </Col>
-        <Col xs={12} sm={8} lg={4}>
-          <Card size="small">
-            <Statistic title="已关闭" value={analyticsData.closedTickets} />
-          </Card>
-        </Col>
-        <Col xs={12} sm={8} lg={4}>
-          <Card size="small">
-            <Statistic title="已超期" value={analyticsData.overdueTickets} styles={{ content: { color: analyticsData.overdueTickets > 0 ? '#cf1322' : undefined } }} />
-          </Card>
-        </Col>
-        <Col xs={12} sm={8} lg={4}>
-          <Card size="small">
-            <div className="flex flex-col items-center">
-              <Text type="secondary" className="mb-1">SLA 达标率</Text>
-              <Progress type="circle" size={64} percent={Math.round(analyticsData.processingTimeStats.slaComplianceRate)} />
-            </div>
-          </Card>
-        </Col>
+        {kpiCards.map((card) => (
+          <Col xs={12} sm={8} lg={6} xl={3} key={card.title}>
+            <Card size="small">
+              <Statistic title={card.title} value={card.value} styles={{ content: { color: card.color } }} />
+            </Card>
+          </Col>
+        ))}
       </Row>
 
+      <Card
+        title="处理效率与 SLA"
+        size="small"
+        extra={<Text type="secondary">SLA 读数按租户全量计算，不跟随登录者的数据范围</Text>}
+      >
+        {stats.sla ? (
+          <Row gutter={[16, 16]}>
+            <Col xs={12} lg={6}>
+              <div className="flex flex-col items-center">
+                <Text type="secondary" className="mb-1">
+                  SLA 达标率
+                </Text>
+                <Progress
+                  type="circle"
+                  size={72}
+                  percent={Math.round(stats.sla.complianceRate)}
+                />
+                <Text type="secondary" className="mt-1 text-xs">
+                  样本 {stats.sla.sampledTickets} 张，违约 {stats.sla.violatedTickets} 张
+                </Text>
+              </div>
+            </Col>
+            <Col xs={12} lg={6}>
+              <Statistic
+                title="平均响应时长（小时）"
+                value={stats.sla.avgResponseMinutes / 60}
+                precision={1}
+              />
+            </Col>
+            <Col xs={12} lg={6}>
+              <Statistic
+                title="平均解决时长（小时）"
+                value={stats.sla.avgResolutionHours}
+                precision={1}
+              />
+            </Col>
+            <Col xs={12} lg={6}>
+              <Statistic
+                title="解决率"
+                value={percentage(stats.resolved + stats.closed, stats.total)}
+                precision={1}
+                suffix="%"
+              />
+            </Col>
+          </Row>
+        ) : (
+          <Row gutter={[16, 16]}>
+            <Col xs={24} lg={12}>
+              <Alert
+                type="info"
+                showIcon
+                title="SLA 达标率暂不可用"
+                description="未接入 SLA 计时服务或本次读数失败，因此这里显示「没取到」而不是 0%。请先在 SLA 模块完成定义与监控配置。"
+              />
+            </Col>
+            <Col xs={12} lg={6}>
+              <Statistic
+                title="解决率"
+                value={percentage(stats.resolved + stats.closed, stats.total)}
+                precision={1}
+                suffix="%"
+              />
+            </Col>
+            <Col xs={12} lg={6}>
+              <Statistic
+                title="超期率"
+                value={percentage(stats.overdue, stats.total)}
+                precision={1}
+                suffix="%"
+              />
+            </Col>
+          </Row>
+        )}
+      </Card>
+
       <Card title="工单趋势（每日新建/解决）" size="small">
-        {analyticsData.dailyTrend.length > 0 ? (
+        {stats.dailyTrend && stats.dailyTrend.length > 0 ? (
           <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={analyticsData.dailyTrend}>
+            <LineChart data={stats.dailyTrend}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="date" tickFormatter={(d: string) => dayjs(d).format('MM-DD')} fontSize={12} />
+              <XAxis
+                dataKey="date"
+                tickFormatter={(d: string) => dayjs(d).format('MM-DD')}
+                fontSize={12}
+              />
               <YAxis allowDecimals={false} />
               <RechartsTooltip
                 labelFormatter={(d: unknown) => dayjs(String(d)).format('YYYY-MM-DD')}
-                formatter={(value: unknown, name: unknown) => [Number(value) || 0, name === 'created' ? '新建' : name === 'resolved' ? '已解决' : String(name)]}
+                formatter={(value: unknown, name: unknown) => [
+                  Number(value) || 0,
+                  name === 'created' ? '新建' : name === 'resolved' ? '已解决' : String(name),
+                ]}
               />
               <Legend formatter={(v: string) => (v === 'created' ? '新建' : v === 'resolved' ? '已解决' : v)} />
               <Line type="monotone" dataKey="created" stroke="#1890ff" strokeWidth={2} dot={false} />
@@ -362,18 +366,24 @@ const TicketAnalytics: React.FC = () => {
             </LineChart>
           </ResponsiveContainer>
         ) : (
-          <Empty description="所选时间范围内暂无趋势数据" />
+          <Empty
+            description={
+              stats.dailyTrend === undefined
+                ? '本次请求未返回趋势序列（后端未启用窗口趋势）'
+                : '所选时间范围内没有新建或解决的工单'
+            }
+          />
         )}
       </Card>
 
       <Row gutter={[16, 16]}>
         <Col xs={24} lg={12}>
           <Card title="状态分布" size="small">
-            {analyticsData.statusDistribution.length > 0 ? (
+            {statusSlices.length > 0 ? (
               <ResponsiveContainer width="100%" height={280}>
                 <PieChart>
                   <Pie
-                    data={analyticsData.statusDistribution}
+                    data={statusSlices}
                     dataKey="value"
                     nameKey="name"
                     cx="50%"
@@ -381,13 +391,13 @@ const TicketAnalytics: React.FC = () => {
                     outerRadius={90}
                     label
                   >
-                    {analyticsData.statusDistribution.map((entry) => (
-                      <Cell key={entry.name} fill={entry.color} />
+                    {statusSlices.map((slice) => (
+                      <Cell key={slice.key} fill={slice.color} />
                     ))}
                   </Pie>
                   <RechartsTooltip
                     formatter={(value: unknown, name: unknown) => [
-                      `${value} (${calculatePercentage(Number(value) || 0, statusTotal).toFixed(1)}%)`,
+                      `${value} (${percentage(Number(value) || 0, statusTotal).toFixed(1)}%)`,
                       String(name),
                     ]}
                   />
@@ -395,160 +405,68 @@ const TicketAnalytics: React.FC = () => {
                 </PieChart>
               </ResponsiveContainer>
             ) : (
-              <Empty description="暂无状态分布数据" />
+              <Empty description="所选范围内暂无状态分布数据" />
             )}
           </Card>
         </Col>
         <Col xs={24} lg={12}>
           <Card title="优先级分布" size="small">
-            {analyticsData.priorityDistribution.length > 0 ? (
+            {prioritySlices.length > 0 ? (
               <ResponsiveContainer width="100%" height={280}>
-                <BarChart data={analyticsData.priorityDistribution}>
+                <BarChart data={prioritySlices}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="name" fontSize={12} />
                   <YAxis allowDecimals={false} />
                   <RechartsTooltip
                     formatter={(value: unknown, name: unknown) => [
-                      `${value} (${calculatePercentage(Number(value) || 0, priorityTotal).toFixed(1)}%)`,
+                      `${value} (${percentage(Number(value) || 0, priorityTotal).toFixed(1)}%)`,
                       String(name),
                     ]}
                   />
                   <Bar dataKey="value" name="工单数" radius={[4, 4, 0, 0]}>
-                    {analyticsData.priorityDistribution.map((entry) => (
-                      <Cell key={entry.name} fill={entry.color} />
+                    {prioritySlices.map((slice) => (
+                      <Cell key={slice.key} fill={slice.color} />
                     ))}
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <Empty description="暂无优先级分布数据" />
+              <Empty description="所选范围内暂无优先级分布数据" />
             )}
           </Card>
         </Col>
       </Row>
 
-      <Card title="处理效率" size="small">
-        <Row gutter={[16, 16]}>
-          <Col xs={12} lg={6}>
-            <Statistic
-              title="平均响应时间（小时）"
-              value={analyticsData.processingTimeStats.avgProcessingTime || 0}
-              precision={1}
-            />
-          </Col>
-          <Col xs={12} lg={6}>
-            <Statistic
-              title="平均解决时间（小时）"
-              value={analyticsData.processingTimeStats.avgResolutionTime || 0}
-              precision={1}
-            />
-          </Col>
-          <Col xs={12} lg={6}>
-            <Statistic
-              title="解决率"
-              value={calculatePercentage(analyticsData.resolvedTickets, analyticsData.totalTickets)}
-              precision={1}
-              suffix="%"
-            />
-          </Col>
-          <Col xs={12} lg={6}>
-            <Statistic
-              title="超期率"
-              value={calculatePercentage(analyticsData.overdueTickets, analyticsData.totalTickets)}
-              precision={1}
-              suffix="%"
-            />
-          </Col>
-        </Row>
-        {(analyticsData.typeDistribution.length === 0) && (
-          <Text type="secondary" className="mt-2 block">
-            注：后端当前未提供类型分布与处理时长明细，相关指标暂为空/0，不区分于真实零值。
-          </Text>
+      <Card title="状态明细" size="small">
+        {statusSlices.length > 0 ? (
+          <Row gutter={[16, 16]}>
+            {statusSlices.map((slice) => (
+              <Col xs={12} sm={8} md={6} key={slice.key}>
+                <div className="flex items-center gap-2">
+                  <Tag color={slice.color} className="m-0">
+                    {slice.name}
+                  </Tag>
+                  <span className="text-lg font-semibold">{slice.value}</span>
+                </div>
+              </Col>
+            ))}
+          </Row>
+        ) : (
+          <Empty description="所选范围内没有工单" />
         )}
       </Card>
     </Space>
   );
 
-  return (
-    <div className="p-6">
-      {/* 页面标题和工具栏 */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <Title level={2}>工单分析</Title>
-          <Space>
-            <RangePicker
-              value={dateRange}
-              onChange={(dates) => {
-                if (dates && dates[0] && dates[1]) {
-                  setDateRange([dates[0], dates[1]]);
-                }
-              }}
-              format="YYYY-MM-DD"
-              allowClear={false}
-            />
-            <Button icon={<RotateCcw />} onClick={fetchData} loading={loading}>
-              刷新数据
-            </Button>
-            <Button
-              icon={<FileSpreadsheet />}
-              onClick={() => handleExport('excel')}
-              loading={exporting}
-            >
-              导出报表
-            </Button>
-          </Space>
-        </div>
-      </div>
-
-      {noticeAlert}
-
-      <Spin spinning={loading}>
-        <Tabs
-          activeKey={activeTab}
-          onChange={setActiveTab}
-          items={[
-            { key: 'overview', label: '总览', children: overviewTab },
-            {
-              key: 'team',
-              label: '团队表现',
-              children: (
-                <Card size="small">
-                  <Table
-                    columns={teamColumns}
-                    dataSource={analyticsData.teamPerformance}
-                    rowKey="assigneeName"
-                    pagination={false}
-                    size="small"
-                    locale={{ emptyText: <Empty description="暂无团队表现数据" /> }}
-                  />
-                </Card>
-              ),
-            },
-            {
-              key: 'category',
-              label: '热门类别',
-              children: (
-                <Card size="small">
-                  <Table
-                    columns={categoryColumns}
-                    dataSource={analyticsData.hotCategories}
-                    rowKey="category"
-                    pagination={false}
-                    size="small"
-                    locale={{ emptyText: <Empty description="暂无热门类别数据" /> }}
-                  />
-                </Card>
-              ),
-            },
-            {
-              key: 'deep',
-              label: '深度分析',
-              children: <TicketDeepAnalytics />,
-            },
-          ]}
-        />
-      </Spin>
-    </div>
+  return renderShell(
+    <Tabs
+      activeKey={activeTab}
+      onChange={setActiveTab}
+      items={[
+        { key: 'overview', label: '总览', children: overviewTab },
+        { key: 'deep', label: '深度分析', children: <TicketDeepAnalytics /> },
+      ]}
+    />
   );
 };
 

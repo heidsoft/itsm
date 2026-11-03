@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"itsm-backend/ent"
+	"itsm-backend/ent/sladefinition"
 	"itsm-backend/ent/user"
 	"itsm-backend/internal/datascope"
 	"itsm-backend/repository/base"
@@ -333,18 +334,26 @@ func orderTicketPriorities(counts map[ticket.Priority]int) []PriorityCount {
 	return out
 }
 
-func (r *EntRepository) GetStats(ctx context.Context, tenantID int, scope datascope.DataScope, viewerID int) (*TicketStats, error) {
-	statusCounts, err := r.repo.CountByStatus(ctx, tenantID, scope, viewerID)
+// GetStats 汇总工单统计。window 为 nil 时保持原语义（可见范围内全量、无趋势）；
+// 非 nil 时计数、超期与趋势都按同一个 created_at 窗口收窄，三者口径必须一致，
+// 否则同一屏 KPI 卡片和趋势图会读出两批不同的工单。
+func (r *EntRepository) GetStats(ctx context.Context, tenantID int, scope datascope.DataScope, viewerID int, window *ticket.StatsWindow) (*TicketStats, error) {
+	statusCounts, err := r.repo.CountByStatus(ctx, tenantID, scope, viewerID, window)
 	if err != nil {
 		return nil, fmt.Errorf("get status counts: %w", err)
 	}
-	priorityCounts, err := r.repo.CountByPriority(ctx, tenantID, scope, viewerID)
+	priorityCounts, err := r.repo.CountByPriority(ctx, tenantID, scope, viewerID, window)
 	if err != nil {
 		return nil, fmt.Errorf("get priority counts: %w", err)
 	}
 
 	// Reuse the authoritative overdue filter without loading the full backlog.
-	overdue, err := r.repo.List(ctx, tenantID, &ticket.FilterParams{IsOverdue: true, DataScope: scope, CurrentUserID: viewerID}, &base.QueryParams{Page: 1, PageSize: 1})
+	overdueFilters := &ticket.FilterParams{IsOverdue: true, DataScope: scope, CurrentUserID: viewerID}
+	if window != nil {
+		overdueFilters.DateFrom = &window.From
+		overdueFilters.DateTo = &window.To
+	}
+	overdue, err := r.repo.List(ctx, tenantID, overdueFilters, &base.QueryParams{Page: 1, PageSize: 1})
 	if err != nil {
 		return nil, fmt.Errorf("get overdue count: %w", err)
 	}
@@ -374,6 +383,20 @@ func (r *EntRepository) GetStats(ctx context.Context, tenantID int, scope datasc
 	}
 	stats.ByStatus = orderTicketStatuses(statusCounts)
 	stats.ByPriority = orderTicketPriorities(priorityCounts)
+	if window != nil {
+		trend, err := r.repo.TrendByDay(ctx, tenantID, scope, viewerID, *window)
+		if err != nil {
+			return nil, fmt.Errorf("get daily trend: %w", err)
+		}
+		stats.DailyTrend = make([]DailyTrendPoint, 0, len(trend))
+		for _, point := range trend {
+			stats.DailyTrend = append(stats.DailyTrend, DailyTrendPoint{
+				Date:     point.Date,
+				Created:  point.Created,
+				Resolved: point.Resolved,
+			})
+		}
+	}
 	return stats, nil
 }
 
@@ -438,6 +461,26 @@ func (r *EntRepository) EscalateTicket(ctx context.Context, id int, reason strin
 
 func (r *EntRepository) UpdateSLADeadlines(ctx context.Context, id int, responseDeadline, resolutionDeadline *time.Time, slaDefinitionID *int, tenantID int) error {
 	return r.repo.UpdateSLADeadlines(ctx, id, responseDeadline, resolutionDeadline, slaDefinitionID, tenantID)
+}
+
+// GetSLADefinitionName 按租户读取 SLA 定义名称。
+// 定义 ID 来自工单/SLA 状态表，必须带 tenant 谓词，避免跨租户名称泄漏；
+// 定义已删除或不属于当前租户时返回空名，由响应侧显示 "-"。
+func (r *EntRepository) GetSLADefinitionName(ctx context.Context, tenantID int, definitionID int) (string, error) {
+	if r.client == nil || tenantID <= 0 || definitionID <= 0 {
+		return "", nil
+	}
+	sla, err := r.client.SLADefinition.Query().
+		Where(sladefinition.ID(definitionID), sladefinition.TenantID(tenantID)).
+		Select(sladefinition.FieldName).
+		Only(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return "", nil
+		}
+		return "", fmt.Errorf("query sla definition name: %w", err)
+	}
+	return sla.Name, nil
 }
 
 // GetUserNamesByIDs 批量读取当前租户内用户显示名（id -> name）。

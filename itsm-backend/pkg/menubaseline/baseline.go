@@ -72,7 +72,8 @@ func MenuDefinitions() []MenuSpec {
 		// 商品目录管理：marketplace_catalog:read 只授予 sysadmin。目录是全局表
 		// （无 tenant_id），租户 admin 的 marketplace:read/write 只能安装/卸载，
 		// 不能上架——所以这条菜单对租户管理员不出现，而不是出现了点进去 403。
-		{Name: "商品目录", Path: "/admin/marketplace", Icon: "Store", ParentPath: "/marketplace", PermissionCode: "marketplace_catalog:read", SortOrder: 30, Description: "扩展商品上架、下架与版本管理（平台级）"},
+		// 与父级「应用市场」区分：这条是平台上架/版本管理控制台，不是浏览市场（D34-4）。
+		{Name: "应用上架管理", Path: "/admin/marketplace", Icon: "Store", ParentPath: "/marketplace", PermissionCode: "marketplace_catalog:read", SortOrder: 30, Description: "扩展商品上架、下架与版本管理（平台级）"},
 
 		// ===== 顶级独立业务条线菜单 =====
 		{Name: "审计日志", Path: "/audit-logs", Icon: "Shield", ParentPath: "", PermissionCode: "audit:read", SortOrder: 210, Description: "审计日志"},
@@ -80,10 +81,13 @@ func MenuDefinitions() []MenuSpec {
 
 		// ===== 子菜单：工单管理 =====
 		{Name: "工单类型", Path: "/tickets/types", Icon: "ClipboardList", ParentPath: "/tickets", PermissionCode: "ticket_type:read", SortOrder: 21},
-		// 页面主数据源是 GET /api/v1/analytics/tickets，接口要求 report:read（router/ticket_routes.go）。
-		// 挂在 ticket:read 上时 agent 看得到入口、点进去就 403（实测 code 2003）。
+		// 页面主数据源是 GET /api/v1/tickets/stats（ticket:read，随登录者行级数据范围收窄），
+		// 但同页的「深度分析」与「导出」走 POST /tickets/analytics/{deep,export}（report:read /
+		// ticket:export）。菜单按最高要求的入口取 report:read：挂在 ticket:read 上时坐席
+		// 点进来就是 403（实测 code 2003），页面再把 403 渲染成全 0。
+		// 原「工单仪表盘」(/tickets/dashboard) 与本条目功能重复且满是假控件，已于
+		// 2026-11-01 退役；存量库由 migrations/20261101_retire_ticket_dashboard_menu.sql 停用。
 		{Name: "工单统计", Path: "/tickets/analytics", Icon: "BarChart3", ParentPath: "/tickets", PermissionCode: "report:read", SortOrder: 22, Description: "工单统计视图"},
-		{Name: "工单仪表盘", Path: "/tickets/dashboard", Icon: "LayoutDashboard", ParentPath: "/tickets", PermissionCode: "ticket:read", SortOrder: 23, Description: "工单综合仪表盘"},
 		{Name: "我的抄送", Path: "/tickets/cc", Icon: "Mail", ParentPath: "/tickets", PermissionCode: "ticket:read", SortOrder: 24, Description: "抄送给我的工单"},
 		// 页面数据源是 GET /api/v1/tickets/templates，接口要求 ticket_template:read。
 		// 挂在 ticket:write 上让只写自己工单的最终用户拿到入口后立刻 403（实测 code 2003）。
@@ -98,7 +102,7 @@ func MenuDefinitions() []MenuSpec {
 		{Name: "新建事件", Path: "/incidents/create", Icon: "Plus", ParentPath: "/incidents", PermissionCode: "incident:write", SortOrder: 32},
 		// 值班排班从「客户与合同」归位：排班对象是事件响应的支持组，属事件域运营视图
 		// （数据源 GET /on-call/schedules 要求 on_call:read）。
-		{Name: "值班排班", Path: "/email-intake/on-call", Icon: "Clock", ParentPath: "/incidents", PermissionCode: "on_call:read", SortOrder: 33, Description: "支持组值班排班"},
+		{Name: "值班排班", Path: "/on-call", Icon: "Clock", ParentPath: "/incidents", PermissionCode: "on_call:read", SortOrder: 33, Description: "支持组值班排班"},
 
 		// ===== 子菜单：问题管理 =====
 		// 页面 /problems/new 早已存在；其余六域（事件/变更/发布/资产/CI/知识）都有
@@ -120,9 +124,11 @@ func MenuDefinitions() []MenuSpec {
 		// ===== 子菜单：客户与合同 =====
 		// 值班排班已移出：它回答「谁在值班」，是事件响应排班，不是客户主数据
 		// （审计 3.3-⑨ 的父子语义问题）。
-		{Name: "客户资料", Path: "/email-intake/customers", Icon: "Users", ParentPath: "/email-intake", PermissionCode: "customer_master:read", SortOrder: 652},
-		{Name: "支持合同", Path: "/email-intake/contracts", Icon: "FileText", ParentPath: "/email-intake", PermissionCode: "support_contract:read", SortOrder: 653},
-		{Name: "来源组织", Path: "/email-intake/sources", Icon: "Globe", ParentPath: "/email-intake", PermissionCode: "customer_master:read", SortOrder: 654},
+		// URL 用业务名（/customers、/support-contracts、/source-organizations），
+		// 不再挂在邮件报障技术路径下；旧路径由 next.config 重定向 + seeder 路径迁移兜底（D34-2）。
+		{Name: "客户资料", Path: "/customers", Icon: "Users", ParentPath: "/email-intake", PermissionCode: "customer_master:read", SortOrder: 652},
+		{Name: "支持合同", Path: "/support-contracts", Icon: "FileText", ParentPath: "/email-intake", PermissionCode: "support_contract:read", SortOrder: 653},
+		{Name: "来源组织", Path: "/source-organizations", Icon: "Globe", ParentPath: "/email-intake", PermissionCode: "customer_master:read", SortOrder: 654},
 
 		// ===== 子菜单：服务目录 =====
 		// 「-目录」补丁式后缀不专业（审计报告 3.3-②）；父菜单即服务目录，子项名「目录审批」语义自明。
@@ -149,7 +155,6 @@ func MenuDefinitions() []MenuSpec {
 
 		// ===== 子菜单：SLA =====
 		{Name: "SLA 监控", Path: "/sla-monitor", Icon: "Activity", ParentPath: "/sla", PermissionCode: "sla:read", SortOrder: 92},
-		{Name: "SLA 配置", Path: "/workflow/sla", Icon: "Clock", ParentPath: "/sla", PermissionCode: "sla:write", SortOrder: 93},
 		// ===== 子菜单：SLA · 配置面（2026-10-25 从系统管理归位）=====
 		{Name: "升级规则", Path: "/admin/escalation-rules", Icon: "AlertTriangle", ParentPath: "/sla", PermissionCode: "sla:write", SortOrder: 100},
 		{Name: "升级矩阵", Path: "/admin/escalation-matrices", Icon: "TrendingUp", ParentPath: "/sla", PermissionCode: "sla:read", SortOrder: 105},
@@ -166,6 +171,9 @@ func MenuDefinitions() []MenuSpec {
 		// 与 /admin/tickets/automation-rules 是同一个配置面的两个入口，按管理面取
 		// automation_rule:write：只读角色拿到菜单后每个写按钮都会 403。
 		{Name: "流程触发器", Path: "/workflow/automation", Icon: "Zap", ParentPath: "/workflow", PermissionCode: "automation_rule:write", SortOrder: 107},
+		// 该页读的是 BPMN 实例 SLA 指标与违规（/bpmn/sla/*，bpmn:read），
+		// 不是 SLA 配置；挂在 SLA 菜单下曾让「SLA 配置」指向监控页（D34-3）。
+		{Name: "流程 SLA 监控", Path: "/workflow/sla", Icon: "Activity", ParentPath: "/workflow", PermissionCode: "bpmn:read", SortOrder: 108, Description: "BPMN 流程 SLA 指标与违规告警"},
 		// 审批中心菜单已删除：与顶级「我的待办」同一页面（/approvals），一个目的地两个菜单
 		// 会让用户在两处看到同一份待办（审计 3.3-③ 四入口问题的去重动作）。
 		{Name: "操作日志", Path: "/workflow/audit", Icon: "ClipboardList", ParentPath: "/workflow", PermissionCode: "audit:read", SortOrder: 109},
@@ -181,7 +189,8 @@ func MenuDefinitions() []MenuSpec {
 		{Name: "AI 审批", Path: "/ai/approval", Icon: "ShieldAlert", ParentPath: "/ai/chat", PermissionCode: "ai:read", SortOrder: 114},
 
 		// ===== 子菜单：MSP 客户管理 =====
-		{Name: "客户管理子页", Path: "/msp/management", Icon: "Settings", ParentPath: "/msp", PermissionCode: "msp:write", SortOrder: 122},
+		// 该页是 MSP 把客户分配给服务人员/团队（客户分配），不是「子页」占位（D34-1）。
+		{Name: "客户分配", Path: "/msp/management", Icon: "Settings", ParentPath: "/msp", PermissionCode: "msp:write", SortOrder: 122, Description: "MSP 客户与服务人员的分配关系"},
 
 		// ===== 子菜单：发布管理 =====
 		{Name: "新建发布", Path: "/releases/new", Icon: "Plus", ParentPath: "/releases", PermissionCode: "release:write", SortOrder: 132},

@@ -1,6 +1,6 @@
 # 前端菜单与功能映射梳理
 
-> 适用范围：`itsm-frontend` + `itsm-backend` v1.6.x 收尾期；最后同步时间：2026-10-18（规则配置面三条菜单码按 `pkg/menubaseline/baseline.go` 复核纠正为 `assignment_rule:write` / `automation_rule:write`；菜单条数与 §8 缺登清单沿用 2026-10-11 复核结果）。
+> 适用范围：`itsm-frontend` + `itsm-backend` v1.6.x 收尾期；最后同步时间：2026-11-01（工单仪表盘退役：菜单基线摘除 `/tickets/dashboard`，条数由 103 收紧为 102，§3.2/§8.2/§9 同步收口；规则配置面三条菜单码按 `pkg/menubaseline/baseline.go` 复核纠正为 `assignment_rule:write` / `automation_rule:write`）。
 > 用途：把"前端页面 ↔ 后端菜单 ↔ API 入口 ↔ 能力治理"四个视角统一到一张图，作为菜单收口与下阶段补齐的参考。
 >
 > 本文是 docs/product/ 家族的新增文档，与 `ai-automation-status.md` 并列，专注"菜单/页面/功能"层。菜单事实以 `pkg/menubaseline/baseline.go` 为准，不以本文为准。
@@ -13,8 +13,9 @@
 
 - **前端没有静态菜单配置**。`itsm-frontend/src/components/layout/sidebar/menu-config.ts` 仅保留 `MenuItem` 类型与 `capabilityPathRules`，没有任何 `const getMenuConfig()` 静态数组。
 - **菜单唯一来源是后端**：登录用户通过 `GET /api/v1/auth/menus` 获取当前租户 + 角色 + 权限过滤后的菜单树。
-- **后端 `pkg/menubaseline/baseline.go::MenuDefinitions()` 是种子真理**（`itsm-backend/pkg/menubaseline/baseline.go:20`）：98 条菜单（28 顶级 + 70 子级）由 `pkg/seeder/seeder.go:1891 seedMenus` 两遍写入 `menu` 表（顶级 → 子级按 `parent_path` 反查）。`pkg/seeder/seeder.go:1886 menuDefinitions()` 只是转调。
-- **条数有测试棘轮**：`pkg/seeder/initialization_verify_cold_test.go:296` 断言 `require.Len(menuDefinitions(), 98)`，增删菜单必须同步该数字。
+- **后端 `pkg/menubaseline/baseline.go::MenuDefinitions()` 是种子真理**（`itsm-backend/pkg/menubaseline/baseline.go:20`）：102 条菜单（30 顶级 + 72 子级）由 `pkg/seeder/seeder.go:1895 seedMenus` 两遍写入 `menu` 表（顶级 → 子级按 `parent_path` 反查）。`pkg/seeder/seeder.go:1890 menuDefinitions()` 只是转调。
+- **条数有测试棘轮**：`pkg/seeder/initialization_verify_cold_test.go:303` 断言 `require.Len(menuDefinitions(), 102)`，增删菜单必须同步该数字。
+- **种子是 add-only**：`seedMenus` / `InitMenusFromBaseline` 只会新增与更新条目，不会停用基线里已摘除的 path。因此菜单退役必须配套一条按 path 收窄、不带 tenant 与主键的停用迁移（如 `migrations/20261101_retire_ticket_dashboard_menu.sql`），否则存量租户侧边栏会留一条指向已删页面的死链。
 - **运行时入口**：`MenuService.GetUserMenus`（`service/menu_service.go:212`）→ `dto.MenuTreeResponse{Main, Admin}`。
 - **前端缓存**：`useUserMenusQuery`（`src/lib/hooks/useUserMenusQuery.ts`）走 React Query，5 分钟 staleTime；菜单管理端 CRUD 后派发 `MENUS_UPDATED_EVENT` 自动 invalidate。
 
@@ -25,7 +26,7 @@ seedMenus → menu 表（tenant_id + path 唯一）
                 ↑
         upsertMenu (两遍 upsert)
                 ↑
-   menuDefinitions() = 98 条菜单种子（唯一真理）
+   menuDefinitions() = 102 条菜单种子（唯一真理）
 
 登录后:
   GET /api/v1/auth/menus
@@ -119,9 +120,17 @@ seedMenus → menu 表（tenant_id + path 唯一）
 |-----:|------|------|------------|------|
 | 21 | `/tickets/types` | 工单类型 | `ticket_type:read` | ClipboardList |
 | 22 | `/tickets/analytics` | 工单统计 | `report:read` | BarChart3 |
-| 23 | `/tickets/dashboard` | 工单仪表盘 | `ticket:read` | LayoutDashboard |
 | 24 | `/tickets/cc` | 我的抄送 | `ticket:read` | Mail |
 | 25 | `/tickets/templates` | 工单模板 | `ticket_template:read` | Copy |
+
+> 2026-11-01：`/tickets/dashboard`（工单仪表盘）已从基线摘除。它与「工单统计」展示同一批指标
+> （总量/待处理/已解决/SLA/优先级分布），且时间窗下拉与 SLA 阈值只存在组件 state、从不发给后端，
+> 团队表现表恒为空——属假控件。页面已删除，`next.config.ts` 保留
+> `/tickets/dashboard → /tickets/analytics` 跳转；存量菜单行由
+> `migrations/20261101_retire_ticket_dashboard_menu.sql` 按 path 停用（不删行、不限租户）。
+> 工单统计页的唯一数据源是 `GET /api/v1/tickets/stats`，其菜单码继续挂 `report:read`：
+> 页面主体只需 `ticket:read`，但「深度分析/导出」页签要求 `report:read` 与 `ticket:export`，
+> 菜单取最高要求码，缺权限由页内分块提示说明，不再渲染成 0。
 
 > 2026-10-19：`/tickets/templates` 此前挂 `ticket:write`，而页面数据源
 > `GET /api/v1/tickets/templates` 要求 `ticket_template:read`；只写自己工单的最终用户
@@ -599,7 +608,7 @@ tenant.Group("/admin").GET("/tenants", ...)  // alias /tenants
 | 顶级 | 缺登子菜单 | 前端 page | 备注 |
 |------|----------|----------|------|
 | `/tickets` | `/tickets/create` | ✅ `tickets/create/page.tsx` | 当前 /tickets 顶级有页面，建议补"新建工单"子菜单 |
-| `/tickets` | `/tickets/dashboard` | ✅ `tickets/dashboard/page.tsx` | 当前 /tickets/analytics 已存在，建议补 dashboard 或别名 |
+| `/tickets` | `/tickets/dashboard` | ❌ 页面已删除（2026-11-01） | 与 `/tickets/analytics` 功能重复且满是假控件，退役为单一入口；旧 URL 由 `next.config.ts` 跳转，菜单行由迁移停用 |
 | `/tickets` | `/tickets/cc` | ✅ `tickets/cc/page.tsx` | 抄送列表；建议作为工单管理下的运营维度 |
 | `/tickets` | `/tickets/templates/*` | ✅ `tickets/templates/[id]/page.tsx` + `templates/page.tsx` | 工单模板管理；建议作为 `/admin/ticket-templates` 或 `/admin` 子菜单 |
 | `/incidents` | `/incidents/[id]/edit` | ✅ `incidents/[id]/edit/page.tsx` | 编辑入口一般由详情页承担 |
@@ -636,7 +645,7 @@ tenant.Group("/admin").GET("/tenants", ...)  // alias /tenants
 2. ~~新增顶级菜单 `/tags`~~ —— 2026-10-02 已按相反方向收口：菜单基线本就注册了 `/admin/tags`（`pkg/menubaseline/baseline.go:147`），是页面挂在 `/tags` 才导致侧边栏点击 404。改动页面归属（`git mv` 到 `src/app/(main)/admin/tags/page.tsx`）零数据变更即可让入口生效；改基线 path 反而会让已种子租户留下孤儿菜单行。新增顶级菜单不再是候选方案，且基线仍带 `PermissionCode: "system:read"`，与页面真实所需的 `ticket_tag:*` 不一致，口径待单独拍板。
 3. **新增顶级菜单 `/projects`**（permission `project:read`）：项目/工单关联运营入口。
 4. **新增顶级菜单 `/applications`**（permission `application:read`）：应用/微服务运营入口。
-5. **补全子菜单**：把 `/tickets/dashboard`、`/tickets/cc`、`/cmdb/ci-types`、`/cmdb/registry`、`/cmdb/cloud-resources`、`/cmdb/cloud-services`、`/cmdb/reconciliation`、`/knowledge/articles/[id]`、`/knowledge/reviews`、`/workflow/sla`（已存在）等补齐。
+5. **补全子菜单**：把 `/tickets/cc`、`/cmdb/ci-types`、`/cmdb/registry`、`/cmdb/cloud-resources`、`/cmdb/cloud-services`、`/cmdb/reconciliation`、`/knowledge/articles/[id]`、`/knowledge/reviews`、`/workflow/sla`（已存在）等补齐。~~`/tickets/dashboard`~~ 于 2026-11-01 反向收口：与「工单统计」重复，退役为单一入口而非补挂菜单。
 
 ### P1：能力治理收敛
 

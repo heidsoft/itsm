@@ -21,6 +21,21 @@ const nextConfig: NextConfig = {
     ];
   },
 
+  // 客户主数据/值班排班从 /email-intake/* 迁到业务语义化路由（D34-2）。
+  // 旧链接保留跳转，避免书签、外部文档里的旧 URL 直接 404。
+  async redirects() {
+    return [
+      { source: '/email-intake/customers', destination: '/customers', permanent: false },
+      { source: '/email-intake/contracts', destination: '/support-contracts', permanent: false },
+      { source: '/email-intake/sources', destination: '/source-organizations', permanent: false },
+      { source: '/email-intake/on-call', destination: '/on-call', permanent: false },
+      // 工单仪表盘与工单统计功能重复，2026-11-01 退役前者（菜单见
+      // migrations/20261101_retire_ticket_dashboard_menu.sql）。书签与历史文档里的
+      // 旧 URL 继续跳转，不落到 404。
+      { source: '/tickets/dashboard', destination: '/tickets/analytics', permanent: false },
+    ];
+  },
+
   // 图片优化配置
   images: {
     formats: ['image/webp', 'image/avif'],

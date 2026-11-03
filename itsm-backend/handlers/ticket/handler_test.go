@@ -69,6 +69,9 @@ type mockRepository struct {
 	lastSearchUserID     int
 	lastOverdueDataScope datascope.DataScope
 	lastOverdueUserID    int
+	// 统计窗口必须完整下传到仓储：mock 忽略 window 时，handler 少传一个查询参数
+	// 或把「未传日期」当成「今天」都不会被测试发现。
+	lastStatsWindow *ticketrepo.StatsWindow
 }
 
 func newMockRepository() *mockRepository {
@@ -357,10 +360,11 @@ func (m *mockRepository) GetUserNamesByIDs(ctx context.Context, tenantID int, id
 	return out, nil
 }
 
-func (m *mockRepository) GetStats(ctx context.Context, tenantID int, ds datascope.DataScope, currentUserID int) (*TicketStats, error) {
+func (m *mockRepository) GetStats(ctx context.Context, tenantID int, ds datascope.DataScope, currentUserID int, window *ticketrepo.StatsWindow) (*TicketStats, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.statsCalled = true
+	m.lastStatsWindow = window
 	statusCounts := map[ticketrepo.Status]int{}
 	priorityCounts := map[ticketrepo.Priority]int{}
 	stats := &TicketStats{}
@@ -370,6 +374,10 @@ func (m *mockRepository) GetStats(ctx context.Context, tenantID int, ds datascop
 	}
 	for _, t := range m.tickets {
 		if t.TenantID != tenantID {
+			continue
+		}
+		// 窗口按 created_at 收窄，与 EntRepository 的 DateFrom/DateTo 谓词一致。
+		if window != nil && (t.CreatedAt.Before(window.From) || t.CreatedAt.After(window.To)) {
 			continue
 		}
 		if ds != datascope.DataScopeAll {
@@ -403,6 +411,32 @@ func (m *mockRepository) GetStats(ctx context.Context, tenantID int, ds datascop
 	// 与生产实现同一套聚合与排序，避免 mock 契约漂移掩盖真实分布缺陷。
 	stats.ByStatus = orderTicketStatuses(statusCounts)
 	stats.ByPriority = orderTicketPriorities(priorityCounts)
+	// 带窗口时镜像生产：逐日补零，横轴缺日会让「今天没人提单」和「今天没取到数」看起来一样。
+	if window != nil {
+		created := map[string]int{}
+		resolved := map[string]int{}
+		for _, t := range m.tickets {
+			if t.TenantID != tenantID {
+				continue
+			}
+			if t.CreatedAt.After(window.To) || t.CreatedAt.Before(window.From) {
+				continue
+			}
+			created[t.CreatedAt.Format("2006-01-02")]++
+			if t.ResolvedAt != nil && !t.ResolvedAt.Before(window.From) && !t.ResolvedAt.After(window.To) {
+				resolved[t.ResolvedAt.Format("2006-01-02")]++
+			}
+		}
+		stats.DailyTrend = nil
+		for day := window.From; !day.After(window.To); day = day.AddDate(0, 0, 1) {
+			label := day.Format("2006-01-02")
+			stats.DailyTrend = append(stats.DailyTrend, DailyTrendPoint{
+				Date:     label,
+				Created:  created[label],
+				Resolved: resolved[label],
+			})
+		}
+	}
 	return stats, nil
 }
 
@@ -454,6 +488,10 @@ func (m *mockRepository) EscalateTicket(ctx context.Context, id int, reason stri
 
 func (m *mockRepository) UpdateSLADeadlines(ctx context.Context, id int, responseDeadline, resolutionDeadline *time.Time, slaDefinitionID *int, tenantID int) error {
 	return nil
+}
+
+func (m *mockRepository) GetSLADefinitionName(ctx context.Context, tenantID int, definitionID int) (string, error) {
+	return "", nil
 }
 
 func (m *mockRepository) GetTemplateCategories(ctx context.Context, tenantID int) ([]string, error) {

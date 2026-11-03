@@ -24,6 +24,7 @@ import {
   Radio,
 } from 'antd';
 import type { RadioChangeEvent } from 'antd';
+import { formatDateTime } from '@/lib/formatters';
 import {
   AlertTriangle,
   BookOpen,
@@ -359,8 +360,8 @@ const TicketTemplatesPage = () => {
       </div>
 
       <div className='flex items-center justify-between text-xs text-gray-500 mb-3'>
-        <span>创建时间: {new Date(template.createdAt).toLocaleDateString('zh-CN')}</span>
-        <span>更新时间: {new Date(template.updatedAt).toLocaleDateString('zh-CN')}</span>
+        <span>创建时间: {formatDateTime(template.createdAt)}</span>
+        <span>更新时间: {formatDateTime(template.updatedAt)}</span>
       </div>
 
       <div className='flex items-center justify-between'>
@@ -396,7 +397,7 @@ const TicketTemplatesPage = () => {
           <div className='text-center'>
             <Text className='text-xs text-gray-500'>更新时间</Text>
             <div className='font-semibold'>
-              {new Date(template.updatedAt).toLocaleDateString('zh-CN')}
+              {formatDateTime(template.updatedAt)}
             </div>
           </div>
           <div className='flex items-center space-x-2'>

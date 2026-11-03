@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"itsm-backend/internal/datascope"
+	repoTicket "itsm-backend/repository/ticket"
 )
 
 // Repository defines the interface for ticket data access
@@ -34,7 +35,8 @@ type Repository interface {
 	// Stats
 	// scope/viewerID 与 List 使用同一套行级数据范围，避免工作台卡片
 	// 报出租户全量而工单列表为空的口径分裂。
-	GetStats(ctx context.Context, tenantID int, scope datascope.DataScope, viewerID int) (*TicketStats, error)
+	// window 非 nil 时，计数器、超期数与每日趋势共用同一个 created_at 窗口。
+	GetStats(ctx context.Context, tenantID int, scope datascope.DataScope, viewerID int, window *repoTicket.StatsWindow) (*TicketStats, error)
 
 	// Number generation
 	GenerateTicketNumber(ctx context.Context, tenantID int) (string, error)
@@ -48,6 +50,9 @@ type Repository interface {
 
 	// SLA
 	UpdateSLADeadlines(ctx context.Context, id int, responseDeadline, resolutionDeadline *time.Time, slaDefinitionID *int, tenantID int) error
+	// GetSLADefinitionName 按租户读取 SLA 定义名称（详情页「SLA定义」展示用）。
+	// 定义 ID 来自工单/SLA 状态表，必须带 tenant 谓词，避免跨租户名称泄漏。
+	GetSLADefinitionName(ctx context.Context, tenantID int, definitionID int) (string, error)
 
 	// 注：模板 CRUD（CreateTemplate 等）不在此接口——它们的规则与持久化
 	// 唯一所有者是 productionSvc（service.TicketService 模板 CRUD）；

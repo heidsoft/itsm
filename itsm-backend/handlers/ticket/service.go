@@ -419,9 +419,53 @@ func (s *Service) GetTicketsByAssignee(ctx context.Context, assigneeID int, tena
 	return s.repo.FindByAssignee(ctx, assigneeID, tenantID)
 }
 
-// GetStats returns ticket statistics for the viewer's data range.
-func (s *Service) GetStats(ctx context.Context, tenantID int, actorID int, actorRole string) (*TicketStats, error) {
-	return s.repo.GetStats(ctx, tenantID, dataScopeForRole(actorRole), actorID)
+// GetStats 返回登录者数据范围内的工单统计，是工单统计的唯一入口。
+//
+// window 为 nil 时保持旧口径：统计可见范围内全部工单，不带趋势与 SLA 读数
+// （工作台卡片依赖这一点，不能在这里塞默认窗口让 KPI 凭空变小）。
+// window 非 nil 时计数器、超期数、分布与趋势共用同一个 created_at 窗口，
+// 并按租户全量补一份 SLA 达标读数。
+func (s *Service) GetStats(ctx context.Context, tenantID int, actorID int, actorRole string, window *repoTicket.StatsWindow) (*TicketStats, error) {
+	scope := dataScopeForRole(actorRole)
+	stats, err := s.repo.GetStats(ctx, tenantID, scope, actorID, window)
+	if err != nil {
+		return nil, err
+	}
+	stats.Scope = StatsScopeLabel(scope)
+	stats.Window = StatsWindowEcho(window)
+	if window != nil {
+		s.attachSLACompliance(ctx, tenantID, *window, stats)
+	}
+	return stats, nil
+}
+
+// attachSLACompliance 补齐窗口内的 SLA 达标读数，失败时保持 nil。
+//
+// nil 与 0% 必须区分：达标率 0 会被读成「这个租户所有工单都超时」，
+// 而计时服务未接入/查询失败是运维问题，前端要显示「不可用」而不是假数字。
+func (s *Service) attachSLACompliance(ctx context.Context, tenantID int, window repoTicket.StatsWindow, stats *TicketStats) {
+	if s.slaMonitor == nil {
+		return
+	}
+	metrics, err := s.slaMonitor.CalculateSLAMetrics(ctx, tenantID, window.From, window.To)
+	if err != nil {
+		s.logger.Warnw("计算工单 SLA 达标率失败", "tenant_id", tenantID, "error", err)
+		return
+	}
+	echo := StatsWindowEcho(&window)
+	windowDays := 0
+	if echo != nil {
+		windowDays = echo.Days
+	}
+	stats.SLA = &TicketSLACompliance{
+		ComplianceRate:     metrics.SLACompliance,
+		SampledTickets:     metrics.TotalTickets,
+		ViolatedTickets:    metrics.ViolatedTickets,
+		AvgResponseMinutes: metrics.AvgResponseMinutes,
+		AvgResolutionHours: metrics.AvgResolutionHours,
+		WindowDays:         windowDays,
+		Scope:              SLAScopeTenant,
+	}
 }
 
 // ExportTickets 导出工单，委派给生产服务层（其查询已带 TenantID 谓词）。
@@ -629,54 +673,99 @@ func (s *Service) DeleteSubtask(ctx context.Context, subtaskID int, tenantID int
 	return s.repo.Delete(ctx, subtaskID, tenantID)
 }
 
-// GetTicketSLAInfo 返回工单的 SLA 信息：SLA 字段以 sla_states 表为准，
-// 表里没有记录时降级到工单内联字段。
-func (s *Service) GetTicketSLAInfo(ctx context.Context, ticketID int, tenantID int) (map[string]interface{}, error) {
+// GetTicketSLAInfo 返回工单的 SLA 信息。
+//
+// 生产装配下委托给 productionSvc：SLA 字段以 sla_states 表为准、缺记录时降级到
+// 工单内联字段的规则由该领域唯一实现持有。handler 层此前复制了一份 ad-hoc map，
+// 字段会随一侧演进而漏掉（slaDefinitionName / ticketNumber / 剩余时间曾因此丢失）。
+//
+// productionSvc 为 nil（单元测试或降级装配）时用 repo 构造同一契约，字段必须与
+// service.TicketSLAInfo 保持一致。
+func (s *Service) GetTicketSLAInfo(ctx context.Context, ticketID int, tenantID int) (*service.TicketSLAInfo, error) {
+	if s.productionSvc != nil {
+		return s.productionSvc.GetTicketSLAInfo(ctx, ticketID, tenantID)
+	}
+
 	t, err := s.repo.GetByID(ctx, ticketID, tenantID)
 	if err != nil {
 		return nil, err
 	}
+	info := &service.TicketSLAInfo{
+		TicketID:     t.ID,
+		TicketNumber: t.TicketNumber,
+		Priority:     t.Priority,
+	}
 
 	// 优先从 sla_states 读取
 	if s.slaMonitor != nil {
-		slaSt, slaErr := s.slaMonitor.GetSLAState(ctx, tenantID, "ticket", ticketID)
-		if slaErr == nil && slaSt != nil {
-			var responseDeadline *time.Time
+		if slaSt, slaErr := s.slaMonitor.GetSLAState(ctx, tenantID, "ticket", ticketID); slaErr == nil && slaSt != nil {
+			info.SLADefinitionID = slaSt.SLADefinitionID
 			if !slaSt.ResponseDeadline.IsZero() {
-				responseDeadline = &slaSt.ResponseDeadline
+				info.ResponseDeadline = slaSt.ResponseDeadline
 			}
-			var resolutionDeadline *time.Time
 			if !slaSt.ResolutionDeadline.IsZero() {
-				resolutionDeadline = &slaSt.ResolutionDeadline
+				info.ResolutionDeadline = slaSt.ResolutionDeadline
 			}
-			var firstResponseAt *time.Time
 			if !slaSt.FirstResponseAt.IsZero() {
-				firstResponseAt = &slaSt.FirstResponseAt
+				info.FirstResponseAt = &slaSt.FirstResponseAt
 			}
-			return map[string]interface{}{
-				"ticketId":             t.ID,
-				"slaDefinitionId":      slaSt.SLADefinitionID,
-				"responseDeadline":     responseDeadline,
-				"resolutionDeadline":   resolutionDeadline,
-				"firstResponseAt":      firstResponseAt,
-				"status":               t.Status,
-				"isResponseBreached":   responseDeadline != nil && time.Now().After(*responseDeadline),
-				"isResolutionBreached": resolutionDeadline != nil && time.Now().After(*resolutionDeadline),
-			}, nil
+			if !slaSt.ResolvedAt.IsZero() {
+				info.ResolvedAt = &slaSt.ResolvedAt
+			}
+			s.fillSLAComputedFields(ctx, tenantID, info)
+			return info, nil
 		}
 	}
 
 	// 降级：使用工单内联字段
-	return map[string]interface{}{
-		"ticketId":             t.ID,
-		"slaDefinitionId":      t.SLADefinitionID,
-		"responseDeadline":     t.SLAResponseDeadline,
-		"resolutionDeadline":   t.SLAResolutionDeadline,
-		"firstResponseAt":      t.FirstResponseAt,
-		"status":               t.Status,
-		"isResponseBreached":   t.SLAResponseDeadline != nil && time.Now().After(*t.SLAResponseDeadline),
-		"isResolutionBreached": t.SLAResolutionDeadline != nil && time.Now().After(*t.SLAResolutionDeadline),
-	}, nil
+	if t.SLADefinitionID != nil {
+		info.SLADefinitionID = *t.SLADefinitionID
+	}
+	if t.SLAResponseDeadline != nil {
+		info.ResponseDeadline = *t.SLAResponseDeadline
+	}
+	if t.SLAResolutionDeadline != nil {
+		info.ResolutionDeadline = *t.SLAResolutionDeadline
+	}
+	info.FirstResponseAt = t.FirstResponseAt
+	info.ResolvedAt = t.ResolvedAt
+	s.fillSLAComputedFields(ctx, tenantID, info)
+	return info, nil
+}
+
+// fillSLAComputedFields 补齐 SLA 定义名称与响应/解决的剩余分钟数与违约标记。
+// 定义名称按租户查询，避免跨租户名称泄漏；定义已删除时留空，由响应显示 "-"。
+func (s *Service) fillSLAComputedFields(ctx context.Context, tenantID int, info *service.TicketSLAInfo) {
+	if info.SLADefinitionID > 0 {
+		if name, err := s.repo.GetSLADefinitionName(ctx, tenantID, info.SLADefinitionID); err == nil {
+			info.SLADefinitionName = name
+		} else if s.logger != nil {
+			s.logger.Warnw("加载 SLA 定义名称失败", "tenant_id", tenantID, "sla_definition_id", info.SLADefinitionID, "error", err)
+		}
+	}
+
+	now := time.Now()
+	if info.FirstResponseAt != nil {
+		info.ResponseTimeLeft = 0
+		info.IsResponseBreached = false
+	} else if !info.ResponseDeadline.IsZero() {
+		if now.After(info.ResponseDeadline) {
+			info.IsResponseBreached = true
+		} else {
+			info.ResponseTimeLeft = int(info.ResponseDeadline.Sub(now).Minutes())
+		}
+	}
+
+	if info.ResolvedAt != nil {
+		info.ResolutionTimeLeft = 0
+		info.IsResolutionBreached = false
+	} else if !info.ResolutionDeadline.IsZero() {
+		if now.After(info.ResolutionDeadline) {
+			info.IsResolutionBreached = true
+		} else {
+			info.ResolutionTimeLeft = int(info.ResolutionDeadline.Sub(now).Minutes())
+		}
+	}
 }
 
 // GetTicketActivity retrieves ticket activity log (merged comments, attachments, status changes)
