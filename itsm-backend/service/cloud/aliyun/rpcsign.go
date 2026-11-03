@@ -74,6 +74,36 @@ func (e *RPCError) Error() string {
 
 // Call 发起一次 RPC 请求并把 JSON 响应解析到 out。out 为 nil 时只校验成功。
 func (c *rpcClient) Call(ctx context.Context, action string, params map[string]string, out any) error {
+	raw, err := c.callRaw(ctx, action, params)
+	if err != nil {
+		return err
+	}
+	if raw.Status != http.StatusOK {
+		return parseRPCError(raw.Status, raw.Body)
+	}
+	if out == nil {
+		return nil
+	}
+	if err := json.Unmarshal(raw.Body, out); err != nil {
+		return fmt.Errorf("aliyun rpc %s: decode response: %w", action, err)
+	}
+	return nil
+}
+
+// rpcRawResponse 是一次 RPC 调用的原始结果。
+type rpcRawResponse struct {
+	Status    int
+	Body      []byte
+	RequestID string
+}
+
+// callRaw 发起一次 RPC 请求并返回原始状态码、响应体与请求 ID。
+//
+// 抽出来是为了让只读探测工具复用**完全相同**的签名与编码路径：探测跑通的
+// 签名就是生产用的签名，不是两份实现各自通过。同时它保留原始体，让探测能
+// 检查「HTTP 200 + 响应体里带业务错误码」这类调用方必须自行判定的形态
+// （CMS 线上就出现过 Code 为字符串 "Throttling" 的错误分支）。
+func (c *rpcClient) callRaw(ctx context.Context, action string, params map[string]string) (rpcRawResponse, error) {
 	form := make(map[string]string, len(params)+10)
 	maps.Copy(form, params)
 	form["Action"] = action
@@ -93,31 +123,26 @@ func (c *rpcClient) Call(ctx context.Context, action string, params map[string]s
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, "https://"+c.endpoint+"/", strings.NewReader(body))
 	if err != nil {
-		return err
+		return rpcRawResponse{}, err
 	}
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded;charset=utf-8")
 	req.Header.Set("Accept", "application/json")
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
-		return fmt.Errorf("aliyun rpc %s: %w", action, err)
+		return rpcRawResponse{}, fmt.Errorf("aliyun rpc %s: %w", action, err)
 	}
 	defer resp.Body.Close()
 
 	payload, err := io.ReadAll(io.LimitReader(resp.Body, 8<<20))
 	if err != nil {
-		return fmt.Errorf("aliyun rpc %s: read response: %w", action, err)
+		return rpcRawResponse{}, fmt.Errorf("aliyun rpc %s: read response: %w", action, err)
 	}
-	if resp.StatusCode != http.StatusOK {
-		return parseRPCError(resp.StatusCode, payload)
-	}
-	if out == nil {
-		return nil
-	}
-	if err := json.Unmarshal(payload, out); err != nil {
-		return fmt.Errorf("aliyun rpc %s: decode response: %w", action, err)
-	}
-	return nil
+	return rpcRawResponse{
+		Status:    resp.StatusCode,
+		Body:      payload,
+		RequestID: resp.Header.Get("X-Acs-Request-Id"),
+	}, nil
 }
 
 func parseRPCError(status int, payload []byte) error {

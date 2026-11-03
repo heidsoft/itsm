@@ -105,12 +105,28 @@ func (v SecurityVulnerability) FirstSeen() time.Time { return tsToTime(int64(v.F
 func (v SecurityVulnerability) LastSeen() time.Time  { return tsToTime(int64(v.LastTs)) }
 
 // FirstTs/LastTs 是秒级时间戳；0 表示未知。
-func tsToTime(sec int64) time.Time {
-	if sec <= 0 {
+// tsToTime 把云安全中心的时间戳转成 time.Time。
+//
+// 云安全中心的 FirstTs / LastTs / ModifyTs / RepairTs 官方文档明确「单位为
+// 毫秒」（DescribeVulList 响应示例 1620404763000）。此前这里按秒解析，真实
+// 数据 1781413840000 会被算成公元 58655 年——漏洞的「首次发现」「最后发现」
+// 落在几万年之后，列表排序、水位线比较与"多久没复现"的判断全部失真。
+//
+// 边界兜底：SAS 不同接口/历史数据可能混用秒级时间戳，用 1e11 分界——
+// 毫秒时间戳大于 1e11 才落在 1973 年之后，秒时间戳小于 1e11 才落在
+// 5138 年之前，两侧不可能重叠，因此这个判断不会误伤任何真实值。
+func tsToTime(value int64) time.Time {
+	if value <= 0 {
 		return time.Time{}
 	}
-	return time.Unix(sec, 0).UTC()
+	if value < timestampMillisThreshold {
+		return time.Unix(value, 0).UTC()
+	}
+	return time.UnixMilli(value).UTC()
 }
+
+// timestampMillisThreshold 是毫秒/秒时间戳的分界值。
+const timestampMillisThreshold = int64(1e11)
 
 type vulListPage struct {
 	TotalCount  int                     `json:"TotalCount"`
@@ -151,4 +167,64 @@ func (c *SecurityCenterClient) DescribeVulnerabilities(ctx context.Context, vulT
 		return nil, 0, err
 	}
 	return out.VulRecords, out.TotalCount, nil
+}
+
+// SecurityCenterVulStatistics 是云安全中心的漏洞计数（各类型未修复数）。
+//
+// 这是云侧的权威计数，与「本轮拉到了几条列表」是两件事：前者回答「云上到底
+// 有多少漏洞」，后者回答「我们这次同步到了多少」。同步侧用它做交叉校验，
+// 避免「漏同步」被「本轮没出现即已修复」的收口误判成全部已修复。
+type SecurityCenterVulStatistics struct {
+	CveNum int `json:"CveNum"`
+	SysNum int `json:"SysNum"`
+	CmsNum int `json:"CmsNum"`
+	ScaNum int `json:"ScaNum"`
+	AppNum int `json:"AppNum"`
+	EmgNum int `json:"EmgNum"`
+	// VulAsapSum / VulLaterSum / VulNntfSum 按修复必要性分级统计未修复漏洞。
+	VulAsapSum  int `json:"VulAsapSum"`
+	VulLaterSum int `json:"VulLaterSum"`
+	VulNntfSum  int `json:"VulNntfSum"`
+	// VulDealedTotalNum 是已修复（已处理）的漏洞总数。
+	VulDealedTotalNum int `json:"VulDealedTotalNum"`
+}
+
+// CountFor 返回指定漏洞类型的云侧计数；未知类型返回 0。
+func (s *SecurityCenterVulStatistics) CountFor(vulnType string) int {
+	if s == nil {
+		return 0
+	}
+	switch vulnType {
+	case "cve":
+		return s.CveNum
+	case "sys":
+		return s.SysNum
+	case "cms":
+		return s.CmsNum
+	case "sca":
+		return s.ScaNum
+	case "app":
+		return s.AppNum
+	case "emg":
+		return s.EmgNum
+	default:
+		return 0
+	}
+}
+
+// TotalUnfixed 是按修复必要性分级的未修复漏洞总数。
+func (s *SecurityCenterVulStatistics) TotalUnfixed() int {
+	if s == nil {
+		return 0
+	}
+	return s.VulAsapSum + s.VulLaterSum + s.VulNntfSum
+}
+
+// DescribeVulNumStatistics 查询云安全中心的漏洞计数。
+func (c *SecurityCenterClient) DescribeVulNumStatistics(ctx context.Context) (*SecurityCenterVulStatistics, error) {
+	var out SecurityCenterVulStatistics
+	if err := c.caller.Call(ctx, "DescribeVulNumStatistics", map[string]string{"Lang": "zh"}, &out); err != nil {
+		return nil, err
+	}
+	return &out, nil
 }

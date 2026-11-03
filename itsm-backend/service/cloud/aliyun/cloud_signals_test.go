@@ -139,8 +139,8 @@ func TestSecurityCenterDescribeVulnerabilitiesParsesRecords(t *testing.T) {
 			"InstanceId": "i-abc",
 			"InstanceName": "web-1",
 			"RegionId": "cn-beijing",
-			"FirstTs": "1760000000",
-			"LastTs": 1760100000,
+			"FirstTs": "1760000000000",
+			"LastTs": 1760100000000,
 			"ExtendContentJson": "{\"cvss_score\":\"9.8\"}"
 		}]
 	}`)}
@@ -154,7 +154,8 @@ func TestSecurityCenterDescribeVulnerabilitiesParsesRecords(t *testing.T) {
 	require.Equal(t, 1, int(records[0].Status))
 	require.Equal(t, "OpenSSL 缓冲区溢出", records[0].Title())
 	require.Equal(t, "critical", records[0].Severity())
-	require.Equal(t, time.Unix(1760000000, 0).UTC(), records[0].FirstSeen())
+	// 官方单位是毫秒：1760000000000 ms = 2025-10-09T06:13:20Z。
+	require.Equal(t, time.UnixMilli(1760000000000).UTC(), records[0].FirstSeen())
 	require.Equal(t, "DescribeVulList", caller.action)
 	require.Equal(t, "cve", caller.params["Type"])
 	require.Equal(t, "1,2", caller.params["StatusList"])
