@@ -23,25 +23,51 @@ const (
 )
 
 // SecurityVulnerability 是云安全中心一条漏洞记录。Severity 未在列表接口中直接给出，
-// 用 ExtendContentJson 的 CVSS 评分推导。
+// 用云侧的 Level 字段或 ExtendContentJson 的 CVSS 评分推导。
 type SecurityVulnerability struct {
-	PrimaryID         flexString `json:"PrimaryId"`
-	Name              string     `json:"Name"`
-	AliasName         string     `json:"AliasName"`
-	Type              string     `json:"Type"`
-	Status            flexInt    `json:"Status"`
-	Necessity         string     `json:"Necessity"`
-	InstanceID        string     `json:"InstanceId"`
-	InstanceName      string     `json:"InstanceName"`
-	UUID              string     `json:"Uuid"`
-	InternetIP        string     `json:"InternetIp"`
-	IntranetIP        string     `json:"IntranetIp"`
-	RegionID          string     `json:"RegionId"`
-	Related           string     `json:"Related"`
-	FirstTs           flexInt64  `json:"FirstTs"`
-	LastTs            flexInt64  `json:"LastTs"`
-	ModifyTs          flexInt64  `json:"ModifyTs"`
-	ExtendContentJSON string     `json:"ExtendContentJson"`
+	PrimaryID    flexString `json:"PrimaryId"`
+	Name         string     `json:"Name"`
+	AliasName    string     `json:"AliasName"`
+	Type         string     `json:"Type"`
+	Status       flexInt    `json:"Status"`
+	Necessity    string     `json:"Necessity"`
+	InstanceID   string     `json:"InstanceId"`
+	InstanceName string     `json:"InstanceName"`
+	UUID         string     `json:"Uuid"`
+	InternetIP   string     `json:"InternetIp"`
+	IntranetIP   string     `json:"IntranetIp"`
+	RegionID     string     `json:"RegionId"`
+	Related      string     `json:"Related"`
+	FirstTs      flexInt64  `json:"FirstTs"`
+	LastTs       flexInt64  `json:"LastTs"`
+	ModifyTs     flexInt64  `json:"ModifyTs"`
+	// Level 是云侧给出的漏洞等级（high/medium/low）。emg（应急/SCA）类型
+	// 没有 cvss_score，只有 Level——2026-11-03 真实账号实测 Level="high"。
+	Level string `json:"Level"`
+	// ExtendContentJson 在不同漏洞类型下形态不同（cve/sys/cms 是 JSON 字符串，
+	// emg 是 JSON 对象）。解码时统一归一成 JSON 字符串存进来，避免 emg 类型
+	// 因「object 不能解进 string」而让整轮同步失败。
+	ExtendContentJSON string `json:"ExtendContentJson"`
+}
+
+// UnmarshalJSON 解码一条漏洞记录，并把 ExtendContentJson 的两种形态
+// （JSON 字符串 / JSON 对象）统一成 JSON 字符串。
+//
+// 2026-11-03 prod 实测：emg（应急/SCA）类型返回的是 JSON 对象
+// {"Necessity":{},"cveList":[],"RpmEntityList":[...]}，按字符串解码会报
+// "json: cannot unmarshal object into Go struct field ... of type string"，
+// 该类型的漏洞一条都进不来。解码归一后两种形态都能正常落库。
+func (v *SecurityVulnerability) UnmarshalJSON(b []byte) error {
+	type alias SecurityVulnerability
+	aux := struct {
+		ExtendContentJSON flexJSONObject `json:"ExtendContentJson"`
+		*alias
+	}{alias: (*alias)(v)}
+	if err := json.Unmarshal(b, &aux); err != nil {
+		return err
+	}
+	v.ExtendContentJSON = aux.ExtendContentJSON.String()
+	return nil
 }
 
 type flexInt64 int64
@@ -60,8 +86,15 @@ func (f *flexInt64) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-// Severity 把 CVSS 评分映射为 ITSM 严重度；无评分时返回 unknown，不猜测。
+// Severity 返回漏洞严重度。
+//
+// 优先用云侧给的 Level——emg（应急/SCA）类型没有 cvss_score，只有 Level；
+// 没有 Level 时才回退到 CVSS 评分推导（cve/sys/cms 常见）。
+// 两者都没有时返回 unknown，不猜测。
 func (v SecurityVulnerability) Severity() string {
+	if level := normalizeSASLevel(v.Level); level != "" {
+		return level
+	}
 	score := v.cvssScore()
 	switch {
 	case score == 0:
@@ -77,12 +110,29 @@ func (v SecurityVulnerability) Severity() string {
 	}
 }
 
-func (v SecurityVulnerability) cvssScore() float64 {
-	var ext struct {
-		CVSSScore flexFloat `json:"cvss_score"`
+// normalizeSASLevel 把云安全中心的 Level 词表映射成 ITSM 严重度；
+// 未知取值返回空串（由调用方回退到 CVSS 推导）。
+func normalizeSASLevel(level string) string {
+	switch strings.ToLower(strings.TrimSpace(level)) {
+	case "critical":
+		return "critical"
+	case "high":
+		return "high"
+	case "medium", "mid":
+		return "medium"
+	case "low":
+		return "low"
+	default:
+		return ""
 	}
+}
+
+func (v SecurityVulnerability) cvssScore() float64 {
 	if v.ExtendContentJSON == "" {
 		return 0
+	}
+	var ext struct {
+		CVSSScore flexFloat `json:"cvss_score"`
 	}
 	if err := json.Unmarshal([]byte(v.ExtendContentJSON), &ext); err != nil {
 		return 0
