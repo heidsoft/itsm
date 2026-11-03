@@ -98,6 +98,7 @@ import (
 	vendorHandler "itsm-backend/handlers/vendor"
 	wecomHandler "itsm-backend/handlers/wecom"
 	workbenchHandler "itsm-backend/handlers/workbench"
+	cloudAlicloud "itsm-backend/infrastructure/cloud/alicloud"
 	"itsm-backend/internal/commandbus"
 	"itsm-backend/internal/knowledgeaccess"
 	"itsm-backend/internal/schema"
@@ -960,6 +961,10 @@ func NewApplication() *Application {
 	)
 	vendorService := service.NewVendorService(client, sugar)
 	provisioningService := service.NewProvisioningService(client, sugar)
+	// 真实交付走租户云账号 + secret:// 引用（cloud_discovery.tenant_secrets）。
+	// 未配置账号/凭据时任务 fail closed，不会静默退回 Stub 造假成功。
+	provisioningService.SetProvider(cloudAlicloud.NewECSProvider(sugar))
+	provisioningService.SetCloudRuntime(tenantSecretResolver)
 	provisioningTaskCommandHandler := service.NewProvisioningTaskCommandHandler(provisioningService)
 	if provisioningTaskCommandHandler != nil {
 		if err := commandRegistry.Register(commandbus.CommandExecuteProvisioningTask, provisioningTaskCommandHandler.Handle); err != nil {
@@ -976,6 +981,11 @@ func NewApplication() *Application {
 	// sla_states；装配缺失时降级为无 SLA 绑定，不阻断创建。
 	srService.SetSLAService(ticketSLAService)
 	srHandler := service_request.NewHandler(srService)
+
+	// 交付完成后的联动：SR 承接 SLA 与流程作业收口，CMDB 承接配置项投影。
+	// 两者都在交付事务提交后回调，失败只留痕，不回滚已发生的交付。
+	provisioningService.SetDeliveryListener(srService)
+	provisioningService.SetCIProjector(cmdb.NewProvisioningCIProjector(cmdbRepo, configurationItemService, sugar))
 
 	// Domain: Incident (DDD)
 	// IncidentHandler 在应用装配阶段注入（见本函数早段的 incident.NewService/NewHandler），
@@ -1052,10 +1062,17 @@ func NewApplication() *Application {
 	}
 	sugar.Infow("AI SkillRegistry ready", "total_skills", skillRegistry.Count())
 
+	// 技能商品的交付校验：市场侧用 SkillRegistry 判断「版本行声明的技能码在本进程
+	// 到底有没有实现」，装不出来的商品不能标 active；技能调用侧反过来用市场判定
+	// 「该租户是否装上了交付这个技能的组件」。两个方向共用同一个实例，避免
+	// marketplace 与 skill 各自维护一份技能词表而漂移。
+	marketplaceSvc.SetSkillRuntime(skillRegistry)
+
 	// Skills Management API：在 SkillRegistry 装配完成后创建 handler。
 	// handler 只是 thin wrapper，所有业务逻辑在 SkillRegistry 内。
 	// client 用于 Invoke 时校验 skill 声明的 RequiredPermissions。
 	skillHandler := skill.NewHandler(skillRegistry, sugar, client)
+	skillHandler.SetSkillEntitlements(marketplaceSvc)
 	emailIntakeService := email_intake.NewService(client)
 	emailIntakeHandler := email_intake.NewHandler(emailIntakeService)
 	emailIntakeMode := email_intake.IntakeMode(os.Getenv("EMAIL_INTAKE_MODE"))
@@ -1318,7 +1335,7 @@ func NewApplication() *Application {
 		IncidentHandler:              incidentHandler,
 		ApprovalHandler:              approvalHandler,
 		BPMNHandler:                  bpmnHTTPHandler,
-		A2UIHandler:                  a2uiHandler.NewHandler(a2uiService, sugar),
+		A2UIHandler:                  a2uiHandler.NewHandler(a2uiService, ticketHandlerService, sugar),
 		CMDBHandler:                  cmdbHandler,
 		CloudSignalHandler:           cloudSignalRuntime.HTTPHandler(),
 		TicketCategoryHandler:        ticketCategoryHandler.NewHandler(ticketCategoryService, sugar),

@@ -99,8 +99,8 @@ func BuiltinRolePermissionCodes() map[string][]string {
 			"knowledge:read", "knowledge:write",
 			// SLA（1）：仅查看自己 SLA 进度
 			"sla:read",
-			// 服务请求（3）：坐席通常作为 L1 审批人
-			"service_request:read", "service_request:write", "service_request:approve",
+			// 服务请求（4）：坐席作为 L1 审批人，并可执行交付（云资源真实创建）
+			"service_request:read", "service_request:write", "service_request:approve", "service_request:provision",
 			// 上下文读权限（7）：坐席处理工单时的最小视角
 			"user:read", "team:read", "department:read",
 			"asset:read", "cmdb:read",
@@ -170,7 +170,7 @@ func BuiltinRolePermissionCodes() map[string][]string {
 			"ticket:resolve", "ticket:close", "ticket:approve",
 			"problem:read", "change:read", "asset:read", "cmdb:read", "cmdb:write",
 			"user:read", "team:read", "knowledge:read", "report:read",
-			"service_request:read", "service_request:write", "service_request:approve",
+			"service_request:read", "service_request:write", "service_request:approve", "service_request:provision",
 			// 流程运营职责需要配置面（工单类型/分类/模板、SLA、流程与发布读、
 			// 服务目录、CI 类型建模），不含 user/role/system 写（归 admin 与三员）。
 			// 模板路由按 create/update 分码；admin 靠 write⇒同义补齐可达，it_admin 既无
@@ -226,7 +226,7 @@ func BuiltinRolePermissionCodes() map[string][]string {
 			"tenant:read", "tenant:write",
 			"incident:read", "incident:write", "incident:force-update", "incident:admin",
 			"service_catalog:read", "service_catalog:write", "service_catalog:delete",
-			"service_request:read", "service_request:write",
+			"service_request:read", "service_request:write", "service_request:provision",
 			"change:read", "change:write", "change:delete",
 			"problem:read", "problem:write", "problem:delete",
 			"release:read", "release:write", "release:delete",
@@ -271,7 +271,7 @@ func BuiltinRolePermissionCodes() map[string][]string {
 			"cmdb:read",
 			"incident:read", "incident:write",
 			"service_catalog:read",
-			"service_request:read", "service_request:write",
+			"service_request:read", "service_request:write", "service_request:provision",
 			"alert:read",
 			"alerts:read",
 			"ai:read",

@@ -283,7 +283,13 @@ func (i *productionComponentInitializer) Apply(
 	if i.seeder.appConfig != nil {
 		mode = i.seeder.appConfig.RLS.Mode
 	}
-	client := ent.NewClient(ent.Driver(rls.From(driver, mode, i.seeder.sugar)))
+	// 未知模式必须报错而不是静默降级为 off：初始化路径与主链路共用同一套
+	// 模式校验，否则一个拼写错误会让播种过程在无隔离状态下运行。
+	rlsDriver, err := rls.From(driver, mode, i.seeder.sugar)
+	if err != nil {
+		return initialization.Result{}, err
+	}
+	client := ent.NewClient(ent.Driver(rlsDriver))
 	var mutationErr error
 	client.Use(func(next ent.Mutator) ent.Mutator {
 		return ent.MutateFunc(func(ctx context.Context, mutation ent.Mutation) (ent.Value, error) {

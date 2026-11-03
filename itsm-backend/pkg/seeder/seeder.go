@@ -720,11 +720,14 @@ func getEmbeddedConfig() *SeedConfig {
 			{Name: "变更审批", Desc: "所有变更请求需要多级审批", TicketType: "change", Priority: "", Nodes: []map[string]interface{}{{"type": "approval", "name": "技术审批", "approver_type": "role", "role": "engineer", "timeout": 240}, {"type": "approval", "name": "经理审批", "approver_type": "role", "role": "manager", "timeout": 480}}},
 			{Name: "服务请求审批", Desc: "高价值服务请求需要审批", TicketType: "service_request", Priority: "high", Nodes: []map[string]interface{}{{"type": "approval", "name": "服务审批", "approver_type": "manager", "timeout": 120}}},
 		},
+		// 工单聚合只承载 ticket 域流程：这里的 incident/problem/change/service_request
+		// 是工单的 type 取值，不是 incident/problem/change 领域的单据。外域流程的服务任务
+		// 按 incident_id/change_id 等变量写库，工单聚合没有这些变量，会读到 0 后死信。
 		ProcessBindings: []ProcessBindingSeed{
-			{BusinessType: "ticket", BusinessSubType: "incident", ProcessDefinitionKey: "incident_emergency_flow", IsDefault: true},
-			{BusinessType: "ticket", BusinessSubType: "problem", ProcessDefinitionKey: "problem_management_flow", IsDefault: true},
-			{BusinessType: "ticket", BusinessSubType: "change", ProcessDefinitionKey: "change_normal_flow", IsDefault: true},
-			{BusinessType: "ticket", BusinessSubType: "service_request", ProcessDefinitionKey: "service_request_flow", IsDefault: true},
+			{BusinessType: "ticket", BusinessSubType: "incident", ProcessDefinitionKey: "ticket_general_flow", IsDefault: true},
+			{BusinessType: "ticket", BusinessSubType: "problem", ProcessDefinitionKey: "ticket_general_flow", IsDefault: true},
+			{BusinessType: "ticket", BusinessSubType: "change", ProcessDefinitionKey: "ticket_general_flow", IsDefault: true},
+			{BusinessType: "ticket", BusinessSubType: "service_request", ProcessDefinitionKey: "ticket_general_flow", IsDefault: true},
 			{BusinessType: "ticket", BusinessSubType: "improvement", ProcessDefinitionKey: "ticket_general_flow", IsDefault: true},
 			{BusinessType: "ticket", ProcessDefinitionKey: "ticket_general_flow", IsDefault: true},
 		},
@@ -2031,6 +2034,13 @@ func (s *Seeder) seedMenuAndPermissionFixes(ctx context.Context) {
 		"/sla/overview":               "/sla",
 		"/email-intake/conversations": "/email-intake",
 		"/knowledge/articles":         "/knowledge",
+		// D34：客户主数据/值班排班迁出 /email-intake 技术路径，URL 与业务名对齐。
+		// 新版 specs 已包含目标路径，存量数据走 dupCount>0 分支删除旧条目；
+		// 旧 URL 由 next.config redirects 兜底跳转。
+		"/email-intake/customers": "/customers",
+		"/email-intake/contracts": "/support-contracts",
+		"/email-intake/sources":   "/source-organizations",
+		"/email-intake/on-call":   "/on-call",
 		// 审批待办去重（2026-10-26）：/approvals/pending 只是 redirect 到 /approvals 的兼容壳，
 		// 基线已删除该菜单；存量数据里它仍以顶级「待我审批」存在，会与新「我的待办」重复。
 		// 目标 /approvals 一定存在 → 走 dupCount>0 分支删除旧条目。

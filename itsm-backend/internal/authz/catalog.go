@@ -115,6 +115,8 @@ func Definitions() []PermissionDef {
 		{"service_request:delete", "删除服务请求", "service_request", "delete", "删除服务请求"},
 		// 审批动作独立权限
 		{"service_request:approve", "审批服务请求", "service_request", "approve", "审批/驳回服务请求（L1/L2/L3 审批人）"},
+		// 交付动作独立权限：会调用云 Provider 真实创建资源，不能与字段编辑共用 write
+		{"service_request:provision", "执行服务交付", "service_request", "provision", "触发/重试/裁决服务请求的资源交付"},
 		// 通知权限（路由 RequirePermission("notification", "read"/"create") 依赖）
 		{"notification:read", "查看通知", "notification", "read", "查看通知和偏好设置"},
 		{"notification:create", "发送通知", "notification", "create", "创建/发送通知"},

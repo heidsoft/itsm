@@ -629,7 +629,7 @@ func (s *PermissionService) InitDefaultPermissions(ctx context.Context, tenantID
 		"problem":         {"create", "read", "write", "update", "delete", "export"},
 		"change":          {"create", "read", "write", "update", "delete", "approve", "export"},
 		"service_catalog": {"create", "read", "write", "update", "delete"},
-		"service_request": {"create", "read", "write", "update", "delete", "approve"},
+		"service_request": {"create", "read", "write", "update", "delete", "approve", "provision"},
 		"knowledge":       {"create", "read", "write", "update", "delete"},
 		"cmdb":            {"create", "read", "write", "update", "delete", "export"},
 		"asset":           {"create", "read", "write", "update", "delete", "assign"},

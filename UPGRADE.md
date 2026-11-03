@@ -3769,6 +3769,30 @@ cd itsm-frontend && npm run test:unit -- --runTestsByPath src/lib/api/__tests__/
 - 配置接口对不存在、已卸载或其他租户的安装记录返回 `404/4004`，不再返回 `500/5001`。
 - 调用方应展示服务端错误，不把上述失败作为成功安装，也不要自动重试未实现能力。无数据库迁移。
 
+### 1.100 问题知识反查移除重复读面（2026-10-31，端点移除 + 写入行为变更）
+
+- `GET /api/v1/problem-knowledge-articles/problems/{id}` 已移除，请求返回 `404`。该端点忽略路径中的 `problemID`、返回租户内全部知识文章，不能表达「由该问题沉淀」。反查请改用 `GET /api/v1/problems/{id}/knowledge`（按 `source_problem_id` 过滤，校验问题可见性与分类权限）。
+- `POST /api/v1/problem-knowledge-articles` 保留，但请求中的 `problemId` 现在必须指向当前租户存在的问题：跨租户或不存在统一返回 `404/4004`，且文章会写入 `source_problem_id`。此前 `problemId` 被丢弃，投放的文章在调查摘要与新反查端点中都不可见。
+- 影响面：仅自定义集成若调用过被移除的 GET 需要迁移；使用调查页沉淀的前端无需改动，但历史遗留的无来源文章不会自动补 `source_problem_id`。无数据库迁移。
+
+### 1.101 内置流程模板自动升级；在途服务请求需终止重建（2026-10-31，行为变更，无 DDL）
+
+- **启动部署改为版本感知。** 服务启动时仍会为每个 active 租户部署内置 BPMN 模板，但不再「key 已存在就跳过」。现在读取模板内声明的 `metaData version`：版本更高则以新版本发布，旧定义保留、仅新版本标记为 `is_latest`；版本更低不会降级；版本相同但内容变化时自动递增 patch 版本。定义写入与 `is_latest` 翻转在同一事务内完成，多副本并发部署由 `(tenant_id, key, version)` 唯一约束兜底。
+- **服务请求模板 2.0.0 → 2.1.0 是结构性变更。** 2.1.0 删除了「请求受理」用户任务（提交即受理），审批/履约任务新增 `taskPurpose`/`approvalLevel`，审批人改由启动变量 `approval_plan` 提供。升级前已启动、仍在运行的旧实例不会自动迁移；旧实例停在新模板已不存在的节点，且旧「请求受理」会被审批桥接当作审批待办，无法正常结束。
+- **处置方式：统一终止并提示重建。** 升级后执行一次运维命令（先 dry-run 确认清单）：
+  ```bash
+  cd itsm-backend
+  # 只列出，不写入
+  go run ./cmd/service-request-maintenance -actor-id <管理员用户ID>
+  # 确认清单后执行
+  go run ./cmd/service-request-maintenance -actor-id <管理员用户ID> -apply
+  ```
+  - `-tenant-id <id>` 只处理指定租户；缺省处理全部 active 租户。`-reason "..."` 可覆盖默认原因。
+  - 命令只处理 `business_key=service_request:<id>` 且 `definition_key=service_request_flow`、绑定非最新定义的 `running/suspended` 实例。
+  - 执行时终止流程实例、作废待审批步骤、把请求置为 `cancelled`，写入 `cancel_stale_process_instance` 审计，并给发起人发系统通知提示重新提交；重复执行为幂等。
+  - `provisioning`（交付中）、`delivered`、`rejected` 的请求只报告不处理，由运维确认交付结果后人工收口。
+- **不执行该命令的后果：** 旧实例会长期悬挂，审批收件箱里可能出现无法推进的待办；新提交的请求不受影响，会直接使用 2.1.0。无数据库迁移。
+
 ## 2. 环境变量变更
 
 本次升级**移除了多个"幽灵配置项"**（在示例文件中声明但代码/Compose 从不读取，用户配置了也不生效），并修正了一个 Grafana 密码安全缺陷。

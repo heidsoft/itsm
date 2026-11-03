@@ -297,8 +297,11 @@ func TestColdVerifyExpectationsAreDeterministicAndIndependent(t *testing.T) {
 	//       + 零入口页面补挂 4 条（10104fea2，2026-10-25：/workbench、
 	//         /problems/new、/admin/department-processes、/admin/config-inheritance）
 	//       - 审批中心（/approvals，2026-10-26 去重：与顶级「我的待办」同页）。
-	require.Len(t, menuDefinitions(), 103)
-	require.Len(t, menus, 103)
+	// 102 = 103 - 工单仪表盘（/tickets/dashboard，2026-11-01）：与「工单统计」
+	//       展示同一批指标且满是假控件，页面已删、存量菜单行由
+	//       migrations/20261101_retire_ticket_dashboard_menu.sql 停用。
+	require.Len(t, menuDefinitions(), 102)
+	require.Len(t, menus, 102)
 	for code, expected := range authz.BuiltinRolePermissionCodes() {
 		require.ElementsMatch(t, expected, grants[code], code)
 	}

@@ -321,3 +321,10 @@ itsm-frontend/scripts/tmp-*.mjs
 
 # migration-lint compiled binary (build artifact, keep local)
 itsm-backend/migration-lint
+
+# Local Go CLI build artifacts (`go build -o <name>` 直接落在 backend 根目录).
+# 两者均为 Mach-O 可执行文件（ai-eval ~127MB、aliyun-connection-check ~28MB）：
+# 不进版本库，也避免误 add 时触发 pre-commit 的 10MB 闸门把整批提交一起拒掉。
+# 精确路径，放在文件末尾（后写优先），不会吞掉同目录下的源码。
+itsm-backend/ai-eval
+itsm-backend/aliyun-connection-check

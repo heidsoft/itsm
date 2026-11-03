@@ -138,8 +138,8 @@ func TestMarketplaceManageFollowsTenantAdminPermission(t *testing.T) {
 	require.Equal(t, []string{"read"}, actionsFor("technician"))
 }
 
-// 没有实现证据的能力不得申报 GA。标签维持 Pilot：工单标签完整，但组织标签
-// （tags 表）只由 seeder 写入、没有管理面。workflow 的 Pilot 理由见
+// 没有实现证据的能力不得申报 GA。标签维持 Pilot：工单标签完整，组织标签
+// （tags 表）有只读查询但没有写入口。workflow 的 Pilot 理由见
 // TestWorkflowCapabilityStaysPilotUntilBridgingIsClosed。
 // 模板此前被「通用 /api/v1/templates 从未注册」这条幽灵缺陷卡住——前端仓库里
 // 既没有 template-api.ts，也没有任何该路径调用，实际表面是
@@ -250,17 +250,23 @@ func TestPromotedCapabilitiesAreGA(t *testing.T) {
 //
 // 因此把「已修好的事实」写成禁词表：一旦这些能力重新把旧结论写回理由，
 // 测试立即失败，逼作者去核对当前代码。
+//
+// 2026-10-31 复核又补三例：组织标签并非「无任何管理面」（有只读 GET）、
+// 云发现从未有增量通道、OIDC 已有假 IdP 全链路；同时移除了宣称存在、
+// 实际只切换日志标签的 AI「生产验收模式」。
 func TestPilotReasonsDoNotCiteClosedBlockers(t *testing.T) {
 	closedBlockers := map[string][]string{
 		// 2026-10-23：Job 级执行器消费 cmdb.cloud_discovery.run，
 		// DiscoveryScheduler 消费 discovery_sources.schedule。
-		"cmdbDiscovery":      {"队列无消费者", "没有执行者", "仅被单测调用", "worker 消费"},
+		// 2026-10-31：增量通道从未实现，不得再说成「增量发现未验收」。
+		"cmdbDiscovery":      {"队列无消费者", "没有执行者", "仅被单测调用", "worker 消费", "全量与增量发现未验收"},
 		"cmdbReconciliation": {"发现链路没有消费者", "只能对空集", "没有确认/驳回的写入面"},
 		// 2026-10-23：分诊/RCA 已强制 promptVersion + model + confidence + 底账。
-		// 2026-10-31：仿真「生产验收模式」的 ITSM_AI_EVAL_USE_LLM 只会切换日志标签，已移除；
-		// 同日代码侧三项验收缺口闭环（a9dbec0aa）——RAG 期望改按文章标题引用真实语料
-		// （不再是虚构 ID）、预测分数由生产 SLABreachPredictor 产出（不再取自数据集自带
-		// probability）、LLM 档验收命令 cmd/ai-eval 已就绪。这些表述不得再出现在理由里。
+		// 2026-10-31：仿真「生产验收模式」的 ITSM_AI_EVAL_USE_LLM 只会切换日志标签，已移除。
+		// 2026-10-31（晚）：代码侧三项验收缺口已闭环（a9dbec0aa）——RAG 期望改按
+		// 文章标题引用真实语料（不再是虚构 ID）、预测分数由生产 SLABreachPredictor
+		// 产出（不再取自数据集自带 probability）、LLM 档验收命令 cmd/ai-eval 已就绪
+		// （不再「没有可用的真实 LLM 候选生成器」）。这些表述不得再出现在理由里。
 		"ai": {
 			"confidence、接受/拒绝反馈", "evaluator 未接入调用链", "ITSM_AI_EVAL_USE_LLM", "生产验收模式",
 			"expected_doc_ids 是虚构 ID", "expected_doc_ids 为虚构 ID", "预测分值仍取自数据集", "没有可用的真实 LLM 候选生成器",
@@ -272,6 +278,12 @@ func TestPilotReasonsDoNotCiteClosedBlockers(t *testing.T) {
 		"connector.feishu": {"死信重放未实现", "市场安装闭环未验收", "死信人工重放与市场安装闭环未验收"},
 		// 2026-10-31：分类可见性已在全部知识读面收口并补齐跨角色回归。
 		"knowledge": {"分类可见性的跨角色检索未做端到端验收", "版本化发布", "发布版本语义未收敛"},
+		// 2026-10-31：组织标签有只读查询端点，缺的只是写入口；不得再说成「无任何管理面」。
+		"tag": {"无任何管理面", "没有管理面", "从未被装配"},
+		// 2026-10-31：假 IdP 已覆盖登录→回调→换票→JWT 整链，缺的只是真实 IdP 联调。
+		"identity.oidc": {"现有覆盖为服务单测与路由测试", "没有与真实 IdP 的端到端联调证据"},
+		// 2026-10-31：交付已接阿里云 ECS RunInstances（租户凭据引用、未配置失败关闭）。
+		"serviceRequest": {"交付 Provider 仍是 StubProvider", "未接真实云 API", "交付 Provider 仍为 Stub"},
 	}
 	byKey := make(map[string]definition, len(registry))
 	for _, item := range registry {

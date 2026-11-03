@@ -75,11 +75,12 @@ var registry = []definition{
 	// 语义是「outbox 未装配」）。注释过期导致的假 Pilot 会隐藏一个已可投产的能力。
 	{key: "problem", maturity: MaturityGA, built: true, dependencies: []string{"sla", "workflow"}},
 	{key: "change", maturity: MaturityGA, built: true, dependencies: []string{"workflow"}},
-	// 服务请求维持 Pilot，阻断项不在交付状态机（那一层 2026-10-21 已收口）：
-	// 真正没解决的是「交付本身是不是真的」。
+	// 服务请求维持 Pilot：2026-10-31 已接阿里云 ECS 真实交付并打通审批→交付→
+	// SLA/流程/CMDB 收尾，但交付只覆盖 ECS，中途失败的回滚补偿仍未实现，
+	// 目录项到 CI Type、交付模板、BPMN、SLA 的绑定口径也还分散。
 	{
 		key: "serviceRequest", maturity: MaturityPilot, built: true, dependencies: []string{"workflow", "notification"},
-		pilotReason: "交付 Provider 仍是 StubProvider，不会真正创建云资源；多步交付中途失败后的资源回滚/补偿未实现；目录项到 CI Type、交付模板、BPMN、SLA 的绑定口径仍分散。晋升条件：接真实 provider + 补偿动作 + 目录项绑定统一。",
+		pilotReason: "交付已接阿里云 ECS 真实 Provider（租户云账号 + secret:// 凭据引用，未配置即失败关闭），但目前只覆盖 ECS 一种资源；多步交付中途失败后的资源回滚/补偿未实现；目录项到 CI Type、交付模板、BPMN、SLA 的绑定口径仍分散。晋升条件：补偿动作 + 目录项绑定统一 + 至少一条真实账号交付验收。",
 	},
 	{key: "cmdb", maturity: MaturityGA, built: true},
 	{key: "cmdb.configurationItems", maturity: MaturityGA, built: true, dependencies: []string{"cmdb"}},
@@ -94,10 +95,11 @@ var registry = []definition{
 	// aliyun/ecs、tencent/cvm、aws/ec2、volcengine/ecs、k8s/pod 五个。
 	// 同批补上 cloud_services 产品基线（cmdb-core 组件按注册表装配结果预置，
 	// 与适配器由守卫测试双向锁定）——此前全仓无 INSERT 与 seed，新租户的
-	// 发现任务会在 scope 解析处整批失败。CI 回写接通后，剩下的阻断项是真实账号验收。
+	// 发现任务会在 scope 解析处整批失败。2026-10-31 复核：发现没有增量通道，
+	// 每轮全量分页列举、只按 missing_count 判失联；剩下的阻断是增量水位线与真实账号验收。
 	{
 		key: "cmdbDiscovery", maturity: MaturityPilot, built: true, dependencies: []string{"cmdb"}, readinessEnv: "ITSM_CMDB_DISCOVERY_READY",
-		pilotReason: "执行链与定时调度已闭环（Job 执行器 + 每分钟 cron 消费 schedule），五个厂商适配器已装配，云服务类型基线随 cmdb-core 预置，发现结果按「云服务类型 → CI 类型」映射回写配置项（表外类型显式跳过，必填属性凑不齐时不建账）；凑不齐必填项的资源已有补录入口（GET /discovery/pending-resources 列出属性缺口，POST .../register 补录建账）。但真实账号下的全量与增量发现未验收。晋升条件：真实账号发现验收。",
+		pilotReason: "执行链与定时调度已闭环（Job 执行器 + 每分钟 cron 消费 schedule），五个厂商适配器已装配，云服务类型基线随 cmdb-core 预置，发现结果按「云服务类型 → CI 类型」映射回写配置项（表外类型显式跳过，必填属性凑不齐时不建账）；凑不齐必填项的资源已有补录入口（GET /discovery/pending-resources 列出属性缺口，POST .../register 补录建账）。剩余阻断：每轮发现都是全量分页列举，没有增量水位线（只按 missing_count 判定既有资源失联），真实账号下的发现未验收。晋升条件：增量水位线 + 真实账号下的全量与增量发现验收。",
 	},
 	{
 		key: "cmdbReconciliation", maturity: MaturityPilot, built: true, dependencies: []string{"cmdb", "cmdbDiscovery"}, readinessEnv: "ITSM_CMDB_DISCOVERY_READY",
@@ -142,13 +144,8 @@ var registry = []definition{
 	// 仍不申报 GA：代码侧三项验收缺口（虚构 ID、预测分值自给、假验收开关）
 	// 已于 2026-10-31 闭环——期望改按文章标题引用 + 真实语料/真实检索器（召回率
 	// 0.80 为真实测得）、预测分数由生产 SLABreachPredictor 产出（与人工标注独立）、
-	// cmd/ai-eval 提供可执行验收命令。同日补齐**记忆层**：短期层=会话历史回读
-	// 并作为多路检索补充（此前 Chat 完全无状态，「它怎么修」这类指代结构上不
-	// 可能命中）；情景层=历史工单处置经验召回（RAG 关键词检索只覆盖知识文章，
-	// 历史结论一直躺在库里不被召回，且必须经 DataScope 行级过滤）。记忆条
-	// 目带 fromMemory 标注、不与知识库正文混淆。
-	// 剩下的阻断是**人工执行**的 LLM 档与真实语料验收尚未跑过，指标达标与否
-	// 没有人签过字。
+	// cmd/ai-eval 提供可执行验收命令。剩下的阻断是**人工执行**的 LLM 档与真实
+	// 语料验收尚未跑过，指标达标与否没有人签过字。
 	{
 		key: "ai", maturity: MaturityPilot, built: true, readinessEnv: "ITSM_AI_READY",
 		pilotReason: "分诊与工单 RCA 已强制 promptVersion/model/confidence 并落 ai_audit 底账（采纳/拒绝经 PATCH 翻转，不再由前端自报）；LLM 调用已按租户归集（ai_llm_calls 带 tenant_id/request_id，/ai/metrics 为租户口径；升级前的历史行无法回填归因，按哨兵值排除、租户无归因行时如实报不可用）。溯源已覆盖全能力面且 model 不再失真：分诊/RCA 之外，摘要（method 三态 llm/direct/fallback + 真实模型名）、预测（口径版本 + 真实置信度 + auditId）、chat（检索模式 + 真实命中分 + auditId）均已强制溯源并落 ai_audit 底账；此前 TriageService 把 model 写死成 gpt-4o-mini（生产配的并不是它，底账系统性地指向错误模型）、邮件抽取器未配模型时兜底成同一个硬编码值，现改由 provider 自报（ModelReportingProvider），报不出时如实写 unknown。深度分析（SQL 聚合）刻意不补 model 而只给口径版本与 method=aggregate——给没有模型参与的聚合伪造 model 比缺失更危险。token 配额与成本口径已落地（AIQuotaService：租户月度配额从既有 ai_llm_calls 计量读取不建新表、未配置=不限制且如实报 quotaConfigured=false、超限网关拒绝并留计量痕、评估失败 fail-open——配额是预算保护不是安全边界；单价未配置时 estimatedCost=0 且 costConfigured=false，绝不给猜的单价；/ai/metrics 附带 quota/cost，告警分 warning/exceeded 两级）。评测门禁的自我实现已修（此前候选=期望答案，三项指标恒满分且把实现改坏照样绿），且 CI 评测已接真实生产路径：RAG 期望按文章标题引用真实语料（datasets/corpus/rag_corpus.jsonl，与库的主键解耦），检索走生产 service.RAGService 关键词路径（真实 SQL，召回率 0.80 为真实测得而非自我实现）；预测分数由生产 SLABreachPredictor 产出（排序层=预计解决时长/SLA 窗口，与人工标注独立产生），标注依据逐条留存；摘要候选走 SummarizeService 真实降级路径并有退化敏感性守卫。LLM 档验收通道已就绪（cmd/ai-eval：由人执行、读 llm.* 配置构造真实 provider、配置缺失报错不悄悄降级、产出归档报告，指标与 CI 同口径）。记忆层已落地（短期层）：会话历史回读并抽出实体/实义短语，作为**独立补充检索路**参与召回——此前每轮只用当前 query 检索，「它怎么修」这类指代在整串包含语义下必然零命中，是结构性的不可能；实测指代型 query 由零命中变为命中相关文档。不新建表（数据本就在 messages 表）、不拼接 query（拼接会让当前 query 也命不中）、记忆条目带 fromMemory/memoryQuery 标注且在 prompt 中显式区分「会话记忆线索」与「知识库正文」，不得让模型把「聊过」说成「文档里写着」。情景层亦已落地：历史工单处置经验（tickets.resolution）按标题关键词召回——此前 RAG 关键词检索只覆盖知识文章，「上次这个故障怎么解决的」结构上答不了；情景召回必须经 datascope.ApplyTicketFilter 行级过滤（工单是业务数据，把用户无权查看的工单处置喂给 LLM 等于绕过权限外泄内容），且只取已解决且有处置结论的工单，条目标 object_type=ticket_experience 并在 prompt 中标注「历史工单处置经验，非知识库正文」——历史结论是先例不是标准流程。语义层（RAG+知识库）与程序性层（Skills）此前已具备。渐进式披露亦已落地：检索结果带 truncated/contentLength 信号位（模型此前无从判断片段是否完整，拿半截内容当全文硬答），新增只读工具 get_kb_article 按需读全文（此前工具清单只有检索没有读全文，需要细节的问题结构上答不了——evidence gap 无法闭合）；读全文与检索共用同一套准入（租户/未软删/已发布/时效/分类可见性），两处口径不同会出现「检索命中但读不到」或「绕过权限的读通道」；读不到时报错而非返回空内容（空内容会让模型当「没有正文」然后编造）。剩余阻断：LLM 档与真实生产语料的验收**尚未由人执行过**——指标达标与否没有任何一次真实运行与签字记录，CI 的降级档不能代替真实模型的质量结论（此句曾在记忆层批次合成时意外丢失，本次恢复）。晋升条件：跑一次 cmd/ai-eval -mode llm + 真实知识库语料的质量验收并归档报告（召回率/摘要质量/预测 AUC 达标，验收人确认）。剩余阻断：LLM 档与真实生产语料的验收**尚未由人执行过**——指标达标与否没有任何一次真实运行与签字记录，CI 的降级档不能代替真实模型的质量结论。晋升条件：跑一次 cmd/ai-eval -mode llm + 真实知识库语料的质量验收并归档报告（召回率/摘要质量/预测 AUC 达标，验收人确认）。",
@@ -187,7 +184,7 @@ var registry = []definition{
 	// 工单标签、ticket_tags 0 行）。现已改为写 ticket_tags，并加守卫测试锁表。
 	{
 		key: "tag", maturity: MaturityPilot, built: true,
-		pilotReason: "工单标签（ticket_tags）CRUD、工单绑定与 /admin/tags 页已完整，种子基线也不再错写进组织标签表；但组织标签（tags 表，挂项目/应用/微服务/部门/团队）仍无任何管理面——整套 TagService 从未被装配，两张表并存且组织标签侧无写入口。晋升条件：组织标签管理面或与工单标签收敛。",
+		pilotReason: "工单标签（ticket_tags）CRUD、工单绑定与 /admin/tags 页已完整，种子基线也不再错写进组织标签表；但组织标签（tags 表，挂项目/应用/微服务/部门/团队）只有只读查询（GET /api/v1/system/tags 与兼容别名 GET /api/v1/tags），仓储里的 Create/Delete 没有注册路由、整套 TagService 未装配，两张表并存且组织标签侧无写入口。晋升条件：组织标签管理面（写入与挂接）或与工单标签收敛。",
 	},
 	// 2026-10-22 晋升 GA：模板的真实表面是 /api/v1/tickets/templates 的 8 个端点
 	// （列表/分类/创建/详情/更新/状态/复制/删除，权限码 ticket_template:*），
@@ -200,7 +197,7 @@ var registry = []definition{
 	// 是否真正可用取决于租户有没有启用身份提供方，由 HealthFor 如实报告。
 	{
 		key: "identity.oidc", maturity: MaturityPilot, built: true,
-		pilotReason: "SSO/OIDC 端点与服务齐备，但没有与真实 IdP 的端到端联调证据（现有覆盖为服务单测与路由测试）；租户未启用 IdP 时 health 会如实降级。晋升条件：至少一家真实 IdP 的登录/回调/换票验收。",
+		pilotReason: "SSO/OIDC 的 11 个端点与服务齐备，已有 httptest 假 IdP 覆盖登录→回调→换票→JWT 会话整条链路，租户未启用 IdP 时 health 如实降级；但没有与真实 IdP 的联调证据（验签算法、声明映射与时钟偏差以线上为准）。晋升条件：至少一家真实 IdP 的登录/回调/换票验收。",
 	},
 	// 企微/钉钉连接器（2026-10-21 Disabled→Pilot 转正）：Send/HealthCheck/VerifySignature/
 	// ParseInbound 四项核心与飞书同层级实现（connector/builtin/{wecom,dingtalk}，编译期
