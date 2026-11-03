@@ -1,72 +1,68 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                 xmlns:itsm="https://github.com/heidsoft/itsm/schema/bpmn"
                  targetNamespace="http://bpmn.io/schema/bpmn">
 
   <bpmn:process id="service_request_flow" name="服务请求流程" isExecutable="true">
     <bpmn:extensionElements>
       <bpmn:metaData name="category">service_request</bpmn:metaData>
-      <bpmn:metaData name="version">2.0.0</bpmn:metaData>
-      <bpmn:metaData name="description">标准服务请求处理流程（含多级审批）</bpmn:metaData>
+      <bpmn:metaData name="version">2.1.0</bpmn:metaData>
+      <bpmn:metaData name="description">标准服务请求处理流程（审批层级与审批人由流程变量驱动）</bpmn:metaData>
     </bpmn:extensionElements>
 
-    <!-- 开始事件：请求提交 -->
     <bpmn:startEvent id="StartEvent_1" name="请求提交">
-      <bpmn:outgoing>Flow_1</bpmn:outgoing>
+      <bpmn:outgoing>Flow_2</bpmn:outgoing>
     </bpmn:startEvent>
 
-    <!-- 请求受理 -->
-    <bpmn:userTask id="Activity_Accept" name="请求受理">
-      <bpmn:incoming>Flow_1</bpmn:incoming>
-      <bpmn:outgoing>Flow_2</bpmn:outgoing>
-    </bpmn:userTask>
-
-    <!-- 判断是否需要审批 -->
+    <!-- 提交即受理：受理不再是一个用户任务，否则审批桥接会把「受理」当成审批待办。 -->
     <bpmn:exclusiveGateway id="Gateway_Approval" name="需要审批?">
       <bpmn:incoming>Flow_2</bpmn:incoming>
       <bpmn:outgoing>Flow_3</bpmn:outgoing>
       <bpmn:outgoing>Flow_4</bpmn:outgoing>
     </bpmn:exclusiveGateway>
 
-    <!-- 一级审批：直属主管审批 -->
-    <bpmn:userTask id="Activity_Approval_L1" name="直属主管审批">
+    <!-- 一级审批：审批人与会签阈值来自 approval_plan 变量。 -->
+    <bpmn:userTask id="Activity_Approval_L1" name="一级审批"
+                   itsm:taskPurpose="approval" itsm:approvalLevel="1"
+                   itsm:approvalMode="single" itsm:commentRequiredOnReject="true">
       <bpmn:incoming>Flow_3</bpmn:incoming>
       <bpmn:outgoing>Flow_L1_Result</bpmn:outgoing>
     </bpmn:userTask>
 
-    <!-- 一级审批结果 -->
-    <bpmn:exclusiveGateway id="Gateway_L1_Result" name="主管审批结果?">
+    <bpmn:exclusiveGateway id="Gateway_L1_Result" name="一级审批结果?">
       <bpmn:incoming>Flow_L1_Result</bpmn:incoming>
-      <bpmn:outgoing>Flow_L1_Pass</bpmn:outgoing>
+      <bpmn:outgoing>Flow_L1_Pass_Next</bpmn:outgoing>
+      <bpmn:outgoing>Flow_L1_Pass_Last</bpmn:outgoing>
       <bpmn:outgoing>Flow_Reject</bpmn:outgoing>
     </bpmn:exclusiveGateway>
 
-    <!-- 二级审批：部门经理审批 -->
-    <bpmn:userTask id="Activity_Approval_L2" name="部门经理审批">
-      <bpmn:incoming>Flow_L1_Pass</bpmn:incoming>
+    <bpmn:userTask id="Activity_Approval_L2" name="二级审批"
+                   itsm:taskPurpose="approval" itsm:approvalLevel="2"
+                   itsm:approvalMode="single" itsm:commentRequiredOnReject="true">
+      <bpmn:incoming>Flow_L1_Pass_Next</bpmn:incoming>
       <bpmn:outgoing>Flow_L2_Result</bpmn:outgoing>
     </bpmn:userTask>
 
-    <!-- 二级审批结果 -->
-    <bpmn:exclusiveGateway id="Gateway_L2_Result" name="经理审批结果?">
+    <bpmn:exclusiveGateway id="Gateway_L2_Result" name="二级审批结果?">
       <bpmn:incoming>Flow_L2_Result</bpmn:incoming>
-      <bpmn:outgoing>Flow_L2_Pass</bpmn:outgoing>
+      <bpmn:outgoing>Flow_L2_Pass_Next</bpmn:outgoing>
+      <bpmn:outgoing>Flow_L2_Pass_Last</bpmn:outgoing>
       <bpmn:outgoing>Flow_L2_Reject</bpmn:outgoing>
     </bpmn:exclusiveGateway>
 
-    <!-- 三级审批：IT运维经理审批 -->
-    <bpmn:userTask id="Activity_Approval_L3" name="IT运维经理审批">
-      <bpmn:incoming>Flow_L2_Pass</bpmn:incoming>
+    <bpmn:userTask id="Activity_Approval_L3" name="三级审批"
+                   itsm:taskPurpose="approval" itsm:approvalLevel="3"
+                   itsm:approvalMode="single" itsm:commentRequiredOnReject="true">
+      <bpmn:incoming>Flow_L2_Pass_Next</bpmn:incoming>
       <bpmn:outgoing>Flow_L3_Result</bpmn:outgoing>
     </bpmn:userTask>
 
-    <!-- 三级审批结果 -->
-    <bpmn:exclusiveGateway id="Gateway_L3_Result" name="运维经理审批结果?">
+    <bpmn:exclusiveGateway id="Gateway_L3_Result" name="三级审批结果?">
       <bpmn:incoming>Flow_L3_Result</bpmn:incoming>
       <bpmn:outgoing>Flow_L3_Pass</bpmn:outgoing>
       <bpmn:outgoing>Flow_L3_Reject</bpmn:outgoing>
     </bpmn:exclusiveGateway>
 
-    <!-- 驳回通知 -->
     <bpmn:serviceTask id="Activity_RejectNotify" name="驳回通知" implementation="##WebService">
       <bpmn:extensionElements>
         <bpmn:metaData name="service_task_type">generic_task</bpmn:metaData>
@@ -78,33 +74,30 @@
       <bpmn:outgoing>Flow_EndReject</bpmn:outgoing>
     </bpmn:serviceTask>
 
-    <!-- 执行服务 -->
-    <bpmn:userTask id="Activity_Execute" name="执行服务">
+    <bpmn:userTask id="Activity_Execute" name="执行服务" itsm:taskPurpose="work">
       <bpmn:incoming>Flow_4</bpmn:incoming>
+      <bpmn:incoming>Flow_L1_Pass_Last</bpmn:incoming>
+      <bpmn:incoming>Flow_L2_Pass_Last</bpmn:incoming>
       <bpmn:incoming>Flow_L3_Pass</bpmn:incoming>
       <bpmn:outgoing>Flow_6</bpmn:outgoing>
     </bpmn:userTask>
 
-    <!-- 确认完成 -->
-    <bpmn:userTask id="Activity_Confirm" name="用户确认">
+    <bpmn:userTask id="Activity_Confirm" name="用户确认" itsm:taskPurpose="work">
       <bpmn:incoming>Flow_6</bpmn:incoming>
       <bpmn:outgoing>Flow_7</bpmn:outgoing>
     </bpmn:userTask>
 
-    <!-- 满意度网关 -->
     <bpmn:exclusiveGateway id="Gateway_Satisfaction" name="满意?">
       <bpmn:incoming>Flow_7</bpmn:incoming>
       <bpmn:outgoing>Flow_8</bpmn:outgoing>
       <bpmn:outgoing>Flow_Feedback</bpmn:outgoing>
     </bpmn:exclusiveGateway>
 
-    <!-- 改进服务 -->
-    <bpmn:userTask id="Activity_Feedback" name="改进服务">
+    <bpmn:userTask id="Activity_Feedback" name="改进服务" itsm:taskPurpose="work">
       <bpmn:incoming>Flow_Feedback</bpmn:incoming>
       <bpmn:outgoing>Flow_FeedbackLoop</bpmn:outgoing>
     </bpmn:userTask>
 
-    <!-- 服务完成 -->
     <bpmn:serviceTask id="Activity_Complete" name="服务完成" implementation="##WebService">
       <bpmn:extensionElements>
         <bpmn:metaData name="service_task_type">generic_task</bpmn:metaData>
@@ -114,7 +107,6 @@
       <bpmn:outgoing>Flow_End</bpmn:outgoing>
     </bpmn:serviceTask>
 
-    <!-- 结束事件 -->
     <bpmn:endEvent id="EndEvent_1" name="流程结束">
       <bpmn:incoming>Flow_End</bpmn:incoming>
     </bpmn:endEvent>
@@ -123,33 +115,36 @@
       <bpmn:incoming>Flow_EndReject</bpmn:incoming>
     </bpmn:endEvent>
 
-    <!-- 连线 -->
-    <bpmn:sequenceFlow id="Flow_1" sourceRef="StartEvent_1" targetRef="Activity_Accept" />
-    <bpmn:sequenceFlow id="Flow_2" sourceRef="Activity_Accept" targetRef="Gateway_Approval" />
+    <bpmn:sequenceFlow id="Flow_2" sourceRef="StartEvent_1" targetRef="Gateway_Approval" />
     <bpmn:sequenceFlow id="Flow_3" sourceRef="Gateway_Approval" targetRef="Activity_Approval_L1">
       <bpmn:conditionExpression><![CDATA[${variables['need_approval'] == true}]]></bpmn:conditionExpression>
     </bpmn:sequenceFlow>
-    <!-- 不需要审批 → 直接执行 -->
     <bpmn:sequenceFlow id="Flow_4" sourceRef="Gateway_Approval" targetRef="Activity_Execute">
       <bpmn:conditionExpression><![CDATA[${variables['need_approval'] != true}]]></bpmn:conditionExpression>
     </bpmn:sequenceFlow>
-    <!-- 三级审批全部通过 → 执行服务 -->
+
+    <bpmn:sequenceFlow id="Flow_L1_Result" sourceRef="Activity_Approval_L1" targetRef="Gateway_L1_Result" />
+    <!-- 审批链只有一级时直接进入执行；只有存在第 2 级才创建二级审批待办。 -->
+    <bpmn:sequenceFlow id="Flow_L1_Pass_Next" sourceRef="Gateway_L1_Result" targetRef="Activity_Approval_L2">
+      <bpmn:conditionExpression><![CDATA[${variables['approvalResult'] == 'approved' && variables['total_levels'] >= 2}]]></bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_L1_Pass_Last" sourceRef="Gateway_L1_Result" targetRef="Activity_Execute">
+      <bpmn:conditionExpression><![CDATA[${variables['approvalResult'] == 'approved' && variables['total_levels'] < 2}]]></bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+
+    <bpmn:sequenceFlow id="Flow_L2_Result" sourceRef="Activity_Approval_L2" targetRef="Gateway_L2_Result" />
+    <bpmn:sequenceFlow id="Flow_L2_Pass_Next" sourceRef="Gateway_L2_Result" targetRef="Activity_Approval_L3">
+      <bpmn:conditionExpression><![CDATA[${variables['approvalResult'] == 'approved' && variables['total_levels'] >= 3}]]></bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_L2_Pass_Last" sourceRef="Gateway_L2_Result" targetRef="Activity_Execute">
+      <bpmn:conditionExpression><![CDATA[${variables['approvalResult'] == 'approved' && variables['total_levels'] < 3}]]></bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+
+    <bpmn:sequenceFlow id="Flow_L3_Result" sourceRef="Activity_Approval_L3" targetRef="Gateway_L3_Result" />
     <bpmn:sequenceFlow id="Flow_L3_Pass" sourceRef="Gateway_L3_Result" targetRef="Activity_Execute">
       <bpmn:conditionExpression><![CDATA[${variables['approvalResult'] == 'approved'}]]></bpmn:conditionExpression>
     </bpmn:sequenceFlow>
-    <!-- 一级审批通过 → 二级审批 -->
-    <bpmn:sequenceFlow id="Flow_L1_Result" sourceRef="Activity_Approval_L1" targetRef="Gateway_L1_Result" />
-    <bpmn:sequenceFlow id="Flow_L1_Pass" sourceRef="Gateway_L1_Result" targetRef="Activity_Approval_L2">
-      <bpmn:conditionExpression><![CDATA[${variables['approvalResult'] == 'approved'}]]></bpmn:conditionExpression>
-    </bpmn:sequenceFlow>
-    <!-- 二级审批通过 → 三级审批 -->
-    <bpmn:sequenceFlow id="Flow_L2_Result" sourceRef="Activity_Approval_L2" targetRef="Gateway_L2_Result" />
-    <bpmn:sequenceFlow id="Flow_L2_Pass" sourceRef="Gateway_L2_Result" targetRef="Activity_Approval_L3">
-      <bpmn:conditionExpression><![CDATA[${variables['approvalResult'] == 'approved'}]]></bpmn:conditionExpression>
-    </bpmn:sequenceFlow>
-    <!-- 三级审批通过 → 执行服务 -->
-    <bpmn:sequenceFlow id="Flow_L3_Result" sourceRef="Activity_Approval_L3" targetRef="Gateway_L3_Result" />
-    <!-- 任意级别驳回 → 驳回通知 -->
+
     <bpmn:sequenceFlow id="Flow_Reject" sourceRef="Gateway_L1_Result" targetRef="Activity_RejectNotify">
       <bpmn:conditionExpression><![CDATA[${variables['approvalResult'] == 'rejected'}]]></bpmn:conditionExpression>
     </bpmn:sequenceFlow>

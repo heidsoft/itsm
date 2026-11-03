@@ -182,7 +182,7 @@ func (h *Handler) Get(c *gin.Context) {
 		return
 	}
 
-	req, approvals, err := h.service.Get(c.Request.Context(), id, tenantID)
+	req, approvals, err := h.service.GetForActor(c.Request.Context(), id, tenantID, c.GetInt("user_id"), c.GetString("role"))
 	if err != nil {
 		if ent.IsNotFound(err) {
 			common.Fail(c, common.NotFoundErrorCode, "Not Found")
@@ -210,8 +210,12 @@ func (h *Handler) ListApprovals(c *gin.Context) {
 		return
 	}
 
-	_, approvals, err := h.service.Get(c.Request.Context(), id, tenantID)
+	_, approvals, err := h.service.GetForActor(c.Request.Context(), id, tenantID, c.GetInt("user_id"), c.GetString("role"))
 	if err != nil {
+		if ent.IsNotFound(err) {
+			common.Fail(c, common.NotFoundErrorCode, "Not Found")
+			return
+		}
 		failServiceRequest(c, err)
 		return
 	}
@@ -254,6 +258,7 @@ func (h *Handler) List(c *gin.Context) {
 
 	filters := ListFilters{
 		Status:        normalizeServiceRequestStatus(req.Status),
+		Keyword:       strings.TrimSpace(req.Keyword),
 		UserID:        userID,
 		Page:          page,
 		PageSize:      pageSize,
@@ -592,7 +597,7 @@ func (h *Handler) GetServiceRequestSLA(c *gin.Context) {
 		return
 	}
 
-	info, err := h.service.GetServiceRequestSLA(c.Request.Context(), id, tenantID)
+	info, err := h.service.GetServiceRequestSLA(c.Request.Context(), id, tenantID, c.GetInt("user_id"), c.GetString("role"))
 	if err != nil {
 		if ent.IsNotFound(err) {
 			common.Fail(c, common.NotFoundErrorCode, "Not Found")

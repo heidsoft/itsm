@@ -6,7 +6,9 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"sort"
+	"strings"
 	"testing"
 	"time"
 
@@ -238,6 +240,43 @@ func TestServiceRequestListRouteEnvelopeAndPagination(t *testing.T) {
 				require.Len(t, res.Items, tc.total, body)
 			})
 		}
+	})
+
+	t.Run("keyword 在 title/reason 上服务端过滤，大小写不敏感且不跨租户", func(t *testing.T) {
+		// 种子标题为 SR-<code>-<i>，reason 统一为「验证服务请求列表分页夹紧与信封收敛」。
+		// 关键字必须由后端过滤并随分页生效：前端不再对当前页做本地二次筛选。
+		cases := []struct {
+			name      string
+			query     string
+			total     int
+			maxItems  int
+			titleOnly bool
+		}{
+			{"标题精确命中", "keyword=sr-a-05&pageSize=100", 1, 1, true},
+			{"标题大小写不敏感", "keyword=SR-A-05&pageSize=100", 1, 1, true},
+			{"原因模糊命中", "keyword=" + url.QueryEscape("分页夹紧") + "&pageSize=100", 25, 25, false},
+			{"无匹配", "keyword=NOTHING-MATCHES&pageSize=100", 0, 0, false},
+			{"分页后仍是全量匹配总数而非当前页长度", "keyword=" + url.QueryEscape("分页夹紧") + "&pageSize=10", 25, 10, false},
+		}
+		for _, tc := range cases {
+			t.Run(tc.name, func(t *testing.T) {
+				_, body, env := listA(t, tc.query)
+				require.Equal(t, 0, env.Code, body)
+				res := decode(t, body, env)
+				assert.Equal(t, tc.total, res.Total, "%s: body=%s", tc.name, body)
+				assert.Len(t, res.Items, tc.maxItems, body)
+				if tc.titleOnly {
+					for _, item := range res.Items {
+						assert.Contains(t, strings.ToLower(item.Title), "sr-a-05", body)
+					}
+				}
+			})
+		}
+
+		// 跨租户：租户 B 用租户 A 的标题检索不到任何记录
+		_, body, env := do(t, adminB, "sr-b-admin", "super_admin", tenantB, "/api/v1/service-requests", "keyword=sr-a-05&pageSize=100")
+		require.Equal(t, 0, env.Code, body)
+		assert.Equal(t, 0, decode(t, body, env).Total, "跨租户关键字不得命中其他租户的请求单: body=%s", body)
 	})
 
 	t.Run("空结果序列化为 []", func(t *testing.T) {

@@ -30,7 +30,9 @@ type CloudMonitorAlertLog struct {
 }
 
 type alertLogPage struct {
-	Code         string                 `json:"Code"`
+	// 线上 DescribeAlertLogList 成功时返回数字 200，而错误分支返回字符串
+	//（如 "Throttling"），因此按 flexString 解码，不能写死 string。
+	Code         flexString             `json:"Code"`
 	Message      string                 `json:"Message"`
 	Success      bool                   `json:"Success"`
 	Total        int                    `json:"Total"`
@@ -64,7 +66,7 @@ func (c *CloudMonitorClient) DescribeAlertLogs(ctx context.Context, start, end t
 		return nil, 0, err
 	}
 	if !out.Success && out.Code != "" && out.Code != "200" {
-		return nil, 0, &RPCError{StatusCode: 200, Code: out.Code, Message: out.Message}
+		return nil, 0, &RPCError{StatusCode: 200, Code: string(out.Code), Message: out.Message}
 	}
 	return out.AlertLogList, out.Total, nil
 }

@@ -534,6 +534,7 @@ export class ServiceCatalogApi {
       page,
       pageSize,
       ...(status ? { status } : {}),
+      ...(query?.keyword?.trim() ? { keyword: query.keyword.trim() } : {}),
     });
     return {
       items: resp.items.map(ServiceCatalogApi.toServiceRequest),

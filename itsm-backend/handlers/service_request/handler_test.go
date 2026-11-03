@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -20,6 +21,7 @@ import (
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
+	"itsm-backend/ent/servicerequestapproval"
 	entuser "itsm-backend/ent/user"
 	"itsm-backend/handlers/cmdb"
 	releasehandler "itsm-backend/handlers/release"
@@ -42,9 +44,11 @@ func srUID() string {
 }
 
 func createServiceCatalogForTest(ctx context.Context, svc *service_catalog.Service, name, category, description string, deliveryTime, tenantID int, status string, ciTypeID, cloudServiceID int) (*service_catalog.ServiceCatalog, error) {
+	// 与 HTTP 入口同一默认：未显式声明时目录要求审批。
 	return svc.Create(ctx, &service_catalog.ServiceCatalog{
 		Name: name, Category: category, Description: description, DeliveryTime: deliveryTime,
 		TenantID: tenantID, Status: status, CITypeID: ciTypeID, CloudServiceID: cloudServiceID,
+		RequiresApproval: true,
 	})
 }
 
@@ -173,6 +177,30 @@ func TestServiceRequestHandler_Create_Success(t *testing.T) {
 	assert.Equal(t, "submitted", data["status"])
 }
 
+func TestServiceRequestHandler_Create_NoApprovalCatalogSkipsApprovalChain(t *testing.T) {
+	r, client, _, _, catID := srSetup(t)
+	ctx := context.Background()
+	_, err := client.ServiceCatalog.UpdateOneID(catID).SetRequiresApproval(false).Save(ctx)
+	require.NoError(t, err)
+
+	resp := srDoReq(t, r, "POST", "/api/v1/service-requests", dto.CreateServiceRequestRequest{
+		CatalogID: catID, Title: "NoApproval-" + srUID(), Reason: "no approval needed", ComplianceAck: true,
+	})
+	require.Equal(t, common.SuccessCode, resp.Code, "body=%s", srStr(resp))
+	data := resp.Data.(map[string]interface{})
+	assert.Equal(t, "security_approved", data["status"], "免审批目录应直接到达履约门禁")
+	assert.EqualValues(t, 0, data["currentLevel"])
+	assert.EqualValues(t, 0, data["totalLevels"])
+	assert.NotEmpty(t, data["approvedAt"])
+
+	id := int(data["id"].(float64))
+	approvalCount, err := client.ServiceRequestApproval.Query().
+		Where(servicerequestapproval.ServiceRequestIDEQ(id)).
+		Count(ctx)
+	require.NoError(t, err)
+	assert.Zero(t, approvalCount, "免审批目录不得生成审批待办")
+}
+
 func TestServiceRequestHandler_Create_MissingCatalogID(t *testing.T) {
 	r, _, _, _, _ := srSetup(t)
 	// CatalogID=0 → handler 直接返回 1001
@@ -236,6 +264,48 @@ func TestServiceRequestHandler_Get_Success(t *testing.T) {
 	require.Equal(t, common.SuccessCode, resp.Code, "body=%s", srStr(resp))
 	data := resp.Data.(map[string]interface{})
 	assert.EqualValues(t, id, data["id"])
+}
+
+func TestServiceRequestHandler_ReadRejectsUnrelatedTenantUser(t *testing.T) {
+	r, client, tenantID, _, catID := srSetup(t)
+	id := srCreateOne(t, r, catID)
+
+	logger := zaptest.NewLogger(t).Sugar()
+	h := NewHandler(NewService(NewEntRepository(client), service_catalog.NewEntRepository(client), cmdb.NewEntRepository(client), client, logger, nil))
+	other, err := client.User.Create().
+		SetUsername("sr-outsider-" + srUID()).
+		SetEmail("sr-outsider-" + srUID() + "@example.com").
+		SetName("Outsider").
+		SetPasswordHash("hash").
+		SetRole("end_user").
+		SetDepartment("IT").
+		SetActive(true).
+		SetTenantID(tenantID).
+		Save(context.Background())
+	require.NoError(t, err)
+
+	outsider := gin.New()
+	outsider.Use(_srAuthRole(tenantID, other.ID, "end_user", "IT"))
+	outsider.GET("/api/v1/service-requests/:id", h.Get)
+	outsider.GET("/api/v1/service-requests/:id/approvals", h.ListApprovals)
+
+	for _, path := range []string{
+		"/api/v1/service-requests/" + strconv.Itoa(id),
+		"/api/v1/service-requests/" + strconv.Itoa(id) + "/approvals",
+	} {
+		resp := srDoReq(t, outsider, "GET", path, nil)
+		assert.EqualValues(t, common.NotFoundErrorCode, resp.Code, "path=%s body=%s", path, srStr(resp))
+	}
+
+	// 一旦进入审批链（即使尚未审批），该用户就应能看到自己待处理的请求。
+	_, err = client.ServiceRequestApproval.Update().
+		Where(servicerequestapproval.ServiceRequestIDEQ(id), servicerequestapproval.LevelEQ(1)).
+		SetNode(map[string]interface{}{"approver_ids": []interface{}{float64(other.ID)}}).
+		Save(context.Background())
+	require.NoError(t, err)
+
+	resp := srDoReq(t, outsider, "GET", "/api/v1/service-requests/"+strconv.Itoa(id), nil)
+	assert.Equal(t, common.SuccessCode, resp.Code, "body=%s", srStr(resp))
 }
 
 func TestServiceRequestHandler_Get_InvalidID(t *testing.T) {
@@ -846,7 +916,7 @@ func TestServiceRequestHandler_RequesterCannotSelfApprove(t *testing.T) {
 	assert.EqualValues(t, common.ForbiddenErrorCode, resp.Code, "body=%s", srStr(resp))
 }
 
-func TestServiceRequestPendingApprovalsAreDepartmentScopedAndUnknownRoleDenied(t *testing.T) {
+func TestServiceRequestPendingApprovalsFollowResolvedApprovers(t *testing.T) {
 	_, client, tenantID, managerID, catID := srSetup(t)
 	ctx := context.Background()
 	logger := zaptest.NewLogger(t).Sugar()
@@ -860,6 +930,10 @@ func TestServiceRequestPendingApprovalsAreDepartmentScopedAndUnknownRoleDenied(t
 		SetUsername("hr-requester-" + srUID()).SetEmail("hr-" + srUID() + "@example.com").SetName("HR Requester").
 		SetPasswordHash("hash").SetRole("agent").SetDepartment("HR").SetActive(true).SetTenantID(tenantID).Save(ctx)
 	require.NoError(t, err)
+	outsider, err := client.User.Create().
+		SetUsername("tech-outside-" + srUID()).SetEmail("tech-" + srUID() + "@example.com").SetName("Outside Technician").
+		SetPasswordHash("hash").SetRole("technician").SetDepartment("IT").SetActive(true).SetTenantID(tenantID).Save(ctx)
+	require.NoError(t, err)
 	expireAt := time.Now().Add(30 * 24 * time.Hour)
 	for _, requesterID := range []int{itRequester.ID, hrRequester.ID} {
 		_, err = service.Create(ctx, tenantID, requesterID, catID, &ServiceRequest{
@@ -869,14 +943,83 @@ func TestServiceRequestPendingApprovalsAreDepartmentScopedAndUnknownRoleDenied(t
 		require.NoError(t, err)
 	}
 
+	// 待办按实际审批人身份过滤：HR 请求在一级解析不到同部门经理时回退到租户经理，
+	// 因此 manager 的两条请求都在其名下；不在 approver_ids 的 technician 一条都看不到。
 	pending, total, err := service.ListPendingApprovals(ctx, tenantID, managerID, "manager", 1, 10)
 	require.NoError(t, err)
-	assert.Equal(t, 1, total)
-	require.Len(t, pending, 1)
-	assert.Equal(t, itRequester.ID, pending[0].RequesterID)
+	assert.Equal(t, 2, total)
+	assert.Len(t, pending, 2)
+
+	pending, total, err = service.ListPendingApprovals(ctx, tenantID, outsider.ID, "technician", 1, 10)
+	require.NoError(t, err)
+	assert.Equal(t, 0, total)
+	assert.Empty(t, pending)
 
 	_, _, err = service.ListPendingApprovals(ctx, tenantID, managerID, "viewer", 1, 10)
 	require.Error(t, err)
+}
+
+func TestServiceRequestPendingApprovalsUseApproverIDsNotRole(t *testing.T) {
+	_, client, tenantID, managerID, catID := srSetup(t)
+	ctx := context.Background()
+	logger := zaptest.NewLogger(t).Sugar()
+	svc := NewService(NewEntRepository(client), service_catalog.NewEntRepository(client), cmdb.NewEntRepository(client), client, logger, nil)
+	expireAt := time.Now().Add(30 * 24 * time.Hour)
+	req, err := svc.Create(ctx, tenantID, managerID, catID, &ServiceRequest{
+		Title: "approver id scoped", ComplianceAck: true, DataClassification: "internal", ExpireAt: &expireAt,
+	})
+	require.NoError(t, err)
+
+	approver, err := client.User.Create().
+		SetUsername("ops-approver-" + srUID()).SetEmail("ops-" + srUID() + "@example.com").SetName("Ops Approver").
+		SetPasswordHash("hash").SetRole("agent").SetDepartment("OPS").SetActive(true).SetTenantID(tenantID).Save(ctx)
+	require.NoError(t, err)
+	outsider, err := client.User.Create().
+		SetUsername("ops-outsider-" + srUID()).SetEmail("ops-out-" + srUID() + "@example.com").SetName("Ops Outsider").
+		SetPasswordHash("hash").SetRole("agent").SetDepartment("OPS").SetActive(true).SetTenantID(tenantID).Save(ctx)
+	require.NoError(t, err)
+
+	level1, err := client.ServiceRequestApproval.Query().
+		Where(
+			servicerequestapproval.TenantIDEQ(tenantID),
+			servicerequestapproval.ServiceRequestIDEQ(req.ID),
+			servicerequestapproval.LevelEQ(1),
+		).Only(ctx)
+	require.NoError(t, err)
+	// 显式把一级审批人改成角色并非 manager 的用户：待办必须按名单而不是角色下发。
+	level1.Node["approver_ids"] = []interface{}{float64(approver.ID)}
+	require.NoError(t, client.ServiceRequestApproval.UpdateOne(level1).SetNode(level1.Node).Exec(ctx))
+
+	pending, total, err := svc.ListPendingApprovals(ctx, tenantID, approver.ID, "agent", 1, 10)
+	require.NoError(t, err)
+	assert.Equal(t, 1, total)
+	require.Len(t, pending, 1)
+	assert.Equal(t, req.ID, pending[0].ID)
+
+	pending, total, err = svc.ListPendingApprovals(ctx, tenantID, outsider.ID, "agent", 1, 10)
+	require.NoError(t, err)
+	assert.Equal(t, 0, total)
+	assert.Empty(t, pending)
+}
+
+func TestServiceRequestApplyApprovalRejectsNonApprovalStage(t *testing.T) {
+	_, client, tenantID, managerID, catID := srSetup(t)
+	ctx := context.Background()
+	logger := zaptest.NewLogger(t).Sugar()
+	svc := NewService(NewEntRepository(client), service_catalog.NewEntRepository(client), cmdb.NewEntRepository(client), client, logger, nil)
+	expireAt := time.Now().Add(30 * 24 * time.Hour)
+	req, err := svc.Create(ctx, tenantID, managerID, catID, &ServiceRequest{
+		Title: "cancel then approve", ComplianceAck: true, DataClassification: "internal", ExpireAt: &expireAt,
+	})
+	require.NoError(t, err)
+	require.NoError(t, svc.UpdateStatus(ctx, req.ID, tenantID, managerID, "manager", "cancelled"))
+
+	// 管理员身份也不行：终态请求即使被残留审批行指向，也不得再写审批票。
+	_, _, err = svc.ApplyApproval(ctx, req.ID, tenantID, managerID, "approve", "", "admin", "IT")
+	require.Error(t, err)
+	var appErr *common.AppError
+	require.True(t, errors.As(err, &appErr), "unexpected error: %v", err)
+	assert.Equal(t, common.ErrCodeConflict, appErr.Code)
 }
 
 func TestServiceRequestHandler_ApplyApproval_FullProgression(t *testing.T) {

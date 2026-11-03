@@ -12,15 +12,12 @@ import {
   Tag,
   Divider,
   Input,
-  Table,
   Alert,
   Modal,
-  Radio,
 } from 'antd';
-import { ArrowLeft, RotateCcw, PlayCircle } from 'lucide-react';
+import { ArrowLeft, XCircle } from 'lucide-react';
 import { ServiceCatalogApi } from '@/lib/api/service-catalog-api';
-import type { ProvisioningTask } from '@/lib/api/service-request-api';
-import { serviceRequestAPI } from '@/lib/api/service-request-api';
+import ServiceRequestProvisioningPanel from '@/components/service-request/ServiceRequestProvisioningPanel';
 
 interface ApprovalRecord {
   id: number;
@@ -63,6 +60,16 @@ const REQUEST_STATUS_LABEL: Record<string, { color: string; label: string }> = {
   cancelled: { color: 'default', label: '已取消' },
 };
 
+// 状态机允许直接取消的来源状态（后端 serviceRequestStatusTransitions）。
+// 交付中的请求不在此列：资源已经在下单，取消只能靠交付失败后的人工判定。
+const CANCELLABLE_STATUSES = new Set([
+  'submitted',
+  'manager_approved',
+  'it_approved',
+  'security_approved',
+  'failed',
+]);
+
 // 审批步骤英文 → 中文（manager / it / security）
 const APPROVAL_STEP_LABEL: Record<string, string> = {
   manager: '主管',
@@ -93,16 +100,11 @@ export default function MyRequestDetailPage() {
   const [loading, setLoading] = useState(true);
   const [detail, setDetail] = useState<ServiceRequestDetail | null>(null);
   const [comment, setComment] = useState('');
-  const [provisioningTasks, setProvisioningTasks] = useState<ProvisioningTask[]>([]);
-  const [loadingTasks, setLoadingTasks] = useState(false);
-  const [executing, setExecuting] = useState(false);
-  // 交付失败恢复：重试（重新排队）与人工判定（自动重试走不通时的出口）。
-  const [retryingTaskId, setRetryingTaskId] = useState<number | null>(null);
-  const [resolveTask, setResolveTask] = useState<ProvisioningTask | null>(null);
-  const [resolveOutcome, setResolveOutcome] = useState<'delivered' | 'failed'>('delivered');
-  const [resolveNote, setResolveNote] = useState('');
-  const [resolving, setResolving] = useState(false);
+  const [cancelOpen, setCancelOpen] = useState(false);
+  const [cancelReason, setCancelReason] = useState('');
+  const [cancelling, setCancelling] = useState(false);
   const approvals = useMemo(() => detail?.approvals ?? [], [detail]);
+  const canCancel = detail ? CANCELLABLE_STATUSES.has(detail.status) : false;
 
   const load = async () => {
     try {
@@ -117,43 +119,11 @@ export default function MyRequestDetailPage() {
     }
   };
 
-  const loadProvisioningTasks = async () => {
-    try {
-      setLoadingTasks(true);
-      const tasks = await serviceRequestAPI.listProvisioningTasks(requestId);
-      setProvisioningTasks(tasks || []);
-    } catch (e) {
-      console.error(e);
-      // 如果还没有任务，不显示错误
-      if (
-        detail?.status === 'security_approved' ||
-        detail?.status === 'provisioning' ||
-        detail?.status === 'delivered'
-      ) {
-        setProvisioningTasks([]);
-      }
-    } finally {
-      setLoadingTasks(false);
-    }
-  };
-
   useEffect(() => {
     if (Number.isFinite(requestId) && requestId > 0) {
       load();
     }
   }, [requestId]);
-
-  useEffect(() => {
-    if (
-      detail &&
-      (detail.status === 'security_approved' ||
-        detail.status === 'provisioning' ||
-        detail.status === 'delivered' ||
-        detail.status === 'failed')
-    ) {
-      loadProvisioningTasks();
-    }
-  }, [detail]);
 
   const doApprove = async () => {
     try {
@@ -183,122 +153,62 @@ export default function MyRequestDetailPage() {
     }
   };
 
-  const handleStartProvisioning = async () => {
+  const doCancel = async () => {
     try {
-      setExecuting(true);
-      await serviceRequestAPI.startProvisioning(requestId);
-      message.success('已启动交付任务');
-      await load();
-      await loadProvisioningTasks();
-    } catch (e) {
-      console.error(e);
-      message.error(e instanceof Error ? e.message : '启动交付失败');
-    } finally {
-      setExecuting(false);
-    }
-  };
-
-  const handleExecuteTask = async (taskId: number) => {
-    try {
-      setExecuting(true);
-      await serviceRequestAPI.executeProvisioningTask(taskId);
-      message.success('交付任务执行中');
-      await loadProvisioningTasks();
+      setCancelling(true);
+      await ServiceCatalogApi.cancelServiceRequest(requestId, cancelReason.trim() || undefined);
+      message.success('服务请求已取消');
+      setCancelOpen(false);
+      setCancelReason('');
       await load();
     } catch (e) {
       console.error(e);
-      message.error(e instanceof Error ? e.message : '执行交付任务失败');
+      message.error(e instanceof Error ? e.message : '取消失败');
     } finally {
-      setExecuting(false);
+      setCancelling(false);
     }
-  };
-
-  // 重试 = 重新排队，不是立刻执行：返回后任务为 pending，由队列 worker 领取。
-  const handleRetryTask = async (taskId: number) => {
-    try {
-      setRetryingTaskId(taskId);
-      const task = await serviceRequestAPI.retryProvisioningTask(taskId, '运维在详情页发起重试');
-      message.success(
-        task?.status === 'pending' ? '已重新排队，等待执行' : '已提交重试'
-      );
-      await loadProvisioningTasks();
-      await load();
-    } catch (e) {
-      console.error(e);
-      message.error(e instanceof Error ? e.message : '重试交付任务失败');
-    } finally {
-      setRetryingTaskId(null);
-    }
-  };
-
-  const openResolveModal = (task: ProvisioningTask) => {
-    setResolveTask(task);
-    setResolveOutcome('delivered');
-    setResolveNote('');
-  };
-
-  const handleResolveTask = async () => {
-    if (!resolveTask) return;
-    if (!resolveNote.trim()) {
-      message.warning('请填写判定依据（工单号、资源 ID 或失败原因分析）');
-      return;
-    }
-    try {
-      setResolving(true);
-      await serviceRequestAPI.resolveProvisioningTask(
-        resolveTask.id,
-        resolveOutcome,
-        resolveNote.trim()
-      );
-      message.success('已提交人工判定');
-      setResolveTask(null);
-      setResolveNote('');
-      await loadProvisioningTasks();
-      await load();
-    } catch (e) {
-      console.error(e);
-      message.error(e instanceof Error ? e.message : '人工判定失败');
-    } finally {
-      setResolving(false);
-    }
-  };
-
-  const taskStatusTag = (status: string) => {
-    const map: Record<string, { color: string; label: string }> = {
-      pending: { color: 'default', label: '待执行' },
-      running: { color: 'processing', label: '执行中' },
-      succeeded: { color: 'success', label: '成功' },
-      failed: { color: 'error', label: '失败' },
-    };
-    const cfg = map[status] || { color: 'default', label: status || '-' };
-    return <Tag color={cfg.color}>{cfg.label}</Tag>;
   };
 
   return (
     <div className='max-w-4xl mx-auto p-6'>
       <Space orientation='vertical' size={16} style={{ width: '100%' }}>
         <Card>
-          <Space align='center'>
-            <Button
-              icon={<ArrowLeft />}
-              onClick={() => {
-                try {
-                  router.push('/my-requests');
-                } catch (navErr) {
-                  console.error('[nav]', navErr);
-                  message.error('导航失败，请稍后重试');
-                }
-              }}
-            >
-              返回
-            </Button>
-            <div>
-              <Title level={2} style={{ marginBottom: 0 }}>
-                请求详情 #{requestId}
-              </Title>
-              <Text type='secondary'>最小可用：展示状态与审批记录，并支持 approve/reject</Text>
-            </div>
-          </Space>
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              gap: 16,
+              flexWrap: 'wrap',
+            }}
+          >
+            <Space align='center'>
+              <Button
+                icon={<ArrowLeft />}
+                onClick={() => {
+                  try {
+                    router.push('/my-requests');
+                  } catch (navErr) {
+                    console.error('[nav]', navErr);
+                    message.error('导航失败，请稍后重试');
+                  }
+                }}
+              >
+                返回
+              </Button>
+              <div>
+                <Title level={2} style={{ marginBottom: 0 }}>
+                  请求详情 #{requestId}
+                </Title>
+                <Text type='secondary'>查看审批记录与交付进度</Text>
+              </div>
+            </Space>
+            {canCancel && (
+              <Button danger icon={<XCircle />} onClick={() => setCancelOpen(true)}>
+                取消请求
+              </Button>
+            )}
+          </div>
         </Card>
 
         <Card loading={loading}>
@@ -406,214 +316,47 @@ export default function MyRequestDetailPage() {
             </>
           )}
 
-          {/* 交付操作 - 安全审批通过后显示 */}
-          {detail?.status === 'security_approved' && (
-            <>
-              <Title level={4}>交付操作</Title>
-              <Alert
-                title='审批已全部通过'
-                description='可以启动交付任务，系统将自动创建云资源'
-                type='success'
-                showIcon
-                style={{ marginBottom: 16 }}
-              />
-              <Button
-                type='primary'
-                icon={<PlayCircle />}
-                onClick={handleStartProvisioning}
-                loading={executing}
-                size='large'
-              >
-                启动交付
-              </Button>
-              <Divider />
-            </>
-          )}
-
-          {/* 交付任务列表 */}
-          {(detail?.status === 'provisioning' ||
-            detail?.status === 'delivered' ||
-            detail?.status === 'failed') && (
-            <>
-              <Title level={4}>
-                交付任务
-                <Button
-                  type='link'
-                  icon={<RotateCcw />}
-                  onClick={loadProvisioningTasks}
-                  loading={loadingTasks}
-                  size='small'
-                >
-                  刷新
-                </Button>
-              </Title>
-              {provisioningTasks.length === 0 ? (
-                <Text type='secondary'>暂无交付任务</Text>
-              ) : (
-                <Table<ProvisioningTask>
-                  rowKey='id'
-                  loading={loadingTasks}
-                  dataSource={provisioningTasks}
-                  pagination={false}
-                  size='small'
-                  columns={[
-                    {
-                      title: 'ID',
-                      dataIndex: 'id',
-                      width: 80,
-                    },
-                    {
-                      title: '资源类型',
-                      dataIndex: 'resourceType',
-                      width: 120,
-                    },
-                    {
-                      title: '状态',
-                      dataIndex: 'status',
-                      width: 100,
-                      render: (status: string) => taskStatusTag(status),
-                    },
-                    {
-                      title: '提供商',
-                      dataIndex: 'provider',
-                      width: 100,
-                    },
-                    {
-                      // 尝试次数直接决定「还能不能重试」：前端不猜，按服务端下发的
-                      // maxAttempts 判断，避免按钮点了才报 409。
-                      title: '尝试',
-                      key: 'attempts',
-                      width: 90,
-                      render: (_, task) =>
-                        `${task.attemptCount ?? 0}/${task.maxAttempts ?? 5}`,
-                    },
-                    {
-                      title: '错误信息',
-                      dataIndex: 'errorMessage',
-                      ellipsis: true,
-                      render: (text: string, task) =>
-                        text || (task.resolutionNote ? `人工判定：${task.resolutionNote}` : '-'),
-                    },
-                    {
-                      title: '创建时间',
-                      dataIndex: 'createdAt',
-                      width: 180,
-                      render: (v: string) => (v ? new Date(v).toLocaleString() : '-'),
-                    },
-                    {
-                      title: '操作',
-                      key: 'actions',
-                      width: 180,
-                      render: (_, task) => (
-                        <Space>
-                          {task.status === 'pending' && (
-                            <Button
-                              type='link'
-                              size='small'
-                              onClick={() => handleExecuteTask(task.id)}
-                              loading={executing}
-                            >
-                              执行
-                            </Button>
-                          )}
-                          {task.status === 'failed' && (
-                            <>
-                              {/* 达到上限后重试按钮消失，只留人工判定——继续显示
-                                  一个注定 409 的按钮比不显示更糟。 */}
-                              {(task.attemptCount ?? 0) < (task.maxAttempts ?? 5) && (
-                                <Button
-                                  type='link'
-                                  size='small'
-                                  onClick={() => handleRetryTask(task.id)}
-                                  loading={retryingTaskId === task.id}
-                                >
-                                  重试
-                                </Button>
-                              )}
-                              <Button
-                                type='link'
-                                size='small'
-                                onClick={() => openResolveModal(task)}
-                              >
-                                人工判定
-                              </Button>
-                            </>
-                          )}
-                          {task.status === 'succeeded' && task.result && (
-                            <Button
-                              type='link'
-                              size='small'
-                              onClick={() => {
-                                message.info(JSON.stringify(task.result, null, 2));
-                              }}
-                            >
-                              查看结果
-                            </Button>
-                          )}
-                        </Space>
-                      ),
-                    },
-                  ]}
+          {/* 交付操作与任务列表 - 审批通过后显示 */}
+          {detail &&
+            ['security_approved', 'provisioning', 'delivered', 'failed'].includes(
+              detail.status
+            ) && (
+              <>
+                <Divider />
+                <ServiceRequestProvisioningPanel
+                  requestId={requestId}
+                  status={detail.status}
+                  onChanged={load}
                 />
-              )}
-              {detail?.status === 'provisioning' &&
-                provisioningTasks.some(t => t.status === 'pending') && (
-                  <div style={{ marginTop: 16 }}>
-                    <Button
-                      type='primary'
-                      icon={<PlayCircle />}
-                      onClick={() => {
-                        const pendingTask = provisioningTasks.find(t => t.status === 'pending');
-                        if (pendingTask) {
-                          handleExecuteTask(pendingTask.id);
-                        }
-                      }}
-                      loading={executing}
-                    >
-                      执行待处理任务
-                    </Button>
-                  </div>
-                )}
-            </>
-          )}
+              </>
+            )}
         </Card>
 
         <Modal
-          open={resolveTask !== null}
-          title='人工判定交付结果'
-          onCancel={() => setResolveTask(null)}
-          onOk={handleResolveTask}
-          okText='提交判定'
-          cancelText='取消'
-          confirmLoading={resolving}
+          open={cancelOpen}
+          title='取消服务请求'
+          onCancel={() => setCancelOpen(false)}
+          onOk={doCancel}
+          okText='确认取消'
+          cancelText='返回'
+          okButtonProps={{ danger: true }}
+          confirmLoading={cancelling}
           destroyOnHidden
         >
           <Space orientation='vertical' size={12} style={{ width: '100%' }}>
             <Alert
               type='warning'
               showIcon
-              message='仅在自动重试无法成功时使用'
-              description='凭据吊销、配额封禁或资源已在平台外建好时，请在此给出终态判定。判定会写入服务请求状态，并记录判定人与依据。'
+              title='取消后不可恢复'
+              description='待审批记录会作废，关联流程实例会终止。如需继续，请重新提交服务请求。'
             />
             <div>
-              <Text type='secondary'>判定结果</Text>
-              <div style={{ marginTop: 8 }}>
-                <Radio.Group
-                  value={resolveOutcome}
-                  onChange={e => setResolveOutcome(e.target.value)}
-                >
-                  <Radio.Button value='delivered'>已交付</Radio.Button>
-                  <Radio.Button value='failed'>交付失败</Radio.Button>
-                </Radio.Group>
-              </div>
-            </div>
-            <div>
-              <Text type='secondary'>判定依据（必填）</Text>
+              <Text type='secondary'>取消原因（选填）</Text>
               <Input.TextArea
                 rows={3}
-                value={resolveNote}
-                onChange={e => setResolveNote(e.target.value)}
-                placeholder='例如：资源已在控制台手工创建 i-abc123，凭据吊销无法走自动交付'
+                value={cancelReason}
+                onChange={e => setCancelReason(e.target.value)}
+                placeholder='例如：需求变更，改为申请更大的规格'
                 maxLength={500}
                 showCount
                 style={{ marginTop: 8 }}

@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sort"
+	"strings"
 	"time"
 
 	"itsm-backend/common"
@@ -137,6 +139,9 @@ func (r *EntRepository) Create(ctx context.Context, req *ServiceRequest, approva
 	if req.ExpireAt != nil {
 		create.SetExpireAt(*req.ExpireAt)
 	}
+	if req.ApprovedAt != nil {
+		create.SetApprovedAt(*req.ApprovedAt)
+	}
 	if req.CiID > 0 {
 		create.SetCiID(req.CiID)
 	}
@@ -219,6 +224,9 @@ func (r *EntRepository) CreateWithWorkflowCommand(ctx context.Context, req *Serv
 	}
 	if req.ExpireAt != nil {
 		create.SetExpireAt(*req.ExpireAt)
+	}
+	if req.ApprovedAt != nil {
+		create.SetApprovedAt(*req.ApprovedAt)
 	}
 	if req.CiID > 0 {
 		create.SetCiID(req.CiID)
@@ -311,6 +319,12 @@ func (r *EntRepository) List(ctx context.Context, tenantID int, filters ListFilt
 
 	if filters.Status != "" {
 		query.Where(servicerequest.Status(filters.Status))
+	}
+	if keyword := strings.TrimSpace(filters.Keyword); keyword != "" {
+		query.Where(servicerequest.Or(
+			servicerequest.TitleContainsFold(keyword),
+			servicerequest.ReasonContainsFold(keyword),
+		))
 	}
 	if filters.UserID > 0 {
 		query.Where(servicerequest.RequesterID(filters.UserID))
@@ -624,6 +638,20 @@ func (r *EntRepository) UpdateRequestAndApprovalWithClient(ctx context.Context, 
 	return nil
 }
 
+// CancelPendingApprovals 作废请求下所有待审批步骤：请求取消后这些步骤不可能再被处理，
+// 留着 pending 会让审批历史误显示为「仍在等待」。
+func (r *EntRepository) CancelPendingApprovals(ctx context.Context, tenantID, requestID int) (int, error) {
+	return r.client.ServiceRequestApproval.Update().
+		Where(
+			servicerequestapproval.TenantIDEQ(tenantID),
+			servicerequestapproval.ServiceRequestIDEQ(requestID),
+			servicerequestapproval.StatusEQ(ApprovalStatusPending),
+		).
+		SetStatus(ApprovalStatusCancelled).
+		AddVersion(1).
+		Save(ctx)
+}
+
 func (r *EntRepository) ListPendingApprovals(ctx context.Context, tenantID int, targetLevel int, requiredStatus, requesterDept string, page, size int) ([]*ServiceRequest, int, error) {
 	approvalQuery := r.client.ServiceRequestApproval.Query().
 		Where(
@@ -713,6 +741,139 @@ func (r *EntRepository) ListPendingApprovals(ctx context.Context, tenantID int, 
 		results[i] = r.toDomain(row)
 	}
 	return results, total, nil
+}
+
+// ListApproverPendingRequests 返回 actor 本人真正能审批的请求。
+// 除管理员外不再按「角色→层级」猜测范围：逐条比对当前待审层 approver_ids，
+// 名单缺失时才回退遗留的角色/部门兜底，口径与 checkEligibility 一致。
+func (r *EntRepository) ListApproverPendingRequests(ctx context.Context, tenantID, actorID int, actorRole, actorDept string, page, size int) ([]*ServiceRequest, int, error) {
+	approvals, err := r.client.ServiceRequestApproval.Query().
+		Where(
+			servicerequestapproval.TenantIDEQ(tenantID),
+			servicerequestapproval.StatusEQ(ApprovalStatusPending),
+		).
+		All(ctx)
+	if err != nil {
+		return nil, 0, err
+	}
+	if len(approvals) == 0 {
+		return []*ServiceRequest{}, 0, nil
+	}
+
+	requestIDs := make([]int, 0, len(approvals))
+	seen := make(map[int]struct{}, len(approvals))
+	for _, approval := range approvals {
+		if _, exists := seen[approval.ServiceRequestID]; exists {
+			continue
+		}
+		seen[approval.ServiceRequestID] = struct{}{}
+		requestIDs = append(requestIDs, approval.ServiceRequestID)
+	}
+
+	rows, err := r.client.ServiceRequest.Query().
+		Where(
+			servicerequest.TenantID(tenantID),
+			servicerequest.DeletedAtIsNil(),
+			servicerequest.IDIn(requestIDs...),
+		).
+		All(ctx)
+	if err != nil {
+		return nil, 0, err
+	}
+	byID := make(map[int]*ent.ServiceRequest, len(rows))
+	requesterIDs := make([]int, 0, len(rows))
+	for _, row := range rows {
+		byID[row.ID] = row
+		requesterIDs = append(requesterIDs, row.RequesterID)
+	}
+	deptByRequester, err := r.userDepartments(ctx, tenantID, requesterIDs)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	matched := make([]*ent.ServiceRequest, 0, len(rows))
+	added := make(map[int]struct{}, len(rows))
+	for _, approval := range approvals {
+		request := byID[approval.ServiceRequestID]
+		if request == nil || request.CurrentLevel != approval.Level {
+			continue
+		}
+		if request.Status != srApprovalStageStatus(approval.Level) {
+			continue
+		}
+		if !approvalActionableBy(r.toDomainApproval(approval), actorID, actorRole, actorDept, deptByRequester[request.RequesterID]) {
+			continue
+		}
+		if _, exists := added[request.ID]; exists {
+			continue
+		}
+		added[request.ID] = struct{}{}
+		matched = append(matched, request)
+	}
+
+	sort.Slice(matched, func(i, j int) bool {
+		if matched[i].CreatedAt.Equal(matched[j].CreatedAt) {
+			return matched[i].ID < matched[j].ID
+		}
+		return matched[i].CreatedAt.After(matched[j].CreatedAt)
+	})
+
+	page, size = common.ValidatePagination(page, size)
+	total := len(matched)
+	start := (page - 1) * size
+	if start > total {
+		start = total
+	}
+	end := start + size
+	if end > total {
+		end = total
+	}
+	results := make([]*ServiceRequest, 0, end-start)
+	for _, row := range matched[start:end] {
+		results = append(results, r.toDomain(row))
+	}
+	return results, total, nil
+}
+
+func (r *EntRepository) userDepartments(ctx context.Context, tenantID int, userIDs []int) (map[int]string, error) {
+	out := make(map[int]string, len(userIDs))
+	if len(userIDs) == 0 {
+		return out, nil
+	}
+	users, err := r.client.User.Query().
+		Where(user.TenantIDEQ(tenantID), user.IDIn(userIDs...)).
+		Select(user.FieldID, user.FieldDepartment).
+		All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	for _, item := range users {
+		out[item.ID] = item.Department
+	}
+	return out, nil
+}
+
+// approvalActionableBy 与 checkEligibility 同一口径：会签中已投票的人不再收到待办；
+// approver_ids 非空时只认名单成员；名单缺失时才回退遗留「步骤→角色」兜底。
+func approvalActionableBy(approval *ServiceRequestApproval, actorID int, actorRole, actorDept, requesterDept string) bool {
+	if nodeUserListContains(approval.Node, "approved_ids", actorID) {
+		return false
+	}
+	if approval.ApproverID != nil && *approval.ApproverID == actorID {
+		return true
+	}
+	if ids, ok := approval.Node["approver_ids"].([]interface{}); ok && len(ids) > 0 {
+		return nodeApproverContains(approval.Node, actorID)
+	}
+	switch approval.Step {
+	case ApprovalStepManager:
+		return actorRole == RoleManager && actorDept != "" && strings.EqualFold(actorDept, requesterDept)
+	case ApprovalStepIT:
+		return actorRole == RoleITAdmin || actorRole == RoleAgent || actorRole == RoleTechnician
+	case ApprovalStepSecurity:
+		return actorRole == RoleSecAdmin
+	}
+	return false
 }
 
 // Helper to get User department (needed for filtering)

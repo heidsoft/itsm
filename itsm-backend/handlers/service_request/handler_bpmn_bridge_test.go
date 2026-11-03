@@ -14,6 +14,8 @@ import (
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
+	"itsm-backend/ent/servicerequestapproval"
+	entuser "itsm-backend/ent/user"
 	"itsm-backend/handlers/cmdb"
 	"itsm-backend/handlers/service_catalog"
 
@@ -73,6 +75,7 @@ func srSetupBridge(t *testing.T) (*gin.Engine, *ent.Client, int, int, int) {
 	r.POST("/api/v1/service-requests", h.Create)
 	r.GET("/api/v1/service-requests/:id", h.Get)
 	r.POST("/api/v1/service-requests/:id/approval", h.ApplyApproval)
+	r.PUT("/api/v1/service-requests/:id/status", h.UpdateStatus)
 	return r, client, tenant.ID, approver.ID, cat.ID
 }
 
@@ -177,4 +180,42 @@ func TestServiceRequestApproval_BridgeFailClosedForUnauthorizedActor(t *testing.
 	require.Equal(t, common.SuccessCode, getResp.Code)
 	getData := getResp.Data.(map[string]interface{})
 	assert.Equal(t, "submitted", getData["status"], "fail-closed 时业务状态不得推进")
+}
+
+func TestServiceRequestCancel_TerminatesWorkflowAndVoidsPendingApprovals(t *testing.T) {
+	r, client, tenantID, approverID, catID := srSetupBridge(t)
+	id := srCreateOne(t, r, catID)
+	taskID := srCreateBPMNFixture(t, client, tenantID, "cancel1", id, approverID)
+
+	ctx := context.Background()
+	requester, err := client.User.Query().
+		Where(entuser.TenantIDEQ(tenantID), entuser.RoleEQ("agent")).
+		Only(ctx)
+	require.NoError(t, err)
+	logger := zaptest.NewLogger(t).Sugar()
+	h := NewHandler(NewService(NewEntRepository(client), service_catalog.NewEntRepository(client), cmdb.NewEntRepository(client), client, logger, nil))
+	requesterRouter := gin.New()
+	requesterRouter.Use(_srAuthRole(tenantID, requester.ID, "agent", "IT"))
+	requesterRouter.PUT("/api/v1/service-requests/:id/status", h.UpdateStatus)
+
+	resp := srDoReq(t, requesterRouter, "PUT", "/api/v1/service-requests/"+strconv.Itoa(id)+"/status",
+		dto.UpdateServiceRequestStatusRequest{Status: "cancelled"})
+	require.Equal(t, common.SuccessCode, resp.Code, "body=%s", srStr(resp))
+
+	task, err := client.ProcessTask.Get(ctx, taskID)
+	require.NoError(t, err)
+	assert.Equal(t, "cancelled", task.Status, "取消失败的流程待办必须被终止，否则永久悬挂")
+
+	instance, err := client.ProcessInstance.Get(ctx, task.ProcessInstanceID)
+	require.NoError(t, err)
+	assert.Equal(t, "terminated", instance.Status)
+
+	approvals, err := client.ServiceRequestApproval.Query().
+		Where(servicerequestapproval.ServiceRequestIDEQ(id)).
+		All(ctx)
+	require.NoError(t, err)
+	require.NotEmpty(t, approvals)
+	for _, approval := range approvals {
+		assert.Equal(t, ApprovalStatusCancelled, approval.Status, "请求取消后不应残留 pending 审批")
+	}
 }

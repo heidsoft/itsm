@@ -421,6 +421,8 @@ export interface ServiceRequestQuery {
   endDate?: string;
   page?: number;
   pageSize?: number;
+  // 服务端关键字过滤（匹配标题/申请原因），随分页一起生效
+  keyword?: string;
 }
 
 export default ServiceItem;

@@ -77,6 +77,53 @@ func TestCloudMonitorDescribeAlertLogsSurfacesBusinessError(t *testing.T) {
 	require.Equal(t, "Throttling", rpcErr.Code)
 }
 
+func TestCloudMonitorDescribeAlertLogsAcceptsNumericCode(t *testing.T) {
+	// 线上 DescribeAlertLogList 成功响应实际返回数字 Code，此前按 string 解码
+	// 导致整个告警同步在解码阶段失败。
+	client := &CloudMonitorClient{caller: &fakeCaller{respond: decodeInto(`{
+		"Code": 200,
+		"Success": true,
+		"Total": 1,
+		"AlertLogList": [{
+			"LogId": 1770000000123,
+			"AlertTime": "2026-10-31 10:00:00",
+			"Level": "CRITICAL",
+			"RuleId": "rule-1"
+		}]
+	}`)}}
+
+	logs, total, err := client.DescribeAlertLogs(context.Background(), time.Now().Add(-time.Hour), time.Now(), 1, 10)
+	require.NoError(t, err)
+	require.Equal(t, 1, total)
+	require.Len(t, logs, 1)
+	require.Equal(t, "rule-1", logs[0].RuleID)
+}
+
+func TestCloudMonitorDescribeAlertLogsSurfacesNumericBusinessError(t *testing.T) {
+	client := &CloudMonitorClient{caller: &fakeCaller{respond: decodeInto(`{
+		"Code": 503,
+		"Message": "service unavailable",
+		"Success": false
+	}`)}}
+
+	_, _, err := client.DescribeAlertLogs(context.Background(), time.Now().Add(-time.Hour), time.Now(), 1, 10)
+
+	var rpcErr *RPCError
+	require.ErrorAs(t, err, &rpcErr)
+	require.Equal(t, "503", rpcErr.Code)
+	require.Equal(t, "service unavailable", rpcErr.Message)
+}
+
+func TestParseRPCErrorAcceptsNumericCode(t *testing.T) {
+	err := parseRPCError(500, []byte(`{"Code": 500,"Message":"internal error","RequestId":"req-1"}`))
+
+	var rpcErr *RPCError
+	require.ErrorAs(t, err, &rpcErr)
+	require.Equal(t, "500", rpcErr.Code)
+	require.Equal(t, "internal error", rpcErr.Message)
+	require.Equal(t, "req-1", rpcErr.RequestID)
+}
+
 func TestSecurityCenterDescribeVulnerabilitiesParsesRecords(t *testing.T) {
 	caller := &fakeCaller{respond: decodeInto(`{
 		"TotalCount": 1,

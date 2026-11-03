@@ -3,10 +3,12 @@
 import React, { useState, useEffect } from 'react';
 import { App, Card, Row, Col, Statistic, Typography, Tabs, Table, Button } from 'antd';
 import ServiceRequestList from '@/components/service-request/ServiceRequestList';
-import { FileText, Clock, CheckCircle, Inbox } from 'lucide-react';
+import { FileText, Clock, CheckCircle, Inbox, Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { serviceRequestAPI } from '@/lib/api/service-request-api';
 import { ServiceRequestStatus } from '@/constants/service-request';
+import { usePermissions } from '@/lib/hooks/use-permissions';
+import { formatDateTime } from '@/lib/formatters';
 
 const { Title, Text } = Typography;
 
@@ -24,6 +26,9 @@ interface PendingApprovalRow {
 export default function ServiceRequestsPage() {
   const router = useRouter();
   const { message } = App.useApp();
+  const { hasPermission } = usePermissions();
+  const canCreateServiceRequest =
+    hasPermission('service_request', 'write') || hasPermission('service_request', 'create');
   const [activeTab, setActiveTab] = useState('requests');
   const [pendingApprovals, setPendingApprovals] = useState<PendingApprovalRow[]>([]);
   const [stats, setStats] = useState({
@@ -97,7 +102,7 @@ export default function ServiceRequestsPage() {
       title: '申请时间',
       dataIndex: 'createdAt',
       key: 'createdAt',
-      render: (value: string) => new Date(value).toLocaleDateString(),
+      render: (value: string) => formatDateTime(value),
     },
     {
       title: '操作',
@@ -126,6 +131,15 @@ export default function ServiceRequestsPage() {
             查看和管理服务请求及审批流程
           </Text>
         </div>
+        {canCreateServiceRequest && (
+          <Button
+            type="primary"
+            icon={<Plus size={16} />}
+            onClick={() => router.push('/service-requests/new')}
+          >
+            新建服务请求
+          </Button>
+        )}
       </div>
 
       {/* 统计卡片 */}

@@ -29,7 +29,7 @@ func SetupServiceRequestRoutes(tenant *gin.RouterGroup, h *service_request.Handl
 
 		// Provisioning routes
 		if provisioningHandler != nil {
-			sr.POST("/:id/provision", middleware.RequirePermission("service_request", "write"), provisioningHandler.StartProvisioning)
+			sr.POST("/:id/provision", middleware.RequirePermission("service_request", "provision"), provisioningHandler.StartProvisioning)
 			sr.GET("/:id/provisioning-tasks", middleware.RequirePermission("service_request", "read"), provisioningHandler.ListProvisioningTasks)
 		}
 	}
@@ -40,11 +40,12 @@ func SetupServiceRequestRoutes(tenant *gin.RouterGroup, h *service_request.Handl
 	//   execute —— 首次执行或运维强制再执行一次（受状态守卫约束，succeeded 不可重入）；
 	//   retry   —— 把失败任务重新排队，受 MaxTaskAttempts 约束，每次尝试独立幂等键；
 	//   resolve —— 自动重试不可能成功时的人工判定（provider 永久故障 / 资源已在平台外建好）。
-	// 三者都要求 service_request:write：交付会真实创建云资源，读权限不应携带这种副作用。
+	// 三者共用 service_request:provision：交付会真实创建云资源，属于独立动作，
+	// 不能借用 write——否则任何能改服务请求字段的角色都能下单云资源。
 	provisioning := tenant.Group("/provisioning-tasks")
 	{
-		provisioning.POST("/:id/execute", middleware.RequirePermission("service_request", "write"), provisioningHandler.ExecuteProvisioningTask)
-		provisioning.POST("/:id/retry", middleware.RequirePermission("service_request", "write"), provisioningHandler.RetryProvisioningTask)
-		provisioning.POST("/:id/resolve", middleware.RequirePermission("service_request", "write"), provisioningHandler.ResolveProvisioningTask)
+		provisioning.POST("/:id/execute", middleware.RequirePermission("service_request", "provision"), provisioningHandler.ExecuteProvisioningTask)
+		provisioning.POST("/:id/retry", middleware.RequirePermission("service_request", "provision"), provisioningHandler.RetryProvisioningTask)
+		provisioning.POST("/:id/resolve", middleware.RequirePermission("service_request", "provision"), provisioningHandler.ResolveProvisioningTask)
 	}
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { Card, Input, Button, Tag, Pagination, Spin, Empty, Select, Alert, App } from 'antd';
 import {
@@ -49,6 +49,7 @@ interface ServiceRequest {
 
 import { ServiceCatalogApi } from '@/lib/api/service-catalog-api';
 import type { ServiceRequestStatus } from '@/types/service-catalog';
+import { formatDateTime } from '@/lib/formatters';
 
 const RequestStatusBadge = ({ status }: { status: string }) => {
   const statusConfig = {
@@ -75,18 +76,7 @@ const RequestStatusBadge = ({ status }: { status: string }) => {
 };
 
 const RequestCard = ({ request }: { request: ServiceRequest }) => {
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return '-';
-    const time = new Date(dateString);
-    if (Number.isNaN(time.getTime())) return '-';
-    return time.toLocaleString('zh-CN', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  };
+  const formatDate = (dateString?: string) => formatDateTime(dateString) || '-';
 
   return (
     <Card
@@ -139,13 +129,21 @@ const MyRequestsPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  // 各状态的真实总数由服务端返回；不能再用「当前页条数」冒充全量
+  const [statusCounts, setStatusCounts] = useState<Record<string, number>>({});
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
   const pageSize = 10;
 
-  // 获取服务请求数据
-  const fetchRequests = async (page = 1, status = filter) => {
+  // 竞态守卫：快速翻页/切筛选/改关键字时，旧响应不得覆盖新结果
+  const listRequestIdRef = useRef(0);
+  const countsRequestIdRef = useRef(0);
+
+  // 获取服务请求数据（分页、状态、关键字全部由后端过滤）
+  const fetchRequests = async (page: number, status: string, keyword: string) => {
+    const requestId = ++listRequestIdRef.current;
     setLoading(true);
     setError(null);
     try {
@@ -153,7 +151,9 @@ const MyRequestsPage = () => {
         page,
         pageSize,
         status: status === 'all' ? undefined : (status as ServiceRequestStatus),
+        keyword: keyword || undefined,
       });
+      if (requestId !== listRequestIdRef.current) return;
 
       // 本页的 ServiceRequest 是早期按页面字段攒的局部视图，与 API 层线上形状
       // （ServiceRequestDetail）已经漂移（本页要求 reason 必填，API 层不保证）。
@@ -163,6 +163,7 @@ const MyRequestsPage = () => {
       setTotal(data.total);
       setTotalPages(Math.max(1, data.totalPages));
     } catch (error) {
+      if (requestId !== listRequestIdRef.current) return;
       console.error('API调用失败:', error);
       setError('加载失败，请重试');
       message.error('加载服务请求失败');
@@ -170,30 +171,64 @@ const MyRequestsPage = () => {
       setTotal(0);
       setTotalPages(1);
     } finally {
-      setLoading(false);
+      if (requestId === listRequestIdRef.current) setLoading(false);
     }
   };
 
+  // 获取各状态真实计数：与列表同一套关键字条件，各自取服务端 total
+  const fetchStatusCounts = async (keyword: string) => {
+    const requestId = ++countsRequestIdRef.current;
+    const statuses = ['submitted', 'provisioning', 'delivered', 'rejected'];
+    try {
+      const [allResult, ...statusResults] = await Promise.all([
+        ServiceCatalogApi.getServiceRequests({ page: 1, pageSize: 1, keyword: keyword || undefined }),
+        ...statuses.map(status =>
+          ServiceCatalogApi.getServiceRequests({
+            page: 1,
+            pageSize: 1,
+            status: status as ServiceRequestStatus,
+            keyword: keyword || undefined,
+          })
+        ),
+      ]);
+      if (requestId !== countsRequestIdRef.current) return;
+
+      const counts: Record<string, number> = { all: allResult.total };
+      statuses.forEach((status, index) => {
+        counts[status] = statusResults[index]?.total ?? 0;
+      });
+      setStatusCounts(counts);
+    } catch (error) {
+      if (requestId !== countsRequestIdRef.current) return;
+      // 计数失败不能影响列表主流程，同时不展示过期数字
+      console.error('加载状态计数失败:', error);
+      setStatusCounts({});
+    }
+  };
+
+  // 输入防抖：避免每次按键都打服务端
   useEffect(() => {
-    fetchRequests(currentPage, filter);
-  }, [currentPage, filter]);
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchTerm.trim());
+      setCurrentPage(1);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
-  // 筛选数据
-  const filteredRequests = requests.filter(request => {
-    const matchesSearch =
-      !searchTerm ||
-      request.catalog?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      request.reason.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesSearch;
-  });
+  useEffect(() => {
+    fetchRequests(currentPage, filter, debouncedSearch);
+  }, [currentPage, filter, debouncedSearch]);
 
-  // 动态计算过滤选项数量
+  useEffect(() => {
+    fetchStatusCounts(debouncedSearch);
+  }, [debouncedSearch]);
+
   const filterOptions = [
-    { value: 'all', label: '全部', count: total },
-    { value: 'submitted', label: '已提交', count: requests.filter(r => r.status === 'submitted').length },
-    { value: 'provisioning', label: '交付中', count: requests.filter(r => r.status === 'provisioning').length },
-    { value: 'delivered', label: '已交付', count: requests.filter(r => r.status === 'delivered').length },
-    { value: 'rejected', label: '已拒绝', count: requests.filter(r => r.status === 'rejected').length },
+    { value: 'all', label: '全部', count: statusCounts.all ?? 0 },
+    { value: 'submitted', label: '已提交', count: statusCounts.submitted ?? 0 },
+    { value: 'provisioning', label: '交付中', count: statusCounts.provisioning ?? 0 },
+    { value: 'delivered', label: '已交付', count: statusCounts.delivered ?? 0 },
+    { value: 'rejected', label: '已拒绝', count: statusCounts.rejected ?? 0 },
   ];
 
   return (
@@ -207,7 +242,7 @@ const MyRequestsPage = () => {
               <p className="text-gray-500">查看和跟踪您提交的所有服务请求</p>
             </div>
             <Button
-              onClick={() => fetchRequests(currentPage, filter)}
+              onClick={() => fetchRequests(currentPage, filter, debouncedSearch)}
               icon={<RefreshCw className="w-4 h-4" />}
             >
               刷新
@@ -224,7 +259,7 @@ const MyRequestsPage = () => {
             showIcon
             className="mb-6"
             action={
-              <Button size="small" onClick={() => fetchRequests(currentPage, filter)}>
+              <Button size="small" onClick={() => fetchRequests(currentPage, filter, debouncedSearch)}>
                 重试
               </Button>
             }
@@ -275,9 +310,9 @@ const MyRequestsPage = () => {
           <div className="flex items-center justify-center py-12">
             <Spin size="large" />
           </div>
-        ) : filteredRequests.length > 0 ? (
+        ) : requests.length > 0 ? (
           <div className="space-y-4">
-            {filteredRequests.map(request => (
+            {requests.map(request => (
               <RequestCard key={request.id} request={request} />
             ))}
           </div>
@@ -290,16 +325,28 @@ const MyRequestsPage = () => {
               image={Empty.PRESENTED_IMAGE_SIMPLE}
               description={
                 <div className="mb-4">
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">暂无请求</h3>
-                  <p className="text-gray-500">您还没有提交任何服务请求</p>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                    {debouncedSearch ? '没有匹配的请求' : '暂无请求'}
+                  </h3>
+                  <p className="text-gray-500">
+                    {debouncedSearch
+                      ? `未找到包含“${debouncedSearch}”的请求`
+                      : filter === 'all'
+                        ? '您还没有提交任何服务请求'
+                        : '当前状态下没有请求'}
+                  </p>
                 </div>
               }
             >
-              <Link href="/service-catalog">
-                <Button type="primary" icon={<FileText className="w-4 h-4" />}>
-                  浏览服务目录
-                </Button>
-              </Link>
+              {debouncedSearch ? (
+                <Button onClick={() => setSearchTerm('')}>清除搜索</Button>
+              ) : (
+                <Link href="/service-catalog">
+                  <Button type="primary" icon={<FileText className="w-4 h-4" />}>
+                    浏览服务目录
+                  </Button>
+                </Link>
+              )}
             </Empty>
           </Card>
         )}

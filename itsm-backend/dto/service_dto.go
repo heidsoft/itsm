@@ -75,6 +75,9 @@ type GetServiceCatalogsRequest struct {
 // 这里没有 UserID 字段，操作者身份只取认证上下文。
 type GetServiceRequestsRequest struct {
 	Status string `json:"status" form:"status" binding:"omitempty"`
+	// Keyword 按标题/申请原因模糊匹配；分页与过滤由后端负责，
+	// 前端不得再对当前页做二次过滤。
+	Keyword string `json:"keyword" form:"keyword" binding:"omitempty,max=100"`
 }
 
 // ServiceCatalogResponse 服务目录响应

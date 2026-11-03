@@ -15,6 +15,7 @@ import (
 	"itsm-backend/ent/processinstance"
 	"itsm-backend/ent/release"
 	"itsm-backend/ent/servicerequest"
+	"itsm-backend/ent/servicerequestapproval"
 	"itsm-backend/ent/ticket"
 
 	"go.uber.org/zap"
@@ -85,6 +86,20 @@ func (h *WorkflowStartCommandHandler) Handle(ctx context.Context, cmd *ent.Opera
 		processKey, err = h.pickExistingDefinition(ctx, cmd.TenantID, processKey, "ticket_general_flow", "ticket_assignment_flow")
 		if err != nil {
 			return err
+		}
+		// 类型/分类绑定可能指向别的域的流程——默认种子里就有 ticket/incident →
+		// incident_emergency_flow。那类流程的服务任务按 incident_id/change_id 写库，
+		// 工单聚合只会读到 0 并在 8 次重试后进死信；ID 恰好撞号时还会改到另一个域的单据。
+		if category, found, cerr := h.definitionCategory(ctx, cmd.TenantID, processKey); cerr != nil {
+			return cerr
+		} else if found && !ticketProcessCategories[strings.ToLower(strings.TrimSpace(category))] {
+			h.logger.Warnw("ticket workflow resolved to a non-ticket process definition, falling back",
+				"command_id", cmd.ID, "ticket_id", tkt.ID, "tenant_id", cmd.TenantID,
+				"resolved_key", processKey, "definition_category", category)
+			processKey, err = h.pickExistingDefinition(ctx, cmd.TenantID, "ticket_general_flow", "ticket_assignment_flow")
+			if err != nil {
+				return err
+			}
 		}
 		variables := map[string]interface{}{
 			"ticket_id": tkt.ID, "ticket_number": tkt.TicketNumber, "title": tkt.Title,
@@ -175,13 +190,51 @@ func (h *WorkflowStartCommandHandler) Handle(ctx context.Context, cmd *ent.Opera
 		if err != nil {
 			return fmt.Errorf("load service request for workflow: %w", err)
 		}
+		// 审批人来自落库的审批记录，而不是创建时的一次性快照：审批链解析、
+		// 角色兜底、部门匹配的最终结果都在 service_request_approvals.node 里。
+		approvals, err := h.client.ServiceRequestApproval.Query().
+			Where(
+				servicerequestapproval.TenantIDEQ(cmd.TenantID),
+				servicerequestapproval.ServiceRequestIDEQ(sr.ID),
+			).
+			Order(ent.Asc(servicerequestapproval.FieldLevel)).
+			All(ctx)
+		if err != nil {
+			return fmt.Errorf("load service request approvals for workflow: %w", err)
+		}
+		plan := make([]interface{}, 0, len(approvals))
+		for _, approval := range approvals {
+			ids := []interface{}{}
+			threshold := 1
+			if approval.Node != nil {
+				if raw, ok := approval.Node["approver_ids"].([]interface{}); ok {
+					ids = raw
+				}
+				if raw, ok := approval.Node["quorum_threshold"].(float64); ok && int(raw) > 0 {
+					threshold = int(raw)
+				}
+			}
+			plan = append(plan, map[string]interface{}{
+				"level":        approval.Level,
+				"step":         approval.Step,
+				"approver_ids": ids,
+				"threshold":    threshold,
+			})
+		}
+		totalLevels := sr.TotalLevels
+		if totalLevels <= 0 || totalLevels > len(approvals) {
+			totalLevels = len(approvals)
+		}
 		req = &dto.ProcessTriggerRequest{
 			BusinessType: dto.BusinessTypeServiceRequest, BusinessID: sr.ID,
 			ProcessDefinitionKey: "service_request_flow",
 			Variables: map[string]interface{}{
 				"service_request_id": sr.ID, "title": sr.Title, "reason": sr.Reason,
 				"status": sr.Status, "requester_id": sr.RequesterID, "catalog_id": sr.CatalogID,
-				"current_level": sr.CurrentLevel, "total_levels": sr.TotalLevels,
+				"current_level": sr.CurrentLevel, "total_levels": totalLevels,
+				// 没有审批记录时直接进入履约，避免流程停在无人可审的节点上。
+				"need_approval": len(approvals) > 0,
+				"approval_plan": plan,
 			},
 			TriggeredBy: fmt.Sprintf("%d", sr.RequesterID), TriggeredAt: time.Now(), TenantID: cmd.TenantID,
 		}
@@ -220,6 +273,29 @@ func (h *WorkflowStartCommandHandler) definitionAvailable(ctx context.Context, t
 		processdefinition.IsActive(true),
 		processdefinition.Key(key),
 	).Exist(ctx)
+}
+
+// ticketProcessCategories 是能承载统一工单聚合的流程类别。工单与 incident/change/... 是
+// 独立领域：域流程的服务任务按各自域表的 ID 写库，工单聚合跑它们只会读到 0 并死信。
+var ticketProcessCategories = map[string]bool{"": true, "default": true, "ticket": true}
+
+// definitionCategory 返回租户下该流程定义最新启用版本的类别；定义不存在时 found=false。
+func (h *WorkflowStartCommandHandler) definitionCategory(ctx context.Context, tenantID int, key string) (category string, found bool, err error) {
+	def, err := h.client.ProcessDefinition.Query().
+		Where(
+			processdefinition.TenantIDEQ(tenantID),
+			processdefinition.IsActive(true),
+			processdefinition.Key(key),
+		).
+		Order(ent.Desc(processdefinition.FieldIsLatest)).
+		First(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return "", false, nil
+		}
+		return "", false, fmt.Errorf("load process definition %s: %w", key, err)
+	}
+	return def.Category, true, nil
 }
 
 // pickExistingDefinition 返回 key 与 fallbacks 中第一个在租户下真实存在且启用的流程 key。

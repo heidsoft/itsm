@@ -64,7 +64,9 @@ type ServiceRequestApproval struct {
 
 // ListFilters defines filters for listing service requests
 type ListFilters struct {
-	Status   string
+	Status string
+	// Keyword 在 title/reason 上做不区分大小写的包含匹配（服务端过滤，随分页生效）。
+	Keyword  string
 	UserID   int // Requester ID
 	Page     int
 	PageSize int
@@ -92,9 +94,13 @@ type Repository interface {
 	UpdateApprovalWithClient(ctx context.Context, txc *ent.Client, approval *ServiceRequestApproval) error
 	UpdateRequestAndApproval(ctx context.Context, req *ServiceRequest, approval *ServiceRequestApproval) error
 	UpdateRequestAndApprovalWithClient(ctx context.Context, txc *ent.Client, req *ServiceRequest, approval *ServiceRequestApproval) error
+	// CancelPendingApprovals 将请求下所有 pending 审批步骤置为 cancelled，返回受影响行数。
+	CancelPendingApprovals(ctx context.Context, tenantID, requestID int) (int, error)
 
 	// Pending approvals for approver
 	ListPendingApprovals(ctx context.Context, tenantID int, targetLevel int, requiredStatus, requesterDept string, page, size int) ([]*ServiceRequest, int, error)
+	// ListApproverPendingRequests 按实际审批人身份返回待办（管理员走 ListPendingApprovals 全量口径）。
+	ListApproverPendingRequests(ctx context.Context, tenantID, actorID int, actorRole, actorDept string, page, size int) ([]*ServiceRequest, int, error)
 	GetUserContext(ctx context.Context, userID, tenantID int) (department, name string, err error)
 
 	// FindActiveUsersByRole 查找租户内指定角色的活跃用户；department 非空时优先返回同部门用户。

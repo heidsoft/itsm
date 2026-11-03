@@ -22,6 +22,22 @@ type bpmnUserIDKey struct{}
 // It must only be populated from trusted authentication middleware.
 var BPMNUserIDContextKey = bpmnUserIDKey{}
 
+type bpmnSystemAdvanceKey struct{}
+
+// WithBPMNSystemAdvance marks ctx as a trusted system transition: the engine
+// skips per-actor task ownership checks while still keeping the tenant scope
+// intact for RLS. Do not use tenantctx system bypass for this — that would
+// route DB access through a BYPASSRLS role.
+func WithBPMNSystemAdvance(ctx context.Context) context.Context {
+	return context.WithValue(ctx, bpmnSystemAdvanceKey{}, true)
+}
+
+// IsBPMNSystemAdvance reports whether ctx is a trusted BPMN system transition.
+func IsBPMNSystemAdvance(ctx context.Context) bool {
+	v, _ := ctx.Value(bpmnSystemAdvanceKey{}).(bool)
+	return v
+}
+
 // ServiceTaskHandlerInterface 服务任务处理器接口
 // 定义所有服务任务处理器需要实现的方法
 type ServiceTaskHandlerInterface interface {

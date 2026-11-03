@@ -228,6 +228,10 @@ services:
 
       # Connector encryption key (required in production)
       - CONNECTOR_CONFIG_ENCRYPTION_KEY=${CONNECTOR_CONFIG_ENCRYPTION_KEY:?CONNECTOR_CONFIG_ENCRYPTION_KEY must be set in production}
+      # 云交付凭据（env://ITSM_ALIYUN 在进程内 os.Getenv 解析）：
+      # backend 建任务/健康探测，worker 真正执行 RunInstances，两端都要能拿到。
+      - ITSM_ALIYUN_ACCESS_KEY_ID=${ITSM_ALIYUN_ACCESS_KEY_ID:-}
+      - ITSM_ALIYUN_ACCESS_KEY_SECRET=${ITSM_ALIYUN_ACCESS_KEY_SECRET:-}
 
       # Proxy bypass for health checks
       - no_proxy=localhost,127.0.0.1
@@ -365,6 +369,10 @@ services:
       - MINIO_BUCKET=${MINIO_BUCKET:-itsm-uploads}
       - MINIO_USE_SSL=${MINIO_USE_SSL:-false}
       - CONNECTOR_CONFIG_ENCRYPTION_KEY=${CONNECTOR_CONFIG_ENCRYPTION_KEY:?CONNECTOR_CONFIG_ENCRYPTION_KEY must be set in production}
+      # 云交付凭据（env://ITSM_ALIYUN 在进程内 os.Getenv 解析）：
+      # backend 建任务/健康探测，worker 真正执行 RunInstances，两端都要能拿到。
+      - ITSM_ALIYUN_ACCESS_KEY_ID=${ITSM_ALIYUN_ACCESS_KEY_ID:-}
+      - ITSM_ALIYUN_ACCESS_KEY_SECRET=${ITSM_ALIYUN_ACCESS_KEY_SECRET:-}
       # LLM 配置（worker 需要处理 AI 相关命令）
       - LLM_PROVIDER=${LLM_PROVIDER:-openai}
       - LLM_MODEL=${LLM_MODEL:-gpt-4}

@@ -167,11 +167,14 @@ func TestService_EnableWorkflowOutbox_UsesOutboxPath(t *testing.T) {
 		Save(ctx)
 	require.NoError(t, err)
 
+	// 提交人不能同时是唯一可审批人：创建阶段要求每一级都有另一名审批角色用户。
+	srSeedApprover(t, ctx, client, tenant.ID, "IT")
+
 	scRepo := service_catalog.NewEntRepository(client)
 	scSvc := service_catalog.NewService(scRepo, logger)
 	cat, err := scSvc.Create(ctx, &service_catalog.ServiceCatalog{
 		Name: "OutboxCatalog", Category: "software", Description: "for outbox test",
-		DeliveryTime: 0, TenantID: tenant.ID, Status: "enabled",
+		DeliveryTime: 0, TenantID: tenant.ID, Status: "enabled", RequiresApproval: true,
 	})
 	require.NoError(t, err)
 

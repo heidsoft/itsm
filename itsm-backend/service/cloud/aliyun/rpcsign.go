@@ -121,10 +121,12 @@ func (c *rpcClient) Call(ctx context.Context, action string, params map[string]s
 }
 
 func parseRPCError(status int, payload []byte) error {
+	// 错误响应的 Code 也可能是数字（部分网关错误），用 flexString 解码，
+	// 否则 json.Unmarshal 报错被忽略后 Code 恒为空、错误被降级成 UnknownError。
 	var e struct {
-		Code      string `json:"Code"`
-		Message   string `json:"Message"`
-		RequestID string `json:"RequestId"`
+		Code      flexString `json:"Code"`
+		Message   string     `json:"Message"`
+		RequestID string     `json:"RequestId"`
 	}
 	_ = json.Unmarshal(payload, &e)
 	if e.Code == "" {
@@ -133,7 +135,7 @@ func parseRPCError(status int, payload []byte) error {
 	if e.Message == "" {
 		e.Message = http.StatusText(status)
 	}
-	return &RPCError{StatusCode: status, Code: e.Code, Message: e.Message, RequestID: e.RequestID}
+	return &RPCError{StatusCode: status, Code: string(e.Code), Message: e.Message, RequestID: e.RequestID}
 }
 
 func randomNonce() string {
