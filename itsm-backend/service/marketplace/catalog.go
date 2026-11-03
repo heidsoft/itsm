@@ -46,6 +46,14 @@ var (
 	ErrCatalogItemPublished         = errors.New("marketplace catalog item is published")
 	ErrCatalogItemInstalled         = errors.New("marketplace catalog item has tenant installations")
 	ErrCatalogFieldRequired         = errors.New("marketplace catalog field is required")
+	// ErrCatalogTypeNotDeliverable 目录不受理该类型：平台没有对应的交付机制。
+	// 与安装面的 ErrMarketplaceDeliveryUnsupported 成对——目录写入侧先挡住，
+	// 就不会出现「能上架、点安装才失败」的商品。
+	ErrCatalogTypeNotDeliverable = errors.New("marketplace catalog type is not deliverable")
+	// ErrCatalogSkillLocatorInvalid 技能商品没有可解析的运行时代码定位符。
+	// 与 ErrCatalogConnectorUnregistered 同构：name 决定连接器 provider，
+	// 定位符决定技能装的是哪段运行时代码，两者都必须在上架前就能核对。
+	ErrCatalogSkillLocatorInvalid = errors.New("marketplace catalog skill locator is invalid")
 )
 
 // catalogNamePattern 商品标识：小写字母数字与连字符，不能以连字符开头/结尾。
@@ -85,6 +93,11 @@ type CatalogItemPatch struct {
 	MinSystemVersion *string
 	// Version 仅创建时使用：初始版本号。连接器商品可省略（取 manifest 版本）。
 	Version *string
+	// ManifestPath 仅创建时使用：写入首个版本行的交付物定位符。
+	// 技能商品必填且必须能解析成运行时已注册的技能码（形如 skill://ai.triage）；
+	// 连接器商品留空即可（交付物由 name 对应的 provider 决定）。
+	// 后续版本只能通过版本接口维护定位符，这里不接受更新。
+	ManifestPath *string
 }
 
 // CatalogListFilter 目录列表筛选（与租户侧 ListItems 不同，这里包含非 published）。
@@ -146,7 +159,7 @@ func (s *Service) AdminListItems(ctx context.Context, filter CatalogListFilter) 
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to list catalog items: %w", err)
 	}
-	return dto.ToMarketplaceItemResponseList(items), total, nil
+	return toItemResponses(items), total, nil
 }
 
 // GetCatalogItem 目录项详情（含草稿），附带全部版本。
@@ -164,7 +177,7 @@ func (s *Service) GetCatalogItem(ctx context.Context, itemID int) (*CatalogItemD
 	versions := item.Edges.Versions
 	sortVersionsByRelease(versions)
 	return &CatalogItemDetail{
-		Item:     dto.ToMarketplaceItemResponse(item),
+		Item:     toItemResponse(item),
 		Versions: dto.ToMarketplaceItemVersionResponseList(versions),
 	}, nil
 }
@@ -181,11 +194,17 @@ func (s *Service) CreateCatalogItem(ctx context.Context, patch CatalogItemPatch)
 	}
 	itemType := marketplaceitem.Type(strings.TrimSpace(derefString(patch.Type)))
 	if !validCatalogType(itemType) {
-		return nil, fmt.Errorf("%w: type 必须是 connector/skill/plugin", ErrCatalogFieldRequired)
+		return nil, fmt.Errorf("%w: type 必须是 %s", ErrCatalogTypeNotDeliverable, strings.Join(catalogTypeNames(), "/"))
 	}
 	// 先校验 provider 是否已注册：未注册时后面的 manifest 补齐会静默跳过，
 	// 报错会退化成「title 必填」这种与真实原因无关的提示。
 	if err := validateConnectorProvider(name, itemType); err != nil {
+		return nil, err
+	}
+	// 技能商品的交付物是「运行时里的一段代码」，定位符必须在这里就能解析成
+	// 已注册的技能码；否则商品能上架、能点安装，失败原因却只在安装时才暴露。
+	locator, err := s.resolveCatalogLocator(itemType, derefString(patch.ManifestPath))
+	if err != nil {
 		return nil, err
 	}
 	manifest, hasManifest := catalogConnectorManifest(name, itemType)
@@ -240,12 +259,15 @@ func (s *Service) CreateCatalogItem(ctx context.Context, patch CatalogItemPatch)
 	}
 	// 首个版本直接标记 published：它描述的是已经存在的运行时代码/发布物，
 	// 不是待审内容。条目本身仍是 draft，上架是另一个显式动作。
-	if _, err := tx.ItemVersion.Create().
+	versionCreate := tx.ItemVersion.Create().
 		SetItemID(item.ID).
 		SetVersion(version).
 		SetStatus(itemversion.StatusPublished).
-		SetReleasedAt(time.Now()).
-		Save(ctx); err != nil {
+		SetReleasedAt(time.Now())
+	if locator != "" {
+		versionCreate = versionCreate.SetManifestPath(locator)
+	}
+	if _, err := versionCreate.Save(ctx); err != nil {
 		_ = tx.Rollback()
 		if ent.IsConstraintError(err) {
 			return nil, fmt.Errorf("%w: version=%q", ErrCatalogVersionExists, version)
@@ -277,8 +299,8 @@ func (s *Service) UpdateCatalogItem(ctx context.Context, itemID int, patch Catal
 	if patch.Type != nil && marketplaceitem.Type(*patch.Type) != item.Type {
 		return nil, fmt.Errorf("%w: type 不可修改（决定安装副作用路径）", ErrCatalogItemIdentityImmutable)
 	}
-	if patch.Version != nil {
-		return nil, fmt.Errorf("%w: 版本只能通过版本接口维护", ErrCatalogVersionInvalid)
+	if patch.Version != nil || patch.ManifestPath != nil {
+		return nil, fmt.Errorf("%w: 版本与交付物定位符只能通过版本接口维护", ErrCatalogVersionInvalid)
 	}
 
 	update := applyUpdatePatch(s.db.MarketplaceItem.UpdateOneID(itemID), patch)
@@ -303,6 +325,12 @@ func (s *Service) PublishCatalogItem(ctx context.Context, itemID int) (*CatalogI
 	}
 	if item.Status == marketplaceitem.StatusPublished {
 		return s.GetCatalogItem(ctx, itemID)
+	}
+	// 不受理的类型即使已有版本行也不能上架：上架意味着租户可以点安装，
+	// 而安装面会拒绝这个类型——那正是要避免的「能上架、装不了」。
+	if !IsDeliverableType(item.Type) {
+		return nil, fmt.Errorf("%w: type=%s（平台只交付 %s）",
+			ErrCatalogTypeNotDeliverable, item.Type, strings.Join(catalogTypeNames(), "/"))
 	}
 
 	latest, err := s.latestPublishedVersion(ctx, itemID)
@@ -449,6 +477,26 @@ func (s *Service) CreateItemVersion(ctx context.Context, itemID int, in ItemVers
 			}
 		}
 	}
+	// 技能版本没显式给定位符时，沿用最近一个已声明的版本：技能的商品身份就是
+	// 「卖运行时里的哪段代码」，发新版本通常换的是实现内容而不是代码码。
+	// 不继承会让「发布 1.1.0」把交付物变成空定位符，于是所有租户的升级在安装期
+	// 才失败；继承后仍然走 resolveCatalogLocator 校验，指向不存在的码照样拦。
+	rawLocator := strings.TrimSpace(in.ManifestPath)
+	if item.Type == marketplaceitem.TypeSkill && rawLocator == "" {
+		inherited, err := s.latestSkillLocator(ctx, itemID)
+		if err != nil {
+			return nil, err
+		}
+		rawLocator = inherited
+	}
+	// 连接器/其它类型的 manifestPath 原样入库（历史用作内置组件说明），不做解析。
+	locator, err := s.resolveCatalogLocator(item.Type, rawLocator)
+	if err != nil {
+		return nil, err
+	}
+	if locator == "" {
+		locator = rawLocator
+	}
 
 	status := itemversion.StatusDraft
 	if in.Publish {
@@ -460,7 +508,7 @@ func (s *Service) CreateItemVersion(ctx context.Context, itemID int, in ItemVers
 		SetStatus(status).
 		SetChangelog(strings.TrimSpace(in.Changelog)).
 		SetDownloadURL(strings.TrimSpace(in.DownloadURL)).
-		SetManifestPath(strings.TrimSpace(in.ManifestPath)).
+		SetManifestPath(locator).
 		SetMinSystemVersion(strings.TrimSpace(in.MinSystemVersion))
 	if len(in.Dependencies) > 0 {
 		create = create.SetDependencies(in.Dependencies)
@@ -532,12 +580,19 @@ func (s *Service) PublishItemVersion(ctx context.Context, itemID int, rawVersion
 //
 // 只对已上架条目生效：draft 条目的 latest_version 在 PublishCatalogItem 时
 // 统一对齐，这里提前改会让「未上架却指向某个版本」的状态出现两种解释。
+// 未上架时必须是静默跳过而不是报错——「先建草稿条目、再发布版本、最后上架」
+// 是目录管理的正常顺序，在这一步抛 500 会让运营以为发布失败。
 func (s *Service) advanceLatestVersion(ctx context.Context, itemID int, version string) error {
-	if err := s.db.MarketplaceItem.UpdateOneID(itemID).
-		Where(marketplaceitem.StatusEQ(marketplaceitem.StatusPublished)).
+	advanced, err := s.db.MarketplaceItem.Update().
+		Where(marketplaceitem.ID(itemID), marketplaceitem.StatusEQ(marketplaceitem.StatusPublished)).
 		SetLatestVersion(version).
-		Exec(ctx); err != nil {
+		Save(ctx)
+	if err != nil {
 		return fmt.Errorf("failed to advance latest version: %w", err)
+	}
+	if advanced == 0 {
+		s.logger.Infow("marketplace catalog version published on unpublished item",
+			"item_id", itemID, "version", version, "reason", "latest_version 将在上架时对齐")
 	}
 	return nil
 }
@@ -600,12 +655,39 @@ func validateConnectorProvider(name string, itemType marketplaceitem.Type) error
 	return nil
 }
 
+// validCatalogType 目录受理的类型。
+//
+// 词表来自 deliverableTypes()，不在这里另列一份：目录能建什么类型与安装面
+// 能交付什么类型必须是同一个答案，否则就会出现「目录里有、装不上」的商品。
 func validCatalogType(t marketplaceitem.Type) bool {
-	switch t {
-	case marketplaceitem.TypeConnector, marketplaceitem.TypeSkill, marketplaceitem.TypePlugin:
-		return true
+	return IsDeliverableType(t)
+}
+
+// catalogTypeNames 受理类型的可读列表，用于报错与界面文案。
+func catalogTypeNames() []string {
+	types := deliverableTypes()
+	names := make([]string, 0, len(types))
+	for _, t := range types {
+		names = append(names, string(t))
 	}
-	return false
+	return names
+}
+
+// resolveCatalogLocator 校验并归一化技能商品的交付物定位符。
+//
+// 连接器返回空串表示「这里没有需要解析的东西」：它的交付物由 name 对应的
+// provider 决定，调用方随后原样保留自己填写的 manifestPath（历史说明文本）。
+// 技能必须解析成运行时已注册的技能码，返回值统一带 skill:// 前缀，
+// 让「内置交付物」与「下载地址」在同一个 manifest_path 字段上仍可读性区分开。
+func (s *Service) resolveCatalogLocator(itemType marketplaceitem.Type, rawLocator string) (string, error) {
+	if itemType != marketplaceitem.TypeSkill {
+		return "", nil
+	}
+	code, err := s.resolveSkillCode(rawLocator)
+	if err != nil {
+		return "", fmt.Errorf("%w: %v", ErrCatalogSkillLocatorInvalid, err)
+	}
+	return skillLocatorPrefix + code, nil
 }
 
 // applyCreatePatch 把 patch 应用到新建条目。

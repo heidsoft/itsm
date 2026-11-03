@@ -62,10 +62,11 @@ const MarketplaceDetailPage = () => {
   const [installing, setInstalling] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
 
-  const versions = useMemo(() => item?.edges?.versions || [], [item]);
+  const versions = useMemo(() => item?.versions ?? [], [item]);
   const isInstalled = Boolean(installation);
-  // 安装/配置只对 connector 有交付实现；skill/plugin 入口返回 501，不能摆出可点的安装按钮。
-  const installSupported = item?.type === 'connector';
+  // 能否安装只由服务端的交付判定决定（连接器/技能为真）。界面不得另写一份 type 白名单：
+  // 目录放开新类型时，写死的白名单会把新入口静默拦掉，而 501 只该留给真正不交付的类型。
+  const installSupported = Boolean(item?.deliverable);
 
   // NaN 守卫：验证 itemId 有效性
   useEffect(() => {
@@ -252,9 +253,9 @@ const MarketplaceDetailPage = () => {
                     </div>
                   ) : !installSupported ? (
                     <div className="max-w-52 text-left">
-                      <Button size="lg" disabled>暂不支持安装</Button>
+                      <Button size="lg" disabled>平台不交付该类型</Button>
                       <p className="text-xs text-gray-500 mt-2">
-                        {typeNames[item.type]}类扩展的安装与分发机制尚未落地，当前仅可浏览。
+                        {typeNames[item.type]}类扩展需要外部宿主运行时，平台不托管第三方代码；历史条目仅可查看与卸载。
                       </p>
                     </div>
                   ) : (
@@ -353,7 +354,7 @@ const MarketplaceDetailPage = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <InfoRow label="最新版本" value={item.latestVersion || '1.0.0'} />
-              <InfoRow label="发布日期" value={formatDate(versions[0]?.releasedAt || item.updatedAt)} />
+              <InfoRow label="发布日期" value={formatDate(versions[0]?.releasedAt)} />
               <InfoRow label="最低系统要求" value={item.minSystemVersion || '未声明'} />
               {(item.installCount || 0) > 0 && (
                 <InfoRow label="安装量" value={String(item.installCount)} />
@@ -372,7 +373,7 @@ const MarketplaceDetailPage = () => {
                 <Button className="w-full" onClick={() => router.push('/installations')}>管理已安装应用</Button>
               ) : !installSupported ? (
                 <Button className="w-full" size="lg" disabled>
-                  暂不支持安装
+                  平台不交付该类型
                 </Button>
               ) : (
                 <Button className="w-full" size="lg" onClick={handleInstall} disabled={installing}>

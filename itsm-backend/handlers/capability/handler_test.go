@@ -51,7 +51,15 @@ func TestHandlerReturnsTenantAwareCapabilityContract(t *testing.T) {
 	for _, item := range response.Data.Items {
 		byKey[item.Key] = item
 	}
-	require.Equal(t, MaturityPilot, byKey["marketplace"].Maturity)
+	// 市场晋升 GA 的证据不在本测试里，而在装配与路由回归：
+	//   技能装载成功 / 定位符缺失如实置 failed —— handlers/marketplace/handler_upgrade_test.go
+	//   升级、回滚与拒绝语义、auto_upgrade 开关、依赖对齐读面 —— 同一文件
+	//   后台升级 pass 的扫描范围与单商品失败隔离 —— service/marketplace/auto_upgrade_pass_test.go
+	//   升级/自动升级的执行者来源（不得绕过 SetSkillRuntime 注入）——
+	//     internal/bootstrap/marketplace_delivery_assembly_test.go
+	// 本条只锁矩阵形状：GA 不得再挂着 pilotReason（理由过期与成熟度自相矛盾）。
+	require.Equal(t, MaturityGA, byKey["marketplace"].Maturity)
+	require.Empty(t, byKey["marketplace"].PilotReason)
 	require.Equal(t, []string{"read", "manage"}, byKey["marketplace"].AllowedActions)
 	require.False(t, byKey["connector.feishu"].DeploymentReady)
 	require.NotEmpty(t, byKey["connector.feishu"].DegradedReason)

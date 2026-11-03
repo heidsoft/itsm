@@ -7,6 +7,7 @@ import (
 	"sort"
 	"strings"
 
+	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/itemversion"
 	"itsm-backend/ent/marketplaceitem"
@@ -48,9 +49,9 @@ var (
 	// 装不出来的东西不能标成 active。
 	ErrMarketplaceSkillRuntimeMissing = errors.New("skill is not present in the runtime registry")
 
-	// ErrMarketplaceSkillVersionMissing 已安装版本没有对应的已发布版本行。
-	// 升级与调用权判定都按版本行做，缺行时不能退化成「按最新版本猜」。
-	ErrMarketplaceSkillVersionMissing = errors.New("marketplace item has no published version row")
+	// ErrMarketplaceVersionUnavailable 目标/已安装版本没有对应的已发布版本行。
+	// 技能交付、升级目标、依赖声明都按版本行读取，缺行时不能退化成「按最新版本猜」。
+	ErrMarketplaceVersionUnavailable = errors.New("marketplace item has no published version row")
 
 	// ErrMarketplaceConfigUnsupported 该商品类型没有租户级配置面。
 	//
@@ -82,14 +83,42 @@ func deliverableTypes() []marketplaceitem.Type {
 	return []marketplaceitem.Type{marketplaceitem.TypeConnector, marketplaceitem.TypeSkill}
 }
 
-// isDeliverableType 判定商品类型是否由平台交付。
-func isDeliverableType(t marketplaceitem.Type) bool {
+// IsDeliverableType 判定商品类型是否由平台交付。
+func IsDeliverableType(t marketplaceitem.Type) bool {
 	for _, d := range deliverableTypes() {
 		if t == d {
 			return true
 		}
 	}
 	return false
+}
+
+// toItemResponse 出站商品 DTO，并补上交付判定。
+//
+// deliverable 在这里算而不是在 dto 包里算：交付词表属于业务规则，DTO 包只负责
+// 字段搬运。四个出站调用点统一走这对函数，新增接口不会漏掉这个字段。
+func toItemResponse(item *ent.MarketplaceItem) *dto.MarketplaceItemResponse {
+	if item == nil {
+		return nil
+	}
+	resp := dto.ToMarketplaceItemResponse(item)
+	resp.Deliverable = IsDeliverableType(item.Type)
+	// 版本历史来自已加载的 versions 边：详情查询带 WithVersions，列表不带则为空。
+	// 界面据此渲染「版本历史」，缺边时是「未加载」而不是「没有版本」。
+	resp.Versions = dto.ToMarketplaceItemVersionSummaries(item.Edges.Versions)
+	return resp
+}
+
+// toItemResponses 批量出站，口径同 toItemResponse。
+func toItemResponses(items []*ent.MarketplaceItem) []*dto.MarketplaceItemResponse {
+	out := make([]*dto.MarketplaceItemResponse, 0, len(items))
+	for _, item := range items {
+		if item == nil {
+			continue
+		}
+		out = append(out, toItemResponse(item))
+	}
+	return out
 }
 
 // skillRuntimeCodesForError 给报错用的已注册技能码（字典序，稳定可断言）。
@@ -111,7 +140,8 @@ func (s *Service) skillRuntimeCodesForError() string {
 func (s *Service) resolveSkillCode(locator string) (string, error) {
 	code := normalizeSkillLocator(locator)
 	if code == "" {
-		return "", fmt.Errorf("%w: 技能商品必须用 manifestPath 声明运行时的技能码", ErrMarketplaceSkillArtifactMissing)
+		return "", fmt.Errorf("%w: 技能商品必须用 manifestPath 声明运行时的技能码（当前可用：%s）",
+			ErrMarketplaceSkillArtifactMissing, s.skillRuntimeCodesForError())
 	}
 	if s.skillRuntime == nil {
 		return "", fmt.Errorf("%w: 无法校验技能 %q", ErrMarketplaceRuntimeUnavailable, code)
@@ -122,13 +152,14 @@ func (s *Service) resolveSkillCode(locator string) (string, error) {
 	return code, nil
 }
 
-// skillVersionRow 读取某个已安装/待装版本对应的技能版本行。
+// publishedVersionRow 读取某个版本对应的已发布版本行。
 //
-// 与依赖校验的口径不同：依赖缺版本行算「未声明依赖」，技能缺版本行算「无法交付」——
-// 技能的运行时代码就写在这行里，没有它，安装出来的是一条指向虚无的安装记录。
-func (s *Service) skillVersionRow(ctx context.Context, itemID int, version string) (*ent.ItemVersion, error) {
+// 依赖校验的口径不同：依赖缺版本行算「未声明依赖」，交付与升级缺版本行算
+// 「无法进行」——技能的运行时代码写在这行里，升级的合法性由这行的 status 决定，
+// 没有它就只能靠 latest_version 猜，而 latest_version 正是最容易与实际发布物脱钩的字段。
+func (s *Service) publishedVersionRow(ctx context.Context, itemID int, version string) (*ent.ItemVersion, error) {
 	if strings.TrimSpace(version) == "" {
-		return nil, fmt.Errorf("%w: item=%d 缺少版本号", ErrMarketplaceSkillVersionMissing, itemID)
+		return nil, fmt.Errorf("%w: item=%d 缺少版本号", ErrMarketplaceVersionUnavailable, itemID)
 	}
 	row, err := s.db.ItemVersion.Query().
 		Where(
@@ -140,11 +171,32 @@ func (s *Service) skillVersionRow(ctx context.Context, itemID int, version strin
 	if err != nil {
 		if ent.IsNotFound(err) {
 			return nil, fmt.Errorf("%w: item=%d version=%s 没有已发布版本行",
-				ErrMarketplaceSkillVersionMissing, itemID, version)
+				ErrMarketplaceVersionUnavailable, itemID, version)
 		}
-		return nil, fmt.Errorf("failed to load skill version row: %w", err)
+		return nil, fmt.Errorf("failed to load published version row: %w", err)
 	}
 	return row, nil
+}
+
+// latestSkillLocator 返回该技能商品最近一个已声明定位符的版本行内容。
+//
+// 找不到任何声明时返回空串，由调用方决定是报错还是留空——新增版本时
+// 这意味着「目录里从没有版本声明过交付物」，管理员必须显式补一次。
+func (s *Service) latestSkillLocator(ctx context.Context, itemID int) (string, error) {
+	row, err := s.db.ItemVersion.Query().
+		Where(
+			itemversion.ItemID(itemID),
+			itemversion.ManifestPathNEQ(""),
+		).
+		Order(ent.Desc(itemversion.FieldID)).
+		First(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return "", nil
+		}
+		return "", fmt.Errorf("failed to load inherited skill locator for item %d: %w", itemID, err)
+	}
+	return strings.TrimSpace(row.ManifestPath), nil
 }
 
 // provisionSkill 确认交付物在本进程运行时存在。
@@ -152,7 +204,7 @@ func (s *Service) skillVersionRow(ctx context.Context, itemID int, version strin
 // 运行实现随平台编译、由 bootstrap 注册进 SkillRegistry，所以这里不创建实例，
 // 只做「装不出来就别标 active」的判定——与 provisionConnector 对连接器的作用一致。
 func (s *Service) provisionSkill(ctx context.Context, item *ent.MarketplaceItem, version string) error {
-	row, err := s.skillVersionRow(ctx, item.ID, version)
+	row, err := s.publishedVersionRow(ctx, item.ID, version)
 	if err != nil {
 		return err
 	}
@@ -201,7 +253,7 @@ func IsDeliveryNotReady(err error) bool {
 		errors.Is(err, ErrMarketplaceRuntimeUnavailable) ||
 		errors.Is(err, ErrMarketplaceSkillArtifactMissing) ||
 		errors.Is(err, ErrMarketplaceSkillRuntimeMissing) ||
-		errors.Is(err, ErrMarketplaceSkillVersionMissing)
+		errors.Is(err, ErrMarketplaceVersionUnavailable)
 }
 
 // SkillEntitlement 一次技能调用权判定结果。

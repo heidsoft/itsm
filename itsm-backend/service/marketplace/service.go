@@ -117,8 +117,9 @@ func (s *Service) ListItems(ctx context.Context, itemType, category, search stri
 	}
 
 	// 分页查询
+	// 列表不加载 versions 边：卡片页不渲染版本历史，而 changelog 会随条目数线性放大响应体。
+	// 出站 DTO 因此省略 versions 字段（不是「该商品没有版本」），详情页才带。
 	items, err := query.
-		WithVersions().
 		Order(ent.Desc(marketplaceitem.FieldInstallCount), ent.Desc(marketplaceitem.FieldRating)).
 		Offset((page - 1) * pageSize).
 		Limit(pageSize).
@@ -127,7 +128,7 @@ func (s *Service) ListItems(ctx context.Context, itemType, category, search stri
 		return nil, 0, fmt.Errorf("failed to list items: %w", err)
 	}
 
-	return dto.ToMarketplaceItemResponseList(items), total, nil
+	return toItemResponses(items), total, nil
 }
 
 // GetItem 获取商品详情
@@ -144,7 +145,7 @@ func (s *Service) GetItem(ctx context.Context, itemID int) (*dto.MarketplaceItem
 		}
 		return nil, fmt.Errorf("failed to get item: %w", err)
 	}
-	return dto.ToMarketplaceItemResponse(item), nil
+	return toItemResponse(item), nil
 }
 
 // reactivateUninstalledInstallation 复用并重置历史卸载记录
@@ -223,7 +224,7 @@ func (s *Service) InstallItem(ctx context.Context, tenantID, itemID int, install
 	}
 	// 4) 平台只交付 connector 与 skill：plugin 需要宿主运行时，目录侧已不受理上架，
 	//    这里的拦截只用于兜住历史条目，返回「不支持该类型」而不是假装装好了。
-	if !isDeliverableType(item.Type) {
+	if !IsDeliverableType(item.Type) {
 		return nil, ErrMarketplaceDeliveryUnsupported
 	}
 	// 5) 已存在安装记录时的两种语义：
@@ -243,7 +244,7 @@ func (s *Service) InstallItem(ctx context.Context, tenantID, itemID int, install
 	} else if existingInstallation.Status == tenantinstallation.StatusActive ||
 		existingInstallation.Status == tenantinstallation.StatusDisabled {
 		s.logger.Infow("Item already installed, returning existing installation", "tenant_id", tenantID, "item_id", itemID, "installation_id", existingInstallation.ID)
-		return existingInstallation, nil
+		return s.withItemEdge(ctx, existingInstallation), nil
 	} else {
 		// 上次停在 installing/failed：把「安装」按钮当成重试入口，而不是无脑返回
 		// 那条永远起不来的记录。重试前同样要过依赖闸门，否则会把一条本不该
@@ -317,7 +318,7 @@ func (s *Service) activateInstallation(
 		if updateErr != nil {
 			return nil, fmt.Errorf("failed to record installation failure: %w", updateErr)
 		}
-		return failed, err
+		return s.withItemEdge(ctx, failed), err
 	}
 
 	active, err := s.db.TenantInstallation.UpdateOne(installation).
@@ -331,7 +332,30 @@ func (s *Service) activateInstallation(
 
 	s.logger.Infow("Item installed successfully",
 		"tenant_id", installation.TenantID, "item_id", item.ID, "item_name", item.Name)
-	return active, nil
+	return s.withItemEdge(ctx, active), nil
+}
+
+// withItemEdge 重新读取安装记录并带上商品边。
+//
+// 出站 DTO 的 itemName/itemType/deliverable/latestVersion/upgradeAvailable 全部
+// 来自这条边，而 ent 的 Save() 只返回裸记录：刚装好的技能会在响应里显示成
+// 「不可交付、无版本信息」，界面据此把升级按钮藏掉。补齐放在 service 出口而不是
+// 各 handler 里——漏一个调用点就是一个静默的错误状态。
+// 这里读失败不改变已经成功的写入，只降级成「边缺失」，因此必须留日志而不是无声返回。
+func (s *Service) withItemEdge(ctx context.Context, in *ent.TenantInstallation) *ent.TenantInstallation {
+	if in == nil {
+		return nil
+	}
+	loaded, err := s.db.TenantInstallation.Query().
+		Where(tenantinstallation.ID(in.ID)).
+		WithItem().
+		Only(ctx)
+	if err != nil {
+		s.logger.Warnw("Failed to reload marketplace installation with item edge",
+			"installation_id", in.ID, "tenant_id", in.TenantID, "item_id", in.ItemID, "error", err)
+		return in
+	}
+	return loaded
 }
 
 // UninstallItem 租户卸载商品
@@ -455,7 +479,7 @@ func (s *Service) UpdateInstallationConfig(ctx context.Context, tenantID, itemID
 	// 运行时按版本行的定位符取实现，没有任何代码读 installation.Config，
 	// 若照单收下只会得到「界面改了、行为没变」的假控件。
 	if item.Type != marketplaceitem.TypeConnector {
-		if !isDeliverableType(item.Type) {
+		if !IsDeliverableType(item.Type) {
 			return nil, ErrMarketplaceDeliveryUnsupported
 		}
 		return nil, fmt.Errorf("%w: %s 类组件的配置由目录版本声明，租户侧没有可配置项", ErrMarketplaceConfigUnsupported, item.Type)
@@ -499,7 +523,7 @@ func (s *Service) UpdateInstallationConfig(ctx context.Context, tenantID, itemID
 		return nil, fmt.Errorf("failed to update config: %w", err)
 	}
 
-	return updated, nil
+	return s.withItemEdge(ctx, updated), nil
 }
 
 // GetConnectorInstallation returns the active marketplace installation for a built-in connector.

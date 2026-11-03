@@ -1,9 +1,11 @@
 package dto
 
 import (
+	"sort"
 	"time"
 
 	"itsm-backend/ent"
+	"itsm-backend/ent/itemversion"
 	"itsm-backend/ent/marketplaceitem"
 )
 
@@ -11,34 +13,70 @@ import (
 // 字段统一 camelCase：snake_case 只允许出现在 ent 列名、SQL 与数据库迁移中。
 // 严禁前端或第三方回退到 long_description / install_count / icon_url 等同名字段。
 type MarketplaceItemResponse struct {
-	ID               int       `json:"id"`
-	Name             string    `json:"name"`
-	Type             string    `json:"type"`
-	Title            string    `json:"title"`
-	Provider         string    `json:"provider"`
-	Description      string    `json:"description,omitempty"`
-	LongDescription  string    `json:"longDescription,omitempty"`
-	IconURL          string    `json:"iconUrl,omitempty"`
-	Screenshots      []string  `json:"screenshots,omitempty"`
-	Tags             []string  `json:"tags"`
-	Rating           float64   `json:"rating"`
-	InstallCount     int       `json:"installCount"`
-	LatestVersion    string    `json:"latestVersion"`
-	MinSystemVersion string    `json:"minSystemVersion,omitempty"`
-	Status           string    `json:"status"`
-	IsOfficial       bool      `json:"isOfficial"`
-	IsFree           bool      `json:"isFree"`
-	Price            float64   `json:"price"`
-	Category         string    `json:"category,omitempty"`
-	Capabilities     []string  `json:"capabilities,omitempty"`
-	RequiredPerms    []string  `json:"requiredPermissions,omitempty"`
-	AuthorID         string    `json:"authorId,omitempty"`
-	AuthorName       string    `json:"authorName,omitempty"`
-	Homepage         string    `json:"homepage,omitempty"`
-	Repository       string    `json:"repository,omitempty"`
-	License          string    `json:"license,omitempty"`
-	CreatedAt        time.Time `json:"createdAt"`
-	UpdatedAt        time.Time `json:"updatedAt"`
+	ID               int      `json:"id"`
+	Name             string   `json:"name"`
+	Type             string   `json:"type"`
+	Title            string   `json:"title"`
+	Provider         string   `json:"provider"`
+	Description      string   `json:"description,omitempty"`
+	LongDescription  string   `json:"longDescription,omitempty"`
+	IconURL          string   `json:"iconUrl,omitempty"`
+	Screenshots      []string `json:"screenshots,omitempty"`
+	Tags             []string `json:"tags"`
+	Rating           float64  `json:"rating"`
+	InstallCount     int      `json:"installCount"`
+	LatestVersion    string   `json:"latestVersion"`
+	MinSystemVersion string   `json:"minSystemVersion,omitempty"`
+	Status           string   `json:"status"`
+	IsOfficial       bool     `json:"isOfficial"`
+	IsFree           bool     `json:"isFree"`
+	Price            float64  `json:"price"`
+	Category         string   `json:"category,omitempty"`
+	Capabilities     []string `json:"capabilities,omitempty"`
+	RequiredPerms    []string `json:"requiredPermissions,omitempty"`
+	AuthorID         string   `json:"authorId,omitempty"`
+	AuthorName       string   `json:"authorName,omitempty"`
+	Homepage         string   `json:"homepage,omitempty"`
+	Repository       string   `json:"repository,omitempty"`
+	License          string   `json:"license,omitempty"`
+	// Deliverable 平台是否能真正交付该商品（连接器/技能）。
+	// 由 service/marketplace 的交付词表计算，前端据此决定「安装」入口是否可用——
+	// 界面不得再自己写一份 type 白名单，否则目录放开新类型时前端会静默拦。
+	Deliverable bool `json:"deliverable"`
+	// Versions 是租户可见的版本历史，只在详情按已发布版本填充。
+	// 列表不加载版本边，因此留空（omitempty），界面不得把它读成「没有历史版本」。
+	// 这里不复用 MarketplaceItemVersionResponse：目录侧那份带 manifestPath、
+	// downloadUrl 与 configSchema，属于平台上架细节，不该随租户详情外泄。
+	Versions  []MarketplaceItemVersionSummary `json:"versions,omitempty"`
+	CreatedAt time.Time                       `json:"createdAt"`
+	UpdatedAt time.Time                       `json:"updatedAt"`
+}
+
+// MarketplaceItemVersionSummary 是租户可见的版本条目。
+type MarketplaceItemVersionSummary struct {
+	Version    string    `json:"version"`
+	Changelog  string    `json:"changelog,omitempty"`
+	ReleasedAt time.Time `json:"releasedAt"`
+}
+
+// ToMarketplaceItemVersionSummaries 过滤出已发布版本并按发布时间倒序。
+//
+// 草稿版本不进租户视野：它代表「平台还没决定要发」，显示出来等于把
+// 目录内部排期当成商品信息。
+func ToMarketplaceItemVersionSummaries(versions []*ent.ItemVersion) []MarketplaceItemVersionSummary {
+	out := make([]MarketplaceItemVersionSummary, 0, len(versions))
+	for _, v := range versions {
+		if v == nil || v.Status != itemversion.StatusPublished {
+			continue
+		}
+		out = append(out, MarketplaceItemVersionSummary{
+			Version:    v.Version,
+			Changelog:  v.Changelog,
+			ReleasedAt: v.ReleasedAt,
+		})
+	}
+	sort.Slice(out, func(i, j int) bool { return out[i].ReleasedAt.After(out[j].ReleasedAt) })
+	return out
 }
 
 // ToMarketplaceItemResponse 将 ent.MarketplaceItem 转换为 camelCase DTO。
@@ -152,4 +190,31 @@ func ToMarketplaceItemVersionResponseList(items []*ent.ItemVersion) []*Marketpla
 		out = append(out, ToMarketplaceItemVersionResponse(item))
 	}
 	return out
+}
+
+// MarketplaceDependencyResponse 是单条已安装组件的依赖对齐结果。
+//
+// status 三态：ok / unsatisfied / declaration_missing。第三态不能并进「没问题」——
+// 目录里缺版本行的商品没有依赖声明可查，界面若显示健康就把最需要先修的存量数据藏掉了。
+type MarketplaceDependencyResponse struct {
+	ItemID             int               `json:"itemId"`
+	ItemName           string            `json:"itemName"`
+	ItemTitle          string            `json:"itemTitle"`
+	ItemType           string            `json:"itemType"`
+	Status             string            `json:"status"`
+	InstalledVersion   string            `json:"installedVersion"`
+	InstallationStatus string            `json:"installationStatus"`
+	Dependencies       map[string]string `json:"dependencies,omitempty"`
+	Problems           []string          `json:"problems,omitempty"`
+}
+
+// MarketplaceDependencyReportResponse 是租户存量依赖对齐报告。
+type MarketplaceDependencyReportResponse struct {
+	TenantID           int                              `json:"tenantId"`
+	CheckedAt          time.Time                        `json:"checkedAt"`
+	Total              int                              `json:"total"`
+	Satisfied          int                              `json:"satisfied"`
+	Unsatisfied        int                              `json:"unsatisfied"`
+	DeclarationMissing int                              `json:"declarationMissing"`
+	Findings           []*MarketplaceDependencyResponse `json:"findings"`
 }

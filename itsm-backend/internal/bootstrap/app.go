@@ -150,6 +150,11 @@ type Application struct {
 	// CloudSignal 云监控告警 / 安全漏洞的后台同步与自动建单桥。
 	CloudSignal *cloudSignalRuntime
 
+	// MarketplaceService 提供 auto_upgrade 的执行者。此前 auto_upgrade 只有写入路径
+	// （安装时落库、界面可勾），没有任何代码读取它，是个假开关；
+	// 后台升级 pass 是它唯一的消费者，必须复用路由侧同一个实例（共享连接器/技能运行态注入）。
+	MarketplaceService *marketplaceService.Service
+
 	// backgroundWG 跟踪由 startBackgroundTasks 启动的所有后台 goroutine。
 	// 在 Stop() 中等待它们退出，避免应用关闭时强制杀死进行中的任务。
 	backgroundWG sync.WaitGroup
@@ -1062,13 +1067,17 @@ func NewApplication() *Application {
 	}
 	sugar.Infow("AI SkillRegistry ready", "total_skills", skillRegistry.Count())
 
-	// 技能交付门禁（SkillRuntime / SkillEntitlements 双向接线）由 marketplace/skill
-	// 域批次在两侧实现齐备后一并装配，此处不提前调用尚未落地的方法。
+	// 技能商品的交付校验：市场侧用 SkillRegistry 判断「版本行声明的技能码在本进程
+	// 到底有没有实现」，装不出来的商品不能标 active；技能调用侧反过来用市场判定
+	// 「该租户是否装上了交付这个技能的组件」。两个方向共用同一个实例，避免
+	// marketplace 与 skill 各自维护一份技能词表而漂移。
+	marketplaceSvc.SetSkillRuntime(skillRegistry)
 
 	// Skills Management API：在 SkillRegistry 装配完成后创建 handler。
 	// handler 只是 thin wrapper，所有业务逻辑在 SkillRegistry 内。
 	// client 用于 Invoke 时校验 skill 声明的 RequiredPermissions。
 	skillHandler := skill.NewHandler(skillRegistry, sugar, client)
+	skillHandler.SetSkillEntitlements(marketplaceSvc)
 	emailIntakeService := email_intake.NewService(client)
 	emailIntakeHandler := email_intake.NewHandler(emailIntakeService)
 	emailIntakeMode := email_intake.IntakeMode(os.Getenv("EMAIL_INTAKE_MODE"))
@@ -1458,6 +1467,9 @@ func NewApplication() *Application {
 
 		// 云监控告警 / 安全漏洞同步与建单桥
 		CloudSignal: cloudSignalRuntime,
+
+		// 市场 auto_upgrade 的后台执行者（与 HTTP 路由同一实例）
+		MarketplaceService: marketplaceSvc,
 	}
 }
 
@@ -2072,6 +2084,41 @@ func (app *Application) startBackgroundTasks(ctx context.Context) {
 			}
 		}
 	})
+
+	// 市场 auto_upgrade 后台执行：把「目录发布了新已发布版本」变成「开了自动升级的
+	// 租户真的升上去」。
+	//
+	// 只在 worker/all 进程跑（startBackgroundTasks 的调用点已保证）：api 多副本各跑一遍
+	// 会让同一批安装记录被并发升级。单轮超时 5 分钟——升级会触碰连接器运行态，
+	// 一个不响的提供方不能把 ticker 永久占住。
+	if app.MarketplaceService != nil {
+		safeGo("marketplace-auto-upgrade", func() {
+			ticker := time.NewTicker(15 * time.Minute)
+			defer ticker.Stop()
+			for {
+				select {
+				case <-ctx.Done():
+					return
+				case <-ticker.C:
+				}
+				sysCtx := tenantctx.SystemContext(ctx, "bootstrap:marketplace-auto-upgrade",
+					"apply marketplace auto-upgrade across all tenants")
+				roundCtx, cancel := context.WithTimeout(sysCtx, 5*time.Minute)
+				summary, err := app.MarketplaceService.RunAutoUpgradePass(roundCtx)
+				cancel()
+				if err != nil {
+					app.Logger.Warnw("marketplace auto-upgrade pass failed", "error", err)
+					continue
+				}
+				if summary.Upgraded > 0 || summary.Failed > 0 {
+					app.Logger.Infow("marketplace auto-upgrade pass completed",
+						"scanned", summary.Scanned, "upgraded", summary.Upgraded,
+						"skipped", summary.Skipped, "failed", summary.Failed,
+						"failures", summary.Failures)
+				}
+			}
+		})
+	}
 
 	// Timer Event scheduler: in-memory wheel with DB-backed recovery.
 	// TimerEventHandler bridges timer firing to BPMN process engine.

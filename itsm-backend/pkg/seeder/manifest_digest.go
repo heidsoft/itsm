@@ -129,9 +129,13 @@ func manifestDigestInputs(component string) ([]string, error) {
 		// 私有商品覆盖；因此把 in-code 列表当作 version ledger 的事实来源。
 		inputs := make([]string, 0, len(marketplaceItemDefinitions()))
 		for _, item := range marketplaceItemDefinitions() {
-			inputs = append(inputs, fmt.Sprintf("marketplace-item-default=%s|%s|%s|%s|%s|%s|%t|%t|%s",
+			// status 与 manifest_path 必须入摘要：退役一个内置商品、或修正技能
+			// 定位符，都不改 latest_version；漏掉这两段，已初始化的部署看到的
+			// 校验和不变，停用与定位符修复永远不会重放到存量库。
+			inputs = append(inputs, fmt.Sprintf("marketplace-item-default=%s|%s|%s|%s|%s|%s|%t|%t|%s|%s|%s",
 				item.Name, item.Type, item.Title, item.Provider, item.LatestVersion,
-				item.MinSystemVersion, item.IsOfficial, item.IsFree, item.License))
+				item.MinSystemVersion, item.IsOfficial, item.IsFree, item.License,
+				item.Status, item.ManifestPath))
 		}
 		return inputs, nil
 

@@ -48,6 +48,10 @@ type catalogItemRequest struct {
 	License             *string                 `json:"license"`
 	MinSystemVersion    *string                 `json:"minSystemVersion"`
 	Version             *string                 `json:"version"`
+	// ManifestPath 只在创建时生效：技能商品用它声明交付物定位符（skill://<code>）。
+	// 不在 PATCH 接受，是因为定位符指向哪个运行态版本属于版本行的事实，
+	// 改它等于换发布物——必须走「新增版本 + 发布」，不能被一次 PATCH 静默换掉。
+	ManifestPath *string `json:"manifestPath"`
 }
 
 func (r catalogItemRequest) toPatch() marketplace.CatalogItemPatch {
@@ -74,6 +78,7 @@ func (r catalogItemRequest) toPatch() marketplace.CatalogItemPatch {
 		License:          r.License,
 		MinSystemVersion: r.MinSystemVersion,
 		Version:          r.Version,
+		ManifestPath:     r.ManifestPath,
 	}
 }
 
@@ -340,6 +345,12 @@ func respondCatalogError(ctx *gin.Context, err error, fallback string) {
 		// 参数错误必须带上具体原因：运营看到的应该是「ghost 未注册，已注册有 …」
 		// 而不是「参数不合法」——后者无法转化为任何下一步动作。
 		common.BadRequestWithErr(ctx, err, "目录参数不合法："+err.Error())
+	case errors.Is(err, marketplace.ErrCatalogTypeNotDeliverable):
+		// 平台没有插件宿主，这是契约层面的不可受理，不是内部错误。
+		common.BadRequestWithErr(ctx, err, "目录不受理该类型："+err.Error())
+	case errors.Is(err, marketplace.ErrCatalogSkillLocatorInvalid):
+		// 报错里已带上当前运行时可用的技能码清单，运营据此决定改定位符还是先发技能。
+		common.BadRequestWithErr(ctx, err, "技能交付物定位符不可用："+err.Error())
 	case errors.Is(err, marketplace.ErrCatalogVersionExists):
 		common.Conflict(ctx, "版本号已存在，请换一个版本号："+err.Error(), nil)
 	case errors.Is(err, marketplace.ErrCatalogItemIdentityImmutable):

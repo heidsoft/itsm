@@ -1,7 +1,7 @@
 # 🛣️ ITSM Roadmap
 
 > **Source of truth for what is shipping, what is shipping next, and
-> what is parked.** Updated as part of every release. Last synced: 2026-10-29（v1.6.16–v1.6.20 五版本条目级回填完成——此前该区间只有 CHANGELOG 无 ROADMAP 条目；v1.6.21–v1.6.34 的增量以 `CHANGELOG.md` 为准，待下个发布节点统一回填。同日：v1.7 两项提前收口确认——AI Evaluator CI gate（v1.6.16 落地，四指标阈值已进 backend-ci）与 Skill Registry UI（v1.6.16 落地）。P0 数据库结构护栏迁移 `20261027_prod_schema_guards.sql` 落地 29 索引/唯一键）。
+> what is parked.** Updated as part of every release. Last synced: 2026-11-03（应用市场交付语义闭环并晋升「可用」，条目见下方「当前未发布改进」；能力矩阵 `marketplace` 行同步摘除 pilotReason）。此前 2026-10-29：v1.6.16–v1.6.20 五版本条目级回填完成——此前该区间只有 CHANGELOG 无 ROADMAP 条目；v1.6.21–v1.6.34 的增量以 `CHANGELOG.md` 为准，待下个发布节点统一回填。同日：v1.7 两项提前收口确认——AI Evaluator CI gate（v1.6.16 落地，四指标阈值已进 backend-ci）与 Skill Registry UI（v1.6.16 落地）。P0 数据库结构护栏迁移 `20261027_prod_schema_guards.sql` 落地 29 索引/唯一键）。
 >
 > Cross-references:
 > - Design outlines: [docs/prd/](./docs/prd)（当前仅 1 篇）+ [plans/](./plans)（专项计划与审计）
@@ -9,9 +9,9 @@
 > - Architecture: [docs/architecture/](./docs/architecture)
 > - Open issues & milestones: GitHub [Issues](https://github.com/heidsoft/itsm/issues) and [Projects](https://github.com/heidsoft/itsm/projects)
 
-### 当前未发布改进（2026-10-29）
+### 当前未发布改进（2026-11-03）
 
-- 应用市场：技能、插件缺少加载器时拒绝安装和配置，保留历史记录的查看与卸载；路由回归覆盖租户、权限及连接器原有流程，服务回归覆盖各安装状态下不写入数据。
+- 应用市场：交付语义补齐后晋升「可用」。技能与连接器是可交付类型——技能安装按版本行 `skill://<技能码>` 激活本进程技能运行时，定位符缺失或运行时不可用即置 `failed` 并列出可用技能码，不再返回虚假安装成功；`POST /marketplace/items/:id/upgrade` 承担升级与回滚（目标版本可点名、更旧即回滚、按目标版本复核依赖、运行态起不来保持原版本并 `409`）；`PATCH /items/:id/auto-upgrade` 是 `*bool` 显式开关并落审计，由 worker 每 15 分钟的 `RunAutoUpgradePass` 真正执行；`GET /marketplace/dependency-status` 逐条复核存量安装前置，缺版本声明的存量商品单列 `declaration_missing` 而不并入健康。目录写入与上架拒绝 plugin（平台无宿主运行时，安装/升级 `501`），历史 `jira-sync-plugin` 种子行置 `deprecated` 以保留安装记录与审计引用；路由回归覆盖租户、权限与状态码，装配回归锁死后台升级 pass 的执行者来源。制品分发（下载、签名、沙箱执行）仍属 v3.0 Plugin marketplace v2，不在本承诺内。
 - AI 评测：摘要评分改为调用候选生成器，空摘要、无关摘要和混合质量输出均有回归测试；仍是离线评测基础，不作为生产模型验收。
 - 知识库：堵住更新文章与恢复历史版本两条绕过评审的发布旁路，恢复版本重置为草稿并同事务清理旧索引。
 - CMDB：对账应用差异前校验资源快照新鲜度，指纹已变化时拒绝覆写（409），避免用过期快照盖掉更新的云上事实。

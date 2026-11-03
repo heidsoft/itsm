@@ -180,6 +180,7 @@ contract_for() {
     "知识与 RAG") echo "知识/RAG" ;;
     "AI 辅助") echo "AI" ;;
     "通知与连接器") echo "连接器/通知" ;;
+    "应用市场与扩展交付") echo "市场/扩展交付" ;;
     "RBAC/多租户") echo "RBAC/多租户/审计" ;;
     "报表与运营") echo "报表/运营" ;;
     *) echo "__UNKNOWN__" ;;

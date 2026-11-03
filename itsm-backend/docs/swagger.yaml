@@ -3300,6 +3300,141 @@ definitions:
       totalPages:
         type: integer
     type: object
+  dto.MarketplaceDependencyReportResponse:
+    properties:
+      checkedAt:
+        type: string
+      declarationMissing:
+        type: integer
+      findings:
+        items:
+          $ref: '#/definitions/dto.MarketplaceDependencyResponse'
+        type: array
+      satisfied:
+        type: integer
+      tenantId:
+        type: integer
+      total:
+        type: integer
+      unsatisfied:
+        type: integer
+    type: object
+  dto.MarketplaceDependencyResponse:
+    properties:
+      dependencies:
+        additionalProperties:
+          type: string
+        type: object
+      installationStatus:
+        type: string
+      installedVersion:
+        type: string
+      itemId:
+        type: integer
+      itemName:
+        type: string
+      itemTitle:
+        type: string
+      itemType:
+        type: string
+      problems:
+        items:
+          type: string
+        type: array
+      status:
+        type: string
+    type: object
+  dto.MarketplaceItemResponse:
+    properties:
+      authorId:
+        type: string
+      authorName:
+        type: string
+      capabilities:
+        items:
+          type: string
+        type: array
+      category:
+        type: string
+      createdAt:
+        type: string
+      deliverable:
+        description: |-
+          Deliverable 平台是否能真正交付该商品（连接器/技能）。
+          由 service/marketplace 的交付词表计算，前端据此决定「安装」入口是否可用——
+          界面不得再自己写一份 type 白名单，否则目录放开新类型时前端会静默拦。
+        type: boolean
+      description:
+        type: string
+      homepage:
+        type: string
+      iconUrl:
+        type: string
+      id:
+        type: integer
+      installCount:
+        type: integer
+      isFree:
+        type: boolean
+      isOfficial:
+        type: boolean
+      latestVersion:
+        type: string
+      license:
+        type: string
+      longDescription:
+        type: string
+      minSystemVersion:
+        type: string
+      name:
+        type: string
+      price:
+        type: number
+      provider:
+        type: string
+      rating:
+        type: number
+      repository:
+        type: string
+      requiredPermissions:
+        items:
+          type: string
+        type: array
+      screenshots:
+        items:
+          type: string
+        type: array
+      status:
+        type: string
+      tags:
+        items:
+          type: string
+        type: array
+      title:
+        type: string
+      type:
+        type: string
+      updatedAt:
+        type: string
+      versions:
+        description: |-
+          Versions 是租户可见的版本历史，只在详情按已发布版本填充。
+          列表不加载版本边，因此留空（omitempty），界面不得把它读成「没有历史版本」。
+          这里不复用 MarketplaceItemVersionResponse：目录侧那份带 manifestPath、
+          downloadUrl 与 configSchema，属于平台上架细节，不该随租户详情外泄。
+        items:
+          $ref: '#/definitions/dto.MarketplaceItemVersionSummary'
+        type: array
+    type: object
+  dto.MarketplaceItemVersionSummary:
+    properties:
+      changelog:
+        type: string
+      releasedAt:
+        type: string
+      version:
+        type: string
+    type: object
   dto.MultiCloudResourceData:
     properties:
       name:
@@ -4528,248 +4663,6 @@ definitions:
       username:
         type: string
     type: object
-  ent.ItemVersion:
-    properties:
-      changelog:
-        description: 版本更新日志
-        type: string
-      config_schema:
-        additionalProperties: true
-        description: 该版本的配置Schema，覆盖item级别的Schema
-        type: object
-      created_at:
-        description: CreatedAt holds the value of the "created_at" field.
-        type: string
-      dependencies:
-        additionalProperties:
-          type: string
-        description: 依赖的其他组件，格式为组件名:版本要求
-        type: object
-      download_count:
-        description: 该版本下载次数
-        type: integer
-      download_url:
-        description: 安装包下载地址，第三方组件使用
-        type: string
-      edges:
-        allOf:
-        - $ref: '#/definitions/ent.ItemVersionEdges'
-        description: |-
-          Edges holds the relations/edges for other nodes in the graph.
-          The values are being populated by the ItemVersionQuery when eager-loading is set.
-      id:
-        description: ID of the ent.
-        type: integer
-      item_id:
-        description: 关联的MarketplaceItem ID
-        type: integer
-      manifest_path:
-        description: 内置组件的Manifest路径，官方组件使用
-        type: string
-      min_system_version:
-        description: 该版本最低支持的系统版本
-        type: string
-      released_at:
-        description: ReleasedAt holds the value of the "released_at" field.
-        type: string
-      status:
-        allOf:
-        - $ref: '#/definitions/itemversion.Status'
-        description: 版本状态
-      updated_at:
-        description: UpdatedAt holds the value of the "updated_at" field.
-        type: string
-      version:
-        description: 版本号，语义化版本如v1.0.0
-        type: string
-    type: object
-  ent.ItemVersionEdges:
-    properties:
-      item:
-        allOf:
-        - $ref: '#/definitions/ent.MarketplaceItem'
-        description: Item holds the value of the item edge.
-    type: object
-  ent.MarketplaceItem:
-    properties:
-      author_id:
-        description: 作者用户ID
-        type: string
-      author_name:
-        description: 作者名称
-        type: string
-      capabilities:
-        description: 组件支持的能力列表
-        items:
-          type: string
-        type: array
-      category:
-        description: 分类，如办公协同/监控告警/AI能力等
-        type: string
-      config_schema:
-        additionalProperties: true
-        description: 配置JSON Schema
-        type: object
-      created_at:
-        description: CreatedAt holds the value of the "created_at" field.
-        type: string
-      description:
-        description: 组件描述
-        type: string
-      edges:
-        allOf:
-        - $ref: '#/definitions/ent.MarketplaceItemEdges'
-        description: |-
-          Edges holds the relations/edges for other nodes in the graph.
-          The values are being populated by the MarketplaceItemQuery when eager-loading is set.
-      homepage:
-        description: 项目主页
-        type: string
-      icon_url:
-        description: 图标URL
-        type: string
-      id:
-        description: ID of the ent.
-        type: integer
-      install_count:
-        description: 安装次数
-        type: integer
-      is_free:
-        description: 是否免费
-        type: boolean
-      is_official:
-        description: 是否是官方组件
-        type: boolean
-      latest_version:
-        description: 最新版本号
-        type: string
-      license:
-        description: 开源协议
-        type: string
-      long_description:
-        description: 详细描述
-        type: string
-      min_system_version:
-        description: 最低支持的系统版本
-        type: string
-      name:
-        description: 组件唯一标识名称
-        type: string
-      price:
-        description: 价格，付费组件使用
-        type: number
-      provider:
-        description: 提供商名称
-        type: string
-      rating:
-        description: 评分，0-5
-        type: number
-      repository:
-        description: 代码仓库地址
-        type: string
-      required_permissions:
-        description: 组件需要的系统权限列表
-        items:
-          type: string
-        type: array
-      screenshots:
-        description: 截图URL列表
-        items:
-          type: string
-        type: array
-      status:
-        allOf:
-        - $ref: '#/definitions/marketplaceitem.Status'
-        description: 发布状态
-      tags:
-        description: 标签列表
-        items:
-          type: string
-        type: array
-      title:
-        description: 组件显示名称
-        type: string
-      type:
-        allOf:
-        - $ref: '#/definitions/marketplaceitem.Type'
-        description: 组件类型：连接器/技能/插件
-      updated_at:
-        description: UpdatedAt holds the value of the "updated_at" field.
-        type: string
-    type: object
-  ent.MarketplaceItemEdges:
-    properties:
-      installations:
-        description: Installations holds the value of the installations edge.
-        items:
-          $ref: '#/definitions/ent.TenantInstallation'
-        type: array
-      versions:
-        description: Versions holds the value of the versions edge.
-        items:
-          $ref: '#/definitions/ent.ItemVersion'
-        type: array
-    type: object
-  ent.TenantInstallation:
-    properties:
-      auto_upgrade:
-        description: 是否自动升级到最新版本
-        type: boolean
-      config:
-        additionalProperties: true
-        description: 租户的组件配置信息，敏感字段加密存储
-        type: object
-      created_at:
-        description: CreatedAt holds the value of the "created_at" field.
-        type: string
-      edges:
-        allOf:
-        - $ref: '#/definitions/ent.TenantInstallationEdges'
-        description: |-
-          Edges holds the relations/edges for other nodes in the graph.
-          The values are being populated by the TenantInstallationQuery when eager-loading is set.
-      error_message:
-        description: 安装/运行错误信息
-        type: string
-      id:
-        description: ID of the ent.
-        type: integer
-      installed_at:
-        description: InstalledAt holds the value of the "installed_at" field.
-        type: string
-      installed_by:
-        description: 安装者用户ID
-        type: string
-      installed_version:
-        description: 安装的版本号
-        type: string
-      item_id:
-        description: 关联的MarketplaceItem ID
-        type: integer
-      last_updated_at:
-        description: LastUpdatedAt holds the value of the "last_updated_at" field.
-        type: string
-      last_used_at:
-        description: LastUsedAt holds the value of the "last_used_at" field.
-        type: string
-      status:
-        allOf:
-        - $ref: '#/definitions/tenantinstallation.Status'
-        description: 安装状态
-      tenant_id:
-        description: 租户ID
-        type: integer
-      updated_at:
-        description: UpdatedAt holds the value of the "updated_at" field.
-        type: string
-    type: object
-  ent.TenantInstallationEdges:
-    properties:
-      item:
-        allOf:
-        - $ref: '#/definitions/ent.MarketplaceItem'
-        description: Item holds the value of the item edge.
-    type: object
   handlers.DashboardOverview:
     properties:
       incidentDistribution:
@@ -5021,46 +4914,65 @@ definitions:
       resolved:
         type: integer
     type: object
-  itemversion.Status:
-    enum:
-    - draft
-    - draft
-    - published
-    - deprecated
-    - withdrawn
-    type: string
-    x-enum-varnames:
-    - DefaultStatus
-    - StatusDraft
-    - StatusPublished
-    - StatusDeprecated
-    - StatusWithdrawn
-  marketplaceitem.Status:
-    enum:
-    - draft
-    - draft
-    - reviewing
-    - published
-    - rejected
-    - deprecated
-    type: string
-    x-enum-varnames:
-    - DefaultStatus
-    - StatusDraft
-    - StatusReviewing
-    - StatusPublished
-    - StatusRejected
-    - StatusDeprecated
-  marketplaceitem.Type:
-    enum:
-    - connector
-    - skill
-    - plugin
-    type: string
-    x-enum-varnames:
-    - TypeConnector
-    - TypeSkill
-    - TypePlugin
+  marketplace.InstallationResponse:
+    properties:
+      autoUpgrade:
+        type: boolean
+      config:
+        additionalProperties: true
+        type: object
+      deliverable:
+        type: boolean
+      errorMessage:
+        type: string
+      id:
+        type: integer
+      installedAt:
+        type: string
+      installedBy:
+        type: string
+      installedVersion:
+        type: string
+      itemDescription:
+        type: string
+      itemIconUrl:
+        type: string
+      itemId:
+        type: integer
+      itemName:
+        description: |-
+          以下字段来自安装记录的商品边：安装列表的展示与过滤靠它们，
+          前端不应再拉一次目录来「补齐名称/描述」——那是第二次真相来源。
+          边未加载时留空（不是「没有新版本」）：界面必须把「不知道」和
+          「已最新」区分开，否则升级按钮会在数据缺失时消失。
+        type: string
+      itemTitle:
+        type: string
+      itemType:
+        type: string
+      lastUpdatedAt:
+        type: string
+      lastUsedAt:
+        type: string
+      latestVersion:
+        type: string
+      status:
+        type: string
+      tenantId:
+        type: integer
+      upgradeAvailable:
+        type: boolean
+    type: object
+  marketplace.autoUpgradeRequest:
+    properties:
+      autoUpgrade:
+        type: boolean
+    type: object
+  marketplace.upgradeRequest:
+    properties:
+      targetVersion:
+        type: string
+    type: object
   notification.ChannelStatus:
     properties:
       blockedReason:
@@ -5222,22 +5134,6 @@ definitions:
       resolved:
         type: integer
     type: object
-  tenantinstallation.Status:
-    enum:
-    - installing
-    - installing
-    - active
-    - disabled
-    - failed
-    - uninstalled
-    type: string
-    x-enum-varnames:
-    - DefaultStatus
-    - StatusInstalling
-    - StatusActive
-    - StatusDisabled
-    - StatusFailed
-    - StatusUninstalled
 info:
   contact: {}
   description: AI-Native ITSM 平台 API：ITIL v4 核心流程（工单/事件/问题/变更/发布/服务请求）、CMDB、BPMN 工作流、知识库
@@ -11663,6 +11559,26 @@ paths:
     post:
       responses: {}
       summary: 发布目录项版本（平台）
+  /api/v1/marketplace/dependency-status:
+    get:
+      description: 逐条判定租户已安装组件的前置依赖是否仍然满足；只读，不修改安装记录
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.MarketplaceDependencyReportResponse'
+              type: object
+      security:
+      - Bearer: []
+      summary: 查询存量安装的依赖对齐状态
+      tags:
+      - 市场
   /api/v1/marketplace/installations:
     get:
       consumes:
@@ -11684,7 +11600,7 @@ paths:
             - properties:
                 data:
                   items:
-                    $ref: '#/definitions/ent.TenantInstallation'
+                    $ref: '#/definitions/marketplace.InstallationResponse'
                   type: array
               type: object
       security:
@@ -11713,7 +11629,7 @@ paths:
             - $ref: '#/definitions/common.Response'
             - properties:
                 data:
-                  $ref: '#/definitions/ent.TenantInstallation'
+                  $ref: '#/definitions/marketplace.InstallationResponse'
               type: object
       security:
       - Bearer: []
@@ -11747,7 +11663,7 @@ paths:
             - $ref: '#/definitions/common.Response'
             - properties:
                 data:
-                  $ref: '#/definitions/ent.TenantInstallation'
+                  $ref: '#/definitions/marketplace.InstallationResponse'
               type: object
       security:
       - Bearer: []
@@ -11803,7 +11719,7 @@ paths:
                       type: integer
                     items:
                       items:
-                        $ref: '#/definitions/ent.MarketplaceItem'
+                        $ref: '#/definitions/dto.MarketplaceItemResponse'
                       type: array
                   type: object
               type: object
@@ -11831,9 +11747,43 @@ paths:
             - $ref: '#/definitions/common.Response'
             - properties:
                 data:
-                  $ref: '#/definitions/ent.MarketplaceItem'
+                  $ref: '#/definitions/dto.MarketplaceItemResponse'
               type: object
       summary: 获取商品详情
+      tags:
+      - 市场
+  /api/v1/marketplace/items/{id}/auto-upgrade:
+    patch:
+      consumes:
+      - application/json
+      description: 开启后，后台升级 pass 会把该安装记录升到目录当前 latest 已发布版本
+      parameters:
+      - description: 组件ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 自动升级意愿（autoUpgrade 必填，false 是合法值）
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/marketplace.autoUpgradeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/marketplace.InstallationResponse'
+              type: object
+      security:
+      - Bearer: []
+      summary: 设置组件的自动升级意愿
       tags:
       - 市场
   /api/v1/marketplace/items/{id}/install:
@@ -11857,7 +11807,7 @@ paths:
             - $ref: '#/definitions/common.Response'
             - properties:
                 data:
-                  $ref: '#/definitions/ent.TenantInstallation'
+                  $ref: '#/definitions/marketplace.InstallationResponse'
               type: object
       security:
       - Bearer: []
@@ -11885,6 +11835,39 @@ paths:
       security:
       - Bearer: []
       summary: 卸载组件
+      tags:
+      - 市场
+  /api/v1/marketplace/items/{id}/upgrade:
+    post:
+      consumes:
+      - application/json
+      description: 把租户的安装记录升到目录当前最新版本或指定的已发布版本；目标版本比当前旧时即为回滚
+      parameters:
+      - description: 组件ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 目标版本；省略即升到目录当前 latest
+        in: body
+        name: body
+        schema:
+          $ref: '#/definitions/marketplace.upgradeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/marketplace.InstallationResponse'
+              type: object
+      security:
+      - Bearer: []
+      summary: 升级已安装的组件
       tags:
       - 市场
   /api/v1/notification-deliveries:

@@ -4,12 +4,14 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 
 	_ "github.com/mattn/go-sqlite3"
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
 	"itsm-backend/ent/itemversion"
 	"itsm-backend/ent/marketplaceitem"
+	"itsm-backend/ent/tenantinstallation"
 
 	// 注册一个真实连接器 provider：目录管理要求连接器商品的 name 必须对应
 	// 已注册 provider，测试需要至少一个真实 manifest 才能验证「补齐元数据」
@@ -25,7 +27,11 @@ func newCatalogService(t *testing.T, dsn string) (*Service, *ent.Client) {
 	t.Helper()
 	client := enttest.Open(t, "sqlite3", "file:"+dsn+"?mode=memory&cache=shared&_fk=1")
 	t.Cleanup(func() { _ = client.Close() })
-	return NewService(client, zaptest.NewLogger(t).Sugar()), client
+	svc := NewService(client, zaptest.NewLogger(t).Sugar())
+	// 目录写侧现在会核对技能定位符，测试因此必须带一个运行时替身；
+	// 否则「创建技能商品」会先撞上「运行时未装配」，测不到真正想测的那条不变量。
+	svc.SetSkillRuntime(fakeSkillRuntime{codes: defaultSkillCodes()})
+	return svc, client
 }
 
 func strPtr(v string) *string { return &v }
@@ -96,24 +102,157 @@ func TestCreateCatalogItem_NonConnectorRequiresVersion(t *testing.T) {
 	ctx := context.Background()
 
 	_, err := svc.CreateCatalogItem(ctx, CatalogItemPatch{
-		Name:     strPtr("excel-export-skill"),
-		Type:     strPtr("skill"),
-		Title:    strPtr("Excel 导出"),
-		Provider: strPtr("internal"),
+		Name:         strPtr("excel-export-skill"),
+		Type:         strPtr("skill"),
+		Title:        strPtr("Excel 导出"),
+		Provider:     strPtr("internal"),
+		ManifestPath: strPtr("skill://ai.triage"),
 	})
 	require.Error(t, err)
 	assert.True(t, errors.Is(err, ErrCatalogVersionInvalid), "got %v", err)
 
 	detail, err := svc.CreateCatalogItem(ctx, CatalogItemPatch{
-		Name:     strPtr("excel-export-skill"),
-		Type:     strPtr("skill"),
-		Title:    strPtr("Excel 导出"),
-		Provider: strPtr("internal"),
-		Version:  strPtr("v1.2.3"),
+		Name:         strPtr("excel-export-skill"),
+		Type:         strPtr("skill"),
+		Title:        strPtr("Excel 导出"),
+		Provider:     strPtr("internal"),
+		Version:      strPtr("v1.2.3"),
+		ManifestPath: strPtr("skill://ai.triage"),
 	})
 	require.NoError(t, err)
 	// v 前缀被归一：v1.2.3 与 1.2.3 在 UNIQUE(item_id,version) 眼里是两行。
 	assert.Equal(t, "1.2.3", detail.Item.LatestVersion)
+	require.Len(t, detail.Versions, 1)
+	assert.Equal(t, "skill://ai.triage", detail.Versions[0].ManifestPath)
+}
+
+// 技能商品的交付物是运行时里的一段代码：定位符必须能解析成已注册的技能码，
+// 否则商品能上架、能点安装，失败原因却只在安装时才暴露。
+func TestCreateCatalogItem_SkillRequiresResolvableLocator(t *testing.T) {
+	svc, _ := newCatalogService(t, "catalog_skill_locator")
+	ctx := context.Background()
+
+	for _, tc := range []struct {
+		name    string
+		locator *string
+	}{
+		{"missing", nil},
+		{"blank", strPtr("   ")},
+		{"unregistered-code", strPtr("skill://ai.not-in-runtime")},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := svc.CreateCatalogItem(ctx, CatalogItemPatch{
+				Name:         strPtr("locator-" + tc.name),
+				Type:         strPtr("skill"),
+				Title:        strPtr("技能"),
+				Provider:     strPtr("internal"),
+				Version:      strPtr("1.0.0"),
+				ManifestPath: tc.locator,
+			})
+			require.Error(t, err, "locator=%v", tc.locator)
+			assert.True(t, errors.Is(err, ErrCatalogSkillLocatorInvalid), "got %v", err)
+			// 报错带上运行时可用的码清单，否则运营无法区分「写错了」与「技能还没发布」。
+			assert.Contains(t, err.Error(), "ai.triage")
+		})
+	}
+
+	// 裸码（不带 skill:// 前缀）也受理，但入库统一成带前缀的形态。
+	detail, err := svc.CreateCatalogItem(ctx, CatalogItemPatch{
+		Name:         strPtr("bare-code-skill"),
+		Type:         strPtr("skill"),
+		Title:        strPtr("技能"),
+		Provider:     strPtr("internal"),
+		Version:      strPtr("1.0.0"),
+		ManifestPath: strPtr("ai.triage"),
+	})
+	require.NoError(t, err)
+	assert.Equal(t, "skill://ai.triage", detail.Versions[0].ManifestPath)
+}
+
+// 平台没有插件宿主：插件在目录写入侧就拒收，避免出现「能上架、点安装才失败」的商品。
+func TestCreateCatalogItem_RejectsPluginType(t *testing.T) {
+	svc, _ := newCatalogService(t, "catalog_plugin_reject")
+	ctx := context.Background()
+
+	_, err := svc.CreateCatalogItem(ctx, CatalogItemPatch{
+		Name:  strPtr("legacy-plugin"),
+		Type:  strPtr("plugin"),
+		Title: strPtr("遗留插件"),
+	})
+	require.Error(t, err)
+	assert.True(t, errors.Is(err, ErrCatalogTypeNotDeliverable), "got %v", err)
+	assert.Contains(t, err.Error(), "connector", "报错应给出受理的类型清单")
+}
+
+// 新增技能版本必须继续声明交付物：留空并继承旧定位符会让升级指向错实现，
+// 而「发布新版本 → 全租户升级失败」正是继承要防的事故。
+func TestCreateItemVersion_SkillInheritsLocator(t *testing.T) {
+	svc, client := newCatalogService(t, "catalog_version_inherit")
+	ctx := context.Background()
+
+	detail, err := svc.CreateCatalogItem(ctx, CatalogItemPatch{
+		Name:         strPtr("inherit-skill"),
+		Type:         strPtr("skill"),
+		Title:        strPtr("工单分诊"),
+		Provider:     strPtr("internal"),
+		Version:      strPtr("1.0.0"),
+		ManifestPath: strPtr("skill://ai.triage"),
+	})
+	require.NoError(t, err)
+	itemID := detail.Item.ID
+
+	inherited, err := svc.CreateItemVersion(ctx, itemID, ItemVersionInput{Version: "1.1.0", Publish: true})
+	require.NoError(t, err)
+	assert.Equal(t, "skill://ai.triage", inherited.ManifestPath, "新版本必须自带定位符，否则升级读不到交付物")
+
+	// 显式换实现时以显式值为准（升级即切换到另一段运行时代码）。
+	changed, err := svc.CreateItemVersion(ctx, itemID, ItemVersionInput{Version: "1.2.0", ManifestPath: "skill://ai.summarize"})
+	require.NoError(t, err)
+	assert.Equal(t, "skill://ai.summarize", changed.ManifestPath)
+
+	// 从未声明过定位符的历史条目：没有可继承的值时不虚构一个，
+	// 而是拒绝——静默造出一个「装不了」的版本行比报错更糟。
+	legacy, err := client.MarketplaceItem.Create().
+		SetName("legacy-no-locator").
+		SetType(marketplaceitem.TypeSkill).
+		SetTitle("历史技能").
+		SetProvider("internal").
+		SetLatestVersion("1.0.0").
+		SetStatus(marketplaceitem.StatusPublished).
+		Save(ctx)
+	require.NoError(t, err)
+	_, err = svc.CreateItemVersion(ctx, legacy.ID, ItemVersionInput{Version: "1.1.0"})
+	require.Error(t, err)
+	assert.True(t, errors.Is(err, ErrCatalogSkillLocatorInvalid), "got %v", err)
+	assert.Contains(t, err.Error(), "ai.triage")
+
+	// 显式补上定位符就能修复历史条目，不需要重建商品。
+	repaired, err := svc.CreateItemVersion(ctx, legacy.ID, ItemVersionInput{
+		Version: "1.1.0", ManifestPath: "skill://ai.triage", Publish: true,
+	})
+	require.NoError(t, err)
+	assert.Equal(t, "skill://ai.triage", repaired.ManifestPath)
+
+	// 存量脏数据（版本行定位符为空）仍在安装期 fail closed，而不是装成 active。
+	dirty, err := client.MarketplaceItem.Create().
+		SetName("legacy-empty-locator").
+		SetType(marketplaceitem.TypeSkill).
+		SetTitle("脏数据技能").
+		SetProvider("internal").
+		SetLatestVersion("1.0.0").
+		SetStatus(marketplaceitem.StatusPublished).
+		Save(ctx)
+	require.NoError(t, err)
+	_, err = client.ItemVersion.Create().
+		SetItemID(dirty.ID).
+		SetVersion("1.0.0").
+		SetStatus(itemversion.StatusPublished).
+		SetReleasedAt(time.Now()).
+		Save(ctx)
+	require.NoError(t, err)
+	_, err = svc.InstallItem(ctx, 3, dirty.ID, "1001")
+	require.Error(t, err)
+	assert.True(t, errors.Is(err, ErrMarketplaceSkillArtifactMissing), "got %v", err)
 }
 
 // 上架必须有已发布版本，并把 latest_version 对齐到最近发布的那个。
@@ -246,11 +385,12 @@ func TestPublishItemVersion_AdvanceAndRollback(t *testing.T) {
 	ctx := context.Background()
 
 	detail, err := svc.CreateCatalogItem(ctx, CatalogItemPatch{
-		Name:     strPtr("excel-export-skill"),
-		Type:     strPtr("skill"),
-		Title:    strPtr("Excel 导出"),
-		Provider: strPtr("internal"),
-		Version:  strPtr("1.0.0"),
+		Name:         strPtr("triage-skill"),
+		Type:         strPtr("skill"),
+		Title:        strPtr("工单分诊"),
+		Provider:     strPtr("internal"),
+		Version:      strPtr("1.0.0"),
+		ManifestPath: strPtr("skill://ai.triage"),
 	})
 	require.NoError(t, err)
 	itemID := detail.Item.ID
@@ -269,14 +409,25 @@ func TestPublishItemVersion_AdvanceAndRollback(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "1.1.0", afterPublish.Item.LatestVersion)
 
+	// 发布新版本后安装走的是「latest 指向的那个已发布版本」：
+	// 版本行带定位符 ⇒ 技能交付成功，记录为 active。
 	installation, err := svc.InstallItem(ctx, 7, itemID, "1001")
-	require.ErrorIs(t, err, ErrMarketplaceDeliveryUnsupported)
-	require.Nil(t, installation)
+	require.NoError(t, err)
+	require.NotNil(t, installation)
+	assert.Equal(t, tenantinstallation.StatusActive, installation.Status)
+	assert.Equal(t, "1.1.0", installation.InstalledVersion)
 
 	// 回滚：重新发布 1.0.0。
 	rolledBack, err := svc.PublishItemVersion(ctx, itemID, "1.0.0")
 	require.NoError(t, err)
 	assert.Equal(t, "1.0.0", rolledBack.Item.LatestVersion)
+
+	// 已装的租户不会因回滚自动降版：降级是显式的升级调用（目标更旧的已发布版本）。
+	result, err := svc.UpgradeInstallation(ctx, 7, itemID, "1.0.0", "1001")
+	require.NoError(t, err)
+	assert.True(t, result.Upgraded)
+	assert.Equal(t, "1.1.0", result.FromVersion)
+	assert.Equal(t, "1.0.0", result.ToVersion)
 }
 
 // 连接器版本必须与运行时 manifest 一致：目录声明 9.9.9、实际跑 1.0.0，

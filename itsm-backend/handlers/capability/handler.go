@@ -175,10 +175,27 @@ var registry = []definition{
 	// skill/plugin 缺少分发/装载机制，安装与配置入口返回 501，不再创建有效安装记录。
 	// auto_upgrade 有字段没有执行路径；存量安装未做一次性对齐（闸门之前落库的
 	// 记录可能已悬空），升级时的重新校验也无处挂载（升级本身尚未实现）。
-	{
-		key: "marketplace", maturity: MaturityPilot, built: true,
-		pilotReason: "目录管理已闭环（平台上架/下架、版本发布与回滚、控制台），依赖闸门已双向落地（安装前校验前置组件与版本、卸载前拦截被依赖的组件，缺口逐项返回 409）。但商品交付语义仍不完整：skill/plugin 缺少分发/装载机制，安装与配置明确返回 501，历史记录仍可查看和卸载；auto_upgrade 无升级执行路径；依赖闸门不回溯存量安装，升级时的重新校验也无处挂载。晋升条件：skill/plugin 装载机制 + 版本升级执行 + 存量依赖对齐。",
-	},
+	//
+	// 2026-11-03 上述四条阻断全部闭环，晋升 GA（按实测证据，不按注释）：
+	//   1) 技能装载：版本行 manifest_path=`skill://<技能码>` 必须命中本进程
+	//      SkillRegistry（internal/bootstrap/app.go 的 SetSkillRuntime 注入，
+	//      与 handlers/skill 的调用准入共用同一实例）；命中即置 active 并交付，
+	//      命不中则安装记录如实置 failed + error_message，不谎报已安装。
+	//      种子在建库前校验技能定位符，装不出来的内置商品进不了目录。
+	//   2) 升级执行：POST /items/:id/upgrade 先按目标版本复核依赖再换运行态，
+	//      目标版本比当前旧即回滚。点名了不可用的版本返回 400，未点名而目录里
+	//      没有可用已发布版本返回 409；运行态没能起来同样是 409 且记录保持原版本。
+	//   3) auto_upgrade：PATCH /items/:id/auto-upgrade 为 *bool 显式开关并落审计，
+	//      后台每轮 RunAutoUpgradePass 由 app.go 装配执行（有装配守卫锁执行者来源），
+	//      单商品失败不冻结其它商品，扫描范围只含可交付且已上架的条目。
+	//   4) 存量依赖对齐：GET /marketplace/dependency-status 逐条安装复核前置，
+	//      区分 unsatisfied 与 declaration_missing，只读不修数据，由管理员决定
+	//      补装前置还是补目录版本行。
+	// 类型边界：平台只交付连接器与技能。插件需要宿主运行时，平台不托管第三方代码，
+	// 因此目录写入/上架拒绝 plugin 类型（400），出厂的插件条目改为停用（deprecated）
+	// 而非删除——存量安装记录与审计仍指向它，历史仍可查看与卸载。
+	// 制品仓库、签名校验与沙箱执行属 roadmap（Plugin marketplace v2），不在本承诺内。
+	{key: "marketplace", maturity: MaturityGA, built: true},
 	{key: "project", maturity: MaturityGA, built: true},
 	{key: "application", maturity: MaturityGA, built: true},
 	// 工单标签（ticket_tags）已完整，缺的是另一套模型的管理面。

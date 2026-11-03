@@ -3931,13 +3931,23 @@ Authorization: Bearer <accessToken>
 | 情形 | 结果 |
 |---|---|
 | 连接器成功注册进运行态 | `200`，`status=active` |
-| 技能或插件（`type=skill/plugin`）尚无分发、加载实现 | `501`，`code=5010`；不新增安装记录、不重试或激活历史记录、不增加安装计数 |
+| 技能商品的版本行定位符命中本进程已装配的技能码 | `200`，`status=active`（技能装载=激活内置运行时技能，见下） |
+| 技能商品的版本行缺定位符 / 指向运行时没有的技能码 | `200`，`status=failed` + `errorMessage`（列出本进程实际可用的技能码）；不激活、不谎报已安装 |
+| 插件（`type=plugin`）：平台不托管第三方代码，没有宿主运行时 | `501`，`code=5010`；不新增安装记录、不重试或激活历史记录、不增加安装计数 |
 | 记录已建但连接器起不来（缺凭据 / provider 未注册 / 端点不可达） | `200`，`status=failed` + `errorMessage`，响应 `message` 提示补全配置 |
 | 商品不存在 / 未发布 | `404` / `400` |
 | 连接器已安装且 `active`/`disabled` | `200` 幂等返回原记录，不重复注册 |
-| 上次停在 `installing`/`failed` | 视为**重试**：重新注册连接器，重复调用安装即是重试入口 |
-| 卸载后重装（历史记录复用） | 同样重新走注册，不会因为「记录已存在」就直接标 `active` |
+| 上次停在 `installing`/`failed` | 视为**重试**：重新注册连接器 / 重新装载技能，重复调用安装即是重试入口 |
+| 卸载后重装（历史记录复用） | 同样重新走装载，不会因为「记录已存在」就直接标 `active` |
 | 待装版本声明的依赖未满足（前置未安装 / 版本不符 / 自依赖） | `409`，`message` 逐项列出缺口，**不落安装记录** |
+
+**技能的「分发」是什么**：版本行的 `manifest_path` 写 `skill://<技能码>`（形如
+`skill://ai.triage`），市场侧用它查本进程的 `SkillRegistry`——命不中就没有可交付的运行态，
+安装记录如实置 `failed`。装配点是 `internal/bootstrap/app.go` 的 `SetSkillRuntime(skillRegistry)`，
+与技能调用侧的准入（`handlers/skill`）**共用同一实例**，因此不存在「目录说有、运行时没有」
+的第二份技能词表。平台没有制品仓库：`download_url` 不参与装载，技能代码随二进制内置发布，
+第三方技能上传/签名校验/沙箱执行不在本能力承诺内（属 roadmap）。
+种子清单为技能条目声明定位符并把它纳入版本 checksum，初始化 verify 会核对首个版本行确实带上该定位符——缺声明直接报错，不会静默写出一条没有交付物的商品；至于该技能码在本进程是否真的存在，则在安装时判定（见上表）。
 
 **失败不返回 4xx 的原因**：资源（安装记录）确实被创建了，`409`/`500` 会让人以为
 什么都没发生。返回 `200 + failed` 让前端能显示「已安装但未就绪 + 原因」，用户补完
@@ -3971,10 +3981,13 @@ Content-Type: application/json
 |---|---|
 | 新配置让连接器成功起来 | `200`；写入配置，`installing`/`failed` 的记录一并转 `active` 并清空 `errorMessage` |
 | 新配置无法初始化 | `409`，**库内保留上一份可用配置**，运行态仍是旧实例 |
-| 技能或插件的历史安装记录 | `501`，`code=5010`；配置、状态和时间戳保持不变 |
+| 技能（`type=skill`）的安装记录 | `400`，文案「该组件类型没有租户级配置项」；配置、状态和时间戳保持不变。技能没有租户级配置面，后端明确拒绝——摆一个点了必然失败的按钮比不摆更糟，界面因此不显示「配置」 |
+| 插件（`type=plugin`）的历史安装记录 | `501`，`code=5010`；配置、状态和时间戳保持不变 |
 | 安装记录不存在、已卸载或属于其他租户 | `404`，`code=4004` |
 
-技能和插件仍可浏览目录；历史安装记录可查看、卸载，但历史 `active` 状态不代表已经加载运行，本次不批量改写存量数据。
+技能与插件的历史条目仍可在目录与安装页查看、卸载。插件条目出厂即为 `deprecated`（停用不删除，
+因为存量安装记录与审计仍指向它），且目录写入/上架不再受理 `plugin` 类型（`400`）——
+平台不会挂出一个装不上的商品。
 
 顺序是**先让运行态用新配置起来、成功后才落库**。反序会在失败时留下「库是新凭据、
 内存是旧凭据」的分裂状态：用户以为换了 token 已生效，实际仍在用旧的发消息。
@@ -4000,6 +4013,92 @@ POST /api/v1/marketplace/items/{itemId}/uninstall
 `Revoke` 以 `(tenant, name, provider)` 为键删实例。历史上 `provider` 若与安装时不一致，
 键就不匹配、实例会残留——此时若照样标 `uninstalled`，界面显示已卸载而连接器仍在用
 活着的凭据收发消息、仍能接收回调。因此卸载后按 `name` 复查运行态，残留即失败关闭。
+
+## 版本升级、自动升级与依赖对齐
+
+安装记录上有三个此前不存在的能力：升到指定/最新版本、声明自动升级意愿、以及核对
+存量安装的前置是否还对齐。三者都以**目录的已发布版本行**为准，不看草稿。
+
+```http
+POST /api/v1/marketplace/items/{itemId}/upgrade
+Content-Type: application/json
+
+{ "targetVersion": "1.2.0" }
+```
+
+`targetVersion` 可省略（含空 body），省略即升到目录当前 `latestVersion`；传空字符串是
+参数错误，不能被当成「没传」。`v` 前缀会被归一，因此回滚传 `v1.0.0` 与 `1.0.0` 等价。
+目标版本比已装版本旧就是回滚，走同一条路径。
+
+| 情形 | 结果 |
+|---|---|
+| 升到新的已发布版本并装载成功 | `200`，`message` 写明「已从 X 升级到 Y」，`data` 是更新后的安装记录 |
+| 已装的就是目标版本 | `200`，`message`「已是版本 X，无需升级」，记录不变（重复调用不产生副作用） |
+| 点名了草稿版本 / 不存在的版本 | `400` |
+| 未点名而目录里没有可用于升级的已发布版本 | `409` |
+| 新版本新增的前置依赖未满足 | `409`，逐项列出缺口；**已装版本保持不变**（升级重新过安装闸门，不是只装时检查一次） |
+| 运行态没能起来（技能码不在运行时 / 连接器起不来） | `409`，文案「升级未完成，仍在使用当前版本」；`installed_version` 与状态不动 |
+| 插件条目 | `501`，`code=5010` |
+| 未安装 / 其他租户的安装记录 | `404` |
+| 无 `marketplace:write` 权限 / 无租户上下文 | `403` / `401`（失败关闭，不落默认租户） |
+
+### 自动升级意愿与后台执行
+
+```http
+PATCH /api/v1/marketplace/items/{itemId}/auto-upgrade
+Content-Type: application/json
+
+{ "autoUpgrade": false }
+```
+
+`autoUpgrade` 必填且必须是布尔：`false` 是合法值，缺字段不能被判成「关掉」，否则一次
+误发的 PATCH 会永久停用该租户的自动升级。开关改动写 `audit_log`（谁同意了这个租户被
+静默升级，或不再被升级）。安装记录默认开启自动升级。
+
+执行者是后台每 15 分钟一轮的 `RunAutoUpgradePass`（`internal/bootstrap/app.go`，只在
+`ITSM_PROCESS_MODE=worker|all` 的进程跑，单轮超时 5 分钟）：扫描 `autoUpgrade=true`
+且状态生效的安装，逐个升到目录最新已发布版本。一个商品升级失败不冻结同轮其它商品；
+出现升级或失败时，本轮的 `scanned/upgraded/skipped/failed` 与失败明细进结构化日志。
+已在最新版本时重复执行不写数据，因此多副本 `all` 部署各跑一轮不会造成重复变更。
+
+### 存量依赖对齐（只读诊断）
+
+```http
+GET /api/v1/marketplace/dependency-status
+```
+
+安装/卸载闸门只管新发生的动作；闸门之前落库的存量记录可能已经悬空，这个接口逐条复核
+本租户每个已安装组件在**其已装版本**上的依赖声明，只报告不修数据——补装前置还是补目录
+版本行是管理员的决定，不是后台能替客户做的写操作。
+
+| 字段 | 含义 |
+|---|---|
+| `total` / `satisfied` / `unsatisfied` / `declarationMissing` | 逐状态计数 |
+| `findings[].status` | `ok` / `unsatisfied` / `declaration_missing` |
+| `findings[].problems` | `unsatisfied` 时逐项写明缺口（未安装 / 已装版本不符） |
+| `findings[].installedVersion` / `installationStatus` | 判定依据是这条记录**已装的**版本，不是市场最新版本 |
+
+`declaration_missing` 不能并进「没问题」：目录里缺版本行的商品没有依赖声明可查，界面若
+把它显示成健康，就把最需要先修的存量数据藏掉了。该读面失败时界面显示「依赖对齐状态暂不可查
++ 原因」，不假装健康。
+
+### 商品详情的版本历史与安装列表的商品字段
+
+- `GET /api/v1/marketplace/items/{id}`（详情）返回 `versions[]`：只含**已发布**版本，按
+  `releasedAt` 倒序，每项只有 `version` / `changelog` / `releasedAt`。目录侧字段
+  `manifestPath`、`downloadUrl`、`configSchema` 不在租户读面上出现。
+- `GET /api/v1/marketplace/items`（列表）**省略** `versions` 字段——卡片页不渲染版本历史，
+  而 changelog 会随条目数线性放大响应体。缺字段表示「未加载」，界面不得据此显示「该商品没有历史版本」。
+- 两个商品与安装 DTO 都带 `deliverable`（平台是否真正交付该类型）。「能不能装」只有这一个
+  判定来源，界面不再另写一份 type 白名单；`false` 时显示「平台不交付该类型」并给出原因，
+  而不是隐藏入口或留一个点了必失败的按钮。
+- `GET /marketplace/installations` 的每条记录都带商品边派生字段：`itemName`、`itemTitle`、
+  `itemDescription`、`itemIconUrl`、`itemType`、`latestVersion`、`upgradeAvailable`。
+  前端不再拉一次目录来「补齐名称」——那是第二次真相来源。边未加载时这些字段留空且
+  `upgradeAvailable=false`（不是「已是最新」）；`upgradeAvailable` 为 `true` 时安装页给出
+  「升级到 v{latestVersion}」入口。
+- 安装记录是租户级数据：出站 DTO 只含脱敏后的 `config`（token/secret/password 类键值替换为
+  `***`），且响应不含 `tenant_id`、`edges` 或目录侧的装载定位符。
 
 ## 商品目录管理（平台级）
 

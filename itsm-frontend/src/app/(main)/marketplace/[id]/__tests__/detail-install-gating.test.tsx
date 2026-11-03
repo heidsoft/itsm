@@ -42,6 +42,8 @@ const baseItem: MarketplaceItem = {
   provider: 'itsm',
   latestVersion: '1.0.0',
   category: 'AI',
+  // 交付判定来自服务端；界面不再按 type 自行推断（D11 的门控口径已随之改变）。
+  deliverable: true,
 };
 
 function renderPage() {
@@ -64,34 +66,75 @@ beforeEach(() => {
   mockedService.getInstallation.mockResolvedValue(null);
 });
 
-describe('市场详情安装入口门控（D11 回归）', () => {
-  it('skill 条目：页头与侧栏均禁用「暂不支持安装」，无可点的「立即安装」', async () => {
-    mockedService.getItem.mockResolvedValue({ ...baseItem, type: 'skill' });
+describe('市场详情安装入口门控（按服务端交付判定）', () => {
+  it('skill 且 deliverable：页头与侧栏都给出可点的「立即安装」', async () => {
+    mockedService.getItem.mockResolvedValue({ ...baseItem, type: 'skill', deliverable: true });
     renderPage();
 
-    const disabled = await screen.findAllByRole('button', { name: '暂不支持安装' });
-    // 页头 + 侧栏各一处，且都不可点
+    const buttons = await screen.findAllByRole('button', { name: '立即安装' });
+    expect(buttons.length).toBeGreaterThanOrEqual(2);
+    expect(enabledInstallButtons().length).toBeGreaterThanOrEqual(2);
+    expect(screen.queryByRole('button', { name: '平台不交付该类型' })).toBeNull();
+  });
+
+  it('plugin 且 deliverable=false：两处入口禁用，且文案不再写成「尚未落地」', async () => {
+    mockedService.getItem.mockResolvedValue({ ...baseItem, type: 'plugin', deliverable: false });
+    renderPage();
+
+    const disabled = await screen.findAllByRole('button', { name: '平台不交付该类型' });
     expect(disabled.length).toBeGreaterThanOrEqual(2);
     disabled.forEach(btn => expect(btn).toBeDisabled());
     expect(enabledInstallButtons()).toHaveLength(0);
+    expect(screen.queryByText(/安装与分发机制尚未落地/)).toBeNull();
   });
 
-  it('connector 条目但无 marketplace:write：侧栏显示禁用的「仅管理员可安装」', async () => {
+  it('connector 且 deliverable=true：保留可点击的「立即安装」', async () => {
+    mockedService.getItem.mockResolvedValue({ ...baseItem, type: 'connector', deliverable: true });
+    renderPage();
+
+    await screen.findAllByRole('button', { name: '立即安装' });
+    expect(enabledInstallButtons().length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('有交付能力但无 marketplace:write：侧栏显示禁用的「仅管理员可安装」', async () => {
     mockHasPermission.mockReturnValue(false);
-    mockedService.getItem.mockResolvedValue({ ...baseItem, type: 'connector' });
+    mockedService.getItem.mockResolvedValue({ ...baseItem, type: 'connector', deliverable: true });
     renderPage();
 
     const sidebarBtn = await screen.findByRole('button', { name: '仅管理员可安装' });
     expect(sidebarBtn).toBeDisabled();
     expect(enabledInstallButtons()).toHaveLength(0);
   });
+});
 
-  it('connector 条目且有写权限：保留可点击的「立即安装」（防止过度禁用）', async () => {
-    mockedService.getItem.mockResolvedValue({ ...baseItem, type: 'connector' });
+describe('市场详情版本历史（此前长期读不存在的 edges.versions）', () => {
+  it('渲染服务端返回的已发布版本，按返回顺序展示版本号与说明', async () => {
+    mockedService.getItem.mockResolvedValue({
+      ...baseItem,
+      versions: [
+        { version: '1.2.0', changelog: '支持多语言关键词', releasedAt: '2026-11-01T10:00:00Z' },
+        { version: '1.1.0', releasedAt: '2026-10-01T10:00:00Z' },
+      ],
+    });
     renderPage();
 
-    const buttons = await screen.findAllByRole('button', { name: '立即安装' });
-    expect(buttons.length).toBeGreaterThanOrEqual(1);
-    expect(enabledInstallButtons().length).toBeGreaterThanOrEqual(1);
+    const tab = await screen.findByRole('tab', { name: '版本历史' });
+    tab.click();
+
+    expect(await screen.findByText('v1.2.0')).toBeInTheDocument();
+    expect(screen.getByText('v1.1.0')).toBeInTheDocument();
+    expect(screen.getByText('支持多语言关键词')).toBeInTheDocument();
+    // 缺 changelog 的版本给出占位文案，而不是空白行。
+    expect(screen.getByText('暂无更新说明')).toBeInTheDocument();
+  });
+
+  it('详情未带 versions 时给出空态文案，不得伪造历史', async () => {
+    mockedService.getItem.mockResolvedValue({ ...baseItem });
+    renderPage();
+
+    const tab = await screen.findByRole('tab', { name: '版本历史' });
+    tab.click();
+
+    expect(await screen.findByText('暂无版本历史')).toBeInTheDocument();
   });
 });

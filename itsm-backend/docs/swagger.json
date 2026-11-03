@@ -10380,6 +10380,43 @@
                 "responses": {}
             }
         },
+        "/api/v1/marketplace/dependency-status": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "逐条判定租户已安装组件的前置依赖是否仍然满足；只读，不修改安装记录",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "市场"
+                ],
+                "summary": "查询存量安装的依赖对齐状态",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.MarketplaceDependencyReportResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/marketplace/installations": {
             "get": {
                 "security": [
@@ -10420,7 +10457,7 @@
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/ent.TenantInstallation"
+                                                "$ref": "#/definitions/marketplace.InstallationResponse"
                                             }
                                         }
                                     }
@@ -10470,7 +10507,7 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/ent.TenantInstallation"
+                                            "$ref": "#/definitions/marketplace.InstallationResponse"
                                         }
                                     }
                                 }
@@ -10528,7 +10565,7 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/ent.TenantInstallation"
+                                            "$ref": "#/definitions/marketplace.InstallationResponse"
                                         }
                                     }
                                 }
@@ -10615,7 +10652,7 @@
                                                 "items": {
                                                     "type": "array",
                                                     "items": {
-                                                        "$ref": "#/definitions/ent.MarketplaceItem"
+                                                        "$ref": "#/definitions/dto.MarketplaceItemResponse"
                                                     }
                                                 }
                                             }
@@ -10662,7 +10699,65 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/ent.MarketplaceItem"
+                                            "$ref": "#/definitions/dto.MarketplaceItemResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/marketplace/items/{id}/auto-upgrade": {
+            "patch": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "开启后，后台升级 pass 会把该安装记录升到目录当前 latest 已发布版本",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "市场"
+                ],
+                "summary": "设置组件的自动升级意愿",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "组件ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "自动升级意愿（autoUpgrade 必填，false 是合法值）",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/marketplace.autoUpgradeRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/marketplace.InstallationResponse"
                                         }
                                     }
                                 }
@@ -10711,7 +10806,7 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/ent.TenantInstallation"
+                                            "$ref": "#/definitions/marketplace.InstallationResponse"
                                         }
                                     }
                                 }
@@ -10753,6 +10848,63 @@
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/marketplace/items/{id}/upgrade": {
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "把租户的安装记录升到目录当前最新版本或指定的已发布版本；目标版本比当前旧时即为回滚",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "市场"
+                ],
+                "summary": "升级已安装的组件",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "组件ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "目标版本；省略即升到目录当前 latest",
+                        "name": "body",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/marketplace.upgradeRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/marketplace.InstallationResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
@@ -18365,6 +18517,199 @@
                 }
             }
         },
+        "dto.MarketplaceDependencyReportResponse": {
+            "type": "object",
+            "properties": {
+                "checkedAt": {
+                    "type": "string"
+                },
+                "declarationMissing": {
+                    "type": "integer"
+                },
+                "findings": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.MarketplaceDependencyResponse"
+                    }
+                },
+                "satisfied": {
+                    "type": "integer"
+                },
+                "tenantId": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                },
+                "unsatisfied": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.MarketplaceDependencyResponse": {
+            "type": "object",
+            "properties": {
+                "dependencies": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "installationStatus": {
+                    "type": "string"
+                },
+                "installedVersion": {
+                    "type": "string"
+                },
+                "itemId": {
+                    "type": "integer"
+                },
+                "itemName": {
+                    "type": "string"
+                },
+                "itemTitle": {
+                    "type": "string"
+                },
+                "itemType": {
+                    "type": "string"
+                },
+                "problems": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.MarketplaceItemResponse": {
+            "type": "object",
+            "properties": {
+                "authorId": {
+                    "type": "string"
+                },
+                "authorName": {
+                    "type": "string"
+                },
+                "capabilities": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "category": {
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "deliverable": {
+                    "description": "Deliverable 平台是否能真正交付该商品（连接器/技能）。\n由 service/marketplace 的交付词表计算，前端据此决定「安装」入口是否可用——\n界面不得再自己写一份 type 白名单，否则目录放开新类型时前端会静默拦。",
+                    "type": "boolean"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "homepage": {
+                    "type": "string"
+                },
+                "iconUrl": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "installCount": {
+                    "type": "integer"
+                },
+                "isFree": {
+                    "type": "boolean"
+                },
+                "isOfficial": {
+                    "type": "boolean"
+                },
+                "latestVersion": {
+                    "type": "string"
+                },
+                "license": {
+                    "type": "string"
+                },
+                "longDescription": {
+                    "type": "string"
+                },
+                "minSystemVersion": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "price": {
+                    "type": "number"
+                },
+                "provider": {
+                    "type": "string"
+                },
+                "rating": {
+                    "type": "number"
+                },
+                "repository": {
+                    "type": "string"
+                },
+                "requiredPermissions": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "screenshots": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "status": {
+                    "type": "string"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "title": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                },
+                "versions": {
+                    "description": "Versions 是租户可见的版本历史，只在详情按已发布版本填充。\n列表不加载版本边，因此留空（omitempty），界面不得把它读成「没有历史版本」。\n这里不复用 MarketplaceItemVersionResponse：目录侧那份带 manifestPath、\ndownloadUrl 与 configSchema，属于平台上架细节，不该随租户详情外泄。",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.MarketplaceItemVersionSummary"
+                    }
+                }
+            }
+        },
+        "dto.MarketplaceItemVersionSummary": {
+            "type": "object",
+            "properties": {
+                "changelog": {
+                    "type": "string"
+                },
+                "releasedAt": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.MultiCloudResourceData": {
             "type": "object",
             "properties": {
@@ -20153,352 +20498,6 @@
                 }
             }
         },
-        "ent.ItemVersion": {
-            "type": "object",
-            "properties": {
-                "changelog": {
-                    "description": "版本更新日志",
-                    "type": "string"
-                },
-                "config_schema": {
-                    "description": "该版本的配置Schema，覆盖item级别的Schema",
-                    "type": "object",
-                    "additionalProperties": true
-                },
-                "created_at": {
-                    "description": "CreatedAt holds the value of the \"created_at\" field.",
-                    "type": "string"
-                },
-                "dependencies": {
-                    "description": "依赖的其他组件，格式为组件名:版本要求",
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "string"
-                    }
-                },
-                "download_count": {
-                    "description": "该版本下载次数",
-                    "type": "integer"
-                },
-                "download_url": {
-                    "description": "安装包下载地址，第三方组件使用",
-                    "type": "string"
-                },
-                "edges": {
-                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the ItemVersionQuery when eager-loading is set.",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/ent.ItemVersionEdges"
-                        }
-                    ]
-                },
-                "id": {
-                    "description": "ID of the ent.",
-                    "type": "integer"
-                },
-                "item_id": {
-                    "description": "关联的MarketplaceItem ID",
-                    "type": "integer"
-                },
-                "manifest_path": {
-                    "description": "内置组件的Manifest路径，官方组件使用",
-                    "type": "string"
-                },
-                "min_system_version": {
-                    "description": "该版本最低支持的系统版本",
-                    "type": "string"
-                },
-                "released_at": {
-                    "description": "ReleasedAt holds the value of the \"released_at\" field.",
-                    "type": "string"
-                },
-                "status": {
-                    "description": "版本状态",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/itemversion.Status"
-                        }
-                    ]
-                },
-                "updated_at": {
-                    "description": "UpdatedAt holds the value of the \"updated_at\" field.",
-                    "type": "string"
-                },
-                "version": {
-                    "description": "版本号，语义化版本如v1.0.0",
-                    "type": "string"
-                }
-            }
-        },
-        "ent.ItemVersionEdges": {
-            "type": "object",
-            "properties": {
-                "item": {
-                    "description": "Item holds the value of the item edge.",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/ent.MarketplaceItem"
-                        }
-                    ]
-                }
-            }
-        },
-        "ent.MarketplaceItem": {
-            "type": "object",
-            "properties": {
-                "author_id": {
-                    "description": "作者用户ID",
-                    "type": "string"
-                },
-                "author_name": {
-                    "description": "作者名称",
-                    "type": "string"
-                },
-                "capabilities": {
-                    "description": "组件支持的能力列表",
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "category": {
-                    "description": "分类，如办公协同/监控告警/AI能力等",
-                    "type": "string"
-                },
-                "config_schema": {
-                    "description": "配置JSON Schema",
-                    "type": "object",
-                    "additionalProperties": true
-                },
-                "created_at": {
-                    "description": "CreatedAt holds the value of the \"created_at\" field.",
-                    "type": "string"
-                },
-                "description": {
-                    "description": "组件描述",
-                    "type": "string"
-                },
-                "edges": {
-                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the MarketplaceItemQuery when eager-loading is set.",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/ent.MarketplaceItemEdges"
-                        }
-                    ]
-                },
-                "homepage": {
-                    "description": "项目主页",
-                    "type": "string"
-                },
-                "icon_url": {
-                    "description": "图标URL",
-                    "type": "string"
-                },
-                "id": {
-                    "description": "ID of the ent.",
-                    "type": "integer"
-                },
-                "install_count": {
-                    "description": "安装次数",
-                    "type": "integer"
-                },
-                "is_free": {
-                    "description": "是否免费",
-                    "type": "boolean"
-                },
-                "is_official": {
-                    "description": "是否是官方组件",
-                    "type": "boolean"
-                },
-                "latest_version": {
-                    "description": "最新版本号",
-                    "type": "string"
-                },
-                "license": {
-                    "description": "开源协议",
-                    "type": "string"
-                },
-                "long_description": {
-                    "description": "详细描述",
-                    "type": "string"
-                },
-                "min_system_version": {
-                    "description": "最低支持的系统版本",
-                    "type": "string"
-                },
-                "name": {
-                    "description": "组件唯一标识名称",
-                    "type": "string"
-                },
-                "price": {
-                    "description": "价格，付费组件使用",
-                    "type": "number"
-                },
-                "provider": {
-                    "description": "提供商名称",
-                    "type": "string"
-                },
-                "rating": {
-                    "description": "评分，0-5",
-                    "type": "number"
-                },
-                "repository": {
-                    "description": "代码仓库地址",
-                    "type": "string"
-                },
-                "required_permissions": {
-                    "description": "组件需要的系统权限列表",
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "screenshots": {
-                    "description": "截图URL列表",
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "status": {
-                    "description": "发布状态",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/marketplaceitem.Status"
-                        }
-                    ]
-                },
-                "tags": {
-                    "description": "标签列表",
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "title": {
-                    "description": "组件显示名称",
-                    "type": "string"
-                },
-                "type": {
-                    "description": "组件类型：连接器/技能/插件",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/marketplaceitem.Type"
-                        }
-                    ]
-                },
-                "updated_at": {
-                    "description": "UpdatedAt holds the value of the \"updated_at\" field.",
-                    "type": "string"
-                }
-            }
-        },
-        "ent.MarketplaceItemEdges": {
-            "type": "object",
-            "properties": {
-                "installations": {
-                    "description": "Installations holds the value of the installations edge.",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/ent.TenantInstallation"
-                    }
-                },
-                "versions": {
-                    "description": "Versions holds the value of the versions edge.",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/ent.ItemVersion"
-                    }
-                }
-            }
-        },
-        "ent.TenantInstallation": {
-            "type": "object",
-            "properties": {
-                "auto_upgrade": {
-                    "description": "是否自动升级到最新版本",
-                    "type": "boolean"
-                },
-                "config": {
-                    "description": "租户的组件配置信息，敏感字段加密存储",
-                    "type": "object",
-                    "additionalProperties": true
-                },
-                "created_at": {
-                    "description": "CreatedAt holds the value of the \"created_at\" field.",
-                    "type": "string"
-                },
-                "edges": {
-                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the TenantInstallationQuery when eager-loading is set.",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/ent.TenantInstallationEdges"
-                        }
-                    ]
-                },
-                "error_message": {
-                    "description": "安装/运行错误信息",
-                    "type": "string"
-                },
-                "id": {
-                    "description": "ID of the ent.",
-                    "type": "integer"
-                },
-                "installed_at": {
-                    "description": "InstalledAt holds the value of the \"installed_at\" field.",
-                    "type": "string"
-                },
-                "installed_by": {
-                    "description": "安装者用户ID",
-                    "type": "string"
-                },
-                "installed_version": {
-                    "description": "安装的版本号",
-                    "type": "string"
-                },
-                "item_id": {
-                    "description": "关联的MarketplaceItem ID",
-                    "type": "integer"
-                },
-                "last_updated_at": {
-                    "description": "LastUpdatedAt holds the value of the \"last_updated_at\" field.",
-                    "type": "string"
-                },
-                "last_used_at": {
-                    "description": "LastUsedAt holds the value of the \"last_used_at\" field.",
-                    "type": "string"
-                },
-                "status": {
-                    "description": "安装状态",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/tenantinstallation.Status"
-                        }
-                    ]
-                },
-                "tenant_id": {
-                    "description": "租户ID",
-                    "type": "integer"
-                },
-                "updated_at": {
-                    "description": "UpdatedAt holds the value of the \"updated_at\" field.",
-                    "type": "string"
-                }
-            }
-        },
-        "ent.TenantInstallationEdges": {
-            "type": "object",
-            "properties": {
-                "item": {
-                    "description": "Item holds the value of the item edge.",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/ent.MarketplaceItem"
-                        }
-                    ]
-                }
-            }
-        },
         "handlers.DashboardOverview": {
             "type": "object",
             "properties": {
@@ -20881,54 +20880,88 @@
                 }
             }
         },
-        "itemversion.Status": {
-            "type": "string",
-            "enum": [
-                "draft",
-                "draft",
-                "published",
-                "deprecated",
-                "withdrawn"
-            ],
-            "x-enum-varnames": [
-                "DefaultStatus",
-                "StatusDraft",
-                "StatusPublished",
-                "StatusDeprecated",
-                "StatusWithdrawn"
-            ]
+        "marketplace.InstallationResponse": {
+            "type": "object",
+            "properties": {
+                "autoUpgrade": {
+                    "type": "boolean"
+                },
+                "config": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "deliverable": {
+                    "type": "boolean"
+                },
+                "errorMessage": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "installedAt": {
+                    "type": "string"
+                },
+                "installedBy": {
+                    "type": "string"
+                },
+                "installedVersion": {
+                    "type": "string"
+                },
+                "itemDescription": {
+                    "type": "string"
+                },
+                "itemIconUrl": {
+                    "type": "string"
+                },
+                "itemId": {
+                    "type": "integer"
+                },
+                "itemName": {
+                    "description": "以下字段来自安装记录的商品边：安装列表的展示与过滤靠它们，\n前端不应再拉一次目录来「补齐名称/描述」——那是第二次真相来源。\n边未加载时留空（不是「没有新版本」）：界面必须把「不知道」和\n「已最新」区分开，否则升级按钮会在数据缺失时消失。",
+                    "type": "string"
+                },
+                "itemTitle": {
+                    "type": "string"
+                },
+                "itemType": {
+                    "type": "string"
+                },
+                "lastUpdatedAt": {
+                    "type": "string"
+                },
+                "lastUsedAt": {
+                    "type": "string"
+                },
+                "latestVersion": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "tenantId": {
+                    "type": "integer"
+                },
+                "upgradeAvailable": {
+                    "type": "boolean"
+                }
+            }
         },
-        "marketplaceitem.Status": {
-            "type": "string",
-            "enum": [
-                "draft",
-                "draft",
-                "reviewing",
-                "published",
-                "rejected",
-                "deprecated"
-            ],
-            "x-enum-varnames": [
-                "DefaultStatus",
-                "StatusDraft",
-                "StatusReviewing",
-                "StatusPublished",
-                "StatusRejected",
-                "StatusDeprecated"
-            ]
+        "marketplace.autoUpgradeRequest": {
+            "type": "object",
+            "properties": {
+                "autoUpgrade": {
+                    "type": "boolean"
+                }
+            }
         },
-        "marketplaceitem.Type": {
-            "type": "string",
-            "enum": [
-                "connector",
-                "skill",
-                "plugin"
-            ],
-            "x-enum-varnames": [
-                "TypeConnector",
-                "TypeSkill",
-                "TypePlugin"
-            ]
+        "marketplace.upgradeRequest": {
+            "type": "object",
+            "properties": {
+                "targetVersion": {
+                    "type": "string"
+                }
+            }
         },
         "notification.ChannelStatus": {
             "type": "object",
@@ -21172,25 +21205,6 @@
                     "type": "integer"
                 }
             }
-        },
-        "tenantinstallation.Status": {
-            "type": "string",
-            "enum": [
-                "installing",
-                "installing",
-                "active",
-                "disabled",
-                "failed",
-                "uninstalled"
-            ],
-            "x-enum-varnames": [
-                "DefaultStatus",
-                "StatusInstalling",
-                "StatusActive",
-                "StatusDisabled",
-                "StatusFailed",
-                "StatusUninstalled"
-            ]
         }
     },
     "securityDefinitions": {

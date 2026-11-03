@@ -3768,6 +3768,7 @@ cd itsm-frontend && npm run test:unit -- --runTestsByPath src/lib/api/__tests__/
 - 连接器安装流程不变。技能、插件目录仍可浏览，历史安装记录可查看和卸载；历史 `active` 不是运行成功的证据，本次不修改存量数据。
 - 配置接口对不存在、已卸载或其他租户的安装记录返回 `404/4004`，不再返回 `500/5001`。
 - 调用方应展示服务端错误，不把上述失败作为成功安装，也不要自动重试未实现能力。无数据库迁移。
+- **2026-11-03 更新：** 本节的 `skill` 部分已被 §1.102 取代（技能已接真实装载，安装返回 `200` + `active|failed`）；`plugin` 的 `501` 语义仍有效。
 
 ### 1.100 问题知识反查移除重复读面（2026-10-31，端点移除 + 写入行为变更）
 
@@ -3792,6 +3793,23 @@ cd itsm-frontend && npm run test:unit -- --runTestsByPath src/lib/api/__tests__/
   - 执行时终止流程实例、作废待审批步骤、把请求置为 `cancelled`，写入 `cancel_stale_process_instance` 审计，并给发起人发系统通知提示重新提交；重复执行为幂等。
   - `provisioning`（交付中）、`delivered`、`rejected` 的请求只报告不处理，由运维确认交付结果后人工收口。
 - **不执行该命令的后果：** 旧实例会长期悬挂，审批收件箱里可能出现无法推进的待办；新提交的请求不受影响，会直接使用 2.1.0。无数据库迁移。
+
+### 1.102 应用市场：技能改为真实装载，新增升级/自动升级/依赖对齐端点（2026-11-03，状态码变更 + 新增端点 + 目录写入校验）
+
+本节取代 §1.99 中关于 **skill** 的部分；plugin 的 `501` 语义保持不变。
+
+- **技能安装不再是 `501`。** `POST /api/v1/marketplace/items/{id}/install` 对 `type=skill` 返回 HTTP `200`，`data.status` 只有两种真实结果：
+  - `active`——版本行的 `manifestPath=skill://<技能码>` 命中本进程已注册的技能运行时；
+  - `failed`——定位符缺失、格式非法或该技能码在当前进程未注册，`errorMessage` 会列出本进程可用的技能码。
+  安装结果反映**运行态**，不是「记录写成功」。技能没有制品下载层：装载的是随本后端版本编译进去的代码，`downloadUrl` 不参与交付。
+- **技能配置面收敛为不可用。** `PUT /api/v1/marketplace/installations/{id}/config` 对 `skill` 返回 `400`（技能由代码实现，配置项没有执行者），对 `plugin` 仍返回 `501`。此前技能可以保存一份永远不会生效的配置。
+- **三个新端点**（均在 `/api/v1/marketplace` 下，`marketplace:read` / `marketplace:write` 门禁，租户 fail-closed）：
+  - `POST /items/{id}/upgrade`——升级与回滚同一入口。`targetVersion` 可省略（升到目录当前 `latestVersion`）、可带 `v` 前缀、可指名比当前更旧的版本（即回滚）；目标必须是目录里已发布的版本行。同版本重复调用返回 `200` 且不写数据；目标版本无法解析时**点名了版本返回 `400`、未点名而目录里没有可用版本返回 `409`**；运行态没能起来返回 `409` 且安装记录保持原版本原状态。
+  - `PATCH /items/{id}/auto-upgrade`——请求体 `{"autoUpgrade": true|false}`。该字段是必需布尔值：`false` 是合法关闭，缺字段返回 `400`；改动落审计。开关生效后由 worker 每 15 分钟执行一轮（仅 `ITSM_PROCESS_MODE=worker|all`），单个商品失败不影响同轮其他商品。
+  - `GET /dependency-status`——存量安装的依赖对齐报告，`data` 为 `{tenantId, checkedAt, total, satisfied, unsatisfied, declarationMissing, findings[]}`。每条 finding 的 `status` 为 `ok` / `unsatisfied` / `declaration_missing`；第三态表示目录里缺该商品的已发布版本行、没有依赖声明可查，**不得当作健康**。该端点只读，不修数据。
+- **目录写入与上架拒绝 plugin。** `POST/PUT /api/v1/marketplace/items` 及发布动作对 `type=plugin` 返回 `400`；历史种子商品 `jira-sync-plugin` 置为 `deprecated`（保留，不删除——安装记录与审计仍引用它）。API 新增可交付类型判定字段 `deliverable`（连接器/技能为 `true`，插件为 `false`），前端与调用方应读这一个字段，不要自行按 `itemType` 枚举。
+- **商品详情与安装列表的形状变化。** 商品详情新增 `versions[]`（仅已发布版本，含 `version`/`changelog`/`releasedAt`，按发布倒序；不下发 `manifestPath`、`downloadUrl`、`configSchema`）；商品**列表**不含 `versions`，表示未加载而非没有。安装列表每行新增来自商品边的平铺字段 `itemName`、`itemTitle`、`itemDescription`、`itemIconUrl`、`itemType`、`deliverable`、`latestVersion`、`upgradeAvailable`；商品边未加载时 `upgradeAvailable=false`。`config` 继续脱敏，出站响应不含 `tenantId` 与 `edges`。
+- **无数据库迁移。** 上述行为全部落在既有列（`marketplace_item_versions.manifest_path`、`tenant_installations.auto_upgrade/error_message`）。升级后建议调用一次 `GET /marketplace/dependency-status` 确认存量商品的版本行是否补齐。
 
 ## 2. 环境变量变更
 

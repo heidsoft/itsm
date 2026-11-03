@@ -21,6 +21,7 @@ import (
 	"itsm-backend/ent/department"
 	"itsm-backend/ent/group"
 	"itsm-backend/ent/incident"
+	"itsm-backend/ent/itemversion"
 	"itsm-backend/ent/knowledgearticle"
 	"itsm-backend/ent/knownerror"
 	"itsm-backend/ent/marketplaceitem"
@@ -224,6 +225,17 @@ type MarketplaceItemSeed struct {
 	License          string   `json:"license"`
 	Homepage         string   `json:"homepage"`
 	Repository       string   `json:"repository"`
+	// Status 是目录发布状态，留空按 published 处理。退役（deprecated）用于
+	// 「平台不再交付、但存量安装记录与历史条目必须保留」的商品——删除会让
+	// 已安装租户的记录指向一条不存在的目录项。
+	Status string `json:"status"`
+	// ManifestPath 写入首个版本行的交付物定位符。技能必填（skill://<运行时技能码>），
+	// 因为技能的交付物不是文件而是本进程已装配的运行时实现；连接器按 provider 名称
+	// 定位，留空。缺定位符的技能条目在目录里无法交付，seed 直接报错而不是写出坏数据。
+	ManifestPath string `json:"manifest_path"`
+	// Dependencies 写入首个版本行的前置组件（组件名 → 版本要求，空串表示任意版本）。
+	// 依赖闸门读取的是版本行而不是商品行，缺这一段就等于内置商品从不声明前置。
+	Dependencies map[string]string `json:"dependencies"`
 }
 
 // IncidentSeed 事件种子数据结构
@@ -2566,22 +2578,51 @@ func (s *Seeder) seedIncidentCategories(ctx context.Context) error {
 
 // seedMarketplaceItems reconciles the marketplace item baseline.
 //
-// MarketplaceItem 表是全局商品目录（无 tenant_id），name 唯一。
-// 与其他域不同的是：不存在跨租户隔离，每个 seed 项全局唯一。
-// 已存在记录直接跳过，缺失则创建并立即置为 published（这是
-// Service.ListItems 唯一可见的状态）。
+// MarketplaceItem 表是全局商品目录（无 tenant_id），name 唯一，因此不存在跨租户隔离：
+// 每个 seed 项全局唯一。
+//
+// 对已存在的记录只对齐「发布状态 + 首个版本行」，不改名称也不改内容：目录项被租户
+// 安装记录与审计引用。停用（deprecated）是内置商品退出交付的唯一手段，删除会让存量
+// 记录指向不存在的商品。
 func (s *Seeder) seedMarketplaceItems(ctx context.Context) error {
 	created := 0
+	reconciled := 0
+	versioned := 0
 	for _, item := range s.expectedMarketplaceItems() {
-		exists, err := s.client.MarketplaceItem.Query().
-			Where(marketplaceitem.NameEQ(item.Name)).
-			Exist(ctx)
+		desiredStatus, err := marketplaceSeedStatus(item.Status)
 		if err != nil {
+			return fmt.Errorf("seed marketplace item %s: %w", item.Name, err)
+		}
+		if err := validateMarketplaceSeed(item); err != nil {
+			return fmt.Errorf("seed marketplace item %s: %w", item.Name, err)
+		}
+
+		existing, err := s.client.MarketplaceItem.Query().
+			Where(marketplaceitem.NameEQ(item.Name)).
+			Only(ctx)
+		if err != nil && !ent.IsNotFound(err) {
 			return fmt.Errorf("check marketplace item %s: %w", item.Name, err)
 		}
-		if exists {
+		if existing != nil {
+			// 只对齐发布状态，不改名称、不改内容：目录项被租户安装记录与审计引用，
+			// 重命名或改名会让历史指向错误的商品。
+			if existing.Status != desiredStatus {
+				if _, err := s.client.MarketplaceItem.UpdateOne(existing).
+					SetStatus(desiredStatus).
+					SetUpdatedAt(time.Now()).
+					Save(ctx); err != nil {
+					return fmt.Errorf("reconcile marketplace item %s status: %w", item.Name, err)
+				}
+				reconciled++
+			}
+			added, err := s.seedMarketplaceItemVersion(ctx, existing, item)
+			if err != nil {
+				return err
+			}
+			versioned += added
 			continue
 		}
+
 		builder := s.client.MarketplaceItem.Create().
 			SetName(item.Name).
 			SetType(marketplaceitem.Type(item.Type)).
@@ -2596,7 +2637,7 @@ func (s *Seeder) seedMarketplaceItems(ctx context.Context) error {
 			SetRequiredPermissions(item.RequiredPerms).
 			SetLatestVersion(item.LatestVersion).
 			SetMinSystemVersion(item.MinSystemVersion).
-			SetStatus(marketplaceitem.StatusPublished).
+			SetStatus(desiredStatus).
 			SetIsOfficial(item.IsOfficial).
 			SetIsFree(item.IsFree).
 			SetPrice(item.Price).
@@ -2607,11 +2648,95 @@ func (s *Seeder) seedMarketplaceItems(ctx context.Context) error {
 			SetInstallCount(0).
 			SetCreatedAt(time.Now()).
 			SetUpdatedAt(time.Now())
-		if _, err := builder.Save(ctx); err != nil {
+		createdItem, err := builder.Save(ctx)
+		if err != nil {
 			return fmt.Errorf("seed marketplace item %s: %w", item.Name, err)
 		}
 		created++
+		// 条目与首个版本行必须同时存在：latest_version 只是「目录当前指向」，
+		// 依赖声明、交付定位符、以及「能不能升到这个版本」的判断都以版本行为准。
+		// 缺版本行的内置商品会让安装（技能）与升级（所有类型）在运行时失败。
+		added, err := s.seedMarketplaceItemVersion(ctx, createdItem, item)
+		if err != nil {
+			return err
+		}
+		versioned += added
 	}
-	s.sugar.Infow("marketplace items reconciled", "created", created, "total_expected", len(s.expectedMarketplaceItems()))
+	s.sugar.Infow("marketplace items reconciled",
+		"created", created, "status_reconciled", reconciled,
+		"versions_created", versioned, "total_expected", len(s.expectedMarketplaceItems()))
 	return nil
+}
+
+// marketplaceSeedStatus 解析种子声明的发布状态，留空按 published。
+func marketplaceSeedStatus(raw string) (marketplaceitem.Status, error) {
+	trimmed := strings.TrimSpace(raw)
+	if trimmed == "" {
+		return marketplaceitem.StatusPublished, nil
+	}
+	status := marketplaceitem.Status(trimmed)
+	switch status {
+	case marketplaceitem.StatusDraft,
+		marketplaceitem.StatusReviewing,
+		marketplaceitem.StatusPublished,
+		marketplaceitem.StatusRejected,
+		marketplaceitem.StatusDeprecated:
+		return status, nil
+	default:
+		return "", fmt.Errorf("未知的 status %q", raw)
+	}
+}
+
+// validateMarketplaceSeed 在写库前挡住无法交付的种子：技能必须有命中运行时技能码的定位符。
+//
+// 写一条 latest_version 指向空定位符的技能条目，等于在目录里挂一个「装不上也升不了」的商品，
+// 而且失败要到用户点安装时才暴露——种子阶段报错才是这里正确的失败位置。
+func validateMarketplaceSeed(item MarketplaceItemSeed) error {
+	if !strings.EqualFold(strings.TrimSpace(item.Type), "skill") {
+		return nil
+	}
+	locator := strings.TrimSpace(item.ManifestPath)
+	if locator == "" {
+		return fmt.Errorf("技能商品缺少 manifest_path（应形如 skill://ai.triage）")
+	}
+	if !strings.HasPrefix(locator, "skill://") {
+		return fmt.Errorf("技能商品的 manifest_path 必须是 skill://<技能码>，当前为 %q", locator)
+	}
+	if strings.TrimSpace(strings.TrimPrefix(locator, "skill://")) == "" {
+		return fmt.Errorf("技能商品的 manifest_path 缺少技能码：%q", locator)
+	}
+	return nil
+}
+
+// seedMarketplaceItemVersion 幂等写入商品在 latest_version 上的版本行。
+func (s *Seeder) seedMarketplaceItemVersion(ctx context.Context, item *ent.MarketplaceItem, seed MarketplaceItemSeed) (int, error) {
+	version := strings.TrimSpace(item.LatestVersion)
+	if version == "" {
+		return 0, fmt.Errorf("marketplace item %s 没有 latest_version，无法写版本行", item.Name)
+	}
+	exists, err := s.client.ItemVersion.Query().
+		Where(itemversion.ItemID(item.ID), itemversion.Version(version)).
+		Exist(ctx)
+	if err != nil {
+		return 0, fmt.Errorf("check marketplace version %s@%s: %w", item.Name, version, err)
+	}
+	if exists {
+		return 0, nil
+	}
+	create := s.client.ItemVersion.Create().
+		SetItemID(item.ID).
+		SetVersion(version).
+		SetStatus(itemversion.StatusPublished).
+		SetMinSystemVersion(seed.MinSystemVersion).
+		SetReleasedAt(time.Now())
+	if locator := strings.TrimSpace(seed.ManifestPath); locator != "" {
+		create = create.SetManifestPath(locator)
+	}
+	if deps := seed.Dependencies; len(deps) > 0 {
+		create = create.SetDependencies(deps)
+	}
+	if _, err := create.Save(ctx); err != nil {
+		return 0, fmt.Errorf("seed marketplace version %s@%s: %w", item.Name, version, err)
+	}
+	return 1, nil
 }

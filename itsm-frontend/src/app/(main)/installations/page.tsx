@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { App } from 'antd';
 import {
   AlertCircle,
+  ArrowUpCircle,
   CheckCircle2,
   Clock,
   ExternalLink,
@@ -29,7 +30,7 @@ import {
 import { httpClient, serverErrorMessage } from '@/lib/api/http-client';
 import type { ConnectorConfig } from '@/lib/services/connector-service';
 import connectorService from '@/lib/services/connector-service';
-import type { TenantInstallation } from '@/lib/services/marketplace-service';
+import type { MarketplaceDependencyReport, TenantInstallation } from '@/lib/services/marketplace-service';
 import marketplaceService from '@/lib/services/marketplace-service';
 import { useCapabilities } from '@/lib/hooks/useCapabilities';
 import { usePermissions } from '@/lib/hooks/use-permissions';
@@ -78,8 +79,17 @@ const typeNames = {
   plugin: '插件',
 };
 
+// 商品展示字段由安装列表接口按商品边扁平带出（itemName/itemTitle/...），
+// 界面不再读 installation.edges.item —— DTO 里从来没有 edges，读它只会让每张卡片
+// 退化成「应用 #id」并让类型过滤和搜索静默失效。
 const connectorRuntimeName = (installation: TenantInstallation) =>
-  installation.edges?.item?.name?.replace(/-connector$/, '') || '';
+  installation.itemName?.replace(/-connector$/, '') || '';
+
+const dependencyStatusLabel: Record<string, string> = {
+  ok: '依赖已对齐',
+  unsatisfied: '前置未满足',
+  declaration_missing: '目录缺版本声明',
+};
 
 const maskSensitive = (key: string, value: unknown) => {
   if (value === undefined || value === null || value === '') return '未配置';
@@ -106,6 +116,10 @@ const InstallationsPage = () => {
   const [connectorConfigs, setConnectorConfigs] = useState<ConnectorConfig[]>([]);
   const [loading, setLoading] = useState(true);
   const [savingId, setSavingId] = useState<number | null>(null);
+  const [upgradingId, setUpgradingId] = useState<number | null>(null);
+  const [autoUpgradeId, setAutoUpgradeId] = useState<number | null>(null);
+  const [dependencyReport, setDependencyReport] = useState<MarketplaceDependencyReport | null>(null);
+  const [dependencyError, setDependencyError] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [forms, setForms] = useState<Record<number, InstallForm>>({});
   const [search, setSearch] = useState('');
@@ -121,12 +135,19 @@ const InstallationsPage = () => {
     setLoading(true);
     setLoadError(null);
     try {
-      const [installationRes, configRes] = await Promise.all([
+      const [installationRes, configRes, dependencyRes] = await Promise.all([
         marketplaceService.listInstallations(),
         connectorService.configs().catch(() => []),
+        // 依赖对齐是独立读面：它失败时不能说「依赖健康」，要说查不到。
+        marketplaceService.dependencyStatus().catch((error: unknown) => {
+          setDependencyError(error instanceof Error ? error.message : '依赖对齐状态查询失败');
+          return null;
+        }),
       ]);
       setInstallations(installationRes);
       setConnectorConfigs(configRes);
+      setDependencyReport(dependencyRes);
+      if (dependencyRes) setDependencyError(null);
       setForms(Object.fromEntries(installationRes.map(item => [item.id, makeForm(item)])));
     } catch (error: unknown) {
       console.error('Failed to fetch installations:', error);
@@ -148,29 +169,75 @@ const InstallationsPage = () => {
   }, [connectorConfigs]);
 
   const filteredInstallations = installations.filter(installation => {
-    const item = installation.edges?.item;
-    const title = item?.title || item?.name || '';
-    const description = item?.description || '';
+    const title = installation.itemTitle || installation.itemName || '';
+    const description = installation.itemDescription || '';
     const matchesSearch =
       !search ||
       title.toLowerCase().includes(search.toLowerCase()) ||
       description.toLowerCase().includes(search.toLowerCase());
     const matchesStatus = statusFilter === 'all' || installation.status === statusFilter;
-    const matchesType = typeFilter === 'all' || item?.type === typeFilter;
+    const matchesType = typeFilter === 'all' || installation.itemType === typeFilter;
     return matchesSearch && matchesStatus && matchesType;
   });
 
   const handleUninstall = async (installation: TenantInstallation) => {
-    const title = installation.edges?.item?.title || installation.edges?.item?.name || '应用';
+    const title = installation.itemTitle || installation.itemName || '应用';
     if (!confirm(`确定要卸载「${title}」吗？卸载后相关功能将无法使用。`)) return;
     try {
       await marketplaceService.uninstallItem(installation.itemId);
       setInstallations(items => items.filter(item => item.id !== installation.id));
+      await refreshDependencyStatus();
     } catch (error) {
       console.error('Failed to uninstall item:', error);
       // 卸载被拒时后端会说明原因（例如「连接器运行实例未能注销，卸载已中止」），
       // 折叠成「卸载失败」会让人以为网络问题而反复重试。
       message.error(serverErrorMessage(error, '卸载失败'));
+    }
+  };
+
+  const updateInstallationRow = (updated: TenantInstallation) => {
+    setInstallations(items => items.map(item => (item.id === updated.id ? updated : item)));
+  };
+
+  // 换版本会重新执行依赖闸门，因此升级/卸载之后要重新取一次对齐报告；
+  // 失败时保留旧报告并把原因显示出来，不能显示成「依赖已对齐」。
+  const refreshDependencyStatus = async () => {
+    try {
+      setDependencyReport(await marketplaceService.dependencyStatus());
+      setDependencyError(null);
+    } catch (error: unknown) {
+      setDependencyError(error instanceof Error ? error.message : '依赖对齐状态查询失败');
+    }
+  };
+
+  const handleUpgrade = async (installation: TenantInstallation) => {
+    const target = installation.latestVersion ?? '';
+    setUpgradingId(installation.itemId);
+    try {
+      updateInstallationRow(await marketplaceService.upgradeItem(installation.itemId));
+      message.success(`已升级到 v${target}`);
+      await refreshDependencyStatus();
+    } catch (error) {
+      console.error('Failed to upgrade item:', error);
+      // 409 会说「升级未完成，仍在使用当前版本」：这条必须原样展示，
+      // 否则管理员以为已经换了版本，而运行态仍停在旧发布物上。
+      message.error(serverErrorMessage(error, '升级失败'));
+    } finally {
+      setUpgradingId(null);
+    }
+  };
+
+  const handleToggleAutoUpgrade = async (installation: TenantInstallation) => {
+    const next = !installation.autoUpgrade;
+    setAutoUpgradeId(installation.itemId);
+    try {
+      updateInstallationRow(await marketplaceService.setAutoUpgrade(installation.itemId, next));
+      message.success(next ? '已开启自动升级' : '已关闭自动升级');
+    } catch (error) {
+      console.error('Failed to update auto upgrade preference:', error);
+      message.error(serverErrorMessage(error, next ? '开启自动升级失败' : '关闭自动升级失败'));
+    } finally {
+      setAutoUpgradeId(null);
     }
   };
 
@@ -304,31 +371,73 @@ const InstallationsPage = () => {
         </div>
       )}
 
+      {dependencyError && (
+        <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded text-sm text-yellow-800 flex items-start gap-2">
+          <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+          <span>依赖对齐状态暂不可查：{dependencyError}。下方列表不据此判断健康。</span>
+        </div>
+      )}
+
+      {dependencyReport && dependencyReport.unsatisfied + dependencyReport.declarationMissing > 0 && (
+        <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded text-sm">
+          <div className="flex items-start gap-2">
+            <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0 text-yellow-700" />
+            <div>
+              <div className="font-medium text-yellow-800">
+                {dependencyReport.total} 个已安装组件中，{dependencyReport.unsatisfied} 个前置未满足、
+                {dependencyReport.declarationMissing} 个目录缺版本声明
+              </div>
+              <ul className="mt-2 space-y-1 text-yellow-900">
+                {dependencyReport.findings
+                  .filter(finding => finding.status !== 'ok')
+                  .map(finding => (
+                    <li key={finding.itemId}>
+                      <span className="font-medium">{finding.itemTitle || finding.itemName}</span>
+                      {`（${dependencyStatusLabel[finding.status] ?? finding.status}${finding.installedVersion ? ` · v${finding.installedVersion}` : ''}）`}
+                      {(finding.problems || []).map(problem => (
+                        <div key={problem} className="ml-2 text-xs text-yellow-800">
+                          {problem}
+                        </div>
+                      ))}
+                    </li>
+                  ))}
+              </ul>
+              <p className="mt-2 text-xs text-yellow-800">
+                补齐前置组件后升级才会放行；目录缺版本声明需要先在应用管理里发布版本行。
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 gap-4">
         {filteredInstallations.map(installation => {
-          const item = installation.edges?.item;
           const status = statusConfig[installation.status] || statusConfig.installing;
           const runtimeName = connectorRuntimeName(installation);
           const runtimeConfig = connectorConfigByName.get(runtimeName);
           const isFeishu = runtimeName === 'feishu';
           const isEditing = editingId === installation.id;
           const form = forms[installation.id] || makeForm(installation);
+          const displayName = installation.itemTitle || installation.itemName || `应用 #${installation.itemId}`;
+          // 配置面只有连接器有：技能没有租户级配置项，后端会明确拒绝，
+          // 摆一个点了必然失败的按钮比不摆更糟。
+          const isConnector = installation.itemType === 'connector';
           return (
             <Card key={installation.id} className="hover:shadow-sm transition-shadow">
               <CardHeader className="pb-2">
                 <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 rounded-md overflow-hidden bg-gray-100 flex items-center justify-center">
-                      {item?.iconUrl ? (
-                        <img src={item.iconUrl} alt={item.title} className="w-full h-full object-cover" />
+                      {installation.itemIconUrl ? (
+                        <img src={installation.itemIconUrl} alt={displayName} className="w-full h-full object-cover" />
                       ) : (
-                        <span className="text-sm">{item?.type ? typeNames[item.type] : '应用'}</span>
+                        <span className="text-sm">{installation.itemType ? typeNames[installation.itemType] : '应用'}</span>
                       )}
                     </div>
                     <div>
                       <div className="flex flex-wrap items-center gap-3">
-                        <CardTitle className="text-xl">{item?.title || item?.name || `应用 #${installation.itemId}`}</CardTitle>
-                        {item?.type && <Badge variant="secondary">{typeNames[item.type]}</Badge>}
+                        <CardTitle className="text-xl">{displayName}</CardTitle>
+                        {installation.itemType && <Badge variant="secondary">{typeNames[installation.itemType]}</Badge>}
                         <Badge className={status.color}>
                           {status.icon}
                           <span className="ml-1">{status.label}</span>
@@ -339,11 +448,30 @@ const InstallationsPage = () => {
                           </Badge>
                         )}
                       </div>
-                      <CardDescription className="mt-1">{item?.description || '暂无描述'}</CardDescription>
+                      <CardDescription className="mt-1">{installation.itemDescription || '暂无描述'}</CardDescription>
                     </div>
                   </div>
                   {canManageMarketplace && <div className="flex items-center gap-2">
-                    {item?.type === 'connector' && (
+                    {installation.upgradeAvailable && (
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => handleUpgrade(installation)}
+                        disabled={upgradingId === installation.itemId}
+                      >
+                        <ArrowUpCircle className="h-4 w-4 mr-1" />
+                        {upgradingId === installation.itemId ? '升级中...' : `升级到 v${installation.latestVersion}`}
+                      </Button>
+                    )}
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => handleToggleAutoUpgrade(installation)}
+                      disabled={autoUpgradeId === installation.itemId}
+                    >
+                      自动升级：{installation.autoUpgrade ? '开' : '关'}
+                    </Button>
+                    {isConnector && (
                       <Button variant="secondary" size="sm" onClick={() => setEditingId(isEditing ? null : installation.id)}>
                         <Settings className="h-4 w-4 mr-1" />
                         配置
@@ -366,12 +494,14 @@ const InstallationsPage = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
                   <Info label="已安装版本" value={`v${installation.installedVersion}`} />
+                  <Info label="目录最新版本" value={installation.latestVersion ? `v${installation.latestVersion}` : '未知'} />
                   <Info label="安装时间" value={formatDateTime(installation.installedAt)} />
-                  <Info label="上次更新" value={formatDateTime(installation.updatedAt || installation.lastUpdatedAt || installation.installedAt)} />
+                  {/* 上次更新：从未更新过的记录用安装时间兜底，lastUpdatedAt 是契约里的可选字段 */}
+                  <Info label="上次更新" value={formatDateTime(installation.lastUpdatedAt || installation.installedAt)} />
                   <Info label="最近使用" value={formatDateTime(installation.lastUsedAt) || '从未使用'} />
                 </div>
 
-                {item?.type === 'connector' && (
+                {isConnector && (
                   <div className="rounded-md border bg-gray-50 p-3">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
                       <Info label="运行时名称" value={runtimeName || '未识别'} />

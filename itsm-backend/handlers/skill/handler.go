@@ -31,6 +31,7 @@ import (
 	"itsm-backend/ent"
 	"itsm-backend/middleware"
 	"itsm-backend/service"
+	"itsm-backend/service/marketplace"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -52,11 +53,25 @@ type Handler struct {
 	registry *service.SkillRegistry
 	logger   *zap.SugaredLogger
 	client   *ent.Client
+	// entitlements 由市场服务注入：目录里由商品交付的技能，只有该租户装了对应
+	// 组件才能调。未注入（nil）时不施加该门禁——生产入口由 bootstrap 强制装配，
+	// 单测与未启用市场的部署形态保持原行为。
+	entitlements SkillEntitlements
+}
+
+// SkillEntitlements 市场侧的技能开通判定，由 service/marketplace.Service 实现。
+type SkillEntitlements interface {
+	SkillInvocationEntitlement(ctx context.Context, tenantID int, code string) (marketplace.SkillEntitlement, error)
+}
+
+// SetSkillEntitlements 注入技能交付判定。见 Handler.entitlements。
+func (h *Handler) SetSkillEntitlements(e SkillEntitlements) {
+	h.entitlements = e
 }
 
 // NewHandler 构造技能管理 Handler。
-// client 用于 Invoke 时校验 skill 声明的 RequiredPermissions；可为 nil
-// （此时权限校验按 hardcode 模式的默认权限集进行）。
+// client 用于 Invoke 时按 DB 授权数据校验 skill 声明的 RequiredPermissions；
+// 传 nil 时权限判定退化为无 DB 数据源的模式结果，生产装配必须传入真实 client。
 func NewHandler(registry *service.SkillRegistry, logger *zap.SugaredLogger, client *ent.Client) *Handler {
 	if registry == nil {
 		registry = service.NewSkillRegistry()
@@ -64,7 +79,7 @@ func NewHandler(registry *service.SkillRegistry, logger *zap.SugaredLogger, clie
 	if logger == nil {
 		logger = zap.NewNop().Sugar()
 	}
-	return &Handler{registry: registry, logger: logger}
+	return &Handler{registry: registry, logger: logger, client: client}
 }
 
 // ----------------------------------------------------------------------------
@@ -508,6 +523,24 @@ func (h *Handler) Invoke(c *gin.Context) {
 	input["tenantId"] = tenantID
 	input["userId"] = userID
 	input["role"] = c.GetString("role")
+
+	// 市场交付门禁：由商品目录交付的技能，租户必须先装上。
+	// 判定本身出错（DB/查询失败）按拒绝处理——「查不动就放行」会让安装记录
+	// 变成装饰，也让「卸载即撤权」这条契约失效。
+	if h.entitlements != nil {
+		entitlement, err := h.entitlements.SkillInvocationEntitlement(c.Request.Context(), tenantID, code)
+		if err != nil {
+			h.logger.Warnw("skill entitlement check failed", "skill", code, "tenant_id", tenantID, "error", err)
+			common.RespondError(c, err, "技能交付状态校验失败")
+			return
+		}
+		if !entitlement.Allowed {
+			h.logger.Infow("skill invoke denied by marketplace delivery",
+				"skill", code, "tenant_id", tenantID, "item", entitlement.ItemName, "reason", entitlement.Reason)
+			common.Forbidden(c, entitlement.Reason)
+			return
+		}
+	}
 
 	// 执行前校验 skill 声明的 RequiredPermissions。
 	// 该字段此前只存不验：manifests 里声明了 ticket:write 之类的 skill，

@@ -45,6 +45,9 @@ func newCatalogFixture(t *testing.T, dsn string) *catalogFixture {
 	client := enttest.Open(t, "sqlite3", "file:"+dsn+"?mode=memory&cache=shared&_fk=1")
 	t.Cleanup(func() { _ = client.Close() })
 	svc := marketplaceService.NewService(client, zaptest.NewLogger(t).Sugar())
+	// 目录写侧会核对技能定位符能否解析成运行时技能码，所以 HTTP 面同样要装配运行时；
+	// 否则「给技能新增版本」会先撞上「运行时未装配」，测不到路由真正的拒绝语义。
+	svc.SetSkillRuntime(newSkillRuntimeStub())
 	h := NewHandler(svc)
 
 	r := gin.New()
@@ -106,6 +109,82 @@ func TestCatalogHandler_CreateReturnsItemAndVersions(t *testing.T) {
 	require.True(t, ok)
 	require.Len(t, versions, 1)
 	assert.Equal(t, "published", versions[0].(map[string]any)["status"])
+}
+
+// 技能商品缺少/写错交付物定位符同样在创建时拒绝，并把运行时可用码还给界面。
+func TestCatalogHandler_SkillLocatorRejectionsAreBadRequest(t *testing.T) {
+	f := newCatalogFixture(t, "catalog_http_skill_locator")
+
+	// 不传 manifestPath：交付物为空，商品能上架却装不了。
+	code, payload := f.do(t, http.MethodPost, "/api/v1/marketplace/catalog/items", map[string]any{
+		"name":     "no-locator-skill",
+		"type":     "skill",
+		"title":    "无定位符技能",
+		"provider": "internal",
+	})
+	require.Equal(t, http.StatusBadRequest, code, "%v", payload)
+	msg, _ := payload["message"].(string)
+	assert.Contains(t, msg, "manifestPath", "文案要指向缺失的字段，而不是「参数错误」")
+
+	// 指向运行时没有的码：报错要给出可用清单，否则运营无法区分「写错」与「还没发布」。
+	code, payload = f.do(t, http.MethodPost, "/api/v1/marketplace/catalog/items", map[string]any{
+		"name":         "ghost-skill",
+		"type":         "skill",
+		"title":        "幽灵技能",
+		"provider":     "internal",
+		"manifestPath": "skill://ai.not-in-runtime",
+	})
+	require.Equal(t, http.StatusBadRequest, code, "%v", payload)
+	msg, _ = payload["message"].(string)
+	assert.Contains(t, msg, "ai.triage", "报错应列出运行时实际可用的技能码")
+}
+
+// 平台没有插件宿主：插件在目录写入侧就 400，避免产生「能上架、点安装才 501」的商品。
+func TestCatalogHandler_PluginTypeIsBadRequest(t *testing.T) {
+	f := newCatalogFixture(t, "catalog_http_plugin_reject")
+
+	code, payload := f.do(t, http.MethodPost, "/api/v1/marketplace/catalog/items", map[string]any{
+		"name":     "legacy-plugin",
+		"type":     "plugin",
+		"title":    "遗留插件",
+		"provider": "internal",
+	})
+	require.Equal(t, http.StatusBadRequest, code, "%v", payload)
+	msg, _ := payload["message"].(string)
+	assert.Contains(t, msg, "connector", "报错要给出受理的类型清单")
+
+	count, err := f.client.MarketplaceItem.Query().
+		Where(marketplaceitem.TypeEQ(marketplaceitem.TypePlugin)).
+		Count(context.Background())
+	require.NoError(t, err)
+	assert.Zero(t, count, "被拒的类型不能留下目录条目")
+}
+
+// 草稿条目先发版本、后上架：latest_version 在上架那一刻才对齐。
+func TestCatalogHandler_PublishItemAlignsLatestVersion(t *testing.T) {
+	f := newCatalogFixture(t, "catalog_http_publish_align")
+
+	code, payload := f.do(t, http.MethodPost, "/api/v1/marketplace/catalog/items", map[string]any{
+		"name":         "align-skill",
+		"type":         "skill",
+		"title":        "对齐技能",
+		"provider":     "internal",
+		"version":      "1.0.0",
+		"manifestPath": "skill://ai.triage",
+	})
+	require.Equal(t, http.StatusOK, code, "%v", payload)
+	itemID := int(payload["data"].(map[string]any)["item"].(map[string]any)["id"].(float64))
+	base := "/api/v1/marketplace/catalog/items/" + strconv.Itoa(itemID)
+
+	// 上架前发布 1.1.0：这是「草稿期把版本准备好」的正常顺序，不能被当成失败。
+	code, payload = f.do(t, http.MethodPost, base+"/versions", map[string]any{"version": "1.1.0", "publish": true})
+	require.Equal(t, http.StatusOK, code, "%v", payload)
+
+	code, payload = f.do(t, http.MethodPost, base+"/publish", nil)
+	require.Equal(t, http.StatusOK, code, "%v", payload)
+	item := payload["data"].(map[string]any)["item"].(map[string]any)
+	assert.Equal(t, "published", item["status"])
+	assert.Equal(t, "1.1.0", item["latestVersion"], "上架要对齐到最近发布的版本，而不是创建时的 1.0.0")
 }
 
 // 未注册的连接器 provider 在创建时就拒绝，而不是等到租户点安装才失败。
@@ -192,11 +271,12 @@ func TestCatalogHandler_VersionLifecycle(t *testing.T) {
 	f := newCatalogFixture(t, "catalog_http_versions")
 
 	code, payload := f.do(t, http.MethodPost, "/api/v1/marketplace/catalog/items", map[string]any{
-		"name":     "excel-export-skill",
-		"type":     "skill",
-		"title":    "Excel 导出",
-		"provider": "internal",
-		"version":  "1.0.0",
+		"name":         "triage-skill",
+		"type":         "skill",
+		"title":        "工单分诊",
+		"provider":     "internal",
+		"version":      "1.0.0",
+		"manifestPath": "skill://ai.triage",
 	})
 	require.Equal(t, http.StatusOK, code, "%v", payload)
 	itemID := int(payload["data"].(map[string]any)["item"].(map[string]any)["id"].(float64))
@@ -205,9 +285,11 @@ func TestCatalogHandler_VersionLifecycle(t *testing.T) {
 	code, payload = f.do(t, http.MethodPost, base+"/publish", nil)
 	require.Equal(t, http.StatusOK, code, "%v", payload)
 
+	// 新增版本不带 manifestPath：继承 1.0.0 的定位符，界面不必每次重填技能码。
 	code, payload = f.do(t, http.MethodPost, base+"/versions", map[string]any{"version": "1.1.0"})
 	require.Equal(t, http.StatusOK, code, "%v", payload)
 	assert.Equal(t, "draft", payload["data"].(map[string]any)["status"])
+	assert.Equal(t, "skill://ai.triage", payload["data"].(map[string]any)["manifestPath"])
 
 	code, payload = f.do(t, http.MethodGet, base+"/versions", nil)
 	require.Equal(t, http.StatusOK, code, "%v", payload)

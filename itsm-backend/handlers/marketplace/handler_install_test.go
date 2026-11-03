@@ -57,6 +57,27 @@ func (s *handlerStubConnector) HealthCheck(context.Context) connector.HealthStat
 
 func (s *handlerStubConnector) Close() error { return nil }
 
+// skillRuntimeStub 是技能运行时的测试替身。码取自 handlers/ai 实际注册的技能，
+// 这样路由测试走的是「目录定位符 → 运行时技能码」这条真实判定链。
+type skillRuntimeStub struct {
+	codes []string
+}
+
+func (r skillRuntimeStub) Has(code string) bool {
+	for _, c := range r.codes {
+		if c == code {
+			return true
+		}
+	}
+	return false
+}
+
+func (r skillRuntimeStub) Codes() []string { return append([]string(nil), r.codes...) }
+
+func newSkillRuntimeStub() skillRuntimeStub {
+	return skillRuntimeStub{codes: []string{"ai.triage", "ai.create_ticket", "ai.summarize"}}
+}
+
 type handlerFixture struct {
 	handler *Handler
 	itemID  int
@@ -76,6 +97,7 @@ func newHandlerFixture(t *testing.T, name string) *handlerFixture {
 
 	svc := marketplaceService.NewService(client, zaptest.NewLogger(t).Sugar())
 	svc.SetConnectorManager(manager)
+	svc.SetSkillRuntime(newSkillRuntimeStub())
 
 	item, err := client.MarketplaceItem.Create().
 		SetName(name).
@@ -266,7 +288,9 @@ func marketplaceRouteRequest(f *handlerFixture, tenantID int, role, method, path
 }
 
 func TestMarketplaceRoutes_UnsupportedDelivery(t *testing.T) {
-	for _, itemType := range []marketplaceitem.Type{marketplaceitem.TypeSkill, marketplaceitem.TypePlugin} {
+	// 只有插件属于「平台不交付」：技能已由 skill:// 定位符走真实交付路径，
+	// 其安装/卸载/配置语义见 TestMarketplaceRoutes_SkillInstallUpgradeAndAutoUpgrade。
+	for _, itemType := range []marketplaceitem.Type{marketplaceitem.TypePlugin} {
 		for _, tc := range []struct {
 			name               string
 			method             string
@@ -335,7 +359,8 @@ func TestMarketplaceRoutes_UnsupportedDelivery(t *testing.T) {
 }
 
 func TestMarketplaceRoutes_UnsupportedHistoryCanBeReadAndUninstalled(t *testing.T) {
-	for _, itemType := range []marketplaceitem.Type{marketplaceitem.TypeSkill, marketplaceitem.TypePlugin} {
+	// 历史插件条目：不能装、不能配，但仍能读与卸载（否则存量租户永远清不掉）。
+	for _, itemType := range []marketplaceitem.Type{marketplaceitem.TypePlugin} {
 		t.Run(string(itemType), func(t *testing.T) {
 			f := newHandlerFixture(t, "history_"+string(itemType))
 			ctx := context.Background()

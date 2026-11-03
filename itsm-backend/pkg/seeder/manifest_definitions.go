@@ -266,6 +266,9 @@ func marketplaceItemDefinitions() []MarketplaceItemSeed {
 			License:          "Apache-2.0",
 			Homepage:         "https://open.dingtalk.com",
 			Repository:       "https://github.com/itsm-marketplace/dingtalk-ai-assistant",
+			// 交付物定位符必须命中本进程已装配的技能码：这个条目的能力
+			// （自然语言创建工单/催办）由内置 ai.create_ticket 提供。
+			ManifestPath: "skill://ai.create_ticket",
 		},
 		{
 			Name:             "wecom-connector",
@@ -308,6 +311,9 @@ func marketplaceItemDefinitions() []MarketplaceItemSeed {
 			License:          "Apache-2.0",
 			Homepage:         "https://github.com/itsm-marketplace",
 			Repository:       "https://github.com/itsm-marketplace/ai-ticket-classify",
+			// 分类/优先级建议由内置 ai.triage 交付；定位符写运行时技能码，
+			// 不是文件路径——平台不托管第三方技能代码。
+			ManifestPath: "skill://ai.triage",
 		},
 		{
 			Name:             "jira-sync-plugin",
@@ -329,6 +335,10 @@ func marketplaceItemDefinitions() []MarketplaceItemSeed {
 			License:          "MIT",
 			Homepage:         "https://www.atlassian.com/software/jira",
 			Repository:       "https://github.com/itsm-marketplace/jira-sync",
+			// 插件类商品没有宿主运行时可扩展，平台无法交付：这里停用而不是删除，
+			// 因为已安装租户的记录与历史审计仍指向这条目录项。
+			// 目录写入面（CreateCatalogItem/PublishCatalogItem）也已拒绝 plugin 类型。
+			Status: "deprecated",
 		},
 	}
 }

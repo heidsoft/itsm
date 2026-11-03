@@ -142,4 +142,61 @@ describe('MarketplaceService', () => {
       expect(result.config).toEqual(config);
     });
   });
+
+  describe('upgradeItem', () => {
+    it('省略目标版本时不发送请求体，语义是升到目录 latest', async () => {
+      const response = { id: 10, tenantId: 1, itemId: 5, installedVersion: '1.1.0', status: 'active', installedAt: '2024-01-01' };
+      mockPost.mockResolvedValue(response);
+
+      const result = await marketplaceService.upgradeItem(5);
+
+      expect(mockPost).toHaveBeenCalledWith('/api/v1/marketplace/items/5/upgrade', undefined);
+      expect(result.installedVersion).toBe('1.1.0');
+    });
+
+    it('点名版本时只发送 targetVersion（回滚走同一入口）', async () => {
+      mockPost.mockResolvedValue({ id: 10, tenantId: 1, itemId: 5, installedVersion: '1.0.0', status: 'active', installedAt: '2024-01-01' });
+
+      await marketplaceService.upgradeItem(5, '1.0.0');
+
+      expect(mockPost).toHaveBeenCalledWith('/api/v1/marketplace/items/5/upgrade', { targetVersion: '1.0.0' });
+    });
+  });
+
+  describe('setAutoUpgrade', () => {
+    it.each([true, false])('必须显式发送布尔 %p，不能让后端把未传当成关闭', async autoUpgrade => {
+      const mockPatch = httpClient.patch as jest.Mock;
+      mockPatch.mockResolvedValue({ id: 10, tenantId: 1, itemId: 5, autoUpgrade, status: 'active', installedAt: '2024-01-01' });
+
+      const result = await marketplaceService.setAutoUpgrade(5, autoUpgrade);
+
+      expect(mockPatch).toHaveBeenCalledWith('/api/v1/marketplace/items/5/auto-upgrade', { autoUpgrade });
+      expect(result.autoUpgrade).toBe(autoUpgrade);
+    });
+  });
+
+  describe('dependencyStatus', () => {
+    it('读取存量依赖报告，保留三态计数与明细', async () => {
+      const report = {
+        tenantId: 1,
+        checkedAt: '2026-11-03T00:00:00Z',
+        total: 2,
+        satisfied: 0,
+        unsatisfied: 1,
+        declarationMissing: 1,
+        findings: [
+          { itemId: 7, itemName: 'dependent-skill', itemTitle: '依赖方', itemType: 'skill', status: 'unsatisfied', installedVersion: '1.0.0', installationStatus: 'active', problems: ['缺少前置 base-skill'] },
+          { itemId: 8, itemName: 'orphan-skill', itemTitle: '无版本行', itemType: 'skill', status: 'declaration_missing', installedVersion: '9.9.9', installationStatus: 'active', problems: ['目录里没有 9.9.9 的已发布版本行'] },
+        ],
+      };
+      mockGet.mockResolvedValue(report);
+
+      const result = await marketplaceService.dependencyStatus();
+
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/marketplace/dependency-status');
+      expect(result.unsatisfied).toBe(1);
+      expect(result.declarationMissing).toBe(1);
+      expect(result.findings.map(finding => finding.status)).toEqual(['unsatisfied', 'declaration_missing']);
+    });
+  });
 });

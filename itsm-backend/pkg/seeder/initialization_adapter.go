@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 
 	"entgo.io/ent/dialect"
 
@@ -16,6 +17,7 @@ import (
 	"itsm-backend/ent/citype"
 	"itsm-backend/ent/department"
 	"itsm-backend/ent/group"
+	"itsm-backend/ent/itemversion"
 	"itsm-backend/ent/marketplaceitem"
 	"itsm-backend/ent/menu"
 	"itsm-backend/ent/permission"
@@ -662,21 +664,64 @@ func (s *Seeder) verifyCMDBTemplates(ctx context.Context) error {
 
 // verifyMarketplaceItems 校验全局市场商品基线（无 tenant 维度）。
 // 与 CMDB/Extension 不同：MarketplaceItem 表无 tenant_id，name 是唯一键。
-// 校验每条 seed 期望项都已存在；缺失即视为基线破坏，调用方会让 init 退出。
+//
+// 校验的不只是「条目存在」：latest_version 必须有对应版本行，技能条目还必须带
+// 定位符。缺任何一项，安装与升级会在用户点击时才失败，而 init 已经报告成功——
+// 这正是本校验器存在的意义。
 func (s *Seeder) verifyMarketplaceItems(ctx context.Context) error {
 	expected := s.expectedMarketplaceItems()
 	if len(expected) == 0 {
 		return fmt.Errorf("verify marketplace-items: expected marketplace item baseline is empty")
 	}
 	for _, item := range expected {
-		exists, err := s.client.MarketplaceItem.Query().
-			Where(marketplaceitem.NameEQ(item.Name)).
-			Exist(ctx)
+		desiredStatus, err := marketplaceSeedStatus(item.Status)
 		if err != nil {
 			return fmt.Errorf("verify marketplace item %s: %w", item.Name, err)
 		}
-		if !exists {
+		if err := validateMarketplaceSeed(item); err != nil {
+			return fmt.Errorf("verify marketplace item %s: %w", item.Name, err)
+		}
+		existing, err := s.client.MarketplaceItem.Query().
+			Where(marketplaceitem.NameEQ(item.Name)).
+			Only(ctx)
+		if ent.IsNotFound(err) {
 			return fmt.Errorf("verify marketplace items: missing %s", item.Name)
+		}
+		if err != nil {
+			return fmt.Errorf("verify marketplace item %s: %w", item.Name, err)
+		}
+		if existing.Status != desiredStatus {
+			return fmt.Errorf("verify marketplace items: %s status=%s, expected %s",
+				item.Name, existing.Status, desiredStatus)
+		}
+		version := strings.TrimSpace(existing.LatestVersion)
+		if version == "" {
+			return fmt.Errorf("verify marketplace items: %s 没有 latest_version", item.Name)
+		}
+		hasVersion, err := s.client.ItemVersion.Query().
+			Where(itemversion.ItemID(existing.ID), itemversion.Version(version)).
+			Exist(ctx)
+		if err != nil {
+			return fmt.Errorf("verify marketplace version %s@%s: %w", item.Name, version, err)
+		}
+		if !hasVersion {
+			return fmt.Errorf("verify marketplace items: %s 的 latest_version=%s 没有版本行（安装与升级会失败）", item.Name, version)
+		}
+		if strings.EqualFold(strings.TrimSpace(item.Type), "skill") {
+			hasLocator, err := s.client.ItemVersion.Query().
+				Where(
+					itemversion.ItemID(existing.ID),
+					itemversion.Version(version),
+					itemversion.ManifestPath(strings.TrimSpace(item.ManifestPath)),
+				).
+				Exist(ctx)
+			if err != nil {
+				return fmt.Errorf("verify marketplace skill locator %s: %w", item.Name, err)
+			}
+			if !hasLocator {
+				return fmt.Errorf("verify marketplace items: 技能 %s 的版本行缺少定位符 %q",
+					item.Name, item.ManifestPath)
+			}
 		}
 	}
 	return nil

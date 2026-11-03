@@ -2,7 +2,9 @@ package marketplace
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
+	"strings"
 
 	"itsm-backend/common"
 	"itsm-backend/middleware"
@@ -39,9 +41,16 @@ func (c *Handler) RegisterRoutes(r *gin.RouterGroup) {
 		{
 			marketplaceGroup.POST("/items/:id/install", middleware.RequirePermission("marketplace", "write"), c.InstallItem)
 			marketplaceGroup.POST("/items/:id/uninstall", middleware.RequirePermission("marketplace", "write"), c.UninstallItem)
+			// 升级与自动升级意愿同样是平台级变更：换版本会重新装载运行态，
+			// 权限码必须与安装一致，否则「能装的人不能升」会让 auto_upgrade 开关失去意义。
+			marketplaceGroup.POST("/items/:id/upgrade", middleware.RequirePermission("marketplace", "write"), c.UpgradeItem)
+			marketplaceGroup.PATCH("/items/:id/auto-upgrade", middleware.RequirePermission("marketplace", "write"), c.SetAutoUpgrade)
 			marketplaceGroup.GET("/installations", middleware.RequirePermission("marketplace", "read"), c.ListInstallations)
 			marketplaceGroup.GET("/installations/:id", middleware.RequirePermission("marketplace", "read"), c.GetInstallation)
 			marketplaceGroup.PUT("/installations/:id/config", middleware.RequirePermission("marketplace", "write"), c.UpdateInstallationConfig)
+			// 存量安装的依赖对齐是只读诊断面：它不修数据，只如实报告哪些前置没满足、
+			// 哪些版本行缺失，供管理员决定下一步是补装前置还是补目录版本。
+			marketplaceGroup.GET("/dependency-status", middleware.RequirePermission("marketplace", "read"), c.DependencyStatus)
 		}
 	}
 }
@@ -58,7 +67,7 @@ func (c *Handler) RegisterRoutes(r *gin.RouterGroup) {
 // @Param isOfficial query boolean false "是否是官方组件"
 // @Param page query int false "页码，默认1"
 // @Param pageSize query int false "每页数量，默认20"
-// @Success 200 {object} common.Response{data=object{items=[]ent.MarketplaceItem, total=int, page=int, pageSize=int}}
+// @Success 200 {object} common.Response{data=object{items=[]dto.MarketplaceItemResponse, total=int, page=int, pageSize=int}}
 // @Router /api/v1/marketplace/items [get]
 func (c *Handler) ListItems(ctx *gin.Context) {
 	itemType := ctx.Query("type")
@@ -96,7 +105,7 @@ func (c *Handler) ListItems(ctx *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path int true "组件ID"
-// @Success 200 {object} common.Response{data=ent.MarketplaceItem}
+// @Success 200 {object} common.Response{data=dto.MarketplaceItemResponse}
 // @Router /api/v1/marketplace/items/{id} [get]
 func (c *Handler) GetItem(ctx *gin.Context) {
 	itemIDStr := ctx.Param("id")
@@ -123,7 +132,7 @@ func (c *Handler) GetItem(ctx *gin.Context) {
 // @Produce json
 // @Param id path int true "组件ID"
 // @Security Bearer
-// @Success 200 {object} common.Response{data=ent.TenantInstallation}
+// @Success 200 {object} common.Response{data=marketplace.InstallationResponse}
 // @Router /api/v1/marketplace/items/{id}/install [post]
 func (c *Handler) InstallItem(ctx *gin.Context) {
 	itemIDStr := ctx.Param("id")
@@ -231,7 +240,7 @@ func (c *Handler) UninstallItem(ctx *gin.Context) {
 // @Produce json
 // @Param status query string false "状态过滤：active/disabled/failed"
 // @Security Bearer
-// @Success 200 {object} common.Response{data=[]ent.TenantInstallation}
+// @Success 200 {object} common.Response{data=[]marketplace.InstallationResponse}
 // @Router /api/v1/marketplace/installations [get]
 func (c *Handler) ListInstallations(ctx *gin.Context) {
 	status := ctx.Query("status")
@@ -257,7 +266,7 @@ func (c *Handler) ListInstallations(ctx *gin.Context) {
 // @Produce json
 // @Param id path int true "组件ID"
 // @Security Bearer
-// @Success 200 {object} common.Response{data=ent.TenantInstallation}
+// @Success 200 {object} common.Response{data=marketplace.InstallationResponse}
 // @Router /api/v1/marketplace/installations/{id} [get]
 func (c *Handler) GetInstallation(ctx *gin.Context) {
 	itemIDStr := ctx.Param("id")
@@ -294,7 +303,7 @@ func (c *Handler) GetInstallation(ctx *gin.Context) {
 // @Param id path int true "组件ID"
 // @Param config body object true "配置信息"
 // @Security Bearer
-// @Success 200 {object} common.Response{data=ent.TenantInstallation}
+// @Success 200 {object} common.Response{data=marketplace.InstallationResponse}
 // @Router /api/v1/marketplace/installations/{id}/config [put]
 func (c *Handler) UpdateInstallationConfig(ctx *gin.Context) {
 	itemIDStr := ctx.Param("id")
@@ -342,4 +351,178 @@ func (c *Handler) UpdateInstallationConfig(ctx *gin.Context) {
 	}
 
 	common.Success(ctx, ToInstallationResponse(installation))
+}
+
+// upgradeRequest 升级入参。targetVersion 可省略，省略即升到目录当前 latest。
+//
+// 用指针而不是空串区分「没传」与「传了空串」：后者是调用方明确要求升到一个
+// 空版本号，属于参数错误，不能被静默当成「升最新版」。
+type upgradeRequest struct {
+	TargetVersion *string `json:"targetVersion"`
+}
+
+// UpgradeItem 升级已安装的组件
+// @Summary 升级已安装的组件
+// @Description 把租户的安装记录升到目录当前最新版本或指定的已发布版本；目标版本比当前旧时即为回滚
+// @Tags 市场
+// @Accept json
+// @Produce json
+// @Param id path int true "组件ID"
+// @Param body body upgradeRequest false "目标版本；省略即升到目录当前 latest"
+// @Security Bearer
+// @Success 200 {object} common.Response{data=marketplace.InstallationResponse}
+// @Router /api/v1/marketplace/items/{id}/upgrade [post]
+func (c *Handler) UpgradeItem(ctx *gin.Context) {
+	itemID, err := strconv.Atoi(ctx.Param("id"))
+	if err != nil {
+		common.ParamError(ctx, "invalid item id")
+		return
+	}
+
+	// 空 body 表示「升到最新版」，因此只在真的有请求体时绑定，
+	// 避免 ShouldBindJSON 在 Content-Length: 0 上返回 EOF 变成参数错误。
+	var req upgradeRequest
+	targetVersion := ""
+	if ctx.Request.ContentLength > 0 {
+		if err := ctx.ShouldBindJSON(&req); err != nil {
+			common.BadRequestWithErr(ctx, err, "请求参数错误")
+			return
+		}
+		if req.TargetVersion != nil {
+			targetVersion = strings.TrimSpace(*req.TargetVersion)
+			if targetVersion == "" {
+				common.ParamError(ctx, "targetVersion 不能为空字符串；省略该字段即升到最新版本")
+				return
+			}
+		}
+	}
+
+	tenantID, ok := middleware.TenantIDOrUnauthorized(ctx)
+	if !ok {
+		return
+	}
+	userID, ok := middleware.UserIDOrUnauthorized(ctx)
+	if !ok {
+		return
+	}
+
+	result, err := c.service.UpgradeInstallation(ctx.Request.Context(), tenantID, itemID, targetVersion, strconv.Itoa(userID))
+	if err != nil {
+		switch {
+		case errors.Is(err, marketplace.ErrMarketplaceItemNotFound):
+			common.NotFoundWithErr(ctx, err, "组件不存在或已被下架")
+		case errors.Is(err, marketplace.ErrMarketplaceInstallationAbsent):
+			common.NotFoundWithErr(ctx, err, "安装记录不存在或已被卸载")
+		case errors.Is(err, marketplace.ErrMarketplaceDeliveryUnsupported):
+			common.Fail(ctx, common.NotImplementedCode, "平台不交付该类型商品：插件需要宿主运行时，历史插件条目仅可查看与卸载")
+		case errors.Is(err, marketplace.ErrMarketplaceUpgradeTargetInvalid):
+			// 调用方点名了一个不可用的版本 → 参数问题；
+			// 没点名（即「升最新」）而目录里没有可用版本 → 数据状态冲突。
+			if targetVersion != "" {
+				common.BadRequestWithErr(ctx, err, "升级目标不可用")
+			} else {
+				common.Conflict(ctx, "目录里没有可用于升级的已发布版本："+err.Error(), nil)
+			}
+		case errors.Is(err, marketplace.ErrMarketplaceDependencyUnsatisfied):
+			common.Conflict(ctx, err.Error(), nil)
+		case marketplace.IsDeliveryNotReady(err), errors.Is(err, marketplace.ErrMarketplaceUpgradeBlocked):
+			// 运行态没能起来：installed_version 没换、状态没动，租户仍在跑旧版本。
+			// 必须把「没升成」说清楚，否则界面以为升级已完成。
+			common.Conflict(ctx, "升级未完成，仍在使用当前版本："+err.Error(), nil)
+		default:
+			common.RespondError(ctx, err, "升级组件失败")
+		}
+		return
+	}
+
+	if !result.Upgraded {
+		common.SuccessWithMessage(ctx,
+			fmt.Sprintf("已是版本 %s，无需升级", result.ToVersion),
+			ToInstallationResponse(result.Installation))
+		return
+	}
+	common.SuccessWithMessage(ctx,
+		fmt.Sprintf("已从 %s 升级到 %s", result.FromVersion, result.ToVersion),
+		ToInstallationResponse(result.Installation))
+}
+
+// autoUpgradeRequest 自动升级意愿入参。
+//
+// 必须是 *bool：false 是合法值（关掉自动升级），用 bool 绑定会让「未传」
+// 与「显式关闭」都落到 false，一次误发的 PATCH 就把租户的自动升级永久关掉。
+type autoUpgradeRequest struct {
+	AutoUpgrade *bool `json:"autoUpgrade"`
+}
+
+// SetAutoUpgrade 开关某条安装记录的自动升级
+// @Summary 设置组件的自动升级意愿
+// @Description 开启后，后台升级 pass 会把该安装记录升到目录当前 latest 已发布版本
+// @Tags 市场
+// @Accept json
+// @Produce json
+// @Param id path int true "组件ID"
+// @Param body body autoUpgradeRequest true "自动升级意愿（autoUpgrade 必填，false 是合法值）"
+// @Security Bearer
+// @Success 200 {object} common.Response{data=marketplace.InstallationResponse}
+// @Router /api/v1/marketplace/items/{id}/auto-upgrade [patch]
+func (c *Handler) SetAutoUpgrade(ctx *gin.Context) {
+	itemID, err := strconv.Atoi(ctx.Param("id"))
+	if err != nil {
+		common.ParamError(ctx, "invalid item id")
+		return
+	}
+
+	var req autoUpgradeRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		common.BadRequestWithErr(ctx, err, "请求参数错误")
+		return
+	}
+	if req.AutoUpgrade == nil {
+		common.ParamError(ctx, "autoUpgrade 必填（true 开启自动升级 / false 关闭）")
+		return
+	}
+
+	tenantID, ok := middleware.TenantIDOrUnauthorized(ctx)
+	if !ok {
+		return
+	}
+	userID, ok := middleware.UserIDOrUnauthorized(ctx)
+	if !ok {
+		return
+	}
+
+	installation, err := c.service.SetAutoUpgrade(ctx.Request.Context(), tenantID, itemID, *req.AutoUpgrade, strconv.Itoa(userID))
+	if err != nil {
+		if errors.Is(err, marketplace.ErrMarketplaceInstallationAbsent) {
+			common.NotFoundWithErr(ctx, err, "安装记录不存在或已被卸载")
+			return
+		}
+		common.RespondError(ctx, err, "更新自动升级设置失败")
+		return
+	}
+
+	common.Success(ctx, ToInstallationResponse(installation))
+}
+
+// DependencyStatus 存量安装的依赖对齐报告
+// @Summary 查询存量安装的依赖对齐状态
+// @Description 逐条判定租户已安装组件的前置依赖是否仍然满足；只读，不修改安装记录
+// @Tags 市场
+// @Produce json
+// @Security Bearer
+// @Success 200 {object} common.Response{data=dto.MarketplaceDependencyReportResponse}
+// @Router /api/v1/marketplace/dependency-status [get]
+func (c *Handler) DependencyStatus(ctx *gin.Context) {
+	tenantID, ok := middleware.TenantIDOrUnauthorized(ctx)
+	if !ok {
+		return
+	}
+
+	report, err := c.service.DependencyStatus(ctx.Request.Context(), tenantID)
+	if err != nil {
+		common.RespondError(ctx, err, "查询依赖对齐状态失败")
+		return
+	}
+
+	common.Success(ctx, ToDependencyReportResponse(report))
 }
