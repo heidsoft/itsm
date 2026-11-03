@@ -103,7 +103,9 @@ func AcquireConn(ctx context.Context, db *sql.DB) (*sql.Conn, error) {
 	// the current transaction). tid is int64 from our internal context, not
 	// user input, but routing through parameters keeps the call safe even if
 	// the upstream type ever changes.
-	if _, err := conn.ExecContext(ctx, "SELECT set_config('app.current_tenant', $1, false)", tid); err != nil {
+	// 变量名来自进程级配置（SetTenantVarName 已做标识符校验），值走参数，
+	// 因此这里不存在拼接注入面。
+	if _, err := conn.ExecContext(ctx, "SELECT set_config($1, $2::text, false)", tenantVarName, tid); err != nil {
 		_ = conn.Close()
 		return nil, fmt.Errorf("rls: set tenant: %w", err)
 	}
@@ -138,7 +140,9 @@ func SetTenantOnConn(ctx context.Context, conn *sql.Conn) (*sql.Conn, error) {
 	if !ok {
 		return nil, ErrNoTenant
 	}
-	if _, err := conn.ExecContext(ctx, "SELECT set_config('app.current_tenant', $1, false)", tid); err != nil {
+	// 变量名来自进程级配置（SetTenantVarName 已做标识符校验），值走参数，
+	// 因此这里不存在拼接注入面。
+	if _, err := conn.ExecContext(ctx, "SELECT set_config($1, $2::text, false)", tenantVarName, tid); err != nil {
 		return nil, fmt.Errorf("rls: set tenant: %w", err)
 	}
 	return conn, nil

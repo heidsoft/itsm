@@ -163,14 +163,16 @@ echo ""
 # ==============================================================================
 if [ "$RUN_RLS" = "true" ]; then
   banner "Step 5: 应用 RLS pilot"
-  docker cp itsm-backend/database/rls/migrations/001_roles.sql itsm-postgres-prod:/tmp/
+  # 角色由版本化迁移创建（NOLOGIN、无口令），口令在创建之后带外设置。
+  # 顺序不能反：ALTER ROLE 在角色不存在时会失败。
+  docker cp itsm-backend/migrations/20261031_rls_roles_bootstrap.sql itsm-postgres-prod:/tmp/
   docker cp itsm-backend/database/rls/migrations/002_pilot_policies.sql itsm-postgres-prod:/tmp/
+  docker exec itsm-postgres-prod psql -U itsm -d itsm_prod \
+    -v ON_ERROR_STOP=1 -f /tmp/20261031_rls_roles_bootstrap.sql 2>&1 | tail -5
   docker exec itsm-postgres-prod psql -U itsm -d itsm_prod \
     -c "ALTER ROLE itsm_app LOGIN PASSWORD 'RlsApp2026SecurePass!';" >/dev/null
   docker exec itsm-postgres-prod psql -U itsm -d itsm_prod \
     -c "ALTER ROLE itsm_admin LOGIN PASSWORD '${RLS_ADMIN_PASSWORD:-rls_admin_change_me}';" >/dev/null
-  docker exec itsm-postgres-prod psql -U itsm -d itsm_prod \
-    -v ON_ERROR_STOP=1 -f /tmp/001_roles.sql 2>&1 | tail -5
   docker exec itsm-postgres-prod psql -U itsm -d itsm_prod \
     -v ON_ERROR_STOP=1 -f /tmp/002_pilot_policies.sql 2>&1 | tail -5
   docker cp "$REPORT_DIR/../rls_r1_e2e_prod.sql" itsm-postgres-prod:/tmp/ 2>/dev/null || \

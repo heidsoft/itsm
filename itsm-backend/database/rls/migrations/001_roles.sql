@@ -1,69 +1,25 @@
 -- =============================================================================
--- RLS Migration 001 — Roles Bootstrap
+-- RLS 角色引导（已迁移至版本化迁移流）
 --
--- 目的：为 Row-Level Security 建立最小权限模型。
+-- 本文件**不再包含可执行 DDL**，只保留一个指针，原因：
+--   1. 它此前不在迁移流里（不会被自动执行），却写着硬编码占位口令
+--      `REPLACE_IN_PRODUCTION`——照抄执行会得到一个「口令公开且可登录」的
+--      角色，比不建角色更危险；
+--   2. 角色模型（itsm_app / itsm_admin）现在由
+--      `itsm-backend/migrations/20261031_rls_roles_bootstrap.sql` 统一维护，
+--      由迁移器自动执行、进入 schema_migrations 账本并参与 checksum 校验。
+--      两处维护必然漂移，因此这里只留指针。
 --
--- 角色约定：
---   itsm_app   ← 应用连接使用（普通角色，policy 生效）
---   itsm_admin ← 迁移/后台任务/MSP 运维使用（BYPASSRLS，policy 不生效）
+-- 现行做法（见 docs/operations/rls-rollout.md）：
+--   * 迁移创建的是 **NOLOGIN** 角色，不会写入任何口令；
+--   * 运维在带外显式执行 `ALTER ROLE itsm_app LOGIN PASSWORD <password>`；
+--   * 是否真正启用 enforcement 由启动时的 readiness 探测把关
+--     （database/rls/readiness.go），角色存在不等于隔离生效。
 --
--- 执行方式：
---   psql -U <superuser> -d itsm -f 001_roles.sql
---
--- 幂等性：使用 DO 块 + pg_roles 探测，重复执行安全。
--- 回滚：见 001_roles_rollback.sql（本目录）
+-- 回滚：itsm-backend/migrations/20261031_rls_roles_bootstrap_down.sql
 -- =============================================================================
 
 DO $$
 BEGIN
-    -- ------------------------------------------------------------------------
-    -- 1. 应用角色（普通角色，受 RLS 约束）
-    -- ------------------------------------------------------------------------
-    IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'itsm_app') THEN
-        CREATE ROLE itsm_app LOGIN PASSWORD 'REPLACE_IN_PRODUCTION';
-        RAISE NOTICE 'created role itsm_app';
-    ELSE
-        RAISE NOTICE 'role itsm_app already exists, skipping';
-    END IF;
-
-    -- ------------------------------------------------------------------------
-    -- 2. 管理角色（BYPASSRLS，用于迁移/后台任务）
-    -- ------------------------------------------------------------------------
-    IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'itsm_admin') THEN
-        CREATE ROLE itsm_admin LOGIN BYPASSRLS PASSWORD 'REPLACE_IN_PRODUCTION';
-        RAISE NOTICE 'created role itsm_admin';
-    ELSE
-        -- 已存在则确保有 BYPASSRLS
-        ALTER ROLE itsm_admin BYPASSRLS;
-        RAISE NOTICE 'role itsm_admin already exists, ensured BYPASSRLS';
-    END IF;
+    RAISE NOTICE '001_roles.sql is retired: roles are managed by migrations/20261031_rls_roles_bootstrap.sql';
 END $$;
-
--- ---------------------------------------------------------------------------
--- 3. 权限：itsm_app 需要业务表的 CRUD，但不能改 schema。
---    itsm_admin 拥有全部权限（用于 migration + 应急运维）。
--- ---------------------------------------------------------------------------
-GRANT USAGE ON SCHEMA public TO itsm_app, itsm_admin;
-
-GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES    IN SCHEMA public TO itsm_app;
-GRANT USAGE, SELECT                  ON ALL SEQUENCES IN SCHEMA public TO itsm_app;
-
-GRANT ALL PRIVILEGES ON ALL TABLES    IN SCHEMA public TO itsm_admin;
-GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO itsm_admin;
-
--- 未来新建的表也自动授权
-ALTER DEFAULT PRIVILEGES IN SCHEMA public
-    GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES    TO itsm_app;
-ALTER DEFAULT PRIVILEGES IN SCHEMA public
-    GRANT USAGE, SELECT                  ON SEQUENCES TO itsm_app;
-ALTER DEFAULT PRIVILEGES IN SCHEMA public
-    GRANT ALL PRIVILEGES ON TABLES    TO itsm_admin;
-ALTER DEFAULT PRIVILEGES IN SCHEMA public
-    GRANT ALL PRIVILEGES ON SEQUENCES TO itsm_admin;
-
--- ---------------------------------------------------------------------------
--- 4. GUC 变量登记（PostgreSQL 15+ 语法友好；14 也可用）
---    这一步不是必需，policy 引用未登记的自定义变量也能工作，但登记后
---    pg_settings 中可见，便于运维查询。
--- ---------------------------------------------------------------------------
--- 无需 DDL，`SET SESSION app.current_tenant = ...` 直接可用。

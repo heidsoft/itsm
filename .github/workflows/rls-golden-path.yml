@@ -100,11 +100,16 @@ jobs:
           ITSM_AUTO_SEED: 'false'
         run: go run -tags migrate .
 
-      # SET ROLE itsm_app 需要该角色存在；001_roles.sql 使用 DO 块，幂等可重复执行
-      - name: Apply RLS roles bootstrap
+      # SET ROLE itsm_app 需要该角色存在。角色由版本化迁移
+      # migrations/20261031_rls_roles_bootstrap.sql 在上一步 migrate 时创建；
+      # 这里只做断言，防止迁移被跳过或角色属性被改坏（superuser/BYPASSRLS
+      # 会让 RLS 对 itsm_app 完全失效）。
+      - name: Verify RLS roles created by migrations
         run: |
-          docker exec -i rls-golden-pg psql -v ON_ERROR_STOP=1 -U postgres -d itsm_test \
-            -f - < itsm-backend/database/rls/migrations/001_roles.sql
+          test "$(docker exec rls-golden-pg psql -At -U postgres -d itsm_test -c \
+            "SELECT count(*) FROM pg_roles WHERE rolname = 'itsm_app' AND NOT rolsuper AND NOT rolbypassrls")" = "1"
+          test "$(docker exec rls-golden-pg psql -At -U postgres -d itsm_test -c \
+            "SELECT count(*) FROM pg_roles WHERE rolname = 'itsm_admin' AND rolbypassrls")" = "1"
 
       # database/rls 的租户隔离用例需要一个租户 1 的 changes 行作为探针数据
       - name: Seed probe data

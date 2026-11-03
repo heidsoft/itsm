@@ -38,7 +38,9 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"regexp"
 	"strconv"
+	"strings"
 	"sync/atomic"
 
 	"itsm-backend/common/tenantctx"
@@ -58,17 +60,67 @@ const (
 	ModeEnforce Mode = "enforce"
 )
 
-// ParseMode normalizes user input. Unknown values fall back to off.
-func ParseMode(s string) Mode {
-	switch Mode(s) {
+// ParseMode 把配置值归一为受支持的档位。**未知值一律报错，不回退到 off**。
+//
+// 为什么必须失败关闭：RLS_MODE 是安全开关，`enforced`、`Enforce`、`enforce `
+// 这类拼写错误如果被静默归一成 off，运维会以为租户隔离已开启，而实际
+// 一行都没生效——这是最难发现的一类安全缺陷：日志显示服务健康，测试全绿，
+// 只有跨租户数据泄露时才暴露。空字符串是唯一允许的「未配置」写法（等价 off，
+// 由 config 默认值决定），其余必须精确匹配。
+func ParseMode(s string) (Mode, error) {
+	switch Mode(strings.TrimSpace(s)) {
+	case "", ModeOff:
+		return ModeOff, nil
 	case ModeShadow:
-		return ModeShadow
+		return ModeShadow, nil
 	case ModeEnforce:
-		return ModeEnforce
+		return ModeEnforce, nil
 	default:
-		return ModeOff
+		return ModeOff, fmt.Errorf(
+			"rls: unsupported RLS_MODE %q (allowed: off, shadow, enforce); refusing to start rather than silently disabling tenant isolation",
+			s,
+		)
 	}
 }
+
+// DefaultTenantVarName 是 RLS 策略读取的会话变量名（002_pilot_policies.sql /
+// 019_align_rls_tenant_variable 对齐后的口径）。
+const DefaultTenantVarName = "app.current_tenant"
+
+// tenantVarName 是当前进程实际注入的会话变量名。
+//
+// 之前这里是一个 const，而 config 里同时暴露了 RLS_TENANT_VAR_NAME 并把它
+// 原样打进启动日志——配置说 A、代码做 B，日志还替代码作证。改由
+// SetTenantVarName 在初始化时写入一次，驱动与 AcquireConn 共用同一份值。
+var tenantVarName = DefaultTenantVarName
+
+// tenantVarPattern 限制变量名的字符集。
+//
+// 变量名会被拼进 `SET LOCAL <name> = ...`（PostgreSQL 的 SET 语句不接受
+// 占位符，只能拼接），因此必须在进入 SQL 之前拒绝任何非标识符字符。
+// 允许一个点号是 PostgreSQL 自定义 GUC 的惯例（app.current_tenant）。
+var tenantVarPattern = regexp.MustCompile(`^[a-z_][a-z0-9_]*(\.[a-z_][a-z0-9_]*)?$`)
+
+// SetTenantVarName 设置进程级 RLS 会话变量名。空值表示使用默认名。
+// 只应在启动装配阶段调用一次；运行期变更不会回溯已建立的连接。
+func SetTenantVarName(name string) error {
+	name = strings.TrimSpace(name)
+	if name == "" {
+		tenantVarName = DefaultTenantVarName
+		return nil
+	}
+	if !tenantVarPattern.MatchString(name) {
+		return fmt.Errorf(
+			"rls: invalid RLS_TENANT_VAR_NAME %q: must match %s (it is interpolated into SET statements)",
+			name, tenantVarPattern.String(),
+		)
+	}
+	tenantVarName = name
+	return nil
+}
+
+// TenantVarName 返回当前进程使用的 RLS 会话变量名。
+func TenantVarName() string { return tenantVarName }
 
 // Driver wraps a dialect.Driver and applies RLS behavior per Mode.
 // It implements dialect.Driver so callers can drop it in place of the
@@ -77,6 +129,9 @@ type Driver struct {
 	inner dialect.Driver
 	mode  Mode
 	log   *zap.SugaredLogger
+	// tenantVar 在构造时快照，避免运行期 SetTenantVarName 让同一批连接
+	// 里出现两种变量名。
+	tenantVar string
 
 	// stats: atomic counters exposed via Stats(). Cheap to update on hot path.
 	nQueriesOff     atomic.Uint64
@@ -93,16 +148,22 @@ func NewDriver(drv dialect.Driver, mode Mode, log *zap.SugaredLogger) *Driver {
 		log = zap.S()
 	}
 	return &Driver{
-		inner: drv,
-		mode:  mode,
-		log:   log,
+		inner:     drv,
+		mode:      mode,
+		log:       log,
+		tenantVar: tenantVarName,
 	}
 }
 
 // Mode returns the currently active enforcement mode.
 func (d *Driver) Mode() Mode { return d.mode }
 
-// Stats returns runtime counters. Intended for /internal/rls debug endpoint.
+// Stats returns runtime counters.
+//
+// 刻意不挂一个 /internal/rls-stats 路由：本项目所有 HTTP 入口都必须过
+// RBAC 与租户中间件，为一个纯运维计数器新开未鉴权路由不划算，而挂上鉴权
+// 又会变成「只有租户管理员能看进程级计数」的错误语义。计数器改由
+// database 包以 Prometheus GaugeFunc 暴露到既有 /metrics（已鉴权）。
 type Stats struct {
 	Mode           Mode   `json:"mode"`
 	QueriesOff     uint64 `json:"queries_off"`
@@ -148,7 +209,7 @@ func (d *Driver) Tx(ctx context.Context) (dialect.Tx, error) {
 	if d.mode == ModeEnforce && !tenantctx.IsSystemBypass(ctx) {
 		if tid, ok := tenantctx.TenantID(ctx); ok {
 			// Execute SET LOCAL to set tenant context for this transaction
-			if err := tx.Exec(ctx, fmt.Sprintf("SET LOCAL %s = %d", tenantVarName, tid), nil, nil); err != nil {
+			if err := tx.Exec(ctx, fmt.Sprintf("SET LOCAL %s = %d", d.tenantVar, tid), nil, nil); err != nil {
 				// Rollback on failure - don't return a broken tx
 				_ = tx.Rollback()
 				return nil, fmt.Errorf("rls: failed to set tenant in transaction: %w", err)
@@ -187,7 +248,7 @@ func (d *Driver) BeginTx(ctx context.Context, opts *sql.TxOptions) (dialect.Tx, 
 	// In enforce mode, set tenant context immediately after transaction start
 	if d.mode == ModeEnforce && !tenantctx.IsSystemBypass(ctx) {
 		if tid, ok := tenantctx.TenantID(ctx); ok {
-			if err := tx.Exec(ctx, fmt.Sprintf("SET LOCAL %s = %d", tenantVarName, tid), nil, nil); err != nil {
+			if err := tx.Exec(ctx, fmt.Sprintf("SET LOCAL %s = %d", d.tenantVar, tid), nil, nil); err != nil {
 				_ = tx.Rollback()
 				return nil, fmt.Errorf("rls: failed to set tenant in transaction: %w", err)
 			}
@@ -256,11 +317,8 @@ func (d *Driver) enforceContext(ctx context.Context, op, firstTok string) (conte
 		return nil, fmt.Errorf("rls: enforce mode requires tenant_id in context")
 	}
 	d.nEnforceApplied.Add(1)
-	return entsql.WithVar(ctx, tenantVarName, strconv.Itoa(tid)), nil
+	return entsql.WithVar(ctx, d.tenantVar, strconv.Itoa(tid)), nil
 }
-
-// tenantVarName 是 RLS 策略读取的会话变量名，与 002_pilot_policies.sql 保持一致。
-const tenantVarName = "app.current_tenant"
 
 // -----------------------------------------------------------------------
 // Observation (used by off + shadow)
@@ -341,10 +399,15 @@ var _ dialect.Driver = (*Driver)(nil)
 //
 // Example:
 //
-//	drv := rls.From(db, cfg.RLS.Mode, sugar)
+//	drv, err := rls.From(db, cfg.RLS.Mode, sugar)
+//	if err != nil { return err }
 //	client := ent.NewClient(ent.Driver(drv))
-func From(inner dialect.Driver, modeStr string, log *zap.SugaredLogger) *Driver {
-	return NewDriver(inner, ParseMode(modeStr), log)
+func From(inner dialect.Driver, modeStr string, log *zap.SugaredLogger) (*Driver, error) {
+	mode, err := ParseMode(modeStr)
+	if err != nil {
+		return nil, err
+	}
+	return NewDriver(inner, mode, log), nil
 }
 
 // Describe returns a short human string used in startup logs.

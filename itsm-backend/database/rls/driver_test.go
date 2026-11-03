@@ -62,16 +62,29 @@ var _ dialect.Driver = (*fakeDriver)(nil)
 
 func TestParseMode(t *testing.T) {
 	cases := map[string]Mode{
-		"":          ModeOff,
-		"off":       ModeOff,
-		"OFF":       ModeOff, // unknown values fall back to off
-		"shadow":    ModeShadow,
-		"enforce":   ModeEnforce,
-		"gibberish": ModeOff,
+		"":        ModeOff,
+		"off":     ModeOff,
+		"shadow":  ModeShadow,
+		"enforce": ModeEnforce,
+		// 容忍前后空白（env 文件里常见），但仍不做大小写归一。
+		" enforce ": ModeEnforce,
 	}
 	for in, want := range cases {
-		if got := ParseMode(in); got != want {
+		got, err := ParseMode(in)
+		if err != nil {
+			t.Errorf("ParseMode(%q) returned unexpected error: %v", in, err)
+			continue
+		}
+		if got != want {
 			t.Errorf("ParseMode(%q) = %q, want %q", in, got, want)
+		}
+	}
+
+	// 未知值必须报错，不得静默降级为 off。拼错的安全开关如果被当成
+	// 「关闭」，运维会以为租户隔离已生效而实际一行都没过滤。
+	for _, in := range []string{"OFF", "Enforce", "enforced", "gibberish", "1", "true"} {
+		if got, err := ParseMode(in); err == nil {
+			t.Errorf("ParseMode(%q) = %q, want error (unknown modes must fail closed)", in, got)
 		}
 	}
 }

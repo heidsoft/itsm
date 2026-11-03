@@ -1,17 +1,12 @@
 -- =============================================================================
--- RLS Migration 001 Rollback
+-- RLS 角色引导回滚（已迁移至版本化迁移流）
 --
--- 撤销 001_roles.sql 建立的角色与权限。仅用于紧急回滚，正常运维不应使用。
+-- 本文件不再包含可执行 DDL。回滚由
+-- `itsm-backend/migrations/20261031_rls_roles_bootstrap_down.sql` 负责：
+-- 先撤销 public schema 授权与默认权限，再在无依赖时删除角色，失败则如实告警。
 -- =============================================================================
 
-REVOKE ALL ON ALL TABLES    IN SCHEMA public FROM itsm_app, itsm_admin;
-REVOKE ALL ON ALL SEQUENCES IN SCHEMA public FROM itsm_app, itsm_admin;
-REVOKE USAGE ON SCHEMA public FROM itsm_app, itsm_admin;
-
-ALTER DEFAULT PRIVILEGES IN SCHEMA public REVOKE SELECT, INSERT, UPDATE, DELETE ON TABLES    FROM itsm_app;
-ALTER DEFAULT PRIVILEGES IN SCHEMA public REVOKE USAGE, SELECT                  ON SEQUENCES FROM itsm_app;
-ALTER DEFAULT PRIVILEGES IN SCHEMA public REVOKE ALL PRIVILEGES ON TABLES    FROM itsm_admin;
-ALTER DEFAULT PRIVILEGES IN SCHEMA public REVOKE ALL PRIVILEGES ON SEQUENCES FROM itsm_admin;
-
-DROP ROLE IF EXISTS itsm_app;
-DROP ROLE IF EXISTS itsm_admin;
+DO $$
+BEGIN
+    RAISE NOTICE '001_roles_rollback.sql is retired: use migrations/20261031_rls_roles_bootstrap_down.sql';
+END $$;

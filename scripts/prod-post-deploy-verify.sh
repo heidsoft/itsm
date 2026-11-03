@@ -20,6 +20,7 @@
 #   ADMIN_USERNAME 登录用户（默认 admin）
 #   ADMIN_PASSWORD 默认从 <repo>/.env.prod 读取；也可显式传入
 #   ENV_FILE       env 文件路径（默认 <repo>/.env.prod）
+#   FLOW_SCENARIO  --full 时运行的 itsm-cli 业务旅程（默认 ticket-lifecycle）
 
 set -euo pipefail
 
@@ -31,10 +32,16 @@ REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 BASE_URL="${BASE_URL:-http://localhost}"
 ADMIN_USERNAME="${ADMIN_USERNAME:-admin}"
 ENV_FILE="${ENV_FILE:-${REPO_ROOT}/.env.prod}"
+FLOW_SCENARIO="${FLOW_SCENARIO:-ticket-lifecycle}"
 RUN_FULL=false
-[ "${1:-}" = "--full" ] && RUN_FULL=true
 SKIP_VERSION=false
-for a in "$@"; do [ "$a" = "--skip-version" ] && SKIP_VERSION=true; done
+for a in "$@"; do
+  case "$a" in
+    --full) RUN_FULL=true ;;
+    --skip-version) SKIP_VERSION=true ;;
+    *) echo "未知参数: $a" >&2; exit 2 ;;
+  esac
+done
 
 GREEN='\033[0;32m'; RED='\033[0;31m'; NC='\033[0m'
 PASS=0; FAIL=0
@@ -123,7 +130,11 @@ fi
 if $RUN_FULL; then
   if [ -x "$REPO_ROOT/itsm-cli/bin/itsm.js" ] || [ -f "$REPO_ROOT/itsm-cli/bin/itsm.js" ]; then
     if node "$REPO_ROOT/itsm-cli/bin/itsm.js" doctor >/dev/null 2>&1; then ok "itsm-cli doctor"; else fail "itsm-cli doctor"; fi
-    if node "$REPO_ROOT/itsm-cli/bin/itsm.js" flow run --json >/dev/null 2>&1; then ok "itsm-cli flow run"; else fail "itsm-cli flow run（场景失败需人工判 failed/blocked）"; fi
+    if node "$REPO_ROOT/itsm-cli/bin/itsm.js" flow run "$FLOW_SCENARIO" --json >/dev/null 2>&1; then
+      ok "itsm-cli flow run $FLOW_SCENARIO"
+    else
+      fail "itsm-cli flow run $FLOW_SCENARIO（场景失败需人工判 failed/blocked）"
+    fi
   else
     fail "--full 需要 itsm-cli（$REPO_ROOT/itsm-cli/bin/itsm.js 不存在）"
   fi

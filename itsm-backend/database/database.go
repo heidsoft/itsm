@@ -222,8 +222,13 @@ func EnsureIndexConvergence(ctx context.Context, db *sql.DB) (int, error) {
 	return dropped, errors.Join(errs...)
 }
 
-// rlsDriver 保存最后一次初始化的 RLS 装饰器实例，供 /internal/rls-stats
-// 等诊断端点读取运行时统计。为 nil 表示未启用 RLS 或未初始化。
+// rlsDriver 保存最后一次初始化的 RLS 装饰器实例，供进程内诊断读取运行时
+// 统计（Stats()）。为 nil 表示未启用 RLS 或未初始化。
+//
+// 注意：本项目没有 /internal/rls-stats 路由（此前注释声称有，实际从未注册）。
+// 计数器不新开 HTTP 入口——所有入口都必须过 RBAC 与租户中间件，为进程级
+// 计数开一个未鉴权路由不划算，挂鉴权又会变成「只有某租户管理员能看全局计数」
+// 的错误语义。运维可观测性走 shadow 模式的 WARN 日志。
 var rlsDriver *rls.Driver
 
 // GetRawDB returns the underlying *sql.DB for raw SQL operations (e.g., pgvector)
@@ -360,7 +365,20 @@ func InitDatabaseWithRLS(cfg *config.DatabaseConfig, rlsCfg *config.RLSConfig, l
 	if err != nil {
 		return nil, err
 	}
-	if rlsCfg == nil || rlsCfg.Mode == "" || rlsCfg.Mode == string(rls.ModeOff) {
+	// 模式解析必须严格：拼错 RLS_MODE（如 enforced）如果被静默归一成 off，
+	// 运维会以为隔离已开启而实际一行都没生效。ParseMode 对未知值返回错误。
+	var mode rls.Mode
+	if rlsCfg == nil {
+		mode = rls.ModeOff
+	} else {
+		parsed, err := rls.ParseMode(rlsCfg.Mode)
+		if err != nil {
+			return nil, err
+		}
+		mode = parsed
+	}
+
+	if mode == rls.ModeOff {
 		if logger != nil {
 			logger.Infow("rls: driver mode=off (default, pass-through)")
 		}
@@ -368,19 +386,59 @@ func InitDatabaseWithRLS(cfg *config.DatabaseConfig, rlsCfg *config.RLSConfig, l
 		return client, nil
 	}
 
+	// 会话变量名必须真正接线。此前 config 暴露 RLS_TENANT_VAR_NAME 并原样
+	// 打进日志，而驱动内部用的是硬编码常量——配置说 A、代码做 B，日志还
+	// 替代码作证。现在由驱动持有该值，非法标识符直接拒绝启动（变量名会被
+	// 拼进 SET 语句）。
+	if err := rls.SetTenantVarName(rlsCfg.TenantVarName); err != nil {
+		return nil, err
+	}
+
 	// 装饰：把底层 entsql driver 换成 RLS 装饰器
 	innerDrv := entsql.OpenDB("postgres", rawDB)
-	deco := rls.From(innerDrv, rlsCfg.Mode, logger)
+	deco := rls.NewDriver(innerDrv, mode, logger)
 	rlsDriver = deco
+
+	// enforce 就绪探测：驱动只负责注入会话变量与 fail-close，**不负责**
+	// 让数据库真的过滤行。超级用户、BYPASSRLS 角色、以及「表 owner + 非
+	// FORCE 策略」都会无条件绕过策略。不探测就切 enforce，等于把
+	// enforce_applied 计数当成隔离生效的证据。
+	probeCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ready, readyErr := rls.CheckReadiness(probeCtx, rawDB)
+	cancel()
+	if readyErr != nil {
+		// 探测本身失败不能当成「就绪」：宁可拒绝启动，也不要假装已隔离。
+		return nil, fmt.Errorf("rls: readiness probe failed in %s mode: %w", mode, readyErr)
+	}
+	if mode == rls.ModeEnforce {
+		if err := rls.EnforceReadinessError(ready); err != nil {
+			return nil, err
+		}
+	} else if logger != nil {
+		// shadow 不改数据库行为，探测不通过不阻断启动，但必须提前告知：
+		// 现在切 enforce 会失败/无效。
+		if ready.Ready() {
+			logger.Infow("rls: shadow mode readiness ok", "readiness", ready.String())
+		} else {
+			logger.Warnw(
+				"rls: shadow mode is observable but enforce would NOT be effective yet",
+				"reasons", ready.Reasons,
+				"readiness", ready.String(),
+			)
+		}
+	}
+
 	if logger != nil {
 		logger.Infow(
 			"rls: driver installed",
 			"mode", string(deco.Mode()),
-			"tenant_var", rlsCfg.TenantVarName,
+			// 打印驱动实际使用的变量名，而不是配置里那个未经接线的值。
+			"tenant_var", rls.TenantVarName(),
+			"readiness", ready.String(),
 		)
 	}
 	rlsClient := ent.NewClient(ent.Driver(deco))
-	RegisterSecurityInterceptors(rlsClient, rlsCfg.Mode)
+	RegisterSecurityInterceptors(rlsClient, string(mode))
 	return rlsClient, nil
 }
 

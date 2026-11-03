@@ -8,7 +8,7 @@
 //	  go test -tags integration_rls -v ./database/rls/...
 //
 // Prerequisites:
-//   - itsm_app / itsm_admin roles exist (see migrations/001_roles.sql)
+//   - itsm_app / itsm_admin roles exist (created by migrations/20261031_rls_roles_bootstrap.sql)
 //   - `changes` table has rows for at least tenant_id=1
 //   - The connecting DB is the SAME one you migrated (see caveat below)
 //

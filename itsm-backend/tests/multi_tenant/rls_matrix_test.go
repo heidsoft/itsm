@@ -448,12 +448,13 @@ func TestTenantScope_ListIsolation(t *testing.T) {
 	require.NoError(t, err)
 
 	knowledgeRepo := knowledge.NewEntRepository(env.client)
-	artsA, totalA, err := knowledgeRepo.List(ctx, env.tenantA.ID, 1, 20, "", "", "")
+	// Visibility 零值=不做分类收窄：本用例只验租户隔离，租户内全部作者都放行。
+	artsA, totalA, err := knowledgeRepo.List(ctx, env.tenantA.ID, 1, 20, "", "", "", knowledge.Visibility{})
 	require.NoError(t, err)
 	require.Len(t, artsA, 1)
 	require.Equal(t, 1, totalA)
 
-	artsB, totalB, err := knowledgeRepo.List(ctx, env.tenantB.ID, 1, 20, "", "", "")
+	artsB, totalB, err := knowledgeRepo.List(ctx, env.tenantB.ID, 1, 20, "", "", "", knowledge.Visibility{})
 	require.NoError(t, err)
 	require.Empty(t, artsB, "tenantB 不得看到 tenantA 的知识文章")
 	require.Zero(t, totalB)
