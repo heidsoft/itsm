@@ -75,12 +75,16 @@ var registry = []definition{
 	// 语义是「outbox 未装配」）。注释过期导致的假 Pilot 会隐藏一个已可投产的能力。
 	{key: "problem", maturity: MaturityGA, built: true, dependencies: []string{"sla", "workflow"}},
 	{key: "change", maturity: MaturityGA, built: true, dependencies: []string{"workflow"}},
-	// 服务请求维持 Pilot：2026-10-31 已接阿里云 ECS 真实交付并打通审批→交付→
-	// SLA/流程/CMDB 收尾，但交付只覆盖 ECS，中途失败的回滚补偿仍未实现，
-	// 目录项到 CI Type、交付模板、BPMN、SLA 的绑定口径也还分散。
+	// 服务请求维持 Pilot：2026-10-31 已接阿里云 ECS RunInstances 真实交付并打通
+	// 审批→交付→SLA/流程/CMDB 收尾；2026-11-02 真实账号端到端验收跑到
+	// RunInstances（云侧因账号余额不足拒绝，凭据/签名/账号/地域链路均已验证通过），
+	// 并补齐 ClientToken 幂等、失败对账证据、永久错误快速失败、人工裁决审计与
+	// 创建阶段审批计划 fail-closed。剩余阻断是：只覆盖 ECS、缺自动释放/回滚动作、
+	// 目录项绑定口径分散，以及一次成功创建并释放 ECS 的闭环验收（账号侧阻塞）。
+	// 理由必须与代码同步，由 TestServiceRequestPilotReasonReflectsDeliveryReality 双向锁定。
 	{
 		key: "serviceRequest", maturity: MaturityPilot, built: true, dependencies: []string{"workflow", "notification"},
-		pilotReason: "交付已接阿里云 ECS 真实 Provider（租户云账号 + secret:// 凭据引用，未配置即失败关闭），但目前只覆盖 ECS 一种资源；多步交付中途失败后的资源回滚/补偿未实现；目录项到 CI Type、交付模板、BPMN、SLA 的绑定口径仍分散。晋升条件：补偿动作 + 目录项绑定统一 + 至少一条真实账号交付验收。",
+		pilotReason: "交付已接阿里云 ECS RunInstances 真实 Provider（租户云账号 + secret:// 或 env://ITSM_ALIYUN 凭据引用，未配置即失败关闭），审批→交付→SLA/流程/CMDB 收尾已打通；ClientToken 幂等、失败审计带对账证据、永久性云错误快速失败、人工裁决落审计谱系均已闭环。2026-11-02 真实账号端到端验收已跑到 RunInstances（云侧因账号余额不足拒绝，凭据/签名/账号/地域链路全部验证通过）。剩余阻断：① 只覆盖 ECS 一种资源；② 缺自动释放/回滚动作，中途失败靠幂等键对账与人工判定兜底；③ 目录项到 CI Type、交付模板、BPMN、SLA 的绑定口径仍分散。晋升条件：账号充值后完成一次真实账号创建并释放 ECS 的闭环验收 + 目录项绑定统一 + 自动补偿或第二资源类型。",
 	},
 	{key: "cmdb", maturity: MaturityGA, built: true},
 	{key: "cmdb.configurationItems", maturity: MaturityGA, built: true, dependencies: []string{"cmdb"}},

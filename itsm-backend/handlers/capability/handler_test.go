@@ -2,6 +2,7 @@ package capability
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -283,7 +284,13 @@ func TestPilotReasonsDoNotCiteClosedBlockers(t *testing.T) {
 		// 2026-10-31：假 IdP 已覆盖登录→回调→换票→JWT 整链，缺的只是真实 IdP 联调。
 		"identity.oidc": {"现有覆盖为服务单测与路由测试", "没有与真实 IdP 的端到端联调证据"},
 		// 2026-10-31：交付已接阿里云 ECS RunInstances（租户凭据引用、未配置失败关闭）。
-		"serviceRequest": {"交付 Provider 仍是 StubProvider", "未接真实云 API", "交付 Provider 仍为 Stub"},
+		// 2026-11-02：真实账号验收已执行、凭据支持 env://、失败靠幂等键对账 +
+		// 人工判定兜底，以下旧结论不得再写回理由。
+		"serviceRequest": {
+			"交付 Provider 仍是 StubProvider", "未接真实云 API", "交付 Provider 仍为 Stub",
+			"租户云账号 + secret:// 凭据引用", "多步交付中途失败后的资源回滚/补偿未实现",
+			"至少一条真实账号交付验收",
+		},
 	}
 	byKey := make(map[string]definition, len(registry))
 	for _, item := range registry {
@@ -296,6 +303,66 @@ func TestPilotReasonsDoNotCiteClosedBlockers(t *testing.T) {
 			require.NotContainsf(t, item.pilotReason, phrase,
 				"%s 的理由引用了已闭环的阻断项 %q，请按当前代码重写", key, phrase)
 		}
+	}
+}
+
+// validateServiceRequestPilotReason 校验服务请求的 Pilot 理由是否与 2026-11-02
+// 之后的交付现实一致。抽成返回 error 的纯函数，是为了在测试里把历史旧文案
+// 也喂进来做反向验证：如果守卫只是「检查当前字符串里有没有关键词」，改回旧
+// 结论同样会绿，那就是假绿。
+func validateServiceRequestPilotReason(reason string) error {
+	// 已落地/已澄清的事实，必须逐处在理由里出现。
+	for _, phrase := range []string{
+		"env://ITSM_ALIYUN", // 凭据双形态；真实账号验收用的正是 env://
+		"ClientToken",       // 幂等键 + 失败对账证据
+		"人工裁决",              // 判定落审计谱系
+		"永久性",               // 永久云错误快速失败，不再重投
+		"真实账号",              // 端到端验收已执行
+		"自动释放",              // 仍缺的动作，不能再笼统写成「缺补偿」
+		"晋升条件",
+	} {
+		if !strings.Contains(reason, phrase) {
+			return fmt.Errorf("pilotReason 缺少已落地/已澄清事实 %q", phrase)
+		}
+	}
+	// 2026-10-31 的旧结论，任何一条重新出现都说明理由没跟上代码。
+	for _, phrase := range []string{
+		"租户云账号 + secret:// 凭据引用",
+		"多步交付中途失败后的资源回滚/补偿未实现",
+		"至少一条真实账号交付验收",
+		"交付 Provider 仍是 StubProvider",
+	} {
+		if strings.Contains(reason, phrase) {
+			return fmt.Errorf("pilotReason 引用了过期结论 %q", phrase)
+		}
+	}
+	return nil
+}
+
+// TestServiceRequestPilotReasonReflectsDeliveryReality 双向锁定服务请求的
+// Pilot 理由：当前值必须通过，退回旧文案或删掉任一已落地事实必须被拒。
+func TestServiceRequestPilotReasonReflectsDeliveryReality(t *testing.T) {
+	var item *definition
+	for i := range registry {
+		if registry[i].key == "serviceRequest" {
+			item = &registry[i]
+			break
+		}
+	}
+	require.NotNil(t, item, "能力矩阵必须有 serviceRequest 条目")
+	require.Equal(t, MaturityPilot, item.maturity)
+	require.NoError(t, validateServiceRequestPilotReason(item.pilotReason))
+
+	// 反向验证一：10-31 的旧文案喂回同一判定函数，必须被拒绝。
+	old := "交付已接阿里云 ECS 真实 Provider（租户云账号 + secret:// 凭据引用，未配置即失败关闭），但目前只覆盖 ECS 一种资源；多步交付中途失败后的资源回滚/补偿未实现；目录项到 CI Type、交付模板、BPMN、SLA 的绑定口径仍分散。晋升条件：补偿动作 + 目录项绑定统一 + 至少一条真实账号交付验收。"
+	require.Error(t, validateServiceRequestPilotReason(old),
+		"旧文案必须被拒，否则守卫只是匹配当前字符串（假绿）")
+
+	// 反向验证二：逐项删掉一个已落地事实也必须被拒，防止断言取并集后
+	// 靠其它关键词偶然通过。
+	for _, drop := range []string{"ClientToken", "人工裁决", "env://ITSM_ALIYUN"} {
+		require.Error(t, validateServiceRequestPilotReason(strings.Replace(item.pilotReason, drop, "", 1)),
+			"移除 %q 后守卫仍应拒绝", drop)
 	}
 }
 
