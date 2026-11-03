@@ -92,6 +92,8 @@ function statsFixture(overrides: Partial<TicketStatsResponse> = {}): TicketStats
       { priority: 'urgent', count: 20 },
       { priority: 'critical', count: 10 },
     ],
+    // 报表页不带窗口取全量，后端仍会回显行级数据范围。
+    scope: 'all',
     ...overrides,
   };
 }

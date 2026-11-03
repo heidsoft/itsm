@@ -28,6 +28,7 @@ import {
 import type { ColumnsType } from 'antd/es/table';
 import { ArrowDownCircle, ArrowUpCircle, Boxes, History, Pencil, Plus, RefreshCw, Trash2 } from 'lucide-react';
 import { PageContainer } from '@/app/components/PageContainer';
+import { formatDateTime } from '@/lib/formatters';
 import {
   CATALOG_STATUS_META,
   createCatalogItem,
@@ -277,7 +278,7 @@ export default function MarketplaceCatalogAdminPage() {
       title: '商品',
       dataIndex: 'title',
       render: (_: unknown, item) => (
-        <Space direction='vertical' size={0}>
+        <Space orientation='vertical' size={0}>
           <Text strong>{item.title}</Text>
           <Text type='secondary' style={{ fontSize: 12 }}>
             {item.name} · {item.provider}
@@ -322,7 +323,7 @@ export default function MarketplaceCatalogAdminPage() {
       title: '更新时间',
       dataIndex: 'updatedAt',
       width: 170,
-      render: (value: string) => (value ? new Date(value).toLocaleString('zh-CN') : '—'),
+      render: (value: string) => formatDateTime(value) || '—',
     },
     {
       title: '操作',
@@ -393,7 +394,7 @@ export default function MarketplaceCatalogAdminPage() {
       title: '发布时间',
       dataIndex: 'releasedAt',
       width: 170,
-      render: (value: string) => (value ? new Date(value).toLocaleString('zh-CN') : '—'),
+      render: (value: string) => formatDateTime(value) || '—',
     },
     {
       title: '操作',
@@ -435,7 +436,7 @@ export default function MarketplaceCatalogAdminPage() {
         </Space>
       }
     >
-      <Space direction='vertical' size={16} style={{ width: '100%' }}>
+      <Space orientation='vertical' size={16} style={{ width: '100%' }}>
         <Row gutter={16}>
           <Col xs={12} md={6}>
             <Card size='small'>
@@ -444,12 +445,12 @@ export default function MarketplaceCatalogAdminPage() {
           </Col>
           <Col xs={12} md={6}>
             <Card size='small'>
-              <Statistic title='已上架' value={summary.published} valueStyle={{ color: '#3f8600' }} />
+              <Statistic title='已上架' value={summary.published} styles={{ content: { color: '#3f8600' } }} />
             </Card>
           </Col>
           <Col xs={12} md={6}>
             <Card size='small'>
-              <Statistic title='草稿' value={summary.draft} valueStyle={{ color: '#d48806' }} />
+              <Statistic title='草稿' value={summary.draft} styles={{ content: { color: '#d48806' } }} />
             </Card>
           </Col>
           <Col xs={12} md={6}>
@@ -462,7 +463,7 @@ export default function MarketplaceCatalogAdminPage() {
         <Alert
           type='info'
           showIcon
-          message='目录是全局的，对所有租户生效'
+          title='目录是全局的，对所有租户生效'
           description='上架后所有租户都能浏览与安装；下架只停止新安装，已安装租户不受影响。连接器类商品的名称必须对应一个已注册的连接器（如 feishu / wecom / dingtalk / webhook），否则安装时无法启动运行态。'
         />
 
@@ -606,7 +607,7 @@ export default function MarketplaceCatalogAdminPage() {
         onClose={() => setVersionsOpen(false)}
       >
         {versionTarget && (
-          <Space direction='vertical' size={16} style={{ width: '100%' }}>
+          <Space orientation='vertical' size={16} style={{ width: '100%' }}>
             <Descriptions size='small' column={2} bordered>
               <Descriptions.Item label='线上版本'>
                 {versionTarget.item.latestVersion || '未发布'}

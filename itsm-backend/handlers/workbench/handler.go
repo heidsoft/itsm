@@ -69,6 +69,13 @@ func (h *Handler) Query(c *gin.Context) {
 		query.Phase = strings.Split(phaseStr, ",")
 	}
 
+	// excludePhase 是「未关闭」语义的反向过滤：默认排除 closed/resolved 等终态，
+	// 而不是枚举 draft/submitted/active —— 后者会漏掉状态无法映射到已知 phase 的单据（unknown）
+	// 以及未来新增的阶段。Phase 与 ExcludePhase 互斥：前端默认只传 ExcludePhase。
+	if excludePhaseStr := c.Query("excludePhase"); excludePhaseStr != "" {
+		query.ExcludePhase = strings.Split(excludePhaseStr, ",")
+	}
+
 	if priorityStr := c.Query("priority"); priorityStr != "" {
 		query.Priority = strings.Split(priorityStr, ",")
 	}

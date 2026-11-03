@@ -20,6 +20,7 @@ import {
   type ListAuditLogsParams,
 } from '@/lib/api/auditlog-api';
 import { useAuthStoreHydration } from '@/lib/store/auth-store';
+import { formatDateTime } from '@/lib/formatters';
 
 const { Title, Text } = Typography;
 
@@ -29,6 +30,114 @@ const METHOD_COLORS: Record<string, string> = {
   PUT: 'orange',
   PATCH: 'cyan',
   DELETE: 'red',
+};
+
+// 操作码中文映射：取值来自后端 middleware/audit.go 的 AuditableAction 常量、
+// 登录审计的 LOGIN_SUCCESS/LOGIN_FAILED，以及 BPMN 审计动作（如 reassigned）。
+const actionLabels: Record<string, string> = {
+  login: '登录',
+  logout: '登出',
+  LOGIN_SUCCESS: '登录成功',
+  LOGIN_FAILED: '登录失败',
+  create: '创建',
+  update: '编辑',
+  delete: '删除',
+  view: '查看',
+  read: '读取',
+  write: '写入',
+  search: '搜索',
+  export: '导出',
+  import: '导入',
+  assign: '分配',
+  escalate: '升级',
+  resolve: '解决',
+  close: '关闭',
+  reopen: '重新打开',
+  comment: '评论',
+  attachment: '附件',
+  permission: '权限变更',
+  configuration: '配置变更',
+  submit: '提交',
+  approve: '审批通过',
+  reject: '审批拒绝',
+  schedule: '排期',
+  start: '开始',
+  complete: '完成',
+  rollback: '回滚',
+  cancel: '取消',
+  // BPMN 流程审计动作
+  terminated: '流程终止',
+  assigned: '任务分配',
+  unassigned: '取消分配',
+  claimed: '领取任务',
+  completed: '任务完成',
+  cancelled: '任务取消',
+  escalated: '任务升级',
+  reassigned: '重新分配',
+  variable_changed: '变量变更',
+  activity_started: '活动开始',
+  activity_completed: '活动完成',
+  delegate: '委派',
+  add_approver: '添加审批人',
+  system_decision: '系统决策',
+};
+
+// 资源码中文映射：后端取 URL 的第三段（多为复数 kebab-case），
+// 少数业务写入使用 `ticket_type:<id>` 形式，按冒号前缀回退。
+const resourceLabels: Record<string, string> = {
+  auth: '认证',
+  tickets: '工单',
+  ticket: '工单',
+  ticket_type: '工单类型',
+  incidents: '事件',
+  incident: '事件',
+  problems: '问题',
+  problem: '问题',
+  changes: '变更',
+  change: '变更',
+  releases: '发布',
+  release: '发布',
+  'service-requests': '服务请求',
+  service_request: '服务请求',
+  'service-catalog': '服务目录',
+  service_catalog: '服务目录',
+  knowledge: '知识库',
+  cmdb: 'CMDB',
+  assets: '资产',
+  asset: '资产',
+  licenses: '许可证',
+  license: '许可证',
+  users: '用户',
+  user: '用户',
+  roles: '角色',
+  role: '角色',
+  menus: '菜单',
+  tenants: '租户',
+  tenant: '租户',
+  'audit-logs': '审计日志',
+  notifications: '通知',
+  approvals: '审批',
+  bpmn: '工作流',
+  workflows: '工作流实例',
+  marketplace: '应用市场',
+  connectors: '连接器',
+  msp: 'MSP',
+  reports: '报表',
+  dashboard: '仪表盘',
+  projects: '项目',
+  applications: '应用',
+  'email-intake': '邮件受理',
+  ai: 'AI 能力',
+  sla: 'SLA',
+  approvals_workflows: '审批流程',
+};
+
+const labelOr = (labels: Record<string, string>, code: string): string => {
+  if (!code) return '-';
+  if (labels[code]) return labels[code];
+  // `ticket_type:1` 等前缀形式：优先映射前缀，再兜底原值
+  const prefix = code.split(':')[0];
+  return labels[prefix] ?? code;
 };
 
 const statusColor = (code: number): string => {
@@ -123,7 +232,7 @@ const AuditLogsPage: React.FC = () => {
       // 改为本地化短格式，列宽内完整展示。
       render: (v: string) => (
         <Text style={{ whiteSpace: 'nowrap' }}>
-          {v ? new Date(v).toLocaleString('zh-CN', { hour12: false }) : '-'}
+          {formatDateTime(v) || '-'}
         </Text>
       ),
     },
@@ -142,6 +251,8 @@ const AuditLogsPage: React.FC = () => {
       key: 'action',
       width: 160,
       ellipsis: true,
+      // 显示中文动作名；未收录的动作码保留原值，便于排查
+      render: (v: string) => labelOr(actionLabels, v),
     },
     {
       title: '资源',
@@ -149,6 +260,7 @@ const AuditLogsPage: React.FC = () => {
       key: 'resource',
       width: 160,
       ellipsis: true,
+      render: (v: string) => labelOr(resourceLabels, v),
     },
     {
       title: '路径',

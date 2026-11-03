@@ -6,6 +6,7 @@ import type { ColumnsType } from 'antd/es/table';
 import { Activity, AlertTriangle, CheckCircle, Zap } from 'lucide-react';
 import { IncidentAPI } from '@/lib/api/incident-api';
 import type { Incident, ListIncidentsResponse } from '@/lib/api/incident-api';
+import { formatDateTime } from '@/lib/formatters';
 
 const { Title, Text } = Typography;
 
@@ -151,7 +152,7 @@ export default function NOCPage() {
       dataIndex: 'createdAt',
       key: 'createdAt',
       width: 180,
-      render: (v: string) => (v ? new Date(v).toLocaleString('zh-CN', { hour12: false }) : '-'),
+      render: (v: string) => formatDateTime(v) || '-',
     },
   ];
 

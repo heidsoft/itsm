@@ -173,7 +173,9 @@ export function CIEditorForm({
             onChange={onCITypeChange}
             size='middle'
             options={types.map(type => ({
-              label: type.name,
+              // ci_types.name 是租户内唯一代码（server/database/...），中文名在 description；
+              // 下拉展示中文，value 仍用稳定 id。
+              label: type.description?.trim() || type.name,
               value: type.id,
             }))}
           />

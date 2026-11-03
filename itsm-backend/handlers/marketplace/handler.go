@@ -150,18 +150,18 @@ func (c *Handler) InstallItem(ctx *gin.Context) {
 		case errors.Is(err, marketplace.ErrMarketplaceItemUnavailable), errors.Is(err, marketplace.ErrMarketplaceInstalledByMissing):
 			common.BadRequestWithErr(ctx, err, "组件当前不可安装")
 		case errors.Is(err, marketplace.ErrMarketplaceDeliveryUnsupported):
-			common.Fail(ctx, common.NotImplementedCode, "技能与插件尚不支持分发和加载，暂不可安装或配置")
-		case errors.Is(err, marketplace.ErrMarketplaceConnectorNotReady):
-			// 安装记录已落库并标为 failed（连接器没起来：缺凭据 / provider 未注册 /
-			// 端点不可达）。这里如实返回那条记录，让前端显示「已安装但未就绪 +
-			// errorMessage」，而不是笼统的「安装失败」让人以为压根没装上。
+			common.Fail(ctx, common.NotImplementedCode, "平台不交付该类型商品：插件需要宿主运行时，历史插件条目仅可查看与卸载")
+		case marketplace.IsDeliveryNotReady(err):
+			// 运行态没能起来（连接器缺凭据 / 技能交付物在本进程不存在）。
+			// 安装记录已落库并标为 failed，这里如实返回那条记录，让前端显示
+			// 「已安装但未就绪 + errorMessage」，而不是笼统的「安装失败」让人以为压根没装上。
 			if installation != nil {
 				common.SuccessWithMessage(ctx,
-					"安装记录已创建，但连接器未就绪；补全配置后重新安装即可",
+					"安装记录已创建，但运行态未就绪；补全配置或修正目录版本后重新安装即可",
 					ToInstallationResponse(installation))
 				return
 			}
-			common.Conflict(ctx, "连接器未就绪："+err.Error(), nil)
+			common.Conflict(ctx, "组件运行态未就绪："+err.Error(), nil)
 		case errors.Is(err, marketplace.ErrMarketplaceDependencyUnsatisfied):
 			// 前置组件缺失/版本不符属于业务冲突而非参数错误：商品本身可装，
 			// 只是依赖链没满足。明细由 service 逐项拼好，直接展示给管理员。
@@ -322,7 +322,13 @@ func (c *Handler) UpdateInstallationConfig(ctx *gin.Context) {
 			return
 		}
 		if errors.Is(err, marketplace.ErrMarketplaceDeliveryUnsupported) {
-			common.Fail(ctx, common.NotImplementedCode, "技能与插件尚不支持分发和加载，暂不可安装或配置")
+			common.Fail(ctx, common.NotImplementedCode, "平台不交付该类型商品：插件需要宿主运行时，历史插件条目仅可查看与卸载")
+			return
+		}
+		if errors.Is(err, marketplace.ErrMarketplaceConfigUnsupported) {
+			// 类型本身可交付，但它没有租户级配置面：这是「不接受该请求」，
+			// 不是「功能未实现」——收下并忽略配置只会造出一个假保存。
+			common.BadRequestWithErr(ctx, err, "该组件类型没有租户级配置项")
 			return
 		}
 		if errors.Is(err, marketplace.ErrMarketplaceConnectorNotReady) {

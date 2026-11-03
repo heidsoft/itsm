@@ -79,6 +79,21 @@ func (r *repositoryImpl) Query(ctx context.Context, query WorkbenchQuery) (*Work
 			conds = append(conds, fmt.Sprintf("status IN (%s)", strings.Join(placeholders, ",")))
 		}
 
+		// ExcludePhase（未关闭语义）：按域把终态映射回 status，用 NOT IN 排除。
+		// 必须在每个 UNION 分支内做：phase→status 映射是域相关的，且 unknown 阶段
+		// （状态不在 lifecycle 映射表中）不会被任何排除集命中，因此天然保留。
+		if len(query.ExcludePhase) > 0 {
+			excluded, ok := lifecycle.StatusesForPhases(lifecycle.Domain(d.name), query.ExcludePhase)
+			if ok && len(excluded) > 0 {
+				placeholders := make([]string, len(excluded))
+				for i, s := range excluded {
+					placeholders[i] = nextArg()
+					args = append(args, s)
+				}
+				conds = append(conds, fmt.Sprintf("status NOT IN (%s)", strings.Join(placeholders, ",")))
+			}
+		}
+
 		// 行级数据权限（owner/assignee 维度）：非管理角色只看本人发起或受理的单据。
 		// 收窄条件放在各域子查询内，保证 UNION 的每一条分支都带上 ——
 		// 放外层会因各域列名不同而无法统一引用。

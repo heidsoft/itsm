@@ -10,6 +10,8 @@
  * - 全部字段按字符串转义：公式注入防护（以 = + - @ 开头的值加前置单引号）。
  */
 
+import { formatDateTime } from '@/lib/formatters';
+
 /** 单列定义：title 为表头，render 把行数据转为单元格文本。 */
 export interface CsvColumn<T> {
   title: string;
@@ -44,13 +46,9 @@ export async function fetchAllPages<T>(
   return all;
 }
 
-/** CSV 日期单元格：本地时间字符串，空值/非法值输出空串。 */
+/** CSV 日期单元格：统一 YYYY-MM-DD HH:mm，空值/非法值输出空串。 */
 export function csvDate(value?: string | null): string {
-  if (!value) {
-    return '';
-  }
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? '' : date.toLocaleString('zh-CN', { hour12: false });
+  return formatDateTime(value);
 }
 
 /** CSV 单元格转义：包裹引号、屏蔽公式注入。 */

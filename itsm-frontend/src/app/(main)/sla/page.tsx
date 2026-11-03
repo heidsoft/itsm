@@ -21,9 +21,35 @@ type PriorityKey = 'critical' | 'urgent' | 'high' | 'medium' | 'normal' | 'low';
 
 const priorityKeys: PriorityKey[] = ['critical', 'urgent', 'high', 'medium', 'normal', 'low'];
 
+// 剩余时间必须按量级格式化：直接展示「3018 分钟」会让用户自己换算成天/小时。
+// 单位随语言切换，避免英文界面出现中文单位。
+function formatDuration(minutes: number, language: string): string {
+  const abs = Math.abs(Math.round(minutes));
+  const days = Math.floor(abs / 1440);
+  const hours = Math.floor((abs % 1440) / 60);
+  const mins = abs % 60;
+  if (language === 'en-US') {
+    if (days > 0) return hours > 0 ? `${days}d ${hours}h` : `${days}d`;
+    if (hours > 0) return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
+    return `${mins}m`;
+  }
+  if (days > 0) return hours > 0 ? `${days} 天 ${hours} 小时` : `${days} 天`;
+  if (hours > 0) return mins > 0 ? `${hours} 小时 ${mins} 分钟` : `${hours} 小时`;
+  return `${mins} 分钟`;
+}
+
 export default function SLAPage() {
   const router = useRouter();
-  const { t } = useI18n();
+  const { t, language } = useI18n();
+
+  // 告警规则名沿用了 SLA 定义名前缀（SLA-P3-低-响应告警 / SLA-服务请求-响应告警），
+  // 两个维度混排会让人误以为告警类型不同。页面已展示工单与优先级，
+  // 规则名只保留告警维度（响应/解决），统一成同一套命名。
+  const alertKindLabel = (name?: string | null) => {
+    if (name?.endsWith('-响应告警')) return t('sla.alertKindResponse');
+    if (name?.endsWith('-解决告警')) return t('sla.alertKindResolution');
+    return name || t('sla.alertKindGeneric');
+  };
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [refreshedAt, setRefreshedAt] = useState<Date>();
@@ -246,7 +272,7 @@ export default function SLAPage() {
                       <div>
                         <div className="font-medium">{alert.ticketTitle}</div>
                         <div className="text-xs text-gray-500">
-                          {alert.alertRuleName} · {t('sla.ticketRef', { id: alert.ticketId })}
+                          {alertKindLabel(alert.alertRuleName)} · {t('sla.ticketRef', { id: alert.ticketId })}
                         </div>
                       </div>
                       <Space>
@@ -257,8 +283,8 @@ export default function SLAPage() {
                         {remainingMinutes !== null && (
                           <Tag color={remainingMinutes <= 0 ? 'red' : 'orange'}>
                             {remainingMinutes <= 0
-                              ? t('sla.overdueMinutes', { minutes: Math.abs(remainingMinutes) })
-                              : t('sla.remainingMinutes', { minutes: remainingMinutes })}
+                              ? t('sla.overdueDuration', { duration: formatDuration(remainingMinutes, language) })
+                              : t('sla.remainingDuration', { duration: formatDuration(remainingMinutes, language) })}
                           </Tag>
                         )}
                       </Space>

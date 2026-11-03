@@ -217,7 +217,7 @@ export default function ReconciliationPage() {
           type="error"
           showIcon
           style={{ marginBottom: 16 }}
-          message={reconErrorText}
+          title={reconErrorText}
           action={
             <Button size="small" onClick={() => reconQuery.refetch()}>
               重试

@@ -39,6 +39,7 @@ import {
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { RoleAPI } from '@/lib/api/role-api';
+import { formatDateTime } from '@/lib/formatters';
 import { UserApi } from '@/lib/api/user-api';
 import type { PermissionCatalogItem, Role } from '@/lib/api/api-config';
 import { useI18n } from '@/lib/i18n/useI18n';
@@ -346,7 +347,7 @@ export default function RoleManagement() {
       dataIndex: 'createdAt',
       width: 160,
       render: (createdAt: string) => (
-        <span>{createdAt ? new Date(createdAt).toLocaleDateString() : '-'}</span>
+        <span>{formatDateTime(createdAt) || '-'}</span>
       ),
     },
     {

@@ -19,6 +19,7 @@ import {
 import React, { useState, useEffect } from 'react';
 import dayjs from 'dayjs';
 import type { Dayjs } from 'dayjs';
+import { formatDateTime } from '@/lib/formatters';
 import {
   Card,
   Table,
@@ -343,7 +344,7 @@ export default function TenantManagement() {
       render: (expiresAt: string) => (
         <div className="flex items-center">
           <Calendar className="w-4 h-4 mr-1 text-gray-400" />
-          {expiresAt ? new Date(expiresAt).toLocaleDateString() : t('tenants.usage.none')}
+          {formatDateTime(expiresAt) || t('tenants.usage.none')}
         </div>
       ),
     },

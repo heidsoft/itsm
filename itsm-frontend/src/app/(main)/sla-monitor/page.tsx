@@ -21,6 +21,7 @@ import { AlertTriangle, CheckCircle, Clock, RefreshCw, TrendingUp } from 'lucide
 import { SLAApi } from '@/lib/api/sla-api';
 import type { SLADefinition, SLAViolation } from '@/lib/api/sla-api';
 import { BACKEND_MAX_PAGE_SIZE } from '@/lib/api/pagination';
+import { formatDateTime as sharedFormatDateTime } from '@/lib/formatters';
 
 const { Title, Text } = Typography;
 
@@ -46,8 +47,7 @@ const VIOLATION_TYPE_LABELS: Record<string, string> = {
   resolution: '解决超时',
 };
 
-const formatDateTime = (value?: string): string =>
-  value ? new Date(value).toLocaleString('zh-CN', { hour12: false }) : '-';
+const formatDateTime = (value?: string): string => sharedFormatDateTime(value) || '-';
 
 /** 单个 SLA 定义的违规聚合，全部来自后端违规列表，不做任何推算 */
 interface ServiceSLARow {

@@ -44,6 +44,7 @@ import { useDashboardData } from './hooks/useDashboardData';
 import type { QuickAction } from './types/dashboard.types';
 import { useTheme } from '@/lib/design-system/theme';
 import { userPreferences } from '@/lib/user-preferences';
+import { formatDateTime } from '@/lib/formatters';
 
 type DashboardUserPreferences = ReturnType<typeof userPreferences.get>;
 
@@ -218,7 +219,7 @@ export default function DashboardPage() {
         <div className='flex items-center justify-between min-w-[200px]'>
           <span className='text-sm font-medium'>最后更新</span>
           <span className='text-xs text-gray-500 font-medium'>
-            {lastUpdated ? new Date(lastUpdated).toLocaleTimeString() : '从未'}
+            {formatDateTime(lastUpdated) || '从未'}
           </span>
         </div>
       ),
@@ -281,7 +282,7 @@ export default function DashboardPage() {
         <Space size='middle'>
           {lastUpdated && (
             <span className='text-sm text-gray-500'>
-              更新于 {new Date(lastUpdated).toLocaleTimeString()}
+              更新于 {formatDateTime(lastUpdated)}
             </span>
           )}
 

@@ -210,7 +210,7 @@ export const SLATrendPredictionCard: React.FC<Props> = ({
       </Spin>
 
       <Text type="secondary" className="mt-2 block text-xs">
-        预测窗口：{range[0]} ~ {range[1]} · 由 itsm-backend PredictionService 提供
+        预测窗口：{range[0]} ~ {range[1]} · 由平台预测服务提供
       </Text>
     </Card>
   );
@@ -218,11 +218,13 @@ export const SLATrendPredictionCard: React.FC<Props> = ({
 
 /** 极简列表式渲染，避免引入额外图表依赖；后续可换成 G2/echarts */
 const PredictionList: React.FC<{ points: PredictionDataPoint[] }> = ({ points }) => {
-  const top = points.slice(0, 8);
+  // 必须渲染全部预测点：此前只取前 8 个，而上方「峰值」是按全部点计算的，
+  // 峰值日期落在第 9 个点之后时，列表（即 X 轴）根本不包含该日期，出现自相矛盾。
+  const maxValue = points.reduce((m, p) => Math.max(m, p.predictedValue), 0) || 1;
   return (
-    <div className="space-y-2">
-      {top.map((p, idx) => {
-        const widthPct = Math.min(100, Math.max(8, (p.predictedValue / (top[0].predictedValue || 1)) * 100));
+    <div className="max-h-80 space-y-2 overflow-y-auto pr-1">
+      {points.map((p, idx) => {
+        const widthPct = Math.min(100, Math.max(8, (p.predictedValue / maxValue) * 100));
         return (
           <div key={`${p.date}-${idx}`} className="flex items-center gap-3">
             <Text className="w-24 shrink-0 text-xs text-gray-500">{p.date}</Text>

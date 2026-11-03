@@ -26,6 +26,7 @@ import {
   type AIEvaluationReport,
 } from '@/lib/api/ai-api';
 import { useAuthStoreHydration } from '@/lib/store/auth-store';
+import { formatDateTime } from '@/lib/formatters';
 
 const { Title, Text } = Typography;
 
@@ -106,7 +107,7 @@ const AIAuditConsole: React.FC = () => {
       dataIndex: 'createdAt',
       key: 'createdAt',
       width: 170,
-      render: (v: string) => new Date(v).toLocaleString('zh-CN', { hour12: false }),
+      render: (v: string) => formatDateTime(v),
     },
     {
       title: '场景',
@@ -355,7 +356,7 @@ const AIAuditConsole: React.FC = () => {
           <Descriptions column={1} size="small" bordered>
             <Descriptions.Item label="请求 ID">{detail.requestId}</Descriptions.Item>
             <Descriptions.Item label="时间">
-              {new Date(detail.createdAt).toLocaleString('zh-CN', { hour12: false })}
+              {formatDateTime(detail.createdAt)}
             </Descriptions.Item>
             <Descriptions.Item label="场景">{scenarioLabel(detail.scenario)}</Descriptions.Item>
             <Descriptions.Item label="输入引用">{detail.inputRef || '-'}</Descriptions.Item>

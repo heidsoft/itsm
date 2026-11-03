@@ -23,7 +23,7 @@ const SHORTCUTS = [
   {
     category: '操作',
     items: [
-      { key: 'ctrl+n / cmd+n', description: '新建工单', action: '/tickets/new' },
+      { key: 'ctrl+n / cmd+n', description: '新建工单', action: '/tickets/create' },
       { key: 'ctrl+k / cmd+k', description: '打开全局搜索', action: 'search' },
       { key: 'ctrl+b / cmd+b', description: '切换侧边栏折叠', action: 'toggleSidebar' },
       { key: 'ctrl+r / cmd+r', description: '刷新当前页面数据', action: 'refresh' },
@@ -70,7 +70,7 @@ export default function GlobalShortcutProvider({ children }: GlobalShortcutProvi
   useHotkeys('g c', () => router.push('/cmdb'), { preventDefault: true });
   useHotkeys('g k', () => router.push('/knowledge'), { preventDefault: true });
   useHotkeys('g w', () => router.push('/workflows'), { preventDefault: true });
-  useHotkeys('ctrl+n, cmd+n', () => router.push('/tickets/new'), { preventDefault: true });
+  useHotkeys('ctrl+n, cmd+n', () => router.push('/tickets/create'), { preventDefault: true });
   useHotkeys('ctrl+k, cmd+k', openSearch, { preventDefault: true });
   useHotkeys('ctrl+b, cmd+b', toggleSidebar, { preventDefault: true });
   useHotkeys('ctrl+/, cmd+/, ?', openHelp, { preventDefault: true });

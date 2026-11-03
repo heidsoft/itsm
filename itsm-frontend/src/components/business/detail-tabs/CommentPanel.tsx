@@ -16,6 +16,7 @@ import {
 } from 'antd';
 import { UserSelect } from '@/components/common/UserSelect';
 import { useI18n } from '@/lib/i18n/useI18n';
+import { formatDateTime as sharedFormatDateTime } from '@/lib/formatters';
 import type {
   CommentAdapter,
   CommentItem,
@@ -43,7 +44,7 @@ export const CommentPanel: React.FC<CommentPanelProps> = ({
   currentUserId,
   formatDateTime,
 }) => {
-  const { t, language } = useI18n();
+  const { t } = useI18n();
   const { message } = App.useApp();
   const [comments, setComments] = useState<CommentItem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -58,10 +59,7 @@ export const CommentPanel: React.FC<CommentPanelProps> = ({
   const canEditByAdapter = typeof adapter.update === 'function';
   const canEditByUser = (c: CommentItem) => (currentUserId ? c.userId === currentUserId : true);
 
-  const defaultFormat = useCallback(
-    (s: string) => (s ? new Date(s).toLocaleString(language === 'en-US' ? 'en-US' : 'zh-CN') : ''),
-    [language]
-  );
+  const defaultFormat = useCallback((s: string) => sharedFormatDateTime(s), []);
   const fmt = formatDateTime ?? defaultFormat;
 
   const fetchComments = useCallback(async () => {

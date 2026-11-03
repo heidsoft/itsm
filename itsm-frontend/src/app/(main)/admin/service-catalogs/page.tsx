@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { formatDateTime } from '@/lib/formatters';
 import {
   Card,
   Table,
@@ -587,7 +588,7 @@ const ServiceCatalogManagement = () => {
       key: 'createdAt',
       width: 150,
       render: (date: string) => (
-        <span className="text-sm text-gray-600">{new Date(date).toLocaleDateString('zh-CN')}</span>
+        <span className="text-sm text-gray-600">{formatDateTime(date)}</span>
       ),
     },
     {

@@ -20,6 +20,7 @@ import MSPService from '@/lib/services/msp-service';
 import { UserApi } from '@/lib/api/user-api';
 import type { MSPAllocation, CreateAllocationRequest } from '@/types/msp';
 import { BACKEND_MAX_PAGE_SIZE } from '@/lib/api/pagination';
+import { formatDateTime } from '@/lib/formatters';
 export default function MSPManagementPage() {
   const { message } = App.useApp();
   const [form] = Form.useForm();
@@ -160,7 +161,7 @@ export default function MSPManagementPage() {
       title: '分配时间',
       dataIndex: 'assignedAt',
       key: 'assignedAt',
-      render: (date: string) => new Date(date).toLocaleString('zh-CN'),
+      render: (date: string) => formatDateTime(date),
     },
     {
       title: '操作',

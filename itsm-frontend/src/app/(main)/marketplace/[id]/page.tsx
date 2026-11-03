@@ -29,14 +29,17 @@ import type {
 import { serverErrorMessage } from '@/lib/api/http-client';
 import marketplaceService from '@/lib/services/marketplace-service';
 import { useCapabilities } from '@/lib/hooks/useCapabilities';
+import { usePermissions } from '@/lib/hooks/use-permissions';
+import {
+  MARKETPLACE_TYPE_LABELS,
+  marketplaceCategoryLabel,
+  marketplaceTagLabel,
+} from '@/lib/marketplaceLabels';
+import { formatDateTime } from '@/lib/formatters';
 
-const typeNames = {
-  connector: '连接器',
-  skill: '技能',
-  plugin: '插件',
-};
+const typeNames = MARKETPLACE_TYPE_LABELS;
 
-const formatDate = (value?: string) => (value ? new Date(value).toLocaleDateString() : '暂无');
+const formatDate = (value?: string) => formatDateTime(value) || '暂无';
 
 const normalizeMarkdown = (text?: string) =>
   (text || '暂无详细介绍').split('\n').filter(line => line.trim().length > 0);
@@ -47,7 +50,11 @@ const MarketplaceDetailPage = () => {
   const itemId = Number(params.id);
   const { message, modal } = App.useApp();
   const { allows, find: findCapability } = useCapabilities();
-  const canManageMarketplace = allows('marketplace', 'manage');
+  const { hasPermission } = usePermissions();
+  // 能力矩阵的 manage 只区分 admin-like 角色（部门经理/审计员也算），
+  // 真正的写权限以 RBAC 为准：没有 marketplace:write 时不展示会 403 的安装入口。
+  const canManageMarketplace =
+    allows('marketplace', 'manage') && hasPermission('marketplace', 'write');
 
   const [item, setItem] = useState<MarketplaceItem | null>(null);
   const [installation, setInstallation] = useState<TenantInstallation | null>(null);
@@ -57,6 +64,8 @@ const MarketplaceDetailPage = () => {
 
   const versions = useMemo(() => item?.edges?.versions || [], [item]);
   const isInstalled = Boolean(installation);
+  // 安装/配置只对 connector 有交付实现；skill/plugin 入口返回 501，不能摆出可点的安装按钮。
+  const installSupported = item?.type === 'connector';
 
   // NaN 守卫：验证 itemId 有效性
   useEffect(() => {
@@ -200,14 +209,18 @@ const MarketplaceDetailPage = () => {
                   </div>
                   <p className="text-gray-600">{item.description || '暂无描述'}</p>
                   <div className="flex flex-wrap items-center gap-4 mt-3 text-sm text-gray-500">
-                    <span className="flex items-center gap-1">
-                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                      {(item.rating || 0).toFixed(1)}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Download className="h-4 w-4" />
-                      {item.installCount || 0} 次安装
-                    </span>
+                    {(item.rating || 0) > 0 && (
+                      <span className="flex items-center gap-1">
+                        <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                        {(item.rating || 0).toFixed(1)}
+                      </span>
+                    )}
+                    {(item.installCount || 0) > 0 && (
+                      <span className="flex items-center gap-1">
+                        <Download className="h-4 w-4" />
+                        {item.installCount} 次安装
+                      </span>
+                    )}
                     <span className="flex items-center gap-1">
                       <User className="h-4 w-4" />
                       作者：{item.authorName || item.provider}
@@ -223,7 +236,7 @@ const MarketplaceDetailPage = () => {
                     <div className="max-w-52 text-left">
                       <Badge className="bg-yellow-100 text-yellow-800">预览 · 只读</Badge>
                       <p className="text-xs text-gray-500 mt-2">
-                        {findCapability('marketplace')?.degradedReason || '安装、卸载和配置将在飞书生产闭环验收后开放。'}
+                        {findCapability('marketplace')?.degradedReason || '仅租户管理员可以安装、卸载和配置扩展。'}
                       </p>
                     </div>
                   ) : isInstalled ? (
@@ -236,6 +249,13 @@ const MarketplaceDetailPage = () => {
                         <Button onClick={() => router.push('/installations')}>管理</Button>
                         <Button variant="destructive" onClick={handleUninstall}>卸载</Button>
                       </div>
+                    </div>
+                  ) : !installSupported ? (
+                    <div className="max-w-52 text-left">
+                      <Button size="lg" disabled>暂不支持安装</Button>
+                      <p className="text-xs text-gray-500 mt-2">
+                        {typeNames[item.type]}类扩展的安装与分发机制尚未落地，当前仅可浏览。
+                      </p>
                     </div>
                   ) : (
                     <Button size="lg" onClick={handleInstall} disabled={installing}>
@@ -250,15 +270,12 @@ const MarketplaceDetailPage = () => {
 
           <Card>
             <Tabs defaultValue="description">
-              <CardHeader>
-                <TabsList>
-                  <TabsTrigger value="description">详情介绍</TabsTrigger>
-                  <TabsTrigger value="capabilities">功能特性</TabsTrigger>
-                  <TabsTrigger value="permissions">权限说明</TabsTrigger>
-                  <TabsTrigger value="versions">版本历史</TabsTrigger>
-                </TabsList>
-              </CardHeader>
-              <CardContent>
+              <TabsList>
+                <TabsTrigger value="description">详情介绍</TabsTrigger>
+                <TabsTrigger value="capabilities">功能特性</TabsTrigger>
+                <TabsTrigger value="permissions">权限说明</TabsTrigger>
+                <TabsTrigger value="versions">版本历史</TabsTrigger>
+              </TabsList>
                 <TabsContent value="description" className="mt-0 space-y-4">
                   <div className="prose prose-sm max-w-none">
                     {normalizeMarkdown(item.longDescription || item.description).map((line, index) => (
@@ -272,7 +289,7 @@ const MarketplaceDetailPage = () => {
                         {(item.tags || []).map(tag => (
                           <Badge key={tag} variant="outline">
                             <Tag className="h-3 w-3 mr-1" />
-                            {tag}
+                            {marketplaceTagLabel(tag)}
                           </Badge>
                         ))}
                       </div>
@@ -325,7 +342,6 @@ const MarketplaceDetailPage = () => {
                     )) : <p className="text-sm text-gray-500">暂无版本历史</p>}
                   </div>
                 </TabsContent>
-              </CardContent>
             </Tabs>
           </Card>
         </div>
@@ -339,15 +355,25 @@ const MarketplaceDetailPage = () => {
               <InfoRow label="最新版本" value={item.latestVersion || '1.0.0'} />
               <InfoRow label="发布日期" value={formatDate(versions[0]?.releasedAt || item.updatedAt)} />
               <InfoRow label="最低系统要求" value={item.minSystemVersion || '未声明'} />
-              <InfoRow label="安装量" value={String(item.installCount || 0)} />
+              {(item.installCount || 0) > 0 && (
+                <InfoRow label="安装量" value={String(item.installCount)} />
+              )}
               <div>
                 <div className="text-sm font-medium mb-1">分类</div>
-                <Badge variant="secondary">{item.category || '未分类'}</Badge>
+                <Badge variant="secondary">{marketplaceCategoryLabel(item.category)}</Badge>
               </div>
             </CardContent>
             <CardFooter className="border-t pt-4">
-              {isInstalled ? (
+              {!canManageMarketplace ? (
+                <Button className="w-full" size="lg" disabled>
+                  仅管理员可安装
+                </Button>
+              ) : isInstalled ? (
                 <Button className="w-full" onClick={() => router.push('/installations')}>管理已安装应用</Button>
+              ) : !installSupported ? (
+                <Button className="w-full" size="lg" disabled>
+                  暂不支持安装
+                </Button>
               ) : (
                 <Button className="w-full" size="lg" onClick={handleInstall} disabled={installing}>
                   {installing ? '安装中...' : '立即安装'}

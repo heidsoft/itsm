@@ -24,6 +24,7 @@ import type { ColumnsType } from 'antd/es/table';
 import { AlertTriangle, MailWarning, RefreshCw, RotateCcw, Search } from 'lucide-react';
 import { serverErrorMessage } from '@/lib/api/http-client';
 import operationsService from '@/lib/services/operations-service';
+import { formatDateTime } from '@/lib/formatters';
 import type {
   CommandStatus,
   CommandSummary,
@@ -59,7 +60,7 @@ const CHANNEL_OPTIONS = [
   { value: 'webhook', label: 'Webhook' },
 ];
 
-const formatTime = (value?: string) => (value ? new Date(value).toLocaleString('zh-CN') : '—');
+const formatTime = (value?: string) => formatDateTime(value) || '—';
 
 /**
  * 死信与投递重放的运维面。
@@ -381,7 +382,7 @@ export default function OperationsPage() {
             <Statistic
               title='死信命令'
               value={summary?.deadLetter ?? 0}
-              valueStyle={{ color: (summary?.deadLetter ?? 0) > 0 ? '#cf1322' : undefined }}
+              styles={{ content: { color: (summary?.deadLetter ?? 0) > 0 ? '#cf1322' : undefined } }}
               prefix={<AlertTriangle size={16} />}
             />
           </Card>
@@ -401,7 +402,7 @@ export default function OperationsPage() {
             <Statistic
               title='租约卡住'
               value={summary?.stuckLeases ?? 0}
-              valueStyle={{ color: (summary?.stuckLeases ?? 0) > 0 ? '#d46b08' : undefined }}
+              styles={{ content: { color: (summary?.stuckLeases ?? 0) > 0 ? '#d46b08' : undefined } }}
             />
           </Card>
         </Col>
@@ -410,7 +411,7 @@ export default function OperationsPage() {
       <Alert
         type='info'
         showIcon
-        message='重放的边界'
+        title='重放的边界'
         description={
           <span>
             「命令死信」重放保留原幂等键，worker 仍按原身份去重；AI 写工具若在中断前已产生副作用，

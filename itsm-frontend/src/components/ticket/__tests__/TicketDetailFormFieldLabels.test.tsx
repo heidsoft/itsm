@@ -162,4 +162,22 @@ describe('TicketDetail 动态表单字段 — 标签解析回归', () => {
     expect(await screen.findByText('account_type')).toBeInTheDocument();
     expect(screen.getByText('target_system')).toBeInTheDocument();
   });
+
+  it('后端内部生成的 formFields 键值本地化，不直出 aiTicketType/hardware', async () => {
+    // A2UI 智能提单会写入 aiTicketType 这类内部枚举，租户类型 schema 里没有该字段，
+    // 展示层必须用内置映射本地化，而不是把内部键名和英文枚举直接暴露给用户。
+    mockGetTicket.mockResolvedValue({
+      ...ticketWithFormFields,
+      formFields: { aiTicketType: 'hardware' },
+    });
+    mockGetTicketType.mockResolvedValue(typeDefinition);
+    renderDetail();
+
+    await waitFor(() => expect(mockGetTicketType).toHaveBeenCalledWith(5));
+
+    expect(await screen.findByText('AI 工单类型')).toBeInTheDocument();
+    expect(screen.getByText('硬件')).toBeInTheDocument();
+    expect(screen.queryByText('aiTicketType')).toBeNull();
+    expect(screen.queryByText('hardware')).toBeNull();
+  });
 });

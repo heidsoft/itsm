@@ -37,6 +37,7 @@ import {
 } from '@/lib/services/emailIntakeService';
 import { UserApi } from '@/lib/api/user-api';
 import { BACKEND_MAX_PAGE_SIZE } from '@/lib/api/pagination';
+import { formatDateTime } from '@/lib/formatters';
 
 interface User {
   id: number;
@@ -56,11 +57,24 @@ const statusMeta: Record<string, { color: string; label: string }> = {
   REJECTED: { color: 'error', label: '已拒绝' },
 };
 
-const formatTime = (value?: string): string =>
-  value ? new Date(value).toLocaleString('zh-CN', { hour12: false }) : '-';
+// 客户状态：后端 service_customer.status（启用/停用，停用由 DisableCustomer 置为 inactive）
+const customerStatusMeta: Record<string, { color: string; label: string }> = {
+  active: { color: 'green', label: '启用' },
+  inactive: { color: 'default', label: '已停用' },
+};
+
+// 支持合同状态：后端 support_contract.status（active/terminated/expired/pending）
+const contractStatusMeta: Record<string, { color: string; label: string }> = {
+  active: { color: 'success', label: '生效中' },
+  terminated: { color: 'error', label: '已终止' },
+  expired: { color: 'warning', label: '已过期' },
+  pending: { color: 'default', label: '待生效' },
+};
+
+const formatTime = (value?: string): string => formatDateTime(value) || '-';
 
 export default function EmailIntakePage() {
-  const { message } = App.useApp();
+  const { message, modal } = App.useApp();
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<string>();
   const [conversations, setConversations] = useState<EmailConversation[]>([]);
@@ -397,11 +411,14 @@ export default function EmailIntakePage() {
           columns={[
             { title: '名称', dataIndex: 'name' },
             { title: '简称', dataIndex: 'shortName' },
-            { title: 'Alias', dataIndex: 'aliases', render: (v: string[]) => v?.join('、') || '-' },
+            { title: '别名', dataIndex: 'aliases', render: (v: string[]) => v?.join('、') || '-' },
             {
               title: '状态',
               dataIndex: 'status',
-              render: (v: string) => <Tag color={v === 'active' ? 'green' : 'default'}>{v}</Tag>,
+              render: (v: string) => {
+                const meta = customerStatusMeta[v];
+                return <Tag color={meta?.color ?? 'default'}>{meta?.label ?? (v || '-')}</Tag>;
+              },
             },
             {
               title: '操作',
@@ -422,7 +439,7 @@ export default function EmailIntakePage() {
                     danger
                     disabled={record.status !== 'active'}
                     onClick={() =>
-                      Modal.confirm({
+                      modal.confirm({
                         title: '停用该客户？',
                         onOk: async () => {
                           await emailIntakeService.disableCustomer(record.id);
@@ -455,7 +472,10 @@ export default function EmailIntakePage() {
             {
               title: '状态',
               dataIndex: 'status',
-              render: (v: string) => <Tag color={v === 'active' ? 'success' : 'error'}>{v}</Tag>,
+              render: (v: string) => {
+                const meta = contractStatusMeta[v];
+                return <Tag color={meta?.color ?? 'default'}>{meta?.label ?? (v || '-')}</Tag>;
+              },
             },
             {
               title: '有效期',
@@ -490,7 +510,7 @@ export default function EmailIntakePage() {
                     danger
                     disabled={record.status !== 'active'}
                     onClick={() =>
-                      Modal.confirm({
+                      modal.confirm({
                         title: '终止该合同？',
                         content: '终止后自动开单将立即被阻止。',
                         onOk: async () => {
@@ -554,7 +574,7 @@ export default function EmailIntakePage() {
                   type='link'
                   danger
                   onClick={() =>
-                    Modal.confirm({
+                    modal.confirm({
                       title: '删除该映射？',
                       onOk: async () => {
                         await emailIntakeService.deleteExternalContractReference(record.id);

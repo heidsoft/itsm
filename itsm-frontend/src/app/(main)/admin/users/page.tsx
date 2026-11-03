@@ -43,6 +43,7 @@ import { RoleAPI } from '@/lib/api/role-api';
 import type { Role } from '@/lib/api/api-config';
 import { useAuthStore, useAuthStoreHydration } from '@/lib/store/auth-store';
 import { useI18n } from '@/lib/i18n/useI18n';
+import { formatDateTime } from '@/lib/formatters';
 
 const { Title, Text } = Typography;
 const { Search: AntSearch } = Input;
@@ -345,7 +346,7 @@ const UserManagement: React.FC = () => {
       dataIndex: 'createdAt',
       key: 'createdAt',
       width: 140,
-      render: (text: string) => (text ? new Date(text).toLocaleString('zh-CN') : '-'),
+      render: (text: string) => formatDateTime(text) || '-',
     },
     {
       title: t('common.action'),

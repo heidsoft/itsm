@@ -35,7 +35,7 @@ const items: ProductCapabilityState[] = [
     allowedActions: ['read', 'manage'],
     dependencies: [],
     health: { ok: true, checkedAt: '2026-10-22T10:00:00Z' },
-    acceptanceVersion: '2026.08-private-preview',
+    acceptanceVersion: '2026.10.31',
   },
   {
     key: 'problem',
@@ -45,7 +45,7 @@ const items: ProductCapabilityState[] = [
     tenantReady: true,
     allowedActions: ['read', 'manage'],
     dependencies: ['sla', 'workflow'],
-    acceptanceVersion: '2026.08-private-preview',
+    acceptanceVersion: '2026.10.31',
   },
   {
     key: 'cmdbDiscovery',
@@ -58,7 +58,7 @@ const items: ProductCapabilityState[] = [
     degradedReason: 'deployment dependency is not ready',
     pilotReason:
       '发现任务没有执行者：ClaimDiscoveryJob 仅被单测调用，队列无消费者。晋升条件：worker 消费 + 真实账号发现验收。',
-    acceptanceVersion: '2026.08-private-preview',
+    acceptanceVersion: '2026.10.31',
   },
   {
     key: 'connector.feishu',
@@ -71,7 +71,7 @@ const items: ProductCapabilityState[] = [
     degradedReason: 'callback token mismatch',
     health: { ok: false, reason: 'callback token mismatch', checkedAt: '2026-10-22T10:00:00Z' },
     pilotReason: '回调验签只有单测，未与真实飞书租户做生产验收。晋升条件：真实租户收发 + 验签验收。',
-    acceptanceVersion: '2026.08-private-preview',
+    acceptanceVersion: '2026.10.31',
   },
 ];
 
@@ -80,7 +80,7 @@ describe('能力矩阵控制台', () => {
     jest.clearAllMocks();
     mockedGetCapabilities.mockResolvedValue({
       items,
-      acceptanceVersion: '2026.08-private-preview',
+      acceptanceVersion: '2026.10.31',
     });
   });
 
@@ -92,6 +92,8 @@ describe('能力矩阵控制台', () => {
     );
 
     expect(await screen.findByText('cmdbDiscovery')).toBeInTheDocument();
+    // 契约验收基线必须可见：售前/运维要能核对这份矩阵是哪一天对账的。
+    expect(screen.getByText('2026.10.31')).toBeInTheDocument();
     // Pilot 理由：读者要能据此推进晋升，而不是只看到一个黄色「预览」标签。
     expect(screen.getByText(/发现任务没有执行者/)).toBeInTheDocument();
     // 不可用原因与 pilot 理由同时可见：修好 READY 变量后仍要知道还差什么。

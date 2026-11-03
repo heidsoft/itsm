@@ -53,6 +53,7 @@ import {
   type ConversationSummary,
   type RagAnswer,
 } from '@/lib/api/ai-api';
+import { formatDateTime } from '@/lib/formatters';
 
 const { Text, Paragraph } = Typography;
 
@@ -308,7 +309,7 @@ const AIChat: React.FC = () => {
       if (diff < 60_000) return '刚刚';
       if (diff < 3_600_000) return `${Math.floor(diff / 60_000)} 分钟前`;
       if (diff < 86_400_000) return `${Math.floor(diff / 3_600_000)} 小时前`;
-      return d.toLocaleDateString('zh-CN');
+      return formatDateTime(iso);
     } catch {
       return '';
     }
@@ -546,7 +547,7 @@ const AIChat: React.FC = () => {
                               type="link"
                               icon={<FileText size={12} />}
                               style={{ padding: 0, height: 'auto' }}
-                              onClick={() => router.push('/knowledge/articles/create')}
+                              onClick={() => router.push('/knowledge/articles/new')}
                             >
                               补充为知识文章
                             </Button>

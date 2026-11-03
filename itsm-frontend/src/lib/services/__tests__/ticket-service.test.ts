@@ -153,12 +153,38 @@ describe('ticketService', () => {
       overdue: 0,
       byStatus: [{ status: 'open', count: 1 }],
       byPriority: [{ priority: 'high', count: 1 }],
+      scope: 'all',
     };
     mockGet.mockResolvedValueOnce(stats);
 
     await expect(ticketService.getTicketStats()).resolves.toBe(stats);
 
-    expect(mockGet).toHaveBeenCalledWith('/api/v1/tickets/stats');
+    expect(mockGet).toHaveBeenCalledWith('/api/v1/tickets/stats', undefined);
+  });
+
+  // 工单统计页的唯一数据源就是带窗口的 stats，窗口参数必须原样透传到查询串。
+  it('getTicketStats 透传 dateFrom/dateTo 窗口参数', async () => {
+    mockGet.mockResolvedValueOnce({
+      total: 1,
+      open: 1,
+      inProgress: 0,
+      resolved: 0,
+      closed: 0,
+      pending: 0,
+      highPriority: 0,
+      overdue: 0,
+      byStatus: [{ status: 'open', count: 1 }],
+      byPriority: [{ priority: 'high', count: 1 }],
+      scope: 'owner',
+      window: { dateFrom: '2026-10-03', dateTo: '2026-11-01', days: 30 },
+    } satisfies TicketStatsResponse);
+
+    await ticketService.getTicketStats({ dateFrom: '2026-10-03', dateTo: '2026-11-01' });
+
+    expect(mockGet).toHaveBeenCalledWith('/api/v1/tickets/stats', {
+      dateFrom: '2026-10-03',
+      dateTo: '2026-11-01',
+    });
   });
 
   it('assignTicket POST /api/v1/tickets/15/assign', async () => {

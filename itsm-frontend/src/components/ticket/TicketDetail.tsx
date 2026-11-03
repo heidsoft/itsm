@@ -144,6 +144,25 @@ const toTicketPriority = (value: string): TicketPriority =>
     ? (value as TicketPriority)
     : TicketPriority.MEDIUM;
 
+// 后端内部生成的 formFields（如 A2UI 智能提单的 aiTicketType）没有租户工单类型
+// schema，键名与取值都是内部枚举。展示层必须本地化，不能直出 "aiTicketType: hardware"。
+const INTERNAL_FORM_FIELD_LABELS: Record<string, string> = {
+  aiTicketType: 'AI 工单类型',
+};
+
+const INTERNAL_FORM_FIELD_VALUE_LABELS: Record<string, Record<string, string>> = {
+  aiTicketType: {
+    hardware: '硬件',
+    software: '软件',
+    network: '网络',
+    access: '权限申请',
+    service_request: '服务请求',
+    problem: '问题',
+    change: '变更',
+    other: '其他',
+  },
+};
+
 // 把任意 formFields 值渲染为只读文案。避免对 object / array 直接 toString 产生 [object Object]
 const renderFormFieldValue = (value: unknown): React.ReactNode => {
   if (value === null || value === undefined || value === '') {
@@ -807,8 +826,14 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
             <Card size="small" title={t('ticketDetail.formFields') || '动态表单字段'} className="mt-2">
               <Descriptions column={2} bordered size="small">
                 {Object.entries(ticket.formFields).map(([key, value]) => (
-                  <Descriptions.Item key={key} label={formFieldLabels[key] ?? key}>
-                    {renderFormFieldValue(value)}
+                  <Descriptions.Item
+                    key={key}
+                    label={formFieldLabels[key] ?? INTERNAL_FORM_FIELD_LABELS[key] ?? key}
+                  >
+                    {typeof value === 'string'
+                      ? (INTERNAL_FORM_FIELD_VALUE_LABELS[key]?.[value] ??
+                        renderFormFieldValue(value))
+                      : renderFormFieldValue(value)}
                   </Descriptions.Item>
                 ))}
               </Descriptions>
@@ -826,20 +851,20 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
                       slaInfo.isResponseBreached || slaInfo.isResolutionBreached ? 'red' : 'blue'
                     }
                   >
-                    {slaInfo.slaDefinitionName}
+                    {slaInfo.slaDefinitionName || '-'}
                   </Tag>
                 </div>
                 <div className="flex justify-between">
                   <Text type="secondary">{t('ticketDetail.responseDeadline')}:</Text>
                   <Text type={slaInfo.isResponseBreached ? 'danger' : undefined}>
-                    {slaInfo.responseDeadline ? new Date(slaInfo.responseDeadline).toLocaleString() : '-'}
+                    {formatDateTime(slaInfo.responseDeadline) || '-'}
                     {slaInfo.isResponseBreached && ` (${t('ticketDetail.responseTimeout')})`}
                   </Text>
                 </div>
                 <div className="flex justify-between">
                   <Text type="secondary">{t('ticketDetail.resolutionDeadline')}:</Text>
                   <Text type={slaInfo.isResolutionBreached ? 'danger' : undefined}>
-                    {slaInfo.resolutionDeadline ? new Date(slaInfo.resolutionDeadline).toLocaleString() : '-'}
+                    {formatDateTime(slaInfo.resolutionDeadline) || '-'}
                     {slaInfo.isResolutionBreached && ` (${t('ticketDetail.resolutionTimeout')})`}
                   </Text>
                 </div>

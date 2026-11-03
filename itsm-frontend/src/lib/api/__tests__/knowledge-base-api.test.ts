@@ -71,11 +71,12 @@ describe('KnowledgeBaseApi', () => {
   });
 
   describe('getCategories', () => {
-    it('should get categories', async () => {
-      mockGet.mockResolvedValue([{ id: '1', name: 'FAQ' }]);
+    it('should get category names as strings', async () => {
+      // 后端契约：GET /knowledge/categories 返回该租户已使用的分类名称集合（字符串数组）。
+      mockGet.mockResolvedValue(['FAQ', '故障排查']);
       const result = await KnowledgeBaseApi.getCategories();
       expect(mockGet).toHaveBeenCalledWith('/api/v1/knowledge/categories');
-      expect(result).toHaveLength(1);
+      expect(result).toEqual(['FAQ', '故障排查']);
     });
   });
 
@@ -181,30 +182,6 @@ describe('KnowledgeBaseApi', () => {
       mockGet.mockResolvedValue({ diff: 'changes', changes: [] });
       await KnowledgeBaseApi.compareVersions('1', 1, 2);
       expect(mockGet).toHaveBeenCalledWith('/api/v1/knowledge/articles/1/versions/compare', { from: 1, to: 2 });
-    });
-  });
-
-  describe('createCategory', () => {
-    it('should create category', async () => {
-      mockPost.mockResolvedValue({ id: '1', name: 'New' });
-      await KnowledgeBaseApi.createCategory({ name: 'New' } as any);
-      expect(mockPost).toHaveBeenCalledWith('/api/v1/knowledge/categories', { name: 'New' });
-    });
-  });
-
-  describe('updateCategory', () => {
-    it('should update category', async () => {
-      mockPut.mockResolvedValue({ id: '1', name: 'Updated' });
-      await KnowledgeBaseApi.updateCategory('1', { name: 'Updated' });
-      expect(mockPut).toHaveBeenCalledWith('/api/v1/knowledge/categories/1', { name: 'Updated' });
-    });
-  });
-
-  describe('deleteCategory', () => {
-    it('should delete category', async () => {
-      mockDelete.mockResolvedValue(undefined);
-      await KnowledgeBaseApi.deleteCategory('1');
-      expect(mockDelete).toHaveBeenCalledWith('/api/v1/knowledge/categories/1');
     });
   });
 

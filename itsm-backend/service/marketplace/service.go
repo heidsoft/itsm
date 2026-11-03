@@ -23,6 +23,9 @@ type Service struct {
 	db               *ent.Client
 	logger           *zap.SugaredLogger
 	connectorManager *connector.Manager
+	// skillRuntime 是技能商品的运行时视图；未注入时技能交付判定失败关闭，
+	// 而不是跳过校验把装不出来的商品标成 active。
+	skillRuntime SkillRuntime
 }
 
 var (
@@ -70,6 +73,12 @@ func NewService(db *ent.Client, logger *zap.SugaredLogger) *Service {
 // SetConnectorManager 注入连接器管理器，安装/卸载时自动 provision/revoke 连接器
 func (s *Service) SetConnectorManager(mgr *connector.Manager) {
 	s.connectorManager = mgr
+}
+
+// SetSkillRuntime 注入技能运行时（service.SkillRegistry），用于校验技能商品的
+// 交付物是否真的在本进程可用。未注入时技能安装一律失败关闭。
+func (s *Service) SetSkillRuntime(rt SkillRuntime) {
+	s.skillRuntime = rt
 }
 
 // ListItems 查询市场商品列表
@@ -212,10 +221,12 @@ func (s *Service) InstallItem(ctx context.Context, tenantID, itemID int, install
 	if installedBy == "" {
 		return nil, ErrMarketplaceInstalledByMissing
 	}
-	if item.Type != marketplaceitem.TypeConnector {
+	// 4) 平台只交付 connector 与 skill：plugin 需要宿主运行时，目录侧已不受理上架，
+	//    这里的拦截只用于兜住历史条目，返回「不支持该类型」而不是假装装好了。
+	if !isDeliverableType(item.Type) {
 		return nil, ErrMarketplaceDeliveryUnsupported
 	}
-	// 4) 已存在安装记录时的两种语义：
+	// 5) 已存在安装记录时的两种语义：
 	//    - active / disabled：幂等返回当前安装，避免重复安装报错、也不重复 provision
 	//    - installing / failed：上次没装成（典型是连接器还没填凭据），本次视为重试
 	existingInstallation, err := s.db.TenantInstallation.Query().
@@ -281,7 +292,7 @@ func (s *Service) InstallItem(ctx context.Context, tenantID, itemID int, install
 	return s.activateInstallation(ctx, item, installation, installedBy, nil)
 }
 
-// activateInstallation 把「安装记录」与「连接器运行态」对齐后再落最终状态。
+// activateInstallation 把「安装记录」与「运行态」对齐后再落最终状态。
 //
 // 顺序是关键：先 provision，再改状态。反过来的话，provision 失败时记录已经是
 // active，市场页与运行态就永久不一致（旧实现正是如此：Warn 之后照样 SetStatus(active)）。
@@ -294,9 +305,10 @@ func (s *Service) activateInstallation(
 	installedBy string,
 	config map[string]interface{},
 ) (*ent.TenantInstallation, error) {
-	if err := s.provisionConnector(ctx, item, installation.TenantID, installedBy, config); err != nil {
-		s.logger.Warnw("Connector provisioning failed during install",
-			"item_id", item.ID, "tenant_id", installation.TenantID, "installation_id", installation.ID, "error", err)
+	if err := s.provisionRuntime(ctx, item, installation.TenantID, installedBy, installation.InstalledVersion, config); err != nil {
+		s.logger.Warnw("Runtime provisioning failed during install",
+			"item_id", item.ID, "item_type", string(item.Type), "tenant_id", installation.TenantID,
+			"installation_id", installation.ID, "error", err)
 		failed, updateErr := s.db.TenantInstallation.UpdateOne(installation).
 			SetStatus(tenantinstallation.StatusFailed).
 			SetErrorMessage(err.Error()).
@@ -305,7 +317,7 @@ func (s *Service) activateInstallation(
 		if updateErr != nil {
 			return nil, fmt.Errorf("failed to record installation failure: %w", updateErr)
 		}
-		return failed, fmt.Errorf("%w: %v", ErrMarketplaceConnectorNotReady, err)
+		return failed, err
 	}
 
 	active, err := s.db.TenantInstallation.UpdateOne(installation).
@@ -438,8 +450,15 @@ func (s *Service) UpdateInstallationConfig(ctx context.Context, tenantID, itemID
 	if err != nil {
 		return nil, fmt.Errorf("failed to get marketplace item: %w", err)
 	}
+	// 配置面只对连接器开放：连接器的凭据/设置确实有运行态消费者
+	// （provisionConnector 把它灌进 connector.Config）。技能没有租户级配置入口——
+	// 运行时按版本行的定位符取实现，没有任何代码读 installation.Config，
+	// 若照单收下只会得到「界面改了、行为没变」的假控件。
 	if item.Type != marketplaceitem.TypeConnector {
-		return nil, ErrMarketplaceDeliveryUnsupported
+		if !isDeliverableType(item.Type) {
+			return nil, ErrMarketplaceDeliveryUnsupported
+		}
+		return nil, fmt.Errorf("%w: %s 类组件的配置由目录版本声明，租户侧没有可配置项", ErrMarketplaceConfigUnsupported, item.Type)
 	}
 
 	// 验证配置是否符合商品的 ConfigSchema
@@ -471,9 +490,8 @@ func (s *Service) UpdateInstallationConfig(ctx context.Context, tenantID, itemID
 		ClearErrorMessage()
 	// 之前停在 installing/failed 的连接器安装，凭据补齐即视为装好——
 	// 这是「安装失败 → 补配置 → 变可用」闭环的最后一步。
-	if item.Type == marketplaceitem.TypeConnector &&
-		(installation.Status == tenantinstallation.StatusInstalling ||
-			installation.Status == tenantinstallation.StatusFailed) {
+	if installation.Status == tenantinstallation.StatusInstalling ||
+		installation.Status == tenantinstallation.StatusFailed {
 		update = update.SetStatus(tenantinstallation.StatusActive)
 	}
 	updated, err := update.Save(ctx)

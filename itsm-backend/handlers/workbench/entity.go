@@ -26,10 +26,14 @@ type WorkbenchQuery struct {
 	TenantID   int      `json:"tenantId"`
 	AssigneeID *int     `json:"assigneeId,omitempty"`
 	Phase      []string `json:"phase,omitempty"`
-	Priority   []string `json:"priority,omitempty"`
-	RecordType []string `json:"recordType,omitempty"`
-	Page       int      `json:"page"`
-	PageSize   int      `json:"pageSize"`
+	// ExcludePhase 是「未关闭」语义的反向过滤：列出需要排除的阶段（如 closed/resolved），
+	// 其余阶段（含未来新增的、或状态无法映射到已知 phase 的 unknown）一律保留。
+	// 与 Phase（白名单）互斥使用：前端默认只传 ExcludePhase，用户显式勾选阶段时才传 Phase。
+	ExcludePhase []string `json:"excludePhase,omitempty"`
+	Priority     []string `json:"priority,omitempty"`
+	RecordType   []string `json:"recordType,omitempty"`
+	Page         int      `json:"page"`
+	PageSize     int      `json:"pageSize"`
 
 	// 行级数据权限。零值 DataScopeAll 表示不过滤；
 	// 非管理角色必须显式传入 datascope.DataScopeOwnedOrAssigned。

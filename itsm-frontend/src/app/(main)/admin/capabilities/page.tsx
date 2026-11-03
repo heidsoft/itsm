@@ -65,6 +65,7 @@ function isUnready(item: ProductCapabilityState): boolean {
 export default function CapabilitiesAdminPage() {
   const { message } = App.useApp();
   const [items, setItems] = useState<ProductCapabilityState[]>([]);
+  const [acceptanceVersion, setAcceptanceVersion] = useState('');
   const [loading, setLoading] = useState(false);
   const [filter, setFilter] = useState<MaturityFilter>('all');
   const [keyword, setKeyword] = useState('');
@@ -74,9 +75,11 @@ export default function CapabilitiesAdminPage() {
     try {
       const data = await getCapabilities();
       setItems(data.items ?? []);
+      setAcceptanceVersion(data.acceptanceVersion ?? '');
     } catch (error) {
       message.error(error instanceof Error ? error.message : '加载能力矩阵失败');
       setItems([]);
+      setAcceptanceVersion('');
     } finally {
       setLoading(false);
     }
@@ -115,7 +118,7 @@ export default function CapabilitiesAdminPage() {
       dataIndex: 'key',
       width: 260,
       render: (key: string, item) => (
-        <Space direction='vertical' size={0}>
+        <Space orientation='vertical' size={0}>
           <Text strong>{key}</Text>
           {item.dependencies.length > 0 && (
             <Text type='secondary' style={{ fontSize: 12 }}>
@@ -186,7 +189,7 @@ export default function CapabilitiesAdminPage() {
           return <Text type='secondary'>—</Text>;
         }
         return (
-          <Space direction='vertical' size={2}>
+          <Space orientation='vertical' size={2}>
             {item.degradedReason && <Text type='danger'>{item.degradedReason}</Text>}
             {item.pilotReason && <Text type='secondary'>{item.pilotReason}</Text>}
           </Space>
@@ -204,7 +207,7 @@ export default function CapabilitiesAdminPage() {
         </Button>
       }
     >
-      <Space direction='vertical' size={16} style={{ width: '100%' }}>
+      <Space orientation='vertical' size={16} style={{ width: '100%' }}>
         <Row gutter={16}>
           <Col xs={12} md={6}>
             <Card size='small'>
@@ -213,7 +216,7 @@ export default function CapabilitiesAdminPage() {
           </Col>
           <Col xs={12} md={6}>
             <Card size='small'>
-              <Statistic title='GA（可承诺）' value={summary.ga} valueStyle={{ color: '#3f8600' }} />
+              <Statistic title='GA（可承诺）' value={summary.ga} styles={{ content: { color: '#3f8600' } }} />
             </Card>
           </Col>
           <Col xs={12} md={6}>
@@ -221,7 +224,7 @@ export default function CapabilitiesAdminPage() {
               <Statistic
                 title='预览（Pilot）'
                 value={summary.pilot}
-                valueStyle={{ color: '#d48806' }}
+                styles={{ content: { color: '#d48806' } }}
                 prefix={<FlaskConical size={16} />}
               />
             </Card>
@@ -231,18 +234,28 @@ export default function CapabilitiesAdminPage() {
               <Statistic
                 title='此刻不可用'
                 value={summary.unready}
-                valueStyle={{ color: summary.unready > 0 ? '#cf1322' : undefined }}
+                styles={{ content: { color: summary.unready > 0 ? '#cf1322' : undefined } }}
                 prefix={summary.unready > 0 ? <AlertTriangle size={16} /> : <Ban size={16} />}
               />
             </Card>
           </Col>
         </Row>
 
+        <Space wrap size={6}>
+          <Text type='secondary'>契约验收基线</Text>
+          <Tag color={acceptanceVersion ? 'blue' : 'default'}>{acceptanceVersion || '未声明'}</Tag>
+          <Tooltip title='能力矩阵最近一次对账日期，不是发布版本。它不得早于最新发布版本；单条能力是否可承诺仍看成熟度、部署就绪与说明。'>
+            <Text type='secondary' style={{ cursor: 'help' }}>
+              说明
+            </Text>
+          </Tooltip>
+        </Space>
+
         {tenantMissing && (
           <Alert
             type='warning'
             showIcon
-            message='当前会话没有租户上下文'
+            title='当前会话没有租户上下文'
             description='矩阵只反映部署级事实：tenantReady 为 false、allowedActions 为空，不代表能力缺失。'
           />
         )}
@@ -251,7 +264,7 @@ export default function CapabilitiesAdminPage() {
           <Alert
             type='error'
             showIcon
-            message={`${summary.unready} 项能力此刻不可用`}
+            title={`${summary.unready} 项能力此刻不可用`}
             description='部署依赖未就绪或探测失败。切到「未就绪」筛选可看到具体原因，修好后刷新本页即可复核。'
           />
         )}

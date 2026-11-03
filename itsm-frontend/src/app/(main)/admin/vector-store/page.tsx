@@ -10,6 +10,7 @@ import {
 import { PageContainer } from '@/app/components/PageContainer';
 import { UsageGuideCard } from '@/components/common/UsageGuideCard';
 import { VectorStoreApi } from '@/lib/api/vector-store-api';
+import { formatDateTime } from '@/lib/formatters';
 import type { VectorStoreStatus, VectorStoreTestResult } from '@/lib/api/vector-store-api';
 
 const { Text } = Typography;
@@ -172,9 +173,7 @@ export default function VectorStoreAdminPage() {
                   </Tag>
                 </Descriptions.Item>
                 <Descriptions.Item label="检查时间">
-                  {status.checkedAt
-                    ? new Date(status.checkedAt).toLocaleString('zh-CN', { hour12: false })
-                    : '-'}
+                  {formatDateTime(status.checkedAt) || '-'}
                 </Descriptions.Item>
                 {status.message && (
                   <Descriptions.Item label="提示信息" span={2}>
@@ -226,9 +225,7 @@ export default function VectorStoreAdminPage() {
                       <Descriptions.Item label="消息" span={2}>{testResult.message}</Descriptions.Item>
                     )}
                     <Descriptions.Item label="测试时间">
-                      {testResult.checkedAt
-                        ? new Date(testResult.checkedAt).toLocaleString('zh-CN', { hour12: false })
-                        : '-'}
+                      {formatDateTime(testResult.checkedAt) || '-'}
                     </Descriptions.Item>
                   </Descriptions>
                 </Card>

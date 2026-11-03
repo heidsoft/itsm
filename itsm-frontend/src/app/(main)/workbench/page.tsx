@@ -12,6 +12,7 @@ import {
   type WorkbenchItem,
   type WorkbenchQuery,
 } from '@/lib/api/workbench-api';
+import { formatDateTime } from '@/lib/formatters';
 
 const { Text } = Typography;
 
@@ -19,7 +20,11 @@ const PHASE_OPTIONS = ['draft', 'submitted', 'active', 'resolved', 'closed'] as 
 const PRIORITY_OPTIONS = ['critical', 'high', 'medium', 'low'] as const;
 const RECORD_TYPE_OPTIONS = ['incident', 'change', 'problem', 'ticket'] as const;
 
-const DEFAULT_PHASES = ['draft', 'submitted', 'active'];
+// 默认不做「白名单」式阶段筛选（旧值 ['draft','submitted','active'] 会漏掉
+// phase=unknown 和未来新增的阶段）。改为「未关闭」语义：排除终态 closed/resolved，
+// 其余全部保留。
+const DEFAULT_PHASES: string[] = [];
+const DEFAULT_EXCLUDE_PHASES = ['closed', 'resolved'];
 
 const priorityColor: Record<string, string> = {
   critical: 'red',
@@ -83,10 +88,16 @@ export default function WorkbenchPage() {
       const query: WorkbenchQuery = {
         page,
         pageSize,
-        phase: phases.length ? phases : undefined,
         priority: priorities.length ? priorities : undefined,
         recordType: recordTypes.length ? recordTypes : undefined,
       };
+      // 阶段筛选二选一：用户显式勾选时走 phase 白名单；未勾选时走「未关闭」语义，
+      // 用 excludePhase 排除终态，避免白名单漏掉 unknown / 新增阶段。
+      if (phases.length > 0) {
+        query.phase = phases;
+      } else {
+        query.excludePhase = DEFAULT_EXCLUDE_PHASES;
+      }
       if (user?.id) {
         query.assigneeId = user.id;
       }
@@ -162,7 +173,7 @@ export default function WorkbenchPage() {
         title: t('workbench.columns.createdAt'),
         dataIndex: 'createdAt',
         width: 180,
-        render: (v: string) => new Date(v).toLocaleString(),
+        render: (v: string) => formatDateTime(v),
       },
     ],
     [t, labelOr]
@@ -189,6 +200,12 @@ export default function WorkbenchPage() {
             label: labelOr(`workbench.phases.${p}`, p),
           }))}
         />
+        {/* 未勾选阶段时，默认排除已关闭/已解决终态；显式提示，避免用户误以为列表是全量。 */}
+        {phases.length === 0 && (
+          <Text type='secondary' className='ml-2' style={{ fontSize: 12 }}>
+            默认排除已关闭、已解决
+          </Text>
+        )}
       </div>
       <div>
         <Text type='secondary' className='mr-2'>
@@ -268,7 +285,7 @@ export default function WorkbenchPage() {
             setPageSize(ps);
           },
           showSizeChanger: true,
-          showTotal: (t: number) => `${t} items`,
+          showTotal: (total: number) => t('common.totalLabel', { total }),
         }}
         onRow={record => ({
           onClick: () => handleRowClick(record),

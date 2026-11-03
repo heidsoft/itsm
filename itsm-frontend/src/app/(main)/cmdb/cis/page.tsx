@@ -10,7 +10,7 @@ export default function CIListPage() {
     <div className="space-y-6 p-6">
       <ManagementPageHeader
         title="配置项工作台"
-        description="查看和管理所有配置项，支持按类型、状态、关键程度等维度筛选。"
+        description="查看和管理所有配置项，支持按名称、CI 类型、状态筛选。"
       />
       <CIList />
     </div>

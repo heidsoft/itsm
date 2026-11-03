@@ -9,6 +9,12 @@ import { applicationService } from '@/lib/services/application-service';
 import { projectService } from '@/lib/services/project-service';
 import { useI18n } from '@/lib/i18n';
 
+// 应用类型中文映射，与下方新建/编辑表单的 Select options 保持一致
+const appTypeLabels: Record<string, string> = {
+  web: 'Web应用',
+  mobile: '移动应用',
+  backend: '后端服务',
+};
 
 export default function ApplicationsPage() {
   const { t } = useI18n();
@@ -78,7 +84,7 @@ export default function ApplicationsPage() {
       title: '类型',
       dataIndex: 'type',
       key: 'type',
-      render: (type: string) => <Tag color="blue">{(type || 'UNKNOWN').toUpperCase()}</Tag>,
+      render: (type: string) => <Tag color="blue">{appTypeLabels[type] || type || '-'}</Tag>,
     },
     {
       title: '微服务数',

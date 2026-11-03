@@ -12,6 +12,7 @@ import { CMDB_CAPABILITIES } from '@/lib/cmdb/cmdb-capabilities';
 import { useCapabilities } from '@/lib/hooks/useCapabilities';
 import { useI18n } from '@/lib/i18n/useI18n';
 import { usePermissions } from '@/lib/hooks/use-permissions';
+import { formatDateTime } from '@/lib/formatters';
 
 const { Paragraph, Text, Title } = Typography;
 
@@ -186,7 +187,7 @@ export function CSDMHub() {
         </Text>
         {overview.refreshedAt && (
           <Text type="secondary" className="mt-2 block text-xs">
-            {t('cmdb.hub.refreshedAt', { time: new Date(overview.refreshedAt).toLocaleString() })}
+            {t('cmdb.hub.refreshedAt', { time: formatDateTime(overview.refreshedAt) })}
           </Text>
         )}
       </Card>

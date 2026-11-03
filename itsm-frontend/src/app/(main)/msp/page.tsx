@@ -22,7 +22,7 @@ import {
 import { User, FileText, Clock, AlertCircle, CheckCircle } from 'lucide-react';
 import MSPService from '@/lib/services/msp-service';
 import { hasProductCapability } from '@/config/product-capabilities';
-import { displayUserName } from '@/lib/formatters';
+import { displayUserName, formatDateTime } from '@/lib/formatters';
 import type { MSPAllocation, MSPCustomerReport, MSPPerformanceReport, MSPContext } from '@/types/msp';
 import type { Ticket as ApiTicket } from '@/lib/api/ticket-api';
 
@@ -175,7 +175,7 @@ export default function MSPDashboardPage() {
       title: '分配时间',
       dataIndex: 'assignedAt',
       key: 'assignedAt',
-      render: (date: string) => date ? new Date(date).toLocaleString('zh-CN') : '-',
+      render: (date: string) => formatDateTime(date) || '-',
     },
   ];
 
@@ -246,7 +246,7 @@ export default function MSPDashboardPage() {
       render: (_: unknown, record: ApiTicket) =>
         displayUserName(record.assigneeName, record.assigneeId, '未分配'),
     },
-    { title: '创建时间', dataIndex: 'createdAt', key: 'createdAt', render: (v: string) => v ? new Date(v).toLocaleString('zh-CN') : '-' },
+    { title: '创建时间', dataIndex: 'createdAt', key: 'createdAt', render: (v: string) => formatDateTime(v) || '-' },
     {
       title: '操作',
       key: 'action',
@@ -274,8 +274,8 @@ export default function MSPDashboardPage() {
         return <Tag color={color}>{role.toUpperCase()}</Tag>;
       },
     },
-    { title: '分配时间', dataIndex: 'assignedAt', key:'assignedAt', render: (v: string) => v ? new Date(v).toLocaleString('zh-CN') : '-' },
-    { title: '解除时间', dataIndex: 'deassignedAt', key:'deassignedAt', render: (v: string) => v ? new Date(v).toLocaleString('zh-CN') : '-' },
+    { title: '分配时间', dataIndex: 'assignedAt', key:'assignedAt', render: (v: string) => formatDateTime(v) || '-' },
+    { title: '解除时间', dataIndex: 'deassignedAt', key:'deassignedAt', render: (v: string) => formatDateTime(v) || '-' },
   ];
 
   if (!isMSP && !isAdmin) {

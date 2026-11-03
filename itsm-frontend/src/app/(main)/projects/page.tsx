@@ -12,7 +12,7 @@ import {
   Select,
   DatePicker,
   Progress,
-  message,
+  App,
 } from 'antd';
 import { Plus, Pencil, Trash2, RefreshCw, Briefcase } from 'lucide-react';
 import { PageContainer } from '@/app/components/PageContainer';
@@ -26,8 +26,16 @@ import { useI18n } from '@/lib/i18n';
 
 const { RangePicker } = DatePicker;
 
+// 项目状态枚举与后端 ent/schema/project.go 保持一致（active/completed/suspended）
+const projectStatusLabels: Record<string, string> = {
+  active: '进行中',
+  completed: '已完成',
+  suspended: '已暂停',
+};
+
 export default function ProjectsPage() {
   const { t } = useI18n();
+  const { message, modal } = App.useApp();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [form] = Form.useForm();
@@ -128,10 +136,7 @@ export default function ProjectsPage() {
       title: '状态',
       dataIndex: 'status',
       key: 'status',
-      render: (status: string) => {
-        // Map status
-        return <Tag>{status || 'Unknown'}</Tag>;
-      },
+      render: (status: string) => <Tag>{projectStatusLabels[status] || status || '-'}</Tag>,
     },
     {
       title: '操作',
@@ -158,7 +163,7 @@ export default function ProjectsPage() {
   };
 
   const handleDelete = (record: Project) => {
-    Modal.confirm({
+    modal.confirm({
       title: '确认删除',
       content: `确定要删除项目 "${record.name}" 吗？`,
       onOk: async () => {

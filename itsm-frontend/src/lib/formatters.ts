@@ -3,9 +3,11 @@ import utc from 'dayjs/plugin/utc';
 
 dayjs.extend(utc);
 
-export const formatDateTime = (iso?: string | null) => {
-  if (!iso) return '';
-  const d = dayjs(iso);
+// 接受 Date 实例是为了让「本地已持有 Date 对象」的页面不必先 toISOString()
+// 再解析回来（Invalid Date 上调用 toISOString 会抛 RangeError）。
+export const formatDateTime = (value?: string | Date | null) => {
+  if (!value) return '';
+  const d = dayjs(value);
   if (!d.isValid() || d.year() <= 1) return '';
   // 统一使用 YYYY-MM-DD HH:mm，避免 toLocaleString 输出 "2026/8/15 14:30:00" 这类不一致格式
   return d.format('YYYY-MM-DD HH:mm');

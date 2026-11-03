@@ -21,6 +21,7 @@ import type { ColumnsType } from 'antd/es/table';
 import { Delete, Edit, FlaskConical, Plus, RefreshCw } from 'lucide-react';
 import { UsageGuideCard } from '@/components/common/UsageGuideCard';
 import { isPermissionDeniedError } from '@/lib/api/http-client';
+import { formatDateTime } from '@/lib/formatters';
 import type {
   ActionConfig,
   AssignmentRule,
@@ -56,10 +57,7 @@ interface TestFormValues {
 }
 
 function formatDate(value?: string) {
-  if (!value) return '-';
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleString('zh-CN', { hour12: false });
+  return formatDateTime(value) || '-';
 }
 
 function parseJsonField<T>(value: string, fallback: T, fieldName: string): T {

@@ -6,6 +6,7 @@ import { Activity, AlertCircle, CheckCircle, RefreshCw, XCircle, Database, Zap, 
 import { useI18n } from '@/lib/i18n';
 import { DashboardAPI } from '@/lib/api/dashboard-api';
 import { formatMetricWindow, formatUptime } from '@/lib/utils/metric-format';
+import { formatDateTime } from '@/lib/formatters';
 import type { SystemStats } from '@/types/dashboard';
 
 const { Title, Text } = Typography;
@@ -202,7 +203,7 @@ export const SystemHealth: React.FC = () => {
 
   const sampledAtText =
     stats && !Number.isNaN(Date.parse(stats.sampledAt))
-      ? new Date(stats.sampledAt).toLocaleString('zh-CN')
+      ? formatDateTime(stats.sampledAt)
       : '—';
 
   return (

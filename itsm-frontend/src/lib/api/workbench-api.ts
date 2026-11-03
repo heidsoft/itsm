@@ -17,6 +17,9 @@ export interface WorkbenchItem {
 export interface WorkbenchQuery {
   assigneeId?: number;
   phase?: string[];
+  // excludePhase 是「未关闭」语义的反向过滤：列出要排除的阶段（默认 closed/resolved），
+  // 其余阶段（含 unknown 与未来新增阶段）一律保留。与 phase 互斥使用。
+  excludePhase?: string[];
   priority?: string[];
   recordType?: string[];
   page?: number;
@@ -35,6 +38,7 @@ export async function queryWorkbench(params: WorkbenchQuery): Promise<WorkbenchR
   const query = new URLSearchParams();
   if (params.assigneeId !== undefined) query.set('assigneeId', String(params.assigneeId));
   if (params.phase?.length) query.set('phase', params.phase.join(','));
+  if (params.excludePhase?.length) query.set('excludePhase', params.excludePhase.join(','));
   if (params.priority?.length) query.set('priority', params.priority.join(','));
   if (params.recordType?.length) query.set('recordType', params.recordType.join(','));
   if (params.page) query.set('page', String(params.page));

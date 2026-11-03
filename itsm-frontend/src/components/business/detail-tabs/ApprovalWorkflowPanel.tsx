@@ -316,7 +316,8 @@ export const ApprovalWorkflowPanel: React.FC<ApprovalWorkflowPanelProps> = ({
     [],
   );
 
-  // "查看完整流程图" 跳转地址：与后端 ProcessTriggerService 约定的 businessKey 协议一致。
+  // 「查看流程实例」跳转地址：与后端 ProcessTriggerService 约定的 businessKey 协议一致；
+  // 目标页是流程实例详情（任务/审批记录/审计日志），不是 BPMN 图形查看器。
   const openProcessDiagramUrl = useCallback(
     (processInstanceId: string) => {
       const url = `/workflow/instances?businessKey=ticket:${ticketId}&instanceId=${encodeURIComponent(
@@ -365,7 +366,7 @@ export const ApprovalWorkflowPanel: React.FC<ApprovalWorkflowPanelProps> = ({
               icon={<ExternalLink size={12} />}
               onClick={() => openProcessDiagramUrl(bpmnState.processInstanceId)}
             >
-              {t('detailTabs.viewProcessDiagram') || '查看完整流程图'}
+              {t('detailTabs.viewProcessDiagram') || '查看流程实例'}
             </Button>
           }
         >
@@ -449,7 +450,7 @@ export const ApprovalWorkflowPanel: React.FC<ApprovalWorkflowPanelProps> = ({
               icon={<ExternalLink size={12} />}
               onClick={() => openProcessDiagramUrl(bpmnState.processInstanceId)}
             >
-              {t('detailTabs.viewProcessDiagram') || '查看完整流程图'}
+              {t('detailTabs.viewProcessDiagram') || '查看流程实例'}
             </Button>
           }
         />

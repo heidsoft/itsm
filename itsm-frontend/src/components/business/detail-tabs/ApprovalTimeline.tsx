@@ -6,6 +6,7 @@ import { CheckCircle, XCircle, Timer, ArrowRight } from 'lucide-react';
 import type { ApprovalStep, ApprovalStepStatus, ApprovalActionInput } from './types';
 import { UserApi } from '@/lib/api/user-api';
 import { useI18n } from '@/lib/i18n/useI18n';
+import { formatDateTime as sharedFormatDateTime } from '@/lib/formatters';
 
 const { Text } = Typography;
 const { TextArea } = Input;
@@ -45,7 +46,7 @@ export const ApprovalTimeline: React.FC<ApprovalTimelineProps> = ({
   onDelegate,
   formatDateTime,
 }) => {
-  const { t, language } = useI18n();
+  const { t } = useI18n();
   const { message } = App.useApp();
   const [currentAction, setCurrentAction] = useState<Action | null>(null);
   const [comment, setComment] = useState('');
@@ -77,11 +78,7 @@ export const ApprovalTimeline: React.FC<ApprovalTimelineProps> = ({
     [t],
   );
 
-  const defaultFormat = useCallback(
-    (s?: string) =>
-      s ? new Date(s).toLocaleString(language === 'en-US' ? 'en-US' : 'zh-CN') : '',
-    [language],
-  );
+  const defaultFormat = useCallback((s?: string) => sharedFormatDateTime(s), []);
   const fmt = formatDateTime ?? defaultFormat;
 
   const iconFor = (status: ApprovalStepStatus) => {

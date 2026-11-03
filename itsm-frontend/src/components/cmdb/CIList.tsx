@@ -42,6 +42,13 @@ const statusColors: Record<string, string> = {
   [CIStatus.DECOMMISSIONED]: 'red',
 };
 
+// ci_types.name 是租户内唯一代码（server/database/...），中文名在 description。
+// 展示层统一优先中文描述，缺失再回退代码/原始类型，避免列表与导出出现英文代码。
+const getCITypeLabel = (types: CIType[], ciTypeId: number | undefined, fallback?: string): string => {
+  const type = types.find(item => item.id === ciTypeId);
+  return type?.description?.trim() || type?.name || fallback || '';
+};
+
 const CIList: React.FC = () => {
   const router = useRouter();
   const { message } = App.useApp();
@@ -169,7 +176,7 @@ const CIList: React.FC = () => {
       ...selectedData.map(item => [
         item.id,
         item.name,
-        types.find(t => t.id === item.ciTypeId)?.name || item.type || '',
+        getCITypeLabel(types, item.ciTypeId, item.type),
         item.cloudProvider || '',
         item.status,
         item.model || '',
@@ -203,7 +210,7 @@ const CIList: React.FC = () => {
       width: 70,
     },
     {
-      title: '资产名称',
+      title: '名称',
       dataIndex: 'name',
       ellipsis: true,
       render: (text: string, record: ConfigurationItem) => (
@@ -220,7 +227,7 @@ const CIList: React.FC = () => {
       title: '类型',
       width: 120,
       render: (_: unknown, record: ConfigurationItem) => {
-        return types.find(t => t.id === record.ciTypeId)?.name || record.type || `类型 ${record.ciTypeId}`;
+        return getCITypeLabel(types, record.ciTypeId, record.type) || `类型 ${record.ciTypeId}`;
       },
     },
     {
@@ -291,7 +298,7 @@ const CIList: React.FC = () => {
         {/* 搜索工具栏 */}
         <div className="mb-4 flex flex-wrap items-center gap-3">
           <Input
-            placeholder="搜索名称/序列号"
+            placeholder="搜索名称/编号"
             allowClear
             value={searchInput}
             onChange={event => handleSearchInputChange(event.target.value)}
@@ -300,13 +307,13 @@ const CIList: React.FC = () => {
             style={{ width: 200 }}
           />
           <Select
-            aria-label="资产类型"
-            placeholder="资产类型"
+            aria-label="CI 类型"
+            placeholder="CI 类型"
             style={{ width: 140 }}
             allowClear
             value={filters.ciTypeId}
             onChange={value => handleFilterChange({ ciTypeId: value })}
-           options={types.map(t => ({ value: t.id, label: t.name }))} />
+           options={types.map(t => ({ value: t.id, label: t.description?.trim() || t.name }))} />
           <Select
             aria-label="状态"
             placeholder="状态"
@@ -330,7 +337,7 @@ const CIList: React.FC = () => {
               className="ml-auto"
               onClick={() => router.push('/cmdb/cis/create')}
             >
-              录入资产
+              新建配置项
             </Button>
           )}
         </div>
@@ -383,8 +390,8 @@ const CIList: React.FC = () => {
                   state="empty"
                   minHeight={200}
                   empty={{
-                    title: '暂无配置项数据',
-                    description: '当前没有配置项数据',
+                    title: '暂无配置项',
+                    description: '还没有登记配置项，可先新建，或从云资源列表导入。',
                     icon: <Database size={48} />,
                     actionText: '创建配置项',
                     onAction: () => router.push('/cmdb/cis/create'),

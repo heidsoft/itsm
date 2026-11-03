@@ -836,7 +836,7 @@ const ChangeDetail: React.FC = () => {
                       type="warning"
                       showIcon
                       className="mb-4"
-                      message={t('changeDetail.checklistBlockedHint').replace(
+                      title={t('changeDetail.checklistBlockedHint').replace(
                         '{count}',
                         String(pendingSteps.length)
                       )}
@@ -922,7 +922,7 @@ const ChangeDetail: React.FC = () => {
                               }
                               title={<Text>{step.description}</Text>}
                               description={
-                                <Space direction="vertical" size={0}>
+                                <Space orientation="vertical" size={0}>
                                   <Text type="secondary">
                                     {rollbackStepLabels[step.status]}
                                     {step.resolvedByName

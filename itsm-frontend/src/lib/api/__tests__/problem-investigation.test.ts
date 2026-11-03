@@ -157,15 +157,6 @@ describe('ProblemInvestigationAPI', () => {
     });
   });
 
-  describe('getKnowledgeArticles', () => {
-    it('should get knowledge articles', async () => {
-      mockGet.mockResolvedValue({ items: [{ id: 1 }] });
-      const result = await ProblemInvestigationAPI.getKnowledgeArticles(1);
-      expect(mockGet).toHaveBeenCalledWith('/api/v1/problem-knowledge-articles/problems/1');
-      expect(result).toHaveLength(1);
-    });
-  });
-
   describe('error propagation', () => {
     it('should propagate errors', async () => {
       mockGet.mockRejectedValue(new Error('Server error'));

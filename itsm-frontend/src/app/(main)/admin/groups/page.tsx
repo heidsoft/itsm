@@ -29,6 +29,7 @@ import { GroupAPI, type Group } from '@/lib/api/group-api';
 import { UserApi, type User, PRIMARY_ROLE_OPTIONS, PRIMARY_ROLE_LABEL } from '@/lib/api/user-api';
 import { useI18n } from '@/lib/i18n/useI18n';
 import { BACKEND_MAX_PAGE_SIZE } from '@/lib/api/pagination';
+import { formatDateTime } from '@/lib/formatters';
 
 const { Title, Text } = Typography;
 const { Search: AntSearch } = Input;
@@ -289,14 +290,14 @@ const GroupManagement: React.FC = () => {
       title: t('groups.createdAt'),
       dataIndex: 'createdAt',
       key: 'createdAt',
-      render: (value: string) => (value ? new Date(value).toLocaleString('zh-CN') : '-'),
+      render: (value: string) => formatDateTime(value) || '-',
       width: 160,
     },
     {
       title: t('groups.updatedAt'),
       dataIndex: 'updatedAt',
       key: 'updatedAt',
-      render: (value: string) => (value ? new Date(value).toLocaleString('zh-CN') : '-'),
+      render: (value: string) => formatDateTime(value) || '-',
       width: 160,
     },
     {

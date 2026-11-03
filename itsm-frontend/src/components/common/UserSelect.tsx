@@ -81,7 +81,7 @@ export const UserSelect: React.FC<UserSelectProps> = ({
       notFoundContent={isFetching ? <Spin size="small" /> : isError ? '用户列表加载失败' : '未找到用户'}
       optionLabelProp="label"
       options={options}
-      dropdownRender={menu => (
+      popupRender={menu => (
         <>
           {menu}
           {hint && (

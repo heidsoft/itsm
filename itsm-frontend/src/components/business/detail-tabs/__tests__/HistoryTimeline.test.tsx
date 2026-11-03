@@ -57,6 +57,30 @@ describe('HistoryTimeline', () => {
     expect(mockFetchAuditLog).not.toHaveBeenCalled();
   });
 
+  it('translates known English action codes to Chinese labels', async () => {
+    // 回归：后端 action 为 'update'，details 已是中文，直接渲染会形成
+    // 「update + 更新工单」中英混排。展示层必须把已知 action 归一为中文。
+    mockFetchHistory.mockResolvedValueOnce([
+      {
+        id: 2,
+        user: { name: '张三' },
+        action: 'update',
+        details: '更新工单',
+        createdAt: '2026-01-01T00:00:00Z',
+      },
+    ]);
+
+    render(
+      <HistoryTimeline targetType="ticket" targetId={7} fetchHistory={mockFetchHistory} />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('张三')).toBeInTheDocument();
+    });
+    expect(screen.getByText('更新')).toBeInTheDocument();
+    expect(screen.queryByText('update')).not.toBeInTheDocument();
+  });
+
   it('falls back to fetchAuditLog when fetchHistory rejects', async () => {
     mockFetchHistory.mockRejectedValueOnce(new Error('native api down'));
     mockFetchAuditLog.mockResolvedValueOnce([

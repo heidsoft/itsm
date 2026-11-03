@@ -342,3 +342,55 @@ func TestQueryPageSizeFollowsPlatformOwner(t *testing.T) {
 	assert.Len(t, list.Items, 2)
 	assert.Equal(t, (list.Total+1)/2, list.TotalPages)
 }
+
+// TestQueryExcludePhaseRemovesTerminalButKeepsUnknown 锁定 D18「未关闭」语义：
+// excludePhase=closed 必须在 SQL 侧排除终态（closed/cancelled/...），
+// 但不得误伤状态无法映射到已知 phase 的 unknown 单据 —— 这正是旧默认
+// phase=draft,submitted,active 白名单会漏掉的那一类。
+//
+// 反向验证：把 repository_impl.go 里 ExcludePhase 分支整段去掉，本用例转红
+// （closed 单据重新出现在列表里，total 变大）。
+func TestQueryExcludePhaseRemovesTerminalButKeepsUnknown(t *testing.T) {
+	f := setupWorkbenchTest(t)
+
+	// 追加两条 tenantA 工单：一条 closed（应被排除）、一条状态不在 lifecycle 映射表中
+	// （phase=unknown，应保留）。用原始 SQL 插入，绕过 ent 的必填校验噪音。
+	_, err := f.db.Exec(`INSERT INTO tickets (tenant_id, title, ticket_number, requester_id, assignee_id, status, priority, form_fields, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		f.tenantA, "A-工单-已关闭", "TK-A-CLOSED", f.actorA, f.actorA, "closed", "low", "{}", time.Now(), time.Now())
+	require.NoError(t, err)
+	_, err = f.db.Exec(`INSERT INTO tickets (tenant_id, title, ticket_number, requester_id, assignee_id, status, priority, form_fields, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		f.tenantA, "A-工单-未知阶段", "TK-A-UNKNOWN", f.actorA, f.actorA, "weird_status", "medium", "{}", time.Now(), time.Now())
+	require.NoError(t, err)
+
+	// 无过滤：closed 与 unknown 都在，全量 = 4(原有活跃) + 2 = 6。
+	status, env := doWorkbench(t, f.handler, f.tenantA, "?page=1&pageSize=100")
+	require.Equal(t, http.StatusOK, status)
+	all := decodeList(t, env)
+	assert.Equal(t, 6, all.Total, "无过滤时 closed 与 unknown 都应出现")
+
+	titles := make(map[string]bool)
+	for _, item := range all.Items {
+		titles[item.Title] = true
+	}
+	assert.True(t, titles["A-工单-已关闭"], "无过滤时 closed 单据应出现")
+	assert.True(t, titles["A-工单-未知阶段"], "无过滤时 unknown 阶段单据应出现")
+
+	// excludePhase=closed：终态被排除，unknown 保留 → total = 5。
+	status, env = doWorkbench(t, f.handler, f.tenantA, "?excludePhase=closed&page=1&pageSize=100")
+	require.Equal(t, http.StatusOK, status)
+	filtered := decodeList(t, env)
+	assert.Equal(t, 5, filtered.Total, "excludePhase=closed 应只排除终态，保留 unknown")
+
+	filteredTitles := make(map[string]bool)
+	for _, item := range filtered.Items {
+		filteredTitles[item.Title] = true
+	}
+	assert.False(t, filteredTitles["A-工单-已关闭"], "closed 单据必须被排除")
+	assert.True(t, filteredTitles["A-工单-未知阶段"], "unknown 阶段单据不得被排除 —— 这是 D18 的核心")
+
+	// phase 白名单（旧默认）会把 unknown 也漏掉：作为对照断言。
+	status, env = doWorkbench(t, f.handler, f.tenantA, "?phase=draft,submitted,active&page=1&pageSize=100")
+	require.Equal(t, http.StatusOK, status)
+	white := decodeList(t, env)
+	assert.Less(t, white.Total, filtered.Total, "旧白名单会漏掉 unknown，故 total 更小")
+}

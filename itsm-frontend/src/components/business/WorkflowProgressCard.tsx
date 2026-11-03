@@ -30,6 +30,31 @@ import type { BpmnProcessState } from '@/types/ticket-workflow-state';
 
 const { Text } = Typography;
 
+// BPMN 活动类型在后端可能是 camelCase（userTask）或 snake_case（user_task），
+// 统一归一化为中文标签，不在卡片里直出英文枚举。
+const ACTIVITY_TYPE_LABELS: Record<string, string> = {
+  startevent: '开始事件',
+  endevent: '结束事件',
+  usertask: '用户任务',
+  servicetask: '服务任务',
+  scripttask: '脚本任务',
+  manualtask: '人工任务',
+  businessruletask: '规则任务',
+  sendtask: '发送任务',
+  receivetask: '接收任务',
+  exclusivegateway: '排他网关',
+  parallelgateway: '并行网关',
+  inclusivegateway: '包容网关',
+  eventbasedgateway: '事件网关',
+  subprocess: '子流程',
+  callactivity: '调用活动',
+};
+
+function getActivityTypeLabel(type?: string | null): string {
+  const key = (type || '').replace(/[_-]/g, '').toLowerCase();
+  return ACTIVITY_TYPE_LABELS[key] ?? (type || '用户任务');
+}
+
 export interface WorkflowProgressCardProps {
   ticketId: number;
   /**
@@ -155,7 +180,7 @@ export const WorkflowProgressCard: React.FC<WorkflowProgressCardProps> = ({
             icon={<ExternalLink size={12} />}
             onClick={() => openDiagram(state.processInstanceId)}
           >
-            查看完整流程图
+            查看流程实例
           </Button>
         }
       >
@@ -232,7 +257,7 @@ export const WorkflowProgressCard: React.FC<WorkflowProgressCardProps> = ({
             </Text>
             <div className="mt-1 flex items-center gap-2">
               <Tag color="blue" className="mr-0">
-                {state.currentActivityType || 'userTask'}
+                {getActivityTypeLabel(state.currentActivityType)}
               </Tag>
               <Text strong>{state.currentActivityName}</Text>
             </div>
@@ -264,7 +289,7 @@ export const WorkflowProgressCard: React.FC<WorkflowProgressCardProps> = ({
                 <Space key={nx.activityId} size={6} className="text-xs">
                   <ArrowRight size={12} className="text-gray-400" />
                   <Tag color={nx.isGateway ? 'orange' : 'blue'} className="mr-0">
-                    {nx.activityType}
+                    {getActivityTypeLabel(nx.activityType)}
                   </Tag>
                   <Text>{nx.activityName}</Text>
                   {nx.isGateway && (

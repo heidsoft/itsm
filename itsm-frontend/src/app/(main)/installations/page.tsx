@@ -32,6 +32,8 @@ import connectorService from '@/lib/services/connector-service';
 import type { TenantInstallation } from '@/lib/services/marketplace-service';
 import marketplaceService from '@/lib/services/marketplace-service';
 import { useCapabilities } from '@/lib/hooks/useCapabilities';
+import { usePermissions } from '@/lib/hooks/use-permissions';
+import { formatDateTime } from '@/lib/formatters';
 
 type InstallForm = {
   appId: string;
@@ -112,7 +114,8 @@ const InstallationsPage = () => {
   const [loadError, setLoadError] = useState<string | null>(null);
   const { message, modal } = App.useApp();
   const { allows } = useCapabilities();
-  const canManageMarketplace = allows('marketplace', 'manage');
+  const { hasPermission } = usePermissions();
+  const canManageMarketplace = allows('marketplace', 'manage') && hasPermission('marketplace', 'write');
 
   const loadInstallations = async () => {
     setLoading(true);
@@ -363,9 +366,9 @@ const InstallationsPage = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
                   <Info label="已安装版本" value={`v${installation.installedVersion}`} />
-                  <Info label="安装时间" value={new Date(installation.installedAt).toLocaleString()} />
-                  <Info label="上次更新" value={new Date(installation.updatedAt || installation.lastUpdatedAt || installation.installedAt).toLocaleString()} />
-                  <Info label="最近使用" value={installation.lastUsedAt ? new Date(installation.lastUsedAt).toLocaleString() : '从未使用'} />
+                  <Info label="安装时间" value={formatDateTime(installation.installedAt)} />
+                  <Info label="上次更新" value={formatDateTime(installation.updatedAt || installation.lastUpdatedAt || installation.installedAt)} />
+                  <Info label="最近使用" value={formatDateTime(installation.lastUsedAt) || '从未使用'} />
                 </div>
 
                 {item?.type === 'connector' && (

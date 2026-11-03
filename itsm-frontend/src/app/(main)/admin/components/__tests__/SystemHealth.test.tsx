@@ -1,5 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import { DashboardAPI } from '@/lib/api/dashboard-api';
+import { formatDateTime } from '@/lib/formatters';
 import type { SystemStats } from '@/types/dashboard';
 import { SystemHealth } from '../SystemHealth';
 
@@ -118,7 +119,7 @@ describe('SystemHealth', () => {
 
     render(<SystemHealth />);
 
-    const expected = new Date('2026-10-14T02:00:00.000Z').toLocaleString('zh-CN');
+    const expected = formatDateTime('2026-10-14T02:00:00.000Z');
     await waitFor(() =>
       expect(screen.getByText(`最后更新: ${expected}`)).toBeInTheDocument(),
     );

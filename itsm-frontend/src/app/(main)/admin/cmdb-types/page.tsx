@@ -34,6 +34,7 @@ import {
   Switch,
 } from 'antd';
 import { CMDBApi } from '@/lib/api/cmdb-api';
+import { formatDateTime } from '@/lib/formatters';
 import { UsageGuideCard } from '@/components/common/UsageGuideCard';
 import type { CIType } from '@/types/biz/cmdb';
 import {
@@ -319,7 +320,7 @@ const CMDBTypesManagement = () => {
       width: 150,
       render: (date: string) => (
         <span className='text-sm text-gray-600'>
-          {date ? new Date(date).toLocaleDateString('zh-CN') : '-'}
+          {formatDateTime(date) || '-'}
         </span>
       ),
     },

@@ -4,9 +4,54 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Timeline, Typography, Empty, Spin, Alert, Button, Tag } from 'antd';
 import { History as HistoryIcon } from 'lucide-react';
 import { useI18n } from '@/lib/i18n/useI18n';
+import { formatDateTime as sharedFormatDateTime } from '@/lib/formatters';
 import type { HistoryRecord, TargetType } from './types';
 
 const { Text } = Typography;
+
+// 后端历史接口的 action 是稳定英文枚举（create/update/status_change…），
+// 直接渲染会和中文 details 混排（如「update + 更新工单」）。
+// 这里统一做展示层归一：已知 action 转本地化文案，未知值原样保留。
+const ACTION_LABELS: Record<string, { zh: string; en: string }> = {
+  create: { zh: '创建', en: 'Create' },
+  created: { zh: '创建', en: 'Create' },
+  update: { zh: '更新', en: 'Update' },
+  updated: { zh: '更新', en: 'Update' },
+  delete: { zh: '删除', en: 'Delete' },
+  deleted: { zh: '删除', en: 'Delete' },
+  status_change: { zh: '状态变更', en: 'Status Change' },
+  status_changed: { zh: '状态变更', en: 'Status Change' },
+  change_status: { zh: '状态变更', en: 'Status Change' },
+  assign: { zh: '分配', en: 'Assign' },
+  assigned: { zh: '分配', en: 'Assign' },
+  unassign: { zh: '取消分配', en: 'Unassign' },
+  comment: { zh: '评论', en: 'Comment' },
+  comment_added: { zh: '评论', en: 'Comment' },
+  escalate: { zh: '升级', en: 'Escalate' },
+  escalated: { zh: '升级', en: 'Escalate' },
+  resolve: { zh: '解决', en: 'Resolve' },
+  resolved: { zh: '解决', en: 'Resolve' },
+  close: { zh: '关闭', en: 'Close' },
+  closed: { zh: '关闭', en: 'Close' },
+  reopen: { zh: '重新打开', en: 'Reopen' },
+  reopened: { zh: '重新打开', en: 'Reopen' },
+  approve: { zh: '审批通过', en: 'Approve' },
+  approved: { zh: '审批通过', en: 'Approve' },
+  reject: { zh: '拒绝', en: 'Reject' },
+  rejected: { zh: '拒绝', en: 'Reject' },
+  login_success: { zh: '登录成功', en: 'Login Success' },
+  login_failed: { zh: '登录失败', en: 'Login Failed' },
+  search: { zh: '查询', en: 'Search' },
+  export: { zh: '导出', en: 'Export' },
+  import: { zh: '导入', en: 'Import' },
+};
+
+function formatActionLabel(action: string | undefined, language: string): string | null {
+  if (!action) return null;
+  const entry = ACTION_LABELS[action.trim().toLowerCase()];
+  if (!entry) return action;
+  return language === 'en-US' ? entry.en : entry.zh;
+}
 
 export interface HistoryTimelineProps {
   targetType: TargetType;
@@ -29,10 +74,7 @@ export const HistoryTimeline: React.FC<HistoryTimelineProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [source, setSource] = useState<'native' | 'audit'>('native');
 
-  const defaultFormat = useCallback(
-    (s: string) => (s ? new Date(s).toLocaleString(language === 'en-US' ? 'en-US' : 'zh-CN') : ''),
-    [language]
-  );
+  const defaultFormat = useCallback((s: string) => sharedFormatDateTime(s), []);
   const fmt = formatDateTime ?? defaultFormat;
 
   const load = useCallback(async () => {
@@ -92,39 +134,42 @@ export const HistoryTimeline: React.FC<HistoryTimelineProps> = ({
 
       {records.length > 0 ? (
         <Timeline>
-          {records.map((r) => (
-            <Timeline.Item key={r.id}>
-              <div className="flex items-start justify-between">
-                <div>
-                  <Text strong>{r.user?.name || r.user?.username || t('detailTabs.system')}</Text>
-                  {r.action && (
-                    <Tag color="blue" className="ml-2">
-                      {r.action}
-                    </Tag>
-                  )}
-                  {r.details && (
-                    <div className="text-sm text-gray-600 mt-1">{r.details}</div>
-                  )}
-                  {r.fieldName && (
-                    <div className="text-sm text-gray-600 mt-1">
-                      {t('detailTabs.fieldChanged')} <Text code>{r.fieldName}</Text>
-                    </div>
-                  )}
-                  {r.changeReason && (
-                    <div className="text-sm text-gray-500 mt-1">{t('detailTabs.changeReason')}：{r.changeReason}</div>
-                  )}
+          {records.map((r) => {
+            const actionLabel = formatActionLabel(r.action, language);
+            return (
+              <Timeline.Item key={r.id}>
+                <div className="flex items-start justify-between">
+                  <div>
+                    <Text strong>{r.user?.name || r.user?.username || t('detailTabs.system')}</Text>
+                    {actionLabel && (
+                      <Tag color="blue" className="ml-2">
+                        {actionLabel}
+                      </Tag>
+                    )}
+                    {r.details && (
+                      <div className="text-sm text-gray-600 mt-1">{r.details}</div>
+                    )}
+                    {r.fieldName && (
+                      <div className="text-sm text-gray-600 mt-1">
+                        {t('detailTabs.fieldChanged')} <Text code>{r.fieldName}</Text>
+                      </div>
+                    )}
+                    {r.changeReason && (
+                      <div className="text-sm text-gray-500 mt-1">{t('detailTabs.changeReason')}：{r.changeReason}</div>
+                    )}
+                  </div>
+                  <div className="text-right ml-4 shrink-0">
+                    <div className="text-sm text-gray-500">{fmt(r.createdAt)}</div>
+                    {r.oldValue !== undefined && r.newValue !== undefined && (
+                      <div className="text-xs text-gray-400">
+                        {String(r.oldValue) || t('detailTabs.emptyValue')} → {String(r.newValue) || t('detailTabs.emptyValue')}
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <div className="text-right ml-4 shrink-0">
-                  <div className="text-sm text-gray-500">{fmt(r.createdAt)}</div>
-                  {r.oldValue !== undefined && r.newValue !== undefined && (
-                    <div className="text-xs text-gray-400">
-                      {String(r.oldValue) || t('detailTabs.emptyValue')} → {String(r.newValue) || t('detailTabs.emptyValue')}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </Timeline.Item>
-          ))}
+              </Timeline.Item>
+            );
+          })}
         </Timeline>
       ) : (
         <Empty

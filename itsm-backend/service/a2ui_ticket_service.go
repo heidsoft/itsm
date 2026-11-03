@@ -3,15 +3,8 @@ package service
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"strings"
 )
-
-// ErrA2UISubmitNotImplemented：A2UI 表单「提交」动作的诚实语义哨兵（UPGRADE §1.48）。
-// A2UI submit 从未真正创建工单（伪造 TKT-xxx 编号 + status=created 假成功）；
-// 真创建必须经 ticket 领域公开 service 接口完成 requester/审计/SLA/工作流绑定，
-// 属产品待办。在此之前未实现的渠道必须显式 501（NotImplementedCode），不得伪装成功。
-var ErrA2UISubmitNotImplemented = errors.New("a2ui ticket submit channel not wired into ticket domain")
 
 // ==================== A2UI 消息结构 ====================
 
@@ -378,22 +371,6 @@ typeMatched:
 	result["description"] = intent
 
 	return result
-}
-
-// 处理用户提交操作
-// B11（UPGRADE §1.48）：「submit」动作为未接线能力。此前实现从未真正创建工单，
-// 而是伪造 TKT-yyyymm-00123 编号并回传 status=created 假成功，让 /tickets/ai-create
-// 页面展示「工单创建成功！」——违反能力状态语义（未实现不得伪装 ready）。
-// 真创建需经 ticket 领域公开 service 接口完成 requester/审计/SLA/工作流绑定，属产品待办。
-func (s *A2UITicketService) HandleUserAction(ctx context.Context, action string, surfaceID string, contextData map[string]interface{}) ([]string, error) {
-	var messages []string
-
-	if action == "submit" {
-		// 未接线能力显式失败：handler 映射为 501/NotImplementedCode。
-		return nil, ErrA2UISubmitNotImplemented
-	}
-
-	return messages, nil
 }
 
 // ParseTicketIntent B9: 解析自然语言描述，返回结构化字段供前端预填表单

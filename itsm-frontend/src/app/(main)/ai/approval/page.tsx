@@ -23,6 +23,7 @@ import {
   type ToolApprovalListResponse,
 } from '@/lib/api/ai-api';
 import { useAuthStoreHydration } from '@/lib/store/auth-store';
+import { formatDateTime } from '@/lib/formatters';
 
 const { Title, Text } = Typography;
 
@@ -160,7 +161,7 @@ const AIApprovalQueue: React.FC = () => {
       dataIndex: 'createdAt',
       key: 'createdAt',
       width: 170,
-      render: (v: string) => new Date(v).toLocaleString('zh-CN', { hour12: false }),
+      render: (v: string) => formatDateTime(v),
     },
     {
       title: '操作',

@@ -108,6 +108,17 @@ func (r *SkillRegistry) Get(code string) (Skill, error) {
 	return s, nil
 }
 
+// Has 判断 code 是否已有运行实现。
+//
+// 市场侧交付校验用这个而不是 Get：技能商品指向一个编译不进本进程的 code 时，
+// 「查不到」就是它无法交付的原因，不需要把整个 Skill 接口暴露给 marketplace 包。
+func (r *SkillRegistry) Has(code string) bool {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	_, ok := r.skills[code]
+	return ok
+}
+
 // MustGet 取出 Skill；找不到则 panic。仅在 bootstrap 期间使用，handler 不应调用。
 func (r *SkillRegistry) MustGet(code string) Skill {
 	s, err := r.Get(code)

@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { DashboardAPI } from '@/lib/api/dashboard-api';
+import { formatDateTime } from '@/lib/formatters';
 import type { RecentActivity as RecentActivityData } from '@/app/(main)/dashboard/types/dashboard.types';
 
 const { Text } = Typography;
@@ -28,7 +29,7 @@ const formatRelativeTime = (iso: string): string => {
   if (diffHour < 24) return `${diffHour}小时前`;
   const diffDay = Math.floor(diffHour / 24);
   if (diffDay < 30) return `${diffDay}天前`;
-  return new Date(ts).toLocaleDateString('zh-CN');
+  return formatDateTime(iso);
 };
 
 // 活动类型 → 图标与配色

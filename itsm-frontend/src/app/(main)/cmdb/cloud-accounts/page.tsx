@@ -322,7 +322,7 @@ export default function CloudAccountPage() {
           type='error'
           showIcon
           className='mb-4'
-          message={loadErrorText}
+          title={loadErrorText}
           action={
             <Button size='small' onClick={() => accountsQuery.refetch()}>
               重试

@@ -18,8 +18,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/Select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 import { Badge } from '@/components/ui/Badge';
+import {
+  MARKETPLACE_TYPE_LABELS,
+  marketplaceCategoryLabel,
+  marketplaceTagLabel,
+} from '@/lib/marketplaceLabels';
 import {
   Search,
   Plug,
@@ -129,21 +133,14 @@ const MarketplacePage = () => {
     return matchesSearch && matchesType && matchesCategory && matchesOfficial;
   });
 
-  // 获取所有分类
-  const categories = ['all', ...Array.from(new Set(items.map(item => item.category)))];
+  // 获取所有分类（只保留真实分类 code，`all` 由「全部分类」选项单独提供，避免重复）
+  const categories = Array.from(new Set(items.map(item => item.category).filter(Boolean)));
 
   // 类型图标映射
   const typeIcons = {
     connector: <Plug className="h-5 w-5 text-blue-500" />,
     skill: <Brain className="h-5 w-5 text-purple-500" />,
     plugin: <Layers className="h-5 w-5 text-green-500" />
-  };
-
-  // 类型名称映射
-  const typeNames = {
-    connector: '连接器',
-    skill: '技能',
-    plugin: '插件'
   };
 
   if (loading) {
@@ -189,9 +186,10 @@ const MarketplacePage = () => {
                 <SelectValue placeholder="分类" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="all">全部分类</SelectItem>
                 {categories.map(cat => (
                   <SelectItem key={cat} value={cat}>
-                    {cat === 'all' ? '全部分类' : cat}
+                    {marketplaceCategoryLabel(cat)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -209,16 +207,20 @@ const MarketplacePage = () => {
               </SelectContent>
             </Select>
           </div>
+          <div className="w-full md:w-48">
+            <Select value={activeTab} onValueChange={setActiveTab}>
+              <SelectTrigger>
+                <SelectValue placeholder="类型" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">全部类型</SelectItem>
+                <SelectItem value="connector">连接器</SelectItem>
+                <SelectItem value="skill">AI 技能</SelectItem>
+                <SelectItem value="plugin">插件</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
-
-        <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab}>
-          <TabsList>
-            <TabsTrigger value="all">全部</TabsTrigger>
-            <TabsTrigger value="connector">连接器</TabsTrigger>
-            <TabsTrigger value="skill">AI技能</TabsTrigger>
-            <TabsTrigger value="plugin">插件</TabsTrigger>
-          </TabsList>
-        </Tabs>
       </div>
 
       {/* 应用列表 */}
@@ -239,7 +241,7 @@ const MarketplacePage = () => {
                     <CardTitle className="text-lg">{item.title}</CardTitle>
                     <CardDescription className="flex items-center gap-2 mt-1">
                       <Badge variant="secondary" className="text-xs">
-                        {typeNames[item.type]}
+                        {MARKETPLACE_TYPE_LABELS[item.type] ?? item.type}
                       </Badge>
                       {item.isOfficial && (
                         <Badge variant="default" className="bg-blue-100 text-blue-800 hover:bg-blue-200 text-xs">
@@ -258,7 +260,7 @@ const MarketplacePage = () => {
               <div className="flex flex-wrap gap-1 mt-2">
                 {item.tags.slice(0, 3).map(tag => (
                   <Badge key={tag} variant="outline" className="text-xs">
-                    {tag}
+                    {marketplaceTagLabel(tag)}
                   </Badge>
                 ))}
                 {item.tags.length > 3 && (
@@ -268,14 +270,18 @@ const MarketplacePage = () => {
             </CardContent>
             <CardFooter className="flex items-center justify-between pt-2 border-t">
               <div className="flex items-center gap-3 text-sm text-gray-500">
-                <div className="flex items-center gap-1">
-                  <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                  <span>{item.rating.toFixed(1)}</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Download className="h-4 w-4" />
-                  <span>{item.installCount}</span>
-                </div>
+                {item.rating > 0 && (
+                  <div className="flex items-center gap-1">
+                    <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                    <span>{item.rating.toFixed(1)}</span>
+                  </div>
+                )}
+                {item.installCount > 0 && (
+                  <div className="flex items-center gap-1">
+                    <Download className="h-4 w-4" />
+                    <span>{item.installCount}</span>
+                  </div>
+                )}
                 <div className="text-xs text-gray-400">
                   v{item.latestVersion}
                 </div>

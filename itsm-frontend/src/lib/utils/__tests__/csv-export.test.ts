@@ -4,6 +4,21 @@
  * 覆盖三条真实缺陷面：翻页终止条件（total=0 是合法值，不能 || 兜底）、
  * 公式注入转义、下载时 blob URL 的申请与释放。
  */
+// jest.setup.js 为 Ant Design DatePicker 全局 mock 了 dayjs（format() 恒返回固定串），
+// 本文件断言真实的时间格式，需要 requireActual 覆盖该 mock。
+type DayjsFactory = typeof import('dayjs');
+
+jest.mock('dayjs', () => {
+  const actual = jest.requireActual('dayjs');
+  const realDayjs = jest.fn((date?: string) => actual(date)) as jest.Mock & DayjsFactory;
+  realDayjs.extend = actual.extend;
+  realDayjs.locale = actual.locale;
+  realDayjs.unix = actual.unix;
+  realDayjs.isDayjs = actual.isDayjs;
+  return realDayjs;
+});
+
+import { formatDateTime } from '@/lib/formatters';
 import { buildCsv, csvDate, downloadCsv, fetchAllPages, type PageResult } from '../csv-export';
 
 const BOM = '\uFEFF';
@@ -84,9 +99,10 @@ describe('csvDate', () => {
     expect(csvDate('not-a-date')).toBe('');
   });
 
-  it('合法时间用 zh-CN 本地串', () => {
+  it('合法时间与全站统一格式一致（YYYY-MM-DD HH:mm）', () => {
     const iso = '2026-10-18T01:30:00Z';
-    expect(csvDate(iso)).toBe(new Date(iso).toLocaleString('zh-CN', { hour12: false }));
+    expect(csvDate(iso)).toBe(formatDateTime(iso));
+    expect(csvDate(iso)).toMatch(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/);
   });
 });
 

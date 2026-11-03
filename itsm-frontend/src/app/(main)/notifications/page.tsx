@@ -465,7 +465,17 @@ export default function NotificationsPage() {
     return (
       <List
         dataSource={notificationList}
-        renderItem={notification => (
+        renderItem={notification => {
+          // 后端 title 与 content 常常是同一段文本，卡片只在两者不同时再展示正文，
+          // 否则同一句话会上下渲染两遍。
+          const titleText =
+            (notification.title || '').trim() ||
+            (notification.content || '').trim() ||
+            getNotificationTypeLabel(notification.type);
+          const contentText = (notification.content || '').trim();
+          const showContent = contentText.length > 0 && contentText !== titleText;
+
+          return (
           <List.Item
             className={notification.status === 'read' ? 'opacity-70' : ''}
             actions={[
@@ -516,7 +526,7 @@ export default function NotificationsPage() {
                      min-w-0 + truncate 让正文占满剩余宽度并单行截断 */}
                   <div className="flex min-w-0 flex-1 items-center gap-2">
                     <Text strong={notification.status !== 'read'} className="min-w-0 truncate">
-                      {notification.content || getNotificationTypeLabel(notification.type)}
+                      {titleText}
                     </Text>
                     {notification.status !== 'read' && <Badge status="processing" className="shrink-0" />}
                     <Tag
@@ -538,7 +548,7 @@ export default function NotificationsPage() {
               }
               description={
                 <div className="space-y-1">
-                  <Text>{notification.content}</Text>
+                  {showContent && <Text>{contentText}</Text>}
                   {notification.sentAt && (
                     <div className="text-xs text-gray-500">
                       {t('notifications.sentAt')}: {formatDateTime(notification.sentAt)}
@@ -553,7 +563,8 @@ export default function NotificationsPage() {
               }
             />
           </List.Item>
-        )}
+          );
+        }}
       />
     );
   };

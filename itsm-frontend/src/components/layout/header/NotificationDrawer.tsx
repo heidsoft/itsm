@@ -6,6 +6,7 @@ import { Bell, CheckCheck, ArrowRight, Ticket, AlertTriangle, Zap } from 'lucide
 import type { TicketNotification } from '@/lib/api/ticket-notification-api';
 import { DESIGN } from '@/design-system/tokens';
 import { useI18n } from '@/lib/i18n/useI18n';
+import { formatDateTime } from '@/lib/formatters';
 
 const { Text, Title } = Typography;
 
@@ -152,7 +153,7 @@ export const NotificationDrawer: React.FC<NotificationDrawerProps> = ({
               {item.content}
             </Text>
             <Text style={{ fontSize: 12, color: DESIGN.colors.textMuted }}>
-              {item.createdAt ? new Date(item.createdAt).toLocaleString() : ''}
+              {formatDateTime(item.createdAt)}
             </Text>
           </div>
         </div>

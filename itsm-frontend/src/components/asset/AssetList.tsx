@@ -42,6 +42,14 @@ const typeColors: Record<string, string> = {
   license: 'orange',
 };
 
+// 类型中文名映射（与 AssetDetail、筛选下拉保持一致）
+const typeLabels: Record<string, string> = {
+  hardware: '硬件',
+  software: '软件',
+  cloud: '云资源',
+  license: '许可证',
+};
+
 interface AssetListProps {
   showActions?: boolean;
 }
@@ -134,7 +142,7 @@ const AssetList: React.FC<AssetListProps> = ({ showActions = true }) => {
       key: 'type',
       width: 100,
       render: (type: string) => (
-        <Tag color={typeColors[type] || 'default'}>{type?.toUpperCase()}</Tag>
+        <Tag color={typeColors[type] || 'default'}>{typeLabels[type] || type || '-'}</Tag>
       ),
     },
     {
