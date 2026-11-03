@@ -116,8 +116,11 @@ describe('ArticleDetail 发布入口 — 按评审阶段渲染', () => {
     mockGetArticle.mockResolvedValue({ ...draftArticle, reviewStatus: 'under_review' });
     await renderDetail();
 
-    const label = await screen.findByText('评审中');
-    expect(label.closest('button')).toBeDisabled();
+    // 评审阶段同时出现在状态徽标与按钮上，按角色定位按钮避免多匹配。
+    const label = await screen.findByRole('button', { name: '评审中' });
+    expect(label).toBeDisabled();
+    // 徽标必须与按钮同口径展示评审阶段，不能仍显示「草稿」。
+    expect(screen.getByText('评审中', { selector: '.ant-tag' })).toBeInTheDocument();
     expect(screen.queryByText('发布文章')).toBeNull();
     expect(screen.queryByText('提交评审')).toBeNull();
   });

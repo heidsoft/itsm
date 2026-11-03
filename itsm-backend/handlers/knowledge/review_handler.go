@@ -48,7 +48,7 @@ func (h *Handler) reviewHandler(action string) gin.HandlerFunc {
 			return
 		}
 
-		ctx := c.Request.Context()
+		ctx := h.requestContext(c)
 		var (
 			article *Article
 			err     error
@@ -108,7 +108,7 @@ func (h *Handler) ListArticleReviews(c *gin.Context) {
 	}
 
 	pg := common.GetPaginationFromQuery(c)
-	records, total, err := h.svc.ListReviews(c.Request.Context(), id, tenantID, pg.Page, pg.PageSize)
+	records, total, err := h.svc.ListReviews(h.requestContext(c), id, tenantID, pg.Page, pg.PageSize)
 	if err != nil {
 		common.NotFound(c, "Article not found")
 		return

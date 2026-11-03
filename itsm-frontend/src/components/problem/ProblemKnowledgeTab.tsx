@@ -145,7 +145,7 @@ export const ProblemKnowledgeTab: React.FC<ProblemKnowledgeTabProps> = ({ proble
       </div>
 
       {loadError && (
-        <Alert type="error" showIcon message={loadError} style={{ marginBottom: 12 }} />
+        <Alert type="error" showIcon title={loadError} style={{ marginBottom: 12 }} />
       )}
 
       {/* 反查失败时只呈现 Alert，不渲染空列表——「读取失败」与「尚未沉淀」同屏自相矛盾，
@@ -214,12 +214,12 @@ export const ProblemKnowledgeTab: React.FC<ProblemKnowledgeTabProps> = ({ proble
           form.resetFields();
         }}
         okText="沉淀"
-        destroyOnClose
+        destroyOnHidden
       >
         <Alert
           type="info"
           showIcon
-          message="内容将按「问题现象 / 根因分析 / 临时措施 / 解决方案」自动组装；产物为草稿，发布须过知识评审流。"
+          title="内容将按「问题现象 / 根因分析 / 临时措施 / 解决方案」自动组装；产物为草稿，发布须过知识评审流。"
           style={{ marginBottom: 16 }}
         />
         <Form form={form} layout="vertical">

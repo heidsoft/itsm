@@ -60,6 +60,46 @@ func TestListArticles_CanonicalEnvelope(t *testing.T) {
 	assert.Equal(t, []interface{}{}, empty["items"], "空列表必须序列化为 []，不能是 null")
 }
 
+// 作者展示名回归：DTO 的 author 字段此前从未被赋值，详情/列表只能显示空值。
+// 仓储读取时必须按 author_id 回填用户展示名（姓名优先，缺失回退 username）。
+func TestArticleResponse_IncludesAuthorDisplayName(t *testing.T) {
+	ctx := context.Background()
+	client := enttest.Open(t, "sqlite3", "file:knowledge_author_name?mode=memory&cache=shared&_fk=1")
+	defer client.Close()
+
+	tenant := client.Tenant.Create().
+		SetName("Knowledge").SetCode("knowledge-author").SetDomain("knowledge-author.test").SetStatus("active").
+		SaveX(ctx)
+
+	author, err := client.User.Create().
+		SetUsername("kb-author").
+		SetEmail("kb-author@example.com").
+		SetName("知识作者").
+		SetPasswordHash("hash").
+		SetRole("super_admin").
+		SetActive(true).
+		SetTenantID(tenant.ID).
+		Save(ctx)
+	require.NoError(t, err)
+
+	svc := NewService(NewEntRepository(client), zaptest.NewLogger(t).Sugar())
+	svc.SetEntClient(client)
+	h := NewHandler(svc)
+
+	_, err = svc.CreateArticle(ctx, &Article{
+		Title: "author-name", Content: "content", AuthorID: author.ID, TenantID: tenant.ID, IsPublished: true,
+	})
+	require.NoError(t, err)
+
+	data := listArticlesData(t, h, tenant.ID, "page=1&pageSize=20")
+	items, ok := data["items"].([]interface{})
+	require.True(t, ok, "data.items 缺失")
+	require.Len(t, items, 1)
+	item, ok := items[0].(map[string]interface{})
+	require.True(t, ok)
+	assert.Equal(t, "知识作者", item["author"], "响应 author 必须是作者展示名")
+}
+
 func listArticlesData(t *testing.T, h *Handler, tenantID int, query string) map[string]interface{} {
 	t.Helper()
 

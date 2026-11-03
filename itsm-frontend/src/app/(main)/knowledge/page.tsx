@@ -29,6 +29,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { formatDateTime } from '@/lib/formatters';
 import ArticleList from '@/components/knowledge/ArticleList';
 import { KnowledgeBaseApi } from '@/lib/api/knowledge-base-api';
 import { ArticleStatus, type KnowledgeArticle } from '@/types/knowledge-base';
@@ -54,7 +55,7 @@ const freshnessLabel = (result: {
   if (result.validUntil) {
     const until = new Date(result.validUntil);
     if (!isNaN(until.getTime())) {
-      return `有效至 ${until.toLocaleDateString('zh-CN')}`;
+      return `有效至 ${formatDateTime(result.validUntil)}`;
     }
   }
   return '长期有效';
@@ -142,10 +143,10 @@ export default function KnowledgePage() {
       const mappedArticles = articles.map((a: KnowledgeArticle) => ({
         id: String(a.id ?? ''),
         title: a.title || '',
-        views: a.viewCount ?? 0,
-        author: a.authorName || '-',
-        date: 'publishedAt' in a && a.publishedAt ? new Date(String(a.publishedAt)).toLocaleDateString() : '-',
-        category: a.categoryName || '-',
+        views: a.views ?? 0,
+        author: a.author || '-',
+        date: formatDateTime(a.updatedAt) || '-',
+        category: a.category || '-',
       }));
 
       setRecentArticles(mappedArticles);

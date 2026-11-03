@@ -1,11 +1,13 @@
 package problem_investigation
 
 import (
+	"context"
 	"strconv"
 
 	"itsm-backend/common"
 	"itsm-backend/common/handlerctx"
 	"itsm-backend/dto"
+	"itsm-backend/internal/knowledgeaccess"
 
 	"github.com/gin-gonic/gin"
 )
@@ -21,6 +23,14 @@ func tenantID(c *gin.Context) (int, bool) {
 // 此处保持一致以避免行为变化，调用方自行确保中间件已注入）。
 func userID(c *gin.Context) int {
 	return c.GetInt("user_id")
+}
+
+// viewerContext 把请求身份注入知识可见性上下文，供知识列表按分类权限过滤。
+func viewerContext(c *gin.Context) context.Context {
+	return knowledgeaccess.WithViewer(c.Request.Context(), knowledgeaccess.Viewer{
+		UserID: c.GetInt("user_id"),
+		Role:   c.GetString("role"),
+	})
 }
 
 func pathID(c *gin.Context, field string, label string) (int, bool) {
@@ -338,7 +348,7 @@ func (h *Handler) GetProblemInvestigationSummary(c *gin.Context) {
 		return
 	}
 
-	summary, err := h.invService.GetProblemInvestigationSummary(c.Request.Context(), problemID, tid)
+	summary, err := h.invService.GetProblemInvestigationSummary(viewerContext(c), problemID, tid)
 	if err != nil {
 		h.logger.Errorw("Get problem investigation summary failed", "error", err, "problem_id", problemID, "tenant_id", tid)
 		common.RespondError(c, err, "操作失败")
@@ -466,46 +476,5 @@ func (h *Handler) CreateKnowledgeArticle(c *gin.Context) {
 			"tags":     article.Tags,
 			"authorId": article.AuthorID,
 		},
-	})
-}
-
-// GetProblemKnowledgeArticles 获取问题知识库文章列表
-func (h *Handler) GetProblemKnowledgeArticles(c *gin.Context) {
-	problemID, ok := pathID(c, "id", "问题")
-	if !ok {
-		return
-	}
-
-	tid, ok := tenantID(c)
-	if !ok {
-		return
-	}
-
-	// 获取知识库文章列表（按创建时间倒序；沿用旧实现未按 problem 过滤的行为）
-	articles, err := h.invService.ListKnowledgeArticles(c.Request.Context(), tid)
-	if err != nil {
-		h.logger.Errorw("Get knowledge articles failed", "error", err, "tenant_id", tid)
-		common.Fail(c, common.InternalErrorCode, "获取知识库文章列表失败")
-		return
-	}
-
-	var result []gin.H
-	for _, a := range articles {
-		result = append(result, gin.H{
-			"id":        a.ID,
-			"title":     a.Title,
-			"content":   a.Content,
-			"category":  a.Category,
-			"tags":      a.Tags,
-			"authorId":  a.AuthorID,
-			"viewCount": a.ViewCount,
-			"likeCount": a.LikeCount,
-			"createdAt": a.CreatedAt,
-		})
-	}
-
-	common.Success(c, gin.H{
-		"problemId": problemID,
-		"items":     result,
 	})
 }

@@ -10,7 +10,6 @@
 import { httpClient } from './http-client';
 import type {
   KnowledgeArticle,
-  KnowledgeCategory,
   KnowledgeTag,
   ArticleComment,
   ArticleFeedback,
@@ -166,25 +165,10 @@ export class KnowledgeBaseApi {
 
   // ==================== 分类和标签 ====================
 
-  static async getCategories(): Promise<KnowledgeCategory[]> {
+  // 后端 GET /knowledge/categories 返回该租户文章已使用的分类名称集合（字符串数组），
+  // 不是结构化对象。契约以后端为准，调用方直接按字符串渲染与提交。
+  static async getCategories(): Promise<string[]> {
     return httpClient.get(`${KNOWLEDGE_PREFIX}/categories`);
-  }
-
-  static async createCategory(
-    category: Omit<KnowledgeCategory, 'id' | 'level' | 'articleCount' | 'createdAt' | 'updatedAt'>
-  ): Promise<KnowledgeCategory> {
-    return httpClient.post(`${KNOWLEDGE_PREFIX}/categories`, category);
-  }
-
-  static async updateCategory(
-    id: string,
-    category: Partial<KnowledgeCategory>
-  ): Promise<KnowledgeCategory> {
-    return httpClient.put(`${KNOWLEDGE_PREFIX}/categories/${id}`, category);
-  }
-
-  static async deleteCategory(id: string): Promise<void> {
-    return httpClient.delete(`${KNOWLEDGE_PREFIX}/categories/${id}`);
   }
 
   static async getTags(): Promise<KnowledgeTag[]> {

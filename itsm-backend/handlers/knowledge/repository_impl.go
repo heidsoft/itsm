@@ -12,6 +12,7 @@ import (
 	"itsm-backend/ent/knowledgearticlereview"
 	"itsm-backend/ent/knowledgearticleversion"
 	"itsm-backend/ent/user"
+	"itsm-backend/internal/knowledgeaccess"
 )
 
 // defaultCategories provides baseline knowledge-base categories so the category
@@ -107,11 +108,16 @@ func (r *EntRepository) Get(ctx context.Context, id int, tenantID int) (*Article
 	if err != nil {
 		return nil, err
 	}
-	return toDomain(e), nil
+	a := toDomain(e)
+	// 作者展示名：DTO 的 author 字段此前从未被赋值，详情页只能显示空值。
+	names := r.userDisplayNames(ctx, []int{a.AuthorID})
+	a.AuthorName = names[a.AuthorID]
+	return a, nil
 }
 
-func (r *EntRepository) List(ctx context.Context, tenantID int, page, size int, category, search, status string) ([]*Article, int, error) {
-	q := r.client.KnowledgeArticle.Query().Where(knowledgearticle.TenantID(tenantID), knowledgearticle.DeletedAtIsNil())
+func (r *EntRepository) List(ctx context.Context, tenantID int, page, size int, category, search, status string, vis Visibility) ([]*Article, int, error) {
+	q := applyVisibility(r.client.KnowledgeArticle.Query().
+		Where(knowledgearticle.TenantID(tenantID), knowledgearticle.DeletedAtIsNil()), vis)
 
 	if category != "" {
 		q = q.Where(knowledgearticle.Category(category))
@@ -146,7 +152,50 @@ func (r *EntRepository) List(ctx context.Context, tenantID int, page, size int, 
 	for _, e := range es {
 		results = append(results, toDomain(e))
 	}
+	// 批量补齐作者展示名，避免列表逐条查用户表（N+1）。
+	authorIDs := make([]int, 0, len(results))
+	for _, a := range results {
+		authorIDs = append(authorIDs, a.AuthorID)
+	}
+	names := r.userDisplayNames(ctx, authorIDs)
+	for _, a := range results {
+		a.AuthorName = names[a.AuthorID]
+	}
 	return results, total, nil
+}
+
+// applyVisibility 把分类级可见性收窄到 SQL 谓词。
+// 权限状态不可得（DenyAllSentinel）时只放行无分类文章；作者本人豁免。
+func applyVisibility(q *ent.KnowledgeArticleQuery, vis Visibility) *ent.KnowledgeArticleQuery {
+	if len(vis.DeniedCategories) == 0 {
+		return q
+	}
+	if len(vis.DeniedCategories) == 1 && vis.DeniedCategories[0] == knowledgeaccess.DenyAllSentinel {
+		return q.Where(knowledgearticle.CategoryEQ(""))
+	}
+	if vis.ViewerUserID > 0 {
+		return q.Where(knowledgearticle.Or(
+			knowledgearticle.CategoryNotIn(vis.DeniedCategories...),
+			knowledgearticle.AuthorIDEQ(vis.ViewerUserID),
+		))
+	}
+	return q.Where(knowledgearticle.CategoryNotIn(vis.DeniedCategories...))
+}
+
+// categoryVisible 判定没有作者归属的分类（默认分类基线）是否对访问者可见。
+func categoryVisible(category string, vis Visibility) bool {
+	if len(vis.DeniedCategories) == 0 {
+		return true
+	}
+	if len(vis.DeniedCategories) == 1 && vis.DeniedCategories[0] == knowledgeaccess.DenyAllSentinel {
+		return category == ""
+	}
+	for _, denied := range vis.DeniedCategories {
+		if denied == category {
+			return false
+		}
+	}
+	return true
 }
 
 // Update 更新文章正文与属性。
@@ -748,9 +797,9 @@ func (r *EntRepository) Delete(ctx context.Context, id int, tenantID int) error 
 	return err
 }
 
-func (r *EntRepository) GetCategories(ctx context.Context, tenantID int) ([]string, error) {
-	existing, err := r.client.KnowledgeArticle.Query().
-		Where(knowledgearticle.TenantID(tenantID), knowledgearticle.DeletedAtIsNil()).
+func (r *EntRepository) GetCategories(ctx context.Context, tenantID int, vis Visibility) ([]string, error) {
+	existing, err := applyVisibility(r.client.KnowledgeArticle.Query().
+		Where(knowledgearticle.TenantID(tenantID), knowledgearticle.DeletedAtIsNil()), vis).
 		GroupBy(knowledgearticle.FieldCategory).
 		Strings(ctx)
 	if err != nil {
@@ -762,7 +811,7 @@ func (r *EntRepository) GetCategories(ctx context.Context, tenantID int) ([]stri
 	merged := make([]string, 0, len(existing)+len(defaultCategories))
 	for _, c := range defaultCategories {
 		c = strings.TrimSpace(c)
-		if c == "" {
+		if c == "" || !categoryVisible(c, vis) {
 			continue
 		}
 		if _, ok := seen[c]; ok {
@@ -786,9 +835,10 @@ func (r *EntRepository) GetCategories(ctx context.Context, tenantID int) ([]stri
 	return merged, nil
 }
 
-func (r *EntRepository) GetStats(ctx context.Context, tenantID int) (*Stats, error) {
-	// Query all articles for this tenant
-	query := r.client.KnowledgeArticle.Query().Where(knowledgearticle.TenantID(tenantID), knowledgearticle.DeletedAtIsNil())
+func (r *EntRepository) GetStats(ctx context.Context, tenantID int, vis Visibility) (*Stats, error) {
+	// Query all readable articles for this tenant
+	query := applyVisibility(r.client.KnowledgeArticle.Query().
+		Where(knowledgearticle.TenantID(tenantID), knowledgearticle.DeletedAtIsNil()), vis)
 
 	// Get total count
 	total, err := query.Count(ctx)
@@ -813,8 +863,8 @@ func (r *EntRepository) GetStats(ctx context.Context, tenantID int) (*Stats, err
 		TotalViews int `json:"total_views"` // matches ent aggregate alias for Scan()
 	}
 	var viewResult []ViewSum
-	err = r.client.KnowledgeArticle.Query().
-		Where(knowledgearticle.TenantID(tenantID), knowledgearticle.DeletedAtIsNil()).
+	err = applyVisibility(r.client.KnowledgeArticle.Query().
+		Where(knowledgearticle.TenantID(tenantID), knowledgearticle.DeletedAtIsNil()), vis).
 		Aggregate(ent.As(ent.Sum(knowledgearticle.FieldViewCount), "total_views")).
 		Scan(ctx, &viewResult)
 	if err != nil {
@@ -830,8 +880,8 @@ func (r *EntRepository) GetStats(ctx context.Context, tenantID int) (*Stats, err
 		TotalLikes int `json:"total_likes"` // matches ent aggregate alias for Scan()
 	}
 	var likeResult []LikeSum
-	err = r.client.KnowledgeArticle.Query().
-		Where(knowledgearticle.TenantID(tenantID), knowledgearticle.DeletedAtIsNil()).
+	err = applyVisibility(r.client.KnowledgeArticle.Query().
+		Where(knowledgearticle.TenantID(tenantID), knowledgearticle.DeletedAtIsNil()), vis).
 		Aggregate(ent.As(ent.Sum(knowledgearticle.FieldLikeCount), "total_likes")).
 		Scan(ctx, &likeResult)
 	if err != nil {
@@ -848,8 +898,8 @@ func (r *EntRepository) GetStats(ctx context.Context, tenantID int) (*Stats, err
 		Count    int    `json:"count"`
 	}
 	var categoryResults []CategoryGroup
-	err = r.client.KnowledgeArticle.Query().
-		Where(knowledgearticle.TenantID(tenantID), knowledgearticle.DeletedAtIsNil()).
+	err = applyVisibility(r.client.KnowledgeArticle.Query().
+		Where(knowledgearticle.TenantID(tenantID), knowledgearticle.DeletedAtIsNil()), vis).
 		GroupBy(knowledgearticle.FieldCategory).
 		Aggregate(ent.Count()).
 		Scan(ctx, &categoryResults)

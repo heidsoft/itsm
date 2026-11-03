@@ -11,14 +11,16 @@ var ErrArticleNotFound = errors.New("article not found")
 
 // Article representing a knowledge base article
 type Article struct {
-	ID          int      `json:"id"`
-	Title       string   `json:"title"`
-	Content     string   `json:"content"`
-	Category    string   `json:"category"`
-	Tags        []string `json:"tags"`
-	AuthorID    int      `json:"authorId"`
-	TenantID    int      `json:"tenantId"`
-	IsPublished bool     `json:"isPublished"`
+	ID       int      `json:"id"`
+	Title    string   `json:"title"`
+	Content  string   `json:"content"`
+	Category string   `json:"category"`
+	Tags     []string `json:"tags"`
+	AuthorID int      `json:"authorId"`
+	// AuthorName 是展示名，由仓储层在读取时按 author_id 批量补齐（未命中为空）。
+	AuthorName  string `json:"authorName,omitempty"`
+	TenantID    int    `json:"tenantId"`
+	IsPublished bool   `json:"isPublished"`
 
 	// 评审状态机。ReviewStatus 为空按 "draft" 处理，
 	// 兼容未回填该字段的历史响应。

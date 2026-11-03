@@ -1,6 +1,7 @@
 package problem
 
 import (
+	"context"
 	"errors"
 	"strconv"
 	"strings"
@@ -9,10 +10,20 @@ import (
 	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/handlers/knowledge"
+	"itsm-backend/internal/knowledgeaccess"
 	"itsm-backend/middleware"
 
 	"github.com/gin-gonic/gin"
 )
+
+// knowledgeViewerContext 把请求身份注入知识可见性上下文。
+// 反查沉淀知识时由知识域按 Viewer 判定分类权限，匿名身份会被 fail-closed。
+func knowledgeViewerContext(c *gin.Context) context.Context {
+	return knowledgeaccess.WithViewer(c.Request.Context(), knowledgeaccess.Viewer{
+		UserID: c.GetInt("user_id"),
+		Role:   c.GetString("role"),
+	})
+}
 
 type Handler struct {
 	service *Service
@@ -1156,7 +1167,7 @@ func (h *Handler) ListProblemKnowledge(c *gin.Context) {
 		return
 	}
 
-	articles, err := h.service.ListProblemKnowledge(c.Request.Context(), tenantID, id)
+	articles, err := h.service.ListProblemKnowledge(knowledgeViewerContext(c), tenantID, id)
 	if err != nil {
 		if errors.Is(err, ErrProblemNotVisible) {
 			common.Fail(c, common.NotFoundErrorCode, "Problem not found")

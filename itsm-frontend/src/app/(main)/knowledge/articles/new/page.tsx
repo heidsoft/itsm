@@ -17,6 +17,7 @@ import {
   App,
   Typography,
   Breadcrumb,
+  AutoComplete,
 } from 'antd';
 import { ArrowLeft, Save } from 'lucide-react';
 import { KnowledgeBaseApi } from '@/lib/api/knowledge-base-api';
@@ -29,32 +30,28 @@ export default function NewKnowledgeArticlePage() {
   const [form] = Form.useForm();
   const { message } = App.useApp();
   const [loading, setLoading] = useState(false);
-  const [categories, setCategories] = useState<{ id: number; name: string }[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
 
   React.useEffect(() => {
     KnowledgeBaseApi.getCategories()
-      .then((data: unknown) => {
-        const list = Array.isArray(data) ? data : (data as Record<string, unknown>)?.categories as unknown[] || [];
-        setCategories(list.map((c: Record<string, unknown>) => ({ id: c.id as number, name: c.name as string })));
+      .then(list => {
+        // 后端返回的是该租户已使用的分类名称集合；纯数字项来自旧版把分类 ID
+        // 当名称写入的脏数据，直接过滤，避免下拉里出现「1」。
+        setCategories((list || []).filter(name => !/^\d+$/.test(String(name))));
       })
       .catch(() => {
-        // fallback 默认分类
-        setCategories([
-          { id: 1, name: '故障处理' },
-          { id: 2, name: '操作指南' },
-          { id: 3, name: '常见问题' },
-        ]);
+        // 分类加载失败不阻塞写作，但必须让用户知道下拉不完整。
+        message.error('加载知识分类失败，可手动输入分类名称');
       });
-  }, []);
+  }, [message]);
 
-  const onFinish = async (values: { title: string; content: string; categoryId: number; tags?: string[] }) => {
+  const onFinish = async (values: { title: string; content: string; category: string; tags?: string[] }) => {
     setLoading(true);
     try {
       const created = await KnowledgeBaseApi.createArticle({
         title: values.title,
         content: values.content,
-        category:
-          categories.find(c => c.id === values.categoryId)?.name || String(values.categoryId),
+        category: values.category.trim(),
         tags: values.tags || [],
       });
       message.success('文章创建成功');
@@ -85,20 +82,25 @@ export default function NewKnowledgeArticlePage() {
           form={form}
           layout="vertical"
           onFinish={onFinish}
-          initialValues={{ categoryId: 1, tags: [] }}
+          initialValues={{ tags: [] }}
         >
           <Form.Item name="title" label="标题" rules={[{ required: true, message: '请输入标题' }]}>
             <Input placeholder="例如：VPN 拨号失败排查指南" maxLength={200} />
           </Form.Item>
 
+          {/* 分类在后端是自由字符串，因此用 AutoComplete：既可从已有分类中选择，
+              也可直接输入新分类，避免后端分类为空时表单无法提交。 */}
           <Form.Item
-            name="categoryId"
+            name="category"
             label="分类"
-            rules={[{ required: true, message: '请选择分类' }]}
+            rules={[{ required: true, message: '请选择或输入分类' }]}
           >
-            <Select
-              placeholder="选择分类"
-              options={categories.map(c => ({ label: c.name, value: c.id }))}
+            <AutoComplete
+              placeholder="选择或输入分类，如「故障排查」"
+              options={categories.map(name => ({ value: name }))}
+              filterOption={(input, option) =>
+                String(option?.value ?? '').toLowerCase().includes(input.toLowerCase())
+              }
             />
           </Form.Item>
 

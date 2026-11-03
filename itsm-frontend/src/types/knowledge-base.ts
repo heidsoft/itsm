@@ -72,9 +72,9 @@ export interface KnowledgeArticle {
   plainText?: string; // 纯文本（用于搜索）
   summary?: string; // 摘要
 
-  // 分类和标签
-  categoryId?: string;
-  categoryName?: string;
+  // 分类和标签。后端 dto.KnowledgeArticleResponse 只返回 category 名称字符串；
+  // 知识域的分类是自由文本，不存在分类实体 ID，不要再引入 categoryId/categoryName 别名。
+  category: string;
   tags: string[];
   keywords?: string[]; // 搜索关键词
 
@@ -108,11 +108,8 @@ export interface KnowledgeArticle {
   metaDescription?: string;
   metaKeywords?: string[];
 
-  // 统计
-  viewCount: number;
-  likeCount: number;
-  shareCount: number;
-  commentCount: number;
+  // 统计：后端字段名为 views
+  views: number;
 
   // 评分
   rating?: number;
@@ -131,9 +128,8 @@ export interface KnowledgeArticle {
   version: number;
   versionHistory?: ArticleVersion[];
 
-  // 协作
-  authorId: number;
-  authorName: string;
+  // 协作：后端只返回展示名 author，不返回作者 ID
+  author: string;
   contributors?: Array<{
     userId: number;
     userName: string;
@@ -146,10 +142,9 @@ export interface KnowledgeArticle {
   reviewComment?: string;
   reviewedAt?: Date;
 
-  // 时间戳
-  createdAt: Date;
-  updatedAt: Date;
-  publishedAt?: Date;
+  // 时间戳：后端返回 RFC3339 字符串
+  createdAt: string;
+  updatedAt: string;
 
   // 有效期
   expiresAt?: Date; // 过期时间
@@ -182,35 +177,6 @@ export interface ArticleVersion {
 }
 
 // ==================== 分类和标签 ====================
-
-/**
- * 知识库分类
- */
-export interface KnowledgeCategory {
-  id: string;
-  name: string;
-  slug: string;
-  description?: string;
-  icon?: string;
-  color?: string;
-
-  // 层级关系
-  parentId?: string;
-  parentName?: string;
-  children?: KnowledgeCategory[];
-  level: number;
-  order: number;
-
-  // 统计
-  articleCount: number;
-
-  // 权限
-  visibility: ArticleVisibility;
-  allowedRoles?: string[];
-
-  createdAt: Date;
-  updatedAt: Date;
-}
 
 /**
  * 标签

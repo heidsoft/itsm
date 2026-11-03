@@ -149,6 +149,25 @@ func TestE2E_RAG_AuthorCanReadOwnRestrictedArticle(t *testing.T) {
 	require.True(t, found, "作者本人应能检索到自己写的受限分类文章")
 }
 
+// 受限分类集合不可得时，检索必须按 DenyAllSentinel 收窄到无分类文章，
+// 不能把「权限状态未知」当成「没有受限分类」。夹具里所有文章都有分类，
+// 因此失败关闭后连公开分类也应全部消失。
+func TestE2E_RAG_FailsClosedWhenGuardCannotReadPermissions(t *testing.T) {
+	client, rag, ctx, tenantID, employeeID, _ := setupKnowledgeAccessE2E(t)
+	defer client.Close()
+
+	rag.SetKnowledgeGuard(knowledgeaccess.NewGuard(nil, zaptest.NewLogger(t).Sugar()))
+	viewerCtx := knowledgeaccess.WithViewer(ctx, knowledgeaccess.Viewer{UserID: employeeID, Role: "end_user"})
+
+	secretResults, err := rag.Ask(viewerCtx, tenantID, "薪酬", 20)
+	require.NoError(t, err)
+	require.Empty(t, secretResults, "权限状态未知时不得返回受限分类知识")
+
+	publicResults, err := rag.Ask(viewerCtx, tenantID, "VPN", 20)
+	require.NoError(t, err)
+	require.Empty(t, publicResults, "失败关闭时任何有分类的文章都不能放行")
+}
+
 func TestE2E_RAG_CrossTenantIsolation(t *testing.T) {
 	client, rag, ctx, tenantID, employeeID, _ := setupKnowledgeAccessE2E(t)
 	defer client.Close()
@@ -171,3 +190,7 @@ func TestE2E_RAG_CrossTenantIsolation(t *testing.T) {
 		require.NotEqual(t, "VPN 其他租户配置", r["title"], "跨租户知识不得泄漏")
 	}
 }
+
+// 问题页知识反查的可见性覆盖已随 ListKnowledgeArticles 读面退役一起迁到
+// handlers/problem_investigation（摘要是唯一存活的知识读面），此处不再保留
+// 只验证已删除方法的用例。

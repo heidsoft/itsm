@@ -25,6 +25,7 @@ import { Search, Plus, Pencil, Trash2, Eye, RotateCcw, AlertCircle, CheckCircle,
 import type { ColumnsType, TablePaginationConfig } from 'antd/es/table';
 import type { KEDBResponse, KEDBStatsResponse } from '@/lib/api/kedb-api';
 import { KEDBApi } from '@/lib/api/kedb-api';
+import { formatDateTime } from '@/lib/formatters';
 
 const { TextArea } = Input;
 const { Text } = Typography;
@@ -263,7 +264,7 @@ export default function KnownErrorsPage() {
       title: '创建时间',
       dataIndex: 'createdAt',
       width: 160,
-      render: (text: string) => new Date(text).toLocaleString(),
+      render: (text: string) => formatDateTime(text),
     },
     {
       title: '操作',
@@ -592,10 +593,10 @@ export default function KnownErrorsPage() {
               {viewRecord.affectedCis?.join(', ') || '-'}
             </Descriptions.Item>
             <Descriptions.Item label="创建时间">
-              {new Date(viewRecord.createdAt).toLocaleString()}
+              {formatDateTime(viewRecord.createdAt)}
             </Descriptions.Item>
             <Descriptions.Item label="更新时间">
-              {new Date(viewRecord.updatedAt).toLocaleString()}
+              {formatDateTime(viewRecord.updatedAt)}
             </Descriptions.Item>
           </Descriptions>
         )}

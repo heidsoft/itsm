@@ -30,6 +30,7 @@ package knowledgeaccess
 import (
 	"context"
 	"errors"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -186,6 +187,37 @@ func (g *Guard) CanReadCategory(ctx context.Context, tenantID int, v Viewer, cat
 			"tenant_id", tenantID, "category", category, "role", v.Role, "user_id", v.UserID)
 	}
 	return ok
+}
+
+// DenyAllSentinel 受限分类集合不可得时的拒绝哨兵。
+// 调用方拿到它时只能放行无分类（category=""）的文章：权限状态未知时
+// 不能把任何有分类的文章当成公开内容。
+const DenyAllSentinel = "\x00__deny_all__"
+
+// DeniedCategories 返回当前访问者无权读取的分类，已排序。
+//
+// ctx 未注入 Viewer 时按匿名处理，所有已纳管分类一律拒绝（fail-closed）。
+// 受限分类集合查询失败时返回错误，由调用方决定拒绝粒度：
+// API 读面应直接失败，检索路径可用 DenyAllSentinel 收窄到无分类资源。
+// 作者豁免无法在 SQL 层逐条判断，调用方需同时按 Viewer.UserID 放行本人文章。
+func (g *Guard) DeniedCategories(ctx context.Context, tenantID int) ([]string, error) {
+	if g == nil {
+		return nil, nil
+	}
+	viewer, _ := ViewerFrom(ctx)
+	restricted, err := g.RestrictedCategories(ctx, tenantID)
+	if err != nil {
+		return nil, err
+	}
+	denied := make([]string, 0, len(restricted))
+	for cat := range restricted {
+		// authorID 传 0：SQL/批量场景无法逐条判断作者，作者豁免由调用方处理。
+		if !g.CanReadCategory(ctx, tenantID, viewer, cat, 0) {
+			denied = append(denied, cat)
+		}
+	}
+	sort.Strings(denied)
+	return denied, nil
 }
 
 // FilterArticles 批量过滤文章，返回可访问的子集，保持原顺序。

@@ -61,9 +61,8 @@ const ArticleList: React.FC<ArticleListProps> = ({ showHeader = true }) => {
   const loadCategories = async () => {
     try {
       const res = await KnowledgeBaseApi.getCategories();
-      // Map KnowledgeCategory objects to strings for backward compatibility
-      const categoryNames = (res || []).map((cat: any) => cat.name || cat.id || String(cat));
-      setCategories(categoryNames);
+      // 后端返回该租户已使用的分类名称集合；纯数字项是把分类 ID 当名称写入的脏数据。
+      setCategories((res || []).filter(name => !/^\d+$/.test(String(name))));
     } catch (e) {
       // console.error(e);
     }

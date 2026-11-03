@@ -202,11 +202,6 @@ interface KnowledgeArticleMutationResponse {
   article: ProblemKnowledgeArticle;
 }
 
-interface KnowledgeArticlesResponse {
-  problemId: number;
-  items: ProblemKnowledgeArticle[];
-}
-
 // 问题调查摘要
 export interface ProblemInvestigationSummary {
   investigation?: ProblemInvestigation;
@@ -435,14 +430,6 @@ export const ProblemInvestigationAPI = {
       data
     );
     return response.article;
-  },
-
-  // 获取知识库文章列表
-  async getKnowledgeArticles(problemId: number): Promise<ProblemKnowledgeArticle[]> {
-    const response = await httpClient.get<KnowledgeArticlesResponse>(
-      `/api/v1/problem-knowledge-articles/problems/${problemId}`
-    );
-    return response.items || [];
   },
 };
 

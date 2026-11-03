@@ -32,6 +32,8 @@ import {
   KnowledgeStatus,
   KnowledgeStatusLabels,
   KnowledgeStatusColors,
+  ReviewStatusLabels,
+  ReviewStatusColors,
 } from '@/constants/knowledge';
 import type { KnowledgeArticle } from '@/types/biz/knowledge';
 import ArticleVersionControl from './ArticleVersionControl';
@@ -185,6 +187,12 @@ const ArticleDetail: React.FC = () => {
   const canPublish = reviewStatus === 'approved';
   const canSubmitReview = reviewStatus === 'draft' || reviewStatus === 'rejected';
 
+  // 作者/分类展示值：后端可能只回填名称之一，缺失时不渲染「作者: 」空壳。
+  const authorName = (article.authorName || article.author || '').trim();
+  const rawCategory = (article.categoryName || article.category || '').trim();
+  // 旧版曾把分类 ID 当名称写入，纯数字不是有效分类名，按未分类展示。
+  const articleCategory = /^\d+$/.test(rawCategory) ? '' : rawCategory;
+
   return (
     <div style={{ padding: '0 0 24px' }}>
       <Breadcrumb style={{ marginBottom: 16 }}>
@@ -261,17 +269,19 @@ const ArticleDetail: React.FC = () => {
           <Title level={2}>{article.title}</Title>
 
           <Space split={<Divider type="vertical" />} wrap>
-            <Space>
-              <User />
-              <Text type="secondary">作者: {article.author}</Text>
-            </Space>
+            {authorName && (
+              <Space>
+                <User />
+                <Text type="secondary">作者: {authorName}</Text>
+              </Space>
+            )}
             <Space>
               <Calendar />
               <Text type="secondary">{dayjs(article.createdAt).format('YYYY-MM-DD HH:mm')}</Text>
             </Space>
             <Space>
               <Folder />
-              <Text type="secondary">{article.category || '未分类'}</Text>
+              <Text type="secondary">{articleCategory || '未分类'}</Text>
             </Space>
             {/* 来源追溯（2026-10-22 沉淀闭环）：由问题沉淀而来的文章回链问题详情，
                 与问题详情页「知识沉淀」Tab 构成双向闭环；手工创建的文章不显示此行。 */}
@@ -288,7 +298,14 @@ const ArticleDetail: React.FC = () => {
                 </Button>
               </Space>
             )}
-            <Tag color={KnowledgeStatusColors[status]}>{KnowledgeStatusLabels[status]}</Tag>
+            {/* 可见性与评审阶段是两条轴：已发布单独标注，评审阶段始终展示，
+                避免出现「徽标=草稿、按钮=评审中」的语义冲突。 */}
+            {status === KnowledgeStatus.PUBLISHED && (
+              <Tag color={KnowledgeStatusColors[KnowledgeStatus.PUBLISHED]}>
+                {KnowledgeStatusLabels[KnowledgeStatus.PUBLISHED]}
+              </Tag>
+            )}
+            <Tag color={ReviewStatusColors[reviewStatus]}>{ReviewStatusLabels[reviewStatus]}</Tag>
           </Space>
         </div>
 

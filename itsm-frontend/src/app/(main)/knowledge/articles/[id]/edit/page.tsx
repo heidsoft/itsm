@@ -18,6 +18,7 @@ import {
   Typography,
   Breadcrumb,
   Skeleton,
+  AutoComplete,
 } from 'antd';
 import { ArrowLeft, Save } from 'lucide-react';
 import { KnowledgeBaseApi } from '@/lib/api/knowledge-base-api';
@@ -33,36 +34,32 @@ export default function EditKnowledgeArticlePage() {
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
   const [notFound, setNotFound] = useState(false);
-  const [categories, setCategories] = useState<{ id: number; name: string }[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
 
   useEffect(() => {
     KnowledgeBaseApi.getCategories()
-      .then((data: unknown) => {
-        const list = Array.isArray(data) ? data : (data as Record<string, unknown>)?.categories as unknown[] || [];
-        setCategories(list.map((c: Record<string, unknown>) => ({ id: c.id as number, name: c.name as string })));
+      .then(list => {
+        // 后端返回该租户已使用的分类名称集合；纯数字项是把分类 ID 当名称写入的脏数据。
+        setCategories((list || []).filter(name => !/^\d+$/.test(String(name))));
       })
       .catch(() => {
-        // fallback 默认分类
-        setCategories([
-          { id: 1, name: '故障处理' },
-          { id: 2, name: '操作指南' },
-          { id: 3, name: '常见问题' },
-        ]);
+        message.error('加载知识分类失败，可手动输入分类名称');
       });
-  }, []);
+  }, [message]);
 
   useEffect(() => {
     if (!id) return;
     setFetching(true);
     KnowledgeBaseApi.getArticle(id)
       .then(article => {
-        const matched = categories.find(
-          c => c.name === article.categoryName || String(c.id) === String(article.categoryId),
-        );
         form.setFieldsValue({
           title: article.title,
           content: article.content,
-          categoryId: matched?.id ?? 1,
+          // 后端契约字段是 category（分类名称）；历史脏数据把分类 ID
+          // 存成了名称，回填时按「未分类」留给用户重新输入。
+          category: /^\d+$/.test(article.category ?? '')
+            ? undefined
+            : article.category,
           tags: article.tags || [],
         });
       })
@@ -70,17 +67,15 @@ export default function EditKnowledgeArticlePage() {
         setNotFound(true);
       })
       .finally(() => setFetching(false));
-    // categories 加载完成后重新匹配一次默认分类
-  }, [id, categories, form]);
+  }, [id, form]);
 
-  const onFinish = async (values: { title: string; content: string; categoryId: number; tags?: string[] }) => {
+  const onFinish = async (values: { title: string; content: string; category: string; tags?: string[] }) => {
     setLoading(true);
     try {
       await KnowledgeBaseApi.updateArticle(id, {
         title: values.title,
         content: values.content,
-        category:
-          categories.find(c => c.id === values.categoryId)?.name || String(values.categoryId),
+        category: values.category.trim(),
         tags: values.tags || [],
       });
       message.success('文章更新成功');
@@ -134,13 +129,16 @@ export default function EditKnowledgeArticlePage() {
             </Form.Item>
 
             <Form.Item
-              name="categoryId"
+              name="category"
               label="分类"
-              rules={[{ required: true, message: '请选择分类' }]}
+              rules={[{ required: true, message: '请选择或输入分类' }]}
             >
-              <Select
-                placeholder="选择分类"
-                options={categories.map(c => ({ label: c.name, value: c.id }))}
+              <AutoComplete
+                placeholder="选择或输入分类，如「故障排查」"
+                options={categories.map(name => ({ value: name }))}
+                filterOption={(input, option) =>
+                  String(option?.value ?? '').toLowerCase().includes(input.toLowerCase())
+                }
               />
             </Form.Item>
 

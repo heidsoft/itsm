@@ -12,6 +12,7 @@ import (
 	"itsm-backend/ent"
 	"itsm-backend/handlers/knowledge"
 	"itsm-backend/internal/datascope"
+	"itsm-backend/internal/knowledgeaccess"
 	"itsm-backend/service"
 	"itsm-backend/service/sla"
 
@@ -29,6 +30,9 @@ type Service struct {
 	// kbRepo 知识沉淀目标仓储（2026-10-22 沉淀闭环落地）。
 	// nil 时（单测/旧组装）沉淀端点显式 503，反查端点返回空列表。
 	kbRepo KnowledgeSink
+	// knowledgeGuard 知识分类可见性守卫。反查沉淀知识属于知识读面，
+	// 必须与知识域共用同一套分类纳管策略，否则问题页会成为受限知识的旁路。
+	knowledgeGuard *knowledgeaccess.Guard
 	// entClient 直连 Ent 客户端，用于在业务事务内驱动 BPMN 桥接
 	// （问题生命周期动作推进流程待办，与工单/事件/变更同一原语）。
 	entClient *ent.Client
@@ -89,6 +93,12 @@ type KnowledgeSink interface {
 // SetKnowledgeRepository 注入知识沉淀目标仓储（装配缺失时沉淀端点显式 503）。
 func (s *Service) SetKnowledgeRepository(kb KnowledgeSink) {
 	s.kbRepo = kb
+}
+
+// SetKnowledgeGuard 注入知识分类可见性守卫。装配缺失时保持旧行为，
+// 装配后反查沉淀知识会按当前访问者的分类权限过滤。
+func (s *Service) SetKnowledgeGuard(g *knowledgeaccess.Guard) {
+	s.knowledgeGuard = g
 }
 
 // bindSLAOnCreate 问题创建后绑定 SLA：按 problem 服务类型 + 优先级匹配 SLA 定义，
@@ -342,7 +352,11 @@ func (s *Service) ListProblemKnowledge(ctx context.Context, tenantID, problemID 
 	if s.kbRepo == nil {
 		return []*knowledge.Article{}, nil
 	}
-	return s.kbRepo.ListBySourceProblem(ctx, tenantID, problemID)
+	articles, err := s.kbRepo.ListBySourceProblem(ctx, tenantID, problemID)
+	if err != nil {
+		return nil, err
+	}
+	return knowledge.FilterVisibleArticles(ctx, s.knowledgeGuard, tenantID, articles), nil
 }
 
 // validateAssignee 统一受指人同租户/在职校验入口。

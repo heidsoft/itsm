@@ -1,6 +1,7 @@
 package knowledge
 
 import (
+	"context"
 	"errors"
 	"strings"
 
@@ -19,6 +20,16 @@ type Handler struct {
 	// 真正的准入判定发生在检索路径上，这里必须与 Service 用同一套策略，
 	// 否则界面会显示「可引用」而检索实际把它挡掉（或反之）。
 	freshness *knowledgeaccess.FreshnessJudger
+}
+
+// requestContext 在请求 context 上注入访问者身份，供分类级可见性判定。
+// 读写文章、版本、评审的入口都必须使用它：缺少 Viewer 会被按匿名处理，
+// 已纳管分类对合法用户也会变成 not-found。
+func (h *Handler) requestContext(c *gin.Context) context.Context {
+	return knowledgeaccess.WithViewer(c.Request.Context(), knowledgeaccess.Viewer{
+		UserID: c.GetInt("user_id"),
+		Role:   c.GetString("role"),
+	})
 }
 
 func NewHandler(svc *Service) *Handler {
@@ -48,6 +59,7 @@ func (h *Handler) toArticleDTO(a *Article) *dto.KnowledgeArticleResponse {
 		Title:     a.Title,
 		Content:   a.Content,
 		Category:  a.Category,
+		Author:    a.AuthorName,
 		Tags:      a.Tags,
 		Status:    status,
 		TenantID:  a.TenantID,
@@ -181,7 +193,7 @@ func (h *Handler) GetArticle(c *gin.Context) {
 		return
 	}
 
-	res, err := h.svc.GetArticle(c.Request.Context(), id, tenantID)
+	res, err := h.svc.GetArticle(h.requestContext(c), id, tenantID)
 	if err != nil {
 		common.NotFound(c, "Article not found")
 		return
@@ -210,7 +222,7 @@ func (h *Handler) ListArticles(c *gin.Context) {
 		return
 	}
 
-	list, total, err := h.svc.ListArticles(c.Request.Context(), tenantID, pg.Page, pg.PageSize, category, search, status)
+	list, total, err := h.svc.ListArticles(h.requestContext(c), tenantID, pg.Page, pg.PageSize, category, search, status)
 	if err != nil {
 		common.FailWithErr(c, err, "操作失败")
 		return
@@ -252,7 +264,7 @@ func (h *Handler) UpdateArticle(c *gin.Context) {
 		return
 	}
 
-	existing, err := h.svc.GetArticle(c.Request.Context(), id, tenantID)
+	existing, err := h.svc.GetArticle(h.requestContext(c), id, tenantID)
 	if err != nil {
 		common.NotFound(c, "Article not found")
 		return
@@ -295,7 +307,7 @@ func (h *Handler) UpdateArticle(c *gin.Context) {
 		return
 	}
 
-	res, err := h.svc.UpdateArticle(c.Request.Context(), existing)
+	res, err := h.svc.UpdateArticle(h.requestContext(c), existing)
 	if err != nil {
 		common.FailWithErr(c, err, "操作失败")
 		return
@@ -331,7 +343,7 @@ func (h *Handler) MarkArticleReviewed(c *gin.Context) {
 		return
 	}
 
-	res, err := h.svc.MarkArticleReviewed(c.Request.Context(), id, tenantID)
+	res, err := h.svc.MarkArticleReviewed(h.requestContext(c), id, tenantID)
 	if err != nil {
 		// 不存在与已软删统一按未找到返回，避免暴露资源存在性
 		common.NotFound(c, "Article not found")
@@ -372,7 +384,7 @@ func (h *Handler) setArticlePublished(c *gin.Context, published bool) {
 
 	// 发布门禁在服务层：review_status != approved 时返回 409/4090，
 	// 不让 HTTP 入口成为绕过评审的旁路（见 Service.SetArticlePublished）。
-	res, err := h.svc.SetArticlePublished(c.Request.Context(), id, tenantID, published)
+	res, err := h.svc.SetArticlePublished(h.requestContext(c), id, tenantID, published)
 	if err != nil {
 		// ent.NotFoundError → 4004/404；评审未通过 → 4090/409。
 		common.RespondError(c, err, "操作失败")
@@ -503,10 +515,7 @@ func (h *Handler) SearchArticles(c *gin.Context) {
 
 	// 注入访问者身份：知识检索据此做分类级可见性过滤（L0 权限边界）。
 	// 不注入则按匿名处理，已纳管的受限分类一律不可见（fail-closed）。
-	searchCtx := knowledgeaccess.WithViewer(c.Request.Context(), knowledgeaccess.Viewer{
-		UserID: c.GetInt("user_id"),
-		Role:   c.GetString("role"),
-	})
+	searchCtx := h.requestContext(c)
 
 	articles, err := h.svc.SearchArticles(searchCtx, tenantIDInt, req.Query, req.Category, limit)
 	if err != nil {
@@ -561,7 +570,7 @@ func (h *Handler) GetRecommendations(c *gin.Context) {
 	}
 
 	limit := 5
-	articles, _, err := h.svc.ListArticles(c.Request.Context(), tenantID, 1, limit, "", "", "published")
+	articles, _, err := h.svc.ListArticles(h.requestContext(c), tenantID, 1, limit, "", "", "published")
 	if err != nil {
 		common.FailWithErr(c, err, "获取推荐文章失败")
 		return
@@ -589,7 +598,7 @@ func (h *Handler) GetRecentArticles(c *gin.Context) {
 	}
 
 	limit := 10
-	articles, _, err := h.svc.ListArticles(c.Request.Context(), tenantID, 1, limit, "", "", "published")
+	articles, _, err := h.svc.ListArticles(h.requestContext(c), tenantID, 1, limit, "", "", "published")
 	if err != nil {
 		common.FailWithErr(c, err, "获取最近文章失败")
 		return
@@ -617,7 +626,7 @@ func (h *Handler) GetCategories(c *gin.Context) {
 		return
 	}
 
-	list, err := h.svc.GetCategories(c.Request.Context(), tenantID)
+	list, err := h.svc.GetCategories(h.requestContext(c), tenantID)
 	if err != nil {
 		common.FailWithErr(c, err, "操作失败")
 		return
@@ -641,7 +650,7 @@ func (h *Handler) GetStats(c *gin.Context) {
 		return
 	}
 
-	stats, err := h.svc.GetStats(c.Request.Context(), tenantID)
+	stats, err := h.svc.GetStats(h.requestContext(c), tenantID)
 	if err != nil {
 		common.FailWithErr(c, err, "操作失败")
 		return
@@ -664,7 +673,7 @@ func (h *Handler) ListArticleVersions(c *gin.Context) {
 
 	pg := common.GetPaginationFromQuery(c)
 
-	versions, _, err := h.svc.ListVersions(c.Request.Context(), id, tenantID, pg.Page, pg.PageSize)
+	versions, _, err := h.svc.ListVersions(h.requestContext(c), id, tenantID, pg.Page, pg.PageSize)
 	if err != nil {
 		knowledgeVersionError(c, err)
 		return
@@ -688,7 +697,7 @@ func (h *Handler) RestoreArticleVersion(c *gin.Context) {
 	}
 	userID := c.GetInt("user_id")
 
-	article, err := h.svc.RestoreVersion(c.Request.Context(), id, version, tenantID, userID)
+	article, err := h.svc.RestoreVersion(h.requestContext(c), id, version, tenantID, userID)
 	if err != nil {
 		knowledgeVersionError(c, err)
 		return
@@ -717,12 +726,12 @@ func (h *Handler) CompareArticleVersions(c *gin.Context) {
 		return
 	}
 
-	fromVersion, err := h.svc.GetVersion(c.Request.Context(), id, from, tenantID)
+	fromVersion, err := h.svc.GetVersion(h.requestContext(c), id, from, tenantID)
 	if err != nil {
 		knowledgeVersionError(c, err)
 		return
 	}
-	toVersion, err := h.svc.GetVersion(c.Request.Context(), id, to, tenantID)
+	toVersion, err := h.svc.GetVersion(h.requestContext(c), id, to, tenantID)
 	if err != nil {
 		knowledgeVersionError(c, err)
 		return

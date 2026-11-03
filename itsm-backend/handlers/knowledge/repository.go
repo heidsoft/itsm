@@ -4,11 +4,20 @@ import (
 	"context"
 )
 
+// Visibility 描述当前访问者的分类级可见性收窄条件。
+// DeniedCategories 为空表示不做过滤；ViewerUserID > 0 时用于作者豁免。
+type Visibility struct {
+	DeniedCategories []string
+	ViewerUserID     int
+}
+
 // Repository interface for Knowledge domain
 type Repository interface {
 	Create(ctx context.Context, a *Article) (*Article, error)
 	Get(ctx context.Context, id int, tenantID int) (*Article, error)
-	List(ctx context.Context, tenantID int, page, size int, category, search, status string) ([]*Article, int, error)
+	// List 的可见性过滤在 SQL 层完成：先过滤再分页，total 才代表
+	// 当前访问者真正能看到的条数；先分页后过滤会让分页语义失真。
+	List(ctx context.Context, tenantID int, page, size int, category, search, status string, vis Visibility) ([]*Article, int, error)
 	Update(ctx context.Context, a *Article) (*Article, error)
 	// PublishWithPointer 发布文章并建立「线上版本」指针：同事务内为即将上线的
 	// 正文落版本快照、把 published_version 指向它、翻 is_published。
@@ -40,8 +49,8 @@ type Repository interface {
 	// RestoreVersion 把文章正文恢复到指定版本：先为当前正文建快照，再覆写。
 	// 恢复本身也会留下一个新版本，历史链不断。
 	RestoreVersion(ctx context.Context, articleID, version, tenantID, userID int) (*Article, error)
-	GetCategories(ctx context.Context, tenantID int) ([]string, error)
-	GetStats(ctx context.Context, tenantID int) (*Stats, error)
+	GetCategories(ctx context.Context, tenantID int, vis Visibility) ([]string, error)
+	GetStats(ctx context.Context, tenantID int, vis Visibility) (*Stats, error)
 	// GetByIDs returns articles by a list of IDs, preserving the order of IDs.
 	// It filters by tenant and only returns published, non-deleted articles.
 	GetByIDs(ctx context.Context, tenantID int, ids []int) ([]*Article, error)

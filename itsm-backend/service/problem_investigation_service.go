@@ -13,6 +13,7 @@ import (
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/knowledgearticle"
+	"itsm-backend/internal/knowledgeaccess"
 
 	"go.uber.org/zap"
 )
@@ -24,6 +25,9 @@ type ProblemInvestigationService struct {
 	logger *zap.SugaredLogger
 	repo   *problemInvestigationRepository
 	users  *userLookupRepository
+	// knowledgeGuard 知识分类可见性守卫：调查页的知识列表同样是知识读面，
+	// 不能绕过分类纳管。nil 时保持旧行为。
+	knowledgeGuard *knowledgeaccess.Guard
 }
 
 // NewProblemInvestigationService 创建问题调查服务
@@ -42,22 +46,29 @@ func (s *ProblemInvestigationService) SetUserLookupRepository(repo *userLookupRe
 	s.users = repo
 }
 
+// SetKnowledgeGuard 注入知识分类可见性守卫。
+func (s *ProblemInvestigationService) SetKnowledgeGuard(g *knowledgeaccess.Guard) {
+	s.knowledgeGuard = g
+}
+
 func (s *ProblemInvestigationService) CreateKnowledgeArticle(ctx context.Context, tenantID, authorID int, req *dto.CreateProblemKnowledgeArticleRequest) (*ent.KnowledgeArticle, error) {
+	// source_problem_id 是问题→知识的权威来源字段：写入前必须确认问题属于当前租户，
+	// 跨租户 ID 与不存在同样返回 404，避免用知识文章反查别家问题的标题。
+	if _, ok, err := s.repo.FetchProblemTitle(ctx, req.ProblemID, tenantID); err != nil {
+		return nil, fmt.Errorf("查询问题失败: %w", err)
+	} else if !ok {
+		return nil, notFoundError("问题不存在", req.ProblemID)
+	}
+
 	return s.client.KnowledgeArticle.Create().
 		SetTitle(req.ArticleTitle).
 		SetContent(req.ArticleContent).
 		SetCategory(req.ArticleType).
 		SetAuthorID(authorID).
 		SetTags(strings.Join(req.Tags, ",")).
+		SetSourceProblemID(req.ProblemID).
 		SetTenantID(tenantID).
 		Save(ctx)
-}
-
-func (s *ProblemInvestigationService) ListKnowledgeArticles(ctx context.Context, tenantID int) ([]*ent.KnowledgeArticle, error) {
-	return s.client.KnowledgeArticle.Query().
-		Where(knowledgearticle.TenantIDEQ(tenantID), knowledgearticle.DeletedAtIsNil()).
-		Order(ent.Desc(knowledgearticle.FieldCreatedAt)).
-		All(ctx)
 }
 
 // problemInvestigationStatusTransitions 与 handlers/problem 的状态机保持一致。
@@ -446,6 +457,9 @@ func (s *ProblemInvestigationService) GetProblemInvestigationSummary(ctx context
 	// 反向断链补齐（2026-10-22）：knowledge_articles.source_problem_id 落地后，
 	// 摘要里的 KnowledgeArticles 不再是恒空数组——由该问题沉淀的文章（含草稿）
 	// 按创建时间倒序回填。查询失败向上传播，不静默空数据（同上 P0-4 教训）。
+	//
+	// 分类可见性与其它知识读面同口径（2026-10-31）：摘要是问题页的另一个知识读面，
+	// 不能因为入口不同就绕过分类纳管；viewer 由 handler 注入，守卫拒绝时 fail-closed。
 	if kbArticles, err := s.client.KnowledgeArticle.Query().
 		Where(
 			knowledgearticle.TenantID(tenantID),
@@ -456,6 +470,10 @@ func (s *ProblemInvestigationService) GetProblemInvestigationSummary(ctx context
 		All(ctx); err != nil {
 		return nil, fmt.Errorf("查询沉淀知识失败: %w", err)
 	} else if len(kbArticles) > 0 {
+		if s.knowledgeGuard != nil {
+			viewer, _ := knowledgeaccess.ViewerFrom(ctx)
+			kbArticles, _ = s.knowledgeGuard.FilterArticles(ctx, tenantID, viewer, kbArticles)
+		}
 		summary.KnowledgeArticles = make([]*dto.ProblemKnowledgeArticleResponse, 0, len(kbArticles))
 		for _, ka := range kbArticles {
 			authorName := ""

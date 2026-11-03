@@ -2,16 +2,21 @@ package problem_investigation
 
 import (
 	"bytes"
+	"context"
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
 	"testing"
+	"time"
 
 	_ "github.com/mattn/go-sqlite3"
 
+	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
+	"itsm-backend/ent/knowledgearticle"
 	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
@@ -21,10 +26,16 @@ import (
 )
 
 func setupTestHandler(t *testing.T) *gin.Engine {
+	r, _, _ := setupTestHandlerWithService(t)
+	return r
+}
+
+func setupTestHandlerWithService(t *testing.T) (*gin.Engine, *ent.Client, *service.ProblemInvestigationService) {
 	gin.SetMode(gin.TestMode)
 
-	// 每个测试用独立命名内存库，避免 cache=shared 跨测试状态泄漏
-	dbName := "file:pi_test_" + t.Name() + "?mode=memory&_fk=1"
+	// 每个测试用独立命名内存库；cache=shared 让 ent 客户端与 raw sql.DB 看到同一份数据
+	// （否则两条连接各自打开一个空的内存库），独立命名保证测试之间不共享状态。
+	dbName := "file:pi_test_" + t.Name() + "?mode=memory&cache=shared&_fk=1"
 
 	// 创建内存数据库
 	client := enttest.Open(t, "sqlite3", dbName)
@@ -41,7 +52,7 @@ func setupTestHandler(t *testing.T) *gin.Engine {
 	r := gin.New()
 	r.Use(gin.Recovery())
 
-	// Tenant/user 上下文注入（模拟中间件）
+	// Tenant/user/role 上下文注入（模拟中间件）
 	r.Use(func(c *gin.Context) {
 		tenantID := 1
 		if h := c.GetHeader("X-Test-Tenant"); h != "" {
@@ -55,8 +66,13 @@ func setupTestHandler(t *testing.T) *gin.Engine {
 				userID = v
 			}
 		}
+		role := "admin"
+		if h := c.GetHeader("X-Test-Role"); h != "" {
+			role = h
+		}
 		c.Set("tenant_id", tenantID)
 		c.Set("user_id", userID)
+		c.Set("role", role)
 		c.Next()
 	})
 
@@ -76,9 +92,26 @@ func setupTestHandler(t *testing.T) *gin.Engine {
 	r.POST("/api/v1/problem-relationships", h.CreateProblemRelationship)
 	r.GET("/api/v1/problems/:id/relationships", h.GetProblemRelationships)
 	r.POST("/api/v1/problem-knowledge-articles", h.CreateKnowledgeArticle)
-	r.GET("/api/v1/problem-knowledge-articles/problems/:id", h.GetProblemKnowledgeArticles)
 
-	return r
+	return r, client, invService
+}
+
+// createTestProblem 造一条可被知识沉淀引用的问题单（raw SQL 仓储按 tenant_id 校验归属）。
+func createTestProblem(t *testing.T, ctx context.Context, client *ent.Client, tenantID, createdBy int) *ent.Problem {
+	t.Helper()
+	now := time.Now()
+	p, err := client.Problem.Create().
+		SetTitle("磁盘告警排查").
+		SetDescription("磁盘使用率持续告警").
+		SetStatus("open").
+		SetPriority("medium").
+		SetCreatedBy(createdBy).
+		SetTenantID(tenantID).
+		SetCreatedAt(now).
+		SetUpdatedAt(now).
+		Save(ctx)
+	require.NoError(t, err)
+	return p
 }
 
 func TestHandler_CreateProblemInvestigation_BadRequest(t *testing.T) {
@@ -193,9 +226,11 @@ func TestHandler_GetProblemRelationships_EmptyList(t *testing.T) {
 }
 
 func TestHandler_CreateKnowledgeArticle(t *testing.T) {
-	r := setupTestHandler(t)
+	r, client, _ := setupTestHandlerWithService(t)
+	ctx := context.Background()
+	problem := createTestProblem(t, ctx, client, 1, 1)
 
-	body := []byte(`{"problemId":1,"articleTitle":"DNS 故障排查手册","articleContent":"步骤一…","articleType":"troubleshooting","tags":["dns","network"]}`)
+	body := []byte(fmt.Sprintf(`{"problemId":%d,"articleTitle":"DNS 故障排查手册","articleContent":"步骤一…","articleType":"troubleshooting","tags":["dns","network"]}`, problem.ID))
 	req, err := http.NewRequest("POST", "/api/v1/problem-knowledge-articles", bytes.NewReader(body))
 	require.NoError(t, err)
 	req.Header.Set("Content-Type", "application/json")
@@ -222,37 +257,43 @@ func TestHandler_CreateKnowledgeArticle(t *testing.T) {
 	assert.Equal(t, "DNS 故障排查手册", resp.Data.Article.Title)
 	assert.Equal(t, "dns,network", resp.Data.Article.Tags)
 	assert.Equal(t, 1, resp.Data.Article.AuthorID, "未指定作者时应回填当前用户")
+
+	// 来源追溯：problemId 是必填项，必须落到 source_problem_id，否则沉淀文章
+	// 不会出现在问题反查与调查摘要里。
+	article, err := client.KnowledgeArticle.Query().
+		Where(knowledgearticle.IDEQ(resp.Data.ArticleID)).
+		Only(ctx)
+	require.NoError(t, err)
+	require.NotNil(t, article.SourceProblemID)
+	assert.Equal(t, problem.ID, *article.SourceProblemID)
 }
 
-func TestHandler_GetProblemKnowledgeArticles(t *testing.T) {
-	r := setupTestHandler(t)
+// 知识文章不能成为反查他人问题标题的通道：跨租户 problemId 与不存在同样返回 404，
+// 且不得落库。
+func TestHandler_CreateKnowledgeArticle_RejectsCrossTenantProblem(t *testing.T) {
+	r, client, _ := setupTestHandlerWithService(t)
+	ctx := context.Background()
+	otherTenantProblem := createTestProblem(t, ctx, client, 2, 9)
 
-	// 先创建一篇文章
-	body := []byte(`{"problemId":1,"articleTitle":"文章A","articleContent":"内容","articleType":"runbook"}`)
+	body := []byte(fmt.Sprintf(`{"problemId":%d,"articleTitle":"越权文章","articleContent":"内容","articleType":"runbook"}`, otherTenantProblem.ID))
 	req, err := http.NewRequest("POST", "/api/v1/problem-knowledge-articles", bytes.NewReader(body))
 	require.NoError(t, err)
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-Test-Tenant", "1")
+
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
-	require.Equal(t, http.StatusOK, w.Code)
-
-	// 再查询列表
-	req2, err := http.NewRequest("GET", "/api/v1/problem-knowledge-articles/problems/1", nil)
-	require.NoError(t, err)
-	w2 := httptest.NewRecorder()
-	r.ServeHTTP(w2, req2)
-	assert.Equal(t, http.StatusOK, w2.Code, "body=%s", w2.Body.String())
+	assert.Equal(t, http.StatusNotFound, w.Code, "body=%s", w.Body.String())
 
 	var resp struct {
 		Code int `json:"code"`
-		Data struct {
-			ProblemID         int           `json:"problemId"`
-			KnowledgeArticles []interface{} `json:"items"`
-		} `json:"data"`
 	}
-	require.NoError(t, json.Unmarshal(w2.Body.Bytes(), &resp))
-	assert.Equal(t, 0, resp.Code)
-	assert.Len(t, resp.Data.KnowledgeArticles, 1)
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
+	assert.Equal(t, 4004, resp.Code)
+
+	count, err := client.KnowledgeArticle.Query().Count(ctx)
+	require.NoError(t, err)
+	assert.Zero(t, count, "跨租户引用被拒时不得留下文章")
 }
 
 func TestHandler_MissingTenantContext(t *testing.T) {

@@ -50,6 +50,46 @@ func (s *Service) SetKnowledgeGuard(g *knowledgeaccess.Guard) { s.knowledgeGuard
 // SetFreshnessJudger 注入时效性判定器（L1）。传 nil 表示关闭时效过滤。
 func (s *Service) SetFreshnessJudger(j *knowledgeaccess.FreshnessJudger) { s.freshness = j }
 
+// visibilityFor 计算当前访问者的分类可见性收窄条件。
+// 守卫未装配时返回零值（保持旧行为）；守卫查询失败返回错误——
+// 读面必须失败关闭，不能把未知权限状态当成公开内容。
+func (s *Service) visibilityFor(ctx context.Context, tenantID int) (Visibility, error) {
+	if s.knowledgeGuard == nil {
+		return Visibility{}, nil
+	}
+	denied, err := s.knowledgeGuard.DeniedCategories(ctx, tenantID)
+	if err != nil {
+		s.logger.Warnw("知识分类可见性查询失败，拒绝读取", "tenant_id", tenantID, "error", err)
+		return Visibility{}, err
+	}
+	viewer, _ := knowledgeaccess.ViewerFrom(ctx)
+	return Visibility{DeniedCategories: denied, ViewerUserID: viewer.UserID}, nil
+}
+
+// ensureArticleReadable 校验文章存在且当前访问者可读其分类。
+// 不可读与不存在返回同一错误：状态码不能让调用方探测受限文章是否存在。
+func (s *Service) ensureArticleReadable(ctx context.Context, id, tenantID int) (*Article, error) {
+	a, err := s.repo.Get(ctx, id, tenantID)
+	if err != nil {
+		return nil, err
+	}
+	if s.knowledgeGuard == nil {
+		return a, nil
+	}
+	viewer, _ := knowledgeaccess.ViewerFrom(ctx)
+	if !s.knowledgeGuard.CanReadCategory(ctx, tenantID, viewer, a.Category, a.AuthorID) {
+		return nil, ErrArticleNotFound
+	}
+	return a, nil
+}
+
+// filterReadable 对已加载的文章做可见性复核。
+// 检索结果来自异步索引或批量查询时，分类归属可能在取数后变化，
+// 返回前必须按当前权限再过滤一次。
+func (s *Service) filterReadable(ctx context.Context, tenantID int, articles []*Article) []*Article {
+	return FilterVisibleArticles(ctx, s.knowledgeGuard, tenantID, articles)
+}
+
 // MarkArticleReviewed 记录一次内容复核。
 //
 // L1 时效管控的闭环动作：声明了复核周期的知识一旦逾期，会从 RAG 检索结果中消失，
@@ -96,7 +136,7 @@ func (s *Service) applyReview(
 		return nil, common.NewValidationError("驳回必须填写评审意见", nil)
 	}
 
-	current, err := s.repo.Get(ctx, articleID, tenantID)
+	current, err := s.ensureArticleReadable(ctx, articleID, tenantID)
 	if err != nil {
 		return nil, err
 	}
@@ -136,11 +176,17 @@ func (s *Service) applyReview(
 
 // ListReviews 返回文章的评审历史。
 func (s *Service) ListReviews(ctx context.Context, articleID, tenantID, page, pageSize int) ([]*ReviewRecord, int, error) {
+	if _, err := s.ensureArticleReadable(ctx, articleID, tenantID); err != nil {
+		return nil, 0, err
+	}
 	return s.repo.ListReviews(ctx, articleID, tenantID, page, pageSize)
 }
 
 // MarkArticleReviewed 记录一次内容复核：把 last_reviewed_at 置为当前时间。
 func (s *Service) MarkArticleReviewed(ctx context.Context, id int, tenantID int) (*Article, error) {
+	if _, err := s.ensureArticleReadable(ctx, id, tenantID); err != nil {
+		return nil, err
+	}
 	a, err := s.repo.MarkReviewed(ctx, id, tenantID)
 	if err != nil {
 		return nil, err
@@ -152,11 +198,17 @@ func (s *Service) MarkArticleReviewed(ctx context.Context, id int, tenantID int)
 
 // ListVersions 返回文章版本历史（版本号倒序）。
 func (s *Service) ListVersions(ctx context.Context, articleID, tenantID, page, pageSize int) ([]*ArticleVersion, int, error) {
+	if _, err := s.ensureArticleReadable(ctx, articleID, tenantID); err != nil {
+		return nil, 0, err
+	}
 	return s.repo.ListVersions(ctx, articleID, tenantID, page, pageSize)
 }
 
 // GetVersion 返回单个版本快照，供版本对比使用。
 func (s *Service) GetVersion(ctx context.Context, articleID, version, tenantID int) (*ArticleVersion, error) {
+	if _, err := s.ensureArticleReadable(ctx, articleID, tenantID); err != nil {
+		return nil, err
+	}
 	return s.repo.GetVersion(ctx, articleID, version, tenantID)
 }
 
@@ -165,6 +217,9 @@ func (s *Service) GetVersion(ctx context.Context, articleID, version, tenantID i
 // 恢复是内容变更：仓储层会把文章重置为 draft 并撤销发布，这里在同事务
 // 入向量删除任务清理旧索引，避免未经重新评审的旧内容继续被 RAG 检索。
 func (s *Service) RestoreVersion(ctx context.Context, articleID, version, tenantID, userID int) (*Article, error) {
+	if _, err := s.ensureArticleReadable(ctx, articleID, tenantID); err != nil {
+		return nil, err
+	}
 	var (
 		a   *Article
 		err error
@@ -259,14 +314,21 @@ func (s *Service) CreateArticle(ctx context.Context, a *Article) (*Article, erro
 }
 
 func (s *Service) GetArticle(ctx context.Context, id int, tenantID int) (*Article, error) {
-	return s.repo.Get(ctx, id, tenantID)
+	return s.ensureArticleReadable(ctx, id, tenantID)
 }
 
 func (s *Service) ListArticles(ctx context.Context, tenantID int, page, size int, category, search, status string) ([]*Article, int, error) {
-	return s.repo.List(ctx, tenantID, page, size, category, search, status)
+	vis, err := s.visibilityFor(ctx, tenantID)
+	if err != nil {
+		return nil, 0, err
+	}
+	return s.repo.List(ctx, tenantID, page, size, category, search, status, vis)
 }
 
 func (s *Service) UpdateArticle(ctx context.Context, a *Article) (*Article, error) {
+	if _, err := s.ensureArticleReadable(ctx, a.ID, a.TenantID); err != nil {
+		return nil, err
+	}
 	// XSS 消毒
 	a.Title = common.SanitizeText(a.Title)
 	a.Content = common.SanitizeHTML(a.Content)
@@ -310,7 +372,7 @@ func (s *Service) UpdateArticle(ctx context.Context, a *Article) (*Article, erro
 //   - 撤回不设门槛：把内容从可见面撤下永远是安全方向，
 //     驳回/撤回后 RAG 也必须立刻搜不到（索引删除在 UpdateArticle 内同事务入箱）。
 func (s *Service) SetArticlePublished(ctx context.Context, id, tenantID int, published bool) (*Article, error) {
-	article, err := s.repo.Get(ctx, id, tenantID)
+	article, err := s.ensureArticleReadable(ctx, id, tenantID)
 	if err != nil {
 		return nil, err
 	}
@@ -357,7 +419,11 @@ func (s *Service) DeleteArticle(ctx context.Context, id int, tenantID int) error
 }
 
 func (s *Service) GetCategories(ctx context.Context, tenantID int) ([]string, error) {
-	return s.repo.GetCategories(ctx, tenantID)
+	vis, err := s.visibilityFor(ctx, tenantID)
+	if err != nil {
+		return nil, err
+	}
+	return s.repo.GetCategories(ctx, tenantID, vis)
 }
 
 // SearchArticles performs a RAG-powered search over published knowledge articles.
@@ -408,6 +474,8 @@ func (s *Service) SearchArticles(ctx context.Context, tenantID int, query string
 				s.logger.Warnw("KnowledgeService: failed to fetch articles by IDs", "error", err)
 				return nil, err
 			}
+			// 索引结果与取数之间分类可能变化，返回前按当前权限复核一次。
+			articles = s.filterReadable(ctx, tenantID, articles)
 
 			// Re-order by RAG score descending and attach scores.
 			scoreMap := make(map[int]float64, len(scored))
@@ -433,8 +501,9 @@ func (s *Service) SearchArticles(ctx context.Context, tenantID int, query string
 		}
 	}
 
-	// No RAG service: fall back to plain ListArticles with keyword search.
-	articles, _, err := s.repo.List(ctx, tenantID, 1, limit, category, query, "published")
+	// No RAG service: fall back to the same list path so classification
+	// visibility is enforced here too, not only inside the RAG service.
+	articles, _, err := s.ListArticles(ctx, tenantID, 1, limit, category, query, "published")
 	if err != nil {
 		return nil, err
 	}
@@ -456,7 +525,11 @@ func scoredIDsToIDs(scored []struct {
 }
 
 func (s *Service) GetStats(ctx context.Context, tenantID int) (*dto.KnowledgeStatsResponse, error) {
-	stats, err := s.repo.GetStats(ctx, tenantID)
+	vis, err := s.visibilityFor(ctx, tenantID)
+	if err != nil {
+		return nil, err
+	}
+	stats, err := s.repo.GetStats(ctx, tenantID, vis)
 	if err != nil {
 		return nil, err
 	}

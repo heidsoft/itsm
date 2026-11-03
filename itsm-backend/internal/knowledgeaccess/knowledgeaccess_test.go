@@ -187,6 +187,29 @@ func TestFilterArticles_EmptyInput(t *testing.T) {
 	require.Empty(t, kept)
 }
 
+func TestDeniedCategories_ReturnsOnlyManagedCategoriesForViewer(t *testing.T) {
+	client, g, ctx, tenantID, userID := setupGuardFixture(t)
+	defer client.Close()
+
+	restrictCategory(t, ctx, client, tenantID, "财务制度")
+	restrictCategory(t, ctx, client, tenantID, "薪酬档案")
+
+	denied, err := g.DeniedCategories(WithViewer(ctx, Viewer{UserID: userID, Role: "end_user"}), tenantID)
+	require.NoError(t, err)
+	require.Equal(t, []string{"薪酬档案", "财务制度"}, denied, "结果必须排序且只包含已纳管分类")
+
+	denied, err = g.DeniedCategories(WithViewer(ctx, Viewer{UserID: 1, Role: "super_admin"}), tenantID)
+	require.NoError(t, err)
+	require.Empty(t, denied, "super_admin 不应被收窄")
+}
+
+func TestDeniedCategories_FailsWhenPermissionsUnavailable(t *testing.T) {
+	g := NewGuard(nil, zaptest.NewLogger(t).Sugar())
+
+	_, err := g.DeniedCategories(context.Background(), 1)
+	require.Error(t, err, "权限状态不可得时必须上抛，由调用方失败关闭")
+}
+
 func TestInvalidate_ClearsCache(t *testing.T) {
 	client, g, ctx, tenantID, _ := setupGuardFixture(t)
 	defer client.Close()

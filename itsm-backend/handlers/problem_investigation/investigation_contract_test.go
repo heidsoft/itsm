@@ -15,7 +15,9 @@ import (
 
 	"itsm-backend/common"
 	"itsm-backend/dto"
+	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
+	"itsm-backend/internal/knowledgeaccess"
 	"itsm-backend/service"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -107,6 +109,8 @@ var investigationSchemaDDL = []string{
 
 type investigationFixture struct {
 	router   *gin.Engine
+	client   *ent.Client
+	svc      *service.ProblemInvestigationService
 	tenantA  int
 	tenantB  int
 	userA    int
@@ -144,7 +148,8 @@ func newInvestigationFixture(t *testing.T) *investigationFixture {
 		SetStatus("open").SetCreatedBy(userA.ID).SetTenantID(tenantA.ID).SaveX(ctx)
 
 	logger := zaptest.NewLogger(t).Sugar()
-	h := NewHandler(logger, service.NewProblemInvestigationService(db, client, logger))
+	invService := service.NewProblemInvestigationService(db, client, logger)
+	h := NewHandler(logger, invService)
 
 	r := gin.New()
 	r.Use(gin.Recovery())
@@ -155,8 +160,13 @@ func newInvestigationFixture(t *testing.T) *investigationFixture {
 				tid = v
 			}
 		}
+		role := "admin"
+		if h := c.GetHeader("X-Test-Role"); h != "" {
+			role = h
+		}
 		c.Set("tenant_id", tid)
 		c.Set("user_id", userA.ID)
+		c.Set("role", role)
 		c.Next()
 	})
 
@@ -166,6 +176,8 @@ func newInvestigationFixture(t *testing.T) *investigationFixture {
 
 	return &investigationFixture{
 		router:   r,
+		client:   client,
+		svc:      invService,
 		tenantA:  tenantA.ID,
 		tenantB:  tenantB.ID,
 		userA:    userA.ID,
@@ -280,6 +292,84 @@ func TestGetInvestigationSummary_CrossTenantRejected(t *testing.T) {
 	assert.Equal(t, common.NotFoundCode, resp.Code)
 	assert.Equal(t, "问题不存在", resp.Message)
 	assert.Nil(t, resp.Data, "跨租户响应不得携带任何调查数据")
+}
+
+// 调查摘要是问题页的另一个知识读面：受限分类必须按 viewer 的 RBAC 收窄，
+// 不能因为入口不同就绕过分类纳管；super_admin 放行与其它读面同口径。
+func TestGetInvestigationSummary_FiltersRestrictedKnowledgeCategory(t *testing.T) {
+	f := newInvestigationFixture(t)
+	ctx := context.Background()
+
+	_, err := f.client.Permission.Create().
+		SetCode("knowledge_category_finance").
+		SetName("知识分类-财务制度").
+		SetResource(knowledgeaccess.CategoryResource).
+		SetAction(knowledgeaccess.ActionForCategory("财务制度")).
+		SetTenantID(f.tenantA).Save(ctx)
+	require.NoError(t, err)
+
+	f.svc.SetKnowledgeGuard(knowledgeaccess.NewGuard(f.client, zaptest.NewLogger(t).Sugar()))
+
+	for _, article := range []struct {
+		title    string
+		category string
+	}{
+		{title: "VPN 指南", category: "故障处理"},
+		{title: "薪酬方案", category: "财务制度"},
+	} {
+		_, err := f.client.KnowledgeArticle.Create().
+			SetTitle(article.title).
+			SetContent("内容").
+			SetCategory(article.category).
+			SetAuthorID(99).
+			SetTenantID(f.tenantA).
+			SetSourceProblemID(f.problemA).
+			Save(ctx)
+		require.NoError(t, err)
+	}
+
+	readKnowledge := func(role string) []*dto.ProblemKnowledgeArticleResponse {
+		req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("/api/v1/problem-investigation/problems/%d/summary", f.problemA), nil)
+		require.NoError(t, err)
+		req.Header.Set("X-Test-Tenant", fmt.Sprintf("%d", f.tenantA))
+		req.Header.Set("X-Test-Role", role)
+		w := httptest.NewRecorder()
+		f.router.ServeHTTP(w, req)
+		require.Equal(t, http.StatusOK, w.Code, "body=%s", w.Body.String())
+
+		var summary dto.ProblemInvestigationSummaryResponse
+		require.NoError(t, json.Unmarshal(mustData(t, w), &summary))
+		return summary.KnowledgeArticles
+	}
+
+	assert.Len(t, readKnowledge("agent"), 1, "受限分类对普通角色不可见")
+	assert.Len(t, readKnowledge("super_admin"), 2, "super_admin 放行全部分类")
+}
+
+// 权限状态不可得时必须 fail closed：摘要里的沉淀知识不能因为读不到 RBAC
+// 就退化成「没有限制」。访问者不是文章作者，排除作者豁免干扰。
+func TestGetInvestigationSummary_FailsClosedWhenGuardCannotReadPermissions(t *testing.T) {
+	f := newInvestigationFixture(t)
+	ctx := context.Background()
+
+	_, err := f.client.KnowledgeArticle.Create().
+		SetTitle("VPN 指南").SetContent("内容").SetCategory("故障处理").
+		SetAuthorID(99).SetTenantID(f.tenantA).SetSourceProblemID(f.problemA).Save(ctx)
+	require.NoError(t, err)
+
+	f.svc.SetKnowledgeGuard(knowledgeaccess.NewGuard(nil, zaptest.NewLogger(t).Sugar()))
+
+	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("/api/v1/problem-investigation/problems/%d/summary", f.problemA), nil)
+	require.NoError(t, err)
+	req.Header.Set("X-Test-Tenant", fmt.Sprintf("%d", f.tenantA))
+	req.Header.Set("X-Test-Role", "agent")
+	w := httptest.NewRecorder()
+	f.router.ServeHTTP(w, req)
+	require.Equal(t, http.StatusOK, w.Code, "body=%s", w.Body.String())
+
+	var summary dto.ProblemInvestigationSummaryResponse
+	require.NoError(t, json.Unmarshal(mustData(t, w), &summary))
+	assert.Empty(t, summary.KnowledgeArticles, "权限状态未知时不得返回任何有分类的知识")
 }
 
 func mustData(t *testing.T, w *httptest.ResponseRecorder) []byte {

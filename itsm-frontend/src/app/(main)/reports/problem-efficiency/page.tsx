@@ -29,6 +29,7 @@ import {
   YAxis,
 } from 'recharts';
 import { ProblemApi } from '@/lib/api/problem-api';
+import { formatDateTime } from '@/lib/formatters';
 import type { Problem, ProblemStatsResponse } from '@/lib/api/problem-api';
 import {
   ProblemPriority,
@@ -370,7 +371,7 @@ const ProblemEfficiencyPage = () => {
                     </div>
                     <div className="flex items-center gap-4 text-sm text-gray-500">
                       <span>处理人: {problem.assigneeName ?? '未分配'}</span>
-                      <span>创建时间: {new Date(problem.createdAt).toLocaleDateString()}</span>
+                      <span>创建时间: {formatDateTime(problem.createdAt)}</span>
                     </div>
                   </div>
                 ))}
