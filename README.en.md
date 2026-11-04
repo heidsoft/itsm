@@ -16,7 +16,7 @@ An open-source IT service management system for enterprises, covering ITIL core 
 
 </div>
 
-> **Translation status**: `README.md` (Simplified Chinese) is the single source of truth for project content; this file is its English counterpart and must stay in sync with it — section structure, the capability/maturity table, and every command/tool count. If the two disagree, the Chinese README wins and this file is the one to fix. Product UI text is Chinese-first through v1.6.x (see the language note under Quick Start).
+> **Translation status**: `README.md` (Simplified Chinese) is the single source of truth for project content; this file is its English counterpart and must stay in sync with it — section structure, the capability/maturity table, and every command/tool count. If the two disagree, the Chinese README wins and this file is the one to fix. Product UI text is Chinese-first through v1.6.x (see the language note under Quick Start). Terminology is fixed throughout this file: Preview / Available for maturity states, knowledge capture for 知识沉淀, fulfillment for 服务请求交付, extension delivery for 扩展交付, and Alibaba Cloud / Tencent Cloud / AWS / Volcengine / Kubernetes for the five discovery providers. US spelling is used consistently (for example `fulfillment`, not `fulfilment`).
 
 ## Table of Contents
 
@@ -50,7 +50,7 @@ An open-source IT service management system for enterprises, covering ITIL core 
 
 ## Overview
 
-This project aims to provide an enterprise ITSM system that actually works. It connects tickets, incidents, problems, changes, SLA, CMDB, and knowledge base into complete business processes, with audit trails, permission control, and multi-tenant isolation.
+This project aims to provide an enterprise ITSM system that actually works. Rather than piling up feature menus, it connects tickets, incidents, problems, changes, SLA, CMDB, and knowledge base into complete business processes, with audit trails, permission control, and multi-tenant isolation.
 
 Key design choices:
 
@@ -75,17 +75,17 @@ Key design choices:
 |:---|:---:|:---|
 | Tickets & Incidents | Available | Status transitions, dispatch, SLA, BPMN binding, tenant isolation |
 | Ticket Types & Dynamic Forms | Available | Custom fields, form presets, Workflow/SLA bindings |
-| Change Management | Available | Risk assessment, approval chains, rollback plans, PIR. Submission gates are closed (critical CIs / open incidents force `high` risk plus window-conflict blocking); the approval path is atomic and quorum/threshold/multi-level chains take effect on the approval endpoint (returns `pending` below threshold), with terminal transitions in the same transaction. Outcomes are recorded truthfully (the fail endpoint requires a reason into `outcomeNote`; PIR only opens for completed/rolled_back/failed), and rollback is verifiable step by step (done/skipped/failed with note, confirmer and timestamp) — it cannot be marked done while steps are unconfirmed, and the checklist locks once implementation starts |
-| Problems & Known Errors | Available | Root cause analysis, workarounds, linked incidents, SLA (same engine as tickets/incidents), comments, knowledge distillation |
-| Service Catalog & Requests | Preview | Catalog management, request approvals, service tasks. Approvals are orchestrated solely by BPMN (three-level approval gateway plus an approval-plan variable), and catalog items that need no approval go straight to fulfilment. Approval actions are gated by the current node's approver set — users outside that set are not shown an approval button. Fulfilment is "failure is terminal" — execution is claimed atomically (repeat execution returns 409 instead of double-delivering), failures are retryable (capped at 5 attempts), and manual adjudication is recorded when automatic retry is exhausted. Delivery now uses the real Alibaba Cloud ECS provider (credentials referenced via `secret://` from the tenant secret store; requests fail closed when unconfigured), but only ECS is covered and rollback compensation for partial failure is not implemented |
+| Change Management | Available | Risk assessment, approval chains, rollback plans, PIR. Submission gates are closed (critical CIs / open incidents force `high` risk plus window-conflict blocking); the approval path is atomic and quorum/threshold/multi-level chains take effect on the approval endpoint (returns `pending` below threshold), with terminal transitions in the same transaction. Outcomes are recorded truthfully (a fail endpoint plus a mandatory failure/rollback reason written into `outcomeNote`; PIR only opens for completed/rolled_back/failed), and rollback is verifiable step by step (done/skipped/failed with note, confirmer and timestamp) — it cannot be marked done while steps are unconfirmed, and the checklist locks once implementation starts |
+| Problems & Known Errors | Available | Root cause analysis, workarounds, linked incidents, SLA (same engine as tickets/incidents), comments, knowledge capture |
+| Service Catalog & Requests | Preview | Catalog management, request approvals, service tasks. Approvals are orchestrated solely by BPMN (three-level approval gateway plus an approval-plan variable), and catalog items that need no approval are fulfilled directly. Approval actions are gated by the current node's approver set — users outside that set are not shown an approval button. Fulfillment follows "failure is terminal" — execution is claimed atomically (repeat execution returns 409 instead of double-delivering), failures are retryable (capped at 5 attempts), and manual adjudication is recorded. Fulfillment is wired to the real Alibaba Cloud ECS provider (credentials referenced via `secret://` from the tenant secret store; requests fail closed when unconfigured), but only ECS is covered and rollback compensation for partial failure is not implemented |
 | CMDB | Available | CI types, configuration items, relationships, topology, impact analysis |
-| CMDB Cloud Discovery | Preview | Aliyun/CVM/AWS/Volcengine/K8s auto-discovery; diffs update cloud resources then write back configuration items by cloud service type (unmapped types are skipped, CIs missing required attributes wait for manual entry, vanished resources only mark sync stale) |
-| BPMN & Approvals | Preview | Process definitions, instances, tasks, variables, execution history; approvals are orchestrated solely by BPMN (there is no direct business-side approval path), driven by a three-level approval gateway plus an approval-plan variable, with quorum/threshold/multi-level chains taking effect on the approval endpoint; approval eligibility is decided server-side and returned with the response, so the UI only renders approval actions for eligible users |
+| CMDB Cloud Discovery | Preview | Auto-discovery across five resource types — Alibaba Cloud, Tencent Cloud, AWS, Volcengine, and Kubernetes; diffs update cloud resources then write back configuration items by cloud service type (unmapped types are skipped explicitly, CIs missing required attributes wait for manual completion, and vanished resources only mark sync stale without changing lifecycle). Each discovery round lists every page in full — there is no incremental watermark; discovery against real accounts has not been accepted yet |
+| BPMN & Approvals | Preview | Process definitions, instances, tasks, variables, execution history; approvals are orchestrated solely by BPMN (there is no direct business-side approval path), driven by a three-level approval gateway plus an approval-plan variable, with quorum/threshold/multi-level chains taking effect on the approval endpoint; approval eligibility is decided server-side and returned with the response, so the UI renders approval actions only for eligible users — users outside the current level's approver set get no clickable approval button |
 | SLA | Available | Policies, deadlines, warnings, violation statistics |
 | Knowledge & RAG | Preview | Article management, keyword/vector search, Q&A fallback, problem→knowledge capture (`POST /problems/:id/knowledge`, drafts enter review), publish gate (cannot publish before review; passing adds to retrieval, rejection removes it) |
 | AI Assistance | Preview | LLM Gateway, triage, summarization, RAG |
-| Notifications & Connectors | Preview | In-app notifications (already usable), delivery audit, channel diagnostics; Feishu / WeCom / DingTalk connectors implemented (pilot — deployment readiness declared via READY env vars) |
-| Marketplace & Extension Delivery | Available | Catalog items, version rows and publish/unpublish; connectors and skills are the deliverable types — installing a skill activates the runtime skill registered in this process via the version row's `skill://<code>` locator, and a miss reports `status=failed` with the available codes instead of a fake success; `POST /marketplace/items/:id/upgrade` covers both upgrade and rollback (target may be named, an older target rolls back, dependencies are re-checked against the target version, and a runtime that fails to start keeps the current version); the UI opens a dialog listing the item's published versions and states "changes from vX to vY" before a second confirmation, since switching versions reloads the runtime; `auto_upgrade` is an explicit, audited switch executed by the worker pass; `GET /marketplace/dependency-status` re-verifies prerequisites of every existing installation and keeps `declaration_missing` separate from "healthy"; **plugins are deliberately not delivered** — there is no host runtime, so install/upgrade returns `501` and publish returns `400`; skills ship with releases, while an artifact registry, signing and sandboxed execution are not implemented |
+| Notifications & Connectors | Preview | In-app notifications (already Available), delivery audit, channel diagnostics; Feishu / WeCom / DingTalk connectors are all implemented (Preview — deployment readiness declared via READY env vars) |
+| Marketplace & Extension Delivery | Available | Catalog items, version rows and publish/unpublish; connectors and skills are the deliverable types — installing a skill activates the runtime skill registered in this process via the version row's `skill://<code>` locator, and a miss reports `status=failed` with the available codes instead of a fake success; `POST /marketplace/items/:id/upgrade` covers both upgrade and rollback (target may be named, an older target rolls back, dependencies are re-checked against the target version, and a runtime that fails to start keeps the current version); the UI opens a dialog listing the item's published versions and states "changes from vX to vY" before a second confirmation, since switching versions reloads the runtime; `auto_upgrade` is an effective explicit switch executed periodically by the worker; `GET /marketplace/dependency-status` re-verifies prerequisites of every existing installation and keeps `declaration_missing` separate from "healthy"; **plugins are deliberately not delivered** — there is no host runtime, so install/upgrade returns `501` and publish returns `400`; skills ship with releases, while an artifact registry, signing and sandboxed execution are not implemented |
 | RBAC / Multi-Tenancy | Available | Role permissions, endpoint ACL, tenant isolation, audit logs |
 | Reporting & Operations | Preview | SLA and incident partial metrics, dashboard; a unified management-level view is still pending |
 
@@ -210,7 +210,7 @@ curl -X POST http://localhost:8090/api/v1/auth/login \
   -d '{"username":"admin","password":"admin123"}'
 
 # Login response does not expose access token to JavaScript.
-# Write operations also require CSRF token; examples below need jq.
+# Write operations also require a double-submit CSRF token; examples below need jq.
 CSRF_TOKEN=$(curl -s -b /tmp/itsm-cookies.txt -c /tmp/itsm-cookies.txt \
   http://localhost:8090/api/v1/csrf-token | jq -r '.data.csrfToken')
 
@@ -281,7 +281,7 @@ open http://localhost:8090/swagger/index.html
 
 ### MCP Integration (Let an Agent Drive ITSM)
 
-`itsm-cli/bin/itsm-mcp.js` is a zero-dependency MCP server (stdio / JSON-RPC) that exposes the same **342 commands** to clients such as WorkBuddy or Claude Desktop: **27 curated tools** plus `itsm_discover` / `itsm_describe` / `itsm_call`, which together cover the entire command surface. High-risk writes require explicit confirmation, and list responses are trimmed to 50 items by default (`meta` carries `total` and `truncated`; page with `limit`/`pageSize` when you need more).
+`itsm-cli/bin/itsm-mcp.js` is a zero-dependency MCP server (stdio / JSON-RPC) that exposes **342 commands** to clients such as WorkBuddy or Claude Desktop: **27 curated tools** plus `itsm_discover` / `itsm_describe` / `itsm_call`, which together cover the entire command surface. High-risk writes require explicit confirmation, and list responses are trimmed to 50 items by default (`meta` carries `total` and `truncated`; page with `limit`/`pageSize` when you need more).
 
 > The command and tool counts above are taken from live output — `node itsm-cli/bin/itsm.js --json schema | jq .data.count` and `node itsm-cli/bin/itsm-mcp.js --describe`. Both grow as routes are added, so this document does not enumerate them.
 
@@ -333,12 +333,12 @@ Four primary acceptance journeys:
 3. **Change Management**: Change → Impact analysis → Risk → Approval → Implement/Rollback → PIR
 4. **Service Request**: Catalog → Request → Three-level approval → Fulfillment → CI creation or modification
 
-Journey 4 deserves a closer acceptance checklist, since it is the one most likely to look healthy while being stuck:
+Journey 4 deserves a closer acceptance checklist — it is the one most likely to look healthy while actually being stuck:
 
 - **Approval actions are conditional.** Whether the request detail page shows Approve / Reject is decided server-side by checking whether the signed-in user belongs to the current level's approver set, and is returned with the response. The requester and accounts outside that set see no approval button.
 - **Out-of-scope calls get an actionable answer.** A non-approver calling the approval endpoint directly receives `403` with the reason (for example "you are not the assignee or a candidate for this task; check the approvers configured on the approval node"), instead of an uninformative server error.
 - **Approvers are resolved, not defaulted.** The approval plan resolves candidates within the tenant by step role (manager / IT / security) and removes the requester; when nothing resolves it falls back to a super administrator and logs a warning, so the tenant must actually have users with those roles.
-- **Fulfilment failures must suggest a next step.** When a provisioning task lands in `failed`, `errorMessage` says whether a parameter is missing, credentials are unconfigured, or the cloud provider rejected the call — fix the configuration and retry, or take over manually, rather than facing a generic "operation failed".
+- **Fulfillment failures must suggest a next step.** When a provisioning task lands in `failed`, `errorMessage` says whether a parameter is missing, credentials are unconfigured, or the cloud provider rejected the call — fix the configuration and retry, or take over manually, rather than facing a generic "operation failed".
 
 ## Reliable Execution Architecture
 
@@ -430,7 +430,7 @@ itsm/
 ├── itsm-ai-service/  # AI/RAG assistant service
 ├── itsm-agent/       # Agent extensions
 ├── itsm-skill/       # Skill extensions
-├── itsm-cli/         # CLI entry point
+├── itsm-cli/         # CLI + agent protocol + MCP server
 ├── docs/             # Product, architecture, development, deployment, testing docs
 ├── scripts/          # Development, production, release, and diagnostic scripts
 └── monitoring/       # Prometheus/Grafana configuration
@@ -456,13 +456,21 @@ npm test
 cd ..
 make check-contracts
 
+# E2E that writes business data (creating users/tickets/permission fixtures) always
+# runs against a one-off isolated stack, never the resident stack: "up" proves via a
+# canary write that the frontend proxy really lands in this stack's database, and a
+# Playwright-side guard refuses to run when that proof does not hold.
+eval "$(scripts/e2e-isolated-stack.sh up --print-env)"   # start the stack and inject test env vars (incl. E2E_RUN_ID) into the current shell
+cd itsm-frontend && npm run test:e2e:roles               # run fixtures with those env vars
+cd .. && scripts/e2e-isolated-stack.sh down              # tear down (incl. this stack's volumes) and delete the proof file; in a new shell pass E2E_RUN_ID=<run id>
+
 # Business flow regression (requires dev environment; covers incident/problem
 # lifecycle, change rejection path, state machine negative cases, forged token
 # negative cases, and notification/dashboard integration — 26 assertions)
 python3 output/dev_business_flow_test.py
 ```
 
-See [Local Development Commands](./docs/dev-commands-reference.md) and [Testing Guide](./docs/testing/README.md) for detailed layering, test strategy, and E2E usage.
+See [Local Development Commands](./docs/dev-commands-reference.md) (isolated stack: §2.5) and [Testing Guide](./docs/testing/README.md) for detailed layering, test strategy, and E2E usage.
 
 ## Production Deployment
 
@@ -475,7 +483,7 @@ Three deployment modes are supported:
 ```bash
 make prod-init        # Generate production config
 # Edit .env.prod: change passwords, JWT secret, domain, etc.
-make fresh-install-gate  # Empty-volume install self-check before delivery
+make fresh-install-gate  # Empty-volume first-install self-check before delivery: migrate+seed must pass; ledger / process templates / binding invariants must hold
 make prod-deploy      # Deploy
 make prod-health      # Check status
 ```
@@ -496,7 +504,7 @@ Pre-launch checklist:
 | Document | Purpose |
 |:---|:---|
 | [Documentation Center](./docs/README.md) | Find resources by role and topic |
-| [Open-Source Capability Statement](./docs/product/open-source-release-capability.md) | Roles, business closure, maturity, limitations, and acceptance entry |
+| [Open-Source Capability Statement](./docs/product/open-source-release-capability.md) | Roles, end-to-end process closure, maturity, limitations, and acceptance entry points |
 | [Commercial Capability Contract](./docs/product/itsm-commercial-capability-contract.md) | Capability maturity, commercial MVP, and non-goals |
 | [Commercial-Ready Architecture](./docs/architecture/commercial-ready-architecture.md) | Production-grade overall architecture |
 | [CMDB Commercial MVP](./docs/product/cmdb-commercial-mvp.md) | CMDB Available/Preview boundaries and acceptance criteria |
