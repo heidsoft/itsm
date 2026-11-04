@@ -122,6 +122,90 @@ interface RawListItem {
   requesterName?: string;
 }
 
+/**
+ * 业务待办（只读参考）状态列的中文映射。
+ *
+ * 2026-11-04 实测缺陷：本列此前直接渲染后端原始状态串，同页「流程待办」却走了
+ * statusTag 中文映射——同一页面两套标准，业务待办里赫然显示 "pending" / "submitted"。
+ *
+ * 三种业务对象的状态词表互不相同（工单用 open/in_progress，变更用 pending/approved，
+ * 服务请求用 submitted/manager_approved），所以必须按类型分派，不能用一张表硬套。
+ * 词表以各域 constants 为准：服务请求见 constants/service-request.ts。
+ */
+const LEGACY_STATUS_LABELS: Record<LegacyPendingItem['type'], Record<string, string>> = {
+  ticket: {
+    open: '待处理',
+    new: '新建',
+    in_progress: '处理中',
+    pending: '待处理',
+    pending_approval: '待审批',
+    on_hold: '已挂起',
+    resolved: '已解决',
+    closed: '已关闭',
+    cancelled: '已取消',
+  },
+  change: {
+    pending: '待审批',
+    submitted: '已提交',
+    approved: '已批准',
+    rejected: '已拒绝',
+    implementing: '实施中',
+    implemented: '已实施',
+    verified: '已验证',
+    closed: '已关闭',
+    failed: '失败',
+    rolled_back: '已回滚',
+  },
+  service_request: {
+    submitted: '已提交',
+    manager_approved: '主管已批',
+    it_approved: 'IT已批',
+    security_approved: '安全已批',
+    provisioning: '交付中',
+    delivered: '已交付',
+    failed: '交付失败',
+    rejected: '已拒绝',
+    cancelled: '已取消',
+  },
+};
+
+const LEGACY_STATUS_COLORS: Record<LegacyPendingItem['type'], Record<string, string>> = {
+  ticket: {
+    open: 'gold',
+    new: 'gold',
+    in_progress: 'blue',
+    pending: 'gold',
+    pending_approval: 'gold',
+    on_hold: 'orange',
+    resolved: 'green',
+    closed: 'default',
+    cancelled: 'default',
+  },
+  change: {
+    pending: 'gold',
+    submitted: 'gold',
+    approved: 'green',
+    rejected: 'red',
+    implementing: 'blue',
+    implemented: 'cyan',
+    verified: 'green',
+    closed: 'default',
+    failed: 'red',
+    rolled_back: 'orange',
+  },
+  service_request: {
+    submitted: 'gold',
+    manager_approved: 'blue',
+    it_approved: 'geekblue',
+    security_approved: 'green',
+    provisioning: 'cyan',
+    delivered: 'green',
+    failed: 'red',
+    rejected: 'red',
+    cancelled: 'default',
+  },
+};
+
 const priorityColorMap: Record<string, string> = {
   critical: 'red',
   high: 'orange',
@@ -565,7 +649,20 @@ export default function ApprovalsCenterPage() {
       dataIndex: 'status',
       key: 'status',
       width: 100,
-      render: (s: string) => <Tag color="gold">{s}</Tag>,
+      // 状态文案按业务类型分派：工单/变更/服务请求三套词表不同，
+      // 且必须显示中文——直接渲染后端原始串会让同一页面出现
+      // 「流程待办=待指派」与「业务待办=pending」两套标准。
+      render: (s: string, record?: LegacyPendingItem) => {
+        const type = record?.type ?? 'ticket';
+        const key = (s || '').toLowerCase();
+        const label = LEGACY_STATUS_LABELS[type]?.[key];
+        const color = LEGACY_STATUS_COLORS[type]?.[key];
+        return (
+          <Tag color={color || 'default'}>
+            {label ?? (s || '-')}
+          </Tag>
+        );
+      },
     },
     {
       title: t('approvalCenter.colRequester'),

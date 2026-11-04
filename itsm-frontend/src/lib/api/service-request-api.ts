@@ -20,6 +20,11 @@ export interface ServiceRequest {
   complianceAck: boolean;
   currentLevel: number;
   totalLevels: number;
+  /**
+   * 后端判定的「当前用户是否具备当前审批节点的审批资格」。
+   * 决定是否渲染「通过/拒绝」按钮——只按状态渲染会让越权者看到必然失败的入口。
+   */
+  canApprove?: boolean;
   version: number;
   processorId?: number;
   approvedAt?: string;
@@ -191,6 +196,7 @@ class ServiceRequestAPI {
       complianceAck: raw?.complianceAck,
       currentLevel: raw?.currentLevel,
       totalLevels: raw?.totalLevels,
+      canApprove: raw?.canApprove,
       createdAt,
       updatedAt,
       catalog: raw?.catalog || {

@@ -39,6 +39,14 @@ interface ServiceRequestDetail {
   costCenter?: string;
   catalog?: { name?: string };
   approvals?: ApprovalRecord[];
+  /**
+   * 后端判定的「当前用户是否具备当前审批节点的审批资格」。
+   *
+   * 不能只按请求状态渲染审批按钮：审批人集合在审批行的 node.approver_ids 里，
+   * 前端拿不到，此前只按状态渲染，导致发起人自己、以及不在本级审批人集合内的
+   * 管理员都会看到「通过/拒绝」，点下去必然失败（403/500）。
+   */
+  canApprove?: boolean;
 }
 
 const { Title, Text } = Typography;
@@ -290,10 +298,11 @@ export default function MyRequestDetailPage() {
 
           <Divider />
 
-          {/* 审批操作 - 仅在待审批状态显示 */}
-          {(detail?.status === 'submitted' ||
-            detail?.status === 'manager_approved' ||
-            detail?.status === 'it_approved') && (
+          {/* 审批操作 - 仅在待审批状态且当前用户具备本级审批资格时显示 */}
+          {detail?.canApprove === true &&
+            (detail?.status === 'submitted' ||
+              detail?.status === 'manager_approved' ||
+              detail?.status === 'it_approved') && (
             <>
               <Title level={4}>审批操作</Title>
               <Space orientation='vertical' style={{ width: '100%' }}>

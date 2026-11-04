@@ -202,11 +202,18 @@ const ServiceRequestDetail: React.FC = () => {
     return <Timeline items={items} />;
   };
 
-  // 判断当前用户是否可以审批 (简化逻辑：只要有 pending 状态且页面显示了按钮，前端暂不深度校验 user role，依赖后端拦截)
-  // 实际生产中应结合当前 userInfo 判断
-  const canApprove = approvals.some(
-    a => a.status === ApprovalStatus.PENDING && a.level === request?.currentLevel
-  );
+  // 审批入口的资格判定：必须以后端下发的 canApprove 为准。
+  //
+  // 2026-11-04 prod 实测缺陷：此前只判断「当前级是否有 pending 行」，
+  // 等于「只要流程没走完，任何打开详情页的人都能看到通过/拒绝」——
+  // 注释里写明"依赖后端拦截"，但后端拦截是 500「操作失败」（真实原因被吞），
+  // 用户点下去只看到一个无信息量的报错。
+  //
+  // canApprove 由后端按「当前用户是否落在本级 approver_ids 集合内」判定，
+  // 缺字段（旧响应）一律按无资格处理：宁可少给入口，也不给必然失败的入口。
+  const canApprove =
+    request?.canApprove === true &&
+    approvals.some(a => a.status === ApprovalStatus.PENDING && a.level === request?.currentLevel);
 
   if (loading) return <Spin size="large" style={{ display: 'block', margin: '50px auto' }} />;
   if (!request) return <div>未找到请求</div>;

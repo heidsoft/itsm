@@ -490,13 +490,20 @@ func (e *CustomProcessEngine) authorizeTaskActorWithClient(ctx context.Context, 
 		if matches(assignee) {
 			return nil
 		}
-		return fmt.Errorf("该任务已被认领，当前用户不是认领人")
+		return common.NewBusinessError(common.ForbiddenErrorCode,
+			"该任务已被他人认领，当前用户不是认领人，请刷新后查看最新待办", "")
 	}
 	// 未认领任务：assignee 或 candidateUsers 均可操作
 	if matches(task.Assignee) || matches(task.CandidateUsers) {
 		return nil
 	}
-	return fmt.Errorf("当前用户不是该任务的审批人或候选人")
+	// 必须用 AppError 而非 fmt.Errorf：调用方（业务审批桥接）会再包一层
+	// fmt.Errorf("...: %w")，普通 error 在包装后丢失类型，只能落到
+	// handler 的兜底分支 → HTTP 500「操作失败」，把「你不是该节点的审批人」
+	// 这条可行动结论整个吞掉。AppError 经 %w 包装仍能被 errors.As 取回，
+	// 最终正确落到 403。
+	return common.NewBusinessError(common.ForbiddenErrorCode,
+		"当前用户不是该任务的审批人或候选人，请确认审批节点配置的审批人", "")
 }
 
 // ---------------------------------------------------------------------------

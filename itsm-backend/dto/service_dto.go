@@ -152,6 +152,17 @@ type ServiceRequestResponse struct {
 	Approvals []ServiceRequestApprovalResponse `json:"approvals,omitempty"`
 	Catalog   *ServiceCatalogResponse          `json:"catalog,omitempty"`
 	Requester *UserResponse                    `json:"requester,omitempty"`
+
+	// CanApprove 表示「当前登录用户」是否具备当前审批节点的审批资格。
+	//
+	// 为什么必须由后端下发：前端此前只按请求状态（submitted/manager_approved/...）
+	// 渲染「通过/拒绝」按钮，任何能打开详情页的人（包括发起人本人、以及不在该节点
+	// 审批人集合内的管理员）都会看到按钮，点下去必然失败——不是 403 就是 500。
+	// 前端无法自行推断资格：审批人集合存在审批行的 node.approver_ids 里，
+	// 而该字段此前根本不在响应中下发（approverName 只在审批之后才有值）。
+	//
+	// 语义：false 表示当前用户不在当前级审批人集合内，或该请求已不在审批阶段。
+	CanApprove bool `json:"canApprove"`
 }
 
 // ServiceRequestApprovalResponse 服务请求审批记录响应

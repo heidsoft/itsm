@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { App } from 'antd';
 
 import InstallationsPage from '../page';
@@ -27,6 +27,11 @@ jest.mock('@/lib/services/marketplace-service', () => ({
 jest.mock('@/lib/services/connector-service', () => ({
   __esModule: true,
   default: { configs: jest.fn() },
+}));
+
+const mockedListItemVersions = jest.fn();
+jest.mock('@/lib/api/marketplace-catalog-api', () => ({
+  listItemVersions: (...args: unknown[]) => mockedListItemVersions(...args),
 }));
 
 const mockHasPermission = jest.fn();
@@ -83,6 +88,11 @@ beforeEach(() => {
   mockedConnector.configs.mockResolvedValue([]);
   mockedService.dependencyStatus.mockResolvedValue(cleanReport);
   mockedService.listInstallations.mockResolvedValue([skillInstallation]);
+  mockedListItemVersions.mockResolvedValue([
+    { version: '1.1.0', status: 'published', downloadCount: 0, releasedAt: '2026-11-01T00:00:00Z', createdAt: '2026-11-01T00:00:00Z', updatedAt: '2026-11-01T00:00:00Z' },
+    { version: '1.0.0', status: 'published', downloadCount: 0, releasedAt: '2026-10-01T00:00:00Z', createdAt: '2026-10-01T00:00:00Z', updatedAt: '2026-10-01T00:00:00Z' },
+    { version: '0.9.0', status: 'published', downloadCount: 0, releasedAt: '2026-09-01T00:00:00Z', createdAt: '2026-09-01T00:00:00Z', updatedAt: '2026-09-01T00:00:00Z' },
+  ]);
 });
 
 describe('我的应用页读取扁平安装 DTO', () => {
@@ -116,7 +126,7 @@ describe('我的应用页读取扁平安装 DTO', () => {
 });
 
 describe('升级与自动升级', () => {
-  it('upgradeAvailable=true 时点击升级调用 items/:id/upgrade 并就地更新版本号', async () => {
+  it('upgradeAvailable=true 时打开升级弹窗，确认后调用 items/:id/upgrade 并就地更新版本号', async () => {
     const upgraded = { ...skillInstallation, installedVersion: '1.1.0', upgradeAvailable: false };
     mockedService.upgradeItem.mockResolvedValue(upgraded);
     renderPage();
@@ -124,12 +134,44 @@ describe('升级与自动升级', () => {
     const button = await screen.findByRole('button', { name: '升级到 v1.1.0' });
     fireEvent.click(button);
 
-    await waitFor(() => expect(mockedService.upgradeItem).toHaveBeenCalledWith(5));
+    // 二次确认必须先出现，且写明从哪个版本到哪个版本（换版本会重载运行态）。
+    expect(await screen.findByText(/升级 \/ 回滚/)).toBeInTheDocument();
+    await waitFor(() => expect(screen.getAllByText('v1.0.0').length).toBeGreaterThan(0));
+
+    fireEvent.click(screen.getByRole('button', { name: '确认执行' }));
+
+    await waitFor(() => expect(mockedService.upgradeItem).toHaveBeenCalledWith(5, '1.1.0'));
     // 升完之后「已安装版本」与「目录最新版本」同为 1.1.0，两处都要一致。
     await waitFor(() => expect(screen.getAllByText('v1.1.0')).toHaveLength(2));
     expect(screen.queryByRole('button', { name: '升级到 v1.1.0' })).toBeNull();
     // 换版本会重新过依赖闸门，报告要随之刷新。
     expect(mockedService.dependencyStatus).toHaveBeenCalledTimes(2);
+  });
+
+  it('可指名更旧的已发布版本实现回滚（后端 upgrade 支持 targetVersion）', async () => {
+    const rolledBack = { ...skillInstallation, installedVersion: '0.9.0', upgradeAvailable: true };
+    mockedService.upgradeItem.mockResolvedValue(rolledBack);
+    renderPage();
+
+    fireEvent.click(await screen.findByRole('button', { name: '升级到 v1.1.0' }));
+    await screen.findByText(/升级 \/ 回滚/);
+
+    // 选一个比当前更旧的版本 → 必须带 targetVersion 发给后端。
+    // 弹窗内的目标版本下拉（页面上还有筛选用的 combobox，必须限定在弹窗内取）。
+    const dialog = await screen.findByRole('dialog');
+    fireEvent.mouseDown(within(dialog).getByRole('combobox'));
+    // antd Select 的 popup 挂在 body 下；选项没有 title 属性，按文本匹配。
+    const olderOption = await waitFor(() => {
+      const opt = Array.from(document.querySelectorAll('.ant-select-item-option')).find(
+        el => el.textContent?.trim().startsWith('v0.9.0'),
+      );
+      if (!opt) throw new Error('option not rendered');
+      return opt as HTMLElement;
+    });
+    fireEvent.click(olderOption);
+    fireEvent.click(screen.getByRole('button', { name: '确认执行' }));
+
+    await waitFor(() => expect(mockedService.upgradeItem).toHaveBeenCalledWith(5, '0.9.0'));
   });
 
   it('已最新时不摆升级按钮', async () => {
@@ -158,6 +200,7 @@ describe('升级与自动升级', () => {
     renderPage();
 
     fireEvent.click(await screen.findByRole('button', { name: '升级到 v1.1.0' }));
+    fireEvent.click(await screen.findByRole('button', { name: '确认执行' }));
 
     expect(await screen.findByText('升级未完成，仍在使用当前版本')).toBeInTheDocument();
     expect(screen.getAllByText('v1.0.0').length).toBeGreaterThan(0);

@@ -499,6 +499,35 @@ func nodeApproverContains(node map[string]interface{}, userID int) bool {
 	return nodeUserListContains(node, "approver_ids", userID)
 }
 
+// CanActorApproveCurrentLevel 判定 actor 是否具备当前审批节点的审批资格。
+//
+// 判定口径与 ApplyApproval 的可执行口径保持一致：
+//   - 请求必须仍在审批阶段（否则没有"当前节点"可批）；
+//   - 当前级必须有一条 pending 审批行（否则本级已结束或尚未开始）；
+//   - actor 必须落在该行的 approver_ids 集合内。
+//
+// 为什么需要它：前端此前只按请求状态渲染「通过/拒绝」按钮，导致任何能打开详情页
+// 的人都会看到审批入口，点下去必然失败（发起人自审、非本级审批人越权）。
+// 前端无法自行推断——审批人集合存在审批行的 node 里，此前根本不在响应中下发。
+//
+// 与 checkEligibility 的关系：checkEligibility 是执行期的第二道闸（角色/部门兜底），
+// 本函数是第一道闸（是不是这个节点的审批人）。二者都通过才允许点。
+func CanActorApproveCurrentLevel(req *ServiceRequest, approvals []*ServiceRequestApproval, actorID int) bool {
+	if req == nil || actorID <= 0 {
+		return false
+	}
+	if req.CurrentLevel <= 0 || req.Status != srApprovalStageStatus(req.CurrentLevel) {
+		return false
+	}
+	for _, app := range approvals {
+		if app == nil || app.Level != req.CurrentLevel || app.Status != ApprovalStatusPending {
+			continue
+		}
+		return nodeApproverContains(app.Node, actorID)
+	}
+	return false
+}
+
 func nodeUserListContains(node map[string]interface{}, key string, userID int) bool {
 	if node == nil {
 		return false
@@ -732,6 +761,13 @@ func (s *Service) ApplyApproval(ctx context.Context, id, tenantID, actorID int, 
 		ctx, tx.Client(), tenantID, actorID, string(dto.BusinessTypeServiceRequest), id, action, comment,
 	)
 	if bridgeErr != nil {
+		// AppError 必须原样透传：桥接层的权限/冲突结论（如「你不是该节点的审批人」）
+		// 是唯一能指导用户下一步的信息。用 fmt.Errorf 包装会让 handler 落到兜底
+		// 分支返回 500「操作失败」，把可行动文案整个吞掉。
+		var appErr *common.AppError
+		if errors.As(bridgeErr, &appErr) {
+			return nil, nil, appErr
+		}
 		return nil, nil, fmt.Errorf("同步流程审批任务失败: %w", bridgeErr)
 	}
 	if !completed {

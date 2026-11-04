@@ -193,7 +193,19 @@ func (h *Handler) Get(c *gin.Context) {
 		}
 		return
 	}
-	common.Success(c, h.toDTO(req, approvals))
+	common.Success(c, h.toDTOForActor(req, approvals, c.GetInt("user_id")))
+}
+
+// toDTOForActor 在通用 DTO 之上补上「当前用户是否具备审批资格」。
+// 前端据此决定是否渲染「通过/拒绝」按钮——审批人集合只在审批行的 node 里，
+// 不下发到前端的话，前端只能按状态渲染，导致越权者看到必然失败的审批入口。
+func (h *Handler) toDTOForActor(req *ServiceRequest, approvals []*ServiceRequestApproval, actorID int) *dto.ServiceRequestResponse {
+	resp := h.toDTO(req, approvals)
+	if resp == nil {
+		return nil
+	}
+	resp.CanApprove = CanActorApproveCurrentLevel(req, approvals, actorID)
+	return resp
 }
 
 // ListApprovals returns the approval history for one tenant-scoped service request.
