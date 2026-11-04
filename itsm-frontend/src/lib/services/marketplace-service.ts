@@ -111,7 +111,13 @@ class MarketplaceService {
     isOfficial?: boolean;
     page?: number;
     pageSize?: number;
-  } = {}): Promise<{ items: MarketplaceItem[]; total: number; page: number; pageSize: number }> {
+  } = {}): Promise<{
+    items: MarketplaceItem[];
+    total: number;
+    page: number;
+    pageSize: number;
+    totalPages: number;
+  }> {
     return httpClient.get(`${this.baseUrl}/items`, {
       type: params.type,
       category: params.category,
@@ -134,8 +140,16 @@ class MarketplaceService {
     await httpClient.post(`${this.baseUrl}/items/${id}/uninstall`);
   }
 
+  /**
+   * 安装列表走「不分页的列表」契约：后端整表取回本租户的安装记录，
+   * data 只有 {items,total}，没有 page/pageSize/totalPages。
+   */
   async listInstallations(status?: string): Promise<TenantInstallation[]> {
-    return httpClient.get(`${this.baseUrl}/installations`, status ? { status } : undefined);
+    const { items } = await httpClient.get<{ items: TenantInstallation[]; total: number }>(
+      `${this.baseUrl}/installations`,
+      status ? { status } : undefined
+    );
+    return items;
   }
 
   async getInstallation(itemId: number): Promise<TenantInstallation | null> {

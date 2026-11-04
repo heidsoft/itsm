@@ -110,7 +110,13 @@ const renderPage = () =>
 describe('商品目录管理', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockedList.mockResolvedValue({ items, total: items.length, page: 1, pageSize: 20 });
+    mockedList.mockResolvedValue({
+      items,
+      total: items.length,
+      page: 1,
+      pageSize: 20,
+      totalPages: Math.ceil(items.length / 20),
+    });
     mockedPublish.mockResolvedValue({ item: { ...baseItem, status: 'published' }, versions: [] });
     mockedUnpublish.mockResolvedValue({ item: { ...baseItem, status: 'deprecated' }, versions: [] });
   });
@@ -169,7 +175,7 @@ describe('商品目录管理', () => {
   });
 
   it('目录为空时给出可执行空态', async () => {
-    mockedList.mockResolvedValueOnce({ items: [], total: 0, page: 1, pageSize: 20 });
+    mockedList.mockResolvedValueOnce({ items: [], total: 0, page: 1, pageSize: 20, totalPages: 0 });
     renderPage();
 
     expect(await screen.findByText(/目录为空/)).toBeInTheDocument();

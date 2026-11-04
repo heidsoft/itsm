@@ -67,6 +67,7 @@ export interface CatalogListResponse {
   total: number;
   page: number;
   pageSize: number;
+  totalPages: number;
 }
 
 export interface CatalogListParams {

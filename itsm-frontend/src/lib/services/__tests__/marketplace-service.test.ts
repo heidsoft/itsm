@@ -22,7 +22,13 @@ describe('MarketplaceService', () => {
 
   describe('listItems', () => {
     it('should list items with default pagination', async () => {
-      const response = { items: [{ id: 1, name: 'plugin-a', title: 'Plugin A', type: 'plugin', provider: 'acme' }], total: 1, page: 1, pageSize: 100 };
+      const response = {
+        items: [{ id: 1, name: 'plugin-a', title: 'Plugin A', type: 'plugin', provider: 'acme' }],
+        total: 1,
+        page: 1,
+        pageSize: 100,
+        totalPages: 1,
+      };
       mockGet.mockResolvedValue(response);
 
       const result = await marketplaceService.listItems();
@@ -37,10 +43,11 @@ describe('MarketplaceService', () => {
       });
       expect(result.items).toHaveLength(1);
       expect(result.total).toBe(1);
+      expect(result.totalPages).toBe(1);
     });
 
     it('should list items with filters', async () => {
-      const response = { items: [], total: 0, page: 1, pageSize: 10 };
+      const response = { items: [], total: 0, page: 1, pageSize: 10, totalPages: 0 };
       mockGet.mockResolvedValue(response);
 
       await marketplaceService.listItems({ type: 'connector', category: 'im', search: 'slack', page: 2, pageSize: 10 });
@@ -91,18 +98,19 @@ describe('MarketplaceService', () => {
   });
 
   describe('listInstallations', () => {
-    it('should list installations without status filter', async () => {
-      const installations = [{ id: 10, tenantId: 1, itemId: 1, installedVersion: '1.0.0', status: 'active', installedAt: '2024-01-01' }];
-      mockGet.mockResolvedValue(installations);
+    it('should unwrap the {items,total} envelope', async () => {
+      const installation = { id: 10, tenantId: 1, itemId: 1, installedVersion: '1.0.0', status: 'active', installedAt: '2024-01-01' };
+      mockGet.mockResolvedValue({ items: [installation], total: 1 });
 
       const result = await marketplaceService.listInstallations();
 
       expect(mockGet).toHaveBeenCalledWith('/api/v1/marketplace/installations', undefined);
       expect(result).toHaveLength(1);
+      expect(result[0].itemId).toBe(1);
     });
 
     it('should list installations with status filter', async () => {
-      mockGet.mockResolvedValue([]);
+      mockGet.mockResolvedValue({ items: [], total: 0 });
 
       await marketplaceService.listInstallations('active');
 
