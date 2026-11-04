@@ -150,6 +150,7 @@ async function route(req, res) {
     return ok(res, { id: Number(p.split('/')[2]), ticketNumber: 'TKT-1', title: 'a', status: 'new' });
   }
   if (/^\/cmdb\/cis\/\d+$/.test(p) && req.method === 'DELETE') return ok(res, null);
+  if (p === '/boom/gated-delete' && req.method === 'DELETE') return ok(res, { deleted: true });
 
   return json(res, 404, { code: 4004, message: `no stub for ${key}` });
 }
@@ -330,6 +331,67 @@ test('the same write executes once confirm is set', async () => {
   ]);
   assert.equal(byId.get(7).result.isError, false);
   assert.equal(hits.get('DELETE /cmdb/cis/7'), 1);
+});
+
+test('infra.api raw DELETE through itsm_call is gated on confirm too', async () => {
+  hits.clear();
+  const { byId } = await session([
+    initialize,
+    {
+      jsonrpc: '2.0',
+      id: 8,
+      method: 'tools/call',
+      params: {
+        name: 'itsm_call',
+        arguments: { command: 'infra.api', params: { METHOD: 'DELETE', 'path-relative-to-/api/v1': '/boom/gated-delete' } },
+      },
+    },
+  ]);
+  const result = byId.get(8).result;
+  assert.equal(result.isError, true);
+  const payload = JSON.parse(result.content[0].text);
+  assert.equal(payload.error.kind, 'confirmation_required');
+  assert.match(payload.error.hint, /confirm/);
+  assert.equal(hits.get('DELETE /boom/gated-delete') ?? 0, 0, 'the raw DELETE must not be sent before consent');
+});
+
+test('infra.api raw DELETE executes once confirm is set', async () => {
+  hits.clear();
+  const { byId } = await session([
+    initialize,
+    {
+      jsonrpc: '2.0',
+      id: 9,
+      method: 'tools/call',
+      params: {
+        name: 'itsm_call',
+        arguments: { command: 'infra.api', params: { METHOD: 'DELETE', 'path-relative-to-/api/v1': '/boom/gated-delete' }, confirm: true },
+      },
+    },
+  ]);
+  assert.equal(byId.get(9).result.isError, false);
+  assert.equal(hits.get('DELETE /boom/gated-delete'), 1);
+});
+
+test('denyFlags applies on the MCP path, matching the CLI runner policy', async () => {
+  const { byId } = await session([
+    initialize,
+    {
+      jsonrpc: '2.0',
+      id: 10,
+      method: 'tools/call',
+      params: {
+        name: 'itsm_call',
+        arguments: { command: 'auth.login', params: { username: 'u', password: 'inline-secret' }, confirm: true },
+      },
+    },
+  ]);
+  const result = byId.get(10).result;
+  assert.equal(result.isError, true);
+  const payload = JSON.parse(result.content[0].text);
+  assert.equal(payload.error.kind, 'usage');
+  assert.match(payload.error.message, /password/);
+  assert.match(payload.error.message, /password-stdin|password-file/);
 });
 
 test('preview describes the call without sending it', async () => {

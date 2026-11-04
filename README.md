@@ -282,7 +282,7 @@ open http://localhost:8090/swagger/index.html
 
 ### 通过 MCP 接入（Agent 直接操作 ITSM）
 
-`itsm-cli/bin/itsm-mcp.js` 是一个零依赖的 MCP server（stdio / JSON-RPC），把 **342 条命令**暴露给 WorkBuddy、Claude Desktop 等客户端：**27 个精选工具** + `itsm_discover`/`itsm_describe`/`itsm_call` 覆盖全部命令，高风险写操作需显式确认，列表默认裁剪到 50 条（`meta` 里带 `total` 与 `truncated`，需要更多请用 `limit`/`pageSize` 分页取）。
+`itsm-cli/bin/itsm-mcp.js` 是一个零依赖的 MCP server（stdio / JSON-RPC），把 **352 条命令**暴露给 WorkBuddy、Claude Desktop 等客户端：**27 个精选工具** + `itsm_discover`/`itsm_describe`/`itsm_call` 覆盖全部命令，高风险写操作需显式确认，列表默认裁剪到 50 条（`meta` 里带 `total` 与 `truncated`，需要更多请用 `limit`/`pageSize` 分页取）。
 
 > 上面的命令数与工具数以 `node itsm-cli/bin/itsm.js --json schema | jq .data.count` 和 `node itsm-cli/bin/itsm-mcp.js --describe` 的实测输出为准——两者随路由增加而变化，本文档不逐条列举。
 

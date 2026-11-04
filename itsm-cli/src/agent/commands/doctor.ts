@@ -136,7 +136,7 @@ export function doctorCommands() {
             verdict === 'unreachable'
               ? 'Backend is not reachable. Verify ITSM_BASE_URL / --base-url, then retry.'
               : verdict === 'unauthenticated'
-                ? 'Run `itsm --json auth login --username <u> --password <p>` or set ITSM_TOKEN.'
+                ? 'Run `itsm --json auth login --username <u>` with the password supplied via --password-stdin or --password-file, or set ITSM_TOKEN.'
                 : verdict === 'degraded'
                   ? 'Some domains are unavailable to this identity. Read each failed check hint before attempting that domain.'
                   : 'All checks passed. Continue with `itsm --json schema <command>` to plan the next call.',

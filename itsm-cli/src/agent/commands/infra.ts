@@ -2,7 +2,7 @@ import { cmd } from '../spec.js';
 import { requirePositional, jsonFlag } from '../helpers.js';
 import { apiClient } from '../../lib/api-client.js';
 import { resolveRuntimeConfig } from '../../lib/runtime.js';
-import { usageError } from '../../lib/errors.js';
+import { CliError, usageError } from '../../lib/errors.js';
 
 /**
  * Infra tier: the first commands an agent runs to establish trust.
@@ -39,6 +39,26 @@ export function infraCommands() {
         const method = requirePositional(ctx.args, 0, 'METHOD').toUpperCase();
         const relPath = requirePositional(ctx.args, 1, 'path');
         if (!/^\/[a-z0-9]/i.test(relPath)) throw usageError('Path must start with / (relative to /api/v1)');
+        // Method-derived confirmation gate. The single spec cannot express
+        // "risk depends on METHOD", and first-class delete commands all answer
+        // to the exit-10/confirm gate — the debug escape hatch must not become
+        // the one wrapper that deletes production data without consent.
+        if (method === 'DELETE' && !ctx.args.yes) {
+          throw new CliError({
+            kind: 'confirmation_required',
+            message: `infra.api is refusing a raw DELETE ${`/api/v1${relPath}`} without explicit confirmation`,
+            retryable: false,
+            hint: 'Confirm the target with the user first; then retry the SAME request with --yes (MCP clients: confirm=true). Never retry automatically.',
+            risk: {
+              command: 'infra.api',
+              summary: 'Raw HTTP DELETE through the infra.api escape hatch',
+              endpoints: [`DELETE /api/v1${relPath}`],
+              usage: 'itsm infra api <METHOD> <path-relative-to-/api/v1> [--data <json>]',
+              requiredParams: [],
+              irreversible: true,
+            },
+          });
+        }
         const body = jsonFlag(ctx.args.flags);
         return apiClient.requestRaw(method, `/api/v1${relPath}`, body);
       },

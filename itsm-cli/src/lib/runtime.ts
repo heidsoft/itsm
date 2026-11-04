@@ -1,5 +1,5 @@
 import { isLoggedIn, hasRefreshableSession } from './credentials.js';
-import { setExternalTokenProvider, assertTransportSafety } from './api-client.js';
+import { setExternalTokenProvider, assertTransportSafety, timedFetch } from './api-client.js';
 import { redactSecrets, readSecretFile } from './secrets.js';
 
 /**
@@ -82,7 +82,10 @@ export async function hydrateAgentToken(cfg: RuntimeConfig): Promise<void> {
     try {
       // Refuse to transmit the password over plaintext HTTP to a remote host.
       assertTransportSafety(cfg.baseURL, { sendingSecret: true });
-      const res = await fetch(`${cfg.baseURL}/api/v1/auth/login`, {
+      // timedFetch, not bare fetch: the whole runner dispatch is blocked until
+      // this resolves, so a hung backend must surface as a classified
+      // network-error attempt, not an indefinite hang.
+      const res = await timedFetch(`${cfg.baseURL}/api/v1/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username: cfg.username, password: cfg.password }),

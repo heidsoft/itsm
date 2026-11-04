@@ -281,7 +281,7 @@ open http://localhost:8090/swagger/index.html
 
 ### MCP Integration (Let an Agent Drive ITSM)
 
-`itsm-cli/bin/itsm-mcp.js` is a zero-dependency MCP server (stdio / JSON-RPC) that exposes **342 commands** to clients such as WorkBuddy or Claude Desktop: **27 curated tools** plus `itsm_discover` / `itsm_describe` / `itsm_call`, which together cover the entire command surface. High-risk writes require explicit confirmation, and list responses are trimmed to 50 items by default (`meta` carries `total` and `truncated`; page with `limit`/`pageSize` when you need more).
+`itsm-cli/bin/itsm-mcp.js` is a zero-dependency MCP server (stdio / JSON-RPC) that exposes **352 commands** to clients such as WorkBuddy or Claude Desktop: **27 curated tools** plus `itsm_discover` / `itsm_describe` / `itsm_call`, which together cover the entire command surface. High-risk writes require explicit confirmation, and list responses are trimmed to 50 items by default (`meta` carries `total` and `truncated`; page with `limit`/`pageSize` when you need more).
 
 > The command and tool counts above are taken from live output — `node itsm-cli/bin/itsm.js --json schema | jq .data.count` and `node itsm-cli/bin/itsm-mcp.js --describe`. Both grow as routes are added, so this document does not enumerate them.
 

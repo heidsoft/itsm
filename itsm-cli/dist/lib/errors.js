@@ -100,7 +100,7 @@ export function sanitizeProviderMessage(message) {
 export function usageError(message) {
     return new CliError({ kind: 'usage', message, retryable: false });
 }
-export function notAuthenticatedError(message = 'Not authenticated. Run `itsm login -u <user> -p <pass>` or set ITSM_TOKEN.') {
+export function notAuthenticatedError(message = 'Not authenticated. Run `itsm login -u <user>` with the password supplied via --password-stdin or --password-file, or set ITSM_TOKEN.') {
     return new CliError({ kind: 'not_authenticated', message, retryable: false });
 }
 export function successEnvelope(data) {

@@ -29,6 +29,8 @@ interface TransportConfig {
 }
 export declare function configureTransport(patch: Partial<TransportConfig>): void;
 export declare function getTransportConfig(): TransportConfig;
+/** fetch() with a hard deadline; an aborted request becomes a retryable network error. */
+export declare function timedFetch(url: string, init: RequestInit): Promise<Response>;
 export declare function setExternalTokenProvider(fn: () => string | undefined): void;
 export interface TransportOperationError extends CliError {
 }
@@ -469,6 +471,22 @@ export declare class ApiClient {
     getMSPContext(): Promise<unknown>;
     listMSPCustomers(): Promise<unknown>;
     listMSPAllocations(): Promise<unknown>;
+    listMarketplaceItems(params?: Record<string, string | number | boolean | undefined>): Promise<unknown>;
+    getMarketplaceItem(id: number | string): Promise<unknown>;
+    installMarketplaceItem(id: number | string): Promise<unknown>;
+    uninstallMarketplaceItem(id: number | string): Promise<unknown>;
+    /**
+     * Backend contract (handler.go): `targetVersion` is a pointer — an absent
+     * body upgrades to the catalog's current latest, while an explicit empty
+     * string is a 400. Omitting the body entirely (never sending `{}`) is what
+     * distinguishes "upgrade to latest" from "caller sent garbage".
+     */
+    upgradeMarketplaceItem(id: number | string, targetVersion?: string): Promise<unknown>;
+    setMarketplaceAutoUpgrade(id: number | string, autoUpgrade: boolean): Promise<unknown>;
+    listMarketplaceInstallations(status?: string): Promise<unknown>;
+    getMarketplaceInstallation(itemId: number | string): Promise<unknown>;
+    updateMarketplaceInstallationConfig(itemId: number | string, config: Record<string, unknown>): Promise<unknown>;
+    getMarketplaceDependencyStatus(): Promise<unknown>;
 }
 export declare const apiClient: ApiClient;
 export {};

@@ -172,7 +172,7 @@ async function executeSpec(spec, args, rest) {
                 cliError.agentError.message = `${cliError.agentError.message} (auto-login failed: ${where} — ${f.message})`;
                 cliError.agentError.hint =
                     f.businessCode === 2003
-                        ? 'Login rate limit hit (10/min per IP). Do not retry in a loop: run `itsm auth login --username <u> --password <p>` once, then unset ITSM_USERNAME/ITSM_PASSWORD so later calls reuse ~/.itsm/credentials, or pass a token via ITSM_TOKEN.'
+                        ? 'Login rate limit hit (10/min per IP). Do not retry in a loop: run `itsm auth login --username <u>` once with the password supplied via --password-stdin or --password-file (never `--password <p>` on argv), then unset ITSM_USERNAME/ITSM_PASSWORD so later calls reuse ~/.itsm/credentials, or pass a token via ITSM_TOKEN.'
                         : 'ITSM_USERNAME/ITSM_PASSWORD auto-login failed. Verify the credentials, or run `itsm auth login` once and let subsequent calls reuse the stored token.';
             }
         }

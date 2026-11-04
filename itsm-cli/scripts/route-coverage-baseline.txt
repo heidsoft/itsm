@@ -22,3 +22,4 @@
 # 格式：key=value  # 说明
 
 uncovered=598  # 2026-10-31 接入 report.* 9 条命令（目录 + 服务质量 + 工单/事件/SLA/问题/变更报表 + CMDB 质量 + 服务目录使用），未覆盖 605→598。此前 0459e863f 新增的两条报表路由（cmdb-quality / catalog-usage）未接 CLI，棘轮先红（607）——按「新增路由必须接入 CLI」补齐，而不是上调基线。存量缺口（bpmn / ai / dashboard / email-intake 等）仍属既有未接入面。
+# 2026-11-04：0fe07d129 marketplace 提交曾把未覆盖推到 608（+10：+7 存量漂移 + 3 条 market 新路由未接 CLI），同批接入 marketplace.* 10 条租户面命令（items/item/install/uninstall/upgrade/auto-upgrade/installations/installation/installation-config/dependency-status），marketplace 未覆盖 20→10。剩余 10 条全部是 /marketplace/catalog/* 管理面 CRUD/publish——有意不接 agent 面，留在基线内。

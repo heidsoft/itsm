@@ -77,6 +77,16 @@ const TRANSPORT_FLAGS = new Set(['page', 'pageSize']);
  * argument is called and whether it takes a value.
  */
 export function buildInvocation(spec: CommandSpec, params: Record<string, unknown>): Invocation {
+  // Policy denials come before anything else and mirror the runner's
+  // validateFlags: a secret passed inline should be refused with the safe
+  // channel explained, on both transports, not just the CLI one.
+  if (spec.denyFlags) {
+    for (const key of Object.keys(params)) {
+      const reason = spec.denyFlags[key];
+      if (reason) throw usageError(`命令 ${spec.name} 拒绝参数 '${key}'：${reason}`);
+    }
+  }
+
   const allowed = new Map(spec.input.params.map((p) => [p.name, p]));
   const unknown = Object.keys(params).filter((k) => !allowed.has(k) && !TRANSPORT_FLAGS.has(k));
   if (unknown.length) {

@@ -15,6 +15,7 @@ import { slaCommands } from './commands/sla.js';
 import { workflowCommands } from './commands/workflow.js';
 import { notificationCommands } from './commands/notification.js';
 import { connectorCommands } from './commands/connector.js';
+import { marketplaceCommands } from './commands/marketplace.js';
 import { adminCommands } from './commands/admin.js';
 import { doctorCommands } from './commands/doctor.js';
 import { flowCommands } from './commands/flow.js';
@@ -44,6 +45,7 @@ function buildRegistry(): CommandSpec[] {
     ...workflowCommands(),
     ...notificationCommands(),
     ...connectorCommands(),
+    ...marketplaceCommands(),
     ...adminCommands(),
     ...doctorCommands(),
     ...flowCommands(),

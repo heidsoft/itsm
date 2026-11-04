@@ -74,6 +74,9 @@ function route(req, res) {
   if (p === '/boom/notfound') return json(res, 404, { code: 3001, message: 'not found' });
   if (p === '/boom/conflict') return json(res, 409, { code: 3002, message: 'version conflict' });
   if (p === '/boom/validation') return json(res, 400, { code: 1001, message: 'title is required' });
+  // infra.api escape-hatch gate stubs.
+  if (p === '/boom/gated-delete' && req.method === 'DELETE') return ok(res, { deleted: true });
+  if (p === '/boom/raw-write' && req.method === 'POST') return ok(res, { posted: true });
   if (p === '/boom/503-once') {
     if (boomOnce.has(p)) {
       boomOnce.delete(p);
@@ -336,6 +339,33 @@ test('--dry-run previews a high-risk command without triggering the gate or the 
   assert.equal(env.data.dryRun, true);
   assert.equal(env.data.requiresConfirmation, true);
   assert.equal(hits.get('/tickets/1') ?? 0, before);
+});
+
+// ---------------------------------------------------------------------------
+// infra.api escape hatch: the gate is driven by METHOD, not the command verb
+// ---------------------------------------------------------------------------
+
+test('infra.api refuses a raw DELETE without --yes and sends nothing', async () => {
+  const before = hits.get('/boom/gated-delete') ?? 0;
+  const r = await api('DELETE', '/boom/gated-delete');
+  assert.equal(r.code, 10, r.stdout);
+  const env = envelope(r);
+  assert.equal(env.error.kind, 'confirmation_required');
+  assert.equal(env.error.risk.irreversible, true);
+  assert.match(env.error.hint, /--yes/);
+  assert.equal(hits.get('/boom/gated-delete') ?? 0, before, 'the raw DELETE must not be sent before consent');
+});
+
+test('infra.api DELETE executes once --yes is given', async () => {
+  const r = await api('DELETE', '/boom/gated-delete', '--yes');
+  assert.equal(r.code, 0, r.stdout);
+  assert.deepEqual(envelope(r).data, { deleted: true });
+});
+
+test('infra.api non-DELETE writes stay ungated (method, not the escape hatch, drives the gate)', async () => {
+  const r = await api('POST', '/boom/raw-write');
+  assert.equal(r.code, 0, r.stdout);
+  assert.deepEqual(envelope(r).data, { posted: true });
 });
 
 test('--help short-circuits the risk gate', async () => {

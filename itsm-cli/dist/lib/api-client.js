@@ -92,7 +92,7 @@ function isIdempotent(method) {
     return /^(GET|HEAD|OPTIONS)$/i.test(method);
 }
 /** fetch() with a hard deadline; an aborted request becomes a retryable network error. */
-async function timedFetch(url, init) {
+export async function timedFetch(url, init) {
     const { timeoutMs } = transportConfig;
     const controller = new AbortController();
     const timer = timeoutMs > 0 ? setTimeout(() => controller.abort(), timeoutMs) : undefined;
@@ -1460,6 +1460,48 @@ export class ApiClient {
     async getMSPContext() { return request(this.baseURL, 'GET', '/msp/context'); }
     async listMSPCustomers() { return request(this.baseURL, 'GET', '/msp/customers'); }
     async listMSPAllocations() { return request(this.baseURL, 'GET', '/msp/allocations'); }
+    // ---------- Marketplace (tenant-facing extension market) ----------
+    //
+    // Only the user/tenant face (/marketplace/*) is exposed here. The admin
+    // catalog face (/marketplace/catalog/*) is an operator concern managed in the
+    // web console and stays off the agent surface on purpose.
+    async listMarketplaceItems(params) {
+        return request(this.baseURL, 'GET', '/marketplace/items', undefined, params);
+    }
+    async getMarketplaceItem(id) {
+        return request(this.baseURL, 'GET', `/marketplace/items/${id}`);
+    }
+    async installMarketplaceItem(id) {
+        return request(this.baseURL, 'POST', `/marketplace/items/${id}/install`);
+    }
+    async uninstallMarketplaceItem(id) {
+        return request(this.baseURL, 'POST', `/marketplace/items/${id}/uninstall`);
+    }
+    /**
+     * Backend contract (handler.go): `targetVersion` is a pointer — an absent
+     * body upgrades to the catalog's current latest, while an explicit empty
+     * string is a 400. Omitting the body entirely (never sending `{}`) is what
+     * distinguishes "upgrade to latest" from "caller sent garbage".
+     */
+    async upgradeMarketplaceItem(id, targetVersion) {
+        const data = targetVersion === undefined ? undefined : { targetVersion };
+        return request(this.baseURL, 'POST', `/marketplace/items/${id}/upgrade`, data);
+    }
+    async setMarketplaceAutoUpgrade(id, autoUpgrade) {
+        return request(this.baseURL, 'PATCH', `/marketplace/items/${id}/auto-upgrade`, { autoUpgrade });
+    }
+    async listMarketplaceInstallations(status) {
+        return request(this.baseURL, 'GET', '/marketplace/installations', undefined, { status });
+    }
+    async getMarketplaceInstallation(itemId) {
+        return request(this.baseURL, 'GET', `/marketplace/installations/${itemId}`);
+    }
+    async updateMarketplaceInstallationConfig(itemId, config) {
+        return request(this.baseURL, 'PUT', `/marketplace/installations/${itemId}/config`, config);
+    }
+    async getMarketplaceDependencyStatus() {
+        return request(this.baseURL, 'GET', '/marketplace/dependency-status');
+    }
 }
 export const apiClient = new ApiClient();
 /** Some public routes ({status,timestamp}) return bare JSON; others wrap {code,message,data}. Handle both. */
