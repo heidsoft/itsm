@@ -142,12 +142,7 @@ func (c *Handler) AdminListItems(ctx *gin.Context) {
 		common.RespondError(ctx, err, "查询目录失败")
 		return
 	}
-	common.Success(ctx, gin.H{
-		"items":    items,
-		"total":    total,
-		"page":     filter.Page,
-		"pageSize": filter.PageSize,
-	})
+	common.SuccessWithList(ctx, items, total, filter.Page, filter.PageSize)
 }
 
 // GetCatalogItem 目录项详情（含版本）。

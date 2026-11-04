@@ -11599,24 +11599,29 @@ paths:
             - $ref: '#/definitions/common.Response'
             - properties:
                 data:
-                  items:
-                    $ref: '#/definitions/marketplace.InstallationResponse'
-                  type: array
+                  properties:
+                    items:
+                      items:
+                        $ref: '#/definitions/marketplace.InstallationResponse'
+                      type: array
+                    total:
+                      type: integer
+                  type: object
               type: object
       security:
       - Bearer: []
       summary: 列出已安装的组件
       tags:
       - 市场
-  /api/v1/marketplace/installations/{id}:
+  /api/v1/marketplace/installations/{itemId}:
     get:
       consumes:
       - application/json
       description: 获取指定组件的安装详情和配置
       parameters:
-      - description: 组件ID
+      - description: 商品ID（安装记录按 tenant + itemId 定位）
         in: path
-        name: id
+        name: itemId
         required: true
         type: integer
       produces:
@@ -11636,15 +11641,15 @@ paths:
       summary: 获取安装详情
       tags:
       - 市场
-  /api/v1/marketplace/installations/{id}/config:
+  /api/v1/marketplace/installations/{itemId}/config:
     put:
       consumes:
       - application/json
       description: 更新已安装组件的配置信息
       parameters:
-      - description: 组件ID
+      - description: 商品ID（安装记录按 tenant + itemId 定位）
         in: path
-        name: id
+        name: itemId
         required: true
         type: integer
       - description: 配置信息
@@ -11711,16 +11716,18 @@ paths:
             - properties:
                 data:
                   properties:
-                    ' page':
-                      type: integer
-                    ' pageSize':
-                      type: integer
-                    ' total':
-                      type: integer
                     items:
                       items:
                         $ref: '#/definitions/dto.MarketplaceItemResponse'
                       type: array
+                    page:
+                      type: integer
+                    pageSize:
+                      type: integer
+                    total:
+                      type: integer
+                    totalPages:
+                      type: integer
                   type: object
               type: object
       summary: 查询市场商品列表

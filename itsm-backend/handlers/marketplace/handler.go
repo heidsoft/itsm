@@ -46,8 +46,11 @@ func (c *Handler) RegisterRoutes(r *gin.RouterGroup) {
 			marketplaceGroup.POST("/items/:id/upgrade", middleware.RequirePermission("marketplace", "write"), c.UpgradeItem)
 			marketplaceGroup.PATCH("/items/:id/auto-upgrade", middleware.RequirePermission("marketplace", "write"), c.SetAutoUpgrade)
 			marketplaceGroup.GET("/installations", middleware.RequirePermission("marketplace", "read"), c.ListInstallations)
-			marketplaceGroup.GET("/installations/:id", middleware.RequirePermission("marketplace", "read"), c.GetInstallation)
-			marketplaceGroup.PUT("/installations/:id/config", middleware.RequirePermission("marketplace", "write"), c.UpdateInstallationConfig)
+			// 这三条端点以商品 ID 定位安装记录（service.GetInstallation 按 tenant_id +
+			// item_id 查），而安装列表 DTO 同时有 id（安装行主键）和 itemId（商品 ID）。
+			// 参数叫 :id 时调用方会把列表里的 id 填进来，命中的是另一条安装或 404。
+			marketplaceGroup.GET("/installations/:itemId", middleware.RequirePermission("marketplace", "read"), c.GetInstallation)
+			marketplaceGroup.PUT("/installations/:itemId/config", middleware.RequirePermission("marketplace", "write"), c.UpdateInstallationConfig)
 			// 存量安装的依赖对齐是只读诊断面：它不修数据，只如实报告哪些前置没满足、
 			// 哪些版本行缺失，供管理员决定下一步是补装前置还是补目录版本。
 			marketplaceGroup.GET("/dependency-status", middleware.RequirePermission("marketplace", "read"), c.DependencyStatus)
@@ -67,7 +70,7 @@ func (c *Handler) RegisterRoutes(r *gin.RouterGroup) {
 // @Param isOfficial query boolean false "是否是官方组件"
 // @Param page query int false "页码，默认1"
 // @Param pageSize query int false "每页数量，默认20"
-// @Success 200 {object} common.Response{data=object{items=[]dto.MarketplaceItemResponse, total=int, page=int, pageSize=int}}
+// @Success 200 {object} common.Response{data=object{items=[]dto.MarketplaceItemResponse,total=int,page=int,pageSize=int,totalPages=int}}
 // @Router /api/v1/marketplace/items [get]
 func (c *Handler) ListItems(ctx *gin.Context) {
 	itemType := ctx.Query("type")
@@ -90,12 +93,7 @@ func (c *Handler) ListItems(ctx *gin.Context) {
 		return
 	}
 
-	common.Success(ctx, gin.H{
-		"items":    items,
-		"total":    total,
-		"page":     page,
-		"pageSize": pageSize,
-	})
+	common.SuccessWithList(ctx, items, total, page, pageSize)
 }
 
 // GetItem 获取商品详情
@@ -240,7 +238,7 @@ func (c *Handler) UninstallItem(ctx *gin.Context) {
 // @Produce json
 // @Param status query string false "状态过滤：active/disabled/failed"
 // @Security Bearer
-// @Success 200 {object} common.Response{data=[]marketplace.InstallationResponse}
+// @Success 200 {object} common.Response{data=object{items=[]marketplace.InstallationResponse,total=int}}
 // @Router /api/v1/marketplace/installations [get]
 func (c *Handler) ListInstallations(ctx *gin.Context) {
 	status := ctx.Query("status")
@@ -255,7 +253,14 @@ func (c *Handler) ListInstallations(ctx *gin.Context) {
 		return
 	}
 
-	common.Success(ctx, ToInstallationResponseList(installations))
+	// 不分页的列表：service 整表取回该租户的安装记录，没有 Offset/Limit，
+	// 因此只返回诚实的 {items,total}，不伪造 page/pageSize/totalPages。
+	// 见 docs/api-reference.md「不分页的列表」。
+	items := ToInstallationResponseList(installations)
+	common.Success(ctx, gin.H{
+		"items": items,
+		"total": len(items),
+	})
 }
 
 // GetInstallation 获取安装详情
@@ -264,12 +269,12 @@ func (c *Handler) ListInstallations(ctx *gin.Context) {
 // @Tags 市场
 // @Accept json
 // @Produce json
-// @Param id path int true "组件ID"
+// @Param itemId path int true "商品ID（安装记录按 tenant + itemId 定位）"
 // @Security Bearer
 // @Success 200 {object} common.Response{data=marketplace.InstallationResponse}
-// @Router /api/v1/marketplace/installations/{id} [get]
+// @Router /api/v1/marketplace/installations/{itemId} [get]
 func (c *Handler) GetInstallation(ctx *gin.Context) {
-	itemIDStr := ctx.Param("id")
+	itemIDStr := ctx.Param("itemId")
 	itemID, err := strconv.Atoi(itemIDStr)
 	if err != nil {
 		common.ParamError(ctx, "invalid item id")
@@ -300,13 +305,13 @@ func (c *Handler) GetInstallation(ctx *gin.Context) {
 // @Tags 市场
 // @Accept json
 // @Produce json
-// @Param id path int true "组件ID"
+// @Param itemId path int true "商品ID（安装记录按 tenant + itemId 定位）"
 // @Param config body object true "配置信息"
 // @Security Bearer
 // @Success 200 {object} common.Response{data=marketplace.InstallationResponse}
-// @Router /api/v1/marketplace/installations/{id}/config [put]
+// @Router /api/v1/marketplace/installations/{itemId}/config [put]
 func (c *Handler) UpdateInstallationConfig(ctx *gin.Context) {
-	itemIDStr := ctx.Param("id")
+	itemIDStr := ctx.Param("itemId")
 	itemID, err := strconv.Atoi(itemIDStr)
 	if err != nil {
 		common.ParamError(ctx, "invalid item id")

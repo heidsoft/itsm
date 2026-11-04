@@ -3811,6 +3811,22 @@ cd itsm-frontend && npm run test:unit -- --runTestsByPath src/lib/api/__tests__/
 - **商品详情与安装列表的形状变化。** 商品详情新增 `versions[]`（仅已发布版本，含 `version`/`changelog`/`releasedAt`，按发布倒序；不下发 `manifestPath`、`downloadUrl`、`configSchema`）；商品**列表**不含 `versions`，表示未加载而非没有。安装列表每行新增来自商品边的平铺字段 `itemName`、`itemTitle`、`itemDescription`、`itemIconUrl`、`itemType`、`deliverable`、`latestVersion`、`upgradeAvailable`；商品边未加载时 `upgradeAvailable=false`。`config` 继续脱敏，出站响应不含 `tenantId` 与 `edges`。
 - **无数据库迁移。** 上述行为全部落在既有列（`marketplace_item_versions.manifest_path`、`tenant_installations.auto_upgrade/error_message`）。升级后建议调用一次 `GET /marketplace/dependency-status` 确认存量商品的版本行是否补齐。
 
+### 1.103 应用市场两个列表的信封形状，与安装端点的路径参数改名（2026-11-04，破坏性：响应结构变更）
+
+清卷全新部署后的产品功能测试打出的唯一失败项，属于本项目自己的列表契约未落实，不是外部协议变更。
+
+- **`GET /api/v1/marketplace/installations` 不再返回裸数组。** `data` 现为 `{items, total}`。
+  该列表是「不分页的列表」：`ListInstallations` 按 `tenant_id` + 状态整表取回，服务层没有 `Offset/Limit`，
+  因此**不伪造** `page/pageSize/totalPages`。集成方需把 `data` 当数组读的代码改成 `data.items`。
+- **`GET /api/v1/marketplace/items` 与 `GET /api/v1/marketplace/catalog/items` 补齐 `totalPages`。**
+  两者原本声明了 `page/pageSize` 却缺 `totalPages`，调用方无法核对是否还有下一页；服务层确实做
+  `Count + Offset/Limit`，所以按标准五元组 `{items, total, page, pageSize, totalPages}` 补全，而不是降级成不分页。
+- **`GET /marketplace/installations/{itemId}` 与 `PUT /marketplace/installations/{itemId}/config` 的路径参数是商品 ID。**
+  安装记录按 `tenant_id + item_id` 定位，而出站 DTO 同时有 `id`（安装行主键）与 `itemId`（商品 ID）；
+  此前参数名叫 `{id}`，把列表里的 `id` 填进 URL 会命中另一条安装或 404，配置写错记录比报错更糟。
+  本次只改**声明名**（Gin 路由参数、Swagger `@Param`/`@Router`、文档），HTTP 路径形状与请求方式不变，
+  已按商品 ID 调用的客户端**无需改动**；此前误用安装行主键的调用方会继续拿到 404，但语义现在与文档一致。
+
 ## 2. 环境变量变更
 
 本次升级**移除了多个"幽灵配置项"**（在示例文件中声明但代码/Compose 从不读取，用户配置了也不生效），并修正了一个 Grafana 密码安全缺陷。

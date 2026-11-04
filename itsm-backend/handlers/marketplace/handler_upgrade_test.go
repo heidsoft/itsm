@@ -123,14 +123,18 @@ func TestMarketplaceRoutes_InstallationListCarriesItemDisplayFields(t *testing.T
 	require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
 
 	var payload struct {
-		Code int                    `json:"code"`
-		Data []InstallationResponse `json:"data"`
+		Code int `json:"code"`
+		Data struct {
+			Items []InstallationResponse `json:"items"`
+			Total int                    `json:"total"`
+		} `json:"data"`
 	}
 	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &payload))
 	require.Zero(t, payload.Code, rec.Body.String())
-	require.Len(t, payload.Data, 1)
+	require.Len(t, payload.Data.Items, 1)
+	require.Equal(t, 1, payload.Data.Total)
 
-	installed := payload.Data[0]
+	installed := payload.Data.Items[0]
 	assert.Equal(t, "display-skill", installed.ItemName)
 	assert.Equal(t, "工单分诊技能", installed.ItemTitle)
 	assert.Equal(t, "按标题与附件自动分诊", installed.ItemDescription)
@@ -474,7 +478,7 @@ func TestMarketplaceRoutes_ItemDetailCarriesTenantSafeVersionHistory(t *testing.
 			SetChangelog(v.changelog).
 			SetStatus(v.status).
 			SetManifestPath("skill://ai.triage").
-			SetDownloadURL("https://release.invalid/history-skill-"+v.version+".tgz").
+			SetDownloadURL("https://release.invalid/history-skill-" + v.version + ".tgz").
 			SetConfigSchema(map[string]interface{}{"token": map[string]interface{}{"type": "string"}}).
 			SetReleasedAt(baseReleased.Add(-v.ago)).
 			Save(ctx)
@@ -487,8 +491,8 @@ func TestMarketplaceRoutes_ItemDetailCarriesTenantSafeVersionHistory(t *testing.
 	var payload struct {
 		Code int `json:"code"`
 		Data struct {
-			ID       int    `json:"id"`
-			Deliver  bool   `json:"deliverable"`
+			ID       int  `json:"id"`
+			Deliver  bool `json:"deliverable"`
 			Versions []struct {
 				Version    string    `json:"version"`
 				Changelog  string    `json:"changelog"`

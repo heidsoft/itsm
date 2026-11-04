@@ -120,7 +120,9 @@ func newContext(method, target, body, itemID string) (*gin.Context, *httptest.Re
 	c, _ := gin.CreateTestContext(rec)
 	c.Request = httptest.NewRequest(method, target, strings.NewReader(body))
 	c.Request.Header.Set("Content-Type", "application/json")
-	c.Params = gin.Params{{Key: "id", Value: itemID}}
+	// 直接调用 handler 时路径参数是手工塞的：/items/:id 与 /installations/:itemId
+	// 承载同一个商品 ID，只是路由声明的名字不同，这里两个键都给。
+	c.Params = gin.Params{{Key: "id", Value: itemID}, {Key: "itemId", Value: itemID}}
 	c.Set(middleware.TenantContextKey, &middleware.TenantContext{TenantID: 1})
 	c.Set("user_id", 1001)
 	c.Set("tenant_id", 1)

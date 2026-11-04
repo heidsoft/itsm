@@ -3781,6 +3781,7 @@ Query Parameters:
 | `GET /api/v1/tickets/{id}/notifications` | `{items, total}` | 单工单通知按 ticket+tenant 全量返回（`service/ticket_notification_service.go:831` 无 `Limit`），handler 里 `total=len(items)` 诚实 |
 | `GET /api/v1/msp/reports/customers` | `{items, total}` | 区间聚合，字段为 camelCase DTO |
 | `GET /api/v1/msp/reports/performance` | `{items, total}` | 同上 |
+| `GET /api/v1/marketplace/installations` | `{items, total}` | 本租户安装记录整表取回（`service/marketplace/service.go` 的 `ListInstallations` 无 `Offset/Limit`，只按 `tenant_id` + 状态过滤），`total=len(items)` 诚实；`GET /api/v1/marketplace/items` 是真分页，用下面的标准五元组信封 |
 | `GET /api/v1/msp/allocations/history` | `{items, total, page, pageSize, totalPages}` | 标准分页信封，元素是 `MSPAllocationDTO` |
 
 ### MSP 能力开关（部署形态）
@@ -4115,6 +4116,14 @@ GET /api/v1/marketplace/dependency-status
   前端不再拉一次目录来「补齐名称」——那是第二次真相来源。边未加载时这些字段留空且
   `upgradeAvailable=false`（不是「已是最新」）；`upgradeAvailable` 为 `true` 时安装页给出
   「升级到 v{latestVersion}」入口。
+- 两个列表的 `data` 形状不同，且各自诚实：`GET /marketplace/items` 是真分页，返回标准五元组
+  `{items, total, page, pageSize, totalPages}`；`GET /marketplace/installations` 不分页，返回
+  `{items, total}`（见「不分页的列表」）。安装记录此前直接返回裸数组，调用方无法在不猜类型的前提下
+  读集合，2026-11-04 收敛为信封。
+- `GET /marketplace/installations/{itemId}` 与 `PUT /marketplace/installations/{itemId}/config`
+  的路径参数是**商品 ID**，不是安装行主键：安装记录按 `tenant_id + item_id` 定位，而出站 DTO 同时
+  有 `id`（安装行）和 `itemId`（商品）。把列表里的 `id` 填进这条 URL 会命中另一条安装或 404，
+  而写错配置的记录比报错更糟，因此参数名与文档统一写 `itemId`（HTTP 路径形状不变）。
 - 安装记录是租户级数据：出站 DTO 只含脱敏后的 `config`（token/secret/password 类键值替换为
   `***`），且响应不含 `tenant_id`、`edges` 或目录侧的装载定位符。
 

@@ -10462,9 +10462,17 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/marketplace.InstallationResponse"
+                                            "type": "object",
+                                            "properties": {
+                                                "items": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/definitions/marketplace.InstallationResponse"
+                                                    }
+                                                },
+                                                "total": {
+                                                    "type": "integer"
+                                                }
                                             }
                                         }
                                     }
@@ -10475,7 +10483,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/marketplace/installations/{id}": {
+        "/api/v1/marketplace/installations/{itemId}": {
             "get": {
                 "security": [
                     {
@@ -10496,8 +10504,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "组件ID",
-                        "name": "id",
+                        "description": "商品ID（安装记录按 tenant + itemId 定位）",
+                        "name": "itemId",
                         "in": "path",
                         "required": true
                     }
@@ -10524,7 +10532,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/marketplace/installations/{id}/config": {
+        "/api/v1/marketplace/installations/{itemId}/config": {
             "put": {
                 "security": [
                     {
@@ -10545,8 +10553,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "组件ID",
-                        "name": "id",
+                        "description": "商品ID（安装记录按 tenant + itemId 定位）",
+                        "name": "itemId",
                         "in": "path",
                         "required": true
                     },
@@ -10647,20 +10655,23 @@ const docTemplate = `{
                                         "data": {
                                             "type": "object",
                                             "properties": {
-                                                " page": {
-                                                    "type": "integer"
-                                                },
-                                                " pageSize": {
-                                                    "type": "integer"
-                                                },
-                                                " total": {
-                                                    "type": "integer"
-                                                },
                                                 "items": {
                                                     "type": "array",
                                                     "items": {
                                                         "$ref": "#/definitions/dto.MarketplaceItemResponse"
                                                     }
+                                                },
+                                                "page": {
+                                                    "type": "integer"
+                                                },
+                                                "pageSize": {
+                                                    "type": "integer"
+                                                },
+                                                "total": {
+                                                    "type": "integer"
+                                                },
+                                                "totalPages": {
+                                                    "type": "integer"
                                                 }
                                             }
                                         }
