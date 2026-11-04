@@ -172,17 +172,17 @@ def test_p2_04_install_protection():
         case("无可测试的 item", True, "skip")
         return
     code, body = http("GET", "/api/v1/marketplace/installations")
+    # 安装列表是不分页的列表信封：data = {items, total}
+    installations = (body.get("data") or {}).get("items") or [] if code == 200 else []
     installed_ids = set()
-    if code == 200 and isinstance(body.get("data"), list):
-        for inst in body["data"]:
-            iid = inst.get("item_id") or inst.get("itemId") or inst.get("id")
-            if iid:
-                installed_ids.add(iid)
+    for inst in installations:
+        iid = inst.get("itemId")
+        if iid:
+            installed_ids.add(iid)
 
     # 先清理已安装项，避免状态污染
-    # httpClient 自动把 snake_case 转 camelCase，字段名是 itemId
-    for inst in (body.get("data") or []):
-        iid = inst.get("itemId") or inst.get("item_id") or inst.get("id")
+    for inst in installations:
+        iid = inst.get("itemId")
         if iid:
             http("POST", f"/api/v1/marketplace/items/{iid}/uninstall")
 
