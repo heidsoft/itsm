@@ -174,14 +174,60 @@ describe('升级与自动升级', () => {
     await waitFor(() => expect(mockedService.upgradeItem).toHaveBeenCalledWith(5, '0.9.0'));
   });
 
-  it('已最新时不摆升级按钮', async () => {
+  // 反向锁：门控曾写成 `upgradeAvailable || upgradeVersions.length > 0`，而版本清单
+  // 只有点开这个按钮才会填充 —— 已安装=最新版时按钮永不出现，回滚入口恰好消失。
+  // 夹具固定 upgradeAvailable=true 掩盖了它，这里必须固定 false 才能验出修复。
+  it('已安装=最新版时仍可用「升级/回滚」入口退回旧版本', async () => {
+    const upToDate = {
+      ...skillInstallation,
+      installedVersion: '1.1.0',
+      latestVersion: '1.1.0',
+      upgradeAvailable: false,
+    };
+    mockedService.listInstallations.mockResolvedValue([upToDate]);
+    mockedService.upgradeItem.mockResolvedValue({ ...upToDate, installedVersion: '1.0.0' });
+    renderPage();
+
+    fireEvent.click(await screen.findByRole('button', { name: '升级/回滚' }));
+    const dialog = await screen.findByRole('dialog');
+
+    // 默认目标必须是「确实不同的版本」：若仍是已装的 1.1.0，确认执行等于原地重装。
+    await waitFor(() => expect(within(dialog).getByText(/将从/)).toHaveTextContent('v1.0.0'));
+    fireEvent.click(screen.getByRole('button', { name: '确认执行' }));
+
+    await waitFor(() => expect(mockedService.upgradeItem).toHaveBeenCalledWith(5, '1.0.0'));
+  });
+
+  it('只有当前一个已发布版本时明说无可用目标并禁用确认', async () => {
     mockedService.listInstallations.mockResolvedValue([
-      { ...skillInstallation, upgradeAvailable: false },
+      { ...skillInstallation, installedVersion: '1.1.0', latestVersion: '1.1.0', upgradeAvailable: false },
+    ]);
+    mockedListItemVersions.mockResolvedValue([
+      { version: '1.1.0', status: 'published', downloadCount: 0, releasedAt: '2026-11-01T00:00:00Z', createdAt: '2026-11-01T00:00:00Z', updatedAt: '2026-11-01T00:00:00Z' },
     ]);
     renderPage();
 
-    await screen.findByText('智能分诊技能');
-    expect(screen.queryByRole('button', { name: /升级到/ })).toBeNull();
+    fireEvent.click(await screen.findByRole('button', { name: '升级/回滚' }));
+    const dialog = await screen.findByRole('dialog');
+
+    expect(await within(dialog).findByText(/暂无可升级或回滚的目标版本/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '确认执行' })).toBeDisabled();
+    expect(mockedService.upgradeItem).not.toHaveBeenCalled();
+  });
+
+  it('版本清单加载失败时给出原因并禁用确认，不静默执行同版本升级', async () => {
+    mockedService.listInstallations.mockResolvedValue([
+      { ...skillInstallation, installedVersion: '1.1.0', latestVersion: '1.1.0', upgradeAvailable: false },
+    ]);
+    mockedListItemVersions.mockRejectedValue(new Error('版本服务不可用'));
+    renderPage();
+
+    fireEvent.click(await screen.findByRole('button', { name: '升级/回滚' }));
+    const dialog = await screen.findByRole('dialog');
+
+    expect(await within(dialog).findByText(/版本清单加载失败/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '确认执行' })).toBeDisabled();
+    expect(mockedService.upgradeItem).not.toHaveBeenCalled();
   });
 
   it('自动升级按钮按当前状态显示并把取反后的布尔发给后端', async () => {

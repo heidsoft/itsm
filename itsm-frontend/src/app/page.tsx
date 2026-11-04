@@ -253,12 +253,29 @@ export default function HomePage() {
             <div className="mt-6 flex items-start gap-3 bg-blue-50 border border-blue-100 rounded-lg p-4">
               <CheckCircle2 className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
               <div className="text-sm text-blue-800">
-				<p className="font-medium mb-1">本地开发默认账户</p>
-				<p>
-				  仅本地开发环境可使用 <code className="bg-blue-100 px-1.5 py-0.5 rounded text-blue-900">admin</code> /{' '}
-				  <code className="bg-blue-100 px-1.5 py-0.5 rounded text-blue-900">admin123</code>。生产部署使用一次性 bootstrap token
-				  创建管理员，不提供默认密码。
-				</p>
+                {/* 公开落地页对未认证访客可见：演示凭据只在本地开发构建里出现。
+                    与登录页 (auth)/login/page.tsx 使用同一套 NODE_ENV 门控；生产口径按
+                    README 与 docker-compose.prod.yml：管理员由 itsm-init 依 .env.prod 的
+                    ADMIN_PASSWORD 创建，bootstrap token 是可选流程（默认未启用），不是默认模型。 */}
+                {process.env.NODE_ENV === 'development' ? (
+                  <>
+                    <p className="font-medium mb-1">本地开发默认账户</p>
+                    <p>
+                      仅本地开发环境可使用 <code className="bg-blue-100 px-1.5 py-0.5 rounded text-blue-900">admin</code> /{' '}
+                      <code className="bg-blue-100 px-1.5 py-0.5 rounded text-blue-900">admin123</code>。请勿在任何可被其他人访问的部署中保留该账号。
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p className="font-medium mb-1">管理员凭据</p>
+                    <p>
+                      生产部署的管理员密码由 <code className="bg-blue-100 px-1.5 py-0.5 rounded text-blue-900">.env.prod</code> 中的{' '}
+                      <code className="bg-blue-100 px-1.5 py-0.5 rounded text-blue-900">ADMIN_PASSWORD</code> 决定（由{' '}
+                      <code className="bg-blue-100 px-1.5 py-0.5 rounded text-blue-900">itsm-init</code> 首次启动写入）。
+                      请在首次启动前设置强密码，并同步更换 JWT、数据库与 Redis 凭据。
+                    </p>
+                  </>
+                )}
               </div>
             </div>
           </div>

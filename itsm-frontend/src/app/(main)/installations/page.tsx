@@ -131,14 +131,18 @@ const InstallationsPage = () => {
 
   // 升级弹窗状态。
   //
-  // 2026-11-04 实测缺陷：升级此前只有一个「升级到 v{latest}」按钮，
-  // 只能升不能退——后端 upgrade 端点本就支持 targetVersion（可指名旧版本回滚，
-  // 且有单测覆盖），前端却没给入口；且点击直接执行，没有二次确认，
-  // 换版本会重新装载运行态，属于不可忽略的写操作。
+  // 2026-11-04 第一轮修复：给出可选已发布版本的弹窗 + 二次确认，让「指名旧版本回滚」
+  // 有界面入口（后端 upgrade 端点本就支持 targetVersion），换版本会重新装载运行态。
+  // 同日第二轮实测：按钮门控曾写成 `upgradeAvailable || upgradeVersions.length > 0`，
+  // 而版本清单只在这个按钮的 openUpgrade() 里才拉取 —— 已安装=最新版时按钮永不出现，
+  // 回滚入口恰好在最需要它的时候消失；且 upgradeVersions 是全局态，打开过 A 的弹窗
+  // 会让 B 也冒出按钮。现改为入口恒常渲染、版本清单按商品独立加载，
+  // 由弹窗自己判断「有没有可切换的目标」，没有就明说并禁用确认。
   const [upgradeTarget, setUpgradeTarget] = useState<TenantInstallation | null>(null);
   const [upgradeVersions, setUpgradeVersions] = useState<CatalogItemVersion[]>([]);
   const [upgradeVersion, setUpgradeVersion] = useState<string>('');
   const [upgradeVersionsLoading, setUpgradeVersionsLoading] = useState(false);
+  const [upgradeVersionsError, setUpgradeVersionsError] = useState<string | null>(null);
   const { message, modal } = App.useApp();
   const { allows } = useCapabilities();
   const { hasPermission } = usePermissions();
@@ -193,6 +197,12 @@ const InstallationsPage = () => {
     return matchesSearch && matchesStatus && matchesType;
   });
 
+  // 可切换目标 = 已发布且不是当前已安装版本。弹窗据此判断「有没有得换」，
+  // 而不是拿「版本清单是否非空」当入口门控（那会构成循环依赖）。
+  const switchableVersions = upgradeVersions.filter(
+    v => v.version !== upgradeTarget?.installedVersion,
+  );
+
   const handleUninstall = async (installation: TenantInstallation) => {
     const title = installation.itemTitle || installation.itemName || '应用';
     if (!confirm(`确定要卸载「${title}」吗？卸载后相关功能将无法使用。`)) return;
@@ -223,17 +233,33 @@ const InstallationsPage = () => {
     }
   };
 
-  // 打开升级弹窗：拉取该商品的已发布版本供选择（可指名旧版本回滚）。
+  // 打开升级弹窗：按当前商品拉取已发布版本（可指名旧版本回滚）。
+  // 每次打开都先清空上一件商品的清单与报错，避免跨卡片串扰。
   const openUpgrade = async (installation: TenantInstallation) => {
+    const initialTarget = installation.latestVersion ?? '';
     setUpgradeTarget(installation);
-    setUpgradeVersion(installation.latestVersion ?? '');
+    setUpgradeVersions([]);
+    setUpgradeVersionsError(null);
+    setUpgradeVersion(initialTarget);
     setUpgradeVersionsLoading(true);
     try {
-      const versions = await listItemVersions(installation.itemId);
-      setUpgradeVersions(versions.filter(v => v.status === 'published'));
+      const versions = (await listItemVersions(installation.itemId)).filter(v => v.status === 'published');
+      setUpgradeVersions(versions);
+      // 已安装=最新版时 initialTarget 就是当前版本，照它执行等于原地重装一遍。
+      // 自动改选一个确实不同的已发布版本，让「刚升完想退一版」一步可达。
+      const candidates = versions.filter(v => v.version !== installation.installedVersion);
+      if (initialTarget === installation.installedVersion || initialTarget === '') {
+        setUpgradeVersion(
+          candidates.find(v => v.version === installation.latestVersion)?.version ?? candidates[0]?.version ?? '',
+        );
+      }
     } catch {
-      // 版本清单拉不到时退回「只升到最新版」，不让弹窗直接开天窗。
-      setUpgradeVersions([]);
+      // 清单拉不到但目录确实有更新时，仍允许升到 latestVersion；
+      // 无更新（已最新）则必须禁用确认，不能静默按当前版本重跑一次升级。
+      setUpgradeVersionsError('版本清单加载失败，暂时只能升到目录最新版本');
+      if (initialTarget === installation.installedVersion || initialTarget === '') {
+        setUpgradeVersion('');
+      }
     } finally {
       setUpgradeVersionsLoading(false);
     }
@@ -244,7 +270,8 @@ const InstallationsPage = () => {
     setUpgradingId(installation.itemId);
     try {
       updateInstallationRow(await marketplaceService.upgradeItem(installation.itemId, targetVersion));
-      message.success(`已升级到 v${target}`);
+      // 目标版本可能比当前更旧（回滚），统一说「切换到」，不要报成「已升级到」。
+      message.success(`版本已切换到 v${target}`);
       setUpgradeTarget(null);
       await refreshDependencyStatus();
     } catch (error) {
@@ -482,21 +509,21 @@ const InstallationsPage = () => {
                     </div>
                   </div>
                   {canManageMarketplace && <div className="flex items-center gap-2">
-                    {(installation.upgradeAvailable || upgradeVersions.length > 0) && (
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        onClick={() => void openUpgrade(installation)}
-                        disabled={upgradingId === installation.itemId}
-                      >
-                        <ArrowUpCircle className="h-4 w-4 mr-1" />
-                        {upgradingId === installation.itemId
-                          ? '升级中...'
-                          : installation.upgradeAvailable
-                            ? `升级到 v${installation.latestVersion}`
-                            : '升级/回滚'}
-                      </Button>
-                    )}
+                    {/* 入口恒常渲染：能否切换版本由弹窗里的已发布版本清单决定，
+                        不能用「只有点开弹窗才会填充的 upgradeVersions」当门控。 */}
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => void openUpgrade(installation)}
+                      disabled={upgradingId === installation.itemId}
+                    >
+                      <ArrowUpCircle className="h-4 w-4 mr-1" />
+                      {upgradingId === installation.itemId
+                        ? '升级中...'
+                        : installation.upgradeAvailable
+                          ? `升级到 v${installation.latestVersion}`
+                          : '升级/回滚'}
+                    </Button>
                     <Button
                       variant="secondary"
                       size="sm"
@@ -626,14 +653,23 @@ const InstallationsPage = () => {
 
             <div>
               <div className="text-sm font-medium mb-1">目标版本</div>
-              <Select value={upgradeVersion} onValueChange={setUpgradeVersion} disabled={upgradeVersionsLoading}>
+              <Select
+                value={upgradeVersion || undefined}
+                onValueChange={setUpgradeVersion}
+                disabled={upgradeVersionsLoading || switchableVersions.length === 0}
+                placeholder="选择目标版本"
+              >
                 {upgradeVersions.length === 0 ? (
-                  <SelectItem value={upgradeTarget.latestVersion ?? ''}>
-                    v{upgradeTarget.latestVersion ?? '-'}
+                  <SelectItem value="__no_published_version__" disabled>
+                    暂无其他已发布版本
                   </SelectItem>
                 ) : (
                   upgradeVersions.map(v => (
-                    <SelectItem key={v.version} value={v.version}>
+                    <SelectItem
+                      key={v.version}
+                      value={v.version}
+                      disabled={v.version === upgradeTarget.installedVersion}
+                    >
                       v{v.version}
                       {v.version === upgradeTarget.installedVersion ? '（当前版本）' : ''}
                     </SelectItem>
@@ -643,15 +679,29 @@ const InstallationsPage = () => {
               {upgradeVersionsLoading && (
                 <div className="text-xs text-gray-500 mt-1">正在加载可用版本…</div>
               )}
+              {upgradeVersionsError && (
+                <div className="text-xs text-red-600 mt-1">{upgradeVersionsError}</div>
+              )}
+              {!upgradeVersionsLoading && !upgradeVersionsError && switchableVersions.length === 0 && (
+                <div className="text-xs text-gray-500 mt-1">
+                  该商品目前只有 v{upgradeTarget.installedVersion} 一个已发布版本，暂无可升级或回滚的目标版本。
+                </div>
+              )}
             </div>
 
-            <div className="text-sm">
-              将从
-              <span className="font-medium"> v{upgradeTarget.installedVersion} </span>
-              变更为
-              <span className="font-medium"> v{upgradeVersion || upgradeTarget.latestVersion} </span>
-              。升级会重新装载运行态，回滚会退回旧发布物。
-            </div>
+            {upgradeVersion ? (
+              <div className="text-sm">
+                将从
+                <span className="font-medium"> v{upgradeTarget.installedVersion} </span>
+                变更为
+                <span className="font-medium"> v{upgradeVersion} </span>
+                。升级会重新装载运行态，回滚会退回旧发布物。
+              </div>
+            ) : (
+              <div className="text-sm text-gray-500">
+                暂无可切换的目标版本，请先在应用管理里发布其他版本后再来。
+              </div>
+            )}
 
             <div className="flex justify-end gap-2">
               <Button variant="secondary" onClick={() => setUpgradeTarget(null)}>
@@ -659,7 +709,11 @@ const InstallationsPage = () => {
               </Button>
               <Button
                 onClick={() => void handleUpgrade(upgradeTarget, upgradeVersion)}
-                disabled={upgradingId === upgradeTarget.itemId || !upgradeVersion}
+                disabled={
+                  upgradingId === upgradeTarget.itemId ||
+                  !upgradeVersion ||
+                  upgradeVersion === upgradeTarget.installedVersion
+                }
               >
                 {upgradingId === upgradeTarget.itemId ? '执行中...' : '确认执行'}
               </Button>
