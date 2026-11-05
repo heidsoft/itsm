@@ -17,7 +17,7 @@ import {
   MoreHorizontal,
   Copy,
 } from 'lucide-react';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Card,
@@ -42,6 +42,7 @@ import {
 import type { MenuProps } from 'antd';
 import { WorkflowAPI } from '@/lib/api/workflow-api';
 import { UsageGuideCard } from '@/components/common/UsageGuideCard';
+import BPMNDiagramPreview from '@/components/workflow/BPMNDiagramPreview';
 import WorkflowTemplateCatalog from '@/components/workflow/WorkflowTemplateCatalog';
 const { Title, Text } = Typography;
 
@@ -130,7 +131,7 @@ const STATUS_CONFIG = {
 };
 
 const WorkflowManagement = () => {
-  const { message } = App.useApp();
+  const { message, modal } = App.useApp();
   const router = useRouter();
   const [workflows, setWorkflows] = useState<Workflow[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -140,9 +141,13 @@ const WorkflowManagement = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedWorkflow, setSelectedWorkflow] = useState<Workflow | null>(null);
+  const [detailXml, setDetailXml] = useState('');
+  const [detailXmlLoading, setDetailXmlLoading] = useState(false);
+  const [detailXmlError, setDetailXmlError] = useState('');
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [loading, setLoading] = useState(false);
   const [form] = Form.useForm();
+  const detailXmlRequestRef = useRef(0);
 
   // 加载工作流数据
   const loadWorkflows = async () => {
@@ -288,6 +293,24 @@ const WorkflowManagement = () => {
   const handleViewDetail = (workflow: Workflow) => {
     setSelectedWorkflow(workflow);
     setShowDetailModal(true);
+
+    // 列表接口不返回 BPMN XML，预览按需用详情接口取当前定义；
+    // 快速连续打开两个详情时只接受最后一次请求的结果。
+    const requestId = ++detailXmlRequestRef.current;
+    setDetailXml('');
+    setDetailXmlError('');
+    setDetailXmlLoading(true);
+    WorkflowAPI.getWorkflow(workflow.id)
+      .then(definition => {
+        if (requestId !== detailXmlRequestRef.current) return;
+        setDetailXml(definition.bpmnXml || '');
+      })
+      .catch(() => {
+        if (requestId === detailXmlRequestRef.current) setDetailXmlError('加载流程定义失败，无法预览');
+      })
+      .finally(() => {
+        if (requestId === detailXmlRequestRef.current) setDetailXmlLoading(false);
+      });
   };
 
   // 保存工作流（创建或更新走真实 API）
@@ -315,7 +338,7 @@ const WorkflowManagement = () => {
 
         const createdId = (created as { id?: number | string } | undefined)?.id;
         if (createdId) {
-          Modal.confirm({
+          modal.confirm({
             title: '是否立即进入设计器编排流程？',
             content: '工作流已创建为草稿，需要在设计器中编排节点后才能启用。',
             okText: '进入设计器',
@@ -465,7 +488,7 @@ const WorkflowManagement = () => {
             icon: <Trash2 className="w-4 h-4" />,
             danger: true,
             onClick: () => {
-              Modal.confirm({
+              modal.confirm({
                 title: '确定要删除这个工作流吗？',
                 content: `将删除流程定义「${record.name}」，删除后无法恢复。`,
                 okText: '确定删除',
@@ -729,6 +752,7 @@ const WorkflowManagement = () => {
         open={showDetailModal}
         onCancel={() => setShowDetailModal(false)}
         width={800}
+        destroyOnHidden
         footer={[
           <Button key="close" onClick={() => setShowDetailModal(false)}>
             关闭
@@ -796,6 +820,19 @@ const WorkflowManagement = () => {
                   <Text>{selectedWorkflow.lastModified || '-'}</Text>
                 </Col>
               </Row>
+            </div>
+
+            <div>
+              <Title level={5}>流程预览</Title>
+              {detailXmlLoading ? (
+                <div className="flex h-[320px] items-center justify-center rounded border border-dashed border-gray-200">
+                  <Text type="secondary">正在加载流程定义...</Text>
+                </div>
+              ) : detailXmlError ? (
+                <Text type="danger">{detailXmlError}</Text>
+              ) : (
+                <BPMNDiagramPreview xml={detailXml} height={320} />
+              )}
             </div>
 
             <div className="mt-6">

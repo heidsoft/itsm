@@ -12,6 +12,7 @@
  */
 import { applyShaping } from '../agent/shape.js';
 import { addFailureHint } from '../agent/hints.js';
+import { needsConfirmation } from '../agent/spec.js';
 import { classifyError, usageError } from '../lib/errors.js';
 import { getAutoLoginFailure, hydrateAgentToken, resolveRuntimeConfig } from '../lib/runtime.js';
 import { configureBaseURL } from '../lib/api-client.js';
@@ -120,6 +121,14 @@ export function buildInvocation(spec, params) {
     }
     return { positional, flags };
 }
+/** MCP-side mirror of the runner's first positional: the declared first positional param's value from the raw call arguments. */
+function firstPositionalValue(spec, params) {
+    const first = spec.input.params.find((p) => p.kind === 'positional');
+    const value = first ? params[first.name] : undefined;
+    if (value === undefined || value === null || value === '')
+        return undefined;
+    return String(value);
+}
 export async function callCommand(command, params, opts = {}) {
     const spec = resolveCommand(command);
     if (!spec) {
@@ -136,7 +145,7 @@ export async function callCommand(command, params, opts = {}) {
                 command: spec.name,
                 risk: spec.risk,
                 endpoints: spec.endpoints,
-                requiresConfirmation: spec.risk === 'high-risk-write',
+                requiresConfirmation: needsConfirmation(spec, firstPositionalValue(spec, params ?? {})),
                 usage: spec.usage,
                 required: spec.input.params.filter((p) => p.required).map((p) => p.name),
                 note: '未发送任何请求。去掉 preview 即执行；高风险写操作还需 confirm=true。',

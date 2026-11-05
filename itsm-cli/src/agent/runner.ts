@@ -2,7 +2,7 @@ import { registry, domains, findCommandByTokens } from './registry.js';
 import { parseArgs } from './args.js';
 import type { ParsedArgs } from './args.js';
 import type { CommandSpec } from './spec.js';
-import { describeCommand } from './spec.js';
+import { describeCommand, needsConfirmation } from './spec.js';
 import { paramToJsonSchema } from './params.js';
 import { applyShaping } from './shape.js';
 import { addFailureHint } from './hints.js';
@@ -163,7 +163,7 @@ async function executeSpec(spec: CommandSpec, args: ParsedArgs, rest: string[]):
         command: spec.name,
         risk: spec.risk,
         endpoints: spec.endpoints,
-        requiresConfirmation: spec.risk === 'high-risk-write',
+        requiresConfirmation: needsConfirmation(spec, rest[0]),
         input: spec.input,
         note: 'No request was sent. Remove --dry-run to execute; high-risk writes additionally need --yes.',
       }),
@@ -281,7 +281,8 @@ function validatePositionals(spec: CommandSpec, rest: string[]): void {
   );
 }
 
-/** Smallest edit distance to a known flag, surfaced only when meaningfully close. */function closestName(name: string, candidates: string[]): string | undefined {
+/** Smallest edit distance to a known flag, surfaced only when meaningfully close. */
+function closestName(name: string, candidates: string[]): string | undefined {
   let best: string | undefined;
   let bestDist = Infinity;
   for (const c of candidates) {

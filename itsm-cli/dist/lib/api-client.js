@@ -1513,8 +1513,8 @@ function unwrapBody(json) {
     }
     return json;
 }
-/** Pull one cookie value out of Set-Cookie header values. */
-function extractCookie(cookies, name) {
+/** Pull one cookie value out of Set-Cookie header values. Exported so runtime.ts's hydrate path resolves cookies the same way login does (multi-value headers, values containing `=`). */
+export function extractCookie(cookies, name) {
     for (const raw of cookies) {
         for (const part of raw.split(/,(?=[A-Za-z0-9_\-]+=[^;=]+(?:;|$))/)) {
             const pair = part.trim().split(';')[0];

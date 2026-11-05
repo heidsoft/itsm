@@ -102,12 +102,11 @@ export type {
   BpmnCounterSignTask as CounterSignTask,
   BpmnCounterSignStatusResponse as CounterSignStatusResponse,
   BpmnProcessVersion as ProcessVersion,
-  BpmnProcessVersionListResponse as ProcessVersionListResponse,
-  BpmnVersionCompareResponse as VersionCompareResponse,
+  BpmnCreateVersionRequest as CreateVersionRequest,
+  BpmnVersionComparison as VersionComparison,
+  BpmnVersionChange as VersionChangeDetail,
   BpmnInstanceStats as InstanceStats,
   BpmnTaskStats as TaskStats,
-  BpmnVersionChangeLog as VersionChangeLog,
-  BpmnChangeLogListResponse as ChangeLogListResponse,
 } from './workflow-api';
 export type {
   ProcessMetrics,

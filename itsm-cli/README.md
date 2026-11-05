@@ -120,7 +120,8 @@ $ itsm --json ticket delete 42 --yes    # 用户同意后执行
 ```
 
 `infra.api` 逃生舱同样按 METHOD 派生：**裸 `DELETE` 也要 `--yes`**（MCP 客户端用 `confirm=true`），
-POST/PUT/PATCH 维持普通写不设门。Agent 收到 exit 10 **禁止静默重试**；必须先向用户展示 `risk` 内容获得明确同意。
+POST/PUT/PATCH 维持普通写不设门。该声明（`confirmMethods`）同样出现在 `--dry-run` / MCP `preview` 的
+`requiresConfirmation` 与 `itsm_describe` 输出里，预演口径与执行门一致。Agent 收到 exit 10 **禁止静默重试**；必须先向用户展示 `risk` 内容获得明确同意。
 
 ### 输出信封
 

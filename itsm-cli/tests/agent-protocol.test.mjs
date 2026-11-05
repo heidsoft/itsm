@@ -25,6 +25,10 @@ let server;
 let baseUrl;
 /** path → number of requests, for retry/dry-run/high-risk assertions. */
 const hits = new Map();
+/** path → latest query string, for "did the flag become the backend query contract" assertions. */
+const queries = new Map();
+/** "METHOD path" → last JSON body, for body-contract assertions (upgrade pointers, auto-upgrade booleans). */
+const bodies = new Map();
 const boomOnce = new Set(['/boom/503-once']);
 
 const ok = (res, data) => json(res, 200, { code: 0, message: 'success', data });
@@ -33,10 +37,27 @@ function json(res, status, payload) {
   res.end(JSON.stringify(payload));
 }
 
-function route(req, res) {
+function readBody(req) {
+  return new Promise((resolve) => {
+    let raw = '';
+    req.on('data', (c) => (raw += c));
+    req.on('end', () => resolve(raw));
+  });
+}
+
+async function route(req, res) {
   const url = new URL(req.url, baseUrl);
   const p = url.pathname.replace(/^\/api\/v1/, '');
   hits.set(p, (hits.get(p) ?? 0) + 1);
+  queries.set(p, url.searchParams);
+  if (req.method !== 'GET' && req.method !== 'HEAD') {
+    const raw = await readBody(req);
+    try {
+      bodies.set(`${req.method} ${p}`, raw ? JSON.parse(raw) : null);
+    } catch {
+      bodies.set(`${req.method} ${p}`, { __unparsable__: raw });
+    }
+  }
 
   // Public routes
   if (p === '/health') return json(res, 200, { status: 'ok', timestamp: '2026-01-01T00:00:00Z' });
@@ -77,6 +98,32 @@ function route(req, res) {
   // infra.api escape-hatch gate stubs.
   if (p === '/boom/gated-delete' && req.method === 'DELETE') return ok(res, { deleted: true });
   if (p === '/boom/raw-write' && req.method === 'POST') return ok(res, { posted: true });
+
+  // Marketplace surface (marketplace.* commands). Item 8 is installed & free to
+  // uninstall; item 9 is dependency-blocked and answers 409 like the backend.
+  if (p === '/marketplace/items' && req.method === 'GET') {
+    return ok(res, {
+      items: [{ id: 7, name: 'feishu-connector', isOfficial: url.searchParams.get('isOfficial') === 'true' }],
+      total: 1,
+      page: 1,
+      pageSize: 20,
+      totalPages: 1,
+    });
+  }
+  if (p === '/marketplace/items/7' && req.method === 'GET') return ok(res, { id: 7, name: 'feishu-connector', version: '1.1.0' });
+  if (p === '/marketplace/items/7/install' && req.method === 'POST') return ok(res, { id: 7, status: 'installed' });
+  if (p === '/marketplace/items/8/uninstall' && req.method === 'POST') return ok(res, { id: 8, status: 'uninstalled' });
+  if (p === '/marketplace/items/9/uninstall' && req.method === 'POST') {
+    return json(res, 409, { code: 3002, message: '依赖它的组件仍在运行' });
+  }
+  if (p === '/marketplace/items/7/upgrade' && req.method === 'POST') return ok(res, { id: 7, status: 'upgraded' });
+  if (p === '/marketplace/items/7/auto-upgrade' && req.method === 'PATCH') {
+    return ok(res, { id: 7, autoUpgrade: Boolean(bodies.get(`PATCH ${p}`)?.autoUpgrade) });
+  }
+  if (p === '/marketplace/installations/7/config' && req.method === 'PUT') {
+    return ok(res, { itemId: 7, config: bodies.get(`PUT ${p}`) ?? null });
+  }
+  if (p === '/marketplace/dependency-status' && req.method === 'GET') return ok(res, { items: [] });
   if (p === '/boom/503-once') {
     if (boomOnce.has(p)) {
       boomOnce.delete(p);
@@ -366,6 +413,96 @@ test('infra.api non-DELETE writes stay ungated (method, not the escape hatch, dr
   const r = await api('POST', '/boom/raw-write');
   assert.equal(r.code, 0, r.stdout);
   assert.deepEqual(envelope(r).data, { posted: true });
+});
+
+test('infra.api dry-run declares the METHOD gate instead of misleading "no confirmation needed"', async () => {
+  const r = await api('DELETE', '/boom/gated-delete', '--dry-run');
+  assert.equal(r.code, 0, r.stdout);
+  const env = envelope(r);
+  assert.equal(env.data.dryRun, true);
+  // The static risk stays 'write'; confirmMethods is what makes this true.
+  assert.equal(env.data.requiresConfirmation, true);
+});
+
+// ---------------------------------------------------------------------------
+// Marketplace surface: query plumbing, body contracts, gates, error classes
+// ---------------------------------------------------------------------------
+
+test('marketplace items plumbs filters as the backend query contract, not aliases', async () => {
+  const r = await run(['--json', 'marketplace', 'items', '--type', 'connector', '--official', '--page', '2', '--pageSize', '10']);
+  assert.equal(r.code, 0, r.stdout);
+  const q = queries.get('/marketplace/items');
+  assert.equal(q.get('type'), 'connector');
+  // `--official` maps to the backend's `isOfficial`, never an alias.
+  assert.equal(q.get('isOfficial'), 'true');
+  assert.equal(q.get('page'), '2');
+  assert.equal(q.get('pageSize'), '10');
+});
+
+test('marketplace install is a high-risk write: gated without --yes, executed with it', async () => {
+  const before = hits.get('/marketplace/items/7/install') ?? 0;
+  const blocked = await run(['--json', 'marketplace', 'install', '7']);
+  assert.equal(blocked.code, 10, blocked.stdout);
+  assert.equal(envelope(blocked).error.kind, 'confirmation_required');
+  assert.equal(hits.get('/marketplace/items/7/install') ?? 0, before, 'install must not fire before consent');
+
+  const done = await run(['--json', 'marketplace', 'install', '7', '--yes']);
+  assert.equal(done.code, 0, done.stdout);
+  assert.equal(envelope(done).data.status, 'installed');
+  assert.equal(hits.get('/marketplace/items/7/install'), before + 1);
+});
+
+test('marketplace upgrade carries the pointer body contract: value sent, absence means no body', async () => {
+  const withV = await run(['--json', 'marketplace', 'upgrade', '7', '--targetVersion', '1.2.3']);
+  assert.equal(withV.code, 0, withV.stdout);
+  assert.deepEqual(bodies.get('POST /marketplace/items/7/upgrade'), { targetVersion: '1.2.3' });
+
+  // Absent flag → no body at all, never `{}` — the backend treats an empty
+  // string as an explicit 400, which is what makes the distinction meaningful.
+  const withoutV = await run(['--json', 'marketplace', 'upgrade', '7']);
+  assert.equal(withoutV.code, 0, withoutV.stdout);
+  assert.equal(bodies.get('POST /marketplace/items/7/upgrade'), null);
+});
+
+test('marketplace auto-upgrade on|off maps to the required autoUpgrade boolean body', async () => {
+  const on = await run(['--json', 'marketplace', 'auto-upgrade', '7', 'on']);
+  assert.equal(on.code, 0, on.stdout);
+  assert.deepEqual(bodies.get('PATCH /marketplace/items/7/auto-upgrade'), { autoUpgrade: true });
+
+  const off = await run(['--json', 'marketplace', 'auto-upgrade', '7', 'off']);
+  assert.equal(off.code, 0, off.stdout);
+  assert.deepEqual(bodies.get('PATCH /marketplace/items/7/auto-upgrade'), { autoUpgrade: false });
+});
+
+test('marketplace installation-config passes the free-form JSON body through', async () => {
+  const r = await run(['--json', 'marketplace', 'installation-config', '7', '--data', '{"baseUrl":"https://im.example.com","owners":["a","b"]}']);
+  assert.equal(r.code, 0, r.stdout);
+  assert.deepEqual(bodies.get('PUT /marketplace/installations/7/config'), { baseUrl: 'https://im.example.com', owners: ['a', 'b'] });
+});
+
+test('installation-config without --data is a usage error, not a silent no-op save', async () => {
+  const before = hits.get('/marketplace/installations/7/config') ?? 0;
+  const r = await run(['--json', 'marketplace', 'installation-config', '7']);
+  assert.equal(r.code, 2, r.stdout);
+  assert.equal(envelope(r).error.kind, 'usage');
+  assert.equal(hits.get('/marketplace/installations/7/config') ?? 0, before, 'no request may leave without a config body');
+});
+
+test('a dependency-blocked uninstall surfaces as kind=conflict, not a generic failure', async () => {
+  const r = await run(['--json', 'marketplace', 'uninstall', '9', '--yes']);
+  assert.equal(r.code, 5, r.stdout);
+  const env = envelope(r);
+  assert.equal(env.error.kind, 'conflict');
+  assert.match(env.error.message, /依赖/);
+});
+
+test('marketplace read commands stay ungated', async () => {
+  const detail = await run(['--json', 'marketplace', 'item', '7']);
+  assert.equal(detail.code, 0, detail.stdout);
+  assert.equal(envelope(detail).data.name, 'feishu-connector');
+
+  const status = await run(['--json', 'marketplace', 'dependency-status']);
+  assert.equal(status.code, 0, status.stdout);
 });
 
 test('--help short-circuits the risk gate', async () => {

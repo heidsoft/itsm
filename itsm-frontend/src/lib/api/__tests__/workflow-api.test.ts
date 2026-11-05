@@ -1,4 +1,5 @@
 import { WorkflowApi } from '@/lib/api/workflow-api';
+import type { BpmnProcessVersion } from '@/lib/api/workflow-api';
 import { httpClient } from '@/lib/api/http-client';
 
 // Mock httpClient methods directly
@@ -24,6 +25,25 @@ const consoleSpy = {
 describe('WorkflowApi', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+  });
+
+  /** service.ProcessVersion 的完整 camelCase 镜像 */
+  const bpmnVersion = (overrides: Partial<BpmnProcessVersion> = {}): BpmnProcessVersion => ({
+    id: '42',
+    processDefinitionKey: 'wf1',
+    version: 2,
+    name: 'WF',
+    description: '',
+    bpmnXml: '<definitions />',
+    deploymentId: 'dep-1',
+    isActive: true,
+    createdAt: '2024-01-01T10:00:00Z',
+    updatedAt: '2024-01-02T10:00:00Z',
+    createdBy: '1',
+    tenantId: 7,
+    changeLog: '调整审批人',
+    compatibilityNotes: '',
+    ...overrides,
   });
 
   afterAll(() => {
@@ -128,8 +148,8 @@ describe('WorkflowApi', () => {
   describe('getProcessVersions', () => {
     it('should fetch all versions of a process', async () => {
       const mockData = [
-        { id: 1, key:'testProcess', version: 1, name: 'Test Process v1' },
-        { id: 2, key:'testProcess', version: 2, name: 'Test Process v2' },
+        bpmnVersion({ id: '2', version: 2 }),
+        bpmnVersion({ id: '1', version: 1, isActive: false }),
       ];
 
       (httpClient.get as jest.Mock).mockResolvedValueOnce(mockData);
@@ -143,6 +163,38 @@ describe('WorkflowApi', () => {
       });
 
       expect(result).toHaveLength(2);
+      expect(result.map(item => item.id)).toEqual(['2', '1']);
+      expect(result.map(item => item.status)).toEqual(['active', 'inactive']);
+    });
+  });
+
+  describe('getWorkflowVersions', () => {
+    it('每个版本保留唯一 id、按 isActive 映射状态并沿用真实时间', async () => {
+      (httpClient.get as jest.Mock).mockResolvedValueOnce([
+        bpmnVersion({ id: '42', version: 2, isActive: true }),
+        bpmnVersion({ id: '41', version: 1, isActive: false, bpmnXml: '<old />', changeLog: '' }),
+      ]);
+
+      const result = await WorkflowApi.getWorkflowVersions('wf1');
+
+      expect(httpClient.get).toHaveBeenCalledWith('/api/v1/bpmn/versions', { processKey: 'wf1' });
+      expect(result.map(item => item.id)).toEqual(['42', '41']);
+      expect(result.map(item => item.code)).toEqual(['wf1', 'wf1']);
+      expect(result.map(item => item.status)).toEqual(['active', 'inactive']);
+      expect(result[0].createdAt).toEqual(new Date('2024-01-01T10:00:00Z'));
+      expect(result[1].bpmnXml).toBe('<old />');
+    });
+  });
+
+  describe('getVersion', () => {
+    it('按 key + version 路径段取单个版本', async () => {
+      (httpClient.get as jest.Mock).mockResolvedValueOnce(bpmnVersion());
+
+      const result = await WorkflowApi.getVersion('wf 1', 2);
+
+      expect(httpClient.get).toHaveBeenCalledWith('/api/v1/bpmn/versions/wf%201/2');
+      expect(result.bpmnXml).toBe('<definitions />');
+      expect(result.isActive).toBe(true);
     });
   });
 
@@ -385,10 +437,19 @@ describe('WorkflowApi', () => {
   });
 
   describe('publishVersion', () => {
-    it('should return first version', async () => {
-      (httpClient.get as jest.Mock).mockResolvedValueOnce([{ id: 1, key: 'wf1', name: 'WF', version: 2, status: 'active', createdAt: '2024-01-01', updatedAt: '2024-01-01' }]);
+    it('取当前已激活版本', async () => {
+      (httpClient.get as jest.Mock).mockResolvedValueOnce([
+        bpmnVersion({ id: '43', version: 3, isActive: false }),
+        bpmnVersion({ id: '42', version: 2, isActive: true }),
+      ]);
       const result = await WorkflowApi.publishVersion('wf1');
       expect(result.version).toBe(2);
+      expect(result.status).toBe('active');
+    });
+
+    it('没有任何激活版本时不得返回草稿', async () => {
+      (httpClient.get as jest.Mock).mockResolvedValueOnce([bpmnVersion({ isActive: false })]);
+      await expect(WorkflowApi.publishVersion('wf1')).rejects.toThrow('未找到可发布的版本');
     });
 
     it('should throw if no versions', async () => {
@@ -402,6 +463,12 @@ describe('WorkflowApi', () => {
       (httpClient.put as jest.Mock).mockResolvedValueOnce({});
       await WorkflowApi.activateVersion('wf1', 2);
       expect(httpClient.put).toHaveBeenCalledWith('/api/v1/bpmn/versions/wf1/2/activate', {});
+    });
+
+    it('流程 key 含特殊字符时放入路径段前转义', async () => {
+      (httpClient.put as jest.Mock).mockResolvedValueOnce({});
+      await WorkflowApi.activateVersion('wf 1/2', 3);
+      expect(httpClient.put).toHaveBeenCalledWith('/api/v1/bpmn/versions/wf%201%2F2/3/activate', {});
     });
   });
 
@@ -428,25 +495,57 @@ describe('WorkflowApi', () => {
   });
 
   describe('compareVersions', () => {
-    it('should compare and map fields', async () => {
-      (httpClient.get as jest.Mock).mockResolvedValueOnce({ addedNodes: ['n1'], removedNodes: ['n2'], modifiedNodes: ['n3'] });
+    it('透传后端 VersionComparison 结构', async () => {
+      const comparison = {
+        baseVersion: bpmnVersion({ version: 1, isActive: false }),
+        targetVersion: bpmnVersion({ version: 2, isActive: true }),
+        changes: [
+          {
+            type: 'element',
+            changeType: 'added',
+            elementType: 'bpmn:UserTask',
+            elementId: 'Task_1',
+            elementName: '审批',
+            description: 'Task count changed',
+            impact: 'high',
+          },
+        ],
+        breakingChanges: ['Task count changed'],
+        compatibility: 'risky',
+      };
+      (httpClient.get as jest.Mock).mockResolvedValueOnce(comparison);
+
       const result = await WorkflowApi.compareVersions('wf1', 1, 2);
-      expect(result.elementsAdded).toEqual(['n1']);
-      expect(result.elementsRemoved).toEqual(['n2']);
-      expect(result.elementsModified).toEqual(['n3']);
-      expect(result.isIdentical).toBe(false);
+
+      expect(httpClient.get).toHaveBeenCalledWith('/api/v1/bpmn/versions/wf1/compare', {
+        baseVersion: '1',
+        targetVersion: '2',
+      });
+      expect(result?.compatibility).toBe('risky');
+      expect(result?.breakingChanges).toEqual(['Task count changed']);
+      expect(result?.changes).toHaveLength(1);
+      expect(result?.baseVersion?.version).toBe(1);
+      expect(result?.targetVersion?.bpmnXml).toBe('<definitions />');
     });
 
-    it('should return identical when no changes', async () => {
-      (httpClient.get as jest.Mock).mockResolvedValueOnce({});
-      const result = await WorkflowApi.compareVersions('wf1', 1, 2);
-      expect(result.isIdentical).toBe(true);
+    it('相同版本号直接返回 null，不发请求', async () => {
+      const result = await WorkflowApi.compareVersions('wf1', 2, 2);
+      expect(result).toBeNull();
+      expect(httpClient.get).not.toHaveBeenCalled();
     });
 
-    it('should handle null response', async () => {
+    it('后端返回空 data 时按“无需比较”处理，不能伪装成零差异', async () => {
       (httpClient.get as jest.Mock).mockResolvedValueOnce(null);
-      const result = await WorkflowApi.compareVersions('wf1', 1, 2);
-      expect(result.isIdentical).toBe(true);
+      await expect(WorkflowApi.compareVersions('wf1', 1, 2)).resolves.toBeNull();
+    });
+
+    it('流程 key 含特殊字符时转义路径段', async () => {
+      (httpClient.get as jest.Mock).mockResolvedValueOnce(null);
+      await WorkflowApi.compareVersions('wf 1', 1, 2);
+      expect(httpClient.get).toHaveBeenCalledWith('/api/v1/bpmn/versions/wf%201/compare', {
+        baseVersion: '1',
+        targetVersion: '2',
+      });
     });
   });
 

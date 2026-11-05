@@ -81,7 +81,22 @@ export function marketplaceCommands() {
         if (raw !== 'on' && raw !== 'off') throw usageError(`auto-upgrade 取值必须是 'on' 或 'off'，收到 '${raw}'。`);
         return apiClient.setMarketplaceAutoUpgrade(id, raw === 'on');
       },
-      'write' as const
+      'write',
+      {
+        // The positional placeholder ships its legal values, but a derived param
+        // is untyped; declaring it makes itsm_describe/MCP expose enum values
+        // and a real description instead of the raw `on|off` slot name.
+        params: [
+          {
+            name: 'on|off',
+            kind: 'positional',
+            type: 'enum',
+            values: ['on', 'off'],
+            required: true,
+            description: "'on' = 发送 {autoUpgrade:true}；'off' = 发送 {autoUpgrade:false}",
+          },
+        ],
+      }
     ),
     cmd(
       'marketplace.installations',

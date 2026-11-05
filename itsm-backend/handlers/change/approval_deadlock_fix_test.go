@@ -146,6 +146,41 @@ func TestSubmitChange_AdvancesPreApprovalEvaluationNode(t *testing.T) {
 	assert.Equal(t, "completed", assessment.Status, "提交动作应把前置评估节点带过去")
 }
 
+// 回归：super_admin 在 RBAC 里硬编码直通、其权限码不落 role_permissions 表。
+// 若只按 role_permissions 查审批人，单 admin 租户永远找不到审批人 → 变更无法提交。
+func TestListEligibleApprovers_IncludesSuperAdminBypass(t *testing.T) {
+	client, db, tenantID := setupChangeChainEntRepo(t, "superadmin")
+	ctx := context.Background()
+
+	// 复刻生产形态：role_permissions 里没有 super_admin 的授权行。
+	_, err := db.ExecContext(ctx, `
+		INSERT INTO roles (id, name, code, is_system, is_active, data_scope, tenant_id, created_at, updated_at)
+		VALUES (9001, '超级管理员', 'super_admin', true, true, 'all', ?, datetime('now'), datetime('now'));
+	`, tenantID)
+	require.NoError(t, err)
+
+	admin, err := client.User.Create().
+		SetUsername("super-admin-only").
+		SetEmail("super-admin-only@example.com").
+		SetName("Super Admin Only").
+		SetPasswordHash("hash").
+		SetRole("super_admin").
+		SetActive(true).
+		SetTenantID(tenantID).
+		Save(ctx)
+	require.NoError(t, err)
+
+	repo := NewEntRepository(client, db)
+	ids, err := repo.ListEligibleApprovers(ctx, tenantID, "change:approve", 0)
+	require.NoError(t, err)
+	assert.Contains(t, ids, admin.ID, "super_admin 走 RBAC 硬编码直通，必须能被选为审批人")
+
+	// 排除创建人后应为空（此时才是「无可用审批人」）。
+	ids, err = repo.ListEligibleApprovers(ctx, tenantID, "change:approve", admin.ID)
+	require.NoError(t, err)
+	assert.NotContains(t, ids, admin.ID, "创建人必须被排除")
+}
+
 // 反向验证：流程已经在审批节点时，提交/推进不得代签审批。
 // 审批必须由审批人自己完成。
 func TestAdvanceWorkTask_NeverSignsApprovalNode(t *testing.T) {

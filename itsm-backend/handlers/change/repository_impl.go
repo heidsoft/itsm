@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"itsm-backend/common"
+	domainrole "itsm-backend/domain/role"
 	"itsm-backend/ent"
 	"itsm-backend/ent/change"
 	entuser "itsm-backend/ent/user"
@@ -766,13 +767,16 @@ func (r *EntRepository) ValidateApproverBelongsToTenant(ctx context.Context, app
 // 旧实现直接回落到创建人，等于允许自审自己的变更；这里改为从具备审批权限的
 // 活跃用户里挑，并允许调用方排除指定用户（通常是创建人）。
 //
-// 权限判定覆盖两条授权路径：
+// 权限判定覆盖三条授权路径：
+//   - super_admin 旁路：该角色在 RBAC 里硬编码直通（middleware/rbac.go:717），
+//     且**不落 role_permissions 表**，因此必须显式放行，否则单 admin 租户永远
+//     找不到审批人、变更无法提交；
 //   - 主角色：users.role → roles.code → role_permissions → permissions.code
 //   - 多角色：user_roles → roles.code → role_permissions → permissions.code
 //
-// 两次独立查询而不是一条 OR：user_roles 是迁移建的裸关联表（无 ent schema），
-// 在只跑 ent schema 的测试库里并不存在，OR 会让整条查询一起失败。
-// 多角色查询失败时只记日志并退回主角色结果，不影响提交。
+// 主角色与多角色是两次独立查询而不是一条 OR：user_roles 是迁移建的裸关联表
+// （无 ent schema），在只跑 ent schema 的测试库里并不存在，OR 会让整条查询
+// 一起失败。多角色查询失败时只记日志并退回主角色结果，不影响提交。
 func (r *EntRepository) ListEligibleApprovers(ctx context.Context, tenantID int, permissionCode string, excludeUserID int) ([]int, error) {
 	if r.db == nil {
 		return nil, fmt.Errorf("change repository raw database handle not initialised")
@@ -816,6 +820,34 @@ func (r *EntRepository) queryApproversByPrimaryRole(ctx context.Context, tenantI
 	`, tenantID, permissionCode, excludeUserID)
 	if err != nil {
 		return nil, fmt.Errorf("query change approvers by primary role failed: %w", err)
+	}
+	ids, err := scanApproverIDs(rows)
+	if err != nil {
+		return nil, err
+	}
+
+	// super_admin 走 RBAC 硬编码直通，其权限码不在 role_permissions 里，
+	// 必须单独放行（否则单 admin 租户变更永远无法提交）。
+	superAdmins, err := r.querySuperAdmins(ctx, tenantID, excludeUserID)
+	if err != nil {
+		return nil, err
+	}
+	return append(ids, superAdmins...), nil
+}
+
+func (r *EntRepository) querySuperAdmins(ctx context.Context, tenantID int, excludeUserID int) ([]int, error) {
+	rows, err := r.db.QueryContext(ctx, `
+		SELECT DISTINCT u.id
+		FROM users u
+		WHERE u.tenant_id = $1
+		  AND u.role = $2
+		  AND u.active = true
+		  AND u.deleted_at IS NULL
+		  AND ($3 <= 0 OR u.id <> $3)
+		ORDER BY u.id
+	`, tenantID, domainrole.SuperAdmin, excludeUserID)
+	if err != nil {
+		return nil, fmt.Errorf("query super admin approvers failed: %w", err)
 	}
 	return scanApproverIDs(rows)
 }

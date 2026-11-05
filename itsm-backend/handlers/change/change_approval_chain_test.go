@@ -178,7 +178,8 @@ func TestChange_SubmitChange_NoChainRejectsSelfApproval(t *testing.T) {
 }
 
 // TestChange_SubmitChange_NoChainExcludesCreator 验证显式审批人里混进创建人时，
-// 创建人被剔除、重复 ID 被去重，审批链只剩合法的非创建人。
+// 不再静默剔除（会让调用方误以为自己指定的人接了单、实际接单的是另一个人，
+// 审批责任被悄悄转移），而是直接拒绝；合法非创建人审批人则正常提交且重复 ID 去重。
 func TestChange_SubmitChange_NoChainExcludesCreator(t *testing.T) {
 	svc, client, db, tenantID := setupChangeChainTest(t)
 	ctx := context.Background()
@@ -187,12 +188,21 @@ func TestChange_SubmitChange_NoChainExcludesCreator(t *testing.T) {
 	approver := mkChangeUser(t, client, tenantID, "manager")
 	changeID := mkChangeDraft(t, client, tenantID, creator)
 
-	req := &dto.SubmitChangeRequest{ApproverIDs: []int{creator, approver, approver}, Comment: "submit"}
+	// 显式把创建人塞进审批人列表：职责分离要求直接拒绝，而不是悄悄替成别人。
+	req := &dto.SubmitChangeRequest{ApproverIDs: []int{creator, approver}, Comment: "submit"}
 	_, err := svc.SubmitChange(ctx, changeID, tenantID, creator, req)
-	require.NoError(t, err)
+	require.Error(t, err, "显式指定创建人为审批人必须被拒绝")
+	require.Contains(t, err.Error(), "创建人不能审批自己提交的变更")
 
 	approvers := queryChangeChainApprovers(t, db, changeID, tenantID)
-	require.Equal(t, []int{approver}, approvers, "创建人必须被剔除且审批人不得重复")
+	require.Empty(t, approvers, "提交被拒绝时不得写入审批链")
+
+	// 合法非创建人审批人：正常提交，重复 ID 去重后只剩该审批人。
+	req2 := &dto.SubmitChangeRequest{ApproverIDs: []int{approver, approver}, Comment: "submit"}
+	_, err = svc.SubmitChange(ctx, changeID, tenantID, creator, req2)
+	require.NoError(t, err)
+	approvers = queryChangeChainApprovers(t, db, changeID, tenantID)
+	require.Equal(t, []int{approver}, approvers, "重复 ID 去重后只留合法非创建人审批人")
 }
 
 // queryChangeStatus 读取变更当前状态。

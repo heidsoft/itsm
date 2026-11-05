@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import type { MenuProps } from 'antd';
-import { Button, Tooltip, App, Input, AutoComplete, Dropdown, Alert } from 'antd';
+import type { InputRef, MenuProps } from 'antd';
+import { Button, Tooltip, App, Input, Dropdown, Alert } from 'antd';
 import {
   Save,
   PlayCircle,
@@ -27,14 +27,18 @@ import {
   Grid,
   Copy,
   ClipboardPaste,
+  ChevronDown,
+  ChevronUp,
   ListChecks,
   Settings,
-  Bug
+  Bug,
+  X
 } from 'lucide-react';
 import BpmnModeler from 'bpmn-js/lib/Modeler';
 import itsmModdleDescriptor from './itsm-moddle-descriptor';
 import gridModule from 'diagram-js/lib/features/grid-snapping';
 import { ensureBpmnDI, hasBpmnDiagram } from './bpmnAutoLayout';
+import { formatElementType, toShortType, typeSearchTerms } from './bpmnElementTypes';
 import { normalizeNodeProperties, readReferenceId, type ModdleCreate } from './bpmnPropertyWrite';
 import { useI18n } from '@/lib/i18n/useI18n';
 
@@ -70,7 +74,7 @@ export interface BpmnDesignerApi {
   fitViewport: () => void;
   getXML: () => Promise<string | null>;
   validate: () => Promise<any[]>;
-  selectElement: (elementId: string) => void;
+  selectElement: (elementId: string) => boolean;
   /** 用画布当前真实值重新通知选中节点（撤销/重做/外部变更后调用） */
   resyncSelection: () => void;
 }
@@ -90,8 +94,33 @@ export interface BpmnNodeSelection {
 interface SearchMatch {
   id: string;
   name: string;
-  type: string;
+  /** 已本地化的元素类型名，缺失时回退 bpmn 短类型 */
+  typeLabel: string;
 }
+
+interface LiveElement {
+  id: string;
+  type?: string;
+  businessObject?: Record<string, unknown>;
+}
+
+/** 画布几何元素：搜索定位需要绝对坐标和尺寸 */
+interface CanvasElement extends LiveElement {
+  hidden?: boolean;
+  parent?: LiveElement | null;
+  x?: number;
+  y?: number;
+  width?: number;
+  height?: number;
+  absoluteMidpoint?: { x: number; y: number };
+}
+
+/** 画布上可被搜索命中的元素：根平面、标签、隐藏元素与无业务对象的图形不参与匹配 */
+const isSearchableElement = (element: CanvasElement): boolean =>
+  Boolean(element.businessObject) && Boolean(element.parent) && !element.hidden && element.type !== 'label';
+
+const SEARCH_HIT_MARKER = 'bpmn-search-hit';
+const SEARCH_ACTIVE_MARKER = 'bpmn-search-hit-active';
 
 /** 判断事件目标是否为可编辑元素（输入框/文本域），快捷键不应劫持 */
 const isEditableTarget = (target: EventTarget | null): boolean => {
@@ -99,12 +128,6 @@ const isEditableTarget = (target: EventTarget | null): boolean => {
   if (!el) return false;
   return el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable;
 };
-
-interface LiveElement {
-  id: string;
-  type?: string;
-  businessObject?: Record<string, unknown>;
-}
 
 /**
  * 把画布元素当前值快照成面板契约。
@@ -144,8 +167,11 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
   const [canRedo, setCanRedo] = useState(false);
   const [showGrid, setShowGrid] = useState(true);
   const [snapToGrid, setSnapToGrid] = useState(true);
+  const [searchOpen, setSearchOpen] = useState(false);
   const [searchKeyword, setSearchKeyword] = useState('');
   const [searchMatches, setSearchMatches] = useState<SearchMatch[]>([]);
+  /** 当前定位到的命中下标，-1 表示尚未定位任何命中 */
+  const [searchActiveIndex, setSearchActiveIndex] = useState(-1);
   const [selectedElements, setSelectedElements] = useState<string[]>([]);
 
   // ---------------------------------------------------------------------------
@@ -186,6 +212,12 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
   const emittedXmlRef = useRef<string | null>(xml || null);
   // import 并发令牌：仅接受最新一次导入的结果
   const importTokenRef = useRef(0);
+
+  // 节点搜索：命中集合需要在命令变化时按当前关键字重算，因此用 ref 传递重算入口
+  const searchKeywordRef = useRef('');
+  const rerunSearchRef = useRef<() => void>(() => {});
+  const searchInputRef = useRef<InputRef | null>(null);
+  const markedSearchIdsRef = useRef<string[]>([]);
 
   /** 撤销/重做可用状态（来自 bpmn-js 原生命令栈） */
   const syncCommandStackState = useCallback(() => {
@@ -312,6 +344,7 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
         } catch (renderErr) {
           console.error('Error after XML import:', renderErr);
         }
+        rerunSearchRef.current();
       };
       void importInitial();
 
@@ -319,6 +352,8 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
       modeler.on('commandStack.changed', () => {
         syncCommandStackState();
         scheduleXmlSync();
+        // 元素增删/改名后命中集合会失真，按当前关键字重算，避免点到已删除的节点
+        rerunSearchRef.current();
       });
 
       // 视口变化（滚轮缩放、fit-viewport 等）时同步缩放比例显示
@@ -448,6 +483,8 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
         // 导入新流程会重置命令栈
         setCanUndo(false);
         setCanRedo(false);
+        // 旧命中 id 属于上一张图，必须按新 registry 重算
+        rerunSearchRef.current();
       })
       .catch((err: Error & { warnings?: unknown }) => {
         if (token !== importTokenRef.current) return;
@@ -770,63 +807,206 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
     );
   }, [message, t]);
 
-  // 搜索：输入时仅过滤联想列表，选中/回车后再定位（避免每击键全选+缩放跳变）
-  const handleSearchChange = useCallback((value: string) => {
-    setSearchKeyword(value);
+  const searchMatchesRef = useRef<SearchMatch[]>([]);
+  const activeSearchIdRef = useRef<string | null>(null);
+
+  /** 只撤掉搜索高亮 marker，命中列表与定位状态由调用方决定是否清空 */
+  const clearSearchMarkers = useCallback(() => {
     const modeler = modelerRef.current;
-    const keyword = value.trim().toLowerCase();
-    if (!modeler || !keyword) {
+    const ids = markedSearchIdsRef.current;
+    markedSearchIdsRef.current = [];
+    activeSearchIdRef.current = null;
+    if (!modeler || ids.length === 0) return;
+    try {
+      const canvas = modeler.get('canvas') as { removeMarker: (id: string, cls: string) => void };
+      ids.forEach(id => {
+        canvas.removeMarker(id, SEARCH_HIT_MARKER);
+        canvas.removeMarker(id, SEARCH_ACTIVE_MARKER);
+      });
+    } catch {
+      // 画布已销毁时 marker 随 DOM 一起消失
+    }
+  }, []);
+
+  // 搜索：输入时仅过滤+高亮，回车/点击结果后再定位（避免每击键全选+缩放跳变）
+  const applySearch = useCallback((keyword: string) => {
+    clearSearchMarkers();
+    const modeler = modelerRef.current;
+    const normalized = keyword.trim().toLowerCase();
+    if (!modeler || !normalized) {
       setSearchMatches([]);
+      searchMatchesRef.current = [];
+      setSearchActiveIndex(-1);
       return;
     }
 
+    let matches: SearchMatch[] = [];
     try {
       const elementRegistry = modeler.get('elementRegistry') as {
-        filter: (fn: (element: any) => boolean) => any[];
+        filter: (fn: (element: CanvasElement) => boolean) => CanvasElement[];
       };
-      const matches = elementRegistry
+      matches = elementRegistry
         .filter(element => {
-          if (element.hidden || element.type === 'label') return false;
-          const name = (element.businessObject?.name || '').toLowerCase();
-          const id = (element.id || '').toLowerCase();
-          return name.includes(keyword) || id.includes(keyword);
+          if (!isSearchableElement(element)) return false;
+          const name = typeof element.businessObject?.name === 'string'
+            ? element.businessObject.name.toLowerCase()
+            : '';
+          const elementType = element.type || '';
+          const typeTerms = typeSearchTerms(elementType, formatElementType(elementType, tRef.current));
+          return (
+            name.includes(normalized) ||
+            element.id.toLowerCase().includes(normalized) ||
+            typeTerms.some(term => term.includes(normalized))
+          );
         })
-        .slice(0, 12)
-        .map(element => ({
-          id: element.id,
-          name: element.businessObject?.name || element.id,
-          type: (element.type || '').replace('bpmn:', ''),
-        }));
-      setSearchMatches(matches);
-    } catch (err) {
-      console.error('Search failed:', err);
+        .map(element => {
+          const name = typeof element.businessObject?.name === 'string' ? element.businessObject.name : '';
+          return {
+            id: element.id,
+            name: name || element.id,
+            typeLabel: formatElementType(element.type || '', tRef.current),
+          };
+        });
+    } catch {
+      setSearchMatches([]);
+      searchMatchesRef.current = [];
+      setSearchActiveIndex(-1);
+      messageRef.current.error(tRef.current('bpmnDesigner.messages.searchFailed'));
+      return;
     }
-  }, []);
 
-  // 定位元素：选中并平移视口居中（不改变缩放比例）
-  const focusElement = useCallback((elementId: string) => {
+    setSearchMatches(matches);
+    searchMatchesRef.current = matches;
+    setSearchActiveIndex(-1);
+
+    if (matches.length > 0) {
+      markedSearchIdsRef.current = matches.map(match => match.id);
+      try {
+        const canvas = modeler.get('canvas') as { addMarker: (id: string, cls: string) => void };
+        markedSearchIdsRef.current.forEach(id => canvas.addMarker(id, SEARCH_HIT_MARKER));
+      } catch {
+        // marker 失败只影响高亮，命中列表仍然可用，不打断搜索
+      }
+    }
+  }, [clearSearchMarkers]);
+
+  // 关键字或语言变化后重算命中；命令栈变化由 initializeModeler 内的监听器通过 ref 触发
+  useEffect(() => {
+    searchKeywordRef.current = searchKeyword;
+    rerunSearchRef.current = () => applySearch(searchKeywordRef.current);
+    applySearch(searchKeyword);
+  }, [searchKeyword, t, applySearch]);
+
+  /** 定位元素：选中并平移视口居中（不改变缩放比例）；返回是否命中现存元素 */
+  const focusElement = useCallback((elementId: string): boolean => {
     const modeler = modelerRef.current;
-    if (!modeler) return;
+    if (!modeler) return false;
     try {
-      const elementRegistry = modeler.get('elementRegistry') as { get: (id: string) => any };
-      const selection = modeler.get('selection') as { select: (elements: any[]) => void };
-      const canvas = modeler.get('canvas') as { viewbox: (vb?: unknown) => { x: number; y: number; width: number; height: number } };
+      const elementRegistry = modeler.get('elementRegistry') as {
+        get: (id: string) => CanvasElement | undefined;
+      };
+      const selection = modeler.get('selection') as { select: (elements: CanvasElement[]) => void };
+      const canvas = modeler.get('canvas') as {
+        viewbox: (vb?: unknown) => { x: number; y: number; width: number; height: number };
+      };
 
       const el = elementRegistry.get(elementId);
-      if (!el) return;
+      if (!el) return false;
       selection.select([el]);
+
+      // 子流程内元素的 x/y 相对父容器，只有 absoluteMidpoint 对容器内外都成立
+      const midpoint = el.absoluteMidpoint
+        ?? (typeof el.x === 'number' && typeof el.width === 'number'
+          ? { x: el.x + el.width / 2, y: (el.y ?? 0) + (el.height ?? 0) / 2 }
+          : undefined);
+      if (!midpoint) return true;
 
       const viewbox = canvas.viewbox();
       canvas.viewbox({
-        x: el.x + el.width / 2 - viewbox.width / 2,
-        y: el.y + el.height / 2 - viewbox.height / 2,
+        x: midpoint.x - viewbox.width / 2,
+        y: midpoint.y - viewbox.height / 2,
         width: viewbox.width,
         height: viewbox.height,
       });
-    } catch (err) {
-      console.error('Focus element failed:', err);
+      return true;
+    } catch {
+      messageRef.current.error(tRef.current('bpmnDesigner.messages.searchLocateFailed'));
+      return false;
     }
   }, []);
+
+  /** 在命中集合内循环定位；元素已被删除时重算而不是静默失败 */
+  const focusMatchAt = useCallback((index: number) => {
+    const matches = searchMatchesRef.current;
+    if (matches.length === 0) return;
+    const nextIndex = ((index % matches.length) + matches.length) % matches.length;
+    const match = matches[nextIndex];
+    if (!focusElement(match.id)) {
+      messageRef.current.warning(tRef.current('bpmnDesigner.messages.searchElementGone'));
+      rerunSearchRef.current();
+      return;
+    }
+
+    const modeler = modelerRef.current;
+    if (modeler) {
+      try {
+        const canvas = modeler.get('canvas') as {
+          addMarker: (id: string, cls: string) => void;
+          removeMarker: (id: string, cls: string) => void;
+        };
+        if (activeSearchIdRef.current && activeSearchIdRef.current !== match.id) {
+          canvas.removeMarker(activeSearchIdRef.current, SEARCH_ACTIVE_MARKER);
+        }
+        canvas.addMarker(match.id, SEARCH_ACTIVE_MARKER);
+        activeSearchIdRef.current = match.id;
+      } catch {
+        // 高亮失败不影响定位本身
+      }
+    }
+    setSearchActiveIndex(nextIndex);
+  }, [focusElement]);
+
+  const closeSearch = useCallback(() => {
+    setSearchOpen(false);
+    setSearchKeyword('');
+    clearSearchMarkers();
+  }, [clearSearchMarkers]);
+
+  /** 在命中集合内前进一步；尚未定位时向上从最后一个命中开始，向下从第一个开始 */
+  const stepSearch = useCallback(
+    (delta: 1 | -1) => {
+      if (searchMatchesRef.current.length === 0) return;
+      const from = searchActiveIndex < 0 && delta < 0 ? 0 : searchActiveIndex;
+      focusMatchAt(from + delta);
+    },
+    [focusMatchAt, searchActiveIndex]
+  );
+
+  const openSearch = useCallback(() => {
+    setSearchOpen(true);
+    // 面板可能刚挂载，等下一帧再聚焦；已打开时重复 Ctrl+F 也重新聚焦并全选关键字
+    requestAnimationFrame(() => {
+      searchInputRef.current?.focus();
+      searchInputRef.current?.select();
+    });
+  }, []);
+
+  const handleSearchKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      closeSearch();
+      return;
+    }
+    if (event.key === 'ArrowDown' || (event.key === 'Enter' && !event.shiftKey)) {
+      event.preventDefault();
+      stepSearch(1);
+      return;
+    }
+    if (event.key === 'ArrowUp' || (event.key === 'Enter' && event.shiftKey)) {
+      event.preventDefault();
+      stepSearch(-1);
+    }
+  };
 
   // 验证流程
   const handleValidate = useCallback(async () => {
@@ -1048,22 +1228,17 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
   }, [handleValidate]);
 
   /**
-   * 供父组件调用：选中指定元素
+   * 供父组件调用：选中并居中指定元素，返回画布上是否真的存在该元素。
+   * 校验面板的 issue 可能来自后端 lint，元素 id 未必存在于当前草稿，
+   * 静默失败会让「已定位」提示变成假信息。
    */
-  const selectElement = useCallback((elementId: string) => {
-    if (!modelerRef.current) return;
-    const elementRegistry = modelerRef.current.get('elementRegistry') as {
-      get: (id: string) => any;
-    };
-    const selection = modelerRef.current.get('selection') as {
-      select: (elements: any[]) => void;
-    };
-
-    const element = elementRegistry.get(elementId);
-    if (element) {
-      selection.select([element]);
-    }
-  }, []);
+  const selectElement = useCallback(
+    (elementId: string): boolean => {
+      if (!modelerRef.current) return false;
+      return focusElement(elementId);
+    },
+    [focusElement]
+  );
 
   // 暴露命令式 API 给父组件
   useEffect(() => {
@@ -1075,10 +1250,17 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
   // 键盘快捷键处理
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (readOnly) return;
-
       const mod = e.ctrlKey || e.metaKey;
       const key = e.key.toLowerCase();
+
+      // Ctrl/Cmd + F: 打开/聚焦节点搜索（先于只读判断，只读画布同样需要定位节点）
+      if (mod && key === 'f') {
+        e.preventDefault();
+        openSearch();
+        return;
+      }
+
+      if (readOnly) return;
 
       // Ctrl/Cmd + S: 保存（任何焦点下都生效，避免浏览器默认"保存网页"）
       if (mod && key === 's') {
@@ -1133,18 +1315,11 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
         handlePaste();
         return;
       }
-
-      // Ctrl/Cmd + F: 搜索
-      if (mod && key === 'f') {
-        e.preventDefault();
-        const searchInput = document.getElementById('bpmn-search-input');
-        searchInput?.focus();
-      }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [readOnly, handleSave, handleUndo, handleRedo, handleDelete, handleSelectAll, handleCopy, handlePaste]);
+  }, [readOnly, handleSave, handleUndo, handleRedo, handleDelete, handleSelectAll, handleCopy, handlePaste, openSearch]);
 
   // 对齐菜单
   const alignMenuItems: MenuProps['items'] = [
@@ -1238,16 +1413,7 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
     }
   ];
 
-  // 搜索下拉选项
-  const searchOptions = searchMatches.map(match => ({
-    value: match.id,
-    label: (
-      <div className="flex items-center justify-between gap-2">
-        <span className="truncate">{match.name}</span>
-        <span className="text-xs text-gray-400 shrink-0">{match.type}</span>
-      </div>
-    ),
-  }));
+  const hasSearchKeyword = searchKeyword.trim().length > 0;
 
   return (
     <div style={{ display: 'flex', height, border: '1px solid #d9d9d9', borderRadius: '6px', position: 'relative' }}>
@@ -1351,6 +1517,15 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
           </Tooltip>
         </Dropdown>
 
+        <Tooltip title={t('bpmnDesigner.buttons.searchShortcut')} placement="right">
+          <Button
+            aria-label={t('bpmnDesigner.buttons.searchShortcut')}
+            type="text"
+            icon={<Search size={18} />}
+            onClick={openSearch}
+          />
+        </Tooltip>
+
         <div style={{ flex: 1 }} />
 
         <Dropdown menu={{ items: settingsMenuItems }} placement="bottomRight" trigger={['click']}>
@@ -1381,63 +1556,149 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
       {/* BPMN 图 */}
       <div ref={containerRef} style={{ flex: 1, position: 'relative' }} />
 
-      {/* 顶部搜索栏 */}
+      {/* 画布顶部浮层：搜索面板与序列化阻断提示按顺序堆叠，避免互相遮挡 */}
       <div style={{
         position: 'absolute',
         top: 16,
         left: '50%',
         transform: 'translateX(-50%)',
-        width: 300,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: 8,
         zIndex: 10,
-        background: 'white',
-        borderRadius: '6px',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
       }}>
-        <AutoComplete
-          value={searchKeyword}
-          options={searchOptions}
-          onSearch={handleSearchChange}
-          onSelect={value => focusElement(String(value))}
-          onChange={(value: string) => {
-            if (!value) {
-              setSearchKeyword('');
-              setSearchMatches([]);
-            }
-          }}
-          popupMatchSelectWidth={280}
-          defaultActiveFirstOption
-          size="small"
-          style={{ width: '100%' }}
-        >
-          <Input
-            id="bpmn-search-input"
-            placeholder={t('bpmnDesigner.buttons.searchPlaceholder')}
-            prefix={<Search size={14} />}
-            allowClear
-            size="small"
-          />
-        </AutoComplete>
-      </div>
+        {searchOpen && (
+          <div
+            role="search"
+            aria-label={t('bpmnDesigner.buttons.searchShortcut')}
+            style={{
+              width: 340,
+              background: 'white',
+              borderRadius: 6,
+              boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 2, padding: 4 }}>
+              <Input
+                ref={searchInputRef}
+                id="bpmn-search-input"
+                aria-label={t('bpmnDesigner.buttons.searchPlaceholder')}
+                placeholder={t('bpmnDesigner.buttons.searchPlaceholder')}
+                prefix={<Search size={14} />}
+                allowClear
+                size="small"
+                value={searchKeyword}
+                onChange={e => setSearchKeyword(e.target.value)}
+                onKeyDown={handleSearchKeyDown}
+                style={{ flex: 1, minWidth: 0 }}
+              />
+              <span
+                style={{
+                  minWidth: 52,
+                  textAlign: 'center',
+                  fontSize: 12,
+                  color: hasSearchKeyword && searchMatches.length === 0 ? '#d4380d' : '#8c8c8c',
+                }}
+              >
+                {!hasSearchKeyword
+                  ? '—'
+                  : searchActiveIndex >= 0
+                    ? t('bpmnDesigner.messages.searchHitPosition', {
+                        current: searchActiveIndex + 1,
+                        total: searchMatches.length,
+                      })
+                    : t('bpmnDesigner.messages.searchHitTotal', { total: searchMatches.length })}
+              </span>
+              <Tooltip title={t('bpmnDesigner.buttons.searchPrev')}>
+                <Button
+                  aria-label={t('bpmnDesigner.buttons.searchPrev')}
+                  type="text"
+                  size="small"
+                  icon={<ChevronUp size={14} />}
+                  disabled={searchMatches.length === 0}
+                  onClick={() => stepSearch(-1)}
+                />
+              </Tooltip>
+              <Tooltip title={t('bpmnDesigner.buttons.searchNext')}>
+                <Button
+                  aria-label={t('bpmnDesigner.buttons.searchNext')}
+                  type="text"
+                  size="small"
+                  icon={<ChevronDown size={14} />}
+                  disabled={searchMatches.length === 0}
+                  onClick={() => stepSearch(1)}
+                />
+              </Tooltip>
+              <Tooltip title={t('bpmnDesigner.buttons.searchClose')}>
+                <Button
+                  aria-label={t('bpmnDesigner.buttons.searchClose')}
+                  type="text"
+                  size="small"
+                  icon={<X size={14} />}
+                  onClick={closeSearch}
+                />
+              </Tooltip>
+            </div>
 
-      {/* 序列化失败期间保存已被阻断，必须显式告知原因 */}
-      {serializeError && (
-        <div style={{
-          position: 'absolute',
-          top: 52,
-          left: '50%',
-          transform: 'translateX(-50%)',
-          width: 460,
-          maxWidth: '86%',
-          zIndex: 11,
-        }}>
+            {hasSearchKeyword && searchMatches.length === 0 && (
+              <div style={{ padding: '8px 12px', fontSize: 12, color: '#8c8c8c' }}>
+                {t('bpmnDesigner.messages.searchNoMatch')}
+              </div>
+            )}
+
+            {searchMatches.length > 0 && (
+              <ul
+                role="listbox"
+                aria-label={t('bpmnDesigner.messages.searchHitTotal', { total: searchMatches.length })}
+                style={{
+                  maxHeight: 200,
+                  overflowY: 'auto',
+                  margin: 0,
+                  padding: 0,
+                  listStyle: 'none',
+                  borderTop: '1px solid #f0f0f0',
+                }}
+              >
+                {searchMatches.map((match, index) => (
+                  <li
+                    key={match.id}
+                    role="option"
+                    aria-selected={index === searchActiveIndex}
+                    onClick={() => focusMatchAt(index)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: 8,
+                      padding: '6px 12px',
+                      fontSize: 12,
+                      cursor: 'pointer',
+                      background: index === searchActiveIndex ? '#e6f4ff' : undefined,
+                    }}
+                  >
+                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {match.name}
+                    </span>
+                    <span style={{ color: '#8c8c8c', flexShrink: 0 }}>{match.typeLabel}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
+
+        {/* 序列化失败期间保存已被阻断，必须显式告知原因 */}
+        {serializeError && (
           <Alert
             type="error"
             showIcon
             title="流程无法序列化，保存已阻断"
             description={`${serializeError}。请撤销最近一次属性修改，或改用该节点支持的配置项后再保存。`}
+            style={{ width: 460, maxWidth: '86vw' }}
           />
-        </div>
-      )}
+        )}
+      </div>
 
       {/* 缩放控制 */}
       <div

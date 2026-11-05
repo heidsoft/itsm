@@ -26,6 +26,16 @@ export interface CommandMeta {
    * Map of flag → reason shown to the user.
    */
   denyFlags?: Record<string, string>;
+  /**
+   * Risk that depends on runtime input, not just the command name: values of
+   * the FIRST positional argument that trigger the confirmation gate even
+   * though the spec's static risk level is lower. `infra.api` is the user:
+   * its METHOD positional decides whether the call is a read (`GET`) or an
+   * unrecoverable delete. Enforcement lives inside spec.run at execution
+   * time; this field exists so dry-run/preview/describe advertise the same
+   * fact instead of a misleading "no confirmation needed".
+   */
+  confirmMethods?: string[];
 }
 
 export interface CommandSpec {
@@ -43,6 +53,8 @@ export interface CommandSpec {
   bodyFields?: string[];
   /** Flags rejected by policy (secrets on argv), with the reason. */
   denyFlags?: Record<string, string>;
+  /** First-positional values that turn this command's gate on (see CommandMeta). */
+  confirmMethods?: string[];
   run: (ctx: CommandContext) => Promise<unknown>;
 }
 
@@ -110,8 +122,25 @@ export function cmd(
     input: { params, ...(derived.body ? { body: derived.body } : {}) },
     bodyFields: meta?.bodyFields,
     ...(meta?.denyFlags ? { denyFlags: meta.denyFlags } : {}),
+    ...(meta?.confirmMethods ? { confirmMethods: meta.confirmMethods } : {}),
     run,
   };
+}
+
+/**
+ * Whether THIS rendered invocation needs the confirmation gate — the single
+ * fact shared by dry-run (CLI), preview (MCP) and describe:
+ *   · static: high-risk-write always gates;
+ *   · method-derived: confirmMethods compares against the first positional's
+ *     value (infra.api's METHOD). With no/unknown value the gate cannot fire —
+ *     describe-level callers just see the declared confirmMethods.
+ * Execution-time enforcement stays in spec.run; this must never be weaker.
+ */
+export function needsConfirmation(spec: CommandSpec, firstPositional?: string): boolean {
+  if (spec.risk === 'high-risk-write') return true;
+  if (!spec.confirmMethods?.length) return false;
+  if (!firstPositional) return false;
+  return spec.confirmMethods.includes(firstPositional.toUpperCase());
 }
 
 /** One command rendered for agents: what it does, what it needs, what it costs. */
@@ -123,7 +152,8 @@ export function describeCommand(spec: CommandSpec): Record<string, unknown> {
     usage: spec.usage,
     risk: spec.risk,
     endpoints: spec.endpoints,
-    requiresConfirmation: spec.risk === 'high-risk-write',
+    requiresConfirmation: needsConfirmation(spec),
+    ...(spec.confirmMethods ? { confirmMethods: spec.confirmMethods } : {}),
     input: {
       params: spec.input.params,
       ...(spec.input.body ? { body: spec.input.body } : {}),

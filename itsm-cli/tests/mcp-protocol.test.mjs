@@ -151,6 +151,14 @@ async function route(req, res) {
   }
   if (/^\/cmdb\/cis\/\d+$/.test(p) && req.method === 'DELETE') return ok(res, null);
   if (p === '/boom/gated-delete' && req.method === 'DELETE') return ok(res, { deleted: true });
+  if (p === '/marketplace/items' && req.method === 'GET') {
+    return ok(res, {
+      items: [{ id: 7, name: 'feishu-connector', isOfficial: url.searchParams.get('isOfficial') === 'true' }],
+      total: 1, page: 1, pageSize: 20, totalPages: 1,
+    });
+  }
+  if (p === '/marketplace/items/7/install' && req.method === 'POST') return ok(res, { id: 7, status: 'installed' });
+  if (p === '/marketplace/items/7/auto-upgrade' && req.method === 'PATCH') return ok(res, { id: 7, autoUpgrade: true });
 
   return json(res, 404, { code: 4004, message: `no stub for ${key}` });
 }
@@ -373,6 +381,25 @@ test('infra.api raw DELETE executes once confirm is set', async () => {
   assert.equal(hits.get('DELETE /boom/gated-delete'), 1);
 });
 
+test('infra.api preview reflects the METHOD gate, not the static write risk', async () => {
+  const { byId } = await session([
+    initialize,
+    {
+      jsonrpc: '2.0',
+      id: 14,
+      method: 'tools/call',
+      params: {
+        name: 'itsm_call',
+        arguments: { command: 'infra.api', params: { METHOD: 'DELETE', 'path-relative-to-/api/v1': '/boom/gated-delete' }, preview: true },
+      },
+    },
+  ]);
+  assert.equal(byId.get(14).result.isError, false);
+  const preview = JSON.parse(byId.get(14).result.content[0].text);
+  assert.equal(preview.preview, true);
+  assert.equal(preview.requiresConfirmation, true);
+});
+
 test('denyFlags applies on the MCP path, matching the CLI runner policy', async () => {
   const { byId } = await session([
     initialize,
@@ -392,6 +419,58 @@ test('denyFlags applies on the MCP path, matching the CLI runner policy', async 
   assert.equal(payload.error.kind, 'usage');
   assert.match(payload.error.message, /password/);
   assert.match(payload.error.message, /password-stdin|password-file/);
+});
+
+test('marketplace install through itsm_call is a high-risk write with confirm', async () => {
+  hits.clear();
+  const gatedResult = await session([
+    initialize,
+    {
+      jsonrpc: '2.0',
+      id: 11,
+      method: 'tools/call',
+      params: { name: 'itsm_call', arguments: { command: 'marketplace.install', params: { id: '7' } } },
+    },
+  ]);
+  assert.equal(gatedResult.byId.get(11).result.isError, true);
+  const gated = JSON.parse(gatedResult.byId.get(11).result.content[0].text);
+  assert.equal(gated.error.kind, 'confirmation_required');
+  assert.equal(hits.get('POST /marketplace/items/7/install') ?? 0, 0, 'install must not fire before consent');
+
+  const confirmedResult = await session([
+    initialize,
+    {
+      jsonrpc: '2.0',
+      id: 12,
+      method: 'tools/call',
+      params: { name: 'itsm_call', arguments: { command: 'marketplace.install', params: { id: '7' }, confirm: true } },
+    },
+  ]);
+  assert.equal(confirmedResult.byId.get(12).result.isError, false);
+  const done = JSON.parse(confirmedResult.byId.get(12).result.content[0].text);
+  assert.equal(done.data.status, 'installed');
+  assert.equal(hits.get('POST /marketplace/items/7/install'), 1);
+});
+
+test('marketplace items through itsm_call sends the backend query names', async () => {
+  queries.clear();
+  const { byId } = await session([
+    initialize,
+    {
+      jsonrpc: '2.0',
+      id: 13,
+      method: 'tools/call',
+      params: {
+        name: 'itsm_call',
+        arguments: { command: 'marketplace.items', params: { type: 'connector', official: true, page: 2 } },
+      },
+    },
+  ]);
+  assert.equal(byId.get(13).result.isError, false);
+  const q = queries.get('GET /marketplace/items');
+  assert.equal(q.get('type'), 'connector');
+  assert.equal(q.get('isOfficial'), 'true');
+  assert.equal(q.get('page'), '2');
 });
 
 test('preview describes the call without sending it', async () => {

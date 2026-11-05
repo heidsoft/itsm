@@ -26,6 +26,7 @@ import WorkflowVersionModal from './WorkflowVersionModal';
 import WorkflowSettingsModal from './WorkflowSettingsModal';
 import WorkflowMetadataModal from './WorkflowMetadataModal';
 import WorkflowAIModal from './WorkflowAIModal';
+import BPMNDiagramPreview from '../BPMNDiagramPreview';
 
 import type { BpmnNodeSelection } from '../BPMNDesigner';
 import type { WorkflowDefinition, WorkflowVersion, ApprovalConfig } from './WorkflowTypes';
@@ -86,7 +87,7 @@ const getDefaultBPMNXML = () => {
 function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { message } = App.useApp();
+  const { message, modal } = App.useApp();
   const { t } = useI18n();
 
   const [form] = Form.useForm();
@@ -310,25 +311,29 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
   };
 
   // 加载工作流版本
-  const loadWorkflowVersions = async (id: string) => {
-    if (id === 'new') return;
+  const loadWorkflowVersions = useCallback(
+    async (id: string) => {
+      if (id === 'new') return;
 
-    try {
-      const versions = await WorkflowAPI.getProcessVersions(id);
-      const normalized = (versions as any[]).map((version, index) => ({
-        id: version.id || version.key || `version-${index}`,
-        version: String(version.version ?? '1.0.0'),
-        status: version.status || (version.isActive ? 'active' : 'draft'),
-        createdAt: version.createdAt || new Date().toISOString(),
-        createdBy: version.createdBy || t('workflow.designer.system'),
-        changeLog: version.changeLog || '',
-        xml: version.bpmnXml || '',
-      }));
-      setWorkflowVersions(normalized);
-    } catch (error) {
-      console.error('加载工作流版本失败:', error);
-    }
-  };
+      try {
+        const versions = await WorkflowAPI.listVersions(id);
+        setWorkflowVersions(
+          versions.map(version => ({
+            id: version.id,
+            version: String(version.version),
+            status: version.isActive ? 'active' : 'draft',
+            createdAt: version.createdAt,
+            createdBy: version.createdBy || t('workflow.designer.system'),
+            changeLog: version.changeLog,
+            xml: version.bpmnXml,
+          }))
+        );
+      } catch (error) {
+        console.error('加载工作流版本失败:', error);
+      }
+    },
+    [t]
+  );
 
   // 加载工作流配置
   const loadWorkflowConfig = async (key: string) => {
@@ -479,7 +484,7 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
       const issues = await validateWorkflow();
       const hasErrors = issues.some((i: ValidationIssue) => i.type === 'error');
       if (hasErrors) {
-        Modal.confirm({
+        modal.confirm({
           title: t('workflow.designer.saveConfirmTitle'),
           content: t('workflow.designer.saveConfirmContent'),
           okText: t('workflow.designer.saveConfirmContinue'),
@@ -709,15 +714,16 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
   // 跳转到问题元素
   const jumpToIssue = (issue: ValidationIssue) => {
     if (!issue.elementId) return;
-    
+
     const api = getBpmnDesignerApi();
-    if (api) {
-      api.selectElement(issue.elementId);
-      // 切换到设计器标签
-      setActiveTab('designer');
-      // 关闭校验面板（可选）
-      // setShowValidationPanel(false);
+    if (!api) return;
+
+    // 切换到设计器标签后再定位，否则画布可能尚未挂载。
+    setActiveTab('designer');
+    if (api.selectElement(issue.elementId)) {
       message.info(t('workflow.designer.elementLocatedWithName', { name: issue.elementName || issue.elementId }));
+    } else {
+      message.warning(t('workflow.designer.elementLocateFailed', { name: issue.elementName || issue.elementId }));
     }
   };
 
@@ -1097,11 +1103,23 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
                 <span className="mx-2">VS</span>
                 <Tag color="green">{t('workflow.designer.versionCompareVersion', { version: compareVersions.version2.version })}</Tag>
               </div>
-              <div className="grid grid-cols-2 gap-4 h-[600px]">
-                <div className="border border-gray-200 rounded-lg p-4 overflow-y-auto bg-gray-50 font-mono text-xs whitespace-pre-wrap">
+              <div className="grid grid-cols-2 gap-4">
+                <BPMNDiagramPreview
+                  xml={compareVersions.version1.xml}
+                  height={280}
+                  label={t('workflow.designer.versionCompareVersion', { version: compareVersions.version1.version })}
+                />
+                <BPMNDiagramPreview
+                  xml={compareVersions.version2.xml}
+                  height={280}
+                  label={t('workflow.designer.versionCompareVersion', { version: compareVersions.version2.version })}
+                />
+              </div>
+              <div className="mt-4 grid grid-cols-2 gap-4">
+                <div className="h-[200px] overflow-y-auto rounded-lg border border-gray-200 bg-gray-50 p-4 font-mono text-xs whitespace-pre-wrap">
                   {compareVersions.version1.xml}
                 </div>
-                <div className="border border-gray-200 rounded-lg p-4 overflow-y-auto bg-gray-50 font-mono text-xs whitespace-pre-wrap">
+                <div className="h-[200px] overflow-y-auto rounded-lg border border-gray-200 bg-gray-50 p-4 font-mono text-xs whitespace-pre-wrap">
                   {compareVersions.version2.xml}
                 </div>
               </div>

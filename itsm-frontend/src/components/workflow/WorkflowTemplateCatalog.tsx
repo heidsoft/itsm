@@ -1,8 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { App, Button, Card, Descriptions, Form, Input, Modal, Select, Space, Switch, Table, Tag, Typography } from 'antd';
+import { App, Button, Card, Collapse, Descriptions, Form, Input, Modal, Select, Space, Switch, Table, Tag, Typography } from 'antd';
 import { Edit, Eye, History, Plus, Upload, Archive, Copy } from 'lucide-react';
+import BPMNDiagramPreview from '@/components/workflow/BPMNDiagramPreview';
 import {
   BPMNWorkflowTemplateApi,
   type WorkflowTemplate,
@@ -33,7 +34,7 @@ const STATUS_LABELS: Record<string, { label: string; color: string }> = {
 };
 
 export default function WorkflowTemplateCatalog() {
-  const { message } = App.useApp();
+  const { message, modal } = App.useApp();
   const [items, setItems] = useState<WorkflowTemplate[]>([]);
   const [loading, setLoading] = useState(false);
   const [filters, setFilters] = useState({ keyword: '', domain: '', status: '' });
@@ -106,7 +107,7 @@ export default function WorkflowTemplateCatalog() {
   };
 
   const publish = (item: WorkflowTemplate) => {
-    Modal.confirm({
+    modal.confirm({
       title: `发布 ${item.name} ${item.version}？`,
       content: '发布前会执行 BPMN Lint，发布后的版本不可直接编辑。',
       okText: '发布',
@@ -124,7 +125,7 @@ export default function WorkflowTemplateCatalog() {
   };
 
   const archive = (item: WorkflowTemplate) => {
-    Modal.confirm({
+    modal.confirm({
       title: `停用 ${item.name}？`,
       content: '停用只影响模板目录状态，不删除历史版本。',
       okText: '停用',
@@ -217,25 +218,42 @@ export default function WorkflowTemplateCatalog() {
           { title: 'BPMN', dataIndex: 'bpmnXml', render: (value: string) => value ? '已配置' : '缺失' },
         ]} />
       </Modal>
-      <Modal title={detailItem ? `模板详情 — ${detailItem.name}` : '模板详情'} open={detailOpen} onCancel={() => setDetailOpen(false)} footer={null} width={800}>
+      <Modal title={detailItem ? `模板详情 — ${detailItem.name}` : '模板详情'} open={detailOpen} onCancel={() => setDetailOpen(false)} footer={null} width={860} destroyOnHidden>
         {detailItem && (
-          <Descriptions column={2} bordered size="small">
-            <Descriptions.Item label="模板 Key" span={2}>{detailItem.key}</Descriptions.Item>
-            <Descriptions.Item label="模板名称">{detailItem.name}</Descriptions.Item>
-            <Descriptions.Item label="业务域">{DOMAIN_OPTIONS.find(option => option.value === detailItem.domain)?.label || detailItem.domain}</Descriptions.Item>
-            <Descriptions.Item label="版本">{detailItem.version}</Descriptions.Item>
-            <Descriptions.Item label="状态"><Tag color={STATUS_LABELS[detailItem.status]?.color}>{STATUS_LABELS[detailItem.status]?.label || detailItem.status}</Tag></Descriptions.Item>
-            <Descriptions.Item label="对租户用户可见">{detailItem.isPublic ? '是' : '否'}</Descriptions.Item>
-            <Descriptions.Item label="创建时间">{formatDateTime(detailItem.createdAt)}</Descriptions.Item>
-            <Descriptions.Item label="描述" span={2}>{detailItem.description || '—'}</Descriptions.Item>
-            <Descriptions.Item label="BPMN XML" span={2}>
-              {detailItem.bpmnXml ? (
-                <Typography.Paragraph ellipsis={{ rows: 6, expandable: true, symbol: '展开' }} style={{ marginBottom: 0, fontSize: 12, fontFamily: 'monospace', whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
-                  {detailItem.bpmnXml}
-                </Typography.Paragraph>
-              ) : '未配置'}
-            </Descriptions.Item>
-          </Descriptions>
+          <div className="space-y-4">
+            <Descriptions column={2} bordered size="small">
+              <Descriptions.Item label="模板 Key" span={2}>{detailItem.key}</Descriptions.Item>
+              <Descriptions.Item label="模板名称">{detailItem.name}</Descriptions.Item>
+              <Descriptions.Item label="业务域">{DOMAIN_OPTIONS.find(option => option.value === detailItem.domain)?.label || detailItem.domain}</Descriptions.Item>
+              <Descriptions.Item label="版本">{detailItem.version}</Descriptions.Item>
+              <Descriptions.Item label="状态"><Tag color={STATUS_LABELS[detailItem.status]?.color}>{STATUS_LABELS[detailItem.status]?.label || detailItem.status}</Tag></Descriptions.Item>
+              <Descriptions.Item label="对租户用户可见">{detailItem.isPublic ? '是' : '否'}</Descriptions.Item>
+              <Descriptions.Item label="创建时间">{formatDateTime(detailItem.createdAt)}</Descriptions.Item>
+              <Descriptions.Item label="描述" span={2}>{detailItem.description || '—'}</Descriptions.Item>
+            </Descriptions>
+
+            <div>
+              <div className="mb-2 text-sm font-medium">流程预览</div>
+              <BPMNDiagramPreview xml={detailItem.bpmnXml || ''} height={340} />
+            </div>
+
+            {detailItem.bpmnXml && (
+              <Collapse
+                size="small"
+                items={[
+                  {
+                    key: 'xml',
+                    label: 'BPMN XML',
+                    children: (
+                      <pre className="max-h-[280px] overflow-auto text-xs leading-relaxed">
+                        {detailItem.bpmnXml}
+                      </pre>
+                    ),
+                  },
+                ]}
+              />
+            )}
+          </div>
         )}
       </Modal>
     </Card>

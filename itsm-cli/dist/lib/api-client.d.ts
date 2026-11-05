@@ -489,4 +489,6 @@ export declare class ApiClient {
     getMarketplaceDependencyStatus(): Promise<unknown>;
 }
 export declare const apiClient: ApiClient;
+/** Pull one cookie value out of Set-Cookie header values. Exported so runtime.ts's hydrate path resolves cookies the same way login does (multi-value headers, values containing `=`). */
+export declare function extractCookie(cookies: string[], name: string): string | undefined;
 export {};

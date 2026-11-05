@@ -1515,7 +1515,7 @@ func TestChangeHandler_WindowConflict_SameCIOverlappingRejected(t *testing.T) {
 	c.PlannedEndDate = &ce
 	repo.changes[c.ID] = c
 
-	requestBody, _ := json.Marshal(dto.SubmitChangeRequest{ApproverIDs: []int{2}})
+	requestBody, _ := json.Marshal(dto.SubmitChangeRequest{ApproverIDs: []int{3}})
 	w := httptest.NewRecorder()
 	httpReq, _ := http.NewRequest("POST", "/api/v1/changes/"+strconv.Itoa(c.ID)+"/submit", bytes.NewBuffer(requestBody))
 	httpReq.Header.Set("Content-Type", "application/json")
@@ -1551,7 +1551,7 @@ func TestChangeHandler_WindowConflict_DisjointCIPasses(t *testing.T) {
 	c.PlannedEndDate = &ce
 	repo.changes[c.ID] = c
 
-	requestBody, _ := json.Marshal(dto.SubmitChangeRequest{ApproverIDs: []int{2}})
+	requestBody, _ := json.Marshal(dto.SubmitChangeRequest{ApproverIDs: []int{3}})
 	w := httptest.NewRecorder()
 	httpReq, _ := http.NewRequest("POST", "/api/v1/changes/"+strconv.Itoa(c.ID)+"/submit", bytes.NewBuffer(requestBody))
 	httpReq.Header.Set("Content-Type", "application/json")
@@ -1586,7 +1586,7 @@ func TestChangeHandler_WindowConflict_DraftHolderNotBlocking(t *testing.T) {
 			c.PlannedEndDate = &ce
 			repo.changes[c.ID] = c
 
-			requestBody, _ := json.Marshal(dto.SubmitChangeRequest{ApproverIDs: []int{2}})
+			requestBody, _ := json.Marshal(dto.SubmitChangeRequest{ApproverIDs: []int{3}})
 			w := httptest.NewRecorder()
 			httpReq, _ := http.NewRequest("POST", "/api/v1/changes/"+strconv.Itoa(c.ID)+"/submit", bytes.NewBuffer(requestBody))
 			httpReq.Header.Set("Content-Type", "application/json")
@@ -1621,7 +1621,7 @@ func TestChangeHandler_WindowConflict_TouchingEdgesPasses(t *testing.T) {
 	c.PlannedEndDate = &ce
 	repo.changes[c.ID] = c
 
-	requestBody, _ := json.Marshal(dto.SubmitChangeRequest{ApproverIDs: []int{2}})
+	requestBody, _ := json.Marshal(dto.SubmitChangeRequest{ApproverIDs: []int{3}})
 	w := httptest.NewRecorder()
 	httpReq, _ := http.NewRequest("POST", "/api/v1/changes/"+strconv.Itoa(c.ID)+"/submit", bytes.NewBuffer(requestBody))
 	httpReq.Header.Set("Content-Type", "application/json")

@@ -1,5 +1,5 @@
 import { isLoggedIn, hasRefreshableSession } from './credentials.js';
-import { setExternalTokenProvider, assertTransportSafety, timedFetch } from './api-client.js';
+import { setExternalTokenProvider, assertTransportSafety, timedFetch, extractCookie } from './api-client.js';
 import { redactSecrets, readSecretFile } from './secrets.js';
 export const DEFAULT_BASE_URL = 'http://localhost:8090';
 let lastAutoLoginFailure;
@@ -52,7 +52,10 @@ export async function hydrateAgentToken(cfg) {
                 body: JSON.stringify({ username: cfg.username, password: cfg.password }),
             });
             const cookies = res.headers.getSetCookie?.() ?? [res.headers.get('set-cookie') ?? ''];
-            const token = cookies.find((c) => c.trim().startsWith('access_token='))?.split(';')[0]?.split('=')[1];
+            // Same resolver as the interactive login path — one cookie parser, two
+            // transport paths. (A naive split('=')[1] silently truncates values
+            // containing an inner `=`.)
+            const token = extractCookie(cookies, 'access_token');
             if (token) {
                 setExternalTokenProvider(() => token);
                 return;

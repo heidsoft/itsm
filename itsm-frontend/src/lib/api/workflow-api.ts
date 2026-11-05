@@ -197,48 +197,60 @@ export interface BpmnVoteRequest {
   comment?: string;
 }
 
+/**
+ * 对应后端 service.ProcessVersion（bpmn_version_service.go）。
+ * GET /api/v1/bpmn/versions 与 GET /api/v1/bpmn/versions/:key/:version 共用此 DTO。
+ * 列表接口不回填 deploymentId/changeLog/compatibilityNotes，后端固定返回空串。
+ */
 export interface BpmnProcessVersion {
-  key: string;
+  id: string;
+  processDefinitionKey: string;
   version: number;
   name: string;
-  description?: string;
+  description: string;
   bpmnXml: string;
-  status: string;
-  isActivated: boolean;
-  createdBy?: number;
-  createdAt?: string;
-}
-
-export interface BpmnProcessVersionListResponse {
-  items: BpmnProcessVersion[];
-  total: number;
-  page: number;
-  pageSize: number;
+  deploymentId: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  createdBy: string;
+  tenantId: number;
+  changeLog: string;
+  compatibilityNotes: string;
 }
 
 export interface BpmnCreateVersionRequest {
-  key: string;
-  name?: string;
-  description?: string;
-  xml: string;
-}
-
-export interface BpmnVersionChangeLog {
-  id: number;
   processDefinitionKey: string;
-  version: number;
-  changeType: string;
-  changedFields: string[];
-  changeDetails?: string;
-  createdBy?: number;
-  createdAt?: string;
+  name: string;
+  description?: string;
+  bpmnXml: string;
+  changeLog?: string;
+  compatibilityNotes?: string;
 }
 
-export interface BpmnChangeLogListResponse {
-  items: BpmnVersionChangeLog[];
-  total: number;
-  page: number;
-  pageSize: number;
+/** 对应后端 service.ChangeDetail */
+export interface BpmnVersionChange {
+  type: string;
+  changeType: string;
+  elementType: string;
+  elementId: string;
+  elementName: string;
+  description: string;
+  impact: string;
+  oldValue?: string;
+  newValue?: string;
+}
+
+/**
+ * 对应后端 service.VersionComparison。
+ * compatibility 取值：identical / compatible / risky / incompatible。
+ */
+export interface BpmnVersionComparison {
+  baseVersion: BpmnProcessVersion | null;
+  targetVersion: BpmnProcessVersion | null;
+  changes: BpmnVersionChange[];
+  breakingChanges: string[];
+  compatibility: string;
 }
 
 export interface BpmnCounterSignTask {
@@ -262,17 +274,6 @@ export interface BpmnCounterSignStatusResponse {
   completed: boolean;
   createdTime?: string;
   completedTime?: string;
-}
-
-export interface BpmnVersionCompareResponse {
-  key: string;
-  version1: number;
-  version2: number;
-  diff: {
-    added: string[];
-    removed: string[];
-    modified: string[];
-  };
 }
 
 export interface BpmnInstanceStats {
@@ -858,44 +859,20 @@ export class WorkflowApi {
 
   /**
    * 获取工作流版本列表
+   *
+   * 版本级字段（isActive/changeLog/bpmnXml）请用 listVersions，这里只映射流程视图。
    */
   static async getWorkflowVersions(workflowId: string): Promise<WorkflowDefinition[]> {
-    interface ProcessDefinitionResponse {
-      id?: number;
-      key?: string;
-      name?: string;
-      description?: string;
-      bpmnXml?: string;
-      version?: number;
-      status?: string;
-      createdAt?: string;
-      updatedAt?: string;
-      [key: string]: unknown;
-    }
-
-    // 使用新的版本 API
-    const res = await httpClient.get<
-      Array<{
-        id: number;
-        key: string;
-        name: string;
-        description?: string;
-        bpmnXml?: string;
-        version: number;
-        status: string;
-        createdAt: string;
-        updatedAt: string;
-      }>
-    >('/api/v1/bpmn/versions', { processKey: workflowId });
-
-    const list = Array.isArray(res) ? res : [];
-    return list.map(item => ({
-      id: item.key || workflowId,
-      code: item.key || '',
-      name: item.name || '',
+    const versions = await WorkflowApi.listVersions(workflowId);
+    return versions.map(item => ({
+      // 后端每个版本是一条 ProcessDefinition 记录，id 唯一；
+      // 用 key 当 id 会让所有版本行撞 rowKey。
+      id: item.id,
+      code: item.processDefinitionKey,
+      name: item.name,
       type: WorkflowType.TICKET,
-      version: item.version || 1,
-      status: (item.status as WorkflowStatus) || WorkflowStatus.DRAFT,
+      version: item.version,
+      status: item.isActive ? WorkflowStatus.ACTIVE : WorkflowStatus.INACTIVE,
       nodes: [],
       connections: [],
       variables: [],
@@ -907,31 +884,27 @@ export class WorkflowApi {
       },
       createdBy: 0,
       createdByName: '',
-      createdAt: item.createdAt ? new Date(item.createdAt) : new Date(),
-      updatedAt: item.updatedAt ? new Date(item.updatedAt) : new Date(),
+      createdAt: new Date(item.createdAt),
+      updatedAt: new Date(item.updatedAt),
       description: item.description,
       bpmnXml: item.bpmnXml,
-    })) as WorkflowDefinition[];
+    }));
   }
 
-	static async createWorkflowVersion(data: {
-	  processDefinitionKey: string;
-	  name: string;
-	  description?: string;
-	  bpmnXml: string;
-	  changeLog?: string;
-	}): Promise<unknown> {
-	  return httpClient.post('/api/v1/bpmn/versions', data);
-	}
+  static async createWorkflowVersion(data: BpmnCreateVersionRequest): Promise<BpmnProcessVersion> {
+    return httpClient.post<BpmnProcessVersion>('/api/v1/bpmn/versions', data);
+  }
 
   /**
    * 发布新版本
+   *
+   * 后端暂无独立的“发布”动作，取当前已激活版本；没有任何激活版本时报错而不是返回草稿。
    */
   static async publishVersion(workflowId: string): Promise<WorkflowDefinition> {
-    // 后端暂不支持版本发布，获取最新版本返回
     const versions = await WorkflowApi.getWorkflowVersions(workflowId);
-    if (versions.length > 0) {
-      return versions[0];
+    const active = versions.find(item => item.status === WorkflowStatus.ACTIVE);
+    if (active) {
+      return active;
     }
     throw new Error('未找到可发布的版本');
   }
@@ -940,7 +913,10 @@ export class WorkflowApi {
    * 激活指定版本
    */
   static async activateVersion(processKey: string, version: number): Promise<void> {
-    await httpClient.put(`/api/v1/bpmn/versions/${processKey}/${version}/activate`, {});
+    await httpClient.put(
+      `/api/v1/bpmn/versions/${encodeURIComponent(processKey)}/${String(version)}/activate`,
+      {}
+    );
   }
 
   /**
@@ -951,9 +927,12 @@ export class WorkflowApi {
     version: number,
     reason?: string
   ): Promise<void> {
-    await httpClient.put(`/api/v1/bpmn/versions/${processKey}/${version}/rollback`, {
-      reason: reason || '回滚操作',
-    });
+    await httpClient.put(
+      `/api/v1/bpmn/versions/${encodeURIComponent(processKey)}/${String(version)}/rollback`,
+      {
+        reason: reason || '回滚操作',
+      }
+    );
   }
 
   /**
@@ -965,70 +944,24 @@ export class WorkflowApi {
 
   /**
    * 比较两个版本
+   *
+   * 后端返回 service.VersionComparison：base/target 版本快照 + 变更明细 + 兼容性结论。
+   * 版本号相同时后端直接返回空 data，调用方需按“无需比较”处理，不能当成零差异比较结果。
    */
   static async compareVersions(
     processKey: string,
     baseVersion: number,
     targetVersion: number
-  ): Promise<{
-    elementsAdded: string[];
-    elementsRemoved: string[];
-    elementsModified: string[];
-    connectionsAdded: string[];
-    connectionsRemoved: string[];
-    variablesChanged: string[];
-    isIdentical: boolean;
-  }> {
-    interface CompareResponse {
-      addedNodes?: string[];
-      removedNodes?: string[];
-      modifiedNodes?: string[];
-    }
-
-    interface VersionComparisonResponse {
-      elementsAdded: string[];
-      elementsRemoved: string[];
-      elementsModified: string[];
-      connectionsAdded: string[];
-      connectionsRemoved: string[];
-      variablesChanged: string[];
-      isIdentical: boolean;
-    }
-
-    const res = await httpClient.get<{
-      addedNodes?: string[];
-      removedNodes?: string[];
-      modifiedNodes?: string[];
-    }>(`/api/v1/bpmn/versions/${processKey}/compare`, {
-      baseVersion: baseVersion,
-      targetVersion: targetVersion,
-    });
-    const data = res;
-    if (!data) {
-      return {
-        elementsAdded: [],
-        elementsRemoved: [],
-        elementsModified: [],
-        connectionsAdded: [],
-        connectionsRemoved: [],
-        variablesChanged: [],
-        isIdentical: true,
-      };
-    }
-    // 适配后端返回格式
-    return {
-      elementsAdded: data.addedNodes || [],
-      elementsRemoved: data.removedNodes || [],
-      elementsModified: data.modifiedNodes || [],
-      connectionsAdded: [],
-      connectionsRemoved: [],
-      variablesChanged: [],
-      isIdentical: !(
-        data.addedNodes?.length ||
-        data.removedNodes?.length ||
-        data.modifiedNodes?.length
-      ),
-    };
+  ): Promise<BpmnVersionComparison | null> {
+    if (baseVersion === targetVersion) return null;
+    const res = await httpClient.get<BpmnVersionComparison | null>(
+      `/api/v1/bpmn/versions/${encodeURIComponent(processKey)}/compare`,
+      {
+        baseVersion: String(baseVersion),
+        targetVersion: String(targetVersion),
+      }
+    );
+    return res ?? null;
   }
 
   // ==================== 工作流实例管理 ====================
@@ -1725,38 +1658,9 @@ export class WorkflowApi {
    * 获取单个版本
    */
   static async getVersion(key: string, version: number): Promise<BpmnProcessVersion> {
-    const res = await httpClient.get<
-      { data?: BpmnProcessVersion } & BpmnProcessVersion
-    >(`/api/v1/bpmn/versions/${encodeURIComponent(key)}/${String(version)}`);
-    return (res as { data?: BpmnProcessVersion }).data ?? (res as BpmnProcessVersion);
-  }
-
-  /**
-   * 获取版本变更日志列表
-   */
-  static async getVersionChangeLogs(
-    key: string,
-    params?: { page?: number; pageSize?: number }
-  ): Promise<BpmnChangeLogListResponse> {
-    const query: Record<string, string> = {};
-    if (params?.page) query.page = String(params.page);
-    if (params?.pageSize) query.pageSize = String(params.pageSize);
-
-    const res = await httpClient.get<
-      { data?: BpmnChangeLogListResponse } & BpmnChangeLogListResponse
-    >(`/api/v1/bpmn/versions/${encodeURIComponent(key)}/changelogs`, query);
-    return (res as { data?: BpmnChangeLogListResponse }).data ??
-      (res as BpmnChangeLogListResponse);
-  }
-
-  /**
-   * 获取单条版本变更日志
-   */
-  static async getVersionChangeLogById(id: number): Promise<BpmnVersionChangeLog> {
-    const res = await httpClient.get<
-      { data?: BpmnVersionChangeLog } & BpmnVersionChangeLog
-    >(`/api/v1/bpmn/versions/changelogs/${id}`);
-    return (res as { data?: BpmnVersionChangeLog }).data ?? (res as BpmnVersionChangeLog);
+    return httpClient.get<BpmnProcessVersion>(
+      `/api/v1/bpmn/versions/${encodeURIComponent(key)}/${String(version)}`
+    );
   }
 
   static async createCounterSignTask(
@@ -1769,27 +1673,16 @@ export class WorkflowApi {
     return (res as { data?: BpmnCounterSignTask[] }).data ?? (res as BpmnCounterSignTask[]);
   }
 
-  static async listVersions(
-    key: string,
-    params?: { page?: number; pageSize?: number }
-  ): Promise<BpmnProcessVersionListResponse> {
-    const query: Record<string, string> = {};
-    if (params?.page) query.page = String(params.page);
-    if (params?.pageSize) query.pageSize = String(params.pageSize);
-    const res = await httpClient.get<
-      { data?: BpmnProcessVersionListResponse } & BpmnProcessVersionListResponse
-    >(`/api/v1/bpmn/versions`, { ...query, processKey: key });
-    return (
-      (res as { data?: BpmnProcessVersionListResponse }).data ??
-      (res as BpmnProcessVersionListResponse)
-    );
-  }
-
-  static async createVersion(data: BpmnCreateVersionRequest): Promise<BpmnProcessVersion> {
-    const res = await httpClient.post<
-      { data?: BpmnProcessVersion } & BpmnProcessVersion
-    >(`/api/v1/bpmn/versions`, data);
-    return (res as { data?: BpmnProcessVersion }).data ?? (res as BpmnProcessVersion);
+  /**
+   * 获取版本列表
+   *
+   * 后端按 version 倒序返回该 key 的全部版本，data 直接是数组。
+   */
+  static async listVersions(key: string): Promise<BpmnProcessVersion[]> {
+    const res = await httpClient.get<BpmnProcessVersion[]>('/api/v1/bpmn/versions', {
+      processKey: key,
+    });
+    return Array.isArray(res) ? res : [];
   }
 
   /**

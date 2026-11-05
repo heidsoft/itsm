@@ -431,10 +431,10 @@ func (s *Service) SubmitChange(ctx context.Context, changeID, tenantID, submitte
 
 	if len(plan) == 0 {
 		// 无激活审批链时的审批人来源，按优先级：
-		//   1. 调用方显式指定 approverIds（剔除创建人，避免自审）；
-		//   2. 租户内持有 change:approve 权限的活跃用户（同样排除创建人）。
+		//   1. 调用方显式指定 approverIds；
+		//   2. 租户内持有 change:approve 权限的活跃用户（排除创建人）。
 		// 旧实现缺省回落到 c.CreatedBy，等于允许创建人自审自己的变更。
-		ids := excludeChangeApprover(req.ApproverIDs, c.CreatedBy)
+		ids := req.ApproverIDs
 		if len(ids) == 0 {
 			candidates, cerr := s.repo.ListEligibleApprovers(ctx, tenantID, "change:approve", c.CreatedBy)
 			if cerr != nil {
@@ -443,11 +443,25 @@ func (s *Service) SubmitChange(ctx context.Context, changeID, tenantID, submitte
 					"无法确定变更审批人，请稍后重试或联系管理员配置审批链", cerr.Error())
 			}
 			ids = candidates
+		} else {
+			// 显式指定了创建人：直接拒绝，不静默替换成别人。
+			// 静默替换会让调用方以为「我指定的审批人接了单」，实际接单的是另一个人，
+			// 审批责任被悄悄转移——这比报错更难发现。
+			for _, approverID := range ids {
+				if approverID == c.CreatedBy {
+					return nil, common.NewBusinessError(common.ConflictCode,
+						"创建人不能审批自己提交的变更，请指定其他审批人",
+						fmt.Sprintf("changeId=%d creatorId=%d", changeID, c.CreatedBy))
+				}
+			}
 		}
+		ids = excludeChangeApprover(ids, c.CreatedBy)
 		if len(ids) == 0 {
+			// BusinessError.Detail 不会进入响应体（common.writeClassified 只回 message），
+			// 可行动指引必须写进 Message，否则用户只看到「没有审批人」却不知道怎么办。
 			return nil, common.NewBusinessError(common.ConflictCode,
-				"没有可用的变更审批人，禁止创建人自审",
-				fmt.Sprintf("changeId=%d creatorId=%d；请先在租户内配置持有 change:approve 权限的用户，或在提交时指定 approverIds", changeID, c.CreatedBy))
+				"没有可用的变更审批人，禁止创建人自审：请在租户内为具备 change:approve 权限的角色（如变更经理）配置用户，或在提交时指定 approverIds",
+				fmt.Sprintf("changeId=%d creatorId=%d", changeID, c.CreatedBy))
 		}
 		s.logger.Infow("Change resolved approver chain without active approval chain",
 			"change_id", changeID, "creator_id", c.CreatedBy, "approver_count", len(ids))

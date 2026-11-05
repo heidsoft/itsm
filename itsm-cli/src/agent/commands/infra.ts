@@ -62,7 +62,15 @@ export function infraCommands() {
         const body = jsonFlag(ctx.args.flags);
         return apiClient.requestRaw(method, `/api/v1${relPath}`, body);
       },
-      'write' as const
+      'write',
+      {
+        // The DELETE gate above is runtime state (the METHOD positional), which the
+        // static risk level cannot express. Declared here so dry-run/preview/describe
+        // advertise "this invocation needs --yes" instead of "no confirmation needed".
+        // (Comment lives INSIDE the meta object on purpose: a standalone comment
+        // line between two function arguments makes tsc emit a trailing space.)
+        confirmMethods: ['DELETE'],
+      }
     ),
   ];
 }

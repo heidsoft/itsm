@@ -2238,3 +2238,16 @@ html:not(.dark) .ant-btn-default:focus {
   min-width: 0;
   display: block;
 }
+
+/* BPMN 设计器节点搜索高亮：命中元素橙色描边，当前定位元素加深并带光晕。
+   bpmn-js 通过 canvas.addMarker 给 djs-element 追加类名，图形描边在 .djs-visual 内 */
+.djs-element.bpmn-search-hit .djs-visual > :nth-child(1) {
+  stroke: #fa8c16 !important;
+  stroke-width: 2px !important;
+}
+
+.djs-element.bpmn-search-hit-active .djs-visual > :nth-child(1) {
+  stroke: #d4380d !important;
+  stroke-width: 3px !important;
+  filter: drop-shadow(0 0 4px rgba(212, 56, 13, 0.45));
+}
