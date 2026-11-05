@@ -760,6 +760,103 @@ func (r *EntRepository) ValidateApproverBelongsToTenant(ctx context.Context, app
 	return exists, nil
 }
 
+// ListEligibleApprovers 返回租户内持有指定权限码、且处于可用状态的用户 ID。
+//
+// 用途：变更提交在「无激活审批链 + 调用方未指定审批人」时需要一个默认审批人。
+// 旧实现直接回落到创建人，等于允许自审自己的变更；这里改为从具备审批权限的
+// 活跃用户里挑，并允许调用方排除指定用户（通常是创建人）。
+//
+// 权限判定覆盖两条授权路径：
+//   - 主角色：users.role → roles.code → role_permissions → permissions.code
+//   - 多角色：user_roles → roles.code → role_permissions → permissions.code
+//
+// 两次独立查询而不是一条 OR：user_roles 是迁移建的裸关联表（无 ent schema），
+// 在只跑 ent schema 的测试库里并不存在，OR 会让整条查询一起失败。
+// 多角色查询失败时只记日志并退回主角色结果，不影响提交。
+func (r *EntRepository) ListEligibleApprovers(ctx context.Context, tenantID int, permissionCode string, excludeUserID int) ([]int, error) {
+	if r.db == nil {
+		return nil, fmt.Errorf("change repository raw database handle not initialised")
+	}
+	primary, err := r.queryApproversByPrimaryRole(ctx, tenantID, permissionCode, excludeUserID)
+	if err != nil {
+		return nil, err
+	}
+	seen := make(map[int]bool, len(primary))
+	for _, id := range primary {
+		seen[id] = true
+	}
+
+	extra, err := r.queryApproversByExtraRoles(ctx, tenantID, permissionCode, excludeUserID)
+	if err != nil {
+		// user_roles 缺失或查询失败：主角色结果仍然可用。
+		return primary, nil
+	}
+	for _, id := range extra {
+		if !seen[id] {
+			seen[id] = true
+			primary = append(primary, id)
+		}
+	}
+	return primary, nil
+}
+
+func (r *EntRepository) queryApproversByPrimaryRole(ctx context.Context, tenantID int, permissionCode string, excludeUserID int) ([]int, error) {
+	rows, err := r.db.QueryContext(ctx, `
+		SELECT DISTINCT u.id
+		FROM users u
+		JOIN roles r ON r.code = u.role AND r.tenant_id = u.tenant_id
+		JOIN role_permissions rp ON rp.role_id = r.id AND rp.tenant_id = u.tenant_id
+		JOIN permissions p ON p.id = rp.permission_id AND p.tenant_id = u.tenant_id
+		WHERE u.tenant_id = $1
+		  AND u.active = true
+		  AND u.deleted_at IS NULL
+		  AND p.code = $2
+		  AND ($3 <= 0 OR u.id <> $3)
+		ORDER BY u.id
+	`, tenantID, permissionCode, excludeUserID)
+	if err != nil {
+		return nil, fmt.Errorf("query change approvers by primary role failed: %w", err)
+	}
+	return scanApproverIDs(rows)
+}
+
+func (r *EntRepository) queryApproversByExtraRoles(ctx context.Context, tenantID int, permissionCode string, excludeUserID int) ([]int, error) {
+	rows, err := r.db.QueryContext(ctx, `
+		SELECT DISTINCT u.id
+		FROM users u
+		JOIN user_roles ur ON ur.user_id = u.id
+		JOIN roles r ON r.id = ur.role_id AND r.tenant_id = u.tenant_id
+		JOIN role_permissions rp ON rp.role_id = r.id AND rp.tenant_id = u.tenant_id
+		JOIN permissions p ON p.id = rp.permission_id AND p.tenant_id = u.tenant_id
+		WHERE u.tenant_id = $1
+		  AND u.active = true
+		  AND u.deleted_at IS NULL
+		  AND p.code = $2
+		  AND ($3 <= 0 OR u.id <> $3)
+		ORDER BY u.id
+	`, tenantID, permissionCode, excludeUserID)
+	if err != nil {
+		return nil, fmt.Errorf("query change approvers by extra roles failed: %w", err)
+	}
+	return scanApproverIDs(rows)
+}
+
+func scanApproverIDs(rows *sql.Rows) ([]int, error) {
+	defer rows.Close()
+	out := make([]int, 0, 4)
+	for rows.Next() {
+		var id int
+		if scanErr := rows.Scan(&id); scanErr != nil {
+			return nil, fmt.Errorf("scan eligible change approver failed: %w", scanErr)
+		}
+		out = append(out, id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate eligible change approvers failed: %w", err)
+	}
+	return out, nil
+}
+
 // ListByDateRange retrieves changes within a date range
 func (r *EntRepository) ListByDateRange(ctx context.Context, tenantID int, startDate, endDate, status string) ([]*Change, error) {
 	// Parse date range

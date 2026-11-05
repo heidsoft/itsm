@@ -98,6 +98,10 @@ func TestSubmitChangeCommitsBPMNAndBusinessStateAtomically(t *testing.T) {
 	actor, err := client.User.Create().SetUsername("atomic-actor").SetEmail("atomic@example.com").
 		SetName("Atomic Actor").SetPasswordHash("hash").SetRole("manager").SetActive(true).SetTenantID(tenant.ID).Save(ctx)
 	require.NoError(t, err)
+	// 审批人必须不是创建人：创建人自审已被禁止（职责分离）。
+	approver, err := client.User.Create().SetUsername("atomic-approver").SetEmail("atomic-approver@example.com").
+		SetName("Atomic Approver").SetPasswordHash("hash").SetRole("manager").SetActive(true).SetTenantID(tenant.ID).Save(ctx)
+	require.NoError(t, err)
 
 	newDraft := func(title string) *ent.Change {
 		item, createErr := client.Change.Create().SetTitle(title).SetDescription("test").
@@ -111,7 +115,7 @@ func TestSubmitChangeCommitsBPMNAndBusinessStateAtomically(t *testing.T) {
 	t.Run("success commits both", func(t *testing.T) {
 		item := newDraft("atomic success")
 		taskID := createChangeBridgeProcessFixture(t, client, tenant.ID, "atomic-success", fmt.Sprintf("change:%d", item.ID), actor.ID)
-		_, err := svc.SubmitChange(ctx, item.ID, tenant.ID, actor.ID, &dto.SubmitChangeRequest{ApproverIDs: []int{actor.ID}})
+		_, err := svc.SubmitChange(ctx, item.ID, tenant.ID, actor.ID, &dto.SubmitChangeRequest{ApproverIDs: []int{approver.ID}})
 		require.NoError(t, err)
 		stored, err := client.Change.Get(ctx, item.ID)
 		require.NoError(t, err)
@@ -129,7 +133,7 @@ func TestSubmitChangeCommitsBPMNAndBusinessStateAtomically(t *testing.T) {
 			WHEN OLD.id = %d BEGIN SELECT RAISE(ABORT, 'forced status update failure'); END;
 		`, item.ID, item.ID))
 		require.NoError(t, err)
-		_, err = svc.SubmitChange(ctx, item.ID, tenant.ID, actor.ID, &dto.SubmitChangeRequest{ApproverIDs: []int{actor.ID}})
+		_, err = svc.SubmitChange(ctx, item.ID, tenant.ID, actor.ID, &dto.SubmitChangeRequest{ApproverIDs: []int{approver.ID}})
 		require.Error(t, err)
 		stored, err := client.Change.Get(ctx, item.ID)
 		require.NoError(t, err)
@@ -142,7 +146,7 @@ func TestSubmitChangeCommitsBPMNAndBusinessStateAtomically(t *testing.T) {
 	t.Run("BPMN failure leaves change draft", func(t *testing.T) {
 		item := newDraft("BPMN failure rollback")
 		taskID := createChangeBridgeProcessFixture(t, client, tenant.ID, "bpmn-failure", fmt.Sprintf("change:%d", item.ID), actor.ID+999)
-		_, err := svc.SubmitChange(ctx, item.ID, tenant.ID, actor.ID, &dto.SubmitChangeRequest{ApproverIDs: []int{actor.ID}})
+		_, err := svc.SubmitChange(ctx, item.ID, tenant.ID, actor.ID, &dto.SubmitChangeRequest{ApproverIDs: []int{approver.ID}})
 		require.Error(t, err)
 		stored, err := client.Change.Get(ctx, item.ID)
 		require.NoError(t, err)

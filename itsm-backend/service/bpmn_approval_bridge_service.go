@@ -37,6 +37,78 @@ func NewBPMNApprovalBridge(client *ent.Client, logger *zap.SugaredLogger) *BPMNA
 	return &BPMNApprovalBridge{client: client, logger: logger}
 }
 
+// businessApprovalTrustKey 只在本包内使用：标记「业务域已完成审批资格校验」的桥接调用。
+//
+// 背景：change / release 等老 BPMN 模板没有声明 taskPurpose 与候选人，引擎把
+// triggered_by（=创建人）回落成独占 assignee；而业务审批资格来自另一套审批链。
+// 两套身份互不相交时，审批人 403「已被他人认领」、创建人 403「不是待办审批人」，
+// 审批永久卡死。业务域（change 审批链 / release 非创建人 / service_request
+// canApprove）已经各自做了资格校验，因此只在这条受控的桥接路径上忽略「回落认领态」；
+// 通用任务端点 PUT /workflow/tasks/{id}/complete 不带此标记，归属校验保持原样。
+type businessApprovalTrustKey struct{}
+
+func withBusinessApprovalTrust(ctx context.Context) context.Context {
+	return context.WithValue(ctx, businessApprovalTrustKey{}, true)
+}
+
+func businessApprovalTrusted(ctx context.Context) bool {
+	trusted, _ := ctx.Value(businessApprovalTrustKey{}).(bool)
+	return trusted
+}
+
+// preApprovalEvaluationMarkers 是「审批之前的前置评估/评审」节点词根。
+//
+// 与 lifecycleTaskMarkers 的区别：后者覆盖整个生命周期（排期/实施/验证/关闭），
+// 用于「审批绝不能落到这些节点」的判定；这里只圈定「提交动作已经隐含完成」的
+// 那一小段——变更评估、技术评审、初审、合规检查。业务侧提交时这些内容已经被
+// 门禁校验过（影响分析、实施方案、回滚计划、窗口冲突），流程里再留一个待办
+// 只会让审批入口永远拿不到审批待办。
+//
+// 实施/验证/关闭不在此列：那些节点代表真实作业，替业务方完成等于伪造事实。
+var preApprovalEvaluationMarkers = []string{
+	"assessment", "evaluation", "techreview", "tech_review", "review", "intake",
+	"评估", "评审", "初审", "复核", "检查",
+}
+
+// isPreApprovalEvaluationTask 判断待办是否是审批前置的评估/评审节点。
+func isPreApprovalEvaluationTask(task *ent.ProcessTask) bool {
+	if task == nil {
+		return false
+	}
+	haystack := strings.ToLower(task.TaskDefinitionKey + " " + task.TaskName)
+	for _, marker := range preApprovalEvaluationMarkers {
+		if strings.Contains(haystack, marker) {
+			return true
+		}
+	}
+	return false
+}
+
+// inferredTaskPurpose 为没有声明 itsm:taskPurpose 的老模板推断节点用途。
+// 显式声明始终优先；只有明确的作业/审批语义才推断，推断不出时返回空串，
+// 由调用方维持「取最早待办」的既有行为，避免误伤其它流程模板。
+func inferredTaskPurpose(task *ent.ProcessTask) string {
+	if declared, ok := task.TaskVariables["taskPurpose"].(string); ok {
+		if purpose := strings.ToLower(strings.TrimSpace(declared)); purpose != "" {
+			return purpose
+		}
+	}
+	haystack := strings.ToLower(task.TaskDefinitionKey + " " + task.TaskName)
+	workMarkers := []string{
+		"assessment", "review", "schedule", "implement", "verify", "close", "fulfill", "submit", "execute",
+		"评估", "评审", "排期", "实施", "验证", "关闭", "履行", "提交", "执行",
+	}
+	for _, marker := range workMarkers {
+		if strings.Contains(haystack, marker) {
+			return "work"
+		}
+	}
+	if strings.Contains(haystack, "approv") || strings.Contains(haystack, "审批") || strings.Contains(haystack, "cab") {
+		return "approval"
+	}
+	return ""
+}
+
 // CompleteBusinessApprovalTaskWithClient 使用调用方事务绑定的 Ent client 完成审批任务。
 // 它不创建或提交事务，任何失败都由外层事务连同业务状态一起回滚。
 func (b *BPMNApprovalBridge) CompleteBusinessApprovalTaskWithClient(ctx context.Context, txc *ent.Client, tenantID, actorUserID int, businessType string, businessID int, action, comment string) (bool, error) {
@@ -74,6 +146,7 @@ func (b *BPMNApprovalBridge) CompleteBusinessApprovalTaskWithClient(ctx context.
 
 	workflowCtx := context.WithValue(ctx, bpmn.BPMNTenantIDContextKey, tenantID)
 	workflowCtx = context.WithValue(workflowCtx, bpmn.BPMNUserIDContextKey, actorUserID)
+	workflowCtx = withBusinessApprovalTrust(workflowCtx)
 
 	engine := NewCustomProcessEngine(txc, b.logger)
 	if customEngine, ok := engine.(*CustomProcessEngine); ok {
@@ -146,6 +219,7 @@ func (b *BPMNApprovalBridge) CompleteBusinessApprovalTask(ctx context.Context, t
 	// 注入认证操作人与租户，供引擎的 authorizeTaskActor / recordApprovalDecision 使用
 	workflowCtx := context.WithValue(ctx, bpmn.BPMNTenantIDContextKey, tenantID)
 	workflowCtx = context.WithValue(workflowCtx, bpmn.BPMNUserIDContextKey, actorUserID)
+	workflowCtx = withBusinessApprovalTrust(workflowCtx)
 
 	engine := NewCustomProcessEngine(b.client, b.logger)
 	if err := engine.CompleteTask(workflowCtx, task.TaskID, variables); err != nil {
@@ -259,7 +333,7 @@ func (b *BPMNApprovalBridge) advanceBusinessWorkflow(ctx context.Context, client
 
 	handled := false
 	for step := 0; step < maxSteps; step++ {
-		lookup, err := b.findPendingApprovalTaskWithClient(ctx, client, tenantID, businessType, businessID)
+		lookup, err := b.findFirstPendingTaskWithClient(ctx, client, tenantID, businessType, businessID)
 		if err != nil {
 			return handled, err
 		}
@@ -270,6 +344,9 @@ func (b *BPMNApprovalBridge) advanceBusinessWorkflow(ctx context.Context, client
 
 		workflowCtx := context.WithValue(ctx, bpmn.BPMNTenantIDContextKey, tenantID)
 		workflowCtx = context.WithValue(workflowCtx, bpmn.BPMNUserIDContextKey, actorUserID)
+		// 作业节点同样可能因「triggered_by 回落」被认领给创建人；推进作业不是审批签名，
+		// 带受控信任标记让非创建人的提交/审批动作也能越过前置作业节点。
+		workflowCtx = withBusinessApprovalTrust(workflowCtx)
 
 		engine := NewCustomProcessEngine(client, b.logger)
 		var completeErr error
@@ -341,8 +418,9 @@ func (b *BPMNApprovalBridge) CompleteBusinessWorkTasks(ctx context.Context, tena
 
 		var workTask *ent.ProcessTask
 		for _, candidate := range tasks {
-			purpose, _ := candidate.TaskVariables["taskPurpose"].(string)
-			if strings.EqualFold(strings.TrimSpace(purpose), "work") {
+			// 老模板（change/release）没有声明 taskPurpose，用节点语义兜底，
+			// 否则交付收尾时永远找不到可推进的作业待办。
+			if inferredTaskPurpose(candidate) == "work" {
 				workTask = candidate
 				break
 			}
@@ -369,6 +447,86 @@ func (b *BPMNApprovalBridge) CompleteBusinessWorkTasks(ctx context.Context, tena
 	return completed, nil
 }
 
+// AdvanceBusinessWorkTaskWithClient 在调用方事务内推进业务对象当前待办中的作业节点。
+//
+// 用途：变更/发布的 BPMN 模板把「变更评估 / 技术评审」放在审批节点之前，
+// 而产品没有独立的「完成评估」入口，业务提交动作就该把评估一并带过去。
+// 旧流程停在评估节点时，审批入口永远拿不到审批待办（恒 409）。
+//
+// 与审批桥接的硬边界：只推进 purpose=work 的节点，抵达审批节点立刻停下。
+// 绝不代签审批——否则提交动作就等于自动通过审批。
+//
+// 返回推进的节点数；0 表示当前没有可推进的作业节点（未绑定流程 / 已到审批节点 / 已结束）。
+func (b *BPMNApprovalBridge) AdvanceBusinessWorkTaskWithClient(ctx context.Context, txc *ent.Client, tenantID, actorUserID int, businessType string, businessID int, variables map[string]interface{}) (int, error) {
+	if tenantID <= 0 || businessID <= 0 || strings.TrimSpace(businessType) == "" {
+		return 0, nil
+	}
+	businessKey := fmt.Sprintf("%s:%d", strings.ToLower(businessType), businessID)
+
+	instance, err := txc.ProcessInstance.Query().
+		Where(
+			processinstance.BusinessKey(businessKey),
+			processinstance.TenantID(tenantID),
+			processinstance.Status("running"),
+		).
+		Order(ent.Desc(processinstance.FieldStartTime)).
+		First(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return 0, nil
+		}
+		return 0, fmt.Errorf("查询业务关联流程实例失败: %w", err)
+	}
+
+	tasks, err := txc.ProcessTask.Query().
+		Where(
+			processtask.ProcessInstanceID(instance.ID),
+			processtask.TenantID(tenantID),
+			processtask.TaskType("user_task"),
+			processtask.StatusIn(
+				common.ProcessTaskStatusCreated,
+				common.ProcessTaskStatusAssigned,
+				common.ProcessTaskStatusStarted,
+				common.ProcessTaskStatusDelegated,
+			),
+		).
+		Order(ent.Asc(processtask.FieldCreatedTime)).
+		All(ctx)
+	if err != nil {
+		return 0, fmt.Errorf("查询流程待办任务失败: %w", err)
+	}
+
+	var workTask *ent.ProcessTask
+	for _, candidate := range tasks {
+		// 只推进「审批前置的评估/评审」节点：这类节点的内容已被业务门禁校验过，
+		// 提交动作就等于把它带过去。实施/验证/关闭等真实作业节点绝不在此列。
+		if isPreApprovalEvaluationTask(candidate) {
+			workTask = candidate
+			break
+		}
+	}
+	if workTask == nil {
+		return 0, nil
+	}
+
+	workflowCtx := context.WithValue(ctx, bpmn.BPMNTenantIDContextKey, tenantID)
+	workflowCtx = context.WithValue(workflowCtx, bpmn.BPMNUserIDContextKey, actorUserID)
+	workflowCtx = withBusinessApprovalTrust(workflowCtx)
+
+	engine := NewCustomProcessEngine(txc, b.logger)
+	if customEngine, ok := engine.(*CustomProcessEngine); ok {
+		if completeErr := customEngine.CompleteTaskWithClient(workflowCtx, txc, workTask.TaskID, variables); completeErr != nil {
+			return 0, fmt.Errorf("推进流程作业待办失败: %w", completeErr)
+		}
+	} else if completeErr := engine.CompleteTask(workflowCtx, workTask.TaskID, variables); completeErr != nil {
+		return 0, fmt.Errorf("推进流程作业待办失败: %w", completeErr)
+	}
+
+	b.logger.Infow("业务前置作业待办已推进",
+		"businessKey", businessKey, "taskId", workTask.TaskID, "actorUserId", actorUserID)
+	return 1, nil
+}
+
 // bpmnWorkTaskNotActionable 表示业务已到履约收尾，但流程停在了审批或其他非作业节点。
 // 此时代替完成会把交付结果写进审批审计，必须失败关闭并交人工核对流程实例。
 func bpmnWorkTaskNotActionable(businessType string, businessID int) error {
@@ -376,8 +534,7 @@ func bpmnWorkTaskNotActionable(businessType string, businessID int) error {
 		common.ConflictCode,
 		"流程当前待办不是作业节点，拒绝推进",
 		fmt.Sprintf("businessType=%s businessId=%d", strings.ToLower(businessType), businessID),
-	)
-}
+	)}
 
 // HasPendingUserTasksWithClient 检查指定业务键是否仍有待办 BPMN 用户任务（事务内）。
 // 用于审批完成后判定业务状态：approve 后无剩余待办 → 全部审批通过。
@@ -422,7 +579,7 @@ func (b *BPMNApprovalBridge) HasPendingUserTasksWithClient(ctx context.Context, 
 func bpmnApprovalNotActionable(businessType string, businessID int) error {
 	return common.NewBusinessError(
 		common.ConflictCode,
-		"流程已绑定但当前没有可处理的审批待办，请勿直接业务审批",
+		"流程已绑定但当前没有可处理的审批待办，请勿直接业务审批；若流程停在「变更评估 / 技术评审」等作业节点，请先到审批中心完成该作业待办，待流程推进到审批节点后再审批",
 		fmt.Sprintf("businessType=%s businessId=%d", strings.ToLower(businessType), businessID),
 	)
 }
@@ -454,6 +611,9 @@ func isLifecycleTask(task *ent.ProcessTask) bool {
 type approvalTaskLookup struct {
 	bound bool
 	task  *ent.ProcessTask
+	// workTask 记录流程当前停在作业节点（如变更评估）的待办，
+	// 供调用方生成「请先完成评估」这类可行动指引，而不是只报一句 409。
+	workTask *ent.ProcessTask
 }
 
 func (b *BPMNApprovalBridge) findPendingApprovalTask(ctx context.Context, tenantID int, businessType string, businessID int) (approvalTaskLookup, error) {
@@ -462,6 +622,57 @@ func (b *BPMNApprovalBridge) findPendingApprovalTask(ctx context.Context, tenant
 
 func (b *BPMNApprovalBridge) findPendingApprovalTaskWithClient(ctx context.Context, client *ent.Client, tenantID int, businessType string, businessID int) (approvalTaskLookup, error) {
 	return b.findApprovalTaskWithClient(ctx, client, tenantID, businessType, businessID)
+}
+
+// findFirstPendingTaskWithClient 返回业务对象当前最早的待办用户任务（不分用途）。
+//
+// 与 findApprovalTaskWithClient 的区别：后者只认审批节点（审批动作绝不能落到
+// 评估/排期/实施这类作业节点上）；本函数用于「推进当前节点」语义——
+// 事件确认、问题关闭、变更提交都需要把流程推进一步，推的正是当前那个待办，
+// 哪怕它的 taskPurpose 是 approval（老模板里事件/问题的首个待办就是审批节点）。
+func (b *BPMNApprovalBridge) findFirstPendingTaskWithClient(ctx context.Context, client *ent.Client, tenantID int, businessType string, businessID int) (approvalTaskLookup, error) {
+	businessKey := fmt.Sprintf("%s:%d", strings.ToLower(businessType), businessID)
+
+	boundInstance, err := client.ProcessInstance.Query().
+		Where(
+			processinstance.BusinessKey(businessKey),
+			processinstance.TenantID(tenantID),
+		).
+		Order(ent.Desc(processinstance.FieldStartTime)).
+		First(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return approvalTaskLookup{}, nil
+		}
+		return approvalTaskLookup{}, fmt.Errorf("查询业务关联流程实例失败: %w", err)
+	}
+	result := approvalTaskLookup{bound: true}
+	if boundInstance.Status != "running" {
+		return result, nil
+	}
+
+	tasks, err := client.ProcessTask.Query().
+		Where(
+			processtask.ProcessInstanceID(boundInstance.ID),
+			processtask.TenantID(tenantID),
+			processtask.TaskType("user_task"),
+			processtask.StatusIn(
+				common.ProcessTaskStatusCreated,
+				common.ProcessTaskStatusAssigned,
+				common.ProcessTaskStatusStarted,
+				common.ProcessTaskStatusDelegated,
+			),
+		).
+		Order(ent.Asc(processtask.FieldCreatedTime)).
+		All(ctx)
+	if err != nil {
+		return approvalTaskLookup{}, fmt.Errorf("查询流程待办任务失败: %w", err)
+	}
+	if len(tasks) == 0 {
+		return result, nil
+	}
+	result.task = tasks[0]
+	return result, nil
 }
 
 func (b *BPMNApprovalBridge) findApprovalTaskWithClient(ctx context.Context, client *ent.Client, tenantID int, businessType string, businessID int) (approvalTaskLookup, error) {
@@ -511,26 +722,35 @@ func (b *BPMNApprovalBridge) findApprovalTaskWithClient(ctx context.Context, cli
 			"businessKey", businessKey, "processInstanceID", boundInstance.ID)
 		return result, nil
 	}
-	// 优先选显式声明 taskPurpose=approval 的待办；老模板没有该字段时退回最早的待办，
-	// 保持既有域的行为不变。声明了用途但没有审批节点，说明流程已走到履约阶段，
-	// 此时把待办当审批完成会把审批意见写到错误的节点上。
+	// 优先选审批节点；老模板没有声明 taskPurpose 时按节点语义推断，
+	// 避免把「变更评估 / 技术评审」这类生命周期任务当成审批待办，
+	// 从而让业务审批恒 409 或把审批意见写进错误的节点。
+	// 完全推断不出用途时才退回最早待办，保持其它模板的既有行为不变。
 	var task *ent.ProcessTask
 	purposeDeclared := false
 	for _, candidate := range tasks {
-		purpose, ok := candidate.TaskVariables["taskPurpose"].(string)
-		if !ok || strings.TrimSpace(purpose) == "" {
+		purpose := inferredTaskPurpose(candidate)
+		if purpose == "" {
 			continue
 		}
 		purposeDeclared = true
-		if strings.EqualFold(strings.TrimSpace(purpose), "approval") {
+		switch purpose {
+		case "approval":
 			task = candidate
+		case "work":
+			if result.workTask == nil {
+				result.workTask = candidate
+			}
+		}
+		if task != nil {
 			break
 		}
 	}
 	if task == nil {
 		if purposeDeclared {
 			b.logger.Warnw("业务审批桥接：当前待办均非审批节点",
-				"businessKey", businessKey, "processInstanceID", boundInstance.ID)
+				"businessKey", businessKey, "processInstanceID", boundInstance.ID,
+				"hasPendingWorkTask", result.workTask != nil)
 			return result, nil
 		}
 		task = tasks[0]

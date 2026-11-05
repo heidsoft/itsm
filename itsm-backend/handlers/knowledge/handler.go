@@ -60,9 +60,10 @@ func (h *Handler) toArticleDTO(a *Article) *dto.KnowledgeArticleResponse {
 		Content:   a.Content,
 		Category:  a.Category,
 		Author:    a.AuthorName,
-		Tags:      a.Tags,
-		Status:    status,
-		TenantID:  a.TenantID,
+		Tags:        a.Tags,
+		Status:      status,
+		IsPublished: a.IsPublished,
+		TenantID:    a.TenantID,
 		CreatedAt: a.CreatedAt,
 		UpdatedAt: a.UpdatedAt,
 

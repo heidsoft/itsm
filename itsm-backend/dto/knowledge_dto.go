@@ -61,7 +61,10 @@ type KnowledgeArticleResponse struct {
 	Content   string    `json:"content"`
 	Category  string    `json:"category"`
 	Status    string    `json:"status"`
-	Author    string    `json:"author"`
+	// IsPublished 与 Status 同源，但显式透出布尔值，避免 API 消费者靠字符串
+	// 反推可见性（历史响应里该字段恒为 null）。
+	IsPublished bool      `json:"isPublished"`
+	Author      string    `json:"author"`
 	Views     int       `json:"views"`
 	Tags      []string  `json:"tags"`
 	TenantID  int       `json:"tenantId"`

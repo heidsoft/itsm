@@ -6,7 +6,7 @@ import "time"
 type CreateProblemRequest struct {
 	Title       string `json:"title" binding:"required,min=2,max=200"`
 	Description string `json:"description" binding:"required,min=10,max=5000"`
-	Priority    string `json:"priority" binding:"required"`
+	Priority    string `json:"priority" binding:"required,oneof=low medium high critical"`
 	Category    string `json:"category"`
 	RootCause   string `json:"rootCause"`
 	Impact      string `json:"impact"`
@@ -22,7 +22,7 @@ type CreateProblemRequest struct {
 type UpdateProblemRequest struct {
 	Title       *string `json:"title" binding:"omitempty,min=2,max=200"`
 	Description *string `json:"description" binding:"omitempty,min=10,max=5000"`
-	Priority    *string `json:"priority" binding:"omitempty"`
+	Priority    *string `json:"priority" binding:"omitempty,oneof=low medium high critical"`
 	Status      *string `json:"status" binding:"omitempty"`
 	Category    *string `json:"category" binding:"omitempty"`
 	RootCause   *string `json:"rootCause" binding:"omitempty"`

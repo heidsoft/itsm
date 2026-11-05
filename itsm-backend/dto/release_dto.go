@@ -49,9 +49,9 @@ type CreateReleaseRequest struct {
 	ReleaseNumber      string     `json:"releaseNumber" binding:"required"` // 发布编号
 	Title              string     `json:"title" binding:"required"`         // 发布标题
 	Description        string     `json:"description"`                      // 发布描述
-	Type               string     `json:"type"`                             // 发布类型
-	Environment        string     `json:"environment"`                      // 目标环境
-	Severity           string     `json:"severity"`                         // 严重程度
+	Type               string     `json:"type" binding:"omitempty,oneof=major minor patch hotfix"`  // 发布类型
+	Environment        string     `json:"environment" binding:"omitempty,oneof=dev staging production"` // 目标环境
+	Severity           string     `json:"severity" binding:"omitempty,oneof=low medium high critical"`  // 严重程度
 	ChangeID           *int       `json:"changeId"`                         // 关联变更ID
 	OwnerID            *int       `json:"ownerId"`                          // 负责人ID
 	PlannedReleaseDate *time.Time `json:"plannedReleaseDate"`               // 计划发布日期
@@ -72,9 +72,9 @@ type CreateReleaseRequest struct {
 type UpdateReleaseRequest struct {
 	Title              *string    `json:"title"`              // 发布标题
 	Description        *string    `json:"description"`        // 发布描述
-	Type               *string    `json:"type"`               // 发布类型
-	Environment        *string    `json:"environment"`        // 目标环境
-	Severity           *string    `json:"severity"`           // 严重程度
+	Type               *string    `json:"type" binding:"omitempty,oneof=major minor patch hotfix"`  // 发布类型
+	Environment        *string    `json:"environment" binding:"omitempty,oneof=dev staging production"` // 目标环境
+	Severity           *string    `json:"severity" binding:"omitempty,oneof=low medium high critical"`  // 严重程度
 	ChangeID           *int       `json:"changeId"`           // 关联变更ID
 	OwnerID            *int       `json:"ownerId"`            // 负责人ID
 	PlannedReleaseDate *time.Time `json:"plannedReleaseDate"` // 计划发布日期

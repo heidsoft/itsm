@@ -158,9 +158,10 @@ func TestChange_SubmitChange_ChainBlockedFailsClosed(t *testing.T) {
 	require.Empty(t, approvers, "阻塞时不应写入任何审批记录")
 }
 
-// TestChange_SubmitChange_NoChainFallsBackToCreator 验证：无激活链时回退旧逻辑
-// （调用方未传审批人 → 默认创建人），保持向后兼容。
-func TestChange_SubmitChange_NoChainFallsBackToCreator(t *testing.T) {
+// TestChange_SubmitChange_NoChainRejectsSelfApproval 验证职责分离：
+// 旧逻辑在 approverIds 缺省时回落到创建人，admin 可以自审自己的变更。
+// 现在必须失败关闭，并且不落任何审批链行。
+func TestChange_SubmitChange_NoChainRejectsSelfApproval(t *testing.T) {
 	svc, client, db, tenantID := setupChangeChainTest(t)
 	ctx := context.Background()
 
@@ -169,10 +170,29 @@ func TestChange_SubmitChange_NoChainFallsBackToCreator(t *testing.T) {
 
 	req := &dto.SubmitChangeRequest{ApproverIDs: nil, Comment: "submit"}
 	_, err := svc.SubmitChange(ctx, changeID, tenantID, creator, req)
+	require.Error(t, err, "无审批人时必须失败关闭，禁止回落创建人自审")
+	require.Contains(t, err.Error(), "禁止创建人自审")
+
+	approvers := queryChangeChainApprovers(t, db, changeID, tenantID)
+	require.Empty(t, approvers, "提交被拒绝时不得写入审批链")
+}
+
+// TestChange_SubmitChange_NoChainExcludesCreator 验证显式审批人里混进创建人时，
+// 创建人被剔除、重复 ID 被去重，审批链只剩合法的非创建人。
+func TestChange_SubmitChange_NoChainExcludesCreator(t *testing.T) {
+	svc, client, db, tenantID := setupChangeChainTest(t)
+	ctx := context.Background()
+
+	creator := mkChangeUser(t, client, tenantID, "end_user")
+	approver := mkChangeUser(t, client, tenantID, "manager")
+	changeID := mkChangeDraft(t, client, tenantID, creator)
+
+	req := &dto.SubmitChangeRequest{ApproverIDs: []int{creator, approver, approver}, Comment: "submit"}
+	_, err := svc.SubmitChange(ctx, changeID, tenantID, creator, req)
 	require.NoError(t, err)
 
 	approvers := queryChangeChainApprovers(t, db, changeID, tenantID)
-	require.Equal(t, []int{creator}, approvers, "无激活链时应回退创建人自审（旧逻辑）")
+	require.Equal(t, []int{approver}, approvers, "创建人必须被剔除且审批人不得重复")
 }
 
 // queryChangeStatus 读取变更当前状态。

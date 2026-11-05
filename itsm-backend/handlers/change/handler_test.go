@@ -80,6 +80,9 @@ type mockRepository struct {
 	// submitApprovalErr 是事务失败注入点：让 mock 的 SubmitApprovalRecordTx 直接返回错误，
 	// 用来断言 service 把错误透传出去且不在 mock 上留下任何部分写入。
 	submitApprovalErr error
+	// eligibleApprovers 覆盖「租户内具备审批权限的用户」集合；nil 表示使用
+	// mockDefaultApproverID（合成的默认可用审批人），空切片表示一个都没有。
+	eligibleApprovers []int
 	// rollbackSteps 回滚清单（按 change_id）。用内存 map 模拟逐行落库，
 	// 让「未确认步骤拦住 rolled_back」这条门禁能在纯 mock 装配下被断言，
 	// 不必依赖真实 DB。
@@ -412,6 +415,28 @@ func (m *mockRepository) UpdateRiskAssessment(ctx context.Context, ra *RiskAsses
 
 func (m *mockRepository) ValidateApproverBelongsToTenant(ctx context.Context, approverID, tenantID int) (bool, error) {
 	return m.approverValid, nil
+}
+
+// eligibleApprovers 是「租户内具备审批权限的用户」在 mock 里的替身。
+// 默认给一个合成审批人：mock 没有角色/权限表，无法真实解析 change:approve，
+// 但绝大多数用例要盯的是别的门禁（窗口冲突、状态机、事务原子性），
+// 不该被「没有审批人」拦住。需要断言「无审批人时失败关闭」的用例显式置空。
+const mockDefaultApproverID = 999
+
+func (m *mockRepository) ListEligibleApprovers(ctx context.Context, tenantID int, permissionCode string, excludeUserID int) ([]int, error) {
+	if m.eligibleApprovers == nil {
+		if excludeUserID == mockDefaultApproverID {
+			return nil, nil
+		}
+		return []int{mockDefaultApproverID}, nil
+	}
+	out := make([]int, 0, len(m.eligibleApprovers))
+	for _, id := range m.eligibleApprovers {
+		if id != excludeUserID {
+			out = append(out, id)
+		}
+	}
+	return out, nil
 }
 
 func (m *mockRepository) ListByDateRange(ctx context.Context, tenantID int, startDate, endDate, status string) ([]*Change, error) {
@@ -1162,8 +1187,9 @@ func TestSubmitChangeAtomicFailureLeavesDraftUnchanged(t *testing.T) {
 	repo.submitErr = errors.New("injected transaction failure")
 	svc := NewService(repo, nil, logger, nil)
 
+	// 审批人取 2（非创建人）：创建人自审已被禁止，用例要盯的是事务失败时的原子性。
 	_, err := svc.SubmitChange(context.Background(), 1, 1, 1, &dto.SubmitChangeRequest{
-		ApproverIDs: []int{1},
+		ApproverIDs: []int{2},
 		Comment:     "review",
 	})
 

@@ -483,6 +483,19 @@ func (e *CustomProcessEngine) authorizeTaskActorWithClient(ctx context.Context, 
 		}
 		return false
 	}
+	// 业务审批桥接路径：业务域（变更审批链 / 发布非创建人 / 服务请求 canApprove）
+	// 已完成审批资格校验。老模板没有声明候选人时，引擎会把 triggered_by（创建人）
+	// 回落成独占 assignee，与业务审批链身份互斥，导致审批人与创建人都被 403 拒绝。
+	// 这里只对「回落来源」放行，用户主动认领的任务仍严格按 assignee 校验；
+	// 通用任务端点不带 withBusinessApprovalTrust 标记，归属校验保持不变。
+	if businessApprovalTrusted(ctx) {
+		if source, _ := task.TaskVariables["assignmentSource"].(string); source == "triggered_by" {
+			e.logger.Infow("业务审批已由业务域完成资格校验，忽略 BPMN 发起人回落认领态",
+				"taskID", task.TaskID, "userID", userID)
+			return nil
+		}
+	}
+
 	// 认领状态区分：已分配（claimed）的任务只允许 assignee 操作，
 	// 防止 candidateUsers 绕过 claim 直接完成任务。
 	assignee := strings.TrimSpace(task.Assignee)

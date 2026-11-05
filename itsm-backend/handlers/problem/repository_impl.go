@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"itsm-backend/common"
 	"itsm-backend/ent"
 	"itsm-backend/ent/change"
 	"itsm-backend/ent/incident"
@@ -113,7 +114,7 @@ func (r *EntRepository) AddAssociations(ctx context.Context, tenantID, problemID
 		return err
 	}
 	if !exists {
-		return fmt.Errorf("problem not found")
+		return common.NewBusinessError(common.NotFoundCode, "问题不存在或已被删除", "")
 	}
 
 	switch relatedType {
@@ -125,30 +126,33 @@ func (r *EntRepository) AddAssociations(ctx context.Context, tenantID, problemID
 			return err
 		}
 		if count != len(relatedIDs) {
-			return fmt.Errorf("one or more tickets do not belong to the current tenant")
+			return common.NewBusinessError(common.BadRequestCode, "关联工单不存在或已被删除", "")
 		}
 	case "incident":
+		// 显式过滤软删：只靠全局拦截器时，deleted_at 非空的行被过滤掉后
+		// count 不足会落成裸 error，最终被 FailWithErr 兜底成 500。
 		count, err := r.client.Incident.Query().
-			Where(incident.IDIn(relatedIDs...), incident.TenantIDEQ(tenantID)).
+			Where(incident.IDIn(relatedIDs...), incident.TenantIDEQ(tenantID), incident.DeletedAtIsNil()).
 			Count(ctx)
 		if err != nil {
 			return err
 		}
 		if count != len(relatedIDs) {
-			return fmt.Errorf("one or more incidents do not belong to the current tenant")
+			return common.NewBusinessError(common.NotFoundCode, "关联事件不存在或已被删除", "")
 		}
 	case "change":
 		count, err := r.client.Change.Query().
-			Where(change.IDIn(relatedIDs...), change.TenantIDEQ(tenantID)).
+			Where(change.IDIn(relatedIDs...), change.TenantIDEQ(tenantID), change.DeletedAtIsNil()).
 			Count(ctx)
 		if err != nil {
 			return err
 		}
 		if count != len(relatedIDs) {
-			return fmt.Errorf("one or more changes do not belong to the current tenant")
+			return common.NewBusinessError(common.NotFoundCode, "关联变更不存在或已被删除", "")
 		}
 	default:
-		return fmt.Errorf("unsupported related type: %s", relatedType)
+		return common.NewBusinessError(common.BadRequestCode,
+			fmt.Sprintf("不支持的关联类型：%s", relatedType), "")
 	}
 
 	update := r.client.Problem.Update().
@@ -163,7 +167,7 @@ func (r *EntRepository) AddAssociations(ctx context.Context, tenantID, problemID
 	}
 	updated, err := update.Save(ctx)
 	if err == nil && updated != 1 {
-		return fmt.Errorf("problem not found")
+		return common.NewBusinessError(common.NotFoundCode, "问题不存在或已被删除", "")
 	}
 	return err
 }
@@ -185,7 +189,7 @@ func (r *EntRepository) RemoveAssociation(ctx context.Context, tenantID, problem
 
 	updated, err := update.Save(ctx)
 	if err == nil && updated != 1 {
-		return fmt.Errorf("problem not found")
+		return common.NewBusinessError(common.NotFoundCode, "问题不存在或已被删除", "")
 	}
 	return err
 }

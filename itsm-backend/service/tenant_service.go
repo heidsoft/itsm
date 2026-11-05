@@ -306,7 +306,7 @@ func (s *TenantService) DeleteTenant(ctx context.Context, tenantID int) error {
 		return fmt.Errorf("检查租户失败: %w", err)
 	}
 	if !exists {
-		return fmt.Errorf("租户不存在: %d", tenantID)
+		return common.NewBusinessError(common.NotFoundCode, "租户不存在或已被删除", fmt.Sprintf("tenantId=%d", tenantID))
 	}
 
 	// 检查租户下是否有真实用户。产品基线安装的 system-baseline-* 账号
@@ -323,7 +323,9 @@ func (s *TenantService) DeleteTenant(ctx context.Context, tenantID int) error {
 		return fmt.Errorf("检查租户用户失败: %w", err)
 	}
 	if userCount > 0 {
-		return fmt.Errorf("租户下还有用户，无法删除")
+		// 业务拒绝（仍有真实用户）必须具备 4xx 语义，否则 API 会把可预期的
+		// 前置条件失败报成 500「操作失败」，运维无法区分配置问题与服务端故障。
+		return common.NewBusinessError(common.ConflictCode, "租户下还有用户，无法删除", fmt.Sprintf("userCount=%d", userCount))
 	}
 
 	err = s.client.Tenant.UpdateOneID(tenantID).

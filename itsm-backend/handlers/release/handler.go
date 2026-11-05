@@ -280,6 +280,13 @@ func (h *ReleaseHandler) updateReleaseActionStatus(c *gin.Context, status, reaso
 	}
 	release, err := h.releaseService.UpdateReleaseStatus(c.Request.Context(), releaseID, tenantID, status, c.GetInt("user_id"), c.GetString("role"))
 	if err != nil {
+		// 与 UpdateReleaseStatus 端点保持同一语义：状态机白名单拒绝是 409 业务冲突，
+		// 不能让 rollback/cancel/complete 等动作端点掉进 500 兜底。
+		if errors.Is(err, service.ErrInvalidReleaseTransition) {
+			h.logger.Warnw("Release action rejected by state machine", "error", err, "release_id", releaseID, "status", status)
+			common.Conflict(c, "当前发布状态不允许此操作", gin.H{"detail": err.Error()})
+			return
+		}
 		if isForbiddenAppErr(err) {
 			common.RespondError(c, err, "操作失败")
 			return

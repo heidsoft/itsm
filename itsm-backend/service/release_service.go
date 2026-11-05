@@ -627,6 +627,15 @@ func (s *ReleaseService) ApplyReleaseApproval(ctx context.Context, id, tenantID,
 	if s.approvalBridge == nil {
 		return nil, common.NewBusinessError(common.ConflictCode, "没有可处理的 BPMN 审批任务，请先确认流程绑定与待办状态", "")
 	}
+	// 老 release_approval_flow 起流后停在 Activity_TechReview（审批前置的评审节点），
+	// 而产品没有独立的「完成技术评审」入口；此前业务审批永远拿不到审批待办，
+	// 发布全链路卡在 draft。先在事务内把前置评审节点带过去（只推进评估/评审类
+	// 节点，绝不代签审批），再走正常的业务审批桥接。
+	if _, advanceErr := s.approvalBridge.AdvanceBusinessWorkTaskWithClient(
+		ctx, tx.Client(), tenantID, actorID, string(dto.BusinessTypeRelease), id, nil,
+	); advanceErr != nil {
+		return nil, fmt.Errorf("推进发布前置评审待办失败: %w", advanceErr)
+	}
 	completed, bridgeErr := s.approvalBridge.CompleteBusinessApprovalTaskWithClient(
 		ctx, tx.Client(), tenantID, actorID, string(dto.BusinessTypeRelease), id, action, comment,
 	)

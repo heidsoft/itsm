@@ -1099,3 +1099,100 @@ func (r *EntRepository) GetTicketSLA(ctx context.Context, ticketID int, tenantID
 	}
 	return t.CreatedAt, t.FirstResponseAt, t.ResolvedAt, sla.ResponseDeadline, sla.ResolutionDeadline, true, nil
 }
+
+// PersistComplianceViolations 把 CheckSLACompliance 判定出的违规登记到 sla_violations，
+// 让 /sla/violations、/sla/stats、/sla/monitoring 能读到真实的超时工单。
+//
+// 幂等口径与线上 partial unique index (ticket_id, violation_type) WHERE is_resolved=false
+// 对齐：同一工单同一类型只保留一条未解决违规，重复调用不会灌水。
+// SLA 定义 ID 是 Required 外键，未绑定定义时回退到租户内首个定义；连定义都没有
+// 则直接返回 0，绝不伪造外键把违规写成脏数据。
+func (r *EntRepository) PersistComplianceViolations(
+	ctx context.Context, tenantID, ticketID int,
+	responseCompliant, resolutionCompliant bool,
+	responseDeadline, resolutionDeadline time.Time,
+	message string,
+) (int, error) {
+	defID, err := r.ticketSLADefinitionID(ctx, tenantID, ticketID)
+	if err != nil {
+		return 0, err
+	}
+	if defID <= 0 {
+		def, defErr := r.client.SLADefinition.Query().
+			Where(sladefinition.TenantID(tenantID)).
+			Order(ent.Asc(sladefinition.FieldID)).
+			First(ctx)
+		if defErr != nil {
+			if ent.IsNotFound(defErr) {
+				return 0, nil
+			}
+			return 0, defErr
+		}
+		defID = def.ID
+	}
+
+	type breach struct {
+		compliant     bool
+		violationType string
+		deadline      time.Time
+	}
+	breaches := []breach{
+		{responseCompliant, "response_time", responseDeadline},
+		{resolutionCompliant, "resolution_time", resolutionDeadline},
+	}
+
+	created := 0
+	for _, b := range breaches {
+		if b.compliant {
+			continue
+		}
+		exists, existsErr := r.client.SLAViolation.Query().Where(
+			slaviolation.TenantID(tenantID),
+			slaviolation.TicketID(ticketID),
+			slaviolation.ViolationType(b.violationType),
+			slaviolation.IsResolved(false),
+		).Exist(ctx)
+		if existsErr != nil {
+			return created, existsErr
+		}
+		if exists {
+			continue
+		}
+		violationTime := b.deadline
+		if violationTime.IsZero() {
+			violationTime = time.Now()
+		}
+		if _, createErr := r.CreateViolation(ctx, &SLAViolation{
+			TicketID:        ticketID,
+			SLADefinitionID: defID,
+			ViolationType:   b.violationType,
+			ViolationTime:   violationTime,
+			Description:     message,
+			Severity:        "medium",
+			IsResolved:      false,
+			TenantID:        tenantID,
+		}); createErr != nil {
+			return created, createErr
+		}
+		created++
+	}
+	return created, nil
+}
+
+func (r *EntRepository) ticketSLADefinitionID(ctx context.Context, tenantID, ticketID int) (int, error) {
+	state, err := r.client.SLAState.Query().
+		Where(
+			slastate.TenantID(tenantID),
+			slastate.AggregateTypeEQ("ticket"),
+			slastate.AggregateIDEQ(ticketID),
+		).
+		Select(slastate.FieldSLADefinitionID).
+		Only(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return 0, nil
+		}
+		return 0, err
+	}
+	return state.SLADefinitionID, nil
+}

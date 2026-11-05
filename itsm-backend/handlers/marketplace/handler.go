@@ -446,8 +446,12 @@ func (c *Handler) UpgradeItem(ctx *gin.Context) {
 			ToInstallationResponse(result.Installation))
 		return
 	}
+	verb := "升级"
+	if result.RolledBack {
+		verb = "回滚"
+	}
 	common.SuccessWithMessage(ctx,
-		fmt.Sprintf("已从 %s 升级到 %s", result.FromVersion, result.ToVersion),
+		fmt.Sprintf("已从 %s %s到 %s", result.FromVersion, verb, result.ToVersion),
 		ToInstallationResponse(result.Installation))
 }
 

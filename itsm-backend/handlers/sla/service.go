@@ -154,6 +154,28 @@ func (s *Service) CheckSLACompliance(ctx context.Context, ticketID int, tenantID
 	default:
 		res.Message = "SLA 计时正常，等待首次响应"
 	}
+
+	// 判定出的违规必须落库：过去这里只做纯计算，导致 /sla/violations 恒为 0、
+	// stats/monitoring 始终报 100% 合规，监控大屏对真实超时完全无感。
+	// 写入失败只记日志，不覆盖已经算出的 compliant=false 判定结果。
+	if !res.Compliant {
+		persister, ok := s.repo.(interface {
+			PersistComplianceViolations(ctx context.Context, tenantID, ticketID int,
+				responseCompliant, resolutionCompliant bool,
+				responseDeadline, resolutionDeadline time.Time, message string) (int, error)
+		})
+		if ok {
+			created, persistErr := persister.PersistComplianceViolations(ctx, tenantID, ticketID,
+				responseCompliant, resolutionCompliant,
+				slaResponseDeadline, slaResolutionDeadline, res.Message)
+			if persistErr != nil {
+				s.logger.Warnw("persist SLA compliance violations failed",
+					"ticketID", ticketID, "tenantID", tenantID, "error", persistErr)
+			} else if created > 0 {
+				res.Message = fmt.Sprintf("%s；已登记 %d 条 SLA 违规", res.Message, created)
+			}
+		}
+	}
 	return res, nil
 }
 

@@ -161,7 +161,7 @@ func TestProblemAssociationsEnforceTenantBoundary(t *testing.T) {
 
 	require.NoError(t, service.AddAssociations(ctx, tenantA.ID, p.ID, "ticket", []int{localTicket.ID, localTicket.ID}))
 	err = service.AddAssociations(ctx, tenantA.ID, p.ID, "ticket", []int{foreignTicket.ID})
-	require.ErrorContains(t, err, "current tenant")
+	require.ErrorContains(t, err, "关联工单不存在或已被删除")
 
 	withAssociations, err := service.GetWithAssociations(ctx, p.ID, tenantA.ID)
 	require.NoError(t, err)

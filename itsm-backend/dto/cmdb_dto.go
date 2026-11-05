@@ -79,9 +79,9 @@ type CreateCIRequest struct {
 	Name               string                 `json:"name" binding:"required,max=255"`
 	CITypeID           int                    `json:"ciTypeId"`
 	Description        string                 `json:"description"`
-	Status             string                 `json:"status" binding:"required"`
+	Status             string                 `json:"status" binding:"required,oneof=active inactive maintenance retired decommissioned"`
 	Environment        string                 `json:"environment,omitempty"`
-	Criticality        string                 `json:"criticality,omitempty"`
+	Criticality        string                 `json:"criticality,omitempty" binding:"omitempty,oneof=low medium high critical"`
 	AssetTag           string                 `json:"assetTag,omitempty"`
 	Attributes         map[string]interface{} `json:"attributes,omitempty"`
 	SerialNumber       string                 `json:"serialNumber,omitempty"`
@@ -185,9 +185,9 @@ type UpdateCIRequest struct {
 	CITypeID           int                    `json:"ciTypeId,omitempty"`
 	Name               string                 `json:"name,omitempty"`
 	Description        string                 `json:"description,omitempty"`
-	Status             string                 `json:"status,omitempty"`
+	Status             string                 `json:"status,omitempty" binding:"omitempty,oneof=active inactive maintenance retired decommissioned"`
 	Environment        string                 `json:"environment,omitempty"`
-	Criticality        string                 `json:"criticality,omitempty"`
+	Criticality        string                 `json:"criticality,omitempty" binding:"omitempty,oneof=low medium high critical"`
 	AssetTag           string                 `json:"assetTag,omitempty"`
 	Attributes         map[string]interface{} `json:"attributes,omitempty"`
 	SerialNumber       string                 `json:"serialNumber,omitempty"`

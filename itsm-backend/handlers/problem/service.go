@@ -378,7 +378,9 @@ func (s *Service) Create(ctx context.Context, tenantID int, p *Problem) (*Proble
 		return nil, fmt.Errorf("problem title is required")
 	}
 	if !isValidProblemPriority(p.Priority) {
-		return nil, fmt.Errorf("invalid problem priority: %s", p.Priority)
+		// 非法枚举是参数错误，不是服务端故障；裸 fmt.Errorf 会被 FailWithErr 兜底成 500。
+		return nil, common.NewBusinessError(common.BadRequestCode,
+			fmt.Sprintf("无效的问题优先级：%s（可选 low/medium/high/critical）", p.Priority), "")
 	}
 	// AssigneeID 可指向任意租户的用户：写入前必须校验同租户 +在职，
 	// 否则问题单（含根因等敏感内容）可以被静默指给别家租户员工。

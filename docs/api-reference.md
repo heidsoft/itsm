@@ -1413,6 +1413,24 @@ POST /changes/{id}/cancel
 为空时取 `reason`。审批流转的理由写进审批决定；`fail` / `rollback` / `complete` 的理由写进
 **实施结果说明**（`outcomeNote`）。
 
+#### 提交审批的审批人来源（`/changes/{id}/submit`）
+
+提交请求体可携带 `{"approverIds": [6, 7]}`。审批人按以下优先级确定：
+
+| 优先级 | 来源 | 说明 |
+|:--|:---|:---|
+| 1 | 租户内激活的变更审批链 | 命中时以链为准，调用方传入的 `approverIds` 不生效 |
+| 2 | 请求体的 `approverIds` | 创建人会被剔除并去重 |
+| 3 | 租户内持有 `change:approve` 权限的活跃用户 | 创建人被排除在外 |
+
+三种路径都拿不到审批人时返回 `4090`「没有可用的变更审批人，禁止创建人自审」——创建人
+永远不能审批自己提交的变更（职责分离）。要解除该限制必须先在租户内配置持有
+`change:approve` 权限的用户，或在提交时显式指定 `approverIds`。
+
+`type` / `priority` / `impactScope` / `riskLevel` 以及发布单的 `type` / `environment` /
+`severity`、配置项的 `status` / `criticality`、问题的 `priority` 都有枚举校验：非法取值返回
+`4000`，不再落库。
+
 #### 实施结果留痕（`/fail`、`/rollback`、`/complete`）
 
 | 流转 | 权限码 | 原因 | 落点 |

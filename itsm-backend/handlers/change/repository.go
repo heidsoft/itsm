@@ -68,6 +68,11 @@ type Repository interface {
 	// Tenant validation
 	ValidateApproverBelongsToTenant(ctx context.Context, approverID, tenantID int) (bool, error)
 
+	// ListEligibleApprovers 返回租户内持有指定权限码的活跃用户，用于在
+	// 「无激活审批链 + 未指定审批人」时选出默认审批人（必须排除创建人，
+	// 否则等于允许自审）。excludeUserID<=0 表示不排除。
+	ListEligibleApprovers(ctx context.Context, tenantID int, permissionCode string, excludeUserID int) ([]int, error)
+
 	// Calendar view
 	ListByDateRange(ctx context.Context, tenantID int, startDate, endDate, status string) ([]*Change, error)
 

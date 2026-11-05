@@ -49,6 +49,9 @@ type UpgradeResult struct {
 	FromVersion  string
 	ToVersion    string
 	Upgraded     bool
+	// RolledBack 区分「升级」与「回滚」。降级同样走 UpgradeInstallation，
+	// 响应文案不能一律说「已从 X 升级到 Y」。
+	RolledBack bool
 }
 
 // normalizeUpgradeVersion 去掉版本号前的 v 别名并去空白。
@@ -58,6 +61,34 @@ type UpgradeResult struct {
 func normalizeUpgradeVersion(raw string) string {
 	v := strings.TrimSpace(raw)
 	return strings.TrimPrefix(strings.TrimPrefix(v, "v"), "V")
+}
+
+// compareSemverStrings 按数字段比较版本号字符串，用于判断目标版本比当前更旧。
+// 只用于展示文案，不参与准入判定（准入由「是否查得到已发布版本行」决定）；
+// 非数字段按 0 处理，因此带后缀的预发布版本不会被误判为升级。
+func compareSemverStrings(a, b string) int {
+	pa := strings.Split(normalizeUpgradeVersion(a), ".")
+	pb := strings.Split(normalizeUpgradeVersion(b), ".")
+	n := len(pa)
+	if len(pb) > n {
+		n = len(pb)
+	}
+	for i := 0; i < n; i++ {
+		x, y := 0, 0
+		if i < len(pa) {
+			x, _ = strconv.Atoi(pa[i])
+		}
+		if i < len(pb) {
+			y, _ = strconv.Atoi(pb[i])
+		}
+		if x < y {
+			return -1
+		}
+		if x > y {
+			return 1
+		}
+	}
+	return 0
 }
 
 // UpgradeInstallation 把租户的安装记录升到 targetVersion（空则升到目录的 latest_version）。
@@ -122,10 +153,11 @@ func (s *Service) UpgradeInstallation(ctx context.Context, tenantID, itemID int,
 	if err != nil {
 		return nil, err
 	}
-	s.logger.Infow("Marketplace installation upgraded",
+	rolledBack := compareSemverStrings(target, from) < 0
+	s.logger.Infow("Marketplace installation version changed",
 		"tenant_id", tenantID, "item_id", itemID, "item_name", item.Name,
-		"from_version", from, "to_version", target, "actor", actor)
-	return &UpgradeResult{Installation: upgraded, FromVersion: from, ToVersion: target, Upgraded: true}, nil
+		"from_version", from, "to_version", target, "rolled_back", rolledBack, "actor", actor)
+	return &UpgradeResult{Installation: upgraded, FromVersion: from, ToVersion: target, Upgraded: true, RolledBack: rolledBack}, nil
 }
 
 // recordUpgrade 在同一事务里写版本号与审计行。
