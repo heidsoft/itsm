@@ -76,7 +76,10 @@ export function needsConfirmation(spec, firstPositional) {
         return false;
     if (!firstPositional)
         return false;
-    return spec.confirmMethods.includes(firstPositional.toUpperCase());
+    // Case-insensitive: `infra.api` accepts `delete` as readily as `DELETE`, and
+    // the gate must not depend on how the operator typed the verb.
+    const normalized = firstPositional.toUpperCase();
+    return spec.confirmMethods.some((method) => method.toUpperCase() === normalized);
 }
 /** One command rendered for agents: what it does, what it needs, what it costs. */
 export function describeCommand(spec) {

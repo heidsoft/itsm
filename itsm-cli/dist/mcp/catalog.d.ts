@@ -1,10 +1,10 @@
 /**
  * The MCP tool surface.
  *
- * 205 CLI commands exist; advertising all of them costs more context than the
- * work they enable and makes tool selection worse (the model drowns in near
- * duplicates like `ticket.update` vs `ticket.subtasks.update`). So the surface
- * is two-tier:
+ * The CLI registry carries 300+ commands; advertising all of them costs more
+ * context than the work they enable and makes tool selection worse (the model
+ * drowns in near duplicates like `ticket.update` vs `ticket.subtasks.update`).
+ * So the surface is two-tier:
  *
  *   Tier 1 — a curated set of hot-path tools with full JSON Schema, so the
  *            common requests (list/get/create/comment/transition, CMDB impact,

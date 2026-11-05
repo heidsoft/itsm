@@ -263,15 +263,15 @@ node bin/itsm-mcp.js             # 进入协议循环，零 npm 依赖（dist �
 node bin/itsm-mcp.js --describe  # 只打印工具面，不进协议循环
 ```
 
-工具面分两层：20 个精选工具（工单读写与状态机流转、事件分诊、变更审批链、CMDB 影响分析、
-知识检索、SLA 概览、我的待办、身份自检）+ `itsm_discover` → `itsm_describe` → `itsm_call`
-覆盖全部 302 条命令。**schema 由 `CommandSpec.input` 派生**（不新增第二份端点表），
+工具面分三层：32 个精选工具（工单读写与状态机流转、事件分诊、问题/变更/发布/服务请求的 list+get、
+变更审批链、CMDB 影响分析、知识检索与正文、SLA 概览、我的待办、身份自检）+ `itsm_discover` → `itsm_describe`
+→ `itsm_call` 覆盖全部 352 条命令。**schema 由 `CommandSpec.input` 派生**（不新增第二份端点表），
 风险门与 `exit 10` 同源：高风险写缺 `confirm` 时**不发请求**，且永不自动重试。
 列表默认裁剪 50 条并给出 `total`/`truncated`；resources 提供实时能力清单与 4 篇产品文档，
 prompts 提供队列梳理 / 事件复盘 / 变更风险评审三条操作规程。
 
 ```bash
-node --test tests/mcp-protocol.test.mjs   # 18 例协议回归（桩后端，含"高风险写未发请求"）
+node --test tests/mcp-protocol.test.mjs   # 协议回归（桩后端，含"高风险写未发请求"）
 node scripts/mcp-smoke.mjs                # 打真实实例的只读冒烟；--offline 只跑本地断言
 ```
 
@@ -291,7 +291,7 @@ node scripts/mcp-smoke.mjs                # 打真实实例的只读冒烟；--o
 
 ```bash
 cd itsm-cli && npm run check
-# = typecheck + 枚举表同步 + 路由漂移 + flag/positional 声明审计 + 73 条协议/流程/安全回归测试
+# = typecheck + 枚举表同步 + 路由漂移 + 文档计数校验 + flag/positional 声明审计 + 全部协议/流程/安全回归测试
 ```
 
 ### 路由漂移检查

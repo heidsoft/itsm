@@ -1,10 +1,10 @@
 /**
  * The MCP tool surface.
  *
- * 205 CLI commands exist; advertising all of them costs more context than the
- * work they enable and makes tool selection worse (the model drowns in near
- * duplicates like `ticket.update` vs `ticket.subtasks.update`). So the surface
- * is two-tier:
+ * The CLI registry carries 300+ commands; advertising all of them costs more
+ * context than the work they enable and makes tool selection worse (the model
+ * drowns in near duplicates like `ticket.update` vs `ticket.subtasks.update`).
+ * So the surface is two-tier:
  *
  *   Tier 1 — a curated set of hot-path tools with full JSON Schema, so the
  *            common requests (list/get/create/comment/transition, CMDB impact,
@@ -135,10 +135,53 @@ const CURATED: CuratedEntry[] = [
       '基于标题+描述给出 AI 分诊建议（分类、优先级、影响面）。只做决策支持，不会自动处置任何对象。',
   },
   {
+    command: 'problem.list',
+    tool: 'itsm_problem_list',
+    title: '问题列表',
+    description: '按状态分页查询问题（problem）。根因分析、已知错误梳理的入口。',
+  },
+  {
+    command: 'problem.get',
+    tool: 'itsm_problem_get',
+    title: '问题详情',
+    description: '读取单个问题的完整字段（根因、临时措施、关联事件/已知错误）。',
+  },
+  {
     command: 'change.list',
     tool: 'itsm_change_list',
     title: '变更列表',
     description: '按状态、风险等级查询变更单。',
+  },
+  {
+    command: 'change.get',
+    tool: 'itsm_change_get',
+    title: '变更详情',
+    description:
+      '读取变更本体：内容、计划窗口、实施人、回滚方案、风险等级。审批前与 itsm_change_approvals 一起看，缺少回滚/验证方案是驳回依据。',
+  },
+  {
+    command: 'release.list',
+    tool: 'itsm_release_list',
+    title: '发布列表',
+    description: '按状态、类型分页查询发布单。',
+  },
+  {
+    command: 'release.get',
+    tool: 'itsm_release_get',
+    title: '发布详情',
+    description: '读取单个发布单的完整字段（范围、窗口、关联变更、状态）。',
+  },
+  {
+    command: 'request.list',
+    tool: 'itsm_request_list',
+    title: '服务请求列表',
+    description: '分页查询服务请求（service request）。目录项 ID 可从 itsm_call 的 catalog.list 获取。',
+  },
+  {
+    command: 'request.get',
+    tool: 'itsm_request_get',
+    title: '服务请求详情',
+    description: '读取单个服务请求的完整字段（请求项、状态、审批/交付进度）。',
   },
   {
     command: 'change.approvals',
@@ -192,6 +235,13 @@ const CURATED: CuratedEntry[] = [
     description: '检索知识文章（RAG 检索遵循权限与时效）。',
   },
   {
+    command: 'knowledge.get',
+    tool: 'itsm_knowledge_get',
+    title: '知识文章详情',
+    description:
+      '读取单篇文章的正文与来源标注。检索命中后取全文用；跨租户/无权限的文章不会因知道 ID 而可读。',
+  },
+  {
     command: 'sla.stats',
     tool: 'itsm_sla_stats',
     title: 'SLA 概览',
@@ -222,7 +272,7 @@ const META_TOOLS: McpTool[] = [
         query: { type: 'string', description: '关键字，匹配命令名与摘要（中英文均可），如 审批 / approval / 影响 / impact' },
         domain: {
           type: 'string',
-          description: '限定域，如 ticket / incident / change / cmdb / cloud / knowledge / sla / workflow / admin / request / release / problem',
+          description: '限定域：{domains}',
         },
         limit: { type: 'integer', minimum: 1, maximum: 100, description: '最多返回多少条，默认 25' },
       },
@@ -442,9 +492,16 @@ export function buildTools(): McpTool[] {
   }
 
   // The registry grows; a hardcoded count in a description becomes a lie that
-  // no test can catch. Substitute the live size at assembly time.
+  // no test can catch. Substitute the live size at assembly time. Domain names
+  // are derived the same way: the previous hand-kept list silently omitted
+  // catalog/provisioning/connector/marketplace/notification/report/flow/auth,
+  // so an operator filtering on a real domain was told it was not a domain.
+  const domains = [...new Set([...specs.keys()].map((name) => name.split('.')[0]))].sort();
   for (const meta of META_TOOLS) {
-    tools.push({ ...meta, description: meta.description.replace('{count}', String(specs.size)) });
+    tools.push({
+      ...meta,
+      description: meta.description.replace('{count}', String(specs.size)).replace('{domains}', domains.join(' / ')),
+    });
   }
   return tools;
 }
@@ -548,11 +605,14 @@ export function discoverTools(query: string | undefined, domain: string | undefi
     : matched;
 
   const curated = new Set(CURATED.map((c) => c.command));
+  const allDomains = [...new Set(specs.map((s) => s.name.split('.')[0]))].sort();
+  const returned = Math.min(ranked.length, limit);
   return {
     query: q ?? null,
     domain: domain ?? null,
     matched: matched.length,
-    returned: Math.min(ranked.length, limit),
+    returned,
+    remaining: Math.max(0, matched.length - returned),
     commands: ranked.slice(0, limit).map((s) => ({
       command: s.name,
       summary: s.summary,
@@ -561,9 +621,11 @@ export function discoverTools(query: string | undefined, domain: string | undefi
       ...(curated.has(s.name) ? { hasNativeTool: true } : {}),
     })),
     next:
-      matched.length > limit
-        ? '结果被截断：加 domain 或更具体的关键字收窄，或用 limit 提高上限（最大 100）。'
-        : '取完整入参契约：itsm_describe { command }；执行：itsm_call { command, params }。',
+      matched.length === 0
+        ? `没有匹配的命令${domain ? `（'${domain}' 不是已注册域）` : ''}。可用域：${allDomains.join(' / ')}。换关键字或去掉 domain 再试。`
+        : matched.length > limit
+          ? '结果被截断：加 domain 或更具体的关键字收窄，或用 limit 提高上限（最大 100）。'
+          : '取完整入参契约：itsm_describe { command }；执行：itsm_call { command, params }。',
   };
 }
 
