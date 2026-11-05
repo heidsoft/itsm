@@ -231,7 +231,7 @@ async function executeSpec(spec: CommandSpec, args: ParsedArgs, rest: string[]):
  * Single-character names (`-p`) are allowed through: they are legacy aliases
  * read via `stringFlag(flags, 'password', 'p')` and never advertised.
  */
-function validateFlags(spec: CommandSpec, args: ParsedArgs): void {
+export function validateFlags(spec: CommandSpec, args: ParsedArgs): void {
   const known = new Set(spec.input.params.filter((p) => p.kind !== 'positional').map((p) => p.name));
   // `body()`/`jsonFlag()` accept `--payload` wherever `--data` is declared.
   if (known.has('data')) known.add('payload');
@@ -269,7 +269,7 @@ function validateFlags(spec: CommandSpec, args: ParsedArgs): void {
  * per-connector config was fetched when the argument was silently dropped.
  * Under-declared positionals are caught statically by `audit-positionals.mjs`.
  */
-function validatePositionals(spec: CommandSpec, rest: string[]): void {
+export function validatePositionals(spec: CommandSpec, rest: string[]): void {
   const declared = spec.input.params.filter((p) => p.kind === 'positional');
   if (rest.length <= declared.length) return;
 

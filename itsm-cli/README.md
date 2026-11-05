@@ -253,6 +253,34 @@ verdict 三态：
 > 注意：后端登录接口把 JWT 放在 **HttpOnly cookie**（`access_token`/`refresh_token`）里，
 > 响应体无 token 字段。CLI 从 `Set-Cookie` 提取后写入 credentials 或内存。
 
+## TUI（交互模式）
+
+不带 `--json` 时进入 Ink 渲染的交互表面。`itsm`（无参数）与 `itsm help` 展示帮助，
+内容由路由注册表生成，不会与可执行命令脱节：
+
+```bash
+itsm                       # 帮助页（按 domain 分组）
+itsm login -u admin        # 密码走遮蔽输入或 stdin，不进 argv
+itsm tickets --status open
+itsm problem list --priority high
+itsm release 12
+itsm request 9
+```
+
+路由是**注册表驱动 + 通用兜底**的两层结构（`src/tui/routes.tsx`）：
+
+- **精选路由**：工单、事件、问题、变更、发布、服务请求、CMDB、知识库、SLA、工作流/审批、
+  通知、连接器、管理概览、搜索。这些页面有专门的表格与详情布局。
+- **通用兜底**（`src/tui/GenericCommand.tsx`）：任何没有精选页面、以及以后新增的命令，
+  都用同一份 agent 注册表解析执行 —— 相同的 `parseArgs`、flag/positional 校验、风险确认门、
+  `--dry-run`、`--fields/--limit` 裁剪。TUI 不存在第二张命令表，所以不会出现
+  「agent 能跑、TUI 说不认识」的漂移。
+- **裸 domain 帮助**：`itsm report` 这类只有子命令的 domain，会从注册表现列该域命令，
+  而不是报 unknown command。
+- **确认门一致**：`itsm ticket delete 42` 在 TUI 里同样先展示风险、零请求等待 `--yes`。
+
+TUI 只负责展示与采集；业务规则、权限、租户隔离仍全部来自后端，UI 不复制领域状态机。
+
 ## MCP 服务（itsm-mcp）
 
 同一份命令注册表还以 **MCP**（Model Context Protocol，stdio + JSON-RPC 2.0）暴露给图形化宿主
@@ -355,6 +383,11 @@ cd itsm-cli && npm test
 `tests/flow-runner.test.mjs` 用合成场景驱动流程 runner，锁定判定语义：capture 上下文、
 失败即停、teardown 必执行且反序、`expectError` 只接受声明的拒绝、负向步骤收到 5xx 判 `failed`
 而非 `blocked`、`blockedWhen` 降级、`--keep` 跳过清理、teardown 失败只产生 warning。
+
+`tests/tui.test.mjs` 用 `ink-testing-library` 渲染真实编译产物并 stub `fetch`，锁定 TUI 表面：
+精选路由命中 problem/release/request 的列表与详情、帮助页包含三个新分组、
+列表按标准信封渲染、未精选命令经通用兜底执行、高风险命令无 `--yes` 时**零请求**且显示确认门、
+`--yes` 后恰好一次请求、未知命令与裸 domain 帮助的文案。
 
 ### Agent 表面冒烟检查
 

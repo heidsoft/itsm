@@ -139,4 +139,4 @@ const cli = meow(
   }
 );
 
-render(React.createElement(App, { cli }));
+render(React.createElement(App, { cli, argv }));
