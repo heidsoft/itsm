@@ -64,10 +64,11 @@ export function marketplaceCommands() {
         if (targetVersion === '') {
           throw usageError('--targetVersion 不能是空串；省略该 flag 即升级到目录当前最新版本。');
         }
+        // 'upgrade' matches neither risk regex, so without the explicit 'write'
+        // below it would read as an un-gated no-op. Re-loading the runtime is a
+        // platform write.
         return apiClient.upgradeMarketplaceItem(id, targetVersion);
       },
-      // 'upgrade' matches neither risk regex, so without this it would read as
-      // an un-gated no-op. Re-loading the runtime is a platform write.
       'write' as const
     ),
     cmd(
@@ -123,10 +124,11 @@ export function marketplaceCommands() {
         // The backend takes a free-form JSON map; sending nothing is a
         // parameter error, not a no-op save.
         if (!config) throw usageError('安装配置更新需要 --data <json>（自由 JSON 对象）。');
+        // /install/ in the command name would pull this into high-risk-write;
+        // a config update is a normal write, declared explicitly to keep that
+        // decided (see the 'write' argument below).
         return apiClient.updateMarketplaceInstallationConfig(itemId, config);
       },
-      // /install/ substring would pull this into high-risk-write; a config
-      // update is a normal write, declared explicitly to keep that decided.
       'write' as const
     ),
     cmd(
