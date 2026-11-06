@@ -4,7 +4,6 @@ import (
 	"itsm-backend/middleware"
 
 	"github.com/gin-gonic/gin"
-	"go.uber.org/zap"
 )
 
 // SetupCommonSystemRoutes 注册 Common & System 域路由（auth/me、users、groups、org、
@@ -16,6 +15,10 @@ func SetupCommonSystemRoutes(r *gin.Engine, tenant *gin.RouterGroup, config *Rou
 		// auth/me、auth/tenants、auth/menus 挂在 r 层而不是 tenant 分组：
 		// tenant 分组的 RBAC 中间件会拦端用户，layout 取不到身份就崩
 		authGrp := r.Group("/api/v1/auth")
+		// 身份类敏感操作（登出、切换租户）必须在审计里留痕：它们改变会话与
+		// 可见数据边界，是事后追责的第一现场。tenant 分组的审计覆盖不到这里。
+		// 审计挂在分组最前面，POST 失败（401/403）同样会被记录。
+		authGrp.Use(middleware.AuditMiddleware(config.Client))
 		{
 			authGrp.GET("/me", middleware.AuthMiddleware(config.JWTSecret), config.CommonHandler.GetMe)
 			authGrp.GET("/tenants", middleware.AuthMiddleware(config.JWTSecret), config.CommonHandler.GetUserTenants)
@@ -190,7 +193,6 @@ func SetupCommonSystemRoutes(r *gin.Engine, tenant *gin.RouterGroup, config *Rou
 		}
 
 		// Notification Preferences
-		config.Logger.Info("NotificationHandler check:", zap.Any("handler", config.NotificationHandler))
 		if config.NotificationHandler != nil {
 			config.Logger.Info("Registering notification-preferences routes")
 			notifPrefs := tenant.Group("/notification-preferences")

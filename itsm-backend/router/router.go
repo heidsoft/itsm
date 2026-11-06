@@ -649,12 +649,16 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 		SetupAuditLogRoutes(tenant.(*gin.RouterGroup), config.AuditLogHandler, config.CommonHandler)
 		if config.CommonHandler != nil {
 			SetupCommonSystemRoutes(r, tenant.(*gin.RouterGroup), config)
-
-			// 自助账号操作（当前：自助改密，校验旧密码）。
-			// 此前前端 profile 页调用的 PUT /users/:id/reset-password 后端从未注册，
-			// 且那是管理员重置语义（不校验旧密码），不能直接拿来用。
-			SetupAccountRoutes(r, config.JWTSecret, config.AccountHandler)
 		}
+
+		// 自助账号操作（当前：自助改密，校验旧密码）。
+		// 此前前端 profile 页调用的 PUT /users/:id/reset-password 后端从未注册，
+		// 且那是管理员重置语义（不校验旧密码），不能直接拿来用。
+		//
+		// 独立于 CommonHandler 装配：能力不得静默下线。此前它嵌在
+		// `CommonHandler != nil` 守卫里，只装配 AccountHandler 时改密路由
+		// 会静默 404（与审计读面踩过的坑同型）。SetupAccountRoutes 自带 nil 守卫。
+		SetupAccountRoutes(r, config.JWTSecret, config.AccountHandler, config.Client)
 
 		// ==================== Problem Investigation ====================
 		// 权限说明：investigation/step/root_cause/solution 等资源未在 seeder 中定义，

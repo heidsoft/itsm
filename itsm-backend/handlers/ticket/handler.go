@@ -742,11 +742,13 @@ func (h *Handler) ExportTickets(c *gin.Context) {
 	if !ok {
 		return
 	}
+	currentUserID := c.GetInt("user_id")
+	currentRole := c.GetString("role")
 	filters := map[string]interface{}{
 		"status":   req.Filters.Status,
 		"priority": req.Filters.Priority,
 	}
-	data, err := h.service.ExportTickets(c.Request.Context(), tenantID, filters, req.Format)
+	data, err := h.service.ExportTickets(c.Request.Context(), tenantID, filters, req.Format, currentUserID, currentRole)
 	if err != nil {
 		common.FailWithErr(c, err, "工单导出失败")
 		return

@@ -319,6 +319,12 @@ services:
       - LLM_API_KEY=${LLM_API_KEY:-}
       - LLM_BASE_URL=${LLM_ENDPOINT:-${OPENAI_BASE_URL:-https://api.openai.com/v1}}
       - LLM_TIMEOUT=120
+      # 侧车需要回连 Go 后端调用 /api/v1/ai/*（知识检索、工单分析等）。
+      # 注意与 LLM_BASE_URL 语义不同：那个是厂商端点，这个是本系统后端。
+      # 缺省值（http://localhost:8080）在容器网络里必然连不上，必须显式指向服务名。
+      - ITSM_BACKEND_URL=${ITSM_BACKEND_URL:-http://itsm-backend:8090}
+      - ITSM_BACKEND_TOKEN=${ITSM_BACKEND_TOKEN:-}
+      - BACKEND_TIMEOUT=${BACKEND_TIMEOUT:-120}
     expose:
       - "8000"
     networks:

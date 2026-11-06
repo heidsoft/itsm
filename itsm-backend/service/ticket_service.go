@@ -2077,18 +2077,33 @@ func (s *TicketService) entToDomain(e *ent.Ticket) *ticket.Ticket {
 // ticketExportHeaders 是工单导出的列顺序，与 ExportTickets 写入的行 map key 一一对应。
 var ticketExportHeaders = []string{"工单编号", "标题", "描述", "状态", "优先级", "创建时间", "更新时间"}
 
-// ExportTickets 导出工单
-func (s *TicketService) ExportTickets(ctx context.Context, tenantID int, filters map[string]interface{}, format string) ([]byte, error) {
+// ExportTickets 导出工单。
+//
+// 导出是「第二个读取通道」，必须与列表共用同一套可见性判定：
+//   - 租户隔离（TenantID）；
+//   - 软删过滤（DeletedAtIsNil）—— 已删除的工单不该出现在导出文件里；
+//   - 行级数据权限（ticket.DataScopePredicates）—— 普通角色只能导出本人
+//     创建或分配给本人的工单，否则一次导出就能把全租户工单连同描述正文
+//     下载走，绕开列表页 DataScope。
+//
+// 三者缺一都会让导出比页面「看得更多」，这是本次修复的核心。
+func (s *TicketService) ExportTickets(ctx context.Context, tenantID int, filters map[string]interface{}, format string, currentUserID int, currentRole string) ([]byte, error) {
 	if s.client == nil {
 		return nil, fmt.Errorf("ent client not available for export")
 	}
-	query := s.client.Ticket.Query().Where(entTicket.TenantID(tenantID))
+	query := s.client.Ticket.Query().Where(
+		entTicket.TenantID(tenantID),
+		entTicket.DeletedAtIsNil(),
+	)
 	if status, ok := filters["status"].(string); ok && status != "" {
 		query = query.Where(entTicket.StatusEQ(status))
 	}
 	if priority, ok := filters["priority"].(string); ok && priority != "" {
 		query = query.Where(entTicket.PriorityEQ(priority))
 	}
+	// 行级数据权限：与列表/统计同一口径（datascope 单一源 → 同一谓词函数）。
+	scope := datascope.ForTicketReader(currentRole)
+	query = query.Where(ticket.DataScopePredicates(scope, currentUserID)...)
 	// 导出必须有显式排序：按自然顺序返回时，同一份数据两次导出的行序会不一致。
 	tickets, err := query.Order(ent.Asc(entTicket.FieldID)).All(ctx)
 	if err != nil {

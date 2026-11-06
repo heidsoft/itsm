@@ -462,7 +462,7 @@ export default function DashboardPage() {
                                   : undefined;
                               return (
                                 <SLAComplianceChart
-                                  data={data?.slaData || []}
+                                  data={data?.slaData}
                                   overallValue={slaOverall}
                                 />
                               );
@@ -527,7 +527,7 @@ export default function DashboardPage() {
                                   : undefined;
                               return (
                                 <SLAComplianceChart
-                                  data={data?.slaData || []}
+                                  data={data?.slaData}
                                   overallValue={slaOverall}
                                 />
                               );

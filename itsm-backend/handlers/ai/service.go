@@ -1141,15 +1141,26 @@ func (s *Service) TriageTicket(ctx context.Context, tenantID int, userID int, ti
 				"urgency":    s.determineUrgency(result.Priority),
 			},
 		}
+		// 降级结果必须自报家门：前端/审计据此区分「模型结论」与「关键词凑数」，
+		// 否则 sidecar 把 LLM 故障包成 200 之后，界面与底账都看不出异常。
+		if result.Degraded {
+			response["degraded"] = true
+			response["degradedReason"] = result.DegradedReason
+		}
 		if s.auditLedger != nil {
+			metadata := map[string]interface{}{
+				"category": result.Category,
+				"priority": result.Priority,
+				"degraded": result.Degraded,
+			}
+			if result.Degraded {
+				metadata["degradedReason"] = result.DegradedReason
+			}
 			auditID, ledgerErr := s.auditLedger.RecordDecisionAudit(ctx, tenantID, userID,
 				fmt.Sprintf("triage_%d_%d", tenantID, time.Now().UnixNano()),
 				"triage", fmt.Sprintf("ticket:%s", title),
 				result.PromptVersion, result.Model, result.Confidence,
-				map[string]interface{}{
-					"category": result.Category,
-					"priority": result.Priority,
-				},
+				metadata,
 			)
 			if ledgerErr != nil {
 				s.logger.Warnw("TriageTicket: audit ledger write failed (best-effort)", "error", ledgerErr)

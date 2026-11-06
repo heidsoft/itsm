@@ -51,6 +51,10 @@ type GuidanceTriageResponse struct {
 	AssigneeID   int     `json:"assigneeId"`
 	Method       string  `json:"method"`
 	LatencyMs    float64 `json:"latencyMs"`
+	// Degraded 是 sidecar 自报的降级位：LLM 不可用时会返回关键词结果
+	// （method="guidance-fallback"）。此前这个字段（以及 Method）定义在这里
+	// 却零消费，降级结果被当成模型决策消费掉了。
+	Degraded bool `json:"degraded"`
 }
 
 // Triage calls the Guidance sidecar for constrained JSON output

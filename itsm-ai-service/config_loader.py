@@ -73,6 +73,23 @@ class TriageConfig:
 
 
 @dataclass
+class BackendConfig:
+    """ITSM Go 后端的地址与凭据。
+
+    与 llm.* 严格分开：llm.base_url 是「直连的模型厂商端点」（形如
+    https://api.openai.com/v1，guidance sidecar 会在其后拼 /chat/completions），
+    而这里的 base_url 是「本系统 Go 后端」，SDK 风格为 .../api/v1/ai/*。
+    两者曾共用 llm.base_url 一个字段，导致 api/triage.py、api/rca.py 把
+    模型端点当成后端地址去请求（https://api.openai.com/v1/api/v1/ai/...），
+    永远 404、永远静默降级 —— 功能看起来「有」，实际一次 LLM 调用都没发出去。
+    """
+
+    base_url: str = "http://localhost:8080"
+    api_key: str = ""  # 后端 JWT（服务间调用），不是模型厂商的 API key
+    timeout: int = 120
+
+
+@dataclass
 class ServiceConfig:
     name: str = "itsm-ai-service"
     version: str = "1.0.0"
@@ -88,6 +105,7 @@ class Config:
     database: DatabaseConfig
     redis: RedisConfig
     llm: LLMConfig
+    backend: BackendConfig
     rca: RCAConfig
     risk: RiskConfig
     triage: TriageConfig
@@ -102,6 +120,7 @@ def load_config(path: str = "config.yaml") -> Config:
             database=DatabaseConfig(),
             redis=RedisConfig(),
             llm=LLMConfig(),
+            backend=BackendConfig(),
             rca=RCAConfig(),
             risk=RiskConfig(),
             triage=TriageConfig(),
@@ -116,6 +135,7 @@ def load_config(path: str = "config.yaml") -> Config:
         database=DatabaseConfig(**data.get("database", {})),
         redis=RedisConfig(**data.get("redis", {})),
         llm=LLMConfig(**data.get("llm", {})),
+        backend=BackendConfig(**data.get("backend", {})),
         rca=RCAConfig(**data.get("rca", {})),
         risk=RiskConfig(**data.get("risk", {})),
         triage=TriageConfig(**data.get("triage", {})),
@@ -150,6 +170,15 @@ def apply_environment_overrides(config: Config) -> Config:
     }:
         config.llm.base_url = "https://api.minimaxi.com/anthropic/v1"
     config.llm.timeout = int(os.getenv("LLM_TIMEOUT", str(config.llm.timeout)))
+
+    # 后端地址独立覆盖：ITSM_BACKEND_URL（首选）/ BACKEND_URL（兼容）。
+    config.backend.base_url = (
+        os.getenv("ITSM_BACKEND_URL")
+        or os.getenv("BACKEND_URL")
+        or config.backend.base_url
+    ).rstrip("/")
+    config.backend.api_key = os.getenv("ITSM_BACKEND_TOKEN", config.backend.api_key)
+    config.backend.timeout = int(os.getenv("BACKEND_TIMEOUT", str(config.backend.timeout)))
     return config
 
 

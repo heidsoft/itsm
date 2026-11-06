@@ -85,6 +85,11 @@ var SensitiveResources = map[string]bool{
 
 // AuditMiddleware persists audit logs for operations with enhanced security tracking
 func AuditMiddleware(client *ent.Client) gin.HandlerFunc {
+	// 未注入 ent 客户端时（部分集成测试、无 DB 的部署形态）直接放行：
+	// 审计不该让业务请求因为「日志后端缺失」而 panic 或 500。
+	if client == nil {
+		return func(c *gin.Context) { c.Next() }
+	}
 	return func(c *gin.Context) {
 		// 判断是否需要审计
 		if !shouldAuditRequest(c) {

@@ -346,40 +346,81 @@ func (s *SLAAlertService) CheckAndTriggerAlerts(ctx context.Context, ticketID in
 	alertTriggered := false
 
 	// 检查响应时间预警
+	//
+	// 关键：**已超时也要建告警**。历史上这里用 `timeRemaining > 0` 把超时后的
+	// 分支整个跳过，而 EscalationService 唯一的升级数据源就是 SLAAlertHistory
+	// ——于是「最该升级的已超时工单」永远没有告警行、也就永远不升级，
+	// 升级矩阵形同虚设。现在超时按 0% 处理，仍然走同一条规则匹配路径。
 	if !slState.ResponseDeadline.IsZero() && ticketEntity.FirstResponseAt.IsZero() {
 		slaDeadline = slState.ResponseDeadline
 		timeRemaining = slaDeadline.Sub(now).Minutes()
-		if timeRemaining > 0 {
-			// 计算剩余时间百分比
-			totalTime := slaDeadline.Sub(ticketEntity.CreatedAt).Minutes()
-			if totalTime > 0 {
-				percentage := (timeRemaining / totalTime) * 100
-				triggered := s.checkAndCreateAlert(ctx, ticketEntity, alertRules, "response_time", percentage, tenantID)
-				if triggered {
-					alertTriggered = true
-				}
+		totalTime := slaDeadline.Sub(ticketEntity.CreatedAt).Minutes()
+		if totalTime > 0 {
+			percentage := clampRemainingPercentage(timeRemaining, totalTime)
+			rules := rulesForPercentage(alertRules, percentage)
+			triggered := s.checkAndCreateAlert(ctx, ticketEntity, rules, "response_time", percentage, tenantID)
+			if triggered {
+				alertTriggered = true
 			}
 		}
 	}
 
-	// 检查解决时间预警
+	// 检查解决时间预警（同上：超时不跳过）
 	if !slState.ResolutionDeadline.IsZero() && ticketEntity.ResolvedAt.IsZero() {
 		slaDeadline = slState.ResolutionDeadline
 		timeRemaining = slaDeadline.Sub(now).Minutes()
-		if timeRemaining > 0 {
-			// 计算剩余时间百分比
-			totalTime := slaDeadline.Sub(ticketEntity.CreatedAt).Minutes()
-			if totalTime > 0 {
-				percentage := (timeRemaining / totalTime) * 100
-				triggered := s.checkAndCreateAlert(ctx, ticketEntity, alertRules, "resolution_time", percentage, tenantID)
-				if triggered {
-					alertTriggered = true
-				}
+		totalTime := slaDeadline.Sub(ticketEntity.CreatedAt).Minutes()
+		if totalTime > 0 {
+			percentage := clampRemainingPercentage(timeRemaining, totalTime)
+			rules := rulesForPercentage(alertRules, percentage)
+			triggered := s.checkAndCreateAlert(ctx, ticketEntity, rules, "resolution_time", percentage, tenantID)
+			if triggered {
+				alertTriggered = true
 			}
 		}
 	}
 
 	return alertTriggered, nil
+}
+
+// clampRemainingPercentage 把「剩余时间 / 总时长」折算成百分比，负数按 0 收。
+//
+// 0 表示「已超时」：它必须是一个有效取值，而不是被丢弃的分支——否则超时工单
+// 不会产生告警，升级链路因此断在源头。
+func clampRemainingPercentage(timeRemainingMinutes, totalMinutes float64) float64 {
+	if totalMinutes <= 0 {
+		return 0
+	}
+	percentage := (timeRemainingMinutes / totalMinutes) * 100
+	if percentage < 0 {
+		return 0
+	}
+	return percentage
+}
+
+// rulesForPercentage 选出本次应参与判定的规则。
+//
+// 未超时：全部规则都参与（与既有行为一致，由阈值比较筛出命中的那条）。
+// 已超时（percentage<=0）：只保留「最紧急」的一组——阈值最低的那些规则。
+// 否则一个 80/50/20 三档定义会在超时后一次补发三条告警，让同一张工单
+// 立刻收到三次升级通知。
+func rulesForPercentage(rules []*ent.SLAAlertRule, percentage float64) []*ent.SLAAlertRule {
+	if percentage > 0 || len(rules) == 0 {
+		return rules
+	}
+	minThreshold := rules[0].ThresholdPercentage
+	for _, r := range rules {
+		if r.ThresholdPercentage < minThreshold {
+			minThreshold = r.ThresholdPercentage
+		}
+	}
+	out := make([]*ent.SLAAlertRule, 0, len(rules))
+	for _, r := range rules {
+		if r.ThresholdPercentage == minThreshold {
+			out = append(out, r)
+		}
+	}
+	return out
 }
 
 // TriggerSLAWarning 触发SLA预警（基于默认阈值）
@@ -431,28 +472,28 @@ func (s *SLAAlertService) TriggerSLAWarning(ctx context.Context, ticketID int, w
 	now := time.Now()
 	var percentage float64
 	var slaDeadline time.Time
+	matched := false
 
 	if warningType == "response_time" && !slState.ResponseDeadline.IsZero() && ticketEntity.FirstResponseAt.IsZero() {
 		slaDeadline = slState.ResponseDeadline
 		totalTime := slaDeadline.Sub(ticketEntity.CreatedAt).Minutes()
-		timeRemaining := slaDeadline.Sub(now).Minutes()
-		if totalTime > 0 && timeRemaining > 0 {
-			percentage = (timeRemaining / totalTime) * 100
-		}
+		percentage = clampRemainingPercentage(slaDeadline.Sub(now).Minutes(), totalTime)
+		matched = totalTime > 0
 	} else if warningType == "resolution_time" && !slState.ResolutionDeadline.IsZero() && ticketEntity.ResolvedAt.IsZero() {
 		slaDeadline = slState.ResolutionDeadline
 		totalTime := slaDeadline.Sub(ticketEntity.CreatedAt).Minutes()
-		timeRemaining := slaDeadline.Sub(now).Minutes()
-		if totalTime > 0 && timeRemaining > 0 {
-			percentage = (timeRemaining / totalTime) * 100
-		}
+		percentage = clampRemainingPercentage(slaDeadline.Sub(now).Minutes(), totalTime)
+		matched = totalTime > 0
 	}
 
-	if percentage <= 0 {
+	// 已超时（percentage==0）是**合法输入**，不能在这里提前返回：
+	// 返回意味着超时工单永远没有告警行，升级链路因此断在源头。
+	if !matched {
 		return false, nil
 	}
 
-	triggered := s.checkAndCreateAlert(ctx, ticketEntity, alertRules, warningType, percentage, tenantID)
+	rules := rulesForPercentage(alertRules, percentage)
+	triggered := s.checkAndCreateAlert(ctx, ticketEntity, rules, warningType, percentage, tenantID)
 	return triggered, nil
 }
 

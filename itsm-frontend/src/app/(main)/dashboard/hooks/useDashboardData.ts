@@ -79,7 +79,8 @@ function getInitialData(): DashboardData {
     // 工单趋势
     ticketTrend: [],
     incidentDistribution: [],
-    slaData: [],
+    // SLA 是聚合对象（后端 SLAComplianceData），不是数组；后端未返回前留空。
+    slaData: null,
     satisfactionData: [],
     quickActions: [
       {

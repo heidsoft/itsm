@@ -47,6 +47,11 @@ class GuidanceTriageResponse(BaseModel):
     assigneeId: int = 0
     method: str = "guidance"
     latencyMs: float = 0.0
+    # 显式降级标记：LLM 不可用时返回的关键词结果不是模型结论。
+    # 历史实现只靠 method 字符串区分，调用方（Go 后端）根本没读 method，
+    # 于是降级结果被当成模型决策写进审计底账。这里加显式布尔位，
+    # 让「这是降级」这件事不依赖字符串约定。
+    degraded: bool = False
 
 
 _SYSTEM_PROMPT = (
@@ -120,9 +125,13 @@ def _keyword_classify(title: str, description: str) -> GuidanceTriageResponse:
     return GuidanceTriageResponse(
         category=category,
         priority=priority,
-        confidence=0.7,
+        # 关键词命中给不出校准过的置信度，0.7 只是手感值：写低会被当成
+        # 「模型很没把握」，写高会骗过自动采纳阈值。降到 0.5（中性），
+        # 同时 degraded=True 让调用方知道这不是模型打分。
+        confidence=0.5,
         explanation="keyword-based classification (LLM unavailable)",
         method="guidance-fallback",
+        degraded=True,
         latencyMs=0.0,
     )
 

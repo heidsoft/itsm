@@ -1,5 +1,10 @@
 """
-LLM 客户端 - 调用后端 AI 服务
+后端 AI 服务客户端。
+
+命名注意：本模块调的是**本系统 Go 后端**的 /api/v1/ai/* 接口，不是模型厂商
+的 chat/completions。厂商端点属于 guidance sidecar（api/guidance.py），
+两者的地址配置已拆分（llm.base_url vs backend.base_url）——共用同一个字段时
+这里会把 https://api.openai.com/v1 当成后端地址，请求恒 404、静默降级。
 """
 import httpx
 import logging
@@ -15,10 +20,13 @@ class LLMClient:
 
     def __init__(self, backend_url: Optional[str] = None):
         cfg = get_config()
-        self.backend_url = backend_url or cfg.llm.base_url
-        self.api_key = cfg.llm.api_key
+        # 后端地址与模型端点严格分开：用 backend.*，不要回落到 llm.base_url。
+        self.backend_url = (backend_url or cfg.backend.base_url).rstrip("/")
+        # 服务间调用凭据是后端 JWT，不是模型厂商的 API key；未配置时宁可不发
+        # Authorization，也不要把厂商 key 泄漏给后端。
+        self.api_key = cfg.backend.api_key
         self.model = cfg.llm.model
-        self.timeout = cfg.llm.timeout
+        self.timeout = cfg.backend.timeout
         self._client = None
 
     @property

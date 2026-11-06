@@ -468,12 +468,15 @@ func (s *Service) attachSLACompliance(ctx context.Context, tenantID int, window 
 	}
 }
 
-// ExportTickets 导出工单，委派给生产服务层（其查询已带 TenantID 谓词）。
-func (s *Service) ExportTickets(ctx context.Context, tenantID int, filters map[string]interface{}, format string) ([]byte, error) {
+// ExportTickets 导出工单，委派给生产服务层。
+//
+// viewerID/viewerRole 必须下传：导出与列表共用同一套可见性判定
+// （租户 + 软删 + DataScope），漏传会让普通角色导出全租户工单。
+func (s *Service) ExportTickets(ctx context.Context, tenantID int, filters map[string]interface{}, format string, viewerID int, viewerRole string) ([]byte, error) {
 	if s.productionSvc == nil {
 		return nil, common.NewBusinessError(common.ServiceUnavailableCode, "工单导出服务未接入", "")
 	}
-	return s.productionSvc.ExportTickets(ctx, tenantID, filters, format)
+	return s.productionSvc.ExportTickets(ctx, tenantID, filters, format, viewerID, viewerRole)
 }
 
 // ImportTickets imports tickets (placeholder).

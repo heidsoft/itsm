@@ -16,7 +16,7 @@ import type {
   KPIMetric,
   TicketTrendData,
   IncidentDistributionData,
-  SLAData,
+  SLAComplianceData,
   SatisfactionData,
   QuickAction,
   RecentActivity,
@@ -67,8 +67,8 @@ export class DashboardAPI {
    * 获取SLA数据
    * @returns SLA数据列表
    */
-  static async getSLAData(): Promise<SLAData[]> {
-    return await httpClient.get<SLAData[]>('/api/v1/dashboard/sla-data');
+  static async getSLAData(): Promise<SLAComplianceData | null> {
+    return await httpClient.get<SLAComplianceData | null>('/api/v1/dashboard/sla-data');
   }
 
   /**
