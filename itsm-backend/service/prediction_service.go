@@ -1,7 +1,9 @@
 package service
 
 import (
+	"bytes"
 	"context"
+	"encoding/csv"
 	"fmt"
 	"time"
 
@@ -291,27 +293,55 @@ func (s *PredictionService) ExportPredictionReport(ctx context.Context, req *dto
 	}
 }
 
-// exportPredictionToCSV 导出预测为CSV格式
+// exportPredictionToCSV 导出预测为CSV格式。
+//
+// R4：此前用 fmt.Sprintf 手拼 CSV——Model（请求参数，无 oneof 约束）带逗号
+// 会撕裂列、带 \n 会伪造行、以 =/+/-/@ 开头会被 Excel/WPS 当公式执行。
+// 改用 encoding/csv 负责引用与转义；用户可控字符串统一过
+// neutralizeSpreadsheetFormula（与 Excel 导出同一入口）。
 func (s *PredictionService) exportPredictionToCSV(response *dto.TrendPredictionResponse) ([]byte, string, error) {
-	var csvData string
+	var buf bytes.Buffer
+	// utf-8-sig BOM：让 Excel 直接按 UTF-8 打开，中文表头不乱码。
+	buf.Write([]byte{0xEF, 0xBB, 0xBF})
+	w := csv.NewWriter(&buf)
 
-	// CSV头部
-	csvData = "日期,预测值,下限,上限,置信度\n"
-
-	// 数据行
+	if err := w.Write([]string{"日期", "预测值", "下限", "上限", "置信度"}); err != nil {
+		return nil, "", fmt.Errorf("write csv header: %w", err)
+	}
 	for _, point := range response.Predictions {
-		csvData += fmt.Sprintf("%s,%.2f,%.2f,%.2f,%.2f\n",
-			point.Date, point.PredictedValue, point.LowerBound, point.UpperBound, point.Confidence)
+		row := []string{
+			neutralizeSpreadsheetFormula(point.Date),
+			fmt.Sprintf("%.2f", point.PredictedValue),
+			fmt.Sprintf("%.2f", point.LowerBound),
+			fmt.Sprintf("%.2f", point.UpperBound),
+			fmt.Sprintf("%.2f", point.Confidence),
+		}
+		if err := w.Write(row); err != nil {
+			return nil, "", fmt.Errorf("write csv row: %w", err)
+		}
 	}
 
-	// 添加汇总信息
-	csvData += "\n预测信息\n"
-	csvData += fmt.Sprintf("模型,%s\n", response.Model)
-	csvData += fmt.Sprintf("整体置信度,%.2f\n", response.Confidence)
-	csvData += fmt.Sprintf("生成时间,%s\n", response.GeneratedAt.Format("2006-01-02 15:04:05"))
+	if err := w.Write([]string{""}); err != nil {
+		return nil, "", fmt.Errorf("write csv separator: %w", err)
+	}
+	meta := [][]string{
+		{"预测信息"},
+		{"模型", neutralizeSpreadsheetFormula(response.Model)},
+		{"整体置信度", fmt.Sprintf("%.2f", response.Confidence)},
+		{"生成时间", response.GeneratedAt.Format("2006-01-02 15:04:05")},
+	}
+	for _, row := range meta {
+		if err := w.Write(row); err != nil {
+			return nil, "", fmt.Errorf("write csv meta: %w", err)
+		}
+	}
+	w.Flush()
+	if err := w.Error(); err != nil {
+		return nil, "", fmt.Errorf("flush csv: %w", err)
+	}
 
 	filename := fmt.Sprintf("prediction_%s.csv", time.Now().Format("20060102_150405"))
-	return []byte(csvData), filename, nil
+	return buf.Bytes(), filename, nil
 }
 
 // exportPredictionToExcel 导出预测为Excel格式

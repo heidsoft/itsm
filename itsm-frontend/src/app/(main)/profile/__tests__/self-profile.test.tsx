@@ -10,9 +10,29 @@ jest.mock('@/lib/api/user-api', () => ({
     updateOwnProfile: jest.fn(),
     updateUser: jest.fn(),
     changePassword: jest.fn(),
+    changeOwnPassword: jest.fn(),
     getTicketStats: jest.fn(),
   },
 }));
+
+// F2 回归：改密成功必须走 AuthService.logout（清 httpOnly cookie）+ 硬导航到
+// /login。此前只清前端 store：后端已吊销全部 token，用户停在半登出态。
+const authLogoutSpy = jest.fn();
+jest.mock('@/lib/services/auth-service', () => ({
+  AuthService: { logout: (() => authLogoutSpy()) as unknown as () => void },
+}));
+
+const originalLocation = window.location;
+beforeAll(() => {
+  // jsdom 的 location 不可写，替换成可写的普通对象
+  Object.defineProperty(window, 'location', {
+    value: { ...originalLocation, href: '', assign: jest.fn() },
+    writable: true,
+  });
+});
+afterAll(() => {
+  Object.defineProperty(window, 'location', { value: originalLocation, writable: true });
+});
 
 jest.mock('@/lib/api/ticket-api', () => ({
   TicketApi: { getTicketStats: jest.fn().mockResolvedValue({}) },
@@ -149,5 +169,54 @@ describe('/profile 自助资料面', () => {
     fireEvent.click(screen.getByRole('button', { name: '保存修改' }));
 
     expect(await screen.findByText(/该邮箱已被其他账号使用/)).toBeInTheDocument();
+  });
+
+  // F2：改密成功后端吊销全部 token（reLogin:true），前端必须完整登出并硬导航。
+  // 此前只清 store 不跳转：用户看到「请重新登录」却停在原页，旧 cookie 未清，
+  // 直到下次 401 续签失败才被踢走。
+  it('改密成功走 AuthService.logout 清 cookie 并硬导航到 /login', async () => {
+    (UserApi.changeOwnPassword as jest.Mock).mockResolvedValueOnce(undefined);
+    renderPage();
+
+    // 改密卡片在 defaultActiveKey="basic" 之外的 security Tab 里，必须先切过去，
+    // 否则整个表单（含「修改」按钮）根本没挂进 DOM。
+    const securityTab = await screen.findByRole('tab', { name: /安全设置/u });
+    fireEvent.click(securityTab);
+
+    // 打开改密弹窗：安全设置卡片里的「修改」按钮（带 Key 图标，无其他文案）
+    // 页面还有「保存修改」等文案按钮，必须精确匹配；antd 两字按钮的可访问名
+    // 会插入空格（沉淀→沉 淀），所以按 textContent 归一化后用正则匹配。
+    const openBtn = await waitFor(() => {
+      const btns = Array.from(document.querySelectorAll('button'));
+      const target = btns.find(b => /^修\s*改$/.test((b.textContent || '').trim()));
+      expect(target).toBeTruthy();
+      return target as HTMLButtonElement;
+    });
+    fireEvent.click(openBtn);
+
+    // antd Modal 走 portal 渲染在 body 直下；等三个密码框出现
+    const inputs = await waitFor(() => {
+      const all = document.querySelectorAll('input[type="password"]');
+      expect(all.length).toBe(3);
+      return Array.from(all) as HTMLInputElement[];
+    }, { timeout: 4000 });
+    fireEvent.change(inputs[0], { target: { value: 'OldPass!2026x' } });
+    fireEvent.change(inputs[1], { target: { value: 'NewPass!2026x' } });
+    fireEvent.change(inputs[2], { target: { value: 'NewPass!2026x' } });
+
+    // 确认按钮也在 portal 内：从 modal 容器内找
+    const okBtn = await waitFor(() => {
+      const btns = Array.from(document.querySelectorAll('button'));
+      const ok = btns.find(b => /确认修改/u.test(b.textContent || ''));
+      expect(ok).toBeTruthy();
+      return ok as HTMLButtonElement;
+    });
+    fireEvent.click(okBtn);
+
+    await waitFor(() =>
+      expect(UserApi.changeOwnPassword).toHaveBeenCalledWith('OldPass!2026x', 'NewPass!2026x'),
+    );
+    await waitFor(() => expect(authLogoutSpy).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(window.location.href).toBe('/login'));
   });
 });

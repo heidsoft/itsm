@@ -91,15 +91,16 @@ func AuditMiddleware(client *ent.Client) gin.HandlerFunc {
 		return func(c *gin.Context) { c.Next() }
 	}
 	return func(c *gin.Context) {
-		// 判断是否需要审计
-		if !shouldAuditRequest(c) {
-			c.Next()
-			return
-		}
+		// 判断是否需要审计（决定要不要提前读 body）。
+		// 注意不能在这里早退：L3 要求被鉴权链 Abort 的 401/403 也留痕，
+		// 而 shouldAuditRequest 只对写操作与敏感 GET 返回 true。
+		auditable := shouldAuditRequest(c)
 
-		// read body safely and restore
+		// read body safely and restore。
+		// 只对 auditable 请求读：避免把大文件上传提前整段读进内存，
+		// 绕过排在前面的 RequestSizeMiddleware 的保护。
 		var bodyBytes []byte
-		if c.Request.Body != nil {
+		if auditable && c.Request.Body != nil {
 			var err error
 			bodyBytes, err = io.ReadAll(c.Request.Body)
 			if err != nil {
@@ -113,6 +114,16 @@ func AuditMiddleware(client *ent.Client) gin.HandlerFunc {
 		start := time.Now()
 		c.Next()
 		duration := time.Since(start)
+		status := c.Writer.Status()
+
+		// 被 Abort 的失败请求（401 令牌失效/爆破、403 RBAC 拒绝、
+		// 跨租户试探、业务拒绝 409）一律补一条，即使 shouldAuditRequest
+		// 原本判定为「不必审计」（例如非敏感资源 GET）。
+		// 此时 requestBody 为空——不读 body 是刻意的：探测请求的正文可能含
+		// 凭据，且大请求体不该在大小限制之前被整段缓存。
+		if !auditable && status < 400 {
+			return
+		}
 
 		// collect fields
 		rid := c.GetString("request_id")
@@ -140,7 +151,6 @@ func AuditMiddleware(client *ent.Client) gin.HandlerFunc {
 		ip := c.ClientIP()
 		path := c.Request.URL.Path
 		methodStr := c.Request.Method
-		status := c.Writer.Status()
 		userAgent := c.Request.UserAgent()
 
 		// limit stored body size to avoid oversized logs

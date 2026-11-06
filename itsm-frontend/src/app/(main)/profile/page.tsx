@@ -48,6 +48,7 @@ import { PageHeader } from '@/components/layout/PageHeader';
 import { UserApi } from '@/lib/api/user-api';
 import { TicketApi } from '@/lib/api/ticket-api';
 import { NotificationPreferenceApi } from '@/lib/api/notification-preference-api';
+import { AuthService } from '@/lib/services/auth-service';
 import { useI18n } from '@/lib/i18n';
 import { useAuthStore, useAuthStoreHydration } from '@/lib/store/auth-store';
 
@@ -148,12 +149,15 @@ export default function ProfilePage() {
       // 后者不校验旧密码，且 /users/:id/reset-password 后端尚未注册。
       setPasswordLoading(true);
       await UserApi.changeOwnPassword(values.oldPassword, values.newPassword);
-      // 服务端已吊销该用户全部存量 access token，本地会话必须一并清掉，
-      // 否则前端还拿着失效 token 继续请求，只会得到一片 401。
-      useAuthStore.getState().logout();
-      message.success('密码修改成功，请重新登录');
+      // 服务端已吊销该用户全部存量 access token 并要求重新登录（reLogin:true）。
+      // 此前只清前端 store、不跳登录页：用户看到「请重新登录」却停在半登出态，
+      // 旧 cookie 未清、下次 401 续签失败才被踢走。对齐 Header 的登出路径——
+      // AuthService.logout 负责清 httpOnly cookie 与 store，硬导航让中间件重查会话。
+      message.success('密码修改成功，即将跳转登录页');
       setPasswordModalVisible(false);
       passwordForm.resetFields();
+      AuthService.logout();
+      window.location.href = '/login';
     } catch (error) {
       console.error('Failed to change password:', error);
       // 后端 reason 是唯一能区分「旧密码不正确」「密码强度不足」「会话过期」的信息，

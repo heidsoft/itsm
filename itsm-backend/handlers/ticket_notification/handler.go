@@ -58,12 +58,16 @@ func (h *Handler) ListTicketNotifications(c *gin.Context) {
 		return
 	}
 
-	tenantID, _, ok := tenantUserID(c)
+	tenantID, userID, ok := tenantUserID(c)
 	if !ok {
 		common.Fail(c, common.UnauthorizedCode, "未授权访问")
 		return
 	}
-	notifications, err := h.notificationService.ListTicketNotifications(c.Request.Context(), ticketID, tenantID)
+	// 通知正文与收件人邮箱只对「这条通知的收件人」与管理角色开放。
+	// 此前只按 ticketID+tenantID 过滤：同租户任一持码账号可枚举工单 ID
+	// 读走所有收件人的通知与邮箱（N2，行级越权读）。
+	viewerRole := c.GetString("role")
+	notifications, err := h.notificationService.ListTicketNotifications(c.Request.Context(), ticketID, tenantID, userID, viewerRole)
 	if err != nil {
 		h.logger.Errorw("Failed to list ticket notifications", "error", err, "ticket_id", ticketID, "tenant_id", tenantID)
 		common.FailWithErr(c, err, "操作失败")

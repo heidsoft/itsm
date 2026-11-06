@@ -16,6 +16,7 @@ import (
 	"itsm-backend/ent/ticketnotification"
 	"itsm-backend/ent/user"
 	"itsm-backend/internal/commandbus"
+	"itsm-backend/internal/datascope"
 
 	"go.uber.org/zap"
 )
@@ -894,16 +895,30 @@ func collectCreatedRecipients(ctx context.Context, tx *ent.Tx, ticket *ent.Ticke
 	return userIDs
 }
 
-// ListTicketNotifications 获取工单通知列表
+// ListTicketNotifications 获取工单通知列表。
+//
+// 行级可见性（N2 修复）：通知正文与收件人信息只对两类人开放——
+//   - 该通知的收件人本人（user_id = viewerID）；
+//   - 管理角色（datascope.IsDataScopeAllRole，词表单一源 domain/role.IsAdminLike）。
+//
+// 此前谓词只有 TicketID + TenantID：同租户任一持 notification:read 的账号
+// 枚举工单 ID 即可读走所有收件人的通知正文与邮箱（含 Email/Role/Department）。
+// viewerRole 为空按非管理角色处理（安全收窄）。工单处理人（assignee）不在
+// 收件人列表里就不放行——需要抄送处理人时走发送链路把他也写进 user_id。
 func (s *TicketNotificationService) ListTicketNotifications(
 	ctx context.Context,
-	ticketID, tenantID int,
+	ticketID, tenantID, viewerID int,
+	viewerRole string,
 ) ([]*dto.TicketNotificationResponse, error) {
-	notifications, err := s.client.TicketNotification.Query().
+	query := s.client.TicketNotification.Query().
 		Where(
 			ticketnotification.TicketID(ticketID),
 			ticketnotification.TenantID(tenantID),
-		).
+		)
+	if !datascope.IsDataScopeAllRole(viewerRole) {
+		query = query.Where(ticketnotification.UserID(viewerID))
+	}
+	notifications, err := query.
 		Order(ent.Desc(ticketnotification.FieldCreatedAt)).
 		WithUser().
 		All(ctx)

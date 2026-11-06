@@ -17,6 +17,15 @@ import (
 	"itsm-backend/service/cloud"
 )
 
+// maxDiscoveryPages 是单个 scope 允许翻的最大页数。
+//
+// 适配器若回显不变的 NextToken（或恒返回同一个非空 token），无上限的 for{}
+// 会让 job 永不结束：计费 API 被持续放大、账号级限流、worker 被占死。
+// 命中上限时**必须返回 scopeFailure 终止整个 scope**，不能静默 break ——
+// 循环后面的缺失扫描会把「没扫到的存量资源」当作本轮未出现而推进
+// missing_count，连续几轮就误置 stale（与漏洞同步跳过收口同理）。
+const maxDiscoveryPages = 100
+
 // DiscoveryAdapterProvider 是执行器对适配器注册表的窄依赖（生产实现 *cloud.Registry）。
 type DiscoveryAdapterProvider interface {
 	Get(provider, serviceCode string) (cloud.CloudDiscoveryAdapter, bool)
@@ -404,7 +413,8 @@ func (e *DiscoveryJobExecutor) runScope(ctx context.Context, job *DiscoveryJob, 
 
 	seenIdentities := map[string]struct{}{}
 	nextToken := ""
-	for {
+	paginationCompleted := false
+	for pageIndex := 0; pageIndex < maxDiscoveryPages; pageIndex++ {
 		page, err := adapter.DiscoverRegion(ctx, account, sc.region, client, nextToken)
 		if err != nil {
 			return scopeFailure("discover_region_failed", "DiscoverRegion: %w", err)
@@ -437,9 +447,22 @@ func (e *DiscoveryJobExecutor) runScope(ctx context.Context, job *DiscoveryJob, 
 			ciCounts.add(projection)
 		}
 		if page.NextToken == "" {
+			paginationCompleted = true
 			break
 		}
+		// 适配器回显同一个 token 时不前进：静默继续会重复消费同一页资源，
+		// 既放大调用也会把去重后的资源重复计数。
+		if page.NextToken == nextToken {
+			return scopeFailure("discover_page_token_stalled",
+				"DiscoverRegion returned unchanged NextToken %q for %s/%s", nextToken, sc.serviceCode, sc.region)
+		}
 		nextToken = page.NextToken
+	}
+	// 只有自然耗尽游标才会走到这里；翻页上限是异常，必须显式失败，
+	// 否则下面的缺失扫描会把未扫到的存量资源误标 stale。
+	if !paginationCompleted {
+		return scopeFailure("discover_page_limit_exceeded",
+			"DiscoverRegion exceeded %d pages for %s/%s", maxDiscoveryPages, sc.serviceCode, sc.region)
 	}
 
 	// 缺失扫描：本轮没见到的存量资源推进 missing_count，超阈值置 stale。

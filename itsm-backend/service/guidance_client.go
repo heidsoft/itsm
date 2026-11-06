@@ -119,5 +119,26 @@ func (c *GuidanceClient) HealthCheck(ctx context.Context) error {
 		return fmt.Errorf("guidance sidecar unhealthy: status %d", resp.StatusCode)
 	}
 
+	// A5：sidecar 的 /health 保持 200（否则 compose healthcheck 会触发
+	// restart: always 的重启循环），把「凭据缺失」放在响应体里。
+	// 这里必须真正读懂它，否则配置错误依旧被当成健康。
+	// 用指针兼容旧版 sidecar（没有 llm.configured 字段时不误报）。
+	var health struct {
+		Status string `json:"status"`
+		LLM    *struct {
+			Configured *bool  `json:"configured"`
+			Reason     string `json:"reason"`
+		} `json:"llm"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&health); err != nil {
+		return fmt.Errorf("guidance sidecar health response unreadable: %w", err)
+	}
+	if health.LLM != nil && health.LLM.Configured != nil && !*health.LLM.Configured {
+		return fmt.Errorf("guidance sidecar LLM is not configured: %s", health.LLM.Reason)
+	}
+	if health.Status != "" && health.Status != "healthy" {
+		return fmt.Errorf("guidance sidecar degraded: %s", health.Status)
+	}
+
 	return nil
 }

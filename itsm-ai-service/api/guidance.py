@@ -52,6 +52,43 @@ class GuidanceTriageResponse(BaseModel):
     # 于是降级结果被当成模型决策写进审计底账。这里加显式布尔位，
     # 让「这是降级」这件事不依赖字符串约定。
     degraded: bool = False
+    degradedReason: str = ""
+
+
+class LLMNotConfiguredError(RuntimeError):
+    """凭据/端点缺失：这是配置错误，不是一次可重试的调用失败。
+
+    A5：旧实现把它当普通 RuntimeError 抛进宽泛 except，伪装成"LLM 暂时
+    不可用"的降级；容器全绿、/health 恒 healthy，配置错误永远发现不了。
+    """
+
+
+_http_client: Optional[httpx.AsyncClient] = None
+
+
+def get_http_client() -> httpx.AsyncClient:
+    """模块级复用 AsyncClient：连接池 + 不阻塞事件循环。
+
+    A3：旧实现在 `async def` 端点里用同步 `with httpx.Client(...)`，
+    timeout=120 会把整个 uvicorn 事件循环卡住最多两分钟，/health 同样
+    挂起 → compose healthcheck 10s 超时 → restart: always 反复重启；
+    且每请求新建 Client，没有连接池。
+    """
+    global _http_client
+    if _http_client is None:
+        cfg = get_config()
+        _http_client = httpx.AsyncClient(
+            timeout=httpx.Timeout(cfg.llm.timeout or 120, connect=10.0),
+            limits=httpx.Limits(max_connections=20, max_keepalive_connections=10),
+        )
+    return _http_client
+
+
+async def close_http_client() -> None:
+    global _http_client
+    if _http_client is not None:
+        await _http_client.aclose()
+        _http_client = None
 
 
 _SYSTEM_PROMPT = (
@@ -132,19 +169,20 @@ def _keyword_classify(title: str, description: str) -> GuidanceTriageResponse:
         explanation="keyword-based classification (LLM unavailable)",
         method="guidance-fallback",
         degraded=True,
+        degradedReason="LLM call unavailable; keyword fallback used",
         latencyMs=0.0,
     )
 
 
-def _call_llm(title: str, description: str) -> dict:
+async def _call_llm(title: str, description: str) -> dict:
     """Call the configured provider and return a constrained triage object."""
     cfg = get_config()
     api_key = os.getenv("LLM_API_KEY") or cfg.llm.api_key
     if not api_key:
-        raise RuntimeError("LLM_API_KEY not configured")
+        raise LLMNotConfiguredError("LLM_API_KEY not configured")
 
     if cfg.llm.provider == "minimax":
-        return _call_minimax(title, description, api_key)
+        return await _call_minimax(title, description, api_key)
 
     base_url = (cfg.llm.base_url or "https://api.openai.com/v1").rstrip("/")
     model = cfg.llm.model or "gpt-4o-mini"
@@ -163,10 +201,9 @@ def _call_llm(title: str, description: str) -> dict:
     if api_key:
         headers["Authorization"] = f"Bearer {api_key}"
 
-    with httpx.Client(timeout=httpx.Timeout(cfg.llm.timeout or 120)) as client:
-        resp = client.post(url, json=payload, headers=headers)
-        resp.raise_for_status()
-        data = resp.json()
+    resp = await get_http_client().post(url, json=payload, headers=headers)
+    resp.raise_for_status()
+    data = resp.json()
 
     content = data["choices"][0]["message"]["content"]
     parsed = json.loads(content)
@@ -175,7 +212,7 @@ def _call_llm(title: str, description: str) -> dict:
     return parsed
 
 
-def _call_minimax(title: str, description: str, api_key: str) -> dict:
+async def _call_minimax(title: str, description: str, api_key: str) -> dict:
     """Call MiniMax's Anthropic-compatible Messages API.
 
     The Go gateway uses this same protocol. Keeping it explicit prevents the
@@ -197,10 +234,9 @@ def _call_minimax(title: str, description: str, api_key: str) -> dict:
         "anthropic-version": "2023-06-01",
     }
 
-    with httpx.Client(timeout=httpx.Timeout(cfg.llm.timeout or 120)) as client:
-        resp = client.post(f"{base_url}/messages", json=payload, headers=headers)
-        resp.raise_for_status()
-        data = resp.json()
+    resp = await get_http_client().post(f"{base_url}/messages", json=payload, headers=headers)
+    resp.raise_for_status()
+    data = resp.json()
 
     text = next(
         (block.get("text", "") for block in data.get("content", []) if block.get("type") == "text"),
@@ -217,8 +253,17 @@ async def guidance_triage(req: GuidanceTriageRequest):
     """Guidance sidecar 兼容的受限分诊入口。"""
     start = time.perf_counter()
     try:
-        raw = _call_llm(req.title, req.description)
-    except Exception as e:  # noqa: BLE001 - 任何失败都降级为关键词分类
+        raw = await _call_llm(req.title, req.description)
+    except LLMNotConfiguredError as e:
+        # 配置错误不能被包装成「运行时降级」就悄悄过去：打 ERROR 并让
+        # /health 的 llm.configured=false 暴露它。业务请求仍返回可用的降级
+        # 结果（不能因为没配 LLM 让工单分诊整条链路 500）。
+        logger.error(f"Guidance LLM is not configured: {e}")
+        fallback = _keyword_classify(req.title, req.description)
+        fallback.degradedReason = f"configuration error: {e}"
+        fallback.latencyMs = round((time.perf_counter() - start) * 1000, 2)
+        return fallback
+    except Exception as e:  # noqa: BLE001 - 调用失败才降级为关键词分类
         logger.warning(f"Guidance triage LLM unavailable, using keyword fallback: {e}")
         latency = (time.perf_counter() - start) * 1000
         fallback = _keyword_classify(req.title, req.description)

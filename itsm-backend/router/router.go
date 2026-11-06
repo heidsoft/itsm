@@ -417,6 +417,16 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 
 	// 认证路由（需要JWT）
 	auth := r.Group("/api/v1")
+	// L3：审计必须是鉴权链的第一道。
+	//
+	// 旧链序是 Auth → RBAC → CSRF → Tenant → Audit → RequirePermission，
+	// 前三道与 TenantMiddleware 都会 c.Abort()：401（令牌失效/爆破）、
+	// 403（RBAC 拒绝）、跨租户试探在到达 Audit 之前就结束了，audit_logs
+	// 里一条都没有 —— 恰好是最需要留痕的探测行为全部不可追溯。
+	// 把 Audit 提到 auth 组首位后，c.Next() 之后的收尾代码在任何 Abort
+	// 路径上都会执行；它用 context.Background() 写库，也不依赖请求上下文。
+	// tenant 子组继承本组中间件，故不再重复挂载（重复挂载会一笔写两行）。
+	auth.Use(middleware.AuditMiddleware(config.Client))
 	auth.Use(middleware.AuthMiddleware(config.JWTSecret))
 	// RBAC 权限控制中间件：保护所有已认证路由
 	auth.Use(middleware.RBACMiddleware(config.Client))
@@ -510,10 +520,9 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 	SetupMSPRoutes(r, config)
 
 	{
-		// 租户中间件
+		// 租户中间件。审计已上移到 auth 组首位（见本文件认证路由段），
+		// tenant 子组继承该中间件，此处若再挂一次会让每笔写操作落两条审计。
 		tenant := auth.Use(middleware.TenantMiddleware(config.Client))
-		// 审计必须位于租户解析之后，确保所有租户内写操作都有可靠的租户和操作者上下文。
-		tenant.(*gin.RouterGroup).Use(middleware.AuditMiddleware(config.Client))
 
 		// ==================== Ticket Categories & Tags ====================
 		if config.TicketCategoryHandler != nil {

@@ -150,16 +150,28 @@ def apply_environment_overrides(config: Config) -> Config:
     translation here makes the Python guidance sidecar use the same provider,
     model and timeout as the Go LLM gateway without storing secrets in YAML.
     """
-    config.service.host = os.getenv("SERVICE_HOST", config.service.host)
-    config.service.port = int(os.getenv("SERVICE_PORT", str(config.service.port)))
-    config.service.log_level = os.getenv("LOG_LEVEL", config.service.log_level)
+    # A5：环境变量为空串时不得覆盖文件/默认值。Compose 里 `LLM_API_KEY=${LLM_API_KEY:-}`
+    # 会注入一个空串，旧写法 os.getenv(KEY, fallback) 会把 config.yaml 里配好的
+    # 非空 key 直接抹掉，于是「配置明明有、运行时却没有」。
+    config.service.host = os.getenv("SERVICE_HOST") or config.service.host
+    config.service.port = int(os.getenv("SERVICE_PORT") or config.service.port)
+    config.service.log_level = os.getenv("LOG_LEVEL") or config.service.log_level
 
-    config.llm.provider = os.getenv("LLM_PROVIDER", config.llm.provider).strip().lower()
-    config.llm.api_key = os.getenv("LLM_API_KEY", config.llm.api_key)
-    config.llm.model = os.getenv("LLM_MODEL", config.llm.model)
-    config.llm.base_url = os.getenv(
-        "LLM_BASE_URL",
-        os.getenv("LLM_ENDPOINT", config.llm.base_url),
+    # A4：compose 注入了 CORS_ORIGINS，但这里从来没有读过它；
+    # main.py 一直用 config.yaml 的 localhost 白名单。
+    cors_env = os.getenv("CORS_ORIGINS")
+    if cors_env:
+        origins = [o.strip() for o in cors_env.split(",") if o.strip()]
+        if origins:
+            config.service.cors_origins = origins
+
+    config.llm.provider = (os.getenv("LLM_PROVIDER") or config.llm.provider).strip().lower()
+    config.llm.api_key = os.getenv("LLM_API_KEY") or config.llm.api_key
+    config.llm.model = os.getenv("LLM_MODEL") or config.llm.model
+    config.llm.base_url = (
+        os.getenv("LLM_BASE_URL")
+        or os.getenv("LLM_ENDPOINT")
+        or config.llm.base_url
     )
     # MiniMax's supported chat endpoint is Anthropic-compatible, not OpenAI
     # chat/completions. Compose historically supplied the OpenAI default even
@@ -169,7 +181,7 @@ def apply_environment_overrides(config: Config) -> Config:
         "https://api.openai.com/v1",
     }:
         config.llm.base_url = "https://api.minimaxi.com/anthropic/v1"
-    config.llm.timeout = int(os.getenv("LLM_TIMEOUT", str(config.llm.timeout)))
+    config.llm.timeout = int(os.getenv("LLM_TIMEOUT") or config.llm.timeout)
 
     # 后端地址独立覆盖：ITSM_BACKEND_URL（首选）/ BACKEND_URL（兼容）。
     config.backend.base_url = (
@@ -177,13 +189,30 @@ def apply_environment_overrides(config: Config) -> Config:
         or os.getenv("BACKEND_URL")
         or config.backend.base_url
     ).rstrip("/")
-    config.backend.api_key = os.getenv("ITSM_BACKEND_TOKEN", config.backend.api_key)
-    config.backend.timeout = int(os.getenv("BACKEND_TIMEOUT", str(config.backend.timeout)))
+    config.backend.api_key = os.getenv("ITSM_BACKEND_TOKEN") or config.backend.api_key
+    config.backend.timeout = int(os.getenv("BACKEND_TIMEOUT") or config.backend.timeout)
     return config
 
 
 # Global config instance
 _config: Optional[Config] = None
+
+
+# 本地/自建推理端点不需要 API key；其余 provider 缺 key 就是配置错误。
+_LOCAL_PROVIDERS = {"ollama", "vllm", "local", "lmstudio", "localai"}
+
+
+def llm_is_configured(config: Optional[Config] = None) -> bool:
+    """供 lifespan 与 /health 共用的单一判定口径（A5）。
+
+    注意不能用「进程启动时看一眼」就完事：env 在容器里可能为空串，
+    而 config.yaml 里其实配了 key。这里按与 apply_environment_overrides
+    相同的 or 语义取值。
+    """
+    cfg = config or get_config()
+    if cfg.llm.provider in _LOCAL_PROVIDERS:
+        return True
+    return bool((os.getenv("LLM_API_KEY") or cfg.llm.api_key or "").strip())
 
 
 def get_config() -> Config:

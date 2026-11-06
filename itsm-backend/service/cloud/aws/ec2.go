@@ -17,6 +17,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -46,6 +48,25 @@ const (
 	// signingService EC2 的签名服务名（不是 "aws"，写错就是 403）。
 	signingService = "ec2"
 )
+
+// awsRegionPattern 是 region 允许出现在 host 里的唯一字符集。
+//
+// C2：region 由发现任务/租户配置传入，会被直接拼成 "https://ec2.<region>.<suffix>"。
+// 若允许 "evil.com/" 或 "x@169.254.169.254/" 之类的值，请求会带着 SigV4
+// Authorization（含 AK ID）与 X-Amz-Security-Token 发往攻击者或 IMDS。
+// 校验必须在签名之前、且不依赖任何 URL 解析的"聪明"行为——只认 ASCII
+// 小写字母/数字/连字符，其余一律拒绝。
+var awsRegionPattern = regexp.MustCompile(`^[a-z][a-z0-9-]{0,62}$`)
+
+func validateAWSRegion(region string) error {
+	if !awsRegionPattern.MatchString(region) {
+		return fmt.Errorf("aws: invalid region %q (only [a-z0-9-] allowed, must start with a letter)", region)
+	}
+	if strings.HasSuffix(region, "-") || strings.Contains(region, "--") {
+		return fmt.Errorf("aws: invalid region %q (malformed label)", region)
+	}
+	return nil
+}
 
 // Adapter AWS 发现适配器
 type Adapter struct {
@@ -81,6 +102,11 @@ func (a *Adapter) InitClients(ctx context.Context, account *ent.CloudAccount, re
 	}
 	clients := make(map[string]cloud.Client, len(regions))
 	for _, region := range regions {
+		// 早失败：非法 region 不该等到第一次 call 才被发现，更不能带着
+		// 凭据发出去再报错。
+		if err := validateAWSRegion(region); err != nil {
+			return nil, err
+		}
 		clients[region] = &apiClient{region: region, cred: cred, hc: a.hc, now: a.now}
 	}
 	return clients, nil
@@ -152,16 +178,36 @@ func (c *apiClient) baseURL() string {
 	if c.cred != nil && c.cred.Endpoint != "" {
 		return strings.TrimSuffix(c.cred.Endpoint, "/")
 	}
+	return "https://" + expectedEC2Host(c.region)
+}
+
+// expectedEC2Host 是 region 唯一允许映射到的 host，call 会用它做最终断言。
+func expectedEC2Host(region string) string {
 	suffix := "amazonaws.com"
-	if strings.HasPrefix(c.region, "cn-") {
+	if strings.HasPrefix(region, "cn-") {
 		suffix = "amazonaws.com.cn"
 	}
-	return "https://ec2." + c.region + "." + suffix
+	return "ec2." + region + "." + suffix
 }
 
 func (c *apiClient) call(ctx context.Context, action string, params map[string]string, out interface{}) error {
+	// 出网点兜底：即使调用方绕过 InitClients 直接构造 apiClient，也不会
+	// 把带凭据的请求发到由 region 拼出来的任意 host。
+	if err := validateAWSRegion(c.region); err != nil {
+		return err
+	}
+	endpoint := c.baseURL()
+	if c.cred == nil || c.cred.Endpoint == "" {
+		// 默认端点必须精确等于按 region 推导出的域名（含 scheme），
+		// 防止将来 baseURL 改动时把 region 拼进 path/query 造成绕过。
+		u, parseErr := url.Parse(endpoint)
+		if parseErr != nil || u.Scheme != "https" || u.User != nil || u.Port() != "" ||
+			!strings.EqualFold(u.Host, expectedEC2Host(c.region)) {
+			return fmt.Errorf("aws: refusing unexpected default endpoint %q", endpoint)
+		}
+	}
 	body := signing.EncodeForm(queryParams(action, params))
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.baseURL()+"/", strings.NewReader(body))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint+"/", strings.NewReader(body))
 	if err != nil {
 		return err
 	}

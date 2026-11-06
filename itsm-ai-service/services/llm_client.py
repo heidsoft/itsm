@@ -45,14 +45,17 @@ class LLMClient:
             self._client = None
 
     async def chat(self, messages: List[Dict[str, str]], model: Optional[str] = None) -> str:
-        """发送聊天请求"""
+        """发送聊天请求（Go: POST /api/v1/ai/chat）。"""
         try:
             response = await self.client.post(
                 "/api/v1/ai/chat",
                 json={
+                    # Go ChatRequest 是驼峰：query/pageSize/conversationId。
+                    # 此前发 conversation_id/limit，Go 一律读成零值，
+                    # 多轮会话与检索条数静默失效。
                     "query": messages[-1]["content"] if messages else "",
-                    "conversation_id": 0,
-                    "limit": 5
+                    "pageSize": 5,
+                    "conversationId": 0,
                 }
             )
             response.raise_for_status()
@@ -104,16 +107,21 @@ class LLMClient:
             return {}
 
     async def search_knowledge(self, query: str, limit: int = 5) -> List[Dict[str, Any]]:
-        """搜索知识库"""
+        """搜索知识库（Go: POST /api/v1/ai/rag/search）。"""
         try:
             response = await self.client.post(
-                "/api/v1/ai/knowledge/search",
-                json={"query": query, "limit": limit}
+                "/api/v1/ai/rag/search",
+                # Go KnowledgeSearch 读 {query, pageSize, type}；
+                # 旧实现打的是不存在的 /ai/knowledge/search 且发 limit，
+                # 结果恒 404 → 永远返回空列表。
+                json={"query": query, "pageSize": limit, "type": "kb"}
             )
             response.raise_for_status()
             data = response.json()
             if data.get("code") == 0:
-                return data.get("data", {}).get("results", [])
+                payload = data.get("data", {})
+                # 响应字段是 items；旧实现读 results，即使路径修好也仍是空。
+                return payload.get("items", []) or []
             return []
         except Exception as e:
             logger.error(f"Knowledge search error: {e}")

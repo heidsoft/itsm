@@ -58,122 +58,38 @@ class RiskResponse(BaseModel):
     approval_requirement: str  # auto_approved/normal_approval/cab_review
 
 
+_NOT_IMPLEMENTED_DETAIL = {
+    "code": "not_implemented",
+    "capability": "change_risk_prediction",
+    "message": "变更风险预测尚未实现，不能作为审批依据",
+    "reason": (
+        "旧实现不读取任何请求字段、也不调用模型：三个 RiskFactor 全是字面常量，"
+        "risk_score 恒为 3，approval_requirement 恒为 auto_approved。"
+        "让它继续返回 200 会让调用方误以为变更已通过风险评估。"
+    ),
+}
+
+
+def _not_implemented():
+    """统一的 501：明确告诉调用方这个能力不存在，而不是给一个假结论。"""
+    logger.warning("change risk prediction endpoint called but capability is not implemented")
+    raise HTTPException(status_code=501, detail=_NOT_IMPLEMENTED_DETAIL)
+
+
 @router.post("/predict", response_model=RiskResponse)
 async def predict_risk(request: ChangeRequest):
+    """预测变更风险。
+
+    A2：此端点此前是纯常量占位实现（与输入无关、与模型无关），
+    config.yaml 的 risk.cab_review_threshold 是死配置。在接入真实规则/模型
+    之前，宁可 501 也不能输出 "low / auto_approved" 这种会被当成放行依据的
+    结论。已核查 Go 侧没有 approval_requirement 消费点、也没有对该端点的
+    调用，因此不会破坏现有审批链。
     """
-    预测变更风险
-    - 分析风险因素
-    - 计算风险矩阵
-    - 提供缓解建议
-    """
-    try:
-        # 分析风险因素
-        factors = [
-            RiskFactor(
-                factor="服务可用性",
-                description="变更可能影响服务可用性",
-                impact=0.8,
-                probability=0.3,
-                severity=0.6
-            ),
-            RiskFactor(
-                factor="数据完整性",
-                description="变更可能影响数据完整性",
-                impact=0.7,
-                probability=0.2,
-                severity=0.5
-            ),
-            RiskFactor(
-                factor="回滚难度",
-                description="回滚计划复杂度",
-                impact=0.6,
-                probability=0.4,
-                severity=0.5
-            ),
-        ]
-
-        # 计算风险矩阵
-        avg_impact = sum(f.impact for f in factors) / len(factors)
-        avg_probability = sum(f.probability for f in factors) / len(factors)
-
-        impact_score = int(avg_impact * 5)
-        probability_score = int(avg_probability * 5)
-
-        # 确定风险等级
-        risk_score = impact_score * probability_score
-        if risk_score >= 15:
-            risk_level = "critical"
-            color = "red"
-        elif risk_score >= 10:
-            risk_level = "high"
-            color = "orange"
-        elif risk_score >= 5:
-            risk_level = "medium"
-            color = "yellow"
-        else:
-            risk_level = "low"
-            color = "green"
-
-        overall_score = float(risk_score) / 25.0 * 100
-
-        prediction = RiskPrediction(
-            overall_risk_level=risk_level,
-            overall_score=overall_score,
-            risk_matrix=RiskMatrixCell(
-                impact=impact_score,
-                probability=probability_score,
-                risk_level=risk_level,
-                color=color
-            ),
-            factors=factors,
-            mitigation_suggestions=[
-                "在低峰期执行变更",
-                "增加监控告警",
-                "准备手动回滚方案"
-            ]
-        )
-
-        # 确定审批要求
-        if risk_level in ["critical", "high"]:
-            approval_requirement = "cab_review"
-        elif risk_level == "medium":
-            approval_requirement = "normal_approval"
-        else:
-            approval_requirement = "auto_approved"
-
-        recommendations = [
-            "建议安排在非工作时间执行",
-            "需要相关团队审批",
-            "建议准备详细的回滚文档"
-        ]
-
-        result = RiskResponse(
-            change_id=request.change_id,
-            prediction=prediction,
-            recommendations=recommendations,
-            approval_requirement=approval_requirement
-        )
-
-        logger.info(f"Risk prediction completed for: {request.title}")
-        return result
-
-    except Exception as e:
-        logger.error(f"Risk prediction error: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+    _not_implemented()
 
 
 @router.post("/batch", response_model=List[RiskResponse])
 async def predict_batch_risks(requests: List[ChangeRequest]):
-    """
-    批量预测变更风险
-    """
-    results = []
-    for req in requests:
-        try:
-            result = await predict_risk(req)
-            results.append(result)
-        except Exception as e:
-            logger.error(f"Batch risk prediction error: {str(e)}")
-            results.append(None)
-
-    return results
+    """批量预测同样未实现；不逐项吞异常再 append(None) 造成 500。"""
+    _not_implemented()

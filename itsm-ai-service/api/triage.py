@@ -44,12 +44,25 @@ class AssignmentSuggestion(BaseModel):
 
 
 class TriageResponse(BaseModel):
-    """智能分类响应"""
+    """智能分类响应（字段来自 Go 后端 POST /api/v1/ai/triage 的 data）。"""
     categories: List[CategorySuggestion]
     priority: PrioritySuggestion
     assignment: AssignmentSuggestion
     keywords: List[str]
     related_articles: Optional[List[dict]] = None
+    # 溯源与降级标记：调用方必须能区分「模型结论」与「关键词凑数」。
+    # Go 侧在 Guidance/LLM 不可用时返回 degraded=true + degradedReason，
+    # 本服务在后端不可达时走 _rule_based_triage，也必须如实标注。
+    degraded: bool = False
+    degradedReason: str = ""
+    model: str = ""
+    promptVersion: str = ""
+    auditId: Optional[int] = None
+
+
+# 批量端点上限：无边界的 List 会让单请求串行 await 几十万次后端调用，
+# 把 sidecar 与 Go 后端一起拖死（A6 的体量约束）。
+MAX_BATCH_SIZE = 50
 
 
 @router.post("/", response_model=TriageResponse)
@@ -63,7 +76,7 @@ async def classify_ticket(request: TriageRequest):
     llm = get_llm_client()
 
     try:
-        # 调用后端 AI 分诊
+        # 调用后端 AI 分诊（返回的是 Go 的 data 对象，不是模型厂商响应）
         triage_result = await llm.triage_ticket(
             title=request.title,
             description=request.description,
@@ -73,35 +86,38 @@ async def classify_ticket(request: TriageRequest):
 
         if triage_result:
             logger.info(f"Triage completed for: {request.title}")
-            # 转换后端响应
             return _build_triage_response(request, triage_result)
 
-        # 回退到规则-based 分类
-        return _rule_based_triage(request)
+        # 后端无产出（不可达 / 业务降级）：走本地规则，并显式标降级。
+        return _rule_based_triage(request, "backend triage returned no data")
 
     except Exception as e:
-        logger.error(f"Triage error: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        # 不把内部异常原文回显给调用方（可能含后端地址、凭据片段）。
+        logger.error(f"Triage error: {type(e).__name__}")
+        raise HTTPException(status_code=502, detail="工单分诊服务暂时不可用")
 
 
 @router.post("/batch", response_model=List[TriageResponse])
 async def classify_batch_tickets(requests: List[TriageRequest]):
-    """
-    批量智能分类
-    """
+    """批量智能分类。单项失败时返回标记了 degraded 的降级项，不让整批 500。"""
+    if len(requests) > MAX_BATCH_SIZE:
+        raise HTTPException(
+            status_code=413,
+            detail=f"批量分诊最多 {MAX_BATCH_SIZE} 条，实际 {len(requests)} 条",
+        )
     results = []
     for req in requests:
         try:
-            result = await classify_ticket(req)
-            results.append(result)
+            results.append(await classify_ticket(req))
         except Exception as e:
-            logger.error(f"Batch triage error: {str(e)}")
-            results.append(None)
-
+            # 旧实现在这里 append(None)，与 response_model=List[TriageResponse]
+            # 直接冲突：一条失败会让整个响应 500。
+            logger.error(f"Batch triage error: {type(e).__name__}")
+            results.append(_rule_based_triage(req, "backend triage call failed"))
     return results
 
 
-def _rule_based_triage(request: TriageRequest) -> TriageResponse:
+def _rule_based_triage(request: TriageRequest, reason: str = "backend unavailable") -> TriageResponse:
     """基于规则的分类"""
     # 简单的关键词匹配
     keywords = []
@@ -162,46 +178,65 @@ def _rule_based_triage(request: TriageRequest) -> TriageResponse:
             reason=f"{subcategory} 相关问题，分配至 {group}"
         ),
         keywords=keywords,
-        related_articles=[{"id": 1, "title": f"{subcategory} 问题排查指南"}]
+        # 不伪造「相关文档」：Go 不返回这个字段，凭空造一条 id=1 的排查指南
+        # 会让调用方以为后端真的检索过知识库。
+        related_articles=[],
+        degraded=True,
+        degradedReason=reason,
+        model="keyword-fallback",
     )
+
+
+def _clamp_confidence(value) -> float:
+    try:
+        return max(0.0, min(1.0, float(value)))
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def map_backend_triage(triage: dict) -> dict:
+    """把 Go 后端的 data 对象映射成本端 TriageResponse 的字段。
+
+    Go 的真实契约（handlers/ai/service.go TriageTicket）：
+      {title, description, promptVersion, model,
+       suggestions: {category, priority, confidence, reasoning, urgency},
+       degraded?, degradedReason?, auditId?}
+
+    旧实现读的是 categories[] / priority_suggestion / assignment_suggestion /
+    keywords / related_articles —— 这些字段后端一个都不返回，于是分类恒
+    general、优先级恒 low、置信度恒默认 0.8。这里按真实契约逐字段映射，
+    后端没有的字段一律留空，不猜测、不伪造。
+    """
+    suggestions = triage.get("suggestions")
+    if not isinstance(suggestions, dict):
+        suggestions = {}
+    confidence = _clamp_confidence(suggestions.get("confidence"))
+    category = str(suggestions.get("category") or "unclassified")
+    priority = str(suggestions.get("priority") or "unclassified")
+    reasoning = str(suggestions.get("reasoning") or "")
+
+    return {
+        "categories": [{
+            "category": category,
+            "subcategory": "",  # Go 无二级分类概念，留空而不是编 "other"
+            "confidence": confidence,
+        }],
+        "priority": {"priority": priority, "confidence": confidence},
+        "assignment": {
+            "assignee_id": None,       # Go TriageResult.AssigneeID 未进响应
+            "assignee_group": None,
+            "reason": reasoning or "后端未给出分配建议",
+        },
+        "keywords": [],               # Go 不返回关键词
+        "related_articles": [],        # Go 不返回关联文档
+        "degraded": bool(triage.get("degraded", False)),
+        "degradedReason": str(triage.get("degradedReason") or ""),
+        "model": str(triage.get("model") or ""),
+        "promptVersion": str(triage.get("promptVersion") or ""),
+        "auditId": triage.get("auditId"),
+    }
 
 
 def _build_triage_response(request: TriageRequest, triage: dict) -> TriageResponse:
-    """从后端响应构建分类结果"""
-    categories = []
-    for cat in triage.get("categories", triage.get("category_suggestions", [])):
-        if isinstance(cat, dict):
-            categories.append(CategorySuggestion(
-                category=cat.get("category", "general"),
-                subcategory=cat.get("subcategory", "other"),
-                confidence=cat.get("confidence", 0.8)
-            ))
-
-    if not categories:
-        categories = [CategorySuggestion(category="general", subcategory="other", confidence=0.5)]
-
-    priority_data = triage.get("priority", triage.get("priority_suggestion", {}))
-    if isinstance(priority_data, dict):
-        priority = priority_data.get("priority", "low")
-        priority_confidence = priority_data.get("confidence", 0.8)
-    else:
-        priority = str(priority_data) if priority_data else "low"
-        priority_confidence = 0.8
-
-    assignment_data = triage.get("assignment", triage.get("assignment_suggestion", {}))
-    if isinstance(assignment_data, dict):
-        assignment = AssignmentSuggestion(
-            assignee_id=assignment_data.get("assignee_id"),
-            assignee_group=assignment_data.get("assignee_group", "support_team"),
-            reason=assignment_data.get("reason", "基于分类分配")
-        )
-    else:
-        assignment = AssignmentSuggestion(assignee_group="support_team", reason="默认分配")
-
-    return TriageResponse(
-        categories=categories,
-        priority=PrioritySuggestion(priority=priority, confidence=priority_confidence),
-        assignment=assignment,
-        keywords=triage.get("keywords", []),
-        related_articles=triage.get("related_articles", [])
-    )
+    """从后端响应构建分类结果（薄包装，映射逻辑见 map_backend_triage）。"""
+    return TriageResponse(**map_backend_triage(triage))
