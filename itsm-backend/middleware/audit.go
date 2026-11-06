@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"io"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	"itsm-backend/ent"
@@ -35,10 +36,26 @@ func RecordLoginAudit(ctx context.Context, client *ent.Client, userID, tenantID 
 		SetIP(req.IP).SetResource("auth").SetAction(action).SetPath("/api/v1/auth/login").
 		SetMethod("POST").SetStatusCode(map[bool]int{true: 200, false: 401}[action == "LOGIN_SUCCESS"]).
 		SetRequestBody(string(payload)).Exec(auditCtx)
-	if err != nil && globalLogger != nil {
-		globalLogger.Errorw("failed to save login audit", "error", err, "action", action)
+	if err != nil {
+		auditWriteFailures.Add(1)
+		if globalLogger != nil {
+			globalLogger.Errorw("failed to save login audit", "error", err, "action", action, "tenant_id", tenantID, "user_id", userID)
+		}
 	}
 }
+
+// auditWriteFailures 累计审计落库失败次数（L4）。
+//
+// 审计写入与业务不同事务，且失败时业务已返回成功；旧实现只在日志里留一行
+// "Failed to save audit log"，既无计数、也无请求上下文，运维无法知道「这一小时
+// 丢了多少条合规记录」。这里提供进程内计数器供监控/测试读取，并在失败时把
+// 完整（已脱敏）事件回退到结构化日志，让外部日志采集至少能补回这一条。
+// 刻意**不自动重试**：审计表是 append-only 且无幂等键，一次结果不明的失败
+// 重试会制造重复行，比丢一行更难对账。
+var auditWriteFailures atomic.Int64
+
+// AuditWriteFailureCount 返回进程启动以来审计落库失败次数。
+func AuditWriteFailureCount() int64 { return auditWriteFailures.Load() }
 
 // AuditableAction 可审计的操作类型
 type AuditableAction string
@@ -183,12 +200,6 @@ func AuditMiddleware(client *ent.Client) gin.HandlerFunc {
 			SetAction(action).
 			SetRequestBody(requestBody)
 
-		err := auditCreate.Exec(auditCtx)
-		if err != nil && globalLogger != nil {
-			globalLogger.Errorw("Failed to save audit log", "error", err)
-		}
-
-		// 记录结构化日志
 		logFields := []interface{}{
 			"audit_type", "user_action",
 			"request_id", rid,
@@ -205,6 +216,18 @@ func AuditMiddleware(client *ent.Client) gin.HandlerFunc {
 			"latency_ms", duration.Milliseconds(),
 			"success", status < 400,
 			"sensitive", isSensitive,
+		}
+
+		err := auditCreate.Exec(auditCtx)
+		if err != nil {
+			auditWriteFailures.Add(1)
+			if globalLogger != nil {
+				// 回退事件必须带完整上下文与已脱敏正文：业务请求已经成功返回，
+				// 数据库里这一行没了，只剩这条日志可供事后补录。
+				failureFields := append([]interface{}{}, logFields...)
+				failureFields = append(failureFields, "error", err, "request_body", requestBody)
+				globalLogger.Errorw("AUDIT_WRITE_FAILED: audit row lost, fallback log emitted", failureFields...)
+			}
 		}
 
 		if globalLogger != nil {
@@ -241,9 +264,20 @@ func shouldAuditRequest(c *gin.Context) bool {
 		return true
 	}
 
-	// 审计敏感资源的GET请求
+	// 审计敏感资源的GET请求。
+	//
+	// L6：路由用的是连字符（GET /api/v1/audit-logs），词表用的是下划线
+	// （audit_logs），strings.Contains 永不命中——「查看审计日志」这个最该留痕
+	// 的动作反而零记录。先归一化再匹配；导出/下载类 GET 同样必须留痕
+	// （旧规则只认写方法，GET /xxx/export 完全不审计）。
+	normalized := strings.ReplaceAll(path, "-", "_")
 	for resource := range SensitiveResources {
-		if strings.Contains(path, resource) {
+		if strings.Contains(normalized, resource) {
+			return true
+		}
+	}
+	for _, keyword := range []string{"export", "download"} {
+		if strings.Contains(normalized, keyword) {
 			return true
 		}
 	}
@@ -272,7 +306,9 @@ func determineActionAndResource(c *gin.Context) (string, string, string) {
 	// 根据HTTP方法和路径确定操作
 	switch method {
 	case "GET":
-		if resourceID != "" {
+		if strings.Contains(path, "export") || strings.Contains(path, "download") {
+			action = string(ActionExport)
+		} else if resourceID != "" {
 			action = string(ActionView)
 		} else {
 			action = string(ActionSearch)

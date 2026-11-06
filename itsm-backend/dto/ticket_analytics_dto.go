@@ -30,6 +30,9 @@ type DeepAnalyticsResponse struct {
 	// 口径版本才是它真正需要的：换聚合算法/时间口径时必须能区分新旧结果。
 	MetricVersion string `json:"metricVersion,omitempty"`
 	Method        string `json:"method,omitempty"`
+	// Scope 是行级统计口径：tenant=全租户，own=本人创建或受理（datascope）。
+	// 与工作台 KPI 的 scope 字段同义，避免「同一批数字两个口径」无法对账。
+	Scope string `json:"scope,omitempty"`
 }
 
 type AnalyticsDataPoint struct {

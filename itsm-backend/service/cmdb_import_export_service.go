@@ -3,7 +3,9 @@ package service
 
 import (
 	"context"
+	"crypto/rand"
 	"encoding/csv"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -604,9 +606,9 @@ func (s *CMDBImportExportService) processExportTask(parent context.Context, task
 		ciPtrs[i] = &items[i]
 	}
 	if req.ExportType == "csv" {
-		fileURL, fileSize, err = s.generateCSVExport(ciPtrs, exportFields)
+		fileURL, fileSize, err = s.generateCSVExport(ciPtrs, exportFields, tenantID, taskID)
 	} else {
-		fileURL, fileSize, err = s.generateExcelExport(ciPtrs, exportFields)
+		fileURL, fileSize, err = s.generateExcelExport(ciPtrs, exportFields, tenantID, taskID)
 	}
 
 	if err != nil {
@@ -1095,21 +1097,55 @@ func (s *CMDBImportExportService) getDefaultExportFields() []string {
 	}
 }
 
-// generateCSVExport 生成CSV导出文件
-func (s *CMDBImportExportService) generateCSVExport(items []*dto.CIResponse, fields []string) (string, int64, error) {
-	// 创建临时文件
-	tmpDir := os.TempDir()
-	fileName := fmt.Sprintf("cmdb-export-%s.csv", time.Now().Format("20060102-150405"))
-	filePath := filepath.Join(tmpDir, fileName)
+// cmdbExportFilePath 生成租户隔离、任务唯一、不可预测的导出文件路径。
+//
+// R3：旧文件名只有秒级时间戳 `cmdb-export-20060102-150405.csv`，两个任务
+// （可不同租户/不同过滤条件）同秒生成时后写直接 os.Create 截断先写，
+// 前一个任务的 file_url 会指向后一个任务的内容。文件名带 tenantID + taskID
+// + 8 字节随机数，落盘用 O_EXCL 独占创建；taskID 逐字符白名单化，避免
+// 任务号里的 `../` 把文件写出临时目录。
+func cmdbExportFilePath(tenantID int, taskID, ext string) (string, error) {
+	nonce := make([]byte, 8)
+	if _, err := rand.Read(nonce); err != nil {
+		return "", fmt.Errorf("generate export file nonce: %w", err)
+	}
+	safeTaskID := strings.Map(func(r rune) rune {
+		switch {
+		case r >= 'a' && r <= 'z', r >= 'A' && r <= 'Z', r >= '0' && r <= '9', r == '-', r == '_':
+			return r
+		default:
+			return '_'
+		}
+	}, taskID)
+	if len(safeTaskID) > 64 {
+		safeTaskID = safeTaskID[:64]
+	}
+	if safeTaskID == "" {
+		safeTaskID = "unknown"
+	}
+	fileName := fmt.Sprintf("cmdb-export-t%d-%s-%s.%s", tenantID, safeTaskID, hex.EncodeToString(nonce), ext)
+	return filepath.Join(os.TempDir(), fileName), nil
+}
 
-	file, err := os.Create(filePath)
+// generateCSVExport 生成CSV导出文件
+func (s *CMDBImportExportService) generateCSVExport(items []*dto.CIResponse, fields []string, tenantID int, taskID string) (string, int64, error) {
+	filePath, err := cmdbExportFilePath(tenantID, taskID, "csv")
+	if err != nil {
+		return "", 0, err
+	}
+	// O_EXCL：即便随机数撞车也拒绝覆盖既有任务文件，而不是静默复用。
+	// 0600：导出内容含 CI 资产清单，不应对同机其他用户可读。
+	file, err := os.OpenFile(filePath, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0600)
 	if err != nil {
 		return "", 0, err
 	}
 	defer file.Close()
 
+	// UTF-8 BOM：Excel 直接打开中文表头不乱码（与工单导出同一口径）。
+	if _, err := file.Write([]byte{0xEF, 0xBB, 0xBF}); err != nil {
+		return "", 0, err
+	}
 	writer := csv.NewWriter(file)
-	defer writer.Flush()
 
 	// 写入表头
 	headers := s.convertFieldsToHeaders(fields)
@@ -1125,19 +1161,25 @@ func (s *CMDBImportExportService) generateCSVExport(items []*dto.CIResponse, fie
 		}
 	}
 
-	// 获取文件大小
+	// csv.Writer 自带缓冲：旧实现把 Flush 放在 defer 里却在它之前 Stat，
+	// 于是 file_size 恒为 0，任务看着 completed、大小却对不上。必须先显式
+	// Flush 并检查错误，再取文件大小。
+	writer.Flush()
+	if err := writer.Error(); err != nil {
+		return "", 0, err
+	}
 	stat, err := file.Stat()
 	if err != nil {
 		return "", 0, err
 	}
 
-	// 这里应该返回可访问的URL，暂时返回文件路径
-	// 实际生产环境应该上传到对象存储
-	return fmt.Sprintf("/tmp/%s", fileName), stat.Size(), nil
+	// 返回实际落盘路径（os.TempDir() 不保证是 /tmp，旧写法硬编 /tmp/ 会指错）。
+	// 下载端点尚未接线（R2），此处如实返回路径，不伪造一个可访问的 URL。
+	return filePath, stat.Size(), nil
 }
 
 // generateExcelExport 生成Excel导出文件
-func (s *CMDBImportExportService) generateExcelExport(items []*dto.CIResponse, fields []string) (string, int64, error) {
+func (s *CMDBImportExportService) generateExcelExport(items []*dto.CIResponse, fields []string, tenantID int, taskID string) (string, int64, error) {
 	f := excelize.NewFile()
 	defer f.Close()
 
@@ -1164,12 +1206,20 @@ func (s *CMDBImportExportService) generateExcelExport(items []*dto.CIResponse, f
 		}
 	}
 
-	// 保存文件
-	tmpDir := os.TempDir()
-	fileName := fmt.Sprintf("cmdb-export-%s.xlsx", time.Now().Format("20060102-150405"))
-	filePath := filepath.Join(tmpDir, fileName)
-
+	// 保存文件：与 CSV 同一套唯一命名 + O_EXCL 占位，避免 SaveAs 覆盖同名文件。
+	filePath, err := cmdbExportFilePath(tenantID, taskID, "xlsx")
+	if err != nil {
+		return "", 0, err
+	}
+	placeholder, err := os.OpenFile(filePath, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0600)
+	if err != nil {
+		return "", 0, err
+	}
+	if err := placeholder.Close(); err != nil {
+		return "", 0, err
+	}
 	if err := f.SaveAs(filePath); err != nil {
+		_ = os.Remove(filePath)
 		return "", 0, err
 	}
 
@@ -1179,8 +1229,8 @@ func (s *CMDBImportExportService) generateExcelExport(items []*dto.CIResponse, f
 		return "", 0, err
 	}
 
-	// 这里应该返回可访问的URL，暂时返回文件路径
-	return fmt.Sprintf("/tmp/%s", fileName), stat.Size(), nil
+	// 同 CSV：返回实际落盘路径，不硬编 /tmp/。
+	return filePath, stat.Size(), nil
 }
 
 // convertFieldsToHeaders 转换字段名为中文表头

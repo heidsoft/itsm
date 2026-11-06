@@ -4,10 +4,16 @@ ITSM AI Service - FastAPI Entry Point
 """
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
 import logging
 
-from config_loader import get_config, llm_is_configured
+from config_loader import (
+    get_config,
+    llm_is_configured,
+    service_token_enabled,
+    verify_service_token,
+)
 from api import triage, rca, risk, guidance
 
 # 配置日志
@@ -39,6 +45,16 @@ async def lifespan(app: FastAPI):
             "keyword fallback. Set LLM_API_KEY (or use a local provider) — "
             "/health will report status=degraded."
         )
+    # A4：未启用服务间鉴权时不能静默——sidecar 持有生产 LLM 凭据，
+    # 即使只 expose 内网，也要让运维从日志和 /health 看得到这个降级态。
+    if not service_token_enabled():
+        logger.error(
+            "AI_SERVICE_TOKEN is not set: all AI sidecar endpoints are UNAUTHENTICATED. "
+            "Set AI_SERVICE_TOKEN on both itsm-backend and itsm-ai-service to enable "
+            "X-Service-Token enforcement."
+        )
+    else:
+        logger.info("AI sidecar service-token authentication is enabled")
     yield
     # 优雅关闭模块级 AsyncClient，避免事件循环退出后遗留未关闭连接。
     await guidance.close_http_client()
@@ -54,15 +70,36 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# 配置CORS
+# 配置CORS（A4）：CORS_ORIGINS 之前只在 config.yaml 里生效，compose 注入的
+# CORS_ORIGINS 从未被读取（已在 config_loader.apply_environment_overrides 修）。
+# 另一个坑：allow_origins=["*"] 与 allow_credentials=True 不能共存——浏览器
+# 会直接拒绝这种响应，且等于向任意站点开放带凭据的跨域读取。含通配符时
+# 强制关闭凭据；生产应显式列白名单。
 origins = cfg.service.cors_origins
+wildcard = "*" in origins
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins if "*" not in origins else ["*"],
-    allow_credentials=True,
+    allow_origins=["*"] if wildcard else origins,
+    allow_credentials=not wildcard,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+if wildcard:
+    logger.error("CORS_ORIGINS contains '*': allow_credentials disabled; configure an explicit origin allowlist")
+
+# A4：服务间鉴权。/health 必须保持开放，否则 compose healthcheck 会让容器
+# 进入 restart 循环；OPTIONS 预检同理。令牌未配置时不拦截，但上面的 ERROR
+# 日志与 /health 的 auth.serviceToken=disabled 会让降级态可见。
+_PUBLIC_PATHS = {"/", "/health", "/docs", "/redoc", "/openapi.json"}
+
+
+@app.middleware("http")
+async def service_token_guard(request, call_next):
+    if request.method == "OPTIONS" or request.url.path in _PUBLIC_PATHS:
+        return await call_next(request)
+    if not verify_service_token(request.headers.get("x-service-token", "")):
+        return JSONResponse(status_code=401, content={"detail": "invalid or missing X-Service-Token"})
+    return await call_next(request)
 
 # 注册路由
 app.include_router(
@@ -110,7 +147,10 @@ async def health_check():
             "model": cfg.llm.model,
             "configured": configured,
             "reason": "" if configured else "LLM_API_KEY not configured; keyword fallback only",
-        }
+        },
+        "auth": {
+            "serviceToken": "enabled" if service_token_enabled() else "disabled",
+        },
     }
 
 

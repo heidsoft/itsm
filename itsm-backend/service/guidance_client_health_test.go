@@ -64,3 +64,37 @@ func TestGuidanceClient_HealthCheck_ReadsLLMConfigured(t *testing.T) {
 		})
 	}
 }
+
+// A4：sidecar 开启服务间鉴权后，Go 侧必须把 AI_SERVICE_TOKEN 放进
+// X-Service-Token；否则 /triage 恒 401，分诊整条链路退化成关键词兜底。
+func TestGuidanceClient_Triage_SendsServiceToken(t *testing.T) {
+	t.Setenv("AI_SERVICE_TOKEN", "unit-test-token")
+	var got string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		got = r.Header.Get("X-Service-Token")
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"category":"database","priority":"high","confidence":0.8,"explanation":"ok","method":"guidance"}`))
+	}))
+	defer srv.Close()
+
+	c := NewGuidanceClient(srv.URL, zap.NewNop().Sugar())
+	_, err := c.Triage(context.Background(), "MySQL 慢查询", "", 1)
+	require.NoError(t, err)
+	assert.Equal(t, "unit-test-token", got)
+}
+
+func TestGuidanceClient_Triage_NoTokenConfigured_SendsNoHeader(t *testing.T) {
+	t.Setenv("AI_SERVICE_TOKEN", "")
+	var got string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		got = r.Header.Get("X-Service-Token")
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"category":"general","priority":"low","confidence":0.5,"explanation":"ok","method":"guidance-fallback","degraded":true}`))
+	}))
+	defer srv.Close()
+
+	c := NewGuidanceClient(srv.URL, zap.NewNop().Sugar())
+	_, err := c.Triage(context.Background(), "普通咨询", "", 1)
+	require.NoError(t, err)
+	assert.Empty(t, got, "未配置令牌时不应发送空头，避免看起来已鉴权")
+}

@@ -7,9 +7,11 @@ import (
 	"fmt"
 	"time"
 
+	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/ticket"
+	ticketrepo "itsm-backend/repository/ticket"
 
 	"go.uber.org/zap"
 )
@@ -28,8 +30,11 @@ func NewPredictionService(client *ent.Client, logger *zap.SugaredLogger) *Predic
 	}
 }
 
-// GetTrendPrediction 获取趋势预测
-func (s *PredictionService) GetTrendPrediction(ctx context.Context, req *dto.TrendPredictionRequest, tenantID int) (*dto.TrendPredictionResponse, error) {
+// GetTrendPrediction 获取趋势预测。
+//
+// R1/R7/R9：与 GetDeepAnalytics 同一套读面基线——行级 DataScope、软删过滤、
+// 窗口上限与行数上限。此前只有 TenantID，非管理角色可导出全租户历史工单量。
+func (s *PredictionService) GetTrendPrediction(ctx context.Context, req *dto.TrendPredictionRequest, tenantID int, viewer DashboardViewer) (*dto.TrendPredictionResponse, error) {
 	s.logger.Infow("Getting trend prediction", "tenant_id", tenantID, "type", req.PredictionType)
 
 	// 解析时间范围:若客户端未传 timeRange,默认「过去 6 个月 → 今天」(与 handlers/ai 的
@@ -39,30 +44,42 @@ func (s *PredictionService) GetTrendPrediction(ctx context.Context, req *dto.Tre
 		var err error
 		startTime, err = time.Parse("2006-01-02", req.TimeRange[0])
 		if err != nil {
-			return nil, fmt.Errorf("invalid start time format: %w", err)
+			return nil, common.NewBadRequestError("timeRange 起始日期格式非法，应为 YYYY-MM-DD", err)
 		}
 		endTime, err = time.Parse("2006-01-02", req.TimeRange[1])
 		if err != nil {
-			return nil, fmt.Errorf("invalid end time format: %w", err)
+			return nil, common.NewBadRequestError("timeRange 结束日期格式非法，应为 YYYY-MM-DD", err)
 		}
 	} else {
 		endTime = time.Now()
 		startTime = endTime.AddDate(0, -6, 0)
 		s.logger.Warnw("prediction request missing timeRange, using last 6 months as default", "start", startTime, "end", endTime)
 	}
+	if err := validateReportWindow(startTime, endTime); err != nil {
+		return nil, err
+	}
 
-	// 获取历史数据（最近6个月）
+	// 获取历史数据（请求窗口再往前 6 个月）。窗口已在上面限长，
+	// 因此历史查询的最大跨度有上界，不会因任意 timeRange 拉全表。
 	historyStart := startTime.AddDate(0, -6, 0)
 	historyTickets, err := s.client.Ticket.Query().
 		Where(
 			ticket.TenantIDEQ(tenantID),
+			ticket.DeletedAtIsNil(),
 			ticket.CreatedAtGTE(historyStart),
 			ticket.CreatedAtLTE(endTime),
 		).
+		Where(ticketrepo.DataScopePredicates(viewer.ticketScope(), viewer.UserID)...).
+		Order(ent.Asc(ticket.FieldID)).
+		Limit(maxReportTickets + 1).
 		All(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to get history tickets", "error", err)
 		return nil, fmt.Errorf("failed to get history tickets: %w", err)
+	}
+	if len(historyTickets) > maxReportTickets {
+		return nil, common.NewBadRequestError(
+			fmt.Sprintf("统计范围内工单数超过 %d 条，请缩小时间范围", maxReportTickets), nil)
 	}
 
 	// 根据预测类型生成预测数据
@@ -90,6 +107,7 @@ func (s *PredictionService) GetTrendPrediction(ctx context.Context, req *dto.Tre
 		Confidence:  0.85, // 模拟置信度
 		Model:       model,
 		GeneratedAt: time.Now(),
+		Scope:       viewer.scopeKey(),
 	}
 
 	return response, nil
@@ -271,13 +289,14 @@ func (s *PredictionService) calculateAverage(counts map[string]int) int {
 }
 
 // ExportPredictionReport 导出预测报告
-func (s *PredictionService) ExportPredictionReport(ctx context.Context, req *dto.TrendPredictionRequest, format string, tenantID int) ([]byte, string, error) {
+func (s *PredictionService) ExportPredictionReport(ctx context.Context, req *dto.TrendPredictionRequest, format string, tenantID int, viewer DashboardViewer) ([]byte, string, error) {
 	s.logger.Infow("Exporting prediction report", "format", format, "tenant_id", tenantID)
 
 	// 获取预测数据
-	response, err := s.GetTrendPrediction(ctx, req, tenantID)
+	response, err := s.GetTrendPrediction(ctx, req, tenantID, viewer)
 	if err != nil {
-		return nil, "", fmt.Errorf("failed to get prediction data: %w", err)
+		// 不用裸 fmt.Errorf 包装：保留 AppError 的 400 语义与文案。
+		return nil, "", err
 	}
 
 	// 根据格式生成文件

@@ -19,6 +19,8 @@ type TrendPredictionResponse struct {
 	// 「这组数是谁按什么口径算的」必须可追；auditId 让操作者能 PATCH 翻转采纳。
 	PromptVersion string `json:"promptVersion,omitempty"`
 	AuditID       int64  `json:"auditId,omitempty"`
+	// Scope 是行级统计口径：tenant=全租户，own=本人创建或受理（datascope）。
+	Scope string `json:"scope,omitempty"`
 }
 
 type PredictionDataPoint struct {

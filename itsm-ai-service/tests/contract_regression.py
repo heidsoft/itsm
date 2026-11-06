@@ -58,12 +58,23 @@ class _HTTPException(Exception):
         self.detail = detail
 
 
+class _JSONResponse:
+    def __init__(self, status_code=200, content=None, **_kw):
+        self.status_code = status_code
+        self.content = content
+
+
 class _App:
     def __init__(self, **_kw):
         self.state = types.SimpleNamespace()
+        self.added_middleware = []
 
-    def add_middleware(self, *_a, **_kw):
-        pass
+    def add_middleware(self, cls, **kw):
+        self.added_middleware.append((cls, kw))
+
+    def middleware(self, *_a, **_kw):
+        # @app.middleware("http") 必须把被装饰函数原样留下，测试才能直接调。
+        return lambda fn: fn
 
     def include_router(self, *_a, **_kw):
         pass
@@ -78,17 +89,22 @@ if "fastapi" not in sys.modules:
     except ImportError:
         m = types.ModuleType("fastapi")
         m.APIRouter, m.HTTPException, m.FastAPI = _Router, _HTTPException, _App
+        m.Request = object
         sys.modules["fastapi"] = m
         cors_pkg = types.ModuleType("fastapi.middleware")
         cors_mod = types.ModuleType("fastapi.middleware.cors")
         cors_mod.CORSMiddleware = object
         sys.modules["fastapi.middleware"] = cors_pkg
         sys.modules["fastapi.middleware.cors"] = cors_mod
+        responses_mod = types.ModuleType("fastapi.responses")
+        responses_mod.JSONResponse = _JSONResponse
+        sys.modules["fastapi.responses"] = responses_mod
 
 
 class _Response:
     def __init__(self, payload):
         self._payload = payload
+        self.status_code = 200
 
     def raise_for_status(self):
         return None
@@ -107,6 +123,9 @@ class _AsyncClient:
 
     async def post(self, url, **kw):
         _AsyncClient.calls.append((url, kw))
+        if _AsyncClient.fail_once:
+            _AsyncClient.fail_once = False
+            raise _httpx_stub.TimeoutException("simulated transient timeout")
         return _Response(_AsyncClient.next_payload or {"code": 0, "data": {}})
 
     async def aclose(self):
@@ -114,6 +133,7 @@ class _AsyncClient:
 
 
 _AsyncClient.next_payload = None
+_AsyncClient.fail_once = False
 
 
 class _SyncClient:
@@ -130,7 +150,11 @@ if "httpx" not in sys.modules:
         m.Client = _SyncClient
         m.Timeout = lambda *a, **kw: object()
         m.Limits = lambda **kw: object()
+        m.TransportError = type("TransportError", (Exception,), {})
+        m.TimeoutException = type("TimeoutException", (m.TransportError,), {})
+        m.HTTPStatusError = type("HTTPStatusError", (Exception,), {})
         sys.modules["httpx"] = m
+_httpx_stub = sys.modules["httpx"]
 
 if "yaml" not in sys.modules:
     try:
@@ -154,7 +178,7 @@ def check(cond, msg):
 
 def reset_config():
     config_loader._config = None
-    for key in ("LLM_API_KEY", "LLM_PROVIDER", "CORS_ORIGINS", "LLM_BASE_URL"):
+    for key in ("LLM_API_KEY", "LLM_PROVIDER", "CORS_ORIGINS", "LLM_BASE_URL", "AI_SERVICE_TOKEN"):
         os.environ.pop(key, None)
 
 
@@ -324,10 +348,144 @@ def test_a5_config_and_health():
     print("A5 config + health OK")
 
 
+# ---------------------------------------------------------------- A4 服务间鉴权 / CORS
+def test_a4_service_token_and_cors():
+    reset_config()
+    os.environ["AI_SERVICE_TOKEN"] = "unit-test-token"
+    check(config_loader.service_token_enabled() is True, "配置了令牌必须启用鉴权")
+    check(config_loader.verify_service_token("unit-test-token") is True, "正确令牌必须通过")
+    check(config_loader.verify_service_token("wrong") is False, "错误令牌必须拒绝")
+    check(config_loader.verify_service_token("") is False, "缺令牌必须拒绝")
+
+    class _Req:
+        def __init__(self, path, token="", method="POST"):
+            self.url = types.SimpleNamespace(path=path)
+            self.headers = {"x-service-token": token}
+            self.method = method
+
+    async def _next(_request):
+        return "PASSED"
+
+    async def run():
+        denied = await main.service_token_guard(_Req("/triage"), _next)
+        check(isinstance(denied, _JSONResponse) and denied.status_code == 401,
+              "无令牌请求必须 401，不能落到端点上消耗 LLM 凭据")
+        check(await main.service_token_guard(_Req("/triage", "unit-test-token"), _next) == "PASSED",
+              "带正确令牌必须放行")
+        check(await main.service_token_guard(_Req("/health"), _next) == "PASSED",
+              "/health 必须始终开放，否则 healthcheck 触发重启循环")
+        check(await main.service_token_guard(_Req("/api/v1/triage", "", "OPTIONS"), _next) == "PASSED",
+              "CORS 预检不得被鉴权拦住")
+
+    asyncio.run(run())
+
+    health = asyncio.run(main.health_check())
+    check(health["auth"]["serviceToken"] == "enabled", "/health 必须暴露鉴权状态")
+    reset_config()
+    health = asyncio.run(main.health_check())
+    check(health["auth"]["serviceToken"] == "disabled", "未配令牌时降级态必须可观测")
+
+    # 通配符 + allow_credentials 是非法组合：必须自动关掉凭据。
+    cors = [kw for _cls, kw in main.app.added_middleware if "allow_origins" in kw]
+    check(cors and cors[0]["allow_credentials"] is False,
+          "CORS_ORIGINS 含 '*' 时不得 allow_credentials=True")
+    src = (ROOT / "main.py").read_text()
+    check("allow_credentials=not wildcard" in src, "显式白名单时才允许带凭据跨域")
+
+    reset_config()
+    print("A4 service token + CORS OK")
+
+
+# ---------------------------------------------------------------- A6 LLM 响应解析
+_VALID_ENVELOPE = {
+    "choices": [{
+        "message": {"content": '```json\n{"category":"database","priority":"high"}\n```'},
+        "finish_reason": "stop",
+    }],
+}
+
+
+def test_a6_llm_response_robustness():
+    check(guidance._parse_triage_json('```json\n{"category":"database"}\n```') == {"category": "database"},
+          "必须剥掉 markdown 围栏")
+    check(guidance._parse_triage_json('说明如下：{"category":"security"} 以上') == {"category": "security"},
+          "模型前后加缀说明文字时仍应取到 JSON 对象")
+    for bad in (
+        {"choices": []},
+        {"choices": [{"message": {"content": ""}}]},
+        {"choices": [{"message": {"content": "{}"}, "finish_reason": "length"}]},
+        {"error": "upstream"},
+        None,
+    ):
+        try:
+            guidance._chat_content(bad)
+        except guidance.LLMResponseError:
+            pass
+        else:
+            raise AssertionError(f"非法响应信封必须抛 LLMResponseError: {bad!r}")
+    try:
+        guidance._parse_triage_json("")
+    except guidance.LLMResponseError:
+        pass
+    else:
+        raise AssertionError("空 content 不得被当成成功结果")
+
+    reset_config()
+    os.environ["LLM_PROVIDER"] = "openai"
+    os.environ["LLM_API_KEY"] = "sk-test"
+    guidance._http_client = None
+    _AsyncClient.calls.clear()
+    _AsyncClient.fail_once = False
+    _AsyncClient.next_payload = _VALID_ENVELOPE
+
+    async def run():
+        parsed = await guidance._call_llm("MySQL 慢查询", "连接池耗尽")
+        check(parsed["category"] == "database", "带围栏的 JSON 必须解析成功，不再静默降级")
+        await guidance.close_http_client()
+
+    asyncio.run(run())
+    payload = _AsyncClient.calls[-1][1]["json"]
+    check(payload.get("max_tokens") == 1024,
+          "OpenAI 路径必须下发 max_tokens（config.yaml 定义了却从未使用）")
+    check(payload.get("response_format", {}).get("type") == "json_object", "结构化输出约束不能丢")
+
+    # 一次可恢复故障必须重试；重试耗尽仍抛错，而不是伪装成关键词结果。
+    guidance._http_client = None
+    _AsyncClient.calls.clear()
+    _AsyncClient.fail_once = True
+    _AsyncClient.next_payload = _VALID_ENVELOPE
+    asyncio.run(run())
+    check(len(_AsyncClient.calls) == 2, "单次可恢复故障应恰好重试一次")
+
+    # 格式错误同样重试一次；都不成功时错误必须是显式类型。
+    guidance._http_client = None
+    _AsyncClient.calls.clear()
+    _AsyncClient.fail_once = False
+    _AsyncClient.next_payload = {"choices": []}
+
+    async def run_bad():
+        try:
+            await guidance._call_llm("t", "d")
+        except guidance.LLMResponseError:
+            return
+        else:
+            raise AssertionError("格式错误必须显式抛出，不能静默返回")
+        finally:
+            await guidance.close_http_client()
+
+    asyncio.run(run_bad())
+    check(len(_AsyncClient.calls) == 2, "格式偏差也只重试一次，不能无限打厂商接口")
+
+    reset_config()
+    print("A6 LLM response parsing OK")
+
+
 if __name__ == "__main__":
     test_a1_triage_mapping()
     test_a1_llm_client_contract()
     test_a2_risk_not_implemented()
     test_a3_guidance_async_and_config_error()
     test_a5_config_and_health()
+    test_a4_service_token_and_cors()
+    test_a6_llm_response_robustness()
     print("ALL CONTRACT CHECKS PASSED")

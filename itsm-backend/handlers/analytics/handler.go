@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"itsm-backend/common"
+	"itsm-backend/common/handlerctx"
 	"itsm-backend/dto"
 	"itsm-backend/service"
 
@@ -55,11 +56,16 @@ func (h *Handler) ExportAnalytics(ctx *gin.Context) {
 		return
 	}
 
+	// R1：导出必须与列表/工作台同一行级口径；viewer 只取认证上下文。
+	userID, role := handlerctx.ReportViewer(ctx)
+	viewer := service.DashboardViewer{UserID: userID, Role: role}
+
 	exportCtx, cancel := context.WithTimeout(ctx.Request.Context(), 60*time.Second)
 	defer cancel()
-	data, filename, err := h.analyticsService.ExportAnalytics(exportCtx, &req, format, tenantID.(int))
+	data, filename, err := h.analyticsService.ExportAnalytics(exportCtx, &req, format, tenantID.(int), viewer)
 	if err != nil {
-		common.Fail(ctx, common.InternalErrorCode, "导出分析数据失败")
+		// Fail/FailWithErr 会覆盖 AppError 文案，400 参数错误会变 500。
+		common.RespondError(ctx, err, "导出分析数据失败")
 		return
 	}
 

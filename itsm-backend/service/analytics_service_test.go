@@ -64,7 +64,7 @@ func TestAnalyticsService_GetDeepAnalytics_Empty(t *testing.T) {
 		Metrics:    []string{"count"},
 	}
 
-	response, err := service.GetDeepAnalytics(ctx, req, testTenant.ID)
+	response, err := service.GetDeepAnalytics(ctx, req, testTenant.ID, DashboardViewer{ScopeAll: true})
 	require.NoError(t, err)
 	assert.NotNil(t, response)
 	assert.Equal(t, 0, response.Summary.Total)
@@ -104,7 +104,7 @@ func TestAnalyticsService_GetDeepAnalytics_WithTickets(t *testing.T) {
 		Metrics:    []string{"count"},
 	}
 
-	response, err := service.GetDeepAnalytics(ctx, req, testTenant.ID)
+	response, err := service.GetDeepAnalytics(ctx, req, testTenant.ID, DashboardViewer{ScopeAll: true})
 	require.NoError(t, err)
 	assert.NotNil(t, response)
 	assert.Equal(t, 4, response.Summary.Total)
@@ -148,7 +148,7 @@ func TestAnalyticsService_GetDeepAnalytics_WithFilters(t *testing.T) {
 		},
 	}
 
-	response, err := service.GetDeepAnalytics(ctx, req, testTenant.ID)
+	response, err := service.GetDeepAnalytics(ctx, req, testTenant.ID, DashboardViewer{ScopeAll: true})
 	require.NoError(t, err)
 	assert.NotNil(t, response)
 	assert.Equal(t, 1, response.Summary.Total) // 只有high优先级的工单
@@ -167,7 +167,7 @@ func TestAnalyticsService_GetDeepAnalytics_InvalidTimeFormat(t *testing.T) {
 		Metrics:    []string{"count"},
 	}
 
-	_, err = service.GetDeepAnalytics(ctx, req, testTenant.ID)
+	_, err = service.GetDeepAnalytics(ctx, req, testTenant.ID, DashboardViewer{ScopeAll: true})
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "起始日期格式非法")
 	// 关键回归（2026-10-18 缺陷 P1-5）：参数错误必须归类为 400，不能兜底成 500。
@@ -189,7 +189,7 @@ func TestAnalyticsService_GetDeepAnalytics_RejectsIncompleteTimeRange(t *testing
 		Metrics:    []string{"count"},
 	}
 
-	_, err = service.GetDeepAnalytics(ctx, req, testTenant.ID)
+	_, err = service.GetDeepAnalytics(ctx, req, testTenant.ID, DashboardViewer{ScopeAll: true})
 	require.ErrorContains(t, err, "必须恰好包含起止两个日期")
 	// 同上：缺 timeRange 属调用方参数错误 → 400，不是 500。
 	var appErr *common.AppError
@@ -233,7 +233,7 @@ func TestAnalyticsService_GetDeepAnalytics_GroupBy(t *testing.T) {
 		GroupBy:    &groupBy,
 	}
 
-	response, err := service.GetDeepAnalytics(ctx, req, testTenant.ID)
+	response, err := service.GetDeepAnalytics(ctx, req, testTenant.ID, DashboardViewer{ScopeAll: true})
 	require.NoError(t, err)
 	assert.NotNil(t, response)
 	assert.Equal(t, 5, response.Summary.Total)
@@ -274,7 +274,7 @@ func TestAnalyticsService_ExportAnalytics_CSV(t *testing.T) {
 		Metrics:    []string{"count"},
 	}
 
-	data, filename, err := service.ExportAnalytics(ctx, req, "csv", testTenant.ID)
+	data, filename, err := service.ExportAnalytics(ctx, req, "csv", testTenant.ID, DashboardViewer{ScopeAll: true})
 	require.NoError(t, err)
 	assert.NotEmpty(t, data)
 	assert.Contains(t, filename, "analytics_")
@@ -294,7 +294,7 @@ func TestAnalyticsService_ExportAnalytics_UnsupportedFormat(t *testing.T) {
 		Metrics:    []string{"count"},
 	}
 
-	_, _, err = service.ExportAnalytics(ctx, req, "unsupported", testTenant.ID)
+	_, _, err = service.ExportAnalytics(ctx, req, "unsupported", testTenant.ID, DashboardViewer{ScopeAll: true})
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "unsupported format")
 }

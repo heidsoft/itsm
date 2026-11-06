@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 	"time"
 
 	"go.uber.org/zap"
@@ -17,6 +18,9 @@ type GuidanceClient struct {
 	client  *http.Client
 	logger  *zap.SugaredLogger
 	timeout time.Duration
+	// A4：服务间共享令牌。sidecar 配置 AI_SERVICE_TOKEN 后要求 X-Service-Token，
+	// 未配置时该头为空，不发送（向后兼容）。令牌只从运行环境读取，不落配置文件。
+	serviceToken string
 }
 
 // NewGuidanceClient creates a new Guidance sidecar client
@@ -29,8 +33,9 @@ func NewGuidanceClient(baseURL string, logger *zap.SugaredLogger) *GuidanceClien
 		client: &http.Client{
 			Timeout: 120 * time.Second,
 		},
-		logger:  logger,
-		timeout: 120 * time.Second,
+		logger:       logger,
+		timeout:      120 * time.Second,
+		serviceToken: os.Getenv("AI_SERVICE_TOKEN"),
 	}
 }
 
@@ -78,6 +83,9 @@ func (c *GuidanceClient) Triage(ctx context.Context, title, description string, 
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
+	if c.serviceToken != "" {
+		req.Header.Set("X-Service-Token", c.serviceToken)
+	}
 
 	resp, err := c.client.Do(req)
 	if err != nil {

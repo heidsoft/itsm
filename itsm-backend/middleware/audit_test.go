@@ -13,6 +13,7 @@ import (
 	"github.com/gin-gonic/gin"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // 用户删除/变更等 CRUD 操作必须落审计记录。
@@ -101,4 +102,59 @@ func TestAuditMiddleware_UserCRUD(t *testing.T) {
 			}
 		}
 	})
+}
+
+// L6：敏感资源词表用下划线、路由用连字符，旧判定 strings.Contains 永不命中，
+// 于是「查看审计日志」这个最该留痕的动作零记录；各类导出/下载 GET 同理。
+func TestAuditMiddleware_SensitiveGETPathsAreAudited(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	for _, tc := range []struct {
+		path       string
+		wantAudit  bool
+		wantAction string
+	}{
+		{"/api/v1/audit-logs", true, string(ActionSearch)},
+		{"/api/v1/audit-logs/12", true, string(ActionView)},
+		{"/api/v1/tickets/export", true, string(ActionExport)},
+		{"/api/v1/reports/download?id=1", true, string(ActionExport)},
+		{"/api/v1/users", true, string(ActionSearch)},
+		{"/api/v1/tickets", false, ""},
+	} {
+		t.Run(tc.path, func(t *testing.T) {
+			w := httptest.NewRecorder()
+			c, _ := gin.CreateTestContext(w)
+			c.Request, _ = http.NewRequest(http.MethodGet, tc.path, nil)
+			assert.Equal(t, tc.wantAudit, shouldAuditRequest(c), "GET 敏感资源判定")
+			if tc.wantAction != "" {
+				action, _, _ := determineActionAndResource(c)
+				assert.Equal(t, tc.wantAction, action)
+			}
+		})
+	}
+}
+
+// L4：审计落库失败不能只留一行无上下文日志；至少要有可读取的失败计数，
+// 让监控能发现「合规记录正在丢」。刻意不重试（append-only 无幂等键会重复行）。
+func TestAuditMiddleware_WriteFailureIsCounted(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	client := enttest.Open(t, "sqlite3", "file:audit_write_failure?mode=memory&_fk=1")
+	// 先正常落一条，确认夹具可用，再关闭客户端强制后续写入失败。
+	warm := httptest.NewRecorder()
+	c0, _ := gin.CreateTestContext(warm)
+	c0.Request, _ = http.NewRequest(http.MethodPost, "/api/v1/users", strings.NewReader(`{"username":"warmup"}`))
+	c0.Set("tenant_id", 7)
+	c0.Set("user_id", 42)
+	AuditMiddleware(client)(c0)
+	before := AuditWriteFailureCount()
+	require.NoError(t, client.Close())
+
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Request, _ = http.NewRequest(http.MethodPost, "/api/v1/users", strings.NewReader(`{"username":"after-close"}`))
+	c.Set("tenant_id", 7)
+	c.Set("user_id", 42)
+	AuditMiddleware(client)(c)
+
+	assert.Greater(t, AuditWriteFailureCount(), before, "审计写入失败必须被计数，不能静默吞掉")
+	assert.Equal(t, 200, w.Code, "审计失败不得把业务请求改成 5xx")
 }

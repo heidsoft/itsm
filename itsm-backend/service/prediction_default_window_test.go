@@ -2,9 +2,11 @@ package service
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
+	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent/enttest"
 
@@ -64,7 +66,7 @@ func TestPredictionService_EmptyTimeRange_DefaultWindow(t *testing.T) {
 			PredictionType: "volume",
 			// TimeRange 故意不传
 		}
-		resp, err := svc.GetTrendPrediction(ctx, req, testTenant.ID)
+		resp, err := svc.GetTrendPrediction(ctx, req, testTenant.ID, DashboardViewer{ScopeAll: true})
 		require.NoError(t, err)
 		require.NotNil(t, resp)
 		assert.Equal(t, "arima", resp.Model) // 默认模型
@@ -82,7 +84,7 @@ func TestPredictionService_EmptyTimeRange_DefaultWindow(t *testing.T) {
 	t.Run("空timeRange_各预测类型_均不panic", func(t *testing.T) {
 		for _, ptype := range []string{"volume", "type", "priority", "resource"} {
 			req := &dto.TrendPredictionRequest{PredictionType: ptype}
-			resp, err := svc.GetTrendPrediction(ctx, req, testTenant.ID)
+			resp, err := svc.GetTrendPrediction(ctx, req, testTenant.ID, DashboardViewer{ScopeAll: true})
 			require.NoError(t, err, "predictionType=%s 不应 panic", ptype)
 			assert.NotNil(t, resp)
 		}
@@ -97,7 +99,7 @@ func TestPredictionService_EmptyTimeRange_DefaultWindow(t *testing.T) {
 				now.Format("2006-01-02"),
 			},
 		}
-		resp, err := svc.GetTrendPrediction(ctx, req, testTenant.ID)
+		resp, err := svc.GetTrendPrediction(ctx, req, testTenant.ID, DashboardViewer{ScopeAll: true})
 		require.NoError(t, err)
 		assert.NotNil(t, resp)
 	})
@@ -107,8 +109,12 @@ func TestPredictionService_EmptyTimeRange_DefaultWindow(t *testing.T) {
 			PredictionType: "volume",
 			TimeRange:      []string{"not-a-date", "2026-09-11"},
 		}
-		_, err := svc.GetTrendPrediction(ctx, req, testTenant.ID)
+		_, err := svc.GetTrendPrediction(ctx, req, testTenant.ID, DashboardViewer{ScopeAll: true})
 		require.Error(t, err)
-		assert.Contains(t, err.Error(), "invalid start time format")
+		// 参数错误必须是 AppError（400），不能是裸 error 被 handler 兜底成 500。
+		var appErr *common.AppError
+		require.True(t, errors.As(err, &appErr), "非法日期应返回结构化 400")
+		assert.Equal(t, 400, appErr.HTTPStatus)
+		assert.Contains(t, err.Error(), "timeRange 起始日期格式非法")
 	})
 }

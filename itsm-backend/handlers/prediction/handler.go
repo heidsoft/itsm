@@ -10,6 +10,7 @@ package prediction
 
 import (
 	"itsm-backend/common"
+	"itsm-backend/common/handlerctx"
 	"itsm-backend/dto"
 	"itsm-backend/service"
 
@@ -54,7 +55,11 @@ func (h *Handler) ExportPredictionReport(ctx *gin.Context) {
 		return
 	}
 
-	data, filename, err := h.predictionService.ExportPredictionReport(ctx.Request.Context(), &req, format, tenantID.(int))
+	// R1：预测导出与列表/工作台同一行级口径；viewer 只取认证上下文。
+	userID, role := handlerctx.ReportViewer(ctx)
+	viewer := service.DashboardViewer{UserID: userID, Role: role}
+
+	data, filename, err := h.predictionService.ExportPredictionReport(ctx.Request.Context(), &req, format, tenantID.(int), viewer)
 	if err != nil {
 		common.RespondError(ctx, err, "导出预测报告失败")
 		return

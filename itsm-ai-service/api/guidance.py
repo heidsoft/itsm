@@ -9,7 +9,7 @@ Guidance Sidecar 兼容端点
 （OpenAI 兼容接口）生成受约束的分类 JSON，避免回代理后端造成鉴权环。
 """
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional
 import json
 import logging
@@ -35,7 +35,10 @@ _VALID_PRIORITIES = ["critical", "high", "medium", "low"]
 class GuidanceTriageRequest(BaseModel):
     title: str
     description: str = ""
-    tenantId: int = 1
+    # A4：tenantId 旧实现默认 1 且全文零消费，任何调用方都能自称是租户 1。
+    # 服务间令牌启用后调用方已是受信任后端，这里至少拒绝 0/负数这类明显
+    # 伪造值，并把 tenantId 写进结构化日志供审计对齐。
+    tenantId: int = Field(1, ge=1)
 
 
 class GuidanceTriageResponse(BaseModel):
@@ -53,6 +56,13 @@ class GuidanceTriageResponse(BaseModel):
     # 让「这是降级」这件事不依赖字符串约定。
     degraded: bool = False
     degradedReason: str = ""
+
+
+# A6：LLM 响应是外部输入，格式偏差不能靠 `data["choices"][0]` 硬下标
+# 直接抛 KeyError 再被宽泛 except 吞成关键词降级（E-P0-3 的放大器）。
+# 它必须是显式、可重试、可记录的类型。
+class LLMResponseError(ValueError):
+    """LLM 响应体不符合契约（缺 choices / 空 content / 截断 / 非 JSON）。"""
 
 
 class LLMNotConfiguredError(RuntimeError):
@@ -131,6 +141,91 @@ def _coerce_priority(value: str) -> str:
     return "medium"
 
 
+# 一次调用最多尝试 2 次（1 次重试）。只对可恢复错误重试；凭据缺失
+# （LLMNotConfiguredError）是配置错误，重试毫无意义且会把故障拖成两倍慢。
+_MAX_LLM_ATTEMPTS = 2
+_RETRYABLE = (
+    httpx.TimeoutException,
+    httpx.TransportError,
+    httpx.HTTPStatusError,
+    LLMResponseError,
+)
+
+
+def _strip_json_fence(text: str) -> str:
+    """剥掉 ```json ... ``` 围栏；模型经常无视「不要 markdown」的指令。"""
+    if not isinstance(text, str):
+        raise LLMResponseError("LLM content is not a string")
+    stripped = text.strip()
+    if stripped.startswith("```"):
+        first_newline = stripped.find("\n")
+        if first_newline < 0:
+            raise LLMResponseError("LLM returned an unterminated code fence")
+        stripped = stripped[first_newline + 1:].strip()
+        if stripped.endswith("```"):
+            stripped = stripped[:-3].strip()
+    return stripped
+
+
+def _parse_triage_json(text: str) -> dict:
+    """把 LLM 自由文本解析成 JSON 对象；容忍围栏与前后点缀文字。"""
+    stripped = _strip_json_fence(text)
+    if not stripped:
+        raise LLMResponseError("LLM returned empty content")
+    try:
+        parsed = json.loads(stripped)
+    except json.JSONDecodeError:
+        # 只在整体不是 JSON 时尝试截取首个 {...} 块，避免把合法 JSON
+        # 里的字符串内容误当新对象。
+        start, end = stripped.find("{"), stripped.rfind("}")
+        if start < 0 or end <= start:
+            raise LLMResponseError("LLM response is not a JSON object") from None
+        try:
+            parsed = json.loads(stripped[start:end + 1])
+        except json.JSONDecodeError:
+            raise LLMResponseError("LLM response is not a JSON object") from None
+    if not isinstance(parsed, dict):
+        raise LLMResponseError("LLM did not return a JSON object")
+    return parsed
+
+
+def _chat_content(data: dict) -> str:
+    """校验 OpenAI 兼容响应信封，不依赖硬下标。"""
+    if not isinstance(data, dict):
+        raise LLMResponseError("LLM response envelope is not an object")
+    choices = data.get("choices")
+    if not isinstance(choices, list) or not choices:
+        raise LLMResponseError("LLM response has no choices")
+    first = choices[0]
+    if not isinstance(first, dict):
+        raise LLMResponseError("LLM choice is not an object")
+    # finish_reason=length 说明 JSON 被 max_tokens 截断，解析出来的半截对象
+    # 绝不能当成模型结论（旧实现会直接 json.loads 抛错 → 静默降级）。
+    if first.get("finish_reason") == "length":
+        raise LLMResponseError("LLM output truncated (finish_reason=length)")
+    message = first.get("message")
+    content = message.get("content") if isinstance(message, dict) else None
+    if not isinstance(content, str) or not content.strip():
+        raise LLMResponseError("LLM choice has no text content")
+    return content
+
+
+async def _with_one_retry(fetch):
+    """单次重试：网络抖动 / 5xx / 格式偏差各给一次机会。"""
+    last_error = None
+    for attempt in range(_MAX_LLM_ATTEMPTS):
+        try:
+            return await fetch()
+        except _RETRYABLE as exc:
+            last_error = exc
+            if attempt + 1 < _MAX_LLM_ATTEMPTS:
+                logger.warning(
+                    "LLM call failed (attempt %d/%d), retrying once: %s",
+                    attempt + 1, _MAX_LLM_ATTEMPTS, type(exc).__name__,
+                )
+    raise last_error
+
+
 def _keyword_classify(title: str, description: str) -> GuidanceTriageResponse:
     """基于关键词的降级分类，与后端 triage_service.go validCategories 对齐。"""
     text = f"{title} {description}".lower()
@@ -195,21 +290,22 @@ async def _call_llm(title: str, description: str) -> dict:
             {"role": "user", "content": _build_user_prompt(title, description)},
         ],
         "temperature": 0.2,
+        # A6：config.yaml 早就定义了 max_tokens，但 OpenAI 路径从未下发。
+        # 上限夹紧到 1024：分诊输出只要几个字段，不设上限会把成本与
+        # finish_reason=length 的截断风险一起放大。
+        "max_tokens": min(int(cfg.llm.max_tokens or 512), 1024),
         "response_format": {"type": "json_object"},
     }
     headers = {"Content-Type": "application/json"}
     if api_key:
         headers["Authorization"] = f"Bearer {api_key}"
 
-    resp = await get_http_client().post(url, json=payload, headers=headers)
-    resp.raise_for_status()
-    data = resp.json()
+    async def fetch() -> dict:
+        resp = await get_http_client().post(url, json=payload, headers=headers)
+        resp.raise_for_status()
+        return _parse_triage_json(_chat_content(resp.json()))
 
-    content = data["choices"][0]["message"]["content"]
-    parsed = json.loads(content)
-    if not isinstance(parsed, dict):
-        raise ValueError("LLM did not return a JSON object")
-    return parsed
+    return await _with_one_retry(fetch)
 
 
 async def _call_minimax(title: str, description: str, api_key: str) -> dict:
@@ -223,7 +319,7 @@ async def _call_minimax(title: str, description: str, api_key: str) -> dict:
     base_url = (cfg.llm.base_url or "https://api.minimaxi.com/anthropic/v1").rstrip("/")
     payload = {
         "model": cfg.llm.model,
-        "max_tokens": 512,
+        "max_tokens": min(int(cfg.llm.max_tokens or 512), 1024),
         "system": _SYSTEM_PROMPT,
         "temperature": 0.2,
         "messages": [{"role": "user", "content": _build_user_prompt(title, description)}],
@@ -234,24 +330,28 @@ async def _call_minimax(title: str, description: str, api_key: str) -> dict:
         "anthropic-version": "2023-06-01",
     }
 
-    resp = await get_http_client().post(f"{base_url}/messages", json=payload, headers=headers)
-    resp.raise_for_status()
-    data = resp.json()
+    async def fetch() -> dict:
+        resp = await get_http_client().post(f"{base_url}/messages", json=payload, headers=headers)
+        resp.raise_for_status()
+        data = resp.json()
+        blocks = data.get("content", []) if isinstance(data, dict) else []
+        text = next(
+            (block.get("text", "") for block in blocks
+             if isinstance(block, dict) and block.get("type") == "text"),
+            "",
+        )
+        if not text:
+            raise LLMResponseError("MiniMax returned no text block")
+        return _parse_triage_json(text)
 
-    text = next(
-        (block.get("text", "") for block in data.get("content", []) if block.get("type") == "text"),
-        "",
-    )
-    parsed = json.loads(text)
-    if not isinstance(parsed, dict):
-        raise ValueError("MiniMax did not return a JSON object")
-    return parsed
+    return await _with_one_retry(fetch)
 
 
 @router.post("/triage", response_model=GuidanceTriageResponse)
 async def guidance_triage(req: GuidanceTriageRequest):
     """Guidance sidecar 兼容的受限分诊入口。"""
     start = time.perf_counter()
+    logger.info("guidance triage request", extra={"tenant_id": req.tenantId})
     try:
         raw = await _call_llm(req.title, req.description)
     except LLMNotConfiguredError as e:

@@ -142,6 +142,22 @@ func GetEntClient(c *gin.Context) (*ent.Client, bool) {
 	return entClient, true
 }
 
+// ReportViewer 从认证上下文取报表读取者身份（userID + 主角色码）。
+//
+// 报表/导出是「第二个读取通道」，必须与 /tickets 列表共用同一行级范围；
+// 身份只能来自中间件注入的 gin context，绝不能从 query/body 取值。
+// 缺少 user_id 时返回 0：service 层 DashboardViewer.ticketScope() 会把
+// 非管理角色收窄为「本人创建或受理」，而 DataScopePredicates 对 viewerID<=0
+// 直接返回空集（fail-closed），不会放宽成全租户。
+// 返回基础类型而非 service.DashboardViewer，避免 handlerctx → service 的依赖。
+func ReportViewer(c *gin.Context) (int, string) {
+	userID, err := middleware.GetUserID(c)
+	if err != nil {
+		return 0, c.GetString("role")
+	}
+	return userID, c.GetString("role")
+}
+
 // ResolveResourceIDAndTenant 是 controller 端高频组合：
 // ParseResourceID + ResolveTenantID。两个步骤中任一失败 helper 都已
 // 写好错误响应并 abort 请求链。

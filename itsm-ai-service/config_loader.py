@@ -1,6 +1,7 @@
 """
 配置管理
 """
+import hmac
 import os
 from dataclasses import dataclass, field
 from typing import List, Optional
@@ -192,6 +193,28 @@ def apply_environment_overrides(config: Config) -> Config:
     config.backend.api_key = os.getenv("ITSM_BACKEND_TOKEN") or config.backend.api_key
     config.backend.timeout = int(os.getenv("BACKEND_TIMEOUT") or config.backend.timeout)
     return config
+
+
+# A4：AI sidecar 的服务间共享令牌。
+#
+# Go 后端的 GuidanceClient 调 /triage，三台遗留端点（triage/rca/risk）只允许
+# 同网络内服务调用。令牌由部署环境注入 AI_SERVICE_TOKEN，不进 config.yaml、
+# 不进镜像；空值表示「未启用鉴权」，main.py 会在启动时打 ERROR 并在 /health
+# 暴露 auth.serviceToken=disabled，让这个降级态可观测而不是静默。
+def service_token() -> str:
+    return (os.getenv("AI_SERVICE_TOKEN") or "").strip()
+
+
+def service_token_enabled() -> bool:
+    return bool(service_token())
+
+
+def verify_service_token(provided: str) -> bool:
+    """常量时间比对；未配置令牌时不启用鉴权（返回 True）。"""
+    expected = service_token()
+    if not expected:
+        return True
+    return hmac.compare_digest(provided or "", expected)
 
 
 # Global config instance
