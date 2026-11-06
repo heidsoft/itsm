@@ -541,8 +541,12 @@ func NewApplication() *Application {
 		sugar.Fatalw("Failed to register email intake outbound handler", "error", err)
 	}
 
+	// WS hub 必须先于通知投递 handler 装配：in_app 通知在事务提交后按
+	// userID 单播推送，若此处不注入，前端虽能建连却永远收不到业务消息。
+	wsService := service.NewWebSocketService(sugar)
+
 	// 通知 / 审批 / SLA / 自动化 / 序列服务（V2 子服务）
-	notificationCommandHandler := service.NewNotificationDeliveryCommandHandler(client, connectorManager, sugar)
+	notificationCommandHandler := service.NewNotificationDeliveryCommandHandler(client, connectorManager, sugar, wsService.GetHub())
 	if err := commandRegistry.Register(commandbus.CommandDeliverNotification, notificationCommandHandler.Handle); err != nil {
 		sugar.Fatalw("Failed to register notification command handler", "error", err)
 	}
@@ -1252,8 +1256,7 @@ func NewApplication() *Application {
 	// 工单类型服务就绪后注入工具注册表与审批队列，使 create_ticket_type 可经审批流执行。
 	toolRegistry.SetTicketTypeService(ticketTypeService)
 
-	// WebSocket Service
-	wsService := service.NewWebSocketService(sugar)
+	// WebSocket Service 已在通知投递 handler 之前创建并注入 hub，此处复用同一实例
 
 	// 7. 设置路由
 	// 根据配置设置 Gin 运行模式

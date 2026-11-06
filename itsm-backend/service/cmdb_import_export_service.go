@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -34,6 +35,8 @@ import (
 const (
 	cmdbTaskTimeout       = 30 * time.Minute
 	maxCMDBImportFileSize = 50 << 20 // 50 MiB
+	cmdbExportMaxRecords  = 10000    // 单次导出上限，DTO 同步下发供前端与页面 COUNT 对账
+	cmdbExportRetention   = 7 * 24 * time.Hour
 )
 
 var cmdbImportHTTPClient = &http.Client{Timeout: 2 * time.Minute}
@@ -429,6 +432,9 @@ func (s *CMDBImportExportService) processImportTask(parent context.Context, task
 
 // CreateExportTask 创建导出任务
 func (s *CMDBImportExportService) CreateExportTask(ctx context.Context, req *dto.ExportCIRequest, tenantID int, operatorID int, operatorName string) (*dto.ExportCIResult, error) {
+	// R2：expires_at 写入后原本全仓无比较点，临时文件只增不减。
+	// 创建新任务时顺带回收本租户已过期文件（best-effort，失败不阻塞导出）。
+	s.cleanupExpiredExportFiles(ctx, tenantID)
 	taskID := uuid.NewString()
 
 	filtersJSON, err := json.Marshal(req.Filters)
@@ -458,7 +464,7 @@ func (s *CMDBImportExportService) CreateExportTask(ctx context.Context, req *dto
 		SetTenantID(tenantID).
 		SetOperatorID(operatorID).
 		SetOperatorName(operatorName).
-		SetExpiresAt(time.Now().Add(7 * 24 * time.Hour)). // 7天后过期
+		SetExpiresAt(time.Now().Add(cmdbExportRetention)). // 7天后过期
 		Save(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to create export task", "error", err, "tenant_id", tenantID)
@@ -561,8 +567,8 @@ func (s *CMDBImportExportService) processExportTask(parent context.Context, task
 	// 导出上限 1 万条，但页长归平台单一所有者夹紧（MaxPageSize=100），不能一次性索要 1 万：
 	// 按页读到上限。把 PageSize: 10000 直接下传会被服务层静默夹紧，
 	// 导出结果远少于用户勾选的范围。
-	const exportMaxRecords = 10000
 	items := make([]dto.CIResponse, 0, common.MaxPageSize)
+	availableTotal := 0
 	for page := 1; ; page++ {
 		searchReq := &dto.CISearchRequest{
 			Filters:   filters,
@@ -576,13 +582,21 @@ func (s *CMDBImportExportService) processExportTask(parent context.Context, task
 			s.failExportTask(ctx, taskID, tenantID, fmt.Sprintf("查询CI数据失败: %v", err))
 			return
 		}
+		if page == 1 {
+			availableTotal = pageRes.Total
+		}
 		items = append(items, pageRes.Items...)
-		if len(pageRes.Items) < pageRes.PageSize || len(items) >= exportMaxRecords {
+		if len(pageRes.Items) < pageRes.PageSize || len(items) >= cmdbExportMaxRecords {
 			break
 		}
 	}
-	if len(items) > exportMaxRecords {
-		items = items[:exportMaxRecords]
+	if len(items) > cmdbExportMaxRecords {
+		items = items[:cmdbExportMaxRecords]
+	}
+	if availableTotal > len(items) && s.logger != nil {
+		s.logger.Warnw("CMDB export truncated by per-task limit",
+			"task_id", taskID, "tenant_id", tenantID,
+			"available_total", availableTotal, "exported", len(items), "limit", cmdbExportMaxRecords)
 	}
 
 	if len(items) == 0 {
@@ -621,7 +635,9 @@ func (s *CMDBImportExportService) processExportTask(parent context.Context, task
 		Where(cmdbexporttask.TaskID(taskID), cmdbexporttask.TenantID(tenantID)).
 		SetStatus("completed").
 		SetTotalCount(len(items)).
-		SetFileURL(fileURL).
+		// DB 只存物理文件名（basename）：绝对路径绝不出库，
+		// 下载端点再按 tenantID/operatorID/expires_at 校验后拼回隔离目录。
+		SetFileURL(filepath.Base(fileURL)).
 		SetFileSize(fileSize).
 		SetCompletedAt(time.Now()).
 		Save(ctx)
@@ -1097,19 +1113,9 @@ func (s *CMDBImportExportService) getDefaultExportFields() []string {
 	}
 }
 
-// cmdbExportFilePath 生成租户隔离、任务唯一、不可预测的导出文件路径。
-//
-// R3：旧文件名只有秒级时间戳 `cmdb-export-20060102-150405.csv`，两个任务
-// （可不同租户/不同过滤条件）同秒生成时后写直接 os.Create 截断先写，
-// 前一个任务的 file_url 会指向后一个任务的内容。文件名带 tenantID + taskID
-// + 8 字节随机数，落盘用 O_EXCL 独占创建；taskID 逐字符白名单化，避免
-// 任务号里的 `../` 把文件写出临时目录。
-func cmdbExportFilePath(tenantID int, taskID, ext string) (string, error) {
-	nonce := make([]byte, 8)
-	if _, err := rand.Read(nonce); err != nil {
-		return "", fmt.Errorf("generate export file nonce: %w", err)
-	}
-	safeTaskID := strings.Map(func(r rune) rune {
+// sanitizeCMDBTaskID 把任务号收敛成文件名安全字符，防止 `../` 路径穿越。
+func sanitizeCMDBTaskID(taskID string) string {
+	safe := strings.Map(func(r rune) rune {
 		switch {
 		case r >= 'a' && r <= 'z', r >= 'A' && r <= 'Z', r >= '0' && r <= '9', r == '-', r == '_':
 			return r
@@ -1117,14 +1123,65 @@ func cmdbExportFilePath(tenantID int, taskID, ext string) (string, error) {
 			return '_'
 		}
 	}, taskID)
-	if len(safeTaskID) > 64 {
-		safeTaskID = safeTaskID[:64]
+	if len(safe) > 64 {
+		safe = safe[:64]
 	}
-	if safeTaskID == "" {
-		safeTaskID = "unknown"
+	if safe == "" {
+		safe = "unknown"
 	}
-	fileName := fmt.Sprintf("cmdb-export-t%d-%s-%s.%s", tenantID, safeTaskID, hex.EncodeToString(nonce), ext)
-	return filepath.Join(os.TempDir(), fileName), nil
+	return safe
+}
+
+// cmdbExportDir 每个租户一个 0700 私有目录：即便 DB 里的文件名被搏改，
+// 也只能落到当前租户自己的目录，无法跨租户读文件。
+func cmdbExportDir(tenantID int) (string, error) {
+	if tenantID <= 0 {
+		return "", fmt.Errorf("invalid CMDB export tenant id")
+	}
+	dir := filepath.Join(os.TempDir(), "itsm-exports", fmt.Sprintf("t%d", tenantID))
+	if err := os.MkdirAll(dir, 0700); err != nil {
+		return "", fmt.Errorf("create CMDB export directory: %w", err)
+	}
+	return dir, nil
+}
+
+// cmdbExportFilePath 生成租户隔离、任务唯一、不可预测的导出文件路径。
+//
+// R3：旧文件名只有秒级时间戳 `cmdb-export-20060102-150405.csv`，两个任务
+// （可不同租户/不同过滤条件）同秒生成时后写直接 os.Create 截断先写，
+// 前一个任务的 file_url 会指向后一个任务的内容。文件名带 tenantID + taskID
+// + 8 字节随机数，落盘用 O_EXCL 独占创建；taskID 逐字符白名单化。
+func cmdbExportFilePath(tenantID int, taskID, ext string) (string, error) {
+	nonce := make([]byte, 8)
+	if _, err := rand.Read(nonce); err != nil {
+		return "", fmt.Errorf("generate export file nonce: %w", err)
+	}
+	dir, err := cmdbExportDir(tenantID)
+	if err != nil {
+		return "", err
+	}
+	fileName := fmt.Sprintf("cmdb-export-t%d-%s-%s.%s", tenantID, sanitizeCMDBTaskID(taskID), hex.EncodeToString(nonce), ext)
+	return filepath.Join(dir, fileName), nil
+}
+
+// resolveCMDBExportFilePath 把 DB 里存的 basename 还原成物理路径。
+// 只接受本租户目录下的普通文件名：不接受路径分隔符、不接受非白名单扩展名，
+// 因此下载端点无法被用来读任意服务器文件。
+func resolveCMDBExportFilePath(tenantID int, storedName string) (string, error) {
+	if storedName == "" || storedName != filepath.Base(storedName) || strings.ContainsAny(storedName, `/\`) {
+		return "", common.NewBadRequestError("导出文件名非法", nil)
+	}
+	if !strings.HasPrefix(storedName, fmt.Sprintf("cmdb-export-t%d-", tenantID)) {
+		return "", common.NewBadRequestError("导出文件不属于当前租户", nil)
+	}
+	if ext := filepath.Ext(storedName); ext != ".csv" && ext != ".xlsx" {
+		return "", common.NewBadRequestError("导出文件类型非法", nil)
+	}
+	dir, err := cmdbExportDir(tenantID)
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(dir, storedName), nil
 }
 
 // generateCSVExport 生成CSV导出文件
@@ -1174,7 +1231,7 @@ func (s *CMDBImportExportService) generateCSVExport(items []*dto.CIResponse, fie
 	}
 
 	// 返回实际落盘路径（os.TempDir() 不保证是 /tmp，旧写法硬编 /tmp/ 会指错）。
-	// 下载端点尚未接线（R2），此处如实返回路径，不伪造一个可访问的 URL。
+	// 调用方只把 basename 入库，对外 URL 由下载端点生成。
 	return filePath, stat.Size(), nil
 }
 
@@ -1363,17 +1420,92 @@ func (s *CMDBImportExportService) convertToImportDTO(task *ent.CMDBImportTask) *
 	return res
 }
 
-// convertToExportDTO 转换为导出DTO
+// convertToExportDTO 转换为导出DTO。
+// R2：绝不把服务器绝对路径（旧实现 `/tmp/xxx.csv`）回给前端，
+// completed 任务改为回下载端点 URL，由端点做归属与过期校验。
 func (s *CMDBImportExportService) convertToExportDTO(task *ent.CMDBExportTask) *dto.ExportCIResult {
-	return &dto.ExportCIResult{
+	res := &dto.ExportCIResult{
 		TaskID:      task.TaskID,
 		Status:      task.Status,
-		FileURL:     task.FileURL,
 		TotalCount:  task.TotalCount,
 		FileSize:    task.FileSize,
 		CreatedAt:   task.CreatedAt,
 		CompletedAt: &task.CompletedAt,
 		ExpiresAt:   task.ExpiresAt,
+	}
+	if task.Status == "completed" && task.FileURL != "" {
+		res.FileURL = fmt.Sprintf("/api/v1/cmdb/export/%s/download", url.PathEscape(task.TaskID))
+		res.ExportLimit = cmdbExportMaxRecords
+		// 保守提示：达到上限即标记可能截断（恰好等于上限时也提示），
+		// 避免用户把截断后的 totalCount 当成页面 COUNT 的全量。
+		res.Truncated = task.TotalCount >= cmdbExportMaxRecords
+	}
+	return res
+}
+
+// ResolveExportDownload 校验下载资格并还原物理路径。
+// 四重校验：任务必须属于当前租户 → 必须是当前操作人创建 → 已完成且未过期
+// → 文件名必须能还原到本租户隔离目录且文件真实存在。
+func (s *CMDBImportExportService) ResolveExportDownload(ctx context.Context, taskID string, tenantID, operatorID int) (string, string, error) {
+	task, err := s.client.CMDBExportTask.Query().Where(
+		cmdbexporttask.TaskID(taskID),
+		cmdbexporttask.TenantID(tenantID),
+	).Only(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return "", "", common.NewNotFoundError("导出任务")
+		}
+		return "", "", fmt.Errorf("查询导出任务失败: %w", err)
+	}
+	if task.OperatorID != operatorID {
+		return "", "", common.NewForbiddenError("无权下载其他操作人创建的导出文件")
+	}
+	if task.Status != "completed" {
+		return "", "", common.NewConflictError("导出任务", "任务尚未完成")
+	}
+	if !task.ExpiresAt.IsZero() && time.Now().After(task.ExpiresAt) {
+		return "", "", common.NewForbiddenError("导出文件已过期，请重新导出")
+	}
+	filePath, err := resolveCMDBExportFilePath(tenantID, task.FileURL)
+	if err != nil {
+		return "", "", err
+	}
+	info, err := os.Stat(filePath)
+	if err != nil || info.IsDir() {
+		return "", "", common.NewNotFoundError("导出文件")
+	}
+	downloadName := fmt.Sprintf("cmdb-export-%s%s", sanitizeCMDBTaskID(taskID), filepath.Ext(filePath))
+	return filePath, downloadName, nil
+}
+
+// cleanupExpiredExportFiles 回收本租户已过期导出文件。
+// 只删除能成功还原到本租户私有目录的文件，避免误删或路径穿越。
+func (s *CMDBImportExportService) cleanupExpiredExportFiles(ctx context.Context, tenantID int) {
+	if s.client == nil || tenantID <= 0 {
+		return
+	}
+	dir, err := cmdbExportDir(tenantID)
+	if err != nil {
+		return
+	}
+	tasks, err := s.client.CMDBExportTask.Query().Where(
+		cmdbexporttask.TenantID(tenantID),
+	).All(ctx)
+	if err != nil {
+		return
+	}
+	for _, task := range tasks {
+		if task.FileURL == "" || task.ExpiresAt.IsZero() || time.Now().Before(task.ExpiresAt) {
+			continue
+		}
+		path, err := resolveCMDBExportFilePath(tenantID, task.FileURL)
+		if err != nil || filepath.Dir(path) != dir {
+			continue
+		}
+		if err := os.Remove(path); err != nil && !os.IsNotExist(err) && s.logger != nil {
+			s.logger.Warnw("failed to remove expired CMDB export file",
+				"task_id", task.TaskID, "tenant_id", tenantID, "error", err)
+		}
 	}
 }
 

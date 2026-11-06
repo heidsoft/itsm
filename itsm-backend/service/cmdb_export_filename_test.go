@@ -28,10 +28,13 @@ func TestCMDBExportFilePath_IsUniqueTenantScopedAndPathSafe(t *testing.T) {
 	require.Contains(t, filepath.Base(p3), "-t2-", "文件名必须带租户维度")
 	require.True(t, strings.HasSuffix(p1, ".csv"))
 
-	// 任务号里的路径分隔符不得逃出临时目录。
+	// 任务号里的路径分隔符不得逃出租户隔离目录。
 	evil, err := cmdbExportFilePath(1, "../../etc/passwd", "csv")
 	require.NoError(t, err)
-	require.Equal(t, filepath.Dir(os.TempDir()+"/x"), filepath.Dir(evil))
+	tenantDir, err := cmdbExportDir(1)
+	require.NoError(t, err)
+	require.Equal(t, tenantDir, filepath.Dir(evil), "导出文件必须留在当前租户的私有目录")
+	require.Contains(t, tenantDir, "t1")
 	require.NotContains(t, filepath.Base(evil), "/")
 	require.Contains(t, filepath.Base(evil), "______etc_passwd")
 }

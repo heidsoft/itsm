@@ -214,6 +214,8 @@ func (s *Service) GetExportTaskStatus(c *gin.Context) { s.productionSvc.GetExpor
 
 func (s *Service) CreateExportTask(c *gin.Context) { s.productionSvc.CreateExportTask(c) }
 
+func (s *Service) DownloadExportTask(c *gin.Context) { s.productionSvc.DownloadExportTask(c) }
+
 func (s *Service) ListCIRelationships(c *gin.Context) { s.productionSvc.ListCIRelationships(c) }
 
 func (s *Service) GetCIRelationship(c *gin.Context) { s.productionSvc.GetCIRelationship(c) }

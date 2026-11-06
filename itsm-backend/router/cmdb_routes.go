@@ -126,6 +126,9 @@ func SetupCMDBRoutes(
 		{
 			exportRoute.GET("", config.CMDBHandler.ListExportTasks)
 			exportRoute.GET("/:task_id", config.CMDBHandler.GetExportTaskStatus)
+			// R2：导出任务此前 completed 后只回 /tmp/ 绝对路径，前端无法下载。
+			// 下载端点按 taskID + tenantID + operatorID 校验归属并比较 expires_at。
+			exportRoute.GET("/:task_id/download", config.CMDBHandler.DownloadExportTask)
 
 			// 写入权限
 			exportRoute.POST("", middleware.RequirePermission("cmdb", "write"), config.CMDBHandler.CreateExportTask)

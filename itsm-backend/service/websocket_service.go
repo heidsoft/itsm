@@ -302,7 +302,15 @@ func (c *WebSocketClient) handleMessage(msg WebSocketMessage) {
 	case "ping":
 		response := WebSocketMessage{Type: "pong", Payload: nil}
 		msgBytes, _ := json.Marshal(response)
-		c.Send <- msgBytes
+		// ReadPump 里绝不能阻塞写 c.Send：慢客户端把 256 缓冲占满后，
+		// 阻塞会让 ReadPump 永不走到 defer 的 UnregisterClient，
+		// 而 WritePump 退出时只 Close 连接，Hub 里的 client 会永久泄漏。
+		select {
+		case c.Send <- msgBytes:
+		default:
+			c.Hub.logger.Warnw("WebSocket pong dropped: client send buffer full",
+				"client_id", c.ID, "user_id", c.UserID)
+		}
 	case "subscribe":
 		// 处理订阅
 		c.Hub.logger.Infow("Client subscribed", "client_id", c.ID)

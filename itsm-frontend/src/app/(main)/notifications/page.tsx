@@ -205,7 +205,7 @@ export default function NotificationsPage() {
     if (user?.id) {
       // 连接 WebSocket
       notificationWS
-        .connect(user.id)
+        .acquire(user.id)
         .then(() => {
           setWsConnected(true);
         })
@@ -230,7 +230,7 @@ export default function NotificationsPage() {
       return () => {
         unsubscribe();
         unsubConnection();
-        notificationWS.disconnect();
+        notificationWS.release();
       };
     }
   }, [user?.id]);
