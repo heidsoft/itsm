@@ -9,17 +9,30 @@ import (
 	"itsm-backend/connector"
 )
 
+// TestVerifyEventSignature 锁定官方签名算法：对 timestamp + nonce + encrypt_key + body
+// 的拼接串做裸 SHA256（hex）。不是 HMAC——真实飞书回调按官方算法（larksuite/
+// oapi-sdk-go event.Signature）计算，此前的 HMAC 实现会让全部真实回调验签失败。
 func TestVerifyEventSignature(t *testing.T) {
 	c := NewClient("", "app", "sec", "", "ek1")
 	ts, nonce, body := "1700000000", "abc123", []byte(`{"hello":"world"}`)
-	h := hmac.New(sha256.New, []byte("ek1"))
-	h.Write([]byte(ts))
-	h.Write([]byte(nonce))
+
+	h := sha256.New()
+	h.Write([]byte(ts + nonce + "ek1"))
 	h.Write(body)
 	sig := hex.EncodeToString(h.Sum(nil))
 	if !c.VerifyEventSignature(ts, nonce, sig, body) {
-		t.Fatal("expected signature to be valid")
+		t.Fatal("expected official concat-SHA256 signature to be valid")
 	}
+
+	// HMAC-SHA256 形式的签名必须拒绝：同一时刻只有一套算法能通过
+	hm := hmac.New(sha256.New, []byte("ek1"))
+	hm.Write([]byte(ts))
+	hm.Write([]byte(nonce))
+	hm.Write(body)
+	if c.VerifyEventSignature(ts, nonce, hex.EncodeToString(hm.Sum(nil)), body) {
+		t.Fatal("HMAC signature must not verify under the official algorithm")
+	}
+
 	if c.VerifyEventSignature(ts, nonce, "deadbeef", body) {
 		t.Fatal("expected wrong signature to be invalid")
 	}

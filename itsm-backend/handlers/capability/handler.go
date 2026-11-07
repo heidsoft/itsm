@@ -128,7 +128,7 @@ var registry = []definition{
 	// 统计），并挂 report:read + 域 read 双闸门——报表页不是权限的旁路。
 	{
 		key: "report", maturity: MaturityPilot, built: true,
-		pilotReason: "管理者服务质量视图（GET /reports/service-quality）已把 KPI/SLA/事件分布/满意度/趋势/工单统计聚合成单请求并携带 metricVersion 口径版本；报表目录也不再有死链（清单与路由共用同一份 reportCatalog，守卫测试逐条断言每个 path 都已注册）。但 MSP 跨租户汇总边界仍未定义（服务商视角拿不到下属租户的合并口径），导出只有动作级审计、缺少导出行数与数据范围摘要。晋升条件：MSP 汇总口径 + 导出产物审计。",
+		pilotReason: "管理者服务质量视图（GET /reports/service-quality）已把 KPI/SLA/事件分布/满意度/趋势/工单统计聚合成单请求并携带 metricVersion 口径版本，2026-11-07 起问题/变更域统计块接入同一响应（复用两域 GetStats 端点的同一份映射），报表页也有真实消费入口（前端「报表中心」顶部总览，含窗口切换与块缺省的显式降级展示）；报表目录也不再有死链（清单与路由共用同一份 reportCatalog，守卫测试逐条断言每个 path 都已注册）。但 MSP 跨租户汇总边界仍未定义（服务商视角拿不到下属租户的合并口径），导出只有动作级审计、缺少导出行数与数据范围摘要。晋升条件：MSP 汇总口径 + 导出产物审计。",
 	},
 	// 2026-10-30 「线上是哪个版本」已收敛到 published_version 指针：发布时
 	// （评审通过 /publish / PUT status 三条入口）在同一事务内为即将上线的正文
@@ -163,7 +163,7 @@ var registry = []definition{
 	// 审计注入），维持 Pilot 的原因是「没有真实租户联调证据」，不是实现缺失。
 	{
 		key: "connector.feishu", maturity: MaturityPilot, built: true, dependencies: []string{"notification"}, readinessEnv: "ITSM_FEISHU_READY",
-		pilotReason: "Send/HealthCheck/VerifySignature/ParseInbound 与入站去重、回调路由、审计注入齐备，死信重放（/admin/operations）与市场安装闭环也已接通；但这些覆盖仍停在单测与路由测试，未与真实飞书租户做生产验收，也没有在真实渠道故障下演练过死信重放。晋升条件：真实租户收发 + 验签 + 一次真实故障的死信重放演练。",
+		pilotReason: "Send/HealthCheck/VerifySignature/ParseInbound 与入站去重、回调路由、审计注入齐备，死信重放（/admin/operations）与市场安装闭环也已接通；验签按官方算法（sha256(timestamp+nonce+encrypt_key+body) 拼接）实现，Encrypt Key 加密回调支持 AES 解密（含加密 url_verification，challenge 明文回包）。但这些覆盖仍停在单测与路由测试，未与真实飞书租户做生产验收，也没有在真实渠道故障下演练过死信重放。晋升条件：真实租户收发 + 验签 + 一次真实故障的死信重放演练。",
 	},
 	// 市场目录 2026-10-23 补齐管理面：平台级权限码 marketplace_catalog:read/write
 	// （只授 sysadmin，租户 admin 仍只有 marketplace:write 用于安装/卸载）+ 目录项

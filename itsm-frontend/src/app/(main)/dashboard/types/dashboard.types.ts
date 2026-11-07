@@ -157,3 +157,38 @@ export interface DashboardData {
     totalTickets: number;
   };
 }
+
+// 管理者统一服务质量视图（GET /api/v1/reports/service-quality）。
+// 逐字段对齐后端 service.ServiceQualityReport；ticketStats/problemStats/
+// changeStats 是可选装配块——后端对应域未装配时块缺省（显式可见降级），
+// 前端不得用空对象兜底伪装成「全零」。
+export interface ServiceQualityWindow {
+  days: number;
+  from: string;
+  to: string;
+}
+
+export interface AnalyticsTicketStatsBlock {
+  total: number;
+  statusGroups: Array<{ status: string; count: number }>;
+  priorityGroups: Array<{ priority: string; count: number }>;
+  trend30d: Array<{ date: string; count: number }>;
+  generatedAt: string;
+}
+
+export interface ServiceQualityReport {
+  metricVersion: string;
+  metricVersions: Record<string, string>;
+  generatedAt: string;
+  window: ServiceQualityWindow;
+  /** KPI 行级口径：tenant=全租户，own=本人 */
+  scope: 'tenant' | 'own';
+  kpi: KPIMetric[];
+  sla: SLAComplianceData | null;
+  incidentDistribution: IncidentDistributionData[];
+  satisfaction: SatisfactionData[];
+  ticketTrend: TicketTrendData[];
+  ticketStats?: AnalyticsTicketStatsBlock;
+  problemStats?: import('@/lib/api/problem-api').ProblemStatsResponse;
+  changeStats?: import('@/lib/api/change-api').ChangeStatsResponse;
+}

@@ -224,15 +224,18 @@ func (c *Client) doJSON(ctx context.Context, method, path string, in, out interf
 // VerifyEventSignature 验证事件订阅请求的签名
 // https://open.feishu.cn/document/server-docs/event-subscription-guide/signature-verification
 //
-//	以 encrypt_key 为密钥，对 timestamp + nonce + body 做 HMAC-SHA256，
-//	与 header X-Lark-Signature 做常量时间比较。
+//	官方算法（larksuite/oapi-sdk-go event.Signature）：对
+//	timestamp + nonce + encrypt_key + body 的拼接串做 SHA256，hex 编码后与
+//	header X-Lark-Signature 做常量时间比较。注意是裸 SHA256 拼接，不是 HMAC——
+//	真实飞书回调按官方算法计算，用 HMAC 验签会让全部真实回调失败。
 func (c *Client) VerifyEventSignature(ts, nonce, signature string, body []byte) bool {
 	if c.encryptKey == "" || ts == "" || nonce == "" || signature == "" {
 		return false
 	}
-	h := hmac.New(sha256.New, []byte(c.encryptKey))
+	h := sha256.New()
 	h.Write([]byte(ts))
 	h.Write([]byte(nonce))
+	h.Write([]byte(c.encryptKey))
 	h.Write(body)
 	expected := hex.EncodeToString(h.Sum(nil))
 	return hmac.Equal([]byte(expected), []byte(signature))

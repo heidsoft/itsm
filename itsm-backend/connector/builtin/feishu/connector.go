@@ -209,9 +209,23 @@ func (f *Feishu) VerifySignature(headers map[string]string, body []byte) error {
 	return nil
 }
 
-// ParseInbound 解析飞书事件回调
+// DecryptInbound 解密飞书加密回调。body 为明文时原样返回；为
+// {"encrypt":...} 信封时按 Encrypt Key 策略解密，未配置 encrypt_key 即失败关闭。
+// 入站去重等请求身份仍应使用原始 body，明文只交给解析与业务处理。
+func (f *Feishu) DecryptInbound(body []byte) ([]byte, error) {
+	if f.client == nil {
+		return nil, fmt.Errorf("feishu: not initialized")
+	}
+	return decryptInboundPayload(f.client.encryptKey, body)
+}
+
+// ParseInbound 解析飞书事件回调（自动解密 Encrypt Key 信封）
 // 支持：url_verification / event_callback / card.action.trigger
 func (f *Feishu) ParseInbound(body []byte) (*connector.InboundMessage, error) {
+	plain, err := f.DecryptInbound(body)
+	if err != nil {
+		return nil, err
+	}
 	var base struct {
 		UUID      string `json:"uuid"`
 		Token     string `json:"token"`
@@ -225,7 +239,7 @@ func (f *Feishu) ParseInbound(body []byte) (*connector.InboundMessage, error) {
 		} `json:"header"`
 		Event map[string]interface{} `json:"event"`
 	}
-	if err := json.Unmarshal(body, &base); err != nil {
+	if err := json.Unmarshal(plain, &base); err != nil {
 		return nil, fmt.Errorf("feishu: parse inbound: %w", err)
 	}
 	// URL Verification：原样返回 challenge
@@ -245,7 +259,7 @@ func (f *Feishu) ParseInbound(body []byte) (*connector.InboundMessage, error) {
 			ConnectorName: "feishu",
 			MessageID:     base.UUID,
 			Type:          evType,
-			Raw:           body,
+			Raw:           plain,
 			ReceivedAt:    time.Now(),
 			Extras:        map[string]interface{}{"ts": base.TS, "event": base.Event},
 		}
@@ -544,7 +558,7 @@ func (f *Feishu) HandleTaskEvent(ctx context.Context, eventType string, eventDat
 	if f.client == nil {
 		return fmt.Errorf("feishu: connector not initialized")
 	}
-	return fmt.Errorf("feishu: task event handling requires service.FeishuSyncService")
+	return fmt.Errorf("feishu: task event handling requires the ticket sync service")
 }
 
 // mapPriorityToFeishu maps ITSM ticket priority to Feishu task priority

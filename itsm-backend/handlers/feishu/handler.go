@@ -249,11 +249,19 @@ func (h *Handler) Webhook(ctx *gin.Context) {
 		common.Fail(ctx, common.InternalErrorCode, "去重校验失败，请稍后重试")
 		return
 	}
-	if handled := h.handleURLVerification(ctx, fc, rawData); handled {
+	// 解密在验签之后：签名覆盖的是原始请求 body（含 encrypt 信封），先验后解；
+	// 去重身份同样保持原始 body。此后一律用明文解析。
+	plainData, err := fc.DecryptInbound(rawData)
+	if err != nil {
+		h.logger.Errorw("Failed to decrypt Feishu webhook body", "err", err)
+		common.Fail(ctx, common.ParamErrorCode, "Invalid event payload")
+		return
+	}
+	if handled := h.handleURLVerification(ctx, fc, plainData); handled {
 		return
 	}
 
-	msg, err := fc.ParseInbound(rawData)
+	msg, err := fc.ParseInbound(plainData)
 	if err != nil {
 		h.logger.Errorw("Failed to parse Feishu webhook event", "err", err)
 		common.Fail(ctx, common.ParamErrorCode, "Invalid event payload")

@@ -19,6 +19,22 @@ const mockDelete = httpClient.delete as jest.Mock;
 describe('DashboardAPI', () => {
   beforeEach(() => { jest.clearAllMocks(); });
 
+  describe('getServiceQuality', () => {
+    it('should get service quality with explicit window', async () => {
+      const expected = { metricVersion: '1.1', scope: 'tenant', kpi: [] };
+      mockGet.mockResolvedValue(expected);
+      const res = await DashboardAPI.getServiceQuality(60);
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/reports/service-quality', { days: 60 });
+      expect(res).toEqual(expected);
+    });
+
+    it('should omit days when not provided', async () => {
+      mockGet.mockResolvedValue({ kpi: [] });
+      await DashboardAPI.getServiceQuality();
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/reports/service-quality', { days: undefined });
+    });
+  });
+
   describe('getOverview', () => {
     it('should get overview', async () => {
       const expected = { kpiMetrics: [] };

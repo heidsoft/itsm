@@ -18,7 +18,9 @@ import (
 // 版本记录：
 //   - 1.0（2026-10-23）：首版。KPI=工作台行级口径（datascope.ForTicketReader），
 //     SLA 合规率=sla_data 全量口径，趋势按自然日聚合，满意度按月聚合。
-const ServiceQualityMetricVersion = "1.0"
+//   - 1.1（2026-11-07）：新增 problemStats/changeStats 两块（各域 GetStats 既有口径，
+//     全租户计数）。既有块的计算语义未变。
+const ServiceQualityMetricVersion = "1.1"
 
 // serviceQualityBlockVersions 各数据块的独立口径版本。块内语义变化只递增块版本，
 // 不牵连整体版本——下游只消费某一快时可只盯自己那列。
@@ -29,6 +31,8 @@ var serviceQualityBlockVersions = map[string]string{
 	"satisfaction":         "1.0", // 按月聚合，窗口内最近 N 月
 	"ticketTrend":          "1.0", // 自然日聚合，窗口=请求 days
 	"ticketStats":          "1.0", // 状态/优先级分布 + 30 天趋势（analytics 既有口径）
+	"problemStats":         "1.0", // 问题域 GetStats 既有口径，全租户状态/优先级计数
+	"changeStats":          "1.0", // 变更域 GetStats 既有口径，全租户状态/类型计数
 }
 
 // ServiceQualityWindow 报表统计窗口。
@@ -56,7 +60,9 @@ type ServiceQualityReport struct {
 	IncidentDistribution []IncidentDistributionData        `json:"incidentDistribution"`
 	Satisfaction         []SatisfactionData                `json:"satisfaction"`
 	TicketTrend          []TicketTrendData                 `json:"ticketTrend"`
-	TicketStats          *dto.AnalyticsTicketStatsResponse `json:"ticketStats,omitempty"` // analytics 未装配时缺省
+	TicketStats          *dto.AnalyticsTicketStatsResponse `json:"ticketStats,omitempty"`  // analytics 未装配时缺省
+	ProblemStats         *dto.ProblemStatsResponse         `json:"problemStats,omitempty"` // problem 域未装配时缺省
+	ChangeStats          *dto.ChangeStatsResponse          `json:"changeStats,omitempty"`  // change 域未装配时缺省
 }
 
 // DashboardOverviewSource 统一视图对工作台服务的窄接口：只依赖「概览 + 趋势」
@@ -66,13 +72,26 @@ type DashboardOverviewSource interface {
 	GetTicketTrend(ctx context.Context, tenantID, days int) ([]TicketTrendData, error)
 }
 
+// QualityProblemStatsSource 统一视图对问题域统计的窄接口。返回 dto 而非域内类型，
+// 聚合器不反向依赖 handlers/<domain>；装配层负责把域内统计映射成 DTO。
+type QualityProblemStatsSource interface {
+	GetProblemStats(ctx context.Context, tenantID int) (*dto.ProblemStatsResponse, error)
+}
+
+// QualityChangeStatsSource 统一视图对变更域统计的窄接口，同上。
+type QualityChangeStatsSource interface {
+	GetChangeStats(ctx context.Context, tenantID int) (*dto.ChangeStatsResponse, error)
+}
+
 // ServiceQualityReportService 管理者统一服务质量视图的聚合器。
 // 依赖全部可选：dashboard 未装配时无法产出（报错），analytics 未装配时
 // ticketStats 块缺省——聚合视图的能力降级是显式可见的（块缺失），
 // 不是静默给半份数据冒充全量。
 type ServiceQualityReportService struct {
-	dashboard DashboardOverviewSource // nil → Build 显式报错
-	analytics *AnalyticsService       // nil-able：未装配时 ticketStats 块缺省
+	dashboard DashboardOverviewSource   // nil → Build 显式报错
+	analytics *AnalyticsService         // nil-able：未装配时 ticketStats 块缺省
+	problems  QualityProblemStatsSource // nil-able：未装配时 problemStats 块缺省
+	changes   QualityChangeStatsSource  // nil-able：未装配时 changeStats 块缺省
 	now       func() time.Time
 }
 
@@ -83,6 +102,16 @@ func NewServiceQualityReportService(dashboard DashboardOverviewSource, analytics
 		analytics: analytics,
 		now:       time.Now,
 	}
+}
+
+// SetProblemStatsSource 注入问题域统计源（装配层适配器）。未注入时 problemStats 块缺省。
+func (s *ServiceQualityReportService) SetProblemStatsSource(src QualityProblemStatsSource) {
+	s.problems = src
+}
+
+// SetChangeStatsSource 注入变更域统计源（装配层适配器）。未注入时 changeStats 块缺省。
+func (s *ServiceQualityReportService) SetChangeStatsSource(src QualityChangeStatsSource) {
+	s.changes = src
 }
 
 // MaxQualityWindowDays 窗口上限：管理者视图是给「看一段趋势」用的，
@@ -145,6 +174,20 @@ func (s *ServiceQualityReportService) Build(ctx context.Context, tenantID int, v
 			return nil, fmt.Errorf("build ticketStats block: %w", statsErr)
 		}
 		report.TicketStats = stats
+	}
+	if s.problems != nil {
+		problems, problemsErr := s.problems.GetProblemStats(ctx, tenantID)
+		if problemsErr != nil {
+			return nil, fmt.Errorf("build problemStats block: %w", problemsErr)
+		}
+		report.ProblemStats = problems
+	}
+	if s.changes != nil {
+		changes, changesErr := s.changes.GetChangeStats(ctx, tenantID)
+		if changesErr != nil {
+			return nil, fmt.Errorf("build changeStats block: %w", changesErr)
+		}
+		report.ChangeStats = changes
 	}
 	return report, nil
 }

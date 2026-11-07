@@ -732,8 +732,10 @@ func NewApplication() *Application {
 	analyticsService := service.NewAnalyticsService(client, sugar)
 	// 管理者统一服务质量视图聚合器（2026-10-23）：dashboard 概览 + analytics
 	// 工单统计合成一次请求的管理视图；qualityReportService 自身可容忍 analytics
-	// 缺省（块缺省显式可见），dashboard 在上方恒已装配。
-	dashboardHandler.SetServiceQualityService(service.NewServiceQualityReportService(dashboardService, analyticsService))
+	// 缺省（块缺省显式可见），dashboard 在上方恒已装配。问题/变更统计块在两域
+	// service 构造完成后注入（见下方 wireQualityDomainStats 调用）。
+	qualityReportService := service.NewServiceQualityReportService(dashboardService, analyticsService)
+	dashboardHandler.SetServiceQualityService(qualityReportService)
 	predictionService := service.NewPredictionService(client, sugar)
 	slaForecastSkill := service.NewSLAForecastSkill(client, llmGateway, sugar)
 	// 市场服务
@@ -1020,8 +1022,11 @@ func NewApplication() *Application {
 	standardChangeHandler := standard_change.NewHandler(stdChangeService, sugar)
 	changeHandler := change.NewHandler(changeServiceDomain)
 
+	// 统一服务质量视图的问题/变更统计块：两域 service 此刻才可用。
+	wireQualityDomainStats(qualityReportService, problemServiceDomain, changeServiceDomain)
+
 	// 变更评审组名册 handler（审批流转由审批链引擎 review: 解析器驱动，handler 仅管名册）
-	changeReviewService := service.NewChangeReviewService(client, sugar)
+	changeReviewService := change_review.NewChangeReviewService(client, sugar)
 	changeReviewHandler := change_review.NewHandler(changeReviewService, sugar)
 
 	// Analytics & Prediction Controllers
