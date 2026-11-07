@@ -730,7 +730,20 @@ func (s *Service) ListDiscoverySources(ctx context.Context, tenantID int) ([]*Di
 // 幂等语义：请求携带 idempotencyKey 时，同 (tenant, operation, source, key) 的
 // 既有任务直接 409 返回原任务（不重复入队）；不携带则每次生成唯一 key
 // （指纹去重会让「重复执行同一来源」永远撞唯一索引，违背手动重跑诉求）。
+//
+// 手动创建按 full_discovery 语义（重置覆盖水位线、强制新窗）；
+// 调度器走 CreateScheduledDiscoveryJob（增量推进水位线）。
 func (s *Service) CreateDiscoveryJob(ctx context.Context, tenantID, userID int, req *dto.DiscoveryJobRequest) (*DiscoveryJob, error) {
+	return s.createDiscoveryJob(ctx, tenantID, userID, req, DiscoveryJobOperationFull)
+}
+
+// CreateScheduledDiscoveryJob 调度器专用：按覆盖水位线增量推进
+// （operation=incremental_discovery——未完成窗口断点续扫、已完成窗口开新窗）。
+func (s *Service) CreateScheduledDiscoveryJob(ctx context.Context, tenantID int, req *dto.DiscoveryJobRequest) (*DiscoveryJob, error) {
+	return s.createDiscoveryJob(ctx, tenantID, 0, req, DiscoveryJobOperationIncremental)
+}
+
+func (s *Service) createDiscoveryJob(ctx context.Context, tenantID, userID int, req *dto.DiscoveryJobRequest, operation string) (*DiscoveryJob, error) {
 	if req == nil || strings.TrimSpace(req.SourceID) == "" {
 		return nil, common.NewValidationError("sourceId is required", nil)
 	}
@@ -777,7 +790,7 @@ func (s *Service) CreateDiscoveryJob(ctx context.Context, tenantID, userID int, 
 	job := &DiscoveryJob{
 		SourceID:           source.ID,
 		Status:             DiscoveryJobQueued,
-		Operation:          "full_discovery",
+		Operation:          operation,
 		IdempotencyKey:     idemKey,
 		RequestFingerprint: fingerprint,
 		SourceSnapshot: map[string]interface{}{

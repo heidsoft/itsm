@@ -923,6 +923,8 @@ func NewApplication() *Application {
 	// CI 回写走 service.ConfigurationItemService，保住发号、历史与属性校验。
 	discoveryCIProjector := cmdb.NewDiscoveryCIProjector(cmdbRepo, configurationItemService, configurationItemService, sugar)
 	discoveryJobExecutor := cmdb.NewDiscoveryJobExecutor(cmdbRepo, cloudAdapterRegistry, tenantSecretResolver, discoveryCIProjector, sugar)
+	// 覆盖水位线（蓝图 §3.2-17）：断点续扫 + 窗口化缺失判定的状态存储。
+	discoveryJobExecutor.SetScopeStateRepository(cmdb.NewScopeStateRepository(database.GetRawDB()))
 	if err := commandRegistry.Register(commandbus.CommandRunCMDBCloudDiscovery, discoveryJobExecutor.Handle); err != nil {
 		sugar.Fatalw("Failed to register CMDB cloud discovery worker", "error", err)
 	}

@@ -49,10 +49,15 @@ type DiscoveryJobExecutor struct {
 	adapters    DiscoveryAdapterProvider
 	resolver    cloud.TenantSecretResolver
 	ciProjector *DiscoveryCIProjector
+	scopeStates ScopeStateRepository
 	logger      *zap.SugaredLogger
 	workerID    string
 	leaseTTL    time.Duration
 }
+
+// maxScopeWatermarkFailures 是同一覆盖水位线的连续失败上限：达上限重置水位线
+// 从零开窗，防 provider 游标失效后无限续扫同一条死路径。
+const maxScopeWatermarkFailures = 3
 
 // ciProjector 允许为 nil（CI 域未装配），此时每条资源记一次 ciUnavailable 而不是静默不回写。
 func NewDiscoveryJobExecutor(repo Repository, adapters DiscoveryAdapterProvider, resolver cloud.TenantSecretResolver, ciProjector *DiscoveryCIProjector, logger *zap.SugaredLogger) *DiscoveryJobExecutor {
@@ -69,6 +74,12 @@ func NewDiscoveryJobExecutor(repo Repository, adapters DiscoveryAdapterProvider,
 		workerID:    fmt.Sprintf("discovery-%s-%d", hostnameShort(), os.Getpid()),
 		leaseTTL:    ttl,
 	}
+}
+
+// SetScopeStateRepository 注入覆盖水位线仓储（可选）。未注入时每轮开新窗，
+// 语义与无水位线的旧实现一致。
+func (e *DiscoveryJobExecutor) SetScopeStateRepository(repo ScopeStateRepository) {
+	e.scopeStates = repo
 }
 
 // Handle 实现 commandbus.Handler。
@@ -411,12 +422,18 @@ func (e *DiscoveryJobExecutor) runScope(ctx context.Context, job *DiscoveryJob, 
 		return scopeFailure("client_missing", "adapter returned no client for region %s", sc.region)
 	}
 
+	// 覆盖水位线（蓝图 §3.2-17）：每个 scope 独立保存 coverage start/end、
+	// 分页完成证明与 provider watermark。断点续扫沿用原窗口——失败 scope 的
+	// 补采不得伪装成新时间快照，也不得触发全局退役。
+	state := e.openScopeWindow(ctx, source, sc, job.Operation == DiscoveryJobOperationFull)
+
 	seenIdentities := map[string]struct{}{}
-	nextToken := ""
+	nextToken := state.ProviderWatermark
 	paginationCompleted := false
 	for pageIndex := 0; pageIndex < maxDiscoveryPages; pageIndex++ {
 		page, err := adapter.DiscoverRegion(ctx, account, sc.region, client, nextToken)
 		if err != nil {
+			e.failScopeWindow(ctx, state, "discover_region_failed")
 			return scopeFailure("discover_region_failed", "DiscoverRegion: %w", err)
 		}
 		for i := range page.Resources {
@@ -453,19 +470,33 @@ func (e *DiscoveryJobExecutor) runScope(ctx context.Context, job *DiscoveryJob, 
 		// 适配器回显同一个 token 时不前进：静默继续会重复消费同一页资源，
 		// 既放大调用也会把去重后的资源重复计数。
 		if page.NextToken == nextToken {
+			e.failScopeWindow(ctx, state, "discover_page_token_stalled")
 			return scopeFailure("discover_page_token_stalled",
 				"DiscoverRegion returned unchanged NextToken %q for %s/%s", nextToken, sc.serviceCode, sc.region)
 		}
 		nextToken = page.NextToken
+		// 每页 checkpoint：中断后下一轮从水位线续扫，不再从零全量列举。
+		state.ProviderWatermark = nextToken
+		if err := e.saveScopeState(ctx, state); err != nil {
+			e.logger.Warnw("discovery scope watermark checkpoint failed", "job", job.ID,
+				"scope", sc.serviceCode+"/"+sc.region, "error", err)
+		}
 	}
 	// 只有自然耗尽游标才会走到这里；翻页上限是异常，必须显式失败，
 	// 否则下面的缺失扫描会把未扫到的存量资源误标 stale。
 	if !paginationCompleted {
+		e.failScopeWindow(ctx, state, "discover_page_limit_exceeded")
 		return scopeFailure("discover_page_limit_exceeded",
 			"DiscoverRegion exceeded %d pages for %s/%s", maxDiscoveryPages, sc.serviceCode, sc.region)
 	}
 
+	// 封窗：翻页自然耗尽 = 本窗口的完整覆盖证明。清水位线、落水位线时刻。
+	e.sealScopeWindow(ctx, state)
+
 	// 缺失扫描：本轮没见到的存量资源推进 missing_count，超阈值置 stale。
+	// 判定是「水位线窗口」口径：窗口起点以来从未露面且本轮也没见到的资源才算
+	// 缺失——同一窗口的断点补采不会把上一轮已见资源误判缺失（蓝图 §3.2-17：
+	// 失败 scope 的补采不得触发退役）。
 	existing, err := e.repo.ListCloudResourcesByAccountService(ctx, account.TenantID, account.ID, sc.serviceCode)
 	if err != nil {
 		return scopeFailure("missing_scan_failed", "list resources for missing scan: %w", err)
@@ -479,6 +510,10 @@ func (e *DiscoveryJobExecutor) runScope(ctx context.Context, job *DiscoveryJob, 
 			continue
 		}
 		if _, seen := seenIdentities[ex.IdentityHash]; seen {
+			continue
+		}
+		// 水位线窗口内已露面（含同一窗口前几次补采的更新）→ 不缺失。
+		if state.CoverageStart != nil && ex.LastSeenAt != nil && !ex.LastSeenAt.Before(*state.CoverageStart) {
 			continue
 		}
 		ex.MissingCount++
@@ -502,6 +537,89 @@ func (e *DiscoveryJobExecutor) runScope(ctx context.Context, job *DiscoveryJob, 
 
 // applyResource 对单个发现资源做 diff + 落库 + CI 回写，返回 action（create/update/unchanged）
 // 与本次回写结果（未触发回写时为零值 outcome）。
+// openScopeWindow 打开或续扫本 scope 的覆盖窗口（水位线状态）。
+//
+//   - forceNew（full_discovery）：重置水位线，强制从零开新窗。
+//   - 有未完成窗口且水位线非空：沿用原 coverage_start 续扫——补采不得伪装成
+//     新时间快照（蓝图 §3.2-17）。
+//   - 其余：开新窗。
+//
+// 状态仓储未装配或读写失败时降级为「本轮内存窗口」：窗口过滤仍生效，只是
+// 断点续扫能力丢失，语义与旧实现一致。
+func (e *DiscoveryJobExecutor) openScopeWindow(ctx context.Context, source *DiscoverySource, sc discoveryScope, forceNew bool) *DiscoveryScopeState {
+	st := &DiscoveryScopeState{
+		TenantID:    source.TenantID,
+		SourceID:    source.ID,
+		ServiceCode: sc.serviceCode,
+		Region:      sc.region,
+	}
+	if e.scopeStates != nil {
+		if loaded, err := e.scopeStates.Load(ctx, source.TenantID, source.ID, sc.serviceCode, sc.region); err != nil {
+			e.logger.Warnw("discovery scope state load failed, fallback to fresh window",
+				"scope", sc.serviceCode+"/"+sc.region, "error", err)
+		} else if loaded != nil {
+			st = loaded
+		}
+	}
+	resuming := !forceNew && st.ProviderWatermark != "" && st.CoverageStart != nil && !st.PaginationCompleted
+	if resuming {
+		e.logger.Infow("discovery scope resumes from watermark", "scope", sc.serviceCode+"/"+sc.region,
+			"watermark", st.ProviderWatermark, "coverage_start", st.CoverageStart)
+	} else {
+		now := time.Now()
+		st.ProviderWatermark = ""
+		st.CoverageStart = &now
+		st.PaginationCompleted = false
+	}
+	if err := e.saveScopeState(ctx, st); err != nil {
+		e.logger.Warnw("discovery scope window persist failed", "scope", sc.serviceCode+"/"+sc.region, "error", err)
+	}
+	return st
+}
+
+// failScopeWindow 记一次窗口内失败。连续失败达上限时重置水位线：provider 游标
+// 可能已失效，续扫同一死路径会永远失败，从零开窗才能自愈。
+func (e *DiscoveryJobExecutor) failScopeWindow(ctx context.Context, st *DiscoveryScopeState, code string) {
+	if st == nil {
+		return
+	}
+	st.ConsecutiveFailures++
+	st.LastErrorCode = code
+	if st.ConsecutiveFailures >= maxScopeWatermarkFailures {
+		e.logger.Warnw("discovery scope watermark reset after consecutive failures",
+			"scope", st.ServiceCode+"/"+st.Region, "failures", st.ConsecutiveFailures, "last_error", code)
+		st.ProviderWatermark = ""
+		st.CoverageStart = nil
+		st.PaginationCompleted = false
+		st.ConsecutiveFailures = 0
+	}
+	if err := e.saveScopeState(ctx, st); err != nil {
+		e.logger.Warnw("discovery scope failure state persist failed",
+			"scope", st.ServiceCode+"/"+st.Region, "error", err)
+	}
+}
+
+// sealScopeWindow 封窗：翻页自然耗尽是本窗口的完整覆盖证明。
+func (e *DiscoveryJobExecutor) sealScopeWindow(ctx context.Context, st *DiscoveryScopeState) {
+	now := time.Now()
+	st.ProviderWatermark = ""
+	st.PaginationCompleted = true
+	st.LastFullCompletedAt = &now
+	st.ConsecutiveFailures = 0
+	st.LastErrorCode = ""
+	if err := e.saveScopeState(ctx, st); err != nil {
+		e.logger.Warnw("discovery scope seal persist failed",
+			"scope", st.ServiceCode+"/"+st.Region, "error", err)
+	}
+}
+
+func (e *DiscoveryJobExecutor) saveScopeState(ctx context.Context, st *DiscoveryScopeState) error {
+	if e.scopeStates == nil {
+		return nil
+	}
+	return e.scopeStates.Save(ctx, st)
+}
+
 func (e *DiscoveryJobExecutor) applyResource(ctx context.Context, job *DiscoveryJob, source *DiscoverySource, account *ent.CloudAccount, svcDef *CloudService, sc discoveryScope, res *cloud.DiscoveredResource) (string, CIProjectionOutcome, error) {
 	provider := cloud.NormalizeProvider(source.Provider)
 	identityHash := resourceIdentityHash(account.TenantID, provider, account.AccountID, sc.region, sc.serviceCode, svcDef.ResourceTypeCode, res.ResourceID)

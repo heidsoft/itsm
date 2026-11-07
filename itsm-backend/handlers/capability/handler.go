@@ -103,7 +103,7 @@ var registry = []definition{
 	// 每轮全量分页列举、只按 missing_count 判失联；剩下的阻断是增量水位线与真实账号验收。
 	{
 		key: "cmdbDiscovery", maturity: MaturityPilot, built: true, dependencies: []string{"cmdb"}, readinessEnv: "ITSM_CMDB_DISCOVERY_READY",
-		pilotReason: "执行链与定时调度已闭环（Job 执行器 + 每分钟 cron 消费 schedule），五个厂商适配器已装配，云服务类型基线随 cmdb-core 预置，发现结果按「云服务类型 → CI 类型」映射回写配置项（表外类型显式跳过，必填属性凑不齐时不建账）；凑不齐必填项的资源已有补录入口（GET /discovery/pending-resources 列出属性缺口，POST .../register 补录建账）。剩余阻断：每轮发现都是全量分页列举，没有增量水位线（只按 missing_count 判定既有资源失联），真实账号下的发现未验收。晋升条件：增量水位线 + 真实账号下的全量与增量发现验收。",
+		pilotReason: "执行链与定时调度已闭环（Job 执行器 + 每分钟 cron 消费 schedule），五个厂商适配器已装配，云服务类型基线随 cmdb-core 预置，发现结果按「云服务类型 → CI 类型」映射回写配置项（表外类型显式跳过，必填属性凑不齐时不建账）；凑不齐必填项的资源已有补录入口（GET /discovery/pending-resources 列出属性缺口，POST .../register 补录建账）。覆盖水位线已落地（2026-11-07，蓝图 §3.2-17：每 scope 的 coverage start/end + 分页完成证明 + provider watermark）：中断 scope 断点续扫不再从零全量列举，缺失判定按水位线窗口（同一窗口的补采不误判缺失、不触发退役），连续失败自动重置水位线自愈；调度作业按水位线增量推进（incremental_discovery），手动全量强制新窗。剩余阻断：主流云 API 无 modified-since 过滤，发现仍是如实全量列举 + 指纹去重写，增量体现在覆盖进度推进而非「只拉变化」；真实账号下的全量与增量发现均未验收。晋升条件：真实账号下的全量与增量发现验收。",
 	},
 	{
 		key: "cmdbReconciliation", maturity: MaturityPilot, built: true, dependencies: []string{"cmdb", "cmdbDiscovery"}, readinessEnv: "ITSM_CMDB_DISCOVERY_READY",
