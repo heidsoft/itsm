@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"context"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -158,3 +159,105 @@ func TestAuditMiddleware_WriteFailureIsCounted(t *testing.T) {
 	assert.Greater(t, AuditWriteFailureCount(), before, "审计写入失败必须被计数，不能静默吞掉")
 	assert.Equal(t, 200, w.Code, "审计失败不得把业务请求改成 5xx")
 }
+
+// L7：旧实现 io.ReadAll 把整个请求体读进内存后再截断到 4096，
+// 绕过了排在前面的 RequestSizeMiddleware。现在只窥视前 4097 字节，
+// 但下游 handler 仍必须拿到完整 body（MultiReader 拼回）。
+func TestAuditMiddleware_LargeBodyIsBoundedButDownstreamGetsFullBody(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	client := enttest.Open(t, "sqlite3", "file:audit_large_body?mode=memory&_fk=1")
+	defer client.Close()
+
+	body := `{"password":"SuperSecret123!","payload":"` + strings.Repeat("x", 12000) + `"}`
+	c, _ := gin.CreateTestContext(httptest.NewRecorder())
+	c.Request, _ = http.NewRequest(http.MethodPost, "/api/v1/users", strings.NewReader(body))
+	c.Request.Header.Set("Content-Type", "application/json")
+	// 旧实现 io.ReadAll 会把整个 body 读进内存后再截断，审计正文长度与
+	// 新实现完全一样，单看落库内容区分不出来。用字节探针锁住读取量本身。
+	counted := &countingReadCloser{Reader: strings.NewReader(body)}
+	c.Request.Body = counted
+	c.Set("tenant_id", 7)
+	c.Set("user_id", 42)
+
+	AuditMiddleware(client)(c)
+
+	assert.LessOrEqual(t, counted.read, maxAuditBodyBytes+1,
+		"审计中间件最多只窥视 4097 字节，不得把整个请求体读进内存")
+	downstream, err := io.ReadAll(c.Request.Body)
+	require.NoError(t, err)
+	assert.Equal(t, body, string(downstream), "审计不得把业务请求体截断")
+
+	logs, err := client.AuditLog.Query().Where(auditlog.TenantIDEQ(7)).All(context.Background())
+	require.NoError(t, err)
+	require.Len(t, logs, 1)
+	require.NotNil(t, logs[0].RequestBody)
+	assert.LessOrEqual(t, len(*logs[0].RequestBody), maxAuditBodyBytes+len("...[truncated]"))
+	assert.Contains(t, *logs[0].RequestBody, "...[truncated]")
+	assert.NotContains(t, *logs[0].RequestBody, "SuperSecret123!", "敏感字段仍须脱敏")
+}
+
+// L5：MSP 跨租户操作必须记在被操作的客户租户名下，
+// 且保留操作者 MSP 租户与用户，否则客户租户审计视图永远看不到这些动作。
+func TestAuditMiddleware_MSPOperationAttributedToCustomerTenant(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	client := enttest.Open(t, "sqlite3", "file:audit_msp_customer?mode=memory&_fk=1")
+	defer client.Close()
+
+	customer := 9
+	c, _ := gin.CreateTestContext(httptest.NewRecorder())
+	c.Request, _ = http.NewRequest(http.MethodPost, "/api/v1/msp/tickets/1/assign", strings.NewReader(`{"assigneeId":3}`))
+	c.Set("tenant_id", 7) // MSP 自身租户
+	c.Set("user_id", 42)
+	c.Set(MSPContextKey, &MSPContext{
+		IsMSP: true, MSPUserID: 42,
+		CustomerTenantID: &customer, AllowedCustomers: []int{customer},
+	})
+
+	AuditMiddleware(client)(c)
+
+	logs, err := client.AuditLog.Query().Where(auditlog.TenantIDEQ(customer)).All(context.Background())
+	require.NoError(t, err)
+	require.Len(t, logs, 1, "客户租户审计视图必须能看到 MSP 对自己的操作")
+	require.NotNil(t, logs[0].RequestBody)
+	assert.Contains(t, *logs[0].RequestBody, "msp_operator_tenant_id=7")
+	assert.Contains(t, *logs[0].RequestBody, "msp_user_id=42")
+	assert.Contains(t, *logs[0].RequestBody, "msp_scope=customer")
+
+	own, err := client.AuditLog.Query().Where(auditlog.TenantIDEQ(7)).All(context.Background())
+	require.NoError(t, err)
+	assert.Empty(t, own, "已明确目标客户时不应再记到 MSP 自身租户")
+}
+
+func TestAuditMiddleware_MSPAggregateStaysInOperatorTenant(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	client := enttest.Open(t, "sqlite3", "file:audit_msp_aggregate?mode=memory&_fk=1")
+	defer client.Close()
+
+	c, _ := gin.CreateTestContext(httptest.NewRecorder())
+	c.Request, _ = http.NewRequest(http.MethodPost, "/api/v1/msp/allocations", strings.NewReader(`{}`))
+	c.Set("tenant_id", 7)
+	c.Set("user_id", 42)
+	c.Set(MSPContextKey, &MSPContext{IsMSP: true, MSPUserID: 42, AllowedCustomers: []int{9}})
+
+	AuditMiddleware(client)(c)
+
+	logs, err := client.AuditLog.Query().Where(auditlog.TenantIDEQ(7)).All(context.Background())
+	require.NoError(t, err)
+	require.Len(t, logs, 1, "没有明确目标客户的聚合操作仍归 MSP 自身租户")
+	require.NotNil(t, logs[0].RequestBody)
+	assert.Contains(t, *logs[0].RequestBody, "msp_scope=aggregate")
+}
+
+// countingReadCloser 统计审计中间件实际从请求体读取的字节数（L7 回归锁）。
+type countingReadCloser struct {
+	io.Reader
+	read int
+}
+
+func (c *countingReadCloser) Read(p []byte) (int, error) {
+	n, err := c.Reader.Read(p)
+	c.read += n
+	return n, err
+}
+
+func (c *countingReadCloser) Close() error { return nil }

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"strings"
 	"sync/atomic"
@@ -13,6 +14,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 )
+
+// maxAuditBodyBytes 是审计正文的落库上限（L7）。中间件最多只窥视
+// maxAuditBodyBytes+1 字节，绝不为审计把整个请求体读进内存。
+const maxAuditBodyBytes = 4096
 
 type loginAuditRequestKey struct{}
 
@@ -119,13 +124,16 @@ func AuditMiddleware(client *ent.Client) gin.HandlerFunc {
 		var bodyBytes []byte
 		if auditable && c.Request.Body != nil {
 			var err error
-			bodyBytes, err = io.ReadAll(c.Request.Body)
+			// L7：只窥视审计所需的 maxAuditBodyBytes+1 字节，不能把大文件/大 JSON
+			// 整段读进内存再截断（旧实现 io.ReadAll 绕过 RequestSizeMiddleware）。
+			// 已读前缀必须与剩余 Body 拼回，否则下游 handler 会拿到被截断的正文。
+			bodyBytes, err = io.ReadAll(io.LimitReader(c.Request.Body, maxAuditBodyBytes+1))
 			if err != nil {
 				if globalLogger != nil {
 					globalLogger.Warnw("failed to read request body for audit", "error", err)
 				}
 			}
-			c.Request.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
+			c.Request.Body = io.NopCloser(io.MultiReader(bytes.NewReader(bodyBytes), c.Request.Body))
 		}
 
 		start := time.Now()
@@ -172,11 +180,31 @@ func AuditMiddleware(client *ent.Client) gin.HandlerFunc {
 
 		// limit stored body size to avoid oversized logs
 		requestBody := string(bodyBytes)
-		if len(requestBody) > 4096 {
-			requestBody = requestBody[:4096] + "..."
+		if len(requestBody) > maxAuditBodyBytes {
+			requestBody = requestBody[:maxAuditBodyBytes] + "...[truncated]"
 		}
 		// mask sensitive fields
 		requestBody = MaskSensitiveFields(requestBody)
+
+		// L5：MSP 跨租户操作必须记在被操作的客户租户名下。
+		// 旧实现只取 JWT claims 的租户（MSP 自身），客户租户审计视图永远看不到
+		// MSP 对自己资源做了什么。目标客户来自 MSPMiddleware 校验过的上下文，
+		// 不是客户端可伪造的 query 参数。操作者身份另存在正文前缀与结构化日志里。
+		mspScope := ""
+		mspOperatorTenantID := 0
+		mspUserID := 0
+		if mspCtx, ok := GetMSPContext(c); ok && mspCtx.IsMSP {
+			mspOperatorTenantID = tenantID
+			mspUserID = mspCtx.MSPUserID
+			if mspCtx.CustomerTenantID != nil && *mspCtx.CustomerTenantID > 0 {
+				tenantID = *mspCtx.CustomerTenantID
+				mspScope = "customer"
+			} else {
+				mspScope = "aggregate"
+			}
+			requestBody = fmt.Sprintf("[msp_operator_tenant_id=%d msp_user_id=%d msp_scope=%s]\n%s",
+				mspOperatorTenantID, mspUserID, mspScope, requestBody)
+		}
 
 		// 确定操作类型和资源
 		action, resource, _ := determineActionAndResource(c)
@@ -216,6 +244,11 @@ func AuditMiddleware(client *ent.Client) gin.HandlerFunc {
 			"latency_ms", duration.Milliseconds(),
 			"success", status < 400,
 			"sensitive", isSensitive,
+		}
+		if mspScope != "" {
+			logFields = append(logFields,
+				"operator_tenant_id", mspOperatorTenantID,
+				"msp_user_id", mspUserID, "msp_scope", mspScope)
 		}
 
 		err := auditCreate.Exec(auditCtx)

@@ -87,6 +87,27 @@ func EnsureOperationalIndexes(ctx context.Context, db *sql.DB) error {
 				ON incidents (tenant_id, incident_number)
 				WHERE incident_number IS NOT NULL;`,
 		},
+		// L7：audit_logs 此前只有单列 tenant_id 索引，而审计列表的主查询是
+		// 「按租户过滤 + 按 created_at 倒序 + 可选 action/resource/user_id 条件
+		// + Count」。没有复合索引时每次翻页都要对该租户全量排序。
+		// 这里用 EnsureOperationalIndexes 的幂等 DDL 落地（bootstrap 在
+		// InitializeStorage 末尾调用，空库首装与存量升级都会执行），
+		// 不改 ent schema，避免触发全仓 ent 代码重生成。
+		{
+			name: "audit_logs_tenant_created_idx",
+			sql: `CREATE INDEX IF NOT EXISTS audit_logs_tenant_created_idx
+				ON audit_logs (tenant_id, created_at DESC);`,
+		},
+		{
+			name: "audit_logs_tenant_action_created_idx",
+			sql: `CREATE INDEX IF NOT EXISTS audit_logs_tenant_action_created_idx
+				ON audit_logs (tenant_id, action, created_at DESC);`,
+		},
+		{
+			name: "audit_logs_tenant_resource_created_idx",
+			sql: `CREATE INDEX IF NOT EXISTS audit_logs_tenant_resource_created_idx
+				ON audit_logs (tenant_id, resource, created_at DESC);`,
+		},
 	}
 
 	var errs []error

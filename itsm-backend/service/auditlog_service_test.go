@@ -2,12 +2,14 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"testing"
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
 
+	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
@@ -537,4 +539,70 @@ func TestAuditLogService_GetCIAuditLogs_Pagination(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, 15, response.Total)
 	assert.Len(t, response.Items, 5)
+}
+
+// L7：时间参数非法/倒挂/超长窗口此前只打一行 WARN 然后**跳过谓词**，
+// 调用方以为筛了时间，实际仍是全租户 Count + 排序。现在必须显式 400。
+func TestAuditLogService_ListAuditLogs_RejectsInvalidTimeWindow(t *testing.T) {
+	client, service, ctx := setupAuditLogTest(t)
+	defer client.Close()
+	tenant, err := createAuditLogTestTenant(ctx, client, "window")
+	require.NoError(t, err)
+
+	cases := []struct {
+		name, from, to, want string
+	}{
+		{"非法 from", "not-a-date", "", "from 时间格式非法"},
+		{"非法 to", "", "not-a-date", "to 时间格式非法"},
+		{"倒挂", "2026-11-01T00:00:00Z", "2026-10-01T00:00:00Z", "to 不得早于 from"},
+		{"超长窗口", "2020-01-01T00:00:00Z", "2026-11-01T00:00:00Z", "查询窗口不得超过"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := service.ListAuditLogs(ctx, &dto.ListAuditLogsRequest{
+				Page: 1, PageSize: 20, From: tc.from, To: tc.to,
+			}, tenant.ID)
+			require.Error(t, err)
+			var appErr *common.AppError
+			require.True(t, errors.As(err, &appErr), "必须是 AppError 才能透传 400，实际 %T", err)
+			assert.Equal(t, 400, appErr.HTTPStatus)
+			assert.Contains(t, err.Error(), tc.want)
+		})
+	}
+}
+
+func TestAuditLogService_ListAuditLogs_RejectsDeepPage(t *testing.T) {
+	client, service, ctx := setupAuditLogTest(t)
+	defer client.Close()
+	tenant, err := createAuditLogTestTenant(ctx, client, "deeppage")
+	require.NoError(t, err)
+
+	_, err = service.ListAuditLogs(ctx, &dto.ListAuditLogsRequest{
+		Page: maxAuditLogPage + 1, PageSize: 20,
+	}, tenant.ID)
+	require.Error(t, err)
+	var appErr *common.AppError
+	require.True(t, errors.As(err, &appErr))
+	assert.Equal(t, 400, appErr.HTTPStatus)
+}
+
+// 正常窗口不能被误伤：合法筛选仍要下推谓词并返回结果。
+func TestAuditLogService_ListAuditLogs_ValidWindowStillWorks(t *testing.T) {
+	client, service, ctx := setupAuditLogTest(t)
+	defer client.Close()
+	tenant, err := createAuditLogTestTenant(ctx, client, "validwindow")
+	require.NoError(t, err)
+	_, err = client.AuditLog.Create().
+		SetTenantID(tenant.ID).SetResource("ticket").SetAction("create").
+		SetPath("/api/v1/tickets").SetMethod("POST").
+		SetCreatedAt(time.Now().Add(-24 * time.Hour)).Save(ctx)
+	require.NoError(t, err)
+
+	resp, err := service.ListAuditLogs(ctx, &dto.ListAuditLogsRequest{
+		Page: 1, PageSize: 20,
+		From: time.Now().Add(-7 * 24 * time.Hour).UTC().Format(time.RFC3339),
+		To:   time.Now().UTC().Format(time.RFC3339),
+	}, tenant.ID)
+	require.NoError(t, err)
+	assert.Equal(t, 1, resp.Total)
 }
