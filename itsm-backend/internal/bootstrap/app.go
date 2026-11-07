@@ -1026,7 +1026,7 @@ func NewApplication() *Application {
 	wireQualityDomainStats(qualityReportService, problemServiceDomain, changeServiceDomain)
 
 	// 变更评审组名册 handler（审批流转由审批链引擎 review: 解析器驱动，handler 仅管名册）
-	changeReviewService := change_review.NewChangeReviewService(client, sugar)
+	changeReviewService := service.NewChangeReviewService(client, sugar)
 	changeReviewHandler := change_review.NewHandler(changeReviewService, sugar)
 
 	// Analytics & Prediction Controllers
