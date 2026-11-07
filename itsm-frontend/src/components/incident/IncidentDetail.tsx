@@ -51,14 +51,12 @@ type IncidentClassificationFormValues = Omit<
 
 // 根因分析类型
 interface RootCauseData {
-  id?: number;
   analysisMethod?: string;
   rootCause?: string;
   contributingFactors?: string[];
   evidence?: string[];
   preventiveActions?: string[];
   status?: string;
-  createdAt?: string;
 }
 
 // 影响评估类型
@@ -375,13 +373,8 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
         status: values.status,
       };
 
-      if (rootCauseData?.id) {
-        await IncidentAPI.updateRootCauseAnalysis(rootCauseData.id, request);
-        message.success('根因分析已更新');
-      } else {
-        await IncidentAPI.createRootCauseAnalysis(request);
-        message.success('根因分析已创建');
-      }
+      await IncidentAPI.saveRootCauseAnalysis(data.id, request);
+      message.success('根因分析已保存');
       setRootCauseModalVisible(false);
       loadAnalysisData();
     } catch (error) {
@@ -654,7 +647,7 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
               }
               extra={
                 <Button type="link" icon={<Pencil />} onClick={handleEditRootCause}>
-                  {rootCauseData?.id ? '编辑' : '添加'}
+                  {rootCauseData ? '编辑' : '添加'}
                 </Button>
               }
             >
@@ -682,9 +675,6 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
                         ))}
                       </Space>
                     ) : '-'}
-                  </Descriptions.Item>
-                  <Descriptions.Item label="创建时间">
-                    {rootCauseData.createdAt ? dayjs(rootCauseData.createdAt).format('YYYY-MM-DD HH:mm') : '-'}
                   </Descriptions.Item>
                 </Descriptions>
               ) : (

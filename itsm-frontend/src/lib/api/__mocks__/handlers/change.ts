@@ -31,7 +31,6 @@ import type {
   ChangeImpact,
   ChangeRisk,
   RiskAssessmentData,
-  ImpactAnalysisData,
 } from '../../change-api';
 
 // Mock change database

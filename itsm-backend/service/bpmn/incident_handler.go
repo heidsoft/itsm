@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"itsm-backend/common"
+	"itsm-backend/database"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/incident"
@@ -18,6 +19,9 @@ type IncidentServiceTaskHandler struct {
 	HandlerBase
 	client *ent.Client
 	logger *zap.SugaredLogger
+	// generateNumber 与 HTTP 创建共用 incident_number_seq 发号；
+	// 单测注入确定性桩，生产默认走 database.GetRawDB()。
+	generateNumber func(ctx context.Context, year, month int) (string, error)
 }
 
 // NewIncidentServiceTaskHandler 创建事件处理器
@@ -25,6 +29,13 @@ func NewIncidentServiceTaskHandler(client *ent.Client, logger *zap.SugaredLogger
 	return &IncidentServiceTaskHandler{
 		client: client,
 		logger: logger,
+		generateNumber: func(ctx context.Context, year, month int) (string, error) {
+			db := database.GetRawDB()
+			if db == nil {
+				return "", fmt.Errorf("事件编号生成不可用：数据库未初始化")
+			}
+			return database.GenerateIncidentNumber(ctx, db, year, month)
+		},
 	}
 }
 
@@ -108,16 +119,30 @@ func (h *IncidentServiceTaskHandler) createIncident(ctx context.Context, variabl
 		return nil, fmt.Errorf("事件标题不能为空")
 	}
 
-	incident, err := h.client.Incident.Create().
+	year, month, _ := time.Now().Date()
+	number, err := h.generateNumber(ctx, year, int(month))
+	if err != nil {
+		return nil, fmt.Errorf("创建事件失败: %w", err)
+	}
+
+	create := h.client.Incident.Create().
 		SetTitle(title).
 		SetDescription(description).
-		SetType(incidentType).
-		SetPriority(priority).
-		SetSeverity(severity).
 		SetStatus(common.IncidentStatusNew).
+		SetIncidentNumber(number).
 		SetReporterID(GetIntFromVars(variables, "reporter_id")).
-		SetTenantID(tenantID).
-		Save(ctx)
+		SetTenantID(tenantID)
+	// 空字符串不能覆盖 schema 默认值（priority/severity/type 有枚举校验）
+	if incidentType != "" {
+		create.SetType(incidentType)
+	}
+	if priority != "" {
+		create.SetPriority(priority)
+	}
+	if severity != "" {
+		create.SetSeverity(severity)
+	}
+	incident, err := create.Save(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("创建事件失败: %w", err)
 	}
