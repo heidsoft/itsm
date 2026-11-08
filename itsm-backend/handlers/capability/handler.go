@@ -116,7 +116,7 @@ var registry = []definition{
 	// 结束事件驱动且无内置模板。
 	{
 		key: "workflow", maturity: MaturityPilot, built: true,
-		pilotReason: "流程定义、绑定、实例、任务、变量与历史齐备，工单与事件已使用持久化 command/outbox 启动流程，但运行时仍有跨域缺口：问题域创建不落 workflow.start（problem 分支无生产者，生命周期仅在已有实例时桥接）、ServiceTask 外部副作用与流程完成分属两个事务、补偿只支持结束事件驱动且无内置模板、存量 pending 待办与跨域实例级 E2E 未补。晋升条件：问题域 workflow.start 生产者 + ServiceTask 与流程完成同事务 + 补偿内置模板 + 跨域实例级 E2E。",
+		pilotReason: "流程定义、绑定、实例、任务、变量与历史齐备；工单/事件/变更/服务请求/发布/问题六域创建均同事务投 workflow.start（问题域补齐生产者，起流前校验内置模板存在性）；工单生命周期动作（分配/接单/解决/关闭）与 BPMN 当前作业待办在同一事务内推进，审批节点 fail-closed 不代签、已指派给他人的任务仍严格校验归属，详情页动作由 /workflow/state-v2 的 availableActions 与权限码取交集驱动；工单域与问题域均有真实实例级 E2E 回归锁。剩余阻断：ServiceTask 外部副作用与流程完成仍分属事务（已由 outbox + 意图标记实现引擎级 exactly-once，事务边界未合并）、补偿只支持结束事件驱动且内置模板无补偿节点、存量 pending 待办只有只读盘点、真实租户跨域流程联调未由人验收。晋升条件：ServiceTask 副作用与流程完成同事务 + 补偿内置模板与触发入口 + 存量待办迁移工具 + 真实租户跨域联调验收签字。",
 	},
 	{key: "sla", maturity: MaturityGA, built: true},
 	// 报表域此前只在能力契约表里（报表/运营 = Pilot），矩阵里根本没有这一行——

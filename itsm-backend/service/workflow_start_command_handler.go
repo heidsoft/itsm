@@ -133,8 +133,15 @@ func (h *WorkflowStartCommandHandler) Handle(ctx context.Context, cmd *ent.Opera
 		if err != nil {
 			return fmt.Errorf("load problem for workflow: %w", err)
 		}
+		// 与 ticket/change 分支同一保护：租户可能停用或从未部署内置模板，
+		// 直接拿硬编码 key 起流会让 workflow.start 反复重试后进死信。
+		// 显式校验并给出可操作错误，而不是伪装成起流成功。
+		processKey, err := h.pickExistingDefinition(ctx, cmd.TenantID, "problem_management_flow")
+		if err != nil {
+			return err
+		}
 		req = &dto.ProcessTriggerRequest{
-			BusinessType: dto.BusinessTypeProblem, BusinessID: item.ID, ProcessDefinitionKey: "problem_management_flow",
+			BusinessType: dto.BusinessTypeProblem, BusinessID: item.ID, ProcessDefinitionKey: processKey,
 			Variables: map[string]interface{}{
 				"problem_id": item.ID, "title": item.Title, "description": item.Description,
 				"priority": item.Priority, "status": item.Status, "category": item.Category,

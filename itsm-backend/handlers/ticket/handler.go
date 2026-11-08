@@ -532,7 +532,10 @@ func (h *Handler) AssignTicket(c *gin.Context) {
 		return
 	}
 
-	ticket, err := h.service.AssignTicket(c.Request.Context(), id, req.AssigneeID, tenantID)
+	// 分配需要把工单与 BPMN 当前待办放在同一事务推进；引擎按 assignee/candidate
+	// 校验任务归属，因此必须传入认证操作人（与 /tickets/workflow/* 同一上下文来源）。
+	actorID := c.GetInt("user_id")
+	ticket, err := h.service.AssignTicketWithActor(c.Request.Context(), id, req.AssigneeID, tenantID, actorID)
 	if err != nil {
 		common.FailWithErr(c, err, "操作失败")
 		return

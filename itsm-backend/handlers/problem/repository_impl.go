@@ -16,6 +16,7 @@ import (
 	"itsm-backend/ent/problemcomment"
 	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/user"
+	"itsm-backend/internal/commandbus"
 	"itsm-backend/internal/datascope"
 )
 
@@ -237,6 +238,18 @@ func (r *EntRepository) Create(ctx context.Context, p *Problem) (*Problem, error
 	number := fmt.Sprintf("PRB-%s-%04d", time.Now().Format("20060102"), saved.ID)
 	if _, err := tx.Problem.UpdateOneID(saved.ID).SetProblemNumber(number).Save(ctx); err != nil {
 		return rollback(fmt.Errorf("写入问题编号失败: %w", err))
+	}
+	// 问题域创建即投 workflow.start：此前消费侧 WorkflowStartCommandHandler 的
+	// problem 分支齐备，却没有任何生产者，问题单永远不进流程（能力矩阵 Pilot 阻断项）。
+	// 与工单/事件/变更/服务请求/发布同口径：单据 INSERT 与起流命令同事务入箱，
+	// 幂等键按问题 ID 固定，重试不会产生第二个实例。
+	if _, err := commandbus.EnqueueTx(ctx, tx, commandbus.EnqueueRequest{
+		TenantID: p.TenantID, CommandType: commandbus.CommandStartBPMN,
+		AggregateType: "problem", AggregateID: saved.ID,
+		IdempotencyKey: fmt.Sprintf("problem:%d:workflow:start", saved.ID),
+		Payload:        map[string]interface{}{"businessType": "problem", "businessId": saved.ID},
+	}); err != nil {
+		return rollback(fmt.Errorf("enqueue problem workflow: %w", err))
 	}
 	if err := tx.Commit(); err != nil {
 		return rollback(err)

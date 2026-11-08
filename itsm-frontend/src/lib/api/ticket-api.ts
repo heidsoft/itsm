@@ -678,6 +678,26 @@ export class TicketApi {
     return httpClient.post(`/api/v1/tickets/workflow/accept`, { ticketId: ticketId });
   }
 
+  /**
+   * 解决工单（走 /tickets/workflow/* 事务服务）。
+   * 与 resolveTicket 的区别：该入口在同事务内推进 BPMN 待办并写流转记录，
+   * /tickets/:id/resolve 只改工单表。详情页的动作入口一律使用本方法。
+   */
+  static async resolveTicketWorkflow(
+    ticketId: number,
+    data: { resolution?: string; solution?: string; resolutionCategory?: string; workNotes?: string } = {}
+  ): Promise<{ message: string }> {
+    return httpClient.post(`/api/v1/tickets/workflow/resolve`, { ticketId, ...data });
+  }
+
+  /** 关闭工单（走 /tickets/workflow/* 事务服务，同事务推进流程到终态）。 */
+  static async closeTicketWorkflow(
+    ticketId: number,
+    data: { closeReason?: string; closeNotes?: string } = {}
+  ): Promise<{ message: string }> {
+    return httpClient.post(`/api/v1/tickets/workflow/close`, { ticketId, ...data });
+  }
+
   // Reject ticket (驳回)
   static async rejectTicket(ticketId: number, reason: string): Promise<{ message: string }> {
     return httpClient.post(`/api/v1/tickets/workflow/reject`, { ticketId: ticketId, reason });
