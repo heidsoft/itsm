@@ -350,6 +350,8 @@ const SLADefinitionManagement = () => {
         <Text type="secondary">定义和管理服务级别协议，确保服务质量标准</Text>
       </div>
 
+      {/* 统计卡必须门控：还没拉到数据时渲染成「SLA 定义总数 0」会被误读成「没有定义任何 SLA」 */}
+      {!loading && (
       <Row gutter={[16, 16]} align="stretch">
         <Col xs={24} sm={12} lg={6} className="flex">
           <Card className="enterprise-card h-full w-full">
@@ -393,6 +395,7 @@ const SLADefinitionManagement = () => {
           </Card>
         </Col>
       </Row>
+      )}
 
       <Card>
         <Row gutter={[16, 16]} align="middle">

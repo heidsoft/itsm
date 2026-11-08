@@ -42,7 +42,11 @@ export default function ProblemTrendsPage() {
   const { t } = useI18n();
   const { message } = App.useApp();
 
-  const [loading, setLoading] = useState(false);
+  // 数据加载初值必须为 true：mount 必定发起首次拉取，初值 false 会让首帧先渲染
+  // 「暂无趋势数据」结论，再被真实数据覆盖。
+  const [listLoading, setListLoading] = useState(true);
+  // 「查询」按钮的动作态，与列表加载态分开。
+  const [actionLoading, setActionLoading] = useState(false);
   const [trendData, setTrendData] = useState<ProblemTrendData | null>(null);
   const [dateRange, setDateRange] = useState<[Dayjs, Dayjs]>([
     dayjs().subtract(6, 'month'),
@@ -51,7 +55,8 @@ export default function ProblemTrendsPage() {
   const [categoryFilter, setCategoryFilter] = useState<string | undefined>(undefined);
 
   const fetchTrendData = async () => {
-    setLoading(true);
+    setListLoading(true);
+    setActionLoading(true);
     try {
       const response = await ProblemApi.getTrends({
         startDate: dateRange[0].format('YYYY-MM-DD'),
@@ -62,7 +67,8 @@ export default function ProblemTrendsPage() {
       console.error('Failed to fetch trend data:', error);
       message.error('获取趋势数据失败');
     } finally {
-      setLoading(false);
+      setListLoading(false);
+      setActionLoading(false);
     }
   };
 
@@ -162,14 +168,14 @@ export default function ProblemTrendsPage() {
               />
             </div>
             <div className="self-end">
-              <Button type="primary" onClick={handleSearch} loading={loading}>
+              <Button type="primary" onClick={handleSearch} loading={actionLoading}>
                 查询
               </Button>
             </div>
           </Space>
         </Card>
 
-        {loading ? (
+        {listLoading ? (
           <Card className="shadow-sm rounded-lg">
             <div className="flex justify-center py-12">
               <Spin size="large" />

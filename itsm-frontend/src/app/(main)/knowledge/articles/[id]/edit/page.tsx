@@ -31,7 +31,8 @@ export default function EditKnowledgeArticlePage() {
   const { id } = useParams() as { id: string };
   const [form] = Form.useForm();
   const { message } = App.useApp();
-  const [loading, setLoading] = useState(false);
+  // 提交动作态（数据加载由 fetching 负责）。
+  const [actionLoading, setActionLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [categories, setCategories] = useState<string[]>([]);
@@ -70,7 +71,7 @@ export default function EditKnowledgeArticlePage() {
   }, [id, form]);
 
   const onFinish = async (values: { title: string; content: string; category: string; tags?: string[] }) => {
-    setLoading(true);
+    setActionLoading(true);
     try {
       await KnowledgeBaseApi.updateArticle(id, {
         title: values.title,
@@ -83,7 +84,7 @@ export default function EditKnowledgeArticlePage() {
     } catch (e: unknown) {
       message.error('更新失败：' + (e instanceof Error ? e.message : '未知错误'));
     } finally {
-      setLoading(false);
+      setActionLoading(false);
     }
   };
 
@@ -168,7 +169,7 @@ export default function EditKnowledgeArticlePage() {
 
             <Form.Item>
               <Space>
-                <Button type="primary" htmlType="submit" icon={<Save />} loading={loading}>
+                <Button type="primary" htmlType="submit" icon={<Save />} loading={actionLoading}>
                   保存修改
                 </Button>
                 <Button onClick={() => router.push(`/knowledge/articles/${id}`)}>取消</Button>

@@ -72,7 +72,8 @@ export default function WorkbenchPage() {
 
   const [items, setItems] = useState<WorkbenchItem[]>([]);
   const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(false);
+  // 列表初值必须为 true：mount 必定发起首次拉取，初值 false 会让首帧先渲染空列表。
+  const [listLoading, setListLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
@@ -82,7 +83,7 @@ export default function WorkbenchPage() {
   const [recordTypes, setRecordTypes] = useState<string[]>([]);
 
   const fetchData = useCallback(async () => {
-    setLoading(true);
+    setListLoading(true);
     setError(null);
     try {
       const query: WorkbenchQuery = {
@@ -107,7 +108,7 @@ export default function WorkbenchPage() {
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to load workbench');
     } finally {
-      setLoading(false);
+      setListLoading(false);
     }
   }, [page, pageSize, phases, priorities, recordTypes, user?.id]);
 
@@ -266,16 +267,16 @@ export default function WorkbenchPage() {
           onClick: handleRefresh,
         },
       ]}
-      loading={loading}
+      loading={listLoading}
       error={!!error}
-      empty={items.length === 0 && !loading}
+      empty={items.length === 0 && !listLoading}
       emptyDescription={t('workbench.emptyDescription')}
     >
       <Table<WorkbenchItem>
         rowKey='id'
         columns={columns}
         dataSource={items}
-        loading={loading}
+        loading={listLoading}
         pagination={{
           current: page,
           pageSize,

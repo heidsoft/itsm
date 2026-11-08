@@ -59,7 +59,9 @@ const CATEGORY_COLORS: Record<string, string> = {
 export default function StandardChangesPage() {
   const router = useRouter();
   const { t } = useI18n();
-  const [loading, setLoading] = useState(false);
+  // 列表初值必须为 true：mount 必定发起首次拉取，初值 false 会让首帧先渲染
+  // 「暂无标准变更模板」的空态，再被真实数据覆盖。
+  const [listLoading, setListLoading] = useState(true);
   const [templates, setTemplates] = useState<StandardChange[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [total, setTotal] = useState(0);
@@ -80,7 +82,7 @@ export default function StandardChangesPage() {
   }, [page, pageSize, category]);
 
   const fetchTemplates = async () => {
-    setLoading(true);
+    setListLoading(true);
     try {
       const data = await StandardChangeApi.getTemplates({
         page,
@@ -95,7 +97,7 @@ export default function StandardChangesPage() {
       console.error('Failed to fetch templates:', error);
       message.error(t('standardChanges.loadFailed') || '获取模板列表失败');
     } finally {
-      setLoading(false);
+      setListLoading(false);
     }
   };
 
@@ -347,7 +349,7 @@ export default function StandardChangesPage() {
             columns={columns}
             dataSource={templates}
             rowKey='id'
-            loading={loading}
+            loading={listLoading}
             pagination={{
               current: page,
               pageSize: pageSize,

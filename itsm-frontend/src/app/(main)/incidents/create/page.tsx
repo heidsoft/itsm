@@ -64,7 +64,8 @@ interface IncidentFormValues {
 export default function CreateIncidentPage() {
   const router = useRouter();
   const [form] = Form.useForm();
-  const [loading, setLoading] = useState(false);
+  // 提交动作态（表单页首帧是空表单，无列表假空态问题）
+  const [actionLoading, setActionLoading] = useState(false);
   const { message } = App.useApp();
   const [activeTab, setActiveTab] = useState('basic');
   const [selectedCIs, setSelectedCIs] = useState<ConfigurationItem[]>([]);
@@ -207,7 +208,7 @@ export default function CreateIncidentPage() {
   };
 
   const handleSubmit = async (values: IncidentFormValues) => {
-    setLoading(true);
+    setActionLoading(true);
     try {
       await IncidentAPI.createIncident({
         title: values.title,
@@ -226,7 +227,7 @@ export default function CreateIncidentPage() {
     } catch (error) {
       handleError(error, 'createIncident', '创建失败，请重试');
     } finally {
-      setLoading(false);
+      setActionLoading(false);
     }
   };
 
@@ -651,7 +652,7 @@ export default function CreateIncidentPage() {
                   <Button
                     type="primary"
                     htmlType="submit"
-                    loading={loading}
+                    loading={actionLoading}
                     data-testid="incident-submit-button"
                   >
                     提交

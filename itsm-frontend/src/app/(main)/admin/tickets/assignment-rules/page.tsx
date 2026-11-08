@@ -77,7 +77,8 @@ function stringifyJson(value: unknown, fallback: string) {
 export default function AssignmentRulesPage() {
   const { message } = App.useApp();
   const [rules, setRules] = useState<AssignmentRule[]>([]);
-  const [loading, setLoading] = useState(false);
+  // 列表初值必须为 true：mount 必定发起首次拉取，初值 false 会让首帧先渲染空表格。
+  const [listLoading, setListLoading] = useState(true);
   const [loadError, setLoadError] = useState<{ denied: boolean; detail: string } | null>(null);
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
@@ -89,7 +90,7 @@ export default function AssignmentRulesPage() {
   const [testForm] = Form.useForm<TestFormValues>();
 
   const loadRules = async () => {
-    setLoading(true);
+    setListLoading(true);
     setLoadError(null);
     try {
       const response = await TicketAssignmentApi.listRules();
@@ -102,7 +103,7 @@ export default function AssignmentRulesPage() {
         detail: error instanceof Error ? error.message : '',
       });
     } finally {
-      setLoading(false);
+      setListLoading(false);
     }
   };
 
@@ -364,13 +365,13 @@ export default function AssignmentRulesPage() {
                 size="small"
                 icon={<RefreshCw size={14} />}
                 onClick={loadRules}
-                loading={loading}
+                loading={listLoading}
               >
                 重试
               </Button>
             }
           />
-        ) : rules.length === 0 && !loading ? (
+        ) : rules.length === 0 && !listLoading ? (
           <Alert
             type="info"
             showIcon
@@ -382,7 +383,7 @@ export default function AssignmentRulesPage() {
             rowKey="id"
             columns={columns}
             dataSource={rules}
-            loading={loading}
+            loading={listLoading}
             pagination={{ pageSize: 10, showTotal: total => `共 ${total} 条记录` }}
           />
         )}

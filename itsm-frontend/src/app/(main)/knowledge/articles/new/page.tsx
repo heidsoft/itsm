@@ -29,7 +29,8 @@ export default function NewKnowledgeArticlePage() {
   const router = useRouter();
   const [form] = Form.useForm();
   const { message } = App.useApp();
-  const [loading, setLoading] = useState(false);
+  // 提交动作态（表单页首帧是空表单，无列表假空态问题）。
+  const [actionLoading, setActionLoading] = useState(false);
   const [categories, setCategories] = useState<string[]>([]);
 
   React.useEffect(() => {
@@ -46,7 +47,7 @@ export default function NewKnowledgeArticlePage() {
   }, [message]);
 
   const onFinish = async (values: { title: string; content: string; category: string; tags?: string[] }) => {
-    setLoading(true);
+    setActionLoading(true);
     try {
       const created = await KnowledgeBaseApi.createArticle({
         title: values.title,
@@ -59,7 +60,7 @@ export default function NewKnowledgeArticlePage() {
     } catch (e: unknown) {
       message.error('创建失败：' + (e instanceof Error ? e.message : '未知错误'));
     } finally {
-      setLoading(false);
+      setActionLoading(false);
     }
   };
 
@@ -133,7 +134,7 @@ export default function NewKnowledgeArticlePage() {
 
           <Form.Item>
             <Space>
-              <Button type="primary" htmlType="submit" icon={<Save />} loading={loading}>
+              <Button type="primary" htmlType="submit" icon={<Save />} loading={actionLoading}>
                 保存草稿
               </Button>
               <Button onClick={() => router.push('/knowledge')}>取消</Button>

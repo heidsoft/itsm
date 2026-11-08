@@ -42,7 +42,8 @@ export default function DepartmentManagement() {
   const { t } = useI18n();
   const [departments, setDepartments] = useState<Department[]>([]);
   const [treeData, setTreeData] = useState<Department[]>([]);
-  const [loading, setLoading] = useState(false);
+  // 保存动作态（列表加载由 fetching 负责）
+  const [actionLoading, setActionLoading] = useState(false);
   const [fetching, setFetching] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [selectedDepartment, setSelectedDepartment] = useState<Department | null>(null);
@@ -148,7 +149,7 @@ export default function DepartmentManagement() {
   const handleSave = async () => {
     try {
       const values = await form.validateFields();
-      setLoading(true);
+      setActionLoading(true);
 
       if (selectedDepartment) {
         // 更新
@@ -168,7 +169,7 @@ export default function DepartmentManagement() {
       console.error('Failed to save department:', error);
       message.error(t('departments.saveFailed'));
     } finally {
-      setLoading(false);
+      setActionLoading(false);
     }
   };
 
@@ -360,7 +361,7 @@ export default function DepartmentManagement() {
           form.resetFields();
         }}
         width={600}
-        confirmLoading={loading}
+        confirmLoading={actionLoading}
         okText={t('common.save')}
         cancelText={t('common.cancel')}
       >

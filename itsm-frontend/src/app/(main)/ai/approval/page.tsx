@@ -68,20 +68,22 @@ const AIApprovalQueue: React.FC = () => {
   useAuthStoreHydration();
 
   const [items, setItems] = useState<ToolApproval[]>([]);
-  const [loading, setLoading] = useState(false);
+  // 列表初值必须为 true：mount 必定发起首次拉取，初值 false 会让首帧先渲染
+  // 空表格，再被真实数据覆盖。
+  const [listLoading, setListLoading] = useState(true);
   const [state, setState] = useState<string>('pending');
   const [rejectId, setRejectId] = useState<number | null>(null);
   const [rejectReason, setRejectReason] = useState('');
 
   const fetchList = useCallback(async () => {
-    setLoading(true);
+    setListLoading(true);
     try {
       const res: ToolApprovalListResponse = await aiGetToolApprovals(state);
       setItems(res.items ?? []);
     } catch (e) {
       message.error(`加载审批队列失败：${(e as Error).message}`);
     } finally {
-      setLoading(false);
+      setListLoading(false);
     }
   }, [state, message]);
 
@@ -214,7 +216,7 @@ const AIApprovalQueue: React.FC = () => {
         <Table
           rowKey="id"
           size="middle"
-          loading={loading}
+          loading={listLoading}
           dataSource={items}
           columns={columns}
           pagination={{ pageSize: 20, showTotal: (t) => `共 ${t} 条` }}

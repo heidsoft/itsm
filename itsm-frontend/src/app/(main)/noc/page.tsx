@@ -34,7 +34,9 @@ const COUNT_PAGE_SIZE = 100;
 
 export default function NOCPage() {
   const { message } = App.useApp();
-  const [loading, setLoading] = useState(false);
+  // 列表初值必须为 true：mount 必定发起首次拉取，初值 false 会让首帧先渲染
+  // 空表格与全 0 的 KPI 卡片，再被真实数据覆盖。
+  const [listLoading, setListLoading] = useState(true);
   const [incidents, setIncidents] = useState<Incident[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -48,7 +50,7 @@ export default function NOCPage() {
   }>({ highPriority: 0, inProgress: 0, truncated: false, failed: false });
 
   const loadData = useCallback(async (p: number, status?: string) => {
-    setLoading(true);
+    setListLoading(true);
     try {
       const resp: ListIncidentsResponse = await IncidentAPI.getIncidents({
         isMajorIncident: true,
@@ -61,7 +63,7 @@ export default function NOCPage() {
     } catch {
       message.error('加载重大事件失败');
     } finally {
-      setLoading(false);
+      setListLoading(false);
     }
   }, []);
 
@@ -165,51 +167,53 @@ export default function NOCPage() {
         <Text type="secondary">重大事件作战室：实时跟踪企业级重大事件处置进展</Text>
       </div>
 
-      {/* KPI 卡片 */}
-      <Row gutter={[16, 16]} className="mb-6">
-        <Col xs={24} sm={8}>
-          <Card style={cardStyle}>
-            <Statistic
-              title="重大事件总数"
-              value={total}
-              prefix={<Zap size={18} className="text-red-500 mr-2" />}
-              styles={{ content: { color: '#cf1322' } }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={8}>
-          <Card style={cardStyle}>
-            <Statistic
-              title="高优事件"
-              value={
-                counts.failed
-                  ? '-'
-                  : counts.truncated
-                    ? `${counts.highPriority}+`
-                    : counts.highPriority
-              }
-              prefix={<AlertTriangle size={18} className="text-orange-500 mr-2" />}
-              styles={{ content: { color: '#fa8c16' } }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={8}>
-          <Card style={cardStyle}>
-            <Statistic
-              title="正在处理"
-              value={
-                counts.failed
-                  ? '-'
-                  : counts.truncated
-                    ? `${counts.inProgress}+`
-                    : counts.inProgress
-              }
-              prefix={<Activity size={18} className="text-blue-500 mr-2" />}
-              styles={{ content: { color: '#1890ff' } }}
-            />
-          </Card>
-        </Col>
-      </Row>
+      {/* KPI 卡片：加载期不渲染，避免首帧先闪一遍全 0 的假指标 */}
+      {!listLoading && (
+        <Row gutter={[16, 16]} className="mb-6">
+          <Col xs={24} sm={8}>
+            <Card style={cardStyle}>
+              <Statistic
+                title="重大事件总数"
+                value={total}
+                prefix={<Zap size={18} className="text-red-500 mr-2" />}
+                styles={{ content: { color: '#cf1322' } }}
+              />
+            </Card>
+          </Col>
+          <Col xs={24} sm={8}>
+            <Card style={cardStyle}>
+              <Statistic
+                title="高优事件"
+                value={
+                  counts.failed
+                    ? '-'
+                    : counts.truncated
+                      ? `${counts.highPriority}+`
+                      : counts.highPriority
+                }
+                prefix={<AlertTriangle size={18} className="text-orange-500 mr-2" />}
+                styles={{ content: { color: '#fa8c16' } }}
+              />
+            </Card>
+          </Col>
+          <Col xs={24} sm={8}>
+            <Card style={cardStyle}>
+              <Statistic
+                title="正在处理"
+                value={
+                  counts.failed
+                    ? '-'
+                    : counts.truncated
+                      ? `${counts.inProgress}+`
+                      : counts.inProgress
+                }
+                prefix={<Activity size={18} className="text-blue-500 mr-2" />}
+                styles={{ content: { color: '#1890ff' } }}
+              />
+            </Card>
+          </Col>
+        </Row>
+      )}
 
       {/* 筛选 + 列表 */}
       <Card>
@@ -229,13 +233,15 @@ export default function NOCPage() {
             ]}
           />
           <CheckCircle size={16} className="text-gray-400" />
-          <Text type="secondary">共 {total} 条重大事件</Text>
+          <Text type="secondary">
+            {listLoading ? '正在加载重大事件...' : `共 ${total} 条重大事件`}
+          </Text>
         </div>
         <Table<Incident>
           columns={columns}
           dataSource={incidents}
           rowKey="id"
-          loading={loading}
+          loading={listLoading}
           pagination={{
             current: page,
             pageSize: PAGE_SIZE,

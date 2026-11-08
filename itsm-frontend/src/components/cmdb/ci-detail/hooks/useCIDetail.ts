@@ -73,7 +73,7 @@ export const useCIDetail = (): UseCIDetailReturn => {
   return {
     ci,
     types,
-    loading: ciQuery.isLoading || (!!id && typesQuery.isLoading),
+    loading: ciQuery.isPending || (!!id && typesQuery.isPending),
     impactAnalysis: (impactQuery.data as unknown as UseCIDetailReturn['impactAnalysis']) ?? null,
     impactLoading: impactQuery.isFetching,
     changeHistory: historyQuery.data ?? null,

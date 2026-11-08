@@ -44,6 +44,9 @@ jest.mock('@/components/common/UsageGuideCard', () => ({
 // 全局 10s testTimeout 下会假红（与 approvals 页同形态）。
 jest.setTimeout(30000);
 
+// WorkflowAPI.getWorkflows 已经把后端 DTO 映射成前端 WorkflowDefinition 视图：
+// createdAt/updatedAt 是 Date，version 是后端 semver 字符串。测试直接返回该视图，
+// 页面拿到的 shape 必须和真实调用一致。
 const listWorkflow = (id: string) => ({
   id,
   code: id,
@@ -51,9 +54,10 @@ const listWorkflow = (id: string) => ({
   description: `描述 ${id}`,
   category: 'ticket',
   status: 'active',
-  version: 1,
-  createdAt: '2024-01-01T10:00:00Z',
-  updatedAt: '2024-01-02T10:00:00Z',
+  version: '1.0.0',
+  createdByName: '系统',
+  createdAt: new Date('2024-01-01T10:00:00Z'),
+  updatedAt: new Date('2024-01-02T10:00:00Z'),
 });
 
 const deferred = <T,>() => {

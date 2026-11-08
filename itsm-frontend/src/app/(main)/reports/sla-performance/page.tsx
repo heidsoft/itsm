@@ -39,7 +39,9 @@ const DEFAULT_RANGE_DAYS = 30;
 
 const SLAPerformanceReport = () => {
   const { message } = App.useApp();
-  const [loading, setLoading] = useState(false);
+  // 数据加载初值必须为 true：mount 必定发起首次拉取，初值 false 会让首帧先渲染
+  // 「暂无SLA性能数据」结论，再被真实数据覆盖。
+  const [listLoading, setListLoading] = useState(true);
   const [slaData, setSLAData] = useState<SLAData[]>([]);
   const [overallRate, setOverallRate] = useState<number>(0);
   const [totalMet, setTotalMet] = useState<number>(0);
@@ -47,7 +49,7 @@ const SLAPerformanceReport = () => {
   const [hasData, setHasData] = useState<boolean>(false);
 
   const loadData = useCallback(async () => {
-    setLoading(true);
+    setListLoading(true);
     setHasData(false);
     try {
       // 后端按 RFC3339 解析日期，只传 YYYY-MM-DD 会 400 并静默回退到统计接口
@@ -119,7 +121,7 @@ const SLAPerformanceReport = () => {
       message.error('加载数据失败');
       setSLAData([]);
     } finally {
-      setLoading(false);
+      setListLoading(false);
     }
   }, [message]);
 
@@ -173,7 +175,7 @@ const SLAPerformanceReport = () => {
   };
 
   const renderContent = () => {
-    if (loading) {
+    if (listLoading) {
       return (
         <div className="space-y-4">
           <Row gutter={[16, 16]}>
@@ -343,7 +345,7 @@ const SLAPerformanceReport = () => {
             <Text className="text-gray-600">SLA合规率监控</Text>
           </Col>
           <Col>
-            <Button icon={<RotateCcw />} onClick={loadData} loading={loading}>
+            <Button icon={<RotateCcw />} onClick={loadData} loading={listLoading}>
               刷新数据
             </Button>
           </Col>

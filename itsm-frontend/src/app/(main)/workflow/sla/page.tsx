@@ -13,6 +13,7 @@ import {
   Col,
   Statistic,
   Alert,
+  Skeleton,
 } from 'antd';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
@@ -29,7 +30,9 @@ const { RangePicker } = DatePicker;
 export default function SLAMonitoringPage() {
   const { t } = useI18n();
   const currentTenant = useAuthStore(s => s.currentTenant);
-  const [loading, setLoading] = useState(false);
+  // 列表初值必须为 true：mount 必定发起首次拉取，初值 false 会让首帧先渲染
+  // 「违规总数 0」的假统计卡与空表格，再被真实数据覆盖。
+  const [listLoading, setListLoading] = useState(true);
   const [violations, setViolations] = useState<SLAViolation[]>([]);
   // 违规列表加载失败必须与「暂无违规」区分：2026-10-14 修复前失败被渲染成成功态空列表
   const [violationsError, setViolationsError] = useState(false);
@@ -38,7 +41,7 @@ export default function SLAMonitoringPage() {
   const [processMetrics, setProcessMetrics] = useState<ProcessMetrics | null>(null);
   const [dateRange, setDateRange] = useState<[Dayjs, Dayjs]>([dayjs().subtract(7, 'day'), dayjs()]);
 
-  // 使用当前登录租户；未登录时不加载数据
+  // 页面用 currentTenant 是否已水合作为「等登录后再取数」的门槛。
   const tenantId = currentTenant?.id;
 
   const fetchProcesses = async () => {
@@ -57,10 +60,10 @@ export default function SLAMonitoringPage() {
 
   const fetchViolations = async () => {
     if (!tenantId) {
-      setLoading(false);
+      setListLoading(false);
       return;
     }
-    setLoading(true);
+    setListLoading(true);
     try {
       const data = await BPMNDashboardApi.getSLAViolations(tenantId);
       setViolations(data);
@@ -70,13 +73,13 @@ export default function SLAMonitoringPage() {
       setViolations([]);
       setViolationsError(true);
     } finally {
-      setLoading(false);
+      setListLoading(false);
     }
   };
 
   const fetchProcessMetrics = async () => {
     if (!selectedProcess || !tenantId) return;
-    setLoading(true);
+    setListLoading(true);
     try {
       const data = await BPMNDashboardApi.getProcessMetrics(
         selectedProcess,
@@ -88,7 +91,7 @@ export default function SLAMonitoringPage() {
     } catch (error) {
       console.error('Failed to fetch process metrics:', error);
     } finally {
-      setLoading(false);
+      setListLoading(false);
     }
   };
 
@@ -295,13 +298,19 @@ export default function SLAMonitoringPage() {
             showIcon
           />
         ) : violations.length === 0 ? (
-          <Alert title={t('workflow.sla.noViolations') || '暂无SLA违规'} type='success' showIcon />
+          // 空态必须等列表加载完成后再判定：首帧 violations 仍是空数组，
+          // 直接渲染「暂无SLA违规」会把「还没拉到」误报成「系统没有违规」。
+          listLoading ? (
+            <Skeleton active paragraph={{ rows: 3 }} />
+          ) : (
+            <Alert title={t('workflow.sla.noViolations') || '暂无SLA违规'} type='success' showIcon />
+          )
         ) : (
           <Table
             dataSource={violations}
             columns={violationColumns}
             rowKey={record => record.id}
-            loading={loading}
+            loading={listLoading}
             pagination={false}
             size='small'
           />
@@ -309,6 +318,8 @@ export default function SLAMonitoringPage() {
       </Card>
 
       {/* SLA Status Summary */}
+      {/* 统计卡必须门控：还没拉到数据时渲染成「未处理 0」会被误读成「没有违规」 */}
+      {!listLoading && (
       <Row gutter={[16, 16]}>
         <Col xs={24} sm={8}>
           <Card>
@@ -341,6 +352,7 @@ export default function SLAMonitoringPage() {
           </Card>
         </Col>
       </Row>
+      )}
     </div>
   );
 }

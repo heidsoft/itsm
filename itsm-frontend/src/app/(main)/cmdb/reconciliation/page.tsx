@@ -41,7 +41,7 @@ export default function ReconciliationPage() {
   const reconQuery = useReconciliationQuery();
   const servicesQuery = useCloudServicesQuery();
 
-  const loading = reconQuery.isLoading || servicesQuery.isLoading;
+  const loading = reconQuery.isPending || servicesQuery.isPending;
   // 失败必须显式呈现：只消费 data 时，接口 500/403 会让「资源总数/孤儿CI」等
   // 指标一律显示 0，看起来像是「对账很干净」，实际是根本没取到数据。
   const reconError = reconQuery.isError;

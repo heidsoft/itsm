@@ -15,7 +15,8 @@ const CreateProblemPageContent = () => {
   const { t } = useI18n();
   const searchParams = useSearchParams();
   const [form] = Form.useForm();
-  const [loading, setLoading] = useState(false);
+  // 提交动作态（表单页首帧是空表单，无列表假空态问题）
+  const [actionLoading, setActionLoading] = useState(false);
   const { message } = App.useApp();
 
   useEffect(() => {
@@ -41,7 +42,7 @@ const CreateProblemPageContent = () => {
     rootCause: string;
     impact: string;
   }) => {
-    setLoading(true);
+    setActionLoading(true);
     try {
       await ProblemApi.createProblem({
         title: values.title,
@@ -58,7 +59,7 @@ const CreateProblemPageContent = () => {
       console.error('创建问题失败:', error);
       message.error(t('problems.createFailed'));
     } finally {
-      setLoading(false);
+      setActionLoading(false);
     }
   };
 
@@ -169,7 +170,7 @@ const CreateProblemPageContent = () => {
           <Form.Item className="mb-0">
             <div className="flex justify-end space-x-4">
               <Button onClick={() => router.back()}>取消</Button>
-              <Button type="primary" htmlType="submit" loading={loading}>
+              <Button type="primary" htmlType="submit" loading={actionLoading}>
                 创建问题
               </Button>
             </div>

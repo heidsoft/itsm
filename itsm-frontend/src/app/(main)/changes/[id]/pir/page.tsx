@@ -15,6 +15,7 @@ import {
   Descriptions,
   Modal,
   Alert,
+  Spin,
   Typography,
 } from 'antd';
 import { Undo, AlertTriangle, AlertCircle, CheckCircle, XCircle } from 'lucide-react';
@@ -40,7 +41,9 @@ export default function PIRPage() {
   const { message } = App.useApp();
   const changeId = Number(params.id);
 
-  const [loading, setLoading] = useState(false);
+  // 加载初值必须为 true：mount 必定发起首次拉取。existingPIR 决定表单标题
+  // （创建 vs 编辑），初值 false 会让首帧先显示「创建实施后审查」再翻转。
+  const [listLoading, setListLoading] = useState(true);
   const [pir, setPIR] = useState<PIRResponse | null>(null);
   const [existingPIR, setExistingPIR] = useState(false);
   const [form] = Form.useForm();
@@ -49,7 +52,7 @@ export default function PIRPage() {
   const [deleting, setDeleting] = useState(false);
 
   const fetchPIR = useCallback(async () => {
-    setLoading(true);
+    setListLoading(true);
     try {
       const pirData = await ChangeApi.getPIR(changeId);
       setPIR(pirData);
@@ -71,7 +74,7 @@ export default function PIRPage() {
     } catch (error) {
       console.error('Failed to fetch PIR:', error);
     } finally {
-      setLoading(false);
+      setListLoading(false);
     }
   }, [changeId, form]);
 
@@ -171,184 +174,194 @@ export default function PIRPage() {
       extra={<Button onClick={() => router.push(`/changes/${changeId}`)}>返回变更详情</Button>}
     >
       <div className="space-y-6">
-        {pir && (
-          <Card title="PIR概览" className="shadow-sm rounded-lg">
-            <Descriptions column={2} bordered>
-              <Descriptions.Item label="变更ID">{pir.changeId}</Descriptions.Item>
-              <Descriptions.Item label="审查人">{pir.reviewerName}</Descriptions.Item>
-              <Descriptions.Item label="审查日期">
-                {dayjs(pir.reviewDate).format('YYYY-MM-DD HH:mm')}
-              </Descriptions.Item>
-              <Descriptions.Item label="总体结果">
-                {getResultTag(pir.overallResult as PIROverallResult)}
-              </Descriptions.Item>
-              <Descriptions.Item label="目标达成">
-                {pir.objectivesAchieved ? (
-                  <Tag color="success">是</Tag>
-                ) : (
-                  <Tag color="error">否</Tag>
-                )}
-              </Descriptions.Item>
-              <Descriptions.Item label="实际持续时间">
-                {pir.actualDurationMinutes} 分钟
-              </Descriptions.Item>
-              {pir.rollbackPerformed && (
-                <Descriptions.Item label="回滚">
-                  <Tag icon={<Undo />} color="warning">
-                    已回滚
-                  </Tag>
-                </Descriptions.Item>
-              )}
-            </Descriptions>
+        {/* 加载期不渲染表单：existingPIR 决定标题是「创建」还是「编辑」，
+            表单字段也要等回填完成才有意义，首帧渲染必然产生错态。 */}
+        {listLoading ? (
+          <Card className="shadow-sm rounded-lg">
+            <Spin className="flex justify-center py-12" />
           </Card>
+        ) : (
+          <>
+            {pir && (
+              <Card title="PIR概览" className="shadow-sm rounded-lg">
+                <Descriptions column={2} bordered>
+                  <Descriptions.Item label="变更ID">{pir.changeId}</Descriptions.Item>
+                  <Descriptions.Item label="审查人">{pir.reviewerName}</Descriptions.Item>
+                  <Descriptions.Item label="审查日期">
+                    {dayjs(pir.reviewDate).format('YYYY-MM-DD HH:mm')}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="总体结果">
+                    {getResultTag(pir.overallResult as PIROverallResult)}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="目标达成">
+                    {pir.objectivesAchieved ? (
+                      <Tag color="success">是</Tag>
+                    ) : (
+                      <Tag color="error">否</Tag>
+                    )}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="实际持续时间">
+                    {pir.actualDurationMinutes} 分钟
+                  </Descriptions.Item>
+                  {pir.rollbackPerformed && (
+                    <Descriptions.Item label="回滚">
+                      <Tag icon={<Undo />} color="warning">
+                        已回滚
+                      </Tag>
+                    </Descriptions.Item>
+                  )}
+                </Descriptions>
+              </Card>
+            )}
+
+            <Card
+              title={existingPIR ? '编辑实施后审查' : '创建实施后审查'}
+              className="shadow-sm rounded-lg"
+            >
+              <Alert
+                type="info"
+                showIcon
+                className="mb-5"
+                title="按结果、问题、经验和改进建议四部分填写即可，不必每项都写很长。"
+              />
+              <Form
+                form={form}
+                layout="vertical"
+                onFinish={handleSubmit}
+                initialValues={{
+                  overallResult: 'successful',
+                  objectivesAchieved: false,
+                  rollbackPerformed: false,
+                }}
+              >
+                <Divider>基本评估</Divider>
+
+                <Form.Item
+                  name="overallResult"
+                  label="总体结果"
+                  rules={[{ required: true, message: '请选择总体结果' }]}
+                >
+                  <Select placeholder="选择实施结果">
+                    <Select.Option value="successful">
+                      <Space>
+                        <CheckCircle style={{ color: '#52c41a' }} />
+                        成功 - 变更完全按计划实施，达到预期目标
+                      </Space>
+                    </Select.Option>
+                    <Select.Option value="partially_successful">
+                      <Space>
+                        <AlertTriangle style={{ color: '#faad14' }} />
+                        部分成功 - 变更实施但存在一些问题
+                      </Space>
+                    </Select.Option>
+                    <Select.Option value="failed">
+                      <Space>
+                        <XCircle style={{ color: '#ff4d4f' }} />
+                        失败 - 变更未能达到预期目标或需要回滚
+                      </Space>
+                    </Select.Option>
+                  </Select>
+                </Form.Item>
+
+                <Form.Item name="objectivesAchieved" label="目标是否达成">
+                  <Select
+                    placeholder="选择是否达成"
+                    options={[
+                      { label: '是', value: true },
+                      { label: '否', value: false },
+                    ]}
+                  />
+                </Form.Item>
+
+                <Divider>详细评估</Divider>
+
+                <div className="mb-4">
+                  <Text type="secondary">建议每项控制在 1 到 3 句话，优先描述事实和影响。</Text>
+                </div>
+
+                <Form.Item name="successSummary" label="成功总结">
+                  <TextArea
+                    rows={4}
+                    placeholder="哪些做法有效，为什么有效？"
+                    showCount
+                    maxLength={300}
+                  />
+                </Form.Item>
+
+                <Form.Item name="issuesEncountered" label="遇到的问题">
+                  <TextArea rows={4} placeholder="实施中遇到了什么阻碍？" showCount maxLength={300} />
+                </Form.Item>
+
+                <Form.Item name="lessonsLearned" label="经验教训">
+                  <TextArea
+                    rows={4}
+                    placeholder="这次最值得复用或避免的经验是什么？"
+                    showCount
+                    maxLength={300}
+                  />
+                </Form.Item>
+
+                <Form.Item name="improvementRecommendations" label="改进建议">
+                  <TextArea rows={4} placeholder="下次如何做得更稳、更快？" showCount maxLength={300} />
+                </Form.Item>
+
+                <Divider>实施时间</Divider>
+
+                <Space size="large" wrap>
+                  <Form.Item name="actualStartTime" label="实际开始时间">
+                    <DatePicker showTime format="YYYY-MM-DD HH:mm" />
+                  </Form.Item>
+
+                  <Form.Item name="actualEndTime" label="实际结束时间">
+                    <DatePicker showTime format="YYYY-MM-DD HH:mm" />
+                  </Form.Item>
+                </Space>
+
+                <Divider>回滚信息</Divider>
+
+                <Form.Item name="rollbackPerformed" label="是否执行了回滚">
+                  <Select
+                    placeholder="选择是否回滚"
+                    options={[
+                      { label: '是', value: true },
+                      { label: '否', value: false },
+                    ]}
+                  />
+                </Form.Item>
+
+                <Form.Item
+                  name="rollbackReason"
+                  label="回滚原因"
+                  dependencies={['rollbackPerformed']}
+                  hidden={!form.getFieldValue('rollbackPerformed')}
+                >
+                  <TextArea
+                    rows={3}
+                    placeholder="如果执行了回滚，请说明触发原因和处置结果。"
+                    showCount
+                    maxLength={240}
+                  />
+                </Form.Item>
+
+                <Divider />
+
+                <Form.Item>
+                  <Space>
+                    <Button type="primary" htmlType="submit" loading={submitting}>
+                      {existingPIR ? '更新 PIR' : '创建 PIR'}
+                    </Button>
+                    <Button onClick={() => router.push(`/changes/${changeId}`)}>取消</Button>
+                    {existingPIR && (
+                      <Button danger onClick={() => setDeleteModalVisible(true)}>
+                        删除 PIR
+                      </Button>
+                    )}
+                  </Space>
+                </Form.Item>
+              </Form>
+            </Card>
+          </>
         )}
-
-        <Card
-          title={existingPIR ? '编辑实施后审查' : '创建实施后审查'}
-          className="shadow-sm rounded-lg"
-        >
-          <Alert
-            type="info"
-            showIcon
-            className="mb-5"
-            title="按结果、问题、经验和改进建议四部分填写即可，不必每项都写很长。"
-          />
-          <Form
-            form={form}
-            layout="vertical"
-            onFinish={handleSubmit}
-            initialValues={{
-              overallResult: 'successful',
-              objectivesAchieved: false,
-              rollbackPerformed: false,
-            }}
-          >
-            <Divider>基本评估</Divider>
-
-            <Form.Item
-              name="overallResult"
-              label="总体结果"
-              rules={[{ required: true, message: '请选择总体结果' }]}
-            >
-              <Select placeholder="选择实施结果">
-                <Select.Option value="successful">
-                  <Space>
-                    <CheckCircle style={{ color: '#52c41a' }} />
-                    成功 - 变更完全按计划实施，达到预期目标
-                  </Space>
-                </Select.Option>
-                <Select.Option value="partially_successful">
-                  <Space>
-                    <AlertTriangle style={{ color: '#faad14' }} />
-                    部分成功 - 变更实施但存在一些问题
-                  </Space>
-                </Select.Option>
-                <Select.Option value="failed">
-                  <Space>
-                    <XCircle style={{ color: '#ff4d4f' }} />
-                    失败 - 变更未能达到预期目标或需要回滚
-                  </Space>
-                </Select.Option>
-              </Select>
-            </Form.Item>
-
-            <Form.Item name="objectivesAchieved" label="目标是否达成">
-              <Select
-                placeholder="选择是否达成"
-                options={[
-                  { label: '是', value: true },
-                  { label: '否', value: false },
-                ]}
-              />
-            </Form.Item>
-
-            <Divider>详细评估</Divider>
-
-            <div className="mb-4">
-              <Text type="secondary">建议每项控制在 1 到 3 句话，优先描述事实和影响。</Text>
-            </div>
-
-            <Form.Item name="successSummary" label="成功总结">
-              <TextArea
-                rows={4}
-                placeholder="哪些做法有效，为什么有效？"
-                showCount
-                maxLength={300}
-              />
-            </Form.Item>
-
-            <Form.Item name="issuesEncountered" label="遇到的问题">
-              <TextArea rows={4} placeholder="实施中遇到了什么阻碍？" showCount maxLength={300} />
-            </Form.Item>
-
-            <Form.Item name="lessonsLearned" label="经验教训">
-              <TextArea
-                rows={4}
-                placeholder="这次最值得复用或避免的经验是什么？"
-                showCount
-                maxLength={300}
-              />
-            </Form.Item>
-
-            <Form.Item name="improvementRecommendations" label="改进建议">
-              <TextArea rows={4} placeholder="下次如何做得更稳、更快？" showCount maxLength={300} />
-            </Form.Item>
-
-            <Divider>实施时间</Divider>
-
-            <Space size="large" wrap>
-              <Form.Item name="actualStartTime" label="实际开始时间">
-                <DatePicker showTime format="YYYY-MM-DD HH:mm" />
-              </Form.Item>
-
-              <Form.Item name="actualEndTime" label="实际结束时间">
-                <DatePicker showTime format="YYYY-MM-DD HH:mm" />
-              </Form.Item>
-            </Space>
-
-            <Divider>回滚信息</Divider>
-
-            <Form.Item name="rollbackPerformed" label="是否执行了回滚">
-              <Select
-                placeholder="选择是否回滚"
-                options={[
-                  { label: '是', value: true },
-                  { label: '否', value: false },
-                ]}
-              />
-            </Form.Item>
-
-            <Form.Item
-              name="rollbackReason"
-              label="回滚原因"
-              dependencies={['rollbackPerformed']}
-              hidden={!form.getFieldValue('rollbackPerformed')}
-            >
-              <TextArea
-                rows={3}
-                placeholder="如果执行了回滚，请说明触发原因和处置结果。"
-                showCount
-                maxLength={240}
-              />
-            </Form.Item>
-
-            <Divider />
-
-            <Form.Item>
-              <Space>
-                <Button type="primary" htmlType="submit" loading={submitting}>
-                  {existingPIR ? '更新 PIR' : '创建 PIR'}
-                </Button>
-                <Button onClick={() => router.push(`/changes/${changeId}`)}>取消</Button>
-                {existingPIR && (
-                  <Button danger onClick={() => setDeleteModalVisible(true)}>
-                    删除 PIR
-                  </Button>
-                )}
-              </Space>
-            </Form.Item>
-          </Form>
-        </Card>
       </div>
 
       <Modal

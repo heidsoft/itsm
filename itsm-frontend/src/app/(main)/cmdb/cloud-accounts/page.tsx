@@ -50,7 +50,10 @@ export default function CloudAccountPage() {
   // React Query：云账号列表（替代手写 loadData + isMountedRef）
   const accountsQuery = useCloudAccountsQuery();
   const data = accountsQuery.data?.items ?? [];
-  const loading = accountsQuery.isLoading;
+  // 用 isPending 而非 isLoading：SSR/首帧时 query 尚未发起（isFetching=false），
+  // isLoading 为 false 会把「暂无数据 / 共 0 个账号」的空态在数据到达前就渲染出来（D55）。
+  // isPending 在服务端渲染与首次拉取期间均为 true，首帧即呈现加载态。
+  const loading = accountsQuery.isPending;
   // 失败必须显式呈现：只消费 data/isLoading 时，接口 500/403 会退化成
   // 「共 0 个账号」的空表，用户无法区分「真的没数据」和「加载失败」。
   const loadError = accountsQuery.isError;
@@ -310,7 +313,9 @@ export default function CloudAccountPage() {
             新增云账号
           </Button>
         </Space>
-        {loadError ? (
+        {loading ? (
+          <span className='ml-auto text-sm text-gray-400'>加载中…</span>
+        ) : loadError ? (
           <span className='ml-auto text-sm text-red-500'>数据加载失败</span>
         ) : (
           <span className='ml-auto text-sm text-gray-500'>共 {filteredData.length} 个账号</span>
@@ -386,8 +391,8 @@ export default function CloudAccountPage() {
           </Form.Item>
           <Form.Item
             name='credentialRef'
-            label='更新凭据引用'
-            extra='留空将保留现有凭据；服务端不会返回已保存的凭据内容。'
+            label='凭据引用'
+            extra='填写 secret://<tenant>/<name> 引用；留空表示暂不配置凭据。'
           >
             <Input.Password placeholder='例如 secret://tenant-42/aliyun-production' />
           </Form.Item>
@@ -429,7 +434,11 @@ export default function CloudAccountPage() {
           >
             <Input placeholder='例如 生产账号' />
           </Form.Item>
-          <Form.Item name='credentialRef' label='凭据引用'>
+          <Form.Item
+            name='credentialRef'
+            label='更新凭据引用'
+            extra='留空将保留现有凭据；服务端不会返回已保存的凭据内容。'
+          >
             <Input placeholder='例如 aliyun-prod-credential' />
           </Form.Item>
           <Form.Item name='isActive' label='状态' valuePropName='checked'>

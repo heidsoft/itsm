@@ -14,17 +14,19 @@ const { Title, Text } = Typography;
 export default function SourcesPage() {
   const { message } = App.useApp();
   const [items, setItems] = useState<SourceOrganization[]>([]);
-  const [loading, setLoading] = useState(false);
+  // 列表初值必须为 true：mount 必定发起首次拉取，初值 false 会让首帧先渲染
+  // 空表格，再被真实数据覆盖。
+  const [listLoading, setListLoading] = useState(true);
   const [modal, setModal] = useState(false);
   const [editing, setEditing] = useState<SourceOrganization | null>(null);
   const [form] = Form.useForm();
 
   const load = async () => {
-    setLoading(true);
+    setListLoading(true);
     try {
       const res = await emailIntakeService.sourceOrganizations();
       setItems(res.items);
-    } catch { message.error('加载失败'); } finally { setLoading(false); }
+    } catch { message.error('加载失败'); } finally { setListLoading(false); }
   };
   useEffect(() => { load(); }, []);
 
@@ -93,7 +95,7 @@ export default function SourcesPage() {
         <Text type="secondary" className="block mb-3">
           来源组织用于通过发件人邮箱域名或地址自动识别客户身份。例如添加域名 example.com，所有来自 @example.com 的邮件都会自动关联。
         </Text>
-        <Table rowKey="id" loading={loading} columns={columns} dataSource={items} pagination={false} />
+        <Table rowKey="id" loading={listLoading} columns={columns} dataSource={items} pagination={false} />
       </Card>
 
       <Modal title={editing ? '编辑来源组织' : '新增来源组织'} open={modal} onOk={save} onCancel={() => setModal(false)}>

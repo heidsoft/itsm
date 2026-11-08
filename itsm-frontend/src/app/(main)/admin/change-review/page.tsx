@@ -46,7 +46,9 @@ const ChangeReviewManagementPage: React.FC = () => {
   const { message } = App.useApp();
   const [board, setBoard] = useState<ReviewBoardType>('REVIEW');
   const [members, setMembers] = useState<ReviewMember[]>([]);
-  const [loading, setLoading] = useState(false);
+  // 列表初值必须为 true：mount 必定发起首次拉取，初值 false 会让首帧先渲染
+  // 空表格，再被真实数据覆盖。
+  const [listLoading, setListLoading] = useState(true);
 
   // 新增弹窗
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -56,14 +58,14 @@ const ChangeReviewManagementPage: React.FC = () => {
   const [form] = Form.useForm<AddReviewMemberRequest & { role?: ReviewMemberRole }>();
 
   const loadMembers = useCallback(async () => {
-    setLoading(true);
+    setListLoading(true);
     try {
       const data = await ChangeReviewApi.getMembers(board);
       setMembers(data);
     } catch (err) {
       message.error('加载评审组成员失败');
     } finally {
-      setLoading(false);
+      setListLoading(false);
     }
   }, [board, message]);
 
@@ -215,7 +217,7 @@ const ChangeReviewManagementPage: React.FC = () => {
         />
         <Table
           rowKey="id"
-          loading={loading}
+          loading={listLoading}
           columns={columns}
           dataSource={members}
           pagination={false}

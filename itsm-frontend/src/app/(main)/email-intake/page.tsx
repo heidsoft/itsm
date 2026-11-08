@@ -75,7 +75,8 @@ const formatTime = (value?: string): string => formatDateTime(value) || '-';
 
 export default function EmailIntakePage() {
   const { message, modal } = App.useApp();
-  const [loading, setLoading] = useState(false);
+  // 列表初值必须为 true：mount 必定发起首次拉取，初值 false 会让首帧先渲染空表格。
+  const [listLoading, setListLoading] = useState(true);
   const [status, setStatus] = useState<string>();
   const [conversations, setConversations] = useState<EmailConversation[]>([]);
   const [page, setPage] = useState(1);
@@ -104,7 +105,7 @@ export default function EmailIntakePage() {
 
   const loadConversations = useCallback(async () => {
     const requestId = ++listRequest.current;
-    setLoading(true);
+    setListLoading(true);
     try {
       const response = await emailIntakeService.conversations({ page, pageSize, status });
       if (requestId !== listRequest.current) return;
@@ -115,7 +116,7 @@ export default function EmailIntakePage() {
         message.error(`加载邮件处理队列失败：${(error as Error).message}`);
       }
     } finally {
-      if (requestId === listRequest.current) setLoading(false);
+      if (requestId === listRequest.current) setListLoading(false);
     }
   }, [message, page, pageSize, status]);
 
@@ -371,7 +372,7 @@ export default function EmailIntakePage() {
       <Table
         rowKey='id'
         size='middle'
-        loading={loading}
+        loading={listLoading}
         columns={columns}
         dataSource={conversations}
         scroll={{ x: 1100 }}

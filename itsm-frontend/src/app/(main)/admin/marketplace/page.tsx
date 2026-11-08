@@ -104,7 +104,9 @@ export default function MarketplaceCatalogAdminPage() {
   const { message, modal } = App.useApp();
   const [items, setItems] = useState<CatalogItem[]>([]);
   const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(false);
+  // 列表初值必须为 true：mount 必定发起首次拉取，初值 false 会让首帧先渲染
+  // 「商品总数 0」的假统计卡与空表格，再被真实数据覆盖。表单提交已有独立的 submitting。
+  const [listLoading, setListLoading] = useState(true);
   const [status, setStatus] = useState<StatusFilter>('all');
   const [keyword, setKeyword] = useState('');
   const [page, setPage] = useState(1);
@@ -121,7 +123,7 @@ export default function MarketplaceCatalogAdminPage() {
   const [versionForm] = Form.useForm<{ version: string; changelog?: string }>();
 
   const load = useCallback(async () => {
-    setLoading(true);
+    setListLoading(true);
     try {
       const data = await listCatalogItems({
         status: status === 'all' ? undefined : status,
@@ -136,7 +138,7 @@ export default function MarketplaceCatalogAdminPage() {
       setItems([]);
       setTotal(0);
     } finally {
-      setLoading(false);
+      setListLoading(false);
     }
   }, [keyword, message, page, status]);
 
@@ -427,7 +429,7 @@ export default function MarketplaceCatalogAdminPage() {
       header={{ title: '商品目录' }}
       extra={
         <Space>
-          <Button icon={<RefreshCw size={16} />} onClick={() => void load()} loading={loading}>
+          <Button icon={<RefreshCw size={16} />} onClick={() => void load()} loading={listLoading}>
             刷新
           </Button>
           <Button type='primary' icon={<Plus size={16} />} onClick={openCreate}>
@@ -437,28 +439,31 @@ export default function MarketplaceCatalogAdminPage() {
       }
     >
       <Space orientation='vertical' size={16} style={{ width: '100%' }}>
-        <Row gutter={16}>
-          <Col xs={12} md={6}>
-            <Card size='small'>
-              <Statistic title='商品总数' value={total} prefix={<Boxes size={16} />} />
-            </Card>
-          </Col>
-          <Col xs={12} md={6}>
-            <Card size='small'>
-              <Statistic title='已上架' value={summary.published} styles={{ content: { color: '#3f8600' } }} />
-            </Card>
-          </Col>
-          <Col xs={12} md={6}>
-            <Card size='small'>
-              <Statistic title='草稿' value={summary.draft} styles={{ content: { color: '#d48806' } }} />
-            </Card>
-          </Col>
-          <Col xs={12} md={6}>
-            <Card size='small'>
-              <Statistic title='本页安装数' value={summary.installed} />
-            </Card>
-          </Col>
-        </Row>
+        {/* 统计卡必须门控：还没拉到数据时渲染成「商品总数 0」会被误读成「目录为空」 */}
+        {!listLoading && (
+          <Row gutter={16}>
+            <Col xs={12} md={6}>
+              <Card size='small'>
+                <Statistic title='商品总数' value={total} prefix={<Boxes size={16} />} />
+              </Card>
+            </Col>
+            <Col xs={12} md={6}>
+              <Card size='small'>
+                <Statistic title='已上架' value={summary.published} styles={{ content: { color: '#3f8600' } }} />
+              </Card>
+            </Col>
+            <Col xs={12} md={6}>
+              <Card size='small'>
+                <Statistic title='草稿' value={summary.draft} styles={{ content: { color: '#d48806' } }} />
+              </Card>
+            </Col>
+            <Col xs={12} md={6}>
+              <Card size='small'>
+                <Statistic title='本页安装数' value={summary.installed} />
+              </Card>
+            </Col>
+          </Row>
+        )}
 
         <Alert
           type='info'
@@ -490,7 +495,7 @@ export default function MarketplaceCatalogAdminPage() {
         <Table<CatalogItem>
           rowKey='id'
           size='small'
-          loading={loading}
+          loading={listLoading}
           columns={columns}
           dataSource={items}
           pagination={{

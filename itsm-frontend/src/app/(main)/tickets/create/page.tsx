@@ -128,7 +128,8 @@ export default function CreateTicketPage() {
   // 与 CMDB 新建/编辑页同一套守卫：站内链接、浏览器后退、关闭标签页三通道拦截。
   // 工单表单字段多（类型切换还会重置一部分），误关一次的成本很高。
   const { markDirty, clearDirty, handleCancel, confirmLeave } = useUnsavedChangesGuard(router);
-  const [loading, setLoading] = useState(false);
+  // 提交动作态（表单页首帧是空表单，无列表假空态问题）
+  const [actionLoading, setActionLoading] = useState(false);
   const [ticketTypes, setTicketTypes] = useState<RuntimeTicketType[]>([]);
   const [ticketTypesLoading, setTicketTypesLoading] = useState(true);
   const [ticketTypesError, setTicketTypesError] = useState<string | null>(null);
@@ -277,7 +278,7 @@ export default function CreateTicketPage() {
   const handleSubmit = async () => {
     try {
       const values = await form.validateFields();
-      setLoading(true);
+      setActionLoading(true);
 
       // 构建描述：基础描述 + 预设字段
       let description = values.description || '';
@@ -304,7 +305,7 @@ export default function CreateTicketPage() {
       // 检查描述长度
       if (description.length < 10) {
         message.warning('描述至少需要10个字符，请详细描述问题');
-        setLoading(false);
+        setActionLoading(false);
         return;
       }
 
@@ -367,7 +368,7 @@ export default function CreateTicketPage() {
         errorObj?.message || errorObj?.error?.message || '创建工单失败，请检查输入或重新登录';
       message.error(errorMsg);
     } finally {
-      setLoading(false);
+      setActionLoading(false);
     }
   };
 
@@ -939,9 +940,9 @@ export default function CreateTicketPage() {
                 <Button
                   type='primary'
                   onClick={handleSubmit}
-                  loading={loading}
+                  loading={actionLoading}
                   size='large'
-                  aria-busy={loading}
+                  aria-busy={actionLoading}
                   data-testid='ticket-submit-button'
                 >
                   创建工单

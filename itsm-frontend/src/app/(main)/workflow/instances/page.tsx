@@ -56,7 +56,8 @@ function WorkflowInstancesContent() {
   // 后端 GET /bpmn/process-instances 支持 businessKey 精确过滤，用它收敛到该单据的实例。
   const urlBusinessKey = searchParams.get('businessKey') || '';
   const urlInstanceId = searchParams.get('instanceId') || '';
-  const [loading, setLoading] = useState(false);
+  // 列表初值必须为 true：mount 必定发起首次拉取，初值 false 会让首帧先渲染空列表。
+  const [listLoading, setListLoading] = useState(true);
   const [instances, setInstances] = useState<InstanceRow[]>([]);
   const [stats, setStats] = useState({
     total: 0,
@@ -90,7 +91,7 @@ function WorkflowInstancesContent() {
 
   const loadData = async () => {
     try {
-      setLoading(true);
+      setListLoading(true);
       const [instanceResponse, statsResponse] = await Promise.all([
         WorkflowApi.getInstances({
           workflowId: keyword || undefined,
@@ -122,7 +123,7 @@ function WorkflowInstancesContent() {
       message.error('加载工作流实例失败');
       setInstances([]);
     } finally {
-      setLoading(false);
+      setListLoading(false);
     }
   };
 
@@ -264,8 +265,10 @@ function WorkflowInstancesContent() {
                           await WorkflowApi.suspendWorkflow(record.id);
                           message.success('实例已暂停');
                           loadData();
-                        } catch {
-                          message.error('暂停实例失败');
+                        } catch (error) {
+                          // 后端会给出可行动的原因（如「当前状态为 completed，不能暂停」），
+                          // 统一文案会把它吞掉，操作员只能反复点同一个按钮。
+                          message.error(`暂停实例失败：${error instanceof Error ? error.message : '请稍后重试'}`);
                         }
                       },
                     });
@@ -290,8 +293,8 @@ function WorkflowInstancesContent() {
                           await WorkflowApi.terminateWorkflow(record.id, '前端终止');
                           message.success('实例已终止');
                           loadData();
-                        } catch {
-                          message.error('终止实例失败');
+                        } catch (error) {
+                          message.error(`终止实例失败：${error instanceof Error ? error.message : '请稍后重试'}`);
                         }
                       },
                     });
@@ -317,8 +320,8 @@ function WorkflowInstancesContent() {
                         await WorkflowApi.resumeWorkflow(record.id);
                         message.success('实例已恢复');
                         loadData();
-                      } catch {
-                        message.error('恢复实例失败');
+                      } catch (error) {
+                        message.error(`恢复实例失败：${error instanceof Error ? error.message : '请稍后重试'}`);
                       }
                     },
                   });
@@ -343,7 +346,7 @@ function WorkflowInstancesContent() {
         notice={
           <ManagementNotice
             message="本版本"
-            description="支持实例列表、状态操作（暂停/恢复/终止）和详情查看。任务列表与会签视图将在后续版本补充。"
+            description="支持实例列表、状态操作（暂停/恢复/终止）和详情查看，详情里可以看节点任务与执行历史。会签视图将在后续版本补充。"
           />
         }
       />
@@ -378,7 +381,6 @@ function WorkflowInstancesContent() {
                 { label: '已完成', value: 'completed' },
                 { label: '已暂停', value: 'suspended' },
                 { label: '已终止', value: 'terminated' },
-                { label: '失败', value: 'failed' },
               ]}
             />
           </>
@@ -397,7 +399,7 @@ function WorkflowInstancesContent() {
 
       <Card className="rounded-xl shadow-sm">
         <LoadingEmptyError
-          state={loading ? 'loading' : instances.length === 0 ? 'empty' : 'success'}
+          state={listLoading ? 'loading' : instances.length === 0 ? 'empty' : 'success'}
           loadingText="正在加载工作流实例..."
           empty={{
             title: '暂无工作流实例',

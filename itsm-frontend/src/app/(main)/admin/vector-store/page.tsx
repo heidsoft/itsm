@@ -24,20 +24,22 @@ const CAPABILITY_META: Record<string, { color: string; label: string }> = {
 
 export default function VectorStoreAdminPage() {
   const { message } = App.useApp();
-  const [loading, setLoading] = useState(false);
+  // 状态加载初值必须为 true：mount 必定发起首次拉取，初值 false 会让首帧直接渲染
+  // 「无法获取向量存储状态」结论，再被真实状态覆盖。
+  const [listLoading, setListLoading] = useState(true);
   const [status, setStatus] = useState<VectorStoreStatus | null>(null);
   const [testResult, setTestResult] = useState<VectorStoreTestResult | null>(null);
   const [testing, setTesting] = useState(false);
 
   const loadStatus = useCallback(async () => {
-    setLoading(true);
+    setListLoading(true);
     try {
       const data = await VectorStoreApi.getStatus();
       setStatus(data);
     } catch {
       message.error('加载向量存储状态失败');
     } finally {
-      setLoading(false);
+      setListLoading(false);
     }
   }, [message]);
 
@@ -79,7 +81,7 @@ export default function VectorStoreAdminPage() {
       }}
       extra={
         <Space>
-          <Button icon={<RefreshCw size={14} />} onClick={loadStatus} loading={loading}>
+          <Button icon={<RefreshCw size={14} />} onClick={loadStatus} loading={listLoading}>
             刷新
           </Button>
           <Button
@@ -106,8 +108,8 @@ export default function VectorStoreAdminPage() {
           '就绪后到知识库重新索引文章，AI 问答即可使用语义检索；能力状态为“降级”时检索会回退到关键词结果。',
         ]}
       />
-      <Spin spinning={loading}>
-        {!status && !loading ? (
+      <Spin spinning={listLoading}>
+        {!status && !listLoading ? (
           <Empty description="无法获取向量存储状态" />
         ) : status && (
           <>

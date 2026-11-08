@@ -75,7 +75,8 @@ const EditChangePage: React.FC = () => {
   const { t } = useI18n();
   const { message } = App.useApp();
   const [form] = Form.useForm<ChangeFormValues>();
-  const [loading, setLoading] = useState(false);
+  // 提交动作态（数据加载由 fetching 负责）
+  const [actionLoading, setActionLoading] = useState(false);
   const [fetching, setFetching] = useState(false);
   const [changeData, setChangeData] = useState<Change | null>(null);
   const [isReadonly, setIsReadonly] = useState(false);
@@ -136,7 +137,7 @@ const EditChangePage: React.FC = () => {
   const handleSubmit = async (values: ChangeFormValues) => {
     if (!id) return;
 
-    setLoading(true);
+    setActionLoading(true);
     try {
       const [start, end] = values.plannedRange ?? [];
       const affectedCis =
@@ -168,7 +169,7 @@ const EditChangePage: React.FC = () => {
       console.error('更新变更失败:', err);
       message.error(t('changes.createFailed') || '变更更新失败');
     } finally {
-      setLoading(false);
+      setActionLoading(false);
     }
   };
 
@@ -219,7 +220,7 @@ const EditChangePage: React.FC = () => {
           form={form}
           layout="vertical"
           onFinish={handleSubmit}
-          disabled={loading || isReadonly}
+          disabled={actionLoading || isReadonly}
           scrollToFirstError
         >
           <Form.Item
@@ -366,11 +367,11 @@ const EditChangePage: React.FC = () => {
 
           <Form.Item className="!mb-0 mt-4">
             <Space className="w-full justify-end">
-              <Button onClick={() => router.back()} disabled={loading}>
+              <Button onClick={() => router.back()} disabled={actionLoading}>
                 取消
               </Button>
               {!isReadonly && (
-                <Button type="primary" htmlType="submit" loading={loading} icon={<Save size={16} />}>
+                <Button type="primary" htmlType="submit" loading={actionLoading} icon={<Save size={16} />}>
                   保存修改
                 </Button>
               )}

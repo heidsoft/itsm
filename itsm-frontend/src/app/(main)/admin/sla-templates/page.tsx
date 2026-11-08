@@ -367,38 +367,41 @@ export default function SLATemplatesPage() {
         ]}
       />
 
-      <Row gutter={[16, 16]}>
-        <Col xs={24} sm={6}>
-          <Card>
-            <Statistic title="模板总数" value={stats.total} suffix="个" />
-          </Card>
-        </Col>
-        <Col xs={24} sm={6}>
-          <Card>
-            <Statistic
-              title="推荐模板"
-              value={stats.recommended}
-              suffix="个"
-              styles={{ content: { color: '#52c41a' } }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={6}>
-          <Card>
-            <Statistic
-              title="本租户已安装"
-              value={stats.installed}
-              suffix="个"
-              styles={{ content: { color: '#1677ff' } }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={6}>
-          <Card>
-            <Statistic title="覆盖行业" value={stats.industries} suffix="个" />
-          </Card>
-        </Col>
-      </Row>
+      {/* 统计卡必须门控：还没拉到数据时渲染成「模板总数 0」会被误读成「没有模板」 */}
+      {!loading && (
+        <Row gutter={[16, 16]}>
+          <Col xs={24} sm={6}>
+            <Card>
+              <Statistic title="模板总数" value={stats.total} suffix="个" />
+            </Card>
+          </Col>
+          <Col xs={24} sm={6}>
+            <Card>
+              <Statistic
+                title="推荐模板"
+                value={stats.recommended}
+                suffix="个"
+                styles={{ content: { color: '#52c41a' } }}
+              />
+            </Card>
+          </Col>
+          <Col xs={24} sm={6}>
+            <Card>
+              <Statistic
+                title="本租户已安装"
+                value={stats.installed}
+                suffix="个"
+                styles={{ content: { color: '#1677ff' } }}
+              />
+            </Card>
+          </Col>
+          <Col xs={24} sm={6}>
+            <Card>
+              <Statistic title="覆盖行业" value={stats.industries} suffix="个" />
+            </Card>
+          </Col>
+        </Row>
+      )}
 
       {loadError && (
         <Alert

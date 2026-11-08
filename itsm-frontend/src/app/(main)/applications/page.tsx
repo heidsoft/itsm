@@ -24,7 +24,8 @@ export default function ApplicationsPage() {
   const [modalType, setModalType] = useState<'application' | 'microservice'>('application');
   const [editingRecord, setEditingRecord] = useState<ApplicationRecord | MicroserviceRecord | null>(null);
   const [form] = Form.useForm();
-  const [loading, setLoading] = useState(false);
+  // 保存动作态（列表加载由 fetching 负责）
+  const [actionLoading, setActionLoading] = useState(false);
   const [applications, setApplications] = useState<Application[]>([]);
   const [microservices, setMicroservices] = useState<Microservice[]>([]);
   const [fetching, setFetching] = useState(false);
@@ -215,7 +216,7 @@ const handleDelete = (record: RecordData) => {
   const handleOk = async () => {
     try {
       const values = await form.validateFields();
-      setLoading(true);
+      setActionLoading(true);
 
       // 根据是否存在 editingRecord 决定走新增还是更新；避免“修改却走 create”导致数据污染
       if (modalType === 'application') {
@@ -241,7 +242,7 @@ const handleDelete = (record: RecordData) => {
       console.error('Operation Failed:', error);
       message.error(t('common.operationFailed'));
     } finally {
-      setLoading(false);
+      setActionLoading(false);
     }
   };
 
@@ -286,7 +287,7 @@ const handleDelete = (record: RecordData) => {
           setIsModalVisible(false);
           setEditingRecord(null);
         }}
-        confirmLoading={loading}
+        confirmLoading={actionLoading}
         width={600}
       >
         <Form form={form} layout="vertical">

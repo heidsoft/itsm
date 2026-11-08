@@ -631,7 +631,7 @@ function CloudSignalsPageContent() {
             </Button>
           }
         />
-      ) : syncStates.length === 0 && !syncQuery.isLoading ? (
+      ) : syncStates.length === 0 && !syncQuery.isPending ? (
         <Alert
           type="info"
           showIcon
@@ -686,7 +686,7 @@ function CloudSignalsPageContent() {
             size="small"
             columns={syncColumns}
             dataSource={syncStates}
-            loading={syncQuery.isLoading}
+            loading={syncQuery.isPending}
             pagination={false}
             scroll={{ x: 900 }}
           />
@@ -774,7 +774,7 @@ function CloudSignalsPageContent() {
                   rowKey="id"
                   columns={alertColumns}
                   dataSource={alerts}
-                  loading={alertsQuery.isLoading}
+                  loading={alertsQuery.isPending}
                   scroll={{ x: 1200 }}
                   pagination={{
                     current: alertPage.current,
@@ -905,7 +905,7 @@ function CloudSignalsPageContent() {
                   rowKey="id"
                   columns={findingColumns}
                   dataSource={findings}
-                  loading={findingsQuery.isLoading}
+                  loading={findingsQuery.isPending}
                   scroll={{ x: 1500 }}
                   pagination={{
                     current: findingPage.current,

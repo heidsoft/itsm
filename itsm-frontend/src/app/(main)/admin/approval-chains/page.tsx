@@ -138,7 +138,10 @@ export default function ApprovalChainsPage() {
     totalSteps: 0,
     avgStepsPerChain: 0,
   });
-  const [loading, setLoading] = useState(false);
+  // 列表初值必须为 true：mount 必定发起首次拉取，初值 false 会让首帧先渲染空表格。
+  const [listLoading, setListLoading] = useState(true);
+  // 提交动作态，与列表加载态分开。
+  const [actionLoading, setActionLoading] = useState(false);
   const [statsLoading, setStatsLoading] = useState(false);
 
   // 筛选和分页
@@ -160,7 +163,7 @@ export default function ApprovalChainsPage() {
   // 拿到的就是分页对象本身，直接读 items/total，不能再套一层 response.data。
   const loadChains = useCallback(async () => {
     try {
-      setLoading(true);
+      setListLoading(true);
 
       const query = new URLSearchParams({
         page: String(pagination.current),
@@ -186,7 +189,7 @@ export default function ApprovalChainsPage() {
     } catch (error) {
       handleError(error, '加载审批链列表失败');
     } finally {
-      setLoading(false);
+      setListLoading(false);
     }
   }, [pagination.current, pagination.pageSize, filters]);
 
@@ -448,6 +451,7 @@ export default function ApprovalChainsPage() {
   // 处理模态框提交
   const handleModalSubmit = useCallback(
     async (data: unknown) => {
+      setActionLoading(true);
       try {
         const payload = toBackendPayload(data as ApprovalChainSubmitData, editingChain || undefined);
         if (editingChain) {
@@ -464,6 +468,8 @@ export default function ApprovalChainsPage() {
         loadStats();
       } catch (error) {
         handleError(error, editingChain ? '更新审批链失败' : '创建审批链失败');
+      } finally {
+        setActionLoading(false);
       }
     },
     [editingChain, loadChains, loadStats]
@@ -500,13 +506,13 @@ export default function ApprovalChainsPage() {
         onFilterChange={handleFilterChange}
         onRefresh={handleRefresh}
         onCreate={handleCreateChain}
-        loading={loading}
+        loading={listLoading}
       />
 
       {/* 表格 */}
       <ApprovalChainTable
         dataSource={chains}
-        loading={loading}
+        loading={listLoading}
         pagination={pagination}
         selectedRowKeys={selectedRowKeys}
         onPaginationChange={handlePaginationChange}
@@ -525,7 +531,7 @@ export default function ApprovalChainsPage() {
         editingChain={editingChain}
         onCancel={handleModalCancel}
         onSubmit={handleModalSubmit}
-        loading={loading}
+        loading={actionLoading}
       />
     </div>
   );

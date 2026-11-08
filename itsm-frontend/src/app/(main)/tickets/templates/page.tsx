@@ -136,7 +136,9 @@ const TicketTemplatesPage = () => {
   const canUpdate = hasPermission('ticket_template', 'update');
   const canDelete = hasPermission('ticket_template', 'delete');
   const [templates, setTemplates] = useState<TicketTemplate[]>([]);
-  const [loading, setLoading] = useState(false);
+  // 列表初值必须为 true：mount 必定发起首次拉取，初值 false 会让首帧先渲染
+  // 空列表与全 0 的统计卡，再被真实数据覆盖。
+  const [listLoading, setListLoading] = useState(true);
   // 后端 403/2003 与真正的空列表必须分开渲染：把「你没有权限」显示成「系统里没有模板」
   // 会让使用者去改筛选条件或找管理员建数据，而不是申请权限。
   const [loadError, setLoadError] = useState<{ denied: boolean; detail: string } | null>(null);
@@ -149,7 +151,7 @@ const TicketTemplatesPage = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   const loadTemplates = useCallback(async () => {
-    setLoading(true);
+    setListLoading(true);
     try {
       const response = await TicketApi.getTemplates();
 
@@ -197,7 +199,7 @@ const TicketTemplatesPage = () => {
         detail: error instanceof Error ? error.message : '',
       });
     } finally {
-      setLoading(false);
+      setListLoading(false);
     }
   }, []);
 
@@ -460,7 +462,7 @@ const TicketTemplatesPage = () => {
               size='small'
               icon={<RefreshCw size={16} />}
               onClick={loadTemplates}
-              loading={loading}
+              loading={listLoading}
             >
               重试
             </Button>
@@ -468,37 +470,39 @@ const TicketTemplatesPage = () => {
         />
       ) : (
         <>
-          {/* Statistics */}
-          <Row gutter={16} className='mb-6'>
-            <Col span={8}>
-              <Card>
-                <Statistic
-                  title='模板总数'
-                  value={templates.length}
-                  prefix={<FileText size={16} style={{ color: '#3b82f6' }} />}
-                />
-              </Card>
-            </Col>
-            <Col span={8}>
-              <Card>
-                <Statistic
-                  title='启用模板'
-                  value={templates.filter(t => t.isActive).length}
-                  styles={{ content: { color: '#52c41a' } }}
-                  prefix={<CheckCircle size={16} />}
-                />
-              </Card>
-            </Col>
-            <Col span={8}>
-              <Card>
-                <Statistic
-                  title='分类数'
-                  value={new Set(templates.map(t => t.category).filter(Boolean)).size}
-                  prefix={<TagIcon size={16} style={{ color: '#faad14' }} />}
-                />
-              </Card>
-            </Col>
-          </Row>
+          {/* Statistics：加载期不渲染，避免首帧先闪一遍全 0 的假指标 */}
+          {!listLoading && (
+            <Row gutter={16} className='mb-6'>
+              <Col span={8}>
+                <Card>
+                  <Statistic
+                    title='模板总数'
+                    value={templates.length}
+                    prefix={<FileText size={16} style={{ color: '#3b82f6' }} />}
+                  />
+                </Card>
+              </Col>
+              <Col span={8}>
+                <Card>
+                  <Statistic
+                    title='启用模板'
+                    value={templates.filter(t => t.isActive).length}
+                    styles={{ content: { color: '#52c41a' } }}
+                    prefix={<CheckCircle size={16} />}
+                  />
+                </Card>
+              </Col>
+              <Col span={8}>
+                <Card>
+                  <Statistic
+                    title='分类数'
+                    value={new Set(templates.map(t => t.category).filter(Boolean)).size}
+                    prefix={<TagIcon size={16} style={{ color: '#faad14' }} />}
+                  />
+                </Card>
+              </Col>
+            </Row>
+          )}
 
           {/* Filter and search */}
           <Card title='模板管理' className='mb-6'>
@@ -569,7 +573,7 @@ const TicketTemplatesPage = () => {
           </Card>
 
           {/* Template list */}
-          {loading ? (
+          {listLoading ? (
             <Card>
               <div className='text-center py-16'>
                 <div className='inline-flex items-center justify-center w-16 h-16 bg-blue-50 rounded-full mb-4'>

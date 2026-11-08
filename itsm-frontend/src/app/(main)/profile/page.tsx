@@ -23,6 +23,7 @@ import {
   Table,
   Modal,
   Tooltip,
+  Skeleton,
 } from 'antd';
 import {
   User,
@@ -125,7 +126,11 @@ export default function ProfilePage() {
 
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [editing, setEditing] = useState(false);
-  const [loading, setLoading] = useState(false);
+  // 资料加载初值必须为 true：mount 必定发起首次拉取，初值 false 会让首帧先渲染
+  // 「未设置 / 空资料」再被真实数据覆盖，统计卡也会先闪 0。
+  const [listLoading, setListLoading] = useState(true);
+  // 提交动作态：仅覆盖「保存修改」，不参与数据加载门控。
+  const [actionLoading, setActionLoading] = useState(false);
   const [stats, setStats] = useState<UserStats | null>(null);
   const [activities, setActivities] = useState<ActivityItem[]>([]);
   const [profileForm] = Form.useForm();
@@ -181,7 +186,7 @@ export default function ProfilePage() {
 
   const loadProfile = async () => {
     try {
-      setLoading(true);
+      setListLoading(true);
       // 服务端是唯一真相：auth store 里没有 phone，department 也可能是登录时的旧值。
       // 用 store 值预填编辑表单会让「只改姓名」的提交把电话/部门抹成空。
       const me = await UserApi.getOwnProfile();
@@ -223,7 +228,7 @@ export default function ProfilePage() {
         profileForm.setFieldsValue(fallback);
       }
     } finally {
-      setLoading(false);
+      setListLoading(false);
     }
   };
 
@@ -270,7 +275,7 @@ export default function ProfilePage() {
   };
 
   const handleSaveProfile = async (values: { name: string; email: string; phone?: string; department?: string }) => {
-    setLoading(true);
+    setActionLoading(true);
     try {
       // 自助端点：只改调用者本人，且不需要 user:write（那是管理用户目录的语义，
       // 端用户走 PUT /users/:id 必然 403）。
@@ -315,7 +320,7 @@ export default function ProfilePage() {
           : '更新失败，请重试'
       );
     } finally {
-      setLoading(false);
+      setActionLoading(false);
     }
   };
 
@@ -455,76 +460,102 @@ export default function ProfilePage() {
               {/* 头像和信息 */}
               <div style={{ padding: '0 24px 24px', marginTop: -50 }}>
                 <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
-                  <Avatar
-                    size={100}
-                    style={{
-                      background: DESIGN.colors.gradient.primary,
-                      fontSize: 40,
-                      fontWeight: 700,
-                      border: '4px solid white',
-                      boxShadow: DESIGN.shadows.cardHover,
-                    }}
-                  >
-                    {userInitial}
-                  </Avatar>
+                  {/* 头像首字母同样是兜底占位：资料未到达时会先渲染「U」，
+                      被读成「用户名字的首字母就是 U」。加载期用骨架占位。 */}
+                  {listLoading ? (
+                    <Skeleton.Avatar active size={100} shape="circle" />
+                  ) : (
+                    <Avatar
+                      size={100}
+                      style={{
+                        background: DESIGN.colors.gradient.primary,
+                        fontSize: 40,
+                        fontWeight: 700,
+                        border: '4px solid white',
+                        boxShadow: DESIGN.shadows.cardHover,
+                      }}
+                    >
+                      {userInitial}
+                    </Avatar>
+                  )}
                 </div>
 
-                <div style={{ textAlign: 'center', marginBottom: 16 }}>
-                  <Title level={4} style={{ margin: 0, marginBottom: 4 }}>
-                    {profile?.name || profile?.username || '用户'}
-                  </Title>
-                  <Text style={{ color: DESIGN.colors.textMuted }}>
-                    {profile?.email || 'user@example.com'}
-                  </Text>
-                </div>
+                {/* 资料加载期不得渲染「用户 / user@example.com / 未设置」占位：
+                    这些兜底文案会被读成「账号没填资料」，实际只是尚未返回。
+                    与统计卡一致，用 listLoading 整体门控。 */}
+                {listLoading ? (
+                  <Skeleton active paragraph={{ rows: 3 }} />
+                ) : (
+                  <>
+                    <div style={{ textAlign: 'center', marginBottom: 16 }}>
+                      <Title level={4} style={{ margin: 0, marginBottom: 4 }}>
+                        {profile?.name || profile?.username || '用户'}
+                      </Title>
+                      <Text style={{ color: DESIGN.colors.textMuted }}>
+                        {profile?.email || 'user@example.com'}
+                      </Text>
+                    </div>
+                  </>
+                )}
 
-                <div
-                  style={{ display: 'flex', justifyContent: 'center', gap: 8, marginBottom: 20 }}
-                >
-                  <Tag
-                    color={roleColor}
-                    style={{
-                      padding: '4px 12px',
-                      borderRadius: DESIGN.radius.full,
-                      fontWeight: 600,
-                    }}
+                {/* 角色标签同理：资料未到达时兜底成「用户」会被读成
+                    「这个账号就是普通用户」，加载期用骨架占位。 */}
+                {listLoading ? (
+                  <Skeleton active paragraph={{ rows: 1 }} />
+                ) : (
+                  <div
+                    style={{ display: 'flex', justifyContent: 'center', gap: 8, marginBottom: 20 }}
                   >
-                    {profile?.role === 'admin'
-                      ? '管理员'
-                      : profile?.role === 'super_admin'
-                        ? '超级管理员'
-                        : '用户'}
-                  </Tag>
-                  <Tag
-                    style={{
-                      padding: '4px 12px',
-                      borderRadius: DESIGN.radius.full,
-                      background: `${DESIGN.colors.success}15`,
-                      color: DESIGN.colors.success,
-                      border: 'none',
-                    }}
-                  >
-                    <CheckCircle size={12} /> 已激活
-                  </Tag>
-                </div>
+                    <Tag
+                      color={roleColor}
+                      style={{
+                        padding: '4px 12px',
+                        borderRadius: DESIGN.radius.full,
+                        fontWeight: 600,
+                      }}
+                    >
+                      {profile?.role === 'admin'
+                        ? '管理员'
+                        : profile?.role === 'super_admin'
+                          ? '超级管理员'
+                          : '用户'}
+                    </Tag>
+                    <Tag
+                      style={{
+                        padding: '4px 12px',
+                        borderRadius: DESIGN.radius.full,
+                        background: `${DESIGN.colors.success}15`,
+                        color: DESIGN.colors.success,
+                        border: 'none',
+                      }}
+                    >
+                      <CheckCircle size={12} /> 已激活
+                    </Tag>
+                  </div>
+                )}
 
                 <Divider style={{ margin: '16px 0' }} />
 
-                {/* 用户详情 */}
-                <Space orientation="vertical" style={{ width: '100%' }} size="middle">
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <Building size={16} style={{ color: DESIGN.colors.textMuted }} />
-                    <Text>{profile?.department || '未设置'}</Text>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <Phone size={16} style={{ color: DESIGN.colors.textMuted }} />
-                    <Text>{profile?.phone || '未设置'}</Text>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <Clock size={16} style={{ color: DESIGN.colors.textMuted }} />
-                    <Text>上次登录: {profile?.lastLogin || '刚刚'}</Text>
-                  </div>
-                </Space>
+                {/* 用户详情：同样不能在资料到达前显示「未设置」，
+                    否则用户会以为部门/电话确实为空。 */}
+                {listLoading ? (
+                  <Skeleton active paragraph={{ rows: 3 }} />
+                ) : (
+                  <Space orientation="vertical" style={{ width: '100%' }} size="middle">
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <Building size={16} style={{ color: DESIGN.colors.textMuted }} />
+                      <Text>{profile?.department || '未设置'}</Text>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <Phone size={16} style={{ color: DESIGN.colors.textMuted }} />
+                      <Text>{profile?.phone || '未设置'}</Text>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <Clock size={16} style={{ color: DESIGN.colors.textMuted }} />
+                      <Text>上次登录: {profile?.lastLogin || '刚刚'}</Text>
+                    </div>
+                  </Space>
+                )}
               </div>
             </Card>
 
@@ -540,38 +571,43 @@ export default function ProfilePage() {
               <Title level={5} style={{ marginBottom: 20 }}>
                 工作统计
               </Title>
-              <Row gutter={[16, 16]}>
-                <Col span={12}>
-                  <Statistic
-                    title="提交工单"
-                    value={stats?.totalTickets || 0}
-                    prefix={<Ticket size={16} style={{ color: DESIGN.colors.accent }} />}
-                  />
-                </Col>
-                <Col span={12}>
-                  <Statistic
-                    title="已解决"
-                    value={stats?.resolvedTickets || 0}
-                    prefix={<CheckCircle size={16} style={{ color: DESIGN.colors.success }} />}
-                  />
-                </Col>
-                <Col span={12}>
-                  <Statistic
-                    title="满意度"
-                    value={stats?.satisfactionScore || 0}
-                    suffix="/5"
-                    prefix={<Star size={16} style={{ color: DESIGN.colors.warning }} />}
-                  />
-                </Col>
-                <Col span={12}>
-                  <Statistic
-                    title="响应率"
-                    value={stats?.responseRate || 0}
-                    suffix="%"
-                    prefix={<Activity size={16} style={{ color: DESIGN.colors.accent }} />}
-                  />
-                </Col>
-              </Row>
+              {/* 统计卡必须等 stats 真正到达后才渲染：stats 初始为 null，
+                  直接渲染会先闪一组「0」再被真实数字覆盖。loadStats 的失败兜底
+                  也会写入真实对象，所以「已加载」用 stats !== null 判定即可。 */}
+              {stats && (
+                <Row gutter={[16, 16]}>
+                  <Col span={12}>
+                    <Statistic
+                      title="提交工单"
+                      value={stats.totalTickets}
+                      prefix={<Ticket size={16} style={{ color: DESIGN.colors.accent }} />}
+                    />
+                  </Col>
+                  <Col span={12}>
+                    <Statistic
+                      title="已解决"
+                      value={stats.resolvedTickets}
+                      prefix={<CheckCircle size={16} style={{ color: DESIGN.colors.success }} />}
+                    />
+                  </Col>
+                  <Col span={12}>
+                    <Statistic
+                      title="满意度"
+                      value={stats.satisfactionScore}
+                      suffix="/5"
+                      prefix={<Star size={16} style={{ color: DESIGN.colors.warning }} />}
+                    />
+                  </Col>
+                  <Col span={12}>
+                    <Statistic
+                      title="响应率"
+                      value={stats.responseRate}
+                      suffix="%"
+                      prefix={<Activity size={16} style={{ color: DESIGN.colors.accent }} />}
+                    />
+                  </Col>
+                </Row>
+              )}
             </Card>
           </Col>
 
@@ -679,7 +715,7 @@ export default function ProfilePage() {
                             <Button
                               type="primary"
                               htmlType="submit"
-                              loading={loading}
+                              loading={actionLoading}
                               icon={<Save size={16} />}
                               style={{
                                 background: DESIGN.colors.gradient.primary,

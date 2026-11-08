@@ -673,6 +673,8 @@ const ServiceCatalogManagement = () => {
       </div>
 
       {/* 统计卡片 */}
+      {/* 统计卡必须门控：还没拉到数据时渲染成「总服务数 0」会被误读成「服务目录为空」 */}
+      {!loading && (
       <Row gutter={[16, 16]}>
         <Col xs={24} sm={12} lg={6}>
           <Card className="enterprise-card">
@@ -715,6 +717,7 @@ const ServiceCatalogManagement = () => {
           </Card>
         </Col>
       </Row>
+      )}
 
       {/* 工具栏：所有筛选都提交给服务端，页面上不再对当前页二次过滤 */}
       <Card className="enterprise-card">

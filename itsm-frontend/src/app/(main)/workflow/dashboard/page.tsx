@@ -66,19 +66,19 @@ export default function BPMNDashboardPage() {
   const { t } = useI18n();
   const { message } = App.useApp();
   const currentTenant = useAuthStore(s => s.currentTenant);
-  const [loading, setLoading] = useState(true);
+  const [listLoading, setListLoading] = useState(true);
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
   const [dateRange, setDateRange] = useState<[Dayjs, Dayjs]>([dayjs().subtract(7, 'day'), dayjs()]);
 
-  // 使用当前登录租户；未登录时不加载数据
+  // 用 currentTenant 是否已水合作为「等登录后再取数」的门槛。
   const tenantId = currentTenant?.id;
 
   const fetchMetrics = async () => {
     if (!tenantId) {
-      setLoading(false);
+      setListLoading(false);
       return;
     }
-    setLoading(true);
+    setListLoading(true);
     try {
       const data = await BPMNDashboardApi.getDashboardMetrics(
         tenantId,
@@ -90,7 +90,7 @@ export default function BPMNDashboardPage() {
       console.error('Failed to fetch dashboard metrics:', error);
       message.error('加载工作流仪表盘指标失败');
     } finally {
-      setLoading(false);
+      setListLoading(false);
     }
   };
 
@@ -186,7 +186,7 @@ export default function BPMNDashboardPage() {
     },
   ];
 
-  if (loading && !metrics) {
+  if (listLoading && !metrics) {
     return (
       <div className='flex items-center justify-center h-96'>
         <Spin size='large' />
@@ -233,7 +233,7 @@ export default function BPMNDashboardPage() {
             }}
             value={[dateRange[0], dateRange[1]]}
           />
-          <Button icon={<RefreshCw size={16} />} onClick={fetchMetrics} loading={loading}>
+          <Button icon={<RefreshCw size={16} />} onClick={fetchMetrics} loading={listLoading}>
             {t('common.refresh') || '刷新'}
           </Button>
         </Space>

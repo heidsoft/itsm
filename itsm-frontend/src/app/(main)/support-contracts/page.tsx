@@ -24,7 +24,8 @@ export default function ContractsPage() {
   const [branches, setBranches] = useState<CustomerBranch[]>([]);
   const [sources, setSources] = useState<SourceOrganization[]>([]);
   const [refs, setRefs] = useState<ExternalContractReference[]>([]);
-  const [loading, setLoading] = useState(false);
+  // 列表初值必须为 true：mount 必定发起首次拉取，初值 false 会让首帧先渲染空表格。
+  const [listLoading, setListLoading] = useState(true);
   const [modal, setModal] = useState(false);
   const [refModal, setRefModal] = useState(false);
   const [editingContract, setEditingContract] = useState<SupportContract | null>(null);
@@ -33,7 +34,7 @@ export default function ContractsPage() {
   const [selectedCustomer, setSelectedCustomer] = useState<number | undefined>();
 
   const load = async () => {
-    setLoading(true);
+    setListLoading(true);
     try {
       const [c, b, s, r, k] = await Promise.all([
         emailIntakeService.contracts(),
@@ -47,7 +48,7 @@ export default function ContractsPage() {
       setCustomers(s.items);
       setSources(r.items);
       setRefs(k.items);
-    } catch { message.error('加载失败'); } finally { setLoading(false); }
+    } catch { message.error('加载失败'); } finally { setListLoading(false); }
   };
   useEffect(() => { load(); }, []);
 
@@ -178,7 +179,7 @@ export default function ContractsPage() {
             </Button>
           </Space>
         </div>
-        <Table rowKey="id" loading={loading} columns={columns} dataSource={contracts} pagination={{ pageSize: 20 }} />
+        <Table rowKey="id" loading={listLoading} columns={columns} dataSource={contracts} pagination={{ pageSize: 20 }} />
       </Card>
 
       <Card title="外部合同号映射">

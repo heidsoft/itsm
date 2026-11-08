@@ -362,10 +362,10 @@ const CIList: React.FC = () => {
           rowSelection={rowSelection}
           columns={columns}
           dataSource={data}
-          loading={listQuery.isLoading}
+          loading={listQuery.isPending}
           locale={{
             emptyText:
-              listQuery.isLoading && data.length === 0 ? (
+              listQuery.isPending && data.length === 0 ? (
                 <LoadingEmptyError state="loading" minHeight={200} />
               ) : listQuery.isError ? (
                 <LoadingEmptyError

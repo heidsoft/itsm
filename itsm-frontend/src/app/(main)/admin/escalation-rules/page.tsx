@@ -366,6 +366,8 @@ export default function EscalationRulesPage() {
         />
       </div>
 
+      {/* 统计卡必须门控：还没拉到数据时渲染成「告警规则总数 0」会被误读成「没有配置任何告警规则」 */}
+      {!loading && (
       <Row gutter={16} style={{ marginBottom: 16 }}>
         <Col xs={24} sm={12} lg={6}>
           <Card>
@@ -388,6 +390,7 @@ export default function EscalationRulesPage() {
           </Card>
         </Col>
       </Row>
+      )}
 
       <Card style={{ marginBottom: 16 }}>
         <Row gutter={[16, 12]} align="middle">

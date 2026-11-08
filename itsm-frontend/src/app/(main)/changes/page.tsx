@@ -210,7 +210,8 @@ function ChangesPageContent() {
 
   const [activeView, setActiveView] = useState<View>(initialUrlState.view);
   const [changes, setChanges] = useState<Change[]>([]);
-  const [loading, setLoading] = useState(false);
+  // 列表初值必须为 true：mount 必定发起首次拉取，初值 false 会让首帧先渲染空表格/空看板。
+  const [listLoading, setListLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
   const [calendarLoading, setCalendarLoading] = useState(false);
   const [calendarData, setCalendarData] = useState<ChangeCalendarItem[]>([]);
@@ -246,7 +247,7 @@ function ChangesPageContent() {
 
   // ====== 数据获取 ======
   const fetchChanges = useCallback(async () => {
-    setLoading(true);
+    setListLoading(true);
     setLoadError(false);
     try {
       const response = await ChangeApi.getChanges({
@@ -264,7 +265,7 @@ function ChangesPageContent() {
       message.error(t('changes.getFailed'));
       setLoadError(true);
     } finally {
-      setLoading(false);
+      setListLoading(false);
     }
   }, [page, pageSize, statusFilter, riskFilter, searchKeyword, t]);
 
@@ -307,7 +308,7 @@ function ChangesPageContent() {
   };
 
   const fetchChangesForKanban = useCallback(async () => {
-    setLoading(true);
+    setListLoading(true);
     setLoadError(false);
     try {
       const response = await ChangeApi.getChanges({
@@ -322,7 +323,7 @@ function ChangesPageContent() {
       console.error('Failed to fetch changes for kanban:', error);
       setLoadError(true);
     } finally {
-      setLoading(false);
+      setListLoading(false);
     }
   }, [statusFilter, riskFilter, searchKeyword]);
 
@@ -455,7 +456,7 @@ function ChangesPageContent() {
       // ChangeList 内部取数时本来就要做一次 as unknown as 转换）。
       items={changes as unknown as ChangeRow[]}
       total={total}
-      loading={loading}
+      loading={listLoading}
       onDataChange={fetchChanges}
     />
   );
@@ -463,7 +464,7 @@ function ChangesPageContent() {
   const renderKanbanContent = () => (
     <UnifiedKanbanBoard<Change>
       items={changes}
-      loading={loading}
+      loading={listLoading}
       getItemId={(change: Change) => change.id}
       getItemStatus={(change: Change) => change.status || 'draft'}
       getItemTitle={(change: Change) =>
@@ -612,7 +613,7 @@ function ChangesPageContent() {
       searchPlaceholder={t('changes.searchPlaceholder')}
       searchValue={searchKeyword}
       onSearch={handleSearch}
-      searchLoading={loading}
+      searchLoading={listLoading}
       filters={{
         visible: showFilters,
         onToggle: () => setShowFilters(!showFilters),
@@ -638,11 +639,11 @@ function ChangesPageContent() {
           onClick: handleExport,
         },
       ]}
-      loading={activeView === 'calendar' ? false : loading}
+      loading={activeView === 'calendar' ? false : listLoading}
       error={activeView !== 'calendar' && loadError}
       errorDescription={t('changes.loadError')}
       onRetry={handleRefresh}
-      empty={activeView !== 'calendar' && changes.length === 0 && !loading}
+      empty={activeView !== 'calendar' && changes.length === 0 && !listLoading}
       emptyDescription={t('changes.emptyText')}
       emptyAction={canCreateChange ? {
         label: t('changes.createFirst'),

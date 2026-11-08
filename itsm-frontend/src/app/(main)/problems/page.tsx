@@ -116,7 +116,8 @@ export default function ProblemListPage() {
 
   const [activeView, setActiveView] = useState<View>('list');
   const [problems, setProblems] = useState<Problem[]>([]);
-  const [loading, setLoading] = useState(false);
+  // 列表初值必须为 true：mount 必定发起首次拉取，初值 false 会让首帧先渲染空看板/空表格。
+  const [listLoading, setListLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
 
   // 分页
@@ -126,7 +127,7 @@ export default function ProblemListPage() {
 
   // ====== 数据获取 ======
   const fetchProblems = useCallback(async () => {
-    setLoading(true);
+    setListLoading(true);
     setLoadError(false);
     try {
       const response = await ProblemApi.getProblems({
@@ -145,7 +146,7 @@ export default function ProblemListPage() {
       message.error(t('problems.getFailed'));
       setLoadError(true);
     } finally {
-      setLoading(false);
+      setListLoading(false);
     }
   }, [page, pageSize, statusFilter, priorityFilter, searchKeyword, t]);
 
@@ -186,7 +187,7 @@ export default function ProblemListPage() {
   };
 
   const fetchProblemsForKanban = useCallback(async () => {
-    setLoading(true);
+    setListLoading(true);
     setLoadError(false);
     try {
       const response = await ProblemApi.getProblems({
@@ -203,7 +204,7 @@ export default function ProblemListPage() {
       console.error('Failed to fetch problems for kanban:', error);
       setLoadError(true);
     } finally {
-      setLoading(false);
+      setListLoading(false);
     }
   }, [statusFilter, priorityFilter, searchKeyword]);
 
@@ -311,7 +312,7 @@ export default function ProblemListPage() {
   const renderKanbanContent = () => (
     <UnifiedKanbanBoard<Problem>
       items={problems}
-      loading={loading}
+      loading={listLoading}
       getItemId={(problem: Problem) => problem.id}
       getItemStatus={(problem: Problem) => (problem.status === '' ? 'open' : problem.status)}
       getItemTitle={(problem: Problem) =>
@@ -351,7 +352,7 @@ export default function ProblemListPage() {
       searchPlaceholder={t('problems.searchPlaceholder')}
       searchValue={searchKeyword}
       onSearch={handleSearch}
-      searchLoading={loading}
+      searchLoading={listLoading}
       filters={{
         visible: showFilters,
         onToggle: () => setShowFilters(!showFilters),
@@ -383,11 +384,11 @@ export default function ProblemListPage() {
           onClick: handleExport,
         },
       ]}
-      loading={loading}
+      loading={listLoading}
       error={loadError}
       errorDescription={t('problems.emptyDescription')}
       onRetry={handleRefresh}
-      empty={problems.length === 0 && !loading}
+      empty={problems.length === 0 && !listLoading}
       emptyDescription={t('problems.emptyText')}
       emptyAction={{
         label: t('problems.createFirst'),
