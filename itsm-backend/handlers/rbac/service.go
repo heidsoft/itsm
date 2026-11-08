@@ -6,12 +6,12 @@ import (
 	"itsm-backend/dto"
 )
 
-// 注意：handler 仍需 import "itsm-backend/service" 仅用于哨兵
-// service.ErrPermissionNotInTenant 的 errors.Is 判断（跨租户权限分配 400 语义）。
-// 哨兵属 service 包定义，接口化后 handler 对该包的依赖收敛为常量引用，不再依赖具体类型。
+// 角色域 / 权限域的 Ent 实现与 ErrPermissionNotInTenant 哨兵已随批次 2 开局
+// 迁入本域包（role_service_impl.go），handler 不再依赖共享层；菜单实现暂仍由
+// 共享层提供，归后续批次收口。接口签名保持不变，装配点只换构造函数的包限定符。
 
 // RoleService 定义角色域业务接口（依赖倒置）。
-// 实现由 internal/bootstrap 装配的 service.RoleService 提供。
+// 实现由 internal/bootstrap 装配的 NewRoleService 提供（同包 roleServiceImpl）。
 type RoleService interface {
 	CreateRole(ctx context.Context, req *dto.CreateRoleRequest, tenantID int) (*dto.RoleResponse, error)
 	GetRole(ctx context.Context, id int, tenantID int) (*dto.RoleResponse, error)

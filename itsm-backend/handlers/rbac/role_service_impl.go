@@ -1,4 +1,4 @@
-package service
+package rbac
 
 import (
 	"context"
@@ -22,22 +22,22 @@ import (
 	"go.uber.org/zap"
 )
 
-// RoleService 角色服务
-type RoleService struct {
+// roleServiceImpl 是 RoleService 接口的 Ent 实现（域内自持，不再放共享 service 包）。
+type roleServiceImpl struct {
 	client *ent.Client
 	logger *zap.SugaredLogger
 }
 
 // NewRoleService 创建角色服务
-func NewRoleService(client *ent.Client, logger *zap.SugaredLogger) *RoleService {
-	return &RoleService{
+func NewRoleService(client *ent.Client, logger *zap.SugaredLogger) RoleService {
+	return &roleServiceImpl{
 		client: client,
 		logger: logger,
 	}
 }
 
 // getRolePermissionsByIDs 批量查询多个角色的权限（按roleID分组，tenantID隔离）
-func (s *RoleService) getRolePermissionsByIDs(ctx context.Context, roleIDs []int, tenantID int) (map[int][]dto.PermissionInfo, error) {
+func (s *roleServiceImpl) getRolePermissionsByIDs(ctx context.Context, roleIDs []int, tenantID int) (map[int][]dto.PermissionInfo, error) {
 	result := make(map[int][]dto.PermissionInfo, len(roleIDs))
 	for _, rid := range roleIDs {
 		result[rid] = []dto.PermissionInfo{}
@@ -97,7 +97,7 @@ func (s *RoleService) getRolePermissionsByIDs(ctx context.Context, roleIDs []int
 }
 
 // buildRoleResponse 构建角色基础响应（不加载权限）
-func (s *RoleService) buildRoleResponse(roleEntity *ent.Role) *dto.RoleResponse {
+func (s *roleServiceImpl) buildRoleResponse(roleEntity *ent.Role) *dto.RoleResponse {
 	return &dto.RoleResponse{
 		ID:          roleEntity.ID,
 		Name:        roleEntity.Name,
@@ -115,7 +115,7 @@ func (s *RoleService) buildRoleResponse(roleEntity *ent.Role) *dto.RoleResponse 
 }
 
 // CreateRole 创建角色
-func (s *RoleService) CreateRole(ctx context.Context, req *dto.CreateRoleRequest, tenantID int) (*dto.RoleResponse, error) {
+func (s *roleServiceImpl) CreateRole(ctx context.Context, req *dto.CreateRoleRequest, tenantID int) (*dto.RoleResponse, error) {
 	s.logger.Infow("Creating role", "name", req.Name, "tenant_id", tenantID)
 
 	code := req.Code
@@ -149,7 +149,7 @@ func (s *RoleService) CreateRole(ctx context.Context, req *dto.CreateRoleRequest
 }
 
 // GetRole 获取角色详情
-func (s *RoleService) GetRole(ctx context.Context, id int, tenantID int) (*dto.RoleResponse, error) {
+func (s *roleServiceImpl) GetRole(ctx context.Context, id int, tenantID int) (*dto.RoleResponse, error) {
 	roleEntity, err := s.client.Role.Query().
 		Where(
 			role.IDEQ(id),
@@ -176,7 +176,7 @@ func (s *RoleService) GetRole(ctx context.Context, id int, tenantID int) (*dto.R
 }
 
 // ListRoles 获取角色列表
-func (s *RoleService) ListRoles(ctx context.Context, tenantID int, params *dto.GetRolesParams) ([]*dto.RoleResponse, int, error) {
+func (s *roleServiceImpl) ListRoles(ctx context.Context, tenantID int, params *dto.GetRolesParams) ([]*dto.RoleResponse, int, error) {
 	page, pageSize := common.ValidatePagination(params.Page, params.PageSize)
 
 	query := s.client.Role.Query().
@@ -233,7 +233,7 @@ func (s *RoleService) ListRoles(ctx context.Context, tenantID int, params *dto.G
 }
 
 // UpdateRole 更新角色
-func (s *RoleService) UpdateRole(ctx context.Context, id int, req *dto.UpdateRoleRequest, tenantID int) (*dto.RoleResponse, error) {
+func (s *roleServiceImpl) UpdateRole(ctx context.Context, id int, req *dto.UpdateRoleRequest, tenantID int) (*dto.RoleResponse, error) {
 	s.logger.Infow("Updating role", "id", id, "tenant_id", tenantID)
 
 	roleEntity, err := s.client.Role.Query().
@@ -290,7 +290,7 @@ func (s *RoleService) UpdateRole(ctx context.Context, id int, req *dto.UpdateRol
 	return s.GetRole(ctx, id, tenantID)
 }
 
-func (s *RoleService) permissionIDsByCodes(ctx context.Context, permissionCodes []string, tenantID int) ([]int, error) {
+func (s *roleServiceImpl) permissionIDsByCodes(ctx context.Context, permissionCodes []string, tenantID int) ([]int, error) {
 	normalizedCodes := make([]string, 0, len(permissionCodes))
 	seen := make(map[string]struct{}, len(permissionCodes))
 	for _, code := range permissionCodes {
@@ -339,7 +339,7 @@ func (s *RoleService) permissionIDsByCodes(ctx context.Context, permissionCodes 
 }
 
 // DeleteRole 删除角色
-func (s *RoleService) DeleteRole(ctx context.Context, id int, tenantID int) error {
+func (s *roleServiceImpl) DeleteRole(ctx context.Context, id int, tenantID int) error {
 	s.logger.Infow("Deleting role", "id", id, "tenant_id", tenantID)
 
 	roleEntity, err := s.client.Role.Query().
@@ -409,7 +409,7 @@ func (s *RoleService) DeleteRole(ctx context.Context, id int, tenantID int) erro
 // 属于调用方输入错误（应映射为 400），而非服务端内部错误（500）。
 var ErrPermissionNotInTenant = errors.New("部分权限不存在或不属于当前租户")
 
-func (s *RoleService) AssignPermissions(ctx context.Context, roleID int, permissionIDs []int, tenantID int) error {
+func (s *roleServiceImpl) AssignPermissions(ctx context.Context, roleID int, permissionIDs []int, tenantID int) error {
 	s.logger.Infow("Assigning permissions to role", "role_id", roleID, "permission_count", len(permissionIDs))
 
 	roleEntity, err := s.client.Role.Query().
@@ -494,7 +494,7 @@ func (s *RoleService) AssignPermissions(ctx context.Context, roleID int, permiss
 }
 
 // rolePermissionCodes 返回角色当前权限的 code 列表（排序后，供审计 diff）。
-func (s *RoleService) rolePermissionCodes(ctx context.Context, roleID, tenantID int) ([]string, error) {
+func (s *roleServiceImpl) rolePermissionCodes(ctx context.Context, roleID, tenantID int) ([]string, error) {
 	// RolePermission 无 ent 边（schema Edges 为 nil），按既有模式两步查询：
 	// 先取 role_permissions 的 permission_id，再按租户过滤查 permission.code。
 	rolePerms, err := s.client.RolePermission.Query().
@@ -526,7 +526,7 @@ func (s *RoleService) rolePermissionCodes(ctx context.Context, roleID, tenantID 
 
 // writePermissionChangeAudit 写权限变更 diff 审计。
 // after 由提交后的重新快照获得（而非信任入参），确保审计与库内终态一致。
-func (s *RoleService) writePermissionChangeAudit(ctx context.Context, roleEntity *ent.Role, tenantID int, before []string, _ []int) {
+func (s *roleServiceImpl) writePermissionChangeAudit(ctx context.Context, roleEntity *ent.Role, tenantID int, before []string, _ []int) {
 	after, err := s.rolePermissionCodes(ctx, roleEntity.ID, tenantID)
 	if err != nil {
 		s.logger.Warnw("权限变更后快照失败，审计diff缺失after", "role_id", roleEntity.ID, "error", err)
@@ -562,22 +562,22 @@ func (s *RoleService) writePermissionChangeAudit(ctx context.Context, roleEntity
 	s.logger.Infow("权限变更审计已记录", "role_id", roleEntity.ID, "before_count", len(before), "after_count", len(after))
 }
 
-// PermissionService 权限服务
-type PermissionService struct {
+// permissionServiceImpl 是 PermissionService 接口的 Ent 实现。
+type permissionServiceImpl struct {
 	client *ent.Client
 	logger *zap.SugaredLogger
 }
 
 // NewPermissionService 创建权限服务
-func NewPermissionService(client *ent.Client, logger *zap.SugaredLogger) *PermissionService {
-	return &PermissionService{
+func NewPermissionService(client *ent.Client, logger *zap.SugaredLogger) PermissionService {
+	return &permissionServiceImpl{
 		client: client,
 		logger: logger,
 	}
 }
 
 // CreatePermission 创建权限
-func (s *PermissionService) CreatePermission(ctx context.Context, req *dto.CreatePermissionRequest, tenantID int) (*dto.PermissionResponse, error) {
+func (s *permissionServiceImpl) CreatePermission(ctx context.Context, req *dto.CreatePermissionRequest, tenantID int) (*dto.PermissionResponse, error) {
 	s.logger.Infow("Creating permission", "code", req.Code, "tenant_id", tenantID)
 
 	permEntity, err := s.client.Permission.Create().
@@ -596,7 +596,7 @@ func (s *PermissionService) CreatePermission(ctx context.Context, req *dto.Creat
 }
 
 // ListPermissions 获取权限列表
-func (s *PermissionService) ListPermissions(ctx context.Context, tenantID int, resource string) ([]*dto.PermissionResponse, error) {
+func (s *permissionServiceImpl) ListPermissions(ctx context.Context, tenantID int, resource string) ([]*dto.PermissionResponse, error) {
 	query := s.client.Permission.Query().
 		Where(permission.TenantID(tenantID))
 
@@ -618,7 +618,7 @@ func (s *PermissionService) ListPermissions(ctx context.Context, tenantID int, r
 }
 
 // InitDefaultPermissions 初始化默认权限
-func (s *PermissionService) InitDefaultPermissions(ctx context.Context, tenantID int) error {
+func (s *permissionServiceImpl) InitDefaultPermissions(ctx context.Context, tenantID int) error {
 	defaultPermissions := []dto.CreatePermissionRequest{}
 	resourceActions := map[string][]string{
 		"dashboard":       {"read", "view"},
@@ -686,7 +686,7 @@ func (s *PermissionService) InitDefaultPermissions(ctx context.Context, tenantID
 	return nil
 }
 
-func (s *PermissionService) toPermissionResponse(permEntity *ent.Permission) *dto.PermissionResponse {
+func (s *permissionServiceImpl) toPermissionResponse(permEntity *ent.Permission) *dto.PermissionResponse {
 	return &dto.PermissionResponse{
 		ID:          permEntity.ID,
 		Code:        permEntity.Code,

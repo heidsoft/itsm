@@ -8,7 +8,6 @@ import (
 	"itsm-backend/ent"
 	"itsm-backend/ent/knowledgearticle"
 	"itsm-backend/internal/commandbus"
-	"itsm-backend/service"
 )
 
 // The Ent repository is the sole production implementation. Keeping this
@@ -183,10 +182,12 @@ func (s *Service) deleteWithVectorOutbox(ctx context.Context, id, tenantID int) 
 // it never trusts title/content or publication state from the command payload.
 type VectorIndexCommandHandler struct {
 	client *ent.Client
-	rag    *service.RAGService
+	rag    RAGIndexer
 }
 
-func NewVectorIndexCommandHandler(client *ent.Client, rag *service.RAGService) *VectorIndexCommandHandler {
+// NewVectorIndexCommandHandler 只依赖索引写面契约，
+// 不要求注入方同时实现读面方法。
+func NewVectorIndexCommandHandler(client *ent.Client, rag RAGIndexer) *VectorIndexCommandHandler {
 	return &VectorIndexCommandHandler{client: client, rag: rag}
 }
 

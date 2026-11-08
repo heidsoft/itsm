@@ -9,7 +9,6 @@ import (
 	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/middleware"
-	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -257,7 +256,7 @@ func (h *Handler) AssignPermissions(c *gin.Context) {
 	err = h.roleService.AssignPermissions(c.Request.Context(), id, req.PermissionIDs, tenantID)
 	if err != nil {
 		// R1: cross-tenant/invalid permission IDs return 400 not 500
-		if errors.Is(err, service.ErrPermissionNotInTenant) {
+		if errors.Is(err, ErrPermissionNotInTenant) {
 			h.logger.Warnw("Cross-tenant permission assignment rejected",
 				"role_id", id, "tenant_id", tenantID, "error", err)
 			common.ParamErrorWithErr(c, err, "请求参数错误")

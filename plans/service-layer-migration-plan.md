@@ -1,6 +1,6 @@
 # service/ 层迁移收口计划
 
-> Status: 执行中 — 基于 2026-11-07 源码盘点编写；**批次 0 已落地**（Gate C.8，2026-11-07），**批次 1 已退出**（2026-11-08，L.1 达成目标 145、两类裁决完成）。批次 2 起按本计划推进。仍需团队评审后纳入 ROADMAP。
+> Status: 执行中 — 基于 2026-11-07 源码盘点编写；**批次 0 已落地**（Gate C.8，2026-11-07），**批次 1 已退出**（2026-11-08，L.1 达成目标 145、两类裁决完成），**批次 2 已开局**（2026-11-08，knowledge 抽 RAG 窄契约 + rbac 域实现归位，L.1 145→144）。六组中大型域仍待迁。仍需团队评审后纳入 ROADMAP。
 
 ## 背景
 
@@ -116,7 +116,7 @@ AGENTS.md 明确规定 `handlers/<domain>/` 是目标架构，`service/` 仅保�
 | `survey_service.go` | `handlers/survey/service.go` | 整体搬移 |
 | `project_service.go` | `handlers/project/service.go` | 整体搬移 |
 | `group_service.go` | `handlers/group/service.go` | 整体搬移 |
-| `role_service.go` | `handlers/rbac/service.go`（合并） | 合并到已有 |
+| `role_service.go` | `handlers/rbac/role_service_impl.go`（✅ 批次 2 开局已落地） | 域包内新建实现文件（原建议合并进 `service.go`，因同名接口冲突调整；见开局记录） |
 | `menu_service.go` | `handlers/rbac/` 或 `handlers/systemconfig/` | 按消费方归类 |
 | `email_service.go` | `handlers/connector/` 或 `handlers/notification/` | 按消费方归类 |
 | `feishu_sync_service.go` | `handlers/feishu/service.go` | 整体搬移 |
@@ -283,7 +283,7 @@ L.1 下降的 7 个文件即前四批已搬走但基线未收紧的部分；L.3 
 | 文件 | 主要消费方 | 裁决归属 | 落地批次 |
 |:---|:---|:---|:---|
 | `cmdb_saved_view_service.go` | `handlers/cmdb/production_service.go`、`cmd/cmdb`、`app.go` | `handlers/cmdb/`（合并） | 批次 2 |
-| `role_service.go` | `handlers/rbac/handler.go`、`app.go` | `handlers/rbac/service.go`（计划原建议） | 批次 2 |
+| `role_service.go` | `handlers/rbac/handler.go`、`app.go` | `handlers/rbac/role_service_impl.go`（裁决调整，见开局记录） | ✅ 批次 2 开局已落地 |
 | `msp_allocation_service.go` | `handlers/msp/handler.go`、`app.go` | `handlers/msp/`（合并） | 批次 2 |
 | `dashboard_config_store.go` | `internal/bootstrap/app.go` | `handlers/dashboard/`（已有域包） | 批次 2 |
 | `config_inheritance_service.go` | `handlers/bpmn/process_trigger.go`、`app.go` | `handlers/bpmn/`（消费方所在域） | 批次 3 |
@@ -322,6 +322,34 @@ L.1 下降的 7 个文件即前四批已搬走但基线未收紧的部分；L.3 
 | timer_ | 6 | 调度器是基础设施，可能应迁到 `internal/` |
 | escalation_ | 3 | 与 SLA 域强耦合 |
 | skill_ | 3 | AI 工具调用，与 `handlers/ai/` 有重叠 |
+
+#### 批次 2 开局记录（2026-11-08：knowledge 契约抽取 + rbac 域收口）
+
+本批按「先抽接口、再搬实现」的顺序落地两个已有明确归属的切口，**不新建 `handlers/<domain>/` 域包**、`handlers_dirs` 保持 69，接口签名与线上行为零变更。
+
+| 平面 | 收紧前 | 收紧后 | Δ |
+|:---|:---:|:---:|:---:|
+| C.8 / L.1 `service/` 生产文件名 | 145 | **144** | −1 |
+| C.6.4 `service_go_files`（含测试） | 363 | **361** | −2 |
+| C.8 / L.3 `handlers/` 依赖文件 / 域 | 55 / 34 | **51 / 32** | −4 / −2 |
+| C.8 / L.4 零 `service/` 依赖域 | 33 | **35** | +2 |
+| C.6.4 `bootstrap_app_lines` / `handlers_dirs` | 2167 / 69 | 2167 / 69 | 0 |
+
+**① knowledge 域抽 RAG 窄接口（不搬实现）**：新增 `handlers/knowledge/rag_contract.go`，把知识域真实消费的 5 个方法抽成三个窄契约——`RAGRetriever`（`Ask`）、`RAGIndexer`（`HasVectorBackend` / `VectorIndexReady` / `IndexArticle` / `RemoveArticle`）、`RAGService`（前两者组合）。`Service.rag` 由共享层具体指针改为 `RAGService`，`VectorIndexCommandHandler.rag` 改为只依赖写面的 `RAGIndexer`；生产文件对 `itsm-backend/service` 的 import **2 → 0**。`internal/bootstrap/app.go` 传入的共享层实现仍满足契约，**装配代码一行未改**。契约边界写明「新增方法前先确认知识域确实需要」，防止把共享层大接口原样搬回域包。
+
+**② rbac 域实现归位（搬实现 + 哨兵）**：`service/role_service.go` 与其专属测试用 `git mv` 迁入 `handlers/rbac/`（保留 blame 历史）。实现 struct 改名为未导出的 `roleServiceImpl` / `permissionServiceImpl`，与域包**既有**的 `RoleService` / `PermissionService` 接口共存，构造函数改为返回域包接口；`ErrPermissionNotInTenant` 哨兵迁入域包，`handler.go` 去掉共享层 import，`handler_test.go` 改用同包构造与哨兵；`app.go` 两行只换包限定符（`wc -l` 仍 2167），`menu_service.go` 仍在共享层、归后续批次。生产文件对共享层 import **2 → 0**。
+
+**③ 裁决调整（与原建议的偏差，如实记录）**：第 119 行归属表与本退出记录原建议把 `role_service.go` **合并进 `handlers/rbac/service.go`**。但该文件是纯接口定义，且已占用 `RoleService` / `PermissionService` 两个类型名，直接合并会产生同名冲突并把 713 行实现塞进契约文件。因此改为**同域包内新建 `role_service_impl.go`**（接口/实现分离），归属结论不变：仍落在已存在的 `handlers/rbac/`、不新建域包、不抬高 `handlers_dirs`。
+
+**回归锁（均要求能区分新旧实现，不是假绿）**：
+
+- `handlers/knowledge/rag_contract_test.go`：编译期断言共享层 RAG 实现满足三个窄接口；用**纯域内 `fakeRAG`** 注入 `SetRAG` 与 `NewVectorIndexCommandHandler`——若把字段改回共享层具体指针类型，测试文件立即无法编译；另有源码守卫禁止生产文件重新 import 共享层或写回具体类型。
+- `handlers/rbac/domain_ownership_test.go`：编译期断言实现类型、构造函数返回值与哨兵全属域包（旧结构下 `roleServiceImpl` / `ErrPermissionNotInTenant` 都不在本包，无法编译）；源码守卫禁止域包生产文件重新 import 共享层。
+- 门禁级：L.1 收紧到 144 后 `role_service.go` 复活即 FAIL；L.3 的 `knowledge=2` / `rbac=2` 两行从 baseline 删除，任一域重新 import 按「新域违规」FAIL。两份回归锁 + 门禁反向验证均实测变红后还原转绿。
+
+**验证**：`go build ./...` 全绿；`go test ./handlers/rbac/ -count=1` 全量绿（5 个迁移用例 `-v` 逐个确认真实执行）、`./handlers/knowledge/`、`./service/`、`./internal/bootstrap/`、`./router/`、`./middleware/` 定向全绿；docs gates 8/8，C.6 与 C.8 均 0 FAIL / 0 WARN；迁移后的实现类型经 `gofmt`，`git diff --check` 与暂存区敏感扫描通过。
+
+**批次 2 剩余待办（本批未宣称完成）**：六组中大型域未动——`sla_` 6、`ci_`+`cmdb_`+`configuration_` 10、`approval_` 6、`timer_` 6、`escalation_` 3、`skill_` 3；`handlers/ai/service.go` 仍持有共享层 RAG 具体指针（AI 域可复用 knowledge 窄接口，需单独评审）；`ai/eval` 语料检索器直接用共享层实现属评测夹具，允许保留；`menu_service.go` 与批次 1 裁决表其余 5 个文件仍待迁；`ROADMAP` 的 v1.6.x 登记条目仍待团队评审，不由 AI 代填。历史台账 `plans/edge-feature-stability-audit-2026-10-02.md:239` 引用的 `service/role_service.go:198` 行号已失效，按「历史台账不回改」约定保留原文，路径以本记录为准。
 
 ### 批次 3：BPMN 域（6-8 周，独立专项）
 
@@ -399,7 +427,7 @@ ticket 有 20 个 service 文件分散在 10 个子域。策略：
 |:---|:---|:---|:---|
 | 批次 0：守卫建设 | 1 周 | ✅ 已完成 2026-11-07（ROADMAP 登记待评审） | Gate C.8 硬模式 0 FAIL / 0 WARN，反向注入 3/3 变红 |
 | 批次 1：低复杂度域 | 2-3 周 | ✅ **已退出 2026-11-08**：两类裁决完成，8 个零消费方遗留实现退役，3 个专项文件留批次 3/4 | 174 → 169 → 163 → 160 → 153 → **145**（目标 ~145 达成） |
-| 批次 2：中型域 | 4-6 周 | sla/ci/approval/timer/escalation/skill 迁移完成 | service/ 减少到 ~110 文件 |
+| 批次 2：中型域 | 4-6 周 | 🔄 **已开局 2026-11-08**：knowledge 契约抽取 + rbac 域收口完成；六组中大型域待迁 | 145 → **144**；L.3 55/34 → **51/32**；目标 ~110 文件 |
 | 批次 3：BPMN 专项 | 6-8 周 | 36 个 bpmn/workflow/process 文件迁移完成 | service/ 减少到 ~74 文件 |
 | 批次 4：ticket 拆分 | 3-4 周 | 20 个 ticket 文件分散到子域 | service/ 减少到 ~54 文件 |
 | 收口 | 2 周 | 共享基础设施迁入 internal/，service/ 清零或仅余过渡 | service/ ≤ 0 或仅 internal 引用 |
@@ -418,9 +446,9 @@ ticket 有 20 个 service 文件分散在 10 个子域。策略：
 
 ## 度量指标
 
-- **service/ 源文件数量**：盘点时 174 → 2026-11-07 批次 1 首批后 169 → 续批后 163 → 第三批后 160 → 2026-11-08 WIP 收口后 153 → **2026-11-08 批次 1 退出后 145**（基线已收紧，目标 ~145 达成）→ 目标 0（或仅 internal 引用的 placeholder）
-- **handlers/<domain>/ 中 import service/ 的文件数**：批次 0 基线 71（50 域）→ 首批后 66（45 域）→ 续批后 61（40 域）→ 第三批后 59（38 域）→ 2026-11-08 收口后 55（34 域，本批未变）→ 目标 0
+- **service/ 源文件数量**：盘点时 174 → 2026-11-07 批次 1 首批后 169 → 续批后 163 → 第三批后 160 → 2026-11-08 WIP 收口后 153 → 2026-11-08 批次 1 退出后 145（目标 ~145 达成）→ **2026-11-08 批次 2 开局后 144**（基线已收紧）→ 目标 0（或仅 internal 引用的 placeholder）
+- **handlers/<domain>/ 中 import service/ 的文件数**：批次 0 基线 71（50 域）→ 首批后 66（45 域）→ 续批后 61（40 域）→ 第三批后 59（38 域）→ 2026-11-08 收口后 55（34 域）→ **2026-11-08 批次 2 开局后 51（32 域）**（knowledge / rbac 归零）→ 目标 0
 - **已有 service.go 的 handlers/ 域数量**：批次 0 时 26 → 首批后 31 → 续批后 36 → 第三批后 38 → 2026-11-08 读数 42（本批未变）→ 目标全部域自带
-- **零 service/ 依赖的域数量**：批次 0 时 17 → 首批后 22 → 续批后 27 → 第三批后 29 → 2026-11-08 读数 33（本批未变）→ 目标 69
+- **零 service/ 依赖的域数量**：批次 0 时 17 → 首批后 22 → 续批后 27 → 第三批后 29 → 2026-11-08 批次 1 读数 33 → **2026-11-08 批次 2 开局后 35** → 目标 69
 - **CI 守卫通过率**：`check-layering-convergence.sh`（Gate C.8）每次提交验证，由 `scripts/docs-gate/run-all.sh` 调度
 - **批次 1 退出标准（可直接读数）**：`service-prod-baseline.txt` 条目数下降、`handler-service-imports-baseline.txt` 中对应域计数归零、L.4 的「零 service/ 依赖域」数上升；每次下降后跑 `--update-baseline` 收紧，禁止反向放宽

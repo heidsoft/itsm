@@ -100,7 +100,6 @@ provisioning_service.go
 rag_service.go
 release_service.go
 report_export_service.go
-role_service.go
 root_cause_analysis_service.go
 root_cause_service.go
 sequence_service.go

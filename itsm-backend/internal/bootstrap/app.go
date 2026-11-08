@@ -1190,8 +1190,8 @@ func NewApplication() *Application {
 	groupHTTPHandler := groupHandler.NewHandler(groupService, sugar)
 
 	// RBAC handler (database-backed with tenant isolation)
-	roleService := service.NewRoleService(client, sugar)
-	permissionService := service.NewPermissionService(client, sugar)
+	roleService := rbacHandler.NewRoleService(client, sugar)
+	permissionService := rbacHandler.NewPermissionService(client, sugar)
 	menuService := service.NewMenuService(client, sugar)
 	rbacHTTPHandler := rbacHandler.NewHandler(roleService, permissionService, menuService, sugar)
 

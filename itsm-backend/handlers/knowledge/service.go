@@ -13,7 +13,6 @@ import (
 	"itsm-backend/ent/permission"
 	"itsm-backend/internal/commandbus"
 	"itsm-backend/internal/knowledgeaccess"
-	"itsm-backend/service"
 )
 
 type Service struct {
@@ -21,7 +20,8 @@ type Service struct {
 	logger *zap.SugaredLogger
 	// 向量索引同步（可选注入）：发布→索引，取消发布/软删除→移除向量。
 	// nil 时跳过同步，RAG 仍可退化为关键字搜索。
-	rag *service.RAGService
+	// 依赖域包窄契约而非共享层具体类型，见 rag_contract.go。
+	rag RAGService
 	// client 用于访问权限表（knowledgeaccess 的纳管记录存在 permission 表）。
 	// 经 SetEntClient 注入；未注入时纳管接口返回明确错误而非静默失败。
 	client *ent.Client
@@ -265,7 +265,8 @@ func (s *Service) filterCitable(articles []*Article) []*Article {
 }
 
 // SetRAG wires the optional RAG service for vector index synchronization.
-func (s *Service) SetRAG(rag *service.RAGService) {
+// 参数类型为域包窄契约：共享层实现与域内 fake 均可注入。
+func (s *Service) SetRAG(rag RAGService) {
 	s.rag = rag
 }
 

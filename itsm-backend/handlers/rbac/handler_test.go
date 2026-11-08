@@ -51,8 +51,8 @@ func setupRBACTest(t *testing.T) (*Handler, *ent.Client) {
 
 	logger := zaptest.NewLogger(t).Sugar()
 	h := NewHandler(
-		service.NewRoleService(client, logger),
-		service.NewPermissionService(client, logger),
+		NewRoleService(client, logger),
+		NewPermissionService(client, logger),
 		service.NewMenuService(client, logger),
 		logger,
 	)
@@ -764,7 +764,7 @@ func TestCreateRole_ValidationFailure_Mock(t *testing.T) {
 func TestAssignPermissions_CrossTenantSentinel_Mock(t *testing.T) {
 	role := &mockRoleService{}
 	h := newMockRbacHandler(t, role, &mockPermissionService{}, &mockMenuService{})
-	role.On("AssignPermissions", mock.Anything, 1, []int{99}, 1).Return(service.ErrPermissionNotInTenant)
+	role.On("AssignPermissions", mock.Anything, 1, []int{99}, 1).Return(ErrPermissionNotInTenant)
 
 	w, c := mockCtx(http.MethodPost, "/api/v1/roles/1/permissions", `{"permissionIds":[99]}`, 1)
 	h.AssignPermissions(c)
@@ -1013,6 +1013,6 @@ func TestDeleteMenu_UnknownIsNotFound_Mock(t *testing.T) {
 
 // 直接引用哨兵，防止重构时误删错误语义。
 func TestSentinelExists(t *testing.T) {
-	assert.Error(t, service.ErrPermissionNotInTenant)
-	assert.True(t, errors.Is(service.ErrPermissionNotInTenant, service.ErrPermissionNotInTenant))
+	assert.Error(t, ErrPermissionNotInTenant)
+	assert.True(t, errors.Is(ErrPermissionNotInTenant, ErrPermissionNotInTenant))
 }
