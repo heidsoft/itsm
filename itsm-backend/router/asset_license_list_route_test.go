@@ -17,7 +17,6 @@ import (
 	"itsm-backend/ent/enttest"
 	assetHandler "itsm-backend/handlers/asset"
 	"itsm-backend/middleware"
-	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/mattn/go-sqlite3"
@@ -298,7 +297,7 @@ func setupAssetListRouter(t *testing.T, client *ent.Client, logger *zap.SugaredL
 		JWTSecret:    assetListSecret,
 		Logger:       logger,
 		Client:       client,
-		AssetHandler: assetHandler.NewHandler(service.NewAssetService(client, logger), service.NewAssetLicenseService(client, logger), logger),
+		AssetHandler: assetHandler.NewHandler(assetHandler.NewAssetService(client, logger), assetHandler.NewAssetLicenseService(client, logger), logger),
 	})
 	return r
 }

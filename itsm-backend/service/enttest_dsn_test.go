@@ -14,3 +14,5 @@ var testDBCounter int64
 func testDSN() string {
 	return fmt.Sprintf("file:svc_test_%d?mode=memory&cache=shared&_fk=1", atomic.AddInt64(&testDBCounter, 1))
 }
+
+func boolPtr(b bool) *bool { return &b }

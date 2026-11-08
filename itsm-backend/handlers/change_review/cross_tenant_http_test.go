@@ -31,7 +31,6 @@ import (
 	changeReviewHandler "itsm-backend/handlers/change_review"
 	"itsm-backend/middleware"
 	"itsm-backend/router"
-	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/mattn/go-sqlite3"
@@ -89,7 +88,7 @@ func newFixture(t *testing.T) *fixture {
 		JWTSecret:           secret,
 		Logger:              logger,
 		Client:              client,
-		ChangeReviewHandler: changeReviewHandler.NewHandler(service.NewChangeReviewService(client, logger), logger),
+		ChangeReviewHandler: changeReviewHandler.NewHandler(changeReviewHandler.NewChangeReviewService(client, logger), logger),
 	})
 
 	return &fixture{

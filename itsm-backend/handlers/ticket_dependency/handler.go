@@ -8,18 +8,17 @@ import (
 
 	"itsm-backend/common"
 	"itsm-backend/dto"
-	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 )
 
 type Handler struct {
-	dependencyService *service.TicketDependencyService
+	dependencyService *TicketDependencyService
 	logger            *zap.SugaredLogger
 }
 
-func NewHandler(dependencyService *service.TicketDependencyService, logger *zap.SugaredLogger) *Handler {
+func NewHandler(dependencyService *TicketDependencyService, logger *zap.SugaredLogger) *Handler {
 	if logger == nil {
 		logger = zap.NewNop().Sugar()
 	}
@@ -69,7 +68,7 @@ func (h *Handler) AnalyzeDependencyImpact(ctx *gin.Context) {
 	)
 	if err != nil {
 		// 跨租户与真实不存在都按「不存在」处理，不确认对方资源存在；原始错误只进日志。
-		if errors.Is(err, service.ErrDependencyTicketNotFound) {
+		if errors.Is(err, ErrDependencyTicketNotFound) {
 			h.logger.Warnw("Dependency impact target not found", "ticket_id", ticketID, "tenant_id", tid, "error", err)
 			common.Fail(ctx, common.NotFoundCode, "工单不存在或无权访问")
 			return

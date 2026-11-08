@@ -15,7 +15,6 @@ import (
 	"itsm-backend/ent/enttest"
 	vendorHandler "itsm-backend/handlers/vendor"
 	"itsm-backend/middleware"
-	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/mattn/go-sqlite3"
@@ -78,7 +77,7 @@ func setupVendorRouteTestOn(t *testing.T, dsn string) vendorRouteFixture {
 		JWTSecret:     secret,
 		Logger:        logger,
 		Client:        client,
-		VendorHandler: vendorHandler.NewHandler(service.NewVendorService(client, logger), logger),
+		VendorHandler: vendorHandler.NewHandler(vendorHandler.NewVendorService(client, logger), logger),
 	})
 
 	return vendorRouteFixture{engine: r, secret: secret, client: client, userA: userA, stranger: stranger, vendorA: vendorA}

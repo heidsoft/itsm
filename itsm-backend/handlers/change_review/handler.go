@@ -5,7 +5,6 @@ import (
 
 	"itsm-backend/common"
 	"itsm-backend/dto"
-	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -13,11 +12,11 @@ import (
 
 // Handler 变更评审组成员名册 HTTP 层（仅名册管理；评审审批流转由审批链引擎驱动）。
 type Handler struct {
-	svc *service.ChangeReviewService
+	svc *ChangeReviewService
 }
 
 // NewHandler 创建变更评审组 handler
-func NewHandler(svc *service.ChangeReviewService, _ *zap.SugaredLogger) *Handler {
+func NewHandler(svc *ChangeReviewService, _ *zap.SugaredLogger) *Handler {
 	return &Handler{svc: svc}
 }
 

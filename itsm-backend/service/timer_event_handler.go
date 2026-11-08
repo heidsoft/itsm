@@ -85,11 +85,19 @@ func (h *TimerEventHandler) handleIntermediateTimer(ctx context.Context, timer *
 	}
 
 	if instance.CurrentActivityID != timer.ActivityID {
-		h.logger.Warnw("Process current activity does not match timer activity_id",
+		// 流程令牌已不在该 catch 事件上（已被并行分支/其它事件推进或实例已迁移），
+		// 继续从 timer.ActivityID 推进会制造重复令牌破坏流程。跳过本次触发并留痕，
+		// 返回 nil 让调度器把 timer 收敛为 completed，不再重试。
+		h.logger.Warnw("Skipping intermediate timer: process current activity does not match timer activity_id",
 			"instance_id", instance.ID,
 			"current_activity", instance.CurrentActivityID,
 			"timer_activity", timer.ActivityID,
 		)
+		h.recordAudit(ctx, instance, timer.ActivityID, "intermediateCatchEvent", "timer_skipped",
+			fmt.Sprintf("Intermediate timer %s skipped: process token is on %q, not %q",
+				timer.TimerID, instance.CurrentActivityID, timer.ActivityID),
+			timer)
+		return nil
 	}
 
 	h.logger.Infow("Advancing process from intermediate timer event",

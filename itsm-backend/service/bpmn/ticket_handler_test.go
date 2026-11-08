@@ -49,9 +49,13 @@ func TestTicketServiceTaskHandler_UpdateTicketStatus(t *testing.T) {
 		SetStatus("open").
 		SetTicketNumber("TICKET-001").
 		SetRequesterID(testUser.ID).
+		SetResolution("问题已解决").
 		SetTenantID(testTenant.ID).
 		Save(ctx)
 	require.NoError(t, err)
+
+	// 状态机闸门按租户 fail-closed，服务任务调用必须携带 BPMN 租户上下文。
+	ctx = context.WithValue(ctx, BPMNTenantIDContextKey, testTenant.ID)
 
 	tests := []struct {
 		name           string

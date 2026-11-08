@@ -781,6 +781,7 @@ func precheckRoutePermissions() map[string]map[string]Permission {
 			"/api/v1/tickets/workflow/reopen":                        {Resource: "ticket", Action: "close"},
 			"/api/v1/tickets/workflow/resolve":                       {Resource: "ticket", Action: "resolve"},
 			"/api/v1/tickets/workflow/withdraw":                      {Resource: "ticket", Action: "update"},
+			"/api/v1/timers/*/replay":                                {Resource: "system", Action: "write"},
 			"/api/v1/users":                                          {Resource: "user", Action: "write"},
 			"/api/v1/users/batch":                                    {Resource: "user", Action: "write"},
 			"/api/v1/vendors":                                        {Resource: "vendor", Action: "write"},

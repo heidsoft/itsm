@@ -337,9 +337,10 @@ func TestTimerScheduler_ScheduleAndFire(t *testing.T) {
 	assert.Equal(t, created.TimerID, firedTimerID)
 	firedMu.Unlock()
 
-	fired, err := store.GetByTimerID(ctx, created.TimerID)
+	final, err := store.GetByTimerID(ctx, created.TimerID)
 	require.NoError(t, err)
-	assert.Equal(t, string(TimerStatusFired), fired.Status)
+	// 回调成功后 fired 必须收敛为 completed；fired 只是执行中的中间态。
+	assert.Equal(t, string(TimerStatusCompleted), final.Status)
 }
 
 func TestTimerScheduler_Cancel(t *testing.T) {

@@ -30,7 +30,6 @@ import (
 	projectHandler "itsm-backend/handlers/project"
 	"itsm-backend/middleware"
 	"itsm-backend/router"
-	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/mattn/go-sqlite3"
@@ -80,7 +79,7 @@ func newFixture(t *testing.T) *fixture {
 		Logger:         logger,
 		Client:         client,
 		CommonHandler:  commonhandler.NewHandler(nil),
-		ProjectHandler: projectHandler.NewHandler(service.NewProjectService(client)),
+		ProjectHandler: projectHandler.NewHandler(projectHandler.NewProjectService(client)),
 	})
 
 	return &fixture{

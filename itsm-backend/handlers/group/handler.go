@@ -6,7 +6,6 @@ import (
 	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/middleware"
-	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -14,12 +13,12 @@ import (
 
 // Handler HTTP handler for group domain
 type Handler struct {
-	svc    *service.GroupService
+	svc    *GroupService
 	logger *zap.SugaredLogger
 }
 
 // NewHandler creates a new group handler
-func NewHandler(svc *service.GroupService, logger *zap.SugaredLogger) *Handler {
+func NewHandler(svc *GroupService, logger *zap.SugaredLogger) *Handler {
 	return &Handler{svc: svc, logger: logger}
 }
 

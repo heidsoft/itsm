@@ -8,7 +8,6 @@ import (
 
 	"itsm-backend/common"
 	"itsm-backend/dto"
-	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -16,12 +15,12 @@ import (
 
 // Handler 持有 VendorService 依赖.
 type Handler struct {
-	svc    *service.VendorService
+	svc    *VendorService
 	logger *zap.SugaredLogger
 }
 
 // NewHandler 构造 vendor Handler.
-func NewHandler(svc *service.VendorService, logger *zap.SugaredLogger) *Handler {
+func NewHandler(svc *VendorService, logger *zap.SugaredLogger) *Handler {
 	if logger == nil {
 		logger = zap.NewNop().Sugar()
 	}
@@ -58,10 +57,10 @@ func pathVendorID(ctx *gin.Context) (int, bool) {
 // + 业务码 404；编码冲突和删除不存在的记录也统一回 500。原始错误只进日志。
 func (h *Handler) failVendorError(ctx *gin.Context, rawErr error, opMsg string, vendorID, tid int) {
 	switch {
-	case errors.Is(rawErr, service.ErrVendorCodeExists):
+	case errors.Is(rawErr, ErrVendorCodeExists):
 		h.logger.Warnw("Vendor code conflict", "error", rawErr, "tenant_id", tid)
 		common.Conflict(ctx, "供应商编码已存在", nil)
-	case errors.Is(rawErr, service.ErrVendorNotFound):
+	case errors.Is(rawErr, ErrVendorNotFound):
 		// 查询带租户谓词，跨租户与真实不存在同样表现为 not found。
 		h.logger.Warnw("Vendor not found", "error", rawErr, "vendor_id", vendorID, "tenant_id", tid)
 		common.Fail(ctx, common.NotFoundCode, "供应商不存在或无权访问")

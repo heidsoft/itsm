@@ -38,14 +38,16 @@ import (
 )
 
 type fixture struct {
-	engine  *gin.Engine
-	client  *ent.Client
-	secret  string
-	tenantA *ent.Tenant
-	tenantB *ent.Tenant
-	userA   *ent.User
-	endUser *ent.User // end_user 不持 system:read → 403 探针
-	timerA  string
+	engine       *gin.Engine
+	client       *ent.Client
+	secret       string
+	tenantA      *ent.Tenant
+	tenantB      *ent.Tenant
+	userA        *ent.User
+	sysA         *ent.User // sysadmin 持 system:write，replay 成功路径用
+	endUser      *ent.User // end_user 不持 system:read → 403 探针
+	timerA       string
+	timerAFailed string
 }
 
 func newFixture(t *testing.T) *fixture {
@@ -61,6 +63,8 @@ func newFixture(t *testing.T) *fixture {
 
 	userA := client.User.Create().SetUsername("timer-a-owner").SetEmail("timer-a@example.com").SetName("Owner A").
 		SetPasswordHash("hash").SetRole("security_admin").SetActive(true).SetTenantID(tenantA.ID).SaveX(ctx)
+	sysA := client.User.Create().SetUsername("timer-a-sysadmin").SetEmail("timer-a-sys@example.com").SetName("SysAdmin A").
+		SetPasswordHash("hash").SetRole("sysadmin").SetActive(true).SetTenantID(tenantA.ID).SaveX(ctx)
 	endUser := client.User.Create().SetUsername("timer-a-enduser").SetEmail("timer-a-end@example.com").SetName("EndUser A").
 		SetPasswordHash("hash").SetRole("end_user").SetActive(true).SetTenantID(tenantA.ID).SaveX(ctx)
 
@@ -68,6 +72,11 @@ func newFixture(t *testing.T) *fixture {
 		SetProcessDefinitionKey("process-a").SetTimerExpression("PT1H").
 		SetExpressionType("duration").SetFireAt(time.Now().Add(time.Hour)).
 		SetIdempotencyKey("timer-a-001-key").SetTenantID(tenantA.ID).SaveX(ctx)
+	timerAFailed := client.ProcessTimer.Create().SetTimerID("timer-a-failed").SetTimerType("start").
+		SetProcessDefinitionKey("process-a").SetTimerExpression("PT1H").
+		SetExpressionType("duration").SetFireAt(time.Now().Add(-time.Hour)).
+		SetIdempotencyKey("timer-a-failed-key").SetTenantID(tenantA.ID).
+		SetStatus("failed").SetFailureReason("retries exhausted").SetRetryCount(3).SaveX(ctx)
 	client.ProcessTimer.Create().SetTimerID("timer-b-001").SetTimerType("start").
 		SetProcessDefinitionKey("process-b").SetTimerExpression("PT2H").
 		SetExpressionType("duration").SetFireAt(time.Now().Add(2 * time.Hour)).
@@ -87,7 +96,8 @@ func newFixture(t *testing.T) *fixture {
 	return &fixture{
 		engine: engine, client: client, secret: secret,
 		tenantA: tenantA, tenantB: tenantB,
-		userA: userA, endUser: endUser, timerA: timerA.TimerID,
+		userA: userA, sysA: sysA, endUser: endUser,
+		timerA: timerA.TimerID, timerAFailed: timerAFailed.TimerID,
 	}
 }
 
@@ -164,6 +174,44 @@ func TestTimerHTTPContract(t *testing.T) {
 		// GET /timers/（缺失 id，但 gin 路由下空 id 走列表）——改用 system:read 授权探针：
 		// end_user 不持 system:read（roles.go 权威词表）。
 		w := fx.do(t, http.MethodGet, base, fx.endUser)
+		require.Equal(t, http.StatusForbidden, w.Code, "body=%s", w.Body.String())
+		require.Equal(t, 2003, decodeEnvelope(t, w).Code)
+	})
+
+	t.Run("replay重驱死信并重置重试预算", func(t *testing.T) {
+		w := fx.do(t, http.MethodPost, base+"/"+fx.timerAFailed+"/replay", fx.sysA)
+		require.Equal(t, http.StatusOK, w.Code, "body=%s", w.Body.String())
+		env := decodeEnvelope(t, w)
+		require.Equal(t, 0, env.Code)
+		var data struct {
+			Status     string `json:"status"`
+			RetryCount int    `json:"retryCount"`
+		}
+		require.NoError(t, json.Unmarshal(env.Data, &data), "body=%s", w.Body.String())
+		require.Equal(t, "pending", data.Status, "重放后必须回到 pending")
+		require.Equal(t, 0, data.RetryCount, "重放必须清零重试预算")
+	})
+
+	t.Run("replay拒绝非failed/fired状态为409", func(t *testing.T) {
+		// 上一子测试已把 timer 置回 pending：对 pending 重放属非法状态迁移。
+		w := fx.do(t, http.MethodPost, base+"/"+fx.timerAFailed+"/replay", fx.sysA)
+		require.Equal(t, http.StatusConflict, w.Code, "body=%s", w.Body.String())
+	})
+
+	t.Run("replay跨租户与不存在同形404", func(t *testing.T) {
+		w := fx.do(t, http.MethodPost, base+"/timer-b-001/replay", fx.sysA)
+		require.Equal(t, http.StatusNotFound, w.Code, "body=%s", w.Body.String())
+		require.Equal(t, 4004, decodeEnvelope(t, w).Code)
+
+		w = fx.do(t, http.MethodPost, base+"/timer-ghost-999/replay", fx.sysA)
+		require.Equal(t, http.StatusNotFound, w.Code, "body=%s", w.Body.String())
+		require.Equal(t, 4004, decodeEnvelope(t, w).Code)
+	})
+
+	t.Run("replay需要system:write", func(t *testing.T) {
+		// security_admin 持 system:read（组级中间件已放行）但不持 system:write，
+		// 证明该路由有独立的写权限码校验，而非仅靠组级读权限。
+		w := fx.do(t, http.MethodPost, base+"/"+fx.timerAFailed+"/replay", fx.userA)
 		require.Equal(t, http.StatusForbidden, w.Code, "body=%s", w.Body.String())
 		require.Equal(t, 2003, decodeEnvelope(t, w).Code)
 	})

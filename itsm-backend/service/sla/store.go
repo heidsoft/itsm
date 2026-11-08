@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"itsm-backend/common"
 	"itsm-backend/ent"
 	"itsm-backend/ent/slastate"
 
@@ -320,9 +321,24 @@ func (s *Store) RecordResolution(ctx context.Context, tenantID int, aggregateTyp
 	return nil
 }
 
-// Pause 暂停 SLA 计时。
+// Pause 暂停 SLA 计时（独立事务便捷入口）。
 func (s *Store) Pause(ctx context.Context, tenantID int, aggregateType string, aggregateID int, reason string) error {
-	_, err := s.client.SLAState.Update().
+	tx, err := s.client.Tx(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+	if err := s.PauseInTx(ctx, tx, tenantID, aggregateType, aggregateID, reason, time.Now()); err != nil {
+		return err
+	}
+	return tx.Commit()
+}
+
+// PauseInTx 在调用方事务内暂停 SLA 计时，使 sla_states 与领域实体（ticket/incident）
+// 的内嵌 SLA 字段同事务提交，杜绝「实体已暂停、权威表仍 active」的双写漂移。
+// 条件更新 active→paused 并检查 affected，竞态/非 active 一律 conflict，不得静默成功。
+func (s *Store) PauseInTx(ctx context.Context, tx *ent.Tx, tenantID int, aggregateType string, aggregateID int, reason string, now time.Time) error {
+	affected, err := tx.SLAState.Update().
 		Where(
 			slastate.TenantID(tenantID),
 			slastate.AggregateType(aggregateType),
@@ -330,30 +346,84 @@ func (s *Store) Pause(ctx context.Context, tenantID int, aggregateType string, a
 			slastate.StatusEQ("active"),
 		).
 		SetStatus("paused").
-		SetPausedAt(time.Now()).
+		SetPausedAt(now).
 		SetPauseReason(reason).
 		Save(ctx)
-	return err
-}
-
-// Resume 恢复 SLA 计时，累加暂停时长。
-func (s *Store) Resume(ctx context.Context, tenantID int, aggregateType string, aggregateID int) error {
-	state, err := s.GetState(ctx, tenantID, aggregateType, aggregateID)
 	if err != nil {
 		return err
 	}
+	if affected == 0 {
+		return common.NewBusinessError(common.ConflictCode, "SLA 状态非 active，无法暂停（不存在、已暂停或已违规）", "")
+	}
+	return nil
+}
+
+// Resume 恢复 SLA 计时（独立事务便捷入口）。
+func (s *Store) Resume(ctx context.Context, tenantID int, aggregateType string, aggregateID int) error {
+	tx, err := s.client.Tx(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+	if _, _, err := s.ResumeInTx(ctx, tx, tenantID, aggregateType, aggregateID, time.Now()); err != nil {
+		return err
+	}
+	return tx.Commit()
+}
+
+// ResumeInTx 在调用方事务内恢复 SLA 计时，并把暂停时长并入权威 deadline。
+// 返回延长后的 response/resolution deadline，供调用方用同一值双写领域实体，
+// 保证 sla_states 与内嵌字段口径一致。
+//
+// 此前 Resume 只累加 paused_duration_seconds 而不延长 deadline，监控扫描以
+// sla_states.deadline 为权威，恢复后立刻再次判违规→回收→再违规循环。
+func (s *Store) ResumeInTx(ctx context.Context, tx *ent.Tx, tenantID int, aggregateType string, aggregateID int, now time.Time) (time.Time, time.Time, error) {
+	state, err := tx.SLAState.Query().
+		Where(
+			slastate.TenantID(tenantID),
+			slastate.AggregateType(aggregateType),
+			slastate.AggregateID(aggregateID),
+		).
+		Only(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return time.Time{}, time.Time{}, common.NewBusinessError(common.ConflictCode, "SLA 状态不存在，无法恢复", "")
+		}
+		return time.Time{}, time.Time{}, err
+	}
 	if state.Status != "paused" || state.PausedAt.IsZero() {
-		return nil
+		return time.Time{}, time.Time{}, common.NewBusinessError(common.ConflictCode, "SLA 未处于暂停状态，无法恢复", "")
 	}
 
-	pauseDuration := int(time.Since(state.PausedAt).Seconds())
-	_, err = state.Update().
+	pausedDuration := now.Sub(state.PausedAt)
+	var extendedResp, extendedRes time.Time
+	upd := tx.SLAState.Update().
+		Where(
+			slastate.TenantID(tenantID),
+			slastate.AggregateType(aggregateType),
+			slastate.AggregateID(aggregateID),
+			slastate.StatusEQ("paused"),
+		).
 		SetStatus("active").
-		SetPausedDurationSeconds(state.PausedDurationSeconds + pauseDuration).
+		AddPausedDurationSeconds(int(pausedDuration.Seconds())).
 		ClearPausedAt().
-		ClearPauseReason().
-		Save(ctx)
-	return err
+		ClearPauseReason()
+	if !state.ResponseDeadline.IsZero() {
+		extendedResp = state.ResponseDeadline.Add(pausedDuration)
+		upd.SetResponseDeadline(extendedResp)
+	}
+	if !state.ResolutionDeadline.IsZero() {
+		extendedRes = state.ResolutionDeadline.Add(pausedDuration)
+		upd.SetResolutionDeadline(extendedRes)
+	}
+	affected, err := upd.Save(ctx)
+	if err != nil {
+		return time.Time{}, time.Time{}, err
+	}
+	if affected == 0 {
+		return time.Time{}, time.Time{}, common.NewBusinessError(common.ConflictCode, "SLA 状态并发变更，恢复失败", "")
+	}
+	return extendedResp, extendedRes, nil
 }
 
 // BreachCheck 检查并标记超时违规。

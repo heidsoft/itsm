@@ -11,7 +11,6 @@ import (
 
 	"itsm-backend/ent/enttest"
 	"itsm-backend/middleware"
-	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
@@ -27,7 +26,7 @@ func setupTestHandler(t *testing.T) *gin.Engine {
 	t.Cleanup(func() { client.Close() })
 
 	logger := zaptest.NewLogger(t).Sugar()
-	configService := service.NewSystemConfigService(client, logger)
+	configService := NewSystemConfigService(client, logger)
 	h := NewHandler(configService, logger)
 
 	r := gin.New()
@@ -161,7 +160,7 @@ func TestHandler_MissingTenantContext(t *testing.T) {
 	client := enttest.Open(t, "sqlite3", "file:sc_notenant_"+t.Name()+"?mode=memory&_fk=1")
 	t.Cleanup(func() { client.Close() })
 	logger := zaptest.NewLogger(t).Sugar()
-	configService := service.NewSystemConfigService(client, logger)
+	configService := NewSystemConfigService(client, logger)
 	h := NewHandler(configService, logger)
 
 	r := gin.New()

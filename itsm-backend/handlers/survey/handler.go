@@ -8,7 +8,6 @@ import (
 	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/middleware"
-	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -16,12 +15,12 @@ import (
 
 // Handler 持有 SurveyService 依赖.
 type Handler struct {
-	svc    *service.SurveyService
+	svc    *SurveyService
 	logger *zap.SugaredLogger
 }
 
 // NewHandler 构造 survey Handler.
-func NewHandler(svc *service.SurveyService, logger *zap.SugaredLogger) *Handler {
+func NewHandler(svc *SurveyService, logger *zap.SugaredLogger) *Handler {
 	if logger == nil {
 		logger = zap.NewNop().Sugar()
 	}

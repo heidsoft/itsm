@@ -583,6 +583,26 @@ test('schema --as tools emits function-calling definitions with a CLI mapping', 
   assert.equal(create['x-itsm'].positional[0], 'title');
 });
 
+test('mutating verbs absent from the legacy regex are classified writes, reads stay normal', async () => {
+  // Regression: risk defaulted to `normal` for non-GET commands whose verb
+  // (comments.add, acknowledge, lifecycle, suspend, tags-add…) was missing
+  // from the write regex. Hosts advertised 45 mutations as reads.
+  const r = await run(['--json', 'schema', '--as', 'tools', '--domain', 'cmdb']);
+  assert.equal(r.code, 0);
+  const tools = envelope(r).data.tools;
+  const riskOf = (command) => tools.find((t) => t['x-itsm'].command === command)?.['x-itsm'].risk;
+  assert.equal(riskOf('cmdb.lifecycle'), 'write');
+  assert.equal(riskOf('cmdb.revert'), 'high-risk-write', 'revert overwrites current state: it must be gated');
+  assert.equal(riskOf('cmdb.tags.add'), 'write');
+  assert.equal(riskOf('cmdb.search'), 'normal', 'POST search body is transport, not a mutation');
+});
+
+test('cmdb.revert is gated: exit 10 without --yes and zero requests', async () => {
+  const r = await run(['--json', 'cmdb', 'revert', '5']);
+  assert.equal(r.code, 10, r.stdout);
+  assert.equal(envelope(r).error.kind, 'confirmation_required');
+});
+
 test('manifest advertises the protocol and output controls', async () => {
   const env = envelope(await run(['--json', 'manifest']));
   assert.equal(env.data.agentProtocol, true);

@@ -1,5 +1,5 @@
 // Package sla_template 是 SLA 模板域的 HTTP handler 层（域切片架构）。
-// 模板目录与安装规则由 service.SLATemplateService 承载，本包只做租户上下文、
+// 模板目录与安装规则由 SLATemplateService 承载，本包只做租户上下文、
 // DTO 投影与错误映射。
 package sla_template
 
@@ -10,22 +10,21 @@ import (
 	"itsm-backend/common/handlerctx"
 	"itsm-backend/dto"
 	"itsm-backend/middleware"
-	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
 )
 
 // Handler SLA 模板 HTTP handler
 type Handler struct {
-	templateService *service.SLATemplateService
+	templateService *SLATemplateService
 }
 
 // NewHandler 创建 SLA 模板 handler 实例
-func NewHandler(templateService *service.SLATemplateService) *Handler {
+func NewHandler(templateService *SLATemplateService) *Handler {
 	return &Handler{templateService: templateService}
 }
 
-func (h *Handler) toResponse(tmpl service.SLATemplate, state service.SLATemplateInstallInfo) *dto.SLATemplateResponse {
+func (h *Handler) toResponse(tmpl SLATemplate, state SLATemplateInstallInfo) *dto.SLATemplateResponse {
 	resp := &dto.SLATemplateResponse{
 		Key:              tmpl.Key,
 		Name:             tmpl.Name,
@@ -105,7 +104,7 @@ func (h *Handler) GetTemplate(c *gin.Context) {
 
 	tmpl, err := h.templateService.GetTemplate(key)
 	if err != nil {
-		if errors.Is(err, service.ErrSLATemplateNotFound) {
+		if errors.Is(err, ErrSLATemplateNotFound) {
 			common.NotFoundWithErr(c, err, "SLA 模板不存在")
 			return
 		}
@@ -137,7 +136,7 @@ func (h *Handler) InstallTemplate(c *gin.Context) {
 
 	result, err := h.templateService.InstallTemplate(c.Request.Context(), key, tid)
 	if err != nil {
-		if errors.Is(err, service.ErrSLATemplateNotFound) {
+		if errors.Is(err, ErrSLATemplateNotFound) {
 			common.NotFoundWithErr(c, err, "SLA 模板不存在")
 			return
 		}

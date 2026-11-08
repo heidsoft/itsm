@@ -460,3 +460,121 @@ func TestResumeSLA_RejectsInvalidState(t *testing.T) {
 	require.ErrorAs(t, err, &bizErr, "未暂停工单的恢复必须是业务错误")
 	assert.Equal(t, common.ConflictCode, bizErr.Code)
 }
+
+// TestResumeSLA_ExtendsAuthoritativeDeadlines resume 必须把暂停时长并入 sla_states
+// 的权威 deadline，并用同一值双写领域实体。此前 store.Resume 只累加
+// paused_duration_seconds 而不延长 deadline，监控以 sla_states.deadline 为权威，
+// 恢复后立刻再判违规；实体与权威表口径也会漂移。
+func TestResumeSLA_ExtendsAuthoritativeDeadlines(t *testing.T) {
+	client, service, ctx := setupSLAMonitorTest(t)
+	defer client.Close()
+	tn, tk, def := createSlaPauseFixture(t, ctx, client, "extend")
+
+	responseDeadline := time.Now().Add(10 * time.Minute)
+	resolutionDeadline := time.Now().Add(60 * time.Minute)
+	_, err := client.SLAState.Create().
+		SetTenantID(tn.ID).
+		SetAggregateType("ticket").
+		SetAggregateID(tk.ID).
+		SetSLADefinitionID(def.ID).
+		SetStatus("active").
+		SetResponseDeadline(responseDeadline).
+		SetResolutionDeadline(resolutionDeadline).
+		Save(ctx)
+	require.NoError(t, err)
+	_, err = tk.Update().
+		SetSLAStatus("active").
+		SetSLAResponseDeadline(responseDeadline).
+		SetSLAResolutionDeadline(resolutionDeadline).
+		Save(ctx)
+	require.NoError(t, err)
+
+	require.NoError(t, service.PauseSLA(ctx, tn.ID, "ticket", tk.ID, "等待客户补充信息"))
+	pausedAt := time.Now().Add(-2 * time.Hour)
+	_, err = client.SLAState.Update().
+		Where(
+			slastate.TenantIDEQ(tn.ID),
+			slastate.AggregateTypeEQ("ticket"),
+			slastate.AggregateIDEQ(tk.ID),
+		).
+		SetPausedAt(pausedAt).
+		Save(ctx)
+	require.NoError(t, err)
+	_, err = client.Ticket.UpdateOneID(tk.ID).SetSLAPausedAt(pausedAt).Save(ctx)
+	require.NoError(t, err)
+
+	require.NoError(t, service.ResumeSLA(ctx, tn.ID, "ticket", tk.ID))
+
+	state, err := client.SLAState.Query().
+		Where(
+			slastate.TenantIDEQ(tn.ID),
+			slastate.AggregateTypeEQ("ticket"),
+			slastate.AggregateIDEQ(tk.ID),
+		).
+		Only(ctx)
+	require.NoError(t, err)
+	assert.Equal(t, "active", state.Status)
+	assert.True(t, state.PausedAt.IsZero(), "resume 必须清空 paused_at")
+	assert.WithinDuration(t, responseDeadline.Add(2*time.Hour), state.ResponseDeadline, time.Minute,
+		"权威响应 deadline 必须延长暂停时长")
+	assert.WithinDuration(t, resolutionDeadline.Add(2*time.Hour), state.ResolutionDeadline, time.Minute,
+		"权威解决 deadline 必须延长暂停时长")
+	assert.InDelta(t, 7200, state.PausedDurationSeconds, 60, "累计暂停秒数必须并入")
+
+	refreshed, err := client.Ticket.Get(ctx, tk.ID)
+	require.NoError(t, err)
+	assert.Equal(t, "active", refreshed.SLAStatus)
+	assert.True(t, refreshed.SLAResponseDeadline.Equal(state.ResponseDeadline),
+		"实体响应 deadline 必须与权威表一致")
+	assert.True(t, refreshed.SLAResolutionDeadline.Equal(state.ResolutionDeadline),
+		"实体解决 deadline 必须与权威表一致")
+}
+
+// TestResumeSLA_PreventsReBreachLoop resume 延长权威 deadline 后，再次扫描不得对
+// 同一工单重新判违规。此前 deadline 未延长，回收后下一轮扫描立刻再建违规，形成
+// 违规→回收→再违规死循环。
+func TestResumeSLA_PreventsReBreachLoop(t *testing.T) {
+	client, service, ctx := setupSLAMonitorTest(t)
+	defer client.Close()
+	tn, tk, def := createSlaPauseFixture(t, ctx, client, "rebreach")
+
+	responseDeadline := time.Now().Add(-time.Minute)
+	resolutionDeadline := time.Now().Add(30 * time.Minute)
+	_, err := client.SLAState.Create().
+		SetTenantID(tn.ID).
+		SetAggregateType("ticket").
+		SetAggregateID(tk.ID).
+		SetSLADefinitionID(def.ID).
+		SetStatus("active").
+		SetResponseDeadline(responseDeadline).
+		SetResolutionDeadline(resolutionDeadline).
+		Save(ctx)
+	require.NoError(t, err)
+
+	stats, err := service.CheckSLAViolations(ctx, tn.ID)
+	require.NoError(t, err)
+	require.GreaterOrEqual(t, stats.NewViolations, 1, "响应违规必须先被创建")
+
+	require.NoError(t, service.PauseSLA(ctx, tn.ID, "ticket", tk.ID, "客户要求暂停"))
+	_, err = client.SLAState.Update().
+		Where(
+			slastate.TenantIDEQ(tn.ID),
+			slastate.AggregateTypeEQ("ticket"),
+			slastate.AggregateIDEQ(tk.ID),
+		).
+		SetPausedAt(time.Now().Add(-2 * time.Hour)).
+		Save(ctx)
+	require.NoError(t, err)
+	require.NoError(t, service.ResumeSLA(ctx, tn.ID, "ticket", tk.ID))
+
+	stats2, err := service.CheckSLAViolations(ctx, tn.ID)
+	require.NoError(t, err)
+	assert.Equal(t, 0, stats2.NewViolations, "resume 延长 deadline 后不得再判违规（死循环）")
+
+	violations, err := client.SLAViolation.Query().
+		Where(slaviolation.TenantIDEQ(tn.ID), slaviolation.TicketIDEQ(tk.ID)).
+		All(ctx)
+	require.NoError(t, err)
+	require.Len(t, violations, 1, "不得因再扫描新建第二条违规")
+	assert.True(t, violations[0].IsResolved, "原违规回收后保持 resolved")
+}

@@ -55,7 +55,7 @@ function buildRegistry() {
         }
         seen.add(spec.name);
         if (!spec.risk)
-            spec.risk = deriveRisk(spec.name.split('.')[(spec.name.split('.').length - 1)]);
+            spec.risk = deriveRisk(spec.name, spec.name.split('.').pop() ?? spec.name);
     }
     return specs;
 }

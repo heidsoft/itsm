@@ -45,7 +45,7 @@ type Service struct {
 	repo           Repository
 	logger         *zap.SugaredLogger
 	entClient      *ent.Client
-	pirService     *service.ChangePIRService
+	pirService     *ChangePIRService
 	approvalBridge *service.BPMNApprovalBridge
 	// approvalChain 审批链求值引擎：提交变更时按实体类型 "change" 解析租户级激活链，
 	// 以解析出的审批人（租户隔离、含 fallback）覆盖调用方传入的审批人，
@@ -69,7 +69,7 @@ func NewService(repo Repository, entClient *ent.Client, logger *zap.SugaredLogge
 		approvalChain: approvalChain,
 	}
 	// Initialize PIR service
-	svc.pirService = service.NewChangePIRService(entClient, logger)
+	svc.pirService = NewChangePIRService(entClient, logger)
 	if entClient != nil {
 		// 变更审批桥接到 BPMN 任务，避免流程实例悬挂
 		svc.approvalBridge = service.NewBPMNApprovalBridge(entClient, logger)

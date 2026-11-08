@@ -6,18 +6,17 @@ import (
 	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/middleware"
-	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
 )
 
 // Handler 项目管理HTTP处理器
 type Handler struct {
-	service *service.ProjectService
+	service *ProjectService
 }
 
 // NewHandler creates a new project handler
-func NewHandler(svc *service.ProjectService) *Handler {
+func NewHandler(svc *ProjectService) *Handler {
 	return &Handler{service: svc}
 }
 

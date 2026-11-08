@@ -6,7 +6,6 @@ import (
 
 	"itsm-backend/common"
 	"itsm-backend/dto"
-	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -14,13 +13,13 @@ import (
 
 // Handler 资产与许可证 HTTP 层
 type Handler struct {
-	svc        *service.AssetService
-	licenseSvc *service.AssetLicenseService
+	svc        *AssetService
+	licenseSvc *AssetLicenseService
 	logger     *zap.SugaredLogger
 }
 
 // NewHandler 创建 asset handler
-func NewHandler(svc *service.AssetService, licenseSvc *service.AssetLicenseService, logger *zap.SugaredLogger) *Handler {
+func NewHandler(svc *AssetService, licenseSvc *AssetLicenseService, logger *zap.SugaredLogger) *Handler {
 	return &Handler{
 		svc:        svc,
 		licenseSvc: licenseSvc,
@@ -201,7 +200,7 @@ func (h *Handler) DeleteAsset(c *gin.Context) {
 	err = h.svc.DeleteAsset(c.Request.Context(), assetID, tenantID)
 	if err != nil {
 		h.logger.Errorw("Delete asset failed", "error", err, "asset_id", assetID)
-		if errors.Is(err, service.ErrAssetNotFound) {
+		if errors.Is(err, ErrAssetNotFound) {
 			common.Fail(c, common.NotFoundCode, "资产不存在")
 			return
 		}
@@ -251,7 +250,7 @@ func (h *Handler) AssignAsset(c *gin.Context) {
 	asset, err := h.svc.AssignAsset(c.Request.Context(), assetID, tenantID, req.AssignedTo)
 	if err != nil {
 		h.logger.Errorw("Assign asset failed", "error", err, "asset_id", assetID)
-		if errors.Is(err, service.ErrAssetNotFound) {
+		if errors.Is(err, ErrAssetNotFound) {
 			common.Fail(c, common.NotFoundCode, "资产不存在")
 			return
 		}
@@ -284,7 +283,7 @@ func (h *Handler) RetireAsset(c *gin.Context) {
 	asset, err := h.svc.RetireAsset(c.Request.Context(), assetID, tenantID, req.RetireReason)
 	if err != nil {
 		h.logger.Errorw("Retire asset failed", "error", err, "asset_id", assetID)
-		if errors.Is(err, service.ErrAssetNotFound) {
+		if errors.Is(err, ErrAssetNotFound) {
 			common.Fail(c, common.NotFoundCode, "资产不存在")
 			return
 		}
@@ -419,7 +418,7 @@ func (h *Handler) DeleteLicense(c *gin.Context) {
 	err = h.licenseSvc.DeleteLicense(c.Request.Context(), licenseID, tenantID)
 	if err != nil {
 		h.logger.Errorw("Delete license failed", "error", err, "license_id", licenseID)
-		if errors.Is(err, service.ErrLicenseNotFound) {
+		if errors.Is(err, ErrLicenseNotFound) {
 			common.Fail(c, common.NotFoundCode, "许可证不存在")
 			return
 		}
@@ -470,12 +469,12 @@ func (h *Handler) AssignUsers(c *gin.Context) {
 	if err != nil {
 		h.logger.Errorw("Assign users to license failed", "error", err, "license_id", licenseID)
 		switch {
-		case errors.Is(err, service.ErrLicenseNotFound):
+		case errors.Is(err, ErrLicenseNotFound):
 			common.Fail(c, common.NotFoundCode, "许可证不存在")
-		case errors.Is(err, service.ErrLicenseInsufficient):
+		case errors.Is(err, ErrLicenseInsufficient):
 			// 席位不足属于业务冲突：当前可用数与请求数都写进日志后给 409。
 			common.Conflict(c, "许可证席位不足", nil)
-		case errors.Is(err, service.ErrLicenseSeatRace):
+		case errors.Is(err, ErrLicenseSeatRace):
 			common.Conflict(c, "席位已被其他请求占用，请重试", nil)
 		default:
 			common.FailWithErr(c, err, "操作失败")

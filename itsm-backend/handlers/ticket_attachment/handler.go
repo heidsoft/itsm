@@ -1,5 +1,5 @@
 // Package ticket_attachment 是工单附件域的 HTTP handler 层（域切片架构）。
-// 业务逻辑仍由 service.TicketAttachmentService 承载，本包只做参数解析与响应封装。
+// 业务逻辑由本包 TicketAttachmentService 承载，本文件只做参数解析与响应封装。
 package ticket_attachment
 
 import (
@@ -10,7 +10,6 @@ import (
 
 	"itsm-backend/common"
 	"itsm-backend/dto"
-	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -18,12 +17,12 @@ import (
 
 // Handler 工单附件 HTTP handler
 type Handler struct {
-	attachmentService *service.TicketAttachmentService
+	attachmentService *TicketAttachmentService
 	logger            *zap.SugaredLogger
 }
 
 // NewHandler 创建工单附件 handler 实例
-func NewHandler(attachmentService *service.TicketAttachmentService, logger *zap.SugaredLogger) *Handler {
+func NewHandler(attachmentService *TicketAttachmentService, logger *zap.SugaredLogger) *Handler {
 	return &Handler{
 		attachmentService: attachmentService,
 		logger:            logger,
@@ -61,10 +60,10 @@ func pathIDs(c *gin.Context) (ticketID, attachmentID int, ok bool) {
 // 原始错误只进日志；不存在与无权统一按 404 对外表达，避免确认对方工单存在。
 func (h *Handler) failAttachmentAccess(c *gin.Context, rawErr error, ticketID, tenantID int) {
 	switch {
-	case errors.Is(rawErr, service.ErrAttachmentAccessDenied):
+	case errors.Is(rawErr, ErrAttachmentAccessDenied):
 		h.logger.Warnw("Attachment access denied", "error", rawErr, "ticket_id", ticketID, "tenant_id", tenantID)
 		common.Fail(c, common.ForbiddenCode, "无权访问该附件")
-	case errors.Is(rawErr, service.ErrAttachmentNotFound):
+	case errors.Is(rawErr, ErrAttachmentNotFound):
 		h.logger.Warnw("Attachment not found", "error", rawErr, "ticket_id", ticketID, "tenant_id", tenantID)
 		common.Fail(c, common.NotFoundCode, "附件不存在或无权访问")
 	default:
@@ -120,7 +119,7 @@ func (h *Handler) UploadAttachment(c *gin.Context) {
 	}
 	defer src.Close()
 
-	fileHeader := &service.FileHeader{
+	fileHeader := &FileHeader{
 		Filename:    file.Filename,
 		Size:        file.Size,
 		ContentType: file.Header.Get("Content-Type"),

@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -898,6 +899,17 @@ func (s *bpmnTaskService) RetryTask(ctx context.Context, taskID string, maxRetri
 	return err
 }
 
+// bpmnTaskOpenStatuses 是委托/加签允许介入的「待办」状态集合：
+// 引擎创建 userTask 落 created，显式指派/认领后落 assigned。
+var bpmnTaskOpenStatuses = []string{
+	common.ProcessTaskStatusCreated,
+	common.ProcessTaskStatusAssigned,
+}
+
+func isBpmnTaskOpen(status string) bool {
+	return slices.Contains(bpmnTaskOpenStatuses, status)
+}
+
 func (s *bpmnTaskService) DelegateTask(ctx context.Context, taskID string, newAssignee string) error {
 	tenantID, err := requireBPMNTenantContext(ctx)
 	if err != nil {
@@ -916,6 +928,12 @@ func (s *bpmnTaskService) DelegateTask(ctx context.Context, taskID string, newAs
 	// 租户隔离：任务必须属于当前租户
 	if task.TenantID != tenantID {
 		return fmt.Errorf("任务不属于当前租户")
+	}
+
+	// 终态守卫：completed/cancelled/timeout 等已结束任务不得委托，
+	// 否则引擎已关闭的节点会被复活成新待办。
+	if !isBpmnTaskOpen(task.Status) {
+		return fmt.Errorf("任务已结束，不能委托")
 	}
 
 	// 操作人校验：只有当前 assignee 才能委托
@@ -949,13 +967,24 @@ func (s *bpmnTaskService) DelegateTask(ctx context.Context, taskID string, newAs
 
 	originalAssignee := task.Assignee
 
-	// 保持任务活跃状态（"assigned"），仅更换负责人；设为 "delegated" 会导致被委托人看不到该任务
-	if _, err = s.client.ProcessTask.UpdateOne(task).
+	// 保持任务活跃状态（"assigned"），仅更换负责人；设为 "delegated" 会导致被委托人看不到该任务。
+	// 条件更新防并发复活：终态守卫只挡顺序错误，读后并发完成的任务在此处
+	// 因 StatusIn 不命中而 affected==0，按冲突拒绝，不得把终态覆盖回 assigned。
+	updated, err := s.client.ProcessTask.Update().
+		Where(
+			processtask.ID(task.ID),
+			processtask.TenantID(tenantID),
+			processtask.StatusIn(bpmnTaskOpenStatuses...),
+		).
 		SetAssignee(newAssignee).
-		SetStatus("assigned").
+		SetStatus(common.ProcessTaskStatusAssigned).
 		SetTaskVariables(task.TaskVariables).
-		Save(ctx); err != nil {
+		Save(ctx)
+	if err != nil {
 		return err
+	}
+	if updated != 1 {
+		return fmt.Errorf("任务已结束，不能委托")
 	}
 
 	instance, ierr := s.client.ProcessInstance.Get(ctx, task.ProcessInstanceID)
@@ -1006,6 +1035,11 @@ func (s *bpmnTaskService) AddApproverTask(ctx context.Context, taskID string, ne
 		return fmt.Errorf("任务不属于当前租户")
 	}
 
+	// 终态守卫：已结束的审批节点不得加签，否则会为已完成审批复活出新待办子任务。
+	if !isBpmnTaskOpen(task.Status) {
+		return fmt.Errorf("任务已结束，不能加签")
+	}
+
 	// 操作人校验：只有当前 assignee 才能加签
 	actor, err := s.client.User.Query().Where(user.IDEQ(actorID), user.TenantIDEQ(tenantID)).Only(ctx)
 	if err != nil {
@@ -1041,6 +1075,23 @@ func (s *bpmnTaskService) AddApproverTask(ctx context.Context, taskID string, ne
 	}
 
 	addedTaskID := fmt.Sprintf("%s_addapprover_%d", task.TaskID, time.Now().UnixNano())
+
+	// 落库前复查父任务仍为待办：终态守卫读到的是入口快照，
+	// 读后父任务被完成的，加签子任务不得落库。
+	parentOpen, perr := s.client.ProcessTask.Query().
+		Where(
+			processtask.ID(task.ID),
+			processtask.TenantID(tenantID),
+			processtask.StatusIn(bpmnTaskOpenStatuses...),
+		).
+		Exist(ctx)
+	if perr != nil {
+		return fmt.Errorf("复查加签父任务状态失败: %w", perr)
+	}
+	if !parentOpen {
+		return fmt.Errorf("任务已结束，不能加签")
+	}
+
 	newTask, err := s.client.ProcessTask.Create().
 		SetTaskID(addedTaskID).
 		SetProcessInstanceID(task.ProcessInstanceID).

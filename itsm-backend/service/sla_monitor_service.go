@@ -1098,8 +1098,14 @@ func slaLookupError(entity string, err error) error {
 	return fmt.Errorf("查询%s失败: %w", entity, err)
 }
 
-// PauseSLA 暂停工单/事件的SLA计时
+// PauseSLA 暂停工单/事件的SLA计时。
+// sla_states（权威）与领域实体内嵌字段在同一事务提交：此前先写实体再 warn-only
+// 双写 store，store 失败会让实体显示 paused 而权威表仍 active，ResumeSLA 据权威表
+// 判定「未暂停」永久 409，监控也继续按 active 判违规。
 func (s *SLAMonitorService) PauseSLA(ctx context.Context, tenantID int, entityType string, entityID int, reason string) error {
+	if err := s.requireSLAStore(); err != nil {
+		return err
+	}
 	now := time.Now()
 
 	switch entityType {
@@ -1123,21 +1129,22 @@ func (s *SLAMonitorService) PauseSLA(ctx context.Context, tenantID int, entityTy
 		if slState.Status == "paused" {
 			return common.NewBusinessError(common.ConflictCode, "工单SLA已处于暂停状态", "")
 		}
-		err = s.client.Ticket.UpdateOneID(entityID).
-			SetSLAStatus("paused").
-			SetSLAPausedAt(now).
-			SetSLAPauseReason(reason).
-			Exec(ctx)
+		tx, err := s.client.Tx(ctx)
 		if err != nil {
 			return err
 		}
-		// 双写：同步暂停 sla_states
-		if s.slaStore != nil {
-			if pwErr := s.slaStore.Pause(ctx, tenantID, entityType, entityID, reason); pwErr != nil {
-				s.logger.Warnw("Failed to dual-write SLA pause for ticket", "error", pwErr)
-			}
+		defer tx.Rollback()
+		if err := s.slaStore.PauseInTx(ctx, tx, tenantID, entityType, entityID, reason, now); err != nil {
+			return err
 		}
-		return nil
+		if err := tx.Ticket.UpdateOneID(entityID).
+			SetSLAStatus("paused").
+			SetSLAPausedAt(now).
+			SetSLAPauseReason(reason).
+			Exec(ctx); err != nil {
+			return err
+		}
+		return tx.Commit()
 
 	case "incident":
 		_, err := s.client.Incident.Query().
@@ -1159,21 +1166,22 @@ func (s *SLAMonitorService) PauseSLA(ctx context.Context, tenantID int, entityTy
 		if slState.Status == "paused" {
 			return common.NewBusinessError(common.ConflictCode, "事件SLA已处于暂停状态", "")
 		}
-		err = s.client.Incident.UpdateOneID(entityID).
-			SetSLAStatus("paused").
-			SetSLAPausedAt(now).
-			SetSLAPauseReason(reason).
-			Exec(ctx)
+		tx, err := s.client.Tx(ctx)
 		if err != nil {
 			return err
 		}
-		// 双写：同步暂停 sla_states
-		if s.slaStore != nil {
-			if pwErr := s.slaStore.Pause(ctx, tenantID, entityType, entityID, reason); pwErr != nil {
-				s.logger.Warnw("Failed to dual-write SLA pause for incident", "error", pwErr)
-			}
+		defer tx.Rollback()
+		if err := s.slaStore.PauseInTx(ctx, tx, tenantID, entityType, entityID, reason, now); err != nil {
+			return err
 		}
-		return nil
+		if err := tx.Incident.UpdateOneID(entityID).
+			SetSLAStatus("paused").
+			SetSLAPausedAt(now).
+			SetSLAPauseReason(reason).
+			Exec(ctx); err != nil {
+			return err
+		}
+		return tx.Commit()
 
 	default:
 		return fmt.Errorf("不支持的实体类型: %s", entityType)
@@ -1222,8 +1230,13 @@ func (s *SLAMonitorService) recycleResolvedViolations(ctx context.Context, tenan
 	return nil
 }
 
-// ResumeSLA 恢复工单/事件的SLA计时，将暂停时长追加到deadline
+// ResumeSLA 恢复工单/事件的SLA计时，将暂停时长追加到deadline。
+// 权威 deadline 的延长由 slaStore.ResumeInTx 单点计算并返回，领域实体用同一值双写，
+// 二者同事务提交，杜绝 sla_states 与内嵌字段口径漂移导致的恢复后再违规循环。
 func (s *SLAMonitorService) ResumeSLA(ctx context.Context, tenantID int, entityType string, entityID int) error {
+	if err := s.requireSLAStore(); err != nil {
+		return err
+	}
 	now := time.Now()
 
 	switch entityType {
@@ -1248,36 +1261,34 @@ func (s *SLAMonitorService) ResumeSLA(ctx context.Context, tenantID int, entityT
 			return common.NewBusinessError(common.ConflictCode, "工单SLA未处于暂停状态", "")
 		}
 
-		// 计算暂停时长，延长deadline
-		updater := s.client.Ticket.UpdateOneID(entityID).
+		tx, err := s.client.Tx(ctx)
+		if err != nil {
+			return err
+		}
+		defer tx.Rollback()
+		extendedResp, extendedRes, err := s.slaStore.ResumeInTx(ctx, tx, tenantID, entityType, entityID, now)
+		if err != nil {
+			return err
+		}
+		updater := tx.Ticket.UpdateOneID(entityID).
 			SetSLAStatus("active").
 			ClearSLAPausedAt().
 			ClearSLAPauseReason()
-
-		var extendedResp, extendedRes time.Time
-		if !slState.PausedAt.IsZero() {
-			pausedDuration := now.Sub(slState.PausedAt)
-			if !slState.ResponseDeadline.IsZero() {
-				extendedResp = slState.ResponseDeadline.Add(pausedDuration)
-				updater.SetSLAResponseDeadline(extendedResp)
-			}
-			if !slState.ResolutionDeadline.IsZero() {
-				extendedRes = slState.ResolutionDeadline.Add(pausedDuration)
-				updater.SetSLAResolutionDeadline(extendedRes)
-			}
+		if !extendedResp.IsZero() {
+			updater.SetSLAResponseDeadline(extendedResp)
+		}
+		if !extendedRes.IsZero() {
+			updater.SetSLAResolutionDeadline(extendedRes)
 		}
 		if err := updater.Exec(ctx); err != nil {
+			return err
+		}
+		if err := tx.Commit(); err != nil {
 			return err
 		}
 		// 回收：resume 已把暂停时长并入 deadline，原违例可能不再成立。
 		if recycleErr := s.recycleResolvedViolations(ctx, tenantID, entityType, entityID, extendedResp, extendedRes); recycleErr != nil {
 			s.logger.Warnw("Failed to recycle SLA violations after ticket resume", "ticket_id", entityID, "error", recycleErr)
-		}
-		// 双写：同步恢复 sla_states
-		if s.slaStore != nil {
-			if pwErr := s.slaStore.Resume(ctx, tenantID, entityType, entityID); pwErr != nil {
-				s.logger.Warnw("Failed to dual-write SLA resume for ticket", "error", pwErr)
-			}
 		}
 		return nil
 
@@ -1302,35 +1313,34 @@ func (s *SLAMonitorService) ResumeSLA(ctx context.Context, tenantID int, entityT
 			return common.NewBusinessError(common.ConflictCode, "事件SLA未处于暂停状态", "")
 		}
 
-		updater := s.client.Incident.UpdateOneID(entityID).
+		tx, err := s.client.Tx(ctx)
+		if err != nil {
+			return err
+		}
+		defer tx.Rollback()
+		extendedResp, extendedRes, err := s.slaStore.ResumeInTx(ctx, tx, tenantID, entityType, entityID, now)
+		if err != nil {
+			return err
+		}
+		updater := tx.Incident.UpdateOneID(entityID).
 			SetSLAStatus("active").
 			ClearSLAPausedAt().
 			ClearSLAPauseReason()
-
-		var extendedResp, extendedRes time.Time
-		if !slState.PausedAt.IsZero() {
-			pausedDuration := now.Sub(slState.PausedAt)
-			if !slState.ResponseDeadline.IsZero() {
-				extendedResp = slState.ResponseDeadline.Add(pausedDuration)
-				updater.SetSLAResponseDeadline(extendedResp)
-			}
-			if !slState.ResolutionDeadline.IsZero() {
-				extendedRes = slState.ResolutionDeadline.Add(pausedDuration)
-				updater.SetSLAResolutionDeadline(extendedRes)
-			}
+		if !extendedResp.IsZero() {
+			updater.SetSLAResponseDeadline(extendedResp)
+		}
+		if !extendedRes.IsZero() {
+			updater.SetSLAResolutionDeadline(extendedRes)
 		}
 		if err := updater.Exec(ctx); err != nil {
+			return err
+		}
+		if err := tx.Commit(); err != nil {
 			return err
 		}
 		// 回收：resume 已把暂停时长并入 deadline，原违例可能不再成立。
 		if recycleErr := s.recycleResolvedViolations(ctx, tenantID, entityType, entityID, extendedResp, extendedRes); recycleErr != nil {
 			s.logger.Warnw("Failed to recycle SLA violations after incident resume", "incident_id", entityID, "error", recycleErr)
-		}
-		// 双写：同步恢复 sla_states
-		if s.slaStore != nil {
-			if pwErr := s.slaStore.Resume(ctx, tenantID, entityType, entityID); pwErr != nil {
-				s.logger.Warnw("Failed to dual-write SLA resume for incident", "error", pwErr)
-			}
 		}
 		return nil
 

@@ -15,7 +15,6 @@ import (
 	"itsm-backend/connector"
 	feishuConn "itsm-backend/connector/builtin/feishu"
 	"itsm-backend/dto"
-	"itsm-backend/service"
 	marketplaceService "itsm-backend/service/marketplace"
 
 	"github.com/gin-gonic/gin"
@@ -24,7 +23,7 @@ import (
 
 type Handler struct {
 	connectorManager *connector.Manager
-	syncService      *service.FeishuSyncService
+	syncService      *FeishuSyncService
 	marketplace      *marketplaceService.Service
 	logger           *zap.SugaredLogger
 	inboundDedup     *connector.InboundDedup
@@ -47,7 +46,7 @@ const oauthStateTTL = 10 * time.Minute
 
 func NewHandler(
 	connectorManager *connector.Manager,
-	syncService *service.FeishuSyncService,
+	syncService *FeishuSyncService,
 	marketplace *marketplaceService.Service,
 	logger *zap.SugaredLogger,
 ) *Handler {

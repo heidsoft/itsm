@@ -30,7 +30,6 @@ import (
 	surveyHandler "itsm-backend/handlers/survey"
 	"itsm-backend/middleware"
 	"itsm-backend/router"
-	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/mattn/go-sqlite3"
@@ -76,7 +75,7 @@ func newFixture(t *testing.T) *fixture {
 		JWTSecret:     secret,
 		Logger:        logger,
 		Client:        client,
-		SurveyHandler: surveyHandler.NewHandler(service.NewSurveyService(client, logger), logger),
+		SurveyHandler: surveyHandler.NewHandler(surveyHandler.NewSurveyService(client, logger), logger),
 	})
 
 	return &fixture{

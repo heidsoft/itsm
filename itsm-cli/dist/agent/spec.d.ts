@@ -66,9 +66,13 @@ export interface CommandContext {
  * `methods` is the set of HTTP methods the command's endpoints declare. The verb
  * regex alone mis-classified read-only commands whose names happen to contain a
  * mutating word — `change.rollback-steps` (GET /changes/:id/rollback-steps) was
- * flagged high-risk and demanded --yes just to list a checklist. Method wins.
+ * flagged high-risk and demanded --yes just to list a checklist. Method wins,
+ * and conversely: a mutating method with an unknown verb must not fall back to
+ * `normal` — it defaults to `write` (fail-safe), because 40+ registry commands
+ * (comments.add, acknowledge, root-cause, lifecycle, suspend, tags-add …) had
+ * verbs that were missing from the write regex and were advertised as reads.
  */
-export declare function deriveRisk(verb: string, methods?: ReadonlySet<string>): RiskLevel;
+export declare function deriveRisk(name: string, verb: string, methods?: ReadonlySet<string>): RiskLevel;
 /** Compact builder for command specs — keeps domain modules declarative. */
 export declare function cmd(name: string, summary: string, usage: string, endpoints: string[], run: (ctx: CommandContext) => Promise<unknown>, risk?: RiskLevel, meta?: CommandMeta): CommandSpec;
 /**

@@ -512,7 +512,7 @@ func setupTicketRuleListRouter(t *testing.T, client *ent.Client, logger *zap.Sug
 			logger,
 		),
 		TicketAutomationRuleHandler: automationRuleHandler.NewHandler(service.NewTicketAutomationRuleService(client, logger), logger),
-		TicketAttachmentHandler:     ticketAttachmentHandler.NewHandler(service.NewTicketAttachmentService(client, logger), logger),
+		TicketAttachmentHandler:     ticketAttachmentHandler.NewHandler(ticketAttachmentHandler.NewTicketAttachmentService(client, logger), logger),
 	})
 	return r
 }

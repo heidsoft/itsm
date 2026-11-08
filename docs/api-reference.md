@@ -2340,6 +2340,24 @@ GET /api/v1/bpmn/tasks?status=&processDefinitionKey=&page=1&pageSize=20
 
   以上均属调用方可见的行为变更，升级注意事项见 [UPGRADE.md](../UPGRADE.md) §1.46。
 
+### BPMN 定时器（`/api/v1/timers`）
+
+```http
+GET  /api/v1/timers?status=&timerType=&processDefinitionKey=&page=1&pageSize=20  # system:read
+GET  /api/v1/timers/stats                                                        # system:read
+GET  /api/v1/timers/{timerId}                                                    # system:read
+POST /api/v1/timers/{timerId}/replay                                             # system:write
+```
+
+定时器状态词表：`pending`（待触发）/ `fired`（触发执行中，中间态）/ `completed`（回调成功收敛）/
+`cancelled`（实例挂起/流程重发布取消）/ `failed`（重试预算耗尽的死信）。stats 响应的 `completed`
+字段与状态词表一致（2026-11-08 起新增）。
+
+`replay` 面向运维重驱：仅接受 `failed`（死信）或滞留 `fired` 的定时器，重置回 `pending`、清零
+重试预算与失败原因并把 `fireAt` 拉到当前时刻，由调度器下一个同步周期拾起；对
+`pending`/`completed`/`cancelled` 重放属非法状态迁移，返回 **409/`4090`**；跨租户与不存在的
+`timerId` 同形 **404/`4004`**。死信递增 `itsm_timer_dead_letter_total` 指标，无自动重试。
+
 ### 获取工作流列表
 
 ```http

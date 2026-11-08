@@ -29,7 +29,6 @@ import (
 	ticketViewHandler "itsm-backend/handlers/ticket_view"
 	"itsm-backend/middleware"
 	"itsm-backend/router"
-	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/mattn/go-sqlite3"
@@ -79,7 +78,7 @@ func newFixture(t *testing.T) *fixture {
 		JWTSecret:         secret,
 		Logger:            logger,
 		Client:            client,
-		TicketViewHandler: ticketViewHandler.NewHandler(service.NewTicketViewService(client, logger), logger),
+		TicketViewHandler: ticketViewHandler.NewHandler(ticketViewHandler.NewTicketViewService(client, logger), logger),
 	})
 
 	return &fixture{

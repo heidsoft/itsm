@@ -18,13 +18,20 @@ import (
 
 // BPMNVersionService BPMN流程版本管理服务
 type BPMNVersionService struct {
-	client *ent.Client
-	logger *zap.SugaredLogger
+	client     *ent.Client
+	logger     *zap.SugaredLogger
+	timerStore TimerStore
 }
 
 // NewBPMNVersionService 创建BPMN版本管理服务实例
 func NewBPMNVersionService(client *ent.Client, logger *zap.SugaredLogger) *BPMNVersionService {
 	return &BPMNVersionService{client: client, logger: logger}
+}
+
+// SetTimerStore 注入 start timer 时间表存储（bootstrap 在 timerStore 创建后装配）。
+// 未注入时激活/回滚版本只切换定义行，不同步时间表。
+func (s *BPMNVersionService) SetTimerStore(store TimerStore) {
+	s.timerStore = store
 }
 
 // ProcessVersion 流程版本信息
@@ -290,6 +297,25 @@ func (s *BPMNVersionService) ActivateVersion(ctx context.Context, processKey str
 	// 提交事务
 	if err := tx.Commit(); err != nil {
 		return fmt.Errorf("提交事务失败: %w", err)
+	}
+
+	// 激活即切换生产时间表：按目标版本 XML 整体替换 start timer（先取消旧
+	// pending 再重建）。不同步会让激活后的版本按旧版本（或空）时间表启动实例，
+	// 回滚路径经 ActivateVersion 同样继承该语义。
+	if s.timerStore != nil {
+		def, err := s.client.ProcessDefinition.Query().
+			Where(
+				processdefinition.Key(processKey),
+				processdefinition.Version(fmt.Sprintf("%d", version)),
+				processdefinition.TenantID(tenantID),
+			).
+			First(ctx)
+		if err != nil {
+			return fmt.Errorf("版本已激活但加载目标版本定义失败: %w", err)
+		}
+		if _, err := SyncStartTimers(ctx, s.client, s.timerStore, def.BpmnXML, processKey, tenantID); err != nil {
+			return fmt.Errorf("版本已激活但同步 start timer 时间表失败: %w", err)
+		}
 	}
 
 	return nil

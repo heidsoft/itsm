@@ -21,5 +21,5 @@
 #
 # 格式：key=value  # 说明
 
-uncovered=598  # 2026-10-31 接入 report.* 9 条命令（目录 + 服务质量 + 工单/事件/SLA/问题/变更报表 + CMDB 质量 + 服务目录使用），未覆盖 605→598。此前 0459e863f 新增的两条报表路由（cmdb-quality / catalog-usage）未接 CLI，棘轮先红（607）——按「新增路由必须接入 CLI」补齐，而不是上调基线。存量缺口（bpmn / ai / dashboard / email-intake 等）仍属既有未接入面。
+uncovered=600  # 2026-10-31 接入 report.* 9 条命令（目录 + 服务质量 + 工单/事件/SLA/问题/变更报表 + CMDB 质量 + 服务目录使用），未覆盖 605→598。此前 0459e863f 新增的两条报表路由（cmdb-quality / catalog-usage）未接 CLI，棘轮先红（607）——按「新增路由必须接入 CLI」补齐，而不是上调基线。存量缺口（bpmn / ai / dashboard / email-intake 等）仍属既有未接入面。 → 2026-11-08 +2：按脚本口径（`node scripts/check-route-drift.mjs`）在干净 HEAD 工作树实测未覆盖 599，说明此前批次已有 +1 历史漏账（基线停在 598）；本批 WIP 新增 `POST /api/v1/timers/{}/replay`（timer 人工重放入口，`system:write` 管理面运维端点，与 `operationRoutes.POST("/:id/replay")` 同型）再 +1，工作树实测 600。两条均属有意不接 agent 面的管理面端点：人工重放是高危写操作，接进 agent/MCP 命令面会扩大非交互触发面，且需另设计确认门与操作谱系幂等，归属独立 CLI 批次评审；此处按脚本注释允许的「确属有意不接入」口径登记为债务，不同时为放行其他新增路由放宽上界（棘轮值精确等于实测 600，非过量上调）。
 # 2026-11-04：0fe07d129 marketplace 提交曾把未覆盖推到 608（+10：+7 存量漂移 + 3 条 market 新路由未接 CLI），同批接入 marketplace.* 10 条租户面命令（items/item/install/uninstall/upgrade/auto-upgrade/installations/installation/installation-config/dependency-status），marketplace 未覆盖 20→10。剩余 10 条全部是 /marketplace/catalog/* 管理面 CRUD/publish——有意不接 agent 面，留在基线内。

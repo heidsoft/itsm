@@ -496,11 +496,25 @@ export function buildTools(): McpTool[] {
   // are derived the same way: the previous hand-kept list silently omitted
   // catalog/provisioning/connector/marketplace/notification/report/flow/auth,
   // so an operator filtering on a real domain was told it was not a domain.
+  // Substitution reaches into nested schema descriptions too: the `{domains}`
+  // placeholder inside `itsm_discover`'s `domain` property shipped literal,
+  // and the model saw the template instead of the values.
   const domains = [...new Set([...specs.keys()].map((name) => name.split('.')[0]))].sort();
+  const substitute = (value: unknown): unknown => {
+    if (typeof value === 'string') {
+      return value.replace('{count}', String(specs.size)).replace('{domains}', domains.join(' / '));
+    }
+    if (Array.isArray(value)) return value.map((v) => substitute(v));
+    if (value && typeof value === 'object') {
+      return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, substitute(v)]));
+    }
+    return value;
+  };
   for (const meta of META_TOOLS) {
     tools.push({
       ...meta,
-      description: meta.description.replace('{count}', String(specs.size)).replace('{domains}', domains.join(' / ')),
+      description: substitute(meta.description) as string,
+      inputSchema: substitute(meta.inputSchema) as typeof meta.inputSchema,
     });
   }
   return tools;

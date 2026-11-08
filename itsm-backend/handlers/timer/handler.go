@@ -74,3 +74,28 @@ func (h *Handler) Stats(c *gin.Context) {
 	}
 	common.Success(c, result)
 }
+
+// Replay handles POST /api/v1/timers/:id/replay
+func (h *Handler) Replay(c *gin.Context) {
+	timerID := c.Param("id")
+	if timerID == "" {
+		common.ParamError(c, "timer id is required")
+		return
+	}
+
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
+
+	result, err := h.service.Replay(c.Request.Context(), tenantID, timerID)
+	if err != nil {
+		if IsNotFound(err) {
+			common.NotFound(c, "timer not found")
+			return
+		}
+		common.RespondError(c, err, "重放定时器失败")
+		return
+	}
+	common.Success(c, result)
+}

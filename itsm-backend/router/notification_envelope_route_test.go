@@ -62,7 +62,7 @@ func TestNotificationListRouteEnvelopeContract(t *testing.T) {
 
 	logger := zaptest.NewLogger(t).Sugar()
 	notifService := service.NewNotificationService(client)
-	notifPrefService := service.NewNotificationPreferenceService(client, logger)
+	notifPrefService := notificationHandler.NewPreferenceService(client, logger)
 	ticketNotifService := service.NewTicketNotificationService(client, logger)
 
 	gin.SetMode(gin.TestMode)

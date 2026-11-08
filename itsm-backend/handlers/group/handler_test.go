@@ -14,7 +14,6 @@ import (
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/middleware"
-	"itsm-backend/service"
 
 	entsql "entgo.io/ent/dialect/sql"
 	"github.com/gin-gonic/gin"
@@ -57,7 +56,7 @@ func setupGroupTest(t *testing.T) (*Handler, *ent.Client, int, int) {
 		require.NoError(t, err)
 	}
 
-	h := NewHandler(service.NewGroupService(client), zaptest.NewLogger(t).Sugar())
+	h := NewHandler(NewGroupService(client), zaptest.NewLogger(t).Sugar())
 	return h, client, tenantA, tenantB
 }
 

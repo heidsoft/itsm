@@ -16,7 +16,6 @@ import (
 	"itsm-backend/ent/enttest"
 	ticketAttachmentHandler "itsm-backend/handlers/ticket_attachment"
 	"itsm-backend/middleware"
-	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/mattn/go-sqlite3"
@@ -110,7 +109,7 @@ func setupAttachmentRouteTest(t *testing.T) attachmentRouteFixture {
 		JWTSecret:               secret,
 		Logger:                  logger,
 		Client:                  client,
-		TicketAttachmentHandler: ticketAttachmentHandler.NewHandler(service.NewTicketAttachmentService(client, logger), logger),
+		TicketAttachmentHandler: ticketAttachmentHandler.NewHandler(ticketAttachmentHandler.NewTicketAttachmentService(client, logger), logger),
 	})
 
 	return attachmentRouteFixture{

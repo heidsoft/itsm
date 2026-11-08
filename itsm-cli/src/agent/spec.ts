@@ -67,10 +67,47 @@ export interface CommandContext {
   };
 }
 
-const RISK_SKIP = new Set(['read', 'list', 'get', 'view', 'search', 'stats', 'health']);
+const RISK_SKIP = new Set(['list', 'view', 'search', 'stats', 'health']);
 
 /** Read-only HTTP methods can never be gated, whatever the verb is named. */
 const READ_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
+
+/**
+ * POST/PUT used as pure transport for a read or a session operation. These are
+ * the only non-GET commands that must stay `normal`: analysis, session
+ * management, and client-level search-by-body never mutate domain state. Every
+ * other non-GET command defaults to `write` — an unknown mutating verb must
+ * never be advertised read-only to a host (MCP hosts annotate `readOnlyHint`
+ * from this level and then happily batch "read-only" calls).
+ *
+ * Reviewed per registry entry 2026-11 (auth.* session ops, AI decision-support
+ * analysis, report-style aggregation, connection test, isListish search bodies).
+ */
+const READ_BY_POST = new Set([
+  // Session management: reads/writes the caller's own token, not tenant data.
+  'auth.login',
+  'auth.refresh',
+  'auth.logout',
+  'auth.switch-tenant',
+  'auth.register',
+  'auth.forgot-password',
+  'auth.reset-password',
+  'auth.validate-reset-token',
+  'auth.sso-initiate',
+  'auth.sso-bind',
+  'auth.sso-unbind',
+  // AI decision support: returns a suggestion, changes nothing.
+  'incident.triage',
+  'ticket.ai-analyze',
+  // Report/aggregation reads that take a POST body.
+  'sla.monitoring',
+  'sla.check-compliance',
+  // POST search bodies (also RISK_SKIP verbs, listed explicitly for clarity).
+  'cmdb.search',
+  'knowledge.search',
+  // Live connection check against the upstream — no connector state change.
+  'connector.test',
+]);
 
 /**
  * Derive risk from the verb when a spec doesn't declare it.
@@ -78,15 +115,25 @@ const READ_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
  * `methods` is the set of HTTP methods the command's endpoints declare. The verb
  * regex alone mis-classified read-only commands whose names happen to contain a
  * mutating word — `change.rollback-steps` (GET /changes/:id/rollback-steps) was
- * flagged high-risk and demanded --yes just to list a checklist. Method wins.
+ * flagged high-risk and demanded --yes just to list a checklist. Method wins,
+ * and conversely: a mutating method with an unknown verb must not fall back to
+ * `normal` — it defaults to `write` (fail-safe), because 40+ registry commands
+ * (comments.add, acknowledge, root-cause, lifecycle, suspend, tags-add …) had
+ * verbs that were missing from the write regex and were advertised as reads.
  */
-export function deriveRisk(verb: string, methods?: ReadonlySet<string>): RiskLevel {
+export function deriveRisk(name: string, verb: string, methods?: ReadonlySet<string>): RiskLevel {
   const onlyReads = methods && methods.size > 0 && [...methods].every((m) => READ_METHODS.has(m));
   if (onlyReads) return 'normal';
+  if (READ_BY_POST.has(name)) return 'normal';
   if (RISK_SKIP.has(verb)) return 'normal';
-  if (/delete|revoke|terminate|cancel|close|bulk|batch|rollback|replay|archive|install/.test(verb)) return 'high-risk-write';
+  if (/delete|revoke|terminate|cancel|close|bulk|batch|rollback|revert|replay|archive|install/.test(verb)) return 'high-risk-write';
   if (/create|update|patch|assign|resolve|approve|reject|submit|complete|claim|start|schedule|publish|send|provision|enable|disable|restore|reopen|escalate|withdraw|pause|resume|unpublish|status|accept|forward|convert/.test(verb)) return 'write';
-  return 'normal';
+  // Fail-safe fallback: the endpoint method is a mutation the legacy verb list
+  // never knew (comments.add, acknowledge, root-cause, investigate, solution,
+  // fail, execute, retry, lifecycle, decision, cc, notify, remove …). Born as
+  // 'normal', those tools read as read-only to hosts. Defaulting to `write`
+  // keeps the gate honest for future verbs too.
+  return 'write';
 }
 
 function methodsOf(endpoints: string[]): ReadonlySet<string> | undefined {
@@ -117,7 +164,7 @@ export function cmd(
     summary,
     usage,
     endpoints,
-    risk: risk ?? deriveRisk(verb, methodsOf(endpoints)),
+    risk: risk ?? deriveRisk(name, verb, methodsOf(endpoints)),
     examples: meta?.examples,
     input: { params, ...(derived.body ? { body: derived.body } : {}) },
     bodyFields: meta?.bodyFields,

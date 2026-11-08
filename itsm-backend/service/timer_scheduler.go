@@ -17,9 +17,12 @@ type TimerFireCallback func(ctx context.Context, timer *TimerRecord) error
 
 // timerSyncInterval 周期性同步间隔；timerSyncLookahead 为未来窗口接驳的前瞻跨度，
 // 取 2 倍 tick 以保证新 timer 在 fire_at 之前至少被扫描到一次。
+// timerStaleFiredThreshold 是 fired 滞留回收阈值：正常回调秒级完成，
+// 超过该阈值仍处于 fired 的行视为孤儿（崩溃/异常遗留），回收重驱。
 const (
-	timerSyncInterval  = 1 * time.Minute
-	timerSyncLookahead = 2 * time.Minute
+	timerSyncInterval        = 1 * time.Minute
+	timerSyncLookahead       = 2 * time.Minute
+	timerStaleFiredThreshold = 5 * time.Minute
 )
 
 type TimerRecord struct {
@@ -229,6 +232,14 @@ func (s *TimerScheduler) fireCallback(ctx context.Context, record *TimerRecord) 
 		}
 	}
 
+	// 回调成功必须把 fired 收敛为 completed：fired 只表示「执行中」，
+	// 停留在 fired 的行会被 stale 回收重新驱动，造成重复触发。
+	if _, err := s.store.CASComplete(ctx, record.TimerID); err != nil {
+		s.logger.Errorf("CAS complete failed for timer %s: %v", record.TimerID, err)
+		metrics.TimerFiredTotal.WithLabelValues(record.TimerType, "complete_failed", strconv.Itoa(record.TenantID)).Inc()
+		return
+	}
+
 	metrics.TimerFiredTotal.WithLabelValues(record.TimerType, "success", strconv.Itoa(record.TenantID)).Inc()
 	metrics.TimerFireLatency.WithLabelValues(record.TimerType, strconv.Itoa(record.TenantID)).Observe(latency.Seconds())
 	s.metrics.RecordFire(latency)
@@ -263,6 +274,19 @@ func (s *TimerScheduler) handleFireFailure(ctx context.Context, record *TimerRec
 	if _, err := s.store.CASFail(ctx, record.TimerID, reason, newRetryCount, nextFireAt); err != nil {
 		s.logger.Errorf("CAS fail failed for timer %s: %v", record.TimerID, err)
 		return
+	}
+
+	// 重试预算耗尽 → 终态 failed（死信）。不会有自动重试：
+	// 必须可观测，并由运维经 POST /api/v1/timers/:id/replay 显式重驱。
+	if nextFireAt == nil {
+		metrics.TimerDeadLetterTotal.WithLabelValues(record.TimerType, strconv.Itoa(record.TenantID)).Inc()
+		s.logger.Errorw("timer dead-lettered after exhausting retries",
+			"timer_id", record.TimerID,
+			"timer_type", record.TimerType,
+			"tenant_id", record.TenantID,
+			"retry_count", newRetryCount,
+			"last_error", reason,
+		)
 	}
 
 	if nextFireAt != nil {
@@ -320,18 +344,39 @@ func (s *TimerScheduler) recover(ctx context.Context) error {
 			}
 			totalRecovered++
 		}
+	}
 
-		staleFired, err := s.store.FindFiredStale(ctx, now.Add(-5*time.Minute))
-		if err != nil {
-			s.logger.Errorf("recovery: failed to find stale fired timers: %v", err)
-			continue
-		}
-		for _, timer := range staleFired {
-			s.logger.Warnf("recovery: stale fired timer %s (fire_at=%s) detected, may need manual review", timer.TimerID, timer.FireAt.Format(time.RFC3339))
-		}
+	// FindFiredStale 不分租户，在租户循环外执行一次即可。
+	if err := s.reclaimStaleFired(ctx, now); err != nil {
+		s.logger.Errorf("recovery: stale fired reclaim failed: %v", err)
 	}
 
 	s.logger.Infof("recovery scan complete: %d timers rescheduled across %d tenants", totalRecovered, len(tenants))
+	return nil
+}
+
+// reclaimStaleFired 把滞留在 fired 超过阈值（正常回调秒级完成）的孤儿 timer
+// 收回 pending 并重新入队。这是崩溃恢复的核心：CASFire 在回调之前落库，
+// 进程在回调前崩溃会把 timer 永久卡在 fired，不回收则业务效果（推进流程/
+// 启动实例）永久丢失。回收后回调重新执行，语义为 at-least-once。
+func (s *TimerScheduler) reclaimStaleFired(ctx context.Context, now time.Time) error {
+	staleFired, err := s.store.FindFiredStale(ctx, now.Add(-timerStaleFiredThreshold))
+	if err != nil {
+		return fmt.Errorf("failed to find stale fired timers: %w", err)
+	}
+	for _, timer := range staleFired {
+		if _, err := s.store.CASReclaim(ctx, timer.TimerID); err != nil {
+			s.logger.Errorf("reclaim: failed to reclaim stale fired timer %s: %v", timer.TimerID, err)
+			continue
+		}
+		if err := s.Schedule(ctx, entTimerToRecord(timer)); err != nil {
+			s.logger.Errorf("reclaim: failed to reschedule reclaimed timer %s: %v", timer.TimerID, err)
+			continue
+		}
+		s.metrics.RecordRecovery()
+		s.logger.Warnf("reclaimed stale fired timer %s (fire_at=%s), redriving",
+			timer.TimerID, timer.FireAt.Format(time.RFC3339))
+	}
 	return nil
 }
 
@@ -401,6 +446,12 @@ func (s *TimerScheduler) syncWithDB(ctx context.Context) {
 				s.logger.Errorf("periodic sync: failed to schedule future timer %s: %v", timer.TimerID, err)
 			}
 		}
+	}
+
+	// 周期性回收滞留 fired：运行期回调失败处理自身出错（如 CASFail 冲突）也会
+	// 留下永久 fired 的孤儿行，不能只靠启动恢复。
+	if err := s.reclaimStaleFired(ctx, now); err != nil {
+		s.logger.Errorf("periodic sync: stale fired reclaim failed: %v", err)
 	}
 }
 

@@ -7,7 +7,7 @@ import (
 )
 
 // Service 定义应用管理域业务接口（依赖倒置）。
-// 实现由 internal/bootstrap 装配的 service.ApplicationService 提供。
+// 实现由 internal/bootstrap 装配的本包 ApplicationService 提供。
 // 原 handler 构造函数直接接收 *ent.Client 并内联 new service（依赖注入下沉、
 // 无法 mock），现改为依赖域内接口，由组合根负责装配。
 type Service interface {

@@ -15,7 +15,6 @@ import (
 	"itsm-backend/connector"
 	connectorAlert "itsm-backend/connector/alert"
 	"itsm-backend/ent"
-	"itsm-backend/handlers"
 	a2uiHandler "itsm-backend/handlers/a2ui"
 	accountHandler "itsm-backend/handlers/account"
 	"itsm-backend/handlers/ai"
@@ -36,6 +35,7 @@ import (
 	"itsm-backend/handlers/cmdb"
 	domainCommon "itsm-backend/handlers/common"
 	connectorHandler "itsm-backend/handlers/connector"
+	dashboardHandler "itsm-backend/handlers/dashboard"
 	dingtalkHandler "itsm-backend/handlers/dingtalk"
 	"itsm-backend/handlers/email_intake"
 	escalationMatrixHandler "itsm-backend/handlers/escalation_matrix"
@@ -176,7 +176,7 @@ type RouterConfig struct {
 	BPMNHandler                  *bpmnHandler.Handler
 
 	A2UIHandler      *a2uiHandler.Handler
-	DashboardHandler *handlers.DashboardHandler
+	DashboardHandler *dashboardHandler.DashboardHandler
 	// DashboardConfigStore 承载仪表盘个性化配置（布局/部件/配置）的持久化。
 	// nil 表示未装配 —— 此时配置类端点回落内置默认值且写面显式 503。
 	DashboardConfigStore DashboardConfigStore
@@ -470,6 +470,8 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 		timerRoutes.GET("", timerH.List)
 		timerRoutes.GET("/stats", timerH.Stats)
 		timerRoutes.GET("/:id", timerH.Get)
+		// 死信/滞留定时器的运维重驱入口：写操作，且必须独立校验 system:write。
+		timerRoutes.POST("/:id/replay", middleware.RequirePermission("system", "write"), timerH.Replay)
 	}
 
 	// WebSocket 路由（使用短期票据替代JWT query参数，避免token泄露）

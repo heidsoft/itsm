@@ -94,6 +94,31 @@ func (s *Service) Stats(ctx context.Context, tenantID int) (*service.TimerStats,
 	return s.store.Stats(ctx, tenantID)
 }
 
+// Replay 重驱一个死信（failed）或滞留（fired）的定时器：重置回 pending 并清空
+// 重试预算，由调度器下一个同步周期拾起。pending/completed/cancelled 属于非法
+// 状态迁移，返回可映射 409 的业务错误。
+func (s *Service) Replay(ctx context.Context, tenantID int, timerID string) (*TimerDTO, error) {
+	timer, err := s.store.GetByTimerID(ctx, timerID)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, &notFoundError{}
+		}
+		return nil, err
+	}
+	if timer.TenantID != tenantID {
+		return nil, &notFoundError{}
+	}
+
+	replayed, err := s.store.Replay(ctx, tenantID, timerID)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, &notFoundError{}
+		}
+		return nil, err
+	}
+	return toDTO(replayed), nil
+}
+
 type notFoundError struct{}
 
 func (e *notFoundError) Error() string { return "timer not found" }

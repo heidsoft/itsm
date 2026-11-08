@@ -3,7 +3,6 @@ package router
 import (
 	"bytes"
 	"context"
-	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
@@ -22,13 +21,15 @@ import (
 	"go.uber.org/zap"
 )
 
-// feishuWebhookSignature 复刻飞书事件订阅的签名算法（timestamp + nonce + body，HMAC-SHA256）。
+// feishuWebhookSignature 复刻飞书事件订阅的签名算法：timestamp + nonce + encrypt_key + body
+// 裸 SHA256 拼接（官方 SDK 口径，不是 HMAC）。
 const feishuEncryptKey = "webhook-secret"
 
 func feishuWebhookSignature(timestamp, nonce string, body []byte) string {
-	h := hmac.New(sha256.New, []byte(feishuEncryptKey))
+	h := sha256.New()
 	h.Write([]byte(timestamp))
 	h.Write([]byte(nonce))
+	h.Write([]byte(feishuEncryptKey))
 	h.Write(body)
 	return hex.EncodeToString(h.Sum(nil))
 }

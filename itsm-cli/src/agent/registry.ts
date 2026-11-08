@@ -58,7 +58,7 @@ function buildRegistry(): CommandSpec[] {
       throw new Error(`Duplicate agent command: ${spec.name}`);
     }
     seen.add(spec.name);
-    if (!spec.risk) spec.risk = deriveRisk(spec.name.split('.')[(spec.name.split('.').length - 1)]);
+    if (!spec.risk) spec.risk = deriveRisk(spec.name, spec.name.split('.').pop() ?? spec.name);
   }
   return specs;
 }

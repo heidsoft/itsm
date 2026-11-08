@@ -294,6 +294,30 @@ test('tools/list: unique names, strict schemas, curated tools marked read-only',
   assert.equal(meta.annotations.destructiveHint, true, 'itsm_call can reach destructive commands, so it must say so');
 });
 
+test('tools/list: mutating commands are never advertised read-only, and template placeholders are substituted', async () => {
+  // Regression: risk derivation defaulted to `normal` whenever the verb fell
+  // outside the legacy write regex (comments.add, acknowledge, decision,
+  // lifecycle, suspend, tags-add…). Hosts then annotated these writes
+  // readOnlyHint=true and "safe call" them alongside real reads.
+  const { byId } = await session([
+    initialize,
+    { jsonrpc: '2.0', id: 2, method: 'tools/list' },
+    { jsonrpc: '2.0', id: 3, method: 'tools/list' },
+  ]);
+  const writing = byId.get(2).result.tools;
+  for (const name of ['itsm_ticket_comment_add', 'itsm_ticket_create']) {
+    const tool = writing.find((t) => t.name === name);
+    assert.ok(tool, `missing write-path tool ${name}`);
+    assert.equal(tool.annotations.readOnlyHint, false, `${name} mutates state and must not be advertised read-only`);
+  }
+
+  const discover = byId.get(3).result.tools.find((t) => t.name === 'itsm_discover');
+  const domainDesc = discover.inputSchema.properties.domain.description;
+  assert.equal(domainDesc.includes('{domains}'), false, 'the domain template placeholder must be substituted');
+  assert.ok(domainDesc.includes('ticket'), `domain description should list real domains, got: ${domainDesc}`);
+  assert.match(discover.description, /\b\d{3,4}\b/, 'command count placeholder must be substituted');
+});
+
 test('tools/list exposes the full input contract of a curated command', async () => {
   const { byId } = await session([initialize, { jsonrpc: '2.0', id: 3, method: 'tools/list' }]);
   const tools = byId.get(3).result.tools;

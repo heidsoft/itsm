@@ -14,7 +14,6 @@ import (
 	"itsm-backend/ent/enttest"
 	ticketDependencyHandler "itsm-backend/handlers/ticket_dependency"
 	"itsm-backend/middleware"
-	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/mattn/go-sqlite3"
@@ -94,7 +93,7 @@ func setupTicketDependencyRouteTest(t *testing.T) dependencyRouteFixture {
 		JWTSecret:               secret,
 		Logger:                  logger,
 		Client:                  client,
-		TicketDependencyHandler: ticketDependencyHandler.NewHandler(service.NewTicketDependencyService(client, logger), logger),
+		TicketDependencyHandler: ticketDependencyHandler.NewHandler(ticketDependencyHandler.NewTicketDependencyService(client, logger), logger),
 	})
 
 	return dependencyRouteFixture{

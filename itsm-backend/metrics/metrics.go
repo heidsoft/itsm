@@ -158,6 +158,17 @@ var (
 		[]string{"type", "tenant_id"},
 	)
 
+	// TimerDeadLetterTotal 记录重试预算耗尽后进入终态 failed 的定时器（死信）。
+	// 死信不会有自动重试，必须由运维经 POST /api/v1/timers/:id/replay 显式重驱；
+	// 该指标持续增长代表流程推进被卡住，需要告警。
+	TimerDeadLetterTotal = promauto.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "itsm_timer_dead_letter_total",
+			Help: "Total number of timers that exhausted retries and entered terminal failed state",
+		},
+		[]string{"type", "tenant_id"},
+	)
+
 	// TimerPausedTotal 记录流程实例挂起时被取消的活跃定时器数量
 	// （恢复时由 reregisterInstanceTimers 重建，重建不计数——
 	// 该指标用于发现"挂起后 timer 仍在触发"的泄漏回归）。

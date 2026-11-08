@@ -12,14 +12,13 @@ import (
 
 	"itsm-backend/common"
 	"itsm-backend/dto"
-	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 )
 
 type Handler struct {
-	categoryService *service.TicketCategoryService
+	categoryService *TicketCategoryService
 	logger          *zap.SugaredLogger
 }
 
@@ -32,7 +31,7 @@ type importRow struct {
 	IsActive    bool   `json:"isActive"`
 }
 
-func NewHandler(categoryService *service.TicketCategoryService, logger *zap.SugaredLogger) *Handler {
+func NewHandler(categoryService *TicketCategoryService, logger *zap.SugaredLogger) *Handler {
 	if logger == nil {
 		logger = zap.NewNop().Sugar()
 	}
@@ -41,7 +40,7 @@ func NewHandler(categoryService *service.TicketCategoryService, logger *zap.Suga
 
 // CreateCategory POST /api/v1/ticket-categories
 func (h *Handler) CreateCategory(c *gin.Context) {
-	var req service.CreateCategoryRequest
+	var req CreateCategoryRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
@@ -72,7 +71,7 @@ func (h *Handler) UpdateCategory(c *gin.Context) {
 		return
 	}
 
-	var req service.UpdateCategoryRequest
+	var req UpdateCategoryRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
@@ -146,7 +145,7 @@ func (h *Handler) GetCategory(c *gin.Context) {
 func (h *Handler) ListCategories(c *gin.Context) {
 	tenantID := c.GetInt("tenant_id")
 
-	var req service.ListCategoriesRequest
+	var req ListCategoriesRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
 		common.Fail(c, common.ParamErrorCode, "无效的查询参数")
 		return
@@ -195,7 +194,7 @@ func (h *Handler) MoveCategory(c *gin.Context) {
 		return
 	}
 
-	var req service.MoveCategoryRequest
+	var req MoveCategoryRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
@@ -248,7 +247,7 @@ func (h *Handler) ExecuteImport(c *gin.Context) {
 			failed++
 			continue
 		}
-		_, err := h.categoryService.CreateCategory(c.Request.Context(), &service.CreateCategoryRequest{
+		_, err := h.categoryService.CreateCategory(c.Request.Context(), &CreateCategoryRequest{
 			Name:        row.Name,
 			Code:        row.Code,
 			Description: row.Description,

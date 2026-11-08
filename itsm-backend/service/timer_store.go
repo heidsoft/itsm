@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"itsm-backend/common"
 	"itsm-backend/ent"
 	"itsm-backend/ent/predicate"
 	"itsm-backend/ent/processtimer"
@@ -18,6 +19,7 @@ type TimerStatus string
 const (
 	TimerStatusPending   TimerStatus = "pending"
 	TimerStatusFired     TimerStatus = "fired"
+	TimerStatusCompleted TimerStatus = "completed"
 	TimerStatusCancelled TimerStatus = "cancelled"
 	TimerStatusFailed    TimerStatus = "failed"
 )
@@ -70,9 +72,11 @@ type TimerStore interface {
 	FindPendingDue(ctx context.Context, tenantID int, now time.Time) ([]*ent.ProcessTimer, error)
 	FindPendingFuture(ctx context.Context, tenantID int, now time.Time) ([]*ent.ProcessTimer, error)
 	FindFiredStale(ctx context.Context, threshold time.Time) ([]*ent.ProcessTimer, error)
-	FindFailedRetryable(ctx context.Context, tenantID int) ([]*ent.ProcessTimer, error)
 	CASFire(ctx context.Context, timerID string, firedAt time.Time) (*ent.ProcessTimer, error)
+	CASComplete(ctx context.Context, timerID string) (*ent.ProcessTimer, error)
+	CASReclaim(ctx context.Context, timerID string) (*ent.ProcessTimer, error)
 	CASFail(ctx context.Context, timerID string, reason string, retryCount int, nextFireAt *time.Time) (*ent.ProcessTimer, error)
+	Replay(ctx context.Context, tenantID int, timerID string) (*ent.ProcessTimer, error)
 	CancelByProcessInstance(ctx context.Context, tenantID, processInstanceID int) (int, error)
 	CancelByTimerID(ctx context.Context, timerID string) error
 	List(ctx context.Context, filter TimerListFilter) ([]*ent.ProcessTimer, int, error)
@@ -92,6 +96,7 @@ type TimerListFilter struct {
 type TimerStats struct {
 	Pending   int `json:"pending"`
 	Fired     int `json:"fired"`
+	Completed int `json:"completed"`
 	Cancelled int `json:"cancelled"`
 	Failed    int `json:"failed"`
 	Paused    int `json:"paused"`
@@ -182,16 +187,109 @@ func (s *DBTimerStore) FindFiredStale(ctx context.Context, threshold time.Time) 
 		All(ctx)
 }
 
-func (s *DBTimerStore) FindFailedRetryable(ctx context.Context, tenantID int) ([]*ent.ProcessTimer, error) {
-	preds := []predicate.ProcessTimer{
-		processtimer.StatusEQ(string(TimerStatusFailed)),
+// CASComplete 把已触发（in-flight）的 timer 收敛为 completed。
+// fired 只是「回调已启动」的中间态：回调成功后必须落 completed，
+// 否则崩溃恢复无法区分「执行中」与「已完成」，stale 回收会造成重复触发。
+func (s *DBTimerStore) CASComplete(ctx context.Context, timerID string) (*ent.ProcessTimer, error) {
+	timer, err := s.GetByTimerID(ctx, timerID)
+	if err != nil {
+		return nil, fmt.Errorf("timer not found: %w", err)
 	}
-	if tenantID > 0 {
-		preds = append(preds, processtimer.TenantID(tenantID))
+	if timer.Status != string(TimerStatusFired) {
+		return nil, fmt.Errorf("timer %s status is %s, expected fired", timerID, timer.Status)
 	}
-	return s.client.ProcessTimer.Query().
-		Where(preds...).
-		All(ctx)
+
+	affected, err := s.client.ProcessTimer.Update().
+		Where(
+			processtimer.TimerID(timerID),
+			processtimer.StatusEQ(string(TimerStatusFired)),
+			processtimer.Version(timer.Version),
+		).
+		SetStatus(string(TimerStatusCompleted)).
+		SetVersion(timer.Version + 1).
+		Save(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("CAS complete update failed: %w", err)
+	}
+	if affected == 0 {
+		return nil, fmt.Errorf("CAS complete conflict: timer %s version changed", timerID)
+	}
+
+	return s.GetByTimerID(ctx, timerID)
+}
+
+// CASReclaim 把滞留在 fired 的孤儿 timer 收回 pending，等待重新触发。
+// 只回收 fired：正常完成会落 completed，不会进入回收视野；
+// 回收后由调度器重新 CASFire → callback，业务效果按 at-least-once 重驱。
+func (s *DBTimerStore) CASReclaim(ctx context.Context, timerID string) (*ent.ProcessTimer, error) {
+	timer, err := s.GetByTimerID(ctx, timerID)
+	if err != nil {
+		return nil, fmt.Errorf("timer not found: %w", err)
+	}
+	if timer.Status != string(TimerStatusFired) {
+		return nil, fmt.Errorf("timer %s status is %s, expected fired", timerID, timer.Status)
+	}
+
+	affected, err := s.client.ProcessTimer.Update().
+		Where(
+			processtimer.TimerID(timerID),
+			processtimer.StatusEQ(string(TimerStatusFired)),
+			processtimer.Version(timer.Version),
+		).
+		SetStatus(string(TimerStatusPending)).
+		SetVersion(timer.Version + 1).
+		Save(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("CAS reclaim update failed: %w", err)
+	}
+	if affected == 0 {
+		return nil, fmt.Errorf("CAS reclaim conflict: timer %s version changed", timerID)
+	}
+
+	return s.GetByTimerID(ctx, timerID)
+}
+
+// Replay 运维显式重驱一个死信（failed）或滞留（fired）的 timer：
+// 重置回 pending、清空重试预算与失败原因、fire_at 拉到当前时刻，
+// 由调度器下一个同步周期拾起。pending/completed/cancelled 不可重放。
+func (s *DBTimerStore) Replay(ctx context.Context, tenantID int, timerID string) (*ent.ProcessTimer, error) {
+	timer, err := s.client.ProcessTimer.Query().
+		Where(processtimer.TimerID(timerID)).
+		Only(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if timer.TenantID != tenantID {
+		return nil, &ent.NotFoundError{}
+	}
+	if timer.Status != string(TimerStatusFailed) && timer.Status != string(TimerStatusFired) {
+		return nil, common.NewBusinessError(common.ConflictCode,
+			fmt.Sprintf("定时器 %s 状态为 %s，仅 failed/fired 可重放", timerID, timer.Status), "")
+	}
+
+	fireAt := time.Now()
+	affected, err := s.client.ProcessTimer.Update().
+		Where(
+			processtimer.TimerID(timerID),
+			processtimer.TenantID(tenantID),
+			processtimer.StatusIn(string(TimerStatusFailed), string(TimerStatusFired)),
+			processtimer.Version(timer.Version),
+		).
+		SetStatus(string(TimerStatusPending)).
+		SetFireAt(fireAt).
+		SetRetryCount(0).
+		ClearFailureReason().
+		SetVersion(timer.Version + 1).
+		Save(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("replay update failed: %w", err)
+	}
+	if affected == 0 {
+		return nil, common.NewBusinessError(common.ConflictCode,
+			fmt.Sprintf("定时器 %s 状态已并发变更，重放失败，请刷新后重试", timerID), "")
+	}
+
+	return s.GetByTimerID(ctx, timerID)
 }
 
 func (s *DBTimerStore) CASFire(ctx context.Context, timerID string, firedAt time.Time) (*ent.ProcessTimer, error) {
@@ -351,6 +449,12 @@ func (s *DBTimerStore) Stats(ctx context.Context, tenantID int) (*TimerStats, er
 		return nil, fmt.Errorf("stats fired failed: %w", err)
 	}
 	stats.Fired = firedCount
+
+	completedCount, err := query.Clone().Where(processtimer.StatusEQ(string(TimerStatusCompleted))).Count(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("stats completed failed: %w", err)
+	}
+	stats.Completed = completedCount
 
 	cancelledCount, err := query.Clone().Where(processtimer.StatusEQ(string(TimerStatusCancelled))).Count(ctx)
 	if err != nil {

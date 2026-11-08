@@ -77,7 +77,7 @@ func newFixture(t *testing.T) *fixture {
 		Client:    client,
 		// vector-store 路由挂在 SetupSystemConfigRoutes 内（外层 gate 要求
 		// SystemConfigHandler != nil，与生产装配一致）。
-		SystemConfigHandler: systemconfig.NewHandler(service.NewSystemConfigService(client, logger), logger),
+		SystemConfigHandler: systemconfig.NewHandler(systemconfig.NewSystemConfigService(client, logger), logger),
 		VectorStoreHandler:  vectorStoreHandler.NewHandler(service.NewVectorStore(rawDB), logger),
 	})
 

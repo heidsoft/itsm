@@ -10,8 +10,8 @@
 | # | 阻断项 | 本批闭环情况 | 代码事实源 |
 | --- | --- | --- | --- |
 | 1 | ServiceTask 副作用与流程完成同事务 | 已闭环：输出变量、副作用完成凭据（`_serviceTaskExecutedOccurrences`）、receipt、审计、补偿登记、节点完成与流程推进收进同一个 `ent.Tx`；崩溃回滚后按凭据缺失重放 handler 并复用同一幂等键 | `itsm-backend/service/bpmn_service_task_command_handler.go`、`service/bpmn_service_task_transaction_test.go`、`service/bpmn_service_task_convergence_test.go` |
-| 2 | 补偿内置模板与触发入口 | 已闭环：内置模板 `service/bpmn/compensation_recovery_flow.bpmn` 含补偿结束事件、补偿边界事件与 `isForCompensation` 处理器；管理面 `TriggerCompensation` 支持 dry-run/apply、按边界事件解析范围、逆序补偿、occurrence 幂等、触发留痕与审计同事务；CLI `cmd/bpmn-compensation` 默认 dry-run | `itsm-backend/service/bpmn_compensation_trigger.go`、`cmd/bpmn-compensation/main.go`、`service/bpmn_compensation_trigger_test.go` |
-| 3 | 存量 pending 待办迁移工具 | 已闭环：`BuildPendingMigrationPlan` 只读计划 + `ApplyPendingMigration` 默认 dry-run、显式 `-apply` 单事务执行；只自动处理孤儿实例与显式指定目标用户的未指派待办，陈旧待办仅 review；幂等键 + 状态复核 + 审计 + 租户过滤 | `itsm-backend/service/bpmn_pending_migration.go`、`cmd/pending-task-migration/main.go`、`service/bpmn_pending_migration_test.go` |
+| 2 | 补偿内置模板与触发入口 | 已闭环：内置模板 `service/bpmn/compensation_recovery_flow.bpmn` 含补偿结束事件、补偿边界事件与 `isForCompensation` 处理器；管理面 `TriggerCompensation` 支持 dry-run/apply、按边界事件解析范围、逆序补偿、occurrence 幂等、触发留痕与审计同事务；CLI `cmd/bpmn-compensation` 默认 dry-run | `itsm-backend/service/bpmn_compensation.go`（显式触发入口已按 Gate C.8 / L.1 并入本文件）、`cmd/bpmn-compensation/main.go`、`service/bpmn_compensation_trigger_test.go` |
+| 3 | 存量 pending 待办迁移工具 | 已闭环：`BuildPendingMigrationPlan` 只读计划 + `ApplyPendingMigration` 默认 dry-run、显式 `-apply` 单事务执行；只自动处理孤儿实例与显式指定目标用户的未指派待办，陈旧待办仅 review；幂等键 + 状态复核 + 审计 + 租户过滤 | `itsm-backend/service/bpmn_pending_inventory.go`（迁移工具已按 Gate C.8 / L.1 并入本文件）、`cmd/pending-task-migration/main.go`、`service/bpmn_pending_migration_test.go` |
 | 4 | 真实租户跨域联调验收签字 | **未闭环**：本批只交付自动化证据与验收流程，真实生产租户的执行与签字必须由人完成 | 本文件、`scripts/acceptance/workflow-cross-domain-acceptance.sh`、`itsm-backend/service/bpmn_cross_tenant_e2e_test.go` |
 
 自动化能证明的是「代码层语义与租户隔离」；**不能**证明「真实租户的业务数据、外部系统副作用、组织审批链、通知渠道在目标环境上按预期工作」。因此第 4 项不可由脚本或 AI 代签。

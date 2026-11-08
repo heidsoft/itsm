@@ -7,9 +7,9 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"itsm-backend/common"
-	"itsm-backend/handlers"
 	changeHandler "itsm-backend/handlers/change"
 	cmdbHandler "itsm-backend/handlers/cmdb"
+	dashboardHandler "itsm-backend/handlers/dashboard"
 	problemHandler "itsm-backend/handlers/problem"
 	service_catalog "itsm-backend/handlers/service_catalog"
 	ticketHandler "itsm-backend/handlers/ticket"
@@ -171,7 +171,7 @@ func mergeWidgetByID(existing []map[string]any, incoming map[string]any) []map[s
 //
 // 权限资源名统一用 dashboard（read|write），必须与 RolePermissions 里的 dashboard 定义对齐；
 // 用 report/widget 等资源名会让 DBOnly 模式下非 admin/manager 角色对仪表盘端点全量 403。
-func SetupDashboardRoutes(tenant *gin.RouterGroup, h *handlers.DashboardHandler, ticketHandler *ticketHandler.Handler, cfgStore DashboardConfigStore) {
+func SetupDashboardRoutes(tenant *gin.RouterGroup, h *dashboardHandler.DashboardHandler, ticketHandler *ticketHandler.Handler, cfgStore DashboardConfigStore) {
 	dashboard := tenant.Group("/dashboard")
 	{
 		// 别名：/api/v1/dashboard 直接返回 overview 数据（前端默认调用）
@@ -468,7 +468,7 @@ func availableReports(cmdbWired, catalogWired bool) []gin.H {
 // 这里改为转发到问题域 /problems/trend 与变更域 /changes/stats 的实现。
 func SetupReportsRoutes(
 	tenant *gin.RouterGroup,
-	h *handlers.DashboardHandler,
+	h *dashboardHandler.DashboardHandler,
 	problemHandler *problemHandler.Handler,
 	changeHandler *changeHandler.Handler,
 	cmdbHandler *cmdbHandler.Handler,

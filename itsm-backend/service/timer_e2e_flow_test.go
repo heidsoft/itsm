@@ -115,8 +115,52 @@ func (s *memoryTimerStore) FindFiredStale(_ context.Context, threshold time.Time
 	return nil, nil
 }
 
-func (s *memoryTimerStore) FindFailedRetryable(_ context.Context, tenantID int) ([]*ent.ProcessTimer, error) {
-	return nil, nil
+func (s *memoryTimerStore) CASComplete(_ context.Context, timerID string) (*ent.ProcessTimer, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	for _, t := range s.timers {
+		if t.TimerID == timerID && t.Status == string(TimerStatusFired) {
+			t.Status = string(TimerStatusCompleted)
+			t.Version++
+			return t, nil
+		}
+	}
+	return nil, fmt.Errorf("timer %s not found or not fired", timerID)
+}
+
+func (s *memoryTimerStore) CASReclaim(_ context.Context, timerID string) (*ent.ProcessTimer, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	for _, t := range s.timers {
+		if t.TimerID == timerID && t.Status == string(TimerStatusFired) {
+			t.Status = string(TimerStatusPending)
+			t.Version++
+			return t, nil
+		}
+	}
+	return nil, fmt.Errorf("timer %s not found or not fired", timerID)
+}
+
+func (s *memoryTimerStore) Replay(_ context.Context, tenantID int, timerID string) (*ent.ProcessTimer, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	for _, t := range s.timers {
+		if t.TimerID == timerID {
+			if t.TenantID != tenantID {
+				return nil, &ent.NotFoundError{}
+			}
+			if t.Status != string(TimerStatusFailed) && t.Status != string(TimerStatusFired) {
+				return nil, fmt.Errorf("timer %s status is %s, only failed/fired can be replayed", timerID, t.Status)
+			}
+			t.Status = string(TimerStatusPending)
+			t.FireAt = time.Now()
+			t.RetryCount = 0
+			t.FailureReason = ""
+			t.Version++
+			return t, nil
+		}
+	}
+	return nil, fmt.Errorf("timer %s not found", timerID)
 }
 
 func (s *memoryTimerStore) CASFire(_ context.Context, timerID string, firedAt time.Time) (*ent.ProcessTimer, error) {
@@ -821,7 +865,15 @@ func (s *failingTimerStore) FindFiredStale(_ context.Context, _ time.Time) ([]*e
 	return nil, fmt.Errorf("simulated DB failure")
 }
 
-func (s *failingTimerStore) FindFailedRetryable(_ context.Context, _ int) ([]*ent.ProcessTimer, error) {
+func (s *failingTimerStore) CASComplete(_ context.Context, _ string) (*ent.ProcessTimer, error) {
+	return nil, fmt.Errorf("simulated DB failure")
+}
+
+func (s *failingTimerStore) CASReclaim(_ context.Context, _ string) (*ent.ProcessTimer, error) {
+	return nil, fmt.Errorf("simulated DB failure")
+}
+
+func (s *failingTimerStore) Replay(_ context.Context, _ int, _ string) (*ent.ProcessTimer, error) {
 	return nil, fmt.Errorf("simulated DB failure")
 }
 

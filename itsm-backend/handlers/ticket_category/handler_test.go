@@ -12,7 +12,6 @@ import (
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
 	"itsm-backend/ent/ticketcategory"
-	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/mattn/go-sqlite3"
@@ -31,7 +30,7 @@ func newCategoryTestRouter(t *testing.T, client *ent.Client, tenantID int) *gin.
 	t.Helper()
 	gin.SetMode(gin.TestMode)
 	logger := zaptest.NewLogger(t).Sugar()
-	h := NewHandler(service.NewTicketCategoryService(client), logger)
+	h := NewHandler(NewTicketCategoryService(client), logger)
 
 	r := gin.New()
 	r.Use(gin.Recovery())

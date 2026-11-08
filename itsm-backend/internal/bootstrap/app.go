@@ -117,7 +117,7 @@ import (
 	"go.uber.org/zap"
 
 	// 顶层 handlers 包：聚合 dashboard_handler.go 等遗留 controller 风格 handler
-	"itsm-backend/handlers"
+	dashboardpkg "itsm-backend/handlers/dashboard"
 )
 
 type Application struct {
@@ -393,17 +393,17 @@ func NewApplication() *Application {
 	unifiedSLAEngine := slaEngine.NewEngine(nil)
 	slaStore := slaEngine.NewStore(client, unifiedSLAEngine)
 	ticketSLAService.SetSLAStore(slaStore)
-	auditLogService := service.NewAuditLogService(client, sugar)
+	auditLogService := auditlogHandler.NewAuditLogService(client, sugar)
 	ticketTypeService := service.NewTicketTypeService(client, sugar)
 	ticketTagService := service.NewTicketTagService(client)
-	surveyService := service.NewSurveyService(client, sugar)
-	slaTemplateService := service.NewSLATemplateService(client, sugar)
-	ticketDependencyService := service.NewTicketDependencyService(client, sugar)
-	ticketCommentService := service.NewTicketCommentService(client, sugar)
-	ticketAttachmentService := service.NewTicketAttachmentService(client, sugar)
+	surveyService := surveyHandler.NewSurveyService(client, sugar)
+	slaTemplateService := slaTemplateHandler.NewSLATemplateService(client, sugar)
+	ticketDependencyService := ticketDependencyHandler.NewTicketDependencyService(client, sugar)
+	ticketCommentService := ticketCommentHandler.NewTicketCommentService(client, sugar)
+	ticketAttachmentService := ticketAttachmentHandler.NewTicketAttachmentService(client, sugar)
 	ticketNotificationService := service.NewTicketNotificationService(client, sugar)
-	ticketRatingService := service.NewTicketRatingService(client, sugar)
-	ticketViewService := service.NewTicketViewService(client, sugar)
+	ticketRatingService := ticketRatingHandler.NewTicketRatingService(client, sugar)
+	ticketViewService := ticketViewHandler.NewTicketViewService(client, sugar)
 	ticketAssignmentRuleService := service.NewTicketAssignmentRuleService(client, sugar)
 	ticketAssignmentService := service.NewTicketAssignmentService(client, sugar)
 	ticketAssignmentSmartService := service.NewTicketAssignmentSmartService(client, sugar, ticketAssignmentService, ticketAssignmentRuleService)
@@ -412,8 +412,8 @@ func NewApplication() *Application {
 	incidentAlertingService := service.NewIncidentAlertingService(client, sugar)
 	rootCauseAnalysisService := service.NewRootCauseAnalysisService(client)
 	// handler 未在此注入时 router 的 nil 守卫会静默跳过整组路由
-	applicationHTTPHandler := applicationHandler.NewHandler(service.NewApplicationService(client))
-	projectHTTPHandler := projectHandler.NewHandler(service.NewProjectService(client))
+	applicationHTTPHandler := applicationHandler.NewHandler(applicationHandler.NewApplicationService(client))
+	projectHTTPHandler := projectHandler.NewHandler(projectHandler.NewProjectService(client))
 	incidentRepo := incident.NewEntRepository(client)
 	// SLA 暂停/恢复的权威实现，供工单/事件 handler 域调用。
 	slaMonitorService := service.NewSLAMonitorService(client, sugar)
@@ -587,7 +587,7 @@ func NewApplication() *Application {
 	// 显式注入 *sql.DB，让 dashboardRepository 内 AVG/FILTER/CTE 复杂聚合走真实连接；
 	// 不再依赖全局 rawDB 兜底，便于测试隔离与多连接池演进。
 	dashboardService := service.NewDashboardServiceWithDB(client, database.GetRawDB(), sugar)
-	dashboardHandler := handlers.NewDashboardHandler(dashboardService, ticketService, incidentService, sugar)
+	dashboardHandler := dashboardpkg.NewDashboardHandler(dashboardService, ticketService, incidentService, sugar)
 	ticketService.EnableSideEffectOutbox()
 	_ = sequenceService // V2 内部通过 Repository.GenerateTicketNumber 使用 sequence；保留为运行时上下文依赖
 
@@ -603,8 +603,8 @@ func NewApplication() *Application {
 	// Release & Asset Management Services
 	releaseService := service.NewReleaseService(client, sugar)
 	releaseService.EnableWorkflowOutbox()
-	assetService := service.NewAssetService(client, sugar)
-	assetLicenseService := service.NewAssetLicenseService(client, sugar)
+	assetService := assetHandler.NewAssetService(client, sugar)
+	assetLicenseService := assetHandler.NewAssetLicenseService(client, sugar)
 	// CMDB Services
 	ciTypeService := service.NewCITypeService(client, sugar)
 	ciAttributeDefinitionService := service.NewCIAttributeDefinitionService(client, sugar)
@@ -732,8 +732,7 @@ func NewApplication() *Application {
 	analyticsService := service.NewAnalyticsService(client, sugar)
 	// 管理者统一服务质量视图聚合器（2026-10-23）：dashboard 概览 + analytics
 	// 工单统计合成一次请求的管理视图；qualityReportService 自身可容忍 analytics
-	// 缺省（块缺省显式可见），dashboard 在上方恒已装配。问题/变更统计块在两域
-	// service 构造完成后注入（见下方 wireQualityDomainStats 调用）。
+	// 缺省（块缺省显式可见），dashboard 在上方恒已装配。
 	qualityReportService := service.NewServiceQualityReportService(dashboardService, analyticsService)
 	dashboardHandler.SetServiceQualityService(qualityReportService)
 	predictionService := service.NewPredictionService(client, sugar)
@@ -775,7 +774,7 @@ func NewApplication() *Application {
 	// General Notification Service & Controller
 	notificationService := service.NewNotificationService(client)
 	// Notification and preference services share the notification domain handler.
-	notificationPreferenceService := service.NewNotificationPreferenceService(client, sugar)
+	notificationPreferenceService := notificationHandler.NewPreferenceService(client, sugar)
 	notificationHTTPHandler := notificationHandler.NewHandler(notificationService, notificationPreferenceService, sugar)
 	// 投递审计读面：直接读 notification_deliveries（由 commandbus 投递处理器写入），
 	// 并提供失败重试入队。没有它，运维无法回答「为什么这条通知没发出去」。
@@ -833,6 +832,8 @@ func NewApplication() *Application {
 	// Timer Store 必须在部署服务之前创建：流程部署时注册 Timer Start Event 依赖它。
 	timerStore := service.NewDBTimerStore(client, sugar)
 	bpmnDeploymentService := service.NewBPMNDeploymentServiceWithTimerStore(client, timerStore, sugar)
+	// 版本激活/回滚同样必须同步 start timer 时间表（P1⑤）。
+	bpmnVersionService.SetTimerStore(timerStore)
 	bpmnAIGeneratorService := service.NewBPMNAIGeneratorService(llmGateway, bpmnDeploymentService, bpmnTemplateService)
 	bpmnAIGeneratorHandler := bpmnHandler.NewAIGeneratorHandler(bpmnAIGeneratorService)
 	bpmnTemplateCatalog := service.NewBPMNWorkflowTemplateCatalog(database.GetRawDB())
@@ -866,7 +867,7 @@ func NewApplication() *Application {
 
 	// Connector Manager / Registry / Market —— 连接器/插件/技能市场基础设施
 	// Feishu 连接器控制器
-	feishuSyncService := service.NewFeishuSyncService(client, sugar)
+	feishuSyncService := feishuHandler.NewFeishuSyncService(client, sugar)
 	inboundDedup := connector.NewInboundDeduper(client, 5*time.Minute)
 	feishuHTTPHandler := feishuHandler.NewHandler(connectorManager, feishuSyncService, marketplaceSvc, sugar)
 	feishuHTTPHandler.SetInboundDedup(inboundDedup)
@@ -923,8 +924,6 @@ func NewApplication() *Application {
 	// CI 回写走 service.ConfigurationItemService，保住发号、历史与属性校验。
 	discoveryCIProjector := cmdb.NewDiscoveryCIProjector(cmdbRepo, configurationItemService, configurationItemService, sugar)
 	discoveryJobExecutor := cmdb.NewDiscoveryJobExecutor(cmdbRepo, cloudAdapterRegistry, tenantSecretResolver, discoveryCIProjector, sugar)
-	// 覆盖水位线（蓝图 §3.2-17）：断点续扫 + 窗口化缺失判定的状态存储。
-	discoveryJobExecutor.SetScopeStateRepository(cmdb.NewScopeStateRepository(database.GetRawDB()))
 	if err := commandRegistry.Register(commandbus.CommandRunCMDBCloudDiscovery, discoveryJobExecutor.Handle); err != nil {
 		sugar.Fatalw("Failed to register CMDB cloud discovery worker", "error", err)
 	}
@@ -972,7 +971,7 @@ func NewApplication() *Application {
 		sugar,
 		service.NewSystemConfigEscalationMatrixStore(client, sugar),
 	)
-	vendorService := service.NewVendorService(client, sugar)
+	vendorService := vendorHandler.NewVendorService(client, sugar)
 	provisioningService := service.NewProvisioningService(client, sugar)
 	// 真实交付走租户云账号 + secret:// 引用（cloud_discovery.tenant_secrets）。
 	// 未配置账号/凭据时任务 fail closed，不会静默退回 Stub 造假成功。
@@ -984,7 +983,7 @@ func NewApplication() *Application {
 			sugar.Fatalw("Failed to register provisioning task command handler", "error", err)
 		}
 	}
-	ticketCategoryService := service.NewTicketCategoryService(client)
+	ticketCategoryService := ticketCategoryHandler.NewTicketCategoryService(client)
 
 	// Domain: Service Request (DDD)
 	srRepo := service_request.NewEntRepository(client)
@@ -1023,12 +1022,11 @@ func NewApplication() *Application {
 	stdChangeService := standard_change.NewService(client, changeServiceDomain)
 	standardChangeHandler := standard_change.NewHandler(stdChangeService, sugar)
 	changeHandler := change.NewHandler(changeServiceDomain)
-
-	// 统一服务质量视图的问题/变更统计块：两域 service 此刻才可用。
+	// 统一服务质量视图的问题/变更统计块：两域 service 此刻才可用（装配守卫见 quality_sources_test.go，缺失时响应块静默缺省）。
 	wireQualityDomainStats(qualityReportService, problemServiceDomain, changeServiceDomain)
 
 	// 变更评审组名册 handler（审批流转由审批链引擎 review: 解析器驱动，handler 仅管名册）
-	changeReviewService := service.NewChangeReviewService(client, sugar)
+	changeReviewService := change_review.NewChangeReviewService(client, sugar)
 	changeReviewHandler := change_review.NewHandler(changeReviewService, sugar)
 
 	// Analytics & Prediction Controllers
@@ -1188,7 +1186,7 @@ func NewApplication() *Application {
 	userHTTPHandler := userHandler.NewHandler(userService, sugar)
 
 	// Group Handler
-	groupService := service.NewGroupService(client)
+	groupService := groupHandler.NewGroupService(client)
 	groupHTTPHandler := groupHandler.NewHandler(groupService, sugar)
 
 	// RBAC handler (database-backed with tenant isolation)
@@ -1233,7 +1231,7 @@ func NewApplication() *Application {
 	}
 
 	// System Config Handler
-	systemConfigService := service.NewSystemConfigService(client, sugar)
+	systemConfigService := systemconfig.NewSystemConfigService(client, sugar)
 	systemConfigHandler := systemconfig.NewHandler(systemConfigService, sugar)
 
 	// Vendor Controller

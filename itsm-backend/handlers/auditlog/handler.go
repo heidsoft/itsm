@@ -4,7 +4,6 @@ import (
 	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/middleware"
-	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -12,12 +11,12 @@ import (
 
 // Handler 审计日志HTTP处理器
 type Handler struct {
-	service *service.AuditLogService
+	service *AuditLogService
 	logger  *zap.SugaredLogger
 }
 
 // NewHandler creates a new auditlog handler
-func NewHandler(s *service.AuditLogService, logger *zap.SugaredLogger) *Handler {
+func NewHandler(s *AuditLogService, logger *zap.SugaredLogger) *Handler {
 	return &Handler{service: s, logger: logger}
 }
 

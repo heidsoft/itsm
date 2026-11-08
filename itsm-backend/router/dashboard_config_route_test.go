@@ -11,7 +11,7 @@ import (
 	"testing"
 
 	"itsm-backend/ent"
-	"itsm-backend/handlers"
+	dashboardHandler "itsm-backend/handlers/dashboard"
 
 	"github.com/gin-gonic/gin"
 )
@@ -123,7 +123,7 @@ func newDashboardTestRouter(store DashboardConfigStore) *gin.Engine {
 		c.Set("client", (*ent.Client)(nil))
 		c.Next()
 	})
-	SetupDashboardRoutes(tenant, handlers.NewDashboardHandler(nil, nil, nil, nil), nil, store)
+	SetupDashboardRoutes(tenant, dashboardHandler.NewDashboardHandler(nil, nil, nil, nil), nil, store)
 	return r
 }
 

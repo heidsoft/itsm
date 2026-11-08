@@ -12,7 +12,6 @@ import (
 	"go.uber.org/zap"
 	"itsm-backend/ent/enttest"
 	"itsm-backend/middleware"
-	"itsm-backend/service"
 )
 
 func TestConfigPaginationContract(t *testing.T) {
@@ -28,7 +27,7 @@ func TestConfigPaginationContract(t *testing.T) {
 		}
 		client.SystemConfig.Create().SetKey(key).SetValue(key).SetValueType("string").SetCategory(category).SetTenantID(tenant).SaveX(context.Background())
 	}
-	h := NewHandler(service.NewSystemConfigService(client, zap.NewNop().Sugar()), zap.NewNop().Sugar())
+	h := NewHandler(NewSystemConfigService(client, zap.NewNop().Sugar()), zap.NewNop().Sugar())
 	r := gin.New()
 	r.GET("/api/v1/system-configs", func(c *gin.Context) {
 		c.Set(middleware.TenantContextKey, &middleware.TenantContext{TenantID: 1})

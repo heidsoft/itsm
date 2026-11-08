@@ -35,7 +35,6 @@ import (
 	assetHandler "itsm-backend/handlers/asset"
 	"itsm-backend/middleware"
 	"itsm-backend/router"
-	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/mattn/go-sqlite3"
@@ -109,7 +108,7 @@ func newFixture(t *testing.T) *fixture {
 		JWTSecret:    secret,
 		Logger:       logger,
 		Client:       client,
-		AssetHandler: assetHandler.NewHandler(service.NewAssetService(client, logger), service.NewAssetLicenseService(client, logger), logger),
+		AssetHandler: assetHandler.NewHandler(assetHandler.NewAssetService(client, logger), assetHandler.NewAssetLicenseService(client, logger), logger),
 	})
 
 	return &fixture{

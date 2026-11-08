@@ -33,7 +33,6 @@ import (
 	ratingHandler "itsm-backend/handlers/ticket_rating"
 	"itsm-backend/middleware"
 	"itsm-backend/router"
-	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/mattn/go-sqlite3"
@@ -78,7 +77,7 @@ func newFixture(t *testing.T) *fixture {
 		Logger:    logger,
 		Client:    client,
 		TicketRatingHandler: ratingHandler.NewHandler(
-			service.NewTicketRatingService(client, logger), logger),
+			ratingHandler.NewTicketRatingService(client, logger), logger),
 	})
 
 	return &fixture{

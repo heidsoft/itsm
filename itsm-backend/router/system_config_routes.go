@@ -5,7 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"itsm-backend/handlers"
+	dashboardHandler "itsm-backend/handlers/dashboard"
 	systemConfigHandler "itsm-backend/handlers/systemconfig"
 	tenantHandler "itsm-backend/handlers/tenant"
 	vectorStoreHandler "itsm-backend/handlers/vector_store"
@@ -18,7 +18,7 @@ import (
 //
 // dashboard 为 nil 时不注册状态端点：运行时指标只有一个采集口径，
 // 复制一份假数据或第二套采集实现都属于回归。
-func SetupSystemConfigRoutes(tenant *gin.RouterGroup, h *systemConfigHandler.Handler, tenantHandler *tenantHandler.Handler, vectorStoreHandler *vectorStoreHandler.Handler, dashboard *handlers.DashboardHandler) {
+func SetupSystemConfigRoutes(tenant *gin.RouterGroup, h *systemConfigHandler.Handler, tenantHandler *tenantHandler.Handler, vectorStoreHandler *vectorStoreHandler.Handler, dashboard *dashboardHandler.DashboardHandler) {
 	sysConfigs := tenant.Group("/system-configs")
 	{
 		// 配置管理。默认配置由 ListConfigs 在总数为 0 时懒初始化，

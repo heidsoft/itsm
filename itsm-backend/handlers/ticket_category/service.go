@@ -1,0 +1,490 @@
+package ticket_category
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"strings"
+	"time"
+
+	"itsm-backend/common"
+	"itsm-backend/ent"
+	"itsm-backend/ent/processdefinition"
+	"itsm-backend/ent/ticket"
+	"itsm-backend/ent/ticketcategory"
+)
+
+// TicketCategoryService 工单分类服务
+type TicketCategoryService struct {
+	client *ent.Client
+}
+
+// NewTicketCategoryService 创建工单分类服务实例
+func NewTicketCategoryService(client *ent.Client) *TicketCategoryService {
+	return &TicketCategoryService{client: client}
+}
+
+// CreateCategory 创建工单分类
+func (s *TicketCategoryService) CreateCategory(ctx context.Context, req *CreateCategoryRequest) (*ent.TicketCategory, error) {
+	// 验证分类代码唯一性
+	exists, err := s.client.TicketCategory.Query().
+		Where(ticketcategory.CodeEQ(req.Code)).
+		Where(ticketcategory.TenantID(req.TenantID)).
+		Exist(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if exists {
+		return nil, errors.New("分类代码已存在")
+	}
+
+	// 验证父分类
+	var level int = 1
+	if req.ParentID > 0 {
+		parent, err := s.client.TicketCategory.Query().
+			Where(ticketcategory.ID(req.ParentID), ticketcategory.TenantID(req.TenantID)).
+			Only(ctx)
+		if err != nil {
+			return nil, errors.New("父分类不存在")
+		}
+		level = parent.Level + 1
+	}
+
+	create := s.client.TicketCategory.Create().
+		SetName(req.Name).
+		SetDescription(req.Description).
+		SetCode(req.Code).
+		SetLevel(level).
+		SetSortOrder(req.SortOrder).
+		SetIsActive(req.IsActive).
+		SetTenantID(req.TenantID)
+	if req.ParentID > 0 {
+		create.SetParentID(req.ParentID)
+	}
+	if req.WorkflowDefinitionKey != nil && *req.WorkflowDefinitionKey != "" {
+		if err := s.validateWorkflowKey(ctx, req.TenantID, *req.WorkflowDefinitionKey); err != nil {
+			return nil, err
+		}
+		create.SetWorkflowDefinitionKey(*req.WorkflowDefinitionKey)
+	}
+	if req.DepartmentID != nil && *req.DepartmentID > 0 {
+		create.SetDepartmentID(*req.DepartmentID)
+	}
+
+	category, err := create.Save(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return category, nil
+}
+
+// GetCategory 获取工单分类
+func (s *TicketCategoryService) GetCategory(ctx context.Context, id int, tenantID int) (*ent.TicketCategory, error) {
+	return s.client.TicketCategory.Query().
+		Where(ticketcategory.ID(id), ticketcategory.TenantID(tenantID)).
+		Only(ctx)
+}
+
+// ListCategories 获取工单分类列表
+func (s *TicketCategoryService) ListCategories(ctx context.Context, req *ListCategoriesRequest) ([]*ent.TicketCategory, int, error) {
+	query := s.client.TicketCategory.Query()
+
+	// 应用过滤条件
+	if req.ParentID != nil {
+		if *req.ParentID == 0 {
+			// 获取顶级分类
+			query = query.Where(ticketcategory.ParentIDIsNil())
+		} else {
+			query = query.Where(ticketcategory.ParentIDEQ(*req.ParentID))
+		}
+	}
+	if req.Level > 0 {
+		query = query.Where(ticketcategory.LevelEQ(req.Level))
+	}
+	if req.IsActive != nil {
+		query = query.Where(ticketcategory.IsActive(*req.IsActive))
+	}
+	if req.TenantID > 0 {
+		query = query.Where(ticketcategory.TenantID(req.TenantID))
+	}
+
+	// 获取总数
+	total, err := query.Count(ctx)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	// 应用分页和排序
+	if req.Page > 0 && req.PageSize > 0 {
+		offset := (req.Page - 1) * req.PageSize
+		query = query.Offset(offset).Limit(req.PageSize)
+	}
+
+	// 默认按排序顺序和名称排序
+	query = query.Order(ent.Asc(ticketcategory.FieldSortOrder), ent.Asc(ticketcategory.FieldName))
+
+	categories, err := query.All(ctx)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return categories, total, nil
+}
+
+// GetCategoryTree 获取分类树结构
+func (s *TicketCategoryService) GetCategoryTree(ctx context.Context, tenantID int) ([]*CategoryTreeItem, error) {
+	// 获取所有分类
+	categories, err := s.client.TicketCategory.Query().
+		Where(ticketcategory.TenantID(tenantID)).
+		Where(ticketcategory.IsActive(true)).
+		Order(ent.Asc(ticketcategory.FieldSortOrder), ent.Asc(ticketcategory.FieldName)).
+		All(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// 构建分类树
+	categoryMap := make(map[int]*CategoryTreeItem)
+	var rootCategories []*CategoryTreeItem
+
+	for _, category := range categories {
+		item := &CategoryTreeItem{
+			ID:          category.ID,
+			Name:        category.Name,
+			Description: category.Description,
+			Code:        category.Code,
+			Level:       category.Level,
+			SortOrder:   category.SortOrder,
+			IsActive:    category.IsActive,
+			Children:    []*CategoryTreeItem{},
+		}
+		categoryMap[category.ID] = item
+
+		if category.ParentID == 0 {
+			rootCategories = append(rootCategories, item)
+		} else {
+			if parent, exists := categoryMap[category.ParentID]; exists {
+				parent.Children = append(parent.Children, item)
+			}
+		}
+	}
+
+	return rootCategories, nil
+}
+
+// UpdateCategory 更新工单分类
+func (s *TicketCategoryService) UpdateCategory(ctx context.Context, id int, req *UpdateCategoryRequest, tenantID int) (*ent.TicketCategory, error) {
+	update := s.client.TicketCategory.UpdateOneID(id).
+		Where(ticketcategory.TenantID(tenantID))
+
+	if req.Name != "" {
+		update.SetName(req.Name)
+	}
+	if req.Description != "" {
+		update.SetDescription(req.Description)
+	}
+	if req.Code != "" {
+		// 验证分类代码唯一性
+		exists, err := s.client.TicketCategory.Query().
+			Where(ticketcategory.CodeEQ(req.Code)).
+			Where(ticketcategory.TenantID(tenantID)).
+			Where(ticketcategory.IDNEQ(id)).
+			Exist(ctx)
+		if err != nil {
+			return nil, err
+		}
+		if exists {
+			return nil, errors.New("分类代码已存在")
+		}
+		update.SetCode(req.Code)
+	}
+	if req.ParentID != nil {
+		if *req.ParentID == id {
+			return nil, errors.New("不能将分类设置为自身的父分类")
+		}
+		if *req.ParentID > 0 {
+			isDescendant, err := s.isDescendantCategory(ctx, *req.ParentID, id, tenantID)
+			if err != nil {
+				return nil, err
+			}
+			if isDescendant {
+				return nil, errors.New("不能将分类移动到其子分类下")
+			}
+			// 验证父分类
+			parent, err := s.client.TicketCategory.Query().
+				Where(ticketcategory.ID(*req.ParentID), ticketcategory.TenantID(tenantID)).
+				Only(ctx)
+			if err != nil {
+				return nil, errors.New("父分类不存在")
+			}
+			update.SetParentID(*req.ParentID)
+			update.SetLevel(parent.Level + 1)
+		} else {
+			update.ClearParentID()
+			update.SetLevel(1)
+		}
+	}
+	if req.SortOrder != nil {
+		update.SetSortOrder(*req.SortOrder)
+	}
+	if req.IsActive != nil {
+		update.SetIsActive(*req.IsActive)
+	}
+	if req.WorkflowDefinitionKey != nil {
+		if *req.WorkflowDefinitionKey != "" {
+			if err := s.validateWorkflowKey(ctx, tenantID, *req.WorkflowDefinitionKey); err != nil {
+				return nil, err
+			}
+			update.SetWorkflowDefinitionKey(*req.WorkflowDefinitionKey)
+		} else {
+			update.ClearWorkflowDefinitionKey()
+		}
+	}
+	if req.DepartmentID != nil {
+		if *req.DepartmentID > 0 {
+			update.SetDepartmentID(*req.DepartmentID)
+		} else {
+			update.ClearDepartmentID()
+		}
+	}
+
+	update.SetUpdatedAt(time.Now())
+
+	updated, err := update.Save(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if req.ParentID != nil {
+		if err := s.refreshDescendantLevels(ctx, updated.ID, updated.Level, tenantID); err != nil {
+			return nil, err
+		}
+	}
+	return updated, nil
+}
+
+// validateWorkflowKey 校验分类关联的流程定义在本租户存在且已激活。
+// 分类绑定是建单选路的一个优先级来源，写入时必须可解析，否则管理员看到
+// 「保存成功」但工单仍走默认流程。
+func (s *TicketCategoryService) validateWorkflowKey(ctx context.Context, tenantID int, key string) error {
+	if strings.TrimSpace(key) == "" {
+		return nil
+	}
+	exists, err := s.client.ProcessDefinition.Query().
+		Where(
+			processdefinition.KeyEQ(key),
+			processdefinition.TenantIDEQ(tenantID),
+			processdefinition.IsActiveEQ(true),
+			processdefinition.IsLatestEQ(true),
+		).Exist(ctx)
+	if err != nil {
+		return fmt.Errorf("验证关联工作流失败: %w", err)
+	}
+	if !exists {
+		return common.NewValidationError("工作流不存在、未激活或不属于当前租户", nil)
+	}
+	return nil
+}
+
+// DeleteCategory 删除工单分类
+func (s *TicketCategoryService) DeleteCategory(ctx context.Context, id int, tenantID int) error {
+	// 检查是否有子分类
+	childrenCount, err := s.client.TicketCategory.Query().
+		Where(
+			ticketcategory.ParentIDEQ(id),
+			ticketcategory.TenantID(tenantID),
+		).
+		Count(ctx)
+	if err != nil {
+		return err
+	}
+	if childrenCount > 0 {
+		return errors.New("无法删除有子分类的分类")
+	}
+
+	// 检查是否有工单使用此分类
+	ticketsCount, err := s.client.Ticket.Query().
+		Where(
+			ticket.CategoryIDEQ(id),
+			ticket.TenantID(tenantID),
+		).
+		Count(ctx)
+	if err != nil {
+		return err
+	}
+	if ticketsCount > 0 {
+		return errors.New("无法删除正在使用的分类")
+	}
+
+	return s.client.TicketCategory.DeleteOneID(id).
+		Where(ticketcategory.TenantID(tenantID)).
+		Exec(ctx)
+}
+
+// MoveCategory 移动分类到新的父级或排序位置。
+func (s *TicketCategoryService) MoveCategory(ctx context.Context, id int, req *MoveCategoryRequest, tenantID int) (*ent.TicketCategory, error) {
+	category, err := s.client.TicketCategory.Query().
+		Where(ticketcategory.ID(id), ticketcategory.TenantID(tenantID)).
+		Only(ctx)
+	if err != nil {
+		return nil, errors.New("分类不存在")
+	}
+
+	newParentID := category.ParentID
+	newLevel := category.Level
+	if req.NewParentID != nil {
+		if *req.NewParentID == id {
+			return nil, errors.New("不能将分类移动到自身下级")
+		}
+		newParentID = *req.NewParentID
+		newLevel = 1
+
+		if newParentID > 0 {
+			parent, err := s.client.TicketCategory.Query().
+				Where(ticketcategory.ID(newParentID), ticketcategory.TenantID(tenantID)).
+				Only(ctx)
+			if err != nil {
+				return nil, errors.New("父分类不存在")
+			}
+
+			isDescendant, err := s.isDescendantCategory(ctx, parent.ID, id, tenantID)
+			if err != nil {
+				return nil, err
+			}
+			if isDescendant {
+				return nil, errors.New("不能将分类移动到其子分类下")
+			}
+			newLevel = parent.Level + 1
+		}
+	}
+
+	update := s.client.TicketCategory.UpdateOneID(id).
+		Where(ticketcategory.TenantID(tenantID)).
+		SetLevel(newLevel).
+		SetUpdatedAt(time.Now())
+	if req.NewParentID != nil {
+		if newParentID > 0 {
+			update.SetParentID(newParentID)
+		} else {
+			update.ClearParentID()
+		}
+	}
+	if req.NewSortOrder != nil {
+		update.SetSortOrder(*req.NewSortOrder)
+	}
+
+	moved, err := update.Save(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if newLevel != category.Level {
+		if err := s.refreshDescendantLevels(ctx, id, newLevel, tenantID); err != nil {
+			return nil, err
+		}
+	}
+
+	return moved, nil
+}
+
+func (s *TicketCategoryService) isDescendantCategory(ctx context.Context, candidateID, ancestorID, tenantID int) (bool, error) {
+	currentID := candidateID
+	visited := map[int]bool{}
+	for currentID > 0 {
+		if currentID == ancestorID {
+			return true, nil
+		}
+		if visited[currentID] {
+			return false, errors.New("分类层级存在循环引用")
+		}
+		visited[currentID] = true
+
+		category, err := s.client.TicketCategory.Query().
+			Where(ticketcategory.ID(currentID), ticketcategory.TenantID(tenantID)).
+			Only(ctx)
+		if err != nil {
+			return false, err
+		}
+		currentID = category.ParentID
+	}
+	return false, nil
+}
+
+func (s *TicketCategoryService) refreshDescendantLevels(ctx context.Context, parentID, parentLevel, tenantID int) error {
+	children, err := s.client.TicketCategory.Query().
+		Where(ticketcategory.ParentIDEQ(parentID), ticketcategory.TenantID(tenantID)).
+		All(ctx)
+	if err != nil {
+		return err
+	}
+
+	for _, child := range children {
+		childLevel := parentLevel + 1
+		if err := s.client.TicketCategory.UpdateOneID(child.ID).
+			Where(ticketcategory.TenantID(tenantID)).
+			SetLevel(childLevel).
+			SetUpdatedAt(time.Now()).
+			Exec(ctx); err != nil {
+			return err
+		}
+		if err := s.refreshDescendantLevels(ctx, child.ID, childLevel, tenantID); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// CreateCategoryRequest 创建分类请求
+// TenantID 由控制器从认证上下文注入，不参与请求体校验
+type CreateCategoryRequest struct {
+	Name                  string  `json:"name" binding:"required"`
+	Description           string  `json:"description"`
+	Code                  string  `json:"code" binding:"required"`
+	ParentID              int     `json:"parentId"`
+	SortOrder             int     `json:"sortOrder"`
+	IsActive              bool    `json:"isActive"`
+	WorkflowDefinitionKey *string `json:"workflowDefinitionKey"`
+	DepartmentID          *int    `json:"departmentId"`
+	TenantID              int     `json:"tenantId"`
+}
+
+// UpdateCategoryRequest 更新分类请求
+type UpdateCategoryRequest struct {
+	Name                  string  `json:"name"`
+	Description           string  `json:"description"`
+	Code                  string  `json:"code"`
+	ParentID              *int    `json:"parentId"`
+	SortOrder             *int    `json:"sortOrder"`
+	IsActive              *bool   `json:"isActive"`
+	WorkflowDefinitionKey *string `json:"workflowDefinitionKey"`
+	DepartmentID          *int    `json:"departmentId"`
+}
+
+// MoveCategoryRequest 移动分类请求
+type MoveCategoryRequest struct {
+	NewParentID  *int `json:"newParentId"`
+	NewSortOrder *int `json:"newSortOrder"`
+}
+
+// ListCategoriesRequest 获取分类列表请求
+type ListCategoriesRequest struct {
+	Page     int   `json:"page" form:"page"`
+	PageSize int   `json:"pageSize" form:"pageSize"`
+	ParentID *int  `json:"parentId" form:"parentId"`
+	Level    int   `json:"level" form:"level"`
+	IsActive *bool `json:"isActive" form:"isActive"`
+	TenantID int   `json:"tenantId" form:"tenantId"`
+}
+
+// CategoryTreeItem 分类树项目
+type CategoryTreeItem struct {
+	ID          int                 `json:"id"`
+	Name        string              `json:"name"`
+	Description string              `json:"description"`
+	Code        string              `json:"code"`
+	Level       int                 `json:"level"`
+	SortOrder   int                 `json:"sortOrder"`
+	IsActive    bool                `json:"isActive"`
+	Children    []*CategoryTreeItem `json:"children"`
+}

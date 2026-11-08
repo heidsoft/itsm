@@ -25,7 +25,6 @@ import (
 	auditHandler "itsm-backend/handlers/auditlog"
 	"itsm-backend/middleware"
 	"itsm-backend/router"
-	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/mattn/go-sqlite3"
@@ -92,7 +91,7 @@ func newFixture(t *testing.T) *fixture {
 		JWTSecret:       secret,
 		Logger:          logger,
 		Client:          client,
-		AuditLogHandler: auditHandler.NewHandler(service.NewAuditLogService(client, logger), logger),
+		AuditLogHandler: auditHandler.NewHandler(auditHandler.NewAuditLogService(client, logger), logger),
 	})
 
 	return &fixture{

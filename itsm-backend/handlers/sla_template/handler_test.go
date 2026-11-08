@@ -17,7 +17,6 @@ import (
 	"itsm-backend/ent/enttest"
 	"itsm-backend/ent/sladefinition"
 	"itsm-backend/middleware"
-	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
@@ -81,7 +80,7 @@ func setupSLATemplateHandler(t *testing.T) *slaTemplateTest {
 	tenantA := seedTenant("SLA Template Tenant A", "sla-tpl-a")
 	tenantB := seedTenant("SLA Template Tenant B", "sla-tpl-b")
 
-	h := NewHandler(service.NewSLATemplateService(client, zaptest.NewLogger(t).Sugar()))
+	h := NewHandler(NewSLATemplateService(client, zaptest.NewLogger(t).Sugar()))
 
 	r := gin.New()
 	r.Use(gin.Recovery())

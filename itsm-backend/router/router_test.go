@@ -383,9 +383,9 @@ func TestSetupRoutes_P1DomainHandlersRegistered(t *testing.T) {
 		Logger:              logger,
 		Client:              client,
 		CommonHandler:       domainCommon.NewHandler(nil),
-		AssetHandler:        assetHandler.NewHandler(service.NewAssetService(client, logger), service.NewAssetLicenseService(client, logger), logger),
-		GroupHandler:        groupHandler.NewHandler(service.NewGroupService(client), logger),
-		NotificationHandler: notificationHandler.NewHandler(service.NewNotificationService(client), service.NewNotificationPreferenceService(client, logger), logger),
+		AssetHandler:        assetHandler.NewHandler(assetHandler.NewAssetService(client, logger), assetHandler.NewAssetLicenseService(client, logger), logger),
+		GroupHandler:        groupHandler.NewHandler(groupHandler.NewGroupService(client), logger),
+		NotificationHandler: notificationHandler.NewHandler(service.NewNotificationService(client), notificationHandler.NewPreferenceService(client, logger), logger),
 		UserHandler:         userHandler.NewHandler(service.NewUserService(client, logger), logger),
 		ReleaseHandler:      releaseHandler.NewHandler(logger, service.NewReleaseService(client, logger)),
 	}
@@ -427,7 +427,7 @@ func TestSetupRoutes_SystemConfigInitWriteSurfaceIsAbsent(t *testing.T) {
 		Logger:    logger,
 		Client:    client,
 		SystemConfigHandler: systemConfigHandler.NewHandler(
-			service.NewSystemConfigService(client, logger), logger),
+			systemConfigHandler.NewSystemConfigService(client, logger), logger),
 	}
 
 	gin.SetMode(gin.TestMode)

@@ -3,6 +3,7 @@ package bpmn
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"itsm-backend/common"
@@ -126,7 +127,7 @@ func (h *TicketServiceTaskHandler) updateTicketStatus(ctx context.Context, ticke
 	// 获取新状态
 	newStatus, _ := variables["new_status"].(string)
 	if newStatus == "" {
-		newStatus = "in_progress"
+		newStatus = common.TicketStatusInProgress
 	}
 
 	// 解析附加字段
@@ -135,22 +136,63 @@ func (h *TicketServiceTaskHandler) updateTicketStatus(ctx context.Context, ticke
 		additionalData["form_fields"] = formFields
 	}
 
-	// 执行更新
+	// 租户 fail-closed：拿不到租户上下文不得改工单。
 	tenantID := h.getTenantID(ctx, variables)
-	update := h.client.Ticket.UpdateOneID(ticketID)
-	if tenantID > 0 {
-		update = update.Where(ticket.TenantID(tenantID))
+	if tenantID <= 0 {
+		return nil, fmt.Errorf("缺少租户上下文，无法更新工单状态")
 	}
-	if newStatus == "resolved" || newStatus == "closed" {
-		update = update.SetResolvedAt(time.Now())
+
+	// 状态机权威闸门：BPMN 服务任务与人工流转共用同一张迁移表，
+	// 流程配置错误（如把已关闭工单改回 in_progress）必须在服务任务边界被拒。
+	current, err := h.getTicket(ctx, ticketID, tenantID)
+	if err != nil {
+		h.logger.Errorw("Failed to load ticket for status update", "ticket_id", ticketID, "tenant_id", tenantID, "error", err)
+		return nil, fmt.Errorf("工单不存在或不属于当前租户: %w", err)
 	}
-	_, err := update.
+	if !common.IsValidTicketStatusTransition(current.Status, newStatus) {
+		h.logger.Errorw("Illegal ticket status transition via BPMN service task",
+			"ticket_id", ticketID, "current_status", current.Status, "target_status", newStatus)
+		return nil, fmt.Errorf("非法工单状态转换: %s -> %s", current.Status, newStatus)
+	}
+	if newStatus == common.TicketStatusResolved && strings.TrimSpace(current.Resolution) == "" {
+		return nil, fmt.Errorf("解决工单前必须填写解决方案")
+	}
+	if current.Status == newStatus {
+		return &dto.ServiceTaskResult{
+			Success:     true,
+			Message:     fmt.Sprintf("工单 %d 已处于状态 %s，无需变更", ticketID, newStatus),
+			UpdatedData: additionalData,
+		}, nil
+	}
+
+	// 条件更新（version CAS）：与人工流转一致，读后并发修改按冲突拒绝，
+	// 不得无条件覆盖。时间戳语义与 TicketLifecycleService 对齐。
+	now := time.Now()
+	updater := h.client.Ticket.Update().
+		Where(
+			ticket.ID(ticketID),
+			ticket.TenantIDEQ(tenantID),
+			ticket.DeletedAtIsNil(),
+			ticket.VersionEQ(current.Version),
+		).
 		SetStatus(newStatus).
-		SetUpdatedAt(time.Now()).
-		Save(ctx)
+		SetVersion(current.Version + 1).
+		SetUpdatedAt(now)
+	switch newStatus {
+	case common.TicketStatusResolved:
+		updater = updater.SetResolvedAt(now).ClearClosedAt()
+	case common.TicketStatusClosed:
+		updater = updater.SetClosedAt(now)
+	default:
+		updater = updater.ClearResolvedAt().ClearClosedAt()
+	}
+	affected, err := updater.Save(ctx)
 	if err != nil {
 		h.logger.Errorw("Failed to update ticket status", "ticket_id", ticketID, "error", err)
 		return nil, fmt.Errorf("更新工单状态失败: %w", err)
+	}
+	if affected == 0 {
+		return nil, fmt.Errorf("工单状态并发冲突，请重试")
 	}
 
 	h.logger.Infow("Ticket status updated via BPMN", "ticket_id", ticketID, "new_status", newStatus)

@@ -2,14 +2,17 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
 
+	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/ticketautomationrule"
+	"itsm-backend/ent/user"
 
 	"go.uber.org/zap"
 )
@@ -291,6 +294,20 @@ func (s *TicketAutomationRuleService) ExecuteRulesForTicket(
 
 			// 记录执行日志
 			s.logger.Infow("Automation rule executed", "rule_id", rule.ID, "rule_name", rule.Name, "ticket_id", ticketID)
+
+			// 重载工单：本条规则可能已改变状态/优先级/处理人，
+			// 后续规则的条件评估必须基于最新数据而不是过期快照。
+			if refreshed, rerr := s.client.Ticket.Query().
+				Where(
+					ticket.ID(ticketID),
+					ticket.TenantIDEQ(tenantID),
+					ticket.DeletedAtIsNil(),
+				).
+				Only(ctx); rerr == nil {
+				ticketEntity = refreshed
+			} else {
+				s.logger.Warnw("Failed to reload ticket after rule execution", "error", rerr, "ticket_id", ticketID)
+			}
 		}
 	}
 
@@ -426,8 +443,29 @@ func (s *TicketAutomationRuleService) executeActions(
 
 		case "assign":
 			if userID, ok := action["user_id"].(float64); ok {
-				_, err := s.client.Ticket.UpdateOneID(ticketEntity.ID).
-					SetAssigneeID(int(userID)).
+				targetID := int(userID)
+				// 目标必须存在、属于同一租户且活跃：跨租户/停用账号不得被指派。
+				exists, err := s.client.User.Query().
+					Where(
+						user.IDEQ(targetID),
+						user.TenantIDEQ(ticketEntity.TenantID),
+						user.ActiveEQ(true),
+					).
+					Exist(ctx)
+				if err != nil {
+					s.logger.Warnw("Failed to validate assign target", "error", err,
+						"ticket_id", ticketEntity.ID, "target_user_id", targetID)
+					continue
+				}
+				if !exists {
+					s.logger.Warnw("Skip automation assign: target user invalid",
+						"errorClass", "invalid_assignee",
+						"ticket_id", ticketEntity.ID, "target_user_id", targetID,
+						"tenant_id", ticketEntity.TenantID)
+					continue
+				}
+				_, err = s.client.Ticket.UpdateOneID(ticketEntity.ID).
+					SetAssigneeID(targetID).
 					Save(ctx)
 				if err != nil {
 					s.logger.Warnw("Failed to assign ticket", "error", err)
@@ -489,17 +527,112 @@ func (s *TicketAutomationRuleService) executeActions(
 
 		case "set_status":
 			if status, ok := action["status"].(string); ok {
-				_, err := s.client.Ticket.UpdateOneID(ticketEntity.ID).
-					SetStatus(status).
-					Save(ctx)
-				if err != nil {
-					s.logger.Warnw("Failed to set status", "error", err)
+				if err := s.applyStatusAction(ctx, rule, ticketEntity.ID, ticketEntity.TenantID, status); err != nil {
+					s.logger.Warnw("Failed to apply automation status action", "error", err,
+						"rule_id", rule.ID, "ticket_id", ticketEntity.ID, "target_status", status)
 				}
 			}
 		}
 	}
 
 	return nil
+}
+
+// applyStatusAction 自动化 set_status 必须走与人工流转相同的权威状态机：
+// 非法迁移拒绝、resolved 必须携带解决方案、同状态幂等跳过、乐观锁 CAS
+// 与完整时间戳语义（前端禁用按钮不是状态机）。全部业务拒绝记 Warn 并
+// 中止该动作（不中断其它规则）；仅真实 DB 故障返回 error。
+func (s *TicketAutomationRuleService) applyStatusAction(
+	ctx context.Context,
+	rule *ent.TicketAutomationRule,
+	ticketID, tenantID int,
+	status string,
+) error {
+	current, err := s.client.Ticket.Query().
+		Where(
+			ticket.ID(ticketID),
+			ticket.TenantIDEQ(tenantID),
+			ticket.DeletedAtIsNil(),
+		).
+		Only(ctx)
+	if err != nil {
+		return fmt.Errorf("加载工单失败: %w", err)
+	}
+
+	if !common.IsValidTicketStatusTransition(current.Status, status) {
+		s.logger.Warnw("Skip automation set_status: illegal transition",
+			"errorClass", "invalid_status_transition",
+			"rule_id", rule.ID, "ticket_id", ticketID,
+			"current_status", current.Status, "target_status", status)
+		return nil
+	}
+	if status == common.TicketStatusResolved && strings.TrimSpace(current.Resolution) == "" {
+		s.logger.Warnw("Skip automation set_status: resolution required",
+			"errorClass", "resolution_required",
+			"rule_id", rule.ID, "ticket_id", ticketID)
+		return nil
+	}
+	if current.Status == status {
+		return nil
+	}
+
+	tx, err := s.client.Tx(ctx)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	updater := tx.Ticket.Update().
+		Where(
+			ticket.ID(ticketID),
+			ticket.TenantIDEQ(tenantID),
+			ticket.DeletedAtIsNil(),
+			ticket.VersionEQ(current.Version),
+		).
+		SetStatus(status).
+		SetVersion(current.Version + 1).
+		SetUpdatedAt(time.Now())
+	switch status {
+	case common.TicketStatusResolved:
+		updater = updater.SetResolvedAt(time.Now()).ClearClosedAt()
+	case common.TicketStatusClosed:
+		updater = updater.SetClosedAt(time.Now())
+	default:
+		updater = updater.ClearResolvedAt().ClearClosedAt()
+	}
+	affected, err := updater.Save(ctx)
+	if err != nil {
+		return err
+	}
+	if affected == 0 {
+		s.logger.Warnw("Skip automation set_status: version conflict",
+			"errorClass", "version_conflict",
+			"rule_id", rule.ID, "ticket_id", ticketID)
+		return nil
+	}
+
+	auditBody, _ := json.Marshal(map[string]interface{}{
+		"ruleId":         rule.ID,
+		"ruleName":       rule.Name,
+		"ticketId":       ticketID,
+		"previousStatus": current.Status,
+		"newStatus":      status,
+	})
+	body := string(auditBody)
+	if _, err := tx.AuditLog.Create().
+		SetTenantID(tenantID).
+		SetUserID(rule.CreatedBy).
+		SetResource(fmt.Sprintf("ticket:%d", ticketID)).
+		SetAction("automation_set_status").
+		SetPath(fmt.Sprintf("service://tickets/%d/automation-status", ticketID)).
+		SetMethod("DOMAIN").
+		SetStatusCode(0).
+		SetNillableRequestBody(&body).
+		Save(ctx); err != nil {
+		return fmt.Errorf("记录自动化状态变更审计失败: %w", err)
+	}
+
+	return tx.Commit()
 }
 
 // getActionDescriptions 获取动作描述
