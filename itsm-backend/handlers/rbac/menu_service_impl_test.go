@@ -1,9 +1,11 @@
-package service
+package rbac
 
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
+	"sync/atomic"
 	"testing"
 
 	"itsm-backend/common"
@@ -22,7 +24,7 @@ import (
 // DB 已授权的低角色用户（如 security_admin 持 user:read）能看到 /admin/users 菜单，
 // 不再被路径前缀硬编码遮蔽。
 func TestFilterMenusByPermission_RespectsGrantedPermissionCode(t *testing.T) {
-	svc := &MenuService{}
+	svc := &menuServiceImpl{}
 	menus := []*ent.Menu{
 		{Name: "事件管理", Path: "/incidents", PermissionCode: "incident:read"},
 		{Name: "工作流", Path: "/workflow", PermissionCode: "workflow:read"},
@@ -65,7 +67,7 @@ func pathsOf(menus []*ent.Menu) []string {
 // 因此在侧边栏看到「团队管理」，点进去恒定 403（2026-10-18 本地生产栈实测 code 2003）。
 // 同时保留 service→service_catalog 这类别名：它是租户管理员真实依赖的桥。
 func TestFilterMenusByPermission_CanonicalResourceCodesAreNotAliased(t *testing.T) {
-	svc := &MenuService{}
+	svc := &menuServiceImpl{}
 	menus := []*ent.Menu{
 		{Name: "团队管理", Path: "/admin/teams", PermissionCode: "team:read"},
 		{Name: "部门管理", Path: "/admin/departments", PermissionCode: "department:read"},
@@ -109,7 +111,7 @@ func TestFilterMenusByPermission_CanonicalResourceCodesAreNotAliased(t *testing.
 // 出发建树，存活子菜单会因父节点缺失被整棵丢弃。backfillParentMenus 必须把父菜单
 // 作为纯导航容器回填，让子树在树中可达。
 func TestBackfillParentMenus_OrphanedSubtreePreserved(t *testing.T) {
-	svc := &MenuService{}
+	svc := &menuServiceImpl{}
 	parentID := 10
 	grandparentID := 20
 	menus := []*ent.Menu{
@@ -151,7 +153,7 @@ func TestBackfillParentMenus_OrphanedSubtreePreserved(t *testing.T) {
 // TestBackfillParentMenus_NoParentNoBackfill 全部子菜单都被过滤时，
 // 父菜单不得被回填成空导航容器；已保留的父菜单也不得重复插入。
 func TestBackfillParentMenus_NoParentNoBackfill(t *testing.T) {
-	svc := &MenuService{}
+	svc := &menuServiceImpl{}
 	parentID := 30
 	menus := []*ent.Menu{
 		{ID: parentID, Name: "报表", Path: "/reports", PermissionCode: "report:read"},
@@ -367,3 +369,14 @@ func TestDeleteMenu_StateAndTenantSemantics(t *testing.T) {
 	_, err = client.Menu.Get(ctx, foreign.ID)
 	require.NoError(t, err, "删除操作不得波及他租户")
 }
+
+// 迁移自共享 service 包的测试辅助（包私有，跨包不可见，须在本域重建）。
+// 前缀与 service/enttest_dsn_test.go 的 svc_test_ 区分，避免跨包同名内存库串数据。
+var rbacTestDBCounter int64
+
+func testDSN() string {
+	return fmt.Sprintf("file:rbac_test_%d?mode=memory&cache=shared&_fk=1", atomic.AddInt64(&rbacTestDBCounter, 1))
+}
+
+// ptr 原本定义在 service/user_service_table_test.go，随菜单测试迁入后须在本包重建。
+func ptr(s string) *string { return &s }

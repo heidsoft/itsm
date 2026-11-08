@@ -63,7 +63,7 @@ func main() {
 	configurationItemService := service.NewConfigurationItemService(client, sugar, ciHistoryService, ciTagService)
 	ciRelationshipService := service.NewCIRelationshipService(client, sugar)
 	cmdbImportExportService := service.NewCMDBImportExportService(client, sugar, configurationItemService, ciTagService)
-	cmdbSavedViewService := service.NewCMDBSavedViewService(client, sugar)
+	cmdbSavedViewService := cmdb.NewCMDBSavedViewService(client, sugar)
 
 	// 独立 CMDB 兼容入口复用 handlers/cmdb 的生产服务，不再装配 legacy controller。
 	cmdbHandler := cmdb.NewProductionService(

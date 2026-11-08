@@ -1,4 +1,4 @@
-package service
+package rbac
 
 import (
 	"context"
@@ -19,22 +19,22 @@ import (
 	"go.uber.org/zap"
 )
 
-// MenuService 菜单服务
-type MenuService struct {
+// menuServiceImpl 菜单服务
+type menuServiceImpl struct {
 	client *ent.Client
 	logger *zap.SugaredLogger
 }
 
 // NewMenuService 创建菜单服务
-func NewMenuService(client *ent.Client, logger *zap.SugaredLogger) *MenuService {
-	return &MenuService{
+func NewMenuService(client *ent.Client, logger *zap.SugaredLogger) *menuServiceImpl {
+	return &menuServiceImpl{
 		client: client,
 		logger: logger,
 	}
 }
 
 // CreateMenu 创建菜单
-func (s *MenuService) CreateMenu(ctx context.Context, req *dto.CreateMenuRequest, tenantID int) (*dto.MenuDTO, error) {
+func (s *menuServiceImpl) CreateMenu(ctx context.Context, req *dto.CreateMenuRequest, tenantID int) (*dto.MenuDTO, error) {
 	s.logger.Infow("Creating menu", "name", req.Name, "tenant_id", tenantID)
 
 	// 验证父菜单是否存在（如果指定了父菜单）。parentId 0 与未传同义，都表示顶级菜单。
@@ -108,7 +108,7 @@ func (s *MenuService) CreateMenu(ctx context.Context, req *dto.CreateMenuRequest
 }
 
 // GetMenu 获取菜单
-func (s *MenuService) GetMenu(ctx context.Context, id int, tenantID int) (*dto.MenuDTO, error) {
+func (s *menuServiceImpl) GetMenu(ctx context.Context, id int, tenantID int) (*dto.MenuDTO, error) {
 	menuEntity, err := s.client.Menu.Query().
 		Where(menu.ID(id), menu.TenantID(tenantID)).
 		Only(ctx)
@@ -120,7 +120,7 @@ func (s *MenuService) GetMenu(ctx context.Context, id int, tenantID int) (*dto.M
 }
 
 // ListMenus 获取菜单列表
-func (s *MenuService) ListMenus(ctx context.Context, tenantID int) ([]*dto.MenuDTO, error) {
+func (s *menuServiceImpl) ListMenus(ctx context.Context, tenantID int) ([]*dto.MenuDTO, error) {
 	menus, err := s.client.Menu.Query().
 		Where(menu.TenantID(tenantID)).
 		Order(ent.Asc(menu.FieldSortOrder)).
@@ -140,7 +140,7 @@ func (s *MenuService) ListMenus(ctx context.Context, tenantID int) ([]*dto.MenuD
 // assertParentAssignable 校验上级菜单可指向：必须同租户、非自身、且不是自身的后代，
 // 否则菜单树会成环，页面按 parentId 组装时会出现整棵子树消失。
 // 菜单量级有限，一次读回全租户再做遍历，避免递归查库。
-func (s *MenuService) assertParentAssignable(ctx context.Context, menuID int, parentID int, tenantID int) error {
+func (s *menuServiceImpl) assertParentAssignable(ctx context.Context, menuID int, parentID int, tenantID int) error {
 	if parentID == menuID {
 		return common.NewValidationError("上级菜单不能是当前菜单自身", nil)
 	}
@@ -183,7 +183,7 @@ func (s *MenuService) assertParentAssignable(ctx context.Context, menuID int, pa
 }
 
 // UpdateMenu 更新菜单
-func (s *MenuService) UpdateMenu(ctx context.Context, id int, req *dto.UpdateMenuRequest, tenantID int) (*dto.MenuDTO, error) {
+func (s *menuServiceImpl) UpdateMenu(ctx context.Context, id int, req *dto.UpdateMenuRequest, tenantID int) (*dto.MenuDTO, error) {
 	s.logger.Infow("Updating menu", "id", id, "tenant_id", tenantID)
 
 	menuEntity, err := s.client.Menu.Query().
@@ -241,7 +241,7 @@ func (s *MenuService) UpdateMenu(ctx context.Context, id int, req *dto.UpdateMen
 }
 
 // DeleteMenu 删除菜单
-func (s *MenuService) DeleteMenu(ctx context.Context, id int, tenantID int) error {
+func (s *menuServiceImpl) DeleteMenu(ctx context.Context, id int, tenantID int) error {
 	s.logger.Infow("Deleting menu", "id", id, "tenant_id", tenantID)
 
 	// 与 GetMenu/UpdateMenu 同一口径：未命中按 ent 的 not-found 上抛，由响应层统一映射成
@@ -275,7 +275,7 @@ func (s *MenuService) DeleteMenu(ctx context.Context, id int, tenantID int) erro
 }
 
 // GetUserMenus 获取用户可见菜单（根据用户角色和权限）
-func (s *MenuService) GetUserMenus(ctx context.Context, userID int, tenantID int) (*dto.MenuTreeResponse, error) {
+func (s *menuServiceImpl) GetUserMenus(ctx context.Context, userID int, tenantID int) (*dto.MenuTreeResponse, error) {
 	s.logger.Infow("Getting user menus", "user_id", userID, "tenant_id", tenantID)
 
 	// 获取用户角色
@@ -369,7 +369,7 @@ func isMSPMenu(m dto.MenuDTO) bool {
 }
 
 // getUserPermissions 获取用户的权限列表
-func (s *MenuService) getUserPermissions(ctx context.Context, userEntity *ent.User, tenantID int) map[string]bool {
+func (s *menuServiceImpl) getUserPermissions(ctx context.Context, userEntity *ent.User, tenantID int) map[string]bool {
 	permissions := make(map[string]bool)
 
 	// 超级管理员拥有所有权限
@@ -408,7 +408,7 @@ func (s *MenuService) getUserPermissions(ctx context.Context, userEntity *ent.Us
 	return permissions
 }
 
-func (s *MenuService) addDatabaseRolePermissions(ctx context.Context, permissions map[string]bool, tenantID int, roleCodes []string) {
+func (s *menuServiceImpl) addDatabaseRolePermissions(ctx context.Context, permissions map[string]bool, tenantID int, roleCodes []string) {
 	if len(roleCodes) == 0 {
 		return
 	}
@@ -488,10 +488,10 @@ func (s *MenuService) addDatabaseRolePermissions(ctx context.Context, permission
 }
 
 // filterMenusByPermission 根据权限过滤菜单
-func (s *MenuService) filterMenusByPermission(menus []*ent.Menu, permissions map[string]bool, roleCodes map[string]bool) []*ent.Menu {
+func (s *menuServiceImpl) filterMenusByPermission(menus []*ent.Menu, permissions map[string]bool, roleCodes map[string]bool) []*ent.Menu {
 	filtered := make([]*ent.Menu, 0)
 
-	// debugLog nil 守卫：单元测试直接构造 MenuService{}，logger 可能为 nil；
+	// debugLog nil 守卫：单元测试直接构造 menuServiceImpl{}，logger 可能为 nil；
 	// 调试日志不得成为 nil 指针 panic 源。
 	debugLog := func(msg string, kv ...interface{}) {
 		if s.logger != nil {
@@ -666,7 +666,7 @@ func splitPermission(permCode string) []string {
 // 将父菜单作为纯导航容器回填到结果集，以保证 buildMenuTree 能正确构建层级——
 // 否则 buildMenuTree 只从存活的根节点出发建树，存活子菜单会因父节点缺失被整棵丢弃。
 // 回填只是展示层导航容器：被回填的父菜单不代表授权，接口仍逐请求把关。
-func (s *MenuService) backfillParentMenus(filtered, all []*ent.Menu) []*ent.Menu {
+func (s *menuServiceImpl) backfillParentMenus(filtered, all []*ent.Menu) []*ent.Menu {
 	kept := make(map[int]bool, len(filtered))
 	for _, m := range filtered {
 		kept[m.ID] = true
@@ -700,7 +700,7 @@ func (s *MenuService) backfillParentMenus(filtered, all []*ent.Menu) []*ent.Menu
 }
 
 // buildMenuTree 构建菜单树
-func (s *MenuService) buildMenuTree(menus []*ent.Menu) (mainMenus, adminMenus []dto.MenuDTO) {
+func (s *menuServiceImpl) buildMenuTree(menus []*ent.Menu) (mainMenus, adminMenus []dto.MenuDTO) {
 	// 构建子菜单映射
 	childrenMap := make(map[int][]*ent.Menu)
 	for _, m := range menus {
@@ -763,7 +763,7 @@ func isAdminMenu(path string) bool {
 }
 
 // toMenuDTO 转换为 DTO
-func (s *MenuService) toMenuDTO(menuEntity *ent.Menu) *dto.MenuDTO {
+func (s *menuServiceImpl) toMenuDTO(menuEntity *ent.Menu) *dto.MenuDTO {
 	dto := &dto.MenuDTO{
 		ID:        menuEntity.ID,
 		Name:      menuEntity.Name,
@@ -791,7 +791,7 @@ func (s *MenuService) toMenuDTO(menuEntity *ent.Menu) *dto.MenuDTO {
 }
 
 // ExportMenus 导出当前租户菜单为 seeder 兼容格式（parentPath 替代 parentId）。
-func (s *MenuService) ExportMenus(ctx context.Context, tenantID int) ([]dto.MenuExportItem, error) {
+func (s *menuServiceImpl) ExportMenus(ctx context.Context, tenantID int) ([]dto.MenuExportItem, error) {
 	menus, err := s.client.Menu.Query().
 		Where(menu.TenantID(tenantID)).
 		Order(ent.Asc(menu.FieldSortOrder)).
@@ -827,7 +827,7 @@ func (s *MenuService) ExportMenus(ctx context.Context, tenantID int) ([]dto.Menu
 
 // InitMenusFromBaseline 从 pkg/menubaseline 基线补齐缺失菜单，返回 diff 报告。
 // 已存在的菜单不覆盖 isVisible/isEnabled 等运营字段。
-func (s *MenuService) InitMenusFromBaseline(ctx context.Context, tenantID int) (*dto.MenuInitDiffResponse, error) {
+func (s *menuServiceImpl) InitMenusFromBaseline(ctx context.Context, tenantID int) (*dto.MenuInitDiffResponse, error) {
 	specs := menubaseline.MenuDefinitions()
 
 	existing, err := s.client.Menu.Query().
@@ -903,7 +903,7 @@ func (s *MenuService) InitMenusFromBaseline(ctx context.Context, tenantID int) (
 }
 
 // upsertBaselineMenu 按 (tenantID, path) 创建缺失菜单或更新已有菜单的基线字段。
-func (s *MenuService) upsertBaselineMenu(ctx context.Context, tenantID int, spec *menubaseline.MenuSpec, pathSet map[string]*ent.Menu) {
+func (s *menuServiceImpl) upsertBaselineMenu(ctx context.Context, tenantID int, spec *menubaseline.MenuSpec, pathSet map[string]*ent.Menu) {
 	if m, exists := pathSet[spec.Path]; exists {
 		var parentID *int
 		if spec.ParentPath != "" {

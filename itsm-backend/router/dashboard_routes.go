@@ -113,7 +113,7 @@ func defaultDashboardTemplate() gin.H {
 }
 
 // DashboardConfigStore 承载仪表盘个性化配置的持久化契约。
-// 生产实现见 service.NewDashboardConfigStore（落 system_configs）。
+// 生产实现见 handlers/dashboard.NewDashboardConfigStore（落 system_configs）。
 type DashboardConfigStore interface {
 	LoadDashboardConfig(ctx context.Context, tenantID, userID int) (map[string]any, error)
 	SaveDashboardConfig(ctx context.Context, tenantID, userID int, cfg map[string]any) error

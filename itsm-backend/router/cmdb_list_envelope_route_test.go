@@ -357,7 +357,7 @@ func setupCMDBListRouter(t *testing.T, client *ent.Client, logger *zap.SugaredLo
 	ciSvc := service.NewConfigurationItemService(client, logger, historySvc, tagSvc)
 	relSvc := service.NewCIRelationshipService(client, logger)
 	importExportSvc := service.NewCMDBImportExportService(client, logger, ciSvc, tagSvc)
-	savedViewSvc := service.NewCMDBSavedViewService(client, logger)
+	savedViewSvc := cmdbHandler.NewCMDBSavedViewService(client, logger)
 
 	production := cmdbHandler.NewProductionService(logger, ciTypeSvc, ciAttrSvc, ciSvc, relSvc, historySvc, tagSvc, importExportSvc, savedViewSvc)
 	svc := cmdbHandler.NewService(cmdbHandler.NewEntRepository(client), production, logger)

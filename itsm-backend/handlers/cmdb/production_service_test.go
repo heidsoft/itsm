@@ -37,7 +37,7 @@ func setupTestProductionService(t *testing.T) (*gin.Engine, *ProductionService, 
 	configurationItemService := service.NewConfigurationItemService(client, logger, ciHistoryService, ciTagService)
 	ciRelationshipService := service.NewCIRelationshipService(client, logger)
 	cmdbImportExportService := service.NewCMDBImportExportService(client, logger, configurationItemService, ciTagService)
-	cmdbSavedViewService := service.NewCMDBSavedViewService(client, logger)
+	cmdbSavedViewService := NewCMDBSavedViewService(client, logger)
 
 	// 创建控制器
 	cmdbController := NewProductionService(

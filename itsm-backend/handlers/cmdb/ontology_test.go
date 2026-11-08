@@ -59,7 +59,7 @@ func ontologyTestRouterWithRegistry(t *testing.T, withTenant bool, tr *service.T
 	ciSvc := service.NewConfigurationItemService(client, logger, ciHistorySvc, ciTagSvc)
 	ciRelSvc := service.NewCIRelationshipService(client, logger)
 	impExpSvc := service.NewCMDBImportExportService(client, logger, ciSvc, ciTagSvc)
-	savedViewSvc := service.NewCMDBSavedViewService(client, logger)
+	savedViewSvc := NewCMDBSavedViewService(client, logger)
 
 	ps := NewProductionService(logger, ciTypeSvc, ciAttrSvc, ciSvc, ciRelSvc, ciHistorySvc, ciTagSvc, impExpSvc, savedViewSvc)
 	if tr != nil {
@@ -201,7 +201,7 @@ func TestOntology_OnlyReturnsOwnTenantCITypes(t *testing.T) {
 	ciSvc := service.NewConfigurationItemService(client, logger, ciHistorySvc, ciTagSvc)
 	ciRelSvc := service.NewCIRelationshipService(client, logger)
 	impExpSvc := service.NewCMDBImportExportService(client, logger, ciSvc, ciTagSvc)
-	savedViewSvc := service.NewCMDBSavedViewService(client, logger)
+	savedViewSvc := NewCMDBSavedViewService(client, logger)
 	ps := NewProductionService(logger, ciTypeSvc, ciAttrSvc, ciSvc, ciRelSvc, ciHistorySvc, ciTagSvc, impExpSvc, savedViewSvc)
 
 	r := gin.New()

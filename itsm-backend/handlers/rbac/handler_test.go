@@ -17,7 +17,6 @@ import (
 	"itsm-backend/ent"
 	entrole "itsm-backend/ent/role"
 	"itsm-backend/middleware"
-	"itsm-backend/service"
 
 	entsql "entgo.io/ent/dialect/sql"
 	"github.com/gin-gonic/gin"
@@ -53,7 +52,7 @@ func setupRBACTest(t *testing.T) (*Handler, *ent.Client) {
 	h := NewHandler(
 		NewRoleService(client, logger),
 		NewPermissionService(client, logger),
-		service.NewMenuService(client, logger),
+		NewMenuService(client, logger),
 		logger,
 	)
 	return h, client

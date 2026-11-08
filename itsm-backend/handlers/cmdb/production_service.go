@@ -27,7 +27,7 @@ type ProductionService struct {
 	ciHistoryService             *service.CIHistoryService
 	ciTagService                 *service.CITagService
 	importExportService          *service.CMDBImportExportService
-	savedViewService             *service.CMDBSavedViewService
+	savedViewService             *CMDBSavedViewService
 	toolRegistry                 *service.ToolRegistry // 可选：本体自描述端点暴露 AI 工具面
 }
 
@@ -41,7 +41,7 @@ func NewProductionService(
 	ciHistoryService *service.CIHistoryService,
 	ciTagService *service.CITagService,
 	importExportService *service.CMDBImportExportService,
-	savedViewService *service.CMDBSavedViewService,
+	savedViewService *CMDBSavedViewService,
 ) *ProductionService {
 	return &ProductionService{
 		logger:                       logger,

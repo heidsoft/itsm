@@ -56,10 +56,8 @@ ci_tag_service.go
 ci_type_service.go
 cmdb_import_export_service.go
 cmdb_merge.go
-cmdb_saved_view_service.go
 config_inheritance_service.go
 configuration_item_service.go
-dashboard_config_store.go
 dashboard_repository.go
 dashboard_service.go
 domain_command_handlers.go
@@ -82,8 +80,6 @@ knowledge_service.go
 legacy_approval_migration_service.go
 llm_gateway.go
 llm_providers.go
-menu_service.go
-msp_allocation_service.go
 notification_delivery_command_handler.go
 notification_outbox.go
 notification_service.go

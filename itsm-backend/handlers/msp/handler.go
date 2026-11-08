@@ -1,5 +1,5 @@
 // Package msp 是 MSP 多租户服务域的 HTTP handler 层（域切片架构）。
-// 业务逻辑仍由 service.MSPAllocationService / service.TicketService 承载，
+// 业务逻辑由本域的 MSPAllocationService 与 TicketService 窄接口承载，
 // 本包只做参数解析与响应封装。
 package msp
 
@@ -13,7 +13,6 @@ import (
 	"itsm-backend/ent"
 	"itsm-backend/middleware"
 	"itsm-backend/repository/ticket"
-	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -21,15 +20,15 @@ import (
 
 // Handler MSP HTTP handler
 type Handler struct {
-	mspAllocationService *service.MSPAllocationService
-	ticketService        *service.TicketService
+	mspAllocationService *MSPAllocationService
+	ticketService        TicketService
 	logger               *zap.SugaredLogger
 }
 
 // NewHandler 创建 MSP handler 实例
 func NewHandler(
-	mspAllocationService *service.MSPAllocationService,
-	ticketService *service.TicketService,
+	mspAllocationService *MSPAllocationService,
+	ticketService TicketService,
 	logger *zap.SugaredLogger,
 ) *Handler {
 	return &Handler{
@@ -133,7 +132,7 @@ func (h *Handler) CreateAllocation(c *gin.Context) {
 
 	alloc, err := h.mspAllocationService.Create(c.Request.Context(), operatorID, req.MSPUserID, req.CustomerTenantID, req.Role, operatorRole)
 	if err != nil {
-		if errors.Is(err, service.ErrMSPAllocationForbidden) {
+		if errors.Is(err, ErrMSPAllocationForbidden) {
 			h.logger.Warnw("msp allocation create forbidden", "operator", operatorID, "msp_user_id", req.MSPUserID)
 			common.Forbidden(c, "无权操作该 MSP 租户的分配")
 			return
@@ -164,12 +163,12 @@ func (h *Handler) Deallocate(c *gin.Context) {
 
 	err := h.mspAllocationService.Deactivate(c.Request.Context(), operatorID, req.MSPUserID, req.CustomerTenantID, operatorRole)
 	if err != nil {
-		if errors.Is(err, service.ErrMSPAllocationForbidden) {
+		if errors.Is(err, ErrMSPAllocationForbidden) {
 			h.logger.Warnw("msp allocation deactivate forbidden", "operator", operatorID, "msp_user_id", req.MSPUserID)
 			common.Forbidden(c, "无权操作该 MSP 租户的分配")
 			return
 		}
-		if errors.Is(err, service.ErrMSPAllocationNotFound) {
+		if errors.Is(err, ErrMSPAllocationNotFound) {
 			h.logger.Warnw("Deallocate matched no active allocation",
 				"msp_user_id", req.MSPUserID, "customer_tenant_id", req.CustomerTenantID, "operator", operatorID)
 			common.NotFound(c, "没有可解除的活跃分配")
@@ -202,7 +201,7 @@ func (h *Handler) GetAllocationHistory(c *gin.Context) {
 		return
 	}
 
-	filter := service.MSPAllocationHistoryFilter{MSPTenantID: mspTenantID}
+	filter := MSPAllocationHistoryFilter{MSPTenantID: mspTenantID}
 
 	if raw := c.Query("mspUserId"); raw != "" {
 		v, err := strconv.Atoi(raw)

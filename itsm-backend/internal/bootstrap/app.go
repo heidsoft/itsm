@@ -619,7 +619,7 @@ func NewApplication() *Application {
 	if err := commandRegistry.Register(commandbus.CommandProcessCMDBExport, importExportService.HandleExportCommand); err != nil {
 		sugar.Fatalw("Failed to register CMDB export command handler", "error", err)
 	}
-	savedViewService := service.NewCMDBSavedViewService(client, sugar)
+	savedViewService := cmdb.NewCMDBSavedViewService(client, sugar)
 	// LLM/Embedding/VectorStore
 	var embedder service.Embedder
 	if cfg.LLM.Provider == "openai" || cfg.LLM.Provider == "" {
@@ -964,7 +964,7 @@ func NewApplication() *Application {
 	approvalChainService := service.NewApprovalChainService(client, sugar)
 	// 将审批链求值器注入 BPMN Service Task handler（配置与编排分离）
 	customProcessEngine.SetApprovalChainResolver(service.NewApprovalChainResolverAdapter(client, sugar, approvalChainService))
-	mspAllocationService := service.NewMSPAllocationService(client, sugar)
+	mspAllocationService := mspHandler.NewMSPAllocationService(client, sugar)
 	// 升级矩阵落 system_configs（key=escalation.matrix）：纯内存态会导致
 	// PUT /escalation-matrices 返回成功后重启即丢配置，多副本之间也不共享。
 	escalationMatrixService := service.NewEscalationMatrixServiceWithStore(
@@ -1192,7 +1192,7 @@ func NewApplication() *Application {
 	// RBAC handler (database-backed with tenant isolation)
 	roleService := rbacHandler.NewRoleService(client, sugar)
 	permissionService := rbacHandler.NewPermissionService(client, sugar)
-	menuService := service.NewMenuService(client, sugar)
+	menuService := rbacHandler.NewMenuService(client, sugar)
 	rbacHTTPHandler := rbacHandler.NewHandler(roleService, permissionService, menuService, sugar)
 
 	// Audit Log Controller (支持过滤/分页的审计日志查询)
@@ -1382,7 +1382,7 @@ func NewApplication() *Application {
 		// 仪表盘个性化配置落 system_configs（dashboard.config/layout/widgets 前缀 + user_id）。
 		// 此前 /dashboard/config|layout|widgets 写面只回显请求体、无任何持久化，
 		// 表现为"保存成功"实则重启即丢。
-		DashboardConfigStore:        service.NewDashboardConfigStore(client, sugar),
+		DashboardConfigStore:        dashboardpkg.NewDashboardConfigStore(client, sugar),
 		ServiceCatalogHandler:       scHandler,
 		ServiceRequestHandler:       srHandler,
 		ApplicationHandler:          applicationHTTPHandler,

@@ -17,11 +17,15 @@ var (
 	_ PermissionService = (*permissionServiceImpl)(nil)
 	_ RoleService       = NewRoleService(nil, nil)
 	_ PermissionService = NewPermissionService(nil, nil)
+	_ MenuService       = (*menuServiceImpl)(nil)
+	_ MenuService       = NewMenuService(nil, nil)
 )
 
 func TestRBACDomainOwnsRoleImplementation(t *testing.T) {
 	var svc RoleService = NewRoleService(nil, nil)
 	require.NotNil(t, svc, "域包构造函数必须返回域内接口实现")
+	var menu MenuService = NewMenuService(nil, nil)
+	require.NotNil(t, menu, "菜单实现必须归本域并满足域内 MenuService 接口")
 
 	assert.Error(t, ErrPermissionNotInTenant)
 	assert.True(t, errors.Is(ErrPermissionNotInTenant, ErrPermissionNotInTenant),
@@ -32,7 +36,7 @@ func TestRBACDomainOwnsRoleImplementation(t *testing.T) {
 // 源码守卫：域包生产文件不得重新引入共享 service 包。
 // L.3 只在门禁侧挡 import；此锁让 go test 也能直接发现回退。
 func TestRBACDomainHasNoSharedServiceImport(t *testing.T) {
-	for _, name := range []string{"handler.go", "service.go", "role_service_impl.go"} {
+	for _, name := range []string{"handler.go", "service.go", "role_service_impl.go", "menu_service_impl.go"} {
 		body, err := os.ReadFile(name)
 		require.NoError(t, err, "读取 %s", name)
 		assert.NotContains(t, string(body), `"itsm-backend/service"`,

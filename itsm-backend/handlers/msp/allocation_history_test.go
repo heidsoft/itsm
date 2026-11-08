@@ -14,7 +14,6 @@ import (
 	"itsm-backend/ent/enttest"
 	"itsm-backend/ent/mspallocation"
 	"itsm-backend/ent/tenant"
-	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/mattn/go-sqlite3"
@@ -40,7 +39,7 @@ func newAllocationRouter(t *testing.T, client *ent.Client, userID, tenantID int)
 	t.Helper()
 	gin.SetMode(gin.TestMode)
 	logger := zaptest.NewLogger(t).Sugar()
-	h := NewHandler(service.NewMSPAllocationService(client, logger), nil, logger)
+	h := NewHandler(NewMSPAllocationService(client, logger), nil, logger)
 
 	r := gin.New()
 	r.Use(gin.Recovery())

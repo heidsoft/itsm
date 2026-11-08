@@ -17,7 +17,6 @@ dashboard=1
 email_intake=2
 escalation_matrix=1
 incident=1
-msp=1
 operations=1
 prediction=1
 problem=1
