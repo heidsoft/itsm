@@ -30,6 +30,11 @@
 #         存量逐域清零（只允许下降）。baseline 中不存在的域若出现计数，视为
 #         新增违规 FAIL —— 新域必须自带 service.go，不得回退到共享层。
 #   L.4 进度报告（advisory）：域包总数 / 已有 service.go 的域 / 零 service/ 依赖的域
+#   L.5 已退役遗留代码零复活：批次 1 退出时删除的 8 个零消费方实现，其文件名与
+#         独有包级哨兵符号都不得在 service/ 顶层重新出现（L.1 只锁文件名，换名
+#         即可绕过；L.5 锁符号）。清单见 retired-services.txt，只增不减。
+#         扫描文件数 <100 或清单条目 <8 时直接 FAIL —— 零命中必须可信，不能是
+#         扫描器失效造成的假绿。
 #
 # 用法：
 #   ./scripts/docs-gate/check-layering-convergence.sh                 # hard
@@ -55,6 +60,7 @@ ROOT_DIR="${DOCS_GATE_ROOT:-$(cd "${SCRIPT_DIR}/../.." && pwd)}"
 BE="${ROOT_DIR}/itsm-backend"
 SERVICE_BASELINE="${LAYERING_SERVICE_BASELINE:-${SCRIPT_DIR}/service-prod-baseline.txt}"
 IMPORT_BASELINE="${LAYERING_IMPORT_BASELINE:-${SCRIPT_DIR}/handler-service-imports-baseline.txt}"
+RETIRED_LIST="${LAYERING_RETIRED_LIST:-${SCRIPT_DIR}/retired-services.txt}"
 
 MODE="hard"
 ACTION="check"
@@ -236,6 +242,50 @@ else
     warn "L.3 有 ${l3_drops} 个域依赖下降 —— 请跑 --update-baseline 收紧并在 CHANGELOG 记录"
   fi
   rm -f "${cur_i}" "${base_i}"
+fi
+
+# ---------------------------------------------------------------------------
+# L.5 已退役遗留代码零复活（批次 1 退出回归锁）
+# ---------------------------------------------------------------------------
+echo "-- L.5 已退役遗留代码零复活"
+if [ ! -f "${RETIRED_LIST}" ]; then
+  fail "L.5 退役清单缺失：${RETIRED_LIST}"
+else
+  l5_files="$(find "${BE}/service" -maxdepth 1 -name '*.go' -print 2>/dev/null | sort)"
+  l5_file_count="$(printf '%s\n' "${l5_files}" | grep -c '\.go$')"
+  l5_entries=0
+  l5_hits=0
+  if [ "${l5_file_count}" -lt 100 ]; then
+    fail "L.5 扫描器失效：service/ 顶层只扫到 ${l5_file_count} 个 .go（预期 >=100），零命中不可信"
+    l5_hits=$((l5_hits + 1))
+  else
+    while IFS=' ' read -r l5_orig l5_syms l5_rest; do
+      case "${l5_orig}" in '' | \#*) continue ;; esac
+      [ -z "${l5_syms}" ] && continue
+      l5_entries=$((l5_entries + 1))
+      if [ -f "${BE}/service/${l5_orig}" ]; then
+        fail "L.5 退役文件 ${l5_orig} 重新出现在 service/ 顶层"
+        l5_hits=$((l5_hits + 1))
+      fi
+      IFS=',' read -r -a l5_arr <<<"${l5_syms}"
+      for l5_sym in "${l5_arr[@]}"; do
+        [ -z "${l5_sym}" ] && continue
+        # 逐符号比对，不取并集；扫描范围只限 service/ 顶层（含测试）。
+        l5_hit="$(grep -lw "${l5_sym}" ${l5_files} 2>/dev/null | head -3)"
+        if [ -n "${l5_hit}" ]; then
+          fail "L.5 退役符号 ${l5_sym}（来自 ${l5_orig}）在 service/ 顶层复活：$(printf '%s' "${l5_hit}" | tr '\n' ' ')"
+          l5_hits=$((l5_hits + 1))
+        fi
+      done
+    done <"${RETIRED_LIST}"
+  fi
+  if [ "${l5_entries}" -lt 8 ]; then
+    fail "L.5 清单只解析到 ${l5_entries} 条（预期 >=8）：清单被裁剪或格式损坏，零命中不可信"
+    l5_hits=$((l5_hits + 1))
+  fi
+  if [ "${l5_hits}" -eq 0 ]; then
+    pass "${l5_entries} 项退役实现零复活（扫描 ${l5_file_count} 个 service/ 顶层 .go）"
+  fi
 fi
 
 # ---------------------------------------------------------------------------

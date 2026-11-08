@@ -19,11 +19,13 @@
 |------|---------|---------|--------|---------|
 | SLA 违规扫描 | `sla_monitor_service.go` 后台 ticker | 1 分钟 | 无 | 无（重新扫描即可） |
 | 升级调度 | `escalation_service.go` 后台 ticker | 5 分钟 | 无 | 无 |
-| 事件升级调度 | `incident_escalation_service.go` 后台 ticker | 5 分钟 | 无 | 无 |
+| 事件升级调度 | `incident_escalation_service.go` 后台 ticker（**已退役 2026-11-08**） | 5 分钟 | 无 | 无 |
 | 任务超时扫描 | `bpmn_timeout_scanner.go` 后台 ticker | 2 分钟 | outbox 通知 | 无 |
 | 工作流自动升级 | `workflow_automation_service.go` 后台 ticker | 内部循环 | 无 | 无 |
 
 此外 `bpmn_event_service.go` 定义了完整的事件类型体系（`TriggerTimer`、`EventBoundary`、`EventIntermediate`），但所有方法均为 stub（直接返回空数据）。
+
+> 状态标注（2026-11-08）：上表「事件升级调度」是设计清单条目，`service/incident_escalation_service.go` 已在分层迁移批次 1 退出时退役（全仓零消费方），且该退役文件本身并不含 ticker——此调度从未按本设计落地。剩余四套 ticker 的合并候选判断不受影响。
 
 ### 1.2 缺失能力
 
@@ -513,7 +515,7 @@ Phase 1 包含查询和统计接口，写操作接口（cancel/reschedule/pause/
 |------|------|---------|------|
 | SLA Monitor | `sla_monitor_service.go` | `safeGo` + `time.NewTicker` | 1 分钟 |
 | Escalation | `escalation_service.go` | `safeGo` + `time.NewTicker` | 5 分钟 |
-| Incident Escalation | `incident_escalation_service.go` | `safeGo` + `time.NewTicker` | 5 分钟 |
+| Incident Escalation | `incident_escalation_service.go` | `safeGo` + `time.NewTicker`（**已退役 2026-11-08，实际未实现 ticker**） | 5 分钟 |
 | Timeout Scanner | `bpmn_timeout_scanner.go` | `safeGo` + `time.NewTicker` | 2 分钟 |
 | Workflow Auto Escalation | `workflow_automation_service.go` | `safeGo` + `time.NewTicker` | 内部循环 |
 

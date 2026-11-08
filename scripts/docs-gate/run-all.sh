@@ -2,7 +2,7 @@
 #
 # scripts/docs-gate/run-all.sh
 #
-# 一键运行 docs-gate 的 7 条规则：
+# 一键运行 docs-gate 的 8 条规则：
 #   C.1 硬编码生产密码（hardcoded passwords）
 #   C.2 Roadmap 重复
 #   C.3 内部 markdown 链接失效（advisory）
@@ -10,6 +10,12 @@
 #   C.5 代码 <-> 文档同步新鲜度（make 目标存在性 / ROADMAP 与 CHANGELOG 新鲜度）
 #   C.6 产品口径漂移（成熟度口径一致性 / 领域清单 / 零路由域包 / 表面棘轮 / 覆盖率口径）
 #   C.7 产品需求收敛（空壳前端模块 / 预览域棘轮 / 规划能力面冻结）
+#   C.8 分层收敛（service/ 文件名与 import 棘轮 / handlers 根目录零游离 /
+#       已退役遗留代码零复活）
+#
+# ✅ 2026-11-08：C.8 此前虽已实现并在计划里声明「由 run-all.sh 统一调度」，
+#    实际并未出现在下方 run_gate 列表（一直靠人工单独执行）。本批补入，
+#    TOTAL 由 7 变 8，CI 与本地 `bash run-all.sh` 从此覆盖分层守卫。
 #
 # 阻断强度（重要，勿凭注释判断，以脚本实际退出码为准）：
 #   - C.6 **默认 hard**：存在 FAIL 即退出码 1，无需 --strict。
@@ -64,6 +70,7 @@ run_gate "C.4 release claims"       "${ROOT_DIR}/scripts/docs-gate/check-release
 run_gate "C.5 doc sync freshness"   "${ROOT_DIR}/scripts/docs-gate/check-doc-sync.sh"
 run_gate "C.6 product drift"        "${ROOT_DIR}/scripts/docs-gate/check-product-drift.sh"
 run_gate "C.7 scope creep"          "${ROOT_DIR}/scripts/docs-gate/check-scope-creep.sh"
+run_gate "C.8 layering convergence" "${ROOT_DIR}/scripts/docs-gate/check-layering-convergence.sh"
 
 echo ""
 echo "########################################"

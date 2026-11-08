@@ -707,6 +707,8 @@ admin 角色不再自动获得 MSP 访问权；MSP 身份判定改为"租户类�
 
 ### 7.4 MSP 客户校验
 
+> ⚠️ **状态标注（2026-11-08）**：本节为历史设计记录。`service/MSPAccessValidator` 已随 `service/` 分层迁移批次 1 退出而退役——全仓零消费方、从未装配进 `NewApplication`（见 `plans/service-layer-migration-plan.md` 批次 1 退出记录）；文中 `middleware.ResolveRequestTenantID` 与 controller 亦不在当前代码库。当前 MSP 租户收敛请以 `handlers/msp/` 与 `handlers/common/datascope` 的实际实现为准。
+
 `service/MSPAccessValidator` 是 service 层的分配校验入口，提供三个方法：
 
 - `ValidateCustomerAccess(mspUserID, customerTenantID)`：检查分配是否有效；

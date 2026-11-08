@@ -1,6 +1,6 @@
 # service/ 层迁移收口计划
 
-> Status: 执行中 — 基于 2026-11-07 源码盘点编写；**批次 0 已落地**（Gate C.8，2026-11-07），批次 1 起按本计划推进。仍需团队评审后纳入 ROADMAP。
+> Status: 执行中 — 基于 2026-11-07 源码盘点编写；**批次 0 已落地**（Gate C.8，2026-11-07），**批次 1 已退出**（2026-11-08，L.1 达成目标 145、两类裁决完成）。批次 2 起按本计划推进。仍需团队评审后纳入 ROADMAP。
 
 ## 背景
 
@@ -102,9 +102,9 @@ AGENTS.md 明确规定 `handlers/<domain>/` 是目标架构，`service/` 仅保�
 
 **仍待办**：`ROADMAP` 登记 v1.6.x「service/ 迁移收口」条目（需团队评审后写入，不自作主张改发布口径）。`incident/layering_test.go` 式的 handler 源码级 AST 守卫不再逐域铺开——L.3 的计数棘轮已覆盖该平面，逐域测试会带来 69 份重复维护成本。
 
-### 批次 1：低复杂度单文件域（2-3 周）— 进行中（2026-11-07 已完成 13 个域 / 14 个生产文件）
+### 批次 1：低复杂度单文件域（2-3 周）— ✅ 已退出（2026-11-08）
 
-> 执行进度见下方三份「批次 1 执行记录」。第三批起，选域不再限于「严格自包含 + 同名域包」：与已有域包共存的接口实现走**合并式迁移**，与共享服务耦合的域走**依赖倒置**（域内定义最小接口、组合根注入实现），两种形态都不需要提前拆分共享层。草稿里的 29 个域是**前缀归类估算**，不是可直接执行的清单：实际盘点发现其中若干域（`tag`、`department`、`priority_matrix` 等）并没有同名 `handlers/<domain>/` 包，需要先裁决归属，不能盲目新建域包（新建会抬高 `handlers_dirs` 基线）。第二批改用 Go AST 全量重盘（顶层声明 → 包级符号表 → 双向耦合），按「有同名域包 + 可证自包含 + 不被并行会话改动」三条件筛选；`SelectorExpr.Sel` 伪引用（如 `time.Now` 被误读成包级 `Now`）已 exclusion 修正，否则会把候选误判为耦合。
+> 执行进度见下方六份「批次 1 执行记录」。第三批起，选域不再限于「严格自包含 + 同名域包」：与已有域包共存的接口实现走**合并式迁移**，与共享服务耦合的域走**依赖倒置**（域内定义最小接口、组合根注入实现），两种形态都不需要提前拆分共享层。草稿里的 29 个域是**前缀归类估算**，不是可直接执行的清单：实际盘点发现其中若干域（`tag`、`department`、`priority_matrix` 等）并没有同名 `handlers/<domain>/` 包，需要先裁决归属，不能盲目新建域包（新建会抬高 `handlers_dirs` 基线）。第二批改用 Go AST 全量重盘（顶层声明 → 包级符号表 → 双向耦合），按「有同名域包 + 可证自包含 + 不被并行会话改动」三条件筛选；`SelectorExpr.Sel` 伪引用（如 `time.Now` 被误读成包级 `Now`）已 exclusion 修正，否则会把候选误判为耦合。
 
 29 个「各 1 个源文件」的域，迁移成本低、风险小：
 
@@ -251,7 +251,64 @@ L.1 下降的 7 个文件即前四批已搬走但基线未收紧的部分；L.3 
 
 **同批修复的装配回归**：定向回归暴露 `TestQualityDomainStatsWired` 为红——并行会话把统一服务质量视图聚合器改成内联构造，`wireQualityDomainStats` 调用随之消失，`quality_sources.go` 与守卫测试成为孤儿，`/reports/service-quality` 的问题/变更统计块静默缺省。恢复 `qualityReportService` 变量与两域统计注入后转绿；该修复净增 app.go 3 行，已计入上表 C.6.4 数值，不是新增能力表面。
 
-**剩余待办不变**：批次 1 的退出标准仍未达成（无同名域包的文件需先裁决归属、零消费方的遗留代码需退役评审），批次 2/3/4 按原计划推进；`ROADMAP` 登记条目仍待团队评审。本批只证明「守卫账面与源码一致」，不宣称分层收敛完成。
+**本批边界**：只证明「守卫账面与源码一致」，未宣称分层收敛完成；此处列出的两类待裁决项已在下方「批次 1 退出记录」中全部闭环。`ROADMAP` 登记条目仍待团队评审。
+
+#### 批次 1 退出记录（2026-11-08，两类裁决 + 8 个遗留实现退役）
+
+**结论：批次 1 正式退出**——L.1 由 153 降到 **145**，达成时间线表设定的「全批完成目标 ~145」；两类长期挂起的裁决全部落地；C.8 新增 L.5 守卫并纳入 `run-all.sh` 统一调度。本批**不宣称分层收敛完成**：批次 2/3/4 未启动，`ROADMAP` 登记仍待团队评审。
+
+##### 裁决一：零消费方遗留代码退役（8 删 3 留）
+
+计划里「`dir=False` 且 `ext=0`」的 11 个候选，此前因「删除属退役而非迁移、需单独评审」被搁置。本批用**可证伪的编译证据**替代主观判断：把 11 个候选连同 8 份专属测试全部移出工作树，`go build -a ./...` 与 `go test ./service/ -run '^$' -count=1` 仍编译通过（EXIT=0），证明生产侧与测试侧均无消费方；再用 `go/ast` 复核包级符号，并修正两处历史伪命中——**方法名不是包级符号**（`QueryCache.Get` 曾被误读成包级 `Get`，导致 57 处假引用），以及 **`service.X` 只有在文件确实 import `itsm-backend/service` 时才是包限定引用**（局部变量/字段同名会造成假命中）。
+
+| 处理 | 文件 | 依据 |
+|:---|:---|:---|
+| 退役 | `known_error_service.go` | `handlers/known_error/` 已有活的 `Service` 实现；该副本的 `LinkKnownErrorToProblem` 全仓零调用方（E4-15 已记录） |
+| 退役 | `number_generator.go` | `globalGenerator` 仅自引用；编号实际由 `handlers/*/repository_impl.go` 用时间 + 自增 ID 生成 |
+| 退役 | `query_optimizer.go` (+ `_test.go`) | `GlobalQueryCache` / `InitQueryCache` 全仓零调用 |
+| 退役 | `incident_escalation_service.go` | 零消费方；PRD 描述的「后台 ticker」在该文件中并不存在（设计未落地） |
+| 退役 | `department_service.go` (+ `_test.go`) | 仅自身测试引用 |
+| 退役 | `tag_service.go` (+ `_test.go`) | 仅自身测试引用；`Tag` 与 `TicketTag` 两套模型，组织侧无管理面 |
+| 退役 | `service_catalog_item_service.go` (+ `_test.go`) | 仅自身测试引用，从未装配进 `NewApplication` |
+| 退役 | `msp_access_validator.go` (+ `_test.go`) | 仅自身测试引用；文中 `middleware.ResolveRequestTenantID` 也不在当前代码库 |
+| 保留 | `bpmn_permission_service.go` / `bpmn_variable_service.go` | 属 BPMN 专项（批次 3，36 文件）上下文，随专项一并裁决，避免在大迁移里丢上下文 |
+| 保留 | `ticket_search_service.go` | 属 ticket 拆分（批次 4，20 文件）上下文，同上 |
+
+共删除 8 个生产文件 + 5 个专属测试 = **13 个 `.go`**；`service_go_files` 376 → **363**、L.1 153 → **145**，两份基线均按 `measure` 口径精确下调，不留免检空间。删除属**退役**而非迁移——这 8 个实现从未接线到任何路由，因此不改变线上行为；`git` 历史可完整回退，清单见 `scripts/docs-gate/retired-services.txt`。
+
+##### 裁决二：无同名域包文件的归属（7 个，全部不新建域包）
+
+用 `go/ast` 复核 7 个仍有活跃消费方的文件，消费方全部落在**已存在**的域包或 `internal/`，因此裁决为「合并进已有域包 / 迁入 internal」，**不新建 `handlers/<domain>/`**，不抬高 `handlers_dirs`：
+
+| 文件 | 主要消费方 | 裁决归属 | 落地批次 |
+|:---|:---|:---|:---|
+| `cmdb_saved_view_service.go` | `handlers/cmdb/production_service.go`、`cmd/cmdb`、`app.go` | `handlers/cmdb/`（合并） | 批次 2 |
+| `role_service.go` | `handlers/rbac/handler.go`、`app.go` | `handlers/rbac/service.go`（计划原建议） | 批次 2 |
+| `msp_allocation_service.go` | `handlers/msp/handler.go`、`app.go` | `handlers/msp/`（合并） | 批次 2 |
+| `dashboard_config_store.go` | `internal/bootstrap/app.go` | `handlers/dashboard/`（已有域包） | 批次 2 |
+| `config_inheritance_service.go` | `handlers/bpmn/process_trigger.go`、`app.go` | `handlers/bpmn/`（消费方所在域） | 批次 3 |
+| `bpmn_tenant_service.go` | `handlers/bpmn/dashboard.go`、`app.go` | `handlers/bpmn/` | 批次 3 |
+| `tenant_aware_repository.go` | `tests/multi_tenant/rls_matrix_test.go` | `internal/datascope/`（计划「真正需要保留」清单已列） | 收口批 |
+
+`system_config_service.go` 与 `sla_breach_predictor_service.go` 已由并行会话在 WIP 收口批迁走，不再属于待裁决项。
+
+##### 守卫闭环：L.5 + C.8 纳入统一调度
+
+- 新增 `scripts/docs-gate/retired-services.txt` 与 Gate C.8 **L.5**：8 项退役实现的文件名与独有包级哨兵符号都不得在 `service/` 顶层复活。L.1 只锁文件名，换个名字即可绕过；L.5 锁符号。扫描文件数 <100 或清单条目 <8 时直接 FAIL，避免「扫描器失效造成的假绿」。
+- 哨兵逐个经「当前 `service/` 顶层 `grep -w` 零命中」实测，刻意排除 `Get`/`Set`/`Delete`/`Clear` 等泛名方法。`ProcessEscalations` 因与活 `escalation_service.go` 同名，被 L.5 首次运行抓出并剔除，改用独有符号。
+- 反向验证三例全部成立且还原后转绿：① 往活文件注入 `KnownErrorService` 注释（换名复活，L.1 保持 PASS 而 L.5 FAIL）；② 恢复 `known_error_service.go` 原名（L.5 报文件 + 4 个符号复活，共 5 FAIL）；③ 清单裁剪到 6 条（L.5 报清单损坏）。
+- **修复守卫闭环缺口**：`run-all.sh` 此前只调度 C.1–C.7，C.8 虽在批次 0 记录里声明「由 run-all.sh 统一调度」，实际一直靠人工单独执行。本批补入，门禁总数 7 → **8**。
+
+##### 历史文档影响（已同步状态标注，不改历史叙述）
+
+- `docs/articles/05-multi-tenant-msp-operations.md` §7.4、`docs/prd/timer-event-design-outline.md`（正文表 + 附录 B）：加「已退役 / 实际未实现」标注，避免把死实现读成线上入口。
+- `plans/edge-feature-stability-audit-2026-10-02.md` E4-15 引用的 `LinkKnownErrorToProblem`、`output/capability-preview-closure-2026-11-07.md` 关于 `tag` 的措辞、`CHANGELOG.md` 历史条目：均为**历史台账**，保留原文不回改。E4-15 的「待裁」项因依赖实现已退役，需在批次 3 知识闭环评审时重评——改由 `handlers/known_error/` 活实现承接，或收回能力申报。
+
+##### 验证与剩余待办
+
+`go build ./...` 与 `go build -a ./service/` 全绿；`go test ./service/ -count=1`、受影响域定向回归全绿；C.6 0 FAIL / 0 WARN、C.8 0 FAIL / 0 WARN、全套 docs gates 8/8 通过；`git diff --check` 与暂存区敏感扫描干净。
+
+**剩余待办**：批次 2（sla/ci/approval/timer/escalation/skill）、批次 3（BPMN 36 文件专项 + E4-15 重评）、批次 4（ticket 20 文件拆分）、收口（共享基础设施迁 `internal/`）；`ROADMAP` 的 v1.6.x「service/ 迁移收口」条目仍需团队评审后写入，不由 AI 代填。
 
 ### 批次 2：中型域（4-6 周）
 
@@ -341,7 +398,7 @@ ticket 有 20 个 service 文件分散在 10 个子域。策略：
 | 阶段 | 时间 | 目标 | 度量 |
 |:---|:---|:---|:---|
 | 批次 0：守卫建设 | 1 周 | ✅ 已完成 2026-11-07（ROADMAP 登记待评审） | Gate C.8 硬模式 0 FAIL / 0 WARN，反向注入 3/3 变红 |
-| 批次 1：低复杂度域 | 2-3 周 | 进行中：已完成 13 域 / 14 个生产文件，剩余需裁决无同名域包的归属与遗留死代码退役 | 2026-11-07 实测 174 → 169 → 163 → **160**；全批完成目标 ~145 |
+| 批次 1：低复杂度域 | 2-3 周 | ✅ **已退出 2026-11-08**：两类裁决完成，8 个零消费方遗留实现退役，3 个专项文件留批次 3/4 | 174 → 169 → 163 → 160 → 153 → **145**（目标 ~145 达成） |
 | 批次 2：中型域 | 4-6 周 | sla/ci/approval/timer/escalation/skill 迁移完成 | service/ 减少到 ~110 文件 |
 | 批次 3：BPMN 专项 | 6-8 周 | 36 个 bpmn/workflow/process 文件迁移完成 | service/ 减少到 ~74 文件 |
 | 批次 4：ticket 拆分 | 3-4 周 | 20 个 ticket 文件分散到子域 | service/ 减少到 ~54 文件 |
@@ -361,9 +418,9 @@ ticket 有 20 个 service 文件分散在 10 个子域。策略：
 
 ## 度量指标
 
-- **service/ 源文件数量**：盘点时 174 → 2026-11-07 批次 1 首批后 169 → 续批后 163 → 第三批后 160 → **2026-11-08 WIP 收口后 153**（基线已收紧）→ 目标 0（或仅 internal 引用的 placeholder）
-- **handlers/<domain>/ 中 import service/ 的文件数**：批次 0 基线 71（50 域）→ 首批后 66（45 域）→ 续批后 61（40 域）→ 第三批后 59（38 域）→ **2026-11-08 收口后 55（34 域）** → 目标 0
-- **已有 service.go 的 handlers/ 域数量**：批次 0 时 26 → 首批后 31 → 续批后 36 → 第三批后 38 → **2026-11-08 读数 42** → 目标全部域自带
-- **零 service/ 依赖的域数量**：批次 0 时 17 → 首批后 22 → 续批后 27 → 第三批后 29 → **2026-11-08 读数 33** → 目标 69
+- **service/ 源文件数量**：盘点时 174 → 2026-11-07 批次 1 首批后 169 → 续批后 163 → 第三批后 160 → 2026-11-08 WIP 收口后 153 → **2026-11-08 批次 1 退出后 145**（基线已收紧，目标 ~145 达成）→ 目标 0（或仅 internal 引用的 placeholder）
+- **handlers/<domain>/ 中 import service/ 的文件数**：批次 0 基线 71（50 域）→ 首批后 66（45 域）→ 续批后 61（40 域）→ 第三批后 59（38 域）→ 2026-11-08 收口后 55（34 域，本批未变）→ 目标 0
+- **已有 service.go 的 handlers/ 域数量**：批次 0 时 26 → 首批后 31 → 续批后 36 → 第三批后 38 → 2026-11-08 读数 42（本批未变）→ 目标全部域自带
+- **零 service/ 依赖的域数量**：批次 0 时 17 → 首批后 22 → 续批后 27 → 第三批后 29 → 2026-11-08 读数 33（本批未变）→ 目标 69
 - **CI 守卫通过率**：`check-layering-convergence.sh`（Gate C.8）每次提交验证，由 `scripts/docs-gate/run-all.sh` 调度
 - **批次 1 退出标准（可直接读数）**：`service-prod-baseline.txt` 条目数下降、`handler-service-imports-baseline.txt` 中对应域计数归零、L.4 的「零 service/ 依赖域」数上升；每次下降后跑 `--update-baseline` 收紧，禁止反向放宽

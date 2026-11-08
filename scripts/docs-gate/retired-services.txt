@@ -1,0 +1,30 @@
+# Gate C.8 / L.5 — 已退役的 service/ 遗留死代码清单
+#
+# 格式：<原文件名> <哨兵符号列表（逗号分隔，无空格）>
+#
+# 背景：2026-11-08 批次 1 退出时，8 个「零外部消费方、零生产消费方」的遗留实现
+# 被退役删除（不是迁移）。退役的权威证明是：把 11 个候选文件连同专属测试全部移出
+# 工作树后，`go build -a ./...` 与 `go test ./service/ -run '^$'` 仍编译通过；
+# 再用 `go/ast` 复核包级符号（排除方法名与未 import service 包的伪命中）。
+# 详见 plans/service-layer-migration-plan.md「批次 1 退出记录」与 CHANGELOG。
+#
+# 为什么需要 L.5：L.1 只锁「文件名」，换个文件名把死代码搬回 service/ 就能绕过。
+# 本清单锁「包级哨兵符号」——只要这批实现的类型/构造器在 service/ 顶层重新出现，
+# 无论叫什麼文件名都 FAIL。哨兵只选该文件独有、不与活代码重名的符号；
+# 刻意排除 Get/Set/Delete/Clear 这类泛名方法，避免假红；每个哨兵都经
+# 「当前 service/ 顶层全量 grep -w 零命中」实测验证。`ProcessEscalations` 因与活文件
+# `escalation_service.go` 的同名符号冲突被剔除（L.5 首次运行即抓出该假阳性），
+# 改用独有符号替代。新增哨兵必须先做同一验证。
+#
+# 扫描范围仅 itsm-backend/service/ 顶层（含 *_test.go）：handlers/ 域包里出现同名
+# 类型属于正常的目标架构，不参与判定。
+#
+# 新增退役必须同步本清单 + CHANGELOG，禁止删除已有行（清单只增不减）。
+known_error_service.go KnownErrorService,NewKnownErrorService,MatchKnownErrorBySymptoms,LinkKnownErrorToProblem
+number_generator.go NumberGenerator,NewNumberGenerator,GenerateTicketNumberGlobal
+query_optimizer.go QueryOptimizer,GlobalQueryCache,InitQueryCache,NewQueryCache,GenerateCacheKey
+incident_escalation_service.go IncidentEscalationService,NewIncidentEscalationService,QueryEscalationRules,CheckAndEscalate
+department_service.go DepartmentService,NewDepartmentService,GetDepartmentTree
+tag_service.go TagService,NewTagService,BindTagToEntity
+service_catalog_item_service.go ServiceCatalogItemService,NewServiceCatalogItemService
+msp_access_validator.go MSPAccessValidator,NewMSPAccessValidator,FilterByMSPAllocation

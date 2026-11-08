@@ -62,7 +62,6 @@ configuration_item_service.go
 dashboard_config_store.go
 dashboard_repository.go
 dashboard_service.go
-department_service.go
 domain_command_handlers.go
 email_service.go
 embed_pipeline.go
@@ -75,23 +74,19 @@ expression_engine.go
 guidance_client.go
 impact_explanation_service.go
 incident_alerting_service.go
-incident_escalation_service.go
 incident_monitoring_service.go
 incident_rule_engine.go
 incident_service.go
 knowledge_integration_service.go
 knowledge_service.go
-known_error_service.go
 legacy_approval_migration_service.go
 llm_gateway.go
 llm_providers.go
 menu_service.go
-msp_access_validator.go
 msp_allocation_service.go
 notification_delivery_command_handler.go
 notification_outbox.go
 notification_service.go
-number_generator.go
 ontology_service.go
 operator_context.go
 prediction_service.go
@@ -102,7 +97,6 @@ process_resolver.go
 process_routing_service.go
 provisioning_delivery.go
 provisioning_service.go
-query_optimizer.go
 rag_service.go
 release_service.go
 report_export_service.go
@@ -110,7 +104,6 @@ role_service.go
 root_cause_analysis_service.go
 root_cause_service.go
 sequence_service.go
-service_catalog_item_service.go
 service_quality_report_service.go
 skill_base.go
 skill_manifest.go
@@ -122,7 +115,6 @@ sla_monitor_service.go
 sla_policy_service.go
 summarize_service.go
 system_stats.go
-tag_service.go
 tenant_aware_repository.go
 tenant_service.go
 ticket_assignment_rule_service.go
