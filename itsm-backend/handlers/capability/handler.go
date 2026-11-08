@@ -110,13 +110,14 @@ var registry = []definition{
 		pilotReason: "差异能算、能决策（POST /discovery/results/:id/apply|reject），应用后同步刷新配置项并把反查 ID 记在差异上；但回写目前只覆盖基线内的云主机/Pod 类型，云上连续缺失只把配置项标成同步滞后、不给出退役建议，且缺少真实数据验收。晋升条件：真实数据对账验收 + 覆盖更多资源类型。",
 	},
 	// 2026-10-31 运行时降为 Pilot，与 README 成熟度表、商业能力契约对齐：
-	// 此前矩阵对客户下发 GA，但问题域创建从不落 workflow.start 命令
-	// （WorkflowStartCommandHandler 的 problem 分支无生产者，生命周期仅在已有
-	// 实例时桥接），ServiceTask 外部副作用与流程完成仍分属两个事务，补偿只支持
-	// 结束事件驱动且无内置模板。
+	// 此前矩阵对客户下发 GA，而问题域创建不落 workflow.start、ServiceTask
+	// 副作用与流程完成分属两事务、补偿只支持结束事件且无内置模板。
+	// 2026-11-08 四项代码侧阻断已闭环（见 pilotReason），仍维持 Pilot 的
+	// 唯一原因是真实租户跨域联调尚未由验收人执行并签字；签字栏为空时
+	// 不得晋升 GA，守卫见 handler_test.go 的 workflow 用例。
 	{
 		key: "workflow", maturity: MaturityPilot, built: true,
-		pilotReason: "流程定义、绑定、实例、任务、变量与历史齐备；工单/事件/变更/服务请求/发布/问题六域创建均同事务投 workflow.start（问题域补齐生产者，起流前校验内置模板存在性）；工单生命周期动作（分配/接单/解决/关闭）与 BPMN 当前作业待办在同一事务内推进，审批节点 fail-closed 不代签、已指派给他人的任务仍严格校验归属，详情页动作由 /workflow/state-v2 的 availableActions 与权限码取交集驱动；工单域与问题域均有真实实例级 E2E 回归锁。剩余阻断：ServiceTask 外部副作用与流程完成仍分属事务（已由 outbox + 意图标记实现引擎级 exactly-once，事务边界未合并）、补偿只支持结束事件驱动且内置模板无补偿节点、存量 pending 待办只有只读盘点、真实租户跨域流程联调未由人验收。晋升条件：ServiceTask 副作用与流程完成同事务 + 补偿内置模板与触发入口 + 存量待办迁移工具 + 真实租户跨域联调验收签字。",
+		pilotReason: "流程定义、绑定、实例、任务、变量与历史齐备；六业务域创建同事务投 workflow.start，工单生命周期动作与 BPMN 当前作业待办在同一事务推进，详情页动作由 /workflow/state-v2 的 availableActions 与权限码取交集驱动；ServiceTask 输出变量、副作用完成凭据、receipt、审计、补偿登记、节点完成与流程推进在同一个 ent.Tx 原子提交，完成事务回滚后按凭据缺失重放副作用且幂等键不变；内置补偿模板含补偿结束事件、补偿边界事件与补偿处理器，管理面显式触发支持 dry-run/apply、按边界事件解析范围、逆序补偿、occurrence 幂等与触发留痕同事务；存量 pending 待办迁移提供只读计划加默认 dry-run 的可执行工具，只自动处理孤儿实例与显式指定目标用户的未指派待办，动作带幂等键、状态复核与审计；跨租户跨业务域真实起流的实例级 E2E 回归锁齐备。剩余阻断：真实租户跨域联调尚未由验收人执行并签字，自动化证据脚本与逐项签字清单已就绪但签字栏为空，真实环境的外部副作用、组织审批链与通知渠道未由人确认。晋升条件：验收人按 docs/acceptance/workflow-cross-domain-signoff.md 完成逐项验收、补齐全部 SKIP 证据并签字，随后在独立批次同步能力矩阵成熟度、README 成熟度表与商业能力契约。",
 	},
 	{key: "sla", maturity: MaturityGA, built: true},
 	// 报表域此前只在能力契约表里（报表/运营 = Pilot），矩阵里根本没有这一行——

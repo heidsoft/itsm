@@ -183,13 +183,45 @@ func TestUnprovenCapabilitiesAreNotDeclaredGA(t *testing.T) {
 	require.NotEmpty(t, byKey["tag"].PilotReason)
 }
 
-// TestWorkflowCapabilityStaysPilotUntilBridgingIsClosed 锁定 2026-10-31 的运行时降级。
+// validateWorkflowPilotReason 校验 workflow 的 Pilot 理由与 2026-11-08
+// 四项阻断收口之后的现实一致。抽成返回 error 的纯函数，是为了把旧文案
+// 与「逐项删减」都喂回来做反向验证：只匹配当前字符串的守卫会假绿。
+func validateWorkflowPilotReason(reason string) error {
+	for _, phrase := range []string{
+		"晋升条件",
+		"真实租户跨域联调",   // 唯一剩余的阻断
+		"签字",         // 明确不得由脚本/AI 代签
+		"同一个 ent.Tx", // ServiceTask 完成凭据与流程推进同事务
+		"补偿边界事件",     // 内置补偿模板 + 显式触发入口
+		"默认 dry-run", // 存量待办迁移工具
+	} {
+		if !strings.Contains(reason, phrase) {
+			return fmt.Errorf("workflow pilotReason 缺少当前事实 %q", phrase)
+		}
+	}
+	for _, phrase := range []string{
+		"问题域创建不落",
+		"外部副作用与流程完成仍分属",
+		"补偿只支持结束事件驱动",
+		"存量 pending 待办只有只读盘点",
+		"跨域实例级 E2E 待补",
+		"TODO", "待补", "暂不支持", "未知",
+	} {
+		if strings.Contains(reason, phrase) {
+			return fmt.Errorf("workflow pilotReason 引用了过期结论或占位词 %q", phrase)
+		}
+	}
+	return nil
+}
+
+// TestWorkflowCapabilityStaysPilotUntilBridgingIsClosed 锁定 2026-10-31 的
+// 运行时降级，并在 2026-11-08 改为锁定「仅剩人工验收签字」这一真实状态。
 //
-// 矩阵此前把 workflow 申报为 GA，而 README 成熟度表与商业能力契约都写 Pilot。
-// 矩阵是前端与控制台的事实源：谎报 GA 会让运营把 BPMN 当成已验收能力交付。
-// 当前真实缺口（问题域无 workflow.start 生产者、补偿无内置模板、ServiceTask
-// 副作用在完成事务之外、缺跨域实例级 E2E）全部写进 pilotReason；等这些项逐个
-// 闭环并拿到证据后，才允许连同本测试一起晋升。
+// 矩阵此前把 workflow 申报为 GA，而 README 成熟度表与商业能力契约都写 Pilot；
+// 矩阵是前端与控制台的事实源，谎报 GA 会让运营把 BPMN 当成已验收能力交付。
+// 四项代码侧阻断（ServiceTask 事务边界、补偿内置模板与触发入口、存量待办
+// 迁移工具、跨域实例级 E2E）已闭环，但真实租户跨域联调仍须由验收人执行并
+// 签字：签字栏为空即不得晋升，因此本测试继续锁死 MaturityPilot。
 func TestWorkflowCapabilityStaysPilotUntilBridgingIsClosed(t *testing.T) {
 	var found *definition
 	for i := range registry {
@@ -199,10 +231,22 @@ func TestWorkflowCapabilityStaysPilotUntilBridgingIsClosed(t *testing.T) {
 		}
 	}
 	require.NotNil(t, found, "能力矩阵缺少 workflow 条目")
-	require.Equal(t, MaturityPilot, found.maturity, "workflow 未补齐跨域闭环前不得申报 GA")
+	require.Equal(t, MaturityPilot, found.maturity, "真实租户跨域联调签字前不得申报 GA")
 	require.True(t, found.built)
-	require.Contains(t, found.pilotReason, "晋升条件")
-	require.Contains(t, found.pilotReason, "问题域")
+	require.NoError(t, validateWorkflowPilotReason(found.pilotReason))
+
+	// 反向验证一：10-31 的旧四项缺口文案喂回同一判定函数，必须被拒。
+	old := "问题域创建不落 workflow.start；ServiceTask 外部副作用与流程完成仍分属两个事务；补偿只支持结束事件驱动且无内置模板；存量 pending 待办只有只读盘点；跨域实例级 E2E 待补。晋升条件：补齐生产者、合并事务、内置补偿模板与跨域 E2E。"
+	require.Error(t, validateWorkflowPilotReason(old),
+		"旧文案必须被拒，否则守卫只是匹配当前字符串（假绿）")
+
+	// 反向验证二：抹掉「签字」或任一闭环事实都必须被拒，防止断言取并集后
+	// 靠其它关键词偶然通过。
+	for _, drop := range []string{"签字", "真实租户跨域联调", "同一个 ent.Tx", "补偿边界事件", "默认 dry-run"} {
+		// ReplaceAll：理由里部分关键词出现多次，只删一处会留下假绿通道。
+		require.Error(t, validateWorkflowPilotReason(strings.ReplaceAll(found.pilotReason, drop, "")),
+			"移除全部 %q 后守卫仍应拒绝", drop)
+	}
 }
 
 // TestPromotedCapabilitiesAreGA 锁定 2026-10-21 的通知域 GA 晋升：
@@ -282,7 +326,14 @@ func TestPilotReasonsDoNotCiteClosedBlockers(t *testing.T) {
 		},
 		// 2026-10-24：ServiceTask action 两端口径接通；2026-10-23 工单审批桥接
 		// 收进业务事务；发布创建与 workflow.start 同事务入队。这些不再是缺口。
-		"workflow": {"ServiceTask action 链路未打通", "工单审批桥接非原子", "release 域自动起流"},
+		// 2026-11-08：四项剩余阻断（问题域生产者、ServiceTask 事务边界、
+		// 补偿内置模板与触发入口、存量待办迁移与跨域 E2E）全部代码闭环，
+		// 旧结论不得再写回理由；剩余阻断只剩真实租户跨域联调的人工签字。
+		"workflow": {
+			"ServiceTask action 链路未打通", "工单审批桥接非原子", "release 域自动起流",
+			"问题域创建不落", "外部副作用与流程完成仍分属", "补偿只支持结束事件驱动",
+			"存量 pending 待办只有只读盘点", "跨域实例级 E2E 待补",
+		},
 		// 2026-10-22：命令死信/失败投递重放产品面与市场安装/配置/卸载闭环落地。
 		"connector.feishu": {"死信重放未实现", "市场安装闭环未验收", "死信人工重放与市场安装闭环未验收"},
 		// 2026-10-31：分类可见性已在全部知识读面收口并补齐跨角色回归。

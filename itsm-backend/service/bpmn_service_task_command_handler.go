@@ -68,48 +68,44 @@ func (e *CustomProcessEngine) HandleBPMNServiceTaskCommand(ctx context.Context, 
 	variables["_idempotencyKey"] = cmd.IdempotencyKey
 	variables["_serviceTaskOccurrence"] = occurrence
 
-	// 副作用执行权登记（§事务收敛）：租约锁定与「本 occurrence 副作用已执行」
-	// 意图写成同一事务。handler.Execute 的副作用发生在事务外（通知/Webhook 等
-	// 外部系统无法随 DB 事务回滚），此前一旦在「副作用已生效、完成事务未提交」
-	// 之间崩溃（worker 被杀/租约过期/DB 抖动），重试会再次执行 handler，
-	// 造成重复通知/重复 Webhook。现在崩溃恢复时按意图标记跳过重复执行——
-	// 引擎级 exactly-once，handler 自身幂等降级为第二道防线。
-	alreadyExecuting, err := e.markServiceTaskExecuting(workflowCtx, cmd, instance.ID, elementID, occurrence)
-	if err != nil {
-		return err
-	}
+	// §事务收敛（2026-11-08）：副作用完成凭据与流程完成写进同一个 ent.Tx。
+	//
+	// 外部副作用（通知/Webhook/邮件）物理上无法随数据库事务回滚，因此
+	// 「同事务」的工程含义是：副作用的持久化凭据（_serviceTaskExecutedOccurrences
+	// + receipt + 审计）与流程节点完成/推进原子提交。旧实现把凭据放在副作用
+	// 之前的独立「执行意图」事务里，一旦 worker 在副作用执行中途被杀，意图已
+	// 提交而副作用从未生效，恢复时却被当成「已执行」跳过——at-most-once 静默
+	// 漏执行。现在意图只用于诊断，是否重放以完成事务里的凭据为准：凭据不存在
+	// 就重放 handler（_idempotencyKey 恒定，由 handler/外部系统按幂等键去重），
+	// 凭据存在才跳过。
+	//
+	// 同时把原先独立的「输出变量持久化」小事务并入完成事务：崩溃恢复重放
+	// handler 会重新产出输出，不再需要独立事务兜住 result 丢失。
+	executed := intMapVariable(instance.Variables, "_serviceTaskExecutedOccurrences")
 	var result *dto.ServiceTaskResult
-	if !alreadyExecuting {
+	if executed[elementID] >= occurrence {
+		e.logger.Infow("ServiceTask 完成凭据已存在，跳过重复副作用",
+			"command_id", cmd.ID, "tenant_id", cmd.TenantID, "element_id", elementID, "occurrence", occurrence)
+	} else {
+		if _, err := e.markServiceTaskExecuting(workflowCtx, cmd, instance.ID, elementID, occurrence); err != nil {
+			return err
+		}
 		result, err = handler.Execute(workflowCtx, nil, variables)
 		if err != nil {
-			// handler 明确报告失败：清除执行意图，让重试重新执行副作用。
-			// 清除本身失败时该 occurrence 会被误判为已执行而跳过——
-			// 记 Error 附人工修复指引，绝不静默。
+			// handler 明确报告失败：清除诊断用的执行意图，让重试重新执行副作用。
 			if clearErr := e.clearServiceTaskExecuting(workflowCtx, cmd, elementID); clearErr != nil {
-				e.logger.Errorw("ServiceTask 执行意图清除失败：重试将跳过副作用执行，需人工核对",
+				e.logger.Errorw("ServiceTask 执行意图清除失败（诊断用，不影响重放判定）",
 					"command_id", cmd.ID, "tenant_id", cmd.TenantID, "element_id", elementID, "error", clearErr)
 			}
-			// 错误必须自带定位信息。handler.Execute 的签名收的是 *ent.ProcessTask，
-			// 而 ServiceTask 来自 BPMN 定义、没有对应的 process_tasks 行，因此这里只能
-			// 传 nil——serviceTaskActionError 里的 task=<nil> 就是这个原因（2026-10-18
-			// 的日志定位改造因此没达到目的）。在调用点补齐流程实例、定义、节点与
-			// 本次 occurrence，运维在 dead_letter 里就能直接定位到是哪个流程的哪个节点。
+			// 错误必须自带定位信息：handler.Execute 的签名收的是 *ent.ProcessTask，
+			// 而 ServiceTask 来自 BPMN 定义、没有对应的 process_tasks 行，这里只能传
+			// nil；在调用点补齐流程实例、定义、节点与 occurrence，dead_letter 里
+			// 才能直接定位是哪个流程的哪个节点。
 			return fmt.Errorf(
 				"ServiceTask %s 执行失败（element=%s occurrence=%d processInstance=%d processDefinition=%s tenant=%d）: %w",
 				serviceRef, elementID, occurrence, instance.ID, instance.ProcessDefinitionKey, cmd.TenantID, err,
 			)
 		}
-		// 输出变量在副作用成功后立即落库（独立小事务）：崩溃恢复路径
-		// 跳过 handler 执行，result 为 nil，若不在执行时持久化，
-		// 恢复尝试会把 handler 产出永久丢掉。
-		if result != nil {
-			if saveErr := e.saveServiceTaskOutput(workflowCtx, cmd, instance.ID, result.OutputVars); saveErr != nil {
-				return saveErr
-			}
-		}
-	} else {
-		e.logger.Infow("ServiceTask 副作用已在先前尝试中执行，跳过重复执行（崩溃恢复）",
-			"command_id", cmd.ID, "tenant_id", cmd.TenantID, "element_id", elementID, "occurrence", occurrence)
 	}
 
 	tx, err := e.client.Tx(workflowCtx)
@@ -147,8 +143,46 @@ func (e *CustomProcessEngine) HandleBPMNServiceTaskCommand(ctx context.Context, 
 	}
 	completed[elementID] = occurrence
 	current.Variables["_serviceTaskCompletedOccurrences"] = completed
+
+	// 副作用完成凭据：与输出、补偿登记、节点完成、流程推进同属这一个事务。
+	// 只有 Commit 成功后它才可见；worker 在 Commit 前被杀 → 整体回滚 →
+	// 下一次尝试按凭据缺失重放 handler（幂等键不变），不再静默漏执行。
+	// 重新以事务内最新实例变量为准，避免并发分支覆盖刚读到的完成凭据。
+	executed = intMapVariable(current.Variables, "_serviceTaskExecutedOccurrences")
+	executed[elementID] = occurrence
+	current.Variables["_serviceTaskExecutedOccurrences"] = executed
+	receipts := map[string]interface{}{}
+	if raw, ok := current.Variables["_serviceTaskReceipts"].(map[string]interface{}); ok {
+		for key, value := range raw {
+			receipts[key] = value
+		}
+	}
+	receipts[elementID] = map[string]interface{}{
+		"occurrence":     occurrence,
+		"serviceRef":     serviceRef,
+		"idempotencyKey": cmd.IdempotencyKey,
+	}
+	current.Variables["_serviceTaskReceipts"] = receipts
+
 	if _, err := txc.ProcessInstance.UpdateOneID(current.ID).SetVariables(current.Variables).Save(workflowCtx); err != nil {
-		return fmt.Errorf("保存 ServiceTask 输出失败: %w", err)
+		return fmt.Errorf("保存 ServiceTask 完成凭据与输出失败: %w", err)
+	}
+	// 审计与完成凭据同事务：任一条写失败都会让整个完成事务回滚，
+	// 不留下「流程已推进但没有副作用凭据」的孤儿分叉。
+	if err := e.auditService.RecordAuditWithClient(workflowCtx, txc, &AuditContext{
+		ProcessInstanceID:    current.ID,
+		ProcessInstanceKey:   current.ProcessInstanceID,
+		ProcessDefinitionKey: current.ProcessDefinitionKey,
+		ProcessDefinitionID:  current.ProcessDefinitionID,
+		ActivityID:           elementID,
+		ActivityType:         "ServiceTask",
+		Action:               AuditActionActivityCompleted,
+		VariablesAfter:       current.Variables,
+		Comment: fmt.Sprintf("ServiceTask %s 副作用完成凭据（occurrence=%d）与流程推进同事务提交",
+			serviceRef, occurrence),
+		TenantID: current.TenantID,
+	}); err != nil {
+		return fmt.Errorf("记录 ServiceTask 完成凭据审计失败: %w", err)
 	}
 	// 补偿范围登记与完成同事务：流程推进到结束事件时才能补偿到它。
 	if err := e.registerCompensation(workflowCtx, txc, current, elementID, serviceRef, occurrence, current.Variables); err != nil {
@@ -171,13 +205,13 @@ func (e *CustomProcessEngine) HandleBPMNServiceTaskCommand(ctx context.Context, 
 
 // markServiceTaskExecuting 在同一事务里完成两件必须原子的事：
 //  1. 锁定命令租约（条件 UPDATE，旧 worker 失约后不得推进）；
-//  2. 在流程实例变量里登记「本 occurrence 的副作用执行权」
-//     （_serviceTaskExecuting[elementId]=occurrence，并累计尝试次数）。
+//  2. 登记「本 occurrence 已尝试执行副作用」并累计尝试次数
+//     （_serviceTaskExecuting / _serviceTaskAttempts，供运维诊断）。
 //
-// 返回 alreadyExecuting=true 表示该 occurrence 的副作用已在先前尝试中执行
-// （崩溃恢复场景），调用方必须跳过 handler.Execute 直接走完成事务。
-// 副作用（通知/Webhook/外部系统调用）无法随数据库事务回滚，这个意图标记
-// 是引擎级 exactly-once 的唯一锚点。
+// 注意：这个「意图」不再作为 exactly-once 的判定锚点。外部副作用无法随
+// 数据库事务回滚，若把「已登记意图」当作「副作用已生效」，worker 在副作用
+// 执行中途被杀时会静默漏执行。真正的完成凭据是写进完成事务的
+// _serviceTaskExecutedOccurrences + receipt；本函数返回值仅保留兼容语义。
 func (e *CustomProcessEngine) markServiceTaskExecuting(ctx context.Context, cmd *ent.OperationalCommand, instanceID int, elementID string, occurrence int) (bool, error) {
 	tx, err := e.client.Tx(ctx)
 	if err != nil {
@@ -191,14 +225,17 @@ func (e *CustomProcessEngine) markServiceTaskExecuting(ctx context.Context, cmd 
 	}
 	alreadyExecuting := false
 	if _, err := updateProcessInstanceVariablesCAS(ctx, txc, instanceID, cmd.TenantID, func(vars map[string]interface{}) error {
-		executing := intMapVariable(vars, "_serviceTaskExecuting")
-		if executing[elementID] == occurrence {
-			alreadyExecuting = true
-			return nil
-		}
+		// 每次真正准备执行 handler 都如实累计尝试次数。_serviceTaskExecuting
+		// 只是诊断用的意图标记：它在独立事务里提交，完成事务回滚后仍会残留；
+		// 若据此早返回，恢复重放的那次真实副作用就会漏计，运维对账会把
+		// 「2 次执行」看成 1 次。是否重放的判定权已交给完成事务里的凭据。
 		attempts := intMapVariable(vars, "_serviceTaskAttempts")
 		attempts[elementID]++
 		vars["_serviceTaskAttempts"] = attempts
+		executing := intMapVariable(vars, "_serviceTaskExecuting")
+		if executing[elementID] == occurrence {
+			alreadyExecuting = true
+		}
 		executing[elementID] = occurrence
 		vars["_serviceTaskExecuting"] = executing
 		return nil
@@ -211,9 +248,12 @@ func (e *CustomProcessEngine) markServiceTaskExecuting(ctx context.Context, cmd 
 	return alreadyExecuting, nil
 }
 
-// saveServiceTaskOutput 把 handler 输出变量在副作用成功后立即持久化
-// （独立小事务）。崩溃恢复路径跳过 handler 执行时 result 为 nil，
-// 若不在执行时落库，恢复尝试会把 handler 产出永久丢掉。
+// saveServiceTaskOutput 把 handler 输出变量在副作用成功后立即持久化（独立小事务）。
+//
+// 2026-11-08 起主路径不再调用：输出变量、完成凭据、补偿登记与流程推进已在
+// 同一个完成事务里原子提交；完成事务回滚后的恢复路径会按凭据缺失重放
+// handler，重新产出输出，不再需要独立事务兜住 result 丢失。保留此函数供
+// 运维诊断脚本与历史兼容调用，禁止重新接回主命令路径。
 func (e *CustomProcessEngine) saveServiceTaskOutput(ctx context.Context, cmd *ent.OperationalCommand, instanceID int, outputs map[string]interface{}) error {
 	if len(outputs) == 0 {
 		return nil

@@ -29,12 +29,13 @@ const convergenceServiceTaskBPMN = `<?xml version="1.0" encoding="UTF-8"?>
   </bpmn:process>
 </bpmn:definitions>`
 
-// countingHandler 记录执行次数的 ServiceTask 处理器（外部副作用计数器）。
+// countingHandler 记录执行次数与每次收到的幂等键（外部副作用计数器）。
 // crashFlag 非 nil 时，Execute 成功返回前置位——模拟「副作用已生效、
 // 完成事务尚未提交」的崩溃窗口（测试用注入点）。
 type countingHandler struct {
 	calls     int
 	crashFlag *bool
+	keys      []string
 }
 
 func (h *countingHandler) GetTaskType() string  { return "ServiceTask" }
@@ -45,6 +46,8 @@ func (h *countingHandler) Validate(context.Context, map[string]interface{}) erro
 
 func (h *countingHandler) Execute(_ context.Context, _ *ent.ProcessTask, variables map[string]interface{}) (*dto.ServiceTaskResult, error) {
 	h.calls++
+	key, _ := variables["_idempotencyKey"].(string)
+	h.keys = append(h.keys, key)
 	if h.crashFlag != nil {
 		*h.crashFlag = true
 	}
@@ -85,13 +88,15 @@ func claimServiceTaskLease(t *testing.T, ctx context.Context, client *ent.Client
 	return updated
 }
 
-// TestServiceTaskSideEffectExactlyOnceAcrossCrash 事务收敛核心用例：
+// TestServiceTaskSideEffectReplaysAfterCommitCrash 事务收敛核心用例：
 // 副作用（handler.Execute）在事务外执行，「完成事务提交前崩溃」时，
-// 重试不得重复执行副作用——引擎按 _serviceTaskExecuting 意图标记恢复。
+// 完成事务里的副作用凭据会随事务一起回滚；恢复路径必须按凭据缺失重放
+// handler，并用同一个幂等键让外部系统去重，而不是靠副作用前提交的
+// 「执行意图」假装恰好一次（旧实现会在副作用执行中途被杀时静默漏执行）。
 //
 // 崩溃窗口用 ent hook 模拟：handler 执行成功后，完成事务内的
 // ProcessInstance 写入被注入失败（等价于 worker 在提交前被杀）。
-func TestServiceTaskSideEffectExactlyOnceAcrossCrash(t *testing.T) {
+func TestServiceTaskSideEffectReplaysAfterCommitCrash(t *testing.T) {
 	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
 	engine, handler, tenantID, workflowCtx := setupConvergenceEngine(t, client)
@@ -111,12 +116,16 @@ func TestServiceTaskSideEffectExactlyOnceAcrossCrash(t *testing.T) {
 	// 副作用生效后、完成事务提交前被杀的窗口。
 	var crashAfterExecute bool
 	handler.crashFlag = &crashAfterExecute
+	// 崩溃注入是一次性的：恢复尝试里 handler 会再次置位 crashFlag，
+	// 若 hook 不自行收敛，第二次尝试会被同一个注入点反复打断。
+	crashRemain := 1
 	client.ProcessInstance.Use(func(next ent.Mutator) ent.Mutator {
 		return ent.MutateFunc(func(ctx context.Context, m ent.Mutation) (ent.Value, error) {
-			if crashAfterExecute {
+			if crashRemain > 0 && crashAfterExecute {
 				if vars, ok := m.Field("variables"); ok {
 					if varsMap, isMap := vars.(map[string]interface{}); isMap {
 						if _, done := varsMap["_serviceTaskCompletedOccurrences"]; done {
+							crashRemain--
 							return nil, assert.AnError
 						}
 					}
@@ -137,16 +146,24 @@ func TestServiceTaskSideEffectExactlyOnceAcrossCrash(t *testing.T) {
 	reclaimed := claimServiceTaskLease(t, ctx, client, cmd, "worker-retry", 2)
 	require.NoError(t, engine.HandleBPMNServiceTaskCommand(workflowCtx, reclaimed))
 
-	// 副作用 exactly-once：恢复路径跳过重复执行。
-	require.Equal(t, 1, handler.calls, "崩溃恢复不得重复执行 ServiceTask 副作用")
+	// 完成事务回滚后凭据不可见：恢复必须重放副作用，且幂等键保持不变。
+	require.Equal(t, 2, handler.calls, "完成事务回滚后必须重放副作用，不能静默漏执行")
+	require.Len(t, handler.keys, 2)
+	assert.NotEmpty(t, handler.keys[0], "handler 必须收到幂等键")
+	assert.Equal(t, handler.keys[0], handler.keys[1], "重放必须复用同一幂等键供外部系统去重")
 
-	// 流程在恢复尝试中完成，且崩溃尝试中 handler 产出的变量已持久化。
+	// 流程在恢复尝试中完成，重放产出的变量与完成凭据在同一事务里可见。
 	completed, err := client.ProcessInstance.Get(ctx, instance.ID)
 	require.NoError(t, err)
 	assert.Equal(t, "completed", completed.Status)
 	assert.Equal(t, "ok", completed.Variables["serviceResult"], "崩溃恢复不得丢失 handler 输出变量")
+	executed := intMapVariable(completed.Variables, "_serviceTaskExecutedOccurrences")
+	assert.Equal(t, 1, executed["ServiceTask_1"], "副作用完成凭据必须与流程完成同事务落库")
+	receipts, ok := completed.Variables["_serviceTaskReceipts"].(map[string]interface{})
+	require.True(t, ok, "必须留下可对账的副作用 receipt")
+	assert.Contains(t, receipts, "ServiceTask_1")
 	attempts := intMapVariable(completed.Variables, "_serviceTaskAttempts")
-	assert.Equal(t, 1, attempts["ServiceTask_1"], "执行权只登记一次（崩溃恢复不重复计数）")
+	assert.Equal(t, 2, attempts["ServiceTask_1"], "两次真实执行都要如实计入尝试次数")
 }
 
 // TestServiceTaskHandlerFailureClearsExecutionIntent 处理器明确失败时，
@@ -175,12 +192,15 @@ func TestServiceTaskHandlerFailureClearsExecutionIntent(t *testing.T) {
 	require.Error(t, err)
 	require.Equal(t, 1, failing.calls)
 
-	// 执行权登记已清除：实例变量中不存在该 element 的 executing 标记。
+	// 诊断用的执行意图已清除：实例变量中不存在该 element 的 executing 标记。
+	// 完成凭据仍不存在，因此后续重试必须重放副作用，不能被误判为已完成。
 	inst, err := client.ProcessInstance.Get(ctx, instance.ID)
 	require.NoError(t, err)
 	executing := intMapVariable(inst.Variables, "_serviceTaskExecuting")
 	_, stillMarked := executing["ServiceTask_1"]
-	assert.False(t, stillMarked, "handler 失败后必须清除执行权登记，否则重试会跳过副作用")
+	assert.False(t, stillMarked, "handler 失败后必须清除执行意图")
+	assert.Empty(t, intMapVariable(inst.Variables, "_serviceTaskExecutedOccurrences"),
+		"handler 失败不得产生完成凭据")
 
 	// 换回成功处理器重试：副作用应重新执行并推进流程。
 	engine.callbackRegistry.RegisterHandler(&countingHandler{})

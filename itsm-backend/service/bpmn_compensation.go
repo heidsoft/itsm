@@ -80,7 +80,9 @@ func compensationSnapshot(variables map[string]interface{}) map[string]interface
 	out := make(map[string]interface{}, len(variables))
 	for key, value := range variables {
 		switch key {
-		case "_compensationRegistered", "_compensationOrder", "_compensationExecuted":
+		case "_compensationRegistered", "_compensationOrder", "_compensationExecuted",
+			"_serviceTaskExecutedOccurrences", "_serviceTaskReceipts", "_serviceTaskExecuting",
+			"_serviceTaskAttempts", "_serviceTaskCompletedOccurrences", "_serviceTaskOccurrences":
 			continue
 		}
 		out[key] = value

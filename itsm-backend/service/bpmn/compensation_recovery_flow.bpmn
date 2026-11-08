@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  补偿回滚内置模板（2026-11-08）。
+
+  用途：给需要「先产生副作用、再由人/系统判失败后回滚」的业务提供一份
+  开箱即用的流程定义，而不是让每个租户自己拼补偿节点。
+  能力矩阵 workflow 的「补偿内置模板与触发入口」由此模板 + 管理面显式
+  补偿触发（service.TriggerCompensation / cmd/bpmn-compensation）共同闭环。
+
+  两种触发方式都保留：
+  1) 流程内触发：到达 EndEvent_Compensate（<compensateEventDefinition/>）
+     时，引擎按完成顺序逆序补偿所有已登记 ServiceTask；
+  2) 模型声明触发：Boundary_Compensate 是挂在 Activity_Review 上的补偿
+     边界事件，管理面显式触发时按 attachedToRef / activityRef 解析补偿范围。
+
+  补偿处理器 Activity_UndoReserve 带 isForCompensation="true"，只作为
+  补偿处理器存在，主流程到达时引擎跳过（见 bpmn_compensation.go 语义子集）。
+-->
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 targetNamespace="http://bpmn.io/schema/bpmn"
+                 id="Definitions_compensation_recovery">
+
+  <bpmn:process id="compensation_recovery_flow" name="补偿回滚流程" isExecutable="true">
+    <bpmn:extensionElements>
+      <bpmn:metaData name="category">compensation</bpmn:metaData>
+      <bpmn:metaData name="version">1.0.0</bpmn:metaData>
+      <bpmn:metaData name="description">带补偿结束事件与补偿边界事件声明的内置流程模板</bpmn:metaData>
+    </bpmn:extensionElements>
+
+    <bpmn:startEvent id="StartEvent_1" name="开始">
+      <bpmn:outgoing>Flow_1</bpmn:outgoing>
+    </bpmn:startEvent>
+
+    <bpmn:serviceTask id="Activity_Reserve" name="预留资源" implementation="##WebService">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="service_task_type">ticket_task</bpmn:metaData>
+        <bpmn:metaData name="action">update_status</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_1</bpmn:incoming>
+      <bpmn:outgoing>Flow_2</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:serviceTask id="Activity_Apply" name="执行变更" implementation="##WebService">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="service_task_type">ticket_task</bpmn:metaData>
+        <bpmn:metaData name="action">notify_requester</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_2</bpmn:incoming>
+      <bpmn:outgoing>Flow_3</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:userTask id="Activity_Review" name="人工复核">
+      <bpmn:incoming>Flow_3</bpmn:incoming>
+      <bpmn:outgoing>Flow_4</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- 补偿边界事件声明：显式触发时按 attachedToRef 定位补偿范围 -->
+    <bpmn:boundaryEvent id="Boundary_Compensate" name="补偿回滚" attachedToRef="Activity_Review" cancelActivity="false">
+      <bpmn:compensateEventDefinition activityRef=""/>
+    </bpmn:boundaryEvent>
+
+    <bpmn:exclusiveGateway id="Gateway_Compensate" name="需要补偿?">
+      <bpmn:incoming>Flow_4</bpmn:incoming>
+      <bpmn:outgoing>Flow_5</bpmn:outgoing>
+      <bpmn:outgoing>Flow_6</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:endEvent id="EndEvent_Compensate" name="触发补偿">
+      <bpmn:incoming>Flow_5</bpmn:incoming>
+      <bpmn:compensateEventDefinition/>
+    </bpmn:endEvent>
+
+    <bpmn:endEvent id="EndEvent_Done" name="正常结束">
+      <bpmn:incoming>Flow_6</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <!-- 补偿处理器：只作为补偿处理声明，主流程到达时引擎跳过 -->
+    <bpmn:serviceTask id="Activity_UndoReserve" name="撤销预留" isForCompensation="true" implementation="##WebService">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="service_task_type">ticket_task</bpmn:metaData>
+        <bpmn:metaData name="action">update_status</bpmn:metaData>
+      </bpmn:extensionElements>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="Flow_1" sourceRef="StartEvent_1" targetRef="Activity_Reserve"/>
+    <bpmn:sequenceFlow id="Flow_2" sourceRef="Activity_Reserve" targetRef="Activity_Apply"/>
+    <bpmn:sequenceFlow id="Flow_3" sourceRef="Activity_Apply" targetRef="Activity_Review"/>
+    <bpmn:sequenceFlow id="Flow_4" sourceRef="Activity_Review" targetRef="Gateway_Compensate"/>
+    <bpmn:sequenceFlow id="Flow_5" sourceRef="Gateway_Compensate" targetRef="EndEvent_Compensate">
+      <bpmn:conditionExpression xsi:type="bpmn:tExpression">
+        <bpmn:body>${variables['need_compensation'] == true}</bpmn:body>
+      </bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_6" sourceRef="Gateway_Compensate" targetRef="EndEvent_Done">
+      <bpmn:conditionExpression xsi:type="bpmn:tExpression">
+        <bpmn:body>${variables['need_compensation'] != true}</bpmn:body>
+      </bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+  </bpmn:process>
+</bpmn:definitions>
