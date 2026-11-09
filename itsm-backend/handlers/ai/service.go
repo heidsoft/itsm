@@ -22,7 +22,7 @@ import (
 type Service struct {
 	repo               Repository
 	logger             *zap.SugaredLogger
-	rag                *service.RAGService
+	rag                RAGChatService
 	llmGateway         *service.LLMGateway
 	tools              *service.ToolRegistry
 	analytics          *service.AnalyticsService
@@ -50,10 +50,34 @@ type AuditLedgerWriter interface {
 // 编译期断言：生产实现满足窄接口。
 var _ AuditLedgerWriter = (*service.AITelemetryService)(nil)
 
+// ragStreamer 是流式问答的可选能力接口，与 RAGChatService 分开声明。
+//
+// 其方法签名携带共享层 *service.LLMGateway / []service.LLMTool，因此定义在本
+// 文件（本就依赖共享层），不进零依赖的 rag_contract.go——否则会新增一个
+// import service 的生产文件，让 Gate C.8 / L.3 的 ai 计数由 4 升到 5。
+// 生产实现 *service.RAGService 同时满足 RAGChatService 与 ragStreamer；
+// 只实现读面契约的域内实现（单测 fake）不具备流式能力，ChatStream 会走
+// 明确的降级错误而不是 panic。
+type ragStreamer interface {
+	AskWithLLMStreamWithToolsMulti(
+		ctx context.Context,
+		tenantID int,
+		query string,
+		supplemental []string,
+		gateway *service.LLMGateway,
+		maxResults int,
+		tools []service.LLMTool,
+		onSources func(sources []map[string]any),
+		onDelta func(delta string),
+		execTool func(name string, args map[string]any) (any, error),
+		extraDocs []map[string]any,
+	) error
+}
+
 func NewService(
 	repo Repository,
 	logger *zap.SugaredLogger,
-	rag *service.RAGService,
+	rag RAGChatService,
 	tools *service.ToolRegistry,
 	analytics *service.AnalyticsService,
 	prediction *service.PredictionService,
@@ -501,6 +525,12 @@ func (s *Service) ChatStream(
 	if s.rag == nil {
 		return 0, "", fmt.Errorf("RAG service not initialized")
 	}
+	// 流式问答是读面契约之外的可选能力：只实现 RAGChatService 的注入方
+	// 不具备它，与「未装配」同口径降级，不退回具体指针、也不 panic。
+	streamer, hasStream := s.rag.(ragStreamer)
+	if !hasStream {
+		return 0, "", fmt.Errorf("RAG service not initialized")
+	}
 
 	// 按权限过滤只读工具注入聊天路径；写工具仅放行经审批流的白名单（创建工单/更新工单/创建工单类型），
 	// 它们经由 ExecuteTool 进入待审批队列，绝不在聊天链路内直接落地写库。
@@ -580,7 +610,7 @@ func (s *Service) ChatStream(
 	// 的权限判定走这里），行级范围与 Chat 同口径。
 	episodes := s.recallEpisodes(ctx, tenantID, userID, role, query)
 
-	if err := s.rag.AskWithLLMStreamWithToolsMulti(
+	if err := streamer.AskWithLLMStreamWithToolsMulti(
 		ctx, tenantID, query, memory.Queries, s.llmGateway, limit, tools,
 		wrappedSources, wrappedDelta, execTool, episodesToResults(episodes)); err != nil {
 		return 0, "", err

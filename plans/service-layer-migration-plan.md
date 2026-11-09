@@ -485,3 +485,29 @@ ticket 有 20 个 service 文件分散在 10 个子域。策略：
 - **零 service/ 依赖的域数量**：批次 0 时 17 → 首批后 22 → 续批后 27 → 第三批后 29 → 2026-11-08 批次 1 读数 33 → 2026-11-08 批次 2 开局后 35 → **2026-11-09 续批后 36** → 目标 69
 - **CI 守卫通过率**：`check-layering-convergence.sh`（Gate C.8）每次提交验证，由 `scripts/docs-gate/run-all.sh` 调度
 - **批次 1 退出标准（可直接读数）**：`service-prod-baseline.txt` 条目数下降、`handler-service-imports-baseline.txt` 中对应域计数归零、L.4 的「零 service/ 依赖域」数上升；每次下降后跑 `--update-baseline` 收紧，禁止反向放宽
+
+## 批次 2 补批复盘：AI 域窄契约与计数型守卫的边界（2026-11-09）
+
+**做了什么**：`handlers/ai/` 的 `Service.rag` 由 `*service.RAGService` 具体指针改为域内窄接口 `RAGChatService`（嵌入 knowledge 域现成 `RAGRetriever.Ask` + `AskMulti` + `Mode`），`internal/bootstrap/app.go` 零改动；流式方法因签名携带共享层类型，拆为 `ragStreamer` 可选能力接口放在本就依赖共享层的 `service.go`，以类型断言调用。配套 `rag_contract_test.go`（编译期断言 + 纯域内 fake + 源码守卫）与两处反向验证。
+
+**可直接复用的四步模板**（批次 3/4 建议按此执行，不要按文件清单整文件 `git mv`）：
+
+1. 先盘**真实消费面**再定契约：`ai` 实际用了 4 个 RAG 方法，其中只有 `Ask` 与 knowledge 现成契约重合；直接套 `knowledge.RAGService`（5 方法组合接口）既缺 `AskMulti`/`Mode` 又多出 4 个用不到的方法。
+2. 只复用现成契约的**最小子集**（`RAGRetriever`），域内补齐专属方法，不另起同签名接口。
+3. 方法签名若携带共享层具体类型（`*service.LLMGateway` / `[]service.LLMTool`），把该能力拆成**可选接口**并放在已依赖共享层的既有文件里；放进新契约文件会新增一个 import service 的生产文件，L.3 直接变红。待 LLMGateway 契约化后再合并。
+4. 回归锁必须能区分新旧实现：编译期断言只证明生产实现满足接口，真正锁住边界的是「纯域内 fake 能注入」+「源码守卫禁止具体类型回退」+「反向验证改回旧值会红」。
+
+**L.3 计数不下降（如实口径）**：本批 `ai` 仍 4、全仓仍 50 文件 / 31 域，L.1 140、L.4 36/69、C.6.4 五项零变化，三份基线**零改动**（无下降不下调，避免 `got<want` 静默放宽）。逐文件证据：
+
+| `ai` 生产文件 | 除 RAG 外仍绑定的共享层符号 |
+|:---|:---|
+| `builtin_skills.go` | `service.SkillRegistry`、`service.Skill` |
+| `skills.go` | `service.BaseSkill`、`service.SkillManifest`、`service.DashboardViewer`（11 个内置 Skill 全嵌 `*service.BaseSkill`） |
+| `handler.go` | `service.ToolDefinition`、`service.ErrQuotaExceeded` / `ErrRateLimited` / `ErrIncidentNotFound` / `ErrAIAnalysisUnavailable` / `ErrFeedbackNotFound`、`service.DashboardViewer` |
+| `service.go` | `LLMGateway`、`ToolRegistry`、`AnalyticsService`、`PredictionService`、`SLAForecastSkill`、`TriageService`、`RootCauseService`、`AITelemetryService`、`SummarizeService`、`LLMTool`、`LLMTool` 列表、`DashboardViewer` 等 12 类 |
+
+因此单换 RAG 指针不足以让任一文件脱离 import。**结论：L.3 是「文件是否 import」的计数型棘轮，无法表达「边界已倒置」这一质量改进**；反过来也说明整文件 `git mv` 可能让计数下降而边界不变（假收敛）。建议补一条 **L.6 符号级共享层依赖白名单**：按 `service.<Symbol>` 逐域记账并棘轮，让「抽窄接口」这种边界改进也能被度量、被守住；同时把 `scripts/acceptance/product-function-smoke.py` 与全新空库 init 纳入每批必跑（本轮 prod 重建证明它们能发现源码测试发现不了的 `external` 卷与 init 依赖链问题）。
+
+**守卫口径坑**：L.3 用 `grep -rl '"itsm-backend/service"'` 全文计数，**注释里写出带引号的共享包路径同样算一个依赖文件**。本批契约注释首次写入该字面量后，C.8 实测 `ai 4→5` FAIL；去掉字面量即恢复 `50/31` 全绿。域内源码守卫同理，故 `rag_contract_test.go` 扫的是剔除行注释后的源码，注释仍可正常写明被禁止的旧写法。
+
+**未启动**：批次 3（BPMN 36 文件）、批次 4（ticket 20 文件）、收口批；`workflow` 仍 Pilot，真实租户跨域联调人工签字栏留空。
