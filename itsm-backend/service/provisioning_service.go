@@ -12,6 +12,7 @@ import (
 	"itsm-backend/common"
 	"itsm-backend/domain/provisioning"
 	domainServiceRequest "itsm-backend/domain/servicerequest"
+	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/cloudaccount"
 	"itsm-backend/ent/provisioningtask"
@@ -31,23 +32,25 @@ import (
 // 重复执行的代价不是多一次日志，而是多一台机器。调用方必须能区分
 // 「已经做完了」「别人正在做」「重试次数用完了」「这个状态不能重试」，
 // 而不是统一压成 500 让前端去猜。
+// 定义已下沉到 dto 包；此处保留变量别名，使 service 公开 API 不变，
+// 且 handler 与 service 判定的仍是同一个 error 实例（errors.Is 可命中包装链）。
 var (
 	// ErrProvisioningTaskSucceeded 任务已交付成功，拒绝再次执行（幂等空操作）。
-	ErrProvisioningTaskSucceeded = errors.New("交付任务已完成，拒绝重复执行")
+	ErrProvisioningTaskSucceeded = dto.ErrProvisioningTaskSucceeded
 	// ErrProvisioningTaskInProgress 任务正在执行中（或刚被其他 worker 领取）。
-	ErrProvisioningTaskInProgress = errors.New("交付任务正在执行中")
+	ErrProvisioningTaskInProgress = dto.ErrProvisioningTaskInProgress
 	// ErrProvisioningTaskAttemptsExhausted 重试次数已达上限，必须转人工判定。
-	ErrProvisioningTaskAttemptsExhausted = errors.New("交付任务重试次数已达上限，需人工接管")
+	ErrProvisioningTaskAttemptsExhausted = dto.ErrProvisioningTaskAttemptsExhausted
 	// ErrProvisioningTaskNotRetryable 当前状态不具备重试语义（如尚未失败的 pending）。
-	ErrProvisioningTaskNotRetryable = errors.New("交付任务当前状态不允许重试")
+	ErrProvisioningTaskNotRetryable = dto.ErrProvisioningTaskNotRetryable
 	// ErrProvisioningTaskNotResolvable 当前状态不允许人工判定（running/succeeded）。
-	ErrProvisioningTaskNotResolvable = errors.New("交付任务当前状态不允许人工判定")
+	ErrProvisioningTaskNotResolvable = dto.ErrProvisioningTaskNotResolvable
 	// ErrProvisioningNotExecutable 交付参数或云账号配置不完整，自动重试不可能成功。
 	// 这类失败落库后不再重投，由运维修正配置后走人工重试。
-	ErrProvisioningNotExecutable = errors.New("交付配置不完整，自动重试不会成功")
+	ErrProvisioningNotExecutable = dto.ErrProvisioningNotExecutable
 	// ErrProvisioningPermanentlyFailed 云侧业务拒绝（余额不足/配额封禁/参数不存在），
 	// 重试期望收益为零：停止自动重投，保留人工重试入口供运维修复后重新触发。
-	ErrProvisioningPermanentlyFailed = errors.New("云侧拒绝且自动重试不会成功")
+	ErrProvisioningPermanentlyFailed = dto.ErrProvisioningPermanentlyFailed
 )
 
 // staleTaskLease 判定「running 但已无人执行」的租约时长。

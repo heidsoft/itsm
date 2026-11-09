@@ -1,6 +1,5 @@
 // Package assignment_smart 是工单智能分配域的 HTTP handler 层（域切片架构）。
-// 业务逻辑仍由 service.TicketAssignmentSmartService / service.TicketAssignmentRuleService 承载，
-// 本包只做参数解析与响应封装。
+// 业务逻辑由域内契约声明的能力面承载，组合根注入实现；本包只做参数解析与响应封装。
 package assignment_smart
 
 import (
@@ -10,7 +9,6 @@ import (
 	"itsm-backend/common"
 	"itsm-backend/common/handlerctx"
 	"itsm-backend/dto"
-	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -18,15 +16,15 @@ import (
 
 // Handler 工单智能分配 HTTP handler
 type Handler struct {
-	smartService *service.TicketAssignmentSmartService
-	ruleService  *service.TicketAssignmentRuleService
+	smartService SmartAssignmentService
+	ruleService  AssignmentRuleService
 	logger       *zap.SugaredLogger
 }
 
 // NewHandler 创建工单智能分配 handler 实例
 func NewHandler(
-	smartService *service.TicketAssignmentSmartService,
-	ruleService *service.TicketAssignmentRuleService,
+	smartService SmartAssignmentService,
+	ruleService AssignmentRuleService,
 	logger *zap.SugaredLogger,
 ) *Handler {
 	return &Handler{
@@ -211,7 +209,7 @@ func (h *Handler) DeleteAssignmentRule(c *gin.Context) {
 	err := h.ruleService.DeleteAssignmentRule(c.Request.Context(), ruleID, tenantID)
 	if err != nil {
 		h.logger.Errorw("Failed to delete assignment rule", "error", err, "rule_id", ruleID)
-		if errors.Is(err, service.ErrAssignmentRuleNotFound) {
+		if errors.Is(err, dto.ErrAssignmentRuleNotFound) {
 			common.Fail(c, common.NotFoundCode, "分配规则不存在")
 			return
 		}
@@ -239,9 +237,9 @@ func (h *Handler) TestAssignmentRule(c *gin.Context) {
 	if err != nil {
 		h.logger.Errorw("Failed to test assignment rule", "error", err, "rule_id", req.RuleID, "ticket_id", req.TicketID)
 		switch {
-		case errors.Is(err, service.ErrAssignmentRuleNotFound):
+		case errors.Is(err, dto.ErrAssignmentRuleNotFound):
 			common.Fail(c, common.NotFoundCode, "分配规则不存在")
-		case errors.Is(err, service.ErrTestTicketNotFound):
+		case errors.Is(err, dto.ErrTestTicketNotFound):
 			common.Fail(c, common.NotFoundCode, "工单不存在")
 		default:
 			common.FailWithErr(c, err, "操作失败")

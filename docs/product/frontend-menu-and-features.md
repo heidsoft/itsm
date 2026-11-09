@@ -16,7 +16,7 @@
 - **后端 `pkg/menubaseline/baseline.go::MenuDefinitions()` 是种子真理**（`itsm-backend/pkg/menubaseline/baseline.go:20`）：102 条菜单（30 顶级 + 72 子级）由 `pkg/seeder/seeder.go:1895 seedMenus` 两遍写入 `menu` 表（顶级 → 子级按 `parent_path` 反查）。`pkg/seeder/seeder.go:1890 menuDefinitions()` 只是转调。
 - **条数有测试棘轮**：`pkg/seeder/initialization_verify_cold_test.go:303` 断言 `require.Len(menuDefinitions(), 102)`，增删菜单必须同步该数字。
 - **种子是 add-only**：`seedMenus` / `InitMenusFromBaseline` 只会新增与更新条目，不会停用基线里已摘除的 path。因此菜单退役必须配套一条按 path 收窄、不带 tenant 与主键的停用迁移（如 `migrations/20261101_retire_ticket_dashboard_menu.sql`），否则存量租户侧边栏会留一条指向已删页面的死链。
-- **运行时入口**：`MenuService.GetUserMenus`（`service/menu_service.go:212`）→ `dto.MenuTreeResponse{Main, Admin}`。
+- **运行时入口**：`MenuService.GetUserMenus`（`handlers/rbac/menu_service_impl.go`）→ `dto.MenuTreeResponse{Main, Admin}`。
 - **前端缓存**：`useUserMenusQuery`（`src/lib/hooks/useUserMenusQuery.ts`）走 React Query，5 分钟 staleTime；菜单管理端 CRUD 后派发 `MENUS_UPDATED_EVENT` 自动 invalidate。
 
 ### 1.2 数据流
@@ -57,7 +57,7 @@ seedMenus → menu 表（tenant_id + path 唯一）
 | React Query 缓存 | [itsm-frontend/src/lib/hooks/useUserMenusQuery.ts](../../itsm-frontend/src/lib/hooks/useUserMenusQuery.ts) | 62 |
 | 菜单种子（真理） | [itsm-backend/pkg/menubaseline/baseline.go:20-158 `MenuDefinitions()`](../../itsm-backend/pkg/menubaseline/baseline.go#L20-L158) | 139 |
 | 菜单 upsert | [itsm-backend/pkg/seeder/seeder.go:1886 转调 `menuDefinitions()` / :1891 `seedMenus`](../../itsm-backend/pkg/seeder/seeder.go#L1886-L1891) | — |
-| 运行时 GetUserMenus | [itsm-backend/service/menu_service.go:212-292 GetUserMenus+filterMSPMenus](../../itsm-backend/service/menu_service.go#L212-L292) | 81 |
+| 运行时 GetUserMenus | [itsm-backend/handlers/rbac/menu_service_impl.go GetUserMenus+filterMSPMenus](../../itsm-backend/handlers/rbac/menu_service_impl.go) | 81 |
 | 路由注册 | [itsm-backend/router/common_system_routes.go:14-214](../../itsm-backend/router/common_system_routes.go#L14-L214) | 200 |
 | HTTP Handler | [itsm-backend/handlers/rbac/handler.go:493 GetUserMenus](../../itsm-backend/handlers/rbac/handler.go#L493-L514) | 22 |
 | Marketplace 路由 | [itsm-backend/handlers/marketplace/handler.go:44-62 RegisterRoutes](../../itsm-backend/handlers/marketplace/handler.go#L44-L62) | 19 |
@@ -340,7 +340,7 @@ filterByCapability(menus)：
 
 ### 4.4 权限码判定与别名（`filterMenusByPermission`）
 
-菜单可见性只由权限码决定，判定顺序（`itsm-backend/service/menu_service.go`）：
+菜单可见性只由权限码决定，判定顺序（`itsm-backend/handlers/rbac/menu_service_impl.go`）：
 空码 → 精确码 → `resource:*` / `*` 通配 → Action 别名 → Resource 别名后再走通配。
 
 Resource 别名只保留「同一资源的两个名字」：`service→service_catalog`、`workflow→bpmn`、
@@ -674,7 +674,7 @@ tenant.Group("/admin").GET("/tenants", ...)  // alias /tenants
 ## §10 参考文件索引
 
 - 后端种子： [itsm-backend/pkg/menubaseline/baseline.go:20-158](../../itsm-backend/pkg/menubaseline/baseline.go#L20-L158)（定义）+ [itsm-backend/pkg/seeder/seeder.go:1885-1891](../../itsm-backend/pkg/seeder/seeder.go#L1885-L1891)（转调与写入）
-- 后端运行时： [itsm-backend/service/menu_service.go:200-292](../../itsm-backend/service/menu_service.go#L200-L292)
+- 后端运行时： [itsm-backend/handlers/rbac/menu_service_impl.go](../../itsm-backend/handlers/rbac/menu_service_impl.go)
 - 后端路由： [itsm-backend/router/common_system_routes.go](../../itsm-backend/router/common_system_routes.go)
 - 后端 Handler： [itsm-backend/handlers/rbac/handler.go:493-514](../../itsm-backend/handlers/rbac/handler.go#L493-L514)
 - 后端 Marketplace Handler： [itsm-backend/handlers/marketplace/handler.go](../../itsm-backend/handlers/marketplace/handler.go)

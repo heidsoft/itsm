@@ -1,5 +1,5 @@
 // Package ticket_tag 是工单标签域的 HTTP handler 层（域切片架构）。
-// 业务逻辑仍由 service.TicketTagService 承载，本包只做参数解析与响应封装。
+// 业务逻辑由域内 TagService 契约声明，组合根注入实现；本包只做参数解析与响应封装。
 package ticket_tag
 
 import (
@@ -9,7 +9,6 @@ import (
 	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
-	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -17,12 +16,12 @@ import (
 
 // Handler 工单标签 HTTP handler
 type Handler struct {
-	tagService *service.TicketTagService
+	tagService TagService
 	logger     *zap.SugaredLogger
 }
 
 // NewHandler 创建工单标签 handler 实例
-func NewHandler(tagService *service.TicketTagService, logger *zap.SugaredLogger) *Handler {
+func NewHandler(tagService TagService, logger *zap.SugaredLogger) *Handler {
 	return &Handler{
 		tagService: tagService,
 		logger:     logger,
@@ -54,16 +53,16 @@ func pathID(c *gin.Context) (int, bool) {
 // 原始错误只进日志，响应体固定为安全消息。
 func (h *Handler) failTagError(c *gin.Context, rawErr error, opMsg string, tagID, tid int) {
 	switch {
-	case errors.Is(rawErr, service.ErrTicketTagNameExists):
+	case errors.Is(rawErr, dto.ErrTicketTagNameExists):
 		h.logger.Warnw("Ticket tag name conflict", "error", rawErr, "tenant_id", tid)
 		common.Conflict(c, "标签名称已存在", nil)
-	case errors.Is(rawErr, service.ErrTicketTagInUse):
+	case errors.Is(rawErr, dto.ErrTicketTagInUse):
 		h.logger.Warnw("Ticket tag still in use", "error", rawErr, "tag_id", tagID, "tenant_id", tid)
 		common.Conflict(c, "标签仍被工单使用，无法删除", nil)
-	case errors.Is(rawErr, service.ErrTicketTagNameBlank):
+	case errors.Is(rawErr, dto.ErrTicketTagNameBlank):
 		h.logger.Warnw("Ticket tag name blank", "error", rawErr, "tenant_id", tid)
 		common.Fail(c, common.ParamErrorCode, "标签名称不能为空")
-	case errors.Is(rawErr, service.ErrTicketTagNotFound), ent.IsNotFound(rawErr):
+	case errors.Is(rawErr, dto.ErrTicketTagNotFound), ent.IsNotFound(rawErr):
 		// 查询都带租户谓词，所以跨租户与真实不存在同样表现为 not found。
 		h.logger.Warnw("Ticket tag not found", "error", rawErr, "tag_id", tagID, "tenant_id", tid)
 		common.Fail(c, common.NotFoundCode, "标签不存在或无权访问")
@@ -76,7 +75,7 @@ func (h *Handler) failTagError(c *gin.Context, rawErr error, opMsg string, tagID
 
 // CreateTag 创建标签
 func (h *Handler) CreateTag(c *gin.Context) {
-	var req service.CreateTagRequest
+	var req dto.CreateTagRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
@@ -104,7 +103,7 @@ func (h *Handler) UpdateTag(c *gin.Context) {
 		return
 	}
 
-	var req service.UpdateTagRequest
+	var req dto.UpdateTagRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
@@ -184,7 +183,7 @@ func (h *Handler) ListTags(c *gin.Context) {
 		}
 	}
 
-	req := &service.ListTagsRequest{
+	req := &dto.ListTagsRequest{
 		Page:     page,
 		PageSize: pageSize,
 		IsActive: active,

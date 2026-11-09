@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"time"
 
@@ -19,9 +18,12 @@ import (
 //     handler 映射 404/4004 —— 条件删除 0 行不再假装成功。
 //   - ErrTestTicketNotFound：试运行时工单不存在或跨租户，handler 映射 404/4004
 //     —— 此前 ticket.Get 无租户谓词，他租工单可被读取做匹配并回显动作。
+//
+// 定义已下沉到 dto 包；此处保留变量别名，使 service 公开 API 不变，
+// 且 handler 与 service 判定的仍是同一个 error 实例（errors.Is 可命中包装链）。
 var (
-	ErrAssignmentRuleNotFound = errors.New("assignment rule not found")
-	ErrTestTicketNotFound     = errors.New("assignment test ticket not found")
+	ErrAssignmentRuleNotFound = dto.ErrAssignmentRuleNotFound
+	ErrTestTicketNotFound     = dto.ErrTestTicketNotFound
 )
 
 type TicketAssignmentRuleService struct {

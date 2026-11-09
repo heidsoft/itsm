@@ -10,7 +10,6 @@ import (
 	"itsm-backend/domain/provisioning"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
-	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -18,12 +17,12 @@ import (
 
 // Handler 持有 ProvisioningService 依赖.
 type Handler struct {
-	provisioningService *service.ProvisioningService
+	provisioningService ProvisioningTaskService
 	logger              *zap.SugaredLogger
 }
 
 // NewHandler 构造 provisioning Handler.
-func NewHandler(provisioningService *service.ProvisioningService, logger *zap.SugaredLogger) *Handler {
+func NewHandler(provisioningService ProvisioningTaskService, logger *zap.SugaredLogger) *Handler {
 	if logger == nil {
 		logger = zap.NewNop().Sugar()
 	}
@@ -198,15 +197,15 @@ func (h *Handler) ResolveProvisioningTask(c *gin.Context) {
 // 压成 500 会让前端重试、让运维以为系统故障，实际应该去看任务状态。
 func (h *Handler) respondProvisioningError(c *gin.Context, err error, fallback string) {
 	switch {
-	case errors.Is(err, service.ErrProvisioningTaskSucceeded):
+	case errors.Is(err, dto.ErrProvisioningTaskSucceeded):
 		common.Fail(c, common.ConflictCode, "该交付任务已完成，不能重复执行（重复执行会造成重复交付）")
-	case errors.Is(err, service.ErrProvisioningTaskInProgress):
+	case errors.Is(err, dto.ErrProvisioningTaskInProgress):
 		common.Fail(c, common.ConflictCode, "该交付任务正在执行中，请等待本次执行结束后再操作")
-	case errors.Is(err, service.ErrProvisioningTaskAttemptsExhausted):
+	case errors.Is(err, dto.ErrProvisioningTaskAttemptsExhausted):
 		common.Fail(c, common.ConflictCode, "该交付任务重试次数已达上限，请人工判定交付结果")
-	case errors.Is(err, service.ErrProvisioningTaskNotRetryable):
+	case errors.Is(err, dto.ErrProvisioningTaskNotRetryable):
 		common.Fail(c, common.ConflictCode, "该交付任务当前状态不允许重试（仅失败任务可重试）")
-	case errors.Is(err, service.ErrProvisioningTaskNotResolvable):
+	case errors.Is(err, dto.ErrProvisioningTaskNotResolvable):
 		common.Fail(c, common.ConflictCode, "该交付任务当前状态不允许人工判定（执行中或已完成）")
 	default:
 		common.FailWithErr(c, err, fallback)

@@ -11,9 +11,9 @@ import (
 
 	"itsm-backend/common"
 	"itsm-backend/common/handlerctx"
+	"itsm-backend/dto"
 	"itsm-backend/handlers/ticket"
 	"itsm-backend/middleware"
-	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -30,12 +30,12 @@ type ticketCreator interface {
 }
 
 type Handler struct {
-	a2uiService   *service.A2UITicketService
+	a2uiService   TicketFormService
 	ticketCreator ticketCreator
 	logger        *zap.SugaredLogger
 }
 
-func NewHandler(a2uiService *service.A2UITicketService, creator ticketCreator, logger *zap.SugaredLogger) *Handler {
+func NewHandler(a2uiService TicketFormService, creator ticketCreator, logger *zap.SugaredLogger) *Handler {
 	if logger == nil {
 		logger = zap.NewNop().Sugar()
 	}
@@ -282,19 +282,19 @@ func buildSubmitSuccessMessages(surfaceID string, created *ticket.Ticket) ([]str
 		return nil, errA2UITicketCreateEmpty
 	}
 	ticketID := created.ID
-	dataMsg := service.A2UIDataModelUpdate{
-		DataModelUpdate: service.DataModelUpdate{
+	dataMsg := dto.A2UIDataModelUpdate{
+		DataModelUpdate: dto.DataModelUpdate{
 			SurfaceID: surfaceID,
 			Path:      "/ticket",
-			Contents: []service.Content{
+			Contents: []dto.Content{
 				{Key: "status", ValueString: "created"},
 				{Key: "ticketId", ValueNumber: &ticketID},
 				{Key: "ticketNumber", ValueString: created.TicketNumber},
 			},
 		},
 	}
-	deleteMsg := service.A2UIDeleteSurface{
-		DeleteSurface: service.DeleteSurface{SurfaceID: surfaceID},
+	deleteMsg := dto.A2UIDeleteSurface{
+		DeleteSurface: dto.DeleteSurface{SurfaceID: surfaceID},
 	}
 
 	data, err := json.Marshal(dataMsg)

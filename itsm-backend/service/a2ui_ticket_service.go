@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"strings"
+
+	"itsm-backend/dto"
 )
 
 // ==================== A2UI 消息结构 ====================
@@ -25,23 +27,11 @@ type Component struct {
 
 type ComponentDef map[string]interface{}
 
-// DataModelUpdate 消息
-type A2UIDataModelUpdate struct {
-	DataModelUpdate DataModelUpdate `json:"dataModelUpdate"`
-}
-
-type DataModelUpdate struct {
-	SurfaceID string    `json:"surfaceId"`
-	Path      string    `json:"path"`
-	Contents  []Content `json:"contents"`
-}
-
-type Content struct {
-	Key         string `json:"key"`
-	ValueString string `json:"valueString,omitempty"`
-	ValueNumber *int   `json:"valueNumber,omitempty"`
-	ValueBool   *bool  `json:"valueBoolean,omitempty"`
-}
+// DataModelUpdate 消息。结构已下沉到 dto 包；别名是同一类型（不是新定义），
+// 服务侧生成初始表单与 handler 侧构造提交成功消息共用同一套 JSON 结构。
+type A2UIDataModelUpdate = dto.A2UIDataModelUpdate
+type DataModelUpdate = dto.DataModelUpdate
+type Content = dto.Content
 
 // BeginRendering 消息
 type A2UIBeginRendering struct {
@@ -54,13 +44,8 @@ type BeginRendering struct {
 }
 
 // DeleteSurface 消息
-type A2UIDeleteSurface struct {
-	DeleteSurface DeleteSurface `json:"deleteSurface"`
-}
-
-type DeleteSurface struct {
-	SurfaceID string `json:"surfaceId"`
-}
+type A2UIDeleteSurface = dto.A2UIDeleteSurface
+type DeleteSurface = dto.DeleteSurface
 
 // ==================== 工单表单服务 ====================
 

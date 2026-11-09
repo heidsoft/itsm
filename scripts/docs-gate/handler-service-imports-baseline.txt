@@ -3,9 +3,8 @@
 # 收紧方式同上；逐域清零进度见 plans/service-layer-migration-plan.md。
 # 2026-11-09 批次 2 补批二：10 个单符号域经域内窄契约归零，实测 50 文件/31 域 -> 40 文件/21 域；L.1 140 与 C.6.4 五项不变。
 # 2026-11-09 批次 2 补批三：4 个双符号域经窄契约 + dto 值类型下沉归零，实测 40 文件/21 域 -> 36 文件/17 域；L.1 140 与 C.6.4 五项不变。
-a2ui=1
+# 2026-11-09 批次 2 补批四：a2ui / assignment_smart / provisioning / ticket_tag 四域经窄契约 + dto 值类型与 sentinel 下沉归零，实测 36 文件/17 域 -> 32 文件/13 域；L.1 140 与 C.6.4 五项不变。
 ai=4
-assignment_smart=1
 bpmn=8
 change=1
 cmdb=7
@@ -14,9 +13,7 @@ email_intake=2
 incident=1
 operations=1
 problem=1
-provisioning=1
 service_request=1
 skill=2
 ticket=1
-ticket_tag=1
 timer=2

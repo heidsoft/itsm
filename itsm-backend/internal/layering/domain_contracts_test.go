@@ -6,21 +6,26 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"regexp"
 	"strings"
 	"testing"
 
 	"itsm-backend/dto"
+	"itsm-backend/handlers/a2ui"
 	"itsm-backend/handlers/account"
 	"itsm-backend/handlers/analytics"
 	"itsm-backend/handlers/approval"
 	"itsm-backend/handlers/approval_chain"
+	"itsm-backend/handlers/assignment_smart"
 	"itsm-backend/handlers/auth"
 	"itsm-backend/handlers/automation_rule"
 	"itsm-backend/handlers/escalation_matrix"
 	"itsm-backend/handlers/prediction"
 	"itsm-backend/handlers/problem_investigation"
+	"itsm-backend/handlers/provisioning"
 	"itsm-backend/handlers/release"
 	"itsm-backend/handlers/ticket_notification"
+	"itsm-backend/handlers/ticket_tag"
 	"itsm-backend/handlers/ticket_type"
 	"itsm-backend/handlers/ticket_workflow"
 	"itsm-backend/handlers/vector_store"
@@ -44,13 +49,18 @@ var (
 	_ ticket_type.TicketTypeService                     = (*service.TicketTypeService)(nil)
 	_ ticket_workflow.TicketWorkflowService             = (*service.TicketWorkflowService)(nil)
 	_ vector_store.VectorStore                          = (*service.VectorStore)(nil)
+	_ a2ui.TicketFormService                            = (*service.A2UITicketService)(nil)
+	_ assignment_smart.SmartAssignmentService           = (*service.TicketAssignmentSmartService)(nil)
+	_ assignment_smart.AssignmentRuleService            = (*service.TicketAssignmentRuleService)(nil)
+	_ provisioning.ProvisioningTaskService              = (*service.ProvisioningService)(nil)
+	_ ticket_tag.TagService                             = (*service.TicketTagService)(nil)
 )
 
 type domainSpec struct {
 	name     string // handlers 下的域目录名
 	file     string // 持有契约字段的生产文件
 	iface    string // 域内窄接口名
-	concrete string // 共享层具体类型名
+	concrete string // 共享层具体类型名；多接口域用逗号分隔，逐个检查
 }
 
 var contractDomains = []domainSpec{
@@ -68,6 +78,10 @@ var contractDomains = []domainSpec{
 	{"ticket_type", "handler.go", "TicketTypeService", "TicketTypeService"},
 	{"ticket_workflow", "handler.go", "TicketWorkflowService", "TicketWorkflowService"},
 	{"vector_store", "handler.go", "VectorStore", "VectorStore"},
+	{"a2ui", "handler.go", "TicketFormService", "A2UITicketService"},
+	{"assignment_smart", "handler.go", "SmartAssignmentService", "TicketAssignmentSmartService,TicketAssignmentRuleService"},
+	{"provisioning", "handler.go", "ProvisioningTaskService", "ProvisioningService"},
+	{"ticket_tag", "handler.go", "TagService", "TicketTagService"},
 }
 
 // 只剔除行注释，避免把说明文字里的示例当成代码；L.3 门禁本身是全文 grep，
@@ -82,6 +96,12 @@ func stripLineComments(src string) string {
 		b.WriteByte('\n')
 	}
 	return b.String()
+}
+
+// squashSpace 让源码守卫不受 gofmt 对齐空格影响：var 块里对齐后的
+// 「ErrX      = dto.ErrX」与声明文本「ErrX = dto.ErrX」应视为同一条。
+func squashSpace(s string) string {
+	return strings.Join(strings.Fields(s), " ")
 }
 
 // TestDomainContractsKeepSharedLayerOut 是集中式归属回归锁：
@@ -115,8 +135,11 @@ func TestDomainContractsKeepSharedLayerOut(t *testing.T) {
 				if strings.Contains(string(body), sharedImport) {
 					t.Errorf("handlers/%s/%s 重新引用了共享层包，L.3 归零被破坏", d.name, fn)
 				}
-				if strings.Contains(stripLineComments(string(body)), "*service."+d.concrete) {
-					t.Errorf("handlers/%s/%s 字段或构造参数回退到共享层具体类型 %s", d.name, fn, d.concrete)
+				bodyCode := stripLineComments(string(body))
+				for _, concrete := range strings.Split(d.concrete, ",") {
+					if strings.Contains(bodyCode, "*service."+concrete) {
+						t.Errorf("handlers/%s/%s 字段或构造参数回退到共享层具体类型 %s", d.name, fn, concrete)
+					}
 				}
 			}
 			// 零命中不能由「目录空了 / 文件被删光」造成。
@@ -143,11 +166,16 @@ func TestDomainContractsKeepSharedLayerOut(t *testing.T) {
 				t.Fatalf("读取 handlers/%s/%s 失败：%v", d.name, d.file, err)
 			}
 			code := stripLineComments(string(holder))
-			if !strings.Contains(code, d.iface) {
+			// 词边界而不是子串：具体类型 TicketTagService 含 TagService 子串，
+			// 用 Contains 会让「字段回退到具体类型」仍然假绿。
+			ifaceWord := regexp.MustCompile(`\b` + regexp.QuoteMeta(d.iface) + `\b`)
+			if !ifaceWord.MatchString(code) {
 				t.Errorf("handlers/%s/%s 未使用域内接口 %s", d.name, d.file, d.iface)
 			}
-			if strings.Contains(code, "*service."+d.concrete) {
-				t.Errorf("handlers/%s/%s 回退到共享层具体类型（旧实现）", d.name, d.file)
+			for _, concrete := range strings.Split(d.concrete, ",") {
+				if strings.Contains(code, "*service."+concrete) {
+					t.Errorf("handlers/%s/%s 回退到共享层具体类型 %s（旧实现）", d.name, d.file, concrete)
+				}
 			}
 		})
 	}
@@ -165,6 +193,14 @@ func TestSharedValueTypesRemainDTOAliases(t *testing.T) {
 		{"DashboardViewer", reflect.TypeOf(service.DashboardViewer{}), reflect.TypeOf(dto.DashboardViewer{})},
 		{"EscalationMatrix", reflect.TypeOf(service.EscalationMatrix{}), reflect.TypeOf(dto.EscalationMatrix{})},
 		{"EscalationLevel", reflect.TypeOf(service.EscalationLevel{}), reflect.TypeOf(dto.EscalationLevel{})},
+		{"CreateTagRequest", reflect.TypeOf(service.CreateTagRequest{}), reflect.TypeOf(dto.CreateTagRequest{})},
+		{"UpdateTagRequest", reflect.TypeOf(service.UpdateTagRequest{}), reflect.TypeOf(dto.UpdateTagRequest{})},
+		{"ListTagsRequest", reflect.TypeOf(service.ListTagsRequest{}), reflect.TypeOf(dto.ListTagsRequest{})},
+		{"A2UIDataModelUpdate", reflect.TypeOf(service.A2UIDataModelUpdate{}), reflect.TypeOf(dto.A2UIDataModelUpdate{})},
+		{"DataModelUpdate", reflect.TypeOf(service.DataModelUpdate{}), reflect.TypeOf(dto.DataModelUpdate{})},
+		{"Content", reflect.TypeOf(service.Content{}), reflect.TypeOf(dto.Content{})},
+		{"A2UIDeleteSurface", reflect.TypeOf(service.A2UIDeleteSurface{}), reflect.TypeOf(dto.A2UIDeleteSurface{})},
+		{"DeleteSurface", reflect.TypeOf(service.DeleteSurface{}), reflect.TypeOf(dto.DeleteSurface{})},
 	}
 	for _, p := range pairs {
 		if p.shared != p.bottom {
@@ -173,8 +209,29 @@ func TestSharedValueTypesRemainDTOAliases(t *testing.T) {
 	}
 
 	// sentinel 必须是同一个 error 实例，否则 handler 侧 errors.Is 会静默失效。
-	if !errors.Is(fmt.Errorf("wrapped: %w", service.ErrInvalidReleaseTransition), dto.ErrInvalidReleaseTransition) {
-		t.Error("service.ErrInvalidReleaseTransition 必须与 dto 的 sentinel 指向同一实例")
+	sentinels := []struct {
+		name           string
+		shared, bottom error
+	}{
+		{"ErrInvalidReleaseTransition", service.ErrInvalidReleaseTransition, dto.ErrInvalidReleaseTransition},
+		{"ErrAssignmentRuleNotFound", service.ErrAssignmentRuleNotFound, dto.ErrAssignmentRuleNotFound},
+		{"ErrTestTicketNotFound", service.ErrTestTicketNotFound, dto.ErrTestTicketNotFound},
+		{"ErrProvisioningTaskSucceeded", service.ErrProvisioningTaskSucceeded, dto.ErrProvisioningTaskSucceeded},
+		{"ErrProvisioningTaskInProgress", service.ErrProvisioningTaskInProgress, dto.ErrProvisioningTaskInProgress},
+		{"ErrProvisioningTaskAttemptsExhausted", service.ErrProvisioningTaskAttemptsExhausted, dto.ErrProvisioningTaskAttemptsExhausted},
+		{"ErrProvisioningTaskNotRetryable", service.ErrProvisioningTaskNotRetryable, dto.ErrProvisioningTaskNotRetryable},
+		{"ErrProvisioningTaskNotResolvable", service.ErrProvisioningTaskNotResolvable, dto.ErrProvisioningTaskNotResolvable},
+		{"ErrProvisioningNotExecutable", service.ErrProvisioningNotExecutable, dto.ErrProvisioningNotExecutable},
+		{"ErrProvisioningPermanentlyFailed", service.ErrProvisioningPermanentlyFailed, dto.ErrProvisioningPermanentlyFailed},
+		{"ErrTicketTagNameExists", service.ErrTicketTagNameExists, dto.ErrTicketTagNameExists},
+		{"ErrTicketTagInUse", service.ErrTicketTagInUse, dto.ErrTicketTagInUse},
+		{"ErrTicketTagNameBlank", service.ErrTicketTagNameBlank, dto.ErrTicketTagNameBlank},
+		{"ErrTicketTagNotFound", service.ErrTicketTagNotFound, dto.ErrTicketTagNotFound},
+	}
+	for _, s := range sentinels {
+		if !errors.Is(fmt.Errorf("wrapped: %w", s.shared), s.bottom) {
+			t.Errorf("service.%s 必须与 dto 的 sentinel 指向同一实例", s.name)
+		}
 	}
 
 	// 导出的 String 方法必须随类型一起下沉（service/escalation_matrix_test.go 仍调用 m.String）。
@@ -188,6 +245,20 @@ func TestSharedValueTypesRemainDTOAliases(t *testing.T) {
 		{"dashboard_service.go", "type DashboardViewer = dto.DashboardViewer"},
 		{"escalation_matrix.go", "type EscalationMatrix = dto.EscalationMatrix"},
 		{"release_service.go", "var ErrInvalidReleaseTransition = dto.ErrInvalidReleaseTransition"},
+		{"ticket_assignment_rule_service.go", "ErrAssignmentRuleNotFound = dto.ErrAssignmentRuleNotFound"},
+		{"ticket_assignment_rule_service.go", "ErrTestTicketNotFound = dto.ErrTestTicketNotFound"},
+		{"provisioning_service.go", "ErrProvisioningTaskSucceeded = dto.ErrProvisioningTaskSucceeded"},
+		{"provisioning_service.go", "ErrProvisioningPermanentlyFailed = dto.ErrProvisioningPermanentlyFailed"},
+		{"ticket_tag_service.go", "ErrTicketTagNameExists = dto.ErrTicketTagNameExists"},
+		{"ticket_tag_service.go", "ErrTicketTagNotFound = dto.ErrTicketTagNotFound"},
+		{"ticket_tag_service.go", "type CreateTagRequest = dto.CreateTagRequest"},
+		{"ticket_tag_service.go", "type UpdateTagRequest = dto.UpdateTagRequest"},
+		{"ticket_tag_service.go", "type ListTagsRequest = dto.ListTagsRequest"},
+		{"a2ui_ticket_service.go", "type A2UIDataModelUpdate = dto.A2UIDataModelUpdate"},
+		{"a2ui_ticket_service.go", "type DataModelUpdate = dto.DataModelUpdate"},
+		{"a2ui_ticket_service.go", "type Content = dto.Content"},
+		{"a2ui_ticket_service.go", "type A2UIDeleteSurface = dto.A2UIDeleteSurface"},
+		{"a2ui_ticket_service.go", "type DeleteSurface = dto.DeleteSurface"},
 	}
 	for _, a := range aliases {
 		body, err := os.ReadFile(filepath.Join("..", "..", "service", a.file))
@@ -197,8 +268,50 @@ func TestSharedValueTypesRemainDTOAliases(t *testing.T) {
 		if len(body) < 100 {
 			t.Fatalf("扫描器零命中保护：service/%s 内容异常短（%d 字节）", a.file, len(body))
 		}
-		if !strings.Contains(stripLineComments(string(body)), a.decl) {
+		if !strings.Contains(squashSpace(stripLineComments(string(body))), squashSpace(a.decl)) {
 			t.Errorf("service/%s 丢失别名声明 %q", a.file, a.decl)
 		}
+	}
+}
+
+// TestDomainErrorMappingsUseDTOSentinels 锁住 handler 的错误映射必须读 dto 的
+// sentinel：改回共享层限定符会重新引入共享层 import，改成域内自建 error 会让
+// errors.Is 静默失效。两种退化都要在这里变红，而不是等到线上返回码漂移。
+func TestDomainErrorMappingsUseDTOSentinels(t *testing.T) {
+	cases := []struct {
+		domain    string
+		file      string
+		sentinels []string
+	}{
+		{"assignment_smart", "handler.go", []string{"dto.ErrAssignmentRuleNotFound", "dto.ErrTestTicketNotFound"}},
+		{"provisioning", "handler.go", []string{
+			"dto.ErrProvisioningTaskSucceeded", "dto.ErrProvisioningTaskInProgress",
+			"dto.ErrProvisioningTaskAttemptsExhausted", "dto.ErrProvisioningTaskNotRetryable",
+			"dto.ErrProvisioningTaskNotResolvable",
+		}},
+		{"ticket_tag", "handler.go", []string{
+			"dto.ErrTicketTagNameExists", "dto.ErrTicketTagInUse",
+			"dto.ErrTicketTagNameBlank", "dto.ErrTicketTagNotFound",
+		}},
+	}
+	for _, c := range cases {
+		t.Run(c.domain, func(t *testing.T) {
+			body, err := os.ReadFile(filepath.Join("..", "..", "handlers", c.domain, c.file))
+			if err != nil {
+				t.Fatalf("读取 handlers/%s/%s 失败：%v", c.domain, c.file, err)
+			}
+			if len(body) < 100 {
+				t.Fatalf("扫描器零命中保护：handlers/%s/%s 内容异常短（%d 字节）", c.domain, c.file, len(body))
+			}
+			code := stripLineComments(string(body))
+			for _, s := range c.sentinels {
+				if !strings.Contains(code, s) {
+					t.Errorf("handlers/%s/%s 未使用 %s 做错误映射", c.domain, c.file, s)
+				}
+			}
+			if strings.Contains(code, "service.Err") {
+				t.Errorf("handlers/%s/%s 错误映射回退到共享层限定符", c.domain, c.file)
+			}
+		})
 	}
 }
