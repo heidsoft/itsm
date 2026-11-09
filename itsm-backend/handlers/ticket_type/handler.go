@@ -8,18 +8,17 @@ import (
 	"itsm-backend/common"
 	"itsm-backend/common/handlerctx"
 	"itsm-backend/dto"
-	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 )
 
 type Handler struct {
-	ticketTypeService *service.TicketTypeService
+	ticketTypeService TicketTypeService
 	logger            *zap.SugaredLogger
 }
 
-func NewHandler(ticketTypeService *service.TicketTypeService, logger *zap.SugaredLogger) *Handler {
+func NewHandler(ticketTypeService TicketTypeService, logger *zap.SugaredLogger) *Handler {
 	if logger == nil {
 		logger = zap.NewNop().Sugar()
 	}

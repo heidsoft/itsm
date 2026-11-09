@@ -8,7 +8,6 @@ import (
 	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
-	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -16,12 +15,12 @@ import (
 
 // Handler 工单自动化规则 HTTP handler
 type Handler struct {
-	ruleService *service.TicketAutomationRuleService
+	ruleService AutomationRuleService
 	logger      *zap.SugaredLogger
 }
 
 // NewHandler 创建工单自动化规则 handler 实例
-func NewHandler(ruleService *service.TicketAutomationRuleService, logger *zap.SugaredLogger) *Handler {
+func NewHandler(ruleService AutomationRuleService, logger *zap.SugaredLogger) *Handler {
 	return &Handler{
 		ruleService: ruleService,
 		logger:      logger,

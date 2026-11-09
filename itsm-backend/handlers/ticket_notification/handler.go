@@ -8,7 +8,6 @@ import (
 	"itsm-backend/common"
 	"itsm-backend/common/handlerctx"
 	"itsm-backend/dto"
-	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -16,12 +15,12 @@ import (
 
 // Handler 工单通知 HTTP handler
 type Handler struct {
-	notificationService *service.TicketNotificationService
+	notificationService TicketNotificationService
 	logger              *zap.SugaredLogger
 }
 
 // NewHandler 创建工单通知 handler 实例
-func NewHandler(notificationService *service.TicketNotificationService, logger *zap.SugaredLogger) *Handler {
+func NewHandler(notificationService TicketNotificationService, logger *zap.SugaredLogger) *Handler {
 	return &Handler{
 		notificationService: notificationService,
 		logger:              logger,

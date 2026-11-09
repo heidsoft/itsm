@@ -2,16 +2,12 @@
 // 业务逻辑仍由 service.ApprovalService 承载，本包只做参数解析与响应封装。
 package approval
 
-import (
-	"itsm-backend/service"
-)
-
 // Handler 审批工作流 HTTP handler
 type Handler struct {
-	approvalService *service.ApprovalService
+	approvalService ApprovalService
 }
 
 // NewHandler 创建审批工作流 handler 实例
-func NewHandler(approvalService *service.ApprovalService) *Handler {
+func NewHandler(approvalService ApprovalService) *Handler {
 	return &Handler{approvalService: approvalService}
 }

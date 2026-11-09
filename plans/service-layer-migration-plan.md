@@ -511,3 +511,33 @@ ticket 有 20 个 service 文件分散在 10 个子域。策略：
 **守卫口径坑**：L.3 用 `grep -rl '"itsm-backend/service"'` 全文计数，**注释里写出带引号的共享包路径同样算一个依赖文件**。本批契约注释首次写入该字面量后，C.8 实测 `ai 4→5` FAIL；去掉字面量即恢复 `50/31` 全绿。域内源码守卫同理，故 `rag_contract_test.go` 扫的是剔除行注释后的源码，注释仍可正常写明被禁止的旧写法。
 
 **未启动**：批次 3（BPMN 36 文件）、批次 4（ticket 20 文件）、收口批；`workflow` 仍 Pilot，真实租户跨域联调人工签字栏留空。
+
+## 批次 2 补批二：长尾单符号域归零（2026-11-09）
+
+**口径**：本批只收口「每个域仅依赖 1 个共享层具体类型」的长尾域，**不代表批次 2 完成**——`sla_` 5、`ci_`+`cmdb_`+`configuration_` 9、`approval_` 6、`timer_` 6、`escalation_` 3、`skill_` 3 六组中大型域仍未动。
+
+### 选域方法：按符号而不是按文件
+
+对 `handlers/<domain>/` 所有生产文件统计 `service.<Symbol>` 去重集合，得到 11 个 `distinct_syms <= 1` 的域。它们的共同形态是「`Handler`/`Service` 结构体持一个 `*service.Xxx` 字段 + 构造参数同类型」，而生产装配传入的正是具体指针。把字段/构造参数改成**域内窄接口**后，具体类型自动满足契约，`internal/bootstrap/app.go` 与所有调用方零改动，同时该域生产文件的共享层 import 可以删掉——这是能真正让 L.3 归零、又不产生 `service → handlers` 反向依赖的最小改动。本批落地其中 10 个；`operations` 用包别名 `toolsexec` 调用的是**包级函数** `RecoverInterruptedToolInvocationTx`（不是方法），窄接口模板不适用，单独留待收口批处理。
+
+### 两个必须记录的踩坑
+
+1. **消费面要按全包扫，不能只扫 import 了共享层的那个文件**。`approval` / `problem_investigation` / `ticket_workflow` 的 `handler.go` 只持字段、零方法调用，初版据此写成空接口；真实调用在同域 `routes.go`（该文件本身不 import 共享层），全量编译报出 31 处 `undefined` 才暴露。改为按域目录全包扫描 `<field>.<Method>` 后，补齐 7 / 11 / 13 个方法。教训：**接口方法集 = 域内所有生产文件对字段的调用并集**，路由文件是常见盲区。
+2. **共享层私有返回类型会卡死归零**。`approval.MigrateWorkflowToBPMN` 返回 `*service.LegacyApprovalMigrationResult`，契约若直接引用就必须 import 共享层，该域计数只会从 `handler.go` 平移到 `contracts.go`。解法是把纯响应 DTO 下沉到 `dto/` 包，`service` 侧保留 `type X = dto.X` 别名（类型身份等价、公开 API 不变），契约改用 `dto.X`。**别名比改所有引用点更省，且不会新增 service/ 文件触发 L.1**。
+
+### 回归锁：集中式而非逐域铺开
+
+上一记录曾判定「逐域源码守卫会带来 69 份重复维护成本」。本批改用 `internal/layering/domain_contracts_test.go` 一份集中式守卫：10 条编译期断言（生产具体类型满足域内契约）+ 按域遍历的源码断言（逐处比对不取并集、扫描器零命中直接失败、字段类型断言能区分新旧实现）。测试文件 import 共享层不影响 L.3（门禁 `grep -v '_test.go'` 且只扫 `handlers/`）。反向验证三处均变红：字段/构造器改回具体类型（3 条断言）、契约文件插入共享层路径字面量（2 条断言）、某域重新 import 共享层（Gate C.8 / L.3 报「新域」FAIL）；恢复后 byte-identical 且全绿。
+
+### 读数与账本
+
+| 指标 | 本批前 | 本批后 |
+|:---|---:|---:|
+| L.3 handlers import service 文件 / 域 | 50 / 31 | **40 / 21** |
+| L.4 零共享层依赖域（共 69） | 36 | **46** |
+| L.1 service/ 顶层生产文件 | 140 | 140 |
+| C.6.4 五项（handlers_dirs / service_go_files / bootstrap_app_lines / ent_schema_files / frontend_pages） | 69 / 354 / 2167 / 136 / 173 | 不变 |
+
+`handler-service-imports-baseline.txt` 按 `collect_import_counts` 的 `measure` 口径精确删除 10 行（31→21 条），另两份基线零改动。`go build ./...` EXIT=0、12 个相关包完整测试全绿、全仓 305 个测试包分批串行编译全绿（一次性 `-run '^$'` 被沙箱 SIGTERM(137)，环境内存限制）、8 道文档门禁 `8 total, 0 failed`。
+
+**剩余待办**：六组中大型域（批次 2 主体）、批次 3（BPMN 36 文件）、批次 4（ticket 20 文件）、收口批（`tenant_aware_repository` / `operations` 别名形态 / 共享基础设施迁 `internal/`）、**L.6 符号级共享层依赖白名单守卫**（本批的集中式守卫是它的雏形，但尚未按 `service.<Symbol>` 逐域记账并棘轮）、`ROADMAP` v1.6.x 登记仍待团队评审；`workflow` 真实租户跨域联调人工签字栏留空。

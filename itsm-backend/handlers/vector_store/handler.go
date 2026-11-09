@@ -11,7 +11,6 @@ import (
 	"itsm-backend/common"
 	connectorVector "itsm-backend/connector/vector"
 	"itsm-backend/middleware"
-	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -19,12 +18,12 @@ import (
 
 // Handler 向量存储HTTP处理器
 type Handler struct {
-	store  *service.VectorStore
+	store  VectorStore
 	logger *zap.SugaredLogger
 }
 
 // NewHandler creates a new vector store handler
-func NewHandler(store *service.VectorStore, logger *zap.SugaredLogger) *Handler {
+func NewHandler(store VectorStore, logger *zap.SugaredLogger) *Handler {
 	return &Handler{store: store, logger: logger}
 }
 

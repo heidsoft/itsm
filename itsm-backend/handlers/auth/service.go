@@ -16,7 +16,6 @@ import (
 	"itsm-backend/ent/user"
 	"itsm-backend/middleware"
 	"itsm-backend/pkg/tenantmode"
-	"itsm-backend/service"
 
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
@@ -26,7 +25,7 @@ type Service struct {
 	client       *ent.Client
 	jwtSecret    string
 	logger       *zap.SugaredLogger
-	emailService *service.EmailService
+	emailService EmailService
 	baseURL      string
 }
 
@@ -34,8 +33,8 @@ func NewService(client *ent.Client, jwtSecret string, logger *zap.SugaredLogger)
 	return &Service{client: client, jwtSecret: jwtSecret, logger: logger, baseURL: "http://localhost:3000"}
 }
 
-func (s *Service) SetEmailService(emailService *service.EmailService) { s.emailService = emailService }
-func (s *Service) SetBaseURL(baseURL string)                          { s.baseURL = baseURL }
+func (s *Service) SetEmailService(emailService EmailService) { s.emailService = emailService }
+func (s *Service) SetBaseURL(baseURL string)                 { s.baseURL = baseURL }
 
 func (s *Service) permissions(userEntity *ent.User) []string {
 	return userPermissions(userEntity)

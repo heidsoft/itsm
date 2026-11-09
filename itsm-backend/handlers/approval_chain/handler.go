@@ -7,7 +7,6 @@ import (
 
 	"itsm-backend/common"
 	"itsm-backend/dto"
-	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -15,12 +14,12 @@ import (
 
 // Handler 审批链 HTTP handler
 type Handler struct {
-	chainService *service.ApprovalChainService
+	chainService ApprovalChainService
 	logger       *zap.SugaredLogger
 }
 
 // NewHandler 创建审批链 handler 实例
-func NewHandler(chainService *service.ApprovalChainService, logger *zap.SugaredLogger) *Handler {
+func NewHandler(chainService ApprovalChainService, logger *zap.SugaredLogger) *Handler {
 	return &Handler{
 		chainService: chainService,
 		logger:       logger,

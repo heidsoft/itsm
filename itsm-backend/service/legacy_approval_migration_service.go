@@ -23,13 +23,9 @@ func NewLegacyApprovalMigrationService(client *ent.Client) *LegacyApprovalMigrat
 	return &LegacyApprovalMigrationService{client: client, deployment: NewBPMNDeploymentService(client), binding: NewProcessBindingService(client)}
 }
 
-type LegacyApprovalMigrationResult struct {
-	WorkflowID           int    `json:"workflowId"`
-	ProcessDefinitionKey string `json:"processDefinitionKey"`
-	BPMNXML              string `json:"bpmnXml,omitempty"`
-	Skipped              bool   `json:"skipped"`
-	BindingReplaced      bool   `json:"bindingReplaced"`
-}
+// LegacyApprovalMigrationResult 的定义已下沉到 dto 包；此处保留别名以维持
+// 既有 service 包引用与公开 API，类型身份与 dto 版本完全等价。
+type LegacyApprovalMigrationResult = dto.LegacyApprovalMigrationResult
 
 func (s *LegacyApprovalMigrationService) Migrate(ctx context.Context, workflow *ent.ApprovalWorkflow, dryRun bool) (*LegacyApprovalMigrationResult, error) {
 	key := fmt.Sprintf("legacy_approval_%d", workflow.ID)

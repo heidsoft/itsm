@@ -3,19 +3,17 @@
 package problem_investigation
 
 import (
-	"itsm-backend/service"
-
 	"go.uber.org/zap"
 )
 
 // Handler 问题调查 HTTP handler
 type Handler struct {
 	logger     *zap.SugaredLogger
-	invService *service.ProblemInvestigationService
+	invService ProblemInvestigationService
 }
 
 // NewHandler 创建问题调查 handler 实例
-func NewHandler(logger *zap.SugaredLogger, invService *service.ProblemInvestigationService) *Handler {
+func NewHandler(logger *zap.SugaredLogger, invService ProblemInvestigationService) *Handler {
 	return &Handler{
 		logger:     logger,
 		invService: invService,

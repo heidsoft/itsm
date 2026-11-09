@@ -10,18 +10,17 @@ import (
 
 	"itsm-backend/common"
 	"itsm-backend/dto"
-	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
 )
 
 // Handler 自助账号操作 handler。
 type Handler struct {
-	userService *service.UserService
+	userService UserService
 }
 
 // NewHandler 创建自助账号 handler。
-func NewHandler(userService *service.UserService) *Handler {
+func NewHandler(userService UserService) *Handler {
 	return &Handler{userService: userService}
 }
 

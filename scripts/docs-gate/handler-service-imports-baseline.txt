@@ -1,15 +1,11 @@
 # Gate C.8 / L.3 — handlers/<domain>/ 生产文件 import service/ 计数棘轮
 # 格式 domain=count。只允许下降；新域出现计数一律 FAIL。
 # 收紧方式同上；逐域清零进度见 plans/service-layer-migration-plan.md。
+# 2026-11-09 批次 2 补批二：10 个单符号域经域内窄契约归零，实测 50 文件/31 域 -> 40 文件/21 域；L.1 140 与 C.6.4 五项不变。
 a2ui=1
-account=1
 ai=4
 analytics=1
-approval=1
-approval_chain=1
 assignment_smart=1
-auth=1
-automation_rule=1
 bpmn=8
 change=1
 cmdb=7
@@ -20,15 +16,10 @@ incident=1
 operations=1
 prediction=1
 problem=1
-problem_investigation=1
 provisioning=1
 release=1
 service_request=1
 skill=2
 ticket=1
-ticket_notification=1
 ticket_tag=1
-ticket_type=1
-ticket_workflow=1
 timer=2
-vector_store=1
