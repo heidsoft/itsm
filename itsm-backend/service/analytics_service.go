@@ -61,7 +61,7 @@ func validateReportWindow(start, end time.Time) error {
 // 现在与 /tickets 列表、/tickets/export 共用 repository/ticket.DataScopePredicates
 // 与 DeletedAtIsNil，viewer 由认证上下文构造，缺失身份按空集收窄。
 func (s *AnalyticsService) GetDeepAnalytics(ctx context.Context, req *dto.DeepAnalyticsRequest, tenantID int, viewer DashboardViewer) (*dto.DeepAnalyticsResponse, error) {
-	s.logger.Infow("Getting deep analytics", "tenant_id", tenantID, "dimensions", req.Dimensions, "scope", viewer.scopeKey())
+	s.logger.Infow("Getting deep analytics", "tenant_id", tenantID, "dimensions", req.Dimensions, "scope", scopeKey(viewer))
 
 	// 解析时间范围
 	//
@@ -93,7 +93,7 @@ func (s *AnalyticsService) GetDeepAnalytics(ctx context.Context, req *dto.DeepAn
 			ticket.CreatedAtGTE(startTime),
 			ticket.CreatedAtLT(endTime),
 		).
-		Where(ticketrepo.DataScopePredicates(viewer.ticketScope(), viewer.UserID)...)
+		Where(ticketrepo.DataScopePredicates(ticketScope(viewer), viewer.UserID)...)
 
 	// 应用过滤器
 	if req.Filters != nil {
@@ -141,7 +141,7 @@ func (s *AnalyticsService) GetDeepAnalytics(ctx context.Context, req *dto.DeepAn
 		GeneratedAt: time.Now(),
 		// 显式标注口径：tenant=全租户，own=本人创建或受理。
 		// 前端「本人口径」与「全租户口径」的数字必须能区分。
-		Scope: viewer.scopeKey(),
+		Scope: scopeKey(viewer),
 	}
 
 	return response, nil

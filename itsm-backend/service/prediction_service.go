@@ -69,7 +69,7 @@ func (s *PredictionService) GetTrendPrediction(ctx context.Context, req *dto.Tre
 			ticket.CreatedAtGTE(historyStart),
 			ticket.CreatedAtLTE(endTime),
 		).
-		Where(ticketrepo.DataScopePredicates(viewer.ticketScope(), viewer.UserID)...).
+		Where(ticketrepo.DataScopePredicates(ticketScope(viewer), viewer.UserID)...).
 		Order(ent.Asc(ticket.FieldID)).
 		Limit(maxReportTickets + 1).
 		All(ctx)
@@ -107,7 +107,7 @@ func (s *PredictionService) GetTrendPrediction(ctx context.Context, req *dto.Tre
 		Confidence:  0.85, // 模拟置信度
 		Model:       model,
 		GeneratedAt: time.Now(),
-		Scope:       viewer.scopeKey(),
+		Scope:       scopeKey(viewer),
 	}
 
 	return response, nil

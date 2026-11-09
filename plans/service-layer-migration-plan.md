@@ -541,3 +541,38 @@ ticket 有 20 个 service 文件分散在 10 个子域。策略：
 `handler-service-imports-baseline.txt` 按 `collect_import_counts` 的 `measure` 口径精确删除 10 行（31→21 条），另两份基线零改动。`go build ./...` EXIT=0、12 个相关包完整测试全绿、全仓 305 个测试包分批串行编译全绿（一次性 `-run '^$'` 被沙箱 SIGTERM(137)，环境内存限制）、8 道文档门禁 `8 total, 0 failed`。
 
 **剩余待办**：六组中大型域（批次 2 主体）、批次 3（BPMN 36 文件）、批次 4（ticket 20 文件）、收口批（`tenant_aware_repository` / `operations` 别名形态 / 共享基础设施迁 `internal/`）、**L.6 符号级共享层依赖白名单守卫**（本批的集中式守卫是它的雏形，但尚未按 `service.<Symbol>` 逐域记账并棘轮）、`ROADMAP` v1.6.x 登记仍待团队评审；`workflow` 真实租户跨域联调人工签字栏留空。
+
+---
+
+## 批次 2 补批三：双符号域归零 + 共享层值类型下沉（2026-11-09）
+
+**口径**：继续按符号级盘点推进 `distinct_syms == 2` 的域，落地 `analytics` / `escalation_matrix` / `prediction` / `release` 四个。**不代表批次 2 完成**，六组中大型域仍未动。
+
+### 为什么这批比单符号域难
+
+单符号域只需「字段类型换接口 + 删 import」。双符号域的第二个符号往往是**方法签名里的共享层值类型或 sentinel error**，契约要写完整签名就必须引用它，于是「删掉 handler.go 的 import」只是把依赖平移到 `contracts.go`，L.3 计数不降反升。
+
+| 域 | 第二符号 | 下沉形态 | 连带处理 |
+|:---|:---|:---|:---|
+| `analytics` / `prediction` | `DashboardViewer`（导出方法参数） | `dto/dashboard_viewer.go` 纯 struct + service 侧 `type X = dto.X` | 3 个**未导出**方法 `ticketScope/sqlViewerID/scopeKey` 无法挂在别名类型上，改 service 侧自由函数，全包 12 处调用等价改写 |
+| `escalation_matrix` | `EscalationMatrix` + `EscalationLevel`（返回值 / JSON 绑定目标） | `dto/escalation_matrix.go` 连同**导出** `String()` 方法整体搬走 + 别名 | `service/escalation_matrix_test.go` 的 `m.String()` 保持可用；`service` 侧删 `fmt` import |
+| `release` | `ErrInvalidReleaseTransition`（`errors.Is` 判定） | `dto/release_dto.go` 定义 sentinel + service 侧 `var E = dto.E` | 变量别名指向同一 error 实例，`errors.Is` 包装链仍命中；`service` 侧删 `errors` import |
+
+**判据**：Go 是名义类型，`dto.X` 与「另起一份 `service.X` struct」不是同一类型，接口方法签名会立刻不匹配。所以别名（`=`）而不是新定义是本模板的硬要求；反过来它也意味着「把别名偷偷改回 struct」会被编译期断言抓住，L.3 计数门禁却看不出来。
+
+### 回归锁升级
+
+`internal/layering/domain_contracts_test.go` 扩展到 14 域（+4 条编译期断言 +4 组源码守卫），新增 `TestSharedValueTypesRemainDTOAliases`：`reflect.TypeOf` 比对三组类型身份、包装后的 `errors.Is` 判定、`String()` 行为、service 侧别名声明的源码守卫。反向验证四处均变红，其中**收紧基线后**的门禁层验证尤其重要：收紧前让某域重新 import 共享层，C.8 仍报 PASS（`got < want` 静默放行），精确下调到 36 文件 / 17 域后才报「新域 FAIL」。这再次说明「每次真下降必须同步收紧基线，否则守卫等于没装」。
+
+### 读数与账本
+
+| 指标 | 本批前 | 本批后 |
+|:---|---:|---:|
+| L.3 handlers import service 文件 / 域 | 40 / 21 | **36 / 17** |
+| L.4 零共享层依赖域（共 69） | 46 | **50** |
+| L.1 service/ 顶层生产文件 | 140 | 140 |
+| C.6.4 五项 | 69 / 354 / 2167 / 136 / 173 | 不变 |
+
+`handler-service-imports-baseline.txt` 精确删除 4 行（21→17 条），另两份基线零改动。`go build ./...` EXIT=0、8 个相关包完整测试全绿、全仓 305 个测试包分批串行编译全绿、8 道文档门禁 `8 total, 0 failed`。
+
+**下一步**：剩余 17 域里 `bpmn=8` / `cmdb=7` / `ai=4` 占 19 个文件（53%），且多为「共享基础设施 + 具体类型混用」，整文件搬移会产生 `service → handlers` 反向依赖；建议开批次 3 前先出 BPMN 拆分设计（引擎 / 执行器 / 解析器 / 任务变量四组边界），而不是继续按文件清单搬。

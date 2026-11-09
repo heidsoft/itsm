@@ -7,7 +7,6 @@ import (
 	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/middleware"
-	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -16,11 +15,11 @@ import (
 // ReleaseHandler HTTP handlers for release domain
 type ReleaseHandler struct {
 	logger         *zap.SugaredLogger
-	releaseService *service.ReleaseService
+	releaseService ReleaseService
 }
 
 // NewHandler creates a new release handler
-func NewHandler(logger *zap.SugaredLogger, releaseService *service.ReleaseService) *ReleaseHandler {
+func NewHandler(logger *zap.SugaredLogger, releaseService ReleaseService) *ReleaseHandler {
 	return &ReleaseHandler{
 		logger:         logger,
 		releaseService: releaseService,
@@ -175,7 +174,7 @@ func (h *ReleaseHandler) UpdateReleaseStatus(c *gin.Context) {
 		// 状态机白名单拒绝属于与服务器状态相关的业务冲突：按全局错误语义规范
 		// 映射 409(4090)，不能伪装成 400 参数错误（触发客户端"修正输入"重试），
 		// 更不能掉进 500 兜底（客户端会误判为服务端故障而盲目重试）。
-		if errors.Is(err, service.ErrInvalidReleaseTransition) {
+		if errors.Is(err, dto.ErrInvalidReleaseTransition) {
 			h.logger.Warnw("Release status transition rejected", "error", err, "release_id", releaseID)
 			common.Conflict(c, "当前发布状态不允许此操作", gin.H{"detail": err.Error()})
 			return
@@ -282,7 +281,7 @@ func (h *ReleaseHandler) updateReleaseActionStatus(c *gin.Context, status, reaso
 	if err != nil {
 		// 与 UpdateReleaseStatus 端点保持同一语义：状态机白名单拒绝是 409 业务冲突，
 		// 不能让 rollback/cancel/complete 等动作端点掉进 500 兜底。
-		if errors.Is(err, service.ErrInvalidReleaseTransition) {
+		if errors.Is(err, dto.ErrInvalidReleaseTransition) {
 			h.logger.Warnw("Release action rejected by state machine", "error", err, "release_id", releaseID, "status", status)
 			common.Conflict(c, "当前发布状态不允许此操作", gin.H{"detail": err.Error()})
 			return

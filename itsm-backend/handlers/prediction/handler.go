@@ -12,7 +12,6 @@ import (
 	"itsm-backend/common"
 	"itsm-backend/common/handlerctx"
 	"itsm-backend/dto"
-	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -20,12 +19,12 @@ import (
 
 // Handler 持有 PredictionService 依赖.
 type Handler struct {
-	predictionService *service.PredictionService
+	predictionService PredictionService
 	logger            *zap.SugaredLogger
 }
 
 // NewHandler 构造 prediction Handler.
-func NewHandler(predictionService *service.PredictionService, logger *zap.SugaredLogger) *Handler {
+func NewHandler(predictionService PredictionService, logger *zap.SugaredLogger) *Handler {
 	if logger == nil {
 		logger = zap.NewNop().Sugar()
 	}
@@ -57,7 +56,7 @@ func (h *Handler) ExportPredictionReport(ctx *gin.Context) {
 
 	// R1：预测导出与列表/工作台同一行级口径；viewer 只取认证上下文。
 	userID, role := handlerctx.ReportViewer(ctx)
-	viewer := service.DashboardViewer{UserID: userID, Role: role}
+	viewer := dto.DashboardViewer{UserID: userID, Role: role}
 
 	data, filename, err := h.predictionService.ExportPredictionReport(ctx.Request.Context(), &req, format, tenantID.(int), viewer)
 	if err != nil {

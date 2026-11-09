@@ -1,11 +1,12 @@
 // Package escalation_matrix 是升级矩阵域的 HTTP handler 层（域切片架构）。
-// 业务逻辑仍由 service.EscalationMatrixService 承载，本包只做参数解析与响应封装。
+// 业务逻辑仍由共享层的升级矩阵服务承载，本包只做参数解析与响应封装；
+// 依赖通过本域 EscalationMatrixService 窄契约注入。
 package escalation_matrix
 
 import (
 	"itsm-backend/common"
+	"itsm-backend/dto"
 	"itsm-backend/middleware"
-	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -14,11 +15,11 @@ import (
 // Handler 升级矩阵 HTTP handler
 type Handler struct {
 	logger                  *zap.SugaredLogger
-	escalationMatrixService *service.EscalationMatrixService
+	escalationMatrixService EscalationMatrixService
 }
 
 // NewHandler 创建升级矩阵 handler 实例
-func NewHandler(logger *zap.SugaredLogger, escalationMatrixService *service.EscalationMatrixService) *Handler {
+func NewHandler(logger *zap.SugaredLogger, escalationMatrixService EscalationMatrixService) *Handler {
 	return &Handler{
 		logger:                  logger,
 		escalationMatrixService: escalationMatrixService,
@@ -56,7 +57,7 @@ func (h *Handler) SetMatrix(ctx *gin.Context) {
 	if !ok {
 		return
 	}
-	var matrix service.EscalationMatrix
+	var matrix dto.EscalationMatrix
 	if err := ctx.ShouldBindJSON(&matrix); err != nil {
 		common.ParamErrorWithErr(ctx, err, "请求参数错误")
 		return

@@ -1,6 +1,16 @@
 package dto
 
-import "time"
+import (
+	"errors"
+	"time"
+)
+
+// ErrInvalidReleaseTransition 表示发布状态机白名单拒绝了本次状态流转。
+// 属于调用方输入错误（应映射为 400），而非服务端内部错误（500）。
+//
+// sentinel 下沉到 dto，使 handlers/release 的窄契约与错误判定无需引用共享层；
+// service 侧以变量别名暴露同一个 error 实例，errors.Is 判定不受影响。
+var ErrInvalidReleaseTransition = errors.New("非法的发布状态转换")
 
 // ReleaseStatus 发布状态
 type ReleaseStatus string

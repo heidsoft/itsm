@@ -7,18 +7,17 @@ import (
 	"itsm-backend/common"
 	"itsm-backend/common/handlerctx"
 	"itsm-backend/dto"
-	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
 )
 
 // Handler handles HTTP requests for analytics
 type Handler struct {
-	analyticsService *service.AnalyticsService
+	analyticsService AnalyticsService
 }
 
 // NewHandler creates a new analytics handler
-func NewHandler(analyticsService *service.AnalyticsService) *Handler {
+func NewHandler(analyticsService AnalyticsService) *Handler {
 	return &Handler{analyticsService: analyticsService}
 }
 
@@ -58,7 +57,7 @@ func (h *Handler) ExportAnalytics(ctx *gin.Context) {
 
 	// R1：导出必须与列表/工作台同一行级口径；viewer 只取认证上下文。
 	userID, role := handlerctx.ReportViewer(ctx)
-	viewer := service.DashboardViewer{UserID: userID, Role: role}
+	viewer := dto.DashboardViewer{UserID: userID, Role: role}
 
 	exportCtx, cancel := context.WithTimeout(ctx.Request.Context(), 60*time.Second)
 	defer cancel()

@@ -598,16 +598,11 @@ type DashboardOverviewData struct {
 	PeakHours                []PeakHourData                 `json:"peakHours,omitempty"`
 }
 
-// DashboardViewer 工作台读取者身份。KPI 里的工单类指标按读取者的行级范围统计，
-// 与 /tickets 列表同一规则（datascope.ForTicketReader）；ScopeAll 用于后台任务等
-// 没有请求者上下文的调用，显式声明全租户口径而不是靠空角色推断。
-type DashboardViewer struct {
-	UserID   int
-	Role     string
-	ScopeAll bool
-}
+// DashboardViewer 值类型已下沉到 dto 包，此处保留别名以保持 service 包公开 API
+// 与所有现行调用点的类型身份不变。依赖 datascope 的三个口径函数留在本包（未导出）。
+type DashboardViewer = dto.DashboardViewer
 
-func (v DashboardViewer) ticketScope() datascope.DataScope {
+func ticketScope(v DashboardViewer) datascope.DataScope {
 	if v.ScopeAll {
 		return datascope.DataScopeAll
 	}
@@ -615,16 +610,16 @@ func (v DashboardViewer) ticketScope() datascope.DataScope {
 }
 
 // sqlViewerID 返回 raw SQL 的行级范围参数：全租户口径传 0，SQL 内 $4 = 0 即不过滤。
-func (v DashboardViewer) sqlViewerID() int {
-	if v.ticketScope() == datascope.DataScopeAll {
+func sqlViewerID(v DashboardViewer) int {
+	if ticketScope(v) == datascope.DataScopeAll {
 		return 0
 	}
 	return v.UserID
 }
 
 // scopeKey 是给前端用于标注口径的稳定枚举，不放中文。
-func (v DashboardViewer) scopeKey() string {
-	if v.ticketScope() == datascope.DataScopeAll {
+func scopeKey(v DashboardViewer) string {
+	if ticketScope(v) == datascope.DataScopeAll {
 		return "tenant"
 	}
 	return "own"
@@ -735,7 +730,7 @@ type PeakHourData struct {
 //
 // viewer 决定工单类 KPI 的行级范围；图表区（趋势/团队负载/事件分布）本期仍是租户级口径。
 func (s *DashboardService) GetDashboardOverview(ctx context.Context, tenantID int, viewer DashboardViewer) (*DashboardOverviewData, error) {
-	s.logger.Infow("Getting dashboard overview", "tenant_id", tenantID, "viewer_id", viewer.UserID, "viewer_role", viewer.Role, "scope", viewer.scopeKey())
+	s.logger.Infow("Getting dashboard overview", "tenant_id", tenantID, "viewer_id", viewer.UserID, "viewer_role", viewer.Role, "scope", scopeKey(viewer))
 
 	// 获取KPI指标
 	kpiMetrics, err := s.getKPIMetrics(ctx, tenantID, viewer)
@@ -851,7 +846,7 @@ func (s *DashboardService) getKPIMetricsAt(
 ) ([]KPIMetricData, error) {
 	lastMonthStart, lastMonthEnd, thisMonthStart := kpiMonthWindows(now)
 
-	scope := viewer.ticketScope()
+	scope := ticketScope(viewer)
 
 	// scopedTickets 是本页所有工单计数的统一入口：租户 + 软删 + 读取者行级范围。
 	scopedTickets := func() *ent.TicketQuery {
@@ -908,7 +903,7 @@ func (s *DashboardService) getKPIMetricsAt(
 		tenantID,
 		thisMonthStart,
 		lastMonthStart,
-		viewer.sqlViewerID(),
+		sqlViewerID(viewer),
 	)
 	if err != nil {
 		return nil, err
@@ -930,7 +925,7 @@ func (s *DashboardService) getKPIMetricsAt(
 		tenantID,
 		lastMonthStart,
 		thisMonthStart,
-		viewer.sqlViewerID(),
+		sqlViewerID(viewer),
 	)
 	if err != nil {
 		s.logger.Warnw("failed to read previous-period SLA scope", "error", err)
@@ -1016,7 +1011,7 @@ func (s *DashboardService) getKPIMetricsAt(
 			ChangeType:  changeType,
 			Description: description,
 			Comparable:  comparable,
-			Scope:       viewer.scopeKey(),
+			Scope:       scopeKey(viewer),
 		}
 	}
 

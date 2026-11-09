@@ -88,7 +88,7 @@ func (s *SLAForecastSkill) Execute(ctx context.Context, input *ForecastInput) (*
 			ticket.CreatedAtGTE(historyStart),
 			ticket.CreatedAtLTE(input.EndDate),
 		).
-		Where(ticketrepo.DataScopePredicates(input.Viewer.ticketScope(), input.Viewer.UserID)...).
+		Where(ticketrepo.DataScopePredicates(ticketScope(input.Viewer), input.Viewer.UserID)...).
 		Order(ent.Asc(ticket.FieldID)).
 		Limit(maxReportTickets + 1).
 		All(ctx)

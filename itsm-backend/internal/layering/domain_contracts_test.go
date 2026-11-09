@@ -1,17 +1,25 @@
 package layering
 
 import (
+	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 
+	"itsm-backend/dto"
 	"itsm-backend/handlers/account"
+	"itsm-backend/handlers/analytics"
 	"itsm-backend/handlers/approval"
 	"itsm-backend/handlers/approval_chain"
 	"itsm-backend/handlers/auth"
 	"itsm-backend/handlers/automation_rule"
+	"itsm-backend/handlers/escalation_matrix"
+	"itsm-backend/handlers/prediction"
 	"itsm-backend/handlers/problem_investigation"
+	"itsm-backend/handlers/release"
 	"itsm-backend/handlers/ticket_notification"
 	"itsm-backend/handlers/ticket_type"
 	"itsm-backend/handlers/ticket_workflow"
@@ -23,11 +31,15 @@ import (
 // 的真实调用面决定，任何签名漂移都会在编译期暴露，而不是拖到运行时。
 var (
 	_ account.UserService                               = (*service.UserService)(nil)
+	_ analytics.AnalyticsService                        = (*service.AnalyticsService)(nil)
 	_ approval.ApprovalService                          = (*service.ApprovalService)(nil)
 	_ approval_chain.ApprovalChainService               = (*service.ApprovalChainService)(nil)
 	_ auth.EmailService                                 = (*service.EmailService)(nil)
 	_ automation_rule.AutomationRuleService             = (*service.TicketAutomationRuleService)(nil)
+	_ escalation_matrix.EscalationMatrixService         = (*service.EscalationMatrixService)(nil)
+	_ prediction.PredictionService                      = (*service.PredictionService)(nil)
 	_ problem_investigation.ProblemInvestigationService = (*service.ProblemInvestigationService)(nil)
+	_ release.ReleaseService                            = (*service.ReleaseService)(nil)
 	_ ticket_notification.TicketNotificationService     = (*service.TicketNotificationService)(nil)
 	_ ticket_type.TicketTypeService                     = (*service.TicketTypeService)(nil)
 	_ ticket_workflow.TicketWorkflowService             = (*service.TicketWorkflowService)(nil)
@@ -43,7 +55,11 @@ type domainSpec struct {
 
 var contractDomains = []domainSpec{
 	{"account", "handler.go", "UserService", "UserService"},
+	{"analytics", "handler.go", "AnalyticsService", "AnalyticsService"},
 	{"approval", "handler.go", "ApprovalService", "ApprovalService"},
+	{"escalation_matrix", "handler.go", "EscalationMatrixService", "EscalationMatrixService"},
+	{"prediction", "handler.go", "PredictionService", "PredictionService"},
+	{"release", "handler.go", "ReleaseService", "ReleaseService"},
 	{"approval_chain", "handler.go", "ApprovalChainService", "ApprovalChainService"},
 	{"auth", "service.go", "EmailService", "EmailService"},
 	{"automation_rule", "handler.go", "AutomationRuleService", "TicketAutomationRuleService"},
@@ -134,5 +150,55 @@ func TestDomainContractsKeepSharedLayerOut(t *testing.T) {
 				t.Errorf("handlers/%s/%s 回退到共享层具体类型（旧实现）", d.name, d.file)
 			}
 		})
+	}
+}
+
+// TestSharedValueTypesRemainDTOAliases 锁住「共享层值类型下沉到 dto，service 侧类型别名」：
+// 若有人把定义搬回 service 包另起一份 struct，域内窄契约的签名会立刻不兼容，
+// 而 L.3 计数门禁看不出来（域内仍不引用共享层）。
+func TestSharedValueTypesRemainDTOAliases(t *testing.T) {
+	pairs := []struct {
+		name   string
+		shared reflect.Type
+		bottom reflect.Type
+	}{
+		{"DashboardViewer", reflect.TypeOf(service.DashboardViewer{}), reflect.TypeOf(dto.DashboardViewer{})},
+		{"EscalationMatrix", reflect.TypeOf(service.EscalationMatrix{}), reflect.TypeOf(dto.EscalationMatrix{})},
+		{"EscalationLevel", reflect.TypeOf(service.EscalationLevel{}), reflect.TypeOf(dto.EscalationLevel{})},
+	}
+	for _, p := range pairs {
+		if p.shared != p.bottom {
+			t.Errorf("service.%s 必须是 dto.%s 的类型别名，否则域内契约签名不再匹配", p.name, p.name)
+		}
+	}
+
+	// sentinel 必须是同一个 error 实例，否则 handler 侧 errors.Is 会静默失效。
+	if !errors.Is(fmt.Errorf("wrapped: %w", service.ErrInvalidReleaseTransition), dto.ErrInvalidReleaseTransition) {
+		t.Error("service.ErrInvalidReleaseTransition 必须与 dto 的 sentinel 指向同一实例")
+	}
+
+	// 导出的 String 方法必须随类型一起下沉（service/escalation_matrix_test.go 仍调用 m.String）。
+	matrix := dto.EscalationMatrix{"critical": {{Level: 1, AfterMinutes: 15, NotifyRoles: []string{"manager"}}}}
+	if got := matrix.String("critical"); !strings.Contains(got, "L1(15min") {
+		t.Errorf("EscalationMatrix.String 行为漂移：%q", got)
+	}
+
+	// 源码守卫：service 侧必须保留别名声明，不能重新定义值类型。
+	aliases := []struct{ file, decl string }{
+		{"dashboard_service.go", "type DashboardViewer = dto.DashboardViewer"},
+		{"escalation_matrix.go", "type EscalationMatrix = dto.EscalationMatrix"},
+		{"release_service.go", "var ErrInvalidReleaseTransition = dto.ErrInvalidReleaseTransition"},
+	}
+	for _, a := range aliases {
+		body, err := os.ReadFile(filepath.Join("..", "..", "service", a.file))
+		if err != nil {
+			t.Fatalf("读取 service/%s 失败：%v", a.file, err)
+		}
+		if len(body) < 100 {
+			t.Fatalf("扫描器零命中保护：service/%s 内容异常短（%d 字节）", a.file, len(body))
+		}
+		if !strings.Contains(stripLineComments(string(body)), a.decl) {
+			t.Errorf("service/%s 丢失别名声明 %q", a.file, a.decl)
+		}
 	}
 }

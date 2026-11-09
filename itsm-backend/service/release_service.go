@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"math/rand"
 	"time"
@@ -448,7 +447,8 @@ func (s *ReleaseService) UpdateRelease(ctx context.Context, id, tenantID int, re
 
 // ErrInvalidReleaseTransition 表示发布状态机白名单拒绝了本次状态流转。
 // 属于调用方输入错误（应映射为 400），而非服务端内部错误（500）。
-var ErrInvalidReleaseTransition = errors.New("非法的发布状态转换")
+// 定义下沉到 dto，此处保留变量别名：errors.Is 仍命中同一个 error 实例。
+var ErrInvalidReleaseTransition = dto.ErrInvalidReleaseTransition
 
 // UpdateReleaseStatus 更新发布状态，流转必须过 isValidReleaseStatusTransition 白名单，
 // 否则持 release:write 的人可以绕过审批门禁：

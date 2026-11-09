@@ -148,7 +148,7 @@ func (s *ServiceQualityReportService) Build(ctx context.Context, tenantID int, v
 		MetricVersions:       serviceQualityBlockVersions,
 		GeneratedAt:          to,
 		Window:               ServiceQualityWindow{Days: days, From: from, To: to},
-		Scope:                viewer.scopeKey(),
+		Scope:                scopeKey(viewer),
 		KPI:                  overview.KPIMetrics,
 		SLA:                  overview.SLAData,
 		IncidentDistribution: overview.IncidentDistribution,
