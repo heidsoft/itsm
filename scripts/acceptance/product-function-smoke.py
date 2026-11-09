@@ -8,6 +8,10 @@
 用法:
   python3 scripts/acceptance/product-function-smoke.py
   python3 scripts/acceptance/product-function-smoke.py --base http://127.0.0.1 --json /tmp/r.json --md /tmp/r.md
+  # 迁移后独立 HEAD 实例：API 走新二进制，前端页面仍走现有 nginx；双重版本指纹
+  python3 scripts/acceptance/product-function-smoke.py \
+      --base http://127.0.0.1:8099 --frontend-base http://127.0.0.1 \
+      --expect-head --expect-version head-a6cda5ead --migration-deep
 
 输出：每项记录 HTTP / 业务码 / 耗时 / 结论；产出 JSON + Markdown 报告。
 清理：创建的知识文章、工单在用例末尾自动删除；删除失败会在报告中留 ID。
@@ -33,6 +37,7 @@ RESULTS: list[dict[str, Any]] = []
 CLEANUP_IDS: dict[str, Any] = {}
 OPENER: urllib.request.OpenerDirector | None = None
 BASE = "http://127.0.0.1"
+FRONTEND_BASE = ""
 CSRF = ""
 
 
@@ -46,7 +51,8 @@ def env_password(env_file: Path) -> str:
 def call(method: str, path: str, body: Any = None, csrf: bool = False,
          timeout: float = 12.0) -> tuple[int, Any, float]:
     global CSRF
-    url = BASE + (path if path.startswith("http") else path)
+    # 允许传绝对 URL：前端页面探测可指向另一环境，而 API 始终走 BASE
+    url = path if path.startswith("http") else BASE + path
     headers = {"Content-Type": "application/json"}
     if csrf:
         code, data, _ = call("GET", f"{API}/csrf-token", timeout=timeout)
@@ -186,6 +192,84 @@ def version_fingerprint() -> None:
                     "message": "" if wf.get("maturity") == "pilot" else f"maturity={wf.get('maturity')}"})
 
 
+def batch2_surface() -> None:
+    """service 迁移批次 2 续批四个迁入域的定向黑盒用例（--migration-deep）。
+
+    写操作都做成零副作用：CMDB 保存视图「创建后按 ID 删除」，仪表盘配置
+    「读原值 → 原样回写 → 回读比对」，目标环境既有配置内容不变。
+    """
+    stamp = dt.datetime.now().strftime("%Y%m%d%H%M%S")
+    group = "迁移·本批四域"
+
+    def record(name: str, method: str, path: str, ok: bool, status: int,
+               code: Any, message: str = "", severity: str = "FAIL") -> None:
+        RESULTS.append({"group": group, "name": name, "method": method, "path": path,
+                        "http": status, "code": code, "elapsed_ms": 0,
+                        "result": "PASS" if ok else severity,
+                        "message": "" if ok else message})
+
+    # cmdb / saved_view_service.go：读面 + 写路径 + 清理
+    check(group, "CMDB 保存视图列表", "GET", f"{API}/cmdb/views?page=1&pageSize=1")
+    st, d, _ = call("POST", f"{API}/cmdb/views",
+                    {"name": f"QA-MIGRATION-{stamp}", "description": "batch2 blackbox probe",
+                     "filters": {"query": ""}, "isPublic": False}, csrf=True)
+    view = (d.get("data") or {}) if isinstance(d, dict) else {}
+    vid = view.get("id") or view.get("ID")
+    record("创建 CMDB 保存视图", "POST", f"{API}/cmdb/views",
+           st in (200, 201) and d.get("code") == 0 and bool(vid), st, d.get("code"),
+           str(d.get("message")))
+    if vid:
+        CLEANUP_IDS["cmdbView"] = vid
+        check(group, "读取新建保存视图", "GET", f"{API}/cmdb/views/{vid}")
+        st2, d2, _ = call("DELETE", f"{API}/cmdb/views/{vid}", csrf=True)
+        record("清理 CMDB 保存视图", "DELETE", f"{API}/cmdb/views/{vid}",
+               d2.get("code") == 0, st2, d2.get("code"), str(d2.get("message")), "WARN")
+
+    # dashboard / config_store.go：Load / Save 零变更回写
+    st, d, _ = call("GET", f"{API}/dashboard/config")
+    orig = d.get("data") if isinstance(d, dict) else None
+    check(group, "仪表盘配置读取", "GET", f"{API}/dashboard/config")
+    if isinstance(orig, dict):
+        st2, d2, _ = call("POST", f"{API}/dashboard/config", orig, csrf=True)
+        record("仪表盘配置零变更回写", "POST", f"{API}/dashboard/config",
+               st2 in (200, 201) and d2.get("code") == 0, st2, d2.get("code"),
+               str(d2.get("message")))
+        st3, d3, _ = call("GET", f"{API}/dashboard/config")
+        now = (d3.get("data") or {}) if isinstance(d3, dict) else {}
+        same = (now.get("description") == orig.get("description")
+                and len(now.get("widgets") or []) == len(orig.get("widgets") or []))
+        record("仪表盘配置回读一致", "GET", f"{API}/dashboard/config",
+               st3 == 200 and d3.get("code") == 0 and same, st3, d3.get("code"),
+               f"description/widgets 回读不一致（same={same}）")
+    else:
+        record("仪表盘配置回读一致", "GET", f"{API}/dashboard/config", False, st,
+               d.get("code"), "GET 未返回配置对象")
+
+    # rbac / menu_service_impl.go
+    check(group, "菜单管理列表", "GET", f"{API}/menus?page=1&pageSize=1")
+    check(group, "用户可见菜单", "GET", f"{API}/auth/menus")
+    # msp / allocation_service_impl.go：private 部署形态下 capability gate 会挡下，记 WARN
+    check(group, "MSP 分配历史", "GET",
+          f"{API}/msp/allocations/history?page=1&pageSize=1", severity="WARN")
+
+
+def version_assert(expected: str) -> None:
+    """硬版本指纹：/api/v1/version 的 APP_VERSION 必须由 HEAD 二进制注入。
+
+    与 version_fingerprint() 互补：后者证明「行为文案是新源码」，本项证明
+    「响应确实来自本次编译的实例」，两者都不能被镜像 CreatedAt 替代。
+    """
+    status, data, elapsed = call("GET", f"{API}/version")
+    payload = data.get("data") if isinstance(data, dict) else None
+    got = str((payload or {}).get("version") or "")
+    ok = status == 200 and data.get("code") == 0 and got == expected
+    RESULTS.append({"group": "版本指纹", "name": f"服务端实例版本 = {expected}",
+                    "method": "GET", "path": f"{API}/version", "http": status,
+                    "code": data.get("code"), "elapsed_ms": round(elapsed * 1000),
+                    "result": "PASS" if ok else "FAIL",
+                    "message": "" if ok else f"got={got!r} code={data.get('code')}"})
+
+
 def write_flows() -> None:
     stamp = dt.datetime.now().strftime("%Y%m%d%H%M%S")
     title = f"QA-MIGRATION-{stamp}"
@@ -280,7 +364,7 @@ def frontend_surface() -> None:
     for name, p in [("登录页", "/login"), ("仪表盘", "/dashboard"),
                     ("工单页", "/tickets"), ("知识库页", "/knowledge"),
                     ("能力矩阵页", "/admin/capabilities")]:
-        status, data, elapsed = call("GET", p)
+        status, data, elapsed = call("GET", FRONTEND_BASE + p)
         ok = status in (200, 302, 307)
         RESULTS.append({"group": "前端", "name": name, "method": "GET", "path": p,
                         "http": status, "code": None, "elapsed_ms": round(elapsed * 1000),
@@ -307,15 +391,22 @@ def cleanup() -> None:
 
 
 def main() -> int:
-    global BASE
+    global BASE, FRONTEND_BASE
     ap = argparse.ArgumentParser()
     ap.add_argument("--base", default="http://127.0.0.1")
+    ap.add_argument("--frontend-base", default="",
+                    help="前端页面探测的独立基址（默认与 --base 相同）")
+    ap.add_argument("--migration-deep", action="store_true",
+                    help="追加本批迁移四域定向用例（含零副作用写回读与自动清理）")
+    ap.add_argument("--expect-version", default="",
+                    help="断言 /api/v1/version 的 APP_VERSION 等于该值（HEAD 实例硬指纹）")
     ap.add_argument("--json", default=str(REPO / "output" / "product-function-test.json"))
     ap.add_argument("--md", default=str(REPO / "output" / "product-function-test.md"))
     ap.add_argument("--expect-head", action="store_true",
-                    help="启用版本行为指纹断言（仅在部署了 HEAD 源码的镜像后使用）")
+                    help="启用能力矩阵行为指纹断言（仅在跑 HEAD 源码实例时使用）")
     args = ap.parse_args()
     BASE = args.base.rstrip("/")
+    FRONTEND_BASE = (args.frontend_base or BASE).rstrip("/")
 
     login()
     check("平台", "健康检查", "GET", f"{API}/health")
@@ -325,8 +416,12 @@ def main() -> int:
     check("平台", "能力矩阵", "GET", f"{API}/capabilities")
     read_surface()
     migration_surface()
+    if args.migration_deep:
+        batch2_surface()
     if args.expect_head:
         version_fingerprint()
+    if args.expect_version:
+        version_assert(args.expect_version)
     write_flows()
     frontend_surface()
     cleanup()
@@ -335,14 +430,20 @@ def main() -> int:
     for r in RESULTS:
         summary[r["result"]] = summary.get(r["result"], 0) + 1
     payload = {"generatedAt": dt.datetime.now().isoformat(timespec="seconds"),
-               "base": BASE, "summary": summary, "cleanupIds": CLEANUP_IDS,
-               "results": RESULTS}
+               "base": BASE, "frontendBase": FRONTEND_BASE,
+               "expectedVersion": args.expect_version, "expectHead": args.expect_head,
+               "migrationDeep": args.migration_deep,
+               "summary": summary, "cleanupIds": CLEANUP_IDS, "results": RESULTS}
     Path(args.json).parent.mkdir(parents=True, exist_ok=True)
     Path(args.json).write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
 
     lines = ["# ITSM 产品功能回归报告", "",
              f"- 生成时间：{payload['generatedAt']}",
-             f"- 目标环境：`{BASE}`",
+             f"- 目标环境：`{BASE}`（API / 后端）",
+             f"- 前端探测：`{FRONTEND_BASE}`",
+             f"- 版本指纹：`{args.expect_version or '未启用'}`"
+             f" / 行为指纹：{'启用' if args.expect_head else '未启用'}"
+             f" / 迁移深测：{'启用' if args.migration_deep else '未启用'}",
              f"- 结论：PASS {summary.get('PASS', 0)} / FAIL {summary.get('FAIL', 0)} / "
              f"WARN {summary.get('WARN', 0)} / BLOCKED {summary.get('BLOCKED', 0)}", ""]
     groups: dict[str, list[dict[str, Any]]] = {}
