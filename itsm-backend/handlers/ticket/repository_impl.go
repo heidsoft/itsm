@@ -519,7 +519,7 @@ func (r *EntRepository) GetUserNamesByIDs(ctx context.Context, tenantID int, ids
 }
 
 // 注：模板 CRUD 不在本仓储实现——它们唯一所有者是 productionSvc
-// （service.TicketService 模板 CRUD），此前这里的返回伪造数据的 stub 已移除。
+// （共享层工单服务的模板 CRUD），此前这里的返回伪造数据的 stub 已移除。
 
 func ptrTicketStatus(v ticket.Status) *ticket.Status {
 	return &v

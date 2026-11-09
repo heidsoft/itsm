@@ -29,19 +29,19 @@ import (
 	"go.uber.org/zap"
 )
 
-// 事件领域哨兵错误，供 controller 通过 errors.Is 做精确错误分类，
-// 避免依赖易碎的字符串比较（err.Error() == "incident not found"）。
+// 事件领域哨兵错误。定义已下沉到 dto 包，此处保留变量别名，使 service 公开名不变，
+// 且 handler 与 service 判定的仍是同一个 error 实例（errors.Is 可命中包装链）。
 var (
-	ErrIncidentNotFound                  = errors.New("incident not found")
-	ErrIncidentTerminal                  = errors.New("terminal incident cannot be escalated")
-	ErrIncidentEscalationLevelInvalid    = errors.New("escalation level must be between 1 and 5")
-	ErrIncidentEscalationLevelNotGreater = errors.New("escalation level must be greater than current level")
-	ErrIncidentEscalationReasonRequired  = errors.New("escalation reason is required")
-	ErrEmailContractNotActive            = errors.New("support contract is not active")
-	ErrIncidentInvalidTransition         = errors.New("invalid incident status transition")
-	ErrIncidentResolutionRequired        = errors.New("incident resolution is required")
-	ErrIncidentCloseNotesRequired        = errors.New("incident close notes are required")
-	ErrIncidentVersionConflict           = errors.New("incident version conflict")
+	ErrIncidentNotFound                  = dto.ErrIncidentNotFound
+	ErrIncidentTerminal                  = dto.ErrIncidentTerminal
+	ErrIncidentEscalationLevelInvalid    = dto.ErrIncidentEscalationLevelInvalid
+	ErrIncidentEscalationLevelNotGreater = dto.ErrIncidentEscalationLevelNotGreater
+	ErrIncidentEscalationReasonRequired  = dto.ErrIncidentEscalationReasonRequired
+	ErrEmailContractNotActive            = dto.ErrEmailContractNotActive
+	ErrIncidentInvalidTransition         = dto.ErrIncidentInvalidTransition
+	ErrIncidentResolutionRequired        = dto.ErrIncidentResolutionRequired
+	ErrIncidentCloseNotesRequired        = dto.ErrIncidentCloseNotesRequired
+	ErrIncidentVersionConflict           = dto.ErrIncidentVersionConflict
 )
 
 type EmailIncidentCommand struct {

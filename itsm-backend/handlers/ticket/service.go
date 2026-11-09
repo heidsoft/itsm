@@ -11,7 +11,6 @@ import (
 	"itsm-backend/dto"
 	"itsm-backend/internal/datascope"
 	repoTicket "itsm-backend/repository/ticket"
-	"itsm-backend/service"
 
 	"go.uber.org/zap"
 )
@@ -25,13 +24,13 @@ var ErrTicketInvalidTransition = fmt.Errorf("invalid ticket status transition")
 // All operations go through the Repository interface (tenant-isolated).
 type Service struct {
 	repo          Repository
-	productionSvc *service.TicketService
-	slaMonitor    *service.SLAMonitorService
+	productionSvc TicketProductionService
+	slaMonitor    TicketSLAMonitor
 	logger        *zap.SugaredLogger
 }
 
 // NewService creates a new ticket service.
-func NewService(repo Repository, productionSvc *service.TicketService, slaMonitor *service.SLAMonitorService, logger *zap.SugaredLogger) *Service {
+func NewService(repo Repository, productionSvc TicketProductionService, slaMonitor TicketSLAMonitor, logger *zap.SugaredLogger) *Service {
 	return &Service{repo: repo, productionSvc: productionSvc, slaMonitor: slaMonitor, logger: logger}
 }
 
@@ -512,14 +511,14 @@ func (s *Service) AssignTickets(ctx context.Context, tenantID int, ticketIDs []i
 
 // ==================== 工单模板 ====================
 //
-// 模板的业务规则与持久化唯一所有者是 productionSvc（service.TicketService 的
+// 模板的业务规则与持久化唯一所有者是 productionSvc（共享层工单服务的
 // 模板 CRUD，对照 ent TicketTemplate schema）。此前这组方法委托给 Repository
 // 层的 stub——CreateTemplate 原样返回入参、GetTemplate 恒 not found，属于
 // "伪成功"：前端显示创建/编辑成功，库里实际没有记录，违反"能力未实现必须
 // 如实暴露，禁止包装成空成功"的错误语义禁令。现在统一接通真实现；
 // productionSvc 为 nil（纯单测 harness）时 fail-closed 报错，不再伪造成功。
 
-// dtoTemplateToDomain 把 service.TicketService 返回的 dto.TicketTemplate 转回
+// dtoTemplateToDomain 把共享层工单服务返回的 dto.TicketTemplate 转回
 // handler 层模板实体，供 normalizeTemplate 统一映射响应。
 func dtoTemplateToDomain(t *dto.TicketTemplate) *TicketTemplate {
 	if t == nil {
@@ -699,8 +698,8 @@ func (s *Service) DeleteSubtask(ctx context.Context, subtaskID int, tenantID int
 // 字段会随一侧演进而漏掉（slaDefinitionName / ticketNumber / 剩余时间曾因此丢失）。
 //
 // productionSvc 为 nil（单元测试或降级装配）时用 repo 构造同一契约，字段必须与
-// service.TicketSLAInfo 保持一致。
-func (s *Service) GetTicketSLAInfo(ctx context.Context, ticketID int, tenantID int) (*service.TicketSLAInfo, error) {
+// dto.TicketSLAInfo 保持一致。
+func (s *Service) GetTicketSLAInfo(ctx context.Context, ticketID int, tenantID int) (*dto.TicketSLAInfo, error) {
 	if s.productionSvc != nil {
 		return s.productionSvc.GetTicketSLAInfo(ctx, ticketID, tenantID)
 	}
@@ -709,7 +708,7 @@ func (s *Service) GetTicketSLAInfo(ctx context.Context, ticketID int, tenantID i
 	if err != nil {
 		return nil, err
 	}
-	info := &service.TicketSLAInfo{
+	info := &dto.TicketSLAInfo{
 		TicketID:     t.ID,
 		TicketNumber: t.TicketNumber,
 		Priority:     t.Priority,
@@ -754,7 +753,7 @@ func (s *Service) GetTicketSLAInfo(ctx context.Context, ticketID int, tenantID i
 
 // fillSLAComputedFields 补齐 SLA 定义名称与响应/解决的剩余分钟数与违约标记。
 // 定义名称按租户查询，避免跨租户名称泄漏；定义已删除时留空，由响应显示 "-"。
-func (s *Service) fillSLAComputedFields(ctx context.Context, tenantID int, info *service.TicketSLAInfo) {
+func (s *Service) fillSLAComputedFields(ctx context.Context, tenantID int, info *dto.TicketSLAInfo) {
 	if info.SLADefinitionID > 0 {
 		if name, err := s.repo.GetSLADefinitionName(ctx, tenantID, info.SLADefinitionID); err == nil {
 			info.SLADefinitionName = name

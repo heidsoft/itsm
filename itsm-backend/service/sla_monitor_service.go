@@ -29,15 +29,9 @@ type SLAMonitorService struct {
 	slaStore        *sla.Store
 }
 
-type SLAMetrics struct {
-	ResponseTime       float64 `json:"responseTime"`
-	ResolutionTime     float64 `json:"resolutionTime"`
-	SLACompliance      float64 `json:"slaCompliance"`
-	TotalTickets       int     `json:"totalTickets"`
-	ViolatedTickets    int     `json:"violatedTickets"`
-	AvgResponseMinutes float64 `json:"avgResponseMinutes"`
-	AvgResolutionHours float64 `json:"avgResolutionHours"`
-}
+// 定义已下沉到 dto.SLAMonitorMetrics（与 dto.SLAMetrics 仪表盘视图不是同一结构）。
+// 别名是同一类型而非新定义，CalculateSLAMetrics 的返回契约不变。
+type SLAMetrics = dto.SLAMonitorMetrics
 
 func NewSLAMonitorService(client *ent.Client, logger *zap.SugaredLogger) *SLAMonitorService {
 	return &SLAMonitorService{

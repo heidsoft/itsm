@@ -1676,22 +1676,8 @@ func (s *TicketService) UpdateTicketStatus(ctx context.Context, ticketID int, st
 	return updated, nil
 }
 
-// TicketSLAInfo 工单 SLA 信息（V2 内联定义，避免与 V1 重复）
-type TicketSLAInfo struct {
-	TicketID             int        `json:"ticketId"`
-	TicketNumber         string     `json:"ticketNumber"`
-	Priority             string     `json:"priority"`
-	SLADefinitionID      int        `json:"slaDefinitionId"`
-	SLADefinitionName    string     `json:"slaDefinitionName"`
-	ResponseDeadline     time.Time  `json:"responseDeadline"`
-	ResolutionDeadline   time.Time  `json:"resolutionDeadline"`
-	ResponseTimeLeft     int        `json:"responseTimeLeftMinutes"`
-	IsResponseBreached   bool       `json:"isResponseBreached"`
-	ResolutionTimeLeft   int        `json:"resolutionTimeLeftMinutes"`
-	IsResolutionBreached bool       `json:"isResolutionBreached"`
-	FirstResponseAt      *time.Time `json:"firstResponseAt,omitempty"`
-	ResolvedAt           *time.Time `json:"resolvedAt,omitempty"`
-}
+// 定义已下沉到 dto 包；别名是同一类型而非新定义，JSON 字段与 tag 不变。
+type TicketSLAInfo = dto.TicketSLAInfo
 
 // GetTicketSLAState 从 sla_states 表查询工单的 SLA 状态。
 func (s *TicketService) GetTicketSLAState(ctx context.Context, tenantID int, ticketID int) (*ent.SLAState, error) {

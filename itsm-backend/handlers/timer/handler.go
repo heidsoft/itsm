@@ -3,7 +3,7 @@ package timer
 import (
 	"itsm-backend/common"
 	"itsm-backend/common/handlerctx"
-	"itsm-backend/service"
+	"itsm-backend/dto"
 
 	"github.com/gin-gonic/gin"
 )
@@ -20,7 +20,7 @@ func (h *Handler) List(c *gin.Context) {
 
 	pg := common.GetPaginationFromQuery(c)
 
-	filter := service.TimerListFilter{
+	filter := dto.TimerListFilter{
 		TenantID:             tenantID,
 		Status:               c.Query("status"),
 		TimerType:            c.Query("timerType"),

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"itsm-backend/common"
+	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/predicate"
 	"itsm-backend/ent/processtimer"
@@ -83,25 +84,10 @@ type TimerStore interface {
 	Stats(ctx context.Context, tenantID int) (*TimerStats, error)
 }
 
-type TimerListFilter struct {
-	TenantID             int
-	Status               string
-	TimerType            string
-	ProcessInstanceID    *int
-	ProcessDefinitionKey string
-	Page                 int
-	PageSize             int
-}
-
-type TimerStats struct {
-	Pending   int `json:"pending"`
-	Fired     int `json:"fired"`
-	Completed int `json:"completed"`
-	Cancelled int `json:"cancelled"`
-	Failed    int `json:"failed"`
-	Paused    int `json:"paused"`
-	Total     int `json:"total"`
-}
+// 两个值类型已下沉到 dto 包；别名是同一类型而非新定义，
+// 保证 TimerStore.List/Stats 的方法签名与 handlers/timer 域内契约完全一致。
+type TimerListFilter = dto.TimerListFilter
+type TimerStats = dto.TimerStats
 
 type DBTimerStore struct {
 	client *ent.Client

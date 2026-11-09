@@ -20,14 +20,17 @@ import (
 	"itsm-backend/handlers/auth"
 	"itsm-backend/handlers/automation_rule"
 	"itsm-backend/handlers/escalation_matrix"
+	"itsm-backend/handlers/incident"
 	"itsm-backend/handlers/prediction"
 	"itsm-backend/handlers/problem_investigation"
 	"itsm-backend/handlers/provisioning"
 	"itsm-backend/handlers/release"
+	"itsm-backend/handlers/ticket"
 	"itsm-backend/handlers/ticket_notification"
 	"itsm-backend/handlers/ticket_tag"
 	"itsm-backend/handlers/ticket_type"
 	"itsm-backend/handlers/ticket_workflow"
+	"itsm-backend/handlers/timer"
 	"itsm-backend/handlers/vector_store"
 	"itsm-backend/service"
 )
@@ -54,6 +57,16 @@ var (
 	_ assignment_smart.AssignmentRuleService            = (*service.TicketAssignmentRuleService)(nil)
 	_ provisioning.ProvisioningTaskService              = (*service.ProvisioningService)(nil)
 	_ ticket_tag.TagService                             = (*service.TicketTagService)(nil)
+	_ incident.IncidentProductionService                = (*service.IncidentService)(nil)
+	_ incident.IncidentMonitoringProvider               = (*service.IncidentMonitoringService)(nil)
+	_ incident.IncidentAlertingProvider                 = (*service.IncidentAlertingService)(nil)
+	_ incident.IncidentRootCauseService                 = (*service.RootCauseAnalysisService)(nil)
+	_ incident.IncidentSLAMonitor                       = (*service.SLAMonitorService)(nil)
+	_ ticket.TicketProductionService                    = (*service.TicketService)(nil)
+	_ ticket.TicketSLAMonitor                           = (*service.SLAMonitorService)(nil)
+	// 共享层是接口而非指针类型：接口到接口赋值同样在编译期检查方法集，
+	// 这能锁住 List/Stats 的 dto 值类型身份不被换成另一份同名结构。
+	_ timer.TimerReadStore = (service.TimerStore)(nil)
 )
 
 type domainSpec struct {
@@ -61,27 +74,31 @@ type domainSpec struct {
 	file     string // 持有契约字段的生产文件
 	iface    string // 域内窄接口名
 	concrete string // 共享层具体类型名；多接口域用逗号分隔，逐个检查
+	bare     string // 共享层是接口（非指针）时，额外检查裸限定符，如 service.TimerStore
 }
 
 var contractDomains = []domainSpec{
-	{"account", "handler.go", "UserService", "UserService"},
-	{"analytics", "handler.go", "AnalyticsService", "AnalyticsService"},
-	{"approval", "handler.go", "ApprovalService", "ApprovalService"},
-	{"escalation_matrix", "handler.go", "EscalationMatrixService", "EscalationMatrixService"},
-	{"prediction", "handler.go", "PredictionService", "PredictionService"},
-	{"release", "handler.go", "ReleaseService", "ReleaseService"},
-	{"approval_chain", "handler.go", "ApprovalChainService", "ApprovalChainService"},
-	{"auth", "service.go", "EmailService", "EmailService"},
-	{"automation_rule", "handler.go", "AutomationRuleService", "TicketAutomationRuleService"},
-	{"problem_investigation", "handler.go", "ProblemInvestigationService", "ProblemInvestigationService"},
-	{"ticket_notification", "handler.go", "TicketNotificationService", "TicketNotificationService"},
-	{"ticket_type", "handler.go", "TicketTypeService", "TicketTypeService"},
-	{"ticket_workflow", "handler.go", "TicketWorkflowService", "TicketWorkflowService"},
-	{"vector_store", "handler.go", "VectorStore", "VectorStore"},
-	{"a2ui", "handler.go", "TicketFormService", "A2UITicketService"},
-	{"assignment_smart", "handler.go", "SmartAssignmentService", "TicketAssignmentSmartService,TicketAssignmentRuleService"},
-	{"provisioning", "handler.go", "ProvisioningTaskService", "ProvisioningService"},
-	{"ticket_tag", "handler.go", "TagService", "TicketTagService"},
+	{"account", "handler.go", "UserService", "UserService", ""},
+	{"analytics", "handler.go", "AnalyticsService", "AnalyticsService", ""},
+	{"approval", "handler.go", "ApprovalService", "ApprovalService", ""},
+	{"escalation_matrix", "handler.go", "EscalationMatrixService", "EscalationMatrixService", ""},
+	{"prediction", "handler.go", "PredictionService", "PredictionService", ""},
+	{"release", "handler.go", "ReleaseService", "ReleaseService", ""},
+	{"approval_chain", "handler.go", "ApprovalChainService", "ApprovalChainService", ""},
+	{"auth", "service.go", "EmailService", "EmailService", ""},
+	{"automation_rule", "handler.go", "AutomationRuleService", "TicketAutomationRuleService", ""},
+	{"problem_investigation", "handler.go", "ProblemInvestigationService", "ProblemInvestigationService", ""},
+	{"ticket_notification", "handler.go", "TicketNotificationService", "TicketNotificationService", ""},
+	{"ticket_type", "handler.go", "TicketTypeService", "TicketTypeService", ""},
+	{"ticket_workflow", "handler.go", "TicketWorkflowService", "TicketWorkflowService", ""},
+	{"vector_store", "handler.go", "VectorStore", "VectorStore", ""},
+	{"a2ui", "handler.go", "TicketFormService", "A2UITicketService", ""},
+	{"assignment_smart", "handler.go", "SmartAssignmentService", "TicketAssignmentSmartService,TicketAssignmentRuleService", ""},
+	{"provisioning", "handler.go", "ProvisioningTaskService", "ProvisioningService", ""},
+	{"ticket_tag", "handler.go", "TagService", "TicketTagService", ""},
+	{"incident", "service.go", "IncidentProductionService", "IncidentService,IncidentMonitoringService,IncidentAlertingService,RootCauseAnalysisService,SLAMonitorService", ""},
+	{"ticket", "service.go", "TicketProductionService", "TicketService,SLAMonitorService", ""},
+	{"timer", "service.go", "TimerReadStore", "TimerStore", "TimerStore"},
 }
 
 // 只剔除行注释，避免把说明文字里的示例当成代码；L.3 门禁本身是全文 grep，
@@ -140,6 +157,11 @@ func TestDomainContractsKeepSharedLayerOut(t *testing.T) {
 					if strings.Contains(bodyCode, "*service."+concrete) {
 						t.Errorf("handlers/%s/%s 字段或构造参数回退到共享层具体类型 %s", d.name, fn, concrete)
 					}
+				}
+				// 共享层是接口类型时没有 "*service.X" 形态，需单独锁裸限定符，
+				// 否则把 store 改回 service.TimerStore 仍能靠全文 import 检查之外的路径漏过。
+				if d.bare != "" && strings.Contains(bodyCode, "service."+d.bare) {
+					t.Errorf("handlers/%s/%s 字段回退到共享层接口 service.%s", d.name, fn, d.bare)
 				}
 			}
 			// 零命中不能由「目录空了 / 文件被删光」造成。
@@ -227,6 +249,16 @@ func TestSharedValueTypesRemainDTOAliases(t *testing.T) {
 		{"ErrTicketTagInUse", service.ErrTicketTagInUse, dto.ErrTicketTagInUse},
 		{"ErrTicketTagNameBlank", service.ErrTicketTagNameBlank, dto.ErrTicketTagNameBlank},
 		{"ErrTicketTagNotFound", service.ErrTicketTagNotFound, dto.ErrTicketTagNotFound},
+		{"ErrIncidentNotFound", service.ErrIncidentNotFound, dto.ErrIncidentNotFound},
+		{"ErrIncidentTerminal", service.ErrIncidentTerminal, dto.ErrIncidentTerminal},
+		{"ErrIncidentEscalationLevelInvalid", service.ErrIncidentEscalationLevelInvalid, dto.ErrIncidentEscalationLevelInvalid},
+		{"ErrIncidentEscalationLevelNotGreater", service.ErrIncidentEscalationLevelNotGreater, dto.ErrIncidentEscalationLevelNotGreater},
+		{"ErrIncidentEscalationReasonRequired", service.ErrIncidentEscalationReasonRequired, dto.ErrIncidentEscalationReasonRequired},
+		{"ErrEmailContractNotActive", service.ErrEmailContractNotActive, dto.ErrEmailContractNotActive},
+		{"ErrIncidentInvalidTransition", service.ErrIncidentInvalidTransition, dto.ErrIncidentInvalidTransition},
+		{"ErrIncidentResolutionRequired", service.ErrIncidentResolutionRequired, dto.ErrIncidentResolutionRequired},
+		{"ErrIncidentCloseNotesRequired", service.ErrIncidentCloseNotesRequired, dto.ErrIncidentCloseNotesRequired},
+		{"ErrIncidentVersionConflict", service.ErrIncidentVersionConflict, dto.ErrIncidentVersionConflict},
 	}
 	for _, s := range sentinels {
 		if !errors.Is(fmt.Errorf("wrapped: %w", s.shared), s.bottom) {
@@ -259,6 +291,12 @@ func TestSharedValueTypesRemainDTOAliases(t *testing.T) {
 		{"a2ui_ticket_service.go", "type Content = dto.Content"},
 		{"a2ui_ticket_service.go", "type A2UIDeleteSurface = dto.A2UIDeleteSurface"},
 		{"a2ui_ticket_service.go", "type DeleteSurface = dto.DeleteSurface"},
+		{"incident_service.go", "ErrIncidentNotFound = dto.ErrIncidentNotFound"},
+		{"incident_service.go", "ErrIncidentVersionConflict = dto.ErrIncidentVersionConflict"},
+		{"sla_monitor_service.go", "type SLAMetrics = dto.SLAMonitorMetrics"},
+		{"ticket_service.go", "type TicketSLAInfo = dto.TicketSLAInfo"},
+		{"timer_store.go", "type TimerListFilter = dto.TimerListFilter"},
+		{"timer_store.go", "type TimerStats = dto.TimerStats"},
 	}
 	for _, a := range aliases {
 		body, err := os.ReadFile(filepath.Join("..", "..", "service", a.file))
@@ -271,6 +309,31 @@ func TestSharedValueTypesRemainDTOAliases(t *testing.T) {
 		if !strings.Contains(squashSpace(stripLineComments(string(body))), squashSpace(a.decl)) {
 			t.Errorf("service/%s 丢失别名声明 %q", a.file, a.decl)
 		}
+	}
+}
+
+// TestRenamedDTOAliasesShareTypeIdentity 锁住「下沉后改名」的别名身份：
+// dto.SLAMetrics 已被仪表盘达成率视图占用，监控指标只能叫 SLAMonitorMetrics，
+// 但 service.SLAMetrics 必须仍指向同一个类型，否则 CalculateSLAMetrics 的返回
+// 签名会与 ticket 域窄契约不兼容（L.3 计数门禁看不出这种退化）。
+func TestRenamedDTOAliasesShareTypeIdentity(t *testing.T) {
+	cases := []struct {
+		name           string
+		shared, bottom reflect.Type
+	}{
+		{"SLAMetrics/SLAMonitorMetrics", reflect.TypeOf(service.SLAMetrics{}), reflect.TypeOf(dto.SLAMonitorMetrics{})},
+		{"TicketSLAInfo", reflect.TypeOf(service.TicketSLAInfo{}), reflect.TypeOf(dto.TicketSLAInfo{})},
+		{"TimerListFilter", reflect.TypeOf(service.TimerListFilter{}), reflect.TypeOf(dto.TimerListFilter{})},
+		{"TimerStats", reflect.TypeOf(service.TimerStats{}), reflect.TypeOf(dto.TimerStats{})},
+	}
+	for _, c := range cases {
+		if c.shared != c.bottom {
+			t.Errorf("%s：共享层类型与 dto 下沉类型必须身份一致（%v vs %v）", c.name, c.shared, c.bottom)
+		}
+	}
+	// 仪表盘视图与监控指标是两个不同结构，禁止顺手合并成一个类型。
+	if reflect.TypeOf(dto.SLAMetrics{}) == reflect.TypeOf(dto.SLAMonitorMetrics{}) {
+		t.Error("dto.SLAMetrics 与 dto.SLAMonitorMetrics 是两个不同视图，禁止合并")
 	}
 }
 
@@ -292,6 +355,11 @@ func TestDomainErrorMappingsUseDTOSentinels(t *testing.T) {
 		{"ticket_tag", "handler.go", []string{
 			"dto.ErrTicketTagNameExists", "dto.ErrTicketTagInUse",
 			"dto.ErrTicketTagNameBlank", "dto.ErrTicketTagNotFound",
+		}},
+		{"incident", "service.go", []string{
+			"dto.ErrIncidentVersionConflict", "dto.ErrIncidentInvalidTransition",
+			"dto.ErrIncidentResolutionRequired", "dto.ErrIncidentCloseNotesRequired",
+			"dto.ErrIncidentNotFound",
 		}},
 	}
 	for _, c := range cases {

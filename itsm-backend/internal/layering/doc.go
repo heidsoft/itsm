@@ -6,4 +6,7 @@
 // 且 handler 字段使用的是域内接口而非共享层具体类型。此外还锁住下沉到 dto/
 // 的值类型与 sentinel 在 service 侧保持类型别名 / 同一 error 实例，以及 handler
 // 的错误映射只读 dto.Err* —— 这两类退化都不会被 L.3 的计数棘轮发现。
+// 共享层依赖本身是接口（没有 *service.X 形态）的域由 domainSpec.bare 单独守；
+// 下沉后必须改名的类型（如 SLAMetrics → SLAMonitorMetrics）另有类型身份断言，
+// 防止与 dto 中同名但字段语义不同的结构混用。
 package layering

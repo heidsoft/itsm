@@ -4,15 +4,15 @@ import (
 	"context"
 	"time"
 
+	"itsm-backend/dto"
 	"itsm-backend/ent"
-	"itsm-backend/service"
 )
 
 type Service struct {
-	store service.TimerStore
+	store TimerReadStore
 }
 
-func NewService(store service.TimerStore) *Service {
+func NewService(store TimerReadStore) *Service {
 	return &Service{store: store}
 }
 
@@ -51,7 +51,7 @@ type TimerListResponse struct {
 	TotalPages int         `json:"totalPages"`
 }
 
-func (s *Service) List(ctx context.Context, filter service.TimerListFilter) (*TimerListResponse, error) {
+func (s *Service) List(ctx context.Context, filter dto.TimerListFilter) (*TimerListResponse, error) {
 	items, total, err := s.store.List(ctx, filter)
 	if err != nil {
 		return nil, err
@@ -90,7 +90,7 @@ func (s *Service) Get(ctx context.Context, tenantID int, timerID string) (*Timer
 	return toDTO(timer), nil
 }
 
-func (s *Service) Stats(ctx context.Context, tenantID int) (*service.TimerStats, error) {
+func (s *Service) Stats(ctx context.Context, tenantID int) (*dto.TimerStats, error) {
 	return s.store.Stats(ctx, tenantID)
 }
 

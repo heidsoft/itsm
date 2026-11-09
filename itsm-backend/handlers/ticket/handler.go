@@ -1177,7 +1177,7 @@ func (h *Handler) DeleteSubtask(c *gin.Context) {
 }
 
 // PauseSLA handles PUT /api/v1/tickets/:id/sla/pause
-// Note: SLA pause/resume require service.SLAMonitorService which is not part of
+// Note: SLA pause/resume require the shared SLA monitor which is not part of
 // the handlers/ticket Service struct. These handlers delegate to the legacy
 // controller for now.
 func (h *Handler) PauseSLA(c *gin.Context) {

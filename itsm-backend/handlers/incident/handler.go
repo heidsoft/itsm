@@ -1172,7 +1172,7 @@ func (h *IncidentHandler) Update(c *gin.Context) {
 		updates.ResolutionSteps = dto.StructSliceToMapSlice(req.ResolutionSteps)
 	}
 	// 乐观锁版本透传：Version 是可选契约（0 = 客户端未提供），是否参与冲突判定由
-	// service.Update 的 `> 0` 守卫决定，与 legacy incident/ticket service 一致。
+	// 领域层 Update 的 `> 0` 守卫决定，与 legacy incident/ticket service 一致。
 	updates.Version = req.Version
 
 	updated, err := h.service.Update(c.Request.Context(), tenantID, id, updates, c.GetInt("user_id"), c.GetString("role"))

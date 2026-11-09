@@ -55,7 +55,7 @@ type Repository interface {
 	GetSLADefinitionName(ctx context.Context, tenantID int, definitionID int) (string, error)
 
 	// 注：模板 CRUD（CreateTemplate 等）不在此接口——它们的规则与持久化
-	// 唯一所有者是 productionSvc（service.TicketService 模板 CRUD）；
+	// 唯一所有者是 productionSvc（共享层工单服务的模板 CRUD）；
 	// 历史上这里挂在接口上时由返回伪造数据的 stub 实现，属于"伪成功"，已移除。
 }
 

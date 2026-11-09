@@ -12,7 +12,6 @@ import (
 	"itsm-backend/ent"
 	"itsm-backend/internal/commandbus"
 	"itsm-backend/internal/datascope"
-	"itsm-backend/service"
 
 	"go.uber.org/zap"
 )
@@ -25,11 +24,11 @@ type ProcessTriggerServiceInterface interface {
 type Service struct {
 	repo                  Repository
 	client                *ent.Client
-	productionService     *service.IncidentService
-	monitoringService     *service.IncidentMonitoringService
-	alertingSvc           *service.IncidentAlertingService
-	rootCauseSvc          *service.RootCauseAnalysisService
-	slaMonitor            *service.SLAMonitorService
+	productionService     IncidentProductionService
+	monitoringService     IncidentMonitoringProvider
+	alertingSvc           IncidentAlertingProvider
+	rootCauseSvc          IncidentRootCauseService
+	slaMonitor            IncidentSLAMonitor
 	logger                *zap.SugaredLogger
 	processTriggerService ProcessTriggerServiceInterface
 }
@@ -64,7 +63,7 @@ type IncidentMetricsReadModel struct {
 	MetricsCount int
 }
 
-func NewService(repo Repository, client *ent.Client, productionSvc *service.IncidentService, monitoringSvc *service.IncidentMonitoringService, alertingSvc *service.IncidentAlertingService, rootCauseSvc *service.RootCauseAnalysisService, slaMonitor *service.SLAMonitorService, logger *zap.SugaredLogger) *Service {
+func NewService(repo Repository, client *ent.Client, productionSvc IncidentProductionService, monitoringSvc IncidentMonitoringProvider, alertingSvc IncidentAlertingProvider, rootCauseSvc IncidentRootCauseService, slaMonitor IncidentSLAMonitor, logger *zap.SugaredLogger) *Service {
 	if logger == nil {
 		// 兜底：审计事件写失败时要用 logger 报错，nil logger 会在错误路径上
 		// 二次 panic，把「记录失败」变成「服务崩溃」。
@@ -390,7 +389,7 @@ func (s *Service) updateIncident(ctx context.Context, tenantID int, id int, upda
 	// 该字段是指针语义的可选值，仅在客户端确实带了版本（>0）时校验；未带版本的旧
 	// 调用方仍受仓储层 VersionEQ 条件更新保护，不会退化成静默覆盖。
 	if updates.Version > 0 && updates.Version != current.Version {
-		return nil, fmt.Errorf("%w: client=%d current=%d", service.ErrIncidentVersionConflict, updates.Version, current.Version)
+		return nil, fmt.Errorf("%w: client=%d current=%d", dto.ErrIncidentVersionConflict, updates.Version, current.Version)
 	}
 
 	// Apply updates
@@ -409,7 +408,7 @@ func (s *Service) updateIncident(ctx context.Context, tenantID int, id int, upda
 		// 旧逻辑允许终态（closed/cancelled）事件被任意改写回 active，
 		// 也允许从 new 直接跳到 resolved 绕过处理流程。
 		if !common.IsValidIncidentStatusTransition(current.Status, updates.Status) {
-			return nil, fmt.Errorf("%w: from '%s' to '%s'", service.ErrIncidentInvalidTransition, current.Status, updates.Status)
+			return nil, fmt.Errorf("%w: from '%s' to '%s'", dto.ErrIncidentInvalidTransition, current.Status, updates.Status)
 		}
 		current.Status = updates.Status
 		if updates.Status == "resolved" {
@@ -626,19 +625,19 @@ func (s *Service) CreateIncidentComment(ctx context.Context, incidentID, tenantI
 // lifecycleError preserves domain failure semantics without exposing provider errors.
 func lifecycleError(err error) error {
 	switch {
-	case errors.Is(err, service.ErrIncidentInvalidTransition):
+	case errors.Is(err, dto.ErrIncidentInvalidTransition):
 		return common.NewBusinessError(common.ConflictCode, "当前事件状态不允许此操作", "")
-	case errors.Is(err, service.ErrIncidentVersionConflict):
+	case errors.Is(err, dto.ErrIncidentVersionConflict):
 		return common.NewBusinessError(common.ConflictCode, "事件已被修改，请刷新后重试", "")
 	case errors.Is(err, ErrStaleVersion):
 		// 仓储条件更新未命中：读取快照后行已被并发写入推进。与客户端版本不符
 		// 同属冲突语义，必须提示刷新重试而不是 500。
 		return common.NewBusinessError(common.ConflictCode, "事件已被修改，请刷新后重试", "")
-	case errors.Is(err, service.ErrIncidentResolutionRequired):
+	case errors.Is(err, dto.ErrIncidentResolutionRequired):
 		return common.NewBusinessError(common.ParamErrorCode, "请填写解决方案", "")
-	case errors.Is(err, service.ErrIncidentCloseNotesRequired):
+	case errors.Is(err, dto.ErrIncidentCloseNotesRequired):
 		return common.NewBusinessError(common.ParamErrorCode, "请填写关闭说明", "")
-	case errors.Is(err, service.ErrIncidentNotFound):
+	case errors.Is(err, dto.ErrIncidentNotFound):
 		return common.NewBusinessError(common.NotFoundCode, "事件不存在", "")
 	case ent.IsNotFound(err):
 		// 仓储读/条件更新未命中：资源不存在或跨租户（fail closed 后同样表现为
