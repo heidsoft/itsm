@@ -9,11 +9,11 @@ import (
 
 	"go.uber.org/zap"
 	"itsm-backend/common"
+	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/processdefinition"
 	"itsm-backend/ent/processdeployment"
 	"itsm-backend/ent/processinstance"
-	"itsm-backend/ent/schema"
 )
 
 // ---------------------------------------------------------------------------
@@ -27,45 +27,14 @@ import (
 
 // Request DTOs
 
-type CreateProcessDefinitionRequest struct {
-	Key              string                 `json:"key" binding:"required"`
-	Name             string                 `json:"name" binding:"required"`
-	Description      string                 `json:"description"`
-	Category         string                 `json:"category"`
-	BPMNXML          string                 `json:"bpmnXml" binding:"required"`
-	ProcessVariables map[string]interface{} `json:"processVariables"`
-	// ApprovalConfig 流程级审批配置（auto_approve_roles 等），与设计器「流程配置」页签对应，
-	// 必须随创建/更新写入对应的 DB 列，否则前端保存会静默丢失。
-	ApprovalConfig *schema.ApprovalConfig `json:"approvalConfig"`
-	SLAConfig      map[string]interface{} `json:"slaConfig"`
-	TenantID       int                    `json:"tenantId" binding:"required"`
-	Publish        bool                   `json:"publish"`
-}
+// CreateProcessDefinitionRequest 已下沉到 dto；此处保留别名，保证共享层方法签名与域内窄契约是同一类型身份。
+type CreateProcessDefinitionRequest = dto.CreateProcessDefinitionRequest
 
-type UpdateProcessDefinitionRequest struct {
-	Name             string                 `json:"name"`
-	Description      string                 `json:"description"`
-	Category         string                 `json:"category"`
-	BPMNXML          string                 `json:"bpmnXml"`
-	ProcessVariables map[string]interface{} `json:"processVariables"`
-	IsActive         *bool                  `json:"isActive"`
-	// ApprovalConfig 非 nil 时整体替换流程级审批配置（读改写由前端负责）。
-	ApprovalConfig *schema.ApprovalConfig `json:"approvalConfig"`
-	SLAConfig      map[string]interface{} `json:"slaConfig"`
-	// CandidateDefinition is the AI-generated business contract. It is kept
-	// alongside the BPMN draft so publishing can enforce the same safety gate
-	// after a human edits the diagram.
-	CandidateDefinition map[string]interface{} `json:"candidateDefinition"`
-}
+// UpdateProcessDefinitionRequest 已下沉到 dto；此处保留别名，保证共享层方法签名与域内窄契约是同一类型身份。
+type UpdateProcessDefinitionRequest = dto.UpdateProcessDefinitionRequest
 
-type ListProcessDefinitionsRequest struct {
-	Key      string `form:"key" json:"key"`
-	Category string `form:"category" json:"category"`
-	IsActive *bool  `form:"isActive" json:"isActive"`
-	TenantID int    `form:"-" json:"tenantId"`
-	Page     int    `form:"page" json:"page"`
-	PageSize int    `form:"pageSize" json:"pageSize"`
-}
+// ListProcessDefinitionsRequest 已下沉到 dto；此处保留别名，保证共享层方法签名与域内窄契约是同一类型身份。
+type ListProcessDefinitionsRequest = dto.ListProcessDefinitionsRequest
 
 // Service struct
 

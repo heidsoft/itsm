@@ -5,16 +5,15 @@ import (
 	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/middleware"
-	"itsm-backend/service"
 )
 
 // AIGeneratorHandler AI BPMN生成控制器
 type AIGeneratorHandler struct {
-	aiGeneratorService *service.BPMNAIGeneratorService
+	aiGeneratorService AIGeneratorCatalog
 }
 
 // NewAIGeneratorHandler 创建控制器实例
-func NewAIGeneratorHandler(aiGeneratorService *service.BPMNAIGeneratorService) *AIGeneratorHandler {
+func NewAIGeneratorHandler(aiGeneratorService AIGeneratorCatalog) *AIGeneratorHandler {
 	return &AIGeneratorHandler{
 		aiGeneratorService: aiGeneratorService,
 	}

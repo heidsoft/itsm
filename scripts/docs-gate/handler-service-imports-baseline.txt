@@ -8,8 +8,9 @@
 # 2026-11-10 批次 3 第 1 步：handlers/bpmn/workflow_template.go 经域内窄契约 WorkflowTemplateCatalog + 3 个模板 sentinel 与 DefaultStaleThresholdHours 下沉 dto 归零，实测 bpmn 8 -> 7（合计 28 -> 27 文件 / 10 域不变）；L.1 140、L.4 57 与 C.6.4 五项不变，app.go 零改动。
 # 2026-11-10 批次 3 第 2 步：handlers/bpmn/dashboard.go + monitoring.go 经 5 个域内窄契约 + 21 个监控/审计/SLA/租户值类型成组下沉 dto（service 侧同名别名）归零，实测 bpmn 7 -> 5（合计 27 -> 25 文件 / 10 域不变）；L.1 140、L.4 57 与 C.6.4 五项不变，app.go 零改动。
 # 2026-11-10 批次 3 第 3 步：handlers/bpmn/process_trigger.go 经 3 个域内窄契约（16 方法）+ ResolvedConfig 与 ErrConfigNotFound 下沉 dto（service 侧同名别名）归零，实测 bpmn 5 -> 4（合计 25 -> 24 文件 / 10 域不变）；L.1 140、L.4 57 与 C.6.4 五项不变，app.go 零改动。
+# 2026-11-10 批次 3 第 4 步：handlers/bpmn/workflow.go + ai_generator.go 经 3 个域内窄契约 + 17 个引擎组值类型（含 43 方法子服务接口）成组下沉 dto、ParseVersionNumber 改注入函数字段归零，实测 bpmn 4 -> 2（合计 24 -> 22 文件 / 10 域不变）；L.1 140、L.4 57 与 C.6.4 五项不变，app.go 零改动。设计表原写 4 -> 1，实测仅 2 个文件可在零改动组合根的前提下归零，剩余 lint.go / inventory.go 仍留第 5 步与组合根专项合并（2 -> 0），最终 20 文件 / 9 域目标不变。
 ai=4
-bpmn=4
+bpmn=2
 change=1
 cmdb=7
 dashboard=1

@@ -91,6 +91,45 @@ type ProcessBindingCatalog interface {
 	InitDepartmentDefaultBindings(ctx context.Context, tenantID, departmentID int, departmentType string) error
 }
 
+// 批次 3 第 4 步：引擎 / 流程定义 / 实例 / 任务 / 版本组窄契约。
+//
+// ProcessEngine 的三个访问器返回的是共享层包内的命名接口，Go 要求方法签名
+// 的类型完全一致（不能换成另一个结构等价的域内接口），因此这三个子服务接口
+// 的唯一定义收敛到 dto，共享层保留同名别名；本契约引用同一批 dto 类型，
+// `service.ProcessEngine` 的方法集因此覆盖 WorkflowEngine，组合根无需改动。
+// 版本服务只需方法集一致，装配点仍传具体指针。
+
+// WorkflowEngine 是 workflow.go 消费的引擎门面。
+type WorkflowEngine interface {
+	ProcessDefinitionService() dto.ProcessDefinitionCatalog
+	ProcessInstanceService() dto.ProcessInstanceCatalog
+	TaskService() dto.TaskCatalog
+	StartProcess(ctx context.Context, processDefinitionKey string, businessKey string, variables map[string]interface{}) (*ent.ProcessInstance, error)
+	SuspendProcess(ctx context.Context, processInstanceID string, reason string) error
+	ResumeProcess(ctx context.Context, processInstanceID string) error
+	TerminateProcess(ctx context.Context, processInstanceID string, reason string) error
+}
+
+// VersionCatalog 是 workflow.go 版本管理路由消费的窄契约（8 个方法）。
+type VersionCatalog interface {
+	CreateVersion(ctx context.Context, req *dto.CreateVersionRequest) (*dto.ProcessVersion, error)
+	GetVersion(ctx context.Context, processKey string, version int, tenantID int) (*dto.ProcessVersion, error)
+	ListVersions(ctx context.Context, processKey string, tenantID int) ([]*dto.ProcessVersion, error)
+	ActivateVersion(ctx context.Context, processKey string, version int, tenantID int) error
+	RollbackToVersion(ctx context.Context, processKey string, targetVersion int, tenantID int, reason string) error
+	CompareVersions(ctx context.Context, processKey string, baseVersion, targetVersion int, tenantID int) (*dto.VersionComparison, error)
+	GetChangeLogsByProcessKey(ctx context.Context, processKey string, tenantID int) ([]*ent.ProcessVersionChangelog, error)
+	GetChangeLogsByProcessDefinitionID(ctx context.Context, processDefID, tenantID int) ([]*ent.ProcessVersionChangelog, error)
+}
+
+// AIGeneratorCatalog 是 ai_generator.go 消费的窄契约（生成 / 预览 / 模板推荐
+// 三条路由的调用并集，缺一条就会让对应端点在编译期丢失方法）。
+type AIGeneratorCatalog interface {
+	GenerateBPMN(ctx context.Context, req *dto.GenerateBPMNRequest, autoDeploy bool) (*dto.GenerateBPMNResponse, error)
+	PreviewBPMN(ctx context.Context, req *dto.PreviewBPMNRequest) (*dto.PreviewBPMNResponse, error)
+	SuggestTemplates(ctx context.Context, tenantID int, keyword, processType string) ([]*dto.BPMNTemplateSuggestion, error)
+}
+
 // DomainConfigResolver 全局 → 租户 → 部门 → 团队的层级配置解析
 type DomainConfigResolver interface {
 	ListConfigs(ctx context.Context, tenantID int, configType string) ([]*ent.DomainConfig, error)

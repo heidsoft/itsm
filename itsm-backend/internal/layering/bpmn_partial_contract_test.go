@@ -13,14 +13,16 @@ import (
 )
 
 // bpmn 是「部分归零」域：第 1 步归零 workflow_template.go，第 2 步归零
-// dashboard.go + monitoring.go，第 3 步归零 process_trigger.go，其余 4 个
-// 生产文件仍 import 共享层。因此它不能进 contractDomains（那个守卫逐文件
-// 扫整个域），改由本文件按「单文件 + 基线」精确锁定。后续每组归零时，把
-// bpmnPartialZeroExpectedImports 与基线期望值同步下调即可。
+// dashboard.go + monitoring.go，第 3 步归零 process_trigger.go，第 4 步归零
+// workflow.go + ai_generator.go，其余 2 个生产文件（lint.go / inventory.go）
+// 仍 import 共享层——它们的域内构造与包级函数必须上移组合根，留给第 5 步。
+// 因此它不能进 contractDomains（那个守卫逐文件扫整个域），改由本文件按
+// 「单文件 + 基线」精确锁定。后续每组归零时，把 bpmnPartialZeroExpectedImports
+// 与基线期望值同步下调即可。
 
 const bpmnSharedImport = `"itsm-backend/service"`
 
-const bpmnPartialZeroExpectedImports = 4
+const bpmnPartialZeroExpectedImports = 2
 
 func readBPMNFile(t *testing.T, rel string) string {
 	t.Helper()
@@ -111,7 +113,7 @@ func TestBPMNPartialZeroMatchesL3Baseline(t *testing.T) {
 		}
 	}
 	if count != bpmnPartialZeroExpectedImports {
-		t.Errorf("handlers/bpmn 共享层依赖实测 %d，期望 %d（批次 3 第 1、2、3 步归零 4 个文件）", count, bpmnPartialZeroExpectedImports)
+		t.Errorf("handlers/bpmn 共享层依赖实测 %d，期望 %d（批次 3 第 1–4 步归零 6 个文件）", count, bpmnPartialZeroExpectedImports)
 	}
 
 	base, err := os.ReadFile(filepath.Join("..", "..", "..", "scripts", "docs-gate", "handler-service-imports-baseline.txt"))
@@ -128,7 +130,7 @@ func TestBPMNPartialZeroMatchesL3Baseline(t *testing.T) {
 			values = append(values, strings.TrimPrefix(line, "bpmn="))
 		}
 	}
-	want := "4"
+	want := "2"
 	if len(values) != 1 || values[0] != want {
 		t.Errorf("L.3 基线 bpmn 期望恰好一条 bpmn=%s，实际 %v（真下降必须同 commit 精确收紧）", want, values)
 	}
@@ -433,5 +435,249 @@ func TestBPMNPartialZeroTriggerGroup(t *testing.T) {
 	}
 	if !strings.Contains(contract, "(*dto.ResolvedConfig, error)") {
 		t.Errorf("contracts.go 的 GetEffectiveConfig 未使用 dto 值类型")
+	}
+}
+
+// 批次 3 第 4 步需要下沉的引擎组值类型：10 个请求 DTO + 7 个响应/嵌套类型。
+// 三个子服务接口（ProcessDefinitionCatalog / ProcessInstanceCatalog /
+// TaskCatalog）的方法集逐条复制自共享层原接口，共 43 个方法，签名只引用
+// dto / ent / 内置类型，因此共享层只需保留别名，域内契约无需共享层 import。
+var bpmnEngineDTONames = []string{
+	"CreateProcessDefinitionRequest", "UpdateProcessDefinitionRequest", "ListProcessDefinitionsRequest",
+	"ListProcessInstancesRequest", "InstanceStatisticsRequest", "InstanceStatistics",
+	"ListUserTasksRequest", "TaskStatisticsRequest", "TaskStatistics",
+	"CounterSignStatus", "CounterSignRequest", "VoteRequest",
+	"ProcessVersion", "CreateVersionRequest", "UpdateVersionRequest",
+	"VersionComparison", "ChangeDetail",
+}
+
+var bpmnEngineSubInterfaces = []string{
+	"ProcessDefinitionCatalog", "ProcessInstanceCatalog", "TaskCatalog",
+}
+
+var bpmnEngineRequestNames = []string{
+	"CreateProcessDefinitionRequest", "UpdateProcessDefinitionRequest", "ListProcessDefinitionsRequest",
+	"ListProcessInstancesRequest", "InstanceStatisticsRequest", "ListUserTasksRequest",
+	"TaskStatisticsRequest", "CounterSignRequest", "VoteRequest", "CreateVersionRequest",
+}
+
+func readEngineServiceFile(t *testing.T, rel string) string {
+	t.Helper()
+	body, err := os.ReadFile(filepath.Join("..", "..", "service", rel))
+	if err != nil {
+		t.Fatalf("读取 service/%s 失败：%v", rel, err)
+	}
+	if len(body) < 500 {
+		t.Fatalf("扫描器零命中保护：service/%s 仅 %d 字节", rel, len(body))
+	}
+	return string(body)
+}
+
+// TestBPMNPartialZeroEngineGroup 锁住组 1 的归零形态：引擎门面用域内窄接口、
+// 10 个请求 DTO 全部取自 dto、版本解析改注入函数字段；AI 生成器用域内窄接口。
+// 把 workflow.go / ai_generator.go 改回 HEAD 版本必须由断言变红。
+func TestBPMNPartialZeroEngineGroup(t *testing.T) {
+	wf := readBPMNFile(t, "workflow.go")
+	ai := readBPMNFile(t, "ai_generator.go")
+	for name, body := range map[string]string{"workflow.go": wf, "ai_generator.go": ai} {
+		if strings.Contains(body, bpmnSharedImport) {
+			t.Errorf("handlers/bpmn/%s 重新引用共享层包，L.3 归零被破坏", name)
+		}
+		if strings.Contains(stripLineComments(body), "service.") {
+			t.Errorf("handlers/bpmn/%s 残留共享层限定符（旧实现）", name)
+		}
+	}
+
+	wfCode := stripLineComments(wf)
+	for _, want := range []string{
+		`\bprocessEngine\s+WorkflowEngine\b`,
+		`\bversionService\s+VersionCatalog\b`,
+		`\bparseVersionNumber\s+func\(string\)\s*\(int,\s*error\)`,
+		`\bNewWorkflowHandler\(processEngine\s+WorkflowEngine,\s*versionService\s+VersionCatalog\)`,
+		`parseVersionNumber:\s*dto\.ParseVersionNumber`,
+	} {
+		if !regexp.MustCompile(want).MatchString(wfCode) {
+			t.Errorf("workflow.go 缺少窄契约/注入函数字段写法 %q", want)
+		}
+	}
+	for _, name := range bpmnEngineRequestNames {
+		if !strings.Contains(wfCode, "dto."+name) {
+			t.Errorf("workflow.go 未从 dto 取请求类型 %s", name)
+		}
+		if strings.Contains(wfCode, "service."+name) {
+			t.Errorf("workflow.go 请求类型 %s 回退到共享层限定符（旧实现）", name)
+		}
+	}
+	if got := strings.Count(wfCode, "c.parseVersionNumber("); got != 5 {
+		t.Errorf("workflow.go 注入函数字段调用数 %d，期望 5（版本管理的 5 条路由）", got)
+	}
+	if strings.Contains(wfCode, "service.ParseVersionNumber") {
+		t.Errorf("workflow.go 回退到共享层包级函数（旧实现）")
+	}
+
+	aiCode := stripLineComments(ai)
+	for _, want := range []string{
+		`\baiGeneratorService\s+AIGeneratorCatalog\b`,
+		`\bNewAIGeneratorHandler\(aiGeneratorService\s+AIGeneratorCatalog\)`,
+	} {
+		if !regexp.MustCompile(want).MatchString(aiCode) {
+			t.Errorf("ai_generator.go 缺少窄契约写法 %q", want)
+		}
+	}
+
+	contract := readBPMNFile(t, "contracts.go")
+	if strings.Contains(contract, bpmnSharedImport) {
+		t.Errorf("contracts.go 出现共享层包路径字面量（连注释也会让 L.3 计数 +1）")
+	}
+	for _, iface := range []string{"WorkflowEngine", "VersionCatalog", "AIGeneratorCatalog"} {
+		if !strings.Contains(contract, "type "+iface+" interface") {
+			t.Errorf("contracts.go 未声明域内接口 %s", iface)
+		}
+	}
+	// 三个访问器的返回类型必须与共享层 ProcessEngine 完全一致：写回包内命名
+	// 接口会让接口到接口赋值编译失败，而这里锁的是「引用 dto 子接口」这一形态。
+	for _, want := range []string{
+		"ProcessDefinitionService() dto.ProcessDefinitionCatalog",
+		"ProcessInstanceService() dto.ProcessInstanceCatalog",
+		"TaskService() dto.TaskCatalog",
+	} {
+		if !strings.Contains(contract, want) {
+			t.Errorf("contracts.go 的 WorkflowEngine 缺少访问器签名 %q", want)
+		}
+	}
+}
+
+// TestBPMNEngineDTOsHaveSingleSource 逐处比对 dto 定义与共享层别名，不取并集：
+// 任何一处别名丢失、值类型在共享层另起一份、或接口方法集被裁剪都会变红。
+func TestBPMNEngineDTOsHaveSingleSource(t *testing.T) {
+	bottom, err := os.ReadFile(filepath.Join("..", "..", "dto", "bpmn_engine_dto.go"))
+	if err != nil {
+		t.Fatalf("读取 dto/bpmn_engine_dto.go 失败：%v", err)
+	}
+	if len(bottom) < 1000 {
+		t.Fatalf("扫描器零命中保护：dto 值类型文件仅 %d 字节", len(bottom))
+	}
+	if strings.Contains(string(bottom), bpmnSharedImport) {
+		t.Errorf("dto 不得反向依赖共享层")
+	}
+	for _, n := range bpmnEngineDTONames {
+		if !regexp.MustCompile(`\btype\s+` + n + `\s+struct\s*\{`).MatchString(string(bottom)) {
+			t.Errorf("dto 缺少值类型定义 %s", n)
+		}
+	}
+	for _, n := range bpmnEngineSubInterfaces {
+		if !regexp.MustCompile(`\btype\s+` + n + `\s+interface\s*\{`).MatchString(string(bottom)) {
+			t.Errorf("dto 缺少子服务接口定义 %s", n)
+		}
+	}
+
+	byFile := map[string][]string{
+		"bpmn_process_definition_service.go": {"CreateProcessDefinitionRequest", "UpdateProcessDefinitionRequest", "ListProcessDefinitionsRequest"},
+		"bpmn_process_instance_service.go":   {"ListProcessInstancesRequest", "InstanceStatisticsRequest", "InstanceStatistics"},
+		"bpmn_task_service.go":               {"ListUserTasksRequest", "TaskStatisticsRequest", "TaskStatistics", "CounterSignStatus", "CounterSignRequest", "VoteRequest"},
+		"bpmn_version_service.go":            {"ProcessVersion", "CreateVersionRequest", "UpdateVersionRequest", "VersionComparison", "ChangeDetail"},
+	}
+	seen := 0
+	for file, list := range byFile {
+		body := readEngineServiceFile(t, file)
+		flat := squashSpace(stripLineComments(body))
+		for _, n := range list {
+			seen++
+			if !strings.Contains(flat, squashSpace("type "+n+" = dto."+n)) {
+				t.Errorf("service/%s 丢失别名 %q（值类型不得在共享层另起一份）", file, n)
+			}
+			if strings.Contains(flat, "type "+n+" struct") {
+				t.Errorf("service/%s 重新定义了 %s（值类型身份分裂）", file, n)
+			}
+		}
+	}
+	if seen != len(bpmnEngineDTONames) {
+		t.Fatalf("扫描器零命中保护：别名检查覆盖 %d 处，期望 %d 处", seen, len(bpmnEngineDTONames))
+	}
+
+	eng := readEngineServiceFile(t, "bpmn_process_engine.go")
+	engFlat := squashSpace(stripLineComments(eng))
+	for _, decl := range []string{
+		"type ProcessDefinitionService = dto.ProcessDefinitionCatalog",
+		"type ProcessInstanceService = dto.ProcessInstanceCatalog",
+		"type TaskService = dto.TaskCatalog",
+	} {
+		if !strings.Contains(engFlat, squashSpace(decl)) {
+			t.Errorf("service/bpmn_process_engine.go 丢失接口别名 %q", decl)
+		}
+	}
+	// 版本解析只有一份实现：共享层必须委托 dto，不能被换成语义不同的另一份。
+	flatBottom := squashSpace(stripLineComments(string(bottom)))
+	if !strings.Contains(flatBottom, squashSpace("func ParseVersionNumber(versionStr string) (int, error) {")) {
+		t.Errorf("dto 缺少 ParseVersionNumber 单一实现")
+	}
+	for _, frag := range []string{`strconv.Atoi(versionStr)`, `strings.Split(versionStr, ".")`} {
+		if !strings.Contains(string(bottom), frag) {
+			t.Errorf("dto 的 ParseVersionNumber 缺少实现片段 %q（语义可能被换掉）", frag)
+		}
+	}
+	ver := readEngineServiceFile(t, "bpmn_version_service.go")
+	verFlat := squashSpace(stripLineComments(ver))
+	if !strings.Contains(verFlat, squashSpace("return dto.ParseVersionNumber(versionStr)")) {
+		t.Errorf("service/bpmn_version_service.go 的 ParseVersionNumber 未委托 dto（实现可能分裂）")
+	}
+}
+
+// TestBPMNVersionNumberSingleImplementation 锁住行为等价：共享层委托函数与
+// dto 单一实现必须在合法 semver、纯整数与非法输入上返回完全相同的结果。
+func TestBPMNVersionNumberSingleImplementation(t *testing.T) {
+	for _, in := range []string{"1", "2", "0", "1.0.0", "12.3.4", "v2", "", "x.y", "-1"} {
+		got, gotErr := service.ParseVersionNumber(in)
+		want, wantErr := dto.ParseVersionNumber(in)
+		if got != want || (gotErr == nil) != (wantErr == nil) {
+			t.Errorf("ParseVersionNumber(%q) 在共享层与 dto 之间漂移：(%d,%v) vs (%d,%v)",
+				in, got, gotErr, want, wantErr)
+		}
+	}
+}
+
+// TestBPMNEngineDTOJSONShape 锁住下沉后最容易静默漂移的 JSON tag：改一个
+// 字母不影响编译、不影响 L.3 计数，却会让前端读到 undefined。
+func TestBPMNEngineDTOJSONShape(t *testing.T) {
+	cases := []struct {
+		name   string
+		v      interface{}
+		want   []string
+		absent []string
+	}{
+		{"CreateProcessDefinitionRequest", dto.CreateProcessDefinitionRequest{}, []string{`"key"`, `"bpmnXml"`, `"approvalConfig"`, `"slaConfig"`, `"tenantId"`}, nil},
+		{"UpdateProcessDefinitionRequest", dto.UpdateProcessDefinitionRequest{}, []string{`"candidateDefinition"`, `"isActive"`, `"approvalConfig"`}, nil},
+		{"ListProcessDefinitionsRequest", dto.ListProcessDefinitionsRequest{}, []string{`"key"`, `"category"`, `"pageSize"`}, nil},
+		{"ListProcessInstancesRequest", dto.ListProcessInstancesRequest{}, []string{`"processDefinitionKey"`, `"businessKey"`, `"pageSize"`}, nil},
+		{"ListUserTasksRequest", dto.ListUserTasksRequest{}, []string{`"userId"`, `"processInstanceId"`, `"pageSize"`}, []string{`"AllTasks"`, `"allTasks"`}},
+		{"InstanceStatistics", dto.InstanceStatistics{}, []string{`"total"`, `"running"`, `"suspended"`, `"terminated"`}, nil},
+		{"TaskStatistics", dto.TaskStatistics{}, []string{`"totalTasks"`, `"averageCompletion"`, `"statusBreakdown"`, `"timeDistribution"`}, nil},
+		{"CounterSignStatus", dto.CounterSignStatus{}, []string{`"parentTaskId"`, `"approved"`, `"rejected"`, `"pending"`}, nil},
+		{"CounterSignRequest", dto.CounterSignRequest{}, []string{`"approvalType"`, `"approvers"`, `"threshold"`}, nil},
+		{"VoteRequest", dto.VoteRequest{}, []string{`"approved"`, `"comment"`}, nil},
+		{"ProcessVersion", dto.ProcessVersion{}, []string{`"processDefinitionKey"`, `"bpmnXml"`, `"deploymentId"`, `"createdAt"`, `"compatibilityNotes"`}, nil},
+		{"CreateVersionRequest", dto.CreateVersionRequest{}, []string{`"processDefinitionKey"`, `"bpmnXml"`, `"changeLog"`, `"createdBy"`}, nil},
+		{"VersionComparison", dto.VersionComparison{BaseVersion: &dto.ProcessVersion{}, TargetVersion: &dto.ProcessVersion{}}, []string{`"baseVersion"`, `"targetVersion"`, `"breakingChanges"`, `"compatibility"`}, nil},
+		{"ChangeDetail", dto.ChangeDetail{OldValue: "a", NewValue: "b"}, []string{`"elementType"`, `"impact"`, `"oldValue"`, `"newValue"`}, nil},
+	}
+	if len(cases) < 14 {
+		t.Fatalf("扫描器零命中保护：JSON 形状用例仅 %d 个", len(cases))
+	}
+	for _, tc := range cases {
+		raw, err := json.Marshal(tc.v)
+		if err != nil {
+			t.Fatalf("%s 序列化失败：%v", tc.name, err)
+		}
+		body := string(raw)
+		for _, key := range tc.want {
+			if !strings.Contains(body, key) {
+				t.Errorf("%s 的 JSON 形状缺少 %s：%s", tc.name, key, body)
+			}
+		}
+		for _, key := range tc.absent {
+			if strings.Contains(body, key) {
+				t.Errorf("%s 的 JSON 形状意外出现 %s：%s", tc.name, key, body)
+			}
+		}
 	}
 }

@@ -35,70 +35,23 @@ import (
 
 // Request/Response structs
 
-type ListUserTasksRequest struct {
-	Assignee        string `form:"-" json:"assignee"`
-	CandidateUsers  string `form:"-" json:"candidateUsers"`
-	CandidateGroups string `form:"-" json:"candidateGroups"`
-	// UserID 为「我的待办」语义：查询"分配给我 OR 我在候选人 OR 我所在组作为候选组"的任务。
-	// 传入后：Assignee/CandidateUsers/CandidateGroups 会被忽略（可选透传）。
-	// 身份三字段一律 form:"-"：只能由 handler 从认证上下文写入。
-	UserID int `form:"-" json:"userId"`
-	// AllTasks is an internal authorization decision made by the controller after
-	// the task:admin middleware succeeds. It must never be populated from HTTP input.
-	AllTasks bool `json:"-" form:"-"`
-	// ProcessInstanceID 是 process_tasks 的数值外键；列表按 PI-* 业务键过滤尚未收敛，
-	// 故 form:"-"，避免前端传 "PI-xxx" 时 Gin 把它变成 400。
-	ProcessInstanceID    int    `form:"-" json:"processInstanceId"`
-	Status               string `form:"status" json:"status"`
-	ProcessDefinitionKey string `form:"processDefinitionKey" json:"processDefinitionKey"`
-	TenantID             int    `form:"-" json:"tenantId"`
-	Page                 int    `form:"page" json:"page"`
-	PageSize             int    `form:"pageSize" json:"pageSize"`
-}
+// ListUserTasksRequest 已下沉到 dto；此处保留别名，保证共享层方法签名与域内窄契约是同一类型身份。
+type ListUserTasksRequest = dto.ListUserTasksRequest
 
-type TaskStatisticsRequest struct {
-	ProcessDefinitionKey string     `form:"processDefinitionKey" json:"processDefinitionKey"`
-	Assignee             string     `form:"assignee" json:"assignee"`
-	Status               string     `form:"status" json:"status"`
-	TenantID             int        `form:"-" json:"tenantId"`
-	StartDate            *time.Time `form:"-" json:"startDate"`
-	EndDate              *time.Time `form:"-" json:"endDate"`
-}
+// TaskStatisticsRequest 已下沉到 dto；此处保留别名，保证共享层方法签名与域内窄契约是同一类型身份。
+type TaskStatisticsRequest = dto.TaskStatisticsRequest
 
-type TaskStatistics struct {
-	TotalTasks        int                    `json:"totalTasks"`
-	CompletedTasks    int                    `json:"completedTasks"`
-	PendingTasks      int                    `json:"pendingTasks"`
-	OverdueTasks      int                    `json:"overdueTasks"`
-	AverageCompletion float64                `json:"averageCompletion"`
-	StatusBreakdown   map[string]int         `json:"statusBreakdown"`
-	AssigneeBreakdown map[string]int         `json:"assigneeBreakdown"`
-	TimeDistribution  map[string]interface{} `json:"timeDistribution"`
-}
+// TaskStatistics 已下沉到 dto；此处保留别名，保证共享层方法签名与域内窄契约是同一类型身份。
+type TaskStatistics = dto.TaskStatistics
 
-// CounterSignStatus 会签状态
-type CounterSignStatus struct {
-	ParentTaskID string `json:"parentTaskId"`
-	Total        int    `json:"total"`
-	Completed    int    `json:"completed"`
-	Approved     int    `json:"approved"`
-	Rejected     int    `json:"rejected"`
-	Pending      int    `json:"pending"`
-	Status       string `json:"status"` // pending, approved, rejected
-}
+// CounterSignStatus 已下沉到 dto；此处保留别名，保证共享层方法签名与域内窄契约是同一类型身份。
+type CounterSignStatus = dto.CounterSignStatus
 
-// CounterSignRequest 会签请求
-type CounterSignRequest struct {
-	ApprovalType string   `json:"approvalType"` // serial, parallel
-	Approvers    []string `json:"approvers"`
-	Threshold    int      `json:"threshold"`
-}
+// CounterSignRequest 已下沉到 dto；此处保留别名，保证共享层方法签名与域内窄契约是同一类型身份。
+type CounterSignRequest = dto.CounterSignRequest
 
-// VoteRequest 投票请求
-type VoteRequest struct {
-	Approved bool   `json:"approved"`
-	Comment  string `json:"comment"`
-}
+// VoteRequest 已下沉到 dto；此处保留别名，保证共享层方法签名与域内窄契约是同一类型身份。
+type VoteRequest = dto.VoteRequest
 
 type bpmnTaskService struct {
 	client        *ent.Client

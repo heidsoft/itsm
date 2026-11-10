@@ -5,9 +5,9 @@ import (
 	"encoding/xml"
 	"fmt"
 	"strconv"
-	"strings"
 	"time"
 
+	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/processdefinition"
 	"itsm-backend/ent/processversionchangelog"
@@ -34,66 +34,20 @@ func (s *BPMNVersionService) SetTimerStore(store TimerStore) {
 	s.timerStore = store
 }
 
-// ProcessVersion 流程版本信息
-type ProcessVersion struct {
-	ID                   string    `json:"id"`
-	ProcessDefinitionKey string    `json:"processDefinitionKey"`
-	Version              int       `json:"version"`
-	Name                 string    `json:"name"`
-	Description          string    `json:"description"`
-	BPMNXML              string    `json:"bpmnXml"`
-	DeploymentID         string    `json:"deploymentId"`
-	IsActive             bool      `json:"isActive"`
-	CreatedAt            time.Time `json:"createdAt"`
-	UpdatedAt            time.Time `json:"updatedAt"`
-	CreatedBy            string    `json:"createdBy"`
-	TenantID             int       `json:"tenantId"`
-	ChangeLog            string    `json:"changeLog"`
-	CompatibilityNotes   string    `json:"compatibilityNotes"`
-}
+// ProcessVersion 已下沉到 dto；此处保留别名，保证共享层方法签名与域内窄契约是同一类型身份。
+type ProcessVersion = dto.ProcessVersion
 
-// CreateVersionRequest 创建版本请求
-type CreateVersionRequest struct {
-	ProcessDefinitionKey string `json:"processDefinitionKey" binding:"required"`
-	Name                 string `json:"name" binding:"required"`
-	Description          string `json:"description"`
-	BPMNXML              string `json:"bpmnXml" binding:"required"`
-	ChangeLog            string `json:"changeLog"`
-	CompatibilityNotes   string `json:"compatibilityNotes"`
-	TenantID             int    `json:"tenantId"`
-	CreatedBy            string `json:"createdBy"`
-}
+// CreateVersionRequest 已下沉到 dto；此处保留别名，保证共享层方法签名与域内窄契约是同一类型身份。
+type CreateVersionRequest = dto.CreateVersionRequest
 
-// UpdateVersionRequest 更新版本请求
-type UpdateVersionRequest struct {
-	Name               string `json:"name"`
-	Description        string `json:"description"`
-	BPMNXML            string `json:"bpmnXml"`
-	ChangeLog          string `json:"changeLog"`
-	CompatibilityNotes string `json:"compatibilityNotes"`
-}
+// UpdateVersionRequest 已下沉到 dto；此处保留别名，保证共享层方法签名与域内窄契约是同一类型身份。
+type UpdateVersionRequest = dto.UpdateVersionRequest
 
-// VersionComparison 版本比较结果
-type VersionComparison struct {
-	BaseVersion     *ProcessVersion `json:"baseVersion"`
-	TargetVersion   *ProcessVersion `json:"targetVersion"`
-	Changes         []ChangeDetail  `json:"changes"`
-	BreakingChanges []string        `json:"breakingChanges"`
-	Compatibility   string          `json:"compatibility"`
-}
+// VersionComparison 已下沉到 dto；此处保留别名，保证共享层方法签名与域内窄契约是同一类型身份。
+type VersionComparison = dto.VersionComparison
 
-// ChangeDetail 变更详情
-type ChangeDetail struct {
-	Type        string `json:"type"`        // "added", "removed", "modified"
-	ChangeType  string `json:"changeType"`  // 变更类型
-	ElementType string `json:"elementType"` // "task", "gateway", "event", "flow"
-	ElementID   string `json:"elementId"`
-	ElementName string `json:"elementName"`
-	Description string `json:"description"`
-	Impact      string `json:"impact"`             // "low", "medium", "high", "critical"
-	OldValue    string `json:"oldValue,omitempty"` // 旧值
-	NewValue    string `json:"newValue,omitempty"` // 新值
-}
+// ChangeDetail 已下沉到 dto；此处保留别名，保证共享层方法签名与域内窄契约是同一类型身份。
+type ChangeDetail = dto.ChangeDetail
 
 // CreateVersion 创建新版本
 func (s *BPMNVersionService) CreateVersion(ctx context.Context, req *CreateVersionRequest) (*ProcessVersion, error) {
@@ -392,16 +346,7 @@ func (s *BPMNVersionService) CompareVersions(ctx context.Context, processKey str
 // ParseVersionNumber 将版本字符串解析为整数版本号。
 // 支持纯整数（"1","2"）和 semver（"1.0.0","1.1.0"）两种格式，semver 取主版本号。
 func ParseVersionNumber(versionStr string) (int, error) {
-	if v, err := strconv.Atoi(versionStr); err == nil {
-		return v, nil
-	}
-	parts := strings.Split(versionStr, ".")
-	if len(parts) > 0 {
-		if v, err := strconv.Atoi(parts[0]); err == nil {
-			return v, nil
-		}
-	}
-	return 0, fmt.Errorf("无效的版本格式: %s", versionStr)
+	return dto.ParseVersionNumber(versionStr)
 }
 
 // getCurrentVersion 获取当前最高版本号

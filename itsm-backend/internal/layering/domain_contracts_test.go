@@ -82,6 +82,12 @@ var (
 	_ bpmn.ProcessTriggerRunner  = (*service.ProcessTriggerService)(nil)
 	_ bpmn.ProcessBindingCatalog = (*service.ProcessBindingService)(nil)
 	_ bpmn.DomainConfigResolver  = (*service.ConfigInheritanceService)(nil)
+	// 批次 3 第 4 步：组 1 引擎 / 版本 / AI 生成器三个窄契约。
+	// ProcessEngine 本身是接口，用接口到接口赋值锁住「三个访问器的返回类型
+	// 与域内契约完全一致」——若共享层偷偷把访问器改回包内命名接口，这里先红。
+	_ bpmn.WorkflowEngine     = (service.ProcessEngine)(nil)
+	_ bpmn.VersionCatalog     = (*service.BPMNVersionService)(nil)
+	_ bpmn.AIGeneratorCatalog = (*service.BPMNAIGeneratorService)(nil)
 )
 
 type domainSpec struct {
@@ -346,6 +352,27 @@ func TestSharedValueTypesRemainDTOAliases(t *testing.T) {
 		// 批次 3 第 3 步：层级域配置的 sentinel 与解析结果逐处锁别名。
 		{"config_inheritance_service.go", "var ErrConfigNotFound = dto.ErrConfigNotFound"},
 		{"config_inheritance_service.go", "type ResolvedConfig = dto.ResolvedConfig"},
+		// 批次 3 第 4 步：17 个引擎组值类型 + 3 个子服务接口别名，逐处比对不取并集。
+		{"bpmn_process_definition_service.go", "type CreateProcessDefinitionRequest = dto.CreateProcessDefinitionRequest"},
+		{"bpmn_process_definition_service.go", "type UpdateProcessDefinitionRequest = dto.UpdateProcessDefinitionRequest"},
+		{"bpmn_process_definition_service.go", "type ListProcessDefinitionsRequest = dto.ListProcessDefinitionsRequest"},
+		{"bpmn_process_instance_service.go", "type ListProcessInstancesRequest = dto.ListProcessInstancesRequest"},
+		{"bpmn_process_instance_service.go", "type InstanceStatisticsRequest = dto.InstanceStatisticsRequest"},
+		{"bpmn_process_instance_service.go", "type InstanceStatistics = dto.InstanceStatistics"},
+		{"bpmn_task_service.go", "type ListUserTasksRequest = dto.ListUserTasksRequest"},
+		{"bpmn_task_service.go", "type TaskStatisticsRequest = dto.TaskStatisticsRequest"},
+		{"bpmn_task_service.go", "type TaskStatistics = dto.TaskStatistics"},
+		{"bpmn_task_service.go", "type CounterSignStatus = dto.CounterSignStatus"},
+		{"bpmn_task_service.go", "type CounterSignRequest = dto.CounterSignRequest"},
+		{"bpmn_task_service.go", "type VoteRequest = dto.VoteRequest"},
+		{"bpmn_version_service.go", "type ProcessVersion = dto.ProcessVersion"},
+		{"bpmn_version_service.go", "type CreateVersionRequest = dto.CreateVersionRequest"},
+		{"bpmn_version_service.go", "type UpdateVersionRequest = dto.UpdateVersionRequest"},
+		{"bpmn_version_service.go", "type VersionComparison = dto.VersionComparison"},
+		{"bpmn_version_service.go", "type ChangeDetail = dto.ChangeDetail"},
+		{"bpmn_process_engine.go", "type ProcessDefinitionService = dto.ProcessDefinitionCatalog"},
+		{"bpmn_process_engine.go", "type ProcessInstanceService = dto.ProcessInstanceCatalog"},
+		{"bpmn_process_engine.go", "type TaskService = dto.TaskCatalog"},
 	}
 	for _, a := range aliases {
 		body, err := os.ReadFile(filepath.Join("..", "..", "service", a.file))

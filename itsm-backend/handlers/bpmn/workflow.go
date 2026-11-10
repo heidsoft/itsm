@@ -12,7 +12,6 @@ import (
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/middleware"
-	"itsm-backend/service"
 	"itsm-backend/service/bpmn"
 
 	"github.com/gin-gonic/gin"
@@ -20,15 +19,21 @@ import (
 
 // WorkflowHandler BPMN工作流控制器
 type WorkflowHandler struct {
-	processEngine  service.ProcessEngine
-	versionService *service.BPMNVersionService
+	processEngine      WorkflowEngine
+	versionService     VersionCatalog
+	parseVersionNumber func(string) (int, error)
 }
 
-// NewWorkflowHandler 创建BPMN工作流控制器
-func NewWorkflowHandler(processEngine service.ProcessEngine, versionService *service.BPMNVersionService) *WorkflowHandler {
+// NewWorkflowHandler 创建BPMN工作流控制器。
+//
+// parseVersionNumber 是注入的函数字段：版本解析原先是共享层的包级函数，
+// handler 因 5 处调用必须 import 共享层包。实现收敛到 dto 后由构造期注入，
+// 组合根签名与调用点均不变，测试可替换该函数验证非法版本号分支。
+func NewWorkflowHandler(processEngine WorkflowEngine, versionService VersionCatalog) *WorkflowHandler {
 	return &WorkflowHandler{
-		processEngine:  processEngine,
-		versionService: versionService,
+		processEngine:      processEngine,
+		versionService:     versionService,
+		parseVersionNumber: dto.ParseVersionNumber,
 	}
 }
 
@@ -132,7 +137,7 @@ func (c *WorkflowHandler) PublishProcessDefinition(ctx *gin.Context) {
 		common.Fail(ctx, common.BadRequestCode, "版本参数不能为空")
 		return
 	}
-	var req service.UpdateProcessDefinitionRequest
+	var req dto.UpdateProcessDefinitionRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		common.ParamErrorWithErr(ctx, err, "请求参数错误")
 		return
@@ -284,7 +289,7 @@ func (c *WorkflowHandler) CreateProcessDefinition(ctx *gin.Context) {
 
 	// 重新序列化为 CreateProcessDefinitionRequest
 	reqBytes, _ := json.Marshal(req)
-	var finalReq service.CreateProcessDefinitionRequest
+	var finalReq dto.CreateProcessDefinitionRequest
 	if err := json.Unmarshal(reqBytes, &finalReq); err != nil {
 		common.ParamErrorWithErr(ctx, err, "请求参数解析错误")
 		return
@@ -306,7 +311,7 @@ func (c *WorkflowHandler) CreateProcessDefinition(ctx *gin.Context) {
 
 // ListProcessDefinitions 获取流程定义列表
 func (c *WorkflowHandler) ListProcessDefinitions(ctx *gin.Context) {
-	var req service.ListProcessDefinitionsRequest
+	var req dto.ListProcessDefinitionsRequest
 	if err := ctx.ShouldBindQuery(&req); err != nil {
 		common.ParamErrorWithErr(ctx, err, "请求参数错误")
 		return
@@ -376,7 +381,7 @@ func (c *WorkflowHandler) UpdateProcessDefinition(ctx *gin.Context) {
 		return
 	}
 
-	var req service.UpdateProcessDefinitionRequest
+	var req dto.UpdateProcessDefinitionRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		common.ParamErrorWithErr(ctx, err, "请求参数错误")
 		return
@@ -482,7 +487,7 @@ func (c *WorkflowHandler) CloneProcessDefinition(ctx *gin.Context) {
 
 	// 创建新流程定义
 	bpmnXML := string(definition.BpmnXML)
-	newDefinition := &service.CreateProcessDefinitionRequest{
+	newDefinition := &dto.CreateProcessDefinitionRequest{
 		Key:         req.NewKey,
 		Name:        req.NewName,
 		Description: definition.Description,
@@ -567,7 +572,7 @@ func (c *WorkflowHandler) StartProcess(ctx *gin.Context) {
 
 // ListProcessInstances 获取流程实例列表
 func (c *WorkflowHandler) ListProcessInstances(ctx *gin.Context) {
-	var req service.ListProcessInstancesRequest
+	var req dto.ListProcessInstancesRequest
 	if err := ctx.ShouldBindQuery(&req); err != nil {
 		common.ParamErrorWithErr(ctx, err, "请求参数错误")
 		return
@@ -713,7 +718,7 @@ func (c *WorkflowHandler) TerminateProcess(ctx *gin.Context) {
 
 // ListUserTasks 获取用户任务列表（默认「我的待办」语义）
 func (c *WorkflowHandler) ListUserTasks(ctx *gin.Context) {
-	var req service.ListUserTasksRequest
+	var req dto.ListUserTasksRequest
 	if err := ctx.ShouldBindQuery(&req); err != nil {
 		common.ParamErrorWithErr(ctx, err, "请求参数错误")
 		return
@@ -759,7 +764,7 @@ func (c *WorkflowHandler) ListUserTasks(ctx *gin.Context) {
 
 // ListAllTasks 获取当前租户全部任务。生产路由必须先通过 task:admin 权限校验。
 func (c *WorkflowHandler) ListAllTasks(ctx *gin.Context) {
-	var req service.ListUserTasksRequest
+	var req dto.ListUserTasksRequest
 	if err := ctx.ShouldBindQuery(&req); err != nil {
 		common.ParamErrorWithErr(ctx, err, "请求参数错误")
 		return
@@ -1039,7 +1044,7 @@ func (c *WorkflowHandler) GetVersion(ctx *gin.Context) {
 	versionStr := ctx.Param("version")
 	tenantID := ctx.GetInt("tenant_id")
 
-	version, err := service.ParseVersionNumber(versionStr)
+	version, err := c.parseVersionNumber(versionStr)
 	if err != nil {
 		common.Fail(ctx, common.BadRequestCode, "无效的版本号")
 		return
@@ -1056,7 +1061,7 @@ func (c *WorkflowHandler) GetVersion(ctx *gin.Context) {
 
 // CreateVersion 创建新版本
 func (c *WorkflowHandler) CreateVersion(ctx *gin.Context) {
-	var req service.CreateVersionRequest
+	var req dto.CreateVersionRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		common.ParamErrorWithErr(ctx, err, "请求参数错误")
 		return
@@ -1080,7 +1085,7 @@ func (c *WorkflowHandler) ActivateVersion(ctx *gin.Context) {
 	versionStr := ctx.Param("version")
 	tenantID := ctx.GetInt("tenant_id")
 
-	version, err := service.ParseVersionNumber(versionStr)
+	version, err := c.parseVersionNumber(versionStr)
 	if err != nil {
 		common.Fail(ctx, common.BadRequestCode, "无效的版本号")
 		return
@@ -1101,7 +1106,7 @@ func (c *WorkflowHandler) RollbackVersion(ctx *gin.Context) {
 	versionStr := ctx.Param("version")
 	tenantID := ctx.GetInt("tenant_id")
 
-	version, err := service.ParseVersionNumber(versionStr)
+	version, err := c.parseVersionNumber(versionStr)
 	if err != nil {
 		common.Fail(ctx, common.BadRequestCode, "无效的版本号")
 		return
@@ -1139,13 +1144,13 @@ func (c *WorkflowHandler) CompareVersions(ctx *gin.Context) {
 		return
 	}
 
-	base, err := service.ParseVersionNumber(baseVersion)
+	base, err := c.parseVersionNumber(baseVersion)
 	if err != nil {
 		common.Fail(ctx, common.BadRequestCode, "无效的基础版本号")
 		return
 	}
 
-	target, err := service.ParseVersionNumber(targetVersion)
+	target, err := c.parseVersionNumber(targetVersion)
 	if err != nil {
 		common.Fail(ctx, common.BadRequestCode, "无效的目标版本号")
 		return
@@ -1168,7 +1173,7 @@ func (c *WorkflowHandler) CompareVersions(ctx *gin.Context) {
 
 // GetInstanceStats 获取实例统计
 func (c *WorkflowHandler) GetInstanceStats(ctx *gin.Context) {
-	var req service.InstanceStatisticsRequest
+	var req dto.InstanceStatisticsRequest
 	if err := ctx.ShouldBindQuery(&req); err != nil {
 		common.ParamErrorWithErr(ctx, err, "请求参数错误")
 		return
@@ -1192,7 +1197,7 @@ func (c *WorkflowHandler) GetInstanceStats(ctx *gin.Context) {
 
 // GetTaskStats 获取任务统计
 func (c *WorkflowHandler) GetTaskStats(ctx *gin.Context) {
-	var req service.TaskStatisticsRequest
+	var req dto.TaskStatisticsRequest
 	if err := ctx.ShouldBindQuery(&req); err != nil {
 		common.ParamErrorWithErr(ctx, err, "请求参数错误")
 		return
@@ -1219,7 +1224,7 @@ func (c *WorkflowHandler) GetTaskStats(ctx *gin.Context) {
 func (c *WorkflowHandler) CreateCounterSignTasks(ctx *gin.Context) {
 	taskID := ctx.Param("id")
 
-	var req service.CounterSignRequest
+	var req dto.CounterSignRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		common.ParamErrorWithErr(ctx, err, "请求参数错误")
 		return
@@ -1259,7 +1264,7 @@ func (c *WorkflowHandler) GetCounterSignStatus(ctx *gin.Context) {
 func (c *WorkflowHandler) Vote(ctx *gin.Context) {
 	taskID := ctx.Param("id")
 
-	var req service.VoteRequest
+	var req dto.VoteRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		common.ParamErrorWithErr(ctx, err, "请求参数错误")
 		return

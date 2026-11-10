@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-	"time"
 
+	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/processexecutionhistory"
 	"itsm-backend/ent/processinstance"
@@ -25,40 +25,14 @@ import (
 
 // Request/Response DTOs
 
-// ListProcessInstancesRequest 流程实例列表请求。
-//
-// handler 用 ShouldBindQuery 绑定：没有 form 标签时 Gin 只按 Go 字段名匹配，
-// camelCase 查询参数会静默丢空，service 侧的过滤谓词因此永远收不到条件。
-// TenantID 只认认证上下文注入，禁止从请求绑定。
-type ListProcessInstancesRequest struct {
-	ProcessDefinitionKey string `form:"processDefinitionKey" json:"processDefinitionKey"`
-	Status               string `form:"status" json:"status"`
-	BusinessKey          string `form:"businessKey" json:"businessKey"`
-	TenantID             int    `form:"-" json:"tenantId"`
-	Page                 int    `form:"page" json:"page"`
-	PageSize             int    `form:"pageSize" json:"pageSize"`
-}
+// ListProcessInstancesRequest 已下沉到 dto；此处保留别名，保证共享层方法签名与域内窄契约是同一类型身份。
+type ListProcessInstancesRequest = dto.ListProcessInstancesRequest
 
-// InstanceStatisticsRequest 实例统计请求
-//
-// StartDate/EndDate 的 wire 格式尚未收敛，保持不绑定：按时间过滤当前不生效，
-// 但不会因为猜错格式把统计请求变成 400。
-type InstanceStatisticsRequest struct {
-	ProcessDefinitionKey string     `form:"processDefinitionKey" json:"processDefinitionKey"`
-	Status               string     `form:"status" json:"status"`
-	TenantID             int        `form:"-" json:"tenantId"`
-	StartDate            *time.Time `form:"-" json:"startDate"`
-	EndDate              *time.Time `form:"-" json:"endDate"`
-}
+// InstanceStatisticsRequest 已下沉到 dto；此处保留别名，保证共享层方法签名与域内窄契约是同一类型身份。
+type InstanceStatisticsRequest = dto.InstanceStatisticsRequest
 
-// InstanceStatistics 实例统计
-type InstanceStatistics struct {
-	Total      int `json:"total"`
-	Running    int `json:"running"`
-	Completed  int `json:"completed"`
-	Suspended  int `json:"suspended"`
-	Terminated int `json:"terminated"`
-}
+// InstanceStatistics 已下沉到 dto；此处保留别名，保证共享层方法签名与域内窄契约是同一类型身份。
+type InstanceStatistics = dto.InstanceStatistics
 
 // Service struct
 

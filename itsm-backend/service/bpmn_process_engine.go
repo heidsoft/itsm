@@ -31,61 +31,17 @@ type ProcessEngine interface {
 	TerminateProcess(ctx context.Context, processInstanceID string, reason string) error
 }
 
-// ProcessDefinitionService 流程定义服务接口
-type ProcessDefinitionService interface {
-	CreateProcessDefinition(ctx context.Context, req *CreateProcessDefinitionRequest) (*ent.ProcessDefinition, error)
-	GetProcessDefinition(ctx context.Context, key string, version string) (*ent.ProcessDefinition, error)
-	GetProcessDefinitionByID(ctx context.Context, id int) (*ent.ProcessDefinition, error)
-	GetLatestProcessDefinition(ctx context.Context, key string) (*ent.ProcessDefinition, error)
-	UpdateProcessDefinition(ctx context.Context, key string, version string, req *UpdateProcessDefinitionRequest) (*ent.ProcessDefinition, error)
-	PublishProcessDefinition(ctx context.Context, key string, version string, req *UpdateProcessDefinitionRequest) (*ent.ProcessDefinition, error)
-	DeleteProcessDefinition(ctx context.Context, key string, version string) error
-	ListProcessDefinitions(ctx context.Context, req *ListProcessDefinitionsRequest) ([]*ent.ProcessDefinition, int, error)
-	SetProcessDefinitionActive(ctx context.Context, key string, version string, active bool) error
-}
+// ProcessDefinitionService 是 dto.ProcessDefinitionCatalog 的别名：ProcessEngine 三个访问器的返回类型
+// 必须与域内窄契约完全一致（Go 要求命名类型相同），接口定义因此收敛到 dto。
+type ProcessDefinitionService = dto.ProcessDefinitionCatalog
 
-// ProcessInstanceService 流程实例服务接口
-type ProcessInstanceService interface {
-	GetProcessInstance(ctx context.Context, processInstanceID string) (*ent.ProcessInstance, error)
-	ListProcessInstances(ctx context.Context, req *ListProcessInstancesRequest) ([]*ent.ProcessInstance, int, error)
-	GetProcessInstanceVariables(ctx context.Context, processInstanceID string) (map[string]interface{}, error)
-	SetProcessInstanceVariables(ctx context.Context, processInstanceID string, variables map[string]interface{}) error
-	GetProcessInstanceHistory(ctx context.Context, processInstanceID string) ([]*ent.ProcessExecutionHistory, error)
-	GetInstanceStatistics(ctx context.Context, req *InstanceStatisticsRequest) (*InstanceStatistics, error)
-}
+// ProcessInstanceService 是 dto.ProcessInstanceCatalog 的别名：ProcessEngine 三个访问器的返回类型
+// 必须与域内窄契约完全一致（Go 要求命名类型相同），接口定义因此收敛到 dto。
+type ProcessInstanceService = dto.ProcessInstanceCatalog
 
-// TaskService 任务管理服务接口
-type TaskService interface {
-	GetTask(ctx context.Context, taskID string) (*ent.ProcessTask, error)
-	GetTaskByID(ctx context.Context, id int) (*ent.ProcessTask, error)
-	AuthorizeTaskAccess(ctx context.Context, task *ent.ProcessTask, requireActor bool) error
-	CompleteTaskByID(ctx context.Context, id int, variables map[string]interface{}) error
-	ClaimTask(ctx context.Context, taskID string, userID string) error
-	ClaimTaskByID(ctx context.Context, id int, userID int) error
-	ListUserTasks(ctx context.Context, req *ListUserTasksRequest) ([]*ent.ProcessTask, int, error)
-	ListUserTaskViews(ctx context.Context, req *ListUserTasksRequest) ([]*dto.BPMNTaskResponse, int, error)
-	AssignTask(ctx context.Context, taskID string, assignee string) error
-	ReassignTask(ctx context.Context, taskID string, newAssigneeID int, reason string) error
-	TerminateTask(ctx context.Context, taskID string, reason string) error
-	CompleteTask(ctx context.Context, taskID string, variables map[string]interface{}) error
-	CancelTask(ctx context.Context, taskID string, reason string) error
-	GetTaskVariables(ctx context.Context, taskID string) (map[string]interface{}, error)
-	SetTaskVariables(ctx context.Context, taskID string, variables map[string]interface{}) error
-	HandleTaskTimeout(ctx context.Context, taskID string) error
-	RetryTask(ctx context.Context, taskID string, maxRetries int) error
-	DelegateTask(ctx context.Context, taskID string, newAssignee string) error
-	DelegateTaskByID(ctx context.Context, id int, newAssignee string) error
-	AddApproverTask(ctx context.Context, taskID string, newApprover string) error
-	AddApproverTaskByID(ctx context.Context, id int, newApprover string) error
-	EscalateTask(ctx context.Context, taskID string, reason string) error
-	BatchAssignTasks(ctx context.Context, taskIDs []string, assignee string, tenantID int) error
-	GetTaskStatistics(ctx context.Context, req *TaskStatisticsRequest) (*TaskStatistics, error)
-	ListApprovalDecisions(ctx context.Context, processInstanceKey string) ([]*ent.ProcessApprovalDecision, error)
-	// 会签相关
-	CreateCounterSignTasks(ctx context.Context, parentTaskID string, req *CounterSignRequest) ([]*ent.ProcessTask, error)
-	GetCounterSignStatus(ctx context.Context, parentTaskID string) (*CounterSignStatus, error)
-	Vote(ctx context.Context, taskID string, req *VoteRequest) error
-}
+// TaskService 是 dto.TaskCatalog 的别名：ProcessEngine 三个访问器的返回类型
+// 必须与域内窄契约完全一致（Go 要求命名类型相同），接口定义因此收敛到 dto。
+type TaskService = dto.TaskCatalog
 
 // CustomProcessEngine 是ProcessEngine接口的实现
 // 充当领域服务(Domain Service)，协调流程定义、实例和任务实体的生命周期
