@@ -11,6 +11,7 @@ import (
 	"itsm-backend/ent/auditlog"
 	"itsm-backend/internal/commandbus"
 	"itsm-backend/middleware"
+	toolsexec "itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/require"
@@ -21,7 +22,7 @@ func TestHandlerListUsesCamelCaseContractAndTenantScope(t *testing.T) {
 	client := newOperationsTestClient(t)
 	createCommand(t, client, 7, commandbus.StatusPending)
 	createCommand(t, client, 8, commandbus.StatusDeadLetter)
-	handler := NewHandler(NewService(client))
+	handler := NewHandler(NewService(client, toolsexec.RecoverInterruptedToolInvocationTx))
 	router := gin.New()
 	router.GET("/commands", func(c *gin.Context) {
 		c.Set(middleware.TenantContextKey, &middleware.TenantContext{TenantID: 7})
@@ -61,7 +62,7 @@ func TestHandlerListAcceptsCommandTypeAndAggregateTypeFilters(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	client := newOperationsTestClient(t)
 	createCommand(t, client, 5, commandbus.StatusPending)
-	handler := NewHandler(NewService(client))
+	handler := NewHandler(NewService(client, toolsexec.RecoverInterruptedToolInvocationTx))
 	router := gin.New()
 	router.GET("/commands", func(c *gin.Context) {
 		c.Set(middleware.TenantContextKey, &middleware.TenantContext{TenantID: 5})
@@ -89,7 +90,7 @@ func TestHandlerBulkReplayExposesAuditAndMatchedIds(t *testing.T) {
 	dead := createCommandAt(t, client, 9, commandbus.StatusDeadLetter, 101)
 	createCommandAt(t, client, 9, commandbus.StatusPending, 102)
 
-	handler := NewHandler(NewService(client))
+	handler := NewHandler(NewService(client, toolsexec.RecoverInterruptedToolInvocationTx))
 	router := gin.New()
 	router.POST("/bulk-replay", func(c *gin.Context) {
 		c.Set(middleware.TenantContextKey, &middleware.TenantContext{TenantID: 9})
@@ -121,7 +122,7 @@ func TestHandlerBulkReplayExposesAuditAndMatchedIds(t *testing.T) {
 func TestHandlerBulkReplayRejectsEmptyFilterWith404(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	client := newOperationsTestClient(t)
-	handler := NewHandler(NewService(client))
+	handler := NewHandler(NewService(client, toolsexec.RecoverInterruptedToolInvocationTx))
 	router := gin.New()
 	router.POST("/bulk-replay", func(c *gin.Context) {
 		c.Set(middleware.TenantContextKey, &middleware.TenantContext{TenantID: 9})
@@ -140,7 +141,7 @@ func TestHandlerBulkCancelRejectsWrongStatus(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	client := newOperationsTestClient(t)
 	createCommand(t, client, 3, commandbus.StatusSucceeded)
-	handler := NewHandler(NewService(client))
+	handler := NewHandler(NewService(client, toolsexec.RecoverInterruptedToolInvocationTx))
 	router := gin.New()
 	router.POST("/bulk-cancel", func(c *gin.Context) {
 		c.Set(middleware.TenantContextKey, &middleware.TenantContext{TenantID: 3})
@@ -170,7 +171,7 @@ func TestHandlerReplayRecoversInterruptedAITool(t *testing.T) {
 		SetLastError("tool invocation is not claimable").Save(ctx)
 	require.NoError(t, err)
 
-	handler := NewHandler(NewService(client))
+	handler := NewHandler(NewService(client, toolsexec.RecoverInterruptedToolInvocationTx))
 	router := gin.New()
 	router.POST("/commands/:id/replay", func(c *gin.Context) {
 		c.Set(middleware.TenantContextKey, &middleware.TenantContext{TenantID: invocation.TenantID})
@@ -222,7 +223,7 @@ func TestReplayDoesNotRecoverAnotherTenantsInvocation(t *testing.T) {
 		SetStatus(commandbus.StatusDeadLetter).SetMaxAttempts(1).Save(ctx)
 	require.NoError(t, err)
 
-	_, err = NewService(client).Replay(ctx, commandTenantID, command.ID, Actor{UserID: invocation.UserID, Path: "/replay", Method: http.MethodPost})
+	_, err = NewService(client, toolsexec.RecoverInterruptedToolInvocationTx).Replay(ctx, commandTenantID, command.ID, Actor{UserID: invocation.UserID, Path: "/replay", Method: http.MethodPost})
 	require.NoError(t, err)
 	unchanged, err := client.ToolInvocation.Get(ctx, invocation.ID)
 	require.NoError(t, err)

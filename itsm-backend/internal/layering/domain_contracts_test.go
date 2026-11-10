@@ -22,7 +22,9 @@ import (
 	"itsm-backend/handlers/bpmn"
 	"itsm-backend/handlers/escalation_matrix"
 	"itsm-backend/handlers/incident"
+	"itsm-backend/handlers/operations"
 	"itsm-backend/handlers/prediction"
+	"itsm-backend/handlers/problem"
 	"itsm-backend/handlers/problem_investigation"
 	"itsm-backend/handlers/provisioning"
 	"itsm-backend/handlers/release"
@@ -92,6 +94,11 @@ var (
 	// 后者是函数到函数类型赋值，编译期锁住返回类型必须与 dto 值类型身份一致。
 	_ bpmn.BPMNLintCatalog         = (*service.BPMNLintService)(nil)
 	_ bpmn.PendingInventoryBuilder = service.BuildPendingWorkflowInventory
+	// 批次 3 第 5 步 B：operations 的包级函数与 problem 的两个具体服务。
+	// ToolInvocationRecovery 是函数到函数类型赋值，锁住同事务恢复函数的完整签名。
+	_ operations.ToolInvocationRecovery = service.RecoverInterruptedToolInvocationTx
+	_ problem.SLAService                = (*service.TicketSLAService)(nil)
+	_ problem.WorkflowBridge            = (*service.BPMNApprovalBridge)(nil)
 )
 
 type domainSpec struct {

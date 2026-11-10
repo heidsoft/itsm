@@ -14,6 +14,7 @@ import (
 	"itsm-backend/ent/operationalcommand"
 	"itsm-backend/handlers/operations"
 	"itsm-backend/internal/commandbus"
+	toolsexec "itsm-backend/service"
 )
 
 // Scenario 9: Outbox retry / dead-letter / replay 行为测试
@@ -35,7 +36,7 @@ func TestScenario9_OutboxRetryDeadLetter(t *testing.T) {
 
 	logger := zaptest.NewLogger(t).Sugar()
 	registry := commandbus.NewRegistry()
-	opsSvc := operations.NewService(client)
+	opsSvc := operations.NewService(client, toolsexec.RecoverInterruptedToolInvocationTx)
 	actor := operations.Actor{UserID: 1, RequestID: "req-1", IP: "127.0.0.1", Path: "/ops", Method: "POST"}
 
 	t.Run("enqueue validation rejects invalid requests", func(t *testing.T) {

@@ -11,7 +11,6 @@ import (
 	"itsm-backend/ent"
 	"itsm-backend/ent/operationalcommand"
 	"itsm-backend/internal/commandbus"
-	toolsexec "itsm-backend/service"
 )
 
 const StatusCancelled = "cancelled"
@@ -28,12 +27,21 @@ const (
 	maxBulkLimit     = 1000
 )
 
+// ToolInvocationRecovery 在运维重放死信时，于同一事务内解锁被中断的 AI
+// 工具调用。实现由组合根注入，本域不引用共享层包。
+type ToolInvocationRecovery func(ctx context.Context, tx *ent.Tx, tenantID, invocationID int) (bool, error)
+
 type Service struct {
-	client *ent.Client
-	now    func() time.Time
+	client                *ent.Client
+	now                   func() time.Time
+	recoverToolInvocation ToolInvocationRecovery
 }
 
-func NewService(client *ent.Client) *Service { return &Service{client: client, now: time.Now} }
+// NewService 构造运维服务。恢复函数必须由组合根显式传入：漏接线在编译期
+// 即失败，不留「重放成功但中断调用永远不解锁」的静默降级路径。
+func NewService(client *ent.Client, recoverToolInvocation ToolInvocationRecovery) *Service {
+	return &Service{client: client, now: time.Now, recoverToolInvocation: recoverToolInvocation}
+}
 
 type ListRequest struct {
 	TenantID      int
@@ -269,7 +277,7 @@ func (s *Service) transition(ctx context.Context, tenantID, commandID int, actor
 	}
 	invocationRecovered := false
 	if replay && command.CommandType == commandbus.CommandExecuteAITool && command.AggregateType == "tool_invocation" {
-		invocationRecovered, err = toolsexec.RecoverInterruptedToolInvocationTx(ctx, tx, tenantID, command.AggregateID)
+		invocationRecovered, err = s.recoverToolInvocation(ctx, tx, tenantID, command.AggregateID)
 		if err != nil {
 			return nil, fmt.Errorf("recover AI tool invocation: %w", err)
 		}
@@ -351,7 +359,7 @@ func (s *Service) bulkTransition(ctx context.Context, filter BulkFilter, actor A
 	for _, cmd := range matched {
 		invocationRecovered := false
 		if replay && cmd.CommandType == commandbus.CommandExecuteAITool && cmd.AggregateType == "tool_invocation" {
-			invocationRecovered, err = toolsexec.RecoverInterruptedToolInvocationTx(ctx, tx, filter.TenantID, cmd.AggregateID)
+			invocationRecovered, err = s.recoverToolInvocation(ctx, tx, filter.TenantID, cmd.AggregateID)
 			if err != nil {
 				return nil, fmt.Errorf("recover AI tool invocation for command %d: %w", cmd.ID, err)
 			}

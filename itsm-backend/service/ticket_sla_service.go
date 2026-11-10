@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"itsm-backend/common"
+	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/sladefinition"
 	"itsm-backend/ent/slastate"
@@ -49,12 +50,7 @@ type TicketSLAInfoResult struct {
 }
 
 // SLADeadlineResult SLA截止时间计算结果
-type SLADeadlineResult struct {
-	SLADefinitionID    int
-	ResponseDeadline   *time.Time
-	ResolutionDeadline *time.Time
-	BusinessHoursOnly  bool
-}
+type SLADeadlineResult = dto.SLADeadlineResult
 
 // TicketStats 工单统计
 type TicketStats struct {

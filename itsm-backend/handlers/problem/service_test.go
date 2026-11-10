@@ -23,8 +23,12 @@ func setupProblemHandlerTest(t *testing.T) (*ent.Client, *Service, context.Conte
 	repo := NewEntRepository(client)
 	// 受指人校验器与生产同构：直接复用 service.TicketService 的实现（同租户+在职），
 	// 保证跨租户注入回归测试测的是真实校验逻辑。
-	validator := service.NewTicketServiceForTest(client, zaptest.NewLogger(t).Sugar())
-	return client, NewService(repo, client, validator, zaptest.NewLogger(t).Sugar()), context.Background()
+	logger := zaptest.NewLogger(t).Sugar()
+	validator := service.NewTicketServiceForTest(client, logger)
+	// 桥接构造已上移组合根，夹具必须按生产装配显式注入，否则生命周期动作
+	// 不推进 BPMN 待办（workflow_bridge_test.go 的 E2E 会失去被测对象）。
+	return client, NewService(repo, client, validator, logger,
+		service.NewBPMNApprovalBridge(client, logger)), context.Background()
 }
 
 func createProblemHandlerTenant(t *testing.T, ctx context.Context, client *ent.Client, suffix string) *ent.Tenant {

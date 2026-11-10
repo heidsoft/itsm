@@ -10,12 +10,11 @@
 # 2026-11-10 批次 3 第 3 步：handlers/bpmn/process_trigger.go 经 3 个域内窄契约（16 方法）+ ResolvedConfig 与 ErrConfigNotFound 下沉 dto（service 侧同名别名）归零，实测 bpmn 5 -> 4（合计 25 -> 24 文件 / 10 域不变）；L.1 140、L.4 57 与 C.6.4 五项不变，app.go 零改动。
 # 2026-11-10 批次 3 第 4 步：handlers/bpmn/workflow.go + ai_generator.go 经 3 个域内窄契约 + 17 个引擎组值类型（含 43 方法子服务接口）成组下沉 dto、ParseVersionNumber 改注入函数字段归零，实测 bpmn 4 -> 2（合计 24 -> 22 文件 / 10 域不变）；L.1 140、L.4 57 与 C.6.4 五项不变，app.go 零改动。设计表原写 4 -> 1，实测仅 2 个文件可在零改动组合根的前提下归零，剩余 lint.go / inventory.go 仍留第 5 步与组合根专项合并（2 -> 0），最终 20 文件 / 9 域目标不变。
 # 2026-11-10 批次 3 第 5 步 A：handlers/bpmn/lint.go + inventory.go 经 BPMNLintCatalog 窄契约、PendingInventoryBuilder 注入函数类型与 5 个盘点值类型下沉 dto 归零，构造上移组合根（app.go 两处 1:1 行内替换、净增 0 行）。实测 bpmn 2 -> 0，整域基线行删除，合计 22 -> 20 文件 / 10 -> 9 域，L.4 零依赖域 57 -> 58；L.1 140 与 C.6.4 五项不变（工作树 bootstrap_app_lines 2169 > 基线 2167 仍来自并行会话未提交的 zap.ReplaceGlobals 两行 WIP，本批不代调）。组合根专项 B（operations / problem）另批交付。
+# 2026-11-10 批次 3 第 5 步 B：组合根注入专项。operations 的包级恢复函数改构造期注入的 ToolInvocationRecovery（22 处调用点全量显式传真实实现，router.go 接线）；problem 的 TicketSLAService / BPMNApprovalBridge 改 2 个域内窄契约、SLADeadlineResult 下沉 dto（service 侧同名别名）、桥接构造上移 app.go 与测试夹具。两域生产文件共享层依赖各 1 -> 0，整域基线行删除；合计 20 -> 18 文件 / 9 -> 7 域，L.4 零依赖域 58 -> 60。app.go 的 problem.NewService 为 1:1 行内替换、净增 0 行，L.1 140 与 C.6.4 五项不变（工作树 2169 > 基线 2167 仍为并行会话 WIP，本批不代调）。
 ai=4
 change=1
 cmdb=7
 dashboard=1
 email_intake=2
-operations=1
-problem=1
 service_request=1
 skill=2

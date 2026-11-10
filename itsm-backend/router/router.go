@@ -448,7 +448,7 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 		common.Success(c, buildGAReadiness(c.Request.Context(), config.Client))
 	})
 	if config.Client != nil {
-		operationHandler := operations.NewHandler(operations.NewService(config.Client))
+		operationHandler := operations.NewHandler(operations.NewService(config.Client, service.RecoverInterruptedToolInvocationTx))
 		operationRoutes := auth.Group("/admin/operations/commands")
 		operationRoutes.Use(middleware.TenantMiddleware(config.Client))
 		operationRoutes.Use(middleware.RequirePermission("system", "write"))

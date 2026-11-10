@@ -13,7 +13,6 @@ import (
 	"itsm-backend/handlers/knowledge"
 	"itsm-backend/internal/datascope"
 	"itsm-backend/internal/knowledgeaccess"
-	"itsm-backend/service"
 	"itsm-backend/service/sla"
 
 	"go.uber.org/zap"
@@ -26,7 +25,7 @@ type Service struct {
 	// slaSvc 提供 SLA 截止时间计算与 sla_states 持久化（2026-10-21 GA 阻断项落地）。
 	// 与 incident 域同一装配模式：handler 域不自己算 deadline，词汇表与存储收敛在
 	// service 层单一实现；nil 时（单测/旧组装）问题照常创建，只是不带 SLA 绑定。
-	slaSvc *service.TicketSLAService
+	slaSvc SLAService
 	// kbRepo 知识沉淀目标仓储（2026-10-22 沉淀闭环落地）。
 	// nil 时（单测/旧组装）沉淀端点显式 503，反查端点返回空列表。
 	kbRepo KnowledgeSink
@@ -39,7 +38,7 @@ type Service struct {
 	// approvalBridge 问题生命周期动作（调查/解决/关闭）→ BPMN 流程待办桥。
 	// nil 时（单测/旧组装/仓储未实现原子更新器）问题域照常流转，
 	// 只是流程实例不随动——未接线不是阻断项，分叉由盘点工具暴露。
-	approvalBridge *service.BPMNApprovalBridge
+	approvalBridge WorkflowBridge
 }
 
 // atomicProblemUpdater 是支持「业务写入 + BPMN 桥接同一事务」的仓储能力
@@ -62,23 +61,24 @@ func (s *Service) IsNotFound(err error) bool {
 	return ent.IsNotFound(err)
 }
 
-func NewService(repo Repository, entClient *ent.Client, validator AssigneeValidator, logger *zap.SugaredLogger) *Service {
+func NewService(repo Repository, entClient *ent.Client, validator AssigneeValidator, logger *zap.SugaredLogger, bridge ...WorkflowBridge) *Service {
 	svc := &Service{
 		repo:      repo,
 		entClient: entClient,
 		validator: validator,
 		logger:    logger,
 	}
-	if entClient != nil {
-		// 问题生命周期动作统一桥接到 BPMN 流程待办，避免流程实例悬挂。
-		svc.approvalBridge = service.NewBPMNApprovalBridge(entClient, logger)
+	// 桥接由组合根显式注入；未注入时（单测/旧组装）问题域照常流转，
+	// 流程实例不随动——未接线不是阻断项，分叉由盘点工具暴露。
+	if len(bridge) > 0 {
+		svc.approvalBridge = bridge[0]
 	}
 	return svc
 }
 
 // SetSLAService 注入 SLA 服务（截止时间计算 + sla_states 持久化）。
 // 装配缺失时问题域降级为「无 SLA 绑定」而非拒绝创建——能力缺失不得阻断主流程。
-func (s *Service) SetSLAService(slaSvc *service.TicketSLAService) {
+func (s *Service) SetSLAService(slaSvc SLAService) {
 	s.slaSvc = slaSvc
 }
 

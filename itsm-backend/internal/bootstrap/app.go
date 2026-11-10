@@ -1005,7 +1005,7 @@ func NewApplication() *Application {
 
 	// Domain: Problem (DDD)
 	problemRepo := problem.NewEntRepository(client)
-	problemServiceDomain := problem.NewService(problemRepo, client, ticketService, sugar) // 受指人校验复用 ticketService.ValidateAssignee（同租户+在职），与 datascope 写权限互补
+	problemServiceDomain := problem.NewService(problemRepo, client, ticketService, sugar, service.NewBPMNApprovalBridge(client, sugar)) // 受指人校验复用 ticketService.ValidateAssignee（同租户+在职），与 datascope 写权限互补
 	// SLA 注入（2026-10-21 GA 阻断项落地）：问题创建即按 problem 服务类型绑定
 	// sla_states，resolved/closed 时打解决时间戳。装配缺失时问题域降级为无 SLA
 	// 绑定，不阻断创建。

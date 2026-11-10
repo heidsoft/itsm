@@ -13,6 +13,7 @@ import (
 	"itsm-backend/ent/enttest"
 	"itsm-backend/ent/operationalcommand"
 	"itsm-backend/internal/commandbus"
+	toolsexec "itsm-backend/service"
 
 	"entgo.io/ent/dialect"
 	_ "github.com/mattn/go-sqlite3"
@@ -61,7 +62,7 @@ func createInterruptedAIToolInvocation(t *testing.T, client *ent.Client, label s
 func TestServiceIsTenantScopedAndSanitizesPayload(t *testing.T) {
 	client := newOperationsTestClient(t)
 	command := createCommand(t, client, 1, commandbus.StatusPending)
-	service := NewService(client)
+	service := NewService(client, toolsexec.RecoverInterruptedToolInvocationTx)
 
 	_, err := service.Get(context.Background(), 2, command.ID)
 	require.ErrorIs(t, err, ErrCommandNotFound)
@@ -77,7 +78,7 @@ func TestReplayPreservesIdentityAndAttemptAndWritesAudit(t *testing.T) {
 	_, err := client.OperationalCommand.UpdateOneID(command.ID).
 		SetAttempt(4).SetLastError("temporary failure").SetCompletedAt(time.Now()).Save(context.Background())
 	require.NoError(t, err)
-	service := NewService(client)
+	service := NewService(client, toolsexec.RecoverInterruptedToolInvocationTx)
 	now := time.Now().Add(time.Minute)
 	service.now = func() time.Time { return now }
 
@@ -106,7 +107,7 @@ func TestCancelFencesProcessingOwnerAndRejectsInvalidReplay(t *testing.T) {
 	command, err := client.OperationalCommand.UpdateOneID(command.ID).
 		SetLeaseOwner("worker-a").SetLeaseExpiresAt(lease).SetFencingToken(7).Save(context.Background())
 	require.NoError(t, err)
-	service := NewService(client)
+	service := NewService(client, toolsexec.RecoverInterruptedToolInvocationTx)
 
 	cancelled, err := service.Cancel(context.Background(), 1, command.ID, Actor{UserID: 1, Path: "/cancel", Method: "POST"})
 	require.NoError(t, err)
@@ -124,7 +125,7 @@ func TestListReturnsOperationalSummaryForTenant(t *testing.T) {
 	createCommand(t, client, 1, commandbus.StatusPending)
 	createCommand(t, client, 1, commandbus.StatusDeadLetter)
 	createCommand(t, client, 2, commandbus.StatusPending)
-	service := NewService(client)
+	service := NewService(client, toolsexec.RecoverInterruptedToolInvocationTx)
 
 	page, err := service.List(context.Background(), ListRequest{TenantID: 1, Page: 1, PageSize: 20})
 	require.NoError(t, err)
@@ -152,7 +153,7 @@ func TestListFiltersByCommandTypeAndAggregateType(t *testing.T) {
 		SetStatus(commandbus.StatusPending).Save(context.Background())
 	require.NoError(t, err)
 
-	service := NewService(client)
+	service := NewService(client, toolsexec.RecoverInterruptedToolInvocationTx)
 	page, err := service.List(context.Background(), ListRequest{
 		TenantID: 1, CommandType: commandbus.CommandStartBPMN, Page: 1, PageSize: 20,
 	})
@@ -178,7 +179,7 @@ func TestBulkReplayRestoresCommandsAndKeepsIdempotencyKey(t *testing.T) {
 	_, err := client.OperationalCommand.UpdateOneID(a.ID).
 		SetLastError("boom").SetAttempt(3).SetCompletedAt(time.Now()).Save(context.Background())
 	require.NoError(t, err)
-	service := NewService(client)
+	service := NewService(client, toolsexec.RecoverInterruptedToolInvocationTx)
 
 	result, err := service.BulkReplay(context.Background(), BulkFilter{
 		TenantID: 1, PageSize: 10,
@@ -213,7 +214,7 @@ func TestBulkReplayRecoversInterruptedAITool(t *testing.T) {
 		SetStatus(commandbus.StatusDeadLetter).SetAttempt(1).SetMaxAttempts(1).Save(ctx)
 	require.NoError(t, err)
 
-	result, err := NewService(client).BulkReplay(ctx, BulkFilter{TenantID: invocation.TenantID, PageSize: 10}, Actor{
+	result, err := NewService(client, toolsexec.RecoverInterruptedToolInvocationTx).BulkReplay(ctx, BulkFilter{TenantID: invocation.TenantID, PageSize: 10}, Actor{
 		UserID: invocation.UserID, Path: "/bulk-replay", Method: "POST",
 	})
 	require.NoError(t, err)
@@ -229,7 +230,7 @@ func TestBulkReplayRecoversInterruptedAITool(t *testing.T) {
 func TestBulkReplayRejectsWrongStatusAndEmptyFilter(t *testing.T) {
 	client := newOperationsTestClient(t)
 	createCommand(t, client, 1, commandbus.StatusPending)
-	service := NewService(client)
+	service := NewService(client, toolsexec.RecoverInterruptedToolInvocationTx)
 
 	_, err := service.BulkReplay(context.Background(), BulkFilter{TenantID: 1, Status: commandbus.StatusPending}, Actor{})
 	require.Error(t, err)
@@ -252,7 +253,7 @@ func TestBulkCancelOnlyTouchesStuckLeasesWhenAsked(t *testing.T) {
 		SetLeaseExpiresAt(time.Now().Add(5 * time.Minute)).
 		SetFencingToken(2).Save(context.Background())
 	require.NoError(t, err)
-	service := NewService(client)
+	service := NewService(client, toolsexec.RecoverInterruptedToolInvocationTx)
 	service.now = func() time.Time { return time.Now() }
 
 	// 仅撤离 lease 过期：active 必须保持 processing
@@ -296,7 +297,7 @@ func TestSummaryExposesStuckLeaseAndFailureRate(t *testing.T) {
 		SetCompletedAt(now).Save(context.Background())
 	require.NoError(t, err)
 
-	page, err := NewService(client).List(context.Background(), ListRequest{TenantID: 1, Page: 1, PageSize: 20})
+	page, err := NewService(client, toolsexec.RecoverInterruptedToolInvocationTx).List(context.Background(), ListRequest{TenantID: 1, Page: 1, PageSize: 20})
 	require.NoError(t, err)
 	require.Equal(t, 1, page.Summary.StuckLeases)
 	require.Equal(t, 1, page.Summary.Pending)
@@ -326,7 +327,7 @@ func TestCancelAllowsDeadLetterAsTerminalDecision(t *testing.T) {
 		SetAttempt(8).SetLastError("load notification ticket: ent: ticket not found").
 		SetCompletedAt(time.Now()).Save(context.Background())
 	require.NoError(t, err)
-	service := NewService(client)
+	service := NewService(client, toolsexec.RecoverInterruptedToolInvocationTx)
 	now := time.Now().Add(time.Minute)
 	service.now = func() time.Time { return now }
 
@@ -360,7 +361,7 @@ func TestBulkCancelAllowsDeadLetterFilter(t *testing.T) {
 	_, err = client.OperationalCommand.UpdateOneID(other.ID).
 		SetCommandType("workflow.start").Save(context.Background())
 	require.NoError(t, err)
-	service := NewService(client)
+	service := NewService(client, toolsexec.RecoverInterruptedToolInvocationTx)
 
 	result, err := service.BulkCancel(context.Background(), BulkFilter{
 		TenantID: 1, Status: commandbus.StatusDeadLetter, CommandType: "notification.deliver", PageSize: 100,
