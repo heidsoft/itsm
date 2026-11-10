@@ -58,15 +58,15 @@ func (s *Service) ApplyDiscoveryResult(ctx context.Context, tenantID, userID, id
 		return nil, fmt.Errorf("claim discovery result %d: %w", id, err)
 	}
 	if claimed != 1 {
-		return nil, common.NewConflictError("discoveryResult", "差异已被其他操作者处理")
+		return nil, common.NewStateConflictError("差异已被其他操作者处理，请刷新后重试", "claim lost")
 	}
 
 	resource, err := s.repo.GetCloudResourceByIdentity(ctx, tenantID, result.ResourceIdentity)
 	if err != nil {
 		if ent.IsNotFound(err) {
 			s.failApplyingDiscoveryResult(ctx, tenantID, id, "resource_missing", "资源已不存在")
-			return nil, common.NewConflictError("discoveryResult",
-				"资源已不存在（可能已被删除），请重跑发现后再决策")
+			return nil, common.NewStateConflictError(
+				"资源已不存在（可能已被删除），请重跑发现后再决策", "resource missing")
 		}
 		s.failApplyingDiscoveryResult(ctx, tenantID, id, "resource_load_failed", err.Error())
 		return nil, fmt.Errorf("load cloud resource by identity: %w", err)
@@ -78,8 +78,8 @@ func (s *Service) ApplyDiscoveryResult(ctx context.Context, tenantID, userID, id
 	// 更新的事实，必须 fail-closed 要求重跑发现（缺基线哈希同样无法证明新鲜）。
 	if result.BeforeHash == "" || resource.SourceFingerprint != result.BeforeHash {
 		s.failApplyingDiscoveryResult(ctx, tenantID, id, "resource_changed", "资源在差异生成后已变化，快照过期")
-		return nil, common.NewConflictError("discoveryResult",
-			"资源自差异生成后已发生变化，当前快照已过期，请重跑发现后再决策")
+		return nil, common.NewStateConflictError(
+			"资源自差异生成后已发生变化，当前快照已过期，请重跑发现后再决策", "stale snapshot")
 	}
 
 	applyDiscoveredSnapshot(resource, result)
@@ -98,7 +98,7 @@ func (s *Service) ApplyDiscoveryResult(ctx context.Context, tenantID, userID, id
 		return nil, fmt.Errorf("persist applied discovery result %d: %w", id, err)
 	}
 	if changed != 1 {
-		return nil, common.NewConflictError("discoveryResult", "差异状态已被其他操作者改变")
+		return nil, common.NewStateConflictError("差异状态已被其他操作者改变，请刷新后重试", "status changed")
 	}
 	result.Status = DiscoveryResultApplied
 	result.ErrorCode = ""
@@ -143,7 +143,7 @@ func (s *Service) RejectDiscoveryResult(ctx context.Context, tenantID, userID, i
 		return nil, fmt.Errorf("persist rejected discovery result %d: %w", id, err)
 	}
 	if changed != 1 {
-		return nil, common.NewConflictError("discoveryResult", "差异已被其他操作者处理")
+		return nil, common.NewStateConflictError("差异已被其他操作者处理，请刷新后重试", "claim lost")
 	}
 	result.Status = DiscoveryResultRejected
 	result.ErrorCode = ""
@@ -166,16 +166,16 @@ func (s *Service) failApplyingDiscoveryResult(ctx context.Context, tenantID, id 
 
 func ensureDecidableDiscoveryResult(result *DiscoveryResult) error {
 	if result.Status != DiscoveryResultPending {
-		return common.NewConflictError("discoveryResult",
-			fmt.Sprintf("差异已处理（%s），不能重复决策", result.Status))
+		return common.NewStateConflictError(
+			fmt.Sprintf("差异已处理（%s），不能重复决策", result.Status), result.Status)
 	}
 	if result.Action != "update" {
-		return common.NewConflictError("discoveryResult",
-			fmt.Sprintf("只有 update 差异需要人工决策（当前 %s）：create 在发现时已落库，delete 不产生差异", result.Action))
+		return common.NewStateConflictError(
+			fmt.Sprintf("只有 update 差异需要人工决策（当前 %s）：create 在发现时已落库，delete 不产生差异", result.Action), result.Action)
 	}
 	if strings.TrimSpace(result.ResourceIdentity) == "" {
-		return common.NewConflictError("discoveryResult",
-			"差异缺少规范身份哈希，无法定位资源，请重跑发现")
+		return common.NewStateConflictError(
+			"差异缺少规范身份哈希，无法定位资源，请重跑发现", "missing identity")
 	}
 	return nil
 }

@@ -202,8 +202,9 @@ func (p *DiscoveryCIProjector) CompleteManually(
 			fmt.Sprintf("租户尚未创建 CI 类型 %s，无法按发现结果建账", ciTypeName), nil)
 	}
 	if linked := p.findLinkedCI(ctx, res); linked != nil {
-		return nil, common.NewConflictError("云资源已建账",
-			fmt.Sprintf("该资源已关联配置项 #%d（%s），请直接编辑该配置项", linked.ID, linked.CINumber))
+		return nil, common.NewStateConflictError(
+			fmt.Sprintf("该资源已关联配置项 #%d（%s），请直接编辑该配置项", linked.ID, linked.CINumber),
+			fmt.Sprintf("linked ci=%d", linked.ID))
 	}
 
 	createReq := p.newCreateCIRequest(res, ciTypeID)

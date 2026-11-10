@@ -33,7 +33,10 @@ func failServiceRequest(c *gin.Context, err error) {
 		case common.ErrCodeNotFound:
 			common.Fail(c, common.NotFoundErrorCode, appErr.Message)
 		case common.ErrCodeConflict:
-			common.Fail(c, common.ConflictCode, appErr.Error())
+			// Never render AppError.Error() here: it carries the debug prefix
+			// ("[CONFLICT] ") plus the internal detail suffix. Classification has
+			// exactly one owner and clients get the domain message.
+			common.Fail(c, common.ConflictCode, appErr.Message)
 		default:
 			common.Fail(c, common.InternalErrorCode, appErr.Message)
 		}

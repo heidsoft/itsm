@@ -6,8 +6,10 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"testing"
 
+	"itsm-backend/common"
 	"itsm-backend/ent/auditlog"
 	"itsm-backend/internal/commandbus"
 	"itsm-backend/middleware"
@@ -156,6 +158,38 @@ func TestHandlerBulkCancelRejectsWrongStatus(t *testing.T) {
 		http.MethodPost, "/bulk-cancel", bytes.NewReader(body),
 	))
 	require.Equal(t, http.StatusConflict, recorder.Code)
+}
+
+func TestHandlerReplayRejectsSucceededCommandWithActionableMessage(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	client := newOperationsTestClient(t)
+	command := createCommand(t, client, 4, commandbus.StatusSucceeded)
+	handler := NewHandler(NewService(client, toolsexec.RecoverInterruptedToolInvocationTx))
+	router := gin.New()
+	router.POST("/commands/:id/replay", func(c *gin.Context) {
+		c.Set(middleware.TenantContextKey, &middleware.TenantContext{TenantID: 4})
+		c.Set("tenant_id", 4)
+		c.Set("user_id", 9)
+		handler.Replay(c)
+	})
+
+	recorder := httptest.NewRecorder()
+	router.ServeHTTP(recorder, httptest.NewRequest(
+		http.MethodPost, "/commands/"+strconv.Itoa(command.ID)+"/replay", nil,
+	))
+	require.Equal(t, http.StatusConflict, recorder.Code)
+
+	var response struct {
+		Code    int    `json:"code"`
+		Message string `json:"message"`
+	}
+	require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &response))
+	require.Equal(t, common.ConflictCode, response.Code)
+	// 回归：状态不满足与并发写共用一句 "state changed"，重放成功命令的调用方
+	// 被误导为「刷新重试即可」。文案必须说明允许的状态。
+	require.Contains(t, response.Message, "不允许该操作")
+	require.Contains(t, response.Message, "dead_letter")
+	require.NotContains(t, response.Message, "state changed")
 }
 
 func TestHandlerReplayRecoversInterruptedAITool(t *testing.T) {

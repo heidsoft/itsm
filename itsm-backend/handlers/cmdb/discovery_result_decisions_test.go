@@ -111,7 +111,8 @@ func TestApplyDiscoveryResultWritesResourceFacts(t *testing.T) {
 	var appErr *common.AppError
 	require.ErrorAs(t, err, &appErr)
 	require.Equal(t, common.ErrCodeConflict, appErr.Code)
-	require.Contains(t, appErr.Detail, "已处理")
+	// 用户可见的原因必须在 Message；Detail 只留机器上下文（RespondError 不展示 Detail）。
+	require.Contains(t, appErr.Message, "已处理")
 }
 
 func TestApplyDiscoveryResultRejectsStaleSnapshot(t *testing.T) {
@@ -139,7 +140,7 @@ func TestApplyDiscoveryResultRejectsStaleSnapshot(t *testing.T) {
 	var appErr *common.AppError
 	require.ErrorAs(t, err, &appErr)
 	require.Equal(t, common.ErrCodeConflict, appErr.Code)
-	require.Contains(t, appErr.Detail, "重跑发现")
+	require.Contains(t, appErr.Message, "重跑发现")
 
 	got, err := repo.GetCloudResourceByIdentity(ctx, tenant.ID, "identity-stale")
 	require.NoError(t, err)
@@ -204,7 +205,7 @@ func TestApplyDiscoveryResultRejectsNonUpdateActions(t *testing.T) {
 	var appErr *common.AppError
 	require.ErrorAs(t, err, &appErr)
 	require.Equal(t, common.ErrCodeConflict, appErr.Code)
-	require.Contains(t, appErr.Detail, "只有 update")
+	require.Contains(t, appErr.Message, "只有 update")
 }
 
 func TestApplyDiscoveryResultFailsClosedWhenResourceGone(t *testing.T) {
@@ -229,7 +230,7 @@ func TestApplyDiscoveryResultFailsClosedWhenResourceGone(t *testing.T) {
 	var appErr *common.AppError
 	require.ErrorAs(t, err, &appErr)
 	require.Equal(t, common.ErrCodeConflict, appErr.Code)
-	require.Contains(t, appErr.Detail, "重跑发现")
+	require.Contains(t, appErr.Message, "重跑发现")
 }
 
 func TestDiscoveryResultDecisionsAreTenantScoped(t *testing.T) {

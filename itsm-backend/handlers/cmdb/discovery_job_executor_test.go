@@ -367,7 +367,7 @@ func TestDiscoveryJobIdempotencyConflict(t *testing.T) {
 	appErr, ok := err.(*common.AppError)
 	require.True(t, ok)
 	require.Equal(t, common.ErrCodeConflict, appErr.Code)
-	require.Contains(t, appErr.Detail, "job=")
+	require.Contains(t, appErr.Message, "job=", "用户可见文案要带上已存在的任务，便于排查")
 	require.NotEqual(t, 0, first.ID)
 }
 

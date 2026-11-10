@@ -1461,7 +1461,8 @@ func (s *CMDBImportExportService) ResolveExportDownload(ctx context.Context, tas
 		return "", "", common.NewForbiddenError("无权下载其他操作人创建的导出文件")
 	}
 	if task.Status != "completed" {
-		return "", "", common.NewConflictError("导出任务", "任务尚未完成")
+		return "", "", common.NewStateConflictError(
+			fmt.Sprintf("导出任务尚未完成（当前 %s），无法下载", task.Status), task.Status)
 	}
 	if !task.ExpiresAt.IsZero() && time.Now().After(task.ExpiresAt) {
 		return "", "", common.NewForbiddenError("导出文件已过期，请重新导出")

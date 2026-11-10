@@ -91,8 +91,9 @@ func (s *CIRelationshipService) CreateCIRelationship(ctx context.Context, req *d
 		return nil, fmt.Errorf("failed to check relation existence: %w", err)
 	}
 	if exists {
-		return nil, common.NewConflictError("CI关系",
-			fmt.Sprintf("源CI %d 与目标CI %d 之间已存在类型为 %s 的关系", req.SourceCIID, req.TargetCIID, req.RelationshipType))
+		return nil, common.NewStateConflictError(
+			fmt.Sprintf("源CI %d 与目标CI %d 之间已存在类型为 %s 的关系", req.SourceCIID, req.TargetCIID, req.RelationshipType),
+			"duplicate relationship")
 	}
 
 	// 环检测：若 targetCI 已存在通向 sourceCI 的有向路径，则本次插入会形成环
@@ -108,8 +109,9 @@ func (s *CIRelationshipService) CreateCIRelationship(ctx context.Context, req *d
 		return nil, fmt.Errorf("failed to detect cycle: %w", cycleErr)
 	}
 	if cyclic {
-		return nil, common.NewConflictError("CI关系",
-			fmt.Sprintf("该关系会在 CI 依赖图中形成环（source=%d target=%d type=%s）", req.SourceCIID, req.TargetCIID, req.RelationshipType))
+		return nil, common.NewStateConflictError(
+			fmt.Sprintf("该关系会在 CI 依赖图中形成环（source=%d target=%d type=%s）", req.SourceCIID, req.TargetCIID, req.RelationshipType),
+			"cycle detected")
 	}
 
 	// 创建关系

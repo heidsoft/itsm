@@ -776,8 +776,9 @@ func (s *Service) createDiscoveryJob(ctx context.Context, tenantID, userID int, 
 			return nil, fmt.Errorf("check discovery job idempotency: %w", err)
 		}
 		if existing != nil {
-			return nil, common.NewConflictError("discoveryJob",
-				fmt.Sprintf("相同幂等键的任务已存在（job=%d, status=%s）", existing.ID, existing.Status))
+			return nil, common.NewStateConflictError(
+				fmt.Sprintf("相同幂等键的任务已存在（job=%d, status=%s）", existing.ID, existing.Status),
+				"idempotency key reused")
 		}
 	}
 
@@ -842,7 +843,8 @@ func (s *Service) CancelDiscoveryJob(ctx context.Context, tenantID, id int) (*Di
 		return nil, err
 	}
 	if err := RequestDiscoveryJobCancellation(job, time.Now()); err != nil {
-		return nil, common.NewConflictError("discoveryJob", fmt.Sprintf("任务已终态（%s），无法取消", job.Status))
+		return nil, common.NewStateConflictError(
+			fmt.Sprintf("任务已终态（%s），无法取消", job.Status), job.Status)
 	}
 	if err := s.repo.UpdateDiscoveryJob(ctx, job); err != nil {
 		return nil, fmt.Errorf("persist cancel for job %d: %w", id, err)
@@ -859,9 +861,10 @@ func (s *Service) RetryDiscoveryJob(ctx context.Context, tenantID, userID, id in
 	retry, err := NewDiscoveryJobRetry(previous, time.Now())
 	if err != nil {
 		if err == ErrJobAttemptsExhausted {
-			return nil, common.NewConflictError("discoveryJob", "任务重试次数已耗尽")
+			return nil, common.NewStateConflictError("任务重试次数已耗尽，无法再次重试", "attempts exhausted")
 		}
-		return nil, common.NewConflictError("discoveryJob", "只有失败（failed/partial_failed）的任务可以重试")
+		return nil, common.NewStateConflictError(
+			fmt.Sprintf("只有失败（failed/partial_failed）的任务可以重试（当前 %s）", previous.Status), previous.Status)
 	}
 	retry.IdempotencyKey = fmt.Sprintf("retry-%d-%d", previous.ID, time.Now().UnixNano())
 	retry.RequestFingerprint = previous.RequestFingerprint

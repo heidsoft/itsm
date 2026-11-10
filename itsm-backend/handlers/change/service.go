@@ -136,8 +136,9 @@ func (s *Service) UpdateChange(ctx context.Context, c *Change, actorID int, acto
 		// 被删了，从而发起重试或错误清理。
 		var notFound *ent.NotFoundError
 		if errors.As(err, &notFound) {
-			return nil, common.NewConflictError("change",
-				fmt.Sprintf("变更单状态已由 %q 变为其他值（可能正被审批推进），请刷新后重试", existing.Status))
+			return nil, common.NewStateConflictError(
+				fmt.Sprintf("变更单状态已由 %q 变为其他值（可能正被审批推进），请刷新后重试", existing.Status),
+				"status moved under update")
 		}
 		return nil, err
 	}

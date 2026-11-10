@@ -429,7 +429,8 @@ func (r *EntRepository) CreateTeam(ctx context.Context, t *Team) (*Team, error) 
 		return nil, err
 	}
 	if exists {
-		return nil, common.NewConflictError("team", t.Code)
+		return nil, common.NewStateConflictError(
+			fmt.Sprintf("团队编码 %s 已存在，请换一个编码", t.Code), t.Code)
 	}
 	if t.ManagerID > 0 {
 		if err := r.assertActiveTenantUser(ctx, t.ManagerID, t.TenantID); err != nil {
@@ -516,7 +517,8 @@ func (r *EntRepository) UpdateTeam(ctx context.Context, t *Team) (*Team, error) 
 		return nil, err
 	}
 	if exists {
-		return nil, common.NewConflictError("team", t.Code)
+		return nil, common.NewStateConflictError(
+			fmt.Sprintf("团队编码 %s 已存在，请换一个编码", t.Code), t.Code)
 	}
 	if t.ManagerID > 0 {
 		if err := r.assertActiveTenantUser(ctx, t.ManagerID, t.TenantID); err != nil {

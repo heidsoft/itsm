@@ -99,7 +99,7 @@ func (h *Handler) bulk(c *gin.Context, replay bool) {
 	var body bulkRequestBody
 	if c.Request.ContentLength > 0 {
 		if err := json.NewDecoder(c.Request.Body).Decode(&body); err != nil {
-			common.ParamError(c, "invalid bulk request body")
+			common.ParamError(c, "批量请求体格式不正确")
 			return
 		}
 	}
@@ -123,11 +123,12 @@ func (h *Handler) bulk(c *gin.Context, replay bool) {
 	if err != nil {
 		switch {
 		case errors.Is(err, ErrBulkEmpty):
-			common.NotFound(c, "no operational commands matched the filter")
+			common.NotFound(c, "没有匹配筛选条件的操作命令")
 		case errors.Is(err, ErrInvalidState):
-			common.Fail(c, common.ConflictCode, "operational command bulk filter is invalid")
+			common.Fail(c, common.ConflictCode,
+				"批量筛选状态不合法（重放支持 dead_letter/cancelled，取消支持 pending/processing/dead_letter）")
 		default:
-			common.InternalError(c, "operational command bulk operation failed")
+			common.InternalError(c, "批量操作命令执行失败")
 		}
 		return
 	}
@@ -139,18 +140,24 @@ func (h *Handler) respond(c *gin.Context, result *CommandDTO, err error) {
 	case err == nil:
 		common.Success(c, result)
 	case errors.Is(err, ErrCommandNotFound):
-		common.NotFound(c, "operational command not found")
-	case errors.Is(err, ErrInvalidState), errors.Is(err, ErrConcurrentWrite):
-		common.Fail(c, common.ConflictCode, "operational command state changed; refresh and retry")
+		common.NotFound(c, "操作命令不存在")
+	case errors.Is(err, ErrInvalidState):
+		// 状态不满足不是一个「并发变化」：重放只接受 dead_letter/cancelled，
+		// 取消只接受 pending/processing/dead_letter。让调用方知道下一步可以做什么，
+		// 而不是笼统地说命令状态变了。
+		common.Fail(c, common.ConflictCode,
+			"当前命令状态不允许该操作（重放支持 dead_letter/cancelled，取消支持 pending/processing/dead_letter）")
+	case errors.Is(err, ErrConcurrentWrite):
+		common.Fail(c, common.ConflictCode, "命令已被其他操作修改，请刷新后重试")
 	default:
-		common.InternalError(c, "operational command operation failed")
+		common.InternalError(c, "操作命令执行失败")
 	}
 }
 
 func commandID(c *gin.Context) (int, bool) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil || id <= 0 {
-		common.ParamError(c, "invalid command id")
+		common.ParamError(c, "命令 ID 不合法")
 		return 0, false
 	}
 	return id, true

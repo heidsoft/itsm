@@ -114,11 +114,33 @@ func NewForbiddenError(message string) *AppError {
 	}
 }
 
-// NewConflictError creates a conflict error
+// NewConflictError creates a duplicate-resource conflict error.
+//
+// The message is derived from the resource name ("<resource> already exists"),
+// so `resource` must be a noun. State, precondition, or lifecycle conflicts —
+// "任务已终态，无法取消", "不允许该状态迁移（failed → delivered）" — must use
+// NewStateConflictError instead: appending "already exists" to a sentence produces
+// unreadable text like "Invalid service request status transition already exists".
 func NewConflictError(resource, detail string) *AppError {
 	return &AppError{
 		Code:       ErrCodeConflict,
 		Message:    fmt.Sprintf("%s already exists", resource),
+		Detail:     detail,
+		HTTPStatus: http.StatusConflict,
+	}
+}
+
+// NewStateConflictError creates a state/precondition conflict (409) whose message
+// is exactly what the caller wrote. Use it for illegal lifecycle transitions,
+// optimistic-lock misses, "already processed by another operator", and similar
+// cases where the reason IS the user-facing sentence.
+//
+// `detail` carries structured context for logs and diagnostics; it is not shown
+// to the client, so anything the user must see belongs in `message`.
+func NewStateConflictError(message, detail string) *AppError {
+	return &AppError{
+		Code:       ErrCodeConflict,
+		Message:    message,
 		Detail:     detail,
 		HTTPStatus: http.StatusConflict,
 	}

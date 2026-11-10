@@ -108,7 +108,8 @@ func (s *TicketTypeService) CreateTicketType(ctx context.Context, req *dto.Creat
 		return nil, fmt.Errorf("failed to check code existence: %w", err)
 	}
 	if exists {
-		return nil, common.NewConflictError("工单类型编码", req.Code)
+		return nil, common.NewStateConflictError(
+			fmt.Sprintf("工单类型编码 %s 已存在，请换一个编码", req.Code), req.Code)
 	}
 
 	// Serialize complex JSON fields

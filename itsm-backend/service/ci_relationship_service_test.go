@@ -609,6 +609,62 @@ func TestCreateCIRelationship_DuplicateIsConflict(t *testing.T) {
 	if appErr.HTTPStatus != 409 {
 		t.Fatalf("HTTPStatus = %d, want 409 (%s)", appErr.HTTPStatus, appErr.Message)
 	}
+	// 回归：状态冲突曾走重复资源构造器，客户端只看到 "CI关系 already exists"，
+	// 真正原因被塞进 Detail（RespondError 不展示 Detail）。
+	if strings.Contains(appErr.Message, "already exists") {
+		t.Fatalf("冲突文案不应使用重复资源措辞，实际: %q", appErr.Message)
+	}
+	if !strings.Contains(appErr.Message, "已存在类型为") {
+		t.Fatalf("冲突文案应说明重复关系，实际: %q", appErr.Message)
+	}
+}
+
+// 环检测拒绝必须是 409 且带可读原因，而不是 "CI关系 already exists"。
+func TestCreateCIRelationship_CycleIsReadableConflict(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", "file:ci_rel_cycle?mode=memory&cache=shared&_fk=1")
+	defer client.Close()
+
+	ctx := context.Background()
+	tenant, err := createCMDBTestTenant(ctx, client, "Tenant Cycle", "tenant-cycle", "cycle.example.com")
+	if err != nil {
+		t.Fatalf("创建租户失败: %v", err)
+	}
+	ciType, err := createTestCIType(ctx, client, tenant.ID, "server-cycle")
+	if err != nil {
+		t.Fatalf("创建CI类型失败: %v", err)
+	}
+	a, err := createTestCI(ctx, client, tenant.ID, ciType.ID, "cycle-a")
+	if err != nil {
+		t.Fatalf("创建CI失败: %v", err)
+	}
+	b, err := createTestCI(ctx, client, tenant.ID, ciType.ID, "cycle-b")
+	if err != nil {
+		t.Fatalf("创建CI失败: %v", err)
+	}
+
+	svc := NewCIRelationshipService(client, zaptest.NewLogger(t).Sugar())
+	if _, err := svc.CreateCIRelationship(ctx, &dto.CreateCIRelationshipRequest{
+		SourceCIID: a.ID, TargetCIID: b.ID, RelationshipType: dto.DependsOn,
+	}, tenant.ID); err != nil {
+		t.Fatalf("首次创建关系失败: %v", err)
+	}
+
+	_, err = svc.CreateCIRelationship(ctx, &dto.CreateCIRelationshipRequest{
+		SourceCIID: b.ID, TargetCIID: a.ID, RelationshipType: dto.DependsOn,
+	}, tenant.ID)
+	var appErr *common.AppError
+	if !errors.As(err, &appErr) {
+		t.Fatalf("期望 *common.AppError(409)，实际 %T: %v", err, err)
+	}
+	if appErr.HTTPStatus != 409 {
+		t.Fatalf("HTTPStatus = %d, want 409 (%s)", appErr.HTTPStatus, appErr.Message)
+	}
+	if strings.Contains(appErr.Message, "already exists") {
+		t.Fatalf("环检测冲突文案不应使用重复资源措辞，实际: %q", appErr.Message)
+	}
+	if !strings.Contains(appErr.Message, "形成环") {
+		t.Fatalf("环检测冲突文案应说明成环，实际: %q", appErr.Message)
+	}
 }
 
 // 自环关系是参数错误（400）。

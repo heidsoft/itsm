@@ -227,7 +227,7 @@ func (s *Service) Create(ctx context.Context, tenantID, requesterID int, catalog
 	// 1. Validate Service Catalog
 	cat, err := s.scRepo.Get(ctx, tenantID, catalogID)
 	if err != nil {
-		return nil, common.NewNotFoundError("Service Catalog not found")
+		return nil, common.NewNotFoundError("Service Catalog")
 	}
 	if cat.CloudServiceID > 0 && cat.CITypeID == 0 {
 		return nil, common.NewBadRequestError("关联云服务时必须配置CI类型", nil)
@@ -589,7 +589,8 @@ func (s *Service) ApplyApproval(ctx context.Context, id, tenantID, actorID int, 
 	}
 	// 审批只存在于审批阶段：终态或已进入履约的请求即使残留 pending 审批行也不得再投票。
 	if req.CurrentLevel <= 0 || req.Status != srApprovalStageStatus(req.CurrentLevel) {
-		return nil, nil, common.NewConflictError("当前请求不在审批阶段", req.Status)
+		return nil, nil, common.NewStateConflictError(
+			fmt.Sprintf("当前请求不在审批阶段（状态 %s），无法继续审批", req.Status), req.Status)
 	}
 
 	// 3. Find Pending Approval for Current Level
@@ -601,7 +602,8 @@ func (s *Service) ApplyApproval(ctx context.Context, id, tenantID, actorID int, 
 		}
 	}
 	if currentApproval == nil {
-		return nil, nil, common.NewConflictError("No pending approval found for current level", "")
+		return nil, nil, common.NewStateConflictError(
+			fmt.Sprintf("当前审批层级（%d）没有可处理的审批记录", req.CurrentLevel), "")
 	}
 
 	// 审批人集合只含发起人时，BPMN 会按「审批任务不得落到发起人」的规则把待办
@@ -631,7 +633,8 @@ func (s *Service) ApplyApproval(ctx context.Context, id, tenantID, actorID int, 
 	// 4. Check Permissions
 	requesterDept, _, err := s.repo.GetUserContext(ctx, req.RequesterID, tenantID)
 	if err != nil {
-		return nil, nil, common.NewConflictError("Requester is no longer available", "")
+		return nil, nil, common.NewStateConflictError(
+			fmt.Sprintf("请求人（#%d）已不可用，无法继续审批", req.RequesterID), "requester unavailable")
 	}
 	if actorDept == "" {
 		actorDept = userDept
@@ -1194,10 +1197,11 @@ func (s *Service) Update(ctx context.Context, id, tenantID, actorID int, actorRo
 	// 1. Get existing request
 	req, _, err := s.repo.GetWithApprovals(ctx, id, tenantID)
 	if err != nil {
-		return nil, common.NewNotFoundError("Service Request not found")
+		return nil, common.NewNotFoundError("Service Request")
 	}
 	if req.Status != SRStatusSubmitted {
-		return nil, common.NewConflictError("Only submitted requests can be edited", req.Status)
+		return nil, common.NewStateConflictError(
+			fmt.Sprintf("仅 submitted 状态的请求可编辑（当前 %s）", req.Status), req.Status)
 	}
 	if actorID != req.RequesterID && !isServiceRequestAdmin(actorRole) {
 		return nil, common.NewForbiddenError("Only the requester or an administrator can edit this request")
@@ -1278,13 +1282,15 @@ func (s *Service) classifyWriteFailure(ctx context.Context, req *ServiceRequest,
 func (s *Service) UpdateStatus(ctx context.Context, id, tenantID, actorID int, actorRole, status string) error {
 	req, _, err := s.repo.GetWithApprovals(ctx, id, tenantID)
 	if err != nil {
-		return common.NewNotFoundError("Service Request not found")
+		return common.NewNotFoundError("Service Request")
 	}
 	if strings.TrimSpace(status) == "" {
 		return common.NewBadRequestError("Status is required", nil)
 	}
 	if !isValidServiceRequestOperationalTransition(req.Status, status) {
-		return common.NewConflictError("Invalid service request status transition", req.Status+" -> "+status)
+		return common.NewStateConflictError(
+			fmt.Sprintf("不允许该状态迁移（%s → %s）", req.Status, status),
+			req.Status+" -> "+status)
 	}
 	if status == SRStatusCancelled {
 		if actorID != req.RequesterID && !isServiceRequestAdmin(actorRole) {
@@ -1338,13 +1344,14 @@ func (s *Service) Delete(ctx context.Context, id, tenantID, actorID int, actorRo
 	// 1. Get existing request
 	req, _, err := s.repo.GetWithApprovals(ctx, id, tenantID)
 	if err != nil {
-		return common.NewNotFoundError("Service Request not found")
+		return common.NewNotFoundError("Service Request")
 	}
 	if actorID != req.RequesterID && !isServiceRequestAdmin(actorRole) {
 		return common.NewForbiddenError("Only the requester or an administrator can delete this request")
 	}
 	if req.Status != SRStatusSubmitted && req.Status != SRStatusRejected && req.Status != SRStatusCancelled {
-		return common.NewConflictError("Only submitted, rejected, or cancelled requests can be deleted", req.Status)
+		return common.NewStateConflictError(
+			fmt.Sprintf("仅 submitted/rejected/cancelled 状态的请求可删除（当前 %s）", req.Status), req.Status)
 	}
 
 	// 2. Delete

@@ -321,6 +321,16 @@ func TestServiceRequestHandler_Get_NotFound(t *testing.T) {
 	assert.EqualValues(t, common.NotFoundErrorCode, resp.Code, "body=%s", srStr(resp))
 }
 
+// 回归：参数曾经传入 "Service Request not found"，NewNotFoundError 又追加一次
+// " not found"，客户端看到 "Service Request not found not found"。
+func TestServiceRequestHandler_UpdateStatus_NotFoundMessageIsNotDoubled(t *testing.T) {
+	r, _, _, _, _ := srSetup(t)
+	resp := srDoReq(t, r, "PUT", "/api/v1/service-requests/999999/status",
+		dto.UpdateServiceRequestStatusRequest{Status: SRStatusDelivered})
+	assert.EqualValues(t, common.NotFoundErrorCode, resp.Code, "body=%s", srStr(resp))
+	assert.Equal(t, "Service Request not found", resp.Message)
+}
+
 func TestServiceRequestGetMissingReturnsHTTP404NotFoundCode(t *testing.T) {
 	r, client, _, _, _ := srSetup(t)
 	defer client.Close()
@@ -403,6 +413,11 @@ func TestServiceRequestHandler_UpdateStatusCannotBypassApproval(t *testing.T) {
 	req := dto.UpdateServiceRequestStatusRequest{Status: "approved"} // 归一化为 security_approved
 	resp := srDoReq(t, r, "PUT", "/api/v1/service-requests/"+strconv.Itoa(id)+"/status", req)
 	assert.EqualValues(t, common.ConflictCode, resp.Code, "body=%s", srStr(resp))
+	// Regression: the conflict branch returned appErr.Error(), leaking the debug
+	// prefix and detail suffix ("[CONFLICT] ... already exists: ...") to clients.
+	assert.NotContains(t, resp.Message, "[CONFLICT]")
+	assert.NotContains(t, resp.Message, "already exists")
+	assert.Contains(t, resp.Message, "不允许该状态迁移", "body=%s", srStr(resp))
 }
 
 func TestServiceRequestHandler_UpdateStatus_MissingStatus(t *testing.T) {

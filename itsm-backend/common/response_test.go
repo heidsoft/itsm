@@ -513,6 +513,16 @@ func TestRespondError_AppErrorMapping(t *testing.T) {
 		{"not_found", NewNotFoundError("ticket"), NotFoundCode, http.StatusNotFound, "ticket not found"},
 		{"forbidden", NewForbiddenError("no permission"), ForbiddenCode, http.StatusForbidden, "no permission"},
 		{"conflict", NewConflictError("ticket", "duplicate"), ConflictCode, http.StatusConflict, "ticket already exists"},
+		{
+			// Regression: state conflicts used to go through NewConflictError, so the
+			// client saw "<sentence> already exists" and the reason lived in Detail,
+			// which RespondError never surfaces.
+			"state_conflict",
+			NewStateConflictError("不允许该状态迁移（failed → delivered）", "failed -> delivered"),
+			ConflictCode,
+			http.StatusConflict,
+			"不允许该状态迁移（failed → delivered）",
+		},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
