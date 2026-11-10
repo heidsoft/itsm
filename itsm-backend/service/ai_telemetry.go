@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"itsm-backend/common/tenantctx"
+	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/auditlog"
 	"itsm-backend/middleware"
@@ -136,26 +137,8 @@ func (s *AITelemetryService) RecordDecisionAudit(ctx context.Context, tenantID, 
 	return s.repo.SaveAuditLedger(ctx, tenantID, userID, reqID, scenario, inputRef, string(noteBytes), score)
 }
 
-// AIMetrics 指标聚合结果（API JSON 形状）。
-//
-// 用结构体 + json tag 强制 camelCase，
-// 避免 map[string]interface{} 拼写漂移。前端 TS 类型 AIMetrics 字段对齐。
-// 单元测试只断言字段名（不需要起 sqlite 测试 DB）。
-type AIMetrics struct {
-	TotalRequests          int                    `json:"totalRequests"`
-	TotalFeedback          int                    `json:"totalFeedback"`
-	UsefulFeedback         int                    `json:"usefulFeedback"`
-	UsefulRate             float64                `json:"usefulRate"`
-	ByKind                 map[string]interface{} `json:"byKind"`
-	AvgResponseTimeSeconds float64                `json:"avgResponseTimeSeconds"`
-	LLMCallCount           int                    `json:"llmCallCount"`
-	TotalTokens            int                    `json:"totalTokens"`
-	ResponseTimeAvailable  bool                   `json:"responseTimeAvailable"`
-	// Quota 月度配额用量（nil = 配额服务未装配，如实省略）。
-	Quota *QuotaUsage `json:"quota,omitempty"`
-	// Cost 成本估算口径（nil = 配额服务未装配）。
-	Cost *CostEstimate `json:"cost,omitempty"`
-}
+// AIMetrics 值类型唯一实现在 dto 包；此处保留同名别名以保持 service 包公开 API。
+type AIMetrics = dto.AIMetrics
 
 // GetMetrics retrieves AI usage metrics for a tenant.
 //

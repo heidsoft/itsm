@@ -47,8 +47,16 @@ import (
 var (
 	_ account.UserService        = (*service.UserService)(nil)
 	_ analytics.AnalyticsService = (*service.AnalyticsService)(nil)
-	// B1：AI 域仍是部分归零域，只锁 SkillRegistrar 编译期满足，不进 contractDomains。
+	// B1+B2：AI 域已整域归零，锁全部 9 个域内窄契约的编译期满足。
 	_ ai.SkillRegistrar                         = (*service.SkillRegistry)(nil)
+	_ ai.ToolCatalog                            = (*service.ToolRegistry)(nil)
+	_ ai.DeepAnalyticsProvider                  = (*service.AnalyticsService)(nil)
+	_ ai.TrendPredictor                         = (*service.PredictionService)(nil)
+	_ ai.SLAForecastRunner                      = (*service.SLAForecastSkill)(nil)
+	_ ai.TriageAdvisor                          = (*service.TriageService)(nil)
+	_ ai.RootCauseAnalyzer                      = (*service.RootCauseService)(nil)
+	_ ai.AITelemetryFacade                      = (*service.AITelemetryService)(nil)
+	_ ai.Summarizer                             = (*service.SummarizeService)(nil)
 	_ approval.ApprovalService                  = (*service.ApprovalService)(nil)
 	_ approval_chain.ApprovalChainService       = (*service.ApprovalChainService)(nil)
 	_ auth.EmailService                         = (*service.EmailService)(nil)
@@ -161,6 +169,7 @@ var contractDomains = []domainSpec{
 	{"timer", "service.go", "TimerReadStore", "TimerStore", "TimerStore"},
 	{"dashboard", "handler.go", "DashboardOverviewProvider", "DashboardService,ServiceQualityReportService,TicketService,IncidentService", ""},
 	{"email_intake", "orchestrator.go", "EmailIncidentCreator", "IncidentService", ""},
+	{"ai", "service.go", "ToolCatalog", "ToolRegistry,AnalyticsService,PredictionService,SLAForecastSkill,TriageService,RootCauseService,AITelemetryService,SummarizeService", ""},
 }
 
 // 只剔除行注释，避免把说明文字里的示例当成代码；L.3 门禁本身是全文 grep，

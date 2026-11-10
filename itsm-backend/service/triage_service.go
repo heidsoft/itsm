@@ -7,6 +7,8 @@ import (
 	"strings"
 	"time"
 
+	"itsm-backend/dto"
+
 	"go.uber.org/zap"
 )
 
@@ -50,41 +52,8 @@ func (t *TriageService) normalizeResult(result TriageResult) TriageResult {
 	return result
 }
 
-// TriageResult holds classification suggestions for incidents/tickets
-//
-// Model/PromptVersion 是溯源字段：Model 标注决策来源链路（guidance/llm/keyword，
-// 是「哪条路径给出的建议」而不是具体模型名），PromptVersion 是口径版本。
-// 两者随响应透出并写入服务端 AI 审计底账。
-//
-// ModelName 是另一回事：**具体模型名**。此前这里没有它，于是 SuggestWithMetadata
-// 往 Model 字段里塞了一个硬编码的 "gpt-4o-mini"——而生产配的并不是它，AI 审计
-// 底账里的模型名因此是假的。假溯源比没有溯源更危险：底账看起来权威，事后追责
-// 却指向错误的模型。现在两个维度各占一个字段，链路归链路、模型归模型。
-//
-// ModelName 由 gateway.EffectiveModel() 得出；无法从 provider 取到时报
-// "unknown"，绝不猜。keyword/guidance 路径没有模型参与，字段留空（是实情，
-// 不是缺失）。
-type TriageResult struct {
-	Category      string  `json:"category"`
-	Priority      string  `json:"priority"`
-	AssigneeID    int     `json:"assigneeId"`
-	Confidence    float64 `json:"confidence"`
-	Explanation   string  `json:"explanation"`
-	SuggestedFix  string  `json:"suggestedFix,omitempty"`
-	Model         string  `json:"model,omitempty"`
-	ModelName     string  `json:"modelName,omitempty"`
-	PromptVersion string  `json:"promptVersion,omitempty"`
-
-	// Degraded/DegradedReason 标注「这条建议没有模型参与」。
-	//
-	// 背景：sidecar 在 LLM 不可用时不报错，而是把关键词分类包成 HTTP 200 返回
-	// （method="guidance-fallback"、置信度写死 0.7）。后端此前无脑把它当 guidance
-	// 决策收下，于是 AI 审计底账里出现一条「模型决策」，事后复盘根本分不清哪些
-	// 结论是模型给的、哪些是正则凑的。降级结果本身不丢人，冒充模型结果才丢人。
-	// 现在降级路径一律置 Degraded=true，并随响应透出、写进底账。
-	Degraded       bool   `json:"degraded,omitempty"`
-	DegradedReason string `json:"degradedReason,omitempty"`
-}
+// TriageResult 值类型唯一实现在 dto 包；此处保留同名别名以保持 service 包公开 API。
+type TriageResult = dto.TriageResult
 
 // modelBackedPaths 是「真的有一次模型推理」的链路标识。
 // 其余链路（keyword 启发式、guidance-fallback 等）一律视为降级。
@@ -135,7 +104,6 @@ func guidanceResultDegraded(r *GuidanceTriageResponse) bool {
 	}
 	return r.Degraded || isDegradedGuidanceMethod(r.Method)
 }
-
 
 // TriageService provides LLM-powered ticket triage and classification
 type TriageService struct {

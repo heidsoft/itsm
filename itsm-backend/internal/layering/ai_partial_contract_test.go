@@ -1,6 +1,7 @@
 package layering
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -15,12 +16,12 @@ import (
 	"itsm-backend/service"
 )
 
-// AI 域部分归零专项回归锁（2026-11-10，LLMGateway 契约化专项 B1）。
+// AI 域整域归零专项回归锁（2026-11-10，LLMGateway 契约化专项 B1+B2）。
 //
-// 本批把 `handler.go` / `skills.go` / `builtin_skills.go` 三文件归零，
-// `service.go` 仍留待 B2 的 10 个窄契约，所以这是**部分归零域**：
-// 不能进 contractDomains（那个守卫逐文件扫整个域），必须用「实测计数 +
-// 基线数值」双锁。最大的假绿风险是 skill 骨架的私有钩子：BaseSkill 下沉
+// B1 把 `handler.go` / `skills.go` / `builtin_skills.go` 三文件归零，
+// B2 把最后一个 `service.go` 经 8 个域内窄契约归零，AI 域已整域零共享层
+// import。本文件保留三重锁：全域零引用扫描、基线行已删（不得复活 ai=N）、
+// 值类型身份/形状锁。最大的假绿风险仍是 skill 骨架的私有钩子：BaseSkill 下沉
 // dto 后，若有人把 TrackedSkill / RecordResult 改回私有名字，编译与 L.3
 // 计数都不变，但 SkillRegistry 的运行时类型断言会静默失效、指标不再累计。
 
@@ -39,9 +40,9 @@ func readAIRepoFile(t *testing.T, parts ...string) string {
 	return string(body)
 }
 
-// TestAIDomainIsPartiallyConverged：三个目标文件零共享层 import，全域恰好
-// 还剩 1 个（service.go），基线必须精确等于 1。
-func TestAIDomainIsPartiallyConverged(t *testing.T) {
+// TestAIDomainIsFullyConverged：全域生产文件零共享层 import（整域归零），
+// 基线不得出现 ai=N（含 ai=0 的假账）。
+func TestAIDomainIsFullyConverged(t *testing.T) {
 	dir := filepath.Join("..", "..", "handlers", "ai")
 	entries, err := os.ReadDir(dir)
 	if err != nil {
@@ -69,8 +70,8 @@ func TestAIDomainIsPartiallyConverged(t *testing.T) {
 	if prod < 8 {
 		t.Fatalf("扫描器零命中保护：handlers/ai 只有 %d 个生产 .go 文件", prod)
 	}
-	if len(importing) != 1 || importing[0] != "service.go" {
-		t.Errorf("AI 域部分归零口径漂移：仍 import 共享层的是 %v，期望仅 service.go", importing)
+	if len(importing) != 0 {
+		t.Errorf("AI 域整域归零被破坏：仍 import 共享层的是 %v", importing)
 	}
 	for _, fn := range []string{"handler.go", "skills.go", "builtin_skills.go", "contracts.go", "rag_contract.go"} {
 		body := readAIRepoFile(t, "handlers", "ai", fn)
@@ -79,11 +80,8 @@ func TestAIDomainIsPartiallyConverged(t *testing.T) {
 		}
 	}
 	base := readAIRepoFile(t, "..", "scripts", "docs-gate", "handler-service-imports-baseline.txt")
-	if !regexp.MustCompile(`(?m)^ai=1$`).MatchString(base) {
-		t.Errorf("L.3 基线 ai 必须精确为 1（B1 后仅 service.go 依赖共享层）")
-	}
-	if regexp.MustCompile(`(?m)^ai=0$`).MatchString(base) {
-		t.Errorf("L.3 基线 ai=0 是提前宣告整域归零的假账本")
+	if regexp.MustCompile(`(?m)^ai=\d+$`).MatchString(base) {
+		t.Errorf("L.3 基线不得残留 ai=N 行（整域归零后应删除该行，含 ai=0 假账）")
 	}
 }
 
@@ -108,6 +106,11 @@ func TestAISharedValueTypesAreDTOAliases(t *testing.T) {
 		{"SkillMetrics", reflect.TypeOf(service.SkillMetrics{}), reflect.TypeOf(dto.SkillMetrics{})},
 		{"SkillIdentity", reflect.TypeOf(service.SkillIdentity{}), reflect.TypeOf(dto.SkillIdentity{})},
 		{"BaseSkill", reflect.TypeOf(service.BaseSkill{}), reflect.TypeOf(dto.BaseSkill{})},
+		{"TriageResult", reflect.TypeOf(service.TriageResult{}), reflect.TypeOf(dto.TriageResult{})},
+		{"AIMetrics", reflect.TypeOf(service.AIMetrics{}), reflect.TypeOf(dto.AIMetrics{})},
+		{"QuotaUsage", reflect.TypeOf(service.QuotaUsage{}), reflect.TypeOf(dto.QuotaUsage{})},
+		{"CostEstimate", reflect.TypeOf(service.CostEstimate{}), reflect.TypeOf(dto.CostEstimate{})},
+		{"SummaryWithMetadata", reflect.TypeOf(service.SummaryWithMetadata{}), reflect.TypeOf(dto.SummaryWithMetadata{})},
 	}
 	for _, p := range pairs {
 		if p.shared != p.bottom {
@@ -128,6 +131,11 @@ func TestAISharedValueTypesAreDTOAliases(t *testing.T) {
 		{"ForecastOutput", reflect.TypeOf(dto.ForecastOutput{}), "Predictions,Confidence,Model,Insights,Seasonality,Trend,AnomalyDates"},
 		{"SkillManifest", reflect.TypeOf(dto.SkillManifest{}), "Name,Version,Title,Provider,Description,LongDescription,IconURL,Screenshots,Tags,Category,Capabilities,InputSchema,OutputSchema,RequiredPermissions,MinSystemVersion,Author,Rating,InstallCount,IsOfficial,Checksum"},
 		{"SkillMetrics", reflect.TypeOf(dto.SkillMetrics{}), "TotalCalls,SuccessRate,AvgLatencyMs,ErrorCount,LastUsedAt"},
+		{"TriageResult", reflect.TypeOf(dto.TriageResult{}), "Category,Priority,AssigneeID,Confidence,Explanation,SuggestedFix,Model,ModelName,PromptVersion,Degraded,DegradedReason"},
+		{"AIMetrics", reflect.TypeOf(dto.AIMetrics{}), "TotalRequests,TotalFeedback,UsefulFeedback,UsefulRate,ByKind,AvgResponseTimeSeconds,LLMCallCount,TotalTokens,ResponseTimeAvailable,Quota,Cost"},
+		{"QuotaUsage", reflect.TypeOf(dto.QuotaUsage{}), "QuotaConfigured,MonthlyQuota,TokensUsed,TokensRemaining,UsedRatio,Alert,AlertMessage"},
+		{"CostEstimate", reflect.TypeOf(dto.CostEstimate{}), "CostConfigured,TotalTokens,EstimatedCost,Currency,PricePer1K"},
+		{"SummaryWithMetadata", reflect.TypeOf(dto.SummaryWithMetadata{}), "Summary,Method,Latency,CharCount,PromptVersion,Model,Confidence"},
 	}
 	for _, s := range shapes {
 		if got := fieldNames(s.typ); got != s.want {
@@ -143,6 +151,18 @@ func TestAISharedValueTypesAreDTOAliases(t *testing.T) {
 	}
 	if got := tagOf(reflect.TypeOf(dto.SkillManifest{}), "RequiredPermissions"); got != `json:"requiredPermissions,omitempty"` {
 		t.Errorf("SkillManifest.RequiredPermissions tag 漂移：%s", got)
+	}
+	if got := tagOf(reflect.TypeOf(dto.AIMetrics{}), "TotalRequests"); got != `json:"totalRequests"` {
+		t.Errorf("AIMetrics.TotalRequests tag 漂移：%s", got)
+	}
+	if got := tagOf(reflect.TypeOf(dto.AIMetrics{}), "Quota"); got != `json:"quota,omitempty"` {
+		t.Errorf("AIMetrics.Quota tag 漂移：%s", got)
+	}
+	if got := tagOf(reflect.TypeOf(dto.TriageResult{}), "Degraded"); got != `json:"degraded,omitempty"` {
+		t.Errorf("TriageResult.Degraded tag 漂移：%s", got)
+	}
+	if got := tagOf(reflect.TypeOf(dto.SummaryWithMetadata{}), "PromptVersion"); got != `json:"promptVersion"` {
+		t.Errorf("SummaryWithMetadata.PromptVersion tag 漂移：%s", got)
 	}
 
 	// 逐处别名源码守卫（不取并集）。
@@ -164,6 +184,11 @@ func TestAISharedValueTypesAreDTOAliases(t *testing.T) {
 		{"skill_base.go", "type SkillIdentity = dto.SkillIdentity"},
 		{"root_cause_service.go", "var ErrAIAnalysisUnavailable = dto.ErrAIAnalysisUnavailable"},
 		{"ai_telemetry_repository.go", "var ErrFeedbackNotFound = dto.ErrFeedbackNotFound"},
+		{"triage_service.go", "type TriageResult = dto.TriageResult"},
+		{"ai_telemetry.go", "type AIMetrics = dto.AIMetrics"},
+		{"ai_quota.go", "type QuotaUsage = dto.QuotaUsage"},
+		{"ai_quota.go", "type CostEstimate = dto.CostEstimate"},
+		{"summarize_service.go", "type SummaryWithMetadata = dto.SummaryWithMetadata"},
 	}
 	cache := map[string]string{}
 	for _, a := range aliasDecls {
@@ -272,4 +297,66 @@ func TestAISkillRegistrarWiring(t *testing.T) {
 	if !regexp.MustCompile(`RegisterBuiltinSkills\(`).MatchString(app) {
 		t.Errorf("组合根缺少 RegisterBuiltinSkills 装配接线")
 	}
+}
+
+// TestAIServiceContractShapes：B2 的 8 个窄契约源码级形态锁（逐处比对，
+// 不取并集）。签名若漂移（例如 viewer 参数换回共享层类型），生产具体指针
+// 会静默不满足接口，运行时装配报错才暴露——这里在编译期就锁死。
+func TestAIServiceContractShapes(t *testing.T) {
+	contract := readAIRepoFile(t, "handlers", "ai", "contracts.go")
+	for _, decl := range []string{
+		"Execute(ctx context.Context, tenantID int, name string, args map[string]interface{}) (interface{}, error)",
+		"GetTool(name string) *dto.ToolDefinition",
+		"ListTools() []dto.ToolDefinition",
+		"ListToolsForTenant(ctx context.Context, tenantID int) []dto.ToolDefinition",
+		"GetDeepAnalytics(ctx context.Context, req *dto.DeepAnalyticsRequest, tenantID int, viewer dto.DashboardViewer) (*dto.DeepAnalyticsResponse, error)",
+		"GetTrendPrediction(ctx context.Context, req *dto.TrendPredictionRequest, tenantID int, viewer dto.DashboardViewer) (*dto.TrendPredictionResponse, error)",
+		"Execute(ctx context.Context, input *dto.ForecastInput) (*dto.ForecastOutput, error)",
+		"SuggestForTenant(ctx context.Context, title, description string, tenantID int) dto.TriageResult",
+		"AnalyzeIncident(ctx context.Context, incidentID, tenantID int) (*dto.IncidentAIAnalysisResponse, error)",
+		"AnalyzeTicket(ctx context.Context, ticketID, tenantID int) (*dto.TicketRootCauseAnalysisResponse, error)",
+		"GetAnalysisReport(ctx context.Context, ticketID, tenantID int) (*dto.TicketRootCauseAnalysisResponse, error)",
+		"SummarizeTicket(ctx context.Context, ticketID, tenantID int) (map[string]interface{}, error)",
+		"Evaluate(ctx context.Context, tenantID int, lookbackDays int) (*dto.AIEvaluationReport, error)",
+		"GetMetrics(ctx context.Context, tenantID int, lookbackDays int) (*dto.AIMetrics, error)",
+		"ListAuditLogs(ctx context.Context, tenantID int, page, pageSize int, kind string, lookbackDays int) ([]dto.AIAuditEntry, int, error)",
+		"UpdateAuditAccepted(ctx context.Context, tenantID int, id int64, accepted bool) error",
+		"RecordDecisionAudit(ctx context.Context, tenantID, userID int, reqID, scenario, inputRef, promptVersion, model string, confidence float64, suggestion map[string]interface{}) (int64, error)",
+		"SummarizeWithMetadata(ctx context.Context, text string, maxLen int) (*dto.SummaryWithMetadata, error)",
+	} {
+		if !strings.Contains(squashSpace(contract), squashSpace(decl)) {
+			t.Errorf("handlers/ai/contracts.go 契约签名漂移：%q", decl)
+		}
+	}
+	for _, iface := range []string{
+		"type ToolCatalog interface", "type DeepAnalyticsProvider interface",
+		"type TrendPredictor interface", "type SLAForecastRunner interface",
+		"type TriageAdvisor interface", "type RootCauseAnalyzer interface",
+		"type AITelemetryFacade interface", "type Summarizer interface",
+	} {
+		if !strings.Contains(contract, iface) {
+			t.Errorf("contracts.go 缺少 %q", iface)
+		}
+	}
+	// service.go 的字段/构造必须使用域内窄接口而非共享层具体类型。
+	holder := readAIRepoFile(t, "handlers", "ai", "service.go")
+	for _, decl := range []string{
+		"tools ToolCatalog", "analytics DeepAnalyticsProvider", "prediction TrendPredictor",
+		"slaForecastSkill SLAForecastRunner", "triageService TriageAdvisor",
+		"rca RootCauseAnalyzer", "aiTelemetryService AITelemetryFacade",
+		"summarizeService Summarizer",
+	} {
+		if !strings.Contains(squashSpace(holder), squashSpace(decl)) {
+			t.Errorf("handlers/ai/service.go 字段类型漂移（应使用域内窄接口）：%q", decl)
+		}
+	}
+	// auditLedger 默认装配依赖 AITelemetryFacade ⊇ AuditLedgerWriter：
+	// 编译期断言从域内上移到本集中锁。
+	var _ AuditLedgerAssert = (*service.AITelemetryService)(nil)
+}
+
+// AuditLedgerAssert 是域内 AuditLedgerWriter 的镜像签名（供集中锁做
+// 编译期满足检查；生产实现是共享层 AI 遥测服务）。
+type AuditLedgerAssert interface {
+	RecordDecisionAudit(ctx context.Context, tenantID, userID int, reqID, scenario, inputRef, promptVersion, model string, confidence float64, suggestion map[string]interface{}) (int64, error)
 }

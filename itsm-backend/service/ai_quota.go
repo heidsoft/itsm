@@ -10,6 +10,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"itsm-backend/dto"
 )
 
 // AIQuotaService 租户 token 配额与单价口径。
@@ -121,18 +123,8 @@ func (s *AIQuotaService) monthTokens(ctx context.Context, tenantID int) (int64, 
 	return n, nil
 }
 
-// QuotaUsage 配额用量评估结果。
-type QuotaUsage struct {
-	QuotaConfigured bool    `json:"quotaConfigured"`
-	MonthlyQuota    int64   `json:"monthlyQuota"`
-	TokensUsed      int64   `json:"tokensUsed"`
-	TokensRemaining int64   `json:"tokensRemaining"`
-	UsedRatio       float64 `json:"usedRatio"`
-	// Alert: "" | "warning" | "exceeded"
-	Alert string `json:"alert"`
-	// AlertMessage 人类可读告警文案（Alert 非空时才有意义）。
-	AlertMessage string `json:"alertMessage,omitempty"`
-}
+// QuotaUsage 值类型唯一实现在 dto 包；此处保留同名别名以保持 service 包公开 API。
+type QuotaUsage = dto.QuotaUsage
 
 // Evaluate 评估租户本月用量：未配置配额时返回 quotaConfigured=false 的诚实空态。
 func (s *AIQuotaService) Evaluate(ctx context.Context, tenantID int) (*QuotaUsage, error) {
@@ -180,14 +172,8 @@ func (s *AIQuotaService) Check(ctx context.Context, tenantID int) (bool, *QuotaU
 	return usage.TokensUsed < usage.MonthlyQuota, usage, nil
 }
 
-// CostEstimate 按单价口径估算成本。
-type CostEstimate struct {
-	CostConfigured bool    `json:"costConfigured"`
-	TotalTokens    int64   `json:"totalTokens"`
-	EstimatedCost  float64 `json:"estimatedCost"`
-	Currency       string  `json:"currency"`
-	PricePer1K     float64 `json:"pricePer1k"`
-}
+// CostEstimate 值类型唯一实现在 dto 包；此处保留同名别名以保持 service 包公开 API。
+type CostEstimate = dto.CostEstimate
 
 // EstimateCost 按给定窗口的实际 token 用量估算成本。
 // 单价未配置时返回 costConfigured=false 且 estimatedCost=0——宁可不给数字，

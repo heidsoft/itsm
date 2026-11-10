@@ -8,15 +8,13 @@ import (
 	"strings"
 	"time"
 
+	"go.uber.org/zap"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/ticket"
 	"itsm-backend/internal/knowledgeaccess"
 	"itsm-backend/metrics"
 	"itsm-backend/middleware"
-	"itsm-backend/service"
-
-	"go.uber.org/zap"
 )
 
 type Service struct {
@@ -24,15 +22,15 @@ type Service struct {
 	logger             *zap.SugaredLogger
 	rag                RAGChatService
 	llmGateway         dto.LLMGatewayPort
-	tools              *service.ToolRegistry
-	analytics          *service.AnalyticsService
-	prediction         *service.PredictionService
-	slaForecastSkill   *service.SLAForecastSkill
-	triageService      *service.TriageService
-	rca                *service.RootCauseService
-	aiTelemetryService *service.AITelemetryService
+	tools              ToolCatalog
+	analytics          DeepAnalyticsProvider
+	prediction         TrendPredictor
+	slaForecastSkill   SLAForecastRunner
+	triageService      TriageAdvisor
+	rca                RootCauseAnalyzer
+	aiTelemetryService AITelemetryFacade
 	// SummarizeService 装配路径；摘要优先走它，不再绕行 rca.SummarizeTicket。
-	summarizeService *service.SummarizeService
+	summarizeService Summarizer
 	// ent client，用于复用 RBAC hasResourcePermission
 	entClient *ent.Client
 	// auditLedger 服务端 AI 决策底账写口（窄接口，生产实现是 AITelemetryService）。
@@ -42,19 +40,16 @@ type Service struct {
 
 // AuditLedgerWriter 是服务端 AI 决策底账的窄接口：产出 AI 建议时自动落一条
 // item_type='ai_audit' 行（accepted=NULL 未决策），返回行 ID 供操作者经
-// PATCH /ai/audit-logs/:id 翻转采纳/拒绝。生产实现 *service.AITelemetryService。
+// PATCH /ai/audit-logs/:id 翻转采纳/拒绝。生产实现是共享层 AI 遥测服务。
 type AuditLedgerWriter interface {
 	RecordDecisionAudit(ctx context.Context, tenantID, userID int, reqID, scenario, inputRef, promptVersion, model string, confidence float64, suggestion map[string]interface{}) (int64, error)
 }
-
-// 编译期断言：生产实现满足窄接口。
-var _ AuditLedgerWriter = (*service.AITelemetryService)(nil)
 
 // ragStreamer 是流式问答的可选能力接口，与 RAGChatService 分开声明。
 //
 // 网关契约化后，其方法签名只引用 dto 端口与 dto 值类型；本批暂留本文件
 // （既有回归锁断言声明位置），AI 域整体归零批次再并入零依赖契约文件。
-// 生产实现 *service.RAGService 同时满足 RAGChatService 与 ragStreamer；
+// 生产实现（共享层 RAG 服务）同时满足 RAGChatService 与 ragStreamer；
 // 只实现读面契约的域内实现（单测 fake）不具备流式能力，ChatStream 会走
 // 明确的降级错误而不是 panic。
 type ragStreamer interface {
@@ -77,13 +72,13 @@ func NewService(
 	repo Repository,
 	logger *zap.SugaredLogger,
 	rag RAGChatService,
-	tools *service.ToolRegistry,
-	analytics *service.AnalyticsService,
-	prediction *service.PredictionService,
-	slaForecastSkill *service.SLAForecastSkill,
-	triageService *service.TriageService,
-	rca *service.RootCauseService,
-	aiTelemetryService *service.AITelemetryService,
+	tools ToolCatalog,
+	analytics DeepAnalyticsProvider,
+	prediction TrendPredictor,
+	slaForecastSkill SLAForecastRunner,
+	triageService TriageAdvisor,
+	rca RootCauseAnalyzer,
+	aiTelemetryService AITelemetryFacade,
 ) *Service {
 	s := &Service{
 		repo:               repo,
@@ -117,7 +112,7 @@ func (s *Service) SetLLMGateway(gateway dto.LLMGatewayPort) {
 
 // SetSummarizeService wires SummarizeService。
 // SummarizeTicket 优先走 SummarizeService.SummarizeWithMetadata，失败兜底回 rca。
-func (s *Service) SetSummarizeService(svc *service.SummarizeService) {
+func (s *Service) SetSummarizeService(svc Summarizer) {
 	s.summarizeService = svc
 }
 
@@ -129,7 +124,7 @@ func (s *Service) SetEntClient(client *ent.Client) {
 
 // Tool Methods
 
-func (s *Service) ListTools() []service.ToolDefinition {
+func (s *Service) ListTools() []dto.ToolDefinition {
 	if s.tools == nil {
 		return nil
 	}
@@ -137,7 +132,7 @@ func (s *Service) ListTools() []service.ToolDefinition {
 }
 
 // ListToolsForTenant 返回按租户动态化的工具清单（list_cis 的 ci_type 枚举来自租户 CIType 表）。
-func (s *Service) ListToolsForTenant(ctx context.Context, tenantID int) []service.ToolDefinition {
+func (s *Service) ListToolsForTenant(ctx context.Context, tenantID int) []dto.ToolDefinition {
 	if s.tools == nil {
 		return nil
 	}
@@ -737,7 +732,7 @@ func (s *Service) AnalyzeTicketWithAudit(ctx context.Context, ticketID int, tena
 
 func (s *Service) AnalyzeIncident(ctx context.Context, incidentID int, tenantID int) (interface{}, error) {
 	if s.rca == nil {
-		return nil, service.ErrAIAnalysisUnavailable
+		return nil, dto.ErrAIAnalysisUnavailable
 	}
 	return s.rca.AnalyzeIncident(ctx, incidentID, tenantID)
 }
@@ -915,7 +910,7 @@ const analyticsMetricVersion = "deep-analytics-v1"
 // **不补 model**。此前能力矩阵把 analytics 与 chat/摘要并列为「缺溯源字段」，
 // 但给聚合结果加一个 model 字段只会制造假溯源：客户端会以为这是某模型的建议，
 // 而实际没有任何模型参与。诚实标注「这是聚合，口径版本是 X」才是它该有的溯源。
-func (s *Service) GetDeepAnalytics(ctx context.Context, req *dto.DeepAnalyticsRequest, tenantID int, viewer service.DashboardViewer) (interface{}, error) {
+func (s *Service) GetDeepAnalytics(ctx context.Context, req *dto.DeepAnalyticsRequest, tenantID int, viewer dto.DashboardViewer) (interface{}, error) {
 	res, err := s.analytics.GetDeepAnalytics(ctx, req, tenantID, viewer)
 	if err != nil {
 		return nil, err
@@ -933,9 +928,9 @@ func (s *Service) GetDeepAnalytics(ctx context.Context, req *dto.DeepAnalyticsRe
 // 预测算法或平滑参数而不换版本号，底账里新旧口径的预测就无法区分。
 const slaForecastPromptVersion = "sla-forecast-v1"
 
-func (s *Service) GetTrendPrediction(ctx context.Context, req *dto.TrendPredictionRequest, tenantID int, userID int, viewer service.DashboardViewer) (interface{}, error) {
+func (s *Service) GetTrendPrediction(ctx context.Context, req *dto.TrendPredictionRequest, tenantID int, userID int, viewer dto.DashboardViewer) (interface{}, error) {
 	// 前端不带 timeRange 时默认为「过去 6 个月 → 今天」。
-	// 否则 req.TimeRange[0/1] 会 panic,与 prediction_service.go 行为对齐。
+	// 否则 req.TimeRange[0/1] 会 panic,与共享层预测服务行为对齐。
 	if len(req.TimeRange) != 2 {
 		now := time.Now()
 		req.TimeRange = []string{
@@ -946,7 +941,7 @@ func (s *Service) GetTrendPrediction(ctx context.Context, req *dto.TrendPredicti
 
 	// Try to use AI-Native SLAForecastSkill first
 	if s.slaForecastSkill != nil {
-		input := &service.ForecastInput{
+		input := &dto.ForecastInput{
 			TenantID:  tenantID,
 			StartDate: parseDate(req.TimeRange[0]),
 			EndDate:   parseDate(req.TimeRange[1]),
@@ -1011,7 +1006,7 @@ func (s *Service) recordForecastAudit(ctx context.Context, tenantID, userID int,
 // normalizeForecastOutput 把 SLAForecastSkill.ForecastOutput 转译为 dto 契约
 // （predictions[i].predictedValue 而非 predicted）。同时保留 SLAForecastSkill
 // 的 AI 增强字段（insights/seasonality/trend/anomalyDates）作为额外元数据。
-func normalizeForecastOutput(output *service.ForecastOutput, promptVersion string, auditID int64) interface{} {
+func normalizeForecastOutput(output *dto.ForecastOutput, promptVersion string, auditID int64) interface{} {
 	if output == nil {
 		return output
 	}
@@ -1062,12 +1057,12 @@ func normalizeForecastOutput(output *service.ForecastOutput, promptVersion strin
 }
 
 // GetForecastInsights returns AI-generated insights for SLA forecasting
-func (s *Service) GetForecastInsights(ctx context.Context, req *dto.TrendPredictionRequest, tenantID int, userID int, viewer service.DashboardViewer) (interface{}, error) {
+func (s *Service) GetForecastInsights(ctx context.Context, req *dto.TrendPredictionRequest, tenantID int, userID int, viewer dto.DashboardViewer) (interface{}, error) {
 	if s.slaForecastSkill == nil {
 		return nil, fmt.Errorf("SLAForecastSkill not initialized")
 	}
 
-	input := &service.ForecastInput{
+	input := &dto.ForecastInput{
 		TenantID:  tenantID,
 		StartDate: parseDate(req.TimeRange[0]),
 		EndDate:   parseDate(req.TimeRange[1]),
@@ -1110,7 +1105,7 @@ func (s *Service) SaveFeedback(ctx context.Context, tenantID, userID int, reques
 }
 
 // UpdateAuditAccepted flips accepted on an ai_feedbacks row whose item_type
-// is 'ai_audit'. Returns service.ErrFeedbackNotFound when the row is
+// is 'ai_audit'. Returns ErrFeedbackNotFound (dto sentinel) when the row is
 // missing, belongs to another tenant, or is not an audit row.
 func (s *Service) UpdateAuditAccepted(ctx context.Context, tenantID int, id int64, accepted bool) error {
 	if s.aiTelemetryService == nil {
@@ -1144,8 +1139,7 @@ func (s *Service) SearchKnowledge(ctx context.Context, tenantID int, query strin
 
 // TriageTicket provides ticket classification and recommendations.
 //
-// 移除内联关键词 fallback，统一委托
-// service/triage_service.go（Guidance → LLM → keyword 三级链）。
+// 移除内联关键词 fallback，统一委托共享层分诊服务（Guidance → LLM → keyword 三级链）。
 // triageService 不可用时返回 unclassified + confidence=0，不再维护第二套分类枚举。
 //
 // 置信度/溯源强制化：结果携带 promptVersion/model 溯源字段，并自动落一条服务端
@@ -1231,17 +1225,17 @@ func (s *Service) determineUrgency(priority string) string {
 }
 
 // Evaluate delegates to AITelemetryService.Evaluate (nil-safe for unit tests).
-func (s *Service) Evaluate(ctx context.Context, tenantID int, days int) (*service.AIEvaluationReport, error) {
+func (s *Service) Evaluate(ctx context.Context, tenantID int, days int) (*dto.AIEvaluationReport, error) {
 	if s.aiTelemetryService == nil {
-		return &service.AIEvaluationReport{GeneratedAt: time.Now().Format(time.RFC3339), LookbackDays: days}, nil
+		return &dto.AIEvaluationReport{GeneratedAt: time.Now().Format(time.RFC3339), LookbackDays: days}, nil
 	}
 	return s.aiTelemetryService.Evaluate(ctx, tenantID, days)
 }
 
 // ListAuditLogs delegates to AITelemetryService.ListAuditLogs (nil-safe for unit tests).
-func (s *Service) ListAuditLogs(ctx context.Context, tenantID, page, pageSize int, kind string, days int) ([]service.AIAuditEntry, int, error) {
+func (s *Service) ListAuditLogs(ctx context.Context, tenantID, page, pageSize int, kind string, days int) ([]dto.AIAuditEntry, int, error) {
 	if s.aiTelemetryService == nil {
-		return []service.AIAuditEntry{}, 0, nil
+		return []dto.AIAuditEntry{}, 0, nil
 	}
 	return s.aiTelemetryService.ListAuditLogs(ctx, tenantID, page, pageSize, kind, days)
 }

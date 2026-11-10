@@ -6,6 +6,8 @@ import (
 	"strings"
 	"time"
 
+	"itsm-backend/dto"
+
 	"go.uber.org/zap"
 )
 
@@ -177,34 +179,8 @@ func simpleTruncate(text string, maxLen int) string {
 // 换 prompt 模板就必须换它，否则底账里两代 prompt 的产出无法区分。
 const SummarizePromptVersion = "ticket-summary-v1"
 
-// SummaryWithMetadata includes metadata about the summary
-//
-// Method 是「这份摘要到底怎么来的」，三种取值必须如实区分：
-//
-//	llm      —— 模型真的生成了摘要
-//	direct   —— 原文够短，直接原样返回（**不是摘要**，是原文）
-//	fallback —— 模型不可用/调用失败，退化为截断原文（**不是摘要**，是截断）
-//
-// 区分它们不是为了好看：此前 direct/fallback 产出的东西同样被当作「AI 摘要」
-// 呈给用户，而底账里没有任何字段能区分。用户以为自己在评估 AI，实际评估的是
-// 一段截断文本——采纳率、有用率这些指标因此从根上就是脏的。
-//
-// Model 是真实模型名（由 LLMGateway.EffectiveModel 取得，取不到为 "unknown"）；
-// llm 以外的路径没有模型参与，字段留空——留空是实情，不是缺失。
-//
-// Confidence 对摘要**恒为 0 并标注不适用**：摘要是生成类产出，模型不给自评
-// 分数，硬填一个数字就是编造。是否可信由操作者的采纳/拒绝翻转来表达（那才是
-// 真实信号），不靠一个假分数装点。
-type SummaryWithMetadata struct {
-	Summary   string        `json:"summary"`
-	Method    string        `json:"method"` // "llm" | "direct" | "fallback"
-	Latency   time.Duration `json:"latencyMs"`
-	CharCount int           `json:"charCount"`
-	// 溯源三字段
-	PromptVersion string  `json:"promptVersion"`
-	Model         string  `json:"model,omitempty"` // 空 = 无模型参与（direct/fallback）
-	Confidence    float64 `json:"confidence"`      // 摘要场景恒为 0，见类型注释
-}
+// SummaryWithMetadata 值类型唯一实现在 dto 包；此处保留同名别名以保持 service 包公开 API。
+type SummaryWithMetadata = dto.SummaryWithMetadata
 
 // SummarizeWithMetadata returns summary with additional metadata
 func (s *SummarizeService) SummarizeWithMetadata(ctx context.Context, text string, maxLen int) (*SummaryWithMetadata, error) {
