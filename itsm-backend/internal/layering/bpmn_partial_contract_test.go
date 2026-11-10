@@ -13,14 +13,14 @@ import (
 )
 
 // bpmn 是「部分归零」域：第 1 步归零 workflow_template.go，第 2 步归零
-// dashboard.go + monitoring.go，其余 5 个生产文件仍 import 共享层。
-// 因此它不能进 contractDomains（那个守卫逐文件扫整个域），改由本文件按
-// 「单文件 + 基线」精确锁定。后续每组归零时，把
+// dashboard.go + monitoring.go，第 3 步归零 process_trigger.go，其余 4 个
+// 生产文件仍 import 共享层。因此它不能进 contractDomains（那个守卫逐文件
+// 扫整个域），改由本文件按「单文件 + 基线」精确锁定。后续每组归零时，把
 // bpmnPartialZeroExpectedImports 与基线期望值同步下调即可。
 
 const bpmnSharedImport = `"itsm-backend/service"`
 
-const bpmnPartialZeroExpectedImports = 5
+const bpmnPartialZeroExpectedImports = 4
 
 func readBPMNFile(t *testing.T, rel string) string {
 	t.Helper()
@@ -111,7 +111,7 @@ func TestBPMNPartialZeroMatchesL3Baseline(t *testing.T) {
 		}
 	}
 	if count != bpmnPartialZeroExpectedImports {
-		t.Errorf("handlers/bpmn 共享层依赖实测 %d，期望 %d（批次 3 第 1、2 步归零 3 个文件）", count, bpmnPartialZeroExpectedImports)
+		t.Errorf("handlers/bpmn 共享层依赖实测 %d，期望 %d（批次 3 第 1、2、3 步归零 4 个文件）", count, bpmnPartialZeroExpectedImports)
 	}
 
 	base, err := os.ReadFile(filepath.Join("..", "..", "..", "scripts", "docs-gate", "handler-service-imports-baseline.txt"))
@@ -128,7 +128,7 @@ func TestBPMNPartialZeroMatchesL3Baseline(t *testing.T) {
 			values = append(values, strings.TrimPrefix(line, "bpmn="))
 		}
 	}
-	want := "5"
+	want := "4"
 	if len(values) != 1 || values[0] != want {
 		t.Errorf("L.3 基线 bpmn 期望恰好一条 bpmn=%s，实际 %v（真下降必须同 commit 精确收紧）", want, values)
 	}
@@ -329,5 +329,109 @@ func TestBPMNMonitoringDTOJSONShape(t *testing.T) {
 				t.Errorf("%s 的 JSON 契约丢失 key %s，实际 %s", c.name, key, string(raw))
 			}
 		}
+	}
+}
+
+// 批次 3 第 3 步：层级域配置的 sentinel 与值类型只有一份定义。
+// 尤其要锁住 errors.Is 的「各层级均未命中 -> data=null」映射：共享层若另起
+// 一个同文案 error 实例，编译、L.3 计数与 JSON 契约都看不出退化，只会把
+// 合法空结果变成 500。
+func TestBPMNDomainConfigValuesComeFromDTO(t *testing.T) {
+	if service.ErrConfigNotFound != dto.ErrConfigNotFound {
+		t.Errorf("ErrConfigNotFound 在共享层与 dto 之间分裂，errors.Is 空结果映射会静默失效")
+	}
+
+	bottom, err := os.ReadFile(filepath.Join("..", "..", "dto", "bpmn_config_inheritance_dto.go"))
+	if err != nil {
+		t.Fatalf("读取 dto/bpmn_config_inheritance_dto.go 失败：%v", err)
+	}
+	if len(bottom) < 200 {
+		t.Fatalf("扫描器零命中保护：dto 配置值文件仅 %d 字节", len(bottom))
+	}
+	if strings.Contains(string(bottom), bpmnSharedImport) {
+		t.Errorf("dto 不得反向依赖共享层")
+	}
+	flat := squashSpace(stripLineComments(string(bottom)))
+	for _, decl := range []string{
+		"var ErrConfigNotFound = errors.New(",
+		"type ResolvedConfig struct {",
+	} {
+		if !strings.Contains(flat, squashSpace(decl)) {
+			t.Errorf("dto 配置值文件缺少定义 %q（sentinel / 值类型必须只有一份）", decl)
+		}
+	}
+
+	// JSON tag 是 /domain-configs/effective 的真实响应契约，改一个字母前端就读不到。
+	raw, err := json.Marshal(dto.ResolvedConfig{
+		Key: "k", Value: map[string]interface{}{"a": 1},
+		Source: "tenant", InheritMode: "override", Version: 3,
+	})
+	if err != nil {
+		t.Fatalf("序列化 ResolvedConfig 失败：%v", err)
+	}
+	for _, key := range []string{`"key"`, `"value"`, `"source"`, `"inheritMode"`, `"version"`} {
+		if !strings.Contains(string(raw), key) {
+			t.Errorf("ResolvedConfig 的 JSON 契约丢失 key %s，实际 %s", key, string(raw))
+		}
+	}
+
+	svc, err := os.ReadFile(filepath.Join("..", "..", "service", "config_inheritance_service.go"))
+	if err != nil {
+		t.Fatalf("读取 service/config_inheritance_service.go 失败：%v", err)
+	}
+	if len(svc) < 1000 {
+		t.Fatalf("扫描器零命中保护：service/config_inheritance_service.go 仅 %d 字节", len(svc))
+	}
+	svcFlat := squashSpace(stripLineComments(string(svc)))
+	for _, decl := range []string{
+		"var ErrConfigNotFound = dto.ErrConfigNotFound",
+		"type ResolvedConfig = dto.ResolvedConfig",
+	} {
+		if !strings.Contains(svcFlat, squashSpace(decl)) {
+			t.Errorf("service/config_inheritance_service.go 丢失别名 %q", decl)
+		}
+	}
+	if strings.Contains(svcFlat, "type ResolvedConfig struct") {
+		t.Errorf("共享层重新定义了 ResolvedConfig（值类型身份分裂）")
+	}
+}
+
+// TestBPMNPartialZeroTriggerGroup 锁住「归零是换成域内窄契约」而不是删文件、
+// 或把共享层限定符换成别的等价写法。把 process_trigger.go 改回 HEAD 版本必须变红。
+func TestBPMNPartialZeroTriggerGroup(t *testing.T) {
+	pt := readBPMNFile(t, "process_trigger.go")
+	if strings.Contains(pt, bpmnSharedImport) {
+		t.Errorf("handlers/bpmn/process_trigger.go 重新引用共享层包，L.3 归零被破坏")
+	}
+	code := stripLineComments(pt)
+	if strings.Contains(code, "service.") {
+		t.Errorf("handlers/bpmn/process_trigger.go 残留共享层限定符（旧实现）")
+	}
+	for _, want := range []string{
+		`\btriggerService\s+ProcessTriggerRunner\b`,
+		`\bbindingService\s+ProcessBindingCatalog\b`,
+		`\bconfigService\s+DomainConfigResolver\b`,
+		`\bNewProcessTriggerHandler\(triggerService\s+ProcessTriggerRunner,\s*bindingService\s+ProcessBindingCatalog,\s*configService\s+DomainConfigResolver\)`,
+		`errors\.Is\(err,\s*dto\.ErrConfigNotFound\)`,
+	} {
+		if !regexp.MustCompile(want).MatchString(code) {
+			t.Errorf("process_trigger.go 缺少窄契约/值类型写法 %q", want)
+		}
+	}
+	if strings.Contains(code, "service.ErrConfigNotFound") {
+		t.Errorf("process_trigger.go 错误映射回退到共享层 sentinel（旧实现）")
+	}
+
+	contract := readBPMNFile(t, "contracts.go")
+	if strings.Contains(contract, bpmnSharedImport) {
+		t.Errorf("contracts.go 出现共享层包路径字面量（连注释也会让 L.3 计数 +1）")
+	}
+	for _, iface := range []string{"ProcessTriggerRunner", "ProcessBindingCatalog", "DomainConfigResolver"} {
+		if !strings.Contains(contract, "type "+iface+" interface") {
+			t.Errorf("contracts.go 未声明域内接口 %s", iface)
+		}
+	}
+	if !strings.Contains(contract, "(*dto.ResolvedConfig, error)") {
+		t.Errorf("contracts.go 的 GetEffectiveConfig 未使用 dto 值类型")
 	}
 }

@@ -78,6 +78,10 @@ var (
 	_ bpmn.BPMNTenantStatsProvider   = (*service.BPMNTenantService)(nil)
 	_ bpmn.BPMNSLAProvider           = (*service.BPMNSLAService)(nil)
 	_ bpmn.ProcessMonitoringProvider = (*service.BPMNMonitoringService)(nil)
+	// 批次 3 第 3 步：组 2 三个窄契约（bpmn 仍是部分归零域）。
+	_ bpmn.ProcessTriggerRunner  = (*service.ProcessTriggerService)(nil)
+	_ bpmn.ProcessBindingCatalog = (*service.ProcessBindingService)(nil)
+	_ bpmn.DomainConfigResolver  = (*service.ConfigInheritanceService)(nil)
 )
 
 type domainSpec struct {
@@ -234,6 +238,7 @@ func TestSharedValueTypesRemainDTOAliases(t *testing.T) {
 		{"Content", reflect.TypeOf(service.Content{}), reflect.TypeOf(dto.Content{})},
 		{"A2UIDeleteSurface", reflect.TypeOf(service.A2UIDeleteSurface{}), reflect.TypeOf(dto.A2UIDeleteSurface{})},
 		{"DeleteSurface", reflect.TypeOf(service.DeleteSurface{}), reflect.TypeOf(dto.DeleteSurface{})},
+		{"ResolvedConfig", reflect.TypeOf(service.ResolvedConfig{}), reflect.TypeOf(dto.ResolvedConfig{})},
 	}
 	for _, p := range pairs {
 		if p.shared != p.bottom {
@@ -273,6 +278,7 @@ func TestSharedValueTypesRemainDTOAliases(t *testing.T) {
 		{"ErrWorkflowTemplateNotFound", service.ErrWorkflowTemplateNotFound, dto.ErrWorkflowTemplateNotFound},
 		{"ErrWorkflowTemplateConflict", service.ErrWorkflowTemplateConflict, dto.ErrWorkflowTemplateConflict},
 		{"ErrWorkflowTemplateInvalid", service.ErrWorkflowTemplateInvalid, dto.ErrWorkflowTemplateInvalid},
+		{"ErrConfigNotFound", service.ErrConfigNotFound, dto.ErrConfigNotFound},
 	}
 	for _, s := range sentinels {
 		if !errors.Is(fmt.Errorf("wrapped: %w", s.shared), s.bottom) {
@@ -337,6 +343,9 @@ func TestSharedValueTypesRemainDTOAliases(t *testing.T) {
 		{"bpmn_monitoring_service.go", "type ProcessTimelineEntry = dto.ProcessTimelineEntry"},
 		{"bpmn_sla_service.go", "type SLAViolation = dto.SLAViolation"},
 		{"bpmn_tenant_service.go", "type TenantBPMNStats = dto.TenantBPMNStats"},
+		// 批次 3 第 3 步：层级域配置的 sentinel 与解析结果逐处锁别名。
+		{"config_inheritance_service.go", "var ErrConfigNotFound = dto.ErrConfigNotFound"},
+		{"config_inheritance_service.go", "type ResolvedConfig = dto.ResolvedConfig"},
 	}
 	for _, a := range aliases {
 		body, err := os.ReadFile(filepath.Join("..", "..", "service", a.file))

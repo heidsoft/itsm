@@ -2,9 +2,9 @@ package service
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
+	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/department"
 	"itsm-backend/ent/domainconfig"
@@ -15,7 +15,7 @@ import (
 // ErrConfigNotFound 表示全局 → 租户 → 部门 → 团队 各层级均未命中配置。
 // 这是合法的空结果而非内部错误：调用方必须用 errors.Is 区分，并映射为
 // data=null 的成功响应，不能返回 500/5001。
-var ErrConfigNotFound = errors.New("config not found")
+var ErrConfigNotFound = dto.ErrConfigNotFound
 
 // ConfigInheritanceService provides hierarchical configuration with inheritance
 type ConfigInheritanceService struct {
@@ -32,13 +32,7 @@ func NewConfigInheritanceService(client *ent.Client, logger *zap.SugaredLogger) 
 }
 
 // ResolvedConfig represents a fully resolved configuration
-type ResolvedConfig struct {
-	Key         string                 `json:"key"`
-	Value       map[string]interface{} `json:"value"`
-	Source      string                 `json:"source"` // global, tenant, department, team
-	InheritMode string                 `json:"inheritMode"`
-	Version     int                    `json:"version"`
-}
+type ResolvedConfig = dto.ResolvedConfig
 
 // InheritanceLevel represents a level in the inheritance chain
 type InheritanceLevel struct {

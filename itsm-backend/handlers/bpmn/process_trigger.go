@@ -7,20 +7,19 @@ import (
 	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/middleware"
-	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
 )
 
 // ProcessTriggerHandler 流程触发控制器
 type ProcessTriggerHandler struct {
-	triggerService *service.ProcessTriggerService
-	bindingService *service.ProcessBindingService
-	configService  *service.ConfigInheritanceService
+	triggerService ProcessTriggerRunner
+	bindingService ProcessBindingCatalog
+	configService  DomainConfigResolver
 }
 
 // NewProcessTriggerHandler 创建流程触发控制器
-func NewProcessTriggerHandler(triggerService *service.ProcessTriggerService, bindingService *service.ProcessBindingService, configService *service.ConfigInheritanceService) *ProcessTriggerHandler {
+func NewProcessTriggerHandler(triggerService ProcessTriggerRunner, bindingService ProcessBindingCatalog, configService DomainConfigResolver) *ProcessTriggerHandler {
 	return &ProcessTriggerHandler{
 		triggerService: triggerService,
 		bindingService: bindingService,
@@ -485,7 +484,7 @@ func (c *ProcessTriggerHandler) GetEffectiveDomainConfig(ctx *gin.Context) {
 	result, err := c.configService.GetEffectiveConfig(ctx.Request.Context(), tenantID, departmentID, teamID, configType, configKey)
 	if err != nil {
 		// 各继承层级均未命中配置是合法空结果，返回 data=null 而非 500。
-		if errors.Is(err, service.ErrConfigNotFound) {
+		if errors.Is(err, dto.ErrConfigNotFound) {
 			common.Success(ctx, nil)
 			return
 		}

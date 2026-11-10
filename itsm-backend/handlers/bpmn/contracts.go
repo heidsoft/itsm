@@ -63,3 +63,48 @@ type ProcessMonitoringProvider interface {
 	GetPerformanceAlerts(ctx context.Context, tenantID int) ([]map[string]interface{}, error)
 	GetSystemHealth(ctx context.Context, tenantID int) (map[string]interface{}, error)
 }
+
+// 批次 3 第 3 步：流程触发 / 流程绑定 / 层级域配置三组窄契约。
+// 方法集等于 process_trigger.go 的真实调用面（5 + 8 + 3 = 16 个方法）。
+// GetEffectiveConfig 的返回值与「各层级均未命中」的 sentinel 已下沉到 dto，
+// 共享层保留同名别名，因此这里只需引用 dto、ent 与内置类型；
+// 装配点仍传具体指针，组合根无需改动。
+
+// ProcessTriggerRunner 流程实例触发生命周期
+type ProcessTriggerRunner interface {
+	TriggerProcess(ctx context.Context, req *dto.ProcessTriggerRequest) (*dto.ProcessTriggerResponse, error)
+	GetProcessStatus(ctx context.Context, processInstanceID int, tenantID int) (*dto.ProcessTriggerResponse, error)
+	CancelProcess(ctx context.Context, processInstanceID int, reason string, tenantID int) error
+	SuspendProcess(ctx context.Context, processInstanceID int, reason string, tenantID int) error
+	ResumeProcess(ctx context.Context, processInstanceID int, tenantID int) error
+}
+
+// ProcessBindingCatalog 流程绑定与部门默认流程模板
+type ProcessBindingCatalog interface {
+	CreateBinding(ctx context.Context, binding *dto.ProcessBinding) (*dto.ProcessBinding, error)
+	GetBinding(ctx context.Context, id int, tenantID int) (*dto.ProcessBinding, error)
+	QueryBindings(ctx context.Context, req *dto.ProcessBindingQueryRequest) ([]*dto.ProcessBinding, error)
+	UpdateBinding(ctx context.Context, id int, binding *dto.ProcessBinding) (*dto.ProcessBinding, error)
+	DeleteBinding(ctx context.Context, id int, tenantID int) error
+	GetBindingsByBusinessType(ctx context.Context, businessType dto.BusinessType, tenantID int) ([]*dto.ProcessBinding, error)
+	GetDepartmentBindings(ctx context.Context, tenantID, departmentID int) ([]*dto.ProcessBinding, error)
+	InitDepartmentDefaultBindings(ctx context.Context, tenantID, departmentID int, departmentType string) error
+}
+
+// DomainConfigResolver 全局 → 租户 → 部门 → 团队的层级配置解析
+type DomainConfigResolver interface {
+	ListConfigs(ctx context.Context, tenantID int, configType string) ([]*ent.DomainConfig, error)
+	SetConfig(
+		ctx context.Context,
+		tenantID, departmentID, teamID int,
+		configType, configKey string,
+		configValue map[string]interface{},
+		inheritMode string,
+		description string,
+	) error
+	GetEffectiveConfig(
+		ctx context.Context,
+		tenantID, departmentID, teamID int,
+		configType, configKey string,
+	) (*dto.ResolvedConfig, error)
+}
