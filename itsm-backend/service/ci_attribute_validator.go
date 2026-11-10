@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"math"
 	"sort"
@@ -11,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/ciattributedefinition"
 	"itsm-backend/ent/citype"
@@ -27,7 +27,7 @@ const globalAttributeDefinitionTenantID = 1
 
 // ErrCIAttributeValidation 标记「属性值不符合该 CI 类型的定义」（缺必填、类型/枚举不通过、唯一冲突）。
 // 调用方（如云发现回写 CI）据此区分「数据要人补录」和写入失败，不得靠匹配错误文案。
-var ErrCIAttributeValidation = errors.New("ci attribute validation")
+var ErrCIAttributeValidation = dto.ErrCIAttributeValidation
 
 // CIAttributeValidator 基于 CIAttributeDefinition 元数据对 CI 动态属性做归一化与校验。
 // 校验内容：类型强转、默认值填充、必填、validation_rules（枚举/长度/数值范围/pattern）、唯一性。
@@ -41,15 +41,7 @@ func NewCIAttributeValidator(client *ent.Client) *CIAttributeValidator {
 }
 
 // CIAttributeRequirement 描述某个 CI 类型（含继承链）上一条必填属性定义的补录所需信息。
-type CIAttributeRequirement struct {
-	Name         string   `json:"name"`
-	DisplayName  string   `json:"displayName"`
-	DataType     string   `json:"dataType"`
-	EnumValues   []string `json:"enumValues"`
-	DefaultValue string   `json:"defaultValue"`
-	Placeholder  string   `json:"placeholder"`
-	HelpText     string   `json:"helpText"`
-}
+type CIAttributeRequirement = dto.CIAttributeRequirement
 
 // collectEffectiveAttributeDefinitions 解析 CI 类型继承链并按「根→叶、租户覆盖全局」合并出生效定义。
 // 这是「该类型要求哪些属性」的唯一事实来源：NormalizeAttributes 与必填项查询共用，禁止另写一份查询。

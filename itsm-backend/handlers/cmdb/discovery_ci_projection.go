@@ -13,11 +13,10 @@ import (
 	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
-	"itsm-backend/service"
 )
 
 // 发现结果回写配置项。CI 的写入规则（发号、历史、属性校验）在
-// service.ConfigurationItemService，这里只决定落成哪一类、带哪些字段。
+// ConfigurationItemService，这里只决定落成哪一类、带哪些字段。
 // 两条产品口径：动态属性只从云标签推断，凑不齐 CI 类型的必填项就记 deferred 交人补录，
 // 不臆造值；资源连续缺失只把已链接的配置项标成 cloud_sync_status=stale，
 // 不碰 lifecycle_status——退役是人的决定。
@@ -67,7 +66,7 @@ func DiscoveryCITypeMappingKeys() []string {
 	return keys
 }
 
-// DiscoveryCIWriter 是回写面用到的 CI 域能力（生产实现 *service.ConfigurationItemService）。
+// DiscoveryCIWriter 是回写面用到的 CI 域能力（生产实现 *ConfigurationItemService）。
 type DiscoveryCIWriter interface {
 	CreateCI(ctx context.Context, req *dto.CreateCIRequest, tenantID int) (*dto.CIResponse, error)
 	UpdateCI(ctx context.Context, id, tenantID int, req *dto.UpdateCIRequest) (*dto.CIResponse, error)
@@ -159,7 +158,7 @@ func (p *DiscoveryCIProjector) createCI(ctx context.Context, res *CloudResource,
 	req := p.newCreateCIRequest(res, ciTypeID)
 	created, err := p.writer.CreateCI(ctx, req, res.TenantID)
 	if err != nil {
-		if errors.Is(err, service.ErrCIAttributeValidation) {
+		if errors.Is(err, dto.ErrCIAttributeValidation) {
 			p.logger.Infow("discovery ci projection deferred",
 				"tenant_id", res.TenantID, "resource_id", res.ResourceID,
 				"ci_type_id", ciTypeID, "error", err)

@@ -11,7 +11,6 @@ import (
 	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
-	"itsm-backend/service"
 	"itsm-backend/service/cloud"
 )
 
@@ -24,7 +23,7 @@ import (
 const CIProvisioningSourceValue = "provisioning"
 
 // ProvisioningCIProjector 把已成功交付的云资源写成 CMDB 配置项。
-// CI 写入规则仍由 service.ConfigurationItemService 承担，这里只决定落点与字段。
+// CI 写入规则仍由 ConfigurationItemService 承担，这里只决定落点与字段。
 type ProvisioningCIProjector struct {
 	repo   Repository
 	writer DiscoveryCIWriter
@@ -38,35 +37,35 @@ func NewProvisioningCIProjector(repo Repository, writer DiscoveryCIWriter, logge
 	return &ProvisioningCIProjector{repo: repo, writer: writer, logger: logger}
 }
 
-var _ service.ProvisioningCIProjector = (*ProvisioningCIProjector)(nil)
+var _ dto.ProvisioningCIProjector = (*ProvisioningCIProjector)(nil)
 
-func (p *ProvisioningCIProjector) ProjectProvisionedResource(ctx context.Context, req service.ProvisioningCIProjectionRequest) service.ProvisioningCIProjectionResult {
+func (p *ProvisioningCIProjector) ProjectProvisionedResource(ctx context.Context, req dto.ProvisioningCIProjectionRequest) dto.ProvisioningCIProjectionResult {
 	if p == nil || p.repo == nil || p.writer == nil {
-		return provisioningProjection(service.ProvisioningCIProjectionUnavailable, 0, "projector_not_wired")
+		return provisioningProjection(dto.ProvisioningCIProjectionUnavailable, 0, "projector_not_wired")
 	}
 	if req.TenantID <= 0 || req.ServiceRequestID <= 0 {
-		return provisioningProjection(service.ProvisioningCIProjectionFailed, 0, "request_without_tenant")
+		return provisioningProjection(dto.ProvisioningCIProjectionFailed, 0, "request_without_tenant")
 	}
 	instanceID := strings.TrimSpace(req.Resources["instance_id"])
 	if instanceID == "" {
-		return provisioningProjection(service.ProvisioningCIProjectionSkipped, 0, "provider_result_missing_instance_id")
+		return provisioningProjection(dto.ProvisioningCIProjectionSkipped, 0, "provider_result_missing_instance_id")
 	}
 	// req.ResourceType 是交付任务里的服务码（当前只有 ecs），CI 侧资源类型统一是 instance，
 	// 与发现链路使用同一张 ecs|cvm|ec2 → cloud_vm 映射表。
 	ciTypeName, ok := CITypeForCloudResource(req.ResourceType, "instance")
 	if !ok {
-		return provisioningProjection(service.ProvisioningCIProjectionSkipped, 0,
+		return provisioningProjection(dto.ProvisioningCIProjectionSkipped, 0,
 			fmt.Sprintf("unmapped_resource_type=%s|instance", req.ResourceType))
 	}
 	ciTypeID, err := p.repo.GetCITypeIDByName(ctx, req.TenantID, ciTypeName)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return provisioningProjection(service.ProvisioningCIProjectionSkipped, 0,
+			return provisioningProjection(dto.ProvisioningCIProjectionSkipped, 0,
 				fmt.Sprintf("ci_type_missing=%s(tenant=%d)", ciTypeName, req.TenantID))
 		}
 		p.logger.Warnw("provisioning ci type lookup failed",
 			"tenant_id", req.TenantID, "ci_type", ciTypeName, "error", err)
-		return provisioningProjection(service.ProvisioningCIProjectionFailed, 0, err.Error())
+		return provisioningProjection(dto.ProvisioningCIProjectionFailed, 0, err.Error())
 	}
 
 	provider := cloud.NormalizeProvider(req.Provider)
@@ -74,7 +73,7 @@ func (p *ProvisioningCIProjector) ProjectProvisionedResource(ctx context.Context
 	if err != nil && !ent.IsNotFound(err) {
 		p.logger.Warnw("provisioning ci lookup failed",
 			"tenant_id", req.TenantID, "instance_id", instanceID, "error", err)
-		return provisioningProjection(service.ProvisioningCIProjectionFailed, 0, err.Error())
+		return provisioningProjection(dto.ProvisioningCIProjectionFailed, 0, err.Error())
 	}
 	if existing != nil {
 		return p.updateCI(ctx, req, existing, provider, instanceID)
@@ -82,39 +81,39 @@ func (p *ProvisioningCIProjector) ProjectProvisionedResource(ctx context.Context
 	return p.createCI(ctx, req, ciTypeID, provider, instanceID)
 }
 
-func (p *ProvisioningCIProjector) createCI(ctx context.Context, req service.ProvisioningCIProjectionRequest, ciTypeID int, provider, instanceID string) service.ProvisioningCIProjectionResult {
+func (p *ProvisioningCIProjector) createCI(ctx context.Context, req dto.ProvisioningCIProjectionRequest, ciTypeID int, provider, instanceID string) dto.ProvisioningCIProjectionResult {
 	createReq := p.newCreateCIRequest(req, ciTypeID, provider, instanceID)
 	created, err := p.writer.CreateCI(ctx, createReq, req.TenantID)
 	if err != nil {
-		if errors.Is(err, service.ErrCIAttributeValidation) {
+		if errors.Is(err, dto.ErrCIAttributeValidation) {
 			p.logger.Infow("provisioning ci projection deferred",
 				"tenant_id", req.TenantID, "service_request_id", req.ServiceRequestID,
 				"instance_id", instanceID, "ci_type_id", ciTypeID, "error", err)
-			return provisioningProjection(service.ProvisioningCIProjectionDeferred, 0, err.Error())
+			return provisioningProjection(dto.ProvisioningCIProjectionDeferred, 0, err.Error())
 		}
 		p.logger.Warnw("provisioning ci projection failed",
 			"tenant_id", req.TenantID, "service_request_id", req.ServiceRequestID,
 			"instance_id", instanceID, "error", err)
-		return provisioningProjection(service.ProvisioningCIProjectionFailed, 0, err.Error())
+		return provisioningProjection(dto.ProvisioningCIProjectionFailed, 0, err.Error())
 	}
 	p.logger.Infow("configuration item created by provisioning",
 		"tenant_id", req.TenantID, "ci_id", created.ID,
 		"service_request_id", req.ServiceRequestID, "instance_id", instanceID)
-	return provisioningProjection(service.ProvisioningCIProjectionCreated, created.ID, "from_provisioning")
+	return provisioningProjection(dto.ProvisioningCIProjectionCreated, created.ID, "from_provisioning")
 }
 
-func (p *ProvisioningCIProjector) updateCI(ctx context.Context, req service.ProvisioningCIProjectionRequest, existing *ConfigurationItem, provider, instanceID string) service.ProvisioningCIProjectionResult {
+func (p *ProvisioningCIProjector) updateCI(ctx context.Context, req dto.ProvisioningCIProjectionRequest, existing *ConfigurationItem, provider, instanceID string) dto.ProvisioningCIProjectionResult {
 	updated, err := p.writer.UpdateCI(ctx, existing.ID, req.TenantID, p.newUpdateCIRequest(req, provider, instanceID))
 	if err != nil {
 		p.logger.Warnw("provisioning ci update failed",
 			"tenant_id", req.TenantID, "ci_id", existing.ID,
 			"service_request_id", req.ServiceRequestID, "instance_id", instanceID, "error", err)
-		return provisioningProjection(service.ProvisioningCIProjectionFailed, existing.ID, err.Error())
+		return provisioningProjection(dto.ProvisioningCIProjectionFailed, existing.ID, err.Error())
 	}
-	return provisioningProjection(service.ProvisioningCIProjectionUpdated, updated.ID, "refreshed")
+	return provisioningProjection(dto.ProvisioningCIProjectionUpdated, updated.ID, "refreshed")
 }
 
-func (p *ProvisioningCIProjector) newCreateCIRequest(req service.ProvisioningCIProjectionRequest, ciTypeID int, provider, instanceID string) *dto.CreateCIRequest {
+func (p *ProvisioningCIProjector) newCreateCIRequest(req dto.ProvisioningCIProjectionRequest, ciTypeID int, provider, instanceID string) *dto.CreateCIRequest {
 	return &dto.CreateCIRequest{
 		Name:              provisioningCIName(req, instanceID),
 		CITypeID:          ciTypeID,
@@ -134,7 +133,7 @@ func (p *ProvisioningCIProjector) newCreateCIRequest(req service.ProvisioningCIP
 }
 
 // newUpdateCIRequest 只刷新云侧事实；名称、属性、环境等可能已被人工修正的字段不动。
-func (p *ProvisioningCIProjector) newUpdateCIRequest(req service.ProvisioningCIProjectionRequest, provider, instanceID string) *dto.UpdateCIRequest {
+func (p *ProvisioningCIProjector) newUpdateCIRequest(req dto.ProvisioningCIProjectionRequest, provider, instanceID string) *dto.UpdateCIRequest {
 	return &dto.UpdateCIRequest{
 		Status:            common.CIStatusActive,
 		Source:            CIProvisioningSourceValue,
@@ -150,7 +149,7 @@ func (p *ProvisioningCIProjector) newUpdateCIRequest(req service.ProvisioningCIP
 	}
 }
 
-func provisioningCIName(req service.ProvisioningCIProjectionRequest, instanceID string) string {
+func provisioningCIName(req dto.ProvisioningCIProjectionRequest, instanceID string) string {
 	for _, key := range []string{"instanceName", "name", "hostname"} {
 		if value := projectionStringValue(req.Payload, key); value != "" {
 			return value
@@ -159,7 +158,7 @@ func provisioningCIName(req service.ProvisioningCIProjectionRequest, instanceID 
 	return instanceID
 }
 
-func provisioningCIAttributes(req service.ProvisioningCIProjectionRequest) map[string]interface{} {
+func provisioningCIAttributes(req dto.ProvisioningCIProjectionRequest) map[string]interface{} {
 	attrs := map[string]interface{}{
 		"cloudProvider": cloud.NormalizeProvider(req.Provider),
 	}
@@ -175,7 +174,7 @@ func provisioningCIAttributes(req service.ProvisioningCIProjectionRequest) map[s
 }
 
 // provisioningCloudMetadata 保留云侧回执，便于对账；不包含凭据或请求正文。
-func provisioningCloudMetadata(req service.ProvisioningCIProjectionRequest, instanceID string) map[string]interface{} {
+func provisioningCloudMetadata(req dto.ProvisioningCIProjectionRequest, instanceID string) map[string]interface{} {
 	metadata := map[string]interface{}{}
 	if ids := strings.TrimSpace(req.Resources["instance_ids"]); ids != "" {
 		metadata["instanceIds"] = ids
@@ -196,7 +195,7 @@ func provisioningCloudMetadata(req service.ProvisioningCIProjectionRequest, inst
 }
 
 // provisioningCloudTags 记录交付时写入的云标签，和 ECS Provider 的实际打标保持一致。
-func provisioningCloudTags(req service.ProvisioningCIProjectionRequest) map[string]interface{} {
+func provisioningCloudTags(req dto.ProvisioningCIProjectionRequest) map[string]interface{} {
 	tags := map[string]interface{}{
 		"itsm-tenant-id":            fmt.Sprintf("%d", req.TenantID),
 		"itsm-service-request-id":   fmt.Sprintf("%d", req.ServiceRequestID),
@@ -225,6 +224,6 @@ func projectionStringValue(payload map[string]any, key string) string {
 	}
 }
 
-func provisioningProjection(status string, ciID int, reason string) service.ProvisioningCIProjectionResult {
-	return service.ProvisioningCIProjectionResult{Status: status, CIID: ciID, Reason: reason}
+func provisioningProjection(status string, ciID int, reason string) dto.ProvisioningCIProjectionResult {
+	return dto.ProvisioningCIProjectionResult{Status: status, CIID: ciID, Reason: reason}
 }

@@ -659,7 +659,7 @@ ticket 有 20 个 service 文件分散在 10 个子域。策略：
 
 ## 批次 3 前置：BPMN 四组边界拆分设计（2026-11-10）
 
-> **状态：批次 3 五步全部落地（2026-11-10，L.3 `bpmn=8→7→5→4→2→0`，`operations` / `problem` 各 `1→0`，合计 **18 文件 / 7 域**、L.4 零依赖域 **60**）。** 本节是批次 3 的开工依据。落地按「组 4 纯值 → 组 3 → 组 2 → 组 1 → 组合根专项」拆成独立提交，每组单独跑回归锁 + 反向验证 + 基线精确收紧；不按 `service/` 侧 36 文件清单整文件 `git mv`（见 :493）。
+> **状态：批次 3 五步全部落地（2026-11-10，L.3 `bpmn=8→7→5→4→2→0`，`operations` / `problem` 各 `1→0`，合计 **18 文件 / 7 域**、L.4 零依赖域 **60**）；cmdb 专项 A 已落地（`cmdb=7→2`，合计 **13 文件 / 7 域**），专项 B 待落地。** 本节是批次 3 的开工依据。落地按「组 4 纯值 → 组 3 → 组 2 → 组 1 → 组合根专项」拆成独立提交，每组单独跑回归锁 + 反向验证 + 基线精确收紧；不按 `service/` 侧 36 文件清单整文件 `git mv`（见 :493）。
 
 ### 现状盘点（只读实测，非推算）
 
@@ -724,8 +724,10 @@ ticket 有 20 个 service 文件分散在 10 个子域。策略：
 ### 与另外两条专项的界面
 
 - **LLMGateway 契约化**收 `email_intake` + `ai`：与 `bpmn` 域完全无交集（该域已随 5A 全量归零），可完全并行；5B 已把 `operations` / `problem` 收口，组合根注入专项到此结束。
-- **剩余域**：`cmdb=7` 是下一批主战场（占剩余 18 个文件的 39%），`ai=4` / `email_intake=2` 依赖 LLMGateway 专项，`change` / `service_request` 各 1 可用现模板，`dashboard=1` / `skill=2` 为成组 DTO 下沉。
+- **剩余域**：`cmdb` 专项 A 已归零 5 个文件（`7→2`），专项 B 剩 `production_service.go` / `ontology.go`；`ai=4` / `email_intake=2` 依赖 LLMGateway 专项，`change` / `service_request` 各 1 可用现模板，`dashboard=1` / `skill=2` 为成组 DTO 下沉。
 - `dashboard` 域（16 符号全为方法返回 DTO）可用现模板直接收，与 BPMN 无交集，可作批次 3 前的暖身批。
 - 本设计不改运行时行为，**不需要重建 prod 镜像**；prod 当前 `v1.6.50`（HEAD `bed0cbe46` 干净快照），本节只动源码与基线。
 
-**未纳入**：L.6 符号级白名单、ROADMAP v1.6.x 团队评审、`workflow` 真实租户跨域联调人工签字（不由 AI 代签）、`cmdb=7` 专项。
+**未纳入**：L.6 符号级白名单、ROADMAP v1.6.x 团队评审、`workflow` 真实租户跨域联调人工签字（不由 AI 代签）、`cmdb` 专项 B。
+
+**cmdb 专项 A 落地记录（2026-11-10）**：7 个文件的共享层依赖分三类，先收低风险的 5 个。① **timer 纯函数组**：`discovery_scheduler.go` / `handler.go` 需要 `ResolveLocation` / `ParseTimerExpression` / `NextFireAt`，但它们的实现依赖 `service/timer_cron.go` 的 `cronParser` 与 `service/timer_event_extractor.go` 的 5 个私有 ISO 8601 helper，且 `ExpressionType` 定义在 `service/timer_store.go`。若只把三个入口搬进域内会立刻长出第二份时区/cron 口径，故把**整组纯函数连私有 helper 与 cron 解析器**用脚本按 `git show HEAD` 原文自动抽取到 `dto/timer_expression_dto.go`（唯一实现），`service` 侧保留三处同名薄委托 + `ExpressionType` 别名 + `DefaultTimerTimezone` 别名，`timer_event_extractor.go` 删掉 5 个私有 helper，`timer_cron.go` 只留依赖 `ent.Client` 的 `LoadTenantLocation` 与 `IsRecurring` / `CycleRemaining`。**组合根零改动**（无需注入函数字段），timer 全套单测口径逐字不变。② **CMDB 投影值类型**：`ErrCIAttributeValidation` / `CIAttributeRequirement`（7 字段 JSON tag）、provisioning 的 6 个状态常量 + 2 值类型 + `ProvisioningCIProjector` 接口一并下沉 `dto/cmdb_projection_dto.go`，`service/{ci_attribute_validator,provisioning_delivery}.go` 改同名别名，`errors.Is` 身份与接口签名不变。③ 5 个 handler 共 **39 处** `service.` 引用改 `dto.`、删 import；`discovery_manual_completion.go` 带并行会话 WIP（3/+2 行），用同一替换函数分别产出工作区版与「HEAD 快照 + 本批改动」隔离 blob。④ 回归锁新建 `internal/layering/cmdb_partial_contract_test.go`：部分归零域实测计数/基线双锁（`cmdb=2`）、5 个文件逐处 dto 契约、常量字面值 + JSON tag 形状 + `errors.Is` 身份 + `reflect.Type` 身份、timer「service 必须是薄委托」源码守卫与 6 类输入的行为等价（防「两边一起改坏」）；集中锁补 3 条编译期接口断言与 11 条别名/委托源码守卫。与 HEAD 逐函数体/逐字段自动比对 **28 项 0 diff**，回归锁首跑即抓到 `DefaultTimerTimezone` 被漏写成独立常量（已改为别名）。C.8 实测 **L.1 140 / L.3 13 文件 7 域 / L.4 60 / L.5 零复活，0 failures 0 warnings**；`app.go` 与 `router.go` 零改动，C.6.4 五项不变。本步不改运行时行为，不重建 prod 镜像。

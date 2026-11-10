@@ -37,14 +37,15 @@ const (
 	TimerTypeTaskDue TimerType = "task_due"
 )
 
-type ExpressionType string
+// ExpressionType 的单一定义已下沉 dto；service 保留同名别名以兼容既有调用点。
+type ExpressionType = dto.ExpressionType
 
 const (
-	ExprTypeDuration ExpressionType = "duration"
-	ExprTypeCron     ExpressionType = "cron"
-	ExprTypeDate     ExpressionType = "date"
+	ExprTypeDuration = dto.ExprTypeDuration
+	ExprTypeCron     = dto.ExprTypeCron
+	ExprTypeDate     = dto.ExprTypeDate
 	// ExprTypeCycle ISO 8601 循环表达式（R5/PT10M）或重复 cron 的通用别名。
-	ExprTypeCycle ExpressionType = "cycle"
+	ExprTypeCycle = dto.ExprTypeCycle
 )
 
 type PauseState string

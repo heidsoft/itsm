@@ -10,7 +10,6 @@ import (
 	"itsm-backend/common"
 	"itsm-backend/common/handlerctx"
 	"itsm-backend/dto"
-	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
 )
@@ -25,7 +24,7 @@ type Handler struct {
 func NewHandler(svc *Service) *Handler {
 	return &Handler{
 		svc:         svc,
-		locationFor: func(context.Context, int) *time.Location { return service.ResolveLocation("") },
+		locationFor: func(context.Context, int) *time.Location { return dto.ResolveLocation("") },
 	}
 }
 

@@ -20,6 +20,7 @@ import (
 	"itsm-backend/handlers/auth"
 	"itsm-backend/handlers/automation_rule"
 	"itsm-backend/handlers/bpmn"
+	"itsm-backend/handlers/cmdb"
 	"itsm-backend/handlers/escalation_matrix"
 	"itsm-backend/handlers/incident"
 	"itsm-backend/handlers/operations"
@@ -99,6 +100,12 @@ var (
 	_ operations.ToolInvocationRecovery = service.RecoverInterruptedToolInvocationTx
 	_ problem.SLAService                = (*service.TicketSLAService)(nil)
 	_ problem.WorkflowBridge            = (*service.BPMNApprovalBridge)(nil)
+	// cmdb 专项 A：CI 回写与必填属性读取两个域内窄接口，锁住
+	// []dto.CIAttributeRequirement 的类型身份；投影器反向锁住 dto 接口。
+	// cmdb 仍是部分归零域，故不进 contractDomains。
+	_ cmdb.CIRequirementReader    = (*service.ConfigurationItemService)(nil)
+	_ cmdb.DiscoveryCIWriter      = (*service.ConfigurationItemService)(nil)
+	_ dto.ProvisioningCIProjector = (*cmdb.ProvisioningCIProjector)(nil)
 )
 
 type domainSpec struct {
@@ -390,6 +397,18 @@ func TestSharedValueTypesRemainDTOAliases(t *testing.T) {
 		{"bpmn_pending_inventory.go", "type PendingProcessGroup = dto.PendingProcessGroup"},
 		{"bpmn_pending_inventory.go", "type OrphanInstanceItem = dto.OrphanInstanceItem"},
 		{"bpmn_pending_inventory.go", "type PendingWorkflowInventory = dto.PendingWorkflowInventory"},
+		// cmdb 专项 A：值类型 / sentinel / 接口别名与三处 timer 薄委托，逐处比对不取并集。
+		{"ci_attribute_validator.go", "var ErrCIAttributeValidation = dto.ErrCIAttributeValidation"},
+		{"ci_attribute_validator.go", "type CIAttributeRequirement = dto.CIAttributeRequirement"},
+		{"provisioning_delivery.go", "type ProvisioningCIProjectionRequest = dto.ProvisioningCIProjectionRequest"},
+		{"provisioning_delivery.go", "type ProvisioningCIProjectionResult = dto.ProvisioningCIProjectionResult"},
+		{"provisioning_delivery.go", "type ProvisioningCIProjector = dto.ProvisioningCIProjector"},
+		{"timer_store.go", "type ExpressionType = dto.ExpressionType"},
+		{"timer_cron.go", "const DefaultTimerTimezone = dto.DefaultTimerTimezone"},
+		{"timer_cron.go", "return dto.ParseTimerExpression(expr)"},
+		{"timer_cron.go", "return dto.ResolveLocation(tz)"},
+		{"timer_cron.go", "return dto.NextFireAt(expr, exprType, loc, after)"},
+		{"timer_cron.go", "dto.SplitCycleExpression(strings.TrimSpace(expr))"},
 	}
 	for _, a := range aliases {
 		body, err := os.ReadFile(filepath.Join("..", "..", "service", a.file))

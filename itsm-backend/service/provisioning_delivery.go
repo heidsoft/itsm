@@ -1,6 +1,10 @@
 package service
 
-import "context"
+import (
+	"context"
+
+	"itsm-backend/dto"
+)
 
 // 交付完成后的联动契约。
 //
@@ -16,37 +20,18 @@ type ProvisioningDeliveryListener interface {
 }
 
 // CI 投影结果状态。与 handlers/cmdb 的 CIProjection* 常量同值，
-// 定义在这里是为了让 service 层不反向依赖 HTTP 域。
+// 定义下沉 dto 是为了让 service 层不反向依赖 HTTP 域。
 const (
-	ProvisioningCIProjectionCreated     = "created"
-	ProvisioningCIProjectionUpdated     = "updated"
-	ProvisioningCIProjectionDeferred    = "deferred"
-	ProvisioningCIProjectionSkipped     = "skipped"
-	ProvisioningCIProjectionFailed      = "failed"
-	ProvisioningCIProjectionUnavailable = "unavailable"
+	ProvisioningCIProjectionCreated     = dto.ProvisioningCIProjectionCreated
+	ProvisioningCIProjectionUpdated     = dto.ProvisioningCIProjectionUpdated
+	ProvisioningCIProjectionDeferred    = dto.ProvisioningCIProjectionDeferred
+	ProvisioningCIProjectionSkipped     = dto.ProvisioningCIProjectionSkipped
+	ProvisioningCIProjectionFailed      = dto.ProvisioningCIProjectionFailed
+	ProvisioningCIProjectionUnavailable = dto.ProvisioningCIProjectionUnavailable
 )
 
-// ProvisioningCIProjectionRequest 描述一次已成功的云资源交付。
-// Resources 是 Provider 返回的原始键值（实例 ID、地域、账号等）。
-type ProvisioningCIProjectionRequest struct {
-	TenantID           int
-	ServiceRequestID   int
-	ProvisioningTaskID int
-	ResourceType       string
-	Provider           string
-	Resources          map[string]string
-	Payload            map[string]any
-}
-
-// ProvisioningCIProjectionResult 是一次 CI 回写的结果；Reason 面向日志，不面向用户文案。
-type ProvisioningCIProjectionResult struct {
-	Status string
-	CIID   int
-	Reason string
-}
-
-// ProvisioningCIProjector 把已交付的云资源落成配置项。
-// 实现位于 handlers/cmdb，复用发现链路的 CI 类型解析与去重规则。
-type ProvisioningCIProjector interface {
-	ProjectProvisionedResource(ctx context.Context, req ProvisioningCIProjectionRequest) ProvisioningCIProjectionResult
-}
+// ProvisioningCIProjectionRequest / Result / Projector 的单一定义在 dto，
+// service 侧保留同名别名，交付链路与回归锁的签名不变。
+type ProvisioningCIProjectionRequest = dto.ProvisioningCIProjectionRequest
+type ProvisioningCIProjectionResult = dto.ProvisioningCIProjectionResult
+type ProvisioningCIProjector = dto.ProvisioningCIProjector

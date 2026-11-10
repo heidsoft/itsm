@@ -12,7 +12,6 @@ import (
 	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
-	"itsm-backend/service"
 )
 
 // DiscoveryScheduler 消费 `discovery_sources.schedule`。
@@ -71,7 +70,7 @@ func NewDiscoveryScheduler(repo Repository, svc *Service, logger *zap.SugaredLog
 		service:      svc,
 		logger:       logger,
 		now:          time.Now,
-		locationFor:  func(context.Context, int) *time.Location { return service.ResolveLocation("") },
+		locationFor:  func(context.Context, int) *time.Location { return dto.ResolveLocation("") },
 		grace:        2 * time.Minute,
 		warnCooldown: 10 * time.Minute,
 		lastWarn:     make(map[string]time.Time),
@@ -106,7 +105,7 @@ func planDiscoveryRun(schedule string, lastQueued *time.Time, lastStatus string,
 		return discoveryRunPlan{Reason: fmt.Sprintf("上一次任务仍在执行（%s）", lastStatus)}, nil
 	}
 
-	exprType, err := service.ParseTimerExpression(expr)
+	exprType, err := dto.ParseTimerExpression(expr)
 	if err != nil {
 		return discoveryRunPlan{}, err
 	}
@@ -119,7 +118,7 @@ func planDiscoveryRun(schedule string, lastQueued *time.Time, lastStatus string,
 		anchor = *lastQueued
 	}
 
-	fireAt, err := service.NextFireAt(expr, exprType, loc, anchor)
+	fireAt, err := dto.NextFireAt(expr, exprType, loc, anchor)
 	if err != nil {
 		return discoveryRunPlan{}, err
 	}
@@ -233,11 +232,11 @@ func schedulePreview(schedule string, now time.Time, loc *time.Location) (next *
 	if expr == "" {
 		return nil, ""
 	}
-	exprType, err := service.ParseTimerExpression(expr)
+	exprType, err := dto.ParseTimerExpression(expr)
 	if err != nil {
 		return nil, err.Error()
 	}
-	nextAt, err := service.NextFireAt(expr, exprType, loc, now)
+	nextAt, err := dto.NextFireAt(expr, exprType, loc, now)
 	if err != nil {
 		return nil, err.Error()
 	}

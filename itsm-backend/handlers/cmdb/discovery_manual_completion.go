@@ -10,12 +10,11 @@ import (
 	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
-	"itsm-backend/service"
 )
 
 // 人工补全入口：发现回写把「凑不齐必填属性」的资源记为 deferred，
 // 这里把这笔账交还给运营人员——列出待补全资源、补录属性后建账。
-// 必填项的事实来源是 service.CIAttributeValidator（与 CreateCI 校验同一份查询），
+// 必填项的事实来源是 CIAttributeValidator（与 CreateCI 校验同一份查询），
 // 本文件不得再写一份「哪些属性必填」的逻辑。
 
 // ErrDiscoveryProjectorNotWired 表示 CI 域装配缺失（projector 或属性定义读取器未注入）。
@@ -23,15 +22,15 @@ import (
 var ErrDiscoveryProjectorNotWired = errors.New("discovery ci projector not wired")
 
 // CIRequirementReader 读取某 CI 类型（含继承链）生效的必填属性定义，
-// 生产实现是 *service.ConfigurationItemService。
+// 生产实现是 *ConfigurationItemService。
 type CIRequirementReader interface {
-	ListRequiredCIAttributes(ctx context.Context, tenantID, ciTypeID int) ([]service.CIAttributeRequirement, error)
+	ListRequiredCIAttributes(ctx context.Context, tenantID, ciTypeID int) ([]dto.CIAttributeRequirement, error)
 }
 
 // PendingDiscoveryAttribute 是一条必填属性在某个待补全资源上的现状：
 // 值只可能来自云标签（建账时 Attributes 就是标签快照），satisfied 表示无需人工补录。
 type PendingDiscoveryAttribute struct {
-	service.CIAttributeRequirement
+	dto.CIAttributeRequirement
 	Satisfied    bool
 	CurrentValue string
 }
@@ -95,7 +94,7 @@ func (p *DiscoveryCIProjector) ListPending(ctx context.Context, tenantID int) ([
 	}
 
 	// 同一目标类型只查一次属性定义（本轮调用内缓存）
-	requirementsCache := make(map[int][]service.CIAttributeRequirement)
+	requirementsCache := make(map[int][]dto.CIAttributeRequirement)
 
 	pending := make([]*PendingDiscoveryResource, 0)
 	for _, res := range resources {
@@ -228,7 +227,7 @@ func (p *DiscoveryCIProjector) CompleteManually(
 
 	created, err := p.writer.CreateCI(ctx, createReq, tenantID)
 	if err != nil {
-		if errors.Is(err, service.ErrCIAttributeValidation) {
+		if errors.Is(err, dto.ErrCIAttributeValidation) {
 			return nil, common.NewValidationError(err.Error(), err)
 		}
 		p.logger.Warnw("discovery manual completion failed",
