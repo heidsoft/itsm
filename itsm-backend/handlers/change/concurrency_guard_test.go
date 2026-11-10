@@ -125,7 +125,7 @@ func (r *updateCountRepo) Update(ctx context.Context, c *Change) (*Change, error
 // 绝不能再用陈旧快照做全列 repo.Update（把并发提交的字段编辑静默卡掉）。
 func TestTransitionStatus_NonTerminal_NoStaleFullOverwrite(t *testing.T) {
 	repo := &updateCountRepo{mockRepository: newMockRepository()}
-	svc := NewService(repo, nil, zaptest.NewLogger(t).Sugar(), nil)
+	svc := newTestService(repo, nil, zaptest.NewLogger(t).Sugar(), nil)
 	ctx := context.Background()
 	const tenantID, ownerID = 1, 42
 

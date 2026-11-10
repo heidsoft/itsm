@@ -137,6 +137,11 @@ func (s *Service) TerminateStaleServiceRequestInstances(ctx context.Context, ten
 				results = append(results, result)
 				continue
 			}
+			if s.approvalBridge == nil {
+				// 桥接未接线（装配遗漏/单测）：终止残留流程实例无法执行，
+				// 失败关闭而不是 panic——调用方据此知道「残留流程仍在」。
+				return results, fmt.Errorf("终止服务请求 %d 的残留流程实例失败: BPMN 桥接未接线", requestID)
+			}
 			if err := s.approvalBridge.TerminateBusinessWorkflow(
 				ctx, tenantID, actorID, string(dto.BusinessTypeServiceRequest), requestID, reason,
 			); err != nil {

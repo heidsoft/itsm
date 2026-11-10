@@ -120,7 +120,7 @@ func srSetup(t *testing.T) (*gin.Engine, *ent.Client, int, int, int) {
 
 	repo := NewEntRepository(client)
 	cmdbRepo := cmdb.NewEntRepository(client)
-	svc := NewService(repo, scRepo, cmdbRepo, client, logger, nil)
+	svc := newTestService(repo, scRepo, cmdbRepo, client, logger, nil)
 	h := NewHandler(svc)
 
 	user, err := client.User.Create().
@@ -244,7 +244,7 @@ func TestServiceRequestCreateDefersNewCIUntilProvisioning(t *testing.T) {
 	catalog, err := createServiceCatalogForTest(ctx, service_catalog.NewService(scRepo, logger),
 		"VM Request", "infrastructure", "Provision VM", 24, tenant.ID, "enabled", ciType.ID, 0)
 	require.NoError(t, err)
-	service := NewService(NewEntRepository(client), scRepo, cmdb.NewEntRepository(client), client, logger, nil)
+	service := newTestService(NewEntRepository(client), scRepo, cmdb.NewEntRepository(client), client, logger, nil)
 	expireAt := time.Now().Add(30 * 24 * time.Hour)
 
 	created, err := service.Create(ctx, tenant.ID, user.ID, catalog.ID, &ServiceRequest{
@@ -271,7 +271,7 @@ func TestServiceRequestHandler_ReadRejectsUnrelatedTenantUser(t *testing.T) {
 	id := srCreateOne(t, r, catID)
 
 	logger := zaptest.NewLogger(t).Sugar()
-	h := NewHandler(NewService(NewEntRepository(client), service_catalog.NewEntRepository(client), cmdb.NewEntRepository(client), client, logger, nil))
+	h := NewHandler(newTestService(NewEntRepository(client), service_catalog.NewEntRepository(client), cmdb.NewEntRepository(client), client, logger, nil))
 	other, err := client.User.Create().
 		SetUsername("sr-outsider-" + srUID()).
 		SetEmail("sr-outsider-" + srUID() + "@example.com").
@@ -373,7 +373,7 @@ func TestServiceRequestHandler_ListApprovals_RejectsCrossTenant(t *testing.T) {
 	foreignRouter := gin.New()
 	foreignRouter.Use(srAuth(foreignTenant.ID, 999999))
 	scRepo := service_catalog.NewEntRepository(client)
-	svc := NewService(NewEntRepository(client), scRepo, cmdb.NewEntRepository(client), client, zaptest.NewLogger(t).Sugar(), nil)
+	svc := newTestService(NewEntRepository(client), scRepo, cmdb.NewEntRepository(client), client, zaptest.NewLogger(t).Sugar(), nil)
 	foreignRouter.GET("/api/v1/service-requests/:id/approvals", NewHandler(svc).ListApprovals)
 
 	resp := srDoReq(t, foreignRouter, "GET", "/api/v1/service-requests/"+strconv.Itoa(id)+"/approvals", nil)
@@ -652,7 +652,7 @@ func TestBusinessApprovalHTTP_TenantAndIdentityIsolation(t *testing.T) {
 				srCreateBPMNFixture(t, client, tenantID, "isolation", id, actorID)
 				ctx := context.Background()
 				logger := zaptest.NewLogger(t).Sugar()
-				svc := NewService(NewEntRepository(client), service_catalog.NewEntRepository(client), cmdb.NewEntRepository(client), client, logger, nil)
+				svc := newTestService(NewEntRepository(client), service_catalog.NewEntRepository(client), cmdb.NewEntRepository(client), client, logger, nil)
 				handler := NewHandler(svc).ApplyApproval
 				path := fmt.Sprintf("/api/v1/service-requests/%d/approval", id)
 				if domain == "release" {
@@ -765,7 +765,7 @@ func srSetupRoleClient(t *testing.T, role, dept string) (*gin.Engine, *ent.Clien
 	require.NoError(t, err)
 	repo := NewEntRepository(client)
 	cmdbRepo := cmdb.NewEntRepository(client)
-	svc := NewService(repo, scRepo, cmdbRepo, client, logger, nil)
+	svc := newTestService(repo, scRepo, cmdbRepo, client, logger, nil)
 	h := NewHandler(svc)
 	requester, err := client.User.Create().
 		SetUsername("sr-requester-" + srUID()).
@@ -940,7 +940,7 @@ func TestServiceRequestPendingApprovalsFollowResolvedApprovers(t *testing.T) {
 	ctx := context.Background()
 	logger := zaptest.NewLogger(t).Sugar()
 	scRepo := service_catalog.NewEntRepository(client)
-	service := NewService(NewEntRepository(client), scRepo, cmdb.NewEntRepository(client), client, logger, nil)
+	service := newTestService(NewEntRepository(client), scRepo, cmdb.NewEntRepository(client), client, logger, nil)
 	itRequester, err := client.User.Create().
 		SetUsername("it-requester-" + srUID()).SetEmail("it-" + srUID() + "@example.com").SetName("IT Requester").
 		SetPasswordHash("hash").SetRole("agent").SetDepartment("IT").SetActive(true).SetTenantID(tenantID).Save(ctx)
@@ -982,7 +982,7 @@ func TestServiceRequestPendingApprovalsUseApproverIDsNotRole(t *testing.T) {
 	_, client, tenantID, managerID, catID := srSetup(t)
 	ctx := context.Background()
 	logger := zaptest.NewLogger(t).Sugar()
-	svc := NewService(NewEntRepository(client), service_catalog.NewEntRepository(client), cmdb.NewEntRepository(client), client, logger, nil)
+	svc := newTestService(NewEntRepository(client), service_catalog.NewEntRepository(client), cmdb.NewEntRepository(client), client, logger, nil)
 	expireAt := time.Now().Add(30 * 24 * time.Hour)
 	req, err := svc.Create(ctx, tenantID, managerID, catID, &ServiceRequest{
 		Title: "approver id scoped", ComplianceAck: true, DataClassification: "internal", ExpireAt: &expireAt,
@@ -1025,7 +1025,7 @@ func TestServiceRequestApplyApprovalRejectsNonApprovalStage(t *testing.T) {
 	_, client, tenantID, managerID, catID := srSetup(t)
 	ctx := context.Background()
 	logger := zaptest.NewLogger(t).Sugar()
-	svc := NewService(NewEntRepository(client), service_catalog.NewEntRepository(client), cmdb.NewEntRepository(client), client, logger, nil)
+	svc := newTestService(NewEntRepository(client), service_catalog.NewEntRepository(client), cmdb.NewEntRepository(client), client, logger, nil)
 	expireAt := time.Now().Add(30 * 24 * time.Hour)
 	req, err := svc.Create(ctx, tenantID, managerID, catID, &ServiceRequest{
 		Title: "cancel then approve", ComplianceAck: true, DataClassification: "internal", ExpireAt: &expireAt,

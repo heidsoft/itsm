@@ -21,6 +21,7 @@ import (
 	"itsm-backend/handlers/auth"
 	"itsm-backend/handlers/automation_rule"
 	"itsm-backend/handlers/bpmn"
+	"itsm-backend/handlers/change"
 	"itsm-backend/handlers/cmdb"
 	"itsm-backend/handlers/dashboard"
 	"itsm-backend/handlers/email_intake"
@@ -32,6 +33,7 @@ import (
 	"itsm-backend/handlers/problem_investigation"
 	"itsm-backend/handlers/provisioning"
 	"itsm-backend/handlers/release"
+	"itsm-backend/handlers/service_request"
 	"itsm-backend/handlers/skill"
 	"itsm-backend/handlers/ticket"
 	"itsm-backend/handlers/ticket_notification"
@@ -59,7 +61,13 @@ var (
 	_ ai.AITelemetryFacade     = (*service.AITelemetryService)(nil)
 	_ ai.Summarizer            = (*service.SummarizeService)(nil)
 	// skill 域整域归零（2026-11-10）：窄契约与值类型/sentinel 全部走 dto。
-	_ skill.SkillRegistryCatalog                = (*service.SkillRegistry)(nil)
+	_ skill.SkillRegistryCatalog = (*service.SkillRegistry)(nil)
+	// change / service_request 域整域归零（2026-11-10 收官批）：窄契约 + 值类型下沉。
+	_ change.ApprovalChainResolver              = (*service.ApprovalChainService)(nil)
+	_ change.ChangeApprovalBridge               = (*service.BPMNApprovalBridge)(nil)
+	_ service_request.ApprovalChainResolver     = (*service.ApprovalChainService)(nil)
+	_ service_request.SRApprovalBridge          = (*service.BPMNApprovalBridge)(nil)
+	_ service_request.SRSLAService              = (*service.TicketSLAService)(nil)
 	_ approval.ApprovalService                  = (*service.ApprovalService)(nil)
 	_ approval_chain.ApprovalChainService       = (*service.ApprovalChainService)(nil)
 	_ auth.EmailService                         = (*service.EmailService)(nil)
@@ -174,6 +182,8 @@ var contractDomains = []domainSpec{
 	{"email_intake", "orchestrator.go", "EmailIncidentCreator", "IncidentService", ""},
 	{"ai", "service.go", "ToolCatalog", "ToolRegistry,AnalyticsService,PredictionService,SLAForecastSkill,TriageService,RootCauseService,AITelemetryService,SummarizeService", ""},
 	{"skill", "handler.go", "SkillRegistryCatalog", "SkillRegistry", ""},
+	{"change", "service.go", "ApprovalChainResolver", "ApprovalChainService,BPMNApprovalBridge", ""},
+	{"service_request", "service.go", "ApprovalChainResolver", "ApprovalChainService,BPMNApprovalBridge,TicketSLAService", ""},
 }
 
 // 只剔除行注释，避免把说明文字里的示例当成代码；L.3 门禁本身是全文 grep，

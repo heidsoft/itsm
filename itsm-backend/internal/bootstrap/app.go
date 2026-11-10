@@ -987,7 +987,7 @@ func NewApplication() *Application {
 
 	// Domain: Service Request (DDD)
 	srRepo := service_request.NewEntRepository(client)
-	srService := service_request.NewService(srRepo, scRepo, cmdbRepo, client, sugar, approvalChainService)
+	srService := service_request.NewService(srRepo, scRepo, cmdbRepo, client, sugar, approvalChainService, service_request.WithApprovalBridge(service.NewBPMNApprovalBridge(client, sugar)))
 	srService.EnableWorkflowOutbox()
 	// SLA 注入（2026-10-21 统一绑定落地）：服务请求创建即按 service_request 类型绑定
 	// sla_states；装配缺失时降级为无 SLA 绑定，不阻断创建。
@@ -1018,7 +1018,7 @@ func NewApplication() *Application {
 
 	// Domain: Change (DDD)
 	changeRepo := change.NewEntRepository(client, database.GetRawDB())
-	changeServiceDomain := change.NewService(changeRepo, client, sugar, approvalChainService)
+	changeServiceDomain := change.NewService(changeRepo, client, sugar, approvalChainService, change.WithApprovalBridge(service.NewBPMNApprovalBridge(client, sugar)), change.WithApprovalChainCloser(service.CloseChangeApprovalChains))
 	stdChangeService := standard_change.NewService(client, changeServiceDomain)
 	standardChangeHandler := standard_change.NewHandler(stdChangeService, sugar)
 	changeHandler := change.NewHandler(changeServiceDomain)

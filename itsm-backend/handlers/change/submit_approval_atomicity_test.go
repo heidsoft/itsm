@@ -39,7 +39,7 @@ func TestSubmitApproval_AtomicSuccess_RecordAndStateCommittedTogether(t *testing
 		{ID: 1, ChangeID: changeID, TenantID: tenantID, Level: 1, ApproverID: approverID},
 	}
 
-	svc := NewService(repo, nil, logger, nil)
+	svc := newTestService(repo, nil, logger, nil)
 	comment := "ok"
 	rec := &ApprovalRecord{
 		ChangeID:   changeID,
@@ -96,7 +96,7 @@ func TestSubmitApproval_TransactionFailure_LeavesNoSideEffects(t *testing.T) {
 		{ID: 1, ChangeID: changeID, TenantID: tenantID, Level: 1, ApproverID: approverID},
 	}
 
-	svc := NewService(repo, nil, logger, nil)
+	svc := newTestService(repo, nil, logger, nil)
 	_, err := svc.SubmitApproval(context.Background(), &ApprovalRecord{
 		ChangeID:   changeID,
 		ApproverID: approverID,
@@ -140,7 +140,7 @@ func TestSubmitApproval_CASGuard_NonDraftDoesNotRegressState(t *testing.T) {
 		{ID: 2, ChangeID: changeID, TenantID: tenantID, Level: 2, ApproverID: approverID2},
 	}
 
-	svc := NewService(repo, nil, logger, nil)
+	svc := newTestService(repo, nil, logger, nil)
 	returned, err := svc.SubmitApproval(context.Background(), &ApprovalRecord{
 		ChangeID:   changeID,
 		ApproverID: approverID1,
@@ -186,7 +186,7 @@ func TestSubmitApproval_RejectsApproverNotInChain(t *testing.T) {
 	}
 	repo.approverValid = approverValid
 
-	svc := NewService(repo, nil, logger, nil)
+	svc := newTestService(repo, nil, logger, nil)
 	_, err := svc.SubmitApproval(context.Background(), &ApprovalRecord{
 		ChangeID:   changeID,
 		ApproverID: stranger,
@@ -228,7 +228,7 @@ func TestSubmitApproval_TimestampFromCallerNotElapsedClock(t *testing.T) {
 		{ID: 1, ChangeID: changeID, TenantID: tenantID, Level: 1, ApproverID: approverID},
 	}
 
-	svc := NewService(repo, nil, logger, nil)
+	svc := newTestService(repo, nil, logger, nil)
 	returned, err := svc.SubmitApproval(context.Background(), &ApprovalRecord{
 		ChangeID:   changeID,
 		ApproverID: approverID,

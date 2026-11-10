@@ -79,7 +79,7 @@ func TestApprovalBridge_TriggeredByFallbackDoesNotDeadlock(t *testing.T) {
 	require.NoError(t, err)
 
 	repo := newMockRepository()
-	svc := NewService(repo, entClient, zaptest.NewLogger(t).Sugar(), nil)
+	svc := newTestService(repo, entClient, zaptest.NewLogger(t).Sugar(), nil)
 
 	c := createTestChange(repo, tenantID, creatorID)
 	c.Status = "pending"
@@ -100,7 +100,7 @@ func TestApprovalBridge_TriggeredByFallbackDoesNotDeadlock(t *testing.T) {
 		fmt.Sprintf("change:%d", c.ID), creatorID, "Activity_CABApproval", "CAB审批")
 	_, err = entClient.ProcessTask.UpdateOneID(taskID).
 		SetTaskVariables(map[string]interface{}{
-			"taskPurpose":     "approval",
+			"taskPurpose":      "approval",
 			"assignmentSource": "triggered_by",
 		}).
 		Save(ctx)
@@ -127,7 +127,7 @@ func TestSubmitChange_AdvancesPreApprovalEvaluationNode(t *testing.T) {
 	approver := mkChangeUser(t, entClient, tenantID, "manager")
 
 	repo := NewEntRepository(entClient, rawDB)
-	svc := NewService(repo, entClient, zaptest.NewLogger(t).Sugar(), nil)
+	svc := newTestService(repo, entClient, zaptest.NewLogger(t).Sugar(), nil)
 
 	changeID := mkChangeDraft(t, entClient, tenantID, creator)
 

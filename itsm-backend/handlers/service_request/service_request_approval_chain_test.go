@@ -45,7 +45,7 @@ func setupApprovalChainTest(t *testing.T) (*Service, *ent.Client, int, int) {
 	repo := NewEntRepository(client)
 	cmdbRepo := cmdb.NewEntRepository(client)
 	approvalChainSvc := service.NewApprovalChainService(client, logger)
-	svc := NewService(repo, scRepo, cmdbRepo, client, logger, approvalChainSvc)
+	svc := newTestService(repo, scRepo, cmdbRepo, client, logger, approvalChainSvc)
 	return svc, client, tenant.ID, cat.ID
 }
 

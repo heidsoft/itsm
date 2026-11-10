@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"itsm-backend/dto"
 	"sort"
 	"strconv"
 	"strings"
@@ -41,39 +42,14 @@ const (
 	FallbackAutoReject  = "auto_reject"  // 自动拒绝
 )
 
-// ApprovalEvalContext 审批链求值上下文
-type ApprovalEvalContext struct {
-	TenantID    int
-	EntityType  string // ticket, change, service_request
-	RequesterID int
-	Priority    string
-	Amount      float64
-}
+// ApprovalEvalContext 值类型唯一实现在 dto 包；此处保留同名别名以保持 service 包公开 API。
+type ApprovalEvalContext = dto.ApprovalEvalContext
 
-// ApprovalLevelEval 单层（一个 level）求值结果
-type ApprovalLevelEval struct {
-	Level             int
-	Required          bool
-	ApprovalType      string // serial | parallel | all | or
-	Threshold         int    // 需要的批准人数
-	ApproverIDs       []int
-	ApproverNames     []string
-	FallbackTriggered bool
-	FallbackAction    string
-	Status            string // pending | satisfied | blocked
-	// i3 P0 动态适配：上下文不匹配条件时该层被跳过，视为自动通过。
-	Skipped    bool   // 本层是否被条件过滤跳过
-	SkipReason string // 跳过原因，如 "priority_not_match"/"amount_below_min"/"amount_above_max"
-}
+// ApprovalLevelEval 值类型唯一实现在 dto 包；此处保留同名别名以保持 service 包公开 API。
+type ApprovalLevelEval = dto.ApprovalLevelEval
 
-// ApprovalChainEvaluation 整体求值结果
-type ApprovalChainEvaluation struct {
-	ChainID      int
-	Levels       []ApprovalLevelEval
-	Passed       bool // 所有必需层均满足（含 fallback 解决）
-	PendingLevel int  // 下一个待审批层（1-based），0=已完成/无待办
-	Blocked      bool // 触发 block/auto_reject，需人工干预
-}
+// ApprovalChainEvaluation 值类型唯一实现在 dto 包；此处保留同名别名以保持 service 包公开 API。
+type ApprovalChainEvaluation = dto.ApprovalChainEvaluation
 
 // EvaluateApprovalChain 对一条审批链求值。
 // approvals 为「level -> 已批准该层的用户ID列表」；传 nil 表示尚未有任何批准（用于生成审批计划）。

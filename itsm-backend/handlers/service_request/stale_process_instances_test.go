@@ -80,7 +80,7 @@ func newStaleFixture(t *testing.T) *staleFixture {
 	fixture.oldDef = fixture.createDefinition(t, "2.0.0", false, "old")
 	fixture.newDef = fixture.createDefinition(t, "2.1.0", true, "new")
 
-	fixture.svc = NewService(NewEntRepository(client), nil, nil, client, logger, nil)
+	fixture.svc = newTestService(NewEntRepository(client), nil, nil, client, logger, nil)
 	fixture.svc.SetSystemNotifier(fixture.notifier)
 	return fixture
 }

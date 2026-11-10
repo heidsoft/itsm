@@ -16,7 +16,6 @@ import (
 	"itsm-backend/handlers/cmdb"
 	"itsm-backend/handlers/service_catalog"
 	"itsm-backend/internal/datascope"
-	"itsm-backend/service"
 	"itsm-backend/service/sla"
 
 	"go.uber.org/zap"
@@ -69,18 +68,24 @@ type Service struct {
 	cmdbRepo       cmdb.Repository
 	client         *ent.Client
 	logger         *zap.SugaredLogger
-	approvalBridge *service.BPMNApprovalBridge
+	approvalBridge SRApprovalBridge
 	// approvalChain 解析审批展示/投影层级；审批写入必须先成功完成 BPMN 待办,
 	// 不再允许无运行中实例或无待办时回退到业务侧裁决。
-	approvalChain *service.ApprovalChainService
+	approvalChain ApprovalChainResolver
 	// slaSvc 为服务请求提供 SLA 绑定与读面（2026-10-21 统一绑定落地）。
-	slaSvc                *service.TicketSLAService
+	slaSvc                SRSLAService
 	workflowOutboxEnabled bool
 	// notifier 供运维批量终止旧版流程实例后提示发起人重建；未注入时静默跳过。
 	notifier SystemNotifier
 }
 
-func NewService(repo Repository, scRepo service_catalog.Repository, cmdbRepo cmdb.Repository, entClient *ent.Client, logger *zap.SugaredLogger, approvalChain *service.ApprovalChainService) *Service {
+// NewService 构造服务请求域服务。
+//
+// approvalChain 是审批链求值窄契约（组合根注入共享层引擎的具体指针，
+// 隐式满足）；opts 承载其余外部依赖（BPMN 流程桥接），由组合根显式注入——
+// 本域不构造共享层对象（与 problem 域 WorkflowBridge 同一口径）。
+// 未注入时（单测/旧组装）本域照常流转，流程实例不随动——未接线不是阻断项。
+func NewService(repo Repository, scRepo service_catalog.Repository, cmdbRepo cmdb.Repository, entClient *ent.Client, logger *zap.SugaredLogger, approvalChain ApprovalChainResolver, opts ...ServiceOption) *Service {
 	svc := &Service{
 		repo:          repo,
 		scRepo:        scRepo,
@@ -89,9 +94,10 @@ func NewService(repo Repository, scRepo service_catalog.Repository, cmdbRepo cmd
 		logger:        logger,
 		approvalChain: approvalChain,
 	}
-	if entClient != nil {
-		// 服务请求审批桥接到 BPMN 任务，避免流程实例悬挂
-		svc.approvalBridge = service.NewBPMNApprovalBridge(entClient, logger)
+	for _, opt := range opts {
+		if opt != nil {
+			opt(svc)
+		}
 	}
 	return svc
 }
@@ -101,10 +107,10 @@ func NewService(repo Repository, scRepo service_catalog.Repository, cmdbRepo cmd
 // CommandStartBPMN outbox row share one transaction.
 func (s *Service) EnableWorkflowOutbox() { s.workflowOutboxEnabled = true }
 
-var _ service.ProvisioningDeliveryListener = (*Service)(nil)
+var _ ProvisioningDeliveryListener = (*Service)(nil)
 
 // SetSLAService 注入 SLA 服务（装配缺失时服务请求降级为无 SLA 绑定，不阻断创建）。
-func (s *Service) SetSLAService(slaSvc *service.TicketSLAService) { s.slaSvc = slaSvc }
+func (s *Service) SetSLAService(slaSvc SRSLAService) { s.slaSvc = slaSvc }
 
 // bindSLAOnCreate 服务请求创建后绑定 SLA：按 service_type="service_request" 匹配
 // SLA 定义并写入 sla_states（与工单/事件/问题同一 Store、同一多态表）。
@@ -1128,8 +1134,8 @@ func (s *Service) enrichApprovalsWithApprovers(ctx context.Context, tenantID int
 // 注：当前按实体类型解析（租户级激活链），未绑定到具体服务目录项；
 // 若需按目录项维度绑定审批链，需为 ServiceCatalog 增加 approval_chain_id 字段
 // （schema 变更 + 迁移），列为后续独立重构项。
-func (s *Service) resolveServiceRequestChain(ctx context.Context, tenantID, requesterID int) (*service.ApprovalChainEvaluation, error) {
-	evalCtx := service.ApprovalEvalContext{
+func (s *Service) resolveServiceRequestChain(ctx context.Context, tenantID, requesterID int) (*dto.ApprovalChainEvaluation, error) {
+	evalCtx := dto.ApprovalEvalContext{
 		TenantID:    tenantID,
 		EntityType:  "service_request",
 		RequesterID: requesterID,

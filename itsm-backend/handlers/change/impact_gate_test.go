@@ -33,7 +33,7 @@ func newImpactGateTestService(t *testing.T) (*Service, context.Context, int) {
 	tenant := client.Tenant.Create().SetName("变更门禁租户").SetCode("impact-gate").SetDomain("impact-gate.example.com").SetStatus("active").SaveX(ctx)
 
 	repo := NewEntRepository(client, nil)
-	svc := NewService(repo, client, zaptest.NewLogger(t).Sugar(), nil)
+	svc := newTestService(repo, client, zaptest.NewLogger(t).Sugar(), nil)
 	return svc, ctx, tenant.ID
 }
 
@@ -85,7 +85,7 @@ func TestValidateImpactGate(t *testing.T) {
 	})
 
 	t.Run("entClient缺失时降级放行", func(t *testing.T) {
-		legacySvc := NewService(svc.repo, nil, zaptest.NewLogger(t).Sugar(), nil)
+		legacySvc := newTestService(svc.repo, nil, zaptest.NewLogger(t).Sugar(), nil)
 		c, err := svc.repo.Get(ctx, change.ID, tenantID)
 		require.NoError(t, err)
 		assert.NoError(t, legacySvc.validateImpactGate(ctx, change.ID, tenantID, c))

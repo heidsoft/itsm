@@ -62,7 +62,7 @@ func TestTransitionStatus_FailRecordsOutcomeNote(t *testing.T) {
 	entClient := newChangeBridgeEntClient(t, "change_fail_outcome")
 	tenantID, actorID := setupChangeBridgeActor(t, entClient, "fo")
 	repo := newMockRepository()
-	svc := NewService(repo, entClient, zaptest.NewLogger(t).Sugar(), nil)
+	svc := newTestService(repo, entClient, zaptest.NewLogger(t).Sugar(), nil)
 	ctx := context.Background()
 
 	c := createTestChange(repo, tenantID, actorID)
@@ -86,7 +86,7 @@ func TestTransitionStatus_RollbackRecordsOutcomeNote(t *testing.T) {
 	entClient := newChangeBridgeEntClient(t, "change_rollback_outcome")
 	tenantID, actorID := setupChangeBridgeActor(t, entClient, "ro")
 	repo := newMockRepository()
-	svc := NewService(repo, entClient, zaptest.NewLogger(t).Sugar(), nil)
+	svc := newTestService(repo, entClient, zaptest.NewLogger(t).Sugar(), nil)
 	ctx := context.Background()
 
 	c := createTestChange(repo, tenantID, actorID)

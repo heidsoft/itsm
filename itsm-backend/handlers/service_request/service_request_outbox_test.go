@@ -180,7 +180,7 @@ func TestService_EnableWorkflowOutbox_UsesOutboxPath(t *testing.T) {
 
 	repo := NewEntRepository(client)
 	cmdbRepo := cmdb.NewEntRepository(client)
-	svc := NewService(repo, scRepo, cmdbRepo, client, logger, nil)
+	svc := newTestService(repo, scRepo, cmdbRepo, client, logger, nil)
 	svc.EnableWorkflowOutbox()
 
 	expireAt := time.Now().Add(72 * time.Hour)

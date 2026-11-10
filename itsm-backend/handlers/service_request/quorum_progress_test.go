@@ -61,7 +61,7 @@ func setupQuorumProgress(t *testing.T) (*gin.Engine, *ent.Client, int, int, int,
 	}, tenant.ID)
 	require.NoError(t, err)
 
-	svc := NewService(repo, scRepo, cmdbRepo, client, logger, acs)
+	svc := newTestService(repo, scRepo, cmdbRepo, client, logger, acs)
 	h := NewHandler(svc)
 
 	mkUser := func(role string) int {

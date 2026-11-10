@@ -60,7 +60,7 @@ func TestTransitionStatus_ParallelQuorumNotMet_StaysPending(t *testing.T) {
 	tenantID, actorA := setupChangeBridgeActor(t, entClient, "qm1")
 	actorB := mkChangeUser(t, entClient, tenantID, "security_admin")
 	repo := newMockRepository()
-	svc := NewService(repo, entClient, zaptest.NewLogger(t).Sugar(), nil)
+	svc := newTestService(repo, entClient, zaptest.NewLogger(t).Sugar(), nil)
 	ctx := context.Background()
 
 	c := createTestChange(repo, tenantID, actorA)
@@ -93,7 +93,7 @@ func TestTransitionStatus_ParallelQuorumMet_Approves(t *testing.T) {
 	tenantID, actorA := setupChangeBridgeActor(t, entClient, "qm2")
 	actorB := mkChangeUser(t, entClient, tenantID, "security_admin")
 	repo := newMockRepository()
-	svc := NewService(repo, entClient, zaptest.NewLogger(t).Sugar(), nil)
+	svc := newTestService(repo, entClient, zaptest.NewLogger(t).Sugar(), nil)
 	ctx := context.Background()
 
 	c := createTestChange(repo, tenantID, actorA)
@@ -127,7 +127,7 @@ func TestTransitionStatus_ThresholdNotMet_StaysPending(t *testing.T) {
 	actorB := mkChangeUser(t, entClient, tenantID, "security_admin")
 	actorC := mkChangeUser(t, entClient, tenantID, "technician")
 	repo := newMockRepository()
-	svc := NewService(repo, entClient, zaptest.NewLogger(t).Sugar(), nil)
+	svc := newTestService(repo, entClient, zaptest.NewLogger(t).Sugar(), nil)
 	ctx := context.Background()
 
 	c := createTestChange(repo, tenantID, actorA)
@@ -157,7 +157,7 @@ func TestTransitionStatus_RejectedDecisionBlocksApprove(t *testing.T) {
 	tenantID, actorA := setupChangeBridgeActor(t, entClient, "qm4")
 	actorB := mkChangeUser(t, entClient, tenantID, "security_admin")
 	repo := newMockRepository()
-	svc := NewService(repo, entClient, zaptest.NewLogger(t).Sugar(), nil)
+	svc := newTestService(repo, entClient, zaptest.NewLogger(t).Sugar(), nil)
 	ctx := context.Background()
 
 	c := createTestChange(repo, tenantID, actorA)
@@ -252,7 +252,7 @@ func TestTransitionStatus_QuorumWithoutWorkflowInstance_FailsClosed(t *testing.T
 	tenantID, actorA := setupChangeBridgeActor(t, entClient, "ni1")
 	actorB := mkChangeUser(t, entClient, tenantID, "security_admin")
 	repo := newMockRepository()
-	svc := NewService(repo, entClient, zaptest.NewLogger(t).Sugar(), nil)
+	svc := newTestService(repo, entClient, zaptest.NewLogger(t).Sugar(), nil)
 	ctx := context.Background()
 
 	c := createTestChange(repo, tenantID, actorA)
@@ -286,7 +286,7 @@ func TestTransitionStatus_SingleVoteSufficientWithoutInstance_Approves(t *testin
 	tenantID, actorA := setupChangeBridgeActor(t, entClient, "ni2")
 	actorB := mkChangeUser(t, entClient, tenantID, "security_admin")
 	repo := newMockRepository()
-	svc := NewService(repo, entClient, zaptest.NewLogger(t).Sugar(), nil)
+	svc := newTestService(repo, entClient, zaptest.NewLogger(t).Sugar(), nil)
 	ctx := context.Background()
 
 	c := createTestChange(repo, tenantID, actorA)

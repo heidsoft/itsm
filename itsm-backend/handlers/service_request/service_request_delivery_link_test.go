@@ -23,7 +23,7 @@ func newDeliveryLinkService(t *testing.T) (*Service, *sla.Store, int, int) {
 	store := sla.NewStore(client, sla.NewEngine(nil))
 	slaSvc.SetSLAStore(store)
 
-	svc := NewService(repo, nil, nil, client, zaptest.NewLogger(t).Sugar(), nil)
+	svc := newTestService(repo, nil, nil, client, zaptest.NewLogger(t).Sugar(), nil)
 	svc.SetSLAService(slaSvc)
 	return svc, store, tenantID, requester.ID
 }

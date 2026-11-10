@@ -165,7 +165,7 @@ func TestTransitionStatus_BridgesBPMNTask(t *testing.T) {
 	entClient := newChangeBridgeEntClient(t, "change_bridge_e2e")
 	tenantID, actorID := setupChangeBridgeActor(t, entClient, "e2e")
 	repo := newMockRepository()
-	svc := NewService(repo, entClient, zaptest.NewLogger(t).Sugar(), nil)
+	svc := newTestService(repo, entClient, zaptest.NewLogger(t).Sugar(), nil)
 	ctx := context.Background()
 
 	c := createTestChange(repo, tenantID, actorID)
@@ -215,7 +215,7 @@ func TestTransitionStatus_BridgeFailClosed(t *testing.T) {
 	entClient := newChangeBridgeEntClient(t, "change_bridge_failclosed")
 	tenantID, actorID := setupChangeBridgeActor(t, entClient, "fc")
 	repo := newMockRepository()
-	svc := NewService(repo, entClient, zaptest.NewLogger(t).Sugar(), nil)
+	svc := newTestService(repo, entClient, zaptest.NewLogger(t).Sugar(), nil)
 	ctx := context.Background()
 
 	c := createTestChange(repo, tenantID, actorID)
@@ -259,7 +259,7 @@ func TestTransitionStatus_NoBoundInstanceFallsBack(t *testing.T) {
 	entClient := newChangeBridgeEntClient(t, "change_bridge_fallback")
 	tenantID, actorID := setupChangeBridgeActor(t, entClient, "fb")
 	repo := newMockRepository()
-	svc := NewService(repo, entClient, zaptest.NewLogger(t).Sugar(), nil)
+	svc := newTestService(repo, entClient, zaptest.NewLogger(t).Sugar(), nil)
 	ctx := context.Background()
 
 	c := createTestChange(repo, tenantID, actorID)
@@ -291,7 +291,7 @@ func TestTransitionStatus_BridgeRollbackOnCASConflict(t *testing.T) {
 	entClient := newChangeBridgeEntClient(t, "change_bridge_rollback")
 	tenantID, actorID := setupChangeBridgeActor(t, entClient, "rb")
 	repo := newMockRepository()
-	svc := NewService(repo, entClient, zaptest.NewLogger(t).Sugar(), nil)
+	svc := newTestService(repo, entClient, zaptest.NewLogger(t).Sugar(), nil)
 	ctx := context.Background()
 
 	c := createTestChange(repo, tenantID, actorID)
@@ -336,7 +336,7 @@ func TestTransitionStatus_ApprovalNotMisfireOnLifecycleTask(t *testing.T) {
 	entClient := newChangeBridgeEntClient(t, "change_bridge_lifecycle")
 	tenantID, actorID := setupChangeBridgeActor(t, entClient, "lc")
 	repo := newMockRepository()
-	svc := NewService(repo, entClient, zaptest.NewLogger(t).Sugar(), nil)
+	svc := newTestService(repo, entClient, zaptest.NewLogger(t).Sugar(), nil)
 	ctx := context.Background()
 
 	c := createTestChange(repo, tenantID, actorID)

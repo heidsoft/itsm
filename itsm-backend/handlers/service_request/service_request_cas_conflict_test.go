@@ -38,7 +38,7 @@ func casConflictSetup(t *testing.T) (*Service, *EntRepository, *ent.Client, int)
 	require.NoError(t, err)
 
 	repo := NewEntRepository(client)
-	svc := NewService(repo, nil, nil, client, zaptest.NewLogger(t).Sugar(), nil)
+	svc := newTestService(repo, nil, nil, client, zaptest.NewLogger(t).Sugar(), nil)
 	return svc, repo, client, tenant.ID
 }
 

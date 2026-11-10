@@ -77,7 +77,7 @@ func setupRollbackStepTest(t *testing.T) (*Service, *ent.Client, *sql.DB, int, i
 	require.NoError(t, err)
 
 	repo := NewEntRepository(client, db)
-	svc := NewService(repo, client, zaptest.NewLogger(t).Sugar(), nil)
+	svc := newTestService(repo, client, zaptest.NewLogger(t).Sugar(), nil)
 	return svc, client, db, tenant.ID, actor.ID
 }
 

@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"itsm-backend/dto"
 	"reflect"
 
 	"go.uber.org/zap"
@@ -24,15 +25,8 @@ func NewApprovalChainShadowComparator(adapter *ApprovalChainResolverAdapter, log
 	return &ApprovalChainShadowComparator{adapter: adapter, logger: logger}
 }
 
-// ShadowResult 记录影子路径的执行结果。
-type ShadowResult struct {
-	ChainID      int
-	Passed       bool
-	PendingLevel int
-	Blocked      bool
-	LevelsJSON   []byte
-	Err          error
-}
+// ShadowResult 值类型唯一实现在 dto 包；此处保留同名别名以保持 service 包公开 API。
+type ShadowResult = dto.ShadowResult
 
 // Compare 对比直接路径结果与影子路径结果，差异写日志。
 // directPlan 为直接路径的 ResolveApprovalPlan 返回值（可为 nil 表示直接路径报错）。

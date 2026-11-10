@@ -17,7 +17,6 @@ import (
 	"itsm-backend/ent/incident"
 	"itsm-backend/ent/processapprovaldecision"
 	"itsm-backend/internal/datascope"
-	"itsm-backend/service"
 
 	"go.uber.org/zap"
 )
@@ -46,11 +45,15 @@ type Service struct {
 	logger         *zap.SugaredLogger
 	entClient      *ent.Client
 	pirService     *ChangePIRService
-	approvalBridge *service.BPMNApprovalBridge
+	approvalBridge ChangeApprovalBridge
 	// approvalChain 审批链求值引擎：提交变更时按实体类型 "change" 解析租户级激活链，
 	// 以解析出的审批人（租户隔离、含 fallback）覆盖调用方传入的审批人，
 	// 堵住「无审批人时自审」与越权自选审批人；链阻塞则失败关闭。
-	approvalChain *service.ApprovalChainService
+	approvalChain ApprovalChainResolver
+	// closeApprovalChains 收口变更终态时残留的 pending 审批链节点。
+	// 共享层对应实现是包级函数（走全局 DB handle），无法下沉为窄接口，
+	// 故以函数类型由组合根注入；未注入时退化为「记日志待人工收口」。
+	closeApprovalChains ApprovalChainCloser
 }
 
 type workflowCommandCreator interface {
@@ -61,7 +64,15 @@ type atomicApprovalSubmitter interface {
 	SubmitForApprovalWithWorkflow(context.Context, int, int, []ApprovalLevelPlan, string, func(*ent.Client) error) error
 }
 
-func NewService(repo Repository, entClient *ent.Client, logger *zap.SugaredLogger, approvalChain *service.ApprovalChainService) *Service {
+// NewService 构造变更域服务。
+//
+// approvalChain 是审批链求值窄契约（组合根注入共享层引擎的具体指针，
+// 隐式满足）；bridge 是 BPMN 流程桥接窄契约，由组合根显式注入——
+// 本域不构造共享层对象（与 problem 域 WorkflowBridge 同一口径）；closers 是
+// 审批链收口函数（共享层包级函数走全局 DB handle，无法下沉为窄接口）。
+// 未注入时（单测/旧组装）本域照常流转，流程实例不随动——未接线不是阻断项，
+// 分叉由盘点工具暴露。
+func NewService(repo Repository, entClient *ent.Client, logger *zap.SugaredLogger, approvalChain ApprovalChainResolver, opts ...ServiceOption) *Service {
 	svc := &Service{
 		repo:          repo,
 		entClient:     entClient,
@@ -70,9 +81,10 @@ func NewService(repo Repository, entClient *ent.Client, logger *zap.SugaredLogge
 	}
 	// Initialize PIR service
 	svc.pirService = NewChangePIRService(entClient, logger)
-	if entClient != nil {
-		// 变更审批桥接到 BPMN 任务，避免流程实例悬挂
-		svc.approvalBridge = service.NewBPMNApprovalBridge(entClient, logger)
+	for _, opt := range opts {
+		if opt != nil {
+			opt(svc)
+		}
 	}
 	return svc
 }
@@ -535,7 +547,7 @@ func excludeChangeApprover(ids []int, creatorID int) []int {
 // 返回 (nil, nil) 表示无激活链（调用方应回退旧逻辑）；
 // 返回 (nil, err) 表示链存在但被阻塞（必需层无审批人且策略为阻断），调用方应失败关闭。
 func (s *Service) resolveChangeChainPlan(ctx context.Context, tenantID, changeID, submitterID int, priority string) ([]ApprovalLevelPlan, error) {
-	evalCtx := service.ApprovalEvalContext{
+	evalCtx := dto.ApprovalEvalContext{
 		TenantID:    tenantID,
 		EntityType:  "change",
 		RequesterID: submitterID,
@@ -902,7 +914,7 @@ func (s *Service) TransitionStatus(ctx context.Context, id, tenantID, userID int
 	}
 
 	// Validate state transition (使用 service 包的 canonical 状态机，保证与 legacy service 一致)
-	if !service.IsValidChangeStatusTransition(c.Status, targetStatus, c.Type) {
+	if !dto.IsValidChangeStatusTransition(c.Status, targetStatus, c.Type) {
 		return nil, fmt.Errorf("%w: 从 '%s' 到 '%s'", ErrInvalidTransition, c.Status, targetStatus)
 	}
 
@@ -1290,10 +1302,15 @@ func (s *Service) TransitionStatus(ctx context.Context, id, tenantID, userID int
 // 写入终态，收口失败不能上抛（调用方会误以为可以重试，实际重试必撞 409），
 // 只能重试一次后升级日志，交给运维/补偿任务人工收口。
 func (s *Service) closeChainsDegraded(ctx context.Context, id, tenantID int) {
-	if closeErr := service.CloseChangeApprovalChains(ctx, id, tenantID); closeErr != nil {
+	if s.closeApprovalChains == nil {
+		s.logger.Warnw("TransitionStatus: 未注入审批链收口函数，残留 pending 审批链需人工收口",
+			"change_id", id, "tenant_id", tenantID)
+		return
+	}
+	if closeErr := s.closeApprovalChains(ctx, id, tenantID); closeErr != nil {
 		s.logger.Warnw("TransitionStatus: 收口审批链首次失败（无事务退化路径），重试一次",
 			"error", closeErr, "change_id", id, "tenant_id", tenantID)
-		if retryErr := service.CloseChangeApprovalChains(ctx, id, tenantID); retryErr != nil {
+		if retryErr := s.closeApprovalChains(ctx, id, tenantID); retryErr != nil {
 			s.logger.Errorw("TransitionStatus: 收口审批链失败（无事务退化路径，已重试）——"+
 				"变更已终态但审批链可能仍 pending，需要人工收口",
 				"error", retryErr, "change_id", id, "tenant_id", tenantID)

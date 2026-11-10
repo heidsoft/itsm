@@ -75,7 +75,7 @@ func TestApplyApproval_SelfOnlyApproversReturnActionableConflict(t *testing.T) {
 		Save(ctx)
 	require.NoError(t, err)
 
-	svc := NewService(NewEntRepository(client), scRepo, cmdb.NewEntRepository(client), client, logger, nil)
+	svc := newTestService(NewEntRepository(client), scRepo, cmdb.NewEntRepository(client), client, logger, nil)
 
 	_, _, err = svc.ApplyApproval(ctx, sr.ID, tenant.ID, requester.ID, "approve", "自批", "admin", "IT")
 	require.Error(t, err)
@@ -135,7 +135,7 @@ func TestCreate_DefaultApprovalLevelsCarrySingleApproverThreshold(t *testing.T) 
 	catalog, err := createServiceCatalogForTest(ctx, scSvc, "QT-Catalog-"+srUID(), "software", "quorum", 0, tenant.ID, "enabled", 0, 0)
 	require.NoError(t, err)
 
-	svc := NewService(NewEntRepository(client), scRepo, cmdb.NewEntRepository(client), client, logger, nil)
+	svc := newTestService(NewEntRepository(client), scRepo, cmdb.NewEntRepository(client), client, logger, nil)
 	req := &ServiceRequest{
 		TenantID:           tenant.ID,
 		CatalogID:          catalog.ID,
@@ -298,13 +298,13 @@ func TestCreate_OutboxFailClosedWhenApprovalLevelUnstaffed(t *testing.T) {
 	}
 
 	// ① 同步路径：不会启动真实 BPMN 流程，不存在空指派死路，允许创建。
-	svcSync := NewService(NewEntRepository(client), scRepo, cmdb.NewEntRepository(client), client, logger, nil)
+	svcSync := newTestService(NewEntRepository(client), scRepo, cmdb.NewEntRepository(client), client, logger, nil)
 	created, err := svcSync.Create(ctx, tenant.ID, requester.ID, catalog.ID, newRequest())
 	require.NoError(t, err, "同步审批路径不应被 fail-closed 拦下")
 	require.NotNil(t, created)
 
 	// ② prod 路径：启用 outbox 后，同一租户提交必须被拦在创建阶段。
-	svcOutbox := NewService(NewEntRepository(client), scRepo, cmdb.NewEntRepository(client), client, logger, nil)
+	svcOutbox := newTestService(NewEntRepository(client), scRepo, cmdb.NewEntRepository(client), client, logger, nil)
 	svcOutbox.EnableWorkflowOutbox()
 	_, err = svcOutbox.Create(ctx, tenant.ID, requester.ID, catalog.ID, newRequest())
 	require.Error(t, err, "会启动真实 BPMN 流程时，无人可批的请求不能落库")
@@ -363,7 +363,7 @@ func TestApplyApproval_UnstaffedHistoricApprovalIsActionableConflict(t *testing.
 		}).Save(ctx)
 	require.NoError(t, err)
 
-	svc := NewService(NewEntRepository(client), scRepo, cmdb.NewEntRepository(client), client, logger, nil)
+	svc := newTestService(NewEntRepository(client), scRepo, cmdb.NewEntRepository(client), client, logger, nil)
 	svc.EnableWorkflowOutbox()
 	_, _, err = svc.ApplyApproval(ctx, sr.ID, tenant.ID, requester.ID, "approve", "", "admin", "IT")
 	require.Error(t, err)

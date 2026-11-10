@@ -32,7 +32,7 @@ func setupTestHandler(t *testing.T) (*gin.Engine, *Handler, *mockRepository) {
 
 	logger := zaptest.NewLogger(t).Sugar()
 	repo := newMockRepository()
-	svc := NewService(repo, nil, logger, nil)
+	svc := newTestService(repo, nil, logger, nil)
 	handler := NewHandler(svc)
 
 	r := gin.New()
@@ -628,7 +628,7 @@ func TestChangeService_GetCMDBImpactSummary_WithoutEntClient(t *testing.T) {
 	repo := newMockRepository()
 	createTestChange(repo, 1, 1)
 
-	svc := NewService(repo, nil, logger, nil)
+	svc := newTestService(repo, nil, logger, nil)
 	_, err := svc.GetCMDBImpactSummary(context.Background(), 1, 1)
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "CMDB impact summary unavailable")
@@ -1185,7 +1185,7 @@ func TestSubmitChangeAtomicFailureLeavesDraftUnchanged(t *testing.T) {
 	repo := newMockRepository()
 	repo.changes[1] = &Change{ID: 1, TenantID: 1, CreatedBy: 1, Status: "draft"}
 	repo.submitErr = errors.New("injected transaction failure")
-	svc := NewService(repo, nil, logger, nil)
+	svc := newTestService(repo, nil, logger, nil)
 
 	// 审批人取 2（非创建人）：创建人自审已被禁止，用例要盯的是事务失败时的原子性。
 	_, err := svc.SubmitChange(context.Background(), 1, 1, 1, &dto.SubmitChangeRequest{
@@ -1206,7 +1206,7 @@ func TestConfigureWorkflowAtomicFailurePreservesOldChain(t *testing.T) {
 	oldChain := []*ApprovalChain{{ID: 10, ChangeID: 1, TenantID: 1, Level: 1, ApproverID: 1}}
 	repo.chains[1] = oldChain
 	repo.replaceErr = errors.New("injected transaction failure")
-	svc := NewService(repo, nil, logger, nil)
+	svc := newTestService(repo, nil, logger, nil)
 
 	err := svc.ConfigureWorkflow(context.Background(), 1, 1, []*ApprovalChain{
 		{Level: 1, ApproverID: 2},
@@ -1403,7 +1403,7 @@ func TestInferITILPractices(t *testing.T) {
 func TestChangeHandler_MissingTenantContext_401(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	repo := newMockRepository()
-	svc := NewService(repo, nil, zaptest.NewLogger(t).Sugar(), nil)
+	svc := newTestService(repo, nil, zaptest.NewLogger(t).Sugar(), nil)
 	handler := NewHandler(svc)
 
 	r := gin.New()

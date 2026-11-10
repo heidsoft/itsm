@@ -29,7 +29,7 @@ import (
 func newTransitionTestService(t *testing.T) (*Service, *mockRepository) {
 	t.Helper()
 	repo := newMockRepository()
-	return NewService(repo, nil, zaptest.NewLogger(t).Sugar(), nil), repo
+	return newTestService(repo, nil, zaptest.NewLogger(t).Sugar(), nil), repo
 }
 
 // seedPendingChange 创建一个处于 pending 且指定用户为待办审批人的变更。

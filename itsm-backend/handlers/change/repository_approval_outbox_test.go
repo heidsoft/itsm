@@ -110,7 +110,7 @@ func TestSubmitChangeCommitsBPMNAndBusinessStateAtomically(t *testing.T) {
 		return item
 	}
 	repo := NewEntRepository(client, db)
-	svc := NewService(repo, client, zaptest.NewLogger(t).Sugar(), nil)
+	svc := newTestService(repo, client, zaptest.NewLogger(t).Sugar(), nil)
 
 	t.Run("success commits both", func(t *testing.T) {
 		item := newDraft("atomic success")

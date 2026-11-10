@@ -46,7 +46,7 @@ func srSetupBridge(t *testing.T) (*gin.Engine, *ent.Client, int, int, int) {
 	require.NoError(t, err)
 	repo := NewEntRepository(client)
 	cmdbRepo := cmdb.NewEntRepository(client)
-	svc := NewService(repo, scRepo, cmdbRepo, client, logger, nil)
+	svc := newTestService(repo, scRepo, cmdbRepo, client, logger, nil)
 	h := NewHandler(svc)
 	requester, err := client.User.Create().
 		SetUsername("sr-bridge-requester-" + srUID()).
@@ -193,7 +193,7 @@ func TestServiceRequestCancel_TerminatesWorkflowAndVoidsPendingApprovals(t *test
 		Only(ctx)
 	require.NoError(t, err)
 	logger := zaptest.NewLogger(t).Sugar()
-	h := NewHandler(NewService(NewEntRepository(client), service_catalog.NewEntRepository(client), cmdb.NewEntRepository(client), client, logger, nil))
+	h := NewHandler(newTestService(NewEntRepository(client), service_catalog.NewEntRepository(client), cmdb.NewEntRepository(client), client, logger, nil))
 	requesterRouter := gin.New()
 	requesterRouter.Use(_srAuthRole(tenantID, requester.ID, "agent", "IT"))
 	requesterRouter.PUT("/api/v1/service-requests/:id/status", h.UpdateStatus)
