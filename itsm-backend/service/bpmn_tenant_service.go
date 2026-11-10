@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/processdefinition"
 	"itsm-backend/ent/processinstance"
@@ -178,14 +179,7 @@ func (s *BPMNTenantService) GetTenantStatistics(ctx context.Context, tenantID in
 }
 
 // TenantBPMNStats 租户BPMN统计数据
-type TenantBPMNStats struct {
-	TotalDefinitions   int `json:"totalDefinitions"`
-	TotalInstances     int `json:"totalInstances"`
-	RunningInstances   int `json:"runningInstances"`
-	CompletedInstances int `json:"completedInstances"`
-	TotalTasks         int `json:"totalTasks"`
-	OpenTasks          int `json:"openTasks"`
-}
+type TenantBPMNStats = dto.TenantBPMNStats
 
 // ValidateTenantAccess 验证租户访问权限
 func (s *BPMNTenantService) ValidateTenantAccess(ctx context.Context, resourceType string, resourceID int, tenantID int) error {

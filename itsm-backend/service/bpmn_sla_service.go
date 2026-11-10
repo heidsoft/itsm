@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/processdefinition"
 	"itsm-backend/ent/processinstance"
@@ -363,13 +364,4 @@ type SLAInfo struct {
 }
 
 // SLAViolation SLA违规
-type SLAViolation struct {
-	ResourceType   string
-	ResourceID     int
-	ResourceKey    string
-	SLAStatus      string
-	StartTime      time.Time
-	Deadline       time.Time
-	ElapsedMinutes int
-	TenantID       int
-}
+type SLAViolation = dto.SLAViolation

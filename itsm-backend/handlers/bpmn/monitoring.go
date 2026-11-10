@@ -5,25 +5,25 @@ import (
 	"time"
 
 	"itsm-backend/common"
-	"itsm-backend/service"
+	"itsm-backend/dto"
 
 	"github.com/gin-gonic/gin"
 )
 
 // MonitoringHandler BPMN监控控制器
 type MonitoringHandler struct {
-	monitoringService *service.BPMNMonitoringService
+	monitoringService ProcessMonitoringProvider
 }
 
 // NewMonitoringHandler 创建BPMN监控控制器
-func NewMonitoringHandler(monitoringService *service.BPMNMonitoringService) *MonitoringHandler {
+func NewMonitoringHandler(monitoringService ProcessMonitoringProvider) *MonitoringHandler {
 	return &MonitoringHandler{
 		monitoringService: monitoringService,
 	}
 }
 
 // SetMonitoringService 设置监控服务（用于延迟注入）
-func (c *MonitoringHandler) SetMonitoringService(s *service.BPMNMonitoringService) {
+func (c *MonitoringHandler) SetMonitoringService(s ProcessMonitoringProvider) {
 	c.monitoringService = s
 }
 
@@ -99,7 +99,7 @@ func (c *MonitoringHandler) GetProcessMetrics(ctx *gin.Context) {
 		timeRange = "24h"
 	}
 
-	req := &service.ProcessMetricsRequest{
+	req := &dto.ProcessMetricsRequest{
 		TenantID:  tenantID,
 		TimeRange: timeRange,
 	}
@@ -142,7 +142,7 @@ func (c *MonitoringHandler) GetProcessMetricsByKey(ctx *gin.Context) {
 		timeRange = "24h"
 	}
 
-	req := &service.ProcessMetricsRequest{
+	req := &dto.ProcessMetricsRequest{
 		ProcessDefinitionKey: processKey,
 		TenantID:             tenantID,
 		TimeRange:            timeRange,
@@ -204,7 +204,7 @@ func (c *MonitoringHandler) ListProcessInstancesStatus(ctx *gin.Context) {
 	status := ctx.Query("status")
 	assignee := ctx.Query("assignee")
 
-	query := &service.ListProcessInstanceStatusQuery{
+	query := &dto.ListProcessInstanceStatusQuery{
 		TenantID:   tenantID,
 		Page:       pg.Page,
 		PageSize:   pg.PageSize,
@@ -267,7 +267,7 @@ func (c *MonitoringHandler) GetPerformanceMetrics(ctx *gin.Context) {
 
 	timeRange := ctx.DefaultQuery("timeRange", "24h")
 
-	req := &service.ProcessMetricsRequest{
+	req := &dto.ProcessMetricsRequest{
 		TenantID:  tenantID,
 		TimeRange: timeRange,
 	}

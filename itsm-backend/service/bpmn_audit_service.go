@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"itsm-backend/common"
+	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/processauditlog"
 
@@ -481,20 +482,4 @@ func (s *BPMNAuditService) GetActivityStatistics(ctx context.Context, processDef
 }
 
 // QueryAuditLogsRequest 查询审计日志请求
-type QueryAuditLogsRequest struct {
-	ProcessInstanceID    int
-	ProcessInstanceKey   string
-	ProcessDefinitionKey string
-	ActivityID           string
-	ActivityType         string
-	Action               string
-	UserID               int
-	AssigneeID           int
-	TenantID             int
-	StartTime            time.Time
-	EndTime              time.Time
-	Page                 int
-	PageSize             int
-	SortBy               string
-	SortOrder            string
-}
+type QueryAuditLogsRequest = dto.QueryAuditLogsRequest

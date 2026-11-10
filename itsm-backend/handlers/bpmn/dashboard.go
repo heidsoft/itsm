@@ -7,7 +7,6 @@ import (
 	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/middleware"
-	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -15,18 +14,18 @@ import (
 
 // DashboardHandler BPMN监控仪表盘控制器
 type DashboardHandler struct {
-	metricsService *service.BPMNMetricsService
-	auditService   *service.BPMNAuditService
-	tenantService  *service.BPMNTenantService
-	slaService     *service.BPMNSLAService
+	metricsService DashboardMetricsProvider
+	auditService   BPMNAuditLogReader
+	tenantService  BPMNTenantStatsProvider
+	slaService     BPMNSLAProvider
 }
 
 // NewDashboardHandler 创建BPMN监控仪表盘控制器
 func NewDashboardHandler(
-	metricsService *service.BPMNMetricsService,
-	auditService *service.BPMNAuditService,
-	tenantService *service.BPMNTenantService,
-	slaService *service.BPMNSLAService,
+	metricsService DashboardMetricsProvider,
+	auditService BPMNAuditLogReader,
+	tenantService BPMNTenantStatsProvider,
+	slaService BPMNSLAProvider,
 ) *DashboardHandler {
 	return &DashboardHandler{
 		metricsService: metricsService,
@@ -189,7 +188,7 @@ func (c *DashboardHandler) GetAuditLogs(ctx *gin.Context) {
 		return
 	}
 
-	req := &service.QueryAuditLogsRequest{
+	req := &dto.QueryAuditLogsRequest{
 		TenantID: tenantID,
 	}
 

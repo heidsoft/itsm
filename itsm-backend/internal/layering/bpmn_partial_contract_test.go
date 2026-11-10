@@ -1,6 +1,7 @@
 package layering
 
 import (
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -11,14 +12,15 @@ import (
 	"itsm-backend/service"
 )
 
-// 批次 3 第 1 步：bpmn 是「部分归零」域，只有 workflow_template.go 不再依赖
-// 共享层，其余 7 个生产文件仍 import service/。因此它不能进 contractDomains
-// （那个守卫逐文件扫整个域），改由本文件按「单文件 + 基线」精确锁定。
-// 后续每组归零时，把 bpmnPartialZeroExpectedImports 与基线期望值同步下调即可。
+// bpmn 是「部分归零」域：第 1 步归零 workflow_template.go，第 2 步归零
+// dashboard.go + monitoring.go，其余 5 个生产文件仍 import 共享层。
+// 因此它不能进 contractDomains（那个守卫逐文件扫整个域），改由本文件按
+// 「单文件 + 基线」精确锁定。后续每组归零时，把
+// bpmnPartialZeroExpectedImports 与基线期望值同步下调即可。
 
 const bpmnSharedImport = `"itsm-backend/service"`
 
-const bpmnPartialZeroExpectedImports = 7
+const bpmnPartialZeroExpectedImports = 5
 
 func readBPMNFile(t *testing.T, rel string) string {
 	t.Helper()
@@ -109,7 +111,7 @@ func TestBPMNPartialZeroMatchesL3Baseline(t *testing.T) {
 		}
 	}
 	if count != bpmnPartialZeroExpectedImports {
-		t.Errorf("handlers/bpmn 共享层依赖实测 %d，期望 %d（批次 3 第 1 步只归零 workflow_template.go）", count, bpmnPartialZeroExpectedImports)
+		t.Errorf("handlers/bpmn 共享层依赖实测 %d，期望 %d（批次 3 第 1、2 步归零 3 个文件）", count, bpmnPartialZeroExpectedImports)
 	}
 
 	base, err := os.ReadFile(filepath.Join("..", "..", "..", "scripts", "docs-gate", "handler-service-imports-baseline.txt"))
@@ -126,7 +128,7 @@ func TestBPMNPartialZeroMatchesL3Baseline(t *testing.T) {
 			values = append(values, strings.TrimPrefix(line, "bpmn="))
 		}
 	}
-	want := "7"
+	want := "5"
 	if len(values) != 1 || values[0] != want {
 		t.Errorf("L.3 基线 bpmn 期望恰好一条 bpmn=%s，实际 %v（真下降必须同 commit 精确收紧）", want, values)
 	}
@@ -165,6 +167,167 @@ func TestBPMNSharedValuesComeFromDTO(t *testing.T) {
 	} {
 		if !strings.Contains(flat, squashSpace(decl)) {
 			t.Errorf("dto 纯值文件缺少定义 %q（sentinel / 阈值必须只有一份）", decl)
+		}
+	}
+}
+
+// 批次 3 第 2 步需要下沉的值类型：3 个请求 DTO + 18 个响应/嵌套类型。
+// service 侧必须保留同名别名，否则接口方法签名里的值类型身份会分裂成两份。
+var bpmnMonitoringDTONames = []string{
+	"QueryAuditLogsRequest", "ProcessMetricsRequest", "ListProcessInstanceStatusQuery",
+	"DashboardMetrics", "ProcessHealth", "ProcessStat", "TaskStat", "TrendPoint",
+	"BPMNProcessMetrics", "BottleneckInfo", "ProcessMetrics", "PerformanceMetrics",
+	"TaskMetrics", "BottleneckAnalysis", "BottleneckTask", "SlowestPath",
+	"ResourceConstraint", "ProcessInstanceStatus", "ProcessTimelineEntry",
+	"SLAViolation", "TenantBPMNStats",
+}
+
+// TestBPMNPartialZeroMonitoringGroup 锁住「归零是换成域内窄契约」而不是
+// 删文件或改写一个等价的共享层限定符。把两个 handler 改回 HEAD 版本必须变红。
+func TestBPMNPartialZeroMonitoringGroup(t *testing.T) {
+	dash := readBPMNFile(t, "dashboard.go")
+	mon := readBPMNFile(t, "monitoring.go")
+
+	for name, body := range map[string]string{"dashboard.go": dash, "monitoring.go": mon} {
+		if strings.Contains(body, bpmnSharedImport) {
+			t.Errorf("handlers/bpmn/%s 重新引用共享层包，L.3 归零被破坏", name)
+		}
+		if strings.Contains(stripLineComments(body), "service.") {
+			t.Errorf("handlers/bpmn/%s 残留共享层限定符（旧实现）", name)
+		}
+	}
+
+	dashCode := stripLineComments(dash)
+	for _, want := range []string{
+		`\bmetricsService\s+DashboardMetricsProvider\b`,
+		`\bauditService\s+BPMNAuditLogReader\b`,
+		`\btenantService\s+BPMNTenantStatsProvider\b`,
+		`\bslaService\s+BPMNSLAProvider\b`,
+		`&dto\.QueryAuditLogsRequest\{`,
+	} {
+		if !regexp.MustCompile(want).MatchString(dashCode) {
+			t.Errorf("dashboard.go 缺少窄契约/值类型写法 %q", want)
+		}
+	}
+	monCode := stripLineComments(mon)
+	for _, want := range []string{
+		`\bmonitoringService\s+ProcessMonitoringProvider\b`,
+		`\bNewMonitoringHandler\(monitoringService\s+ProcessMonitoringProvider\)`,
+		`\bSetMonitoringService\(s\s+ProcessMonitoringProvider\)`,
+		`&dto\.ProcessMetricsRequest\{`,
+		`&dto\.ListProcessInstanceStatusQuery\{`,
+	} {
+		if !regexp.MustCompile(want).MatchString(monCode) {
+			t.Errorf("monitoring.go 缺少窄契约/值类型写法 %q", want)
+		}
+	}
+
+	contract := readBPMNFile(t, "contracts.go")
+	if strings.Contains(contract, bpmnSharedImport) {
+		t.Errorf("contracts.go 出现共享层包路径字面量（连注释也会让 L.3 计数 +1）")
+	}
+	for _, iface := range []string{
+		"WorkflowTemplateCatalog", "DashboardMetricsProvider", "BPMNAuditLogReader",
+		"BPMNTenantStatsProvider", "BPMNSLAProvider", "ProcessMonitoringProvider",
+	} {
+		if !strings.Contains(contract, "type "+iface+" interface") {
+			t.Errorf("contracts.go 未声明域内接口 %s", iface)
+		}
+	}
+}
+
+// TestBPMNMonitoringDTOsHaveSingleSource 逐处比对 dto 定义与 service 别名，
+// 不取并集：任何一处别名丢失都会让接口方法集在编译期与运行期同时漂移。
+func TestBPMNMonitoringDTOsHaveSingleSource(t *testing.T) {
+	dtoBody, err := os.ReadFile(filepath.Join("..", "..", "dto", "bpmn_monitoring_dto.go"))
+	if err != nil {
+		t.Fatalf("读取 dto/bpmn_monitoring_dto.go 失败：%v", err)
+	}
+	if len(dtoBody) < 1000 {
+		t.Fatalf("扫描器零命中保护：dto 值类型文件仅 %d 字节", len(dtoBody))
+	}
+	if strings.Contains(string(dtoBody), bpmnSharedImport) {
+		t.Errorf("dto 不得反向依赖共享层")
+	}
+	for _, n := range bpmnMonitoringDTONames {
+		if !regexp.MustCompile(`\btype\s+` + n + `\s+struct\s*\{`).MatchString(string(dtoBody)) {
+			t.Errorf("dto 缺少值类型定义 %s", n)
+		}
+	}
+
+	byFile := map[string][]string{
+		"bpmn_audit_service.go":      {"QueryAuditLogsRequest"},
+		"bpmn_metrics_service.go":    {"DashboardMetrics", "ProcessHealth", "ProcessStat", "TaskStat", "TrendPoint", "BPMNProcessMetrics", "BottleneckInfo"},
+		"bpmn_monitoring_service.go": {"ProcessMetricsRequest", "ListProcessInstanceStatusQuery", "ProcessMetrics", "PerformanceMetrics", "TaskMetrics", "BottleneckAnalysis", "BottleneckTask", "SlowestPath", "ResourceConstraint", "ProcessInstanceStatus", "ProcessTimelineEntry"},
+		"bpmn_sla_service.go":        {"SLAViolation"},
+		"bpmn_tenant_service.go":     {"TenantBPMNStats"},
+	}
+	seen := 0
+	for file, list := range byFile {
+		body, err := os.ReadFile(filepath.Join("..", "..", "service", file))
+		if err != nil {
+			t.Fatalf("读取 service/%s 失败：%v", file, err)
+		}
+		if len(body) < 500 {
+			t.Fatalf("扫描器零命中保护：service/%s 仅 %d 字节", file, len(body))
+		}
+		flat := squashSpace(stripLineComments(string(body)))
+		for _, n := range list {
+			seen++
+			want := squashSpace("type " + n + " = dto." + n)
+			if !strings.Contains(flat, want) {
+				t.Errorf("service/%s 丢失别名 %q（值类型不得在共享层另起一份）", file, n)
+			}
+		}
+	}
+	if seen != len(bpmnMonitoringDTONames) {
+		t.Fatalf("扫描器零命中保护：别名检查覆盖 %d 处，期望 %d 处", seen, len(bpmnMonitoringDTONames))
+	}
+}
+
+// TestBPMNMonitoringDTOJSONShape 锁住下沉后最容易静默漂移的 JSON tag：
+// 结构体字段没变但 tag 改一个字母，前端就会读到 undefined，而编译与 L.3
+// 计数都看不出来。逐字段比对只能防「搬定义」时手误，这里防后续修改。
+func TestBPMNMonitoringDTOJSONShape(t *testing.T) {
+	cases := []struct {
+		name string
+		v    interface{}
+		want []string
+	}{
+		{
+			"DashboardMetrics",
+			dto.DashboardMetrics{
+				ProcessHealth:    &dto.ProcessHealth{},
+				TopProcesses:     []dto.ProcessStat{{}},
+				TaskDistribution: []dto.TaskStat{{}},
+				TrendData:        []dto.TrendPoint{{}},
+			},
+			[]string{`"totalProcesses"`, `"slaComplianceRate"`, `"slaCompliantSamples"`, `"slaTotalSamples"`, `"avgCompletionTimeMinutes"`, `"processHealth"`, `"trendData"`},
+		},
+		{
+			"ProcessMetrics",
+			dto.ProcessMetrics{
+				PerformanceMetrics: &dto.PerformanceMetrics{},
+				TaskMetrics:        map[string]*dto.TaskMetrics{},
+				BottleneckAnalysis: &dto.BottleneckAnalysis{},
+			},
+			[]string{`"processDefinitionKey"`, `"performanceMetrics"`, `"taskMetrics"`, `"bottleneckAnalysis"`, `"tenantId"`, `"latencyPercentile95"`},
+		},
+		{
+			"ProcessTimelineEntry",
+			dto.ProcessTimelineEntry{VariablesBefore: map[string]interface{}{"k": 1}, Metadata: map[string]interface{}{"m": 2}},
+			[]string{`"eventType"`, `"variablesBefore"`, `"metadata"`, `"nodeDurationMs"`},
+		},
+	}
+	for _, c := range cases {
+		raw, err := json.Marshal(c.v)
+		if err != nil {
+			t.Fatalf("序列化 %s 失败：%v", c.name, err)
+		}
+		for _, key := range c.want {
+			if !strings.Contains(string(raw), key) {
+				t.Errorf("%s 的 JSON 契约丢失 key %s，实际 %s", c.name, key, string(raw))
+			}
 		}
 	}
 }

@@ -71,6 +71,13 @@ var (
 	// 批次 3 第 1 步：bpmn 域只有 workflow_template.go 归零，不能进 contractDomains
 	// （那个守卫逐文件扫整个域，其余 7 个文件仍依赖共享层）；这里单独锁窄契约。
 	_ bpmn.WorkflowTemplateCatalog = (*service.BPMNWorkflowTemplateCatalog)(nil)
+	// 批次 3 第 2 步：组 3 五个窄契约同样单独锁（bpmn 仍是部分归零域）。
+	// 值类型身份靠下面 21 条别名守卫与 dto JSON 契约共同保证。
+	_ bpmn.DashboardMetricsProvider  = (*service.BPMNMetricsService)(nil)
+	_ bpmn.BPMNAuditLogReader        = (*service.BPMNAuditService)(nil)
+	_ bpmn.BPMNTenantStatsProvider   = (*service.BPMNTenantService)(nil)
+	_ bpmn.BPMNSLAProvider           = (*service.BPMNSLAService)(nil)
+	_ bpmn.ProcessMonitoringProvider = (*service.BPMNMonitoringService)(nil)
 )
 
 type domainSpec struct {
@@ -308,6 +315,28 @@ func TestSharedValueTypesRemainDTOAliases(t *testing.T) {
 		{"bpmn_workflow_template_catalog.go", "ErrWorkflowTemplateConflict = dto.ErrWorkflowTemplateConflict"},
 		{"bpmn_workflow_template_catalog.go", "ErrWorkflowTemplateInvalid = dto.ErrWorkflowTemplateInvalid"},
 		{"bpmn_pending_inventory.go", "const DefaultStaleThresholdHours = dto.DefaultStaleThresholdHours"},
+		// 批次 3 第 2 步：21 个 BPMN 监控值类型逐处锁别名，不取并集。
+		{"bpmn_audit_service.go", "type QueryAuditLogsRequest = dto.QueryAuditLogsRequest"},
+		{"bpmn_metrics_service.go", "type DashboardMetrics = dto.DashboardMetrics"},
+		{"bpmn_metrics_service.go", "type ProcessHealth = dto.ProcessHealth"},
+		{"bpmn_metrics_service.go", "type ProcessStat = dto.ProcessStat"},
+		{"bpmn_metrics_service.go", "type TaskStat = dto.TaskStat"},
+		{"bpmn_metrics_service.go", "type TrendPoint = dto.TrendPoint"},
+		{"bpmn_metrics_service.go", "type BPMNProcessMetrics = dto.BPMNProcessMetrics"},
+		{"bpmn_metrics_service.go", "type BottleneckInfo = dto.BottleneckInfo"},
+		{"bpmn_monitoring_service.go", "type ProcessMetricsRequest = dto.ProcessMetricsRequest"},
+		{"bpmn_monitoring_service.go", "type ListProcessInstanceStatusQuery = dto.ListProcessInstanceStatusQuery"},
+		{"bpmn_monitoring_service.go", "type ProcessMetrics = dto.ProcessMetrics"},
+		{"bpmn_monitoring_service.go", "type PerformanceMetrics = dto.PerformanceMetrics"},
+		{"bpmn_monitoring_service.go", "type TaskMetrics = dto.TaskMetrics"},
+		{"bpmn_monitoring_service.go", "type BottleneckAnalysis = dto.BottleneckAnalysis"},
+		{"bpmn_monitoring_service.go", "type BottleneckTask = dto.BottleneckTask"},
+		{"bpmn_monitoring_service.go", "type SlowestPath = dto.SlowestPath"},
+		{"bpmn_monitoring_service.go", "type ResourceConstraint = dto.ResourceConstraint"},
+		{"bpmn_monitoring_service.go", "type ProcessInstanceStatus = dto.ProcessInstanceStatus"},
+		{"bpmn_monitoring_service.go", "type ProcessTimelineEntry = dto.ProcessTimelineEntry"},
+		{"bpmn_sla_service.go", "type SLAViolation = dto.SLAViolation"},
+		{"bpmn_tenant_service.go", "type TenantBPMNStats = dto.TenantBPMNStats"},
 	}
 	for _, a := range aliases {
 		body, err := os.ReadFile(filepath.Join("..", "..", "service", a.file))

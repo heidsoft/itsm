@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"itsm-backend/common"
+	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/processexecutionhistory"
 	"itsm-backend/ent/processinstance"
@@ -39,116 +40,31 @@ func (s *BPMNMonitoringService) SetAuditService(auditService *BPMNAuditService) 
 }
 
 // ProcessMetrics 流程指标
-type ProcessMetrics struct {
-	ProcessDefinitionKey string                  `json:"processDefinitionKey"`
-	TotalInstances       int                     `json:"totalInstances"`
-	RunningInstances     int                     `json:"runningInstances"`
-	CompletedInstances   int                     `json:"completedInstances"`
-	FailedInstances      int                     `json:"failedInstances"`
-	AverageDuration      time.Duration           `json:"averageDuration"`
-	SuccessRate          float64                 `json:"successRate"`
-	PerformanceMetrics   *PerformanceMetrics     `json:"performanceMetrics"`
-	TaskMetrics          map[string]*TaskMetrics `json:"taskMetrics"`
-	BottleneckAnalysis   *BottleneckAnalysis     `json:"bottleneckAnalysis"`
-	TenantID             int                     `json:"tenantId"`
-	TimeRange            string                  `json:"timeRange"`
-}
+type ProcessMetrics = dto.ProcessMetrics
 
 // PerformanceMetrics 性能指标
-type PerformanceMetrics struct {
-	Throughput          float64 `json:"throughput"`          // 吞吐量（实例/小时）
-	AverageResponseTime float64 `json:"averageResponseTime"` // 平均响应时间
-	PeakConcurrency     int     `json:"peakConcurrency"`     // 峰值并发数
-	ResourceUtilization float64 `json:"resourceUtilization"` // 资源利用率
-	ErrorRate           float64 `json:"errorRate"`           // 错误率
-	Availability        float64 `json:"availability"`        // 可用性
-	LatencyPercentile95 float64 `json:"latencyPercentile95"` // 95%延迟
-	LatencyPercentile99 float64 `json:"latencyPercentile99"` // 99%延迟
-}
+type PerformanceMetrics = dto.PerformanceMetrics
 
 // TaskMetrics 任务指标
-type TaskMetrics struct {
-	TaskID              string             `json:"taskId"`
-	TaskName            string             `json:"taskName"`
-	TotalExecutions     int                `json:"totalExecutions"`
-	CompletedExecutions int                `json:"completedExecutions"`
-	FailedExecutions    int                `json:"failedExecutions"`
-	AverageDuration     time.Duration      `json:"averageDuration"`
-	SuccessRate         float64            `json:"successRate"`
-	AssigneePerformance map[string]float64 `json:"assigneePerformance"`
-	WaitTime            time.Duration      `json:"waitTime"`       // 等待时间
-	ProcessingTime      time.Duration      `json:"processingTime"` // 处理时间
-	QueueLength         int                `json:"queueLength"`    // 队列长度
-	Priority            string             `json:"priority"`       // 优先级
-}
+type TaskMetrics = dto.TaskMetrics
 
 // BottleneckAnalysis 瓶颈分析
-type BottleneckAnalysis struct {
-	BottleneckTasks     []*BottleneckTask     `json:"bottleneckTasks"`
-	SlowestPaths        []*SlowestPath        `json:"slowestPaths"`
-	ResourceConstraints []*ResourceConstraint `json:"resourceConstraints"`
-	Recommendations     []string              `json:"recommendations"`
-	Severity            string                `json:"severity"` // low, medium, high, critical
-}
+type BottleneckAnalysis = dto.BottleneckAnalysis
 
 // BottleneckTask 瓶颈任务
-type BottleneckTask struct {
-	TaskID                   string        `json:"taskId"`
-	TaskName                 string        `json:"taskName"`
-	BottleneckType           string        `json:"bottleneckType"` // processing, waiting, resource
-	ImpactScore              float64       `json:"impactScore"`    // 0-100
-	AverageDuration          time.Duration `json:"averageDuration"`
-	WaitTime                 time.Duration `json:"waitTime"`
-	QueueLength              int           `json:"queueLength"`
-	Assignee                 string        `json:"assignee"`
-	Recommendation           string        `json:"recommendation"`
-	WaitTimeSeconds          int           `json:"waitTimeSeconds"`
-	ProcessingTimeSeconds    int           `json:"processingTimeSeconds"`
-	TotalDurationSeconds     int           `json:"totalDurationSeconds"`
-	P95WaitTimeSeconds       int           `json:"p95WaitTimeSeconds"`
-	P95ProcessingTimeSeconds int           `json:"p95ProcessingTimeSeconds"`
-	P95TotalDurationSeconds  int           `json:"p95TotalDurationSeconds"`
-	SampleCount              int           `json:"sampleCount"`
-}
+type BottleneckTask = dto.BottleneckTask
 
 // SlowestPath 最慢路径
 //
 // totalDurationSeconds 以秒为单位输出：time.Duration 直接序列化会变成纳秒整数
 // （7200000000000），前端无法直接展示，也会让 API 契约与其它 *Seconds 字段不一致。
-type SlowestPath struct {
-	PathID               string   `json:"pathId"`
-	PathName             string   `json:"pathName"`
-	TotalDurationSeconds int64    `json:"totalDurationSeconds"`
-	TaskCount            int      `json:"taskCount"`
-	BottleneckTasks      []string `json:"bottleneckTasks"`
-	Optimization         string   `json:"optimization"`
-}
+type SlowestPath = dto.SlowestPath
 
 // ResourceConstraint 资源约束
-type ResourceConstraint struct {
-	ResourceType   string  `json:"resourceType"` // human, system, external
-	ResourceName   string  `json:"resourceName"`
-	Utilization    float64 `json:"utilization"` // 0-100
-	Capacity       int     `json:"capacity"`
-	CurrentLoad    int     `json:"currentLoad"`
-	ConstraintType string  `json:"constraintType"` // capacity, skill, availability
-	Impact         string  `json:"impact"`         // low, medium, high
-}
+type ResourceConstraint = dto.ResourceConstraint
 
 // ProcessInstanceStatus 流程实例状态
-type ProcessInstanceStatus struct {
-	ProcessInstanceID string                 `json:"processInstanceId"`
-	Status            string                 `json:"status"`
-	CurrentTask       string                 `json:"currentTask"`
-	Assignee          string                 `json:"assignee"`
-	StartTime         time.Time              `json:"startTime"`
-	ExpectedEndTime   *time.Time             `json:"expectedEndTime"`
-	Variables         map[string]interface{} `json:"variables"`
-	Progress          float64                `json:"progress"`
-	TenantID          int                    `json:"tenantId"`
-	EstimatedDuration time.Duration          `json:"estimatedDuration"`
-	RiskLevel         string                 `json:"riskLevel"` // low, medium, high
-}
+type ProcessInstanceStatus = dto.ProcessInstanceStatus
 
 // AuditLogEntry 审计日志条目
 type AuditLogEntry struct {
@@ -192,13 +108,7 @@ type PerformanceAlert struct {
 }
 
 // ProcessMetricsRequest 流程指标请求
-type ProcessMetricsRequest struct {
-	ProcessDefinitionKey string     `json:"processDefinitionKey"`
-	TenantID             int        `json:"tenantId"`
-	TimeRange            string     `json:"timeRange"`
-	StartTime            *time.Time `json:"startTime"`
-	EndTime              *time.Time `json:"endTime"`
-}
+type ProcessMetricsRequest = dto.ProcessMetricsRequest
 
 // calculateAverageDuration 计算平均持续时间
 func (s *BPMNMonitoringService) calculateAverageDuration(ctx context.Context, query *ent.ProcessInstanceQuery) (time.Duration, error) {
@@ -513,26 +423,7 @@ func (s *BPMNMonitoringService) GetProcessTimeline(ctx context.Context, processI
 }
 
 // ProcessTimelineEntry 流程时间线条目
-type ProcessTimelineEntry struct {
-	ID              string                 `json:"id"`
-	Sequence        int                    `json:"sequence"`
-	Timestamp       time.Time              `json:"timestamp"`
-	EventType       string                 `json:"eventType"`
-	ActivityID      string                 `json:"activityId"`
-	ActivityName    string                 `json:"activityName"`
-	ActivityType    string                 `json:"activityType"`
-	UserID          int                    `json:"userId"`
-	UserName        string                 `json:"userName"`
-	AssigneeID      int                    `json:"assigneeId"`
-	AssigneeName    string                 `json:"assigneeName"`
-	TenantID        int                    `json:"tenantId"`
-	VariablesBefore map[string]interface{} `json:"variablesBefore,omitempty"`
-	VariablesAfter  map[string]interface{} `json:"variablesAfter,omitempty"`
-	Comment         string                 `json:"comment,omitempty"`
-	DurationMs      int                    `json:"durationMs"`
-	NodeDurationMs  int                    `json:"nodeDurationMs"`
-	Metadata        map[string]interface{} `json:"metadata,omitempty"`
-}
+type ProcessTimelineEntry = dto.ProcessTimelineEntry
 
 // GetSystemHealth 获取系统健康状态
 func (s *BPMNMonitoringService) GetSystemHealth(ctx context.Context, tenantID int) (map[string]interface{}, error) {
@@ -1127,16 +1018,7 @@ func (s *BPMNMonitoringService) GetProcessMetrics(ctx context.Context, req *Proc
 }
 
 // ListProcessInstanceStatusQuery 流程实例状态查询请求
-type ListProcessInstanceStatusQuery struct {
-	TenantID   int
-	Page       int
-	PageSize   int
-	ProcessKey string
-	Status     string
-	Assignee   string
-	StartTime  *time.Time
-	EndTime    *time.Time
-}
+type ListProcessInstanceStatusQuery = dto.ListProcessInstanceStatusQuery
 
 // ListProcessInstancesStatus 批量查询流程实例状态（真实实现）
 func (s *BPMNMonitoringService) ListProcessInstancesStatus(ctx context.Context, query *ListProcessInstanceStatusQuery) ([]*ProcessInstanceStatus, int, error) {

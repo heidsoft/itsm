@@ -5,6 +5,7 @@ import (
 	"math"
 	"time"
 
+	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/processdefinition"
 	"itsm-backend/ent/processinstance"
@@ -35,52 +36,19 @@ func NewBPMNMetricsService(client *ent.Client, logger *zap.SugaredLogger) *BPMNM
 }
 
 // DashboardMetrics 仪表盘指标
-type DashboardMetrics struct {
-	TotalProcesses    int     `json:"totalProcesses"`
-	ActiveInstances   int     `json:"activeInstances"`
-	CompletedToday    int     `json:"completedToday"`
-	OpenTasks         int     `json:"openTasks"`
-	SLAComplianceRate float64 `json:"slaComplianceRate"`
-	// SLACompliantSamples/SLATotalSamples 暴露合规率样本量：
-	// 前端据此区分“暂无样本”与“真实 0%”，不得把 0 样本伪装成高合规。
-	SLACompliantSamples int            `json:"slaCompliantSamples"`
-	SLATotalSamples     int            `json:"slaTotalSamples"`
-	AvgCompletionTime   float64        `json:"avgCompletionTimeMinutes"`
-	ProcessHealth       *ProcessHealth `json:"processHealth"`
-	TopProcesses        []ProcessStat  `json:"topProcesses"`
-	TaskDistribution    []TaskStat     `json:"taskDistribution"`
-	TrendData           []TrendPoint   `json:"trendData"`
-}
+type DashboardMetrics = dto.DashboardMetrics
 
 // ProcessHealth 流程健康度
-type ProcessHealth struct {
-	Healthy     int     `json:"healthy"`
-	Warning     int     `json:"warning"`
-	Critical    int     `json:"critical"`
-	HealthScore float64 `json:"healthScore"` // 0-100
-}
+type ProcessHealth = dto.ProcessHealth
 
 // ProcessStat 流程统计
-type ProcessStat struct {
-	ProcessDefinitionKey string  `json:"processDefinitionKey"`
-	TotalInstances       int     `json:"totalInstances"`
-	RunningInstances     int     `json:"runningInstances"`
-	CompletedInstances   int     `json:"completedInstances"`
-	AvgDuration          float64 `json:"avgDurationMinutes"`
-}
+type ProcessStat = dto.ProcessStat
 
 // TaskStat 任务统计
-type TaskStat struct {
-	Status  string  `json:"status"`
-	Count   int     `json:"count"`
-	Percent float64 `json:"percent"`
-}
+type TaskStat = dto.TaskStat
 
 // TrendPoint 趋势数据点
-type TrendPoint struct {
-	Date  string `json:"date"`
-	Count int    `json:"count"`
-}
+type TrendPoint = dto.TrendPoint
 
 // GetDashboardMetrics 获取仪表盘指标
 func (s *BPMNMetricsService) GetDashboardMetrics(ctx context.Context, tenantID int, startTime, endTime time.Time) (*DashboardMetrics, error) {
@@ -429,15 +397,7 @@ func (s *BPMNMetricsService) GetProcessMetrics(ctx context.Context, processDefin
 }
 
 // BPMNProcessMetrics 流程指标
-type BPMNProcessMetrics struct {
-	TotalInstances      int     `json:"totalInstances"`
-	RunningInstances    int     `json:"runningInstances"`
-	CompletedInstances  int     `json:"completedInstances"`
-	TerminatedInstances int     `json:"terminatedInstances"`
-	CompletionRate      float64 `json:"completionRate"`
-	SLAComplianceRate   float64 `json:"slaComplianceRate"`
-	AvgCompletionTime   float64 `json:"avgCompletionTimeMinutes"`
-}
+type BPMNProcessMetrics = dto.BPMNProcessMetrics
 
 // GetBottleneckAnalysis 获取瓶颈分析
 func (s *BPMNMetricsService) GetBottleneckAnalysis(ctx context.Context, processDefinitionKey string, tenantID int) ([]BottleneckInfo, error) {
@@ -510,10 +470,4 @@ type TaskStats struct {
 }
 
 // BottleneckInfo 瓶颈信息
-type BottleneckInfo struct {
-	TaskName    string  `json:"taskName"`
-	TotalCount  int     `json:"totalCount"`
-	AvgDuration float64 `json:"avgDurationMinutes"`
-	MaxDuration float64 `json:"maxDurationMinutes"`
-	MinDuration float64 `json:"minDurationMinutes"`
-}
+type BottleneckInfo = dto.BottleneckInfo
