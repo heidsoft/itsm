@@ -11,6 +11,7 @@ export function knowledgeCommands() {
     cmd('knowledge.get', 'Article detail (with source attribution)', 'itsm knowledge get <id>', ['GET /api/v1/knowledge/articles/:id'], async (ctx) => apiClient.getKnowledgeArticle(requirePositional(ctx.args, 0, 'articleId'))),
     cmd('knowledge.create', 'Create article (draft)', 'itsm knowledge create --data <json>', ['POST /api/v1/knowledge/articles'], async (ctx) => apiClient.createKnowledgeArticle(body(ctx.args) ?? {})),
     cmd('knowledge.update', 'Update article', 'itsm knowledge update <id> [--data <json>]', ['PUT /api/v1/knowledge/articles/:id'], async (ctx) => apiClient.updateKnowledgeArticle(requirePositional(ctx.args, 0, 'articleId'), body(ctx.args) ?? {})),
+    cmd('knowledge.delete', 'Delete an article (irreversible)', 'itsm knowledge delete <id>', ['DELETE /api/v1/knowledge/articles/:id'], async (ctx) => apiClient.deleteKnowledgeArticle(requirePositional(ctx.args, 0, 'articleId'))),
     cmd('knowledge.publish', 'Publish draft article (requires an approved review)', 'itsm knowledge publish <id>', ['POST /api/v1/knowledge/articles/:id/publish'], async (ctx) => apiClient.knowledgeLifecycle(requirePositional(ctx.args, 0, 'articleId'), 'publish')),
     cmd('knowledge.review-submit', 'Submit an article for editorial review', 'itsm knowledge review-submit <id> [--comment text]', ['POST /api/v1/knowledge/articles/:id/review/submit'], async (ctx) =>
       apiClient.knowledgeReviewAction(requirePositional(ctx.args, 0, 'articleId'), 'submit', body(ctx.args) ?? {})

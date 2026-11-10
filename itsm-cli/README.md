@@ -293,7 +293,7 @@ node bin/itsm-mcp.js --describe  # 只打印工具面，不进协议循环
 
 工具面分三层：32 个精选工具（工单读写与状态机流转、事件分诊、问题/变更/发布/服务请求的 list+get、
 变更审批链、CMDB 影响分析、知识检索与正文、SLA 概览、我的待办、身份自检）+ `itsm_discover` → `itsm_describe`
-→ `itsm_call` 覆盖全部 352 条命令。**schema 由 `CommandSpec.input` 派生**（不新增第二份端点表），
+→ `itsm_call` 覆盖全部 353 条命令。**schema 由 `CommandSpec.input` 派生**（不新增第二份端点表），
 风险门与 `exit 10` 同源：高风险写缺 `confirm` 时**不发请求**，且永不自动重试。
 列表默认裁剪 50 条并给出 `total`/`truncated`；resources 提供实时能力清单与 4 篇产品文档，
 prompts 提供队列梳理 / 事件复盘 / 变更风险评审三条操作规程。
@@ -307,7 +307,7 @@ node scripts/mcp-smoke.mjs                # 打真实实例的只读冒烟；--o
 
 ## 命令面速览
 
-完整目录以 `itsm --json commands` 为准（352 命令，直接从代码注册表生成）。主要 domain：
+完整目录以 `itsm --json commands` 为准（353 命令，直接从代码注册表生成）。主要 domain：
 
 `infra`（健康/版本/能力/全局搜索/原始API/**doctor 自检**） · `auth`（登录/刷新/状态/登出/切租户/注册/密码重置/SSO） · `ticket`（CRUD + workflow 状态机 + 评论 + 子任务 + 关系 + SLA + 评分 + AI） · `incident`（含根因/分类/影响评估/重大事件/事件流/报告） · `problem`（含 known-errors） · `change`（全生命周期 + 审批链 + 风险评估 + CMDB 影响 + 回滚清单 + PIR + 变更日历） · `release` · `request`/`catalog`（服务请求与目录 CRUD） · `cmdb`（CI/关系/拓扑/影响分析/标签/版本回退/CI 类型） · `cloud`（云账号/服务/资源 + 发现源/任务/结果 + **deferred 资源人工补全建账**） · `knowledge` · `sla` · `workflow`（BPMN） · `notification`（含投递审计） · `connector`（集成市场） · `marketplace`（扩展市场租户面：浏览/安装/卸载/升级/自动升级/安装配置/依赖对齐；catalog 管理面有意不接 agent 面） · `admin`（用户/租户/RBAC/审计/MSP/**可靠副作用命令总线**/定时器）
 

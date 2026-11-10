@@ -603,6 +603,21 @@ test('cmdb.revert is gated: exit 10 without --yes and zero requests', async () =
   assert.equal(envelope(r).error.kind, 'confirmation_required');
 });
 
+test('knowledge.delete exists and is gated: backend route reachable, exit 10 without --yes', async () => {
+  // Regression: DELETE /knowledge/articles/:id was registered (knowledge:delete
+  // permission) but the CLI only shipped create/update, so cleanup had to fall
+  // back to raw curl. A missing verb is a product gap, not a missing endpoint.
+  const schema = await run(['--json', 'schema', '--as', 'tools', '--domain', 'knowledge']);
+  assert.equal(schema.code, 0);
+  const del = envelope(schema).data.tools.find((t) => t['x-itsm'].command === 'knowledge.delete');
+  assert.ok(del, 'knowledge.delete must be part of the command surface');
+  assert.equal(del['x-itsm'].risk, 'high-risk-write');
+
+  const r = await run(['--json', 'knowledge', 'delete', '1']);
+  assert.equal(r.code, 10, r.stdout);
+  assert.equal(envelope(r).error.kind, 'confirmation_required');
+});
+
 test('manifest advertises the protocol and output controls', async () => {
   const env = envelope(await run(['--json', 'manifest']));
   assert.equal(env.data.agentProtocol, true);
