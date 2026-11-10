@@ -149,6 +149,33 @@ async function route(req, res) {
   if (/^\/tickets\/\d+$/.test(p) && req.method === 'GET') {
     return ok(res, { id: Number(p.split('/')[2]), ticketNumber: 'TKT-1', title: 'a', status: 'new' });
   }
+  // Domain read surfaces behind the curated problem/change/release/request/
+  // knowledge tools. Each returns the standard list envelope so shaping and
+  // paging are exercised exactly as they are in production.
+  if (p === '/problems' && req.method === 'GET') {
+    return ok(res, { items: [{ id: 1, problemNumber: 'PRB-1', title: 'db latency', status: 'open' }], total: 1, page: 1, pageSize: 20, totalPages: 1 });
+  }
+  if (/^\/problems\/\d+$/.test(p) && req.method === 'GET') {
+    return ok(res, { id: Number(p.split('/')[2]), problemNumber: 'PRB-1', title: 'db latency' });
+  }
+  if (/^\/changes\/\d+$/.test(p) && req.method === 'GET') {
+    return ok(res, { id: Number(p.split('/')[2]), title: 'upgrade db', status: 'draft' });
+  }
+  if (p === '/releases' && req.method === 'GET') {
+    return ok(res, { items: [{ id: 1, name: 'R1', status: 'planned' }], total: 1, page: 1, pageSize: 20, totalPages: 1 });
+  }
+  if (/^\/releases\/\d+$/.test(p) && req.method === 'GET') {
+    return ok(res, { id: Number(p.split('/')[2]), name: 'R1', status: 'planned' });
+  }
+  if (p === '/service-requests' && req.method === 'GET') {
+    return ok(res, { items: [{ id: 1, requestNumber: 'REQ-1', status: 'pending' }], total: 1, page: 1, pageSize: 20, totalPages: 1 });
+  }
+  if (/^\/service-requests\/\d+$/.test(p) && req.method === 'GET') {
+    return ok(res, { id: Number(p.split('/')[2]), requestNumber: 'REQ-1', status: 'pending' });
+  }
+  if (/^\/knowledge\/articles\/\d+$/.test(p) && req.method === 'GET') {
+    return ok(res, { id: Number(p.split('/')[4]), title: 'runbook', content: '# steps' });
+  }
   if (/^\/cmdb\/cis\/\d+$/.test(p) && req.method === 'DELETE') return ok(res, null);
   if (p === '/boom/gated-delete' && req.method === 'DELETE') return ok(res, { deleted: true });
   if (p === '/marketplace/items' && req.method === 'GET') {
@@ -277,6 +304,54 @@ test('tools/list exposes the full input contract of a curated command', async ()
   assert.equal(props.id, undefined, 'create has no id positional');
 });
 
+test('curated surface covers problem/release/request/change/knowledge, and tools/list stays spec-shaped', async () => {
+  const { byId } = await session([initialize, { jsonrpc: '2.0', id: 30, method: 'tools/list' }]);
+  const tools = byId.get(30).result.tools;
+  const expected = [
+    'itsm_problem_list',
+    'itsm_problem_get',
+    'itsm_change_get',
+    'itsm_release_list',
+    'itsm_release_get',
+    'itsm_request_list',
+    'itsm_request_get',
+    'itsm_knowledge_get',
+  ];
+  for (const name of expected) {
+    const tool = tools.find((t) => t.name === name);
+    assert.ok(tool, `missing curated tool ${name}`);
+    assert.equal(tool.annotations.readOnlyHint, true, `${name} must be advertised read-only`);
+  }
+  const get = tools.find((t) => t.name === 'itsm_problem_get');
+  assert.deepEqual(get.inputSchema.required, ['id']);
+
+  // Internal routing fields are server-side facts, not part of the MCP Tool
+  // schema; a strict host may reject them and a client must never depend on them.
+  for (const tool of tools) {
+    assert.equal(tool.command, undefined, `${tool.name} leaked the internal command field`);
+    assert.equal(tool.defaults, undefined, `${tool.name} leaked internal defaults`);
+  }
+});
+
+test('a newly curated domain tool executes the command it names (problem.list)', async () => {
+  hits.clear();
+  const { byId } = await session([
+    initialize,
+    {
+      jsonrpc: '2.0',
+      id: 31,
+      method: 'tools/call',
+      params: { name: 'itsm_problem_list', arguments: { limit: 1 } },
+    },
+  ]);
+  const result = byId.get(31).result;
+  assert.equal(result.isError, false);
+  const payload = JSON.parse(result.content[0].text);
+  assert.equal(payload.data.items.length, 1);
+  assert.equal(payload.meta.total, 1);
+  assert.equal(hits.get('GET /problems'), 1);
+});
+
 test('a list call is bounded by default and reports total vs returned', async () => {
   const { byId } = await session([
     initialize,
@@ -360,6 +435,11 @@ test('infra.api raw DELETE through itsm_call is gated on confirm too', async () 
   const payload = JSON.parse(result.content[0].text);
   assert.equal(payload.error.kind, 'confirmation_required');
   assert.match(payload.error.hint, /confirm/);
+  // The gateway gate (not spec.run) must answer: its payload carries the risk
+  // summary, and only this path can classify the method-derived call as
+  // irreversible (the command name alone is just `infra.api`).
+  assert.equal(payload.error.risk.irreversible, true);
+  assert.match(payload.error.message, /显式确认/);
   assert.equal(hits.get('DELETE /boom/gated-delete') ?? 0, 0, 'the raw DELETE must not be sent before consent');
 });
 
@@ -390,7 +470,7 @@ test('infra.api preview reflects the METHOD gate, not the static write risk', as
       method: 'tools/call',
       params: {
         name: 'itsm_call',
-        arguments: { command: 'infra.api', params: { METHOD: 'DELETE', 'path-relative-to-/api/v1': '/boom/gated-delete' }, preview: true },
+        arguments: { command: 'infra.api', params: { METHOD: 'delete', 'path-relative-to-/api/v1': '/boom/gated-delete' }, preview: true },
       },
     },
   ]);
@@ -517,6 +597,44 @@ test('discover works in Chinese and ranks name hits above summary hits', async (
   const payload = JSON.parse(byId.get(10).result.content[0].text);
   assert.ok(payload.commands.length > 0, '中文查询必须命中');
   assert.match(payload.commands[0].command, /approv/, `top hit should be an approval command, got ${payload.commands[0].command}`);
+});
+
+test('discover reports truncation with remaining, and an unknown domain lists the live domain set', async () => {
+  const { byId } = await session([
+    initialize,
+    { jsonrpc: '2.0', id: 40, method: 'tools/call', params: { name: 'itsm_discover', arguments: { limit: 1 } } },
+    { jsonrpc: '2.0', id: 41, method: 'tools/call', params: { name: 'itsm_discover', arguments: { domain: 'not-a-domain' } } },
+  ]);
+
+  const truncated = JSON.parse(byId.get(40).result.content[0].text);
+  assert.equal(truncated.returned, 1);
+  assert.ok(truncated.matched > 1, 'the registry is larger than one command');
+  assert.equal(truncated.remaining, truncated.matched - 1);
+  assert.match(truncated.next, /截断/);
+
+  // A stale hand-written domain list is worse than no list: it tells an
+  // operator that a real domain does not exist. The hint must come from the
+  // registry, so it includes domains added after the catalog was written.
+  const none = JSON.parse(byId.get(41).result.content[0].text);
+  assert.equal(none.matched, 0);
+  assert.match(none.next, /可用域/);
+  assert.match(none.next, /marketplace/);
+  assert.match(none.next, /provisioning/);
+});
+
+test('itsm_call rejects a non-object params as a protocol error, not a bogus missing-parameter report', async () => {
+  const { byId } = await session([
+    initialize,
+    {
+      jsonrpc: '2.0',
+      id: 42,
+      method: 'tools/call',
+      params: { name: 'itsm_call', arguments: { command: 'ticket.get', params: '7' } },
+    },
+  ]);
+  const res = byId.get(42);
+  assert.equal(res.error?.code, -32602);
+  assert.match(res.error.message, /params 必须是对象/);
 });
 
 test('describe returns the CLI contract, and misses carry a suggestion', async () => {

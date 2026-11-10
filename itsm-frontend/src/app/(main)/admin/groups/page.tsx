@@ -40,7 +40,10 @@ const GroupManagement: React.FC = () => {
   const { message, modal } = App.useApp();
   const [form] = Form.useForm();
   const [groups, setGroups] = useState<Group[]>([]);
-  const [loading, setLoading] = useState(false);
+  // 列表初值必须为 true：mount 必定发起首次拉取，初值 false 会让首帧先渲染
+  // 「用户组总数 0」的假统计卡与空表格，再被真实数据覆盖。保存动作另用 actionLoading。
+  const [listLoading, setListLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState(false);
   const [search, setSearch] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
@@ -62,7 +65,7 @@ const GroupManagement: React.FC = () => {
   });
 
   const loadGroups = async () => {
-    setLoading(true);
+    setListLoading(true);
     try {
       const response = await GroupAPI.getGroups({
         page: pagination.current,
@@ -78,7 +81,7 @@ const GroupManagement: React.FC = () => {
       console.error('Failed to load groups:', error);
       message.error(t('groups.messages.loadFailed'));
     } finally {
-      setLoading(false);
+      setListLoading(false);
     }
   };
 
@@ -102,7 +105,7 @@ const GroupManagement: React.FC = () => {
   };
 
   const handleSave = async (values: { name: string; description?: string }) => {
-    setLoading(true);
+    setActionLoading(true);
     try {
       if (selectedGroup) {
         await GroupAPI.updateGroup(selectedGroup.id, values);
@@ -119,7 +122,7 @@ const GroupManagement: React.FC = () => {
       console.error('Failed to save group:', error);
       message.error(t('groups.messages.saveFailed'));
     } finally {
-      setLoading(false);
+      setActionLoading(false);
     }
   };
 
@@ -340,15 +343,18 @@ const GroupManagement: React.FC = () => {
         </Button>
       </div>
 
-      <Row gutter={16}>
-        {statsCards.map(item => (
-          <Col span={12} md={8} lg={6} key={item.title}>
-            <Card>
-              <Statistic title={item.title} value={item.value} prefix={item.icon} />
-            </Card>
-          </Col>
-        ))}
-      </Row>
+      {/* 统计卡必须门控：还没拉到数据时渲染成「用户组总数 0」会被误读成「没有用户组」 */}
+      {!listLoading && (
+        <Row gutter={16}>
+          {statsCards.map(item => (
+            <Col span={12} md={8} lg={6} key={item.title}>
+              <Card>
+                <Statistic title={item.title} value={item.value} prefix={item.icon} />
+              </Card>
+            </Col>
+          ))}
+        </Row>
+      )}
 
       <Card>
         <Space wrap className="w-full justify-between">
@@ -371,7 +377,7 @@ const GroupManagement: React.FC = () => {
           columns={columns}
           dataSource={groups}
           rowKey="id"
-          loading={loading}
+          loading={listLoading}
           onChange={handleTableChange}
           scroll={{ x: 860 }}
           locale={{
@@ -425,7 +431,7 @@ const GroupManagement: React.FC = () => {
           </Form.Item>
           <Form.Item>
             <Space>
-              <Button type="primary" htmlType="submit" loading={loading}>
+              <Button type="primary" htmlType="submit" loading={actionLoading}>
                 {selectedGroup ? t('common.save') : t('common.create')}
               </Button>
               <Button

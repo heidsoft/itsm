@@ -39,10 +39,30 @@ export interface IncidentDistributionData {
   color: string;
 }
 
-export interface SLAData {
-  service: string;
-  target: number;
-  actual: number;
+/**
+ * SLA 合规快照，字段与后端 service.SLAComplianceData 一一对应。
+ *
+ * 注意这是**一个对象**，不是按服务拆分的数组：/dashboard/overview 与
+ * /dashboard/sla-data 返回的都是同一份聚合快照。历史类型写成 `SLAData[]`
+ * （service/target/actual 三字段），图表再用 Array.isArray 过滤，于是对象被
+ * 判为"没有数据"，SLA 面板在生产上长期显示"暂无数据"——契约写错比字段缺失
+ * 更难发现，因为类型检查全绿。
+ */
+export interface SLAComplianceData {
+  /** 整体合规率（%）：(总工单 - 有未解决违规的工单) / 总工单 */
+  complianceRate: number;
+  /** 响应时限达成率（%），按 violation_type=response_* 分桶 */
+  responseTimeCompliance: number;
+  /** 解决时限达成率（%），按 violation_type=resolution_* 分桶 */
+  resolutionTimeCompliance: number;
+  /** 24 小时内将到期的工单数 */
+  atRiskTickets: number;
+  /** 存在未解决违规的工单数 */
+  breachedTickets: number;
+  /** 统计窗口（近 30 天）内的工单总数 */
+  totalTickets: number;
+  /** 未违约工单数 */
+  compliantTickets: number;
 }
 
 export interface SatisfactionData {
@@ -118,7 +138,7 @@ export interface DashboardData {
   kpiMetrics: KPIMetric[];
   ticketTrend: TicketTrendData[];
   incidentDistribution: IncidentDistributionData[];
-  slaData: SLAData[];
+  slaData?: SLAComplianceData | null;
   satisfactionData: SatisfactionData[];
   quickActions: QuickAction[];
   recentActivities: RecentActivity[];
@@ -136,4 +156,39 @@ export interface DashboardData {
     dateRange: { start: string; end: string };
     totalTickets: number;
   };
+}
+
+// 管理者统一服务质量视图（GET /api/v1/reports/service-quality）。
+// 逐字段对齐后端 service.ServiceQualityReport；ticketStats/problemStats/
+// changeStats 是可选装配块——后端对应域未装配时块缺省（显式可见降级），
+// 前端不得用空对象兜底伪装成「全零」。
+export interface ServiceQualityWindow {
+  days: number;
+  from: string;
+  to: string;
+}
+
+export interface AnalyticsTicketStatsBlock {
+  total: number;
+  statusGroups: Array<{ status: string; count: number }>;
+  priorityGroups: Array<{ priority: string; count: number }>;
+  trend30d: Array<{ date: string; count: number }>;
+  generatedAt: string;
+}
+
+export interface ServiceQualityReport {
+  metricVersion: string;
+  metricVersions: Record<string, string>;
+  generatedAt: string;
+  window: ServiceQualityWindow;
+  /** KPI 行级口径：tenant=全租户，own=本人 */
+  scope: 'tenant' | 'own';
+  kpi: KPIMetric[];
+  sla: SLAComplianceData | null;
+  incidentDistribution: IncidentDistributionData[];
+  satisfaction: SatisfactionData[];
+  ticketTrend: TicketTrendData[];
+  ticketStats?: AnalyticsTicketStatsBlock;
+  problemStats?: import('@/lib/api/problem-api').ProblemStatsResponse;
+  changeStats?: import('@/lib/api/change-api').ChangeStatsResponse;
 }

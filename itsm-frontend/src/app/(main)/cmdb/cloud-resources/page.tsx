@@ -418,7 +418,7 @@ export default function CloudResourcePage() {
 
       <Table
         rowKey='id'
-        loading={resourcesQuery.isLoading}
+        loading={resourcesQuery.isPending}
         dataSource={resources}
         columns={columns as unknown as React.ComponentProps<typeof Table>['columns']}
         pagination={{

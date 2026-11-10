@@ -115,8 +115,8 @@ func (h *Handler) ExecuteTool(c *gin.Context) {
 
 	if invocationID > 0 {
 		common.Success(c, dto.ToolExecutionResponse{
-			Status: "pending", Summary: "工具操作已提交审批", InvocationID: invocationID,
-			ApprovalState: "pending", NextActions: []string{"等待审批后执行"}, Artifacts: []string{},
+			Status: "pending", Summary: "Tool operation submitted for approval", InvocationID: invocationID,
+			ApprovalState: "pending", NextActions: []string{"Execute after approval"}, Artifacts: []string{},
 		})
 		return
 	}
@@ -255,7 +255,7 @@ func (h *Handler) ChatStream(c *gin.Context) {
 		payload := map[string]string{"message": err.Error()}
 		if errors.Is(err, service.ErrQuotaExceeded) {
 			payload["reason"] = "quota_exceeded"
-			payload["message"] = "本月 AI token 配额已用完，请联系管理员调整配额或下月再试"
+			payload["message"] = "The monthly AI token quota has been exhausted. Contact your administrator to adjust the quota or try again next month"
 		} else if errors.Is(err, service.ErrRateLimited) {
 			payload["reason"] = "rate_limited"
 		}
@@ -408,9 +408,12 @@ func (h *Handler) GetDeepAnalytics(c *gin.Context) {
 	if !ok {
 		return
 	}
-	res, err := h.svc.GetDeepAnalytics(c.Request.Context(), &req, tenantID)
+	// R1：viewer 只从认证上下文取，报表与列表/导出共用同一行级谓词。
+	userID, role := handlerctx.ReportViewer(c)
+	viewer := service.DashboardViewer{UserID: userID, Role: role}
+	res, err := h.svc.GetDeepAnalytics(c.Request.Context(), &req, tenantID, viewer)
 	if err != nil {
-		common.FailWithErr(c, err, "Operation failed")
+		common.RespondError(c, err, "Operation failed")
 		return
 	}
 	common.Success(c, res)
@@ -429,9 +432,12 @@ func (h *Handler) GetTrendPrediction(c *gin.Context) {
 	}
 	// userID 用于把预测底账归属到具体操作者：谁依据这组预测做了决策，事后可追。
 	userID := c.GetInt("user_id")
-	res, err := h.svc.GetTrendPrediction(c.Request.Context(), &req, tenantID, userID)
+	// R1：预测底账归属用 userID；统计范围另用 viewer（角色 + 用户 ID）。
+	_, role := handlerctx.ReportViewer(c)
+	viewer := service.DashboardViewer{UserID: userID, Role: role}
+	res, err := h.svc.GetTrendPrediction(c.Request.Context(), &req, tenantID, userID, viewer)
 	if err != nil {
-		common.FailWithErr(c, err, "Operation failed")
+		common.RespondError(c, err, "Operation failed")
 		return
 	}
 	common.Success(c, res)

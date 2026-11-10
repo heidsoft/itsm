@@ -36,7 +36,9 @@ export default function ConnectorsAdminPage() {
   const [market, setMarket] = useState<ConnectorManifest[]>([]);
   const [instances, setInstances] = useState<ConnectorConfig[]>([]);
   const [health, setHealth] = useState<ConnectorHealth[]>([]);
-  const [loading, setLoading] = useState(false);
+  // 列表初值必须为 true：mount 必定发起首次拉取，初值 false 会让首帧直接渲染
+  // 「暂无连接器」的空态（Table 分支根本不渲染，loading 也看不到）。
+  const [listLoading, setListLoading] = useState(true);
 
   const [provisionOpen, setProvisionOpen] = useState(false);
   const [provisionTarget, setProvisionTarget] = useState<ConnectorManifest | null>(null);
@@ -51,7 +53,7 @@ export default function ConnectorsAdminPage() {
   const requiredSettingKeys = provisionTarget ? REQUIRED_SETTINGS[provisionTarget.name] || [] : [];
 
   const load = async () => {
-    setLoading(true);
+    setListLoading(true);
     try {
       const [m, c, h] = await Promise.all([
         connectorService.list(),
@@ -64,7 +66,7 @@ export default function ConnectorsAdminPage() {
     } catch (e) {
       message.error(t('connectors.loadFailed', { msg: (e as Error).message }));
     } finally {
-      setLoading(false);
+      setListLoading(false);
     }
   };
 
@@ -299,7 +301,7 @@ export default function ConnectorsAdminPage() {
       }}
       extra={
         <Space>
-          <Button icon={<RotateCcw />} onClick={load} loading={loading}>
+          <Button icon={<RotateCcw />} onClick={load} loading={listLoading}>
             {t('connectors.buttons.refresh')}
           </Button>
         </Space>
@@ -334,11 +336,23 @@ export default function ConnectorsAdminPage() {
             key: 'market',
             label: `${t('connectors.tabs.market')} (${market.length})`,
             children: market.length === 0 ? (
-              <Empty description={t('connectors.marketEmpty')} />
+              // 加载中不能判定为空：market 还是空数组时首帧会误报「暂无连接器」。
+              listLoading ? (
+                <Table
+                  rowKey="name"
+                  loading
+                  columns={marketColumns}
+                  dataSource={[]}
+                  scroll={{ x: 1100 }}
+                  pagination={false}
+                />
+              ) : (
+                <Empty description={t('connectors.marketEmpty')} />
+              )
             ) : (
               <Table
                 rowKey="name"
-                loading={loading}
+                loading={listLoading}
                 columns={marketColumns}
                 dataSource={market}
                 scroll={{ x: 1100 }}
@@ -350,11 +364,23 @@ export default function ConnectorsAdminPage() {
             key: 'instances',
             label: `${t('connectors.tabs.configured')} (${instances.length})`,
             children: instances.length === 0 ? (
-              <Empty description={t('connectors.configuredEmpty')} />
+              // 加载中不能判定为空：instances 还是空数组时首帧会误报「暂无已配置连接器」。
+              listLoading ? (
+                <Table
+                  rowKey="name"
+                  loading
+                  columns={instanceColumns}
+                  dataSource={[]}
+                  scroll={{ x: 1000 }}
+                  pagination={false}
+                />
+              ) : (
+                <Empty description={t('connectors.configuredEmpty')} />
+              )
             ) : (
               <Table
                 rowKey="name"
-                loading={loading}
+                loading={listLoading}
                 columns={instanceColumns}
                 dataSource={instances}
                 scroll={{ x: 1000 }}

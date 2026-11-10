@@ -35,6 +35,7 @@ import {
   useDeleteCIMutation,
 } from '@/lib/hooks/useCMDB';
 import { useOperationPermissions } from '@/lib/hooks/use-permissions';
+import { buildCsv, downloadCsv } from '@/lib/utils/csv-export';
 const statusColors: Record<string, string> = {
   [CIStatus.ACTIVE]: 'green',
   [CIStatus.INACTIVE]: 'default',
@@ -164,36 +165,28 @@ const CIList: React.FC = () => {
     });
   };
 
-  // 导出选中项（CSV）：M1 占位实现，按列硬编码；M2 可切换为 xlsx 流式导出。
+  // 导出选中项（CSV）：统一走 buildCsv，避免手写拼接绕过公式注入防护。
+  // 旧实现只把引号翻倍，形如 =HYPERLINK(...) 的 CI 名称在 Excel/WPS 打开即执行。
   const handleExport = () => {
     if (selectedRowKeys.length === 0) {
       message.warning('Please select the configuration items to be exported first');
       return;
     }
     const selectedData = data.filter(item => selectedRowKeys.includes(item.id));
-    const csvContent = [
-      ['ID', 'Name', 'Type', 'Cloud Provider', 'Status', 'Model', 'Vendor', 'Last Update'].join(','),
-      ...selectedData.map(item => [
-        item.id,
-        item.name,
-        getCITypeLabel(types, item.ciTypeId, item.type),
-        item.cloudProvider || '',
-        item.status,
-        item.model || '',
-        item.vendor || '',
-        item.updatedAt || '',
-      ].map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')),
-    ].join('\n');
-
-    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `Configuration item export_${dayjs().format('YYYYMMDD_HHmmss')}.csv`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+    const csv = buildCsv<ConfigurationItem>(
+      [
+        { title: 'ID', render: item => item.id },
+        { title: "Name", render: item => item.name },
+        { title: "Type", render: item => getCITypeLabel(types, item.ciTypeId, item.type) },
+        { title: "Cloud Provider", render: item => item.cloudProvider || '' },
+        { title: "Status", render: item => item.status },
+        { title: "Model", render: item => item.model || '' },
+        { title: "Vendor", render: item => item.vendor || '' },
+        { title: "Last Update", render: item => item.updatedAt || '' },
+      ],
+      selectedData
+    );
+    downloadCsv(`Configuration item export_${dayjs().format('YYYYMMDD_HHmmss')}`, csv);
     message.success(`Exported ${selectedData.length} records`);
   };
 
@@ -376,10 +369,10 @@ const CIList: React.FC = () => {
           rowSelection={rowSelection}
           columns={columns}
           dataSource={data}
-          loading={listQuery.isLoading}
+          loading={listQuery.isPending}
           locale={{
             emptyText:
-              listQuery.isLoading && data.length === 0 ? (
+              listQuery.isPending && data.length === 0 ? (
                 <LoadingEmptyError state="loading" minHeight={200} />
               ) : listQuery.isError ? (
                 <LoadingEmptyError

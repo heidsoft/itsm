@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { App } from 'antd';
 import CapabilitiesAdminPage from '../page';
 import { getCapabilities } from '@/lib/api/capability-api';
@@ -114,7 +114,7 @@ describe('能力矩阵控制台', () => {
     const gaRow = screen.getByText('problem').closest('tr');
     expect(gaRow).not.toBeNull();
     expect(gaRow?.textContent).toContain('GA');
-    expect(gaRow?.textContent).not.toContain('晋升条件');
+    expect(gaRow?.textContent).not.toContain('Promotion criteria');
   });
 
   it('「未就绪」筛选只保留此刻不可用的能力', async () => {
@@ -145,5 +145,76 @@ describe('能力矩阵控制台', () => {
     );
 
     expect(await screen.findByText(/The capability matrix is empty, please confirm that the backend \/api\/v1\/capabilities is reachable/)).toBeInTheDocument();
+  });
+
+  it('预览条目分区显示剩余阻断与晋升条件，并给出已声明条件数', async () => {
+    render(
+      <App>
+        <CapabilitiesAdminPage />
+      </App>,
+    );
+
+    expect(await screen.findByText('cmdbDiscovery')).toBeInTheDocument();
+    expect(screen.getAllByText('Remaining blockers')).toHaveLength(2);
+    expect(screen.getAllByText('Promotion criteria')).toHaveLength(2);
+    // 分母是预览总数，缺口不能藏起来。
+    expect(screen.getByText(/Promotion criteria 2\/2/)).toBeInTheDocument();
+    const gaRow = screen.getByText('problem').closest('tr');
+    expect(gaRow?.textContent).not.toContain('Promotion criteria');
+    expect(gaRow?.textContent).not.toContain('Remaining blockers');
+  });
+
+  it('可以按预览理由内容搜索，而不只按能力键', async () => {
+    render(
+      <App>
+        <CapabilitiesAdminPage />
+      </App>,
+    );
+
+    expect(await screen.findByText('cmdbDiscovery')).toBeInTheDocument();
+    fireEvent.change(screen.getByPlaceholderText(/Search capability keys or preview rationale/), {
+      target: { value: '真实租户收发' },
+    });
+
+    await waitFor(() => expect(screen.queryByText('cmdbDiscovery')).not.toBeInTheDocument());
+    expect(screen.getByText('connector.feishu')).toBeInTheDocument();
+    expect(screen.queryByText('ticket')).not.toBeInTheDocument();
+  });
+
+  it('查看完整理由打开详情面板，三段与接口原文都可核对', async () => {
+    render(
+      <App>
+        <CapabilitiesAdminPage />
+      </App>,
+    );
+
+    expect(await screen.findByText('cmdbDiscovery')).toBeInTheDocument();
+    fireEvent.click(screen.getAllByText('View full rationale')[0]);
+
+    const dialog = await screen.findByRole('dialog');
+    expect(within(dialog).getByText('Completed progress')).toBeInTheDocument();
+    expect(within(dialog).getByText('Remaining blockers')).toBeInTheDocument();
+    expect(within(dialog).getByText('Promotion criteria')).toBeInTheDocument();
+    expect(within(dialog).getByText('Original API response')).toBeInTheDocument();
+    // 切分只服务于展示，接口原文必须一字不少地可回看。
+    const reason = items.find(item => item.key === 'cmdbDiscovery')?.pilotReason;
+    expect(within(dialog).getByText(reason ?? '')).toBeInTheDocument();
+  });
+
+  it('理由缺晋升条件时如实标记契约不完整，不伪装成正常预览态', async () => {
+    mockedGetCapabilities.mockResolvedValueOnce({
+      items: [{ ...items[2], pilotReason: '只剩一段描述，没有给出晋升条件标记。' }],
+      acceptanceVersion: '2026.10.31',
+    });
+
+    render(
+      <App>
+        <CapabilitiesAdminPage />
+      </App>,
+    );
+
+    expect(await screen.findByText('Promotion criteria not declared (incomplete contract)')).toBeInTheDocument();
+    expect(screen.getByText(/Promotion criteria 0\/1/)).toBeInTheDocument();
+    expect(screen.queryByText('View full rationale')).not.toBeInTheDocument();
   });
 });

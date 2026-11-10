@@ -66,7 +66,9 @@ const SLAMonitorPage = () => {
   const [autoRefresh] = useState(true);
   const [refreshInterval, setRefreshInterval] = useState(30);
   const [activeTab, setActiveTab] = useState('overview');
-  const [loading, setLoading] = useState(false);
+  // 列表初值必须为 true：mount 必定发起首次拉取，初值 false 会让首帧先渲染
+  // 「SLA 定义总数 0」「合规率 0%」的假统计卡与空表格，再被真实数据覆盖。
+  const [listLoading, setListLoading] = useState(true);
   const [stats, setStats] = useState({
     totalDefinitions: 0,
     activeDefinitions: 0,
@@ -78,8 +80,8 @@ const SLAMonitorPage = () => {
   const [serviceSLA, setServiceSLA] = useState<ServiceSLARow[]>([]);
 
   const fetchStats = async () => {
-    if (loading) return;
-    setLoading(true);
+    if (listLoading) return;
+    setListLoading(true);
     try {
       const [statsData, violationResp, definitionResp] = await Promise.all([
         SLAApi.getSLAStats(),
@@ -128,7 +130,7 @@ const SLAMonitorPage = () => {
       console.error('Failed to fetch SLA stats:', error);
       message.error('Failed to obtain SLA statistics, please try again later.');
     } finally {
-      setLoading(false);
+      setListLoading(false);
     }
   };
 
@@ -299,14 +301,15 @@ const SLAMonitorPage = () => {
               { value: 300, label: '5 minutes' },
             ]}
           />
-          <Button icon={<RefreshCw size={16} />} onClick={() => fetchStats()} loading={loading}>
-
+          <Button icon={<RefreshCw size={16} />} onClick={() => fetchStats()} loading={listLoading}>
             Refresh
           </Button>
         </Space>
       </div>
 
       {/* 统计卡片：Card 高度撑满 Col，保证四张卡片等高 */}
+      {/* 统计卡必须门控：还没拉到数据时渲染成「SLA总数 0」会被误读成「没有定义任何 SLA」 */}
+      {!listLoading && (
       <Row gutter={[16, 16]} className="mb-6">
         <Col xs={24} sm={12} lg={6}>
           <Card className="rounded-lg shadow-sm" style={{ height: '100%' }}>
@@ -350,6 +353,7 @@ const SLAMonitorPage = () => {
           </Card>
         </Col>
       </Row>
+      )}
 
       {/* SLA监控内容 */}
       <Card>
@@ -387,7 +391,7 @@ const SLAMonitorPage = () => {
                   columns={ticketColumns}
                   dataSource={violations}
                   rowKey="id"
-                  loading={loading}
+                  loading={listLoading}
                   pagination={{ pageSize: 10, showSizeChanger: true }}
                   size="small"
                   scroll={{ x: 1100 }}
@@ -407,6 +411,8 @@ const SLAMonitorPage = () => {
               children: (
                 <div>
                   {/* 服务SLA 统计：三张卡片等高 */}
+                  {/* 统计卡必须门控：还没拉到数据时渲染成「服务总数 0」会被误读成「没有接入服务」 */}
+                  {!listLoading && (
                   <Row gutter={[16, 16]} className="mb-4">
                     <Col xs={24} sm={8}>
                       <Card size="small" className="bg-blue-50" style={{ height: '100%' }}>
@@ -439,12 +445,13 @@ const SLAMonitorPage = () => {
                       </Card>
                     </Col>
                   </Row>
+                  )}
 
                   <Table<ServiceSLARow>
                     columns={serviceColumns}
                     dataSource={serviceSLA}
                     rowKey="id"
-                    loading={loading}
+                    loading={listLoading}
                     pagination={{ pageSize: 10, showSizeChanger: true }}
                     scroll={{ x: 1000 }}
                     locale={{ emptyText: 'There is no SLA definition yet, please create it in the SLA policy first' }}

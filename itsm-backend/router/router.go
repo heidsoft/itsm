@@ -417,6 +417,16 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 
 	// 认证路由（需要JWT）
 	auth := r.Group("/api/v1")
+	// L3：审计必须是鉴权链的第一道。
+	//
+	// 旧链序是 Auth → RBAC → CSRF → Tenant → Audit → RequirePermission，
+	// 前三道与 TenantMiddleware 都会 c.Abort()：401（令牌失效/爆破）、
+	// 403（RBAC 拒绝）、跨租户试探在到达 Audit 之前就结束了，audit_logs
+	// 里一条都没有 —— 恰好是最需要留痕的探测行为全部不可追溯。
+	// 把 Audit 提到 auth 组首位后，c.Next() 之后的收尾代码在任何 Abort
+	// 路径上都会执行；它用 context.Background() 写库，也不依赖请求上下文。
+	// tenant 子组继承本组中间件，故不再重复挂载（重复挂载会一笔写两行）。
+	auth.Use(middleware.AuditMiddleware(config.Client))
 	auth.Use(middleware.AuthMiddleware(config.JWTSecret))
 	// RBAC 权限控制中间件：保护所有已认证路由
 	auth.Use(middleware.RBACMiddleware(config.Client))
@@ -510,10 +520,9 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 	SetupMSPRoutes(r, config)
 
 	{
-		// 租户中间件
+		// 租户中间件。审计已上移到 auth 组首位（见本文件认证路由段），
+		// tenant 子组继承该中间件，此处若再挂一次会让每笔写操作落两条审计。
 		tenant := auth.Use(middleware.TenantMiddleware(config.Client))
-		// 审计必须位于租户解析之后，确保所有租户内写操作都有可靠的租户和操作者上下文。
-		tenant.(*gin.RouterGroup).Use(middleware.AuditMiddleware(config.Client))
 
 		// ==================== Ticket Categories & Tags ====================
 		if config.TicketCategoryHandler != nil {
@@ -649,12 +658,16 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 		SetupAuditLogRoutes(tenant.(*gin.RouterGroup), config.AuditLogHandler, config.CommonHandler)
 		if config.CommonHandler != nil {
 			SetupCommonSystemRoutes(r, tenant.(*gin.RouterGroup), config)
-
-			// 自助账号操作（当前：自助改密，校验旧密码）。
-			// 此前前端 profile 页调用的 PUT /users/:id/reset-password 后端从未注册，
-			// 且那是管理员重置语义（不校验旧密码），不能直接拿来用。
-			SetupAccountRoutes(r, config.JWTSecret, config.AccountHandler)
 		}
+
+		// 自助账号操作（当前：自助改密，校验旧密码）。
+		// 此前前端 profile 页调用的 PUT /users/:id/reset-password 后端从未注册，
+		// 且那是管理员重置语义（不校验旧密码），不能直接拿来用。
+		//
+		// 独立于 CommonHandler 装配：能力不得静默下线。此前它嵌在
+		// `CommonHandler != nil` 守卫里，只装配 AccountHandler 时改密路由
+		// 会静默 404（与审计读面踩过的坑同型）。SetupAccountRoutes 自带 nil 守卫。
+		SetupAccountRoutes(r, config.JWTSecret, config.AccountHandler, config.Client)
 
 		// ==================== Problem Investigation ====================
 		// 权限说明：investigation/step/root_cause/solution 等资源未在 seeder 中定义，

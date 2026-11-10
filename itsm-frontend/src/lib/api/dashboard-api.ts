@@ -16,10 +16,11 @@ import type {
   KPIMetric,
   TicketTrendData,
   IncidentDistributionData,
-  SLAData,
+  SLAComplianceData,
   SatisfactionData,
   QuickAction,
   RecentActivity,
+  ServiceQualityReport,
 } from '@/app/(main)/dashboard/types/dashboard.types';
 
 /**
@@ -27,6 +28,15 @@ import type {
  * 提供仪表盘数据获取和管理相关的API调用方法
  */
 export class DashboardAPI {
+  /**
+   * 获取管理者统一服务质量视图
+   * KPI、SLA 合规、事件分布、满意度、工单趋势与工单/问题/变更统计聚合成
+   * 一次请求；响应携带 metricVersion 口径版本。窗口默认 30 天、上限 90 天。
+   */
+  static async getServiceQuality(days?: number): Promise<ServiceQualityReport> {
+    return httpClient.get<ServiceQualityReport>('/api/v1/reports/service-quality', { days });
+  }
+
   /**
    * 获取仪表盘概览数据
    * 包括KPI指标、趋势图表、快速操作等所有Dashboard展示数据
@@ -67,8 +77,8 @@ export class DashboardAPI {
    * 获取SLA数据
    * @returns SLA数据列表
    */
-  static async getSLAData(): Promise<SLAData[]> {
-    return await httpClient.get<SLAData[]>('/api/v1/dashboard/sla-data');
+  static async getSLAData(): Promise<SLAComplianceData | null> {
+    return await httpClient.get<SLAComplianceData | null>('/api/v1/dashboard/sla-data');
   }
 
   /**

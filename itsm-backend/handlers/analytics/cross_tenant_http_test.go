@@ -17,6 +17,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 	"time"
 
@@ -28,6 +29,7 @@ import (
 	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
+	_ "github.com/lib/pq"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
@@ -163,4 +165,66 @@ func TestGetTicketAnalyticsCrossTenant(t *testing.T) {
 		}
 		require.Equal(t, 2, sum, "status 分布不得把租户 A 工单算进来")
 	})
+}
+
+// Uses the existing schema and rollback-only fixtures at the production HTTP boundary.
+func TestGetTicketAnalyticsEmptyArraysPostgres(t *testing.T) {
+	dsn := os.Getenv("ITSM_TEST_POSTGRES_DSN")
+	if dsn == "" {
+		t.Skip("ITSM_TEST_POSTGRES_DSN is required")
+	}
+	baseClient, err := ent.Open("postgres", dsn)
+	require.NoError(t, err)
+	t.Cleanup(func() { require.NoError(t, baseClient.Close()) })
+	ctx := context.Background()
+	tx, err := baseClient.Tx(ctx)
+	require.NoError(t, err)
+	t.Cleanup(func() { require.NoError(t, tx.Rollback()) })
+	client := tx.Client()
+	suffix := fmt.Sprintf("analytics-empty-%d", time.Now().UnixNano())
+	tenantA := client.Tenant.Create().SetName("Empty analytics tenant").SetCode(suffix + "-a").SetDomain(suffix + "-a.example.com").SetStatus("active").SaveX(ctx)
+	tenantB := client.Tenant.Create().SetName("Populated analytics tenant").SetCode(suffix + "-b").SetDomain(suffix + "-b.example.com").SetStatus("active").SaveX(ctx)
+	mkUser := func(tenantID int, name string) *ent.User {
+		return client.User.Create().SetUsername(suffix + name).SetEmail(suffix + name + "@example.com").SetName(name).SetPasswordHash("test-hash").SetRole("super_admin").SetActive(true).SetTenantID(tenantID).SaveX(ctx)
+	}
+	userA, userB := mkUser(tenantA.ID, "a"), mkUser(tenantB.ID, "b")
+	client.Ticket.Create().SetTitle("Foreign tenant ticket").SetTicketNumber(suffix).SetRequesterID(userB.ID).SetTenantID(tenantB.ID).SetStatus("open").SetPriority("high").SaveX(ctx)
+	logger := zaptest.NewLogger(t).Sugar()
+	gin.SetMode(gin.TestMode)
+	engine := gin.New()
+	const secret = "analytics-empty-array-regression"
+	router.SetupRoutes(engine, &router.RouterConfig{JWTSecret: secret, Logger: logger, Client: client, AnalyticsHandler: analyticsHandler.NewHandler(service.NewAnalyticsService(client, logger))})
+	fx := &fixture{engine: engine, client: client, secret: secret}
+	for _, tc := range []struct {
+		name  string
+		user  *ent.User
+		total int
+	}{{"empty tenant excludes foreign records", userA, 0}, {"populated tenant positive control", userB, 1}} {
+		t.Run(tc.name, func(t *testing.T) {
+			w := fx.do(t, http.MethodGet, "/api/v1/analytics/tickets", tc.user)
+			require.Equal(t, http.StatusOK, w.Code, "body=%s", w.Body.String())
+			var response struct {
+				Code int                        `json:"code"`
+				Data map[string]json.RawMessage `json:"data"`
+			}
+			require.NoError(t, json.Unmarshal(w.Body.Bytes(), &response))
+			require.Zero(t, response.Code)
+			var total int
+			require.NoError(t, json.Unmarshal(response.Data["total"], &total))
+			require.Equal(t, tc.total, total)
+			for _, key := range []string{"statusGroups", "priorityGroups", "trend30d"} {
+				raw, exists := response.Data[key]
+				require.True(t, exists, "missing camelCase field %s", key)
+				require.NotEqual(t, "null", string(raw), "%s must be an array", key)
+				var rows []map[string]interface{}
+				require.NoError(t, json.Unmarshal(raw, &rows), "%s must be an array", key)
+				require.NotNil(t, rows, "%s must be an array", key)
+				require.Len(t, rows, tc.total, "%s must remain tenant-scoped", key)
+				if tc.total > 0 {
+					require.EqualValues(t, 1, rows[0]["count"])
+				}
+			}
+			require.NotContains(t, w.Body.String(), "passwordHash")
+		})
+	}
 }

@@ -12,6 +12,7 @@ import (
 	"itsm-backend/ent"
 	"itsm-backend/ent/slaviolation"
 	"itsm-backend/ent/ticket"
+	ticketrepo "itsm-backend/repository/ticket"
 
 	"go.uber.org/zap"
 )
@@ -30,9 +31,37 @@ func NewAnalyticsService(client *ent.Client, logger *zap.SugaredLogger) *Analyti
 	}
 }
 
-// GetDeepAnalytics 获取深度分析数据
-func (s *AnalyticsService) GetDeepAnalytics(ctx context.Context, req *dto.DeepAnalyticsRequest, tenantID int) (*dto.DeepAnalyticsResponse, error) {
-	s.logger.Infow("Getting deep analytics", "tenant_id", tenantID, "dimensions", req.Dimensions)
+// 报表读面统一边界（R9）。此前 GetDeepAnalytics / GetTrendPrediction / 工单导出
+// 都是 `.All(ctx)` 无上限：一次跨 100 年的 timeRange 会把整张 tickets 表
+// 拉进进程内存，handler 的 60s 超时只影响响应、回收不了已分配的内存。
+// 与 handlers/incident/report.go 的 366 天窗口上限保持同一口径。
+const (
+	maxReportWindowDays = 366
+	maxReportTickets    = 50000
+)
+
+// validateReportWindow 拒绝倒挂与超长窗口，并明确返回 400（AppError）。
+// 裸 fmt.Errorf 会被 classifyError 兜底成 500「操作失败」，把调用方参数错误
+// 表现成服务端故障（2026-10-18 P1-5 同类问题）。
+func validateReportWindow(start, end time.Time) error {
+	if !end.After(start) {
+		return common.NewBadRequestError("timeRange end date must be later than start date", nil)
+	}
+	if end.Sub(start) > maxReportWindowDays*24*time.Hour {
+		return common.NewBadRequestError(
+			fmt.Sprintf("The reporting window must not exceed %d days; narrow timeRange", maxReportWindowDays), nil)
+	}
+	return nil
+}
+
+// GetDeepAnalytics 获取深度分析数据。
+//
+// R1/R7：此前只有 TenantID 一个谓词——非管理角色能读到/导出全租户工单量、
+// 分布、满意度与时长，且分母含已软删工单，与工作台「本人口径」直接矛盾。
+// 现在与 /tickets 列表、/tickets/export 共用 repository/ticket.DataScopePredicates
+// 与 DeletedAtIsNil，viewer 由认证上下文构造，缺失身份按空集收窄。
+func (s *AnalyticsService) GetDeepAnalytics(ctx context.Context, req *dto.DeepAnalyticsRequest, tenantID int, viewer DashboardViewer) (*dto.DeepAnalyticsResponse, error) {
+	s.logger.Infow("Getting deep analytics", "tenant_id", tenantID, "dimensions", req.Dimensions, "scope", viewer.scopeKey())
 
 	// 解析时间范围
 	//
@@ -52,14 +81,19 @@ func (s *AnalyticsService) GetDeepAnalytics(ctx context.Context, req *dto.DeepAn
 		return nil, common.NewBadRequestError("timeRange end date format is illegal, should be YYYY-MM-DD", err)
 	}
 	endTime = endTime.Add(24 * time.Hour) // 包含结束日期
+	if err := validateReportWindow(startTime, endTime); err != nil {
+		return nil, err
+	}
 
-	// 构建查询
+	// 构建查询：租户 + 软删 + 行级范围 + 窗口，四者与列表/导出同源。
 	query := s.client.Ticket.Query().
 		Where(
 			ticket.TenantIDEQ(tenantID),
+			ticket.DeletedAtIsNil(),
 			ticket.CreatedAtGTE(startTime),
 			ticket.CreatedAtLT(endTime),
-		)
+		).
+		Where(ticketrepo.DataScopePredicates(viewer.ticketScope(), viewer.UserID)...)
 
 	// 应用过滤器
 	if req.Filters != nil {
@@ -79,11 +113,16 @@ func (s *AnalyticsService) GetDeepAnalytics(ctx context.Context, req *dto.DeepAn
 		}
 	}
 
-	// 获取所有工单
-	allTickets, err := query.All(ctx)
+	// 取上限+1 行用于显式拒绝：静默截断会让报表数字"看起来完整"，
+	// 这正是本项目最危险的「假成功」缺陷类（见扩展审查 R8）。
+	allTickets, err := query.Order(ent.Asc(ticket.FieldID)).Limit(maxReportTickets + 1).All(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to get tickets", "error", err)
 		return nil, fmt.Errorf("failed to get tickets: %w", err)
+	}
+	if len(allTickets) > maxReportTickets {
+		return nil, common.NewBadRequestError(
+			fmt.Sprintf("The reporting scope exceeds %d tickets; narrow the time range or add filters", maxReportTickets), nil)
 	}
 
 	// 按维度分组统计
@@ -100,6 +139,9 @@ func (s *AnalyticsService) GetDeepAnalytics(ctx context.Context, req *dto.DeepAn
 		Data:        dataPoints,
 		Summary:     summary,
 		GeneratedAt: time.Now(),
+		// 显式标注口径：tenant=全租户，own=本人创建或受理。
+		// 前端「本人口径」与「全租户口径」的数字必须能区分。
+		Scope: viewer.scopeKey(),
 	}
 
 	return response, nil
@@ -286,13 +328,14 @@ func (s *AnalyticsService) calculateSummary(ctx context.Context, tenantID int, t
 }
 
 // ExportAnalytics 导出分析数据
-func (s *AnalyticsService) ExportAnalytics(ctx context.Context, req *dto.DeepAnalyticsRequest, format string, tenantID int) ([]byte, string, error) {
+func (s *AnalyticsService) ExportAnalytics(ctx context.Context, req *dto.DeepAnalyticsRequest, format string, tenantID int, viewer DashboardViewer) ([]byte, string, error) {
 	s.logger.Infow("Exporting analytics", "format", format, "tenant_id", tenantID)
 
 	// 获取分析数据
-	response, err := s.GetDeepAnalytics(ctx, req, tenantID)
+	response, err := s.GetDeepAnalytics(ctx, req, tenantID, viewer)
 	if err != nil {
-		return nil, "", fmt.Errorf("failed to get analytics data: %w", err)
+		// 不能用裸 fmt.Errorf 包装：会把 400 参数错误退化成 500。
+		return nil, "", err
 	}
 
 	// 根据格式生成文件
@@ -359,7 +402,7 @@ func (s *AnalyticsService) exportToPDF(response *dto.DeepAnalyticsResponse) ([]b
 // GetTicketStats 获取工单分析概览（轻量聚合，/api/v1/analytics/tickets 用）
 func (s *AnalyticsService) GetTicketStats(ctx context.Context, tenantID int) (*dto.AnalyticsTicketStatsResponse, error) {
 	// 1. 按状态分组
-	var statusGroups []dto.TicketStatusGroup
+	statusGroups := make([]dto.TicketStatusGroup, 0)
 	err := s.client.Ticket.Query().
 		Where(ticket.TenantIDEQ(tenantID)).
 		GroupBy(ticket.FieldStatus).
@@ -397,7 +440,7 @@ func (s *AnalyticsService) GetTicketStats(ctx context.Context, tenantID int) (*d
 	}
 
 	// 4. 按优先级
-	var priorityGroups []dto.TicketPriorityGroup
+	priorityGroups := make([]dto.TicketPriorityGroup, 0)
 	err = s.client.Ticket.Query().
 		Where(ticket.TenantIDEQ(tenantID)).
 		GroupBy(ticket.FieldPriority).

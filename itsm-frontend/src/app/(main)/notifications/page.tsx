@@ -139,7 +139,9 @@ export default function NotificationsPage() {
   const [notifications, setNotifications] = useState<TicketNotification[]>([]);
   const [unreadNotifications, setUnreadNotifications] = useState<TicketNotification[]>([]);
   const [readNotifications, setReadNotifications] = useState<TicketNotification[]>([]);
-  const [loading, setLoading] = useState(false);
+  // 列表初值必须为 true：mount 必定发起首次拉取，初值 false 会让首帧先渲染
+  // 空的 Spin 包裹层，再被真实数据覆盖。动作态另用 actionKey / preferencesLoading。
+  const [listLoading, setListLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('all');
   const [preferences, setPreferences] = useState<NotificationPreferenceItem[]>([]);
   const [preferencesLoading, setPreferencesLoading] = useState(false);
@@ -157,7 +159,7 @@ export default function NotificationsPage() {
 
   // 加载通知
   const loadNotifications = useCallback(async () => {
-    setLoading(true);
+    setListLoading(true);
     try {
       const [allRes, unreadRes, readRes] = await Promise.all([
         TicketNotificationApi.getUserNotifications({ page: 1, pageSize: 100 }),
@@ -173,7 +175,7 @@ export default function NotificationsPage() {
       message.error(t('notifications.loadFailed'));
       console.error('Failed to load notifications:', error);
     } finally {
-      setLoading(false);
+      setListLoading(false);
     }
   }, [t]);
 
@@ -205,7 +207,7 @@ export default function NotificationsPage() {
     if (user?.id) {
       // 连接 WebSocket
       notificationWS
-        .connect(user.id)
+        .acquire(user.id)
         .then(() => {
           setWsConnected(true);
         })
@@ -230,7 +232,7 @@ export default function NotificationsPage() {
       return () => {
         unsubscribe();
         unsubConnection();
-        notificationWS.disconnect();
+        notificationWS.release();
       };
     }
   }, [user?.id]);
@@ -672,7 +674,7 @@ export default function NotificationsPage() {
               )}
             </Space>
           </div>
-          <Spin spinning={loading} tip={t('common.loading')}>{renderNotificationList(filteredNotifications)}</Spin>
+          <Spin spinning={listLoading} tip={t('common.loading')}>{renderNotificationList(filteredNotifications)}</Spin>
         </Card>
       ),
     },
@@ -690,7 +692,7 @@ export default function NotificationsPage() {
       children: (
         <Card>
           {renderFilterBar()}
-          <Spin spinning={loading}>{renderNotificationList(filteredUnreadNotifications)}</Spin>
+          <Spin spinning={listLoading}>{renderNotificationList(filteredUnreadNotifications)}</Spin>
         </Card>
       ),
     },
@@ -705,7 +707,7 @@ export default function NotificationsPage() {
       children: (
         <Card>
           {renderFilterBar()}
-          <Spin spinning={loading}>{renderNotificationList(filteredReadNotifications)}</Spin>
+          <Spin spinning={listLoading}>{renderNotificationList(filteredReadNotifications)}</Spin>
         </Card>
       ),
     },

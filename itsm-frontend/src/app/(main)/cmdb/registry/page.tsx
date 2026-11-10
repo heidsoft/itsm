@@ -250,7 +250,10 @@ export default function ServiceGraphRegistryPage() {
   });
 
   const queries = [sourcesQuery, servicesQuery, accountsQuery, historyQuery, capabilitiesQuery];
-  const loading = queries.some(q => q.isLoading);
+  // 用 isPending 而非 isLoading：SSR/首帧时 query 尚未发起（isFetching=false），
+  // isLoading 为 false 会把「暂无数据 / 共 0 个资源」的空态在数据到达前就渲染出来（D56）。
+  // isPending 在服务端渲染与首次拉取期间均为 true，首帧即呈现加载态。
+  const loading = queries.some(q => q.isPending);
   const fetching = queries.some(q => q.isFetching) || pendingQuery.isFetching;
   const hasError = queries.some(q => q.isError);
 
@@ -625,8 +628,8 @@ export default function ServiceGraphRegistryPage() {
                   rowKey="id"
                   columns={pendingColumns}
                   dataSource={pendingResources}
-                  loading={pendingQuery.isLoading || pendingQuery.isFetching}
-                  locale={{ emptyText: 'There are no cloud resources that require manual completion' }}
+                  loading={pendingQuery.isPending || pendingQuery.isFetching}
+                  locale={{ emptyText: "There are no cloud resources that require manual completion" }}
                   pagination={{
                     current: pendingPage,
                     pageSize: pendingPageSize,

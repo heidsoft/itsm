@@ -2,6 +2,7 @@ package aliyun
 
 import (
 	"context"
+	"fmt"
 
 	openapiutil "github.com/alibabacloud-go/darabonba-openapi/v2/utils"
 	ecs "github.com/alibabacloud-go/ecs-20140526/v7/client"
@@ -18,6 +19,10 @@ import (
 const (
 	Provider       = "aliyun"
 	ServiceCodeECS = "ecs"
+	// ecsMaxPages 防止云侧回显不变的 NextToken 让内部翻页永不结束。
+	// 命中上限必须返回错误而不是静默截断：上层缺失扫描会把没扫到的
+	// 存量资源当作「本轮未出现」推进 missing_count，进而误置 stale。
+	ecsMaxPages = 100
 )
 
 // AliyunECSAdapter 阿里云 ECS 发现适配器
@@ -113,7 +118,7 @@ func (a *AliyunECSAdapter) DiscoverRegion(ctx context.Context, account *ent.Clou
 	var allResources []cloud.DiscoveredResource
 	token := nextToken
 
-	for {
+	for pageIndex := 0; pageIndex < ecsMaxPages; pageIndex++ {
 		req := buildDescribeInstancesRequest(region, token)
 
 		resp, err := ecsClient.ecs.DescribeInstancesWithOptions(req, runtimeOptions())
@@ -122,7 +127,7 @@ func (a *AliyunECSAdapter) DiscoverRegion(ctx context.Context, account *ent.Clou
 		}
 
 		if resp.Body == nil || resp.Body.Instances == nil {
-			break
+			return &cloud.PageResult{Resources: allResources}, nil
 		}
 
 		for _, inst := range resp.Body.Instances.Instance {
@@ -132,13 +137,16 @@ func (a *AliyunECSAdapter) DiscoverRegion(ctx context.Context, account *ent.Clou
 			allResources = append(allResources, transformInstance(inst, region))
 		}
 
-		token = tea.StringValue(resp.Body.NextToken)
-		if token == "" {
-			break
+		newToken := tea.StringValue(resp.Body.NextToken)
+		if newToken == "" {
+			return &cloud.PageResult{Resources: allResources}, nil
 		}
+		if newToken == token {
+			return nil, fmt.Errorf("aliyun ecs: DescribeInstances returned unchanged NextToken %q in region %s", newToken, region)
+		}
+		token = newToken
 	}
-
-	return &cloud.PageResult{Resources: allResources}, nil
+	return nil, fmt.Errorf("aliyun ecs: DescribeInstances exceeded %d pages in region %s", ecsMaxPages, region)
 }
 
 // DescribeInstances 的 RegionId 是必填项，客户端配置里的 RegionId 不会自动填充请求体。

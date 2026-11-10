@@ -26,6 +26,49 @@ func NewBPMNAuditService(client *ent.Client, logger *zap.SugaredLogger) *BPMNAud
 	}
 }
 
+// clampBPMNAuditWindow 把审计查询窗口收进 [end-maxWindow, end]。
+//
+// HTTP 入口 handlers/bpmn/dashboard.go 的 startTime/endTime 完全由 query 决定，
+// 默认 7 天但可传 100 年。这里刻意选择「夹紧 + WARN」而不是返回 400：
+// 该 handler 的错误出口是 failInternal（统一 500），service 抛 AppError 会被
+// 兜底成 500，反而比收窄窗口更糟。夹紧不改变已有正常请求的语义，超限一律留痕。
+func (s *BPMNAuditService) clampBPMNAuditWindow(start, end time.Time, caller string) (time.Time, time.Time) {
+	maxWindow := time.Duration(maxBPMNAuditWindowDays) * 24 * time.Hour
+	if end.IsZero() {
+		end = time.Now()
+	}
+	if start.IsZero() {
+		start = end.Add(-maxWindow)
+	}
+	if end.Before(start) {
+		s.warnAuditWindow(caller, "inverted", start, end)
+		start = end
+	}
+	if end.Sub(start) > maxWindow {
+		s.warnAuditWindow(caller, "over_limit", start, end)
+		start = end.Add(-maxWindow)
+	}
+	return start, end
+}
+
+func (s *BPMNAuditService) warnAuditWindow(caller, reason string, start, end time.Time) {
+	if s.logger == nil {
+		return
+	}
+	s.logger.Warnw("BPMN audit query window clamped",
+		"caller", caller, "reason", reason,
+		"original_start", start, "end", end,
+		"max_days", maxBPMNAuditWindowDays, "max_rows", maxBPMNAuditRows)
+}
+
+// BPMN 审计读面的无界防护（L9）。
+// 时间线/用户活动/活动统计曾经裸 .All(ctx)，客户端把 endTime 传到 100 年后
+// 就能把整张 process_audit_logs 拉进内存。这里统一夹窗口 + 加行数上限。
+const (
+	maxBPMNAuditRows       = 5000
+	maxBPMNAuditWindowDays = 366
+)
+
 // AuditAction 审计操作类型
 const (
 	AuditActionProcessStarted    = "started"
@@ -301,6 +344,10 @@ func (s *BPMNAuditService) QueryAuditLogs(ctx context.Context, req *QueryAuditLo
 	query := s.client.ProcessAuditLog.Query()
 
 	// 构建查询条件
+	// L9：客户端可传 100 年窗口，先夹紧再下推时间谓词，避免 Count 全表扫。
+	if !req.StartTime.IsZero() || !req.EndTime.IsZero() {
+		req.StartTime, req.EndTime = s.clampBPMNAuditWindow(req.StartTime, req.EndTime, "QueryAuditLogs")
+	}
 	if req.ProcessInstanceID > 0 {
 		query = query.Where(processauditlog.ProcessInstanceID(req.ProcessInstanceID))
 	}
@@ -383,6 +430,7 @@ func (s *BPMNAuditService) GetProcessTimeline(ctx context.Context, processInstan
 
 	logs, err := query.
 		Order(ent.Asc(processauditlog.FieldTimestamp)).
+		Limit(maxBPMNAuditRows).
 		All(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to obtain process timeline: %w", err)
@@ -392,6 +440,7 @@ func (s *BPMNAuditService) GetProcessTimeline(ctx context.Context, processInstan
 
 // GetUserActivity 获取用户活动
 func (s *BPMNAuditService) GetUserActivity(ctx context.Context, userID int, tenantID int, startTime, endTime time.Time) ([]*ent.ProcessAuditLog, error) {
+	startTime, endTime = s.clampBPMNAuditWindow(startTime, endTime, "GetUserActivity")
 	query := s.client.ProcessAuditLog.Query().
 		Where(processauditlog.UserID(userID)).
 		Where(processauditlog.TimestampGTE(startTime)).
@@ -401,13 +450,14 @@ func (s *BPMNAuditService) GetUserActivity(ctx context.Context, userID int, tena
 		query = query.Where(processauditlog.TenantID(tenantID))
 	}
 
-	return query.Order(ent.Desc(processauditlog.FieldTimestamp)).All(ctx)
+	return query.Order(ent.Desc(processauditlog.FieldTimestamp)).Limit(maxBPMNAuditRows).All(ctx)
 }
 
 // GetActivityStatistics 获取活动统计
 func (s *BPMNAuditService) GetActivityStatistics(ctx context.Context, processDefinitionKey string, tenantID int, startTime, endTime time.Time) (map[string]int, error) {
 	stats := make(map[string]int)
 
+	startTime, endTime = s.clampBPMNAuditWindow(startTime, endTime, "GetActivityStatistics")
 	query := s.client.ProcessAuditLog.Query().
 		Where(processauditlog.ProcessDefinitionKey(processDefinitionKey)).
 		Where(processauditlog.TimestampGTE(startTime)).
@@ -417,7 +467,7 @@ func (s *BPMNAuditService) GetActivityStatistics(ctx context.Context, processDef
 		query = query.Where(processauditlog.TenantID(tenantID))
 	}
 
-	logs, err := query.All(ctx)
+	logs, err := query.Limit(maxBPMNAuditRows).All(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to obtain activity statistics: %w", err)
 	}

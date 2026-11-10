@@ -193,7 +193,9 @@ func (s *DiscoveryScheduler) RunTenant(ctx context.Context, tenantID int, now ti
 			continue
 		}
 
-		job, err := s.service.CreateDiscoveryJob(ctx, tenantID, 0, &dto.DiscoveryJobRequest{
+		// 调度作业按覆盖水位线增量推进（断点续扫 + 窗口化缺失判定）；
+		// 手动触发的 full_discovery 才强制重置水位线。
+		job, err := s.service.CreateScheduledDiscoveryJob(ctx, tenantID, &dto.DiscoveryJobRequest{
 			SourceID:       source.ID,
 			IdempotencyKey: scheduledDiscoveryIdempotencyKey(source.ID, plan.FireAt),
 		})

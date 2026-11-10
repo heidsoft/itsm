@@ -4,14 +4,20 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	"itsm-backend/ent"
 
 	"github.com/gin-gonic/gin"
 )
+
+// maxAuditBodyBytes 是审计正文的落库上限（L7）。中间件最多只窥视
+// maxAuditBodyBytes+1 字节，绝不为审计把整个请求体读进内存。
+const maxAuditBodyBytes = 4096
 
 type loginAuditRequestKey struct{}
 
@@ -35,10 +41,26 @@ func RecordLoginAudit(ctx context.Context, client *ent.Client, userID, tenantID 
 		SetIP(req.IP).SetResource("auth").SetAction(action).SetPath("/api/v1/auth/login").
 		SetMethod("POST").SetStatusCode(map[bool]int{true: 200, false: 401}[action == "LOGIN_SUCCESS"]).
 		SetRequestBody(string(payload)).Exec(auditCtx)
-	if err != nil && globalLogger != nil {
-		globalLogger.Errorw("failed to save login audit", "error", err, "action", action)
+	if err != nil {
+		auditWriteFailures.Add(1)
+		if globalLogger != nil {
+			globalLogger.Errorw("failed to save login audit", "error", err, "action", action, "tenant_id", tenantID, "user_id", userID)
+		}
 	}
 }
+
+// auditWriteFailures 累计审计落库失败次数（L4）。
+//
+// 审计写入与业务不同事务，且失败时业务已返回成功；旧实现只在日志里留一行
+// "Failed to save audit log"，既无计数、也无请求上下文，运维无法知道「这一小时
+// 丢了多少条合规记录」。这里提供进程内计数器供监控/测试读取，并在失败时把
+// 完整（已脱敏）事件回退到结构化日志，让外部日志采集至少能补回这一条。
+// 刻意**不自动重试**：审计表是 append-only 且无幂等键，一次结果不明的失败
+// 重试会制造重复行，比丢一行更难对账。
+var auditWriteFailures atomic.Int64
+
+// AuditWriteFailureCount 返回进程启动以来审计落库失败次数。
+func AuditWriteFailureCount() int64 { return auditWriteFailures.Load() }
 
 // AuditableAction 可审计的操作类型
 type AuditableAction string
@@ -85,29 +107,48 @@ var SensitiveResources = map[string]bool{
 
 // AuditMiddleware persists audit logs for operations with enhanced security tracking
 func AuditMiddleware(client *ent.Client) gin.HandlerFunc {
+	// 未注入 ent 客户端时（部分集成测试、无 DB 的部署形态）直接放行：
+	// 审计不该让业务请求因为「日志后端缺失」而 panic 或 500。
+	if client == nil {
+		return func(c *gin.Context) { c.Next() }
+	}
 	return func(c *gin.Context) {
-		// 判断是否需要审计
-		if !shouldAuditRequest(c) {
-			c.Next()
-			return
-		}
+		// 判断是否需要审计（决定要不要提前读 body）。
+		// 注意不能在这里早退：L3 要求被鉴权链 Abort 的 401/403 也留痕，
+		// 而 shouldAuditRequest 只对写操作与敏感 GET 返回 true。
+		auditable := shouldAuditRequest(c)
 
-		// read body safely and restore
+		// read body safely and restore。
+		// 只对 auditable 请求读：避免把大文件上传提前整段读进内存，
+		// 绕过排在前面的 RequestSizeMiddleware 的保护。
 		var bodyBytes []byte
-		if c.Request.Body != nil {
+		if auditable && c.Request.Body != nil {
 			var err error
-			bodyBytes, err = io.ReadAll(c.Request.Body)
+			// L7：只窥视审计所需的 maxAuditBodyBytes+1 字节，不能把大文件/大 JSON
+			// 整段读进内存再截断（旧实现 io.ReadAll 绕过 RequestSizeMiddleware）。
+			// 已读前缀必须与剩余 Body 拼回，否则下游 handler 会拿到被截断的正文。
+			bodyBytes, err = io.ReadAll(io.LimitReader(c.Request.Body, maxAuditBodyBytes+1))
 			if err != nil {
 				if globalLogger != nil {
 					globalLogger.Warnw("failed to read request body for audit", "error", err)
 				}
 			}
-			c.Request.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
+			c.Request.Body = io.NopCloser(io.MultiReader(bytes.NewReader(bodyBytes), c.Request.Body))
 		}
 
 		start := time.Now()
 		c.Next()
 		duration := time.Since(start)
+		status := c.Writer.Status()
+
+		// 被 Abort 的失败请求（401 令牌失效/爆破、403 RBAC 拒绝、
+		// 跨租户试探、业务拒绝 409）一律补一条，即使 shouldAuditRequest
+		// 原本判定为「不必审计」（例如非敏感资源 GET）。
+		// 此时 requestBody 为空——不读 body 是刻意的：探测请求的正文可能含
+		// 凭据，且大请求体不该在大小限制之前被整段缓存。
+		if !auditable && status < 400 {
+			return
+		}
 
 		// collect fields
 		rid := c.GetString("request_id")
@@ -135,16 +176,35 @@ func AuditMiddleware(client *ent.Client) gin.HandlerFunc {
 		ip := c.ClientIP()
 		path := c.Request.URL.Path
 		methodStr := c.Request.Method
-		status := c.Writer.Status()
 		userAgent := c.Request.UserAgent()
 
 		// limit stored body size to avoid oversized logs
 		requestBody := string(bodyBytes)
-		if len(requestBody) > 4096 {
-			requestBody = requestBody[:4096] + "..."
+		if len(requestBody) > maxAuditBodyBytes {
+			requestBody = requestBody[:maxAuditBodyBytes] + "...[truncated]"
 		}
 		// mask sensitive fields
 		requestBody = MaskSensitiveFields(requestBody)
+
+		// L5：MSP 跨租户操作必须记在被操作的客户租户名下。
+		// 旧实现只取 JWT claims 的租户（MSP 自身），客户租户审计视图永远看不到
+		// MSP 对自己资源做了什么。目标客户来自 MSPMiddleware 校验过的上下文，
+		// 不是客户端可伪造的 query 参数。操作者身份另存在正文前缀与结构化日志里。
+		mspScope := ""
+		mspOperatorTenantID := 0
+		mspUserID := 0
+		if mspCtx, ok := GetMSPContext(c); ok && mspCtx.IsMSP {
+			mspOperatorTenantID = tenantID
+			mspUserID = mspCtx.MSPUserID
+			if mspCtx.CustomerTenantID != nil && *mspCtx.CustomerTenantID > 0 {
+				tenantID = *mspCtx.CustomerTenantID
+				mspScope = "customer"
+			} else {
+				mspScope = "aggregate"
+			}
+			requestBody = fmt.Sprintf("[msp_operator_tenant_id=%d msp_user_id=%d msp_scope=%s]\n%s",
+				mspOperatorTenantID, mspUserID, mspScope, requestBody)
+		}
 
 		// 确定操作类型和资源
 		action, resource, _ := determineActionAndResource(c)
@@ -168,12 +228,6 @@ func AuditMiddleware(client *ent.Client) gin.HandlerFunc {
 			SetAction(action).
 			SetRequestBody(requestBody)
 
-		err := auditCreate.Exec(auditCtx)
-		if err != nil && globalLogger != nil {
-			globalLogger.Errorw("Failed to save audit log", "error", err)
-		}
-
-		// 记录结构化日志
 		logFields := []interface{}{
 			"audit_type", "user_action",
 			"request_id", rid,
@@ -190,6 +244,23 @@ func AuditMiddleware(client *ent.Client) gin.HandlerFunc {
 			"latency_ms", duration.Milliseconds(),
 			"success", status < 400,
 			"sensitive", isSensitive,
+		}
+		if mspScope != "" {
+			logFields = append(logFields,
+				"operator_tenant_id", mspOperatorTenantID,
+				"msp_user_id", mspUserID, "msp_scope", mspScope)
+		}
+
+		err := auditCreate.Exec(auditCtx)
+		if err != nil {
+			auditWriteFailures.Add(1)
+			if globalLogger != nil {
+				// 回退事件必须带完整上下文与已脱敏正文：业务请求已经成功返回，
+				// 数据库里这一行没了，只剩这条日志可供事后补录。
+				failureFields := append([]interface{}{}, logFields...)
+				failureFields = append(failureFields, "error", err, "request_body", requestBody)
+				globalLogger.Errorw("AUDIT_WRITE_FAILED: audit row lost, fallback log emitted", failureFields...)
+			}
 		}
 
 		if globalLogger != nil {
@@ -226,9 +297,20 @@ func shouldAuditRequest(c *gin.Context) bool {
 		return true
 	}
 
-	// 审计敏感资源的GET请求
+	// 审计敏感资源的GET请求。
+	//
+	// L6：路由用的是连字符（GET /api/v1/audit-logs），词表用的是下划线
+	// （audit_logs），strings.Contains 永不命中——「查看审计日志」这个最该留痕
+	// 的动作反而零记录。先归一化再匹配；导出/下载类 GET 同样必须留痕
+	// （旧规则只认写方法，GET /xxx/export 完全不审计）。
+	normalized := strings.ReplaceAll(path, "-", "_")
 	for resource := range SensitiveResources {
-		if strings.Contains(path, resource) {
+		if strings.Contains(normalized, resource) {
+			return true
+		}
+	}
+	for _, keyword := range []string{"export", "download"} {
+		if strings.Contains(normalized, keyword) {
 			return true
 		}
 	}
@@ -257,7 +339,9 @@ func determineActionAndResource(c *gin.Context) (string, string, string) {
 	// 根据HTTP方法和路径确定操作
 	switch method {
 	case "GET":
-		if resourceID != "" {
+		if strings.Contains(path, "export") || strings.Contains(path, "download") {
+			action = string(ActionExport)
+		} else if resourceID != "" {
 			action = string(ActionView)
 		} else {
 			action = string(ActionSearch)

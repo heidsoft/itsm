@@ -71,7 +71,9 @@ export default function KnowledgeReviewListPage() {
   const { t } = useI18n();
   const { message } = App.useApp();
 
-  const [loading, setLoading] = useState(false);
+  // 列表初值必须为 true：mount 必定发起首次拉取，初值 false 会让首帧直接渲染
+  // 「暂没有待审核的文章」的空态（Table 分支根本不渲染）。
+  const [listLoading, setListLoading] = useState(true);
   const [articles, setArticles] = useState<ArticleItem[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -85,7 +87,7 @@ export default function KnowledgeReviewListPage() {
   const [submitting, setSubmitting] = useState(false);
 
   const fetchArticles = useCallback(async () => {
-    setLoading(true);
+    setListLoading(true);
     try {
       const response = await KnowledgeBaseApi.getArticles({
         page,
@@ -108,7 +110,7 @@ export default function KnowledgeReviewListPage() {
       console.error('Failed to fetch articles:', error);
       message.error('Failed to obtain article list');
     } finally {
-      setLoading(false);
+      setListLoading(false);
     }
   }, [page, pageSize, statusFilter]);
 
@@ -274,12 +276,12 @@ export default function KnowledgeReviewListPage() {
           </Space>
         </div>
 
-        {articles.length > 0 ? (
+        {articles.length > 0 || listLoading ? (
           <Table
             columns={columns}
             dataSource={articles}
             rowKey="id"
-            loading={loading}
+            loading={listLoading}
             pagination={{
               current: page,
               pageSize: pageSize,

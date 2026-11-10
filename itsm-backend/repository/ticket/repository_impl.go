@@ -537,7 +537,7 @@ func (r *EntRepository) List(ctx context.Context, tenantID int, filters *FilterP
 			query = query.Where(ticket.CreatedAtLTE(*filters.DateTo))
 		}
 		// 行级数据权限。
-		query = query.Where(dataScopePredicates(filters.DataScope, filters.CurrentUserID)...)
+		query = query.Where(DataScopePredicates(filters.DataScope, filters.CurrentUserID)...)
 	}
 
 	// 获取总数
@@ -712,8 +712,8 @@ func (r *EntRepository) FindOverduePage(ctx context.Context, tenantID int, page,
 		return []*Ticket{}, 0, nil
 	}
 	// 收窄为「当前可见范围内」的逾期工单。DataScopeAll 返回 nil（不加过滤）；
-	// 身份缺失（viewerID<=0）时 dataScopePredicates 返回 IDEQ(-1) 收窄为空集。
-	preds = append(preds, dataScopePredicates(scope, viewerID)...)
+	// 身份缺失（viewerID<=0）时 DataScopePredicates 返回 IDEQ(-1) 收窄为空集。
+	preds = append(preds, DataScopePredicates(scope, viewerID)...)
 
 	query := r.Client().Ticket.Query().Where(preds...)
 	total, err := query.Clone().Count(ctx)
@@ -733,10 +733,14 @@ func (r *EntRepository) FindOverduePage(ctx context.Context, tenantID int, page,
 	return toDomainModels(entities), total, nil
 }
 
-// dataScopePredicates 返回行级数据权限谓词，供 List 与统计共用。
+// DataScopePredicates 返回行级数据权限谓词，供 List、统计与导出共用。
+//
+// 导出必须走同一个函数：导出是「另一个读取通道」，若单独拼查询，
+// 普通角色就能把 DataScope 之外（他人创建、未分配给本人）的工单连同
+// 描述正文一起下载走。任何新的读面都从这里取谓词，不要各写一份。
 // 仓储层只实现 All 与 OwnedOrAssigned 两档：除 All 外一律按最窄档收窄，
 // 新增枚举值时不会静默放宽权限；身份缺失同样返回空集而非全量。
-func dataScopePredicates(scope datascope.DataScope, viewerID int) []predicate.Ticket {
+func DataScopePredicates(scope datascope.DataScope, viewerID int) []predicate.Ticket {
 	if scope == datascope.DataScopeAll {
 		return nil
 	}
@@ -774,7 +778,7 @@ func (r *EntRepository) CountByStatus(ctx context.Context, tenantID int, scope d
 	var results []statusCount
 	err := r.Client().Ticket.Query().
 		Where(ticket.TenantID(tenantID), ticket.DeletedAtIsNil()).
-		Where(dataScopePredicates(scope, viewerID)...).
+		Where(DataScopePredicates(scope, viewerID)...).
 		Where(windowPredicates(window)...).
 		GroupBy(ticket.FieldStatus).
 		Aggregate(ent.Count()).
@@ -801,7 +805,7 @@ func (r *EntRepository) CountByPriority(ctx context.Context, tenantID int, scope
 	var results []priorityCount
 	err := r.Client().Ticket.Query().
 		Where(ticket.TenantID(tenantID), ticket.DeletedAtIsNil()).
-		Where(dataScopePredicates(scope, viewerID)...).
+		Where(DataScopePredicates(scope, viewerID)...).
 		Where(windowPredicates(window)...).
 		GroupBy(ticket.FieldPriority).
 		Aggregate(ent.Count()).
@@ -846,7 +850,7 @@ func (r *EntRepository) TrendByDay(ctx context.Context, tenantID int, scope data
 	baseQuery := func() *ent.TicketQuery {
 		return r.Client().Ticket.Query().
 			Where(ticket.TenantID(tenantID), ticket.DeletedAtIsNil()).
-			Where(dataScopePredicates(scope, viewerID)...)
+			Where(DataScopePredicates(scope, viewerID)...)
 	}
 
 	var createdRows []createdRow

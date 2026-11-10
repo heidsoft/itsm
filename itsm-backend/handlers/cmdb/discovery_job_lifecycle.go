@@ -17,6 +17,18 @@ const (
 	DiscoveryJobCancelled     = "cancelled"
 )
 
+// 作业类型（discovery_jobs.operation）。
+//
+//	full_discovery        手动全量：重置覆盖水位线、强制从零开新窗。
+//	                      操作员怀疑漂移时的「重扫一遍」语义。
+//	incremental_discovery 调度增量：按覆盖水位线推进——未完成窗口断点续扫，
+//	                      已完成窗口开新窗。发现仍是如实全量列举（主流云 API
+//	                      无 modified-since 过滤），增量体现在覆盖进度推进。
+const (
+	DiscoveryJobOperationFull        = "full_discovery"
+	DiscoveryJobOperationIncremental = "incremental_discovery"
+)
+
 var (
 	ErrInvalidJobTransition = errors.New("invalid discovery job transition")
 	ErrJobLeaseConflict     = errors.New("discovery job lease conflict")

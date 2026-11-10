@@ -73,6 +73,12 @@ func (e *RPCError) Error() string {
 }
 
 // Call 发起一次 RPC 请求并把 JSON 响应解析到 out。out 为 nil 时只校验成功。
+//
+// 阿里云 RPC 风格接口的鉴权失败、限流、参数错误**可能以 HTTP 200 返回**，
+// 错误信息只放在响应体的 Code/Message 里。因此「状态码 200」不等于成功：
+// 这里统一解一次错误信封，非成功码一律转成 *RPCError。少了这道闸，一次
+// 限流（Throttling）就会被上层解成全零值，变成「云上一条漏洞都没有」，
+// 进而把存量未修复漏洞全部误标为已修复——安全上比漏报危险得多。
 func (c *rpcClient) Call(ctx context.Context, action string, params map[string]string, out any) error {
 	raw, err := c.callRaw(ctx, action, params)
 	if err != nil {
@@ -81,6 +87,9 @@ func (c *rpcClient) Call(ctx context.Context, action string, params map[string]s
 	if raw.Status != http.StatusOK {
 		return parseRPCError(raw.Status, raw.Body)
 	}
+	if err := detectRPCBusinessError(action, raw); err != nil {
+		return err
+	}
 	if out == nil {
 		return nil
 	}
@@ -88,6 +97,73 @@ func (c *rpcClient) Call(ctx context.Context, action string, params map[string]s
 		return fmt.Errorf("aliyun rpc %s: decode response: %w", action, err)
 	}
 	return nil
+}
+
+// rpcEnvelope 是阿里云 RPC 响应里可能携带的业务错误信封。
+//
+// 只有错误分支才带 Code（成功分支一般只有数据字段），例外是云监控
+// DescribeAlertLogList 成功时显式回填 Code="200" + Success=true。
+type rpcEnvelope struct {
+	Code      flexString `json:"Code"`
+	Message   string     `json:"Message"`
+	RequestID string     `json:"RequestId"`
+	Success   *bool      `json:"Success"`
+}
+
+// rpcSuccessCodes 是各产品在成功响应里可能回填的 Code 取值（统一转小写比较）。
+// 阿里云的错误码是 Throttling / Forbidden.RAM / InvalidParameter 这类字符串，
+// 不会与这些成功标记重叠。
+var rpcSuccessCodes = map[string]bool{
+	"":        true,
+	"200":     true,
+	"0":       true,
+	"ok":      true,
+	"success": true,
+	"true":    true,
+}
+
+// detectRPCBusinessError 判定一个 HTTP 200 响应是否其实是业务错误。
+//
+// 判定规则（宁严不宽，但不会误伤合法成功响应）：
+//   - 响应体不是 JSON 对象 → 不是信封，交给后续 out 解码处理；
+//   - Success 显式为 false → 业务错误；
+//   - Code 非空且不在成功码集合内 → 业务错误；
+//   - 其余视为成功。
+//
+// 只读 Describe* 接口的成功响应不带业务错误码，因此这条规则不会拦掉正常
+// 数据；而限流、鉴权、参数错误必然带 Code，全部会被拦下。
+func detectRPCBusinessError(action string, raw rpcRawResponse) error {
+	if len(raw.Body) == 0 {
+		return nil
+	}
+	var env rpcEnvelope
+	if err := json.Unmarshal(raw.Body, &env); err != nil {
+		// 非 JSON（XML 错误体、HTML 网关页等）交给上层解码报错。
+		return nil
+	}
+	code := strings.TrimSpace(string(env.Code))
+	requestID := firstNonEmpty(env.RequestID, raw.RequestID)
+
+	if env.Success != nil && !*env.Success {
+		if rpcSuccessCodes[strings.ToLower(code)] {
+			code = "UnknownError"
+		}
+		return &RPCError{
+			StatusCode: raw.Status,
+			Code:       code,
+			Message:    firstNonEmpty(env.Message, "Alibaba Cloud API returned Success=false"),
+			RequestID:  requestID,
+		}
+	}
+	if rpcSuccessCodes[strings.ToLower(code)] {
+		return nil
+	}
+	return &RPCError{
+		StatusCode: raw.Status,
+		Code:       code,
+		Message:    firstNonEmpty(env.Message, fmt.Sprintf("aliyun rpc %s: business error", action)),
+		RequestID:  requestID,
+	}
 }
 
 // rpcRawResponse 是一次 RPC 调用的原始结果。

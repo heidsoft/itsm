@@ -15,7 +15,8 @@ const CreateProblemPageContent = () => {
   const { t } = useI18n();
   const searchParams = useSearchParams();
   const [form] = Form.useForm();
-  const [loading, setLoading] = useState(false);
+  // 提交动作态（表单页首帧是空表单，无列表假空态问题）
+  const [actionLoading, setActionLoading] = useState(false);
   const { message } = App.useApp();
 
   useEffect(() => {
@@ -46,7 +47,7 @@ Please fill in a detailed description and root cause analysis of the problem her
     rootCause: string;
     impact: string;
   }) => {
-    setLoading(true);
+    setActionLoading(true);
     try {
       await ProblemApi.createProblem({
         title: values.title,
@@ -63,7 +64,7 @@ Please fill in a detailed description and root cause analysis of the problem her
       console.error('Failed to create issue:', error);
       message.error(t('problems.createFailed'));
     } finally {
-      setLoading(false);
+      setActionLoading(false);
     }
   };
 
@@ -175,8 +176,7 @@ Please fill in a detailed description and root cause analysis of the problem her
           <Form.Item className="mb-0">
             <div className="flex justify-end space-x-4">
               <Button onClick={() => router.back()}>Cancel</Button>
-              <Button type="primary" htmlType="submit" loading={loading}>
-
+              <Button type="primary" htmlType="submit" loading={actionLoading}>
                 Create issue
               </Button>
             </div>

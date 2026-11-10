@@ -1617,6 +1617,40 @@ func (c *ProductionService) CreateExportTask(ctx *gin.Context) {
 	common.Success(ctx, result)
 }
 
+// DownloadExportTask 下载导出结果
+// @Summary 下载CMDB导出文件
+// @Description 按任务ID下载导出文件；校验租户、操作人归属与 expires_at
+// @Tags CMDB
+// @Produce octet-stream
+// @Param task_id path string true "任务ID"
+// @Success 200 {file} file
+// @Router /api/v1/cmdb/export/{task_id}/download [get]
+func (c *ProductionService) DownloadExportTask(ctx *gin.Context) {
+	tenantID, ok := handlerctx.ResolveTenantID(ctx)
+	if !ok {
+		return
+	}
+	userID, uidOK := middleware.UserIDOrUnauthorized(ctx)
+	if !uidOK {
+		return
+	}
+	taskID := ctx.Param("task_id")
+	if taskID == "" {
+		common.Fail(ctx, common.ParamErrorCode, "Task ID is required")
+		return
+	}
+
+	filePath, fileName, err := c.importExportService.ResolveExportDownload(ctx.Request.Context(), taskID, tenantID, userID)
+	if err != nil {
+		c.logger.Warnw("CMDB export download rejected", "task_id", taskID,
+			"tenant_id", tenantID, "user_id", userID, "error", err)
+		// AppError 的 403/404/409 必须原样透传，不能兜底成 500。
+		common.RespondError(ctx, err, "Failed to download export file")
+		return
+	}
+	ctx.FileAttachment(filePath, fileName)
+}
+
 // GetExportTaskStatus 获取导出任务状态
 // @Summary 获取导出任务状态
 // @Description 查询导出任务的执行状态和结果

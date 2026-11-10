@@ -111,6 +111,14 @@ func (s *TicketWorkflowService) AcceptTicket(ctx context.Context, req *dto.Accep
 		return txErr
 	}
 
+	// 工单接单与流程节点推进同一事务：流程停在「任务分配」时推进到「工单处理」，
+	// 任一侧失败整体回滚，避免工单已 in_progress 而实例仍停在分配节点。
+	if err := advanceTicketWorkflowTx(ctx, txClient, s.logger, tenantID, userID,
+		req.TicketID, string(dto.WorkflowActionAccept), req.Comment, "in_progress"); err != nil {
+		txErr = err
+		return txErr
+	}
+
 	txErr = tx.Commit()
 	if txErr != nil {
 		return fmt.Errorf("Failed to submit order transaction: %w", txErr)
@@ -935,6 +943,13 @@ func (s *TicketWorkflowService) ResolveTicket(ctx context.Context, req *dto.Reso
 		return txErr
 	}
 
+	// 解决动作同事务推进流程待办（引擎自动求值网关，落到「解决工单」节点）。
+	if err := advanceTicketWorkflowTx(ctx, txClient, s.logger, tenantID, userID,
+		req.TicketID, string(dto.WorkflowActionResolve), req.Resolution, "resolved"); err != nil {
+		txErr = err
+		return txErr
+	}
+
 	txErr = tx.Commit()
 	return txErr
 }
@@ -994,6 +1009,13 @@ func (s *TicketWorkflowService) CloseTicket(ctx context.Context, req *dto.CloseT
 	}, tenantID)
 	if err != nil {
 		txErr = fmt.Errorf("Record transfer record failed: %w", err)
+		return txErr
+	}
+
+	// 关闭动作同事务推进最后一个作业待办，让流程实例随工单一同进入终态。
+	if err := advanceTicketWorkflowTx(ctx, txClient, s.logger, tenantID, userID,
+		req.TicketID, string(dto.WorkflowActionClose), req.CloseNotes, "closed"); err != nil {
+		txErr = err
 		return txErr
 	}
 

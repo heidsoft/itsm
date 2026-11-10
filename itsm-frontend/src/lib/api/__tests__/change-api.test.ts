@@ -718,45 +718,6 @@ describe('ChangeApi', () => {
     });
   });
 
-  describe('getImpactAnalysis', () => {
-    it('should fetch impact analysis', async () => {
-      const mockResponse = {
-        code: 0,
-        message: 'success',
-        data: {
-          businessImpact: 'High impact on customer-facing services',
-          technicalImpact: 'Database downtime required',
-          userImpact: 'Service unavailable during maintenance',
-          affectedSystems: ['web-app', 'api-gateway'],
-          affectedUsers: 5000,
-          estimatedDowntime: 120,
-          dataRiskLevel: 'medium',
-          serviceDependencies: ['auth-service', 'cache-service'],
-          backupStrategy: 'Full backup before change',
-          recoveryPlan: 'Restore from backup if needed',
-        },
-      };
-
-      (fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        headers: new Headers(),
-        status: 200,
-        json: async () => mockResponse,
-      });
-
-      const result = await ChangeApi.getImpactAnalysis(1);
-
-      expect(fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/api/v1/changes/1/impact'),
-        expect.objectContaining({
-          method: 'GET',
-        })
-      );
-
-      expect(result.businessImpact).toBe('High impact on customer-facing services');
-    });
-  });
-
   describe('getRiskAssessment', () => {
     it('should fetch risk assessment', async () => {
       const mockResponse = {

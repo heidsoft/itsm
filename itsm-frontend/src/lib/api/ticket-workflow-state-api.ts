@@ -37,6 +37,28 @@ export const TicketWorkflowStateApi = {
   },
 
   /**
+   * 拉取完整的流转状态（含 availableActions / canAccept / canResolve / canClose）。
+   *
+   * 详情页的动作入口必须按后端状态机给出的可用动作收口：只按权限码渲染时，
+   * 「工单已 resolved」仍会亮着接单按钮，而流程实例早已推进到别的节点。
+   * 与 getStateV2 共用同一端点，不新增请求。
+   */
+  getWorkflowState: async (ticketId: number): Promise<TicketWorkflowState> => {
+    return httpClient.get<TicketWorkflowState>(
+      `/api/v1/tickets/${ticketId}/workflow/state-v2`
+    );
+  },
+
+  /** 安全包装：接口不可用时返回 null，调用方按 fail-closed 隐藏流程动作。 */
+  tryGetWorkflowState: async (ticketId: number): Promise<TicketWorkflowState | null> => {
+    try {
+      return await TicketWorkflowStateApi.getWorkflowState(ticketId);
+    } catch {
+      return null;
+    }
+  },
+
+  /**
    * 安全包装：失败返回 null 而非抛出，便于在 render 路径中并发调用而不污染
    * 其它子请求的错误状态。
    *

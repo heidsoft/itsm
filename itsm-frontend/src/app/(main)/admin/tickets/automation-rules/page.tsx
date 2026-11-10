@@ -36,7 +36,8 @@ const { TextArea } = Input;
 const AutomationRulesPage: React.FC = () => {
   const { message } = App.useApp();
   const [rules, setRules] = useState<AutomationRule[]>([]);
-  const [loading, setLoading] = useState(false);
+  // 列表初值必须为 true：mount 必定发起首次拉取，初值 false 会让首帧先渲染空表格。
+  const [listLoading, setListLoading] = useState(true);
   const [loadError, setLoadError] = useState<{ denied: boolean; detail: string } | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [editingRule, setEditingRule] = useState<AutomationRule | null>(null);
@@ -44,7 +45,7 @@ const AutomationRulesPage: React.FC = () => {
 
   // 加载规则列表
   const loadRules = async () => {
-    setLoading(true);
+    setListLoading(true);
     setLoadError(null);
     try {
       const response = await TicketAutomationRuleApi.listRules();
@@ -57,7 +58,7 @@ const AutomationRulesPage: React.FC = () => {
         detail: error instanceof Error ? error.message : '',
       });
     } finally {
-      setLoading(false);
+      setListLoading(false);
     }
   };
 
@@ -292,14 +293,14 @@ const AutomationRulesPage: React.FC = () => {
                 size="small"
                 icon={<RefreshCw size={14} />}
                 onClick={loadRules}
-                loading={loading}
+                loading={listLoading}
               >
 
                 Retry
               </Button>
             }
           />
-        ) : rules.length === 0 && !loading ? (
+        ) : rules.length === 0 && !listLoading ? (
           <Alert
             type="info"
             showIcon
@@ -310,7 +311,7 @@ const AutomationRulesPage: React.FC = () => {
             columns={columns}
             dataSource={rules}
             rowKey="id"
-            loading={loading}
+            loading={listLoading}
             pagination={{
               pageSize: 10,
               showSizeChanger: true,

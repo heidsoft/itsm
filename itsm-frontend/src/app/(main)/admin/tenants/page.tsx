@@ -107,7 +107,10 @@ export default function TenantManagement() {
   const TENANT_STATUS = getTenantStatusConfig(t);
   const TENANT_TYPES = getTenantTypeConfig(t);
   const [tenants, setTenants] = useState<Tenant[]>([]);
-  const [loading, setLoading] = useState(false);
+  // 列表初值必须为 true：mount 必定发起首次拉取，初值 false 会让首帧先渲染
+  // 「租户总数 0」的假统计卡与空表格，再被真实数据覆盖。保存动作另用 actionLoading。
+  const [listLoading, setListLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null);
   const [viewOnly, setViewOnly] = useState(false);
@@ -129,7 +132,7 @@ export default function TenantManagement() {
 
   // 加载租户数据
   const loadTenants = async () => {
-    setLoading(true);
+    setListLoading(true);
     try {
       const response = await TenantAPI.getTenants({
         search: searchTerm || undefined,
@@ -162,7 +165,7 @@ export default function TenantManagement() {
     } catch (error) {
       message.error(t('tenants.loadFailed'));
     } finally {
-      setLoading(false);
+      setListLoading(false);
     }
   };
 
@@ -173,6 +176,7 @@ export default function TenantManagement() {
 
   // 处理保存租户
   const handleSaveTenant = async () => {
+    setActionLoading(true);
     try {
       const values = (await form.validateFields()) as TenantFormValues;
       const payload = {
@@ -202,6 +206,8 @@ export default function TenantManagement() {
       loadTenants(); // 重新加载数据
     } catch (error) {
       message.error(t('tenants.saveFailed'));
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -231,7 +237,7 @@ export default function TenantManagement() {
   };
 
   const handleChangeTenantStatus = async (tenant: Tenant, status: TenantStatusKey) => {
-    setLoading(true);
+    setActionLoading(true);
     try {
       await TenantAPI.updateTenant(tenant.id, { status });
       message.success(t('tenants.statusUpdateSuccess', { status: TENANT_STATUS[status].label }));
@@ -239,7 +245,7 @@ export default function TenantManagement() {
     } catch (error) {
       message.error(t('tenants.statusUpdateFailed'));
     } finally {
-      setLoading(false);
+      setActionLoading(false);
     }
   };
 
@@ -464,47 +470,50 @@ export default function TenantManagement() {
       </div>
 
       {/* 统计卡片 */}
-      <Row gutter={[16, 16]}>
-        <Col xs={24} sm={12} lg={6}>
-          <Card className="enterprise-card">
-            <Statistic
-              title={t('tenants.totalTenants')}
-              value={stats.total}
-              prefix={<Building2 className="w-5 h-5" />}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card className="enterprise-card">
-            <Statistic
-              title={t('tenants.activeTenants')}
-              value={stats.active}
-              prefix={<CheckCircle className="w-5 h-5" />}
-              styles={{ content: { color: '#52c41a' } }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card className="enterprise-card">
-            <Statistic
-              title={t('tenants.suspendedTenants')}
-              value={stats.suspended}
-              prefix={<AlertCircle className="w-5 h-5" />}
-              styles={{ content: { color: '#faad14' } }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card className="enterprise-card">
-            <Statistic
-              title={t('tenants.expiredTenants')}
-              value={stats.expired}
-              prefix={<Clock className="w-5 h-5" />}
-              styles={{ content: { color: '#1890ff' } }}
-            />
-          </Card>
-        </Col>
-      </Row>
+      {/* 统计卡片必须门控：还没拉到数据时渲染成「租户总数 0」会被误读成「没有租户」 */}
+      {!listLoading && (
+        <Row gutter={[16, 16]}>
+          <Col xs={24} sm={12} lg={6}>
+            <Card className="enterprise-card">
+              <Statistic
+                title={t('tenants.totalTenants')}
+                value={stats.total}
+                prefix={<Building2 className="w-5 h-5" />}
+              />
+            </Card>
+          </Col>
+          <Col xs={24} sm={12} lg={6}>
+            <Card className="enterprise-card">
+              <Statistic
+                title={t('tenants.activeTenants')}
+                value={stats.active}
+                prefix={<CheckCircle className="w-5 h-5" />}
+                styles={{ content: { color: '#52c41a' } }}
+              />
+            </Card>
+          </Col>
+          <Col xs={24} sm={12} lg={6}>
+            <Card className="enterprise-card">
+              <Statistic
+                title={t('tenants.suspendedTenants')}
+                value={stats.suspended}
+                prefix={<AlertCircle className="w-5 h-5" />}
+                styles={{ content: { color: '#faad14' } }}
+              />
+            </Card>
+          </Col>
+          <Col xs={24} sm={12} lg={6}>
+            <Card className="enterprise-card">
+              <Statistic
+                title={t('tenants.expiredTenants')}
+                value={stats.expired}
+                prefix={<Clock className="w-5 h-5" />}
+                styles={{ content: { color: '#1890ff' } }}
+              />
+            </Card>
+          </Col>
+        </Row>
+      )}
 
       {/* 搜索和过滤 */}
       <Card>
@@ -569,7 +578,7 @@ export default function TenantManagement() {
           columns={columns}
           dataSource={tenants}
           rowKey="id"
-          loading={loading}
+          loading={listLoading}
           scroll={{ x: 920 }}
           pagination={{
             total: tenants.length,
@@ -703,7 +712,7 @@ export default function TenantManagement() {
           form.resetFields();
         }}
         width={600}
-        confirmLoading={loading}
+        confirmLoading={actionLoading}
         okText={t('common.save')}
         cancelText={t('common.cancel')}
         footer={

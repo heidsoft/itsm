@@ -1,13 +1,17 @@
 package service
 
 import (
+	"bytes"
 	"context"
+	"encoding/csv"
 	"fmt"
 	"time"
 
+	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/ticket"
+	ticketrepo "itsm-backend/repository/ticket"
 
 	"go.uber.org/zap"
 )
@@ -26,8 +30,11 @@ func NewPredictionService(client *ent.Client, logger *zap.SugaredLogger) *Predic
 	}
 }
 
-// GetTrendPrediction 获取趋势预测
-func (s *PredictionService) GetTrendPrediction(ctx context.Context, req *dto.TrendPredictionRequest, tenantID int) (*dto.TrendPredictionResponse, error) {
+// GetTrendPrediction 获取趋势预测。
+//
+// R1/R7/R9：与 GetDeepAnalytics 同一套读面基线——行级 DataScope、软删过滤、
+// 窗口上限与行数上限。此前只有 TenantID，非管理角色可导出全租户历史工单量。
+func (s *PredictionService) GetTrendPrediction(ctx context.Context, req *dto.TrendPredictionRequest, tenantID int, viewer DashboardViewer) (*dto.TrendPredictionResponse, error) {
 	s.logger.Infow("Getting trend prediction", "tenant_id", tenantID, "type", req.PredictionType)
 
 	// 解析时间范围:若客户端未传 timeRange,默认「过去 6 个月 → 今天」(与 handlers/ai 的
@@ -37,30 +44,42 @@ func (s *PredictionService) GetTrendPrediction(ctx context.Context, req *dto.Tre
 		var err error
 		startTime, err = time.Parse("2006-01-02", req.TimeRange[0])
 		if err != nil {
-			return nil, fmt.Errorf("invalid start time format: %w", err)
+			return nil, common.NewBadRequestError("Invalid timeRange start date; expected YYYY-MM-DD", err)
 		}
 		endTime, err = time.Parse("2006-01-02", req.TimeRange[1])
 		if err != nil {
-			return nil, fmt.Errorf("invalid end time format: %w", err)
+			return nil, common.NewBadRequestError("Invalid timeRange end date; expected YYYY-MM-DD", err)
 		}
 	} else {
 		endTime = time.Now()
 		startTime = endTime.AddDate(0, -6, 0)
 		s.logger.Warnw("prediction request missing timeRange, using last 6 months as default", "start", startTime, "end", endTime)
 	}
+	if err := validateReportWindow(startTime, endTime); err != nil {
+		return nil, err
+	}
 
-	// 获取历史数据（最近6个月）
+	// 获取历史数据（请求窗口再往前 6 个月）。窗口已在上面限长，
+	// 因此历史查询的最大跨度有上界，不会因任意 timeRange 拉全表。
 	historyStart := startTime.AddDate(0, -6, 0)
 	historyTickets, err := s.client.Ticket.Query().
 		Where(
 			ticket.TenantIDEQ(tenantID),
+			ticket.DeletedAtIsNil(),
 			ticket.CreatedAtGTE(historyStart),
 			ticket.CreatedAtLTE(endTime),
 		).
+		Where(ticketrepo.DataScopePredicates(viewer.ticketScope(), viewer.UserID)...).
+		Order(ent.Asc(ticket.FieldID)).
+		Limit(maxReportTickets + 1).
 		All(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to get history tickets", "error", err)
 		return nil, fmt.Errorf("failed to get history tickets: %w", err)
+	}
+	if len(historyTickets) > maxReportTickets {
+		return nil, common.NewBadRequestError(
+			fmt.Sprintf("The reporting scope exceeds %d tickets; narrow the time range", maxReportTickets), nil)
 	}
 
 	// 根据预测类型生成预测数据
@@ -88,6 +107,7 @@ func (s *PredictionService) GetTrendPrediction(ctx context.Context, req *dto.Tre
 		Confidence:  0.85, // 模拟置信度
 		Model:       model,
 		GeneratedAt: time.Now(),
+		Scope:       viewer.scopeKey(),
 	}
 
 	return response, nil
@@ -269,13 +289,14 @@ func (s *PredictionService) calculateAverage(counts map[string]int) int {
 }
 
 // ExportPredictionReport 导出预测报告
-func (s *PredictionService) ExportPredictionReport(ctx context.Context, req *dto.TrendPredictionRequest, format string, tenantID int) ([]byte, string, error) {
+func (s *PredictionService) ExportPredictionReport(ctx context.Context, req *dto.TrendPredictionRequest, format string, tenantID int, viewer DashboardViewer) ([]byte, string, error) {
 	s.logger.Infow("Exporting prediction report", "format", format, "tenant_id", tenantID)
 
 	// 获取预测数据
-	response, err := s.GetTrendPrediction(ctx, req, tenantID)
+	response, err := s.GetTrendPrediction(ctx, req, tenantID, viewer)
 	if err != nil {
-		return nil, "", fmt.Errorf("failed to get prediction data: %w", err)
+		// 不用裸 fmt.Errorf 包装：保留 AppError 的 400 语义与文案。
+		return nil, "", err
 	}
 
 	// 根据格式生成文件
@@ -291,27 +312,55 @@ func (s *PredictionService) ExportPredictionReport(ctx context.Context, req *dto
 	}
 }
 
-// exportPredictionToCSV 导出预测为CSV格式
+// exportPredictionToCSV 导出预测为CSV格式。
+//
+// R4：此前用 fmt.Sprintf 手拼 CSV——Model（请求参数，无 oneof 约束）带逗号
+// 会撕裂列、带 \n 会伪造行、以 =/+/-/@ 开头会被 Excel/WPS 当公式执行。
+// 改用 encoding/csv 负责引用与转义；用户可控字符串统一过
+// neutralizeSpreadsheetFormula（与 Excel 导出同一入口）。
 func (s *PredictionService) exportPredictionToCSV(response *dto.TrendPredictionResponse) ([]byte, string, error) {
-	var csvData string
+	var buf bytes.Buffer
+	// utf-8-sig BOM：让 Excel 直接按 UTF-8 打开，中文表头不乱码。
+	buf.Write([]byte{0xEF, 0xBB, 0xBF})
+	w := csv.NewWriter(&buf)
 
-	// CSV头部
-	csvData = "日期,预测值,下限,上限,置信度\n"
-
-	// 数据行
+	if err := w.Write([]string{"Date", "Predicted value", "Lower bound", "Upper bound", "Confidence"}); err != nil {
+		return nil, "", fmt.Errorf("write csv header: %w", err)
+	}
 	for _, point := range response.Predictions {
-		csvData += fmt.Sprintf("%s,%.2f,%.2f,%.2f,%.2f\n",
-			point.Date, point.PredictedValue, point.LowerBound, point.UpperBound, point.Confidence)
+		row := []string{
+			neutralizeSpreadsheetFormula(point.Date),
+			fmt.Sprintf("%.2f", point.PredictedValue),
+			fmt.Sprintf("%.2f", point.LowerBound),
+			fmt.Sprintf("%.2f", point.UpperBound),
+			fmt.Sprintf("%.2f", point.Confidence),
+		}
+		if err := w.Write(row); err != nil {
+			return nil, "", fmt.Errorf("write csv row: %w", err)
+		}
 	}
 
-	// 添加汇总信息
-	csvData += "\n预测信息\n"
-	csvData += fmt.Sprintf("模型,%s\n", response.Model)
-	csvData += fmt.Sprintf("整体置信度,%.2f\n", response.Confidence)
-	csvData += fmt.Sprintf("生成时间,%s\n", response.GeneratedAt.Format("2006-01-02 15:04:05"))
+	if err := w.Write([]string{""}); err != nil {
+		return nil, "", fmt.Errorf("write csv separator: %w", err)
+	}
+	meta := [][]string{
+		{"Prediction information"},
+		{"Model", neutralizeSpreadsheetFormula(response.Model)},
+		{"Overall confidence", fmt.Sprintf("%.2f", response.Confidence)},
+		{"Generated at", response.GeneratedAt.Format("2006-01-02 15:04:05")},
+	}
+	for _, row := range meta {
+		if err := w.Write(row); err != nil {
+			return nil, "", fmt.Errorf("write csv meta: %w", err)
+		}
+	}
+	w.Flush()
+	if err := w.Error(); err != nil {
+		return nil, "", fmt.Errorf("flush csv: %w", err)
+	}
 
 	filename := fmt.Sprintf("prediction_%s.csv", time.Now().Format("20060102_150405"))
-	return []byte(csvData), filename, nil
+	return buf.Bytes(), filename, nil
 }
 
 // exportPredictionToExcel 导出预测为Excel格式

@@ -251,6 +251,9 @@ services:
       # Guidance sidecar 地址：指向 itsm-ai-service 的受限分诊端点 /triage
       # （默认 localhost:8091；生产由该服务接管，triage 走受限生成路径）
       - GUIDANCE_URL=${GUIDANCE_URL:-http://itsm-ai-service:8000}
+      # A4：与 itsm-ai-service 共用的服务间令牌（X-Service-Token）。
+      # 两侧同时为空时 sidecar 不启用鉴权，启动日志与 /health 会显式告警。
+      - AI_SERVICE_TOKEN=${AI_SERVICE_TOKEN:-}
 
       # 告警通知
       - SMTP_HOST=${SMTP_HOST:-}
@@ -313,12 +316,20 @@ services:
       - SERVICE_PORT=8000
       - LOG_LEVEL=${AI_LOG_LEVEL:-info}
       - CORS_ORIGINS=http://itsm-frontend:3000,http://nginx
+      # A4：非空时所有非 /health 端点要求 X-Service-Token；后端须注入同一个值。
+      - AI_SERVICE_TOKEN=${AI_SERVICE_TOKEN:-}
       # 直连 LLM provider（OpenAI 兼容）。与后端共用同一套 LLM 凭据。
       - LLM_PROVIDER=${LLM_PROVIDER:-openai}
       - LLM_MODEL=${LLM_MODEL:-gpt-4}
       - LLM_API_KEY=${LLM_API_KEY:-}
       - LLM_BASE_URL=${LLM_ENDPOINT:-${OPENAI_BASE_URL:-https://api.openai.com/v1}}
       - LLM_TIMEOUT=120
+      # 侧车需要回连 Go 后端调用 /api/v1/ai/*（知识检索、工单分析等）。
+      # 注意与 LLM_BASE_URL 语义不同：那个是厂商端点，这个是本系统后端。
+      # 缺省值（http://localhost:8080）在容器网络里必然连不上，必须显式指向服务名。
+      - ITSM_BACKEND_URL=${ITSM_BACKEND_URL:-http://itsm-backend:8090}
+      - ITSM_BACKEND_TOKEN=${ITSM_BACKEND_TOKEN:-}
+      - BACKEND_TIMEOUT=${BACKEND_TIMEOUT:-120}
     expose:
       - "8000"
     networks:

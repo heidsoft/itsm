@@ -28,7 +28,8 @@ export default function IncidentEditPage() {
   const params = useParams();
   const id = params?.id as string;
   const [form] = Form.useForm();
-  const [loading, setLoading] = useState(false);
+  // 提交动作态（数据加载由 fetching 负责）
+  const [actionLoading, setActionLoading] = useState(false);
   const [fetching, setFetching] = useState(false);
   const [incidentData, setIncidentData] = useState<Incident | null>(null);
   const { message } = App.useApp();
@@ -74,7 +75,7 @@ export default function IncidentEditPage() {
   const handleSubmit = async (values: IncidentFormValues) => {
     if (!id) return;
 
-    setLoading(true);
+    setActionLoading(true);
     try {
       // source 不在后端 UpdateIncidentRequest 契约内，转发会被静默丢弃，故不提交。
       const payload: UpdateIncidentRequest = {
@@ -97,7 +98,7 @@ export default function IncidentEditPage() {
       const detail = error instanceof Error ? error.message : '';
       message.error(detail || t('incidents.updateFailed'));
     } finally {
-      setLoading(false);
+      setActionLoading(false);
     }
   };
 
@@ -232,8 +233,7 @@ export default function IncidentEditPage() {
 
           <Form.Item>
             <Space>
-              <Button type="primary" htmlType="submit" icon={<Save />} loading={loading}>
-
+              <Button type="primary" htmlType="submit" icon={<Save />} loading={actionLoading}>
                 Save
               </Button>
               <Button onClick={handleCancel}>Cancel</Button>

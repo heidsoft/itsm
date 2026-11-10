@@ -31,9 +31,14 @@ import {
   Tag,
   Typography,
 } from 'antd';
+import type { ColumnsType } from 'antd/es/table';
 import { Search, Clock, AlertTriangle, BarChart3, Zap, Rocket } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
-import { BPMNMonitoringApi, type BottleneckTask } from '@/lib/api/bpmn-monitoring-api';
+import {
+  BPMNMonitoringApi,
+  type BottleneckAnalysis,
+  type BottleneckTask,
+} from '@/lib/api/bpmn-monitoring-api';
 import { WorkflowApi } from '@/lib/api/workflow-api';
 import { BACKEND_MAX_PAGE_SIZE } from '@/lib/api/pagination';
 
@@ -52,7 +57,7 @@ const bottleneckTypeLabel: Record<string, string> = {
   resource: 'Resource limited',
 };
 
-// 严重程度、资源类型、约束类型都是后端枚举，统一映射中文，不直接回显原始值。
+// Severity、资源类型、约束类型都是后端枚举，统一映射中文，不直接回显原始值。
 const severityLabel: Record<string, string> = {
   low: 'Low',
   medium: 'Medium',
@@ -87,28 +92,11 @@ export default function BottlenecksPage() {
   const [selectedProcess, setSelectedProcess] = useState<string | null>(null);
   const [keyword, setKeyword] = useState('');
   const [timeRange, setTimeRange] = useState<string>('24h');
-  const [loading, setLoading] = useState(false);
-  const [analysis, setAnalysis] = useState<{
-    bottleneckTasks: BottleneckTask[];
-    severity: string;
-    recommendations: string[];
-    slowestPaths: Array<{
-      pathId: string;
-      pathName: string;
-      totalDurationSeconds: number;
-      taskCount: number;
-      bottleneckTasks: string[];
-      optimization: string;
-    }>;
-    resourceConstraints: Array<{
-      resourceType: string;
-      resourceName: string;
-      utilization: number;
-      capacity: number;
-      currentLoad: number;
-      constraintType: string;
-    }>;
-  } | null>(null);
+  // 列表初值必须为 true：mount 后会发起分析请求，初值 false 会让首帧先渲染
+  // 「瓶颈任务数 0」的假统计卡，再被真实数据覆盖。
+  const [listLoading, setListLoading] = useState(true);
+  const [analysis, setAnalysis] = useState<BottleneckAnalysis | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   // 加载流程列表：以流程定义为准（未运行过实例的流程也能分析），
   // 不再用 dashboard topProcesses（仅统计有实例的流程，新环境会恒空）
@@ -140,28 +128,23 @@ export default function BottlenecksPage() {
   useEffect(() => {
     if (!selectedProcess) return;
     let alive = true;
-    setLoading(true);
+    setListLoading(true);
     BPMNMonitoringApi.getBottleneckAnalysis(selectedProcess, timeRange)
       .then(data => {
         if (!alive) return;
-        setAnalysis({
-          bottleneckTasks: data.bottleneckTasks ?? [],
-          slowestPaths: data.slowestPaths ?? [],
-          resourceConstraints: data.resourceConstraints ?? [],
-          recommendations: data.recommendations ?? [],
-          severity: data.severity ?? 'low',
-        });
+        setAnalysis(data);
+        setLoadError(null);
       })
       .catch(err => {
-
         console.error(err);
         if (alive) {
           message.error('Loading bottleneck analysis failed');
           setAnalysis(null);
+          setLoadError('Bottleneck analysis failed. Try again later or adjust the time range.');
         }
       })
       .finally(() => {
-        if (alive) setLoading(false);
+        if (alive) setListLoading(false);
       });
     return () => {
       alive = false;
@@ -185,7 +168,7 @@ export default function BottlenecksPage() {
     [analysis]
   );
 
-  const taskColumns = [
+  const taskColumns: ColumnsType<BottleneckTask> = [
     {
       title: 'Task',
       key: 'task',
@@ -334,13 +317,25 @@ export default function BottlenecksPage() {
         </Card>
       ) : (
         <>
+          {/* 统计卡必须门控：还没拉到分析结果时渲染成「瓶颈任务数 0」会被误读成「没有瓶颈」 */}
+          {!listLoading && (
           <Row gutter={[16, 16]}>
             <Col xs={24} sm={6}>
               <Card>
                 <Statistic
                   title="Severity"
-                  value={severityLabel[analysis?.severity ?? 'low'] ?? analysis?.severity ?? '-'}
-                  styles={{ content: { color: severityColorMap[analysis?.severity ?? 'low'] ?? 'green' } }}
+                  value={
+                    analysis
+                      ? (severityLabel[analysis.severity] ?? analysis.severity)
+                      : loadError
+                        ? 'Failed to load'
+                        : 'No data'
+                  }
+                  styles={{
+                    content: {
+                      color: analysis ? (severityColorMap[analysis.severity] ?? undefined) : undefined,
+                    },
+                  }}
                   prefix={<AlertTriangle />}
                 />
               </Card>
@@ -369,6 +364,7 @@ export default function BottlenecksPage() {
               </Card>
             </Col>
           </Row>
+          )}
 
           {analysis?.recommendations && analysis.recommendations.length > 0 && (
             <Alert
@@ -385,13 +381,17 @@ export default function BottlenecksPage() {
             />
           )}
 
-          <Card title={`Bottleneck task details - ${selectedProcess}`} loading={loading}>
-            {analysis?.bottleneckTasks.length === 0 ? (
-              <Empty description="No bottleneck tasks yet" />
+          <Card title={`Bottleneck task details - ${selectedProcess}`} loading={listLoading}>
+            {loadError ? (
+              <Alert type="error" showIcon title="Failed to load bottleneck analysis" description={loadError} />
+            ) : !analysis ? (
+              <Empty description="The server returned no bottleneck analysis data" />
+            ) : analysis.bottleneckTasks.length === 0 ? (
+              <Empty description="No bottleneck tasks" />
             ) : (
-              <Table
+              <Table<BottleneckTask>
                 rowKey="taskId"
-                dataSource={analysis?.bottleneckTasks ?? []}
+                dataSource={analysis.bottleneckTasks}
                 columns={taskColumns}
                 pagination={false}
                 scroll={{ x: 'max-content' }}

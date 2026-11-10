@@ -15,7 +15,9 @@ export default function CustomersPage() {
   const { message } = App.useApp();
   const [customers, setCustomers] = useState<ServiceCustomer[]>([]);
   const [branches, setBranches] = useState<CustomerBranch[]>([]);
-  const [loading, setLoading] = useState(false);
+  // 列表初值必须为 true：mount 必定发起首次拉取，初值 false 会让首帧先渲染
+  // 空表格，再被真实数据覆盖。
+  const [listLoading, setListLoading] = useState(true);
   const [customerModal, setCustomerModal] = useState(false);
   const [branchModal, setBranchModal] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<ServiceCustomer | null>(null);
@@ -24,7 +26,7 @@ export default function CustomersPage() {
   const [branchForm] = Form.useForm();
 
   const load = async () => {
-    setLoading(true);
+    setListLoading(true);
     try {
       const [c, b] = await Promise.all([
         emailIntakeService.customers(),
@@ -35,7 +37,7 @@ export default function CustomersPage() {
     } catch {
       message.error('Failed to load data');
     } finally {
-      setLoading(false);
+      setListLoading(false);
     }
   };
 
@@ -139,7 +141,7 @@ export default function CustomersPage() {
           </Space>
         </div>
         <Table
-          rowKey="id" loading={loading} columns={columns} dataSource={customers}
+          rowKey="id" loading={listLoading} columns={columns} dataSource={customers}
           expandable={{ expandedRowRender }} pagination={{ pageSize: 20 }}
           expandRowByClick
         />

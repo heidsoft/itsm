@@ -47,12 +47,14 @@ interface ChartDataItem {
 }
 
 const ServiceCatalogUsagePage = () => {
-  const [loading, setLoading] = useState(false);
+  // 数据加载初值必须为 true：mount 必定发起首次拉取，初值 false 会让首帧先渲染
+  // 「暂无服务目录使用数据」结论，再被真实数据覆盖。
+  const [listLoading, setListLoading] = useState(true);
   const [services, setServices] = useState<ServiceItem[]>([]);
   const [statusFilter, setStatusFilter] = useState<'all' | ServiceStatus>('all');
 
   const loadData = async () => {
-    setLoading(true);
+    setListLoading(true);
     try {
       const { services: servicesData } = await ServiceCatalogApi.getServices({
         page: 1,
@@ -63,7 +65,7 @@ const ServiceCatalogUsagePage = () => {
       console.error('Failed to load service catalog data:', error);
       setServices([]);
     } finally {
-      setLoading(false);
+      setListLoading(false);
     }
   };
 
@@ -178,7 +180,7 @@ const ServiceCatalogUsagePage = () => {
         description="Request volume statistics (the number of times each service is applied for) rely on back-end collection and are not currently provided; this page shows the inventory structure of the service directory, excluding request data."
       />
 
-      {loading ? (
+      {listLoading ? (
         <div className="flex items-center justify-center h-64">
           <Spin size="large" description="Loading report data..." />
         </div>

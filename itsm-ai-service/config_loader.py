@@ -1,6 +1,7 @@
 """
 配置管理
 """
+import hmac
 import os
 from dataclasses import dataclass, field
 from typing import List, Optional
@@ -73,6 +74,23 @@ class TriageConfig:
 
 
 @dataclass
+class BackendConfig:
+    """ITSM Go 后端的地址与凭据。
+
+    与 llm.* 严格分开：llm.base_url 是「直连的模型厂商端点」（形如
+    https://api.openai.com/v1，guidance sidecar 会在其后拼 /chat/completions），
+    而这里的 base_url 是「本系统 Go 后端」，SDK 风格为 .../api/v1/ai/*。
+    两者曾共用 llm.base_url 一个字段，导致 api/triage.py、api/rca.py 把
+    模型端点当成后端地址去请求（https://api.openai.com/v1/api/v1/ai/...），
+    永远 404、永远静默降级 —— 功能看起来「有」，实际一次 LLM 调用都没发出去。
+    """
+
+    base_url: str = "http://localhost:8080"
+    api_key: str = ""  # 后端 JWT（服务间调用），不是模型厂商的 API key
+    timeout: int = 120
+
+
+@dataclass
 class ServiceConfig:
     name: str = "itsm-ai-service"
     version: str = "1.0.0"
@@ -88,6 +106,7 @@ class Config:
     database: DatabaseConfig
     redis: RedisConfig
     llm: LLMConfig
+    backend: BackendConfig
     rca: RCAConfig
     risk: RiskConfig
     triage: TriageConfig
@@ -102,6 +121,7 @@ def load_config(path: str = "config.yaml") -> Config:
             database=DatabaseConfig(),
             redis=RedisConfig(),
             llm=LLMConfig(),
+            backend=BackendConfig(),
             rca=RCAConfig(),
             risk=RiskConfig(),
             triage=TriageConfig(),
@@ -116,6 +136,7 @@ def load_config(path: str = "config.yaml") -> Config:
         database=DatabaseConfig(**data.get("database", {})),
         redis=RedisConfig(**data.get("redis", {})),
         llm=LLMConfig(**data.get("llm", {})),
+        backend=BackendConfig(**data.get("backend", {})),
         rca=RCAConfig(**data.get("rca", {})),
         risk=RiskConfig(**data.get("risk", {})),
         triage=TriageConfig(**data.get("triage", {})),
@@ -130,16 +151,28 @@ def apply_environment_overrides(config: Config) -> Config:
     translation here makes the Python guidance sidecar use the same provider,
     model and timeout as the Go LLM gateway without storing secrets in YAML.
     """
-    config.service.host = os.getenv("SERVICE_HOST", config.service.host)
-    config.service.port = int(os.getenv("SERVICE_PORT", str(config.service.port)))
-    config.service.log_level = os.getenv("LOG_LEVEL", config.service.log_level)
+    # A5：环境变量为空串时不得覆盖文件/默认值。Compose 里 `LLM_API_KEY=${LLM_API_KEY:-}`
+    # 会注入一个空串，旧写法 os.getenv(KEY, fallback) 会把 config.yaml 里配好的
+    # 非空 key 直接抹掉，于是「配置明明有、运行时却没有」。
+    config.service.host = os.getenv("SERVICE_HOST") or config.service.host
+    config.service.port = int(os.getenv("SERVICE_PORT") or config.service.port)
+    config.service.log_level = os.getenv("LOG_LEVEL") or config.service.log_level
 
-    config.llm.provider = os.getenv("LLM_PROVIDER", config.llm.provider).strip().lower()
-    config.llm.api_key = os.getenv("LLM_API_KEY", config.llm.api_key)
-    config.llm.model = os.getenv("LLM_MODEL", config.llm.model)
-    config.llm.base_url = os.getenv(
-        "LLM_BASE_URL",
-        os.getenv("LLM_ENDPOINT", config.llm.base_url),
+    # A4：compose 注入了 CORS_ORIGINS，但这里从来没有读过它；
+    # main.py 一直用 config.yaml 的 localhost 白名单。
+    cors_env = os.getenv("CORS_ORIGINS")
+    if cors_env:
+        origins = [o.strip() for o in cors_env.split(",") if o.strip()]
+        if origins:
+            config.service.cors_origins = origins
+
+    config.llm.provider = (os.getenv("LLM_PROVIDER") or config.llm.provider).strip().lower()
+    config.llm.api_key = os.getenv("LLM_API_KEY") or config.llm.api_key
+    config.llm.model = os.getenv("LLM_MODEL") or config.llm.model
+    config.llm.base_url = (
+        os.getenv("LLM_BASE_URL")
+        or os.getenv("LLM_ENDPOINT")
+        or config.llm.base_url
     )
     # MiniMax's supported chat endpoint is Anthropic-compatible, not OpenAI
     # chat/completions. Compose historically supplied the OpenAI default even
@@ -149,12 +182,60 @@ def apply_environment_overrides(config: Config) -> Config:
         "https://api.openai.com/v1",
     }:
         config.llm.base_url = "https://api.minimaxi.com/anthropic/v1"
-    config.llm.timeout = int(os.getenv("LLM_TIMEOUT", str(config.llm.timeout)))
+    config.llm.timeout = int(os.getenv("LLM_TIMEOUT") or config.llm.timeout)
+
+    # 后端地址独立覆盖：ITSM_BACKEND_URL（首选）/ BACKEND_URL（兼容）。
+    config.backend.base_url = (
+        os.getenv("ITSM_BACKEND_URL")
+        or os.getenv("BACKEND_URL")
+        or config.backend.base_url
+    ).rstrip("/")
+    config.backend.api_key = os.getenv("ITSM_BACKEND_TOKEN") or config.backend.api_key
+    config.backend.timeout = int(os.getenv("BACKEND_TIMEOUT") or config.backend.timeout)
     return config
+
+
+# A4：AI sidecar 的服务间共享令牌。
+#
+# Go 后端的 GuidanceClient 调 /triage，三台遗留端点（triage/rca/risk）只允许
+# 同网络内服务调用。令牌由部署环境注入 AI_SERVICE_TOKEN，不进 config.yaml、
+# 不进镜像；空值表示「未启用鉴权」，main.py 会在启动时打 ERROR 并在 /health
+# 暴露 auth.serviceToken=disabled，让这个降级态可观测而不是静默。
+def service_token() -> str:
+    return (os.getenv("AI_SERVICE_TOKEN") or "").strip()
+
+
+def service_token_enabled() -> bool:
+    return bool(service_token())
+
+
+def verify_service_token(provided: str) -> bool:
+    """常量时间比对；未配置令牌时不启用鉴权（返回 True）。"""
+    expected = service_token()
+    if not expected:
+        return True
+    return hmac.compare_digest(provided or "", expected)
 
 
 # Global config instance
 _config: Optional[Config] = None
+
+
+# 本地/自建推理端点不需要 API key；其余 provider 缺 key 就是配置错误。
+_LOCAL_PROVIDERS = {"ollama", "vllm", "local", "lmstudio", "localai"}
+
+
+def llm_is_configured(config: Optional[Config] = None) -> bool:
+    """供 lifespan 与 /health 共用的单一判定口径（A5）。
+
+    注意不能用「进程启动时看一眼」就完事：env 在容器里可能为空串，
+    而 config.yaml 里其实配了 key。这里按与 apply_environment_overrides
+    相同的 or 语义取值。
+    """
+    cfg = config or get_config()
+    if cfg.llm.provider in _LOCAL_PROVIDERS:
+        return True
+    return bool((os.getenv("LLM_API_KEY") or cfg.llm.api_key or "").strip())
 
 
 def get_config() -> Config:

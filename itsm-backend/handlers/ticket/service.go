@@ -323,6 +323,22 @@ func (s *Service) AssignTicket(ctx context.Context, ticketID int, assigneeID int
 	return productionTicketToTicket(updated), nil
 }
 
+// AssignTicketWithActor 是 HTTP 分配入口使用的变体：带上真实操作人，
+// 让「工单分配 + BPMN 当前作业待办推进」在同一事务内完成。
+//
+// 保留不带 actor 的 AssignTicket 给既有调用方（含单测夹具与批量分配路径）；
+// 没有操作人身份时引擎无法校验任务归属，不应伪造系统身份去推进流程。
+func (s *Service) AssignTicketWithActor(ctx context.Context, ticketID int, assigneeID int, tenantID int, actorID int) (*Ticket, error) {
+	if s.productionSvc == nil {
+		return s.repo.AssignTicket(ctx, ticketID, assigneeID, tenantID)
+	}
+	updated, err := s.productionSvc.AssignTicketWithWorkflowAdvance(ctx, ticketID, assigneeID, tenantID, actorID)
+	if err != nil {
+		return nil, err
+	}
+	return productionTicketToTicket(updated), nil
+}
+
 // EscalateTicket escalates a ticket.
 // 升级是生命周期写操作，与 Update/Delete 同风险面——行级校验
 // 写权限 ⊆ 读权限（普通角色仅创建人/受理人/管理员）。
@@ -468,12 +484,15 @@ func (s *Service) attachSLACompliance(ctx context.Context, tenantID int, window 
 	}
 }
 
-// ExportTickets 导出工单，委派给生产服务层（其查询已带 TenantID 谓词）。
-func (s *Service) ExportTickets(ctx context.Context, tenantID int, filters map[string]interface{}, format string) ([]byte, error) {
+// ExportTickets 导出工单，委派给生产服务层。
+//
+// viewerID/viewerRole 必须下传：导出与列表共用同一套可见性判定
+// （租户 + 软删 + DataScope），漏传会让普通角色导出全租户工单。
+func (s *Service) ExportTickets(ctx context.Context, tenantID int, filters map[string]interface{}, format string, viewerID int, viewerRole string) ([]byte, error) {
 	if s.productionSvc == nil {
 		return nil, common.NewBusinessError(common.ServiceUnavailableCode, "The work order export service is not connected", "")
 	}
-	return s.productionSvc.ExportTickets(ctx, tenantID, filters, format)
+	return s.productionSvc.ExportTickets(ctx, tenantID, filters, format, viewerID, viewerRole)
 }
 
 // ImportTickets imports tickets (placeholder).

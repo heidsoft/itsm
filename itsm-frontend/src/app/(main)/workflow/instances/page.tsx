@@ -56,7 +56,8 @@ function WorkflowInstancesContent() {
   // 后端 GET /bpmn/process-instances 支持 businessKey 精确过滤，用它收敛到该单据的实例。
   const urlBusinessKey = searchParams.get('businessKey') || '';
   const urlInstanceId = searchParams.get('instanceId') || '';
-  const [loading, setLoading] = useState(false);
+  // 列表初值必须为 true：mount 必定发起首次拉取，初值 false 会让首帧先渲染空列表。
+  const [listLoading, setListLoading] = useState(true);
   const [instances, setInstances] = useState<InstanceRow[]>([]);
   const [stats, setStats] = useState({
     total: 0,
@@ -90,7 +91,7 @@ function WorkflowInstancesContent() {
 
   const loadData = async () => {
     try {
-      setLoading(true);
+      setListLoading(true);
       const [instanceResponse, statsResponse] = await Promise.all([
         WorkflowApi.getInstances({
           workflowId: keyword || undefined,
@@ -122,7 +123,7 @@ function WorkflowInstancesContent() {
       message.error('Failed to load workflow instance');
       setInstances([]);
     } finally {
-      setLoading(false);
+      setListLoading(false);
     }
   };
 
@@ -265,8 +266,10 @@ function WorkflowInstancesContent() {
                           await WorkflowApi.suspendWorkflow(record.id);
                           message.success('Instance paused');
                           loadData();
-                        } catch {
-                          message.error('Failed to suspend instance');
+                        } catch (error) {
+                          // 后端会给出可行动的原因（如「当前状态为 completed，不能暂停」），
+                          // 统一文案会把它吞掉，操作员只能反复点同一个按钮。
+                          message.error(`Failed to suspend instance: ${error instanceof Error ? error.message : 'Please try again later'}`);
                         }
                       },
                     });
@@ -292,8 +295,8 @@ function WorkflowInstancesContent() {
                           await WorkflowApi.terminateWorkflow(record.id, 'Frontend terminated');
                           message.success('Instance terminated');
                           loadData();
-                        } catch {
-                          message.error('Failed to terminate instance');
+                        } catch (error) {
+                          message.error(`Failed to terminate instance: ${error instanceof Error ? error.message : 'Please try again later'}`);
                         }
                       },
                     });
@@ -320,8 +323,8 @@ function WorkflowInstancesContent() {
                         await WorkflowApi.resumeWorkflow(record.id);
                         message.success('Instance restored');
                         loadData();
-                      } catch {
-                        message.error('Failed to restore instance');
+                      } catch (error) {
+                        message.error(`Failed to restore instance: ${error instanceof Error ? error.message : 'Please try again later'}`);
                       }
                     },
                   });
@@ -347,7 +350,7 @@ function WorkflowInstancesContent() {
         notice={
           <ManagementNotice
             message="This version"
-            description="Supports instance list, status operations (pause/resume/terminate) and detailed viewing. Task list and countersign views will be added in subsequent versions."
+            description="Supports instance lists, status actions (suspend/resume/terminate), and details including node tasks and execution history. Countersign views will be added in a future release."
           />
         }
       />
@@ -380,9 +383,8 @@ function WorkflowInstancesContent() {
               options={[
                 { label: 'Running', value: 'running' },
                 { label: 'Completed', value: 'completed' },
-                { label: 'Paused', value: 'suspended' },
+                { label: 'Suspended', value: 'suspended' },
                 { label: 'Terminated', value: 'terminated' },
-                { label: 'Failed', value: 'failed' },
               ]}
             />
           </>
@@ -403,8 +405,8 @@ function WorkflowInstancesContent() {
 
       <Card className="rounded-xl shadow-sm">
         <LoadingEmptyError
-          state={loading ? 'loading' : instances.length === 0 ? 'empty' : 'success'}
-          loadingText="Loading workflow instance..."
+          state={listLoading ? 'loading' : instances.length === 0 ? 'empty' : 'success'}
+          loadingText="Loading workflow instances..."
           empty={{
             title: 'No workflow instance yet',
             description: 'There is no instance data under the current filter criteria.',

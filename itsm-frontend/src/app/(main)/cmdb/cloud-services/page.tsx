@@ -51,7 +51,7 @@ export default function CloudServicePage() {
   const servicesQuery = useCloudServicesQuery(providerFilter);
   const serviceItems = servicesQuery.data?.items;
   const data = useMemo(() => serviceItems ?? [], [serviceItems]);
-  const loading = servicesQuery.isLoading;
+  const loading = servicesQuery.isPending;
 
   const serviceMap = useMemo(() => {
     return new Map(data.map(service => [service.id, service]));

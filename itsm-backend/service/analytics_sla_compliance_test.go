@@ -91,7 +91,7 @@ func TestAnalyticsSLACompliance_ResolvedButBreached(t *testing.T) {
 	}
 	seedSLAViolation(t, ctx, client, tenant.ID, breached.ID)
 
-	resp, err := svc.GetDeepAnalytics(ctx, analyticsSLARequest(), tenant.ID)
+	resp, err := svc.GetDeepAnalytics(ctx, analyticsSLARequest(), tenant.ID, DashboardViewer{ScopeAll: true})
 	require.NoError(t, err)
 	require.Equal(t, 4, resp.Summary.Total)
 	require.Equal(t, 4, resp.Summary.Resolved)
@@ -116,7 +116,7 @@ func TestAnalyticsSLACompliance_OpenWithoutViolation(t *testing.T) {
 		seedAnalyticsTicket(t, ctx, client, tenant.ID, user.ID, fmt.Sprintf("TKT-SLAO-%03d", i), "open")
 	}
 
-	resp, err := svc.GetDeepAnalytics(ctx, analyticsSLARequest(), tenant.ID)
+	resp, err := svc.GetDeepAnalytics(ctx, analyticsSLARequest(), tenant.ID, DashboardViewer{ScopeAll: true})
 	require.NoError(t, err)
 	require.Equal(t, 4, resp.Summary.Total)
 	require.Equal(t, 0, resp.Summary.Resolved)
@@ -146,11 +146,11 @@ func TestAnalyticsSLACompliance_TenantScoped(t *testing.T) {
 	seedSLAViolation(t, ctx, client, tenantB.ID, tkB.ID)
 	_ = tkA
 
-	respA, err := svc.GetDeepAnalytics(ctx, analyticsSLARequest(), tenantA.ID)
+	respA, err := svc.GetDeepAnalytics(ctx, analyticsSLARequest(), tenantA.ID, DashboardViewer{ScopeAll: true})
 	require.NoError(t, err)
 	require.InDelta(t, 100.0, respA.Summary.SLACompliance, 0.001, "A 租户无违规，不受 B 租户违规影响")
 
-	respB, err := svc.GetDeepAnalytics(ctx, analyticsSLARequest(), tenantB.ID)
+	respB, err := svc.GetDeepAnalytics(ctx, analyticsSLARequest(), tenantB.ID, DashboardViewer{ScopeAll: true})
 	require.NoError(t, err)
 	require.InDelta(t, 0.0, respB.Summary.SLACompliance, 0.001, "B 租户唯一工单违规，合规率 0")
 }

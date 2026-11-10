@@ -116,7 +116,9 @@ const computeQualityForGroup = (items: ConfigurationItem[]): Omit<QualityData, '
 
 const CMDBQualityReport = () => {
   const { message } = App.useApp();
-  const [loading, setLoading] = useState(false);
+  // 数据加载初值必须为 true：mount 必定发起首次拉取，初值 false 会让首帧先渲染
+  // 「暂无 CMDB 配置项」结论，再被真实数据覆盖。
+  const [listLoading, setListLoading] = useState(true);
   const [qualityData, setQualityData] = useState<QualityData[]>([]);
   const [overall, setOverall] = useState<{
     total: number;
@@ -127,7 +129,7 @@ const CMDBQualityReport = () => {
   const [hasData, setHasData] = useState<boolean>(false);
 
   const loadData = useCallback(async () => {
-    setLoading(true);
+    setListLoading(true);
     setHasData(false);
     try {
       // 拉取 CI 列表，按 type 分组后计算真实质量指标。
@@ -176,7 +178,7 @@ const CMDBQualityReport = () => {
       setQualityData([]);
       setOverall(null);
     } finally {
-      setLoading(false);
+      setListLoading(false);
     }
   }, [message]);
 
@@ -185,7 +187,7 @@ const CMDBQualityReport = () => {
   }, [loadData]);
 
   const renderContent = () => {
-    if (loading) {
+    if (listLoading) {
       return (
         <div className="space-y-4">
           <Row gutter={[16, 16]}>
@@ -341,8 +343,7 @@ Completeness = 9 core fields are filled in; Accuracy = status/criticality is wit
             <Text className="text-gray-600">Configuration item data quality monitoring</Text>
           </Col>
           <Col>
-            <Button icon={<RotateCcw />} onClick={loadData} loading={loading}>
-
+            <Button icon={<RotateCcw />} onClick={loadData} loading={listLoading}>
               Refresh Data
             </Button>
           </Col>

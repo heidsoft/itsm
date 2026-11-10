@@ -127,6 +127,14 @@ type SkillInvokeResponse struct {
 // Routes
 // ----------------------------------------------------------------------------
 
+// requestTenantID 取当前请求的租户 ID。
+//
+// AuthMiddleware/TenantMiddleware 已把 tenant_id 写入上下文；这里只做读取，
+// 不接受 query/body 指定租户——否则一次请求就能以别的租户身份读技能。
+func requestTenantID(c *gin.Context) int {
+	return c.GetInt("tenant_id")
+}
+
 // RegisterRoutes 会把技能管理路由挂到传入的 tenant-scoped router group。
 //
 // 调用方应在已通过 JWT + tenant 中间件的 group 上调用本方法。
@@ -191,9 +199,11 @@ func (h *Handler) List(c *gin.Context) {
 	status := strings.TrimSpace(c.Query("status"))
 	q := strings.TrimSpace(strings.ToLower(c.Query("q")))
 
-	entries := h.registry.ListEntries()
+	// 只能看到「平台内置 + 本租户注册」的技能；其它租户的自定义技能不出现。
+	tenantID := requestTenantID(c)
+	entries := h.registry.ListEntriesScoped(tenantID)
 	if tag != "" {
-		entries = h.registry.ListEntriesByTag(tag)
+		entries = h.registry.ListEntriesByTagScoped(tenantID, tag)
 	}
 
 	filtered := make([]service.SkillEntry, 0, len(entries))
@@ -244,7 +254,7 @@ func (h *Handler) List(c *gin.Context) {
 // Get GET /api/v1/skills/:code
 func (h *Handler) Get(c *gin.Context) {
 	code := c.Param("code")
-	entry, err := h.registry.GetEntry(code)
+	entry, err := h.registry.GetEntryScoped(requestTenantID(c), code)
 	if err != nil {
 		common.Fail(c, common.NotFoundCode, "skill not found: "+code)
 		return
@@ -303,7 +313,14 @@ func (h *Handler) Create(c *gin.Context) {
 		Executor:            req.Executor,
 	})
 
-	if err := h.registry.Register(skill); err != nil {
+	// 自定义技能必须归属到具体租户：tenantID=0 会被当成全局技能对所有租户可见，
+	// 那是提权。缺租户上下文直接拒绝，不做「默认全局」的兜底。
+	tenantID := requestTenantID(c)
+	if tenantID <= 0 {
+		common.Fail(c, common.ForbiddenCode, "Tenant context is missing; cannot register skill")
+		return
+	}
+	if err := h.registry.RegisterScoped(tenantID, skill); err != nil {
 		if errors.Is(err, service.ErrSkillAlreadyRegistered) {
 			common.Fail(c, common.ConflictCode, "skill already registered: "+req.Code)
 			return
@@ -313,7 +330,7 @@ func (h *Handler) Create(c *gin.Context) {
 	}
 	h.logger.Infow("skill registered", "code", req.Code, "version", req.Version, "category", category)
 
-	entry, err := h.registry.GetEntry(req.Code)
+	entry, err := h.registry.GetEntryScoped(tenantID, req.Code)
 	if err != nil {
 		common.Success(c, gin.H{"code": req.Code, "registered": true})
 		return
@@ -336,7 +353,8 @@ func (h *Handler) Update(c *gin.Context) {
 		return
 	}
 
-	existing, err := h.registry.Get(code)
+	tenantID := requestTenantID(c)
+	existing, err := h.registry.GetScoped(tenantID, code)
 	if err != nil {
 		common.Fail(c, common.NotFoundCode, "skill not found: "+code)
 		return
@@ -398,12 +416,12 @@ func (h *Handler) Update(c *gin.Context) {
 	}
 
 	// 替换：先 Unregister 再以新元数据 Register。
-	if err := h.registry.Unregister(code); err != nil {
+	if err := h.registry.UnregisterScoped(tenantID, code); err != nil {
 		common.FailWithErr(c, err, "unregister failed")
 		return
 	}
 	updated := NewCustomSkill(manifestToConfig(newManifest))
-	if err := h.registry.Register(updated); err != nil {
+	if err := h.registry.RegisterScoped(tenantID, updated); err != nil {
 		common.FailWithErr(c, err, "re-register failed")
 		return
 	}
@@ -419,7 +437,8 @@ func (h *Handler) Update(c *gin.Context) {
 //   - 仅允许自定义 skill promote；builtin Skill 视为不可变。
 func (h *Handler) Promote(c *gin.Context) {
 	code := c.Param("code")
-	existing, err := h.registry.Get(code)
+	tenantID := requestTenantID(c)
+	existing, err := h.registry.GetScoped(tenantID, code)
 	if err != nil {
 		common.Fail(c, common.NotFoundCode, "skill not found: "+code)
 		return
@@ -435,12 +454,12 @@ func (h *Handler) Promote(c *gin.Context) {
 	}
 	m.Category = "ga"
 	m.Checksum = m.ComputeChecksum()
-	if err := h.registry.Unregister(code); err != nil {
+	if err := h.registry.UnregisterScoped(tenantID, code); err != nil {
 		common.FailWithErr(c, err, "unregister failed")
 		return
 	}
 	updated := NewCustomSkill(manifestToConfig(m))
-	if err := h.registry.Register(updated); err != nil {
+	if err := h.registry.RegisterScoped(tenantID, updated); err != nil {
 		common.FailWithErr(c, err, "re-register failed")
 		return
 	}
@@ -456,7 +475,8 @@ func (h *Handler) Promote(c *gin.Context) {
 //   - builtin Skill 拒绝删除。
 func (h *Handler) Delete(c *gin.Context) {
 	code := c.Param("code")
-	existing, err := h.registry.Get(code)
+	tenantID := requestTenantID(c)
+	existing, err := h.registry.GetScoped(tenantID, code)
 	if err != nil {
 		common.Fail(c, common.NotFoundCode, "skill not found: "+code)
 		return
@@ -466,7 +486,7 @@ func (h *Handler) Delete(c *gin.Context) {
 		common.Fail(c, common.ForbiddenCode, "builtin skills cannot be deleted")
 		return
 	}
-	if err := h.registry.Unregister(code); err != nil {
+	if err := h.registry.UnregisterScoped(tenantID, code); err != nil {
 		common.FailWithErr(c, err, "unregister failed")
 		return
 	}
@@ -546,7 +566,7 @@ func (h *Handler) Invoke(c *gin.Context) {
 	// 该字段此前只存不验：manifests 里声明了 ticket:write 之类的 skill，
 	// 任何持 ai:read 的角色都能调用，声明等于装饰。
 	// 空列表不校验（字段可选，保持向后兼容）。
-	entry, entryErr := h.registry.GetEntry(code)
+	entry, entryErr := h.registry.GetEntryScoped(tenantID, code)
 	if entryErr == nil && !h.enforceRequiredPermissions(c, entry) {
 		return
 	}
@@ -561,7 +581,7 @@ func (h *Handler) Invoke(c *gin.Context) {
 	}
 
 	if entryErr != nil {
-		entry, _ = h.registry.GetEntry(code)
+		entry, _ = h.registry.GetEntryScoped(tenantID, code)
 	}
 	resp := SkillInvokeResponse{
 		Code:           code,

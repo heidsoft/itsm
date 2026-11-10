@@ -28,7 +28,9 @@ export default function SkillsAdminPage() {
   const { t } = useI18n();
   const { message } = App.useApp();
   const [items, setItems] = useState<SkillEntry[]>([]);
-  const [loading, setLoading] = useState(false);
+  // 列表初值必须为 true：mount 必定发起首次拉取，初值 false 会让首帧先渲染
+  // 空表格，再被真实数据覆盖。
+  const [listLoading, setListLoading] = useState(true);
   const [filters, setFilters] = useState<{ q?: string; category?: SkillCategory; status?: SkillStatus }>({});
 
   const [detail, setDetail] = useState<SkillEntry | null>(null);
@@ -37,14 +39,14 @@ export default function SkillsAdminPage() {
   const [form] = Form.useForm<SkillUpsertRequest>();
 
   const load = async () => {
-    setLoading(true);
+    setListLoading(true);
     try {
       const res = await skillApi.list({ ...filters, pageSize: 100 });
       setItems(res.items ?? []);
     } catch (e) {
       message.error((e as Error).message ?? t('admin.skills.loadFailed'));
     } finally {
-      setLoading(false);
+      setListLoading(false);
     }
   };
 
@@ -163,7 +165,7 @@ export default function SkillsAdminPage() {
 
         <Table<SkillEntry>
           rowKey="code"
-          loading={loading}
+          loading={listLoading}
           dataSource={items}
           locale={{ emptyText: <Empty description={t('admin.skills.empty')} /> }}
           columns={[

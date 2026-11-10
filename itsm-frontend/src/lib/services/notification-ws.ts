@@ -12,8 +12,9 @@ export type { UserNotification } from '@/lib/api/ticket-notification-api';
 
 export interface NotificationWSMessage {
   type: 'notification' | 'heartbeat' | 'error';
-  /** 服务端推送的是原始通知契约（message/read 字段） */
+  /** 旧版前端读 data；后端 WebSocketMessage 实际下发的是 payload */
   data?: UserNotification;
+  payload?: UserNotification;
   message?: string;
 }
 
@@ -36,6 +37,9 @@ const DEFAULT_CONFIG: Required<NotificationWSConfig> = {
   heartbeatInterval: 30000,
 };
 
+/** 去重窗口上限，防止长期会话中 Set 无界增长。 */
+const MAX_SEEN_NOTIFICATIONS = 500;
+
 class NotificationWSService {
   private ws: WebSocket | null = null;
   private reconnectAttempts = 0;
@@ -54,6 +58,15 @@ class NotificationWSService {
   private shouldReconnect = true;
   private isManualDisconnect = false;
 
+  /** Header 与通知页共享单例：只有最后一个使用者释放时才真正断开。 */
+  private refCount = 0;
+  /** 取票/建连进行中，避免两个组件同时 acquire 开出两条连接。 */
+  private connectionPromise: Promise<void> | null = null;
+  /** 重连或服务端重复投递时，同一条通知只回调一次。 */
+  private seenNotificationIds: Set<number> = new Set();
+  /** 指数退避耗尽后只通知一次，之后转入 keep-alive 低频重试。 */
+  private maxAttemptsNotified = false;
+
   constructor(config: NotificationWSConfig = {}) {
     const cfg = { ...DEFAULT_CONFIG, ...config };
     this.maxReconnectAttempts = cfg.maxReconnectAttempts;
@@ -67,11 +80,28 @@ class NotificationWSService {
    * 流程：先 POST /api/v1/ws/ticket 获取短期票据，再用 ?ticket= 建立连接
    * 认证走 httpOnly cookie，因此这里不接收任何 token 形参。
    */
-  async connect(userId: number): Promise<void> {
+  connect(userId: number): Promise<void> {
     this.userId = userId;
     this.shouldReconnect = true;
     this.isManualDisconnect = false;
 
+    if (this.connectionPromise) return this.connectionPromise;
+
+    const pending = this.openConnection(userId);
+    this.connectionPromise = pending;
+    const clear = () => {
+      if (this.connectionPromise === pending) this.connectionPromise = null;
+    };
+    // 取票失败时 this.ws 尚未创建，onclose 永远不会触发。
+    // 必须由这里自行排队重试，否则后端一次滚动重启就让实时通道永久静默。
+    pending.then(clear, () => {
+      clear();
+      this.handleReconnect();
+    });
+    return pending;
+  }
+
+  private async openConnection(userId: number): Promise<void> {
     // 1. 获取 WebSocket 短期票据（认证走 httpOnly cookie，CSRF 由 httpClient 自动处理）
     let ticket: string;
     try {
@@ -101,6 +131,7 @@ class NotificationWSService {
           logger.info('[NotificationWS] Connected');
           this.reconnectAttempts = 0;
           this.reconnectDelay = 0;
+          this.maxAttemptsNotified = false;
           this.startHeartbeat();
           this.notifyConnectionStatus(true);
           resolve();
@@ -135,6 +166,30 @@ class NotificationWSService {
     });
   }
 
+  /**
+   * 申请使用共享连接。多个组件各自 acquire/release，
+   * 任一组件卸载不再触发全局 disconnect（N3）。
+   */
+  acquire(userId: number): Promise<void> {
+    this.refCount += 1;
+    this.shouldReconnect = true;
+    this.isManualDisconnect = false;
+
+    if (this.connectionPromise) return this.connectionPromise;
+    if (this.isConnected() && this.userId === userId) return Promise.resolve();
+    return this.connect(userId);
+  }
+
+  /** 释放共享连接；引用计数归零才真正断开。 */
+  release(): void {
+    if (this.refCount <= 1) {
+      this.refCount = 0;
+      this.disconnect();
+      return;
+    }
+    this.refCount -= 1;
+  }
+
   private getApiBase(): string {
     if (typeof window === 'undefined') return '';
     const proto = window.location.protocol === 'https:' ? 'https:' : 'http:';
@@ -142,17 +197,13 @@ class NotificationWSService {
   }
 
   /**
-   * 清理资源
+   * 清理资源。注意不清 reconnectTimeout：
+   * 建连过程中 cleanup 会打断 connect 内部刚排队的重试链路。
+   * 重连定时器只由 disconnect() 显式取消。
    */
   private cleanup(): void {
     // 停止心跳
     this.stopHeartbeat();
-
-    // 清除重连定时器
-    if (this.reconnectTimeout) {
-      clearTimeout(this.reconnectTimeout);
-      this.reconnectTimeout = null;
-    }
 
     // 关闭旧连接
     if (this.ws) {
@@ -169,15 +220,24 @@ class NotificationWSService {
   }
 
   /**
-   * 处理 WebSocket 消息
+   * 处理 WebSocket 消息。
+   * 后端 WebSocketMessage 是 {type, payload}，前端历史契约读 data，两者都兼容。
    */
   private handleMessage(message: NotificationWSMessage): void {
     switch (message.type) {
-      case 'notification':
-        if (message.data) {
-          this.notificationCallbacks.forEach(cb => cb(message.data!));
+      case 'notification': {
+        const notification = message.data ?? message.payload;
+        if (!notification) break;
+        if (typeof notification.id === 'number') {
+          if (this.seenNotificationIds.has(notification.id)) break;
+          this.seenNotificationIds.add(notification.id);
+          if (this.seenNotificationIds.size > MAX_SEEN_NOTIFICATIONS) {
+            this.seenNotificationIds.clear();
+          }
         }
+        this.notificationCallbacks.forEach(cb => cb(notification));
         break;
+      }
       case 'heartbeat':
         // 心跳响应
         break;
@@ -219,34 +279,38 @@ class NotificationWSService {
    * 计算重连延迟（指数退避）
    */
   private calculateReconnectDelay(): number {
-    const delay = this.initialReconnectDelay * Math.pow(2, this.reconnectAttempts);
+    const delay = this.initialReconnectDelay * Math.pow(2, this.reconnectAttempts - 1);
     return Math.min(delay, this.maxReconnectDelay);
   }
 
   /**
-   * 处理重连
+   * 处理重连。指数退避耗尽后不再彻底放弃，而是转入低频 keep-alive 重试，
+   * 保证后端滚动重启后通道能自愈；同时防重避免 onerror + onclose 双调度。
    */
   private handleReconnect(): void {
+    if (!this.shouldReconnect || this.isManualDisconnect || this.reconnectTimeout) return;
+
     if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-      logger.warn('[NotificationWS] Max reconnection attempts reached');
-      this.notifyMaxAttemptsReached();
-      return;
+      if (!this.maxAttemptsNotified) {
+        this.maxAttemptsNotified = true;
+        this.notifyMaxAttemptsReached();
+      }
+      this.reconnectDelay = this.maxReconnectDelay;
+      logger.warn('[NotificationWS] Backoff exhausted, keeping low-frequency retry alive');
+    } else {
+      this.reconnectAttempts++;
+      this.reconnectDelay = this.calculateReconnectDelay();
+      logger.info(
+        `[NotificationWS] Reconnecting in ${this.reconnectDelay}ms... (${this.reconnectAttempts}/${this.maxReconnectAttempts})`
+      );
+      this.reconnectCallbacks.forEach(cb => cb(this.reconnectAttempts, this.maxReconnectAttempts));
     }
 
-    this.reconnectAttempts++;
-    this.reconnectDelay = this.calculateReconnectDelay();
-
-    logger.info(
-      `[NotificationWS] Reconnecting in ${this.reconnectDelay}ms... (${this.reconnectAttempts}/${this.maxReconnectAttempts})`
-    );
-
-    // 通知重连尝试
-    this.reconnectCallbacks.forEach(cb => cb(this.reconnectAttempts, this.maxReconnectAttempts));
-
     this.reconnectTimeout = setTimeout(() => {
+      this.reconnectTimeout = null;
       if (this.shouldReconnect && this.userId) {
         this.connect(this.userId).catch(() => {
-          // 连接失败由 onclose 处理，会触发重连
+          // connect 的 rejection 分支已排队下一次重试，避免重复调度
         });
       }
     }, this.reconnectDelay);
@@ -260,7 +324,7 @@ class NotificationWSService {
   }
 
   /**
-   * 通知达到最大重连次数
+   * 通知达到最大重连次数（进入 keep-alive 前只触发一次）
    */
   private notifyMaxAttemptsReached(): void {
     this.maxAttemptsCallbacks.forEach(cb => cb());
@@ -304,6 +368,11 @@ class NotificationWSService {
   disconnect(): void {
     this.isManualDisconnect = true;
     this.shouldReconnect = false;
+    this.refCount = 0;
+    if (this.reconnectTimeout) {
+      clearTimeout(this.reconnectTimeout);
+      this.reconnectTimeout = null;
+    }
     this.cleanup();
     this.reconnectAttempts = 0;
     this.reconnectDelay = 0;
@@ -318,6 +387,11 @@ class NotificationWSService {
     this.isManualDisconnect = false;
     this.reconnectAttempts = 0;
     this.reconnectDelay = 0;
+    this.maxAttemptsNotified = false;
+    if (this.reconnectTimeout) {
+      clearTimeout(this.reconnectTimeout);
+      this.reconnectTimeout = null;
+    }
 
     if (this.userId) {
       return this.connect(this.userId);

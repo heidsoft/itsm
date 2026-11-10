@@ -178,13 +178,38 @@ func (h *Handler) Provision(ctx *gin.Context) {
 	if !h.requireStore(ctx) {
 		return
 	}
+	// Provision 会关闭并替换同名旧实例（manager.go），所以必须在调用前
+	// 把旧配置留底：Save 失败时只 Revoke 新实例会让「库里有旧配置、内存里
+	// 没有实例」，重启前该连接器完全不可用。RotateSecret 早已走恢复路径，
+	// 这里是同一模式的另一入口。
+	var previous *connector.Config
+	for _, existing := range h.manager.ListByTenant(tenantID) {
+		if existing.Name == req.Name {
+			copied := existing
+			// 复制 map：Provision 的 Init 可能就地改写 settings/credentials，
+			// 留底必须独立于运行态实例持有的那一份。
+			copied.Settings = cloneSettings(existing.Settings)
+			copied.Credentials = make(map[string]string, len(existing.Credentials))
+			for k, v := range existing.Credentials {
+				copied.Credentials[k] = v
+			}
+			previous = &copied
+			break
+		}
+	}
 	if err := h.manager.Provision(ctx.Request.Context(), cfg); err != nil {
 		common.RespondError(ctx, err, "Operation failed")
 		return
 	}
 	if err := h.store.Save(ctx.Request.Context(), cfg); err != nil {
 		h.manager.Revoke(cfg)
-		common.RespondError(ctx, err, "Operation failed")
+		if previous != nil {
+			if restoreErr := h.manager.Provision(ctx.Request.Context(), *previous); restoreErr != nil {
+				h.logger.Errorw("connector provision rollback failed; runtime may be disabled until restart",
+					"connector", req.Name, "tenant_id", tenantID, "error", restoreErr)
+			}
+		}
+		common.RespondError(ctx, err, "Operation failed: Configuration could not be persisted")
 		return
 	}
 	common.Success(ctx, maskConfig(cfg, h.manager.HealthCheckTenant(ctx.Request.Context(), tenantID)))
@@ -261,8 +286,8 @@ func (h *Handler) Test(ctx *gin.Context) {
 	if err := h.manager.Send(ctx.Request.Context(), tenantID, name, &connector.Message{
 		Channel: channel,
 		Type:    "text",
-		Title:   "ITSM 连接器测试",
-		Content: "这是一条来自 ITSM 的测试消息。\n时间: " + time.Now().Format(time.RFC3339),
+		Title:   "ITSM Connector Test",
+		Content: "This is a test message from ITSM.\nTime: " + time.Now().Format(time.RFC3339),
 	}); err != nil {
 		common.RespondError(ctx, err, "Operation failed")
 		return
@@ -475,7 +500,7 @@ func (h *Handler) RotateSecret(ctx *gin.Context) {
 		"provider":  rotated.Provider,
 		"rotated":   true,
 		"rotatedAt": rotatedAt,
-		"note":      "旧凭据已立即失效；如需回退，用旧凭据再调一次 POST /connectors/configs",
+		"note":      "The previous credentials are immediately invalidated. To roll back, submit the previous credentials again through POST /connectors/configs",
 	})
 }
 

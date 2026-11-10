@@ -32,7 +32,6 @@ jest.mock('@/lib/api/', () => ({
     getApprovalSummary: jest.fn().mockResolvedValue({ chain: [] }),
     getChangeApprovals: jest.fn().mockResolvedValue([]),
     getRiskAssessment: jest.fn().mockResolvedValue(null),
-    getImpactAnalysis: jest.fn().mockResolvedValue(null),
     resolveRollbackStep: (...args: unknown[]) => resolveRollbackStep(...args),
     replaceRollbackSteps: (...args: unknown[]) => replaceRollbackSteps(...args),
     failChange: jest.fn(),

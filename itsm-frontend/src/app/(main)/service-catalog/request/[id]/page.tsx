@@ -49,7 +49,8 @@ export default function ServiceCatalogRequestPage() {
   const { message } = App.useApp();
   const id = Number(params?.id);
   const [form] = Form.useForm();
-  const [loading, setLoading] = useState(false);
+  // 提交动作态（数据加载由 fetching 负责）。
+  const [actionLoading, setActionLoading] = useState(false);
   const [catalog, setCatalog] = useState<CatalogInfo | null>(null);
   const [fetching, setFetching] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
@@ -96,7 +97,7 @@ export default function ServiceCatalogRequestPage() {
   }, [form, user]);
 
   const onFinish = async (values: Record<string, unknown>) => {
-    setLoading(true);
+    setActionLoading(true);
     try {
       const expireAt: Dayjs | undefined = values.expireAt as Dayjs | undefined;
       const payload: CreateServiceRequestRequest = {
@@ -133,7 +134,7 @@ export default function ServiceCatalogRequestPage() {
     } catch (e: unknown) {
       message.error('Submission failed:' + (e instanceof Error ? e.message : 'Unknown error'));
     } finally {
-      setLoading(false);
+      setActionLoading(false);
     }
   };
 
@@ -332,7 +333,7 @@ export default function ServiceCatalogRequestPage() {
                 type='primary'
                 htmlType='submit'
                 icon={<Send />}
-                loading={loading}
+                loading={actionLoading}
                 disabled={!catalog || !!fetchError}
               >
 

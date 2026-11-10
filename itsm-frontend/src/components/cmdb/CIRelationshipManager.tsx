@@ -186,7 +186,10 @@ const CIRelationshipManager: React.FC<CIRelationshipManagerProps> = ({
     }
   };
 
-  const isLoading = relationsQuery.isLoading;
+  // 用 isPending 而非 isLoading：SSR/首帧时 query 尚未发起（isFetching=false），
+  // isLoading 为 false 会让「暂无关系」的空态在数据到达前就渲染出来（D56）。
+  // isPending 在服务端渲染与首次拉取期间均为 true，首帧即呈现加载态。
+  const isLoading = relationsQuery.isPending;
 
   // 表格列定义
   const columns = [

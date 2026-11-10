@@ -36,7 +36,7 @@ export default function RelationshipsPage() {
   }, [cisQuery.isError, message]);
 
   const selectedCi = cis.find(item => item.id === selectedCiId) || null;
-  const loading = cisQuery.isLoading;
+  const loading = cisQuery.isPending;
 
   return (
     <div className="space-y-6 p-6">

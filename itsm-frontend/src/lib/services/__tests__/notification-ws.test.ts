@@ -253,6 +253,28 @@ describe('NotificationWSService', () => {
       expect(cb).not.toHaveBeenCalled();
     });
 
+    it('accepts the backend {type, payload} envelope, not just the legacy data field', () => {
+      const cb = jest.fn();
+      service.onNotification(cb);
+      const notification = makeNotification({ id: 301, message: 'WS wired' });
+
+      FakeWebSocket.instances[0].triggerMessage({ type: 'notification', payload: notification });
+
+      expect(cb).toHaveBeenCalledTimes(1);
+      expect(cb).toHaveBeenCalledWith(notification);
+    });
+
+    it('deduplicates notification ids across reconnect/duplicate delivery', () => {
+      const cb = jest.fn();
+      service.onNotification(cb);
+      const notification = makeNotification({ id: 302 });
+
+      FakeWebSocket.instances[0].triggerMessage({ type: 'notification', payload: notification });
+      FakeWebSocket.instances[0].triggerMessage({ type: 'notification', data: notification });
+
+      expect(cb).toHaveBeenCalledTimes(1);
+    });
+
     it('unsubscribe stops callback from firing', () => {
       const cb = jest.fn();
       const unsub = service.onNotification(cb);
@@ -325,11 +347,10 @@ describe('NotificationWSService', () => {
       service.disconnect();
     });
 
-    it('stops and notifies after maxReconnectAttempts', async () => {
-      // Drive the boundary condition directly via the (private) reconnect
-      // counter, which is the cleanest way to assert the cap. The full
-      // reconnection cycle is already exercised by the previous test.
-      const service2 = new NotificationWSService({ maxReconnectAttempts: 2 });
+    it('notifies once but keeps a low-frequency retry alive after maxReconnectAttempts', async () => {
+      // 退避耗尽后彻底停摆会让后端滚动重启后的实时通道永久静默；
+      // 现在通知一次订阅者，然后转入 keep-alive 低频重试。
+      const service2 = new NotificationWSService({ maxReconnectAttempts: 2, maxReconnectDelay: 30000 });
       const maxCb = jest.fn();
       service2.onMaxAttemptsReached(maxCb);
 
@@ -338,18 +359,60 @@ describe('NotificationWSService', () => {
       FakeWebSocket.instances[0].triggerOpen();
       await promise;
 
-      // Fast-forward reconnectAttempts to the cap, then trigger one more close.
-      // This isolates the "attempts >= max" branch without the noise of
-      // three back-to-back timer cycles.
       (service2 as unknown as { reconnectAttempts: number }).reconnectAttempts = 2;
       FakeWebSocket.instances[0].triggerClose(1006);
 
-      // notifyMaxAttemptsReached should have fired; further unexpected
-      // closes must NOT schedule a reconnect (reconnectTimeout stays null).
-      expect(maxCb).toHaveBeenCalled();
-      expect((service2 as unknown as { reconnectTimeout: unknown }).reconnectTimeout).toBeNull();
+      expect(maxCb).toHaveBeenCalledTimes(1);
+      const reconnectTimeout = (service2 as unknown as { reconnectTimeout: unknown }).reconnectTimeout;
+      expect(reconnectTimeout).not.toBeNull();
+
+      const connectSpy = jest.spyOn(service2, 'connect');
+      jest.advanceTimersByTime(30000);
+      expect(connectSpy).toHaveBeenCalledWith(1);
 
       service2.disconnect();
+    });
+  });
+
+  describe('shared connection reference counting (N3)', () => {
+    it('keeps the socket open until the last consumer releases it', async () => {
+      const service = new NotificationWSService();
+
+      const first = service.acquire(1);
+      await Promise.resolve();
+      FakeWebSocket.instances[0].triggerOpen();
+      await first;
+
+      await service.acquire(1);
+      expect(FakeWebSocket.instances).toHaveLength(1);
+
+      service.release();
+      expect(service.isConnected()).toBe(true);
+      expect(FakeWebSocket.instances[0].closed).toBe(false);
+
+      service.release();
+      expect(service.isConnected()).toBe(false);
+    });
+  });
+
+  describe('ticket failure self-healing (N4)', () => {
+    it('schedules its own retry when ticket acquisition fails before a socket exists', async () => {
+      const service = new NotificationWSService({
+        initialReconnectDelay: 1000,
+        maxReconnectAttempts: 3,
+      });
+      (httpClient.request as jest.Mock).mockRejectedValueOnce(new Error('ticket 503'));
+
+      await expect(service.connect(1)).rejects.toThrow('ticket 503');
+      expect(FakeWebSocket.instances).toHaveLength(0);
+      expect((service as unknown as { reconnectTimeout: unknown }).reconnectTimeout).not.toBeNull();
+
+      jest.advanceTimersByTime(1000);
+      await Promise.resolve();
+      await Promise.resolve();
+      expect(FakeWebSocket.instances).toHaveLength(1);
+
+      service.disconnect();
     });
   });
 

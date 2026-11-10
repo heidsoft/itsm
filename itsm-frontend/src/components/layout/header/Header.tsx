@@ -100,7 +100,7 @@ export const Header: React.FC<HeaderProps> = ({
   useEffect(() => {
     if (user?.id) {
       loadNotifications();
-      notificationWS.connect(user.id).catch(() => {
+      notificationWS.acquire(user.id).catch(() => {
         // WebSocket server not available, ignore silently
       });
 
@@ -113,7 +113,7 @@ export const Header: React.FC<HeaderProps> = ({
 
       return () => {
         unsubscribe();
-        notificationWS.disconnect();
+        notificationWS.release();
       };
     }
   }, [user?.id, loadNotifications]);

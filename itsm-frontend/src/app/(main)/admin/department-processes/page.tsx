@@ -48,7 +48,9 @@ export default function DepartmentProcessPage() {
   const [selectedDeptId, setSelectedDeptId] = useState<number | null>(null);
   const [selectedDept, setSelectedDept] = useState<Department | null>(null);
   const [deptProcesses, setDeptProcesses] = useState<ProcessBinding[]>([]);
-  const [loading, setLoading] = useState(false);
+  // 列表初值必须为 true：选中部门后会发起拉取，初值 false 会让首帧先渲染
+  // 「流程总数 0」的假统计卡与空表格，再被真实数据覆盖。
+  const [listLoading, setListLoading] = useState(true);
   const [showInitModal, setShowInitModal] = useState(false);
   const [departmentType, setDepartmentType] = useState('operations');
 
@@ -77,7 +79,7 @@ export default function DepartmentProcessPage() {
   };
 
   const loadDeptProcesses = async (deptId: number) => {
-    setLoading(true);
+    setListLoading(true);
     try {
       const data = await ProcessBindingApi.listDepartmentProcesses(deptId);
       setDeptProcesses(data);
@@ -85,7 +87,7 @@ export default function DepartmentProcessPage() {
       console.error('Failed to load department processes:', error);
       message.error('Failed to load department process');
     } finally {
-      setLoading(false);
+      setListLoading(false);
     }
   };
 
@@ -224,6 +226,8 @@ export default function DepartmentProcessPage() {
                 </Card>
 
                 {/* Statistics */}
+                {/* 统计卡必须门控：还没拉到数据时渲染成「流程总数 0」会被误读成「该部门没有绑定流程」 */}
+                {!listLoading && (
                 <Row gutter={16} style={{ marginBottom: 16 }}>
                   <Col span={8}>
                     <Card size="small">
@@ -241,6 +245,7 @@ export default function DepartmentProcessPage() {
                     </Card>
                   </Col>
                 </Row>
+                )}
 
                 {/* Actions */}
                 <Card size="small" style={{ marginBottom: 16 }}>
@@ -268,7 +273,7 @@ export default function DepartmentProcessPage() {
                   <Table
                     columns={columns}
                     dataSource={deptProcesses}
-                    loading={loading}
+                    loading={listLoading}
                     rowKey="id"
                     pagination={false}
                   />

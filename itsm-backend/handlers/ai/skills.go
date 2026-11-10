@@ -36,6 +36,18 @@ func (e *SkillInputError) Error() string {
 
 func (e *SkillInputError) Unwrap() error { return e.Wrapped }
 
+// skillReportViewer 把 skill 输入中的认证身份翻译成报表读取者。
+//
+// handlers/skill.Invoke 已用 gin context 无条件覆盖 input["userId"]/
+// input["role"]，因此这里不会被调用方伪造；若 skill 被后台直接调用而未注入
+// 身份，则得到零值 viewer → 非管理角色 + userID=0 → 空集（fail-closed），
+// 不会退回全租户口径。
+func skillReportViewer(in map[string]any) service.DashboardViewer {
+	userID, _ := inputInt(in, "userId", 0)
+	role, _ := inputString(in, "role", false)
+	return service.DashboardViewer{UserID: userID, Role: role}
+}
+
 // helper：从 map 中按 key 取出 string，缺值时返回 SkillInputError。
 func inputString(input map[string]any, key string, required bool) (string, error) {
 	v, ok := input[key]
@@ -567,7 +579,7 @@ func (s *AnalyticsSkill) Execute(ctx context.Context, input interface{}) (interf
 	if s.svc == nil {
 		return nil, errors.New("analytics skill: underlying service is nil")
 	}
-	return s.svc.GetDeepAnalytics(ctx, req, tenantID)
+	return s.svc.GetDeepAnalytics(ctx, req, tenantID, skillReportViewer(in))
 }
 
 // ----------------------------------------------------------------------------
@@ -635,8 +647,10 @@ func (s *TrendPredictionSkill) Execute(ctx context.Context, input interface{}) (
 	if s.svc == nil {
 		return nil, errors.New("trend_prediction skill: underlying service is nil")
 	}
-	// skill 调用无用户上下文：userID 传 0，底账照落。
-	return s.svc.GetTrendPrediction(ctx, req, tenantID, 0)
+	// 底账归属：skill 调用无独立请求者上下文时 userID 传 0，底账照落；
+	// 统计范围另取 skill 输入里的身份（Invoke 已用认证上下文无条件覆盖
+	// userId/role，不可由调用方伪造）。
+	return s.svc.GetTrendPrediction(ctx, req, tenantID, 0, skillReportViewer(in))
 }
 
 // ----------------------------------------------------------------------------

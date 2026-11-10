@@ -9,6 +9,7 @@ import {
   Col,
   Empty,
   Input,
+  Modal,
   Row,
   Segmented,
   Space,
@@ -22,9 +23,10 @@ import type { ColumnsType } from 'antd/es/table';
 import { AlertTriangle, Ban, FlaskConical, RefreshCw, Search, ShieldCheck } from 'lucide-react';
 import { PageContainer } from '@/app/components/PageContainer';
 import { getCapabilities } from '@/lib/api/capability-api';
+import { splitPilotReason } from '@/lib/api/pilot-reason';
 import type { ProductCapabilityState } from '@/lib/api/capability-api';
 
-const { Text } = Typography;
+const { Paragraph, Text } = Typography;
 
 /**
  * 能力矩阵控制台。
@@ -62,13 +64,106 @@ function isUnready(item: ProductCapabilityState): boolean {
   return item.health ? !item.health.ok : false;
 }
 
+/**
+ * 表格里的预览态摘要。三件事必须同时可核对，且不能把千字散文平铺进单元格：
+ *   1. degradedReason —— 此刻为什么不可用（排障信号，会变）；
+ *   2. Remaining blockers       —— 为什么它还不是 GA（发布决策）；
+ *   3. Promotion criteria       —— 还差哪块可验证证据，读者要能据此推进。
+ * 完整原文不丢，收进详情面板；解析不出Promotion criteria时如实标「契约不完整」，
+ * 不用「No data」把缺契约伪装成正常状态。
+ */
+function PilotReasonCell({
+  item,
+  onOpen,
+}: {
+  item: ProductCapabilityState;
+  onOpen: (key: string) => void;
+}) {
+  const parts = splitPilotReason(item.pilotReason);
+  if (!item.degradedReason && !parts) return <Text type='secondary'>—</Text>;
+  return (
+    <Space orientation='vertical' size={2} style={{ maxWidth: 460 }}>
+      {item.degradedReason && <Text type='danger'>{item.degradedReason}</Text>}
+      {parts && !parts.structured && (
+        <>
+          <Text type='warning'>Promotion criteria not declared (incomplete contract)</Text>
+          <Text type='secondary' ellipsis={{ tooltip: false }}>
+            {parts.full}
+          </Text>
+        </>
+      )}
+      {parts?.structured && (
+        <>
+          <Space size={4} align='start'>
+            <Tag color='gold'>Remaining blockers</Tag>
+            <Text type='secondary' ellipsis={{ tooltip: false }}>
+              {parts.blockers}
+            </Text>
+          </Space>
+          <Space size={4} align='start'>
+            <Tag color='blue'>Promotion criteria</Tag>
+            <Text ellipsis={{ tooltip: false }}>{parts.criteria}</Text>
+          </Space>
+          <Button
+            type='link'
+            size='small'
+            style={{ padding: 0, height: 'auto' }}
+            onClick={() => onOpen(item.key)}
+          >
+            View full rationale
+          </Button>
+        </>
+      )}
+    </Space>
+  );
+}
+
+/** 详情面板按三段回看Original API response，避免「切分后看不到依据」。 */
+function PilotReasonDetail({ item }: { item: ProductCapabilityState }) {
+  const parts = splitPilotReason(item.pilotReason);
+  if (!parts) return <Text type='secondary'>No preview rationale was returned for this capability</Text>;
+  return (
+    <Space orientation='vertical' size={12} style={{ width: '100%' }}>
+      <Text type='secondary'>
+        Acceptance baseline {item.acceptanceVersion || 'Not declared'} · Maturity: Preview (Pilot)
+        {item.degradedReason ? ` · Currently unavailable: ${item.degradedReason}` : ''}
+      </Text>
+      <div>
+        <Text strong>Completed progress</Text>
+        <Paragraph style={{ marginTop: 4, marginBottom: 0 }}>
+          {parts.progress || '(The rationale does not separate progress from blockers; see remaining blockers below)'}
+        </Paragraph>
+      </div>
+      <div>
+        <Text strong type='danger'>
+          Remaining blockers
+        </Text>
+        <Paragraph style={{ marginTop: 4, marginBottom: 0 }}>{parts.blockers}</Paragraph>
+      </div>
+      <div>
+        <Text strong>Promotion criteria</Text>
+        <Paragraph style={{ marginTop: 4, marginBottom: 0 }}>
+          {parts.criteria || 'Not declared (incomplete contract)'}
+        </Paragraph>
+      </div>
+      <div>
+        <Text type='secondary'>Original API response</Text>
+        <Paragraph style={{ marginTop: 4, marginBottom: 0 }}>{parts.full}</Paragraph>
+      </div>
+    </Space>
+  );
+}
+
 export default function CapabilitiesAdminPage() {
   const { message } = App.useApp();
   const [items, setItems] = useState<ProductCapabilityState[]>([]);
   const [acceptanceVersion, setAcceptanceVersion] = useState('');
-  const [loading, setLoading] = useState(false);
+  // 列表初值必须为 true：mount 必定发起首次拉取，初值 false 会让首帧先渲染
+  // 「Total capabilities 0」的假统计卡与空表格，再被真实数据覆盖。
+  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<MaturityFilter>('all');
   const [keyword, setKeyword] = useState('');
+  const [detailKey, setDetailKey] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -94,7 +189,12 @@ export default function CapabilitiesAdminPage() {
     const pilot = items.filter(item => item.maturity === 'pilot').length;
     const disabled = items.filter(item => item.maturity === 'disabled').length;
     const unready = items.filter(isUnready).length;
-    return { total: items.length, ga, pilot, disabled, unready };
+    // 有多少预览条目真的写出了Promotion criteria：分母是预览总数，缺口必须可见，
+    // 否则「预览态可核对」只是一句注释。
+    const criteriaDeclared = items.filter(
+      item => item.maturity === 'pilot' && splitPilotReason(item.pilotReason)?.structured === true
+    ).length;
+    return { total: items.length, ga, pilot, disabled, unready, criteriaDeclared };
   }, [items]);
 
   // 矩阵按租户下发：没有租户上下文时 allowedActions 为空、tenantReady=false，
@@ -108,9 +208,15 @@ export default function CapabilitiesAdminPage() {
       if (filter === 'pilot' && item.maturity !== 'pilot') return false;
       if (filter === 'unready' && !isUnready(item)) return false;
       if (!needle) return true;
-      return item.key.toLowerCase().includes(needle);
+      // 预览态要能按「还差什么」检索：拿到一句「真实账号验收」也应能定位
+      // 到对应能力，而不必先猜出能力键。
+      return `${item.key} ${item.pilotReason ?? ''} ${item.degradedReason ?? ''}`
+        .toLowerCase()
+        .includes(needle);
     });
   }, [items, filter, keyword]);
+
+  const detailItem = detailKey ? (items.find(item => item.key === detailKey) ?? null) : null;
 
   const columns: ColumnsType<ProductCapabilityState> = [
     {
@@ -180,22 +286,7 @@ export default function CapabilitiesAdminPage() {
     {
       title: 'Description',
       key: 'reason',
-      render: (_: unknown, item) => {
-        // 两件事必须同时可见，不能二选一：
-        //   degradedReason = 此刻为什么不可用（排障信号，会变）；
-        //   pilotReason    = 为什么它还不是 GA（发布决策，不会自己消失）。
-        // 此前只显示前者，于是「部署未就绪」的 Pilot 能力在页面上看不到任何
-        // 晋升线索——运维修好 READY 变量后仍不知道这块能力还差什么。
-        if (!item.degradedReason && !item.pilotReason) {
-          return <Text type='secondary'>—</Text>;
-        }
-        return (
-          <Space orientation='vertical' size={2}>
-            {item.degradedReason && <Text type='danger'>{item.degradedReason}</Text>}
-            {item.pilotReason && <Text type='secondary'>{item.pilotReason}</Text>}
-          </Space>
-        );
-      },
+      render: (_: unknown, item) => <PilotReasonCell item={item} onOpen={setDetailKey} />,
     },
   ];
 
@@ -210,43 +301,53 @@ export default function CapabilitiesAdminPage() {
       }
     >
       <Space orientation='vertical' size={16} style={{ width: '100%' }}>
-        <Row gutter={16}>
-          <Col xs={12} md={6}>
-            <Card size='small'>
-              <Statistic title="Total number of abilities" value={summary.total} prefix={<ShieldCheck size={16} />} />
-            </Card>
-          </Col>
-          <Col xs={12} md={6}>
-            <Card size='small'>
-              <Statistic title="GA (can commit)" value={summary.ga} styles={{ content: { color: '#3f8600' } }} />
-            </Card>
-          </Col>
-          <Col xs={12} md={6}>
-            <Card size='small'>
-              <Statistic
-                title="Preview (Pilot)"
-                value={summary.pilot}
-                styles={{ content: { color: '#d48806' } }}
-                prefix={<FlaskConical size={16} />}
-              />
-            </Card>
-          </Col>
-          <Col xs={12} md={6}>
-            <Card size='small'>
-              <Statistic
-                title="Not available at this time"
-                value={summary.unready}
-                styles={{ content: { color: summary.unready > 0 ? '#cf1322' : undefined } }}
-                prefix={summary.unready > 0 ? <AlertTriangle size={16} /> : <Ban size={16} />}
-              />
-            </Card>
-          </Col>
-        </Row>
+        {/* 统计卡必须门控：还没拉到数据时渲染成「Total capabilities 0」会被误读成「矩阵为空」 */}
+        {!loading && (
+          <Row gutter={16}>
+            <Col xs={12} md={6}>
+              <Card size='small'>
+                <Statistic title='Total capabilities' value={summary.total} prefix={<ShieldCheck size={16} />} />
+              </Card>
+            </Col>
+            <Col xs={12} md={6}>
+              <Card size='small'>
+                <Statistic title='GA (ready to commit)' value={summary.ga} styles={{ content: { color: '#3f8600' } }} />
+              </Card>
+            </Col>
+            <Col xs={12} md={6}>
+              <Card size='small'>
+                <Statistic
+                  title='Preview (Pilot)'
+                  value={summary.pilot}
+                  styles={{ content: { color: '#d48806' } }}
+                  prefix={<FlaskConical size={16} />}
+                />
+              </Card>
+            </Col>
+            <Col xs={12} md={6}>
+              <Card size='small'>
+                <Statistic
+                  title='Currently unavailable'
+                  value={summary.unready}
+                  styles={{ content: { color: summary.unready > 0 ? '#cf1322' : undefined } }}
+                  prefix={summary.unready > 0 ? <AlertTriangle size={16} /> : <Ban size={16} />}
+                />
+              </Card>
+            </Col>
+          </Row>
+        )}
 
         <Space wrap size={6}>
           <Text type='secondary'>Contract acceptance baseline</Text>
           <Tag color={acceptanceVersion ? 'blue' : 'default'}>{acceptanceVersion || 'Not declared'}</Tag>
-          <Tooltip title="The date of the last reconciliation of the capability matrix, not the release version. It must not be earlier than the latest released version; whether a single capability can be promised depends on maturity, deployment readiness and description.">
+          <Tooltip title='Preview capabilities with declared promotion criteria / total preview capabilities. A lower count means some entries need complete rationale before promotion can proceed.'>
+            <span>
+              <Tag color={summary.criteriaDeclared === summary.pilot ? 'green' : 'orange'}>
+                Promotion criteria {summary.criteriaDeclared}/{summary.pilot}
+              </Tag>
+            </span>
+          </Tooltip>
+          <Tooltip title='The capability matrix reconciliation date, not the release version. It must not precede the latest release; capability commitments depend on maturity, deployment readiness, and rationale.'>
             <Text type='secondary' style={{ cursor: 'help' }}>
 
               Description
@@ -281,7 +382,7 @@ export default function CapabilitiesAdminPage() {
           <Input
             allowClear
             prefix={<Search size={14} />}
-            placeholder="Search by capability key, such as connector.feishu"
+            placeholder='Search capability keys or preview rationale, e.g. connector.feishu'
             style={{ width: 280 }}
             value={keyword}
             onChange={event => setKeyword(event.target.value)}
@@ -305,6 +406,16 @@ export default function CapabilitiesAdminPage() {
             ),
           }}
         />
+
+        <Modal
+          open={detailItem !== null}
+          onCancel={() => setDetailKey(null)}
+          footer={null}
+          width={760}
+          title={`Preview review · ${detailItem?.key ?? ''}`}
+        >
+          {detailItem && <PilotReasonDetail item={detailItem} />}
+        </Modal>
       </Space>
     </PageContainer>
   );

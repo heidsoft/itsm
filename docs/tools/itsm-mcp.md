@@ -1,6 +1,6 @@
 # ITSM MCP Server（itsm-mcp）
 
-`itsm-mcp` 把 ITSM 的命令面暴露成 **MCP（Model Context Protocol）** 工具，使 WorkBuddy、Claude Desktop、Cursor 等任意 MCP 客户端可以直接查询与操作本实例：工单、事件、问题、变更、发布、服务请求、CMDB、知识库、SLA、BPMN 工作流，共 268 条命令。
+`itsm-mcp` 把 ITSM 的命令面暴露成 **MCP（Model Context Protocol）** 工具，使 WorkBuddy、Claude Desktop、Cursor 等任意 MCP 客户端可以直接查询与操作本实例：工单、事件、问题、变更、发布、服务请求、CMDB、知识库、SLA、BPMN 工作流，共 352 条命令。
 
 它同时是「用 Agent 完善产品」的入口：客户端不仅能调 API，还能读 `ROADMAP.md`、`CHANGELOG.md`、API 参考与架构文档（MCP resources），从而在有产品上下文的前提下提出改动，而不是另造一套并行机制。
 
@@ -64,15 +64,15 @@ node itsm-cli/bin/itsm-mcp.js --describe
 
 ---
 
-## 2. 工具面：三层，而不是 268 个工具
+## 2. 工具面：三层，而不是 352 个工具
 
-把 268 条命令平铺成 268 个工具会淹没模型：`ticket.update` 与 `ticket.subtasks.update` 之类的近邻工具会互相干扰，`tools/list` 本身就要吃掉上万 token。因此分三层：
+把 352 条命令平铺成 352 个工具会淹没模型：`ticket.update` 与 `ticket.subtasks.update` 之类的近邻工具会互相干扰，`tools/list` 本身就要吃掉上万 token。因此分三层：
 
 | 层 | 内容 | 使用场景 |
 |:---|:---|:---|
-| **精选工具**（20 个） | `itsm_ticket_list` / `itsm_ticket_get` / `itsm_ticket_create` / `itsm_ticket_update` / `itsm_ticket_comment_add` / `itsm_ticket_transition` / `itsm_incident_*` / `itsm_change_list` / `itsm_change_approvals` / `itsm_cmdb_search` / `itsm_cmdb_impact` / `itsm_knowledge_search` / `itsm_sla_stats` / `itsm_workflow_tasks` / `itsm_whoami` / `itsm_health` / `itsm_search` | 高频路径，带完整 JSON Schema，一次调用到位 |
+| **精选工具**（32 个） | 工单/事件/**问题**/变更/发布的 list + get、变更审批链、服务请求 list + get、CMDB 搜索与影响分析、知识检索与正文、SLA 概览、我的待办、身份/健康/全局搜索 | 高频路径，带完整 JSON Schema，一次调用到位 |
 | **发现三件套** | `itsm_discover` → `itsm_describe` → `itsm_call` | 精选工具未覆盖的动作；参数不靠猜 |
-| **其余 245 条** | 经 `itsm_call` 用命令名执行 | 审批链、标签、关联、版本、审计、连接器等 |
+| **其余 320 条** | 经 `itsm_call` 用命令名执行 | 审批链、标签、关联、版本、审计、连接器等 |
 
 少数工具会在端点语义之外补一层默认值，让工具名和实际返回一致：`itsm_workflow_tasks` 默认只返待处理（`status=created`），因为 `GET /bpmn/tasks` 不传 `status` 时连已完成的任务一起返回；显式传 `status` 仍以调用方的值为准，走 `itsm_call` 则完全不过滤。
 
@@ -133,7 +133,7 @@ itsm_call     { command: "change.approvals", params: { id: "CHG-1" } }
 | 方法 | 状态 |
 |:---|:---|
 | `initialize` / `notifications/initialized` | ✅ 版本协商（`2025-06-18` / `2025-03-26` / `2024-11-05`） |
-| `tools/list` / `tools/call` | ✅ 含 `structuredContent` + 注解 |
+| `tools/list` / `tools/call` | ✅ `tools/list` 只返回 MCP Tool 规范字段；`tools/call` 含 `structuredContent` 与注解 |
 | `resources/list` / `resources/templates/list` / `resources/read` | ✅ 未知 URI 返回 `-32002` |
 | `prompts/list` / `prompts/get` | ✅ 缺必填参数返回 `-32602` |
 | `ping` / `logging/setLevel` / `completion/complete` | ✅ |
@@ -162,15 +162,18 @@ itsm_call     { command: "change.approvals", params: { id: "CHG-1" } }
 ```bash
 cd itsm-cli
 npm run build
-node --test tests/mcp-protocol.test.mjs   # 18 例：握手/工具面/风险闸/裁剪/资源/提示词/分帧容错/排空
+node --test tests/mcp-protocol.test.mjs   # 握手/工具面/风险闸/裁剪/资源/提示词/分帧容错/排空
 node scripts/mcp-smoke.mjs                # 打真实实例的只读冒烟（不会写数据）
+node scripts/check-doc-claims.mjs         # 校验本文与 README 的命令数/工具数没有漂移
 node scripts/mcp-smoke.mjs --offline       # 只跑本地协议断言
 ```
 
 `tests/mcp-protocol.test.mjs` 覆盖的硬约束：
 
 - 高风险写**未发请求**（用桩后端计数断言 `DELETE /cmdb/cis/7` 命中 0 次），`confirm: true` 后才恰好 1 次；
-- 未声明参数在**发请求前**被拒，并列出可用参数名；
+- method 派生门（`infra.api DELETE`）同样由 gateway 拦截，payload 带 `risk.irreversible=true`，不依赖命令内部兜底；
+- `tools/list` 不泄漏内部路由字段（`command` / `defaults`），严格宿主不会因未知字段拒绝工具面；
+- 未声明参数在**发请求前**被拒，并列出可用参数名；`params` 形态错误返回 `-32602` 而不是伪装成“缺参数”；
 - 列表默认裁剪到 50 条且 `meta.total` 保留全量口径；
 - stdout 逐行可解析——出现非 JSON 帧直接判失败；
 - 畸形帧返回 `-32700` 后服务仍可继续应答；

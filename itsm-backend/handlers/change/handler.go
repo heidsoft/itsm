@@ -618,11 +618,13 @@ func (h *Handler) GetStats(c *gin.Context) {
 	}
 	// Map domain stats -> DTO so the response shape stays governed by dto.ChangeStatsResponse
 	// (Project rule: Controller must return DTO, never the domain struct directly.)
-	common.Success(c, toStatsDTO(res))
+	common.Success(c, ToStatsDTO(res))
 }
 
-// toStatsDTO maps the change.Stats domain struct to dto.ChangeStatsResponse.
-func toStatsDTO(s *Stats) *dto.ChangeStatsResponse {
+// ToStatsDTO maps the change.Stats domain struct to dto.ChangeStatsResponse.
+// Exported so the service-quality aggregator wiring (internal/bootstrap) can
+// reuse the exact same mapping instead of duplicating field copies.
+func ToStatsDTO(s *Stats) *dto.ChangeStatsResponse {
 	out := &dto.ChangeStatsResponse{ByType: []dto.ChangeTypeCount{}}
 	if s == nil {
 		return out

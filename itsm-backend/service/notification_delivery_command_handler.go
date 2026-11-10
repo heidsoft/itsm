@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"itsm-backend/connector"
+	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/change"
 	"itsm-backend/ent/notificationdelivery"
@@ -18,14 +19,38 @@ import (
 	"go.uber.org/zap"
 )
 
+// userMessageSink 是 WebSocketHub 的最小投递契约。
+// 生产环境注入 *WebSocketHub；这里刻意只暴露按 userID 的单播投递，
+// 不允许退化成 SendToTenant —— 后者会把通知正文推给同租户全员。
+type userMessageSink interface {
+	SendToUser(userID int, message WebSocketMessage)
+}
+
 type NotificationDeliveryCommandHandler struct {
 	client     *ent.Client
 	connectors *connector.Manager
 	logger     *zap.SugaredLogger
+	wsHub      userMessageSink
 }
 
-func NewNotificationDeliveryCommandHandler(client *ent.Client, connectors *connector.Manager, logger *zap.SugaredLogger) *NotificationDeliveryCommandHandler {
-	return &NotificationDeliveryCommandHandler{client: client, connectors: connectors, logger: logger}
+// NewNotificationDeliveryCommandHandler 的可选 wsHub 在装配期一次性注入：
+// 用可变参数而不是新增强制形参，避免未接 WS 的测试夹具/独立 worker 被迫造假 hub。
+func NewNotificationDeliveryCommandHandler(client *ent.Client, connectors *connector.Manager, logger *zap.SugaredLogger, wsHub ...userMessageSink) *NotificationDeliveryCommandHandler {
+	var sink userMessageSink
+	if len(wsHub) > 0 {
+		sink = wsHub[0]
+	}
+	return &NotificationDeliveryCommandHandler{client: client, connectors: connectors, logger: logger, wsHub: sink}
+}
+
+// pushInAppNotification 把已落库的通知按收件人单播推给在线连接。
+// WS 是加速通道而非投递凭据：推送失败/未连接都不影响已提交的通知行，
+// 前端仍以 GET /notifications 与 /unread-count 为权威数据源。
+func (h *NotificationDeliveryCommandHandler) pushInAppNotification(userID int, payload dto.Notification) {
+	if h.wsHub == nil || userID <= 0 {
+		return
+	}
+	h.wsHub.SendToUser(userID, WebSocketMessage{Type: "notification", Payload: payload})
 }
 
 func (h *NotificationDeliveryCommandHandler) Handle(ctx context.Context, cmd *ent.OperationalCommand) error {
@@ -195,7 +220,7 @@ func (h *NotificationDeliveryCommandHandler) deliverInApp(ctx context.Context, c
 		}
 		ticketNotificationID = &ticketNotification.ID
 	}
-	_, err = tx.Notification.Create().SetTitle(notificationType).SetMessage(content).SetType("info").
+	notification, err := tx.Notification.Create().SetTitle(notificationType).SetMessage(content).SetType("info").
 		SetUserID(recipient.ID).SetTenantID(cmd.TenantID).SetActionURL(actionURL).SetActionText(actionText).Save(ctx)
 	if err != nil {
 		return rollback(err)
@@ -210,12 +235,38 @@ func (h *NotificationDeliveryCommandHandler) deliverInApp(ctx context.Context, c
 	_, err = deliveryCreate.Save(ctx)
 	if err != nil {
 		if ent.IsConstraintError(err) {
+			// 幂等命中：通知此前已投递，不能再推一次造成前端重复条目。
 			_ = tx.Rollback()
 			return nil
 		}
 		return rollback(err)
 	}
-	return tx.Commit()
+	if err := tx.Commit(); err != nil {
+		return err
+	}
+
+	// 只在事务提交成功后推送，避免「通知行回滚了但用户已收到消息」。
+	pushPayload := dto.Notification{
+		ID:        notification.ID,
+		Title:     notificationType,
+		Message:   content,
+		Type:      "info",
+		Read:      false,
+		UserID:    recipient.ID,
+		TenantID:  cmd.TenantID,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}
+	if actionURL != "" {
+		url := actionURL
+		pushPayload.ActionURL = &url
+	}
+	if actionText != "" {
+		text := actionText
+		pushPayload.ActionText = &text
+	}
+	h.pushInAppNotification(recipient.ID, pushPayload)
+	return nil
 }
 
 func (h *NotificationDeliveryCommandHandler) deliverConnector(ctx context.Context, cmd *ent.OperationalCommand, tk *ent.Ticket, recipient *ent.User, channel, notificationType, content, actionURL, actionText, resourceType string, resourceID int, existing *ent.NotificationDelivery) error {

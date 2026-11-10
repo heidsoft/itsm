@@ -532,7 +532,10 @@ func (h *Handler) AssignTicket(c *gin.Context) {
 		return
 	}
 
-	ticket, err := h.service.AssignTicket(c.Request.Context(), id, req.AssigneeID, tenantID)
+	// 分配需要把工单与 BPMN 当前待办放在同一事务推进；引擎按 assignee/candidate
+	// 校验任务归属，因此必须传入认证操作人（与 /tickets/workflow/* 同一上下文来源）。
+	actorID := c.GetInt("user_id")
+	ticket, err := h.service.AssignTicketWithActor(c.Request.Context(), id, req.AssigneeID, tenantID, actorID)
 	if err != nil {
 		common.FailWithErr(c, err, "Operation failed")
 		return
@@ -742,11 +745,13 @@ func (h *Handler) ExportTickets(c *gin.Context) {
 	if !ok {
 		return
 	}
+	currentUserID := c.GetInt("user_id")
+	currentRole := c.GetString("role")
 	filters := map[string]interface{}{
 		"status":   req.Filters.Status,
 		"priority": req.Filters.Priority,
 	}
-	data, err := h.service.ExportTickets(c.Request.Context(), tenantID, filters, req.Format)
+	data, err := h.service.ExportTickets(c.Request.Context(), tenantID, filters, req.Format, currentUserID, currentRole)
 	if err != nil {
 		common.FailWithErr(c, err, "Work order export failed")
 		return

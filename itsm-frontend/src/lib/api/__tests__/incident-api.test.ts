@@ -215,10 +215,26 @@ describe('IncidentAPI', () => {
   });
 
   describe('getRootCauseAnalysis', () => {
-    it('should get root cause analysis', async () => {
-      mockGet.mockResolvedValue({ id: 1, rootCause: 'DNS' });
+    it('should map the nested rootCause payload to a flat analysis', async () => {
+      mockGet.mockResolvedValue({
+        incidentId: 1,
+        rootCause: { rootCause: 'DNS 配置漂移', analysisMethod: '5-whys', status: 'draft' },
+        rootCauseAnalysis: null,
+      });
       const result = await IncidentAPI.getRootCauseAnalysis(1);
       expect(mockGet).toHaveBeenCalledWith('/api/v1/incidents/1/root-cause');
+      expect(result).toEqual({
+        incidentId: 1,
+        rootCause: 'DNS 配置漂移',
+        analysisMethod: '5-whys',
+        status: 'draft',
+      });
+    });
+
+    it('should return null when the incident has no root cause yet', async () => {
+      mockGet.mockResolvedValue({ incidentId: 1, rootCause: null, rootCauseAnalysis: null });
+      const result = await IncidentAPI.getRootCauseAnalysis(1);
+      expect(result).toBeNull();
     });
 
     it('should propagate errors', async () => {
@@ -227,19 +243,43 @@ describe('IncidentAPI', () => {
     });
   });
 
-  describe('createRootCauseAnalysis', () => {
-    it('should create root cause analysis', async () => {
-      mockPost.mockResolvedValue({ id: 1 });
-      await IncidentAPI.createRootCauseAnalysis({ incidentId: 1, rootCause: 'DNS', category: 'network' } as any);
-      expect(mockPost).toHaveBeenCalledWith('/api/v1/incidents/root-cause', expect.any(Object));
+  describe('saveRootCauseAnalysis', () => {
+    it('should upsert via PUT with the rootCause-wrapped body', async () => {
+      mockPut.mockResolvedValue({ message: '根因分析已更新' });
+      await IncidentAPI.saveRootCauseAnalysis(1, {
+        incidentId: 1,
+        analysisMethod: '5-whys',
+        rootCause: 'DNS 配置漂移',
+        contributingFactors: ['变更未评审'],
+        evidence: ['变更记录'],
+        preventiveActions: ['强制评审'],
+        status: 'completed',
+      });
+      expect(mockPut).toHaveBeenCalledWith('/api/v1/incidents/1/root-cause', {
+        rootCause: {
+          analysisMethod: '5-whys',
+          rootCause: 'DNS 配置漂移',
+          contributingFactors: ['变更未评审'],
+          evidence: ['变更记录'],
+          preventiveActions: ['强制评审'],
+          status: 'completed',
+        },
+      });
     });
-  });
 
-  describe('updateRootCauseAnalysis', () => {
-    it('should update root cause analysis', async () => {
-      mockPut.mockResolvedValue({ id: 1 });
-      await IncidentAPI.updateRootCauseAnalysis(1, { rootCause: 'Updated' } as any);
-      expect(mockPut).toHaveBeenCalledWith('/api/v1/incidents/root-cause/1', { rootCause: 'Updated' });
+    it('should propagate errors', async () => {
+      mockPut.mockRejectedValue(new Error('forbidden'));
+      await expect(
+        IncidentAPI.saveRootCauseAnalysis(1, {
+          incidentId: 1,
+          analysisMethod: '5-whys',
+          rootCause: 'x',
+          contributingFactors: [],
+          evidence: [],
+          preventiveActions: [],
+          status: 'draft',
+        }),
+      ).rejects.toThrow('forbidden');
     });
   });
 

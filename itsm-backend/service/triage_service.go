@@ -74,14 +74,68 @@ type TriageResult struct {
 	Model         string  `json:"model,omitempty"`
 	ModelName     string  `json:"modelName,omitempty"`
 	PromptVersion string  `json:"promptVersion,omitempty"`
+
+	// Degraded/DegradedReason 标注「这条建议没有模型参与」。
+	//
+	// 背景：sidecar 在 LLM 不可用时不报错，而是把关键词分类包成 HTTP 200 返回
+	// （method="guidance-fallback"、置信度写死 0.7）。后端此前无脑把它当 guidance
+	// 决策收下，于是 AI 审计底账里出现一条「模型决策」，事后复盘根本分不清哪些
+	// 结论是模型给的、哪些是正则凑的。降级结果本身不丢人，冒充模型结果才丢人。
+	// 现在降级路径一律置 Degraded=true，并随响应透出、写进底账。
+	Degraded       bool   `json:"degraded,omitempty"`
+	DegradedReason string `json:"degradedReason,omitempty"`
 }
 
-// withTrace 给分诊结果补溯源字段（决策链路 + 口径版本）。
+// modelBackedPaths 是「真的有一次模型推理」的链路标识。
+// 其余链路（keyword 启发式、guidance-fallback 等）一律视为降级。
+var modelBackedPaths = map[string]bool{
+	"llm":      true,
+	"guidance": true,
+}
+
+// withTrace 给分诊结果补溯源字段（决策链路 + 口径版本 + 是否降级）。
 func (t *TriageService) withTrace(r TriageResult, model string) TriageResult {
 	r.Model = model
 	r.PromptVersion = TriagePromptVersion
+	if !modelBackedPaths[strings.ToLower(strings.TrimSpace(model))] {
+		r.Degraded = true
+		if r.DegradedReason == "" {
+			r.DegradedReason = "no model inference on path " + model
+		}
+	}
 	return r
 }
+
+// guidanceDegradedMarkers 是 sidecar 响应 method 里表示「这不是模型给的」的标记。
+//
+// 用「黑名单包含」而不是「白名单等于」：sidecar 未来新增正常模型链路（如
+// guidance-minimax）时不该被误判成降级；反过来，只要 method 里带这些词，
+// 就一定是降级。空 method 表示老版本 sidecar 没这个字段，按 guidance 处理。
+var guidanceDegradedMarkers = []string{"fallback", "keyword", "heuristic", "degraded", "error", "mock", "stub"}
+
+// isDegradedGuidanceMethod 判断 sidecar 返回的 method 是否标记了降级。
+func isDegradedGuidanceMethod(method string) bool {
+	m := strings.ToLower(strings.TrimSpace(method))
+	if m == "" {
+		return false
+	}
+	for _, marker := range guidanceDegradedMarkers {
+		if strings.Contains(m, marker) {
+			return true
+		}
+	}
+	return false
+}
+
+// guidanceResultDegraded 综合 sidecar 的显式降级位与 method 约定做判定。
+// 两者取或：新版 sidecar 可能只置 degraded=true 而不改 method，老版只有 method。
+func guidanceResultDegraded(r *GuidanceTriageResponse) bool {
+	if r == nil {
+		return false
+	}
+	return r.Degraded || isDegradedGuidanceMethod(r.Method)
+}
+
 
 // TriageService provides LLM-powered ticket triage and classification
 type TriageService struct {
@@ -182,17 +236,38 @@ func (t *TriageService) suggest(ctx context.Context, title, description string, 
 		Explanation: "keyword heuristic",
 	}
 
+	// 侧车降级响应先扣在手里：它是「关键词 + 写死置信度」的兜底，价值低于本地
+	// 关键词启发式（后者带 category→assignee 映射、中文词表更全）。所以先让 LLM
+	// 网关和本地启发式试一遍，只有它们都拿不到结果时才回头用它，并标注 degraded。
+	var degradedFromSidecar *GuidanceTriageResponse
+
 	// Priority 1: Use Guidance sidecar for constrained generation
 	if useGuidance && t.guidanceClient != nil {
 		guidanceResult, err := t.guidanceClient.Triage(ctx, title, description, tenantID)
 		if err != nil {
 			t.logger.Warn("TriageService: Guidance sidecar failed, falling back", zap.Error(err))
+		} else if guidanceResultDegraded(guidanceResult) {
+			// 关键：sidecar 把 LLM 故障包装成 HTTP 200 + 关键词结果返回。
+			// 直接采信会让 AI 审计底账记下一条「模型决策」，事后无法区分
+			// 模型结论与正则凑数。这里先降级为候选，不当最终答案。
+			t.logger.Warn("TriageService: Guidance sidecar returned degraded result, trying local paths first",
+				zap.String("method", guidanceResult.Method),
+				zap.String("category", guidanceResult.Category),
+				zap.Float64("confidence", guidanceResult.Confidence))
+			degradedFromSidecar = guidanceResult
 		} else {
 			t.logger.Info("TriageService: Guidance-constrained classification",
 				zap.String("category", guidanceResult.Category),
 				zap.String("priority", guidanceResult.Priority),
 				zap.Float64("confidence", guidanceResult.Confidence),
+				zap.String("method", guidanceResult.Method),
 				zap.Float64("latency_ms", guidanceResult.LatencyMs))
+			// 透传 sidecar 自报的 method（老版本无该字段时回落 "guidance"），
+			// 让溯源链路上「谁给的结论」有据可查，而不是后端硬编码一个值。
+			method := strings.TrimSpace(guidanceResult.Method)
+			if method == "" {
+				method = "guidance"
+			}
 			return t.withTrace(t.normalizeResult(TriageResult{
 				Category:     guidanceResult.Category,
 				Priority:     guidanceResult.Priority,
@@ -200,7 +275,7 @@ func (t *TriageService) suggest(ctx context.Context, title, description string, 
 				Confidence:   guidanceResult.Confidence,
 				Explanation:  guidanceResult.Explanation,
 				SuggestedFix: guidanceResult.SuggestedFix,
-			}), "guidance")
+			}), method)
 		}
 	}
 
@@ -211,6 +286,10 @@ func (t *TriageService) suggest(ctx context.Context, title, description string, 
 			t.logger.Warn("TriageService: LLM classification failed, using fallback", zap.Error(err))
 			if t.keywordFallback {
 				return t.withTrace(t.keywordBasedSuggest(text), "keyword")
+			}
+			if degradedFromSidecar != nil {
+				r, method := t.sidecarDegradedResult(degradedFromSidecar)
+				return t.withTrace(r, method)
 			}
 			return t.withTrace(result, "keyword")
 		}
@@ -234,7 +313,33 @@ func (t *TriageService) suggest(ctx context.Context, title, description string, 
 		return t.withTrace(t.keywordBasedSuggest(text), "keyword")
 	}
 
+	// Priority 4: 本地链路全无产出，只能用 sidecar 的降级结果（并如实标注）。
+	if degradedFromSidecar != nil {
+		r, method := t.sidecarDegradedResult(degradedFromSidecar)
+		return t.withTrace(r, method)
+	}
+
 	return t.withTrace(result, "keyword")
+}
+
+// sidecarDegradedResult 把 sidecar 的降级响应转成本地结果，并保留其自报的 method。
+// 只在本地链路（LLM 网关 / 关键词启发式）都拿不到结果时使用；返回的 method
+// 会被 withTrace 判定为非模型链路，从而置 Degraded=true。
+func (t *TriageService) sidecarDegradedResult(degraded *GuidanceTriageResponse) (TriageResult, string) {
+	method := strings.TrimSpace(degraded.Method)
+	if method == "" {
+		method = "guidance-fallback"
+	}
+	r := t.normalizeResult(TriageResult{
+		Category:     degraded.Category,
+		Priority:     degraded.Priority,
+		AssigneeID:   degraded.AssigneeID,
+		Confidence:   degraded.Confidence,
+		Explanation:  degraded.Explanation,
+		SuggestedFix: degraded.SuggestedFix,
+	})
+	r.DegradedReason = "guidance sidecar returned " + method
+	return r, method
 }
 
 // llmClassify uses LLM for intelligent ticket classification
@@ -426,22 +531,23 @@ func (t *TriageService) SuggestWithMetadata(ctx context.Context, title, descript
 	text := strings.ToLower(title + " " + description)
 
 	result := &TriageWithMetadata{
-		Result: TriageResult{
+		Result: t.withTrace(TriageResult{
 			Category:    "general",
 			Priority:    "medium",
 			AssigneeID:  0,
 			Confidence:  0.5,
 			Explanation: "keyword heuristic",
-		},
+		}, "keyword"),
 		Method:  "fallback",
 		Latency: time.Since(start),
 	}
 
 	if t.gateway == nil {
 		if t.keywordFallback {
-			result.Result = t.keywordBasedSuggest(text)
+			result.Result = t.withTrace(t.keywordBasedSuggest(text), "keyword")
 			result.Method = "fallback"
 		}
+		result.Latency = time.Since(start)
 		return result, nil
 	}
 
@@ -449,13 +555,14 @@ func (t *TriageService) SuggestWithMetadata(ctx context.Context, title, descript
 	if err != nil {
 		t.logger.Warn("TriageService: LLM classification failed", zap.Error(err))
 		if t.keywordFallback {
-			result.Result = t.keywordBasedSuggest(text)
+			result.Result = t.withTrace(t.keywordBasedSuggest(text), "keyword")
 			result.Method = "fallback"
 		}
+		result.Latency = time.Since(start)
 		return result, nil
 	}
 
-	result.Result = llmResult
+	result.Result = t.withTrace(llmResult, "llm")
 	result.Method = "llm"
 	// 真实模型名，不再是硬编码常量：硬编码会让审计底账在换模型之后继续
 	// 指向旧模型。取不到时报 "unknown"（EffectiveModel 的语义），不猜。

@@ -56,7 +56,8 @@ export default function OnCallPage() {
   const [currentOnCall, setCurrentOnCall] = useState<
     Record<number, { userId: number; startAt: string; endAt: string } | null>
   >({});
-  const [loading, setLoading] = useState(false);
+  // 列表初值必须为 true：mount 必定发起首次拉取，初值 false 会让首帧先渲染空表格。
+  const [listLoading, setListLoading] = useState(true);
   const [scheduleModal, setScheduleModal] = useState(false);
   const [shiftModal, setShiftModal] = useState(false);
   const [editShiftModal, setEditShiftModal] = useState(false);
@@ -67,7 +68,7 @@ export default function OnCallPage() {
   const [editShiftForm] = Form.useForm();
 
   const load = async () => {
-    setLoading(true);
+    setListLoading(true);
     try {
       const [s, g, u, sh] = await Promise.all([
         emailIntakeService.schedules(),
@@ -95,7 +96,7 @@ export default function OnCallPage() {
     } catch {
       message.error('LoadingFailed');
     } finally {
-      setLoading(false);
+      setListLoading(false);
     }
   };
   useEffect(() => {
@@ -294,7 +295,7 @@ export default function OnCallPage() {
         </div>
         <Table
           rowKey='id'
-          loading={loading}
+          loading={listLoading}
           columns={scheduleColumns}
           dataSource={schedules}
           pagination={false}
@@ -310,7 +311,7 @@ export default function OnCallPage() {
         </div>
         <Table
           rowKey='id'
-          loading={loading}
+          loading={listLoading}
           columns={shiftColumns}
           dataSource={shifts}
           pagination={{ pageSize: 10 }}

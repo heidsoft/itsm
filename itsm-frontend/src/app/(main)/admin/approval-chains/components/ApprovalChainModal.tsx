@@ -51,6 +51,9 @@ const { TextArea } = Input;
 const { Text, Title } = Typography;
 // Step removed - antd 5+ uses items prop instead
 
+// 第一步「基本信息」的 Form 字段名：用于分步校验与创建失败时的自动回跳定位
+const STEP_BASIC_FIELDS = ['name', 'description', 'entityType', 'isActive'];
+
 interface ApprovalChainModalProps {
   visible: boolean;
   editingChain: ApprovalChain | null;
@@ -193,9 +196,29 @@ export function ApprovalChainModal({
       await onSubmit(data);
       resetForm();
     } catch (error) {
-      // 表单验证失败
+      // D52：表单校验失败时，若错误落在第一步字段（隐藏容器内渲染，用户不可见），
+      // 必须自动跳回第一步并给出可见提示，否则表现为「点了没反应」。
+      const errorFields = (error as { errorFields?: { name: (string | number)[] }[] })
+        ?.errorFields;
+      if (
+        errorFields?.some(field => STEP_BASIC_FIELDS.includes(String(field.name[0])))
+      ) {
+        setCurrentStep(0);
+        message.error('Basic information is invalid. Please review it and try again.');
+      }
     }
   }, [form, steps, onSubmit, resetForm, message]);
+
+  // 「Next」必须先通过当前步骤的字段校验（D52：修复前直接放行，
+  // 导致空名称也能进入步骤配置，创建时错误又渲染在隐藏容器里不可见）
+  const handleNextStep = useCallback(async () => {
+    try {
+      await form.validateFields(STEP_BASIC_FIELDS);
+      setCurrentStep(prev => prev + 1);
+    } catch {
+      // 校验错误已渲染在字段旁，停留在当前步骤
+    }
+  }, [form]);
 
   // 添加步骤
   const handleAddStep = useCallback(() => {
@@ -599,7 +622,7 @@ export function ApprovalChainModal({
         否则 step 0 ↔ step 1 切换时 Form 卸载，name/description/entityType/isActive 被清空。
       */}
       <Form form={form} layout="vertical" component="div">
-        <div style={{ display: currentStep === 0 ? 'block' : 'none' }}>
+        <div data-testid="approval-chain-step-basic" style={{ display: currentStep === 0 ? 'block' : 'none' }}>
           <Form.Item
             name="name"
             label="Approval ChainsName"
@@ -645,8 +668,7 @@ export function ApprovalChainModal({
           )}
 
           {currentStep < stepItems.length - 1 ? (
-            <Button type="primary" onClick={() => setCurrentStep(currentStep + 1)}>
-
+            <Button type="primary" onClick={handleNextStep}>
               Next
             </Button>
           ) : (

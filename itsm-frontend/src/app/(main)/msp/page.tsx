@@ -30,7 +30,9 @@ const { RangePicker } = DatePicker;
 
 export default function MSPDashboardPage() {
   const { message } = App.useApp();
-  const [loading, setLoading] = useState(false);
+  // 列表初值必须为 true：mount 必定发起首次拉取，初值 false 会让首帧渲染出
+  // 空态内容而不是整页 Spin 遮罩。各子区块另有独立标志（ticketsLoading / perfLoading / historyLoading）。
+  const [listLoading, setListLoading] = useState(true);
   const [isMSP, setIsMSP] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [allocations, setAllocations] = useState<MSPAllocation[]>([]);
@@ -78,7 +80,7 @@ export default function MSPDashboardPage() {
   };
 
   const loadDashboardData = async () => {
-    setLoading(true);
+    setListLoading(true);
     try {
       const [allocRes, custRes, ctxRes] = await Promise.all([
         MSPService.getAllocations(),
@@ -100,7 +102,7 @@ export default function MSPDashboardPage() {
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to load data');
     } finally {
-      setLoading(false);
+      setListLoading(false);
     }
   };
 
@@ -299,7 +301,7 @@ export default function MSPDashboardPage() {
     );
   }
 
-  if (loading) {
+  if (listLoading) {
     return (
       <div style={{ padding: 24, textAlign: 'center' }}>
         <Spin size="large" tip="Loading MSP data..." />
@@ -370,7 +372,7 @@ export default function MSPDashboardPage() {
                 columns={allocationColumns}
                 dataSource={allocations}
                 rowKey="id"
-                loading={loading}
+                loading={listLoading}
                 pagination={{ pageSize: 10 }}
               />
             ),
@@ -422,7 +424,7 @@ export default function MSPDashboardPage() {
                 columns={reportColumns}
                 dataSource={reports}
                 rowKey="mspTenantId"
-                loading={loading}
+                loading={listLoading}
                 pagination={{ pageSize: 10 }}
               />
             ),

@@ -11,6 +11,7 @@ import { useParams } from 'next/navigation';
 import { TicketApi, type EscalateTicketRequest, type TicketConfigurationItem, type TicketSLAInfo } from '@/lib/api/ticket-api';
 import { TicketStatus, TicketPriority } from '@/constants/taxonomy';
 import { TicketApprovalApi } from '@/lib/api/ticket-approval-api';
+import { TicketWorkflowStateApi } from '@/lib/api/ticket-workflow-state-api';
 import { TicketTypeApi } from '@/lib/api/ticketTypeApi';
 import type { Ticket } from '@/lib/api/api-config';
 import type { User } from '@/lib/api/user-api';
@@ -225,6 +226,15 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
   const [escalating, setEscalating] = useState(false);
   const [escalateForm] = Form.useForm();
 
+  // 流程流转动作（接单 / 解决 / 关闭）由后端 state-v2 的 availableActions 驱动。
+  // 只按权限码渲染会让「工单状态已推进、流程节点没动」的动作继续亮着；
+  // 接口不可用时按 fail-closed 隐藏新动作，不猜状态机。
+  const [workflowActions, setWorkflowActions] = useState<string[]>([]);
+  const [workflowActionSeq, setWorkflowActionSeq] = useState(0);
+  const [workflowActionModal, setWorkflowActionModal] = useState<'resolve' | 'close' | null>(null);
+  const [workflowActionBusy, setWorkflowActionBusy] = useState(false);
+  const [workflowActionForm] = Form.useForm();
+
   // AI-Native：受影响配置项（工单→CI 反向查询）
   const [cis, setCis] = useState<TicketConfigurationItem[]>([]);
   const [cisLoading, setCisLoading] = useState(false);
@@ -273,13 +283,21 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
   // （ticket:update），因此两个码任一命中即为可操作。
   const canApproveTicket = hasPermission('ticket', 'approve') || canUpdateTicket;
   const canCcTicket = canAssignTicket;
+  // /tickets/workflow/accept|resolve|close 各自的 RequirePermission 权限码；
+  // 与后端路由闸门保持一致，避免出现「看得到、点下去必然 403」的按钮。
+  const canAcceptTicket = canAssignTicket;
+  const canResolveTicket = hasPermission('ticket', 'resolve') || canUpdateTicket;
+  const canCloseTicket = hasPermission('ticket', 'close') || canUpdateTicket;
   const hasAnyTicketAction =
     canApproveTicket ||
     canAssignTicket ||
     canEscalateTicket ||
     canUpdateTicket ||
     canCcTicket ||
-    canDeleteTicket;
+    canDeleteTicket ||
+    canAcceptTicket ||
+    canResolveTicket ||
+    canCloseTicket;
 
   // 所有下游操作（写操作/子组件/关联面板）统一使用数字 ID。
   // 单号路由下 ticket 加载完成后即有值；加载前子组件隐藏或禁用。
@@ -351,6 +369,25 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
       fetchTicket();
     }
   }, [ticketKey]);
+
+  // 每次动作成功后重新拉一次状态机：按钮与流程节点共用后端这一个事实源。
+  useEffect(() => {
+    if (!resolvedTicketId) {
+      setWorkflowActions([]);
+      return;
+    }
+    let cancelled = false;
+    TicketWorkflowStateApi.tryGetWorkflowState(resolvedTicketId).then(state => {
+      if (!cancelled) {
+        setWorkflowActions(
+          Array.isArray(state?.availableActions) ? state!.availableActions.map(String) : []
+        );
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [resolvedTicketId, workflowActionSeq]);
 
   useEffect(() => {
     if (ticketKey) {
@@ -523,11 +560,61 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
       antMessage.success(t('ticketDetail.assignSuccess'));
       setAssignModalVisible(false);
       assignForm.resetFields();
-      fetchTicket();
+      refreshWorkflowState();
     } catch (error) {
       handleError(error, 'assignTicket', t('ticketDetail.assignFailed'));
     } finally {
       setAssigning(false);
+    }
+  };
+
+  // 工单主链路动作统一走 /tickets/workflow/*：工单状态、流转记录与 BPMN 待办
+  // 在同一事务里提交。动作成功后重新取一次状态机，按钮与流程节点始终同源。
+  const refreshWorkflowState = () => {
+    fetchTicket();
+    setWorkflowActionSeq(v => v + 1);
+  };
+
+  const handleAcceptTicket = async () => {
+    if (!resolvedTicketId) return;
+    setWorkflowActionBusy(true);
+    try {
+      await TicketApi.acceptTicket(resolvedTicketId);
+      antMessage.success("Ticket accepted; workflow advanced");
+      refreshWorkflowState();
+    } catch (error) {
+      handleError(error, 'acceptTicket', "Failed to accept ticket");
+    } finally {
+      setWorkflowActionBusy(false);
+    }
+  };
+
+  const openWorkflowActionModal = (action: 'resolve' | 'close') => {
+    workflowActionForm.resetFields();
+    setWorkflowActionModal(action);
+  };
+
+  const handleWorkflowActionSubmit = async (values: { note?: string }) => {
+    if (!resolvedTicketId || !workflowActionModal) return;
+    setWorkflowActionBusy(true);
+    try {
+      if (workflowActionModal === 'resolve') {
+        await TicketApi.resolveTicketWorkflow(resolvedTicketId, {
+          resolution: values.note ?? '',
+          workNotes: values.note ?? '',
+        });
+      } else {
+        await TicketApi.closeTicketWorkflow(resolvedTicketId, { closeNotes: values.note ?? '' });
+      }
+      antMessage.success(
+        workflowActionModal === 'resolve' ? "Ticket resolved; workflow advanced" : "Ticket closed; workflow completed"
+      );
+      setWorkflowActionModal(null);
+      refreshWorkflowState();
+    } catch (error) {
+      handleError(error, 'ticketWorkflowAction', "Operation failed");
+    } finally {
+      setWorkflowActionBusy(false);
     }
   };
 
@@ -906,6 +993,34 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
                   {t('ticketDetail.reject')}
                 </Button>
               )}
+              {workflowActions.includes('accept') && canAcceptTicket && (
+                <Button
+                  type="primary"
+                  icon={<Check size={16} />}
+                  onClick={handleAcceptTicket}
+                  loading={workflowActionBusy}
+                  disabled={isTicketFinal}
+                >
+                  Accept
+                </Button>
+              )}
+              {workflowActions.includes('resolve') && canResolveTicket && (
+                <Button
+                  icon={<Check size={16} />}
+                  onClick={() => openWorkflowActionModal('resolve')}
+                  disabled={isTicketFinal}
+                >
+                  Resolve
+                </Button>
+              )}
+              {workflowActions.includes('close') && canCloseTicket && (
+                <Button
+                  onClick={() => openWorkflowActionModal('close')}
+                  disabled={isTicketFinal}
+                >
+                  Close
+                </Button>
+              )}
               {canAssignTicket && (
                 <Button
                   icon={<UserCheck size={16} />}
@@ -976,6 +1091,36 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
             </Text>
           )}
         </Space>
+
+        {/* 流转动作：解决 / 关闭。接单无需附加信息，直接提交。 */}
+        <Modal
+          title={workflowActionModal === 'resolve' ? "Resolve Ticket" : "Close Ticket"}
+          open={workflowActionModal !== null}
+          onCancel={() => setWorkflowActionModal(null)}
+          footer={null}
+        >
+          <Form form={workflowActionForm} layout="vertical" onFinish={handleWorkflowActionSubmit}>
+            <Form.Item
+              name="note"
+              label={workflowActionModal === 'resolve' ? "Resolution / Work Notes" : "Closure Notes (optional)"}
+              rules={
+                workflowActionModal === 'resolve'
+                  ? [{ required: true, message: "Please enter a resolution" }]
+                  : []
+              }
+            >
+              <TextArea rows={3} maxLength={1000} showCount />
+            </Form.Item>
+            <Form.Item style={{ marginBottom: 0 }}>
+              <Space>
+                <Button type="primary" htmlType="submit" loading={workflowActionBusy}>
+                  Confirm
+                </Button>
+                <Button onClick={() => setWorkflowActionModal(null)}>Cancel</Button>
+              </Space>
+            </Form.Item>
+          </Form>
+        </Modal>
 
         {/* Assignment Modal */}
         <Modal

@@ -3,7 +3,8 @@ package incident
 import (
 	"context"
 	"database/sql"
-	"fmt"
+
+	"itsm-backend/database"
 )
 
 // incidentNumberRepository 负责 incident 编号生成。
@@ -31,11 +32,5 @@ func newIncidentNumberRepository(db *sql.DB) *incidentNumberRepository {
 // Generate 返回形如 INC-YYYYMM-NNNNNN 的事件编号。
 // 参数 year/month 由调用方提供本地时区的年月，避免 server UTC 漂移。
 func (r *incidentNumberRepository) Generate(ctx context.Context, year, month int) (string, error) {
-	var seq int64
-	if err := r.db.QueryRowContext(ctx,
-		"SELECT nextval('incident_number_seq')",
-	).Scan(&seq); err != nil {
-		return "", fmt.Errorf("generate incident number: %w", err)
-	}
-	return fmt.Sprintf("INC-%04d%02d-%06d", year, month, seq), nil
+	return database.GenerateIncidentNumber(ctx, r.db, year, month)
 }

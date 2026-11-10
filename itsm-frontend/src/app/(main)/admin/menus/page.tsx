@@ -59,7 +59,10 @@ export default function MenuManagementPage() {
   const { t } = useI18n();
   const { message: antMessage } = App.useApp();
   const [menus, setMenus] = useState<MenuItem[]>([]);
-  const [loading, setLoading] = useState(false);
+  // 列表初值必须为 true：mount 必定发起首次拉取，初值 false 会让首帧先渲染
+  // 「0 个菜单」的假统计卡与空表格，再被真实数据覆盖。保存/删除等动作各自有独立状态。
+  const [listLoading, setListLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState(false);
   const [searchText, setSearchText] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'visible' | 'hidden' | 'enabled' | 'disabled'>(
     'all',
@@ -73,7 +76,7 @@ export default function MenuManagementPage() {
 
   // 加载列表
   const loadMenus = async () => {
-    setLoading(true);
+    setListLoading(true);
     try {
       const res = await MenuAdminAPI.list();
       setMenus(res.items);
@@ -81,7 +84,7 @@ export default function MenuManagementPage() {
       console.error('Failed to load menus', err);
       antMessage.error(t('menus.loadFailed'));
     } finally {
-      setLoading(false);
+      setListLoading(false);
     }
   };
 
@@ -158,7 +161,7 @@ export default function MenuManagementPage() {
   const handleSave = async () => {
     try {
       const values = await form.validateFields();
-      setLoading(true);
+      setActionLoading(true);
       // 全量提交并用空值表达「清空」：PUT 的可选字段是指针，未传保持原值，
       // 只有显式空值才覆盖。parentId 0 = 顶级菜单，icon/permissionCode/description 空串 = 清除。
       const payload: MenuRequest = {
@@ -193,7 +196,7 @@ export default function MenuManagementPage() {
       const errMsg = err instanceof Error ? err.message : t('common.saveFailed');
       antMessage.error(errMsg);
     } finally {
-      setLoading(false);
+      setActionLoading(false);
     }
   };
 
@@ -377,47 +380,50 @@ export default function MenuManagementPage() {
         }
       />
 
-      <Row gutter={[16, 16]}>
-        <Col xs={12} md={6}>
-          <Card>
-            <Statistic
-              title={t('menus.totalMenus')}
-              value={stats.total}
-              prefix={<Hash className="w-5 h-5" />}
-            />
-          </Card>
-        </Col>
-        <Col xs={12} md={6}>
-          <Card>
-            <Statistic
-              title={t('menus.enabledMenus')}
-              value={stats.enabled}
-              prefix={<Power className="w-5 h-5" />}
-              styles={{ content: { color: '#52c41a' } }}
-            />
-          </Card>
-        </Col>
-        <Col xs={12} md={6}>
-          <Card>
-            <Statistic
-              title={t('menus.disabledMenus')}
-              value={stats.disabled}
-              prefix={<PowerOff className="w-5 h-5" />}
-              styles={{ content: { color: '#ff4d4f' } }}
-            />
-          </Card>
-        </Col>
-        <Col xs={12} md={6}>
-          <Card>
-            <Statistic
-              title={t('menus.hiddenMenus')}
-              value={stats.hidden}
-              prefix={<EyeOff className="w-5 h-5" />}
-              styles={{ content: { color: '#faad14' } }}
-            />
-          </Card>
-        </Col>
-      </Row>
+      {/* 统计卡必须门控：还没拉到数据时渲染成「0 个菜单」会被误读成「系统里没有菜单」 */}
+      {!listLoading && (
+        <Row gutter={[16, 16]}>
+          <Col xs={12} md={6}>
+            <Card>
+              <Statistic
+                title={t('menus.totalMenus')}
+                value={stats.total}
+                prefix={<Hash className="w-5 h-5" />}
+              />
+            </Card>
+          </Col>
+          <Col xs={12} md={6}>
+            <Card>
+              <Statistic
+                title={t('menus.enabledMenus')}
+                value={stats.enabled}
+                prefix={<Power className="w-5 h-5" />}
+                styles={{ content: { color: '#52c41a' } }}
+              />
+            </Card>
+          </Col>
+          <Col xs={12} md={6}>
+            <Card>
+              <Statistic
+                title={t('menus.disabledMenus')}
+                value={stats.disabled}
+                prefix={<PowerOff className="w-5 h-5" />}
+                styles={{ content: { color: '#ff4d4f' } }}
+              />
+            </Card>
+          </Col>
+          <Col xs={12} md={6}>
+            <Card>
+              <Statistic
+                title={t('menus.hiddenMenus')}
+                value={stats.hidden}
+                prefix={<EyeOff className="w-5 h-5" />}
+                styles={{ content: { color: '#faad14' } }}
+              />
+            </Card>
+          </Col>
+        </Row>
+      )}
 
       <Card className="mb-4">
         <Row gutter={[16, 16]} align="middle">
@@ -445,7 +451,7 @@ export default function MenuManagementPage() {
           </Col>
           <Col xs={24} md={6} lg={10} className="text-right">
             <Space>
-              <Button icon={<RefreshCw className="w-4 h-4" />} onClick={loadMenus} loading={loading}>
+              <Button icon={<RefreshCw className="w-4 h-4" />} onClick={loadMenus} loading={listLoading}>
                 {t('menus.refresh')}
               </Button>
               <Button type="primary" icon={<Plus className="w-4 h-4" />} onClick={openCreate}>
@@ -459,7 +465,7 @@ export default function MenuManagementPage() {
       <Card>
         <Table
           rowKey="id"
-          loading={loading}
+          loading={listLoading}
           columns={columns}
           dataSource={treeMenus}
           expandable={{ indentSize: 20 }}
@@ -487,7 +493,7 @@ export default function MenuManagementPage() {
           setEditing(null);
           form.resetFields();
         }}
-        confirmLoading={loading}
+        confirmLoading={actionLoading}
         okText={t('common.save')}
         cancelText={t('common.cancel')}
         width={680}

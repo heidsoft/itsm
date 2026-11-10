@@ -15,7 +15,8 @@ export default function EditServicePage() {
   const { message: appMessage } = App.useApp();
   const { t } = useI18n();
   const [form] = Form.useForm();
-  const [loading, setLoading] = useState(false);
+  // 提交动作态（数据加载由 initialLoading 负责）。
+  const [actionLoading, setActionLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
 
   const serviceId = params.id as string;
@@ -44,7 +45,7 @@ export default function EditServicePage() {
 
   const handleSubmit = async (values: Record<string, unknown>) => {
     try {
-      setLoading(true);
+      setActionLoading(true);
       await ServiceCatalogApi.updateService(serviceId, {
         name: values.name as string,
         category: values.category as ServiceCategory,
@@ -57,7 +58,7 @@ export default function EditServicePage() {
     } catch (error) {
       appMessage.error(error instanceof Error ? error.message : t('common.saveFailed'));
     } finally {
-      setLoading(false);
+      setActionLoading(false);
     }
   };
 
@@ -91,7 +92,7 @@ export default function EditServicePage() {
           </Form.Item>
           <Form.Item>
             <div className="flex gap-4">
-              <Button type="primary" htmlType="submit" loading={loading}>
+              <Button type="primary" htmlType="submit" loading={actionLoading}>
                 {t('common.save')}
               </Button>
               <Button onClick={() => router.push('/service-catalog')}>{t('common.cancel')}</Button>

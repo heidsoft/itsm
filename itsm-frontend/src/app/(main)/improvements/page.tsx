@@ -32,8 +32,9 @@ const ImprovementListPage = () => {
   const { message } = App.useApp();
   const { t } = useI18n();
   const [improvements, setImprovements] = useState<Improvement[]>([]);
-  const [filter, setFilter] = useState<string>('All');
-  const [loading, setLoading] = useState(false);
+  const [filter, setFilter] = useState<string>("All");
+  // 列表初值必须为 true：mount 必定发起首次拉取，初值 false 会让首帧先渲染空列表。
+  const [listLoading, setListLoading] = useState(true);
 
   // 加载改进计划
   React.useEffect(() => {
@@ -41,7 +42,7 @@ const ImprovementListPage = () => {
   }, []);
 
   const loadImprovements = async () => {
-    setLoading(true);
+    setListLoading(true);
     try {
       const { TicketApi } = await import('@/lib/api/ticket-api');
       const response: TicketListResponse = await TicketApi.getTickets({ type: 'improvement', page: 1, pageSize: 100 });
@@ -61,7 +62,7 @@ const ImprovementListPage = () => {
       console.error(t('common.getFailed') + ':', error);
       message.error(t('common.getFailed'));
     } finally {
-      setLoading(false);
+      setListLoading(false);
     }
   };
 
@@ -138,8 +139,7 @@ const ImprovementListPage = () => {
             <p className="text-gray-500 mt-1">Identify, plan and implement improvements to IT services and processes</p>
           </div>
           <Space>
-            <Button icon={<RotateCcw />} onClick={loadImprovements} loading={loading}>
-
+            <Button icon={<RotateCcw />} onClick={loadImprovements} loading={listLoading}>
               Refresh
             </Button>
             <Button
@@ -171,7 +171,7 @@ const ImprovementListPage = () => {
         </div>
 
         {/* 改进计划列表 */}
-        {filteredImprovements.length === 0 && !loading ? (
+        {filteredImprovements.length === 0 && !listLoading ? (
           <Empty description="No improvement plan yet">
             <Button type="primary" onClick={() => router.push('/tickets/create?type=improvement')}>
 
@@ -183,7 +183,7 @@ const ImprovementListPage = () => {
             columns={columns}
             dataSource={filteredImprovements}
             rowKey="id"
-            loading={loading}
+            loading={listLoading}
             pagination={{
               pageSize: 10,
               showSizeChanger: true,

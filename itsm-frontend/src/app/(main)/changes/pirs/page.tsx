@@ -26,7 +26,8 @@ export default function PIRListPage() {
   const { t } = useI18n();
   const { message } = App.useApp();
 
-  const [loading, setLoading] = useState(false);
+  // 列表初值必须为 true：mount 必定发起首次拉取，初值 false 会让首帧先渲染空表格。
+  const [listLoading, setListLoading] = useState(true);
   const [pirs, setPirs] = useState<PIRResponse[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -42,7 +43,7 @@ export default function PIRListPage() {
 
   const fetchPIRs = useCallback(async () => {
     const seq = ++listRequest.current;
-    setLoading(true);
+    setListLoading(true);
     try {
       const response = await ChangeApi.getPIRs({
         page,
@@ -57,7 +58,7 @@ export default function PIRListPage() {
       console.error('Failed to fetch PIRs:', error);
       message.error('Failed to obtain PIR list');
     } finally {
-      if (seq === listRequest.current) setLoading(false);
+      if (seq === listRequest.current) setListLoading(false);
     }
   }, [page, pageSize, resultFilter]);
 
@@ -223,7 +224,7 @@ export default function PIRListPage() {
           columns={columns}
           dataSource={pirs}
           rowKey="id"
-          loading={loading}
+          loading={listLoading}
           pagination={{
             current: page,
             pageSize: pageSize,

@@ -104,6 +104,8 @@ func (h *Handler) GetExportTaskStatus(c *gin.Context) { h.svc.GetExportTaskStatu
 
 func (h *Handler) CreateExportTask(c *gin.Context) { h.svc.CreateExportTask(c) }
 
+func (h *Handler) DownloadExportTask(c *gin.Context) { h.svc.DownloadExportTask(c) }
+
 func (h *Handler) ListCIRelationships(c *gin.Context) { h.svc.ListCIRelationships(c) }
 
 func (h *Handler) GetCIRelationship(c *gin.Context) { h.svc.GetCIRelationship(c) }

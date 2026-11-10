@@ -41,6 +41,7 @@ import {
 } from 'antd';
 import type { MenuProps } from 'antd';
 import { WorkflowAPI } from '@/lib/api/workflow-api';
+import { WorkflowType } from '@/types/workflow';
 import { UsageGuideCard } from '@/components/common/UsageGuideCard';
 import BPMNDiagramPreview from '@/components/workflow/BPMNDiagramPreview';
 import WorkflowTemplateCatalog from '@/components/workflow/WorkflowTemplateCatalog';
@@ -145,13 +146,18 @@ const WorkflowManagement = () => {
   const [detailXmlLoading, setDetailXmlLoading] = useState(false);
   const [detailXmlError, setDetailXmlError] = useState('');
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
-  const [loading, setLoading] = useState(false);
+  // 列表初值必须为 true：mount 必定发起首次拉取，初值 false 会让首帧先渲染
+  // 「Total workflows 0」的假统计卡与空表格，再被真实数据覆盖。
+  const [listLoading, setListLoading] = useState(true);
+  // 复制/删除/批量删除/Save是提交动作，不应与列表加载共用一个标志：
+  // 共用会让「Save中」把整个表格也转圈，反之亦然。
+  const [actionLoading, setActionLoading] = useState(false);
   const [form] = Form.useForm();
   const detailXmlRequestRef = useRef(0);
 
   // 加载工作流数据
   const loadWorkflows = async () => {
-    setLoading(true);
+    setListLoading(true);
     try {
       const response = await WorkflowAPI.getWorkflows({});
       const workflowList: Workflow[] = (response.workflows || []).map((w) => ({
@@ -170,7 +176,7 @@ const WorkflowManagement = () => {
       console.error('Failed to load workflows:', error);
       message.error('Failed to load workflow data');
     } finally {
-      setLoading(false);
+      setListLoading(false);
     }
   };
 
@@ -207,24 +213,22 @@ const WorkflowManagement = () => {
   });
 
   // 处理工作流状态切换
-  const handleStatusToggle = async (workflowKey: string) => {
-    const workflow = workflows.find(w => w.id === workflowKey);
-    if (!workflow) return;
-
+  const handleStatusToggle = async (workflow: Workflow) => {
     const newStatus = workflow.status === WORKFLOW_STATUS.ACTIVE
       ? WORKFLOW_STATUS.INACTIVE
       : WORKFLOW_STATUS.ACTIVE;
 
     try {
+      // 后端按 (key, version) 精确定位版本，必须回传列表里的真实版本号。
       if (newStatus === WORKFLOW_STATUS.ACTIVE) {
-        await WorkflowAPI.activateWorkflow(workflowKey);
+        await WorkflowAPI.activateWorkflow(workflow.id, workflow.version);
       } else {
-        await WorkflowAPI.deactivateWorkflow(workflowKey);
+        await WorkflowAPI.deactivateWorkflow(workflow.id, workflow.version);
       }
 
       setWorkflows(prev =>
         prev.map(w => {
-          if (w.id === workflowKey) {
+          if (w.id === workflow.id) {
             return { ...w, status: newStatus };
           }
           return w;
@@ -240,11 +244,10 @@ const WorkflowManagement = () => {
   // 处理工作流复制（调用后端 clone 接口，保留 bpmnXml）
   const handleDuplicate = async (workflow: Workflow) => {
     try {
-      setLoading(true);
+      setActionLoading(true);
       await WorkflowAPI.cloneProcessDefinition(workflow.id, {
         newKey: `${workflow.id}_copy_${Date.now()}`,
         newName: `${workflow.name} (Copy)`,
-        description: workflow.description,
       });
       message.success('Workflow copied');
       loadWorkflows();
@@ -252,31 +255,32 @@ const WorkflowManagement = () => {
       console.error('Failed to duplicate workflow:', error);
       message.error('Failed to copy workflow');
     } finally {
-      setLoading(false);
+      setActionLoading(false);
     }
   };
 
-  // 处理工作流删除（id 为 process key）
-  const handleDelete = async (workflowKey: string) => {
+  // 处理工作流删除（id 为 process key，version 为列表返回的真实版本）
+  const handleDelete = async (workflow: Workflow) => {
     try {
-      setLoading(true);
-      await WorkflowAPI.deleteWorkflow(workflowKey);
+      setActionLoading(true);
+      await WorkflowAPI.deleteWorkflow(workflow.id);
       message.success('Workflow deleted');
       loadWorkflows();
     } catch (error) {
       console.error('Failed to delete workflow:', error);
       message.error('Failed to delete workflow');
     } finally {
-      setLoading(false);
+      setActionLoading(false);
     }
   };
 
   // 批量删除（循环调用真实 API，id 为 process key）
   const handleBatchDelete = async () => {
     try {
-      setLoading(true);
+      setActionLoading(true);
+      const selected = workflows.filter(w => selectedRowKeys.includes(w.id));
       await Promise.all(
-        selectedRowKeys.map(key => WorkflowAPI.deleteWorkflow(String(key)))
+        selected.map(workflow => WorkflowAPI.deleteWorkflow(workflow.id))
       );
       message.success(`Deleted ${selectedRowKeys.length} workflows`);
       setSelectedRowKeys([]);
@@ -285,7 +289,7 @@ const WorkflowManagement = () => {
       console.error('Failed to batch delete workflows:', error);
       message.error('Batch delete failed');
     } finally {
-      setLoading(false);
+      setActionLoading(false);
     }
   };
 
@@ -313,38 +317,40 @@ const WorkflowManagement = () => {
       });
   };
 
-  // 保存工作流（创建或更新走真实 API）
+  // Save工作流（创建或更新走真实 API）
   const handleSave = async () => {
     try {
       const values = await form.validateFields();
-      setLoading(true);
+      setActionLoading(true);
 
       if (selectedWorkflow) {
-        await WorkflowAPI.updateWorkflow(selectedWorkflow.id, {
-          name: values.name,
-          description: values.description,
-          category: values.type,
-        } as never);
+        await WorkflowAPI.updateWorkflow(
+          selectedWorkflow.id,
+          {
+            name: values.name,
+            description: values.description,
+            category: values.type,
+          },
+          selectedWorkflow.version
+        );
         message.success('Workflow updated successfully');
       } else {
         const created = await WorkflowAPI.createWorkflow({
           code: values.name,
           name: values.name,
           description: values.description,
-          type: (values.type as 'approval') || 'approval',
-          status: 'draft',
-        } as never);
+          type: (values.type as WorkflowType) ?? WorkflowType.APPROVAL,
+        });
         message.success('Workflow created successfully');
 
-        const createdId = (created as { id?: number | string } | undefined)?.id;
-        if (createdId) {
+        if (created.id) {
           modal.confirm({
             title: 'Do you want to enter the designer orchestration process immediately?',
             content: 'The workflow has been created as a draft and needs to be orchestrated in the designer before it can be enabled.',
             okText: 'Enter the designer',
             cancelText: 'Talk to you later',
             onOk: () => {
-              router.push(`/workflow/designer?id=${createdId}`);
+              router.push(`/workflow/designer?id=${created.id}`);
             },
           });
         }
@@ -358,7 +364,7 @@ const WorkflowManagement = () => {
       console.error('Failed to save workflow:', error);
       message.error('Save failed, please check required fields or backend availability');
     } finally {
-      setLoading(false);
+      setActionLoading(false);
     }
   };
 
@@ -490,11 +496,11 @@ const WorkflowManagement = () => {
             onClick: () => {
               modal.confirm({
                 title: 'Are you sure you want to delete this workflow?',
-                content: `Process definition "will be deleted"${record.name}", it cannot be restored after deletion.`,
+                content: `Process definition "${record.name}" v${record.version} will be deleted. This cannot be undone.`,
                 okText: 'Confirm deletion',
                 cancelText: 'Cancel',
                 okType: 'danger',
-                onOk: () => handleDelete(record.id),
+                onOk: () => handleDelete(record),
               });
             },
           },
@@ -521,7 +527,7 @@ const WorkflowManagement = () => {
                   )
                 }
                 disabled={isDraft}
-                onClick={() => handleStatusToggle(record.id)}
+                onClick={() => handleStatusToggle(record)}
               />
             </Tooltip>
             <Dropdown menu={{ items: moreItems }} trigger={['click']}>
@@ -567,38 +573,41 @@ const WorkflowManagement = () => {
       <WorkflowTemplateCatalog />
 
       {/* 统计卡片 */}
-      <Row gutter={[16, 16]}>
-        <Col xs={24} sm={8}>
-          <Card className="enterprise-card">
-            <Statistic
-              title="Total Workflows"
-              value={stats.total}
-              prefix={<GitBranch className="w-5 h-5" />}
-              styles={{ content: { color: '#1890ff' } }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={8}>
-          <Card className="enterprise-card">
-            <Statistic
-              title="Enabled"
-              value={stats.active}
-              prefix={<Play className="w-5 h-5" />}
-              styles={{ content: { color: '#52c41a' } }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={8}>
-          <Card className="enterprise-card">
-            <Statistic
-              title="Draft"
-              value={stats.draft}
-              prefix={<Edit className="w-5 h-5" />}
-              styles={{ content: { color: '#722ed1' } }}
-            />
-          </Card>
-        </Col>
-      </Row>
+      {/* 统计卡片必须门控：还没拉到数据时渲染成「Total workflows 0」会被误读成「没有工作流」 */}
+      {!listLoading && (
+        <Row gutter={[16, 16]}>
+          <Col xs={24} sm={8}>
+            <Card className="enterprise-card">
+              <Statistic
+                title="Total workflows"
+                value={stats.total}
+                prefix={<GitBranch className="w-5 h-5" />}
+                styles={{ content: { color: '#1890ff' } }}
+              />
+            </Card>
+          </Col>
+          <Col xs={24} sm={8}>
+            <Card className="enterprise-card">
+              <Statistic
+                title="Enabled"
+                value={stats.active}
+                prefix={<Play className="w-5 h-5" />}
+                styles={{ content: { color: '#52c41a' } }}
+              />
+            </Card>
+          </Col>
+          <Col xs={24} sm={8}>
+            <Card className="enterprise-card">
+              <Statistic
+                title="Draft"
+                value={stats.draft}
+                prefix={<Edit className="w-5 h-5" />}
+                styles={{ content: { color: '#722ed1' } }}
+              />
+            </Card>
+          </Col>
+        </Row>
+      )}
 
       {/* 搜索和过滤 */}
       <Card>
@@ -672,15 +681,15 @@ const WorkflowManagement = () => {
 
       {/* 工作流列表 */}
       <Card className="enterprise-card">
-        {filteredWorkflows.length === 0 && !loading ? (
-          <Empty description="There is no workflow yet. Click the button in the upper right corner to create it." />
+        {filteredWorkflows.length === 0 && !listLoading ? (
+          <Empty description="No workflows yet. Use the button in the upper right to create one." />
         ) : (
           <Table
             columns={columns}
             dataSource={filteredWorkflows}
             rowKey="id"
             rowSelection={rowSelection}
-            loading={loading}
+            loading={listLoading}
             scroll={{ x: 1200 }}
             pagination={{
               total: filteredWorkflows.length,
@@ -710,7 +719,7 @@ const WorkflowManagement = () => {
           form.resetFields();
         }}
         width={600}
-        confirmLoading={loading}
+        confirmLoading={actionLoading}
         okText="Save"
         cancelText="Cancel"
       >

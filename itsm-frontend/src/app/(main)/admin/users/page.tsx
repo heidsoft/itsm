@@ -51,14 +51,18 @@ const { Search: AntSearch } = Input;
 
 const UserManagement: React.FC = () => {
   const { token } = theme.useToken();
-  const { message } = App.useApp();
+  // 反馈 API 必须来自 App 上下文：静态 Modal.confirm 无法继承主题与 locale。
+  const { message, modal } = App.useApp();
   const { t } = useI18n();
   const { currentTenant } = useAuthStore();
   useAuthStoreHydration();
 
   // 状态管理
   const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(false);
+  // 列表加载与提交动作分开：mount 必定发起首次拉取，列表初值必须为 true，
+  // 否则首帧会把「还没拉取」渲染成「暂无用户」；而提交按钮不应跟着列表一起转圈。
+  const [listLoading, setListLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState(false);
   const [stats, setStats] = useState({ total: 0, active: 0, inactive: 0 });
   const [pagination, setPagination] = useState({
     current: 1,
@@ -89,7 +93,7 @@ const UserManagement: React.FC = () => {
 
   // 加载用户列表
   const loadUsers = async () => {
-    setLoading(true);
+    setListLoading(true);
     try {
       const params = {
         page: pagination.current,
@@ -111,7 +115,7 @@ const UserManagement: React.FC = () => {
     } catch (error) {
       message.error(t('users.messages.loadFailed'));
     } finally {
-      setLoading(false);
+      setListLoading(false);
     }
   };
 
@@ -141,7 +145,7 @@ const UserManagement: React.FC = () => {
     role: string;
     roleIds: number[];
   }) => {
-    setLoading(true);
+    setActionLoading(true);
     try {
       const tenantId = currentTenant?.id;
       if (!tenantId) {
@@ -166,7 +170,7 @@ const UserManagement: React.FC = () => {
     } catch (error) {
       message.error(error instanceof Error ? error.message : t('users.messages.createFailed'));
     } finally {
-      setLoading(false);
+      setActionLoading(false);
     }
   };
 
@@ -181,7 +185,7 @@ const UserManagement: React.FC = () => {
     roleIds: number[];
   }) => {
     if (!selectedUser) return;
-    setLoading(true);
+    setActionLoading(true);
     try {
       await UserApi.updateUser(selectedUser.id, {
         username: values.username,
@@ -201,13 +205,13 @@ const UserManagement: React.FC = () => {
     } catch (error) {
       message.error(error instanceof Error ? error.message : t('users.messages.updateFailed'));
     } finally {
-      setLoading(false);
+      setActionLoading(false);
     }
   };
 
   // 删除用户
   const handleDeleteUser = async (userId: number) => {
-    setLoading(true);
+    setActionLoading(true);
     try {
       await UserApi.deleteUser(userId);
       message.success(t('users.messages.deleteSuccess'));
@@ -215,13 +219,13 @@ const UserManagement: React.FC = () => {
     } catch (error) {
       message.error(error instanceof Error ? error.message : t('users.messages.deleteFailed'));
     } finally {
-      setLoading(false);
+      setActionLoading(false);
     }
   };
 
   // 切换用户状态
   const handleToggleUserStatus = async (userId: number, currentStatus: boolean) => {
-    setLoading(true);
+    setActionLoading(true);
     try {
       const newStatus = !currentStatus;
       await UserApi.changeUserStatus(userId, newStatus);
@@ -234,14 +238,14 @@ const UserManagement: React.FC = () => {
       console.error('Failed to toggle user status:', error);
       message.error(error instanceof Error ? error.message : t('users.messages.statusUpdateFailed'));
     } finally {
-      setLoading(false);
+      setActionLoading(false);
     }
   };
 
   // 重置密码
   const handleResetPassword = async (values: { newPassword: string }) => {
     if (!selectedUser) return;
-    setLoading(true);
+    setActionLoading(true);
     try {
       await UserApi.resetPassword(selectedUser.id, values.newPassword);
       message.success(t('users.messages.passwordResetSuccess'));
@@ -251,7 +255,7 @@ const UserManagement: React.FC = () => {
     } catch (error) {
       message.error(error instanceof Error ? error.message : t('users.messages.passwordResetFailed'));
     } finally {
-      setLoading(false);
+      setActionLoading(false);
     }
   };
 
@@ -299,7 +303,7 @@ const UserManagement: React.FC = () => {
               <Tag
                 key={tag.label}
                 color={tag.primary ? 'blue' : undefined}
-                bordered={false}
+                variant="filled"
               >
                 {tag.label}
               </Tag>
@@ -336,7 +340,7 @@ const UserManagement: React.FC = () => {
         <Switch
           aria-label={`Switch user ${record.name} enabled status`}
           checked={active}
-          loading={loading}
+          loading={actionLoading}
           onChange={() => handleToggleUserStatus(record.id, active)}
           checkedChildren={t('users.statusTag.active')}
           unCheckedChildren={t('users.statusTag.deactivated')}
@@ -390,9 +394,12 @@ const UserManagement: React.FC = () => {
                 icon: <Trash2 size={16} />,
                 danger: true,
                 onClick: () => {
-                  Modal.confirm({
+                  modal.confirm({
                     title: t('common.confirmDelete'),
-                    content: t('users.confirmDelete', { name: record.name }),
+                    content: t('users.confirmDeleteContent', { name: record.name }),
+                    okText: t('common.confirm'),
+                    cancelText: t('common.cancel'),
+                    okButtonProps: { danger: true },
                     onOk: () => handleDeleteUser(record.id),
                   });
                 },
@@ -418,7 +425,8 @@ const UserManagement: React.FC = () => {
         </Title>
         <Text type="secondary">{t('users.description')}</Text>
 
-        {/* 统计卡片 */}
+        {/* 统计卡片：首次拉取未完成时不渲染，否则会把「还没拉到」画成「总用户数 0」 */}
+        {!listLoading && (
         <Row gutter={16} style={{ marginTop: token.marginLG }}>
           <Col span={8}>
             <Card>
@@ -448,6 +456,7 @@ const UserManagement: React.FC = () => {
             </Card>
           </Col>
         </Row>
+        )}
       </div>
 
       {/* 操作栏 */}
@@ -529,7 +538,7 @@ const UserManagement: React.FC = () => {
 
       {/* 用户表格 */}
       <Card>
-        {users.length === 0 && !loading ? (
+        {users.length === 0 && !listLoading ? (
           <Empty description={t('users.empty')} image={Empty.PRESENTED_IMAGE_SIMPLE}>
             <Button type="primary" onClick={() => setIsCreateModalVisible(true)}>
 {t('users.createFirst')}
@@ -540,7 +549,7 @@ const UserManagement: React.FC = () => {
             columns={columns}
             dataSource={users}
             rowKey="id"
-            loading={loading}
+            loading={listLoading}
             scroll={{ x: 980 }}
             pagination={{
               current: pagination.current,
@@ -659,7 +668,7 @@ const UserManagement: React.FC = () => {
           </Row>
           <Form.Item>
             <Space>
-              <Button type="primary" htmlType="submit" loading={loading}>
+              <Button type="primary" htmlType="submit" loading={actionLoading}>
   {t('users.createUser')}
               </Button>
               <Button
@@ -747,7 +756,7 @@ const UserManagement: React.FC = () => {
           </Form.Item>
           <Form.Item>
             <Space>
-              <Button type="primary" htmlType="submit" loading={loading}>
+              <Button type="primary" htmlType="submit" loading={actionLoading}>
 {t('users.form.save')}
               </Button>
               <Button
@@ -788,7 +797,7 @@ const UserManagement: React.FC = () => {
           </Form.Item>
           <Form.Item>
             <Space>
-              <Button type="primary" htmlType="submit" loading={loading}>
+              <Button type="primary" htmlType="submit" loading={actionLoading}>
 {t('users.actions.resetPassword')}
               </Button>
               <Button

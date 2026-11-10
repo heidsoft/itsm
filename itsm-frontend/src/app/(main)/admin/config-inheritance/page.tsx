@@ -30,7 +30,9 @@ export default function ConfigInheritancePage() {
   const { message } = App.useApp();
   const [configs, setConfigs] = useState<DomainConfig[]>([]);
   const [effectiveConfig, setEffectiveConfig] = useState<EffectiveConfig | null>(null);
-  const [loading, setLoading] = useState(false);
+  // 列表初值必须为 true：mount 必定发起首次拉取，初值 false 会让首帧先渲染
+  // 空表格，再被真实数据覆盖。
+  const [listLoading, setListLoading] = useState(true);
   const [previewLoading, setPreviewLoading] = useState(false);
   const [previewed, setPreviewed] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
@@ -38,7 +40,7 @@ export default function ConfigInheritancePage() {
   const [previewForm] = Form.useForm();
 
   const loadConfigs = async () => {
-    setLoading(true);
+    setListLoading(true);
     try {
       const data = await DomainConfigApi.list();
       setConfigs(data);
@@ -46,7 +48,7 @@ export default function ConfigInheritancePage() {
       console.error(error);
       message.error('Failed to load configuration');
     } finally {
-      setLoading(false);
+      setListLoading(false);
     }
   };
 
@@ -163,8 +165,7 @@ export default function ConfigInheritancePage() {
             title="Configuration list"
             extra={
               <Space>
-                <Button icon={<RefreshCw size={16} />} onClick={loadConfigs} loading={loading}>
-
+                <Button icon={<RefreshCw size={16} />} onClick={loadConfigs} loading={listLoading}>
                   Refresh
                 </Button>
                 <Button type="primary" icon={<Plus size={16} />} onClick={() => setModalOpen(true)}>
@@ -174,7 +175,7 @@ export default function ConfigInheritancePage() {
               </Space>
             }
           >
-            <Table columns={columns} dataSource={configs} rowKey="id" loading={loading} />
+            <Table columns={columns} dataSource={configs} rowKey="id" loading={listLoading} />
           </Card>
         </Col>
 

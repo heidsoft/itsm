@@ -39,7 +39,8 @@ const { RangePicker } = DatePicker;
 export default function AuditLogsPage() {
   const { t } = useI18n();
   const { message } = App.useApp();
-  const [loading, setLoading] = useState(false);
+  // 列表初值必须为 true：mount 必定发起首次拉取，初值 false 会让首帧先渲染空列表。
+  const [listLoading, setListLoading] = useState(true);
   const [logs, setLogs] = useState<ProcessAuditLog[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -56,7 +57,7 @@ export default function AuditLogsPage() {
   });
 
   const fetchLogs = async () => {
-    setLoading(true);
+    setListLoading(true);
     try {
       // 租户由后端认证上下文收敛；前端不发送 tenantId 去猜测归属。
       const request: QueryAuditLogsRequest = {
@@ -73,7 +74,7 @@ export default function AuditLogsPage() {
       setLogs([]);
       setTotal(0);
     } finally {
-      setLoading(false);
+      setListLoading(false);
     }
   };
 
@@ -276,7 +277,7 @@ export default function AuditLogsPage() {
           dataSource={logs}
           columns={columns}
           rowKey="id"
-          loading={loading}
+          loading={listLoading}
           scroll={{ x: 1200 }}
           pagination={{
             current: page,

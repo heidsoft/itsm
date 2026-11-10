@@ -765,8 +765,13 @@ func (h *Handler) GetStats(c *gin.Context) {
 		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
+	common.Success(c, ToStatsResponse(stats))
+}
 
-	// Map domain stats to DTO
+// ToStatsResponse maps the problem domain stats to DTO. Exported so the
+// service-quality aggregator wiring (internal/bootstrap) can reuse the exact
+// same mapping instead of duplicating field copies.
+func ToStatsResponse(stats *ProblemStats) *dto.ProblemStatsResponse {
 	resp := &dto.ProblemStatsResponse{
 		Total:        stats.Total,
 		Open:         stats.Open,
@@ -783,7 +788,7 @@ func (h *Handler) GetStats(c *gin.Context) {
 	for _, item := range stats.ByPriority {
 		resp.ByPriority = append(resp.ByPriority, dto.ProblemPriorityCount{Priority: item.Priority, Count: item.Count})
 	}
-	common.Success(c, resp)
+	return resp
 }
 
 // GetTrends handles GET /api/v1/problems/trend

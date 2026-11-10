@@ -886,8 +886,8 @@ const analyticsMetricVersion = "deep-analytics-v1"
 // **不补 model**。此前能力矩阵把 analytics 与 chat/摘要并列为「缺溯源字段」，
 // 但给聚合结果加一个 model 字段只会制造假溯源：客户端会以为这是某模型的建议，
 // 而实际没有任何模型参与。诚实标注「这是聚合，口径版本是 X」才是它该有的溯源。
-func (s *Service) GetDeepAnalytics(ctx context.Context, req *dto.DeepAnalyticsRequest, tenantID int) (interface{}, error) {
-	res, err := s.analytics.GetDeepAnalytics(ctx, req, tenantID)
+func (s *Service) GetDeepAnalytics(ctx context.Context, req *dto.DeepAnalyticsRequest, tenantID int, viewer service.DashboardViewer) (interface{}, error) {
+	res, err := s.analytics.GetDeepAnalytics(ctx, req, tenantID, viewer)
 	if err != nil {
 		return nil, err
 	}
@@ -904,7 +904,7 @@ func (s *Service) GetDeepAnalytics(ctx context.Context, req *dto.DeepAnalyticsRe
 // 预测算法或平滑参数而不换版本号，底账里新旧口径的预测就无法区分。
 const slaForecastPromptVersion = "sla-forecast-v1"
 
-func (s *Service) GetTrendPrediction(ctx context.Context, req *dto.TrendPredictionRequest, tenantID int, userID int) (interface{}, error) {
+func (s *Service) GetTrendPrediction(ctx context.Context, req *dto.TrendPredictionRequest, tenantID int, userID int, viewer service.DashboardViewer) (interface{}, error) {
 	// 前端不带 timeRange 时默认为「过去 6 个月 → 今天」。
 	// 否则 req.TimeRange[0/1] 会 panic,与 prediction_service.go 行为对齐。
 	if len(req.TimeRange) != 2 {
@@ -922,6 +922,7 @@ func (s *Service) GetTrendPrediction(ctx context.Context, req *dto.TrendPredicti
 			StartDate: parseDate(req.TimeRange[0]),
 			EndDate:   parseDate(req.TimeRange[1]),
 			Metrics:   []string{req.PredictionType},
+			Viewer:    viewer,
 		}
 		output, err := s.slaForecastSkill.Execute(ctx, input)
 		if err == nil {
@@ -942,7 +943,7 @@ func (s *Service) GetTrendPrediction(ctx context.Context, req *dto.TrendPredicti
 		s.logger.Warnw("SLAForecastSkill failed, falling back to legacy", "error", err)
 	}
 
-	res, err := s.prediction.GetTrendPrediction(ctx, req, tenantID)
+	res, err := s.prediction.GetTrendPrediction(ctx, req, tenantID, viewer)
 	if err != nil {
 		return nil, err
 	}
@@ -1032,7 +1033,7 @@ func normalizeForecastOutput(output *service.ForecastOutput, promptVersion strin
 }
 
 // GetForecastInsights returns AI-generated insights for SLA forecasting
-func (s *Service) GetForecastInsights(ctx context.Context, req *dto.TrendPredictionRequest, tenantID int, userID int) (interface{}, error) {
+func (s *Service) GetForecastInsights(ctx context.Context, req *dto.TrendPredictionRequest, tenantID int, userID int, viewer service.DashboardViewer) (interface{}, error) {
 	if s.slaForecastSkill == nil {
 		return nil, fmt.Errorf("SLAForecastSkill not initialized")
 	}
@@ -1042,6 +1043,7 @@ func (s *Service) GetForecastInsights(ctx context.Context, req *dto.TrendPredict
 		StartDate: parseDate(req.TimeRange[0]),
 		EndDate:   parseDate(req.TimeRange[1]),
 		Metrics:   []string{req.PredictionType},
+		Viewer:    viewer,
 	}
 
 	output, err := s.slaForecastSkill.Execute(ctx, input)
@@ -1141,15 +1143,26 @@ func (s *Service) TriageTicket(ctx context.Context, tenantID int, userID int, ti
 				"urgency":    s.determineUrgency(result.Priority),
 			},
 		}
+		// 降级结果必须自报家门：前端/审计据此区分「模型结论」与「关键词凑数」，
+		// 否则 sidecar 把 LLM 故障包成 200 之后，界面与底账都看不出异常。
+		if result.Degraded {
+			response["degraded"] = true
+			response["degradedReason"] = result.DegradedReason
+		}
 		if s.auditLedger != nil {
+			metadata := map[string]interface{}{
+				"category": result.Category,
+				"priority": result.Priority,
+				"degraded": result.Degraded,
+			}
+			if result.Degraded {
+				metadata["degradedReason"] = result.DegradedReason
+			}
 			auditID, ledgerErr := s.auditLedger.RecordDecisionAudit(ctx, tenantID, userID,
 				fmt.Sprintf("triage_%d_%d", tenantID, time.Now().UnixNano()),
 				"triage", fmt.Sprintf("ticket:%s", title),
 				result.PromptVersion, result.Model, result.Confidence,
-				map[string]interface{}{
-					"category": result.Category,
-					"priority": result.Priority,
-				},
+				metadata,
 			)
 			if ledgerErr != nil {
 				s.logger.Warnw("TriageTicket: audit ledger write failed (best-effort)", "error", ledgerErr)

@@ -115,7 +115,19 @@ export class McpServer {
     map.set('ping', async () => ({}));
     map.set('logging/setLevel', async () => ({}));
 
-    map.set('tools/list', async () => ({ tools: this.tools }));
+    map.set('tools/list', async () => ({
+      // Project to the MCP Tool schema only. `command` / `defaults` are internal
+      // routing fields (used by the server and --describe); leaking them into
+      // the protocol invites clients to depend on something the spec never
+      // promised, and strict hosts validate the object.
+      tools: this.tools.map(({ name, title, description, inputSchema, annotations }) => ({
+        name,
+        title,
+        description,
+        inputSchema,
+        annotations,
+      })),
+    }));
 
     map.set('tools/call', async (req) => {
       const name = req.params?.['name'];
@@ -210,7 +222,14 @@ export class McpServer {
           throw new RpcError(RPC.InvalidParams, 'itsm_call 需要 command，例如 ticket.tags-add');
         }
         const rawParams = args['params'];
-        const params = (rawParams && typeof rawParams === 'object' ? rawParams : {}) as Record<string, unknown>;
+        // `params` is a free-form object by contract. Silently coercing a
+        // string/array to {} turns a client bug into "missing required
+        // parameter" and sends the caller down the wrong fix; reject the shape
+        // at the protocol boundary instead.
+        if (rawParams !== undefined && (rawParams === null || typeof rawParams !== 'object' || Array.isArray(rawParams))) {
+          throw new RpcError(RPC.InvalidParams, 'itsm_call 的 params 必须是对象，键名与 itsm_describe 的 input.params 一致');
+        }
+        const params = (rawParams ?? {}) as Record<string, unknown>;
         const rawLimit = Number(args['limit']);
         const fields = Array.isArray(args['fields']) ? (args['fields'] as unknown[]).map(String) : undefined;
         return callCommand(command, params, {

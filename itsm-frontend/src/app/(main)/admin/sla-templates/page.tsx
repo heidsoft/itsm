@@ -113,7 +113,7 @@ export default function SLATemplatesPage() {
     setFailures([]);
     try {
       const result = await SLATemplateApi.installTemplate(key);
-      // 安装状态以服务端为准：重新拉列表，刷新后不会退回「未安装」
+      // 安装状态以服务端为准：重新拉列表，Refresh后不会退回「未安装」
       await loadTemplates();
       if (result.created) {
         message.success(`Template "${result.templateKey}"Already installed in the current tenant"`);
@@ -372,38 +372,41 @@ export default function SLATemplatesPage() {
         ]}
       />
 
-      <Row gutter={[16, 16]}>
-        <Col xs={24} sm={6}>
-          <Card>
-            <Statistic title="Total number of templates" value={stats.total} suffix="items" />
-          </Card>
-        </Col>
-        <Col xs={24} sm={6}>
-          <Card>
-            <Statistic
-              title="Recommended Templates"
-              value={stats.recommended}
-              suffix="items"
-              styles={{ content: { color: '#52c41a' } }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={6}>
-          <Card>
-            <Statistic
-              title="This tenant has already been installed"
-              value={stats.installed}
-              suffix="items"
-              styles={{ content: { color: '#1677ff' } }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={6}>
-          <Card>
-            <Statistic title="Covered industries" value={stats.industries} suffix="items" />
-          </Card>
-        </Col>
-      </Row>
+      {/* 统计卡必须门控：还没拉到数据时渲染成「Total templates 0」会被误读成「没有模板」 */}
+      {!loading && (
+        <Row gutter={[16, 16]}>
+          <Col xs={24} sm={6}>
+            <Card>
+              <Statistic title="Total templates" value={stats.total} suffix="items" />
+            </Card>
+          </Col>
+          <Col xs={24} sm={6}>
+            <Card>
+              <Statistic
+                title="Recommended templates"
+                value={stats.recommended}
+                suffix="items"
+                styles={{ content: { color: '#52c41a' } }}
+              />
+            </Card>
+          </Col>
+          <Col xs={24} sm={6}>
+            <Card>
+              <Statistic
+                title="Installed for this tenant"
+                value={stats.installed}
+                suffix="items"
+                styles={{ content: { color: '#1677ff' } }}
+              />
+            </Card>
+          </Col>
+          <Col xs={24} sm={6}>
+            <Card>
+              <Statistic title="Industries covered" value={stats.industries} suffix="items" />
+            </Card>
+          </Col>
+        </Row>
+      )}
 
       {loadError && (
         <Alert

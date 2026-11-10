@@ -4411,6 +4411,10 @@ GET    /api/v1/on-call/current?groupId=5&at=2026-10-20T02:00:00Z
 
 路由表守卫 `itsm-backend/router/problem_investigation_route_test.go` 锁死该端点不再注册。
 
+## Ticket analytics empty results
+
+`GET /api/v1/analytics/tickets` returns `data.statusGroups`, `data.priorityGroups`, and `data.trend30d` as JSON arrays. When the authenticated tenant has no tickets, these fields are `[]`, never `null`, and `data.total` is `0`. The ticket statistics block in `GET /api/v1/reports/service-quality` uses the same service and array contract. Tickets from other tenants are excluded.
+
 ## 版本历史
 
 | 版本 | 日期 | 说明 |

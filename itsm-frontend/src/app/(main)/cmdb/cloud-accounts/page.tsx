@@ -50,7 +50,10 @@ export default function CloudAccountPage() {
   // React Query：云账号列表（替代手写 loadData + isMountedRef）
   const accountsQuery = useCloudAccountsQuery();
   const data = accountsQuery.data?.items ?? [];
-  const loading = accountsQuery.isLoading;
+  // 用 isPending 而非 isLoading：SSR/首帧时 query 尚未发起（isFetching=false），
+  // isLoading 为 false 会把「暂无数据 / 共 0 个账号」的空态在数据到达前就渲染出来（D55）。
+  // isPending 在服务端渲染与首次拉取期间均为 true，首帧即呈现加载态。
+  const loading = accountsQuery.isPending;
   // 失败必须显式呈现：只消费 data/isLoading 时，接口 500/403 会退化成
   // 「共 0 个账号」的空表，用户无法区分「真的没数据」和「加载失败」。
   const loadError = accountsQuery.isError;
@@ -312,7 +315,9 @@ export default function CloudAccountPage() {
             Add a new cloud account
           </Button>
         </Space>
-        {loadError ? (
+        {loading ? (
+          <span className='ml-auto text-sm text-gray-400'>Loading…</span>
+        ) : loadError ? (
           <span className='ml-auto text-sm text-red-500'>Data loading failed</span>
         ) : (
           <span className='ml-auto text-sm text-gray-500'>Total {filteredData.length}  accounts</span>
@@ -389,8 +394,8 @@ export default function CloudAccountPage() {
           </Form.Item>
           <Form.Item
             name='credentialRef'
-            label="Update credential reference"
-            extra="Leave it blank to retain existing credentials; the server will not return the contents of the saved credentials."
+            label="Credential reference"
+            extra="Enter a secret://<tenant>/<name> reference; leave blank to configure credentials later."
           >
             <Input.Password placeholder="For example secret://tenant-42/aliyun-production" />
           </Form.Item>
@@ -432,7 +437,11 @@ export default function CloudAccountPage() {
           >
             <Input placeholder="For example, production account" />
           </Form.Item>
-          <Form.Item name='credentialRef' label="Credential reference">
+          <Form.Item
+            name='credentialRef'
+            label="Update credential reference"
+            extra="Leave it blank to retain existing credentials; the server will not return the contents of the saved credentials."
+          >
             <Input placeholder="e.g. aliyun-prod-credential" />
           </Form.Item>
           <Form.Item name='isActive' label="Status" valuePropName='checked'>

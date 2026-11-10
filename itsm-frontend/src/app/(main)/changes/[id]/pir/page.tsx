@@ -15,6 +15,7 @@ import {
   Descriptions,
   Modal,
   Alert,
+  Spin,
   Typography,
 } from 'antd';
 import { Undo, AlertTriangle, AlertCircle, CheckCircle, XCircle } from 'lucide-react';
@@ -40,7 +41,9 @@ export default function PIRPage() {
   const { message } = App.useApp();
   const changeId = Number(params.id);
 
-  const [loading, setLoading] = useState(false);
+  // 加载初值必须为 true：mount 必定发起首次拉取。existingPIR 决定表单标题
+  // （创建 vs 编辑），初值 false 会让首帧先显示「创建实施后审查」再翻转。
+  const [listLoading, setListLoading] = useState(true);
   const [pir, setPIR] = useState<PIRResponse | null>(null);
   const [existingPIR, setExistingPIR] = useState(false);
   const [form] = Form.useForm();
@@ -49,7 +52,7 @@ export default function PIRPage() {
   const [deleting, setDeleting] = useState(false);
 
   const fetchPIR = useCallback(async () => {
-    setLoading(true);
+    setListLoading(true);
     try {
       const pirData = await ChangeApi.getPIR(changeId);
       setPIR(pirData);
@@ -71,7 +74,7 @@ export default function PIRPage() {
     } catch (error) {
       console.error('Failed to fetch PIR:', error);
     } finally {
-      setLoading(false);
+      setListLoading(false);
     }
   }, [changeId, form]);
 
@@ -174,189 +177,194 @@ export default function PIRPage() {
       extra={<Button onClick={() => router.push(`/changes/${changeId}`)}>Return change details</Button>}
     >
       <div className="space-y-6">
-        {pir && (
-          <Card title="PIR Overview" className="shadow-sm rounded-lg">
-            <Descriptions column={2} bordered>
-              <Descriptions.Item label="Change ID">{pir.changeId}</Descriptions.Item>
-              <Descriptions.Item label="Reviewer">{pir.reviewerName}</Descriptions.Item>
-              <Descriptions.Item label="Review date">
-                {dayjs(pir.reviewDate).format('YYYY-MM-DD HH:mm')}
-              </Descriptions.Item>
-              <Descriptions.Item label="Overall results">
-                {getResultTag(pir.overallResult as PIROverallResult)}
-              </Descriptions.Item>
-              <Descriptions.Item label="Goal achieved">
-                {pir.objectivesAchieved ? (
-                  <Tag color="success">Yes</Tag>
-                ) : (
-                  <Tag color="error">No</Tag>
-                )}
-              </Descriptions.Item>
-              <Descriptions.Item label="Actual duration">
-                {pir.actualDurationMinutes}  minutes
-              </Descriptions.Item>
-              {pir.rollbackPerformed && (
-                <Descriptions.Item label="Rollback">
-                  <Tag icon={<Undo />} color="warning">
-
-                    Rolled Back
-                  </Tag>
-                </Descriptions.Item>
-              )}
-            </Descriptions>
+        {/* 加载期不渲染表单：existingPIR 决定标题是「创建」还是「编辑」，
+            表单字段也要等回填完成才有意义，首帧渲染必然产生错态。 */}
+        {listLoading ? (
+          <Card className="shadow-sm rounded-lg">
+            <Spin className="flex justify-center py-12" />
           </Card>
+        ) : (
+          <>
+            {pir && (
+              <Card title="PIR Overview" className="shadow-sm rounded-lg">
+                <Descriptions column={2} bordered>
+                  <Descriptions.Item label="Change ID">{pir.changeId}</Descriptions.Item>
+                  <Descriptions.Item label="Reviewer">{pir.reviewerName}</Descriptions.Item>
+                  <Descriptions.Item label="Review date">
+                    {dayjs(pir.reviewDate).format('YYYY-MM-DD HH:mm')}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Overall results">
+                    {getResultTag(pir.overallResult as PIROverallResult)}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Goal achieved">
+                    {pir.objectivesAchieved ? (
+                      <Tag color="success">Yes</Tag>
+                    ) : (
+                      <Tag color="error">No</Tag>
+                    )}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Actual duration">
+                    {pir.actualDurationMinutes} minutes
+                  </Descriptions.Item>
+                  {pir.rollbackPerformed && (
+                    <Descriptions.Item label="Rollback">
+                      <Tag icon={<Undo />} color="warning">
+                        Rolled Back
+                      </Tag>
+                    </Descriptions.Item>
+                  )}
+                </Descriptions>
+              </Card>
+            )}
+
+            <Card
+              title={existingPIR ? "Edit post-implementation review" : "Create a post-implementation review"}
+              className="shadow-sm rounded-lg"
+            >
+              <Alert
+                type="info"
+                showIcon
+                className="mb-5"
+                title="Just fill in the four parts: results, problems, experiences and suggestions for improvement. It is not necessary to write a long article for each item."
+              />
+              <Form
+                form={form}
+                layout="vertical"
+                onFinish={handleSubmit}
+                initialValues={{
+                  overallResult: 'successful',
+                  objectivesAchieved: false,
+                  rollbackPerformed: false,
+                }}
+              >
+                <Divider>Basic Assessment</Divider>
+
+                <Form.Item
+                  name="overallResult"
+                  label="Overall results"
+                  rules={[{ required: true, message: "Please select overall results" }]}
+                >
+                  <Select placeholder="Select implementation results">
+                    <Select.Option value="successful">
+                      <Space>
+                        <CheckCircle style={{ color: '#52c41a' }} />
+                        Success - the change was implemented exactly as planned and achieved the expected goals
+                      </Space>
+                    </Select.Option>
+                    <Select.Option value="partially_successful">
+                      <Space>
+                        <AlertTriangle style={{ color: '#faad14' }} />
+                        Partially successful - Change implemented with some issues
+                      </Space>
+                    </Select.Option>
+                    <Select.Option value="failed">
+                      <Space>
+                        <XCircle style={{ color: '#ff4d4f' }} />
+                        Failure - the change did not achieve the desired goal or needs to be rolled back
+                      </Space>
+                    </Select.Option>
+                  </Select>
+                </Form.Item>
+
+                <Form.Item name="objectivesAchieved" label="Is the goal achieved?">
+                  <Select
+                    placeholder="Choose whether to achieve"
+                    options={[
+                      { label: "Yes", value: true },
+                      { label: "No", value: false },
+                    ]}
+                  />
+                </Form.Item>
+
+                <Divider>Detailed Assessment</Divider>
+
+                <div className="mb-4">
+                  <Text type="secondary">It is recommended that each control be limited to 1 to 3 sentences, giving priority to describing the facts and impact.</Text>
+                </div>
+
+                <Form.Item name="successSummary" label="Successful summary">
+                  <TextArea
+                    rows={4}
+                    placeholder="What works and why?"
+                    showCount
+                    maxLength={300}
+                  />
+                </Form.Item>
+
+                <Form.Item name="issuesEncountered" label="Problem encountered">
+                  <TextArea rows={4} placeholder="What obstacles were encountered during implementation?" showCount maxLength={300} />
+                </Form.Item>
+
+                <Form.Item name="lessonsLearned" label="Lessons Learned">
+                  <TextArea
+                    rows={4}
+                    placeholder="What is the most valuable experience from this time that is worth reusing or avoiding?"
+                    showCount
+                    maxLength={300}
+                  />
+                </Form.Item>
+
+                <Form.Item name="improvementRecommendations" label="ImprovementSuggestion">
+                  <TextArea rows={4} placeholder="How can we make it more stable and faster next time?" showCount maxLength={300} />
+                </Form.Item>
+
+                <Divider>Implementation time</Divider>
+
+                <Space size="large" wrap>
+                  <Form.Item name="actualStartTime" label="Actual start time">
+                    <DatePicker showTime format="YYYY-MM-DD HH:mm" />
+                  </Form.Item>
+
+                  <Form.Item name="actualEndTime" label="Actual end time">
+                    <DatePicker showTime format="YYYY-MM-DD HH:mm" />
+                  </Form.Item>
+                </Space>
+
+                <Divider>Rollback information</Divider>
+
+                <Form.Item name="rollbackPerformed" label="Whether a rollback was performed">
+                  <Select
+                    placeholder="Choose whether to roll back"
+                    options={[
+                      { label: "Yes", value: true },
+                      { label: "No", value: false },
+                    ]}
+                  />
+                </Form.Item>
+
+                <Form.Item
+                  name="rollbackReason"
+                  label="Rollback Reason"
+                  dependencies={['rollbackPerformed']}
+                  hidden={!form.getFieldValue('rollbackPerformed')}
+                >
+                  <TextArea
+                    rows={3}
+                    placeholder="If a rollback is performed, please explain the triggering reason and the disposition result."
+                    showCount
+                    maxLength={240}
+                  />
+                </Form.Item>
+
+                <Divider />
+
+                <Form.Item>
+                  <Space>
+                    <Button type="primary" htmlType="submit" loading={submitting}>
+                      {existingPIR ? "Update PIR" : "Create PIR"}
+                    </Button>
+                    <Button onClick={() => router.push(`/changes/${changeId}`)}>Cancel</Button>
+                    {existingPIR && (
+                      <Button danger onClick={() => setDeleteModalVisible(true)}>
+                        Delete PIR
+                      </Button>
+                    )}
+                  </Space>
+                </Form.Item>
+              </Form>
+            </Card>
+          </>
         )}
-
-        <Card
-          title={existingPIR ? 'Edit post-implementation review' : 'Create a post-implementation review'}
-          className="shadow-sm rounded-lg"
-        >
-          <Alert
-            type="info"
-            showIcon
-            className="mb-5"
-            title="Just fill in the four parts: results, problems, experiences and suggestions for improvement. It is not necessary to write a long article for each item."
-          />
-          <Form
-            form={form}
-            layout="vertical"
-            onFinish={handleSubmit}
-            initialValues={{
-              overallResult: 'successful',
-              objectivesAchieved: false,
-              rollbackPerformed: false,
-            }}
-          >
-            <Divider>Basic Assessment</Divider>
-
-            <Form.Item
-              name="overallResult"
-              label="Overall results"
-              rules={[{ required: true, message: 'Please select overall results' }]}
-            >
-              <Select placeholder="Select implementation results">
-                <Select.Option value="successful">
-                  <Space>
-                    <CheckCircle style={{ color: '#52c41a' }} />
-
-                    Success - the change was implemented exactly as planned and achieved the expected goals
-                  </Space>
-                </Select.Option>
-                <Select.Option value="partially_successful">
-                  <Space>
-                    <AlertTriangle style={{ color: '#faad14' }} />
-
-                    Partially successful - Change implemented with some issues
-                  </Space>
-                </Select.Option>
-                <Select.Option value="failed">
-                  <Space>
-                    <XCircle style={{ color: '#ff4d4f' }} />
-
-                    Failure - the change did not achieve the desired goal or needs to be rolled back
-                  </Space>
-                </Select.Option>
-              </Select>
-            </Form.Item>
-
-            <Form.Item name="objectivesAchieved" label="Is the goal achieved?">
-              <Select
-                placeholder="Choose whether to achieve"
-                options={[
-                  { label: 'Yes', value: true },
-                  { label: 'No', value: false },
-                ]}
-              />
-            </Form.Item>
-
-            <Divider>Detailed Assessment</Divider>
-
-            <div className="mb-4">
-              <Text type="secondary">It is recommended that each control be limited to 1 to 3 sentences, giving priority to describing the facts and impact.</Text>
-            </div>
-
-            <Form.Item name="successSummary" label="Successful summary">
-              <TextArea
-                rows={4}
-                placeholder="What works and why?"
-                showCount
-                maxLength={300}
-              />
-            </Form.Item>
-
-            <Form.Item name="issuesEncountered" label="Problem encountered">
-              <TextArea rows={4} placeholder="What obstacles were encountered during implementation?" showCount maxLength={300} />
-            </Form.Item>
-
-            <Form.Item name="lessonsLearned" label="Lessons Learned">
-              <TextArea
-                rows={4}
-                placeholder="What is the most valuable experience from this time that is worth reusing or avoiding?"
-                showCount
-                maxLength={300}
-              />
-            </Form.Item>
-
-            <Form.Item name="improvementRecommendations" label="ImprovementSuggestion">
-              <TextArea rows={4} placeholder="How can we make it more stable and faster next time?" showCount maxLength={300} />
-            </Form.Item>
-
-            <Divider>Implementation time</Divider>
-
-            <Space size="large" wrap>
-              <Form.Item name="actualStartTime" label="Actual start time">
-                <DatePicker showTime format="YYYY-MM-DD HH:mm" />
-              </Form.Item>
-
-              <Form.Item name="actualEndTime" label="Actual end time">
-                <DatePicker showTime format="YYYY-MM-DD HH:mm" />
-              </Form.Item>
-            </Space>
-
-            <Divider>Rollback information</Divider>
-
-            <Form.Item name="rollbackPerformed" label="Whether a rollback was performed">
-              <Select
-                placeholder="Choose whether to roll back"
-                options={[
-                  { label: 'Yes', value: true },
-                  { label: 'No', value: false },
-                ]}
-              />
-            </Form.Item>
-
-            <Form.Item
-              name="rollbackReason"
-              label="Rollback Reason"
-              dependencies={['rollbackPerformed']}
-              hidden={!form.getFieldValue('rollbackPerformed')}
-            >
-              <TextArea
-                rows={3}
-                placeholder="If a rollback is performed, please explain the triggering reason and the disposition result."
-                showCount
-                maxLength={240}
-              />
-            </Form.Item>
-
-            <Divider />
-
-            <Form.Item>
-              <Space>
-                <Button type="primary" htmlType="submit" loading={submitting}>
-                  {existingPIR ? 'Update PIR' : 'Create PIR'}
-                </Button>
-                <Button onClick={() => router.push(`/changes/${changeId}`)}>Cancel</Button>
-                {existingPIR && (
-                  <Button danger onClick={() => setDeleteModalVisible(true)}>
-
-                    Delete PIR
-                  </Button>
-                )}
-              </Space>
-            </Form.Item>
-          </Form>
-        </Card>
       </div>
 
       <Modal

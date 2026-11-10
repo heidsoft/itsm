@@ -16,7 +16,8 @@
     "gen:enums": "node scripts/gen-enums.mjs",
     "check:enums": "node scripts/gen-enums.mjs --check",
     "check:route-drift": "npm run build && node scripts/check-route-drift.mjs",
-    "check": "npm run typecheck && npm run check:enums && npm run check:route-drift && npm run audit:flags && npm run audit:positionals && npm test",
+    "check:docs": "node scripts/check-doc-claims.mjs",
+    "check": "npm run typecheck && npm run check:enums && npm run check:route-drift && npm run check:docs && npm run audit:flags && npm run audit:positionals && npm test",
     "smoke:agent": "node scripts/agent-smoke.mjs",
     "mcp": "npm run build && node bin/itsm-mcp.js",
     "smoke:mcp": "node scripts/mcp-smoke.mjs",
@@ -35,6 +36,7 @@
   "devDependencies": {
     "@types/node": "^20.11.0",
     "@types/react": "^19.0.0",
+    "ink-testing-library": "^4.0.0",
     "typescript": "^5.3.0"
   }
 }

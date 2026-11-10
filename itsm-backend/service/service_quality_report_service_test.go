@@ -7,6 +7,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"itsm-backend/dto"
 )
 
 // fakeQualityDashboard 工作台概览源的假实现：不触发 DB，锁定聚合器自身的
@@ -56,7 +58,7 @@ func TestServiceQualityReport_MetricVersionContract(t *testing.T) {
 
 	assert.Equal(t, ServiceQualityMetricVersion, report.MetricVersion)
 	require.NotNil(t, report.MetricVersions)
-	for _, block := range []string{"kpi", "sla", "incidentDistribution", "satisfaction", "ticketTrend", "ticketStats"} {
+	for _, block := range []string{"kpi", "sla", "incidentDistribution", "satisfaction", "ticketTrend", "ticketStats", "problemStats", "changeStats"} {
 		assert.NotEmpty(t, report.MetricVersions[block], "block %s 缺少口径版本", block)
 	}
 
@@ -74,6 +76,56 @@ func TestServiceQualityReport_MetricVersionContract(t *testing.T) {
 
 	// analytics 未装配 → ticketStats 块显式缺省（能力降级可见）。
 	assert.Nil(t, report.TicketStats)
+	// problem/change 域未注入 → 两块同样显式缺省。
+	assert.Nil(t, report.ProblemStats)
+	assert.Nil(t, report.ChangeStats)
+}
+
+// fakeQualityProblemStats 问题域统计源假实现。
+type fakeQualityProblemStats struct {
+	stats *dto.ProblemStatsResponse
+	err   error
+}
+
+func (f fakeQualityProblemStats) GetProblemStats(ctx context.Context, tenantID int) (*dto.ProblemStatsResponse, error) {
+	return f.stats, f.err
+}
+
+// fakeQualityChangeStats 变更域统计源假实现。
+type fakeQualityChangeStats struct {
+	stats *dto.ChangeStatsResponse
+	err   error
+}
+
+func (f fakeQualityChangeStats) GetChangeStats(ctx context.Context, tenantID int) (*dto.ChangeStatsResponse, error) {
+	return f.stats, f.err
+}
+
+// TestServiceQualityReport_DomainStatsBlocks 问题/变更统计块：注入即透传、
+// 失败必须整体失败（管理视图不给半张纸）。
+func TestServiceQualityReport_DomainStatsBlocks(t *testing.T) {
+	svc := NewServiceQualityReportService(newFakeQualityDashboard(), nil)
+	svc.SetProblemStatsSource(fakeQualityProblemStats{stats: &dto.ProblemStatsResponse{Total: 8, Open: 3, HighPriority: 1}})
+	svc.SetChangeStatsSource(fakeQualityChangeStats{stats: &dto.ChangeStatsResponse{Total: 5, Completed: 2}})
+
+	report, err := svc.Build(context.Background(), 1, qualityViewer(), 30)
+	require.NoError(t, err)
+	require.NotNil(t, report.ProblemStats)
+	assert.Equal(t, 8, report.ProblemStats.Total)
+	require.NotNil(t, report.ChangeStats)
+	assert.Equal(t, 5, report.ChangeStats.Total)
+
+	failing := NewServiceQualityReportService(newFakeQualityDashboard(), nil)
+	failing.SetProblemStatsSource(fakeQualityProblemStats{err: errors.New("problem stats down")})
+	_, err = failing.Build(context.Background(), 1, qualityViewer(), 30)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "build problemStats block")
+
+	failingChange := NewServiceQualityReportService(newFakeQualityDashboard(), nil)
+	failingChange.SetChangeStatsSource(fakeQualityChangeStats{err: errors.New("change stats down")})
+	_, err = failingChange.Build(context.Background(), 1, qualityViewer(), 30)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "build changeStats block")
 }
 
 func TestServiceQualityReport_WindowClamp(t *testing.T) {

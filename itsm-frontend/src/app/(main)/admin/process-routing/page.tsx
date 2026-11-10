@@ -46,7 +46,9 @@ type ProcessRoutingRule = ProcessBinding & {
 export default function ProcessRoutingPage() {
   const { message } = App.useApp();
   const [rules, setRules] = useState<ProcessRoutingRule[]>([]);
-  const [loading, setLoading] = useState(false);
+  // 列表初值必须为 true：mount 必定发起首次拉取，初值 false 会让首帧先渲染
+  // 「Total rules 0」的假统计卡与空表格，再被真实数据覆盖。
+  const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [selectedRule, setSelectedRule] = useState<ProcessRoutingRule | null>(null);
   const [departments, setDepartments] = useState<Department[]>([]);
@@ -335,29 +337,31 @@ export default function ProcessRoutingPage() {
         showIcon
         title="Process routing rules determine which workflow a business document matches"
       />
-      {/* Statistics */}
-      <Row gutter={16}>
-        <Col span={6}>
-          <Card>
-            <Statistic title="Total number of rules" value={stats.total} />
-          </Card>
-        </Col>
-        <Col span={6}>
-          <Card>
-            <Statistic title="Enabled" value={stats.active} styles={{ content: { color: '#3f8600' } }} />
-          </Card>
-        </Col>
-        <Col span={6}>
-          <Card>
-            <Statistic title="Department only" value={stats.departmentSpecific} />
-          </Card>
-        </Col>
-        <Col span={6}>
-          <Card>
-            <Statistic title="Global rules" value={stats.global} />
-          </Card>
-        </Col>
-      </Row>
+      {/* 统计卡必须门控：还没拉到数据时渲染成「Total rules 0」会被误读成「没有路由规则」 */}
+      {!loading && (
+        <Row gutter={16}>
+          <Col span={6}>
+            <Card>
+              <Statistic title="Total rules" value={stats.total} />
+            </Card>
+          </Col>
+          <Col span={6}>
+            <Card>
+              <Statistic title="Enabled" value={stats.active} styles={{ content: { color: '#3f8600' } }} />
+            </Card>
+          </Col>
+          <Col span={6}>
+            <Card>
+              <Statistic title="Department specific" value={stats.departmentSpecific} />
+            </Card>
+          </Col>
+          <Col span={6}>
+            <Card>
+              <Statistic title="Global rules" value={stats.global} />
+            </Card>
+          </Col>
+        </Row>
+      )}
 
       {/* Rules Table */}
       <Card

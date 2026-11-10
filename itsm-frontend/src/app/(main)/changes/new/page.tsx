@@ -68,10 +68,11 @@ const CreateChangePage: React.FC = () => {
   const { t } = useI18n();
   const { message } = App.useApp();
   const [form] = Form.useForm<ChangeFormValues>();
-  const [loading, setLoading] = useState(false);
+  // 提交动作态（表单页首帧是空表单，无列表假空态问题）
+  const [actionLoading, setActionLoading] = useState(false);
 
   const handleSubmit = async (values: ChangeFormValues) => {
-    setLoading(true);
+    setActionLoading(true);
     try {
       const [start, end] = values.plannedRange ?? [];
       const affectedCis =
@@ -103,7 +104,7 @@ const CreateChangePage: React.FC = () => {
       console.error('Failed to commit changes:', err);
       message.error(t('changes.createFailed'));
     } finally {
-      setLoading(false);
+      setActionLoading(false);
     }
   };
 
@@ -146,7 +147,7 @@ const CreateChangePage: React.FC = () => {
             riskLevel: 'medium',
           }}
           onFinish={handleSubmit}
-          disabled={loading}
+          disabled={actionLoading}
           scrollToFirstError
         >
           <Form.Item
@@ -303,14 +304,13 @@ const CreateChangePage: React.FC = () => {
 
           <Form.Item className="!mb-0 mt-4">
             <Space className="w-full justify-end">
-              <Button onClick={() => router.back()} disabled={loading}>
-
+              <Button onClick={() => router.back()} disabled={actionLoading}>
                 Cancel
               </Button>
               <Button
                 type="primary"
                 htmlType="submit"
-                loading={loading}
+                loading={actionLoading}
                 data-testid="change-submit-button"
               >
 

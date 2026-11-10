@@ -39,7 +39,8 @@ export default function ProjectsPage() {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [form] = Form.useForm();
-  const [loading, setLoading] = useState(false);
+  // 保存动作态（列表加载由 fetching 负责）
+  const [actionLoading, setActionLoading] = useState(false);
   const [projects, setProjects] = useState<Project[]>([]);
   const [fetching, setFetching] = useState(false);
   const [departmentOptions, setDepartmentOptions] = useState<{ label: string; value: number }[]>([]);
@@ -181,7 +182,7 @@ export default function ProjectsPage() {
   const handleOk = async () => {
     try {
       const values = await form.validateFields();
-      setLoading(true);
+      setActionLoading(true);
 
       // 编辑/新建分支，避免修改时走 create 导致重复记录
       if (editingProject) {
@@ -199,7 +200,7 @@ export default function ProjectsPage() {
       console.error('Operation Failed:', error);
       message.error(t('common.operationFailed'));
     } finally {
-      setLoading(false);
+      setActionLoading(false);
     }
   };
 
@@ -239,7 +240,7 @@ export default function ProjectsPage() {
           setIsModalVisible(false);
           setEditingProject(null);
         }}
-        confirmLoading={loading}
+        confirmLoading={actionLoading}
         width={600}
       >
         <Form form={form} layout="vertical">

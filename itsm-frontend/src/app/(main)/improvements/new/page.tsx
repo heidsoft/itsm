@@ -12,11 +12,12 @@ const NewImprovementPage = () => {
   const { message } = App.useApp();
   const { t } = useI18n();
   const [form] = Form.useForm();
-  const [loading, setLoading] = useState(false);
+  // 提交动作态（表单页首帧是空表单，无列表假空态问题）。
+  const [actionLoading, setActionLoading] = useState(false);
 
   const onFinish = async (values: { title: string; description?: string; priority?: string }) => {
     try {
-      setLoading(true);
+      setActionLoading(true);
       await TicketApi.createTicket({
         type: 'improvement',
         title: values.title,
@@ -29,7 +30,7 @@ const NewImprovementPage = () => {
       console.error('Create improvement failed:', error);
       message.error('Creation failed, please try again later');
     } finally {
-      setLoading(false);
+      setActionLoading(false);
     }
   };
 
@@ -74,7 +75,7 @@ const NewImprovementPage = () => {
                   type="primary"
                   htmlType="submit"
                   icon={<Save />}
-                  loading={loading}
+                  loading={actionLoading}
                 >
 
                   Save

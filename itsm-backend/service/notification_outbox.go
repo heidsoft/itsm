@@ -42,7 +42,11 @@ func EnqueueResourceNotificationTx(ctx context.Context, tx *ent.Tx, request Reso
 	idempotencyKey := fmt.Sprintf("%s:%s:%d:%s:%d:%s",
 		request.OccurrenceKey, request.ResourceType, request.ResourceID,
 		request.Channel, request.RecipientID, request.NotificationType)
-	_, err = commandbus.EnqueueTx(ctx, tx, commandbus.EnqueueRequest{
+	// 超时扫描会对同一 (task, dueDate) 反复入箱。普通 EnqueueTx 撞
+	// (tenant_id, command_type, idempotency_key) 唯一索引后会让 PostgreSQL
+	// 把整个事务标记为 aborted(25P02)，同事务内的业务写入被连坐回滚，
+	// 该次超时通知反而丢失。幂等变体用 ON CONFLICT DO NOTHING 在语句级吞掉冲突。
+	_, _, err = commandbus.EnqueueTxIdempotent(ctx, tx, commandbus.EnqueueRequest{
 		TenantID: request.TenantID, CommandType: commandbus.CommandDeliverNotification,
 		AggregateType: request.ResourceType, AggregateID: request.ResourceID,
 		IdempotencyKey: idempotencyKey, MaxAttempts: 8,

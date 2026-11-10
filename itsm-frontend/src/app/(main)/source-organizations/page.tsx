@@ -14,17 +14,19 @@ const { Title, Text } = Typography;
 export default function SourcesPage() {
   const { message } = App.useApp();
   const [items, setItems] = useState<SourceOrganization[]>([]);
-  const [loading, setLoading] = useState(false);
+  // 列表初值必须为 true：mount 必定发起首次拉取，初值 false 会让首帧先渲染
+  // 空表格，再被真实数据覆盖。
+  const [listLoading, setListLoading] = useState(true);
   const [modal, setModal] = useState(false);
   const [editing, setEditing] = useState<SourceOrganization | null>(null);
   const [form] = Form.useForm();
 
   const load = async () => {
-    setLoading(true);
+    setListLoading(true);
     try {
       const res = await emailIntakeService.sourceOrganizations();
       setItems(res.items);
-    } catch { message.error('LoadingFailed'); } finally { setLoading(false); }
+    } catch { message.error("Loading failed"); } finally { setListLoading(false); }
   };
   useEffect(() => { load(); }, []);
 
@@ -94,7 +96,7 @@ export default function SourcesPage() {
 
           Used by the source organization to automatically identify customers through the sender's email domain name or address. For example, if you add the domain name example.com, all emails from @example.com will be automatically associated.
         </Text>
-        <Table rowKey="id" loading={loading} columns={columns} dataSource={items} pagination={false} />
+        <Table rowKey="id" loading={listLoading} columns={columns} dataSource={items} pagination={false} />
       </Card>
 
       <Modal title={editing ? 'Edit source organization' : 'Add new source organization'} open={modal} onOk={save} onCancel={() => setModal(false)}>

@@ -54,7 +54,8 @@ export default function WorkflowVersionsPage() {
   const searchParams = useSearchParams();
   const [processKey, setProcessKey] = useState(searchParams.get('workflowId') || '');
   const [processKeyOptions, setProcessKeyOptions] = useState<{ label: string; value: string }[]>([]);
-  const [loading, setLoading] = useState(false);
+  // 列表初值必须为 true：mount 必定发起首次拉取，初值 false 会让首帧先渲染空列表。
+  const [listLoading, setListLoading] = useState(true);
   const [versions, setVersions] = useState<BpmnProcessVersion[]>([]);
   const [selectedVersion, setSelectedVersion] = useState<BpmnProcessVersion | null>(null);
   const [comparison, setComparison] = useState<BpmnVersionComparison | null>(null);
@@ -88,14 +89,14 @@ export default function WorkflowVersionsPage() {
     }
 
     try {
-      setLoading(true);
+      setListLoading(true);
       setVersions(await WorkflowAPI.listVersions(processKey));
     } catch (error) {
       console.error('Failed to load workflow versions:', error);
       message.error('Failed to load workflow versions');
       setVersions([]);
     } finally {
-      setLoading(false);
+      setListLoading(false);
     }
   }, [processKey, message]);
 
@@ -216,8 +217,12 @@ export default function WorkflowVersionsPage() {
                   cancelText: 'Cancel',
                   onOk: async () => {
                     try {
-                      await WorkflowAPI.rollbackVersion(record.processDefinitionKey, record.version, 'Frontend rollback');
-                      message.success(`Rolled back to version v ${record.version}`);
+                      await WorkflowAPI.rollbackVersion(
+                        record.processDefinitionKey,
+                        record.version,
+                        'Frontend rollback'
+                      );
+                      message.success(`Rolled back to version v${record.version}`);
                       await loadVersions();
                     } catch {
                       message.error('Rollback version failed');
@@ -324,8 +329,8 @@ export default function WorkflowVersionsPage() {
 
       <Card className="rounded-xl shadow-sm">
         <LoadingEmptyError
-          state={loading ? 'loading' : versions.length === 0 ? 'empty' : 'success'}
-          loadingText="Loading workflow version..."
+          state={listLoading ? 'loading' : versions.length === 0 ? 'empty' : 'success'}
+          loadingText="Loading workflow versions..."
           empty={{
             title: processKey ? 'Version data not found' : 'Please select the process first',
             description: processKey

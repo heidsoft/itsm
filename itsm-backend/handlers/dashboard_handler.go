@@ -89,13 +89,6 @@ type IncidentDistributionData struct {
 	Color    string `json:"color"`
 }
 
-// SLAData SLA数据
-type SLAData struct {
-	Service string  `json:"service"`
-	Target  float64 `json:"target"`
-	Actual  float64 `json:"actual"`
-}
-
 // SatisfactionData 满意度数据
 type SatisfactionData struct {
 	Month     string  `json:"month"`
@@ -313,19 +306,6 @@ func convertRecentActivities(activities []service.RecentActivityData) []RecentAc
 	return result
 }
 
-//lint:ignore U1000 reserved for future SLA dashboard feature
-func _convertSLAData(slaData []service.SLAData) []SLAData {
-	result := make([]SLAData, len(slaData))
-	for i, s := range slaData {
-		result[i] = SLAData{
-			Service: s.Service,
-			Target:  s.Target,
-			Actual:  s.Actual,
-		}
-	}
-	return result
-}
-
 func convertSatisfactionData(satisfactionData []service.SatisfactionData) []SatisfactionData {
 	result := make([]SatisfactionData, len(satisfactionData))
 	for i, s := range satisfactionData {
@@ -467,11 +447,15 @@ func (h *DashboardHandler) GetIncidentDistribution(c *gin.Context) {
 
 // GetSLAData 获取SLA数据
 // @Summary 获取SLA数据
-// @Description 获取各服务的SLA达成情况
+// @Description 获取租户近30天的SLA合规快照。响应是**单个对象**（complianceRate /
+// @Description responseTimeCompliance / resolutionTimeCompliance / atRiskTickets /
+// @Description breachedTickets / totalTickets / compliantTickets），不是按服务拆分的数组——
+// @Description 早期文档写成 {array} SLAData，前端据此定义 SLAData[] 并用 Array.isArray 过滤，
+// @Description 于是对象被当成"没有数据"，SLA 面板长期显示"暂无数据"。
 // @Tags Dashboard
 // @Accept json
 // @Produce json
-// @Success 200 {array} SLAData
+// @Success 200 {object} service.SLAComplianceData
 // @Failure 500 {object} ErrorResponse
 // @Router /api/v1/dashboard/sla-data [get]
 func (h *DashboardHandler) GetSLAData(c *gin.Context) {

@@ -192,21 +192,6 @@ export interface RiskAssessmentData {
   riskFactors?: string[];
 }
 
-// 影响分析数据
-export interface ImpactAnalysisData {
-  businessImpact: string;
-  technicalImpact: string;
-  userImpact: string;
-  affectedSystems: string[];
-  affectedUsers: number;
-  estimatedDowntime: number;
-  dataRiskLevel: string;
-  serviceDependencies: string[];
-  backupStrategy: string;
-  recoveryPlan: string;
-  impactScore?: number;
-}
-
 export interface ChangeCMDBImpactSummary {
   changeId: number;
   totalAffectedCIs: number;
@@ -489,16 +474,6 @@ export class ChangeApi {
     status?: string;
   }): Promise<{ items: ChangeCalendarItem[]; total: number }> {
     return httpClient.get('/api/v1/changes/calendar', params);
-  }
-
-  // 获取变更影响分析
-  static async getImpactAnalysis(id: number): Promise<ImpactAnalysisData> {
-    return httpClient.get(`/api/v1/changes/${id}/impact`);
-  }
-
-  // 更新影响分析
-  static async updateImpactAnalysis(id: number, data: ImpactAnalysisData): Promise<void> {
-    return httpClient.put(`/api/v1/changes/${id}/impact`, data);
   }
 
   // 获取变更风险评估

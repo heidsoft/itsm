@@ -24,7 +24,8 @@ import { formatDateTime } from '@/lib/formatters';
 export default function MSPManagementPage() {
   const { message } = App.useApp();
   const [form] = Form.useForm();
-  const [loading, setLoading] = useState(false);
+  // 列表初值必须为 true：mount 必定发起首次拉取，初值 false 会让首帧先渲染空表格。
+  const [listLoading, setListLoading] = useState(true);
   const [hasAccess, setHasAccess] = useState(false);
   const [allocations, setAllocations] = useState<MSPAllocation[]>([]);
   const [customers, setCustomers] = useState<{ id: number; code: string; name: string }[]>([]);
@@ -69,7 +70,7 @@ export default function MSPManagementPage() {
   }
 
   const loadData = async () => {
-    setLoading(true);
+    setListLoading(true);
     try {
       const [allocRes, custRes, usersRes] = await Promise.all([
         MSPService.getAllocations(),
@@ -97,7 +98,7 @@ export default function MSPManagementPage() {
     } catch (err: unknown) {
       message.error(err instanceof Error ? err.message : 'Failed to load data');
     } finally {
-      setLoading(false);
+      setListLoading(false);
     }
   };
 
@@ -199,7 +200,7 @@ export default function MSPManagementPage() {
           columns={columns}
           dataSource={allocations}
           rowKey="id"
-          loading={loading}
+          loading={listLoading}
           pagination={{ pageSize: 10 }}
         />
       </Card>

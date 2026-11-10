@@ -24,20 +24,22 @@ const CAPABILITY_META: Record<string, { color: string; label: string }> = {
 
 export default function VectorStoreAdminPage() {
   const { message } = App.useApp();
-  const [loading, setLoading] = useState(false);
+  // 状态加载初值必须为 true：mount 必定发起首次拉取，初值 false 会让首帧直接渲染
+  // 「Unable to obtain vector store status」结论，再被真实状态覆盖。
+  const [listLoading, setListLoading] = useState(true);
   const [status, setStatus] = useState<VectorStoreStatus | null>(null);
   const [testResult, setTestResult] = useState<VectorStoreTestResult | null>(null);
   const [testing, setTesting] = useState(false);
 
   const loadStatus = useCallback(async () => {
-    setLoading(true);
+    setListLoading(true);
     try {
       const data = await VectorStoreApi.getStatus();
       setStatus(data);
     } catch {
       message.error('Failed to load vector storage state');
     } finally {
-      setLoading(false);
+      setListLoading(false);
     }
   }, [message]);
 
@@ -79,8 +81,7 @@ export default function VectorStoreAdminPage() {
       }}
       extra={
         <Space>
-          <Button icon={<RefreshCw size={14} />} onClick={loadStatus} loading={loading}>
-
+          <Button icon={<RefreshCw size={14} />} onClick={loadStatus} loading={listLoading}>
             Refresh
           </Button>
           <Button
@@ -108,9 +109,9 @@ export default function VectorStoreAdminPage() {
           'After it is ready, go to the knowledge base to re-index the article, and AI Q&A can use semantic search; when the capability status is "downgraded", the search will fall back to keyword results.',
         ]}
       />
-      <Spin spinning={loading}>
-        {!status && !loading ? (
-          <Empty description="Unable to obtain vector storage status" />
+      <Spin spinning={listLoading}>
+        {!status && !listLoading ? (
+          <Empty description="Unable to obtain vector store status" />
         ) : status && (
           <>
             {/* 顶部状态卡片 */}

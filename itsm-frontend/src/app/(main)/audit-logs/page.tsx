@@ -152,7 +152,9 @@ const AuditLogsPage: React.FC = () => {
   useAuthStoreHydration();
 
   const [logs, setLogs] = useState<AuditLog[]>([]);
-  const [loading, setLoading] = useState(false);
+  // 列表初值必须为 true：mount 必定发起首次拉取，初值 false 会让首帧先渲染
+  // 「暂无日志」的空表格，再被真实数据覆盖。
+  const [listLoading, setListLoading] = useState(true);
   const [pagination, setPagination] = useState({
     current: 1,
     pageSize: 20,
@@ -172,7 +174,7 @@ const AuditLogsPage: React.FC = () => {
 
   const fetchLogs = useCallback(
     async (page: number, pageSize: number, query: typeof appliedFilters) => {
-      setLoading(true);
+      setListLoading(true);
       try {
         const params: ListAuditLogsParams = {
           page,
@@ -195,7 +197,7 @@ const AuditLogsPage: React.FC = () => {
           `Failed to load audit log:${err instanceof Error ? err.message : 'Unknown error'}`
         );
       } finally {
-        setLoading(false);
+        setListLoading(false);
       }
     },
     [message]
@@ -368,7 +370,7 @@ const AuditLogsPage: React.FC = () => {
           rowKey="id"
           columns={columns}
           dataSource={logs}
-          loading={loading}
+          loading={listLoading}
           scroll={{ x: 1100 }}
           pagination={{
             current: pagination.current,

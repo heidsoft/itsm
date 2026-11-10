@@ -5,12 +5,20 @@ import (
 	"fmt"
 	"time"
 
+	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/auditlog"
 	"itsm-backend/ent/user"
 
 	"go.uber.org/zap"
+)
+
+// 审计日志读面的无界防护（L7）。audit_logs 此前只有单列 tenant_id 索引，
+// Count + Order(created_at DESC) 在无时间窗口时是全租户扫描。
+const (
+	maxAuditLogWindowDays = 366
+	maxAuditLogPage       = 10000
 )
 
 type AuditLogService struct {
@@ -30,6 +38,11 @@ func (s *AuditLogService) ListAuditLogs(ctx context.Context, req *dto.ListAuditL
 	}
 	if req.PageSize <= 0 || req.PageSize > 100 {
 		req.PageSize = 20
+	}
+	// 深分页的 Offset 会让数据库跳过海量行；超过上限直接 400，
+	// 让调用方改用时间窗口而不是无限翻页。
+	if req.Page > maxAuditLogPage {
+		return nil, common.NewBadRequestError(fmt.Sprintf("page must not exceed %d", maxAuditLogPage), nil)
 	}
 
 	q := s.client.AuditLog.Query().Where(
@@ -58,19 +71,32 @@ func (s *AuditLogService) ListAuditLogs(ctx context.Context, req *dto.ListAuditL
 		q = q.Where(auditlog.RequestIDEQ(req.RequestID))
 	}
 
-	// 时间范围过滤
+	// 时间范围过滤：非法格式不再静默忽略（否则调用方以为筛了时间，
+	// 实际谓词根本没下推，仍是全租户扫描）。handler 已用 common.RespondError，
+	// AppError 的 400 会原样透传，不会被兜底成 500。
+	var fromTime, toTime time.Time
 	if req.From != "" {
-		if t, err := time.Parse(time.RFC3339, req.From); err == nil {
-			q = q.Where(auditlog.CreatedAtGTE(t))
-		} else {
-			s.logger.Warnw("Invalid From time format", "from", req.From, "error", err)
+		t, err := time.Parse(time.RFC3339, req.From)
+		if err != nil {
+			return nil, common.NewBadRequestError("Invalid from timestamp; expected RFC3339", err)
 		}
+		fromTime = t
+		q = q.Where(auditlog.CreatedAtGTE(t))
 	}
 	if req.To != "" {
-		if t, err := time.Parse(time.RFC3339, req.To); err == nil {
-			q = q.Where(auditlog.CreatedAtLTE(t))
-		} else {
-			s.logger.Warnw("Invalid To time format", "to", req.To, "error", err)
+		t, err := time.Parse(time.RFC3339, req.To)
+		if err != nil {
+			return nil, common.NewBadRequestError("Invalid to timestamp; expected RFC3339", err)
+		}
+		toTime = t
+		q = q.Where(auditlog.CreatedAtLTE(t))
+	}
+	if !fromTime.IsZero() && !toTime.IsZero() {
+		if toTime.Before(fromTime) {
+			return nil, common.NewBadRequestError("to must not be earlier than from", nil)
+		}
+		if toTime.Sub(fromTime) > time.Duration(maxAuditLogWindowDays)*24*time.Hour {
+			return nil, common.NewBadRequestError(fmt.Sprintf("The query window must not exceed %d days", maxAuditLogWindowDays), nil)
 		}
 	}
 

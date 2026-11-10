@@ -53,7 +53,9 @@ const WorkflowAutomationPage = () => {
   const { message } = App.useApp();
   const { t } = useI18n();
   const [rules, setRules] = useState<AutomationRule[]>([]);
-  const [loading, setLoading] = useState(false);
+  // 列表初值必须为 true：mount 必定发起首次拉取，初值 false 会让首帧先渲染
+  // 「0 条规则」的假空态，再被真实数据覆盖。页面上的动作（测试规则等）有独立状态，不共用它。
+  const [listLoading, setListLoading] = useState(true);
   const [loadError, setLoadError] = useState<{ denied: boolean; detail: string } | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [editingRule, setEditingRule] = useState<AutomationRule | null>(null);
@@ -125,7 +127,7 @@ const WorkflowAutomationPage = () => {
   }, []);
 
   const loadRules = async () => {
-    setLoading(true);
+    setListLoading(true);
     setLoadError(null);
     try {
       const response = await TicketAutomationRuleApi.listRules();
@@ -138,7 +140,7 @@ const WorkflowAutomationPage = () => {
         detail: error instanceof Error ? error.message : '',
       });
     } finally {
-      setLoading(false);
+      setListLoading(false);
     }
   };
 
@@ -359,7 +361,7 @@ const WorkflowAutomationPage = () => {
               size='small'
               icon={<RefreshCw className='w-4 h-4' />}
               onClick={loadRules}
-              loading={loading}
+              loading={listLoading}
             >
 
               Retry
@@ -368,7 +370,8 @@ const WorkflowAutomationPage = () => {
         />
       ) : (
         <>
-          {/* 统计信息 */}
+          {/* 统计信息：首次拉取未完成时不渲染，否则会把「还没拉到」画成「0 条规则」 */}
+          {!listLoading && (
           <Row gutter={[16, 16]} className='mb-6'>
             <Col xs={24} sm={12} lg={6}>
               <Card className='rounded-lg shadow-sm border border-gray-200'>
@@ -411,6 +414,7 @@ const WorkflowAutomationPage = () => {
               </Card>
             </Col>
           </Row>
+          )}
 
           {/* 规则管理 */}
           <Card className='rounded-lg shadow-sm border border-gray-200'>
@@ -434,7 +438,7 @@ const WorkflowAutomationPage = () => {
                       columns={columns}
                       dataSource={filteredRules}
                       rowKey='id'
-                      loading={loading}
+                      loading={listLoading}
                       pagination={false}
                     />
                   ),
@@ -447,7 +451,7 @@ const WorkflowAutomationPage = () => {
                       columns={columns}
                       dataSource={filteredRules}
                       rowKey='id'
-                      loading={loading}
+                      loading={listLoading}
                       pagination={false}
                     />
                   ),
@@ -460,7 +464,7 @@ const WorkflowAutomationPage = () => {
                       columns={columns}
                       dataSource={filteredRules}
                       rowKey='id'
-                      loading={loading}
+                      loading={listLoading}
                       pagination={false}
                     />
                   ),

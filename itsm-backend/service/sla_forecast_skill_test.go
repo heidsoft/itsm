@@ -28,6 +28,7 @@ func TestSLAForecastSkill_Execute(t *testing.T) {
 		StartDate: startDate,
 		EndDate:   endDate,
 		Metrics:   []string{"volume"},
+		Viewer:    DashboardViewer{ScopeAll: true},
 	}
 
 	output, err := skill.Execute(ctx, input)

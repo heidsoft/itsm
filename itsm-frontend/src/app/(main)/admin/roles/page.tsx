@@ -96,7 +96,12 @@ export default function RoleManagement() {
   const { t } = useI18n();
   const { message } = App.useApp();
   const [roles, setRoles] = useState<Role[]>([]);
-  const [loading, setLoading] = useState(false);
+  // 列表初值必须为 true：mount 必定发起首次拉取，初值 false 会让首帧先渲染
+  // 「角色总数 0」的假统计卡与空表格，再被真实数据覆盖。
+  const [listLoading, setListLoading] = useState(true);
+  // 保存角色 / 初始化权限是提交动作，不应与列表加载共用一个标志：
+  // 共用会让「保存中」把表格也转圈，反之亦然。
+  const [actionLoading, setActionLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
   const [form] = Form.useForm();
@@ -127,7 +132,7 @@ export default function RoleManagement() {
   // 加载角色数据
   const loadRoles = useCallback(async () => {
     const seq = ++requestSeqRef.current;
-    setLoading(true);
+    setListLoading(true);
     try {
       const search = debouncedSearch || undefined;
       const [rolesResponse, activeResponse, inactiveResponse, userStats] = await Promise.all([
@@ -162,7 +167,7 @@ export default function RoleManagement() {
       message.error(t('roles.loadRolesFailed'));
     } finally {
       if (seq === requestSeqRef.current) {
-        setLoading(false);
+        setListLoading(false);
       }
     }
   }, [page, pageSize, debouncedSearch, statusFilter, message, t]);
@@ -202,7 +207,7 @@ export default function RoleManagement() {
 
   // 处理保存角色
   const handleSaveRole = async () => {
-    setLoading(true);
+    setActionLoading(true);
     try {
       const values = await form.validateFields();
 
@@ -265,12 +270,12 @@ export default function RoleManagement() {
     } catch (error) {
       message.error(t('roles.saveFailed'));
     } finally {
-      setLoading(false);
+      setActionLoading(false);
     }
   };
 
   const handleInitPermissions = async () => {
-    setLoading(true);
+    setActionLoading(true);
     try {
       await RoleAPI.initDefaultPermissions();
       await loadPermissions();
@@ -278,7 +283,7 @@ export default function RoleManagement() {
     } catch (error) {
       message.error(t('roles.initPermissionsFailed'));
     } finally {
-      setLoading(false);
+      setActionLoading(false);
     }
   };
 
@@ -414,7 +419,7 @@ export default function RoleManagement() {
           type="warning"
           showIcon
           action={
-            <Button size="small" type="link" onClick={handleInitPermissions} loading={loading}>
+            <Button size="small" type="link" onClick={handleInitPermissions} loading={actionLoading}>
               {t('roles.initDefaultPermissions')}
             </Button>
           }
@@ -530,47 +535,50 @@ export default function RoleManagement() {
       </div>
 
       {/* 统计卡片 */}
-      <Row gutter={[16, 16]}>
-        <Col xs={24} sm={12} lg={6}>
-          <Card className="enterprise-card">
-            <Statistic
-              title={t('roles.total')}
-              value={stats.totalRoles}
-              prefix={<Key className="w-5 h-5" />}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card className="enterprise-card">
-            <Statistic
-              title={t('roles.enabled')}
-              value={stats.activeRoles}
-              prefix={<CheckCircle className="w-5 h-5" />}
-              styles={{ content: { color: '#52c41a' } }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card className="enterprise-card">
-            <Statistic
-              title={t('roles.disabled')}
-              value={stats.inactiveRoles}
-              prefix={<XCircle className="w-5 h-5" />}
-              styles={{ content: { color: '#ff4d4f' } }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card className="enterprise-card">
-            <Statistic
-              title={t('roles.userCount')}
-              value={stats.totalUsers}
-              prefix={<Users className="w-5 h-5" />}
-              styles={{ content: { color: '#fa8c16' } }}
-            />
-          </Card>
-        </Col>
-      </Row>
+      {/* 统计卡片必须门控：还没拉到数据时渲染成「角色总数 0」会被误读成「没有角色」 */}
+      {!listLoading && (
+        <Row gutter={[16, 16]}>
+          <Col xs={24} sm={12} lg={6}>
+            <Card className="enterprise-card">
+              <Statistic
+                title={t('roles.total')}
+                value={stats.totalRoles}
+                prefix={<Key className="w-5 h-5" />}
+              />
+            </Card>
+          </Col>
+          <Col xs={24} sm={12} lg={6}>
+            <Card className="enterprise-card">
+              <Statistic
+                title={t('roles.enabled')}
+                value={stats.activeRoles}
+                prefix={<CheckCircle className="w-5 h-5" />}
+                styles={{ content: { color: '#52c41a' } }}
+              />
+            </Card>
+          </Col>
+          <Col xs={24} sm={12} lg={6}>
+            <Card className="enterprise-card">
+              <Statistic
+                title={t('roles.disabled')}
+                value={stats.inactiveRoles}
+                prefix={<XCircle className="w-5 h-5" />}
+                styles={{ content: { color: '#ff4d4f' } }}
+              />
+            </Card>
+          </Col>
+          <Col xs={24} sm={12} lg={6}>
+            <Card className="enterprise-card">
+              <Statistic
+                title={t('roles.userCount')}
+                value={stats.totalUsers}
+                prefix={<Users className="w-5 h-5" />}
+                styles={{ content: { color: '#fa8c16' } }}
+              />
+            </Card>
+          </Col>
+        </Row>
+      )}
 
       {/* 搜索和过滤 */}
       <Card>
@@ -605,7 +613,7 @@ export default function RoleManagement() {
           </Col>
           <Col xs={24} md={4} lg={10} className="text-right">
             <Space>
-              <Button onClick={handleInitPermissions} loading={loading}>
+              <Button onClick={handleInitPermissions} loading={actionLoading}>
                 {t('roles.initPermissions')}
               </Button>
               <Button
@@ -630,7 +638,7 @@ export default function RoleManagement() {
           columns={columns}
           dataSource={roles}
           rowKey="id"
-          loading={loading}
+          loading={listLoading}
           pagination={{
             current: page,
             pageSize,
@@ -664,7 +672,7 @@ export default function RoleManagement() {
           form.resetFields();
         }}
         width={800}
-        confirmLoading={loading}
+        confirmLoading={actionLoading}
         okText={t('roles.save')}
         cancelText={t('roles.cancel')}
       >

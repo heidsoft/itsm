@@ -44,7 +44,6 @@ import type { Change, ApprovalChainItem, RollbackStep } from '@/types/biz/change
 import ReviewStepBadge from '@/components/change-review/ReviewStepBadge';
 import ChangeRiskAssessment from './ChangeRiskAssessment';
 import ChangeCMDBImpactPanel from './ChangeCMDBImpactPanel';
-import ChangeImpactAnalysis from './ChangeImpactAnalysis';
 import ChangeRollbackPlan from './ChangeRollbackPlan';
 import { SafeTextBlock } from '@/components/common/SafeContent';
 import { formatDateTime } from '@/lib/formatters';
@@ -78,7 +77,6 @@ const ChangeDetail: React.FC = () => {
   const [change, setChange] = useState<Change | null>(null);
   const [approvalChain, setApprovalChain] = useState<ApprovalChainItem[]>([]);
   const [riskAssessment, setRiskAssessment] = useState<any>(null);
-  const [impactAnalysis, setImpactAnalysis] = useState<any>(null);
   const [rollbackPlan, setRollbackPlan] = useState<any>(null);
   const [assessmentLoading, setAssessmentLoading] = useState(false);
   const [approvalModalVisible, setApprovalModalVisible] = useState(false);
@@ -394,20 +392,6 @@ const ChangeDetail: React.FC = () => {
     }
   };
 
-  // 加载影响分析数据
-  const loadImpactAnalysis = async () => {
-    if (!id) return;
-    setAssessmentLoading(true);
-    try {
-      const data = await ChangeApi.getImpactAnalysis(Number(id));
-      setImpactAnalysis(data);
-    } catch (error) {
-      console.error('Failed to load impact analysis:', error);
-    } finally {
-      setAssessmentLoading(false);
-    }
-  };
-
   // 保存风险评估
   const handleSaveRiskAssessment = async (data: any) => {
     if (!id) return;
@@ -415,18 +399,6 @@ const ChangeDetail: React.FC = () => {
       await ChangeApi.updateRisk(Number(id), data);
       message.success(t('changeDetail.riskSaveSuccess'));
       loadRiskAssessment();
-    } catch (error) {
-      message.error(serverErrorMessage(error, t('changeDetail.saveFailed')));
-    }
-  };
-
-  // 保存影响分析
-  const handleSaveImpactAnalysis = async (data: any) => {
-    if (!id) return;
-    try {
-      await ChangeApi.updateImpactAnalysis(Number(id), data);
-      message.success(t('changeDetail.impactSaveSuccess'));
-      loadImpactAnalysis();
     } catch (error) {
       message.error(serverErrorMessage(error, t('changeDetail.saveFailed')));
     }
@@ -701,7 +673,6 @@ const ChangeDetail: React.FC = () => {
           style={{ marginTop: 24 }}
           onChange={activeKey => {
             if (activeKey === '3' && !riskAssessment) loadRiskAssessment();
-            if (activeKey === '4' && !impactAnalysis) loadImpactAnalysis();
           }}
           items={[
             {
@@ -794,19 +765,6 @@ const ChangeDetail: React.FC = () => {
                     changeId={Number(id)}
                     initialData={riskAssessment}
                     onSave={handleSaveRiskAssessment}
-                  />
-                </Spin>
-              ),
-            },
-            {
-              key: '4',
-              label: t('changeDetail.impactAnalysis'),
-              children: (
-                <Spin spinning={assessmentLoading}>
-                  <ChangeImpactAnalysis
-                    changeId={Number(id)}
-                    initialData={impactAnalysis}
-                    onSave={handleSaveImpactAnalysis}
                   />
                 </Spin>
               ),

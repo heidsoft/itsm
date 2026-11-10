@@ -108,7 +108,7 @@ describe('SLATemplatesPage', () => {
 
     const pendingRow = await rowOf(changeNormal.name);
     expect(within(pendingRow).getByText("Not installed")).toBeInTheDocument();
-    expect(screen.getByText("This tenant has already been installed")).toBeInTheDocument();
+    expect(screen.getByText("Installed for this tenant")).toBeInTheDocument();
   });
 
   it('优先级、服务窗口、时限使用与 SLA 定义页相同的展示口径', async () => {

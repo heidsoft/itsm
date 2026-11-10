@@ -61,7 +61,8 @@ func ToTicketNotificationResponse(notification *ent.TicketNotification, user *en
 		resp.ReadAt = &notification.ReadAt
 	}
 
-	// 设置用户信息
+	// 设置用户信息（auth_dto.UserInfo）。Email 字段是否下发由 service 层的
+	// 行级过滤决定：viewer 只能看到自己名下的通知，或管理角色看全量。
 	if user != nil {
 		resp.User = &UserInfo{
 			ID:         user.ID,

@@ -165,6 +165,8 @@ func (s *DashboardService) GetSLAComplianceData(ctx context.Context, tenantID in
 	}
 
 	var breachedTicketCount int
+	// 按违规类型分桶后的违约工单数（响应时限 / 解决时限各自口径）。
+	var responseBreachedCount, resolutionBreachedCount int
 
 	// SLAViolation 是独立表，一个工单可能有多条违规记录，按 ticket_id 去重
 	// 分子必须与分母同口径：只统计近30天内创建且未删除的工单的违规
@@ -182,15 +184,39 @@ func (s *DashboardService) GetSLAComplianceData(ctx context.Context, tenantID in
 		s.logger.Warnw("failed to query sla violations for compliance data", "error", err)
 		breachedTicketCount = 0
 	} else {
-		// 用 map 对 ticket_id 去重
-		uniqueTickets := make(map[int]struct{})
+		// 用 map 对 ticket_id 去重。
+		//
+		// 同时按 violation_type 分桶：此前 responseCompliance 与
+		// resolutionCompliance 直接抄了整体合规率，三个指标永远相等——面板上
+		// 并排显示三个数字，其中两个是另一个的副本，属于"看起来有分析、实际
+		// 只有一个数"。violation_type 由 SLA 监控写入（response_time /
+		// resolution_time），按它分桶才能让两侧各自成立。
+		allTickets := make(map[int]struct{})
+		responseBreached := make(map[int]struct{})
+		resolutionBreached := make(map[int]struct{})
 		for _, v := range violations {
-			uniqueTickets[v.TicketID] = struct{}{}
+			allTickets[v.TicketID] = struct{}{}
+			switch {
+			case strings.HasPrefix(v.ViolationType, "response"):
+				responseBreached[v.TicketID] = struct{}{}
+			case strings.HasPrefix(v.ViolationType, "resolution"):
+				resolutionBreached[v.TicketID] = struct{}{}
+			default:
+				// 未知类型只计入整体违约，不臆测归入哪个时限。
+			}
 		}
-		breachedTicketCount = len(uniqueTickets)
+		breachedTicketCount = len(allTickets)
+		responseBreachedCount = len(responseBreached)
+		resolutionBreachedCount = len(resolutionBreached)
 	}
 	if breachedTicketCount > totalTickets {
 		breachedTicketCount = totalTickets
+	}
+	if responseBreachedCount > totalTickets {
+		responseBreachedCount = totalTickets
+	}
+	if resolutionBreachedCount > totalTickets {
+		resolutionBreachedCount = totalTickets
 	}
 
 	compliantTickets := totalTickets - breachedTicketCount
@@ -198,8 +224,8 @@ func (s *DashboardService) GetSLAComplianceData(ctx context.Context, tenantID in
 	if totalTickets > 0 {
 		// 合规率 = (总工单 - 有违规的工单) / 总工单
 		complianceRate = float64(compliantTickets) / float64(totalTickets) * 100
-		responseCompliance = complianceRate
-		resolutionCompliance = complianceRate
+		responseCompliance = float64(totalTickets-responseBreachedCount) / float64(totalTickets) * 100
+		resolutionCompliance = float64(totalTickets-resolutionBreachedCount) / float64(totalTickets) * 100
 	} else {
 		complianceRate = 100.0
 		responseCompliance = 100.0

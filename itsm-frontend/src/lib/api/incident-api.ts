@@ -118,20 +118,16 @@ export interface CreateIncidentRequest {
   formFields?: Record<string, string | number | boolean>;
 }
 
-// 根因分析接口
+// 根因分析：后端权威存储是 incident.root_cause JSON（dto.RootCause），
+// 读写都走 /incidents/:id/root-cause，不存在独立记录 ID。
 export interface RootCauseAnalysis {
-  id?: number;
   incidentId: number;
-  analysisMethod: string; // "5-whys" | "fishbone" | "timeline" | "fault-tree"
-  rootCause: string;
-  contributingFactors: string[];
-  evidence: string[];
-  preventiveActions: string[];
-  status: 'draft' | 'in-progress' | 'completed' | 'approved';
-  analystId?: number;
-  analystName?: string;
-  createdAt?: string;
-  updatedAt?: string;
+  analysisMethod?: string; // "5-whys" | "fishbone" | "timeline" | "fault-tree"
+  rootCause?: string;
+  contributingFactors?: string[];
+  evidence?: string[];
+  preventiveActions?: string[];
+  status?: string; // 'draft' | 'in-progress' | 'completed' | 'approved'
 }
 
 // 影响评估接口
@@ -632,47 +628,32 @@ export class IncidentAPI {
   }
 
   // 根因分析相关API
-  static async getRootCauseAnalysis(incidentId: number): Promise<RootCauseAnalysis> {
-    try {
-      const response = await httpClient.get<RootCauseAnalysis>(
-        `/api/v1/incidents/${incidentId}/root-cause`
-      );
-      return response;
-    } catch (error) {
-      console.error('IncidentAPI.getRootCauseAnalysis error:', error);
-      throw error;
+  static async getRootCauseAnalysis(incidentId: number): Promise<RootCauseAnalysis | null> {
+    const response = await httpClient.get<{
+      incidentId: number;
+      rootCause: Omit<RootCauseAnalysis, 'incidentId'> | null;
+    }>(`/api/v1/incidents/${incidentId}/root-cause`);
+    if (!response.rootCause) {
+      return null;
     }
+    return { incidentId, ...response.rootCause };
   }
 
-  static async createRootCauseAnalysis(
+  // 创建与更新是同一个 upsert：后端按 incidentId 覆盖 root_cause JSON。
+  static async saveRootCauseAnalysis(
+    incidentId: number,
     request: CreateRootCauseAnalysisRequest
-  ): Promise<RootCauseAnalysis> {
-    try {
-      const response = await httpClient.post<RootCauseAnalysis>(
-        '/api/v1/incidents/root-cause',
-        request
-      );
-      return response;
-    } catch (error) {
-      console.error('IncidentAPI.createRootCauseAnalysis error:', error);
-      throw error;
-    }
-  }
-
-  static async updateRootCauseAnalysis(
-    id: number,
-    request: Partial<CreateRootCauseAnalysisRequest>
-  ): Promise<RootCauseAnalysis> {
-    try {
-      const response = await httpClient.put<RootCauseAnalysis>(
-        `/api/v1/incidents/root-cause/${id}`,
-        request
-      );
-      return response;
-    } catch (error) {
-      console.error('IncidentAPI.updateRootCauseAnalysis error:', error);
-      throw error;
-    }
+  ): Promise<void> {
+    await httpClient.put(`/api/v1/incidents/${incidentId}/root-cause`, {
+      rootCause: {
+        analysisMethod: request.analysisMethod,
+        rootCause: request.rootCause,
+        contributingFactors: request.contributingFactors,
+        evidence: request.evidence,
+        preventiveActions: request.preventiveActions,
+        status: request.status,
+      },
+    });
   }
 
   // 影响评估相关API

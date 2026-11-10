@@ -10,8 +10,10 @@ import (
 
 	"go.uber.org/zap"
 
+	"itsm-backend/common"
 	"itsm-backend/ent"
 	"itsm-backend/ent/ticket"
+	ticketrepo "itsm-backend/repository/ticket"
 )
 
 // ForecastInput 输入结构
@@ -20,6 +22,11 @@ type ForecastInput struct {
 	StartDate time.Time
 	EndDate   time.Time
 	Metrics   []string // ["volume", "response_time", "sla_compliance"]
+	// Viewer 是读取者身份（R1）。SLAForecastSkill 是 /api/v1/ai/predictions
+	// 的首选实现，此前与 legacy 预测一样只按 tenant 拉全量工单；零值 viewer
+	// 按最窄档收窄为空集，不会静默放宽。后台无请求者上下文的调用须显式
+	// 传 ScopeAll，而不是省略。
+	Viewer DashboardViewer
 }
 
 // PredictionPoint 单个预测点
@@ -77,12 +84,20 @@ func (s *SLAForecastSkill) Execute(ctx context.Context, input *ForecastInput) (*
 	tickets, err := s.client.Ticket.Query().
 		Where(
 			ticket.TenantIDEQ(input.TenantID),
+			ticket.DeletedAtIsNil(),
 			ticket.CreatedAtGTE(historyStart),
 			ticket.CreatedAtLTE(input.EndDate),
 		).
+		Where(ticketrepo.DataScopePredicates(input.Viewer.ticketScope(), input.Viewer.UserID)...).
+		Order(ent.Asc(ticket.FieldID)).
+		Limit(maxReportTickets + 1).
 		All(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get history tickets: %w", err)
+	}
+	if len(tickets) > maxReportTickets {
+		return nil, common.NewBadRequestError(
+			fmt.Sprintf("The reporting scope exceeds %d tickets; narrow the time range", maxReportTickets), nil)
 	}
 
 	// 2. 构建时间序列数据

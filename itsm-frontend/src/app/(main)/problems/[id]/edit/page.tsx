@@ -31,7 +31,8 @@ export default function ProblemEditPage() {
   const { message } = App.useApp();
   const { t } = useI18n();
   const [form] = Form.useForm();
-  const [loading, setLoading] = useState(false);
+  // 提交动作态（数据加载由 fetching 负责）
+  const [actionLoading, setActionLoading] = useState(false);
   const [fetching, setFetching] = useState(false);
   const [problemData, setProblemData] = useState<ProblemData | null>(null);
 
@@ -82,7 +83,7 @@ export default function ProblemEditPage() {
   }) => {
     if (!id) return;
 
-    setLoading(true);
+    setActionLoading(true);
     try {
       await ProblemApi.updateProblem(Number(id), values);
       message.success(t('problems.updateSuccess'));
@@ -90,7 +91,7 @@ export default function ProblemEditPage() {
     } catch (error) {
       message.error(t('problems.updateFailed'));
     } finally {
-      setLoading(false);
+      setActionLoading(false);
     }
   };
 
@@ -214,8 +215,7 @@ export default function ProblemEditPage() {
 
           <Form.Item>
             <Space>
-              <Button type="primary" htmlType="submit" icon={<Save />} loading={loading}>
-
+              <Button type="primary" htmlType="submit" icon={<Save />} loading={actionLoading}>
                 Save
               </Button>
               <Button onClick={handleCancel}>Cancel</Button>

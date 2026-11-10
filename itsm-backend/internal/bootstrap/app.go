@@ -541,8 +541,12 @@ func NewApplication() *Application {
 		sugar.Fatalw("Failed to register email intake outbound handler", "error", err)
 	}
 
+	// WS hub 必须先于通知投递 handler 装配：in_app 通知在事务提交后按
+	// userID 单播推送，若此处不注入，前端虽能建连却永远收不到业务消息。
+	wsService := service.NewWebSocketService(sugar)
+
 	// 通知 / 审批 / SLA / 自动化 / 序列服务（V2 子服务）
-	notificationCommandHandler := service.NewNotificationDeliveryCommandHandler(client, connectorManager, sugar)
+	notificationCommandHandler := service.NewNotificationDeliveryCommandHandler(client, connectorManager, sugar, wsService.GetHub())
 	if err := commandRegistry.Register(commandbus.CommandDeliverNotification, notificationCommandHandler.Handle); err != nil {
 		sugar.Fatalw("Failed to register notification command handler", "error", err)
 	}
@@ -728,8 +732,10 @@ func NewApplication() *Application {
 	analyticsService := service.NewAnalyticsService(client, sugar)
 	// 管理者统一服务质量视图聚合器（2026-10-23）：dashboard 概览 + analytics
 	// 工单统计合成一次请求的管理视图；qualityReportService 自身可容忍 analytics
-	// 缺省（块缺省显式可见），dashboard 在上方恒已装配。
-	dashboardHandler.SetServiceQualityService(service.NewServiceQualityReportService(dashboardService, analyticsService))
+	// 缺省（块缺省显式可见），dashboard 在上方恒已装配。问题/变更统计块在两域
+	// service 构造完成后注入（见下方 wireQualityDomainStats 调用）。
+	qualityReportService := service.NewServiceQualityReportService(dashboardService, analyticsService)
+	dashboardHandler.SetServiceQualityService(qualityReportService)
 	predictionService := service.NewPredictionService(client, sugar)
 	slaForecastSkill := service.NewSLAForecastSkill(client, llmGateway, sugar)
 	// 市场服务
@@ -917,6 +923,8 @@ func NewApplication() *Application {
 	// CI 回写走 service.ConfigurationItemService，保住发号、历史与属性校验。
 	discoveryCIProjector := cmdb.NewDiscoveryCIProjector(cmdbRepo, configurationItemService, configurationItemService, sugar)
 	discoveryJobExecutor := cmdb.NewDiscoveryJobExecutor(cmdbRepo, cloudAdapterRegistry, tenantSecretResolver, discoveryCIProjector, sugar)
+	// 覆盖水位线（蓝图 §3.2-17）：断点续扫 + 窗口化缺失判定的状态存储。
+	discoveryJobExecutor.SetScopeStateRepository(cmdb.NewScopeStateRepository(database.GetRawDB()))
 	if err := commandRegistry.Register(commandbus.CommandRunCMDBCloudDiscovery, discoveryJobExecutor.Handle); err != nil {
 		sugar.Fatalw("Failed to register CMDB cloud discovery worker", "error", err)
 	}
@@ -1015,6 +1023,9 @@ func NewApplication() *Application {
 	stdChangeService := standard_change.NewService(client, changeServiceDomain)
 	standardChangeHandler := standard_change.NewHandler(stdChangeService, sugar)
 	changeHandler := change.NewHandler(changeServiceDomain)
+
+	// 统一服务质量视图的问题/变更统计块：两域 service 此刻才可用。
+	wireQualityDomainStats(qualityReportService, problemServiceDomain, changeServiceDomain)
 
 	// 变更评审组名册 handler（审批流转由审批链引擎 review: 解析器驱动，handler 仅管名册）
 	changeReviewService := service.NewChangeReviewService(client, sugar)
@@ -1252,8 +1263,7 @@ func NewApplication() *Application {
 	// 工单类型服务就绪后注入工具注册表与审批队列，使 create_ticket_type 可经审批流执行。
 	toolRegistry.SetTicketTypeService(ticketTypeService)
 
-	// WebSocket Service
-	wsService := service.NewWebSocketService(sugar)
+	// WebSocket Service 已在通知投递 handler 之前创建并注入 hub，此处复用同一实例
 
 	// 7. 设置路由
 	// 根据配置设置 Gin 运行模式

@@ -18,7 +18,8 @@ export default function ServiceApprovalsPage() {
   const { message } = App.useApp();
   const { t } = useI18n();
   const [requests, setRequests] = useState<ServiceRequestRecord[]>([]);
-  const [loading, setLoading] = useState(false);
+  // 列表初值必须为 true：mount 必定发起首次拉取，初值 false 会让首帧先渲染空表格。
+  const [listLoading, setListLoading] = useState(true);
   const [detailModalVisible, setDetailModalVisible] = useState(false);
   const [rejectModalVisible, setRejectModalVisible] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<ServiceRequestRecord | null>(null);
@@ -34,7 +35,7 @@ export default function ServiceApprovalsPage() {
   }, []);
 
   const loadApprovals = async () => {
-    setLoading(true);
+    setListLoading(true);
     try {
       const data = await ServiceCatalogApi.getServiceRequests({
         status: ServiceRequestStatus.PENDING_APPROVAL,
@@ -43,7 +44,7 @@ export default function ServiceApprovalsPage() {
     } catch (error) {
       message.error(t('common.getFailed'));
     } finally {
-      setLoading(false);
+      setListLoading(false);
     }
   };
 
@@ -132,7 +133,7 @@ export default function ServiceApprovalsPage() {
   return (
     <div className="p-6">
       <Card title={t('service.pendingApprovals')}>
-        <Table columns={columns} dataSource={requests} loading={loading} rowKey="id" />
+        <Table columns={columns} dataSource={requests} loading={listLoading} rowKey="id" />
       </Card>
 
       {/* Detail Modal */}

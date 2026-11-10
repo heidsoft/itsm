@@ -48,7 +48,8 @@ const severityConfig: Record<string, { color: string; text: string }> = {
 
 export default function KnownErrorsPage() {
   const { message } = App.useApp();
-  const [loading, setLoading] = useState(false);
+  // 列表初值必须为 true：mount 必定发起首次拉取，初值 false 会让首帧先渲染空表格。
+  const [listLoading, setListLoading] = useState(true);
   const [data, setData] = useState<KEDBResponse[]>([]);
   const [stats, setStats] = useState<KEDBStatsResponse | null>(null);
   const [pagination, setPagination] = useState({ current: 1, pageSize: 20, total: 0 });
@@ -74,7 +75,7 @@ export default function KnownErrorsPage() {
   // 2026-10-14 修复：此前 handleSearch/handleTableChange 先 setState 后立即调 fetchData()，
   // fetchData 闭包里读的是旧 pagination（停第 N 页搜索会拿第 N 页数据），且无 effect 补救。
   const fetchData = useCallback(async () => {
-    setLoading(true);
+    setListLoading(true);
     try {
       const params = {
         page: pagination.current,
@@ -93,7 +94,7 @@ export default function KnownErrorsPage() {
     } catch (error) {
       message.error('Failed to obtain data');
     } finally {
-      setLoading(false);
+      setListLoading(false);
     }
   }, [pagination.current, pagination.pageSize, searchParams]);
 
@@ -437,7 +438,7 @@ export default function KnownErrorsPage() {
           <Table
             columns={columns}
             dataSource={data}
-            loading={loading}
+            loading={listLoading}
             rowKey="id"
             scroll={{ x: 1200 }}
             pagination={{

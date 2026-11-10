@@ -43,17 +43,18 @@ const statusColor: Record<string, string> = {
 export default function MyTicketCCPage() {
   const { message } = App.useApp();
   const [records, setRecords] = useState<TicketCCRecord[]>([]);
-  const [loading, setLoading] = useState(false);
+  // 列表初值必须为 true：mount 必定发起首次拉取，初值 false 会让首帧先渲染空表格。
+  const [listLoading, setListLoading] = useState(true);
 
   const loadRecords = async () => {
     try {
-      setLoading(true);
+      setListLoading(true);
       const resp = await TicketApi.getMyCCRecords();
       setRecords(resp.items);
     } catch (error) {
       message.error(error instanceof Error ? error.message : 'Failed to load CC records');
     } finally {
-      setLoading(false);
+      setListLoading(false);
     }
   };
 
@@ -126,8 +127,7 @@ export default function MyTicketCCPage() {
               <Text type="secondary">Centrally view all tickets and CC history sent to me</Text>
             </div>
           </Space>
-          <Button icon={<RefreshCw size={16} />} onClick={loadRecords} loading={loading}>
-
+          <Button icon={<RefreshCw size={16} />} onClick={loadRecords} loading={listLoading}>
             Refresh
           </Button>
         </div>
@@ -136,7 +136,7 @@ export default function MyTicketCCPage() {
           rowKey="id"
           columns={columns}
           dataSource={records}
-          loading={loading}
+          loading={listLoading}
           pagination={{ pageSize: 20, showSizeChanger: true }}
         />
       </Card>

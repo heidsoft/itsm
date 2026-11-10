@@ -1,6 +1,7 @@
 'use client';
 
 import AdvancedReporting from '@/components/business/AdvancedReporting';
+import ServiceQualityOverview from '@/components/business/reports/ServiceQualityOverview';
 import { ManagementPageHeader } from '@/components/ui/ManagementPageHeader';
 
 export default function ReportsPage() {
@@ -10,6 +11,7 @@ export default function ReportsPage() {
         title="Report Center"
         description="ITSM Business Report"
       />
+      <ServiceQualityOverview />
       <AdvancedReporting />
     </div>
   );

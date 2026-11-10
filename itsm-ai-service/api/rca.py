@@ -54,6 +54,10 @@ class RCAResponse(BaseModel):
     root_cause: RCARootCause
     recommendations: List[RCARecommendation]
     related_known_errors: Optional[List[dict]] = None
+    # 降级标记：本次结论不是模型推理产物（模型不可用 / 未关联问题），
+    # findings 只是供人工填写的 5 Whys 骨架，root_cause 不成立。
+    degraded: bool = False
+    degradedReason: Optional[str] = None
 
 
 @router.post("/analyze", response_model=RCAResponse)
@@ -115,25 +119,35 @@ async def find_similar_problems(request: dict):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+_WHY_QUESTIONS = [
+    "为什么会出现该问题？",
+    "为什么上一步的原因会发生？",
+    "为什么上一步的原因会发生？",
+    "为什么上一步的原因会发生？",
+    "为什么上一步的原因会发生？",
+]
+
+
 def _rule_based_rca(request: RCARequest) -> RCAResponse:
-    """基于规则做 RCA 分析"""
+    """无模型可用时的降级响应：只给 5 Whys 骨架，不编结论。
+
+    历史实现返回一套写死的「服务器宕机→电源故障→过载→突发流量→监控缺失」，
+    还配了 confidence=0.82 和「历史数据显示类似问题发生过」这类不存在的证据。
+    那等于用模板冒充分析：前端看到的是一条高置信度根因，实际与工单内容毫无关系，
+    值班人员据此改配置就是纯粹被误导。现在只输出问题骨架，根因留空、置信度归零、
+    证据清空，并用 degraded 显式标注，让界面提示「需人工分析」。
+    """
     if request.analysis_type == "5_whys":
         findings = [
-            RCAFinding(step=1, question="为什么服务不可用?", answer="服务器宕机", insight="硬件故障"),
-            RCAFinding(step=2, question="为什么服务器宕机?", answer="电源故障", insight="UPS问题"),
-            RCAFinding(step=3, question="为什么电源故障?", answer="过载", insight="需要负载均衡"),
-            RCAFinding(step=4, question="为什么会过载?", answer="突发流量", insight="容量规划不足"),
-            RCAFinding(step=5, question="为什么容量规划不足?", answer="监控缺失", insight="需要完善监控告警"),
+            RCAFinding(step=i, question=q, answer="", insight="待人工填写")
+            for i, q in enumerate(_WHY_QUESTIONS, 1)
         ]
         root_cause = RCARootCause(
-            cause="监控缺失导致无法提前预警容量问题",
-            confidence=0.82,
-            evidence=["未配置容量监控告警", "历史数据显示类似问题发生过"]
+            cause="未得出结论：AI 分析不可用，请人工完成根因分析",
+            confidence=0.0,
+            evidence=[],
         )
-        recommendations = [
-            RCARecommendation(action="部署容量监控", priority="high", estimated_effort="2天"),
-            RCARecommendation(action="配置自动扩容", priority="medium", estimated_effort="3天"),
-        ]
+        recommendations: List[RCARecommendation] = []
     else:
         findings = []
         root_cause = RCARootCause(cause="分析中", confidence=0.0, evidence=[])
@@ -145,7 +159,9 @@ def _rule_based_rca(request: RCARequest) -> RCAResponse:
         findings=findings,
         root_cause=root_cause,
         recommendations=recommendations,
-        related_known_errors=[{"id": 1, "title": "服务器容量不足处理"}]
+        related_known_errors=None,
+        degraded=True,
+        degradedReason="LLM 分析不可用，已降级为 5 Whys 骨架（不含根因结论）",
     )
 
 

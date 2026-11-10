@@ -194,7 +194,17 @@ export async function callCommand(
     };
   }
 
-  if (spec.risk === 'high-risk-write' && !opts.confirm) {
+  // One gate for both transports: static risk AND method-derived confirmMethods
+  // (`infra.api`). Previously this read `spec.risk === 'high-risk-write'`, so a
+  // method-derived gate only stopped inside spec.run and surfaced the CLI-shaped
+  // error instead of the uniform confirmation payload. `needsConfirmation` is
+  // the same fact the CLI dry-run and preview advertise.
+  const firstPositional = firstPositionalValue(spec, params ?? {});
+  if (needsConfirmation(spec, firstPositional) && !opts.confirm) {
+    const methodDerived = spec.risk !== 'high-risk-write';
+    const irreversible = /delete|revoke|terminate|purge|rollback|replay/.test(
+      `${spec.name} ${firstPositional ?? ''}`.toLowerCase()
+    );
     return {
       isError: true,
       payload: {
@@ -202,7 +212,9 @@ export async function callCommand(
         command: spec.name,
         error: {
           kind: 'confirmation_required',
-          message: `${spec.name} 属于高风险写操作，未执行`,
+          message: methodDerived
+            ? `${spec.name} 的本次调用（${firstPositional}）需要显式确认，未执行`
+            : `${spec.name} 属于高风险写操作，未执行`,
           retryable: false,
           hint: '先向用户说明将要发生什么；得到明确同意后，用相同参数再调用一次并把 confirm 置为 true。不得自动重试。',
           risk: {
@@ -211,11 +223,16 @@ export async function callCommand(
             endpoints: spec.endpoints,
             usage: spec.usage,
             requiredParams: spec.input.params.filter((p) => p.required).map((p) => p.name),
-            irreversible: /delete|revoke|terminate|purge|rollback|replay/.test(spec.name),
+            irreversible,
           },
         },
       },
-      structured: { command: spec.name, kind: 'confirmation_required', risk: spec.risk },
+      structured: {
+        command: spec.name,
+        kind: 'confirmation_required',
+        risk: spec.risk,
+        ...(methodDerived ? { methodDerived: firstPositional } : {}),
+      },
     };
   }
 

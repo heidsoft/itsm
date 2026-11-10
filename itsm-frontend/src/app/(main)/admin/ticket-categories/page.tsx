@@ -104,7 +104,9 @@ const TicketCategoryManagementPage = () => {
   const [categories, setCategories] = useState<TicketCategory[]>([]);
   const [workflows, setWorkflows] = useState<WorkflowOption[]>([]);
   const [departments, setDepartments] = useState<DepartmentOption[]>([]);
-  const [loading, setLoading] = useState(false);
+  // 列表初值必须为 true：mount 必定发起首次拉取，初值 false 会让首帧先渲染
+  // 空表格，再被真实数据覆盖。保存动作另用 saving。
+  const [listLoading, setListLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
   const [saving, setSaving] = useState(false);
   const [editingCategory, setEditingCategory] = useState<TicketCategory | null>(null);
@@ -117,7 +119,7 @@ const TicketCategoryManagementPage = () => {
   }, []);
 
   const loadCategories = async () => {
-    setLoading(true);
+    setListLoading(true);
     try {
       const data = await TicketCategoryApi.getCategories({ page: 1, pageSize: BACKEND_MAX_PAGE_SIZE });
       const list = normalizeCategories(data.items);
@@ -127,7 +129,7 @@ const TicketCategoryManagementPage = () => {
       message.error('Failed to load category');
       setCategories([]);
     } finally {
-      setLoading(false);
+      setListLoading(false);
     }
   };
 
@@ -486,7 +488,7 @@ const TicketCategoryManagementPage = () => {
 
   const treeData = categoryTree.map(buildTreeNode);
 
-  if (loading) {
+  if (listLoading) {
     return <LoadingSkeleton type="table" rows={8} columns={7} />;
   }
 
