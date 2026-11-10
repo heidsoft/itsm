@@ -2,7 +2,7 @@
 #
 # scripts/static-gates/run-all.sh
 #
-# Stage 5 — 一键运行 7 条静态门禁：
+# Stage 5 — 一键运行 8 条静态门禁：
 #   5.1 禁止裸 c.JSON
 #   5.2 common.Fail 2002/2004/2005 → 401/403/404 映射契约
 #   5.3 前端禁用 raw fetch / axios
@@ -10,6 +10,7 @@
 #   5.5 ListResponse 分页形状契约
 #   5.13 事务内吞掉 ent.IsConstraintError（PG 25P02 连坐回滚）
 #   5.10 handlers 分页响应体的集合键必须是 items（硬门禁，CI 已接）
+#   5.14 shell 里未加花括号的 $VAR 不得紧邻非 ASCII 字符（set -u unbound variable）
 #
 # 注意：编号沿用 docs/testing/static-analysis-gates.md 的门禁 ID 命名空间，
 # 5.6–5.9（前端 advisory 门禁）不在本聚合脚本里执行，见该文档「接入位置」。
@@ -51,6 +52,7 @@ run_gate "5.4 context.Background"   "${ROOT_DIR}/scripts/static-gates/check-cont
 run_gate "5.5 pagination shape"     "${ROOT_DIR}/scripts/static-gates/check-pagination-shape.sh"
 run_gate "5.13 tx constraint swallow" "${ROOT_DIR}/scripts/static-gates/check-tx-constraint-swallow.sh"
 run_gate "5.10 handler list envelope" "${ROOT_DIR}/scripts/static-gates/check-list-envelope.sh"
+run_gate "5.14 shell var boundary"   "${ROOT_DIR}/scripts/static-gates/check-shell-var-boundary.sh"
 
 echo ""
 echo "########################################"

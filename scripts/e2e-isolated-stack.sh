@@ -59,7 +59,7 @@ http_code() { curl --noproxy '*' --silent --show-error -o /dev/null --max-time 3
 show_body() {
   local file="$1"
   [ -s "$file" ] || {
-    say "响应体为空（$file）"
+    say "响应体为空（${file}）"
     return 0
   }
   say "响应体：$(head -c 400 "$file")"
@@ -131,14 +131,14 @@ require_explicit_target() {
 if [ "$ACTION" = "down" ]; then
   require_explicit_target
   command -v docker >/dev/null 2>&1 || die "docker 不可用"
-  say "拆除 project=$PROJECT（含本栈卷）"
+  say "拆除 project=${PROJECT}（含本栈卷）"
   teardown_password_env
   "${COMPOSE[@]}" down -v --remove-orphans >&2 || die "compose down 失败：见上面的 compose 输出"
   # 命令返回 0 不等于拆干净：按 project label 复核，残留就报出来，
   # 否则下一轮 up 会对着来源不明的容器做断言。
   leftover="$(docker ps -aq --filter "label=com.docker.compose.project=$PROJECT")"
   [ -z "$leftover" ] || {
-    say "仍有容器属于 $PROJECT："
+    say "仍有容器属于 ${PROJECT}："
     docker ps -a --filter "label=com.docker.compose.project=$PROJECT" --format '  {{.Names}}\t{{.Status}}' >&2
     die "拆栈未生效，proof 文件保留以便重试"
   }
@@ -160,12 +160,12 @@ if [ "$ACTION" = "status" ]; then
       say "proof 已过期：重新 up"
     fi
   else
-    say "尚无 proof 文件（$PROOF_FILE）"
+    say "尚无 proof 文件（${PROOF_FILE}）"
   fi
   exit 0
 fi
 
-[ "$ACTION" = "up" ] || die "未知动作：$ACTION（支持 up|down|status）"
+[ "$ACTION" = "up" ] || die "未知动作：${ACTION}（支持 up|down|status）"
 
 # ---------------------------------------------------------------------------
 # up：前置校验
@@ -180,7 +180,7 @@ command -v jq >/dev/null 2>&1 || die "需要 jq（解析 canary 响应与写 pro
 OURS="$(docker ps -q --filter "label=com.docker.compose.project=$PROJECT" 2>/dev/null | tr -d '[:space:]')"
 for probe in "$BACKEND_URL/api/v1/health" "$FRONTEND_URL/api/v1/csrf-token"; do
   if curl_loopback --max-time 3 -o /dev/null "$probe" 2>/dev/null && [ -z "$OURS" ]; then
-    say "探测到 $probe 已有响应，但不属于 project=$PROJECT。一次性栈要求端口独占，请先："
+    say "探测到 $probe 已有响应，但不属于 project=${PROJECT}。一次性栈要求端口独占，请先："
     say "  E2E_RUN_ID=<当时的运行号> scripts/e2e-isolated-stack.sh down"
     die "拒绝与来历不明的服务共用 e2e 端口"
   fi
@@ -205,7 +205,7 @@ export E2E_ADMIN_PASSWORD
 # 立刻落盘（0600）：canary 阶段失败时栈还在，没有这一份就只剩一个改不了口令的空壳容器。
 printf '%s\n' "$E2E_ADMIN_PASSWORD" >"$PASSWORD_FILE"
 chmod 600 "$PASSWORD_FILE"
-say "admin 口令：$PASSWORD_FILE（一次性栈，勿提交）"
+say "admin 口令：${PASSWORD_FILE}（一次性栈，勿提交）"
 
 say "project=$PROJECT run=$E2E_RUN_ID frontend=$FRONTEND_URL backend(direct)=$BACKEND_URL"
 
@@ -270,7 +270,7 @@ say "后端镜像一致：$BUILT_IMAGE_ID"
 
 PROXY_UPSTREAM="$(docker exec "$FRONTEND_CONTAINER" printenv ITSM_BACKEND_URL 2>/dev/null || true)"
 [ "$PROXY_UPSTREAM" = "$EXPECTED_PROXY_UPSTREAM" ] ||
-  die "前端代理 upstream=$PROXY_UPSTREAM，期望 $EXPECTED_PROXY_UPSTREAM（绝不能是 localhost:8090）"
+  die "前端代理 upstream=${PROXY_UPSTREAM}，期望 ${EXPECTED_PROXY_UPSTREAM}（绝不能是 localhost:8090）"
 
 # ---------------------------------------------------------------------------
 # 3. canary 证明：写路径必须穿过前端代理，并且只落在本栈数据库
@@ -345,7 +345,7 @@ TOTAL_CANARY="$(pg_sql "select count(*) from users where username like 'e2e-cana
 CANARY_ID="$(pg_sql "select id from users where username='$CANARY'")"
 DELETE_STATUS="$(curl -sS --noproxy '*' -b "$JAR" -c "$JAR" -o /dev/null -w '%{http_code}' \
   --max-time 30 -X DELETE -H "X-CSRF-Token: $(csrf)" "$FRONTEND_URL/api/v1/users/$CANARY_ID")"
-[ "$DELETE_STATUS" = "200" ] || say "canary 用户清理未成功（HTTP $DELETE_STATUS），不影响 proof"
+[ "$DELETE_STATUS" = "200" ] || say "canary 用户清理未成功（HTTP ${DELETE_STATUS}），不影响 proof"
 
 # ---------------------------------------------------------------------------
 # 4. 写 proof：Playwright 侧的 isolatedBaseURL() 只认这个文件

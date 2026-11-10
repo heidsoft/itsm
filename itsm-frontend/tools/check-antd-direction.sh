@@ -36,7 +36,7 @@ for p in "${PATTERNS[@]}"; do
   matches=$(printf '%s\n' "$FILES" | xargs "$GREP_BIN" -nF -- "$p" 2>/dev/null || true)
   if [ -n "$matches" ]; then
     echo ""
-    echo "✗ Bug 7 回归：仍存在 $p（应为 orientation=\"vertical\"）"
+    echo "✗ Bug 7 回归：仍存在 ${p}（应为 orientation=\"vertical\"）"
     echo "$matches"
     FAIL=1
   fi

@@ -90,7 +90,7 @@ else
   if [ "$LOGIN_HTTP" = "200" ] && [ "$LOGIN_CODE" = "0" ]; then
     ok "管理员登录 ${ADMIN_USERNAME}（cookie 用后即删）"
   else
-    fail "登录失败 HTTP=$LOGIN_HTTP code=$LOGIN_CODE（后续探测跳过）"
+    fail "登录失败 HTTP=$LOGIN_HTTP code=${LOGIN_CODE}（后续探测跳过）"
   fi
 
   PROBE_PATHS=(
@@ -133,7 +133,7 @@ if $RUN_FULL; then
     if node "$REPO_ROOT/itsm-cli/bin/itsm.js" flow run "$FLOW_SCENARIO" --json >/dev/null 2>&1; then
       ok "itsm-cli flow run $FLOW_SCENARIO"
     else
-      fail "itsm-cli flow run $FLOW_SCENARIO（场景失败需人工判 failed/blocked）"
+      fail "itsm-cli flow run ${FLOW_SCENARIO}（场景失败需人工判 failed/blocked）"
     fi
   else
     fail "--full 需要 itsm-cli（$REPO_ROOT/itsm-cli/bin/itsm.js 不存在）"

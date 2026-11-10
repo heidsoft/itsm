@@ -4,8 +4,8 @@
 
 本文档定义了 Stage 5 的静态门禁。已实现门禁对应 `scripts/static-gates/` 下的
 shell 脚本（5.11 例外，位于 `itsm-frontend/tools/check-antd-legacy.sh`）；
-`scripts/static-gates/run-all.sh` 只聚合 5.1–5.5、5.10 与 5.13 七条
-（实测见该文件 :46-52）。**5.6–5.9 目前没有脚本、没有接入点**，表中列出的脚本名是待实现占位，
+`scripts/static-gates/run-all.sh` 聚合 5.1–5.5、5.10、5.13 与 5.14 八条
+（以该文件的 `run_gate` 列表为准）。**5.6–5.9 目前没有脚本、没有接入点**，表中列出的脚本名是待实现占位，
 `git ls-files` 全仓匹配数为 0。
 
 | # | 规则 | 脚本 | 状态 | 阻断构建 |
@@ -21,7 +21,8 @@ shell 脚本（5.11 例外，位于 `itsm-frontend/tools/check-antd-legacy.sh`�
 | 5.9 | 测试夹具不得硬编码共享唯一键（如 `ticket_categories.code`） | `check-test-fixture-uniqueness.sh`（未创建） | 未实现 | ❌ |
 | 5.10 | `handlers/**` 分页 `gin.H` 响应体的集合键必须是 `items` | `check-list-envelope.sh` | **HARD** | ✅（backend-ci lint job） |
 | 5.11 | Ant Design v4/v5 弃用 API 零新增（9 类，组件归属判定 + 基线棘轮） | `itsm-frontend/tools/check-antd-legacy.sh` | HARD（本地棘轮） | ❌（未接 CI） |
-| 5.13 | 事务内不得吞掉 `ent.IsConstraintError` 后继续执行 | `check-tx-constraint-swallow.sh` | **HARD** | ❌（未接 CI） |
+| 5.13 | 事务内不得吞掉 `ent.IsConstraintError` 后继续执行 | `check-tx-constraint-swallow.sh` | **HARD** | ✅（backend-ci lint job） |
+| 5.14 | shell 中未加花括号的 `$VAR` 不得紧邻非 ASCII 字符（`set -u` unbound variable） | `check-shell-var-boundary.sh` | **HARD** | ✅（backend-ci lint job） |
 
 > 5.6–5.9 迁移自 2026-06-19 前端 UX Review 与 2026-07-01 系统功能评审结果（两份报告已随 2026-10 文档清理删除，原文可用 `git log --diff-filter=D -- docs/review` 取回）；对应的四个脚本从未落地，规则目前只以本文描述的形式存在。
 
@@ -35,8 +36,9 @@ shell 脚本（5.11 例外，位于 `itsm-frontend/tools/check-antd-legacy.sh`�
 
 ### CI
 
-2026-10-02 实测（`grep -rn "static-gates" .github/workflows/`）：**只有 5.10 真正在 CI 里跑**，
-接在 `.github/workflows/backend-ci.yml` 的 lint job：
+2026-11-10 复核（`grep -rn "static-gates" .github/workflows/`）：接在
+`.github/workflows/backend-ci.yml` lint job 的是 **5.10、5.13、5.14 三条**，
+`run-all.sh` 仍未被任何 workflow 调用。以 5.10 为例：
 
 ```yaml
 - name: List envelope gate (handlers must use items)
@@ -529,3 +531,44 @@ if err != nil { return err }
 - `service/bpmn/notification_handler.go` — 改用 `EnqueueTxIdempotent`
 - `service/ticket_notification_service.go` — `enqueueResourceNotificationCommandTx`
   改用幂等变体；5 处 tx 内调用点不再吞错
+
+---
+
+## 5.14 — shell 变量边界（unbraced `$VAR` 不得紧邻非 ASCII 字符）
+
+**问题**：bash 的变量名允许含高位字节（非 ASCII）。`set -u` 下写
+`fail "flow run $FLOW_SCENARIO（场景失败）"` 时，展开的其实是名为
+`FLOW_SCENARIO（` 的变量，脚本直接以 `unbound variable` / EXIT=127 结束。
+汉字同样如此（`echo "$X条"` 也炸），不止全角标点。最要命的是这类写法
+几乎都在 `fail` / `die` / `error` 的**失败分支**里：脚本崩在报错语句上，
+真正的失败原因反而被吞掉，验收剧本拿不到可用证据。
+
+**复现**（2026-11-10 本机 prod `v1.6.50` 重建验收）：
+`scripts/prod-post-deploy-verify.sh --full` 在 `itsm-cli flow run` 失败分支的
+`fail` 行报 `line 136: FLOW_SCENARIO?: unbound variable`，EXIT=5；当时只能用
+`/tmp` 里的临时修补副本跑完 24 项验收。
+
+**最小证据**：
+
+```bash
+bash -c 'set -u; X=a; echo "$X（x）"'    # EXIT=127 unbound variable
+bash -c 'set -u; X=a; echo "${X}（x）"'  # EXIT=0，文案不变
+```
+
+**修法**：统一用 `${VAR}` 显式给出变量边界，或在变量与非 ASCII 文本之间插入
+ASCII 分隔符；输出文案零变化。本批一次清理 18 处 / 5 个脚本：
+
+| 脚本 | 处数 | 典型位置 |
+|:--|--:|:--|
+| `scripts/e2e-isolated-stack.sh` | 10 | 未知动作、`proof` 缺失、代理 upstream 不符等 `die`/`say` 分支 |
+| `scripts/prepare-release.sh` | 3 | 版本号格式非法、CHANGELOG 日期告警 |
+| `scripts/prod-dead-letter-check.sh` | 2 | 超阈值 webhook 告警 payload |
+| `scripts/prod-post-deploy-verify.sh` | 2 | 登录失败、`--full` 业务旅程失败 |
+| `itsm-frontend/tools/check-antd-direction.sh` | 1 | Bug 7 回归命中提示 |
+
+**守卫**：`scripts/static-gates/check-shell-var-boundary.sh` 扫描全仓 `*.sh`，
+匹配「未加花括号的 `$VAR` 紧跟任意非 ASCII 字节」（纯注释行不展开变量，排除）。
+防假绿三件套：违规样本必须命中 / `${VAR}` 与 ASCII 分隔样本必须零命中 /
+扫描文件数为 0 直接判守卫不可用（EXIT=2）；命中逐条打印 `file:line`，EXIT=1 阻断。
+接入 `scripts/static-gates/run-all.sh`（第 8 条）与
+`.github/workflows/backend-ci.yml` 的 lint job。

@@ -46,7 +46,7 @@ if [[ -z "$VERSION" ]]; then
 fi
 
 if [[ ! "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?$ ]]; then
-  error "版本号格式不合法: $VERSION（期望 v1.2.3 或 v1.2.3-rc.1）"
+  error "版本号格式不合法: ${VERSION}（期望 v1.2.3 或 v1.2.3-rc.1）"
   exit 1
 fi
 
@@ -102,10 +102,10 @@ fi
 
 # 检查日期
 if grep -qF "${CHANGELOG_HEADER}] - ${TODAY}" "$CHANGELOG"; then
-  info "  CHANGELOG 条目: OK（日期 $TODAY）"
+  info "  CHANGELOG 条目: OK（日期 ${TODAY}）"
 else
   EXPECTED_LINE=$(grep -nF "$CHANGELOG_HEADER" "$CHANGELOG" | head -1)
-  warn "  CHANGELOG 日期可能不是今天（今天=$TODAY）"
+  warn "  CHANGELOG 日期可能不是今天（今天=${TODAY}）"
   warn "  找到: $EXPECTED_LINE"
 fi
 

@@ -63,7 +63,7 @@ fi
 if [ "$TOTAL" -gt "$THRESHOLD" ]; then
   if [ -n "$NOTIFY_WEBHOOK" ]; then
     curl -s -m 5 -X POST "$NOTIFY_WEBHOOK" -H 'Content-Type: application/json' \
-      -d "{\"msg_type\":\"text\",\"content\":{\"text\":\"ITSM 死信告警：积压 $TOTAL 条（阈值 $THRESHOLD），最老 $OLDEST。分布: $BREAKDOWN_LINE\"}}" >/dev/null 2>&1 || true
+      -d "{\"msg_type\":\"text\",\"content\":{\"text\":\"ITSM 死信告警：积压 $TOTAL 条（阈值 ${THRESHOLD}），最老 ${OLDEST}。分布: $BREAKDOWN_LINE\"}}" >/dev/null 2>&1 || true
   fi
   [ "$OUTPUT_JSON" = true ] || echo "[DEAD-LETTER] ❌ 超过阈值，请到 /admin/operations 死信面归因处置（重放或 cancel）"
   exit 1
