@@ -654,3 +654,63 @@ ticket 有 20 个 service 文件分散在 10 个子域。策略：
 `handler-service-imports-baseline.txt` 按 `measure` 精确删除 3 行（13→10 条），另两份基线零改动。验证：`go build ./...` EXIT=0；8 个相关包完整测试全绿（`service` 77s）；全仓 **305/305** 测试包分三段串行编译全绿（高 load 下两次 `SIGTERM(137)`，用断点记录续跑）；8 道文档门禁全绿。
 
 **下一步**：剩余 10 域 / 28 文件里 `bpmn=8` / `cmdb=7` 占 15 个（54%）。三条专项不变：① BPMN 四组边界拆分设计后开批次 3；② LLMGateway 契约化后一次收 `email_intake` + `ai`；③ 组合根注入形态收 `operations` / `problem`（会动 `app.go` 与 C.6.4）。`dashboard` 是本模板可直接复用的下一批（16 符号全为方法返回 DTO，成组下沉即可）。`L.6` 符号级白名单、ROADMAP v1.6.x 团队评审、`workflow` 人工签字仍未启动。
+
+---
+
+## 批次 3 前置：BPMN 四组边界拆分设计（2026-11-10）
+
+> **状态：设计定稿，代码未动。** 本节是批次 3 的开工依据。落地按「组 4 纯值 → 组 3 → 组 2 → 组 1 → 组合根专项」拆成独立提交，每组单独跑回归锁 + 反向验证 + 基线精确收紧；不按 `service/` 侧 36 文件清单整文件 `git mv`（见 :493）。
+
+### 现状盘点（只读实测，非推算）
+
+`handlers/bpmn/` 共 9 个生产 `.go`，其中 **8 个 import `itsm-backend/service`**（与 L.3 `bpmn=8` 吻合）：`workflow.go`(1312) / `process_trigger.go`(505) / `dashboard.go`(408) / `monitoring.go`(314) / `workflow_template.go`(213) / `ai_generator.go`(140) / `lint.go`(60) / `inventory.go`(67)。去重后 **34 个共享层符号**（26 类型 / 3 函数 / 1 常量 / 4 sentinel），约 88 个方法调用。
+
+⚠️ `handler.go`(91 行) **不 import 共享层**，但持有 8 个子 Handler 并调 12 个兼容路由方法（`:79-90`），最终落到 `workflow.go` 的 `processEngine` 链。按 :525 / :639 的教训，「域内全部生产文件的调用并集」必须包含它，否则窄接口方法集漏一大半。
+
+装配点集中在 `internal/bootstrap/app.go:816-858`（8 个 Handler + `SetTemplateCatalog` 交叉注入 `:841-842` + `NewBPMNMonitoringService(client, bpmnAuditService, …)` `:831`）。
+
+### 四组边界（按 `service.<Symbol>` 交集切，各组符号互不重叠）
+
+| 组 | 文件 | 共享层符号 | 方法数 | 主要难点 |
+|:--|:---|:---|---:|:---|
+| **1 引擎 / 流程定义 / 任务 / 版本** | `workflow.go` | `ProcessEngine`(接口) + `BPMNVersionService` + 10 个 `*Request`/`*StatisticsRequest` + `ParseVersionNumber`(包级函数) + `service/bpmn` 子包 2 个 ContextKey | ~46 / 50 处调用 | 三个访问器返回共享层子接口，其方法签名直接带 `*service.CreateProcessDefinitionRequest`；只换注入字段类型不够 |
+| **2 触发 / 绑定 / 域配置** | `process_trigger.go` | `ProcessTriggerService` / `ProcessBindingService` / `ConfigInheritanceService` + `ErrConfigNotFound` | 16 | `GetEffectiveConfig` 返回 `*service.ResolvedConfig`，契约写全签名就重新 import |
+| **3 监控 / 审计 / 指标 / SLA / 租户** | `dashboard.go` + `monitoring.go` | 5 个具体服务 + `QueryAuditLogsRequest` / `ProcessMetricsRequest` / `ListProcessInstanceStatusQuery` | 14 | 方法入参在 handler 内直接构造共享层 DTO；`SetMonitoringService(*service.BPMNMonitoringService)` setter |
+| **4 模板 / AI / Lint / 存量盘点** | `workflow_template.go` + `ai_generator.go` + `lint.go` + `inventory.go` | 3 个具体服务 + 3 个 `ErrWorkflowTemplate*` + `NewBPMNLintService` + `DefaultStaleThresholdHours` + `BuildPendingWorkflowInventory` | 12 | 三类硬骨头齐聚：域内构造共享层对象、包级函数、包级常量/sentinel |
+
+计划 :578 / :623 / :656 的「引擎 / 执行器 / 解析器 / 任务变量」是 **`service/` 侧 36 文件**的命名；本节四组是 **`handlers/bpmn/` 消费面**的切法，组 1 大致对应前者「引擎 + 执行器 + 任务变量」，组 2/3/4 对应 :393-410 拆分表的绑定触发 / 审计监控 / 模板 lint 盘点行。
+
+### 三类硬骨头与既定解法
+
+1. **方法签名带共享层具体类型**（组 1/2/3 全中）→ DTO 成组下沉 `dto/`，`service` 侧在**既有文件内**加 `type X = dto.X` / `var E = dto.E` 别名（类型身份等价、`errors.Is` 同一实例、不新增 `service/` 顶层文件）。契约文件里绝不出现共享层路径字面量。
+2. **域内直接构造共享层对象**（`lint.go:22 service.NewBPMNLintService()`，装配点 `app.go:846 NewLintHandler()` 无参）→ 必须上移组合根，改 `app.go` → C.6.4。
+3. **包级函数 / 常量**（`inventory.go:51 DefaultStaleThresholdHours`、`:61 BuildPendingWorkflowInventory`、`workflow.go` 5 处 `ParseVersionNumber`、3 个模板 sentinel、`process_trigger.go:488 ErrConfigNotFound`）→ sentinel/值类型走 `dto` 别名；函数改成注入的函数字段或能力接口，且**声明在已依赖共享层的既有文件**，不新建 import 文件。
+
+### 门禁红线（每组都要守）
+
+- 🔴 `handlers/bpmn/contracts.go` 出现 `"itsm-backend/service"` 字面量（**连注释都算**，L.3 是全文 grep，见 :511）→ `bpmn` 8→9 直接 FAIL。契约文件须满足 `domain_contracts_test.go:172-184`：存在、≥100 字节、声明 `type <iface> interface`、零共享层 import。
+- 不新建 `handlers` 子域包（`handlers_dirs=69`）、不在 `service/` 顶层新增文件（L.1=140）、`dto/` 新增文件三个门禁都不统计（:601 已实证）。
+- `app.go` 尽量净增 0 行（1:1 限定符替换或零改动）。当前实测 **2169 行 > C.6.4 基线 2167**，该 2 行差异归属并行迁移批、其提交时上调；本设计不代调、不叠加新的账本漂移。
+- 每组真下降后**同 commit 精确收紧** `handler-service-imports-baseline.txt`（`bpmn=8→N`，整域归零时删除该行），并在 CHANGELOG 记录加减账；不收紧等于没装守卫（:565 反向验证）。L.1 / L.3 **严禁上调**，只有 C.6.4 真实增长时允许带理由上调。
+- 回归锁：`domain_contracts_test.go` 加域规格 + 编译期断言（接口形态用接口到接口赋值）+ 源码守卫；每组做**反向验证**（改回旧值必须由断言变红，不是靠编译失败）。
+
+### 落地顺序（风险从低到高，每组独立可提交）
+
+| 步 | 范围 | `app.go` | 预期 L.3 |
+|:--|:---|:---|:---|
+| 1 | 组 4 纯值：3 个模板 sentinel + `DefaultStaleThresholdHours` 下沉 `dto/` + 别名；模板 DTO 本就在 `dto/` | 零改动 | 8 → 7（`workflow_template.go` 归零） |
+| 2 | 组 3：3 个请求 DTO 下沉 + 5 个服务窄接口，setter 改域内接口 | 零改动 | 7 → 5 |
+| 3 | 组 2：`ResolvedConfig` + `ErrConfigNotFound` 下沉 + 3 接口 | 零改动 | 5 → 4 |
+| 4 | 组 1：10 个 Request DTO + `ProcessEngine` 三访问器 + 版本服务；`ParseVersionNumber` 改注入函数字段 | 零改动 | 4 → 1（`workflow.go` 归零） |
+| 5 | 组 4 剩余（`lint.go` 构造 / `inventory.go` 包级函数）**与组合根专项合并**：`operations` / `problem` / `bpmn` 一次性改 `app.go` 并统一上调 C.6.4 基线 | 变更，一次调基线 | 1 → 0，删 `bpmn` 行 |
+
+目标读数：L.3 **28 文件 / 10 域 → 20 文件 / 9 域**，L.4 零依赖域 **57 → 58**；L.1 140 不变，C.6.4 五项除第 5 步的 `bootstrap_app_lines` 外不变。
+
+### 与另外两条专项的界面
+
+- **LLMGateway 契约化**收 `email_intake` + `ai`：与 BPMN 无交集（`ai_generator.go` 只依赖 `BPMNAIGeneratorService`），可完全并行。
+- **组合根注入**收 `operations` / `problem`：与第 5 步同型（包级函数 / `NewBPMNApprovalBridge` 域内构造），**必须合并成一个提交**，避免多次动 `app.go`、多次调 C.6.4 基线。
+- `dashboard` 域（16 符号全为方法返回 DTO）可用现模板直接收，与 BPMN 无交集，可作批次 3 前的暖身批。
+- 本设计不改运行时行为，**不需要重建 prod 镜像**；prod 当前 `v1.6.50`（HEAD `bed0cbe46` 干净快照），本节只动源码与基线。
+
+**未纳入**：L.6 符号级白名单、ROADMAP v1.6.x 团队评审、`workflow` 真实租户跨域联调人工签字（不由 AI 代签）、`cmdb=7` 专项。
