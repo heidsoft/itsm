@@ -101,7 +101,7 @@ func (h *DeliveryHandler) ListDeliveries(c *gin.Context) {
 	pg := common.GetPaginationFromQuery(c)
 	predicates, err := deliveryPredicates(c, tenantID)
 	if err != nil {
-		common.ParamErrorWithErr(c, err, "时间或过滤参数格式错误")
+		common.ParamErrorWithErr(c, err, "Time or filter parameter format is wrong")
 		return
 	}
 
@@ -109,7 +109,7 @@ func (h *DeliveryHandler) ListDeliveries(c *gin.Context) {
 	total, err := base.Clone().Count(c.Request.Context())
 	if err != nil {
 		h.logger.Errorw("count notification deliveries", "tenant_id", tenantID, "error", err)
-		common.InternalError(c, "查询投递记录失败")
+		common.InternalError(c, "Failed to query delivery records")
 		return
 	}
 	rows, err := base.
@@ -119,7 +119,7 @@ func (h *DeliveryHandler) ListDeliveries(c *gin.Context) {
 		All(c.Request.Context())
 	if err != nil {
 		h.logger.Errorw("list notification deliveries", "tenant_id", tenantID, "error", err)
-		common.InternalError(c, "查询投递记录失败")
+		common.InternalError(c, "Failed to query delivery records")
 		return
 	}
 
@@ -146,7 +146,7 @@ func (h *DeliveryHandler) GetDeliveryStats(c *gin.Context) {
 	if raw := strings.TrimSpace(c.Query("days")); raw != "" {
 		parsed, err := strconv.Atoi(raw)
 		if err != nil || parsed <= 0 {
-			common.ParamError(c, "days 必须是正整数")
+			common.ParamError(c, "days must be a positive integer")
 			return
 		}
 		if parsed > 90 {
@@ -172,7 +172,7 @@ func (h *DeliveryHandler) GetDeliveryStats(c *gin.Context) {
 		Scan(c.Request.Context(), &rows)
 	if err != nil {
 		h.logger.Errorw("aggregate notification deliveries", "tenant_id", tenantID, "error", err)
-		common.InternalError(c, "统计投递数据失败")
+		common.InternalError(c, "Statistics delivery data failed")
 		return
 	}
 
@@ -232,7 +232,7 @@ func (h *DeliveryHandler) RetryDelivery(c *gin.Context) {
 	}
 	deliveryID, err := strconv.Atoi(c.Param("id"))
 	if err != nil || deliveryID <= 0 {
-		common.ParamError(c, "投递记录ID格式错误")
+		common.ParamError(c, "Delivery record ID format error")
 		return
 	}
 	ctx := c.Request.Context()
@@ -241,26 +241,26 @@ func (h *DeliveryHandler) RetryDelivery(c *gin.Context) {
 		Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			common.NotFound(c, "投递记录不存在")
+			common.NotFound(c, "Delivery record does not exist")
 			return
 		}
-		common.InternalError(c, "读取投递记录失败")
+		common.InternalError(c, "Failed to read delivery record")
 		return
 	}
 	switch delivery.Status {
 	case "failed":
 		// 只有失败记录允许重试。
 	case "sent":
-		common.Conflict(c, "该通知已投递成功，无需重试", nil)
+		common.Conflict(c, "The notification has been delivered successfully and there is no need to retry.", nil)
 		return
 	default:
-		common.Conflict(c, "该通知仍在投递队列中，请等待结果", nil)
+		common.Conflict(c, "The notification is still in the delivery queue, please wait for the result", nil)
 		return
 	}
 
 	command, err := h.client.OperationalCommand.Get(ctx, delivery.OperationalCommandID)
 	if err != nil || command.TenantID != tenantID {
-		common.NotFound(c, "原投递命令不存在或不属于当前租户")
+		common.NotFound(c, "The original delivery command does not exist or does not belong to the current tenant")
 		return
 	}
 
@@ -291,7 +291,7 @@ func (h *DeliveryHandler) RetryDelivery(c *gin.Context) {
 	if err != nil {
 		h.logger.Errorw("requeue notification delivery", "delivery_id", deliveryID,
 			"tenant_id", tenantID, "error", err)
-		common.InternalError(c, "重试入队失败")
+		common.InternalError(c, "Retry to join the queue failed")
 		return
 	}
 
@@ -359,13 +359,13 @@ func (h *DeliveryHandler) existingRetry(ctx context.Context, tenantID int, origi
 func (h *DeliveryHandler) requireTenant(c *gin.Context) (int, bool) {
 	if h.client == nil {
 		c.JSON(http.StatusServiceUnavailable, gin.H{
-			"code": 503, "message": "通知投递审计未启用（命令总线未装配）",
+			"code": 503, "message": "Notification delivery auditing not enabled (command bus not assembled)",
 		})
 		return 0, false
 	}
 	tenantID, err := currentTenantID(c)
 	if err != nil {
-		common.ParamError(c, "租户信息错误")
+		common.ParamError(c, "Wrong tenant information")
 		return 0, false
 	}
 	return tenantID, true
@@ -384,14 +384,14 @@ func deliveryPredicates(c *gin.Context, tenantID int) ([]predicate.NotificationD
 	if raw := strings.TrimSpace(c.Query("recipientId")); raw != "" {
 		id, err := strconv.Atoi(raw)
 		if err != nil || id <= 0 {
-			return nil, fmt.Errorf("recipientId 无效")
+			return nil, fmt.Errorf("recipientId is invalid")
 		}
 		predicates = append(predicates, notificationdelivery.RecipientIDEQ(id))
 	}
 	if raw := strings.TrimSpace(c.Query("ticketId")); raw != "" {
 		id, err := strconv.Atoi(raw)
 		if err != nil || id <= 0 {
-			return nil, fmt.Errorf("ticketId 无效")
+			return nil, fmt.Errorf("ticketId is invalid")
 		}
 		predicates = append(predicates, notificationdelivery.TicketIDEQ(id))
 	}
@@ -420,7 +420,7 @@ func parseDeliveryTime(raw string, endOfDay bool) (time.Time, error) {
 	}
 	date, err := time.ParseInLocation("2006-01-02", raw, time.Local)
 	if err != nil {
-		return time.Time{}, fmt.Errorf("时间格式错误: %s", raw)
+		return time.Time{}, fmt.Errorf("Wrong time format: %s", raw)
 	}
 	if endOfDay {
 		return date.AddDate(0, 0, 1), nil

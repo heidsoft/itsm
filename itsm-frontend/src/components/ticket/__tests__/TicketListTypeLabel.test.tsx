@@ -46,26 +46,27 @@ function typeColumn() {
 }
 
 describe('工单列表类型列', () => {
-  it('后端 type 词表每个取值都有中文显示名', () => {
+  it('every backend type has an English display label', () => {
     const missing = BACKEND_TYPE_VOCABULARY.filter(t => !TICKET_TYPE_CONFIG[t]);
     expect(missing).toEqual([]);
   });
 
-  it('渲染结果不含原始英文枚举', () => {
+  it('renders English labels instead of raw enum values', () => {
+    const expectedLabels = ['Incident', 'Service Request', 'Change', 'Ticket', 'Problem', 'Continuous improvement'];
     const renderType = typeColumn();
     for (const type of BACKEND_TYPE_VOCABULARY) {
       const { container, unmount } = render(<>{renderType(type, ticketOfType(type))}</>);
       const text = container.textContent ?? '';
       expect(text).not.toBe(type);
-      expect(text).toMatch(/[\u4e00-\u9fa5]/);
+      expect(text).toBe(expectedLabels[BACKEND_TYPE_VOCABULARY.indexOf(type)]);
       unmount();
     }
   });
 
-  it('ticket 显示为「工单」而不是回落原文', () => {
+  it('renders Ticket for the ticket enum', () => {
     const renderType = typeColumn();
     const { container } = render(<>{renderType('ticket', ticketOfType('ticket'))}</>);
-    expect(container.textContent).toBe('工单');
+    expect(container.textContent).toBe("Ticket");
   });
 
   it('未知类型仍回落原文，不吞掉信息', () => {

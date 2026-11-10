@@ -21,7 +21,7 @@ export function useReportSummaries() {
       setReports(response.items ?? []);
     } catch (requestError) {
       setReports([]);
-      setError(requestError instanceof Error ? requestError.message : '报表目录加载失败');
+      setError(requestError instanceof Error ? requestError.message : 'Failed to load report directory');
     } finally {
       setLoading(false);
     }

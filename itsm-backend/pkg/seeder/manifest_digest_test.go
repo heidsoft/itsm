@@ -4,13 +4,50 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"reflect"
 	"testing"
+	"unicode"
 
 	"itsm-backend/internal/authz"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+func TestBuiltinManifestDisplayTextIsEnglish(t *testing.T) {
+	// These same manifests feed the production initialization components.
+	// Inspect display fields, while preserving stored keys and category values.
+	var inspect func(reflect.Value)
+	inspect = func(v reflect.Value) {
+		if v.Kind() == reflect.Pointer || v.Kind() == reflect.Interface {
+			if !v.IsNil() {
+				inspect(v.Elem())
+			}
+			return
+		}
+		switch v.Kind() {
+		case reflect.Slice, reflect.Array:
+			for i := 0; i < v.Len(); i++ {
+				inspect(v.Index(i))
+			}
+		case reflect.Struct:
+			for i := 0; i < v.NumField(); i++ {
+				field := v.Type().Field(i).Name
+				value := v.Field(i)
+				if value.Kind() == reflect.String && (field == "Name" || field == "Title" || field == "Description" || field == "Desc" || field == "ServiceName" || field == "ResourceTypeName") {
+					for _, r := range value.String() {
+						require.False(t, unicode.Is(unicode.Han, r), "%s still contains Chinese: %s", field, value.String())
+					}
+				} else {
+					inspect(value)
+				}
+			}
+		}
+	}
+	for _, manifest := range []any{getProductDefaultConfig(), BuiltinRoles(), ticketTypeDefinitions(), standardChangeDefinitions(), ciTypeDefinitions(), ticketTagDefinitions(), incidentCategoryDefinitions(), marketplaceItemDefinitions(), defaultSLAPolicySeeds(), cloudServiceTypeDefinitions()} {
+		inspect(reflect.ValueOf(manifest))
+	}
+}
 
 // The version ledger must notice an in-code manifest edit: a menu, permission,
 // ticket type or BPMN template change cannot leave the recorded checksum

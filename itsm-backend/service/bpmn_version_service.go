@@ -93,7 +93,7 @@ func (s *BPMNVersionService) CreateVersion(ctx context.Context, req *CreateVersi
 	// 获取当前最高版本号
 	currentVersion, err := s.getCurrentVersion(ctx, req.ProcessDefinitionKey, req.TenantID)
 	if err != nil {
-		return nil, fmt.Errorf("获取当前版本失败: %w", err)
+		return nil, fmt.Errorf("Failed to get current version: %w", err)
 	}
 
 	newVersionNumber := currentVersion + 1
@@ -107,7 +107,7 @@ func (s *BPMNVersionService) CreateVersion(ctx context.Context, req *CreateVersi
 		SetDeployedBy(req.CreatedBy).
 		Save(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("创建部署记录失败: %w", err)
+		return nil, fmt.Errorf("Failed to create deployment record: %w", err)
 	}
 
 	// 使用部署ID创建流程定义
@@ -123,7 +123,7 @@ func (s *BPMNVersionService) CreateVersion(ctx context.Context, req *CreateVersi
 		SetDeploymentID(deployment.ID).
 		Save(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("创建流程定义失败: %w", err)
+		return nil, fmt.Errorf("Failed to create process definition: %w", err)
 	}
 
 	// 记录版本变更日志 - processDef.ID是int类型
@@ -160,7 +160,7 @@ func (s *BPMNVersionService) GetVersion(ctx context.Context, processKey string, 
 		).
 		First(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("获取流程定义失败: %w", err)
+		return nil, fmt.Errorf("Failed to get process definition: %w", err)
 	}
 
 	// ProcessDeployment没有ProcessDefinitionID字段，暂时跳过部署信息查询
@@ -175,7 +175,7 @@ func (s *BPMNVersionService) GetVersion(ctx context.Context, processKey string, 
 	// 解析版本号
 	versionNumber, err := ParseVersionNumber(processDef.Version)
 	if err != nil {
-		return nil, fmt.Errorf("解析版本号失败: %w", err)
+		return nil, fmt.Errorf("Failed to parse version number: %w", err)
 	}
 
 	return &ProcessVersion{
@@ -203,7 +203,7 @@ func (s *BPMNVersionService) ListVersions(ctx context.Context, processKey string
 		Order(ent.Desc(processdefinition.FieldVersion)).
 		All(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("获取流程定义列表失败: %w", err)
+		return nil, fmt.Errorf("Failed to get process definition list: %w", err)
 	}
 
 	var versions []*ProcessVersion
@@ -248,7 +248,7 @@ func (s *BPMNVersionService) ActivateVersion(ctx context.Context, processKey str
 	// 开始事务
 	tx, err := s.client.Tx(ctx)
 	if err != nil {
-		return fmt.Errorf("开始事务失败: %w", err)
+		return fmt.Errorf("Failed to start transaction: %w", err)
 	}
 	defer func() {
 		if v := recover(); v != nil {
@@ -269,7 +269,7 @@ func (s *BPMNVersionService) ActivateVersion(ctx context.Context, processKey str
 		Save(ctx)
 	if err != nil {
 		tx.Rollback()
-		return fmt.Errorf("停用其他版本失败: %w", err)
+		return fmt.Errorf("Failed to deactivate other versions: %w", err)
 	}
 
 	// 激活指定版本 - Version是string类型
@@ -284,12 +284,12 @@ func (s *BPMNVersionService) ActivateVersion(ctx context.Context, processKey str
 		Save(ctx)
 	if err != nil {
 		tx.Rollback()
-		return fmt.Errorf("激活指定版本失败: %w", err)
+		return fmt.Errorf("Failed to activate specified version: %w", err)
 	}
 
 	// 提交事务
 	if err := tx.Commit(); err != nil {
-		return fmt.Errorf("提交事务失败: %w", err)
+		return fmt.Errorf("Failed to commit transaction: %w", err)
 	}
 
 	return nil
@@ -306,7 +306,7 @@ func (s *BPMNVersionService) RollbackToVersion(ctx context.Context, processKey s
 		).
 		First(ctx)
 	if err != nil {
-		return fmt.Errorf("目标版本不存在: %w", err)
+		return fmt.Errorf("Target version does not exist: %w", err)
 	}
 
 	// 创建回滚版本 - BPMNXML是[]byte类型，转换为string
@@ -323,12 +323,12 @@ func (s *BPMNVersionService) RollbackToVersion(ctx context.Context, processKey s
 
 	rollbackVersion, err := s.CreateVersion(ctx, rollbackReq)
 	if err != nil {
-		return fmt.Errorf("创建回滚版本失败: %w", err)
+		return fmt.Errorf("Failed to create rollback version: %w", err)
 	}
 
 	// 激活回滚版本
 	if err := s.ActivateVersion(ctx, processKey, rollbackVersion.Version, tenantID); err != nil {
-		return fmt.Errorf("激活回滚版本失败: %w", err)
+		return fmt.Errorf("Failed to activate rollback version: %w", err)
 	}
 
 	return nil
@@ -339,13 +339,13 @@ func (s *BPMNVersionService) CompareVersions(ctx context.Context, processKey str
 	// 获取基础版本
 	baseProcessDef, err := s.GetVersion(ctx, processKey, baseVersion, tenantID)
 	if err != nil {
-		return nil, fmt.Errorf("获取基础版本失败: %w", err)
+		return nil, fmt.Errorf("Failed to get base version: %w", err)
 	}
 
 	// 获取目标版本
 	targetProcessDef, err := s.GetVersion(ctx, processKey, targetVersion, tenantID)
 	if err != nil {
-		return nil, fmt.Errorf("获取目标版本失败: %w", err)
+		return nil, fmt.Errorf("Failed to get target version: %w", err)
 	}
 
 	// 比较BPMN XML内容
@@ -375,7 +375,7 @@ func ParseVersionNumber(versionStr string) (int, error) {
 			return v, nil
 		}
 	}
-	return 0, fmt.Errorf("无效的版本格式: %s", versionStr)
+	return 0, fmt.Errorf("Invalid version format: %s", versionStr)
 }
 
 // getCurrentVersion 获取当前最高版本号
@@ -388,7 +388,7 @@ func (s *BPMNVersionService) getCurrentVersion(ctx context.Context, processKey s
 		Order(ent.Desc(processdefinition.FieldVersion)).
 		First(ctx)
 	if err != nil {
-		return 0, fmt.Errorf("获取流程定义失败: %w", err)
+		return 0, fmt.Errorf("Failed to get process definition: %w", err)
 	}
 
 	return ParseVersionNumber(processDef.Version)
@@ -405,7 +405,7 @@ func (s *BPMNVersionService) recordVersionChangeLog(ctx context.Context, process
 	processDefIDInt, err := strconv.Atoi(processDefID)
 	if err != nil {
 		s.logger.Warnw("Failed to parse processDefID", "process_def_id", processDefID, "error", err)
-		return fmt.Errorf("解析流程定义 ID 失败：%w", err)
+		return fmt.Errorf("Failed to parse process definition ID: %w", err)
 	}
 
 	// 解析 createdBy 为 int (用户 ID)
@@ -432,7 +432,7 @@ func (s *BPMNVersionService) recordVersionChangeLog(ctx context.Context, process
 			"created_by", createdBy,
 			"tenant_id", tenantID,
 			"error", err)
-		return fmt.Errorf("创建版本变更日志失败：%w", err)
+		return fmt.Errorf("Failed to create version change log: %w", err)
 	}
 
 	s.logger.Infow("Version change logged successfully",
@@ -534,10 +534,10 @@ func (s *BPMNVersionService) GetChangeLogsByProcessKey(ctx context.Context, proc
 		Where(processdefinition.Key(processKey), processdefinition.TenantID(tenantID)).
 		All(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("流程定义不存在: %w", err)
+		return nil, fmt.Errorf("Process definition does not exist: %w", err)
 	}
 	if len(pds) == 0 {
-		return nil, fmt.Errorf("流程定义不存在: key=%s tenant=%d", processKey, tenantID)
+		return nil, fmt.Errorf("Process definition does not exist: key=%s tenant=%d", processKey, tenantID)
 	}
 
 	ids := make([]int, 0, len(pds))
@@ -551,7 +551,7 @@ func (s *BPMNVersionService) GetChangeLogsByProcessKey(ctx context.Context, proc
 		Order(ent.Desc(processversionchangelog.FieldCreatedAt)).
 		All(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("获取变更日志失败: %w", err)
+		return nil, fmt.Errorf("Failed to get change log: %w", err)
 	}
 
 	return changelogs, nil
@@ -560,7 +560,7 @@ func (s *BPMNVersionService) GetChangeLogsByProcessKey(ctx context.Context, proc
 // GetChangeLogsByProcessDefinitionID 根据流程定义ID获取版本变更日志；定义 ID 全局可枚举，查询必须带租户谓词。
 func (s *BPMNVersionService) GetChangeLogsByProcessDefinitionID(ctx context.Context, processDefID, tenantID int) ([]*ent.ProcessVersionChangelog, error) {
 	if tenantID <= 0 {
-		return nil, fmt.Errorf("缺少租户上下文")
+		return nil, fmt.Errorf("Missing tenant context")
 	}
 	changelogs, err := s.client.ProcessVersionChangelog.Query().
 		Where(
@@ -570,7 +570,7 @@ func (s *BPMNVersionService) GetChangeLogsByProcessDefinitionID(ctx context.Cont
 		Order(ent.Desc(processversionchangelog.FieldCreatedAt)).
 		All(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("获取变更日志失败: %w", err)
+		return nil, fmt.Errorf("Failed to get change log: %w", err)
 	}
 
 	return changelogs, nil

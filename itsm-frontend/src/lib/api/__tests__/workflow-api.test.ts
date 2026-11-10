@@ -432,7 +432,7 @@ describe('WorkflowApi', () => {
     });
 
     it('should throw on invalid data', async () => {
-      await expect(WorkflowApi.importWorkflow({ version: '1.0', exportedAt: new Date(), exportedBy: 'sys' } as any)).rejects.toThrow('无效的导入数据');
+      await expect(WorkflowApi.importWorkflow({ version: '1.0', exportedAt: new Date(), exportedBy: 'sys' } as any)).rejects.toThrow("Invalid import data");
     });
   });
 
@@ -449,12 +449,12 @@ describe('WorkflowApi', () => {
 
     it('没有任何激活版本时不得返回草稿', async () => {
       (httpClient.get as jest.Mock).mockResolvedValueOnce([bpmnVersion({ isActive: false })]);
-      await expect(WorkflowApi.publishVersion('wf1')).rejects.toThrow('未找到可发布的版本');
+      await expect(WorkflowApi.publishVersion('wf1')).rejects.toThrow("No releasable version found");
     });
 
     it('should throw if no versions', async () => {
       (httpClient.get as jest.Mock).mockResolvedValueOnce([]);
-      await expect(WorkflowApi.publishVersion('wf1')).rejects.toThrow('未找到可发布的版本');
+      await expect(WorkflowApi.publishVersion('wf1')).rejects.toThrow("No releasable version found");
     });
   });
 
@@ -482,7 +482,7 @@ describe('WorkflowApi', () => {
     it('should use default reason', async () => {
       (httpClient.put as jest.Mock).mockResolvedValueOnce({});
       await WorkflowApi.rollbackVersion('wf1', 1);
-      expect(httpClient.put).toHaveBeenCalledWith('/api/v1/bpmn/versions/wf1/1/rollback', { reason: '回滚操作' });
+      expect(httpClient.put).toHaveBeenCalledWith('/api/v1/bpmn/versions/wf1/1/rollback', { reason: "Rollback operation" });
     });
   });
 
@@ -601,7 +601,7 @@ describe('WorkflowApi', () => {
     it('should return mock template', async () => {
       const result = await WorkflowApi.getTemplate('t1');
       expect(result.id).toBe('t1');
-      expect(result.name).toBe('未命名模板');
+      expect(result.name).toBe("Unnamed template");
     });
   });
 

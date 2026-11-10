@@ -58,27 +58,27 @@ export function useIncidentStats(): UseIncidentStatsResult {
       metrics
         ? [
             {
-              label: '总事件数',
+              label: 'Total Incidents',
               value: metrics.totalIncidents || 0,
               color: '#3b82f6',
               icon: <Siren size={20} strokeWidth={1.8} />,
             },
             {
-              label: '待处理',
+              label: 'Pending',
               value: metrics.openIncidents || 0,
               color: '#faad14',
               icon: <CircleDot size={20} strokeWidth={1.8} />,
             },
             {
-              label: '紧急事件',
+              label: 'Urgent',
               value: metrics.criticalIncidents || 0,
               color: '#ff4d4f',
               icon: <TriangleAlert size={20} strokeWidth={1.8} />,
             },
             {
-              label: '平均解决时间',
+              label: 'Avg Resolution Time',
               value: Math.round((metrics.avgResolutionTime || 0) / 60),
-              suffix: '分钟',
+              suffix: 'minutes',
               color: '#52c41a',
               icon: <Clock3 size={20} strokeWidth={1.8} />,
             },

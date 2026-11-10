@@ -92,17 +92,17 @@ describe('WorkflowNodeInspector — 审批语义 panel', () => {
     );
 
     // 审批语义 panel header is always visible for UserTask.
-    expect(screen.getByText('审批语义')).toBeInTheDocument();
+    expect(screen.getByText("Approval Semantics")).toBeInTheDocument();
 
     // Default taskPurpose is "work" → 普通人工任务 is rendered as the select label.
     await waitFor(() => {
-      expect(screen.getAllByText('普通人工任务').length).toBeGreaterThanOrEqual(1);
+      expect(screen.getAllByText("Common manual tasks").length).toBeGreaterThanOrEqual(1);
     });
 
     // When taskPurpose !== "approval" the approval sub-panel must be hidden.
-    expect(screen.queryByText('单人审批')).not.toBeInTheDocument();
-    expect(screen.queryByText('委托')).not.toBeInTheDocument();
-    expect(screen.queryByText('拒绝意见必填')).not.toBeInTheDocument();
+    expect(screen.queryByText("Single approver")).not.toBeInTheDocument();
+    expect(screen.queryByText("Allow delegation")).not.toBeInTheDocument();
+    expect(screen.queryByText("Required for rejecting comments")).not.toBeInTheDocument();
   });
 
   it('shows the approval sub-panel when taskPurpose is approval', async () => {
@@ -119,12 +119,12 @@ describe('WorkflowNodeInspector — 审批语义 panel', () => {
     // “当前选中项标签”，不是下拉展开后的选项。
     // 超时动作尚未就绪，标签带后缀说明，故用前缀匹配。
     await waitFor(() => {
-      expect(screen.getByText('单人审批')).toBeInTheDocument();
-      expect(screen.getByText(/^仅提醒/)).toBeInTheDocument();
-      expect(screen.getByText('终止流程')).toBeInTheDocument();
-      expect(screen.getByText('允许委托')).toBeInTheDocument();
-      expect(screen.getByText('允许加签')).toBeInTheDocument();
-      expect(screen.getByText('拒绝意见必填')).toBeInTheDocument();
+      expect(screen.getByText("Single approver")).toBeInTheDocument();
+      expect(screen.getByText(/^Alert only/)).toBeInTheDocument();
+      expect(screen.getByText("Terminating process")).toBeInTheDocument();
+      expect(screen.getByText("Allow delegation")).toBeInTheDocument();
+      expect(screen.getByText("Allow signature")).toBeInTheDocument();
+      expect(screen.getByText("Required for rejecting comments")).toBeInTheDocument();
     });
   });
 
@@ -139,7 +139,7 @@ describe('WorkflowNodeInspector — 审批语义 panel', () => {
 
     // The 通过人数 label only appears in the threshold sub-panel.
     await waitFor(() => {
-      expect(screen.getByText('通过人数')).toBeInTheDocument();
+      expect(screen.getByText("Number of people passing")).toBeInTheDocument();
     });
 
     // Threshold value must be initialized from the moddle attribute.
@@ -157,10 +157,10 @@ describe('WorkflowNodeInspector — 审批语义 panel', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText('单人审批')).toBeInTheDocument();
+      expect(screen.getByText("Single approver")).toBeInTheDocument();
     });
     // 通过人数 label is the threshold input's addonBefore — should not appear.
-    expect(screen.queryByText('通过人数')).not.toBeInTheDocument();
+    expect(screen.queryByText("Number of people passing")).not.toBeInTheDocument();
   });
 
   it('writes the right moddle key for every approval control', async () => {
@@ -173,7 +173,7 @@ describe('WorkflowNodeInspector — 审批语义 panel', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText('拒绝意见必填')).toBeInTheDocument();
+      expect(screen.getByText("Required for rejecting comments")).toBeInTheDocument();
     });
 
     // The 拒绝意见必填 switch is wired to commentRequiredOnReject.
@@ -213,15 +213,15 @@ describe('WorkflowNodeInspector — 审批语义 panel', () => {
       />
     );
 
-    expect(screen.queryByText('审批语义')).not.toBeInTheDocument();
+    expect(screen.queryByText("Approval Semantics")).not.toBeInTheDocument();
   });
 
   it('renders empty-state when no selection is provided', () => {
     const onUpdateProperties = jest.fn().mockReturnValue(true);
     render(<WorkflowNodeInspector selection={null} onUpdateProperties={onUpdateProperties} />);
 
-    // Empty hint copy in Chinese.
-    expect(screen.getByText(/点击画布上的节点查看\/编辑属性/)).toBeInTheDocument();
+    // Empty hint copy in English.
+    expect(screen.getByText('Click on a node on the canvas to view/edit properties')).toBeInTheDocument();
   });
 });
 
@@ -263,7 +263,7 @@ describe('WorkflowNodeInspector — moddle 值回读', () => {
       />
     );
 
-    const textarea = screen.getByPlaceholderText('输入节点功能描述（可选）');
+    const textarea = screen.getByPlaceholderText("Enter node function description (optional)");
     expect(textarea).toHaveValue('');
   });
 
@@ -308,7 +308,7 @@ describe('WorkflowNodeInspector — moddle 值回读', () => {
     const switches = screen.getAllByRole('switch');
     expect(switches[0]).not.toBeChecked();
     // 抄送类型必须能回读，否则重开流程看起来像配置丢失
-    expect(document.querySelector('.ant-select-content-has-value')?.textContent).toContain('角色');
+    expect(document.querySelector('.ant-select-content-has-value')?.textContent).toContain("Role");
   });
 
   it('operationRef 输入已移除，未接线的拒绝分支选项被禁用', async () => {
@@ -328,13 +328,13 @@ describe('WorkflowNodeInspector — moddle 值回读', () => {
       />
     );
 
-    expect(screen.queryByText('操作引用 (operationRef)')).not.toBeInTheDocument();
+    expect(screen.queryByText("Actions引用 (operationRef)")).not.toBeInTheDocument();
 
     // 下拉顺序：taskPurpose / approvalMode / rejectStrategy / timeoutAction
     const comboboxes = screen.getAllByRole('combobox');
     fireEvent.mouseDown(comboboxes[2]);
 
-    const option = await screen.findByText('进入拒绝分支');
+    const option = await screen.findByText("Entering reject branch");
     expect(option.closest('.ant-select-item')).not.toHaveClass('ant-select-item-option-disabled');
     expect(onUpdateProperties).not.toHaveBeenCalled();
   });

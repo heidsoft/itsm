@@ -222,21 +222,21 @@ func TestUpdate_RejectsInvalidValuesWithFieldSpecificMessage(t *testing.T) {
 		body    map[string]any
 		wantMsg string
 	}{
-		{"交付天数非数字", map[string]any{"deliveryTime": "tomorrow"}, "deliveryTime 必须是正整数天数"},
-		{"交付天数为零", map[string]any{"deliveryTime": "0"}, "交付天数必须在 1 到 3650 之间"},
-		{"交付天数越界", map[string]any{"deliveryTime": "99999"}, "交付天数必须在 1 到 3650 之间"},
-		{"审批级别越界", map[string]any{"approvalLevel": 9}, "审批级别必须在 0 到 3 之间（0 表示未配置）"},
-		{"审批级别负数", map[string]any{"approvalLevel": -1}, "审批级别必须在 0 到 3 之间（0 表示未配置）"},
+		{"交付天数非数字", map[string]any{"deliveryTime": "tomorrow"}, "deliveryTime must be a positive integer number of days"},
+		{"交付天数为零", map[string]any{"deliveryTime": "0"}, "Delivery days must be between 1 and 3650"},
+		{"交付天数越界", map[string]any{"deliveryTime": "99999"}, "Delivery days must be between 1 and 3650"},
+		{"审批级别越界", map[string]any{"approvalLevel": 9}, "Approval level must be between 0 and 3 (0 means not configured)"},
+		{"审批级别负数", map[string]any{"approvalLevel": -1}, "Approval level must be between 0 and 3 (0 means not configured)"},
 		{"状态非法", map[string]any{"status": "archived"}, "状态只能是 enabled 或 disabled"},
 		{"状态清空", map[string]any{"status": ""}, "状态只能是 enabled 或 disabled"},
-		{"服务类型非法", map[string]any{"serviceType": "gpu"}, "服务类型只能是 vm/rds/oss/network/storage/security/custom"},
-		{"计价单位非法", map[string]any{"unit": "年"}, "计价单位只能是 月/次/用户"},
-		{"名称清空", map[string]any{"name": "   "}, "服务名称不能为空"},
-		{"分类清空", map[string]any{"category": ""}, "服务分类不能为空"},
-		{"SLA 响应负数", map[string]any{"slaResponseTime": -5}, "SLA 响应时限不能为负数"},
-		{"SLA 解决负数", map[string]any{"slaResolutionTime": -5}, "SLA 解决时限不能为负数"},
-		{"排序负数", map[string]any{"sortOrder": -1}, "排序不能为负数"},
-		{"价格负数", map[string]any{"price": -1}, "价格不能为负数"},
+		{"服务类型非法", map[string]any{"serviceType": "gpu"}, "The service type can only be vm/rds/oss/network/storage/security/custom"},
+		{"计价单位非法", map[string]any{"unit": "年"}, "The pricing unit can only be month/time/user"},
+		{"名称清空", map[string]any{"name": "   "}, "Service name cannot be empty"},
+		{"分类清空", map[string]any{"category": ""}, "Service category cannot be empty"},
+		{"SLA 响应负数", map[string]any{"slaResponseTime": -5}, "SLA response time limit cannot be negative"},
+		{"SLA 解决负数", map[string]any{"slaResolutionTime": -5}, "SLA resolution time limit cannot be negative"},
+		{"排序负数", map[string]any{"sortOrder": -1}, "Sort cannot be negative"},
+		{"价格负数", map[string]any{"price": -1}, "Price cannot be negative"},
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
@@ -266,7 +266,7 @@ func TestUpdate_NameConflictIs409NotInternalError(t *testing.T) {
 		map[string]any{"name": before.Name})
 	assert.Equal(t, 409, w.Code, "body=%s", w.Body.String())
 	assert.Equal(t, common.ConflictCode, resp.Code, "body=%s", mustSC(&resp))
-	assert.Equal(t, "服务目录名称已存在，请换一个名称", resp.Message)
+	assert.Equal(t, "The service directory name already exists, please change it to a different name", resp.Message)
 	assert.NotContains(t, strings.ToLower(w.Body.String()), "sql", "驱动错误不得透给页面")
 
 	// 失败的那一行不受影响
@@ -395,12 +395,12 @@ func TestCreate_ValidationMessagesComeFromService(t *testing.T) {
 	})
 	require.Equal(t, 400, w.Code, "body=%s", w.Body.String())
 	require.Equal(t, common.ParamErrorCode, resp.Code)
-	assert.Equal(t, "关联云服务时必须选择 CI 类型", resp.Message)
+	assert.Equal(t, "CI type must be selected when associating cloud services", resp.Message)
 
 	w, resp = scDoRaw(t, r, "POST", "/api/v1/service-catalogs", dto.CreateServiceCatalogRequest{
 		Name: "Msg-" + scUID(), Category: "cloud", DeliveryTime: "4000",
 	})
 	require.Equal(t, 400, w.Code, "body=%s", w.Body.String())
 	require.Equal(t, common.ParamErrorCode, resp.Code)
-	assert.Equal(t, "交付天数必须在 1 到 3650 之间", resp.Message)
+	assert.Equal(t, "Delivery days must be between 1 and 3650", resp.Message)
 }

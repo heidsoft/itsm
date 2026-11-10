@@ -66,27 +66,27 @@ describe('LicenseDetail 清空授权', () => {
     const user = userEvent.setup();
     renderDetail();
 
-    await user.click(await screen.findByRole('button', { name: '清空授权' }));
+    await user.click(await screen.findByRole('button', { name: "Clear authorization" }));
     const dialog = await screen.findByRole('dialog');
     expect(within(dialog).getByText(/设计软件许可证/)).toHaveTextContent(
-      '将移除「设计软件许可证」的 1 名授权用户，并释放 1 个席位。'
+      "Will remove \"设计软件许可证\" 1 authorized users and released 1 seats."
     );
     expect(AssetApi.updateLicense).not.toHaveBeenCalled();
 
-    await user.click(within(dialog).getByRole('button', { name: '清空授权' }));
+    await user.click(within(dialog).getByRole('button', { name: "Clear authorization" }));
 
     await waitFor(() => expect(AssetApi.updateLicense).toHaveBeenCalledWith(7, { users: [] }));
     expect(await screen.findByText('0 / 1')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: '清空授权' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: "Clear authorization" })).not.toBeInTheDocument();
   });
 
   it('取消确认不修改授权用户', async () => {
     const user = userEvent.setup();
     renderDetail();
 
-    await user.click(await screen.findByRole('button', { name: '清空授权' }));
+    await user.click(await screen.findByRole('button', { name: "Clear authorization" }));
     const dialog = await screen.findByRole('dialog');
-    await user.click(within(dialog).getByRole('button', { name: /取\s*消/ }));
+    await user.click(within(dialog).getByRole('button', { name: /Cancel/ }));
 
     expect(AssetApi.updateLicense).not.toHaveBeenCalled();
     expect(screen.getByText('张三')).toBeInTheDocument();

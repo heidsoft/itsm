@@ -201,7 +201,7 @@ class ServiceRequestAPI {
       updatedAt,
       catalog: raw?.catalog || {
         id: catalogId,
-        name: raw?.serviceName || (catalogId ? `服务 #${catalogId}` : '未知服务'),
+        name: raw?.serviceName || (catalogId ? `Service #${catalogId}` : 'Unknown Service'),
         category: raw?.category || '',
         description: raw?.reason || '',
         deliveryTime: raw?.deliveryTime || raw?.deliveryTime || '',
@@ -209,7 +209,7 @@ class ServiceRequestAPI {
       requester: raw?.requester || {
         id: requesterId,
         username: raw?.requesterName || raw?.requestedByName || '',
-        name: raw?.requesterName || raw?.requestedByName || (requesterId ? `用户 #${requesterId}` : '-'),
+        name: raw?.requesterName || raw?.requestedByName || (requesterId ? `User #${requesterId}` : '-'),
         email: raw?.requestedByEmail || '',
         department: '',
       },

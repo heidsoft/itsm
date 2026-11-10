@@ -32,9 +32,9 @@ const { Text, Title } = Typography;
 // 趋势方向映射
 const trendDirectionConfig: Record<string, { color: string; icon: React.ReactNode; text: string }> =
   {
-    increasing: { color: '#ff4d4f', icon: <TrendingUp />, text: '上升' },
-    decreasing: { color: '#52c41a', icon: <TrendingDown />, text: '下降' },
-    stable: { color: '#1890ff', icon: <Minus />, text: '稳定' },
+    increasing: { color: '#ff4d4f', icon: <TrendingUp />, text: 'rising' },
+    decreasing: { color: '#52c41a', icon: <TrendingDown />, text: 'Descent' },
+    stable: { color: '#1890ff', icon: <Minus />, text: 'stable' },
   };
 
 export default function ProblemTrendsPage() {
@@ -60,7 +60,7 @@ export default function ProblemTrendsPage() {
       setTrendData(response);
     } catch (error) {
       console.error('Failed to fetch trend data:', error);
-      message.error('获取趋势数据失败');
+      message.error('Failed to obtain trend data');
     } finally {
       setLoading(false);
     }
@@ -95,34 +95,34 @@ export default function ProblemTrendsPage() {
   // 月度趋势表格数据
   const monthlyTrendColumns = [
     {
-      title: '月份',
+      title: 'month',
       dataIndex: 'month',
       key: 'month',
       width: 120,
     },
     {
-      title: '问题数量',
+      title: 'Number of questions',
       dataIndex: 'count',
       key: 'count',
       width: 120,
       render: (count: number) => <Text strong>{count}</Text>,
     },
     {
-      title: '已解决',
+      title: 'Resolved',
       dataIndex: 'resolved',
       key: 'resolved',
       width: 100,
       render: (resolved: number) => <Tag color="green">{resolved}</Tag>,
     },
     {
-      title: '待处理',
+      title: 'Pending',
       dataIndex: 'open',
       key: 'open',
       width: 100,
       render: (open: number) => <Tag color="orange">{open}</Tag>,
     },
     {
-      title: '解决率',
+      title: 'Resolution rate',
       key: 'rate',
       render: (_value: unknown, record: { count: number; resolved: number }) => {
         const rate = record.count > 0 ? (record.resolved / record.count) * 100 : 0;
@@ -132,14 +132,15 @@ export default function ProblemTrendsPage() {
   ];
 
   return (
-    <PageContainer title="问题趋势分析" description="分析问题的变化趋势和分布情况">
+    <PageContainer title="Problem trend analysis" description="Analyze the changing trends and distribution of problems">
       <div className="space-y-6">
         {/* 筛选条件 */}
         <Card className="shadow-sm rounded-lg">
           <Space wrap size="large">
             <div>
               <Text type="secondary" className="mb-2 block">
-                时间范围
+
+                Time Range
               </Text>
               <RangePicker
                 value={dateRange}
@@ -150,10 +151,11 @@ export default function ProblemTrendsPage() {
             </div>
             <div>
               <Text type="secondary" className="mb-2 block">
-                分类筛选
+
+                Category Filter
               </Text>
               <Select
-                placeholder="全部分类"
+                placeholder="All categories"
                 value={categoryFilter}
                 onChange={setCategoryFilter}
                 allowClear
@@ -163,7 +165,8 @@ export default function ProblemTrendsPage() {
             </div>
             <div className="self-end">
               <Button type="primary" onClick={handleSearch} loading={loading}>
-                查询
+
+                Query
               </Button>
             </div>
           </Space>
@@ -182,7 +185,7 @@ export default function ProblemTrendsPage() {
               <Col xs={24} sm={12} lg={6}>
                 <Card className="shadow-sm rounded-lg">
                   <Statistic
-                    title="问题总数"
+                    title="Total number of questions"
                     value={trendData.totalProblems || 0}
                     prefix={<BarChart3 className="text-blue-500" />}
                     styles={{ content: { color: '#1890ff' } }}
@@ -192,7 +195,7 @@ export default function ProblemTrendsPage() {
               <Col xs={24} sm={12} lg={6}>
                 <Card className="shadow-sm rounded-lg">
                   <Statistic
-                    title="已解决"
+                    title="Resolved"
                     value={trendData.resolvedProblems || 0}
                     prefix={<LineChart className="text-green-500" />}
                     styles={{ content: { color: '#52c41a' } }}
@@ -202,7 +205,7 @@ export default function ProblemTrendsPage() {
               <Col xs={24} sm={12} lg={6}>
                 <Card className="shadow-sm rounded-lg">
                   <Statistic
-                    title="待处理"
+                    title="Pending"
                     value={trendData.openProblems || 0}
                     prefix={<PieChart className="text-orange-500" />}
                     styles={{ content: { color: '#fa8c16' } }}
@@ -212,7 +215,7 @@ export default function ProblemTrendsPage() {
               <Col xs={24} sm={12} lg={6}>
                 <Card className="shadow-sm rounded-lg">
                   <Statistic
-                    title="解决率"
+                    title="Resolution rate"
                     value={(trendData.resolutionRate || 0) * 100}
                     precision={1}
                     suffix="%"
@@ -228,10 +231,11 @@ export default function ProblemTrendsPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <Title level={5} className="mb-2">
-                    趋势方向
+
+                    Trend direction
                   </Title>
                   <Space>
-                    <Text type="secondary">时间范围内的问题趋势：</Text>
+                    <Text type="secondary">Problem trends within time range:</Text>
                     <Tag
                       icon={trendConfig.icon}
                       color={trendConfig.color}
@@ -242,10 +246,10 @@ export default function ProblemTrendsPage() {
                   </Space>
                 </div>
                 <div className="text-right">
-                  <Text type="secondary">平均解决时间</Text>
+                  <Text type="secondary">Avg Resolution Time</Text>
                   <Title level={3} className="mt-1 mb-0">
                     {trendData.avgResolutionTimeHours?.toFixed(1) || 0}{' '}
-                    <span className="text-sm">小时</span>
+                    <span className="text-sm">hours</span>
                   </Title>
                 </div>
               </div>
@@ -254,7 +258,7 @@ export default function ProblemTrendsPage() {
             {/* 分类分布 */}
             <Row gutter={[16, 16]}>
               <Col xs={24} lg={12}>
-                <Card title="分类分布" className="shadow-sm rounded-lg">
+                <Card title="Classification distribution" className="shadow-sm rounded-lg">
                   {trendData.categoryBreakdown &&
                   Object.keys(trendData.categoryBreakdown).length > 0 ? (
                     <div className="space-y-3">
@@ -284,12 +288,12 @@ export default function ProblemTrendsPage() {
                         })}
                     </div>
                   ) : (
-                    <Empty description="暂无分类数据" />
+                    <Empty description="No classified data yet" />
                   )}
                 </Card>
               </Col>
               <Col xs={24} lg={12}>
-                <Card title="优先级分布" className="shadow-sm rounded-lg">
+                <Card title="Priority distribution" className="shadow-sm rounded-lg">
                   {trendData.priorityBreakdown &&
                   Object.keys(trendData.priorityBreakdown).length > 0 ? (
                     <div className="space-y-3">
@@ -312,12 +316,12 @@ export default function ProblemTrendsPage() {
                               <div className="flex justify-between mb-1">
                                 <Tag color={colorMap[priority] || 'default'}>
                                   {priority === 'critical'
-                                    ? '紧急'
+                                    ? 'Urgent'
                                     : priority === 'high'
-                                      ? '高'
+                                      ? 'High'
                                       : priority === 'medium'
-                                        ? '中'
-                                        : '低'}
+                                        ? 'Medium'
+                                        : 'Low'}
                                 </Tag>
                                 <Text strong>{count}</Text>
                               </div>
@@ -332,14 +336,14 @@ export default function ProblemTrendsPage() {
                         })}
                     </div>
                   ) : (
-                    <Empty description="暂无优先级数据" />
+                    <Empty description="No priority data yet" />
                   )}
                 </Card>
               </Col>
             </Row>
 
             {/* 月度趋势 */}
-            <Card title="月度趋势" className="shadow-sm rounded-lg">
+            <Card title="Monthly Trend" className="shadow-sm rounded-lg">
               {trendData.monthlyTrend && trendData.monthlyTrend.length > 0 ? (
                 <Table
                   columns={monthlyTrendColumns}
@@ -351,13 +355,13 @@ export default function ProblemTrendsPage() {
                   size="small"
                 />
               ) : (
-                <Empty description="暂无月度趋势数据" />
+                <Empty description="No monthly trend data yet" />
               )}
             </Card>
           </>
         ) : (
           <Card className="shadow-sm rounded-lg">
-            <Empty description="暂无趋势数据，请选择时间范围后查询" />
+            <Empty description="There is no trend data yet, please select a time range and query" />
           </Card>
         )}
       </div>

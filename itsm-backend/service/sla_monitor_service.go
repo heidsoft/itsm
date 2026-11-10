@@ -67,7 +67,7 @@ func (s *SLAMonitorService) SetSLAStore(store *sla.Store) {
 // 依赖缺失属于运维配置不可用，按 fail closed 返回可映射 503 的业务错误，不得伪装成空检查结果。
 func (s *SLAMonitorService) requireSLAStore() error {
 	if s.slaStore == nil {
-		return common.NewBusinessError(common.ServiceUnavailableCode, "SLA 状态存储未注入，无法执行 SLA 检查", "")
+		return common.NewBusinessError(common.ServiceUnavailableCode, "SLA state store not injected, unable to perform SLA check", "")
 	}
 	return nil
 }
@@ -1093,9 +1093,9 @@ func (s *SLAMonitorService) StartSLAWatcher(ctx context.Context, interval time.D
 // 不存在是业务拒绝（404），其余为内部错误交由 handler 兜底。
 func slaLookupError(entity string, err error) error {
 	if ent.IsNotFound(err) {
-		return common.NewBusinessError(common.NotFoundCode, entity+"不存在", "")
+		return common.NewBusinessError(common.NotFoundCode, entity+"does not exist", "")
 	}
-	return fmt.Errorf("查询%s失败: %w", entity, err)
+	return fmt.Errorf("Query %s failed: %w", entity, err)
 }
 
 // PauseSLA 暂停工单/事件的SLA计时
@@ -1118,10 +1118,10 @@ func (s *SLAMonitorService) PauseSLA(ctx context.Context, tenantID int, entityTy
 			).
 			Only(ctx)
 		if err != nil || slState == nil {
-			return common.NewBusinessError(common.ConflictCode, "工单SLA状态不存在", "")
+			return common.NewBusinessError(common.ConflictCode, "The SLA status of the work order does not exist", "")
 		}
 		if slState.Status == "paused" {
-			return common.NewBusinessError(common.ConflictCode, "工单SLA已处于暂停状态", "")
+			return common.NewBusinessError(common.ConflictCode, "The ticket SLA has been suspended", "")
 		}
 		err = s.client.Ticket.UpdateOneID(entityID).
 			SetSLAStatus("paused").
@@ -1154,10 +1154,10 @@ func (s *SLAMonitorService) PauseSLA(ctx context.Context, tenantID int, entityTy
 			).
 			Only(ctx)
 		if err != nil || slState == nil {
-			return common.NewBusinessError(common.ConflictCode, "事件SLA状态不存在", "")
+			return common.NewBusinessError(common.ConflictCode, "Event SLA status does not exist", "")
 		}
 		if slState.Status == "paused" {
-			return common.NewBusinessError(common.ConflictCode, "事件SLA已处于暂停状态", "")
+			return common.NewBusinessError(common.ConflictCode, "Event SLA has been suspended", "")
 		}
 		err = s.client.Incident.UpdateOneID(entityID).
 			SetSLAStatus("paused").
@@ -1176,7 +1176,7 @@ func (s *SLAMonitorService) PauseSLA(ctx context.Context, tenantID int, entityTy
 		return nil
 
 	default:
-		return fmt.Errorf("不支持的实体类型: %s", entityType)
+		return fmt.Errorf("Unsupported entity type: %s", entityType)
 	}
 }
 
@@ -1242,10 +1242,10 @@ func (s *SLAMonitorService) ResumeSLA(ctx context.Context, tenantID int, entityT
 			).
 			Only(ctx)
 		if err != nil || slState == nil {
-			return common.NewBusinessError(common.ConflictCode, "工单SLA状态不存在", "")
+			return common.NewBusinessError(common.ConflictCode, "The SLA status of the work order does not exist", "")
 		}
 		if slState.Status != "paused" {
-			return common.NewBusinessError(common.ConflictCode, "工单SLA未处于暂停状态", "")
+			return common.NewBusinessError(common.ConflictCode, "Ticket SLA is not in suspended state", "")
 		}
 
 		// 计算暂停时长，延长deadline
@@ -1296,10 +1296,10 @@ func (s *SLAMonitorService) ResumeSLA(ctx context.Context, tenantID int, entityT
 			).
 			Only(ctx)
 		if err != nil || slState == nil {
-			return common.NewBusinessError(common.ConflictCode, "事件SLA状态不存在", "")
+			return common.NewBusinessError(common.ConflictCode, "Event SLA status does not exist", "")
 		}
 		if slState.Status != "paused" {
-			return common.NewBusinessError(common.ConflictCode, "事件SLA未处于暂停状态", "")
+			return common.NewBusinessError(common.ConflictCode, "Event SLA is not on hold", "")
 		}
 
 		updater := s.client.Incident.UpdateOneID(entityID).
@@ -1335,7 +1335,7 @@ func (s *SLAMonitorService) ResumeSLA(ctx context.Context, tenantID int, entityT
 		return nil
 
 	default:
-		return fmt.Errorf("不支持的实体类型: %s", entityType)
+		return fmt.Errorf("Unsupported entity type: %s", entityType)
 	}
 }
 

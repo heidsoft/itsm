@@ -26,5 +26,5 @@ export const displayUserName = (
 ): string => {
   const trimmed = name?.trim();
   if (trimmed) return trimmed;
-  return userId ? `用户 #${userId}` : emptyLabel;
+  return userId ? `User #${userId}` : emptyLabel;
 };

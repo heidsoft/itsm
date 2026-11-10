@@ -23,7 +23,7 @@ func validateProviderInputs(issuer, authzURL, tokenURL, userinfoURL, jwksURL, re
 		defaultRole = "end_user"
 	}
 	if !allowedJITRoles[defaultRole] {
-		return fmt.Errorf("默认角色仅支持 end_user/agent/technician，收到的值: %q", defaultRole)
+		return fmt.Errorf("Default role only supports end_user/agent/technician, received value: %q", defaultRole)
 	}
 	if err := validateHTTPURL("issuer", issuer, false); err != nil {
 		return err
@@ -47,11 +47,11 @@ func validateProviderInputs(issuer, authzURL, tokenURL, userinfoURL, jwksURL, re
 func validateHTTPURL(name, raw string, requireHTTPS bool) error {
 	trimmed := strings.TrimSpace(raw)
 	if trimmed == "" {
-		return fmt.Errorf("%s 不能为空", name)
+		return fmt.Errorf("%s cannot be empty", name)
 	}
 	parsed, err := url.Parse(trimmed)
 	if err != nil {
-		return fmt.Errorf("%s 不是合法 URL: %w", name, err)
+		return fmt.Errorf("%s is not a valid URL: %w", name, err)
 	}
 	switch parsed.Scheme {
 	case "https":
@@ -64,9 +64,9 @@ func validateHTTPURL(name, raw string, requireHTTPS bool) error {
 		if host == "localhost" || host == "127.0.0.1" || host == "::1" {
 			return nil
 		}
-		return fmt.Errorf("%s 必须使用 https（localhost 开发除外）", name)
+		return fmt.Errorf("%s must use https (except localhost development)", name)
 	default:
-		return fmt.Errorf("%s 只支持 http/https", name)
+		return fmt.Errorf("%s only supports http/https", name)
 	}
 }
 
@@ -81,7 +81,7 @@ func (s *SSOService) CreateProvider(ctx context.Context, tenantID int, req *dto.
 		protocol = "oidc"
 	}
 	if protocol != "oidc" {
-		return nil, fmt.Errorf("仅支持 oidc 协议，收到的值: %q", req.Protocol)
+		return nil, fmt.Errorf("Only oidc protocol supported, value received: %q", req.Protocol)
 	}
 	defaultRole := strings.TrimSpace(req.DefaultRole)
 	if defaultRole == "" {
@@ -92,10 +92,10 @@ func (s *SSOService) CreateProvider(ctx context.Context, tenantID int, req *dto.
 	}
 	exists, err := s.client.SSOProvider.Query().Where(ssoprovider.TenantIDEQ(tenantID), ssoprovider.CodeEQ(req.Code)).Exist(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("检查提供方编码失败")
+		return nil, fmt.Errorf("Failed to check provider encoding")
 	}
 	if exists {
-		return nil, fmt.Errorf("提供方编码 %s 已存在", req.Code)
+		return nil, fmt.Errorf("Provider code %s already exists", req.Code)
 	}
 
 	encryptedSecret, err := s.encryptSecret(req.ClientSecret)
@@ -136,9 +136,9 @@ func (s *SSOService) CreateProvider(ctx context.Context, tenantID int, req *dto.
 		Save(ctx)
 	if err != nil {
 		if ent.IsConstraintError(err) {
-			return nil, fmt.Errorf("提供方编码 %s 已存在", req.Code)
+			return nil, fmt.Errorf("Provider code %s already exists", req.Code)
 		}
-		return nil, fmt.Errorf("创建提供方失败")
+		return nil, fmt.Errorf("Failed to create provider")
 	}
 	return toProviderResponse(provider), nil
 }
@@ -150,9 +150,9 @@ func (s *SSOService) GetProvider(ctx context.Context, tenantID, providerID int) 
 		Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, fmt.Errorf("提供方不存在")
+			return nil, fmt.Errorf("Provider does not exist")
 		}
-		return nil, fmt.Errorf("查询提供方失败")
+		return nil, fmt.Errorf("Failed to query provider")
 	}
 	return toProviderResponse(provider), nil
 }
@@ -168,11 +168,11 @@ func (s *SSOService) ListProviders(ctx context.Context, tenantID, page, pageSize
 	query := s.client.SSOProvider.Query().Where(ssoprovider.TenantIDEQ(tenantID))
 	total, err := query.Count(ctx)
 	if err != nil {
-		return nil, 0, fmt.Errorf("查询提供方失败")
+		return nil, 0, fmt.Errorf("Failed to query provider")
 	}
 	providers, err := query.Order(ent.Desc(ssoprovider.FieldID)).Offset((page - 1) * pageSize).Limit(pageSize).All(ctx)
 	if err != nil {
-		return nil, 0, fmt.Errorf("查询提供方失败")
+		return nil, 0, fmt.Errorf("Failed to query provider")
 	}
 	items := make([]*dto.SSOProviderResponse, 0, len(providers))
 	for _, provider := range providers {
@@ -189,9 +189,9 @@ func (s *SSOService) UpdateProvider(ctx context.Context, tenantID, providerID in
 		Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, fmt.Errorf("提供方不存在")
+			return nil, fmt.Errorf("Provider does not exist")
 		}
-		return nil, fmt.Errorf("查询提供方失败")
+		return nil, fmt.Errorf("Failed to query provider")
 	}
 
 	update := s.client.SSOProvider.UpdateOneID(provider.ID)
@@ -203,7 +203,7 @@ func (s *SSOService) UpdateProvider(ctx context.Context, tenantID, providerID in
 	}
 	if req.ClientSecret != nil {
 		if strings.TrimSpace(*req.ClientSecret) == "" {
-			return nil, fmt.Errorf("client_secret 不能清空（不支持公开客户端时请删除提供方后重建）")
+			return nil, fmt.Errorf("client_secret cannot be cleared (if public clients are not supported, please delete the provider and rebuild)")
 		}
 		encrypted, encErr := s.encryptSecret(*req.ClientSecret)
 		if encErr != nil {
@@ -260,7 +260,7 @@ func (s *SSOService) UpdateProvider(ctx context.Context, tenantID, providerID in
 	if req.DefaultRole != nil {
 		role := strings.TrimSpace(*req.DefaultRole)
 		if !allowedJITRoles[role] {
-			return nil, fmt.Errorf("默认角色仅支持 end_user/agent/technician，收到的值: %q", role)
+			return nil, fmt.Errorf("Default role only supports end_user/agent/technician, received value: %q", role)
 		}
 		update = update.SetDefaultRole(role)
 	}
@@ -277,7 +277,7 @@ func (s *SSOService) UpdateProvider(ctx context.Context, tenantID, providerID in
 
 	updated, err := update.Save(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("更新提供方失败")
+		return nil, fmt.Errorf("Failed to update provider")
 	}
 	return toProviderResponse(updated), nil
 }
@@ -290,20 +290,20 @@ func (s *SSOService) DeleteProvider(ctx context.Context, tenantID, providerID in
 		Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return fmt.Errorf("提供方不存在")
+			return fmt.Errorf("Provider does not exist")
 		}
-		return fmt.Errorf("查询提供方失败")
+		return fmt.Errorf("Failed to query provider")
 	}
 	tx, err := s.client.Tx(ctx)
 	if err != nil {
-		return fmt.Errorf("启动事务失败")
+		return fmt.Errorf("Failed to start transaction")
 	}
 	defer func() { _ = tx.Rollback() }()
 	if _, err := tx.SSOIdentity.Delete().Where(ssoidentity.ProviderIDEQ(provider.ID)).Exec(ctx); err != nil {
-		return fmt.Errorf("清理身份绑定失败")
+		return fmt.Errorf("Failed to clean up identity binding")
 	}
 	if err := tx.SSOProvider.DeleteOneID(provider.ID).Exec(ctx); err != nil {
-		return fmt.Errorf("删除提供方失败")
+		return fmt.Errorf("Failed to delete provider")
 	}
 	return tx.Commit()
 }
@@ -313,11 +313,11 @@ func (s *SSOService) encryptSecret(plain string) (string, error) {
 		return "", nil
 	}
 	if s.encryption == nil {
-		return "", fmt.Errorf("加密服务未配置，无法保存 client_secret")
+		return "", fmt.Errorf("Encryption service is not configured and client_secret cannot be saved")
 	}
 	encrypted, err := s.encryption.Encrypt(plain)
 	if err != nil {
-		return "", fmt.Errorf("加密 client_secret 失败")
+		return "", fmt.Errorf("Encryption client_secret failed")
 	}
 	return encrypted, nil
 }

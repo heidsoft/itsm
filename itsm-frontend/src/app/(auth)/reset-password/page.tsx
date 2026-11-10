@@ -47,7 +47,7 @@ function ResetPasswordContent() {
           setTokenValid(false);
         }
       } catch (err) {
-        logger.error('验证令牌失败:', err);
+        logger.error('Failed to verify token:', err);
         setTokenValid(false);
       }
     };
@@ -86,7 +86,7 @@ function ResetPasswordContent() {
         }, 3000);
       }
     } catch (err) {
-      logger.error('重置密码失败:', err);
+      logger.error('Password reset failed:', err);
       message.error(err instanceof Error ? err.message : t('auth.resetPassword.resetFailed'));
     } finally {
       setLoading(false);
@@ -108,13 +108,16 @@ function ResetPasswordContent() {
                 </div>
 
                 <Title level={3} className="!mb-2 !text-gray-900 !text-xl">
-                  链接已失效
+
+                  Link has expired
                 </Title>
 
                 <Text className="!text-gray-500 !text-sm block !mb-6">
-                  密码重置链接已过期或无效
+
+                  Password reset link has expired or is invalid
                   <br />
-                  请重新发起密码重置请求
+
+                  Please re-initiate password reset request
                 </Text>
 
                 <Button
@@ -123,12 +126,14 @@ function ResetPasswordContent() {
                   className="w-full h-10 rounded-md text-sm font-semibold"
                   onClick={() => router.push('/forgot-password')}
                 >
-                  重新发送请求
+
+                  Resend request
                 </Button>
 
                 <div className="text-center mt-4">
                   <Text className="text-gray-400 text-xs">
-                    记起密码了？{' '}
+
+                    Remember the password?{' '}
                     <a href="/login" className="text-blue-600 hover:underline">
                       {t('auth.register.loginNow')}
                     </a>
@@ -161,9 +166,11 @@ function ResetPasswordContent() {
                 </Title>
 
                 <Text className="!text-gray-500 !text-sm block !mb-6">
-                  您的密码已成功重置
+
+                  Your password has been successfully reset
                   <br />
-                  正在跳转到登录页...
+
+                  Redirecting to login page...
                 </Text>
 
                 <Button
@@ -185,7 +192,7 @@ function ResetPasswordContent() {
   const password = form.getFieldValue('password');
   const strength = getPasswordStrength(password || '');
   const strengthColors = ['#ff4d4f', '#ff4d4f', '#faad14', '#faad14', '#52c41a', '#52c41a'];
-  const strengthLabels = ['非常弱', '弱', '一般', '中等', '强', '非常强'];
+  const strengthLabels = ['Very weak', 'weak', 'Average', 'Medium', 'Strong', 'Very strong'];
 
   return (
     <ConfigProvider theme={antdTheme}>
@@ -197,7 +204,7 @@ function ResetPasswordContent() {
                 {t('auth.resetPassword.title')}
               </Title>
               <Text className="!text-gray-500 !text-sm">{t('auth.resetPassword.subtitle')}</Text>
-              {email && <Text className="!text-gray-400 !text-xs block !mt-1">账户：{email}</Text>}
+              {email && <Text className="!text-gray-400 !text-xs block !mt-1">Account:{email}</Text>}
             </div>
 
             <Form form={form} layout="vertical" size="middle" onFinish={handleReset}>
@@ -233,7 +240,7 @@ function ResetPasswordContent() {
                       className="text-xs"
                       style={{ color: strengthColors[strength - 1] || '#ff4d4f' }}
                     >
-                      {strengthLabels[strength - 1] || '非常弱'}
+                      {strengthLabels[strength - 1] || 'Very weak'}
                     </Text>
                   </div>
                 </div>
@@ -265,11 +272,11 @@ function ResetPasswordContent() {
 
               <Form.Item className="mb-2">
                 <div className="bg-gray-50 rounded-lg p-3">
-                  <Text className="!text-gray-600 !text-xs block !mb-2">密码要求：</Text>
+                  <Text className="!text-gray-600 !text-xs block !mb-2">Password requirement:</Text>
                   <ul className="!text-gray-500 !text-xs list-disc list-inside space-y-0.5">
-                    <li>至少 8 个字符</li>
-                    <li>包含大小写字母</li>
-                    <li>包含数字或特殊字符</li>
+                    <li>at least 8 characters</li>
+                    <li>Contains uppercase and lowercase letters</li>
+                    <li>Contains numbers or special characters</li>
                   </ul>
                 </div>
               </Form.Item>
@@ -292,7 +299,8 @@ function ResetPasswordContent() {
 
             <div className="text-center">
               <Text className="text-gray-400 text-xs">
-                记起密码了？{' '}
+
+                Remember the password?{' '}
                 <a href="/login" className="text-blue-600 hover:underline">
                   {t('auth.register.loginNow')}
                 </a>
@@ -317,7 +325,8 @@ export default function ResetPasswordPage() {
             >
               <div className="text-center">
                 <Title level={3} className="!mb-2 !text-gray-900 !text-xl">
-                  正在加载...
+
+                  Loading...
                 </Title>
               </div>
             </Card>

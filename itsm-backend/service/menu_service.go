@@ -43,10 +43,10 @@ func (s *MenuService) CreateMenu(ctx context.Context, req *dto.CreateMenuRequest
 			Where(menu.ID(*req.ParentID), menu.TenantID(tenantID)).
 			Exist(ctx)
 		if err != nil {
-			return nil, fmt.Errorf("查询父菜单失败: %w", err)
+			return nil, fmt.Errorf("Failed to query parent menu: %w", err)
 		}
 		if !exists {
-			return nil, common.NewValidationError("上级菜单不存在或不属于当前租户", nil)
+			return nil, common.NewValidationError("The upper-level menu does not exist or does not belong to the current tenant", nil)
 		}
 	}
 
@@ -69,10 +69,10 @@ func (s *MenuService) CreateMenu(ctx context.Context, req *dto.CreateMenuRequest
 		Where(menu.PathEQ(req.Path), menu.TenantIDEQ(tenantID)).
 		Exist(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("查询菜单失败: %w", err)
+		return nil, fmt.Errorf("Failed to query menu: %w", err)
 	}
 	if exists {
-		return nil, common.NewBusinessError(common.ConflictCode, "同级路径菜单已存在", req.Path)
+		return nil, common.NewBusinessError(common.ConflictCode, "The same level path menu already exists", req.Path)
 	}
 
 	// 单次 INSERT 写入全部字段；权限码写失败必须向上抛错，否则菜单 PermissionCode 落空后
@@ -99,9 +99,9 @@ func (s *MenuService) CreateMenu(ctx context.Context, req *dto.CreateMenuRequest
 	menuEntity, err := create.Save(ctx)
 	if err != nil {
 		if ent.IsConstraintError(err) {
-			return nil, common.NewBusinessError(common.ConflictCode, "同级路径菜单已存在", req.Path)
+			return nil, common.NewBusinessError(common.ConflictCode, "The same level path menu already exists", req.Path)
 		}
-		return nil, fmt.Errorf("创建菜单失败: %w", err)
+		return nil, fmt.Errorf("Failed to create menu: %w", err)
 	}
 
 	return s.toMenuDTO(menuEntity), nil
@@ -113,7 +113,7 @@ func (s *MenuService) GetMenu(ctx context.Context, id int, tenantID int) (*dto.M
 		Where(menu.ID(id), menu.TenantID(tenantID)).
 		Only(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("菜单不存在: %w", err)
+		return nil, fmt.Errorf("Menu does not exist: %w", err)
 	}
 
 	return s.toMenuDTO(menuEntity), nil
@@ -126,7 +126,7 @@ func (s *MenuService) ListMenus(ctx context.Context, tenantID int) ([]*dto.MenuD
 		Order(ent.Asc(menu.FieldSortOrder)).
 		All(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("获取菜单列表失败: %w", err)
+		return nil, fmt.Errorf("Failed to get menu list: %w", err)
 	}
 
 	dtos := make([]*dto.MenuDTO, 0, len(menus))
@@ -142,12 +142,12 @@ func (s *MenuService) ListMenus(ctx context.Context, tenantID int) ([]*dto.MenuD
 // 菜单量级有限，一次读回全租户再做遍历，避免递归查库。
 func (s *MenuService) assertParentAssignable(ctx context.Context, menuID int, parentID int, tenantID int) error {
 	if parentID == menuID {
-		return common.NewValidationError("上级菜单不能是当前菜单自身", nil)
+		return common.NewValidationError("The upper-level menu cannot be the current menu itself", nil)
 	}
 
 	menus, err := s.client.Menu.Query().Where(menu.TenantID(tenantID)).All(ctx)
 	if err != nil {
-		return fmt.Errorf("查询菜单失败: %w", err)
+		return fmt.Errorf("Failed to query menu: %w", err)
 	}
 
 	children := make(map[int][]int, len(menus))
@@ -161,7 +161,7 @@ func (s *MenuService) assertParentAssignable(ctx context.Context, menuID int, pa
 		}
 	}
 	if !parentFound {
-		return common.NewValidationError("上级菜单不存在或不属于当前租户", nil)
+		return common.NewValidationError("The upper-level menu does not exist or does not belong to the current tenant", nil)
 	}
 
 	visited := map[int]bool{menuID: true}
@@ -171,7 +171,7 @@ func (s *MenuService) assertParentAssignable(ctx context.Context, menuID int, pa
 		stack = stack[:len(stack)-1]
 		for _, childID := range children[current] {
 			if childID == parentID {
-				return common.NewValidationError("上级菜单不能是当前菜单的子菜单", nil)
+				return common.NewValidationError("The upper-level menu cannot be a submenu of the current menu", nil)
 			}
 			if !visited[childID] {
 				visited[childID] = true
@@ -190,7 +190,7 @@ func (s *MenuService) UpdateMenu(ctx context.Context, id int, req *dto.UpdateMen
 		Where(menu.ID(id), menu.TenantID(tenantID)).
 		Only(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("菜单不存在: %w", err)
+		return nil, fmt.Errorf("Menu does not exist: %w", err)
 	}
 
 	update := menuEntity.Update()
@@ -234,7 +234,7 @@ func (s *MenuService) UpdateMenu(ctx context.Context, id int, req *dto.UpdateMen
 
 	updated, err := update.Save(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("更新菜单失败: %w", err)
+		return nil, fmt.Errorf("Failed to update menu: %w", err)
 	}
 
 	return s.toMenuDTO(updated), nil
@@ -250,7 +250,7 @@ func (s *MenuService) DeleteMenu(ctx context.Context, id int, tenantID int) erro
 		Where(menu.ID(id), menu.TenantID(tenantID)).
 		Only(ctx)
 	if err != nil {
-		return fmt.Errorf("菜单不存在: %w", err)
+		return fmt.Errorf("Menu does not exist: %w", err)
 	}
 
 	// 检查是否有子菜单
@@ -258,17 +258,17 @@ func (s *MenuService) DeleteMenu(ctx context.Context, id int, tenantID int) erro
 		Where(menu.ParentID(id), menu.TenantID(tenantID)).
 		Count(ctx)
 	if err != nil {
-		return fmt.Errorf("检查子菜单失败: %w", err)
+		return fmt.Errorf("Failed to check submenu: %w", err)
 	}
 	if children > 0 {
-		return common.NewBusinessError(common.ConflictCode, "请先删除子菜单", fmt.Sprintf("menu_id=%d children=%d", id, children))
+		return common.NewBusinessError(common.ConflictCode, "Please delete the submenu first", fmt.Sprintf("menu_id=%d children=%d", id, children))
 	}
 
 	_, err = s.client.Menu.Delete().
 		Where(menu.ID(id), menu.TenantID(tenantID)).
 		Exec(ctx)
 	if err != nil {
-		return fmt.Errorf("删除菜单失败: %w", err)
+		return fmt.Errorf("Failed to delete menu: %w", err)
 	}
 
 	return nil
@@ -287,7 +287,7 @@ func (s *MenuService) GetUserMenus(ctx context.Context, userID int, tenantID int
 		WithTenant().
 		Only(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("用户不存在: %w", err)
+		return nil, fmt.Errorf("User does not exist: %w", err)
 	}
 
 	// 获取用户的权限列表
@@ -304,7 +304,7 @@ func (s *MenuService) GetUserMenus(ctx context.Context, userID int, tenantID int
 		Order(ent.Asc(menu.FieldSortOrder)).
 		All(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("获取菜单失败: %w", err)
+		return nil, fmt.Errorf("Failed to get menu: %w", err)
 	}
 
 	// 根据权限过滤菜单
@@ -797,7 +797,7 @@ func (s *MenuService) ExportMenus(ctx context.Context, tenantID int) ([]dto.Menu
 		Order(ent.Asc(menu.FieldSortOrder)).
 		All(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("导出菜单失败: %w", err)
+		return nil, fmt.Errorf("Failed to export menu: %w", err)
 	}
 
 	idToPath := make(map[int]string, len(menus))
@@ -834,7 +834,7 @@ func (s *MenuService) InitMenusFromBaseline(ctx context.Context, tenantID int) (
 		Where(menu.TenantID(tenantID)).
 		All(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("查询现有菜单失败: %w", err)
+		return nil, fmt.Errorf("Failed to query existing menu: %w", err)
 	}
 
 	pathSet := make(map[string]*ent.Menu, len(existing))
@@ -855,7 +855,7 @@ func (s *MenuService) InitMenusFromBaseline(ctx context.Context, tenantID int) (
 		Where(menu.TenantID(tenantID)).
 		All(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("刷新菜单失败: %w", err)
+		return nil, fmt.Errorf("Failed to refresh menu: %w", err)
 	}
 	pathSet = make(map[string]*ent.Menu, len(refreshed))
 	for _, m := range refreshed {

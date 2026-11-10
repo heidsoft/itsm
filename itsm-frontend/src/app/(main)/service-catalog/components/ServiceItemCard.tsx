@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { serviceCategoryLabel } from '@/constants/service-catalog';
 import { useRouter } from 'next/navigation';
 import {
   Card,
@@ -32,6 +33,8 @@ import { usePermissions } from '@/lib/hooks/use-permissions';
 
 const { Title, Text } = Typography;
 
+const priorityLabels: Readonly<Record<string, string>> = { 高: 'High', 中: 'Medium', 低: 'Low' };
+
 const categoryIcons: Record<string, typeof HardDrive> = {
   云计算: HardDrive,
   支持: UserCog,
@@ -54,6 +57,9 @@ export const ServiceItemCard: React.FC<ServiceItemCardProps> = ({ catalog, onDel
   const { hasPermission } = usePermissions();
   const canManageCatalog = hasPermission('service_catalog', 'write');
   const [deleting, setDeleting] = useState(false);
+  const priorityLabel = catalog.priority && Object.hasOwn(priorityLabels, catalog.priority)
+    ? priorityLabels[catalog.priority]
+    : catalog.priority || '—';
   const categoryKey = String(catalog.category);
   const IconComponent = categoryIcons[categoryKey] || HardDrive;
 
@@ -95,8 +101,8 @@ export const ServiceItemCard: React.FC<ServiceItemCardProps> = ({ catalog, onDel
 
   const confirmDelete = () => {
     modal.confirm({
-      title: `删除「${catalog.name}」？`,
-      content: '删除后该目录转为「已停用」，门户不再展示，已有申请记录保留。',
+      title: `Delete "${catalog.name}」？`,
+      content: 'After deletion, the directory will be converted to "deactivated", the portal will no longer be displayed, and existing application records will be retained.',
       okText: t('common.delete'),
       okButtonProps: { danger: true, loading: deleting },
       cancelText: t('common.cancel'),
@@ -149,11 +155,11 @@ export const ServiceItemCard: React.FC<ServiceItemCardProps> = ({ catalog, onDel
               {catalog.name}
             </Title>
             <Tag color={getPriorityColor(catalog.priority || '')} className="!m-0">
-              {catalog.priority || '—'}
+              {priorityLabel}
             </Tag>
           </div>
           <Text type="secondary" className="!text-xs mt-1 block">
-            {catalog.category}
+            {serviceCategoryLabel(catalog.category)}
           </Text>
         </div>
       </div>
@@ -166,7 +172,8 @@ export const ServiceItemCard: React.FC<ServiceItemCardProps> = ({ catalog, onDel
         <div className="flex items-center">
           <Clock size={14} className="mr-1 text-gray-500" />
           <Text type="secondary" className="!text-xs">
-            交付周期：{catalog.deliveryDays != null ? `${catalog.deliveryDays} 天` : '待确认'}
+
+            Delivery time:{catalog.deliveryDays != null ? `${catalog.deliveryDays} days` : 'Pending'}
           </Text>
         </div>
         <div>
@@ -189,7 +196,7 @@ export const ServiceItemCard: React.FC<ServiceItemCardProps> = ({ catalog, onDel
           </Button>
           {canManageCatalog && <Dropdown menu={{ items: actionItems }} trigger={['click']} placement="bottomRight">
             <Button
-              aria-label="更多操作"
+              aria-label="More actions"
               icon={<MoreHorizontal size={16} />}
               onClick={e => e.stopPropagation()}
               loading={deleting}

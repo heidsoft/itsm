@@ -18,16 +18,16 @@ export enum IncidentStatus {
 
 // 状态描述映射
 export const IncidentStatusLabels: Record<IncidentStatus, string> = {
-  [IncidentStatus.NEW]: '新建',
-  [IncidentStatus.ACKNOWLEDGED]: '已确认',
-  [IncidentStatus.ASSIGNED]: '已分配',
-  [IncidentStatus.IN_PROGRESS]: '处理中',
-  [IncidentStatus.TRIAGED]: '已分类',
-  [IncidentStatus.ESCALATED]: '已升级',
-  [IncidentStatus.ON_HOLD]: '已暂停',
-  [IncidentStatus.RESOLVED]: '已解决',
-  [IncidentStatus.CLOSED]: '已关闭',
-  [IncidentStatus.CANCELLED]: '已取消',
+  [IncidentStatus.NEW]: 'Create',
+  [IncidentStatus.ACKNOWLEDGED]: 'Acknowledged',
+  [IncidentStatus.ASSIGNED]: 'Assigned',
+  [IncidentStatus.IN_PROGRESS]: 'In Progress',
+  [IncidentStatus.TRIAGED]: 'Triaged',
+  [IncidentStatus.ESCALATED]: 'Escalated',
+  [IncidentStatus.ON_HOLD]: 'Paused',
+  [IncidentStatus.RESOLVED]: 'Resolved',
+  [IncidentStatus.CLOSED]: 'Closed',
+  [IncidentStatus.CANCELLED]: 'Cancelled',
 };
 
 // 优先级（与后端 ent/schema/incident.go 的 priority 校验取值一致：
@@ -41,10 +41,10 @@ export enum IncidentPriority {
 }
 
 export const IncidentPriorityLabels: Record<IncidentPriority, string> = {
-  [IncidentPriority.LOW]: '低',
-  [IncidentPriority.MEDIUM]: '中',
-  [IncidentPriority.HIGH]: '高',
-  [IncidentPriority.CRITICAL]: '紧急',
+  [IncidentPriority.LOW]: 'Low',
+  [IncidentPriority.MEDIUM]: 'Medium',
+  [IncidentPriority.HIGH]: 'High',
+  [IncidentPriority.CRITICAL]: 'Urgent',
 };
 
 // 严重程度
@@ -56,10 +56,10 @@ export enum IncidentSeverity {
 }
 
 export const IncidentSeverityLabels: Record<IncidentSeverity, string> = {
-  [IncidentSeverity.LOW]: '低',
-  [IncidentSeverity.MEDIUM]: '中',
-  [IncidentSeverity.HIGH]: '高',
-  [IncidentSeverity.CRITICAL]: '严重',
+  [IncidentSeverity.LOW]: 'Low',
+  [IncidentSeverity.MEDIUM]: 'Medium',
+  [IncidentSeverity.HIGH]: 'High',
+  [IncidentSeverity.CRITICAL]: 'Critical',
 };
 
 // status 与 priority 在持久层是无约束/半约束字符串列，词表外的历史取值必须

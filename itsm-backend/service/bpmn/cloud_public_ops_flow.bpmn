@@ -1,58 +1,58 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" id="Definitions_CloudOps" targetNamespace="http://bpmn.io/schema/bpmn" exporter="ITSM Platform" exporterVersion="1.0">
-  <process id="cloud_public_ops" name="公有云资源运维流程" isExecutable="true" camunda:versionTag="1.0">
-    <documentation>公有云（阿里云/腾讯云/AWS）资源申请、变更、释放等运维流程</documentation>
+  <process id="cloud_public_ops" name="Public Cloud Resource Operations Workflow" isExecutable="true" camunda:versionTag="1.0">
+    <documentation>Public cloud resource request, change, and release workflow for Alibaba Cloud, Tencent Cloud, and AWS</documentation>
 
     <!-- 开始事件 -->
-    <startEvent id="StartEvent_1" name="开始">
+    <startEvent id="StartEvent_1" name="Start">
       <outgoing>Flow_1</outgoing>
     </startEvent>
 
     <!-- 用户提交申请 -->
-    <userTask id="Task_Submit" name="提交云资源申请" camunda:assignee="${initiator}">
+    <userTask id="Task_Submit" name="Submit Cloud Resource Request" camunda:assignee="${initiator}">
       <incoming>Flow_1</incoming>
       <outgoing>Flow_2</outgoing>
     </userTask>
 
     <!-- 运维审批 -->
-    <userTask id="Task_OpsApproval" name="运维工程师审批" camunda:assignee="technician">
+    <userTask id="Task_OpsApproval" name="Operations Engineer Approval" camunda:assignee="technician">
       <incoming>Flow_2</incoming>
       <outgoing>Flow_3</outgoing>
     </userTask>
 
     <!-- 经理审批 -->
-    <exclusiveGateway id="Gateway_Manager" name="经理审批" default="Flow_5">
+    <exclusiveGateway id="Gateway_Manager" name="Manager Approval" default="Flow_5">
       <incoming>Flow_3</incoming>
       <outgoing>Flow_4</outgoing>
       <outgoing>Flow_5</outgoing>
     </exclusiveGateway>
 
     <!-- 审批拒绝 -->
-    <userTask id="Task_Reject" name="告知申请人">
+    <userTask id="Task_Reject" name="Notify Requester">
       <incoming>Flow_4</incoming>
       <outgoing>Flow_6</outgoing>
     </userTask>
 
     <!-- 执行资源申请 -->
-    <userTask id="Task_Execute" name="执行云资源操作" camunda:assignee="technician">
+    <userTask id="Task_Execute" name="Execute Cloud Resource Operation" camunda:assignee="technician">
       <incoming>Flow_5</incoming>
       <outgoing>Flow_7</outgoing>
     </userTask>
 
     <!-- 安全审核（高风险操作） -->
-    <userTask id="Task_SecurityReview" name="安全审核">
+    <userTask id="Task_SecurityReview" name="Security Review">
       <incoming>Flow_7</incoming>
       <outgoing>Flow_8</outgoing>
     </userTask>
 
     <!-- 验证结果 -->
-    <userTask id="Task_Verify" name="验证与反馈" camunda:assignee="${initiator}">
+    <userTask id="Task_Verify" name="Verification and Feedback" camunda:assignee="${initiator}">
       <incoming>Flow_8</incoming>
       <outgoing>Flow_9</outgoing>
     </userTask>
 
     <!-- 结束 -->
-    <endEvent id="EndEvent_1" name="结束">
+    <endEvent id="EndEvent_1" name="End">
       <incoming>Flow_6</incoming>
       <incoming>Flow_9</incoming>
     </endEvent>
@@ -61,10 +61,10 @@
     <sequenceFlow id="Flow_1" sourceRef="StartEvent_1" targetRef="Task_Submit"/>
     <sequenceFlow id="Flow_2" sourceRef="Task_Submit" targetRef="Task_OpsApproval"/>
     <sequenceFlow id="Flow_3" sourceRef="Task_OpsApproval" targetRef="Gateway_Manager"/>
-    <sequenceFlow id="Flow_4" sourceRef="Gateway_Manager" name="拒绝" targetRef="Task_Reject">
+    <sequenceFlow id="Flow_4" sourceRef="Gateway_Manager" name="Rejected" targetRef="Task_Reject">
       <conditionExpression xsi:type="tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">${approved == false}</conditionExpression>
     </sequenceFlow>
-    <sequenceFlow id="Flow_5" sourceRef="Gateway_Manager" name="通过" targetRef="Task_Execute"/>
+    <sequenceFlow id="Flow_5" sourceRef="Gateway_Manager" name="Approved" targetRef="Task_Execute"/>
     <sequenceFlow id="Flow_6" sourceRef="Task_Reject" targetRef="EndEvent_1"/>
     <sequenceFlow id="Flow_7" sourceRef="Task_Execute" targetRef="Task_SecurityReview"/>
     <sequenceFlow id="Flow_8" sourceRef="Task_SecurityReview" targetRef="Task_Verify"/>

@@ -71,8 +71,8 @@ func (s *SLATemplateService) initCatalog() {
 	templates := []SLATemplate{
 		{
 			Key:            "incident_p1_critical",
-			Name:           "事件 P1 紧急",
-			Description:    "适用于业务完全中断的紧急事件，要求 15 分钟内响应、4 小时内解决",
+			Name:           "Incident P1 Critical",
+			Description:    "For critical incidents with a complete business outage: respond within 15 minutes and resolve within 4 hours",
 			ServiceType:    "incident",
 			Priority:       "critical",
 			ResponseTime:   15,
@@ -103,8 +103,8 @@ func (s *SLATemplateService) initCatalog() {
 		},
 		{
 			Key:            "incident_p2_high",
-			Name:           "事件 P2 高",
-			Description:    "适用于影响部分用户的高优先级事件，要求 1 小时内响应、8 小时内解决",
+			Name:           "Incident P2 High",
+			Description:    "For high-priority incidents affecting some users: respond within 1 hour and resolve within 8 hours",
 			ServiceType:    "incident",
 			Priority:       "high",
 			ResponseTime:   60,
@@ -131,8 +131,8 @@ func (s *SLATemplateService) initCatalog() {
 		},
 		{
 			Key:            "incident_p3_medium",
-			Name:           "事件 P3 中",
-			Description:    "适用于影响少数用户的中优先级事件，要求 4 小时内响应、24 小时内解决",
+			Name:           "Incident P3 Medium",
+			Description:    "For medium-priority incidents affecting a few users: respond within 4 hours and resolve within 24 hours",
 			ServiceType:    "incident",
 			Priority:       "medium",
 			ResponseTime:   240,
@@ -158,8 +158,8 @@ func (s *SLATemplateService) initCatalog() {
 		},
 		{
 			Key:            "change_normal",
-			Name:           "变更 - 普通",
-			Description:    "适用于风险较低的常规变更，要求 4 小时内审批、24 小时内实施",
+			Name:           "Change - Normal",
+			Description:    "For low-risk routine changes: approve within 4 hours and implement within 24 hours",
 			ServiceType:    "change",
 			Priority:       "medium",
 			ResponseTime:   240,
@@ -185,8 +185,8 @@ func (s *SLATemplateService) initCatalog() {
 		},
 		{
 			Key:            "change_emergency",
-			Name:           "变更 - 紧急",
-			Description:    "适用于紧急修复变更，要求 30 分钟内审批、4 小时内实施",
+			Name:           "Change - Emergency",
+			Description:    "For emergency fixes: approve within 30 minutes and implement within 4 hours",
 			ServiceType:    "change",
 			Priority:       "critical",
 			ResponseTime:   30,
@@ -210,8 +210,8 @@ func (s *SLATemplateService) initCatalog() {
 		},
 		{
 			Key:            "service_request_standard",
-			Name:           "服务请求 - 标准",
-			Description:    "适用于标准服务请求（账号开通、权限申请等），要求 8 小时内响应、72 小时内解决",
+			Name:           "Service Request - Standard",
+			Description:    "For standard service requests such as account creation and access requests: respond within 8 hours and resolve within 72 hours",
 			ServiceType:    "service_request",
 			Priority:       "low",
 			ResponseTime:   480,
@@ -386,7 +386,7 @@ func (s *SLATemplateService) InstallTemplate(ctx context.Context, key string, te
 			SLADefinitionID: state.SLADefinitionID,
 			Created:         false,
 			WasAlreadyExist: true,
-			Message:         "该模板已安装过，已返回现有 SLA 定义",
+			Message:         "This template is already installed; the existing SLA definition was returned",
 		}, nil
 	}
 
@@ -422,6 +422,6 @@ func (s *SLATemplateService) InstallTemplate(ctx context.Context, key string, te
 		SLADefinitionID: created.ID,
 		Created:         true,
 		WasAlreadyExist: false,
-		Message:         fmt.Sprintf("模板 %s 已成功安装", tmpl.Name),
+		Message:         fmt.Sprintf("Template %s installed successfully", tmpl.Name),
 	}, nil
 }

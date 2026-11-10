@@ -42,7 +42,7 @@ func TestAuthMiddlewareRejectsRevokedAccessToken(t *testing.T) {
 	secondRequest.Header.Set("Authorization", "Bearer "+token)
 	router.ServeHTTP(second, secondRequest)
 	require.NotEqual(t, http.StatusNoContent, second.Code)
-	require.Contains(t, second.Body.String(), "token已失效")
+	require.Contains(t, second.Body.String(), "token has expired")
 }
 
 func TestAccessTokenRevocationKeyDoesNotExposeToken(t *testing.T) {

@@ -55,17 +55,17 @@ func (s *TicketRatingService) SubmitRating(
 
 	// 验证工单状态（只有已解决或已关闭的工单才能评分）
 	if ticketEntity.Status != "resolved" && ticketEntity.Status != "closed" {
-		return nil, common.NewBusinessError(common.ParamErrorCode, "只能对已解决或已关闭的工单进行评分", "")
+		return nil, common.NewBusinessError(common.ParamErrorCode, "Only resolved or closed tickets can be scored", "")
 	}
 
 	// 验证评分人是否为申请人
 	if ticketEntity.RequesterID != ratedBy {
-		return nil, common.NewBusinessError(common.ForbiddenCode, "只有申请人可以评分", "")
+		return nil, common.NewBusinessError(common.ForbiddenCode, "Only applicants can score", "")
 	}
 
 	// 检查是否已经评分过
 	if ticketEntity.Rating > 0 {
-		return nil, common.NewBusinessError(common.ConflictCode, "该工单已经评分过了", "")
+		return nil, common.NewBusinessError(common.ConflictCode, "This ticket has already been scored", "")
 	}
 
 	// 更新工单评分。评分字段用条件更新（未评：rating IS NULL 或 =0）完成
@@ -94,7 +94,7 @@ func (s *TicketRatingService) SubmitRating(
 	if affected == 0 {
 		// 并发竞态：读取时未评分，写入时已被第一个请求评过（或工单在此间隙
 		// 被删）→ 不静默覆盖，统一按「已评分」业务冲突处理。
-		return nil, common.NewBusinessError(common.ConflictCode, "该工单已经评分过了", "")
+		return nil, common.NewBusinessError(common.ConflictCode, "This ticket has already been scored", "")
 	}
 
 	// 重读评分后的权威状态（条件更新只返回受影响行数）。

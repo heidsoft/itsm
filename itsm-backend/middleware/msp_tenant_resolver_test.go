@@ -161,9 +161,9 @@ func TestAbortIfTenantError(t *testing.T) {
 		wantCode int
 		wantMsg  string
 	}{
-		{"no tenant context", ErrNoTenantContext, 401, "租户上下文缺失"},
-		{"msp customer denied", ErrMSPCustomerDenied, 403, "MSP员工无权访问该客户租户"},
-		{"unknown error", errors.New("boom"), 500, "租户解析失败"},
+		{"no tenant context", ErrNoTenantContext, 401, "Tenant context missing"},
+		{"msp customer denied", ErrMSPCustomerDenied, 403, "MSP employees do not have access to this customer tenant"},
+		{"unknown error", errors.New("boom"), 500, "Tenant resolution failed"},
 		{"nil error is no-op", nil, 200, ""},
 	}
 	for _, tc := range cases {

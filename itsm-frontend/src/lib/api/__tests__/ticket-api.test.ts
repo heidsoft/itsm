@@ -458,7 +458,7 @@ describe('TicketApi', () => {
     it('should get stats', async () => {
       mockGet.mockResolvedValue({ total: 10, open: 5 });
       const result = await TicketApi.getTicketStats();
-      expect(mockGet).toHaveBeenCalledWith('/api/v1/tickets/stats');
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/tickets/stats', undefined);
       expect(result.total).toBe(10);
     });
   });

@@ -819,12 +819,12 @@ export class IncidentAPI {
   // 模拟阿里云告警事件（仅开发环境可用，避免生产环境写入伪造事件）
   static async simulateAlibabaCloudAlert(): Promise<Incident> {
     if (process.env.NODE_ENV === 'production') {
-      throw new Error('simulate 方法仅允许在开发环境调用，禁止在生产环境创建伪造事件');
+      throw new Error('The simulate method can only be called in the development environment and is prohibited from creating fake events in the production environment.');
     }
     const mockAlert: AlibabaCloudAlertRequest = {
       alertId: `alert_${Date.now()}`,
-      alertName: 'CPU使用率过高告警',
-      alertDescription: '实例 i-bp1abcdefg 的CPU使用率在过去15分钟内持续高于95%',
+      alertName: 'High CPU usage alarm',
+      alertDescription: 'The CPU usage of instance i-bp1abcdefg has been continuously above 95% for the past 15 minutes.',
       alertLevel: 'critical',
       instanceId: 'i-bp1abcdefg',
       region: 'cn-hangzhou',
@@ -835,10 +835,10 @@ export class IncidentAPI {
         diskUsage: 45.1,
       },
       alertData: {
-        alertRule: 'CPU使用率 > 90%',
+        alertRule: 'CPU usage > 90%',
         threshold: 90,
         currentValue: 95.5,
-        duration: '15分钟',
+        duration: '15 minutes',
       },
       detectedAt: new Date().toISOString(),
     };
@@ -849,20 +849,20 @@ export class IncidentAPI {
   // 模拟安全事件（仅开发环境可用）
   static async simulateSecurityEvent(): Promise<Incident> {
     if (process.env.NODE_ENV === 'production') {
-      throw new Error('simulate 方法仅允许在开发环境调用，禁止在生产环境创建伪造事件');
+      throw new Error('The simulate method can only be called in the development environment and is prohibited from creating fake events in the production environment.');
     }
     const mockSecurityEvent: SecurityEventRequest = {
       eventId: `security_${Date.now()}`,
       eventType: 'SSH暴力破解',
-      eventName: '检测到可疑的SSH登录尝试',
+      eventName: 'Suspicious SSH login attempt detected',
       eventDescription:
-        '安全系统检测到来自未知IP地址 (47.98.x.x) 对生产环境服务器的多次SSH登录失败尝试',
+        'The security system detected multiple failed SSH login attempts to the production server from an unknown IP address (47.98.x.x)',
       sourceIp: '47.98.x.x',
       target: 'PROD-BASTION-HOST',
       severity: 'high',
       eventDetails: {
         failedAttempts: 15,
-        timeWindow: '10分钟',
+        timeWindow: '10 minutes',
         targetPort: 22,
         attackType: 'brute_force',
       },
@@ -875,13 +875,13 @@ export class IncidentAPI {
   // 模拟云产品事件（仅开发环境可用）
   static async simulateCloudProductEvent(): Promise<Incident> {
     if (process.env.NODE_ENV === 'production') {
-      throw new Error('simulate 方法仅允许在开发环境调用，禁止在生产环境创建伪造事件');
+      throw new Error('The simulate method can only be called in the development environment and is prohibited from creating fake events in the production environment.');
     }
     const mockCloudEvent: CloudProductEventRequest = {
       eventId: `cloud_${Date.now()}`,
       eventType: 'RDS主备同步延迟',
-      eventName: '数据库主备同步延迟告警',
-      eventDescription: '监控系统告警，生产数据库（RDS）主备同步延迟超过阈值（30秒）',
+      eventName: 'Database master and backup synchronization delay alarm',
+      eventDescription: 'Monitoring system alarm, production database (RDS) master-slave synchronization delay exceeds the threshold (30 seconds)',
       product: 'rds',
       instanceId: 'rm-bp1abcdefg',
       region: 'cn-hangzhou',

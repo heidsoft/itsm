@@ -64,13 +64,13 @@ func (s *TicketWorkflowService) AcceptTicket(ctx context.Context, req *dto.Accep
 	}
 
 	if tk.Status != "new" && tk.Status != "open" {
-		return common.NewBusinessError(common.ConflictCode, "工单当前状态不允许接单", fmt.Sprintf("当前状态 '%s'", tk.Status))
+		return common.NewBusinessError(common.ConflictCode, "The current status of the work order does not allow receiving orders", fmt.Sprintf("Current status '%s'", tk.Status))
 	}
 
 	// 开启事务，保证原子性
 	tx, err := s.client.Tx(ctx)
 	if err != nil {
-		return fmt.Errorf("开启事务失败: %w", err)
+		return fmt.Errorf("Failed to open transaction: %w", err)
 	}
 	var txErr error
 	defer func() {
@@ -107,13 +107,13 @@ func (s *TicketWorkflowService) AcceptTicket(ctx context.Context, req *dto.Accep
 		CreatedAt:  time.Now(),
 	}, tenantID)
 	if err != nil {
-		txErr = fmt.Errorf("记录流转记录失败: %w", err)
+		txErr = fmt.Errorf("Record transfer record failed: %w", err)
 		return txErr
 	}
 
 	txErr = tx.Commit()
 	if txErr != nil {
-		return fmt.Errorf("提交接单事务失败: %w", txErr)
+		return fmt.Errorf("Failed to submit order transaction: %w", txErr)
 	}
 	return txErr
 }
@@ -135,13 +135,13 @@ func (s *TicketWorkflowService) RejectTicket(ctx context.Context, req *dto.Rejec
 
 	// 驳回目标状态必须通过状态机白名单校验（客户端显式传入时禁止任意跳转）
 	if !common.IsValidTicketStatusTransition(tk.Status, returnToStatus) {
-		return common.NewBusinessError(common.ConflictCode, "工单当前状态不允许驳回", fmt.Sprintf("from '%s' to '%s'", tk.Status, returnToStatus))
+		return common.NewBusinessError(common.ConflictCode, "The current status of the work order does not allow rejection", fmt.Sprintf("from '%s' to '%s'", tk.Status, returnToStatus))
 	}
 
 	// 开启事务，保证原子性
 	tx, err := s.client.Tx(ctx)
 	if err != nil {
-		return fmt.Errorf("开启事务失败: %w", err)
+		return fmt.Errorf("Failed to open transaction: %w", err)
 	}
 	var txErr error
 	defer func() {
@@ -174,13 +174,13 @@ func (s *TicketWorkflowService) RejectTicket(ctx context.Context, req *dto.Rejec
 		CreatedAt:  time.Now(),
 	}, tenantID)
 	if err != nil {
-		txErr = fmt.Errorf("记录流转记录失败: %w", err)
+		txErr = fmt.Errorf("Record transfer record failed: %w", err)
 		return txErr
 	}
 
 	txErr = tx.Commit()
 	if txErr != nil {
-		return fmt.Errorf("提交驳回事务失败: %w", txErr)
+		return fmt.Errorf("Failed to submit rejected transaction: %w", txErr)
 	}
 	return txErr
 }
@@ -196,17 +196,17 @@ func (s *TicketWorkflowService) WithdrawTicket(ctx context.Context, req *dto.Wit
 
 	// 检查是否是工单创建者
 	if tk.RequesterID != userID {
-		return common.NewBusinessError(common.ForbiddenCode, "只有工单创建者可以撤回工单", "")
+		return common.NewBusinessError(common.ForbiddenCode, "Only the ticket creator can withdraw the ticket", "")
 	}
 
 	if !common.IsValidTicketStatusTransition(tk.Status, "cancelled") {
-		return common.NewBusinessError(common.ConflictCode, "工单当前状态不允许撤回", fmt.Sprintf("from '%s' to 'cancelled'", tk.Status))
+		return common.NewBusinessError(common.ConflictCode, "The current status of the work order does not allow withdrawal", fmt.Sprintf("from '%s' to 'cancelled'", tk.Status))
 	}
 
 	// 开启事务，保证原子性（与其他流转动作对齐：状态更新与流转记录同事务）
 	tx, err := s.client.Tx(ctx)
 	if err != nil {
-		return fmt.Errorf("开启事务失败: %w", err)
+		return fmt.Errorf("Failed to open transaction: %w", err)
 	}
 	var txErr error
 	defer func() {
@@ -240,13 +240,13 @@ func (s *TicketWorkflowService) WithdrawTicket(ctx context.Context, req *dto.Wit
 		CreatedAt:  time.Now(),
 	}, tenantID)
 	if err != nil {
-		txErr = fmt.Errorf("记录流转记录失败: %w", err)
+		txErr = fmt.Errorf("Record transfer record failed: %w", err)
 		return txErr
 	}
 
 	txErr = tx.Commit()
 	if txErr != nil {
-		return fmt.Errorf("提交撤回事务失败: %w", txErr)
+		return fmt.Errorf("Failed to commit undo transaction: %w", txErr)
 	}
 	return nil
 }
@@ -265,15 +265,15 @@ func (s *TicketWorkflowService) ForwardTicket(ctx context.Context, req *dto.Forw
 		Where(user.ID(req.ToUserID), user.TenantIDEQ(tenantID), user.Active(true)).
 		Exist(ctx)
 	if err != nil {
-		return fmt.Errorf("校验转发接收人失败: %w", err)
+		return fmt.Errorf("Failed to verify forwarding recipient: %w", err)
 	}
 	if !recipientOK {
-		return common.NewBusinessError(common.ParamErrorCode, "转发接收人不存在、未激活或不属于当前租户", "")
+		return common.NewBusinessError(common.ParamErrorCode, "The forwarding recipient does not exist, is not activated, or does not belong to the current tenant", "")
 	}
 
 	tx, err := s.client.Tx(ctx)
 	if err != nil {
-		return fmt.Errorf("开启事务失败: %w", err)
+		return fmt.Errorf("Failed to open transaction: %w", err)
 	}
 	var txErr error
 	defer func() {
@@ -310,13 +310,13 @@ func (s *TicketWorkflowService) ForwardTicket(ctx context.Context, req *dto.Forw
 		},
 	}, tenantID)
 	if err != nil {
-		txErr = fmt.Errorf("记录流转记录失败: %w", err)
+		txErr = fmt.Errorf("Record transfer record failed: %w", err)
 		return txErr
 	}
 
 	txErr = tx.Commit()
 	if txErr != nil {
-		return fmt.Errorf("提交转发事务失败: %w", txErr)
+		return fmt.Errorf("Failed to commit forwarding transaction: %w", txErr)
 	}
 	return txErr
 }
@@ -340,10 +340,10 @@ func (s *TicketWorkflowService) CCTicket(ctx context.Context, req *dto.CCTicketR
 		Select(user.FieldID).
 		Ints(ctx)
 	if err != nil {
-		return fmt.Errorf("校验抄送用户失败: %w", err)
+		return fmt.Errorf("Failed to verify CC user: %w", err)
 	}
 	if len(targetUsers) != len(uniqueInts(req.CCUsers)) {
-		return fmt.Errorf("抄送用户不存在、未激活或不属于当前租户")
+		return fmt.Errorf("The CC user does not exist, is not activated, or does not belong to the current tenant")
 	}
 
 	// 添加抄送人
@@ -407,7 +407,7 @@ func (s *TicketWorkflowService) ListMyCCRecords(ctx context.Context, userID, ten
 		Order(ent.Desc(ticketcc.FieldAddedAt), ent.Asc(ticketcc.FieldID)).
 		All(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("查询我的抄送失败: %w", err)
+		return nil, fmt.Errorf("Failed to check my CC: %w", err)
 	}
 	return s.buildCCListResponse(ctx, records)
 }
@@ -427,7 +427,7 @@ func (s *TicketWorkflowService) ListTicketCCRecords(ctx context.Context, ticketI
 		Order(ent.Desc(ticketcc.FieldAddedAt), ent.Asc(ticketcc.FieldID)).
 		All(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("查询工单抄送记录失败: %w", err)
+		return nil, fmt.Errorf("Failed to query the work order carbon copy record: %w", err)
 	}
 	return s.buildCCListResponse(ctx, records)
 }
@@ -443,14 +443,14 @@ func bpmnFirstMode() bool {
 // 这是部署配置缺失（operational unavailable），不是用户参数错误，也不能伪装成审批冲突。
 func bpmnBridgeUnavailable() error {
 	return common.NewBusinessError(common.ServiceUnavailableCode,
-		"BPMN 审批桥接未接线，无法按流程处理审批", "ITSM_APPROVAL_BPMN_FIRST 已开启但 bridge 未初始化")
+		"BPMN approval bridge is not wired and approval cannot be processed according to the process", "ITSM_APPROVAL_BPMN_FIRST is enabled but the bridge is not initialized")
 }
 
 // bpmnTicketUnbound 表示工单从未绑定流程实例。BPMN 优先模式下这是流程配置缺口，
 // 必须与 legacy 路径的「未绑定则回退审批链」区分开，让运维看出成因在流程绑定/启动而非待办。
 func bpmnTicketUnbound() error {
 	return common.NewBusinessError(common.ConflictCode,
-		"工单未绑定 BPMN 流程实例，请确认流程模板绑定与流程是否已启动", "")
+		"The work order is not bound to the BPMN process instance. Please confirm whether the process template is bound and the process has been started.", "")
 }
 
 // ApproveTicket 审批工单（事务保护，保证审批记录更新、工单状态变更与流转记录的原子性）
@@ -467,17 +467,17 @@ func (s *TicketWorkflowService) ApproveTicket(ctx context.Context, req *dto.Appr
 		Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return common.NewBusinessError(common.NotFoundCode, "审批记录不存在", "")
+			return common.NewBusinessError(common.NotFoundCode, "Approval record does not exist", "")
 		}
-		return fmt.Errorf("查询审批记录失败: %w", err)
+		return fmt.Errorf("Failed to query approval records: %w", err)
 	}
 
 	if approval.Status != string(dto.ApprovalStatusPending) {
-		return common.NewBusinessError(common.ConflictCode, "审批已处理", "")
+		return common.NewBusinessError(common.ConflictCode, "Approval has been processed", "")
 	}
 
 	if approval.ApproverID != userID {
-		return common.NewBusinessError(common.ForbiddenCode, "无权限审批该记录", "")
+		return common.NewBusinessError(common.ForbiddenCode, "No authority to approve this record", "")
 	}
 
 	approvalLevel := approval.Level
@@ -490,11 +490,11 @@ func (s *TicketWorkflowService) ApproveTicket(ctx context.Context, req *dto.Appr
 		newApprovalStatus = string(dto.ApprovalStatusRejected)
 	case "delegate":
 		if req.DelegateToUserID == nil {
-			return fmt.Errorf("委派时必须指定委派人")
+			return fmt.Errorf("The delegate must be specified when delegating")
 		}
 		newApprovalStatus = string(dto.ApprovalStatusCancelled)
 	default:
-		return fmt.Errorf("无效的审批操作: %s", req.Action)
+		return fmt.Errorf("Invalid approval operation: %s", req.Action)
 	}
 
 	if bpmnFirstMode() {
@@ -523,7 +523,7 @@ func (s *TicketWorkflowService) approveTicketBPMNFirst(
 			ctx, tenantID, userID, string(dto.BusinessTypeTicket), req.TicketID, *req.DelegateToUserID,
 		)
 		if bridgeErr != nil {
-			return fmt.Errorf("同步流程委派任务失败: %w", bridgeErr)
+			return fmt.Errorf("Synchronization process delegation task failed: %w", bridgeErr)
 		}
 		if !handled {
 			return bpmnTicketUnbound()
@@ -533,7 +533,7 @@ func (s *TicketWorkflowService) approveTicketBPMNFirst(
 
 	tx, err := s.client.Tx(ctx)
 	if err != nil {
-		return fmt.Errorf("开启事务失败: %w", err)
+		return fmt.Errorf("Failed to open transaction: %w", err)
 	}
 	var txErr error
 	defer func() {
@@ -553,7 +553,7 @@ func (s *TicketWorkflowService) approveTicketBPMNFirst(
 			ctx, txClient, tenantID, userID, string(dto.BusinessTypeTicket), req.TicketID, req.Action, req.Comment,
 		)
 		if bridgeErr != nil {
-			txErr = fmt.Errorf("同步流程审批任务失败: %w", bridgeErr)
+			txErr = fmt.Errorf("Synchronization process approval task failed: %w", bridgeErr)
 			return txErr
 		}
 		if !handled {
@@ -609,7 +609,7 @@ func (s *TicketWorkflowService) approveTicketLegacy(
 				ctx, tenantID, userID, string(dto.BusinessTypeTicket), req.TicketID, *req.DelegateToUserID,
 			)
 			if bridgeErr != nil {
-				return fmt.Errorf("同步流程委派任务失败: %w", bridgeErr)
+				return fmt.Errorf("Synchronization process delegation task failed: %w", bridgeErr)
 			}
 			bpmnHandled = handled
 		}
@@ -617,7 +617,7 @@ func (s *TicketWorkflowService) approveTicketLegacy(
 
 	tx, err := s.client.Tx(ctx)
 	if err != nil {
-		return fmt.Errorf("开启事务失败: %w", err)
+		return fmt.Errorf("Failed to open transaction: %w", err)
 	}
 	var txErr error
 	defer func() {
@@ -635,7 +635,7 @@ func (s *TicketWorkflowService) approveTicketLegacy(
 			ctx, txClient, tenantID, userID, string(dto.BusinessTypeTicket), req.TicketID, req.Action, req.Comment,
 		)
 		if bridgeErr != nil {
-			txErr = fmt.Errorf("同步流程审批任务失败: %w", bridgeErr)
+			txErr = fmt.Errorf("Synchronization process approval task failed: %w", bridgeErr)
 			return txErr
 		}
 		bpmnHandled = handled
@@ -667,7 +667,7 @@ func (s *TicketWorkflowService) approveTicketLegacy(
 			SetTenantID(tenantID).
 			Save(ctx)
 		if err != nil {
-			txErr = fmt.Errorf("创建委派审批记录失败: %w", err)
+			txErr = fmt.Errorf("Failed to create delegated approval record: %w", err)
 			return txErr
 		}
 	}
@@ -679,7 +679,7 @@ func (s *TicketWorkflowService) approveTicketLegacy(
 				ticketapproval.Status(string(dto.ApprovalStatusPending))).
 			Count(ctx)
 		if err != nil {
-			txErr = fmt.Errorf("查询待审批记录失败: %w", err)
+			txErr = fmt.Errorf("Failed to query records to be approved: %w", err)
 			return txErr
 		}
 		if pendingCount == 0 {
@@ -687,7 +687,7 @@ func (s *TicketWorkflowService) approveTicketLegacy(
 				SetStatus("approved").
 				Save(ctx)
 			if err != nil {
-				txErr = fmt.Errorf("更新工单状态为已审批失败: %w", err)
+				txErr = fmt.Errorf("Failed to update work order status to approved: %w", err)
 				return txErr
 			}
 		}
@@ -696,7 +696,7 @@ func (s *TicketWorkflowService) approveTicketLegacy(
 			SetStatus("rejected").
 			Save(ctx)
 		if err != nil {
-			txErr = fmt.Errorf("更新工单状态为已拒绝失败: %w", err)
+			txErr = fmt.Errorf("Failed to update ticket status to rejected: %w", err)
 			return txErr
 		}
 
@@ -708,7 +708,7 @@ func (s *TicketWorkflowService) approveTicketLegacy(
 			SetStatus(string(dto.ApprovalStatusCancelled)).
 			Save(ctx)
 		if err != nil {
-			txErr = fmt.Errorf("取消其他待审批记录失败: %w", err)
+			txErr = fmt.Errorf("Failed to cancel other records pending approval: %w", err)
 			return txErr
 		}
 	}
@@ -739,7 +739,7 @@ func (s *TicketWorkflowService) approveTicketLegacy(
 		Metadata:   metadata,
 	}, tenantID)
 	if err != nil {
-		txErr = fmt.Errorf("记录流转记录失败: %w", err)
+		txErr = fmt.Errorf("Record transfer record failed: %w", err)
 		return txErr
 	}
 
@@ -780,7 +780,7 @@ func (s *TicketWorkflowService) syncTicketApprovalTx(
 			SetTenantID(tenantID).
 			Save(ctx)
 		if err != nil {
-			return fmt.Errorf("创建委派审批记录失败: %w", err)
+			return fmt.Errorf("Failed to create delegated approval record: %w", err)
 		}
 	}
 
@@ -793,7 +793,7 @@ func (s *TicketWorkflowService) syncTicketApprovalTx(
 			SetStatus(string(dto.ApprovalStatusCancelled)).
 			Save(ctx)
 		if err != nil {
-			return fmt.Errorf("取消其他待审批记录失败: %w", err)
+			return fmt.Errorf("Failed to cancel other records pending approval: %w", err)
 		}
 	}
 
@@ -816,14 +816,14 @@ func (s *TicketWorkflowService) updateTicketStatusFromBPMN(
 			ctx, txClient, tenantID, string(dto.BusinessTypeTicket), req.TicketID,
 		)
 		if err != nil {
-			return fmt.Errorf("查询 BPMN 待办状态失败: %w", err)
+			return fmt.Errorf("Failed to query BPMN backlog status: %w", err)
 		}
 		if !hasPending {
 			_, err = txClient.Ticket.UpdateOneID(req.TicketID).
 				SetStatus("approved").
 				Save(ctx)
 			if err != nil {
-				return fmt.Errorf("更新工单状态为已审批失败: %w", err)
+				return fmt.Errorf("Failed to update work order status to approved: %w", err)
 			}
 		}
 	case "reject":
@@ -831,7 +831,7 @@ func (s *TicketWorkflowService) updateTicketStatusFromBPMN(
 			SetStatus("rejected").
 			Save(ctx)
 		if err != nil {
-			return fmt.Errorf("更新工单状态为已拒绝失败: %w", err)
+			return fmt.Errorf("Failed to update ticket status to rejected: %w", err)
 		}
 	}
 	return nil
@@ -884,13 +884,13 @@ func (s *TicketWorkflowService) ResolveTicket(ctx context.Context, req *dto.Reso
 
 	// 状态机校验：仅白名单允许的来源状态可迁入 resolved
 	if !common.IsValidTicketStatusTransition(tk.Status, "resolved") {
-		return common.NewBusinessError(common.ConflictCode, "工单当前状态不允许解决", fmt.Sprintf("from '%s' to 'resolved'", tk.Status))
+		return common.NewBusinessError(common.ConflictCode, "The current status of the work order does not allow resolution", fmt.Sprintf("from '%s' to 'resolved'", tk.Status))
 	}
 
 	// 开启事务，保证原子性
 	tx, err := s.client.Tx(ctx)
 	if err != nil {
-		return fmt.Errorf("开启事务失败: %w", err)
+		return fmt.Errorf("Failed to open transaction: %w", err)
 	}
 	var txErr error
 	defer func() {
@@ -931,7 +931,7 @@ func (s *TicketWorkflowService) ResolveTicket(ctx context.Context, req *dto.Reso
 		},
 	}, tenantID)
 	if err != nil {
-		txErr = fmt.Errorf("记录流转记录失败: %w", err)
+		txErr = fmt.Errorf("Record transfer record failed: %w", err)
 		return txErr
 	}
 
@@ -949,13 +949,13 @@ func (s *TicketWorkflowService) CloseTicket(ctx context.Context, req *dto.CloseT
 	}
 
 	if !common.IsValidTicketStatusTransition(tk.Status, "closed") {
-		return common.NewBusinessError(common.ConflictCode, "只有已解决的工单才能关闭", fmt.Sprintf("当前状态 '%s'", tk.Status))
+		return common.NewBusinessError(common.ConflictCode, "Only resolved tickets can be closed", fmt.Sprintf("Current status '%s'", tk.Status))
 	}
 
 	// 开启事务，保证原子性
 	tx, err := s.client.Tx(ctx)
 	if err != nil {
-		return fmt.Errorf("开启事务失败: %w", err)
+		return fmt.Errorf("Failed to open transaction: %w", err)
 	}
 	var txErr error
 	defer func() {
@@ -993,7 +993,7 @@ func (s *TicketWorkflowService) CloseTicket(ctx context.Context, req *dto.CloseT
 		},
 	}, tenantID)
 	if err != nil {
-		txErr = fmt.Errorf("记录流转记录失败: %w", err)
+		txErr = fmt.Errorf("Record transfer record failed: %w", err)
 		return txErr
 	}
 
@@ -1012,13 +1012,13 @@ func (s *TicketWorkflowService) ReopenTicket(ctx context.Context, req *dto.Reope
 
 	// closed 是状态机规定的终态（不可迁出），仅 resolved 允许重开
 	if !common.IsValidTicketStatusTransition(tk.Status, "open") {
-		return common.NewBusinessError(common.ConflictCode, "只有已解决的工单才能重开", fmt.Sprintf("当前状态 '%s'", tk.Status))
+		return common.NewBusinessError(common.ConflictCode, "Only resolved tickets can be reopened", fmt.Sprintf("Current status '%s'", tk.Status))
 	}
 
 	// 开启事务，保证原子性
 	tx, err := s.client.Tx(ctx)
 	if err != nil {
-		return fmt.Errorf("开启事务失败: %w", err)
+		return fmt.Errorf("Failed to open transaction: %w", err)
 	}
 	var txErr error
 	defer func() {
@@ -1052,7 +1052,7 @@ func (s *TicketWorkflowService) ReopenTicket(ctx context.Context, req *dto.Reope
 		CreatedAt:  time.Now(),
 	}, tenantID)
 	if err != nil {
-		txErr = fmt.Errorf("记录流转记录失败: %w", err)
+		txErr = fmt.Errorf("Record transfer record failed: %w", err)
 		return txErr
 	}
 
@@ -1340,7 +1340,7 @@ func (s *TicketWorkflowService) enrichBpmnProcessState(ctx context.Context, tk *
 				BpmnStatus:        "not_started",
 			}, nil
 		}
-		return nil, fmt.Errorf("查询工单关联流程实例失败: %w", err)
+		return nil, fmt.Errorf("Failed to query the process instance associated with the work order: %w", err)
 	}
 
 	// 查流程定义，补全 name。定义可能不存在（数据补全滞后），失败不影响主流程。
@@ -1388,7 +1388,7 @@ func (s *TicketWorkflowService) enrichBpmnProcessState(ctx context.Context, tk *
 		Order(ent.Asc(processtask.FieldCreatedTime)).
 		All(ctx)
 	if taskErr != nil {
-		return nil, fmt.Errorf("查询流程任务失败: %w", taskErr)
+		return nil, fmt.Errorf("Query process task failed: %w", taskErr)
 	}
 
 	// 当前节点基本信息
@@ -1512,7 +1512,7 @@ func (s *TicketWorkflowService) buildBpmnHistory(ctx context.Context, instance *
 		Order(ent.Asc(processtask.FieldCompletedTime)).
 		All(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("查询流程历史任务失败: %w", err)
+		return nil, fmt.Errorf("Query process history task failed: %w", err)
 	}
 
 	userIDs := map[int]struct{}{}
@@ -1571,7 +1571,7 @@ func (s *TicketWorkflowService) computeNextActivities(ctx context.Context, insta
 		if ent.IsNotFound(err) {
 			return nil, nil
 		}
-		return nil, fmt.Errorf("查询流程定义失败: %w", err)
+		return nil, fmt.Errorf("Failed to query process definition: %w", err)
 	}
 	if len(def.BpmnXML) == 0 {
 		return nil, nil
@@ -1579,7 +1579,7 @@ func (s *TicketWorkflowService) computeNextActivities(ctx context.Context, insta
 
 	g, err := parseBpmnProcessGraph(def.BpmnXML)
 	if err != nil {
-		return nil, fmt.Errorf("解析 BPMN XML 失败: %w", err)
+		return nil, fmt.Errorf("Failed to parse BPMN XML: %w", err)
 	}
 
 	nextIDs := g.outgoing[currentActivityID]
@@ -1775,17 +1775,17 @@ func parseBpmnProcessGraph(xmlBytes []byte) (*bpmnProcessGraph, error) {
 
 func (s *TicketWorkflowService) ensureCanCCTicket(ctx context.Context, tk *ent.Ticket, userID, tenantID int) error {
 	if tk == nil {
-		return fmt.Errorf("工单不存在")
+		return fmt.Errorf("The work order does not exist")
 	}
 	if tk.Status == "closed" || tk.Status == "cancelled" {
-		return fmt.Errorf("工单已结束，无法抄送")
+		return fmt.Errorf("Ticket is closed, cannot CC")
 	}
 	return s.ensureCanViewTicketCC(ctx, tk, userID, tenantID)
 }
 
 func (s *TicketWorkflowService) ensureCanViewTicketCC(ctx context.Context, tk *ent.Ticket, userID, tenantID int) error {
 	if tk == nil {
-		return common.NewBusinessError(common.NotFoundCode, "工单不存在", "")
+		return common.NewBusinessError(common.NotFoundCode, "The work order does not exist", "")
 	}
 	if tk.RequesterID == userID || tk.AssigneeID == userID {
 		return nil
@@ -1797,7 +1797,7 @@ func (s *TicketWorkflowService) ensureCanViewTicketCC(ctx context.Context, tk *e
 	if err != nil {
 		// 权限拒绝是 403，不是内部错误；fmt.Errorf 会被 handler 压成 500，
 		// 让「你没权限看」看起来像「服务挂了」。
-		return common.NewBusinessError(common.ForbiddenCode, "无权访问该工单抄送信息", "")
+		return common.NewBusinessError(common.ForbiddenCode, "Not authorized to access the CC information of this ticket", "")
 	}
 	// 全租户抄送可见性只给管理面角色，词表以 domain/role 为单一事实源。
 	// 此前裸写 "super_admin","admin","manager","technician"：technician 不是管理角色
@@ -1810,7 +1810,7 @@ func (s *TicketWorkflowService) ensureCanViewTicketCC(ctx context.Context, tk *e
 		Where(ticketapproval.TicketID(tk.ID), ticketapproval.TenantID(tenantID), ticketapproval.ApproverID(userID)).
 		Exist(ctx)
 	if err != nil {
-		return fmt.Errorf("校验审批权限失败: %w", err)
+		return fmt.Errorf("Failed to verify approval authority: %w", err)
 	}
 	if isApprover {
 		return nil
@@ -1820,13 +1820,13 @@ func (s *TicketWorkflowService) ensureCanViewTicketCC(ctx context.Context, tk *e
 		Where(ticketcc.TicketID(tk.ID), ticketcc.TenantID(tenantID), ticketcc.UserID(userID), ticketcc.IsActive(true)).
 		Exist(ctx)
 	if err != nil {
-		return fmt.Errorf("校验抄送权限失败: %w", err)
+		return fmt.Errorf("Failed to verify CC permission: %w", err)
 	}
 	if isCCUser {
 		return nil
 	}
 
-	return common.NewBusinessError(common.ForbiddenCode, "无权访问该工单抄送信息", "")
+	return common.NewBusinessError(common.ForbiddenCode, "Not authorized to access the CC information of this ticket", "")
 }
 
 func normalizeNotifyChannels(channels []string) []string {
@@ -1891,11 +1891,11 @@ func (s *TicketWorkflowService) buildCCListResponse(ctx context.Context, records
 
 	tickets, err := s.client.Ticket.Query().Where(ticket.IDIn(uniqueInts(ticketIDs)...)).All(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("查询抄送工单信息失败: %w", err)
+		return nil, fmt.Errorf("Failed to query CC work order information: %w", err)
 	}
 	users, err := s.client.User.Query().Where(user.IDIn(uniqueInts(userIDs)...)).All(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("查询抄送用户信息失败: %w", err)
+		return nil, fmt.Errorf("Failed to query CC user information: %w", err)
 	}
 
 	ticketByID := make(map[int]*ent.Ticket, len(tickets))
@@ -1933,7 +1933,7 @@ func (s *TicketWorkflowService) buildCCListResponse(ctx context.Context, records
 // 版本冲突错误（classifyError 识别为 4090 并携带冲突载荷）；其余错误按内部错误包装。
 func mapTicketSaveErr(err error, ticketID, heldVersion int) error {
 	if ent.IsNotFound(err) {
-		return common.NewVersionConflictError("工单", ticketID, heldVersion, heldVersion+1)
+		return common.NewVersionConflictError("Ticket", ticketID, heldVersion, heldVersion+1)
 	}
 	return fmt.Errorf("failed to update ticket: %w", err)
 }
@@ -1944,7 +1944,7 @@ func (s *TicketWorkflowService) getTicket(ctx context.Context, ticketID, tenantI
 		Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, common.NewBusinessError(common.NotFoundCode, "工单不存在", "")
+			return nil, common.NewBusinessError(common.NotFoundCode, "The work order does not exist", "")
 		}
 		return nil, fmt.Errorf("failed to get ticket: %w", err)
 	}

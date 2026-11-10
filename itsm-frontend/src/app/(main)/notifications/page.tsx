@@ -486,7 +486,7 @@ export default function NotificationsPage() {
                   size="small"
                   onClick={() => void openNotificationAction(notification)}
                 >
-                  {notification.actionText || '查看详情'}
+                  {notification.actionText || 'View Details'}
                 </Button>
               ),
               notification.status !== 'read' && (

@@ -24,7 +24,7 @@ export default function KnowledgeIdRedirectPage() {
   return (
     <App>
       <div style={{ padding: 48, textAlign: 'center' }}>
-        <Spin tip="正在跳转到知识详情..." />
+        <Spin tip="Jumping to knowledge details..." />
       </div>
     </App>
   );

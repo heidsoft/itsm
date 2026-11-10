@@ -103,7 +103,7 @@ func (s *BPMNTenantService) DeleteTenantData(ctx context.Context, tenantID int) 
 		Where(processtask.TenantID(tenantID)).
 		Exec(ctx)
 	if err != nil {
-		return fmt.Errorf("删除流程任务失败: %w", err)
+		return fmt.Errorf("Failed to delete process task: %w", err)
 	}
 
 	// 2. 删除流程实例
@@ -111,7 +111,7 @@ func (s *BPMNTenantService) DeleteTenantData(ctx context.Context, tenantID int) 
 		Where(processinstance.TenantID(tenantID)).
 		Exec(ctx)
 	if err != nil {
-		return fmt.Errorf("删除流程实例失败: %w", err)
+		return fmt.Errorf("Failed to delete process instance: %w", err)
 	}
 
 	// 3. 删除流程定义
@@ -119,7 +119,7 @@ func (s *BPMNTenantService) DeleteTenantData(ctx context.Context, tenantID int) 
 		Where(processdefinition.TenantID(tenantID)).
 		Exec(ctx)
 	if err != nil {
-		return fmt.Errorf("删除流程定义失败: %w", err)
+		return fmt.Errorf("Failed to delete process definition: %w", err)
 	}
 
 	return nil
@@ -195,21 +195,21 @@ func (s *BPMNTenantService) ValidateTenantAccess(ctx context.Context, resourceTy
 			Where(processdefinition.ID(resourceID), processdefinition.TenantID(tenantID)).
 			Only(ctx)
 		if err != nil {
-			return fmt.Errorf("无权访问该流程定义")
+			return fmt.Errorf("No access to the process definition")
 		}
 	case "process_instance":
 		_, err := s.client.ProcessInstance.Query().
 			Where(processinstance.ID(resourceID), processinstance.TenantID(tenantID)).
 			Only(ctx)
 		if err != nil {
-			return fmt.Errorf("无权访问该流程实例")
+			return fmt.Errorf("No access to the process instance")
 		}
 	case "task":
 		_, err := s.client.ProcessTask.Query().
 			Where(processtask.ID(resourceID), processtask.TenantID(tenantID)).
 			Only(ctx)
 		if err != nil {
-			return fmt.Errorf("无权访问该任务")
+			return fmt.Errorf("No permission to access this task")
 		}
 	}
 	return nil

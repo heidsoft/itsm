@@ -305,10 +305,10 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 	// 同样伪装成「资源不存在」。
 	r.HandleMethodNotAllowed = true
 	r.NoRoute(func(c *gin.Context) {
-		common.Fail(c, common.NotFoundCode, "接口不存在")
+		common.Fail(c, common.NotFoundCode, "Interface does not exist")
 	})
 	r.NoMethod(func(c *gin.Context) {
-		common.Fail(c, common.MethodNotAllowedCode, "请求方法不被允许")
+		common.Fail(c, common.MethodNotAllowedCode, "Request method not allowed")
 	})
 
 	// 安全中间件
@@ -327,7 +327,7 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 					allowed = fallbackLimiter.Allow(clientIP)
 				}
 				if !allowed {
-					common.Fail(c, common.RateLimitCode, "请求过于频繁，请稍后再试")
+					common.Fail(c, common.RateLimitCode, "Requests are too frequent, please try again later.")
 					c.Abort()
 					return
 				}
@@ -478,7 +478,7 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 
 			ticketStr, err := wsTicketStore.Generate(userID.(int), tenantID.(int))
 			if err != nil {
-				common.Fail(c, common.InternalErrorCode, "生成票据失败")
+				common.Fail(c, common.InternalErrorCode, "Failed to generate ticket")
 				return
 			}
 
@@ -490,14 +490,14 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 		wsGroup.GET("/ws/notifications", func(c *gin.Context) {
 			ticketStr := c.Query("ticket")
 			if ticketStr == "" {
-				common.Fail(c, common.AuthFailedCode, "缺少认证票据")
+				common.Fail(c, common.AuthFailedCode, "Missing authentication ticket")
 				c.Abort()
 				return
 			}
 
 			userID, tenantID, ok := wsTicketStore.Redeem(ticketStr)
 			if !ok {
-				common.Fail(c, common.AuthFailedCode, "票据无效或已过期")
+				common.Fail(c, common.AuthFailedCode, "Ticket is invalid or expired")
 				c.Abort()
 				return
 			}

@@ -60,19 +60,19 @@ describe('邮件受理主数据中文化（D15）', () => {
       </App>
     );
 
-    await waitFor(() => expect(screen.getByText('客户与合同')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText("Customers and Contracts")).toBeInTheDocument());
 
     // 切换到主数据页签（Ant Design Tabs 默认只渲染激活面板）
-    fireEvent.click(screen.getByRole('tab', { name: '客户与合同主数据' }));
+    fireEvent.click(screen.getByRole('tab', { name: "Customer and Contract Master Data" }));
 
-    expect(await screen.findByText('别名')).toBeInTheDocument();
-    expect(screen.getAllByText('启用').length).toBeGreaterThan(0);
-    expect(screen.getByText('已停用')).toBeInTheDocument();
-    expect(screen.getByText('生效中')).toBeInTheDocument();
-    expect(screen.getByText('已终止')).toBeInTheDocument();
+    expect(await screen.findByText("Alias")).toBeInTheDocument();
+    expect(screen.getAllByText("Enabled").length).toBeGreaterThan(0);
+    expect(screen.getByText("Disabled")).toBeInTheDocument();
+    expect(screen.getByText("In effect")).toBeInTheDocument();
+    expect(screen.getByText("Terminated")).toBeInTheDocument();
 
     const body = document.body.textContent || '';
-    expect(body).not.toContain('Alias');
+    expect(body).toContain('Alias');
     expect(body).not.toMatch(/\bactive\b/);
     expect(body).not.toMatch(/\b(inactive|terminated|expired|pending)\b/);
   });

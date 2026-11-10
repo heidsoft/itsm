@@ -108,7 +108,7 @@ func TestHandler_AcceptTicket_TicketNotFound(t *testing.T) {
 	// 消息仍是 handler 的 publicMsg：FailWithErr 只统一分类，文案权威要透出领域消息时用 RespondError。
 	assert.Equal(t, http.StatusNotFound, w.Code, "body=%s", w.Body.String())
 	assert.Equal(t, common.NotFoundCode, decodeWorkflowCode(t, w), "body=%s", w.Body.String())
-	assert.Equal(t, "操作失败", decodeWorkflowMessage(t, w), "body=%s", w.Body.String())
+	assert.Equal(t, "Operation failed", decodeWorkflowMessage(t, w), "body=%s", w.Body.String())
 }
 
 func decodeWorkflowCode(t *testing.T, w *httptest.ResponseRecorder) int {
@@ -249,7 +249,7 @@ func TestHandler_ApproveTicket_UnboundFallsBackToApprovalChain(t *testing.T) {
 			require.Equal(t, http.StatusConflict, w.Code, "body=%s", w.Body.String())
 			repeated := decodeApprove(t, w)
 			assert.Equal(t, 4090, repeated.Code)
-			assert.Equal(t, "审批已处理", repeated.Message)
+			assert.Equal(t, "Approval has been processed", repeated.Message)
 
 			ticket, err := env.client.Ticket.Get(ctx, ticketID)
 			require.NoError(t, err)

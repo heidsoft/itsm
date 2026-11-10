@@ -185,7 +185,7 @@ export function useCreateRelationMutation() {
   return useMutation({
     mutationFn: (request: CreateRelationRequest) => TicketRelationsApi.createRelation(request),
     onSuccess: (_, variables) => {
-      message.success('关联创建成功');
+      message.success('Association created successfully');
       queryClient.invalidateQueries({
         queryKey: TICKET_RELATION_KEYS.list(variables.sourceTicketId),
       });
@@ -196,7 +196,7 @@ export function useCreateRelationMutation() {
     },
     onError: (error: unknown) => {
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
-      message.error(`创建关联失败：${errorMessage}`);
+      message.error(`Failed to create association:${errorMessage}`);
     },
   });
 }
@@ -211,7 +211,7 @@ export function useBatchCreateRelationsMutation() {
     mutationFn: (request: BatchCreateRelationsRequest) =>
       TicketRelationsApi.batchCreateRelations(request),
     onSuccess: (result, variables) => {
-      message.success(`成功创建 ${result.created} 个关联`);
+      message.success(`Successfully created ${result.created} associations`);
       queryClient.invalidateQueries({
         queryKey: TICKET_RELATION_KEYS.list(variables.sourceTicketId),
       });
@@ -219,7 +219,7 @@ export function useBatchCreateRelationsMutation() {
     },
     onError: (error: unknown) => {
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
-      message.error(`批量创建关联失败：${errorMessage}`);
+      message.error(`Failed to create associations in batches:${errorMessage}`);
     },
   });
 }
@@ -234,7 +234,7 @@ export function useUpdateRelationMutation() {
     mutationFn: ({ relationId, request }: { relationId: string; request: UpdateRelationRequest }) =>
       TicketRelationsApi.updateRelation(relationId, request),
     onSuccess: (_, variables) => {
-      message.success('关联更新成功');
+      message.success('Association update successful');
       queryClient.invalidateQueries({
         queryKey: TICKET_RELATION_KEYS.detail(variables.relationId),
       });
@@ -242,7 +242,7 @@ export function useUpdateRelationMutation() {
     },
     onError: (error: unknown) => {
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
-      message.error(`更新关联失败：${errorMessage}`);
+      message.error(`Failed to update association:${errorMessage}`);
     },
   });
 }
@@ -257,13 +257,13 @@ export function useDeleteRelationMutation() {
     mutationFn: ({ relationId, reason }: { relationId: string; reason?: string }) =>
       TicketRelationsApi.deleteRelation(relationId, reason),
     onSuccess: () => {
-      message.success('关联已删除');
+      message.success('Association deleted');
       queryClient.invalidateQueries({ queryKey: TICKET_RELATION_KEYS.lists() });
       queryClient.invalidateQueries({ queryKey: ['tickets'] });
     },
     onError: (error: unknown) => {
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
-      message.error(`删除关联失败：${errorMessage}`);
+      message.error(`Failed to delete association:${errorMessage}`);
     },
   });
 }
@@ -283,7 +283,7 @@ export function useSetParentMutation() {
       parentTicketId: number;
     }) => TicketRelationsApi.setParent(childTicketId, parentTicketId),
     onSuccess: (_, variables) => {
-      message.success('父工单设置成功');
+      message.success('Parent work order set successfully');
       queryClient.invalidateQueries({
         queryKey: TICKET_RELATION_KEYS.hierarchy(variables.childTicketId),
       });
@@ -294,7 +294,7 @@ export function useSetParentMutation() {
     },
     onError: (error: unknown) => {
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
-      message.error(`设置父工单失败：${errorMessage}`);
+      message.error(`Failed to set parent ticket:${errorMessage}`);
     },
   });
 }
@@ -308,7 +308,7 @@ export function useRemoveParentMutation() {
   return useMutation({
     mutationFn: (childTicketId: number) => TicketRelationsApi.removeParent(childTicketId),
     onSuccess: (_, childTicketId) => {
-      message.success('父工单已移除');
+      message.success('Parent ticket has been removed');
       queryClient.invalidateQueries({
         queryKey: TICKET_RELATION_KEYS.hierarchy(childTicketId),
       });
@@ -316,7 +316,7 @@ export function useRemoveParentMutation() {
     },
     onError: (error: unknown) => {
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
-      message.error(`移除父工单失败：${errorMessage}`);
+      message.error(`Failed to remove parent ticket:${errorMessage}`);
     },
   });
 }
@@ -334,7 +334,7 @@ export function useAddDependencyMutation() {
       dependencyType: 'hard' | 'soft';
     }) => TicketRelationsApi.addDependency(data),
     onSuccess: (_, variables) => {
-      message.success('依赖添加成功');
+      message.success('Dependency added successfully');
       queryClient.invalidateQueries({
         queryKey: TICKET_RELATION_KEYS.dependencies(variables.ticketId),
       });
@@ -345,7 +345,7 @@ export function useAddDependencyMutation() {
     },
     onError: (error: unknown) => {
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
-      message.error(`添加依赖失败：${errorMessage}`);
+      message.error(`Failed to add dependency:${errorMessage}`);
     },
   });
 }
@@ -360,7 +360,7 @@ export function useRemoveDependencyMutation() {
     mutationFn: ({ ticketId, dependencyId }: { ticketId: number; dependencyId: string }) =>
       TicketRelationsApi.removeDependency(ticketId, dependencyId),
     onSuccess: (_, variables) => {
-      message.success('依赖已移除');
+      message.success('Dependency removed');
       queryClient.invalidateQueries({
         queryKey: TICKET_RELATION_KEYS.dependencies(variables.ticketId),
       });
@@ -371,7 +371,7 @@ export function useRemoveDependencyMutation() {
     },
     onError: (error: unknown) => {
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
-      message.error(`移除依赖失败：${errorMessage}`);
+      message.error(`Failed to remove dependency:${errorMessage}`);
     },
   });
 }

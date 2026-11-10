@@ -15,7 +15,7 @@ import (
 // dateFrom/dateTo 任一为空表示使用缺省窗口；只传一端是参数错误，不会静默补另一端。
 func (s *Service) GetReport(ctx context.Context, tenantID int, dateFrom, dateTo string) (*IncidentReport, error) {
 	if tenantID <= 0 {
-		return nil, common.NewBusinessError(common.AuthFailedCode, "缺少租户上下文", "incident report requires tenant")
+		return nil, common.NewBusinessError(common.AuthFailedCode, "Missing tenant context", "incident report requires tenant")
 	}
 	period, err := ResolveReportPeriod(dateFrom, dateTo, time.Now())
 	if err != nil {

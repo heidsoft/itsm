@@ -550,9 +550,9 @@ export class WorkflowApi {
       code: current.code,
       name: current.name,
       description: current.description,
-       
+
       type: current.type,
-       
+
       bpmnXml: current.bpmnXml,
     });
   }
@@ -562,7 +562,7 @@ export class WorkflowApi {
     try {
       await WorkflowApi.activateWorkflow(workflowId);
     } catch (error) {
-      console.error('部署工作流失败:', error);
+      console.error('Deployment workflow failed:', error);
       throw error;
     }
   }
@@ -766,11 +766,11 @@ export class WorkflowApi {
     const original = await WorkflowApi.getWorkflow(id);
     return WorkflowApi.createWorkflow({
       code: `${original.code}_copy_${Date.now()}`,
-      name: name || `${original.name} (副本)`,
+      name: name || `${original.name} (Copy)`,
       description: original.description,
-       
+
       type: original.type,
-       
+
       bpmnXml: original.bpmnXml,
     });
   }
@@ -807,16 +807,16 @@ export class WorkflowApi {
     const errors: ValidationError[] = [];
     const warnings: ValidationError[] = [];
     if (!workflow.id) {
-      errors.push({ type: 'error', message: '工作流 ID 不能为空' });
+      errors.push({ type: 'error', message: 'Workflow ID cannot be empty' });
     }
     if (!workflow.name) {
-      errors.push({ type: 'error', message: '工作流名称不能为空' });
+      errors.push({ type: 'error', message: 'Workflow name cannot be empty' });
     }
     if (!workflow.nodes?.length) {
-      errors.push({ type: 'error', message: '工作流必须包含至少一个节点' });
+      errors.push({ type: 'error', message: 'Workflow must contain at least one node' });
     }
     if (workflow.nodes?.length && !workflow.connections?.length) {
-      warnings.push({ type: 'warning', message: '工作流有节点但无连线，请确认流程是否完整' });
+      warnings.push({ type: 'warning', message: 'The workflow has nodes but no connections. Please confirm whether the process is complete.' });
     }
     return { isValid: errors.length === 0, errors, warnings };
   }
@@ -844,7 +844,7 @@ export class WorkflowApi {
   static async importWorkflow(data: WorkflowExport): Promise<WorkflowDefinition> {
     // 后端暂不支持导入，使用创建接口
     if (!data.workflow) {
-      throw new Error('无效的导入数据');
+      throw new Error('Invalid import data');
     }
     return WorkflowApi.createWorkflow({
       code: data.workflow.code || `imported_${Date.now()}`,
@@ -906,7 +906,7 @@ export class WorkflowApi {
     if (active) {
       return active;
     }
-    throw new Error('未找到可发布的版本');
+    throw new Error('No releasable version found');
   }
 
   /**
@@ -930,7 +930,7 @@ export class WorkflowApi {
     await httpClient.put(
       `/api/v1/bpmn/versions/${encodeURIComponent(processKey)}/${String(version)}/rollback`,
       {
-        reason: reason || '回滚操作',
+        reason: reason || 'Rollback operation',
       }
     );
   }
@@ -1141,7 +1141,7 @@ export class WorkflowApi {
     // 后端暂无专用节点实例API，尝试从任务列表获取
     try {
       const instance = await WorkflowApi.getInstance(instanceId);
-       
+
       const _unused = instance;
       const tasksRes = await httpClient.get<
         Array<{
@@ -1219,7 +1219,7 @@ export class WorkflowApi {
     // 后端暂无模板接口，返回空模板数据
     return {
       id,
-      name: '未命名模板',
+      name: "Unnamed template",
       description: '',
       category: 'general',
       isPublic: false,
@@ -1227,7 +1227,7 @@ export class WorkflowApi {
       definition: {
         code: '',
         name: '',
-         
+
         type: WorkflowType.TICKET,
         version: 1,
         status: WorkflowStatus.DRAFT,
@@ -1254,8 +1254,8 @@ export class WorkflowApi {
     return WorkflowApi.createWorkflow({
       code: `workflow_${Date.now()}`,
       name,
-      description: `从模板 ${templateId} 创建`,
-       
+      description: `From template ${templateId} Create`,
+
       type: WorkflowType.TICKET,
     });
   }
@@ -1274,7 +1274,7 @@ export class WorkflowApi {
     }
   ): Promise<WorkflowTemplate> {
     // 后端暂无保存模板接口，返回模拟数据
-     
+
     const _unused = workflowId;
     return {
       id: `template_${Date.now()}`,
@@ -1286,7 +1286,7 @@ export class WorkflowApi {
       definition: {
         code: '',
         name: data.name,
-         
+
         type: WorkflowType.TICKET,
         version: 1,
         status: WorkflowStatus.DRAFT,
@@ -1713,26 +1713,26 @@ export class WorkflowApi {
     ]);
 
     const rows = [
-      ['报告类型', '工作流报告'],
-      ['工作流ID', params.workflowId],
-      ['工作流名称', workflow?.name || params.workflowId],
-      ['开始日期', params.startDate],
-      ['结束日期', params.endDate],
-      ['总实例数', workflowStats.totalInstances || instanceStats.total],
-      ['运行中实例', workflowStats.runningInstances || instanceStats.running],
-      ['已完成实例', workflowStats.completedInstances || instanceStats.completed],
-      ['失败实例', workflowStats.failedInstances],
-      ['暂停实例', instanceStats.suspended],
-      ['终止实例', instanceStats.terminated],
-      ['总任务数', taskStats.totalTasks],
-      ['已完成任务', taskStats.completedTasks],
-      ['待办任务', taskStats.pendingTasks],
-      ['逾期任务', taskStats.overdueTasks],
-      ['平均任务完成时间', taskStats.averageCompletion],
-      ['成功率', workflowStats.successRate],
-      ['平均耗时', workflowStats.avgDuration],
-      ['导出格式请求', params.format],
-      ['导出时间', new Date().toISOString()],
+      ['Report type', 'Workflow Report'],
+      ['Workflow ID', params.workflowId],
+      ['Workflow Name', workflow?.name || params.workflowId],
+      ['Start Date', params.startDate],
+      ['end date', params.endDate],
+      ['Total Instances', workflowStats.totalInstances || instanceStats.total],
+      ['Running Instances', workflowStats.runningInstances || instanceStats.running],
+      ['Completed Instances', workflowStats.completedInstances || instanceStats.completed],
+      ['Failed instance', workflowStats.failedInstances],
+      ['Pausing instance', instanceStats.suspended],
+      ['Terminating instance', instanceStats.terminated],
+      ['Total number of tasks', taskStats.totalTasks],
+      ['Task completed', taskStats.completedTasks],
+      ['To-do tasks', taskStats.pendingTasks],
+      ['Overdue task', taskStats.overdueTasks],
+      ['Average task completion time', taskStats.averageCompletion],
+      ['Success rate', workflowStats.successRate],
+      ['Average time taken', workflowStats.avgDuration],
+      ['Export format request', params.format],
+      ['Export time', new Date().toISOString()],
     ];
     const csv = rows.map(row => row.map(WorkflowApi.escapeCSV).join(',')).join('\n');
     return new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8' });

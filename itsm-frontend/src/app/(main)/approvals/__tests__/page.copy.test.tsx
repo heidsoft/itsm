@@ -143,14 +143,14 @@ describe('审批中心文案', () => {
 
     await renderPage();
 
-    const button = await screen.findByRole('button', { name: '完成' });
+    const button = await screen.findByRole('button', { name: "Complete" });
     await userEvent.click(button);
 
-    expect(await screen.findByText('完成任务')).toBeInTheDocument();
-    expect(screen.getByText('处理意见（可选）')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '确认完成' })).toBeInTheDocument();
-    expect(screen.queryByText('批准任务')).not.toBeInTheDocument();
-    expect(screen.queryByText('审批意见（可选）')).not.toBeInTheDocument();
+    expect(await screen.findByText("Complete task")).toBeInTheDocument();
+    expect(screen.getByText("Work comment (optional)")).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: "Confirm completion" })).toBeInTheDocument();
+    expect(screen.queryByText("Approve task")).not.toBeInTheDocument();
+    expect(screen.queryByText("Approval comment (optional)")).not.toBeInTheDocument();
   });
 
   it('显式 approval 节点仍用「批准」文案', async () => {
@@ -163,12 +163,12 @@ describe('审批中心文案', () => {
 
     await renderPage();
 
-    const button = await screen.findByRole('button', { name: '批准' });
+    const button = await screen.findByRole('button', { name: "Approve" });
     await userEvent.click(button);
 
-    expect(await screen.findByText('批准任务')).toBeInTheDocument();
-    expect(screen.getByText('审批意见（可选）')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '确认批准' })).toBeInTheDocument();
+    expect(await screen.findByText("Approve task")).toBeInTheDocument();
+    expect(screen.getByText("Approval comment (optional)")).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: "Confirm approval" })).toBeInTheDocument();
   });
 
   it('流程列优先显示定义显示名，缺失时回退 Key（D10）', async () => {
@@ -205,13 +205,13 @@ describe('审批中心文案', () => {
 
     await renderPage();
 
-    await userEvent.click(await screen.findByRole('button', { name: '完成' }));
-    await userEvent.click(await screen.findByRole('button', { name: '确认完成' }));
+    await userEvent.click(await screen.findByRole('button', { name: "Complete" }));
+    await userEvent.click(await screen.findByRole('button', { name: "Confirm completion" }));
 
     await waitFor(() =>
       expect(mockSubmitTaskDecision).toHaveBeenCalledWith(101, { action: 'approve', comment: '' })
     );
-    expect(await screen.findByText('已完成')).toBeInTheDocument();
+    expect(await screen.findByText("Completed")).toBeInTheDocument();
     // 审批中心页面较重：提交后触发任务与遗留单两路全量重渲染，jsdom 实测 ~11-12s，
     // 默认 10s testTimeout 贴线必红（非用例逻辑问题）
   }, 20000);

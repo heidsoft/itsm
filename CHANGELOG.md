@@ -9,6 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Remaining English UI text (2026-11-10)**: audit every App Router page and translate remaining built-in workflow diagrams/catalogs, organizational defaults, service/ticket/SLA metadata, capability and integration descriptions, notifications, and offline messages. Display legacy category, pricing-unit, and department values in English while preserving API values. Add guarded, reversible migrations for unchanged product baseline records; preserve customized text, immutable identifiers, customer content, and historical audit snapshots. Regression coverage includes production catalog handlers, built-in manifests, and rendered pricing/category forms; local PostgreSQL probes verify migration repeatability, customization preservation, and exact rollback.
+- **Windows local startup (2026-11-09)**: use portable forward-slash paths when reading embedded BPMN templates, so database initialization and workflow deployment work on Windows. Added a regression test that reads every built-in template through the production template service.
+- **English dashboard (2026-11-09)**: translate backend-supplied KPI labels, quick actions, activity statuses, and default dashboard/report descriptions. Verified through a real local admin login and rendered dashboard; stored incident categories and cloud identifiers remain unchanged.
+
+
+### Changed
+
+- **English-only application (2026-11-06)**: make `en-US` the only UI language; remove the Chinese dictionary, language switcher and Chinese fallback; normalize saved browser preferences; translate built-in UI labels, metadata, PWA/offline pages and workflow templates. Add English menu baselines and an idempotent migration for unchanged built-in menu labels. Existing user content and stored business identifiers are preserved.
+
+
 ### Added
 
 - **流程设计器节点搜索与只读流程图预览可生产使用（2026-11-05）**：节点一多就找不到、除了设计器没有任何地方能看到流程图形状，是流程模块两处日常损耗。① **节点搜索**：`Ctrl/Cmd+F`（只读画布同样可用）按名称、元素 ID 或本地化类型匹配——"用户任务"和 `usertask` 都能命中未命名节点；命中节点橙色描边、当前定位加深，逐个定位时选中并把视口居中到该元素，到末尾回绕，命中节点已被删除则重算列表并如实提示，`Escape` 清除全部高亮，模型变更后按当前关键字重算。搜索排除无父元素的根、连线标签与隐藏元素。② **只读预览** `BPMNDiagramPreview`：用 `NavigatedViewer` 而不是 Modeler，预览面不带出调色板、命令栈和属性写入能力；接进流程管理详情、版本详情、模板详情与设计器版本对比（此前版本对比只能并排读两坨 XML 文本）。模板/AI 产出的 XML 常缺 `<bpmndi:BPMNDiagram>`，沿用设计器同一 DI 补全注入点，否则只会得到 "no diagram to display"；Modal 动画期间容器尺寸为 0，等布局完成再导入，等不到就如实报错并给重试，不显示空白画布；快速切换预览对象时旧导入不覆盖新导入。验证：`BPMNDesigner.test.tsx` 搜索 12 例、`BPMNDiagramPreview.test.tsx` 8 例、`bpmnElementTypes.test.ts` 9 例、版本页 8 例、流程管理页详情预览 4 例。

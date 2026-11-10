@@ -71,7 +71,7 @@ describe('useErrorHandler', () => {
 
     const appError = result.current.handleError(new Error('Network Error'));
 
-    expect(appError.message).toBe('网络连接失败，请检查网络设置');
+    expect(appError.message).toBe("Network connection failed, please check network settings");
   });
 
   it('should handle timeout errors', () => {
@@ -79,7 +79,7 @@ describe('useErrorHandler', () => {
 
     const appError = result.current.handleError(new Error('Request timeout'));
 
-    expect(appError.message).toBe('请求超时，请稍后重试');
+    expect(appError.message).toBe("Request timed out, please try again later.");
   });
 
   it('should handle 401 unauthorized', () => {
@@ -87,7 +87,7 @@ describe('useErrorHandler', () => {
 
     const appError = result.current.handleError(new Error('401 Unauthorized'));
 
-    expect(appError.message).toBe('登录已过期，请重新登录');
+    expect(appError.message).toBe("Login has expired, please log in again");
   });
 
   it('should handle 403 forbidden', () => {
@@ -95,7 +95,7 @@ describe('useErrorHandler', () => {
 
     const appError = result.current.handleError(new Error('403 Forbidden'));
 
-    expect(appError.message).toBe('权限不足，无法执行此操作');
+    expect(appError.message).toBe("Insufficient permissions to perform this operation");
   });
 
   it('should handle async errors', async () => {
@@ -134,17 +134,17 @@ describe('useErrorHandler', () => {
     // 只会反复点同一个按钮。
     const { result } = renderHook(() => useErrorHandler());
 
-    result.current.handleError(new Error('权限不足'), 'assignTicket', '分配失败');
+    result.current.handleError(new Error('权限不足'), 'assignTicket', 'Assignment failed');
 
-    expect(mockMessage.error).toHaveBeenCalledWith('分配失败：权限不足');
+    expect(mockMessage.error).toHaveBeenCalledWith("Assignment failed：权限不足");
   });
 
   it('403 分类原因同样带出', () => {
     const { result } = renderHook(() => useErrorHandler());
 
-    result.current.handleError(new Error('403 Forbidden'), 'loadRules', '加载失败');
+    result.current.handleError(new Error('403 Forbidden'), 'loadRules', 'Loading failed');
 
-    expect(mockMessage.error).toHaveBeenCalledWith('加载失败：权限不足，无法执行此操作');
+    expect(mockMessage.error).toHaveBeenCalledWith("Loading failed：Insufficient permissions to perform this operation");
   });
 
   it('优先使用 App 上下文的反馈实例', () => {

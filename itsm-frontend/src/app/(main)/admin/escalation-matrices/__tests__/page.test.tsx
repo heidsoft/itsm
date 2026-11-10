@@ -80,43 +80,43 @@ describe('EscalationMatricesPage', () => {
     await waitFor(() => expect(mockedApi.getMatrix).toHaveBeenCalled());
 
     // 表格视图与分组视图同源，每个服务端值都出现两次；只渲染一处说明另一处仍写死。
-    expect(await screen.findAllByText('7 分钟')).toHaveLength(2);
-    expect(screen.getAllByText('it_admin · IT 管理员')).toHaveLength(2);
-    expect(screen.getAllByText('3.8 天')).toHaveLength(2);
+    expect(await screen.findAllByText("7 minutes")).toHaveLength(2);
+    expect(screen.getAllByText("it_admin · IT Administrator")).toHaveLength(2);
+    expect(screen.getAllByText("3.8 days")).toHaveLength(2);
     // 只有 critical L2 两个通知目标都为空，urgent L1 仅用户为空。
-    expect(screen.getAllByText('未指定角色')).toHaveLength(1);
-    expect(screen.getAllByText('未指定用户')).toHaveLength(2);
-    expect(screen.getAllByText('无说明')).toHaveLength(1);
+    expect(screen.getAllByText("No role specified")).toHaveLength(1);
+    expect(screen.getAllByText("No user specified")).toHaveLength(2);
+    expect(screen.getAllByText("No description")).toHaveLength(1);
 
     // 内置默认的阈值 15 分钟与服务端不同，出现即说明页面在渲染假配置。
-    expect(screen.queryByText('15 分钟')).not.toBeInTheDocument();
+    expect(screen.queryByText("15 minutes")).not.toBeInTheDocument();
   });
 
   it('优先级键与通知目标由服务端决定，未知键原样透出', async () => {
     mockedApi.getMatrix.mockResolvedValue(SERVER_MATRIX);
     renderPage();
 
-    expect(await screen.findAllByText('critical · 致命')).toHaveLength(3);
+    expect(await screen.findAllByText("critical · Fatal")).toHaveLength(3);
     // urgent 不在前端词表里，必须原样显示，不能被前端词表覆盖。
     expect(screen.getAllByText('urgent')).toHaveLength(2);
 
     // 统计值全部由服务端矩阵得出：2 个优先级、3 个级别、4 个通知目标
-    expect(statistic('覆盖优先级')).toHaveTextContent('2个');
-    expect(statistic('升级级别总数')).toHaveTextContent('3级');
-    expect(statistic('通知目标数')).toHaveTextContent('4个');
-    expect(screen.getByText('2 级升级')).toBeInTheDocument();
-    expect(screen.getByText('1 级升级')).toBeInTheDocument();
+    expect(statistic("Override priority")).toHaveTextContent(/2\s*items/);
+    expect(statistic("Total number of upgrade levels")).toHaveTextContent(/3\s*level/);
+    expect(statistic("Number of notification targets")).toHaveTextContent(/4\s*items/);
+    expect(screen.getByText("2 level upgrade")).toBeInTheDocument();
+    expect(screen.getByText("1 level upgrade")).toBeInTheDocument();
   });
 
   it('加载失败时回落到内置默认并明确标注不是生产配置', async () => {
     mockedApi.getMatrix.mockRejectedValue(new Error('升级矩阵返回为空，无法确认当前生效配置'));
     renderPage();
 
-    const alert = await screen.findByText('升级矩阵加载失败');
+    const alert = await screen.findByText("Upgrade matrix loading failed");
     expect(alert).toBeInTheDocument();
     expect(
-      screen.getByText(/以下展示的是系统内置默认策略，并非生产配置/),
+      screen.getByText(/\. What is shown below is the default policy built into the system, not the production configuration\. Please do not judge online upgrade behavior based on this\./),
     ).toBeInTheDocument();
-    expect(screen.getAllByText('15 分钟').length).toBeGreaterThan(0);
+    expect(screen.getAllByText("15 minutes").length).toBeGreaterThan(0);
   });
 });

@@ -119,8 +119,8 @@ export default function TagsPage() {
 
   const handleDelete = (record: TicketTag) => {
     modal.confirm({
-      title: '确认删除标签',
-      content: `删除后无法恢复。标签「${record.name}」若仍被工单使用，后端会拒绝删除。`,
+      title: 'Confirm tag deletion',
+      content: `Cannot be restored after deletion. Tag "${record.name}"If it is still used by the work order, the backend will refuse to delete it.`,
       okButtonProps: { danger: true },
       onOk: async () => {
         try {
@@ -138,13 +138,13 @@ export default function TagsPage() {
 
   const columns = [
     {
-      title: '标签名称',
+      title: 'Tag Name',
       dataIndex: 'name',
       key: 'name',
       render: (text: string, record: TicketTag) => <Tag color={record.color}>{text}</Tag>,
     },
     {
-      title: '颜色',
+      title: 'Color',
       dataIndex: 'color',
       key: 'color',
       render: (color: string) => (
@@ -154,23 +154,23 @@ export default function TagsPage() {
         </div>
       ),
     },
-    { title: '描述', dataIndex: 'description', key: 'description' },
+    { title: 'Description', dataIndex: 'description', key: 'description' },
     {
-      title: '状态',
+      title: 'Status',
       dataIndex: 'isActive',
       key: 'isActive',
-      render: (isActive: boolean) => (isActive ? <Tag color="green">启用</Tag> : <Tag>停用</Tag>),
+      render: (isActive: boolean) => (isActive ? <Tag color="green">Enabled</Tag> : <Tag>Disable</Tag>),
     },
     {
-      title: '操作',
+      title: 'Actions',
       key: 'action',
       render: (_: unknown, record: TicketTag) => (
         <Space size="middle">
-          <Button type="text" aria-label="编辑" icon={<Pencil />} onClick={() => openEdit(record)} />
+          <Button type="text" aria-label="Edit" icon={<Pencil />} onClick={() => openEdit(record)} />
           <Button
             type="text"
             danger
-            aria-label="删除"
+            aria-label="Delete"
             icon={<Trash2 />}
             onClick={() => handleDelete(record)}
           />
@@ -182,15 +182,17 @@ export default function TagsPage() {
   return (
     <PageContainer
       header={{
-        title: '全局标签管理',
-        breadcrumb: { items: [{ title: '首页' }, { title: '系统管理' }, { title: '标签管理' }] },
+        title: 'Global tag management',
+        breadcrumb: { items: [{ title: 'Home page' }, { title: 'System Admin' }, { title: 'Tag Management' }] },
       }}
       extra={[
         <Button key="refresh" icon={<RefreshCw />} onClick={() => reload()} loading={fetching}>
-          刷新
+
+          Refresh
         </Button>,
         <Button key="create" type="primary" icon={<Plus />} onClick={openCreate}>
-          新建标签
+
+          Create Tag
         </Button>,
       ]}
     >
@@ -209,7 +211,7 @@ export default function TagsPage() {
       />
 
       <Modal
-        title={editing ? `编辑标签：${editing.name}` : '新建标签'}
+        title={editing ? `Edit tag:${editing.name}` : 'Create Tag'}
         open={modalOpen}
         onOk={handleSubmit}
         onCancel={() => setModalOpen(false)}
@@ -218,22 +220,22 @@ export default function TagsPage() {
         <Form form={form} layout="vertical" initialValues={{ color: '#1890ff', isActive: true }}>
           <Form.Item
             name="name"
-            label="标签名称"
-            rules={[{ required: true, message: '请输入标签名称' }]}
+            label="Tag Name"
+            rules={[{ required: true, message: 'Please enter the tag name' }]}
           >
-            <Input placeholder="请输入标签名称" maxLength={50} />
+            <Input placeholder="Please enter the tag name" maxLength={50} />
           </Form.Item>
-          <Form.Item name="color" label="颜色">
+          <Form.Item name="color" label="Color">
             <ColorPicker showText />
           </Form.Item>
-          <Form.Item name="description" label="描述">
+          <Form.Item name="description" label="Description">
             <Input.TextArea rows={4} />
           </Form.Item>
           <Form.Item
             name="isActive"
-            label="启用"
+            label="Enabled"
             valuePropName="checked"
-            extra="停用后仍可在历史工单上看到，但不再用于新的分类。"
+            extra="After deactivation, it can still be seen on historical tickets, but will no longer be used for new categories."
           >
             <Switch />
           </Form.Item>

@@ -45,15 +45,15 @@ const MATURITY_META: Record<
   { label: string; color: string }
 > = {
   ga: { label: 'GA', color: 'green' },
-  pilot: { label: '预览', color: 'gold' },
-  disabled: { label: '未包含', color: 'default' },
+  pilot: { label: 'Preview', color: 'gold' },
+  disabled: { label: 'Not included', color: 'default' },
 };
 
 const FILTER_OPTIONS: { label: string; value: MaturityFilter }[] = [
-  { label: '全部', value: 'all' },
+  { label: 'All', value: 'all' },
   { label: 'GA', value: 'ga' },
-  { label: '预览', value: 'pilot' },
-  { label: '未就绪', value: 'unready' },
+  { label: 'Preview', value: 'pilot' },
+  { label: 'Not Ready', value: 'unready' },
 ];
 
 /** 部署就绪 + 探测健康才算「此刻可用」。探测缺失（无信号）不算失败。 */
@@ -77,7 +77,7 @@ export default function CapabilitiesAdminPage() {
       setItems(data.items ?? []);
       setAcceptanceVersion(data.acceptanceVersion ?? '');
     } catch (error) {
-      message.error(error instanceof Error ? error.message : '加载能力矩阵失败');
+      message.error(error instanceof Error ? error.message : 'Failed to load capability matrix');
       setItems([]);
       setAcceptanceVersion('');
     } finally {
@@ -114,7 +114,7 @@ export default function CapabilitiesAdminPage() {
 
   const columns: ColumnsType<ProductCapabilityState> = [
     {
-      title: '能力',
+      title: 'Capabilities',
       dataIndex: 'key',
       width: 260,
       render: (key: string, item) => (
@@ -122,14 +122,15 @@ export default function CapabilitiesAdminPage() {
           <Text strong>{key}</Text>
           {item.dependencies.length > 0 && (
             <Text type='secondary' style={{ fontSize: 12 }}>
-              依赖：{item.dependencies.join(' / ')}
+
+              Dependencies:{item.dependencies.join(' / ')}
             </Text>
           )}
         </Space>
       ),
     },
     {
-      title: '成熟度',
+      title: 'Maturity',
       dataIndex: 'maturity',
       width: 100,
       render: (maturity: ProductCapabilityState['maturity']) => (
@@ -137,32 +138,32 @@ export default function CapabilitiesAdminPage() {
       ),
     },
     {
-      title: '部署就绪',
+      title: 'Ready to deploy',
       dataIndex: 'deploymentReady',
       width: 110,
       render: (ready: boolean) =>
-        ready ? <Tag color='green'>就绪</Tag> : <Tag color='orange'>未就绪</Tag>,
+        ready ? <Tag color='green'>Ready</Tag> : <Tag color='orange'>Not Ready</Tag>,
     },
     {
-      title: '探测',
+      title: 'Detection',
       dataIndex: 'health',
       width: 150,
       render: (_: unknown, item) => {
         if (!item.health) {
           // 没有探测维度不等于健康，也不等于故障：如实显示「无信号」。
-          return <Text type='secondary'>无信号</Text>;
+          return <Text type='secondary'>No signal</Text>;
         }
         return item.health.ok ? (
-          <Tag color='green'>正常</Tag>
+          <Tag color='green'>OK</Tag>
         ) : (
-          <Tooltip title={item.health.reason || '探测未通过'}>
-            <Tag color='red'>异常</Tag>
+          <Tooltip title={item.health.reason || 'Detection failed'}>
+            <Tag color='red'>Error</Tag>
           </Tooltip>
         );
       },
     },
     {
-      title: '可用动作',
+      title: 'Available actions',
       dataIndex: 'allowedActions',
       width: 140,
       render: (actions: string[]) =>
@@ -177,7 +178,7 @@ export default function CapabilitiesAdminPage() {
         ),
     },
     {
-      title: '说明',
+      title: 'Description',
       key: 'reason',
       render: (_: unknown, item) => {
         // 两件事必须同时可见，不能二选一：
@@ -200,10 +201,11 @@ export default function CapabilitiesAdminPage() {
 
   return (
     <PageContainer
-      header={{ title: '能力矩阵' }}
+      header={{ title: 'Capability Matrix' }}
       extra={
         <Button icon={<RefreshCw size={16} />} onClick={() => void load()} loading={loading}>
-          刷新
+
+          Refresh
         </Button>
       }
     >
@@ -211,18 +213,18 @@ export default function CapabilitiesAdminPage() {
         <Row gutter={16}>
           <Col xs={12} md={6}>
             <Card size='small'>
-              <Statistic title='能力总数' value={summary.total} prefix={<ShieldCheck size={16} />} />
+              <Statistic title="Total number of abilities" value={summary.total} prefix={<ShieldCheck size={16} />} />
             </Card>
           </Col>
           <Col xs={12} md={6}>
             <Card size='small'>
-              <Statistic title='GA（可承诺）' value={summary.ga} styles={{ content: { color: '#3f8600' } }} />
+              <Statistic title="GA (can commit)" value={summary.ga} styles={{ content: { color: '#3f8600' } }} />
             </Card>
           </Col>
           <Col xs={12} md={6}>
             <Card size='small'>
               <Statistic
-                title='预览（Pilot）'
+                title="Preview (Pilot)"
                 value={summary.pilot}
                 styles={{ content: { color: '#d48806' } }}
                 prefix={<FlaskConical size={16} />}
@@ -232,7 +234,7 @@ export default function CapabilitiesAdminPage() {
           <Col xs={12} md={6}>
             <Card size='small'>
               <Statistic
-                title='此刻不可用'
+                title="Not available at this time"
                 value={summary.unready}
                 styles={{ content: { color: summary.unready > 0 ? '#cf1322' : undefined } }}
                 prefix={summary.unready > 0 ? <AlertTriangle size={16} /> : <Ban size={16} />}
@@ -242,11 +244,12 @@ export default function CapabilitiesAdminPage() {
         </Row>
 
         <Space wrap size={6}>
-          <Text type='secondary'>契约验收基线</Text>
-          <Tag color={acceptanceVersion ? 'blue' : 'default'}>{acceptanceVersion || '未声明'}</Tag>
-          <Tooltip title='能力矩阵最近一次对账日期，不是发布版本。它不得早于最新发布版本；单条能力是否可承诺仍看成熟度、部署就绪与说明。'>
+          <Text type='secondary'>Contract acceptance baseline</Text>
+          <Tag color={acceptanceVersion ? 'blue' : 'default'}>{acceptanceVersion || 'Not declared'}</Tag>
+          <Tooltip title="The date of the last reconciliation of the capability matrix, not the release version. It must not be earlier than the latest released version; whether a single capability can be promised depends on maturity, deployment readiness and description.">
             <Text type='secondary' style={{ cursor: 'help' }}>
-              说明
+
+              Description
             </Text>
           </Tooltip>
         </Space>
@@ -255,8 +258,8 @@ export default function CapabilitiesAdminPage() {
           <Alert
             type='warning'
             showIcon
-            title='当前会话没有租户上下文'
-            description='矩阵只反映部署级事实：tenantReady 为 false、allowedActions 为空，不代表能力缺失。'
+            title="There is no tenant context for the current session"
+            description="The matrix only reflects deployment-level facts: tenantReady is false and allowedActions is empty, which does not mean a lack of capabilities."
           />
         )}
 
@@ -264,8 +267,8 @@ export default function CapabilitiesAdminPage() {
           <Alert
             type='error'
             showIcon
-            title={`${summary.unready} 项能力此刻不可用`}
-            description='部署依赖未就绪或探测失败。切到「未就绪」筛选可看到具体原因，修好后刷新本页即可复核。'
+            title={`${summary.unready} Ability is not available at this time`}
+            description="The deployment dependency is not ready or the detection failed. Switch to the &quot;Not Ready&quot; filter to see the specific reasons. After repairing, refresh this page to review."
           />
         )}
 
@@ -278,7 +281,7 @@ export default function CapabilitiesAdminPage() {
           <Input
             allowClear
             prefix={<Search size={14} />}
-            placeholder='按能力键搜索，如 connector.feishu'
+            placeholder="Search by capability key, such as connector.feishu"
             style={{ width: 280 }}
             value={keyword}
             onChange={event => setKeyword(event.target.value)}
@@ -296,7 +299,7 @@ export default function CapabilitiesAdminPage() {
             emptyText: (
               <Empty
                 description={
-                  items.length === 0 ? '能力矩阵为空，请确认后端 /api/v1/capabilities 可达' : '没有符合筛选条件的能力'
+                  items.length === 0 ? 'The capability matrix is empty, please confirm that the backend /api/v1/capabilities is reachable' : 'No ability matching the filter criteria'
                 }
               />
             ),

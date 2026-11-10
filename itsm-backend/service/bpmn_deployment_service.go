@@ -46,19 +46,19 @@ func NewBPMNDeploymentServiceWithTimerStore(client *ent.Client, timerStore Timer
 func (s *BPMNDeploymentService) DeployProcessDefinition(ctx context.Context, req *DeployProcessDefinitionRequest) (*ent.ProcessDeployment, error) {
 	// 验证BPMN XML
 	if err := s.parser.ValidateBPMNXML([]byte(req.BPMNXML)); err != nil {
-		return nil, fmt.Errorf("BPMN XML验证失败: %w", err)
+		return nil, fmt.Errorf("BPMN XML validation failed: %w", err)
 	}
 
 	// 解析BPMN XML
 	definitions, err := s.parser.ParseXML([]byte(req.BPMNXML))
 	if err != nil {
-		return nil, fmt.Errorf("BPMN XML解析失败: %w", err)
+		return nil, fmt.Errorf("BPMN XML parsing failed: %w", err)
 	}
 
 	// 提取流程信息
 	processInfo := s.parser.ExtractProcessInfo(definitions)
 	if processInfo == nil {
-		return nil, fmt.Errorf("无法提取流程信息")
+		return nil, fmt.Errorf("Unable to extract process information")
 	}
 
 	// 创建部署记录
@@ -72,7 +72,7 @@ func (s *BPMNDeploymentService) DeployProcessDefinition(ctx context.Context, req
 		SetIsActive(true).
 		Save(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("创建部署记录失败: %w", err)
+		return nil, fmt.Errorf("Failed to create deployment record: %w", err)
 	}
 
 	// 创建流程定义
@@ -80,7 +80,7 @@ func (s *BPMNDeploymentService) DeployProcessDefinition(ctx context.Context, req
 	if err != nil {
 		// 如果创建流程定义失败，删除部署记录
 		s.client.ProcessDeployment.DeleteOne(deployment).Exec(ctx)
-		return nil, fmt.Errorf("创建流程定义失败: %w", err)
+		return nil, fmt.Errorf("Failed to create process definition: %w", err)
 	}
 
 	// 定时器注册失败不阻断部署（定义已落库，重新部署可重建时间表，与设计器发布口径一致），
@@ -134,7 +134,7 @@ func (s *BPMNDeploymentService) createProcessDefinition(ctx context.Context, req
 			SetIsLatest(false).
 			Save(ctx)
 		if err != nil {
-			return nil, fmt.Errorf("更新旧版本状态失败: %w", err)
+			return nil, fmt.Errorf("Failed to update old version status: %w", err)
 		}
 	}
 
@@ -143,7 +143,7 @@ func (s *BPMNDeploymentService) createProcessDefinition(ctx context.Context, req
 		SetDeploymentMetadata(processInfo).
 		Save(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("更新部署记录元数据失败: %w", err)
+		return nil, fmt.Errorf("Failed to update deployment record metadata: %w", err)
 	}
 
 	// 创建新的流程定义
@@ -160,7 +160,7 @@ func (s *BPMNDeploymentService) createProcessDefinition(ctx context.Context, req
 		SetDeployedAt(time.Now()).
 		Save(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("创建流程定义失败: %w", err)
+		return nil, fmt.Errorf("Failed to create process definition: %w", err)
 	}
 
 	return processDef, nil
@@ -229,7 +229,7 @@ func (s *BPMNDeploymentService) ListDeployments(ctx context.Context, req *ListDe
 	// 获取总数
 	total, err := query.Count(ctx)
 	if err != nil {
-		return nil, 0, fmt.Errorf("获取部署记录总数失败: %w", err)
+		return nil, 0, fmt.Errorf("Failed to obtain the total number of deployment records: %w", err)
 	}
 
 	// 分页查询
@@ -239,7 +239,7 @@ func (s *BPMNDeploymentService) ListDeployments(ctx context.Context, req *ListDe
 		Limit(req.PageSize).
 		All(ctx)
 	if err != nil {
-		return nil, 0, fmt.Errorf("查询部署记录失败: %w", err)
+		return nil, 0, fmt.Errorf("Failed to query deployment records: %w", err)
 	}
 
 	return deployments, total, nil
@@ -255,7 +255,7 @@ func (s *BPMNDeploymentService) UndeployProcessDefinition(ctx context.Context, d
 		Where(processdeployment.DeploymentID(deploymentID), processdeployment.TenantID(tenantID)).
 		First(ctx)
 	if err != nil {
-		return fmt.Errorf("获取部署记录失败: %w", err)
+		return fmt.Errorf("Failed to obtain deployment record: %w", err)
 	}
 
 	// 检查是否有正在运行的流程实例
@@ -264,7 +264,7 @@ func (s *BPMNDeploymentService) UndeployProcessDefinition(ctx context.Context, d
 		Where(processdefinition.DeploymentID(deployment.ID)).
 		All(ctx)
 	if err != nil {
-		return fmt.Errorf("查找流程定义失败: %w", err)
+		return fmt.Errorf("Failed to find process definition: %w", err)
 	}
 
 	var totalInstances int
@@ -274,13 +274,13 @@ func (s *BPMNDeploymentService) UndeployProcessDefinition(ctx context.Context, d
 			Where(processinstance.StatusIn("running", "suspended")).
 			Count(ctx)
 		if err != nil {
-			return fmt.Errorf("检查流程实例失败: %w", err)
+			return fmt.Errorf("Failed to check process instance: %w", err)
 		}
 		totalInstances += instances
 	}
 
 	if totalInstances > 0 {
-		return fmt.Errorf("无法取消部署，仍有 %d 个正在运行的流程实例", totalInstances)
+		return fmt.Errorf("Unable to undeploy, there are still %d process instances running", totalInstances)
 	}
 
 	// 停用相关的流程定义
@@ -289,7 +289,7 @@ func (s *BPMNDeploymentService) UndeployProcessDefinition(ctx context.Context, d
 		SetIsActive(false).
 		Save(ctx)
 	if err != nil {
-		return fmt.Errorf("停用流程定义失败: %w", err)
+		return fmt.Errorf("Failed to deactivate process definition: %w", err)
 	}
 
 	// 更新部署状态 - ProcessDeployment没有Status字段，使用IsActive代替
@@ -297,7 +297,7 @@ func (s *BPMNDeploymentService) UndeployProcessDefinition(ctx context.Context, d
 		SetIsActive(false).
 		Save(ctx)
 	if err != nil {
-		return fmt.Errorf("更新部署状态失败: %w", err)
+		return fmt.Errorf("Failed to update deployment status: %w", err)
 	}
 
 	return nil
@@ -313,7 +313,7 @@ func (s *BPMNDeploymentService) RedeployProcessDefinition(ctx context.Context, d
 		Where(processdeployment.DeploymentID(deploymentID), processdeployment.TenantID(tenantID)).
 		First(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("获取原始部署记录失败: %w", err)
+		return nil, fmt.Errorf("Failed to obtain original deployment record: %w", err)
 	}
 
 	// 创建重新部署请求 - ProcessDeployment没有这些字段，需要通过其他方式获取
@@ -328,7 +328,7 @@ func (s *BPMNDeploymentService) RedeployProcessDefinition(ctx context.Context, d
 	// 执行重新部署
 	newDeployment, err := s.DeployProcessDefinition(ctx, redeployReq)
 	if err != nil {
-		return nil, fmt.Errorf("重新部署失败: %w", err)
+		return nil, fmt.Errorf("Redeploy failed: %w", err)
 	}
 
 	// 更新原始部署记录状态 - ProcessDeployment没有这些字段
@@ -338,7 +338,7 @@ func (s *BPMNDeploymentService) RedeployProcessDefinition(ctx context.Context, d
 	// 	SetRedeploymentID(fmt.Sprintf("%d", newDeployment.ID)).
 	// 	Save(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("更新原始部署状态失败: %w", err)
+		return nil, fmt.Errorf("Failed to update original deployment status: %w", err)
 	}
 
 	return newDeployment, nil
@@ -354,7 +354,7 @@ func (s *BPMNDeploymentService) GetDeploymentHistory(ctx context.Context, proces
 		Order(ent.Desc(processdeployment.FieldDeploymentTime)).
 		All(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("获取部署历史失败: %w", err)
+		return nil, fmt.Errorf("Failed to obtain deployment history: %w", err)
 	}
 
 	return deployments, nil

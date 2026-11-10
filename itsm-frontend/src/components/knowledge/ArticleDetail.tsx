@@ -72,11 +72,11 @@ const ArticleDetail: React.FC = () => {
       setArticle(data as unknown as KnowledgeArticle);
       // 设置页面标题
       if (typeof document !== 'undefined' && data?.title) {
-        document.title = `${data.title} - 知识库`;
+        document.title = `${data.title} - Knowledge Base`;
       }
     } catch (error) {
       // console.error(error);
-      message.error('加载文章详情失败');
+      message.error('Failed to load article details');
     } finally {
       setLoading(false);
     }
@@ -85,18 +85,18 @@ const ArticleDetail: React.FC = () => {
   const handlePublish = () => {
     if (!article) return;
     Modal.confirm({
-      title: '确认发布该文章？',
-      content: '发布后将对所有有权限的用户可见。',
-      okText: '发布',
-      cancelText: '取消',
+      title: 'Confirm to publish this article?',
+      content: 'Once published, it will be visible to all users with permissions.',
+      okText: 'Release',
+      cancelText: 'Cancel',
       onOk: async () => {
         setActionLoading('publish');
         try {
           const updated = await KnowledgeBaseApi.publishArticle(article.id);
           setArticle(updated as unknown as KnowledgeArticle);
-          message.success('文章已发布');
+          message.success('Article published');
         } catch (e: any) {
-          message.error('发布失败：' + (e?.message || '未知错误'));
+          message.error('Publishing failed:' + (e?.message || 'Unknown error'));
         } finally {
           setActionLoading(null);
         }
@@ -107,18 +107,18 @@ const ArticleDetail: React.FC = () => {
   const handleUnpublish = () => {
     if (!article) return;
     Modal.confirm({
-      title: '确认取消发布？',
-      content: '取消发布后文章将变回草稿状态。',
-      okText: '取消发布',
-      cancelText: '返回',
+      title: 'Confirm to cancel publishing?',
+      content: 'The article will return to draft status after unpublishing.',
+      okText: 'Unpublish',
+      cancelText: 'Back',
       onOk: async () => {
         setActionLoading('unpublish');
         try {
           const updated = await KnowledgeBaseApi.unpublishArticle(article.id);
           setArticle(updated as unknown as KnowledgeArticle);
-          message.success('已取消发布');
+          message.success('Unpublished');
         } catch (e: any) {
-          message.error('操作失败：' + (e?.message || '未知错误'));
+          message.error('Operation failed:' + (e?.message || 'Unknown error'));
         } finally {
           setActionLoading(null);
         }
@@ -131,19 +131,19 @@ const ArticleDetail: React.FC = () => {
   const handleSubmitReview = () => {
     if (!article) return;
     Modal.confirm({
-      title: '确认提交评审？',
-      content: '提交后进入评审队列，须由其他评审人审批通过（不能自审）才会对外可见。',
-      okText: '提交评审',
-      cancelText: '取消',
+      title: 'Confirm submission for review?',
+      content: 'After submission, it enters the review queue and must be approved by other reviewers (self-review is not possible) before it can be visible to the outside world.',
+      okText: 'Submit for review',
+      cancelText: 'Cancel',
       onOk: async () => {
         setActionLoading('submit');
         try {
           const updated = await KnowledgeBaseApi.submitReview(String(article.id));
           setArticle(updated as unknown as KnowledgeArticle);
-          message.success('已提交评审，等待其他评审人审批');
+          message.success('Submitted for review, waiting for approval by other reviewers');
         } catch (e: unknown) {
           const err = e as { message?: string };
-          message.error('提交评审失败：' + (err?.message || '未知错误'));
+          message.error('Submission for review failed:' + (err?.message || 'Unknown error'));
         } finally {
           setActionLoading(null);
         }
@@ -164,10 +164,11 @@ const ArticleDetail: React.FC = () => {
         <Result
           status="404"
           title="404"
-          subTitle="抱歉，您访问的文章不存在"
+          subTitle="Sorry, the article you visited does not exist"
           extra={
             <Button type="primary" onClick={() => router.push('/knowledge')}>
-              返回列表
+
+              Back to List
             </Button>
           }
         />
@@ -196,10 +197,10 @@ const ArticleDetail: React.FC = () => {
   return (
     <div style={{ padding: '0 0 24px' }}>
       <Breadcrumb style={{ marginBottom: 16 }}>
-        <Breadcrumb.Item>首页</Breadcrumb.Item>
-        <Breadcrumb.Item>知识库</Breadcrumb.Item>
-        <Breadcrumb.Item onClick={() => router.push('/knowledge')}>文章列表</Breadcrumb.Item>
-        <Breadcrumb.Item>文章详情</Breadcrumb.Item>
+        <Breadcrumb.Item>Home page</Breadcrumb.Item>
+        <Breadcrumb.Item>Knowledge Base</Breadcrumb.Item>
+        <Breadcrumb.Item onClick={() => router.push('/knowledge')}>Articles</Breadcrumb.Item>
+        <Breadcrumb.Item>Article details</Breadcrumb.Item>
       </Breadcrumb>
 
       <Card>
@@ -213,7 +214,8 @@ const ArticleDetail: React.FC = () => {
             }}
           >
             <Button icon={<ArrowLeft />} onClick={() => router.push('/knowledge')}>
-              返回列表
+
+              Back to List
             </Button>
             <Space>
               {/* 发布 = 评审通过的可见性投影：未过评审时只给「提交评审」，
@@ -225,7 +227,8 @@ const ArticleDetail: React.FC = () => {
                   onClick={handlePublish}
                   loading={actionLoading === 'publish'}
                 >
-                  发布文章
+
+                  Publish
                 </Button>
               )}
               {canWriteArticle && status === KnowledgeStatus.DRAFT && canSubmitReview && (
@@ -235,13 +238,15 @@ const ArticleDetail: React.FC = () => {
                   onClick={handleSubmitReview}
                   loading={actionLoading === 'submit'}
                 >
-                  提交评审
+
+                  Submit for review
                 </Button>
               )}
               {canWriteArticle && status === KnowledgeStatus.DRAFT && reviewStatus === 'under_review' && (
-                <Tooltip title="已送审，等待其他评审人审批（不能自审）">
+                <Tooltip title="Submitted for review, waiting for approval from other reviewers (self-review is not allowed)">
                   <Button disabled icon={<CheckCircle />}>
-                    评审中
+
+                    Under review
                   </Button>
                 </Tooltip>
               )}
@@ -251,7 +256,8 @@ const ArticleDetail: React.FC = () => {
                   onClick={handleUnpublish}
                   loading={actionLoading === 'unpublish'}
                 >
-                  取消发布
+
+                  Unpublish
                 </Button>
               )}
               {canWriteArticle && (
@@ -260,7 +266,8 @@ const ArticleDetail: React.FC = () => {
                   icon={<Pencil />}
                   onClick={() => router.push(`/knowledge/articles/${article.id}/edit`)}
                 >
-                  编辑文章
+
+                  Edit Article
                 </Button>
               )}
             </Space>
@@ -272,7 +279,7 @@ const ArticleDetail: React.FC = () => {
             {authorName && (
               <Space>
                 <User />
-                <Text type="secondary">作者: {authorName}</Text>
+                <Text type="secondary">Author: {authorName}</Text>
               </Space>
             )}
             <Space>
@@ -281,7 +288,7 @@ const ArticleDetail: React.FC = () => {
             </Space>
             <Space>
               <Folder />
-              <Text type="secondary">{articleCategory || '未分类'}</Text>
+              <Text type="secondary">{articleCategory || 'Uncategorized'}</Text>
             </Space>
             {/* 来源追溯（2026-10-22 沉淀闭环）：由问题沉淀而来的文章回链问题详情，
                 与问题详情页「知识沉淀」Tab 构成双向闭环；手工创建的文章不显示此行。 */}
@@ -294,7 +301,8 @@ const ArticleDetail: React.FC = () => {
                   style={{ padding: 0 }}
                   onClick={() => router.push(`/problems/${article.sourceProblemId}`)}
                 >
-                  来源问题 #{article.sourceProblemId}
+
+                  Source problem #{article.sourceProblemId}
                 </Button>
               </Space>
             )}
@@ -322,7 +330,7 @@ const ArticleDetail: React.FC = () => {
           items={[
             {
               key: 'content',
-              label: '文章内容',
+              label: 'Article Content',
               children: (
                 <div className="article-content" style={{ minHeight: 400 }}>
                   {/*
@@ -340,20 +348,20 @@ const ArticleDetail: React.FC = () => {
                       </ReactMarkdown>
                     </div>
                   ) : (
-                    <Paragraph type="secondary">本文暂无内容。</Paragraph>
+                    <Paragraph type="secondary">This article has no content yet.</Paragraph>
                   )}
                 </div>
               ),
             },
             {
               key: 'versions',
-              label: '版本历史',
+              label: 'Version History',
               children: (
                 <ArticleVersionControl
                   articleId={article.id.toString()}
                   currentVersion={1}
                   onVersionChange={version => {
-                    message.info(`切换到版本 ${version}`);
+                    message.info(`Switch to version ${version}`);
                   }}
                 />
               ),

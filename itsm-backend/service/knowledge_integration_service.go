@@ -65,7 +65,7 @@ func (s *KnowledgeIntegrationService) RecommendSolutions(ctx context.Context, ti
 	// 1. 获取工单信息
 	ticketEntity, err := s.client.Ticket.Get(ctx, ticketID)
 	if err != nil {
-		return nil, fmt.Errorf("获取工单失败: %w", err)
+		return nil, fmt.Errorf("Failed to obtain work order: %w", err)
 	}
 
 	// 2. 提取工单关键词
@@ -191,7 +191,7 @@ func (s *KnowledgeIntegrationService) searchKnowledgeArticles(ctx context.Contex
 		Limit(limit).
 		All(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("搜索知识库文章失败: %w", err)
+		return nil, fmt.Errorf("Failed to search knowledge base articles: %w", err)
 	}
 
 	return articles, nil
@@ -256,14 +256,14 @@ func (s *KnowledgeIntegrationService) AssociateWithKnowledge(ctx context.Context
 	// 1. 验证工单和文章是否存在
 	ticket, err := s.client.Ticket.Get(ctx, ticketID)
 	if err != nil {
-		return nil, fmt.Errorf("工单不存在: %w", err)
+		return nil, fmt.Errorf("Ticket does not exist: %w", err)
 	}
 
 	article, err := s.client.KnowledgeArticle.Query().
 		Where(knowledgearticle.IDEQ(articleID), knowledgearticle.DeletedAtIsNil()).
 		Only(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("知识库文章不存在: %w", err)
+		return nil, fmt.Errorf("Knowledge base article does not exist: %w", err)
 	}
 
 	// 2. 计算相关性评分
@@ -304,7 +304,7 @@ func (s *KnowledgeIntegrationService) addKnowledgeTagToTicket(ctx context.Contex
 			SetTenantID(1). // 这里应该从工单获取租户ID
 			Save(ctx)
 		if err != nil {
-			return fmt.Errorf("创建标签失败: %w", err)
+			return fmt.Errorf("Failed to create label: %w", err)
 		}
 	}
 
@@ -318,7 +318,7 @@ func (s *KnowledgeIntegrationService) GetAIRecommendations(ctx context.Context, 
 	// 1. 获取工单信息
 	ticket, err := s.client.Ticket.Get(ctx, ticketID)
 	if err != nil {
-		return nil, fmt.Errorf("获取工单失败: %w", err)
+		return nil, fmt.Errorf("Failed to obtain work order: %w", err)
 	}
 
 	// 2. 分析工单内容
@@ -466,7 +466,7 @@ func (s *KnowledgeIntegrationService) GetRelatedArticles(ctx context.Context, ti
 	// 获取工单信息
 	ticket, err := s.client.Ticket.Get(ctx, ticketID)
 	if err != nil {
-		return nil, fmt.Errorf("获取工单失败: %w", err)
+		return nil, fmt.Errorf("Failed to obtain work order: %w", err)
 	}
 
 	// 提取关键词
@@ -485,7 +485,7 @@ func (s *KnowledgeIntegrationService) GetRelatedArticles(ctx context.Context, ti
 func (s *KnowledgeIntegrationService) UpdateArticleViewCount(ctx context.Context, articleID int) error {
 	// 由于KnowledgeArticle没有ViewCount字段，这个方法暂时不实现
 	// 实际项目中需要先添加该字段到schema中
-	return fmt.Errorf("文章查看次数字段未实现")
+	return fmt.Errorf("The article views field is not implemented")
 }
 
 // AssociateWithKnowledgeRequest 关联知识库文章请求

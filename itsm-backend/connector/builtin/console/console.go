@@ -24,10 +24,10 @@ func (c *Console) Manifest() connector.Manifest {
 	return connector.Manifest{
 		Name:                "console",
 		Version:             "1.0.0",
-		Title:               "控制台日志",
+		Title:               "Console Log",
 		Provider:            "builtin",
 		Type:                connector.TypeCustom,
-		Description:         "把消息打印到标准输出，常用于本地开发与单元测试",
+		Description:         "Print messages to standard output for local development and unit testing",
 		Capabilities:        []connector.Capability{connector.CapSendMessage},
 		Tags:                []string{"debug", "log", "local"},
 		IsOfficial:          true,

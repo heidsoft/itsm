@@ -52,71 +52,71 @@ interface ErrorGuidance {
  */
 const ERROR_GUIDANCE: Record<string, ErrorGuidance> = {
   '400': {
-    title: '提交的内容有误',
-    reason: '请求参数未通过服务端校验',
-    action: '请检查标红字段后重新提交',
+    title: 'Wrong content submitted',
+    reason: 'Request parameters failed server-side verification',
+    action: 'Please check the red fields and resubmit.',
   },
   '401': {
-    title: '登录状态已失效',
-    reason: '登录凭证已过期或已被注销',
-    action: '请重新登录后再试',
+    title: 'Login status has expired',
+    reason: 'Login credentials have expired or been logged out',
+    action: 'Please log in again and try again',
   },
   '403': {
-    title: '没有权限执行此操作',
-    reason: '当前角色未被授予该资源的访问权限',
-    action: '请联系管理员申请权限，或切换到有权限的角色',
+    title: 'No permission to perform this operation',
+    reason: 'The current role is not granted access to this resource',
+    action: 'Please contact the administrator to apply for permissions, or switch to a role with permissions',
   },
   '404': {
-    title: '找不到该资源',
-    reason: '资源可能已被删除，或你无权查看',
-    action: '请返回列表刷新后重试',
+    title: 'The resource cannot be found',
+    reason: 'The resource may have been deleted or you do not have permission to view it.',
+    action: 'Please return to the list to refresh and try again.',
   },
   '409': {
-    title: '数据已被其他人修改',
-    reason: '并发提交时版本校验未通过，为避免覆盖他人改动已拒绝本次提交',
-    action: '请刷新页面查看最新内容后重新提交',
+    title: 'Data has been modified by someone else',
+    reason: 'The version verification failed during concurrent submission. To avoid overwriting other people\'s changes, this submission has been rejected.',
+    action: 'Please refresh the page to view the latest content and resubmit.',
   },
   '422': {
-    title: '数据校验未通过',
-    reason: '部分字段不符合业务规则',
-    action: '请检查表单中标红的字段',
+    title: 'Data verification failed',
+    reason: 'Some fields do not comply with business rules',
+    action: 'Please check the fields marked red in the form',
   },
   '429': {
-    title: '操作过于频繁',
-    reason: '已触发服务端的频率限制',
-    action: '请稍等片刻后重试',
+    title: 'Operation too frequent',
+    reason: 'Server-side frequency limit has been triggered',
+    action: 'Please wait for a while and try again.',
   },
   '500': {
-    title: '服务暂时不可用',
-    reason: '服务端处理时发生内部错误',
-    action: '请稍后重试；若持续出现请联系管理员',
+    title: 'Service is temporarily unavailable',
+    reason: 'An internal error occurred during server-side processing',
+    action: 'Please try again later; if it continues to appear, please contact the administrator.',
   },
   '502': {
-    title: '网关异常',
-    action: '请稍后重试；若持续出现请联系管理员',
+    title: 'Gateway exception',
+    action: 'Please try again later; if it continues to appear, please contact the administrator.',
   },
   '503': {
-    title: '服务正在维护或过载',
-    action: '请稍后重试',
+    title: 'The service is under maintenance or overloaded',
+    action: 'Please try again later',
   },
   '504': {
-    title: '服务响应超时',
-    reason: '后端处理时间超过了网关上限',
-    action: '请稍后重试，或缩小查询范围后再试',
+    title: 'Service response timed out',
+    reason: 'The backend processing time exceeds the gateway limit',
+    action: 'Please try again later, or narrow down the query scope and try again.',
   },
   // 网络层
   'Network Error': {
-    title: '网络连接失败',
-    reason: '无法连接到服务器',
-    action: '请检查网络后重试',
+    title: 'Network connection failed',
+    reason: 'Unable to connect to server',
+    action: 'Please check the network and try again',
   },
   timeout: {
-    title: '请求超时',
-    action: '请稍后重试，或缩小查询范围后再试',
+    title: 'Request timeout',
+    action: 'Please try again later, or narrow down the query scope and try again.',
   },
   'Request timeout': {
-    title: '请求超时',
-    action: '请稍后重试，或缩小查询范围后再试',
+    title: 'Request timeout',
+    action: 'Please try again later, or narrow down the query scope and try again.',
   },
 };
 
@@ -147,7 +147,7 @@ function resolveGuidanceKey(error: unknown): string | undefined {
 
 /** 组装最终提示文案：发生了什么 / 为什么 / 怎么办 */
 function composeMessage(guidance: ErrorGuidance, context?: string): string {
-  const title = context ? `${context}失败：${guidance.title}` : guidance.title;
+  const title = context ? `${context} Failure:${guidance.title}` : guidance.title;
   const parts = [title];
   if (guidance.reason) parts.push(guidance.reason);
   if (guidance.action) parts.push(guidance.action);
@@ -165,7 +165,7 @@ function showError(text: string, options: NotifyOptions): void {
   if (options.action) {
     // 注意：antd v6 已废弃 notification 的 `btn`，改用 `actions`
     notification.error({
-      message: options.context ? `${options.context}失败` : '操作失败',
+      message: options.context ? `${options.context} Failed` : 'Operation failed',
       description: text,
       duration: options.duration ?? 6,
       actions: (
@@ -220,16 +220,16 @@ export const notify = {
       text = composeMessage(guidance, options.context);
     } else {
       const friendly = getFriendlyErrorMessage(error);
-      text = options.context ? `${options.context}失败：${friendly}` : friendly;
+      text = options.context ? `${options.context} Failure:${friendly}` : friendly;
     }
 
     // 兜底：解析不出任何有用信息时不暴露原始错误对象
-    if (!text || text === '操作失败，请稍后重试') {
+    if (!text || text === "Operation failed, please try again later.") {
       text = options.fallback
         ? options.fallback
         : options.context
-          ? `${options.context}失败，请稍后重试`
-          : '操作失败，请稍后重试';
+          ? `${options.context} Failed, please try again later`
+          : 'Operation failed, please try again later.';
     }
 
     showError(text, options);
@@ -241,9 +241,9 @@ export const notify = {
    * AI 属于增强能力，失败不应表现为"操作失败"——用户最担心的是自己填的内容丢失，
    * 因此明确说明已降级且手动输入不受影响，避免误导为数据问题。
    */
-  aiUnavailable(context = 'AI 助手', options: NotifyOptions = {}): void {
+  aiUnavailable(context = 'AI Assistant', options: NotifyOptions = {}): void {
     if (!isBrowser()) return;
-    const text = `${context}暂时不可用，已为你保留手动填写的内容，不影响正常提交`;
+    const text = `${context} Temporarily unavailable. The manually filled content has been reserved for you and will not affect normal submission.`;
     if (options.action) {
       showError(text, options);
       return;
@@ -252,9 +252,9 @@ export const notify = {
   },
 
   /** AI 建议可用但置信度偏低时的提示，避免用户盲目采信 */
-  aiLowConfidence(context = 'AI 建议'): void {
+  aiLowConfidence(context = 'AI suggestion'): void {
     if (!isBrowser()) return;
-    message.info(`${context}置信度较低，请结合实际情况判断后再采纳`, 4);
+    message.info(`${context} The confidence level is low. Please judge based on the actual situation before adopting it.`, 4);
   },
 };
 

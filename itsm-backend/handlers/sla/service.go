@@ -307,7 +307,7 @@ func (s *Service) ListSLAPerformance(ctx context.Context, tenantID int, q SLAPer
 func (s *Service) CreateAlertRule(ctx context.Context, rule *SLAAlertRule) (*SLAAlertRule, error) {
 	// 关联 ID 必须属于同一租户：不校验会允许通过 slaDefinitionId 注入跨租户引用。
 	if _, err := s.repo.GetDefinition(ctx, rule.SLADefinitionID, rule.TenantID); err != nil {
-		return nil, common.NewBadRequestError("SLA 定义不存在或不属于当前租户", err)
+		return nil, common.NewBadRequestError("SLA definition does not exist or does not belong to the current tenant", err)
 	}
 	return s.repo.CreateAlertRule(ctx, rule)
 }
@@ -368,22 +368,22 @@ func (s *Service) GetAlertHistory(ctx context.Context, tenantID int, page, size 
 func (s *Service) GetSLAStats(ctx context.Context, tenantID int) (*dto.SLAStatsResponse, error) {
 	totalDefinitions, err := s.repo.CountDefinitions(ctx, tenantID, nil)
 	if err != nil {
-		return nil, fmt.Errorf("统计 SLA 定义失败: %w", err)
+		return nil, fmt.Errorf("Statistics SLA definition failed: %w", err)
 	}
 	active := true
 	activeDefinitions, err := s.repo.CountDefinitions(ctx, tenantID, &active)
 	if err != nil {
-		return nil, fmt.Errorf("统计启用的 SLA 定义失败: %w", err)
+		return nil, fmt.Errorf("Statistics enabled SLA definition failed: %w", err)
 	}
 
 	totalViolations, err := s.repo.CountViolations(ctx, tenantID, nil)
 	if err != nil {
-		return nil, fmt.Errorf("统计 SLA 违规失败: %w", err)
+		return nil, fmt.Errorf("Statistics SLA violation failed: %w", err)
 	}
 	unresolved := false
 	openViolations, err := s.repo.CountViolations(ctx, tenantID, &unresolved)
 	if err != nil {
-		return nil, fmt.Errorf("统计未处理 SLA 违规失败: %w", err)
+		return nil, fmt.Errorf("Statistics unhandled SLA violation failed: %w", err)
 	}
 
 	// 合规率基于总工单数与达标工单数。工单统计失败不能被当作
@@ -391,7 +391,7 @@ func (s *Service) GetSLAStats(ctx context.Context, tenantID int) (*dto.SLAStatsR
 	var complianceRate float64
 	totalTickets, metSLA, err := s.repo.GetTicketStats(ctx, tenantID)
 	if err != nil {
-		return nil, fmt.Errorf("统计工单达标情况失败: %w", err)
+		return nil, fmt.Errorf("Failed to count work order compliance status: %w", err)
 	}
 	if totalTickets > 0 {
 		complianceRate = float64(metSLA) / float64(totalTickets) * 100

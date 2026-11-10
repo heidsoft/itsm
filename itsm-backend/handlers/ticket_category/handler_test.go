@@ -185,7 +185,7 @@ func TestCategoryWrite_RejectsUnknownWorkflowKey(t *testing.T) {
 	}
 	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &env))
 	assert.Equal(t, 4000, env.Code)
-	assert.Equal(t, "工作流不存在、未激活或不属于当前租户", env.Message)
+	assert.Equal(t, "The workflow does not exist, is not active, or does not belong to the current tenant", env.Message)
 
 	count, err := client.TicketCategory.Query().Where(ticketcategory.CodeEQ("net-fault")).Count(ctx)
 	require.NoError(t, err)

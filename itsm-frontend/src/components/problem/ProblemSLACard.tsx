@@ -18,12 +18,12 @@ import { ProblemApi, type ProblemSLA } from '@/lib/api/problem-api';
 const { Text } = Typography;
 
 const statusMeta: Record<string, { label: string; color: string }> = {
-  unbound: { label: '未绑定', color: 'default' },
-  active: { label: '进行中', color: 'blue' },
-  warning: { label: '临近期限', color: 'orange' },
-  breached: { label: '已超时', color: 'red' },
-  paused: { label: '已暂停', color: 'purple' },
-  met: { label: '已达成', color: 'green' },
+  unbound: { label: 'Not bound', color: 'default' },
+  active: { label: 'In Progress', color: 'blue' },
+  warning: { label: 'Deadline approaching', color: 'orange' },
+  breached: { label: 'Timed out', color: 'red' },
+  paused: { label: 'Paused', color: 'purple' },
+  met: { label: 'Achieved', color: 'green' },
 };
 
 export interface ProblemSLACardProps {
@@ -60,27 +60,27 @@ export const ProblemSLACard: React.FC<ProblemSLACardProps> = ({ problemId }) => 
   return (
     <Card size="small" title="SLA" className="mt-4" data-testid="problem-sla-card">
       {!sla.bound ? (
-        <Text type="secondary">该问题未绑定 SLA（租户未配置 problem 类型的 SLA 定义）</Text>
+        <Text type="secondary">The problem is not bound to an SLA (the tenant does not configure an SLA definition of the problem type)</Text>
       ) : (
         <Descriptions size="small" column={1}>
-          <Descriptions.Item label="状态">
+          <Descriptions.Item label="Status">
             <Tag color={meta.color}>{meta.label}</Tag>
           </Descriptions.Item>
-          <Descriptions.Item label="响应截止">
+          <Descriptions.Item label="Response Deadline">
             <Text type={sla.status === 'breached' ? 'danger' : undefined}>
               {fmt(sla.responseDeadline)}
             </Text>
           </Descriptions.Item>
-          <Descriptions.Item label="解决截止">
+          <Descriptions.Item label="Resolution Deadline">
             <Text type={sla.status === 'breached' ? 'danger' : undefined}>
               {fmt(sla.resolutionDeadline)}
             </Text>
           </Descriptions.Item>
           {sla.firstResponseAt && (
-            <Descriptions.Item label="首次响应">{fmt(sla.firstResponseAt)}</Descriptions.Item>
+            <Descriptions.Item label="First response">{fmt(sla.firstResponseAt)}</Descriptions.Item>
           )}
           {sla.resolvedAt && (
-            <Descriptions.Item label="解决时间">{fmt(sla.resolvedAt)}</Descriptions.Item>
+            <Descriptions.Item label="Resolved At">{fmt(sla.resolvedAt)}</Descriptions.Item>
           )}
         </Descriptions>
       )}

@@ -5,20 +5,20 @@
                  xmlns:camunda="http://camunda.org/schema/1.0/bpmn"
                  targetNamespace="http://bpmn.io/schema/bpmn">
 
-  <bpmn:process id="incident_emergency_flow" name="紧急事件流程" isExecutable="true">
+  <bpmn:process id="incident_emergency_flow" name="Emergency Incident Workflow" isExecutable="true">
     <bpmn:extensionElements>
       <bpmn:metaData name="category">incident</bpmn:metaData>
       <bpmn:metaData name="version">1.1.0</bpmn:metaData>
-      <bpmn:metaData name="description">紧急事件快速响应流程（带主管审批）</bpmn:metaData>
+      <bpmn:metaData name="description">Rapid emergency incident response workflow with supervisor approval</bpmn:metaData>
     </bpmn:extensionElements>
 
     <!-- 开始事件：事件报告 -->
-    <bpmn:startEvent id="StartEvent_1" name="事件报告">
+    <bpmn:startEvent id="StartEvent_1" name="Incident Report">
       <bpmn:outgoing>Flow_1</bpmn:outgoing>
     </bpmn:startEvent>
 
     <!-- 自动分配（基于SLA） -->
-    <bpmn:serviceTask id="Activity_AutoAssign" name="自动分配" implementation="##WebService">
+    <bpmn:serviceTask id="Activity_AutoAssign" name="Automatic Assignment" implementation="##WebService">
       <bpmn:extensionElements>
         <bpmn:metaData name="service_task_type">incident_task</bpmn:metaData>
         <bpmn:metaData name="action">assign_incident</bpmn:metaData>
@@ -28,7 +28,7 @@
     </bpmn:serviceTask>
 
     <!-- 主管审批 (新增) -->
-    <bpmn:userTask id="Activity_ManagerApproval" name="主管审批">
+    <bpmn:userTask id="Activity_ManagerApproval" name="Supervisor Approval">
       <bpmn:extensionElements>
         <bpmn:metaData name="service_task_type">incident_task</bpmn:metaData>
         <bpmn:metaData name="action">manager_approval</bpmn:metaData>
@@ -41,7 +41,7 @@
     </bpmn:userTask>
 
     <!-- 初步诊断 -->
-    <bpmn:userTask id="Activity_Diagnosis" name="初步诊断">
+    <bpmn:userTask id="Activity_Diagnosis" name="Initial Diagnosis">
       <bpmn:extensionElements>
         <bpmn:metaData name="service_task_type">incident_task</bpmn:metaData>
         <bpmn:metaData name="action">update_incident</bpmn:metaData>
@@ -51,14 +51,14 @@
     </bpmn:userTask>
 
     <!-- 问题定位网关 -->
-    <bpmn:exclusiveGateway id="Gateway_Resolved" name="问题已定位?">
+    <bpmn:exclusiveGateway id="Gateway_Resolved" name="Issue Identified?">
       <bpmn:incoming>Flow_3</bpmn:incoming>
       <bpmn:outgoing>Flow_Resolve</bpmn:outgoing>
       <bpmn:outgoing>Flow_Escalate</bpmn:outgoing>
     </bpmn:exclusiveGateway>
 
     <!-- 立即解决 -->
-    <bpmn:userTask id="Activity_Resolve" name="立即解决">
+    <bpmn:userTask id="Activity_Resolve" name="Resolve Immediately">
       <bpmn:extensionElements>
         <bpmn:metaData name="service_task_type">incident_task</bpmn:metaData>
         <bpmn:metaData name="action">resolve_incident</bpmn:metaData>
@@ -68,7 +68,7 @@
     </bpmn:userTask>
 
     <!-- 升级处理（高优先级自动升级） -->
-    <bpmn:serviceTask id="Activity_AutoEscalate" name="自动升级" implementation="##WebService">
+    <bpmn:serviceTask id="Activity_AutoEscalate" name="Automatic Escalation" implementation="##WebService">
       <bpmn:extensionElements>
         <bpmn:metaData name="service_task_type">incident_task</bpmn:metaData>
         <bpmn:metaData name="action">escalate_incident</bpmn:metaData>
@@ -78,13 +78,13 @@
     </bpmn:serviceTask>
 
     <!-- 专家团队处理 -->
-    <bpmn:userTask id="Activity_ExpertHandle" name="专家团队处理">
+    <bpmn:userTask id="Activity_ExpertHandle" name="Expert Team Response">
       <bpmn:incoming>Flow_4</bpmn:incoming>
       <bpmn:outgoing>Flow_5</bpmn:outgoing>
     </bpmn:userTask>
 
     <!-- 问题解决网关 -->
-    <bpmn:exclusiveGateway id="Gateway_Solved" name="问题解决?">
+    <bpmn:exclusiveGateway id="Gateway_Solved" name="Issue Resolved?">
       <bpmn:incoming>Flow_5</bpmn:incoming>
       <bpmn:outgoing>Flow_6</bpmn:outgoing>
       <bpmn:outgoing>Flow_7</bpmn:outgoing>
@@ -101,7 +101,7 @@
     </bpmn:sequenceFlow>
 
     <!-- 通知相关方 -->
-    <bpmn:serviceTask id="Activity_Notify" name="通知相关方" implementation="##WebService">
+    <bpmn:serviceTask id="Activity_Notify" name="Notify Stakeholders" implementation="##WebService">
       <bpmn:extensionElements>
         <bpmn:metaData name="service_task_type">generic_task</bpmn:metaData>
         <bpmn:metaData name="action">notify</bpmn:metaData>
@@ -111,7 +111,7 @@
     </bpmn:serviceTask>
 
     <!-- 事件关闭 -->
-    <bpmn:userTask id="Activity_Close" name="事件关闭">
+    <bpmn:userTask id="Activity_Close" name="Incident Closed">
       <bpmn:extensionElements>
         <bpmn:metaData name="service_task_type">incident_task</bpmn:metaData>
         <bpmn:metaData name="action">close_incident</bpmn:metaData>
@@ -121,7 +121,7 @@
     </bpmn:userTask>
 
     <!-- 结束事件 -->
-    <bpmn:endEvent id="EndEvent_1" name="事件完成">
+    <bpmn:endEvent id="EndEvent_1" name="Incident Completed">
       <bpmn:incoming>Flow_Final</bpmn:incoming>
     </bpmn:endEvent>
 

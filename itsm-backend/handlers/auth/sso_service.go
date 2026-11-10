@@ -74,29 +74,29 @@ func (s *SSOService) Initiate(ctx context.Context, providerCode, tenantCode stri
 		return nil, err
 	}
 	if provider.ClientID == "" {
-		return nil, common.NewBusinessError(common.ServiceUnavailableCode, fmt.Sprintf("提供方 %s 未配置 client_id，请联系管理员", provider.Code), "")
+		return nil, common.NewBusinessError(common.ServiceUnavailableCode, fmt.Sprintf("Provider %s does not configure client_id, please contact the administrator", provider.Code), "")
 	}
 	if strings.TrimSpace(provider.RedirectURI) == "" {
-		return nil, common.NewBusinessError(common.ServiceUnavailableCode, fmt.Sprintf("提供方 %s 未配置回调地址，请联系管理员", provider.Code), "")
+		return nil, common.NewBusinessError(common.ServiceUnavailableCode, fmt.Sprintf("Provider %s has not configured a callback address, please contact the administrator", provider.Code), "")
 	}
 
 	endpoints, err := s.oidc.resolveEndpoints(ctx, provider.ID, provider.Issuer, provider.AuthorizationEndpoint, provider.TokenEndpoint, provider.UserinfoEndpoint, provider.JwksURI)
 	if err != nil {
 		s.markProviderError(ctx, provider.ID, err)
-		return nil, common.NewBusinessError(common.ServiceUnavailableCode, fmt.Sprintf("提供方 %s 端点解析失败，请稍后重试或联系管理员", provider.Code), "")
+		return nil, common.NewBusinessError(common.ServiceUnavailableCode, fmt.Sprintf("Provider %s endpoint resolution failed, please try again later or contact the administrator", provider.Code), "")
 	}
 
 	state, err := randomTokenHex(32)
 	if err != nil {
-		return nil, common.NewBusinessError(common.InternalErrorCode, "生成登录状态失败", "")
+		return nil, common.NewBusinessError(common.InternalErrorCode, "Failed to generate login status", "")
 	}
 	nonce, err := randomTokenHex(32)
 	if err != nil {
-		return nil, common.NewBusinessError(common.InternalErrorCode, "生成登录状态失败", "")
+		return nil, common.NewBusinessError(common.InternalErrorCode, "Failed to generate login status", "")
 	}
 	verifier, err := randomTokenBase64URL(32)
 	if err != nil {
-		return nil, common.NewBusinessError(common.InternalErrorCode, "生成登录状态失败", "")
+		return nil, common.NewBusinessError(common.InternalErrorCode, "Failed to generate login status", "")
 	}
 	challengeSum := sha256.Sum256([]byte(verifier))
 	challenge := base64.RawURLEncoding.EncodeToString(challengeSum[:])
@@ -115,7 +115,7 @@ func (s *SSOService) Initiate(ctx context.Context, providerCode, tenantCode stri
 		CreatedAt:  time.Now(),
 	}
 	if err := s.states.Save(ctx, state, record, SSOStateTTL); err != nil {
-		return nil, common.NewBusinessError(common.ServiceUnavailableCode, "登录状态服务暂不可用，请稍后重试", "")
+		return nil, common.NewBusinessError(common.ServiceUnavailableCode, "The login status service is temporarily unavailable, please try again later.", "")
 	}
 
 	scopes := strings.TrimSpace(provider.Scopes)
@@ -145,20 +145,20 @@ func (s *SSOService) Initiate(ctx context.Context, providerCode, tenantCode stri
 func (s *SSOService) Callback(ctx context.Context, providerCode, code, state string) (*dto.SSOSessionResponse, error) {
 	record, err := s.states.Consume(ctx, state)
 	if err != nil {
-		return nil, fmt.Errorf("登录状态无效或已过期，请重新发起 SSO 登录")
+		return nil, fmt.Errorf("The login status is invalid or expired, please re-initiate SSO login.")
 	}
 	provider, err := s.client.SSOProvider.Get(ctx, record.ProviderID)
 	if err != nil {
-		return nil, fmt.Errorf("提供方不存在")
+		return nil, fmt.Errorf("Provider does not exist")
 	}
 	if providerCode != "" && !strings.EqualFold(provider.Code, providerCode) {
-		return nil, fmt.Errorf("回调提供方与发起时不一致")
+		return nil, fmt.Errorf("The callback provider is inconsistent with the one when it was initiated.")
 	}
 	if !provider.Enabled {
-		return nil, fmt.Errorf("提供方 %s 已停用", provider.Code)
+		return nil, fmt.Errorf("Provider %s is deactivated", provider.Code)
 	}
 	if record.Mode == "bind" {
-		return nil, fmt.Errorf("该 state 属于账号绑定流程，请通过绑定入口完成")
+		return nil, fmt.Errorf("This state belongs to the account binding process. Please complete it through the binding entrance.")
 	}
 
 	identity, err := s.exchangeAndIdentify(ctx, provider, code, record)
@@ -172,26 +172,26 @@ func (s *SSOService) Callback(ctx context.Context, providerCode, code, state str
 		return nil, err
 	}
 	if !userEntity.Active {
-		return nil, fmt.Errorf("账号已被停用，请联系管理员")
+		return nil, fmt.Errorf("Account has been deactivated, please contact the administrator")
 	}
 	tenantEntity, err := s.client.Tenant.Get(ctx, userEntity.TenantID)
 	if err != nil {
-		return nil, fmt.Errorf("租户不存在")
+		return nil, fmt.Errorf("Tenant does not exist")
 	}
 	if tenantEntity.Status != "active" {
-		return nil, fmt.Errorf("租户已被暂停")
+		return nil, fmt.Errorf("Tenant has been suspended")
 	}
 	if !tenantEntity.ExpiresAt.IsZero() && tenantEntity.ExpiresAt.Before(time.Now()) {
-		return nil, fmt.Errorf("租户已过期")
+		return nil, fmt.Errorf("Tenant has expired")
 	}
 
 	accessToken, err := middleware.GenerateAccessToken(userEntity.ID, userEntity.Username, string(userEntity.Role), userEntity.TenantID, s.jwtSecret, middleware.AccessTokenTTL)
 	if err != nil {
-		return nil, fmt.Errorf("生成访问令牌失败")
+		return nil, fmt.Errorf("Failed to generate access token")
 	}
 	refreshToken, err := middleware.GenerateRefreshToken(userEntity.ID, userEntity.Username, string(userEntity.Role), userEntity.TenantID, s.jwtSecret, middleware.RefreshTokenTTL)
 	if err != nil {
-		return nil, fmt.Errorf("生成刷新令牌失败")
+		return nil, fmt.Errorf("Failed to generate refresh token")
 	}
 
 	if err := s.touchIdentity(ctx, provider.ID, userEntity.ID, identity); err != nil {
@@ -214,23 +214,23 @@ func (s *SSOService) Callback(ctx context.Context, providerCode, code, state str
 func (s *SSOService) Bind(ctx context.Context, sessionUserID int, providerCode, code, state string) error {
 	record, err := s.states.Consume(ctx, state)
 	if err != nil {
-		return fmt.Errorf("登录状态无效或已过期，请重新发起绑定")
+		return fmt.Errorf("The login status is invalid or expired, please re-initiate binding.")
 	}
 	if record.Mode != "bind" || record.BindUserID <= 0 {
-		return fmt.Errorf("该 state 不属于绑定流程")
+		return fmt.Errorf("This state does not belong to the binding process")
 	}
 	if record.BindUserID != sessionUserID {
-		return fmt.Errorf("会话与绑定请求不匹配，请重新发起绑定")
+		return fmt.Errorf("The session does not match the binding request, please reinitiate binding.")
 	}
 	provider, err := s.client.SSOProvider.Get(ctx, record.ProviderID)
 	if err != nil {
-		return fmt.Errorf("提供方不存在")
+		return fmt.Errorf("Provider does not exist")
 	}
 	if providerCode != "" && !strings.EqualFold(provider.Code, providerCode) {
-		return fmt.Errorf("绑定提供方与发起时不一致")
+		return fmt.Errorf("The binding provider is inconsistent with the one initiated")
 	}
 	if !provider.Enabled {
-		return fmt.Errorf("提供方 %s 已停用", provider.Code)
+		return fmt.Errorf("Provider %s is deactivated", provider.Code)
 	}
 
 	identity, err := s.exchangeAndIdentify(ctx, provider, code, record)
@@ -241,10 +241,10 @@ func (s *SSOService) Bind(ctx context.Context, sessionUserID int, providerCode, 
 
 	sessionUser, err := s.client.User.Get(ctx, sessionUserID)
 	if err != nil {
-		return fmt.Errorf("用户不存在")
+		return fmt.Errorf("User does not exist")
 	}
 	if sessionUser.TenantID != provider.TenantID {
-		return fmt.Errorf("不能绑定其他租户的提供方")
+		return fmt.Errorf("Cannot bind providers of other tenants")
 	}
 
 	// 该外部身份已被同租户其他用户占用时拒绝：静默改绑会把原主人的登录路径偷走。
@@ -252,14 +252,14 @@ func (s *SSOService) Bind(ctx context.Context, sessionUserID int, providerCode, 
 		Where(ssoidentity.TenantIDEQ(provider.TenantID), ssoidentity.ProviderIDEQ(provider.ID), ssoidentity.SubjectEQ(identity.Subject)).
 		Only(ctx)
 	if err == nil && existing.UserID != sessionUserID {
-		return fmt.Errorf("该外部身份已绑定到其他账号")
+		return fmt.Errorf("The external identity is already bound to another account")
 	}
 	if err != nil && !ent.IsNotFound(err) {
-		return fmt.Errorf("查询绑定关系失败")
+		return fmt.Errorf("Failed to query binding relationship")
 	}
 
 	if _, err := s.upsertIdentity(ctx, provider.ID, sessionUserID, identity); err != nil {
-		return fmt.Errorf("保存绑定关系失败: %w", err)
+		return fmt.Errorf("Failed to save binding relationship: %w", err)
 	}
 	s.logger.Infow("sso identity bound", "user_id", sessionUserID, "provider_id", provider.ID, "subject", maskSubject(identity.Subject))
 	return nil
@@ -275,10 +275,10 @@ func (s *SSOService) Unbind(ctx context.Context, sessionUserID int, providerCode
 		Where(ssoidentity.TenantIDEQ(mustUserTenant(ctx, s, sessionUserID)), ssoidentity.ProviderIDEQ(provider.ID), ssoidentity.UserIDEQ(sessionUserID)).
 		Exec(ctx)
 	if err != nil {
-		return fmt.Errorf("解除绑定失败")
+		return fmt.Errorf("Unbinding failed")
 	}
 	if affected == 0 {
-		return fmt.Errorf("尚未绑定该提供方")
+		return fmt.Errorf("The provider has not been bound yet")
 	}
 	s.logger.Infow("sso identity unbound", "user_id", sessionUserID, "provider_id", provider.ID)
 	return nil
@@ -288,13 +288,13 @@ func (s *SSOService) Unbind(ctx context.Context, sessionUserID int, providerCode
 func (s *SSOService) ListIdentities(ctx context.Context, sessionUserID int) ([]dto.SSOIdentityResponse, error) {
 	sessionUser, err := s.client.User.Get(ctx, sessionUserID)
 	if err != nil {
-		return nil, fmt.Errorf("用户不存在")
+		return nil, fmt.Errorf("User does not exist")
 	}
 	identities, err := s.client.SSOIdentity.Query().
 		Where(ssoidentity.TenantIDEQ(sessionUser.TenantID), ssoidentity.UserIDEQ(sessionUserID)).
 		All(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("查询绑定关系失败")
+		return nil, fmt.Errorf("Failed to query binding relationship")
 	}
 	if len(identities) == 0 {
 		return []dto.SSOIdentityResponse{}, nil
@@ -305,7 +305,7 @@ func (s *SSOService) ListIdentities(ctx context.Context, sessionUserID int) ([]d
 	}
 	providers, err := s.client.SSOProvider.Query().Where(ssoprovider.IDIn(providerIDs...)).All(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("查询提供方失败")
+		return nil, fmt.Errorf("Failed to query provider")
 	}
 	providerByID := make(map[int]*ent.SSOProvider, len(providers))
 	for _, provider := range providers {
@@ -345,7 +345,7 @@ func (s *SSOService) ListEnabledProviders(ctx context.Context, tenantCode string
 	}
 	providers, err := query.Order(ent.Asc(ssoprovider.FieldID)).All(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("查询提供方失败")
+		return nil, fmt.Errorf("Failed to query provider")
 	}
 	out := make([]dto.SSOBrief, 0, len(providers))
 	for _, provider := range providers {
@@ -357,17 +357,17 @@ func (s *SSOService) ListEnabledProviders(ctx context.Context, tenantCode string
 // exchangeAndIdentify 完成授权码交换与身份解析（id_token 优先，userinfo 兜底）。
 func (s *SSOService) exchangeAndIdentify(ctx context.Context, provider *ent.SSOProvider, code string, record *SSOStateRecord) (*oidcIdentity, error) {
 	if code == "" {
-		return nil, fmt.Errorf("缺少授权码")
+		return nil, fmt.Errorf("Missing authorization code")
 	}
 	endpoints, err := s.oidc.resolveEndpoints(ctx, provider.ID, provider.Issuer, provider.AuthorizationEndpoint, provider.TokenEndpoint, provider.UserinfoEndpoint, provider.JwksURI)
 	if err != nil {
-		return nil, fmt.Errorf("提供方端点解析失败: %w", err)
+		return nil, fmt.Errorf("Provider endpoint resolution failed: %w", err)
 	}
 	clientSecret := ""
 	if provider.ClientSecretEncrypted != "" {
 		decrypted, decErr := s.encryption.Decrypt(provider.ClientSecretEncrypted)
 		if decErr != nil {
-			return nil, fmt.Errorf("client_secret 解密失败，请重新配置提供方")
+			return nil, fmt.Errorf("client_secret decryption failed, please reconfigure the provider")
 		}
 		clientSecret = decrypted
 	}
@@ -385,7 +385,7 @@ func (s *SSOService) exchangeAndIdentify(ctx context.Context, provider *ent.SSOP
 	}
 	identity, err := s.oidc.fetchUserinfo(ctx, endpoints, tokenResp.AccessToken)
 	if err != nil {
-		return nil, fmt.Errorf("获取身份失败: %w", err)
+		return nil, fmt.Errorf("Failed to obtain identity: %w", err)
 	}
 	return identity, nil
 }
@@ -396,12 +396,12 @@ func (s *SSOService) resolveUser(ctx context.Context, provider *ent.SSOProvider,
 		Where(ssoidentity.TenantIDEQ(provider.TenantID), ssoidentity.ProviderIDEQ(provider.ID), ssoidentity.SubjectEQ(identity.Subject)).
 		Only(ctx)
 	if err != nil && !ent.IsNotFound(err) {
-		return nil, false, fmt.Errorf("查询身份绑定失败")
+		return nil, false, fmt.Errorf("Failed to query identity binding")
 	}
 	if err == nil {
 		userEntity, userErr := s.client.User.Get(ctx, binding.UserID)
 		if userErr != nil {
-			return nil, false, fmt.Errorf("绑定的本地用户不存在，请联系管理员")
+			return nil, false, fmt.Errorf("The bound local user does not exist, please contact the administrator")
 		}
 		return userEntity, false, nil
 	}
@@ -423,15 +423,15 @@ func (s *SSOService) resolveUser(ctx context.Context, provider *ent.SSOProvider,
 			return existing, false, nil
 		}
 		if !ent.IsNotFound(emailErr) {
-			return nil, false, fmt.Errorf("按邮箱匹配用户失败")
+			return nil, false, fmt.Errorf("Failed to match user by email")
 		}
 	}
 
 	if !provider.AutoProvision {
-		return nil, false, fmt.Errorf("账号不存在，且该提供方未开启自动开通，请联系管理员")
+		return nil, false, fmt.Errorf("The account does not exist and the provider has not enabled automatic activation. Please contact the administrator.")
 	}
 	if identity.Email == "" {
-		return nil, false, fmt.Errorf("IdP 未返回邮箱地址，无法自动开通账号")
+		return nil, false, fmt.Errorf("The IdP did not return the email address and the account cannot be automatically opened.")
 	}
 	userEntity, provisionErr := s.provisionUser(ctx, provider, identity)
 	if provisionErr != nil {
@@ -446,7 +446,7 @@ func (s *SSOService) resolveUser(ctx context.Context, provider *ent.SSOProvider,
 // provisionUser JIT 建号。username 在租户内去重；密码为随机值（SSO 用户不走密码登录）。
 func (s *SSOService) provisionUser(ctx context.Context, provider *ent.SSOProvider, identity *oidcIdentity) (*ent.User, error) {
 	if !allowedJITRoles[provider.DefaultRole] {
-		return nil, fmt.Errorf("提供方默认角色 %q 不允许自动开通（仅限 end_user/agent/technician），请联系管理员", provider.DefaultRole)
+		return nil, fmt.Errorf("Provider default role %q does not allow automatic provisioning (end_user/agent/technician only), please contact the administrator", provider.DefaultRole)
 	}
 	username, err := s.uniqueUsername(ctx, provider.TenantID, identity)
 	if err != nil {
@@ -454,11 +454,11 @@ func (s *SSOService) provisionUser(ctx context.Context, provider *ent.SSOProvide
 	}
 	randomPassword := make([]byte, 32)
 	if _, err := rand.Read(randomPassword); err != nil {
-		return nil, fmt.Errorf("生成随机凭证失败")
+		return nil, fmt.Errorf("Failed to generate random credentials")
 	}
 	passwordHash, err := bcrypt.GenerateFromPassword(randomPassword, bcrypt.DefaultCost)
 	if err != nil {
-		return nil, fmt.Errorf("密码处理失败")
+		return nil, fmt.Errorf("Password processing failed")
 	}
 	displayName := strings.TrimSpace(identity.Name)
 	if displayName == "" {
@@ -475,9 +475,9 @@ func (s *SSOService) provisionUser(ctx context.Context, provider *ent.SSOProvide
 		Save(ctx)
 	if err != nil {
 		if ent.IsConstraintError(err) {
-			return nil, fmt.Errorf("该邮箱已存在账号，无法自动开通，请联系管理员")
+			return nil, fmt.Errorf("There is already an account in this mailbox and cannot be automatically opened. Please contact the administrator.")
 		}
-		return nil, fmt.Errorf("创建用户失败")
+		return nil, fmt.Errorf("Failed to create user")
 	}
 	s.logger.Infow("sso jit user provisioned", "user_id", userEntity.ID, "provider_id", provider.ID, "tenant_id", provider.TenantID)
 	return userEntity, nil
@@ -503,13 +503,13 @@ func (s *SSOService) uniqueUsername(ctx context.Context, tenantID int, identity 
 		}
 		exists, err := s.client.User.Query().Where(user.UsernameEQ(candidate), user.TenantIDEQ(tenantID)).Exist(ctx)
 		if err != nil {
-			return "", fmt.Errorf("检查用户名失败")
+			return "", fmt.Errorf("Failed to check username")
 		}
 		if !exists {
 			return candidate, nil
 		}
 	}
-	return "", fmt.Errorf("无法生成唯一用户名，请手动创建账号")
+	return "", fmt.Errorf("Unable to generate unique username, please create an account manually")
 }
 
 func sanitizeUsername(raw string) string {
@@ -531,7 +531,7 @@ func (s *SSOService) checkEmailDomain(provider *ent.SSOProvider, email string) e
 		return nil
 	}
 	if email == "" {
-		return fmt.Errorf("该提供方限制了邮箱域，但 IdP 未返回邮箱")
+		return fmt.Errorf("The provider restricted the mailbox domain, but the IdP did not return the mailbox")
 	}
 	domain := strings.ToLower(strings.SplitN(email, "@", 2)[1])
 	for _, candidate := range strings.Split(allowed, ",") {
@@ -541,7 +541,7 @@ func (s *SSOService) checkEmailDomain(provider *ent.SSOProvider, email string) e
 			return nil
 		}
 	}
-	return fmt.Errorf("邮箱域不在允许范围")
+	return fmt.Errorf("Email domain is not allowed.")
 }
 
 // upsertIdentity 写入或刷新绑定（同一用户+提供方只保留一条）。
@@ -627,40 +627,40 @@ func (s *SSOService) resolveProviderForLogin(ctx context.Context, providerCode, 
 	if strings.TrimSpace(tenantCode) != "" {
 		tenantEntity, err := s.client.Tenant.Query().Where(tenant.CodeEQ(tenantCode)).Only(ctx)
 		if err != nil {
-			return nil, common.NewBusinessError(common.NotFoundCode, "租户不存在", "")
+			return nil, common.NewBusinessError(common.NotFoundCode, "Tenant does not exist", "")
 		}
 		query = query.Where(ssoprovider.TenantIDEQ(tenantEntity.ID))
 	}
 	providers, err := query.Order(ent.Asc(ssoprovider.FieldID)).All(ctx)
 	if err != nil {
-		return nil, common.NewBusinessError(common.InternalErrorCode, "查询提供方失败", "")
+		return nil, common.NewBusinessError(common.InternalErrorCode, "Failed to query provider", "")
 	}
 	switch len(providers) {
 	case 0:
-		return nil, common.NewBusinessError(common.NotFoundCode, fmt.Sprintf("SSO 提供方 %s 不存在或未启用", code), "")
+		return nil, common.NewBusinessError(common.NotFoundCode, fmt.Sprintf("SSO provider %s does not exist or is not enabled", code), "")
 	case 1:
 		return providers[0], nil
 	default:
-		return nil, common.NewBusinessError(common.BadRequestCode, fmt.Sprintf("提供方编码 %s 在多个租户下启用，请携带租户编码后重试", code), "")
+		return nil, common.NewBusinessError(common.BadRequestCode, fmt.Sprintf("Provider code %s is enabled under multiple tenants, please bring the tenant code and try again", code), "")
 	}
 }
 
 func (s *SSOService) resolveProviderByCode(ctx context.Context, providerCode string) (*ent.SSOProvider, error) {
 	code := strings.TrimSpace(providerCode)
 	if code == "" {
-		return nil, fmt.Errorf("缺少提供方编码")
+		return nil, fmt.Errorf("Missing provider code")
 	}
 	providers, err := s.client.SSOProvider.Query().Where(ssoprovider.CodeEQ(code)).Order(ent.Asc(ssoprovider.FieldID)).All(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("查询提供方失败")
+		return nil, fmt.Errorf("Failed to query provider")
 	}
 	switch len(providers) {
 	case 0:
-		return nil, fmt.Errorf("SSO 提供方 %s 不存在", code)
+		return nil, fmt.Errorf("SSO provider %s does not exist", code)
 	case 1:
 		return providers[0], nil
 	default:
-		return nil, fmt.Errorf("提供方编码 %s 在多个租户下存在，请联系管理员", code)
+		return nil, fmt.Errorf("Provider code %s exists under multiple tenants, please contact the administrator", code)
 	}
 }
 

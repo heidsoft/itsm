@@ -30,9 +30,9 @@ describe('AdminAutomationRulesPage 加载失败语义', () => {
       </App>,
     );
 
-    expect(await screen.findByText('没有权限查看自动化规则')).toBeInTheDocument();
-    expect(screen.getByText(/这里不是「系统里没有规则」/)).toBeInTheDocument();
-    expect(screen.queryByText('暂无自动化规则，点击上方按钮创建')).not.toBeInTheDocument();
+    expect(await screen.findByText("No permission to view automation rules")).toBeInTheDocument();
+    expect(screen.getByText(/The current role is not granted read permission for automation rules\. This is not "there are no rules in the system"\. Please contact the administrator to configure permissions for your role's opening rules\./)).toBeInTheDocument();
+    expect(screen.queryByText("There is no automation rule yet, click the button above to create it")).not.toBeInTheDocument();
     expect(document.querySelector('.ant-table')).toBeNull();
   });
 
@@ -44,7 +44,7 @@ describe('AdminAutomationRulesPage 加载失败语义', () => {
       </App>,
     );
 
-    expect(await screen.findByText('暂无自动化规则，点击上方按钮创建')).toBeInTheDocument();
-    expect(screen.queryByText(/没有权限/)).not.toBeInTheDocument();
+    expect(await screen.findByText("There is no automation rule yet, click the button above to create it")).toBeInTheDocument();
+    expect(screen.queryByText(/No permission/)).not.toBeInTheDocument();
   });
 });

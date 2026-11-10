@@ -172,7 +172,7 @@ describe('SLAApi', () => {
 
     it('should throw on empty response instead of faking success', async () => {
       mockPost.mockResolvedValue(undefined);
-      await expect(SLAApi.getSLAMonitoring()).rejects.toThrow('SLA 监控数据为空');
+      await expect(SLAApi.getSLAMonitoring()).rejects.toThrow("SLA monitoring data is empty");
     });
   });
 

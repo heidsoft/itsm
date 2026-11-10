@@ -35,7 +35,7 @@ func newDashboardRepository(db *sql.DB) *dashboardRepository {
 // requireDB 仓储方法内部前置校验：db 必须非空。
 func (r *dashboardRepository) requireDB() error {
 	if r == nil || r.db == nil {
-		return errors.New("dashboard repository: 数据库连接未初始化")
+		return errors.New("dashboard repository: Database connection not initialized")
 	}
 	return nil
 }
@@ -53,7 +53,7 @@ func (r *dashboardRepository) AvgResponseAndResolutionHours(ctx context.Context,
 		return 0, 0, err
 	}
 	if tenantID <= 0 {
-		return 0, 0, errors.New("dashboard repository: tenantID 必须为正整数")
+		return 0, 0, errors.New("dashboard repository: tenantID must be a positive integer")
 	}
 
 	const query = `
@@ -105,16 +105,16 @@ func (r *dashboardRepository) KPIAvgAndSLAScope(
 		return 0, 0, 0, 0, 0, 0, err
 	}
 	if tenantID <= 0 {
-		return 0, 0, 0, 0, 0, 0, errors.New("dashboard repository: tenantID 必须为正整数")
+		return 0, 0, 0, 0, 0, 0, errors.New("dashboard repository: tenantID must be a positive integer")
 	}
 	if thisMonthStart.IsZero() || lastMonthStart.IsZero() {
-		return 0, 0, 0, 0, 0, 0, errors.New("dashboard repository: 时间窗口不能为零值")
+		return 0, 0, 0, 0, 0, 0, errors.New("dashboard repository: time window cannot be zero value")
 	}
 	if !lastMonthStart.Before(thisMonthStart) {
-		return 0, 0, 0, 0, 0, 0, errors.New("dashboard repository: lastMonthStart 必须早于 thisMonthStart")
+		return 0, 0, 0, 0, 0, 0, errors.New("dashboard repository: lastMonthStart must be earlier than thisMonthStart")
 	}
 	if viewerID < 0 {
-		return 0, 0, 0, 0, 0, 0, errors.New("dashboard repository: viewerID 不能为负数")
+		return 0, 0, 0, 0, 0, 0, errors.New("dashboard repository: viewerID cannot be negative")
 	}
 
 	const query = `
@@ -183,16 +183,16 @@ func (r *dashboardRepository) PreviousSLAScopeCount(
 		return 0, 0, err
 	}
 	if tenantID <= 0 {
-		return 0, 0, errors.New("dashboard repository: tenantID 必须为正整数")
+		return 0, 0, errors.New("dashboard repository: tenantID must be a positive integer")
 	}
 	if thisMonthStart.IsZero() || lastMonthStart.IsZero() {
-		return 0, 0, errors.New("dashboard repository: 时间窗口不能为零值")
+		return 0, 0, errors.New("dashboard repository: time window cannot be zero value")
 	}
 	if !lastMonthStart.Before(thisMonthStart) {
-		return 0, 0, errors.New("dashboard repository: lastMonthStart 必须早于 thisMonthStart")
+		return 0, 0, errors.New("dashboard repository: lastMonthStart must be earlier than thisMonthStart")
 	}
 	if viewerID < 0 {
-		return 0, 0, errors.New("dashboard repository: viewerID 不能为负数")
+		return 0, 0, errors.New("dashboard repository: viewerID cannot be negative")
 	}
 
 	const query = `

@@ -104,8 +104,8 @@ export default function SLAMonitoringPage() {
   }, [selectedProcess, dateRange]);
 
   const VIOLATION_TYPE_LABEL: Record<string, string> = {
-    response_time: '响应超时',
-    resolution_time: '解决超时',
+    response_time: 'Response timeout',
+    resolution_time: 'Resolving timeout',
   };
 
   const severityColor = (severity: string) => {
@@ -125,7 +125,7 @@ export default function SLAMonitoringPage() {
 
   const violationColumns = [
     {
-      title: '工单',
+      title: 'Ticket',
       dataIndex: 'ticketNumber',
       key: 'ticketNumber',
       width: 220,
@@ -146,39 +146,41 @@ export default function SLAMonitoringPage() {
       render: (val: string) => val || '-',
     },
     {
-      title: '违规类型',
+      title: 'Violation Type',
       dataIndex: 'violationType',
       key: 'violationType',
       width: 110,
       render: (val: string) => <Tag>{VIOLATION_TYPE_LABEL[val] || val || '-'}</Tag>,
     },
     {
-      title: '严重级别',
+      title: 'Severity level',
       dataIndex: 'severity',
       key: 'severity',
       width: 100,
       render: (val: string) => <Tag color={severityColor(val)}>{val || '-'}</Tag>,
     },
     {
-      title: '违规时间',
+      title: 'Violation Time',
       dataIndex: 'violationTime',
       key: 'violationTime',
       width: 160,
       render: (val: string) => (val ? dayjs(val).format('YYYY-MM-DD HH:mm') : '-'),
     },
     {
-      title: '状态',
+      title: 'Status',
       dataIndex: 'isResolved',
       key: 'isResolved',
       width: 100,
       render: (isResolved: boolean) =>
         isResolved ? (
           <Tag color="green" icon={<CheckCircle size={14} />}>
-            已处理
+
+            Processed
           </Tag>
         ) : (
           <Tag color="red" icon={<AlertTriangle size={14} />}>
-            未处理
+
+            Not processed
           </Tag>
         ),
     },
@@ -188,7 +190,7 @@ export default function SLAMonitoringPage() {
     <div className='p-6 space-y-6'>
       {/* Header */}
       <div className='flex justify-between items-center'>
-        <h1 className='text-2xl font-bold'>{t('workflow.sla.title') || 'BPMN SLA监控'}</h1>
+        <h1 className='text-2xl font-bold'>{t('workflow.sla.title') || 'BPMN SLA Monitor'}</h1>
         <Button
           icon={<RefreshCw size={16} />}
           onClick={() => {
@@ -196,15 +198,15 @@ export default function SLAMonitoringPage() {
             fetchProcessMetrics();
           }}
         >
-          {t('common.refresh') || '刷新'}
+          {t('common.refresh') || 'Refresh'}
         </Button>
       </div>
 
       {/* Process Metrics */}
-      <Card title={t('workflow.sla.processMetrics') || '流程SLA指标'}>
+      <Card title={t('workflow.sla.processMetrics') || 'Process SLA Metrics'}>
         <Space wrap className='mb-4'>
           <Select
-            placeholder={t('workflow.sla.selectProcess') || '选择流程'}
+            placeholder={t('workflow.sla.selectProcess') || 'Select Process'}
             style={{ width: 250 }}
             value={selectedProcess || undefined}
             onChange={setSelectedProcess}
@@ -225,34 +227,34 @@ export default function SLAMonitoringPage() {
           <Row gutter={[16, 16]}>
             <Col xs={12} sm={8}>
               <Statistic
-                title={t('workflow.sla.totalInstances') || '总实例数'}
+                title={t('workflow.sla.totalInstances') || 'Total Instances'}
                 value={processMetrics.totalInstances}
               />
             </Col>
             <Col xs={12} sm={8}>
               <Statistic
-                title={t('workflow.sla.runningInstances') || '进行中'}
+                title={t('workflow.sla.runningInstances') || 'In Progress'}
                 value={processMetrics.runningInstances}
                 styles={{ content: { color: '#1890ff' } }}
               />
             </Col>
             <Col xs={12} sm={8}>
               <Statistic
-                title={t('workflow.sla.completedInstances') || '已完成'}
+                title={t('workflow.sla.completedInstances') || 'Completed'}
                 value={processMetrics.completedInstances}
                 styles={{ content: { color: '#52c41a' } }}
               />
             </Col>
             <Col xs={12} sm={8}>
               <Statistic
-                title={t('workflow.sla.completionRate') || '完成率'}
+                title={t('workflow.sla.completionRate') || 'Completion Rate'}
                 value={processMetrics.completionRate}
                 suffix='%'
               />
             </Col>
             <Col xs={12} sm={8}>
               <Statistic
-                title={t('workflow.sla.slaComplianceRate') || 'SLA合规率'}
+                title={t('workflow.sla.slaComplianceRate') || 'SLA Compliance Rate'}
                 value={processMetrics.slaComplianceRate}
                 suffix='%'
                 styles={{
@@ -269,9 +271,9 @@ export default function SLAMonitoringPage() {
             </Col>
             <Col xs={12} sm={8}>
               <Statistic
-                title={t('workflow.sla.avgCompletionTime') || '平均完成时间'}
+                title={t('workflow.sla.avgCompletionTime') || 'Avg Completion Time'}
                 value={processMetrics.avgCompletionTimeMinutes?.toFixed(1) || 0}
-                suffix='分钟'
+                suffix="minutes"
               />
             </Col>
           </Row>
@@ -280,22 +282,22 @@ export default function SLAMonitoringPage() {
 
       {/* SLA Violations */}
       <Card
-        title={t('workflow.sla.violations') || 'SLA违规告警'}
+        title={t('workflow.sla.violations') || 'SLA Violations'}
         extra={
           <Tag color='red'>
-            {violations.length} {t('workflow.sla.items') || '项'}
+            {violations.length} {t('workflow.sla.items') || 'items'}
           </Tag>
         }
       >
         {violationsError ? (
           <Alert
-            title='SLA 违规数据加载失败'
-            description='请稍后重试；失败不等于没有违规，请勿据此判断系统健康。'
+            title="SLA violation data loading failed"
+            description="Please try again later; failure does not mean there is no violation, please do not judge the health of the system based on this."
             type='error'
             showIcon
           />
         ) : violations.length === 0 ? (
-          <Alert title={t('workflow.sla.noViolations') || '暂无SLA违规'} type='success' showIcon />
+          <Alert title={t('workflow.sla.noViolations') || 'No SLA Violations'} type='success' showIcon />
         ) : (
           <Table
             dataSource={violations}
@@ -313,7 +315,7 @@ export default function SLAMonitoringPage() {
         <Col xs={24} sm={8}>
           <Card>
             <Statistic
-              title="未处理"
+              title="Not processed"
               value={violations.filter(v => !v.isResolved).length}
               prefix={<AlertTriangle size={20} />}
               styles={{ content: { color: '#ff4d4f' } }}
@@ -323,7 +325,7 @@ export default function SLAMonitoringPage() {
         <Col xs={24} sm={8}>
           <Card>
             <Statistic
-              title="高严重级别"
+              title="High severity"
               value={violations.filter(v => v.severity === 'critical' || v.severity === 'high').length}
               prefix={<Clock size={20} />}
               styles={{ content: { color: '#faad14' } }}
@@ -333,7 +335,7 @@ export default function SLAMonitoringPage() {
         <Col xs={24} sm={8}>
           <Card>
             <Statistic
-              title="已处理"
+              title="Processed"
               value={violations.filter(v => v.isResolved).length}
               prefix={<CheckCircle size={20} />}
               styles={{ content: { color: '#52c41a' } }}

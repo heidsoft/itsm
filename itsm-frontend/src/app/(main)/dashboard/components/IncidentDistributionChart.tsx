@@ -17,7 +17,7 @@ const IncidentDistributionChart: React.FC<{ data: IncidentDistributionData[] }> 
 
     const config = {
       data: validData.map(item => ({
-        type: item.category || '未知',
+        type: item.category || 'Unknown',
         value: item.count || 0,
       })),
       angleField: 'value',
@@ -32,7 +32,7 @@ const IncidentDistributionChart: React.FC<{ data: IncidentDistributionData[] }> 
             fontSize: '12px', // antdTheme.token.fontSizeSM
             fill: '#64748b', // antdTheme.token.colorTextSecondary
           },
-          formatter: () => '总事件数',
+          formatter: () => 'Total Incidents',
         },
         content: {
           offsetY: 8,
@@ -63,17 +63,17 @@ const IncidentDistributionChart: React.FC<{ data: IncidentDistributionData[] }> 
         ? validData.reduce((prev, current) =>
             (prev.count || 0) > (current.count || 0) ? prev : current
           )
-        : { category: '无数据', count: 0 };
+        : { category: 'No data', count: 0 };
 
     return (
       <DashboardChartCard
-        title="事件分类分布"
-        subtitle="按事件类型统计分析"
+        title="Event classification distribution"
+        subtitle="Statistical analysis by event type"
         icon={<PieChart style={{ width: 20, height: 20 }} />}
         iconColor="#10b981"
         extra={
           <Tag color="success" className="font-semibold">
-            {topCategory.category}占比最高
+            {topCategory.category}highest proportion
           </Tag>
         }
       >

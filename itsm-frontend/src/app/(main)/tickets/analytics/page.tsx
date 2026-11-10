@@ -73,9 +73,9 @@ const PRIORITY_COLORS: Record<TicketPriority, string> = {
 const UNKNOWN_COLOR = '#d9d9d9';
 
 const SCOPE_LABELS: Record<TicketStatsResponse['scope'], string> = {
-  all: '租户全量工单',
-  department: '本部门可见工单',
-  owner: '本人创建或受理的工单',
+  all: 'Tenant full work order',
+  department: 'Work orders are visible to this department',
+  owner: 'Work order created or accepted by me',
 };
 
 interface Slice {
@@ -156,7 +156,7 @@ const TicketAnalytics: React.FC = () => {
       setState({
         kind: 'error',
         denied: isPermissionDeniedError(error),
-        reason: serverErrorMessage(error, '后端未能返回工单统计。'),
+        reason: serverErrorMessage(error, 'The backend failed to return work order statistics.'),
       });
     }
   }, [dateRange]);
@@ -169,7 +169,8 @@ const TicketAnalytics: React.FC = () => {
     <div className="p-6">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <Title level={2} className="!mb-0">
-          工单统计
+
+          Work order statistics
         </Title>
         <Space>
           <RangePicker
@@ -183,7 +184,8 @@ const TicketAnalytics: React.FC = () => {
             allowClear={false}
           />
           <Button icon={<RotateCcw />} onClick={fetchData} loading={state.kind === 'loading'}>
-            刷新数据
+
+            Refresh Data
           </Button>
         </Space>
       </div>
@@ -197,15 +199,16 @@ const TicketAnalytics: React.FC = () => {
       <Alert
         type={state.denied ? 'warning' : 'error'}
         showIcon
-        title={state.denied ? '工单统计没有访问权限' : '工单统计加载失败'}
+        title={state.denied ? 'No access rights to work order statistics' : 'Failed to load work order statistics'}
         description={
           state.denied
-            ? `${state.reason}。该页面的计数器、分布与趋势都来自 GET /api/v1/tickets/stats，需要 ticket:read；请联系管理员为当前角色开放该权限。缺少数据不等于租户里没有工单。`
-            : `${state.reason}。请稍后重试；若持续失败，请联系管理员查看后端日志。`
+            ? `${state.reason}. The counters, distributions and trends of this page all come from GET /api/v1/tickets/stats, which requires ticket:read; please contact the administrator to enable this permission for the current role. Lack of data does not mean there are no work orders in the tenant.`
+            : `${state.reason}. Please try again later; if it continues to fail, please contact the administrator to check the backend log.`
         }
         action={
           <Button size="small" icon={<RotateCcw />} onClick={fetchData}>
-            重试
+
+            Retry
           </Button>
         }
       />
@@ -215,7 +218,7 @@ const TicketAnalytics: React.FC = () => {
   if (state.kind === 'loading') {
     return renderShell(
       <div className="flex min-h-[400px] items-center justify-center">
-        <Spin size="large" description="加载工单统计..." />
+        <Spin size="large" description="Loading work order statistics..." />
       </div>
     );
   }
@@ -228,21 +231,21 @@ const TicketAnalytics: React.FC = () => {
 
   // 后端把 scope 锁定在 all/department/owner（handlers/ticket/stats_contract_test.go）。
   // 词表外的值如实显示原始值，不冒充「租户全量」，否则口径提示本身就是错的。
-  const scopeText = SCOPE_LABELS[stats.scope] ?? `未识别的数据范围 ${stats.scope}`;
+  const scopeText = SCOPE_LABELS[stats.scope] ?? `Unrecognized data range ${stats.scope}`;
   const windowText = stats.window
-    ? `${stats.window.dateFrom} 至 ${stats.window.dateTo}（${stats.window.days} 天，按创建时间）`
-    : '全部时间（按创建时间）';
+    ? `${stats.window.dateFrom} to ${stats.window.dateTo}（${stats.window.days} days, by creation time)`
+    : 'All time (by creation time)';
 
   const kpiCards = [
-    { title: '工单总数', value: stats.total, color: '#1890ff' },
-    { title: '待处理', value: stats.open, color: STATUS_COLORS[TicketStatus.OPEN] },
-    { title: '处理中', value: stats.inProgress, color: STATUS_COLORS[TicketStatus.IN_PROGRESS] },
-    { title: '挂起', value: stats.pending, color: STATUS_COLORS[TicketStatus.PENDING] },
-    { title: '已解决', value: stats.resolved, color: STATUS_COLORS[TicketStatus.RESOLVED] },
-    { title: '已关闭', value: stats.closed, color: STATUS_COLORS[TicketStatus.CLOSED] },
-    { title: '高优先级', value: stats.highPriority, color: PRIORITY_COLORS[TicketPriority.HIGH] },
+    { title: 'Total number of work orders', value: stats.total, color: '#1890ff' },
+    { title: 'Pending', value: stats.open, color: STATUS_COLORS[TicketStatus.OPEN] },
+    { title: 'In Progress', value: stats.inProgress, color: STATUS_COLORS[TicketStatus.IN_PROGRESS] },
+    { title: 'hang', value: stats.pending, color: STATUS_COLORS[TicketStatus.PENDING] },
+    { title: 'Resolved', value: stats.resolved, color: STATUS_COLORS[TicketStatus.RESOLVED] },
+    { title: 'Closed', value: stats.closed, color: STATUS_COLORS[TicketStatus.CLOSED] },
+    { title: 'High Priority', value: stats.highPriority, color: PRIORITY_COLORS[TicketPriority.HIGH] },
     {
-      title: '已超期',
+      title: 'Expired',
       value: stats.overdue,
       color: stats.overdue > 0 ? '#cf1322' : undefined,
     },
@@ -252,8 +255,9 @@ const TicketAnalytics: React.FC = () => {
     <Space orientation="vertical" size="middle" className="w-full">
       <div className="rounded-md border border-gray-200 bg-white px-4 py-3">
         <Text type="secondary">
-          统计口径：{scopeText}；时间窗口 {windowText}。本页所有卡片、分布与趋势共用这同一次查询，
-          不含其他数据源。
+
+          Statistical caliber:{scopeText};Time window {windowText}. All cards, distributions and trends on this page share the same query.
+does not contain other data sources.
         </Text>
       </div>
 
@@ -268,16 +272,17 @@ const TicketAnalytics: React.FC = () => {
       </Row>
 
       <Card
-        title="处理效率与 SLA"
+        title="Processing Efficiency and SLA"
         size="small"
-        extra={<Text type="secondary">SLA 读数按租户全量计算，不跟随登录者的数据范围</Text>}
+        extra={<Text type="secondary">SLA readings are calculated based on the full amount of the tenant and do not follow the data range of the login user</Text>}
       >
         {stats.sla ? (
           <Row gutter={[16, 16]}>
             <Col xs={12} lg={6}>
               <div className="flex flex-col items-center">
                 <Text type="secondary" className="mb-1">
-                  SLA 达标率
+
+                  SLA Compliance
                 </Text>
                 <Progress
                   type="circle"
@@ -285,27 +290,28 @@ const TicketAnalytics: React.FC = () => {
                   percent={Math.round(stats.sla.complianceRate)}
                 />
                 <Text type="secondary" className="mt-1 text-xs">
-                  样本 {stats.sla.sampledTickets} 张，违约 {stats.sla.violatedTickets} 张
+
+                  Sample: {stats.sla.sampledTickets} tickets; SLA breaches: {stats.sla.violatedTickets}
                 </Text>
               </div>
             </Col>
             <Col xs={12} lg={6}>
               <Statistic
-                title="平均响应时长（小时）"
+                title="Average response time (hours)"
                 value={stats.sla.avgResponseMinutes / 60}
                 precision={1}
               />
             </Col>
             <Col xs={12} lg={6}>
               <Statistic
-                title="平均解决时长（小时）"
+                title="Average resolution time (hours)"
                 value={stats.sla.avgResolutionHours}
                 precision={1}
               />
             </Col>
             <Col xs={12} lg={6}>
               <Statistic
-                title="解决率"
+                title="Resolution rate"
                 value={percentage(stats.resolved + stats.closed, stats.total)}
                 precision={1}
                 suffix="%"
@@ -318,13 +324,13 @@ const TicketAnalytics: React.FC = () => {
               <Alert
                 type="info"
                 showIcon
-                title="SLA 达标率暂不可用"
-                description="未接入 SLA 计时服务或本次读数失败，因此这里显示「没取到」而不是 0%。请先在 SLA 模块完成定义与监控配置。"
+                title="SLA compliance rate is temporarily unavailable"
+                description="Not connected to the SLA timing service or this reading failed, so &quot;not obtained&quot; is displayed here instead of 0%. Please complete the definition and monitoring configuration in the SLA module first."
               />
             </Col>
             <Col xs={12} lg={6}>
               <Statistic
-                title="解决率"
+                title="Resolution rate"
                 value={percentage(stats.resolved + stats.closed, stats.total)}
                 precision={1}
                 suffix="%"
@@ -332,7 +338,7 @@ const TicketAnalytics: React.FC = () => {
             </Col>
             <Col xs={12} lg={6}>
               <Statistic
-                title="超期率"
+                title="Overdue rate"
                 value={percentage(stats.overdue, stats.total)}
                 precision={1}
                 suffix="%"
@@ -342,7 +348,7 @@ const TicketAnalytics: React.FC = () => {
         )}
       </Card>
 
-      <Card title="工单趋势（每日新建/解决）" size="small">
+      <Card title="Work order trend (newly created/resolved daily)" size="small">
         {stats.dailyTrend && stats.dailyTrend.length > 0 ? (
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={stats.dailyTrend}>
@@ -357,10 +363,10 @@ const TicketAnalytics: React.FC = () => {
                 labelFormatter={(d: unknown) => dayjs(String(d)).format('YYYY-MM-DD')}
                 formatter={(value: unknown, name: unknown) => [
                   Number(value) || 0,
-                  name === 'created' ? '新建' : name === 'resolved' ? '已解决' : String(name),
+                  name === 'created' ? 'Create' : name === 'resolved' ? 'Resolved' : String(name),
                 ]}
               />
-              <Legend formatter={(v: string) => (v === 'created' ? '新建' : v === 'resolved' ? '已解决' : v)} />
+              <Legend formatter={(v: string) => (v === 'created' ? 'Create' : v === 'resolved' ? 'Resolved' : v)} />
               <Line type="monotone" dataKey="created" stroke="#1890ff" strokeWidth={2} dot={false} />
               <Line type="monotone" dataKey="resolved" stroke="#52c41a" strokeWidth={2} dot={false} />
             </LineChart>
@@ -369,8 +375,8 @@ const TicketAnalytics: React.FC = () => {
           <Empty
             description={
               stats.dailyTrend === undefined
-                ? '本次请求未返回趋势序列（后端未启用窗口趋势）'
-                : '所选时间范围内没有新建或解决的工单'
+                ? 'This request did not return a trend sequence (window trend is not enabled on the backend)'
+                : 'There are no new or resolved tickets in the selected time range'
             }
           />
         )}
@@ -378,7 +384,7 @@ const TicketAnalytics: React.FC = () => {
 
       <Row gutter={[16, 16]}>
         <Col xs={24} lg={12}>
-          <Card title="状态分布" size="small">
+          <Card title="Status distribution" size="small">
             {statusSlices.length > 0 ? (
               <ResponsiveContainer width="100%" height={280}>
                 <PieChart>
@@ -405,12 +411,12 @@ const TicketAnalytics: React.FC = () => {
                 </PieChart>
               </ResponsiveContainer>
             ) : (
-              <Empty description="所选范围内暂无状态分布数据" />
+              <Empty description="There is no status distribution data in the selected range." />
             )}
           </Card>
         </Col>
         <Col xs={24} lg={12}>
-          <Card title="优先级分布" size="small">
+          <Card title="Priority distribution" size="small">
             {prioritySlices.length > 0 ? (
               <ResponsiveContainer width="100%" height={280}>
                 <BarChart data={prioritySlices}>
@@ -423,7 +429,7 @@ const TicketAnalytics: React.FC = () => {
                       String(name),
                     ]}
                   />
-                  <Bar dataKey="value" name="工单数" radius={[4, 4, 0, 0]}>
+                  <Bar dataKey="value" name="Number of work orders" radius={[4, 4, 0, 0]}>
                     {prioritySlices.map((slice) => (
                       <Cell key={slice.key} fill={slice.color} />
                     ))}
@@ -431,13 +437,13 @@ const TicketAnalytics: React.FC = () => {
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <Empty description="所选范围内暂无优先级分布数据" />
+              <Empty description="There is no priority distribution data in the selected range." />
             )}
           </Card>
         </Col>
       </Row>
 
-      <Card title="状态明细" size="small">
+      <Card title="Status details" size="small">
         {statusSlices.length > 0 ? (
           <Row gutter={[16, 16]}>
             {statusSlices.map((slice) => (
@@ -452,7 +458,7 @@ const TicketAnalytics: React.FC = () => {
             ))}
           </Row>
         ) : (
-          <Empty description="所选范围内没有工单" />
+          <Empty description="There are no tickets in the selected range" />
         )}
       </Card>
     </Space>
@@ -463,8 +469,8 @@ const TicketAnalytics: React.FC = () => {
       activeKey={activeTab}
       onChange={setActiveTab}
       items={[
-        { key: 'overview', label: '总览', children: overviewTab },
-        { key: 'deep', label: '深度分析', children: <TicketDeepAnalytics /> },
+        { key: 'overview', label: 'Overview', children: overviewTab },
+        { key: 'deep', label: 'In-depth analysis', children: <TicketDeepAnalytics /> },
       ]}
     />
   );

@@ -171,42 +171,42 @@ export const passwordSecurity = {
     if (password.length >= 8) {
       score += 1;
     } else {
-      feedback.push('密码长度至少需要8个字符');
+      feedback.push('Password length needs to be at least 8 characters');
     }
 
     // 包含小写字母
     if (/[a-z]/.test(password)) {
       score += 1;
     } else {
-      feedback.push('密码需要包含小写字母');
+      feedback.push('Password needs to contain lowercase letters');
     }
 
     // 包含大写字母
     if (/[A-Z]/.test(password)) {
       score += 1;
     } else {
-      feedback.push('密码需要包含大写字母');
+      feedback.push('Password needs to contain uppercase letters');
     }
 
     // 包含数字
     if (/\d/.test(password)) {
       score += 1;
     } else {
-      feedback.push('密码需要包含数字');
+      feedback.push('Password needs to contain numbers');
     }
 
     // 包含特殊字符
     if (/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
       score += 1;
     } else {
-      feedback.push('密码需要包含特殊字符');
+      feedback.push('Password needs to contain special characters');
     }
 
     // 不包含常见弱密码
     const commonPasswords = ['123456', 'password', '123456789', 'qwerty', 'abc123'];
     if (commonPasswords.includes(password.toLowerCase())) {
       score = 0;
-      feedback.push('请不要使用常见的弱密码');
+      feedback.push('Please do not use common weak passwords');
     }
 
     return {

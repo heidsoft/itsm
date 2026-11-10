@@ -15,11 +15,11 @@
 
 export const BRAND = {
   NAME: 'AI-Native ITSM',
-  NAME_CN: '智能服务管理',
+  NAME_CN: 'Intelligent Service Management',
   SLOGAN: 'LLM-first Service Management',
-  SLOGAN_CN: '让 IT 服务更高效',
+  SLOGAN_CN: 'Making IT services more efficient',
   COPYRIGHT: `© ${new Date().getFullYear()} AI-Native ITSM. Licensed under Apache 2.0.`,
-  COPYRIGHT_CN: `© ${new Date().getFullYear()} 智能服务管理 · Apache 2.0 开源协议`,
+  COPYRIGHT_CN: `© ${new Date().getFullYear()} Intelligent Service Management · Apache 2.0 Open Source Protocol`,
   HOMEPAGE: 'https://cloudmesh.top/',
   REPO: 'https://github.com/heidsoft/itsm',
 } as const;

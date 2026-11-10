@@ -60,7 +60,7 @@ func resolveTenant(c *gin.Context) (int, bool) {
 		return tid, true
 	}
 	if !c.Writer.Written() {
-		common.Fail(c, common.AuthFailedCode, "未授权访问")
+		common.Fail(c, common.AuthFailedCode, "Unauthorized access")
 	}
 	return 0, false
 }
@@ -74,7 +74,7 @@ func (h *Handler) ListTemplates(c *gin.Context) {
 
 	states, err := h.templateService.InstallStates(c.Request.Context(), tid)
 	if err != nil {
-		common.RespondError(c, err, "查询 SLA 模板安装状态失败")
+		common.RespondError(c, err, "Failed to query SLA template installation status")
 		return
 	}
 
@@ -94,7 +94,7 @@ func (h *Handler) ListTemplates(c *gin.Context) {
 func (h *Handler) GetTemplate(c *gin.Context) {
 	key := c.Param("key")
 	if key == "" {
-		common.Fail(c, common.ParamErrorCode, "模板 key 不能为空")
+		common.Fail(c, common.ParamErrorCode, "Template key cannot be empty")
 		return
 	}
 
@@ -106,16 +106,16 @@ func (h *Handler) GetTemplate(c *gin.Context) {
 	tmpl, err := h.templateService.GetTemplate(key)
 	if err != nil {
 		if errors.Is(err, service.ErrSLATemplateNotFound) {
-			common.NotFoundWithErr(c, err, "SLA 模板不存在")
+			common.NotFoundWithErr(c, err, "SLA template does not exist")
 			return
 		}
-		common.RespondError(c, err, "查询 SLA 模板失败")
+		common.RespondError(c, err, "Failed to query SLA template")
 		return
 	}
 
 	states, err := h.templateService.InstallStates(c.Request.Context(), tid)
 	if err != nil {
-		common.RespondError(c, err, "查询 SLA 模板安装状态失败")
+		common.RespondError(c, err, "Failed to query SLA template installation status")
 		return
 	}
 
@@ -126,7 +126,7 @@ func (h *Handler) GetTemplate(c *gin.Context) {
 func (h *Handler) InstallTemplate(c *gin.Context) {
 	key := c.Param("key")
 	if key == "" {
-		common.Fail(c, common.ParamErrorCode, "模板 key 不能为空")
+		common.Fail(c, common.ParamErrorCode, "Template key cannot be empty")
 		return
 	}
 
@@ -138,10 +138,10 @@ func (h *Handler) InstallTemplate(c *gin.Context) {
 	result, err := h.templateService.InstallTemplate(c.Request.Context(), key, tid)
 	if err != nil {
 		if errors.Is(err, service.ErrSLATemplateNotFound) {
-			common.NotFoundWithErr(c, err, "SLA 模板不存在")
+			common.NotFoundWithErr(c, err, "SLA template does not exist")
 			return
 		}
-		common.RespondError(c, err, "安装 SLA 模板失败")
+		common.RespondError(c, err, "Failed to install SLA template")
 		return
 	}
 

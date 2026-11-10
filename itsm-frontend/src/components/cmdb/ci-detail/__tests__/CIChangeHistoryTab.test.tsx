@@ -67,7 +67,7 @@ describe('CIChangeHistoryTab', () => {
   it('应该显示变更历史标题', () => {
     render(<CIChangeHistoryTab {...defaultProps} />);
 
-    expect(screen.getByText('CI变更历史')).toBeInTheDocument();
+    expect(screen.getByText("CI change history")).toBeInTheDocument();
   });
 
   it('点击刷新按钮应调用 onLoad', async () => {
@@ -76,7 +76,7 @@ describe('CIChangeHistoryTab', () => {
 
     render(<CIChangeHistoryTab {...defaultProps} onLoad={mockOnLoad} />);
 
-    await user.click(screen.getByRole('button', { name: '刷新变更历史' }));
+    await user.click(screen.getByRole('button', { name: "Refresh change history" }));
 
     expect(mockOnLoad).toHaveBeenCalled();
   });
@@ -92,9 +92,9 @@ describe('CIChangeHistoryTab', () => {
   it('应该显示中文操作标签与版本号', () => {
     render(<CIChangeHistoryTab {...defaultProps} />);
 
-    expect(screen.getByText('更新')).toBeInTheDocument();
-    expect(screen.getByText('生命周期变更')).toBeInTheDocument();
-    expect(screen.getByText('创建')).toBeInTheDocument();
+    expect(screen.getByText("Update")).toBeInTheDocument();
+    expect(screen.getByText("Lifecycle changes")).toBeInTheDocument();
+    expect(screen.getByText("Create")).toBeInTheDocument();
     expect(screen.getByText('v3')).toBeInTheDocument();
   });
 
@@ -115,23 +115,23 @@ describe('CIChangeHistoryTab', () => {
   it('应该显示变更字段与备注', () => {
     render(<CIChangeHistoryTab {...defaultProps} />);
 
-    expect(screen.getByText('变更字段: memory, status')).toBeInTheDocument();
+    expect(screen.getByText("Change fields: memory, status")).toBeInTheDocument();
     expect(screen.getByText('扩容内存')).toBeInTheDocument();
   });
 
   it('应该显示操作人，后端未给姓名时不伪造', () => {
     render(<CIChangeHistoryTab {...defaultProps} />);
 
-    expect(screen.getByText('操作人: admin')).toBeInTheDocument();
-    expect(screen.getByText('操作人: operator')).toBeInTheDocument();
+    expect(screen.getByText("Operator: admin")).toBeInTheDocument();
+    expect(screen.getByText("Operator: operator")).toBeInTheDocument();
     // 三条记录里只有两条带 operatorName（系统操作者的那条为空）
-    expect(screen.getAllByText(/操作人:/)).toHaveLength(2);
+    expect(screen.getAllByText(/Operator:/)).toHaveLength(2);
   });
 
   it('应该用响应元数据如实说明总量与页码', () => {
     render(<CIChangeHistoryTab {...defaultProps} />);
 
-    expect(screen.getByText(/共 25 条，第 1\/2 页/)).toBeInTheDocument();
+    expect(screen.getByText(/Total 25 Article, Article 1\/2 Page/)).toBeInTheDocument();
   });
 
   it('第一页时上一页禁用、下一页按 items 翻页', async () => {
@@ -140,9 +140,9 @@ describe('CIChangeHistoryTab', () => {
 
     render(<CIChangeHistoryTab {...defaultProps} onPageChange={mockOnPageChange} />);
 
-    expect(screen.getByRole('button', { name: '变更历史上一页' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: "Change history previous page" })).toBeDisabled();
 
-    await user.click(screen.getByRole('button', { name: '变更历史下一页' }));
+    await user.click(screen.getByRole('button', { name: "Change history next page" }));
     expect(mockOnPageChange).toHaveBeenCalledWith(2);
   });
 
@@ -154,15 +154,15 @@ describe('CIChangeHistoryTab', () => {
       />
     );
 
-    expect(screen.getByRole('button', { name: '变更历史下一页' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: '变更历史上一页' })).not.toBeDisabled();
+    expect(screen.getByRole('button', { name: "Change history next page" })).toBeDisabled();
+    expect(screen.getByRole('button', { name: "Change history previous page" })).not.toBeDisabled();
   });
 
   it('加载失败必须显示错误而不是「暂无历史审计记录」', () => {
     render(<CIChangeHistoryTab {...defaultProps} changeHistory={null} historyError />);
 
-    expect(screen.getByText('变更历史加载失败')).toBeInTheDocument();
-    expect(screen.queryByText(/暂无历史审计记录/)).not.toBeInTheDocument();
+    expect(screen.getByText("Change history loading failed")).toBeInTheDocument();
+    expect(screen.queryByText(/No historical audit record yet/)).not.toBeInTheDocument();
   });
 
   it('空历史应显示空状态', () => {
@@ -173,12 +173,12 @@ describe('CIChangeHistoryTab', () => {
       />
     );
 
-    expect(screen.getByText(/暂无历史审计记录/i)).toBeInTheDocument();
+    expect(screen.getByText(/No historical audit record yet/i)).toBeInTheDocument();
   });
 
   it('changeHistory 为 null 应显示空状态', () => {
     render(<CIChangeHistoryTab {...defaultProps} changeHistory={null} />);
 
-    expect(screen.getByText(/暂无历史审计记录/i)).toBeInTheDocument();
+    expect(screen.getByText(/No historical audit record yet/i)).toBeInTheDocument();
   });
 });

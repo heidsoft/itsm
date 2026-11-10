@@ -49,7 +49,7 @@ export const validatePasswordStrength = (
   message: string;
 } => {
   if (password.length < 6) {
-    return { isValid: false, strength: 'weak', message: '密码长度至少6位' };
+    return { isValid: false, strength: 'weak', message: 'Password must be at least 6 characters long' };
   }
 
   let strength = 0;
@@ -71,18 +71,18 @@ export const validatePasswordStrength = (
   if (/[^a-zA-Z0-9]/.test(password)) strength += 1;
 
   if (strength <= 2) {
-    return { isValid: true, strength: 'weak', message: '密码强度：弱' };
+    return { isValid: true, strength: 'weak', message: 'Password strength: weak' };
   } else if (strength <= 4) {
-    return { isValid: true, strength: 'medium', message: '密码强度：中' };
+    return { isValid: true, strength: 'medium', message: 'Password strength: medium' };
   } else {
-    return { isValid: true, strength: 'strong', message: '密码强度：强' };
+    return { isValid: true, strength: 'strong', message: 'Password strength: strong' };
   }
 };
 
 // 必填验证
 export const validateRequired = (
   value: unknown,
-  fieldName: string = '此字段'
+  fieldName: string = 'This field'
 ): string | undefined => {
   if (
     value === null ||
@@ -90,7 +90,7 @@ export const validateRequired = (
     value === '' ||
     (Array.isArray(value) && value.length === 0)
   ) {
-    return `${fieldName}不能为空`;
+    return `${fieldName} cannot be empty`;
   }
   return undefined;
 };
@@ -100,13 +100,13 @@ export const validateLength = (
   value: string,
   min?: number,
   max?: number,
-  fieldName: string = '此字段'
+  fieldName: string = 'This field'
 ): string | undefined => {
   if (min !== undefined && value.length < min) {
-    return `${fieldName}长度不能小于${min}个字符`;
+    return `${fieldName} Length cannot be less than ${min} characters`;
   }
   if (max !== undefined && value.length > max) {
-    return `${fieldName}长度不能大于${max}个字符`;
+    return `${fieldName} Length cannot be greater than ${max} characters`;
   }
   return undefined;
 };
@@ -116,13 +116,13 @@ export const validateRange = (
   value: number,
   min?: number,
   max?: number,
-  fieldName: string = '此字段'
+  fieldName: string = 'This field'
 ): string | undefined => {
   if (min !== undefined && value < min) {
-    return `${fieldName}不能小于${min}`;
+    return `${fieldName} Cannot be less than ${min}`;
   }
   if (max !== undefined && value > max) {
-    return `${fieldName}不能大于${max}`;
+    return `${fieldName} Cannot be greater than ${max}`;
   }
   return undefined;
 };
@@ -131,7 +131,7 @@ export const validateRange = (
 export const validatePattern = (
   value: string,
   pattern: RegExp,
-  message: string = '格式不正确'
+  message: string = 'Incorrect format'
 ): string | undefined => {
   if (!pattern.test(value)) {
     return message;
@@ -154,7 +154,7 @@ export const createValidator = (rules: {
   fieldName?: string;
 }) => {
   return (value: unknown): string | undefined => {
-    const fieldName = rules.fieldName || '此字段';
+    const fieldName = rules.fieldName || 'This field';
 
     // 必填验证
     if (rules.required) {
@@ -171,17 +171,17 @@ export const createValidator = (rules: {
 
     // 邮箱验证 - 仅当值为 string 时
     if (rules.email && typeof value === 'string' && !validateEmail(value)) {
-      return `${fieldName}格式不正确`;
+      return `${fieldName} Incorrect format`;
     }
 
     // 手机号验证 - 仅当值为 string 时
     if (rules.phone && typeof value === 'string' && !validatePhone(value)) {
-      return `${fieldName}格式不正确`;
+      return `${fieldName} Incorrect format`;
     }
 
     // URL验证 - 仅当值为 string 时
     if (rules.url && typeof value === 'string' && !validateURL(value)) {
-      return `${fieldName}格式不正确`;
+      return `${fieldName} Incorrect format`;
     }
 
     // 长度验证

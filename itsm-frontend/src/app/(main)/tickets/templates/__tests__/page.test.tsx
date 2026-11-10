@@ -62,11 +62,11 @@ describe('TicketTemplatesPage 加载失败语义', () => {
     mockedApi.getTemplates.mockRejectedValue(new ApiRequestError('权限不足', 403, 2003));
     renderPage();
 
-    expect(await screen.findByText('没有权限查看工单模板')).toBeInTheDocument();
-    expect(screen.getByText(/这里不是「系统里没有模板」/)).toBeInTheDocument();
-    expect(screen.queryByText('暂无模板')).not.toBeInTheDocument();
-    expect(screen.queryByText('模板总数')).not.toBeInTheDocument();
-    expect(screen.queryByText('模板管理')).not.toBeInTheDocument();
+    expect(await screen.findByText("No permission to view the work order template")).toBeInTheDocument();
+    expect(screen.getByText(/The current role is not granted read permission for the ticket template\. This is not "there is no template in the system", please contact the administrator to open ticket_template:read for your role\./)).toBeInTheDocument();
+    expect(screen.queryByText("No template yet")).not.toBeInTheDocument();
+    expect(screen.queryByText("Total number of templates")).not.toBeInTheDocument();
+    expect(screen.queryByText("Template management")).not.toBeInTheDocument();
   });
 
   it('服务端错误时给出原因，重试成功后恢复列表', async () => {
@@ -75,15 +75,15 @@ describe('TicketTemplatesPage 加载失败语义', () => {
     );
     renderPage();
 
-    expect(await screen.findByText('模板列表加载失败')).toBeInTheDocument();
+    expect(await screen.findByText("Template list loading failed")).toBeInTheDocument();
     expect(screen.getByText('HTTP error! status: 500')).toBeInTheDocument();
 
     mockedApi.getTemplates.mockResolvedValue({ items: [TEMPLATE], total: 1 });
-    await userEvent.click(screen.getByRole('button', { name: '重试' }));
+    await userEvent.click(screen.getByRole('button', { name: "Retry" }));
 
     await waitFor(() => expect(mockedApi.getTemplates).toHaveBeenCalledTimes(2));
     expect(await screen.findByText('网络故障模板')).toBeInTheDocument();
-    expect(screen.queryByText('模板列表加载失败')).not.toBeInTheDocument();
+    expect(screen.queryByText("Template list loading failed")).not.toBeInTheDocument();
   });
 
   it('加载成功且确实没有模板时才显示统计卡与空状态', async () => {
@@ -91,9 +91,9 @@ describe('TicketTemplatesPage 加载失败语义', () => {
     renderPage();
 
     await waitFor(() => expect(mockedApi.getTemplates).toHaveBeenCalledTimes(1));
-    expect(screen.getByText('模板总数')).toBeInTheDocument();
-    expect(screen.getByText('暂无模板')).toBeInTheDocument();
-    expect(screen.queryByText(/没有权限/)).not.toBeInTheDocument();
+    expect(screen.getByText("Total number of templates")).toBeInTheDocument();
+    expect(screen.getByText("No template yet")).toBeInTheDocument();
+    expect(screen.queryByText(/No permission/)).not.toBeInTheDocument();
   });
 
   // 权限不足时仍显示可用按钮，点下去只会拿到 403，属于假可操作状态。
@@ -103,10 +103,10 @@ describe('TicketTemplatesPage 加载失败语义', () => {
     renderPage();
 
     expect(await screen.findByText('网络故障模板')).toBeInTheDocument();
-    expect(screen.queryByLabelText('新建模板')).not.toBeInTheDocument();
-    expect(screen.queryByLabelText('编辑模板')).not.toBeInTheDocument();
-    expect(screen.queryByLabelText('复制模板')).not.toBeInTheDocument();
-    expect(screen.getByLabelText('查看模板详情')).toBeInTheDocument();
+    expect(screen.queryByLabelText("New Template")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Edit Template")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Copy template")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("View template details")).toBeInTheDocument();
   });
 
   it('有写权限时按钮齐全，删除仍受 delete 权限控制', async () => {
@@ -118,9 +118,9 @@ describe('TicketTemplatesPage 加载失败语义', () => {
     mockedApi.getTemplates.mockResolvedValue({ items: [TEMPLATE], total: 1 });
     renderPage();
 
-    expect(await screen.findByLabelText('新建模板')).toBeInTheDocument();
-    expect(screen.getByLabelText('编辑模板')).toBeInTheDocument();
-    expect(screen.getByLabelText('复制模板')).toBeInTheDocument();
-    expect(screen.queryByLabelText('删除模板')).not.toBeInTheDocument();
+    expect(await screen.findByLabelText("New Template")).toBeInTheDocument();
+    expect(screen.getByLabelText("Edit Template")).toBeInTheDocument();
+    expect(screen.getByLabelText("Copy template")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Delete template")).not.toBeInTheDocument();
   });
 });

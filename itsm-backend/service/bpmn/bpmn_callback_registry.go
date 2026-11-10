@@ -67,7 +67,7 @@ func (r *CallbackRegistry) HandleCallback(ctx context.Context, req *dto.Callback
 	// 0. 租户校验（fail-closed）
 	tenantID, ok := ctx.Value(BPMNTenantIDContextKey).(int)
 	if !ok || tenantID <= 0 {
-		return errors.New("缺少有效租户上下文，拒绝执行回调")
+		return errors.New("Missing valid tenant context, callback execution refused")
 	}
 
 	// 1. 获取任务（带租户过滤，防止跨租户访问）
@@ -84,7 +84,7 @@ func (r *CallbackRegistry) HandleCallback(ctx context.Context, req *dto.Callback
 	// 2. 获取处理器
 	handler := r.getHandler(req.ActivityType)
 	if handler == nil {
-		return fmt.Errorf("未找到任务类型 %s 的处理器", req.ActivityType)
+		return fmt.Errorf("Processor not found for task type %s", req.ActivityType)
 	}
 
 	// 3. 执行处理器

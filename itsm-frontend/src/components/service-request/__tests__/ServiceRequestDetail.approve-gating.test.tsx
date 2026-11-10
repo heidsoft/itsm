@@ -69,9 +69,9 @@ describe('ServiceRequestDetail 审批入口门控', () => {
     await screen.findByText('测试服务请求');
 
     await waitFor(() => {
-      expect(screen.queryByRole('button', { name: '通过' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: "Approve" })).not.toBeInTheDocument();
     });
-    expect(screen.queryByRole('button', { name: '拒绝' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: "Rejected" })).not.toBeInTheDocument();
   });
 
   it('canApprove=false 时不渲染审批按钮', async () => {
@@ -82,7 +82,7 @@ describe('ServiceRequestDetail 审批入口门控', () => {
     await screen.findByText('测试服务请求');
 
     await waitFor(() => {
-      expect(screen.queryByRole('button', { name: '通过' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: "Approve" })).not.toBeInTheDocument();
     });
   });
 
@@ -91,8 +91,8 @@ describe('ServiceRequestDetail 审批入口门控', () => {
 
     renderDetail();
 
-    const approveButton = await screen.findByRole('button', { name: '通过' });
+    const approveButton = await screen.findByRole('button', { name: "Approve" });
     expect(approveButton).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '拒绝' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: "Rejected" })).toBeInTheDocument();
   });
 });

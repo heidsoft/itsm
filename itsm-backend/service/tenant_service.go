@@ -39,7 +39,7 @@ func (s *TenantService) CreateTenant(ctx context.Context, req *dto.CreateTenantR
 	tx, err := s.client.Tx(ctx)
 	if err != nil {
 		s.logger.Errorf("开启租户创建事务失败: %v", err)
-		return nil, fmt.Errorf("开启租户创建事务失败: %w", err)
+		return nil, fmt.Errorf("Failed to start tenant creation transaction: %w", err)
 	}
 	committed := false
 	defer func() {
@@ -56,10 +56,10 @@ func (s *TenantService) CreateTenant(ctx context.Context, req *dto.CreateTenantR
 		Exist(ctx)
 	if err != nil {
 		s.logger.Errorf("检查租户代码失败: %v", err)
-		return nil, fmt.Errorf("检查租户代码失败: %w", err)
+		return nil, fmt.Errorf("Failed to check tenant code: %w", err)
 	}
 	if exists {
-		return nil, common.NewBusinessError(common.ConflictCode, "租户代码已存在", req.Code)
+		return nil, common.NewBusinessError(common.ConflictCode, "Tenant code already exists", req.Code)
 	}
 
 	// 创建租户
@@ -84,9 +84,9 @@ func (s *TenantService) CreateTenant(ctx context.Context, req *dto.CreateTenantR
 	if err != nil {
 		s.logger.Errorf("创建租户失败: %v", err)
 		if ent.IsConstraintError(err) {
-			return nil, common.NewBusinessError(common.ConflictCode, "租户代码已存在", req.Code)
+			return nil, common.NewBusinessError(common.ConflictCode, "Tenant code already exists", req.Code)
 		}
-		return nil, fmt.Errorf("创建租户失败: %w", err)
+		return nil, fmt.Errorf("Failed to create tenant: %w", err)
 	}
 
 	// 幂等键以租户创建事件为身份：每个租户只安装一次产品基线，
@@ -109,12 +109,12 @@ func (s *TenantService) CreateTenant(ctx context.Context, req *dto.CreateTenantR
 		MaxAttempts:    5,
 	}); err != nil {
 		s.logger.Errorf("入队租户基线安装命令失败: %v", err)
-		return nil, fmt.Errorf("入队租户基线安装命令失败: %w", err)
+		return nil, fmt.Errorf("Enqueue tenant baseline install command failed: %w", err)
 	}
 
 	if err := tx.Commit(); err != nil {
 		s.logger.Errorf("提交租户创建事务失败: %v", err)
-		return nil, fmt.Errorf("提交租户创建事务失败: %w", err)
+		return nil, fmt.Errorf("Failed to commit tenant creation transaction: %w", err)
 	}
 	committed = true
 
@@ -130,10 +130,10 @@ func (s *TenantService) GetTenantByCode(ctx context.Context, code string) (*ent.
 		First(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, fmt.Errorf("租户不存在: %s", code)
+			return nil, fmt.Errorf("Tenant does not exist: %s", code)
 		}
 		s.logger.Errorf("查询租户失败: %v", err)
-		return nil, fmt.Errorf("查询租户失败: %w", err)
+		return nil, fmt.Errorf("Failed to query tenant: %w", err)
 	}
 	return tenantEntity, nil
 }
@@ -145,7 +145,7 @@ func (s *TenantService) UpdateTenantStatus(ctx context.Context, tenantID int, st
 	switch status {
 	case "active", "suspended", "expired":
 	default:
-		return fmt.Errorf("无效的租户状态: %s（允许值: active/suspended/expired）", status)
+		return fmt.Errorf("Invalid tenant state: %s (allowed values: active/suspended/expired)", status)
 	}
 
 	err := s.client.Tenant.
@@ -155,7 +155,7 @@ func (s *TenantService) UpdateTenantStatus(ctx context.Context, tenantID int, st
 		Exec(ctx)
 	if err != nil {
 		s.logger.Errorf("更新租户状态失败: %v", err)
-		return fmt.Errorf("更新租户状态失败: %w", err)
+		return fmt.Errorf("Failed to update tenant status: %w", err)
 	}
 
 	s.logger.Infof("成功更新租户状态: %d -> %s", tenantID, status)
@@ -190,7 +190,7 @@ func (s *TenantService) ListTenants(ctx context.Context, req *dto.ListTenantsReq
 	total, err := query.Count(ctx)
 	if err != nil {
 		s.logger.Errorf("获取租户总数失败: %v", err)
-		return nil, 0, fmt.Errorf("获取租户总数失败: %w", err)
+		return nil, 0, fmt.Errorf("Failed to obtain total number of tenants: %w", err)
 	}
 
 	// 分页查询
@@ -201,7 +201,7 @@ func (s *TenantService) ListTenants(ctx context.Context, req *dto.ListTenantsReq
 		All(ctx)
 	if err != nil {
 		s.logger.Errorf("获取租户列表失败: %v", err)
-		return nil, 0, fmt.Errorf("获取租户列表失败: %w", err)
+		return nil, 0, fmt.Errorf("Failed to get tenant list: %w", err)
 	}
 
 	return tenants, total, nil
@@ -215,10 +215,10 @@ func (s *TenantService) GetTenant(ctx context.Context, tenantID int) (*ent.Tenan
 		First(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, fmt.Errorf("租户不存在: %d", tenantID)
+			return nil, fmt.Errorf("Tenant does not exist: %d", tenantID)
 		}
 		s.logger.Errorf("查询租户失败: %v", err)
-		return nil, fmt.Errorf("查询租户失败: %w", err)
+		return nil, fmt.Errorf("Failed to query tenant: %w", err)
 	}
 	return tenantEntity, nil
 }
@@ -231,10 +231,10 @@ func (s *TenantService) UpdateTenant(ctx context.Context, tenantID int, req *dto
 		Exist(ctx)
 	if err != nil {
 		s.logger.Errorf("检查租户失败: %v", err)
-		return nil, fmt.Errorf("检查租户失败: %w", err)
+		return nil, fmt.Errorf("Failed to check tenant: %w", err)
 	}
 	if !exists {
-		return nil, fmt.Errorf("租户不存在: %d", tenantID)
+		return nil, fmt.Errorf("Tenant does not exist: %d", tenantID)
 	}
 
 	// 构建更新操作
@@ -286,7 +286,7 @@ func (s *TenantService) UpdateTenant(ctx context.Context, tenantID int, req *dto
 	tenantEntity, err := update.Save(ctx)
 	if err != nil {
 		s.logger.Errorf("更新租户失败: %v", err)
-		return nil, fmt.Errorf("更新租户失败: %w", err)
+		return nil, fmt.Errorf("Failed to update tenant: %w", err)
 	}
 
 	s.logger.Infof("成功更新租户: %d", tenantID)
@@ -303,10 +303,10 @@ func (s *TenantService) DeleteTenant(ctx context.Context, tenantID int) error {
 		Exist(ctx)
 	if err != nil {
 		s.logger.Errorf("检查租户失败: %v", err)
-		return fmt.Errorf("检查租户失败: %w", err)
+		return fmt.Errorf("Failed to check tenant: %w", err)
 	}
 	if !exists {
-		return common.NewBusinessError(common.NotFoundCode, "租户不存在或已被删除", fmt.Sprintf("tenantId=%d", tenantID))
+		return common.NewBusinessError(common.NotFoundCode, "Tenant does not exist or has been deleted", fmt.Sprintf("tenantId=%d", tenantID))
 	}
 
 	// 检查租户下是否有真实用户。产品基线安装的 system-baseline-* 账号
@@ -320,12 +320,12 @@ func (s *TenantService) DeleteTenant(ctx context.Context, tenantID int) error {
 		Count(ctx)
 	if err != nil {
 		s.logger.Errorf("检查租户用户失败: %v", err)
-		return fmt.Errorf("检查租户用户失败: %w", err)
+		return fmt.Errorf("Failed to check tenant user: %w", err)
 	}
 	if userCount > 0 {
 		// 业务拒绝（仍有真实用户）必须具备 4xx 语义，否则 API 会把可预期的
 		// 前置条件失败报成 500「操作失败」，运维无法区分配置问题与服务端故障。
-		return common.NewBusinessError(common.ConflictCode, "租户下还有用户，无法删除", fmt.Sprintf("userCount=%d", userCount))
+		return common.NewBusinessError(common.ConflictCode, "There are still users under the tenant and cannot be deleted.", fmt.Sprintf("userCount=%d", userCount))
 	}
 
 	err = s.client.Tenant.UpdateOneID(tenantID).
@@ -334,7 +334,7 @@ func (s *TenantService) DeleteTenant(ctx context.Context, tenantID int) error {
 		Exec(ctx)
 	if err != nil {
 		s.logger.Errorf("软删除租户失败: %v", err)
-		return fmt.Errorf("删除租户失败: %w", err)
+		return fmt.Errorf("Failed to delete tenant: %w", err)
 	}
 
 	s.logger.Infow(

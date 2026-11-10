@@ -68,7 +68,7 @@ func (h *Handler) ListKnownErrors(c *gin.Context) {
 
 	items, total, err := h.svc.ListKnownErrors(c.Request.Context(), tenantID, pg.Page, pg.PageSize)
 	if err != nil {
-		common.InternalError(c, "获取已知错误列表失败")
+		common.InternalError(c, "Failed to get list of known errors")
 		return
 	}
 
@@ -83,7 +83,7 @@ func (h *Handler) ListKnownErrors(c *gin.Context) {
 func (h *Handler) GetKnownError(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.ParamError(c, "无效的ID")
+		common.ParamError(c, "Invalid ID")
 		return
 	}
 
@@ -94,7 +94,7 @@ func (h *Handler) GetKnownError(c *gin.Context) {
 
 	item, err := h.svc.GetKnownError(c.Request.Context(), tenantID, id)
 	if err != nil {
-		common.FailWithErr(c, err, "获取已知错误失败")
+		common.FailWithErr(c, err, "Failed to get known errors")
 		return
 	}
 
@@ -104,7 +104,7 @@ func (h *Handler) GetKnownError(c *gin.Context) {
 func (h *Handler) CreateKnownError(c *gin.Context) {
 	var req dto.CreateKnownErrorRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
@@ -133,10 +133,10 @@ func (h *Handler) CreateKnownError(c *gin.Context) {
 	item, err := h.svc.CreateKnownError(c.Request.Context(), input)
 	if err != nil {
 		if errors.Is(err, ErrLinkedProblemNotFound) {
-			common.NotFoundWithErr(c, err, "关联的问题不存在")
+			common.NotFoundWithErr(c, err, "The associated problem does not exist")
 			return
 		}
-		common.FailWithErr(c, err, "创建已知错误失败")
+		common.FailWithErr(c, err, "Create known error failed")
 		return
 	}
 
@@ -146,13 +146,13 @@ func (h *Handler) CreateKnownError(c *gin.Context) {
 func (h *Handler) UpdateKnownError(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.ParamError(c, "无效的ID")
+		common.ParamError(c, "Invalid ID")
 		return
 	}
 
 	var req dto.KEDBUpdateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
@@ -201,7 +201,7 @@ func (h *Handler) UpdateKnownError(c *gin.Context) {
 
 	item, err := h.svc.UpdateKnownError(c.Request.Context(), tenantID, id, input)
 	if err != nil {
-		common.FailWithErr(c, err, "更新已知错误失败")
+		common.FailWithErr(c, err, "Failed to update known errors")
 		return
 	}
 
@@ -211,7 +211,7 @@ func (h *Handler) UpdateKnownError(c *gin.Context) {
 func (h *Handler) DeleteKnownError(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.ParamError(c, "无效的ID")
+		common.ParamError(c, "Invalid ID")
 		return
 	}
 
@@ -221,7 +221,7 @@ func (h *Handler) DeleteKnownError(c *gin.Context) {
 	}
 
 	if err := h.svc.DeleteKnownError(c.Request.Context(), tenantID, id); err != nil {
-		common.FailWithErr(c, err, "删除已知错误失败")
+		common.FailWithErr(c, err, "Failed to remove known errors")
 		return
 	}
 
@@ -236,7 +236,7 @@ func (h *Handler) GetStats(c *gin.Context) {
 
 	stats, err := h.svc.GetStats(c.Request.Context(), tenantID)
 	if err != nil {
-		common.InternalError(c, "获取统计信息失败")
+		common.InternalError(c, "Failed to obtain statistics")
 		return
 	}
 
@@ -265,7 +265,7 @@ func (h *Handler) SearchKnownErrors(c *gin.Context) {
 
 	items, total, err := h.svc.SearchKnownErrors(c.Request.Context(), tenantID, keyword, pg.Page, pg.PageSize)
 	if err != nil {
-		common.InternalError(c, "搜索已知错误失败")
+		common.InternalError(c, "Search for known errors failed")
 		return
 	}
 
@@ -285,7 +285,7 @@ func (h *Handler) GetCategories(c *gin.Context) {
 
 	items, _, err := h.svc.ListKnownErrors(c.Request.Context(), tenantID, 1, 1000)
 	if err != nil {
-		common.InternalError(c, "获取分类失败")
+		common.InternalError(c, "Failed to obtain classification")
 		return
 	}
 
@@ -307,7 +307,7 @@ func (h *Handler) GetCategories(c *gin.Context) {
 func (h *Handler) PromoteToKnownError(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.ParamError(c, "无效的ID")
+		common.ParamError(c, "Invalid ID")
 		return
 	}
 
@@ -318,12 +318,12 @@ func (h *Handler) PromoteToKnownError(c *gin.Context) {
 
 	item, err := h.svc.GetKnownError(c.Request.Context(), tenantID, id)
 	if err != nil {
-		common.FailWithErr(c, err, "获取已知错误失败")
+		common.FailWithErr(c, err, "Failed to get known errors")
 		return
 	}
 
 	if item.Status == "resolved" {
-		common.Fail(c, common.BadRequestCode, "已解决的问题不能再次提升")
+		common.Fail(c, common.BadRequestCode, "Resolved issue cannot be promoted again")
 		return
 	}
 
@@ -331,7 +331,7 @@ func (h *Handler) PromoteToKnownError(c *gin.Context) {
 		Status: ptrString("resolved"),
 	})
 	if err != nil {
-		common.FailWithErr(c, err, "提升已知错误失败")
+		common.FailWithErr(c, err, "Failed to promote known errors")
 		return
 	}
 
@@ -357,12 +357,12 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 func (h *Handler) getTenantID(c *gin.Context) (int, bool) {
 	tenantIDVal, ok := c.Get("tenant_id")
 	if !ok {
-		common.Fail(c, common.AuthErrorCode, "租户上下文缺失")
+		common.Fail(c, common.AuthErrorCode, "Tenant context missing")
 		return 0, false
 	}
 	tenantID, ok := tenantIDVal.(int)
 	if !ok || tenantID == 0 {
-		common.Fail(c, common.AuthErrorCode, "无效的租户上下文")
+		common.Fail(c, common.AuthErrorCode, "Invalid tenant context")
 		return 0, false
 	}
 	return tenantID, true

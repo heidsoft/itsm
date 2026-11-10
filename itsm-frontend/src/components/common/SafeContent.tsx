@@ -112,7 +112,7 @@ export const SafeTextBlock: React.FC<
     /** 是否显示为段落 */
     asParagraph?: boolean;
   }
-> = ({ content, fallback = '暂无内容', asParagraph = true, ...props }) => {
+> = ({ content, fallback = 'No content yet', asParagraph = true, ...props }) => {
   if (content === null || content === undefined || content === '') {
     return (
       <span style={{ color: 'var(--color-text-muted, #8c8c8c)' }}>

@@ -128,11 +128,11 @@ describe('Unified Config', () => {
 
   describe('I18N_CONFIG', () => {
     it('should have default locale', () => {
-      expect(I18N_CONFIG.DEFAULT_LOCALE).toBe('zh-CN');
+      expect(I18N_CONFIG.DEFAULT_LOCALE).toBe('en-US');
     });
 
     it('should have supported locales', () => {
-      expect(I18N_CONFIG.SUPPORTED_LOCALES).toContain('zh-CN');
+      expect(I18N_CONFIG.SUPPORTED_LOCALES).toEqual(['en-US']);
       expect(I18N_CONFIG.SUPPORTED_LOCALES).toContain('en-US');
     });
 

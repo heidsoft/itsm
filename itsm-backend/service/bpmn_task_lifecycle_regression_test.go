@@ -37,7 +37,7 @@ func TestRejectWithoutComment_ReturnsFriendlyError(t *testing.T) {
 		"approvalAction": "reject",
 		// 不传 approvalComment：缺失时必须走校验错误，不能 panic。
 	})
-	require.ErrorContains(t, err, "该审批节点要求拒绝时必须填写意见")
+	require.ErrorContains(t, err, "The approval node requires comments to be filled in when rejecting")
 }
 
 // 认领必须是条件更新。读到"未认领"快照后、写入前任务被他人认领时，
@@ -92,7 +92,7 @@ func TestCancelTask_RejectsCompletedTask(t *testing.T) {
 
 	taskSvc := engine.TaskService()
 	err = taskSvc.CancelTask(ctx, task.TaskID, "迟到的取消")
-	require.ErrorContains(t, err, "任务已结束，不能取消")
+	require.ErrorContains(t, err, "The task has ended and cannot be canceled")
 
 	after, err := client.ProcessTask.Query().
 		Where(processtask.TaskID(task.TaskID), processtask.TenantID(tenantID)).

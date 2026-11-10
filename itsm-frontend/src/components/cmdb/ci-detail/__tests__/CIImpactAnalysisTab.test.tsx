@@ -97,32 +97,32 @@ describe('CIImpactAnalysisTab', () => {
     render(<CIImpactAnalysisTab {...defaultProps} />);
 
     // 检查上游影响标签存在（显示在 Tab 上）
-    expect(screen.getByText(/上游影响 \(1\)/)).toBeInTheDocument();
+    expect(screen.getByText(/Upstream Impact \(1\)/)).toBeInTheDocument();
   });
 
   it('应该显示下游影响标签', () => {
     render(<CIImpactAnalysisTab {...defaultProps} />);
 
     // 检查下游影响标签存在
-    expect(screen.getByText(/下游影响 \(1\)/)).toBeInTheDocument();
+    expect(screen.getByText(/Downstream Impact \(1\)/)).toBeInTheDocument();
   });
 
   it('应该显示关联工单标签', () => {
     render(<CIImpactAnalysisTab {...defaultProps} />);
 
-    expect(screen.getByText(/关联工单 \(1\)/)).toBeInTheDocument();
+    expect(screen.getByText(/Associated work order \(1\)/)).toBeInTheDocument();
   });
 
   it('应该显示关联事件标签', () => {
     render(<CIImpactAnalysisTab {...defaultProps} />);
 
-    expect(screen.getByText(/关联事件 \(1\)/)).toBeInTheDocument();
+    expect(screen.getByText(/Correlation event \(1\)/)).toBeInTheDocument();
   });
 
   it('应该显示分析按钮', () => {
     render(<CIImpactAnalysisTab {...defaultProps} />);
 
-    const analyzeButton = screen.getByRole('button', { name: /执行影响分析/i });
+    const analyzeButton = screen.getByRole('button', { name: /Perform impact analysis/i });
     expect(analyzeButton).toBeInTheDocument();
   });
 
@@ -132,7 +132,7 @@ describe('CIImpactAnalysisTab', () => {
 
     render(<CIImpactAnalysisTab {...defaultProps} onAnalyze={mockOnAnalyze} />);
 
-    const analyzeButton = screen.getByRole('button', { name: /执行影响分析/i });
+    const analyzeButton = screen.getByRole('button', { name: /Perform impact analysis/i });
     await user.click(analyzeButton);
 
     expect(mockOnAnalyze).toHaveBeenCalled();
@@ -149,12 +149,12 @@ describe('CIImpactAnalysisTab', () => {
   it('没有影响分析数据应显示空状态', () => {
     render(<CIImpactAnalysisTab {...defaultProps} impactAnalysis={null} />);
 
-    expect(screen.getByText(/点击上方按钮执行影响分析/i)).toBeInTheDocument();
+    expect(screen.getByText(/Click the button above to perform an impact analysis/i)).toBeInTheDocument();
   });
 
   it('应该显示 CI影响分析 标题', () => {
     render(<CIImpactAnalysisTab {...defaultProps} />);
 
-    expect(screen.getByText(/CI影响分析/)).toBeInTheDocument();
+    expect(screen.getByText(/CI Impact Analysis/)).toBeInTheDocument();
   });
 });

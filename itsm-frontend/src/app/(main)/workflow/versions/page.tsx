@@ -26,16 +26,16 @@ const COMPATIBILITY_CONFIG: Record<
   string,
   { text: string; alertType: 'error' | 'warning' | 'success' }
 > = {
-  identical: { text: '无差异', alertType: 'success' },
-  compatible: { text: '向后兼容', alertType: 'success' },
-  risky: { text: '高风险变更', alertType: 'warning' },
-  incompatible: { text: '不兼容', alertType: 'error' },
+  identical: { text: 'No difference', alertType: 'success' },
+  compatible: { text: 'Backwards Compatibility', alertType: 'success' },
+  risky: { text: 'High risk change', alertType: 'warning' },
+  incompatible: { text: 'Incompatible', alertType: 'error' },
 };
 
 const CHANGE_TYPE_LABEL: Record<string, string> = {
-  added: '新增',
-  removed: '移除',
-  modified: '修改',
+  added: 'New',
+  removed: 'Remove',
+  modified: 'Modify',
 };
 
 const IMPACT_COLOR: Record<string, string> = {
@@ -92,7 +92,7 @@ export default function WorkflowVersionsPage() {
       setVersions(await WorkflowAPI.listVersions(processKey));
     } catch (error) {
       console.error('Failed to load workflow versions:', error);
-      message.error('加载工作流版本失败');
+      message.error('Failed to load workflow versions');
       setVersions([]);
     } finally {
       setLoading(false);
@@ -108,7 +108,7 @@ export default function WorkflowVersionsPage() {
       // 后端按 version 倒序返回，首行即最新版本。
       const newest = versions[0];
       if (!newest || newest.version === record.version) {
-        message.info('当前版本已经是最新版本，无需比较。');
+        message.info('The current version is already the latest version, no need to compare.');
         return;
       }
       // base 必须是较低版本，否则后端给出的“新增/移除”方向会反过来。
@@ -124,13 +124,13 @@ export default function WorkflowVersionsPage() {
           targetVersion
         );
         if (!result) {
-          message.info('版本相同，无需比较。');
+          message.info('The versions are the same, no need to compare.');
           return;
         }
         setComparison(result);
         setComparisonVisible(true);
       } catch {
-        message.error('版本比较失败');
+        message.error('Version comparison failed');
       } finally {
         setComparingId(null);
       }
@@ -141,63 +141,63 @@ export default function WorkflowVersionsPage() {
   const columns = useMemo(
     () => [
       {
-        title: '版本',
+        title: 'Version',
         dataIndex: 'version',
         key: 'version',
         render: (value: number) => <span className="font-mono text-sm">v{value}</span>,
       },
       {
-        title: '名称',
+        title: 'Name',
         dataIndex: 'name',
         key: 'name',
       },
       {
-        title: '状态',
+        title: 'Status',
         dataIndex: 'isActive',
         key: 'isActive',
-        render: (value: boolean) => (value ? <Tag color="green">已激活</Tag> : <Tag>未激活</Tag>),
+        render: (value: boolean) => (value ? <Tag color="green">Activated</Tag> : <Tag>Inactive</Tag>),
       },
       {
-        title: '创建时间',
+        title: 'Created',
         dataIndex: 'createdAt',
         key: 'createdAt',
         render: (value: string) => formatDateTime(value),
       },
       {
-        title: '更新时间',
+        title: 'Updated At',
         dataIndex: 'updatedAt',
         key: 'updatedAt',
         render: (value: string) => formatDateTime(value),
       },
       {
-        title: '操作',
+        title: 'Actions',
         key: 'actions',
         render: (_: unknown, record: BpmnProcessVersion) => (
           <Space>
             <Button
               type="text"
               icon={<Eye className="h-4 w-4" />}
-              aria-label={`查看版本 v${record.version} 详情`}
+              aria-label={`View version v ${record.version} Details`}
               onClick={() => setSelectedVersion(record)}
             />
             <Button
               type="text"
               icon={<PlayCircle className="h-4 w-4" />}
-              aria-label={`激活版本 v${record.version}`}
+              aria-label={`Activate version v ${record.version}`}
               disabled={record.isActive}
               onClick={() => {
                 modal.confirm({
-                  title: '激活版本',
-                  content: `确定要激活版本 v${record.version} 吗？激活后新发起的流程实例将使用该版本。`,
-                  okText: '激活',
-                  cancelText: '取消',
+                  title: 'Activated version',
+                  content: `Confirm to activate version v ${record.version} ? Newly initiated process instances after activation will use this version.`,
+                  okText: 'Active',
+                  cancelText: 'Cancel',
                   onOk: async () => {
                     try {
                       await WorkflowAPI.activateVersion(record.processDefinitionKey, record.version);
-                      message.success(`已激活版本 v${record.version}`);
+                      message.success(`Version v activated ${record.version}`);
                       await loadVersions();
                     } catch {
-                      message.error('激活版本失败');
+                      message.error('Failed to activate version');
                     }
                   },
                 });
@@ -206,21 +206,21 @@ export default function WorkflowVersionsPage() {
             <Button
               type="text"
               icon={<RotateCcw className="h-4 w-4" />}
-              aria-label={`回滚到版本 v${record.version}`}
+              aria-label={`Rollback to version v ${record.version}`}
               onClick={() => {
                 modal.confirm({
-                  title: '回滚版本',
-                  content: `确定要回滚到版本 v${record.version} 吗？回滚将替换当前生效的流程定义。`,
-                  okText: '回滚',
+                  title: 'Rollback version',
+                  content: `Are you sure you want to roll back to version v?${record.version} ? Rolling back replaces the currently active process definition.`,
+                  okText: 'Rollback',
                   okType: 'danger',
-                  cancelText: '取消',
+                  cancelText: 'Cancel',
                   onOk: async () => {
                     try {
-                      await WorkflowAPI.rollbackVersion(record.processDefinitionKey, record.version, '前端回滚');
-                      message.success(`已回滚到版本 v${record.version}`);
+                      await WorkflowAPI.rollbackVersion(record.processDefinitionKey, record.version, 'Frontend rollback');
+                      message.success(`Rolled back to version v ${record.version}`);
                       await loadVersions();
                     } catch {
-                      message.error('回滚版本失败');
+                      message.error('Rollback version failed');
                     }
                   },
                 });
@@ -229,7 +229,7 @@ export default function WorkflowVersionsPage() {
             <Button
               type="text"
               icon={<Diff className="h-4 w-4" />}
-              aria-label={`比较版本 v${record.version} 与最新版本`}
+              aria-label={`Compare version v ${record.version} with the latest version`}
               loading={comparingId === record.id}
               onClick={() => void handleCompare(record)}
             />
@@ -237,22 +237,22 @@ export default function WorkflowVersionsPage() {
               type="text"
               danger
               icon={<Trash2 className="h-4 w-4" />}
-              aria-label={`删除版本 v${record.version}`}
+              aria-label={`Delete version v ${record.version}`}
               disabled={record.isActive}
               onClick={() => {
                 modal.confirm({
-                  title: '删除版本',
-                  content: `确定要删除版本 v${record.version}（${record.name}）吗？删除后不可恢复。`,
-                  okText: '删除',
+                  title: 'Delete version',
+                  content: `Are you sure you want to delete version v?${record.version}（${record.name})? It cannot be recovered after deletion.`,
+                  okText: 'Delete',
                   okType: 'danger',
-                  cancelText: '取消',
+                  cancelText: 'Cancel',
                   onOk: async () => {
                     try {
                       await WorkflowAPI.deleteVersion(record.processDefinitionKey, record.version);
-                      message.success(`已删除版本 v${record.version}`);
+                      message.success(`Version v deleted ${record.version}`);
                       await loadVersions();
                     } catch {
-                      message.error('删除版本失败');
+                      message.error('Failed to delete version');
                     }
                   },
                 });
@@ -270,23 +270,23 @@ export default function WorkflowVersionsPage() {
   return (
     <div className="space-y-6">
       <ManagementPageHeader
-        title="工作流版本"
-        description="查看流程的历史版本和当前激活版本，支持版本激活、回滚和比较。"
+        title="Workflow version"
+        description="View the historical version and currently activated version of the process, supporting version activation, rollback and comparison."
         notice={
           <ManagementNotice
-            message="本版本"
-            description="支持版本列表、流程图形化预览、激活、回滚与差异比较。导入导出和版本说明编辑将在后续版本补充。"
+            message="This version"
+            description="Supports version list, process graphical preview, activation, rollback and difference comparison. Import, export and version description editing will be added in subsequent versions."
           />
         }
       />
 
       <StatsOverview
         items={[
-          { key: 'count', title: '总版本数', value: versions.length, accentColor: '#1677ff' },
-          { key: 'active', title: '激活版本', value: activeCount, accentColor: '#52c41a' },
+          { key: 'count', title: 'Total version number', value: versions.length, accentColor: '#1677ff' },
+          { key: 'active', title: 'Activated version', value: activeCount, accentColor: '#52c41a' },
           {
             key: 'inactive',
-            title: '未激活',
+            title: 'Inactive',
             value: versions.length - activeCount,
             accentColor: '#faad14',
           },
@@ -298,23 +298,25 @@ export default function WorkflowVersionsPage() {
         filters={
           <Select
             value={processKey || undefined}
-            placeholder="选择流程"
+            placeholder="Select Process"
             showSearch
             allowClear
             optionFilterProp="label"
             style={{ width: 320 }}
             onChange={value => setProcessKey(value || '')}
             options={processKeyOptions}
-            notFoundContent={processKeyOptions.length ? undefined : '暂无流程定义'}
+            notFoundContent={processKeyOptions.length ? undefined : 'No process definition yet'}
           />
         }
         actions={
           <>
             <Button icon={<RefreshCw className="h-4 w-4" />} onClick={loadVersions}>
-              刷新
+
+              Refresh
             </Button>
             <Button icon={<Download className="h-4 w-4" />} disabled>
-              导出版本
+
+              Export version
             </Button>
           </>
         }
@@ -323,13 +325,13 @@ export default function WorkflowVersionsPage() {
       <Card className="rounded-xl shadow-sm">
         <LoadingEmptyError
           state={loading ? 'loading' : versions.length === 0 ? 'empty' : 'success'}
-          loadingText="正在加载工作流版本..."
+          loadingText="Loading workflow version..."
           empty={{
-            title: processKey ? '未找到版本数据' : '请先选择流程',
+            title: processKey ? 'Version data not found' : 'Please select the process first',
             description: processKey
-              ? '当前流程还没有可显示的版本记录。'
-              : '版本页需要先确定一个流程。',
-            actionText: processKey ? '重新加载' : undefined,
+              ? 'There is no displayable version record for the current process.'
+              : 'The version page needs to determine a process first.',
+            actionText: processKey ? 'Reload' : undefined,
             onAction: processKey ? loadVersions : undefined,
             showAction: Boolean(processKey),
           }}
@@ -339,7 +341,7 @@ export default function WorkflowVersionsPage() {
       </Card>
 
       <Modal
-        title={selectedVersion ? `版本详情 · v${selectedVersion.version}` : '版本详情'}
+        title={selectedVersion ? `Version details · v ${selectedVersion.version}` : 'Version details'}
         open={!!selectedVersion}
         onCancel={() => setSelectedVersion(null)}
         footer={null}
@@ -349,31 +351,31 @@ export default function WorkflowVersionsPage() {
         {selectedVersion && (
           <div className="space-y-4">
             <Descriptions column={2} bordered size="small">
-              <Descriptions.Item label="流程 Key" span={2}>
+              <Descriptions.Item label="Process Key" span={2}>
                 {selectedVersion.processDefinitionKey}
               </Descriptions.Item>
-              <Descriptions.Item label="版本">v{selectedVersion.version}</Descriptions.Item>
-              <Descriptions.Item label="状态">
+              <Descriptions.Item label="Version">v{selectedVersion.version}</Descriptions.Item>
+              <Descriptions.Item label="Status">
                 <Tag color={selectedVersion.isActive ? 'green' : 'default'}>
-                  {selectedVersion.isActive ? '已激活' : '未激活'}
+                  {selectedVersion.isActive ? 'Activated' : 'Inactive'}
                 </Tag>
               </Descriptions.Item>
-              <Descriptions.Item label="名称" span={2}>
+              <Descriptions.Item label="Name" span={2}>
                 {selectedVersion.name}
               </Descriptions.Item>
-              <Descriptions.Item label="说明" span={2}>
+              <Descriptions.Item label="Description" span={2}>
                 {selectedVersion.description || '-'}
               </Descriptions.Item>
-              <Descriptions.Item label="创建时间">
+              <Descriptions.Item label="Created">
                 {formatDateTime(selectedVersion.createdAt)}
               </Descriptions.Item>
-              <Descriptions.Item label="更新时间">
+              <Descriptions.Item label="Updated At">
                 {formatDateTime(selectedVersion.updatedAt)}
               </Descriptions.Item>
             </Descriptions>
 
             <div>
-              <div className="mb-2 text-sm font-medium">流程预览</div>
+              <div className="mb-2 text-sm font-medium">Process preview</div>
               <BPMNDiagramPreview xml={selectedVersion.bpmnXml} height={380} />
             </div>
           </div>
@@ -383,8 +385,8 @@ export default function WorkflowVersionsPage() {
       <Modal
         title={
           comparison
-            ? `版本比较 · v${comparison.baseVersion?.version ?? '-'} → v${comparison.targetVersion?.version ?? '-'}`
-            : '版本比较结果'
+            ? `Version comparison · v ${comparison.baseVersion?.version ?? '-'} → v${comparison.targetVersion?.version ?? '-'}`
+            : 'Version comparison results'
         }
         open={comparisonVisible}
         onCancel={() => setComparisonVisible(false)}
@@ -399,18 +401,18 @@ export default function WorkflowVersionsPage() {
               showIcon
               title={
                 COMPATIBILITY_CONFIG[comparison.compatibility]?.text ||
-                `兼容性：${comparison.compatibility || '未知'}`
+                `Compatibility:${comparison.compatibility || 'Unknown'}`
               }
               description={
                 comparison.breakingChanges.length > 0
-                  ? `存在 ${comparison.breakingChanges.length} 项破坏性变更，运行中的流程实例可能受影响。`
-                  : '未发现破坏性变更。'
+                  ? `exists ${comparison.breakingChanges.length} A destructive change may affect running process instances.`
+                  : 'No breaking changes found.'
               }
             />
 
             {comparison.breakingChanges.length > 0 && (
               <div>
-                <div className="mb-2 text-sm font-medium">破坏性变更</div>
+                <div className="mb-2 text-sm font-medium">Destructive change</div>
                 <ul className="list-disc space-y-1 pl-5 text-sm">
                   {comparison.breakingChanges.map((item, index) => (
                     <li key={`${item}-${index}`}>{item}</li>
@@ -420,23 +422,23 @@ export default function WorkflowVersionsPage() {
             )}
 
             <div>
-              <div className="mb-2 text-sm font-medium">变更明细</div>
+              <div className="mb-2 text-sm font-medium">Change details</div>
               <Table<BpmnVersionChange>
                 size="small"
                 rowKey={changeRowKey}
                 dataSource={comparison.changes}
                 pagination={false}
-                locale={{ emptyText: '两个版本之间没有检测到结构变更。' }}
+                locale={{ emptyText: 'No structural changes detected between the two versions.' }}
                 columns={[
                   {
-                    title: '类型',
+                    title: 'Type',
                     dataIndex: 'type',
                     width: 80,
                     render: (value: string) => CHANGE_TYPE_LABEL[value] || value,
                   },
-                  { title: '元素类型', dataIndex: 'elementType', width: 120 },
+                  { title: 'Element type', dataIndex: 'elementType', width: 120 },
                   {
-                    title: '元素',
+                    title: 'Element',
                     dataIndex: 'elementName',
                     render: (value: string, record) => (
                       <span>
@@ -447,9 +449,9 @@ export default function WorkflowVersionsPage() {
                       </span>
                     ),
                   },
-                  { title: '说明', dataIndex: 'description', ellipsis: true },
+                  { title: 'Description', dataIndex: 'description', ellipsis: true },
                   {
-                    title: '影响',
+                    title: 'Impact',
                     dataIndex: 'impact',
                     width: 90,
                     render: (value: string) => (

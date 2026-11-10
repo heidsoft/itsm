@@ -435,7 +435,7 @@ func RBACMiddleware(client *ent.Client) gin.HandlerFunc {
 				"RBACMiddleware: user_id not found in context",
 				"path", c.Request.URL.Path,
 			)
-			common.Fail(c, common.AuthFailedCode, "用户未认证")
+			common.Fail(c, common.AuthFailedCode, "User not authenticated")
 			c.Abort()
 			return
 		}
@@ -447,7 +447,7 @@ func RBACMiddleware(client *ent.Client) gin.HandlerFunc {
 				"path", c.Request.URL.Path,
 				"user_id_interface", userIDInterface,
 			)
-			common.Fail(c, common.AuthFailedCode, "用户ID格式错误")
+			common.Fail(c, common.AuthFailedCode, "User ID format error")
 			c.Abort()
 			return
 		}
@@ -480,7 +480,7 @@ func RBACMiddleware(client *ent.Client) gin.HandlerFunc {
 						"path", c.Request.URL.Path,
 						"user_id", userID,
 					)
-					common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+					common.Fail(c, common.AuthFailedCode, "Tenant information is missing")
 					c.Abort()
 					return
 				}
@@ -490,7 +490,7 @@ func RBACMiddleware(client *ent.Client) gin.HandlerFunc {
 					"path", c.Request.URL.Path,
 					"user_id", userID,
 				)
-				common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+				common.Fail(c, common.AuthFailedCode, "Tenant information is missing")
 				c.Abort()
 				return
 			}
@@ -502,7 +502,7 @@ func RBACMiddleware(client *ent.Client) gin.HandlerFunc {
 				"path", c.Request.URL.Path,
 				"tenant_id_interface", tenantIDInterface,
 			)
-			common.Fail(c, common.AuthFailedCode, "租户ID格式错误")
+			common.Fail(c, common.AuthFailedCode, "Tenant ID format error")
 			c.Abort()
 			return
 		}
@@ -521,7 +521,7 @@ func RBACMiddleware(client *ent.Client) gin.HandlerFunc {
 				"user_id", userID,
 				"error", err.Error(),
 			)
-			common.Fail(c, common.AuthFailedCode, "用户不存在")
+			common.Fail(c, common.AuthFailedCode, "User does not exist")
 			c.Abort()
 			return
 		}
@@ -547,7 +547,7 @@ func RBACMiddleware(client *ent.Client) gin.HandlerFunc {
 				"path", c.Request.URL.Path,
 				"user_id", userID,
 			)
-			common.Fail(c, common.ForbiddenCode, "用户已被禁用")
+			common.Fail(c, common.ForbiddenCode, "User has been disabled")
 			c.Abort()
 			return
 		}
@@ -560,7 +560,7 @@ func RBACMiddleware(client *ent.Client) gin.HandlerFunc {
 				"path", c.Request.URL.Path,
 				"user_id", userID,
 			)
-			common.Fail(c, common.AuthFailedCode, "角色信息缺失")
+			common.Fail(c, common.AuthFailedCode, "Missing role information")
 			c.Abort()
 			return
 		}
@@ -572,7 +572,7 @@ func RBACMiddleware(client *ent.Client) gin.HandlerFunc {
 				"path", c.Request.URL.Path,
 				"role_interface", roleInterface,
 			)
-			common.Fail(c, common.AuthFailedCode, "角色格式错误")
+			common.Fail(c, common.AuthFailedCode, "Character format error")
 			c.Abort()
 			return
 		}
@@ -590,7 +590,7 @@ func RBACMiddleware(client *ent.Client) gin.HandlerFunc {
 				"user_id", userID,
 				"role", role,
 			)
-			common.Fail(c, common.ForbiddenCode, "权限不足")
+			common.Fail(c, common.ForbiddenCode, "Insufficient permissions")
 			c.Abort()
 			return
 		}
@@ -616,13 +616,13 @@ func RequirePermission(resource, action string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		role, ok := c.Get("role")
 		if !ok {
-			common.Fail(c, common.AuthFailedCode, "用户角色信息缺失")
+			common.Fail(c, common.AuthFailedCode, "User role information is missing")
 			c.Abort()
 			return
 		}
 		roleStr, ok := role.(string)
 		if !ok {
-			common.Fail(c, common.AuthFailedCode, "用户角色信息格式错误")
+			common.Fail(c, common.AuthFailedCode, "User role information format error")
 			c.Abort()
 			return
 		}
@@ -630,13 +630,13 @@ func RequirePermission(resource, action string) gin.HandlerFunc {
 		// 获取租户ID
 		tenantIDInterface, ok := c.Get("tenant_id")
 		if !ok {
-			common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+			common.Fail(c, common.AuthFailedCode, "Tenant information is missing")
 			c.Abort()
 			return
 		}
 		tenantID, ok := tenantIDInterface.(int)
 		if !ok {
-			common.Fail(c, common.AuthFailedCode, "租户信息格式错误")
+			common.Fail(c, common.AuthFailedCode, "Tenant information format error")
 			c.Abort()
 			return
 		}
@@ -644,13 +644,13 @@ func RequirePermission(resource, action string) gin.HandlerFunc {
 		// 获取客户端
 		clientInterface, ok := c.Get("client")
 		if !ok {
-			common.Fail(c, common.InternalErrorCode, "客户端缺失")
+			common.Fail(c, common.InternalErrorCode, "Client missing")
 			c.Abort()
 			return
 		}
 		client, ok := clientInterface.(*ent.Client)
 		if !ok {
-			common.Fail(c, common.InternalErrorCode, "客户端类型错误")
+			common.Fail(c, common.InternalErrorCode, "Wrong client type")
 			c.Abort()
 			return
 		}
@@ -670,7 +670,7 @@ func RequirePermission(resource, action string) gin.HandlerFunc {
 				"tenant_id", tenantID,
 				"roles", GetContextRoles(c),
 			)
-			common.Fail(c, common.ForbiddenCode, "权限不足")
+			common.Fail(c, common.ForbiddenCode, "Insufficient permissions")
 			c.Abort()
 			return
 		}
@@ -690,7 +690,7 @@ func RequireRole(allowedRoles ...string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		roleAny, exists := c.Get("role")
 		if !exists {
-			c.JSON(http.StatusForbidden, gin.H{"code": 2003, "message": "缺少角色信息"})
+			c.JSON(http.StatusForbidden, gin.H{"code": 2003, "message": "Missing role information"})
 			c.Abort()
 			return
 		}
@@ -702,7 +702,7 @@ func RequireRole(allowedRoles ...string) gin.HandlerFunc {
 				return
 			}
 		}
-		c.JSON(http.StatusForbidden, gin.H{"code": 2003, "message": "无权限执行该操作"})
+		c.JSON(http.StatusForbidden, gin.H{"code": 2003, "message": "No permission to perform this operation"})
 		c.Abort()
 	}
 }

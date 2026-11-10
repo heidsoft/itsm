@@ -801,7 +801,7 @@ func TestTicketCoreService_UpdateTicketBasic_TableDriven(t *testing.T) {
 		{
 			name: "更新不存在的工单",
 			updateReq: &dto.UpdateTicketRequest{
-				Title: "不存在",
+				Title: "does not exist",
 			},
 			setup: func(t *testing.T, ctx context.Context, client *ent.Client, tenantID, userID int) *ent.Ticket {
 				return &ent.Ticket{ID: 99999}

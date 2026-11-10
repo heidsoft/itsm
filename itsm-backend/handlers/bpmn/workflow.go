@@ -41,7 +41,7 @@ func getBPMNTenantContext(ctx *gin.Context) (context.Context, int, bool) {
 	// 可跨租户读流程定义/实例/任务/变量。正常鉴权用户必带 >0 租户；0 视为异常令牌，直接拒绝。
 	// 注意:不得为 super_admin 回退默认租户 1 —— 无租户上下文必须 fail-closed(ADR 0001)。
 	if tenantID <= 0 {
-		common.AuthFailed(ctx, "未授权访问：缺少有效租户上下文")
+		common.AuthFailed(ctx, "Unauthorized access: Missing valid tenant context")
 		return nil, 0, false
 	}
 	reqCtx := context.WithValue(ctx.Request.Context(), bpmn.BPMNTenantIDContextKey, tenantID)
@@ -129,12 +129,12 @@ func (c *WorkflowHandler) RegisterRoutes(r *gin.RouterGroup) {
 func (c *WorkflowHandler) PublishProcessDefinition(ctx *gin.Context) {
 	key, version := ctx.Param("key"), ctx.Query("version")
 	if version == "" {
-		common.Fail(ctx, common.BadRequestCode, "版本参数不能为空")
+		common.Fail(ctx, common.BadRequestCode, "Version parameter cannot be empty")
 		return
 	}
 	var req service.UpdateProcessDefinitionRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(ctx, err, "请求参数错误")
+		common.ParamErrorWithErr(ctx, err, "Wrong request parameters")
 		return
 	}
 	workflowCtx, _, ok := getBPMNTenantContext(ctx)
@@ -143,10 +143,10 @@ func (c *WorkflowHandler) PublishProcessDefinition(ctx *gin.Context) {
 	}
 	definition, err := c.processEngine.ProcessDefinitionService().PublishProcessDefinition(workflowCtx, key, version, &req)
 	if err != nil {
-		common.RespondError(ctx, err, "发布流程定义失败")
+		common.RespondError(ctx, err, "Failed to publish process definition")
 		return
 	}
-	common.SuccessWithMessage(ctx, "流程定义发布成功", dto.ToBPMNProcessDefinitionResponse(definition))
+	common.SuccessWithMessage(ctx, "Process definition published successfully", dto.ToBPMNProcessDefinitionResponse(definition))
 }
 
 func (c *WorkflowHandler) GetApprovalHistory(ctx *gin.Context) {
@@ -156,7 +156,7 @@ func (c *WorkflowHandler) GetApprovalHistory(ctx *gin.Context) {
 	}
 	decisions, err := c.processEngine.TaskService().ListApprovalDecisions(workflowCtx, ctx.Param("id"))
 	if err != nil {
-		common.RespondError(ctx, err, "查询审批历史失败")
+		common.RespondError(ctx, err, "Failed to query approval history")
 		return
 	}
 	common.Success(ctx, dto.ToProcessApprovalDecisionResponseList(decisions))
@@ -173,7 +173,7 @@ func (c *WorkflowHandler) SubmitTaskDecision(ctx *gin.Context) {
 		AddApproverUserID *int                   `json:"addApproverUserId"`
 	}
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(ctx, err, "请求参数错误")
+		common.ParamErrorWithErr(ctx, err, "Wrong request parameters")
 		return
 	}
 	workflowCtx, _, ok := getBPMNTenantContext(ctx)
@@ -191,13 +191,13 @@ func (c *WorkflowHandler) SubmitTaskDecision(ctx *gin.Context) {
 		task, taskErr = c.processEngine.TaskService().GetTask(workflowCtx, taskID)
 	}
 	if taskErr != nil {
-		common.NotFound(ctx, "审批任务不存在")
+		common.NotFound(ctx, "Approval task does not exist")
 		return
 	}
 
 	if req.Action == "delegate" {
 		if req.DelegateToUserID == nil || *req.DelegateToUserID <= 0 {
-			common.Fail(ctx, common.ParamErrorCode, "委托必须指定目标用户")
+			common.Fail(ctx, common.ParamErrorCode, "The delegate must specify the target user")
 			return
 		}
 		newAssignee := strconv.Itoa(*req.DelegateToUserID)
@@ -208,16 +208,16 @@ func (c *WorkflowHandler) SubmitTaskDecision(ctx *gin.Context) {
 			err = c.processEngine.TaskService().DelegateTask(workflowCtx, taskID, newAssignee)
 		}
 		if err != nil {
-			common.RespondError(ctx, err, "委托失败")
+			common.RespondError(ctx, err, "Delegation failed")
 			return
 		}
-		common.SuccessWithMessage(ctx, "任务已委托", nil)
+		common.SuccessWithMessage(ctx, "Task has been delegated", nil)
 		return
 	}
 
 	if req.Action == "add_approver" {
 		if req.AddApproverUserID == nil || *req.AddApproverUserID <= 0 {
-			common.Fail(ctx, common.ParamErrorCode, "加签必须指定目标用户")
+			common.Fail(ctx, common.ParamErrorCode, "The target user must be specified for signature")
 			return
 		}
 		newApprover := strconv.Itoa(*req.AddApproverUserID)
@@ -228,16 +228,16 @@ func (c *WorkflowHandler) SubmitTaskDecision(ctx *gin.Context) {
 			err = c.processEngine.TaskService().AddApproverTask(workflowCtx, taskID, newApprover)
 		}
 		if err != nil {
-			common.RespondError(ctx, err, "加签失败")
+			common.RespondError(ctx, err, "Failed to add approver")
 			return
 		}
-		common.SuccessWithMessage(ctx, "加签成功", nil)
+		common.SuccessWithMessage(ctx, "Signed successfully", nil)
 		return
 	}
 
 	commentRequired, configured := task.TaskVariables["commentRequiredOnReject"].(bool)
 	if req.Action == "reject" && configured && commentRequired && strings.TrimSpace(req.Comment) == "" {
-		common.Fail(ctx, common.ParamErrorCode, "该审批节点要求拒绝时填写意见")
+		common.Fail(ctx, common.ParamErrorCode, "The approval node requires filling in comments when rejecting")
 		return
 	}
 	variables := req.Variables
@@ -255,10 +255,10 @@ func (c *WorkflowHandler) SubmitTaskDecision(ctx *gin.Context) {
 		err = c.processEngine.TaskService().CompleteTask(workflowCtx, taskID, variables)
 	}
 	if err != nil {
-		common.RespondError(ctx, err, "提交审批决策失败")
+		common.RespondError(ctx, err, "Failed to submit approval decision")
 		return
 	}
-	common.SuccessWithMessage(ctx, "审批决策提交成功", nil)
+	common.SuccessWithMessage(ctx, "Approval decision submitted successfully", nil)
 }
 
 // CreateProcessDefinition 创建流程定义
@@ -266,7 +266,7 @@ func (c *WorkflowHandler) CreateProcessDefinition(ctx *gin.Context) {
 	// 获取租户上下文。租户缺失时 fail-closed，禁止回退默认租户(ADR 0001)。
 	tenantIDFromCtx := ctx.GetInt("tenant_id")
 	if tenantIDFromCtx <= 0 {
-		common.AuthFailed(ctx, "未授权访问：缺少有效租户上下文")
+		common.AuthFailed(ctx, "Unauthorized access: Missing valid tenant context")
 		return
 	}
 
@@ -275,7 +275,7 @@ func (c *WorkflowHandler) CreateProcessDefinition(ctx *gin.Context) {
 	// 我们使用 PostWithContext 来手动控制 TenantID
 	var req map[string]interface{}
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(ctx, err, "请求参数错误")
+		common.ParamErrorWithErr(ctx, err, "Wrong request parameters")
 		return
 	}
 
@@ -286,7 +286,7 @@ func (c *WorkflowHandler) CreateProcessDefinition(ctx *gin.Context) {
 	reqBytes, _ := json.Marshal(req)
 	var finalReq service.CreateProcessDefinitionRequest
 	if err := json.Unmarshal(reqBytes, &finalReq); err != nil {
-		common.ParamErrorWithErr(ctx, err, "请求参数解析错误")
+		common.ParamErrorWithErr(ctx, err, "Request parameter parsing error")
 		return
 	}
 
@@ -297,18 +297,18 @@ func (c *WorkflowHandler) CreateProcessDefinition(ctx *gin.Context) {
 	}
 	definition, err := c.processEngine.ProcessDefinitionService().CreateProcessDefinition(workflowCtx, &finalReq)
 	if err != nil {
-		common.RespondError(ctx, err, "创建流程定义失败")
+		common.RespondError(ctx, err, "Failed to create process definition")
 		return
 	}
 
-	common.SuccessWithMessage(ctx, "流程定义创建成功", dto.ToBPMNProcessDefinitionResponse(definition))
+	common.SuccessWithMessage(ctx, "Process definition created successfully", dto.ToBPMNProcessDefinitionResponse(definition))
 }
 
 // ListProcessDefinitions 获取流程定义列表
 func (c *WorkflowHandler) ListProcessDefinitions(ctx *gin.Context) {
 	var req service.ListProcessDefinitionsRequest
 	if err := ctx.ShouldBindQuery(&req); err != nil {
-		common.ParamErrorWithErr(ctx, err, "请求参数错误")
+		common.ParamErrorWithErr(ctx, err, "Wrong request parameters")
 		return
 	}
 
@@ -329,7 +329,7 @@ func (c *WorkflowHandler) ListProcessDefinitions(ctx *gin.Context) {
 
 	definitions, total, err := c.processEngine.ProcessDefinitionService().ListProcessDefinitions(workflowCtx, &req)
 	if err != nil {
-		common.RespondError(ctx, err, "获取流程定义列表失败")
+		common.RespondError(ctx, err, "Failed to obtain process definition list")
 		return
 	}
 
@@ -360,7 +360,7 @@ func (c *WorkflowHandler) GetProcessDefinition(ctx *gin.Context) {
 	}
 
 	if err != nil {
-		common.NotFoundWithErr(ctx, err, "流程定义不存在")
+		common.NotFoundWithErr(ctx, err, "Process definition does not exist")
 		return
 	}
 
@@ -372,13 +372,13 @@ func (c *WorkflowHandler) UpdateProcessDefinition(ctx *gin.Context) {
 	key := ctx.Param("key")
 	version := ctx.Query("version")
 	if version == "" {
-		common.Fail(ctx, common.BadRequestCode, "版本参数不能为空")
+		common.Fail(ctx, common.BadRequestCode, "Version parameter cannot be empty")
 		return
 	}
 
 	var req service.UpdateProcessDefinitionRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(ctx, err, "请求参数错误")
+		common.ParamErrorWithErr(ctx, err, "Wrong request parameters")
 		return
 	}
 	workflowCtx, _, ok := getBPMNTenantContext(ctx)
@@ -388,11 +388,11 @@ func (c *WorkflowHandler) UpdateProcessDefinition(ctx *gin.Context) {
 
 	definition, err := c.processEngine.ProcessDefinitionService().UpdateProcessDefinition(workflowCtx, key, version, &req)
 	if err != nil {
-		common.RespondError(ctx, err, "更新流程定义失败")
+		common.RespondError(ctx, err, "Failed to update process definition")
 		return
 	}
 
-	common.SuccessWithMessage(ctx, "流程定义更新成功", dto.ToBPMNProcessDefinitionResponse(definition))
+	common.SuccessWithMessage(ctx, "Process definition updated successfully", dto.ToBPMNProcessDefinitionResponse(definition))
 }
 
 // DeleteProcessDefinition 删除流程定义
@@ -400,7 +400,7 @@ func (c *WorkflowHandler) DeleteProcessDefinition(ctx *gin.Context) {
 	key := ctx.Param("key")
 	version := ctx.Query("version")
 	if version == "" {
-		common.Fail(ctx, common.BadRequestCode, "版本参数不能为空")
+		common.Fail(ctx, common.BadRequestCode, "Version parameter cannot be empty")
 		return
 	}
 	workflowCtx, _, ok := getBPMNTenantContext(ctx)
@@ -410,11 +410,11 @@ func (c *WorkflowHandler) DeleteProcessDefinition(ctx *gin.Context) {
 
 	err := c.processEngine.ProcessDefinitionService().DeleteProcessDefinition(workflowCtx, key, version)
 	if err != nil {
-		common.RespondError(ctx, err, "删除流程定义失败")
+		common.RespondError(ctx, err, "Failed to delete process definition")
 		return
 	}
 
-	common.SuccessWithMessage(ctx, "流程定义删除成功", nil)
+	common.SuccessWithMessage(ctx, "Process definition deleted successfully", nil)
 }
 
 // ExportProcessDefinition 导出流程定义
@@ -431,7 +431,7 @@ func (c *WorkflowHandler) ExportProcessDefinition(ctx *gin.Context) {
 
 	definition, err := c.processEngine.ProcessDefinitionService().GetProcessDefinition(workflowCtx, key, version)
 	if err != nil {
-		common.NotFoundWithErr(ctx, err, "获取流程定义失败")
+		common.NotFoundWithErr(ctx, err, "Failed to obtain process definition")
 		return
 	}
 
@@ -465,7 +465,7 @@ func (c *WorkflowHandler) CloneProcessDefinition(ctx *gin.Context) {
 		NewName string `json:"newName" binding:"required"`
 	}
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(ctx, err, "请求参数错误")
+		common.ParamErrorWithErr(ctx, err, "Wrong request parameters")
 		return
 	}
 	workflowCtx, tenantID, ok := getBPMNTenantContext(ctx)
@@ -476,7 +476,7 @@ func (c *WorkflowHandler) CloneProcessDefinition(ctx *gin.Context) {
 	// 获取原流程定义
 	definition, err := c.processEngine.ProcessDefinitionService().GetProcessDefinition(workflowCtx, key, version)
 	if err != nil {
-		common.NotFoundWithErr(ctx, err, "获取流程定义失败")
+		common.NotFoundWithErr(ctx, err, "Failed to obtain process definition")
 		return
 	}
 
@@ -493,7 +493,7 @@ func (c *WorkflowHandler) CloneProcessDefinition(ctx *gin.Context) {
 
 	created, err := c.processEngine.ProcessDefinitionService().CreateProcessDefinition(workflowCtx, newDefinition)
 	if err != nil {
-		common.RespondError(ctx, err, "复制流程定义失败")
+		common.RespondError(ctx, err, "Failed to copy process definition")
 		return
 	}
 
@@ -505,7 +505,7 @@ func (c *WorkflowHandler) SetProcessDefinitionActive(ctx *gin.Context) {
 	key := ctx.Param("key")
 	version := ctx.Query("version")
 	if version == "" {
-		common.Fail(ctx, common.BadRequestCode, "版本参数不能为空")
+		common.Fail(ctx, common.BadRequestCode, "Version parameter cannot be empty")
 		return
 	}
 
@@ -517,7 +517,7 @@ func (c *WorkflowHandler) SetProcessDefinitionActive(ctx *gin.Context) {
 		return
 	}
 	if req.Active == nil {
-		common.Fail(ctx, common.BadRequestCode, "active 字段不能为空")
+		common.Fail(ctx, common.BadRequestCode, "active field cannot be empty")
 		return
 	}
 	workflowCtx, _, ok := getBPMNTenantContext(ctx)
@@ -527,7 +527,7 @@ func (c *WorkflowHandler) SetProcessDefinitionActive(ctx *gin.Context) {
 
 	err := c.processEngine.ProcessDefinitionService().SetProcessDefinitionActive(workflowCtx, key, version, *req.Active)
 	if err != nil {
-		common.RespondError(ctx, err, "设置流程定义状态失败")
+		common.RespondError(ctx, err, "Failed to set process definition status")
 		return
 	}
 
@@ -536,7 +536,7 @@ func (c *WorkflowHandler) SetProcessDefinitionActive(ctx *gin.Context) {
 		status = "停用"
 	}
 
-	common.SuccessWithMessage(ctx, "流程定义"+status+"成功", nil)
+	common.SuccessWithMessage(ctx, "Process Definitions"+status+"Success", nil)
 }
 
 // StartProcess 启动流程实例
@@ -547,7 +547,7 @@ func (c *WorkflowHandler) StartProcess(ctx *gin.Context) {
 		Variables            map[string]interface{} `json:"variables"`
 	}
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(ctx, err, "请求参数错误")
+		common.ParamErrorWithErr(ctx, err, "Wrong request parameters")
 		return
 	}
 	workflowCtx, _, ok := getBPMNTenantContext(ctx)
@@ -557,19 +557,19 @@ func (c *WorkflowHandler) StartProcess(ctx *gin.Context) {
 
 	instance, err := c.processEngine.StartProcess(workflowCtx, req.ProcessDefinitionKey, req.BusinessKey, req.Variables)
 	if err != nil {
-		common.RespondError(ctx, err, "启动流程实例失败")
+		common.RespondError(ctx, err, "Failed to start process instance")
 		return
 	}
 
 	// 与 GET/List 同族契约：统一返回 DTO，寻址键 instanceId（PI-*）在 camelCase 字段中透出。
-	common.SuccessWithMessage(ctx, "流程实例启动成功", dto.ToBPMNProcessInstanceResponse(instance))
+	common.SuccessWithMessage(ctx, "Process instance started successfully", dto.ToBPMNProcessInstanceResponse(instance))
 }
 
 // ListProcessInstances 获取流程实例列表
 func (c *WorkflowHandler) ListProcessInstances(ctx *gin.Context) {
 	var req service.ListProcessInstancesRequest
 	if err := ctx.ShouldBindQuery(&req); err != nil {
-		common.ParamErrorWithErr(ctx, err, "请求参数错误")
+		common.ParamErrorWithErr(ctx, err, "Wrong request parameters")
 		return
 	}
 
@@ -590,7 +590,7 @@ func (c *WorkflowHandler) ListProcessInstances(ctx *gin.Context) {
 
 	instances, total, err := c.processEngine.ProcessInstanceService().ListProcessInstances(reqCtx, &req)
 	if err != nil {
-		common.RespondError(ctx, err, "获取流程实例列表失败")
+		common.RespondError(ctx, err, "Failed to obtain process instance list")
 		return
 	}
 
@@ -612,7 +612,7 @@ func (c *WorkflowHandler) GetProcessInstance(ctx *gin.Context) {
 
 	instance, err := c.processEngine.ProcessInstanceService().GetProcessInstance(workflowCtx, processInstanceID)
 	if err != nil {
-		common.NotFoundWithErr(ctx, err, "流程实例不存在")
+		common.NotFoundWithErr(ctx, err, "Process instance does not exist")
 		return
 	}
 
@@ -627,7 +627,7 @@ func (c *WorkflowHandler) SetProcessInstanceVariables(ctx *gin.Context) {
 		Variables map[string]interface{} `json:"variables" binding:"required"`
 	}
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(ctx, err, "请求参数错误")
+		common.ParamErrorWithErr(ctx, err, "Wrong request parameters")
 		return
 	}
 	workflowCtx, _, ok := getBPMNTenantContext(ctx)
@@ -637,11 +637,11 @@ func (c *WorkflowHandler) SetProcessInstanceVariables(ctx *gin.Context) {
 
 	err := c.processEngine.ProcessInstanceService().SetProcessInstanceVariables(workflowCtx, processInstanceID, req.Variables)
 	if err != nil {
-		common.RespondError(ctx, err, "设置流程实例变量失败")
+		common.RespondError(ctx, err, "Failed to set process instance variables")
 		return
 	}
 
-	common.SuccessWithMessage(ctx, "流程实例变量设置成功", nil)
+	common.SuccessWithMessage(ctx, "Process instance variable set successfully", nil)
 }
 
 // SuspendProcess 暂停流程实例
@@ -652,7 +652,7 @@ func (c *WorkflowHandler) SuspendProcess(ctx *gin.Context) {
 		Reason string `json:"reason" binding:"required"`
 	}
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(ctx, err, "请求参数错误")
+		common.ParamErrorWithErr(ctx, err, "Wrong request parameters")
 		return
 	}
 	workflowCtx, _, ok := getBPMNTenantContext(ctx)
@@ -662,11 +662,11 @@ func (c *WorkflowHandler) SuspendProcess(ctx *gin.Context) {
 
 	err := c.processEngine.SuspendProcess(workflowCtx, processInstanceID, req.Reason)
 	if err != nil {
-		common.RespondError(ctx, err, "暂停流程实例失败")
+		common.RespondError(ctx, err, "Failed to pause process instance")
 		return
 	}
 
-	common.SuccessWithMessage(ctx, "流程实例暂停成功", nil)
+	common.SuccessWithMessage(ctx, "Process instance suspended successfully", nil)
 }
 
 // ResumeProcess 恢复流程实例
@@ -679,11 +679,11 @@ func (c *WorkflowHandler) ResumeProcess(ctx *gin.Context) {
 
 	err := c.processEngine.ResumeProcess(workflowCtx, processInstanceID)
 	if err != nil {
-		common.RespondError(ctx, err, "恢复流程实例失败")
+		common.RespondError(ctx, err, "Failed to restore process instance")
 		return
 	}
 
-	common.SuccessWithMessage(ctx, "流程实例恢复成功", nil)
+	common.SuccessWithMessage(ctx, "Process instance restored successfully", nil)
 }
 
 // TerminateProcess 终止流程实例
@@ -694,7 +694,7 @@ func (c *WorkflowHandler) TerminateProcess(ctx *gin.Context) {
 		Reason string `json:"reason" binding:"required"`
 	}
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(ctx, err, "请求参数错误")
+		common.ParamErrorWithErr(ctx, err, "Wrong request parameters")
 		return
 	}
 	workflowCtx, _, ok := getBPMNTenantContext(ctx)
@@ -704,25 +704,25 @@ func (c *WorkflowHandler) TerminateProcess(ctx *gin.Context) {
 
 	err := c.processEngine.TerminateProcess(workflowCtx, processInstanceID, req.Reason)
 	if err != nil {
-		common.RespondError(ctx, err, "终止流程实例失败")
+		common.RespondError(ctx, err, "Failed to terminate process instance")
 		return
 	}
 
-	common.SuccessWithMessage(ctx, "流程实例终止成功", nil)
+	common.SuccessWithMessage(ctx, "Process instance terminated successfully", nil)
 }
 
 // ListUserTasks 获取用户任务列表（默认「我的待办」语义）
 func (c *WorkflowHandler) ListUserTasks(ctx *gin.Context) {
 	var req service.ListUserTasksRequest
 	if err := ctx.ShouldBindQuery(&req); err != nil {
-		common.ParamErrorWithErr(ctx, err, "请求参数错误")
+		common.ParamErrorWithErr(ctx, err, "Wrong request parameters")
 		return
 	}
 
 	// 从JWT获取租户ID
 	tenantID, exists := ctx.Get("tenant_id")
 	if !exists {
-		common.AuthFailed(ctx, "未授权访问")
+		common.AuthFailed(ctx, "Unauthorized access")
 		return
 	}
 	req.TenantID = tenantID.(int)
@@ -734,7 +734,7 @@ func (c *WorkflowHandler) ListUserTasks(ctx *gin.Context) {
 	req.CandidateUsers = ""
 	req.CandidateGroups = ""
 	if req.UserID <= 0 {
-		common.AuthFailed(ctx, "未授权访问：缺少有效用户上下文")
+		common.AuthFailed(ctx, "Unauthorized access: Missing valid user context")
 		return
 	}
 
@@ -748,7 +748,7 @@ func (c *WorkflowHandler) ListUserTasks(ctx *gin.Context) {
 
 	tasks, total, err := c.processEngine.TaskService().ListUserTaskViews(ctx.Request.Context(), &req)
 	if err != nil {
-		common.RespondError(ctx, err, "获取用户任务列表失败")
+		common.RespondError(ctx, err, "Failed to obtain user task list")
 		return
 	}
 
@@ -761,13 +761,13 @@ func (c *WorkflowHandler) ListUserTasks(ctx *gin.Context) {
 func (c *WorkflowHandler) ListAllTasks(ctx *gin.Context) {
 	var req service.ListUserTasksRequest
 	if err := ctx.ShouldBindQuery(&req); err != nil {
-		common.ParamErrorWithErr(ctx, err, "请求参数错误")
+		common.ParamErrorWithErr(ctx, err, "Wrong request parameters")
 		return
 	}
 
 	tenantID := ctx.GetInt("tenant_id")
 	if tenantID <= 0 {
-		common.AuthFailed(ctx, "未授权访问：缺少有效租户上下文")
+		common.AuthFailed(ctx, "Unauthorized access: Missing valid tenant context")
 		return
 	}
 	req.TenantID = tenantID
@@ -782,7 +782,7 @@ func (c *WorkflowHandler) ListAllTasks(ctx *gin.Context) {
 
 	tasks, total, err := c.processEngine.TaskService().ListUserTaskViews(ctx.Request.Context(), &req)
 	if err != nil {
-		common.RespondError(ctx, err, "获取全部任务列表失败")
+		common.RespondError(ctx, err, "Failed to obtain all task lists")
 		return
 	}
 	common.Success(ctx, common.NewListResponse(tasks, common.NewPaginationResponse(req.Page, req.PageSize, int64(total))))
@@ -807,11 +807,11 @@ func (c *WorkflowHandler) GetTask(ctx *gin.Context) {
 		task, err = c.processEngine.TaskService().GetTask(workflowCtx, taskID)
 	}
 	if err != nil {
-		common.NotFoundWithErr(ctx, err, "任务不存在")
+		common.NotFoundWithErr(ctx, err, "Task does not exist")
 		return
 	}
 	if err := c.processEngine.TaskService().AuthorizeTaskAccess(workflowCtx, task, false); err != nil {
-		common.RespondError(ctx, err, "任务不可访问")
+		common.RespondError(ctx, err, "Task inaccessible")
 		return
 	}
 
@@ -826,7 +826,7 @@ func (c *WorkflowHandler) AssignTask(ctx *gin.Context) {
 		Assignee string `json:"assignee" binding:"required"`
 	}
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(ctx, err, "请求参数错误")
+		common.ParamErrorWithErr(ctx, err, "Wrong request parameters")
 		return
 	}
 	workflowCtx, _, ok := getBPMNTenantContext(ctx)
@@ -836,11 +836,11 @@ func (c *WorkflowHandler) AssignTask(ctx *gin.Context) {
 
 	err := c.processEngine.TaskService().AssignTask(workflowCtx, taskID, req.Assignee)
 	if err != nil {
-		common.RespondError(ctx, err, "分配任务失败")
+		common.RespondError(ctx, err, "Failed to assign task")
 		return
 	}
 
-	common.SuccessWithMessage(ctx, "任务分配成功", nil)
+	common.SuccessWithMessage(ctx, "Task assigned successfully", nil)
 }
 
 // ReassignTask performs an audited tenant-scoped recovery of an active task.
@@ -850,7 +850,7 @@ func (c *WorkflowHandler) ReassignTask(ctx *gin.Context) {
 		Reason        string `json:"reason" binding:"required"`
 	}
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(ctx, err, "请求参数错误")
+		common.ParamErrorWithErr(ctx, err, "Wrong request parameters")
 		return
 	}
 	workflowCtx, _, ok := getBPMNTenantContext(ctx)
@@ -858,10 +858,10 @@ func (c *WorkflowHandler) ReassignTask(ctx *gin.Context) {
 		return
 	}
 	if err := c.processEngine.TaskService().ReassignTask(workflowCtx, ctx.Param("id"), req.NewAssigneeID, req.Reason); err != nil {
-		common.RespondError(ctx, err, "重新分配任务失败")
+		common.RespondError(ctx, err, "Failed to reassign task")
 		return
 	}
-	common.SuccessWithMessage(ctx, "任务重新分配成功", nil)
+	common.SuccessWithMessage(ctx, "Task reassignment successful", nil)
 }
 
 // TerminateTask terminates the owning BPMN instance and all of its open tasks.
@@ -870,7 +870,7 @@ func (c *WorkflowHandler) TerminateTask(ctx *gin.Context) {
 		Reason string `json:"reason" binding:"required"`
 	}
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(ctx, err, "请求参数错误")
+		common.ParamErrorWithErr(ctx, err, "Wrong request parameters")
 		return
 	}
 	workflowCtx, _, ok := getBPMNTenantContext(ctx)
@@ -878,10 +878,10 @@ func (c *WorkflowHandler) TerminateTask(ctx *gin.Context) {
 		return
 	}
 	if err := c.processEngine.TaskService().TerminateTask(workflowCtx, ctx.Param("id"), req.Reason); err != nil {
-		common.RespondError(ctx, err, "终止任务失败")
+		common.RespondError(ctx, err, "Failed to terminate task")
 		return
 	}
-	common.SuccessWithMessage(ctx, "任务所属流程终止成功", nil)
+	common.SuccessWithMessage(ctx, "The process to which the task belongs was successfully terminated", nil)
 }
 
 // ClaimTask 认领任务
@@ -895,7 +895,7 @@ func (c *WorkflowHandler) ClaimTask(ctx *gin.Context) {
 	// 从上下文获取用户ID
 	userID, exists := ctx.Get("user_id")
 	if !exists {
-		common.AuthFailed(ctx, "未授权访问")
+		common.AuthFailed(ctx, "Unauthorized access")
 		return
 	}
 
@@ -910,11 +910,11 @@ func (c *WorkflowHandler) ClaimTask(ctx *gin.Context) {
 		claimErr = c.processEngine.TaskService().ClaimTask(workflowCtx, taskID, fmt.Sprintf("%d", userID))
 	}
 	if claimErr != nil {
-		common.RespondError(ctx, claimErr, "认领任务失败")
+		common.RespondError(ctx, claimErr, "Claim task failed")
 		return
 	}
 
-	common.SuccessWithMessage(ctx, "任务认领成功", nil)
+	common.SuccessWithMessage(ctx, "Task claimed successfully", nil)
 }
 
 // CompleteTask 完成任务
@@ -925,7 +925,7 @@ func (c *WorkflowHandler) CompleteTask(ctx *gin.Context) {
 		Variables map[string]interface{} `json:"variables"`
 	}
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(ctx, err, "请求参数错误")
+		common.ParamErrorWithErr(ctx, err, "Wrong request parameters")
 		return
 	}
 	workflowCtx, _, ok := getBPMNTenantContext(ctx)
@@ -943,11 +943,11 @@ func (c *WorkflowHandler) CompleteTask(ctx *gin.Context) {
 		err = c.processEngine.TaskService().CompleteTask(workflowCtx, taskID, req.Variables)
 	}
 	if err != nil {
-		common.RespondError(ctx, err, "完成任务失败")
+		common.RespondError(ctx, err, "Failed to complete task")
 		return
 	}
 
-	common.SuccessWithMessage(ctx, "任务完成成功", nil)
+	common.SuccessWithMessage(ctx, "Task completed successfully", nil)
 }
 
 // CancelTask 取消任务
@@ -958,7 +958,7 @@ func (c *WorkflowHandler) CancelTask(ctx *gin.Context) {
 		Reason string `json:"reason" binding:"required"`
 	}
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(ctx, err, "请求参数错误")
+		common.ParamErrorWithErr(ctx, err, "Wrong request parameters")
 		return
 	}
 	workflowCtx, _, ok := getBPMNTenantContext(ctx)
@@ -968,11 +968,11 @@ func (c *WorkflowHandler) CancelTask(ctx *gin.Context) {
 
 	err := c.processEngine.TaskService().CancelTask(workflowCtx, taskID, req.Reason)
 	if err != nil {
-		common.RespondError(ctx, err, "取消任务失败")
+		common.RespondError(ctx, err, "Failed to cancel task")
 		return
 	}
 
-	common.SuccessWithMessage(ctx, "任务取消成功", nil)
+	common.SuccessWithMessage(ctx, "Task canceled successfully", nil)
 }
 
 // SetTaskVariables 设置任务变量
@@ -983,7 +983,7 @@ func (c *WorkflowHandler) SetTaskVariables(ctx *gin.Context) {
 		Variables map[string]interface{} `json:"variables" binding:"required"`
 	}
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(ctx, err, "请求参数错误")
+		common.ParamErrorWithErr(ctx, err, "Wrong request parameters")
 		return
 	}
 	workflowCtx, _, ok := getBPMNTenantContext(ctx)
@@ -993,11 +993,11 @@ func (c *WorkflowHandler) SetTaskVariables(ctx *gin.Context) {
 
 	err := c.processEngine.TaskService().SetTaskVariables(workflowCtx, taskID, req.Variables)
 	if err != nil {
-		common.RespondError(ctx, err, "设置任务变量失败")
+		common.RespondError(ctx, err, "Failed to set task variables")
 		return
 	}
 
-	common.SuccessWithMessage(ctx, "任务变量设置成功", nil)
+	common.SuccessWithMessage(ctx, "Task variable set successfully", nil)
 }
 
 // ListVersions 获取版本列表
@@ -1006,7 +1006,7 @@ func (c *WorkflowHandler) ListVersions(ctx *gin.Context) {
 	tenantID := ctx.GetInt("tenant_id")
 
 	if processKey == "" {
-		common.Fail(ctx, common.BadRequestCode, "缺少process_key参数")
+		common.Fail(ctx, common.BadRequestCode, "Missing process_key parameter")
 		return
 	}
 
@@ -1018,7 +1018,7 @@ func (c *WorkflowHandler) ListVersions(ctx *gin.Context) {
 		}
 		def, err := c.processEngine.ProcessDefinitionService().GetProcessDefinitionByID(workflowCtx, id)
 		if err != nil {
-			common.NotFound(ctx, "流程定义不存在")
+			common.NotFound(ctx, "Process definition does not exist")
 			return
 		}
 		processKey = def.Key
@@ -1026,7 +1026,7 @@ func (c *WorkflowHandler) ListVersions(ctx *gin.Context) {
 
 	versions, err := c.versionService.ListVersions(ctx, processKey, tenantID)
 	if err != nil {
-		common.RespondError(ctx, err, "获取版本列表失败")
+		common.RespondError(ctx, err, "Failed to obtain version list")
 		return
 	}
 
@@ -1041,13 +1041,13 @@ func (c *WorkflowHandler) GetVersion(ctx *gin.Context) {
 
 	version, err := service.ParseVersionNumber(versionStr)
 	if err != nil {
-		common.Fail(ctx, common.BadRequestCode, "无效的版本号")
+		common.Fail(ctx, common.BadRequestCode, "Invalid version number")
 		return
 	}
 
 	versionInfo, err := c.versionService.GetVersion(ctx, processKey, version, tenantID)
 	if err != nil {
-		common.NotFound(ctx, "版本不存在")
+		common.NotFound(ctx, "Version does not exist")
 		return
 	}
 
@@ -1058,7 +1058,7 @@ func (c *WorkflowHandler) GetVersion(ctx *gin.Context) {
 func (c *WorkflowHandler) CreateVersion(ctx *gin.Context) {
 	var req service.CreateVersionRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(ctx, err, "请求参数错误")
+		common.ParamErrorWithErr(ctx, err, "Wrong request parameters")
 		return
 	}
 
@@ -1067,7 +1067,7 @@ func (c *WorkflowHandler) CreateVersion(ctx *gin.Context) {
 
 	version, err := c.versionService.CreateVersion(ctx, &req)
 	if err != nil {
-		common.RespondError(ctx, err, "创建版本失败")
+		common.RespondError(ctx, err, "Failed to create version")
 		return
 	}
 
@@ -1082,13 +1082,13 @@ func (c *WorkflowHandler) ActivateVersion(ctx *gin.Context) {
 
 	version, err := service.ParseVersionNumber(versionStr)
 	if err != nil {
-		common.Fail(ctx, common.BadRequestCode, "无效的版本号")
+		common.Fail(ctx, common.BadRequestCode, "Invalid version number")
 		return
 	}
 
 	err = c.versionService.ActivateVersion(ctx, processKey, version, tenantID)
 	if err != nil {
-		common.RespondError(ctx, err, "激活版本失败")
+		common.RespondError(ctx, err, "Failed to activate version")
 		return
 	}
 
@@ -1103,7 +1103,7 @@ func (c *WorkflowHandler) RollbackVersion(ctx *gin.Context) {
 
 	version, err := service.ParseVersionNumber(versionStr)
 	if err != nil {
-		common.Fail(ctx, common.BadRequestCode, "无效的版本号")
+		common.Fail(ctx, common.BadRequestCode, "Invalid version number")
 		return
 	}
 
@@ -1113,13 +1113,13 @@ func (c *WorkflowHandler) RollbackVersion(ctx *gin.Context) {
 	// 绑定失败必须显式拦截：非法 body 会让回滚理由为空串，回滚却仍成功
 	// （gosec G104）。
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(ctx, err, "请求参数错误")
+		common.ParamErrorWithErr(ctx, err, "Wrong request parameters")
 		return
 	}
 
 	err = c.versionService.RollbackToVersion(ctx, processKey, version, tenantID, req.Reason)
 	if err != nil {
-		common.RespondError(ctx, err, "回滚版本失败")
+		common.RespondError(ctx, err, "Rollback version failed")
 		return
 	}
 
@@ -1135,31 +1135,31 @@ func (c *WorkflowHandler) CompareVersions(ctx *gin.Context) {
 
 	// 如果没有提供版本参数，返回友好错误
 	if baseVersion == "" || targetVersion == "" {
-		common.Fail(ctx, common.BadRequestCode, "请提供 base_version 和 target_version 参数")
+		common.Fail(ctx, common.BadRequestCode, "Please provide base_version and target_version parameters")
 		return
 	}
 
 	base, err := service.ParseVersionNumber(baseVersion)
 	if err != nil {
-		common.Fail(ctx, common.BadRequestCode, "无效的基础版本号")
+		common.Fail(ctx, common.BadRequestCode, "Invalid base version number")
 		return
 	}
 
 	target, err := service.ParseVersionNumber(targetVersion)
 	if err != nil {
-		common.Fail(ctx, common.BadRequestCode, "无效的目标版本号")
+		common.Fail(ctx, common.BadRequestCode, "Invalid target version number")
 		return
 	}
 
 	// 相同版本无需比较
 	if base == target {
-		common.SuccessWithMessage(ctx, "版本相同，无需比较", nil)
+		common.SuccessWithMessage(ctx, "The versions are the same, no need to compare", nil)
 		return
 	}
 
 	comparison, err := c.versionService.CompareVersions(ctx, processKey, base, target, tenantID)
 	if err != nil {
-		common.RespondError(ctx, err, "版本比较失败")
+		common.RespondError(ctx, err, "Version comparison failed")
 		return
 	}
 
@@ -1170,7 +1170,7 @@ func (c *WorkflowHandler) CompareVersions(ctx *gin.Context) {
 func (c *WorkflowHandler) GetInstanceStats(ctx *gin.Context) {
 	var req service.InstanceStatisticsRequest
 	if err := ctx.ShouldBindQuery(&req); err != nil {
-		common.ParamErrorWithErr(ctx, err, "请求参数错误")
+		common.ParamErrorWithErr(ctx, err, "Wrong request parameters")
 		return
 	}
 
@@ -1183,7 +1183,7 @@ func (c *WorkflowHandler) GetInstanceStats(ctx *gin.Context) {
 
 	stats, err := c.processEngine.ProcessInstanceService().GetInstanceStatistics(reqCtx, &req)
 	if err != nil {
-		common.RespondError(ctx, err, "获取实例统计失败")
+		common.RespondError(ctx, err, "Failed to obtain instance statistics")
 		return
 	}
 
@@ -1194,21 +1194,21 @@ func (c *WorkflowHandler) GetInstanceStats(ctx *gin.Context) {
 func (c *WorkflowHandler) GetTaskStats(ctx *gin.Context) {
 	var req service.TaskStatisticsRequest
 	if err := ctx.ShouldBindQuery(&req); err != nil {
-		common.ParamErrorWithErr(ctx, err, "请求参数错误")
+		common.ParamErrorWithErr(ctx, err, "Wrong request parameters")
 		return
 	}
 
 	// 从JWT获取租户ID
 	tenantID, exists := ctx.Get("tenant_id")
 	if !exists {
-		common.AuthFailed(ctx, "未授权访问")
+		common.AuthFailed(ctx, "Unauthorized access")
 		return
 	}
 	req.TenantID = tenantID.(int)
 
 	stats, err := c.processEngine.TaskService().GetTaskStatistics(ctx, &req)
 	if err != nil {
-		common.RespondError(ctx, err, "获取任务统计失败")
+		common.RespondError(ctx, err, "Failed to obtain task statistics")
 		return
 	}
 
@@ -1221,7 +1221,7 @@ func (c *WorkflowHandler) CreateCounterSignTasks(ctx *gin.Context) {
 
 	var req service.CounterSignRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(ctx, err, "请求参数错误")
+		common.ParamErrorWithErr(ctx, err, "Wrong request parameters")
 		return
 	}
 	workflowCtx, _, ok := getBPMNTenantContext(ctx)
@@ -1231,7 +1231,7 @@ func (c *WorkflowHandler) CreateCounterSignTasks(ctx *gin.Context) {
 
 	tasks, err := c.processEngine.TaskService().CreateCounterSignTasks(workflowCtx, taskID, &req)
 	if err != nil {
-		common.RespondError(ctx, err, "创建会签任务失败")
+		common.RespondError(ctx, err, "Failed to create countersignature task")
 		return
 	}
 
@@ -1248,7 +1248,7 @@ func (c *WorkflowHandler) GetCounterSignStatus(ctx *gin.Context) {
 
 	status, err := c.processEngine.TaskService().GetCounterSignStatus(workflowCtx, taskID)
 	if err != nil {
-		common.RespondError(ctx, err, "获取会签状态失败")
+		common.RespondError(ctx, err, "Failed to obtain countersignature status")
 		return
 	}
 
@@ -1261,7 +1261,7 @@ func (c *WorkflowHandler) Vote(ctx *gin.Context) {
 
 	var req service.VoteRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(ctx, err, "请求参数错误")
+		common.ParamErrorWithErr(ctx, err, "Wrong request parameters")
 		return
 	}
 	workflowCtx, _, ok := getBPMNTenantContext(ctx)
@@ -1271,7 +1271,7 @@ func (c *WorkflowHandler) Vote(ctx *gin.Context) {
 
 	err := c.processEngine.TaskService().Vote(workflowCtx, taskID, &req)
 	if err != nil {
-		common.RespondError(ctx, err, "投票失败")
+		common.RespondError(ctx, err, "Voting failed")
 		return
 	}
 
@@ -1285,7 +1285,7 @@ func (c *WorkflowHandler) GetVersionChangeLogs(ctx *gin.Context) {
 
 	changelogs, err := c.versionService.GetChangeLogsByProcessKey(ctx, processKey, tenantID)
 	if err != nil {
-		common.RespondError(ctx, err, "获取变更日志失败")
+		common.RespondError(ctx, err, "Failed to obtain change log")
 		return
 	}
 
@@ -1297,14 +1297,14 @@ func (c *WorkflowHandler) GetVersionChangeLogsByID(ctx *gin.Context) {
 	processDefIDStr := ctx.Param("id")
 	processDefID, err := strconv.Atoi(processDefIDStr)
 	if err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "无效的流程定义ID")
+		common.Fail(ctx, common.ParamErrorCode, "Invalid process definition ID")
 		return
 	}
 	tenantID := ctx.GetInt("tenant_id")
 
 	changelogs, err := c.versionService.GetChangeLogsByProcessDefinitionID(ctx, processDefID, tenantID)
 	if err != nil {
-		common.RespondError(ctx, err, "获取变更日志失败")
+		common.RespondError(ctx, err, "Failed to obtain change log")
 		return
 	}
 

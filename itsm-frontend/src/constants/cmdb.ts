@@ -11,10 +11,10 @@ export enum CIStatus {
 }
 
 export const CIStatusLabels: Record<CIStatus, string> = {
-  [CIStatus.ACTIVE]: '使用中',
-  [CIStatus.INACTIVE]: '未激活',
-  [CIStatus.MAINTENANCE]: '维护中',
-  [CIStatus.DECOMMISSIONED]: '已报废',
+  [CIStatus.ACTIVE]: 'In Use',
+  [CIStatus.INACTIVE]: 'Inactive',
+  [CIStatus.MAINTENANCE]: 'Maintenance',
+  [CIStatus.DECOMMISSIONED]: 'scrapped',
 };
 
 // 常见 CI 类型 (演示用，实际从 API 获取)
@@ -27,9 +27,9 @@ export enum CITypeEnum {
 }
 
 export const CITypeLabels: Record<string, string> = {
-  [CITypeEnum.SERVER]: '服务器',
-  [CITypeEnum.DATABASE]: '数据库',
-  [CITypeEnum.APPLICATION]: '应用系统',
-  [CITypeEnum.NETWORK]: '网络设备',
-  [CITypeEnum.STORAGE]: '存储设备',
+  [CITypeEnum.SERVER]: 'Servers',
+  [CITypeEnum.DATABASE]: 'Database',
+  [CITypeEnum.APPLICATION]: 'Application Systems',
+  [CITypeEnum.NETWORK]: 'Network Devices',
+  [CITypeEnum.STORAGE]: 'Storage device',
 };

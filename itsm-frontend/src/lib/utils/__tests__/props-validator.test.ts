@@ -15,7 +15,8 @@ describe('validateRequiredProps', () => {
   const origEnv = process.env.NODE_ENV;
 
   afterEach(() => {
-    Object.defineProperty(process.env, 'NODE_ENV', { value: origEnv, writable: true });
+    if (origEnv === undefined) Reflect.deleteProperty(process.env, 'NODE_ENV');
+    else Object.assign(process.env, { NODE_ENV: origEnv });
   });
 
   it('returns true when all required props present', () => {
@@ -25,7 +26,7 @@ describe('validateRequiredProps', () => {
   });
 
   it('returns false and logs when props missing (production)', () => {
-    Object.defineProperty(process.env, 'NODE_ENV', { value: 'production', writable: true });
+    Object.assign(process.env, { NODE_ENV: 'production' });
     const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
     expect(validateRequiredProps({ a: null, b: 'x' } as any, ['a'], 'Comp')).toBe(false);
     expect(spy).toHaveBeenCalled();
@@ -33,7 +34,7 @@ describe('validateRequiredProps', () => {
   });
 
   it('throws in development mode when props missing', () => {
-    Object.defineProperty(process.env, 'NODE_ENV', { value: 'development', writable: true });
+    Object.assign(process.env, { NODE_ENV: 'development' });
     const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
     expect(() => validateRequiredProps({ a: undefined } as any, ['a'], 'X')).toThrow();
     spy.mockRestore();

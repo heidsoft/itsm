@@ -32,9 +32,9 @@ describe('permissions 模块 i18n 契约', () => {
     expect(i18nKey).toBeTruthy();
   });
 
-  it.each(moduleCodes)('权限码 %s 的翻译在 zh-CN/en-US 均存在', (code) => {
+  it.each(moduleCodes)('权限码 %s 的翻译在 en-US 均存在', (code) => {
     const i18nKey = MODULE_I18N_KEYS[code];
-    for (const locale of ['zh-CN', 'en-US'] as const) {
+    for (const locale of ['en-US'] as const) {
       const dict = translations[locale] as unknown as Dict;
       const label = lookup(dict, `permissions.modules.${i18nKey}.label`);
       const description = lookup(dict, `permissions.modules.${i18nKey}.description`);
@@ -47,7 +47,7 @@ describe('permissions 模块 i18n 契约', () => {
 
   it('页面渲染路径解析出的 key 不得回退为原始权限码大写', () => {
     // 错误形态：ticket → TICKET，字典里没有这个 key
-    const dict = translations['zh-CN'] as unknown as Dict;
+    const dict = translations['en-US'] as unknown as Dict;
     const brokenKeys = moduleCodes
       .map((code) => code.toUpperCase())
       .filter((upper) => lookup(dict, `permissions.modules.${upper}.label`) === undefined);

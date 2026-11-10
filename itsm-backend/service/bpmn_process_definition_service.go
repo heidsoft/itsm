@@ -89,14 +89,14 @@ func (s *bpmnProcessDefinitionService) CreateProcessDefinition(ctx context.Conte
 		if err := validateActivatableBPMNXML(req.BPMNXML); err != nil {
 			// BPMN XML 不合法是「调用方输入问题」，不是服务端故障。
 			// 返回带 400 语义的 AppError，让 common.RespondError 分流成 4000 而不是兜底 500。
-			return nil, common.NewValidationError("BPMN XML 校验失败", err)
+			return nil, common.NewValidationError("BPMN XML validation failed", err)
 		}
 	} else if _, err := NewBPMNParser().ParseXML([]byte(req.BPMNXML)); err != nil {
-		return nil, common.NewValidationError("BPMN XML 校验失败", err)
+		return nil, common.NewValidationError("BPMN XML validation failed", err)
 	}
 	tx, err := s.client.Tx(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("开始流程定义事务失败: %w", err)
+		return nil, fmt.Errorf("Failed to start process definition transaction: %w", err)
 	}
 	defer func() { _ = tx.Rollback() }()
 	client := tx.Client()
@@ -118,7 +118,7 @@ func (s *bpmnProcessDefinitionService) CreateProcessDefinition(ctx context.Conte
 			SetTenantID(req.TenantID).
 			Save(ctx)
 		if err != nil {
-			return nil, fmt.Errorf("创建部署记录失败: %w", err)
+			return nil, fmt.Errorf("Failed to create deployment record: %w", err)
 		}
 	}
 
@@ -135,7 +135,7 @@ func (s *bpmnProcessDefinitionService) CreateProcessDefinition(ctx context.Conte
 			SetIsLatest(false).
 			Save(ctx)
 		if err != nil {
-			return nil, fmt.Errorf("更新旧版本失败: %w", err)
+			return nil, fmt.Errorf("Failed to update old version: %w", err)
 		}
 	}
 
@@ -156,10 +156,10 @@ func (s *bpmnProcessDefinitionService) CreateProcessDefinition(ctx context.Conte
 		SetDeploymentName(deployment.DeploymentName).
 		Save(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("创建流程定义失败: %w", err)
+		return nil, fmt.Errorf("Failed to create process definition: %w", err)
 	}
 	if err = tx.Commit(); err != nil {
-		return nil, fmt.Errorf("提交流程定义事务失败: %w", err)
+		return nil, fmt.Errorf("Failed to commit process definition transaction: %w", err)
 	}
 	return definition, nil
 }
@@ -177,7 +177,7 @@ func (s *bpmnProcessDefinitionService) GetProcessDefinition(ctx context.Context,
 		).
 		First(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("获取流程定义失败: %w", err)
+		return nil, fmt.Errorf("Failed to get process definition: %w", err)
 	}
 
 	return definition, nil
@@ -192,7 +192,7 @@ func (s *bpmnProcessDefinitionService) GetProcessDefinitionByID(ctx context.Cont
 		Where(processdefinition.ID(id), processdefinition.TenantID(tenantID)).
 		First(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("获取流程定义失败: %w", err)
+		return nil, fmt.Errorf("Failed to get process definition: %w", err)
 	}
 
 	return definition, nil
@@ -211,7 +211,7 @@ func (s *bpmnProcessDefinitionService) GetLatestProcessDefinition(ctx context.Co
 		).
 		First(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("获取最新流程定义失败: %w", err)
+		return nil, fmt.Errorf("Failed to get latest process definition: %w", err)
 	}
 
 	return definition, nil
@@ -266,7 +266,7 @@ func (s *bpmnProcessDefinitionService) UpdateProcessDefinition(ctx context.Conte
 
 	updated, err := update.Save(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("更新流程定义失败: %w", err)
+		return nil, fmt.Errorf("Failed to update process definition: %w", err)
 	}
 
 	return updated, nil
@@ -280,29 +280,29 @@ func (s *bpmnProcessDefinitionService) PublishProcessDefinition(ctx context.Cont
 		return nil, err
 	}
 	if strings.TrimSpace(req.BPMNXML) == "" {
-		return nil, fmt.Errorf("发布流程必须包含 BPMN XML")
+		return nil, fmt.Errorf("Release process must contain BPMN XML")
 	}
 	if err := validateActivatableBPMNXML(req.BPMNXML); err != nil {
 		return nil, err
 	}
 	if err := validateCandidateDefinition(req.CandidateDefinition); err != nil {
-		return nil, fmt.Errorf("候选流程策略校验失败: %w", err)
+		return nil, fmt.Errorf("Candidate process policy verification failed: %w", err)
 	}
 	tx, err := s.client.Tx(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("开始发布事务失败: %w", err)
+		return nil, fmt.Errorf("Failed to start publishing transaction: %w", err)
 	}
 	defer func() { _ = tx.Rollback() }()
 	definition, err := tx.ProcessDefinition.Query().Where(
 		processdefinition.Key(key), processdefinition.Version(version), processdefinition.TenantID(tenantID),
 	).Only(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("获取待发布流程定义失败: %w", err)
+		return nil, fmt.Errorf("Failed to obtain process definition to be published: %w", err)
 	}
 	if _, err = tx.ProcessDefinition.Update().Where(
 		processdefinition.Key(key), processdefinition.TenantID(tenantID),
 	).SetIsActive(false).SetIsLatest(false).Save(ctx); err != nil {
-		return nil, fmt.Errorf("停用旧流程版本失败: %w", err)
+		return nil, fmt.Errorf("Deactivation of old process version failed: %w", err)
 	}
 	update := tx.ProcessDefinition.UpdateOne(definition).
 		SetBpmnXML([]byte(req.BPMNXML)).SetIsActive(true).SetIsLatest(true).SetDeployedAt(time.Now())
@@ -327,10 +327,10 @@ func (s *bpmnProcessDefinitionService) PublishProcessDefinition(ctx context.Cont
 	}
 	published, err := update.Save(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("保存发布版本失败: %w", err)
+		return nil, fmt.Errorf("Failed to save release version: %w", err)
 	}
 	if err = tx.Commit(); err != nil {
-		return nil, fmt.Errorf("提交发布事务失败: %w", err)
+		return nil, fmt.Errorf("Failed to commit publishing transaction: %w", err)
 	}
 
 	// 发布即激活时间表——同步 Timer Start Event（cron/cycle 按租户时区）。
@@ -367,12 +367,12 @@ func (s *bpmnProcessDefinitionService) DeleteProcessDefinition(ctx context.Conte
 		).
 		Count(ctx)
 	if err != nil {
-		return fmt.Errorf("检查流程实例失败: %w", err)
+		return fmt.Errorf("Failed to check process instance: %w", err)
 	}
 	if liveCount > 0 {
 		return common.NewAppError(
 			common.ErrCodeConflict,
-			fmt.Sprintf("该流程定义还有 %d 个活跃实例（running/suspended），请先终止或完成后再删除", liveCount),
+			fmt.Sprintf("This process definition still has %d active instances (running/suspended), please terminate or complete before deleting", liveCount),
 			http.StatusConflict, nil,
 		)
 	}
@@ -384,12 +384,12 @@ func (s *bpmnProcessDefinitionService) DeleteProcessDefinition(ctx context.Conte
 		).
 		Count(ctx)
 	if err != nil {
-		return fmt.Errorf("检查流程实例失败: %w", err)
+		return fmt.Errorf("Failed to check process instance: %w", err)
 	}
 	if historicalCount > 0 {
 		return common.NewAppError(
 			common.ErrCodeConflict,
-			fmt.Sprintf("该流程定义有 %d 个历史实例，删除会破坏流程实例历史，请改用停用或发布新版本", historicalCount),
+			fmt.Sprintf("This process definition has %d historical instances. Deletion will destroy the process instance history. Please deactivate or release a new version instead.", historicalCount),
 			http.StatusConflict, nil,
 		)
 	}
@@ -404,7 +404,7 @@ func (s *bpmnProcessDefinitionService) ListProcessDefinitions(ctx context.Contex
 	}
 	tenantID := ctxTenantID
 	if req.TenantID > 0 && req.TenantID != ctxTenantID {
-		return nil, 0, fmt.Errorf("请求租户 %d 与上下文租户 %d 不一致，已拒绝", req.TenantID, ctxTenantID)
+		return nil, 0, fmt.Errorf("Requesting tenant %d is inconsistent with context tenant %d, rejected", req.TenantID, ctxTenantID)
 	}
 
 	query := s.client.ProcessDefinition.Query().
@@ -422,7 +422,7 @@ func (s *bpmnProcessDefinitionService) ListProcessDefinitions(ctx context.Contex
 
 	total, err := query.Count(ctx)
 	if err != nil {
-		return nil, 0, fmt.Errorf("获取流程定义总数失败: %w", err)
+		return nil, 0, fmt.Errorf("Failed to get total number of process definitions: %w", err)
 	}
 
 	if req.Page > 0 && req.PageSize > 0 {
@@ -432,7 +432,7 @@ func (s *bpmnProcessDefinitionService) ListProcessDefinitions(ctx context.Contex
 
 	definitions, err := query.Order(ent.Desc(processdefinition.FieldCreatedAt)).All(ctx)
 	if err != nil {
-		return nil, 0, fmt.Errorf("获取流程定义列表失败: %w", err)
+		return nil, 0, fmt.Errorf("Failed to get process definition list: %w", err)
 	}
 
 	return definitions, total, nil
@@ -525,7 +525,7 @@ func parseSemver(v string) (int, int, int) {
 func validateActivatableBPMNXML(bpmnXML string) error {
 	result, err := NewBPMNLintService().LintBPMNXML([]byte(bpmnXML))
 	if err != nil {
-		return fmt.Errorf("BPMN 发布校验失败: %w", err)
+		return fmt.Errorf("BPMN release verification failed: %w", err)
 	}
 	if !result.HasErrors {
 		return nil
@@ -543,9 +543,9 @@ func validateActivatableBPMNXML(bpmnXML string) error {
 		messages = append(messages, issue.Message)
 	}
 	if len(messages) == 0 {
-		return fmt.Errorf("BPMN 发布校验失败")
+		return fmt.Errorf("BPMN release verification failed")
 	}
-	return fmt.Errorf("BPMN 发布校验失败: %s", strings.Join(messages, "；"))
+	return fmt.Errorf("BPMN release verification failed: %s", strings.Join(messages, "；"))
 }
 
 // validateCandidateDefinition is deliberately deterministic. AI output is
@@ -557,33 +557,33 @@ func validateCandidateDefinition(candidate map[string]interface{}) error {
 	}
 	for _, section := range []string{"domain", "formSchema", "approvalPolicy", "ontologyBindings", "slaConfig"} {
 		if _, ok := candidate[section]; !ok {
-			return fmt.Errorf("缺少 %s", section)
+			return fmt.Errorf("Missing %s", section)
 		}
 	}
 	form, ok := candidate["formSchema"].(map[string]interface{})
 	if !ok {
-		return fmt.Errorf("formSchema 格式错误")
+		return fmt.Errorf("formSchema format error")
 	}
 	fields, ok := form["fields"].([]interface{})
 	if !ok || len(fields) == 0 {
-		return fmt.Errorf("formSchema.fields 不能为空")
+		return fmt.Errorf("formSchema.fields cannot be empty")
 	}
 	for i, raw := range fields {
 		f, ok := raw.(map[string]interface{})
 		if !ok {
-			return fmt.Errorf("字段 %d 格式错误", i)
+			return fmt.Errorf("Field %d is malformed", i)
 		}
 		if strings.TrimSpace(fmt.Sprint(f["name"])) == "" || strings.TrimSpace(fmt.Sprint(f["type"])) == "" {
-			return fmt.Errorf("字段 %d 缺少 name/type", i)
+			return fmt.Errorf("Field %d is missing name/type", i)
 		}
 	}
 	policy, ok := candidate["approvalPolicy"].(map[string]interface{})
 	if !ok {
-		return fmt.Errorf("approvalPolicy 格式错误")
+		return fmt.Errorf("approvalPolicy format error")
 	}
 	if rules, exists := policy["rules"]; exists {
 		if _, ok := rules.([]interface{}); !ok {
-			return fmt.Errorf("approvalPolicy.rules 格式错误")
+			return fmt.Errorf("approvalPolicy.rules format error")
 		}
 	}
 	return nil

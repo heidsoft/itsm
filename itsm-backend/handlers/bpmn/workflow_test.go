@@ -452,7 +452,7 @@ func TestGetApprovalHistory_PropagatesError(t *testing.T) {
 	var resp map[string]interface{}
 	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
 	assert.Equal(t, float64(5001), resp["code"], "service error must surface as InternalErrorCode 5001")
-	assert.Contains(t, resp["message"], "查询审批历史失败")
+	assert.Contains(t, resp["message"], "Failed to query approval history")
 }
 
 // silence unused-import lint on strconv when feature is dropped

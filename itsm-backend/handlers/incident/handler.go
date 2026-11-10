@@ -37,10 +37,10 @@ func failIncidentOperation(c *gin.Context, err error) {
 		return
 	}
 	if ent.IsNotFound(err) {
-		common.NotFound(c, "事件不存在")
+		common.NotFound(c, "Event does not exist")
 		return
 	}
-	common.InternalError(c, "事件操作失败")
+	common.InternalError(c, "Event operation failed")
 }
 
 // Acknowledge 事件管理-确认事件
@@ -56,7 +56,7 @@ func failIncidentOperation(c *gin.Context, err error) {
 // @Router /api/v1/incidents/{id}/acknowledge [post]
 func (h *IncidentHandler) Acknowledge(c *gin.Context) {
 	if c.GetInt("tenant_id") <= 0 || c.GetInt("user_id") <= 0 {
-		common.AuthFailed(c, "缺少有效租户或用户上下文")
+		common.AuthFailed(c, "Missing valid tenant or user context")
 		return
 	}
 
@@ -87,7 +87,7 @@ func (h *IncidentHandler) Acknowledge(c *gin.Context) {
 // @Router /api/v1/incidents/{id}/resolve [post]
 func (h *IncidentHandler) Resolve(c *gin.Context) {
 	if c.GetInt("tenant_id") <= 0 || c.GetInt("user_id") <= 0 {
-		common.AuthFailed(c, "缺少有效租户或用户上下文")
+		common.AuthFailed(c, "Missing valid tenant or user context")
 		return
 	}
 
@@ -100,7 +100,7 @@ func (h *IncidentHandler) Resolve(c *gin.Context) {
 		RootCause  string `json:"rootCause"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
@@ -126,7 +126,7 @@ func (h *IncidentHandler) Resolve(c *gin.Context) {
 // @Router /api/v1/incidents/{id}/close [post]
 func (h *IncidentHandler) Close(c *gin.Context) {
 	if c.GetInt("tenant_id") <= 0 || c.GetInt("user_id") <= 0 {
-		common.AuthFailed(c, "缺少有效租户或用户上下文")
+		common.AuthFailed(c, "Missing valid tenant or user context")
 		return
 	}
 
@@ -138,7 +138,7 @@ func (h *IncidentHandler) Close(c *gin.Context) {
 		CloseNotes string `json:"closeNotes"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
@@ -162,7 +162,7 @@ func (h *IncidentHandler) Close(c *gin.Context) {
 // @Router /api/v1/incidents/{id}/reopen [post]
 func (h *IncidentHandler) Reopen(c *gin.Context) {
 	if c.GetInt("tenant_id") <= 0 || c.GetInt("user_id") <= 0 {
-		common.AuthFailed(c, "缺少有效租户或用户上下文")
+		common.AuthFailed(c, "Missing valid tenant or user context")
 		return
 	}
 
@@ -193,7 +193,7 @@ func (h *IncidentHandler) Reopen(c *gin.Context) {
 // @Router /api/v1/incidents/{id}/assign [post]
 func (h *IncidentHandler) Assign(c *gin.Context) {
 	if c.GetInt("tenant_id") <= 0 || c.GetInt("user_id") <= 0 {
-		common.AuthFailed(c, "缺少有效租户或用户上下文")
+		common.AuthFailed(c, "Missing valid tenant or user context")
 		return
 	}
 
@@ -205,7 +205,7 @@ func (h *IncidentHandler) Assign(c *gin.Context) {
 		AssigneeID int `json:"assigneeId"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
@@ -229,7 +229,7 @@ func (h *IncidentHandler) Assign(c *gin.Context) {
 // @Router /api/v1/incidents/{id} [delete]
 func (h *IncidentHandler) Delete(c *gin.Context) {
 	if c.GetInt("tenant_id") <= 0 || c.GetInt("user_id") <= 0 {
-		common.AuthFailed(c, "缺少有效租户或用户上下文")
+		common.AuthFailed(c, "Missing valid tenant or user context")
 		return
 	}
 
@@ -258,7 +258,7 @@ func (h *IncidentHandler) Delete(c *gin.Context) {
 // @Router /api/v1/incidents/{id}/sla/pause [put]
 func (h *IncidentHandler) PauseSLA(c *gin.Context) {
 	if c.GetInt("tenant_id") <= 0 || c.GetInt("user_id") <= 0 {
-		common.AuthFailed(c, "缺少有效租户或用户上下文")
+		common.AuthFailed(c, "Missing valid tenant or user context")
 		return
 	}
 
@@ -287,7 +287,7 @@ func (h *IncidentHandler) PauseSLA(c *gin.Context) {
 // @Router /api/v1/incidents/{id}/sla/resume [put]
 func (h *IncidentHandler) ResumeSLA(c *gin.Context) {
 	if c.GetInt("tenant_id") <= 0 || c.GetInt("user_id") <= 0 {
-		common.AuthFailed(c, "缺少有效租户或用户上下文")
+		common.AuthFailed(c, "Missing valid tenant or user context")
 		return
 	}
 
@@ -327,7 +327,7 @@ func incidentID(c *gin.Context) (int, bool) {
 func (h *IncidentHandler) Create(c *gin.Context) {
 	var req dto.CreateIncidentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
@@ -369,7 +369,7 @@ func (h *IncidentHandler) Create(c *gin.Context) {
 
 	created, err := h.service.Create(c.Request.Context(), tenantID, incident)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -405,7 +405,7 @@ func (h *IncidentHandler) Get(c *gin.Context) {
 		if ent.IsNotFound(err) {
 			common.Fail(c, common.NotFoundErrorCode, "Incident not found")
 		} else {
-			common.FailWithErr(c, err, "操作失败")
+			common.FailWithErr(c, err, "Operation failed")
 		}
 		return
 	}
@@ -482,7 +482,7 @@ func (h *IncidentHandler) Lists(c *gin.Context) {
 	if v := c.Query("isMajorIncident"); v != "" {
 		major, err := strconv.ParseBool(v)
 		if err != nil {
-			common.Fail(c, common.ParamErrorCode, "isMajorIncident 必须是布尔值")
+			common.Fail(c, common.ParamErrorCode, "isMajorIncident must be a Boolean value")
 			return
 		}
 		filters["is_major_incident"] = major
@@ -490,7 +490,7 @@ func (h *IncidentHandler) Lists(c *gin.Context) {
 	if v := c.Query("assigneeId"); v != "" {
 		assigneeID, err := strconv.Atoi(v)
 		if err != nil || assigneeID <= 0 {
-			common.Fail(c, common.ParamErrorCode, "assigneeId 格式错误")
+			common.Fail(c, common.ParamErrorCode, "assigneeId format error")
 			return
 		}
 		filters["assignee_id"] = assigneeID
@@ -498,7 +498,7 @@ func (h *IncidentHandler) Lists(c *gin.Context) {
 	if v := c.Query("dateFrom"); v != "" {
 		ts, err := parseIncidentTimeFilter(v)
 		if err != nil {
-			common.Fail(c, common.ParamErrorCode, "dateFrom 格式错误（RFC3339 或 YYYY-MM-DD）")
+			common.Fail(c, common.ParamErrorCode, "dateFrom format error (RFC3339 or YYYY-MM-DD)")
 			return
 		}
 		filters["date_from"] = ts
@@ -506,7 +506,7 @@ func (h *IncidentHandler) Lists(c *gin.Context) {
 	if v := c.Query("dateTo"); v != "" {
 		ts, err := parseIncidentTimeFilter(v)
 		if err != nil {
-			common.Fail(c, common.ParamErrorCode, "dateTo 格式错误（RFC3339 或 YYYY-MM-DD）")
+			common.Fail(c, common.ParamErrorCode, "dateTo format error (RFC3339 or YYYY-MM-DD)")
 			return
 		}
 		filters["date_to"] = ts
@@ -515,7 +515,7 @@ func (h *IncidentHandler) Lists(c *gin.Context) {
 	// Scope handling (optional, if we want my incidents)
 	if c.Query("scope") == "me" || strings.Contains(c.Request.URL.Path, "/me") {
 		if currentUserID <= 0 {
-			common.Fail(c, common.AuthFailedCode, "缺少认证上下文，无法按我的事件过滤")
+			common.Fail(c, common.AuthFailedCode, "Missing authentication context, cannot filter by my events")
 			return
 		}
 		filters["assignee_id"] = currentUserID
@@ -523,7 +523,7 @@ func (h *IncidentHandler) Lists(c *gin.Context) {
 
 	incidents, total, err := h.service.List(c.Request.Context(), tenantID, pg.Page, pg.PageSize, filters, currentUserID, currentRole)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -593,7 +593,7 @@ func (h *IncidentHandler) Lists(c *gin.Context) {
 func (h *IncidentHandler) CreateAlert(c *gin.Context) {
 	var req dto.CreateIncidentAlertRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 	tenantID, ok := handlerctx.ResolveTenantID(c)
@@ -602,7 +602,7 @@ func (h *IncidentHandler) CreateAlert(c *gin.Context) {
 	}
 	result, err := h.service.productionService.CreateIncidentAlert(c.Request.Context(), &req, tenantID)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 	common.Success(c, result)
@@ -631,7 +631,7 @@ func (h *IncidentHandler) CreateComment(c *gin.Context) {
 		IsInternal bool   `json:"isInternal"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 	tenantID, ok := handlerctx.ResolveTenantID(c)
@@ -648,7 +648,7 @@ func (h *IncidentHandler) CreateComment(c *gin.Context) {
 		Status: "active", Data: map[string]interface{}{"isInternal": req.IsInternal}, UserID: &userID, Source: "user",
 	}, tenantID)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 	common.Success(c, result)
@@ -669,7 +669,7 @@ func (h *IncidentHandler) CreateComment(c *gin.Context) {
 func (h *IncidentHandler) CreateEvent(c *gin.Context) {
 	var req dto.CreateIncidentEventRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 	tenantID, ok := handlerctx.ResolveTenantID(c)
@@ -678,7 +678,7 @@ func (h *IncidentHandler) CreateEvent(c *gin.Context) {
 	}
 	result, err := h.service.productionService.CreateIncidentEvent(c.Request.Context(), &req, tenantID)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 	common.Success(c, result)
@@ -711,7 +711,7 @@ func (h *IncidentHandler) DeleteComment(c *gin.Context) {
 		return
 	}
 	if err := h.service.productionService.DeleteIncidentComment(c.Request.Context(), incidentID, commentID, tenantID); err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 	common.Success(c, nil)
@@ -739,7 +739,7 @@ func (h *IncidentHandler) GetAlerts(c *gin.Context) {
 	}
 	result, err := h.service.productionService.GetIncidentAlerts(c.Request.Context(), id, tenantID)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 	common.Success(c, result)
@@ -767,7 +767,7 @@ func (h *IncidentHandler) GetComments(c *gin.Context) {
 	}
 	result, err := h.service.productionService.GetIncidentComments(c.Request.Context(), id, tenantID)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 	common.Success(c, result)
@@ -795,7 +795,7 @@ func (h *IncidentHandler) GetEvents(c *gin.Context) {
 	}
 	result, err := h.service.productionService.GetIncidentEvents(c.Request.Context(), id, tenantID)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 	common.Success(c, result)
@@ -823,7 +823,7 @@ func (h *IncidentHandler) GetMetrics(c *gin.Context) {
 	}
 	result, err := h.service.productionService.GetIncidentMetrics(c.Request.Context(), id, tenantID)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 	common.Success(c, result)
@@ -844,7 +844,7 @@ func (h *IncidentHandler) GetMetrics(c *gin.Context) {
 func (h *IncidentHandler) GetMonitoring(c *gin.Context) {
 	var req dto.IncidentMonitoringRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 	tenantID, ok := handlerctx.ResolveTenantID(c)
@@ -853,7 +853,7 @@ func (h *IncidentHandler) GetMonitoring(c *gin.Context) {
 	}
 	result, err := h.service.productionService.GetIncidentMonitoring(c.Request.Context(), &req, tenantID)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 	common.Success(c, result)
@@ -885,7 +885,7 @@ func (h *IncidentHandler) ResolveAlert(c *gin.Context) {
 		return
 	}
 	if err := h.service.productionService.ResolveIncidentAlert(c.Request.Context(), id, userID, tenantID); err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 	common.Success(c, nil)
@@ -911,7 +911,7 @@ func (h *IncidentHandler) EscalateMajor(c *gin.Context) {
 	}
 	var req dto.EscalateMajorIncidentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 	tenantID, ok := handlerctx.ResolveTenantID(c)
@@ -924,7 +924,7 @@ func (h *IncidentHandler) EscalateMajor(c *gin.Context) {
 		return
 	}
 	if err := h.service.productionService.EscalateToMajorIncident(c.Request.Context(), id, userID, tenantID, &req); err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 	common.Success(c, nil)
@@ -953,14 +953,14 @@ func (h *IncidentHandler) AcknowledgeAlert(c *gin.Context) {
 	err := h.service.alertingSvc.AcknowledgeAlert(c.Request.Context(), id, c.GetInt("user_id"), tenantID)
 	if err != nil {
 		if err.Error() == "alert not found" {
-			common.Fail(c, common.NotFoundErrorCode, "告警不存在")
+			common.Fail(c, common.NotFoundErrorCode, "Alarm does not exist")
 			return
 		}
 		h.service.logger.Errorw("Failed to acknowledge alert", "error", err, "id", id)
-		common.Fail(c, common.InternalErrorCode, "确认告警失败")
+		common.Fail(c, common.InternalErrorCode, "Failed to acknowledge alarm")
 		return
 	}
-	common.SuccessWithMessage(c, "确认告警成功", nil)
+	common.SuccessWithMessage(c, "Alarm confirmed successfully", nil)
 }
 
 // GetAlertStatistics 事件管理-获取告警统计
@@ -979,17 +979,17 @@ func (h *IncidentHandler) GetAlertStatistics(c *gin.Context) {
 	startTimeStr := c.Query("startTime")
 	endTimeStr := c.Query("endTime")
 	if startTimeStr == "" || endTimeStr == "" {
-		common.Fail(c, common.ParamErrorCode, "开始时间和结束时间不能为空")
+		common.Fail(c, common.ParamErrorCode, "Start time and end time cannot be empty")
 		return
 	}
 	startTime, err := time.Parse(time.RFC3339, startTimeStr)
 	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "开始时间格式无效")
+		common.Fail(c, common.ParamErrorCode, "Invalid start time format")
 		return
 	}
 	endTime, err := time.Parse(time.RFC3339, endTimeStr)
 	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "结束时间格式无效")
+		common.Fail(c, common.ParamErrorCode, "Invalid end time format")
 		return
 	}
 	tenantID, ok := handlerctx.ResolveTenantID(c)
@@ -999,7 +999,7 @@ func (h *IncidentHandler) GetAlertStatistics(c *gin.Context) {
 	statistics, err := h.service.alertingSvc.GetAlertStatistics(c.Request.Context(), tenantID, startTime, endTime)
 	if err != nil {
 		h.service.logger.Errorw("Failed to get alert statistics", "error", err)
-		common.Fail(c, common.InternalErrorCode, "获取告警统计失败")
+		common.Fail(c, common.InternalErrorCode, "Failed to obtain alarm statistics")
 		return
 	}
 	common.Success(c, statistics)
@@ -1025,7 +1025,7 @@ func (h *IncidentHandler) GetActiveAlerts(c *gin.Context) {
 	alerts, total, err := h.service.alertingSvc.GetActiveAlerts(c.Request.Context(), tenantID, pg.Page, pg.PageSize)
 	if err != nil {
 		h.service.logger.Errorw("Failed to get active alerts", "error", err)
-		common.Fail(c, common.InternalErrorCode, "获取活跃告警失败")
+		common.Fail(c, common.InternalErrorCode, "Failed to obtain active alarms")
 		return
 	}
 	common.Success(c, dto.IncidentAlertListResponse{
@@ -1059,7 +1059,7 @@ func (h *IncidentHandler) AnalyzeImpact(c *gin.Context) {
 	analysis, err := h.service.monitoringService.AnalyzeIncidentImpact(c.Request.Context(), id, tenantID)
 	if err != nil {
 		h.service.logger.Errorw("Failed to analyze incident impact", "error", err, "id", id)
-		common.Fail(c, common.InternalErrorCode, "分析事件影响失败")
+		common.Fail(c, common.InternalErrorCode, "Failed to analyze event impact")
 		return
 	}
 	common.Success(c, analysis)
@@ -1085,7 +1085,7 @@ func (h *IncidentHandler) ConvertToProblem(c *gin.Context) {
 	}
 	var req dto.ConvertIncidentToProblemRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 	tenantID, ok := handlerctx.ResolveTenantID(c)
@@ -1095,7 +1095,7 @@ func (h *IncidentHandler) ConvertToProblem(c *gin.Context) {
 	problem, err := h.service.rootCauseSvc.CreateProblemFromIncident(c.Request.Context(), id, c.GetInt("user_id"), tenantID, &req)
 	if err != nil {
 		h.service.logger.Errorw("Failed to convert incident to problem", "error", err, "incident_id", id)
-		common.RespondError(c, err, "转换失败")
+		common.RespondError(c, err, "Conversion failed")
 		return
 	}
 	common.Success(c, dto.ToProblemResponse(problem))
@@ -1125,7 +1125,7 @@ func (h *IncidentHandler) Update(c *gin.Context) {
 
 	var req dto.UpdateIncidentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
@@ -1177,7 +1177,7 @@ func (h *IncidentHandler) Update(c *gin.Context) {
 
 	updated, err := h.service.Update(c.Request.Context(), tenantID, id, updates, c.GetInt("user_id"), c.GetString("role"))
 	if err != nil {
-		common.RespondError(c, err, "操作失败")
+		common.RespondError(c, err, "Operation failed")
 		return
 	}
 
@@ -1208,7 +1208,7 @@ func (h *IncidentHandler) Escalate(c *gin.Context) {
 
 	var req dto.IncidentEscalationRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
@@ -1473,7 +1473,7 @@ func (h *IncidentHandler) UpdateRootCause(c *gin.Context) {
 		RootCause map[string]interface{} `json:"rootCause"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
@@ -1488,11 +1488,11 @@ func (h *IncidentHandler) UpdateRootCause(c *gin.Context) {
 
 	_, err = h.service.Update(c.Request.Context(), tenantID, id, updates, c.GetInt("user_id"), c.GetString("role"))
 	if err != nil {
-		common.RespondError(c, err, "操作失败")
+		common.RespondError(c, err, "Operation failed")
 		return
 	}
 
-	common.Success(c, gin.H{"message": "根因分析已更新"})
+	common.Success(c, gin.H{"message": "Root cause analysis updated"})
 }
 
 // GetImpactAssessment 事件管理-获取影响评估
@@ -1556,7 +1556,7 @@ func (h *IncidentHandler) UpdateImpactAssessment(c *gin.Context) {
 		ImpactAnalysis map[string]interface{} `json:"impactAnalysis"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
@@ -1571,11 +1571,11 @@ func (h *IncidentHandler) UpdateImpactAssessment(c *gin.Context) {
 
 	_, err = h.service.Update(c.Request.Context(), tenantID, id, updates, c.GetInt("user_id"), c.GetString("role"))
 	if err != nil {
-		common.RespondError(c, err, "操作失败")
+		common.RespondError(c, err, "Operation failed")
 		return
 	}
 
-	common.Success(c, gin.H{"message": "影响评估已更新"})
+	common.Success(c, gin.H{"message": "Impact assessment updated"})
 }
 
 // GetClassification 事件管理-获取事件分类
@@ -1649,7 +1649,7 @@ func (h *IncidentHandler) UpdateClassification(c *gin.Context) {
 		Impact      string `json:"impact"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
@@ -1668,11 +1668,11 @@ func (h *IncidentHandler) UpdateClassification(c *gin.Context) {
 
 	_, err = h.service.Update(c.Request.Context(), tenantID, id, updates, c.GetInt("user_id"), c.GetString("role"))
 	if err != nil {
-		common.RespondError(c, err, "操作失败")
+		common.RespondError(c, err, "Operation failed")
 		return
 	}
 
-	common.Success(c, gin.H{"message": "分类已更新"})
+	common.Success(c, gin.H{"message": "Classification has been updated"})
 }
 
 // GetIncidentEvents 获取事件活动记录
@@ -1810,7 +1810,7 @@ func (h *IncidentHandler) GetIncidentComments(c *gin.Context) {
 		if ent.IsNotFound(err) {
 			common.Fail(c, common.NotFoundErrorCode, "Incident not found")
 		} else {
-			common.FailWithErr(c, err, "操作失败")
+			common.FailWithErr(c, err, "Operation failed")
 		}
 		return
 	}
@@ -1818,7 +1818,7 @@ func (h *IncidentHandler) GetIncidentComments(c *gin.Context) {
 	// 查询评论（使用 IncidentEvent with event_type=comment）
 	events, err := h.service.ListIncidentComments(c.Request.Context(), id, tenantID)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -1858,7 +1858,7 @@ func (h *IncidentHandler) CreateIncidentComment(c *gin.Context) {
 		IsInternal bool   `json:"isInternal"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
@@ -1873,7 +1873,7 @@ func (h *IncidentHandler) CreateIncidentComment(c *gin.Context) {
 		if ent.IsNotFound(err) {
 			common.Fail(c, common.NotFoundErrorCode, "Incident not found")
 		} else {
-			common.FailWithErr(c, err, "操作失败")
+			common.FailWithErr(c, err, "Operation failed")
 		}
 		return
 	}

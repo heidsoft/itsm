@@ -40,5 +40,5 @@ func TestGetAutomationRule_MissingRuleReturnsNotFound(t *testing.T) {
 	var response common.Response
 	require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &response))
 	require.Equal(t, common.NotFoundCode, response.Code)
-	require.Equal(t, "自动化规则不存在或无权访问", response.Message)
+	require.Equal(t, "Automation rule does not exist or does not have access", response.Message)
 }

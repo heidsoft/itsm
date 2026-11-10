@@ -89,7 +89,7 @@ func TestRoleService_DeleteRole_TenantIsolation(t *testing.T) {
 
 	// Should fail with cross-tenant access error
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "角色不存在")
+	assert.Contains(t, err.Error(), "Role does not exist")
 }
 
 // TestDeleteRole_IsSystemProtected 验证 is_system=true 的角色不能删除（第一层保护）
@@ -114,7 +114,7 @@ func TestDeleteRole_IsSystemProtected(t *testing.T) {
 
 	err := svc.DeleteRole(ctx, role.ID, tenant.ID)
 	assert.Error(t, err, "is_system=true 应阻止删除")
-	assert.Contains(t, err.Error(), "系统角色不能删除")
+	assert.Contains(t, err.Error(), "System role cannot be deleted")
 
 	// 角色应仍然存在
 	_, err = client.Role.Get(ctx, role.ID)

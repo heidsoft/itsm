@@ -154,14 +154,14 @@ func TestGetMSPStatus_IdentityDerivedFromAuthenticatedUser(t *testing.T) {
 			userID:      platformAdminID,
 			wantIsMsp:   false,
 			wantIsAdmin: false,
-			wantMessage: "非MSP用户",
+			wantMessage: "Non-MSP user",
 		},
 		{
 			name:        "平台 super_admin 不构成 MSP 访问权",
 			userID:      platformSuperID,
 			wantIsMsp:   false,
 			wantIsAdmin: false,
-			wantMessage: "非MSP用户",
+			wantMessage: "Non-MSP user",
 		},
 	}
 

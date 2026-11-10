@@ -51,29 +51,29 @@ func (e *CustomProcessEngine) StartProcess(ctx context.Context, processDefinitio
 		).
 		First(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("获取流程定义失败: %w", err)
+		return nil, fmt.Errorf("Failed to get process definition: %w", err)
 	}
 
 	// 3. 解析BPMN
 	bpmnDefinitions, err := e.parser.ParseXML(definition.BpmnXML)
 	if err != nil {
-		return nil, fmt.Errorf("解析BPMN失败: %w", err)
+		return nil, fmt.Errorf("Failed to parse BPMN: %w", err)
 	}
 
 	if len(bpmnDefinitions.Processes) == 0 {
-		return nil, fmt.Errorf("BPMN中未找到流程定义")
+		return nil, fmt.Errorf("Process definition not found in BPMN")
 	}
 	process := bpmnDefinitions.Processes[0]
 
 	// 3. 找到开始事件
 	if len(process.StartEvents) == 0 {
-		return nil, fmt.Errorf("流程缺少开始事件")
+		return nil, fmt.Errorf("Workflow is missing a start event")
 	}
 	startEvent := process.StartEvents[0]
 
 	tx, err := e.client.Tx(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("开启流程启动事务失败: %w", err)
+		return nil, fmt.Errorf("Failed to start process startup transaction: %w", err)
 	}
 	defer func() { _ = tx.Rollback() }()
 	txc := tx.Client()
@@ -92,7 +92,7 @@ func (e *CustomProcessEngine) StartProcess(ctx context.Context, processDefinitio
 		SetCurrentActivityName(startEvent.Name).
 		Save(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("创建流程实例失败: %w", err)
+		return nil, fmt.Errorf("Failed to create process instance: %w", err)
 	}
 
 	// 5. 执行流程推进（从StartEvent开始）
@@ -111,10 +111,10 @@ func (e *CustomProcessEngine) StartProcess(ctx context.Context, processDefinitio
 		}
 	}
 	if err := NewBPMNAuditService(txc, e.logger).RecordProcessStarted(ctx, instance, userID, userName, variables); err != nil {
-		return nil, fmt.Errorf("记录流程启动审计失败: %w", err)
+		return nil, fmt.Errorf("Log process startup audit failed: %w", err)
 	}
 	if err := tx.Commit(); err != nil {
-		return nil, fmt.Errorf("提交流程启动事务失败: %w", err)
+		return nil, fmt.Errorf("Failed to commit process startup transaction: %w", err)
 	}
 	return instance.Unwrap(), nil
 }
@@ -131,7 +131,7 @@ func (e *CustomProcessEngine) CompleteTask(ctx context.Context, taskID string, v
 
 	tx, err := e.client.Tx(ctx)
 	if err != nil {
-		return fmt.Errorf("开启事务失败: %w", err)
+		return fmt.Errorf("Failed to open transaction: %w", err)
 	}
 	txc := tx.Client()
 	// 异常时回滚，保证不会留下半提交状态
@@ -152,12 +152,12 @@ func (e *CustomProcessEngine) CompleteTask(ctx context.Context, taskID string, v
 	//    审计写入失败则回滚整个任务完成操作，避免出现"任务已完成但无审计"的状态）
 	if err := e.recordTaskCompletedAudit(ctx, txc, task, variables); err != nil {
 		_ = tx.Rollback()
-		return fmt.Errorf("记录任务完成审计失败: %w", err)
+		return fmt.Errorf("Log task completion audit failed: %w", err)
 	}
 
 	// 8. 提交事务；任一步骤失败已在上方回滚
 	if err := tx.Commit(); err != nil {
-		return fmt.Errorf("提交事务失败: %w", err)
+		return fmt.Errorf("Failed to commit transaction: %w", err)
 	}
 	return nil
 }
@@ -177,7 +177,7 @@ func (e *CustomProcessEngine) CompleteTaskWithClient(ctx context.Context, txc *e
 	// 生命周期推进（acknowledge/resolve/close 等非审批动作）不留操作人痕迹——
 	// 审批有决策行兜底，生命周期动作什么都没有，审计链断裂。
 	if err := e.recordTaskCompletedAudit(ctx, txc, task, variables); err != nil {
-		return fmt.Errorf("记录任务完成审计失败: %w", err)
+		return fmt.Errorf("Log task completion audit failed: %w", err)
 	}
 	return nil
 }
@@ -188,7 +188,7 @@ func (e *CustomProcessEngine) completeTaskWithClient(ctx context.Context, txc *e
 		Where(processtask.TaskID(taskID), processtask.TenantID(tenantID)).
 		First(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("获取任务失败: %w", err)
+		return nil, fmt.Errorf("Failed to get task: %w", err)
 	}
 	if err := e.authorizeTaskActorWithClient(ctx, txc, task); err != nil {
 		return nil, err
@@ -202,17 +202,17 @@ func (e *CustomProcessEngine) completeTaskWithClient(ctx context.Context, txc *e
 			Where(processtask.ParentTaskIDEQ(task.TaskID), processtask.TenantID(tenantID)).
 			Exist(ctx)
 		if err != nil {
-			return nil, fmt.Errorf("检查会签子任务失败: %w", err)
+			return nil, fmt.Errorf("Check countersignature subtask failed: %w", err)
 		}
 		if hasSubTasks {
-			return nil, fmt.Errorf("会签父任务不得直接完成，请通过会签投票机制处理")
+			return nil, fmt.Errorf("The countersigned parent task cannot be completed directly. Please handle it through the countersigned voting mechanism.")
 		}
 	}
 
 	// 2. 获取流程实例 - 使用任务中存储的ProcessInstanceID (ent自动生成的ID)
 	instance, err := txc.ProcessInstance.Get(ctx, task.ProcessInstanceID)
 	if err != nil {
-		return nil, fmt.Errorf("获取流程实例失败: %w", err)
+		return nil, fmt.Errorf("Failed to obtain process instance: %w", err)
 	}
 
 	// 3. 获取流程定义并解析
@@ -226,18 +226,18 @@ func (e *CustomProcessEngine) completeTaskWithClient(ctx context.Context, txc *e
 		).
 		Only(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("获取流程定义失败: %w", err)
+		return nil, fmt.Errorf("Failed to get process definition: %w", err)
 	}
 
 	bpmnDefinitions, err := e.parser.ParseXML(definition.BpmnXML)
 	if err != nil {
-		return nil, fmt.Errorf("解析BPMN失败: %w", err)
+		return nil, fmt.Errorf("Failed to parse BPMN: %w", err)
 	}
 	process := bpmnDefinitions.Processes[0]
 
 	// 4. 更新当前任务状态
 	if task.Status == "completed" || task.Status == "cancelled" {
-		return nil, fmt.Errorf("任务已结束，不能重复完成")
+		return nil, fmt.Errorf("The task has ended and cannot be completed again")
 	}
 
 	updated, err := txc.ProcessTask.Update().
@@ -252,10 +252,10 @@ func (e *CustomProcessEngine) completeTaskWithClient(ctx context.Context, txc *e
 		SetTaskVariables(variables).
 		Save(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("更新任务状态失败: %w", err)
+		return nil, fmt.Errorf("Failed to update task status: %w", err)
 	}
 	if updated != 1 {
-		return nil, fmt.Errorf("任务已被描述，请刷新后重试")
+		return nil, fmt.Errorf("The task has been described, please refresh and try again")
 	}
 
 	e.cancelBoundaryTimers(ctx, instance, process, task.TaskDefinitionKey)
@@ -264,7 +264,7 @@ func (e *CustomProcessEngine) completeTaskWithClient(ctx context.Context, txc *e
 	// 5. 在事务内合并变量（无并发写者，直接合并即可）
 	instance, err = e.mergeVariablesInTx(ctx, txc, instance.ID, variables)
 	if err != nil {
-		return nil, fmt.Errorf("合并实例变量失败: %w", err)
+		return nil, fmt.Errorf("Failed to merge instance variables: %w", err)
 	}
 
 	// 6. 执行流程推进（从当前UserTask继续）。审批拒绝策略属于节点
@@ -276,19 +276,19 @@ func (e *CustomProcessEngine) completeTaskWithClient(ctx context.Context, txc *e
 
 	if approvalAction == "reject" {
 		if commentRequired && strings.TrimSpace(approvalComment) == "" {
-			return nil, fmt.Errorf("该审批节点要求拒绝时必须填写意见")
+			return nil, fmt.Errorf("The approval node requires comments to be filled in when rejecting")
 		}
 		switch strings.ToLower(strings.TrimSpace(rejectStrategy)) {
 		case "terminate":
 			if _, err = txc.ProcessInstance.UpdateOneID(instance.ID).
 				SetStatus("terminated").SetEndTime(time.Now()).Save(ctx); err != nil {
-				return nil, fmt.Errorf("终止被拒绝流程失败: %w", err)
+				return nil, fmt.Errorf("Failed to terminate rejected process: %w", err)
 			}
 			if _, err = txc.ProcessTask.Update().Where(
 				processtask.ProcessInstanceID(instance.ID), processtask.TenantID(instance.TenantID),
 				processtask.StatusNEQ("completed"), processtask.StatusNEQ("cancelled"),
 			).SetStatus("cancelled").SetCompletedTime(time.Now()).Save(ctx); err != nil {
-				return nil, fmt.Errorf("取消被拒绝流程的剩余任务失败: %w", err)
+				return nil, fmt.Errorf("Failed to cancel remaining tasks of rejected process: %w", err)
 			}
 		case "to_requester":
 			if _, err = txc.ProcessTask.Update().Where(
@@ -296,12 +296,12 @@ func (e *CustomProcessEngine) completeTaskWithClient(ctx context.Context, txc *e
 				processtask.StatusNEQ("completed"), processtask.StatusNEQ("cancelled"),
 				processtask.IDNEQ(task.ID),
 			).SetStatus("cancelled").SetCompletedTime(time.Now()).Save(ctx); err != nil {
-				return nil, fmt.Errorf("退回发起人时取消其他活动任务失败: %w", err)
+				return nil, fmt.Errorf("Failed to cancel other active tasks when returning to the sponsor: %w", err)
 			}
 			variables["rework_requested"] = true
 			variables["rework_requested_by"] = task.Assignee
 			if _, err = e.mergeVariablesInTx(ctx, txc, instance.ID, variables); err != nil {
-				return nil, fmt.Errorf("写入退回变量失败: %w", err)
+				return nil, fmt.Errorf("Failed to write return variable: %w", err)
 			}
 			if err := e.executeStep(ctx, txc, instance, process, task.TaskDefinitionKey, instance.Variables); err != nil {
 				return nil, err
@@ -312,7 +312,7 @@ func (e *CustomProcessEngine) completeTaskWithClient(ctx context.Context, txc *e
 				processtask.StatusNEQ("completed"), processtask.StatusNEQ("cancelled"),
 				processtask.IDNEQ(task.ID),
 			).SetStatus("cancelled").SetCompletedTime(time.Now()).Save(ctx); err != nil {
-				return nil, fmt.Errorf("拒绝分支取消其他活动任务失败: %w", err)
+				return nil, fmt.Errorf("Reject branch failed to cancel other active tasks: %w", err)
 			}
 			if err := e.executeStep(ctx, txc, instance, process, task.TaskDefinitionKey, instance.Variables); err != nil {
 				return nil, err
@@ -351,7 +351,7 @@ func (e *CustomProcessEngine) recordTaskCompletedAudit(ctx context.Context, clie
 func (e *CustomProcessEngine) mergeVariablesInTx(ctx context.Context, txc *ent.Client, instanceID int, newVars map[string]interface{}) (*ent.ProcessInstance, error) {
 	inst, err := txc.ProcessInstance.Get(ctx, instanceID)
 	if err != nil {
-		return nil, fmt.Errorf("查询流程实例失败: %w", err)
+		return nil, fmt.Errorf("Failed to query process instance: %w", err)
 	}
 	merged := make(map[string]interface{})
 	for k, v := range inst.Variables {
@@ -367,9 +367,9 @@ func (e *CustomProcessEngine) mergeVariablesInTx(ctx context.Context, txc *ent.C
 		Save(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, fmt.Errorf("流程实例版本冲突（当前版本 %d），请重试", inst.Version)
+			return nil, fmt.Errorf("Process instance version conflict (current version %d), please try again", inst.Version)
 		}
-		return nil, fmt.Errorf("更新实例变量失败: %w", err)
+		return nil, fmt.Errorf("Failed to update instance variables: %w", err)
 	}
 	return updated, nil
 }
@@ -394,7 +394,7 @@ func updateProcessInstanceVariablesCAS(
 			Where(processinstance.IDEQ(instanceID), processinstance.TenantIDEQ(tenantID)).
 			Only(ctx)
 		if err != nil {
-			return nil, fmt.Errorf("查询流程实例失败: %w", err)
+			return nil, fmt.Errorf("Failed to query process instance: %w", err)
 		}
 		vars := make(map[string]interface{}, len(inst.Variables)+4)
 		for key, value := range inst.Variables {
@@ -412,10 +412,10 @@ func updateProcessInstanceVariablesCAS(
 			return updated, nil
 		}
 		if !ent.IsNotFound(err) {
-			return nil, fmt.Errorf("更新流程实例变量失败: %w", err)
+			return nil, fmt.Errorf("Failed to update process instance variables: %w", err)
 		}
 	}
-	return nil, fmt.Errorf("流程实例版本冲突（ID=%d），请重试", instanceID)
+	return nil, fmt.Errorf("Process instance version conflict (ID=%d), please try again", instanceID)
 }
 
 func (e *CustomProcessEngine) recordApprovalDecision(ctx context.Context, txc *ent.Client, instance *ent.ProcessInstance, task *ent.ProcessTask, variables map[string]interface{}) error {
@@ -427,7 +427,7 @@ func (e *CustomProcessEngine) recordApprovalDecision(ctx context.Context, txc *e
 	comment, _ := variables["approvalComment"].(string)
 	actorID, _ := ctx.Value(bpmn.BPMNUserIDContextKey).(int)
 	if actorID <= 0 {
-		return fmt.Errorf("审批决策缺少认证操作人")
+		return fmt.Errorf("Approval decision lacks certified operator")
 	}
 	actorName := ""
 	if actor, err := txc.User.Get(ctx, actorID); err == nil {
@@ -443,7 +443,7 @@ func (e *CustomProcessEngine) recordApprovalDecision(ctx context.Context, txc *e
 		SetActorID(actorID).SetActorName(actorName).SetAction(action).SetDecision(decision).
 		SetComment(comment).SetVariablesSnapshot(variables).SetTenantID(instance.TenantID).Save(ctx)
 	if err != nil {
-		return fmt.Errorf("记录审批决策失败: %w", err)
+		return fmt.Errorf("Failed to record approval decision: %w", err)
 	}
 	return nil
 }
@@ -468,11 +468,11 @@ func (e *CustomProcessEngine) authorizeTaskActorWithClient(ctx context.Context, 
 	}
 	userID, _ := ctx.Value(bpmn.BPMNUserIDContextKey).(int)
 	if userID <= 0 {
-		return common.NewBusinessError(common.UnauthorizedCode, "缺少执行人身份，无法校验任务归属", "")
+		return common.NewBusinessError(common.UnauthorizedCode, "The identity of the executor is missing and the task ownership cannot be verified.", "")
 	}
 	actor, err := client.User.Query().Where(user.ID(userID)).Only(ctx)
 	if err != nil {
-		return fmt.Errorf("审批用户不存在: %w", err)
+		return fmt.Errorf("Approval user does not exist: %w", err)
 	}
 	matches := func(csv string) bool {
 		for _, candidate := range strings.Split(csv, ",") {
@@ -504,7 +504,7 @@ func (e *CustomProcessEngine) authorizeTaskActorWithClient(ctx context.Context, 
 			return nil
 		}
 		return common.NewBusinessError(common.ForbiddenErrorCode,
-			"该任务已被他人认领，当前用户不是认领人，请刷新后查看最新待办", "")
+			"The task has been claimed by others. The current user is not the claimant. Please refresh to view the latest to-do list.", "")
 	}
 	// 未认领任务：assignee 或 candidateUsers 均可操作
 	if matches(task.Assignee) || matches(task.CandidateUsers) {
@@ -516,7 +516,7 @@ func (e *CustomProcessEngine) authorizeTaskActorWithClient(ctx context.Context, 
 	// 这条可行动结论整个吞掉。AppError 经 %w 包装仍能被 errors.As 取回，
 	// 最终正确落到 403。
 	return common.NewBusinessError(common.ForbiddenErrorCode,
-		"当前用户不是该任务的审批人或候选人，请确认审批节点配置的审批人", "")
+		"The current user is not the approver or candidate of this task. Please confirm the approver configured in the approval node.", "")
 }
 
 // ---------------------------------------------------------------------------
@@ -555,7 +555,7 @@ func (e *CustomProcessEngine) executeStep(ctx context.Context, txc *ent.Client, 
 	}
 
 	if targetRef == "" {
-		return fmt.Errorf("没有符合条件的路径")
+		return fmt.Errorf("No matching path")
 	}
 
 	// 记录排他网关路由决策，使「走哪条分支」可审计
@@ -654,7 +654,7 @@ func serviceTaskReference(task *BPMNServiceTask) string {
 
 func (e *CustomProcessEngine) enqueueServiceTaskCommand(ctx context.Context, txc *ent.Client, instance *ent.ProcessInstance, task *BPMNServiceTask) error {
 	if instance.TenantID <= 0 {
-		return fmt.Errorf("ServiceTask 缺少有效租户")
+		return fmt.Errorf("ServiceTask is missing a valid tenant")
 	}
 	if instance.Variables == nil {
 		instance.Variables = map[string]interface{}{}
@@ -668,7 +668,7 @@ func (e *CustomProcessEngine) enqueueServiceTaskCommand(ctx context.Context, txc
 		return nil
 	})
 	if err != nil {
-		return fmt.Errorf("持久化 ServiceTask occurrence 失败: %w", err)
+		return fmt.Errorf("Persistent ServiceTask occurrence failed: %w", err)
 	}
 	instance.Variables = updated.Variables
 	idempotencyKey := fmt.Sprintf("%d:workflow.service_task:%d:%s:%d", instance.TenantID, instance.ID, task.ID, occurrence)
@@ -678,7 +678,7 @@ func (e *CustomProcessEngine) enqueueServiceTaskCommand(ctx context.Context, txc
 		IdempotencyKey: idempotencyKey, MaxAttempts: 8,
 		Payload: map[string]interface{}{"elementId": task.ID, "serviceRef": serviceTaskReference(task), "occurrence": occurrence},
 	}); err != nil {
-		return fmt.Errorf("ServiceTask durable command 入队失败: %w", err)
+		return fmt.Errorf("ServiceTask durable command failed to enqueue: %w", err)
 	}
 	e.logger.Infow("BPMN ServiceTask durable command enqueued", "tenant_id", instance.TenantID,
 		"process_instance_id", instance.ID, "element_id", task.ID, "occurrence", occurrence)
@@ -1186,7 +1186,7 @@ func (e *CustomProcessEngine) createUserTask(ctx context.Context, txc *ent.Clien
 	}
 	createdTask, err := create.Save(ctx)
 	if err != nil {
-		return fmt.Errorf("创建用户任务失败: %w", err)
+		return fmt.Errorf("Create user task failed: %w", err)
 	}
 	if task.TaskPurpose == "approval" && task.ApprovalMode != "" && task.ApprovalMode != "single" {
 		approvers := splitNonEmptyCSV(assignment.candidateUsers)
@@ -1203,7 +1203,7 @@ func (e *CustomProcessEngine) createUserTask(ctx context.Context, txc *ent.Clien
 				approvalType = "serial"
 			}
 			if _, err := createCounterSignTasksWithClient(ctx, txc, createdTask.TaskID, instance.TenantID, &CounterSignRequest{ApprovalType: approvalType, Approvers: approvers, Threshold: threshold}); err != nil {
-				return fmt.Errorf("创建会签任务失败: %w", err)
+				return fmt.Errorf("Failed to create countersignature task: %w", err)
 			}
 		}
 	}
@@ -1371,7 +1371,7 @@ func (e *CustomProcessEngine) tryAutoApproveTask(ctx context.Context, txc *ent.C
 		SetTaskVariables(vars).
 		Save(ctx)
 	if err != nil {
-		return false, fmt.Errorf("自动审批更新任务状态失败: %w", err)
+		return false, fmt.Errorf("Automatic approval update task status failed: %w", err)
 	}
 	if updated != 1 {
 		e.logger.Warnw("auto_approve_roles: 任务状态已被并发修改，跳过自动审批",
@@ -1382,10 +1382,10 @@ func (e *CustomProcessEngine) tryAutoApproveTask(ctx context.Context, txc *ent.C
 	// 2. 推进流程（从该节点继续走条件网关/后续节点）
 	merged, err := e.mergeVariablesInTx(ctx, txc, instance.ID, vars)
 	if err != nil {
-		return false, fmt.Errorf("自动审批合并实例变量失败: %w", err)
+		return false, fmt.Errorf("Automatic approval of merged instance variables failed: %w", err)
 	}
 	if err := e.executeStep(ctx, txc, merged, process, task.ID, merged.Variables); err != nil {
-		return false, fmt.Errorf("自动审批推进流程失败: %w", err)
+		return false, fmt.Errorf("Automatic approval advancement process failed: %w", err)
 	}
 
 	// 3. 系统身份审计事实（actor_id=0，action=system_decision）
@@ -1402,7 +1402,7 @@ func (e *CustomProcessEngine) tryAutoApproveTask(ctx context.Context, txc *ent.C
 		SetVariablesSnapshot(vars).
 		SetTenantID(instance.TenantID).
 		Save(ctx); err != nil {
-		return false, fmt.Errorf("自动审批写系统决策审计失败: %w", err)
+		return false, fmt.Errorf("Automatic approval writing system decision audit failed: %w", err)
 	}
 
 	e.logger.Infow("auto_approve_roles: 任务已系统自动通过",
@@ -1658,9 +1658,9 @@ func (e *CustomProcessEngine) suspendOnBrokenGraph(ctx context.Context, txc *ent
 		SetSuspendedReason(reason).
 		Save(ctx)
 	if err != nil {
-		return fmt.Errorf("标记实例挂起失败（原图断裂）: %w", err)
+		return fmt.Errorf("Mark instance suspension failed (original image broken): %w", err)
 	}
-	return fmt.Errorf("流程图断裂：节点 %s 无可用出边，实例 %d 已挂起", elementID, instance.ID)
+	return fmt.Errorf("Flow graph broken: node %s has no available outgoing edges, instance %d has been suspended", elementID, instance.ID)
 }
 
 // evaluateCondition 评估流转条件 (Domain Logic)
@@ -1802,13 +1802,13 @@ func (e *CustomProcessEngine) handleIntermediateCatchEvent(ctx context.Context, 
 	}
 
 	if e.timerStore == nil {
-		return fmt.Errorf("定时器服务未配置，无法处理中间定时器事件 %s", event.ID)
+		return fmt.Errorf("The timer service is not configured and cannot handle the intermediate timer event %s", event.ID)
 	}
 
 	expression, expressionType := e.extractTimerExpression(event.TimerEventDefinition)
 	fireAt, err := CalculateFireAt(expression, expressionType, time.Now())
 	if err != nil {
-		return fmt.Errorf("计算中间定时器触发时间失败: %w", err)
+		return fmt.Errorf("Failed to calculate intermediate timer firing time: %w", err)
 	}
 
 	instanceID := instance.ID
@@ -1823,7 +1823,7 @@ func (e *CustomProcessEngine) handleIntermediateCatchEvent(ctx context.Context, 
 		TenantID:             instance.TenantID,
 	})
 	if err != nil {
-		return fmt.Errorf("创建中间定时器记录失败: %w", err)
+		return fmt.Errorf("Failed to create intermediate timer record: %w", err)
 	}
 
 	e.logger.Infow("Intermediate timer registered at runtime",
@@ -2004,7 +2004,7 @@ const maxGatewayForkDepth = 64
 // handleParallelGateway 处理并行网关：多入边时作为汇聚节点等待所有分支完成；否则作为分叉节点激活所有出边。
 func (e *CustomProcessEngine) handleParallelGateway(ctx context.Context, txc *ent.Client, instance *ent.ProcessInstance, process *BPMNProcess, gateway *BPMNParallelGateway, depth int) error {
 	if depth > maxGatewayForkDepth {
-		return fmt.Errorf("并行网关分叉层级超过上限，可能存在环路: %s", gateway.ID)
+		return fmt.Errorf("The parallel gateway fork level exceeds the upper limit and a loop may exist: %s", gateway.ID)
 	}
 	incoming := e.findIncomingFlows(process, gateway.ID)
 	if len(incoming) > 1 && !e.allIncomingBranchesCompleted(ctx, txc, instance, process, gateway.ID) {
@@ -2027,7 +2027,7 @@ func (e *CustomProcessEngine) handleParallelGateway(ctx context.Context, txc *en
 // handleInclusiveGateway 处理包容网关：汇聚等待所有入边分支完成；分叉时激活所有命中条件的出边。
 func (e *CustomProcessEngine) handleInclusiveGateway(ctx context.Context, txc *ent.Client, instance *ent.ProcessInstance, process *BPMNProcess, gateway *BPMNInclusiveGateway, depth int) error {
 	if depth > maxGatewayForkDepth {
-		return fmt.Errorf("包容网关分叉层级超过上限，可能存在环路: %s", gateway.ID)
+		return fmt.Errorf("The fork level of the inclusive gateway exceeds the upper limit, and a loop may exist: %s", gateway.ID)
 	}
 	incoming := e.findIncomingFlows(process, gateway.ID)
 	if len(incoming) > 1 && !e.allIncomingBranchesCompleted(ctx, txc, instance, process, gateway.ID) {
@@ -2148,7 +2148,7 @@ func (e *CustomProcessEngine) allIncomingBranchesCompleted(ctx context.Context, 
 // 用于可观测性与卡死检测（P3）。结合日志中的 "并行/包容网关汇聚等待分支完成" 可定位汇聚死锁。
 func (e *CustomProcessEngine) DetectStuckInstances(ctx context.Context, tenantID int, olderThan time.Time) ([]*ent.ProcessInstance, error) {
 	if tenantID <= 0 {
-		return nil, fmt.Errorf("DetectStuckInstances 需要有效的租户上下文")
+		return nil, fmt.Errorf("DetectStuckInstances requires a valid tenant context")
 	}
 	return e.client.ProcessInstance.Query().
 		Where(

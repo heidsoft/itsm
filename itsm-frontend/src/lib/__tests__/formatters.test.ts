@@ -101,17 +101,17 @@ describe('mapLabel', () => {
 
 describe('displayUserName', () => {
   it('shows the server-projected name', () => {
-    expect(displayUserName('张三', 8, '未分配')).toBe('张三');
+    expect(displayUserName('张三', 8, "Unassigned")).toBe('张三');
   });
 
   it('falls back to the user id, never to the unassigned label, when a assignee id exists', () => {
-    expect(displayUserName(undefined, 8, '未分配')).toBe('用户 #8');
-    expect(displayUserName('   ', 8, '未分配')).toBe('用户 #8');
+    expect(displayUserName(undefined, 8, "Unassigned")).toBe("User #8");
+    expect(displayUserName('   ', 8, "Unassigned")).toBe("User #8");
   });
 
   it('shows the unassigned label only when there is really no assignee', () => {
-    expect(displayUserName(undefined, undefined, '未分配')).toBe('未分配');
-    expect(displayUserName('张三', 0, '未分配')).toBe('张三');
-    expect(displayUserName(undefined, 0, '未分配')).toBe('未分配');
+    expect(displayUserName(undefined, undefined, "Unassigned")).toBe("Unassigned");
+    expect(displayUserName('张三', 0, "Unassigned")).toBe('张三');
+    expect(displayUserName(undefined, 0, "Unassigned")).toBe("Unassigned");
   });
 });

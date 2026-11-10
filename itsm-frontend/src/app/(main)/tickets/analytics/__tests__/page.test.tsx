@@ -104,17 +104,17 @@ describe('工单统计页加载语义', () => {
     mockGetTicketStats.mockResolvedValue(statsFixture({ scope: 'owner' }));
     render(<TicketAnalyticsPage />);
 
-    expect(await screen.findByText(/本人创建或受理的工单/)).toBeInTheDocument();
-    expect(screen.getByText(/2026-10-03 至 2026-11-01（30 天，按创建时间）/)).toBeInTheDocument();
+    expect(await screen.findByText(/Work order created or accepted by me/)).toBeInTheDocument();
+    expect(screen.getByText(/2026-10-03 to 2026-11-01（30 days, by creation time\)/)).toBeInTheDocument();
   });
 
   it('SLA 可用时显示达标率与样本明细，并标注租户口径', async () => {
     mockGetTicketStats.mockResolvedValue(statsFixture());
     render(<TicketAnalyticsPage />);
 
-    expect(await screen.findByText(/样本 7 张，违约 1 张/)).toBeInTheDocument();
+    expect(await screen.findByText(/Sample: 7 tickets; SLA breaches: 1/)).toBeInTheDocument();
     expect(screen.getByText(/91%/)).toBeInTheDocument();
-    expect(screen.getByText(/SLA 读数按租户全量计算/)).toBeInTheDocument();
+    expect(screen.getByText(/SLA readings are calculated based on the full amount of the tenant and do not follow the data range of the login user/)).toBeInTheDocument();
   });
 
   // sla 缺省是「没取到」，渲染成 0% 会让使用者以为全部超时。
@@ -122,8 +122,8 @@ describe('工单统计页加载语义', () => {
     mockGetTicketStats.mockResolvedValue(statsFixture({ sla: undefined }));
     render(<TicketAnalyticsPage />);
 
-    expect(await screen.findByText('SLA 达标率暂不可用')).toBeInTheDocument();
-    expect(screen.queryByText(/样本 7 张/)).not.toBeInTheDocument();
+    expect(await screen.findByText("SLA compliance rate is temporarily unavailable")).toBeInTheDocument();
+    expect(screen.queryByText(/Sample 7 Zhang/)).not.toBeInTheDocument();
     expect(screen.queryByText('0%')).not.toBeInTheDocument();
   });
 
@@ -133,7 +133,7 @@ describe('工单统计页加载语义', () => {
     render(<TicketAnalyticsPage />);
 
     expect(
-      await screen.findByText('本次请求未返回趋势序列（后端未启用窗口趋势）')
+      await screen.findByText("This request did not return a trend sequence (window trend is not enabled on the backend)")
     ).toBeInTheDocument();
   });
 
@@ -141,7 +141,7 @@ describe('工单统计页加载语义', () => {
     mockGetTicketStats.mockResolvedValue(statsFixture({ dailyTrend: [] }));
     render(<TicketAnalyticsPage />);
 
-    expect(await screen.findByText('所选时间范围内没有新建或解决的工单')).toBeInTheDocument();
+    expect(await screen.findByText("There are no new or resolved tickets in the selected time range")).toBeInTheDocument();
   });
 
   // 与修复前的差别：403 不再渲染成一屏 0，而是明确缺哪个权限码。
@@ -149,26 +149,26 @@ describe('工单统计页加载语义', () => {
     mockGetTicketStats.mockRejectedValue(new ApiRequestError('权限不足', 403, 2003));
     render(<TicketAnalyticsPage />);
 
-    expect(await screen.findByText('工单统计没有访问权限')).toBeInTheDocument();
-    expect(screen.getByText(/需要 ticket:read/)).toBeInTheDocument();
-    expect(screen.getByText(/缺少数据不等于租户里没有工单/)).toBeInTheDocument();
-    expect(screen.queryByText('工单总数')).not.toBeInTheDocument();
-    expect(screen.queryByText('待处理')).not.toBeInTheDocument();
+    expect(await screen.findByText("No access rights to work order statistics")).toBeInTheDocument();
+    expect(screen.getByText(/requires ticket:read/)).toBeInTheDocument();
+    expect(screen.getByText(/Lack of data does not mean there are no work orders in the tenant/)).toBeInTheDocument();
+    expect(screen.queryByText("Total number of work orders")).not.toBeInTheDocument();
+    expect(screen.queryByText("Pending")).not.toBeInTheDocument();
   });
 
   it('整页失败重试成功后恢复数据', async () => {
     mockGetTicketStats.mockRejectedValue(new ApiRequestError('后端未就绪', 503, 5001));
     render(<TicketAnalyticsPage />);
 
-    expect(await screen.findByText('工单统计加载失败')).toBeInTheDocument();
-    expect(screen.queryByText('工单总数')).not.toBeInTheDocument();
+    expect(await screen.findByText("Failed to load work order statistics")).toBeInTheDocument();
+    expect(screen.queryByText("Total number of work orders")).not.toBeInTheDocument();
 
     mockGetTicketStats.mockResolvedValue(statsFixture({ total: 22 }));
-    await userEvent.click(screen.getByRole('button', { name: '重试' }));
+    await userEvent.click(screen.getByRole('button', { name: "Retry" }));
 
     await waitFor(() => expect(mockGetTicketStats).toHaveBeenCalledTimes(2));
     expect(await screen.findByText('22')).toBeInTheDocument();
-    expect(screen.queryByText('工单统计加载失败')).not.toBeInTheDocument();
+    expect(screen.queryByText("Failed to load work order statistics")).not.toBeInTheDocument();
   });
 
   // 后端未提供这些读数（dto.AnalyticsTicketStatsResponse 只有 total/statusGroups/
@@ -178,10 +178,10 @@ describe('工单统计页加载语义', () => {
     render(<TicketAnalyticsPage />);
 
     await screen.findByText('22');
-    expect(screen.queryByText('团队表现')).not.toBeInTheDocument();
-    expect(screen.queryByText('热门类别')).not.toBeInTheDocument();
-    expect(screen.queryByText('类型分布')).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /导出报表/ })).not.toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: '深度分析' })).toBeInTheDocument();
+    expect(screen.queryByText("Team表现")).not.toBeInTheDocument();
+    expect(screen.queryByText("热门Category")).not.toBeInTheDocument();
+    expect(screen.queryByText("Change type distribution")).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /ExportReport/ })).not.toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: "In-depth analysis" })).toBeInTheDocument();
   });
 });

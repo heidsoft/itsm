@@ -143,7 +143,7 @@ const ProblemEfficiencyPage = () => {
       ]);
       setState({ kind: 'ready', stats, recent: recent.items });
     } catch (err) {
-      setState({ kind: 'error', reason: err instanceof Error ? err.message : '未知错误' });
+      setState({ kind: 'error', reason: err instanceof Error ? err.message : 'Unknown error' });
     }
   }, []);
 
@@ -154,9 +154,9 @@ const ProblemEfficiencyPage = () => {
   if (state.kind === 'loading') {
     return (
       <div className="p-6 bg-gray-50 min-h-full">
-        <Title level={2}>问题管理效率报表</Title>
+        <Title level={2}>Problem Management Efficiency Report</Title>
         <div className="flex items-center justify-center h-64">
-          <Spin size="large" description="加载报表数据..." />
+          <Spin size="large" description="Loading report data..." />
         </div>
       </div>
     );
@@ -166,15 +166,16 @@ const ProblemEfficiencyPage = () => {
     // 失败态不得渲染全 0 卡片或空图表：那会把接口故障伪装成「没有问题记录」。
     return (
       <div className="p-6 bg-gray-50 min-h-full">
-        <Title level={2}>问题管理效率报表</Title>
+        <Title level={2}>Problem Management Efficiency Report</Title>
         <Alert
           type="error"
           showIcon
-          title="问题统计加载失败"
-          description={`${state.reason}。请确认已登录且拥有问题读取权限，或稍后重试。`}
+          title="Problem statistics loading failed"
+          description={`${state.reason}. Please confirm you are logged in and have read access to the question, or try again later.`}
           action={
             <Button size="small" icon={<RotateCcw />} onClick={loadData}>
-              重试
+
+              Retry
             </Button>
           }
         />
@@ -189,13 +190,13 @@ const ProblemEfficiencyPage = () => {
 
   const cards = [
     {
-      title: '问题总数',
+      title: 'Total number of questions',
       value: total,
       color: '#1890ff',
       icon: <AlertTriangle size={20} style={{ color: '#1890ff' }} />,
     },
     {
-      title: '已解决问题',
+      title: 'Problem solved',
       value: stats.resolved,
       color: '#52c41a',
       icon: <CheckCircle size={20} />,
@@ -209,7 +210,7 @@ const ProblemEfficiencyPage = () => {
     },
     {
       // 折叠口径：high 与 critical 同进本卡片。
-      title: '高优先级',
+      title: 'High Priority',
       value: stats.highPriority,
       color: '#ff4d4f',
       icon: <XCircle size={20} />,
@@ -221,23 +222,23 @@ const ProblemEfficiencyPage = () => {
   const resolutionPercent = (stats.resolved / total) * 100;
   const metrics = [
     {
-      title: '解决率',
-      label: '已解决',
+      title: 'Resolution rate',
+      label: 'Resolved',
       part: stats.resolved,
       percent: resolutionPercent,
       // 70% 是本页约定的警示阈值，后端并不下发阈值。
       color: resolutionPercent < 70 ? '#faad14' : '#52c41a',
     },
     {
-      title: '处理中比例',
+      title: 'Processing ratio',
       label: problemStatusLabel(ProblemStatus.IN_PROGRESS),
       part: stats.inProgress,
       percent: (stats.inProgress / total) * 100,
       color: '#1890ff',
     },
     {
-      title: '高优先级占比',
-      label: '高优先级',
+      title: 'High priority ratio',
+      label: 'High Priority',
       part: stats.highPriority,
       percent: (stats.highPriority / total) * 100,
       color: '#ff4d4f',
@@ -247,15 +248,17 @@ const ProblemEfficiencyPage = () => {
   return (
     <div className="p-6 bg-gray-50 min-h-full space-y-6">
       <header>
-        <Title level={2}>问题管理效率报表</Title>
+        <Title level={2}>Problem Management Efficiency Report</Title>
         <Text className="text-gray-500">
-          统计口径为当前租户全量问题记录；分布数据来自后端分组计数，不是当前页列表。
+
+          The statistical caliber is all problem records of the current tenant; the distribution data comes from the backend group count, not the current page list.
         </Text>
       </header>
 
       <Row justify="end">
         <Button icon={<RotateCcw />} onClick={loadData}>
-          刷新数据
+
+          Refresh Data
         </Button>
       </Row>
 
@@ -276,7 +279,7 @@ const ProblemEfficiencyPage = () => {
 
       {total === 0 ? (
         <Card>
-          <Empty description="当前租户还没有问题记录" />
+          <Empty description="There is no problem record for the current tenant" />
         </Card>
       ) : (
         <>
@@ -294,7 +297,7 @@ const ProblemEfficiencyPage = () => {
                       showInfo={false}
                     />
                     <Text type="secondary" className="mt-2 block">
-                      {metric.label} {metric.part} / 总数 {total}
+                      {metric.label} {metric.part}  /Total {total}
                     </Text>
                   </div>
                 </Card>
@@ -304,7 +307,7 @@ const ProblemEfficiencyPage = () => {
 
           <Row gutter={[16, 16]}>
             <Col xs={24} lg={12}>
-              <Card title="问题状态分布">
+              <Card title="Problem status distribution">
                 <ResponsiveContainer width="100%" height={300}>
                   <PieChart>
                     <Pie
@@ -328,7 +331,7 @@ const ProblemEfficiencyPage = () => {
             </Col>
 
             <Col xs={24} lg={12}>
-              <Card title="问题优先级分布">
+              <Card title="Issue priority distribution">
                 <ResponsiveContainer width="100%" height={300}>
                   <BarChart data={prioritySlices}>
                     <CartesianGrid strokeDasharray="3 3" />
@@ -336,7 +339,7 @@ const ProblemEfficiencyPage = () => {
                     <YAxis allowDecimals={false} />
                     <Tooltip />
                     <Legend />
-                    <Bar dataKey="value" name="问题数量" fill="#1890ff">
+                    <Bar dataKey="value" name="Number of questions" fill="#1890ff">
                       {prioritySlices.map(slice => (
                         <Cell key={slice.key} fill={slice.color} />
                       ))}
@@ -348,7 +351,7 @@ const ProblemEfficiencyPage = () => {
           </Row>
 
           {recent.length > 0 && (
-            <Card title="最新问题列表">
+            <Card title="Latest issue list">
               {/* antd v6 已弃用 List（运行时告警），这里用与本表其余部分一致的
                   Tailwind 结构渲染，行为与视觉不变。 */}
               <div className="flex flex-col">
@@ -370,8 +373,8 @@ const ProblemEfficiencyPage = () => {
                       </Tag>
                     </div>
                     <div className="flex items-center gap-4 text-sm text-gray-500">
-                      <span>处理人: {problem.assigneeName ?? '未分配'}</span>
-                      <span>创建时间: {formatDateTime(problem.createdAt)}</span>
+                      <span>Processor: {problem.assigneeName ?? 'Unassigned'}</span>
+                      <span>Creation time: {formatDateTime(problem.createdAt)}</span>
                     </div>
                   </div>
                 ))}

@@ -160,7 +160,7 @@ export default function EnhancedSystemConfiguration() {
   const [hasChanges, setHasChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [systemStats, setSystemStats] = useState({
-    uptime: '加载中...',
+    uptime: 'Loading...',
     goroutines: 0,
     cpuCores: 0,
     memoryUsagePercent: 0,
@@ -190,7 +190,7 @@ export default function EnhancedSystemConfiguration() {
       setInitialConfig(configMap);
       form.setFieldsValue(configMap);
     } catch (error) {
-      message.error('加载系统配置失败');
+      message.error('Failed to load system configuration');
     }
   };
 
@@ -225,27 +225,27 @@ export default function EnhancedSystemConfiguration() {
     setLogs([
       {
         id: 1,
-        action: '用户登录',
+        action: 'User login',
         user: 'admin',
         timestamp: '2026-07-04 10:30:00',
         ip: '192.168.1.100',
-        details: '成功登录系统',
+        details: 'Successfully logged into the system',
       },
       {
         id: 2,
-        action: '配置更新',
+        action: 'Configuration update',
         user: 'admin',
         timestamp: '2026-07-04 09:45:00',
         ip: '192.168.1.100',
-        details: '更新系统配置: sessionTimeout',
+        details: 'Update system configuration: sessionTimeout',
       },
       {
         id: 3,
-        action: '工单创建',
+        action: 'Ticket Created',
         user: 'user1',
         timestamp: '2026-07-04 09:20:00',
         ip: '192.168.1.101',
-        details: '创建工单 TKT-2026-001',
+        details: 'Create work order TKT-2026-001',
       },
     ]);
 
@@ -284,11 +284,11 @@ export default function EnhancedSystemConfiguration() {
 
   // 计算运行时长
   const calculateUptime = (startTime?: number): string => {
-    if (!startTime) return '未知';
+    if (!startTime) return 'Unknown';
     const diff = Date.now() - startTime;
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
     const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    return `${days}天 ${hours}小时`;
+    return `${days} days ${hours} hours`;
   };
 
   // 表单值变化时标记为有更改
@@ -316,11 +316,11 @@ export default function EnhancedSystemConfiguration() {
 
       await SystemConfigAPI.updateConfigs(updateRequests);
 
-      message.success('配置保存成功');
+      message.success('Configuration saved successfully');
       setHasChanges(false);
       setInitialConfig(values);
     } catch (error) {
-      message.error('保存配置失败');
+      message.error('Failed to save configuration');
     } finally {
       setIsSaving(false);
     }
@@ -331,25 +331,26 @@ export default function EnhancedSystemConfiguration() {
     <div className="space-y-6">
       <div>
         <Title level={5} className="!mb-4">
-          基础设置
+
+          Basic Settings
         </Title>
         <Row gutter={[16, 16]}>
           <Col xs={24} md={12}>
             <Form.Item
-              label="系统名称"
+              label="System name"
               name="systemName"
-              rules={[{ required: true, message: '请输入系统名称' }]}
+              rules={[{ required: true, message: 'Please enter system name' }]}
             >
-              <Input placeholder="请输入系统名称" prefix={<Globe className="w-4 h-4" />} />
+              <Input placeholder="Please enter system name" prefix={<Globe className="w-4 h-4" />} />
             </Form.Item>
           </Col>
           <Col xs={24} md={12}>
             <Form.Item
-              label="系统URL"
+              label="System URL"
               name="systemUrl"
               rules={[
-                { required: true, message: '请输入系统URL' },
-                { type: 'url', message: '请输入有效的URL' },
+                { required: true, message: 'Please enter the system URL' },
+                { type: 'url', message: 'Please enter a valid URL' },
               ]}
             >
               <Input placeholder="https://example.com" prefix={<WebIcon />} />
@@ -360,20 +361,20 @@ export default function EnhancedSystemConfiguration() {
         <Row gutter={[16, 16]}>
           <Col xs={24} md={12}>
             <Form.Item
-              label="时区"
+              label="Time zone"
               name="timezone"
-              rules={[{ required: true, message: '请选择时区' }]}
+              rules={[{ required: true, message: 'Please select a time zone' }]}
             >
-              <Select placeholder="请选择时区" options={[{ value: "Asia/Shanghai", label: "亚洲/上海 (UTC+8)" }, { value: "Asia/Tokyo", label: "亚洲/东京 (UTC+9)" }, { value: "Europe/London", label: "欧洲/伦敦 (UTC+0)" }, { value: "America/New_York", label: "美洲/纽约 (UTC-5)" }]} />
+              <Select placeholder="Please select a time zone" options={[{ value: "Asia/Shanghai", label: "Asia/Shanghai (UTC+8)" }, { value: "Asia/Tokyo", label: "Asia/Tokyo (UTC+9)" }, { value: "Europe/London", label: "Europe/London (UTC+0)" }, { value: "America/New_York", label: "America/New York (UTC-5)" }]} />
             </Form.Item>
           </Col>
           <Col xs={24} md={12}>
             <Form.Item
-              label="语言"
+              label="Language"
               name="language"
-              rules={[{ required: true, message: '请选择语言' }]}
+              rules={[{ required: true, message: 'Please select language' }]}
             >
-              <Select placeholder="请选择语言" options={[{ value: "zh-CN", label: "简体中文" }, { value: "en-US", label: "English" }, { value: "ja-JP", label: "日本語" }]} />
+              <Select placeholder="Please select language" options={[{ value: "en-US", label: "English" }]} />
             </Form.Item>
           </Col>
         </Row>
@@ -381,20 +382,20 @@ export default function EnhancedSystemConfiguration() {
         <Row gutter={[16, 16]}>
           <Col xs={24} md={12}>
             <Form.Item
-              label="日期格式"
+              label="date format"
               name="dateFormat"
-              rules={[{ required: true, message: '请选择日期格式' }]}
+              rules={[{ required: true, message: 'Please select date format' }]}
             >
-              <Select placeholder="请选择日期格式" options={[{ value: "YYYY-MM-DD", label: "YYYY-MM-DD" }, { value: "DD/MM/YYYY", label: "DD/MM/YYYY" }, { value: "MM/DD/YYYY", label: "MM/DD/YYYY" }]} />
+              <Select placeholder="Please select date format" options={[{ value: "YYYY-MM-DD", label: "YYYY-MM-DD" }, { value: "DD/MM/YYYY", label: "DD/MM/YYYY" }, { value: "MM/DD/YYYY", label: "MM/DD/YYYY" }]} />
             </Form.Item>
           </Col>
           <Col xs={24} md={12}>
             <Form.Item
-              label="时间格式"
+              label="Time format"
               name="timeFormat"
-              rules={[{ required: true, message: '请选择时间格式' }]}
+              rules={[{ required: true, message: 'Please select time format' }]}
             >
-              <Select placeholder="请选择时间格式" options={[{ value: "24h", label: "24小时制" }, { value: "12h", label: "12小时制" }]} />
+              <Select placeholder="Please select time format" options={[{ value: "24h", label: "24-hour clock" }, { value: "12h", label: "12-hour clock" }]} />
             </Form.Item>
           </Col>
         </Row>
@@ -404,23 +405,24 @@ export default function EnhancedSystemConfiguration() {
 
       <div>
         <Title level={5} className="!mb-4">
-          会话与文件设置
+
+          Session and File Settings
         </Title>
         <Row gutter={[16, 16]}>
           <Col xs={24} md={12}>
             <Form.Item
-              label="会话超时时间(分钟)"
+              label="Session timeout (minutes)"
               name="sessionTimeout"
-              rules={[{ required: true, message: '请输入会话超时时间' }]}
+              rules={[{ required: true, message: 'Please enter session timeout' }]}
             >
-              <InputNumber min={1} max={1440} style={{ width: '100%' }} addonAfter="分钟" />
+              <InputNumber min={1} max={1440} style={{ width: '100%' }} addonAfter="minutes" />
             </Form.Item>
           </Col>
           <Col xs={24} md={12}>
             <Form.Item
-              label="最大文件大小(MB)"
+              label="Maximum file size (MB)"
               name="maxFileSize"
-              rules={[{ required: true, message: '请输入最大文件大小' }]}
+              rules={[{ required: true, message: 'Please enter the maximum file size' }]}
             >
               <InputNumber min={1} max={1024} style={{ width: '100%' }} addonAfter="MB" />
             </Form.Item>
@@ -428,9 +430,9 @@ export default function EnhancedSystemConfiguration() {
         </Row>
 
         <Form.Item
-          label="允许的文件类型"
+          label="Allowed File Types"
           name="allowedFileTypes"
-          rules={[{ required: true, message: '请输入允许的文件类型' }]}
+          rules={[{ required: true, message: 'Please enter allowed file types' }]}
         >
           <Input placeholder=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.png,.gif" />
         </Form.Item>
@@ -440,20 +442,21 @@ export default function EnhancedSystemConfiguration() {
 
       <div>
         <Title level={5} className="!mb-4">
-          系统维护
+
+          System maintenance
         </Title>
         <Row gutter={[16, 16]}>
           <Col xs={24} md={12}>
-            <Form.Item label="维护模式" name="maintenanceMode" valuePropName="checked">
-              <Switch checkedChildren="开启" unCheckedChildren="关闭" />
+            <Form.Item label="Maintenance mode" name="maintenanceMode" valuePropName="checked">
+              <Switch checkedChildren="On" unCheckedChildren="Close" />
             </Form.Item>
-            <Text type="secondary">开启后，普通用户将无法访问系统</Text>
+            <Text type="secondary">Once enabled, ordinary users will not be able to access the system.</Text>
           </Col>
           <Col xs={24} md={12}>
-            <Form.Item label="审计日志" name="enableAuditLog" valuePropName="checked">
-              <Switch checkedChildren="开启" unCheckedChildren="关闭" />
+            <Form.Item label="Audit Logs" name="enableAuditLog" valuePropName="checked">
+              <Switch checkedChildren="On" unCheckedChildren="Close" />
             </Form.Item>
-            <Text type="secondary">记录所有用户操作日志</Text>
+            <Text type="secondary">Record all user operation logs</Text>
           </Col>
         </Row>
       </div>
@@ -466,39 +469,40 @@ export default function EnhancedSystemConfiguration() {
       <div>
         <Title level={5} className="!mb-4">
           <Lock className="inline w-4 h-4 mr-2" />
-          密码策略
+
+          Password Policy
         </Title>
         <Row gutter={[16, 16]}>
           <Col xs={24} md={12}>
             <Form.Item
-              label="密码最小长度"
+              label="Minimum password length"
               name="passwordMinLength"
-              rules={[{ required: true, message: '请输入密码最小长度' }]}
+              rules={[{ required: true, message: 'Please enter the minimum password length' }]}
             >
-              <InputNumber min={6} max={32} style={{ width: '100%' }} addonAfter="字符" />
+              <InputNumber min={6} max={32} style={{ width: '100%' }} addonAfter="character" />
             </Form.Item>
           </Col>
         </Row>
 
         <Row gutter={[16, 16]}>
           <Col xs={12} md={6}>
-            <Form.Item label="需要大写字母" name="passwordRequireUppercase" valuePropName="checked">
+            <Form.Item label="Capital letters required" name="passwordRequireUppercase" valuePropName="checked">
               <Switch />
             </Form.Item>
           </Col>
           <Col xs={12} md={6}>
-            <Form.Item label="需要小写字母" name="passwordRequireLowercase" valuePropName="checked">
+            <Form.Item label="lowercase letters required" name="passwordRequireLowercase" valuePropName="checked">
               <Switch />
             </Form.Item>
           </Col>
           <Col xs={12} md={6}>
-            <Form.Item label="需要数字" name="passwordRequireNumbers" valuePropName="checked">
+            <Form.Item label="Number required" name="passwordRequireNumbers" valuePropName="checked">
               <Switch />
             </Form.Item>
           </Col>
           <Col xs={12} md={6}>
             <Form.Item
-              label="需要特殊字符"
+              label="Special characters required"
               name="passwordRequireSpecialChars"
               valuePropName="checked"
             >
@@ -513,33 +517,34 @@ export default function EnhancedSystemConfiguration() {
       <div>
         <Title level={5} className="!mb-4">
           <UserCheck className="inline w-4 h-4 mr-2" />
-          账户安全
+
+          Account security
         </Title>
         <Row gutter={[16, 16]}>
           <Col xs={24} md={12}>
             <Form.Item
-              label="登录失败次数限制"
+              label="Limit on failed login attempts"
               name="loginMaxAttempts"
-              rules={[{ required: true, message: '请输入登录失败次数限制' }]}
+              rules={[{ required: true, message: 'Please enter the limit for failed login attempts' }]}
             >
-              <InputNumber min={1} max={10} style={{ width: '100%' }} addonAfter="次" />
+              <InputNumber min={1} max={10} style={{ width: '100%' }} addonAfter="times" />
             </Form.Item>
           </Col>
           <Col xs={24} md={12}>
             <Form.Item
-              label="账户锁定时间(分钟)"
+              label="Account lock time (minutes)"
               name="accountLockoutDuration"
-              rules={[{ required: true, message: '请输入账户锁定时间' }]}
+              rules={[{ required: true, message: 'Please enter the account lock time' }]}
             >
-              <InputNumber min={1} max={1440} style={{ width: '100%' }} addonAfter="分钟" />
+              <InputNumber min={1} max={1440} style={{ width: '100%' }} addonAfter="minutes" />
             </Form.Item>
           </Col>
         </Row>
 
         <Row gutter={[16, 16]}>
           <Col xs={24}>
-            <Form.Item label="启用双因素认证" name="enable2FA" valuePropName="checked">
-              <Switch checkedChildren="开启" unCheckedChildren="关闭" />
+            <Form.Item label="Enable two-factor authentication" name="enable2FA" valuePropName="checked">
+              <Switch checkedChildren="On" unCheckedChildren="Close" />
             </Form.Item>
           </Col>
         </Row>
@@ -550,17 +555,18 @@ export default function EnhancedSystemConfiguration() {
       <div>
         <Title level={5} className="!mb-4">
           <Key className="inline w-4 h-4 mr-2" />
-          API 安全
+
+          API security
         </Title>
         <Row gutter={[16, 16]}>
           <Col xs={24} md={12}>
-            <Form.Item label="API速率限制" name="apiRateLimit">
-              <InputNumber min={10} max={10000} style={{ width: '100%' }} addonAfter="请求/分钟" />
+            <Form.Item label="API rate limit" name="apiRateLimit">
+              <InputNumber min={10} max={10000} style={{ width: '100%' }} addonAfter="Requests/minute" />
             </Form.Item>
           </Col>
           <Col xs={24} md={12}>
-            <Form.Item label="API密钥轮换周期">
-              <Select defaultValue="90" style={{ width: '100%' }} options={[{ value: "30", label: "30天" }, { value: "60", label: "60天" }, { value: "90", label: "90天" }, { value: "180", label: "180天" }]} />
+            <Form.Item label="API key rotation period">
+              <Select defaultValue="90" style={{ width: '100%' }} options={[{ value: "30", label: "30 days" }, { value: "60", label: "60 days" }, { value: "90", label: "90 days" }, { value: "180", label: "180 days" }]} />
             </Form.Item>
           </Col>
         </Row>
@@ -574,23 +580,24 @@ export default function EnhancedSystemConfiguration() {
       <div>
         <Title level={5} className="!mb-4">
           <Mail className="inline w-4 h-4 mr-2" />
-          SMTP设置
+
+          SMTP settings
         </Title>
         <Row gutter={[16, 16]}>
           <Col xs={24} md={12}>
             <Form.Item
-              label="SMTP服务器"
+              label="SMTP Server"
               name="smtpHost"
-              rules={[{ required: true, message: '请输入SMTP服务器' }]}
+              rules={[{ required: true, message: 'Please enter SMTP server' }]}
             >
               <Input placeholder="smtp.example.com" prefix={<Server className="w-4 h-4" />} />
             </Form.Item>
           </Col>
           <Col xs={24} md={12}>
             <Form.Item
-              label="SMTP端口"
+              label="SMTP Port"
               name="smtpPort"
-              rules={[{ required: true, message: '请输入SMTP端口' }]}
+              rules={[{ required: true, message: 'Please enter SMTP port' }]}
             >
               <InputNumber min={1} max={65535} style={{ width: '100%' }} />
             </Form.Item>
@@ -600,22 +607,22 @@ export default function EnhancedSystemConfiguration() {
         <Row gutter={[16, 16]}>
           <Col xs={24} md={12}>
             <Form.Item
-              label="SMTP用户名"
+              label="SMTP username"
               name="smtpUsername"
-              rules={[{ required: true, message: '请输入SMTP用户名' }]}
+              rules={[{ required: true, message: 'Please enter SMTP username' }]}
             >
               <Input placeholder="username@example.com" />
             </Form.Item>
           </Col>
           <Col xs={24} md={12}>
-            <Form.Item label="SMTP密码" name="smtpPassword">
-              <Password placeholder="请输入密码" />
+            <Form.Item label="SMTP password" name="smtpPassword">
+              <Password placeholder="Please enter password" />
             </Form.Item>
           </Col>
         </Row>
 
-        <Form.Item label="启用SSL/TLS" name="smtpEnableSSL" valuePropName="checked">
-          <Switch checkedChildren="开启" unCheckedChildren="关闭" />
+        <Form.Item label="Enable SSL/TLS" name="smtpEnableSSL" valuePropName="checked">
+          <Switch checkedChildren="On" unCheckedChildren="Close" />
         </Form.Item>
       </div>
 
@@ -624,21 +631,22 @@ export default function EnhancedSystemConfiguration() {
       <div>
         <Title level={5} className="!mb-4">
           <FileText className="inline w-4 h-4 mr-2" />
-          邮件模板
+
+          Email Templates
         </Title>
         <Form.Item
-          label="发件人邮箱"
+          label="Sender's email address"
           name="emailFrom"
           rules={[
-            { required: true, message: '请输入发件人邮箱' },
-            { type: 'email', message: '请输入有效的邮箱地址' },
+            { required: true, message: 'Please enter the sender\'s email address' },
+            { type: 'email', message: 'Please enter a valid email address' },
           ]}
         >
           <Input placeholder="noreply@example.com" prefix={<Mail className="w-4 h-4" />} />
         </Form.Item>
 
-        <Form.Item label="系统通知模板" name="systemNotificationTemplate">
-          <TextArea rows={4} placeholder="请输入系统通知邮件模板" />
+        <Form.Item label="System notification template" name="systemNotificationTemplate">
+          <TextArea rows={4} placeholder="Please enter the system notification email template" />
         </Form.Item>
       </div>
     </div>
@@ -650,14 +658,15 @@ export default function EnhancedSystemConfiguration() {
       <div>
         <Title level={5} className="!mb-4">
           <Bell className="inline w-4 h-4 mr-2" />
-          通知渠道
+
+          Notification Channels
         </Title>
         <Row gutter={[16, 16]}>
           <Col xs={24} md={8}>
             <Card>
               <div className="text-center">
                 <Mail className="w-8 h-8 mx-auto mb-2 text-blue-500" />
-                <Text strong>邮件通知</Text>
+                <Text strong>Email notification</Text>
                 <div className="mt-2">
                   <Switch defaultChecked />
                 </div>
@@ -693,37 +702,38 @@ export default function EnhancedSystemConfiguration() {
 
       <div>
         <Title level={5} className="!mb-4">
-          通知类型
+
+          Notification Type
         </Title>
         <Row gutter={[16, 16]}>
           <Col xs={24} md={12}>
             <Card size="small">
-              <Form.Item label="工单创建通知" valuePropName="checked">
+              <Form.Item label="Work order creation notification" valuePropName="checked">
                 <Switch defaultChecked />
               </Form.Item>
-              <Form.Item label="工单状态变更" valuePropName="checked">
+              <Form.Item label="Ticket Status Changed" valuePropName="checked">
                 <Switch defaultChecked />
               </Form.Item>
-              <Form.Item label="工单分配通知" valuePropName="checked">
+              <Form.Item label="Work order allocation notification" valuePropName="checked">
                 <Switch defaultChecked />
               </Form.Item>
-              <Form.Item label="SLA警告" valuePropName="checked">
+              <Form.Item label="SLA Warning" valuePropName="checked">
                 <Switch defaultChecked />
               </Form.Item>
             </Card>
           </Col>
           <Col xs={24} md={12}>
             <Card size="small">
-              <Form.Item label="变更审批通知" valuePropName="checked">
+              <Form.Item label="Change Approval Notice" valuePropName="checked">
                 <Switch defaultChecked />
               </Form.Item>
-              <Form.Item label="问题创建通知" valuePropName="checked">
+              <Form.Item label="Issue creation notification" valuePropName="checked">
                 <Switch defaultChecked />
               </Form.Item>
-              <Form.Item label="系统告警" valuePropName="checked">
+              <Form.Item label="System Alerts" valuePropName="checked">
                 <Switch defaultChecked />
               </Form.Item>
-              <Form.Item label="周报汇总" valuePropName="checked">
+              <Form.Item label="Weekly report summary" valuePropName="checked">
                 <Switch />
               </Form.Item>
             </Card>
@@ -739,12 +749,14 @@ export default function EnhancedSystemConfiguration() {
       <div>
         <Title level={5} className="!mb-4">
           <Monitor className="inline w-4 h-4 mr-2" />
-          系统日志
+
+          System log
         </Title>
         <Card
           extra={
             <Button type="link" onClick={() => setShowLogModal(true)}>
-              查看全部
+
+              View All
             </Button>
           }
         >
@@ -774,12 +786,14 @@ export default function EnhancedSystemConfiguration() {
       <div>
         <Title level={5} className="!mb-4">
           <DatabaseIcon className="inline w-4 h-4 mr-2" />
-          备份管理
+
+          Backup Management
         </Title>
         <Card
           extra={
             <Button type="primary" onClick={() => setShowBackupModal(true)}>
-              创建备份
+
+              Create backup
             </Button>
           }
         >
@@ -799,7 +813,7 @@ export default function EnhancedSystemConfiguration() {
                   }
                 />
                 <Tag color={item.status === 'completed' ? 'success' : item.status === 'failed' ? 'error' : 'processing'}>
-                  {item.status === 'completed' ? '已完成' : item.status === 'failed' ? '失败' : '进行中'}
+                  {item.status === 'completed' ? 'Completed' : item.status === 'failed' ? 'Failed' : 'In Progress'}
                 </Tag>
               </List.Item>
             )}
@@ -815,7 +829,7 @@ export default function EnhancedSystemConfiguration() {
       key: 'general',
       label: (
         <span>
-          <Settings className="w-4 h-4" /> 通用设置
+          <Settings className="w-4 h-4" />  General settings
         </span>
       ),
       children: <GeneralSettings />,
@@ -824,7 +838,7 @@ export default function EnhancedSystemConfiguration() {
       key: 'security',
       label: (
         <span>
-          <Shield className="w-4 h-4" /> 安全设置
+          <Shield className="w-4 h-4" />  Security
         </span>
       ),
       children: <SecuritySettings />,
@@ -833,7 +847,7 @@ export default function EnhancedSystemConfiguration() {
       key: 'email',
       label: (
         <span>
-          <Mail className="w-4 h-4" /> 邮件设置
+          <Mail className="w-4 h-4" />  Email settings
         </span>
       ),
       children: <EmailSettings />,
@@ -842,7 +856,7 @@ export default function EnhancedSystemConfiguration() {
       key: 'notification',
       label: (
         <span>
-          <Bell className="w-4 h-4" /> 通知设置
+          <Bell className="w-4 h-4" />  Notifications
         </span>
       ),
       children: <NotificationSettings />,
@@ -851,7 +865,7 @@ export default function EnhancedSystemConfiguration() {
       key: 'monitoring',
       label: (
         <span>
-          <Monitor className="w-4 h-4" /> 日志与监控
+          <Monitor className="w-4 h-4" />  Logging and Monitoring
         </span>
       ),
       children: <MonitoringSettings />,
@@ -863,9 +877,10 @@ export default function EnhancedSystemConfiguration() {
       <div className="mb-6">
         <Title level={2} className="!mb-2 !text-gray-900">
           <Settings className="inline-block w-6 h-6 mr-2" />
-          系统配置
+
+          System Configuration
         </Title>
-        <Text type="secondary">管理系统全局设置和集成配置</Text>
+        <Text type="secondary">Manage system global settings and integration configuration</Text>
       </div>
 
       {/* 系统状态统计 */}
@@ -873,7 +888,7 @@ export default function EnhancedSystemConfiguration() {
         <Col xs={24} sm={12} lg={6}>
           <Card className="rounded-lg shadow-sm border border-gray-200">
             <Statistic
-              title="系统运行时间"
+              title="System Uptime"
               value={systemStats.uptime}
               prefix={<Clock className="w-5 h-5" />}
               styles={{ content: { color: '#52c41a', fontSize: '1.25rem' } }}
@@ -883,7 +898,7 @@ export default function EnhancedSystemConfiguration() {
         <Col xs={24} sm={12} lg={6}>
           <Card className="rounded-lg shadow-sm border border-gray-200">
             <Statistic
-              title="Goroutine 数"
+              title="Number of Goroutines"
               value={systemStats.goroutines}
               prefix={<Network className="w-5 h-5" />}
               styles={{ content: { color: '#1890ff', fontSize: '1.25rem' } }}
@@ -894,7 +909,7 @@ export default function EnhancedSystemConfiguration() {
           <Card className="rounded-lg shadow-sm border border-gray-200">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-sm text-gray-500">内存使用率</div>
+                <div className="text-sm text-gray-500">Memory Usage</div>
                 <div className="text-2xl font-bold text-purple-600">{systemStats.memoryUsagePercent}%</div>
               </div>
               <MemoryStick className="w-8 h-8 text-purple-600" />
@@ -906,7 +921,7 @@ export default function EnhancedSystemConfiguration() {
           <Card className="rounded-lg shadow-sm border border-gray-200">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-sm text-gray-500">磁盘使用率</div>
+                <div className="text-sm text-gray-500">Disk Usage</div>
                 <div className="text-2xl font-bold text-orange-500">{systemStats.diskUsagePercent}%</div>
               </div>
               <Database className="w-8 h-8 text-orange-500" />
@@ -919,8 +934,8 @@ export default function EnhancedSystemConfiguration() {
       {/* 操作提示 */}
       {hasChanges && (
         <Alert
-          title="配置已修改"
-          description="您有未保存的配置更改，请及时保存。"
+          title="Configuration modified"
+          description="You have unsaved configuration changes, please save them in time."
           type="warning"
           showIcon
           closable
@@ -938,11 +953,13 @@ export default function EnhancedSystemConfiguration() {
         >
           <div className="mb-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <Title level={4} className="!mb-0">
-              配置管理
+
+              Configuration Management
             </Title>
             <Space>
               <Button icon={<RefreshCw className="w-4 h-4" />} onClick={handleReset}>
-                重置
+
+                Reset
               </Button>
               <Button
                 type="primary"
@@ -950,7 +967,7 @@ export default function EnhancedSystemConfiguration() {
                 loading={isSaving}
                 onClick={handleSave}
               >
-                {isSaving ? '保存中...' : '保存配置'}
+                {isSaving ? 'Saving...' : 'Save Configuration'}
               </Button>
             </Space>
           </div>
@@ -961,7 +978,7 @@ export default function EnhancedSystemConfiguration() {
 
       {/* 日志详情弹窗 */}
       <Modal
-        title="系统日志"
+        title="System log"
         open={showLogModal}
         onCancel={() => setShowLogModal(false)}
         footer={null}
@@ -973,31 +990,33 @@ export default function EnhancedSystemConfiguration() {
           size="small"
           pagination={{ pageSize: 10 }}
           columns={[
-            { title: '操作', dataIndex: 'action', key: 'action' },
-            { title: '用户', dataIndex: 'user', key: 'user' },
-            { title: '时间', dataIndex: 'timestamp', key: 'timestamp' },
+            { title: 'Actions', dataIndex: 'action', key: 'action' },
+            { title: 'Users', dataIndex: 'user', key: 'user' },
+            { title: 'Timestamp', dataIndex: 'timestamp', key: 'timestamp' },
             { title: 'IP', dataIndex: 'ip', key: 'ip' },
-            { title: '详情', dataIndex: 'details', key: 'details' },
+            { title: 'Details', dataIndex: 'details', key: 'details' },
           ]}
         />
       </Modal>
 
       {/* 创建备份弹窗 */}
       <Modal
-        title="创建备份"
+        title="Create backup"
         open={showBackupModal}
         onCancel={() => setShowBackupModal(false)}
         footer={[
           <Button key="cancel" onClick={() => setShowBackupModal(false)}>
-            取消
+
+            Cancel
           </Button>,
           <Button key="backup" type="primary">
-            开始备份
+
+            Start backup
           </Button>,
         ]}
       >
         <div className="py-4">
-          <Text>确定要创建新的系统备份吗？备份可能需要几分钟时间。</Text>
+          <Text>Are you sure you want to create a new system backup? The backup may take several minutes.</Text>
         </div>
       </Modal>
     </div>

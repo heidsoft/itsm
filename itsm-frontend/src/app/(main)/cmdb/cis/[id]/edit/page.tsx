@@ -45,14 +45,14 @@ const EditCIPage: React.FC = () => {
 
   // 错误提示
   useEffect(() => {
-    if (typesQuery.isError) message.error('加载资产类型失败');
+    if (typesQuery.isError) message.error('Failed to load CI types');
   }, [typesQuery.isError, message]);
   useEffect(() => {
     if (cloudResourcesQuery.isError && cloudServicesQuery.isError)
-      message.error('加载云资源数据失败');
+      message.error('Failed to load cloud resources');
   }, [cloudResourcesQuery.isError, cloudServicesQuery.isError, message]);
   useEffect(() => {
-    if (ciQuery.isError) message.error('加载配置项失败');
+    if (ciQuery.isError) message.error('Failed to load configuration items');
   }, [ciQuery.isError, message]);
 
   const schemaFieldsStateRef = useRef<SchemaField[]>([]);
@@ -171,7 +171,7 @@ const EditCIPage: React.FC = () => {
             ? JSON.parse(values.attributes)
             : values.attributes;
       } catch {
-        message.error('扩展属性需要是有效的 JSON');
+        message.error('Extension attributes must be valid JSON');
         return;
       }
     }
@@ -221,9 +221,9 @@ const EditCIPage: React.FC = () => {
       router.push(`/cmdb/cis/${id}`);
     } catch (error) {
       if (error instanceof Error) {
-        message.error(error.message || '更新配置项失败');
+        message.error(error.message || 'Failed to update configuration items');
       } else {
-        message.error('更新配置项失败');
+        message.error('Failed to update configuration items');
       }
     }
   };
@@ -231,12 +231,12 @@ const EditCIPage: React.FC = () => {
   return (
     <div className='space-y-6'>
       <ManagementPageHeader
-        title='编辑配置项'
-        description='修改这个配置项的基础信息、云资源关联和扩展属性。'
+        title="Edit CI"
+        description="Modify the basic information, cloud resource association and extended attributes of this configuration item."
         notice={
           <ManagementNotice
-            message='编辑时会保留原有云资源映射'
-            description='如果更换云资源，动态属性字段会重新加载，请确认扩展属性是否仍然适用。'
+            message="Original cloud resource mapping will be retained when editing"
+            description="If you change cloud resources, the dynamic attribute fields will be reloaded. Please confirm whether the extended attributes are still applicable."
           />
         }
       />
@@ -252,7 +252,7 @@ const EditCIPage: React.FC = () => {
           schemaFields={schemaFields}
           typeSchemaFields={typeSchemaFields}
           saving={updateMutation.isPending}
-          submitText='保存修改'
+          submitText="Save Changes"
           onSubmit={handleSubmit}
           onCancel={handleCancel}
           onCITypeChange={handleCITypeChange}

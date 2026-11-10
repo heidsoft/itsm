@@ -45,7 +45,7 @@ func tenantID(c *gin.Context) (int, bool) {
 func pathID(c *gin.Context, param string) (int, bool) {
 	id, err := strconv.Atoi(c.Param(param))
 	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "无效的ID参数")
+		common.Fail(c, common.ParamErrorCode, "Invalid ID parameter")
 		return 0, false
 	}
 	return id, true
@@ -60,7 +60,7 @@ func (h *Handler) AutoAssign(c *gin.Context) {
 
 	tenantID, ok := tenantID(c)
 	if !ok {
-		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		common.Fail(c, common.UnauthorizedCode, "Unauthorized access")
 		return
 	}
 
@@ -69,7 +69,7 @@ func (h *Handler) AutoAssign(c *gin.Context) {
 		h.logger.Errorw("Failed to auto assign ticket", "error", err, "ticket_id", ticketID)
 		// 领域错误（工单不存在/跨租户）必须带着自己的状态码出去，不能被压成 500；
 		// 未分类的驱动层错误仍只进日志，客户端拿到固定文案。
-		common.RespondError(c, err, "自动分配失败")
+		common.RespondError(c, err, "Auto-assign failed")
 		return
 	}
 
@@ -85,7 +85,7 @@ func (h *Handler) GetAssignRecommendations(c *gin.Context) {
 
 	tenantID, ok := tenantID(c)
 	if !ok {
-		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		common.Fail(c, common.UnauthorizedCode, "Unauthorized access")
 		return
 	}
 	recommendations, err := h.smartService.GetAssignRecommendations(c.Request.Context(), ticketID, tenantID)
@@ -93,7 +93,7 @@ func (h *Handler) GetAssignRecommendations(c *gin.Context) {
 		h.logger.Errorw("Failed to get assignment recommendations", "error", err, "ticket_id", ticketID)
 		// 工单不存在与跨租户都是 service 的 4004 领域错误，必须原样带着 404 出去；
 		// FailWithErr 会把它们压成 500/5001，与同域附件/变更的 404 口径不一致。
-		common.RespondError(c, err, "获取分配推荐失败")
+		common.RespondError(c, err, "Failed to load recommendations")
 		return
 	}
 
@@ -107,13 +107,13 @@ func (h *Handler) GetAssignRecommendations(c *gin.Context) {
 func (h *Handler) ListAssignmentRules(c *gin.Context) {
 	tenantID, ok := tenantID(c)
 	if !ok {
-		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		common.Fail(c, common.UnauthorizedCode, "Unauthorized access")
 		return
 	}
 	rules, err := h.ruleService.ListAssignmentRules(c.Request.Context(), tenantID)
 	if err != nil {
 		h.logger.Errorw("Failed to list assignment rules", "error", err, "tenant_id", tenantID)
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -132,13 +132,13 @@ func (h *Handler) GetAssignmentRule(c *gin.Context) {
 
 	tenantID, ok := tenantID(c)
 	if !ok {
-		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		common.Fail(c, common.UnauthorizedCode, "Unauthorized access")
 		return
 	}
 	rule, err := h.ruleService.GetAssignmentRule(c.Request.Context(), ruleID, tenantID)
 	if err != nil {
 		h.logger.Errorw("Failed to get assignment rule", "error", err, "rule_id", ruleID)
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -149,19 +149,19 @@ func (h *Handler) GetAssignmentRule(c *gin.Context) {
 func (h *Handler) CreateAssignmentRule(c *gin.Context) {
 	var req dto.CreateAssignmentRuleRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
 	tenantID, ok := tenantID(c)
 	if !ok {
-		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		common.Fail(c, common.UnauthorizedCode, "Unauthorized access")
 		return
 	}
 	rule, err := h.ruleService.CreateAssignmentRule(c.Request.Context(), &req, tenantID)
 	if err != nil {
 		h.logger.Errorw("Failed to create assignment rule", "error", err, "tenant_id", tenantID)
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -177,19 +177,19 @@ func (h *Handler) UpdateAssignmentRule(c *gin.Context) {
 
 	var req dto.UpdateAssignmentRuleRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
 	tenantID, ok := tenantID(c)
 	if !ok {
-		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		common.Fail(c, common.UnauthorizedCode, "Unauthorized access")
 		return
 	}
 	rule, err := h.ruleService.UpdateAssignmentRule(c.Request.Context(), ruleID, &req, tenantID)
 	if err != nil {
 		h.logger.Errorw("Failed to update assignment rule", "error", err, "rule_id", ruleID)
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -205,17 +205,17 @@ func (h *Handler) DeleteAssignmentRule(c *gin.Context) {
 
 	tenantID, ok := tenantID(c)
 	if !ok {
-		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		common.Fail(c, common.UnauthorizedCode, "Unauthorized access")
 		return
 	}
 	err := h.ruleService.DeleteAssignmentRule(c.Request.Context(), ruleID, tenantID)
 	if err != nil {
 		h.logger.Errorw("Failed to delete assignment rule", "error", err, "rule_id", ruleID)
 		if errors.Is(err, service.ErrAssignmentRuleNotFound) {
-			common.Fail(c, common.NotFoundCode, "分配规则不存在")
+			common.Fail(c, common.NotFoundCode, "Allocation rule does not exist")
 			return
 		}
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -226,13 +226,13 @@ func (h *Handler) DeleteAssignmentRule(c *gin.Context) {
 func (h *Handler) TestAssignmentRule(c *gin.Context) {
 	var req dto.TestAssignmentRuleRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
 	tenantID, ok := tenantID(c)
 	if !ok {
-		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		common.Fail(c, common.UnauthorizedCode, "Unauthorized access")
 		return
 	}
 	response, err := h.ruleService.TestAssignmentRule(c.Request.Context(), &req, tenantID)
@@ -240,11 +240,11 @@ func (h *Handler) TestAssignmentRule(c *gin.Context) {
 		h.logger.Errorw("Failed to test assignment rule", "error", err, "rule_id", req.RuleID, "ticket_id", req.TicketID)
 		switch {
 		case errors.Is(err, service.ErrAssignmentRuleNotFound):
-			common.Fail(c, common.NotFoundCode, "分配规则不存在")
+			common.Fail(c, common.NotFoundCode, "Allocation rule does not exist")
 		case errors.Is(err, service.ErrTestTicketNotFound):
-			common.Fail(c, common.NotFoundCode, "工单不存在")
+			common.Fail(c, common.NotFoundCode, "The work order does not exist")
 		default:
-			common.FailWithErr(c, err, "操作失败")
+			common.FailWithErr(c, err, "Operation failed")
 		}
 		return
 	}

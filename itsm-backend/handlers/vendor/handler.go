@@ -32,12 +32,12 @@ func NewHandler(svc *service.VendorService, logger *zap.SugaredLogger) *Handler 
 func tenantID(ctx *gin.Context) (int, bool) {
 	tv, ok := ctx.Get("tenant_id")
 	if !ok {
-		common.Fail(ctx, common.UnauthorizedCode, "租户信息缺失")
+		common.Fail(ctx, common.UnauthorizedCode, "Tenant information is missing")
 		return 0, false
 	}
 	tid, ok := tv.(int)
 	if !ok {
-		common.Fail(ctx, common.UnauthorizedCode, "租户信息格式错误")
+		common.Fail(ctx, common.UnauthorizedCode, "Tenant information format error")
 		return 0, false
 	}
 	return tid, true
@@ -47,7 +47,7 @@ func tenantID(ctx *gin.Context) (int, bool) {
 func pathVendorID(ctx *gin.Context) (int, bool) {
 	id, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil || id <= 0 {
-		common.Fail(ctx, common.ParamErrorCode, "供应商ID格式错误")
+		common.Fail(ctx, common.ParamErrorCode, "Supplier ID format error")
 		return 0, false
 	}
 	return id, true
@@ -60,11 +60,11 @@ func (h *Handler) failVendorError(ctx *gin.Context, rawErr error, opMsg string, 
 	switch {
 	case errors.Is(rawErr, service.ErrVendorCodeExists):
 		h.logger.Warnw("Vendor code conflict", "error", rawErr, "tenant_id", tid)
-		common.Conflict(ctx, "供应商编码已存在", nil)
+		common.Conflict(ctx, "Supplier code already exists", nil)
 	case errors.Is(rawErr, service.ErrVendorNotFound):
 		// 查询带租户谓词，跨租户与真实不存在同样表现为 not found。
 		h.logger.Warnw("Vendor not found", "error", rawErr, "vendor_id", vendorID, "tenant_id", tid)
-		common.Fail(ctx, common.NotFoundCode, "供应商不存在或无权访问")
+		common.Fail(ctx, common.NotFoundCode, "Supplier does not exist or does not have access")
 	default:
 		h.logger.Errorw("Vendor operation failed",
 			"error", rawErr, "operation", opMsg, "vendor_id", vendorID, "tenant_id", tid)
@@ -76,7 +76,7 @@ func (h *Handler) failVendorError(ctx *gin.Context, rawErr error, opMsg string, 
 func (h *Handler) CreateVendor(ctx *gin.Context) {
 	var req dto.CreateVendorRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "参数错误")
+		common.Fail(ctx, common.ParamErrorCode, "Parameter error")
 		return
 	}
 	tid, ok := tenantID(ctx)

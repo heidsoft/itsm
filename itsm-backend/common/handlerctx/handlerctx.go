@@ -126,7 +126,7 @@ func GetEntClient(c *gin.Context) (*ent.Client, bool) {
 	if !exists {
 		c.AbortWithStatusJSON(500, gin.H{
 			"code":    5001,
-			"message": "数据库客户端未找到",
+			"message": "Database client not found",
 		})
 		return nil, false
 	}
@@ -135,7 +135,7 @@ func GetEntClient(c *gin.Context) (*ent.Client, bool) {
 		zap.S().Errorw("Invalid database client in request context")
 		c.AbortWithStatusJSON(500, gin.H{
 			"code":    5001,
-			"message": "数据库客户端无效",
+			"message": "Invalid database client",
 		})
 		return nil, false
 	}
@@ -158,7 +158,7 @@ func ResolveResourceIDAndTenant(c *gin.Context, resourceName string) (int, int, 
 	if err != nil || id <= 0 {
 		c.AbortWithStatusJSON(400, gin.H{
 			"code":    1001,
-			"message": "无效的" + resourceName + "ID",
+			"message": "Invalid" + resourceName + "ID",
 		})
 		return 0, 0, false
 	}
@@ -185,7 +185,7 @@ func ResolveResourceIDUserAndTenant(c *gin.Context, resourceName string) (int, i
 	if err != nil || id <= 0 {
 		c.AbortWithStatusJSON(400, gin.H{
 			"code":    1001,
-			"message": "无效的" + resourceName + "ID",
+			"message": "Invalid" + resourceName + "ID",
 		})
 		return 0, 0, 0, false
 	}
@@ -193,7 +193,7 @@ func ResolveResourceIDUserAndTenant(c *gin.Context, resourceName string) (int, i
 	if err != nil || userID <= 0 {
 		c.AbortWithStatusJSON(401, gin.H{
 			"code":    2001,
-			"message": "获取用户ID失败",
+			"message": "Failed to obtain user ID",
 		})
 		return 0, 0, 0, false
 	}

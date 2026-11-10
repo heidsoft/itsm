@@ -30,9 +30,9 @@ func (s *DepartmentService) GetDepartmentByID(ctx context.Context, id, tenantID 
 		First(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, fmt.Errorf("部门不存在: id=%d", id)
+			return nil, fmt.Errorf("Department does not exist: id=%d", id)
 		}
-		return nil, fmt.Errorf("获取部门失败: %w", err)
+		return nil, fmt.Errorf("Failed to get department: %w", err)
 	}
 	return dept, nil
 }
@@ -42,26 +42,26 @@ func (s *DepartmentService) GetDepartmentByID(ctx context.Context, id, tenantID 
 func (s *DepartmentService) CreateDepartment(ctx context.Context, name, code, description string, managerID, parentID, tenantID int) (*ent.Department, error) {
 	name, code = strings.TrimSpace(name), strings.TrimSpace(code)
 	if name == "" || code == "" {
-		return nil, fmt.Errorf("部门名称和代码不能为空")
+		return nil, fmt.Errorf("Department name and code cannot be empty")
 	}
 	codeExists, err := s.client.Department.Query().
 		Where(department.CodeEQ(code), department.TenantIDEQ(tenantID), department.DeletedAtIsNil()).
 		Exist(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("检查部门代码失败: %w", err)
+		return nil, fmt.Errorf("Failed to check department code: %w", err)
 	}
 	if codeExists {
-		return nil, fmt.Errorf("部门代码已存在: %s", code)
+		return nil, fmt.Errorf("Department code already exists: %s", code)
 	}
 	if parentID > 0 {
 		if _, err := s.GetDepartmentByID(ctx, parentID, tenantID); err != nil {
-			return nil, fmt.Errorf("父部门不存在或不属于当前租户")
+			return nil, fmt.Errorf("The parent department does not exist or does not belong to the current tenant")
 		}
 	}
 	if managerID > 0 {
 		exists, err := s.client.User.Query().Where(user.ID(managerID), user.TenantID(tenantID), user.Active(true)).Exist(ctx)
 		if err != nil || !exists {
-			return nil, fmt.Errorf("部门负责人不存在、不活跃或不属于当前租户")
+			return nil, fmt.Errorf("The department head does not exist, is inactive, or does not belong to the current tenant")
 		}
 	}
 	query := s.client.Department.Create().
@@ -144,10 +144,10 @@ func (s *DepartmentService) UpdateDepartment(ctx context.Context, id int, name, 
 		Where(department.CodeEQ(code), department.TenantIDEQ(tenantID), department.DeletedAtIsNil(), department.IDNEQ(id)).
 		Exist(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("检查部门代码失败: %w", err)
+		return nil, fmt.Errorf("Failed to check department code: %w", err)
 	}
 	if codeExists {
-		return nil, fmt.Errorf("部门代码已存在: %s", code)
+		return nil, fmt.Errorf("Department code already exists: %s", code)
 	}
 	if description == "" {
 		description = oldDept.Description
@@ -159,22 +159,22 @@ func (s *DepartmentService) UpdateDepartment(ctx context.Context, id int, name, 
 		parentID = oldDept.ParentID
 	}
 	if parentID == id {
-		return nil, fmt.Errorf("部门不能将自身设为父部门")
+		return nil, fmt.Errorf("Department cannot set itself as parent department")
 	}
 	if parentID > 0 {
 		if _, err := s.GetDepartmentByID(ctx, parentID, tenantID); err != nil {
-			return nil, fmt.Errorf("父部门不存在或不属于当前租户")
+			return nil, fmt.Errorf("The parent department does not exist or does not belong to the current tenant")
 		}
 		seen := map[int]bool{id: true}
 		cursor := parentID
 		for cursor > 0 {
 			if seen[cursor] {
-				return nil, fmt.Errorf("父部门设置会形成循环引用")
+				return nil, fmt.Errorf("Parent department settings will form a circular reference")
 			}
 			seen[cursor] = true
 			parent, err := s.GetDepartmentByID(ctx, cursor, tenantID)
 			if err != nil {
-				return nil, fmt.Errorf("部门层级数据不完整")
+				return nil, fmt.Errorf("Incomplete department level data")
 			}
 			cursor = parent.ParentID
 		}
@@ -182,7 +182,7 @@ func (s *DepartmentService) UpdateDepartment(ctx context.Context, id int, name, 
 	if managerID > 0 {
 		exists, err := s.client.User.Query().Where(user.ID(managerID), user.TenantID(tenantID), user.Active(true)).Exist(ctx)
 		if err != nil || !exists {
-			return nil, fmt.Errorf("部门负责人不存在、不活跃或不属于当前租户")
+			return nil, fmt.Errorf("The department head does not exist, is inactive, or does not belong to the current tenant")
 		}
 	}
 
@@ -211,7 +211,7 @@ func (s *DepartmentService) DeleteDepartment(ctx context.Context, id int, tenant
 		return err
 	}
 	if !exists {
-		return fmt.Errorf("部门不存在: id=%d", id)
+		return fmt.Errorf("Department does not exist: id=%d", id)
 	}
 
 	// 检查是否有子部门
@@ -222,14 +222,14 @@ func (s *DepartmentService) DeleteDepartment(ctx context.Context, id int, tenant
 		return err
 	}
 	if hasChildren {
-		return fmt.Errorf("无法删除部门：该部门下存在子部门")
+		return fmt.Errorf("Unable to delete department: sub-departments exist under this department")
 	}
 	hasUsers, err := s.client.User.Query().Where(user.DepartmentID(id), user.TenantID(tenantID)).Exist(ctx)
 	if err != nil {
-		return fmt.Errorf("检查部门用户失败: %w", err)
+		return fmt.Errorf("Failed to check department users: %w", err)
 	}
 	if hasUsers {
-		return fmt.Errorf("无法删除部门：请先转移或清空该部门下的用户")
+		return fmt.Errorf("Unable to delete department: please transfer or clear users under this department first")
 	}
 
 	// 软删除部门，保留历史关联和审计数据。

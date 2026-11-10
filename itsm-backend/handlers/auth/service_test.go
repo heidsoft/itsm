@@ -115,10 +115,10 @@ func TestService_SwitchTenant(t *testing.T) {
 		// tenant2 中没有该用户 → 应返回 "无权限访问该租户"
 		_, err := fx.service.SwitchTenant(fx.ctx, fx.user.ID, fx.tenant2.ID)
 		require.Error(t, err)
-		assert.Contains(t, err.Error(), "无权限访问该租户")
+		assert.Contains(t, err.Error(), "No permission to access this tenant")
 	})
 
-	t.Run("租户不存在", func(t *testing.T) {
+	t.Run("Tenant does not exist", func(t *testing.T) {
 		_, err := fx.service.SwitchTenant(fx.ctx, fx.user.ID, 99999)
 		require.Error(t, err)
 	})
@@ -172,7 +172,7 @@ func TestService_Register(t *testing.T) {
 		require.NotNil(t, resp)
 		assert.Equal(t, "bob", resp.Username)
 		assert.Equal(t, "bob@example.com", resp.Email)
-		assert.Contains(t, resp.Message, "成功")
+		assert.Contains(t, resp.Message, "Success")
 
 		// 验证数据库中确实创建，且落入唯一 active 租户而非硬编码租户 1
 		saved, err := fx.client.User.Get(fx.ctx, resp.ID)
@@ -196,7 +196,7 @@ func TestService_Register(t *testing.T) {
 		}
 		_, err := fx.service.Register(fx.ctx, req)
 		require.Error(t, err)
-		assert.Contains(t, err.Error(), "用户名已被注册")
+		assert.Contains(t, err.Error(), "Username has been registered")
 		assertRegisterConflict(t, err)
 	})
 
@@ -209,7 +209,7 @@ func TestService_Register(t *testing.T) {
 		}
 		_, err := fx.service.Register(fx.ctx, req)
 		require.Error(t, err)
-		assert.Contains(t, err.Error(), "邮箱已被注册")
+		assert.Contains(t, err.Error(), "Email has been registered")
 		assertRegisterConflict(t, err)
 	})
 }
@@ -240,7 +240,7 @@ func TestService_ForgotPassword(t *testing.T) {
 		var bizErr *common.BusinessError
 		require.ErrorAs(t, err, &bizErr)
 		assert.Equal(t, common.ServiceUnavailableCode, bizErr.Code)
-		assert.Contains(t, bizErr.Message, "密码重置功能未启用：邮件服务未配置")
+		assert.Contains(t, bizErr.Message, "Password reset function is not enabled: Email service is not configured")
 
 		// 不应生成 token
 		count, err := fx.client.PasswordResetToken.Query().Count(fx.ctx)
@@ -386,7 +386,7 @@ func TestService_ResetPassword(t *testing.T) {
 		}
 		_, err := fx.service.ResetPassword(fx.ctx, req)
 		require.Error(t, err)
-		assert.Contains(t, err.Error(), "两次输入的密码不一致")
+		assert.Contains(t, err.Error(), "Passwords do not match")
 	})
 
 	t.Run("token 不存在返回错误", func(t *testing.T) {
@@ -398,7 +398,7 @@ func TestService_ResetPassword(t *testing.T) {
 		}
 		_, err := fx.service.ResetPassword(fx.ctx, req)
 		require.Error(t, err)
-		assert.Contains(t, err.Error(), "令牌无效或已使用")
+		assert.Contains(t, err.Error(), "Token is invalid or already used")
 	})
 
 	t.Run("成功重置密码并标记 token 已使用", func(t *testing.T) {
@@ -419,7 +419,7 @@ func TestService_ResetPassword(t *testing.T) {
 		}
 		resp, err := fx.service.ResetPassword(fx.ctx, req)
 		require.NoError(t, err)
-		assert.Contains(t, resp.Message, "成功")
+		assert.Contains(t, resp.Message, "Success")
 
 		// 验证密码已更新
 		updated, err := fx.client.User.Get(fx.ctx, fx.user.ID)
@@ -452,7 +452,7 @@ func TestService_ResetPassword(t *testing.T) {
 		}
 		_, err = fx.service.ResetPassword(fx.ctx, req)
 		require.Error(t, err)
-		assert.Contains(t, err.Error(), "令牌无效或已使用")
+		assert.Contains(t, err.Error(), "Token is invalid or already used")
 	})
 }
 

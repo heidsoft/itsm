@@ -39,18 +39,18 @@ const statusColors: Record<string, string> = {
 };
 
 const statusLabels: Record<string, string> = {
-  active: '有效',
-  expired: '已过期',
-  'expiring-soon': '即将过期',
-  depleted: '已耗尽',
+  active: 'valid',
+  expired: 'Expired',
+  'expiring-soon': 'Expiring soon',
+  depleted: 'Exhausted',
 };
 
 const typeLabels: Record<string, string> = {
-  perpetual: '永久',
-  subscription: '订阅',
-  'per-user': '按用户',
-  'per-seat': '按席位',
-  site: '站点',
+  perpetual: 'Permanent',
+  subscription: 'Subscribe',
+  'per-user': 'By user',
+  'per-seat': 'By seat',
+  site: 'site',
 };
 
 const LicenseDetail: React.FC = () => {
@@ -78,7 +78,7 @@ const LicenseDetail: React.FC = () => {
       setLicense(data);
     } catch (error) {
       console.error('Failed to load license:', error);
-      message.error('加载许可证详情失败');
+      message.error('Failed to load license details');
     } finally {
       setLoading(false);
     }
@@ -86,16 +86,16 @@ const LicenseDetail: React.FC = () => {
 
   const handleAssign = async () => {
     if (selectedUsers.length === 0) {
-      message.warning('请选择用户');
+      message.warning('Please select a user');
       return;
     }
     try {
       await AssetApi.assignLicenseUsers(Number(id), selectedUsers);
-      message.success('分配成功');
+      message.success('Allocation successful');
       setAssignModalVisible(false);
       loadDetail();
     } catch (error) {
-      message.error('分配失败');
+      message.error('Assignment failed');
     }
   };
 
@@ -104,19 +104,19 @@ const LicenseDetail: React.FC = () => {
       return;
     }
     modal.confirm({
-      title: '清空许可证授权？',
-      content: `将移除「${license.name}」的 ${license.users?.length ?? 0} 名授权用户，并释放 ${license.usedQuantity} 个席位。`,
-      okText: '清空授权',
-      cancelText: '取消',
+      title: 'Clear license authorization?',
+      content: `Will remove "${license.name}" ${license.users?.length ?? 0} authorized users and released ${license.usedQuantity} seats.`,
+      okText: 'Clear authorization',
+      cancelText: 'Cancel',
       okButtonProps: { danger: true },
       onOk: async () => {
         setClearingUsers(true);
         try {
           const updated = await AssetApi.updateLicense(Number(id), { users: [] });
           setLicense(updated);
-          message.success('授权已清空，席位已释放');
+          message.success('The authorization has been cleared and the seat has been released');
         } catch (error) {
-          message.error(serverErrorMessage(error, '清空授权失败，请稍后重试'));
+          message.error(serverErrorMessage(error, 'Failed to clear authorization, please try again later.'));
         } finally {
           setClearingUsers(false);
         }
@@ -138,10 +138,11 @@ const LicenseDetail: React.FC = () => {
         <Result
           status='404'
           title='404'
-          subTitle='抱歉，您访问的许可证不存在'
+          subTitle="Sorry, the license you accessed does not exist"
           extra={
             <Button type='primary' onClick={() => router.push('/licenses')}>
-              返回列表
+
+              Back to List
             </Button>
           }
         />
@@ -161,7 +162,8 @@ const LicenseDetail: React.FC = () => {
             onClick={() => router.push('/licenses')}
             style={{ marginBottom: 16 }}
           >
-            返回列表
+
+            Back to List
           </Button>
           <div
             style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}
@@ -170,7 +172,7 @@ const LicenseDetail: React.FC = () => {
               <Title level={3} style={{ marginBottom: 8 }}>
                 {license.name}
               </Title>
-              {license.licenseKey && <Text type='secondary'>许可证密钥: {license.licenseKey}</Text>}
+              {license.licenseKey && <Text type='secondary'>License key: {license.licenseKey}</Text>}
             </div>
             <Space>
               <Tag
@@ -187,7 +189,7 @@ const LicenseDetail: React.FC = () => {
         <Card type='inner' style={{ marginBottom: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
             <div style={{ flex: 1 }}>
-              <Text>使用情况</Text>
+              <Text>Usage</Text>
               <Progress
                 percent={Math.round(usagePercent)}
                 status={
@@ -198,27 +200,27 @@ const LicenseDetail: React.FC = () => {
             </div>
             <div style={{ textAlign: 'center', minWidth: 100 }}>
               <div style={{ fontSize: 24, fontWeight: 'bold' }}>{license.availableQuantity}</div>
-              <div>可用数量</div>
+              <div>Available quantity</div>
             </div>
           </div>
         </Card>
 
         <Descriptions bordered column={2}>
-          <Descriptions.Item label='许可证名称'>{license.name}</Descriptions.Item>
-          <Descriptions.Item label='许可证类型'>
+          <Descriptions.Item label="LicensesName">{license.name}</Descriptions.Item>
+          <Descriptions.Item label="License type">
             <Tag>{typeLabels[license.licenseType]}</Tag>
           </Descriptions.Item>
-          <Descriptions.Item label='状态'>
+          <Descriptions.Item label="Status">
             <Tag color={statusColors[license.status]}>{statusLabels[license.status]}</Tag>
           </Descriptions.Item>
-          <Descriptions.Item label='供应商'>{license.vendor || '-'}</Descriptions.Item>
-          <Descriptions.Item label='总数量'>{license.totalQuantity}</Descriptions.Item>
-          <Descriptions.Item label='已使用'>{license.usedQuantity}</Descriptions.Item>
-          <Descriptions.Item label='采购日期'>{license.purchaseDate || '-'}</Descriptions.Item>
-          <Descriptions.Item label='采购价格'>
+          <Descriptions.Item label="Supplier">{license.vendor || '-'}</Descriptions.Item>
+          <Descriptions.Item label="Total quantity">{license.totalQuantity}</Descriptions.Item>
+          <Descriptions.Item label="Already used">{license.usedQuantity}</Descriptions.Item>
+          <Descriptions.Item label="Purchase date">{license.purchaseDate || '-'}</Descriptions.Item>
+          <Descriptions.Item label="Purchase price">
             {license.purchasePrice ? `¥${license.purchasePrice}` : '-'}
           </Descriptions.Item>
-          <Descriptions.Item label='到期日期'>
+          <Descriptions.Item label="Expiration date">
             <Text
               style={{
                 color:
@@ -229,48 +231,49 @@ const LicenseDetail: React.FC = () => {
                       : undefined,
               }}
             >
-              {license.expiryDate || '永久'}
+              {license.expiryDate || 'Permanent'}
             </Text>
           </Descriptions.Item>
-          <Descriptions.Item label='续费成本'>{license.renewalCost || '-'}</Descriptions.Item>
-          <Descriptions.Item label='支持供应商'>{license.supportVendor || '-'}</Descriptions.Item>
-          <Descriptions.Item label='支持联系方式'>
+          <Descriptions.Item label="Renewal cost">{license.renewalCost || '-'}</Descriptions.Item>
+          <Descriptions.Item label="Support Supplier">{license.supportVendor || '-'}</Descriptions.Item>
+          <Descriptions.Item label="Support Contact">
             {license.supportContact || '-'}
           </Descriptions.Item>
-          <Descriptions.Item label='创建时间'>
+          <Descriptions.Item label="Created">
             {dayjs(license.createdAt).format('YYYY-MM-DD HH:mm')}
           </Descriptions.Item>
-          <Descriptions.Item label='更新时间'>
+          <Descriptions.Item label="Updated At">
             {dayjs(license.updatedAt).format('YYYY-MM-DD HH:mm')}
           </Descriptions.Item>
         </Descriptions>
       </Card>
 
       {license.description && (
-        <Card title='描述'>
+        <Card title="Description">
           <Text>{license.description}</Text>
         </Card>
       )}
 
       {license.notes && (
-        <Card title='备注'>
+        <Card title="Notes">
           <Text>{license.notes}</Text>
         </Card>
       )}
 
       {license.users && license.users.length > 0 && (
         <Card
-          title='授权用户'
+          title="Authorized user"
           extra={
             <Button danger size='small' loading={clearingUsers} onClick={handleClearUsers}>
-              清空授权
+
+              Clear authorization
             </Button>
           }
         >
           <Space wrap>
             {license.users.map((userId, index) => (
               <Tag key={userId} icon={<UserIcon />}>
-                {license.userNames?.[index] || `用户 ${userId}`}
+                {license.userNames?.[index] || `Users ${userId}`}
               </Tag>
             ))}
           </Space>
@@ -278,7 +281,7 @@ const LicenseDetail: React.FC = () => {
       )}
 
       {license.tags && license.tags.length > 0 && (
-        <Card title='标签'>
+        <Card title="Tags">
           <Space wrap>
             {license.tags.map((tag, index) => (
               <Tag key={index}>{tag}</Tag>
@@ -290,35 +293,37 @@ const LicenseDetail: React.FC = () => {
       <Card>
         <Space>
           <Button type='primary' onClick={() => router.push(`/licenses/${license.id}/edit`)}>
-            编辑
+
+            Edit
           </Button>
           {license.status === 'active' && license.availableQuantity > 0 && (
             <Button icon={<UserIcon />} onClick={() => setAssignModalVisible(true)}>
-              分配给用户
+
+              assigned to user
             </Button>
           )}
         </Space>
       </Card>
 
       <Modal
-        title='分配许可证给用户'
+        title="Assign license to user"
         open={assignModalVisible}
         onOk={handleAssign}
         onCancel={() => setAssignModalVisible(false)}
       >
         <div style={{ marginBottom: 16 }}>
-          <Text>可用数量: {license.availableQuantity}</Text>
+          <Text>Available quantity: {license.availableQuantity}</Text>
         </div>
         <Select
           mode='multiple'
           style={{ width: '100%' }}
-          placeholder='选择用户'
+          placeholder="Choose user"
           value={selectedUsers}
           onChange={setSelectedUsers}
           maxCount={license.availableQuantity}
           optionFilterProp='children'
           loading={usersLoading}
-          notFoundContent={usersLoading ? '加载中...' : '暂无用户'}
+          notFoundContent={usersLoading ? 'Loading...' : 'No users yet'}
           options={users.map(user => ({
             value: user.id,
             label: user.name || user.username,

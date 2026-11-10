@@ -86,7 +86,7 @@ describe('菜单管理页 — 列表契约', () => {
     expect(await screen.findByText('服务台')).toBeInTheDocument();
     expect(screen.getByText('系统设置')).toBeInTheDocument();
     // 后端一次返回整份租户菜单，统计口径基于全量而不是当前过滤结果
-    const totalCard = screen.getByText('总菜单数').closest('.ant-statistic') as HTMLElement;
+    const totalCard = screen.getByText("Total Menus").closest('.ant-statistic') as HTMLElement;
     expect(within(totalCard).getByText('3')).toBeInTheDocument();
   }, 30000);
 
@@ -99,7 +99,7 @@ describe('菜单管理页 — 列表契约', () => {
       </App>
     );
 
-    const search = await screen.findByPlaceholderText('搜索菜单名称或路径...');
+    const search = await screen.findByPlaceholderText("Search menu name or path...");
     fireEvent.change(search, { target: { value: '事件' } });
 
     const row = (await screen.findByText('事件管理')).closest('tr') as HTMLElement;
@@ -117,7 +117,7 @@ describe('菜单管理页 — 列表契约', () => {
       </App>
     );
 
-    expect(await screen.findByText('加载菜单列表失败')).toBeInTheDocument();
+    expect(await screen.findByText("Failed to load menu list")).toBeInTheDocument();
   }, 30000);
 
   it('保存顶级菜单时按空值显式清除上级与权限码，而不是省略字段', async () => {
@@ -131,11 +131,11 @@ describe('菜单管理页 — 列表契约', () => {
     );
 
     const row = (await screen.findByText('服务台')).closest('tr') as HTMLElement;
-    fireEvent.click(within(row).getByRole('button', { name: '编辑' }));
+    fireEvent.click(within(row).getByRole('button', { name: "Edit" }));
 
-    await screen.findByText('编辑菜单项');
+    await screen.findByText("Edit Menu Item");
     // antd 在两个 CJK 字符间插入空格，按钮可访问名是「保 存」
-    fireEvent.click(screen.getByRole('button', { name: /保\s*存/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Save/ }));
 
     await waitFor(() => expect(mockedMenuAPI.update).toHaveBeenCalled());
     // PUT 是指针语义：未传保持原值，只有显式空值才能清掉上级菜单和权限码

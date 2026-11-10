@@ -80,12 +80,12 @@ describe('ChangeDetail 实施结果留痕', () => {
     mockChange = { ...baseChange, status: 'in_progress' };
     render(<ChangeDetail />);
 
-    const failButton = await screen.findByRole('button', { name: '标记失败' });
+    const failButton = await screen.findByRole('button', { name: "Mark failed" });
     await userEvent.click(failButton);
 
     const dialog = await screen.findByRole('dialog');
     // 原因为空：确认按钮禁用（同名的「标记失败」在页面上出现两处，先限定在弹窗内）
-    const confirm = within(dialog).getByRole('button', { name: '标记失败' });
+    const confirm = within(dialog).getByRole('button', { name: "Mark failed" });
     expect(confirm).toBeDisabled();
 
     const textarea = within(dialog).getByRole('textbox');
@@ -101,11 +101,11 @@ describe('ChangeDetail 实施结果留痕', () => {
     mockChange = { ...baseChange, status: 'in_progress' };
     render(<ChangeDetail />);
 
-    const rollbackButtons = await screen.findAllByRole('button', { name: /回\s*滚/ });
+    const rollbackButtons = await screen.findAllByRole('button', { name: /Rollback/ });
     await userEvent.click(rollbackButtons[0]);
 
     const dialog = await screen.findByRole('dialog');
-    const confirm = within(dialog).getByRole('button', { name: /回\s*滚/ });
+    const confirm = within(dialog).getByRole('button', { name: /Rollback/ });
     expect(confirm).toBeDisabled();
 
     await userEvent.type(within(dialog).getByRole('textbox'), '窗口内锁等待超时');
@@ -118,8 +118,8 @@ describe('ChangeDetail 实施结果留痕', () => {
     mockChange = { ...baseChange, status: 'failed', outcomeNote: '连接池耗尽，已恢复' };
     render(<ChangeDetail />);
 
-    expect(await screen.findByRole('button', { name: '重新排期' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /回\s*滚/ })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: "Reschedule" })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Rollback/ })).toBeInTheDocument();
     // 实施结果说明要能看到，否则失败原因只存在库里
     expect(await screen.findByText('连接池耗尽，已恢复')).toBeInTheDocument();
   });

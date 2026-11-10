@@ -11,16 +11,16 @@
   <!-- 特点: 快速响应、多级升级、即时通知                         -->
   <!-- ======================================================== -->
 
-  <bpmn:process id="incident_emergency_flow_cn" name="紧急故障响应流程(国内企业版)" isExecutable="true">
+  <bpmn:process id="incident_emergency_flow_cn" name="Emergency Incident Response Workflow (Enterprise Edition)" isExecutable="true">
     <bpmn:extensionElements>
       <bpmn:metaData name="category">incident</bpmn:metaData>
       <bpmn:metaData name="version">2.0.0</bpmn:metaData>
-      <bpmn:metaData name="description">国内企业ITSM紧急故障响应流程，包含快速响应、多级升级机制</bpmn:metaData>
+      <bpmn:metaData name="description">Enterprise ITSM emergency incident workflow with rapid response and multi-level escalation</bpmn:metaData>
       <bpmn:metaData name="enterprise_type">cn_enterprise</bpmn:metaData>
     </bpmn:extensionElements>
 
     <!-- ========== 开始节点 ========== -->
-    <bpmn:startEvent id="StartEvent_P0Report" name="P0故障上报">
+    <bpmn:startEvent id="StartEvent_P0Report" name="Report P0 Incident">
       <bpmn:extensionElements>
         <bpmn:metaData name="priority">P0</bpmn:metaData>
         <bpmn:metaData name="sla_minutes">15</bpmn:metaData>
@@ -30,7 +30,7 @@
     </bpmn:startEvent>
 
     <!-- ========== 阶段1: 快速响应 (5分钟内) ========== -->
-    <bpmn:serviceTask id="Activity_InstantNotify" name="即时通知" implementation="##WebService">
+    <bpmn:serviceTask id="Activity_InstantNotify" name="Immediate Notification" implementation="##WebService">
       <bpmn:extensionElements>
         <bpmn:metaData name="service_task_type">generic_task</bpmn:metaData>
         <bpmn:metaData name="action">instant_notify</bpmn:metaData>
@@ -42,7 +42,7 @@
       <bpmn:outgoing>Flow_S2</bpmn:outgoing>
     </bpmn:serviceTask>
 
-    <bpmn:serviceTask id="Activity_AutoAssign_P0" name="自动分派" implementation="##WebService">
+    <bpmn:serviceTask id="Activity_AutoAssign_P0" name="Automatic Dispatch" implementation="##WebService">
       <bpmn:extensionElements>
         <bpmn:metaData name="service_task_type">incident_task</bpmn:metaData>
         <bpmn:metaData name="action">auto_assign</bpmn:metaData>
@@ -55,7 +55,7 @@
     </bpmn:serviceTask>
 
     <!-- ========== 阶段2: 快速响应 (30分钟内) ========== -->
-    <bpmn:userTask id="Activity_L1Response" name="一线响应">
+    <bpmn:userTask id="Activity_L1Response" name="First-Line Response">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">l1_response</bpmn:metaData>
         <bpmn:metaData name="assignee_type">agent</bpmn:metaData>
@@ -71,14 +71,14 @@
     </bpmn:userTask>
 
     <!-- ========== 阶段3: 问题判定网关 ========== -->
-    <bpmn:exclusiveGateway id="Gateway_ProblemStatus" name="问题状态判定">
+    <bpmn:exclusiveGateway id="Gateway_ProblemStatus" name="Determine Issue Status">
       <bpmn:incoming>Flow_S4</bpmn:incoming>
       <bpmn:outgoing>Flow_CanFix</bpmn:outgoing>
       <bpmn:outgoing>Flow_CannotFix</bpmn:outgoing>
     </bpmn:exclusiveGateway>
 
     <!-- 可快速解决路径 -->
-    <bpmn:userTask id="Activity_L1Fix" name="一线修复">
+    <bpmn:userTask id="Activity_L1Fix" name="First-Line Remediation">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">l1_fix</bpmn:metaData>
         <bpmn:metaData name="timeout_minutes">60</bpmn:metaData>
@@ -89,7 +89,7 @@
     </bpmn:userTask>
 
     <!-- 无法解决需升级 -->
-    <bpmn:serviceTask id="Activity_AutoEscalate_L2" name="自动升级L2">
+    <bpmn:serviceTask id="Activity_AutoEscalate_L2" name="Automatically Escalate to L2">
       <bpmn:extensionElements>
         <bpmn:metaData name="service_task_type">incident_task</bpmn:metaData>
         <bpmn:metaData name="action">escalate_to_l2</bpmn:metaData>
@@ -101,7 +101,7 @@
     </bpmn:serviceTask>
 
     <!-- ========== 阶段4: L2处理 (60分钟内) ========== -->
-    <bpmn:userTask id="Activity_L2Diagnosis" name="L2诊断">
+    <bpmn:userTask id="Activity_L2Diagnosis" name="L2 Diagnosis">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">l2_diagnosis</bpmn:metaData>
         <bpmn:metaData name="assignee_type">technician</bpmn:metaData>
@@ -113,14 +113,14 @@
     </bpmn:userTask>
 
     <!-- L2问题判定网关 -->
-    <bpmn:exclusiveGateway id="Gateway_L2Status" name="L2处理结果">
+    <bpmn:exclusiveGateway id="Gateway_L2Status" name="L2 Response Result">
       <bpmn:incoming>Flow_S5</bpmn:incoming>
       <bpmn:outgoing>Flow_L2Resolved</bpmn:outgoing>
       <bpmn:outgoing>Flow_L2Unresolved</bpmn:outgoing>
     </bpmn:exclusiveGateway>
 
     <!-- L2解决 -->
-    <bpmn:userTask id="Activity_L2Fix" name="L2修复">
+    <bpmn:userTask id="Activity_L2Fix" name="L2 Remediation">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">l2_fix</bpmn:metaData>
         <bpmn:metaData name="timeout_minutes">120</bpmn:metaData>
@@ -130,7 +130,7 @@
     </bpmn:userTask>
 
     <!-- L2无法解决升级L3 -->
-    <bpmn:serviceTask id="Activity_EscalateL3" name="升级L3专家">
+    <bpmn:serviceTask id="Activity_EscalateL3" name="Escalate to L3 Experts">
       <bpmn:extensionElements>
         <bpmn:metaData name="service_task_type">incident_task</bpmn:metaData>
         <bpmn:metaData name="action">escalate_to_l3</bpmn:metaData>
@@ -143,7 +143,7 @@
     </bpmn:serviceTask>
 
     <!-- ========== 阶段5: L3专家处理 ========== -->
-    <bpmn:userTask id="Activity_L3ExpertHandle" name="L3专家处理">
+    <bpmn:userTask id="Activity_L3ExpertHandle" name="L3 Expert Response">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">l3_expert_handle</bpmn:metaData>
         <bpmn:metaData name="assignee_type">it_admin</bpmn:metaData>
@@ -155,14 +155,14 @@
     </bpmn:userTask>
 
     <!-- L3结果判定 -->
-    <bpmn:exclusiveGateway id="Gateway_L3Status" name="L3处理结果">
+    <bpmn:exclusiveGateway id="Gateway_L3Status" name="L3 Response Result">
       <bpmn:incoming>Flow_S6</bpmn:incoming>
       <bpmn:outgoing>Flow_L3Resolved</bpmn:outgoing>
       <bpmn:outgoing>Flow_L3MajorIncident</bpmn:outgoing>
     </bpmn:exclusiveGateway>
 
     <!-- L3解决 -->
-    <bpmn:userTask id="Activity_L3Fix" name="L3修复完成">
+    <bpmn:userTask id="Activity_L3Fix" name="L3 Remediation Completed">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">l3_fix_complete</bpmn:metaData>
         <bpmn:metaData name="timeout_minutes">60</bpmn:metaData>
@@ -172,7 +172,7 @@
     </bpmn:userTask>
 
     <!-- 重大事件升级 -->
-    <bpmn:serviceTask id="Activity_MajorIncidentEscalate" name="重大事件升级">
+    <bpmn:serviceTask id="Activity_MajorIncidentEscalate" name="Major Incident Escalation">
       <bpmn:extensionElements>
         <bpmn:metaData name="service_task_type">incident_task</bpmn:metaData>
         <bpmn:metaData name="action">major_incident_escalate</bpmn:metaData>
@@ -184,7 +184,7 @@
       <bpmn:outgoing>Flow_ToWarRoom</bpmn:outgoing>
     </bpmn:serviceTask>
 
-    <bpmn:userTask id="Activity_WarRoomHandle" name="事件指挥室处理">
+    <bpmn:userTask id="Activity_WarRoomHandle" name="Incident Command Response">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">war_room_handle</bpmn:metaData>
         <bpmn:metaData name="timeout_minutes">480</bpmn:metaData>
@@ -195,7 +195,7 @@
     </bpmn:userTask>
 
     <!-- ========== 结束阶段: 通知与归档 ========== -->
-    <bpmn:serviceTask id="Activity_NotifyStakeholders" name="通知相关方">
+    <bpmn:serviceTask id="Activity_NotifyStakeholders" name="Notify Stakeholders">
       <bpmn:extensionElements>
         <bpmn:metaData name="service_task_type">generic_task</bpmn:metaData>
         <bpmn:metaData name="action">notify_stakeholders</bpmn:metaData>
@@ -208,7 +208,7 @@
       <bpmn:outgoing>Flow_ToClose</bpmn:outgoing>
     </bpmn:serviceTask>
 
-    <bpmn:userTask id="Activity_IncidentClose" name="事件关闭">
+    <bpmn:userTask id="Activity_IncidentClose" name="Incident Closed">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">incident_close</bpmn:metaData>
         <bpmn:metaData name="require_resolution_summary">true</bpmn:metaData>
@@ -219,7 +219,7 @@
     </bpmn:userTask>
 
     <!-- 结束事件 -->
-    <bpmn:endEvent id="EndEvent_Complete" name="事件完成">
+    <bpmn:endEvent id="EndEvent_Complete" name="Incident Completed">
       <bpmn:incoming>Flow_End</bpmn:incoming>
     </bpmn:endEvent>
 

@@ -59,7 +59,7 @@ func (s *TicketTagService) ResolveTagIDsByNames(ctx context.Context, names []str
 		uniqueNames = append(uniqueNames, normalized)
 	}
 	if len(uniqueNames) == 0 {
-		return nil, errors.New("标签不能为空")
+		return nil, errors.New("tag cannot be empty")
 	}
 
 	existingTags, err := s.client.TicketTag.Query().
@@ -86,7 +86,7 @@ func (s *TicketTagService) ResolveTagIDsByNames(ctx context.Context, names []str
 		}
 	}
 	if len(missing) > 0 && !createMissing {
-		return nil, errors.New("部分标签不存在")
+		return nil, errors.New("Some tags do not exist")
 	}
 
 	for _, name := range missing {

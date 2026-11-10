@@ -91,15 +91,15 @@ const iconMap: Record<string, React.ReactNode> = {
 const priorityLabel = (priority: string): string => {
   switch (priority) {
     case 'critical':
-      return '严重';
+      return 'Critical';
     case 'urgent':
-      return '紧急';
+      return 'Urgent';
     case 'high':
-      return '高';
+      return 'High';
     case 'medium':
-      return '中';
+      return 'Medium';
     case 'low':
-      return '低';
+      return 'Low';
     default:
       return priority;
   }
@@ -181,7 +181,7 @@ export default function CreateTicketPage() {
       })
       .catch(error => {
         if (!cancelled)
-          setTicketTypesError(error instanceof Error ? error.message : '工单类型加载失败');
+          setTicketTypesError(error instanceof Error ? error.message : 'Failed to load work order type');
       })
       .finally(() => {
         if (!cancelled) setTicketTypesLoading(false);
@@ -303,13 +303,13 @@ export default function CreateTicketPage() {
 
       // 检查描述长度
       if (description.length < 10) {
-        message.warning('描述至少需要10个字符，请详细描述问题');
+        message.warning('The description requires at least 10 characters, please describe the problem in detail');
         setLoading(false);
         return;
       }
 
       // 构建 title：如果没有选择类型，使用表单中的 title；否则使用类型名称
-      const title = values.title || (selectedType ? `${selectedType.name}请求` : '新建工单');
+      const title = values.title || (selectedType ? `${selectedType.name} Request` : 'New Ticket');
       // 构建 priority：如果没有选择类型，使用表单中的 priority；否则使用预设优先级
       const priority = values.priority || (selectedType ? selectedType.priority : 'medium');
 
@@ -351,20 +351,20 @@ export default function CreateTicketPage() {
           : undefined,
       });
 
-      message.success('工单创建成功');
+      message.success('Work order created successfully');
       // 已落库，跳转不应再被「未保存」守卫拦截。
       clearDirty();
       try {
         router.push(`/tickets/${created.id}`);
       } catch (navErr) {
         console.error('[nav]', navErr);
-        message.error('导航失败，请稍后重试');
+        message.error('Navigation failed, please try again later');
       }
     } catch (e: unknown) {
       console.error('Create ticket error:', e);
       const errorObj = e as { message?: string; error?: { message?: string } };
       const errorMsg =
-        errorObj?.message || errorObj?.error?.message || '创建工单失败，请检查输入或重新登录';
+        errorObj?.message || errorObj?.error?.message || 'Failed to create a work order, please check your input or log in again';
       message.error(errorMsg);
     } finally {
       setLoading(false);
@@ -385,13 +385,13 @@ export default function CreateTicketPage() {
       priority?: string;
     };
 
-    const title = (values.title || (selectedType ? `${selectedType.name}请求` : '')).trim();
+    const title = (values.title || (selectedType ? `${selectedType.name} Request` : '')).trim();
     const description = (values.description || '').trim();
 
     if (!title) {
       // 只标红标题本身，不牵连其它必填项
-      form.setFields([{ name: 'title', errors: ['请先填写标题，AI 需要它才能判断分类'] }]);
-      message.warning('请先填写标题');
+      form.setFields([{ name: 'title', errors: ['Please fill in the title first, AI needs it to determine the classification'] }]);
+      message.warning('Please fill in the title first');
       return;
     }
 
@@ -407,7 +407,7 @@ export default function CreateTicketPage() {
       });
 
       if (!response?.suggestions) {
-        setAiError('AI 未返回分类建议，请补充描述后重试');
+        setAiError('AI did not return classification suggestions, please add a description and try again');
         return;
       }
 
@@ -423,21 +423,21 @@ export default function CreateTicketPage() {
       const applied: string[] = [];
       if (categoryName) {
         form.setFieldValue('category', categoryName);
-        applied.push(`分类「${categoryName}」`);
+        applied.push(`Category「${categoryName}」`);
       }
       if (suggestion.priority) {
         form.setFieldValue('priority', suggestion.priority);
-        applied.push(`优先级「${priorityLabel(suggestion.priority)}」`);
+        applied.push(`Priority "${priorityLabel(suggestion.priority)}」`);
       }
 
       // 成功提示必须反映**实际回填了什么**，不能无条件报成功：
       // 分类匹配不上时只说分类没回填，避免用户以为已生效。
       if (applied.length > 0) {
-        message.success(`AI 建议已应用：${applied.join('、')}`);
+        message.success(`AI suggestion applied:${applied.join('、')}`);
       }
       if (!categoryName && suggestion.category) {
         message.warning(
-          `AI 建议分类「${suggestion.category}」不在当前分类主数据中，未自动回填，请手动选择`
+          `AI suggested classification "${suggestion.category}"is not in the current classification master data and is not automatically backfilled. Please select manually."`
         );
       }
     } catch (e: unknown) {
@@ -446,8 +446,8 @@ export default function CreateTicketPage() {
       const status = (e as { status?: number })?.status;
       setAiError(
         status && status >= 400 && status < 500
-          ? 'AI 分类请求被拒绝，请刷新页面后重试'
-          : 'AI 分类服务暂时不可用，请稍后重试'
+          ? 'AI classification request was rejected, please refresh the page and try again'
+          : 'AI classification service is temporarily unavailable, please try again later'
       );
     } finally {
       setAiLoading(false);
@@ -495,7 +495,7 @@ export default function CreateTicketPage() {
   };
 
   return (
-    <div className='max-w-6xl mx-auto p-4 md:p-6' role='main' aria-label='创建工单页面'>
+    <div className='max-w-6xl mx-auto p-4 md:p-6' role='main' aria-label="Create work order page">
       <Space orientation='vertical' size={16} style={{ width: '100%' }}>
         {/* 页面头部 */}
         <Card>
@@ -503,15 +503,17 @@ export default function CreateTicketPage() {
             <Button
               icon={<ArrowLeft className='w-4 h-4' />}
               onClick={handleCancel}
-              aria-label='返回上一页'
+              aria-label="Return to previous page"
             >
-              返回
+
+              Back
             </Button>
             <div style={{ flex: 1 }}>
               <Title level={4} style={{ marginBottom: 4 }}>
-                新建工单
+
+                New Ticket
               </Title>
-              <Text type='secondary'>选择工单类型，填写详细信息后提交</Text>
+              <Text type='secondary'>Select the work order type, fill in the details and submit</Text>
             </div>
           </Space>
         </Card>
@@ -522,12 +524,12 @@ export default function CreateTicketPage() {
             <Card
               title={
                 <Space>
-                  <span>选择工单类型</span>
-                  <Tag color='blue'>{filteredTypes.length} 种</Tag>
+                  <span>Select work order type</span>
+                  <Tag color='blue'>{filteredTypes.length}  Species</Tag>
                 </Space>
               }
               styles={{ body: { padding: '12px' } }}
-              aria-label='工单类型选择区域'
+              aria-label="Work order type selection area"
             >
               {/* 类型列表 */}
               <div
@@ -536,7 +538,7 @@ export default function CreateTicketPage() {
                   overflowY: 'auto',
                 }}
                 role='list'
-                aria-label='可用工单类型列表'
+                aria-label="List of available ticket types"
               >
                 <Space
                   orientation='vertical'
@@ -549,7 +551,7 @@ export default function CreateTicketPage() {
                   ) : ticketTypesError ? (
                     <Alert type='error' showIcon title={ticketTypesError} />
                   ) : filteredTypes.length === 0 ? (
-                    <Empty description='暂无已启用的工单类型' />
+                    <Empty description="No enabled ticket type yet" />
                   ) : (
                     filteredTypes.map(type => renderTypeCard(type))
                   )}
@@ -563,7 +565,7 @@ export default function CreateTicketPage() {
             <Form
               form={form}
               layout='vertical'
-              aria-label='工单表单'
+              aria-label="Work order form"
               requiredMark='optional'
               onValuesChange={markDirty}
             >
@@ -576,7 +578,7 @@ export default function CreateTicketPage() {
                     background: `${selectedType.color}08`,
                   }}
                   role='region'
-                  aria-label={`已选工单类型：${selectedType.name}`}
+                  aria-label={`Selected work order type:${selectedType.name}`}
                 >
                   <Space orientation='vertical' style={{ width: '100%' }}>
                     <Space>
@@ -591,9 +593,10 @@ export default function CreateTicketPage() {
                         type='link'
                         size='small'
                         onClick={() => setSelectedType(null)}
-                        aria-label='更换工单类型'
+                        aria-label="Change work order type"
                       >
-                        更换
+
+                        Replace
                       </Button>
                     </Space>
                     {/* 关联的工作流信息 */}
@@ -621,7 +624,7 @@ export default function CreateTicketPage() {
                           >
                             {priorityLabel(selectedType.priority)}
                           </Tag>
-                          <Text type='secondary'>审批流程: </Text>
+                          <Text type='secondary'>Approval Process: </Text>
                           <Text strong>{selectedType.workflowDefinitionKey}</Text>
                         </Space>
                       </div>
@@ -633,21 +636,21 @@ export default function CreateTicketPage() {
               {/* 基础表单：始终显示标题、描述、优先级、分类 */}
               <Card
                 key="basic-form"
-                title='工单信息'
+                title="Ticket Info"
                 style={{ marginBottom: 16 }}
-                aria-label='基础工单信息表单'
+                aria-label="Basic work order information form"
                 data-testid='ticket-form'
               >
                 <Form.Item
                   name='title'
-                  label='标题'
+                  label="Title"
                   rules={[
-                    { required: true, message: '请输入标题' },
-                    { min: 2, message: '标题至少需要2个字符' },
+                    { required: true, message: 'Please enter a title' },
+                    { min: 2, message: 'Title requires at least 2 characters' },
                   ]}
                 >
                   <Input
-                    placeholder={selectedType ? `${selectedType.name}相关` : '例如：VPN 无法连接'}
+                    placeholder={selectedType ? `${selectedType.name} Related` : 'For example: VPN cannot connect'}
                     aria-required='true'
                     aria-describedby='title-help'
                     data-testid='ticket-title-input'
@@ -656,16 +659,16 @@ export default function CreateTicketPage() {
 
                 <Form.Item
                   name='description'
-                  label='详细描述'
+                  label="Detailed description"
                   rules={[
-                    { required: true, message: '请输入描述（至少10个字符）' },
-                    { min: 10, message: '描述至少需要10个字符' },
+                    { required: true, message: 'Please enter a description (at least 10 characters)' },
+                    { min: 10, message: 'Description requires at least 10 characters' },
                   ]}
-                  extra='建议写清现象、影响范围和期望结果。'
+                  extra="It is recommended to clearly describe the phenomenon, scope of impact and expected results."
                 >
                   <TextArea
                     rows={6}
-                    placeholder='请详细描述问题/需求与影响范围...'
+                    placeholder="Please describe the problem/need and impact scope in detail..."
                     aria-required='true'
                     data-testid='ticket-description-input'
                   />
@@ -675,35 +678,35 @@ export default function CreateTicketPage() {
                   <Col xs={24} sm={12}>
                     <Form.Item
                       name='priority'
-                      label='优先级'
+                      label="Priority"
                       initialValue={selectedType?.priority || 'medium'}
                       rules={[{ required: true }]}
                     >
                       <AppSelect
                         allowClear
                         options={[
-                          { label: '低', value: 'low' },
-                          { label: '中', value: 'medium' },
-                          { label: '高', value: 'high' },
-                          { label: '紧急', value: 'urgent' },
-                          { label: '严重', value: 'critical' },
+                          { label: 'Low', value: 'low' },
+                          { label: 'Medium', value: 'medium' },
+                          { label: 'High', value: 'high' },
+                          { label: 'Urgent', value: 'urgent' },
+                          { label: 'Critical', value: 'critical' },
                         ]}
-                        placeholder='选择优先级'
-                        aria-label='选择工单优先级'
+                        placeholder="Select priority"
+                        aria-label="Select work order priority"
                       />
                     </Form.Item>
                   </Col>
                   <Col xs={24} sm={12}>
                     <Form.Item
                       name='category'
-                      label='分类'
+                      label="Category"
                       extra={
                         categoryError ? (
                           <Space orientation='vertical' size={2}>
                             <Text type='warning'>
                               {categoryError.denied
-                                ? '当前账号没有「查看工单分类」权限，分类留空仍可提交。请联系管理员为所属角色开放该权限。'
-                                : `工单分类加载失败：${categoryError.detail || '后端未返回分类数据'}`}
+                                ? 'The current account does not have the "View Work Order Category" permission. You can still submit the category if it is left blank. Please contact the administrator to grant this permission for your role.'
+                                : `Failed to load work order category:${categoryError.detail || 'Backend did not return classification data'}`}
                             </Text>
                             <Button
                               type='link'
@@ -712,7 +715,8 @@ export default function CreateTicketPage() {
                               onClick={loadCategories}
                               disabled={categoryLoading}
                             >
-                              重试加载分类
+
+                              Retry loading categories
                             </Button>
                           </Space>
                         ) : null
@@ -724,12 +728,12 @@ export default function CreateTicketPage() {
                         options={categoryOptions}
                         placeholder={
                           categoryLoading
-                            ? '加载分类中…'
+                            ? 'Loading categories…'
                             : categoryError
-                              ? '分类暂不可用'
-                              : '选择分类'
+                              ? 'Category is not available yet'
+                              : 'Select category'
                         }
-                        aria-label='选择工单分类'
+                        aria-label="Select work order category"
                       />
                     </Form.Item>
                   </Col>
@@ -740,15 +744,15 @@ export default function CreateTicketPage() {
               {selectedType?.fields && selectedType.fields.length > 0 && (
                 <Card
                   key={selectedType.id}
-                  title={`${selectedType.name} - 补充信息`}
+                  title={`${selectedType.name} - Supplementary information`}
                   style={{ marginBottom: 16 }}
-                  aria-label={`${selectedType.name} 自定义表单`}
+                  aria-label={`${selectedType.name} Custom form`}
                 >
                   <Alert
                     type='info'
                     showIcon
                     className='mb-4'
-                    title='以下是该工单类型需要的额外信息'
+                    title="The following is additional information required for this ticket type"
                   />
                   <Row gutter={[16, 0]}>
                     {selectedType.fields.map(field => (
@@ -762,7 +766,7 @@ export default function CreateTicketPage() {
                           }
                           rules={
                             field.required
-                              ? [{ required: true, message: `请填写${field.label}` }]
+                              ? [{ required: true, message: `Please fill in ${field.label}` }]
                               : []
                           }
                         >
@@ -776,7 +780,7 @@ export default function CreateTicketPage() {
                           ) : field.type === 'select' ? (
                             <AppSelect
                               disabled={field.readonly}
-                              placeholder={field.placeholder || `请选择${field.label}`}
+                              placeholder={field.placeholder || `Please select ${field.label}`}
                               options={field.options}
                               aria-label={field.label}
                             />
@@ -804,7 +808,7 @@ export default function CreateTicketPage() {
                               disabled={field.readonly}
                               style={{ width: '100%' }}
                               aria-label={field.label}
-                              placeholder={field.placeholder || `请选择${field.label}`}
+                              placeholder={field.placeholder || `Please select ${field.label}`}
                             />
                           ) : field.type === 'datetime' ? (
                             <DatePicker
@@ -860,7 +864,8 @@ export default function CreateTicketPage() {
                 title={
                   <span className='flex items-center gap-2'>
                     <Sparkles className='w-4 h-4 text-yellow-500' />
-                    AI 辅助分类
+
+                    AI-assisted classification
                   </span>
                 }
               >
@@ -871,7 +876,8 @@ export default function CreateTicketPage() {
                       <div className='flex flex-wrap gap-2'>
                         {aiSuggestions.category && (
                           <Tag color='blue'>
-                            分类: {categoryNameByCode[aiSuggestions.category] ?? aiSuggestions.category}
+
+                            Category: {categoryNameByCode[aiSuggestions.category] ?? aiSuggestions.category}
                           </Tag>
                         )}
                         {aiSuggestions.priority && (
@@ -880,11 +886,12 @@ export default function CreateTicketPage() {
                               ['urgent', 'critical'].includes(aiSuggestions.priority) ? 'red' : 'orange'
                             }
                           >
-                            优先级: {priorityLabel(aiSuggestions.priority)}
+
+                            Priority: {priorityLabel(aiSuggestions.priority)}
                           </Tag>
                         )}
                         {aiSuggestions.urgency && (
-                          <Tag color='purple'>紧急度: {priorityLabel(aiSuggestions.urgency)}</Tag>
+                          <Tag color='purple'>Urgency: {priorityLabel(aiSuggestions.urgency)}</Tag>
                         )}
                       </div>
                       {aiSuggestions.reasoning && (
@@ -894,12 +901,13 @@ export default function CreateTicketPage() {
                       )}
                       {aiSuggestions.confidence && (
                         <Text type='secondary' className='text-xs'>
-                          置信度: {Math.round(aiSuggestions.confidence * 100)}%
+
+                          Confidence: {Math.round(aiSuggestions.confidence * 100)}%
                         </Text>
                       )}
                     </div>
                   ) : (
-                    <Text type='secondary'>获取AI智能分类建议</Text>
+                    <Text type='secondary'>Get AI intelligent classification suggestions</Text>
                   )}
                 </Spin>
                 <Button
@@ -910,14 +918,15 @@ export default function CreateTicketPage() {
                   className='mt-2'
                   block
                 >
-                  获取 AI 建议
+
+                  Get AI suggestions
                 </Button>
               </Card>
 
               <div
                 className='mt-4 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end'
                 role='group'
-                aria-label='表单操作按钮'
+                aria-label="Form action button"
               >
                 <Button
                   onClick={() => {
@@ -927,12 +936,12 @@ export default function CreateTicketPage() {
                         router.push('/tickets');
                       } catch (navErr) {
                         console.error('[nav]', navErr);
-                        message.error('导航失败，请稍后重试');
+                        message.error('Navigation failed, please try again later');
                       }
                     });
                   }}
                   size='large'
-                  aria-label='取消创建，返回工单列表'
+                  aria-label="Cancel creation and return to the work order list"
                 >
                   {t('common.cancel')}
                 </Button>
@@ -944,7 +953,8 @@ export default function CreateTicketPage() {
                   aria-busy={loading}
                   data-testid='ticket-submit-button'
                 >
-                  创建工单
+
+                  Create a work order
                 </Button>
               </div>
             </Form>

@@ -22,7 +22,7 @@ export class WorkflowEngine {
     if (!workflow.nodes || workflow.nodes.length === 0) {
       errors.push({
         type: 'error',
-        message: '工作流必须至少包含一个节点',
+        message: 'Workflow must contain at least one node',
       });
       return { isValid: false, errors, warnings };
     }
@@ -66,12 +66,12 @@ export class WorkflowEngine {
     if (startNodes.length === 0) {
       errors.push({
         type: 'error',
-        message: '工作流必须包含一个开始节点',
+        message: 'Workflow must contain a start node',
       });
     } else if (startNodes.length > 1) {
       errors.push({
         type: 'error',
-        message: '工作流只能有一个开始节点',
+        message: 'Workflow can only have one start node',
       });
     }
   }
@@ -84,7 +84,7 @@ export class WorkflowEngine {
     if (endNodes.length === 0) {
       warnings.push({
         type: 'warning',
-        message: '建议添加至少一个结束节点',
+        message: 'It is recommended to add at least one end node',
       });
     }
   }
@@ -101,7 +101,7 @@ export class WorkflowEngine {
       errors.push({
         nodeId: node.id,
         type: 'error',
-        message: '节点名称不能为空',
+        message: 'Node name cannot be empty',
         field: 'name',
       });
     }
@@ -135,7 +135,7 @@ export class WorkflowEngine {
       errors.push({
         nodeId: node.id,
         type: 'error',
-        message: '任务节点必须指定分配类型',
+        message: 'Task node must specify allocation type',
         field: 'assigneeType',
       });
     }
@@ -150,7 +150,7 @@ export class WorkflowEngine {
       errors.push({
         nodeId: node.id,
         type: 'error',
-        message: '审批节点必须指定至少一个审批人',
+        message: 'The approval node must specify at least one approver',
         field: 'approvers',
       });
     }
@@ -165,7 +165,7 @@ export class WorkflowEngine {
       errors.push({
         nodeId: node.id,
         type: 'error',
-        message: '条件节点必须至少定义一个条件',
+        message: 'The condition node must define at least one condition',
         field: 'conditions',
       });
     }
@@ -180,7 +180,7 @@ export class WorkflowEngine {
       errors.push({
         nodeId: node.id,
         type: 'error',
-        message: '脚本节点必须包含脚本内容',
+        message: 'Script node must contain script content',
         field: 'script',
       });
     }
@@ -195,7 +195,7 @@ export class WorkflowEngine {
       errors.push({
         nodeId: node.id,
         type: 'error',
-        message: '通知节点必须指定至少一个接收者',
+        message: 'The notification node must specify at least one recipient',
         field: 'recipients',
       });
     }
@@ -217,7 +217,7 @@ export class WorkflowEngine {
       errors.push({
         connectionId: connection.id,
         type: 'error',
-        message: `连接的源节点 ${connection.sourceNodeId} 不存在`,
+        message: `Source node of the connection ${connection.sourceNodeId} does not exist`,
       });
     }
 
@@ -225,7 +225,7 @@ export class WorkflowEngine {
       errors.push({
         connectionId: connection.id,
         type: 'error',
-        message: `连接的目标节点 ${connection.targetNodeId} 不存在`,
+        message: `The target node of the connection ${connection.targetNodeId} does not exist`,
       });
     }
 
@@ -234,7 +234,7 @@ export class WorkflowEngine {
       errors.push({
         connectionId: connection.id,
         type: 'error',
-        message: '开始节点不能有输入连接',
+        message: 'Start node cannot have input connections',
       });
     }
 
@@ -243,7 +243,7 @@ export class WorkflowEngine {
       errors.push({
         connectionId: connection.id,
         type: 'error',
-        message: '结束节点不能有输出连接',
+        message: 'End node cannot have output connections',
       });
     }
   }
@@ -268,7 +268,7 @@ export class WorkflowEngine {
         warnings.push({
           nodeId: node.id,
           type: 'warning',
-          message: `节点 "${node.name}" 可能是孤立的，没有连接`,
+          message: `node "${node.name}"Possibly orphaned, not connected`,
         });
       }
     });
@@ -319,7 +319,7 @@ export class WorkflowEngine {
         if (hasCycle(node.id)) {
           warnings.push({
             type: 'warning',
-            message: '检测到工作流中存在循环，请确保这是有意的',
+            message: 'Loop detected in workflow, please make sure this is intentional',
           });
           break;
         }

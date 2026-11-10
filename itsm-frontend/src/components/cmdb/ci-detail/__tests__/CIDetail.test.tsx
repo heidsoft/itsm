@@ -59,7 +59,7 @@ describe('CIDetail', () => {
 
     await waitFor(() => {
       // 状态显示为中文标签
-      expect(screen.getByText(/使用中/i)).toBeInTheDocument();
+      expect(screen.getByText(/In Use/i)).toBeInTheDocument();
     });
   });
 
@@ -67,11 +67,11 @@ describe('CIDetail', () => {
     render(<CIDetail />);
 
     await waitFor(() => {
-      expect(screen.getByText(/基本信息/i)).toBeInTheDocument();
-      expect(screen.getByText(/服务拓扑/i)).toBeInTheDocument();
-      expect(screen.getByText(/关系管理/i)).toBeInTheDocument();
-      expect(screen.getByText(/影响分析/i)).toBeInTheDocument();
-      expect(screen.getByText(/变更历史/i)).toBeInTheDocument();
+      expect(screen.getByText(/Basic Info/i)).toBeInTheDocument();
+      expect(screen.getByText(/Service topology/i)).toBeInTheDocument();
+      expect(screen.getByText(/Relationship Management/i)).toBeInTheDocument();
+      expect(screen.getByText(/Impact Analysis/i)).toBeInTheDocument();
+      expect(screen.getByText(/Change History/i)).toBeInTheDocument();
     });
   });
 
@@ -79,7 +79,7 @@ describe('CIDetail', () => {
     render(<CIDetail />);
 
     await waitFor(() => {
-      expect(screen.getByText(/返回列表/i)).toBeInTheDocument();
+      expect(screen.getByText(/Back to List/i)).toBeInTheDocument();
     });
   });
 });

@@ -42,7 +42,7 @@ func TestUpdate_RejectsCrossTenantAssignee(t *testing.T) {
 
 	assigneeID := assigneeT2.ID
 	_, err = svc.Update(ctx, tenant1.ID, inc.ID, &Incident{AssigneeID: &assigneeID}, reporter.ID, "super_admin")
-	require.ErrorContains(t, err, "处理人不存在或不可用")
+	require.ErrorContains(t, err, "Processor does not exist or is unavailable")
 
 	reloaded, err := client.Incident.Get(ctx, inc.ID)
 	require.NoError(t, err)

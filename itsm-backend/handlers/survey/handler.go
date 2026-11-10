@@ -41,7 +41,7 @@ func (h *Handler) ListSurveys(ctx *gin.Context) {
 	}
 	surveys, err := h.svc.GetSurveys(ctx.Request.Context(), tenantID)
 	if err != nil {
-		common.RespondError(ctx, err, "操作失败")
+		common.RespondError(ctx, err, "Operation failed")
 		return
 	}
 	common.Success(ctx, gin.H{
@@ -59,7 +59,7 @@ func (h *Handler) GetSurvey(ctx *gin.Context) {
 	}
 	survey, err := h.svc.GetSurvey(ctx.Request.Context(), surveyID, tenantID)
 	if err != nil {
-		common.RespondError(ctx, err, "操作失败")
+		common.RespondError(ctx, err, "Operation failed")
 		return
 	}
 	common.Success(ctx, dto.ToSurveyDTO(survey))
@@ -69,7 +69,7 @@ func (h *Handler) GetSurvey(ctx *gin.Context) {
 func (h *Handler) CreateSurvey(ctx *gin.Context) {
 	var req dto.CreateSurveyRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.Fail(ctx, 1001, "参数错误")
+		common.Fail(ctx, 1001, "Parameter error")
 		return
 	}
 	tenantID, tenantOK := middleware.TenantIDOrUnauthorized(ctx)
@@ -78,7 +78,7 @@ func (h *Handler) CreateSurvey(ctx *gin.Context) {
 	}
 	survey, err := h.svc.CreateSurvey(ctx.Request.Context(), &req, tenantID)
 	if err != nil {
-		common.RespondError(ctx, err, "操作失败")
+		common.RespondError(ctx, err, "Operation failed")
 		return
 	}
 	common.Success(ctx, dto.ToSurveyDTO(survey))
@@ -89,7 +89,7 @@ func (h *Handler) UpdateSurvey(ctx *gin.Context) {
 	surveyID, _ := strconv.Atoi(ctx.Param("id"))
 	var req dto.UpdateSurveyRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.Fail(ctx, 1001, "参数错误")
+		common.Fail(ctx, 1001, "Parameter error")
 		return
 	}
 	tenantID, tenantOK := middleware.TenantIDOrUnauthorized(ctx)
@@ -98,7 +98,7 @@ func (h *Handler) UpdateSurvey(ctx *gin.Context) {
 	}
 	survey, err := h.svc.UpdateSurvey(ctx.Request.Context(), surveyID, &req, tenantID)
 	if err != nil {
-		common.RespondError(ctx, err, "操作失败")
+		common.RespondError(ctx, err, "Operation failed")
 		return
 	}
 	common.Success(ctx, dto.ToSurveyDTO(survey))
@@ -113,7 +113,7 @@ func (h *Handler) GetSurveyResponses(ctx *gin.Context) {
 	}
 	responses, err := h.svc.GetSurveyResponses(ctx.Request.Context(), surveyID, tenantID)
 	if err != nil {
-		common.RespondError(ctx, err, "操作失败")
+		common.RespondError(ctx, err, "Operation failed")
 		return
 	}
 	common.Success(ctx, gin.H{
@@ -131,7 +131,7 @@ func (h *Handler) GetAnalytics(ctx *gin.Context) {
 	}
 	analytics, err := h.svc.GetAnalytics(ctx.Request.Context(), surveyID, tenantID)
 	if err != nil {
-		common.RespondError(ctx, err, "操作失败")
+		common.RespondError(ctx, err, "Operation failed")
 		return
 	}
 	common.Success(ctx, analytics)
@@ -141,7 +141,7 @@ func (h *Handler) GetAnalytics(ctx *gin.Context) {
 func (h *Handler) SubmitResponse(ctx *gin.Context) {
 	var req dto.SubmitSurveyRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.Fail(ctx, 1001, "参数错误")
+		common.Fail(ctx, 1001, "Parameter error")
 		return
 	}
 	tenantID, tenantOK := middleware.TenantIDOrUnauthorized(ctx)
@@ -150,7 +150,7 @@ func (h *Handler) SubmitResponse(ctx *gin.Context) {
 	}
 	respondentID := ctx.GetInt("user_id")
 	if err := h.svc.SubmitResponse(ctx.Request.Context(), &req, respondentID, tenantID); err != nil {
-		common.RespondError(ctx, err, "操作失败")
+		common.RespondError(ctx, err, "Operation failed")
 		return
 	}
 	common.Success(ctx, gin.H{"message": "submitted"})

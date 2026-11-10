@@ -33,21 +33,21 @@ import (
 // 而不是统一压成 500 让前端去猜。
 var (
 	// ErrProvisioningTaskSucceeded 任务已交付成功，拒绝再次执行（幂等空操作）。
-	ErrProvisioningTaskSucceeded = errors.New("交付任务已完成，拒绝重复执行")
+	ErrProvisioningTaskSucceeded = errors.New("The delivery task has been completed and repeated execution is refused.")
 	// ErrProvisioningTaskInProgress 任务正在执行中（或刚被其他 worker 领取）。
-	ErrProvisioningTaskInProgress = errors.New("交付任务正在执行中")
+	ErrProvisioningTaskInProgress = errors.New("Delivery task is being executed")
 	// ErrProvisioningTaskAttemptsExhausted 重试次数已达上限，必须转人工判定。
-	ErrProvisioningTaskAttemptsExhausted = errors.New("交付任务重试次数已达上限，需人工接管")
+	ErrProvisioningTaskAttemptsExhausted = errors.New("The number of retries of the delivery task has reached the upper limit and manual takeover is required.")
 	// ErrProvisioningTaskNotRetryable 当前状态不具备重试语义（如尚未失败的 pending）。
-	ErrProvisioningTaskNotRetryable = errors.New("交付任务当前状态不允许重试")
+	ErrProvisioningTaskNotRetryable = errors.New("The current status of the delivery task does not allow retry")
 	// ErrProvisioningTaskNotResolvable 当前状态不允许人工判定（running/succeeded）。
-	ErrProvisioningTaskNotResolvable = errors.New("交付任务当前状态不允许人工判定")
+	ErrProvisioningTaskNotResolvable = errors.New("The current status of the delivery task does not allow manual judgment")
 	// ErrProvisioningNotExecutable 交付参数或云账号配置不完整，自动重试不可能成功。
 	// 这类失败落库后不再重投，由运维修正配置后走人工重试。
-	ErrProvisioningNotExecutable = errors.New("交付配置不完整，自动重试不会成功")
+	ErrProvisioningNotExecutable = errors.New("Delivery configuration is incomplete, automatic retry will not succeed")
 	// ErrProvisioningPermanentlyFailed 云侧业务拒绝（余额不足/配额封禁/参数不存在），
 	// 重试期望收益为零：停止自动重投，保留人工重试入口供运维修复后重新触发。
-	ErrProvisioningPermanentlyFailed = errors.New("云侧拒绝且自动重试不会成功")
+	ErrProvisioningPermanentlyFailed = errors.New("Rejected by the cloud side and automatic retry will not succeed.")
 )
 
 // staleTaskLease 判定「running 但已无人执行」的租约时长。
@@ -125,7 +125,7 @@ func (s *ProvisioningService) SetCIProjector(projector ProvisioningCIProjector) 
 func (s *ProvisioningService) CreateTaskFromServiceRequest(ctx context.Context, serviceRequestID, tenantID, actorUserID int) (*ent.ProvisioningTask, error) {
 	tx, err := s.client.Tx(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("开启事务失败: %w", err)
+		return nil, fmt.Errorf("Failed to open transaction: %w", err)
 	}
 	defer tx.Rollback()
 
@@ -135,11 +135,11 @@ func (s *ProvisioningService) CreateTaskFromServiceRequest(ctx context.Context, 
 	if err != nil {
 		// %w 保留 ent.NotFoundError：handler 的 classifyError 需要靠它把
 		// 跨租户/不存在统一呈现为 404，而不是兜底成 500。
-		return nil, fmt.Errorf("服务请求不存在: %w", err)
+		return nil, fmt.Errorf("Service request does not exist: %w", err)
 	}
 	if string(sr.Status) != domainServiceRequest.StatusSecurityApproved {
 		// 非法状态迁移按仓库语义映射 Conflict(4090)，不得兜底成 400/500。
-		return nil, common.NewBusinessError(common.ConflictCode, "当前状态不允许启动交付（需要 security_approved）", "")
+		return nil, common.NewBusinessError(common.ConflictCode, "Current status does not allow delivery to be initiated (requires security_approved)", "")
 	}
 
 	// payload：优先使用 form_data；若为空则降级为空 map
@@ -153,7 +153,7 @@ func (s *ProvisioningService) CreateTaskFromServiceRequest(ctx context.Context, 
 	rawResourceType := provisioningStringValue(payload, "resource_type")
 	resourceType := normalizeProvisioningResourceType(rawResourceType)
 	if _, ok := supportedProvisioningResourceTypes[resourceType]; !ok {
-		return nil, common.NewBadRequestError("暂不支持交付资源类型 "+resourceType+"（当前仅支持 ecs）", nil)
+		return nil, common.NewBadRequestError("Delivery resource type is not supported yet"+resourceType+"(currently only supports ecs)", nil)
 	}
 
 	// 原子占用：只有仍处于 security_approved 的服务请求才能被推进到 provisioning。
@@ -169,10 +169,10 @@ func (s *ProvisioningService) CreateTaskFromServiceRequest(ctx context.Context, 
 		SetStatus("provisioning").
 		Save(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("更新服务请求状态失败: %w", err)
+		return nil, fmt.Errorf("Failed to update service request status: %w", err)
 	}
 	if affected == 0 {
-		return nil, common.NewBusinessError(common.ConflictCode, "服务请求已被其他操作推进，请刷新后重试", "")
+		return nil, common.NewBusinessError(common.ConflictCode, "The service request has been advanced by other operations, please refresh and try again", "")
 	}
 
 	task, err := tx.ProvisioningTask.Create().
@@ -184,7 +184,7 @@ func (s *ProvisioningService) CreateTaskFromServiceRequest(ctx context.Context, 
 		SetStatus(string(provisioning.TaskPending)).
 		Save(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("创建交付任务失败: %w", err)
+		return nil, fmt.Errorf("Failed to create delivery task: %w", err)
 	}
 
 	// 入箱：worker 重载 task 后调 ExecuteTask 实际跑 provider。同一 task ID
@@ -202,11 +202,11 @@ func (s *ProvisioningService) CreateTaskFromServiceRequest(ctx context.Context, 
 			"actorUserId":      actorUserID,
 		},
 	}); err != nil {
-		return nil, fmt.Errorf("入箱交付任务执行命令失败: %w", err)
+		return nil, fmt.Errorf("Inbox delivery task execution command failed: %w", err)
 	}
 
 	if err := tx.Commit(); err != nil {
-		return nil, fmt.Errorf("提交事务失败: %w", err)
+		return nil, fmt.Errorf("Failed to commit transaction: %w", err)
 	}
 	s.notifyDeliveryStarted(ctx, tenantID, serviceRequestID, actorUserID)
 	return task, nil
@@ -234,7 +234,7 @@ func (s *ProvisioningService) ExecuteTask(ctx context.Context, taskID, tenantID,
 		First(ctx)
 	if err != nil {
 		// 同上：保留 ent.NotFoundError 分类，让「任务不存在/跨租户」表现为 404。
-		return nil, fmt.Errorf("交付任务不存在: %w", err)
+		return nil, fmt.Errorf("Delivery task does not exist: %w", err)
 	}
 
 	switch provisioning.TaskStatus(task.Status) {
@@ -280,7 +280,7 @@ func (s *ProvisioningService) ExecuteTask(ctx context.Context, taskID, tenantID,
 		SetLastAttemptAt(now).
 		Save(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("领取交付任务失败: %w", err)
+		return nil, fmt.Errorf("Failed to collect delivery task: %w", err)
 	}
 	if claimed == 0 {
 		// 竞争失败：重新读一次，把「已完成」和「别人在做」区分开，
@@ -336,10 +336,10 @@ func (s *ProvisioningService) ExecuteTask(ctx context.Context, taskID, tenantID,
 func (s *ProvisioningService) buildExecuteRequest(ctx context.Context, tenantID int, task *ent.ProvisioningTask) (cloud.ExecuteRequest, error) {
 	resourceType := normalizeProvisioningResourceType(task.ResourceType)
 	if _, ok := supportedProvisioningResourceTypes[resourceType]; !ok {
-		return cloud.ExecuteRequest{}, fmt.Errorf("%w: 暂不支持交付资源类型 %s（当前仅支持 ecs）", ErrProvisioningNotExecutable, resourceType)
+		return cloud.ExecuteRequest{}, fmt.Errorf("%w: The delivery resource type %s is not supported yet (only ecs is currently supported)", ErrProvisioningNotExecutable, resourceType)
 	}
 	if provider := cloudRuntime.NormalizeProvider(task.Provider); provider != "aliyun" {
-		return cloud.ExecuteRequest{}, fmt.Errorf("%w: 暂不支持交付厂商 %s（当前仅支持 aliyun）", ErrProvisioningNotExecutable, task.Provider)
+		return cloud.ExecuteRequest{}, fmt.Errorf("%w: Delivery manufacturer %s is not currently supported (currently only aliyun is supported)", ErrProvisioningNotExecutable, task.Provider)
 	}
 
 	payload := map[string]any{}
@@ -357,20 +357,20 @@ func (s *ProvisioningService) buildExecuteRequest(ctx context.Context, tenantID 
 		return req, nil
 	}
 	if s.secretResolver == nil {
-		return req, fmt.Errorf("%w: 云凭据解析器未装配", ErrProvisioningNotExecutable)
+		return req, fmt.Errorf("%w: Cloud credential parser is not assembled", ErrProvisioningNotExecutable)
 	}
 
 	sr, err := s.client.ServiceRequest.Query().
 		Where(servicerequest.ID(task.ServiceRequestID), servicerequest.TenantID(tenantID)).
 		Only(ctx)
 	if err != nil {
-		return req, fmt.Errorf("读取服务请求失败: %w", err)
+		return req, fmt.Errorf("Read service request failed: %w", err)
 	}
 	catalog, err := s.client.ServiceCatalog.Query().
 		Where(servicecatalog.ID(sr.CatalogID), servicecatalog.TenantID(tenantID)).
 		Only(ctx)
 	if err != nil {
-		return req, fmt.Errorf("读取服务目录失败: %w", err)
+		return req, fmt.Errorf("Failed to read service directory: %w", err)
 	}
 
 	region := provisioningStringValue(payload, "regionId")
@@ -378,10 +378,10 @@ func (s *ProvisioningService) buildExecuteRequest(ctx context.Context, tenantID 
 		region = catalog.AvailableRegions[0]
 	}
 	if region == "" {
-		return req, fmt.Errorf("%w: 交付参数缺少 regionId，且服务目录未配置唯一可用地域", ErrProvisioningNotExecutable)
+		return req, fmt.Errorf("%w: The delivery parameter is missing regionId and the service catalog is not configured with a unique available region", ErrProvisioningNotExecutable)
 	}
 	if len(catalog.AvailableRegions) > 0 && !containsString(catalog.AvailableRegions, region) {
-		return req, fmt.Errorf("%w: regionId %s 不在服务目录允许的地域内", ErrProvisioningNotExecutable, region)
+		return req, fmt.Errorf("%w: regionId %s is not in the region allowed by the service catalog", ErrProvisioningNotExecutable, region)
 	}
 
 	account, err := s.selectCloudAccount(ctx, tenantID, region, payload)
@@ -390,14 +390,14 @@ func (s *ProvisioningService) buildExecuteRequest(ctx context.Context, tenantID 
 	}
 	credentialJSON, err := s.secretResolver.Resolve(ctx, tenantID, account.CredentialRef)
 	if err != nil {
-		return req, fmt.Errorf("%w: 解析云凭据失败: %v", ErrProvisioningNotExecutable, err)
+		return req, fmt.Errorf("%w: Failed to parse cloud credentials: %v", ErrProvisioningNotExecutable, err)
 	}
 	resolved, err := cloudRuntime.ResolveAliyunCredential(ctx, credentialJSON)
 	if err != nil {
 		return req, fmt.Errorf("%w: %v", ErrProvisioningNotExecutable, err)
 	}
 	if resolved.AccessKeyID == "" || resolved.AccessKeySecret == "" {
-		return req, fmt.Errorf("%w: 阿里云凭据缺少 AccessKeyID/AccessKeySecret", ErrProvisioningNotExecutable)
+		return req, fmt.Errorf("%w: Alibaba Cloud credentials are missing AccessKeyID/AccessKeySecret", ErrProvisioningNotExecutable)
 	}
 
 	req.AccountID = account.AccountID
@@ -418,7 +418,7 @@ func (s *ProvisioningService) selectCloudAccount(ctx context.Context, tenantID i
 		Order(ent.Asc(cloudaccount.FieldID)).
 		All(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("查询云账号失败: %w", err)
+		return nil, fmt.Errorf("Failed to query cloud account: %w", err)
 	}
 
 	requestedID := provisioningIntValue(payload, "cloudAccountId")
@@ -439,13 +439,13 @@ func (s *ProvisioningService) selectCloudAccount(ctx context.Context, tenantID i
 	switch len(candidates) {
 	case 0:
 		if requestedID > 0 {
-			return nil, fmt.Errorf("%w: 指定的云账号不存在、未启用、不是阿里云账号，或不允许地域 %s", ErrProvisioningNotExecutable, region)
+			return nil, fmt.Errorf("%w: The specified cloud account does not exist, is not enabled, is not an Alibaba Cloud account, or the region %s is not allowed", ErrProvisioningNotExecutable, region)
 		}
-		return nil, fmt.Errorf("%w: 租户未配置可用的阿里云账号（provider=aliyun、isActive=true、地域白名单包含 %s）", ErrProvisioningNotExecutable, region)
+		return nil, fmt.Errorf("%w: The tenant has not configured an available Alibaba Cloud account (provider=aliyun, isActive=true, and the region whitelist contains %s)", ErrProvisioningNotExecutable, region)
 	case 1:
 		return candidates[0], nil
 	default:
-		return nil, fmt.Errorf("%w: 存在多个可用阿里云账号，请在交付参数中指定 cloudAccountId", ErrProvisioningNotExecutable)
+		return nil, fmt.Errorf("%w: There are multiple available Alibaba Cloud accounts. Please specify cloudAccountId in the delivery parameters.", ErrProvisioningNotExecutable)
 	}
 }
 
@@ -457,7 +457,7 @@ func (s *ProvisioningService) completeTask(ctx context.Context, tenantID int, ta
 
 	tx, err := s.client.Tx(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("开启事务失败: %w", err)
+		return nil, fmt.Errorf("Failed to open transaction: %w", err)
 	}
 	defer tx.Rollback()
 
@@ -467,19 +467,19 @@ func (s *ProvisioningService) completeTask(ctx context.Context, tenantID int, ta
 		SetResult(result).
 		SetErrorMessage("").
 		Exec(ctx); err != nil {
-		return nil, fmt.Errorf("回写任务结果失败: %w", err)
+		return nil, fmt.Errorf("Writeback task result failed: %w", err)
 	}
 	if err := tx.ServiceRequest.Update().
 		Where(servicerequest.ID(task.ServiceRequestID), servicerequest.TenantID(tenantID)).
 		SetStatus(domainServiceRequest.StatusDelivered).
 		Exec(ctx); err != nil {
-		return nil, fmt.Errorf("更新服务请求状态失败: %w", err)
+		return nil, fmt.Errorf("Failed to update service request status: %w", err)
 	}
 	if err := recordProvisioningAudit(ctx, tx, tenantID, actorUserID, task, "provision.execute.succeeded", 200, result); err != nil {
-		return nil, fmt.Errorf("写入交付审计失败: %w", err)
+		return nil, fmt.Errorf("Write delivery audit failed: %w", err)
 	}
 	if err := tx.Commit(); err != nil {
-		return nil, fmt.Errorf("提交事务失败: %w", err)
+		return nil, fmt.Errorf("Failed to commit transaction: %w", err)
 	}
 	// 交付主事实已落库。之后的 CMDB 投影和生命周期通知属于跨域联动，
 	// 失败只记录在任务结果/日志里，不能把一次真实成功的云上交付改判为失败。
@@ -649,7 +649,7 @@ func (s *ProvisioningService) markServiceRequestStatus(ctx context.Context, tena
 func (s *ProvisioningService) RetryTask(ctx context.Context, taskID, tenantID, actorUserID int, reason string) (*ent.ProvisioningTask, error) {
 	tx, err := s.client.Tx(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("开启事务失败: %w", err)
+		return nil, fmt.Errorf("Failed to open transaction: %w", err)
 	}
 	defer tx.Rollback()
 
@@ -657,7 +657,7 @@ func (s *ProvisioningService) RetryTask(ctx context.Context, taskID, tenantID, a
 		Where(provisioningtask.ID(taskID), provisioningtask.TenantID(tenantID)).
 		First(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("交付任务不存在: %w", err)
+		return nil, fmt.Errorf("Delivery task does not exist: %w", err)
 	}
 
 	switch provisioning.TaskStatus(task.Status) {
@@ -682,7 +682,7 @@ func (s *ProvisioningService) RetryTask(ctx context.Context, taskID, tenantID, a
 		SetStatus(string(provisioning.TaskPending)).
 		Save(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("重置交付任务状态失败: %w", err)
+		return nil, fmt.Errorf("Failed to reset delivery task status: %w", err)
 	}
 
 	// 服务请求 failed → provisioning（仅当仍是 failed，避免覆盖人工已推进的状态）
@@ -694,7 +694,7 @@ func (s *ProvisioningService) RetryTask(ctx context.Context, taskID, tenantID, a
 		).
 		SetStatus(domainServiceRequest.StatusProvisioning).
 		Exec(ctx); err != nil {
-		return nil, fmt.Errorf("更新服务请求状态失败: %w", err)
+		return nil, fmt.Errorf("Failed to update service request status: %w", err)
 	}
 
 	payload := map[string]interface{}{
@@ -715,11 +715,11 @@ func (s *ProvisioningService) RetryTask(ctx context.Context, taskID, tenantID, a
 		MaxAttempts:    provisioning.MaxTaskAttempts - task.AttemptCount,
 		Payload:        payload,
 	}); err != nil {
-		return nil, fmt.Errorf("入箱交付任务重试命令失败: %w", err)
+		return nil, fmt.Errorf("Inbox delivery task retry command failed: %w", err)
 	}
 
 	if err := tx.Commit(); err != nil {
-		return nil, fmt.Errorf("提交事务失败: %w", err)
+		return nil, fmt.Errorf("Failed to commit transaction: %w", err)
 	}
 	return updated, nil
 }
@@ -733,7 +733,7 @@ func (s *ProvisioningService) RetryTask(ctx context.Context, taskID, tenantID, a
 func (s *ProvisioningService) ResolveTaskManually(ctx context.Context, taskID, tenantID, actorUserID int, outcome, note string) (*ent.ProvisioningTask, error) {
 	note = strings.TrimSpace(note)
 	if note == "" {
-		return nil, common.NewBusinessError(common.ParamErrorCode, "人工判定必须填写依据说明", "")
+		return nil, common.NewBusinessError(common.ParamErrorCode, "Manual judgment must fill in the basis description", "")
 	}
 	var finalStatus provisioning.TaskStatus
 	switch strings.ToLower(strings.TrimSpace(outcome)) {
@@ -742,12 +742,12 @@ func (s *ProvisioningService) ResolveTaskManually(ctx context.Context, taskID, t
 	case "failed":
 		finalStatus = provisioning.TaskFailed
 	default:
-		return nil, common.NewBusinessError(common.ParamErrorCode, "判定结果只能是 delivered 或 failed", "")
+		return nil, common.NewBusinessError(common.ParamErrorCode, "The judgment result can only be delivered or failed", "")
 	}
 
 	tx, err := s.client.Tx(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("开启事务失败: %w", err)
+		return nil, fmt.Errorf("Failed to open transaction: %w", err)
 	}
 	defer tx.Rollback()
 
@@ -755,7 +755,7 @@ func (s *ProvisioningService) ResolveTaskManually(ctx context.Context, taskID, t
 		Where(provisioningtask.ID(taskID), provisioningtask.TenantID(tenantID)).
 		First(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("交付任务不存在: %w", err)
+		return nil, fmt.Errorf("Delivery task does not exist: %w", err)
 	}
 	if !provisioning.CanResolveManually(provisioning.TaskStatus(task.Status)) {
 		return task, ErrProvisioningTaskNotResolvable
@@ -771,7 +771,7 @@ func (s *ProvisioningService) ResolveTaskManually(ctx context.Context, taskID, t
 	}
 	updated, err := update.Save(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("更新交付任务失败: %w", err)
+		return nil, fmt.Errorf("Update delivery task failed: %w", err)
 	}
 
 	if finalStatus == provisioning.TaskSucceeded {
@@ -779,7 +779,7 @@ func (s *ProvisioningService) ResolveTaskManually(ctx context.Context, taskID, t
 			Where(servicerequest.ID(task.ServiceRequestID), servicerequest.TenantID(tenantID)).
 			SetStatus(domainServiceRequest.StatusDelivered).
 			Exec(ctx); err != nil {
-			return nil, fmt.Errorf("更新服务请求状态失败: %w", err)
+			return nil, fmt.Errorf("Failed to update service request status: %w", err)
 		}
 	} else {
 		if err := tx.ServiceRequest.Update().
@@ -787,7 +787,7 @@ func (s *ProvisioningService) ResolveTaskManually(ctx context.Context, taskID, t
 			SetStatus(domainServiceRequest.StatusFailed).
 			SetLastError(note).
 			Exec(ctx); err != nil {
-			return nil, fmt.Errorf("更新服务请求状态失败: %w", err)
+			return nil, fmt.Errorf("Failed to update service request status: %w", err)
 		}
 	}
 
@@ -803,11 +803,11 @@ func (s *ProvisioningService) ResolveTaskManually(ctx context.Context, taskID, t
 		"manual":           true,
 	}
 	if err := recordProvisioningAudit(ctx, tx, tenantID, actorUserID, task, "provision.resolve.manual", 200, resolveBody); err != nil {
-		return nil, fmt.Errorf("写入人工判定审计失败: %w", err)
+		return nil, fmt.Errorf("Write manual judgment audit failed: %w", err)
 	}
 
 	if err := tx.Commit(); err != nil {
-		return nil, fmt.Errorf("提交事务失败: %w", err)
+		return nil, fmt.Errorf("Failed to commit transaction: %w", err)
 	}
 	s.logger.Infow("provisioning task resolved manually",
 		"taskID", task.ID, "tenantID", tenantID, "actorUserID", actorUserID, "outcome", finalStatus, "note", note)

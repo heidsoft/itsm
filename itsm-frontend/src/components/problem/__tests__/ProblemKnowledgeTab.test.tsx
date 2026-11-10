@@ -74,8 +74,8 @@ describe('ProblemKnowledgeTab', () => {
       expect(screen.getByText('连接池耗尽导致服务雪崩')).toBeInTheDocument();
     });
     // 沉淀产物恒为草稿：必须标注「草稿」，绝不能渲染成已发布
-    expect(screen.getByText('草稿')).toBeInTheDocument();
-    expect(screen.queryByText('已发布')).not.toBeInTheDocument();
+    expect(screen.getByText("Draft")).toBeInTheDocument();
+    expect(screen.queryByText("Published")).not.toBeInTheDocument();
     expect(mockList).toHaveBeenCalledWith(1);
   });
 
@@ -85,7 +85,7 @@ describe('ProblemKnowledgeTab', () => {
     render(<ProblemKnowledgeTab problemId={1} />);
 
     await waitFor(() => {
-      expect(screen.getByText('尚未沉淀知识')).toBeInTheDocument();
+      expect(screen.getByText("No knowledge has been accumulated yet")).toBeInTheDocument();
     });
   });
 
@@ -97,21 +97,21 @@ describe('ProblemKnowledgeTab', () => {
 
     render(<ProblemKnowledgeTab problemId={1} />);
     await waitFor(() => {
-      expect(screen.getByText('尚未沉淀知识')).toBeInTheDocument();
+      expect(screen.getByText("No knowledge has been accumulated yet")).toBeInTheDocument();
     });
 
     fireEvent.click(screen.getByTestId('promote-knowledge-button'));
     // Modal 有开门动画，等 dialog 出现再操作；antd 给两字按钮文本插空格，
     // 先圈定 dialog 再命中 OK，避免与触发按钮「沉淀为知识」的前缀撞车（同 sla-definitions 先例）
     const modal = await screen.findByRole('dialog');
-    fireEvent.click(within(modal).getByRole('button', { name: /沉\s*淀/ }));
+    fireEvent.click(within(modal).getByRole('button', { name: 'Precipitation' }));
 
     await waitFor(() => {
       expect(mockPromote).toHaveBeenCalledWith(1, { tags: [] });
     });
     await waitFor(() => {
       expect(mockMessageSuccess).toHaveBeenCalledWith(
-        expect.stringContaining('已沉淀为知识草稿')
+        expect.stringContaining("has been deposited into a knowledge draft")
       );
     });
     // 沉淀成功后刷新列表（第二次调用）
@@ -121,7 +121,7 @@ describe('ProblemKnowledgeTab', () => {
     });
   });
 
-  it('surfaces the 422 quality gate reason verbatim', async () => {
+  it('explains the 422 knowledge quality gate in English', async () => {
     mockList.mockResolvedValueOnce({ items: [], total: 0 });
     mockPromote.mockRejectedValueOnce(
       new ApiRequestError('问题尚无根因或解决方案，沉淀为知识没有可复用价值', 422, 4220)
@@ -129,15 +129,15 @@ describe('ProblemKnowledgeTab', () => {
 
     render(<ProblemKnowledgeTab problemId={1} />);
     await waitFor(() => {
-      expect(screen.getByText('尚未沉淀知识')).toBeInTheDocument();
+      expect(screen.getByText("No knowledge has been accumulated yet")).toBeInTheDocument();
     });
 
     fireEvent.click(screen.getByTestId('promote-knowledge-button'));
     const modal = await screen.findByRole('dialog');
-    fireEvent.click(within(modal).getByRole('button', { name: /沉\s*淀/ }));
+    fireEvent.click(within(modal).getByRole('button', { name: 'Precipitation' }));
 
     await waitFor(() => {
-      expect(mockMessageError).toHaveBeenCalledWith(expect.stringContaining('根因或解决方案'));
+      expect(mockMessageError).toHaveBeenCalledWith(expect.stringContaining('root cause or solution'));
     });
     expect(mockPromote).toHaveBeenCalledTimes(1);
   });
@@ -148,8 +148,8 @@ describe('ProblemKnowledgeTab', () => {
     render(<ProblemKnowledgeTab problemId={1} />);
 
     await waitFor(() => {
-      expect(screen.getByText('沉淀知识读取失败')).toBeInTheDocument();
+      expect(screen.getByText("Failed to read precipitated knowledge")).toBeInTheDocument();
     });
-    expect(screen.queryByText('尚未沉淀知识')).not.toBeInTheDocument();
+    expect(screen.queryByText("No knowledge has been accumulated yet")).not.toBeInTheDocument();
   });
 });

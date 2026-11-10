@@ -142,7 +142,7 @@ func TestUserService_GetUserByID(t *testing.T) {
 			expectedError: false,
 		},
 		{
-			name:          "用户不存在",
+			name:          "User does not exist",
 			userID:        99999,
 			expectedError: true,
 		},
@@ -224,7 +224,7 @@ func TestUserService_UpdateUser(t *testing.T) {
 			expectedError: false,
 		},
 		{
-			name:   "用户不存在",
+			name:   "User does not exist",
 			userID: 99999,
 			request: &dto.UpdateUserRequest{
 				Name: "Non-existent User",
@@ -303,7 +303,7 @@ func TestUserService_DeleteUser(t *testing.T) {
 			expectedError: false,
 		},
 		{
-			name:          "用户不存在",
+			name:          "User does not exist",
 			userID:        99999,
 			expectedError: true,
 		},
@@ -473,7 +473,7 @@ func TestUserService_ResetPassword(t *testing.T) {
 			expectedError: false,
 		},
 		{
-			name:          "用户不存在",
+			name:          "User does not exist",
 			userID:        99999,
 			newPassword:   "NewPass@4567890",
 			expectedError: true,
@@ -552,7 +552,7 @@ func TestUserService_ChangeUserStatus(t *testing.T) {
 			expectedError: false,
 		},
 		{
-			name:          "用户不存在",
+			name:          "User does not exist",
 			userID:        99999,
 			active:        false,
 			currentUserID: 0,
@@ -634,7 +634,7 @@ func TestUserService_UpdateUser_TenantIsolation(t *testing.T) {
 
 	assert.Error(t, err)
 	// User doesn't exist from tenant 2's perspective (cross-tenant isolation works)
-	assert.Contains(t, err.Error(), "用户不存在")
+	assert.Contains(t, err.Error(), "User does not exist")
 }
 
 func BenchmarkUserService_CreateUser(b *testing.B) {

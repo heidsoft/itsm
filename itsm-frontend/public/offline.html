@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en-US">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>离线模式 - ITSM系统</title>
+    <title>Offline Mode - ITSM System</title>
     <style>
         * {
             margin: 0;
@@ -170,37 +170,30 @@
         <div class="offline-icon">
             📡
         </div>
-        
-        <h1 class="offline-title">网络连接不可用</h1>
-        
-        <p class="offline-message">
-            您当前处于离线状态，无法连接到服务器。请检查您的网络连接后重试。
-        </p>
-        
+
+        <h1 class="offline-title">Network connection not available</h1>
+
+        <p class="offline-message">You are currently offline and cannot connect to the server. Please check your network connection and try again.</p>
+
         <div class="offline-actions">
-            <button class="btn btn-primary" onclick="window.location.reload()">
-                重新加载
-            </button>
-            <a href="/" class="btn btn-secondary">
-                返回首页
-            </a>
+            <button class="btn btn-primary" onclick="window.location.reload()">Reload</button>
+            <a href="/" class="btn btn-secondary">Return to homepage</a>
         </div>
-        
+
         <div class="offline-features">
-            <h3>离线功能</h3>
+            <h3>Offline function</h3>
             <ul class="feature-list">
-                <li>查看已缓存的工单数据</li>
-                <li>查看已缓存的事件信息</li>
-                <li>查看已缓存的问题记录</li>
-                <li>查看已缓存的变更信息</li>
-                <li>查看已缓存的用户信息</li>
-                <li>查看已缓存的配置数据</li>
+                <li>View cached ticket data</li>
+                <li>View cached event information</li>
+                <li>View cached problem records</li>
+                <li>View cached change information</li>
+                <li>View cached user information</li>
+                <li>View cached configuration data</li>
             </ul>
         </div>
-        
+
         <div id="network-status" class="network-status">
-            <strong>网络状态：</strong>离线
-        </div>
+            <strong>Network status:</strong>Offline</div>
     </div>
 
     <script>
@@ -208,17 +201,17 @@
         function updateNetworkStatus() {
             const statusElement = document.getElementById('network-status');
             const isOnline = navigator.onLine;
-            
+
             if (isOnline) {
-                statusElement.innerHTML = '<strong>网络状态：</strong>已连接';
+                statusElement.innerHTML = '<strong>Network status:</strong>Connected';
                 statusElement.className = 'network-status online';
-                
+
                 // 网络恢复后自动重定向到首页
                 setTimeout(() => {
                     window.location.href = '/';
                 }, 2000);
             } else {
-                statusElement.innerHTML = '<strong>网络状态：</strong>离线';
+                statusElement.innerHTML = '<strong>Network status:</strong>Offline';
                 statusElement.className = 'network-status';
             }
         }
@@ -239,7 +232,7 @@
                 event.preventDefault();
                 window.location.reload();
             }
-            
+
             if (event.key === 'Escape') {
                 window.location.href = '/';
             }
@@ -257,10 +250,10 @@
         document.addEventListener('touchend', (event) => {
             const touchEndX = event.changedTouches[0].clientX;
             const touchEndY = event.changedTouches[0].clientY;
-            
+
             const deltaX = touchEndX - touchStartX;
             const deltaY = touchEndY - touchStartY;
-            
+
             // 检测下拉刷新手势
             if (deltaY > 100 && Math.abs(deltaX) < 50) {
                 window.location.reload();
@@ -269,15 +262,15 @@
 
         // 添加PWA安装提示
         let deferredPrompt;
-        
+
         window.addEventListener('beforeinstallprompt', (event) => {
             event.preventDefault();
             deferredPrompt = event;
-            
+
             // 显示安装提示
             const installButton = document.createElement('button');
             installButton.className = 'btn btn-primary';
-            installButton.textContent = '安装应用';
+            installButton.textContent = 'Install app';
             installButton.style.marginTop = '16px';
             installButton.onclick = async () => {
                 if (deferredPrompt) {
@@ -287,7 +280,7 @@
                     deferredPrompt = null;
                 }
             };
-            
+
             document.querySelector('.offline-actions').appendChild(installButton);
         });
     </script>

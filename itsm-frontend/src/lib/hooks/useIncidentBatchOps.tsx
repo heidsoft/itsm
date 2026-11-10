@@ -60,7 +60,7 @@ export function useIncidentBatchOps({
       ids: readonly React.Key[],
       handler: (id: number) => Promise<unknown>,
       successMsg: string,
-      failPrefix = '部分失败'
+      failPrefix = 'Partial failure'
     ): Promise<{ successCount: number; failedIds: React.Key[] }> => {
       if (ids.length === 0) {
         return { successCount: 0, failedIds: [] };
@@ -91,11 +91,11 @@ export function useIncidentBatchOps({
         await Promise.allSettled(workers);
 
         if (failedIds.length === 0) {
-          message.success(`${successMsg}：${successCount} 项`);
+          message.success(`${successMsg}：${successCount} items`);
         } else if (successCount === 0) {
-          message.error(`${failPrefix}：${failedIds.length} 项全部失败`);
+          message.error(`${failPrefix}：${failedIds.length} All items failed`);
         } else {
-          message.warning(`${failPrefix}：成功 ${successCount} 项，失败 ${failedIds.length} 项`);
+          message.warning(`${failPrefix}：Success ${successCount} Item, failed ${failedIds.length} items`);
         }
         // Keep failed ids selected so the operator can retry; clear only on
         // full success. Use a Set for O(1) membership when the failed list is
@@ -137,21 +137,21 @@ export function useIncidentBatchOps({
   const handleBatchResolve = useCallback(async () => {
     await runBatch(
       selectedRowKeys,
-      id => IncidentAPI.resolveIncident(id, { resolution: '批量解决' }),
-      '批量解决成功'
+      id => IncidentAPI.resolveIncident(id, { resolution: 'Batch solution' }),
+      'Batch solution successful'
     );
   }, [selectedRowKeys, runBatch]);
 
   const handleBatchClose = useCallback(async () => {
     await runBatch(
       selectedRowKeys,
-      id => IncidentAPI.closeIncident(id, { closeNotes: '批量关闭' }),
-      '批量关闭成功'
+      id => IncidentAPI.closeIncident(id, { closeNotes: 'Batch Close' }),
+      'Batch closing successful'
     );
   }, [selectedRowKeys, runBatch]);
 
   const handleBatchDelete = useCallback(async () => {
-    await runBatch(selectedRowKeys, id => IncidentAPI.deleteIncident(id), '批量删除成功');
+    await runBatch(selectedRowKeys, id => IncidentAPI.deleteIncident(id), 'Batch deletion successful');
   }, [selectedRowKeys, runBatch]);
 
   // Note: assign-confirm logic lives in the page (handleAssignConfirm) so it can
@@ -161,29 +161,29 @@ export function useIncidentBatchOps({
   const batchActions: BatchAction[] = [
     {
       key: 'assign',
-      label: '批量分派',
+      label: 'Batch dispatch',
       icon: <UserPlus size={14} />,
       onClick: openAssignModal,
       type: 'primary' as const,
     },
     {
       key: 'resolve',
-      label: '批量解决',
+      label: 'Batch solution',
       icon: <CheckCircle size={14} />,
       onClick: handleBatchResolve,
     },
     {
       key: 'close',
-      label: '批量关闭',
+      label: 'Batch Close',
       icon: <XCircle size={14} />,
       onClick: handleBatchClose,
     },
     {
       key: 'delete',
-      label: '批量删除',
+      label: 'Batch Delete',
       icon: <Trash2 size={14} />,
       danger: true,
-      confirmTitle: `确定删除选中的 ${selectedRowKeys.length} 个事件？此操作不可撤销`,
+      confirmTitle: `Confirm to delete the selected ${selectedRowKeys.length} events? This action is irreversible`,
       onClick: handleBatchDelete,
       overflow: true,
     },

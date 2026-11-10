@@ -193,26 +193,26 @@ func EnsureIndexConvergence(ctx context.Context, db *sql.DB) (int, error) {
 	for _, pair := range duplicateIndexPairs {
 		keep, redundant := pair[0], pair[1]
 		if !safeIndexName.MatchString(keep) || !safeIndexName.MatchString(redundant) {
-			errs = append(errs, fmt.Errorf("index convergence: 非法索引名 %q/%q", keep, redundant))
+			errs = append(errs, fmt.Errorf("index convergence: illegal index name %q/%q", keep, redundant))
 			continue
 		}
 
 		var keepExists bool
 		if err := db.QueryRowContext(ctx,
 			`SELECT to_regclass($1) IS NOT NULL`, keep).Scan(&keepExists); err != nil {
-			errs = append(errs, fmt.Errorf("index convergence: 探测 %s: %w", keep, err))
+			errs = append(errs, fmt.Errorf("index convergence: probe %s: %w", keep, err))
 			continue
 		}
 		if !keepExists {
 			errs = append(errs, fmt.Errorf(
-				"index convergence: 保留方 %s 不存在，拒绝删除 %s（会让该访问路径失去索引）",
+				"index convergence: The retainer %s does not exist, and the deletion of %s is refused (the access path will lose the index)",
 				keep, redundant))
 			continue
 		}
 
 		res, err := db.ExecContext(ctx, `DROP INDEX IF EXISTS `+redundant)
 		if err != nil {
-			errs = append(errs, fmt.Errorf("index convergence: 删除 %s: %w", redundant, err))
+			errs = append(errs, fmt.Errorf("index convergence: delete %s: %w", redundant, err))
 			continue
 		}
 		if n, err := res.RowsAffected(); err == nil && n > 0 {
@@ -323,7 +323,7 @@ func InitDatabase(cfg *config.DatabaseConfig) (*ent.Client, error) {
 	// Compatibility fix: if legacy column "author" exists and is NOT NULL, relax constraint to allow inserts via current schema (author_id)
 	var hasAuthorColumn bool
 	if err := db.QueryRowContext(ctx, `SELECT EXISTS (
-        SELECT 1 FROM information_schema.columns 
+        SELECT 1 FROM information_schema.columns
         WHERE table_name='knowledge_articles' AND column_name='author'
     )`).Scan(&hasAuthorColumn); err == nil && hasAuthorColumn {
 		// drop NOT NULL to avoid insert failures

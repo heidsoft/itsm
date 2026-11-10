@@ -72,10 +72,10 @@ describe('服务请求详情审批入口门控', () => {
     await screen.findByText('测试服务请求');
 
     await waitFor(() => {
-      expect(screen.queryByRole('button', { name: /^通\s*过$/ })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /^Approve$/ })).not.toBeInTheDocument();
     });
-    expect(screen.queryByRole('button', { name: /^拒\s*绝$/ })).not.toBeInTheDocument();
-    expect(screen.queryByText('审批操作')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Rejected$/ })).not.toBeInTheDocument();
+    expect(screen.queryByText("Approval operation")).not.toBeInTheDocument();
   });
 
   it('当前用户具备审批资格时，渲染「通过/拒绝」入口', async () => {
@@ -83,10 +83,10 @@ describe('服务请求详情审批入口门控', () => {
 
     renderPage();
 
-    const approveButton = await screen.findByRole('button', { name: /^通\s*过$/ });
+    const approveButton = await screen.findByRole('button', { name: /^Approve$/ });
     expect(approveButton).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /^拒\s*绝$/ })).toBeInTheDocument();
-    expect(screen.getByText('审批操作')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^Rejected$/ })).toBeInTheDocument();
+    expect(screen.getByText("Approval operation")).toBeInTheDocument();
   });
 
   it('后端未下发 canApprove 字段时（老响应），不渲染审批入口', async () => {
@@ -98,7 +98,7 @@ describe('服务请求详情审批入口门控', () => {
     await screen.findByText('测试服务请求');
 
     await waitFor(() => {
-      expect(screen.queryByRole('button', { name: /^通\s*过$/ })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /^Approve$/ })).not.toBeInTheDocument();
     });
   });
 
@@ -110,7 +110,7 @@ describe('服务请求详情审批入口门控', () => {
     await screen.findByText('测试服务请求');
 
     await waitFor(() => {
-      expect(screen.queryByRole('button', { name: /^通\s*过$/ })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /^Approve$/ })).not.toBeInTheDocument();
     });
   });
 });

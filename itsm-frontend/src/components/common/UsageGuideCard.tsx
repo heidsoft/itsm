@@ -24,7 +24,7 @@ export interface UsageGuideCardProps {
  * 按什么顺序操作、和哪些模块联动”。默认折叠，不挤占操作空间。
  */
 export const UsageGuideCard: React.FC<UsageGuideCardProps> = ({
-  title = '如何使用本页面',
+  title = 'How to use this page',
   intro,
   steps,
   defaultOpen = false,

@@ -56,24 +56,24 @@ describe('Utils', () => {
     it('should return relative time for recent dates', () => {
       const now = new Date();
       const result = formatDate(now);
-      expect(result).toBe('刚刚');
+      expect(result).toBe("Just now");
     });
 
     it('should return minutes ago', () => {
       const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000);
       const result = formatDate(fiveMinAgo);
-      expect(result).toContain('分钟前');
+      expect(result).toContain("minutes ago");
     });
 
     it('should return hours ago', () => {
       const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
       const result = formatDate(twoHoursAgo);
-      expect(result).toContain('小时前');
+      expect(result).toContain("hours ago");
     });
 
     it('should return invalid date for bad input', () => {
       const result = formatDate('not-a-date');
-      expect(result).toBe('无效日期');
+      expect(result).toBe("Invalid date");
     });
 
     it('should handle string date input', () => {

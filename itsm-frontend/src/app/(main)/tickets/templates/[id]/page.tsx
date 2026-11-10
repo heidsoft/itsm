@@ -27,7 +27,7 @@ type TemplateDetail = Awaited<ReturnType<typeof TicketApi.getTemplate>>;
 
 const renderValue = (value: unknown): React.ReactNode => {
   if (value === null || value === undefined || value === '') return '-';
-  if (typeof value === 'boolean') return value ? '是' : '否';
+  if (typeof value === 'boolean') return value ? 'Yes' : 'No';
   if (Array.isArray(value)) return value.join('、') || '-';
   if (typeof value === 'object') return <Text code>{JSON.stringify(value)}</Text>;
   return String(value);
@@ -55,7 +55,7 @@ export default function TicketTemplateDetailPage() {
       setTemplate(templateData);
       setTickets(ticketData.items ?? []);
     } catch {
-      message.error('加载模板详情失败');
+      message.error('Failed to load template details');
       setTemplate(null);
     } finally {
       setLoading(false);
@@ -73,7 +73,7 @@ export default function TicketTemplateDetailPage() {
 
   const columns: ColumnsType<Ticket> = [
     {
-      title: '工单编号',
+      title: 'Ticket Number',
       dataIndex: 'ticketNumber',
       render: (value: string, record) => (
         <Button
@@ -83,7 +83,7 @@ export default function TicketTemplateDetailPage() {
               router.push(`/tickets/${record.id}`);
             } catch (navErr) {
               console.error('[nav]', navErr);
-              message.error('导航失败，请稍后重试');
+              message.error('Navigation failed, please try again later');
             }
           }}
         >
@@ -91,17 +91,17 @@ export default function TicketTemplateDetailPage() {
         </Button>
       ),
     },
-    { title: '标题', dataIndex: 'title', ellipsis: true },
-    { title: '状态', dataIndex: 'status', render: value => <Tag>{value}</Tag> },
+    { title: 'Title', dataIndex: 'title', ellipsis: true },
+    { title: 'Status', dataIndex: 'status', render: value => <Tag>{value}</Tag> },
     {
-      title: '优先级',
+      title: 'Priority',
       dataIndex: 'priority',
       render: value => (
         <Tag color={value === 'high' || value === 'critical' ? 'red' : 'blue'}>{value}</Tag>
       ),
     },
     {
-      title: '创建时间',
+      title: 'Created',
       dataIndex: 'createdAt',
       render: value => (value ? dayjs(value).format('YYYY-MM-DD HH:mm') : '-'),
     },
@@ -118,8 +118,8 @@ export default function TicketTemplateDetailPage() {
     return (
       <Result
         status='404'
-        title='模板不存在'
-        subTitle='该模板可能已被删除，或您没有访问权限。'
+        title="Template does not exist"
+        subTitle="The template may have been deleted or you do not have access rights."
         extra={
           <Button
             onClick={() => {
@@ -127,11 +127,12 @@ export default function TicketTemplateDetailPage() {
                 router.push('/tickets/templates');
               } catch (navErr) {
                 console.error('[nav]', navErr);
-                message.error('导航失败，请稍后重试');
+                message.error('Navigation failed, please try again later');
               }
             }}
           >
-            返回模板列表
+
+            Return template list
           </Button>
         }
       />
@@ -148,11 +149,12 @@ export default function TicketTemplateDetailPage() {
               router.push('/tickets/templates');
             } catch (navErr) {
               console.error('[nav]', navErr);
-              message.error('导航失败，请稍后重试');
+              message.error('Navigation failed, please try again later');
             }
           }}
         >
-          返回模板列表
+
+          Return template list
         </Button>
         <div className='mt-4 flex items-start justify-between'>
           <div>
@@ -160,30 +162,30 @@ export default function TicketTemplateDetailPage() {
               {template.name}
             </Title>
             <Paragraph type='secondary' style={{ marginBottom: 0 }}>
-              {template.description || '暂无描述'}
+              {template.description || 'No description'}
             </Paragraph>
           </div>
           <Tag color={template.isActive ? 'green' : 'default'}>
-            {template.isActive ? '已启用' : '已停用'}
+            {template.isActive ? 'Enabled' : 'Disabled'}
           </Tag>
         </div>
       </Card>
 
-      <Card title='基本信息'>
+      <Card title="Basic Info">
         <Descriptions bordered column={{ xs: 1, sm: 2 }}>
-          <Descriptions.Item label='模板 ID'>{template.id}</Descriptions.Item>
-          <Descriptions.Item label='分类'>{template.category || '-'}</Descriptions.Item>
-          <Descriptions.Item label='默认优先级'>{template.priority || '-'}</Descriptions.Item>
-          <Descriptions.Item label='创建时间'>
+          <Descriptions.Item label="Template ID">{template.id}</Descriptions.Item>
+          <Descriptions.Item label="Category">{template.category || '-'}</Descriptions.Item>
+          <Descriptions.Item label="Default Priority">{template.priority || '-'}</Descriptions.Item>
+          <Descriptions.Item label="Created">
             {dayjs(template.createdAt).format('YYYY-MM-DD HH:mm')}
           </Descriptions.Item>
-          <Descriptions.Item label='更新时间'>
+          <Descriptions.Item label="Updated At">
             {dayjs(template.updatedAt).format('YYYY-MM-DD HH:mm')}
           </Descriptions.Item>
         </Descriptions>
       </Card>
 
-      <Card title='关联表单配置' extra={<FileText size={18} />}>
+      <Card title="Association form configuration" extra={<FileText size={18} />}>
         {formEntries.length > 0 ? (
           <Descriptions bordered column={1}>
             {formEntries.map(([key, value]) => (
@@ -198,18 +200,18 @@ export default function TicketTemplateDetailPage() {
             pagination={false}
             dataSource={template.fields}
             columns={[
-              { title: '字段', dataIndex: 'name' },
-              { title: '标签', dataIndex: 'label' },
-              { title: '类型', dataIndex: 'type' },
-              { title: '必填', dataIndex: 'required', render: value => (value ? '是' : '否') },
+              { title: 'Field', dataIndex: 'name' },
+              { title: 'Tags', dataIndex: 'label' },
+              { title: 'Type', dataIndex: 'type' },
+              { title: 'Required', dataIndex: 'required', render: value => (value ? 'Yes' : 'No') },
             ]}
           />
         ) : (
-          <Empty description='暂无关联表单配置' />
+          <Empty description="No associated form configuration yet" />
         )}
       </Card>
 
-      <Card title={`关联工单（${tickets.length}）`}>
+      <Card title={`Associated work order (${tickets.length}）`}>
         <Table rowKey='id' columns={columns} dataSource={tickets} pagination={{ pageSize: 10 }} />
       </Card>
     </Space>

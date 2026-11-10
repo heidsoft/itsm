@@ -22,7 +22,7 @@ const UserSatisfactionChart: React.FC<{ data: SatisfactionData[] }> = React.memo
     yField: 'rating',
     meta: {
       rating: {
-        alias: '满意度评分',
+        alias: 'Satisfaction Score',
         min: 0,
         max: 5,
       },
@@ -49,8 +49,8 @@ const UserSatisfactionChart: React.FC<{ data: SatisfactionData[] }> = React.memo
     },
     tooltip: {
       formatter: (datum: { rating: number; responses: number }) => ({
-        name: '满意度评分',
-        value: `${datum.rating}/5.0 (${datum.responses}份反馈)`,
+        name: "Satisfaction Score",
+        value: `${datum.rating}/5.0 (${datum.responses} feedback)`,
       }),
     },
     responsive: true,
@@ -65,14 +65,14 @@ const UserSatisfactionChart: React.FC<{ data: SatisfactionData[] }> = React.memo
 
   return (
     <DashboardChartCard
-      title="用户满意度趋势"
-      subtitle="月度服务满意度评分变化"
+      title="User satisfaction trends"
+      subtitle="Changes in monthly service satisfaction scores"
       icon={<Smile style={{ width: 20, height: 20 }} />}
       iconColor="#ec4899"
       trend={{ value: trend, isPositive: trend > 0 }}
       extra={
         <div style={{ textAlign: 'right' }}>
-          <div style={{ fontSize: 12, color: '#8c8c8c' }}>平均评分</div>
+          <div style={{ fontSize: 12, color: '#8c8c8c' }}>average rating</div>
           <div style={{ fontSize: 16, fontWeight: 600, color: '#eb2f96' }}>
             {avgRating.toFixed(1)}/5.0
           </div>
@@ -87,17 +87,17 @@ const UserSatisfactionChart: React.FC<{ data: SatisfactionData[] }> = React.memo
       <div className="mt-4 pt-4 border-t border-gray-100">
         <div className="grid grid-cols-3 gap-4">
           <div className="text-center">
-            <div className="text-xs text-gray-500 mb-1">总反馈数</div>
+            <div className="text-xs text-gray-500 mb-1">Total number of feedbacks</div>
             <div className="text-lg font-bold text-gray-900">{totalResponses}</div>
           </div>
           <div className="text-center">
-            <div className="text-xs text-gray-500 mb-1">最高评分</div>
+            <div className="text-xs text-gray-500 mb-1">Highest Rated</div>
             <div className="text-lg font-bold text-pink-600">
               {data.length > 0 ? maxRating.toFixed(1) : '-'}
             </div>
           </div>
           <div className="text-center">
-            <div className="text-xs text-gray-500 mb-1">最低评分</div>
+            <div className="text-xs text-gray-500 mb-1">lowest rating</div>
             <div className="text-lg font-bold text-orange-600">
               {data.length > 0 ? minRating.toFixed(1) : '-'}
             </div>

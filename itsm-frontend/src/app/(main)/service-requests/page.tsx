@@ -51,7 +51,7 @@ export default function ServiceRequestsPage() {
         (pendingResp?.items ?? []).map(r => ({
           id: r.id,
           requestNumber: r.requestNumber,
-          title: r.title || r.catalog?.name || '服务请求',
+          title: r.title || r.catalog?.name || 'Service Request',
           applicant: r.requester?.name || r.requester?.username || '-',
           createdAt: r.createdAt,
         }))
@@ -74,7 +74,7 @@ export default function ServiceRequestsPage() {
       });
     } catch (error) {
       console.error('Failed to fetch service request stats:', error);
-      message.error('加载服务请求统计失败');
+      message.error('Failed to load service request statistics');
     }
   };
 
@@ -84,28 +84,28 @@ export default function ServiceRequestsPage() {
 
   const approvalColumns = [
     {
-      title: '请求号',
+      title: 'Request number',
       dataIndex: 'requestNumber',
       key: 'requestNumber',
     },
     {
-      title: '标题',
+      title: 'Title',
       dataIndex: 'title',
       key: 'title',
     },
     {
-      title: '申请人',
+      title: 'Requester',
       dataIndex: 'applicant',
       key: 'applicant',
     },
     {
-      title: '申请时间',
+      title: 'Application time',
       dataIndex: 'createdAt',
       key: 'createdAt',
       render: (value: string) => formatDateTime(value),
     },
     {
-      title: '操作',
+      title: 'Actions',
       key: 'action',
       render: (_: unknown, record: PendingApprovalRow) => (
         <Button
@@ -113,7 +113,8 @@ export default function ServiceRequestsPage() {
           type="link"
           onClick={() => router.push(`/service-requests/${record.id}`)}
         >
-          审批
+
+          Approval
         </Button>
       ),
     },
@@ -125,10 +126,12 @@ export default function ServiceRequestsPage() {
       <div className="mb-6 flex justify-between items-center">
         <div>
           <Title level={2} style={{ marginBottom: 4 }}>
-            服务请求
+
+            Service Request
           </Title>
           <Text type="secondary">
-            查看和管理服务请求及审批流程
+
+            View and manage service requests and approval processes
           </Text>
         </div>
         {canCreateServiceRequest && (
@@ -137,7 +140,8 @@ export default function ServiceRequestsPage() {
             icon={<Plus size={16} />}
             onClick={() => router.push('/service-requests/new')}
           >
-            新建服务请求
+
+            New service request
           </Button>
         )}
       </div>
@@ -147,7 +151,7 @@ export default function ServiceRequestsPage() {
         <Col xs={24} sm={12} lg={6}>
           <Card className="rounded-lg shadow-sm">
             <Statistic
-              title="我的请求"
+              title="My Requests"
               value={stats.totalRequests}
               prefix={<FileText className="text-blue-500 mr-2" />}
               styles={{ content: { color: '#1890ff' } }}
@@ -157,7 +161,7 @@ export default function ServiceRequestsPage() {
         <Col xs={24} sm={12} lg={6}>
           <Card className="rounded-lg shadow-sm">
             <Statistic
-              title="待审批"
+              title="Pending Approval"
               value={stats.pending}
               prefix={<Clock className="text-orange-500 mr-2" />}
               styles={{ content: { color: '#fa8c16' } }}
@@ -167,7 +171,7 @@ export default function ServiceRequestsPage() {
         <Col xs={24} sm={12} lg={6}>
           <Card className="rounded-lg shadow-sm">
             <Statistic
-              title="处理中"
+              title="In Progress"
               value={stats.processing}
               prefix={<Inbox className="text-blue-500 mr-2" />}
               styles={{ content: { color: '#1890ff' } }}
@@ -177,7 +181,7 @@ export default function ServiceRequestsPage() {
         <Col xs={24} sm={12} lg={6}>
           <Card className="rounded-lg shadow-sm">
             <Statistic
-              title="已完成"
+              title="Completed"
               value={stats.completed}
               prefix={<CheckCircle className="text-green-500 mr-2" />}
               styles={{ content: { color: '#52c41a' } }}
@@ -197,7 +201,8 @@ export default function ServiceRequestsPage() {
               label: (
                 <span className="flex items-center gap-2">
                   <FileText />
-                  我的请求
+
+                  My Requests
                 </span>
               ),
               children: <ServiceRequestList />,
@@ -207,7 +212,8 @@ export default function ServiceRequestsPage() {
               label: (
                 <span className="flex items-center gap-2">
                   <Clock />
-                  待审批 ({pendingApprovals.length})
+
+                  Pending approval ({pendingApprovals.length})
                 </span>
               ),
               children: (

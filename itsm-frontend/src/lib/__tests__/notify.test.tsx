@@ -18,7 +18,7 @@ jest.mock('@/lib/api/base-api-handler', () => ({
   getFriendlyErrorMessage: jest.fn((error: unknown) => {
     if (error instanceof Error) return error.message;
     if (typeof error === 'string') return error;
-    return '操作失败，请稍后重试';
+    return 'Operation failed, please try again later.';
   }),
 }));
 
@@ -67,36 +67,36 @@ describe('notify', () => {
       notify.error(err);
 
       const text = mockMessage.error.mock.calls[0][0] as string;
-      expect(text).toContain('没有权限');
-      expect(text).toContain('联系管理员');
+      expect(text).toContain("No permission");
+      expect(text).toContain("contact the administrator");
     });
 
     it('resolves 409 from error.code to actionable guidance', () => {
       notify.error({ code: 409 });
 
       const text = mockMessage.error.mock.calls[0][0] as string;
-      expect(text).toContain('数据已被其他人修改');
+      expect(text).toContain("Data has been modified by someone else");
     });
 
     it('resolves 500 from response.status to actionable guidance', () => {
       notify.error({ response: { status: 500, data: {} } });
 
       const text = mockMessage.error.mock.calls[0][0] as string;
-      expect(text).toContain('服务暂时不可用');
+      expect(text).toContain("Service is temporarily unavailable");
     });
 
     it('resolves Network Error from error.message text match', () => {
       notify.error(new Error('Network Error'));
 
       const text = mockMessage.error.mock.calls[0][0] as string;
-      expect(text).toContain('网络连接失败');
+      expect(text).toContain("Network connection failed");
     });
 
     it('resolves timeout from error.message text match', () => {
       notify.error(new Error('Request timeout'));
 
       const text = mockMessage.error.mock.calls[0][0] as string;
-      expect(text).toContain('请求超时');
+      expect(text).toContain("Request timeout");
     });
   });
 
@@ -105,7 +105,7 @@ describe('notify', () => {
       notify.error({ status: 400 }, { context: '提交变更' });
 
       const text = mockMessage.error.mock.calls[0][0] as string;
-      expect(text).toMatch(/^提交变更失败：/);
+      expect(text).toMatch(/^提交变更 Failure:/);
     });
   });
 
@@ -121,7 +121,7 @@ describe('notify', () => {
       notify.error({}, { context: '保存' });
 
       const text = mockMessage.error.mock.calls[0][0] as string;
-      expect(text).toBe('保存失败：操作失败，请稍后重试');
+      expect(text).toBe("保存 Failure:Operation failed, please try again later.");
     });
 
     it('falls through to friendly message when error is an Error instance', () => {
@@ -142,8 +142,8 @@ describe('notify', () => {
 
       expect(mockNotification.error).toHaveBeenCalledTimes(1);
       const call = mockNotification.error.mock.calls[0][0] as Record<string, unknown>;
-      expect(call.message).toBe('加载数据失败');
-      expect(call.description).toContain('网络连接失败');
+      expect(call.message).toBe("加载数据 Failed");
+      expect(call.description).toContain("Network connection failed");
       expect(call.duration).toBe(6);
       expect(call.actions).toBeDefined();
     });
@@ -169,9 +169,9 @@ describe('notify', () => {
       notify.aiUnavailable();
 
       const text = mockMessage.warning.mock.calls[0][0] as string;
-      expect(text).toContain('AI 助手');
-      expect(text).toContain('暂时不可用');
-      expect(text).toContain('手动填写');
+      expect(text).toContain('AI Assistant');
+      expect(text).toContain("Temporarily unavailable");
+      expect(text).toContain("manually filled");
       expect(text).not.toContain('操作失败');
     });
 
@@ -197,8 +197,8 @@ describe('notify', () => {
       notify.aiLowConfidence();
 
       const text = mockMessage.info.mock.calls[0][0] as string;
-      expect(text).toContain('AI 建议');
-      expect(text).toContain('置信度较低');
+      expect(text).toContain("AI suggestion");
+      expect(text).toContain("confidence level is low");
     });
 
     it('uses custom context', () => {

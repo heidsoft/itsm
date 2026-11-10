@@ -60,12 +60,12 @@ describe('WorkflowAIModal', () => {
 
     const { onApplyGeneratedProcess } = renderModal();
 
-    fireEvent.change(screen.getByLabelText('需求描述'), {
+    fireEvent.change(screen.getByLabelText("Requirement Description"), {
       target: {
         value: '用户提交事件，服务台分派给工程师，工程师处理后关闭。',
       },
     });
-    fireEvent.click(screen.getByRole('button', { name: /生成流程/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Generate Process/ }));
 
     await waitFor(() => expect(BPMNAIApi.generateBPMN).toHaveBeenCalledTimes(1));
     expect(BPMNAIApi.generateBPMN).toHaveBeenCalledWith({
@@ -79,7 +79,7 @@ describe('WorkflowAIModal', () => {
 
     expect(await screen.findByText(generatedXml)).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: /应用到画布/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Apply to Canvas/ }));
     expect(onApplyGeneratedProcess).toHaveBeenCalledWith(generatedXml);
   }, 40_000);
 
@@ -88,14 +88,14 @@ describe('WorkflowAIModal', () => {
 
     renderModal();
 
-    fireEvent.change(screen.getByLabelText('需求描述'), {
+    fireEvent.change(screen.getByLabelText("Requirement Description"), {
       target: {
         value: '用户提交事件，服务台分派给工程师，工程师处理后关闭。',
       },
     });
-    fireEvent.click(screen.getByRole('button', { name: /生成流程/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Generate Process/ }));
 
-    expect(await screen.findByText('生成失败')).toBeInTheDocument();
+    expect(await screen.findByText("Generation Failed")).toBeInTheDocument();
     expect(screen.getByText('AI服务暂不可用')).toBeInTheDocument();
   });
 });

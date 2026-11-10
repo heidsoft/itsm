@@ -36,19 +36,19 @@ type EscalationMatrix map[string][]EscalationLevel
 // 升级目标只使用 users.role 主角色码，因为 resolveNotifyUsers 按主角色精确查人。
 var DefaultEscalationMatrix = EscalationMatrix{
 	"critical": {
-		{Level: 1, AfterMinutes: 15, NotifyRoles: []string{"manager"}, Description: "15分钟未响应升级至部门经理"},
-		{Level: 2, AfterMinutes: 30, NotifyRoles: []string{"it_admin"}, Description: "30分钟未响应升级至IT管理员"},
-		{Level: 3, AfterMinutes: 60, NotifyRoles: []string{"admin"}, Description: "60分钟未响应升级至租户管理员"},
+		{Level: 1, AfterMinutes: 15, NotifyRoles: []string{"manager"}, Description: "Escalate to the department manager after 15 minutes without a response"},
+		{Level: 2, AfterMinutes: 30, NotifyRoles: []string{"it_admin"}, Description: "Escalate to the IT administrator after 30 minutes without a response"},
+		{Level: 3, AfterMinutes: 60, NotifyRoles: []string{"admin"}, Description: "Escalate to the tenant administrator after 60 minutes without a response"},
 	},
 	"high": {
-		{Level: 1, AfterMinutes: 60, NotifyRoles: []string{"manager"}, Description: "1小时未响应升级至部门经理"},
-		{Level: 2, AfterMinutes: 240, NotifyRoles: []string{"it_admin"}, Description: "4小时未响应升级至IT管理员"},
+		{Level: 1, AfterMinutes: 60, NotifyRoles: []string{"manager"}, Description: "Escalate to the department manager after 1 hour without a response"},
+		{Level: 2, AfterMinutes: 240, NotifyRoles: []string{"it_admin"}, Description: "Escalate to the IT administrator after 4 hours without a response"},
 	},
 	"medium": {
-		{Level: 1, AfterMinutes: 240, NotifyRoles: []string{"manager"}, Description: "4小时未响应升级至部门经理"},
+		{Level: 1, AfterMinutes: 240, NotifyRoles: []string{"manager"}, Description: "Escalate to the department manager after 4 hours without a response"},
 	},
 	"low": {
-		{Level: 1, AfterMinutes: 480, NotifyRoles: []string{"manager"}, Description: "8小时未响应升级至部门经理"},
+		{Level: 1, AfterMinutes: 480, NotifyRoles: []string{"manager"}, Description: "Escalate to the department manager after 8 hours without a response"},
 	},
 }
 

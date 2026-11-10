@@ -7,12 +7,12 @@
                  targetNamespace="http://bpmn.io/schema/bpmn"
                  id="Definitions_ScheduledInspection">
 
-  <bpmn:process id="scheduled_inspection_flow" name="定时巡检流程" isExecutable="true">
+  <bpmn:process id="scheduled_inspection_flow" name="Scheduled Inspection Workflow" isExecutable="true">
     <bpmn:extensionElements>
       <bpmn:metaData name="category">ops</bpmn:metaData>
       <bpmn:metaData name="sub_category">scheduled</bpmn:metaData>
       <bpmn:metaData name="version">1.0.0</bpmn:metaData>
-      <bpmn:metaData name="description">按 cron 定时启动的巡检流程：到点自动生成巡检任务，人工确认巡检结果，异常自动升级并通知</bpmn:metaData>
+      <bpmn:metaData name="description">Cron-based inspection workflow: create scheduled tasks, confirm results, and automatically escalate and notify on exceptions</bpmn:metaData>
       <bpmn:metaData name="timer_start">0 9 * * *</bpmn:metaData>
       <bpmn:metaData name="timer_timezone_hint">按租户时区解析（tenants.timezone，默认 Asia/Shanghai）</bpmn:metaData>
     </bpmn:extensionElements>
@@ -22,7 +22,7 @@
       表达式为 cron 五字段：每天 09:00 触发（按租户时区解析）。
       也支持 ISO 8601 一次性写法，如 <bpmn:timeDate>2026-12-31T23:59:59Z</bpmn:timeDate>。
     -->
-    <bpmn:startEvent id="StartEvent_Schedule" name="每日 09:00 定时启动">
+    <bpmn:startEvent id="StartEvent_Schedule" name="Start Daily at 09:00">
       <bpmn:timerEventDefinition>
         <bpmn:timeCycle>0 9 * * *</bpmn:timeCycle>
       </bpmn:timerEventDefinition>
@@ -30,7 +30,7 @@
     </bpmn:startEvent>
 
     <!-- 下发巡检任务 -->
-    <bpmn:serviceTask id="Activity_Dispatch" name="下发巡检任务" implementation="##WebService">
+    <bpmn:serviceTask id="Activity_Dispatch" name="Dispatch Inspection Task" implementation="##WebService">
       <bpmn:extensionElements>
         <bpmn:metaData name="service_task_type">ticket_task</bpmn:metaData>
         <bpmn:metaData name="action">assign</bpmn:metaData>
@@ -40,7 +40,7 @@
     </bpmn:serviceTask>
 
     <!-- 人工执行巡检 -->
-    <bpmn:userTask id="Activity_Inspect" name="执行巡检并确认结果" instantiate="false">
+    <bpmn:userTask id="Activity_Inspect" name="Perform Inspection and Confirm Results" instantiate="false">
       <bpmn:extensionElements>
         <bpmn:metaData name="service_task_type">ticket_task</bpmn:metaData>
         <bpmn:metaData name="action">update_status</bpmn:metaData>
@@ -50,14 +50,14 @@
     </bpmn:userTask>
 
     <!-- 巡检结果判断 -->
-    <bpmn:exclusiveGateway id="Gateway_InspectionResult" name="巡检是否异常?">
+    <bpmn:exclusiveGateway id="Gateway_InspectionResult" name="Inspection Exception?">
       <bpmn:incoming>Flow_3</bpmn:incoming>
       <bpmn:outgoing>Flow_Abnormal</bpmn:outgoing>
       <bpmn:outgoing>Flow_Normal</bpmn:outgoing>
     </bpmn:exclusiveGateway>
 
     <!-- 异常升级处理 -->
-    <bpmn:userTask id="Activity_Escalate" name="异常升级处理" instantiate="false">
+    <bpmn:userTask id="Activity_Escalate" name="Escalate Exception" instantiate="false">
       <bpmn:extensionElements>
         <bpmn:metaData name="service_task_type">ticket_task</bpmn:metaData>
         <bpmn:metaData name="action">escalate</bpmn:metaData>
@@ -67,7 +67,7 @@
     </bpmn:userTask>
 
     <!-- 通知巡检结果 -->
-    <bpmn:serviceTask id="Activity_NotifyResult" name="通知巡检结果" implementation="##WebService">
+    <bpmn:serviceTask id="Activity_NotifyResult" name="Notify Inspection Results" implementation="##WebService">
       <bpmn:extensionElements>
         <bpmn:metaData name="service_task_type">ticket_task</bpmn:metaData>
         <bpmn:metaData name="action">notify_requester</bpmn:metaData>
@@ -78,7 +78,7 @@
     </bpmn:serviceTask>
 
     <!-- 结束事件 -->
-    <bpmn:endEvent id="EndEvent_Completed" name="巡检结束">
+    <bpmn:endEvent id="EndEvent_Completed" name="Inspection Completed">
       <bpmn:incoming>Flow_End</bpmn:incoming>
     </bpmn:endEvent>
 

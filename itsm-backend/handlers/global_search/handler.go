@@ -55,13 +55,13 @@ func (h *Handler) Search(ctx *gin.Context) {
 		return
 	}
 	if tenantID == 0 {
-		common.Fail(ctx, common.AuthFailedCode, "租户信息缺失")
+		common.Fail(ctx, common.AuthFailedCode, "Tenant information is missing")
 		return
 	}
 
 	response, err := h.service.Search(ctx.Request.Context(), tenantID, keyword, middleware.GetContextRoles(ctx))
 	if err != nil {
-		common.Fail(ctx, common.InternalErrorCode, "搜索失败")
+		common.Fail(ctx, common.InternalErrorCode, "Search failed")
 		return
 	}
 

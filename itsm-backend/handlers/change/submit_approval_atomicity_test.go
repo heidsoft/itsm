@@ -102,7 +102,7 @@ func TestSubmitApproval_TransactionFailure_LeavesNoSideEffects(t *testing.T) {
 		ApproverID: approverID,
 	}, tenantID)
 	require.Error(t, err)
-	assert.Contains(t, err.Error(), "提交审批失败")
+	assert.Contains(t, err.Error(), "Failed to submit for approval")
 
 	repo.mu.Lock()
 	defer repo.mu.Unlock()

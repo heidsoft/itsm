@@ -69,14 +69,14 @@ const deferred = <T,>() => {
 /** 点开列表行「更多操作」下拉里的「查看详情」；重复打开下拉时取最新一项 */
 const clickDetailMenuItem = async (trigger: HTMLElement) => {
   fireEvent.click(trigger);
-  const items = await screen.findAllByText('查看详情');
+  const items = await screen.findAllByText("View Details");
   fireEvent.click(items[items.length - 1]);
 };
 
 const openDetail = async (rowIndex: number) => {
-  const triggers = await screen.findAllByLabelText('更多操作');
+  const triggers = await screen.findAllByLabelText("More actions");
   await clickDetailMenuItem(triggers[rowIndex]);
-  return screen.findByText('流程预览');
+  return screen.findByText("Process preview");
 };
 
 const renderPage = () =>
@@ -120,12 +120,12 @@ describe('流程管理页详情预览', () => {
     renderPage();
     await openDetail(0);
 
-    expect(screen.getByText('正在加载流程定义...')).toBeInTheDocument();
+    expect(screen.getByText("Loading process definition...")).toBeInTheDocument();
     expect(screen.queryByTestId('bpmn-preview')).not.toBeInTheDocument();
 
     pending.resolve({ id: 'flow_a', bpmnXml: '<definitions>ok</definitions>' });
     await waitFor(() => expect(screen.getByTestId('bpmn-preview')).toBeInTheDocument());
-    expect(screen.queryByText('正在加载流程定义...')).not.toBeInTheDocument();
+    expect(screen.queryByText("Loading process definition...")).not.toBeInTheDocument();
   });
 
   it('快速连续打开两个详情时只接受最后一次请求的结果', async () => {
@@ -136,10 +136,10 @@ describe('流程管理页详情预览', () => {
     );
 
     renderPage();
-    const triggers = await screen.findAllByLabelText('更多操作');
+    const triggers = await screen.findAllByLabelText("More actions");
     await clickDetailMenuItem(triggers[0]);
     await clickDetailMenuItem(triggers[1]);
-    await screen.findByText('流程预览');
+    await screen.findByText("Process preview");
 
     second.resolve({ id: 'flow_b', bpmnXml: '<definitions>flow_b</definitions>' });
     await waitFor(() =>
@@ -165,7 +165,7 @@ describe('流程管理页详情预览', () => {
     await openDetail(0);
 
     await waitFor(() =>
-      expect(screen.getByText('加载流程定义失败，无法预览')).toBeInTheDocument()
+      expect(screen.getByText("Failed to load process definition and cannot preview")).toBeInTheDocument()
     );
     expect(screen.queryByTestId('bpmn-preview')).not.toBeInTheDocument();
   });

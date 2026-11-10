@@ -44,8 +44,8 @@ const ResponseTimeChart: React.FC<{ data: ResponseTimeDistribution[] }> = React.
     },
     tooltip: {
       formatter: (datum: { count?: number; percentage?: number }) => ({
-        name: '工单数',
-        value: `${datum?.count ?? 0}个 (${datum?.percentage ?? 0}%)`,
+        name: "Number of work orders",
+        value: `${datum?.count ?? 0}(${datum?.percentage ?? 0}%)`,
       }),
     },
     responsive: true,
@@ -58,15 +58,15 @@ const ResponseTimeChart: React.FC<{ data: ResponseTimeDistribution[] }> = React.
 
   return (
     <DashboardChartCard
-      title="响应时间分布"
-      subtitle="工单首次响应时间统计"
+      title="Response time distribution"
+      subtitle="Work order first response time statistics"
       icon={<LineChart style={{ width: 20, height: 20 }} />}
       iconColor="#8b5cf6"
       extra={
         <div style={{ textAlign: 'right' }}>
-          <div style={{ fontSize: 12, color: '#8c8c8c' }}>平均响应</div>
+          <div style={{ fontSize: 12, color: '#8c8c8c' }}>Avg Response</div>
           <div style={{ fontSize: 16, fontWeight: 600, color: '#722ed1' }}>
-            {avgTime.toFixed(1)}小时
+            {avgTime.toFixed(1)}hours
           </div>
         </div>
       }
@@ -84,7 +84,8 @@ const ResponseTimeChart: React.FC<{ data: ResponseTimeDistribution[] }> = React.
               fontSize: 13,
             }}
           >
-            暂无响应时间数据
+
+            No response time data yet
           </div>
         ) : (
           <Column {...config} />

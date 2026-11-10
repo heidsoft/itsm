@@ -1,7 +1,8 @@
 {
   "name": "ITSM Platform",
   "short_name": "ITSM",
-  "description": "IT服务管理平台",
+  "description": "IT Service Management Platform",
+  "lang": "en-US",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",

@@ -54,7 +54,7 @@ function openDropdown(ariaLabel: string): HTMLElement {
 }
 
 function selectFilterOption(label: string) {
-  const dropdown = openDropdown('优先级筛选');
+  const dropdown = openDropdown('Priority Filter');
   fireEvent.click(within(dropdown).getByText(label));
 }
 
@@ -94,37 +94,37 @@ describe('SLADefinitionsPage', () => {
     renderPage();
     await screen.findByText('Incident-P0-紧急');
 
-    expect(screen.getByText('SLA 定义总数')).toBeInTheDocument();
-    expect(screen.getByText('SLA 定义总数')).toBeInTheDocument();
-    expect(screen.getByText('覆盖服务类型')).toBeInTheDocument();
+    expect(screen.getByText("Total number of SLA definitions")).toBeInTheDocument();
+    expect(screen.getByText("Total number of SLA definitions")).toBeInTheDocument();
+    expect(screen.getByText("Override service type")).toBeInTheDocument();
     // 已启用/已停用同时出现在状态列，因此断言至少各有两处
-    expect(screen.getAllByText('已启用').length).toBeGreaterThan(1);
-    expect(screen.getAllByText('已停用').length).toBeGreaterThan(1);
-    expect(screen.queryByText('草稿状态')).not.toBeInTheDocument();
-    expect(screen.queryByText('平均可用性')).not.toBeInTheDocument();
+    expect(screen.getAllByText("Enabled").length).toBeGreaterThan(1);
+    expect(screen.getAllByText("Disabled").length).toBeGreaterThan(1);
+    expect(screen.queryByText("The article will return to draft status after unpublishing.")).not.toBeInTheDocument();
+    expect(screen.queryByText("平均Available性")).not.toBeInTheDocument();
   });
 
   it('服务窗口与升级规则来自后端投影，未配置时明确标注', async () => {
     renderPage();
     await screen.findByText('Incident-P0-紧急');
 
-    expect(screen.getByText('服务窗口: 7×24')).toBeInTheDocument();
-    expect(screen.getByText('L1 · 15 分钟后升级 → manager')).toBeInTheDocument();
-    expect(screen.getByText('服务窗口: 未配置')).toBeInTheDocument();
-    expect(screen.getByText('未配置')).toBeInTheDocument();
-    expect(screen.getByText('响应: 8 小时')).toBeInTheDocument();
-    expect(screen.getByText('解决: 7 天')).toBeInTheDocument();
+    expect(screen.getByText("Service window: 7×24")).toBeInTheDocument();
+    expect(screen.getByText("L1 · 15 minutes before escalation → manager")).toBeInTheDocument();
+    expect(screen.getByText("Service window: Not configured")).toBeInTheDocument();
+    expect(screen.getByText("Not configured")).toBeInTheDocument();
+    expect(screen.getByText("Response: 8 hours")).toBeInTheDocument();
+    expect(screen.getByText("Solution: 7 days")).toBeInTheDocument();
   });
 
   it('urgent 与 critical 视为同一优先级，筛选不会漏掉存量定义', async () => {
     renderPage();
     await screen.findByText('Incident-P0-紧急');
 
-    selectFilterOption('紧急');
+    selectFilterOption('Urgent');
     await waitFor(() => expect(screen.queryByText('Change-普通')).not.toBeInTheDocument());
     expect(screen.getByText('Incident-P0-紧急')).toBeInTheDocument();
 
-    selectFilterOption('低');
+    selectFilterOption('Low');
     await waitFor(() => expect(screen.queryByText('Incident-P0-紧急')).not.toBeInTheDocument());
   });
 
@@ -132,20 +132,19 @@ describe('SLADefinitionsPage', () => {
     renderPage();
     await screen.findByText('Incident-P0-紧急');
 
-    fireEvent.click(screen.getByRole('button', { name: /新建 SLA/ }));
-    const nameInput = await screen.findByLabelText('SLA 名称');
+    fireEvent.click(screen.getByRole('button', { name: /Create new SLA/ }));
+    const nameInput = await screen.findByLabelText("SLA Name");
     const modal = nameInput.closest('.ant-modal') as HTMLElement;
 
-    fireEvent.change(within(modal).getByLabelText('SLA 名称'), { target: { value: 'Incident-P1-高' } });
-    fireEvent.mouseDown(within(modal).getByLabelText('服务类型'));
-    fireEvent.click(await screen.findByText('事件管理'));
-    fireEvent.change(within(modal).getByLabelText('描述'), {
+    fireEvent.change(within(modal).getByLabelText("SLA Name"), { target: { value: 'Incident-P1-高' } });
+    fireEvent.click(within(openDropdown('Service Type')).getByText('Incidents'));
+    fireEvent.change(within(modal).getByLabelText("Description"), {
       target: { value: '重要业务受影响，需快速恢复' },
     });
-    fireEvent.change(within(modal).getByLabelText(/响应时限/), { target: { value: '30' } });
-    fireEvent.change(within(modal).getByLabelText(/解决时限/), { target: { value: '240' } });
+    fireEvent.change(within(modal).getByLabelText(/Response time limit/), { target: { value: '30' } });
+    fireEvent.change(within(modal).getByLabelText(/Resolution time limit/), { target: { value: '240' } });
 
-    fireEvent.click(within(modal).getByRole('button', { name: /保\s*存/ }));
+    fireEvent.click(within(modal).getByRole('button', { name: /Save/ }));
 
     await waitFor(() => expect(mockedApi.createSLADefinition).toHaveBeenCalledTimes(1));
     // 表单字段与后端请求体同单位：响应 30 分钟、解决 240 分钟，并显式提交 isActive
@@ -166,7 +165,7 @@ describe('SLADefinitionsPage', () => {
     renderPage();
     await screen.findByText('Incident-P0-紧急');
 
-    fireEvent.click(await screen.findByRole('button', { name: '停用' }));
+    fireEvent.click(await screen.findByRole('button', { name: "Disable" }));
 
     await waitFor(() =>
       expect(mockedApi.updateSLADefinition).toHaveBeenCalledWith(1, { isActive: false })
@@ -179,11 +178,11 @@ describe('SLADefinitionsPage', () => {
 
     renderPage();
 
-    expect(await screen.findByText('SLA 定义加载失败')).toBeInTheDocument();
+    expect(await screen.findByText("SLA definition loading failed")).toBeInTheDocument();
     expect(screen.getByText('SLA 定义服务暂不可用')).toBeInTheDocument();
-    expect(screen.queryByText('还没有 SLA 定义，点击右上角「新建 SLA」创建')).not.toBeInTheDocument();
+    expect(screen.queryByText("There is no SLA definition yet. Click &quot;New SLA&quot; in the upper right corner to create it.")).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: /重新加载/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Reload/ }));
 
     await waitFor(() => expect(mockedApi.getSLADefinitions).toHaveBeenCalledTimes(2));
     expect(await screen.findByText('Incident-P0-紧急')).toBeInTheDocument();
@@ -199,6 +198,6 @@ describe('SLADefinitionsPage', () => {
 
     renderPage();
 
-    expect(await screen.findByText(/服务端共有 137 条 SLA 定义/)).toBeInTheDocument();
+    expect(await screen.findByText(/Shared by the server 137 SLA definitions/)).toBeInTheDocument();
   });
 });

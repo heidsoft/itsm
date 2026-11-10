@@ -176,6 +176,6 @@ func TestCreate_RejectsUnknownCITypeWithFieldMessage(t *testing.T) {
 		})
 	assert.Equal(t, http.StatusBadRequest, w.Code, "body=%s", w.Body.String())
 	assert.Equal(t, common.ParamErrorCode, resp.Code, "body=%s", mustSC(&resp))
-	assert.Equal(t, "关联的 CI 类型不存在或未启用", resp.Message)
+	assert.Equal(t, "The associated CI type does not exist or is not enabled", resp.Message)
 	assert.NotContains(t, w.Body.String(), "not found or inactive", "英文仓储错误不得透给页面")
 }

@@ -167,7 +167,7 @@ func TestApplyReleaseApproval_CreatorCannotSelfApprove(t *testing.T) {
 	svc := NewReleaseService(client, zaptest.NewLogger(t).Sugar())
 
 	_, err := svc.ApplyReleaseApproval(context.Background(), releaseID, tenantID, creatorID, "approve", "")
-	require.Error(t, err, "发布创建人不能审批自己的发布")
+	require.Error(t, err, "The publication creator cannot approve his own publication")
 
 	// 状态未被改动
 	releaseEntity, gerr := client.Release.Get(context.Background(), releaseID)
@@ -216,7 +216,7 @@ func TestApplyReleaseApproval_InvalidApproverForbidden(t *testing.T) {
 					var appErr *common.AppError
 					require.ErrorAs(t, err, &appErr)
 					require.Equal(t, common.ErrCodeForbidden, appErr.Code)
-					require.Equal(t, "审批人不存在或已停用", appErr.Message)
+					require.Equal(t, "The approver does not exist or is disabled", appErr.Message)
 					require.Nil(t, resp)
 				}
 				require.Zero(t, mutations)

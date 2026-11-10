@@ -34,7 +34,7 @@ import (
 func generatePrecheckMap() (map[string]map[string]Permission, error) {
 	routes, unresolved, err := scanPermissionRoutes()
 	if err != nil {
-		return nil, fmt.Errorf("扫描路由声明: %w", err)
+		return nil, fmt.Errorf("Scanning routing statements: %w", err)
 	}
 	if len(unresolved) > 0 {
 		var b strings.Builder
@@ -42,9 +42,9 @@ func generatePrecheckMap() (map[string]map[string]Permission, error) {
 			fmt.Fprintf(&b, "\n  %s:%d %s %s -> %s:%s", u.File, u.RouteLine, u.Method, u.FullPath, u.Resource, u.Action)
 		}
 		return nil, fmt.Errorf(
-			"%d 条权限声明无法定位完整路径，不会进入预检映射（非 super_admin 会在 RBACMiddleware 路径预检处恒 403）：%s\n"+
-				"修复：把该域路由注册到函数内显式派生的分组（grp := tenant.Group(\"/xxx\"）并让 grp 继承组根，"+
-				"或在 route_scan.go 的注册约定里补该形态。",
+			"%d permission statements cannot locate the complete path and will not enter the preflight mapping (non-super_admin will always get 403 at the RBACMiddleware path preflight): %s\n"+
+				"Fix: Register the domain route to an explicitly derived group within the function (grp := tenant.Group(\"/xxx\") and let grp inherit the group root,"+
+				"Or fill in this form in the registration convention of route_scan.go.",
 			len(unresolved), b.String())
 	}
 
@@ -58,7 +58,7 @@ func generatePrecheckMap() (map[string]map[string]Permission, error) {
 		if prev, exists := pair[k]; exists {
 			if prev != [2]string{r.Resource, r.Action} && owner[k] != fmt.Sprintf("%s:%d", r.File, r.RouteLine) {
 				return nil, fmt.Errorf(
-					"预检生成冲突：%s %s 同时声明了 %s:%s（%s）与 %s:%s（%s:%d），请先统一口径",
+					"Preflight generation conflict: %s %s declares %s:%s (%s) and %s:%s (%s:%d) at the same time, please unify the caliber first",
 					r.Method, r.FullPath, prev[0], prev[1], owner[k],
 					r.Resource, r.Action, r.File, r.RouteLine)
 			}
@@ -125,7 +125,7 @@ func precheckRoutePermissions() map[string]map[string]Permission {
 	// 未经格式化的输出会被 gofmt -w 改写后导致新鲜度误报。
 	formatted, err := format.Source([]byte(b.String()))
 	if err != nil {
-		return nil, fmt.Errorf("生成物格式化失败: %w", err)
+		return nil, fmt.Errorf("Generate format failed: %w", err)
 	}
 	return formatted, nil
 }
@@ -134,7 +134,7 @@ func precheckRoutePermissions() map[string]map[string]Permission {
 func PrecheckGenFilePath() (string, error) {
 	_, thisFile, _, ok := runtime.Caller(0)
 	if !ok {
-		return "", fmt.Errorf("无法定位 precheck_codegen.go 所在目录")
+		return "", fmt.Errorf("Unable to locate the directory where precheck_codegen.go is located")
 	}
 	return filepath.Join(filepath.Dir(thisFile), "rbac_precheck_gen.go"), nil
 }

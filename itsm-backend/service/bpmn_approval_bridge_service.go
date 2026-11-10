@@ -113,10 +113,10 @@ func inferredTaskPurpose(task *ent.ProcessTask) string {
 // 它不创建或提交事务，任何失败都由外层事务连同业务状态一起回滚。
 func (b *BPMNApprovalBridge) CompleteBusinessApprovalTaskWithClient(ctx context.Context, txc *ent.Client, tenantID, actorUserID int, businessType string, businessID int, action, comment string) (bool, error) {
 	if tenantID <= 0 || actorUserID <= 0 {
-		return false, common.NewBusinessError(common.UnauthorizedCode, "缺少审批身份或租户上下文", "")
+		return false, common.NewBusinessError(common.UnauthorizedCode, "Missing approval identity or tenant context", "")
 	}
 	if businessID <= 0 || strings.TrimSpace(businessType) == "" || (action != "approve" && action != "reject") {
-		return false, common.NewBusinessError(common.ParamErrorCode, "审批参数无效", "")
+		return false, common.NewBusinessError(common.ParamErrorCode, "Invalid approval parameters", "")
 	}
 
 	lookup, err := b.findPendingApprovalTaskWithClient(ctx, txc, tenantID, businessType, businessID)
@@ -151,11 +151,11 @@ func (b *BPMNApprovalBridge) CompleteBusinessApprovalTaskWithClient(ctx context.
 	engine := NewCustomProcessEngine(txc, b.logger)
 	if customEngine, ok := engine.(*CustomProcessEngine); ok {
 		if err := customEngine.CompleteTaskWithClient(workflowCtx, txc, task.TaskID, variables); err != nil {
-			return false, fmt.Errorf("完成流程审批任务失败: %w", err)
+			return false, fmt.Errorf("Failed to complete process approval task: %w", err)
 		}
 	} else {
 		if err := engine.CompleteTask(workflowCtx, task.TaskID, variables); err != nil {
-			return false, fmt.Errorf("完成流程审批任务失败: %w", err)
+			return false, fmt.Errorf("Failed to complete process approval task: %w", err)
 		}
 	}
 
@@ -185,10 +185,10 @@ func (b *BPMNApprovalBridge) CheckActionableApprovalTask(ctx context.Context, te
 // CompleteBusinessApprovalTask 把业务审批桥接到流程待办；三态语义见类型注释。
 func (b *BPMNApprovalBridge) CompleteBusinessApprovalTask(ctx context.Context, tenantID, actorUserID int, businessType string, businessID int, action, comment string) (bool, error) {
 	if tenantID <= 0 || actorUserID <= 0 {
-		return false, common.NewBusinessError(common.UnauthorizedCode, "缺少审批身份或租户上下文", "")
+		return false, common.NewBusinessError(common.UnauthorizedCode, "Missing approval identity or tenant context", "")
 	}
 	if businessID <= 0 || strings.TrimSpace(businessType) == "" || (action != "approve" && action != "reject") {
-		return false, common.NewBusinessError(common.ParamErrorCode, "审批参数无效", "")
+		return false, common.NewBusinessError(common.ParamErrorCode, "Invalid approval parameters", "")
 	}
 
 	lookup, err := b.findPendingApprovalTask(ctx, tenantID, businessType, businessID)
@@ -223,7 +223,7 @@ func (b *BPMNApprovalBridge) CompleteBusinessApprovalTask(ctx context.Context, t
 
 	engine := NewCustomProcessEngine(b.client, b.logger)
 	if err := engine.CompleteTask(workflowCtx, task.TaskID, variables); err != nil {
-		return false, fmt.Errorf("完成流程审批任务失败: %w", err)
+		return false, fmt.Errorf("Failed to complete process approval task: %w", err)
 	}
 
 	b.logger.Infow("业务审批已桥接完成BPMN任务",
@@ -233,10 +233,10 @@ func (b *BPMNApprovalBridge) CompleteBusinessApprovalTask(ctx context.Context, t
 
 func (b *BPMNApprovalBridge) DelegateBusinessApprovalTask(ctx context.Context, tenantID, actorUserID int, businessType string, businessID, newAssigneeUserID int) (bool, error) {
 	if tenantID <= 0 || actorUserID <= 0 {
-		return false, common.NewBusinessError(common.UnauthorizedCode, "缺少审批身份或租户上下文", "")
+		return false, common.NewBusinessError(common.UnauthorizedCode, "Missing approval identity or tenant context", "")
 	}
 	if businessID <= 0 || newAssigneeUserID <= 0 || strings.TrimSpace(businessType) == "" {
-		return false, common.NewBusinessError(common.ParamErrorCode, "委派参数无效", "")
+		return false, common.NewBusinessError(common.ParamErrorCode, "Invalid delegation parameter", "")
 	}
 
 	lookup, err := b.findPendingApprovalTask(ctx, tenantID, businessType, businessID)
@@ -261,11 +261,11 @@ func (b *BPMNApprovalBridge) DelegateBusinessApprovalTask(ctx context.Context, t
 	engine := NewCustomProcessEngine(b.client, b.logger)
 	if customEngine, ok := engine.(*CustomProcessEngine); ok {
 		if err := customEngine.authorizeTaskActor(workflowCtx, task); err != nil {
-			return false, fmt.Errorf("委派流程任务失败: %w", err)
+			return false, fmt.Errorf("Failed to delegate process task: %w", err)
 		}
 	}
 	if err := engine.TaskService().DelegateTask(workflowCtx, task.TaskID, strconv.Itoa(newAssigneeUserID)); err != nil {
-		return false, fmt.Errorf("委派流程任务失败: %w", err)
+		return false, fmt.Errorf("Failed to delegate process task: %w", err)
 	}
 
 	b.logger.Infow("业务审批委派已同步BPMN任务",
@@ -289,7 +289,7 @@ func (b *BPMNApprovalBridge) TerminateBusinessWorkflow(ctx context.Context, tena
 		).
 		All(ctx)
 	if err != nil {
-		return fmt.Errorf("查询业务关联流程实例失败: %w", err)
+		return fmt.Errorf("Failed to query business association process instance: %w", err)
 	}
 	if len(instances) == 0 {
 		return nil
@@ -300,7 +300,7 @@ func (b *BPMNApprovalBridge) TerminateBusinessWorkflow(ctx context.Context, tena
 	engine := NewCustomProcessEngine(b.client, b.logger)
 	for _, instance := range instances {
 		if err := engine.TerminateProcess(workflowCtx, instance.ProcessInstanceID, reason); err != nil {
-			return fmt.Errorf("终止流程实例 %s 失败: %w", instance.ProcessInstanceID, err)
+			return fmt.Errorf("Termination of process instance %s failed: %w", instance.ProcessInstanceID, err)
 		}
 		b.logger.Infow("业务流程已终止",
 			"businessKey", businessKey, "processInstanceID", instance.ProcessInstanceID, "reason", reason)
@@ -356,7 +356,7 @@ func (b *BPMNApprovalBridge) advanceBusinessWorkflow(ctx context.Context, client
 			completeErr = engine.CompleteTask(workflowCtx, task.TaskID, variables)
 		}
 		if completeErr != nil {
-			return handled, fmt.Errorf("推进流程任务失败: %w", completeErr)
+			return handled, fmt.Errorf("Advance process task failed: %w", completeErr)
 		}
 		handled = true
 	}
@@ -392,7 +392,7 @@ func (b *BPMNApprovalBridge) CompleteBusinessWorkTasks(ctx context.Context, tena
 			if ent.IsNotFound(err) {
 				return completed, nil
 			}
-			return completed, fmt.Errorf("查询业务关联流程实例失败: %w", err)
+			return completed, fmt.Errorf("Failed to query business association process instance: %w", err)
 		}
 
 		tasks, err := b.client.ProcessTask.Query().
@@ -410,7 +410,7 @@ func (b *BPMNApprovalBridge) CompleteBusinessWorkTasks(ctx context.Context, tena
 			Order(ent.Asc(processtask.FieldCreatedTime)).
 			All(ctx)
 		if err != nil {
-			return completed, fmt.Errorf("查询流程待办任务失败: %w", err)
+			return completed, fmt.Errorf("Failed to query process to-do tasks: %w", err)
 		}
 		if len(tasks) == 0 {
 			return completed, nil
@@ -438,7 +438,7 @@ func (b *BPMNApprovalBridge) CompleteBusinessWorkTasks(ctx context.Context, tena
 
 		engine := NewCustomProcessEngine(b.client, b.logger)
 		if err := engine.CompleteTask(workflowCtx, workTask.TaskID, variables); err != nil {
-			return completed, fmt.Errorf("完成流程作业任务失败: %w", err)
+			return completed, fmt.Errorf("Failed to complete process job task: %w", err)
 		}
 		completed++
 		b.logger.Infow("业务作业已推进BPMN任务",
@@ -475,7 +475,7 @@ func (b *BPMNApprovalBridge) AdvanceBusinessWorkTaskWithClient(ctx context.Conte
 		if ent.IsNotFound(err) {
 			return 0, nil
 		}
-		return 0, fmt.Errorf("查询业务关联流程实例失败: %w", err)
+		return 0, fmt.Errorf("Failed to query business association process instance: %w", err)
 	}
 
 	tasks, err := txc.ProcessTask.Query().
@@ -493,7 +493,7 @@ func (b *BPMNApprovalBridge) AdvanceBusinessWorkTaskWithClient(ctx context.Conte
 		Order(ent.Asc(processtask.FieldCreatedTime)).
 		All(ctx)
 	if err != nil {
-		return 0, fmt.Errorf("查询流程待办任务失败: %w", err)
+		return 0, fmt.Errorf("Failed to query process to-do tasks: %w", err)
 	}
 
 	var workTask *ent.ProcessTask
@@ -516,10 +516,10 @@ func (b *BPMNApprovalBridge) AdvanceBusinessWorkTaskWithClient(ctx context.Conte
 	engine := NewCustomProcessEngine(txc, b.logger)
 	if customEngine, ok := engine.(*CustomProcessEngine); ok {
 		if completeErr := customEngine.CompleteTaskWithClient(workflowCtx, txc, workTask.TaskID, variables); completeErr != nil {
-			return 0, fmt.Errorf("推进流程作业待办失败: %w", completeErr)
+			return 0, fmt.Errorf("Failed to advance process job backlog: %w", completeErr)
 		}
 	} else if completeErr := engine.CompleteTask(workflowCtx, workTask.TaskID, variables); completeErr != nil {
-		return 0, fmt.Errorf("推进流程作业待办失败: %w", completeErr)
+		return 0, fmt.Errorf("Failed to advance process job backlog: %w", completeErr)
 	}
 
 	b.logger.Infow("业务前置作业待办已推进",
@@ -532,9 +532,10 @@ func (b *BPMNApprovalBridge) AdvanceBusinessWorkTaskWithClient(ctx context.Conte
 func bpmnWorkTaskNotActionable(businessType string, businessID int) error {
 	return common.NewBusinessError(
 		common.ConflictCode,
-		"流程当前待办不是作业节点，拒绝推进",
+		"The current to-do process is not a job node, and advancement is refused.",
 		fmt.Sprintf("businessType=%s businessId=%d", strings.ToLower(businessType), businessID),
-	)}
+	)
+}
 
 // HasPendingUserTasksWithClient 检查指定业务键是否仍有待办 BPMN 用户任务（事务内）。
 // 用于审批完成后判定业务状态：approve 后无剩余待办 → 全部审批通过。
@@ -552,7 +553,7 @@ func (b *BPMNApprovalBridge) HasPendingUserTasksWithClient(ctx context.Context, 
 		if ent.IsNotFound(err) {
 			return false, nil
 		}
-		return false, fmt.Errorf("查询业务关联流程实例失败: %w", err)
+		return false, fmt.Errorf("Failed to query business association process instance: %w", err)
 	}
 
 	exists, err := client.ProcessTask.Query().
@@ -569,7 +570,7 @@ func (b *BPMNApprovalBridge) HasPendingUserTasksWithClient(ctx context.Context, 
 		).
 		Exist(ctx)
 	if err != nil {
-		return false, fmt.Errorf("查询流程待办任务失败: %w", err)
+		return false, fmt.Errorf("Failed to query process to-do tasks: %w", err)
 	}
 	return exists, nil
 }
@@ -579,7 +580,7 @@ func (b *BPMNApprovalBridge) HasPendingUserTasksWithClient(ctx context.Context, 
 func bpmnApprovalNotActionable(businessType string, businessID int) error {
 	return common.NewBusinessError(
 		common.ConflictCode,
-		"流程已绑定但当前没有可处理的审批待办，请勿直接业务审批；若流程停在「变更评估 / 技术评审」等作业节点，请先到审批中心完成该作业待办，待流程推进到审批节点后再审批",
+		"The process has been bound but there is currently no approval to-do that can be processed. Please do not approve the business directly. If the process stops at an operation node such as \"Change Assessment/Technical Review\", please go to the approval center to complete the operation to-do first, and then approve the process after the process has advanced to the approval node.",
 		fmt.Sprintf("businessType=%s businessId=%d", strings.ToLower(businessType), businessID),
 	)
 }
@@ -644,7 +645,7 @@ func (b *BPMNApprovalBridge) findFirstPendingTaskWithClient(ctx context.Context,
 		if ent.IsNotFound(err) {
 			return approvalTaskLookup{}, nil
 		}
-		return approvalTaskLookup{}, fmt.Errorf("查询业务关联流程实例失败: %w", err)
+		return approvalTaskLookup{}, fmt.Errorf("Failed to query business association process instance: %w", err)
 	}
 	result := approvalTaskLookup{bound: true}
 	if boundInstance.Status != "running" {
@@ -666,7 +667,7 @@ func (b *BPMNApprovalBridge) findFirstPendingTaskWithClient(ctx context.Context,
 		Order(ent.Asc(processtask.FieldCreatedTime)).
 		All(ctx)
 	if err != nil {
-		return approvalTaskLookup{}, fmt.Errorf("查询流程待办任务失败: %w", err)
+		return approvalTaskLookup{}, fmt.Errorf("Failed to query process to-do tasks: %w", err)
 	}
 	if len(tasks) == 0 {
 		return result, nil
@@ -690,7 +691,7 @@ func (b *BPMNApprovalBridge) findApprovalTaskWithClient(ctx context.Context, cli
 		if ent.IsNotFound(err) {
 			return approvalTaskLookup{}, nil
 		}
-		return approvalTaskLookup{}, fmt.Errorf("查询业务关联流程实例失败: %w", err)
+		return approvalTaskLookup{}, fmt.Errorf("Failed to query business association process instance: %w", err)
 	}
 	result := approvalTaskLookup{bound: true}
 
@@ -715,7 +716,7 @@ func (b *BPMNApprovalBridge) findApprovalTaskWithClient(ctx context.Context, cli
 		Order(ent.Asc(processtask.FieldCreatedTime)).
 		All(ctx)
 	if err != nil {
-		return approvalTaskLookup{}, fmt.Errorf("查询流程待办任务失败: %w", err)
+		return approvalTaskLookup{}, fmt.Errorf("Failed to query process to-do tasks: %w", err)
 	}
 	if len(tasks) == 0 {
 		b.logger.Warnw("业务审批桥接：流程实例无待办用户任务",

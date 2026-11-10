@@ -72,7 +72,7 @@ func (h *NotificationHandler) sendEmail(ctx context.Context, task *ent.ProcessTa
 	body := GetStringFromVars(variables, "body")
 
 	if recipients == "" {
-		return nil, fmt.Errorf("邮件收件人不能为空")
+		return nil, fmt.Errorf("Email recipient cannot be empty")
 	}
 
 	tenantID, resourceType, resourceID, err := h.resolveTarget(ctx, task, variables)
@@ -88,7 +88,7 @@ func (h *NotificationHandler) sendEmail(ctx context.Context, task *ent.ProcessTa
 
 	content := strings.TrimSpace(subject + "\n" + body)
 	if content == "" {
-		return h.failure(fmt.Errorf("邮件正文与标题均为空"), "send_email", variables)
+		return h.failure(fmt.Errorf("The email body and title are both empty"), "send_email", variables)
 	}
 
 	enqueued, err := h.enqueueDeliveries(ctx, deliveryRequest{
@@ -122,10 +122,10 @@ func (h *NotificationHandler) sendSMS(ctx context.Context, task *ent.ProcessTask
 	message := GetStringFromVars(variables, "message")
 
 	if phoneNumbers == "" {
-		return nil, fmt.Errorf("手机号不能为空")
+		return nil, fmt.Errorf("Mobile phone number cannot be empty")
 	}
 	if strings.TrimSpace(message) == "" {
-		return nil, fmt.Errorf("短信内容不能为空")
+		return nil, fmt.Errorf("SMS content cannot be empty")
 	}
 
 	tenantID, resourceType, resourceID, err := h.resolveTarget(ctx, task, variables)
@@ -177,13 +177,13 @@ func (h *NotificationHandler) sendInAppNotification(ctx context.Context, task *e
 		}
 	}
 	if len(recipientIDs) == 0 {
-		return nil, fmt.Errorf("用户ID不能为空")
+		return nil, fmt.Errorf("User ID cannot be empty")
 	}
 
 	title := GetStringFromVars(variables, "title")
 	content := GetStringFromVars(variables, "content")
 	if strings.TrimSpace(title) == "" && strings.TrimSpace(content) == "" {
-		return nil, fmt.Errorf("通知标题与内容不能同时为空")
+		return nil, fmt.Errorf("Notification title and content cannot be empty at the same time")
 	}
 
 	tenantID, resourceType, resourceID, err := h.resolveTarget(ctx, task, variables)
@@ -220,10 +220,10 @@ func (h *NotificationHandler) sendInAppNotification(ctx context.Context, task *e
 func (h *NotificationHandler) sendWebhookNotification(ctx context.Context, variables map[string]interface{}) (*dto.ServiceTaskResult, error) {
 	webhookURL := GetStringFromVars(variables, "webhook_url")
 	if webhookURL == "" {
-		return nil, fmt.Errorf("webhook URL不能为空")
+		return nil, fmt.Errorf("webhook URL cannot be empty")
 	}
 	if h.webhook == nil {
-		return h.failure(fmt.Errorf("webhook 处理器未初始化"), "send_webhook", variables)
+		return h.failure(fmt.Errorf("webhook handler not initialized"), "send_webhook", variables)
 	}
 	return h.webhook.callWebhook(ctx, variables)
 }
@@ -243,18 +243,18 @@ type deliveryRequest struct {
 // enqueueDeliveries 在单个事务内为所有收件人写入可靠投递命令；任一收件人非法即整体失败。
 func (h *NotificationHandler) enqueueDeliveries(ctx context.Context, req deliveryRequest) (int, error) {
 	if req.TenantID <= 0 || req.ResourceID <= 0 || req.ResourceType == "" {
-		return 0, fmt.Errorf("通知目标不完整：tenant=%d resource=%s/%d", req.TenantID, req.ResourceType, req.ResourceID)
+		return 0, fmt.Errorf("Notification target is incomplete: tenant=%d resource=%s/%d", req.TenantID, req.ResourceType, req.ResourceID)
 	}
 	if len(req.RecipientIDs) == 0 {
-		return 0, fmt.Errorf("没有可投递的收件人")
+		return 0, fmt.Errorf("No deliverable recipients")
 	}
 	if req.Content == "" {
-		return 0, fmt.Errorf("通知内容不能为空")
+		return 0, fmt.Errorf("Notification content cannot be empty")
 	}
 
 	tx, err := h.client.Tx(ctx)
 	if err != nil {
-		return 0, fmt.Errorf("开启通知事务失败: %w", err)
+		return 0, fmt.Errorf("Failed to open notification transaction: %w", err)
 	}
 	rollback := func(cause error) (int, error) {
 		_ = tx.Rollback()
@@ -265,7 +265,7 @@ func (h *NotificationHandler) enqueueDeliveries(ctx context.Context, req deliver
 	enqueued := 0
 	for _, recipientID := range req.RecipientIDs {
 		if recipientID <= 0 {
-			return rollback(fmt.Errorf("非法的收件人ID: %d", recipientID))
+			return rollback(fmt.Errorf("Illegal recipient ID: %d", recipientID))
 		}
 		if _, dup := seen[recipientID]; dup {
 			continue
@@ -276,10 +276,10 @@ func (h *NotificationHandler) enqueueDeliveries(ctx context.Context, req deliver
 			user.IDEQ(recipientID), user.TenantIDEQ(req.TenantID), user.ActiveEQ(true),
 		).Exist(ctx)
 		if err != nil {
-			return rollback(fmt.Errorf("校验收件人失败: %w", err))
+			return rollback(fmt.Errorf("Failed to verify recipient: %w", err))
 		}
 		if !exists {
-			return rollback(fmt.Errorf("收件人 %d 不是租户 %d 的有效用户", recipientID, req.TenantID))
+			return rollback(fmt.Errorf("Recipient %d is not a valid user for tenant %d", recipientID, req.TenantID))
 		}
 
 		idempotencyKey := fmt.Sprintf("%s:%s:%d:%s:%d:%s",
@@ -306,7 +306,7 @@ func (h *NotificationHandler) enqueueDeliveries(ctx context.Context, req deliver
 			},
 		})
 		if err != nil {
-			return rollback(fmt.Errorf("通知入队失败: %w", err))
+			return rollback(fmt.Errorf("Notification failed: %w", err))
 		}
 		if skipped {
 			// 同一业务事件已入箱，视为已投递，保持幂等
@@ -316,7 +316,7 @@ func (h *NotificationHandler) enqueueDeliveries(ctx context.Context, req deliver
 	}
 
 	if err := tx.Commit(); err != nil {
-		return 0, fmt.Errorf("提交通知事务失败: %w", err)
+		return 0, fmt.Errorf("Failed to commit notification transaction: %w", err)
 	}
 
 	h.logger.Infow("BPMN notification enqueued for reliable delivery",
@@ -345,7 +345,7 @@ func (h *NotificationHandler) resolveTarget(ctx context.Context, task *ent.Proce
 // resolveUsersByContact 将邮箱/手机号解析为租户内的活跃用户ID；有任一无法解析则报错。
 func (h *NotificationHandler) resolveUsersByContact(ctx context.Context, tenantID int, field string, contacts []string) ([]int, error) {
 	if len(contacts) == 0 {
-		return nil, fmt.Errorf("收件人列表为空")
+		return nil, fmt.Errorf("Recipient list is empty")
 	}
 	query := h.client.User.Query().Where(user.TenantIDEQ(tenantID), user.ActiveEQ(true))
 	switch field {
@@ -354,14 +354,14 @@ func (h *NotificationHandler) resolveUsersByContact(ctx context.Context, tenantI
 	case "phone":
 		query = query.Where(user.PhoneIn(contacts...))
 	default:
-		return nil, fmt.Errorf("不支持的收件人字段: %s", field)
+		return nil, fmt.Errorf("Unsupported recipient field: %s", field)
 	}
 	users, err := query.All(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("解析收件人失败: %w", err)
+		return nil, fmt.Errorf("Failed to parse recipient: %w", err)
 	}
 	if len(users) == 0 {
-		return nil, fmt.Errorf("租户 %d 内未找到匹配的收件人(%s)", tenantID, field)
+		return nil, fmt.Errorf("Tenant %d has no matching recipients (%s)", tenantID, field)
 	}
 	ids := make([]int, 0, len(users))
 	matched := make(map[string]struct{}, len(users))
@@ -418,10 +418,10 @@ func resolveNotificationResource(variables map[string]interface{}) (string, int,
 			case "ticket", "change", "service_request":
 				return resourceType, id, nil
 			}
-			return "", 0, fmt.Errorf("不支持的通知资源类型: %s", resourceType)
+			return "", 0, fmt.Errorf("Unsupported notification resource type: %s", resourceType)
 		}
 	}
-	return "", 0, fmt.Errorf("通知缺少业务对象引用(ticket_id/change_id/service_request_id)")
+	return "", 0, fmt.Errorf("Notification is missing business object reference (ticket_id/change_id/service_request_id)")
 }
 
 // occurrenceKey 构造幂等键前缀，优先使用流程任务标识，保证重放不会重复发送

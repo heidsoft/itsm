@@ -31,10 +31,10 @@ func failServiceCatalog(c *gin.Context, err error) {
 		return
 	}
 	if ent.IsNotFound(err) {
-		common.Fail(c, common.NotFoundErrorCode, "服务目录不存在")
+		common.Fail(c, common.NotFoundErrorCode, "Service directory does not exist")
 		return
 	}
-	common.FailWithErr(c, err, "操作失败")
+	common.FailWithErr(c, err, "Operation failed")
 }
 
 // NewHandler creates a new Handler
@@ -46,13 +46,13 @@ func NewHandler(service *Service) *Handler {
 func (h *Handler) List(c *gin.Context) {
 	var req dto.GetServiceCatalogsRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
 	tenantID := c.GetInt("tenant_id")
 	if tenantID == 0 {
-		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		common.Fail(c, common.AuthFailedCode, "Tenant information is missing")
 		return
 	}
 
@@ -71,7 +71,7 @@ func (h *Handler) List(c *gin.Context) {
 
 	catalogs, total, err := h.service.List(c.Request.Context(), tenantID, filters)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -88,13 +88,13 @@ func (h *Handler) List(c *gin.Context) {
 func (h *Handler) Get(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.Fail(c, 1001, "无效的服务目录ID")
+		common.Fail(c, 1001, "Invalid service catalog ID")
 		return
 	}
 
 	tenantID := c.GetInt("tenant_id")
 	if tenantID == 0 {
-		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		common.Fail(c, common.AuthFailedCode, "Tenant information is missing")
 		return
 	}
 
@@ -111,14 +111,14 @@ func (h *Handler) Get(c *gin.Context) {
 func (h *Handler) Create(c *gin.Context) {
 	var req dto.CreateServiceCatalogRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 	normalizeServiceCatalogRequest(&req)
 
 	tenantID := c.GetInt("tenant_id")
 	if tenantID == 0 {
-		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		common.Fail(c, common.AuthFailedCode, "Tenant information is missing")
 		return
 	}
 
@@ -126,7 +126,7 @@ func (h *Handler) Create(c *gin.Context) {
 	if req.DeliveryTime != "" {
 		val, parseErr := strconv.Atoi(req.DeliveryTime)
 		if parseErr != nil || val <= 0 {
-			common.Fail(c, common.ParamErrorCode, "deliveryTime 必须为正整数天数")
+			common.Fail(c, common.ParamErrorCode, "deliveryTime must be a positive integer number of days")
 			return
 		}
 		deliveryTime = val
@@ -174,19 +174,19 @@ func (h *Handler) Create(c *gin.Context) {
 func (h *Handler) Update(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.Fail(c, 1001, "无效的服务目录ID")
+		common.Fail(c, 1001, "Invalid service catalog ID")
 		return
 	}
 
 	var req dto.UpdateServiceCatalogRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
 	tenantID := c.GetInt("tenant_id")
 	if tenantID == 0 {
-		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		common.Fail(c, common.AuthFailedCode, "Tenant information is missing")
 		return
 	}
 
@@ -216,7 +216,7 @@ func (h *Handler) Update(c *gin.Context) {
 	if req.DeliveryTime != nil {
 		days, parseErr := strconv.Atoi(strings.TrimSpace(*req.DeliveryTime))
 		if parseErr != nil {
-			common.Fail(c, common.ParamErrorCode, "deliveryTime 必须是正整数天数")
+			common.Fail(c, common.ParamErrorCode, "deliveryTime must be a positive integer number of days")
 			return
 		}
 		patch.DeliveryTime = &days
@@ -244,13 +244,13 @@ func normalizeServiceCatalogRequest(req *dto.CreateServiceCatalogRequest) {
 func (h *Handler) Delete(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.Fail(c, 1001, "无效的服务目录ID")
+		common.Fail(c, 1001, "Invalid service catalog ID")
 		return
 	}
 
 	tenantID := c.GetInt("tenant_id")
 	if tenantID == 0 {
-		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		common.Fail(c, common.AuthFailedCode, "Tenant information is missing")
 		return
 	}
 
@@ -267,7 +267,7 @@ func (h *Handler) Search(c *gin.Context) {
 	keyword := c.Query("q")
 	tenantID := c.GetInt("tenant_id")
 	if tenantID == 0 {
-		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		common.Fail(c, common.AuthFailedCode, "Tenant information is missing")
 		return
 	}
 
@@ -282,7 +282,7 @@ func (h *Handler) Search(c *gin.Context) {
 
 	catalogs, total, err := h.service.Search(c.Request.Context(), tenantID, keyword, filters)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -299,13 +299,13 @@ func (h *Handler) Search(c *gin.Context) {
 func (h *Handler) Stats(c *gin.Context) {
 	tenantID := c.GetInt("tenant_id")
 	if tenantID == 0 {
-		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		common.Fail(c, common.AuthFailedCode, "Tenant information is missing")
 		return
 	}
 
 	stats, err := h.service.GetStats(c.Request.Context(), tenantID)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 

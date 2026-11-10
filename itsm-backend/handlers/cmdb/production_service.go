@@ -102,7 +102,7 @@ func (c *ProductionService) ListCITypes(ctx *gin.Context) {
 	result, err := c.ciTypeService.ListCITypes(ctx.Request.Context(), tenantID, page, pageSize, search)
 	if err != nil {
 		c.logger.Errorw("List CI types failed", "error", err, "tenant_id", tenantID)
-		common.RespondError(ctx, err, "获取CI类型列表失败")
+		common.RespondError(ctx, err, "Failed to obtain CI type list")
 		return
 	}
 
@@ -127,12 +127,12 @@ func (c *ProductionService) GetCIType(ctx *gin.Context) {
 	result, err := c.ciTypeService.GetCITypeByID(ctx.Request.Context(), id, tenantID)
 	if err != nil {
 		c.logger.Errorw("Get CI type failed", "error", err, "ci_type_id", id, "tenant_id", tenantID)
-		common.RespondError(ctx, err, "获取CI类型失败")
+		common.RespondError(ctx, err, "Failed to obtain CI type")
 		return
 	}
 
 	if result == nil {
-		common.Fail(ctx, common.NotFoundCode, "CI类型不存在")
+		common.Fail(ctx, common.NotFoundCode, "CI type does not exist")
 		return
 	}
 
@@ -156,14 +156,14 @@ func (c *ProductionService) CreateCIType(ctx *gin.Context) {
 
 	var req dto.CreateCITypeRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.ParamError(ctx, "请求参数错误")
+		common.ParamError(ctx, "Wrong request parameters")
 		return
 	}
 
 	result, err := c.ciTypeService.CreateCIType(ctx.Request.Context(), &req, tenantID)
 	if err != nil {
 		c.logger.Errorw("Create CI type failed", "error", err, "tenant_id", tenantID, "name", req.Name)
-		common.RespondError(ctx, err, "创建CI类型失败")
+		common.RespondError(ctx, err, "Failed to create CI type")
 		return
 	}
 
@@ -188,14 +188,14 @@ func (c *ProductionService) UpdateCIType(ctx *gin.Context) {
 
 	var req dto.UpdateCITypeRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.ParamError(ctx, "请求参数错误")
+		common.ParamError(ctx, "Wrong request parameters")
 		return
 	}
 
 	result, err := c.ciTypeService.UpdateCIType(ctx.Request.Context(), id, tenantID, &req)
 	if err != nil {
 		c.logger.Errorw("Update CI type failed", "error", err, "ci_type_id", id, "tenant_id", tenantID)
-		common.RespondError(ctx, err, "更新CI类型失败")
+		common.RespondError(ctx, err, "Failed to update CI type")
 		return
 	}
 
@@ -220,7 +220,7 @@ func (c *ProductionService) DeleteCIType(ctx *gin.Context) {
 	err := c.ciTypeService.DeleteCIType(ctx.Request.Context(), id, tenantID)
 	if err != nil {
 		c.logger.Errorw("Delete CI type failed", "error", err, "ci_type_id", id, "tenant_id", tenantID)
-		common.RespondError(ctx, err, "删除CI类型失败")
+		common.RespondError(ctx, err, "Failed to delete CI type")
 		return
 	}
 
@@ -247,14 +247,14 @@ func (c *ProductionService) ListCIAttributeDefinitions(ctx *gin.Context) {
 	ciTypeIDStr := ctx.Param("id")
 	ciTypeID, err := strconv.Atoi(ciTypeIDStr)
 	if err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "无效的CI类型ID参数")
+		common.Fail(ctx, common.ParamErrorCode, "Invalid CI type ID parameter")
 		return
 	}
 
 	result, err := c.ciAttributeDefinitionService.ListCIAttributeDefinitionsByCITypeID(ctx.Request.Context(), ciTypeID, tenantID)
 	if err != nil {
 		c.logger.Errorw("List CI attribute definitions failed", "error", err, "ci_type_id", ciTypeID, "tenant_id", tenantID)
-		common.RespondError(ctx, err, "获取CI属性定义列表失败")
+		common.RespondError(ctx, err, "Failed to obtain CI attribute definition list")
 		return
 	}
 
@@ -279,12 +279,12 @@ func (c *ProductionService) GetCIAttributeDefinition(ctx *gin.Context) {
 	result, err := c.ciAttributeDefinitionService.GetCIAttributeDefinitionByID(ctx.Request.Context(), id, tenantID)
 	if err != nil {
 		c.logger.Errorw("Get CI attribute definition failed", "error", err, "attr_id", id, "tenant_id", tenantID)
-		common.RespondError(ctx, err, "获取CI属性定义失败")
+		common.RespondError(ctx, err, "Failed to obtain CI attribute definition")
 		return
 	}
 
 	if result == nil {
-		common.Fail(ctx, common.NotFoundCode, "CI属性定义不存在")
+		common.Fail(ctx, common.NotFoundCode, "CI attribute definition does not exist")
 		return
 	}
 
@@ -308,14 +308,14 @@ func (c *ProductionService) CreateCIAttributeDefinition(ctx *gin.Context) {
 
 	var req dto.CreateCIAttributeDefinitionRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.ParamError(ctx, "请求参数错误")
+		common.ParamError(ctx, "Wrong request parameters")
 		return
 	}
 
 	result, err := c.ciAttributeDefinitionService.CreateCIAttributeDefinition(ctx.Request.Context(), &req, tenantID)
 	if err != nil {
 		c.logger.Errorw("Create CI attribute definition failed", "error", err, "tenant_id", tenantID, "name", req.Name)
-		common.RespondError(ctx, err, "创建CI属性定义失败")
+		common.RespondError(ctx, err, "Failed to create CI attribute definition")
 		return
 	}
 
@@ -340,14 +340,14 @@ func (c *ProductionService) UpdateCIAttributeDefinition(ctx *gin.Context) {
 
 	var req dto.UpdateCIAttributeDefinitionRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.ParamError(ctx, "请求参数错误")
+		common.ParamError(ctx, "Wrong request parameters")
 		return
 	}
 
 	result, err := c.ciAttributeDefinitionService.UpdateCIAttributeDefinition(ctx.Request.Context(), id, tenantID, &req)
 	if err != nil {
 		c.logger.Errorw("Update CI attribute definition failed", "error", err, "attr_id", id, "tenant_id", tenantID)
-		common.RespondError(ctx, err, "更新CI属性定义失败")
+		common.RespondError(ctx, err, "Failed to update CI attribute definition")
 		return
 	}
 
@@ -372,7 +372,7 @@ func (c *ProductionService) DeleteCIAttributeDefinition(ctx *gin.Context) {
 	err := c.ciAttributeDefinitionService.DeleteCIAttributeDefinition(ctx.Request.Context(), id, tenantID)
 	if err != nil {
 		c.logger.Errorw("Delete CI attribute definition failed", "error", err, "attr_id", id, "tenant_id", tenantID)
-		common.RespondError(ctx, err, "删除CI属性定义失败")
+		common.RespondError(ctx, err, "Failed to delete CI attribute definition")
 		return
 	}
 
@@ -417,7 +417,7 @@ func (c *ProductionService) ListCIs(ctx *gin.Context) {
 
 	var req dto.ListCIRequest
 	if err := ctx.ShouldBindQuery(&req); err != nil {
-		common.ParamError(ctx, "请求参数错误")
+		common.ParamError(ctx, "Wrong request parameters")
 		return
 	}
 	// 分页不来自 ShouldBindQuery：DTO 的分页字段不参与绑定，生效值只由 HTTP 所有者给出。
@@ -426,7 +426,7 @@ func (c *ProductionService) ListCIs(ctx *gin.Context) {
 	result, err := c.ciService.ListCIs(ctx.Request.Context(), tenantID, &req)
 	if err != nil {
 		c.logger.Errorw("List CIs failed", "error", err, "tenant_id", tenantID)
-		common.RespondError(ctx, err, "获取配置项列表失败")
+		common.RespondError(ctx, err, "Failed to obtain configuration item list")
 		return
 	}
 
@@ -454,12 +454,12 @@ func (c *ProductionService) GetCI(ctx *gin.Context) {
 	result, err := c.ciService.GetCIByID(ctx.Request.Context(), id, tenantID, withRelations)
 	if err != nil {
 		c.logger.Errorw("Get CI failed", "error", err, "ci_id", id, "tenant_id", tenantID)
-		common.RespondError(ctx, err, "获取配置项失败")
+		common.RespondError(ctx, err, "Failed to obtain configuration items")
 		return
 	}
 
 	if result == nil {
-		common.Fail(ctx, common.NotFoundCode, "配置项不存在")
+		common.Fail(ctx, common.NotFoundCode, "Configuration item does not exist")
 		return
 	}
 
@@ -483,12 +483,12 @@ func (c *ProductionService) CreateCI(ctx *gin.Context) {
 
 	var req dto.CreateCIRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.ParamError(ctx, "请求参数错误")
+		common.ParamError(ctx, "Wrong request parameters")
 		return
 	}
 
 	if req.CITypeID == 0 {
-		common.Fail(ctx, common.ParamErrorCode, "CI类型ID不能为空")
+		common.Fail(ctx, common.ParamErrorCode, "CI type ID cannot be empty")
 		return
 	}
 
@@ -498,7 +498,7 @@ func (c *ProductionService) CreateCI(ctx *gin.Context) {
 	result, err := c.ciService.CreateCI(c.operatorContext(ctx), &req, tenantID)
 	if err != nil {
 		c.logger.Errorw("Create CI failed", "error", err, "tenant_id", tenantID, "name", req.Name)
-		common.RespondError(ctx, err, "创建配置项失败")
+		common.RespondError(ctx, err, "Failed to create configuration item")
 		return
 	}
 
@@ -523,14 +523,14 @@ func (c *ProductionService) UpdateCI(ctx *gin.Context) {
 
 	var req dto.UpdateCIRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.ParamError(ctx, "请求参数错误")
+		common.ParamError(ctx, "Wrong request parameters")
 		return
 	}
 
 	result, err := c.ciService.UpdateCI(c.operatorContext(ctx), id, tenantID, &req)
 	if err != nil {
 		c.logger.Errorw("Update CI failed", "error", err, "ci_id", id, "tenant_id", tenantID)
-		common.RespondError(ctx, err, "更新配置项失败")
+		common.RespondError(ctx, err, "Failed to update configuration items")
 		return
 	}
 
@@ -555,7 +555,7 @@ func (c *ProductionService) DeleteCI(ctx *gin.Context) {
 	err := c.ciService.DeleteCI(c.operatorContext(ctx), id, tenantID)
 	if err != nil {
 		c.logger.Errorw("Delete CI failed", "error", err, "ci_id", id, "tenant_id", tenantID)
-		common.RespondError(ctx, err, "删除配置项失败")
+		common.RespondError(ctx, err, "Failed to delete configuration item")
 		return
 	}
 
@@ -579,7 +579,7 @@ func (c *ProductionService) GetCIStats(ctx *gin.Context) {
 	result, err := c.ciService.GetCIStats(ctx.Request.Context(), tenantID)
 	if err != nil {
 		c.logger.Errorw("Get CI stats failed", "error", err, "tenant_id", tenantID)
-		common.RespondError(ctx, err, "获取配置项统计失败")
+		common.RespondError(ctx, err, "Failed to obtain configuration item statistics")
 		return
 	}
 
@@ -612,7 +612,7 @@ func (c *ProductionService) ListCIRelationships(ctx *gin.Context) {
 	result, err := c.ciRelationshipService.ListAllCIRelationships(ctx.Request.Context(), tenantID, page, pageSize, relationshipType)
 	if err != nil {
 		c.logger.Errorw("List CI relationships failed", "error", err, "tenant_id", tenantID)
-		common.FailWithErr(ctx, err, "获取CI关系列表失败")
+		common.FailWithErr(ctx, err, "Failed to obtain CI relationship list")
 		return
 	}
 
@@ -637,12 +637,12 @@ func (c *ProductionService) GetCIRelationship(ctx *gin.Context) {
 	result, err := c.ciRelationshipService.GetCIRelationshipByID(ctx.Request.Context(), id, tenantID)
 	if err != nil {
 		c.logger.Errorw("Get CI relationship failed", "error", err, "relation_id", id, "tenant_id", tenantID)
-		common.RespondError(ctx, err, "获取CI关系失败")
+		common.RespondError(ctx, err, "Failed to obtain CI relationship")
 		return
 	}
 
 	if result == nil {
-		common.Fail(ctx, common.NotFoundCode, "CI关系不存在")
+		common.Fail(ctx, common.NotFoundCode, "CI relationship does not exist")
 		return
 	}
 
@@ -668,7 +668,7 @@ func (c *ProductionService) ListCIRelationshipsByCIID(ctx *gin.Context) {
 	ciIDStr := ctx.Param("id")
 	ciID, err := strconv.Atoi(ciIDStr)
 	if err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "无效的CI ID参数")
+		common.Fail(ctx, common.ParamErrorCode, "Invalid CI ID parameter")
 		return
 	}
 
@@ -677,7 +677,7 @@ func (c *ProductionService) ListCIRelationshipsByCIID(ctx *gin.Context) {
 	result, err := c.ciRelationshipService.ListCIRelationshipsByCIID(ctx.Request.Context(), ciID, tenantID, direction)
 	if err != nil {
 		c.logger.Errorw("List CI relationships by CI ID failed", "error", err, "ci_id", ciID, "tenant_id", tenantID)
-		common.RespondError(ctx, err, "获取CI关系列表失败")
+		common.RespondError(ctx, err, "Failed to obtain CI relationship list")
 		return
 	}
 
@@ -701,7 +701,7 @@ func (c *ProductionService) CreateCIRelationship(ctx *gin.Context) {
 
 	var req dto.CreateCIRelationshipRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.ParamError(ctx, "请求参数错误")
+		common.ParamError(ctx, "Wrong request parameters")
 		return
 	}
 
@@ -709,11 +709,11 @@ func (c *ProductionService) CreateCIRelationship(ctx *gin.Context) {
 	if err != nil {
 		// 词表收口： 词表外关系类型是客户端参数错误（400），不是服务端故障
 		if errors.Is(err, service.ErrInvalidRelationshipType) {
-			common.ParamError(ctx, "请求参数错误")
+			common.ParamError(ctx, "Wrong request parameters")
 			return
 		}
 		c.logger.Errorw("Create CI relationship failed", "error", err, "tenant_id", tenantID, "source_ci_id", req.SourceCIID, "target_ci_id", req.TargetCIID)
-		common.RespondError(ctx, err, "创建CI关系失败")
+		common.RespondError(ctx, err, "Failed to create CI relationship")
 		return
 	}
 
@@ -738,7 +738,7 @@ func (c *ProductionService) UpdateCIRelationship(ctx *gin.Context) {
 
 	var req dto.UpdateCIRelationshipRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.ParamError(ctx, "请求参数错误")
+		common.ParamError(ctx, "Wrong request parameters")
 		return
 	}
 
@@ -746,11 +746,11 @@ func (c *ProductionService) UpdateCIRelationship(ctx *gin.Context) {
 	if err != nil {
 		// 词表收口： 词表外关系类型是客户端参数错误（400），不是服务端故障
 		if errors.Is(err, service.ErrInvalidRelationshipType) {
-			common.ParamError(ctx, "请求参数错误")
+			common.ParamError(ctx, "Wrong request parameters")
 			return
 		}
 		c.logger.Errorw("Update CI relationship failed", "error", err, "relation_id", id, "tenant_id", tenantID)
-		common.RespondError(ctx, err, "更新CI关系失败")
+		common.RespondError(ctx, err, "Failed to update CI relationship")
 		return
 	}
 
@@ -775,7 +775,7 @@ func (c *ProductionService) DeleteCIRelationship(ctx *gin.Context) {
 	err := c.ciRelationshipService.DeleteCIRelationship(ctx.Request.Context(), id, tenantID)
 	if err != nil {
 		c.logger.Errorw("Delete CI relationship failed", "error", err, "relation_id", id, "tenant_id", tenantID)
-		common.RespondError(ctx, err, "删除CI关系失败")
+		common.RespondError(ctx, err, "Failed to delete CI relationship")
 		return
 	}
 
@@ -815,18 +815,18 @@ func (c *ProductionService) GetCITopology(ctx *gin.Context) {
 	}
 	ciID, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "无效的CI ID参数")
+		common.Fail(ctx, common.ParamErrorCode, "Invalid CI ID parameter")
 		return
 	}
 	depth, _ := strconv.Atoi(ctx.DefaultQuery("depth", "3"))
 	result, err := c.ciRelationshipService.GetCITopology(ctx.Request.Context(), ciID, tenantID, depth)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			common.NotFound(ctx, "配置项不存在")
+			common.NotFound(ctx, "Configuration item does not exist")
 			return
 		}
 		c.logger.Errorw("Get CI topology failed", "errorClass", "internal", "ciId", ciID, "tenantId", tenantID)
-		common.InternalError(ctx, "获取CI拓扑失败")
+		common.InternalError(ctx, "Failed to obtain CI topology")
 		return
 	}
 	common.Success(ctx, result)
@@ -851,7 +851,7 @@ func (c *ProductionService) GetCIImpactAnalysis(ctx *gin.Context) {
 	ciIDStr := ctx.Param("id")
 	ciID, err := strconv.Atoi(ciIDStr)
 	if err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "无效的CI ID参数")
+		common.Fail(ctx, common.ParamErrorCode, "Invalid CI ID parameter")
 		return
 	}
 
@@ -863,11 +863,11 @@ func (c *ProductionService) GetCIImpactAnalysis(ctx *gin.Context) {
 	result, err := c.ciRelationshipService.GetCIImpactAnalysis(ctx.Request.Context(), ciID, tenantID, maxDepth)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			common.NotFound(ctx, "配置项不存在")
+			common.NotFound(ctx, "Configuration item does not exist")
 			return
 		}
 		c.logger.Errorw("Get CI impact analysis failed", "errorClass", "internal", "ciId", ciID, "tenantId", tenantID)
-		common.InternalError(ctx, "获取CI影响分析失败")
+		common.InternalError(ctx, "Failed to obtain CI impact analysis")
 		return
 	}
 
@@ -899,7 +899,7 @@ func (c *ProductionService) ListCITags(ctx *gin.Context) {
 	result, err := c.ciTagService.ListCITags(ctx.Request.Context(), tenantID, page, pageSize, search)
 	if err != nil {
 		c.logger.Errorw("List CI tags failed", "error", err, "tenant_id", tenantID)
-		common.RespondError(ctx, err, "获取标签列表失败")
+		common.RespondError(ctx, err, "Failed to obtain tag list")
 		return
 	}
 
@@ -924,12 +924,12 @@ func (c *ProductionService) GetCITag(ctx *gin.Context) {
 	result, err := c.ciTagService.GetCITagByID(ctx.Request.Context(), id, tenantID)
 	if err != nil {
 		c.logger.Errorw("Get CI tag failed", "error", err, "tag_id", id, "tenant_id", tenantID)
-		common.RespondError(ctx, err, "获取标签失败")
+		common.RespondError(ctx, err, "Failed to get tags")
 		return
 	}
 
 	if result == nil {
-		common.Fail(ctx, common.NotFoundCode, "标签不存在")
+		common.Fail(ctx, common.NotFoundCode, "Tag does not exist")
 		return
 	}
 
@@ -953,14 +953,14 @@ func (c *ProductionService) CreateCITag(ctx *gin.Context) {
 
 	var req dto.CreateCITagRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.ParamError(ctx, "请求参数错误")
+		common.ParamError(ctx, "Wrong request parameters")
 		return
 	}
 
 	result, err := c.ciTagService.CreateCITag(ctx.Request.Context(), &req, tenantID)
 	if err != nil {
 		c.logger.Errorw("Create CI tag failed", "error", err, "tenant_id", tenantID, "key", req.Key)
-		common.RespondError(ctx, err, "创建标签失败")
+		common.RespondError(ctx, err, "Failed to create label")
 		return
 	}
 
@@ -985,14 +985,14 @@ func (c *ProductionService) UpdateCITag(ctx *gin.Context) {
 
 	var req dto.UpdateCITagRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.ParamError(ctx, "请求参数错误")
+		common.ParamError(ctx, "Wrong request parameters")
 		return
 	}
 
 	result, err := c.ciTagService.UpdateCITag(ctx.Request.Context(), id, tenantID, &req)
 	if err != nil {
 		c.logger.Errorw("Update CI tag failed", "error", err, "tag_id", id, "tenant_id", tenantID)
-		common.RespondError(ctx, err, "更新标签失败")
+		common.RespondError(ctx, err, "Failed to update label")
 		return
 	}
 
@@ -1017,7 +1017,7 @@ func (c *ProductionService) DeleteCITag(ctx *gin.Context) {
 	err := c.ciTagService.DeleteCITag(ctx.Request.Context(), id, tenantID)
 	if err != nil {
 		c.logger.Errorw("Delete CI tag failed", "error", err, "tag_id", id, "tenant_id", tenantID)
-		common.RespondError(ctx, err, "删除标签失败")
+		common.RespondError(ctx, err, "Failed to delete tag")
 		return
 	}
 
@@ -1043,20 +1043,20 @@ func (c *ProductionService) AddTagsToCI(ctx *gin.Context) {
 	idStr := ctx.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "无效的CI ID参数")
+		common.Fail(ctx, common.ParamErrorCode, "Invalid CI ID parameter")
 		return
 	}
 
 	var req dto.AddCITagsRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.ParamError(ctx, "请求参数错误")
+		common.ParamError(ctx, "Wrong request parameters")
 		return
 	}
 
 	result, err := c.ciService.AddTagsToCI(c.operatorContext(ctx), id, tenantID, req.TagIDs)
 	if err != nil {
 		c.logger.Errorw("Add tags to CI failed", "error", err, "ci_id", id, "tag_ids", req.TagIDs, "tenant_id", tenantID)
-		common.RespondError(ctx, err, "添加标签失败")
+		common.RespondError(ctx, err, "Failed to add tag")
 		return
 	}
 
@@ -1082,20 +1082,20 @@ func (c *ProductionService) RemoveTagsFromCI(ctx *gin.Context) {
 	idStr := ctx.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "无效的CI ID参数")
+		common.Fail(ctx, common.ParamErrorCode, "Invalid CI ID parameter")
 		return
 	}
 
 	var req dto.RemoveCITagsRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.ParamError(ctx, "请求参数错误")
+		common.ParamError(ctx, "Wrong request parameters")
 		return
 	}
 
 	result, err := c.ciService.RemoveTagsFromCI(c.operatorContext(ctx), id, tenantID, req.TagIDs)
 	if err != nil {
 		c.logger.Errorw("Remove tags from CI failed", "error", err, "ci_id", id, "tag_ids", req.TagIDs, "tenant_id", tenantID)
-		common.RespondError(ctx, err, "移除标签失败")
+		common.RespondError(ctx, err, "Failed to remove tag")
 		return
 	}
 
@@ -1124,7 +1124,7 @@ func (c *ProductionService) GetCIHistory(ctx *gin.Context) {
 	idStr := ctx.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "无效的CI ID参数")
+		common.Fail(ctx, common.ParamErrorCode, "Invalid CI ID parameter")
 		return
 	}
 
@@ -1133,7 +1133,7 @@ func (c *ProductionService) GetCIHistory(ctx *gin.Context) {
 	result, err := c.ciHistoryService.GetCIHistory(ctx.Request.Context(), id, tenantID, page, pageSize)
 	if err != nil {
 		c.logger.Errorw("Get CI history failed", "error", err, "ci_id", id, "tenant_id", tenantID)
-		common.RespondError(ctx, err, "获取历史记录失败")
+		common.RespondError(ctx, err, "Failed to obtain history")
 		return
 	}
 
@@ -1159,13 +1159,13 @@ func (c *ProductionService) RevertCIVersion(ctx *gin.Context) {
 	idStr := ctx.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "无效的CI ID参数")
+		common.Fail(ctx, common.ParamErrorCode, "Invalid CI ID parameter")
 		return
 	}
 
 	var req dto.RevertCIVersionRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.ParamError(ctx, "请求参数错误")
+		common.ParamError(ctx, "Wrong request parameters")
 		return
 	}
 
@@ -1176,7 +1176,7 @@ func (c *ProductionService) RevertCIVersion(ctx *gin.Context) {
 	result, err := c.ciHistoryService.RevertCIVersion(c.operatorContext(ctx), id, tenantID, operatorID, operatorName, &req)
 	if err != nil {
 		c.logger.Errorw("Revert CI version failed", "error", err, "ci_id", id, "version", req.Version, "tenant_id", tenantID)
-		common.RespondError(ctx, err, "回滚版本失败")
+		common.RespondError(ctx, err, "Rollback version failed")
 		return
 	}
 
@@ -1202,14 +1202,14 @@ func (c *ProductionService) BatchCreateCI(ctx *gin.Context) {
 
 	var req dto.BatchCreateCIRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.ParamError(ctx, "请求参数错误")
+		common.ParamError(ctx, "Wrong request parameters")
 		return
 	}
 
 	result, err := c.ciService.BatchCreateCI(c.operatorContext(ctx), &req, tenantID)
 	if err != nil {
 		c.logger.Errorw("Batch create CI failed", "error", err, "count", len(req.Items), "tenant_id", tenantID)
-		common.RespondError(ctx, err, "批量创建失败")
+		common.RespondError(ctx, err, "Batch creation failed")
 		return
 	}
 
@@ -1233,14 +1233,14 @@ func (c *ProductionService) BatchUpdateCI(ctx *gin.Context) {
 
 	var req dto.BatchUpdateCIRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.ParamError(ctx, "请求参数错误")
+		common.ParamError(ctx, "Wrong request parameters")
 		return
 	}
 
 	result, err := c.ciService.BatchUpdateCI(c.operatorContext(ctx), &req, tenantID)
 	if err != nil {
 		c.logger.Errorw("Batch update CI failed", "error", err, "count", len(req.IDs), "tenant_id", tenantID)
-		common.RespondError(ctx, err, "批量更新失败")
+		common.RespondError(ctx, err, "Batch update failed")
 		return
 	}
 
@@ -1264,14 +1264,14 @@ func (c *ProductionService) BatchDeleteCI(ctx *gin.Context) {
 
 	var req dto.BatchDeleteCIRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.ParamError(ctx, "请求参数错误")
+		common.ParamError(ctx, "Wrong request parameters")
 		return
 	}
 
 	result, err := c.ciService.BatchDeleteCI(c.operatorContext(ctx), &req, tenantID)
 	if err != nil {
 		c.logger.Errorw("Batch delete CI failed", "error", err, "count", len(req.IDs), "tenant_id", tenantID)
-		common.RespondError(ctx, err, "批量删除失败")
+		common.RespondError(ctx, err, "Batch delete failed")
 		return
 	}
 
@@ -1300,7 +1300,7 @@ func (c *ProductionService) SearchCI(ctx *gin.Context) {
 
 	var req dto.CISearchRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.ParamError(ctx, "请求参数错误")
+		common.ParamError(ctx, "Wrong request parameters")
 		return
 	}
 
@@ -1310,7 +1310,7 @@ func (c *ProductionService) SearchCI(ctx *gin.Context) {
 	result, err := c.ciService.SearchCI(ctx.Request.Context(), tenantID, &req)
 	if err != nil {
 		c.logger.Errorw("Search CI failed", "error", err, "tenant_id", tenantID)
-		common.RespondError(ctx, err, "搜索失败")
+		common.RespondError(ctx, err, "Search failed")
 		return
 	}
 
@@ -1342,14 +1342,14 @@ func (c *ProductionService) CreateSavedView(ctx *gin.Context) {
 
 	var req dto.CreateCISavedViewRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.ParamError(ctx, "请求参数错误")
+		common.ParamError(ctx, "Wrong request parameters")
 		return
 	}
 
 	result, err := c.savedViewService.CreateSavedView(ctx.Request.Context(), &req, tenantID, userID, userNameStr)
 	if err != nil {
 		c.logger.Errorw("Create saved view failed", "error", err, "tenant_id", tenantID, "name", req.Name)
-		common.RespondError(ctx, err, "创建视图失败")
+		common.RespondError(ctx, err, "Failed to create view")
 		return
 	}
 
@@ -1385,7 +1385,7 @@ func (c *ProductionService) ListSavedViews(ctx *gin.Context) {
 	result, err := c.savedViewService.ListSavedViews(ctx.Request.Context(), tenantID, userID, includePublic, page, pageSize)
 	if err != nil {
 		c.logger.Errorw("List saved views failed", "error", err, "tenant_id", tenantID)
-		common.RespondError(ctx, err, "获取视图列表失败")
+		common.RespondError(ctx, err, "Failed to obtain view list")
 		return
 	}
 
@@ -1410,7 +1410,7 @@ func (c *ProductionService) GetSavedView(ctx *gin.Context) {
 	result, err := c.savedViewService.GetSavedView(ctx.Request.Context(), id, tenantID)
 	if err != nil {
 		c.logger.Errorw("Get saved view failed", "error", err, "view_id", id, "tenant_id", tenantID)
-		common.RespondError(ctx, err, "获取视图失败")
+		common.RespondError(ctx, err, "Failed to get view")
 		return
 	}
 
@@ -1439,14 +1439,14 @@ func (c *ProductionService) UpdateSavedView(ctx *gin.Context) {
 	}
 	var req dto.UpdateCISavedViewRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.ParamError(ctx, "请求参数错误")
+		common.ParamError(ctx, "Wrong request parameters")
 		return
 	}
 
 	result, err := c.savedViewService.UpdateSavedView(ctx.Request.Context(), id, tenantID, userID, &req)
 	if err != nil {
 		c.logger.Errorw("Update saved view failed", "error", err, "view_id", id, "tenant_id", tenantID)
-		common.RespondError(ctx, err, "更新视图失败")
+		common.RespondError(ctx, err, "Failed to update view")
 		return
 	}
 
@@ -1475,7 +1475,7 @@ func (c *ProductionService) DeleteSavedView(ctx *gin.Context) {
 	err := c.savedViewService.DeleteSavedView(ctx.Request.Context(), id, tenantID, userID)
 	if err != nil {
 		c.logger.Errorw("Delete saved view failed", "error", err, "view_id", id, "tenant_id", tenantID)
-		common.RespondError(ctx, err, "删除视图失败")
+		common.RespondError(ctx, err, "Failed to delete view")
 		return
 	}
 
@@ -1507,14 +1507,14 @@ func (c *ProductionService) CreateImportTask(ctx *gin.Context) {
 
 	var req dto.ImportCIRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.ParamError(ctx, "请求参数错误")
+		common.ParamError(ctx, "Wrong request parameters")
 		return
 	}
 
 	result, err := c.importExportService.CreateImportTask(ctx.Request.Context(), &req, tenantID, userID, userNameStr)
 	if err != nil {
 		c.logger.Errorw("Create import task failed", "error", err, "tenant_id", tenantID, "file_url", req.FileURL)
-		common.RespondError(ctx, err, "创建导入任务失败")
+		common.RespondError(ctx, err, "Failed to create import task")
 		return
 	}
 
@@ -1538,14 +1538,14 @@ func (c *ProductionService) GetImportTaskStatus(ctx *gin.Context) {
 
 	taskID := ctx.Param("task_id")
 	if taskID == "" {
-		common.Fail(ctx, common.ParamErrorCode, "任务ID不能为空")
+		common.Fail(ctx, common.ParamErrorCode, "Task ID cannot be empty")
 		return
 	}
 
 	result, err := c.importExportService.GetImportTaskStatus(ctx.Request.Context(), taskID, tenantID)
 	if err != nil {
 		c.logger.Errorw("Get import task status failed", "error", err, "task_id", taskID, "tenant_id", tenantID)
-		common.RespondError(ctx, err, "获取任务状态失败")
+		common.RespondError(ctx, err, "Failed to obtain task status")
 		return
 	}
 
@@ -1573,7 +1573,7 @@ func (c *ProductionService) ListImportTasks(ctx *gin.Context) {
 	result, err := c.importExportService.ListImportTasks(ctx.Request.Context(), tenantID, page, pageSize)
 	if err != nil {
 		c.logger.Errorw("List import tasks failed", "error", err, "tenant_id", tenantID)
-		common.RespondError(ctx, err, "获取导入任务列表失败")
+		common.RespondError(ctx, err, "Failed to obtain import task list")
 		return
 	}
 
@@ -1603,14 +1603,14 @@ func (c *ProductionService) CreateExportTask(ctx *gin.Context) {
 
 	var req dto.ExportCIRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.ParamError(ctx, "请求参数错误")
+		common.ParamError(ctx, "Wrong request parameters")
 		return
 	}
 
 	result, err := c.importExportService.CreateExportTask(ctx.Request.Context(), &req, tenantID, userID, userNameStr)
 	if err != nil {
 		c.logger.Errorw("Create export task failed", "error", err, "tenant_id", tenantID)
-		common.RespondError(ctx, err, "创建导出任务失败")
+		common.RespondError(ctx, err, "Failed to create export task")
 		return
 	}
 
@@ -1634,14 +1634,14 @@ func (c *ProductionService) GetExportTaskStatus(ctx *gin.Context) {
 
 	taskID := ctx.Param("task_id")
 	if taskID == "" {
-		common.Fail(ctx, common.ParamErrorCode, "任务ID不能为空")
+		common.Fail(ctx, common.ParamErrorCode, "Task ID cannot be empty")
 		return
 	}
 
 	result, err := c.importExportService.GetExportTaskStatus(ctx.Request.Context(), taskID, tenantID)
 	if err != nil {
 		c.logger.Errorw("Get export task status failed", "error", err, "task_id", taskID, "tenant_id", tenantID)
-		common.RespondError(ctx, err, "获取任务状态失败")
+		common.RespondError(ctx, err, "Failed to obtain task status")
 		return
 	}
 
@@ -1669,7 +1669,7 @@ func (c *ProductionService) ListExportTasks(ctx *gin.Context) {
 	result, err := c.importExportService.ListExportTasks(ctx.Request.Context(), tenantID, page, pageSize)
 	if err != nil {
 		c.logger.Errorw("List export tasks failed", "error", err, "tenant_id", tenantID)
-		common.RespondError(ctx, err, "获取导出任务列表失败")
+		common.RespondError(ctx, err, "Failed to obtain export task list")
 		return
 	}
 
@@ -1697,13 +1697,13 @@ func (c *ProductionService) UpdateLifecycleStatus(ctx *gin.Context) {
 	idStr := ctx.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "无效的CI ID参数")
+		common.Fail(ctx, common.ParamErrorCode, "Invalid CI ID parameter")
 		return
 	}
 
 	var req dto.UpdateCILifecycleRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.ParamError(ctx, "请求参数错误")
+		common.ParamError(ctx, "Wrong request parameters")
 		return
 	}
 
@@ -1719,7 +1719,7 @@ func (c *ProductionService) UpdateLifecycleStatus(ctx *gin.Context) {
 	result, err := c.ciService.UpdateLifecycleStatus(c.operatorContext(ctx), id, tenantID, params, operatorID, operatorName)
 	if err != nil {
 		c.logger.Errorw("Update CI lifecycle status failed", "error", err, "ci_id", id, "status", req.Status, "tenant_id", tenantID)
-		common.RespondError(ctx, err, "更新生命周期状态失败")
+		common.RespondError(ctx, err, "Failed to update lifecycle status")
 		return
 	}
 
@@ -1743,7 +1743,7 @@ func (c *ProductionService) BatchUpdateLifecycleStatus(ctx *gin.Context) {
 
 	var req dto.BatchUpdateLifecycleRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.ParamError(ctx, "请求参数错误")
+		common.ParamError(ctx, "Wrong request parameters")
 		return
 	}
 
@@ -1758,7 +1758,7 @@ func (c *ProductionService) BatchUpdateLifecycleStatus(ctx *gin.Context) {
 	result, err := c.ciService.BatchUpdateLifecycleStatus(c.operatorContext(ctx), req.IDs, tenantID, params, operatorID, operatorName)
 	if err != nil {
 		c.logger.Errorw("Batch update CI lifecycle status failed", "error", err, "count", len(req.IDs), "status", req.Status, "tenant_id", tenantID)
-		common.RespondError(ctx, err, "批量更新失败")
+		common.RespondError(ctx, err, "Batch update failed")
 		return
 	}
 
@@ -1783,14 +1783,14 @@ func (c *ProductionService) GetLifecycleHistory(ctx *gin.Context) {
 	idStr := ctx.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "无效的CI ID参数")
+		common.Fail(ctx, common.ParamErrorCode, "Invalid CI ID parameter")
 		return
 	}
 
 	result, err := c.ciService.GetLifecycleHistory(ctx.Request.Context(), id, tenantID)
 	if err != nil {
 		c.logger.Errorw("Get CI lifecycle history failed", "error", err, "ci_id", id, "tenant_id", tenantID)
-		common.RespondError(ctx, err, "获取生命周期历史失败")
+		common.RespondError(ctx, err, "Failed to obtain life cycle history")
 		return
 	}
 

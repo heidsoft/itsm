@@ -62,7 +62,8 @@ export default function ProblemDetailPage() {
                   label: (
                     <span>
                       <BookOpen size={14} className="inline mr-1" />
-                      知识沉淀
+
+                      Knowledge accumulation
                     </span>
                   ),
                   children: <ProblemKnowledgeTab problemId={numericId} />,
@@ -72,7 +73,8 @@ export default function ProblemDetailPage() {
                   label: (
                     <span>
                       <MessageSquare size={14} className="inline mr-1" />
-                      评论
+
+                      Comments
                     </span>
                   ),
                   children: (

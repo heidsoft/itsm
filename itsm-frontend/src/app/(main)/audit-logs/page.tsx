@@ -35,101 +35,101 @@ const METHOD_COLORS: Record<string, string> = {
 // 操作码中文映射：取值来自后端 middleware/audit.go 的 AuditableAction 常量、
 // 登录审计的 LOGIN_SUCCESS/LOGIN_FAILED，以及 BPMN 审计动作（如 reassigned）。
 const actionLabels: Record<string, string> = {
-  login: '登录',
-  logout: '登出',
-  LOGIN_SUCCESS: '登录成功',
-  LOGIN_FAILED: '登录失败',
-  create: '创建',
-  update: '编辑',
-  delete: '删除',
-  view: '查看',
-  read: '读取',
-  write: '写入',
-  search: '搜索',
-  export: '导出',
-  import: '导入',
-  assign: '分配',
-  escalate: '升级',
-  resolve: '解决',
-  close: '关闭',
-  reopen: '重新打开',
-  comment: '评论',
-  attachment: '附件',
-  permission: '权限变更',
-  configuration: '配置变更',
-  submit: '提交',
-  approve: '审批通过',
-  reject: '审批拒绝',
-  schedule: '排期',
-  start: '开始',
-  complete: '完成',
-  rollback: '回滚',
-  cancel: '取消',
+  login: 'Login',
+  logout: 'Log out',
+  LOGIN_SUCCESS: 'Login Successful',
+  LOGIN_FAILED: 'Login Failed',
+  create: 'Create',
+  update: 'Edit',
+  delete: 'Delete',
+  view: 'View',
+  read: 'Read',
+  write: 'Write',
+  search: 'Search',
+  export: 'Export',
+  import: 'Import',
+  assign: 'Assign',
+  escalate: 'Escalate',
+  resolve: 'Resolve',
+  close: 'Close',
+  reopen: 'Reopen',
+  comment: 'Comments',
+  attachment: 'Attachments',
+  permission: 'Permission change',
+  configuration: 'Configuration change',
+  submit: 'Submit',
+  approve: 'ApprovalApprove',
+  reject: 'Reject',
+  schedule: 'Schedule',
+  start: 'Start',
+  complete: 'Complete',
+  rollback: 'Rollback',
+  cancel: 'Cancel',
   // BPMN 流程审计动作
-  terminated: '流程终止',
-  assigned: '任务分配',
-  unassigned: '取消分配',
-  claimed: '领取任务',
-  completed: '任务完成',
-  cancelled: '任务取消',
-  escalated: '任务升级',
-  reassigned: '重新分配',
-  variable_changed: '变量变更',
-  activity_started: '活动开始',
-  activity_completed: '活动完成',
-  delegate: '委派',
-  add_approver: '添加审批人',
-  system_decision: '系统决策',
+  terminated: 'Process terminated',
+  assigned: 'Task assignment',
+  unassigned: 'Unassign',
+  claimed: 'Receive mission',
+  completed: 'Task completed',
+  cancelled: 'Task canceled',
+  escalated: 'Task upgrade',
+  reassigned: 'reallocation',
+  variable_changed: 'Variable change',
+  activity_started: 'Activity starts',
+  activity_completed: 'Activity completed',
+  delegate: 'Delegate',
+  add_approver: 'Add approver',
+  system_decision: 'System Decision',
 };
 
 // 资源码中文映射：后端取 URL 的第三段（多为复数 kebab-case），
 // 少数业务写入使用 `ticket_type:<id>` 形式，按冒号前缀回退。
 const resourceLabels: Record<string, string> = {
-  auth: '认证',
-  tickets: '工单',
-  ticket: '工单',
-  ticket_type: '工单类型',
-  incidents: '事件',
-  incident: '事件',
-  problems: '问题',
-  problem: '问题',
-  changes: '变更',
-  change: '变更',
-  releases: '发布',
-  release: '发布',
-  'service-requests': '服务请求',
-  service_request: '服务请求',
-  'service-catalog': '服务目录',
-  service_catalog: '服务目录',
-  knowledge: '知识库',
+  auth: 'Authentication',
+  tickets: 'Ticket',
+  ticket: 'Ticket',
+  ticket_type: 'Ticket Types',
+  incidents: 'Incident',
+  incident: 'Incident',
+  problems: 'Problem',
+  problem: 'Problem',
+  changes: 'Change',
+  change: 'Change',
+  releases: 'Release',
+  release: 'Release',
+  'service-requests': 'Service Request',
+  service_request: 'Service Request',
+  'service-catalog': 'Service Catalog',
+  service_catalog: 'Service Catalog',
+  knowledge: 'Knowledge Base',
   cmdb: 'CMDB',
-  assets: '资产',
-  asset: '资产',
-  licenses: '许可证',
-  license: '许可证',
-  users: '用户',
-  user: '用户',
-  roles: '角色',
-  role: '角色',
-  menus: '菜单',
-  tenants: '租户',
-  tenant: '租户',
-  'audit-logs': '审计日志',
-  notifications: '通知',
-  approvals: '审批',
-  bpmn: '工作流',
-  workflows: '工作流实例',
-  marketplace: '应用市场',
-  connectors: '连接器',
+  assets: 'Asset',
+  asset: 'Asset',
+  licenses: 'Licenses',
+  license: 'Licenses',
+  users: 'Users',
+  user: 'Users',
+  roles: 'Role',
+  role: 'Role',
+  menus: 'Menu',
+  tenants: 'Tenant',
+  tenant: 'Tenant',
+  'audit-logs': 'Audit Logs',
+  notifications: 'Notification',
+  approvals: 'Approval',
+  bpmn: 'Workflows',
+  workflows: 'Workflow Instances',
+  marketplace: 'ApplyMarketplace',
+  connectors: 'Connectors',
   msp: 'MSP',
-  reports: '报表',
-  dashboard: '仪表盘',
-  projects: '项目',
-  applications: '应用',
-  'email-intake': '邮件受理',
-  ai: 'AI 能力',
+  reports: 'Report',
+  dashboard: 'Dashboard',
+  projects: 'Project',
+  applications: 'Application',
+  'email-intake': 'Email acceptance',
+  ai: 'AI Capabilities',
   sla: 'SLA',
-  approvals_workflows: '审批流程',
+  approvals_workflows: 'Workflow',
 };
 
 const labelOr = (labels: Record<string, string>, code: string): string => {
@@ -192,7 +192,7 @@ const AuditLogsPage: React.FC = () => {
         });
       } catch (err) {
         message.error(
-          `加载审计日志失败：${err instanceof Error ? err.message : '未知错误'}`
+          `Failed to load audit log:${err instanceof Error ? err.message : 'Unknown error'}`
         );
       } finally {
         setLoading(false);
@@ -203,7 +203,7 @@ const AuditLogsPage: React.FC = () => {
 
   useEffect(() => {
     void fetchLogs(1, pagination.pageSize, appliedFilters);
-     
+
   }, [appliedFilters]);
 
   const handleSearch = () => {
@@ -224,7 +224,7 @@ const AuditLogsPage: React.FC = () => {
 
   const columns = [
     {
-      title: '时间',
+      title: 'Timestamp',
       dataIndex: 'createdAt',
       key: 'createdAt',
       width: 170,
@@ -237,7 +237,7 @@ const AuditLogsPage: React.FC = () => {
       ),
     },
     {
-      title: '用户',
+      title: 'Users',
       dataIndex: 'userId',
       key: 'userId',
       width: 120,
@@ -246,7 +246,7 @@ const AuditLogsPage: React.FC = () => {
         record.userName?.trim() ? record.userName : v ? `#${v}` : '-',
     },
     {
-      title: '操作',
+      title: 'Actions',
       dataIndex: 'action',
       key: 'action',
       width: 160,
@@ -255,7 +255,7 @@ const AuditLogsPage: React.FC = () => {
       render: (v: string) => labelOr(actionLabels, v),
     },
     {
-      title: '资源',
+      title: 'Resources',
       dataIndex: 'resource',
       key: 'resource',
       width: 160,
@@ -263,14 +263,14 @@ const AuditLogsPage: React.FC = () => {
       render: (v: string) => labelOr(resourceLabels, v),
     },
     {
-      title: '路径',
+      title: 'path',
       dataIndex: 'path',
       key: 'path',
       ellipsis: true,
       render: (v: string) => <Text code>{v || '-'}</Text>,
     },
     {
-      title: '方法',
+      title: 'Method',
       dataIndex: 'method',
       key: 'method',
       width: 90,
@@ -279,7 +279,7 @@ const AuditLogsPage: React.FC = () => {
       ),
     },
     {
-      title: '状态码',
+      title: 'status code',
       dataIndex: 'statusCode',
       key: 'statusCode',
       width: 90,
@@ -299,14 +299,15 @@ const AuditLogsPage: React.FC = () => {
       <div className="flex items-center gap-2">
         <ShieldCheck className="w-5 h-5 text-blue-500" />
         <Title level={4} style={{ margin: 0 }}>
-          审计日志
+
+          Audit Logs
         </Title>
       </div>
 
       <Card size="small">
         <Space wrap>
           <Input
-            placeholder="操作类型"
+            placeholder="ActionsType"
             allowClear
             style={{ width: 160 }}
             value={filters.action}
@@ -314,7 +315,7 @@ const AuditLogsPage: React.FC = () => {
             onPressEnter={handleSearch}
           />
           <Input
-            placeholder="资源名称"
+            placeholder="Resource name"
             allowClear
             style={{ width: 160 }}
             value={filters.resource}
@@ -322,7 +323,7 @@ const AuditLogsPage: React.FC = () => {
             onPressEnter={handleSearch}
           />
           <Input
-            placeholder="操作路径"
+            placeholder="Operation path"
             allowClear
             style={{ width: 220 }}
             value={filters.path}
@@ -330,7 +331,7 @@ const AuditLogsPage: React.FC = () => {
             onPressEnter={handleSearch}
           />
           <Select
-            placeholder="请求方式"
+            placeholder="Request method"
             allowClear
             style={{ width: 120 }}
             value={filters.method}
@@ -341,7 +342,7 @@ const AuditLogsPage: React.FC = () => {
             }))}
           />
           <Select
-            placeholder="结果状态"
+            placeholder="Result Status"
             allowClear
             style={{ width: 110 }}
             value={filters.statusCode}
@@ -352,10 +353,12 @@ const AuditLogsPage: React.FC = () => {
             }))}
           />
           <Button type="primary" icon={<Search className="w-4 h-4" />} onClick={handleSearch}>
-            查询
+
+            Query
           </Button>
           <Button icon={<RefreshCw className="w-4 h-4" />} onClick={handleReset}>
-            重置
+
+            Reset
           </Button>
         </Space>
       </Card>
@@ -372,12 +375,12 @@ const AuditLogsPage: React.FC = () => {
             pageSize: pagination.pageSize,
             total: pagination.total,
             showSizeChanger: true,
-            showTotal: (total) => `共 ${total} 条`,
+            showTotal: (total) => `Total ${total} items`,
             onChange: (page, pageSize) => {
               void fetchLogs(page, pageSize, appliedFilters);
             },
           }}
-          locale={{ emptyText: '暂无审计日志' }}
+          locale={{ emptyText: 'No audit log yet' }}
         />
       </Card>
     </div>

@@ -225,7 +225,7 @@ function createOfflineResponse(request) {
   if (url.pathname.startsWith('/api/')) {
     return new Response(JSON.stringify({
       success: false,
-      error: '网络连接不可用，请检查网络后重试',
+      error: 'Network connection unavailable. Check your connection and try again.',
       offline: true,
     }), {
       status: 503,
@@ -235,7 +235,7 @@ function createOfflineResponse(request) {
     });
   }
   
-  return new Response('网络连接不可用', {
+  return new Response('Network connection unavailable', {
     status: 503,
     headers: {
       'Content-Type': 'text/plain',
@@ -249,7 +249,7 @@ self.addEventListener('push', (event) => {
   console.log('Push event received:', event);
   
   const options = {
-    body: '您有新的工单需要处理',
+    body: 'You have a new ticket to process',
     icon: '/file.svg',
     badge: '/file.svg',
     vibrate: [100, 50, 100],
@@ -260,19 +260,19 @@ self.addEventListener('push', (event) => {
     actions: [
       {
         action: 'explore',
-        title: '查看详情',
+        title: 'View details',
         icon: '/file.svg',
       },
       {
         action: 'close',
-        title: '关闭',
+        title: 'Close',
         icon: '/file.svg',
       },
     ],
   };
   
   event.waitUntil(
-    self.registration.showNotification('ITSM系统通知', options)
+    self.registration.showNotification('ITSM Notification', options)
   );
 });
 

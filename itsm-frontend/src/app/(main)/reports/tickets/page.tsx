@@ -111,7 +111,7 @@ const TicketsReportPage = () => {
       const stats = await TicketApi.getTicketStats();
       setState({ kind: 'ready', stats });
     } catch (err) {
-      setState({ kind: 'error', reason: err instanceof Error ? err.message : '未知错误' });
+      setState({ kind: 'error', reason: err instanceof Error ? err.message : 'Unknown error' });
     }
   }, []);
 
@@ -122,9 +122,9 @@ const TicketsReportPage = () => {
   if (state.kind === 'loading') {
     return (
       <div className="p-6 bg-gray-50 min-h-full">
-        <Title level={2}>工单报表</Title>
+        <Title level={2}>Work order report</Title>
         <div className="flex items-center justify-center h-64">
-          <Spin description="加载工单统计..." />
+          <Spin description="Loading work order statistics..." />
         </div>
       </div>
     );
@@ -134,15 +134,16 @@ const TicketsReportPage = () => {
     // 失败态不得渲染全 0 卡片或空图表：那会把接口故障伪装成「没有工单」。
     return (
       <div className="p-6 bg-gray-50 min-h-full">
-        <Title level={2}>工单报表</Title>
+        <Title level={2}>Work order report</Title>
         <Alert
           type="error"
           showIcon
-          title="工单统计加载失败"
-          description={`${state.reason}。请确认已登录且拥有工单读取权限，或稍后重试。`}
+          title="Failed to load work order statistics"
+          description={`${state.reason}. Please confirm that you are logged in and have permission to read the ticket, or try again later.`}
           action={
             <Button size="small" icon={<RotateCcw />} onClick={loadData}>
-              重试
+
+              Retry
             </Button>
           }
         />
@@ -156,7 +157,7 @@ const TicketsReportPage = () => {
   const total = stats.total;
 
   const cards = [
-    { title: '工单总数', value: total, color: '#1890ff' },
+    { title: 'Total number of work orders', value: total, color: '#1890ff' },
     { title: statusLabel(TicketStatus.NEW), value: countOf(statusSlices, TicketStatus.NEW), color: STATUS_COLORS[TicketStatus.NEW] },
     { title: statusLabel(TicketStatus.OPEN), value: countOf(statusSlices, TicketStatus.OPEN), color: STATUS_COLORS[TicketStatus.OPEN] },
     { title: statusLabel(TicketStatus.IN_PROGRESS), value: countOf(statusSlices, TicketStatus.IN_PROGRESS), color: STATUS_COLORS[TicketStatus.IN_PROGRESS] },
@@ -164,21 +165,23 @@ const TicketsReportPage = () => {
     { title: statusLabel(TicketStatus.RESOLVED), value: countOf(statusSlices, TicketStatus.RESOLVED), color: STATUS_COLORS[TicketStatus.RESOLVED] },
     { title: statusLabel(TicketStatus.CLOSED), value: countOf(statusSlices, TicketStatus.CLOSED), color: STATUS_COLORS[TicketStatus.CLOSED] },
     // 超时来自 sla_states 的权威判定，不是工单状态。
-    { title: 'SLA 超时', value: stats.overdue, color: '#ff4d4f' },
+    { title: 'SLA timeout', value: stats.overdue, color: '#ff4d4f' },
   ];
 
   return (
     <div className="p-6 bg-gray-50 min-h-full space-y-6">
       <header>
-        <Title level={2}>工单报表</Title>
+        <Title level={2}>Work order report</Title>
         <Text className="text-gray-500">
-          统计口径为当前租户全量工单；分布数据来自后端分组计数，不是当前页列表。
+
+          The statistical caliber is all work orders of the current tenant; the distribution data comes from the backend group count, not the current page list.
         </Text>
       </header>
 
       <Row justify="end">
         <Button icon={<RotateCcw />} onClick={loadData}>
-          刷新数据
+
+          Refresh Data
         </Button>
       </Row>
 
@@ -198,12 +201,12 @@ const TicketsReportPage = () => {
 
       {total === 0 ? (
         <Card>
-          <Empty description="当前租户还没有工单" />
+          <Empty description="The current tenant does not have a work order yet" />
         </Card>
       ) : (
         <Row gutter={[16, 16]}>
           <Col xs={24} lg={12}>
-            <Card title="工单状态分布">
+            <Card title="Work order status distribution">
               <ResponsiveContainer width="100%" height={300}>
                 <PieChart>
                   <Pie
@@ -227,7 +230,7 @@ const TicketsReportPage = () => {
           </Col>
 
           <Col xs={24} lg={12}>
-            <Card title="工单优先级分布">
+            <Card title="Work order priority distribution">
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={prioritySlices}>
                   <CartesianGrid strokeDasharray="3 3" />
@@ -235,7 +238,7 @@ const TicketsReportPage = () => {
                   <YAxis allowDecimals={false} />
                   <Tooltip />
                   <Legend />
-                  <Bar dataKey="value" name="工单数量" fill="#1890ff">
+                  <Bar dataKey="value" name="Work order quantity" fill="#1890ff">
                     {prioritySlices.map(slice => (
                       <Cell key={slice.key} fill={slice.color} />
                     ))}
@@ -248,7 +251,7 @@ const TicketsReportPage = () => {
       )}
 
       {total > 0 && (
-        <Card title="状态明细">
+        <Card title="Status details">
           <Row gutter={[16, 16]}>
             {statusSlices.map(slice => (
               <Col xs={12} sm={8} md={6} key={slice.key}>

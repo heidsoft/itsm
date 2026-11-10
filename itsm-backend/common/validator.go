@@ -30,11 +30,11 @@ func ValidateStruct(s interface{}) error {
 // ValidateAndBindJSON 验证并绑定JSON请求
 func ValidateAndBindJSON(c *gin.Context, obj interface{}) error {
 	if err := c.ShouldBindJSON(obj); err != nil {
-		return NewBusinessError(ParamErrorCode, "请求参数格式错误", err.Error())
+		return NewBusinessError(ParamErrorCode, "Request parameter format error", err.Error())
 	}
 
 	if err := ValidateStruct(obj); err != nil {
-		return NewBusinessError(ValidationError, "参数验证失败", formatValidationError(err))
+		return NewBusinessError(ValidationError, "Parameter validation failed", formatValidationError(err))
 	}
 
 	return nil
@@ -43,11 +43,11 @@ func ValidateAndBindJSON(c *gin.Context, obj interface{}) error {
 // ValidateAndBindQuery 验证并绑定查询参数
 func ValidateAndBindQuery(c *gin.Context, obj interface{}) error {
 	if err := c.ShouldBindQuery(obj); err != nil {
-		return NewBusinessError(ParamErrorCode, "查询参数格式错误", err.Error())
+		return NewBusinessError(ParamErrorCode, "Query parameter format error", err.Error())
 	}
 
 	if err := ValidateStruct(obj); err != nil {
-		return NewBusinessError(ValidationError, "参数验证失败", formatValidationError(err))
+		return NewBusinessError(ValidationError, "Parameter validation failed", formatValidationError(err))
 	}
 
 	return nil

@@ -52,7 +52,7 @@ func (s *TicketLifecycleService) SetNotificationService(notificationService *Tic
 func (s *TicketLifecycleService) ResolveTicket(ctx context.Context, ticketID int, resolution string, tenantID int, resolvedBy int) (*ent.Ticket, error) {
 	resolution = strings.TrimSpace(resolution)
 	if resolution == "" {
-		return nil, fmt.Errorf("解决方案不能为空")
+		return nil, fmt.Errorf("Solution cannot be empty")
 	}
 	// 验证工单存在
 	t, err := s.client.Ticket.Query().
@@ -155,7 +155,7 @@ func (s *TicketLifecycleService) EscalateTicket(ctx context.Context, ticketID in
 		return nil, ErrInvalidTicketStatus
 	}
 	if strings.TrimSpace(reason) == "" {
-		return nil, fmt.Errorf("升级原因不能为空")
+		return nil, fmt.Errorf("Upgrade reason cannot be empty")
 	}
 
 	// 计算升级后的优先级
@@ -216,7 +216,7 @@ func (s *TicketLifecycleService) UpdateTicketStatus(ctx context.Context, ticketI
 		return nil, ErrInvalidTicketStatus
 	}
 	if status == common.TicketStatusResolved && strings.TrimSpace(t.Resolution) == "" {
-		return nil, fmt.Errorf("解决工单必须通过 ResolveTicket 提交解决方案")
+		return nil, fmt.Errorf("To resolve a ticket, you must submit a solution through ResolveTicket")
 	}
 
 	// 构建更新操作

@@ -8,38 +8,38 @@ const { Text, Title } = Typography;
 
 const setupSteps = [
   {
-    title: '组织与权限',
-    description: '建立用户、用户组、角色与审批人范围。',
+    title: 'Organization and Permissions',
+    description: 'Establish users, user groups, roles and approver ranges.',
     href: '/admin/users',
-    label: '配置用户',
+    label: 'Configure user',
     icon: Users,
   },
   {
-    title: '服务策略',
-    description: '准备分类、SLA、处理人分配规则和审批规则。',
+    title: 'Service Policy',
+    description: 'Prepare classification, SLA, handler assignment rules and approval rules.',
     href: '/admin/sla-definitions',
-    label: '配置 SLA',
+    label: 'Configure SLA',
     icon: ShieldCheck,
   },
   {
-    title: '流程设计',
-    description: '设计并发布 BPMN 流程；变更场景可补充评审组。',
+    title: 'Process Design',
+    description: 'Design and release a BPMN process; change scenarios complement the review team.',
     href: '/workflow/designer',
-    label: '设计流程',
+    label: 'Design Process',
     icon: Workflow,
   },
   {
-    title: '工单类型绑定',
-    description: '把流程、SLA、审批与分配策略绑定为可用服务。',
+    title: 'Work order type binding',
+    description: 'Bind processes, SLAs, approvals and allocation policies into available services.',
     href: '/tickets/types',
-    label: '绑定策略',
+    label: 'Binding strategy',
     icon: ClipboardList,
   },
   {
-    title: '联调与验收',
-    description: '创建一张测试工单，检查实例、审批、SLA 和审计。',
+    title: 'Joint debugging and acceptance',
+    description: 'Create a test ticket to check the instance, approvals, SLA and auditing.',
     href: '/workflow/instances',
-    label: '查看实例',
+    label: 'View Instances',
     icon: CheckCircle2,
   },
 ];
@@ -53,16 +53,17 @@ export function AdminSetupGuide() {
       title={
         <Space>
           <Network className="h-5 w-5 text-blue-600" />
-          <span>管理员配置路线</span>
-          <Tag color="blue">推荐顺序</Tag>
+          <span>Administrator configures route</span>
+          <Tag color="blue">Recommended order</Tag>
         </Space>
       }
-      extra={<Text type="secondary">先绑定，再创建测试工单验证</Text>}
+      extra={<Text type="secondary">Bind first, then create a test work order for verification</Text>}
     >
       <div className="border-b border-slate-100 bg-slate-50 px-5 py-4">
-        <Title level={5} className="!mb-1">把独立配置项组装成可执行的服务</Title>
+        <Title level={5} className="!mb-1">Assemble independent configuration items into executable services</Title>
         <Text type="secondary">
-          流程、SLA、分配和审批规则不会自动对所有工单生效；需要在“工单类型”中完成绑定。
+
+          Process, SLA, allocation and approval rules will not automatically take effect on all work orders; binding needs to be completed in "Work Order Type".
         </Text>
       </div>
 
@@ -102,7 +103,7 @@ export function AdminSetupGuide() {
           className="mt-5"
           type="info"
           showIcon
-          title="验收标准：测试工单应产生处理人、SLA 截止时间和流程实例；如配置了审批，还应出现待审批任务。"
+          title="Acceptance criteria: The test work order should generate a handler, SLA deadline and process instance; if approval is configured, tasks to be approved should also appear."
         />
       </div>
     </Card>

@@ -50,7 +50,7 @@ export const CIImpactAnalysisTab: React.FC<CIImpactAnalysisTabProps> = ({
               <Text>{item.ciName}</Text>
               <Text type="secondary">- {item.ciType}</Text>
               <Text type="secondary">- {item.relationship}</Text>
-              <Text type="secondary">- 距离: {item.distance}</Text>
+              <Text type="secondary">- Distance: {item.distance}</Text>
             </Space>
           </List.Item>
         )}
@@ -75,7 +75,7 @@ export const CIImpactAnalysisTab: React.FC<CIImpactAnalysisTabProps> = ({
             <Space>
               <Tag>{item.status}</Tag>
               <Text>{item.title}</Text>
-              <Text type="secondary">优先级: {item.priority}</Text>
+              <Text type="secondary">Priority: {item.priority}</Text>
             </Space>
           </List.Item>
         )}
@@ -119,20 +119,21 @@ export const CIImpactAnalysisTab: React.FC<CIImpactAnalysisTabProps> = ({
   };
 
   return (
-    <Card title="CI影响分析" size="small">
+    <Card title="CI Impact Analysis" size="small">
       <Button
         type="primary"
         onClick={onAnalyze}
         loading={impactLoading}
         style={{ marginBottom: 16 }}
       >
-        执行影响分析
+
+        Perform impact analysis
       </Button>
 
       {impactAnalysis && (
         <>
           <Alert
-            title="风险等级"
+            title="Risk Level"
             description={
               <Space>
                 <Tag color={RISK_LEVEL_COLORS[impactAnalysis.riskLevel]}>
@@ -155,23 +156,23 @@ export const CIImpactAnalysisTab: React.FC<CIImpactAnalysisTabProps> = ({
             items={[
               {
                 key: 'upstream',
-                label: `上游影响 (${impactAnalysis.upstreamImpact?.length || 0})`,
-                children: renderImpactList(impactAnalysis.upstreamImpact, '无上游依赖'),
+                label: `Upstream Impact (${impactAnalysis.upstreamImpact?.length || 0})`,
+                children: renderImpactList(impactAnalysis.upstreamImpact, 'No upstream dependencies'),
               },
               {
                 key: 'downstream',
-                label: `下游影响 (${impactAnalysis.downstreamImpact?.length || 0})`,
-                children: renderImpactList(impactAnalysis.downstreamImpact, '无下游影响'),
+                label: `Downstream Impact (${impactAnalysis.downstreamImpact?.length || 0})`,
+                children: renderImpactList(impactAnalysis.downstreamImpact, 'No downstream effects'),
               },
               {
                 key: 'tickets',
-                label: `关联工单 (${impactAnalysis.affectedTickets?.length || 0})`,
-                children: renderAffectedTickets(impactAnalysis.affectedTickets, '无关联工单'),
+                label: `Associated work order (${impactAnalysis.affectedTickets?.length || 0})`,
+                children: renderAffectedTickets(impactAnalysis.affectedTickets, 'No related work order'),
               },
               {
                 key: 'incidents',
-                label: `关联事件 (${impactAnalysis.affectedIncidents?.length || 0})`,
-                children: renderAffectedIncidents(impactAnalysis.affectedIncidents, '无关联事件'),
+                label: `Correlation event (${impactAnalysis.affectedIncidents?.length || 0})`,
+                children: renderAffectedIncidents(impactAnalysis.affectedIncidents, 'No associated events'),
               },
             ]}
           />
@@ -179,7 +180,7 @@ export const CIImpactAnalysisTab: React.FC<CIImpactAnalysisTabProps> = ({
       )}
 
       {!impactAnalysis && !impactLoading && (
-        <Empty description="点击上方按钮执行影响分析" />
+        <Empty description="Click the button above to perform an impact analysis" />
       )}
     </Card>
   );

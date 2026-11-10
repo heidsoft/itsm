@@ -32,11 +32,11 @@ jest.mock('@/lib/api/marketplace-catalog-api', () => ({
   createItemVersion: jest.fn(),
   publishItemVersion: jest.fn(),
   CATALOG_STATUS_META: {
-    draft: { label: '草稿', color: 'default', hint: '尚未上架，租户看不到' },
-    reviewing: { label: '待审', color: 'processing', hint: '审核中，尚未上架' },
-    published: { label: '已上架', color: 'green', hint: '租户可浏览并安装' },
-    rejected: { label: '已驳回', color: 'red', hint: '审核未通过，需修改后重新上架' },
-    deprecated: { label: '已下架', color: 'orange', hint: '停止新安装；已安装租户不受影响' },
+    draft: { label: 'Draft', color: 'default', hint: 'Not yet on the shelves, tenants cannot see it' },
+    reviewing: { label: 'Pending review', color: 'processing', hint: 'Under review, not yet on the shelves' },
+    published: { label: 'Already on the shelves', color: 'green', hint: 'Tenant can browse and install' },
+    rejected: { label: 'Rejected', color: 'red', hint: 'The review failed and needs to be modified and re-listed.' },
+    deprecated: { label: 'Removed', color: 'orange', hint: 'Stop new installations; already installed tenants are not affected' },
   },
 }));
 
@@ -127,11 +127,11 @@ describe('商品目录管理', () => {
     expect(await screen.findByText('飞书审批增强连接器')).toBeInTheDocument();
     // 按行断言而不是全局文本：统计卡片里也有「已上架」字样，
     // 全局匹配会同时命中标题与标签，掩盖「某一行状态显示错了」这种真实缺陷。
-    expect(rowOf('飞书审批增强连接器').textContent).toContain('已上架');
-    expect(rowOf('Excel 导出').textContent).toContain('草稿');
-    expect(rowOf('旧版连接器').textContent).toContain('已下架');
+    expect(rowOf('飞书审批增强连接器').textContent).toContain('Already on the shelves');
+    expect(rowOf('Excel 导出').textContent).toContain('Draft');
+    expect(rowOf('旧版连接器').textContent).toContain('Removed');
     // 未发布商品的线上版本必须显式说「未发布」，不能留空让人以为是加载失败。
-    expect(rowOf('Excel 导出').textContent).toContain('未发布');
+    expect(rowOf('Excel 导出').textContent).toContain("Not published");
   });
 
   it('操作按状态出现：已上架给「下架」，草稿/已下架给「上架」', async () => {
@@ -141,9 +141,9 @@ describe('商品目录管理', () => {
 
     // 断言按钮文案而不是行文本：「已上架」里也含「上架」二字，用 textContent
     // 判断会得出相反结论（这正是本测试第一版踩到的坑）。
-    expect(actionsOf('飞书审批增强连接器')).toEqual(['下架', '版本', '编辑']);
-    expect(actionsOf('Excel 导出')).toEqual(['上架', '版本', '编辑', '删除']);
-    expect(actionsOf('旧版连接器')).toEqual(['上架', '版本', '编辑', '删除']);
+    expect(actionsOf('飞书审批增强连接器')).toEqual(['Removed', 'Version', "Edit"]);
+    expect(actionsOf('Excel 导出')).toEqual(['On the shelves', 'Version', "Edit", "Delete"]);
+    expect(actionsOf('旧版连接器')).toEqual(['On the shelves', 'Version', "Edit", "Delete"]);
   });
 
   it('下架调用后端并给出「已安装租户不受影响」的说明', async () => {
@@ -152,7 +152,7 @@ describe('商品目录管理', () => {
     await screen.findByText('飞书审批增强连接器');
     const publishedRow = screen.getByText('飞书审批增强连接器').closest('tr')!;
     const unpublishButton = Array.from(publishedRow.querySelectorAll('button')).find(button =>
-      button.textContent?.includes('下架')
+      button.textContent?.includes('Removed')
     );
     expect(unpublishButton).toBeDefined();
     fireEvent.click(unpublishButton!);
@@ -167,7 +167,7 @@ describe('商品目录管理', () => {
     await screen.findByText('Excel 导出');
     const draftRow = screen.getByText('Excel 导出').closest('tr')!;
     const publishButton = Array.from(draftRow.querySelectorAll('button')).find(button =>
-      button.textContent?.includes('上架')
+      button.textContent?.includes('On the shelves')
     );
     fireEvent.click(publishButton!);
 
@@ -178,6 +178,6 @@ describe('商品目录管理', () => {
     mockedList.mockResolvedValueOnce({ items: [], total: 0, page: 1, pageSize: 20, totalPages: 0 });
     renderPage();
 
-    expect(await screen.findByText(/目录为空/)).toBeInTheDocument();
+    expect(await screen.findByText(/Directory is empty\. You can create new products or confirm whether the seeder has imported factory products\./)).toBeInTheDocument();
   });
 });

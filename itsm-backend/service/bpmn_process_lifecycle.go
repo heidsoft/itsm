@@ -41,7 +41,7 @@ func (e *CustomProcessEngine) loadLifecycleInstance(ctx context.Context, process
 		Where(processinstance.ProcessInstanceID(processInstanceID), processinstance.TenantID(tenantID)).
 		First(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("获取流程实例失败: %w", err)
+		return nil, fmt.Errorf("Failed to obtain process instance: %w", err)
 	}
 
 	transition := instanceLifecycleTable[action]
@@ -52,7 +52,7 @@ func (e *CustomProcessEngine) loadLifecycleInstance(ctx context.Context, process
 	}
 	return nil, common.NewAppError(
 		common.ErrCodeConflict,
-		fmt.Sprintf("流程实例当前状态为 %s，不能%s（仅支持：%s）",
+		fmt.Sprintf("The current status of the process instance is %s and cannot be %s (only supports: %s)",
 			instance.Status, transition.label, strings.Join(transition.allowed, "/")),
 		http.StatusConflict,
 		nil,
@@ -71,7 +71,7 @@ func (e *CustomProcessEngine) SuspendProcess(ctx context.Context, processInstanc
 		SetSuspendedReason(reason).
 		Save(ctx)
 	if err != nil {
-		return fmt.Errorf("暂停流程实例失败: %w", err)
+		return fmt.Errorf("Failed to pause process instance: %w", err)
 	}
 
 	// 挂起后取消该实例的活跃定时器：timer 回调只认 running 实例
@@ -114,7 +114,7 @@ func (e *CustomProcessEngine) ResumeProcess(ctx context.Context, processInstance
 		SetStatus("running").
 		Save(ctx)
 	if err != nil {
-		return fmt.Errorf("恢复流程实例失败: %w", err)
+		return fmt.Errorf("Failed to restore process instance: %w", err)
 	}
 
 	// 恢复后重建当前活动的定时器（挂起时已被取消）：
@@ -157,7 +157,7 @@ func (e *CustomProcessEngine) TerminateProcess(ctx context.Context, processInsta
 		SetEndTime(time.Now()).
 		Save(ctx)
 	if err != nil {
-		return fmt.Errorf("终止流程实例失败: %w", err)
+		return fmt.Errorf("Failed to terminate process instance: %w", err)
 	}
 
 	_, err = e.client.ProcessTask.Update().
@@ -242,13 +242,13 @@ func (e *CustomProcessEngine) reregisterInstanceTimers(ctx context.Context, inst
 		Where(processdefinition.ID(instance.ProcessDefinitionID)).
 		First(ctx)
 	if err != nil {
-		return fmt.Errorf("加载流程定义 %d 失败: %w", instance.ProcessDefinitionID, err)
+		return fmt.Errorf("Failed to load process definition %d: %w", instance.ProcessDefinitionID, err)
 	}
 
 	parser := NewBPMNParser()
 	definitions, err := parser.ParseXML(processDef.BpmnXML)
 	if err != nil {
-		return fmt.Errorf("解析 BPMN XML 失败: %w", err)
+		return fmt.Errorf("Failed to parse BPMN XML: %w", err)
 	}
 	if len(definitions.Processes) == 0 {
 		return fmt.Errorf("BPMN definitions contain no processes")
@@ -266,7 +266,7 @@ func (e *CustomProcessEngine) reregisterInstanceTimers(ctx context.Context, inst
 		expression, expressionType := e.extractTimerExpression(event.TimerEventDefinition)
 		fireAt, err := CalculateFireAt(expression, expressionType, time.Now())
 		if err != nil {
-			return fmt.Errorf("计算定时器触发时间失败: %w", err)
+			return fmt.Errorf("Failed to calculate timer trigger time: %w", err)
 		}
 		instanceID := instance.ID
 		if _, err := e.timerStore.Create(ctx, &CreateTimerRequest{
@@ -279,7 +279,7 @@ func (e *CustomProcessEngine) reregisterInstanceTimers(ctx context.Context, inst
 			FireAt:               fireAt,
 			TenantID:             instance.TenantID,
 		}); err != nil {
-			return fmt.Errorf("重建中间定时器失败: %w", err)
+			return fmt.Errorf("Failed to rebuild intermediate timer: %w", err)
 		}
 		e.logger.Infow("intermediate timer re-registered on process resume",
 			"instance_id", instance.ID, "activity_id", event.ID,

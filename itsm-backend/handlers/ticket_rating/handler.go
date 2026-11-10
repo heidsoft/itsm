@@ -35,13 +35,13 @@ func NewHandler(ratingService *service.TicketRatingService, logger *zap.SugaredL
 func (h *Handler) SubmitRating(c *gin.Context) {
 	ticketID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "无效的工单ID")
+		common.Fail(c, common.ParamErrorCode, "Invalid ticket ID")
 		return
 	}
 
 	var req dto.SubmitTicketRatingRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
@@ -54,7 +54,7 @@ func (h *Handler) SubmitRating(c *gin.Context) {
 	rating, err := h.ratingService.SubmitRating(c.Request.Context(), ticketID, &req, userID, tenantID)
 	if err != nil {
 		h.logger.Errorw("Failed to submit rating", "error", err, "ticket_id", ticketID, "user_id", userID)
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -65,7 +65,7 @@ func (h *Handler) SubmitRating(c *gin.Context) {
 func (h *Handler) GetRating(c *gin.Context) {
 	ticketID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "无效的工单ID")
+		common.Fail(c, common.ParamErrorCode, "Invalid ticket ID")
 		return
 	}
 
@@ -77,7 +77,7 @@ func (h *Handler) GetRating(c *gin.Context) {
 	rating, err := h.ratingService.GetRating(c.Request.Context(), ticketID, tenantID)
 	if err != nil {
 		h.logger.Errorw("Failed to get rating", "error", err, "ticket_id", ticketID)
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -93,7 +93,7 @@ func (h *Handler) GetRating(c *gin.Context) {
 func (h *Handler) GetRatingStats(c *gin.Context) {
 	var req dto.GetRatingStatsRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
@@ -106,7 +106,7 @@ func (h *Handler) GetRatingStats(c *gin.Context) {
 	stats, err := h.ratingService.GetRatingStats(c.Request.Context(), &req)
 	if err != nil {
 		h.logger.Errorw("Failed to get rating stats", "error", err, "tenant_id", req.TenantID)
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 

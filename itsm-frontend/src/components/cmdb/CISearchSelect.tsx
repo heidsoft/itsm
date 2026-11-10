@@ -39,7 +39,7 @@ const statusLabels: Record<string, string> = CIStatusLabels as Record<string, st
 const CISearchSelect: React.FC<CISearchSelectProps> = ({
   value,
   onChange,
-  placeholder = '输入名称搜索配置项',
+  placeholder = 'Enter name to search for configuration items',
   style,
   allowClear = true,
   excludeIds,
@@ -107,7 +107,7 @@ const CISearchSelect: React.FC<CISearchSelectProps> = ({
       onSearch={setSearchInput}
       onChange={handleChange}
       loading={fetching}
-      notFoundContent={fetching ? '搜索中...' : '无匹配配置项'}
+      notFoundContent={fetching ? 'Searching...' : 'No matching configuration item'}
       options={mergedOptions.map(item => ({
         value: item.id,
         label: (

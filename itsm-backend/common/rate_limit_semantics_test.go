@@ -21,7 +21,7 @@ func TestRateLimitSemantics(t *testing.T) {
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
 
-	Fail(c, RateLimitCode, "请求过于频繁，请稍后再试")
+	Fail(c, RateLimitCode, "Requests are too frequent, please try again later.")
 
 	if w.Code != http.StatusTooManyRequests {
 		t.Errorf("RateLimitCode 应映射到 HTTP 429，got %d", w.Code)

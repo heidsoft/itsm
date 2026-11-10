@@ -85,9 +85,9 @@ function toSlices(
 }
 
 const PRESET_OPTIONS = [
-  { value: '7', label: '最近7天' },
-  { value: '30', label: '最近30天' },
-  { value: '90', label: '最近90天' },
+  { value: '7', label: 'Last 7 Days' },
+  { value: '30', label: 'Last 30 Days' },
+  { value: '90', label: 'Last 90 Days' },
 ];
 
 interface WindowRequest {
@@ -108,16 +108,16 @@ function presetWindow(days: number): WindowRequest {
 function formatAvgResolution(report: IncidentReport): string {
   if (report.resolvedInWindow === 0) {
     // 后端对空集合返回 0，这里不能把它显示成「0 分钟」。
-    return '窗口内无解决事件';
+    return 'No resolved events in window';
   }
   const minutes = report.avgResolutionMinutes;
   if (minutes < 60) {
-    return `${minutes} 分钟`;
+    return `${minutes} minutes`;
   }
   if (minutes < 60 * 48) {
-    return `${(minutes / 60).toFixed(1)} 小时`;
+    return `${(minutes / 60).toFixed(1)} hours`;
   }
-  return `${(minutes / (60 * 24)).toFixed(1)} 天`;
+  return `${(minutes / (60 * 24)).toFixed(1)} days`;
 }
 
 // X 轴只保留 MM-DD：90 天窗口下完整日期会互相压字。
@@ -148,7 +148,7 @@ const IncidentTrendsPage = () => {
       }
     } catch (err) {
       if (requestIdRef.current === requestId) {
-        setState({ kind: 'error', reason: err instanceof Error ? err.message : '未知错误' });
+        setState({ kind: 'error', reason: err instanceof Error ? err.message : 'Unknown error' });
       }
     }
   }, [windowRequest]);
@@ -175,15 +175,15 @@ const IncidentTrendsPage = () => {
 
   const windowSummary =
     state.kind === 'ready'
-      ? `统计窗口：${state.report.window.dateFrom} 至 ${state.report.window.dateTo}（${state.report.window.days} 天，日期按服务器时区整日边界）`
-      : '统计窗口：事件趋势报表按创建时间与解决时间分别归日';
+      ? `Statistics window:${state.report.window.dateFrom} to ${state.report.window.dateTo}（${state.report.window.days} day, date according to server time zone whole day boundary)`
+      : 'Statistics window: Event trend reports are dated according to creation time and resolution time.';
 
   if (state.kind === 'loading') {
     return (
       <div className="p-6 bg-gray-50 min-h-full">
-        <Title level={2}>事件趋势报表</Title>
+        <Title level={2}>Event Trend Report</Title>
         <div className="flex items-center justify-center h-64">
-          <Spin size="large" description="加载报表数据..." />
+          <Spin size="large" description="Loading report data..." />
         </div>
       </div>
     );
@@ -193,15 +193,16 @@ const IncidentTrendsPage = () => {
     // 失败态不得渲染全 0 卡片或空图表：那会把接口故障伪装成「窗口内没有事件」。
     return (
       <div className="p-6 bg-gray-50 min-h-full space-y-6">
-        <Title level={2}>事件趋势报表</Title>
+        <Title level={2}>Event Trend Report</Title>
         <Alert
           type="error"
           showIcon
-          title="事件趋势数据加载失败"
-          description={`${state.reason}。请确认已登录且拥有事件读取权限，或调整窗口后重试。`}
+          title="Event trend data loading failed"
+          description={`${state.reason}. Please confirm that you are logged in and have event read permission, or adjust the window and try again.`}
           action={
             <Button size="small" icon={<RotateCcw />} onClick={loadReport}>
-              重试
+
+              Retry
             </Button>
           }
         />
@@ -216,25 +217,25 @@ const IncidentTrendsPage = () => {
 
   const cards = [
     {
-      title: '窗口内新建',
+      title: 'New in window',
       value: report.createdInWindow,
       color: '#1890ff',
       icon: <TrendingUp size={20} style={{ color: '#1890ff' }} />,
     },
     {
-      title: '窗口内解决',
+      title: 'Solved within window',
       value: report.resolvedInWindow,
       color: '#52c41a',
       icon: <CheckCircle size={20} style={{ color: '#52c41a' }} />,
     },
     {
-      title: '平均解决时长',
+      title: 'Average resolution time',
       value: formatAvgResolution(report),
       color: '#faad14',
       icon: <Clock size={20} style={{ color: '#faad14' }} />,
     },
     {
-      title: '统计天数',
+      title: 'Statistics days',
       value: report.window.days,
       color: '#722ed1',
       icon: <BarChart3 size={20} style={{ color: '#722ed1' }} />,
@@ -244,7 +245,7 @@ const IncidentTrendsPage = () => {
   return (
     <div className="p-6 bg-gray-50 min-h-full space-y-6">
       <header>
-        <Title level={2}>事件趋势报表</Title>
+        <Title level={2}>Event Trend Report</Title>
         <Text className="text-gray-500">{windowSummary}</Text>
       </header>
 
@@ -256,8 +257,8 @@ const IncidentTrendsPage = () => {
                 value={presetDays}
                 onChange={handlePresetChange}
                 style={{ width: 140 }}
-                options={[...PRESET_OPTIONS, { value: 'custom', label: '自定义' }]}
-                aria-label="统计窗口"
+                options={[...PRESET_OPTIONS, { value: 'custom', label: 'Custom' }]}
+                aria-label="Statistics window"
               />
               <DatePicker.RangePicker
                 value={[dayjs(windowRequest.dateFrom), dayjs(windowRequest.dateTo)]}
@@ -268,7 +269,8 @@ const IncidentTrendsPage = () => {
           </Col>
           <Col>
             <Button icon={<RotateCcw />} onClick={loadReport}>
-              刷新数据
+
+              Refresh Data
             </Button>
           </Col>
         </Row>
@@ -291,13 +293,13 @@ const IncidentTrendsPage = () => {
 
       {isEmptyWindow ? (
         <Card>
-          <Empty description="所选窗口内没有事件记录" />
+          <Empty description="No events recorded in the selected window" />
         </Card>
       ) : (
         <>
           <Row gutter={[16, 16]}>
             <Col span={24}>
-              <Card title="每日事件量趋势">
+              <Card title="Daily event volume trend">
                 <ResponsiveContainer width="100%" height={350}>
                   <AreaChart data={report.dailyTrend}>
                     <CartesianGrid strokeDasharray="3 3" />
@@ -313,7 +315,7 @@ const IncidentTrendsPage = () => {
                       stroke="#1890ff"
                       fill="#1890ff"
                       fillOpacity={0.3}
-                      name="新建事件"
+                      name="New Incident"
                     />
                     <Area
                       type="monotone"
@@ -321,13 +323,14 @@ const IncidentTrendsPage = () => {
                       stroke="#52c41a"
                       fill="#52c41a"
                       fillOpacity={0.3}
-                      name="解决事件"
+                      name="Resolve Incident"
                     />
                   </AreaChart>
                 </ResponsiveContainer>
                 <Text type="secondary" className="mt-2 block">
-                  窗口内每一天都会出现（无事件为 0）；新建按创建时间归日，解决按解决时间归日，
-                  两者是不同口径，逐日不必相等。
+
+                  It will appear every day in the window (no event is 0); new creations will be dated according to the creation time, and solutions will be dated according to the resolution time.
+The two are of different calibers and are not necessarily equal.
                 </Text>
               </Card>
             </Col>
@@ -335,7 +338,7 @@ const IncidentTrendsPage = () => {
 
           <Row gutter={[16, 16]}>
             <Col xs={24} lg={12}>
-              <Card title="按优先级分布（窗口内新建）">
+              <Card title="Distributed by priority (new in window)">
                 <ResponsiveContainer width="100%" height={300}>
                   <BarChart data={prioritySlices}>
                     <CartesianGrid strokeDasharray="3 3" />
@@ -343,7 +346,7 @@ const IncidentTrendsPage = () => {
                     <YAxis allowDecimals={false} />
                     <Tooltip />
                     <Legend />
-                    <Bar dataKey="value" name="事件数量" fill="#1890ff">
+                    <Bar dataKey="value" name="Number of events" fill="#1890ff">
                       {prioritySlices.map(slice => (
                         <Cell key={slice.key} fill={slice.color} />
                       ))}
@@ -353,7 +356,7 @@ const IncidentTrendsPage = () => {
               </Card>
             </Col>
             <Col xs={24} lg={12}>
-              <Card title="按状态分布（窗口内新建）">
+              <Card title="Distributed by status (new in window)">
                 <ResponsiveContainer width="100%" height={300}>
                   <BarChart data={statusSlices}>
                     <CartesianGrid strokeDasharray="3 3" />
@@ -361,7 +364,7 @@ const IncidentTrendsPage = () => {
                     <YAxis allowDecimals={false} />
                     <Tooltip />
                     <Legend />
-                    <Bar dataKey="value" name="事件数量" fill="#1890ff">
+                    <Bar dataKey="value" name="Number of events" fill="#1890ff">
                       {statusSlices.map(slice => (
                         <Cell key={slice.key} fill={slice.color} />
                       ))}
@@ -369,7 +372,8 @@ const IncidentTrendsPage = () => {
                   </BarChart>
                 </ResponsiveContainer>
                 <Text type="secondary" className="mt-2 block">
-                  状态分布反映窗口内新建事件的当前状态，之和恒等于「窗口内新建」。
+
+                  The status distribution reflects the current status of the new event in the window, and the sum is always equal to "new in the window".
                 </Text>
               </Card>
             </Col>

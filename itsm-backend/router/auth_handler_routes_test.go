@@ -126,7 +126,7 @@ func TestSetupRoutes_AuthHandlerProductionRoutes(t *testing.T) {
 		var envelope common.Response
 		require.NoError(t, json.Unmarshal(response.Body.Bytes(), &envelope))
 		require.Equal(t, common.ConflictCode, envelope.Code)
-		require.Equal(t, "用户名已被注册", envelope.Message)
+		require.Equal(t, "Username has been registered", envelope.Message)
 
 		created, err := client.User.Query().Where(user.EmailEQ("another@example.com")).Count(context.Background())
 		require.NoError(t, err)

@@ -470,7 +470,7 @@ func (t *ToolRegistry) Execute(ctx context.Context, tenantID int, name string, a
 			id = v
 		}
 		if id <= 0 {
-			return nil, fmt.Errorf("get_kb_article 需要正整数 id")
+			return nil, fmt.Errorf("get_kb_article requires a positive integer id")
 		}
 		// 准入规则由 RAGService.GetArticleFull 统一承担（与检索同一套过滤：
 		// 租户/未软删/已发布/时效/分类可见性），工具层不重复实现——两处

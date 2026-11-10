@@ -63,7 +63,7 @@ async function renderPage(items: Team[] = [team], total = items.length) {
 
 async function openMemberModal() {
   await renderPage();
-  fireEvent.click(await screen.findByRole('button', { name: '管理成员' }));
+  fireEvent.click(await screen.findByRole('button', { name: "Manage Members" }));
   return await screen.findByRole('dialog');
 }
 
@@ -155,7 +155,7 @@ describe('团队管理页 — 成员链路', () => {
 
     fireEvent.mouseDown(within(dialog).getByRole('combobox'));
     fireEvent.click(await visibleDropdownOption('卡罗尔'));
-    fireEvent.click(within(dialog).getByRole('button', { name: /添加/ }));
+    fireEvent.click(within(dialog).getByRole('button', { name: /Add/ }));
 
     await waitFor(() => expect(mockedTeamService.addMember).toHaveBeenCalledWith(1, 20));
     expect(await within(dialog).findByText('carol@example.com')).toBeInTheDocument();
@@ -169,7 +169,7 @@ describe('团队管理页 — 成员链路', () => {
 
     fireEvent.mouseDown(within(dialog).getByRole('combobox'));
     fireEvent.click(await visibleDropdownOption('卡罗尔'));
-    fireEvent.click(within(dialog).getByRole('button', { name: /添加/ }));
+    fireEvent.click(within(dialog).getByRole('button', { name: /Add/ }));
 
     expect(
       await screen.findByText('用户已属于团队「网络组」，请先从该团队移出')
@@ -182,9 +182,9 @@ describe('团队管理页 — 成员链路', () => {
     const dialog = await openMemberModal();
     mockedTeamService.removeMember.mockResolvedValue([alice]);
 
-    fireEvent.click(within(dialog).getAllByRole('button', { name: '移出团队' })[1]);
+    fireEvent.click(within(dialog).getAllByRole('button', { name: "Remove from team" })[1]);
     const confirm = await screen.findByRole('tooltip');
-    fireEvent.click(within(confirm).getByRole('button', { name: '确 定' }));
+    fireEvent.click(within(confirm).getByRole('button', { name: "Confirm" }));
 
     await waitFor(() => expect(mockedTeamService.removeMember).toHaveBeenCalledWith(1, 11));
     expect(await within(dialog).findByText('alice@example.com')).toBeInTheDocument();
@@ -193,7 +193,7 @@ describe('团队管理页 — 成员链路', () => {
 
   it('编辑时清空负责人和描述要显式提交 0/空串，后端才能与"未传"区分', async () => {
     await renderPage();
-    fireEvent.click(await screen.findByRole('button', { name: '编辑团队' }));
+    fireEvent.click(await screen.findByRole('button', { name: "Edit Team" }));
     const dialog = await screen.findByRole('dialog');
 
     const clearIcon = dialog.querySelector('.ant-select-clear');
@@ -203,7 +203,7 @@ describe('团队管理页 — 成员链路', () => {
     fireEvent.change(screen.getByDisplayValue('负责生产运维'), { target: { value: '' } });
     mockedTeamService.updateTeam.mockResolvedValue({ ...team, managerId: 0, description: '' });
 
-    fireEvent.click(within(dialog).getByRole('button', { name: '保 存' }));
+    fireEvent.click(within(dialog).getByRole('button', { name: "Save" }));
 
     await waitFor(() =>
       expect(mockedTeamService.updateTeam).toHaveBeenCalledWith(1, {
@@ -226,7 +226,7 @@ describe('团队管理页 — 成员链路', () => {
     expect(await screen.findByText('加载团队数据失败')).toBeInTheDocument();
 
     mockedTeamService.listTeams.mockResolvedValue(listResult([team]));
-    fireEvent.click(await screen.findByRole('button', { name: '重 试' }));
+    fireEvent.click(await screen.findByRole('button', { name: "Retry" }));
 
     expect(await screen.findByText('运维一组')).toBeInTheDocument();
   });

@@ -19,10 +19,10 @@ import { Search as SearchIcon, Filter, Plus, Pencil, Eye, MoreHorizontal } from 
 import type { MenuProps, DropDownProps } from 'antd';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
-import 'dayjs/locale/zh-cn';
+import 'dayjs/locale/en';
 
 dayjs.extend(relativeTime);
-dayjs.locale('zh-cn');
+dayjs.locale('en');
 
 const { Search } = Input;
 
@@ -143,7 +143,7 @@ function DefaultCard<T>({
     () => [
       {
         key: 'view',
-        label: '查看详情',
+        label: 'View Details',
         icon: <Eye />,
         onClick: () => onClick(),
       },
@@ -151,7 +151,7 @@ function DefaultCard<T>({
         ? [
             {
               key: 'edit',
-              label: '编辑',
+              label: 'Edit',
               icon: <Pencil />,
               onClick: () => onEdit(),
             },
@@ -217,7 +217,7 @@ function DefaultCard<T>({
                 <span>{assignee.name}</span>
               </>
             ) : (
-              <span>未分配</span>
+              <span>Unassigned</span>
             )}
           </div>
           {createdAt && <span>{dayjs(createdAt).fromNow()}</span>}
@@ -262,7 +262,7 @@ export function UnifiedKanbanBoard<T>({
   enableDrag = true,
   showToolbar = true,
   columnConfigs,
-  searchPlaceholder = '搜索...',
+  searchPlaceholder = 'Search...',
   showStatusFilter = true,
   showPriorityFilter = true,
   priorityOptions = [],
@@ -351,7 +351,7 @@ export function UnifiedKanbanBoard<T>({
       if (!item || !enableDrag || !onItemStatusChange) return;
       if (getItemStatus(item) === newStatus) return;
       if (canItemStatusChange && !canItemStatusChange(item, newStatus)) {
-        antMessage.warning('您没有执行此状态变更的权限');
+        antMessage.warning('You do not have permission to perform this status change');
         return;
       }
 
@@ -359,9 +359,9 @@ export function UnifiedKanbanBoard<T>({
       setUpdatingItemId(itemId);
       try {
         await onItemStatusChange(itemId, newStatus);
-        antMessage.success('状态已更新');
+        antMessage.success('Status updated');
       } catch (cause) {
-        antMessage.error(cause instanceof Error ? cause.message : '状态更新失败');
+        antMessage.error(cause instanceof Error ? cause.message : 'Failed to update status');
       } finally {
         setUpdatingItemId(null);
       }
@@ -424,7 +424,7 @@ export function UnifiedKanbanBoard<T>({
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
-        <div className="text-gray-500">加载中...</div>
+        <div className="text-gray-500">Loading...</div>
       </div>
     );
   }
@@ -448,9 +448,9 @@ export function UnifiedKanbanBoard<T>({
                 value={filterStatus}
                 onChange={setFilterStatus}
                 style={{ width: 120 }}
-                placeholder="状态"
+                placeholder="Status"
                 options={[
-                  { value: 'all', label: '全部状态' },
+                  { value: 'all', label: 'All Status' },
                   ...columnConfigs.map(col => ({ value: col.key, label: col.title })),
                 ]}
               />
@@ -460,9 +460,9 @@ export function UnifiedKanbanBoard<T>({
                 value={filterPriority}
                 onChange={setFilterPriority}
                 style={{ width: 120 }}
-                placeholder="优先级"
+                placeholder="Priority"
                 options={[
-                  { value: 'all', label: '全部优先级' },
+                  { value: 'all', label: 'All priorities' },
                   ...priorityOptions.map(p => ({ value: p.value, label: p.label })),
                 ]}
               />
@@ -535,7 +535,8 @@ export function UnifiedKanbanBoard<T>({
                 })}
                 {column.items.length === 0 && (
                   <div className="text-center text-slate-400 py-8 text-xs">
-                    暂无数据
+
+                    No data
                   </div>
                 )}
               </div>

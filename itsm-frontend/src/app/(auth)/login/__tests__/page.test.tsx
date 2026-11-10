@@ -177,7 +177,7 @@ describe('LoginPage', () => {
 
       expect(screen.getByTestId('login-card')).toBeInTheDocument();
       // Check for the main heading
-      expect(screen.getByText('欢迎回来')).toBeInTheDocument();
+      expect(screen.getByText("Welcome Back")).toBeInTheDocument();
       expect(screen.getByTestId('username-input')).toBeInTheDocument();
       expect(screen.getByTestId('password-input')).toBeInTheDocument();
     });

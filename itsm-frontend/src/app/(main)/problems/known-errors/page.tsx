@@ -32,18 +32,18 @@ const { Text } = Typography;
 
 // 状态配置
 const statusConfig: Record<string, { color: string; text: string }> = {
-  draft: { color: 'default', text: '草稿' },
-  active: { color: 'processing', text: '活动中' },
-  resolved: { color: 'success', text: '已解决' },
-  deprecated: { color: 'error', text: '已废弃' },
+  draft: { color: 'default', text: 'Draft' },
+  active: { color: 'processing', text: 'Active' },
+  resolved: { color: 'success', text: 'Resolved' },
+  deprecated: { color: 'error', text: 'Obsolete' },
 };
 
 // 严重程度配置
 const severityConfig: Record<string, { color: string; text: string }> = {
-  critical: { color: 'red', text: '严重' },
-  high: { color: 'orange', text: '高' },
-  medium: { color: 'gold', text: '中' },
-  low: { color: 'green', text: '低' },
+  critical: { color: 'red', text: 'Critical' },
+  high: { color: 'orange', text: 'High' },
+  medium: { color: 'gold', text: 'Medium' },
+  low: { color: 'green', text: 'Low' },
 };
 
 export default function KnownErrorsPage() {
@@ -91,7 +91,7 @@ export default function KnownErrorsPage() {
       setData(response.items);
       setPagination((prev) => ({ ...prev, total: response.total }));
     } catch (error) {
-      message.error('获取数据失败');
+      message.error('Failed to obtain data');
     } finally {
       setLoading(false);
     }
@@ -106,8 +106,8 @@ export default function KnownErrorsPage() {
       const response = await KEDBApi.getStats();
       setStats(response);
     } catch (error) {
-      console.error('获取统计失败', error);
-      message.error('获取已知错误统计失败');
+      console.error('Failed to obtain statistics', error);
+      message.error('Failed to obtain known error statistics');
     }
   };
 
@@ -116,8 +116,8 @@ export default function KnownErrorsPage() {
       const response = await KEDBApi.getCategories();
       setCategories(response.items);
     } catch (error) {
-      console.error('获取分类失败', error);
-      message.error('获取分类失败');
+      console.error('Failed to obtain classification', error);
+      message.error('Failed to obtain classification');
     }
   };
 
@@ -169,22 +169,22 @@ export default function KnownErrorsPage() {
   const handleDelete = async (id: number) => {
     try {
       await KEDBApi.deleteKnownError(id);
-      message.success('删除成功');
+      message.success('Deleted');
       fetchData();
       fetchStats();
     } catch (error) {
-      message.error('删除失败');
+      message.error('Delete failed');
     }
   };
 
   const handlePromote = async (id: number) => {
     try {
       await KEDBApi.promoteToKnownError(id);
-      message.success('晋升成功');
+      message.success('Promotion successful');
       fetchData();
       fetchStats();
     } catch (error) {
-      message.error('晋升失败');
+      message.error('Promotion failed');
     }
   };
 
@@ -193,16 +193,16 @@ export default function KnownErrorsPage() {
       const values = await form.validateFields();
       if (editingRecord) {
         await KEDBApi.updateKnownError(editingRecord.id, values);
-        message.success('更新成功');
+        message.success('Updated');
       } else {
         await KEDBApi.createKnownError(values);
-        message.success('创建成功');
+        message.success('Created');
       }
       setIsModalOpen(false);
       fetchData();
       fetchStats();
     } catch (error) {
-      message.error('操作失败');
+      message.error('Operation failed');
     }
   };
 
@@ -214,14 +214,14 @@ export default function KnownErrorsPage() {
       fixed: 'left',
     },
     {
-      title: '标题',
+      title: 'Title',
       dataIndex: 'title',
       fixed: 'left',
       width: 200,
       ellipsis: true,
     },
     {
-      title: '状态',
+      title: 'Status',
       dataIndex: 'status',
       width: 100,
       render: (status: string) => {
@@ -230,7 +230,7 @@ export default function KnownErrorsPage() {
       },
     },
     {
-      title: '严重程度',
+      title: 'Severity',
       dataIndex: 'severity',
       width: 100,
       render: (severity: string) => {
@@ -239,17 +239,17 @@ export default function KnownErrorsPage() {
       },
     },
     {
-      title: '分类',
+      title: 'Category',
       dataIndex: 'category',
       width: 100,
     },
     {
-      title: '发生次数',
+      title: 'Number of occurrences',
       dataIndex:'occurrenceCount',
       width: 100,
     },
     {
-      title: '关键词',
+      title: 'Keywords',
       dataIndex: 'keywords',
       width: 150,
       ellipsis: true,
@@ -261,30 +261,30 @@ export default function KnownErrorsPage() {
         )),
     },
     {
-      title: '创建时间',
+      title: 'Created',
       dataIndex: 'createdAt',
       width: 160,
       render: (text: string) => formatDateTime(text),
     },
     {
-      title: '操作',
+      title: 'Actions',
       key: 'action',
       width: 180,
       fixed: 'right',
       render: (_, record) => (
         <Space size="small">
-          <Tooltip title="查看详情">
+          <Tooltip title="View Details">
             <Button
-              aria-label="查看详情"
+              aria-label="View Details"
               type="link"
               size="small"
               icon={<Eye />}
               onClick={() => handleView(record)}
             />
           </Tooltip>
-          <Tooltip title="编辑">
+          <Tooltip title="Edit">
             <Button
-              aria-label="编辑"
+              aria-label="Edit"
               type="link"
               size="small"
               icon={<Pencil />}
@@ -292,9 +292,9 @@ export default function KnownErrorsPage() {
             />
           </Tooltip>
           {record.status === 'draft' && (
-            <Tooltip title="晋升为正式已知错误">
+            <Tooltip title="Promoted to officially known bug">
               <Button
-                aria-label="晋升为正式已知错误"
+                aria-label="Promoted to officially known bug"
                 type="link"
                 size="small"
                 icon={<CheckCircle />}
@@ -303,14 +303,14 @@ export default function KnownErrorsPage() {
             </Tooltip>
           )}
           <Popconfirm
-            title="确认删除"
-            description="确定要删除这条已知错误吗？"
+            title="Confirm Delete"
+            description="Are you sure you want to delete this known error?"
             onConfirm={() => handleDelete(record.id)}
-            okText="确认"
-            cancelText="取消"
+            okText="Confirm"
+            cancelText="Cancel"
           >
-            <Tooltip title="删除">
-              <Button aria-label="删除" type="link" size="small" danger icon={<Trash2 />} />
+            <Tooltip title="Delete">
+              <Button aria-label="Delete" type="link" size="small" danger icon={<Trash2 />} />
             </Tooltip>
           </Popconfirm>
         </Space>
@@ -326,13 +326,13 @@ export default function KnownErrorsPage() {
           <Row gutter={16}>
             <Col span={6}>
               <Card>
-                <Statistic title="总数" value={stats.total} />
+                <Statistic title="Total" value={stats.total} />
               </Card>
             </Col>
             <Col span={6}>
               <Card>
                 <Statistic
-                  title="活动中"
+                  title="Active"
                   value={stats.active}
                   styles={{ content: { color: '#1890ff' } }}
                 />
@@ -341,7 +341,7 @@ export default function KnownErrorsPage() {
             <Col span={6}>
               <Card>
                 <Statistic
-                  title="已解决"
+                  title="Resolved"
                   value={stats.resolved}
                   styles={{ content: { color: '#52c41a' } }}
                 />
@@ -350,7 +350,7 @@ export default function KnownErrorsPage() {
             <Col span={6}>
               <Card>
                 <Statistic
-                  title="已废弃"
+                  title="Obsolete"
                   value={stats.deprecated}
                   styles={{ content: { color: '#ff4d4f' } }}
                 />
@@ -363,7 +363,7 @@ export default function KnownErrorsPage() {
         <Card>
           <Space wrap>
             <Input.Search
-              placeholder="搜索标题、描述、症状..."
+              placeholder="Search title, description, symptoms..."
               style={{ width: 250 }}
               allowClear
               onSearch={handleSearch}
@@ -372,7 +372,7 @@ export default function KnownErrorsPage() {
               }
             />
             <Select
-              placeholder="状态"
+              placeholder="Status"
               style={{ width: 120 }}
               allowClear
               value={searchParams.status || undefined}
@@ -380,13 +380,13 @@ export default function KnownErrorsPage() {
                 setSearchParams((prev) => ({ ...prev, status: value || '' }))
               }
             >
-              <Select.Option value="draft">草稿</Select.Option>
-              <Select.Option value="active">活动中</Select.Option>
-              <Select.Option value="resolved">已解决</Select.Option>
-              <Select.Option value="deprecated">已废弃</Select.Option>
+              <Select.Option value="draft">Draft</Select.Option>
+              <Select.Option value="active">Active</Select.Option>
+              <Select.Option value="resolved">Resolved</Select.Option>
+              <Select.Option value="deprecated">Obsolete</Select.Option>
             </Select>
             <Select
-              placeholder="严重程度"
+              placeholder="Severity"
               style={{ width: 120 }}
               allowClear
               value={searchParams.severity || undefined}
@@ -394,13 +394,13 @@ export default function KnownErrorsPage() {
                 setSearchParams((prev) => ({ ...prev, severity: value || '' }))
               }
             >
-              <Select.Option value="critical">严重</Select.Option>
-              <Select.Option value="high">高</Select.Option>
-              <Select.Option value="medium">中</Select.Option>
-              <Select.Option value="low">低</Select.Option>
+              <Select.Option value="critical">Critical</Select.Option>
+              <Select.Option value="high">High</Select.Option>
+              <Select.Option value="medium">Medium</Select.Option>
+              <Select.Option value="low">Low</Select.Option>
             </Select>
             <Select
-              placeholder="分类"
+              placeholder="Category"
               style={{ width: 150 }}
               allowClear
               value={searchParams.category || undefined}
@@ -416,19 +416,21 @@ export default function KnownErrorsPage() {
             </Select>
             <Space>
               <Button type="primary" icon={<Search />} onClick={handleSearch}>
-                搜索
+
+                Search
               </Button>
-              <Button onClick={handleReset}>重置</Button>
+              <Button onClick={handleReset}>Reset</Button>
             </Space>
           </Space>
         </Card>
 
         {/* 数据表格 */}
         <Card
-          title="已知错误列表"
+          title="Known bug list"
           extra={
             <Button type="primary" icon={<Plus />} onClick={handleAdd}>
-              新建已知错误
+
+              New known error
             </Button>
           }
         >
@@ -442,7 +444,7 @@ export default function KnownErrorsPage() {
               ...pagination,
               showSizeChanger: true,
               showQuickJumper: true,
-              showTotal: (total) => `共 ${total} 条`,
+              showTotal: (total) => `Total ${total} items`,
               pageSizeOptions: ['10', '20', '50', '100'],
             }}
             onChange={handleTableChange}
@@ -452,84 +454,84 @@ export default function KnownErrorsPage() {
 
       {/* 新建/编辑 Modal */}
       <Modal
-        title={editingRecord ? '编辑已知错误' : '新建已知错误'}
+        title={editingRecord ? 'Edit known error' : 'New known error'}
         open={isModalOpen}
         onOk={handleSubmit}
         onCancel={() => setIsModalOpen(false)}
         width={700}
-        okText="确认"
-        cancelText="取消"
+        okText="Confirm"
+        cancelText="Cancel"
       >
         <Form form={form} layout="vertical">
           <Form.Item
             name="title"
-            label="标题"
-            rules={[{ required: true, message: '请输入标题' }]}
+            label="Title"
+            rules={[{ required: true, message: 'Please enter a title' }]}
           >
-            <Input placeholder="请输入标题" />
+            <Input placeholder="Please enter a title" />
           </Form.Item>
-          <Form.Item name="description" label="描述">
-            <TextArea rows={2} placeholder="请输入描述" />
+          <Form.Item name="description" label="Description">
+            <TextArea rows={2} placeholder="Please enter a description" />
           </Form.Item>
-          <Form.Item name="symptoms" label="症状描述">
-            <TextArea rows={2} placeholder="请输入症状描述" />
+          <Form.Item name="symptoms" label="Symptom description">
+            <TextArea rows={2} placeholder="Please enter a symptom description" />
           </Form.Item>
-          <Form.Item name="rootCause" label="根本原因">
-            <TextArea rows={2} placeholder="请输入根本原因" />
+          <Form.Item name="rootCause" label="Root Cause">
+            <TextArea rows={2} placeholder="Please enter root cause" />
           </Form.Item>
-          <Form.Item name="workaround" label="临时解决方案">
-            <TextArea rows={2} placeholder="请输入临时解决方案" />
+          <Form.Item name="workaround" label="Workaround">
+            <TextArea rows={2} placeholder="Please enter a temporary solution" />
           </Form.Item>
-          <Form.Item name="resolution" label="永久解决方案">
-            <TextArea rows={2} placeholder="请输入永久解决方案" />
+          <Form.Item name="resolution" label="Permanent solution">
+            <TextArea rows={2} placeholder="Please enter a permanent solution" />
           </Form.Item>
           <Row gutter={16}>
             <Col span={8}>
-              <Form.Item name="category" label="分类">
-                <Input placeholder="请输入分类" />
+              <Form.Item name="category" label="Category">
+                <Input placeholder="Please enter the category" />
               </Form.Item>
             </Col>
             <Col span={8}>
-              <Form.Item name="severity" label="严重程度">
-                <Select placeholder="请选择">
-                  <Select.Option value="critical">严重</Select.Option>
-                  <Select.Option value="high">高</Select.Option>
-                  <Select.Option value="medium">中</Select.Option>
-                  <Select.Option value="low">低</Select.Option>
+              <Form.Item name="severity" label="Severity">
+                <Select placeholder="Please select">
+                  <Select.Option value="critical">Critical</Select.Option>
+                  <Select.Option value="high">High</Select.Option>
+                  <Select.Option value="medium">Medium</Select.Option>
+                  <Select.Option value="low">Low</Select.Option>
                 </Select>
               </Form.Item>
             </Col>
             {editingRecord && (
               <Col span={8}>
-                <Form.Item name="status" label="状态">
-                  <Select placeholder="请选择">
-                    <Select.Option value="draft">草稿</Select.Option>
-                    <Select.Option value="active">活动中</Select.Option>
-                    <Select.Option value="resolved">已解决</Select.Option>
-                    <Select.Option value="deprecated">已废弃</Select.Option>
+                <Form.Item name="status" label="Status">
+                  <Select placeholder="Please select">
+                    <Select.Option value="draft">Draft</Select.Option>
+                    <Select.Option value="active">Active</Select.Option>
+                    <Select.Option value="resolved">Resolved</Select.Option>
+                    <Select.Option value="deprecated">Obsolete</Select.Option>
                   </Select>
                 </Form.Item>
               </Col>
             )}
           </Row>
-          <Form.Item name="affectedProducts" label="受影响的产品/服务">
+          <Form.Item name="affectedProducts" label="Affected products/services">
             <Select
               mode="tags"
-              placeholder="输入后按回车添加"
+              placeholder="Press enter after entering to add"
               style={{ width: '100%' }}
             />
           </Form.Item>
-          <Form.Item name="affectedCis" label="受影响的配置项">
+          <Form.Item name="affectedCis" label="Affected configuration items">
             <Select
               mode="tags"
-              placeholder="输入后按回车添加"
+              placeholder="Press enter after entering to add"
               style={{ width: '100%' }}
             />
           </Form.Item>
-          <Form.Item name="keywords" label="关键词">
+          <Form.Item name="keywords" label="Keywords">
             <Select
               mode="tags"
-              placeholder="输入后按回车添加"
+              placeholder="Press enter after entering to add"
               style={{ width: '100%' }}
             />
           </Form.Item>
@@ -538,64 +540,64 @@ export default function KnownErrorsPage() {
 
       {/* 查看详情 Modal */}
       <Modal
-        title="已知错误详情"
+        title="Known error details"
         open={isViewModalOpen}
         onCancel={() => setIsViewModalOpen(false)}
         footer={
-          <Button onClick={() => setIsViewModalOpen(false)}>关闭</Button>
+          <Button onClick={() => setIsViewModalOpen(false)}>Close</Button>
         }
         width={800}
       >
         {viewRecord && (
           <Descriptions column={2} bordered>
             <Descriptions.Item label="ID">{viewRecord.id}</Descriptions.Item>
-            <Descriptions.Item label="状态">
+            <Descriptions.Item label="Status">
               <Tag color={statusConfig[viewRecord.status]?.color}>
                 {statusConfig[viewRecord.status]?.text}
               </Tag>
             </Descriptions.Item>
-            <Descriptions.Item label="标题" span={2}>
+            <Descriptions.Item label="Title" span={2}>
               {viewRecord.title}
             </Descriptions.Item>
-            <Descriptions.Item label="描述" span={2}>
+            <Descriptions.Item label="Description" span={2}>
               {viewRecord.description || '-'}
             </Descriptions.Item>
-            <Descriptions.Item label="症状描述" span={2}>
+            <Descriptions.Item label="Symptom description" span={2}>
               {viewRecord.symptoms || '-'}
             </Descriptions.Item>
-            <Descriptions.Item label="根本原因" span={2}>
+            <Descriptions.Item label="Root Cause" span={2}>
               {viewRecord.rootCause || '-'}
             </Descriptions.Item>
-            <Descriptions.Item label="临时解决方案" span={2}>
+            <Descriptions.Item label="Workaround" span={2}>
               {viewRecord.workaround || '-'}
             </Descriptions.Item>
-            <Descriptions.Item label="永久解决方案" span={2}>
+            <Descriptions.Item label="Permanent solution" span={2}>
               {viewRecord.resolution || '-'}
             </Descriptions.Item>
-            <Descriptions.Item label="分类">{viewRecord.category}</Descriptions.Item>
-            <Descriptions.Item label="严重程度">
+            <Descriptions.Item label="Category">{viewRecord.category}</Descriptions.Item>
+            <Descriptions.Item label="Severity">
               <Tag color={severityConfig[viewRecord.severity]?.color}>
                 {severityConfig[viewRecord.severity]?.text}
               </Tag>
             </Descriptions.Item>
-            <Descriptions.Item label="发生次数">
+            <Descriptions.Item label="Number of occurrences">
               {viewRecord.occurrenceCount}
             </Descriptions.Item>
-            <Descriptions.Item label="关键词" span={2}>
+            <Descriptions.Item label="Keywords" span={2}>
               {viewRecord.keywords?.map((k, i) => (
                 <Tag key={i}>{k}</Tag>
               )) || '-'}
             </Descriptions.Item>
-            <Descriptions.Item label="受影响的产品" span={2}>
+            <Descriptions.Item label="Affected products" span={2}>
               {viewRecord.affectedProducts?.join(', ') || '-'}
             </Descriptions.Item>
-            <Descriptions.Item label="受影响的配置项" span={2}>
+            <Descriptions.Item label="Affected configuration items" span={2}>
               {viewRecord.affectedCis?.join(', ') || '-'}
             </Descriptions.Item>
-            <Descriptions.Item label="创建时间">
+            <Descriptions.Item label="Created">
               {formatDateTime(viewRecord.createdAt)}
             </Descriptions.Item>
-            <Descriptions.Item label="更新时间">
+            <Descriptions.Item label="Updated At">
               {formatDateTime(viewRecord.updatedAt)}
             </Descriptions.Item>
           </Descriptions>

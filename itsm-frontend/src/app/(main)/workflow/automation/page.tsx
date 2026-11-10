@@ -79,11 +79,11 @@ const WorkflowAutomationPage = () => {
 
   const runRuleTest = async () => {
     if (!testRuleId) {
-      message.warning('请选择要测试的规则');
+      message.warning('Please select a rule to test');
       return;
     }
     if (!testTicketId) {
-      message.warning('请输入用于测试的工单 ID（后端 ticketId 必填）');
+      message.warning('Please enter the ticket ID used for testing (backend ticketId is required)');
       return;
     }
     setTesting(true);
@@ -95,7 +95,7 @@ const WorkflowAutomationPage = () => {
       });
       setTestResult(result);
     } catch (e: any) {
-      message.error('测试失败：' + (e?.message || '未知错误'));
+      message.error('Test failed:' + (e?.message || 'Unknown error'));
     } finally {
       setTesting(false);
     }
@@ -105,7 +105,7 @@ const WorkflowAutomationPage = () => {
   const handleCopyRule = async (record: AutomationRule) => {
     try {
       await TicketAutomationRuleApi.createRule({
-        name: `${record.name} 副本`,
+        name: `${record.name} Copy`,
         description: record.description,
         type: record.type,
         priority: record.priority,
@@ -113,10 +113,10 @@ const WorkflowAutomationPage = () => {
         actions: record.actions,
         isActive: false,
       });
-      message.success('已复制为「' + record.name + ' 副本」（默认停用，请检查后启用）');
+      message.success('Copied as "' + record.name + ' Copy" (disabled by default, please check and enable it)');
       loadRules();
     } catch (e: any) {
-      message.error('复制失败：' + (e?.message || '未知错误'));
+      message.error('Copy failed:' + (e?.message || 'Unknown error'));
     }
   };
 
@@ -191,9 +191,9 @@ const WorkflowAutomationPage = () => {
 
   const getRuleTypeText = (type: string) => {
     const texts = {
-      assignment: '自动分配',
-      routing: '智能路由',
-      escalation: '自动升级',
+      assignment: 'Auto Assign',
+      routing: 'Intelligent routing',
+      escalation: 'Automatic upgrade',
     };
     return texts[type as keyof typeof texts] || type;
   };
@@ -209,7 +209,7 @@ const WorkflowAutomationPage = () => {
 
   const columns = [
     {
-      title: '规则名称',
+      title: 'Rule Name',
       dataIndex: 'name',
       key: 'name',
       render: (name: string, record: AutomationRule) => (
@@ -220,7 +220,7 @@ const WorkflowAutomationPage = () => {
       ),
     },
     {
-      title: '类型',
+      title: 'Type',
       dataIndex: 'type',
       key: 'type',
       width: 120,
@@ -231,7 +231,7 @@ const WorkflowAutomationPage = () => {
       ),
     },
     {
-      title: '优先级',
+      title: 'Priority',
       dataIndex: 'priority',
       key: 'priority',
       width: 100,
@@ -240,16 +240,16 @@ const WorkflowAutomationPage = () => {
       ),
     },
     {
-      title: '状态',
+      title: 'Status',
       dataIndex: 'isActive',
       key: 'isActive',
       width: 100,
       render: (isActive: boolean, record: AutomationRule) => (
-        <Switch aria-label={`切换规则 ${record.name} 的启用状态`} checked={isActive} onChange={() => handleToggleRule(record)} size='small' />
+        <Switch aria-label={`Switching rules ${record.name} enabled status`} checked={isActive} onChange={() => handleToggleRule(record)} size='small' />
       ),
     },
     {
-      title: '创建时间',
+      title: 'Created',
       dataIndex: 'createdAt',
       key: 'createdAt',
       width: 150,
@@ -258,37 +258,37 @@ const WorkflowAutomationPage = () => {
       ),
     },
     {
-      title: '操作',
+      title: 'Actions',
       key: 'action',
       width: 150,
       render: (record: AutomationRule) => (
         <Space>
-          <Tooltip title='编辑'>
+          <Tooltip title="Edit">
             <Button
-              aria-label="编辑"
+              aria-label="Edit"
               type='text'
               icon={<Edit className='w-4 h-4' />}
               onClick={() => handleEditRule(record)}
             />
           </Tooltip>
-          <Tooltip title='复制'>
+          <Tooltip title="Copy">
             <Button
-              aria-label="复制"
+              aria-label="Copy"
               type='text'
               icon={<Copy className='w-4 h-4' />}
               onClick={() => handleCopyRule(record)}
             />
           </Tooltip>
           <Popconfirm
-            title='确认删除该自动化规则？'
-            description='删除后规则将立即停止执行，且无法恢复。'
-            okText='删除'
+            title="Confirm to delete this automation rule?"
+            description="The rule will stop executing immediately after deletion and cannot be restored."
+            okText="Delete"
             okButtonProps={{ danger: true }}
-            cancelText='取消'
+            cancelText="Cancel"
             onConfirm={() => handleDeleteRule(record.id)}
           >
-            <Tooltip title='删除'>
-              <Button aria-label="删除" type='text' danger icon={<Trash2 className='w-4 h-4' />} />
+            <Tooltip title="Delete">
+              <Button aria-label="Delete" type='text' danger icon={<Trash2 className='w-4 h-4' />} />
             </Tooltip>
           </Popconfirm>
         </Space>
@@ -313,8 +313,8 @@ const WorkflowAutomationPage = () => {
     <div className='p-6'>
       {/* 页面头部 */}
       <div className='mb-6'>
-        <h1 className='text-2xl font-bold text-gray-900'>工作流自动化</h1>
-        <p className='text-gray-600 mt-1'>配置和管理工作流自动化规则，提高流程效率</p>
+        <h1 className='text-2xl font-bold text-gray-900'>Workflow automation</h1>
+        <p className='text-gray-600 mt-1'>Configure and manage workflow automation rules to improve process efficiency</p>
       </div>
       {/* 全局设置 */}
       <Card className='rounded-lg shadow-sm border border-gray-200 mb-6'>
@@ -322,18 +322,21 @@ const WorkflowAutomationPage = () => {
           <Col xs={24} sm={12}>
             <div>
               <Title level={5} className='!mb-1'>
-                工作流自动化
+
+                Workflow automation
               </Title>
-              <Text type='secondary'>规则的启停请在各行操作，批量启停暂未提供</Text>
+              <Text type='secondary'>Please operate the start and stop of rules in each line. Batch start and stop are not provided yet.</Text>
             </div>
           </Col>
           <Col xs={24} sm={12}>
             <Space>
               <Button icon={<RefreshCw className='w-4 h-4' />} onClick={loadRules}>
-                刷新
+
+                Refresh
               </Button>
               <Button icon={<PlayCircle className='w-4 h-4' />} type='primary' onClick={() => openTestModal()}>
-                测试规则
+
+                Test rules
               </Button>
             </Space>
           </Col>
@@ -345,11 +348,11 @@ const WorkflowAutomationPage = () => {
         <Alert
           type={loadError.denied ? 'warning' : 'error'}
           showIcon
-          title={loadError.denied ? '没有权限查看自动化规则' : t('common.loadRulesFailed')}
+          title={loadError.denied ? 'No permission to view automation rules' : t('common.loadRulesFailed')}
           description={
             loadError.denied
-              ? '当前角色未被授予自动化规则的读取权限。这里不是「系统里没有规则」，请联系管理员为你的角色开放规则配置权限。'
-              : loadError.detail || '后端未能返回规则列表，请稍后重试。'
+              ? 'The current role is not granted read permission for automation rules. This is not "there are no rules in the system". Please contact the administrator to configure permissions for your role\'s opening rules.'
+              : loadError.detail || 'The backend failed to return the rule list, please try again later.'
           }
           action={
             <Button
@@ -358,7 +361,8 @@ const WorkflowAutomationPage = () => {
               onClick={loadRules}
               loading={loading}
             >
-              重试
+
+              Retry
             </Button>
           }
         />
@@ -369,7 +373,7 @@ const WorkflowAutomationPage = () => {
             <Col xs={24} sm={12} lg={6}>
               <Card className='rounded-lg shadow-sm border border-gray-200'>
                 <Statistic
-                  title='自动分配规则'
+                  title="Auto-assign rules"
                   value={rules.filter(r => r.type === 'assignment').length}
                   prefix={<Users className='w-5 h-5' />}
                   styles={{ content: { color: '#1890ff' } }}
@@ -379,7 +383,7 @@ const WorkflowAutomationPage = () => {
             <Col xs={24} sm={12} lg={6}>
               <Card className='rounded-lg shadow-sm border border-gray-200'>
                 <Statistic
-                  title='智能路由规则'
+                  title="Intelligent routing rules"
                   value={rules.filter(r => r.type === 'routing').length}
                   prefix={<GitBranch className='w-5 h-5' />}
                   styles={{ content: { color: '#52c41a' } }}
@@ -389,7 +393,7 @@ const WorkflowAutomationPage = () => {
             <Col xs={24} sm={12} lg={6}>
               <Card className='rounded-lg shadow-sm border border-gray-200'>
                 <Statistic
-                  title='自动升级规则'
+                  title="Automatic upgrade rules"
                   value={rules.filter(r => r.type === 'escalation').length}
                   prefix={<Clock className='w-5 h-5' />}
                   styles={{ content: { color: '#faad14' } }}
@@ -399,7 +403,7 @@ const WorkflowAutomationPage = () => {
             <Col xs={24} sm={12} lg={6}>
               <Card className='rounded-lg shadow-sm border border-gray-200'>
                 <Statistic
-                  title='活跃规则'
+                  title="Active rule"
                   value={rules.filter(r => r.isActive).length}
                   prefix={<CheckCircle className='w-5 h-5' />}
                   styles={{ content: { color: '#52c41a' } }}
@@ -411,9 +415,10 @@ const WorkflowAutomationPage = () => {
           {/* 规则管理 */}
           <Card className='rounded-lg shadow-sm border border-gray-200'>
             <div className='flex items-center justify-between mb-4'>
-              <Title level={5}>自动化规则</Title>
+              <Title level={5}>Automation Rules</Title>
               <Button type='primary' icon={<Plus className='w-4 h-4' />} onClick={handleCreateRule}>
-                新建规则
+
+                Create Rule
               </Button>
             </div>
 
@@ -423,7 +428,7 @@ const WorkflowAutomationPage = () => {
               items={[
                 {
                   key: 'assignment',
-                  label: '自动分配',
+                  label: 'Auto Assign',
                   children: (
                     <Table
                       columns={columns}
@@ -436,7 +441,7 @@ const WorkflowAutomationPage = () => {
                 },
                 {
                   key: 'routing',
-                  label: '智能路由',
+                  label: 'Intelligent routing',
                   children: (
                     <Table
                       columns={columns}
@@ -449,7 +454,7 @@ const WorkflowAutomationPage = () => {
                 },
                 {
                   key: 'escalation',
-                  label: '自动升级',
+                  label: 'Automatic upgrade',
                   children: (
                     <Table
                       columns={columns}
@@ -468,7 +473,7 @@ const WorkflowAutomationPage = () => {
 
       {/* 创建/编辑规则模态框 */}
       <Modal
-        title={editingRule ? '编辑规则' : '新建规则'}
+        title={editingRule ? 'EditRule' : 'Create Rule'}
         open={modalVisible}
         onCancel={() => setModalVisible(false)}
         footer={null}
@@ -510,65 +515,65 @@ const WorkflowAutomationPage = () => {
             <Col span={12}>
               <Form.Item
                 name='name'
-                label='规则名称'
-                rules={[{ required: true, message: '请输入规则名称' }]}
+                label="Rule Name"
+                rules={[{ required: true, message: 'Please enter a rule name' }]}
               >
-                <Input placeholder='请输入规则名称' />
+                <Input placeholder="Please enter a rule name" />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item
                 name='type'
-                label='规则类型'
-                rules={[{ required: true, message: '请选择规则类型' }]}
+                label="Rule type"
+                rules={[{ required: true, message: 'Please select a rule type' }]}
               >
-                <Select placeholder='选择规则类型' options={[{ value: "assignment", label: "自动分配" }, { value: "routing", label: "智能路由" }, { value: "escalation", label: "自动升级" }]} />
+                <Select placeholder="Select rule type" options={[{ value: "assignment", label: "Auto Assign" }, { value: "routing", label: "Intelligent routing" }, { value: "escalation", label: "Automatic upgrade" }]} />
               </Form.Item>
             </Col>
           </Row>
 
-          <Form.Item name='description' label='规则描述'>
-            <Input.TextArea rows={3} placeholder='请输入规则描述' />
+          <Form.Item name='description' label="Rule Description">
+            <Input.TextArea rows={3} placeholder="Please enter a rule description" />
           </Form.Item>
 
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item
                 name='priority'
-                label='优先级'
-                rules={[{ required: true, message: '请设置优先级' }]}
+                label="Priority"
+                rules={[{ required: true, message: 'Please set priority' }]}
               >
-                <Select placeholder='选择优先级' options={[{ value: 1, label: "高 (P1)" }, { value: 2, label: "中 (P2)" }, { value: 3, label: "低 (P3)" }]} />
+                <Select placeholder="Select priority" options={[{ value: 1, label: "High (P1)" }, { value: 2, label: "Medium (P2)" }, { value: 3, label: "Low (P3)" }]} />
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item name='isActive' label='状态' valuePropName='checked'>
+              <Form.Item name='isActive' label="Status" valuePropName='checked'>
                 <Switch />
               </Form.Item>
             </Col>
           </Row>
 
-          <Divider>触发条件</Divider>
+          <Divider>Trigger Condition</Divider>
 
           <Row gutter={16}>
             <Col span={8}>
-              <Form.Item name={['conditions', 'priority']} label='优先级'>
-                <Select placeholder='选择优先级' allowClear options={[{ value: "low", label: "低" }, { value: "normal", label: "普通" }, { value: "high", label: "高" }, { value: "critical", label: "紧急" }]} />
+              <Form.Item name={['conditions', 'priority']} label="Priority">
+                <Select placeholder="Select priority" allowClear options={[{ value: "low", label: "Low" }, { value: "normal", label: "Normal" }, { value: "high", label: "High" }, { value: "critical", label: "Urgent" }]} />
               </Form.Item>
             </Col>
             <Col span={8}>
-              <Form.Item name={['conditions', 'category']} label='分类'>
-                <Select placeholder='选择分类' allowClear options={[{ value: "technical", label: "技术" }, { value: "finance", label: "财务" }, { value: "hr", label: "人事" }, { value: "general", label: "通用" }]} />
+              <Form.Item name={['conditions', 'category']} label="Category">
+                <Select placeholder="Select category" allowClear options={[{ value: "technical", label: "Technology" }, { value: "finance", label: "Finance" }, { value: "hr", label: "Personnel" }, { value: "general", label: "General" }]} />
               </Form.Item>
             </Col>
             <Col span={8}>
-              <Form.Item name={['conditions', 'status']} label='状态'>
-                <Select placeholder='选择状态' allowClear options={[{ value: "pending", label: "待处理" }, { value: "in_progress", label: "处理中" }, { value: "completed", label: "已完成" }]} />
+              <Form.Item name={['conditions', 'status']} label="Status">
+                <Select placeholder="Select status" allowClear options={[{ value: "pending", label: "Pending" }, { value: "in_progress", label: "In Progress" }, { value: "completed", label: "Completed" }]} />
               </Form.Item>
             </Col>
           </Row>
 
-          <Divider>执行动作</Divider>
+          <Divider>Action</Divider>
 
           <Form.Item
             noStyle
@@ -583,15 +588,15 @@ const WorkflowAutomationPage = () => {
                     <Col span={12}>
                       <Form.Item
                         name={['actions', 'assign_to']}
-                        label='分配给'
-                        rules={[{ required: true, message: '请选择分配目标' }]}
+                        label="Assigned To"
+                        rules={[{ required: true, message: 'Please select distribution target' }]}
                       >
-                        <Select placeholder='选择分配目标' options={[{ value: "expert", label: "专家" }, { value: "manager", label: "经理" }, { value: "supervisor", label: "主管" }, { value: "round_robin", label: "轮询分配" }, { value: "least_busy", label: "最少忙碌" }]} />
+                        <Select placeholder="Select distribution target" options={[{ value: "expert", label: "Expert" }, { value: "manager", label: "Manager" }, { value: "supervisor", label: "Supervisor" }, { value: "round_robin", label: "Poll allocation" }, { value: "least_busy", label: "least busy" }]} />
                       </Form.Item>
                     </Col>
                     <Col span={12}>
-                      <Form.Item name={['actions', 'method']} label='分配方法'>
-                        <Select placeholder='选择分配方法' options={[{ value: "round_robin", label: "轮询" }, { value: "least_busy", label: "最少忙碌" }, { value: "skill_based", label: "基于技能" }]} />
+                      <Form.Item name={['actions', 'method']} label="Allocation method">
+                        <Select placeholder="Select allocation method" options={[{ value: "round_robin", label: "Polling" }, { value: "least_busy", label: "least busy" }, { value: "skill_based", label: "Skill-based" }]} />
                       </Form.Item>
                     </Col>
                   </Row>
@@ -604,14 +609,14 @@ const WorkflowAutomationPage = () => {
                     <Col span={12}>
                       <Form.Item
                         name={['actions', 'route_to']}
-                        label='路由到'
-                        rules={[{ required: true, message: '请选择路由目标' }]}
+                        label="route to"
+                        rules={[{ required: true, message: 'Please select a routing target' }]}
                       >
-                        <Select placeholder='选择路由目标' options={[{ value: "tech_support", label: "技术支持组" }, { value: "finance_team", label: "财务组" }, { value: "hr_team", label: "人事组" }, { value: "management", label: "管理层" }]} />
+                        <Select placeholder="Select routing target" options={[{ value: "tech_support", label: "Technical Support Group" }, { value: "finance_team", label: "Finance Group" }, { value: "hr_team", label: "Personnel Team" }, { value: "management", label: "Management" }]} />
                       </Form.Item>
                     </Col>
                     <Col span={12}>
-                      <Form.Item name={['actions', 'notify']} label='通知' valuePropName='checked'>
+                      <Form.Item name={['actions', 'notify']} label="Notification" valuePropName='checked'>
                         <Switch />
                       </Form.Item>
                     </Col>
@@ -625,23 +630,23 @@ const WorkflowAutomationPage = () => {
                     <Col span={8}>
                       <Form.Item
                         name={['actions', 'escalate_to']}
-                        label='升级到'
-                        rules={[{ required: true, message: '请选择升级目标' }]}
+                        label="Upgrade to"
+                        rules={[{ required: true, message: 'Please select the upgrade target' }]}
                       >
-                        <Select placeholder='选择升级目标' options={[{ value: "manager", label: "经理" }, { value: "supervisor", label: "主管" }, { value: "director", label: "总监" }]} />
+                        <Select placeholder="Select upgrade target" options={[{ value: "manager", label: "Manager" }, { value: "supervisor", label: "Supervisor" }, { value: "director", label: "Director" }]} />
                       </Form.Item>
                     </Col>
                     <Col span={8}>
                       <Form.Item
                         name={['actions', 'time_limit']}
-                        label='时间限制(小时)'
-                        rules={[{ required: true, message: '请设置时间限制' }]}
+                        label="Time limit (hours)"
+                        rules={[{ required: true, message: 'Please set a time limit' }]}
                       >
                         <InputNumber min={1} max={168} style={{ width: '100%' }} />
                       </Form.Item>
                     </Col>
                     <Col span={8}>
-                      <Form.Item name={['actions', 'notify']} label='通知' valuePropName='checked'>
+                      <Form.Item name={['actions', 'notify']} label="Notification" valuePropName='checked'>
                         <Switch />
                       </Form.Item>
                     </Col>
@@ -656,9 +661,9 @@ const WorkflowAutomationPage = () => {
           <Form.Item>
             <Space>
               <Button type='primary' htmlType='submit'>
-                {editingRule ? '更新' : '创建'}
+                {editingRule ? 'Update' : 'Create'}
               </Button>
-              <Button onClick={() => setModalVisible(false)}>取消</Button>
+              <Button onClick={() => setModalVisible(false)}>Cancel</Button>
             </Space>
           </Form.Item>
         </Form>
@@ -666,18 +671,18 @@ const WorkflowAutomationPage = () => {
 
       {/* 测试规则弹窗：选规则 + 填工单 ID，走后端 /tickets/automation-rules/:id/test */}
       <Modal
-        title="测试自动化规则"
+        title="Test automation rules"
         open={testModalOpen}
         onOk={runRuleTest}
         onCancel={() => setTestModalOpen(false)}
         confirmLoading={testing}
-        okText="执行测试"
-        cancelText="关闭"
+        okText="Execute test"
+        cancelText="Close"
       >
         <Form layout="vertical">
-          <Form.Item label="规则" required>
+          <Form.Item label="Rule" required>
             <Select
-              placeholder="选择要测试的规则"
+              placeholder="Select rules to test"
               value={testRuleId ?? undefined}
               onChange={(v) => setTestRuleId(v)}
               options={rules.map(r => ({ value: r.id, label: r.name }))}
@@ -685,11 +690,11 @@ const WorkflowAutomationPage = () => {
               optionFilterProp="label"
             />
           </Form.Item>
-          <Form.Item label="测试工单 ID" required tooltip="用一条真实工单验证规则条件是否命中">
+          <Form.Item label="Test ticket ID" required tooltip="Use a real work order to verify whether the rule conditions are met.">
             <Input
               value={testTicketId}
               onChange={(e) => setTestTicketId(e.target.value.replace(/\D/g, ''))}
-              placeholder="例如 123"
+              placeholder="e.g. 123"
               inputMode="numeric"
             />
           </Form.Item>
@@ -697,13 +702,13 @@ const WorkflowAutomationPage = () => {
         {testResult && (
           <div className="mt-2">
             <Tag color={testResult.matched ? 'green' : 'orange'}>
-              {testResult.matched ? '条件命中' : '未命中'}
+              {testResult.matched ? 'Condition hit' : 'Miss'}
             </Tag>
             {testResult.reason && <Text type="secondary" className="ml-2">{testResult.reason}</Text>}
             {testResult.error && <Text type="danger" className="ml-2">{testResult.error}</Text>}
             {testResult.actions && testResult.actions.length > 0 && (
               <div className="mt-2">
-                <Text strong>将执行的动作：</Text>
+                <Text strong>Action to be performed:</Text>
                 <div className="mt-1">
                   {testResult.actions.map((a, i) => (
                     <Tag key={i} className="mb-1">{a}</Tag>

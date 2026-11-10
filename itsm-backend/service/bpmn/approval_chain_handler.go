@@ -60,14 +60,14 @@ func (h *ApprovalChainServiceTaskHandler) GetHandlerID() string {
 
 func (h *ApprovalChainServiceTaskHandler) Execute(ctx context.Context, task *ent.ProcessTask, variables map[string]interface{}) (*dto.ServiceTaskResult, error) {
 	if h.resolver == nil {
-		return nil, fmt.Errorf("审批链求值器未注入，请检查启动顺序")
+		return nil, fmt.Errorf("Approval chain evaluator not injected, please check startup sequence")
 	}
 	action := GetStringFromVars(variables, "action")
 	switch action {
 	case "resolve_plan":
 		return h.resolvePlan(ctx, variables)
 	default:
-		return nil, fmt.Errorf("审批链服务任务未知动作: %q", action)
+		return nil, fmt.Errorf("Unknown action for approval chain service task: %q", action)
 	}
 }
 
@@ -91,12 +91,12 @@ func (h *ApprovalChainServiceTaskHandler) resolvePlan(ctx context.Context, varia
 
 	entityType := GetStringFromVars(variables, "entity_type")
 	if entityType == "" {
-		return nil, fmt.Errorf("审批链求值缺少 entity_type")
+		return nil, fmt.Errorf("Approval chain evaluation is missing entity_type")
 	}
 
 	requesterID := GetIntFromVars(variables, "requester_id")
 	if requesterID <= 0 {
-		return nil, fmt.Errorf("审批链求值缺少有效的 requester_id")
+		return nil, fmt.Errorf("Approval chain evaluation missing valid requester_id")
 	}
 
 	priority := GetStringFromVars(variables, "priority")
@@ -115,7 +115,7 @@ func (h *ApprovalChainServiceTaskHandler) resolvePlan(ctx context.Context, varia
 	var approvals map[int][]int
 	if raw, ok := variables["approvals"]; ok && raw != nil {
 		if err := decodeApprovals(raw, &approvals); err != nil {
-			return nil, fmt.Errorf("解析 approvals 变量失败: %w", err)
+			return nil, fmt.Errorf("Failed to parse approvals variable: %w", err)
 		}
 	}
 
@@ -125,7 +125,7 @@ func (h *ApprovalChainServiceTaskHandler) resolvePlan(ctx context.Context, varia
 	if err != nil {
 		h.logger.Errorw("审批链配置读取/求值失败，阻塞流程",
 			"tenant_id", tenantID, "entity_type", entityType, "requester_id", requesterID, "error", err)
-		return nil, fmt.Errorf("审批链配置读取失败，流程阻塞: %w", err)
+		return nil, fmt.Errorf("Failed to read approval chain configuration, process blocked: %w", err)
 	}
 
 	h.logger.Infow("审批链求值完成",

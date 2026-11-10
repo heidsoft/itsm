@@ -252,7 +252,7 @@ func TestTicketService_ResolveTicket(t *testing.T) {
 	t.Run("解决方案为空时拒绝 resolve", func(t *testing.T) {
 		id := fx.makeTicket(t, "r-empty", ticket.StatusOpen)
 		_, err := fx.svc.ResolveTicket(fx.ctx, id, "   ", fx.tenantID())
-		require.ErrorContains(t, err, "解决方案不能为空")
+		require.ErrorContains(t, err, "Solution cannot be empty")
 	})
 
 	t.Run("in_progress 状态可以 resolve", func(t *testing.T) {

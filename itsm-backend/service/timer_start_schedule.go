@@ -31,7 +31,7 @@ func SyncStartTimers(ctx context.Context, client *ent.Client, store TimerStore, 
 	parser := NewBPMNParser()
 	definitions, err := parser.ParseXML(bpmnXML)
 	if err != nil {
-		return 0, fmt.Errorf("解析 BPMN XML 失败: %w", err)
+		return 0, fmt.Errorf("Failed to parse BPMN XML: %w", err)
 	}
 	return SyncStartTimersFromDefinitions(ctx, client, store, definitions, processKey, tenantID)
 }
@@ -44,12 +44,12 @@ func SyncStartTimersFromDefinitions(ctx context.Context, client *ent.Client, sto
 
 	timerEvents, err := ExtractTimerEvents(definitions, processKey)
 	if err != nil {
-		return 0, fmt.Errorf("提取定时器事件失败: %w", err)
+		return 0, fmt.Errorf("Failed to extract timer event: %w", err)
 	}
 
 	// 幂等：重发布前清空旧时间表（否则每次发布都会追加一份，导致重复启动流程实例）。
 	if _, err := CancelPendingStartTimers(ctx, client, tenantID, processKey); err != nil {
-		return 0, fmt.Errorf("取消旧开始定时器失败: %w", err)
+		return 0, fmt.Errorf("Failed to cancel old start timer: %w", err)
 	}
 
 	loc := LoadTenantLocation(ctx, client, tenantID)
@@ -65,7 +65,7 @@ func SyncStartTimersFromDefinitions(ctx context.Context, client *ent.Client, sto
 
 		fireAt, err := NextFireAt(timerEvent.Expression, exprType, loc, now)
 		if err != nil {
-			return registered, fmt.Errorf("计算定时器触发时间失败（%s）: %w", timerEvent.ActivityID, err)
+			return registered, fmt.Errorf("Failed to calculate timer trigger time (%s): %w", timerEvent.ActivityID, err)
 		}
 
 		// 一次性（date）且已过期 → 不注册：启动一个"本应在过去启动"的流程没有业务语义。
@@ -90,7 +90,7 @@ func SyncStartTimersFromDefinitions(ctx context.Context, client *ent.Client, sto
 			ContextVariables:     ctxVars,
 			TenantID:             tenantID,
 		}); err != nil {
-			return registered, fmt.Errorf("创建定时器记录失败（%s）: %w", timerEvent.ActivityID, err)
+			return registered, fmt.Errorf("Failed to create timer record (%s): %w", timerEvent.ActivityID, err)
 		}
 		registered++
 	}

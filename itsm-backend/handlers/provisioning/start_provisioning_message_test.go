@@ -47,7 +47,7 @@ func TestStartProvisioningSurfacesStateGuardReasonNotFallback(t *testing.T) {
 	assert.Equal(t, float64(common.ConflictCode), env["code"])
 	msg, _ := env["message"].(string)
 	assert.Contains(t, msg, "security_approved", "409 必须说明缺哪一级审批: %s", msg)
-	assert.NotContains(t, msg, "创建交付任务失败", "兜底文案不得覆盖领域文案: %s", msg)
+	assert.NotContains(t, msg, "Failed to create delivery task", "兜底文案不得覆盖领域文案: %s", msg)
 
 	// 状态守卫拒绝时不得留下任何交付任务与状态改写。
 	tasks := fx.client.ProvisioningTask.Query().CountX(ctx)

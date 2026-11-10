@@ -11,9 +11,9 @@ const SEARCH_DEBOUNCE_MS = 300;
 
 /** 分类卡片与页面分类标签共用的关键词归类口径。 */
 const CATEGORY_KEYWORDS: Record<'cloud' | 'account' | 'security', string[]> = {
-  cloud: ['云计算', '云资源'],
-  account: ['支持', '账号'],
-  security: ['安全'],
+  cloud: ['Cloud Computing', 'Cloud Resources'],
+  account: ['Support', 'Account'],
+  security: ['Safe'],
 };
 
 export const useServiceCatalogData = () => {
@@ -63,7 +63,7 @@ export const useServiceCatalogData = () => {
       setCatalogs([]);
       setTotal(0);
       setTruncated(false);
-      setError(err instanceof Error ? err.message : '服务目录加载失败，请稍后重试');
+      setError(err instanceof Error ? err.message : 'Service directory loading failed, please try again later.');
     } finally {
       if (seq === requestSeqRef.current) setLoading(false);
     }

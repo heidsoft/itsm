@@ -38,7 +38,7 @@ func (s *ChangeReviewService) AddMember(ctx context.Context, req *dto.AddChangeR
 		if ent.IsNotFound(err) {
 			// 引用型资源缺失（不存在或跨租户）：按业务参数错误映射 400/1001，
 			// 与工单评论「提及用户无效」同口径；不再裸 error 兜底 500。
-			return nil, common.NewBusinessError(common.ParamErrorCode, "评审组成员用户不存在或不属于当前租户", "")
+			return nil, common.NewBusinessError(common.ParamErrorCode, "The review group member user does not exist or does not belong to the current tenant", "")
 		}
 		return nil, fmt.Errorf("failed to query user: %w", err)
 	}
@@ -55,7 +55,7 @@ func (s *ChangeReviewService) AddMember(ctx context.Context, req *dto.AddChangeR
 	}
 	if exists {
 		// 业务重复：映射 409/4090，不再裸 error 兜底 500。
-		return nil, common.NewBusinessError(common.ConflictCode, "该用户已加入该评审组", "")
+		return nil, common.NewBusinessError(common.ConflictCode, "This user has joined the review group", "")
 	}
 
 	member, err := s.client.ChangeReviewMember.Create().
@@ -100,7 +100,7 @@ func (s *ChangeReviewService) RemoveMember(ctx context.Context, memberID int, te
 	if err != nil {
 		if ent.IsNotFound(err) {
 			// 不存在或跨租户同形 404：不再裸 error 兜底 500（存在性可探测面）。
-			return common.NewBusinessError(common.NotFoundCode, "评审组成员不存在", "")
+			return common.NewBusinessError(common.NotFoundCode, "The review team member does not exist", "")
 		}
 		return fmt.Errorf("failed to get member: %w", err)
 	}
@@ -171,7 +171,7 @@ func (s *ChangeReviewService) UpdateMember(ctx context.Context, memberID, tenant
 	if err != nil {
 		if ent.IsNotFound(err) {
 			// 不存在或跨租户同形 404：不再裸 error 兜底 500。
-			return nil, common.NewBusinessError(common.NotFoundCode, "评审组成员不存在", "")
+			return nil, common.NewBusinessError(common.NotFoundCode, "The review team member does not exist", "")
 		}
 		return nil, fmt.Errorf("failed to get member: %w", err)
 	}

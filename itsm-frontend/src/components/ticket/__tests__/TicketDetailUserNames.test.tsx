@@ -125,14 +125,14 @@ describe('TicketDetail 处理人/申请人显示名 — 服务端投影回归', 
 
     expect(await screen.findByText('张三')).toBeInTheDocument();
     expect(screen.getByText('李四')).toBeInTheDocument();
-    expect(screen.queryByText('用户 #7')).toBeNull();
+    expect(screen.queryByText("User #7")).toBeNull();
   });
 
   it('投影不到姓名时回退用户 ID，而不是谎称未分配', async () => {
     mockGetTicket.mockResolvedValue({ ...baseTicket, assigneeId: 7 });
     renderDetail();
 
-    expect(await screen.findByText('用户 #7')).toBeInTheDocument();
+    expect(await screen.findByText("User #7")).toBeInTheDocument();
     expect(screen.queryByText('ticketDetail.unassigned')).toBeNull();
   });
 

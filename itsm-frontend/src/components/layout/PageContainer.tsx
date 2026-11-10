@@ -58,7 +58,8 @@ export const PageContainer: React.FC<EnterprisePageTemplateProps> = ({
                 icon={<ArrowLeft />}
                 className="enterprise-btn enterprise-btn-ghost"
               >
-                返回
+
+                Back
               </Button>
             )}
             <span className="text-lg font-semibold text-gray-900">{title}</span>
@@ -94,7 +95,8 @@ export const PageContainer: React.FC<EnterprisePageTemplateProps> = ({
                 className="mr-2"
                 onClick={() => router.back()}
               >
-                返回
+
+                Back
               </Button>
             )}
             {breadcrumb.length > 0 && (

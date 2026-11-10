@@ -22,10 +22,10 @@ export const RISK_LEVEL_COLORS: Record<string, string> = {
 
 // 风险等级标签
 export const RISK_LEVEL_LABELS: Record<string, string> = {
-  critical: '严重',
-  high: '高',
-  medium: '中',
-  low: '低',
+  critical: 'Critical',
+  high: 'High',
+  medium: 'Medium',
+  low: 'Low',
 };
 
 // CI 变更历史的 operation 展示色/标签。
@@ -41,11 +41,11 @@ export const CI_OPERATION_COLORS: Record<string, string> = {
 };
 
 export const CI_OPERATION_LABELS: Record<string, string> = {
-  create: '创建',
-  update: '更新',
-  delete: '退役',
-  revert: '版本回滚',
-  lifecycle_update: '生命周期变更',
+  create: 'Create',
+  update: 'Update',
+  delete: 'Retired',
+  revert: 'Version rollback',
+  lifecycle_update: 'Lifecycle changes',
 };
 
 export const ciOperationColor = (operation: string): string =>

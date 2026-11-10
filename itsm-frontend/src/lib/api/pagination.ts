@@ -39,5 +39,5 @@ export function isTruncated(total: number | undefined | null, returned: number):
  */
 export function truncationHint(total: number | undefined | null, returned: number): string | null {
   if (!isTruncated(total, returned)) return null;
-  return `仅显示前 ${returned} 条（共 ${total} 条），请用搜索缩小范围`;
+  return `Show only the front ${returned} Articles (Total ${total} ), please use search to narrow the range`;
 }

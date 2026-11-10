@@ -92,9 +92,9 @@ const ReleaseList: React.FC = () => {
     } catch (error) {
       if (requestId === requestIdRef.current) {
         if (hasLoadedDataRef.current) {
-          message.warning('刷新发布列表失败，已保留当前数据');
+          message.warning('Failed to refresh publication list, current data has been retained');
         } else {
-          message.error('加载发布列表失败');
+          message.error('Failed to load release list');
         }
       }
     } finally {
@@ -109,7 +109,7 @@ const ReleaseList: React.FC = () => {
       const resp = await ReleaseApi.getReleaseStats();
       setStats(resp);
     } catch (error) {
-      message.error('加载统计数据失败');
+      message.error('Failed to load statistics');
     }
   }, [message]);
 
@@ -133,7 +133,7 @@ const ReleaseList: React.FC = () => {
 
   const columns = useMemo<TableColumnsType<Release>>(() => [
     {
-      title: '发布编号',
+      title: 'Release number',
       dataIndex:'releaseNumber',
       key:'releaseNumber',
       width: 140,
@@ -146,7 +146,7 @@ const ReleaseList: React.FC = () => {
       ),
     },
     {
-      title: '标题',
+      title: 'Title',
       dataIndex: 'title',
       key: 'title',
       width: 200,
@@ -160,7 +160,7 @@ const ReleaseList: React.FC = () => {
       ),
     },
     {
-      title: '类型',
+      title: 'Type',
       dataIndex: 'type',
       key: 'type',
       width: 100,
@@ -169,7 +169,7 @@ const ReleaseList: React.FC = () => {
       ),
     },
     {
-      title: '状态',
+      title: 'Status',
       dataIndex: 'status',
       key: 'status',
       width: 120,
@@ -180,7 +180,7 @@ const ReleaseList: React.FC = () => {
       ),
     },
     {
-      title: '目标环境',
+      title: 'Target environment',
       dataIndex: 'environment',
       key: 'environment',
       width: 100,
@@ -191,14 +191,14 @@ const ReleaseList: React.FC = () => {
       ),
     },
     {
-      title: '计划发布日期',
+      title: 'Planned release date',
       dataIndex:'plannedReleaseDate',
       key:'plannedReleaseDate',
       width: 150,
       render: (date?: string) => (date ? dayjs(date).format('YYYY-MM-DD HH:mm') : '-'),
     },
     {
-      title: '创建人',
+      title: 'Creator',
       dataIndex:'createdByName',
       key:'createdByName',
       width: 120,
@@ -211,33 +211,33 @@ const ReleaseList: React.FC = () => {
       ),
     },
     {
-      title: '创建时间',
+      title: 'Created',
       dataIndex: 'createdAt',
       key: 'createdAt',
       width: 150,
       render: (date?: string) => (date ? dayjs(date).format('YYYY-MM-DD HH:mm') : '-'),
     },
     {
-      title: '操作',
+      title: 'Actions',
       key: 'action',
       width: 120,
       fixed: 'right' as const,
       render: (_, record) => (
-        <Space aria-label="操作按钮">
-          <Tooltip title="查看发布详情">
+        <Space aria-label="Action button">
+          <Tooltip title="View release details">
             <Button
               type="text"
               icon={<Eye />}
               href={`/releases/${record.id}`}
-              aria-label={`查看发布 ${record.title || record.releaseNumber || '详情'}`}
+              aria-label={`View releases ${record.title || record.releaseNumber || 'Details'}`}
             />
           </Tooltip>
-          <Tooltip title="编辑发布信息">
+          <Tooltip title="Edit release information">
             <Button
               type="text"
               icon={<Pencil />}
               href={`/releases/${record.id}/edit`}
-              aria-label={`编辑发布 ${record.title || record.releaseNumber || '详情'}`}
+              aria-label={`Edit and publish ${record.title || record.releaseNumber || 'Details'}`}
             />
           </Tooltip>
         </Space>
@@ -248,15 +248,16 @@ const ReleaseList: React.FC = () => {
   return (
     <div className="p-3 md:p-6">
       <ManagementPageHeader
-        title="发布管理"
-        description="规划、跟踪并审计软件和基础设施发布活动"
+        title="Release Management"
+        description="Plan, track, and audit software and infrastructure release activities"
         actions={
           <Button
             type="primary"
             icon={<Plus />}
             onClick={() => router.push('/releases/new')}
           >
-            创建发布
+
+            Create publication
           </Button>
         }
         className="mb-4"
@@ -265,13 +266,13 @@ const ReleaseList: React.FC = () => {
       <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
         <Col xs={24} sm={12} md={8} lg={6} xl={4}>
           <Card>
-            <Statistic title="总发布数" value={stats?.total ?? 0} prefix={<Rocket />} />
+            <Statistic title="Total number of releases" value={stats?.total ?? 0} prefix={<Rocket />} />
           </Card>
         </Col>
         <Col xs={24} sm={12} md={8} lg={6} xl={4}>
           <Card>
             <Statistic
-              title="进行中"
+              title="In Progress"
               value={stats?.inProgress ?? 0}
               styles={{ content: { color: '#1890ff' } }}
             />
@@ -280,7 +281,7 @@ const ReleaseList: React.FC = () => {
         <Col xs={24} sm={12} md={8} lg={6} xl={4}>
           <Card>
             <Statistic
-              title="已完成"
+              title="Completed"
               value={stats?.completed ?? 0}
               styles={{ content: { color: '#52c41a' } }}
             />
@@ -288,12 +289,12 @@ const ReleaseList: React.FC = () => {
         </Col>
         <Col xs={24} sm={12} md={8} lg={6} xl={4}>
           <Card>
-            <Statistic title="已取消" value={stats?.cancelled ?? 0} />
+            <Statistic title="Cancelled" value={stats?.cancelled ?? 0} />
           </Card>
         </Col>
         <Col xs={24} sm={12} md={8} lg={6} xl={4}>
           <Card>
-            <Statistic title="失败" value={stats?.failed ?? 0} styles={{ content: { color: '#ff4d4f' } }} />
+            <Statistic title="Failed" value={stats?.failed ?? 0} styles={{ content: { color: '#ff4d4f' } }} />
           </Card>
         </Col>
       </Row>
@@ -304,42 +305,43 @@ const ReleaseList: React.FC = () => {
           layout={compact ? 'vertical' : 'inline'}
           style={{ marginBottom: 16 }}
         >
-          <Form.Item name="status" label="状态">
+          <Form.Item name="status" label="Status">
             <Select
-              placeholder="选择状态"
+              placeholder="Select status"
               allowClear
               style={{ width: compact ? '100%' : 150 }}
               onChange={handleSearch}
               options={[
-                { value: 'draft', label: '草稿' },
-                { value: 'scheduled', label: '已计划' },
-                { value: 'in-progress', label: '进行中' },
-                { value: 'completed', label: '已完成' },
-                { value: 'cancelled', label: '已取消' },
-                { value: 'failed', label: '失败' },
+                { value: 'draft', label: 'Draft' },
+                { value: 'scheduled', label: 'Planned' },
+                { value: 'in-progress', label: 'In Progress' },
+                { value: 'completed', label: 'Completed' },
+                { value: 'cancelled', label: 'Cancelled' },
+                { value: 'failed', label: 'Failed' },
               ]}
             />
           </Form.Item>
-          <Form.Item name="type" label="类型">
+          <Form.Item name="type" label="Type">
             <Select
-              placeholder="选择类型"
+              placeholder="Select"
               allowClear
               style={{ width: compact ? '100%' : 150 }}
               onChange={handleSearch}
               options={[
-                { value: 'major', label: '主版本' },
-                { value: 'minor', label: '次版本' },
-                { value: 'patch', label: '补丁' },
-                { value: 'hotfix', label: '紧急修复' },
+                { value: 'major', label: 'Major version' },
+                { value: 'minor', label: 'minor version' },
+                { value: 'patch', label: 'Patch' },
+                { value: 'hotfix', label: 'Emergency fix' },
               ]}
             />
           </Form.Item>
           <Form.Item>
             <Space wrap>
               <Button type="primary" icon={<Search />} onClick={handleSearch}>
-                搜索
+
+                Search
               </Button>
-              <Button onClick={handleReset}>重置</Button>
+              <Button onClick={handleReset}>Reset</Button>
             </Space>
           </Form.Item>
         </Form>
@@ -352,9 +354,10 @@ const ReleaseList: React.FC = () => {
           scroll={{ x: 'max-content' }}
           locale={{
             emptyText: (
-              <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无发布数据">
+              <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="No data released yet">
                 <Button type="primary" onClick={() => router.push('/releases/new')}>
-                  创建发布
+
+                  Create publication
                 </Button>
               </Empty>
             ),
@@ -366,7 +369,7 @@ const ReleaseList: React.FC = () => {
             onChange: handlePageChange,
             showSizeChanger: true,
             showQuickJumper: true,
-            showTotal: total => `共 ${total} 条`,
+            showTotal: total => `Total ${total} items`,
             pageSizeOptions: ['10', '20', '50', '100'],
           }}
         />

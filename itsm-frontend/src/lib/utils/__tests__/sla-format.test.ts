@@ -17,9 +17,9 @@ describe('SLA 优先级词表', () => {
   });
 
   it('urgent 归一成 critical，与后端 matcher 的别名口径相同', () => {
-    expect(getPriorityLabel('urgent')).toBe('紧急');
+    expect(getPriorityLabel('urgent')).toBe("Urgent");
     expect(getPriorityColor('urgent')).toBe('red');
-    expect(getPriorityLabel('URGENT')).toBe('紧急');
+    expect(getPriorityLabel('URGENT')).toBe("Urgent");
   });
 
   it('未识别的优先级原样展示并退回默认色，不显示空白', () => {
@@ -37,27 +37,28 @@ describe('SLA 优先级词表', () => {
 
 describe('formatDuration', () => {
   it.each([
-    [15, '15 分钟'],
-    [60, '1 小时'],
-    [90, '1 小时 30 分钟'],
-    [480, '8 小时'],
-    [1440, '1 天'],
-    [1500, '1 天 1 小时'],
+    [1, '1 minute'],
+    [15, '15 minutes'],
+    [60, '1 hour'],
+    [90, '1 hour 30 minutes'],
+    [480, '8 hours'],
+    [1440, '1 day'],
+    [1500, '1 day 1 hour'],
   ] as const)('%i 分钟展示为 %s', (minutes, expected) => {
     expect(formatDuration(minutes)).toBe(expected);
   });
 
   it('缺失或非法值显示未设置，而不是 NaN', () => {
-    expect(formatDuration(0)).toBe('未设置');
-    expect(formatDuration(Number.NaN)).toBe('未设置');
-    expect(formatDuration(-5)).toBe('未设置');
+    expect(formatDuration(0)).toBe("Not set");
+    expect(formatDuration(Number.NaN)).toBe("Not set");
+    expect(formatDuration(-5)).toBe("Not set");
   });
 });
 
 describe('formatBusinessHours', () => {
   it('后端未投影出配置时明确显示未配置', () => {
-    expect(formatBusinessHours(undefined)).toBe('未配置');
-    expect(formatBusinessHours({})).toBe('未配置');
+    expect(formatBusinessHours(undefined)).toBe("Not configured");
+    expect(formatBusinessHours({})).toBe("Not configured");
   });
 
   it('alwaysOn 显示 7×24', () => {
@@ -71,11 +72,11 @@ describe('formatBusinessHours', () => {
       startTime: '09:00',
       endTime: '18:00',
     };
-    expect(formatBusinessHours(config)).toBe('一、二、三、四、五 09:00-18:00 (Asia/Shanghai)');
+    expect(formatBusinessHours(config)).toBe('Mon, Tue, Wed, Thu, Fri 09:00-18:00 (Asia/Shanghai)');
   });
 
   it('七个工作日合并为每天', () => {
-    expect(formatBusinessHours({ workDays: [1, 2, 3, 4, 5, 6, 7] })).toBe('每天');
+    expect(formatBusinessHours({ workDays: [1, 2, 3, 4, 5, 6, 7] })).toBe("Every day");
   });
 });
 
@@ -83,18 +84,18 @@ describe('formatEscalationLevel', () => {
   it('带通知角色时一起展示', () => {
     expect(
       formatEscalationLevel({ level: 1, thresholdMinutes: 15, notifyRoles: ['manager', 'it_admin'] })
-    ).toBe('L1 · 15 分钟后升级 → manager、it_admin');
+    ).toBe("L1 · 15 minutes before escalation → manager, it_admin");
   });
 
   it('无通知角色时不留下多余箭头', () => {
-    expect(formatEscalationLevel({ level: 2, thresholdMinutes: 120 })).toBe('L2 · 2 小时后升级');
+    expect(formatEscalationLevel({ level: 2, thresholdMinutes: 120 })).toBe("L2 · 2 hours before escalation");
   });
 });
 
 describe('服务类型与行业词表', () => {
   it('模板目录的 service_request 不再显示成原始下划线值', () => {
-    expect(getServiceTypeLabel('service_request')).toBe('服务请求');
-    expect(getIndustryLabel('service_request')).toBe('服务请求');
+    expect(getServiceTypeLabel('service_request')).toBe("Service Request");
+    expect(getIndustryLabel('service_request')).toBe("Service Request");
   });
 
   it('未知取值原样返回，不编造成中文标签', () => {

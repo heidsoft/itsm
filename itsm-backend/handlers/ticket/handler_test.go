@@ -144,7 +144,7 @@ func (m *mockRepository) Update(ctx context.Context, id int, params *UpdateParam
 	// 返回类型化冲突错误。service 层会再包一层 fmt.Errorf，handler 依赖
 	// errors.As 解包映射 409(4090)——这正是该回归链路要验证的点。
 	if params.Version != 0 && params.Version != t.Version {
-		return nil, common.NewVersionConflictError("工单", id, params.Version, t.Version)
+		return nil, common.NewVersionConflictError("Ticket", id, params.Version, t.Version)
 	}
 	m.updateCalls++
 	m.lastUpdateParams = params
@@ -959,7 +959,7 @@ func TestHandler_StateMachineWhitelist(t *testing.T) {
 	)
 	assert.Equal(t, 409, w.Code, "new → closed 应返回 409")
 	assert.Contains(t, w.Body.String(), "4090", "业务错误码必须是 4090")
-	assert.Contains(t, w.Body.String(), "当前工单状态不允许此操作")
+	assert.Contains(t, w.Body.String(), "The current work order status does not allow this operation")
 
 	// 非法迁移：new → resolved（不允许）
 	w = doJSON(t, r, http.MethodPut, "/api/v1/tickets/"+idStr+"/status", map[string]string{"status": "resolved"},

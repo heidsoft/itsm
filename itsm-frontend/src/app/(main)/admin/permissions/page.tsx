@@ -482,7 +482,7 @@ const PermissionConfiguration = () => {
                   <span>{modConf.label}</span>
                   <Switch
                     size="small"
-                    aria-label={`启用模块 ${modConf.label}`}
+                    aria-label={`Enabled Modules ${modConf.label}`}
                     checked={moduleState?.isEnabled || false}
                     onChange={() => handleToggleModule(moduleKey)}
                   />
@@ -498,7 +498,7 @@ const PermissionConfiguration = () => {
                   </Tag>
                   <Switch
                     size="small"
-                    aria-label={`${modConf.label} ${actionConf.label} 权限`}
+                    aria-label={`${modConf.label} ${actionConf.label} Permissions`}
                     checked={moduleState?.actions[actionKey] || false}
                     onChange={() => handleToggleAction(moduleKey, actionKey)}
                   />
@@ -557,7 +557,7 @@ const PermissionConfiguration = () => {
                           </div>
                           <Switch
                             size="small"
-                            aria-label={`启用模块 ${modConf.label}`}
+                            aria-label={`Enabled Modules ${modConf.label}`}
                             checked={moduleState?.isEnabled || false}
                             onChange={() => handleToggleModule(moduleKey)}
                           />
@@ -580,7 +580,7 @@ const PermissionConfiguration = () => {
                             </Tooltip>
                             <Switch
                               size="small"
-                              aria-label={`${modConf.label} ${actionConf.label} 权限`}
+                              aria-label={`${modConf.label} ${actionConf.label} Permissions`}
                               checked={moduleState?.actions[actionKey] || false}
                               onChange={() => handleToggleAction(moduleKey, actionKey)}
                               disabled={!moduleState?.isEnabled}

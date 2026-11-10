@@ -85,7 +85,7 @@ func (h *Handler) Login(c *gin.Context) {
 		TenantCode string `json:"tenantCode"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "参数错误")
+		common.ParamErrorWithErr(c, err, "Parameter error")
 		return
 	}
 
@@ -96,11 +96,11 @@ func (h *Handler) Login(c *gin.Context) {
 		// 两者不能混成一个消息，否则前端无法引导用户补租户。
 		if errors.Is(err, ErrLoginTenantRequired) {
 			h.svc.logger.Warnw("login requires tenant disambiguation")
-			common.ParamError(c, "该用户名在多个租户下存在，请选择租户后登录")
+			common.ParamError(c, "This username exists under multiple tenants. Please select a tenant and log in.")
 			return
 		}
 		h.svc.logger.Errorw("login failed", "error", err)
-		common.AuthFailed(c, "用户名或密码错误")
+		common.AuthFailed(c, "Wrong username or password")
 		return
 	}
 
@@ -122,14 +122,14 @@ func (h *Handler) RefreshToken(c *gin.Context) {
 		}
 	}
 	if req.RefreshToken == "" {
-		common.ParamError(c, "参数错误: refreshToken 不能为空")
+		common.ParamError(c, "Parameter error: refreshToken cannot be empty")
 		return
 	}
 
 	res, err := h.svc.RefreshToken(c.Request.Context(), req.RefreshToken)
 	if err != nil {
 		h.svc.logger.Errorw("refresh token failed", "error", err)
-		common.AuthFailed(c, "登录状态已过期，请重新登录")
+		common.AuthFailed(c, "Login status has expired, please log in again")
 		return
 	}
 
@@ -165,7 +165,7 @@ func (h *Handler) Logout(c *gin.Context) {
 	}
 	if revokeErr != nil {
 		h.svc.logger.Errorw("failed to revoke session tokens on logout", "error", revokeErr)
-		common.Fail(c, common.ServiceUnavailableCode, "会话凭证已清除，但服务端吊销未完成；请稍后重试，或由管理端强制下线该账号")
+		common.Fail(c, common.ServiceUnavailableCode, "The session credentials have been cleared, but the server revocation has not been completed; please try again later, or the account may be forced offline by the management side.")
 		return
 	}
 
@@ -204,7 +204,7 @@ func (h *Handler) GetSession(c *gin.Context) {
 	res, err := h.svc.GetSession(c.Request.Context(), userID, tenantID, h.accessTokenRemainingSeconds(c))
 	if err != nil {
 		h.svc.logger.Errorw("failed to resolve session identity", "user_id", userID, "error", err)
-		common.AuthFailed(c, "会话不可用，请重新登录")
+		common.AuthFailed(c, "Session is unavailable, please log in again")
 		return
 	}
 	common.Success(c, res)
@@ -226,7 +226,7 @@ func (h *Handler) GetUserTenants(c *gin.Context) {
 	userID := c.GetInt("user_id")
 	tenants, err := h.svc.GetUserTenants(c.Request.Context(), userID)
 	if err != nil {
-		common.RespondError(c, err, "获取用户租户列表失败")
+		common.RespondError(c, err, "Failed to obtain user tenant list")
 		return
 	}
 	common.Success(c, gin.H{"items": tenants})
@@ -236,7 +236,7 @@ func (h *Handler) ListUsers(c *gin.Context) {
 	tenantID := c.GetInt("tenant_id")
 	users, err := h.svc.ListUsers(c.Request.Context(), tenantID)
 	if err != nil {
-		common.RespondError(c, err, "获取用户列表失败")
+		common.RespondError(c, err, "Failed to obtain user list")
 		return
 	}
 	common.Success(c, users)
@@ -258,13 +258,13 @@ func (h *Handler) GetDepartment(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		common.ParamError(c, "无效的部门ID")
+		common.ParamError(c, "Invalid department ID")
 		return
 	}
 	tenantID := c.GetInt("tenant_id")
 	dept, err := h.svc.GetDepartment(c.Request.Context(), id, tenantID)
 	if err != nil {
-		common.RespondError(c, err, "获取部门失败")
+		common.RespondError(c, err, "Failed to get department")
 		return
 	}
 	common.Success(c, dept)
@@ -283,7 +283,7 @@ func (h *Handler) GetDepartmentTree(c *gin.Context) {
 	tenantID := c.GetInt("tenant_id")
 	tree, err := h.svc.GetDepartmentTree(c.Request.Context(), tenantID)
 	if err != nil {
-		common.RespondError(c, err, "获取部门树失败")
+		common.RespondError(c, err, "Failed to obtain department tree")
 		return
 	}
 	common.Success(c, tree)
@@ -301,7 +301,7 @@ func (h *Handler) ListDepartments(c *gin.Context) {
 	tenantID := c.GetInt("tenant_id")
 	deps, err := h.svc.ListDepartments(c.Request.Context(), tenantID)
 	if err != nil {
-		common.RespondError(c, err, "获取部门列表失败")
+		common.RespondError(c, err, "Failed to obtain department list")
 		return
 	}
 	common.Success(c, deps)
@@ -327,7 +327,7 @@ func (h *Handler) CreateDepartment(c *gin.Context) {
 		ParentID    int    `json:"parentId"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "参数错误")
+		common.ParamErrorWithErr(c, err, "Parameter error")
 		return
 	}
 
@@ -342,7 +342,7 @@ func (h *Handler) CreateDepartment(c *gin.Context) {
 	}
 	result, err := h.svc.CreateDepartment(c.Request.Context(), d)
 	if err != nil {
-		common.RespondError(c, err, "创建部门失败")
+		common.RespondError(c, err, "Failed to create department")
 		return
 	}
 	common.Success(c, result)
@@ -376,7 +376,7 @@ func (h *Handler) UpdateDepartment(c *gin.Context) {
 		ParentID    int    `json:"parentId"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "参数错误")
+		common.ParamErrorWithErr(c, err, "Parameter error")
 		return
 	}
 
@@ -384,7 +384,7 @@ func (h *Handler) UpdateDepartment(c *gin.Context) {
 	// 先读取现有部门，避免部分更新时把 name/code 覆盖为空
 	existing, err := h.svc.GetDepartment(c.Request.Context(), id, tenantID)
 	if err != nil || existing == nil {
-		common.NotFound(c, "部门不存在")
+		common.NotFound(c, "Department does not exist")
 		return
 	}
 	if req.Name != "" {
@@ -405,7 +405,7 @@ func (h *Handler) UpdateDepartment(c *gin.Context) {
 	existing.TenantID = tenantID
 	result, err := h.svc.UpdateDepartment(c.Request.Context(), existing)
 	if err != nil {
-		common.RespondError(c, err, "更新部门失败")
+		common.RespondError(c, err, "Failed to update department")
 		return
 	}
 	common.Success(c, result)
@@ -430,7 +430,7 @@ func (h *Handler) DeleteDepartment(c *gin.Context) {
 
 	tenantID := c.GetInt("tenant_id")
 	if err := h.svc.DeleteDepartment(c.Request.Context(), id, tenantID); err != nil {
-		common.RespondError(c, err, "删除部门失败")
+		common.RespondError(c, err, "Failed to delete department")
 		return
 	}
 	common.Success(c, nil)
@@ -446,7 +446,7 @@ func (h *Handler) ListTeams(c *gin.Context) {
 	pagination := common.GetPaginationFromQuery(c)
 	teams, total, err := h.svc.ListTeams(c.Request.Context(), tenantID, pagination.Page, pagination.PageSize, c.Query("search"))
 	if err != nil {
-		common.RespondError(c, err, "获取团队列表失败")
+		common.RespondError(c, err, "Failed to get team list")
 		return
 	}
 	common.SuccessWithList(c, teams, total, pagination.Page, pagination.PageSize)
@@ -455,7 +455,7 @@ func (h *Handler) ListTeams(c *gin.Context) {
 func (h *Handler) GetTeam(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.ParamError(c, "无效的团队ID")
+		common.ParamError(c, "Invalid team ID")
 		return
 	}
 	tenantID, ok := middleware.TenantIDOrUnauthorized(c)
@@ -464,7 +464,7 @@ func (h *Handler) GetTeam(c *gin.Context) {
 	}
 	t, err := h.svc.GetTeam(c.Request.Context(), id, tenantID)
 	if err != nil {
-		common.RespondError(c, err, "获取团队失败")
+		common.RespondError(c, err, "Failed to get team")
 		return
 	}
 	common.Success(c, t)
@@ -478,7 +478,7 @@ func (h *Handler) CreateTeam(c *gin.Context) {
 		ManagerID   int    `json:"managerId"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "参数错误")
+		common.ParamErrorWithErr(c, err, "Parameter error")
 		return
 	}
 
@@ -495,7 +495,7 @@ func (h *Handler) CreateTeam(c *gin.Context) {
 	}
 	result, err := h.svc.CreateTeam(c.Request.Context(), t)
 	if err != nil {
-		common.RespondError(c, err, "创建团队失败")
+		common.RespondError(c, err, "Failed to create team")
 		return
 	}
 	common.Success(c, result)
@@ -515,7 +515,7 @@ func (h *Handler) UpdateTeam(c *gin.Context) {
 		ManagerID   *int    `json:"managerId"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "参数错误")
+		common.ParamErrorWithErr(c, err, "Parameter error")
 		return
 	}
 
@@ -525,7 +525,7 @@ func (h *Handler) UpdateTeam(c *gin.Context) {
 	}
 	existing, err := h.svc.GetTeam(c.Request.Context(), id, tenantID)
 	if err != nil {
-		common.RespondError(c, err, "更新团队失败")
+		common.RespondError(c, err, "Failed to update team")
 		return
 	}
 	if req.Name != "" {
@@ -544,7 +544,7 @@ func (h *Handler) UpdateTeam(c *gin.Context) {
 	existing.TenantID = tenantID
 	result, err := h.svc.UpdateTeam(c.Request.Context(), existing)
 	if err != nil {
-		common.RespondError(c, err, "更新团队失败")
+		common.RespondError(c, err, "Failed to update team")
 		return
 	}
 	common.Success(c, result)
@@ -562,7 +562,7 @@ func (h *Handler) DeleteTeam(c *gin.Context) {
 		return
 	}
 	if err := h.svc.DeleteTeam(c.Request.Context(), id, tenantID); err != nil {
-		common.RespondError(c, err, "删除团队失败")
+		common.RespondError(c, err, "Failed to delete team")
 		return
 	}
 	common.Success(c, nil)
@@ -572,7 +572,7 @@ func (h *Handler) DeleteTeam(c *gin.Context) {
 func (h *Handler) ListTeamMembers(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.ParamError(c, "无效的团队ID")
+		common.ParamError(c, "Invalid team ID")
 		return
 	}
 	tenantID, ok := middleware.TenantIDOrUnauthorized(c)
@@ -582,7 +582,7 @@ func (h *Handler) ListTeamMembers(c *gin.Context) {
 	pagination := common.GetPaginationFromQuery(c)
 	members, total, err := h.svc.ListTeamMembers(c.Request.Context(), id, tenantID, pagination.Page, pagination.PageSize)
 	if err != nil {
-		common.RespondError(c, err, "获取团队成员失败")
+		common.RespondError(c, err, "Failed to get team members")
 		return
 	}
 	common.SuccessWithList(c, members, total, pagination.Page, pagination.PageSize)
@@ -592,12 +592,12 @@ func (h *Handler) ListTeamMembers(c *gin.Context) {
 func (h *Handler) AddTeamMember(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.ParamError(c, "无效的团队ID")
+		common.ParamError(c, "Invalid team ID")
 		return
 	}
 	var req dto.AddTeamMemberRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 	tenantID, ok := middleware.TenantIDOrUnauthorized(c)
@@ -605,12 +605,12 @@ func (h *Handler) AddTeamMember(c *gin.Context) {
 		return
 	}
 	if err := h.svc.AddTeamMember(c.Request.Context(), id, req.UserID, tenantID); err != nil {
-		common.RespondError(c, err, "添加团队成员失败")
+		common.RespondError(c, err, "Failed to add team member")
 		return
 	}
 	members, _, err := h.svc.ListTeamMembers(c.Request.Context(), id, tenantID, 1, common.MaxPageSize)
 	if err != nil {
-		common.RespondError(c, err, "获取团队成员失败")
+		common.RespondError(c, err, "Failed to get team members")
 		return
 	}
 	common.Success(c, members)
@@ -620,12 +620,12 @@ func (h *Handler) AddTeamMember(c *gin.Context) {
 func (h *Handler) RemoveTeamMember(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.ParamError(c, "无效的团队ID")
+		common.ParamError(c, "Invalid team ID")
 		return
 	}
 	var req dto.RemoveTeamMemberRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 	tenantID, ok := middleware.TenantIDOrUnauthorized(c)
@@ -633,12 +633,12 @@ func (h *Handler) RemoveTeamMember(c *gin.Context) {
 		return
 	}
 	if err := h.svc.RemoveTeamMember(c.Request.Context(), id, req.UserID, tenantID); err != nil {
-		common.RespondError(c, err, "移除团队成员失败")
+		common.RespondError(c, err, "Failed to remove team member")
 		return
 	}
 	members, _, err := h.svc.ListTeamMembers(c.Request.Context(), id, tenantID, 1, common.MaxPageSize)
 	if err != nil {
-		common.RespondError(c, err, "获取团队成员失败")
+		common.RespondError(c, err, "Failed to get team members")
 		return
 	}
 	common.Success(c, members)
@@ -650,7 +650,7 @@ func (h *Handler) ListTags(c *gin.Context) {
 	tenantID := c.GetInt("tenant_id")
 	tags, err := h.svc.ListTags(c.Request.Context(), tenantID)
 	if err != nil {
-		common.RespondError(c, err, "获取标签列表失败")
+		common.RespondError(c, err, "Failed to obtain tag list")
 		return
 	}
 	common.Success(c, tags)
@@ -663,7 +663,7 @@ func (h *Handler) GetAuditLogs(c *gin.Context) {
 	userID, _ := strconv.Atoi(c.Query("userId"))
 	logs, err := h.svc.GetAuditLogs(c.Request.Context(), tenantID, userID)
 	if err != nil {
-		common.RespondError(c, err, "获取审计日志失败")
+		common.RespondError(c, err, "Failed to obtain audit log")
 		return
 	}
 	common.Success(c, logs)

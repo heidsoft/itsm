@@ -114,13 +114,14 @@ export default function IncidentEditPage() {
           onClick={() => router.back()}
           style={{ paddingLeft: 0, color: '#666' }}
         >
-          返回
+
+          Back
         </Button>
       </div>
 
       <Card
         title={
-          <span className="text-lg font-medium">编辑事件 - {incidentData?.incidentNumber}</span>
+          <span className="text-lg font-medium">Edit event - {incidentData?.incidentNumber}</span>
         }
         loading={fetching}
       >
@@ -138,10 +139,10 @@ export default function IncidentEditPage() {
             <Col span={24}>
               <Form.Item
                 name="title"
-                label="事件标题"
-                rules={[{ required: true, message: '请输入事件标题' }]}
+                label="Incident Title"
+                rules={[{ required: true, message: 'Please enter event title' }]}
               >
-                <Input placeholder="请输入事件标题" />
+                <Input placeholder="Please enter event title" />
               </Form.Item>
             </Col>
           </Row>
@@ -150,28 +151,28 @@ export default function IncidentEditPage() {
             <Col span={12}>
               <Form.Item
                 name="status"
-                label="状态"
-                rules={[{ required: true, message: '请选择状态' }]}
+                label="Status"
+                rules={[{ required: true, message: 'Please select status' }]}
               >
-                <Select placeholder="请选择状态" options={[
-                  { value: 'new', label: '新建' },
-                  { value: 'in_progress', label: '进行中' },
-                  { value: 'resolved', label: '已解决' },
-                  { value: 'closed', label: '已关闭' },
+                <Select placeholder="Please select status" options={[
+                  { value: 'new', label: 'Create' },
+                  { value: 'in_progress', label: 'In Progress' },
+                  { value: 'resolved', label: 'Resolved' },
+                  { value: 'closed', label: 'Closed' },
                 ]} />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item
                 name="priority"
-                label="优先级"
-                rules={[{ required: true, message: '请选择优先级' }]}
+                label="Priority"
+                rules={[{ required: true, message: 'Please select priority' }]}
               >
-                <Select placeholder="请选择优先级" options={[
-                  { value: 'low', label: '低' },
-                  { value: 'medium', label: '中' },
-                  { value: 'high', label: '高' },
-                  { value: 'critical', label: '紧急' },
+                <Select placeholder="Please select priority" options={[
+                  { value: 'low', label: 'Low' },
+                  { value: 'medium', label: 'Medium' },
+                  { value: 'high', label: 'High' },
+                  { value: 'critical', label: 'Urgent' },
                 ]} />
               </Form.Item>
             </Col>
@@ -181,38 +182,38 @@ export default function IncidentEditPage() {
             <Col span={12}>
               <Form.Item
                 name="severity"
-                label="严重程度"
-                rules={[{ required: true, message: '请选择严重程度' }]}
+                label="Severity"
+                rules={[{ required: true, message: 'Please select severity' }]}
               >
-                <Select placeholder="请选择严重程度" options={[
-                  { value: 'low', label: '低' },
-                  { value: 'medium', label: '中' },
-                  { value: 'high', label: '高' },
-                  { value: 'critical', label: '严重' },
+                <Select placeholder="Please select severity" options={[
+                  { value: 'low', label: 'Low' },
+                  { value: 'medium', label: 'Medium' },
+                  { value: 'high', label: 'High' },
+                  { value: 'critical', label: 'Critical' },
                 ]} />
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item name="category" label="分类">
-                <Select placeholder="请选择分类" allowClear options={IncidentCategoryOptions} />
+              <Form.Item name="category" label="Category">
+                <Select placeholder="Please select a category" allowClear options={IncidentCategoryOptions} />
               </Form.Item>
             </Col>
           </Row>
 
           <Row gutter={24}>
             <Col span={12}>
-              <Form.Item name="subcategory" label="子分类">
-                <Input placeholder="请输入子分类" />
+              <Form.Item name="subcategory" label="Subcategory">
+                <Input placeholder="Enter subcategory" />
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item name="source" label="来源">
-                <Select placeholder="请选择来源" allowClear options={[
-                  { value: 'manual', label: '手动创建' },
-                  { value: 'monitoring', label: '监控系统' },
-                  { value: 'email', label: '邮件' },
-                  { value: 'phone', label: '电话' },
-                  { value: 'chat', label: '在线聊天' },
+              <Form.Item name="source" label="Source">
+                <Select placeholder="Please select source" allowClear options={[
+                  { value: 'manual', label: 'Manually created' },
+                  { value: 'monitoring', label: 'Monitoring system' },
+                  { value: 'email', label: 'Email' },
+                  { value: 'phone', label: 'Phone' },
+                  { value: 'chat', label: 'Online Chat' },
                   { value: 'api', label: 'API' },
                 ]} />
               </Form.Item>
@@ -221,8 +222,8 @@ export default function IncidentEditPage() {
 
           <Row gutter={24}>
             <Col span={24}>
-              <Form.Item name="description" label="事件描述">
-                <TextArea rows={6} placeholder="请详细描述事件情况" />
+              <Form.Item name="description" label="Incident Description">
+                <TextArea rows={6} placeholder="Please describe the incident in detail" />
               </Form.Item>
             </Col>
           </Row>
@@ -232,9 +233,10 @@ export default function IncidentEditPage() {
           <Form.Item>
             <Space>
               <Button type="primary" htmlType="submit" icon={<Save />} loading={loading}>
-                保存
+
+                Save
               </Button>
-              <Button onClick={handleCancel}>取消</Button>
+              <Button onClick={handleCancel}>Cancel</Button>
             </Space>
           </Form.Item>
         </Form>

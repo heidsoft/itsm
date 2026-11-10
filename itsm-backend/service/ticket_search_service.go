@@ -44,7 +44,7 @@ func NewTicketSearchService(client *ent.Client, logger *zap.SugaredLogger) *Tick
 // SearchTickets 搜索工单（标题、描述、标签等）
 func (s *TicketSearchService) SearchTickets(ctx context.Context, searchTerm string, tenantID int) ([]*ent.Ticket, error) {
 	if strings.TrimSpace(searchTerm) == "" {
-		return nil, fmt.Errorf("搜索关键词不能为空")
+		return nil, fmt.Errorf("Search keyword cannot be empty")
 	}
 
 	// 使用Contains进行模糊搜索，先转小写实现不区分大小写
@@ -63,7 +63,7 @@ func (s *TicketSearchService) SearchTickets(ctx context.Context, searchTerm stri
 		All(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to search tickets", "searchTerm", searchTerm, "error", err)
-		return nil, fmt.Errorf("搜索工单失败: %w", err)
+		return nil, fmt.Errorf("Failed to search for tickets: %w", err)
 	}
 
 	s.logger.Infow("Tickets searched", "tenant_id", tenantID, "term", searchTerm, "count", len(tickets))
@@ -109,7 +109,7 @@ func (s *TicketSearchService) GetOverdueTickets(ctx context.Context, tenantID in
 				All(ctx)
 			if err != nil {
 				s.logger.Errorw("Failed to query overdue tickets by IDs", "error", err)
-				return nil, fmt.Errorf("获取过期工单失败: %w", err)
+				return nil, fmt.Errorf("Failed to obtain expired work order: %w", err)
 			}
 			s.logger.Infow("Overdue tickets retrieved via sla_states", "tenant_id", tenantID, "count", len(tickets))
 			return tickets, nil
@@ -131,7 +131,7 @@ func (s *TicketSearchService) GetOverdueTickets(ctx context.Context, tenantID in
 		All(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to get overdue tickets", "error", err)
-		return nil, fmt.Errorf("获取过期工单失败: %w", err)
+		return nil, fmt.Errorf("Failed to obtain expired work order: %w", err)
 	}
 
 	s.logger.Infow("Overdue tickets retrieved", "tenant_id", tenantID, "count", len(tickets))
@@ -169,7 +169,7 @@ func (s *TicketSearchService) GetTicketStats(ctx context.Context, tenantID int) 
 				Where(ticket.TenantID(tenantID)).
 				Count(ctx)
 			if err != nil {
-				errCh <- fmt.Errorf("统计总工单数失败: %w", err)
+				errCh <- fmt.Errorf("Failed to count total work orders: %w", err)
 				return
 			}
 			mu.Lock()
@@ -185,7 +185,7 @@ func (s *TicketSearchService) GetTicketStats(ctx context.Context, tenantID int) 
 				Where(ticket.TenantID(tenantID), ticket.StatusEQ("open")).
 				Count(ctx)
 			if err != nil {
-				errCh <- fmt.Errorf("统计open工单失败: %w", err)
+				errCh <- fmt.Errorf("Statistics open work order failed: %w", err)
 				return
 			}
 			mu.Lock()
@@ -201,7 +201,7 @@ func (s *TicketSearchService) GetTicketStats(ctx context.Context, tenantID int) 
 				Where(ticket.TenantID(tenantID), ticket.StatusEQ("in_progress")).
 				Count(ctx)
 			if err != nil {
-				errCh <- fmt.Errorf("统计in_progress工单失败: %w", err)
+				errCh <- fmt.Errorf("Statistics in_progress ticket failed: %w", err)
 				return
 			}
 			mu.Lock()
@@ -217,7 +217,7 @@ func (s *TicketSearchService) GetTicketStats(ctx context.Context, tenantID int) 
 				Where(ticket.TenantID(tenantID), ticket.StatusIn("new", "pending")).
 				Count(ctx)
 			if err != nil {
-				errCh <- fmt.Errorf("统计pending工单失败: %w", err)
+				errCh <- fmt.Errorf("Failed to count pending work orders: %w", err)
 				return
 			}
 			mu.Lock()
@@ -233,7 +233,7 @@ func (s *TicketSearchService) GetTicketStats(ctx context.Context, tenantID int) 
 				Where(ticket.TenantID(tenantID), ticket.StatusEQ("resolved")).
 				Count(ctx)
 			if err != nil {
-				errCh <- fmt.Errorf("统计resolved工单失败: %w", err)
+				errCh <- fmt.Errorf("Statistics of resolved work orders failed: %w", err)
 				return
 			}
 			mu.Lock()
@@ -252,7 +252,7 @@ func (s *TicketSearchService) GetTicketStats(ctx context.Context, tenantID int) 
 				).
 				Count(ctx)
 			if err != nil {
-				errCh <- fmt.Errorf("统计高优先级工单失败: %w", err)
+				errCh <- fmt.Errorf("Failed to count high priority work orders: %w", err)
 				return
 			}
 			mu.Lock()

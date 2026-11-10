@@ -44,7 +44,7 @@ func (c *InventoryHandler) RegisterRoutes(r *gin.RouterGroup) {
 func (c *InventoryHandler) GetPendingInventory(ctx *gin.Context) {
 	tenantID := ctx.GetInt("tenant_id")
 	if tenantID <= 0 {
-		common.AuthFailed(ctx, "未授权访问：缺少有效租户上下文")
+		common.AuthFailed(ctx, "Unauthorized access: Missing valid tenant context")
 		return
 	}
 
@@ -52,7 +52,7 @@ func (c *InventoryHandler) GetPendingInventory(ctx *gin.Context) {
 	if raw := ctx.Query("staleThresholdHours"); raw != "" {
 		parsed, err := strconv.Atoi(raw)
 		if err != nil || parsed <= 0 {
-			common.ParamError(ctx, "staleThresholdHours 需为正整数（小时）")
+			common.ParamError(ctx, "staleThresholdHours needs to be a positive integer (hours)")
 			return
 		}
 		staleThresholdHours = parsed
@@ -60,7 +60,7 @@ func (c *InventoryHandler) GetPendingInventory(ctx *gin.Context) {
 
 	inventory, err := service.BuildPendingWorkflowInventory(ctx.Request.Context(), c.client, tenantID, staleThresholdHours)
 	if err != nil {
-		common.RespondError(ctx, err, "生成存量待办盘点失败")
+		common.RespondError(ctx, err, "Failed to generate inventory to-do inventory")
 		return
 	}
 	common.Success(ctx, inventory)

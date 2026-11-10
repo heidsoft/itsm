@@ -34,9 +34,9 @@ describe('AdminAssignmentRulesPage 加载失败语义', () => {
     mockedApi.listRules.mockRejectedValue(new ApiRequestError('权限不足', 403, 2003));
     renderPage();
 
-    expect(await screen.findByText('没有权限查看分配规则')).toBeInTheDocument();
-    expect(screen.getByText(/这里不是「系统里没有规则」/)).toBeInTheDocument();
-    expect(screen.queryByText('暂无分配规则')).not.toBeInTheDocument();
+    expect(await screen.findByText("No permission to view allocation rules")).toBeInTheDocument();
+    expect(screen.getByText(/The current role is not granted read permission for the assignment rules\. This is not "there are no rules in the system"\. Please contact the administrator to configure permissions for your role's opening rules\./)).toBeInTheDocument();
+    expect(screen.queryByText("No allocation rules yet")).not.toBeInTheDocument();
     expect(document.querySelector('.ant-table')).toBeNull();
   });
 
@@ -44,7 +44,7 @@ describe('AdminAssignmentRulesPage 加载失败语义', () => {
     mockedApi.listRules.mockResolvedValue({ items: [], total: 0 });
     renderPage();
 
-    expect(await screen.findByText('暂无分配规则')).toBeInTheDocument();
-    expect(screen.queryByText(/没有权限/)).not.toBeInTheDocument();
+    expect(await screen.findByText("No allocation rules yet")).toBeInTheDocument();
+    expect(screen.queryByText(/No permission/)).not.toBeInTheDocument();
   });
 });

@@ -20,10 +20,10 @@ interface ReportMetricsProps {
 }
 
 const getSLAStatus = (compliance: number) => {
-  if (compliance >= 95) return { color: 'success', text: '优秀' };
-  if (compliance >= 85) return { color: 'normal', text: '良好' };
-  if (compliance >= 75) return { color: 'exception', text: '需改进' };
-  return { color: 'exception', text: '严重' };
+  if (compliance >= 95) return { color: 'success', text: 'Excellent' };
+  if (compliance >= 85) return { color: 'normal', text: 'Good' };
+  if (compliance >= 75) return { color: 'exception', text: 'Needs improvement' };
+  return { color: 'exception', text: 'Critical' };
 };
 
 const getSatisfactionColor = (score: number) => {
@@ -39,13 +39,13 @@ export const ReportMetrics: React.FC<ReportMetricsProps> = ({ metrics }) => {
       <Col xs={24} sm={12} lg={6}>
         <Card>
           <Statistic
-            title="工单总数"
+            title="Total number of work orders"
             value={metrics?.totalTickets}
             prefix={<FileText style={{ color: '#1890ff' }} />}
             suffix={
               <div className="text-xs text-gray-500">
-                <div>已解决: {metrics?.resolvedTickets}</div>
-                <div>待处理: {metrics?.pendingTickets}</div>
+                <div>Resolved: {metrics?.resolvedTickets}</div>
+                <div>Pending: {metrics?.pendingTickets}</div>
               </div>
             }
           />
@@ -54,10 +54,10 @@ export const ReportMetrics: React.FC<ReportMetricsProps> = ({ metrics }) => {
       <Col xs={24} sm={12} lg={6}>
         <Card>
           <Statistic
-            title="平均解决时间"
+            title="Avg Resolution Time"
             value={metrics?.avgResolutionTime}
             prefix={<Clock style={{ color: '#52c41a' }} />}
-            suffix="小时"
+            suffix="hours"
           />
           <div className="mt-2">
             <Progress
@@ -71,7 +71,7 @@ export const ReportMetrics: React.FC<ReportMetricsProps> = ({ metrics }) => {
       <Col xs={24} sm={12} lg={6}>
         <Card>
           <Statistic
-            title="SLA达标率"
+            title="SLA compliance rate"
             value={metrics?.slaCompliance}
             prefix={<CheckCircle style={{ color: '#1890ff' }} />}
             suffix="%"
@@ -101,7 +101,7 @@ export const ReportMetrics: React.FC<ReportMetricsProps> = ({ metrics }) => {
       <Col xs={24} sm={12} lg={6}>
         <Card>
           <Statistic
-            title="满意度评分"
+            title="Satisfaction Score"
             value={metrics?.satisfactionScore}
             precision={1}
             prefix={

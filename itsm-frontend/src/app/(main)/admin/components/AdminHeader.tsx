@@ -75,7 +75,7 @@ export const AdminHeader: React.FC = () => {
               fontSize: token.fontSizeSM,
             }}
           >
-            {currentTime.toLocaleDateString('zh-CN', {
+            {currentTime.toLocaleDateString('en-US', {
               year: 'numeric',
               month: 'long',
               day: 'numeric',

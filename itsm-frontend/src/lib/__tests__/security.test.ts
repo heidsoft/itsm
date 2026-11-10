@@ -162,12 +162,12 @@ describe('passwordSecurity', () => {
     it('should reject common passwords', () => {
       const result = passwordSecurity.checkPasswordStrength('password');
       expect(result.score).toBe(0);
-      expect(result.feedback).toContain('请不要使用常见的弱密码');
+      expect(result.feedback).toContain("Please do not use common weak passwords");
     });
 
     it('should require minimum 8 characters', () => {
       const result = passwordSecurity.checkPasswordStrength('Ab1!xyz');
-      expect(result.feedback).toContain('密码长度至少需要8个字符');
+      expect(result.feedback).toContain("Password length needs to be at least 8 characters");
     });
   });
 
@@ -417,44 +417,43 @@ describe('csrfProtection', () => {
 });
 
 describe('securityLogger', () => {
+  const originalEnv = process.env.NODE_ENV;
+
   beforeEach(() => {
+    Object.assign(process.env, { NODE_ENV: 'development' });
     jest.spyOn(console, 'warn').mockImplementation(() => {});
   });
 
   afterEach(() => {
+    if (originalEnv === undefined) Reflect.deleteProperty(process.env, 'NODE_ENV');
+    else Object.assign(process.env, { NODE_ENV: originalEnv });
     jest.restoreAllMocks();
   });
 
   it('logSecurityEvent logs to console in development', () => {
-    const originalEnv = process.env.NODE_ENV;
-    Object.defineProperty(process.env, 'NODE_ENV', { value: 'development', configurable: true });
     securityLogger.logSecurityEvent('test_event', { key: 'value' });
     expect(console.warn).toHaveBeenCalled();
-    Object.defineProperty(process.env, 'NODE_ENV', { value: originalEnv, configurable: true });
+  });
+
+  it('does not log security events to the console in production', () => {
+    Object.assign(process.env, { NODE_ENV: 'production' });
+    securityLogger.logSecurityEvent('test_event', { key: 'value' });
+    expect(console.warn).not.toHaveBeenCalled();
   });
 
   it('logLoginAttempt logs with masked username', () => {
-    const originalEnv = process.env.NODE_ENV;
-    Object.defineProperty(process.env, 'NODE_ENV', { value: 'development', configurable: true });
     securityLogger.logLoginAttempt(true, 'admin');
     expect(console.warn).toHaveBeenCalled();
-    Object.defineProperty(process.env, 'NODE_ENV', { value: originalEnv, configurable: true });
   });
 
   it('logLoginAttempt handles no username', () => {
-    const originalEnv = process.env.NODE_ENV;
-    Object.defineProperty(process.env, 'NODE_ENV', { value: 'development', configurable: true });
     securityLogger.logLoginAttempt(false);
     expect(console.warn).toHaveBeenCalled();
-    Object.defineProperty(process.env, 'NODE_ENV', { value: originalEnv, configurable: true });
   });
 
   it('logSuspiciousActivity logs activity', () => {
-    const originalEnv = process.env.NODE_ENV;
-    Object.defineProperty(process.env, 'NODE_ENV', { value: 'development', configurable: true });
     securityLogger.logSuspiciousActivity('brute_force', { attempts: 10 });
     expect(console.warn).toHaveBeenCalled();
-    Object.defineProperty(process.env, 'NODE_ENV', { value: originalEnv, configurable: true });
   });
 });
 

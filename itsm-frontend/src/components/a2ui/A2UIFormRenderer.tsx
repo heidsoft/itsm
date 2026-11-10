@@ -215,12 +215,12 @@ const A2UIComponentRenderer: React.FC<{
       const isEnabled = btnProps?.enabled ? resolveValue(btnProps.enabled, model) !== false : true;
 
       // 获取按钮文字（从子组件）
-      let buttonText = '提交';
+      let buttonText = 'Submit';
       if (btnProps?.child) {
         const childComp = allComponents.find(c => c.id === btnProps.child);
         if (childComp && 'Text' in childComp.component) {
           const textProps = (childComp.component as { Text: TextProps }).Text;
-          buttonText = (resolveValue(textProps.text, model) as string) || '提交';
+          buttonText = (resolveValue(textProps.text, model) as string) || 'Submit';
         }
       }
 
@@ -294,7 +294,7 @@ export function A2UIFormRenderer() {
   // 检查是否已登录：使用 zustand 的 isAuthenticated（AuthGuard 已从后端会话端点确认过）
   const checkAuth = (): boolean => {
     if (!useAuthStore.getState().isAuthenticated) {
-      message.error('请先登录后再使用此功能');
+      message.error('Please log in first before using this function');
       return false;
     }
     return true;
@@ -303,7 +303,7 @@ export function A2UIFormRenderer() {
   // 发送意图到 AI
   const sendToAI = async () => {
     if (!userIntent.trim()) {
-      message.warning('请描述您的需求');
+      message.warning('Please describe your needs');
       return;
     }
     if (!checkAuth()) {
@@ -365,7 +365,7 @@ export function A2UIFormRenderer() {
       setUserIntent('');
     } catch (e) {
       console.error(e);
-      message.error('请求失败，请稍后重试');
+      message.error('Request failed, please try again later');
     } finally {
       setLoading(false);
     }
@@ -390,7 +390,7 @@ export function A2UIFormRenderer() {
               const status = updates.find((u: { key: string }) => u.key === 'status')?.valueString;
               if (status === 'created') {
                 setSubmitted(true);
-                message.success('工单创建成功！');
+                message.success('Work order created successfully!');
               }
             }
             if ('deleteSurface' in parsed) {
@@ -402,7 +402,7 @@ export function A2UIFormRenderer() {
           }
         });
       } catch (e) {
-        message.error('提交失败');
+        message.error('Failed to submit');
       } finally {
         setLoading(false);
       }
@@ -417,8 +417,8 @@ export function A2UIFormRenderer() {
       <Card className="max-w-2xl mx-auto">
         <div className="text-center py-8">
           <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold mb-2">工单创建成功</h2>
-          <p className="text-gray-500 mb-4">您的工单已成功提交</p>
+          <h2 className="text-xl font-semibold mb-2">Work order created successfully</h2>
+          <p className="text-gray-500 mb-4">Your ticket has been submitted successfully</p>
           <Button
             type="primary"
             onClick={() => {
@@ -430,7 +430,8 @@ export function A2UIFormRenderer() {
               });
             }}
           >
-            创建新工单
+
+            Create new work order
           </Button>
         </div>
       </Card>
@@ -443,17 +444,18 @@ export function A2UIFormRenderer() {
       <div className="mb-4 p-3 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg">
         <div className="flex items-center gap-2 mb-2">
           <Bot className="w-4 h-4 text-purple-500" />
-          <span className="text-sm font-medium">描述需求，AI 自动生成表单</span>
+          <span className="text-sm font-medium">Describe requirements, AI automatically generates forms</span>
         </div>
         <Space.Compact style={{ width: '100%' }}>
           <Input
-            placeholder="例如：帮我申请一台 ThinkPad 笔记本，用于 Java 开发..."
+            placeholder="For example: help me apply for a ThinkPad laptop for Java development..."
             value={userIntent}
             onChange={e => setUserIntent(e.target.value)}
             onPressEnter={sendToAI}
           />
           <Button icon={<Send />} onClick={sendToAI} loading={loading}>
-            发送
+
+            Send
           </Button>
         </Space.Compact>
       </div>
@@ -481,15 +483,15 @@ export function A2UIFormRenderer() {
       ) : (
         <div className="text-center text-gray-400 py-8">
           <Bot className="w-12 h-12 mx-auto mb-2 opacity-50" />
-          <p>描述您的需求，AI 将生成工单表单</p>
-          <p className="text-xs mt-2">例如：帮我申请一台 ThinkPad 笔记本</p>
+          <p>Describe your needs and AI will generate a work order form</p>
+          <p className="text-xs mt-2">For example: help me apply for a ThinkPad laptop</p>
         </div>
       )}
 
       {/* 调试信息 */}
       {process.env.NODE_ENV === 'development' && components.length > 0 && (
         <details className="mt-4 text-xs text-gray-400">
-          <summary>A2UI 调试信息</summary>
+          <summary>A2UI debugging information</summary>
           <pre className="mt-2 p-2 bg-gray-100 rounded overflow-auto max-h-40">
             {JSON.stringify(components, null, 2)}
           </pre>

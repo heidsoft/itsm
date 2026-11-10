@@ -24,7 +24,7 @@ func ResolveStatsWindow(dateFrom, dateTo string, now time.Time) (*repoTicket.Sta
 	}
 	if dateFrom == "" || dateTo == "" {
 		return nil, common.NewBusinessError(common.ParamErrorCode,
-			"dateFrom 与 dateTo 必须同时提供", "工单统计窗口需要成对的日期边界")
+			"dateFrom and dateTo must be provided at the same time", "Work order statistics window requires paired date boundaries")
 	}
 
 	from, err := parseStatsDate(dateFrom, "dateFrom")
@@ -43,12 +43,12 @@ func ResolveStatsWindow(dateFrom, dateTo string, now time.Time) (*repoTicket.Sta
 	end := startOfDay(to, loc).AddDate(0, 0, 1).Add(-time.Nanosecond)
 	if end.Before(start) {
 		return nil, common.NewBusinessError(common.ParamErrorCode,
-			"dateFrom 不能晚于 dateTo", "工单统计窗口区间倒置")
+			"dateFrom cannot be later than dateTo", "Work order statistics window interval is inverted")
 	}
 	days := int(end.Sub(start).Hours()/24) + 1
 	if days > maxStatsWindowDays {
 		return nil, common.NewBusinessError(common.ParamErrorCode,
-			fmt.Sprintf("统计窗口最长 %d 天", maxStatsWindowDays), "工单统计窗口跨度过大")
+			fmt.Sprintf("The longest statistical window is %d days", maxStatsWindowDays), "The work order statistics window span is too large")
 	}
 	return &repoTicket.StatsWindow{From: start, To: end}, nil
 }
@@ -92,5 +92,5 @@ func parseStatsDate(value, name string) (time.Time, error) {
 		return ts, nil
 	}
 	return time.Time{}, common.NewBusinessError(common.ParamErrorCode,
-		name+" 格式错误（RFC3339 或 YYYY-MM-DD）", "工单统计窗口日期无法解析")
+		name+"Bad format (RFC3339 or YYYY-MM-DD)", "The work order statistics window date cannot be parsed")
 }

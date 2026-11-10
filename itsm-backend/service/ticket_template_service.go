@@ -168,15 +168,15 @@ func (s *TicketTemplateService) UpdateTemplate(ctx context.Context, id int, req 
 func (s *TicketTemplateService) RenderTemplate(ctx context.Context, id, tenantID int, values map[string]interface{}) (map[string]interface{}, error) {
 	tmpl, err := s.GetTemplate(ctx, id, tenantID)
 	if err != nil {
-		return nil, fmt.Errorf("模板不存在")
+		return nil, fmt.Errorf("Template does not exist")
 	}
 	if !tmpl.IsActive {
-		return nil, fmt.Errorf("模板已下架")
+		return nil, fmt.Errorf("The template has been removed from the shelves")
 	}
 	var schema map[string]interface{}
 	if len(tmpl.FormFields) > 0 {
 		if err := json.Unmarshal(tmpl.FormFields, &schema); err != nil {
-			return nil, fmt.Errorf("模板表单配置损坏: %w", err)
+			return nil, fmt.Errorf("Template form configuration is damaged: %w", err)
 		}
 	}
 	result := make(map[string]interface{}, len(values))
@@ -196,7 +196,7 @@ func (s *TicketTemplateService) RenderTemplate(ctx context.Context, id, tenantID
 		if required, _ := field["required"].(bool); required {
 			value, exists := result[key]
 			if !exists || value == nil || strings.TrimSpace(fmt.Sprint(value)) == "" {
-				return nil, fmt.Errorf("必填字段 %s 未填写", key)
+				return nil, fmt.Errorf("Required field %s is not filled in", key)
 			}
 		}
 	}
@@ -205,32 +205,32 @@ func (s *TicketTemplateService) RenderTemplate(ctx context.Context, id, tenantID
 
 func validateTicketTemplate(name, category, priority string, fields map[string]interface{}) error {
 	if strings.TrimSpace(name) == "" {
-		return fmt.Errorf("模板名称不能为空")
+		return fmt.Errorf("Template name cannot be empty")
 	}
 	if strings.TrimSpace(category) == "" {
-		return fmt.Errorf("模板分类不能为空")
+		return fmt.Errorf("Template category cannot be empty")
 	}
 	if priority != "" && priority != "low" && priority != "medium" && priority != "high" && priority != "critical" {
-		return fmt.Errorf("无效的模板优先级")
+		return fmt.Errorf("Invalid template priority")
 	}
 	return validateTemplateFields(fields)
 }
 
 func validateTemplateFields(fields map[string]interface{}) error {
 	if len(fields) > 200 {
-		return fmt.Errorf("模板字段不能超过 200 个")
+		return fmt.Errorf("Template fields cannot exceed 200")
 	}
 	for key, raw := range fields {
 		if strings.TrimSpace(key) == "" {
-			return fmt.Errorf("模板字段名不能为空")
+			return fmt.Errorf("Template field name cannot be empty")
 		}
 		field, ok := raw.(map[string]interface{})
 		if !ok {
-			return fmt.Errorf("模板字段 %s 配置格式无效", key)
+			return fmt.Errorf("Template field %s configuration format is invalid", key)
 		}
 		if required, exists := field["required"]; exists {
 			if _, ok := required.(bool); !ok {
-				return fmt.Errorf("模板字段 %s 的 required 必须为布尔值", key)
+				return fmt.Errorf("required of template field %s must be a boolean", key)
 			}
 		}
 	}
@@ -250,7 +250,7 @@ func (s *TicketTemplateService) DeleteTemplate(ctx context.Context, id int, tena
 		return err
 	}
 	if count > 0 {
-		return errors.New("无法删除正在使用的模板")
+		return errors.New("Unable to delete template in use")
 	}
 
 	return s.client.TicketTemplate.DeleteOneID(id).

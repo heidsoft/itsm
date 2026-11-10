@@ -89,7 +89,7 @@ func (c *Handler) ListItems(ctx *gin.Context) {
 
 	items, total, err := c.service.ListItems(ctx, itemType, category, search, isOfficial, page, pageSize)
 	if err != nil {
-		common.FailWithErr(ctx, err, "查询组件列表失败")
+		common.FailWithErr(ctx, err, "Failed to query component list")
 		return
 	}
 
@@ -115,7 +115,7 @@ func (c *Handler) GetItem(ctx *gin.Context) {
 
 	item, err := c.service.GetItem(ctx, itemID)
 	if err != nil {
-		common.NotFoundWithErr(ctx, err, "组件不存在或已被下架")
+		common.NotFoundWithErr(ctx, err, "The component does not exist or has been removed from the shelves")
 		return
 	}
 
@@ -153,28 +153,28 @@ func (c *Handler) InstallItem(ctx *gin.Context) {
 	if err != nil {
 		switch {
 		case errors.Is(err, marketplace.ErrMarketplaceItemNotFound):
-			common.NotFoundWithErr(ctx, err, "组件不存在或已被下架")
+			common.NotFoundWithErr(ctx, err, "The component does not exist or has been removed from the shelves")
 		case errors.Is(err, marketplace.ErrMarketplaceItemUnavailable), errors.Is(err, marketplace.ErrMarketplaceInstalledByMissing):
-			common.BadRequestWithErr(ctx, err, "组件当前不可安装")
+			common.BadRequestWithErr(ctx, err, "The component is currently uninstallable")
 		case errors.Is(err, marketplace.ErrMarketplaceDeliveryUnsupported):
-			common.Fail(ctx, common.NotImplementedCode, "平台不交付该类型商品：插件需要宿主运行时，历史插件条目仅可查看与卸载")
+			common.Fail(ctx, common.NotImplementedCode, "The platform does not deliver this type of product: the plug-in requires a host to run, and historical plug-in entries can only be viewed and uninstalled.")
 		case marketplace.IsDeliveryNotReady(err):
 			// 运行态没能起来（连接器缺凭据 / 技能交付物在本进程不存在）。
 			// 安装记录已落库并标为 failed，这里如实返回那条记录，让前端显示
 			// 「已安装但未就绪 + errorMessage」，而不是笼统的「安装失败」让人以为压根没装上。
 			if installation != nil {
 				common.SuccessWithMessage(ctx,
-					"安装记录已创建，但运行态未就绪；补全配置或修正目录版本后重新安装即可",
+					"The installation record has been created, but the running state is not ready; complete the configuration or correct the directory version and then reinstall.",
 					ToInstallationResponse(installation))
 				return
 			}
-			common.Conflict(ctx, "组件运行态未就绪："+err.Error(), nil)
+			common.Conflict(ctx, "The component running state is not ready:"+err.Error(), nil)
 		case errors.Is(err, marketplace.ErrMarketplaceDependencyUnsatisfied):
 			// 前置组件缺失/版本不符属于业务冲突而非参数错误：商品本身可装，
 			// 只是依赖链没满足。明细由 service 逐项拼好，直接展示给管理员。
 			common.Conflict(ctx, err.Error(), nil)
 		default:
-			common.RespondError(ctx, err, "安装组件失败")
+			common.RespondError(ctx, err, "Failed to install component")
 		}
 		return
 	}
@@ -208,7 +208,7 @@ func (c *Handler) UninstallItem(ctx *gin.Context) {
 	err = c.service.UninstallItem(ctx, tenantID, itemID)
 	if err != nil {
 		if errors.Is(err, marketplace.ErrMarketplaceInstallationAbsent) {
-			common.NotFoundWithErr(ctx, err, "安装记录不存在或已被卸载")
+			common.NotFoundWithErr(ctx, err, "The installation record does not exist or has been uninstalled")
 			return
 		}
 		if errors.Is(err, marketplace.ErrMarketplaceItemRequiredByDependents) {
@@ -220,10 +220,10 @@ func (c *Handler) UninstallItem(ctx *gin.Context) {
 		if errors.Is(err, marketplace.ErrMarketplaceConnectorStillRunning) {
 			// 运行态没能注销就绝不能标 uninstalled——否则界面显示已卸载，
 			// 连接器还在用活着的凭据收发消息。
-			common.Conflict(ctx, "连接器运行实例未能注销，卸载已中止（安装记录保持原状态）："+err.Error(), nil)
+			common.Conflict(ctx, "The running instance of the connector failed to log out and the uninstallation was aborted (the installation record remains in its original state):"+err.Error(), nil)
 			return
 		}
-		common.RespondError(ctx, err, "卸载组件失败")
+		common.RespondError(ctx, err, "Failed to uninstall component")
 		return
 	}
 
@@ -249,7 +249,7 @@ func (c *Handler) ListInstallations(ctx *gin.Context) {
 
 	installations, err := c.service.ListInstallations(ctx, tenantID, status)
 	if err != nil {
-		common.RespondError(ctx, err, "查询安装列表失败")
+		common.RespondError(ctx, err, "Failed to query the installation list")
 		return
 	}
 
@@ -289,10 +289,10 @@ func (c *Handler) GetInstallation(ctx *gin.Context) {
 	installation, err := c.service.GetInstallation(ctx, tenantID, itemID)
 	if err != nil {
 		if errors.Is(err, marketplace.ErrMarketplaceInstallationAbsent) {
-			common.NotFoundWithErr(ctx, err, "安装记录不存在或已被卸载")
+			common.NotFoundWithErr(ctx, err, "The installation record does not exist or has been uninstalled")
 			return
 		}
-		common.RespondError(ctx, err, "查询安装详情失败")
+		common.RespondError(ctx, err, "Failed to query installation details")
 		return
 	}
 
@@ -320,7 +320,7 @@ func (c *Handler) UpdateInstallationConfig(ctx *gin.Context) {
 
 	var config map[string]interface{}
 	if err := ctx.ShouldBindJSON(&config); err != nil {
-		common.BadRequestWithErr(ctx, err, "请求参数错误")
+		common.BadRequestWithErr(ctx, err, "Wrong request parameters")
 		return
 	}
 
@@ -332,26 +332,26 @@ func (c *Handler) UpdateInstallationConfig(ctx *gin.Context) {
 	installation, err := c.service.UpdateInstallationConfig(ctx.Request.Context(), tenantID, itemID, config)
 	if err != nil {
 		if errors.Is(err, marketplace.ErrMarketplaceInstallationAbsent) {
-			common.NotFoundWithErr(ctx, err, "安装记录不存在或已被卸载")
+			common.NotFoundWithErr(ctx, err, "The installation record does not exist or has been uninstalled")
 			return
 		}
 		if errors.Is(err, marketplace.ErrMarketplaceDeliveryUnsupported) {
-			common.Fail(ctx, common.NotImplementedCode, "平台不交付该类型商品：插件需要宿主运行时，历史插件条目仅可查看与卸载")
+			common.Fail(ctx, common.NotImplementedCode, "The platform does not deliver this type of product: the plug-in requires a host to run, and historical plug-in entries can only be viewed and uninstalled.")
 			return
 		}
 		if errors.Is(err, marketplace.ErrMarketplaceConfigUnsupported) {
 			// 类型本身可交付，但它没有租户级配置面：这是「不接受该请求」，
 			// 不是「功能未实现」——收下并忽略配置只会造出一个假保存。
-			common.BadRequestWithErr(ctx, err, "该组件类型没有租户级配置项")
+			common.BadRequestWithErr(ctx, err, "There is no tenant-level configuration item for this component type")
 			return
 		}
 		if errors.Is(err, marketplace.ErrMarketplaceConnectorNotReady) {
 			// 新配置没能让运行态起来，DB 保持原配置 —— 必须让人知道「这次没生效」，
 			// 否则会以为换了凭据而实际仍在用旧的。
-			common.Conflict(ctx, "新配置未生效，已保留原配置："+err.Error(), nil)
+			common.Conflict(ctx, "The new configuration has not taken effect and the original configuration has been retained:"+err.Error(), nil)
 			return
 		}
-		common.RespondError(ctx, err, "更新安装配置失败")
+		common.RespondError(ctx, err, "Failed to update installation configuration")
 		return
 	}
 
@@ -390,13 +390,13 @@ func (c *Handler) UpgradeItem(ctx *gin.Context) {
 	targetVersion := ""
 	if ctx.Request.ContentLength > 0 {
 		if err := ctx.ShouldBindJSON(&req); err != nil {
-			common.BadRequestWithErr(ctx, err, "请求参数错误")
+			common.BadRequestWithErr(ctx, err, "Wrong request parameters")
 			return
 		}
 		if req.TargetVersion != nil {
 			targetVersion = strings.TrimSpace(*req.TargetVersion)
 			if targetVersion == "" {
-				common.ParamError(ctx, "targetVersion 不能为空字符串；省略该字段即升到最新版本")
+				common.ParamError(ctx, "targetVersion cannot be an empty string; omitting this field will upgrade to the latest version")
 				return
 			}
 		}
@@ -415,34 +415,34 @@ func (c *Handler) UpgradeItem(ctx *gin.Context) {
 	if err != nil {
 		switch {
 		case errors.Is(err, marketplace.ErrMarketplaceItemNotFound):
-			common.NotFoundWithErr(ctx, err, "组件不存在或已被下架")
+			common.NotFoundWithErr(ctx, err, "The component does not exist or has been removed from the shelves")
 		case errors.Is(err, marketplace.ErrMarketplaceInstallationAbsent):
-			common.NotFoundWithErr(ctx, err, "安装记录不存在或已被卸载")
+			common.NotFoundWithErr(ctx, err, "The installation record does not exist or has been uninstalled")
 		case errors.Is(err, marketplace.ErrMarketplaceDeliveryUnsupported):
-			common.Fail(ctx, common.NotImplementedCode, "平台不交付该类型商品：插件需要宿主运行时，历史插件条目仅可查看与卸载")
+			common.Fail(ctx, common.NotImplementedCode, "The platform does not deliver this type of product: the plug-in requires a host to run, and historical plug-in entries can only be viewed and uninstalled.")
 		case errors.Is(err, marketplace.ErrMarketplaceUpgradeTargetInvalid):
 			// 调用方点名了一个不可用的版本 → 参数问题；
 			// 没点名（即「升最新」）而目录里没有可用版本 → 数据状态冲突。
 			if targetVersion != "" {
-				common.BadRequestWithErr(ctx, err, "升级目标不可用")
+				common.BadRequestWithErr(ctx, err, "Upgrade target is unavailable")
 			} else {
-				common.Conflict(ctx, "目录里没有可用于升级的已发布版本："+err.Error(), nil)
+				common.Conflict(ctx, "There is no released version available for upgrade in the directory:"+err.Error(), nil)
 			}
 		case errors.Is(err, marketplace.ErrMarketplaceDependencyUnsatisfied):
 			common.Conflict(ctx, err.Error(), nil)
 		case marketplace.IsDeliveryNotReady(err), errors.Is(err, marketplace.ErrMarketplaceUpgradeBlocked):
 			// 运行态没能起来：installed_version 没换、状态没动，租户仍在跑旧版本。
 			// 必须把「没升成」说清楚，否则界面以为升级已完成。
-			common.Conflict(ctx, "升级未完成，仍在使用当前版本："+err.Error(), nil)
+			common.Conflict(ctx, "Upgrade not completed, current version still in use:"+err.Error(), nil)
 		default:
-			common.RespondError(ctx, err, "升级组件失败")
+			common.RespondError(ctx, err, "Failed to upgrade component")
 		}
 		return
 	}
 
 	if !result.Upgraded {
 		common.SuccessWithMessage(ctx,
-			fmt.Sprintf("已是版本 %s，无需升级", result.ToVersion),
+			fmt.Sprintf("Already version %s, no need to upgrade", result.ToVersion),
 			ToInstallationResponse(result.Installation))
 		return
 	}
@@ -451,7 +451,7 @@ func (c *Handler) UpgradeItem(ctx *gin.Context) {
 		verb = "回滚"
 	}
 	common.SuccessWithMessage(ctx,
-		fmt.Sprintf("已从 %s %s到 %s", result.FromVersion, verb, result.ToVersion),
+		fmt.Sprintf("From %s %s to %s", result.FromVersion, verb, result.ToVersion),
 		ToInstallationResponse(result.Installation))
 }
 
@@ -483,11 +483,11 @@ func (c *Handler) SetAutoUpgrade(ctx *gin.Context) {
 
 	var req autoUpgradeRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.BadRequestWithErr(ctx, err, "请求参数错误")
+		common.BadRequestWithErr(ctx, err, "Wrong request parameters")
 		return
 	}
 	if req.AutoUpgrade == nil {
-		common.ParamError(ctx, "autoUpgrade 必填（true 开启自动升级 / false 关闭）")
+		common.ParamError(ctx, "autoUpgrade required (true turns on automatic upgrade / false turns off)")
 		return
 	}
 
@@ -503,10 +503,10 @@ func (c *Handler) SetAutoUpgrade(ctx *gin.Context) {
 	installation, err := c.service.SetAutoUpgrade(ctx.Request.Context(), tenantID, itemID, *req.AutoUpgrade, strconv.Itoa(userID))
 	if err != nil {
 		if errors.Is(err, marketplace.ErrMarketplaceInstallationAbsent) {
-			common.NotFoundWithErr(ctx, err, "安装记录不存在或已被卸载")
+			common.NotFoundWithErr(ctx, err, "The installation record does not exist or has been uninstalled")
 			return
 		}
-		common.RespondError(ctx, err, "更新自动升级设置失败")
+		common.RespondError(ctx, err, "Failed to update automatic upgrade settings")
 		return
 	}
 
@@ -529,7 +529,7 @@ func (c *Handler) DependencyStatus(ctx *gin.Context) {
 
 	report, err := c.service.DependencyStatus(ctx.Request.Context(), tenantID)
 	if err != nil {
-		common.RespondError(ctx, err, "查询依赖对齐状态失败")
+		common.RespondError(ctx, err, "Failed to query dependency alignment status")
 		return
 	}
 

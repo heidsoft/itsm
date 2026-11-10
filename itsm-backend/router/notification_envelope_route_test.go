@@ -374,7 +374,7 @@ func seedNotifications(ctx context.Context, t *testing.T, client *ent.Client, us
 
 	for i := 0; i < total; i++ {
 		_, err := client.Notification.Create().
-			SetTitle("通知").
+			SetTitle("Notification").
 			SetMessage(fmt.Sprintf("第 %d 条", i)).
 			SetType("info").
 			SetRead(i < read).

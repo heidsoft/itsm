@@ -5,6 +5,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { serviceCategoryLabel } from '@/constants/service-catalog';
 import { useParams, useRouter } from 'next/navigation';
 import {
   Card,
@@ -57,7 +58,7 @@ export default function ServiceCatalogRequestPage() {
   useEffect(() => {
     if (!id) {
       setFetching(false);
-      setFetchError('服务标识无效，请返回服务目录重新选择');
+      setFetchError('The service ID is invalid, please return to the service directory and select again.');
       return;
     }
     setFetching(true);
@@ -80,11 +81,11 @@ export default function ServiceCatalogRequestPage() {
             if (found) {
               setCatalog(found);
             } else {
-              setFetchError('未找到所选服务，该服务可能已下架');
+              setFetchError('The selected service was not found. The service may have been removed from the shelves.');
             }
           });
       })
-      .catch(() => setFetchError('服务信息加载失败，请稍后重试'))
+      .catch(() => setFetchError('Service information loading failed, please try again later.'))
       .finally(() => setFetching(false));
   }, [id]);
 
@@ -122,15 +123,15 @@ export default function ServiceCatalogRequestPage() {
       };
 
       await ServiceCatalogApi.createServiceRequest(payload);
-      message.success('申请已提交，等待审批');
+      message.success('The application has been submitted and is waiting for approval');
       try {
         router.push('/my-requests');
       } catch (navErr) {
         console.error('[nav]', navErr);
-        message.error('导航失败，请稍后重试');
+        message.error('Navigation failed, please try again later');
       }
     } catch (e: unknown) {
-      message.error('提交失败：' + (e instanceof Error ? e.message : '未知错误'));
+      message.error('Submission failed:' + (e instanceof Error ? e.message : 'Unknown error'));
     } finally {
       setLoading(false);
     }
@@ -147,7 +148,7 @@ export default function ServiceCatalogRequestPage() {
   return (
     <div className='max-w-3xl mx-auto p-6'>
       <Breadcrumb
-        items={[{ title: '服务目录', href: '/service-catalog' }, { title: '提交申请' }]}
+        items={[{ title: 'Service Catalog', href: '/service-catalog' }, { title: 'Submitted' }]}
         className='mb-4'
       />
       <Card>
@@ -159,14 +160,16 @@ export default function ServiceCatalogRequestPage() {
                 router.push('/service-catalog');
               } catch (navErr) {
                 console.error('[nav]', navErr);
-                message.error('导航失败，请稍后重试');
+                message.error('Navigation failed, please try again later');
               }
             }}
           >
-            返回
+
+            Back
           </Button>
           <Title level={3} style={{ margin: 0 }}>
-            申请服务
+
+            Apply Service
           </Title>
         </Space>
 
@@ -183,11 +186,12 @@ export default function ServiceCatalogRequestPage() {
                     router.push('/service-catalog');
                   } catch (navErr) {
                     console.error('[nav]', navErr);
-                    message.error('导航失败，请稍后重试');
+                    message.error('Navigation failed, please try again later');
                   }
                 }}
               >
-                返回服务目录
+
+                Return to service directory
               </Button>
             }
           />
@@ -206,10 +210,11 @@ export default function ServiceCatalogRequestPage() {
                 <Space size={4} wrap>
                   {catalog.deliveryTime != null && catalog.deliveryTime > 0 && (
                     <Tag icon={<Clock />} color='blue'>
-                      交付时长 {catalog.deliveryTime} 天
+
+                      Delivery time {catalog.deliveryTime}  days
                     </Tag>
                   )}
-                  {catalog.category && <Tag>{catalog.category}</Tag>}
+                  {catalog.category && <Tag>{serviceCategoryLabel(catalog.category)}</Tag>}
                 </Space>
               </div>
             }
@@ -225,76 +230,76 @@ export default function ServiceCatalogRequestPage() {
 
         <Form form={form} layout='vertical' onFinish={onFinish}>
           <div className='grid grid-cols-2 gap-4'>
-            <Form.Item name='requesterName' label='申请人'>
-              <Input disabled placeholder='当前登录用户' />
+            <Form.Item name='requesterName' label="Requester">
+              <Input disabled placeholder="Current logged in user" />
             </Form.Item>
-            <Form.Item name='requesterEmail' label='联系邮箱'>
-              <Input disabled placeholder='当前用户邮箱' />
+            <Form.Item name='requesterEmail' label="Contact email">
+              <Input disabled placeholder="Current user’s email address" />
             </Form.Item>
           </div>
           <Form.Item
             name='title'
-            label='申请标题'
-            rules={[{ required: true, message: '请输入申请标题' }]}
+            label="Application title"
+            rules={[{ required: true, message: 'Please enter the application title' }]}
           >
-            <Input placeholder='一句话说明申请目的' maxLength={200} />
+            <Input placeholder="One sentence describing the purpose of application" maxLength={200} />
           </Form.Item>
 
           <Form.Item
             name='reason'
-            label='申请理由'
-            rules={[{ required: true, message: '请输入申请理由' }]}
+            label="Reason for application"
+            rules={[{ required: true, message: 'Please enter the reason for application' }]}
           >
             <TextArea
               rows={4}
-              placeholder='请详细说明申请原因、业务场景、紧急程度'
+              placeholder="Please explain in detail the reason for application, business scenario, and urgency"
               maxLength={2000}
             />
           </Form.Item>
 
           <div className='grid grid-cols-2 gap-4'>
-            <Form.Item name='quantity' label='数量' initialValue={1}>
+            <Form.Item name='quantity' label="Count" initialValue={1}>
               <Input type='number' min={1} max={100} />
             </Form.Item>
-            <Form.Item name='expectedAt' label='期望交付时间'>
+            <Form.Item name='expectedAt' label="Expected delivery time">
               <DatePicker showTime style={{ width: '100%' }} />
             </Form.Item>
           </div>
 
           <div className='grid grid-cols-2 gap-4'>
-            <Form.Item name='costCenter' label='成本中心'>
-              <Input placeholder='例如 CC-1001' />
+            <Form.Item name='costCenter' label="Cost Center">
+              <Input placeholder="Example CC-1001" />
             </Form.Item>
-            <Form.Item name='dataClassification' label='数据分级' initialValue='internal'>
+            <Form.Item name='dataClassification' label="Data classification" initialValue='internal'>
               <Select
                 options={[
-                  { label: '公开 (public)', value: 'public' },
-                  { label: '内部 (internal)', value: 'internal' },
-                  { label: '机密 (confidential)', value: 'confidential' },
-                  { label: '绝密 (restricted)', value: 'restricted' },
+                  { label: 'public', value: 'public' },
+                  { label: 'internal', value: 'internal' },
+                  { label: 'confidential (confidential)', value: 'confidential' },
+                  { label: 'Top Secret (restricted)', value: 'restricted' },
                 ]}
               />
             </Form.Item>
           </div>
 
           <Form.Item name='needsPublicIp' valuePropName='checked'>
-            <Checkbox>需要公网 IP</Checkbox>
+            <Checkbox>Public IP required</Checkbox>
           </Form.Item>
 
           <Form.Item
             name='sourceIpWhitelist'
-            label='来源 IP 白名单（多个以英文逗号分隔）'
+            label="Source IP whitelist (multiple separated by commas)"
             dependencies={['needsPublicIp']}
           >
-            <Input placeholder='例如 1.2.3.4, 10.0.0.0/8' />
+            <Input placeholder="For example 1.2.3.4, 10.0.0.0/8" />
           </Form.Item>
 
           <Divider />
 
           <Form.Item
             name='expireAt'
-            label='资源过期时间（到期自动回收）'
-            extra='若不填写，则按服务目录默认策略'
+            label="Resource expiration time (automatic recycling upon expiration)"
+            extra="If not filled in, the default policy of the service directory will be used."
           >
             <DatePicker
               showTime
@@ -311,12 +316,13 @@ export default function ServiceCatalogRequestPage() {
                 validator: (_, value) =>
                   value
                     ? Promise.resolve()
-                    : Promise.reject(new Error('请确认已知悉相关合规与安全要求')),
+                    : Promise.reject(new Error('Please confirm that you are aware of the relevant compliance and security requirements')),
               },
             ]}
           >
             <Checkbox>
-              我已知悉本服务的合规要求与安全策略，并承诺仅将资源用于申请所述的合法业务场景
+
+              I am aware of the compliance requirements and security policies of this service, and promise to use resources only for the legitimate business scenarios described in the application
             </Checkbox>
           </Form.Item>
 
@@ -329,7 +335,8 @@ export default function ServiceCatalogRequestPage() {
                 loading={loading}
                 disabled={!catalog || !!fetchError}
               >
-                提交申请
+
+                Submitted
               </Button>
               <Button
                 onClick={() => {
@@ -337,11 +344,12 @@ export default function ServiceCatalogRequestPage() {
                     router.push('/service-catalog');
                   } catch (navErr) {
                     console.error('[nav]', navErr);
-                    message.error('导航失败，请稍后重试');
+                    message.error('Navigation failed, please try again later');
                   }
                 }}
               >
-                取消
+
+                Cancel
               </Button>
             </Space>
           </Form.Item>

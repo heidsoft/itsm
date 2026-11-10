@@ -100,7 +100,7 @@ func (s *TagService) DeleteTag(ctx context.Context, id int, tenantID int) error 
 		return err
 	}
 	if !exists {
-		return fmt.Errorf("标签不存在: id=%d", id)
+		return fmt.Errorf("Tag does not exist: id=%d", id)
 	}
 
 	// 删除标签

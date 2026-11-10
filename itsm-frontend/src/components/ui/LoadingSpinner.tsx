@@ -22,7 +22,7 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
   className,
   color = 'primary',
   tip,
-  ariaLabel = '加载中',
+  ariaLabel = 'Loading',
 }) => {
   const getSize = () => {
     switch (size) {
@@ -73,7 +73,7 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
  * 页面加载组件
  * 用于全屏加载状态
  */
-export const PageLoading: React.FC<{ message?: string }> = ({ message = '加载中...' }) => {
+export const PageLoading: React.FC<{ message?: string }> = ({ message = 'Loading...' }) => {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
       <LoadingSpinner size="xl" />
@@ -94,7 +94,7 @@ export const ButtonLoading: React.FC<{ className?: string }> = ({ className }) =
  * 卡片加载组件
  * 用于卡片内容的加载状态
  */
-export const CardLoading: React.FC<{ message?: string }> = ({ message = '加载中...' }) => {
+export const CardLoading: React.FC<{ message?: string }> = ({ message = 'Loading...' }) => {
   return (
     <div className="flex flex-col items-center justify-center py-12">
       <LoadingSpinner size="lg" />

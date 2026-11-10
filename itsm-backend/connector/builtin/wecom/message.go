@@ -61,7 +61,7 @@ func (c *Client) sendApp(ctx context.Context, msg *connector.Message) error {
 			"title":       msg.Title,
 			"description": msg.Content,
 			"url":         ifEmpty(btnURL(btns), "https://example.com"),
-			"btntxt":      ifEmpty(btnTitle(btns), "详情"),
+			"btntxt":      ifEmpty(btnTitle(btns), "Details"),
 		}
 	default:
 		payload["text"] = map[string]interface{}{"content": msg.Content}

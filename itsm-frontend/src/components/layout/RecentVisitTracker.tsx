@@ -6,17 +6,17 @@ import { useRecentVisitStore } from '@/lib/store/recent-visit-store';
 
 // 路径到标题和图标映射
 const pathMeta: Record<string, { title: string; icon?: string }> = {
-  '/dashboard': { title: '首页', icon: 'home' },
-  '/tickets': { title: '工单管理', icon: 'ticket' },
-  '/incidents': { title: '事件管理', icon: 'alert-circle' },
-  '/problems': { title: '问题管理', icon: 'alert-triangle' },
-  '/changes': { title: '变更管理', icon: 'refresh-cw' },
-  '/knowledge': { title: '知识库', icon: 'book' },
-  '/service-catalog': { title: '服务目录', icon: 'grid' },
-  '/profile': { title: '个人中心', icon: 'user' },
-  '/notifications': { title: '通知中心', icon: 'bell' },
-  '/admin': { title: '系统管理', icon: 'settings' },
-  '/cmdb': { title: '配置管理', icon: 'database' },
+  '/dashboard': { title: 'Home page', icon: 'home' },
+  '/tickets': { title: 'Ticket Management', icon: 'ticket' },
+  '/incidents': { title: 'Incidents', icon: 'alert-circle' },
+  '/problems': { title: 'Problems', icon: 'alert-triangle' },
+  '/changes': { title: 'Changes', icon: 'refresh-cw' },
+  '/knowledge': { title: 'Knowledge Base', icon: 'book' },
+  '/service-catalog': { title: 'Service Catalog', icon: 'grid' },
+  '/profile': { title: 'Profile', icon: 'user' },
+  '/notifications': { title: 'Notification Center', icon: 'bell' },
+  '/admin': { title: 'System Admin', icon: 'settings' },
+  '/cmdb': { title: 'Configuration Management', icon: 'database' },
 };
 
 export const RecentVisitTracker: React.FC = () => {
@@ -25,7 +25,7 @@ export const RecentVisitTracker: React.FC = () => {
 
   useEffect(() => {
     if (!pathname) return;
-    
+
     // 忽略登录等非主页面
     if (pathname.startsWith('/login') || pathname.startsWith('/auth')) {
       return;
@@ -36,15 +36,15 @@ export const RecentVisitTracker: React.FC = () => {
     if (!meta) {
       // 匹配子路径，比如/tickets/123 -> 工单详情
       if (pathname.match(/^\/tickets\/\d+$/)) {
-        meta = { title: '工单详情', icon: 'ticket' };
+        meta = { title: 'Ticket Detail', icon: 'ticket' };
       } else if (pathname.match(/^\/incidents\/\d+$/)) {
-        meta = { title: '事件详情', icon: 'alert-circle' };
+        meta = { title: 'Incident Detail', icon: 'alert-circle' };
       } else if (pathname.match(/^\/problems\/\d+$/)) {
-        meta = { title: '问题详情', icon: 'alert-triangle' };
+        meta = { title: 'Problem Detail', icon: 'alert-triangle' };
       } else if (pathname.match(/^\/knowledge\/\d+$/)) {
-        meta = { title: '知识详情', icon: 'book' };
+        meta = { title: 'Knowledge details', icon: 'book' };
       } else if (pathname.match(/^\/cmdb\/\w+$/)) {
-        meta = { title: '配置详情', icon: 'database' };
+        meta = { title: 'Configuration details', icon: 'database' };
       } else {
         // 未知路径，使用路径最后一段作为标题
         const segments = pathname.split('/').filter(Boolean);

@@ -9,27 +9,27 @@
 export type MarketplaceItemType = 'connector' | 'skill' | 'plugin';
 
 export const MARKETPLACE_TYPE_LABELS: Record<MarketplaceItemType, string> = {
-  connector: '连接器',
-  skill: 'AI 技能',
-  plugin: '插件',
+  connector: 'Connectors',
+  skill: 'AI skills',
+  plugin: 'Plug-in',
 };
 
 const CATEGORY_LABELS: Record<string, string> = {
-  im: '即时通讯',
-  'ai-skill': 'AI 技能',
-  integration: '集成',
-  notification: '通知',
+  im: 'Instant messaging',
+  'ai-skill': 'AI skills',
+  integration: 'Integrated',
+  notification: 'Notification',
 };
 
 const TAG_LABELS: Record<string, string> = {
-  plugin: '插件',
-  skill: '技能',
-  sync: '同步',
-  triage: '智能分诊',
+  plugin: 'Plug-in',
+  skill: 'Skill',
+  sync: 'Synchronization',
+  triage: 'Intelligent triage',
 };
 
 export const marketplaceCategoryLabel = (code?: string | null): string => {
-  if (!code) return '未分类';
+  if (!code) return 'Uncategorized';
   return CATEGORY_LABELS[code] ?? code;
 };
 

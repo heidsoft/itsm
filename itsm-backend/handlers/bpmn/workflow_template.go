@@ -39,7 +39,7 @@ func (h *WorkflowTemplateHandler) List(ctx *gin.Context) {
 	pg := common.GetPaginationFromQuery(ctx)
 	result, err := h.catalog.List(ctx.Request.Context(), tenantID, ctx.Query("keyword"), ctx.Query("domain"), ctx.Query("status"), pg.Page, pg.PageSize)
 	if err != nil {
-		common.Fail(ctx, common.ServiceUnavailableCode, "模板目录暂不可用")
+		common.Fail(ctx, common.ServiceUnavailableCode, "The template directory is temporarily unavailable")
 		return
 	}
 	common.Success(ctx, result)
@@ -52,11 +52,11 @@ func (h *WorkflowTemplateHandler) Get(ctx *gin.Context) {
 	}
 	result, err := h.catalog.Get(ctx.Request.Context(), tenantID, ctx.Param("key"), ctx.Query("version"))
 	if errors.Is(err, service.ErrWorkflowTemplateNotFound) {
-		common.Fail(ctx, common.NotFoundCode, "模板不存在")
+		common.Fail(ctx, common.NotFoundCode, "Template does not exist")
 		return
 	}
 	if err != nil {
-		common.Fail(ctx, common.ServiceUnavailableCode, "模板目录暂不可用")
+		common.Fail(ctx, common.ServiceUnavailableCode, "The template directory is temporarily unavailable")
 		return
 	}
 	common.Success(ctx, result)
@@ -69,25 +69,25 @@ func (h *WorkflowTemplateHandler) Create(ctx *gin.Context) {
 	}
 	userID, err := middleware.GetUserID(ctx)
 	if err != nil || userID <= 0 {
-		common.AuthFailed(ctx, "未授权访问：缺少有效操作者")
+		common.AuthFailed(ctx, "Unauthorized access: Missing valid operator")
 		return
 	}
 	var req dto.CreateWorkflowTemplateRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(ctx, err, "请求参数错误")
+		common.ParamErrorWithErr(ctx, err, "Wrong request parameters")
 		return
 	}
 	result, err := h.catalog.CreateDraft(ctx.Request.Context(), tenantID, userID, &req)
 	if errors.Is(err, service.ErrWorkflowTemplateConflict) {
-		common.Fail(ctx, common.ConflictCode, "模板 key 已存在")
+		common.Fail(ctx, common.ConflictCode, "Template key already exists")
 		return
 	}
 	if errors.Is(err, service.ErrWorkflowTemplateInvalid) {
-		common.Fail(ctx, common.ValidationError, "模板参数或 BPMN 内容无效")
+		common.Fail(ctx, common.ValidationError, "Invalid template parameter or BPMN content")
 		return
 	}
 	if err != nil {
-		common.Fail(ctx, common.InternalErrorCode, "创建模板失败")
+		common.Fail(ctx, common.InternalErrorCode, "Failed to create template")
 		return
 	}
 	ctx.JSON(http.StatusCreated, common.Response{Code: common.SuccessCode, Message: "success", Data: result})
@@ -100,24 +100,24 @@ func (h *WorkflowTemplateHandler) Update(ctx *gin.Context) {
 	}
 	var req dto.UpdateWorkflowTemplateRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(ctx, err, "请求参数错误")
+		common.ParamErrorWithErr(ctx, err, "Wrong request parameters")
 		return
 	}
 	result, err := h.catalog.UpdateDraft(ctx.Request.Context(), tenantID, ctx.Param("key"), &req)
 	if errors.Is(err, service.ErrWorkflowTemplateNotFound) {
-		common.Fail(ctx, common.NotFoundCode, "模板不存在")
+		common.Fail(ctx, common.NotFoundCode, "Template does not exist")
 		return
 	}
 	if errors.Is(err, service.ErrWorkflowTemplateConflict) {
-		common.Fail(ctx, common.ConflictCode, "只有草稿版本可以编辑")
+		common.Fail(ctx, common.ConflictCode, "Only draft versions can be edited")
 		return
 	}
 	if errors.Is(err, service.ErrWorkflowTemplateInvalid) {
-		common.Fail(ctx, common.ValidationError, "模板参数无效")
+		common.Fail(ctx, common.ValidationError, "Invalid template parameter")
 		return
 	}
 	if err != nil {
-		common.Fail(ctx, common.InternalErrorCode, "更新模板失败")
+		common.Fail(ctx, common.InternalErrorCode, "Failed to update template")
 		return
 	}
 	common.Success(ctx, result)
@@ -130,19 +130,19 @@ func (h *WorkflowTemplateHandler) Publish(ctx *gin.Context) {
 	}
 	result, err := h.catalog.Publish(ctx.Request.Context(), tenantID, ctx.Param("key"))
 	if errors.Is(err, service.ErrWorkflowTemplateNotFound) {
-		common.Fail(ctx, common.NotFoundCode, "模板不存在")
+		common.Fail(ctx, common.NotFoundCode, "Template does not exist")
 		return
 	}
 	if errors.Is(err, service.ErrWorkflowTemplateConflict) {
-		common.Fail(ctx, common.ConflictCode, "只有草稿版本可以发布")
+		common.Fail(ctx, common.ConflictCode, "Only draft versions can be published")
 		return
 	}
 	if errors.Is(err, service.ErrWorkflowTemplateInvalid) {
-		common.Fail(ctx, common.ValidationError, "模板未通过 BPMN 校验")
+		common.Fail(ctx, common.ValidationError, "Template fails BPMN verification")
 		return
 	}
 	if err != nil {
-		common.Fail(ctx, common.InternalErrorCode, "发布模板失败")
+		common.Fail(ctx, common.InternalErrorCode, "Failed to publish template")
 		return
 	}
 	common.Success(ctx, result)
@@ -155,11 +155,11 @@ func (h *WorkflowTemplateHandler) Archive(ctx *gin.Context) {
 	}
 	err := h.catalog.Archive(ctx.Request.Context(), tenantID, ctx.Param("key"))
 	if errors.Is(err, service.ErrWorkflowTemplateNotFound) {
-		common.Fail(ctx, common.NotFoundCode, "已发布模板不存在")
+		common.Fail(ctx, common.NotFoundCode, "Published template does not exist")
 		return
 	}
 	if err != nil {
-		common.Fail(ctx, common.InternalErrorCode, "停用模板失败")
+		common.Fail(ctx, common.InternalErrorCode, "Failed to deactivate template")
 		return
 	}
 	common.Success(ctx, gin.H{"key": ctx.Param("key"), "status": "archived"})
@@ -176,15 +176,15 @@ func (h *WorkflowTemplateHandler) Reload(ctx *gin.Context) {
 	key := ctx.Param("key")
 	result, err := h.catalog.Reload(ctx.Request.Context(), tenantID, key)
 	if errors.Is(err, service.ErrWorkflowTemplateNotFound) {
-		common.Fail(ctx, common.NotFoundCode, "已发布模板不存在，无法重载")
+		common.Fail(ctx, common.NotFoundCode, "The published template does not exist and cannot be reloaded")
 		return
 	}
 	if errors.Is(err, service.ErrWorkflowTemplateInvalid) {
-		common.BadRequestWithErr(ctx, err, "请求参数错误")
+		common.BadRequestWithErr(ctx, err, "Wrong request parameters")
 		return
 	}
 	if err != nil {
-		common.Fail(ctx, common.InternalErrorCode, "重载模板失败")
+		common.Fail(ctx, common.InternalErrorCode, "Failed to reload template")
 		return
 	}
 	common.Success(ctx, result)
@@ -197,7 +197,7 @@ func (h *WorkflowTemplateHandler) Versions(ctx *gin.Context) {
 	}
 	result, err := h.catalog.Versions(ctx.Request.Context(), tenantID, ctx.Param("key"))
 	if err != nil {
-		common.Fail(ctx, common.ServiceUnavailableCode, "模板版本暂不可用")
+		common.Fail(ctx, common.ServiceUnavailableCode, "Template version is not available yet")
 		return
 	}
 	common.Success(ctx, result)
@@ -206,7 +206,7 @@ func (h *WorkflowTemplateHandler) Versions(ctx *gin.Context) {
 func templateTenant(ctx *gin.Context) (int, bool) {
 	tenantID, err := middleware.GetTenantID(ctx)
 	if err != nil || tenantID <= 0 {
-		common.AuthFailed(ctx, "未授权访问：缺少有效租户上下文")
+		common.AuthFailed(ctx, "Unauthorized access: Missing valid tenant context")
 		return 0, false
 	}
 	return tenantID, true

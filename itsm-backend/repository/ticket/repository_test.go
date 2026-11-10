@@ -359,7 +359,7 @@ func TestRepository_Update_RejectsStaleVersion(t *testing.T) {
 	// 不能退化为裸字符串——否则 handler 兜底会把并发冲突掩盖成 500。
 	var conflictErr *common.VersionConflictError
 	require.ErrorAs(t, err, &conflictErr)
-	assert.Equal(t, "工单", conflictErr.ResourceName)
+	assert.Equal(t, "Ticket", conflictErr.ResourceName)
 	assert.Equal(t, created.ID, conflictErr.ResourceID)
 	assert.Equal(t, created.Version+1, conflictErr.CurrentVersion)
 	assert.Equal(t, created.Version, conflictErr.ServerVersion)

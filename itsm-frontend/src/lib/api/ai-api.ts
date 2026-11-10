@@ -171,7 +171,9 @@ export async function aiSimilarIncidents(
 
 export async function aiSummarize(text: string, maxLen = 200): Promise<{ summary: string }> {
   const res = await httpClient.post<{ answers: unknown[] }>(`/api/v1/ai/chat`, {
-    query: `请在${maxLen}字以内总结以下内容：\n\n${text}`,
+    query: `Please ${maxLen} Summarize the following content within one word:
+
+${text}`,
     limit: 1,
   });
   const answers = Array.isArray(res?.answers) ? res.answers : [];
@@ -500,7 +502,7 @@ export async function aiSuggestSolutions(
 
   const list = Array.isArray(res?.items) ? res.items : [];
   return list.map((item, idx) => {
-    const title = String(item?.title || item?.source || `知识项 ${idx + 1}`);
+    const title = String(item?.title || item?.source || `Knowledge item ${idx + 1}`);
     const snippet = String(item?.snippet || item?.content || item?.text || '');
     const score = typeof item?.score === 'number' ? item.score : undefined;
     return {
@@ -510,7 +512,7 @@ export async function aiSuggestSolutions(
       steps: [],
       relatedKnowledge: item?.source ? [String(item.source)] : [],
       confidence: typeof score === 'number' ? score : 0,
-      reasoning: '来自知识库检索结果',
+      reasoning: 'Search results from knowledge base',
     };
   });
 }

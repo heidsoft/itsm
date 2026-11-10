@@ -27,10 +27,10 @@ func (d *DingTalk) Manifest() connector.Manifest {
 	return connector.Manifest{
 		Name:        "dingtalk",
 		Version:     "1.0.0",
-		Title:       "钉钉 DingTalk",
+		Title:       "DingTalk",
 		Provider:    "dingtalk",
 		Type:        connector.TypeIM,
-		Description: "钉钉开放平台连接器：工作通知 + 群机器人（加签模式）+ Stream 回调验签。支持 text/markdown/actionCard。",
+		Description: "DingTalk Open Platform connector: work notifications, signed group bots and Stream callback signature verification. Supports text, markdown and actionCard.",
 		Capabilities: []connector.Capability{
 			connector.CapSendMessage,
 			connector.CapSendCard,

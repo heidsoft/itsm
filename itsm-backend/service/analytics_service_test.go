@@ -334,8 +334,8 @@ func TestAnalyticsService_GetDimensionValue(t *testing.T) {
 	}{
 		{"status", "open"},
 		{"priority", "high"},
-		{"assignee", fmt.Sprintf("用户%d", testAssignee.ID)},
-		{"unknown", "未知"},
+		{"assignee", fmt.Sprintf("User %d", testAssignee.ID)},
+		{"unknown", "Unknown"},
 	}
 
 	for _, tt := range tests {

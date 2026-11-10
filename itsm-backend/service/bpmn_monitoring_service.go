@@ -367,7 +367,7 @@ func (s *BPMNMonitoringService) GetProcessInstanceStatus(ctx context.Context, pr
 		Where(processinstance.TenantID(tenantID)).
 		First(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("获取流程实例失败: %w", err)
+		return nil, fmt.Errorf("Failed to obtain process instance: %w", err)
 	}
 
 	status := &ProcessInstanceStatus{
@@ -469,7 +469,7 @@ func (s *BPMNMonitoringService) GetProcessInstanceHistory(ctx context.Context, p
 	}
 	rows, err := query.Order(ent.Asc(processexecutionhistory.FieldTimestamp)).All(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("获取流程执行历史失败: %w", err)
+		return nil, fmt.Errorf("Failed to obtain process execution history: %w", err)
 	}
 	return rows, nil
 }
@@ -587,7 +587,7 @@ func (s *BPMNMonitoringService) GetPerformanceAlerts(ctx context.Context, tenant
 		alerts = append(alerts, map[string]interface{}{
 			"type":      "long_running_task",
 			"severity":  "warning",
-			"message":   fmt.Sprintf("发现 %d 个长时间运行的任务", len(longRunningTasks)),
+			"message":   fmt.Sprintf("%d long running tasks found", len(longRunningTasks)),
 			"count":     len(longRunningTasks),
 			"timestamp": time.Now(),
 		})
@@ -603,7 +603,7 @@ func (s *BPMNMonitoringService) GetPerformanceAlerts(ctx context.Context, tenant
 		alerts = append(alerts, map[string]interface{}{
 			"type":      "failed_instances",
 			"severity":  "error",
-			"message":   fmt.Sprintf("过去1小时内有 %d 个流程实例失败", failedInstances),
+			"message":   fmt.Sprintf("%d process instances failed in the past hour", failedInstances),
 			"count":     failedInstances,
 			"timestamp": time.Now(),
 		})
@@ -1076,7 +1076,7 @@ func (s *BPMNMonitoringService) GetProcessMetrics(ctx context.Context, req *Proc
 	// 2. 统计总数
 	total, err := query.Clone().Count(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("查询流程实例总数失败: %w", err)
+		return nil, fmt.Errorf("Failed to query the total number of process instances: %w", err)
 	}
 	metrics.TotalInstances = total
 
@@ -1163,7 +1163,7 @@ func (s *BPMNMonitoringService) ListProcessInstancesStatus(ctx context.Context, 
 
 	total, err := dbQuery.Clone().Count(ctx)
 	if err != nil {
-		return nil, 0, fmt.Errorf("查询流程实例总数失败: %w", err)
+		return nil, 0, fmt.Errorf("Failed to query the total number of process instances: %w", err)
 	}
 
 	// 分页：页长由 HTTP 入口的 common.GetPaginationFromQuery 决定，这里只兜非 HTTP
@@ -1174,7 +1174,7 @@ func (s *BPMNMonitoringService) ListProcessInstancesStatus(ctx context.Context, 
 
 	instances, err := dbQuery.All(ctx)
 	if err != nil {
-		return nil, 0, fmt.Errorf("查询流程实例失败: %w", err)
+		return nil, 0, fmt.Errorf("Failed to query process instance: %w", err)
 	}
 
 	statuses := make([]*ProcessInstanceStatus, 0, len(instances))

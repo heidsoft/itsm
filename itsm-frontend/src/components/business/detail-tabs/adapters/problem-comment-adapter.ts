@@ -45,7 +45,7 @@ export const problemCommentAdapter: CommentAdapter = {
     };
   },
   async remove() {
-    throw new Error('问题评论暂不支持删除');
+    throw new Error('Question comments cannot be deleted yet.');
   },
   // update 有意省略 —— 后端不支持
 };

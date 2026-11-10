@@ -188,7 +188,7 @@ describe('AuthService', () => {
         const result = await AuthService.login('testuser', 'password123');
 
         expect(result.ok).toBe(false);
-        expect(result).toMatchObject({ message: expect.stringContaining('暂时无法确认会话') });
+        expect(result).toMatchObject({ message: expect.stringContaining("session cannot be confirmed at this time") });
         expect(mockLogin).not.toHaveBeenCalled();
       });
 
@@ -200,7 +200,7 @@ describe('AuthService', () => {
 
         expect(result).toEqual({
           ok: false,
-          message: expect.stringContaining('会话未能建立'),
+          message: expect.stringContaining("session could not be established"),
         });
         expect(mockLogin).not.toHaveBeenCalled();
       });
@@ -261,14 +261,14 @@ describe('AuthService', () => {
       mockFetch.mockResolvedValueOnce({ ok: true, status: 200, json: () => Promise.resolve({ code: 0 }) });
       mockFetch.mockResolvedValueOnce(SESSION_UNAUTHENTICATED);
 
-      await expect(AuthService.thirdPartyLogin('google', 'code123')).rejects.toThrow('会话不可用');
+      await expect(AuthService.thirdPartyLogin('google', 'code123')).rejects.toThrow("session unavailable");
       expect(mockLogin).not.toHaveBeenCalled();
     });
 
     it('should throw error on failed third party login', async () => {
       mockFetch.mockResolvedValueOnce({ ok: false, status: 400, json: () => Promise.resolve({ code: 1001 }) });
 
-      await expect(AuthService.thirdPartyLogin('google', 'invalid')).rejects.toThrow('登录失败');
+      await expect(AuthService.thirdPartyLogin('google', 'invalid')).rejects.toThrow("Login Failed");
     });
   });
 
@@ -535,7 +535,7 @@ describe('AuthService', () => {
       await flush();
 
       expect(mockLogout).toHaveBeenCalledTimes(1);
-      expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('吊销'), 'store down');
+      expect(console.warn).toHaveBeenCalledWith(expect.stringContaining("revocation"), 'store down');
     });
 
     it('should handle logout network error gracefully', async () => {

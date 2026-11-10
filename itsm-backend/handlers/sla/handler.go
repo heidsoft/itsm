@@ -50,7 +50,7 @@ func toSLADefinitionDTO(s *SLADefinition) *dto.SLADefinitionResponse {
 func (h *Handler) CreateSLADefinition(c *gin.Context) {
 	var req dto.CreateSLADefinitionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "参数错误")
+		common.ParamErrorWithErr(c, err, "Parameter error")
 		return
 	}
 
@@ -74,7 +74,7 @@ func (h *Handler) CreateSLADefinition(c *gin.Context) {
 
 	res, err := h.svc.CreateDefinition(c.Request.Context(), def)
 	if err != nil {
-		common.RespondError(c, err, "创建SLA定义失败")
+		common.RespondError(c, err, "Failed to create SLA definition")
 		return
 	}
 
@@ -109,7 +109,7 @@ func (h *Handler) ListSLADefinitions(c *gin.Context) {
 
 	list, total, err := h.svc.ListDefinitions(c.Request.Context(), tenantIDVal, pg.Page, pg.PageSize)
 	if err != nil {
-		common.RespondError(c, err, "查询SLA定义列表失败")
+		common.RespondError(c, err, "Failed to query SLA definition list")
 		return
 	}
 
@@ -132,7 +132,7 @@ func (h *Handler) UpdateSLADefinition(c *gin.Context) {
 
 	var req dto.UpdateSLADefinitionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "参数错误")
+		common.ParamErrorWithErr(c, err, "Parameter error")
 		return
 	}
 
@@ -175,7 +175,7 @@ func (h *Handler) UpdateSLADefinition(c *gin.Context) {
 
 	res, err := h.svc.UpdateDefinition(c.Request.Context(), existing)
 	if err != nil {
-		common.RespondError(c, err, "更新SLA定义失败")
+		common.RespondError(c, err, "Failed to update SLA definition")
 		return
 	}
 
@@ -192,7 +192,7 @@ func (h *Handler) DeleteSLADefinition(c *gin.Context) {
 	}
 
 	if err := h.svc.DeleteDefinition(c.Request.Context(), id, tenantIDVal); err != nil {
-		common.RespondError(c, err, "删除SLA定义失败")
+		common.RespondError(c, err, "Failed to delete SLA definition")
 		return
 	}
 
@@ -203,7 +203,7 @@ func (h *Handler) DeleteSLADefinition(c *gin.Context) {
 func (h *Handler) CreateAlertRule(c *gin.Context) {
 	var req dto.CreateSLAAlertRuleRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "参数错误")
+		common.ParamErrorWithErr(c, err, "Parameter error")
 		return
 	}
 	tenantIDVal, ok := handlerctx.ResolveTenantID(c)
@@ -221,7 +221,7 @@ func (h *Handler) CreateAlertRule(c *gin.Context) {
 	}
 	res, err := h.svc.CreateAlertRule(c.Request.Context(), rule)
 	if err != nil {
-		common.RespondError(c, err, "创建SLA告警规则失败")
+		common.RespondError(c, err, "Failed to create SLA alarm rule")
 		return
 	}
 	common.Success(c, res)
@@ -241,7 +241,7 @@ func (h *Handler) ListAlertRules(c *gin.Context) {
 	}
 	res, err := h.svc.ListAlertRules(c.Request.Context(), tenantIDVal, filters)
 	if err != nil {
-		common.RespondError(c, err, "查询SLA告警规则列表失败")
+		common.RespondError(c, err, "Failed to query SLA alarm rule list")
 		return
 	}
 	common.Success(c, res)
@@ -275,7 +275,7 @@ func (h *Handler) UpdateAlertRule(c *gin.Context) {
 
 	var req dto.UpdateSLAAlertRuleRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "参数错误")
+		common.ParamErrorWithErr(c, err, "Parameter error")
 		return
 	}
 
@@ -303,7 +303,7 @@ func (h *Handler) UpdateAlertRule(c *gin.Context) {
 
 	res, err := h.svc.UpdateAlertRule(c.Request.Context(), existing)
 	if err != nil {
-		common.RespondError(c, err, "更新SLA告警规则失败")
+		common.RespondError(c, err, "Failed to update SLA alarm rules")
 		return
 	}
 	common.Success(c, res)
@@ -319,7 +319,7 @@ func (h *Handler) DeleteAlertRule(c *gin.Context) {
 	}
 
 	if err := h.svc.DeleteAlertRule(c.Request.Context(), id, tenantIDVal); err != nil {
-		common.RespondError(c, err, "删除SLA告警规则失败")
+		common.RespondError(c, err, "Failed to delete SLA alarm rule")
 		return
 	}
 	common.Success(c, nil)
@@ -334,7 +334,7 @@ func (h *Handler) GetSLAMetrics(c *gin.Context) {
 		return
 	}
 	common.Fail(c, common.NotImplementedCode,
-		"SLA 指标采集尚未实现：当前版本不写入 SLA 指标样本，请改用 GET /api/v1/sla/performance 或 POST /api/v1/sla/monitoring")
+		"SLA indicator collection has not been implemented yet: the current version does not write SLA indicator samples, please use GET /api/v1/sla/performance or POST /api/v1/sla/monitoring instead")
 }
 
 // GetSLAViolations handles GET /api/v1/sla/violations
@@ -365,7 +365,7 @@ func (h *Handler) GetSLAViolations(c *gin.Context) {
 
 	res, total, err := h.svc.GetSLAViolations(c.Request.Context(), tenantIDVal, pg.Page, pg.PageSize, filters)
 	if err != nil {
-		common.RespondError(c, err, "查询SLA违规记录失败")
+		common.RespondError(c, err, "Failed to query SLA violation records")
 		return
 	}
 	if res == nil {
@@ -388,13 +388,13 @@ func (h *Handler) UpdateViolationStatus(c *gin.Context) {
 		Notes      string `json:"notes"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "参数错误")
+		common.ParamErrorWithErr(c, err, "Parameter error")
 		return
 	}
 
 	res, err := h.svc.UpdateSLAViolationStatus(c.Request.Context(), id, req.IsResolved, req.Notes, tenantIDVal)
 	if err != nil {
-		common.RespondError(c, err, "更新SLA违规状态失败")
+		common.RespondError(c, err, "Failed to update SLA violation status")
 		return
 	}
 	common.Success(c, res)
@@ -408,7 +408,7 @@ func (h *Handler) UpdateViolationStatus(c *gin.Context) {
 func (h *Handler) GetSLAMonitoring(c *gin.Context) {
 	var req dto.SLAMonitoringRequest
 	if err := bindOptionalJSON(c, &req); err != nil {
-		common.ParamErrorWithErr(c, err, "参数错误")
+		common.ParamErrorWithErr(c, err, "Parameter error")
 		return
 	}
 	tenantIDVal, ok := handlerctx.ResolveTenantID(c)
@@ -418,12 +418,12 @@ func (h *Handler) GetSLAMonitoring(c *gin.Context) {
 
 	start, err := parseSLATimeParam(req.StartTime)
 	if err != nil {
-		common.ParamError(c, "startTime 格式非法，请使用 RFC3339，例如 2026-01-01T00:00:00Z")
+		common.ParamError(c, "startTime format is illegal, please use RFC3339, for example, 2026-01-01T00:00:00Z")
 		return
 	}
 	end, err := parseSLATimeParam(req.EndTime)
 	if err != nil {
-		common.ParamError(c, "endTime 格式非法，请使用 RFC3339，例如 2026-01-31T23:59:59Z")
+		common.ParamError(c, "endTime format is illegal, please use RFC3339, for example, 2026-01-31T23:59:59Z")
 		return
 	}
 
@@ -454,12 +454,12 @@ func (h *Handler) GetSLAPerformance(c *gin.Context) {
 
 	start, err := parseSLADateFilter(c.Query("startDate"), false)
 	if err != nil {
-		common.ParamError(c, "startDate 格式非法，请使用 YYYY-MM-DD 或 RFC3339")
+		common.ParamError(c, "startDate format is illegal, please use YYYY-MM-DD or RFC3339")
 		return
 	}
 	end, err := parseSLADateFilter(c.Query("endDate"), true)
 	if err != nil {
-		common.ParamError(c, "endDate 格式非法，请使用 YYYY-MM-DD 或 RFC3339")
+		common.ParamError(c, "endDate format is illegal, please use YYYY-MM-DD or RFC3339")
 		return
 	}
 	pg := common.GetPaginationFromQuery(c)
@@ -545,11 +545,11 @@ func parseSLADateFilter(value string, endOfDay bool) (time.Time, error) {
 func failSLAQuery(c *gin.Context, err error, publicMsg string) {
 	switch {
 	case errors.Is(err, ErrTenantRequired):
-		common.AuthFailed(c, "缺少租户上下文，拒绝访问")
+		common.AuthFailed(c, "Missing tenant context, access denied")
 	case errors.Is(err, ErrInvalidWindow):
-		common.ParamError(c, "endTime 必须晚于 startTime")
+		common.ParamError(c, "endTime must be later than startTime")
 	case errors.Is(err, ErrInvalidDimension):
-		common.ParamError(c, "dimension 只支持 serviceType 或 priority")
+		common.ParamError(c, "dimension only supports serviceType or priority")
 	default:
 		common.FailWithErr(c, err, publicMsg)
 	}
@@ -568,7 +568,7 @@ func (h *Handler) CheckSLACompliance(c *gin.Context) {
 
 	res, err := h.svc.CheckSLACompliance(c.Request.Context(), ticketID, tenantIDVal)
 	if err != nil {
-		common.RespondError(c, err, "检查SLA合规性失败")
+		common.RespondError(c, err, "Checking SLA compliance failed")
 		return
 	}
 	common.Success(c, res)
@@ -601,7 +601,7 @@ func (h *Handler) GetAlertHistory(c *gin.Context) {
 
 	res, total, err := h.svc.GetAlertHistory(c.Request.Context(), tenantIDVal, pg.Page, pg.PageSize, filters)
 	if err != nil {
-		common.RespondError(c, err, "查询告警历史失败")
+		common.RespondError(c, err, "Failed to query alarm history")
 		return
 	}
 	if res == nil {
@@ -619,7 +619,7 @@ func (h *Handler) GetSLAStats(c *gin.Context) {
 
 	stats, err := h.svc.GetSLAStats(c.Request.Context(), tenantID)
 	if err != nil {
-		common.RespondError(c, err, "获取SLA统计失败")
+		common.RespondError(c, err, "Failed to obtain SLA statistics")
 		return
 	}
 
@@ -657,7 +657,7 @@ func (h *Handler) GetSLAComplianceReport(c *gin.Context) {
 
 	report, err := h.svc.GetComplianceReport(c.Request.Context(), tenantID, startDate, endDate)
 	if err != nil {
-		common.RespondError(c, err, "生成SLA合规报告失败")
+		common.RespondError(c, err, "Failed to generate SLA compliance report")
 		return
 	}
 

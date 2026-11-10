@@ -123,14 +123,14 @@ func (s *bpmnTaskService) completeTaskEngine() *CustomProcessEngine {
 // 后台任务必须携带 tenantctx 系统上下文，不能因为缺少 user_id 而静默放行。
 func (s *bpmnTaskService) AuthorizeTaskAccess(ctx context.Context, task *ent.ProcessTask, requireActor bool) error {
 	if task == nil {
-		return common.NewBusinessError(common.NotFoundCode, "任务不存在", "")
+		return common.NewBusinessError(common.NotFoundCode, "Task does not exist", "")
 	}
 	if tenantctx.IsSystemBypass(ctx) {
 		return nil
 	}
 	userID, _ := ctx.Value(bpmn.BPMNUserIDContextKey).(int)
 	if userID <= 0 {
-		return common.NewBusinessError(common.UnauthorizedCode, "缺少执行人身份，无法校验任务归属", "")
+		return common.NewBusinessError(common.UnauthorizedCode, "The identity of the executor is missing and the task ownership cannot be verified.", "")
 	}
 	if role, ok := middleware.RBACRoleFromContext(ctx); ok &&
 		middleware.AuthorizeResourceForRole(ctx, s.client, role, "task", "admin", task.TenantID) {
@@ -138,7 +138,7 @@ func (s *bpmnTaskService) AuthorizeTaskAccess(ctx context.Context, task *ent.Pro
 	}
 	actor, actorErr := s.client.User.Query().Where(user.ID(userID), user.TenantID(task.TenantID)).Only(ctx)
 	if actorErr != nil {
-		return common.NewBusinessError(common.ForbiddenCode, "当前用户不属于任务所在租户", "")
+		return common.NewBusinessError(common.ForbiddenCode, "The current user does not belong to the tenant where the task is located", "")
 	}
 	if identityMatchesTaskUser(task.TaskVariables["assigned_by"], actor) {
 		return nil
@@ -153,7 +153,7 @@ func (s *bpmnTaskService) AuthorizeTaskAccess(ctx context.Context, task *ent.Pro
 			return nil
 		}
 	}
-	return common.NewBusinessError(common.ForbiddenCode, "当前用户不是该任务的处理人或候选人", "")
+	return common.NewBusinessError(common.ForbiddenCode, "The current user is not a handler or candidate for this task", "")
 }
 
 func identityMatchesTaskUser(value interface{}, actor *ent.User) bool {
@@ -185,7 +185,7 @@ func (s *bpmnTaskService) GetTask(ctx context.Context, taskID string) (*ent.Proc
 		Where(processtask.TaskID(taskID), processtask.TenantID(tenantID)).
 		First(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("获取任务失败: %w", err)
+		return nil, fmt.Errorf("Failed to get task: %w", err)
 	}
 	return task, nil
 }
@@ -201,7 +201,7 @@ func (s *bpmnTaskService) GetTaskByID(ctx context.Context, id int) (*ent.Process
 		Where(processtask.ID(id), processtask.TenantID(tenantID)).
 		First(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("获取任务失败: %w", err)
+		return nil, fmt.Errorf("Failed to get task: %w", err)
 	}
 	return task, nil
 }
@@ -219,20 +219,20 @@ func (s *bpmnTaskService) CompleteTaskByID(ctx context.Context, id int, variable
 		Where(processtask.ID(id), processtask.TenantID(tenantID)).
 		Only(ctx)
 	if err != nil {
-		return fmt.Errorf("获取任务失败: %w", err)
+		return fmt.Errorf("Failed to get task: %w", err)
 	}
 	return engine.CompleteTask(ctx, task.TaskID, variables)
 }
 
 func (s *bpmnTaskService) ListUserTasks(ctx context.Context, req *ListUserTasksRequest) ([]*ent.ProcessTask, int, error) {
 	if req == nil {
-		return nil, 0, fmt.Errorf("任务列表请求不能为空")
+		return nil, 0, fmt.Errorf("Task list request cannot be empty")
 	}
 	if req.TenantID <= 0 {
-		return nil, 0, fmt.Errorf("缺少有效租户上下文")
+		return nil, 0, fmt.Errorf("Missing valid tenant context")
 	}
 	if !req.AllTasks && req.UserID <= 0 {
-		return nil, 0, fmt.Errorf("我的任务查询缺少有效用户上下文")
+		return nil, 0, fmt.Errorf("My task query is missing a valid user context")
 	}
 	s.logger.Debugw("ListUserTasks called", "assignee", req.Assignee, "userID", req.UserID, "tenantID", req.TenantID)
 	query := s.client.ProcessTask.Query().Where(processtask.TenantID(req.TenantID))
@@ -298,7 +298,7 @@ func (s *bpmnTaskService) ListUserTasks(ctx context.Context, req *ListUserTasksR
 	}
 	total, err := query.Count(ctx)
 	if err != nil {
-		return nil, 0, fmt.Errorf("获取任务总数失败: %w", err)
+		return nil, 0, fmt.Errorf("Failed to get total number of tasks: %w", err)
 	}
 
 	if req.Page > 0 && req.PageSize > 0 {
@@ -308,7 +308,7 @@ func (s *bpmnTaskService) ListUserTasks(ctx context.Context, req *ListUserTasksR
 
 	tasks, err := query.Order(ent.Desc(processtask.FieldCreatedTime)).All(ctx)
 	if err != nil {
-		return nil, 0, fmt.Errorf("获取任务列表失败: %w", err)
+		return nil, 0, fmt.Errorf("Failed to get task list: %w", err)
 	}
 
 	return tasks, total, nil
@@ -337,7 +337,7 @@ func (s *bpmnTaskService) ListUserTaskViews(ctx context.Context, req *ListUserTa
 			Where(processinstance.IDIn(instanceIDs...)).
 			All(ctx)
 		if err != nil {
-			return nil, 0, fmt.Errorf("加载任务所属流程实例失败: %w", err)
+			return nil, 0, fmt.Errorf("Failed to load the process instance to which the task belongs: %w", err)
 		}
 		for _, instance := range instances {
 			instanceMap[instance.ID] = instance
@@ -362,7 +362,7 @@ func (s *bpmnTaskService) ListUserTaskViews(ctx context.Context, req *ListUserTa
 			Select(user.FieldID, user.FieldName, user.FieldUsername).
 			All(ctx)
 		if err != nil {
-			return nil, 0, fmt.Errorf("加载任务负责人失败: %w", err)
+			return nil, 0, fmt.Errorf("Failed to load task owner: %w", err)
 		}
 		nameByID := make(map[int]string, len(users))
 		for _, u := range users {
@@ -399,7 +399,7 @@ func (s *bpmnTaskService) ListUserTaskViews(ctx context.Context, req *ListUserTa
 				Select(processdefinition.FieldID, processdefinition.FieldKey, processdefinition.FieldName, processdefinition.FieldIsLatest).
 				All(ctx)
 			if err != nil {
-				return nil, 0, fmt.Errorf("加载流程定义名称失败: %w", err)
+				return nil, 0, fmt.Errorf("Failed to load process definition name: %w", err)
 			}
 			nameByKey := make(map[string]string, len(defs))
 			latestSeen := make(map[string]bool, len(defs))
@@ -425,7 +425,7 @@ func (s *bpmnTaskService) ListUserTaskViews(ctx context.Context, req *ListUserTa
 func (s *bpmnTaskService) ListApprovalDecisions(ctx context.Context, processInstanceKey string) ([]*ent.ProcessApprovalDecision, error) {
 	tenantID, _ := ctx.Value(bpmn.BPMNTenantIDContextKey).(int)
 	if tenantID <= 0 {
-		return nil, fmt.Errorf("缺少租户上下文")
+		return nil, fmt.Errorf("Missing tenant context")
 	}
 	return s.client.ProcessApprovalDecision.Query().
 		Where(
@@ -443,7 +443,7 @@ func (s *bpmnTaskService) AssignTask(ctx context.Context, taskID string, assigne
 	}
 	actorID, _ := ctx.Value(bpmn.BPMNUserIDContextKey).(int)
 	if actorID <= 0 {
-		return fmt.Errorf("缺少有效的操作人上下文")
+		return fmt.Errorf("Missing valid operator context")
 	}
 
 	task, err := s.GetTask(ctx, taskID)
@@ -458,17 +458,17 @@ func (s *bpmnTaskService) AssignTask(ctx context.Context, taskID string, assigne
 
 	// 租户隔离：任务必须属于当前租户
 	if task.TenantID != tenantID {
-		return fmt.Errorf("任务不属于当前租户")
+		return fmt.Errorf("Task does not belong to current tenant")
 	}
 
 	// 操作人校验：操作人必须存在于当前租户
 	if _, err := s.client.User.Query().Where(user.IDEQ(actorID), user.TenantIDEQ(tenantID)).Only(ctx); err != nil {
-		return fmt.Errorf("操作人不存在或不属于当前租户")
+		return fmt.Errorf("The operator does not exist or does not belong to the current tenant")
 	}
 
 	// 目标用户校验：被分配人必须存在于同一租户且活跃
 	if err := s.validateTargetUser(ctx, tenantID, assignee); err != nil {
-		return fmt.Errorf("分配目标用户校验失败: %w", err)
+		return fmt.Errorf("Assignment target user verification failed: %w", err)
 	}
 
 	taskVars := make(map[string]interface{}, len(task.TaskVariables)+1)
@@ -491,17 +491,17 @@ func (s *bpmnTaskService) AssignTask(ctx context.Context, taskID string, assigne
 func (s *bpmnTaskService) ReassignTask(ctx context.Context, taskID string, newAssigneeID int, reason string) error {
 	reason = strings.TrimSpace(reason)
 	if reason == "" {
-		return fmt.Errorf("重新分配原因不能为空")
+		return fmt.Errorf("Reassignment reason cannot be null")
 	}
 	tenantID, _ := ctx.Value(bpmn.BPMNTenantIDContextKey).(int)
 	actorID, _ := ctx.Value(bpmn.BPMNUserIDContextKey).(int)
 	if tenantID <= 0 || actorID <= 0 {
-		return fmt.Errorf("缺少有效的租户或操作人上下文")
+		return fmt.Errorf("Missing valid tenant or operator context")
 	}
 
 	tx, err := s.client.Tx(ctx)
 	if err != nil {
-		return fmt.Errorf("开启重新分配事务失败: %w", err)
+		return fmt.Errorf("Failed to start reallocation transaction: %w", err)
 	}
 	defer tx.Rollback()
 
@@ -510,7 +510,7 @@ func (s *bpmnTaskService) ReassignTask(ctx context.Context, taskID string, newAs
 		processtask.TenantID(tenantID),
 	).Only(ctx)
 	if err != nil {
-		return fmt.Errorf("任务不存在或不属于当前租户: %w", err)
+		return fmt.Errorf("Task does not exist or does not belong to the current tenant: %w", err)
 	}
 	if strings.TrimSpace(task.Assignee) != "" && task.Assignee != "0" {
 		if err := s.AuthorizeTaskAccess(ctx, task, true); err != nil {
@@ -518,7 +518,7 @@ func (s *bpmnTaskService) ReassignTask(ctx context.Context, taskID string, newAs
 		}
 	}
 	if task.Status != common.ProcessTaskStatusCreated && task.Status != common.ProcessTaskStatusAssigned && task.Status != common.ProcessTaskStatusStarted && task.Status != "running" {
-		return fmt.Errorf("任务状态 %s 不允许重新分配", task.Status)
+		return fmt.Errorf("Task status %s does not allow reassignment", task.Status)
 	}
 	assignee, err := tx.User.Query().Where(
 		user.IDEQ(newAssigneeID),
@@ -526,15 +526,15 @@ func (s *bpmnTaskService) ReassignTask(ctx context.Context, taskID string, newAs
 		user.ActiveEQ(true),
 	).Only(ctx)
 	if err != nil {
-		return fmt.Errorf("目标处理人不存在、已停用或不属于当前租户")
+		return fmt.Errorf("The target handler does not exist, is deactivated, or does not belong to the current tenant")
 	}
 	actor, err := tx.User.Query().Where(user.IDEQ(actorID), user.TenantIDEQ(tenantID), user.ActiveEQ(true)).Only(ctx)
 	if err != nil {
-		return fmt.Errorf("操作人不存在、已停用或不属于当前租户")
+		return fmt.Errorf("The operator does not exist, is deactivated, or does not belong to the current tenant")
 	}
 	instance, err := tx.ProcessInstance.Get(ctx, task.ProcessInstanceID)
 	if err != nil || instance.TenantID != tenantID {
-		return fmt.Errorf("任务所属流程实例不存在或租户不一致")
+		return fmt.Errorf("The process instance to which the task belongs does not exist or the tenant is inconsistent")
 	}
 	previousAssignee := task.Assignee
 	taskVars := make(map[string]interface{}, len(task.TaskVariables)+1)
@@ -548,7 +548,7 @@ func (s *bpmnTaskService) ReassignTask(ctx context.Context, taskID string, newAs
 		SetAssignedTime(time.Now()).
 		SetTaskVariables(taskVars).
 		Save(ctx); err != nil {
-		return fmt.Errorf("重新分配任务失败: %w", err)
+		return fmt.Errorf("Failed to reassign task: %w", err)
 	}
 	if _, err = tx.ProcessAuditLog.Create().
 		SetProcessInstanceID(instance.ID).
@@ -570,10 +570,10 @@ func (s *bpmnTaskService) ReassignTask(ctx context.Context, taskID string, newAs
 		SetTimestamp(time.Now()).
 		SetMetadata(map[string]interface{}{"recoveryAction": "reassign", "taskId": task.TaskID}).
 		Save(ctx); err != nil {
-		return fmt.Errorf("记录重新分配审计失败: %w", err)
+		return fmt.Errorf("Record reallocation audit failed: %w", err)
 	}
 	if err = tx.Commit(); err != nil {
-		return fmt.Errorf("提交重新分配事务失败: %w", err)
+		return fmt.Errorf("Failed to commit reallocation transaction: %w", err)
 	}
 	return nil
 }
@@ -583,42 +583,42 @@ func (s *bpmnTaskService) ReassignTask(ctx context.Context, taskID string, newAs
 func (s *bpmnTaskService) TerminateTask(ctx context.Context, taskID string, reason string) error {
 	reason = strings.TrimSpace(reason)
 	if reason == "" {
-		return fmt.Errorf("终止原因不能为空")
+		return fmt.Errorf("Termination reason cannot be empty")
 	}
 	tenantID, _ := ctx.Value(bpmn.BPMNTenantIDContextKey).(int)
 	actorID, _ := ctx.Value(bpmn.BPMNUserIDContextKey).(int)
 	if tenantID <= 0 || actorID <= 0 {
-		return fmt.Errorf("缺少有效的租户或操作人上下文")
+		return fmt.Errorf("Missing valid tenant or operator context")
 	}
 	tx, err := s.client.Tx(ctx)
 	if err != nil {
-		return fmt.Errorf("开启终止事务失败: %w", err)
+		return fmt.Errorf("Failed to start terminating transaction: %w", err)
 	}
 	defer tx.Rollback()
 	task, err := tx.ProcessTask.Query().Where(processtask.TaskID(taskID), processtask.TenantID(tenantID)).Only(ctx)
 	if err != nil {
-		return fmt.Errorf("任务不存在或不属于当前租户: %w", err)
+		return fmt.Errorf("Task does not exist or does not belong to the current tenant: %w", err)
 	}
 	instance, err := tx.ProcessInstance.Get(ctx, task.ProcessInstanceID)
 	if err != nil || instance.TenantID != tenantID {
-		return fmt.Errorf("任务所属流程实例不存在或租户不一致")
+		return fmt.Errorf("The process instance to which the task belongs does not exist or the tenant is inconsistent")
 	}
 	if instance.Status == "completed" || instance.Status == "terminated" {
-		return fmt.Errorf("流程实例已处于终态 %s", instance.Status)
+		return fmt.Errorf("Process instance is already in final state %s", instance.Status)
 	}
 	actor, err := tx.User.Query().Where(user.IDEQ(actorID), user.TenantIDEQ(tenantID), user.ActiveEQ(true)).Only(ctx)
 	if err != nil {
-		return fmt.Errorf("操作人不存在、已停用或不属于当前租户")
+		return fmt.Errorf("The operator does not exist, is deactivated, or does not belong to the current tenant")
 	}
 	now := time.Now()
 	if _, err = tx.ProcessInstance.UpdateOne(instance).SetStatus("terminated").SetEndTime(now).Save(ctx); err != nil {
-		return fmt.Errorf("终止流程实例失败: %w", err)
+		return fmt.Errorf("Failed to terminate process instance: %w", err)
 	}
 	if _, err = tx.ProcessTask.Update().Where(
 		processtask.ProcessInstanceID(instance.ID),
 		processtask.StatusNotIn(common.ProcessTaskStatusCompleted, common.ProcessTaskStatusCancelled),
 	).SetStatus(common.ProcessTaskStatusCancelled).SetCompletedTime(now).Save(ctx); err != nil {
-		return fmt.Errorf("取消流程未完成任务失败: %w", err)
+		return fmt.Errorf("Failed to cancel process unfinished tasks: %w", err)
 	}
 	if _, err = tx.ProcessAuditLog.Create().
 		SetProcessInstanceID(instance.ID).
@@ -636,10 +636,10 @@ func (s *bpmnTaskService) TerminateTask(ctx context.Context, taskID string, reas
 		SetTimestamp(now).
 		SetMetadata(map[string]interface{}{"recoveryAction": "terminate", "sourceTaskId": task.TaskID}).
 		Save(ctx); err != nil {
-		return fmt.Errorf("记录终止审计失败: %w", err)
+		return fmt.Errorf("Record termination audit failed: %w", err)
 	}
 	if err = tx.Commit(); err != nil {
-		return fmt.Errorf("提交终止事务失败: %w", err)
+		return fmt.Errorf("Failed to commit abort transaction: %w", err)
 	}
 	return nil
 }
@@ -722,7 +722,7 @@ func (s *bpmnTaskService) claimTask(
 		return fmt.Errorf("claim task: %w", err)
 	}
 	if updated != 1 {
-		return fmt.Errorf("任务已被他人认领，请刷新后重试")
+		return fmt.Errorf("The task has been claimed by others, please refresh and try again.")
 	}
 	if err = tx.Commit(); err != nil {
 		return fmt.Errorf("commit claim task transaction: %w", err)
@@ -797,7 +797,7 @@ func (s *bpmnTaskService) CancelTask(ctx context.Context, taskID string, reason 
 		return err
 	}
 	if updated != 1 {
-		return fmt.Errorf("任务已结束，不能取消")
+		return fmt.Errorf("The task has ended and cannot be canceled")
 	}
 	return nil
 }
@@ -826,7 +826,7 @@ func (s *bpmnTaskService) SetTaskVariables(ctx context.Context, taskID string, v
 	}
 	for key, value := range variables {
 		if managedTaskVariable(key) {
-			return fmt.Errorf("流程内部任务变量 %s 不允许通过 API 覆盖", key)
+			return fmt.Errorf("Process internal task variable %s is not allowed to be overridden through API", key)
 		}
 		merged[key] = value
 	}
@@ -862,7 +862,7 @@ func (s *bpmnTaskService) HandleTaskTimeout(ctx context.Context, taskID string) 
 		return err
 	}
 
-	return fmt.Errorf("任务未超时")
+	return fmt.Errorf("Task did not time out")
 }
 
 func (s *bpmnTaskService) RetryTask(ctx context.Context, taskID string, maxRetries int) error {
@@ -881,7 +881,7 @@ func (s *bpmnTaskService) RetryTask(ctx context.Context, taskID string, maxRetri
 	}
 
 	if retryCount >= maxRetries {
-		return fmt.Errorf("任务重试次数已达上限: %d", maxRetries)
+		return fmt.Errorf("The maximum number of task retries has been reached: %d", maxRetries)
 	}
 
 	if task.TaskVariables == nil {
@@ -905,7 +905,7 @@ func (s *bpmnTaskService) DelegateTask(ctx context.Context, taskID string, newAs
 	}
 	actorID, _ := ctx.Value(bpmn.BPMNUserIDContextKey).(int)
 	if actorID <= 0 {
-		return fmt.Errorf("缺少有效的操作人上下文")
+		return fmt.Errorf("Missing valid operator context")
 	}
 
 	task, err := s.GetTask(ctx, taskID)
@@ -915,16 +915,16 @@ func (s *bpmnTaskService) DelegateTask(ctx context.Context, taskID string, newAs
 
 	// 租户隔离：任务必须属于当前租户
 	if task.TenantID != tenantID {
-		return fmt.Errorf("任务不属于当前租户")
+		return fmt.Errorf("Task does not belong to current tenant")
 	}
 
 	// 操作人校验：只有当前 assignee 才能委托
 	actor, err := s.client.User.Query().Where(user.IDEQ(actorID), user.TenantIDEQ(tenantID)).Only(ctx)
 	if err != nil {
-		return fmt.Errorf("操作人不存在或不属于当前租户")
+		return fmt.Errorf("The operator does not exist or does not belong to the current tenant")
 	}
 	if !matchesAssignee(task.Assignee, actorID, actor.Username) {
-		return fmt.Errorf("只有当前处理人才能委托此任务")
+		return fmt.Errorf("Only the current handler can delegate this task")
 	}
 
 	if task.TaskVariables == nil {
@@ -932,15 +932,15 @@ func (s *bpmnTaskService) DelegateTask(ctx context.Context, taskID string, newAs
 	}
 	allowDelegate, _ := task.TaskVariables["allowDelegate"].(bool)
 	if !allowDelegate {
-		return fmt.Errorf("该审批节点不允许委托")
+		return fmt.Errorf("This approval node does not allow delegation")
 	}
 	if strings.TrimSpace(newAssignee) == "" {
-		return fmt.Errorf("委托目标不能为空")
+		return fmt.Errorf("Delegation target cannot be empty")
 	}
 
 	// 目标用户校验：必须存在于同一租户
 	if err := s.validateTargetUser(ctx, tenantID, newAssignee); err != nil {
-		return fmt.Errorf("委托目标用户校验失败: %w", err)
+		return fmt.Errorf("Delegated target user verification failed: %w", err)
 	}
 
 	// 记录委托来源和时间（覆盖已有值，支持多次委托链）
@@ -981,7 +981,7 @@ func (s *bpmnTaskService) DelegateTask(ctx context.Context, taskID string, newAs
 func (s *bpmnTaskService) DelegateTaskByID(ctx context.Context, id int, newAssignee string) error {
 	task, err := s.client.ProcessTask.Get(ctx, id)
 	if err != nil {
-		return fmt.Errorf("任务不存在: %w", err)
+		return fmt.Errorf("Task does not exist: %w", err)
 	}
 	return s.DelegateTask(ctx, task.TaskID, newAssignee)
 }
@@ -993,7 +993,7 @@ func (s *bpmnTaskService) AddApproverTask(ctx context.Context, taskID string, ne
 	}
 	actorID, _ := ctx.Value(bpmn.BPMNUserIDContextKey).(int)
 	if actorID <= 0 {
-		return fmt.Errorf("缺少有效的操作人上下文")
+		return fmt.Errorf("Missing valid operator context")
 	}
 
 	task, err := s.GetTask(ctx, taskID)
@@ -1003,16 +1003,16 @@ func (s *bpmnTaskService) AddApproverTask(ctx context.Context, taskID string, ne
 
 	// 租户隔离：任务必须属于当前租户
 	if task.TenantID != tenantID {
-		return fmt.Errorf("任务不属于当前租户")
+		return fmt.Errorf("Task does not belong to current tenant")
 	}
 
 	// 操作人校验：只有当前 assignee 才能加签
 	actor, err := s.client.User.Query().Where(user.IDEQ(actorID), user.TenantIDEQ(tenantID)).Only(ctx)
 	if err != nil {
-		return fmt.Errorf("操作人不存在或不属于当前租户")
+		return fmt.Errorf("The operator does not exist or does not belong to the current tenant")
 	}
 	if !matchesAssignee(task.Assignee, actorID, actor.Username) {
-		return fmt.Errorf("只有当前处理人才能加签此任务")
+		return fmt.Errorf("Only the current handler can sign this task")
 	}
 
 	if task.TaskVariables == nil {
@@ -1020,15 +1020,15 @@ func (s *bpmnTaskService) AddApproverTask(ctx context.Context, taskID string, ne
 	}
 	allowAdd, _ := task.TaskVariables["allowAddApprover"].(bool)
 	if !allowAdd {
-		return fmt.Errorf("该审批节点不允许加签")
+		return fmt.Errorf("This approval node does not allow signatures")
 	}
 	if strings.TrimSpace(newApprover) == "" {
-		return fmt.Errorf("加签目标不能为空")
+		return fmt.Errorf("The signature target cannot be empty")
 	}
 
 	// 目标用户校验：必须存在于同一租户
 	if err := s.validateTargetUser(ctx, tenantID, newApprover); err != nil {
-		return fmt.Errorf("加签目标用户校验失败: %w", err)
+		return fmt.Errorf("Verification failed for signature target user: %w", err)
 	}
 
 	rootTaskID := task.TaskID
@@ -1063,7 +1063,7 @@ func (s *bpmnTaskService) AddApproverTask(ctx context.Context, taskID string, ne
 		SetCreatedTime(time.Now()).
 		Save(ctx)
 	if err != nil {
-		return fmt.Errorf("创建加签任务失败: %w", err)
+		return fmt.Errorf("Failed to create signature task: %w", err)
 	}
 
 	instance, ierr := s.client.ProcessInstance.Get(ctx, task.ProcessInstanceID)
@@ -1086,7 +1086,7 @@ func (s *bpmnTaskService) AddApproverTask(ctx context.Context, taskID string, ne
 func (s *bpmnTaskService) AddApproverTaskByID(ctx context.Context, id int, newApprover string) error {
 	task, err := s.client.ProcessTask.Get(ctx, id)
 	if err != nil {
-		return fmt.Errorf("任务不存在: %w", err)
+		return fmt.Errorf("Task does not exist: %w", err)
 	}
 
 	return s.AddApproverTask(ctx, task.TaskID, newApprover)
@@ -1110,7 +1110,7 @@ func matchesAssignee(assignee string, userID int, username string) bool {
 func (s *bpmnTaskService) validateTargetUser(ctx context.Context, tenantID int, target string) error {
 	target = strings.TrimSpace(target)
 	if target == "" {
-		return fmt.Errorf("目标用户不能为空")
+		return fmt.Errorf("Target user cannot be empty")
 	}
 
 	// 尝试按 ID 查找
@@ -1119,7 +1119,7 @@ func (s *bpmnTaskService) validateTargetUser(ctx context.Context, tenantID int, 
 			Where(user.IDEQ(id), user.TenantIDEQ(tenantID), user.ActiveEQ(true)).
 			Exist(ctx)
 		if err != nil {
-			return fmt.Errorf("查询目标用户失败: %w", err)
+			return fmt.Errorf("Failed to query target user: %w", err)
 		}
 		if exists {
 			return nil
@@ -1131,10 +1131,10 @@ func (s *bpmnTaskService) validateTargetUser(ctx context.Context, tenantID int, 
 		Where(user.UsernameEQ(target), user.TenantIDEQ(tenantID), user.ActiveEQ(true)).
 		Exist(ctx)
 	if err != nil {
-		return fmt.Errorf("查询目标用户失败: %w", err)
+		return fmt.Errorf("Failed to query target user: %w", err)
 	}
 	if !exists {
-		return fmt.Errorf("目标用户不存在、已停用或不属于当前租户")
+		return fmt.Errorf("The target user does not exist, is deactivated, or does not belong to the current tenant")
 	}
 	return nil
 }
@@ -1161,7 +1161,7 @@ func (s *bpmnTaskService) EscalateTask(ctx context.Context, taskID string, reaso
 
 func (s *bpmnTaskService) BatchAssignTasks(ctx context.Context, taskIDs []string, assignee string, tenantID int) error {
 	if len(taskIDs) == 0 {
-		return fmt.Errorf("任务ID列表为空")
+		return fmt.Errorf("Task ID list is empty")
 	}
 
 	// 租户过滤，防止跨租户批量指派
@@ -1202,7 +1202,7 @@ func (s *bpmnTaskService) GetTaskStatistics(ctx context.Context, req *TaskStatis
 
 	tasks, err := query.All(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("获取任务统计信息失败: %w", err)
+		return nil, fmt.Errorf("Failed to obtain task statistics: %w", err)
 	}
 
 	stats := &TaskStatistics{
@@ -1254,14 +1254,14 @@ func (s *bpmnTaskService) CreateCounterSignTasks(ctx context.Context, parentTask
 
 func createCounterSignTasksWithClient(ctx context.Context, client *ent.Client, parentTaskID string, tenantID int, req *CounterSignRequest) ([]*ent.ProcessTask, error) {
 	if req == nil || len(req.Approvers) == 0 {
-		return nil, fmt.Errorf("会签审批人不能为空")
+		return nil, fmt.Errorf("Countersigning approver cannot be empty")
 	}
 	// 获取父任务
 	parentTask, err := client.ProcessTask.Query().
 		Where(processtask.TaskID(parentTaskID), processtask.TenantID(tenantID)).
 		First(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("获取父任务失败: %w", err)
+		return nil, fmt.Errorf("Failed to get parent task: %w", err)
 	}
 
 	// 生成根任务ID（如果是第一个会签任务）
@@ -1298,7 +1298,7 @@ func createCounterSignTasksWithClient(ctx context.Context, client *ent.Client, p
 			SetCreatedTime(time.Now()).
 			Save(ctx)
 		if err != nil {
-			return nil, fmt.Errorf("创建会签任务失败: %w", err)
+			return nil, fmt.Errorf("Failed to create countersignature task: %w", err)
 		}
 		tasks = append(tasks, task)
 	}
@@ -1315,7 +1315,7 @@ func createCounterSignTasksWithClient(ctx context.Context, client *ent.Client, p
 		}).
 		Save(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("更新父任务会签配置失败: %w", err)
+		return nil, fmt.Errorf("Failed to update parent task countersign configuration: %w", err)
 	}
 
 	return tasks, nil
@@ -1332,7 +1332,7 @@ func (s *bpmnTaskService) GetCounterSignStatus(ctx context.Context, parentTaskID
 		Where(processtask.ParentTaskID(parentTaskID), processtask.TenantID(tenantID)).
 		All(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("获取会签子任务失败: %w", err)
+		return nil, fmt.Errorf("Failed to obtain countersignature subtask: %w", err)
 	}
 
 	status := &CounterSignStatus{
@@ -1399,24 +1399,24 @@ func (s *bpmnTaskService) Vote(ctx context.Context, taskID string, req *VoteRequ
 	}
 	tx, err := s.client.Tx(ctx)
 	if err != nil {
-		return fmt.Errorf("开始会签投票事务失败: %w", err)
+		return fmt.Errorf("Failed to start countersigning voting transaction: %w", err)
 	}
 	defer func() { _ = tx.Rollback() }()
 	task, err := s.client.ProcessTask.Query().
 		Where(processtask.TaskID(taskID), processtask.TenantID(tenantID)).
 		First(ctx)
 	if err != nil {
-		return fmt.Errorf("获取任务失败: %w", err)
+		return fmt.Errorf("Failed to get task: %w", err)
 	}
 	engineForAuth := NewCustomProcessEngine(s.client, s.logger).(*CustomProcessEngine)
 	if err := engineForAuth.authorizeTaskActor(ctx, task); err != nil {
 		return err
 	}
 	if task.Status == "completed" || task.Status == "cancelled" {
-		return fmt.Errorf("会签任务已结束")
+		return fmt.Errorf("The countersignature task has ended")
 	}
 	if task.ParentTaskID != "" && task.Status != common.ProcessTaskStatusAssigned {
-		return fmt.Errorf("会签任务尚未轮到当前审批人")
+		return fmt.Errorf("The countersigning task has not yet reached the current approver’s turn")
 	}
 
 	// 更新任务状态为完成
@@ -1431,10 +1431,10 @@ func (s *bpmnTaskService) Vote(ctx context.Context, taskID string, req *VoteRequ
 		}).
 		Save(ctx)
 	if err != nil {
-		return fmt.Errorf("完成任务失败: %w", err)
+		return fmt.Errorf("Failed to complete task: %w", err)
 	}
 	if updated != 1 {
-		return fmt.Errorf("会签任务已被处理，请刷新后重试")
+		return fmt.Errorf("The countersigning task has been processed, please refresh and try again")
 	}
 	instance, err := tx.ProcessInstance.Query().Where(processinstance.ID(task.ProcessInstanceID), processinstance.TenantID(tenantID)).Only(ctx)
 	if err == nil {
@@ -1448,7 +1448,7 @@ func (s *bpmnTaskService) Vote(ctx context.Context, taskID string, req *VoteRequ
 		}
 	}
 	if err := tx.Commit(); err != nil {
-		return fmt.Errorf("提交会签投票失败: %w", err)
+		return fmt.Errorf("Failed to submit countersignature vote: %w", err)
 	}
 
 	// 获取会签状态
@@ -1459,7 +1459,7 @@ func (s *bpmnTaskService) Vote(ctx context.Context, taskID string, req *VoteRequ
 
 	status, err := s.GetCounterSignStatus(ctx, parentTaskID)
 	if err != nil {
-		return fmt.Errorf("获取会签状态失败: %w", err)
+		return fmt.Errorf("Failed to obtain countersignature status: %w", err)
 	}
 
 	// 根据会签类型和阈值判断是否需要终止其他任务
@@ -1519,7 +1519,7 @@ func (s *bpmnTaskService) Vote(ctx context.Context, taskID string, req *VoteRequ
 			processtask.StatusNEQ("finalizing"),
 		).SetStatus("finalizing").SetTaskVariables(finalVariables).Save(ctx)
 		if claimErr != nil {
-			return fmt.Errorf("抢占会签父任务失败: %w", claimErr)
+			return fmt.Errorf("Failed to preempt countersign parent task: %w", claimErr)
 		}
 		if claimed == 0 {
 			return nil
@@ -1544,7 +1544,7 @@ func (s *bpmnTaskService) Vote(ctx context.Context, taskID string, req *VoteRequ
 			"会签全部投票完成后由系统推进父任务，无单一执行人身份",
 		)
 		if err := engine.CompleteTask(systemCtx, parentTask.TaskID, map[string]interface{}{"approvalResult": status.Status, "approved": status.Status == "approved"}); err != nil {
-			return fmt.Errorf("推进会签父任务失败: %w", err)
+			return fmt.Errorf("Failed to advance countersign parent task: %w", err)
 		}
 	}
 

@@ -76,9 +76,9 @@ describe('EscalationRulesPage', () => {
     await waitFor(() => expect(mockedApi.getAlertRules).toHaveBeenCalled());
     // 关联定义名来自 getSLADefinitions，而不是硬编码的「全部」
     expect(await screen.findByText('SLA-P3-低')).toBeInTheDocument();
-    expect(screen.queryByText('使用统计')).not.toBeInTheDocument();
+    expect(screen.queryByText("使用 Statistics")).not.toBeInTheDocument();
     expect(screen.queryByText('次触发')).not.toBeInTheDocument();
-    expect(screen.queryByText(/由 系统/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/由 System/)).not.toBeInTheDocument();
   });
 
   // 整页 jsdom 渲染 + antd 弹窗，在全量并行下会超过 jest.config 的 10s 默认上限。
@@ -86,17 +86,17 @@ describe('EscalationRulesPage', () => {
     renderPage();
     await waitFor(() => expect(mockedApi.getAlertRules).toHaveBeenCalled());
 
-    fireEvent.click(screen.getByRole('button', { name: /新建规则/ }));
-    const nameInput = await screen.findByLabelText('规则名称');
+    fireEvent.click(screen.getByRole('button', { name: /Create Rule/ }));
+    const nameInput = await screen.findByLabelText("Rule Name");
     const modal = nameInput.closest('.ant-modal') as HTMLElement;
 
-    fireEvent.change(within(modal).getByLabelText('规则名称'), { target: { value: 'P3 响应超时预警' } });
+    fireEvent.change(within(modal).getByLabelText("Rule Name"), { target: { value: 'P3 响应超时预警' } });
 
-    const definitionCombobox = within(modal).getByLabelText('关联 SLA 定义');
+    const definitionCombobox = within(modal).getByLabelText("Associated SLA definition");
     fireEvent.mouseDown(definitionCombobox);
     fireEvent.click(await screen.findByText('SLA-P3-低（low）'));
 
-    fireEvent.click(within(modal).getByRole('button', { name: /保\s*存/ }));
+    fireEvent.click(within(modal).getByRole('button', { name: /Save/ }));
 
     await waitFor(() => expect(mockedApi.createAlertRule).toHaveBeenCalledTimes(1));
     expect(mockedApi.createAlertRule).toHaveBeenCalledWith({
@@ -113,7 +113,7 @@ describe('EscalationRulesPage', () => {
     renderPage();
     await waitFor(() => expect(mockedApi.getAlertRules).toHaveBeenCalled());
 
-    fireEvent.click(await screen.findByRole('button', { name: '停用' }));
+    fireEvent.click(await screen.findByRole('button', { name: "Disable" }));
 
     await waitFor(() =>
       expect(mockedApi.updateAlertRule).toHaveBeenCalledWith(11, { isActive: false }),
@@ -124,14 +124,14 @@ describe('EscalationRulesPage', () => {
     renderPage();
     await waitFor(() => expect(mockedApi.getAlertRules).toHaveBeenCalled());
 
-    fireEvent.click(await screen.findByRole('button', { name: /删除/ }));
+    fireEvent.click(await screen.findByRole('button', { name: /Delete/ }));
 
-    const confirm = await screen.findByText('确定删除该告警规则吗？');
+    const confirm = await screen.findByText("Are you sure you want to delete this alarm rule?");
     const popper = confirm.closest('.ant-popover') as HTMLElement;
     expect(within(popper).getByText(/SLA-变更-响应告警/)).toBeInTheDocument();
     expect(mockedApi.deleteAlertRule).not.toHaveBeenCalled();
 
-    fireEvent.click(within(popper).getByRole('button', { name: '删 除' }));
+    fireEvent.click(within(popper).getByRole('button', { name: "Delete" }));
 
     await waitFor(() => expect(mockedApi.deleteAlertRule).toHaveBeenCalledWith(11));
   }, 30000);

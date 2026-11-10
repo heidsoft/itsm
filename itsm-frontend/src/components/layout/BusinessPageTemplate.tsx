@@ -156,7 +156,7 @@ const StatsCard: React.FC<PageStats & { loading?: boolean }> = ({
     size="small"
     className="h-full rounded-lg shadow-sm transition-shadow hover:shadow-md"
     loading={loading}
-    aria-label={`${label}统计`}
+    aria-label={`${label} Statistics`}
   >
     <div className="flex min-h-20 items-center justify-between gap-4">
       <div className="min-w-0">
@@ -195,7 +195,7 @@ export const BusinessPageTemplate: React.FC<BusinessPageTemplateProps> = ({
   statsLoading = false,
 
   // 搜索配置
-  searchPlaceholder = '搜索...',
+  searchPlaceholder = 'Search...',
   searchValue,
   onSearch,
   searchLoading = false,
@@ -224,10 +224,10 @@ export const BusinessPageTemplate: React.FC<BusinessPageTemplateProps> = ({
   // 内容
   loading = false,
   empty = false,
-  emptyDescription = '暂无数据',
+  emptyDescription = 'No data',
   emptyAction,
   error = false,
-  errorDescription = '加载失败，请稍后重试',
+  errorDescription = 'Loading failed, please try again later.',
   onRetry,
   children,
 
@@ -275,7 +275,8 @@ export const BusinessPageTemplate: React.FC<BusinessPageTemplateProps> = ({
       label: (
         <span className="flex items-center gap-2">
           <Table size={14} />
-          列表视图
+
+          List View
         </span>
       ),
     },
@@ -284,7 +285,8 @@ export const BusinessPageTemplate: React.FC<BusinessPageTemplateProps> = ({
       label: (
         <span className="flex items-center gap-2">
           <LayoutGrid size={14} />
-          看板视图
+
+          Kanban View
         </span>
       ),
     },
@@ -327,7 +329,8 @@ export const BusinessPageTemplate: React.FC<BusinessPageTemplateProps> = ({
                   onClick={onAlertClick}
                   className={alertBadge > 0 ? 'text-orange-500' : ''}
                 >
-                  SLA 预警
+
+                  SLA Alerts
                   {alertBadge > 0 && (
                     <span className="ml-1 px-1.5 py-0.5 text-xs bg-red-500 text-white rounded-full">
                       {alertBadge}
@@ -350,7 +353,7 @@ export const BusinessPageTemplate: React.FC<BusinessPageTemplateProps> = ({
               {/* 更多操作下拉菜单 */}
               {extraActions.length > 0 && (
                 <Dropdown menu={{ items: actionMenuItems }} placement="bottomRight">
-                  <Button aria-label="更多操作" icon={<MoreVertical />} />
+                  <Button aria-label="More actions" icon={<MoreVertical />} />
                 </Dropdown>
               )}
             </Space>
@@ -361,7 +364,7 @@ export const BusinessPageTemplate: React.FC<BusinessPageTemplateProps> = ({
             <div
               className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4"
               role="group"
-              aria-label="页面统计"
+              aria-label="Page Statistics"
             >
               {stats.map(stat => (
                 <StatsCard key={stat.label} {...stat} loading={statsLoading} />
@@ -395,13 +398,15 @@ export const BusinessPageTemplate: React.FC<BusinessPageTemplateProps> = ({
                   onClick={filters.onToggle}
                   type={filters.visible ? 'primary' : 'default'}
                 >
-                  筛选
+
+                  Filter
                 </Button>
               )}
 
               {/* 刷新按钮 */}
               <Button icon={<RotateCcw />} onClick={() => window.location.reload()}>
-                刷新
+
+                Refresh
               </Button>
             </Space>
           </div>
@@ -446,17 +451,19 @@ export const BusinessPageTemplate: React.FC<BusinessPageTemplateProps> = ({
         >
           {loading ? (
             <div className="flex items-center justify-center py-20">
-              <div className="text-gray-400">加载中...</div>
+              <div className="text-gray-400">Loading...</div>
             </div>
           ) : error ? (
             <div className="py-12 text-center" role="alert">
               <div className="mb-2 text-base font-medium text-red-500">{errorDescription}</div>
               <Text type="secondary" className="mb-4 block text-sm">
-                数据加载失败，并非暂无数据，请检查网络后重试
+
+                Data loading failed. It is not that there is no data yet. Please check the network and try again.
               </Text>
               {onRetry && (
                 <Button type="primary" icon={<RotateCcw className="h-4 w-4" />} onClick={onRetry}>
-                  重试
+
+                  Retry
                 </Button>
               )}
             </div>
@@ -485,7 +492,7 @@ export const BusinessPageTemplate: React.FC<BusinessPageTemplateProps> = ({
                 onChange={pagination.onChange}
                 showSizeChanger={screens.md && (pagination.showSizeChanger ?? true)}
                 responsive
-                showTotal={pagination.showTotal ?? ((total) => `共 ${total} 条`)}
+                showTotal={pagination.showTotal ?? ((total) => `Total ${total} items`)}
                 pageSizeOptions={pagination.pageSizeOptions ?? ['10', '20', '50', '100']}
               />
             </div>
@@ -497,7 +504,7 @@ export const BusinessPageTemplate: React.FC<BusinessPageTemplateProps> = ({
       {primaryAction && (
         <div className="fixed bottom-6 right-6 z-50 md:hidden">
           <Button
-            aria-label="新增"
+            aria-label="New"
             type="primary"
             shape="circle"
             size="large"

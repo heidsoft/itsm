@@ -123,7 +123,7 @@ func TestNotificationService_CreateNotification_UserNotFound(t *testing.T) {
 
 	_, err = service.CreateNotification(ctx, req)
 	require.Error(t, err)
-	assert.Contains(t, err.Error(), "用户不存在")
+	assert.Contains(t, err.Error(), "User does not exist")
 }
 
 // ==================== 获取通知列表测试 ====================

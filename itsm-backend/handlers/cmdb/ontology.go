@@ -64,7 +64,7 @@ func (c *ProductionService) GetOntology(ctx *gin.Context) {
 	ciTypes, err := c.listAllCITypes(ctx.Request.Context(), tenantID)
 	if err != nil {
 		c.logger.Errorw("ontology: list ci types failed", "error", err, "tenant_id", tenantID)
-		common.InternalError(ctx, "获取CMDB本体失败")
+		common.InternalError(ctx, "Failed to obtain CMDB ontology")
 		return
 	}
 	for _, t := range ciTypes {

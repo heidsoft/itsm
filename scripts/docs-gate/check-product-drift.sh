@@ -125,7 +125,7 @@ count_handlers_dirs() {
 
 readme_maturity_rows() {
   awk '
-    /^## 能力与成熟度/ { inb = 1; next }
+    /^## (能力与成熟度|Capabilities & Maturity)/ { inb = 1; next }
     inb && /^## / { exit }
     inb && /^\|/ {
       n = split($0, a, "|")
@@ -139,7 +139,7 @@ readme_maturity_rows() {
       # 走 collation，会把任意纯中文名误判为表头「能力域」（实测
       # `工单与事件 == 能力域` 为真），导致纯中文能力域行被整行丢弃、
       # C.6.1 反向闭合误报「对外承诺漏报」。正则字面量按字节匹配，两种 awk 行为一致。
-      if (name ~ /^能力域$/) next
+      if (name ~ /^(能力域|Capability)$/) next
       print name "\t" state
     }
   ' "${ROOT_DIR}/README.md"
@@ -168,21 +168,21 @@ contract_maturity_rows() {
 #   __UNKNOWN__   = 未登记（新增能力域必须登记，否则口径无法比对）
 contract_for() {
   case "$1" in
-    "工单与事件") echo "工单/事件" ;;
-    "工单类型与动态表单") echo "__SUBDOMAIN__" ;;
-    "变更管理") echo "变更" ;;
-    "问题与 Known Error") echo "问题/已知错误" ;;
-    "服务目录与请求") echo "服务目录/服务请求" ;;
+    "工单与事件" | "Tickets & Incidents") echo "工单/事件" ;;
+    "工单类型与动态表单" | "Ticket Types & Dynamic Forms") echo "__SUBDOMAIN__" ;;
+    "变更管理" | "Change Management") echo "变更" ;;
+    "问题与 Known Error" | "Problems & Known Errors") echo "问题/已知错误" ;;
+    "服务目录与请求" | "Service Catalog & Requests") echo "服务目录/服务请求" ;;
     "CMDB") echo "CMDB" ;;
-    "CMDB 云发现") echo "__SUBDOMAIN__" ;;
-    "BPMN 与审批") echo "BPMN/审批" ;;
+    "CMDB 云发现" | "CMDB Cloud Discovery") echo "__SUBDOMAIN__" ;;
+    "BPMN 与审批" | "BPMN & Approvals") echo "BPMN/审批" ;;
     "SLA") echo "SLA" ;;
-    "知识与 RAG") echo "知识/RAG" ;;
-    "AI 辅助") echo "AI" ;;
-    "通知与连接器") echo "连接器/通知" ;;
-    "应用市场与扩展交付") echo "市场/扩展交付" ;;
-    "RBAC/多租户") echo "RBAC/多租户/审计" ;;
-    "报表与运营") echo "报表/运营" ;;
+    "知识与 RAG" | "Knowledge & RAG") echo "知识/RAG" ;;
+    "AI 辅助" | "AI Assistance") echo "AI" ;;
+    "通知与连接器" | "Notifications & Connectors") echo "连接器/通知" ;;
+    "应用市场与扩展交付" | "Marketplace & Extension Delivery") echo "市场/扩展交付" ;;
+    "RBAC/多租户" | "RBAC / Multi-Tenancy") echo "RBAC/多租户/审计" ;;
+    "报表与运营" | "Reporting & Operations") echo "报表/运营" ;;
     *) echo "__UNKNOWN__" ;;
   esac
 }
@@ -190,8 +190,8 @@ contract_for() {
 # 状态兼容：可用 -> 契约含 GA；预览 -> 契约含 Pilot 或 Disabled
 state_ok() {
   case "$1" in
-    可用) case "$2" in *GA*) return 0 ;; *) return 1 ;; esac ;;
-    预览) case "$2" in *Pilot* | *Disabled*) return 0 ;; *) return 1 ;; esac ;;
+    可用 | Available) case "$2" in *GA*) return 0 ;; *) return 1 ;; esac ;;
+    预览 | Preview) case "$2" in *Pilot* | *Disabled*) return 0 ;; *) return 1 ;; esac ;;
     *) return 1 ;;
   esac
 }

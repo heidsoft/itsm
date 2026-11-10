@@ -31,7 +31,7 @@ func NewHandler(logger *zap.SugaredLogger, releaseService *service.ReleaseServic
 func (h *ReleaseHandler) ListReleases(c *gin.Context) {
 	tenantID, err := middleware.GetTenantID(c)
 	if err != nil || tenantID == 0 {
-		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		common.Fail(c, common.UnauthorizedCode, "Unauthorized access")
 		return
 	}
 
@@ -45,7 +45,7 @@ func (h *ReleaseHandler) ListReleases(c *gin.Context) {
 	releases, err := h.releaseService.ListReleases(c.Request.Context(), tenantID, pg.Page, pg.PageSize, status, releaseType, currentUserID, currentRole)
 	if err != nil {
 		h.logger.Errorw("List releases failed", "error", err, "tenant_id", tenantID)
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -56,26 +56,26 @@ func (h *ReleaseHandler) ListReleases(c *gin.Context) {
 func (h *ReleaseHandler) CreateRelease(c *gin.Context) {
 	tenantID, err := middleware.GetTenantID(c)
 	if err != nil || tenantID == 0 {
-		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		common.Fail(c, common.UnauthorizedCode, "Unauthorized access")
 		return
 	}
 
 	userID, err := middleware.GetUserID(c)
 	if err != nil || userID == 0 {
-		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		common.Fail(c, common.UnauthorizedCode, "Unauthorized access")
 		return
 	}
 
 	var req dto.CreateReleaseRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
 	release, err := h.releaseService.CreateRelease(c.Request.Context(), &req, userID, tenantID)
 	if err != nil {
 		h.logger.Errorw("Create release failed", "error", err, "tenant_id", tenantID, "user_id", userID)
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -86,25 +86,25 @@ func (h *ReleaseHandler) CreateRelease(c *gin.Context) {
 func (h *ReleaseHandler) GetRelease(c *gin.Context) {
 	tenantID, err := middleware.GetTenantID(c)
 	if err != nil || tenantID == 0 {
-		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		common.Fail(c, common.UnauthorizedCode, "Unauthorized access")
 		return
 	}
 
 	releaseID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.ParamError(c, "无效的发布ID")
+		common.ParamError(c, "Invalid publication ID")
 		return
 	}
 
 	release, err := h.releaseService.GetReleaseByID(c.Request.Context(), releaseID, tenantID)
 	if err != nil {
 		h.logger.Errorw("Get release failed", "error", err, "release_id", releaseID)
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
 	if release == nil {
-		common.Fail(c, common.NotFoundCode, "发布不存在")
+		common.Fail(c, common.NotFoundCode, "Publication does not exist")
 		return
 	}
 
@@ -115,35 +115,35 @@ func (h *ReleaseHandler) GetRelease(c *gin.Context) {
 func (h *ReleaseHandler) UpdateRelease(c *gin.Context) {
 	tenantID, err := middleware.GetTenantID(c)
 	if err != nil || tenantID == 0 {
-		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		common.Fail(c, common.UnauthorizedCode, "Unauthorized access")
 		return
 	}
 
 	releaseID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.ParamError(c, "无效的发布ID")
+		common.ParamError(c, "Invalid publication ID")
 		return
 	}
 
 	var req dto.UpdateReleaseRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
 	release, err := h.releaseService.UpdateRelease(c.Request.Context(), releaseID, tenantID, &req, c.GetInt("user_id"), c.GetString("role"))
 	if err != nil {
 		if isForbiddenAppErr(err) {
-			common.RespondError(c, err, "操作失败")
+			common.RespondError(c, err, "Operation failed")
 			return
 		}
 		h.logger.Errorw("Update release failed", "error", err, "release_id", releaseID)
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
 	if release == nil {
-		common.Fail(c, common.NotFoundCode, "发布不存在")
+		common.Fail(c, common.NotFoundCode, "Publication does not exist")
 		return
 	}
 
@@ -154,19 +154,19 @@ func (h *ReleaseHandler) UpdateRelease(c *gin.Context) {
 func (h *ReleaseHandler) UpdateReleaseStatus(c *gin.Context) {
 	tenantID, err := middleware.GetTenantID(c)
 	if err != nil || tenantID == 0 {
-		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		common.Fail(c, common.UnauthorizedCode, "Unauthorized access")
 		return
 	}
 
 	releaseID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.ParamError(c, "无效的发布ID")
+		common.ParamError(c, "Invalid publication ID")
 		return
 	}
 
 	var req dto.ReleaseStatusUpdateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
@@ -177,20 +177,20 @@ func (h *ReleaseHandler) UpdateReleaseStatus(c *gin.Context) {
 		// 更不能掉进 500 兜底（客户端会误判为服务端故障而盲目重试）。
 		if errors.Is(err, service.ErrInvalidReleaseTransition) {
 			h.logger.Warnw("Release status transition rejected", "error", err, "release_id", releaseID)
-			common.Conflict(c, "当前发布状态不允许此操作", gin.H{"detail": err.Error()})
+			common.Conflict(c, "This operation is not allowed in the current publishing status", gin.H{"detail": err.Error()})
 			return
 		}
 		if isForbiddenAppErr(err) {
-			common.RespondError(c, err, "操作失败")
+			common.RespondError(c, err, "Operation failed")
 			return
 		}
 		h.logger.Errorw("Update release status failed", "error", err, "release_id", releaseID)
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
 	if release == nil {
-		common.Fail(c, common.NotFoundCode, "发布不存在")
+		common.Fail(c, common.NotFoundCode, "Publication does not exist")
 		return
 	}
 
@@ -205,7 +205,7 @@ func (h *ReleaseHandler) ApproveRelease(c *gin.Context) {
 	// approve 的审批意见可选，允许空请求体；非空但格式错误的请求仍应拒绝。
 	if c.Request.ContentLength != 0 {
 		if err := c.ShouldBindJSON(&req); err != nil {
-			common.ParamErrorWithErr(c, err, "请求参数错误")
+			common.ParamErrorWithErr(c, err, "Wrong request parameters")
 			return
 		}
 	}
@@ -218,7 +218,7 @@ func (h *ReleaseHandler) RejectRelease(c *gin.Context) {
 		Reason string `json:"reason" binding:"required"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.BadRequestCode, "拒绝原因不能为空")
+		common.Fail(c, common.BadRequestCode, "Rejection reason cannot be empty")
 		return
 	}
 	h.applyReleaseApproval(c, "reject", req.Reason)
@@ -228,26 +228,26 @@ func (h *ReleaseHandler) RejectRelease(c *gin.Context) {
 func (h *ReleaseHandler) applyReleaseApproval(c *gin.Context, action, comment string) {
 	tenantID, err := middleware.GetTenantID(c)
 	if err != nil || tenantID == 0 {
-		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		common.Fail(c, common.UnauthorizedCode, "Unauthorized access")
 		return
 	}
 	userID, err := middleware.GetUserID(c)
 	if err != nil || userID == 0 {
-		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		common.Fail(c, common.UnauthorizedCode, "Unauthorized access")
 		return
 	}
 	releaseID, err := strconv.Atoi(c.Param("id"))
 	if err != nil || releaseID <= 0 {
-		common.ParamError(c, "无效的发布ID")
+		common.ParamError(c, "Invalid publication ID")
 		return
 	}
 	release, err := h.releaseService.ApplyReleaseApproval(c.Request.Context(), releaseID, tenantID, userID, action, comment)
 	if err != nil {
-		common.RespondError(c, err, "操作失败")
+		common.RespondError(c, err, "Operation failed")
 		return
 	}
 	if release == nil {
-		common.Fail(c, common.NotFoundCode, "发布不存在")
+		common.Fail(c, common.NotFoundCode, "Publication does not exist")
 		return
 	}
 	h.logger.Infow("Release approval completed",
@@ -261,7 +261,7 @@ func (h *ReleaseHandler) RollbackRelease(c *gin.Context) {
 		Reason string `json:"reason" binding:"required"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.BadRequestCode, "回滚原因不能为空")
+		common.Fail(c, common.BadRequestCode, "Rollback reason cannot be empty")
 		return
 	}
 	h.updateReleaseActionStatus(c, string(dto.ReleaseStatusRolledBack), req.Reason)
@@ -270,12 +270,12 @@ func (h *ReleaseHandler) RollbackRelease(c *gin.Context) {
 func (h *ReleaseHandler) updateReleaseActionStatus(c *gin.Context, status, reason string) {
 	tenantID, err := middleware.GetTenantID(c)
 	if err != nil || tenantID == 0 {
-		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		common.Fail(c, common.UnauthorizedCode, "Unauthorized access")
 		return
 	}
 	releaseID, err := strconv.Atoi(c.Param("id"))
 	if err != nil || releaseID <= 0 {
-		common.ParamError(c, "无效的发布ID")
+		common.ParamError(c, "Invalid publication ID")
 		return
 	}
 	release, err := h.releaseService.UpdateReleaseStatus(c.Request.Context(), releaseID, tenantID, status, c.GetInt("user_id"), c.GetString("role"))
@@ -284,19 +284,19 @@ func (h *ReleaseHandler) updateReleaseActionStatus(c *gin.Context, status, reaso
 		// 不能让 rollback/cancel/complete 等动作端点掉进 500 兜底。
 		if errors.Is(err, service.ErrInvalidReleaseTransition) {
 			h.logger.Warnw("Release action rejected by state machine", "error", err, "release_id", releaseID, "status", status)
-			common.Conflict(c, "当前发布状态不允许此操作", gin.H{"detail": err.Error()})
+			common.Conflict(c, "This operation is not allowed in the current publishing status", gin.H{"detail": err.Error()})
 			return
 		}
 		if isForbiddenAppErr(err) {
-			common.RespondError(c, err, "操作失败")
+			common.RespondError(c, err, "Operation failed")
 			return
 		}
 		h.logger.Errorw("Release action failed", "error", err, "release_id", releaseID, "status", status)
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 	if release == nil {
-		common.Fail(c, common.NotFoundCode, "发布不存在")
+		common.Fail(c, common.NotFoundCode, "Publication does not exist")
 		return
 	}
 	h.logger.Infow("Release action completed", "release_id", releaseID, "tenant_id", tenantID, "status", status, "reason", reason)
@@ -307,24 +307,24 @@ func (h *ReleaseHandler) updateReleaseActionStatus(c *gin.Context, status, reaso
 func (h *ReleaseHandler) DeleteRelease(c *gin.Context) {
 	tenantID, err := middleware.GetTenantID(c)
 	if err != nil || tenantID == 0 {
-		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		common.Fail(c, common.UnauthorizedCode, "Unauthorized access")
 		return
 	}
 
 	releaseID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.ParamError(c, "无效的发布ID")
+		common.ParamError(c, "Invalid publication ID")
 		return
 	}
 
 	err = h.releaseService.DeleteRelease(c.Request.Context(), releaseID, tenantID, c.GetInt("user_id"), c.GetString("role"))
 	if err != nil {
 		if isForbiddenAppErr(err) {
-			common.RespondError(c, err, "操作失败")
+			common.RespondError(c, err, "Operation failed")
 			return
 		}
 		h.logger.Errorw("Delete release failed", "error", err, "release_id", releaseID)
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -335,14 +335,14 @@ func (h *ReleaseHandler) DeleteRelease(c *gin.Context) {
 func (h *ReleaseHandler) GetReleaseStats(c *gin.Context) {
 	tenantID, err := middleware.GetTenantID(c)
 	if err != nil || tenantID == 0 {
-		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		common.Fail(c, common.UnauthorizedCode, "Unauthorized access")
 		return
 	}
 
 	stats, err := h.releaseService.GetReleaseStats(c.Request.Context(), tenantID)
 	if err != nil {
 		h.logger.Errorw("Get release stats failed", "error", err, "tenant_id", tenantID)
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 

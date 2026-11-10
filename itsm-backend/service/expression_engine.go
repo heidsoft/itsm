@@ -60,12 +60,12 @@ func (e *ExpressionEngine) Evaluate(expression string, variables map[string]inte
 	// 编译并执行表达式
 	program, err := expr.Compile(expression, expr.Env(env))
 	if err != nil {
-		return nil, fmt.Errorf("表达式编译失败: %w", err)
+		return nil, fmt.Errorf("Expression compilation failed: %w", err)
 	}
 
 	output, err := expr.Run(program, env)
 	if err != nil {
-		return nil, fmt.Errorf("表达式执行失败: %w", err)
+		return nil, fmt.Errorf("Expression execution failed: %w", err)
 	}
 
 	return output, nil
@@ -106,7 +106,7 @@ func (e *ExpressionEngine) EvaluateNumeric(expression string, variables map[stri
 	case int64:
 		return float64(v), nil
 	default:
-		return 0, fmt.Errorf("无法将结果转换为数值: %v", result)
+		return 0, fmt.Errorf("Unable to convert result to numeric value: %v", result)
 	}
 }
 
@@ -247,7 +247,7 @@ func (e *ExpressionEngine) registerBuiltinFunctions(env map[string]interface{}) 
 			if t2, err2 := time.Parse("2006-01-02 15:04:05", s); err2 == nil {
 				return t2.Unix(), nil
 			}
-			return 0, fmt.Errorf("无法解析时间 %q: %w", s, err)
+			return 0, fmt.Errorf("Unable to parse time %q: %w", s, err)
 		}
 		return t.Unix(), nil
 	}
@@ -393,27 +393,27 @@ func (e *ExpressionEngine) ValidateExpression(expression string) error {
 	openCount := strings.Count(normalized, "(")
 	closeCount := strings.Count(normalized, ")")
 	if openCount != closeCount {
-		return fmt.Errorf("括号不匹配: 开启=%d, 关闭=%d", openCount, closeCount)
+		return fmt.Errorf("Bracket mismatch: on=%d, off=%d", openCount, closeCount)
 	}
 
 	// 2. 检查花括号匹配
 	braceCount := strings.Count(normalized, "{")
 	braceCloseCount := strings.Count(normalized, "}")
 	if braceCount != braceCloseCount {
-		return fmt.Errorf("花括号不匹配: 开启=%d, 关闭=%d", braceCount, braceCloseCount)
+		return fmt.Errorf("Curly brace mismatch: on=%d, off=%d", braceCount, braceCloseCount)
 	}
 
 	// 3. 检查方括号匹配
 	squareOpen := strings.Count(normalized, "[")
 	squareClose := strings.Count(normalized, "]")
 	if squareOpen != squareClose {
-		return fmt.Errorf("方括号不匹配: 开启=%d, 关闭=%d", squareOpen, squareClose)
+		return fmt.Errorf("Square bracket mismatch: on=%d, off=%d", squareOpen, squareClose)
 	}
 
 	// 4. 检查非法字符
 	illegalPattern := regexp.MustCompile(`[^\w\s\-\+\*/%<>=!&|,().{}\[\]?:"'$]`)
 	if illegalPattern.MatchString(normalized) {
-		return fmt.Errorf("表达式包含非法字符")
+		return fmt.Errorf("Expression contains illegal characters")
 	}
 
 	// 5. 尝试编译表达式
@@ -425,7 +425,7 @@ func (e *ExpressionEngine) ValidateExpression(expression string) error {
 
 	_, err := expr.Compile(normalized, expr.Env(env), expr.AllowUndefinedVariables())
 	if err != nil {
-		return fmt.Errorf("表达式语法错误: %w", err)
+		return fmt.Errorf("Expression syntax error: %w", err)
 	}
 
 	return nil

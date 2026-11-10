@@ -95,14 +95,14 @@ func (h *Handler) GetMSPContext(c *gin.Context) {
 func (h *Handler) GetAllocations(c *gin.Context) {
 	userID := c.GetInt("user_id")
 	if userID == 0 {
-		common.Fail(c, common.UnauthorizedCode, "用户未认证")
+		common.Fail(c, common.UnauthorizedCode, "User not authenticated")
 		return
 	}
 
 	allocations, err := h.mspAllocationService.ListByMSPUser(c.Request.Context(), userID)
 	if err != nil {
 		h.logger.Errorw("Failed to list allocations", "error", err, "user_id", userID)
-		common.Fail(c, common.InternalErrorCode, "查询分配列表失败")
+		common.Fail(c, common.InternalErrorCode, "Failed to query allocation list")
 		return
 	}
 
@@ -119,13 +119,13 @@ func (h *Handler) GetAllocations(c *gin.Context) {
 func (h *Handler) CreateAllocation(c *gin.Context) {
 	var req dto.CreateAllocationRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
 	operatorID := c.GetInt("user_id")
 	if operatorID == 0 {
-		common.Fail(c, common.UnauthorizedCode, "用户未认证")
+		common.Fail(c, common.UnauthorizedCode, "User not authenticated")
 		return
 	}
 	roleVal, _ := c.Get("role")
@@ -135,11 +135,11 @@ func (h *Handler) CreateAllocation(c *gin.Context) {
 	if err != nil {
 		if errors.Is(err, service.ErrMSPAllocationForbidden) {
 			h.logger.Warnw("msp allocation create forbidden", "operator", operatorID, "msp_user_id", req.MSPUserID)
-			common.Forbidden(c, "无权操作该 MSP 租户的分配")
+			common.Forbidden(c, "No permission to operate the allocation of this MSP tenant")
 			return
 		}
 		h.logger.Errorw("Failed to create allocation", "error", err, "operator", operatorID)
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -150,13 +150,13 @@ func (h *Handler) CreateAllocation(c *gin.Context) {
 func (h *Handler) Deallocate(c *gin.Context) {
 	var req dto.DeallocateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
 	operatorID := c.GetInt("user_id")
 	if operatorID == 0 {
-		common.Fail(c, common.UnauthorizedCode, "用户未认证")
+		common.Fail(c, common.UnauthorizedCode, "User not authenticated")
 		return
 	}
 	roleVal, _ := c.Get("role")
@@ -166,21 +166,21 @@ func (h *Handler) Deallocate(c *gin.Context) {
 	if err != nil {
 		if errors.Is(err, service.ErrMSPAllocationForbidden) {
 			h.logger.Warnw("msp allocation deactivate forbidden", "operator", operatorID, "msp_user_id", req.MSPUserID)
-			common.Forbidden(c, "无权操作该 MSP 租户的分配")
+			common.Forbidden(c, "No permission to operate the allocation of this MSP tenant")
 			return
 		}
 		if errors.Is(err, service.ErrMSPAllocationNotFound) {
 			h.logger.Warnw("Deallocate matched no active allocation",
 				"msp_user_id", req.MSPUserID, "customer_tenant_id", req.CustomerTenantID, "operator", operatorID)
-			common.NotFound(c, "没有可解除的活跃分配")
+			common.NotFound(c, "No active allocations to deallocate")
 			return
 		}
 		h.logger.Errorw("Failed to deallocate", "error", err, "operator", operatorID)
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
-	common.Success(c, gin.H{"message": "分配已解除"})
+	common.Success(c, gin.H{"message": "Allocation deallocated"})
 }
 
 // GetAllocationHistory 返回当前 MSP 租户的分配历史（含已解除记录）。
@@ -192,13 +192,13 @@ func (h *Handler) Deallocate(c *gin.Context) {
 //	?mspUserId=&customerTenantId=&startDate=YYYY-MM-DD&endDate=YYYY-MM-DD&page=1&pageSize=20
 func (h *Handler) GetAllocationHistory(c *gin.Context) {
 	if c.GetInt("user_id") == 0 {
-		common.Fail(c, common.UnauthorizedCode, "用户未认证")
+		common.Fail(c, common.UnauthorizedCode, "User not authenticated")
 		return
 	}
 
 	mspTenantID := c.GetInt("tenant_id")
 	if mspTenantID == 0 {
-		common.Fail(c, common.UnauthorizedCode, "缺少租户上下文")
+		common.Fail(c, common.UnauthorizedCode, "Missing tenant context")
 		return
 	}
 
@@ -207,7 +207,7 @@ func (h *Handler) GetAllocationHistory(c *gin.Context) {
 	if raw := c.Query("mspUserId"); raw != "" {
 		v, err := strconv.Atoi(raw)
 		if err != nil {
-			common.Fail(c, common.ParamErrorCode, "mspUserId格式错误")
+			common.Fail(c, common.ParamErrorCode, "mspUserId format error")
 			return
 		}
 		filter.MSPUserID = &v
@@ -215,7 +215,7 @@ func (h *Handler) GetAllocationHistory(c *gin.Context) {
 	if raw := c.Query("customerTenantId"); raw != "" {
 		v, err := strconv.Atoi(raw)
 		if err != nil {
-			common.Fail(c, common.ParamErrorCode, "customerTenantId格式错误")
+			common.Fail(c, common.ParamErrorCode, "customerTenantId format error")
 			return
 		}
 		filter.CustomerTenantID = &v
@@ -223,7 +223,7 @@ func (h *Handler) GetAllocationHistory(c *gin.Context) {
 	if raw := c.Query("startDate"); raw != "" {
 		v, err := parseDateOrZero(raw)
 		if err != nil {
-			common.Fail(c, common.ParamErrorCode, "startDate格式错误(YYYY-MM-DD)")
+			common.Fail(c, common.ParamErrorCode, "startDate format error (YYYY-MM-DD)")
 			return
 		}
 		filter.AssignedFrom = &v
@@ -231,7 +231,7 @@ func (h *Handler) GetAllocationHistory(c *gin.Context) {
 	if raw := c.Query("endDate"); raw != "" {
 		v, err := parseDateOrZero(raw)
 		if err != nil {
-			common.Fail(c, common.ParamErrorCode, "endDate格式错误(YYYY-MM-DD)")
+			common.Fail(c, common.ParamErrorCode, "endDate format error (YYYY-MM-DD)")
 			return
 		}
 		filter.AssignedTo = &v
@@ -243,7 +243,7 @@ func (h *Handler) GetAllocationHistory(c *gin.Context) {
 	items, total, err := h.mspAllocationService.ListHistory(c.Request.Context(), filter)
 	if err != nil {
 		h.logger.Errorw("Failed to list allocation history", "error", err, "msp_tenant_id", mspTenantID)
-		common.Fail(c, common.InternalErrorCode, "查询分配历史失败")
+		common.Fail(c, common.InternalErrorCode, "Failed to query allocation history")
 		return
 	}
 
@@ -254,14 +254,14 @@ func (h *Handler) GetAllocationHistory(c *gin.Context) {
 func (h *Handler) GetAllCustomers(c *gin.Context) {
 	userID := c.GetInt("user_id")
 	if userID == 0 {
-		common.Fail(c, common.UnauthorizedCode, "用户未认证")
+		common.Fail(c, common.UnauthorizedCode, "User not authenticated")
 		return
 	}
 
 	customers, err := h.mspAllocationService.GetMSPCustomers(c.Request.Context(), userID)
 	if err != nil {
 		h.logger.Errorw("Failed to list customers", "error", err, "user_id", userID)
-		common.Fail(c, common.InternalErrorCode, "查询客户列表失败")
+		common.Fail(c, common.InternalErrorCode, "Failed to query customer list")
 		return
 	}
 
@@ -287,7 +287,7 @@ func (h *Handler) GetAllCustomers(c *gin.Context) {
 func (h *Handler) GetCustomerTickets(c *gin.Context) {
 	customerTenantID, err := strconv.Atoi(c.Param("customer_tenant_id"))
 	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "客户租户ID无效")
+		common.Fail(c, common.ParamErrorCode, "Invalid customer tenant ID")
 		return
 	}
 
@@ -299,7 +299,7 @@ func (h *Handler) GetCustomerTickets(c *gin.Context) {
 	if !exists || !mspCtx.IsMSP {
 		h.logger.Warnw("Rejected MSP customer tickets without MSP context",
 			"customer_tenant_id", customerTenantID, "user_id", c.GetInt("user_id"))
-		common.Fail(c, common.ForbiddenCode, "非MSP用户")
+		common.Fail(c, common.ForbiddenCode, "Non-MSP user")
 		return
 	}
 	// 防御：customerTenantID 来自 URL param，必须落在 MSP 员工授权列表内，
@@ -307,7 +307,7 @@ func (h *Handler) GetCustomerTickets(c *gin.Context) {
 	if !mspCtx.IsCustomerAllowed(customerTenantID) {
 		h.logger.Warnw("Rejected MSP customer tickets for unauthorized customer",
 			"customer_tenant_id", customerTenantID, "allowed", mspCtx.AllowedCustomers, "user_id", c.GetInt("user_id"))
-		common.Fail(c, common.ForbiddenCode, "无权访问指定客户租户")
+		common.Fail(c, common.ForbiddenCode, "Not authorized to access the specified customer tenant")
 		return
 	}
 	userID := mspCtx.MSPUserID
@@ -315,7 +315,7 @@ func (h *Handler) GetCustomerTickets(c *gin.Context) {
 	tickets, total, err := h.ticketService.GetCustomerTicketsForMSP(c.Request.Context(), userID, customerTenantID, &status, page, pageSize)
 	if err != nil {
 		h.logger.Errorw("Failed to get customer tickets", "error", err, "customer_tenant_id", customerTenantID)
-		common.Fail(c, common.InternalErrorCode, "查询工单失败")
+		common.Fail(c, common.InternalErrorCode, "Failed to query work order")
 		return
 	}
 
@@ -333,19 +333,19 @@ func (h *Handler) GetCustomerTickets(c *gin.Context) {
 func (h *Handler) AssignMSPTechnician(c *gin.Context) {
 	ticketID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "工单ID无效")
+		common.Fail(c, common.ParamErrorCode, "Invalid ticket ID")
 		return
 	}
 
 	var req dto.AssignMSPTechnicianRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
 	assignerID := c.GetInt("user_id")
 	if assignerID == 0 {
-		common.Fail(c, common.UnauthorizedCode, "用户未认证")
+		common.Fail(c, common.UnauthorizedCode, "User not authenticated")
 		return
 	}
 
@@ -353,21 +353,21 @@ func (h *Handler) AssignMSPTechnician(c *gin.Context) {
 	// 防止通过篡改 body 绕过 X-Customer-Tenant-ID 中间件的授权检查。
 	mspCtx, exists := middleware.GetMSPContext(c)
 	if !exists || !mspCtx.IsMSP {
-		common.Fail(c, common.ForbiddenCode, "非MSP用户")
+		common.Fail(c, common.ForbiddenCode, "Non-MSP user")
 		return
 	}
 	if !mspCtx.IsCustomerAllowed(req.CustomerTenantID) {
 		h.logger.Warnw("Rejected MSP technician assignment for unauthorized customer",
 			"ticket_id", ticketID, "customer_tenant_id", req.CustomerTenantID,
 			"allowed", mspCtx.AllowedCustomers, "assigner_id", assignerID)
-		common.Fail(c, common.ForbiddenCode, "无权访问指定客户租户")
+		common.Fail(c, common.ForbiddenCode, "Not authorized to access the specified customer tenant")
 		return
 	}
 
 	ticket, err := h.ticketService.AssignMSPTechnician(c.Request.Context(), ticketID, req.CustomerTenantID, assignerID)
 	if err != nil {
 		h.logger.Errorw("Failed to assign MSP technician", "error", err, "ticket_id", ticketID)
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -380,7 +380,7 @@ func (h *Handler) GetCustomerReports(c *gin.Context) {
 	endDate := c.Query("endDate")
 
 	if startDate == "" || endDate == "" {
-		common.Fail(c, common.ParamErrorCode, "startDate和endDate为必填参数")
+		common.Fail(c, common.ParamErrorCode, "startDate and endDate are required parameters")
 		return
 	}
 
@@ -389,25 +389,25 @@ func (h *Handler) GetCustomerReports(c *gin.Context) {
 	// 是一份跨租户读数。
 	mspTenantID := c.GetInt("tenant_id")
 	if mspTenantID == 0 {
-		common.Fail(c, common.UnauthorizedCode, "缺少租户上下文")
+		common.Fail(c, common.UnauthorizedCode, "Missing tenant context")
 		return
 	}
 
 	dateFrom, err := parseDateOrZero(startDate)
 	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "startDate格式错误(YYYY-MM-DD)")
+		common.Fail(c, common.ParamErrorCode, "startDate format error (YYYY-MM-DD)")
 		return
 	}
 	dateTo, err := parseDateOrZero(endDate)
 	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "endDate格式错误(YYYY-MM-DD)")
+		common.Fail(c, common.ParamErrorCode, "endDate format error (YYYY-MM-DD)")
 		return
 	}
 
 	reports, err := h.ticketService.GetMSPCustomerReports(c.Request.Context(), mspTenantID, dateFrom, dateTo)
 	if err != nil {
 		h.logger.Errorw("Failed to get customer reports", "error", err)
-		common.Fail(c, common.InternalErrorCode, "生成报表失败")
+		common.Fail(c, common.InternalErrorCode, "Failed to generate report")
 		return
 	}
 
@@ -425,18 +425,18 @@ func (h *Handler) GetPerformanceReports(c *gin.Context) {
 	mspUserIDStr := c.Query("mspUserId")
 
 	if startDate == "" || endDate == "" {
-		common.Fail(c, common.ParamErrorCode, "startDate和endDate为必填参数")
+		common.Fail(c, common.ParamErrorCode, "startDate and endDate are required parameters")
 		return
 	}
 
 	dateFrom, err := parseDateOrZero(startDate)
 	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "startDate格式错误(YYYY-MM-DD)")
+		common.Fail(c, common.ParamErrorCode, "startDate format error (YYYY-MM-DD)")
 		return
 	}
 	dateTo, err := parseDateOrZero(endDate)
 	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "endDate格式错误(YYYY-MM-DD)")
+		common.Fail(c, common.ParamErrorCode, "endDate format error (YYYY-MM-DD)")
 		return
 	}
 
@@ -444,28 +444,28 @@ func (h *Handler) GetPerformanceReports(c *gin.Context) {
 	// 旧实现把这个 user ID 当作 tenant_id 传给查询，既没过滤到人，又读到了
 	// 另一个租户的工单数。现在显式拒绝该参数，而不是静默忽略后假装过滤生效。
 	if mspUserIDStr != "" {
-		common.Fail(c, common.ParamErrorCode, "暂不支持按 mspUserId 过滤绩效报表（员工维度尚未实现），请只传 startDate/endDate")
+		common.Fail(c, common.ParamErrorCode, "Filtering performance reports by mspUserId is not currently supported (the employee dimension has not yet been implemented), please only pass startDate/endDate")
 		return
 	}
 
 	// 与历史实现保持一致：默认分支仍要求请求携带 MSP 上下文。
 	mspCtx, exists := middleware.GetMSPContext(c)
 	if !exists || !mspCtx.IsMSP {
-		common.Fail(c, common.ForbiddenCode, "非MSP用户")
+		common.Fail(c, common.ForbiddenCode, "Non-MSP user")
 		return
 	}
 
 	// 聚合维度是 tenant，租户只能来自认证上下文（见 GetCustomerReports 同一问题）。
 	mspTenantID := c.GetInt("tenant_id")
 	if mspTenantID == 0 {
-		common.Fail(c, common.UnauthorizedCode, "缺少租户上下文")
+		common.Fail(c, common.UnauthorizedCode, "Missing tenant context")
 		return
 	}
 
 	reports, err := h.ticketService.GetMSPPerformanceReports(c.Request.Context(), mspTenantID, dateFrom, dateTo)
 	if err != nil {
 		h.logger.Errorw("Failed to get performance reports", "error", err)
-		common.Fail(c, common.InternalErrorCode, "生成绩效报表失败")
+		common.Fail(c, common.InternalErrorCode, "Failed to generate performance report")
 		return
 	}
 

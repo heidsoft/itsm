@@ -36,9 +36,9 @@ const ReviewStepBadge: React.FC<ReviewStepBadgeProps> = ({
   if (board) {
     const color = board === 'REVIEW' ? 'green' : 'purple';
     return (
-      <Tooltip title={`需要${board === 'REVIEW' ? '常规' : '紧急'}评审组审批`}>
+      <Tooltip title={`Required ${board === 'REVIEW' ? 'General' : 'Urgent'} Review Board Approval`}>
         <Tag color={color} icon={<Users size={12} />}>
-          {board === 'REVIEW' ? '常规评审' : '紧急评审'}
+          {board === 'REVIEW' ? 'General review' : 'Emergency review'}
         </Tag>
       </Tooltip>
     );
@@ -46,9 +46,9 @@ const ReviewStepBadge: React.FC<ReviewStepBadgeProps> = ({
 
   const quorumText =
     approvalType === 'or'
-      ? '或签（任一通过）'
+      ? 'Or sign (either passed)'
       : approvalType === 'parallel' || approvalType === 'all'
-        ? `会签（${threshold ?? approverCount ?? '全'} 人通过）`
+        ? `Countersign (${threshold ?? approverCount ?? 'Full'} People pass)`
         : null;
 
   return (
@@ -59,7 +59,7 @@ const ReviewStepBadge: React.FC<ReviewStepBadgeProps> = ({
         </Tag>
       )}
       {quorumText && <Tag>{quorumText}</Tag>}
-      {isRequired === false && <Tag color="default">可选</Tag>}
+      {isRequired === false && <Tag color="default">Optional</Tag>}
     </Space>
   );
 };

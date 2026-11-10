@@ -43,7 +43,7 @@ func (e *EncryptionService) deriveKey(salt []byte) ([]byte, error) {
 	key := make([]byte, 32)
 	kdf := hkdf.New(sha256.New, e.secretKey, salt, hkdfInfo)
 	if _, err := io.ReadFull(kdf, key); err != nil {
-		return nil, fmt.Errorf("HKDF 密钥派生失败: %w", err)
+		return nil, fmt.Errorf("HKDF key derivation failed: %w", err)
 	}
 	return key, nil
 }
@@ -58,7 +58,7 @@ func (e *EncryptionService) Encrypt(plaintext string) (string, error) {
 	// 生成随机盐（16 字节）
 	salt := make([]byte, 16)
 	if _, err := io.ReadFull(rand.Reader, salt); err != nil {
-		return "", fmt.Errorf("生成盐失败: %w", err)
+		return "", fmt.Errorf("Failed to generate salt: %w", err)
 	}
 
 	derivedKey, err := e.deriveKey(salt)
@@ -68,18 +68,18 @@ func (e *EncryptionService) Encrypt(plaintext string) (string, error) {
 
 	block, err := aes.NewCipher(derivedKey)
 	if err != nil {
-		return "", fmt.Errorf("创建AES cipher失败: %w", err)
+		return "", fmt.Errorf("Failed to create AES cipher: %w", err)
 	}
 
 	gcm, err := cipher.NewGCM(block)
 	if err != nil {
-		return "", fmt.Errorf("创建GCM失败: %w", err)
+		return "", fmt.Errorf("Failed to create GCM: %w", err)
 	}
 
 	// 生成随机nonce
 	nonce := make([]byte, gcm.NonceSize())
 	if _, err := io.ReadFull(rand.Reader, nonce); err != nil {
-		return "", fmt.Errorf("生成nonce失败: %w", err)
+		return "", fmt.Errorf("Failed to generate nonce: %w", err)
 	}
 
 	// 加密数据
@@ -109,7 +109,7 @@ func (e *EncryptionService) Decrypt(ciphertext string) (string, error) {
 	// base64解码
 	data, err := base64.StdEncoding.DecodeString(ciphertext)
 	if err != nil {
-		return "", fmt.Errorf("base64解码失败: %w", err)
+		return "", fmt.Errorf("base64 decoding failed: %w", err)
 	}
 
 	if len(data) > 0 && data[0] == currentKeyVersion {
@@ -123,13 +123,13 @@ func (e *EncryptionService) Decrypt(ciphertext string) (string, error) {
 // decryptV1 解密新版密文: version(1) || salt_len(2) || salt || nonce(12) || ciphertext
 func (e *EncryptionService) decryptV1(data []byte) (string, error) {
 	if len(data) < 3 {
-		return "", errors.New("密文长度不足: 缺少版本和盐长度")
+		return "", errors.New("Insufficient ciphertext length: version and salt length missing")
 	}
 
 	saltLen := binary.BigEndian.Uint16(data[1:3])
 	offset := 3 + int(saltLen)
 	if len(data) < offset {
-		return "", errors.New("密文长度不足: 盐数据不完整")
+		return "", errors.New("Insufficient ciphertext length: incomplete salt data")
 	}
 
 	salt := data[3:offset]
@@ -140,24 +140,24 @@ func (e *EncryptionService) decryptV1(data []byte) (string, error) {
 
 	block, err := aes.NewCipher(derivedKey)
 	if err != nil {
-		return "", fmt.Errorf("创建AES cipher失败: %w", err)
+		return "", fmt.Errorf("Failed to create AES cipher: %w", err)
 	}
 
 	gcm, err := cipher.NewGCM(block)
 	if err != nil {
-		return "", fmt.Errorf("创建GCM失败: %w", err)
+		return "", fmt.Errorf("Failed to create GCM: %w", err)
 	}
 
 	nonceSize := gcm.NonceSize()
 	if len(data[offset:]) < nonceSize {
-		return "", errors.New("密文长度不足: nonce 不完整")
+		return "", errors.New("Insufficient ciphertext length: incomplete nonce")
 	}
 
 	nonce := data[offset : offset+nonceSize]
 	cipherData := data[offset+nonceSize:]
 	plaintext, err := gcm.Open(nil, nonce, cipherData, nil)
 	if err != nil {
-		return "", fmt.Errorf("解密失败: %w", err)
+		return "", fmt.Errorf("Decryption failed: %w", err)
 	}
 
 	return string(plaintext), nil
@@ -168,23 +168,23 @@ func (e *EncryptionService) decryptV1(data []byte) (string, error) {
 func (e *EncryptionService) decryptLegacy(data []byte) (string, error) {
 	block, err := aes.NewCipher(e.legacyKey)
 	if err != nil {
-		return "", fmt.Errorf("创建AES cipher失败(legacy): %w", err)
+		return "", fmt.Errorf("Failed to create AES cipher (legacy): %w", err)
 	}
 
 	gcm, err := cipher.NewGCM(block)
 	if err != nil {
-		return "", fmt.Errorf("创建GCM失败(legacy): %w", err)
+		return "", fmt.Errorf("Failed to create GCM (legacy): %w", err)
 	}
 
 	nonceSize := gcm.NonceSize()
 	if len(data) < nonceSize {
-		return "", errors.New("密文长度不足(legacy)")
+		return "", errors.New("Insufficient ciphertext length (legacy)")
 	}
 
 	nonce, cipherData := data[:nonceSize], data[nonceSize:]
 	plaintext, err := gcm.Open(nil, nonce, cipherData, nil)
 	if err != nil {
-		return "", fmt.Errorf("解密失败(legacy): %w", err)
+		return "", fmt.Errorf("Decryption failed (legacy): %w", err)
 	}
 
 	return string(plaintext), nil
@@ -193,13 +193,13 @@ func (e *EncryptionService) decryptLegacy(data []byte) (string, error) {
 // HashPassword 使用bcrypt哈希密码
 func HashPassword(password string) (string, error) {
 	if password == "" {
-		return "", errors.New("密码不能为空")
+		return "", errors.New("Password cannot be empty")
 	}
 
 	// 使用bcrypt默认cost(10)
 	hashedBytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
-		return "", fmt.Errorf("密码哈希失败: %w", err)
+		return "", fmt.Errorf("Password hash failed: %w", err)
 	}
 
 	return string(hashedBytes), nil
@@ -231,7 +231,7 @@ func (e *EncryptionService) EncryptSensitiveFields(data map[string]interface{}) 
 			if strValue, ok := value.(string); ok && strValue != "" {
 				encrypted, err := e.Encrypt(strValue)
 				if err != nil {
-					return fmt.Errorf("加密字段 %s 失败: %w", field, err)
+					return fmt.Errorf("Encrypted field %s failed: %w", field, err)
 				}
 				data[field] = encrypted
 			}
@@ -257,7 +257,7 @@ func (e *EncryptionService) DecryptSensitiveFields(data map[string]interface{}) 
 			if strValue, ok := value.(string); ok && strValue != "" {
 				decrypted, err := e.Decrypt(strValue)
 				if err != nil {
-					return fmt.Errorf("解密字段 %s 失败: %w", field, err)
+					return fmt.Errorf("Decryption of field %s failed: %w", field, err)
 				}
 				data[field] = decrypted
 			}
@@ -275,7 +275,7 @@ func GenerateSecureToken(length int) (string, error) {
 
 	bytes := make([]byte, length)
 	if _, err := rand.Read(bytes); err != nil {
-		return "", fmt.Errorf("生成随机令牌失败: %w", err)
+		return "", fmt.Errorf("Failed to generate random token: %w", err)
 	}
 
 	return base64.URLEncoding.EncodeToString(bytes), nil

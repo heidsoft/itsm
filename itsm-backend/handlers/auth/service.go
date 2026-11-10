@@ -71,10 +71,10 @@ func (s *Service) SwitchTenant(ctx context.Context, userID, tenantID int) (*dto.
 	userEntity, err := s.client.User.Get(ctx, userID)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, fmt.Errorf("用户不存在")
+			return nil, fmt.Errorf("User does not exist")
 		}
 		s.logger.Errorw("Failed to load user for tenant switch", "user_id", userID, "error", err)
-		return nil, fmt.Errorf("无权限访问该租户")
+		return nil, fmt.Errorf("No permission to access this tenant")
 	}
 	nativeSwitch := userEntity.TenantID == tenantID
 	superAdmin := userEntity.Role == user.RoleSuperAdmin
@@ -91,25 +91,25 @@ func (s *Service) SwitchTenant(ctx context.Context, userID, tenantID int) (*dto.
 	}
 	if !nativeSwitch && !superAdmin && !mspAllowed {
 		s.logger.Warnw("Switch tenant denied", "user_id", userID, "tenant_id", tenantID, "native_switch", nativeSwitch, "super_admin", superAdmin, "msp_role", string(userEntity.MspRole))
-		return nil, fmt.Errorf("无权限访问该租户")
+		return nil, fmt.Errorf("No permission to access this tenant")
 	}
 	tenantEntity, err := s.client.Tenant.Get(ctx, tenantID)
 	if err != nil {
-		return nil, fmt.Errorf("租户不存在")
+		return nil, fmt.Errorf("Tenant does not exist")
 	}
 	if tenantEntity.Status != "active" {
-		return nil, fmt.Errorf("租户已被暂停")
+		return nil, fmt.Errorf("Tenant has been suspended")
 	}
 	if !tenantEntity.ExpiresAt.IsZero() && tenantEntity.ExpiresAt.Before(time.Now()) {
-		return nil, fmt.Errorf("租户已过期")
+		return nil, fmt.Errorf("Tenant has expired")
 	}
 	accessToken, err := middleware.GenerateAccessToken(userEntity.ID, userEntity.Username, string(userEntity.Role), tenantID, s.jwtSecret, middleware.AccessTokenTTL)
 	if err != nil {
-		return nil, fmt.Errorf("生成token失败")
+		return nil, fmt.Errorf("Failed to generate token")
 	}
 	refreshToken, err := middleware.GenerateRefreshToken(userEntity.ID, userEntity.Username, string(userEntity.Role), tenantID, s.jwtSecret, middleware.RefreshTokenTTL)
 	if err != nil {
-		return nil, fmt.Errorf("生成刷新令牌失败")
+		return nil, fmt.Errorf("Failed to generate refresh token")
 	}
 	mspRole := string(userEntity.MspRole)
 	var mspRolePtr *string
@@ -121,43 +121,43 @@ func (s *Service) SwitchTenant(ctx context.Context, userID, tenantID int) (*dto.
 
 func (s *Service) Register(ctx context.Context, req *dto.RegisterRequest) (*dto.RegisterResponse, error) {
 	if exists, err := s.client.User.Query().Where(user.UsernameEQ(req.Username)).Exist(ctx); err != nil {
-		return nil, fmt.Errorf("检查用户名失败")
+		return nil, fmt.Errorf("Failed to check username")
 	} else if exists {
-		return nil, common.NewBusinessError(common.ConflictCode, "用户名已被注册", "")
+		return nil, common.NewBusinessError(common.ConflictCode, "Username has been registered", "")
 	}
 	if exists, err := s.client.User.Query().Where(user.EmailEQ(req.Email)).Exist(ctx); err != nil {
-		return nil, fmt.Errorf("检查邮箱失败")
+		return nil, fmt.Errorf("Failed to check email")
 	} else if exists {
-		return nil, common.NewBusinessError(common.ConflictCode, "邮箱已被注册", "")
+		return nil, common.NewBusinessError(common.ConflictCode, "Email has been registered", "")
 	}
 	tenants, err := s.client.Tenant.Query().Where(tenant.StatusEQ("active")).Order(ent.Asc(tenant.FieldID)).Limit(2).All(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("查询租户失败")
+		return nil, fmt.Errorf("Failed to query tenant")
 	}
 	if len(tenants) != 1 {
 		// fail-closed：多活跃租户无法从请求推断归属，零活跃租户说明系统未初始化；
 		// 目标租户绝不接受请求体指定。两者都是部署状态而非用户输入错误，
 		// 报 401 会让新用户以为是自己的凭据有问题。
 		if len(tenants) > 1 {
-			return nil, common.NewBusinessError(common.ServiceUnavailableCode, "系统存在多个活跃租户，自助注册暂未开放，请联系管理员开通账号", "")
+			return nil, common.NewBusinessError(common.ServiceUnavailableCode, "There are multiple active tenants in the system. Self-service registration is not available yet. Please contact the administrator to open an account.", "")
 		}
-		return nil, common.NewBusinessError(common.ServiceUnavailableCode, "系统尚未初始化活跃租户，暂无法注册", "")
+		return nil, common.NewBusinessError(common.ServiceUnavailableCode, "The system has not initialized the active tenant and cannot register it yet.", "")
 	}
 	tenantID := tenants[0].ID
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 	if err != nil {
-		return nil, fmt.Errorf("密码加密失败")
+		return nil, fmt.Errorf("Password encryption failed")
 	}
 	userEntity, err := s.client.User.Create().SetUsername(req.Username).SetEmail(req.Email).SetName(req.ResolvedDisplayName()).SetPasswordHash(string(hashedPassword)).SetPhone(req.Phone).SetDepartment(req.Company).SetRole(user.RoleEndUser).SetTenantID(tenantID).SetActive(true).Save(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("创建用户失败")
+		return nil, fmt.Errorf("Failed to create user")
 	}
 	return &dto.RegisterResponse{ID: userEntity.ID, Username: userEntity.Username, Email: userEntity.Email, Message: "注册成功"}, nil
 }
 
 func (s *Service) ForgotPassword(ctx context.Context, req *dto.ForgotPasswordRequest) (*dto.ForgotPasswordResponse, error) {
 	if s.emailService == nil {
-		return nil, common.NewBusinessError(common.ServiceUnavailableCode, "密码重置功能未启用：邮件服务未配置", "")
+		return nil, common.NewBusinessError(common.ServiceUnavailableCode, "Password reset function is not enabled: Email service is not configured", "")
 	}
 	genericOK := &dto.ForgotPasswordResponse{Message: "如果该邮箱已注册，我们将发送密码重置链接"}
 	query := s.client.User.Query().Where(user.EmailEQ(req.Email))
@@ -174,10 +174,10 @@ func (s *Service) ForgotPassword(ctx context.Context, req *dto.ForgotPasswordReq
 	}
 	token, err := generateResetToken()
 	if err != nil {
-		return nil, fmt.Errorf("生成重置令牌失败: %w", err)
+		return nil, fmt.Errorf("Failed to generate reset token: %w", err)
 	}
 	if _, err = s.client.PasswordResetToken.Create().SetUserID(userEntity.ID).SetEmail(req.Email).SetToken(token).SetExpiresAt(time.Now().Add(time.Hour)).Save(ctx); err != nil {
-		return nil, fmt.Errorf("生成重置令牌失败")
+		return nil, fmt.Errorf("Failed to generate reset token")
 	}
 	if err := s.emailService.SendPasswordResetEmail(ctx, []string{req.Email}, token, s.baseURL); err != nil {
 		s.logger.Errorw("Failed to send password reset email", "user_id", userEntity.ID, "error", err)
@@ -187,30 +187,30 @@ func (s *Service) ForgotPassword(ctx context.Context, req *dto.ForgotPasswordReq
 
 func (s *Service) ResetPassword(ctx context.Context, req *dto.PasswordResetRequest) (*dto.PasswordResetResponse, error) {
 	if req.Password != req.PasswordConfirm {
-		return nil, fmt.Errorf("两次输入的密码不一致")
+		return nil, fmt.Errorf("Passwords do not match")
 	}
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 	if err != nil {
-		return nil, fmt.Errorf("密码加密失败")
+		return nil, fmt.Errorf("Password encryption failed")
 	}
 	tx, err := s.client.Tx(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("启动密码重置事务失败")
+		return nil, fmt.Errorf("Failed to initiate password reset transaction")
 	}
 	defer func() { _ = tx.Rollback() }()
 	affected, err := tx.PasswordResetToken.Update().Where(passwordresettoken.TokenEQ(req.Token), passwordresettoken.EmailEQ(req.Email), passwordresettoken.Used(false), passwordresettoken.ExpiresAtGT(time.Now())).SetUsed(true).Save(ctx)
 	if err != nil || affected != 1 {
-		return nil, fmt.Errorf("令牌无效或已使用")
+		return nil, fmt.Errorf("Token is invalid or already used")
 	}
 	tokenEntity, err := tx.PasswordResetToken.Query().Where(passwordresettoken.TokenEQ(req.Token), passwordresettoken.EmailEQ(req.Email)).Only(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("令牌无效或已使用")
+		return nil, fmt.Errorf("Token is invalid or already used")
 	}
 	if _, err = tx.User.UpdateOneID(tokenEntity.UserID).SetPasswordHash(string(hashedPassword)).Save(ctx); err != nil {
-		return nil, fmt.Errorf("更新密码失败")
+		return nil, fmt.Errorf("Failed to update password")
 	}
 	if err = tx.Commit(); err != nil {
-		return nil, fmt.Errorf("提交密码重置失败")
+		return nil, fmt.Errorf("Failed to submit password reset")
 	}
 	if err := middleware.InvalidateUserTokens(ctx, tokenEntity.UserID, time.Now()); err != nil {
 		// 改密后旧会话应立即失效。密码已写入，回滚更糟，所以只记录：

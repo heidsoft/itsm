@@ -35,7 +35,7 @@ func (s *TicketCategoryService) CreateCategory(ctx context.Context, req *CreateC
 		return nil, err
 	}
 	if exists {
-		return nil, errors.New("分类代码已存在")
+		return nil, errors.New("Category code already exists")
 	}
 
 	// 验证父分类
@@ -45,7 +45,7 @@ func (s *TicketCategoryService) CreateCategory(ctx context.Context, req *CreateC
 			Where(ticketcategory.ID(req.ParentID), ticketcategory.TenantID(req.TenantID)).
 			Only(ctx)
 		if err != nil {
-			return nil, errors.New("父分类不存在")
+			return nil, errors.New("Parent category does not exist")
 		}
 		level = parent.Level + 1
 	}
@@ -195,13 +195,13 @@ func (s *TicketCategoryService) UpdateCategory(ctx context.Context, id int, req 
 			return nil, err
 		}
 		if exists {
-			return nil, errors.New("分类代码已存在")
+			return nil, errors.New("Category code already exists")
 		}
 		update.SetCode(req.Code)
 	}
 	if req.ParentID != nil {
 		if *req.ParentID == id {
-			return nil, errors.New("不能将分类设置为自身的父分类")
+			return nil, errors.New("Cannot set a category as its own parent category")
 		}
 		if *req.ParentID > 0 {
 			isDescendant, err := s.isDescendantCategory(ctx, *req.ParentID, id, tenantID)
@@ -209,14 +209,14 @@ func (s *TicketCategoryService) UpdateCategory(ctx context.Context, id int, req 
 				return nil, err
 			}
 			if isDescendant {
-				return nil, errors.New("不能将分类移动到其子分类下")
+				return nil, errors.New("Cannot move a category to its subcategory")
 			}
 			// 验证父分类
 			parent, err := s.client.TicketCategory.Query().
 				Where(ticketcategory.ID(*req.ParentID), ticketcategory.TenantID(tenantID)).
 				Only(ctx)
 			if err != nil {
-				return nil, errors.New("父分类不存在")
+				return nil, errors.New("Parent category does not exist")
 			}
 			update.SetParentID(*req.ParentID)
 			update.SetLevel(parent.Level + 1)
@@ -278,10 +278,10 @@ func (s *TicketCategoryService) validateWorkflowKey(ctx context.Context, tenantI
 			processdefinition.IsLatestEQ(true),
 		).Exist(ctx)
 	if err != nil {
-		return fmt.Errorf("验证关联工作流失败: %w", err)
+		return fmt.Errorf("Failed to verify associated workflow: %w", err)
 	}
 	if !exists {
-		return common.NewValidationError("工作流不存在、未激活或不属于当前租户", nil)
+		return common.NewValidationError("The workflow does not exist, is not active, or does not belong to the current tenant", nil)
 	}
 	return nil
 }
@@ -299,7 +299,7 @@ func (s *TicketCategoryService) DeleteCategory(ctx context.Context, id int, tena
 		return err
 	}
 	if childrenCount > 0 {
-		return errors.New("无法删除有子分类的分类")
+		return errors.New("Cannot delete a category with subcategories")
 	}
 
 	// 检查是否有工单使用此分类
@@ -313,7 +313,7 @@ func (s *TicketCategoryService) DeleteCategory(ctx context.Context, id int, tena
 		return err
 	}
 	if ticketsCount > 0 {
-		return errors.New("无法删除正在使用的分类")
+		return errors.New("Unable to delete category in use")
 	}
 
 	return s.client.TicketCategory.DeleteOneID(id).
@@ -327,14 +327,14 @@ func (s *TicketCategoryService) MoveCategory(ctx context.Context, id int, req *M
 		Where(ticketcategory.ID(id), ticketcategory.TenantID(tenantID)).
 		Only(ctx)
 	if err != nil {
-		return nil, errors.New("分类不存在")
+		return nil, errors.New("Category does not exist")
 	}
 
 	newParentID := category.ParentID
 	newLevel := category.Level
 	if req.NewParentID != nil {
 		if *req.NewParentID == id {
-			return nil, errors.New("不能将分类移动到自身下级")
+			return nil, errors.New("Category cannot be moved below itself")
 		}
 		newParentID = *req.NewParentID
 		newLevel = 1
@@ -344,7 +344,7 @@ func (s *TicketCategoryService) MoveCategory(ctx context.Context, id int, req *M
 				Where(ticketcategory.ID(newParentID), ticketcategory.TenantID(tenantID)).
 				Only(ctx)
 			if err != nil {
-				return nil, errors.New("父分类不存在")
+				return nil, errors.New("Parent category does not exist")
 			}
 
 			isDescendant, err := s.isDescendantCategory(ctx, parent.ID, id, tenantID)
@@ -352,7 +352,7 @@ func (s *TicketCategoryService) MoveCategory(ctx context.Context, id int, req *M
 				return nil, err
 			}
 			if isDescendant {
-				return nil, errors.New("不能将分类移动到其子分类下")
+				return nil, errors.New("Cannot move a category to its subcategory")
 			}
 			newLevel = parent.Level + 1
 		}
@@ -395,7 +395,7 @@ func (s *TicketCategoryService) isDescendantCategory(ctx context.Context, candid
 			return true, nil
 		}
 		if visited[currentID] {
-			return false, errors.New("分类层级存在循环引用")
+			return false, errors.New("There is a circular reference at the classification level")
 		}
 		visited[currentID] = true
 

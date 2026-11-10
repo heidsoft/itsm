@@ -142,7 +142,7 @@ func (r *EntRepository) assignChangeNumber(ctx context.Context, client *ent.Clie
 	}
 	number := fmt.Sprintf("CHG-%s-%04d", time.Now().Format("20060102"), ec.ID)
 	if _, err := client.Change.UpdateOneID(ec.ID).SetChangeNumber(number).Save(ctx); err != nil {
-		return fmt.Errorf("写入变更编号失败: %w", err)
+		return fmt.Errorf("Failed to write change number: %w", err)
 	}
 	ec.ChangeNumber = number
 	return nil
@@ -476,7 +476,7 @@ func (r *EntRepository) Delete(ctx context.Context, id int, tenantID int) error 
 		return err
 	}
 	if affected != 1 {
-		return common.NewNotFoundError("变更单")
+		return common.NewNotFoundError("Change Order")
 	}
 	return nil
 }

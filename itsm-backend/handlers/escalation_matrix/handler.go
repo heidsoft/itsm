@@ -29,12 +29,12 @@ func NewHandler(logger *zap.SugaredLogger, escalationMatrixService *service.Esca
 func tenantID(c *gin.Context) (int, bool) {
 	tid, exists := c.Get("tenant_id")
 	if !exists {
-		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		common.Fail(c, common.UnauthorizedCode, "Unauthorized access")
 		return 0, false
 	}
 	id, ok := tid.(int)
 	if !ok || id == 0 {
-		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		common.Fail(c, common.UnauthorizedCode, "Unauthorized access")
 		return 0, false
 	}
 	return id, true
@@ -58,13 +58,13 @@ func (h *Handler) SetMatrix(ctx *gin.Context) {
 	}
 	var matrix service.EscalationMatrix
 	if err := ctx.ShouldBindJSON(&matrix); err != nil {
-		common.ParamErrorWithErr(ctx, err, "请求参数错误")
+		common.ParamErrorWithErr(ctx, err, "Wrong request parameters")
 		return
 	}
 	// 落库失败必须显式报错：SetMatrix 内部是「先落库成功才更新缓存」，
 	// 返回 nil 意味着配置已持久化。若这里吞错，接口会返回成功但重启即丢配置。
 	if err := h.escalationMatrixService.SetMatrix(tid, matrix); err != nil {
-		common.FailWithErr(ctx, err, "保存升级矩阵失败")
+		common.FailWithErr(ctx, err, "Failed to save upgrade matrix")
 		return
 	}
 	common.Success(ctx, nil)

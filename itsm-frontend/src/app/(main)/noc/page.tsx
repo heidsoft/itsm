@@ -11,19 +11,19 @@ import { formatDateTime } from '@/lib/formatters';
 const { Title, Text } = Typography;
 
 const PRIORITY_META: Record<string, { color: string; label: string }> = {
-  critical: { color: 'red', label: '紧急' },
-  urgent: { color: 'red', label: '紧急' },
-  high: { color: 'orange', label: '高' },
-  medium: { color: 'blue', label: '中' },
-  low: { color: 'default', label: '低' },
+  critical: { color: 'red', label: 'Urgent' },
+  urgent: { color: 'red', label: 'Urgent' },
+  high: { color: 'orange', label: 'High' },
+  medium: { color: 'blue', label: 'Medium' },
+  low: { color: 'default', label: 'Low' },
 };
 
 const STATUS_META: Record<string, { color: string; label: string }> = {
-  new: { color: 'blue', label: '新建' },
-  open: { color: 'orange', label: '打开' },
-  in_progress: { color: 'cyan', label: '处理中' },
-  resolved: { color: 'green', label: '已解决' },
-  closed: { color: 'default', label: '已关闭' },
+  new: { color: 'blue', label: 'Create' },
+  open: { color: 'orange', label: 'Open' },
+  in_progress: { color: 'cyan', label: 'In Progress' },
+  resolved: { color: 'green', label: 'Resolved' },
+  closed: { color: 'default', label: 'Closed' },
 };
 
 const PAGE_SIZE = 20;
@@ -59,7 +59,7 @@ export default function NOCPage() {
       setIncidents(resp.items ?? []);
       setTotal(resp.total);
     } catch {
-      message.error('加载重大事件失败');
+      message.error('Failed to load major events');
     } finally {
       setLoading(false);
     }
@@ -109,20 +109,20 @@ export default function NOCPage() {
 
   const columns: ColumnsType<Incident> = [
     {
-      title: '编号',
+      title: 'Number',
       dataIndex: 'incidentNumber',
       key: 'incidentNumber',
       width: 130,
       render: (num: string | undefined, record) => num || `#${record.id}`,
     },
     {
-      title: '标题',
+      title: 'Title',
       dataIndex: 'title',
       key: 'title',
       ellipsis: true,
     },
     {
-      title: '优先级',
+      title: 'Priority',
       dataIndex: 'priority',
       key: 'priority',
       width: 80,
@@ -132,7 +132,7 @@ export default function NOCPage() {
       },
     },
     {
-      title: '状态',
+      title: 'Status',
       dataIndex: 'status',
       key: 'status',
       width: 90,
@@ -142,13 +142,13 @@ export default function NOCPage() {
       },
     },
     {
-      title: '处理人',
+      title: 'Assignee',
       key: 'assignee',
       width: 120,
       render: (_, r) => r.assignee?.name || '-',
     },
     {
-      title: '创建时间',
+      title: 'Created',
       dataIndex: 'createdAt',
       key: 'createdAt',
       width: 180,
@@ -161,8 +161,8 @@ export default function NOCPage() {
   return (
     <div className="p-6 min-h-screen bg-gray-50">
       <div className="mb-6">
-        <Title level={2} style={{ marginBottom: 4 }}>NOC 工作台</Title>
-        <Text type="secondary">重大事件作战室：实时跟踪企业级重大事件处置进展</Text>
+        <Title level={2} style={{ marginBottom: 4 }}>NOC workbench</Title>
+        <Text type="secondary">Major incident war room: real-time tracking of enterprise-level major incident handling progress</Text>
       </div>
 
       {/* KPI 卡片 */}
@@ -170,7 +170,7 @@ export default function NOCPage() {
         <Col xs={24} sm={8}>
           <Card style={cardStyle}>
             <Statistic
-              title="重大事件总数"
+              title="Total number of major events"
               value={total}
               prefix={<Zap size={18} className="text-red-500 mr-2" />}
               styles={{ content: { color: '#cf1322' } }}
@@ -180,7 +180,7 @@ export default function NOCPage() {
         <Col xs={24} sm={8}>
           <Card style={cardStyle}>
             <Statistic
-              title="高优事件"
+              title="High quality event"
               value={
                 counts.failed
                   ? '-'
@@ -196,7 +196,7 @@ export default function NOCPage() {
         <Col xs={24} sm={8}>
           <Card style={cardStyle}>
             <Statistic
-              title="正在处理"
+              title="Processing"
               value={
                 counts.failed
                   ? '-'
@@ -214,22 +214,22 @@ export default function NOCPage() {
       {/* 筛选 + 列表 */}
       <Card>
         <div className="mb-4 flex flex-wrap items-center gap-3">
-          <Text strong>状态筛选：</Text>
+          <Text strong>Status filter:</Text>
           <Select
             allowClear
-            placeholder="全部状态"
+            placeholder="All Status"
             style={{ width: 160 }}
             value={statusFilter}
             onChange={(v) => { setStatusFilter(v); setPage(1); }}
             options={[
-              { value: 'new', label: '新建' },
-              { value: 'open', label: '打开' },
-              { value: 'in_progress', label: '处理中' },
-              { value: 'resolved', label: '已解决' },
+              { value: 'new', label: 'Create' },
+              { value: 'open', label: 'Open' },
+              { value: 'in_progress', label: 'In Progress' },
+              { value: 'resolved', label: 'Resolved' },
             ]}
           />
           <CheckCircle size={16} className="text-gray-400" />
-          <Text type="secondary">共 {total} 条重大事件</Text>
+          <Text type="secondary">Total {total}  Major events</Text>
         </div>
         <Table<Incident>
           columns={columns}
@@ -243,7 +243,7 @@ export default function NOCPage() {
             onChange: (p) => setPage(p),
             showSizeChanger: false,
           }}
-          locale={{ emptyText: <Empty description="暂无重大事件" /> }}
+          locale={{ emptyText: <Empty description="No major events yet" /> }}
           scroll={{ x: 900 }}
           size="middle"
         />

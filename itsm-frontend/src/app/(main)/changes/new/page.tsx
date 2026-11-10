@@ -39,28 +39,28 @@ interface ChangeFormValues {
 }
 
 const TYPE_OPTIONS: Array<{ value: ChangeRequest['type']; label: string; hint?: string }> = [
-  { value: 'normal', label: '普通变更', hint: '标准审批流程' },
-  { value: 'standard', label: '标准变更', hint: '预授权、低风险' },
-  { value: 'emergency', label: '紧急变更', hint: '走应急审批' },
+  { value: 'normal', label: 'Normal Change', hint: 'Standard Approval Process' },
+  { value: 'standard', label: 'Standard Change', hint: 'Pre-authorized, low risk' },
+  { value: 'emergency', label: 'Emergency Change', hint: 'Emergency approval' },
 ];
 
 const PRIORITY_OPTIONS: Array<{ value: ChangeRequest['priority']; label: string }> = [
-  { value: 'critical', label: '紧急' },
-  { value: 'high', label: '高' },
-  { value: 'medium', label: '中' },
-  { value: 'low', label: '低' },
+  { value: 'critical', label: 'Urgent' },
+  { value: 'high', label: 'High' },
+  { value: 'medium', label: 'Medium' },
+  { value: 'low', label: 'Low' },
 ];
 
 const IMPACT_OPTIONS: Array<{ value: ChangeRequest['impactScope']; label: string }> = [
-  { value: 'high', label: '高（影响核心业务）' },
-  { value: 'medium', label: '中（影响部分业务或用户）' },
-  { value: 'low', label: '低（影响较小或无影响）' },
+  { value: 'high', label: 'High (affects core business)' },
+  { value: 'medium', label: 'Medium (affects some services or users)' },
+  { value: 'low', label: 'Low (little or no impact)' },
 ];
 
 const RISK_OPTIONS: Array<{ value: ChangeRequest['riskLevel']; label: string }> = [
-  { value: 'high', label: '高' },
-  { value: 'medium', label: '中' },
-  { value: 'low', label: '低' },
+  { value: 'high', label: 'High' },
+  { value: 'medium', label: 'Medium' },
+  { value: 'low', label: 'Low' },
 ];
 
 const CreateChangePage: React.FC = () => {
@@ -100,7 +100,7 @@ const CreateChangePage: React.FC = () => {
       message.success(t('changes.createSuccess'));
       router.push('/changes');
     } catch (err) {
-      console.error('提交变更失败:', err);
+      console.error('Failed to commit changes:', err);
       message.error(t('changes.createFailed'));
     } finally {
       setLoading(false);
@@ -110,7 +110,7 @@ const CreateChangePage: React.FC = () => {
   const validateRange = (_: unknown, value?: [Dayjs, Dayjs]) => {
     if (!value || !value[0] || !value[1]) return Promise.resolve();
     if (value[1].isBefore(value[0])) {
-      return Promise.reject(new Error('结束时间必须晚于开始时间'));
+      return Promise.reject(new Error('End time must be later than start time'));
     }
     return Promise.resolve();
   };
@@ -124,12 +124,14 @@ const CreateChangePage: React.FC = () => {
           onClick={() => router.back()}
           className="!px-0"
         >
-          返回变更列表
+
+          Back to change list
         </Button>
         <Title level={2} className="!mb-1 !mt-2">
-          新建变更请求
+
+          New change request
         </Title>
-        <Text type="secondary">提交新的 IT 基础设施或服务变更请求</Text>
+        <Text type="secondary">Submit a new IT infrastructure or service change request</Text>
       </div>
 
       <Card className="shadow-sm rounded-lg">
@@ -148,44 +150,44 @@ const CreateChangePage: React.FC = () => {
           scrollToFirstError
         >
           <Form.Item
-            label="变更标题"
+            label="Change title"
             name="title"
             rules={[
-              { required: true, message: '请输入变更标题' },
-              { max: 200, message: '标题不超过 200 字' },
+              { required: true, message: 'Please enter a change title' },
+              { max: 200, message: 'Title should not exceed 200 words' },
             ]}
           >
             <Input
-              placeholder="简要描述变更内容"
+              placeholder="Briefly describe the changes"
               allowClear
               data-testid="change-title-input"
             />
           </Form.Item>
 
           <Form.Item
-            label="详细描述"
+            label="Detailed description"
             name="description"
-            rules={[{ required: true, message: '请填写详细描述' }]}
+            rules={[{ required: true, message: 'Please fill in the detailed description' }]}
           >
             <TextArea
               data-testid="change-description-input"
               rows={4}
-              placeholder="请详细说明变更的目的、范围和内容..."
+              placeholder="Please explain in detail the purpose, scope and content of the change..."
               showCount
               maxLength={2000}
             />
           </Form.Item>
 
           <Form.Item
-            label="变更理由"
+            label="Reason for change"
             name="justification"
-            tooltip="解释为什么需要此变更，例如关联的问题或业务需求"
-            rules={[{ required: true, message: '请填写变更理由' }]}
+            tooltip="Explain why this change is needed, such as associated issues or business needs"
+            rules={[{ required: true, message: 'Please fill in the reason for the change' }]}
           >
             <TextArea
               data-testid="change-justification-input"
               rows={3}
-              placeholder="例如：解决问题 PRB-XXXXX，满足新业务需求等"
+              placeholder="For example: solve the problem PRB-XXXXX, meet new business needs, etc."
               showCount
               maxLength={1000}
             />
@@ -194,9 +196,9 @@ const CreateChangePage: React.FC = () => {
           <Row gutter={16}>
             <Col xs={24} md={12}>
               <Form.Item
-                label="变更类型"
+                label="Change Type"
                 name="type"
-                rules={[{ required: true, message: '请选择变更类型' }]}
+                rules={[{ required: true, message: 'Please select a change type' }]}
               >
                 <Select
                   options={TYPE_OPTIONS.map(o => ({
@@ -217,9 +219,9 @@ const CreateChangePage: React.FC = () => {
             </Col>
             <Col xs={24} md={12}>
               <Form.Item
-                label="优先级"
+                label="Priority"
                 name="priority"
-                rules={[{ required: true, message: '请选择优先级' }]}
+                rules={[{ required: true, message: 'Please select priority' }]}
               >
                 <Select options={PRIORITY_OPTIONS} />
               </Form.Item>
@@ -229,18 +231,18 @@ const CreateChangePage: React.FC = () => {
           <Row gutter={16}>
             <Col xs={24} md={12}>
               <Form.Item
-                label="影响范围"
+                label="Impact Range"
                 name="impactScope"
-                rules={[{ required: true, message: '请选择影响范围' }]}
+                rules={[{ required: true, message: 'Please select impact scope' }]}
               >
                 <Select options={IMPACT_OPTIONS} />
               </Form.Item>
             </Col>
             <Col xs={24} md={12}>
               <Form.Item
-                label="风险等级"
+                label="Risk Level"
                 name="riskLevel"
-                rules={[{ required: true, message: '请选择风险等级' }]}
+                rules={[{ required: true, message: 'Please select a risk level' }]}
               >
                 <Select options={RISK_OPTIONS} />
               </Form.Item>
@@ -248,52 +250,52 @@ const CreateChangePage: React.FC = () => {
           </Row>
 
           <Form.Item
-            label="计划实施时间"
+            label="Scheduled Date"
             name="plannedRange"
-            tooltip="计划开始与结束时间"
+            tooltip="Planned start and end time"
             rules={[{ validator: validateRange }]}
           >
             <DatePicker.RangePicker
               showTime={{ format: 'HH:mm' }}
               format="YYYY-MM-DD HH:mm"
               disabledDate={current => !!current && current.isBefore(dayjs().startOf('day'))}
-              placeholder={['开始时间', '结束时间']}
+              placeholder={['Start Time', 'End Time']}
               className="w-full"
             />
           </Form.Item>
 
           <Form.Item
-            label="受影响的配置项"
+            label="Affected configuration items"
             name="affectedCisText"
-            tooltip="多个 CI 用逗号或空格分隔"
+            tooltip="Multiple CIs separated by commas or spaces"
           >
-            <Input placeholder="例如：CI-ECS-001, CI-APP-CRM" allowClear />
+            <Input placeholder="For example: CI-ECS-001, CI-APP-CRM" allowClear />
           </Form.Item>
 
           <Form.Item
-            label="实施计划"
+            label="Implementation Plan"
             name="implementationPlan"
-            rules={[{ required: true, message: '请填写实施计划' }]}
+            rules={[{ required: true, message: 'Please fill in the implementation plan' }]}
           >
             <TextArea
               data-testid="change-implementation-input"
               rows={5}
-              placeholder="详细描述变更的实施步骤..."
+              placeholder="Describe in detail the implementation steps of the change..."
               showCount
               maxLength={3000}
             />
           </Form.Item>
 
           <Form.Item
-            label="回滚计划"
+            label="Rollback Plan"
             name="rollbackPlan"
-            tooltip="变更失败时如何回退"
-            rules={[{ required: true, message: '请填写回滚计划' }]}
+            tooltip="How to roll back when changes fail"
+            rules={[{ required: true, message: 'Please fill in the rollback plan' }]}
           >
             <TextArea
               data-testid="change-rollback-input"
               rows={5}
-              placeholder="详细描述如果变更失败如何回滚..."
+              placeholder="Detailed description of how to rollback if changes fail..."
               showCount
               maxLength={3000}
             />
@@ -302,7 +304,8 @@ const CreateChangePage: React.FC = () => {
           <Form.Item className="!mb-0 mt-4">
             <Space className="w-full justify-end">
               <Button onClick={() => router.back()} disabled={loading}>
-                取消
+
+                Cancel
               </Button>
               <Button
                 type="primary"
@@ -310,7 +313,8 @@ const CreateChangePage: React.FC = () => {
                 loading={loading}
                 data-testid="change-submit-button"
               >
-                提交变更请求
+
+                Submit change request
               </Button>
             </Space>
           </Form.Item>

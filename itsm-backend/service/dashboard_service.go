@@ -291,49 +291,49 @@ func (s *DashboardService) GetDashboardData(ctx context.Context, tenantID int) (
 	slaMetrics, err := s.getSLAMetrics(ctx, tenantID)
 	if err != nil {
 		s.logger.Errorw("Failed to get SLA metrics", "error", err)
-		return nil, fmt.Errorf("获取SLA指标失败: %w", err)
+		return nil, fmt.Errorf("Failed to obtain SLA metrics: %w", err)
 	}
 
 	// 获取事件指标
 	incidentMetrics, err := s.getIncidentMetrics(ctx, tenantID)
 	if err != nil {
 		s.logger.Errorw("Failed to get incident metrics", "error", err)
-		return nil, fmt.Errorf("获取事件指标失败: %w", err)
+		return nil, fmt.Errorf("Failed to obtain event metrics: %w", err)
 	}
 
 	// 获取变更指标
 	changeMetrics, err := s.getChangeMetrics(ctx, tenantID)
 	if err != nil {
 		s.logger.Errorw("Failed to get change metrics", "error", err)
-		return nil, fmt.Errorf("获取变更指标失败: %w", err)
+		return nil, fmt.Errorf("Failed to get change metrics: %w", err)
 	}
 
 	// 获取资源指标
 	resourceMetrics, err := s.getResourceMetrics(ctx, tenantID)
 	if err != nil {
 		s.logger.Errorw("Failed to get resource metrics", "error", err)
-		return nil, fmt.Errorf("获取资源指标失败: %w", err)
+		return nil, fmt.Errorf("Failed to obtain resource indicators: %w", err)
 	}
 
 	// 构建KPI数据
 	kpis := []dto.DashboardKPIResponse{
 		{
-			Title: "SLA 达成率",
+			Title: "SLA Compliance",
 			Value: fmt.Sprintf("%.1f%%", slaMetrics.AchievementRate),
 			Color: "text-green-500",
 		},
 		{
-			Title: "高优先级事件",
+			Title: "High Priority Incidents",
 			Value: fmt.Sprintf("%d", incidentMetrics.HighPriorityCount),
 			Color: "text-red-500",
 		},
 		{
-			Title: "待审批变更",
+			Title: "Changes Awaiting Approval",
 			Value: fmt.Sprintf("%d", changeMetrics.PendingApproval),
 			Color: "text-yellow-500",
 		},
 		{
-			Title: "纳管云资源",
+			Title: "Managed Cloud Resources",
 			Value: fmt.Sprintf("%d", resourceMetrics.TotalResources),
 			Color: "text-blue-500",
 		},
@@ -715,21 +715,21 @@ func (s *DashboardService) GetDashboardOverview(ctx context.Context, tenantID in
 	kpiMetrics, err := s.getKPIMetrics(ctx, tenantID, viewer)
 	if err != nil {
 		s.logger.Errorw("Failed to get KPI metrics", "error", err)
-		return nil, fmt.Errorf("获取KPI指标失败: %w", err)
+		return nil, fmt.Errorf("Failed to obtain KPI indicators: %w", err)
 	}
 
 	// 获取工单趋势数据（最近7天）
 	ticketTrend, err := s.getTicketTrend(ctx, tenantID, 7)
 	if err != nil {
 		s.logger.Errorw("Failed to get ticket trend", "error", err)
-		return nil, fmt.Errorf("获取工单趋势失败: %w", err)
+		return nil, fmt.Errorf("Failed to obtain work order trend: %w", err)
 	}
 
 	// 获取事件分布数据
 	incidentDistribution, err := s.getIncidentDistribution(ctx, tenantID)
 	if err != nil {
 		s.logger.Errorw("Failed to get incident distribution", "error", err)
-		return nil, fmt.Errorf("获取事件分布失败: %w", err)
+		return nil, fmt.Errorf("Failed to obtain event distribution: %w", err)
 	}
 
 	// 获取SLA合规数据
@@ -739,14 +739,14 @@ func (s *DashboardService) GetDashboardOverview(ctx context.Context, tenantID in
 		// 与工单趋势/事件分布/满意度同口径：真实查询失败必须上抛，
 		// 不能降级成全 0 的「假成功」——0% 合规率会被误读成「全部超时」，
 		// 与「无工单」「采集失败」无法区分，掩盖了真正的故障。
-		return nil, fmt.Errorf("获取SLA合规数据失败: %w", err)
+		return nil, fmt.Errorf("Failed to obtain SLA compliance data: %w", err)
 	}
 
 	// 获取满意度数据（最近4个月）
 	satisfactionData, err := s.getSatisfactionDataForDashboard(ctx, tenantID, 4)
 	if err != nil {
 		s.logger.Errorw("Failed to get satisfaction data", "error", err)
-		return nil, fmt.Errorf("获取满意度数据失败: %w", err)
+		return nil, fmt.Errorf("Failed to obtain satisfaction data: %w", err)
 	}
 
 	// 快速操作（静态配置）
@@ -994,18 +994,18 @@ func (s *DashboardService) getKPIMetricsAt(
 		}
 	}
 
-	mTotal := newMetric("total-tickets", "总工单数", "个", "#3b82f6", "范围内全部未删除工单", float64(totalTickets), totalChange, totalComparable)
-	mPending := newMetric("pending-tickets", "待处理工单", "个", "#f59e0b", "当前待处理存量", float64(pendingTickets), 0, false)
+	mTotal := newMetric("total-tickets", "Total Tickets", "tickets", "#3b82f6", "All non-deleted tickets in scope", float64(totalTickets), totalChange, totalComparable)
+	mPending := newMetric("pending-tickets", "Pending Tickets", "tickets", "#f59e0b", "Currently pending tickets", float64(pendingTickets), 0, false)
 	if pendingTickets > 200 {
 		mPending.Alert = "warning"
 	}
-	mInProgress := newMetric("in-progress-tickets", "处理中工单", "个", "#06b6d4", "当前处理中存量", float64(inProgressTickets), 0, false)
-	mCompleted := newMetric("completed-tickets", "已完成工单", "个", "#10b981", "本月完成", float64(completedTickets), completedChange, completedComparable)
-	mAvgResponse := newMetric("avg-first-response", "平均首次响应时间", "小时", "#8b5cf6", "首次响应平均时长", avgFirstResponse, avgFirstResponseChange, avgFirstResponseComparable)
+	mInProgress := newMetric("in-progress-tickets", "Tickets in Progress", "tickets", "#06b6d4", "Currently active tickets", float64(inProgressTickets), 0, false)
+	mCompleted := newMetric("completed-tickets", "Completed Tickets", "tickets", "#10b981", "Completed this month", float64(completedTickets), completedChange, completedComparable)
+	mAvgResponse := newMetric("avg-first-response", "Average First Response Time", "hours", "#8b5cf6", "Average time to first response", avgFirstResponse, avgFirstResponseChange, avgFirstResponseComparable)
 	mAvgResponse.Target = 4
-	mAvgResolution := newMetric("avg-resolution", "平均解决时间", "小时", "#ec4899", "端到端平均时长", avgResolution, avgResolutionChange, avgResolutionComparable)
+	mAvgResolution := newMetric("avg-resolution", "Average Resolution Time", "hours", "#ec4899", "Average end-to-end resolution time", avgResolution, avgResolutionChange, avgResolutionComparable)
 	mAvgResolution.Target = 8
-	mSLA := newMetric("sla-compliance", "SLA达成率", "%", "#10b981", "本月服务水平达成率", slaCompliance, slaComplianceChange, slaComparable)
+	mSLA := newMetric("sla-compliance", "SLA Compliance", "%", "#10b981", "Service level compliance this month", slaCompliance, slaComplianceChange, slaComparable)
 	mSLA.Target = slaTarget
 	if slaCompliance >= slaTarget {
 		mSLA.Alert = "success"
@@ -1013,7 +1013,7 @@ func (s *DashboardService) getKPIMetricsAt(
 		mSLA.Alert = "warning"
 	}
 	// 超时工单是当前时点的存量，没有历史快照可对比，环比一律标注不可比。
-	mOverdue := newMetric("overdue-tickets", "超时工单", "个", "#ef4444", "SLA违规工单", float64(overdueTickets), 0, false)
+	mOverdue := newMetric("overdue-tickets", "Overdue Tickets", "tickets", "#ef4444", "Tickets with SLA breaches", float64(overdueTickets), 0, false)
 	mOverdue.Alert = "error"
 
 	return []KPIMetricData{mTotal, mPending, mInProgress, mCompleted, mAvgResponse, mAvgResolution, mSLA, mOverdue}, nil
@@ -1144,6 +1144,7 @@ func (s *DashboardService) getTicketTrend(ctx context.Context, tenantID int, day
 func (s *DashboardService) getIncidentDistribution(ctx context.Context, tenantID int) ([]IncidentDistributionData, error) {
 	// 按分类统计事件
 	categories := []string{"网络故障", "系统故障", "应用问题", "硬件故障", "其他"}
+	labels := []string{"Network Failures", "System Failures", "Application Issues", "Hardware Failures", "Other"}
 	colors := []string{"#ef4444", "#f59e0b", "#3b82f6", "#10b981", "#6b7280"}
 	distribution := []IncidentDistributionData{}
 
@@ -1160,7 +1161,7 @@ func (s *DashboardService) getIncidentDistribution(ctx context.Context, tenantID
 		}
 
 		distribution = append(distribution, IncidentDistributionData{
-			Category: category,
+			Category: labels[i],
 			Count:    count,
 			Color:    colors[i],
 		})
@@ -1269,7 +1270,7 @@ func (s *DashboardService) getSatisfactionDataForDashboard(ctx context.Context, 
 
 		// 按年月分组
 		monthKey := t.RatedAt.Format("2006-01")
-		monthLabel := fmt.Sprintf("%d月", t.RatedAt.Month())
+		monthLabel := t.RatedAt.Format("Jan")
 
 		if monthlyData[monthKey] == nil {
 			monthlyData[monthKey] = &SatisfactionData{
@@ -1301,29 +1302,29 @@ func (s *DashboardService) getQuickActions() []QuickActionData {
 	return []QuickActionData{
 		{
 			ID:          "create-ticket",
-			Title:       "创建工单",
-			Description: "快速创建新的IT工单",
+			Title:       "Create Ticket",
+			Description: "Create a new IT support ticket",
 			Path:        "/tickets/create",
 			Color:       "#3b82f6",
 		},
 		{
 			ID:          "create-incident",
-			Title:       "报告事件",
-			Description: "报告IT事件和故障",
+			Title:       "Report Incident",
+			Description: "Report an IT incident or outage",
 			Path:        "/incidents/new",
 			Color:       "#ef4444",
 		},
 		{
 			ID:          "create-change",
-			Title:       "提交变更",
-			Description: "提交IT变更请求",
+			Title:       "Submit Change",
+			Description: "Submit an IT change request",
 			Path:        "/changes/new",
 			Color:       "#10b981",
 		},
 		{
 			ID:          "view-reports",
-			Title:       "查看报表",
-			Description: "查看系统报表和分析",
+			Title:       "View Reports",
+			Description: "View system reports and analytics",
 			Path:        "/reports",
 			Color:       "#8b5cf6",
 		},
@@ -1347,11 +1348,11 @@ func (s *DashboardService) getRecentActivitiesForDashboard(ctx context.Context, 
 
 	// 获取状态映射
 	statusNames := map[string]string{
-		"open":        "待处理",
-		"in_progress": "处理中",
-		"pending":     "等待中",
-		"resolved":    "已解决",
-		"closed":      "已关闭",
+		"open":        "Open",
+		"in_progress": "In Progress",
+		"pending":     "Pending",
+		"resolved":    "Resolved",
+		"closed":      "Closed",
 	}
 
 	activities := make([]RecentActivityData, 0, len(tickets))
@@ -1485,7 +1486,7 @@ func (s *DashboardService) getTeamWorkload(ctx context.Context, tenantID int) ([
 		if assigneeStats[assigneeID] == nil {
 			// 获取处理人姓名
 			user, err := s.client.User.Get(ctx, assigneeID)
-			assigneeName := fmt.Sprintf("用户%d", assigneeID)
+			assigneeName := fmt.Sprintf("User %d", assigneeID)
 			if err == nil && user != nil {
 				if user.Name != "" {
 					assigneeName = user.Name

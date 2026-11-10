@@ -57,7 +57,7 @@ function renderPage() {
 // 可点击的「立即安装」= 未 disabled 的按钮；页头与侧栏各一处，需同口径。
 const enabledInstallButtons = () =>
   screen
-    .queryAllByRole('button', { name: '立即安装' })
+    .queryAllByRole('button', { name: "Install now" })
     .filter(btn => !(btn as HTMLButtonElement).disabled);
 
 beforeEach(() => {
@@ -71,28 +71,28 @@ describe('市场详情安装入口门控（按服务端交付判定）', () => {
     mockedService.getItem.mockResolvedValue({ ...baseItem, type: 'skill', deliverable: true });
     renderPage();
 
-    const buttons = await screen.findAllByRole('button', { name: '立即安装' });
+    const buttons = await screen.findAllByRole('button', { name: "Install now" });
     expect(buttons.length).toBeGreaterThanOrEqual(2);
     expect(enabledInstallButtons().length).toBeGreaterThanOrEqual(2);
-    expect(screen.queryByRole('button', { name: '平台不交付该类型' })).toBeNull();
+    expect(screen.queryByRole('button', { name: "The platform does not deliver this type" })).toBeNull();
   });
 
   it('plugin 且 deliverable=false：两处入口禁用，且文案不再写成「尚未落地」', async () => {
     mockedService.getItem.mockResolvedValue({ ...baseItem, type: 'plugin', deliverable: false });
     renderPage();
 
-    const disabled = await screen.findAllByRole('button', { name: '平台不交付该类型' });
+    const disabled = await screen.findAllByRole('button', { name: "The platform does not deliver this type" });
     expect(disabled.length).toBeGreaterThanOrEqual(2);
     disabled.forEach(btn => expect(btn).toBeDisabled());
     expect(enabledInstallButtons()).toHaveLength(0);
-    expect(screen.queryByText(/安装与分发机制尚未落地/)).toBeNull();
+    expect(screen.queryByText(/Installation与分发机制尚未落地/)).toBeNull();
   });
 
   it('connector 且 deliverable=true：保留可点击的「立即安装」', async () => {
     mockedService.getItem.mockResolvedValue({ ...baseItem, type: 'connector', deliverable: true });
     renderPage();
 
-    await screen.findAllByRole('button', { name: '立即安装' });
+    await screen.findAllByRole('button', { name: "Install now" });
     expect(enabledInstallButtons().length).toBeGreaterThanOrEqual(1);
   });
 
@@ -101,7 +101,7 @@ describe('市场详情安装入口门控（按服务端交付判定）', () => {
     mockedService.getItem.mockResolvedValue({ ...baseItem, type: 'connector', deliverable: true });
     renderPage();
 
-    const sidebarBtn = await screen.findByRole('button', { name: '仅管理员可安装' });
+    const sidebarBtn = await screen.findByRole('button', { name: "Only administrators can install" });
     expect(sidebarBtn).toBeDisabled();
     expect(enabledInstallButtons()).toHaveLength(0);
   });
@@ -118,23 +118,23 @@ describe('市场详情版本历史（此前长期读不存在的 edges.versions�
     });
     renderPage();
 
-    const tab = await screen.findByRole('tab', { name: '版本历史' });
+    const tab = await screen.findByRole('tab', { name: "Version History" });
     tab.click();
 
     expect(await screen.findByText('v1.2.0')).toBeInTheDocument();
     expect(screen.getByText('v1.1.0')).toBeInTheDocument();
     expect(screen.getByText('支持多语言关键词')).toBeInTheDocument();
     // 缺 changelog 的版本给出占位文案，而不是空白行。
-    expect(screen.getByText('暂无更新说明')).toBeInTheDocument();
+    expect(screen.getByText("No update instructions yet")).toBeInTheDocument();
   });
 
   it('详情未带 versions 时给出空态文案，不得伪造历史', async () => {
     mockedService.getItem.mockResolvedValue({ ...baseItem });
     renderPage();
 
-    const tab = await screen.findByRole('tab', { name: '版本历史' });
+    const tab = await screen.findByRole('tab', { name: "Version History" });
     tab.click();
 
-    expect(await screen.findByText('暂无版本历史')).toBeInTheDocument();
+    expect(await screen.findByText("No version history yet")).toBeInTheDocument();
   });
 });

@@ -36,14 +36,14 @@ func NewLintHandler() *LintHandler {
 func (c *LintHandler) LintBPMN(ctx *gin.Context) {
 	var req dto.BPMNLintRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(ctx, err, "请求参数错误")
+		common.ParamErrorWithErr(ctx, err, "Wrong request parameters")
 		return
 	}
 
 	result, err := c.lintService.LintBPMNXML([]byte(req.BPMNXML))
 	if err != nil {
 		// XML 无法解析/缺命名空间/缺起止事件等结构性问题按参数错误返回
-		common.BadRequestWithErr(ctx, err, "BPMN 校验失败")
+		common.BadRequestWithErr(ctx, err, "BPMN verification failed")
 		return
 	}
 

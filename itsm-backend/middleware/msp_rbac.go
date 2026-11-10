@@ -36,7 +36,7 @@ func RequireMSPAccess() gin.HandlerFunc {
 		if !exists || !mspCtx.IsMSP {
 			c.JSON(http.StatusForbidden, gin.H{
 				"code":    http.StatusForbidden,
-				"message": "仅MSP员工可访问",
+				"message": "Accessible only to MSP employees",
 			})
 			c.Abort()
 			return
@@ -61,7 +61,7 @@ func RequireMSPManager() gin.HandlerFunc {
 		if !exists || !mspCtx.IsMSP {
 			c.JSON(http.StatusForbidden, gin.H{
 				"code":    http.StatusForbidden,
-				"message": "仅MSP员工可访问",
+				"message": "Accessible only to MSP employees",
 			})
 			c.Abort()
 			return
@@ -69,7 +69,7 @@ func RequireMSPManager() gin.HandlerFunc {
 		if !IsMSPManagerRole(mspCtx.Role) {
 			c.JSON(http.StatusForbidden, gin.H{
 				"code":    http.StatusForbidden,
-				"message": "仅MSP经理可执行此操作",
+				"message": "Only MSP managers can perform this operation",
 			})
 			c.Abort()
 			return
@@ -92,7 +92,7 @@ func ValidateCustomerTenantHeader() gin.HandlerFunc {
 		if header == "" {
 			c.JSON(http.StatusBadRequest, gin.H{
 				"code":    http.StatusBadRequest,
-				"message": "MSP请求必须提供 X-Customer-Tenant-ID 头",
+				"message": "MSP requests must provide the X-Customer-Tenant-ID header",
 			})
 			c.Abort()
 			return
@@ -102,7 +102,7 @@ func ValidateCustomerTenantHeader() gin.HandlerFunc {
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
 				"code":    http.StatusBadRequest,
-				"message": "客户租户ID格式错误",
+				"message": "Customer tenant ID format error",
 			})
 			c.Abort()
 			return
@@ -118,7 +118,7 @@ func ValidateCustomerTenantHeader() gin.HandlerFunc {
 		if !hasAccess {
 			c.JSON(http.StatusForbidden, gin.H{
 				"code":    http.StatusForbidden,
-				"message": "无权访问指定客户租户",
+				"message": "Not authorized to access the specified customer tenant",
 			})
 			c.Abort()
 			return
@@ -138,7 +138,7 @@ func RequireMSPPermission(resource, action string) gin.HandlerFunc {
 		if !exists || !mspCtx.IsMSP {
 			c.JSON(http.StatusForbidden, gin.H{
 				"code":    http.StatusForbidden,
-				"message": "仅MSP员工可访问",
+				"message": "Accessible only to MSP employees",
 			})
 			c.Abort()
 			return
@@ -153,7 +153,7 @@ func RequireMSPPermission(resource, action string) gin.HandlerFunc {
 		if !exists {
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"code":    http.StatusInternalServerError,
-				"message": "租户信息缺失",
+				"message": "Tenant information is missing",
 			})
 			c.Abort()
 			return
@@ -164,7 +164,7 @@ func RequireMSPPermission(resource, action string) gin.HandlerFunc {
 		if !exists {
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"code":    http.StatusInternalServerError,
-				"message": "客户端缺失",
+				"message": "Client missing",
 			})
 			c.Abort()
 			return
@@ -174,7 +174,7 @@ func RequireMSPPermission(resource, action string) gin.HandlerFunc {
 		if !hasResourcePermission(c.Request.Context(), client, rbacRole, resource, action, tenantID) {
 			c.JSON(http.StatusForbidden, gin.H{
 				"code":    http.StatusForbidden,
-				"message": "权限不足",
+				"message": "Insufficient permissions",
 				"data": gin.H{
 					"required_resource": resource,
 					"required_action":   action,
@@ -192,7 +192,7 @@ func RequireMSPPermission(resource, action string) gin.HandlerFunc {
 			if convErr != nil {
 				c.JSON(http.StatusBadRequest, gin.H{
 					"code":    http.StatusBadRequest,
-					"message": "目标客户租户ID格式错误",
+					"message": "The target customer tenant ID format is incorrect.",
 				})
 				c.Abort()
 				return
@@ -208,7 +208,7 @@ func RequireMSPPermission(resource, action string) gin.HandlerFunc {
 			if !hasAccess {
 				c.JSON(http.StatusForbidden, gin.H{
 					"code":    http.StatusForbidden,
-					"message": "MSP员工无权访问此客户租户",
+					"message": "MSP employees do not have access to this customer tenant",
 					"data": gin.H{
 						"target_customer":   targetTenantID,
 						"allowed_customers": mspCtx.AllowedCustomers,

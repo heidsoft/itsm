@@ -97,7 +97,7 @@ func (s *LegacyApprovalMigrationService) upsertBinding(ctx context.Context, work
 			SetPriority(50).
 			SetConditions(conditions).
 			Save(ctx); err != nil {
-			return false, fmt.Errorf("更新已有流程绑定失败: %w", err)
+			return false, fmt.Errorf("Failed to update existing process binding: %w", err)
 		}
 		return true, nil
 	}

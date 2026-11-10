@@ -49,19 +49,19 @@ export interface ProblemKnowledgeTabProps {
 function describePromoteError(err: unknown): string {
   if (err instanceof ApiRequestError) {
     if (err.status === 422 || err.code === 4220) {
-      return '问题尚无根因或解决方案，沉淀为知识没有可复用价值（请先补充根因或解决方案）';
+      return 'There is no root cause or solution to the problem, and it has been accumulated as knowledge with no reusable value (please add the root cause or solution first)';
     }
     if (err.status === 403 || err.code === 2003) {
-      return '没有知识库写权限（knowledge:write），无法沉淀';
+      return 'No knowledge base write permission (knowledge:write), unable to precipitate';
     }
     if (err.status === 503 || err.code === 5003) {
-      return '知识沉淀能力未装配，请联系管理员';
+      return 'The knowledge accumulation ability is not installed, please contact the administrator';
     }
     if (err.status === 404 || err.code === 4004) {
-      return '问题不存在或不属于当前租户';
+      return 'The problem does not exist or does not belong to the current tenant';
     }
   }
-  return '沉淀失败，请稍后重试';
+  return 'Precipitation failed, please try again later.';
 }
 
 export const ProblemKnowledgeTab: React.FC<ProblemKnowledgeTabProps> = ({ problemId }) => {
@@ -83,8 +83,8 @@ export const ProblemKnowledgeTab: React.FC<ProblemKnowledgeTabProps> = ({ proble
       // 反查失败不阻断详情页主体，但必须明示——不能把「读不到」渲染成「没有沉淀」。
       setLoadError(
         err instanceof ApiRequestError && (err.status === 404 || err.code === 4004)
-          ? '问题不存在或不属于当前租户'
-          : '沉淀知识读取失败'
+          ? 'The problem does not exist or does not belong to the current tenant'
+          : 'Failed to read precipitated knowledge'
       );
       setArticles([]);
     } finally {
@@ -116,7 +116,7 @@ export const ProblemKnowledgeTab: React.FC<ProblemKnowledgeTabProps> = ({ proble
         .filter((t) => t.length > 0);
       const created = await ProblemApi.promoteProblemKnowledge(problemId, payload);
       message.success(
-        `已沉淀为知识草稿《${created.title}》，发布须过知识评审流（submit → approve）`
+        `has been deposited into a knowledge draft "${created.title}》, publication must go through the knowledge review process (submit → approve)`
       );
       setModalOpen(false);
       form.resetFields();
@@ -132,7 +132,8 @@ export const ProblemKnowledgeTab: React.FC<ProblemKnowledgeTabProps> = ({ proble
     <div data-testid="problem-knowledge-tab">
       <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'space-between' }}>
         <Text type="secondary">
-          把问题的现象 / 根因 / 临时措施 / 解决方案沉淀为知识草稿（含草稿，创建时间倒序）
+
+          Precipitate the phenomenon/root cause/temporary measures/solutions of the problem into a knowledge draft (including drafts, in reverse order of creation time)
         </Text>
         <Button
           type="primary"
@@ -140,7 +141,8 @@ export const ProblemKnowledgeTab: React.FC<ProblemKnowledgeTabProps> = ({ proble
           onClick={() => setModalOpen(true)}
           data-testid="promote-knowledge-button"
         >
-          沉淀为知识
+
+          Precipitation into knowledge
         </Button>
       </div>
 
@@ -155,7 +157,7 @@ export const ProblemKnowledgeTab: React.FC<ProblemKnowledgeTabProps> = ({ proble
         loading={loading}
         dataSource={articles}
         locale={{
-          emptyText: <Empty description="尚未沉淀知识" image={Empty.PRESENTED_IMAGE_SIMPLE} />,
+          emptyText: <Empty description="No knowledge has been accumulated yet" image={Empty.PRESENTED_IMAGE_SIMPLE} />,
         }}
         renderItem={(article) => (
           <List.Item
@@ -166,7 +168,8 @@ export const ProblemKnowledgeTab: React.FC<ProblemKnowledgeTabProps> = ({ proble
                 type="link"
                 onClick={() => router.push(`/knowledge/articles/${article.id}`)}
               >
-                查看
+
+                View
               </Button>,
             ]}
           >
@@ -177,11 +180,13 @@ export const ProblemKnowledgeTab: React.FC<ProblemKnowledgeTabProps> = ({ proble
                   {article.title}
                   {article.status === 'published' ? (
                     <Tag color="green" style={{ marginLeft: 8 }}>
-                      已发布
+
+                      Published
                     </Tag>
                   ) : (
                     <Tag color="orange" style={{ marginLeft: 8 }}>
-                      草稿
+
+                      Draft
                     </Tag>
                   )}
                 </span>
@@ -205,7 +210,7 @@ export const ProblemKnowledgeTab: React.FC<ProblemKnowledgeTabProps> = ({ proble
       )}
 
       <Modal
-        title="沉淀为知识"
+        title="Precipitation into knowledge"
         open={modalOpen}
         onOk={handlePromote}
         confirmLoading={submitting}
@@ -213,26 +218,26 @@ export const ProblemKnowledgeTab: React.FC<ProblemKnowledgeTabProps> = ({ proble
           setModalOpen(false);
           form.resetFields();
         }}
-        okText="沉淀"
+        okText="Precipitation"
         destroyOnHidden
       >
         <Alert
           type="info"
           showIcon
-          title="内容将按「问题现象 / 根因分析 / 临时措施 / 解决方案」自动组装；产物为草稿，发布须过知识评审流。"
+          title="The content will be automatically assembled according to &quot;Problem phenomenon/Root cause analysis/Temporary measures/Solutions&quot;; the product is a draft, and release must go through the knowledge review process."
           style={{ marginBottom: 16 }}
         />
         <Form form={form} layout="vertical">
-          <Form.Item name="title" label="标题（可选）">
-            <Input placeholder="留空则使用问题标题" maxLength={200} />
+          <Form.Item name="title" label="Title (optional)">
+            <Input placeholder="Leave blank to use question title" maxLength={200} />
           </Form.Item>
-          <Form.Item name="category" label="分类（可选）">
-            <Input placeholder="留空则为「故障排查」" maxLength={64} />
+          <Form.Item name="category" label="Classification (optional)">
+            <Input placeholder="Leave blank for &quot;Troubleshooting&quot;" maxLength={64} />
           </Form.Item>
-          <Form.Item name="tags" label="标签（可选）">
+          <Form.Item name="tags" label="tag (optional)">
             <Select
               mode="tags"
-              placeholder="留空仅带自动标签「问题沉淀」与问题编号"
+              placeholder="Leave blank only with automatic label &quot;Problem Precipitation&quot; and problem number"
               tokenSeparators={[',', '，']}
             />
           </Form.Item>

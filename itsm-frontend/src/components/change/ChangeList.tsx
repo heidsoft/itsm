@@ -138,7 +138,7 @@ const ChangeList: React.FC<ChangeListProps> = ({
         !('name' in error && (error as { name?: string }).name === 'ValidationError')
       ) {
         console.error('Failed to load changes:', error);
-        notify.error(error, { context: '加载变更列表' });
+        notify.error(error, { context: 'Loading changelist' });
       }
     } finally {
       setLoading(false);
@@ -172,24 +172,24 @@ const ChangeList: React.FC<ChangeListProps> = ({
 
   const handleDelete = (id: number, title: string) => {
     Modal.confirm({
-      title: '确认删除',
+      title: 'Confirm Delete',
       content: (
         <div>
-          <p>确定要删除变更请求「{title}」吗？</p>
-          <p style={{ color: '#ff4d4f' }}>此操作不可撤销。</p>
+          <p>Are you sure you want to delete the change request"{title}"?"</p>
+          <p style={{ color: '#ff4d4f' }}>This operation cannot be undone.</p>
         </div>
       ),
-      okText: '确认删除',
+      okText: 'Confirm Delete',
       okType: 'danger',
-      cancelText: '取消',
+      cancelText: 'Cancel',
       onOk: async () => {
         try {
           await ChangeApi.deleteChange(id);
-          notify.success('变更已删除');
+          notify.success('Change deleted');
           loadData();
           onDataChange?.();
         } catch (error) {
-          notify.error(error, { context: '删除变更' });
+          notify.error(error, { context: 'Delete changes' });
         }
       },
     });
@@ -202,18 +202,18 @@ const ChangeList: React.FC<ChangeListProps> = ({
       width: 70,
     },
     {
-      title: '标题',
+      title: 'Title',
       dataIndex: 'title',
       ellipsis: true,
     },
     {
-      title: '模型',
+      title: 'Model',
       dataIndex: 'type',
       width: 100,
       render: (type: ChangeType) => ChangeTypeLabels[type] || type,
     },
     {
-      title: '状态',
+      title: 'Status',
       dataIndex: 'status',
       width: 100,
       render: (status: ChangeStatus) => (
@@ -221,47 +221,47 @@ const ChangeList: React.FC<ChangeListProps> = ({
       ),
     },
     {
-      title: '优先级',
+      title: 'Priority',
       dataIndex: 'priority',
       width: 80,
       render: (priority: ChangePriority) => <Tag>{ChangePriorityLabels[priority]}</Tag>,
     },
     {
-      title: '创建人',
+      title: 'Creator',
       dataIndex:'createdByName',
       width: 100,
     },
     {
-      title: '创建时间',
+      title: 'Created',
       dataIndex: 'createdAt',
       width: 160,
       render: (date: string) => dayjs(date).format('YYYY-MM-DD HH:mm'),
     },
     {
-      title: '操作',
+      title: 'Actions',
       key: 'action',
       width: 150,
       render: (_: unknown, record: Change) => (
         <Space size="small">
-          <Tooltip title="查看详情">
+          <Tooltip title="View Details">
             <Button
               type="text"
               icon={<Eye />}
               onClick={() => router.push(`/changes/${record.id}`)}
-              aria-label={`查看变更 ${record.title}`}
+              aria-label={`View changes ${record.title}`}
             />
           </Tooltip>
-          <Tooltip title="编辑">
+          <Tooltip title="Edit">
             <Button
               type="text"
               icon={<Pencil />}
               onClick={() => router.push(`/changes/${record.id}/edit`)}
-              aria-label={`编辑变更 ${record.title}`}
+              aria-label={`Edit Change ${record.title}`}
             />
           </Tooltip>
-          <Tooltip title="删除">
+          <Tooltip title="Delete">
             <Button
-              aria-label="删除"
+              aria-label="Delete"
               type="text"
               danger
               icon={<Trash2 />}
@@ -298,8 +298,8 @@ const ChangeList: React.FC<ChangeListProps> = ({
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">变更管理</h1>
-          <p className="text-gray-500 mt-1">管理IT基础架构和服务的变更请求，最小化变更风险</p>
+          <h1 className="text-2xl font-bold text-gray-900">Changes</h1>
+          <p className="text-gray-500 mt-1">Manage change requests for IT infrastructure and services to minimize change risk</p>
         </div>
         <Button
           type="primary"
@@ -307,7 +307,8 @@ const ChangeList: React.FC<ChangeListProps> = ({
           onClick={() => router.push('/changes/new')}
           size="large"
         >
-          新建变更
+
+          New Change
         </Button>
       </div>
 
@@ -315,20 +316,20 @@ const ChangeList: React.FC<ChangeListProps> = ({
         <Form form={form} layout="inline" className="mb-6 flex-wrap gap-y-4">
           <Form.Item name="search" className="mb-0">
             <Input
-              placeholder="搜索标题"
+              placeholder="Search title"
               allowClear
               prefix={<Search className="text-gray-400" />}
               className="w-64"
             />
           </Form.Item>
           <Form.Item name="status" className="mb-0">
-            <Select placeholder="状态" className="w-32" allowClear options={Object.entries(ChangeStatusLabels).map(([value, label]) => ({
+            <Select placeholder="Status" className="w-32" allowClear options={Object.entries(ChangeStatusLabels).map(([value, label]) => ({
                 value,
                 label,
               }))} />
           </Form.Item>
           <Form.Item name="type" className="mb-0">
-            <Select placeholder="类型" className="w-32" allowClear options={Object.entries(ChangeTypeLabels).map(([value, label]) => ({
+            <Select placeholder="Type" className="w-32" allowClear options={Object.entries(ChangeTypeLabels).map(([value, label]) => ({
                 value,
                 label,
               }))} />
@@ -336,17 +337,19 @@ const ChangeList: React.FC<ChangeListProps> = ({
           <Form.Item className="mb-0">
             <Space>
               <Button type="primary" onClick={handleSearch}>
-                查询
+
+                Query
               </Button>
-              <Button aria-label="刷新" icon={<RefreshCw />} onClick={loadData} />
+              <Button aria-label="Refresh" icon={<RefreshCw />} onClick={loadData} />
             </Space>
           </Form.Item>
         </Form>
 
         {rows.length === 0 && !spinning ? (
-          <Empty description="暂无变更记录" image={Empty.PRESENTED_IMAGE_SIMPLE}>
+          <Empty description="No change records" image={Empty.PRESENTED_IMAGE_SIMPLE}>
             <Button type="primary" onClick={() => router.push('/changes/new')}>
-              创建变更
+
+              Create Change
             </Button>
           </Empty>
         ) : (
@@ -361,7 +364,7 @@ const ChangeList: React.FC<ChangeListProps> = ({
               total: rowTotal,
               showSizeChanger: true,
               showQuickJumper: true,
-              showTotal: total => `共 ${total} 条记录`,
+              showTotal: total => `Total ${total} records`,
               pageSizeOptions: ['10', '20', '50', '100'],
               onChange: (page, pageSize) => setQuery(prev => ({ ...prev, page, pageSize })),
             }}

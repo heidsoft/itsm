@@ -126,7 +126,7 @@ func (s *BPMNAuditService) RecordAuditWithClient(ctx context.Context, client *en
 	_, err := create.Save(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to record audit log", "error", err, "action", auditCtx.Action)
-		return fmt.Errorf("记录审计日志失败: %w", err)
+		return fmt.Errorf("Failed to record audit log: %w", err)
 	}
 
 	s.logger.Debugw("Audit log recorded", "action", auditCtx.Action, "processInstanceKey", auditCtx.ProcessInstanceKey)
@@ -338,7 +338,7 @@ func (s *BPMNAuditService) QueryAuditLogs(ctx context.Context, req *QueryAuditLo
 	// 获取总数
 	total, err := query.Count(ctx)
 	if err != nil {
-		return nil, 0, fmt.Errorf("查询审计日志总数失败: %w", err)
+		return nil, 0, fmt.Errorf("Failed to query the total number of audit logs: %w", err)
 	}
 
 	// 分页：HTTP 入口由 common.GetPaginationFromQuery 单点决定页长，这里只兜非 HTTP
@@ -366,7 +366,7 @@ func (s *BPMNAuditService) QueryAuditLogs(ctx context.Context, req *QueryAuditLo
 
 	logs, err := query.All(ctx)
 	if err != nil {
-		return nil, 0, fmt.Errorf("查询审计日志失败: %w", err)
+		return nil, 0, fmt.Errorf("Failed to query audit log: %w", err)
 	}
 
 	return logs, total, nil
@@ -385,7 +385,7 @@ func (s *BPMNAuditService) GetProcessTimeline(ctx context.Context, processInstan
 		Order(ent.Asc(processauditlog.FieldTimestamp)).
 		All(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("获取流程时间线失败: %w", err)
+		return nil, fmt.Errorf("Failed to obtain process timeline: %w", err)
 	}
 	return logs, nil
 }
@@ -419,7 +419,7 @@ func (s *BPMNAuditService) GetActivityStatistics(ctx context.Context, processDef
 
 	logs, err := query.All(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("获取活动统计失败: %w", err)
+		return nil, fmt.Errorf("Failed to obtain activity statistics: %w", err)
 	}
 
 	for _, log := range logs {

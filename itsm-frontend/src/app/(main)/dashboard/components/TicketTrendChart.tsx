@@ -11,10 +11,10 @@ import { DashboardChartCard } from './DashboardChartCard'; // Import from new fi
 const TicketTrendChart: React.FC<{ data: TicketTrendData[] }> = React.memo(({ data }) => {
   const config = {
     data: data.flatMap(item => [
-      { date: item.date, type: '待处理', value: item.open },
-      { date: item.date, type: '处理中', value: item.inProgress },
-      { date: item.date, type: '已解决', value: item.resolved },
-      { date: item.date, type: '已关闭', value: item.closed },
+      { date: item.date, type: 'Pending', value: item.open },
+      { date: item.date, type: 'In Progress', value: item.inProgress },
+      { date: item.date, type: 'Resolved', value: item.resolved },
+      { date: item.date, type: 'Closed', value: item.closed },
     ]),
     xField: 'date',
     yField: 'value',
@@ -49,7 +49,7 @@ const TicketTrendChart: React.FC<{ data: TicketTrendData[] }> = React.memo(({ da
         return originalItems.map(item => {
           return {
             ...item,
-            value: `${item.value} 个`,
+            value: `${item.value} items`,
           };
         });
       },
@@ -84,8 +84,8 @@ const TicketTrendChart: React.FC<{ data: TicketTrendData[] }> = React.memo(({ da
 
   return (
     <DashboardChartCard
-      title="工单趋势分析"
-      subtitle="过去7天工单状态变化趋势"
+      title="Work order trend analysis"
+      subtitle="Work order status change trend in the past 7 days"
       icon={<LineChart style={{ width: 20, height: 20 }} />}
       iconColor="#3b82f6"
       trend={{ value: trend, isPositive: trend > 0 }}

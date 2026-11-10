@@ -118,7 +118,7 @@ describe('WorkflowInstanceDetail', () => {
     await waitFor(() => {
       expect(mockGetNodeInstances).toHaveBeenCalledWith('inst-3');
     });
-    fireEvent.click(screen.getByText(/任务列表/));
+    fireEvent.click(screen.getByRole('tab', { name: /^Task List \(\d+\)$/ }));
     await waitFor(() => {
       expect(screen.getByText('审批节点')).toBeInTheDocument();
     });
@@ -150,11 +150,11 @@ describe('WorkflowInstanceDetail', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText(/执行历史/)).toBeInTheDocument();
+      expect(screen.getByRole('tab', { name: /^Execution History \(\d+\)$/ })).toBeInTheDocument();
     });
-    fireEvent.click(screen.getByText(/执行历史/));
+    fireEvent.click(screen.getByRole('tab', { name: /^Execution History \(\d+\)$/ }));
     await waitFor(() => {
-      expect(screen.getByText('PROCESS STARTED')).toBeInTheDocument();
+      expect(screen.getByText('Process started')).toBeInTheDocument();
     });
   });
 
@@ -176,10 +176,10 @@ describe('WorkflowInstanceDetail', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText('返回列表')).toBeInTheDocument();
+      expect(screen.getByText("Back to List")).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByText('返回列表'));
+    fireEvent.click(screen.getByText("Back to List"));
     expect(onBack).toHaveBeenCalledTimes(1);
   });
 
@@ -200,7 +200,7 @@ describe('WorkflowInstanceDetail', () => {
     await waitFor(() => {
       expect(screen.getByText('inst-6')).toBeInTheDocument();
     });
-    expect(screen.queryByText('返回列表')).not.toBeInTheDocument();
+    expect(screen.queryByText("Back to List")).not.toBeInTheDocument();
   });
 
   it('refresh button re-triggers fetchers', async () => {
@@ -224,7 +224,7 @@ describe('WorkflowInstanceDetail', () => {
       expect(mockGetNodeInstances).toHaveBeenCalledTimes(1);
     });
 
-    const refreshBtn = screen.getByText('刷新');
+    const refreshBtn = screen.getByText("Refresh");
     fireEvent.click(refreshBtn);
 
     await waitFor(() => {

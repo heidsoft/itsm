@@ -138,7 +138,7 @@ func buildDingTalkMsg(msg *connector.Message) map[string]interface{} {
 			"actionCard": map[string]interface{}{
 				"title":       msg.Title,
 				"text":        msg.Content,
-				"singleTitle": ifEmpty(firstBtn(btns, "title"), "查看详情"),
+				"singleTitle": ifEmpty(firstBtn(btns, "title"), "View Details"),
 				"singleURL":   ifEmpty(firstBtn(btns, "actionURL"), "https://example.com"),
 				"btns":        btns,
 			},

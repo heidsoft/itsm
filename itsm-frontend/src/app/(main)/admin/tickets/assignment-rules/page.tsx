@@ -65,7 +65,7 @@ function parseJsonField<T>(value: string, fallback: T, fieldName: string): T {
   try {
     return JSON.parse(value) as T;
   } catch {
-    throw new Error(`${fieldName} 不是合法 JSON`);
+    throw new Error(`${fieldName} Not valid JSON`);
   }
 }
 
@@ -144,8 +144,8 @@ export default function AssignmentRulesPage() {
   const saveRule = async () => {
     try {
       const values = await form.validateFields();
-      const conditions = parseJsonField<ConditionConfig[]>(values.conditions, [], '匹配条件');
-      const actions = parseJsonField<ActionConfig>(values.actions, { type: 'user', value: 1 }, '分配动作');
+      const conditions = parseJsonField<ConditionConfig[]>(values.conditions, [], 'matching condition');
+      const actions = parseJsonField<ActionConfig>(values.actions, { type: 'user', value: 1 }, 'Assign action');
       const payload: CreateAssignmentRuleRequest | UpdateAssignmentRuleRequest = {
         name: values.name,
         description: values.description,
@@ -158,16 +158,16 @@ export default function AssignmentRulesPage() {
       setSaving(true);
       if (editingRule) {
         await TicketAssignmentApi.updateRule(editingRule.id, payload);
-        message.success('分配规则已更新');
+        message.success('Assignment rules updated');
       } else {
         await TicketAssignmentApi.createRule(payload as CreateAssignmentRuleRequest);
-        message.success('分配规则已创建');
+        message.success('Assignment rule created');
       }
       closeRuleModal();
       await loadRules();
     } catch (error) {
       if (error instanceof Error) {
-        message.error(error.message ? error.message : '保存分配规则失败');
+        message.error(error.message ? error.message : 'Failed to save allocation rules');
       }
     } finally {
       setSaving(false);
@@ -177,20 +177,20 @@ export default function AssignmentRulesPage() {
   const deleteRule = async (id: number) => {
     try {
       await TicketAssignmentApi.deleteRule(id);
-      message.success('分配规则已删除');
+      message.success('Assignment rule deleted');
       await loadRules();
     } catch {
-      message.error('删除分配规则失败');
+      message.error('Failed to delete allocation rule');
     }
   };
 
   const toggleRule = async (rule: AssignmentRule) => {
     try {
       await TicketAssignmentApi.updateRule(rule.id, { isActive: !rule.isActive });
-      message.success(rule.isActive ? '规则已禁用' : '规则已启用');
+      message.success(rule.isActive ? 'Rule disabled' : 'Rule enabled');
       await loadRules();
     } catch {
-      message.error('切换规则状态失败');
+      message.error('Failed to switch rule status');
     }
   };
 
@@ -211,11 +211,11 @@ export default function AssignmentRulesPage() {
       });
       setTestResult(
         response.matched
-          ? `匹配成功${response.assignedTo ? `，推荐分配给用户 ID ${response.assignedTo}` : ''}。${response.reason || ''}`
-          : `未匹配。${response.reason || ''}`
+          ? `Match successful ${response.assignedTo ? `, recommended to be assigned to user ID ${response.assignedTo}` : ''}。${response.reason || ''}`
+          : `No match.${response.reason || ''}`
       );
     } catch {
-      message.error('测试分配规则失败');
+      message.error('Test assignment rule failed');
     } finally {
       setTesting(false);
     }
@@ -223,18 +223,18 @@ export default function AssignmentRulesPage() {
 
   const columns: ColumnsType<AssignmentRule> = [
     {
-      title: '规则名称',
+      title: 'Rule Name',
       dataIndex: 'name',
       key: 'name',
       render: (name: string, record) => (
         <div>
           <Text strong>{name}</Text>
-          <div className="text-xs text-gray-500">{record.description || '未填写描述'}</div>
+          <div className="text-xs text-gray-500">{record.description || 'No description filled in'}</div>
         </div>
       ),
     },
     {
-      title: '优先级',
+      title: 'Priority',
       dataIndex: 'priority',
       key: 'priority',
       width: 90,
@@ -243,66 +243,66 @@ export default function AssignmentRulesPage() {
       ),
     },
     {
-      title: '动作',
+      title: 'Action',
       dataIndex: 'actions',
       key: 'actions',
       width: 150,
       render: (actions: ActionConfig) => {
         const actionText =
-          actions?.type === 'user' ? `用户 ${actions.value ?? '-'}` : actions?.type || '-';
+          actions?.type === 'user' ? `Users ${actions.value ?? '-'}` : actions?.type || '-';
         return <Tag>{actionText}</Tag>;
       },
     },
     {
-      title: '执行次数',
+      title: 'Number of executions',
       dataIndex:'executionCount',
       key:'executionCount',
       width: 100,
       render: (count: number) => count || 0,
     },
     {
-      title: '最近执行',
+      title: 'Recently executed',
       dataIndex:'lastExecutedAt',
       key:'lastExecutedAt',
       width: 180,
       render: formatDate,
     },
     {
-      title: '状态',
+      title: 'Status',
       dataIndex: 'isActive',
       key: 'isActive',
       width: 110,
       render: (active: boolean, record) => (
         <Switch
-          aria-label={`切换规则 ${record.name} 的启用状态`}
+          aria-label={`Switching rules ${record.name} enabled status`}
           checked={active}
-          checkedChildren="启用"
-          unCheckedChildren="禁用"
+          checkedChildren="Enabled"
+          unCheckedChildren="Disabled"
           onChange={() => toggleRule(record)}
         />
       ),
     },
     {
-      title: '操作',
+      title: 'Actions',
       key: 'operations',
       width: 180,
       render: (_, record) => (
         <div className="flex items-center gap-2">
-          <Tooltip title="测试">
-            <Button aria-label="测试" size="small" icon={<FlaskConical size={14} />} onClick={() => openTestModal(record)} />
+          <Tooltip title="Test">
+            <Button aria-label="Test" size="small" icon={<FlaskConical size={14} />} onClick={() => openTestModal(record)} />
           </Tooltip>
-          <Tooltip title="编辑">
-            <Button aria-label="编辑" size="small" icon={<Edit size={14} />} onClick={() => openEditModal(record)} />
+          <Tooltip title="Edit">
+            <Button aria-label="Edit" size="small" icon={<Edit size={14} />} onClick={() => openEditModal(record)} />
           </Tooltip>
           <Popconfirm
-            title="确认删除该分配规则？"
-            okText="删除"
-            cancelText="取消"
+            title="Confirm to delete this allocation rule?"
+            okText="Delete"
+            cancelText="Cancel"
             okButtonProps={{ danger: true }}
             onConfirm={() => deleteRule(record.id)}
           >
-            <Tooltip title="删除">
-              <Button aria-label="删除" size="small" danger icon={<Delete size={14} />} />
+            <Tooltip title="Delete">
+              <Button aria-label="Delete" size="small" danger icon={<Delete size={14} />} />
             </Tooltip>
           </Popconfirm>
         </div>
@@ -316,16 +316,18 @@ export default function AssignmentRulesPage() {
         <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
             <Title level={3} style={{ marginBottom: 4 }}>
-              工单分配规则
+
+              Work order allocation rules
             </Title>
-            <Text type="secondary">按条件自动选择处理人，支撑工单进入可运营的分派流程。</Text>
+            <Text type="secondary">Automatically select handlers based on conditions, allowing work orders to enter an operational dispatch process.</Text>
           </div>
           <div className="flex items-center gap-2">
-            <Tooltip title="刷新">
-              <Button aria-label="刷新" icon={<RefreshCw size={16} />} onClick={loadRules} />
+            <Tooltip title="Refresh">
+              <Button aria-label="Refresh" icon={<RefreshCw size={16} />} onClick={loadRules} />
             </Tooltip>
             <Button type="primary" icon={<Plus size={16} />} onClick={openCreateModal}>
-              创建规则
+
+              Create rule
             </Button>
           </div>
         </div>
@@ -334,18 +336,18 @@ export default function AssignmentRulesPage() {
           className="mb-4"
           type="info"
           showIcon
-          title="定义匹配条件后，在工单类型中启用自动分配并绑定本规则"
+          title="After defining the matching conditions, enable automatic allocation in the work order type and bind this rule"
         />
 
         <UsageGuideCard
           style={{ marginBottom: 16 }}
-          title="匹配条件和分配动作怎么写"
-          intro="条件字段：priority（优先级）、status（状态）、category_id（分类 ID）、department_id（部门 ID）。操作符：equals / not_equals / contains / greater_than / less_than。"
+          title="How to write matching conditions and allocation actions"
+          intro="Condition fields: priority (priority), status (status), category_id (category ID), department_id (department ID). Operators: equals / not_equals / contains / greater_than / less_than."
           steps={[
-            '匹配条件示例（全部同时满足才命中）：[{"field":"priority","operator":"equals","value":"urgent"},{"field":"category_id","operator":"equals","value":3}]',
-            '分配动作三选一：{"type":"user","value":5} 直接派给用户 5；{"type":"round_robin","value":[5,8,12]} 在候选里轮询；{"type":"load_balance","value":[5,8,12]} 按负载挑。',
-            '优先级数字越大越靠前。先用"测试"输入一个真实工单 ID 预览命中结果，没问题再启用。',
-            '启用后，新建/接单的工单会按规则自动派单，分配结果记入工单历史。',
+            'Example of matching conditions (hit only when all are met at the same time): [{"field":"priority","operator":"equals","value":"urgent"},{"field":"category_id","operator":"equals","value":3}]',
+            'Choose one of three allocation actions: {"type":"user","value":5} is directly assigned to user 5; {"type":"round_robin","value":[5,8,12]} is polled among the candidates; {"type":"load_balance","value":[5,8,12]} is selected according to load.',
+            'The larger the priority number, the higher it is. First use "Test" to enter a real work order ID to preview the hit result, and then enable it if there is no problem.',
+            'After enabling, newly created/received work orders will be automatically dispatched according to the rules, and the allocation results will be recorded in the work order history.',
           ]}
         />
 
@@ -353,11 +355,11 @@ export default function AssignmentRulesPage() {
           <Alert
             type={loadError.denied ? 'warning' : 'error'}
             showIcon
-            title={loadError.denied ? '没有权限查看分配规则' : '加载分配规则失败'}
+            title={loadError.denied ? 'No permission to view allocation rules' : 'Failed to load allocation rules'}
             description={
               loadError.denied
-                ? '当前角色未被授予分配规则的读取权限。这里不是「系统里没有规则」，请联系管理员为你的角色开放规则配置权限。'
-                : loadError.detail || '后端未能返回规则列表，请稍后重试。'
+                ? 'The current role is not granted read permission for the assignment rules. This is not "there are no rules in the system". Please contact the administrator to configure permissions for your role\'s opening rules.'
+                : loadError.detail || 'The backend failed to return the rule list, please try again later.'
             }
             action={
               <Button
@@ -366,7 +368,8 @@ export default function AssignmentRulesPage() {
                 onClick={loadRules}
                 loading={loading}
               >
-                重试
+
+                Retry
               </Button>
             }
           />
@@ -374,8 +377,8 @@ export default function AssignmentRulesPage() {
           <Alert
             type="info"
             showIcon
-            title="暂无分配规则"
-            description="创建规则后，工单可按优先级、状态、分类或部门等条件自动推荐处理人。"
+            title="No allocation rules yet"
+            description="After creating a rule, work orders can automatically recommend handlers based on priority, status, classification, or department."
           />
         ) : (
           <Table
@@ -383,48 +386,48 @@ export default function AssignmentRulesPage() {
             columns={columns}
             dataSource={rules}
             loading={loading}
-            pagination={{ pageSize: 10, showTotal: total => `共 ${total} 条记录` }}
+            pagination={{ pageSize: 10, showTotal: total => `Total ${total} records` }}
           />
         )}
       </Card>
 
       <Modal
-        title={editingRule ? '编辑分配规则' : '创建分配规则'}
+        title={editingRule ? 'Edit allocation rules' : 'Create allocation rule'}
         open={ruleModalOpen}
         onOk={saveRule}
         onCancel={closeRuleModal}
         confirmLoading={saving}
-        okText="保存"
-        cancelText="取消"
+        okText="Save"
+        cancelText="Cancel"
         width={720}
         destroyOnHidden
       >
         <Form form={form} layout="vertical">
-          <Form.Item name="name" label="规则名称" rules={[{ required: true, message: '请输入规则名称' }]}>
-            <Input placeholder="例如：高优先级工单分配给一线负责人" />
+          <Form.Item name="name" label="Rule Name" rules={[{ required: true, message: 'Please enter a rule name' }]}>
+            <Input placeholder="For example: high-priority work orders are assigned to front-line managers" />
           </Form.Item>
-          <Form.Item name="description" label="规则描述">
-            <TextArea rows={3} placeholder="说明该规则适用的业务场景" />
+          <Form.Item name="description" label="Rule Description">
+            <TextArea rows={3} placeholder="Describe the business scenario to which this rule applies" />
           </Form.Item>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <Form.Item name="priority" label="优先级" tooltip="数字越大越先执行">
+            <Form.Item name="priority" label="Priority" tooltip="The larger the number, the first it will be executed.">
               <InputNumber min={1} max={100} style={{ width: '100%' }} />
             </Form.Item>
-            <Form.Item name="isActive" label="启用状态" valuePropName="checked">
-              <Switch checkedChildren="启用" unCheckedChildren="禁用" />
+            <Form.Item name="isActive" label="Enabled" valuePropName="checked">
+              <Switch checkedChildren="Enabled" unCheckedChildren="Disabled" />
             </Form.Item>
           </div>
           <Form.Item
             name="conditions"
-            label="匹配条件 JSON"
-            rules={[{ required: true, message: '请输入匹配条件 JSON' }]}
+            label="Match condition JSON"
+            rules={[{ required: true, message: 'Please enter matching conditions JSON' }]}
           >
             <TextArea rows={7} spellCheck={false} />
           </Form.Item>
           <Form.Item
             name="actions"
-            label="分配动作 JSON"
-            rules={[{ required: true, message: '请输入分配动作 JSON' }]}
+            label="Assign action JSON"
+            rules={[{ required: true, message: 'Please enter the assignment action JSON' }]}
           >
             <TextArea rows={5} spellCheck={false} />
           </Form.Item>
@@ -432,20 +435,20 @@ export default function AssignmentRulesPage() {
       </Modal>
 
       <Modal
-        title="测试分配规则"
+        title="Test allocation rules"
         open={testModalOpen}
         onOk={testRule}
         onCancel={() => setTestModalOpen(false)}
         confirmLoading={testing}
-        okText="执行测试"
-        cancelText="关闭"
+        okText="Execute test"
+        cancelText="Close"
         destroyOnHidden
       >
         <Form form={testForm} layout="vertical">
-          <Form.Item name="ruleId" label="规则 ID" rules={[{ required: true, message: '请选择规则' }]}>
+          <Form.Item name="ruleId" label="Rule ID" rules={[{ required: true, message: 'Please select a rule' }]}>
             <InputNumber disabled style={{ width: '100%' }} />
           </Form.Item>
-          <Form.Item name="ticketId" label="工单 ID" rules={[{ required: true, message: '请输入工单 ID' }]}>
+          <Form.Item name="ticketId" label="Ticket ID" rules={[{ required: true, message: 'Please enter the work order ID' }]}>
             <InputNumber min={1} style={{ width: '100%' }} />
           </Form.Item>
         </Form>

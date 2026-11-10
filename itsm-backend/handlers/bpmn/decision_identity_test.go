@@ -58,7 +58,7 @@ func TestSubmitTaskDecision_NumericIdentityCollision(t *testing.T) {
 		require.NoError(t, json.Unmarshal(w.Body.Bytes(), &response))
 		assert.Equal(t, code, response.Code)
 		if tenant == 1 {
-			assert.Equal(t, "该审批节点要求拒绝时填写意见", response.Message)
+			assert.Equal(t, "The approval node requires filling in comments when rejecting", response.Message)
 		}
 	}
 	assert.Equal(t, target.Status, client.ProcessTask.GetX(ctx, target.ID).Status)

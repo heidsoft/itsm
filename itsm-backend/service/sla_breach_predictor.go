@@ -101,10 +101,10 @@ const queueLoadFactor = 0.6
 // 编造的概率会被当成真实信号进入告警与调度。
 func (p *SLABreachPredictor) Predict(f SLABreachFeatures) (*SLABreachRisk, error) {
 	if f.HistoricalAvgResolutionHours <= 0 {
-		return nil, fmt.Errorf("sla breach predict: historical_avg_resolution_hours 必须为正")
+		return nil, fmt.Errorf("sla breach predict: historical_avg_resolution_hours must be positive")
 	}
 	if f.HorizonMinutes <= 0 {
-		return nil, fmt.Errorf("sla breach predict: horizon_minutes 必须为正")
+		return nil, fmt.Errorf("sla breach predict: horizon_minutes must be positive")
 	}
 
 	// 1) 预计解决时长 = 历史均值 × 优先级系数 × 队列负载因子

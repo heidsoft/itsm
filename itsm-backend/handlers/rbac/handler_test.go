@@ -960,7 +960,7 @@ func TestUpdateMenu_InvalidParentMapsToBadRequest_Mock(t *testing.T) {
 	h := newMockRbacHandler(t, &mockRoleService{}, &mockPermissionService{}, menu)
 
 	menu.On("UpdateMenu", mock.Anything, 5, mock.Anything, 7).
-		Return((*dto.MenuDTO)(nil), common.NewValidationError("上级菜单不存在或不属于当前租户", nil))
+		Return((*dto.MenuDTO)(nil), common.NewValidationError("The upper-level menu does not exist or does not belong to the current tenant", nil))
 
 	w, c := menuCtx(http.MethodPut, "/api/v1/menus/5", `{"parentId":99}`, 7, "admin")
 	c.Params = gin.Params{{Key: "id", Value: "5"}}
@@ -970,7 +970,7 @@ func TestUpdateMenu_InvalidParentMapsToBadRequest_Mock(t *testing.T) {
 	var envelope rbacEnvelope
 	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &envelope))
 	assert.Equal(t, common.BadRequestCode, envelope.Code)
-	assert.Equal(t, "上级菜单不存在或不属于当前租户", envelope.Message)
+	assert.Equal(t, "The upper-level menu does not exist or does not belong to the current tenant", envelope.Message)
 }
 
 // TestDeleteMenu_ConflictMapsTo409 证明「还有子菜单」是客户端可处理的冲突，
@@ -980,7 +980,7 @@ func TestDeleteMenu_ConflictMapsTo409_Mock(t *testing.T) {
 	h := newMockRbacHandler(t, &mockRoleService{}, &mockPermissionService{}, menu)
 
 	menu.On("DeleteMenu", mock.Anything, 5, 7).
-		Return(common.NewBusinessError(common.ConflictCode, "请先删除子菜单", "menu_id=5 children=2"))
+		Return(common.NewBusinessError(common.ConflictCode, "Please delete the submenu first", "menu_id=5 children=2"))
 
 	w, c := menuCtx(http.MethodDelete, "/api/v1/menus/5", "", 7, "admin")
 	c.Params = gin.Params{{Key: "id", Value: "5"}}
@@ -990,7 +990,7 @@ func TestDeleteMenu_ConflictMapsTo409_Mock(t *testing.T) {
 	var envelope rbacEnvelope
 	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &envelope))
 	assert.Equal(t, common.ConflictCode, envelope.Code)
-	assert.Equal(t, "请先删除子菜单", envelope.Message)
+	assert.Equal(t, "Please delete the submenu first", envelope.Message)
 }
 
 // TestDeleteMenu_UnknownIsNotFound 关掉「删除不存在的菜单也返回成功」的静默路径。

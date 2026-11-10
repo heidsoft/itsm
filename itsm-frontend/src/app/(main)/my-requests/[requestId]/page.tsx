@@ -54,18 +54,18 @@ const { Title, Text } = Typography;
 // 服务请求状态（snake_case，对应 backend enum）
 // 兼容旧 camelCase 数据，避免历史脏数据回退到英文原文。
 const REQUEST_STATUS_LABEL: Record<string, { color: string; label: string }> = {
-  submitted: { color: 'gold', label: '已提交' },
-  manager_approved: { color: 'blue', label: '主管已批' },
-  managerApproved: { color: 'blue', label: '主管已批' },
-  it_approved: { color: 'geekblue', label: 'IT已批' },
-  itApproved: { color: 'geekblue', label: 'IT已批' },
-  security_approved: { color: 'green', label: '安全已批' },
-  securityApproved: { color: 'green', label: '安全已批' },
-  provisioning: { color: 'cyan', label: '交付中' },
-  delivered: { color: 'green', label: '已交付' },
-  failed: { color: 'red', label: '交付失败' },
-  rejected: { color: 'red', label: '已拒绝' },
-  cancelled: { color: 'default', label: '已取消' },
+  submitted: { color: 'gold', label: 'Submitted' },
+  manager_approved: { color: 'blue', label: 'Manager Approved' },
+  managerApproved: { color: 'blue', label: 'Manager Approved' },
+  it_approved: { color: 'geekblue', label: 'IT Approved' },
+  itApproved: { color: 'geekblue', label: 'IT Approved' },
+  security_approved: { color: 'green', label: 'Security Approved' },
+  securityApproved: { color: 'green', label: 'Security Approved' },
+  provisioning: { color: 'cyan', label: 'Provisioning' },
+  delivered: { color: 'green', label: 'Delivered' },
+  failed: { color: 'red', label: 'Failed' },
+  rejected: { color: 'red', label: 'Rejected' },
+  cancelled: { color: 'default', label: 'Cancelled' },
 };
 
 // 状态机允许直接取消的来源状态（后端 serviceRequestStatusTransitions）。
@@ -80,18 +80,18 @@ const CANCELLABLE_STATUSES = new Set([
 
 // 审批步骤英文 → 中文（manager / it / security）
 const APPROVAL_STEP_LABEL: Record<string, string> = {
-  manager: '主管',
+  manager: 'Supervisor',
   it: 'IT',
-  security: '安全',
+  security: 'Safe',
 };
 
 // 审批记录状态英文 → 中文（pending / approved / rejected）
 const APPROVAL_RECORD_STATUS_LABEL: Record<string, string> = {
-  pending: '待审批',
-  approved: '已通过',
-  rejected: '已拒绝',
-  delegated: '已委派',
-  timeout: '已超时',
+  pending: 'Pending Approval',
+  approved: 'Approved',
+  rejected: 'Rejected',
+  delegated: 'Delegated',
+  timeout: 'Timed out',
 };
 
 function statusTag(status: string) {
@@ -121,7 +121,7 @@ export default function MyRequestDetailPage() {
       setDetail(data);
     } catch (e) {
       console.error(e);
-      message.error(e instanceof Error ? e.message : '加载失败');
+      message.error(e instanceof Error ? e.message : 'LoadingFailed');
     } finally {
       setLoading(false);
     }
@@ -136,28 +136,28 @@ export default function MyRequestDetailPage() {
   const doApprove = async () => {
     try {
       await ServiceCatalogApi.approveServiceRequest(requestId, comment || undefined);
-      message.success('已提交审批动作（通过）');
+      message.success('Approval action submitted (passed)');
       setComment('');
       await load();
     } catch (e) {
       console.error(e);
-      message.error(e instanceof Error ? e.message : '操作失败');
+      message.error(e instanceof Error ? e.message : 'Operation failed');
     }
   };
 
   const doReject = async () => {
     try {
       if (!comment.trim()) {
-        message.warning('请输入拒绝原因/审批意见');
+        message.warning('Please enter the reason for rejection/approval opinion');
         return;
       }
       await ServiceCatalogApi.rejectServiceRequest(requestId, comment.trim());
-      message.success('已提交审批动作（拒绝）');
+      message.success('Approval action submitted (rejected)');
       setComment('');
       await load();
     } catch (e) {
       console.error(e);
-      message.error(e instanceof Error ? e.message : '操作失败');
+      message.error(e instanceof Error ? e.message : 'Operation failed');
     }
   };
 
@@ -165,13 +165,13 @@ export default function MyRequestDetailPage() {
     try {
       setCancelling(true);
       await ServiceCatalogApi.cancelServiceRequest(requestId, cancelReason.trim() || undefined);
-      message.success('服务请求已取消');
+      message.success('Service request canceled');
       setCancelOpen(false);
       setCancelReason('');
       await load();
     } catch (e) {
       console.error(e);
-      message.error(e instanceof Error ? e.message : '取消失败');
+      message.error(e instanceof Error ? e.message : 'Cancellation failed');
     } finally {
       setCancelling(false);
     }
@@ -198,22 +198,25 @@ export default function MyRequestDetailPage() {
                     router.push('/my-requests');
                   } catch (navErr) {
                     console.error('[nav]', navErr);
-                    message.error('导航失败，请稍后重试');
+                    message.error('Navigation failed, please try again later');
                   }
                 }}
               >
-                返回
+
+                Back
               </Button>
               <div>
                 <Title level={2} style={{ marginBottom: 0 }}>
-                  请求详情 #{requestId}
+
+                  Request details #{requestId}
                 </Title>
-                <Text type='secondary'>查看审批记录与交付进度</Text>
+                <Text type='secondary'>View approval records and delivery progress</Text>
               </div>
             </Space>
             {canCancel && (
               <Button danger icon={<XCircle />} onClick={() => setCancelOpen(true)}>
-                取消请求
+
+                Cancel request
               </Button>
             )}
           </div>
@@ -221,13 +224,13 @@ export default function MyRequestDetailPage() {
 
         <Card loading={loading}>
           <Descriptions bordered column={2} size='middle'>
-            <Descriptions.Item label='状态'>
+            <Descriptions.Item label="Status">
               {statusTag(String(detail?.status || ''))}
             </Descriptions.Item>
-            <Descriptions.Item label='当前级别'>
+            <Descriptions.Item label="Current level">
               {detail?.currentLevel ?? '-'} / {detail?.totalLevels ?? '-'}
             </Descriptions.Item>
-            <Descriptions.Item label='关联CI'>
+            <Descriptions.Item label="Associated CI">
               {detail?.ciId ? (
                 <Button
                   type='link'
@@ -236,7 +239,7 @@ export default function MyRequestDetailPage() {
                       router.push(`/cmdb/cis/${detail.ciId}`);
                     } catch (navErr) {
                       console.error('[nav]', navErr);
-                      message.error('导航失败，请稍后重试');
+                      message.error('Navigation failed, please try again later');
                     }
                   }}
                 >
@@ -246,23 +249,23 @@ export default function MyRequestDetailPage() {
                 '-'
               )}
             </Descriptions.Item>
-            <Descriptions.Item label='标题' span={2}>
+            <Descriptions.Item label="Title" span={2}>
               {detail?.title || detail?.catalog?.name || '-'}
             </Descriptions.Item>
-            <Descriptions.Item label='原因' span={2}>
+            <Descriptions.Item label="Reason" span={2}>
               {detail?.reason || '-'}
             </Descriptions.Item>
-            <Descriptions.Item label='数据分级'>
+            <Descriptions.Item label="Data classification">
               {detail?.dataClassification || '-'}
             </Descriptions.Item>
-            <Descriptions.Item label='成本中心'>{detail?.costCenter || '-'}</Descriptions.Item>
+            <Descriptions.Item label="Cost Center">{detail?.costCenter || '-'}</Descriptions.Item>
           </Descriptions>
 
           <Divider />
 
-          <Title level={4}>审批记录</Title>
+          <Title level={4}>Approval Records</Title>
           {approvals.length === 0 ? (
-            <Text type='secondary'>暂无审批记录</Text>
+            <Text type='secondary'>No approval records</Text>
           ) : (
             <Descriptions bordered column={1} size='small'>
               {approvals.map((a) => (
@@ -288,8 +291,8 @@ export default function MyRequestDetailPage() {
                     ) : (
                       statusTag(String(a.status))
                     )}
-                    <Text type='secondary'>审批人：{a.approverName || '-'}</Text>
-                    <Text type='secondary'>意见：{a.comment || '-'}</Text>
+                    <Text type='secondary'>Approver:{a.approverName || '-'}</Text>
+                    <Text type='secondary'>Comments:{a.comment || '-'}</Text>
                   </Space>
                 </Descriptions.Item>
               ))}
@@ -304,20 +307,22 @@ export default function MyRequestDetailPage() {
               detail?.status === 'manager_approved' ||
               detail?.status === 'it_approved') && (
             <>
-              <Title level={4}>审批操作</Title>
+              <Title level={4}>Approval operation</Title>
               <Space orientation='vertical' style={{ width: '100%' }}>
                 <Input.TextArea
                   value={comment}
                   onChange={e => setComment(e.target.value)}
                   rows={3}
-                  placeholder='审批意见（拒绝时必填）'
+                  placeholder="Approval opinion (required when rejecting)"
                 />
                 <Space>
                   <Button type='primary' onClick={doApprove}>
-                    通过
+
+                    Approve
                   </Button>
                   <Button danger onClick={doReject}>
-                    拒绝
+
+                    Rejected
                   </Button>
                 </Space>
               </Space>
@@ -343,11 +348,11 @@ export default function MyRequestDetailPage() {
 
         <Modal
           open={cancelOpen}
-          title='取消服务请求'
+          title="Cancel service request"
           onCancel={() => setCancelOpen(false)}
           onOk={doCancel}
-          okText='确认取消'
-          cancelText='返回'
+          okText="Confirm cancellation"
+          cancelText="Back"
           okButtonProps={{ danger: true }}
           confirmLoading={cancelling}
           destroyOnHidden
@@ -356,16 +361,16 @@ export default function MyRequestDetailPage() {
             <Alert
               type='warning'
               showIcon
-              title='取消后不可恢复'
-              description='待审批记录会作废，关联流程实例会终止。如需继续，请重新提交服务请求。'
+              title="Cannot be restored after cancellation"
+              description="The record to be approved will be invalidated and the associated process instance will be terminated. To continue, please resubmit your service request."
             />
             <div>
-              <Text type='secondary'>取消原因（选填）</Text>
+              <Text type='secondary'>Reason for cancellation (optional)</Text>
               <Input.TextArea
                 rows={3}
                 value={cancelReason}
                 onChange={e => setCancelReason(e.target.value)}
-                placeholder='例如：需求变更，改为申请更大的规格'
+                placeholder="For example: requirements change, apply for larger specifications instead"
                 maxLength={500}
                 showCount
                 style={{ marginTop: 8 }}

@@ -21,7 +21,7 @@ function InstanceDetailContent() {
   const instanceId = params?.id as string | undefined;
 
   if (!instanceId) {
-    return <div className="p-6 text-center text-gray-500">缺少实例 ID</div>;
+    return <div className="p-6 text-center text-gray-500">Missing instance ID</div>;
   }
 
   return (
@@ -39,7 +39,7 @@ export default function WorkflowInstanceDetailPage() {
     <Suspense
       fallback={
         <div className="flex items-center justify-center h-64">
-          <Spin tip="加载中…" />
+          <Spin tip="Loading…" />
         </div>
       }
     >

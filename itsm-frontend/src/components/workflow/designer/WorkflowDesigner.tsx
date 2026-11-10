@@ -45,42 +45,21 @@ interface WorkflowDesignerProps {
 // 空白模板应当能直接存为草稿，由用户按需拖入节点。
 const getDefaultBPMNXML = () => {
   return `<?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
-                  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
-                  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
-                  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
-                  id="Definitions_1"
-                  targetNamespace="http://bpmn.io/schema/bpmn">
-  <bpmn:process id="Process_1" name="服务流程" isExecutable="true">
-    <bpmn:startEvent id="StartEvent_1" name="开始">
-      <bpmn:outgoing>Flow_1</bpmn:outgoing>
-    </bpmn:startEvent>
-    <bpmn:endEvent id="EndEvent_1" name="结束">
-      <bpmn:incoming>Flow_1</bpmn:incoming>
-    </bpmn:endEvent>
-    <bpmn:sequenceFlow id="Flow_1" sourceRef="StartEvent_1" targetRef="EndEvent_1" />
-  </bpmn:process>
-  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
-    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_1">
-      <bpmndi:BPMNShape id="StartEvent_1_di" bpmnElement="StartEvent_1">
-        <dc:Bounds x="180" y="160" width="36" height="36" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="186" y="203" width="24" height="14" />
-        </bpmndi:BPMNLabel>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="EndEvent_1_di" bpmnElement="EndEvent_1">
-        <dc:Bounds x="432" y="160" width="36" height="36" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="439" y="203" width="24" height="14" />
-        </bpmndi:BPMNLabel>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNEdge id="Flow_1_di" bpmnElement="Flow_1">
-        <di:waypoint x="216" y="178" />
-        <di:waypoint x="432" y="178" />
-      </bpmndi:BPMNEdge>
-    </bpmndi:BPMNPlane>
-  </bpmndi:BPMNDiagram>
-</bpmn:definitions>`;
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+id="Definitions_1" name="Service Process" isExecutable="true">
+<bpmn:startEvent id="StartEvent_1" name="Start">
+<bpmn:outgoing>Flow_1</bpmn:outgoing> <bpmn:incoming>Flow_1</bpmn:incoming>
+</bpmn:endEvent>
+<bpmn:sequenceFlow id="Flow_1" sourceRef="StartEvent_1" targetRef="EndEvent_1" /> <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_1">
+<bpmndi:BPMNShape id="StartEvent_1_di" bpmnElement="StartEvent_1"> <dc:Bounds x="186" y="203" width="24" height="14" />
+</bpmndi:BPMNLabel>
+</bpmndi:BPMNShape> width="36" height="36" />
+<bpmndi:BPMNLabel>
+<dc:Bounds x="439" y="203" width="24" height="14" /> bpmnElement="Flow_1">
+<di:waypoint x="216" y="178" />
+<di:waypoint x="432" y="178" />
+</bpmndi:BPMNEdge>`;
 };
 
 // 内部组件
@@ -169,7 +148,7 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
     }
     const xml = await api.getXML();
     if (!xml) {
-      message.error('流程无法序列化，已阻止保存，请先处理画布上的属性错误');
+      message.error('Process cannot be serialized, saving has been blocked, please handle the property error on the canvas first');
     }
     return xml;
   }, [message, t]);
@@ -192,7 +171,7 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
       }));
       setUserList(users);
     } catch (error) {
-      console.error('加载用户列表失败:', error);
+      console.error('Failed to load user list:', error);
       message.error(t('workflow.designer.loadUserListFailed'));
     } finally {
       setLoadingUsers(false);
@@ -211,7 +190,7 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
       }));
       setRoleList(roles);
     } catch (error) {
-      console.error('加载角色列表失败:', error);
+      console.error('Failed to load character list:', error);
       message.error(t('workflow.designer.loadRoleListFailed'));
     } finally {
       setLoadingRoles(false);
@@ -223,7 +202,7 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
     setLoadingGroups(true);
     try {
       const tenantId = httpClient.getTenantId();
-      if (!tenantId) throw new Error('缺少有效租户上下文');
+      if (!tenantId) throw new Error('Missing valid tenant context');
       const response = await GroupAPI.getGroups({ page: 1, pageSize: 100, tenantId });
       const groups = (response.items || []).map((g: any) => ({
         id: g.id,
@@ -233,7 +212,7 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
       }));
       setGroupList(groups);
     } catch (error) {
-      console.error('加载审批组列表失败:', error);
+      console.error('Failed to load approval group list:', error);
       message.error(t('workflow.designer.loadApprovalGroupsFailed'));
     } finally {
       setLoadingGroups(false);
@@ -273,7 +252,7 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
       // 无 DI 的 BPMN 仍是有效业务定义。绝不能用默认模板覆盖，否则下一次
       // 保存会破坏原流程；让 modeler 显式报告无法渲染并保留原始 XML。
       if (xmlContent && !xmlContent.includes('<bpmndi:BPMNDiagram')) {
-        message.warning('该流程缺少 BPMN 图形坐标（DI），已保留原始 XML；请导入含 DI 的文件后再编辑');
+        message.warning('The process lacks BPMN graphic coordinates (DI) and the original XML has been retained; please import the file containing DI before editing.');
       }
 
 	  const workflowData: WorkflowDefinition = {
@@ -302,7 +281,7 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
       setWorkflow(workflowData);
       setCurrentXML(xmlContent || getDefaultBPMNXML());
     } catch (error) {
-      console.error('加载工作流失败:', error);
+      console.error('Failed to load workflow:', error);
       message.error(t('workflow.designer.loadWorkflowFailed'));
       // 加载失败时不能留在空白画布：页面标题会显示"新工作流设计"，
       // 用户会以为在编辑原流程，点保存则新建一份定义。
@@ -329,7 +308,7 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
           }))
         );
       } catch (error) {
-        console.error('加载工作流版本失败:', error);
+        console.error('Failed to load workflow version:', error);
       }
     },
     [t]
@@ -357,7 +336,7 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
         }
       }
     } catch (error) {
-      console.error('加载工作流配置失败:', error);
+      console.error('Failed to load workflow configuration:', error);
     }
   };
 
@@ -427,7 +406,7 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
           const lint = await BPMNAIApi.lintBPMN(xml);
           issues = mergeLintIssues(localIssues, lint.issues);
         } catch (error) {
-          console.error('后端流程校验失败:', error);
+          console.error('Backend process verification failed:', error);
           issues = mergeLintIssues(localIssues, [
             { severity: 'info', category: 'backend', message: t('workflow.designer.validationBackendUnavailable') },
           ]);
@@ -435,11 +414,11 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
       }
 
       setValidationIssues(issues);
-      
+
       if (issues.length > 0) {
         const errorCount = issues.filter((i: ValidationIssue) => i.type === 'error').length;
         const warningCount = issues.filter((i: ValidationIssue) => i.type === 'warning').length;
-        
+
         if (showSuccessMessage) {
           if (errorCount > 0) {
             message.error(t('workflow.designer.validationErrorsFound', { errorCount, warningCount }));
@@ -449,12 +428,12 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
             message.success(t('workflow.designer.validationPassed'));
           }
         }
-        
+
         // 如果有错误，自动显示校验面板
         if (errorCount > 0) {
           setShowValidationPanel(true);
         }
-        
+
         return issues;
       } else {
         if (showSuccessMessage) {
@@ -464,7 +443,7 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
         return [];
       }
     } catch (error) {
-      console.error('校验失败:', error);
+      console.error('Verification failed:', error);
       message.error(t('workflow.designer.validationFailed'));
       return [];
     } finally {
@@ -551,7 +530,7 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
         loadWorkflowVersions(workflow.id);
       }
     } catch (error) {
-      console.error('保存工作流失败:', error);
+      console.error('Failed to save workflow:', error);
       message.error(t('workflow.designer.saveFailed', { message: (error as Error).message }));
     } finally {
       setSaving(false);
@@ -578,7 +557,7 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
       updateWorkflow({ status: 'active' });
       void loadWorkflowVersions(workflow.id);
     } catch (error: any) {
-      console.error('部署失败:', error);
+      console.error('Deployment failed:', error);
       message.error(t('workflow.designer.deployFailed') + ': ' + (error?.message || ''));
     } finally {
       setDeploying(false);
@@ -659,7 +638,7 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
         loadWorkflowVersions(workflow.id);
       }
     } catch (error) {
-      console.error('保存并部署失败:', error);
+      console.error('Save and deploy failed:', error);
       const errorMsg = error instanceof Error ? error.message : String(error);
       message.error(t('workflow.designer.saveAndDeployFailed', { message: errorMsg }));
     } finally {
@@ -678,7 +657,7 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
         message.success(t('workflow.designer.versionSwitched', { version: version.version }));
       }
     } catch (error) {
-      console.error('切换版本失败:', error);
+      console.error('Failed to switch version:', error);
       message.error(t('workflow.designer.switchVersionFailed'));
     }
   };
@@ -700,7 +679,7 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
       message.success(t('workflow.designer.versionCreated'));
       setShowVersionModal(false);
     } catch (error) {
-      console.error('创建版本失败:', error);
+      console.error('Failed to create version:', error);
       message.error(t('workflow.designer.versionCreateFailed'));
     }
   };
@@ -927,18 +906,18 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
                   <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 h-[calc(100vh-200px)] overflow-y-auto">
                     <div className="mb-4">
                       <Space>
-                        <Button 
-                          type="primary" 
-                          icon={<Bug />} 
+                        <Button
+                          type="primary"
+                          icon={<Bug />}
                           onClick={() => validateWorkflow(true)}
                           loading={validating}
                         >
                           {t('workflow.designer.validationRevalidate')}
                         </Button>
-                        <Switch 
-                          aria-label="自动校验"
-                          checked={autoValidate} 
-                          onChange={setAutoValidate} 
+                        <Switch
+                          aria-label="Automatic verification"
+                          checked={autoValidate}
+                          onChange={setAutoValidate}
                           checkedChildren={t('workflow.designer.validationAutoOn')}
                           unCheckedChildren={t('workflow.designer.validationAutoOff')}
                         />
@@ -1067,7 +1046,7 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
               message.success(t('workflow.designer.settingsSaved'));
               setShowSettingsModal(false);
             } catch (error) {
-              console.error('保存设置失败:', error);
+              console.error('Failed to save settings:', error);
               message.error(t('workflow.designer.settingsSaveFailed'));
             }
           }}

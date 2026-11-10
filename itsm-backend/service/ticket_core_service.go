@@ -50,19 +50,19 @@ func (s *TicketCoreService) CreateTicketBasic(ctx context.Context, req *dto.Crea
 
 	// 验证必填字段
 	if req.Description == "" {
-		return nil, fmt.Errorf("description不能为空")
+		return nil, fmt.Errorf("description cannot be empty")
 	}
 	if req.Priority == "" {
-		return nil, fmt.Errorf("priority不能为空")
+		return nil, fmt.Errorf("priority cannot be empty")
 	}
 
 	if err := s.validateRequester(ctx, req.RequesterID, tenantID); err != nil {
-		return nil, fmt.Errorf("验证创建人失败: %w", err)
+		return nil, fmt.Errorf("Failed to verify creator: %w", err)
 	}
 
 	ticketNumber, err := s.generateTicketNumber(ctx, tenantID)
 	if err != nil {
-		return nil, fmt.Errorf("生成工单编号失败: %w", err)
+		return nil, fmt.Errorf("Failed to generate work order number: %w", err)
 	}
 
 	ticketType := req.Type
@@ -76,23 +76,23 @@ func (s *TicketCoreService) CreateTicketBasic(ctx context.Context, req *dto.Crea
 			Where(ticketcategory.IDEQ(*req.CategoryID), ticketcategory.TenantIDEQ(tenantID)).
 			Exist(ctx)
 		if err != nil {
-			return nil, fmt.Errorf("校验分类失败: %w", err)
+			return nil, fmt.Errorf("Verification classification failed: %w", err)
 		}
 		if !exists {
-			return nil, fmt.Errorf("分类不存在或不属于当前租户")
+			return nil, fmt.Errorf("Classification does not exist or does not belong to the current tenant")
 		}
 		categoryID = req.CategoryID
 	} else if req.Category != "" {
 		catID, err := s.findCategoryID(ctx, req.Category, tenantID)
 		if err != nil {
-			return nil, fmt.Errorf("校验分类失败: %w", err)
+			return nil, fmt.Errorf("Verification classification failed: %w", err)
 		}
 		categoryID = &catID
 	}
 
 	if req.AssigneeID > 0 {
 		if err := s.validateAssignee(ctx, req.AssigneeID, tenantID); err != nil {
-			return nil, fmt.Errorf("验证分配人失败: %w", err)
+			return nil, fmt.Errorf("Failed to verify assignee: %w", err)
 		}
 	}
 	tagIDs, err := s.validateTagIDs(ctx, req.TagIDs, tenantID)
@@ -104,10 +104,10 @@ func (s *TicketCoreService) CreateTicketBasic(ctx context.Context, req *dto.Crea
 			Where(ticket.IDEQ(*req.ParentTicketID), ticket.TenantIDEQ(tenantID), ticket.DeletedAtIsNil()).
 			Exist(ctx)
 		if err != nil {
-			return nil, fmt.Errorf("校验父工单失败: %w", err)
+			return nil, fmt.Errorf("Failed to verify parent ticket: %w", err)
 		}
 		if !exists {
-			return nil, fmt.Errorf("父工单不存在或不属于当前租户")
+			return nil, fmt.Errorf("The parent ticket does not exist or does not belong to the current tenant")
 		}
 	}
 	if req.TemplateID != nil && *req.TemplateID > 0 {
@@ -115,10 +115,10 @@ func (s *TicketCoreService) CreateTicketBasic(ctx context.Context, req *dto.Crea
 			Where(tickettemplate.IDEQ(*req.TemplateID), tickettemplate.TenantIDEQ(tenantID)).
 			Exist(ctx)
 		if err != nil {
-			return nil, fmt.Errorf("校验模板失败: %w", err)
+			return nil, fmt.Errorf("Failed to verify template: %w", err)
 		}
 		if !exists {
-			return nil, fmt.Errorf("模板不存在或不属于当前租户")
+			return nil, fmt.Errorf("Template does not exist or does not belong to the current tenant")
 		}
 	}
 
@@ -175,7 +175,7 @@ func (s *TicketCoreService) CreateTicketBasic(ctx context.Context, req *dto.Crea
 				ticketNumber = newTicketNumber
 			}
 		}
-		return nil, fmt.Errorf("创建失败: %w", err)
+		return nil, fmt.Errorf("Creation failed: %w", err)
 	}
 
 created:
@@ -187,7 +187,7 @@ func (s *TicketCoreService) GetTicket(ctx context.Context, ticketID int, tenantI
 		Where(ticket.IDEQ(ticketID), ticket.TenantID(tenantID), ticket.DeletedAtIsNil()).
 		Only(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("工单不存在: %w", err)
+		return nil, fmt.Errorf("Ticket does not exist: %w", err)
 	}
 	return t, nil
 }
@@ -262,7 +262,7 @@ func (s *TicketCoreService) ListTickets(ctx context.Context, req *dto.ListTicket
 
 	tickets, err := query.All(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("查询失败: %w", err)
+		return nil, fmt.Errorf("Query failed: %w", err)
 	}
 	return tickets, nil
 }
@@ -274,7 +274,7 @@ func (s *TicketCoreService) CountTickets(ctx context.Context, tenantID int, filt
 	}
 	count, err := query.Count(ctx)
 	if err != nil {
-		return 0, fmt.Errorf("统计失败: %w", err)
+		return 0, fmt.Errorf("Statistics failed: %w", err)
 	}
 	return count, nil
 }
@@ -284,13 +284,13 @@ func (s *TicketCoreService) UpdateTicketBasic(ctx context.Context, ticketID int,
 		Where(ticket.IDEQ(ticketID), ticket.TenantID(tenantID), ticket.DeletedAtIsNil()).
 		Only(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("工单不存在: %w", err)
+		return nil, fmt.Errorf("Ticket does not exist: %w", err)
 	}
 
 	// 版本检查（乐观锁）- 除非明确强制更新
 	if !req.Force && req.Version > 0 && t.Version != req.Version {
 		return nil, common.NewVersionConflictError(
-			"工单",
+			"Ticket",
 			ticketID,
 			req.Version,
 			t.Version,
@@ -311,20 +311,20 @@ func (s *TicketCoreService) UpdateTicketBasic(ctx context.Context, ticketID int,
 	if req.Status != "" {
 		// 验证状态转换是否合法
 		if !IsValidTicketStatusTransition(t.Status, req.Status) {
-			return nil, fmt.Errorf("无效的状态转换: 从 %s 到 %s", t.Status, req.Status)
+			return nil, fmt.Errorf("Invalid state transition: from %s to %s", t.Status, req.Status)
 		}
 		update = update.SetStatus(req.Status)
 	}
 	if req.RequesterID > 0 {
 		if err := s.validateRequester(ctx, req.RequesterID, tenantID); err != nil {
-			return nil, fmt.Errorf("验证创建人失败: %w", err)
+			return nil, fmt.Errorf("Failed to verify creator: %w", err)
 		}
 		update = update.SetRequesterID(req.RequesterID)
 	}
 	if req.AssigneeID != 0 {
 		if req.AssigneeID > 0 {
 			if err := s.validateAssignee(ctx, req.AssigneeID, tenantID); err != nil {
-				return nil, fmt.Errorf("验证分配人失败: %w", err)
+				return nil, fmt.Errorf("Failed to verify assignee: %w", err)
 			}
 		}
 		update = update.SetAssigneeID(req.AssigneeID)
@@ -335,7 +335,7 @@ func (s *TicketCoreService) UpdateTicketBasic(ctx context.Context, ticketID int,
 
 	ticket, err := update.Save(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("更新失败: %w", err)
+		return nil, fmt.Errorf("Update failed: %w", err)
 	}
 	return ticket, nil
 }
@@ -351,7 +351,7 @@ func (s *TicketCoreService) DeleteTicket(ctx context.Context, ticketID int, tena
 		SetDeletedAt(time.Now()).
 		Save(ctx)
 	if err != nil {
-		return fmt.Errorf("删除失败: %w", err)
+		return fmt.Errorf("Delete failed: %w", err)
 	}
 	return nil
 }
@@ -363,7 +363,7 @@ func (s *TicketCoreService) BatchDeleteTickets(ctx context.Context, ticketIDs []
 	for _, id := range ticketIDs {
 		_, err := s.GetTicket(ctx, id, tenantID)
 		if err != nil {
-			return fmt.Errorf("工单%d不存在: %w", id, err)
+			return fmt.Errorf("Ticket %d does not exist: %w", id, err)
 		}
 	}
 	// 软删除：批量设置deleted_at时间戳
@@ -372,7 +372,7 @@ func (s *TicketCoreService) BatchDeleteTickets(ctx context.Context, ticketIDs []
 		SetDeletedAt(time.Now()).
 		Save(ctx)
 	if err != nil {
-		return fmt.Errorf("批量删除失败: %w", err)
+		return fmt.Errorf("Batch deletion failed: %w", err)
 	}
 	return nil
 }
@@ -504,32 +504,32 @@ func (s *TicketCoreService) generateTicketNumberWithDB(ctx context.Context, tena
 
 func (s *TicketCoreService) validateRequester(ctx context.Context, userID, tenantID int) error {
 	if userID <= 0 {
-		return fmt.Errorf("无效用户ID")
+		return fmt.Errorf("Invalid user ID")
 	}
 	exists, err := s.client.User.Query().
 		Where(user.ID(userID), user.TenantID(tenantID)).
 		Exist(ctx)
 	if err != nil {
-		return fmt.Errorf("查询失败: %w", err)
+		return fmt.Errorf("Query failed: %w", err)
 	}
 	if !exists {
-		return fmt.Errorf("用户不存在")
+		return fmt.Errorf("User does not exist")
 	}
 	return nil
 }
 
 func (s *TicketCoreService) validateAssignee(ctx context.Context, userID, tenantID int) error {
 	if userID <= 0 {
-		return fmt.Errorf("无效用户ID")
+		return fmt.Errorf("Invalid user ID")
 	}
 	exists, err := s.client.User.Query().
 		Where(user.ID(userID), user.TenantID(tenantID)).
 		Exist(ctx)
 	if err != nil {
-		return fmt.Errorf("查询失败: %w", err)
+		return fmt.Errorf("Query failed: %w", err)
 	}
 	if !exists {
-		return fmt.Errorf("用户不存在")
+		return fmt.Errorf("User does not exist")
 	}
 	return nil
 }
@@ -538,7 +538,7 @@ func (s *TicketCoreService) validateTagIDs(ctx context.Context, tagIDs []int, te
 	uniqueIDs := make(map[int]struct{}, len(tagIDs))
 	for _, tagID := range tagIDs {
 		if tagID <= 0 {
-			return nil, fmt.Errorf("无效标签ID: %d", tagID)
+			return nil, fmt.Errorf("Invalid tag ID: %d", tagID)
 		}
 		uniqueIDs[tagID] = struct{}{}
 	}
@@ -553,10 +553,10 @@ func (s *TicketCoreService) validateTagIDs(ctx context.Context, tagIDs []int, te
 		Where(tickettag.IDIn(ids...), tickettag.TenantIDEQ(tenantID)).
 		Count(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("校验标签失败: %w", err)
+		return nil, fmt.Errorf("Failed to verify tag: %w", err)
 	}
 	if count != len(ids) {
-		return nil, fmt.Errorf("标签不存在或不属于当前租户")
+		return nil, fmt.Errorf("Tag does not exist or does not belong to the current tenant")
 	}
 	return ids, nil
 }
@@ -566,7 +566,7 @@ func (s *TicketCoreService) findCategoryID(ctx context.Context, name string, ten
 		Where(ticketcategory.NameEQ(name), ticketcategory.TenantID(tenantID)).
 		First(ctx)
 	if err != nil {
-		return 0, fmt.Errorf("未找到: %w", err)
+		return 0, fmt.Errorf("Not found: %w", err)
 	}
 	return cat.ID, nil
 }

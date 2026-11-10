@@ -219,7 +219,7 @@ export const SystemHealth: React.FC = () => {
           type="text"
           icon={<RefreshCw className="w-4 h-4" />}
           size="small"
-          aria-label="刷新系统健康状态"
+          aria-label="Refresh system health status"
           onClick={() => void loadStats()}
         />
       }

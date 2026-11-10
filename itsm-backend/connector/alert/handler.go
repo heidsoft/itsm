@@ -37,29 +37,29 @@ func NewHandler(registry *Registry, connectorManager *connector.Manager, client 
 // Ingest receives a monitoring webhook and normalizes it into StandardAlert.
 func (h *Handler) Ingest(c *gin.Context) {
 	if h == nil || h.registry == nil || h.connectorManager == nil || h.repository == nil {
-		common.Fail(c, common.InternalErrorCode, "告警接入服务未就绪")
+		common.Fail(c, common.InternalErrorCode, "Alarm access service is not ready")
 		return
 	}
 	mediaType, _, err := mime.ParseMediaType(c.GetHeader("Content-Type"))
 	if err != nil || mediaType != "application/json" {
-		common.Fail(c, common.ParamErrorCode, "Content-Type 必须为 application/json")
+		common.Fail(c, common.ParamErrorCode, "Content-Type must be application/json")
 		return
 	}
 
 	tenantID, ok := tenantIDFromContext(c)
 	if !ok {
-		common.Fail(c, common.AuthFailedCode, "租户信息缺失或格式错误")
+		common.Fail(c, common.AuthFailedCode, "Tenant information is missing or in the wrong format")
 		return
 	}
 
 	factory, ok := h.registry.Get(strings.TrimSpace(c.Param("source")))
 	if !ok {
-		common.Fail(c, common.ParamErrorCode, "未知或未启用的告警源")
+		common.Fail(c, common.ParamErrorCode, "Unknown or unenabled alarm source")
 		return
 	}
 	source := factory()
 	if source == nil {
-		common.Fail(c, common.InternalErrorCode, "告警源初始化失败")
+		common.Fail(c, common.InternalErrorCode, "Alarm source initialization failed")
 		return
 	}
 	defer source.Close()
@@ -70,16 +70,16 @@ func (h *Handler) Ingest(c *gin.Context) {
 	if err != nil {
 		var maxErr *http.MaxBytesError
 		if errors.As(err, &maxErr) {
-			common.Fail(c, common.ParamErrorCode, "告警 payload 超过大小限制")
+			common.Fail(c, common.ParamErrorCode, "Alarm payload exceeds size limit")
 			return
 		}
-		common.Fail(c, common.InternalErrorCode, "读取告警 payload 失败")
+		common.Fail(c, common.InternalErrorCode, "Failed to read alarm payload")
 		return
 	}
 
 	providedSignature := c.GetHeader(signatureHeader)
 	if err := VerifyWebhookSignature(body, signatureHeader, signatureSecret, providedSignature, h.envIsDevelopment); err != nil {
-		common.Fail(c, common.AuthFailedCode, "Webhook 签名验证失败")
+		common.Fail(c, common.AuthFailedCode, "Webhook signature verification failed")
 		return
 	}
 
@@ -87,29 +87,29 @@ func (h *Handler) Ingest(c *gin.Context) {
 	decoder.UseNumber()
 	var payload map[string]interface{}
 	if err := decoder.Decode(&payload); err != nil || payload == nil {
-		common.Fail(c, common.ValidationError, "Webhook payload 必须是有效的 JSON 对象")
+		common.Fail(c, common.ValidationError, "Webhook payload must be a valid JSON object")
 		return
 	}
 	if decoder.Decode(&struct{}{}) != io.EOF {
-		common.Fail(c, common.ValidationError, "Webhook payload 只能包含一个 JSON 对象")
+		common.Fail(c, common.ValidationError, "Webhook payload can only contain a JSON object")
 		return
 	}
 	if !source.ValidatePayload(payload) {
-		common.Fail(c, common.ValidationError, "Webhook payload 校验失败")
+		common.Fail(c, common.ValidationError, "Webhook payload verification failed")
 		return
 	}
 
 	normalized, err := source.Normalize(c.Request.Context(), tenantID, payload)
 	if err != nil {
-		common.FailWithData(c, common.UnprocessableEntityCode, "告警标准化失败", gin.H{"detail": err.Error()})
+		common.FailWithData(c, common.UnprocessableEntityCode, "Alarm standardization failed", gin.H{"detail": err.Error()})
 		return
 	}
 	if normalized == nil {
-		common.Fail(c, common.InternalErrorCode, "告警源返回了空结果")
+		common.Fail(c, common.InternalErrorCode, "The alarm source returned empty results")
 		return
 	}
 	if _, _, err := h.repository.Store(c.Request.Context(), tenantID, normalized); err != nil {
-		common.Fail(c, common.InternalErrorCode, "保存告警失败")
+		common.Fail(c, common.InternalErrorCode, "Failed to save alarm")
 		return
 	}
 	common.Success(c, gin.H{

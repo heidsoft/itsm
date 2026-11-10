@@ -22,47 +22,47 @@ export const CIBasicInfo: React.FC<CIBasicInfoProps> = ({ ci, typeInfo }) => {
     ci.attributes && typeof ci.attributes === 'object' ? Object.entries(ci.attributes) : [];
   const formatAttributeValue = (value: unknown) => {
     if (value === null || value === undefined || value === '') return '-';
-    if (typeof value === 'boolean') return value ? '是' : '否';
+    if (typeof value === 'boolean') return value ? 'Yes' : 'No';
     if (typeof value === 'object') return JSON.stringify(value);
     return String(value);
   };
 
   return (
     <Descriptions bordered column={2}>
-      <Descriptions.Item label='资产分类'>
-        {typeInfo?.name || `类型 ${ci.ciTypeId}`}
+      <Descriptions.Item label="Asset Classification">
+        {typeInfo?.name || `Type ${ci.ciTypeId}`}
       </Descriptions.Item>
-      <Descriptions.Item label='资产标签'>{ci.assetTag || '-'}</Descriptions.Item>
-      <Descriptions.Item label='序列号'>{ci.serialNumber || '-'}</Descriptions.Item>
-      <Descriptions.Item label='型号'>{ci.model || '-'}</Descriptions.Item>
-      <Descriptions.Item label='厂商'>{ci.vendor || '-'}</Descriptions.Item>
-      <Descriptions.Item label='所在位置'>{ci.location || '-'}</Descriptions.Item>
-      <Descriptions.Item label='环境'>{ci.environment || '-'}</Descriptions.Item>
-      <Descriptions.Item label='重要性'>{ci.criticality || '-'}</Descriptions.Item>
-      <Descriptions.Item label='分配给'>{ci.assignedTo || '-'}</Descriptions.Item>
-      <Descriptions.Item label='拥有者'>{ci.ownedBy || '-'}</Descriptions.Item>
-      <Descriptions.Item label='发现源'>{ci.discoverySource || '-'}</Descriptions.Item>
-      <Descriptions.Item label='数据来源'>{ci.source || '-'}</Descriptions.Item>
-      <Descriptions.Item label='云厂商'>{ci.cloudProvider || '-'}</Descriptions.Item>
-      <Descriptions.Item label='云账号'>{ci.cloudAccountId || '-'}</Descriptions.Item>
+      <Descriptions.Item label="Asset Tag">{ci.assetTag || '-'}</Descriptions.Item>
+      <Descriptions.Item label="Serial Number">{ci.serialNumber || '-'}</Descriptions.Item>
+      <Descriptions.Item label="Model">{ci.model || '-'}</Descriptions.Item>
+      <Descriptions.Item label="Vendor">{ci.vendor || '-'}</Descriptions.Item>
+      <Descriptions.Item label="Location">{ci.location || '-'}</Descriptions.Item>
+      <Descriptions.Item label="Environment">{ci.environment || '-'}</Descriptions.Item>
+      <Descriptions.Item label="Criticality">{ci.criticality || '-'}</Descriptions.Item>
+      <Descriptions.Item label="Assigned To">{ci.assignedTo || '-'}</Descriptions.Item>
+      <Descriptions.Item label="Owned By">{ci.ownedBy || '-'}</Descriptions.Item>
+      <Descriptions.Item label="Discovery Source">{ci.discoverySource || '-'}</Descriptions.Item>
+      <Descriptions.Item label="Data Source">{ci.source || '-'}</Descriptions.Item>
+      <Descriptions.Item label="Cloud Provider">{ci.cloudProvider || '-'}</Descriptions.Item>
+      <Descriptions.Item label="Cloud account">{ci.cloudAccountId || '-'}</Descriptions.Item>
       <Descriptions.Item label='Region'>{ci.cloudRegion || '-'}</Descriptions.Item>
       <Descriptions.Item label='Zone'>{ci.cloudZone || '-'}</Descriptions.Item>
-      <Descriptions.Item label='云资源ID'>{ci.cloudResourceId || '-'}</Descriptions.Item>
-      <Descriptions.Item label='云资源类型'>{ci.cloudResourceType || '-'}</Descriptions.Item>
-      <Descriptions.Item label='云资源引用ID'>{ci.cloudResourceRefId || '-'}</Descriptions.Item>
-      <Descriptions.Item label='同步状态'>{ci.cloudSyncStatus || '-'}</Descriptions.Item>
-      <Descriptions.Item label='同步时间'>
+      <Descriptions.Item label="Cloud resource ID">{ci.cloudResourceId || '-'}</Descriptions.Item>
+      <Descriptions.Item label="Cloud Resource Type">{ci.cloudResourceType || '-'}</Descriptions.Item>
+      <Descriptions.Item label="Cloud resource reference ID">{ci.cloudResourceRefId || '-'}</Descriptions.Item>
+      <Descriptions.Item label="Sync Status">{ci.cloudSyncStatus || '-'}</Descriptions.Item>
+      <Descriptions.Item label="Sync time">
         {ci.cloudSyncTime ? dayjs(ci.cloudSyncTime).format('YYYY-MM-DD HH:mm:ss') : '-'}
       </Descriptions.Item>
-      <Descriptions.Item label='所属租户'>{ci.tenantId}</Descriptions.Item>
-      <Descriptions.Item label='创建时间'>
+      <Descriptions.Item label="Tenant to which it belongs">{ci.tenantId}</Descriptions.Item>
+      <Descriptions.Item label="Created">
         {dayjs(ci.createdAt).format('YYYY-MM-DD HH:mm:ss')}
       </Descriptions.Item>
-      <Descriptions.Item label='最后更新'>
+      <Descriptions.Item label="Last Update">
         {dayjs(ci.updatedAt).format('YYYY-MM-DD HH:mm:ss')}
       </Descriptions.Item>
-      <Descriptions.Item label='描述' span={2}>
-        {ci.description || '无'}
+      <Descriptions.Item label="Description" span={2}>
+        {ci.description || 'None'}
       </Descriptions.Item>
       {dynamicAttributes.map(([key, value]) => (
         <Descriptions.Item key={key} label={schemaLabels.get(key) || key}>

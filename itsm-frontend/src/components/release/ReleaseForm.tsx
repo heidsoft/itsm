@@ -87,7 +87,7 @@ const ReleaseForm: React.FC = () => {
       // 状态守卫：已发布/已部署/已完成的发布不允许编辑
       if (READONLY_STATUSES.includes(data.status)) {
         setIsReadonly(true);
-        message.warning('该发布已进入不可编辑状态，仅可查看');
+        message.warning('This publication has entered a non-editable state and can only be viewed');
         return;
       }
 
@@ -104,7 +104,7 @@ const ReleaseForm: React.FC = () => {
         affectedComponents: data.affectedComponents?.join('\n'),
       });
     } catch (error) {
-      message.error('加载发布详情失败');
+      message.error('Failed to load publication details');
     } finally {
       setLoading(false);
     }
@@ -138,14 +138,14 @@ const ReleaseForm: React.FC = () => {
 
       if (isEdit) {
         await ReleaseApi.updateRelease(Number(id), data);
-        message.success('更新成功');
+        message.success('Updated');
       } else {
         await ReleaseApi.createRelease(data);
-        message.success('创建成功');
+        message.success('Created');
       }
       router.push('/releases');
     } catch (error) {
-      message.error(isEdit ? '更新失败' : '创建失败');
+      message.error(isEdit ? 'Update failed' : 'Creation failed');
     } finally {
       setLoading(false);
     }
@@ -159,12 +159,13 @@ const ReleaseForm: React.FC = () => {
           type="warning"
           showIcon
           icon={<Lock />}
-          title="该发布已进入不可编辑状态"
-          description="已发布、已部署或已完成的发布不允许修改。"
+          title="The publication has entered a non-editable state"
+          description="Modification is not allowed for published, deployed or completed publications."
           className="mb-4"
           action={
             <Button size="small" onClick={() => router.push(`/releases/${id}`)}>
-              返回详情
+
+              Return details
             </Button>
           }
         />
@@ -186,110 +187,111 @@ const ReleaseForm: React.FC = () => {
       >
         <div style={{ marginBottom: 16 }}>
           <Button icon={<ArrowLeft />} onClick={() => router.push('/releases')}>
-            返回列表
+
+            Back to List
           </Button>
         </div>
 
-        <Divider>基本信息</Divider>
+        <Divider>Basic Info</Divider>
 
         <Form.Item
           name="releaseNumber"
-          label="发布编号"
-          rules={[{ required: true, message: '请输入发布编号' }]}
+          label="Release number"
+          rules={[{ required: true, message: 'Please enter the release number' }]}
         >
           <Input
-            placeholder="例如: REL-20260222-001"
+            placeholder="Example: REL-20260222-001"
             data-testid="release-number-input"
           />
         </Form.Item>
 
         <Form.Item
           name="title"
-          label="标题"
-          rules={[{ required: true, message: '请输入发布标题' }]}
+          label="Title"
+          rules={[{ required: true, message: 'Please enter a publication title' }]}
         >
-          <Input placeholder="发布标题" data-testid="release-title-input" />
+          <Input placeholder="Post title" data-testid="release-title-input" />
         </Form.Item>
 
-        <Form.Item name="description" label="描述">
-          <TextArea rows={3} placeholder="发布描述" />
+        <Form.Item name="description" label="Description">
+          <TextArea rows={3} placeholder="Release description" />
         </Form.Item>
 
-        <Form.Item name="type" label="发布类型">
+        <Form.Item name="type" label="Release type">
           <Select options={[
-            { value: 'major', label: '主版本 (Major)' },
-            { value: 'minor', label: '次版本 (Minor)' },
-            { value: 'patch', label: '补丁 (Patch)' },
-            { value: 'hotfix', label: '紧急修复 (Hotfix)' },
+            { value: 'major', label: 'Major version' },
+            { value: 'minor', label: 'Minor version (Minor)' },
+            { value: 'patch', label: 'Patch' },
+            { value: 'hotfix', label: 'Hotfix' },
           ]} />
         </Form.Item>
 
-        <Form.Item name="environment" label="目标环境">
+        <Form.Item name="environment" label="Target environment">
           <Select options={[
-            { value: 'dev', label: '开发环境' },
-            { value: 'staging', label: '预发布环境' },
-            { value: 'production', label: '生产环境' },
+            { value: 'dev', label: 'Development environment' },
+            { value: 'staging', label: 'Pre-release environment' },
+            { value: 'production', label: 'Production environment' },
           ]} />
         </Form.Item>
 
-        <Form.Item name="severity" label="严重程度">
+        <Form.Item name="severity" label="Severity">
           <Select options={[
-            { value: 'low', label: '低' },
-            { value: 'medium', label: '中' },
-            { value: 'high', label: '高' },
-            { value: 'critical', label: '严重' },
+            { value: 'low', label: 'Low' },
+            { value: 'medium', label: 'Medium' },
+            { value: 'high', label: 'High' },
+            { value: 'critical', label: 'Critical' },
           ]} />
         </Form.Item>
 
-        <Divider>计划信息</Divider>
+        <Divider>Plan information</Divider>
 
-        <Form.Item name="plannedReleaseDate" label="计划发布日期">
+        <Form.Item name="plannedReleaseDate" label="Planned release date">
           <DatePicker showTime style={{ width: '100%' }} />
         </Form.Item>
 
-        <Form.Item name="plannedStartDate" label="计划开始时间">
+        <Form.Item name="plannedStartDate" label="Planned start time">
           <DatePicker showTime style={{ width: '100%' }} />
         </Form.Item>
 
-        <Form.Item name="plannedEndDate" label="计划结束时间">
+        <Form.Item name="plannedEndDate" label="Planned end time">
           <DatePicker showTime style={{ width: '100%' }} />
         </Form.Item>
 
-        <Divider>发布内容</Divider>
+        <Divider>Post content</Divider>
 
-        <Form.Item name="releaseNotes" label="发布说明">
-          <TextArea rows={4} placeholder="发布说明内容" />
+        <Form.Item name="releaseNotes" label="Release Notes">
+          <TextArea rows={4} placeholder="Release Notes Content" />
         </Form.Item>
 
-        <Form.Item name="deploymentSteps" label="部署步骤">
-          <TextArea rows={4} placeholder="每行一个步骤" />
+        <Form.Item name="deploymentSteps" label="Deployment steps">
+          <TextArea rows={4} placeholder="One step per line" />
         </Form.Item>
 
-        <Form.Item name="affectedSystems" label="受影响的系统">
-          <TextArea rows={2} placeholder="每行一个系统" />
+        <Form.Item name="affectedSystems" label="Affected systems">
+          <TextArea rows={2} placeholder="One system per line" />
         </Form.Item>
 
-        <Form.Item name="affectedComponents" label="受影响的组件">
-          <TextArea rows={2} placeholder="每行一个组件" />
+        <Form.Item name="affectedComponents" label="Affected components">
+          <TextArea rows={2} placeholder="One component per row" />
         </Form.Item>
 
-        <Divider>回滚与验证</Divider>
+        <Divider>Rollback and Verification</Divider>
 
-        <Form.Item name="rollbackProcedure" label="回滚程序">
-          <TextArea rows={4} placeholder="回滚步骤说明" />
+        <Form.Item name="rollbackProcedure" label="Rollback procedure">
+          <TextArea rows={4} placeholder="Rollback step instructions" />
         </Form.Item>
 
-        <Form.Item name="validationCriteria" label="验证标准">
-          <TextArea rows={3} placeholder="验证通过的标准" />
+        <Form.Item name="validationCriteria" label="Verification Standard">
+          <TextArea rows={3} placeholder="Verification passed standard" />
         </Form.Item>
 
-        <Divider>其他选项</Divider>
+        <Divider>Other options</Divider>
 
-        <Form.Item name="isEmergency" label="紧急发布" valuePropName="checked">
+        <Form.Item name="isEmergency" label="Urgent release" valuePropName="checked">
           <Switch />
         </Form.Item>
 
-        <Form.Item name="requiresApproval" label="需要审批" valuePropName="checked">
+        <Form.Item name="requiresApproval" label="Approval required" valuePropName="checked">
           <Switch />
         </Form.Item>
 
@@ -302,9 +304,9 @@ const ReleaseForm: React.FC = () => {
               loading={loading}
               data-testid="release-submit-button"
             >
-              {isEdit ? '保存' : '创建'}
+              {isEdit ? 'Save' : 'Create'}
             </Button>
-            <Button onClick={() => router.push('/releases')}>取消</Button>
+            <Button onClick={() => router.push('/releases')}>Cancel</Button>
           </Space>
         </Form.Item>
       </Form>

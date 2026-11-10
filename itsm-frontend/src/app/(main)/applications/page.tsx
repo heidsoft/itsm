@@ -11,9 +11,9 @@ import { useI18n } from '@/lib/i18n';
 
 // 应用类型中文映射，与下方新建/编辑表单的 Select options 保持一致
 const appTypeLabels: Record<string, string> = {
-  web: 'Web应用',
-  mobile: '移动应用',
-  backend: '后端服务',
+  web: 'Web Application',
+  mobile: 'Mobile App',
+  backend: 'Backend service',
 };
 
 export default function ApplicationsPage() {
@@ -62,7 +62,7 @@ export default function ApplicationsPage() {
 
   const appColumns = [
     {
-      title: '应用名称',
+      title: 'Application Name',
       dataIndex: 'name',
       key: 'name',
       render: (text: string) => (
@@ -72,42 +72,42 @@ export default function ApplicationsPage() {
         </Space>
       ),
     },
-    { title: '应用代码', dataIndex: 'code', key: 'code' },
+    { title: 'Application code', dataIndex: 'code', key: 'code' },
     {
-      title: '所属项目',
+      title: 'Project',
       dataIndex:'projectId',
       key: 'project',
       render: (id: number) => <span>ID: {id}</span>,
     },
     // { title: "负责人", dataIndex: "owner", key: "owner" }, // Not in schema currently
     {
-      title: '类型',
+      title: 'Type',
       dataIndex: 'type',
       key: 'type',
       render: (type: string) => <Tag color="blue">{appTypeLabels[type] || type || '-'}</Tag>,
     },
     {
-      title: '微服务数',
+      title: 'Number of microservices',
       key: 'microservices',
       render: (_: unknown, record: Application) => (
         <Tag color="purple">{record.edges?.microservices?.length || 0}</Tag>
       ),
     },
     {
-      title: '操作',
+      title: 'Actions',
       key: 'action',
       render: (_: unknown, record: Application & { id: number }) => (
         <Space size="middle">
           <Button
             type="text"
-            aria-label="编辑应用"
+            aria-label="Edit application"
             icon={<Pencil />}
             onClick={() => handleEdit(record as ApplicationRecord, 'application')}
           />
           <Button
             type="text"
             danger
-            aria-label="删除应用"
+            aria-label="Delete app"
             icon={<Trash2 />}
             onClick={() => handleDelete(record as ApplicationRecord)}
           />
@@ -118,7 +118,7 @@ export default function ApplicationsPage() {
 
   const msColumns = [
     {
-      title: '微服务名称',
+      title: 'Microservice name',
       dataIndex: 'name',
       key: 'name',
       render: (text: string) => (
@@ -128,15 +128,15 @@ export default function ApplicationsPage() {
         </Space>
       ),
     },
-    { title: '服务代码', dataIndex: 'code', key: 'code' },
+    { title: 'Service code', dataIndex: 'code', key: 'code' },
     {
-      title: '所属应用',
+      title: 'Belonging application',
       dataIndex:'applicationId',
       key: 'application',
       render: (id: number) => <span>App ID: {id}</span>,
     },
     {
-      title: '技术栈',
+      title: 'Technology stack',
       key: 'tech',
       render: (_: unknown, record: Microservice) => (
         <Space>
@@ -146,20 +146,20 @@ export default function ApplicationsPage() {
       ),
     },
     {
-      title: '操作',
+      title: 'Actions',
       key: 'action',
       render: (_: unknown, record: Microservice & { id: number }) => (
         <Space size="middle">
           <Button
             type="text"
-            aria-label="编辑微服务"
+            aria-label="Edit microservices"
             icon={<Pencil />}
             onClick={() => handleEdit(record as MicroserviceRecord, 'microservice')}
           />
           <Button
             type="text"
             danger
-            aria-label="删除微服务"
+            aria-label="Delete microservice"
             icon={<Trash2 />}
             onClick={() => handleDelete(record as MicroserviceRecord)}
           />
@@ -194,8 +194,8 @@ const handleEdit = (record: RecordData, type: 'application' | 'microservice') =>
 
 const handleDelete = (record: RecordData) => {
   modal.confirm({
-    title: '确认删除',
-    content: `确定要删除 "${record.name}" 吗？`,
+    title: 'Confirm Delete',
+    content: `Are you sure you want to delete "${record.name}"?`,
     onOk: async () => {
       try {
         if (modalType === 'application' || activeTab === 'applications') {
@@ -248,15 +248,17 @@ const handleDelete = (record: RecordData) => {
   return (
     <PageContainer
       header={{
-        title: '应用与服务管理',
-        breadcrumb: { items: [{ title: '首页' }, { title: '应用管理' }] },
+        title: 'Application and Service Management',
+        breadcrumb: { items: [{ title: 'Home page' }, { title: 'Application Management' }] },
       }}
       extra={[
         <Button key="refresh" icon={<RefreshCw />} onClick={fetchData} loading={fetching}>
-          刷新
+
+          Refresh
         </Button>,
         <Button key="create" type="primary" icon={<Plus />} onClick={handleCreate}>
-          新建{activeTab === 'applications' ? '应用' : '微服务'}
+
+          Create{activeTab === 'applications' ? 'Application' : 'Microservices'}
         </Button>,
       ]}
     >
@@ -267,19 +269,19 @@ const handleDelete = (record: RecordData) => {
         items={[
           {
             key: 'applications',
-            label: '应用系统',
+            label: 'Application Systems',
             children: <Table columns={appColumns} dataSource={applications} rowKey="id" loading={fetching} />,
           },
           {
             key: 'microservices',
-            label: '微服务',
+            label: 'Microservices',
             children: <Table columns={msColumns} dataSource={microservices} rowKey="id" loading={fetching} />,
           },
         ]}
       />
 
       <Modal
-        title={modalType === 'application' ? (editingRecord ? '编辑应用' : '新建应用') : (editingRecord ? '编辑微服务' : '新建微服务')}
+        title={modalType === 'application' ? (editingRecord ? 'Edit application' : 'New application') : (editingRecord ? 'Edit microservices' : 'Create a new microservice')}
         open={isModalVisible}
         onOk={handleOk}
         onCancel={() => {
@@ -290,25 +292,25 @@ const handleDelete = (record: RecordData) => {
         width={600}
       >
         <Form form={form} layout="vertical">
-          <Form.Item name="name" label="名称" rules={[{ required: true, message: '请输入名称' }]}>
-            <Input placeholder="请输入名称" />
+          <Form.Item name="name" label="Name" rules={[{ required: true, message: 'Please enter a name' }]}>
+            <Input placeholder="Please enter a name" />
           </Form.Item>
-          <Form.Item name="code" label="代码" rules={[{ required: true, message: '请输入代码' }]}>
-            <Input placeholder="请输入代码" />
+          <Form.Item name="code" label="Code" rules={[{ required: true, message: 'Please enter code' }]}>
+            <Input placeholder="Please enter code" />
           </Form.Item>
 
           {modalType === 'application' ? (
             <>
-              <Form.Item name="projectId" label="所属项目">
-                <Select placeholder="请选择项目" options={projectOptions} />
+              <Form.Item name="projectId" label="Project">
+                <Select placeholder="Please select an item" options={projectOptions} />
               </Form.Item>
-              <Form.Item name="type" label="应用类型">
+              <Form.Item name="type" label="Application type">
                 <Select
-                  placeholder="请选择类型"
+                  placeholder="Please select type"
                   options={[
-                    { label: 'Web应用', value: 'web' },
-                    { label: '移动应用', value: 'mobile' },
-                    { label: '后端服务', value: 'backend' },
+                    { label: 'Web Application', value: 'web' },
+                    { label: 'Mobile App', value: 'mobile' },
+                    { label: 'Backend service', value: 'backend' },
                   ]}
                 />
               </Form.Item>
@@ -317,11 +319,11 @@ const handleDelete = (record: RecordData) => {
             <>
               <Form.Item
                 name="applicationId"
-                label="所属应用"
-                rules={[{ required: true, message: '请选择所属应用' }]}
+                label="Belonging application"
+                rules={[{ required: true, message: 'Please select the application' }]}
               >
                 <Select
-                  placeholder="请选择应用"
+                  placeholder="Please select an application"
                   options={applications.map(app => ({
                     label: app.name,
                     value: app.id,
@@ -329,9 +331,9 @@ const handleDelete = (record: RecordData) => {
                 />
               </Form.Item>
               <div className="grid grid-cols-2 gap-4">
-                <Form.Item name="language" label="开发语言">
+                <Form.Item name="language" label="Development Language">
                   <Select
-                    placeholder="请选择语言"
+                    placeholder="Please select language"
                     options={[
                       { label: 'Go', value: 'go' },
                       { label: 'Java', value: 'java' },
@@ -340,8 +342,8 @@ const handleDelete = (record: RecordData) => {
                     ]}
                   />
                 </Form.Item>
-                <Form.Item name="framework" label="框架">
-                  <Input placeholder="如: Gin, Spring Boot" />
+                <Form.Item name="framework" label="Frame">
+                  <Input placeholder="Such as: Gin, Spring Boot" />
                 </Form.Item>
               </div>
             </>

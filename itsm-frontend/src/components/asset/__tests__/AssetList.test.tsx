@@ -48,7 +48,7 @@ describe('AssetList 类型列中文映射（D12 回归）', () => {
   it('hardware 资产显示「硬件」，不显示原始大写 HARDWARE', async () => {
     renderList();
 
-    expect(await screen.findByText('硬件')).toBeInTheDocument();
+    expect(await screen.findByText("Hardware")).toBeInTheDocument();
     expect(screen.queryByText('HARDWARE')).not.toBeInTheDocument();
   });
 
@@ -67,7 +67,7 @@ describe('AssetList 类型列中文映射（D12 回归）', () => {
     renderList();
 
     await waitFor(() => {
-      expect(screen.queryByText('硬件')).not.toBeInTheDocument();
+      expect(screen.queryByText("Hardware")).not.toBeInTheDocument();
     });
   });
 });

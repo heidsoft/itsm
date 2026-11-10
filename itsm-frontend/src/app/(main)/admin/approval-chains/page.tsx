@@ -76,7 +76,7 @@ const normalizeChain = (chain: BackendApprovalChain): ApprovalChain => ({
     chainId: chain.id,
     level: step.level || index + 1,
     stepOrder: index + 1,
-    stepName: step.name || `步骤 ${index + 1}`,
+    stepName: step.name || `Step ${index + 1}`,
     approverType: step.role ? 'role' : 'user',
     approverId: step.approverId || 0,
     approverName: step.role || '',
@@ -104,7 +104,7 @@ const toBackendPayload = (data: ApprovalChainSubmitData, fallback?: ApprovalChai
     level: step.level || index + 1,
     approverId: step.approverType === 'user' && step.approverId > 0 ? step.approverId : undefined,
     role: step.approverType === 'role' ? step.approverName : '',
-    name: step.stepName || `步骤 ${index + 1}`,
+    name: step.stepName || `Step ${index + 1}`,
     isRequired: step.isRequired !== false,
     approvalType: step.approvalType,
     threshold: step.threshold,
@@ -125,7 +125,7 @@ export default function ApprovalChainsPage() {
     if (error instanceof Error && error.message) {
       message.error(error.message);
     } else {
-      message.error(errorMessage ? errorMessage : '操作失败');
+      message.error(errorMessage ? errorMessage : 'Operation failed');
     }
   };
 
@@ -184,7 +184,7 @@ export default function ApprovalChainsPage() {
         total: response?.total ?? items.length,
       }));
     } catch (error) {
-      handleError(error, '加载审批链列表失败');
+      handleError(error, 'Failed to load approval chain list');
     } finally {
       setLoading(false);
     }
@@ -198,7 +198,7 @@ export default function ApprovalChainsPage() {
       const response = await httpClient.get<ApprovalChainStats>('/api/v1/approval-chains/stats');
       setStats(response);
     } catch (error) {
-      handleError(error, '加载统计数据失败');
+      handleError(error, 'Failed to load statistics');
     } finally {
       setStatsLoading(false);
     }
@@ -275,9 +275,9 @@ export default function ApprovalChainsPage() {
       maps: { users: Record<number, string>; roles: Record<string, string> }
     ): string => {
       if (step.approverType === 'role') {
-        return maps.roles[step.approverName] || step.approverName || '未指定审批角色';
+        return maps.roles[step.approverName] || step.approverName || 'No approval role specified';
       }
-      return maps.users[step.approverId] || (step.approverId ? `用户 #${step.approverId}` : '未指定审批人');
+      return maps.users[step.approverId] || (step.approverId ? `User #${step.approverId}` : 'No approver specified');
     },
     []
   );
@@ -287,38 +287,38 @@ export default function ApprovalChainsPage() {
     async (chain: ApprovalChain) => {
       const maps = await loadReferenceData();
       modal.info({
-        title: '审批链详情',
+        title: 'Approval chain details',
         width: 640,
         content: (
           <div className="space-y-3 pt-2">
             <p>
-              <Text strong>名称：</Text>
+              <Text strong>Name:</Text>
               {chain.name}
             </p>
             <p>
-              <Text strong>适用对象：</Text>
+              <Text strong>Applicable objects:</Text>
               <Tag>{entityTypeLabel(chain.entityType)}</Tag>
             </p>
             <p>
-              <Text strong>状态：</Text>
-              <Tag color={chain.isActive ? 'green' : 'red'}>{chain.isActive ? '启用' : '停用'}</Tag>
+              <Text strong>Status:</Text>
+              <Tag color={chain.isActive ? 'green' : 'red'}>{chain.isActive ? 'Enabled' : 'Disable'}</Tag>
             </p>
             <p>
-              <Text strong>描述：</Text>
+              <Text strong>Description:</Text>
               {chain.description || '-'}
             </p>
             <div>
-              <Text strong>审批步骤：</Text>
+              <Text strong>Approval steps:</Text>
               <ol className="mt-2 list-decimal pl-5">
                 {(chain.steps ?? []).map(step => (
                   <li key={`${chain.id}-${step.stepOrder}`}>
-                    {step.stepName}（层级 {step.level}）：{approverLabel(step, maps)}
+                    {step.stepName}(level {step.level}）：{approverLabel(step, maps)}
                     {step.approvalType
                       ? ` · ${APPROVAL_TYPE_LABELS[step.approvalType as ApprovalType] ?? step.approvalType}`
                       : ''}
-                    {step.threshold ? ` · 阈值 ${step.threshold}` : ''}
+                    {step.threshold ? ` · Threshold ${step.threshold}` : ''}
                     {step.fallbackAction
-                      ? ` · 兜底：${FALLBACK_ACTION_LABELS[step.fallbackAction as FallbackAction]}`
+                      ? ` · Tell the truth:${FALLBACK_ACTION_LABELS[step.fallbackAction as FallbackAction]}`
                       : ''}
                   </li>
                 ))}
@@ -335,19 +335,19 @@ export default function ApprovalChainsPage() {
   const handleDeleteChain = useCallback(
     (chain: ApprovalChain) => {
       modal.confirm({
-        title: '确认删除',
-        content: `确定要删除审批链"${chain.name}"吗？此操作不可撤销。`,
-        okText: '确认删除',
+        title: 'Confirm Delete',
+        content: `Are you sure you want to delete the approval chain"${chain.name}"? This operation cannot be undone.`,
+        okText: 'Confirm Delete',
         okType: 'danger',
-        cancelText: '取消',
+        cancelText: 'Cancel',
         onOk: async () => {
           try {
             await httpClient.delete(`/api/v1/approval-chains/${chain.id}`);
-            message.success('删除成功');
+            message.success('Deleted');
             loadChains();
             loadStats();
           } catch (error) {
-            handleError(error, '删除审批链失败');
+            handleError(error, 'Failed to delete approval chain');
           }
         },
       });
@@ -363,11 +363,11 @@ export default function ApprovalChainsPage() {
           ...toBackendPayload(chain, chain),
           status: chain.isActive ? 'inactive' : 'active',
         });
-        message.success(`${chain.isActive ? '停用' : '启用'}成功`);
+        message.success(`${chain.isActive ? 'Disable' : 'Enabled'} Success`);
         loadChains();
         loadStats();
       } catch (error) {
-        handleError(error, '状态切换失败');
+        handleError(error, 'Status switching failed');
       }
     },
     [loadChains, loadStats]
@@ -379,14 +379,14 @@ export default function ApprovalChainsPage() {
       try {
         await httpClient.post('/api/v1/approval-chains', {
           ...toBackendPayload(chain, chain),
-          name: `${chain.name} - 副本`,
+          name: `${chain.name} - copy`,
           status: 'inactive',
         });
-        message.success('复制成功');
+        message.success('Copy successful');
         loadChains();
         loadStats();
       } catch (error) {
-        handleError(error, '复制审批链失败');
+        handleError(error, 'Failed to copy approval chain');
       }
     },
     [loadChains, loadStats]
@@ -396,11 +396,11 @@ export default function ApprovalChainsPage() {
   const handleBatchDelete = useCallback(
     (ids: React.Key[]) => {
       modal.confirm({
-        title: '确认批量删除',
-        content: `确定要删除选中的 ${ids.length} 个审批链吗？此操作不可撤销。`,
-        okText: '确认删除',
+        title: 'Confirm batch deletion',
+        content: `Are you sure you want to delete the selected ${ids.length} Is there an approval chain? This action cannot be undone.`,
+        okText: 'Confirm Delete',
         okType: 'danger',
-        cancelText: '取消',
+        cancelText: 'Cancel',
         onOk: async () => {
           const results = await Promise.allSettled(
             ids.map(id =>
@@ -426,12 +426,12 @@ export default function ApprovalChainsPage() {
 
           const successCount = ids.length - failedIds.length;
           if (successCount > 0) {
-            message.success(`已删除 ${successCount} 个审批链`);
+            message.success(`Deleted ${successCount} approval chain`);
           }
           if (failedIds.length > 0) {
             const reason =
               firstError instanceof Error && firstError.message ? `：${firstError.message}` : '';
-            message.error(`${failedIds.length} 个审批链删除失败，已保留选中项可重试${reason}`);
+            message.error(`${failedIds.length} Deletion of approval chain failed, selected items have been retained and can be tried again ${reason}`);
             // 仅保留失败项，成功项不再参与后续批量操作
             setSelectedRowKeys(failedIds);
           } else {
@@ -452,10 +452,10 @@ export default function ApprovalChainsPage() {
         const payload = toBackendPayload(data as ApprovalChainSubmitData, editingChain || undefined);
         if (editingChain) {
           await httpClient.put(`/api/v1/approval-chains/${editingChain.id}`, payload);
-          message.success('更新成功');
+          message.success('Updated');
         } else {
           await httpClient.post('/api/v1/approval-chains', payload);
-          message.success('创建成功');
+          message.success('Created');
         }
 
         setModalVisible(false);
@@ -463,7 +463,7 @@ export default function ApprovalChainsPage() {
         loadChains();
         loadStats();
       } catch (error) {
-        handleError(error, editingChain ? '更新审批链失败' : '创建审批链失败');
+        handleError(error, editingChain ? 'Failed to update approval chain' : 'Failed to create approval chain');
       }
     },
     [editingChain, loadChains, loadStats]
@@ -487,7 +487,7 @@ export default function ApprovalChainsPage() {
       <Alert
         type="info"
         showIcon
-        title="本页配置 BPMN 审批节点的审批人规则（审批人/会签/或签/兜底），流程的流转、分支与超时请在「流程设计器」中编排。"
+        title="This page configures the approver rules of the BPMN approval node (approver/countersign/or sign/confirm). Please arrange the flow, branches and timeout of the process in the &quot;Process Designer&quot;."
         className="mb-4"
       />
 

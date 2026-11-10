@@ -125,7 +125,7 @@ func TestCreateUser_MissingTenant(t *testing.T) {
 	assert.Equal(t, http.StatusUnauthorized, w.Code)
 	var resp common.Response
 	assert.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
-	assert.Equal(t, "租户信息缺失", resp.Message)
+	assert.Equal(t, "Tenant information is missing", resp.Message)
 }
 
 func TestCreateUser_RoleEscalationForbidden(t *testing.T) {
@@ -144,7 +144,7 @@ func TestCreateUser_RoleEscalationForbidden(t *testing.T) {
 	assert.Equal(t, http.StatusForbidden, w.Code)
 	var resp common.Response
 	assert.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
-	assert.Contains(t, resp.Message, "无权限分配高于自身角色")
+	assert.Contains(t, resp.Message, "No permission to assign a user role higher")
 	m.AssertNotCalled(t, "CreateUser")
 }
 
@@ -192,7 +192,7 @@ func TestCreateUser_DuplicateBusinessError(t *testing.T) {
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 	var resp common.Response
 	assert.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
-	assert.Equal(t, "请求参数错误", resp.Message)
+	assert.Equal(t, "Wrong request parameters", resp.Message)
 }
 
 func TestCreateUser_WeakPasswordMapsToValidationError(t *testing.T) {
@@ -201,7 +201,7 @@ func TestCreateUser_WeakPasswordMapsToValidationError(t *testing.T) {
 	m := &mockUserService{}
 	h, _ := newTestHandler(m)
 	m.On("CreateUser", mock.Anything, mock.Anything, 1).Return(nil,
-		common.NewValidationError("密码必须同时包含大写字母、小写字母、数字和特殊字符", nil))
+		common.NewValidationError("Password must contain a combination of uppercase letters, lowercase letters, numbers, and special characters", nil))
 
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
@@ -216,14 +216,14 @@ func TestCreateUser_WeakPasswordMapsToValidationError(t *testing.T) {
 	var resp common.Response
 	assert.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
 	assert.Equal(t, common.ValidationError, resp.Code)
-	assert.Equal(t, "密码必须同时包含大写字母、小写字母、数字和特殊字符", resp.Message)
+	assert.Equal(t, "Password must contain a combination of uppercase letters, lowercase letters, numbers, and special characters", resp.Message)
 }
 
 func TestResetPassword_WeakPasswordMapsToValidationError(t *testing.T) {
 	m := &mockUserService{}
 	h, _ := newTestHandler(m)
 	m.On("ResetPassword", mock.Anything, 1, "lowercaseonly12345", 1).Return(
-		common.NewValidationError("密码长度必须为12到128位", nil))
+		common.NewValidationError("Password length must be 12 to 128 characters", nil))
 
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
@@ -240,7 +240,7 @@ func TestResetPassword_WeakPasswordMapsToValidationError(t *testing.T) {
 	var resp common.Response
 	assert.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
 	assert.Equal(t, common.ValidationError, resp.Code)
-	assert.Equal(t, "密码长度必须为12到128位", resp.Message)
+	assert.Equal(t, "Password length must be 12 to 128 characters", resp.Message)
 }
 
 func TestResetPassword_Success(t *testing.T) {

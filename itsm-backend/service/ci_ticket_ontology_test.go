@@ -96,7 +96,7 @@ func TestLinkTicketToCI_RejectsCrossTenantCI(t *testing.T) {
 	// 用租户 B 的身份，去绑定租户 A 的 CI —— 必须拒绝
 	err := svc.LinkTicketToCI(ctx, tenantB, ciID, ticketB)
 	require.Error(t, err)
-	require.Contains(t, err.Error(), "配置项不存在或无权访问")
+	require.Contains(t, err.Error(), "The configuration item does not exist or has no permission to access")
 }
 
 func TestLinkTicketToCI_RejectsCrossTenantTicket(t *testing.T) {
@@ -109,7 +109,7 @@ func TestLinkTicketToCI_RejectsCrossTenantTicket(t *testing.T) {
 	// 用租户 A 的身份，去绑定租户 B 的工单 —— 必须拒绝
 	err := svc.LinkTicketToCI(ctx, tenantA, ciA, ticketB)
 	require.Error(t, err)
-	require.Contains(t, err.Error(), "工单不存在或无权访问")
+	require.Contains(t, err.Error(), "The work order does not exist or does not have access rights.")
 }
 
 func TestLinkTicketToCI_RejectsNonPositiveIDs(t *testing.T) {
@@ -136,7 +136,7 @@ func TestListCITickets_IsolatesTenant(t *testing.T) {
 	// 租户 B 用自己的身份去查租户 A 的 CI —— 必须查不到
 	_, err := svc.ListCITickets(ctx, tenantB, ciA, 10)
 	require.Error(t, err)
-	require.Contains(t, err.Error(), "配置项不存在或无权访问")
+	require.Contains(t, err.Error(), "The configuration item does not exist or has no permission to access")
 }
 
 func TestUnlinkTicketFromCI(t *testing.T) {

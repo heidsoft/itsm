@@ -100,7 +100,7 @@ describe('能力矩阵控制台', () => {
     expect(screen.getByText('callback token mismatch')).toBeInTheDocument();
     expect(screen.getByText(/回调验签只有单测/)).toBeInTheDocument();
     // 部署未就绪与探测失败都计入「此刻不可用」，并给出汇总告警。
-    expect(screen.getByText('2 项能力此刻不可用')).toBeInTheDocument();
+    expect(screen.getByText("2 Ability is not available at this time")).toBeInTheDocument();
   });
 
   it('GA 条目不得带 pilot 理由（否则成熟度与说明自相矛盾）', async () => {
@@ -126,7 +126,7 @@ describe('能力矩阵控制台', () => {
 
     expect(await screen.findByText('ticket')).toBeInTheDocument();
 
-    const [filterLabel] = screen.getAllByText('未就绪');
+    const [filterLabel] = screen.getAllByText("Not Ready");
     fireEvent.click(filterLabel);
 
     await waitFor(() => expect(screen.queryByText('ticket')).not.toBeInTheDocument());
@@ -144,6 +144,6 @@ describe('能力矩阵控制台', () => {
       </App>,
     );
 
-    expect(await screen.findByText(/能力矩阵为空/)).toBeInTheDocument();
+    expect(await screen.findByText(/The capability matrix is empty, please confirm that the backend \/api\/v1\/capabilities is reachable/)).toBeInTheDocument();
   });
 });

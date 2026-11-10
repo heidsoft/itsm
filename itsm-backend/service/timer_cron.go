@@ -33,7 +33,7 @@ var cronParser = cron.NewParser(
 func ParseTimerExpression(expr string) (ExpressionType, error) {
 	trimmed := strings.TrimSpace(expr)
 	if trimmed == "" {
-		return "", fmt.Errorf("定时表达式为空")
+		return "", fmt.Errorf("Timing expression is empty")
 	}
 
 	// 1. ISO 8601 duration
@@ -63,7 +63,7 @@ func ParseTimerExpression(expr string) (ExpressionType, error) {
 		return ExprTypeCron, nil
 	}
 
-	return "", fmt.Errorf("无法识别的定时表达式: %q（支持 ISO 8601 duration/date/cycle 或 cron）", expr)
+	return "", fmt.Errorf("Unrecognized timing expression: %q (supports ISO 8601 duration/date/cycle or cron)", expr)
 }
 
 // ResolveLocation 解析 IANA 时区名；空值或非法名称回退到 DefaultTimerTimezone。
@@ -112,37 +112,37 @@ func NextFireAt(expr string, exprType ExpressionType, loc *time.Location, after 
 	case ExprTypeDuration:
 		d, err := parseISO8601Duration(trimmed)
 		if err != nil {
-			return time.Time{}, fmt.Errorf("解析 duration %q 失败: %w", expr, err)
+			return time.Time{}, fmt.Errorf("Failed to parse duration %q: %w", expr, err)
 		}
 		return after.Add(d).UTC(), nil
 
 	case ExprTypeDate:
 		t, err := time.Parse(time.RFC3339, trimmed)
 		if err != nil {
-			return time.Time{}, fmt.Errorf("解析 date %q 失败: %w", expr, err)
+			return time.Time{}, fmt.Errorf("Failed to parse date %q: %w", expr, err)
 		}
 		return t.UTC(), nil
 
 	case ExprTypeCycle:
 		parts := splitCycleExpression(trimmed)
 		if len(parts) != 2 {
-			return time.Time{}, fmt.Errorf("非法 cycle 表达式: %q", expr)
+			return time.Time{}, fmt.Errorf("Illegal cycle expression: %q", expr)
 		}
 		d, err := parseISO8601Duration(parts[1])
 		if err != nil {
-			return time.Time{}, fmt.Errorf("解析 cycle 间隔 %q 失败: %w", parts[1], err)
+			return time.Time{}, fmt.Errorf("Failed to parse cycle interval %q: %w", parts[1], err)
 		}
 		return after.Add(d).UTC(), nil
 
 	case ExprTypeCron:
 		sched, err := cronParser.Parse(trimmed)
 		if err != nil {
-			return time.Time{}, fmt.Errorf("解析 cron %q 失败: %w", expr, err)
+			return time.Time{}, fmt.Errorf("Failed to parse cron %q: %w", expr, err)
 		}
 		// cron 语义依赖时区：在租户本地时间轴上求下一个匹配点，再转 UTC 存储。
 		next := sched.Next(after.In(loc))
 		if next.IsZero() {
-			return time.Time{}, fmt.Errorf("cron %q 在当前时区 %s 无下一次触发时间", expr, loc.String())
+			return time.Time{}, fmt.Errorf("cron %q has no next trigger time in current time zone %s", expr, loc.String())
 		}
 		return next.UTC(), nil
 

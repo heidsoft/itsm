@@ -14,7 +14,7 @@ describe('AdvancedReportingView', () => {
     );
 
     expect(screen.getByText('服务不可用')).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: /重\s*试/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Retry/ }));
     expect(onReload).toHaveBeenCalledTimes(1);
   });
 
@@ -31,8 +31,8 @@ describe('AdvancedReportingView', () => {
       />
     );
 
-    fireEvent.click(screen.getByRole('button', { name: '查看' }));
+    fireEvent.click(screen.getByRole('button', { name: "View" }));
     expect(onOpenReport).toHaveBeenCalledWith(report);
-    expect(screen.queryByText('创建报表')).not.toBeInTheDocument();
+    expect(screen.queryByText("CreateReport")).not.toBeInTheDocument();
   });
 });

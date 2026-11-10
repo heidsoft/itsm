@@ -235,11 +235,11 @@ func (e *CustomProcessEngine) SetApprovalChainResolver(resolver bpmn.ApprovalCha
 // 无租户上下文或 tenantID<=0 一律返回错误，禁止跨租户回退到全局无过滤查询。
 func requireBPMNTenantContext(ctx context.Context) (int, error) {
 	if ctx == nil {
-		return 0, fmt.Errorf("BPMN 缺少请求上下文")
+		return 0, fmt.Errorf("BPMN missing request context")
 	}
 	tenantID, _ := ctx.Value(bpmn.BPMNTenantIDContextKey).(int)
 	if tenantID <= 0 {
-		return 0, fmt.Errorf("BPMN 缺少有效租户上下文（tenantID=%d），已 fail-closed", tenantID)
+		return 0, fmt.Errorf("BPMN is missing a valid tenant context (tenantID=%d) and has failed-closed", tenantID)
 	}
 	return tenantID, nil
 }

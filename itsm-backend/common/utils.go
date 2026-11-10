@@ -203,7 +203,7 @@ func ParseTime(timeStr string) (time.Time, error) {
 		}
 	}
 
-	return time.Time{}, fmt.Errorf("无法解析时间格式: %s", timeStr)
+	return time.Time{}, fmt.Errorf("Unable to parse time format: %s", timeStr)
 }
 
 // GetTimeRange 获取时间范围

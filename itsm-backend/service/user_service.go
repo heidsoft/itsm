@@ -40,10 +40,10 @@ func (s *UserService) CreateUser(ctx context.Context, req *dto.CreateUserRequest
 		Where(user.UsernameEQ(req.Username), user.TenantIDEQ(tenantID)).
 		Exist(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("检查用户名失败: %w", err)
+		return nil, fmt.Errorf("Failed to check username: %w", err)
 	}
 	if exists {
-		return nil, fmt.Errorf("用户名已存在: %s", req.Username)
+		return nil, fmt.Errorf("Username already exists: %s", req.Username)
 	}
 
 	// 检查邮箱是否已存在
@@ -51,10 +51,10 @@ func (s *UserService) CreateUser(ctx context.Context, req *dto.CreateUserRequest
 		Where(user.EmailEQ(req.Email)).
 		Exist(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("检查邮箱失败: %w", err)
+		return nil, fmt.Errorf("Failed to check mailbox: %w", err)
 	}
 	if exists {
-		return nil, fmt.Errorf("邮箱已存在: %s", req.Email)
+		return nil, fmt.Errorf("Email already exists: %s", req.Email)
 	}
 
 	// 加密密码（如果不提供则生成随机密码）
@@ -67,7 +67,7 @@ func (s *UserService) CreateUser(ctx context.Context, req *dto.CreateUserRequest
 	}
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
-		return nil, fmt.Errorf("密码加密失败: %w", err)
+		return nil, fmt.Errorf("Password encryption failed: %w", err)
 	}
 
 	// 创建用户
@@ -91,7 +91,7 @@ func (s *UserService) CreateUser(ctx context.Context, req *dto.CreateUserRequest
 			primaryRole = "end_user"
 		}
 		if !domainrole.IsBuiltinCode(primaryRole) {
-			return nil, fmt.Errorf("无效的用户角色: %s", primaryRole)
+			return nil, fmt.Errorf("Invalid user role: %s", primaryRole)
 		}
 		uc = uc.SetRole(user.Role(primaryRole))
 
@@ -102,7 +102,7 @@ func (s *UserService) CreateUser(ctx context.Context, req *dto.CreateUserRequest
 	}
 	userEntity, err := uc.Save(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("创建用户失败: %w", err)
+		return nil, fmt.Errorf("Failed to create user: %w", err)
 	}
 
 	// RBAC 多角色：显式 roleIds 优先；否则把主角色同步到 user_roles 边（存量回填同语义），
@@ -119,7 +119,7 @@ func (s *UserService) CreateUser(ctx context.Context, req *dto.CreateUserRequest
 	}
 	if len(roleIDs) > 0 {
 		if err := s.SyncUserRoles(ctx, userEntity.ID, tenantID, roleIDs); err != nil {
-			return nil, fmt.Errorf("写入用户角色边失败: %w", err)
+			return nil, fmt.Errorf("Failed to write user role edge: %w", err)
 		}
 	}
 
@@ -149,10 +149,10 @@ func (s *UserService) SyncUserRoles(ctx context.Context, userID, tenantID int, r
 		Where(entrole.IDIn(roleIDs...), entrole.TenantIDEQ(tenantID)).
 		Count(ctx)
 	if err != nil {
-		return fmt.Errorf("校验角色失败: %w", err)
+		return fmt.Errorf("Failed to verify role: %w", err)
 	}
 	if n != len(roleIDs) {
-		return fmt.Errorf("存在不属于当前租户的角色: 期望 %d 个，匹配 %d 个", len(roleIDs), n)
+		return fmt.Errorf("There are roles that do not belong to the current tenant: expected %d, matched %d", len(roleIDs), n)
 	}
 	_, err = s.client.User.UpdateOneID(userID).ClearRoles().AddRoleIDs(roleIDs...).Save(ctx)
 	return err
@@ -168,15 +168,15 @@ func (s *UserService) CanGrantRoles(ctx context.Context, tenantID int, roleIDs [
 		Where(entrole.IDIn(roleIDs...), entrole.TenantIDEQ(tenantID)).
 		All(ctx)
 	if err != nil {
-		return fmt.Errorf("查询角色失败: %w", err)
+		return fmt.Errorf("Failed to query role: %w", err)
 	}
 	if len(roles) != len(roleIDs) {
-		return fmt.Errorf("存在不属于当前租户的角色: 期望 %d 个，匹配 %d 个", len(roleIDs), len(roles))
+		return fmt.Errorf("There are roles that do not belong to the current tenant: expected %d, matched %d", len(roleIDs), len(roles))
 	}
 	callerRank := serviceRoleRank(callerRole)
 	for _, r := range roles {
 		if serviceRoleRank(r.Code) > callerRank {
-			return fmt.Errorf("无权限分配高于自身角色的用户角色: %s", r.Code)
+			return fmt.Errorf("No permission to assign user role higher than own role: %s", r.Code)
 		}
 	}
 	return nil
@@ -220,7 +220,7 @@ func (s *UserService) ListUsers(ctx context.Context, req *dto.ListUsersRequest, 
 	// 计算总数
 	total, err := query.Count(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("统计用户总数失败: %w", err)
+		return nil, fmt.Errorf("Failed to count the total number of users: %w", err)
 	}
 
 	// 分页查询（预加载 roles 边供前端编辑表单回填）
@@ -231,7 +231,7 @@ func (s *UserService) ListUsers(ctx context.Context, req *dto.ListUsersRequest, 
 		Order(ent.Desc(user.FieldCreatedAt)).
 		All(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("查询用户列表失败: %w", err)
+		return nil, fmt.Errorf("Failed to query user list: %w", err)
 	}
 
 	// 转换为响应格式
@@ -285,9 +285,9 @@ func (s *UserService) GetUserByID(ctx context.Context, id int, tenantID int) (*e
 		Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, fmt.Errorf("用户不存在: ID=%d", id)
+			return nil, fmt.Errorf("User does not exist: ID=%d", id)
 		}
-		return nil, fmt.Errorf("获取用户失败: %w", err)
+		return nil, fmt.Errorf("Failed to get user: %w", err)
 	}
 
 	return userEntity, nil
@@ -303,9 +303,9 @@ func (s *UserService) UpdateUser(ctx context.Context, id int, req *dto.UpdateUse
 		Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, fmt.Errorf("用户不存在: ID=%d", id)
+			return nil, fmt.Errorf("User does not exist: ID=%d", id)
 		}
-		return nil, fmt.Errorf("获取用户失败: %w", err)
+		return nil, fmt.Errorf("Failed to get user: %w", err)
 	}
 
 	update := s.client.User.UpdateOneID(id).Where(user.TenantIDEQ(tenantID))
@@ -322,10 +322,10 @@ func (s *UserService) UpdateUser(ctx context.Context, id int, req *dto.UpdateUse
 			).
 			Exist(ctx)
 		if err != nil {
-			return nil, fmt.Errorf("检查用户名失败: %w", err)
+			return nil, fmt.Errorf("Failed to check username: %w", err)
 		}
 		if exists {
-			return nil, fmt.Errorf("用户名已存在: %s", req.Username)
+			return nil, fmt.Errorf("Username already exists: %s", req.Username)
 		}
 		update = update.SetUsername(req.Username)
 	}
@@ -341,10 +341,10 @@ func (s *UserService) UpdateUser(ctx context.Context, id int, req *dto.UpdateUse
 			).
 			Exist(ctx)
 		if err != nil {
-			return nil, fmt.Errorf("检查邮箱失败: %w", err)
+			return nil, fmt.Errorf("Failed to check mailbox: %w", err)
 		}
 		if exists {
-			return nil, fmt.Errorf("邮箱已存在: %s", req.Email)
+			return nil, fmt.Errorf("Email already exists: %s", req.Email)
 		}
 		update = update.SetEmail(req.Email)
 	}
@@ -369,7 +369,7 @@ func (s *UserService) UpdateUser(ctx context.Context, id int, req *dto.UpdateUse
 			role = "end_user"
 		}
 		if !domainrole.IsBuiltinCode(role) {
-			return nil, fmt.Errorf("无效的用户角色: %s", role)
+			return nil, fmt.Errorf("Invalid user role: %s", role)
 		}
 		if role != string(existingUser.Role) {
 			update = update.SetRole(user.Role(role))
@@ -387,14 +387,14 @@ func (s *UserService) UpdateUser(ctx context.Context, id int, req *dto.UpdateUse
 
 	userEntity, err := update.Save(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("更新用户失败: %w", err)
+		return nil, fmt.Errorf("Failed to update user: %w", err)
 	}
 
 	// RBAC 多角色替换：仅在显式提供 roleIds 时整体替换 user_roles 边
 	// （nil=不动；空数组=清空），避免部分更新语义破坏多角色并集。
 	if req.RoleIDs != nil {
 		if err := s.SyncUserRoles(ctx, id, tenantID, req.RoleIDs); err != nil {
-			return nil, fmt.Errorf("替换用户角色边失败: %w", err)
+			return nil, fmt.Errorf("Failed to replace user role: %w", err)
 		}
 		// 角色集合变更影响权限，与主角色变更同语义：吊销存量 token。
 		if err := middleware.InvalidateUserTokens(ctx, id, time.Now()); err != nil {
@@ -430,7 +430,7 @@ func (s *UserService) DeleteUser(ctx context.Context, id int, tenantID int) erro
 		SetDeletedAt(now).
 		Exec(ctx)
 	if err != nil {
-		return fmt.Errorf("删除用户失败: %w", err)
+		return fmt.Errorf("Failed to delete user: %w", err)
 	}
 
 	// 立即吊销全部存量 access token：软删只是标记 + SetActive(false)，AuthMiddleware
@@ -459,7 +459,7 @@ func (s *UserService) ChangeUserStatus(ctx context.Context, id int, active bool,
 
 	// 防止用户停用自己
 	if id == currentUserID && !active {
-		return fmt.Errorf("不能停用当前登录用户")
+		return fmt.Errorf("Cannot deactivate currently logged in user")
 	}
 
 	err = s.client.User.UpdateOneID(id).
@@ -467,7 +467,7 @@ func (s *UserService) ChangeUserStatus(ctx context.Context, id int, active bool,
 		SetActive(active).
 		Exec(ctx)
 	if err != nil {
-		return fmt.Errorf("更改用户状态失败: %w", err)
+		return fmt.Errorf("Failed to change user status: %w", err)
 	}
 
 	// 停用账户时立即吊销其全部存量 access token。
@@ -499,7 +499,7 @@ func (s *UserService) ResetPassword(ctx context.Context, id int, newPassword str
 	// 加密新密码
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
 	if err != nil {
-		return fmt.Errorf("密码加密失败: %w", err)
+		return fmt.Errorf("Password encryption failed: %w", err)
 	}
 
 	err = s.client.User.UpdateOneID(id).
@@ -507,7 +507,7 @@ func (s *UserService) ResetPassword(ctx context.Context, id int, newPassword str
 		SetPasswordHash(string(hashedPassword)).
 		Exec(ctx)
 	if err != nil {
-		return fmt.Errorf("重置密码失败: %w", err)
+		return fmt.Errorf("Password reset failed: %w", err)
 	}
 
 	// 密码重置后立即吊销该用户全部存量 access token（防旧会话存活）。
@@ -524,27 +524,27 @@ func (s *UserService) GetUserStats(ctx context.Context, tenantID int) (*dto.User
 	s.logger.Infof("获取用户统计: tenantID=%d", tenantID)
 
 	if tenantID <= 0 {
-		return nil, fmt.Errorf("租户信息无效")
+		return nil, fmt.Errorf("Invalid tenant information")
 	}
 	query := s.client.User.Query().Where(user.TenantIDEQ(tenantID))
 
 	// 总用户数
 	total, err := query.Count(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("统计总用户数失败: %w", err)
+		return nil, fmt.Errorf("Failed to count total users: %w", err)
 	}
 
 	// 活跃用户数
 	active, err := query.Clone().Where(user.ActiveEQ(true)).Count(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("统计活跃用户数失败: %w", err)
+		return nil, fmt.Errorf("Failed to count active users: %w", err)
 	}
 
 	monthStart := time.Now().In(time.Local)
 	monthStart = time.Date(monthStart.Year(), monthStart.Month(), 1, 0, 0, 0, 0, monthStart.Location())
 	newThisMonth, err := query.Clone().Where(user.CreatedAtGTE(monthStart)).Count(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("统计本月新增用户失败: %w", err)
+		return nil, fmt.Errorf("Failed to count new users this month: %w", err)
 	}
 
 	response := &dto.UserStatsResponse{
@@ -566,26 +566,26 @@ func (s *UserService) BatchUpdateUsers(ctx context.Context, req *dto.BatchUpdate
 	s.logger.Infof("批量更新用户: count=%d", len(req.UserIDs))
 
 	if len(req.UserIDs) == 0 {
-		return fmt.Errorf("用户ID列表不能为空")
+		return fmt.Errorf("User ID list cannot be empty")
 	}
 
 	ids := uniquePositiveIDs(req.UserIDs)
 	if len(ids) == 0 {
-		return fmt.Errorf("用户ID列表不能为空")
+		return fmt.Errorf("User ID list cannot be empty")
 	}
 	if req.Action == "deactivate" && req.OperatorID > 0 {
 		for _, id := range ids {
 			if id == req.OperatorID {
-				return fmt.Errorf("批量停用不能包含当前登录用户")
+				return fmt.Errorf("Batch deactivation cannot include currently logged in users")
 			}
 		}
 	}
 	matched, err := s.client.User.Query().Where(user.IDIn(ids...), user.TenantIDEQ(tenantID)).Count(ctx)
 	if err != nil {
-		return fmt.Errorf("校验批量用户失败: %w", err)
+		return fmt.Errorf("Failed to verify batch users: %w", err)
 	}
 	if matched != len(ids) {
-		return fmt.Errorf("部分用户不存在或不属于当前租户，请刷新列表后重试")
+		return fmt.Errorf("Some users do not exist or do not belong to the current tenant. Please refresh the list and try again.")
 	}
 
 	update := s.client.User.Update().
@@ -602,16 +602,16 @@ func (s *UserService) BatchUpdateUsers(ctx context.Context, req *dto.BatchUpdate
 		update = update.SetActive(false)
 	case "department":
 		if req.Department == "" {
-			return fmt.Errorf("部门不能为空")
+			return fmt.Errorf("Department cannot be empty")
 		}
 		update = update.SetDepartment(req.Department)
 	default:
-		return fmt.Errorf("不支持的操作类型: %s", req.Action)
+		return fmt.Errorf("Unsupported operation type: %s", req.Action)
 	}
 
 	count, err := update.Save(ctx)
 	if err != nil {
-		return fmt.Errorf("批量更新用户失败: %w", err)
+		return fmt.Errorf("Batch update of users failed: %w", err)
 	}
 
 	s.logger.Infof("批量更新用户成功: updated=%d", count)
@@ -632,7 +632,7 @@ func (s *UserService) BatchUpdateUsers(ctx context.Context, req *dto.BatchUpdate
 //   - 新密码不合规 / 与旧密码相同 → ValidationError
 func (s *UserService) ChangeOwnPassword(ctx context.Context, userID int, oldPassword, newPassword string, tenantID int) error {
 	if userID <= 0 {
-		return common.NewBusinessError(common.UnauthorizedCode, "未授权访问", "")
+		return common.NewBusinessError(common.UnauthorizedCode, "Unauthorized access", "")
 	}
 
 	// 变量名避开 user —— 该包已 import ent/user，遮蔽后
@@ -646,7 +646,7 @@ func (s *UserService) ChangeOwnPassword(ctx context.Context, userID int, oldPass
 	// 避免探测接口被用来枚举账号。
 	if bcrypt.CompareHashAndPassword([]byte(target.PasswordHash), []byte(oldPassword)) != nil {
 		s.logger.Warnf("自助改密失败（旧密码错误）: user_id=%d", userID)
-		return common.NewBusinessError(common.ForbiddenCode, "当前密码不正确", "")
+		return common.NewBusinessError(common.ForbiddenCode, "The current password is incorrect", "")
 	}
 
 	if err := validatePassword(newPassword); err != nil {
@@ -654,19 +654,19 @@ func (s *UserService) ChangeOwnPassword(ctx context.Context, userID int, oldPass
 	}
 
 	if oldPassword == newPassword {
-		return common.NewValidationError("新密码不能与当前密码相同", nil)
+		return common.NewValidationError("New password cannot be the same as current password", nil)
 	}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
 	if err != nil {
-		return fmt.Errorf("密码加密失败: %w", err)
+		return fmt.Errorf("Password encryption failed: %w", err)
 	}
 
 	if err := s.client.User.UpdateOneID(userID).
 		Where(user.TenantIDEQ(tenantID)).
 		SetPasswordHash(string(hashedPassword)).
 		Exec(ctx); err != nil {
-		return fmt.Errorf("修改密码失败: %w", err)
+		return fmt.Errorf("Failed to change password: %w", err)
 	}
 
 	// 与 ResetPassword 一致：改密后吊销全部存量 access token，
@@ -688,17 +688,17 @@ func (s *UserService) ChangeOwnPassword(ctx context.Context, userID int, oldPass
 // 邮箱唯一性沿用管理面口径（跨租户全局唯一），避免自助面绕开约束建出重复登录邮箱。
 func (s *UserService) UpdateOwnProfile(ctx context.Context, userID, tenantID int, req *dto.UpdateOwnProfileRequest) (*ent.User, error) {
 	if userID <= 0 {
-		return nil, common.NewBusinessError(common.UnauthorizedCode, "未授权访问", "")
+		return nil, common.NewBusinessError(common.UnauthorizedCode, "Unauthorized access", "")
 	}
 
 	name := strings.TrimSpace(req.Name)
 	if name == "" {
-		return nil, common.NewValidationError("姓名不能为空", nil)
+		return nil, common.NewValidationError("Name cannot be empty", nil)
 	}
 	// 邮箱是登录身份，不属于自助面可清空字段：留空必须拒绝而不是静默跳过，
 	// 否则任何绕过 DTO binding 的调用方都能把账号改成无法登录。
 	if strings.TrimSpace(req.Email) == "" {
-		return nil, common.NewValidationError("邮箱不能为空", nil)
+		return nil, common.NewValidationError("Email cannot be empty", nil)
 	}
 
 	target, err := s.client.User.Query().
@@ -708,9 +708,9 @@ func (s *UserService) UpdateOwnProfile(ctx context.Context, userID, tenantID int
 		if ent.IsNotFound(err) {
 			// 自助面的 id 来自鉴权上下文，正常永远命中；走到这里说明 JWT 里的租户与库内
 			// 归属已不一致（切租户后的旧会话）。按 not-found 掩码，不回显租户细节。
-			return nil, common.NewBusinessError(common.NotFoundCode, "用户资料不存在", "")
+			return nil, common.NewBusinessError(common.NotFoundCode, "User profile does not exist", "")
 		}
-		return nil, fmt.Errorf("获取用户失败: %w", err)
+		return nil, fmt.Errorf("Failed to get user: %w", err)
 	}
 
 	update := s.client.User.UpdateOneID(userID).
@@ -722,12 +722,12 @@ func (s *UserService) UpdateOwnProfile(ctx context.Context, userID, tenantID int
 			Where(user.And(user.EmailEQ(req.Email), user.IDNEQ(userID))).
 			Exist(ctx)
 		if err != nil {
-			return nil, fmt.Errorf("检查邮箱失败: %w", err)
+			return nil, fmt.Errorf("Failed to check mailbox: %w", err)
 		}
 		if exists {
 			// 自助表单唯一可复现的冲突，必须带可展示文案：返回未分类错误会让
 			// 前端只能显示「更新个人资料失败」，用户不知道要换一个邮箱。
-			return nil, common.NewBusinessError(common.ConflictCode, "该邮箱已被其他账号使用", "")
+			return nil, common.NewBusinessError(common.ConflictCode, "This email address is already used by another account", "")
 		}
 		update = update.SetEmail(req.Email)
 	}
@@ -741,7 +741,7 @@ func (s *UserService) UpdateOwnProfile(ctx context.Context, userID, tenantID int
 
 	updated, err := update.Save(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("更新个人资料失败: %w", err)
+		return nil, fmt.Errorf("Failed to update profile: %w", err)
 	}
 
 	s.logger.Infof("用户自助更新资料成功: ID=%d", userID)
@@ -750,7 +750,7 @@ func (s *UserService) UpdateOwnProfile(ctx context.Context, userID, tenantID int
 
 func validatePassword(password string) error {
 	if len(password) < 12 || len(password) > 128 {
-		return common.NewValidationError("密码长度必须为12到128位", nil)
+		return common.NewValidationError("Password length must be 12 to 128 characters", nil)
 	}
 	var upper, lower, digit, special bool
 	for _, r := range password {
@@ -766,7 +766,7 @@ func validatePassword(password string) error {
 		}
 	}
 	if !upper || !lower || !digit || !special {
-		return common.NewValidationError("密码必须同时包含大写字母、小写字母、数字和特殊字符", nil)
+		return common.NewValidationError("Password must contain a combination of uppercase letters, lowercase letters, numbers, and special characters", nil)
 	}
 	return nil
 }
@@ -798,7 +798,7 @@ func (s *UserService) SearchUsers(ctx context.Context, req *dto.SearchUsersReque
 		Order(ent.Asc(user.FieldName)).
 		All(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("搜索用户失败: %w", err)
+		return nil, fmt.Errorf("Failed to search for user: %w", err)
 	}
 
 	// 转换为响应格式

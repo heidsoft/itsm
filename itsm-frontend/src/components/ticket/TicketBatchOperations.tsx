@@ -83,37 +83,37 @@ const TicketBatchOperations: React.FC<TicketBatchOperationsProps> = ({
     () => [
       {
         key: 'assign',
-        label: '批量分配',
+        label: 'Batch Assign',
         icon: <UserIcon />,
-        description: '将选中的工单分配给指定处理人',
+        description: 'Assign the selected work order to the designated handler',
         permission: ['ticket', 'assign'],
       },
       {
         key: 'update_status',
-        label: '批量更新状态',
+        label: 'Batch Update Status',
         icon: <Flag />,
-        description: '批量更新工单状态',
+        description: 'Update work order status in batches',
         permission: ['ticket', 'update'],
       },
       {
         key: 'add_tags',
-        label: '批量添加标签',
+        label: 'Batch Add Tags',
         icon: <Tag />,
-        description: '为选中的工单添加标签',
+        description: 'Add label to selected work order',
         permission: ['ticket_tag', 'create'],
       },
       {
         key: 'set_priority',
-        label: '批量设置优先级',
+        label: 'Set priorities in batches',
         icon: <Flag />,
-        description: '批量设置工单优先级',
+        description: 'Set work order priority in batches',
         permission: ['ticket', 'update'],
       },
       {
         key: 'export',
-        label: '批量导出',
+        label: 'Batch Export',
         icon: <Download />,
-        description: '导出选中的工单数据',
+        description: 'Export selected work order data',
         permission: ['ticket', 'export'],
       },
       {
@@ -123,10 +123,10 @@ const TicketBatchOperations: React.FC<TicketBatchOperationsProps> = ({
       },
       {
         key: 'delete',
-        label: '批量删除',
+        label: 'Batch Delete',
         icon: <Trash2 />,
         danger: true,
-        description: '删除选中的工单（不可恢复）',
+        description: 'Delete selected work order (unrecoverable)',
         permission: ['ticket', 'delete'],
       },
     ],
@@ -149,7 +149,7 @@ const TicketBatchOperations: React.FC<TicketBatchOperationsProps> = ({
         visible: true,
         current: 0,
         total: selectedTickets.length,
-        status: '准备执行...',
+        status: "Preparing to execute...",
       });
 
       try {
@@ -163,7 +163,7 @@ const TicketBatchOperations: React.FC<TicketBatchOperationsProps> = ({
           setOperationProgress(prev => ({
             ...prev,
             current: i + 1,
-            status: `处理工单 ${ticket.ticketNumber}...`,
+            status: `Process work order ${ticket.ticketNumber}...`,
           }));
 
           try {
@@ -195,13 +195,13 @@ const TicketBatchOperations: React.FC<TicketBatchOperationsProps> = ({
                 await TicketAPI.deleteTicket(ticket.id);
                 break;
               default:
-                throw new Error(`不支持的操作: ${operation}`);
+                throw new Error(`Unsupported operation: ${operation}`);
             }
             successCount++;
           } catch (error) {
             failCount++;
             errors.push(
-              `${ticket.ticketNumber}: ${error instanceof Error ? error.message : '操作失败'}`
+              `${ticket.ticketNumber}: ${error instanceof Error ? error.message : 'Operation failed'}`
             );
           }
 
@@ -211,14 +211,14 @@ const TicketBatchOperations: React.FC<TicketBatchOperationsProps> = ({
 
         setOperationProgress(prev => ({
           ...prev,
-          status: '操作完成',
+          status: "Operation completed",
         }));
 
         // 显示操作结果
         if (failCount === 0) {
-          message.success(`批量操作成功！共处理 ${successCount} 个工单`);
+          message.success(`Batch operation successful! Processed in total ${successCount} work orders`);
         } else {
-          message.warning(`操作完成！成功 ${successCount} 个，失败 ${failCount} 个`);
+          message.warning(`Operation completed! success ${successCount} , failed ${failCount} items`);
         }
 
         setTimeout(() => {
@@ -228,7 +228,7 @@ const TicketBatchOperations: React.FC<TicketBatchOperationsProps> = ({
           onOperationComplete?.();
         }, 1500);
       } catch (error) {
-        message.error('批量操作执行失败');
+        message.error('Batch operation execution failed');
         setOperationProgress({ visible: false, current: 0, total: 0, status: '' });
       } finally {
         setLoading(false);
@@ -275,9 +275,9 @@ const TicketBatchOperations: React.FC<TicketBatchOperationsProps> = ({
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
 
-      message.success('导出完成：文件包含本租户全部工单，不仅限于当前选中项');
+      message.success('Export completed: The file contains all work orders of this tenant, not limited to the currently selected items');
     } catch (error) {
-      message.error('导出失败');
+      message.error('Export failed');
     }
   }, []);
 
@@ -288,16 +288,16 @@ const TicketBatchOperations: React.FC<TicketBatchOperationsProps> = ({
         return (
           <>
             <Form.Item
-              label="分配给"
+              label="Assigned To"
               name="assigneeId"
-              rules={[{ required: true, message: '请选择处理人' }]}
+              rules={[{ required: true, message: 'Please select an assignee' }]}
             >
               <Select
-                placeholder="选择处理人"
+                placeholder="Select assignee"
                 showSearch
                 optionFilterProp="label"
                 loading={assignees.isLoading}
-                notFoundContent={assignees.isError ? '处理人列表加载失败' : undefined}
+                notFoundContent={assignees.isError ? 'Failed to load handler list' : undefined}
                 options={assigneeOptions}
               />
             </Form.Item>
@@ -307,37 +307,37 @@ const TicketBatchOperations: React.FC<TicketBatchOperationsProps> = ({
       case 'update_status':
         return (
           <Form.Item
-            label="新状态"
+            label="New status"
             name="status"
-            rules={[{ required: true, message: '请选择状态' }]}
+            rules={[{ required: true, message: 'Please select status' }]}
           >
-            <Select placeholder="选择状态" options={STATUS_OPTIONS} />
+            <Select placeholder="Select status" options={STATUS_OPTIONS} />
           </Form.Item>
         );
 
       case 'add_tags':
         return (
-          <Form.Item label="标签" name="tags" rules={[{ required: true, message: '请输入标签' }]}>
-            <Select mode="tags" placeholder="输入标签，按回车添加" style={{ width: '100%' }} options={[{ value: "urgent", label: "紧急" }, { value: "sla", label: "SLA监控" }, { value: "escalation", label: "已升级" }]} />
+          <Form.Item label="Tags" name="tags" rules={[{ required: true, message: 'Please enter tags' }]}>
+            <Select mode="tags" placeholder="Enter the label and press Enter to add" style={{ width: '100%' }} options={[{ value: "urgent", label: "Urgent" }, { value: "sla", label: "SLA Monitor" }, { value: "escalation", label: "Escalated" }]} />
           </Form.Item>
         );
 
       case 'set_priority':
         return (
           <Form.Item
-            label="优先级"
+            label="Priority"
             name="priority"
-            rules={[{ required: true, message: '请选择优先级' }]}
+            rules={[{ required: true, message: 'Please select priority' }]}
           >
-            <Select placeholder="选择优先级" options={PRIORITY_OPTIONS} />
+            <Select placeholder="Select priority" options={PRIORITY_OPTIONS} />
           </Form.Item>
         );
 
       case 'delete':
         return (
           <Alert
-            title="删除确认"
-            description={`即将删除 ${selectedTickets.length} 个工单，此操作不可恢复。请确认是否继续？`}
+            title="Delete confirmation"
+            description={`About to be deleted ${selectedTickets.length} Work order, this operation cannot be restored. Please confirm whether to continue?`}
             type="error"
             showIcon
           />
@@ -376,9 +376,10 @@ const TicketBatchOperations: React.FC<TicketBatchOperationsProps> = ({
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <CheckCircle className="text-blue-600 text-lg" />
-            <Text strong>已选择 {selectedTickets.length} 个工单</Text>
+            <Text strong>Selected {selectedTickets.length}  work orders</Text>
             <Button size="small" onClick={onSelectionClear}>
-              清空选择
+
+              Clear selection
             </Button>
           </div>
 
@@ -393,7 +394,8 @@ const TicketBatchOperations: React.FC<TicketBatchOperationsProps> = ({
               loading={loading}
               disabled={permittedOperations.length === 0}
             >
-              批量操作
+
+              Batch operation
             </Button>
           </Dropdown>
         </div>
@@ -412,7 +414,8 @@ const TicketBatchOperations: React.FC<TicketBatchOperationsProps> = ({
             key="cancel"
             onClick={() => setOperationModal({ visible: false, type: '', title: '' })}
           >
-            取消
+
+            Cancel
           </Button>,
           <Button
             key="confirm"
@@ -421,7 +424,7 @@ const TicketBatchOperations: React.FC<TicketBatchOperationsProps> = ({
             loading={loading}
             onClick={() => form.submit()}
           >
-            {operationModal.type === 'delete' ? '确认删除' : '确认操作'}
+            {operationModal.type === 'delete' ? 'Confirm Delete' : 'Confirm operation'}
           </Button>,
         ]}
         width={600}
@@ -437,7 +440,7 @@ const TicketBatchOperations: React.FC<TicketBatchOperationsProps> = ({
 
       {/* 操作进度模态框 */}
       <Modal
-        title="批量操作进度"
+        title="Batch Operation Progress"
         open={operationProgress.visible}
         closable={false}
         footer={null}

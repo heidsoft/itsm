@@ -47,9 +47,9 @@ import {
 const { Text } = Typography;
 
 const ENVIRONMENT_OPTIONS = [
-  { value: 'production', label: '生产' },
-  { value: 'staging', label: '预发' },
-  { value: 'development', label: '开发' },
+  { value: 'production', label: 'Production' },
+  { value: 'staging', label: 'Pre-release' },
+  { value: 'development', label: 'Development' },
 ];
 
 // 必填属性的初始值：优先沿用云标签命中的现值，其次回落属性默认值。
@@ -59,14 +59,14 @@ const initialAttrValue = (attr: PendingDiscoveryAttribute): string =>
 
 // 状态字符串由执行器落库，展示层只做翻译，不要用 success 之类的展示词反推后端状态。
 const DISCOVERY_JOB_STATUS: Record<string, { label: string; color: string }> = {
-  queued: { label: '排队中', color: 'default' },
-  discovering: { label: '发现中', color: 'processing' },
-  discovered: { label: '已发现', color: 'blue' },
-  reconciling: { label: '对账中', color: 'processing' },
-  succeeded: { label: '成功', color: 'green' },
-  partial_failed: { label: '部分失败', color: 'orange' },
-  failed: { label: '失败', color: 'red' },
-  cancelled: { label: '已取消', color: 'default' },
+  queued: { label: 'Queuing', color: 'default' },
+  discovering: { label: 'Discovering', color: 'processing' },
+  discovered: { label: 'Found', color: 'blue' },
+  reconciling: { label: 'Reconciling', color: 'processing' },
+  succeeded: { label: 'Success', color: 'green' },
+  partial_failed: { label: 'Partial failure', color: 'orange' },
+  failed: { label: 'Failed', color: 'red' },
+  cancelled: { label: 'Cancelled', color: 'default' },
 };
 
 const discoveryJobStatusMeta = (status: string) =>
@@ -135,26 +135,26 @@ function CompletionModal({ resource, onClose }: CompletionModalProps) {
     setSubmitting(true);
     try {
       const ci = await registerMutation.mutateAsync({ id: resource.id, data: payload });
-      message.success(`已建账：${ci.name}`);
+      message.success(`Account has been established:${ci.name}`);
       onClose();
     } catch (error) {
       if (error instanceof ApiRequestError) {
         if (error.status === 400 || error.code === 4000) {
           // 必填/属性校验失败：保留弹窗与已填内容，让操作员补齐。
-          message.error(error.message || '必填属性未补齐，请检查后重试');
+          message.error(error.message || 'Required attributes are not completed, please check and try again');
         } else if (error.status === 409 || error.code === 4090) {
-          message.warning('该云资源已建账，列表稍后自动刷新');
+          message.warning('The cloud resource has been accounted for and the list will be automatically refreshed later.');
           onClose();
         } else if (error.status === 503 || error.code === 5003) {
-          message.warning('人工补全暂不可用：发现回写服务未装配');
+          message.warning('Manual completion is temporarily unavailable: it was found that the writeback service is not installed');
         } else if (error.status === 404 || error.code === 4004) {
-          message.error('云资源不存在或不属于当前租户');
+          message.error('The cloud resource does not exist or does not belong to the current tenant');
           onClose();
         } else {
-          message.error(error.message || '补录建账失败');
+          message.error(error.message || 'Failed to create additional account');
         }
       } else {
-        message.error(error instanceof Error ? error.message : '补录建账失败');
+        message.error(error instanceof Error ? error.message : 'Failed to create additional account');
       }
     } finally {
       setSubmitting(false);
@@ -163,11 +163,11 @@ function CompletionModal({ resource, onClose }: CompletionModalProps) {
 
   return (
     <Modal
-      title={resource ? `补录建账：${resource.resourceId}` : '补录建账'}
+      title={resource ? `Supplementary entry and account creation:${resource.resourceId}` : 'Supplementary entry and account creation'}
       open={!!resource}
-      okText="建账"
+      okText="Create account"
       confirmLoading={submitting}
-      cancelText="取消"
+      cancelText="Cancel"
       onCancel={handleClose}
       onOk={handleSubmit}
       destroyOnHidden
@@ -175,22 +175,23 @@ function CompletionModal({ resource, onClose }: CompletionModalProps) {
       {resource ? (
         <>
           <Text type="secondary">
-            目标 CI 类型：{resource.targetCiType}；缺失必填项：
-            {resource.missingAttributeNames.join('、') || '（已预填，可覆盖）'}
+
+            Target CI type:{resource.targetCiType};Missing required fields:
+            {resource.missingAttributeNames.join('、') || '(Prefilled, can be overridden)'}
           </Text>
           <Form form={form} layout="vertical" className="mt-4" disabled={submitting}>
-            <Form.Item name="name" label="CI 名称">
-              <Input placeholder="留空则沿用云资源名称" allowClear />
+            <Form.Item name="name" label="CI name">
+              <Input placeholder="Leave blank to use the cloud resource name." allowClear />
             </Form.Item>
-            <Form.Item name="environment" label="环境">
+            <Form.Item name="environment" label="Environment">
               <Select
-                placeholder="留空则沿用标签推断"
+                placeholder="Leave blank to use label inference"
                 options={ENVIRONMENT_OPTIONS}
                 allowClear
               />
             </Form.Item>
-            <Form.Item name="assignedTo" label="负责人">
-              <Input placeholder="留空则沿用标签推断" allowClear />
+            <Form.Item name="assignedTo" label="Assignee">
+              <Input placeholder="Leave blank to use label inference" allowClear />
             </Form.Item>
             {resource.requiredAttributes.map(attr => (
               <Form.Item
@@ -198,16 +199,16 @@ function CompletionModal({ resource, onClose }: CompletionModalProps) {
                 name={['attributes', attr.name]}
                 label={attr.displayName || attr.name}
                 tooltip={attr.helpText || undefined}
-                rules={[{ required: true, message: `${attr.displayName || attr.name} 为必填项` }]}
+                rules={[{ required: true, message: `${attr.displayName || attr.name} is required` }]}
               >
                 {attr.enumValues && attr.enumValues.length > 0 ? (
                   <Select
-                    placeholder={attr.placeholder || '请选择'}
+                    placeholder={attr.placeholder || 'Please select'}
                     options={attr.enumValues.map(value => ({ value, label: value }))}
                     allowClear
                   />
                 ) : (
-                  <Input placeholder={attr.placeholder || '请输入'} allowClear />
+                  <Input placeholder={attr.placeholder || 'Please input'} allowClear />
                 )}
               </Form.Item>
             ))}
@@ -255,7 +256,7 @@ export default function ServiceGraphRegistryPage() {
 
   React.useEffect(() => {
     if (hasError) {
-      message.error('加载图谱注册中心失败');
+      message.error('Failed to load map registration center');
     }
   }, [hasError, message]);
 
@@ -281,35 +282,35 @@ export default function ServiceGraphRegistryPage() {
   const statsItems: StatsOverviewItem[] = [
     {
       key: 'sources',
-      title: '发现源',
+      title: 'Discovery Source',
       value: discoverySources.length,
       prefix: <Sparkles className="text-cyan-500 mr-2" />,
       accentColor: '#13c2c2',
     },
     {
       key: 'services',
-      title: '云服务',
+      title: 'Cloud services',
       value: cloudServices.length,
       prefix: <Database className="text-blue-500 mr-2" />,
       accentColor: '#1890ff',
     },
     {
       key: 'accounts',
-      title: '云账号',
+      title: 'Cloud account',
       value: cloudAccounts.length,
       prefix: <Cloud className="text-green-500 mr-2" />,
       accentColor: '#52c41a',
     },
     {
       key: 'jobs',
-      title: '发现记录',
+      title: 'Record found',
       value: discoveryHistory.length,
       prefix: <Server className="text-orange-500 mr-2" />,
       accentColor: '#fa8c16',
     },
     {
       key: 'pending',
-      title: '待建账资源',
+      title: 'Resources to be established',
       value: pendingQuery.data?.total ?? 0,
       prefix: <Cloud className="text-rose-500 mr-2" />,
       accentColor: '#f5222d',
@@ -318,30 +319,30 @@ export default function ServiceGraphRegistryPage() {
 
   const sourceColumns = [
     {
-      title: '名称',
+      title: 'Name',
       dataIndex: 'name',
       key: 'name',
     },
     {
-      title: '类型',
+      title: 'Type',
       dataIndex: 'sourceType',
       key: 'sourceType',
       render: (value: string) => <Tag color="blue">{value || '-'}</Tag>,
     },
     {
-      title: '提供方',
+      title: 'Provider',
       dataIndex: 'provider',
       key: 'provider',
       render: (value?: string) => value || '-',
     },
     {
-      title: '状态',
+      title: 'Status',
       dataIndex: 'isActive',
       key: 'isActive',
-      render: (value: boolean) => <Badge status={value ? 'success' : 'default'} text={value ? '启用' : '停用'} />,
+      render: (value: boolean) => <Badge status={value ? 'success' : 'default'} text={value ? 'Enabled' : 'Disable'} />,
     },
     {
-      title: '说明',
+      title: 'Description',
       dataIndex: 'description',
       key: 'description',
       render: (value?: string) => value || '-',
@@ -350,70 +351,70 @@ export default function ServiceGraphRegistryPage() {
 
   const serviceColumns = [
     {
-      title: '厂商',
+      title: 'Vendor',
       dataIndex: 'provider',
       key: 'provider',
     },
     {
-      title: '服务代码',
+      title: 'Service code',
       dataIndex: 'serviceCode',
       key: 'serviceCode',
     },
     {
-      title: '服务名称',
+      title: 'Service Name',
       dataIndex: 'serviceName',
       key: 'serviceName',
     },
     {
-      title: '资源类型',
+      title: 'Resource Type',
       dataIndex: 'resourceTypeName',
       key: 'resourceTypeName',
     },
     {
-      title: '状态',
+      title: 'Status',
       dataIndex: 'isActive',
       key: 'isActive',
-      render: (value: boolean) => <Tag color={value ? 'green' : 'default'}>{value ? '启用' : '停用'}</Tag>,
+      render: (value: boolean) => <Tag color={value ? 'green' : 'default'}>{value ? 'Enabled' : 'Disable'}</Tag>,
     },
   ];
 
   const accountColumns = [
     {
-      title: '厂商',
+      title: 'Vendor',
       dataIndex: 'provider',
       key: 'provider',
     },
     {
-      title: '账号名称',
+      title: 'Account name',
       dataIndex: 'accountName',
       key: 'accountName',
     },
     {
-      title: '账号ID',
+      title: 'Account ID',
       dataIndex: 'accountId',
       key: 'accountId',
     },
     {
-      title: '状态',
+      title: 'Status',
       dataIndex: 'isActive',
       key: 'isActive',
-      render: (value: boolean) => <Tag color={value ? 'green' : 'default'}>{value ? '启用' : '停用'}</Tag>,
+      render: (value: boolean) => <Tag color={value ? 'green' : 'default'}>{value ? 'Enabled' : 'Disable'}</Tag>,
     },
   ];
 
   const historyColumns = [
     {
-      title: '任务ID',
+      title: 'Task ID',
       dataIndex: 'id',
       key: 'id',
     },
     {
-      title: '源ID',
+      title: 'Source ID',
       dataIndex: 'sourceId',
       key: 'sourceId',
     },
     {
-      title: '状态',
+      title: 'Status',
       dataIndex: 'status',
       key: 'status',
       render: (value: string) => {
@@ -422,14 +423,14 @@ export default function ServiceGraphRegistryPage() {
       },
     },
     {
-      title: '失败原因',
+      title: 'Failure reason',
       key: 'failure',
       render: (_: unknown, record: DiscoveryJob) => {
         const failures = discoveryScopeFailures(record);
         if (failures.length > 0) {
           return (
             <Popover
-              title="失败范围"
+              title="Failure range"
               content={
                 <div className="max-w-md space-y-2">
                   {failures.map((item, index) => (
@@ -445,7 +446,7 @@ export default function ServiceGraphRegistryPage() {
               }
             >
               <Tag color="red" className="cursor-pointer">
-                {failures.length} 个范围失败
+                {failures.length}  range failed
               </Tag>
             </Popover>
           );
@@ -460,13 +461,13 @@ export default function ServiceGraphRegistryPage() {
       },
     },
     {
-      title: '开始时间',
+      title: 'Start Time',
       dataIndex: 'startedAt',
       key: 'startedAt',
       render: (value?: string) => formatDateTime(value) || '-',
     },
     {
-      title: '结束时间',
+      title: 'End Time',
       dataIndex: 'finishedAt',
       key: 'finishedAt',
       render: (value?: string) => formatDateTime(value) || '-',
@@ -475,35 +476,35 @@ export default function ServiceGraphRegistryPage() {
 
   const pendingColumns = [
     {
-      title: '资源ID',
+      title: 'Resource ID',
       dataIndex: 'resourceId',
       key: 'resourceId',
     },
     {
-      title: '名称',
+      title: 'Name',
       dataIndex: 'resourceName',
       key: 'resourceName',
       render: (value: string) => value || '-',
     },
     {
-      title: '厂商',
+      title: 'Vendor',
       dataIndex: 'provider',
       key: 'provider',
     },
     {
-      title: '区域',
+      title: 'Area',
       dataIndex: 'region',
       key: 'region',
       render: (value: string) => value || '-',
     },
     {
-      title: '目标 CI 类型',
+      title: 'Target CI type',
       dataIndex: 'targetCiType',
       key: 'targetCiType',
       render: (value: string) => <Tag color="geekblue">{value || '-'}</Tag>,
     },
     {
-      title: '缺失必填项',
+      title: 'Missing required fields',
       dataIndex: 'missingAttributeNames',
       key: 'missingAttributeNames',
       render: (values: string[]) =>
@@ -516,21 +517,22 @@ export default function ServiceGraphRegistryPage() {
             ))}
           </Space>
         ) : (
-          <Text type="secondary">已预填</Text>
+          <Text type="secondary">Prefilled</Text>
         ),
     },
     {
-      title: '最后发现',
+      title: 'Last found',
       dataIndex: 'lastSeenAt',
       key: 'lastSeenAt',
       render: (value?: string) => formatDateTime(value) || '-',
     },
     {
-      title: '操作',
+      title: 'Actions',
       key: 'action',
       render: (_: unknown, record: PendingDiscoveryResource) => (
         <Button type="link" onClick={() => setCompletionTarget(record)}>
-          补录建账
+
+          Supplementary entry and account creation
         </Button>
       ),
     },
@@ -540,14 +542,16 @@ export default function ServiceGraphRegistryPage() {
     <div className="space-y-6 p-6">
       <ManagementPageHeader
         title="Service Graph Registry"
-        description="集中管理发现源、云服务和云账号的接入信息及历史记录。"
+        description="Centrally manage access information and history of discovery sources, cloud services, and cloud accounts."
         actions={
           <Space wrap>
             <Button icon={<RefreshCw className="h-4 w-4" />} loading={fetching} onClick={handleRefresh}>
-              刷新
+
+              Refresh
             </Button>
             <Button type="primary" href="/cmdb/relationships" icon={<Database className="h-4 w-4" />}>
-              去关系图谱
+
+              Remove the relationship graph
             </Button>
           </Space>
         }
@@ -557,11 +561,11 @@ export default function ServiceGraphRegistryPage() {
         <Alert
           type="warning"
           showIcon
-          title="云资源自动发现尚未就绪"
+          title="Cloud resource auto-discovery is not ready yet"
           description={
             discoveryCapability
-              ? `当前状态：${discoveryCapability.state}；缺失条件：${discoveryCapability.missingRequirements.join('、') || '租户配置'}`
-              : '无法读取后端能力状态；后端将按未就绪状态拒绝自动发现请求。'
+              ? `Current status:${discoveryCapability.state};Missing condition:${discoveryCapability.missingRequirements.join('、') || 'Tenant configuration'}`
+              : 'Unable to read backend capability status; backend will reject autodiscover request as not ready.'
           }
         />
       ) : null}
@@ -572,7 +576,7 @@ export default function ServiceGraphRegistryPage() {
         <Row gutter={[16, 16]}>
           <Col xs={24} md={12}>
             <Card size="small" className="h-full bg-slate-50">
-              <Text type="secondary">最后刷新</Text>
+              <Text type="secondary">Last refreshed</Text>
               <div className="mt-2 text-lg font-semibold">
                 {formatDateTime(refreshAt) || '-'}
               </div>
@@ -580,9 +584,10 @@ export default function ServiceGraphRegistryPage() {
           </Col>
           <Col xs={24} md={12}>
             <Card size="small" className="h-full bg-slate-50">
-              <Text type="secondary">注册中心说明</Text>
+              <Text type="secondary">Registration center description</Text>
               <div className="mt-2">
-                先定义发现源和云服务，再把云账号与 CI、关系和对账串起来，才能形成可持续的图谱治理闭环。
+
+                Only by first defining discovery sources and cloud services, and then linking cloud accounts with CIs, relationships, and reconciliations can a sustainable graph governance closed loop be formed.
               </div>
             </Card>
           </Col>
@@ -594,34 +599,34 @@ export default function ServiceGraphRegistryPage() {
           items={[
             {
               key: 'sources',
-              label: '发现源',
+              label: 'Discovery Source',
               children: <Table rowKey="id" columns={sourceColumns} dataSource={discoverySources} pagination={{ pageSize: 8 }} />,
             },
             {
               key: 'services',
-              label: '云服务',
+              label: 'Cloud services',
               children: <Table rowKey="id" columns={serviceColumns} dataSource={cloudServices} pagination={{ pageSize: 8 }} />,
             },
             {
               key: 'accounts',
-              label: '云账号',
+              label: 'Cloud account',
               children: <Table rowKey="id" columns={accountColumns} dataSource={cloudAccounts} pagination={{ pageSize: 8 }} />,
             },
             {
               key: 'history',
-              label: '发现历史',
+              label: 'Discovery history',
               children: <Table rowKey="id" columns={historyColumns} dataSource={discoveryHistory} pagination={{ pageSize: 8 }} />,
             },
             {
               key: 'pending',
-              label: `待建账资源${pendingQuery.data?.total ? ` (${pendingQuery.data.total})` : ''}`,
+              label: `Resources to be established ${pendingQuery.data?.total ? ` (${pendingQuery.data.total})` : ''}`,
               children: (
                 <Table
                   rowKey="id"
                   columns={pendingColumns}
                   dataSource={pendingResources}
                   loading={pendingQuery.isLoading || pendingQuery.isFetching}
-                  locale={{ emptyText: '没有需要人工补全的云资源' }}
+                  locale={{ emptyText: 'There are no cloud resources that require manual completion' }}
                   pagination={{
                     current: pendingPage,
                     pageSize: pendingPageSize,

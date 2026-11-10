@@ -67,12 +67,12 @@ func TenantMiddleware(client *ent.Client) gin.HandlerFunc {
 					First(c.Request.Context())
 				if err != nil {
 					if ent.IsNotFound(err) {
-						common.NotFound(c, "租户不存在")
+						common.NotFound(c, "Tenant does not exist")
 						c.Abort()
 						return
 					}
 					zap.S().Errorw("tenant lookup failed", "source", "header", "error", err)
-					common.Fail(c, common.InternalErrorCode, "租户查询失败")
+					common.Fail(c, common.InternalErrorCode, "Tenant query failed")
 					c.Abort()
 					return
 				}
@@ -91,12 +91,12 @@ func TenantMiddleware(client *ent.Client) gin.HandlerFunc {
 					First(c.Request.Context())
 				if err != nil {
 					if ent.IsNotFound(err) {
-						common.NotFound(c, "租户不存在")
+						common.NotFound(c, "Tenant does not exist")
 						c.Abort()
 						return
 					}
 					zap.S().Errorw("tenant lookup failed", "source", "subdomain", "error", err)
-					common.Fail(c, common.InternalErrorCode, "租户查询失败")
+					common.Fail(c, common.InternalErrorCode, "Tenant query failed")
 					c.Abort()
 					return
 				}
@@ -115,12 +115,12 @@ func TenantMiddleware(client *ent.Client) gin.HandlerFunc {
 					First(c.Request.Context())
 				if err != nil {
 					if ent.IsNotFound(err) {
-						common.NotFound(c, "租户不存在")
+						common.NotFound(c, "Tenant does not exist")
 						c.Abort()
 						return
 					}
 					zap.S().Errorw("tenant lookup failed", "source", "path", "error", err)
-					common.Fail(c, common.InternalErrorCode, "租户查询失败")
+					common.Fail(c, common.InternalErrorCode, "Tenant query failed")
 					c.Abort()
 					return
 				}
@@ -136,7 +136,7 @@ func TenantMiddleware(client *ent.Client) gin.HandlerFunc {
 			// 及同文件「租户不匹配」分支(AuthFailedCode) 三处语义不一致。
 			// 由于本中间件是 tenant 路由组的第一道关卡，域内 401 分支在生产中
 			// 实际不可达——真正的对外契约由此处决定，故统一为 401。
-			common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+			common.Fail(c, common.AuthFailedCode, "Tenant information is missing")
 			c.Abort()
 			return
 		}
@@ -151,19 +151,19 @@ func TenantMiddleware(client *ent.Client) gin.HandlerFunc {
 				"source", source,
 				"user_id", c.GetInt("user_id"),
 			)
-			common.Fail(c, common.AuthFailedCode, "租户不匹配")
+			common.Fail(c, common.AuthFailedCode, "Tenant mismatch")
 			c.Abort()
 			return
 		}
 
 		// 6) 状态/有效期:跨所有来源都必须校验,防止 suspended/expired 租户的 live JWT 仍可访问。
 		if tenantEntity.Status != "active" {
-			common.Forbidden(c, "租户已被暂停或过期")
+			common.Forbidden(c, "Tenant has been suspended or expired")
 			c.Abort()
 			return
 		}
 		if !tenantEntity.ExpiresAt.IsZero() && tenantEntity.ExpiresAt.Before(time.Now()) {
-			common.Forbidden(c, "租户已过期")
+			common.Forbidden(c, "Tenant has expired")
 			c.Abort()
 			return
 		}
@@ -211,10 +211,10 @@ func GetTenantContext(c *gin.Context) (*TenantContext, bool) {
 func GetTenantID(c *gin.Context) (int, error) {
 	tenantCtx, exists := GetTenantContext(c)
 	if !exists {
-		return 0, errors.New("租户上下文不存在")
+		return 0, errors.New("Tenant context does not exist")
 	}
 	if tenantCtx.TenantID <= 0 {
-		return 0, errors.New("租户上下文无效")
+		return 0, errors.New("Invalid tenant context")
 	}
 	return tenantCtx.TenantID, nil
 }
@@ -226,7 +226,7 @@ func GetTenantID(c *gin.Context) (int, error) {
 func TenantIDOrUnauthorized(c *gin.Context) (int, bool) {
 	tenantID, err := GetTenantID(c)
 	if err != nil {
-		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		common.Fail(c, common.AuthFailedCode, "Tenant information is missing")
 		return 0, false
 	}
 	return tenantID, true
@@ -236,14 +236,14 @@ func TenantIDOrUnauthorized(c *gin.Context) (int, bool) {
 func GetUserID(c *gin.Context) (int, error) {
 	userID, exists := c.Get("user_id")
 	if !exists {
-		return 0, errors.New("用户ID不存在")
+		return 0, errors.New("User ID does not exist")
 	}
 
 	if id, ok := userID.(int); ok {
 		return id, nil
 	}
 
-	return 0, errors.New("用户ID类型错误")
+	return 0, errors.New("Wrong user ID type")
 }
 
 // UserIDOrUnauthorized 提取用户ID，失败时统一响应 401（AuthFailedCode）。
@@ -255,11 +255,11 @@ func GetUserID(c *gin.Context) (int, error) {
 func UserIDOrUnauthorized(c *gin.Context) (int, bool) {
 	userID, err := GetUserID(c)
 	if err != nil {
-		common.Fail(c, common.AuthFailedCode, "用户上下文缺失")
+		common.Fail(c, common.AuthFailedCode, "User context missing")
 		return 0, false
 	}
 	if userID <= 0 {
-		common.Fail(c, common.AuthFailedCode, "用户上下文无效")
+		common.Fail(c, common.AuthFailedCode, "Invalid user context")
 		return 0, false
 	}
 	return userID, true

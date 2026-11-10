@@ -134,8 +134,8 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
           <Card className="max-w-2xl w-full">
             <Result
               status="error"
-              title="页面出现错误"
-              subTitle="抱歉，页面遇到了一个意外错误。我们已经记录了这个问题，请尝试刷新页面或联系技术支持。"
+              title="An error occurred on the page"
+              subTitle="Sorry, the page encountered an unexpected error. We have logged this issue, please try refreshing the page or contact technical support."
               extra={[
                 <Button
                   key="retry"
@@ -144,7 +144,8 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
                   onClick={this.handleRetry}
                   className="mr-2"
                 >
-                  重试
+
+                  Retry
                 </Button>,
                 <Button
                   key="home"
@@ -152,27 +153,29 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
                   onClick={this.handleGoHome}
                   className="mr-2"
                 >
-                  返回首页
+
+                  Return to homepage
                 </Button>,
                 <Button key="report" icon={<Bug size={16} />} onClick={this.handleReportBug}>
-                  报告问题
+
+                  Report a problem
                 </Button>,
               ]}
             />
 
             {this.props.showDetails && error && (
               <div className="mt-6 p-4 bg-red-50 rounded-lg">
-                <h4 className="text-sm font-medium text-red-800 mb-2">错误详情</h4>
+                <h4 className="text-sm font-medium text-red-800 mb-2">Error details</h4>
                 <div className="text-xs text-red-700 space-y-2">
                   <div>
-                    <strong>错误信息:</strong> {error.message}
+                    <strong>Error message:</strong> {error.message}
                   </div>
                   <div>
-                    <strong>错误ID:</strong> {this.state.errorId}
+                    <strong>Error ID:</strong> {this.state.errorId}
                   </div>
                   {error.stack && (
                     <div>
-                      <strong>堆栈信息:</strong>
+                      <strong>Stack information:</strong>
                       <pre className="mt-1 p-2 bg-red-100 rounded text-xs overflow-auto max-h-32">
                         {error.stack}
                       </pre>
@@ -180,7 +183,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
                   )}
                   {errorInfo?.componentStack && (
                     <div>
-                      <strong>组件堆栈:</strong>
+                      <strong>Component stack:</strong>
                       <pre className="mt-1 p-2 bg-red-100 rounded text-xs overflow-auto max-h-32">
                         {errorInfo.componentStack}
                       </pre>
@@ -198,7 +201,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   }
 }
 
- 
+
 (ErrorBoundary as unknown as React.ComponentType<ErrorBoundaryProps>).displayName = 'ErrorBoundary';
 
 // 高阶组件版本

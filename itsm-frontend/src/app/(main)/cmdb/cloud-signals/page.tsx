@@ -61,16 +61,16 @@ interface FindingFilterValues extends AlertFilterValues {
 }
 
 const alertStatusMeta: Record<string, { color: string; text: string }> = {
-  firing: { color: 'red', text: '触发中' },
-  acknowledged: { color: 'gold', text: '已认领' },
-  resolved: { color: 'green', text: '已关闭' },
+  firing: { color: 'red', text: 'Triggering' },
+  acknowledged: { color: 'gold', text: 'Claimed' },
+  resolved: { color: 'green', text: 'Closed' },
 };
 
 const findingStatusMeta: Record<string, { color: string; text: string }> = {
-  open: { color: 'red', text: '待修复' },
-  fixing: { color: 'gold', text: '修复中' },
-  fixed: { color: 'green', text: '已修复' },
-  ignored: { color: 'default', text: '已忽略' },
+  open: { color: 'red', text: 'To be fixed' },
+  fixing: { color: 'gold', text: 'Under repair' },
+  fixed: { color: 'green', text: 'Fixed' },
+  ignored: { color: 'default', text: 'ignored' },
 };
 
 const severityColor: Record<string, string> = {
@@ -86,36 +86,36 @@ const severityColor: Record<string, string> = {
 };
 
 const severityText: Record<string, string> = {
-  critical: '严重',
-  high: '高危',
-  medium: '中危',
-  low: '低危',
-  unknown: '未知',
+  critical: 'Critical',
+  high: 'High risk',
+  medium: 'Medium risk',
+  low: 'Low risk',
+  unknown: 'Unknown',
 };
 
 const vulnTypeText: Record<string, string> = {
-  cve: 'Linux 软件漏洞',
-  sys: 'Windows 系统漏洞',
-  cms: 'Web-CMS 漏洞',
-  app: '应用漏洞',
-  emg: '紧急漏洞',
+  cve: 'Linux software vulnerability',
+  sys: 'Windows system vulnerability',
+  cms: 'Web-CMS Vulnerability',
+  app: 'Application vulnerability',
+  emg: 'Emergency vulnerability',
 };
 
 const syncStateMeta: Record<string, { color: string; text: string }> = {
-  unconfigured: { color: 'default', text: '未配置' },
-  unavailable: { color: 'red', text: '不可用' },
-  ready: { color: 'green', text: '就绪' },
+  unconfigured: { color: 'default', text: 'Not configured' },
+  unavailable: { color: 'red', text: 'Not available' },
+  ready: { color: 'green', text: 'Ready' },
 };
 
 const signalKindText: Record<string, string> = {
-  alarm: '云监控告警',
-  vulnerability: '安全漏洞',
+  alarm: 'Cloud monitoring alarm',
+  vulnerability: 'Security Vulnerability',
 };
 
 const alertStatusOptions = [
-  { value: 'firing', label: '触发中' },
-  { value: 'acknowledged', label: '已认领' },
-  { value: 'resolved', label: '已关闭' },
+  { value: 'firing', label: 'Triggering' },
+  { value: 'acknowledged', label: 'Claimed' },
+  { value: 'resolved', label: 'Closed' },
 ];
 
 const alertSeverityOptions = [
@@ -126,18 +126,18 @@ const alertSeverityOptions = [
 ];
 
 const findingStatusOptions = [
-  { value: 'open', label: '待修复' },
-  { value: 'fixing', label: '修复中' },
-  { value: 'fixed', label: '已修复' },
-  { value: 'ignored', label: '已忽略' },
+  { value: 'open', label: 'To be fixed' },
+  { value: 'fixing', label: 'Under repair' },
+  { value: 'fixed', label: 'Fixed' },
+  { value: 'ignored', label: 'ignored' },
 ];
 
 const findingSeverityOptions = [
-  { value: 'critical', label: '严重' },
-  { value: 'high', label: '高危' },
-  { value: 'medium', label: '中危' },
-  { value: 'low', label: '低危' },
-  { value: 'unknown', label: '未知' },
+  { value: 'critical', label: 'Critical' },
+  { value: 'high', label: 'High risk' },
+  { value: 'medium', label: 'Medium risk' },
+  { value: 'low', label: 'Low risk' },
+  { value: 'unknown', label: 'Unknown' },
 ];
 
 const vulnTypeOptions = Object.entries(vulnTypeText).map(([value, label]) => ({ value, label }));
@@ -150,10 +150,10 @@ function bridgeTag(record: CloudAlert) {
   const status = record.annotations?.bridgeStatus;
   if (status === 'bridged') {
     const incidentId = record.annotations?.incidentId;
-    return <Tag color="green">已建单{incidentId ? ` #${incidentId}` : ''}</Tag>;
+    return <Tag color="green">Order has been created{incidentId ? ` #${incidentId}` : ''}</Tag>;
   }
-  if (status === 'failed') return <Tag color="red">建单失败</Tag>;
-  if (status === 'claimed') return <Tag color="gold">建单中</Tag>;
+  if (status === 'failed') return <Tag color="red">Order creation failed</Tag>;
+  if (status === 'claimed') return <Tag color="gold">Order is being created</Tag>;
   return <span className="text-gray-400">-</span>;
 }
 
@@ -293,35 +293,35 @@ function CloudSignalsPageContent() {
 
   const handleAcknowledge = (record: CloudAlert) => {
     acknowledgeMutation.mutate(record.id, {
-      onSuccess: () => message.success(`已认领告警「${record.name}」`),
-      onError: error => message.error(serverErrorMessage(error, '认领告警失败')),
+      onSuccess: () => message.success(`Alarm claimed "${record.name}」`),
+      onError: error => message.error(serverErrorMessage(error, 'Failed to claim alarm')),
     });
   };
 
   const handleResolve = (record: CloudAlert) => {
     resolveMutation.mutate(record.id, {
-      onSuccess: () => message.success(`已关闭告警「${record.name}」`),
-      onError: error => message.error(serverErrorMessage(error, '关闭告警失败')),
+      onSuccess: () => message.success(`Alarm closed "${record.name}」`),
+      onError: error => message.error(serverErrorMessage(error, 'Failed to close alarm')),
     });
   };
 
   const handleIgnore = (record: SecurityFinding) => {
     ignoreMutation.mutate(record.id, {
-      onSuccess: () => message.success(`已忽略漏洞「${record.name}」`),
-      onError: error => message.error(serverErrorMessage(error, '忽略漏洞失败')),
+      onSuccess: () => message.success(`Vulnerability ignored"${record.name}」`),
+      onError: error => message.error(serverErrorMessage(error, 'Ignore vulnerability failed')),
     });
   };
 
   const handleReopen = (record: SecurityFinding) => {
     reopenMutation.mutate(record.id, {
-      onSuccess: () => message.success(`已重新打开漏洞「${record.name}」`),
-      onError: error => message.error(serverErrorMessage(error, '重新打开漏洞失败')),
+      onSuccess: () => message.success(`Vulnerability has been reopened"${record.name}」`),
+      onError: error => message.error(serverErrorMessage(error, 'Failed to reopen vulnerability')),
     });
   };
 
   const alertColumns: ColumnsType<CloudAlert> = [
     {
-      title: '告警',
+      title: 'Alarm',
       width: 260,
       render: (_: unknown, record: CloudAlert) => (
         <div>
@@ -336,13 +336,13 @@ function CloudSignalsPageContent() {
       ),
     },
     {
-      title: '级别',
+      title: 'Level',
       dataIndex: 'severity',
       width: 80,
       render: (value: string) => <Tag color={severityColor[value] || 'default'}>{value || '-'}</Tag>,
     },
     {
-      title: '状态',
+      title: 'Status',
       dataIndex: 'status',
       width: 100,
       render: (value: string) => {
@@ -351,30 +351,30 @@ function CloudSignalsPageContent() {
       },
     },
     {
-      title: '服务',
+      title: 'Service',
       dataIndex: 'service',
       width: 120,
       render: (value?: string) => value || '-',
     },
     {
-      title: '来源 IP',
+      title: 'Source IP',
       dataIndex: 'sourceIp',
       width: 140,
       render: (value?: string) => value || '-',
     },
     {
-      title: '触发时间',
+      title: 'Trigger time',
       dataIndex: 'firedAt',
       width: 170,
       render: (value?: string) => formatTime(value),
     },
     {
-      title: '建单',
+      title: 'Create an order',
       width: 120,
       render: (_: unknown, record: CloudAlert) => bridgeTag(record),
     },
     {
-      title: '操作',
+      title: 'Actions',
       key: 'action',
       width: 140,
       render: (_: unknown, record: CloudAlert) => {
@@ -388,18 +388,20 @@ function CloudSignalsPageContent() {
                 loading={acknowledgeMutation.isPending}
                 onClick={() => handleAcknowledge(record)}
               >
-                认领
+
+                Claim
               </Button>
             )}
             <Popconfirm
-              title="关闭告警"
-              description={`确认关闭告警「${record.name}」？本地关闭不会影响云监控侧状态。`}
-              okText="关闭"
-              cancelText="取消"
+              title="Close alarm"
+              description={`Confirm to close the alarm "${record.name}"? Local shutdown will not affect the status of the cloud monitoring side.`}
+              okText="Close"
+              cancelText="Cancel"
               onConfirm={() => handleResolve(record)}
             >
               <Button type="link" size="small" danger>
-                关闭
+
+                Close
               </Button>
             </Popconfirm>
           </Space>
@@ -410,7 +412,7 @@ function CloudSignalsPageContent() {
 
   const findingColumns: ColumnsType<SecurityFinding> = [
     {
-      title: '漏洞',
+      title: 'Vulnerability',
       width: 280,
       render: (_: unknown, record: SecurityFinding) => (
         <div>
@@ -423,7 +425,7 @@ function CloudSignalsPageContent() {
       ),
     },
     {
-      title: '严重度',
+      title: 'Severity',
       width: 120,
       render: (_: unknown, record: SecurityFinding) => (
         <Space orientation="vertical" size={0}>
@@ -437,13 +439,13 @@ function CloudSignalsPageContent() {
       ),
     },
     {
-      title: '类型',
+      title: 'Type',
       dataIndex: 'vulnType',
       width: 130,
       render: (value?: string) => (value ? vulnTypeText[value] || value : '-'),
     },
     {
-      title: '状态',
+      title: 'Status',
       dataIndex: 'status',
       width: 100,
       render: (value: string) => {
@@ -452,7 +454,7 @@ function CloudSignalsPageContent() {
       },
     },
     {
-      title: '实例',
+      title: 'Instances',
       width: 200,
       render: (_: unknown, record: SecurityFinding) => (
         <div>
@@ -462,13 +464,13 @@ function CloudSignalsPageContent() {
       ),
     },
     {
-      title: '公网 IP',
+      title: 'Public IP',
       dataIndex: 'internetIp',
       width: 140,
       render: (value?: string) => value || '-',
     },
     {
-      title: '关联 CI',
+      title: 'Associated CI',
       width: 160,
       render: (_: unknown, record: SecurityFinding) =>
         record.ciId ? (
@@ -476,16 +478,16 @@ function CloudSignalsPageContent() {
             {record.ciName || record.ciNumber || `#${record.ciId}`}
           </Button>
         ) : (
-          <span className="text-gray-400">未关联</span>
+          <span className="text-gray-400">Not associated</span>
         ),
     },
     {
-      title: '最近发现',
+      title: 'Recently discovered',
       width: 160,
       render: (_: unknown, record: SecurityFinding) => formatTime(record.lastSeenAt || record.lastSyncedAt),
     },
     {
-      title: '操作',
+      title: 'Actions',
       key: 'action',
       width: 120,
       render: (_: unknown, record: SecurityFinding) => {
@@ -494,14 +496,15 @@ function CloudSignalsPageContent() {
         if (active) {
           return (
             <Popconfirm
-              title="忽略漏洞"
-              description={`确认忽略漏洞「${record.name}」？忽略后不再计入未修复统计。`}
-              okText="忽略"
-              cancelText="取消"
+              title="Ignore vulnerability"
+              description={`Confirm ignore vulnerability "${record.name}"? After being ignored, it will no longer be counted in the unrepaired statistics.`}
+              okText="ignore"
+              cancelText="Cancel"
               onConfirm={() => handleIgnore(record)}
             >
               <Button type="link" size="small" danger loading={ignoreMutation.isPending}>
-                忽略
+
+                ignore
               </Button>
             </Popconfirm>
           );
@@ -513,7 +516,8 @@ function CloudSignalsPageContent() {
             loading={reopenMutation.isPending}
             onClick={() => handleReopen(record)}
           >
-            重新打开
+
+            Reopen
           </Button>
         );
       },
@@ -522,7 +526,7 @@ function CloudSignalsPageContent() {
 
   const syncColumns: ColumnsType<CloudSignalSyncState> = [
     {
-      title: '云账号',
+      title: 'Cloud account',
       width: 200,
       render: (_: unknown, record: CloudSignalSyncState) => (
         <div>
@@ -532,13 +536,13 @@ function CloudSignalsPageContent() {
       ),
     },
     {
-      title: '信号',
+      title: 'signal',
       width: 130,
       render: (_: unknown, record: CloudSignalSyncState) =>
         signalKindText[record.signalKind] || record.signalKind,
     },
     {
-      title: '状态',
+      title: 'Status',
       width: 100,
       render: (_: unknown, record: CloudSignalSyncState) => {
         const meta = syncStateMeta[record.state];
@@ -546,23 +550,23 @@ function CloudSignalsPageContent() {
       },
     },
     {
-      title: '最近成功',
+      title: 'Recent success',
       width: 170,
       render: (_: unknown, record: CloudSignalSyncState) => formatTime(record.lastSuccessAt),
     },
     {
-      title: '本批条数',
+      title: 'Number of items in this batch',
       dataIndex: 'itemsSynced',
       width: 100,
     },
     {
-      title: '连续失败',
+      title: 'Continuous failures',
       dataIndex: 'consecutiveFailures',
       width: 100,
       render: (value: number) => (value > 0 ? <Tag color="red">{value}</Tag> : 0),
     },
     {
-      title: '最近错误',
+      title: 'Recent error',
       render: (_: unknown, record: CloudSignalSyncState) =>
         record.lastErrorMessage ? (
           <span className="text-xs text-red-600">
@@ -580,41 +584,43 @@ function CloudSignalsPageContent() {
   const syncProblemStates = syncStates.filter(state => state.state !== 'ready');
 
   const summaryItems = [
-    { key: 'critical', label: '严重' },
-    { key: 'high', label: '高危' },
-    { key: 'medium', label: '中危' },
-    { key: 'low', label: '低危' },
-    { key: 'unknown', label: '未知' },
+    { key: 'critical', label: 'Critical' },
+    { key: 'high', label: 'High risk' },
+    { key: 'medium', label: 'Medium risk' },
+    { key: 'low', label: 'Low risk' },
+    { key: 'unknown', label: 'Unknown' },
   ];
 
-  const alertErrorText = serverErrorMessage(alertsQuery.error, '加载云监控告警失败，请重试');
-  const findingErrorText = serverErrorMessage(findingsQuery.error, '加载安全漏洞失败，请重试');
-  const syncErrorText = serverErrorMessage(syncQuery.error, '加载同步状态失败，请重试');
+  const alertErrorText = serverErrorMessage(alertsQuery.error, 'Failed to load cloud monitoring alarm, please try again');
+  const findingErrorText = serverErrorMessage(findingsQuery.error, 'Failed to load security vulnerability, please try again');
+  const syncErrorText = serverErrorMessage(syncQuery.error, 'Failed to load sync status, please try again');
 
   return (
     <Card>
       <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold">云安全与告警</h1>
+          <h1 className="text-2xl font-bold">Cloud Security and Alerting</h1>
           <p className="text-gray-500 mt-1">
-            云监控告警与云安全中心漏洞，按云账号定时同步；P1/P2 告警由后端自动建事件单。
+
+            Cloud monitoring alarms and cloud security center vulnerabilities are synchronized regularly according to the cloud account; P1/P2 alarms are automatically created by the backend.
           </p>
         </div>
         <Space>
           <Button icon={<RefreshCw />} loading={refreshing} onClick={refreshAll}>
-            刷新
+
+            Refresh
           </Button>
-          <Button onClick={() => router.push('/cmdb/cloud-resources')}>云资源</Button>
+          <Button onClick={() => router.push('/cmdb/cloud-resources')}>Cloud Resources</Button>
         </Space>
       </div>
 
       <Breadcrumb
         style={{ marginBottom: 16 }}
         items={[
-          { title: '首页' },
-          { title: '配置管理' },
+          { title: 'Home page' },
+          { title: 'Configuration Management' },
           { title: <a onClick={() => router.push('/cmdb')}>CMDB</a> },
-          { title: '云安全与告警' },
+          { title: 'Cloud Security and Alerting' },
         ]}
       />
 
@@ -624,10 +630,11 @@ function CloudSignalsPageContent() {
           showIcon
           style={{ marginBottom: 16 }}
           title={syncErrorText}
-          description="同步状态取不到时无法判断告警和漏洞是否是最新数据。"
+          description="When the synchronization status cannot be obtained, it is impossible to determine whether the alarms and vulnerabilities are the latest data."
           action={
             <Button size="small" onClick={() => syncQuery.refetch()}>
-              重试
+
+              Retry
             </Button>
           }
         />
@@ -636,20 +643,20 @@ function CloudSignalsPageContent() {
           type="info"
           showIcon
           style={{ marginBottom: 16 }}
-          title="还没有云信号同步记录"
-          description="同步按云账号执行：先在云账号中配置 secret:// 或 env:// 凭据引用，worker 下一轮同步后会在这里写入状态。"
+          title="There is no cloud signal synchronization record yet"
+          description="Synchronization is performed according to the cloud account: first configure the secret:// or env:// credential reference in the cloud account, and the worker will write the status here after the next round of synchronization."
         />
       ) : hasUnavailable ? (
         <Alert
           type="warning"
           showIcon
           style={{ marginBottom: 16 }}
-          title="部分云账号同步失败"
+          title="Some cloud accounts failed to synchronize"
           description={syncProblemStates
             .filter(state => state.state === 'unavailable')
             .map(
               state =>
-                `${state.accountName || `#${state.cloudAccountId}`}（${signalKindText[state.signalKind] || state.signalKind}）：${state.lastErrorMessage || '未知错误'}`,
+                `${state.accountName || `#${state.cloudAccountId}`}（${signalKindText[state.signalKind] || state.signalKind}）：${state.lastErrorMessage || 'Unknown error'}`,
             )
             .join('；')}
         />
@@ -658,16 +665,16 @@ function CloudSignalsPageContent() {
           type="info"
           showIcon
           style={{ marginBottom: 16 }}
-          title="部分云账号尚未配置同步凭据"
-          description="未配置的账号不会拉取告警和漏洞；其余账号已按计划同步。"
+          title="Some cloud accounts have not been configured with synchronization credentials."
+          description="Unconfigured accounts will not pull alerts and vulnerabilities; other accounts have been synchronized as scheduled."
         />
       ) : (
         <Alert
           type="success"
           showIcon
           style={{ marginBottom: 16 }}
-          title="云信号同步正常"
-          description={`最近一轮：${formatTime(
+          title="Cloud signal synchronization is normal"
+          description={`Latest round:${formatTime(
             syncStates.reduce<string | undefined>(
               (latest, state) =>
                 state.lastSuccessAt && (!latest || dayjs(state.lastSuccessAt).isAfter(dayjs(latest)))
@@ -680,7 +687,7 @@ function CloudSignalsPageContent() {
       )}
 
       {syncStates.length > 0 && (
-        <Card size="small" title="同步状态" style={{ marginBottom: 16 }}>
+        <Card size="small" title="Sync Status" style={{ marginBottom: 16 }}>
           <Table
             rowKey={record => `${record.cloudAccountId}-${record.signalKind}`}
             size="small"
@@ -702,7 +709,8 @@ function CloudSignalsPageContent() {
             label: (
               <Space size={6}>
                 <BellRing className="h-4 w-4" />
-                云监控告警
+
+                Cloud monitoring alarm
               </Space>
             ),
             children: (
@@ -712,7 +720,7 @@ function CloudSignalsPageContent() {
                     <Select
                       mode="multiple"
                       allowClear
-                      placeholder="状态"
+                      placeholder="Status"
                       style={{ minWidth: 160 }}
                       options={alertStatusOptions}
                     />
@@ -721,7 +729,7 @@ function CloudSignalsPageContent() {
                     <Select
                       mode="multiple"
                       allowClear
-                      placeholder="级别"
+                      placeholder="Level"
                       style={{ minWidth: 140 }}
                       options={alertSeverityOptions}
                     />
@@ -731,7 +739,7 @@ function CloudSignalsPageContent() {
                       allowClear
                       showSearch
                       optionFilterProp="label"
-                      placeholder="云账号"
+                      placeholder="Cloud account"
                       style={{ minWidth: 180 }}
                       options={accountOptions}
                     />
@@ -739,7 +747,7 @@ function CloudSignalsPageContent() {
                   <Form.Item name="search" className="!mb-0">
                     <Input
                       allowClear
-                      placeholder="名称 / 告警 ID / 描述"
+                      placeholder="Name/Alarm ID/Description"
                       style={{ width: 220 }}
                       onPressEnter={applyAlertFilters}
                     />
@@ -747,10 +755,12 @@ function CloudSignalsPageContent() {
                   <Form.Item className="!mb-0">
                     <Space>
                       <Button type="primary" icon={<Search />} onClick={applyAlertFilters}>
-                        查询
+
+                        Query
                       </Button>
                       <Button icon={<RotateCcw />} onClick={resetAlertFilters}>
-                        重置
+
+                        Reset
                       </Button>
                     </Space>
                   </Form.Item>
@@ -764,7 +774,8 @@ function CloudSignalsPageContent() {
                     title={alertErrorText}
                     action={
                       <Button size="small" onClick={() => alertsQuery.refetch()}>
-                        重试
+
+                        Retry
                       </Button>
                     }
                   />
@@ -781,7 +792,7 @@ function CloudSignalsPageContent() {
                     pageSize: alertPage.pageSize,
                     total: alertTotal,
                     showSizeChanger: true,
-                    showTotal: total => `共 ${total} 条告警`,
+                    showTotal: total => `Total ${total} Alarm`,
                     onChange: (page, pageSize) => setAlertPage({ current: page, pageSize }),
                   }}
                 />
@@ -793,7 +804,8 @@ function CloudSignalsPageContent() {
             label: (
               <Space size={6}>
                 <ShieldAlert className="h-4 w-4" />
-                安全漏洞
+
+                Security Vulnerability
               </Space>
             ),
             children: (
@@ -801,7 +813,7 @@ function CloudSignalsPageContent() {
                 <Card size="small" style={{ marginBottom: 16 }}>
                   <Space size="large" wrap>
                     <Statistic
-                      title="未修复合计"
+                      title="Unrepaired total"
                       value={summaryQuery.isError ? '—' : (summary?.total ?? 0)}
                       prefix={<ShieldAlert className="mr-2 text-red-500" />}
                     />
@@ -818,7 +830,8 @@ function CloudSignalsPageContent() {
                     ))}
                   </Space>
                   <div className="text-xs text-gray-500 mt-2">
-                    只统计待修复与修复中的漏洞；已修复和已忽略不计入。
+
+                    Only vulnerabilities that need to be fixed and those in the process of being fixed are counted; fixed and ignored vulnerabilities are not counted.
                   </div>
                 </Card>
 
@@ -832,7 +845,7 @@ function CloudSignalsPageContent() {
                     <Select
                       mode="multiple"
                       allowClear
-                      placeholder="状态"
+                      placeholder="Status"
                       style={{ minWidth: 160 }}
                       options={findingStatusOptions}
                     />
@@ -841,7 +854,7 @@ function CloudSignalsPageContent() {
                     <Select
                       mode="multiple"
                       allowClear
-                      placeholder="严重度"
+                      placeholder="Severity"
                       style={{ minWidth: 140 }}
                       options={findingSeverityOptions}
                     />
@@ -849,20 +862,20 @@ function CloudSignalsPageContent() {
                   <Form.Item name="vulnType" className="!mb-0">
                     <Select
                       allowClear
-                      placeholder="漏洞类型"
+                      placeholder="Vulnerability type"
                       style={{ minWidth: 160 }}
                       options={vulnTypeOptions}
                     />
                   </Form.Item>
                   <Form.Item name="instanceId" className="!mb-0">
-                    <Input allowClear placeholder="ECS 实例 ID" style={{ width: 180 }} />
+                    <Input allowClear placeholder="ECS instance ID" style={{ width: 180 }} />
                   </Form.Item>
                   <Form.Item name="cloudAccountId" className="!mb-0">
                     <Select
                       allowClear
                       showSearch
                       optionFilterProp="label"
-                      placeholder="云账号"
+                      placeholder="Cloud account"
                       style={{ minWidth: 180 }}
                       options={accountOptions}
                     />
@@ -870,7 +883,7 @@ function CloudSignalsPageContent() {
                   <Form.Item name="search" className="!mb-0">
                     <Input
                       allowClear
-                      placeholder="漏洞名称 / CVE"
+                      placeholder="Vulnerability name / CVE"
                       style={{ width: 180 }}
                       onPressEnter={applyFindingFilters}
                     />
@@ -878,10 +891,12 @@ function CloudSignalsPageContent() {
                   <Form.Item className="!mb-0">
                     <Space>
                       <Button type="primary" icon={<Search />} onClick={applyFindingFilters}>
-                        查询
+
+                        Query
                       </Button>
                       <Button icon={<RotateCcw />} onClick={resetFindingFilters}>
-                        重置
+
+                        Reset
                       </Button>
                     </Space>
                   </Form.Item>
@@ -895,7 +910,8 @@ function CloudSignalsPageContent() {
                     title={findingErrorText}
                     action={
                       <Button size="small" onClick={() => findingsQuery.refetch()}>
-                        重试
+
+                        Retry
                       </Button>
                     }
                   />
@@ -912,7 +928,7 @@ function CloudSignalsPageContent() {
                     pageSize: findingPage.pageSize,
                     total: findingTotal,
                     showSizeChanger: true,
-                    showTotal: total => `共 ${total} 条漏洞`,
+                    showTotal: total => `Total ${total} vulnerability`,
                     onChange: (page, pageSize) => setFindingPage({ current: page, pageSize }),
                   }}
                 />

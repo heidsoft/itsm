@@ -969,7 +969,7 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
                 { value: 'low', label: t('problemInvestigation.confidenceLabels.low') },
                 { value: 'medium', label: t('problemInvestigation.confidenceLabels.medium') },
                 { value: 'high', label: t('problemInvestigation.confidenceLabels.high') },
-                { value: 'critical', label: t('problemInvestigation.knowledgeArticleStatus.draft') === '草稿' ? '紧急' : 'Critical' },
+                { value: 'critical', label: t('problemInvestigation.knowledgeArticleStatus.draft') === "Draft" ? 'Urgent' : 'Critical' },
               ]}
             />
           </Form.Item>

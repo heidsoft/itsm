@@ -852,7 +852,7 @@ func TestChangeController_UpdateChange_P12_GovernanceGuard(t *testing.T) {
 		var resp common.Response
 		require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
 		assert.Equal(t, common.InternalErrorCode, resp.Code)
-		assert.Contains(t, resp.Message, "更新变更失败")
+		assert.Contains(t, resp.Message, "Failed to update changes")
 	})
 
 	t.Run("pending 下改 Type+ImpactScope+Justification 组合被拒并命名字段", func(t *testing.T) {
@@ -870,7 +870,7 @@ func TestChangeController_UpdateChange_P12_GovernanceGuard(t *testing.T) {
 		assert.Equal(t, http.StatusInternalServerError, w.Code)
 		var resp common.Response
 		require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
-		assert.Contains(t, resp.Message, "更新变更失败")
+		assert.Contains(t, resp.Message, "Failed to update changes")
 	})
 
 	t.Run("pending 下改 ImplementationPlan/RollbackPlan/AffectedCIs 被拒", func(t *testing.T) {
@@ -888,7 +888,7 @@ func TestChangeController_UpdateChange_P12_GovernanceGuard(t *testing.T) {
 		assert.Equal(t, http.StatusInternalServerError, w.Code)
 		var resp common.Response
 		require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
-		assert.Contains(t, resp.Message, "更新变更失败")
+		assert.Contains(t, resp.Message, "Failed to update changes")
 	})
 
 	t.Run("approved 下仅改运营字段（Title/Description/Planned*/RelatedTickets）放行", func(t *testing.T) {
@@ -937,7 +937,7 @@ func TestChangeController_UpdateChange_P12_GovernanceGuard(t *testing.T) {
 		assert.Equal(t, http.StatusInternalServerError, w.Code)
 		var resp common.Response
 		require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
-		assert.Contains(t, resp.Message, "更新变更失败")
+		assert.Contains(t, resp.Message, "Failed to update changes")
 	})
 }
 

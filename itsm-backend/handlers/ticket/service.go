@@ -38,7 +38,7 @@ func NewService(repo Repository, productionSvc *service.TicketService, slaMonito
 // PauseSLA 暂停工单 SLA 计时，落到 SLA 领域的权威实现。
 func (s *Service) PauseSLA(ctx context.Context, tenantID, ticketID int, reason string) error {
 	if s.slaMonitor == nil {
-		return common.NewBusinessError(common.ServiceUnavailableCode, "SLA 计时服务未接入", "")
+		return common.NewBusinessError(common.ServiceUnavailableCode, "SLA timing service is not connected", "")
 	}
 	return s.slaMonitor.PauseSLA(ctx, tenantID, "ticket", ticketID, reason)
 }
@@ -46,7 +46,7 @@ func (s *Service) PauseSLA(ctx context.Context, tenantID, ticketID int, reason s
 // ResumeSLA 恢复工单 SLA 计时（暂停时长顺延截止时间）。
 func (s *Service) ResumeSLA(ctx context.Context, tenantID, ticketID int) error {
 	if s.slaMonitor == nil {
-		return common.NewBusinessError(common.ServiceUnavailableCode, "SLA 计时服务未接入", "")
+		return common.NewBusinessError(common.ServiceUnavailableCode, "SLA timing service is not connected", "")
 	}
 	return s.slaMonitor.ResumeSLA(ctx, tenantID, "ticket", ticketID)
 }
@@ -179,7 +179,7 @@ func (s *Service) Update(ctx context.Context, tenantID int, id int, params *Upda
 		return nil, err
 	}
 	if !datascope.CanWriteResource(actorID, actorRole, current.RequesterID, current.AssigneeID) {
-		return nil, common.NewForbiddenError("无权限修改该工单：仅创建人、受理人或管理员可操作")
+		return nil, common.NewForbiddenError("No permission to modify this work order: only the creator, assignee or administrator can operate")
 	}
 	if params.Version == 0 {
 		params.Version = current.Version
@@ -287,7 +287,7 @@ func (s *Service) Delete(ctx context.Context, id int, tenantID int, actorID int,
 		return err
 	}
 	if !datascope.CanWriteResource(actorID, actorRole, current.RequesterID, current.AssigneeID) {
-		return common.NewForbiddenError("无权限删除该工单：仅创建人、受理人或管理员可操作")
+		return common.NewForbiddenError("No permission to delete this work order: only the creator, assignee or administrator can operate it")
 	}
 	return s.repo.Delete(ctx, id, tenantID)
 }
@@ -303,7 +303,7 @@ func (s *Service) BatchDelete(ctx context.Context, ids []int, tenantID int, acto
 				return err
 			}
 			if !datascope.CanWriteResource(actorID, actorRole, current.RequesterID, current.AssigneeID) {
-				return common.NewForbiddenError(fmt.Sprintf("无权限删除工单 %d：仅创建人、受理人或管理员可操作", id))
+				return common.NewForbiddenError(fmt.Sprintf("No permission to delete work order %d: only the creator, assignee or administrator can operate", id))
 			}
 		}
 	}
@@ -387,7 +387,7 @@ func (s *Service) lifecycleGuard(ctx context.Context, ticketID, actorID int, act
 		return nil, err
 	}
 	if !datascope.CanWriteResource(actorID, actorRole, current.RequesterID, current.AssigneeID) {
-		return nil, common.NewForbiddenError(fmt.Sprintf("无权限%s该工单：仅创建人、受理人或管理员可操作", action))
+		return nil, common.NewForbiddenError(fmt.Sprintf("No permission %s for this work order: only the creator, assignee or administrator can operate it", action))
 	}
 	return current, nil
 }
@@ -396,7 +396,7 @@ func (s *Service) lifecycleGuard(ctx context.Context, ticketID, actorID int, act
 // 与 incident 领域的 lifecycleError 对齐。
 func lifecycleError(err error) error {
 	if errors.Is(err, ErrTicketInvalidTransition) {
-		return common.NewBusinessError(common.ConflictCode, "当前工单状态不允许此操作", "")
+		return common.NewBusinessError(common.ConflictCode, "The current work order status does not allow this operation", "")
 	}
 	return err
 }
@@ -471,7 +471,7 @@ func (s *Service) attachSLACompliance(ctx context.Context, tenantID int, window 
 // ExportTickets 导出工单，委派给生产服务层（其查询已带 TenantID 谓词）。
 func (s *Service) ExportTickets(ctx context.Context, tenantID int, filters map[string]interface{}, format string) ([]byte, error) {
 	if s.productionSvc == nil {
-		return nil, common.NewBusinessError(common.ServiceUnavailableCode, "工单导出服务未接入", "")
+		return nil, common.NewBusinessError(common.ServiceUnavailableCode, "The work order export service is not connected", "")
 	}
 	return s.productionSvc.ExportTickets(ctx, tenantID, filters, format)
 }
@@ -524,7 +524,7 @@ func dtoTemplateToDomain(t *dto.TicketTemplate) *TicketTemplate {
 // GetTicketTemplates returns all ticket templates.
 func (s *Service) GetTicketTemplates(ctx context.Context, tenantID int) ([]*TicketTemplate, error) {
 	if s.productionSvc == nil {
-		return nil, fmt.Errorf("工单模板服务不可用")
+		return nil, fmt.Errorf("The ticket template service is unavailable")
 	}
 	items, err := s.productionSvc.GetTicketTemplates(ctx, tenantID)
 	if err != nil {
@@ -542,7 +542,7 @@ func (s *Service) GetTicketTemplates(ctx context.Context, tenantID int) ([]*Tick
 // GetTicketTemplate returns a single template.
 func (s *Service) GetTicketTemplate(ctx context.Context, tenantID int, templateID int) (*TicketTemplate, error) {
 	if s.productionSvc == nil {
-		return nil, fmt.Errorf("工单模板服务不可用")
+		return nil, fmt.Errorf("The ticket template service is unavailable")
 	}
 	t, err := s.productionSvc.GetTicketTemplate(ctx, tenantID, templateID)
 	if err != nil {
@@ -554,7 +554,7 @@ func (s *Service) GetTicketTemplate(ctx context.Context, tenantID int, templateI
 // CreateTicketTemplate creates a new template.
 func (s *Service) CreateTicketTemplate(ctx context.Context, tenantID int, req *dto.TicketTemplate) (*TicketTemplate, error) {
 	if s.productionSvc == nil {
-		return nil, fmt.Errorf("工单模板服务不可用")
+		return nil, fmt.Errorf("The ticket template service is unavailable")
 	}
 	created, err := s.productionSvc.CreateTicketTemplate(ctx, tenantID, req)
 	if err != nil {
@@ -562,7 +562,7 @@ func (s *Service) CreateTicketTemplate(ctx context.Context, tenantID int, req *d
 	}
 	t, ok := created.(*dto.TicketTemplate)
 	if !ok {
-		return nil, fmt.Errorf("工单模板创建返回类型异常")
+		return nil, fmt.Errorf("Return type exception when creating work order template")
 	}
 	return dtoTemplateToDomain(t), nil
 }
@@ -570,7 +570,7 @@ func (s *Service) CreateTicketTemplate(ctx context.Context, tenantID int, req *d
 // UpdateTicketTemplate updates a template.
 func (s *Service) UpdateTicketTemplate(ctx context.Context, tenantID int, templateID int, req *dto.TicketTemplate) (*TicketTemplate, error) {
 	if s.productionSvc == nil {
-		return nil, fmt.Errorf("工单模板服务不可用")
+		return nil, fmt.Errorf("The ticket template service is unavailable")
 	}
 	updated, err := s.productionSvc.UpdateTicketTemplate(ctx, tenantID, templateID, req)
 	if err != nil {
@@ -578,7 +578,7 @@ func (s *Service) UpdateTicketTemplate(ctx context.Context, tenantID int, templa
 	}
 	t, ok := updated.(*dto.TicketTemplate)
 	if !ok {
-		return nil, fmt.Errorf("工单模板更新返回类型异常")
+		return nil, fmt.Errorf("Work order template update return type exception")
 	}
 	return dtoTemplateToDomain(t), nil
 }
@@ -586,7 +586,7 @@ func (s *Service) UpdateTicketTemplate(ctx context.Context, tenantID int, templa
 // DeleteTicketTemplate deletes a template.
 func (s *Service) DeleteTicketTemplate(ctx context.Context, tenantID int, templateID int) error {
 	if s.productionSvc == nil {
-		return fmt.Errorf("工单模板服务不可用")
+		return fmt.Errorf("The ticket template service is unavailable")
 	}
 	return s.productionSvc.DeleteTicketTemplate(ctx, tenantID, templateID)
 }
@@ -594,7 +594,7 @@ func (s *Service) DeleteTicketTemplate(ctx context.Context, tenantID int, templa
 // UpdateTicketTemplateStatus enables or disables a template.
 func (s *Service) UpdateTicketTemplateStatus(ctx context.Context, tenantID int, templateID int, isActive bool) (*TicketTemplate, error) {
 	if s.productionSvc == nil {
-		return nil, fmt.Errorf("工单模板服务不可用")
+		return nil, fmt.Errorf("The ticket template service is unavailable")
 	}
 	t, err := s.productionSvc.UpdateTicketTemplateStatus(ctx, tenantID, templateID, isActive)
 	if err != nil {
@@ -606,7 +606,7 @@ func (s *Service) UpdateTicketTemplateStatus(ctx context.Context, tenantID int, 
 // CopyTicketTemplate copies a template with a new name.
 func (s *Service) CopyTicketTemplate(ctx context.Context, tenantID int, templateID int, newName string) (*TicketTemplate, error) {
 	if s.productionSvc == nil {
-		return nil, fmt.Errorf("工单模板服务不可用")
+		return nil, fmt.Errorf("The ticket template service is unavailable")
 	}
 	t, err := s.productionSvc.CopyTicketTemplate(ctx, tenantID, templateID, newName)
 	if err != nil {
@@ -618,7 +618,7 @@ func (s *Service) CopyTicketTemplate(ctx context.Context, tenantID int, template
 // GetTicketTemplateCategories returns template categories.
 func (s *Service) GetTicketTemplateCategories(ctx context.Context, tenantID int) ([]string, error) {
 	if s.productionSvc == nil {
-		return nil, fmt.Errorf("工单模板服务不可用")
+		return nil, fmt.Errorf("The ticket template service is unavailable")
 	}
 	return s.productionSvc.GetTicketTemplateCategories(ctx, tenantID)
 }
@@ -646,7 +646,7 @@ func (s *Service) UpdateSubtask(ctx context.Context, tenantID int, subtaskID int
 		return nil, err
 	}
 	if !datascope.CanWriteResource(actorID, actorRole, current.RequesterID, current.AssigneeID) {
-		return nil, common.NewForbiddenError("无权限修改该子任务：仅创建人、受理人或管理员可操作")
+		return nil, common.NewForbiddenError("No permission to modify this subtask: only the creator, assignee or administrator can operate")
 	}
 	// 修复：原代码比较 *current.ParentTicketID != tenantID —— ParentTicketID 是父工单 ID，
 	// 恒不等于 tenantID，导致所有子任务更新都被误判为"不属于父工单"。正确语义是：
@@ -668,7 +668,7 @@ func (s *Service) DeleteSubtask(ctx context.Context, subtaskID int, tenantID int
 		return err
 	}
 	if !datascope.CanWriteResource(actorID, actorRole, current.RequesterID, current.AssigneeID) {
-		return common.NewForbiddenError("无权限删除该子任务：仅创建人、受理人或管理员可操作")
+		return common.NewForbiddenError("No permission to delete this subtask: only the creator, assignee or administrator can operate")
 	}
 	return s.repo.Delete(ctx, subtaskID, tenantID)
 }

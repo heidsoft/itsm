@@ -56,6 +56,15 @@ const CATEGORY_COLORS: Record<string, string> = {
   general: 'default',
 };
 
+// Labels preserve both current API keys and legacy category values when saving/filtering.
+const CATEGORY_LABELS: Readonly<Record<string, string>> = {
+  server: 'Servers', network: 'Network', database: 'Database',
+  application: 'Application', security: 'Security', general: 'General',
+  服务器: 'Servers', 安全: 'Security', 数据库: 'Database', 网络安全: 'Network Security', 应用: 'Application',
+  终端支持: 'Endpoint Support', 网络: 'Network', 模板: 'Template',
+};
+const categoryLabel = (value: string) => Object.hasOwn(CATEGORY_LABELS, value) ? CATEGORY_LABELS[value] : value;
+
 export default function StandardChangesPage() {
   const router = useRouter();
   const { t } = useI18n();
@@ -93,7 +102,7 @@ export default function StandardChangesPage() {
       setTotal(data.total);
     } catch (error) {
       console.error('Failed to fetch templates:', error);
-      message.error(t('standardChanges.loadFailed') || '获取模板列表失败');
+      message.error(t('standardChanges.loadFailed') || 'Failed to load templates');
     } finally {
       setLoading(false);
     }
@@ -142,12 +151,12 @@ export default function StandardChangesPage() {
   const handleDelete = async (id: number) => {
     try {
       await StandardChangeApi.deleteTemplate(id);
-      message.success(t('common.deleteSuccess') || '删除成功');
+      message.success(t('common.deleteSuccess') || 'Deleted');
       fetchTemplates();
       fetchCategories();
     } catch (error) {
       console.error('Failed to delete template:', error);
-      message.error(t('common.deleteFailed') || '删除失败');
+      message.error(t('common.deleteFailed') || 'Delete failed');
     }
   };
 
@@ -162,12 +171,12 @@ export default function StandardChangesPage() {
     try {
       const values = instantiateForm.getFieldsValue();
       const result = await StandardChangeApi.instantiate(selectedTemplate.id, values);
-      message.success(t('standardChanges.instantiateSuccess') || '已成功从模板创建变更');
+      message.success(t('standardChanges.instantiateSuccess') || 'Successfully created change from template');
       setInstantiateModalVisible(false);
       router.push(`/changes/${result.changeId}`);
     } catch (error) {
       console.error('Failed to instantiate:', error);
-      message.error(t('standardChanges.instantiateFailed') || '从模板创建变更失败');
+      message.error(t('standardChanges.instantiateFailed') || 'Failed to create change from template');
     }
   };
 
@@ -176,10 +185,10 @@ export default function StandardChangesPage() {
       const values = await form.validateFields();
       if (editingTemplate) {
         await StandardChangeApi.updateTemplate(editingTemplate.id, values);
-        message.success(t('common.saveSuccess') || '更新成功');
+        message.success(t('common.saveSuccess') || 'Updated');
       } else {
         await StandardChangeApi.createTemplate(values);
-        message.success(t('common.submitSuccess') || '创建成功');
+        message.success(t('common.submitSuccess') || 'Created');
       }
       setModalVisible(false);
       fetchTemplates();
@@ -188,15 +197,15 @@ export default function StandardChangesPage() {
       console.error('Failed to submit:', error);
       message.error(
         editingTemplate
-          ? t('common.saveFailed') || '更新失败'
-          : t('common.submitFailed') || '创建失败'
+          ? t('common.saveFailed') || 'Update failed'
+          : t('common.submitFailed') || 'Creation failed'
       );
     }
   };
 
   const columns = [
     {
-      title: '模板名称',
+      title: 'Template Name',
       dataIndex: 'title',
       key: 'title',
       render: (text: string, record: StandardChange) => (
@@ -211,16 +220,16 @@ export default function StandardChangesPage() {
       ),
     },
     {
-      title: '分类',
+      title: 'Category',
       dataIndex: 'category',
       key: 'category',
       width: 120,
       render: (cat: string) => (
-        <Tag color={CATEGORY_COLORS[cat] || 'default'}>{cat || 'general'}</Tag>
+        <Tag color={CATEGORY_COLORS[cat] || 'default'}>{categoryLabel(cat || 'general')}</Tag>
       ),
     },
     {
-      title: '风险等级',
+      title: 'Risk Level',
       dataIndex: 'riskLevel',
       key: 'riskLevel',
       width: 100,
@@ -231,7 +240,7 @@ export default function StandardChangesPage() {
       ),
     },
     {
-      title: '影响范围',
+      title: 'Impact Range',
       dataIndex: 'impactScope',
       key: 'impactScope',
       width: 100,
@@ -240,53 +249,55 @@ export default function StandardChangesPage() {
       ),
     },
     {
-      title: '预计工期',
+      title: 'Estimated construction period',
       dataIndex: 'expectedDuration',
       key: 'expectedDuration',
       width: 100,
-      render: (mins: number) => (mins ? `${mins}分钟` : '-'),
+      render: (mins: number) => (mins ? `${mins} minutes` : '-'),
     },
     {
-      title: '免审批',
+      title: 'No approval required',
       dataIndex: 'approvalRequired',
       key: 'approvalRequired',
       width: 100,
       render: (required: boolean) =>
         required ? (
           <Tag icon={<AlertCircle size={12} />} color='orange'>
-            需审批
+
+            Approval required
           </Tag>
         ) : (
           <Tag icon={<CheckCircle size={12} />} color='green'>
-            免审批
+
+            No approval required
           </Tag>
         ),
     },
     {
-      title: '操作',
+      title: 'Actions',
       key: 'action',
       width: 180,
       render: (_: unknown, record: StandardChange) => (
         <Space>
-          <Tooltip title='从模板创建变更'>
+          <Tooltip title="Create changes from template">
             <Button
-              aria-label="从模板创建变更"
+              aria-label="Create changes from template"
               type='link'
               icon={<PlayCircle size={14} />}
               onClick={() => handleInstantiate(record)}
             />
           </Tooltip>
-          <Tooltip title='编辑'>
-            <Button aria-label="编辑" type='link' icon={<Edit size={14} />} onClick={() => handleEdit(record)} />
+          <Tooltip title="Edit">
+            <Button aria-label="Edit" type='link' icon={<Edit size={14} />} onClick={() => handleEdit(record)} />
           </Tooltip>
           <Popconfirm
-            title='确定要删除此模板吗？'
+            title="Are you sure you want to delete this template?"
             onConfirm={() => handleDelete(record.id)}
-            okText='确定'
-            cancelText='取消'
+            okText="OK"
+            cancelText="Cancel"
           >
-            <Tooltip title='删除'>
-              <Button aria-label="删除" type='link' danger icon={<Delete size={14} />} />
+            <Tooltip title="Delete">
+              <Button aria-label="Delete" type='link' danger icon={<Delete size={14} />} />
             </Tooltip>
           </Popconfirm>
         </Space>
@@ -299,11 +310,12 @@ export default function StandardChangesPage() {
       <div className='mb-6'>
         <div className='flex items-center justify-between mb-4'>
           <div>
-            <h1 className='text-2xl font-bold text-gray-800'>标准变更库</h1>
-            <p className='text-gray-500 mt-1'>管理预批准的标准变更模板</p>
+            <h1 className='text-2xl font-bold text-gray-800'>Standard Changes Library</h1>
+            <p className='text-gray-500 mt-1'>Manage pre-approved standard change templates</p>
           </div>
           <Button type='primary' icon={<Plus size={16} />} onClick={handleCreate}>
-            新建模板
+
+            New Template
           </Button>
         </div>
 
@@ -311,7 +323,7 @@ export default function StandardChangesPage() {
           <Row gutter={16} className='mb-4'>
             <Col span={8}>
               <Input
-                placeholder='搜索模板名称或描述...'
+                placeholder="Search template name or description..."
                 prefix={<Search size={14} />}
                 value={search}
                 onChange={e => setSearch(e.target.value)}
@@ -320,7 +332,7 @@ export default function StandardChangesPage() {
             </Col>
             <Col span={6}>
               <Select
-                placeholder='选择分类'
+                placeholder="Select category"
                 style={{ width: '100%' }}
                 allowClear
                 value={category || undefined}
@@ -331,14 +343,15 @@ export default function StandardChangesPage() {
               >
                 {categories.map(cat => (
                   <Select.Option key={cat} value={cat}>
-                    {cat}
+                    {categoryLabel(cat)}
                   </Select.Option>
                 ))}
               </Select>
             </Col>
             <Col span={4}>
               <Button type='primary' onClick={handleSearch}>
-                搜索
+
+                Search
               </Button>
             </Col>
           </Row>
@@ -354,7 +367,7 @@ export default function StandardChangesPage() {
               total: total,
               showSizeChanger: true,
               showQuickJumper: true,
-              showTotal: total => `共 ${total} 条`,
+              showTotal: total => `Total ${total} items`,
               onChange: (p, ps) => {
                 setPage(p);
                 setPageSize(ps);
@@ -367,14 +380,16 @@ export default function StandardChangesPage() {
                   description={
                     templates.length === 0 ? (
                       <span>
-                        暂无标准变更模板
+
+                        There is no standard change template yet
                         <br />
                         <Button type='link' onClick={handleCreate}>
-                          创建模板
+
+                          Create template
                         </Button>
                       </span>
                     ) : (
-                      '暂无匹配结果'
+                      'No matching results yet'
                     )
                   }
                 />
@@ -386,42 +401,39 @@ export default function StandardChangesPage() {
 
       {/* 创建/编辑模板 Modal */}
       <Modal
-        title={editingTemplate ? '编辑标准变更模板' : '新建标准变更模板'}
+        title={editingTemplate ? 'Edit Standard Change Template' : 'Create a new standard change template'}
         open={modalVisible}
         onCancel={() => setModalVisible(false)}
         onOk={handleSubmit}
         width={700}
-        okText={editingTemplate ? '更新' : '创建'}
-        cancelText='取消'
+        okText={editingTemplate ? 'Update' : 'Create'}
+        cancelText="Cancel"
       >
         <Form form={form} layout='vertical' className='mt-4'>
           <Form.Item
             name='title'
-            label='模板名称'
-            rules={[{ required: true, message: '请输入模板名称' }]}
+            label="Template Name"
+            rules={[{ required: true, message: 'Please enter template name' }]}
           >
-            <Input placeholder='例如：服务器重启流程' />
+            <Input placeholder="For example: server restart process" />
           </Form.Item>
 
-          <Form.Item name='description' label='模板描述'>
-            <Input.TextArea rows={2} placeholder='简要描述此模板的用途...' />
+          <Form.Item name='description' label="Template description">
+            <Input.TextArea rows={2} placeholder="Briefly describe the purpose of this template..." />
           </Form.Item>
 
           <Row gutter={16}>
             <Col span={12}>
-              <Form.Item name='category' label='分类' initialValue='general'>
-                <Select>
-                  <Select.Option value='server'>服务器</Select.Option>
-                  <Select.Option value='network'>网络</Select.Option>
-                  <Select.Option value='database'>数据库</Select.Option>
-                  <Select.Option value='application'>应用</Select.Option>
-                  <Select.Option value='security'>安全</Select.Option>
-                  <Select.Option value='general'>通用</Select.Option>
-                </Select>
+              <Form.Item name='category' label="Category" initialValue='general'>
+                <Select options={Array.from(new Set([
+                  ...Object.keys(CATEGORY_COLORS),
+                  ...categories,
+                  ...(editingTemplate?.category ? [editingTemplate.category] : []),
+                ])).map(value => ({ value, label: categoryLabel(value) }))} />
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item name='expectedDuration' label='预计工期（分钟）' initialValue={30}>
+              <Form.Item name='expectedDuration' label="Estimated construction period (minutes)" initialValue={30}>
                 <Input type='number' min={1} />
               </Form.Item>
             </Col>
@@ -429,20 +441,20 @@ export default function StandardChangesPage() {
 
           <Row gutter={16}>
             <Col span={12}>
-              <Form.Item name='riskLevel' label='风险等级' initialValue='low'>
+              <Form.Item name='riskLevel' label="Risk Level" initialValue='low'>
                 <Select>
-                  <Select.Option value='low'>低</Select.Option>
-                  <Select.Option value='medium'>中</Select.Option>
-                  <Select.Option value='high'>高</Select.Option>
+                  <Select.Option value='low'>Low</Select.Option>
+                  <Select.Option value='medium'>Medium</Select.Option>
+                  <Select.Option value='high'>High</Select.Option>
                 </Select>
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item name='impactScope' label='影响范围' initialValue='low'>
+              <Form.Item name='impactScope' label="Impact Range" initialValue='low'>
                 <Select>
-                  <Select.Option value='low'>低</Select.Option>
-                  <Select.Option value='medium'>中</Select.Option>
-                  <Select.Option value='high'>高</Select.Option>
+                  <Select.Option value='low'>Low</Select.Option>
+                  <Select.Option value='medium'>Medium</Select.Option>
+                  <Select.Option value='high'>High</Select.Option>
                 </Select>
               </Form.Item>
             </Col>
@@ -450,76 +462,76 @@ export default function StandardChangesPage() {
 
           <Form.Item
             name='implementationPlan'
-            label='实施计划步骤'
-            rules={[{ required: true, message: '请输入实施计划步骤' }]}
+            label="Implementation plan steps"
+            rules={[{ required: true, message: 'Please enter the implementation plan steps' }]}
           >
-            <Input.TextArea rows={4} placeholder='详细描述实施步骤...' />
+            <Input.TextArea rows={4} placeholder="Detailed description of implementation steps..." />
           </Form.Item>
 
           <Form.Item
             name='rollbackPlan'
-            label='回滚计划'
-            rules={[{ required: true, message: '请输入回滚计划' }]}
+            label="Rollback Plan"
+            rules={[{ required: true, message: 'Please enter rollback plan' }]}
           >
-            <Input.TextArea rows={3} placeholder='详细描述回滚步骤...' />
+            <Input.TextArea rows={3} placeholder="Detailed description of rollback steps..." />
           </Form.Item>
 
           <Form.Item
             name='approvalRequired'
-            label='是否需要审批'
+            label="Is approval required?"
             valuePropName='checked'
             initialValue={false}
           >
             <Input type='checkbox' />
           </Form.Item>
 
-          <Form.Item name='prerequisites' label='前置条件'>
-            <Select mode='tags' placeholder='输入前置条件，按回车添加'></Select>
+          <Form.Item name='prerequisites' label="Precondition">
+            <Select mode='tags' placeholder="Enter the precondition and press Enter to add"></Select>
           </Form.Item>
 
-          <Form.Item name='remarks' label='备注'>
-            <Input.TextArea rows={2} placeholder='其他备注信息...' />
+          <Form.Item name='remarks' label="Notes">
+            <Input.TextArea rows={2} placeholder="Other remarks..." />
           </Form.Item>
         </Form>
       </Modal>
 
       {/* 从模板创建变更 Modal */}
       <Modal
-        title={`从模板 "${selectedTemplate?.title}" 创建变更`}
+        title={`From template "${selectedTemplate?.title}" Create changes`}
         open={instantiateModalVisible}
         onCancel={() => setInstantiateModalVisible(false)}
         onOk={handleInstantiateSubmit}
-        okText='创建变更'
-        cancelText='取消'
+        okText="Create Change"
+        cancelText="Cancel"
       >
         {selectedTemplate && (
           <div className='mt-4'>
             <Descriptions column={2} size='small' className='mb-4'>
-              <Descriptions.Item label='分类'>
-                <Tag>{selectedTemplate.category}</Tag>
+              <Descriptions.Item label="Category">
+                <Tag>{categoryLabel(selectedTemplate.category)}</Tag>
               </Descriptions.Item>
-              <Descriptions.Item label='风险等级'>
+              <Descriptions.Item label="Risk Level">
                 <Tag color={RISK_COLORS[selectedTemplate.riskLevel]}>
                   {ChangeRiskLabels[selectedTemplate.riskLevel as keyof typeof ChangeRiskLabels]}
                 </Tag>
               </Descriptions.Item>
-              <Descriptions.Item label='预计工期'>
-                {selectedTemplate.expectedDuration}分钟
+              <Descriptions.Item label="Estimated construction period">
+                {selectedTemplate.expectedDuration}minutes
               </Descriptions.Item>
-              <Descriptions.Item label='免审批'>
-                {selectedTemplate.approvalRequired ? '否' : '是'}
+              <Descriptions.Item label="No approval required">
+                {selectedTemplate.approvalRequired ? 'No' : 'Yes'}
               </Descriptions.Item>
             </Descriptions>
 
             <Form form={instantiateForm} layout='vertical'>
-              <Form.Item name='title' label='变更标题' initialValue={selectedTemplate.title}>
+              <Form.Item name='title' label="Change title" initialValue={selectedTemplate.title}>
                 <Input />
               </Form.Item>
-              <Form.Item name='plannedStartDate' label='计划开始时间'>
-                <DatePicker showTime style={{ width: '100%' }} placeholder='选择计划开始时间' />
+              <Form.Item name='plannedStartDate' label="Planned start time">
+                <DatePicker showTime style={{ width: '100%' }} placeholder="Select planned start time" />
               </Form.Item>
-              <Form.Item name='plannedEndDate' label='计划结束时间'>
-                <DatePicker showTime style={{ width: '100%' }} placeholder='选择计划结束时间' />
+              <Form.Item name='plannedEndDate' label="Planned end time">
+                <DatePicker showTime style={{ width: '100%' }} placeholder="Select planned end time" />
               </Form.Item>
             </Form>
           </div>

@@ -234,7 +234,7 @@ describe('BPMNDesigner', () => {
   });
 
   describe('节点搜索', () => {
-    const SEARCH_LABEL = '搜索节点 (Ctrl+F)';
+    const SEARCH_LABEL = "Search nodes (Ctrl+F)";
 
     const rootElement = {
       id: 'Process_1',
@@ -375,8 +375,8 @@ describe('BPMNDesigner', () => {
       openPanel();
       typeKeyword('审批');
 
-      expect(optionIds()).toEqual(['主管审批用户任务', '人事审批用户任务']);
-      expect(screen.getByText('共 2 个命中')).toBeInTheDocument();
+      expect(optionIds()).toEqual(["主管审批User Task", "人事审批User Task"]);
+      expect(screen.getByText("2 matches")).toBeInTheDocument();
       expect(mockAddMarker).toHaveBeenCalledWith('Task_approve', 'bpmn-search-hit');
       expect(mockAddMarker).toHaveBeenCalledWith('Task_2', 'bpmn-search-hit');
       ['Process_1', 'Flow_1_label', 'Task_hidden'].forEach(id => {
@@ -389,7 +389,7 @@ describe('BPMNDesigner', () => {
       openPanel();
       typeKeyword('TASK_2');
 
-      expect(optionIds()).toEqual(['人事审批用户任务']);
+      expect(optionIds()).toEqual(["人事审批User Task"]);
     });
 
     it('按本地化类型命中未命名的节点', () => {
@@ -411,11 +411,11 @@ describe('BPMNDesigner', () => {
 
       expect(within(screen.getByRole('search')).queryByRole('listbox')).not.toBeInTheDocument();
 
-      typeKeyword('用户任务');
-      expect(optionIds()).toEqual(['Task_no_name用户任务']);
+      typeKeyword("User Task");
+      expect(optionIds()).toEqual(["Task_no_nameUser Task"]);
 
       typeKeyword('usertask');
-      expect(optionIds()).toEqual(['Task_no_name用户任务']);
+      expect(optionIds()).toEqual(["Task_no_nameUser Task"]);
     });
 
     it('无命中时给出可尝试的提示且不添加高亮', () => {
@@ -423,7 +423,7 @@ describe('BPMNDesigner', () => {
       openPanel();
       typeKeyword('不存在的节点');
 
-      expect(screen.getByText('没有匹配的节点，可尝试名称、ID 或类型')).toBeInTheDocument();
+      expect(screen.getByText("No matching nodes. Try name, ID or type")).toBeInTheDocument();
       expect(within(screen.getByRole('search')).queryByRole('listbox')).not.toBeInTheDocument();
       expect(mockAddMarker).not.toHaveBeenCalled();
     });
@@ -484,12 +484,12 @@ describe('BPMNDesigner', () => {
       typeKeyword('审批');
 
       act(() => {
-        fireEvent.click(screen.getByRole('button', { name: '下一个命中' }));
+        fireEvent.click(screen.getByRole('button', { name: "Next match" }));
       });
       expect(screen.getByText('1/2')).toBeInTheDocument();
 
       act(() => {
-        fireEvent.click(screen.getByRole('button', { name: '上一个命中' }));
+        fireEvent.click(screen.getByRole('button', { name: "Previous match" }));
       });
       expect(screen.getByText('2/2')).toBeInTheDocument();
     });
@@ -505,10 +505,10 @@ describe('BPMNDesigner', () => {
         fireEvent.keyDown(input, { key: 'ArrowDown' });
       });
       // 第 1 个命中已消失 → 不定位，只刷新
-      expect(mockMessageApi.warning).toHaveBeenCalledWith('该节点已不在画布上，命中列表已刷新');
+      expect(mockMessageApi.warning).toHaveBeenCalledWith("That node is no longer on the canvas; matches refreshed");
       expect(mockSelect).not.toHaveBeenCalled();
-      expect(optionIds()).toEqual(['人事审批用户任务']);
-      expect(screen.getByText('共 1 个命中')).toBeInTheDocument();
+      expect(optionIds()).toEqual(["人事审批User Task"]);
+      expect(screen.getByText("1 matches")).toBeInTheDocument();
     });
 
     it('Escape 关闭面板并清除全部高亮', () => {
@@ -537,7 +537,7 @@ describe('BPMNDesigner', () => {
         handler();
       });
 
-      expect(screen.getByText('没有匹配的节点，可尝试名称、ID 或类型')).toBeInTheDocument();
+      expect(screen.getByText("No matching nodes. Try name, ID or type")).toBeInTheDocument();
       expect(mockRemoveMarker).toHaveBeenCalledWith('Task_approve', 'bpmn-search-hit');
     });
   });

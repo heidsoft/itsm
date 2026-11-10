@@ -64,7 +64,7 @@ func (s *ApprovalChainService) CreateApprovalChain(ctx context.Context, req *dto
 		Save(ctx)
 	if err != nil {
 		s.logger.Errorf("创建审批链失败: %v", err)
-		return nil, fmt.Errorf("创建审批链失败: %w", err)
+		return nil, fmt.Errorf("Failed to create approval chain: %w", err)
 	}
 
 	return entity, nil
@@ -78,10 +78,10 @@ func (s *ApprovalChainService) GetApprovalChain(ctx context.Context, id int, ten
 		First(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, fmt.Errorf("审批链不存在: %d", id)
+			return nil, fmt.Errorf("Approval chain does not exist: %d", id)
 		}
 		s.logger.Errorf("获取审批链失败: %v", err)
-		return nil, fmt.Errorf("获取审批链失败: %w", err)
+		return nil, fmt.Errorf("Failed to obtain approval chain: %w", err)
 	}
 	return entity, nil
 }
@@ -104,7 +104,7 @@ func (s *ApprovalChainService) ListApprovalChains(ctx context.Context, tenantID 
 	total, err := query.Count(ctx)
 	if err != nil {
 		s.logger.Errorf("获取审批链总数失败: %v", err)
-		return nil, 0, fmt.Errorf("获取审批链总数失败: %w", err)
+		return nil, 0, fmt.Errorf("Failed to obtain the total number of approval chains: %w", err)
 	}
 
 	entities, err := query.
@@ -114,7 +114,7 @@ func (s *ApprovalChainService) ListApprovalChains(ctx context.Context, tenantID 
 		All(ctx)
 	if err != nil {
 		s.logger.Errorf("获取审批链列表失败: %v", err)
-		return nil, 0, fmt.Errorf("获取审批链列表失败: %w", err)
+		return nil, 0, fmt.Errorf("Failed to obtain approval chain list: %w", err)
 	}
 
 	return entities, total, nil
@@ -129,10 +129,10 @@ func (s *ApprovalChainService) UpdateApprovalChain(ctx context.Context, id int, 
 		Exist(ctx)
 	if err != nil {
 		s.logger.Errorf("检查审批链失败: %v", err)
-		return nil, fmt.Errorf("检查审批链失败: %w", err)
+		return nil, fmt.Errorf("Failed to check approval chain: %w", err)
 	}
 	if !exists {
-		return nil, fmt.Errorf("审批链不存在: %d", id)
+		return nil, fmt.Errorf("Approval chain does not exist: %d", id)
 	}
 
 	update := s.client.ApprovalChain.UpdateOneID(id).
@@ -175,7 +175,7 @@ func (s *ApprovalChainService) UpdateApprovalChain(ctx context.Context, id int, 
 	entity, err := update.Save(ctx)
 	if err != nil {
 		s.logger.Errorf("更新审批链失败: %v", err)
-		return nil, fmt.Errorf("更新审批链失败: %w", err)
+		return nil, fmt.Errorf("Failed to update approval chain: %w", err)
 	}
 
 	return entity, nil
@@ -189,16 +189,16 @@ func (s *ApprovalChainService) DeleteApprovalChain(ctx context.Context, id int, 
 		Exist(ctx)
 	if err != nil {
 		s.logger.Errorf("检查审批链失败: %v", err)
-		return fmt.Errorf("检查审批链失败: %w", err)
+		return fmt.Errorf("Failed to check approval chain: %w", err)
 	}
 	if !exists {
-		return fmt.Errorf("审批链不存在: %d", id)
+		return fmt.Errorf("Approval chain does not exist: %d", id)
 	}
 
 	err = s.client.ApprovalChain.DeleteOneID(id).Exec(ctx)
 	if err != nil {
 		s.logger.Errorf("删除审批链失败: %v", err)
-		return fmt.Errorf("删除审批链失败: %w", err)
+		return fmt.Errorf("Failed to delete approval chain: %w", err)
 	}
 
 	return nil
@@ -229,7 +229,7 @@ func (s *ApprovalChainService) GetApprovalChainStats(ctx context.Context, tenant
 		All(ctx)
 	if err != nil {
 		s.logger.Errorf("获取审批链列表失败: %v", err)
-		return nil, fmt.Errorf("获取审批链列表失败: %w", err)
+		return nil, fmt.Errorf("Failed to obtain approval chain list: %w", err)
 	}
 
 	total := len(chains)

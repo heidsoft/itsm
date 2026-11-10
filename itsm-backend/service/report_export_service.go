@@ -108,7 +108,7 @@ func (s *ReportExportService) ExportToExcel(ctx context.Context, data *dto.DeepA
 	// 生成文件
 	var buf bytes.Buffer
 	if err := f.Write(&buf); err != nil {
-		return nil, "", fmt.Errorf("生成Excel失败: %w", err)
+		return nil, "", fmt.Errorf("Failed to generate Excel: %w", err)
 	}
 
 	filename := fmt.Sprintf("analytics_report_%s.xlsx", time.Now().Format("20060102_150405"))
@@ -294,7 +294,7 @@ func (s *ReportExportService) ExportPredictionToExcel(ctx context.Context, predi
 
 	var buf bytes.Buffer
 	if err := f.Write(&buf); err != nil {
-		return nil, "", fmt.Errorf("生成Excel失败: %w", err)
+		return nil, "", fmt.Errorf("Failed to generate Excel: %w", err)
 	}
 
 	filename := fmt.Sprintf("prediction_report_%s.xlsx", time.Now().Format("20060102_150405"))

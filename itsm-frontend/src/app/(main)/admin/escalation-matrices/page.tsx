@@ -27,25 +27,25 @@ const priorityColorMap: Record<string, string> = {
 };
 
 const priorityLabelMap: Record<string, string> = {
-  critical: '致命',
-  high: '高',
-  medium: '中',
-  low: '低',
+  critical: 'Fatal',
+  high: 'High',
+  medium: 'Medium',
+  low: 'Low',
 };
 
 // 后端 notifyRoles 取主角色词表原值，展示时补中文，避免运维对着 it_admin 猜职责。
 const roleLabelMap: Record<string, string> = {
-  admin: '租户管理员',
-  it_admin: 'IT 管理员',
-  manager: '部门经理',
-  agent: '服务台坐席',
-  requester: '申请人',
+  admin: 'Tenant Administrator',
+  it_admin: 'IT Administrator',
+  manager: 'Manager',
+  agent: 'Help Desk Agent',
+  requester: 'Requester',
 };
 
 function formatMinutes(mins: number): string {
-  if (mins < 60) return `${mins} 分钟`;
-  if (mins < 1440) return `${(mins / 60).toFixed(1)} 小时`;
-  return `${(mins / 1440).toFixed(1)} 天`;
+  if (mins < 60) return `${mins} minutes`;
+  if (mins < 1440) return `${(mins / 60).toFixed(1)} hours`;
+  return `${(mins / 1440).toFixed(1)} days`;
 }
 
 export default function EscalationMatricesPage() {
@@ -65,7 +65,7 @@ export default function EscalationMatricesPage() {
       .catch((err: Error) => {
         if (!alive) return;
         setMatrix(DEFAULT_ESCALATION_MATRIX);
-        setLoadError(err.message || '升级矩阵加载失败');
+        setLoadError(err.message || 'Upgrade matrix loading failed');
       })
       .finally(() => {
         if (alive) setLoading(false);
@@ -99,7 +99,7 @@ export default function EscalationMatricesPage() {
 
   const columns = [
     {
-      title: '优先级',
+      title: 'Priority',
       dataIndex: 'priority',
       key: 'priority',
       width: 110,
@@ -110,14 +110,14 @@ export default function EscalationMatricesPage() {
       ),
     },
     {
-      title: '级别',
+      title: 'Level',
       dataIndex: 'level',
       key: 'level',
       width: 80,
       render: (v: number) => <Tag color="blue">L{v}</Tag>,
     },
     {
-      title: '触发时长',
+      title: 'Trigger duration',
       dataIndex: 'afterMinutes',
       key: 'afterMinutes',
       width: 130,
@@ -129,12 +129,12 @@ export default function EscalationMatricesPage() {
       ),
     },
     {
-      title: '通知角色',
+      title: 'Notification role',
       dataIndex: 'notifyRoles',
       key: 'notifyRoles',
       render: (roles: string[]) =>
         roles.length === 0 ? (
-          <Text type="secondary">未指定角色</Text>
+          <Text type="secondary">No role specified</Text>
         ) : (
           <Space size={4} wrap>
             {roles.map(r => (
@@ -146,12 +146,12 @@ export default function EscalationMatricesPage() {
         ),
     },
     {
-      title: '通知用户',
+      title: 'Notify user',
       dataIndex: 'notifyUserIDs',
       key: 'notifyUserIDs',
       render: (ids: number[]) =>
         ids.length === 0 ? (
-          <Text type="secondary">未指定用户</Text>
+          <Text type="secondary">No user specified</Text>
         ) : (
           <Space size={4} wrap>
             {ids.map(id => (
@@ -163,10 +163,10 @@ export default function EscalationMatricesPage() {
         ),
     },
     {
-      title: '升级说明',
+      title: 'Upgrade instructions',
       dataIndex: 'description',
       key: 'description',
-      render: (v: string) => (v ? <Text>{v}</Text> : <Text type="secondary">无说明</Text>),
+      render: (v: string) => (v ? <Text>{v}</Text> : <Text type="secondary">No description</Text>),
     },
   ];
 
@@ -175,71 +175,74 @@ export default function EscalationMatricesPage() {
       <div>
         <Title level={3} style={{ marginBottom: 4 }}>
           <AlertTriangle style={{ marginRight: 8 }} />
-          SLA 升级矩阵
+
+          SLA upgrade matrix
         </Title>
         <Paragraph type="secondary">
-          按优先级配置的多级升级策略。SLA 阈值被突破后，系统按升级链逐级通知更高职责的处理人。
+
+          Multi-level upgrade strategy configured by priority. After the SLA threshold is exceeded, the system notifies processors with higher responsibilities step by step according to the escalation chain.
         </Paragraph>
       </div>
 
       {loadError && (
         <Alert
-          title="升级矩阵加载失败"
-          description={loadError + '。以下展示的是系统内置默认策略，并非生产配置，请勿据此判断线上升级行为。'}
+          title="Upgrade matrix loading failed"
+          description={loadError + '. What is shown below is the default policy built into the system, not the production configuration. Please do not judge online upgrade behavior based on this.'}
           type="error"
           showIcon
           style={{ marginBottom: 16 }}
           action={
             <Button size="small" onClick={() => window.location.reload()}>
-              重试
+
+              Retry
             </Button>
           }
         />
       )}
 
       <Alert
-        title="本页展示后端当前生效的升级矩阵；租户自定义矩阵由运维按 SLA 策略维护"
+        title="This page displays the upgrade matrix currently in effect on the backend; the tenant's custom matrix is maintained by operation and maintenance according to the SLA policy"
         type="info"
         showIcon
       />
 
       <UsageGuideCard
         style={{ marginBottom: 16 }}
-        title="怎么理解和使用升级矩阵"
-        intro="升级矩阵是 SLA 超时的自动升级策略：工单超过阈值仍未处理时，系统按级别逐级通知更高职责的处理人。本页为只读查看，展示的是后端当前对本租户生效的矩阵。"
+        title="How to understand and use the upgrade matrix"
+        intro="The escalation matrix is an automatic escalation strategy for SLA timeout: when a work order exceeds the threshold and remains unprocessed, the system notifies the processor with higher responsibilities step by step. This page is read-only and displays the backend matrix currently in effect for this tenant."
         steps={[
-          '阅读方式：每个优先级（critical 最高）配置若干升级级别；「触发时长」是从告警开始计时累计的分钟数，达到即触发该级升级，按「通知角色 / 通知用户」定位升级对象。',
-          '通知角色取系统主角色码（如 manager、it_admin、admin），升级时按用户主角色精确查人；角色为空且用户为空的那一级不会发出通知。',
-          '生效范围：SLA 告警升级、工单超时升级与 BPMN 任务超时共用这套矩阵，无需单独启用。',
-          '前置条件：SLA 时限来自「SLA 模板 / SLA 定义」，未安装 SLA 的优先级不会触发升级；站内信之外的渠道需在「系统配置」中配好 SMTP 等通知能力。',
-          '建议用法：对照本表确认触发时长与组织值班响应能力是否匹配；如需调整矩阵本身，请通过后端升级矩阵接口（PUT /api/v1/escalation-matrices）提交，页面暂不提供在线编辑。',
+          'Reading method: Configure several upgrade levels for each priority (critical is the highest); "Trigger duration" is the accumulated number of minutes from the start of the alarm. Once reached, an upgrade of this level is triggered. Press "Notify Role/Notify User" to locate the upgrade target.',
+          'The notification role takes the system main role code (such as manager, it_admin, admin). When upgrading, the person will be accurately checked according to the user\'s main role; no notification will be issued at the level where the role is empty and the user is empty.',
+          'Effective scope: SLA alarm upgrade, work order timeout upgrade and BPMN task timeout share this matrix and do not need to be enabled separately.',
+          'Prerequisite: SLA time limit comes from "SLA Template/SLA Definition". Priorities without SLA installed will not trigger upgrades; channels other than intra-site messaging need to configure notification capabilities such as SMTP in "System Configuration".',
+          'Recommended usage: Compare this table to confirm whether the trigger duration matches the organization\'s on-duty response capability; if you need to adjust the matrix itself, please submit it through the back-end upgrade matrix interface (PUT /api/v1/escalation-matrices). The page does not currently provide online editing.',
         ]}
       />
 
       <Row gutter={[16, 16]}>
         <Col xs={24} sm={8}>
           <Card>
-            <Statistic title="覆盖优先级" value={stats.priorities} suffix="个" />
+            <Statistic title="Override priority" value={stats.priorities} suffix="items" />
           </Card>
         </Col>
         <Col xs={24} sm={8}>
           <Card>
-            <Statistic title="升级级别总数" value={stats.totalLevels} suffix="级" styles={{ content: { color: '#1677ff' } }} />
+            <Statistic title="Total number of upgrade levels" value={stats.totalLevels} suffix="level" styles={{ content: { color: '#1677ff' } }} />
           </Card>
         </Col>
         <Col xs={24} sm={8}>
           <Card>
             <Statistic
-              title="通知目标数"
+              title="Number of notification targets"
               value={stats.totalTargets}
-              suffix="个"
+              suffix="items"
               styles={{ content: { color: '#722ed1' } }}
             />
           </Card>
         </Col>
       </Row>
 
-      <Card title="升级矩阵（按优先级和级别）">
+      <Card title="Upgrade matrix (by priority and level)">
         <Table
           rowKey={r => `${r.priority}-${r.level}`}
           loading={loading}
@@ -253,7 +256,7 @@ export default function EscalationMatricesPage() {
         />
       </Card>
 
-      <Card title="按优先级分组视图">
+      <Card title="Group views by priority">
         <Row gutter={[16, 16]}>
           {Object.entries(matrix).map(([priority, levels]) => (
             <Col xs={24} md={12} lg={8} key={priority}>
@@ -264,7 +267,7 @@ export default function EscalationMatricesPage() {
                     <Tag color={priorityColorMap[priority] ?? 'default'}>
                       {priorityLabelMap[priority] ? `${priority} · ${priorityLabelMap[priority]}` : priority}
                     </Tag>
-                    <Text type="secondary">{levels.length} 级升级</Text>
+                    <Text type="secondary">{levels.length}  level upgrade</Text>
                   </Space>
                 }
               >

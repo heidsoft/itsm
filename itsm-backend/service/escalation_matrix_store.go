@@ -46,7 +46,7 @@ func (s *SystemConfigEscalationMatrixStore) Load(ctx context.Context, tenantID i
 		if ent.IsNotFound(err) {
 			return nil, nil
 		}
-		return nil, fmt.Errorf("查询升级矩阵配置失败: %w", err)
+		return nil, fmt.Errorf("Failed to query upgrade matrix configuration: %w", err)
 	}
 	if row.Value == "" {
 		return nil, nil
@@ -54,7 +54,7 @@ func (s *SystemConfigEscalationMatrixStore) Load(ctx context.Context, tenantID i
 
 	var matrix EscalationMatrix
 	if err := json.Unmarshal([]byte(row.Value), &matrix); err != nil {
-		return nil, fmt.Errorf("升级矩阵配置 JSON 非法 (config_id=%d): %w", row.ID, err)
+		return nil, fmt.Errorf("Illegal upgrade matrix configuration JSON (config_id=%d): %w", row.ID, err)
 	}
 	if matrix == nil {
 		return nil, nil
@@ -66,7 +66,7 @@ func (s *SystemConfigEscalationMatrixStore) Load(ctx context.Context, tenantID i
 func (s *SystemConfigEscalationMatrixStore) Save(ctx context.Context, tenantID int, matrix EscalationMatrix) error {
 	raw, err := json.Marshal(matrix)
 	if err != nil {
-		return fmt.Errorf("序列化升级矩阵失败: %w", err)
+		return fmt.Errorf("Failed to serialize upgrade matrix: %w", err)
 	}
 	value := string(raw)
 	now := time.Now()
@@ -90,7 +90,7 @@ func (s *SystemConfigEscalationMatrixStore) Save(ctx context.Context, tenantID i
 			SetDescription("升级矩阵（优先级 → 升级级别链）").
 			SetUpdatedAt(now)
 		if _, err := upd.Save(ctx); err != nil {
-			return fmt.Errorf("更新升级矩阵配置失败: %w", err)
+			return fmt.Errorf("Failed to update upgrade matrix configuration: %w", err)
 		}
 		return nil
 
@@ -106,12 +106,12 @@ func (s *SystemConfigEscalationMatrixStore) Save(ctx context.Context, tenantID i
 			SetUpdatedAt(now).
 			Save(ctx)
 		if err != nil {
-			return fmt.Errorf("创建升级矩阵配置失败: %w", err)
+			return fmt.Errorf("Failed to create upgrade matrix configuration: %w", err)
 		}
 		return nil
 
 	default:
-		return fmt.Errorf("查询升级矩阵配置失败: %w", err)
+		return fmt.Errorf("Failed to query upgrade matrix configuration: %w", err)
 	}
 }
 
@@ -128,10 +128,10 @@ func (s *SystemConfigEscalationMatrixStore) Delete(ctx context.Context, tenantID
 		if ent.IsNotFound(err) {
 			return nil
 		}
-		return fmt.Errorf("查询升级矩阵配置失败: %w", err)
+		return fmt.Errorf("Failed to query upgrade matrix configuration: %w", err)
 	}
 	if err := s.client.SystemConfig.DeleteOneID(existing.ID).Exec(ctx); err != nil {
-		return fmt.Errorf("删除升级矩阵配置失败: %w", err)
+		return fmt.Errorf("Failed to delete upgrade matrix configuration: %w", err)
 	}
 	return nil
 }

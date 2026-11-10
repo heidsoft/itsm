@@ -61,7 +61,7 @@ func (e *CustomProcessEngine) HandleBPMNServiceTaskCommand(ctx context.Context, 
 		}
 	}
 	if handler == nil {
-		return fmt.Errorf("ServiceTask handler '%s' 未注册 (element=%s service_task_type=%s)", serviceRef, task.ID, task.ServiceTaskType)
+		return fmt.Errorf("ServiceTask handler '%s' is not registered (element=%s service_task_type=%s)", serviceRef, task.ID, task.ServiceTaskType)
 	}
 	variables := mergeServiceTaskVariables(instance.Variables, task)
 	variables["_commandId"] = cmd.ID
@@ -95,7 +95,7 @@ func (e *CustomProcessEngine) HandleBPMNServiceTaskCommand(ctx context.Context, 
 			// 的日志定位改造因此没达到目的）。在调用点补齐流程实例、定义、节点与
 			// 本次 occurrence，运维在 dead_letter 里就能直接定位到是哪个流程的哪个节点。
 			return fmt.Errorf(
-				"ServiceTask %s 执行失败（element=%s occurrence=%d processInstance=%d processDefinition=%s tenant=%d）: %w",
+				"ServiceTask %s failed to execute (element=%s occurrence=%d processInstance=%d processDefinition=%s tenant=%d): %w",
 				serviceRef, elementID, occurrence, instance.ID, instance.ProcessDefinitionKey, cmd.TenantID, err,
 			)
 		}
@@ -114,7 +114,7 @@ func (e *CustomProcessEngine) HandleBPMNServiceTaskCommand(ctx context.Context, 
 
 	tx, err := e.client.Tx(workflowCtx)
 	if err != nil {
-		return fmt.Errorf("开启 ServiceTask 完成事务失败: %w", err)
+		return fmt.Errorf("Failed to complete transaction by opening ServiceTask: %w", err)
 	}
 	defer func() { _ = tx.Rollback() }()
 	txc := tx.Client()
@@ -127,7 +127,7 @@ func (e *CustomProcessEngine) HandleBPMNServiceTaskCommand(ctx context.Context, 
 		processinstance.IDEQ(instance.ID), processinstance.TenantIDEQ(cmd.TenantID),
 	).Only(workflowCtx)
 	if err != nil {
-		return fmt.Errorf("重新加载流程实例失败: %w", err)
+		return fmt.Errorf("Failed to reload process instance: %w", err)
 	}
 	completed = intMapVariable(current.Variables, "_serviceTaskCompletedOccurrences")
 	if completed[elementID] >= occurrence {
@@ -135,7 +135,7 @@ func (e *CustomProcessEngine) HandleBPMNServiceTaskCommand(ctx context.Context, 
 	}
 	occurrences = intMapVariable(current.Variables, "_serviceTaskOccurrences")
 	if occurrences[elementID] != occurrence {
-		return fmt.Errorf("ServiceTask 完成时流程状态已变化")
+		return fmt.Errorf("Process status changed when ServiceTask completed")
 	}
 	if current.Variables == nil {
 		current.Variables = map[string]interface{}{}
@@ -148,20 +148,20 @@ func (e *CustomProcessEngine) HandleBPMNServiceTaskCommand(ctx context.Context, 
 	completed[elementID] = occurrence
 	current.Variables["_serviceTaskCompletedOccurrences"] = completed
 	if _, err := txc.ProcessInstance.UpdateOneID(current.ID).SetVariables(current.Variables).Save(workflowCtx); err != nil {
-		return fmt.Errorf("保存 ServiceTask 输出失败: %w", err)
+		return fmt.Errorf("Failed to save ServiceTask output: %w", err)
 	}
 	// 补偿范围登记与完成同事务：流程推进到结束事件时才能补偿到它。
 	if err := e.registerCompensation(workflowCtx, txc, current, elementID, serviceRef, occurrence, current.Variables); err != nil {
 		return err
 	}
 	if err := e.markElementDoneStrict(workflowCtx, txc, current, elementID); err != nil {
-		return fmt.Errorf("标记 ServiceTask 完成失败: %w", err)
+		return fmt.Errorf("Marking ServiceTask completion failed: %w", err)
 	}
 	if err := e.executeStep(workflowCtx, txc, current, process, elementID, current.Variables); err != nil {
-		return fmt.Errorf("推进 ServiceTask 后续流程失败: %w", err)
+		return fmt.Errorf("Failed to advance ServiceTask follow-up process: %w", err)
 	}
 	if err := tx.Commit(); err != nil {
-		return fmt.Errorf("提交 ServiceTask 完成事务失败: %w", err)
+		return fmt.Errorf("Failed to submit ServiceTask completion transaction: %w", err)
 	}
 	e.logger.Infow("BPMN ServiceTask command completed", "command_id", cmd.ID, "tenant_id", cmd.TenantID,
 		"process_instance_id", instance.ID, "element_id", elementID, "occurrence", occurrence,
@@ -181,7 +181,7 @@ func (e *CustomProcessEngine) HandleBPMNServiceTaskCommand(ctx context.Context, 
 func (e *CustomProcessEngine) markServiceTaskExecuting(ctx context.Context, cmd *ent.OperationalCommand, instanceID int, elementID string, occurrence int) (bool, error) {
 	tx, err := e.client.Tx(ctx)
 	if err != nil {
-		return false, fmt.Errorf("开启 ServiceTask 执行权事务失败: %w", err)
+		return false, fmt.Errorf("Failed to open ServiceTask execution right transaction: %w", err)
 	}
 	defer func() { _ = tx.Rollback() }()
 	txc := tx.Client()
@@ -203,10 +203,10 @@ func (e *CustomProcessEngine) markServiceTaskExecuting(ctx context.Context, cmd 
 		vars["_serviceTaskExecuting"] = executing
 		return nil
 	}); err != nil {
-		return false, fmt.Errorf("登记 ServiceTask 执行权失败: %w", err)
+		return false, fmt.Errorf("Failed to register ServiceTask execution rights: %w", err)
 	}
 	if err := tx.Commit(); err != nil {
-		return false, fmt.Errorf("提交 ServiceTask 执行权事务失败: %w", err)
+		return false, fmt.Errorf("Failed to commit ServiceTask execution rights transaction: %w", err)
 	}
 	return alreadyExecuting, nil
 }
@@ -220,7 +220,7 @@ func (e *CustomProcessEngine) saveServiceTaskOutput(ctx context.Context, cmd *en
 	}
 	tx, err := e.client.Tx(ctx)
 	if err != nil {
-		return fmt.Errorf("开启 ServiceTask 输出事务失败: %w", err)
+		return fmt.Errorf("Failed to open ServiceTask output transaction: %w", err)
 	}
 	defer func() { _ = tx.Rollback() }()
 	txc := tx.Client()
@@ -233,10 +233,10 @@ func (e *CustomProcessEngine) saveServiceTaskOutput(ctx context.Context, cmd *en
 		}
 		return nil
 	}); err != nil {
-		return fmt.Errorf("保存 ServiceTask 输出变量失败: %w", err)
+		return fmt.Errorf("Failed to save ServiceTask output variable: %w", err)
 	}
 	if err := tx.Commit(); err != nil {
-		return fmt.Errorf("提交 ServiceTask 输出事务失败: %w", err)
+		return fmt.Errorf("Failed to commit ServiceTask output transaction: %w", err)
 	}
 	return nil
 }
@@ -254,7 +254,7 @@ func (e *CustomProcessEngine) clearServiceTaskExecuting(ctx context.Context, cmd
 		vars["_serviceTaskExecuting"] = executing
 		return nil
 	}); err != nil {
-		return fmt.Errorf("清除 ServiceTask 执行权失败: %w", err)
+		return fmt.Errorf("Failed to clear ServiceTask execution rights: %w", err)
 	}
 	return nil
 }

@@ -25,7 +25,7 @@ describe('WorkflowEngine', () => {
       const result = WorkflowEngine.validate({
         nodes: [{ id: '1', name: 'Task', type: 'task', config: { assigneeType: 'user' } }],
       } as any);
-      expect(result.errors.some(e => e.message.includes('开始节点'))).toBe(true);
+      expect(result.errors.some(e => e.message.includes("start node"))).toBe(true);
     });
 
     it('should error on multiple start nodes', () => {
@@ -35,14 +35,14 @@ describe('WorkflowEngine', () => {
           { id: '2', name: 'Start 2', type: 'start', config: {} },
         ],
       } as any);
-      expect(result.errors.some(e => e.message.includes('只能有一个开始节点'))).toBe(true);
+      expect(result.errors.some(e => e.message.includes("only have one start node"))).toBe(true);
     });
 
     it('should warn when no end node', () => {
       const result = WorkflowEngine.validate({
         nodes: [{ id: '1', name: 'Start', type: 'start', config: {} }],
       } as any);
-      expect(result.warnings.some(e => e.message.includes('结束节点'))).toBe(true);
+      expect(result.warnings.some(e => e.message.includes("end node"))).toBe(true);
     });
 
     it('should validate task node requires assigneeType', () => {
@@ -117,7 +117,7 @@ describe('WorkflowEngine', () => {
         ],
         connections: [{ id: 'c1', sourceNodeId: 'nonexist', targetNodeId: '2' }],
       } as any);
-      expect(result.errors.some(e => e.message.includes('源节点'))).toBe(true);
+      expect(result.errors.some(e => e.message.includes('Source node of the connection'))).toBe(true);
     });
 
     it('should validate connections - target must exist', () => {
@@ -128,7 +128,7 @@ describe('WorkflowEngine', () => {
         ],
         connections: [{ id: 'c1', sourceNodeId: '1', targetNodeId: 'nonexist' }],
       } as any);
-      expect(result.errors.some(e => e.message.includes('目标节点'))).toBe(true);
+      expect(result.errors.some(e => e.message.includes("The target node of the connection"))).toBe(true);
     });
 
     it('should error if start node has input connection', () => {
@@ -139,7 +139,7 @@ describe('WorkflowEngine', () => {
         ],
         connections: [{ id: 'c1', sourceNodeId: '2', targetNodeId: '1' }],
       } as any);
-      expect(result.errors.some(e => e.message.includes('开始节点不能有输入连接'))).toBe(true);
+      expect(result.errors.some(e => e.message.includes("Start node cannot have input connections"))).toBe(true);
     });
 
     it('should error if end node has output connection', () => {
@@ -150,7 +150,7 @@ describe('WorkflowEngine', () => {
         ],
         connections: [{ id: 'c1', sourceNodeId: '2', targetNodeId: '1' }],
       } as any);
-      expect(result.errors.some(e => e.message.includes('结束节点不能有输出连接'))).toBe(true);
+      expect(result.errors.some(e => e.message.includes("End node cannot have output connections"))).toBe(true);
     });
 
     it('should warn about orphaned nodes', () => {
@@ -162,7 +162,7 @@ describe('WorkflowEngine', () => {
         ],
         connections: [{ id: 'c1', sourceNodeId: '1', targetNodeId: '3' }],
       } as any);
-      expect(result.warnings.some(e => e.message.includes('孤立'))).toBe(true);
+      expect(result.warnings.some(e => e.message.includes('Possibly orphaned'))).toBe(true);
     });
 
     it('should warn about cycles', () => {
@@ -178,7 +178,7 @@ describe('WorkflowEngine', () => {
           { id: 'c3', sourceNodeId: '3', targetNodeId: '2' },
         ],
       } as any);
-      expect(result.warnings.some(e => e.message.includes('循环'))).toBe(true);
+      expect(result.warnings.some(e => e.message.includes('Loop detected in workflow'))).toBe(true);
     });
 
     it('should pass valid workflow', () => {

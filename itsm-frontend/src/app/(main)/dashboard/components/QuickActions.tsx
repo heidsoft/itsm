@@ -30,7 +30,7 @@ const EnterpriseQuickActionCard: React.FC<{
         router.push(action.path);
       } catch (error) {
         console.error('Navigation error:', error);
-        message.error('导航失败，请稍后重试');
+        message.error('Navigation failed, please try again later');
       }
     }
   };
@@ -117,12 +117,12 @@ const EnterpriseQuickActionCard: React.FC<{
                     router.push(action.path);
                   } catch (error) {
                     console.error('Navigation error:', error);
-                    message.error('导航失败，请稍后重试');
+                    message.error('Navigation failed, please try again later');
                   }
                 }
               }}
             >
-              <span className='group-hover/btn:mr-1 transition-all duration-300'>立即开始</span>
+              <span className='group-hover/btn:mr-1 transition-all duration-300'>Start Now</span>
             </Button>
           </div>
         </div>
@@ -151,9 +151,10 @@ export const QuickActions: React.FC<QuickActionsProps> = React.memo(
             <div className='mb-4'>
               <h2 className='text-lg font-semibold text-gray-900 mb-1 flex items-center gap-2'>
                 <Zap className='text-xl text-blue-500' />
-                快速操作
+
+                Quick Actions
               </h2>
-              <p className='text-sm text-gray-600'>常用任务和快捷方式</p>
+              <p className='text-sm text-gray-600'>Frequently used tasks and shortcuts</p>
             </div>
           )}
 
@@ -177,13 +178,13 @@ export const QuickActions: React.FC<QuickActionsProps> = React.memo(
         <div className={compact ? '' : 'mb-6'}>
           {showTitle && !compact && (
             <div className='mb-4'>
-              <h2 className='text-lg font-semibold text-gray-900 mb-1'>快速操作</h2>
-              <p className='text-sm text-gray-600'>常用任务和快捷方式</p>
+              <h2 className='text-lg font-semibold text-gray-900 mb-1'>Quick Actions</h2>
+              <p className='text-sm text-gray-600'>Frequently used tasks and shortcuts</p>
             </div>
           )}
 
           <Card className='text-center py-12 border-0 rounded-xl shadow-sm'>
-            <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description='暂无快速操作' />
+            <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="No quick operation yet" />
           </Card>
         </div>
       );
@@ -195,9 +196,10 @@ export const QuickActions: React.FC<QuickActionsProps> = React.memo(
           <div className='mb-4'>
             <h2 className='text-lg font-semibold text-gray-900 mb-1 flex items-center gap-2'>
               <Zap className='text-xl text-blue-500' />
-              快速操作
+
+              Quick Actions
             </h2>
-            <p className='text-sm text-gray-600'>常用任务和快捷方式</p>
+            <p className='text-sm text-gray-600'>Frequently used tasks and shortcuts</p>
           </div>
         )}
 

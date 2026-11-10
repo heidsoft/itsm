@@ -86,7 +86,7 @@ const ChangeImpactAnalysis: React.FC<ChangeImpactAnalysisProps> = ({
       try {
         const items = await CMDBApi.getAllCIs({}, 200);
         const mapped: SystemItem[] = items.map(ci => {
-          const ciType = ci.type || '配置项';
+          const ciType = ci.type || 'Configuration item';
           const criticality =
             ci.criticality === 'high' || ci.criticality === 'medium' || ci.criticality === 'low'
               ? ci.criticality
@@ -117,8 +117,8 @@ const ChangeImpactAnalysis: React.FC<ChangeImpactAnalysisProps> = ({
         console.error('Failed to load configuration items:', error);
         if (cancelled) return;
         setSystemOptions([]);
-        setSystemLoadError('加载配置项失败');
-        message.error('加载配置项失败');
+        setSystemLoadError('Failed to load configuration items');
+        message.error('Failed to load configuration items');
       } finally {
         if (!cancelled) setSystemLoading(false);
       }
@@ -132,11 +132,11 @@ const ChangeImpactAnalysis: React.FC<ChangeImpactAnalysisProps> = ({
 
   // 影响程度选项
   const impactLevels = {
-    none: { label: '无影响', score: 0, color: 'green' },
-    low: { label: '轻微影响', score: 1, color: 'blue' },
-    medium: { label: '中等影响', score: 2, color: 'orange' },
-    high: { label: '严重影响', score: 3, color: 'red' },
-    critical: { label: '关键影响', score: 4, color: 'purple' },
+    none: { label: 'No impact', score: 0, color: 'green' },
+    low: { label: 'Minor impact', score: 1, color: 'blue' },
+    medium: { label: 'Moderate impact', score: 2, color: 'orange' },
+    high: { label: 'Severe impact', score: 3, color: 'red' },
+    critical: { label: 'Key impact', score: 4, color: 'purple' },
   };
 
   // 计算影响分数
@@ -203,7 +203,7 @@ const ChangeImpactAnalysis: React.FC<ChangeImpactAnalysisProps> = ({
 
       onSave?.(analysisData);
     } catch (error) {
-      message.error('表单验证失败');
+      message.error('Form validation failed');
     } finally {
       setSubmitting(false);
     }
@@ -227,7 +227,7 @@ const ChangeImpactAnalysis: React.FC<ChangeImpactAnalysisProps> = ({
             item.criticality === 'high' ? 'red' : item.criticality === 'medium' ? 'orange' : 'blue'
           }
         >
-          {item.criticality === 'high' ? '关键' : item.criticality === 'medium' ? '重要' : '一般'}
+          {item.criticality === 'high' ? 'Critical' : item.criticality === 'medium' ? 'Important' : 'Average'}
         </Tag>
       </div>
     </div>
@@ -262,10 +262,10 @@ const ChangeImpactAnalysis: React.FC<ChangeImpactAnalysisProps> = ({
   };
 
   const getImpactStatus = (score: number) => {
-    if (score <= 30) return '低影响';
-    if (score <= 60) return '中等影响';
-    if (score <= 80) return '高影响';
-    return '关键影响';
+    if (score <= 30) return 'Low impact';
+    if (score <= 60) return 'Moderate impact';
+    if (score <= 80) return 'High impact';
+    return 'Key impact';
   };
 
   return (
@@ -273,13 +273,14 @@ const ChangeImpactAnalysis: React.FC<ChangeImpactAnalysisProps> = ({
       title={
         <Space>
           <Target className="w-5 h-5 text-blue-600" />
-          <span>变更影响分析</span>
+          <span>Change impact analysis</span>
         </Space>
       }
       extra={
         !readOnly && (
           <Button type="primary" onClick={handleSubmit} loading={submitting}>
-            保存分析
+
+            Save analysis
           </Button>
         )
       }
@@ -298,15 +299,15 @@ const ChangeImpactAnalysis: React.FC<ChangeImpactAnalysisProps> = ({
                     margin: '0 0 8px 0',
                   }}
                 >
-                  {impactScore}分
+                  {impactScore}points
                 </Title>
-                <Text type="secondary">综合影响评分</Text>
+                <Text type="secondary">Comprehensive impact score</Text>
               </div>
             </Col>
             <Col span={6}>
               <div className="text-center">
                 <div className="text-2xl font-bold text-blue-600">{targetKeys.length}</div>
-                <Text type="secondary">受影响系统</Text>
+                <Text type="secondary">Affected systems</Text>
               </div>
             </Col>
             <Col span={6}>
@@ -314,15 +315,15 @@ const ChangeImpactAnalysis: React.FC<ChangeImpactAnalysisProps> = ({
                 <div className="text-2xl font-bold text-orange-600">
                   {form.getFieldValue('affected_users') || 0}
                 </div>
-                <Text type="secondary">受影响用户</Text>
+                <Text type="secondary">Affected Users</Text>
               </div>
             </Col>
             <Col span={6}>
               <div className="text-center">
                 <div className="text-2xl font-bold text-red-600">
-                  {form.getFieldValue('estimated_downtime') || 0}分钟
+                  {form.getFieldValue('estimated_downtime') || 0}minutes
                 </div>
-                <Text type="secondary">预计停机时间</Text>
+                <Text type="secondary">Estimated downtime</Text>
               </div>
             </Col>
           </Row>
@@ -338,13 +339,13 @@ const ChangeImpactAnalysis: React.FC<ChangeImpactAnalysisProps> = ({
           {/* 业务影响 */}
           <Col xs={24} lg={12}>
             <Form.Item
-              label="业务影响分析"
+              label="Business Impact Analysis"
               name="businessImpact"
-              rules={[{ required: true, message: '请分析业务影响' }]}
+              rules={[{ required: true, message: 'Please analyze the business impact' }]}
             >
               <TextArea
                 rows={4}
-                placeholder="分析变更对业务流程、服务质量、收入等方面的影响..."
+                placeholder="Analyze the impact of changes on business processes, service quality, revenue, etc..."
                 maxLength={1000}
                 showCount
               />
@@ -354,13 +355,13 @@ const ChangeImpactAnalysis: React.FC<ChangeImpactAnalysisProps> = ({
           {/* 技术影响 */}
           <Col xs={24} lg={12}>
             <Form.Item
-              label="技术影响分析"
+              label="Technology Impact Analysis"
               name="technicalImpact"
-              rules={[{ required: true, message: '请分析技术影响' }]}
+              rules={[{ required: true, message: 'Please analyze the technical impact' }]}
             >
               <TextArea
                 rows={4}
-                placeholder="分析变更对系统架构、性能、安全性等方面的影响..."
+                placeholder="Analyze the impact of changes on system architecture, performance, security, etc..."
                 maxLength={1000}
                 showCount
               />
@@ -370,13 +371,13 @@ const ChangeImpactAnalysis: React.FC<ChangeImpactAnalysisProps> = ({
           {/* 用户影响 */}
           <Col xs={24}>
             <Form.Item
-              label="用户影响分析"
+              label="User Impact Analysis"
               name="userImpact"
-              rules={[{ required: true, message: '请分析用户影响' }]}
+              rules={[{ required: true, message: 'Please analyze the user impact' }]}
             >
               <TextArea
                 rows={4}
-                placeholder="分析变更对用户体验、操作习惯、培训需求等方面的影响..."
+                placeholder="Analyze the impact of changes on user experience, operating habits, training needs, etc..."
                 maxLength={1000}
                 showCount
               />
@@ -385,10 +386,10 @@ const ChangeImpactAnalysis: React.FC<ChangeImpactAnalysisProps> = ({
 
           {/* 受影响系统选择 */}
           <Col xs={24} lg={12}>
-            <Form.Item label="受影响系统">
+            <Form.Item label="Affected systems">
               {systemLoadError && (
                 <Alert
-                  title="系统列表加载失败"
+                  title="System list loading failed"
                   description={systemLoadError}
                   type="error"
                   showIcon
@@ -397,7 +398,7 @@ const ChangeImpactAnalysis: React.FC<ChangeImpactAnalysisProps> = ({
               )}
               <Transfer
                 dataSource={systemOptions}
-                titles={['可用系统', '受影响系统']}
+                titles={['Available systems', 'Affected systems']}
                 targetKeys={targetKeys}
                 onChange={keys => setTargetKeys(keys as string[])}
                 render={renderSystemItem}
@@ -414,52 +415,52 @@ const ChangeImpactAnalysis: React.FC<ChangeImpactAnalysisProps> = ({
           <Col xs={24} lg={12}>
             {/* 受影响用户数 */}
             <Form.Item
-              label="受影响用户数"
+              label="Affected User Count"
               name="affectedUsers"
-              rules={[{ required: true, message: '请输入受影响用户数' }]}
+              rules={[{ required: true, message: 'Please enter the number of affected users' }]}
             >
               <Input
                 type="number"
-                placeholder="估计受影响的用户数量"
+                placeholder="Estimated number of affected users"
                 suffix={<Users className="w-4 h-4" />}
               />
             </Form.Item>
 
             {/* 预计停机时间 */}
             <Form.Item
-              label="预计停机时间（分钟）"
+              label="Estimated downtime (minutes)"
               name="estimatedDowntime"
-              rules={[{ required: true, message: '请输入预计停机时间' }]}
+              rules={[{ required: true, message: 'Please enter estimated downtime' }]}
             >
               <Input
                 type="number"
-                placeholder="预计服务中断时间"
+                placeholder="Estimated service outage time"
                 suffix={<Clock className="w-4 h-4" />}
               />
             </Form.Item>
 
             {/* 数据风险等级 */}
             <Form.Item
-              label="数据风险等级"
+              label="Data risk level"
               name="dataRiskLevel"
-              rules={[{ required: true, message: '请选择数据风险等级' }]}
+              rules={[{ required: true, message: 'Please select data risk level' }]}
             >
-              <Select placeholder="选择数据风险等级" options={[
-                { value: 'low', label: '低风险 - 无数据丢失风险' },
-                { value: 'medium', label: '中风险 - 可能需要数据恢复' },
-                { value: 'high', label: '高风险 - 有数据丢失可能' },
-                { value: 'critical', label: '极高风险 - 严重数据损失风险' },
+              <Select placeholder="Select data risk level" options={[
+                { value: 'low', label: 'Low Risk - No risk of data loss' },
+                { value: 'medium', label: 'Medium Risk - Data recovery may be required' },
+                { value: 'high', label: 'High Risk - Possibility of data loss' },
+                { value: 'critical', label: 'Extremely High Risk - Risk of severe data loss' },
               ]} />
             </Form.Item>
 
             {/* 服务依赖 */}
-            <Form.Item label="服务依赖" name="serviceDependencies">
-              <Select mode="tags" placeholder="选择或输入依赖的服务" style={{ width: '100%' }} options={[
-                { value: '认证服务', label: '认证服务' },
-                { value: '支付服务', label: '支付服务' },
-                { value: '通知服务', label: '通知服务' },
-                { value: '日志服务', label: '日志服务' },
-                { value: '文件服务', label: '文件服务' },
+            <Form.Item label="Service dependency" name="serviceDependencies">
+              <Select mode="tags" placeholder="Select or enter dependent services" style={{ width: '100%' }} options={[
+                { value: '认证服务', label: 'Authentication Service' },
+                { value: '支付服务', label: 'Payment service' },
+                { value: '通知服务', label: 'Notification service' },
+                { value: '日志服务', label: 'Log service' },
+                { value: '文件服务', label: 'File Service' },
               ]} />
             </Form.Item>
           </Col>
@@ -467,13 +468,13 @@ const ChangeImpactAnalysis: React.FC<ChangeImpactAnalysisProps> = ({
           {/* 备份策略 */}
           <Col xs={24} lg={12}>
             <Form.Item
-              label="备份策略"
+              label="Backup strategy"
               name="backupStrategy"
-              rules={[{ required: true, message: '请制定备份策略' }]}
+              rules={[{ required: true, message: 'Please develop a backup strategy' }]}
             >
               <TextArea
                 rows={4}
-                placeholder="描述变更前的数据备份和系统备份策略..."
+                placeholder="Describe the data backup and system backup strategy before the change..."
                 maxLength={1000}
                 showCount
               />
@@ -483,13 +484,13 @@ const ChangeImpactAnalysis: React.FC<ChangeImpactAnalysisProps> = ({
           {/* 恢复计划 */}
           <Col xs={24} lg={12}>
             <Form.Item
-              label="恢复计划"
+              label="Recovery Plan"
               name="recoveryPlan"
-              rules={[{ required: true, message: '请制定恢复计划' }]}
+              rules={[{ required: true, message: 'Please develop a recovery plan' }]}
             >
               <TextArea
                 rows={4}
-                placeholder="制定变更失败后的系统恢复计划..."
+                placeholder="Develop a system recovery plan after a failed change..."
                 maxLength={1000}
                 showCount
               />
@@ -500,8 +501,8 @@ const ChangeImpactAnalysis: React.FC<ChangeImpactAnalysisProps> = ({
         {/* 影响程度提示 */}
         {impactScore >= 80 && (
           <Alert
-            title="关键影响警告"
-            description="该变更被评定为关键影响，建议安排在低峰期实施、准备回滚方案并通知所有相关方"
+            title="Critical Impact Warning"
+            description="This change is assessed as having a critical impact. It is recommended to arrange implementation during off-peak periods, prepare a rollback plan, and notify all relevant parties."
             type="error"
             showIcon
             icon={<AlertTriangle className="w-4 h-4" />}
@@ -511,8 +512,8 @@ const ChangeImpactAnalysis: React.FC<ChangeImpactAnalysisProps> = ({
 
         {impactScore >= 60 && impactScore < 80 && (
           <Alert
-            title="高影响提示"
-            description="该变更具有较高影响，建议仔细评估实施时间和风险控制措施。"
+            title="High Impact Tip"
+            description="This change has high impact and it is recommended to carefully evaluate implementation time and risk control measures."
             type="warning"
             showIcon
             className="mt-4"
@@ -521,8 +522,8 @@ const ChangeImpactAnalysis: React.FC<ChangeImpactAnalysisProps> = ({
 
         {impactScore < 30 && (
           <Alert
-            title="低影响确认"
-            description="该变更影响较小，可按标准流程实施。"
+            title="Low impact confirmation"
+            description="This change has a small impact and can be implemented according to standard procedures."
             type="success"
             showIcon
             className="mt-4"

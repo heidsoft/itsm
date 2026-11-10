@@ -31,12 +31,12 @@ import { formatDateTime } from '@/lib/formatters';
 const { Title, Text } = Typography;
 
 const SCENARIO_LABELS: Record<string, string> = {
-  triage: '智能分诊',
-  summarize: '工单总结',
-  analyze: '根因分析',
-  rag_search: '知识检索',
-  chat: 'AI 对话',
-  sla_forecast: 'SLA 预测',
+  triage: 'Intelligent triage',
+  summarize: 'Work order summary',
+  analyze: 'Root Cause Analysis',
+  rag_search: 'Knowledge retrieval',
+  chat: 'AI dialogue',
+  sla_forecast: 'SLA prediction',
 };
 
 const scenarioLabel = (kind: string): string => SCENARIO_LABELS[kind] ?? kind;
@@ -67,7 +67,7 @@ const AIAuditConsole: React.FC = () => {
     try {
       setReport(await aiGetEvaluation(30));
     } catch (e) {
-      message.error(`加载 AI 评估失败：${(e as Error).message}`);
+      message.error(`Failed to load AI evaluation:${(e as Error).message}`);
     } finally {
       setEvalLoading(false);
     }
@@ -83,7 +83,7 @@ const AIAuditConsole: React.FC = () => {
         setLogs(res.items);
         setPagination({ current: res.page, pageSize: res.pageSize, total: res.total });
       } catch (e) {
-        message.error(`加载 AI 审计日志失败：${(e as Error).message}`);
+        message.error(`Failed to load AI audit log:${(e as Error).message}`);
       } finally {
         setLogsLoading(false);
       }
@@ -103,61 +103,61 @@ const AIAuditConsole: React.FC = () => {
 
   const columns = [
     {
-      title: '时间',
+      title: 'Timestamp',
       dataIndex: 'createdAt',
       key: 'createdAt',
       width: 170,
       render: (v: string) => formatDateTime(v),
     },
     {
-      title: '场景',
+      title: 'Scene',
       dataIndex: 'scenario',
       key: 'scenario',
       width: 110,
       render: (v: string) => <Tag color="geekblue">{scenarioLabel(v)}</Tag>,
     },
     {
-      title: '输入引用',
+      title: 'Input reference',
       dataIndex: 'inputRef',
       key: 'inputRef',
       ellipsis: true,
       render: (v: string) => v || '-',
     },
     {
-      title: '模型',
+      title: 'Model',
       dataIndex: 'model',
       key: 'model',
       width: 130,
       render: (v: string) => v || '-',
     },
     {
-      title: '策略版本',
+      title: 'Policy version',
       dataIndex: 'promptVersion',
       key: 'promptVersion',
       width: 110,
       render: (v: string) => (v ? <Tag>{v}</Tag> : '-'),
     },
     {
-      title: '可信度',
+      title: 'Credibility',
       dataIndex: 'confidence',
       key: 'confidence',
       width: 110,
       render: (v: number) => pct(v ?? 0),
     },
     {
-      title: '采纳',
+      title: 'Adopted',
       dataIndex: 'accepted',
       key: 'accepted',
       width: 80,
       render: (v: boolean) =>
-        v ? <Tag color="success">已采纳</Tag> : <Tag color="default">未采纳</Tag>,
+        v ? <Tag color="success">Adopted</Tag> : <Tag color="default">Not adopted</Tag>,
     },
     {
-      title: '操作',
+      title: 'Actions',
       key: 'action',
       width: 80,
       render: (_: unknown, record: AIAuditEntry) => (
-        <a onClick={() => setDetail(record)}>详情</a>
+        <a onClick={() => setDetail(record)}>Details</a>
       ),
     },
   ];
@@ -169,13 +169,14 @@ const AIAuditConsole: React.FC = () => {
           <Space align="center">
             <ShieldCheck size={22} color="#1677ff" />
             <Title level={4} style={{ margin: 0 }}>
-              AI 评估与审计控制台
+
+              AI Assessment and Audit Console
             </Title>
           </Space>
           <Space>
             <Select
               style={{ width: 160 }}
-              placeholder="全部场景"
+              placeholder="All scenes"
               allowClear
               value={kindFilter || undefined}
               onChange={handleKindChange}
@@ -185,13 +186,13 @@ const AIAuditConsole: React.FC = () => {
               }))}
             />
             <a onClick={() => { fetchEvaluation(); fetchLogs(1, pagination.pageSize, kindFilter); }}>
-              <RefreshCw size={16} /> 刷新
+              <RefreshCw size={16} />  Refresh
             </a>
           </Space>
         </Space>
 
         {/* 评估总览 */}
-        <Card title="评估总览（近 30 天）" loading={evalLoading} extra={<BarChart3 size={16} />}>
+        <Card title="Assessment overview (last 30 days)" loading={evalLoading} extra={<BarChart3 size={16} />}>
           {report?.hasData ? (
             <Space size={32} wrap>
               <div style={{ textAlign: 'center' }}>
@@ -202,54 +203,54 @@ const AIAuditConsole: React.FC = () => {
                   format={(p) => `${p}`}
                 />
                 <div>
-                  <Text strong>健康分</Text>
+                  <Text strong>Health points</Text>
                 </div>
               </div>
               <div>
                 <Descriptions column={2} size="small" colon={false}>
-                  <Descriptions.Item label="反馈样本">
+                  <Descriptions.Item label="Feedback sample">
                     <Text strong>{report.totalFeedback}</Text>
                   </Descriptions.Item>
-                  <Descriptions.Item label="有用率">
+                  <Descriptions.Item label="Effective rate">
                     <Text strong>{pct(report.usefulRate)}</Text>
                   </Descriptions.Item>
-                  <Descriptions.Item label="建议采纳率">
+                  <Descriptions.Item label="Recommendation adoption rate">
                     <Text strong>{pct(report.acceptedRate)}</Text>
                   </Descriptions.Item>
-                  <Descriptions.Item label="平均置信度">
+                  <Descriptions.Item label="Average confidence">
                     <Text strong>{pct(report.avgConfidence)}</Text>
                   </Descriptions.Item>
-                  <Descriptions.Item label="模型调用次数">
-                    <Text strong>{report.platform.llmCallCount} 次</Text>
+                  <Descriptions.Item label="Number of model calls">
+                    <Text strong>{report.platform.llmCallCount}  times</Text>
                   </Descriptions.Item>
-                  <Descriptions.Item label="调用成功率">
+                  <Descriptions.Item label="Call success rate">
                     <Text strong>{pct(report.platform.successRate)}</Text>
                   </Descriptions.Item>
-                  <Descriptions.Item label="平均响应时间">
+                  <Descriptions.Item label="Avg Response Time">
                     <Text strong>{Math.round(report.platform.avgLatencyMs)} ms</Text>
                   </Descriptions.Item>
                 </Descriptions>
               </div>
             </Space>
           ) : (
-            <Empty description="暂无 AI 评估数据" />
+            <Empty description="No AI evaluation data yet" />
           )}
         </Card>
 
         {/* 按场景 + 置信度校准 */}
         {report?.hasData && (
           <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
-            <Card title="按场景评估" style={{ flex: 1 }}>
+            <Card title="Evaluate by scenario" style={{ flex: 1 }}>
               <Table
                 size="small"
                 rowKey="kind"
                 dataSource={report.byScenario}
                 pagination={false}
                 columns={[
-                  { title: '场景', dataIndex: 'kind', render: (v: string) => scenarioLabel(v) },
-                  { title: '样本数', dataIndex: 'count', width: 80 },
+                  { title: 'Scene', dataIndex: 'kind', render: (v: string) => scenarioLabel(v) },
+                  { title: 'Number of samples', dataIndex: 'count', width: 80 },
                   {
-                    title: '有用率',
+                    title: 'Effective rate',
                     dataIndex: 'usefulRate',
                     width: 120,
                     render: (v: number) => (
@@ -257,13 +258,13 @@ const AIAuditConsole: React.FC = () => {
                     ),
                   },
                   {
-                    title: '采纳率',
+                    title: 'Adoption rate',
                     dataIndex: 'acceptedRate',
                     width: 100,
                     render: (v: number) => (v > 0 ? pct(v) : '-'),
                   },
                   {
-                    title: '平均置信度',
+                    title: 'Average confidence',
                     dataIndex: 'avgConfidence',
                     width: 100,
                     render: (v: number) => pct(v),
@@ -275,7 +276,8 @@ const AIAuditConsole: React.FC = () => {
               title={
                 <Space>
                   <Target size={16} />
-                  置信度校准（高置信 ≠ 高有用）
+
+                  Confidence calibration (high confidence ≠ high usefulness)
                 </Space>
               }
               style={{ flex: 1 }}
@@ -286,10 +288,10 @@ const AIAuditConsole: React.FC = () => {
                 dataSource={report.confidenceCalibration}
                 pagination={false}
                 columns={[
-                  { title: '置信区间', dataIndex: 'bucket', width: 100 },
-                  { title: '样本数', dataIndex: 'count', width: 70 },
+                  { title: 'Confidence interval', dataIndex: 'bucket', width: 100 },
+                  { title: 'Number of samples', dataIndex: 'count', width: 70 },
                   {
-                    title: '实际有用率',
+                    title: 'Actual useful rate',
                     dataIndex: 'usefulRate',
                     width: 130,
                     render: (v: number, r: { calibrationError: number; count: number }) =>
@@ -304,12 +306,12 @@ const AIAuditConsole: React.FC = () => {
                       ),
                   },
                   {
-                    title: '校准偏差',
+                    title: 'Calibration deviation',
                     dataIndex: 'calibrationError',
                     width: 90,
                     render: (v: number, r: { count: number }) =>
                       r.count > 0 ? (
-                        <Tooltip title="|实际有用率 - 置信度中点|，越小代表置信度越可信">
+                        <Tooltip title="|Actual useful rate - confidence midpoint|, the smaller the value, the more credible the confidence is">
                           <Tag color={v <= 0.15 ? 'green' : v <= 0.3 ? 'orange' : 'red'}>
                             {Math.round(v * 100)}%
                           </Tag>
@@ -325,7 +327,7 @@ const AIAuditConsole: React.FC = () => {
         )}
 
         {/* 审计日志 */}
-        <Card title={`AI 审计日志（近 90 天，共 ${pagination.total} 条）`}>
+        <Card title={`AI audit log (last 90 days, total ${pagination.total} Article)`}>
           <Table
             rowKey="id"
             size="middle"
@@ -337,36 +339,36 @@ const AIAuditConsole: React.FC = () => {
               pageSize: pagination.pageSize,
               total: pagination.total,
               showSizeChanger: true,
-              showTotal: (t) => `共 ${t} 条`,
+              showTotal: (t) => `Total ${t} items`,
               onChange: (page, pageSize) => fetchLogs(page, pageSize, kindFilter),
             }}
-            locale={{ emptyText: '暂无 AI 审计记录' }}
+            locale={{ emptyText: 'No AI audit record yet' }}
           />
         </Card>
       </Space>
 
       {/* 审计详情 */}
       <Drawer
-        title={`AI 审计详情 · ${detail ? scenarioLabel(detail.scenario) : ''}`}
+        title={`AI Audit Details · ${detail ? scenarioLabel(detail.scenario) : ''}`}
         open={!!detail}
         onClose={() => setDetail(null)}
         width={520}
       >
         {detail && (
           <Descriptions column={1} size="small" bordered>
-            <Descriptions.Item label="请求 ID">{detail.requestId}</Descriptions.Item>
-            <Descriptions.Item label="时间">
+            <Descriptions.Item label="Request ID">{detail.requestId}</Descriptions.Item>
+            <Descriptions.Item label="Timestamp">
               {formatDateTime(detail.createdAt)}
             </Descriptions.Item>
-            <Descriptions.Item label="场景">{scenarioLabel(detail.scenario)}</Descriptions.Item>
-            <Descriptions.Item label="输入引用">{detail.inputRef || '-'}</Descriptions.Item>
-            <Descriptions.Item label="模型">{detail.model || '-'}</Descriptions.Item>
-            <Descriptions.Item label="策略版本">{detail.promptVersion || '-'}</Descriptions.Item>
-            <Descriptions.Item label="可信度">{pct(detail.confidence)}</Descriptions.Item>
-            <Descriptions.Item label="采纳结果">
-              {detail.accepted ? <Tag color="success">已采纳</Tag> : <Tag>未采纳</Tag>}
+            <Descriptions.Item label="Scene">{scenarioLabel(detail.scenario)}</Descriptions.Item>
+            <Descriptions.Item label="Input reference">{detail.inputRef || '-'}</Descriptions.Item>
+            <Descriptions.Item label="Model">{detail.model || '-'}</Descriptions.Item>
+            <Descriptions.Item label="Policy version">{detail.promptVersion || '-'}</Descriptions.Item>
+            <Descriptions.Item label="Credibility">{pct(detail.confidence)}</Descriptions.Item>
+            <Descriptions.Item label="Adoption results">
+              {detail.accepted ? <Tag color="success">Adopted</Tag> : <Tag>Not adopted</Tag>}
             </Descriptions.Item>
-            <Descriptions.Item label="操作">
+            <Descriptions.Item label="Actions">
               <Space>
                 <Button
                   size="small"
@@ -381,15 +383,16 @@ const AIAuditConsole: React.FC = () => {
                         e.id === detail.id ? { ...e, accepted: true } : e
                       )));
                       setDetail({ ...detail, accepted: true });
-                      message.success(`AI 审计 ${detail.id} 已标记采纳`);
+                      message.success(`AI Audit ${detail.id} Marked for adoption`);
                     } catch (err) {
-                      message.error((err as Error).message ?? '采纳失败');
+                      message.error((err as Error).message ?? 'Adoption failed');
                     } finally {
                       setFlipPending(false);
                     }
                   }}
                 >
-                  采纳
+
+                  Adopted
                 </Button>
                 <Button
                   size="small"
@@ -404,24 +407,25 @@ const AIAuditConsole: React.FC = () => {
                         e.id === detail.id ? { ...e, accepted: false } : e
                       )));
                       setDetail({ ...detail, accepted: false });
-                      message.success(`AI 审计 ${detail.id} 已标记拒绝`);
+                      message.success(`AI Audit ${detail.id} Flagged for rejection`);
                     } catch (err) {
-                      message.error((err as Error).message ?? '拒绝失败');
+                      message.error((err as Error).message ?? 'Rejection failed');
                     } finally {
                       setFlipPending(false);
                     }
                   }}
                 >
-                  拒绝
+
+                  Rejected
                 </Button>
               </Space>
             </Descriptions.Item>
-            <Descriptions.Item label="建议内容">
+            <Descriptions.Item label="Suggested content">
               <pre style={{ margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-all', fontSize: 12 }}>
                 {detail.suggestion ? JSON.stringify(detail.suggestion, null, 2) : '-'}
               </pre>
             </Descriptions.Item>
-            <Descriptions.Item label="原始备注">
+            <Descriptions.Item label="Original comment">
               <pre style={{ margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-all', fontSize: 12 }}>
                 {detail.notes || '-'}
               </pre>

@@ -315,14 +315,14 @@ export default function ConnectorsAdminPage() {
 
       <UsageGuideCard
         style={{ marginBottom: 16 }}
-        title="启用后如何测试和使用连接器"
-        intro="连接器把通知、工单邮件等能力对接到企业 IM（飞书/企微/钉钉）、Webhook 或邮箱；凭证由后端保存，页面只展示脱敏信息。"
+        title="How to test and use the connector once enabled"
+        intro="The connector connects capabilities such as notifications and work order emails to corporate IM (Feishu/Qiwei/DingTalk), Webhook or email; the credentials are saved by the backend, and the page only displays desensitized information."
         steps={[
-          '在“连接器市场”页签点“启用”，在弹窗中填写供应商标识和凭证（每行一个 key=value，如 app_id=xxx）；邮箱连接器有专用表单（IMAP/SMTP 主机、账号密码）。',
-          '启用后到“已配置”页签点“测试”验证连通性，成功/失败会直接提示；失败时检查凭证、网络和供应商后台配置。',
-          '用“发送消息”向已绑定的接收通道发一条测试消息，确认消息能真实送达。',
-          '测试通过后，SLA 告警、审批提醒等系统通知会按通知配置经由该通道投递；可在通知中心和审计日志中查看投递结果。',
-          '不再使用时点“禁用”，系统停止通过该通道投递，历史配置保留可随时重新启用。',
+          'Click "Enable" on the "Connector Market" tab, and fill in the supplier ID and credentials in the pop-up window (one key=value per line, such as app_id=xxx); the mailbox connector has a dedicated form (IMAP/SMTP host, account password).',
+          'After enabling, go to the "Configured" tab and click "Test" to verify connectivity. Success/failure will be directly prompted; if it fails, check the credentials, network and supplier background configuration.',
+          'Use "Send Message" to send a test message to the bound receiving channel to confirm that the message can actually be delivered.',
+          'After passing the test, system notifications such as SLA alarms and approval reminders will be delivered through this channel according to the notification configuration; the delivery results can be viewed in the notification center and audit log.',
+          'When "disabled" is no longer used, the system stops delivering through this channel, and the historical configuration is retained and can be re-enabled at any time.',
         ]}
       />
 
@@ -385,17 +385,17 @@ export default function ConnectorsAdminPage() {
                 <Input placeholder={t('connectors.provision.providerPlaceholder')} />
               </Form.Item>
               {provisionTarget.name === 'email' ? <>
-                <Alert type="warning" showIcon title="请使用 QQ 邮箱授权码，不要填写登录密码。凭据只会加密保存在服务端，后续不会回显。" style={{ marginBottom: 16 }} />
-                <Form.Item name="emailUsername" label="邮箱地址" rules={[{ required: true, type: 'email' }]}><Input autoComplete="off" /></Form.Item>
-                <Form.Item name="emailPassword" label="邮箱授权码" rules={[{ required: true }]}><Input.Password autoComplete="new-password" /></Form.Item>
+                <Alert type="warning" showIcon title="Please use the QQ email authorization code and do not fill in the login password. The credentials will only be encrypted and saved on the server and will not be echoed later." style={{ marginBottom: 16 }} />
+                <Form.Item name="emailUsername" label="Email address" rules={[{ required: true, type: 'email' }]}><Input autoComplete="off" /></Form.Item>
+                <Form.Item name="emailPassword" label="Email authorization code" rules={[{ required: true }]}><Input.Password autoComplete="new-password" /></Form.Item>
                 <Space align="start" wrap>
-                  <Form.Item name="imapHost" label="IMAP 主机" rules={[{ required: true }]}><Input /></Form.Item>
-                  <Form.Item name="imapPort" label="IMAP 端口" rules={[{ required: true }]}><InputNumber min={1} max={65535} /></Form.Item>
-                  <Form.Item name="smtpHost" label="SMTP 主机" rules={[{ required: true }]}><Input /></Form.Item>
-                  <Form.Item name="smtpPort" label="SMTP 端口" rules={[{ required: true }]}><InputNumber min={1} max={65535} /></Form.Item>
+                  <Form.Item name="imapHost" label="IMAP host" rules={[{ required: true }]}><Input /></Form.Item>
+                  <Form.Item name="imapPort" label="IMAP port" rules={[{ required: true }]}><InputNumber min={1} max={65535} /></Form.Item>
+                  <Form.Item name="smtpHost" label="SMTP host" rules={[{ required: true }]}><Input /></Form.Item>
+                  <Form.Item name="smtpPort" label="SMTP port" rules={[{ required: true }]}><InputNumber min={1} max={65535} /></Form.Item>
                 </Space>
-                <Form.Item name="mailbox" label="收件箱" rules={[{ required: true }]}><Input /></Form.Item>
-                <Form.Item name="pollIntervalSeconds" label="轮询间隔（秒）" rules={[{ required: true }]}><InputNumber min={15} /></Form.Item>
+                <Form.Item name="mailbox" label="Inbox" rules={[{ required: true }]}><Input /></Form.Item>
+                <Form.Item name="pollIntervalSeconds" label="Polling interval (seconds)" rules={[{ required: true }]}><InputNumber min={15} /></Form.Item>
               </> : <><Form.Item
                 name="credText"
                 label={t('connectors.provision.fieldCredentials')}
@@ -408,8 +408,8 @@ export default function ConnectorsAdminPage() {
                   type="info"
                   showIcon
                   style={{ marginBottom: 12 }}
-                  title={`该连接器需要以下设置项：${requiredSettingKeys.join('、')}`}
-                  description="按 key=value 每行一项填写；留空会导致启用后「测试」失败。"
+                  title={`This connector requires the following settings:${requiredSettingKeys.join('、')}`}
+                  description="Fill in each line according to key=value; leaving it blank will cause the &quot;test&quot; to fail after activation."
                 />
               )}
               <Form.Item

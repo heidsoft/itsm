@@ -435,7 +435,7 @@ func (r *RAGService) GetArticleFull(ctx context.Context, tenantID, articleID int
 	article, err := q.Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, fmt.Errorf("知识文章不存在或不可见: id=%d", articleID)
+			return nil, fmt.Errorf("Knowledge article does not exist or is not visible: id=%d", articleID)
 		}
 		return nil, fmt.Errorf("read knowledge article failed: %w", err)
 	}
@@ -443,7 +443,7 @@ func (r *RAGService) GetArticleFull(ctx context.Context, tenantID, articleID int
 	// 作者豁免：受限分类里自己写的文章仍可见（与检索一致）。
 	if r.knowledgeGuard != nil && article.Category != "" {
 		if !r.knowledgeGuard.CanReadCategory(ctx, tenantID, viewer, article.Category, article.AuthorID) {
-			return nil, fmt.Errorf("知识文章不存在或不可见: id=%d", articleID)
+			return nil, fmt.Errorf("Knowledge article does not exist or is not visible: id=%d", articleID)
 		}
 	}
 
@@ -451,7 +451,7 @@ func (r *RAGService) GetArticleFull(ctx context.Context, tenantID, articleID int
 	if r.freshness != nil {
 		kept, dropped := r.freshness.FilterArticles([]*ent.KnowledgeArticle{article})
 		if dropped > 0 || len(kept) == 0 {
-			return nil, fmt.Errorf("知识文章不存在或不可见: id=%d", articleID)
+			return nil, fmt.Errorf("Knowledge article does not exist or is not visible: id=%d", articleID)
 		}
 	}
 

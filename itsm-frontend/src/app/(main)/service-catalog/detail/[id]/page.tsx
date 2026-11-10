@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { serviceCategoryLabel } from '@/constants/service-catalog';
 import { Card, Descriptions, Tag, Button, Row, Col, App, Spin, Empty } from 'antd';
 import { useParams, useRouter } from 'next/navigation';
 import { ServiceCatalogApi } from '@/lib/api/service-catalog-api';
@@ -9,9 +10,9 @@ import { useI18n } from '@/lib/i18n';
 
 // 服务目录状态映射
 const serviceStatusMap: Record<string, { text: string; color: string }> = {
-  published: { text: '已发布', color: 'green' },
-  draft: { text: '草稿', color: 'default' },
-  archived: { text: '已归档', color: 'gray' },
+  published: { text: 'Published', color: 'green' },
+  draft: { text: 'Draft', color: 'default' },
+  archived: { text: 'Archived', color: 'gray' },
 };
 
 export default function ServiceDetailPage() {
@@ -52,7 +53,7 @@ export default function ServiceDetailPage() {
     <div className="p-6">
       <Card>
         <Descriptions title={service.name} bordered column={2}>
-          <Descriptions.Item label={t('ticketDetail.labelCategory')}>{service.category}</Descriptions.Item>
+          <Descriptions.Item label={t('ticketDetail.labelCategory')}>{serviceCategoryLabel(service.category)}</Descriptions.Item>
           <Descriptions.Item label={t('ticketDetail.labelStatus')}>
             <Tag color={serviceStatusMap[service.status]?.color || 'default'}>{serviceStatusMap[service.status]?.text || service.status}</Tag>
           </Descriptions.Item>
@@ -60,7 +61,7 @@ export default function ServiceDetailPage() {
             {service.shortDescription}
           </Descriptions.Item>
           <Descriptions.Item label={t('service.deliveryTime')}>
-            {service.deliveryDays != null ? `${service.deliveryDays} 天` : '未配置'}
+            {service.deliveryDays != null ? `${service.deliveryDays} days` : 'Not configured'}
           </Descriptions.Item>
         </Descriptions>
 

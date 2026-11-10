@@ -17,15 +17,15 @@ export enum ServiceRequestStatus {
 
 // 状态中文标签映射（HTTP 层展示用，枚举值本身保持后端契约）
 export const ServiceRequestStatusLabels: Record<ServiceRequestStatus, string> = {
-  [ServiceRequestStatus.SUBMITTED]: '已提交',
-  [ServiceRequestStatus.MANAGER_APPROVED]: '经理已审批',
-  [ServiceRequestStatus.IT_APPROVED]: 'IT已审批',
-  [ServiceRequestStatus.SECURITY_APPROVED]: '安全部门已审批',
-  [ServiceRequestStatus.PROVISIONING]: '履约中',
-  [ServiceRequestStatus.DELIVERED]: '已交付',
-  [ServiceRequestStatus.FAILED]: '履约失败',
-  [ServiceRequestStatus.REJECTED]: '已拒绝',
-  [ServiceRequestStatus.CANCELLED]: '已取消',
+  [ServiceRequestStatus.SUBMITTED]: 'Submitted',
+  [ServiceRequestStatus.MANAGER_APPROVED]: 'Manager approved',
+  [ServiceRequestStatus.IT_APPROVED]: 'IT approved',
+  [ServiceRequestStatus.SECURITY_APPROVED]: 'Approved by the security department',
+  [ServiceRequestStatus.PROVISIONING]: 'In progress',
+  [ServiceRequestStatus.DELIVERED]: 'Delivered',
+  [ServiceRequestStatus.FAILED]: 'Fulfillment failed',
+  [ServiceRequestStatus.REJECTED]: 'Rejected',
+  [ServiceRequestStatus.CANCELLED]: 'Cancelled',
 };
 
 export function serviceRequestStatusLabel(status: string): string {

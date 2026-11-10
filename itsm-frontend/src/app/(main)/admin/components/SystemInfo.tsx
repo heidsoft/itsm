@@ -99,7 +99,7 @@ export const SystemInfo: React.FC = () => {
                 >
                   <Text>{item.title}</Text>
                   <Space size={8}>
-                    <Tag color="blue">在线</Tag>
+                    <Tag color="blue">Online</Tag>
                     <ArrowUpRight className="w-4 h-4" style={{ color: token.colorTextSecondary }} />
                   </Space>
                 </a>

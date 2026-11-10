@@ -95,7 +95,7 @@ func (h *Handler) GenerateForm(ctx *gin.Context) {
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"code":    1001,
-			"message": "请求参数错误: " + err.Error(),
+			"message": "Request parameter error:" + err.Error(),
 		})
 		return
 	}
@@ -109,7 +109,7 @@ func (h *Handler) GenerateForm(ctx *gin.Context) {
 	if err != nil {
 		// B11（UPGRADE §1.48）：错误响应不透传内部 err.Error()。
 		h.logger.Errorw("a2ui generate form failed", "intent", req.Intent, "error", err)
-		common.Fail(ctx, common.InternalErrorCode, "生成表单失败")
+		common.Fail(ctx, common.InternalErrorCode, "Failed to generate form")
 		return
 	}
 
@@ -130,7 +130,7 @@ func (h *Handler) HandleAction(ctx *gin.Context) {
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"code":    1001,
-			"message": "请求参数错误: " + err.Error(),
+			"message": "Request parameter error:" + err.Error(),
 		})
 		return
 	}
@@ -139,7 +139,7 @@ func (h *Handler) HandleAction(ctx *gin.Context) {
 	case "submit":
 		h.handleSubmit(ctx, &req)
 	default:
-		common.Fail(ctx, common.ParamErrorCode, "不支持的 A2UI 操作")
+		common.Fail(ctx, common.ParamErrorCode, "Unsupported A2UI operation")
 	}
 }
 
@@ -159,7 +159,7 @@ func (h *Handler) handleSubmit(ctx *gin.Context, req *HandleActionRequest) {
 		return
 	}
 	if h.ticketCreator == nil {
-		common.Fail(ctx, common.ServiceUnavailableCode, "工单创建服务未接入")
+		common.Fail(ctx, common.ServiceUnavailableCode, "The work order creation service is not connected")
 		return
 	}
 
@@ -179,14 +179,14 @@ func (h *Handler) handleSubmit(ctx *gin.Context, req *HandleActionRequest) {
 	})
 	if err != nil {
 		// 统一错误出口：validation/forbidden/unavailable 按业务语义分流，不泄漏内部错误。
-		common.RespondError(ctx, err, "创建工单失败")
+		common.RespondError(ctx, err, "Failed to create ticket")
 		return
 	}
 
 	messages, err := buildSubmitSuccessMessages(req.SurfaceID, created)
 	if err != nil {
 		h.logger.Errorw("a2ui build submit response failed", "surface_id", req.SurfaceID, "ticket_id", created.ID, "error", err)
-		common.Fail(ctx, common.InternalErrorCode, "工单已创建，但响应生成失败")
+		common.Fail(ctx, common.InternalErrorCode, "The ticket was created, but the response generation failed")
 		return
 	}
 
@@ -309,10 +309,10 @@ func buildSubmitSuccessMessages(surfaceID string, created *ticket.Ticket) ([]str
 }
 
 var (
-	errInvalidA2UIForm       = errors.New("缺少工单表单数据")
-	errA2UITitleRequired     = errors.New("工单标题不能为空")
-	errA2UIPriorityInvalid   = errors.New("无效的工单优先级")
-	errA2UITicketCreateEmpty = errors.New("工单创建结果为空")
+	errInvalidA2UIForm       = errors.New("Missing ticket form data")
+	errA2UITitleRequired     = errors.New("Work order title cannot be empty")
+	errA2UIPriorityInvalid   = errors.New("Invalid ticket priority")
+	errA2UITicketCreateEmpty = errors.New("The work order creation result is empty")
 )
 
 // a2uiPublicFormError 只放行上面三条自带文案的哨兵错误；其余错误原文进日志，
@@ -334,7 +334,7 @@ func (h *Handler) ParseTicketIntent(ctx *gin.Context) {
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"code":    1001,
-			"message": "请求参数错误: " + err.Error(),
+			"message": "Request parameter error:" + err.Error(),
 		})
 		return
 	}
@@ -343,7 +343,7 @@ func (h *Handler) ParseTicketIntent(ctx *gin.Context) {
 	if err != nil {
 		// B11（UPGRADE §1.48）：错误响应不透传内部 err.Error()。
 		h.logger.Errorw("a2ui parse intent failed", "error", err)
-		common.Fail(ctx, common.InternalErrorCode, "解析工单意图失败")
+		common.Fail(ctx, common.InternalErrorCode, "Failed to parse work order intent")
 		return
 	}
 

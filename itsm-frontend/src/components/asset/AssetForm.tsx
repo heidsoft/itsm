@@ -30,45 +30,45 @@ const { TextArea } = Input;
 // 表单验证规则
 const formRules = {
   assetNumber: [
-    { required: true, message: '请输入资产编号' },
-    { pattern: /^[A-Z0-9-]+$/, message: '资产编号只能包含大写字母、数字和连字符' },
-    { min: 3, message: '资产编号至少3个字符' },
-    { max: 50, message: '资产编号不能超过50个字符' },
+    { required: true, message: 'Please enter the asset number' },
+    { pattern: /^[A-Z0-9-]+$/, message: 'Asset number can only contain uppercase letters, numbers and hyphens' },
+    { min: 3, message: 'Asset number must be at least 3 characters' },
+    { max: 50, message: 'Asset number cannot exceed 50 characters' },
   ],
   assetName: [
-    { required: true, message: '请输入资产名称' },
-    { min: 2, message: '资产名称至少2个字符' },
-    { max: 200, message: '资产名称不能超过200个字符' },
+    { required: true, message: 'Please enter asset name' },
+    { min: 2, message: 'Asset name must be at least 2 characters long' },
+    { max: 200, message: 'Asset name cannot exceed 200 characters' },
   ],
-  serialNumber: [{ max: 100, message: '序列号不能超过100个字符' }],
+  serialNumber: [{ max: 100, message: 'Serial number cannot exceed 100 characters' }],
   purchasePrice: [
     {
       type: 'number' as const,
       min: 0,
       max: 999999999,
-      message: '采购价格必须在 0 到 999,999,999 之间',
+      message: 'Purchase price must be between 0 and 999,999,999',
     },
   ],
 };
 
 // 表单字段的help文本
 const fieldHelps = {
-  assetNumber: '格式如：ASSET-001',
-  assetName: '资产的友好名称',
-  description: '详细描述资产的用途和特点',
-  assetType: '选择资产的主要类型',
-  category: '用于分类和筛选',
-  serialNumber: '厂商提供的唯一标识',
-  model: '产品型号',
-  manufacturer: '生产厂商名称',
-  vendor: '供应商名称',
-  purchaseDate: '采购完成日期',
-  purchasePrice: '采购时的价格',
-  warrantyExpiry: '保修服务到期日期',
-  supportExpiry: '技术支持到期日期',
-  location: '物理存放位置',
-  department: '所属部门或团队',
-  tags: '用逗号分隔多个标签',
+  assetNumber: 'Format: ASSET-001',
+  assetName: 'Friendly name of the asset',
+  description: 'Detailed description of the asset’s purpose and characteristics',
+  assetType: 'Select the main type of asset',
+  category: 'Used for sorting and filtering',
+  serialNumber: 'Unique identifier provided by the manufacturer',
+  model: 'Product model',
+  manufacturer: 'Manufacturer name',
+  vendor: 'Supplier name',
+  purchaseDate: 'Purchase completion date',
+  purchasePrice: 'Price at time of purchase',
+  warrantyExpiry: 'Warranty service expiration date',
+  supportExpiry: 'Technical support expiration date',
+  location: 'Physical storage location',
+  department: 'Department or team to which you belong',
+  tags: 'Separate multiple tags with commas',
 };
 
 const AssetForm: React.FC = () => {
@@ -92,7 +92,7 @@ const AssetForm: React.FC = () => {
       setDetail(data);
       form.setFieldsValue(data);
     } catch (error) {
-      message.error('加载资产详情失败');
+      message.error('Failed to load asset details');
     } finally {
       setLoading(false);
     }
@@ -143,14 +143,14 @@ const AssetForm: React.FC = () => {
 
       if (isEdit) {
         await AssetApi.updateAsset(Number(id), data);
-        message.success('更新成功');
+        message.success('Updated');
       } else {
         await AssetApi.createAsset(data);
-        message.success('创建成功');
+        message.success('Created');
       }
       router.push('/assets');
     } catch (error) {
-      message.error(isEdit ? '更新失败' : '创建失败');
+      message.error(isEdit ? 'Update failed' : 'Creation failed');
     } finally {
       setLoading(false);
     }
@@ -169,64 +169,65 @@ const AssetForm: React.FC = () => {
       >
         <div style={{ marginBottom: 16 }}>
           <Button icon={<ArrowLeft />} onClick={() => router.push('/assets')}>
-            返回列表
+
+            Back to List
           </Button>
         </div>
 
-        <Divider>基本信息</Divider>
+        <Divider>Basic Info</Divider>
 
         <Form.Item
           name="assetNumber"
           label={
             <Tooltip title={fieldHelps.assetNumber}>
-              <span>资产编号</span>
+              <span>Asset Number</span>
             </Tooltip>
           }
           rules={formRules.assetNumber}
           help={fieldHelps.assetNumber}
         >
-          <Input placeholder="例如: ASSET-001" autoComplete="off" />
+          <Input placeholder="Example: ASSET-001" autoComplete="off" />
         </Form.Item>
 
         <Form.Item
           name="name"
           label={
             <Tooltip title={fieldHelps.assetName}>
-              <span>资产名称</span>
+              <span>Asset Name</span>
             </Tooltip>
           }
           rules={formRules.assetName}
           help={fieldHelps.assetName}
         >
-          <Input placeholder="资产名称" autoComplete="off" />
+          <Input placeholder="Asset Name" autoComplete="off" />
         </Form.Item>
 
         <Form.Item
           name="description"
           label={
             <Tooltip title={fieldHelps.description}>
-              <span>描述</span>
+              <span>Description</span>
             </Tooltip>
           }
           help={fieldHelps.description}
         >
-          <TextArea rows={3} placeholder="资产描述" maxLength={1000} showCount />
+          <TextArea rows={3} placeholder="Asset description" maxLength={1000} showCount />
         </Form.Item>
 
         <Form.Item
           name="type"
           label={
             <Tooltip title={fieldHelps.assetType}>
-              <span>资产类型</span>
+              <span>Asset Type</span>
             </Tooltip>
           }
           help={fieldHelps.assetType}
         >
           <Select options={[
-            { value: 'hardware', label: '硬件' },
-            { value: 'software', label: '软件' },
-            { value: 'cloud', label: '云资源' },
-            { value: 'license', label: '许可证' },
+            { value: 'hardware', label: 'Hardware' },
+            { value: 'software', label: 'Software' },
+            { value: 'cloud', label: 'Cloud Resources' },
+            { value: 'license', label: 'Licenses' },
           ]} />
         </Form.Item>
 
@@ -234,140 +235,140 @@ const AssetForm: React.FC = () => {
           name="category"
           label={
             <Tooltip title={fieldHelps.category}>
-              <span>分类</span>
+              <span>Category</span>
             </Tooltip>
           }
           help={fieldHelps.category}
         >
-          <Input placeholder="资产分类" />
+          <Input placeholder="Asset Classification" />
         </Form.Item>
 
-        <Form.Item name="subcategory" label="子分类">
-          <Input placeholder="资产子分类" />
+        <Form.Item name="subcategory" label="Subcategory">
+          <Input placeholder="Asset subcategory" />
         </Form.Item>
 
-        <Divider>硬件信息</Divider>
+        <Divider>Hardware information</Divider>
 
         <Form.Item
           name="serialNumber"
           label={
             <Tooltip title={fieldHelps.serialNumber}>
-              <span>序列号</span>
+              <span>Serial Number</span>
             </Tooltip>
           }
           rules={formRules.serialNumber}
           help={fieldHelps.serialNumber}
         >
-          <Input placeholder="序列号" />
+          <Input placeholder="Serial Number" />
         </Form.Item>
 
-        <Form.Item name="model" label="型号">
-          <Input placeholder="型号" />
+        <Form.Item name="model" label="Model">
+          <Input placeholder="Model" />
         </Form.Item>
 
-        <Form.Item name="manufacturer" label="制造商">
-          <Input placeholder="制造商" />
+        <Form.Item name="manufacturer" label="Manufacturer">
+          <Input placeholder="Manufacturer" />
         </Form.Item>
 
-        <Form.Item name="vendor" label="供应商">
-          <Input placeholder="供应商" />
+        <Form.Item name="vendor" label="Supplier">
+          <Input placeholder="Supplier" />
         </Form.Item>
 
-        <Divider>采购与财务</Divider>
+        <Divider>Purchasing and Finance</Divider>
 
         <Form.Item
           name="purchaseDate"
           label={
             <Tooltip title={fieldHelps.purchaseDate}>
-              <span>采购日期</span>
+              <span>Purchase date</span>
             </Tooltip>
           }
           help={fieldHelps.purchaseDate}
         >
-          <DatePicker style={{ width: '100%' }} placeholder="选择采购日期" />
+          <DatePicker style={{ width: '100%' }} placeholder="Select purchase date" />
         </Form.Item>
 
         <Form.Item
           name="purchasePrice"
           label={
             <Tooltip title={fieldHelps.purchasePrice}>
-              <span>采购价格</span>
+              <span>Purchase price</span>
             </Tooltip>
           }
           rules={formRules.purchasePrice}
           help={fieldHelps.purchasePrice}
         >
-          <InputNumber style={{ width: '100%' }} min={0} precision={2} placeholder="采购价格" />
+          <InputNumber style={{ width: '100%' }} min={0} precision={2} placeholder="Purchase price" />
         </Form.Item>
 
         <Form.Item
           name="warrantyExpiry"
           label={
             <Tooltip title={fieldHelps.warrantyExpiry}>
-              <span>保修期到期</span>
+              <span>Warranty expired</span>
             </Tooltip>
           }
           help={fieldHelps.warrantyExpiry}
         >
-          <DatePicker style={{ width: '100%' }} placeholder="选择保修到期日期" />
+          <DatePicker style={{ width: '100%' }} placeholder="Select warranty expiration date" />
         </Form.Item>
 
         <Form.Item
           name="supportExpiry"
           label={
             <Tooltip title={fieldHelps.supportExpiry}>
-              <span>支持期到期</span>
+              <span>Support period expired</span>
             </Tooltip>
           }
           help={fieldHelps.supportExpiry}
         >
-          <DatePicker style={{ width: '100%' }} placeholder="选择支持到期日期" />
+          <DatePicker style={{ width: '100%' }} placeholder="Select support expiration date" />
         </Form.Item>
 
-        <Divider>位置与归属</Divider>
+        <Divider>Location and Belonging</Divider>
 
         <Form.Item
           name="location"
           label={
             <Tooltip title={fieldHelps.location}>
-              <span>物理位置</span>
+              <span>Physical location</span>
             </Tooltip>
           }
           help={fieldHelps.location}
         >
-          <Input placeholder="物理位置" />
+          <Input placeholder="Physical location" />
         </Form.Item>
 
         <Form.Item
           name="department"
           label={
             <Tooltip title={fieldHelps.department}>
-              <span>所属部门</span>
+              <span>Department</span>
             </Tooltip>
           }
           help={fieldHelps.department}
         >
-          <Input placeholder="所属部门" />
+          <Input placeholder="Department" />
         </Form.Item>
 
         <Form.Item
           name="tags"
           label={
             <Tooltip title={fieldHelps.tags}>
-              <span>标签</span>
+              <span>Tags</span>
             </Tooltip>
           }
           help={fieldHelps.tags}
         >
-          <Input placeholder="标签，用逗号分隔" />
+          <Input placeholder="Tags, separated by commas" />
         </Form.Item>
 
         <Form.Item>
           <Space>
             <Button type="primary" htmlType="submit" icon={<Save />} loading={loading}>
-              {isEdit ? '保存' : '创建'}
+              {isEdit ? 'Save' : 'Create'}
             </Button>
-            <Button onClick={() => router.push('/assets')}>取消</Button>
+            <Button onClick={() => router.push('/assets')}>Cancel</Button>
           </Space>
         </Form.Item>
       </Form>

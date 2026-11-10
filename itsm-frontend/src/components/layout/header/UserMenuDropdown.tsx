@@ -37,7 +37,8 @@ export const UserMenuDropdown: React.FC<UserMenuDropdownProps> = ({
           boxShadow: DESIGN.shadows.glow(DESIGN.colors.accent),
         }}
       >
-        登录
+
+        Login
       </Button>
     );
   }
@@ -46,7 +47,7 @@ export const UserMenuDropdown: React.FC<UserMenuDropdownProps> = ({
   const userInitial = displayName.charAt(0).toUpperCase() || 'U';
   // 角色标识统一走 PRIMARY_ROLE_LABEL（与侧边栏用户卡一致，审计报告 3.3-⑦）；
   // 未知 code 回退原值而非笼统「用户」，避免 admin 与最终用户显示同名。
-  const roleText = PRIMARY_ROLE_LABEL[user?.role ?? ''] || user?.role || '最终用户';
+  const roleText = PRIMARY_ROLE_LABEL[user?.role ?? ''] || user?.role || 'End User';
   const roleColor = user?.role === 'admin' || user?.role === 'super_admin' ? '#3b82f6' : '#64748b';
 
   const handleMenuClick: MenuProps['onClick'] = ({ key }) => {
@@ -74,7 +75,7 @@ export const UserMenuDropdown: React.FC<UserMenuDropdownProps> = ({
       label: (
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '8px 0' }}>
           <User size={16} />
-          <span>个人中心</span>
+          <span>Profile</span>
         </div>
       ),
     },
@@ -83,7 +84,7 @@ export const UserMenuDropdown: React.FC<UserMenuDropdownProps> = ({
       label: (
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '8px 0' }}>
           <Settings size={16} />
-          <span>设置</span>
+          <span>Settings</span>
         </div>
       ),
     },
@@ -95,7 +96,7 @@ export const UserMenuDropdown: React.FC<UserMenuDropdownProps> = ({
           style={{ display: 'flex', alignItems: 'center', gap: 12, color: DESIGN.colors.danger }}
         >
           <LogOut size={16} />
-          <span>退出登录</span>
+          <span>Logout</span>
         </div>
       ),
     },

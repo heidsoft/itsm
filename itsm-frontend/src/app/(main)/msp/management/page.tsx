@@ -45,10 +45,10 @@ export default function MSPManagementPage() {
         setHasAccess(true);
         loadData();
       } else {
-        setAccessError('您没有权限访问此页面');
+        setAccessError('You do not have permission to access this page');
       }
     } catch (err: unknown) {
-      setAccessError(err instanceof Error ? err.message : '检查权限失败');
+      setAccessError(err instanceof Error ? err.message : 'Failed to check permissions');
     }
   };
 
@@ -95,7 +95,7 @@ export default function MSPManagementPage() {
         setMSPUsers(uniqueUsers);
       }
     } catch (err: unknown) {
-      message.error(err instanceof Error ? err.message : '加载数据失败');
+      message.error(err instanceof Error ? err.message : 'Failed to load data');
     } finally {
       setLoading(false);
     }
@@ -104,27 +104,27 @@ export default function MSPManagementPage() {
   const handleCreate = async (values: CreateAllocationRequest) => {
     try {
       await MSPService.createAllocation(values);
-      message.success('分配创建成功');
+      message.success('Allocation created successfully');
       setModalVisible(false);
       form.resetFields();
       loadData();
     } catch (err: unknown) {
-      message.error(err instanceof Error ? err.message : '创建分配失败');
+      message.error(err instanceof Error ? err.message : 'Failed to create allocation');
     }
   };
 
   const handleDeallocate = async (allocation: MSPAllocation) => {
     Modal.confirm({
-      title: '确认解除分配',
-      content: `确定要解除 ${allocation.mspUsername} 对客户 ${allocation.customerTenantName} 的分配吗？`,
+      title: 'Confirm deallocation',
+      content: `Confirm to cancel ${allocation.mspUsername} To the customer ${allocation.customerTenantName} Assignment?`,
       onOk: async () => {
         setDeallocateLoading(true);
         try {
           await MSPService.deallocate(allocation.mspUserId, allocation.customerTenantId);
-          message.success('分配已解除');
+          message.success('Allocation deallocated');
           loadData();
         } catch (err: unknown) {
-          message.error(err instanceof Error ? err.message : '解除分配失败');
+          message.error(err instanceof Error ? err.message : 'Deallocation failed');
         } finally {
           setDeallocateLoading(false);
         }
@@ -134,42 +134,43 @@ export default function MSPManagementPage() {
 
   const columns = [
     {
-      title: 'MSP 员工',
+      title: 'MSP employee',
       dataIndex: 'mspUsername',
       key:'mspUsername',
     },
     {
-      title: '客户',
+      title: 'Customer',
       dataIndex: 'customerTenantName',
       key:'customerTenantName',
     },
     {
-      title: '角色',
+      title: 'Role',
       dataIndex: 'role',
       key: 'role',
       render: (role: string) => {
         const config = {
-          primary: { color: 'green', text: '主支持' },
-          backup: { color: 'orange', text: '备份' },
-          specialist: { color: 'blue', text: '专家' },
+          primary: { color: 'green', text: 'Main support' },
+          backup: { color: 'orange', text: 'Backup' },
+          specialist: { color: 'blue', text: 'Expert' },
         };
         const cfg = config[role as keyof typeof config] || { color: 'default', text: role };
         return <Tag color={cfg.color}>{cfg.text}</Tag>;
       },
     },
     {
-      title: '分配时间',
+      title: 'Allocate time',
       dataIndex: 'assignedAt',
       key: 'assignedAt',
       render: (date: string) => formatDateTime(date),
     },
     {
-      title: '操作',
+      title: 'Actions',
       key: 'action',
       render: (_: unknown, record: MSPAllocation) => (
         <Space size="small">
           <Button size="small" onClick={() => handleDeallocate(record)} danger>
-            解除
+
+            Dismissed
           </Button>
         </Space>
       ),
@@ -179,15 +180,16 @@ export default function MSPManagementPage() {
   return (
     <div style={{ padding: 24 }}>
       <Card
-        title="MSP 分配管理"
+        title="MSP Allocation Management"
         extra={
           <Button type="primary" icon={<Plus />} onClick={() => setModalVisible(true)}>
-            新建分配
+
+            New allocation
           </Button>
         }
       >
         <Alert
-          title="MSP Manager 可为员工分配客户租户，分配后通过 X-Customer-Tenant-ID 头访问对应工单"
+          title="MSP Manager can assign customer tenants to employees, and after assignment, access the corresponding work orders through the X-Customer-Tenant-ID header"
           type="info"
           showIcon
           style={{ marginBottom: 16 }}
@@ -203,7 +205,7 @@ export default function MSPManagementPage() {
       </Card>
 
       <Modal
-        title="创建 MSP 分配"
+        title="Create MSP allocation"
         open={modalVisible}
         onCancel={() => {
           setModalVisible(false);
@@ -214,37 +216,38 @@ export default function MSPManagementPage() {
         <Form form={form} layout="vertical" onFinish={handleCreate}>
           <Form.Item
             name="mspUserId"
-            label="MSP 员工"
-            rules={[{ required: true, message: '请选择 MSP 员工' }]}
+            label="MSP employee"
+            rules={[{ required: true, message: 'Please select an MSP employee' }]}
           >
-            <Select placeholder="选择 MSP 员工" showSearch optionFilterProp="children" options={mspUsers.map(user => ({ value: user.id, label: user.username }))} />
+            <Select placeholder="Select MSP Employee" showSearch optionFilterProp="children" options={mspUsers.map(user => ({ value: user.id, label: user.username }))} />
           </Form.Item>
 
           <Form.Item
             name="customerTenantId"
-            label="客户租户"
-            rules={[{ required: true, message: '请选择客户租户' }]}
+            label="Customer Tenant"
+            rules={[{ required: true, message: 'Please select customer tenant' }]}
           >
-            <Select placeholder="选择客户租户" showSearch optionFilterProp="children" options={customers.map(cust => ({ value: cust.id, label: <>
+            <Select placeholder="Select customer tenant" showSearch optionFilterProp="children" options={customers.map(cust => ({ value: cust.id, label: <>
                   {cust.code} - {cust.name}
                 </> }))} />
           </Form.Item>
 
           <Form.Item
             name="role"
-            label="分配角色"
+            label="Assign roles"
             initialValue="primary"
-            rules={[{ required: true, message: '请选择分配角色' }]}
+            rules={[{ required: true, message: 'Please select assignment role' }]}
           >
-            <Select placeholder="选择角色" options={[{ value: "primary", label: "主支持 (Primary)" }, { value: "backup", label: "备份 (Backup)" }, { value: "specialist", label: "专家 (Specialist)" }]} />
+            <Select placeholder="Select role" options={[{ value: "primary", label: "Primary Support (Primary)" }, { value: "backup", label: "Backup" }, { value: "specialist", label: "Specialist" }]} />
           </Form.Item>
 
           <Form.Item>
             <Space>
               <Button type="primary" htmlType="submit">
-                创建
+
+                Create
               </Button>
-              <Button onClick={() => setModalVisible(false)}>取消</Button>
+              <Button onClick={() => setModalVisible(false)}>Cancel</Button>
             </Space>
           </Form.Item>
         </Form>

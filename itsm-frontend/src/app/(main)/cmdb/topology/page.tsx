@@ -23,28 +23,28 @@ const ciTypeColors: Record<string, string> = {
 
 // CMDB类型中文映射
 const ciTypeNameMap: Record<string, string> = {
-  server: '服务器',
-  database: '数据库',
-  application: '应用程序',
-  network: '网络设备',
-  storage: '存储设备',
-  cloud: '云资源',
+  server: 'Servers',
+  database: 'Database',
+  application: 'Application',
+  network: 'Network Devices',
+  storage: 'Storage device',
+  cloud: 'Cloud Resources',
 };
 
 // CMDB状态中文映射
 const ciStatusNameMap: Record<string, string> = {
-  active: '活跃',
-  inactive: '未激活',
-  maintenance: '维护中',
-  retired: '已下线',
+  active: 'Active',
+  inactive: 'Inactive',
+  maintenance: 'Maintenance',
+  retired: 'Offline',
 };
 
 // 关键程度中文映射
 const criticalityNameMap: Record<string, string> = {
-  critical: '关键',
-  high: '高',
-  medium: '中',
-  low: '低',
+  critical: 'Critical',
+  high: 'High',
+  medium: 'Medium',
+  low: 'Low',
 };
 
 // dagre 自动分层布局使用的节点尺寸估计值
@@ -181,7 +181,7 @@ export default function TopologyPage() {
 
   // 错误反馈（失败弹一次）
   useEffect(() => {
-    if (topologyQuery.isError) message.error('加载拓扑图失败');
+    if (topologyQuery.isError) message.error('Failed to load topology map');
   }, [topologyQuery.isError, message]);
 
   const onNodeClick = React.useCallback((_: unknown, node: Node) => {
@@ -242,11 +242,11 @@ export default function TopologyPage() {
   );
 
   return (
-    <PageContainer title="CMDB 拓扑图" description="查看一个配置项周围的依赖关系图，支持 1-4 层关系深度。">
+    <PageContainer title="CMDB topology diagram" description="View the dependency graph around a configuration item, supporting 1-4 levels of relationship depth.">
       <Card className="shadow-sm rounded-lg mb-4">
         <Space wrap>
           <Select
-            placeholder="输入名称搜索配置项"
+            placeholder="Enter name to search for configuration items"
             showSearch
             style={{ width: 300 }}
             value={selectedCI}
@@ -254,7 +254,7 @@ export default function TopologyPage() {
             onSearch={setSearchInput}
             filterOption={false}
             loading={cisQuery.isFetching}
-            notFoundContent={cisQuery.isFetching ? '搜索中...' : '无匹配配置项'}
+            notFoundContent={cisQuery.isFetching ? 'Searching...' : 'No matching configuration item'}
             allowClear
             options={ciOptions.map(ci => ({
               value: ci.id,
@@ -269,10 +269,10 @@ export default function TopologyPage() {
               ),
             }))}
           />
-          <Select placeholder="关系深度" value={depth} onChange={setDepth} style={{ width: 120 }}
-            options={[{ value: 1, label: '1 层' }, { value: 2, label: '2 层' }, { value: 3, label: '3 层' }, { value: 4, label: '4 层' }]} />
-          <Button icon={<RotateCcw />} onClick={handleRefresh} loading={loading} disabled={!selectedCI}>刷新</Button>
-          {highlightNodeId && <Tag color="blue" closable onClose={() => setHighlightNodeId(null)}>已高亮直接上下游（点击空白处取消）</Tag>}
+          <Select placeholder="Depth of relationship" value={depth} onChange={setDepth} style={{ width: 120 }}
+            options={[{ value: 1, label: '1st floor' }, { value: 2, label: '2nd floor' }, { value: 3, label: '3 layers' }, { value: 4, label: '4 layers' }]} />
+          <Button icon={<RotateCcw />} onClick={handleRefresh} loading={loading} disabled={!selectedCI}>Refresh</Button>
+          {highlightNodeId && <Tag color="blue" closable onClose={() => setHighlightNodeId(null)}>Direct upstream and downstream have been highlighted (click the blank space to cancel)</Tag>}
         </Space>
       </Card>
       <Card
@@ -284,13 +284,13 @@ export default function TopologyPage() {
       >
         {/* 全局 SVG marker defs，避开 React Flow 11.11.4 getMarkerId() 拼接问题 */}
         <EdgeArrowDefs />
-        {loading ? <div style={{ textAlign: 'center', padding: 100 }}><Spin size="large" /><div style={{ marginTop: 16 }}>加载拓扑图中...</div></div>
+        {loading ? <div style={{ textAlign: 'center', padding: 100 }}><Spin size="large" /><div style={{ marginTop: 16 }}>Loading topology map...</div></div>
         : selectedCI ? <div style={{ height: '100%' }}><ReactFlow nodes={displayNodes} edges={displayEdges} onNodesChange={onNodesChange} onEdgesChange={onEdgesChange} onNodeClick={onNodeClick} onPaneClick={onPaneClick}
             nodeTypes={nodeTypes} fitView fitViewOptions={{ padding: 0.2 }} attributionPosition="bottom-left"><Controls /><Background variant={BackgroundVariant.Dots} gap={20} size={1} /></ReactFlow></div>
-        : <Empty description="请选择一个配置项查看其拓扑关系" style={{ paddingTop: 100 }} />}
+        : <Empty description="Please select a configuration item to view its topological relationship" style={{ paddingTop: 100 }} />}
       </Card>
       <Drawer
-        title="配置项详情"
+        title="Configuration item details"
         placement="right"
         width={400}
         open={drawerVisible}
@@ -302,16 +302,17 @@ export default function TopologyPage() {
             icon={<ExternalLink className="w-3.5 h-3.5" />}
             onClick={() => router.push(`/cmdb/cis/${selectedNodeData.id}`)}
           >
-            查看 CI 详情
+
+            View CI details
           </Button>
         )}
       >
         {selectedNodeData && <Descriptions column={1} bordered size="small">
           <Descriptions.Item label="ID">{selectedNodeData.id}</Descriptions.Item>
-          <Descriptions.Item label="名称">{selectedNodeData.name}</Descriptions.Item>
-          <Descriptions.Item label="类型">{ciTypeNameMap[selectedNodeData.type?.toLowerCase()] || selectedNodeData.typeName}</Descriptions.Item>
-          <Descriptions.Item label="状态"><Tag color={selectedNodeData.status === 'active' ? 'green' : 'default'}>{ciStatusNameMap[selectedNodeData.status] || selectedNodeData.status}</Tag></Descriptions.Item>
-          <Descriptions.Item label="关键程度"><Tag color={selectedNodeData.criticality === 'critical' ? 'red' : 'default'}>{criticalityNameMap[selectedNodeData.criticality] || selectedNodeData.criticality}</Tag></Descriptions.Item>
+          <Descriptions.Item label="Name">{selectedNodeData.name}</Descriptions.Item>
+          <Descriptions.Item label="Type">{ciTypeNameMap[selectedNodeData.type?.toLowerCase()] || selectedNodeData.typeName}</Descriptions.Item>
+          <Descriptions.Item label="Status"><Tag color={selectedNodeData.status === 'active' ? 'green' : 'default'}>{ciStatusNameMap[selectedNodeData.status] || selectedNodeData.status}</Tag></Descriptions.Item>
+          <Descriptions.Item label="Criticality"><Tag color={selectedNodeData.criticality === 'critical' ? 'red' : 'default'}>{criticalityNameMap[selectedNodeData.criticality] || selectedNodeData.criticality}</Tag></Descriptions.Item>
         </Descriptions>}
       </Drawer>
     </PageContainer>

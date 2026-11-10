@@ -39,10 +39,10 @@ import { formatDateTime } from '@/lib/formatters';
 
 const typeNames = MARKETPLACE_TYPE_LABELS;
 
-const formatDate = (value?: string) => formatDateTime(value) || '暂无';
+const formatDate = (value?: string) => formatDateTime(value) || 'None yet';
 
 const normalizeMarkdown = (text?: string) =>
-  (text || '暂无详细介绍').split('\n').filter(line => line.trim().length > 0);
+  (text || 'No detailed introduction yet').split('\n').filter(line => line.trim().length > 0);
 
 const MarketplaceDetailPage = () => {
   const params = useParams();
@@ -71,7 +71,7 @@ const MarketplaceDetailPage = () => {
   // NaN 守卫：验证 itemId 有效性
   useEffect(() => {
     if (!Number.isInteger(itemId) || itemId <= 0) {
-      setLoadError('无效的项目 ID');
+      setLoadError('Invalid project ID');
       setLoading(false);
     }
   }, [itemId]);
@@ -95,7 +95,7 @@ const MarketplaceDetailPage = () => {
       } catch (error: unknown) {
         if (cancelled) return;
         console.error('Failed to fetch marketplace item detail:', error);
-        setLoadError(error instanceof Error ? error.message : '加载应用详情失败');
+        setLoadError(error instanceof Error ? error.message : 'Failed to load application details');
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -119,16 +119,16 @@ const MarketplaceDetailPage = () => {
       if (installed.status === 'failed') {
         message.warning(
           installed.errorMessage
-            ? `安装未完成：${installed.errorMessage}`
-            : '安装未完成，请在安装列表中补全配置后重试',
+            ? `Installation not completed:${installed.errorMessage}`
+            : 'The installation is not completed. Please complete the configuration in the installation list and try again.',
         );
       } else {
-        message.success('安装成功');
+        message.success('Installation successful');
       }
       router.push('/installations');
     } catch (error) {
       console.error('Failed to install item:', error);
-      message.error(serverErrorMessage(error, '安装失败'));
+      message.error(serverErrorMessage(error, 'Installation failed'));
     } finally {
       setInstalling(false);
     }
@@ -137,19 +137,19 @@ const MarketplaceDetailPage = () => {
   const handleUninstall = async () => {
     if (!item) return;
     const confirmed = await modal.confirm({
-      title: '确认卸载',
-      content: `确定要卸载「${item.title}」吗？卸载后相关功能将无法使用。`,
-      okText: '确认',
-      cancelText: '取消',
+      title: 'Confirm uninstallation',
+      content: `Confirm to uninstall "${item.title}"?" Relevant functions will not be available after uninstallation.`,
+      okText: 'Confirm',
+      cancelText: 'Cancel',
     });
     if (!confirmed) return;
     try {
       await marketplaceService.uninstallItem(itemId);
       setInstallation(null);
-      message.success('卸载成功');
+      message.success('Uninstall successful');
     } catch (error) {
       console.error('Failed to uninstall item:', error);
-      message.error(serverErrorMessage(error, '卸载失败'));
+      message.error(serverErrorMessage(error, 'Uninstall failed'));
     }
   };
 
@@ -166,10 +166,10 @@ const MarketplaceDetailPage = () => {
       <div className="container mx-auto px-4 py-6">
         <div className="bg-white rounded-lg shadow-sm p-10 text-center">
           <AlertCircle className="h-12 w-12 text-red-400 mb-4 mx-auto" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">应用不存在</h3>
-          <p className="text-gray-500 mb-4">{loadError || '您访问的应用可能已被下架或删除'}</p>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Application does not exist</h3>
+          <p className="text-gray-500 mb-4">{loadError || 'The application you visited may have been removed or deleted'}</p>
           <Link href="/marketplace">
-            <Button>返回应用市场</Button>
+            <Button>Return to App Market</Button>
           </Link>
         </div>
       </div>
@@ -181,7 +181,8 @@ const MarketplaceDetailPage = () => {
       <div className="flex items-center gap-2 mb-6 text-sm">
         <Link href="/marketplace" className="text-gray-500 hover:text-gray-700 flex items-center gap-1">
           <ArrowLeft className="h-4 w-4" />
-          返回市场
+
+          Return to market
         </Link>
       </div>
 
@@ -201,14 +202,14 @@ const MarketplaceDetailPage = () => {
                   <div className="flex flex-wrap items-center gap-3 mb-1">
                     <h1 className="text-2xl font-bold">{item.title}</h1>
                     <Badge variant="secondary">{typeNames[item.type]}</Badge>
-                    {item.isOfficial && <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-200">官方</Badge>}
+                    {item.isOfficial && <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-200">Official</Badge>}
                     {item.isFree ? (
-                      <Badge className="bg-green-100 text-green-800 hover:bg-green-200">免费</Badge>
+                      <Badge className="bg-green-100 text-green-800 hover:bg-green-200">Free</Badge>
                     ) : (
                       <Badge className="bg-orange-100 text-orange-800 hover:bg-orange-200">¥{item.price || 0}</Badge>
                     )}
                   </div>
-                  <p className="text-gray-600">{item.description || '暂无描述'}</p>
+                  <p className="text-gray-600">{item.description || 'No description'}</p>
                   <div className="flex flex-wrap items-center gap-4 mt-3 text-sm text-gray-500">
                     {(item.rating || 0) > 0 && (
                       <span className="flex items-center gap-1">
@@ -219,51 +220,53 @@ const MarketplaceDetailPage = () => {
                     {(item.installCount || 0) > 0 && (
                       <span className="flex items-center gap-1">
                         <Download className="h-4 w-4" />
-                        {item.installCount} 次安装
+                        {item.installCount}  Installation
                       </span>
                     )}
                     <span className="flex items-center gap-1">
                       <User className="h-4 w-4" />
-                      作者：{item.authorName || item.provider}
+
+                      Author:{item.authorName || item.provider}
                     </span>
                     <span className="flex items-center gap-1">
                       <Calendar className="h-4 w-4" />
-                      更新于 {formatDate(item.updatedAt)}
+
+                      updated on {formatDate(item.updatedAt)}
                     </span>
                   </div>
                 </div>
                 <div className="md:text-right">
                   {!canManageMarketplace ? (
                     <div className="max-w-52 text-left">
-                      <Badge className="bg-yellow-100 text-yellow-800">预览 · 只读</Badge>
+                      <Badge className="bg-yellow-100 text-yellow-800">Preview · Read only</Badge>
                       <p className="text-xs text-gray-500 mt-2">
-                        {findCapability('marketplace')?.degradedReason || '仅租户管理员可以安装、卸载和配置扩展。'}
+                        {findCapability('marketplace')?.degradedReason || 'Only tenant administrators can install, uninstall, and configure extensions.'}
                       </p>
                     </div>
                   ) : isInstalled ? (
                     <div className="space-y-2">
                       <div className="flex items-center md:justify-end gap-1 text-green-600">
                         <CheckCircle2 className="h-5 w-5" />
-                        <span>已安装</span>
+                        <span>Already installed</span>
                       </div>
                       <div className="flex gap-2">
-                        <Button onClick={() => router.push('/installations')}>管理</Button>
-                        <Button variant="destructive" onClick={handleUninstall}>卸载</Button>
+                        <Button onClick={() => router.push('/installations')}>Admin</Button>
+                        <Button variant="destructive" onClick={handleUninstall}>Uninstall</Button>
                       </div>
                     </div>
                   ) : !installSupported ? (
                     <div className="max-w-52 text-left">
-                      <Button size="lg" disabled>平台不交付该类型</Button>
+                      <Button size="lg" disabled>The platform does not deliver this type</Button>
                       <p className="text-xs text-gray-500 mt-2">
-                        {typeNames[item.type]}类扩展需要外部宿主运行时，平台不托管第三方代码；历史条目仅可查看与卸载。
+                        {typeNames[item.type]}Class extension requires an external host runtime, and the platform does not host third-party code; historical entries can only be viewed and uninstalled.
                       </p>
                     </div>
                   ) : (
                     <Button size="lg" onClick={handleInstall} disabled={installing}>
-                      {installing ? '安装中...' : '立即安装'}
+                      {installing ? 'Installing...' : 'Install now'}
                     </Button>
                   )}
-                  <p className="text-xs text-gray-500 mt-2">版本 {item.latestVersion || '1.0.0'}</p>
+                  <p className="text-xs text-gray-500 mt-2">Version {item.latestVersion || '1.0.0'}</p>
                 </div>
               </div>
             </CardHeader>
@@ -272,10 +275,10 @@ const MarketplaceDetailPage = () => {
           <Card>
             <Tabs defaultValue="description">
               <TabsList>
-                <TabsTrigger value="description">详情介绍</TabsTrigger>
-                <TabsTrigger value="capabilities">功能特性</TabsTrigger>
-                <TabsTrigger value="permissions">权限说明</TabsTrigger>
-                <TabsTrigger value="versions">版本历史</TabsTrigger>
+                <TabsTrigger value="description">Detailed introduction</TabsTrigger>
+                <TabsTrigger value="capabilities">Features</TabsTrigger>
+                <TabsTrigger value="permissions">Permission Description</TabsTrigger>
+                <TabsTrigger value="versions">Version History</TabsTrigger>
               </TabsList>
                 <TabsContent value="description" className="mt-0 space-y-4">
                   <div className="prose prose-sm max-w-none">
@@ -285,7 +288,7 @@ const MarketplaceDetailPage = () => {
                   </div>
                   {(item.tags || []).length > 0 && (
                     <div>
-                      <h3 className="text-lg font-medium mb-3">相关标签</h3>
+                      <h3 className="text-lg font-medium mb-3">Related tags</h3>
                       <div className="flex flex-wrap gap-2">
                         {(item.tags || []).map(tag => (
                           <Badge key={tag} variant="outline">
@@ -297,15 +300,15 @@ const MarketplaceDetailPage = () => {
                     </div>
                   )}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <InfoLink icon={<Globe className="h-5 w-5 text-gray-400 mt-0.5" />} label="官方网站" value={item.homepage} />
-                    <InfoLink icon={<Code className="h-5 w-5 text-gray-400 mt-0.5" />} label="代码仓库" value={item.repository} />
-                    <InfoText icon={<Shield className="h-5 w-5 text-gray-400 mt-0.5" />} label="开源协议" value={item.license || '未声明'} />
-                    <InfoText icon={<Terminal className="h-5 w-5 text-gray-400 mt-0.5" />} label="最低系统版本" value={item.minSystemVersion || '未声明'} />
+                    <InfoLink icon={<Globe className="h-5 w-5 text-gray-400 mt-0.5" />} label="Official website" value={item.homepage} />
+                    <InfoLink icon={<Code className="h-5 w-5 text-gray-400 mt-0.5" />} label="Code Repository" value={item.repository} />
+                    <InfoText icon={<Shield className="h-5 w-5 text-gray-400 mt-0.5" />} label="Open source protocol" value={item.license || 'Not declared'} />
+                    <InfoText icon={<Terminal className="h-5 w-5 text-gray-400 mt-0.5" />} label="Minimum system version" value={item.minSystemVersion || 'Not declared'} />
                   </div>
                 </TabsContent>
 
                 <TabsContent value="capabilities" className="mt-0">
-                  <h3 className="text-lg font-medium mb-3">支持的功能特性</h3>
+                  <h3 className="text-lg font-medium mb-3">Supported features</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {(item.capabilities || []).map(capability => (
                       <div key={capability} className="flex items-center gap-2 p-2 bg-gray-50 rounded-md">
@@ -317,7 +320,7 @@ const MarketplaceDetailPage = () => {
                 </TabsContent>
 
                 <TabsContent value="permissions" className="mt-0">
-                  <h3 className="text-lg font-medium mb-3">需要的系统权限</h3>
+                  <h3 className="text-lg font-medium mb-3">System permissions required</h3>
                   <div className="space-y-3">
                     {(item.requiredPermissions || []).map(permission => (
                       <div key={permission} className="flex items-start gap-2 p-2 bg-gray-50 rounded-md">
@@ -325,12 +328,12 @@ const MarketplaceDetailPage = () => {
                         <span>{permission}</span>
                       </div>
                     ))}
-                    {(item.requiredPermissions || []).length === 0 && <p className="text-sm text-gray-500">暂无额外权限说明</p>}
+                    {(item.requiredPermissions || []).length === 0 && <p className="text-sm text-gray-500">No additional permission description yet</p>}
                   </div>
                 </TabsContent>
 
                 <TabsContent value="versions" className="mt-0">
-                  <h3 className="text-lg font-medium mb-3">版本历史</h3>
+                  <h3 className="text-lg font-medium mb-3">Version History</h3>
                   <div className="space-y-4">
                     {versions.length > 0 ? versions.map(version => (
                       <div key={version.version} className="border-l-2 border-gray-200 pl-4 pb-4">
@@ -338,9 +341,9 @@ const MarketplaceDetailPage = () => {
                           <div className="font-medium">v{version.version}</div>
                           <div className="text-sm text-gray-500">{formatDate(version.releasedAt)}</div>
                         </div>
-                        <p className="text-sm text-gray-600 whitespace-pre-line">{version.changelog || '暂无更新说明'}</p>
+                        <p className="text-sm text-gray-600 whitespace-pre-line">{version.changelog || 'No update instructions yet'}</p>
                       </div>
-                    )) : <p className="text-sm text-gray-500">暂无版本历史</p>}
+                    )) : <p className="text-sm text-gray-500">No version history yet</p>}
                   </div>
                 </TabsContent>
             </Tabs>
@@ -350,34 +353,36 @@ const MarketplaceDetailPage = () => {
         <div className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>安装信息</CardTitle>
+              <CardTitle>Installation information</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <InfoRow label="最新版本" value={item.latestVersion || '1.0.0'} />
-              <InfoRow label="发布日期" value={formatDate(versions[0]?.releasedAt)} />
-              <InfoRow label="最低系统要求" value={item.minSystemVersion || '未声明'} />
+              <InfoRow label="latest version" value={item.latestVersion || '1.0.0'} />
+              <InfoRow label="Release date" value={formatDate(versions[0]?.releasedAt)} />
+              <InfoRow label="Minimum system requirements" value={item.minSystemVersion || 'Not declared'} />
               {(item.installCount || 0) > 0 && (
-                <InfoRow label="安装量" value={String(item.installCount)} />
+                <InfoRow label="Installation volume" value={String(item.installCount)} />
               )}
               <div>
-                <div className="text-sm font-medium mb-1">分类</div>
+                <div className="text-sm font-medium mb-1">Category</div>
                 <Badge variant="secondary">{marketplaceCategoryLabel(item.category)}</Badge>
               </div>
             </CardContent>
             <CardFooter className="border-t pt-4">
               {!canManageMarketplace ? (
                 <Button className="w-full" size="lg" disabled>
-                  仅管理员可安装
+
+                  Only administrators can install
                 </Button>
               ) : isInstalled ? (
-                <Button className="w-full" onClick={() => router.push('/installations')}>管理已安装应用</Button>
+                <Button className="w-full" onClick={() => router.push('/installations')}>Manage installed applications</Button>
               ) : !installSupported ? (
                 <Button className="w-full" size="lg" disabled>
-                  平台不交付该类型
+
+                  The platform does not deliver this type
                 </Button>
               ) : (
                 <Button className="w-full" size="lg" onClick={handleInstall} disabled={installing}>
-                  {installing ? '安装中...' : '立即安装'}
+                  {installing ? 'Installing...' : 'Install now'}
                 </Button>
               )}
             </CardFooter>
@@ -385,7 +390,7 @@ const MarketplaceDetailPage = () => {
 
           <Card>
             <CardHeader>
-              <CardTitle>提供商信息</CardTitle>
+              <CardTitle>Provider information</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center gap-3 mb-4">
@@ -393,12 +398,12 @@ const MarketplaceDetailPage = () => {
                   {(item.provider || item.authorName || item.title).charAt(0)}
                 </div>
                 <div>
-                  <div className="font-medium">{item.provider || item.authorName || '未知提供商'}</div>
-                  {item.isOfficial && <Badge className="mt-1 bg-blue-100 text-blue-800 hover:bg-blue-200">官方认证</Badge>}
+                  <div className="font-medium">{item.provider || item.authorName || 'Unknown provider'}</div>
+                  {item.isOfficial && <Badge className="mt-1 bg-blue-100 text-blue-800 hover:bg-blue-200">Official certification</Badge>}
                 </div>
               </div>
               <p className="text-sm text-gray-600">
-                {item.isOfficial ? '由ITSM官方团队开发和维护，确保兼容性和安全性。' : '由社区开发者贡献，经过官方审核验证。'}
+                {item.isOfficial ? 'Developed and maintained by the ITSM official team to ensure compatibility and security.' : 'Contributed by community developers and verified by official review.'}
               </p>
             </CardContent>
           </Card>
@@ -435,7 +440,7 @@ const InfoLink = ({ icon, label, value }: { icon: React.ReactNode; label: string
           {value}
         </a>
       ) : (
-        <div className="text-sm text-gray-600">未提供</div>
+        <div className="text-sm text-gray-600">Not provided</div>
       )}
     </div>
   </div>

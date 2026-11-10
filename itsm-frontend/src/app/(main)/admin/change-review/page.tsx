@@ -32,14 +32,14 @@ import type {
 const { Title, Text } = Typography;
 
 const BOARD_OPTIONS: { label: string; value: ReviewBoardType }[] = [
-  { label: '常规评审组', value: 'REVIEW' },
-  { label: '紧急评审组', value: 'EREVIEW' },
+  { label: 'Regular review group', value: 'REVIEW' },
+  { label: 'Emergency Review Team', value: 'EREVIEW' },
 ];
 
 const ROLE_OPTIONS: { label: string; value: ReviewMemberRole }[] = [
-  { label: '评审成员：参与变更评审和投票', value: 'member' },
-  { label: '主持人：组织评审并确认结论', value: 'chair' },
-  { label: '记录人：维护会议与决议记录', value: 'secretary' },
+  { label: 'Review member: Participate in change review and voting', value: 'member' },
+  { label: 'Moderator: organize the review and confirm the conclusion', value: 'chair' },
+  { label: 'Recorder: Maintain meeting and resolution records', value: 'secretary' },
 ];
 
 const ChangeReviewManagementPage: React.FC = () => {
@@ -61,7 +61,7 @@ const ChangeReviewManagementPage: React.FC = () => {
       const data = await ChangeReviewApi.getMembers(board);
       setMembers(data);
     } catch (err) {
-      message.error('加载评审组成员失败');
+      message.error('Failed to load review team members');
     } finally {
       setLoading(false);
     }
@@ -92,11 +92,11 @@ const ChangeReviewManagementPage: React.FC = () => {
         type: board,
         role: values.role,
       });
-      message.success('已添加评审组成员');
+      message.success('Review team members have been added');
       setIsModalOpen(false);
       loadMembers();
     } catch (err) {
-      message.error('添加失败：' + (err instanceof Error ? err.message : '未知错误'));
+      message.error('Add failed:' + (err instanceof Error ? err.message : 'Unknown error'));
     } finally {
       setSubmitting(false);
     }
@@ -105,20 +105,20 @@ const ChangeReviewManagementPage: React.FC = () => {
   const handleToggleActive = async (m: ReviewMember, next: boolean) => {
     try {
       await ChangeReviewApi.updateMember(m.id, { role: m.role, isActive: next });
-      message.success(next ? '已启用' : '已停用');
+      message.success(next ? 'Enabled' : 'Disabled');
       loadMembers();
     } catch (err) {
-      message.error('更新失败：' + (err instanceof Error ? err.message : '未知错误'));
+      message.error('Update failed:' + (err instanceof Error ? err.message : 'Unknown error'));
     }
   };
 
   const handleRemove = async (m: ReviewMember) => {
     try {
       await ChangeReviewApi.removeMember(m.id);
-      message.success('已移除');
+      message.success('Removed');
       loadMembers();
     } catch (err) {
-      message.error('移除失败：' + (err instanceof Error ? err.message : '未知错误'));
+      message.error('Removal failed:' + (err instanceof Error ? err.message : 'Unknown error'));
     }
   };
 
@@ -131,7 +131,7 @@ const ChangeReviewManagementPage: React.FC = () => {
 
   const columns = [
     {
-      title: '用户',
+      title: 'Users',
       dataIndex: 'userName',
       key: 'userName',
       render: (_: string, m: ReviewMember) => (
@@ -144,32 +144,33 @@ const ChangeReviewManagementPage: React.FC = () => {
       ),
     },
     {
-      title: '角色',
+      title: 'Role',
       dataIndex: 'role',
       key: 'role',
       render: (role: string) => <Tag>{ROLE_OPTIONS.find(r => r.value === role)?.label ?? role}</Tag>,
     },
     {
-      title: '状态',
+      title: 'Status',
       dataIndex: 'isActive',
       key: 'isActive',
       render: (active: boolean, m: ReviewMember) => (
         <Switch
-          aria-label={`切换 ${m.userName} 的启用状态`}
+          aria-label={`switch ${m.userName} enabled status`}
           checked={active}
-          checkedChildren="启用"
-          unCheckedChildren="停用"
+          checkedChildren="Enabled"
+          unCheckedChildren="Disable"
           onChange={next => handleToggleActive(m, next)}
         />
       ),
     },
     {
-      title: '操作',
+      title: 'Actions',
       key: 'actions',
       render: (_: unknown, m: ReviewMember) => (
-        <Popconfirm title="确认移除该成员？" onConfirm={() => handleRemove(m)}>
+        <Popconfirm title="Confirm to remove this member?" onConfirm={() => handleRemove(m)}>
           <Button danger type="link" icon={<Trash2 size={14} />}>
-            移除
+
+            Remove
           </Button>
         </Popconfirm>
       ),
@@ -181,7 +182,8 @@ const ChangeReviewManagementPage: React.FC = () => {
       <Space style={{ width: '100%', justifyContent: 'space-between', marginBottom: 16 }}>
         <Title level={3} style={{ margin: 0 }}>
           <Users style={{ marginRight: 8 }} />
-          评审组管理
+
+          Review team management
         </Title>
         <Space>
           <Segmented
@@ -190,19 +192,20 @@ const ChangeReviewManagementPage: React.FC = () => {
             onChange={v => setBoard(v as ReviewBoardType)}
           />
           <Button type="primary" icon={<Plus size={14} />} onClick={openModal}>
-            新增成员
+
+            Add new member
           </Button>
         </Space>
       </Space>
 
       <UsageGuideCard
         style={{ marginBottom: 16 }}
-        intro="评审组负责评审高风险变更和紧急变更；这里维护的是评审组名单，不是审批流程本身。"
+        intro="The review team is responsible for reviewing high-risk changes and emergency changes; what is maintained here is the list of review teams, not the approval process itself."
         steps={[
-          '用右上角分段控件在常规评审组与紧急评审组两个名单之间切换。',
-          '点击"新增成员"选择用户并指定角色：主持人组织评审并确认结论，评审成员参与投票，记录人维护会议与决议记录。',
-          '变更工单进入评审阶段时，审批候选人来自这份名单；常规变更配常规评审组，紧急变更配紧急评审组。',
-          '不需要某位成员时直接在列表中移除，不影响历史评审记录。',
+          'Use the segmented control in the upper right corner to switch between the regular review group and the emergency review group.',
+          'Click "Add Member" to select a user and assign a role: the moderator organizes the review and confirms the conclusion, the review members participate in voting, and the recorder maintains meeting and resolution records.',
+          'When a change work order enters the review stage, approval candidates come from this list; regular changes are assigned to the regular review team, and emergency changes are assigned to the emergency review team.',
+          'When a member is no longer needed, remove it directly from the list without affecting the historical review record.',
         ]}
       />
 
@@ -211,7 +214,7 @@ const ChangeReviewManagementPage: React.FC = () => {
           className="mb-4"
           type="info"
           showIcon
-          title="添加评审成员并启用后，其将纳入对应评审组的候选审批人"
+          title="After adding review members and enabling them, they will be included in the candidate approvers of the corresponding review group."
         />
         <Table
           rowKey="id"
@@ -219,12 +222,12 @@ const ChangeReviewManagementPage: React.FC = () => {
           columns={columns}
           dataSource={members}
           pagination={false}
-          locale={{ emptyText: '暂无成员' }}
+          locale={{ emptyText: 'No members yet' }}
         />
       </Card>
 
       <Modal
-        title={`新增 ${board === 'REVIEW' ? '常规' : '紧急'}评审组成员`}
+        title={`New ${board === 'REVIEW' ? 'General' : 'Urgent'} Review Team Member`}
         open={isModalOpen}
         onOk={handleAdd}
         onCancel={() => setIsModalOpen(false)}
@@ -234,12 +237,12 @@ const ChangeReviewManagementPage: React.FC = () => {
         <Form form={form} layout="vertical" initialValues={{ role: 'member' }}>
           <Form.Item
             name="userId"
-            label="用户"
-            rules={[{ required: true, message: '请选择用户' }]}
+            label="Users"
+            rules={[{ required: true, message: 'Please select a user' }]}
           >
             <Select
               showSearch
-              placeholder="搜索并选择用户"
+              placeholder="Search and select user"
               filterOption={false}
               onSearch={setUserSearch}
               options={filteredUsers.map(u => ({
@@ -248,11 +251,12 @@ const ChangeReviewManagementPage: React.FC = () => {
               }))}
             />
           </Form.Item>
-          <Form.Item name="role" label="评审组角色" rules={[{ required: true }]}>
+          <Form.Item name="role" label="Review team role" rules={[{ required: true }]}>
             <Select options={ROLE_OPTIONS} />
           </Form.Item>
           <Text type="secondary" style={{ fontSize: 12 }}>
-            新增成员默认启用；停用后审批链引擎（review:{board} 步骤）将不再纳入该成员。
+
+            New members are enabled by default; the post-approval chain engine is disabled (review:{board}  step) will no longer be included in this member.
           </Text>
         </Form>
       </Modal>

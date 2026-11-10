@@ -22,8 +22,8 @@ describe('serviceRequestStatusLabel', () => {
   });
 
   it('renders submitted as 已提交', () => {
-    expect(serviceRequestStatusLabel('submitted')).toBe('已提交');
-    expect(serviceRequestStatusLabel('manager_approved')).toBe('经理已审批');
+    expect(serviceRequestStatusLabel('submitted')).toBe("Submitted");
+    expect(serviceRequestStatusLabel('manager_approved')).toBe("Manager approved");
   });
 
   it('returns unknown status verbatim instead of hiding it', () => {

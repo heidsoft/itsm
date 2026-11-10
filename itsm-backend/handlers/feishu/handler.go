@@ -105,7 +105,7 @@ func (h *Handler) GetOAuthAuthURL(ctx *gin.Context) {
 		// 500 会被监控当成代码故障告警，也让调用方误以为是可重试的瞬时错误。
 		// 用 503 并给出可执行的处置指引（2026-10-18 缺陷 P1-5）。
 		common.Fail(ctx, common.ServiceUnavailableCode,
-			"飞书连接器未配置：请先在「连接器」中创建飞书实例并填写 app_id / app_secret")
+			"Feishu connector is not configured: Please create a Feishu instance in \"Connector\" first and fill in app_id / app_secret")
 		return
 	}
 	redirectURI := ctx.Query("redirectUri")
@@ -118,7 +118,7 @@ func (h *Handler) GetOAuthAuthURL(ctx *gin.Context) {
 	state, err := h.issueOAuthState(tenantID, fc.CallbackInstanceID(), ctx.GetInt("user_id"))
 	if err != nil {
 		h.logger.Errorw("Failed to issue Feishu OAuth state", "tenant_id", tenantID, "err", err)
-		common.Fail(ctx, common.InternalErrorCode, "生成授权状态失败，请稍后重试")
+		common.Fail(ctx, common.InternalErrorCode, "Failed to generate authorization status, please try again later.")
 		return
 	}
 	common.Success(ctx, &dto.FeishuOAuthAuthURLResponse{
@@ -145,7 +145,7 @@ func (h *Handler) OAuthCallback(ctx *gin.Context) {
 	state := ctx.Query("state")
 	if !h.consumeOAuthState(state, fc.CallbackInstanceID(), tenantID) {
 		h.logger.Warnw("Rejected Feishu OAuth callback with invalid state", "tenant_id", tenantID)
-		common.Fail(ctx, common.ForbiddenCode, "授权状态无效或已过期，请重新发起授权")
+		common.Fail(ctx, common.ForbiddenCode, "The authorization status is invalid or expired. Please re-initiate authorization.")
 		return
 	}
 	token, err := fc.ExchangeOAuthCode(ctx.Request.Context(), code)
@@ -197,13 +197,13 @@ func (h *Handler) SyncTicketToFeishu(ctx *gin.Context) {
 		// 500 会被监控当成代码故障告警，也让调用方误以为是可重试的瞬时错误。
 		// 用 503 并给出可执行的处置指引（2026-10-18 缺陷 P1-5）。
 		common.Fail(ctx, common.ServiceUnavailableCode,
-			"飞书连接器未配置：请先在「连接器」中创建飞书实例并填写 app_id / app_secret")
+			"Feishu connector is not configured: Please create a Feishu instance in \"Connector\" first and fill in app_id / app_secret")
 		return
 	}
 	resp, err := h.syncService.SyncTicketToFeishu(ctx.Request.Context(), tenantID, ticketID, fc)
 	if err != nil {
 		h.logger.Errorw("Failed to sync ticket to Feishu", "ticket_id", ticketID, "tenant_id", tenantID, "err", err)
-		common.RespondError(ctx, err, "操作失败")
+		common.RespondError(ctx, err, "Operation failed")
 		return
 	}
 	common.Success(ctx, resp)
@@ -246,7 +246,7 @@ func (h *Handler) Webhook(ctx *gin.Context) {
 		// 去重存储不可用时 fail-closed：放过去重等于允许平台重投的同一事件
 		// 被二次执行（task_event 会重复建/改飞书任务）。
 		h.logger.Errorw("Feishu webhook dedup unavailable", "tenant_id", tenantID, "err", err)
-		common.Fail(ctx, common.InternalErrorCode, "去重校验失败，请稍后重试")
+		common.Fail(ctx, common.InternalErrorCode, "Deduplication verification failed, please try again later.")
 		return
 	}
 	if handled := h.handleURLVerification(ctx, fc, rawData); handled {

@@ -5,11 +5,11 @@ export const formatUptime = (seconds: number): string => {
   const d = Math.floor(seconds / 86400);
   const h = Math.floor((seconds % 86400) / 3600);
   const m = Math.floor((seconds % 3600) / 60);
-  if (d > 0) return `${d}天 ${h}小时`;
-  if (h > 0) return `${h}小时 ${m}分钟`;
-  if (m > 0) return `${m}分钟`;
+  if (d > 0) return `${d} days ${h} hours`;
+  if (h > 0) return `${h} hours ${m} minutes`;
+  if (m > 0) return `${m} minutes`;
   // 刚重启的后端不足 1 分钟，取整会显示成「0分钟」，看起来像没有运行时长。
-  return `${Math.floor(seconds)}秒`;
+  return `${Math.floor(seconds)} seconds`;
 };
 
 // 采样区间由后端决定，可能只有几毫秒；取整会显示成「0s」，看起来像没有数据。

@@ -52,9 +52,9 @@ describe('BPMNDiagramPreview', () => {
   it('空白 XML 展示空态而不是报错，也不创建 Viewer', async () => {
     render(<BPMNDiagramPreview xml="   " />);
 
-    expect(await screen.findByText('该流程暂无可预览的 BPMN 图形')).toBeInTheDocument();
+    expect(await screen.findByText("This process has no previewable BPMN diagram")).toBeInTheDocument();
     expect(viewerInstances).toBe(0);
-    expect(screen.queryByRole('button', { name: '适应画布' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: "Fit viewport" })).not.toBeInTheDocument();
   });
 
   it('导入成功后显示缩放控件并适应画布', async () => {
@@ -65,8 +65,8 @@ describe('BPMNDiagramPreview', () => {
     await waitFor(() => expect(mockZoom).toHaveBeenCalledWith('fit-viewport'));
     expect(screen.getByText('版本 2')).toBeInTheDocument();
     expect(screen.getByText('100%')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '缩小' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '放大' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: "Zoom out" })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: "Zoom in" })).toBeInTheDocument();
   });
 
   it('注册 BPMNDI 补全钩子，复用设计器的同一注入点', async () => {
@@ -87,15 +87,15 @@ describe('BPMNDiagramPreview', () => {
 
     render(<BPMNDiagramPreview xml="<definitions />" />);
 
-    expect(await screen.findByText('流程图预览失败')).toBeInTheDocument();
+    expect(await screen.findByText("Failed to preview the diagram")).toBeInTheDocument();
     expect(screen.getByText('no diagram to display')).toBeInTheDocument();
 
     act(() => {
-      fireEvent.click(screen.getByRole('button', { name: '重试' }));
+      fireEvent.click(screen.getByRole('button', { name: "Retry" }));
     });
 
     await waitFor(() => expect(mockZoom).toHaveBeenCalledWith('fit-viewport'));
-    expect(screen.queryByText('流程图预览失败')).not.toBeInTheDocument();
+    expect(screen.queryByText("Failed to preview the diagram")).not.toBeInTheDocument();
     expect(mockImportXML).toHaveBeenCalledTimes(2);
   });
 
@@ -109,7 +109,7 @@ describe('BPMNDiagramPreview', () => {
       jest.advanceTimersByTime(120 * 16);
     });
 
-    expect(screen.getByText('预览容器尚未就绪，请重试')).toBeInTheDocument();
+    expect(screen.getByText("Preview container is not ready yet, please retry")).toBeInTheDocument();
     expect(viewerInstances).toBe(0);
 
     jest.useRealTimers();
@@ -156,13 +156,13 @@ describe('BPMNDiagramPreview', () => {
     await waitFor(() => expect(screen.getByText('100%')).toBeInTheDocument());
 
     act(() => {
-      fireEvent.click(screen.getByRole('button', { name: '放大' }));
+      fireEvent.click(screen.getByRole('button', { name: "Zoom in" }));
     });
     expect(mockZoom).toHaveBeenCalledWith(1.2);
     expect(screen.getByText('120%')).toBeInTheDocument();
 
     act(() => {
-      fireEvent.click(screen.getByRole('button', { name: '缩小' }));
+      fireEvent.click(screen.getByRole('button', { name: "Zoom out" }));
     });
     expect(mockZoom).toHaveBeenLastCalledWith(0.96);
     expect(screen.getByText('96%')).toBeInTheDocument();

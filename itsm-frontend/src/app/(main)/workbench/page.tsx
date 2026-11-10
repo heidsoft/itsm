@@ -203,7 +203,8 @@ export default function WorkbenchPage() {
         {/* 未勾选阶段时，默认排除已关闭/已解决终态；显式提示，避免用户误以为列表是全量。 */}
         {phases.length === 0 && (
           <Text type='secondary' className='ml-2' style={{ fontSize: 12 }}>
-            默认排除已关闭、已解决
+
+            Default exclusion is turned off, resolved
           </Text>
         )}
       </div>

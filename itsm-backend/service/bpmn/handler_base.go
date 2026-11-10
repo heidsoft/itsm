@@ -129,7 +129,7 @@ func GetTenantIDFromVars(variables map[string]interface{}) (int, error) {
 	if id := GetIntFromVars(variables, "tenant_id"); id > 0 {
 		return id, nil
 	}
-	return 0, fmt.Errorf("流程变量缺少有效的 tenant_id，拒绝执行以避免跨租户写入")
+	return 0, fmt.Errorf("Process variable missing valid tenant_id, execution refused to avoid cross-tenant writes")
 }
 
 // GetTenantIDFromContext 从 context 中提取 BPMN 租户ID，作为流程变量的补充来源。
@@ -162,7 +162,7 @@ func ResolveTenantID(ctx context.Context, variables map[string]interface{}) (int
 	if id, ok := GetTenantIDFromContext(ctx); ok {
 		return id, nil
 	}
-	return 0, fmt.Errorf("无法确定租户ID：流程变量与上下文均缺少 tenant_id")
+	return 0, fmt.Errorf("Unable to determine tenant ID: tenant_id is missing from both process variable and context")
 }
 
 // HandlerRegistry 处理器注册中心

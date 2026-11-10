@@ -29,9 +29,9 @@ describe('useI18n', () => {
   });
 
   describe('initial state', () => {
-    it('should initialize with zh-CN language by default', () => {
+    it('should initialize with English despite a legacy Chinese preference', () => {
       const { result } = renderHook(() => useI18n());
-      expect(result.current.language).toBe('zh-CN');
+      expect(result.current.language).toBe('en-US');
     });
 
     it('should initialize with en-US when preference is set', () => {
@@ -80,16 +80,16 @@ describe('useI18n', () => {
       expect(mockUpdate).toHaveBeenCalledWith({ language: 'en-US' });
     });
 
-    it('should switch to zh-CN', () => {
+    it('should persist English as the only supported language', () => {
       mockGet.mockReturnValueOnce({ language: 'en-US' });
 
       const { result } = renderHook(() => useI18n());
 
       act(() => {
-        result.current.changeLanguage('zh-CN');
+        result.current.changeLanguage('en-US');
       });
 
-      expect(mockUpdate).toHaveBeenCalledWith({ language: 'zh-CN' });
+      expect(mockUpdate).toHaveBeenCalledWith({ language: 'en-US' });
     });
   });
 });

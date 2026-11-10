@@ -122,7 +122,7 @@ func TestDelegateTask_EmptyTarget_ReturnsError(t *testing.T) {
 
 	err := engine.TaskService().DelegateTask(workflowCtx, "TASK-DELEGATE-1", "  ")
 	require.Error(t, err)
-	assert.Contains(t, err.Error(), "委托目标不能为空")
+	assert.Contains(t, err.Error(), "Delegation target cannot be empty")
 }
 
 func TestDelegateTaskByID_DelegatesCorrectly(t *testing.T) {

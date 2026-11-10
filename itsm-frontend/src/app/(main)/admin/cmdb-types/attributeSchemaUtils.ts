@@ -21,11 +21,11 @@ export const ATTRIBUTE_FIELD_TYPES: AttributeFieldType[] = [
 ];
 
 export const ATTRIBUTE_FIELD_TYPE_OPTIONS: { value: AttributeFieldType; label: string }[] = [
-  { value: 'string', label: '文本' },
-  { value: 'number', label: '数字' },
-  { value: 'boolean', label: '布尔' },
-  { value: 'date', label: '日期' },
-  { value: 'select', label: '枚举选择' },
+  { value: 'string', label: 'Text' },
+  { value: 'number', label: 'Number' },
+  { value: 'boolean', label: 'Boolean' },
+  { value: 'date', label: 'Date' },
+  { value: 'select', label: 'Enumeration selection' },
 ];
 
 export const DEFAULT_ATTRIBUTE_SCHEMA = JSON.stringify(
@@ -33,14 +33,14 @@ export const DEFAULT_ATTRIBUTE_SCHEMA = JSON.stringify(
     fields: [
       {
         key: 'environment',
-        label: '环境',
+        label: 'Environment',
         type: 'select',
         options: ['production', 'staging', 'development'],
         required: true,
       },
       {
         key: 'owner',
-        label: '负责人',
+        label: 'Assignee',
         type: 'select',
         options: ['ops', 'platform', 'security'],
       },
@@ -91,11 +91,11 @@ export const validateAttributeSchema = (value?: string): string | null => {
   try {
     parsed = JSON.parse(value);
   } catch {
-    return '请输入合法的 JSON';
+    return 'Please enter legal JSON';
   }
 
   if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
-    return '属性模式必须是对象 JSON';
+    return 'Property schema must be object JSON';
   }
 
   const record = parsed as Record<string, unknown>;
@@ -104,22 +104,22 @@ export const validateAttributeSchema = (value?: string): string | null => {
   }
 
   if (!Array.isArray(record.fields)) {
-    return 'attribute_schema.fields 必须是数组';
+    return 'attribute_schema.fields must be an array';
   }
 
   for (let index = 0; index < record.fields.length; index += 1) {
     const field = record.fields[index];
     if (!field || typeof field !== 'object' || Array.isArray(field)) {
-      return `attribute_schema.fields[${index}] 必须是对象`;
+      return `attribute_schema.fields[${index}] must be an object`;
     }
     const entry = field as Record<string, unknown>;
-    const fieldKey = entry.key || entry.name || `字段${index + 1}`;
+    const fieldKey = entry.key || entry.name || `Field ${index + 1}`;
     const fieldType = entry.type ?? 'string';
     if (!isAttributeFieldType(fieldType)) {
-      return `attribute_schema.fields[${index}]（${fieldKey}）type 仅支持 ${ATTRIBUTE_FIELD_TYPES.join('/')}`;
+      return `attribute_schema.fields[${index}]（${fieldKey}) type only supports ${ATTRIBUTE_FIELD_TYPES.join('/')}`;
     }
     if (fieldType === 'select' && (!Array.isArray(entry.options) || entry.options.length === 0)) {
-      return `attribute_schema.fields[${index}]（${fieldKey}）type=select 时必须提供非空 options`;
+      return `attribute_schema.fields[${index}]（${fieldKey}) non-empty options must be provided when type=select`;
     }
   }
 

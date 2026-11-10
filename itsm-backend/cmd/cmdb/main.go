@@ -140,7 +140,7 @@ func main() {
 			c.Next()
 			return
 		}
-		c.AbortWithStatusJSON(401, gin.H{"error": "未授权：缺少有效的 API Key"})
+		c.AbortWithStatusJSON(401, gin.H{"error": "Unauthorized: Missing valid API Key"})
 	})
 
 	// 设置路由

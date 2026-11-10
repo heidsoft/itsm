@@ -186,7 +186,7 @@ func (s *Service) RefreshToken(ctx context.Context, refreshToken string) (*AuthR
 	if !minIAT.IsZero() && claims.IssuedAt.Time.Before(minIAT) {
 		s.logger.Warnw("refresh token issued before account change, rejected",
 			"user_id", claims.UserID, "issued_at", claims.IssuedAt.Time, "min_issued_at", minIAT)
-		return nil, fmt.Errorf("账号信息已变更，请重新登录")
+		return nil, fmt.Errorf("Account information has been changed, please log in again")
 	}
 
 	user, err := s.repo.GetUserByID(ctx, claims.UserID, claims.TenantID)

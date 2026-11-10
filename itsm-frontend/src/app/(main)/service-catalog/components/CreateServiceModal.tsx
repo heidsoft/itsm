@@ -79,13 +79,13 @@ export const CreateServiceModal: React.FC<CreateServiceModalProps> = ({
         <Form.Item
           label={t('serviceCatalog.deliveryTime')}
           name="deliveryDays"
-          extra="交付周期按自然日保存，范围 1–3650 天"
+          extra="Delivery period is saved in calendar days, ranging from 1–3650 days"
           rules={[
             { required: true, message: t('serviceCatalog.serviceDeliveryTimeRequired') },
-            { type: 'integer', min: 1, max: 3650, message: '交付天数必须是 1 到 3650 之间的整数' },
+            { type: 'integer', min: 1, max: 3650, message: 'Delivery days must be an integer between 1 and 3650' },
           ]}
         >
-          <InputNumber min={1} max={3650} precision={0} className="w-full" suffix="天" />
+          <InputNumber min={1} max={3650} precision={0} className="w-full" suffix="days" />
         </Form.Item>
 
         <Form.Item

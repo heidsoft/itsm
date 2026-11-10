@@ -69,7 +69,7 @@ func (e *CustomProcessEngine) registerCompensation(ctx context.Context, txc *ent
 		return nil
 	})
 	if err != nil {
-		return fmt.Errorf("登记补偿范围失败: %w", err)
+		return fmt.Errorf("Failed to register compensation range: %w", err)
 	}
 	instance.Variables = updated.Variables
 	return nil
@@ -101,7 +101,7 @@ func (e *CustomProcessEngine) runCompensation(ctx context.Context, txc *ent.Clie
 	if def.ActivityRef != "" {
 		targets = []string{def.ActivityRef}
 		if _, ok := registered[def.ActivityRef]; !ok {
-			return fmt.Errorf("补偿目标 %s 未登记（从未完成或已补偿），拒绝继续", def.ActivityRef)
+			return fmt.Errorf("Compensation target %s is not registered (never completed or compensated), refuse to continue", def.ActivityRef)
 		}
 	}
 
@@ -121,7 +121,7 @@ func (e *CustomProcessEngine) runCompensation(ctx context.Context, txc *ent.Clie
 		return nil
 	})
 	if err != nil {
-		return fmt.Errorf("保存补偿执行状态失败: %w", err)
+		return fmt.Errorf("Failed to save compensation execution status: %w", err)
 	}
 	instance.Variables = updated.Variables
 	return nil
@@ -131,7 +131,7 @@ func (e *CustomProcessEngine) runCompensation(ctx context.Context, txc *ent.Clie
 func (e *CustomProcessEngine) compensateOne(ctx context.Context, txc *ent.Client, instance *ent.ProcessInstance, elementID string, entry compensationEntry, actorID int) error {
 	handler := e.callbackRegistry.GetHandler(entry.ServiceRef)
 	if handler == nil {
-		return fmt.Errorf("补偿活动 %s 的 handler '%s' 未注册", elementID, entry.ServiceRef)
+		return fmt.Errorf("handler '%s' of compensation activity %s is not registered", elementID, entry.ServiceRef)
 	}
 	variables := map[string]interface{}{}
 	for k, v := range entry.Variables {
@@ -142,7 +142,7 @@ func (e *CustomProcessEngine) compensateOne(ctx context.Context, txc *ent.Client
 
 	result, err := handler.Execute(ctx, nil, variables)
 	if err != nil {
-		return fmt.Errorf("补偿活动 %s 执行失败: %w", elementID, err)
+		return fmt.Errorf("Compensation activity %s failed to execute: %w", elementID, err)
 	}
 	if result != nil {
 		for k, v := range result.OutputVars {
@@ -170,7 +170,7 @@ func (e *CustomProcessEngine) compensateOne(ctx context.Context, txc *ent.Client
 		Comment:              fmt.Sprintf("补偿活动 %s（occurrence=%d）", elementID, entry.Occurrence),
 		TenantID:             instance.TenantID,
 	}); err != nil {
-		return fmt.Errorf("记录补偿审计失败: %w", err)
+		return fmt.Errorf("Record compensation audit failed: %w", err)
 	}
 	e.logger.Infow("BPMN 补偿已执行",
 		"instance_id", instance.ID, "tenant_id", instance.TenantID,

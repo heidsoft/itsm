@@ -55,7 +55,7 @@ func (s *TicketAssociationService) UpdateTicketAssociations(ctx context.Context,
 
 	tx, err := s.client.Tx(ctx)
 	if err != nil {
-		return fmt.Errorf("启动工单关联事务失败: %w", err)
+		return fmt.Errorf("Failed to start work order related transaction: %w", err)
 	}
 	defer func() { _ = tx.Rollback() }()
 	txClient := tx.Client()
@@ -80,10 +80,10 @@ func (s *TicketAssociationService) UpdateTicketAssociations(ctx context.Context,
 				Where(tickettag.IDIn(tagIDs...), tickettag.TenantIDEQ(ticketEntity.TenantID), tickettag.IsActiveEQ(true)).
 				Count(ctx)
 			if err != nil {
-				return fmt.Errorf("验证标签失败: %w", err)
+				return fmt.Errorf("Failed to verify tag: %w", err)
 			}
 			if count != len(tagIDs) {
-				return fmt.Errorf("标签不存在或不可用")
+				return fmt.Errorf("Tag does not exist or is not available")
 			}
 		}
 		update.ClearTags()
@@ -96,17 +96,17 @@ func (s *TicketAssociationService) UpdateTicketAssociations(ctx context.Context,
 		ids := uniqueIDs(req.RelatedIDs)
 		for _, relatedID := range ids {
 			if relatedID == ticketID {
-				return fmt.Errorf("工单不能关联自身")
+				return fmt.Errorf("The ticket cannot be associated with itself")
 			}
 		}
 		count, err := txClient.Ticket.Query().
 			Where(ticket.IDIn(ids...), ticket.TenantIDEQ(ticketEntity.TenantID), ticket.DeletedAtIsNil()).
 			Count(ctx)
 		if err != nil {
-			return fmt.Errorf("验证关联工单失败: %w", err)
+			return fmt.Errorf("Failed to verify associated tickets: %w", err)
 		}
 		if count != len(ids) {
-			return fmt.Errorf("关联工单不存在")
+			return fmt.Errorf("The associated work order does not exist")
 		}
 		currentRelated, err := txClient.Ticket.Query().
 			Where(ticket.ID(ticketID)).
@@ -114,14 +114,14 @@ func (s *TicketAssociationService) UpdateTicketAssociations(ctx context.Context,
 			Where(ticket.TenantIDEQ(ticketEntity.TenantID)).
 			All(ctx)
 		if err != nil {
-			return fmt.Errorf("查询现有关联工单失败: %w", err)
+			return fmt.Errorf("Failed to query existing related work orders: %w", err)
 		}
 		for _, related := range currentRelated {
 			if err := txClient.Ticket.UpdateOneID(related.ID).
 				Where(ticket.TenantIDEQ(ticketEntity.TenantID)).
 				RemoveRelatedTicketIDs(ticketID).
 				Exec(ctx); err != nil {
-				return fmt.Errorf("清除反向工单关联失败: %w", err)
+				return fmt.Errorf("Failed to clear reverse ticket association: %w", err)
 			}
 		}
 
@@ -133,30 +133,30 @@ func (s *TicketAssociationService) UpdateTicketAssociations(ctx context.Context,
 					Where(ticket.TenantIDEQ(ticketEntity.TenantID), ticket.DeletedAtIsNil()).
 					AddRelatedTicketIDs(ticketID).
 					Exec(ctx); err != nil {
-					return fmt.Errorf("写入反向工单关联失败: %w", err)
+					return fmt.Errorf("Failed to write reverse ticket association: %w", err)
 				}
 			}
 		}
 	}
 
 	if _, err := update.Save(ctx); err != nil {
-		return fmt.Errorf("更新工单关联失败: %w", err)
+		return fmt.Errorf("Failed to update ticket association: %w", err)
 	}
 	if err := tx.Commit(); err != nil {
-		return fmt.Errorf("提交工单关联事务失败: %w", err)
+		return fmt.Errorf("Failed to submit work order related transaction: %w", err)
 	}
 	return nil
 }
 
 func validateParentAssignment(ctx context.Context, client *ent.Client, child *ent.Ticket, parentID int) error {
 	if parentID == child.ID {
-		return common.NewBusinessError(common.UnprocessableEntityCode, "工单不能作为自己的父工单", "")
+		return common.NewBusinessError(common.UnprocessableEntityCode, "A work order cannot be its own parent work order", "")
 	}
 	visited := map[int]struct{}{child.ID: {}}
 	currentID := parentID
 	for currentID != 0 {
 		if _, exists := visited[currentID]; exists {
-			return common.NewBusinessError(common.UnprocessableEntityCode, "父工单关系不能形成循环", "")
+			return common.NewBusinessError(common.UnprocessableEntityCode, "The parent work order relationship cannot form a cycle", "")
 		}
 		visited[currentID] = struct{}{}
 		parent, err := client.Ticket.Query().
@@ -164,9 +164,9 @@ func validateParentAssignment(ctx context.Context, client *ent.Client, child *en
 			Only(ctx)
 		if err != nil {
 			if ent.IsNotFound(err) {
-				return common.NewBusinessError(common.NotFoundCode, "父工单不存在", "")
+				return common.NewBusinessError(common.NotFoundCode, "The parent ticket does not exist", "")
 			}
-			return fmt.Errorf("查询父工单失败: %w", err)
+			return fmt.Errorf("Failed to query parent ticket: %w", err)
 		}
 		currentID = parent.ParentTicketID
 	}
@@ -188,7 +188,7 @@ func (s *TicketAssociationService) GetRelatedTickets(ctx context.Context, ticket
 		WithTags().
 		All(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("获取关联工单失败: %w", err)
+		return nil, fmt.Errorf("Failed to obtain associated work order: %w", err)
 	}
 	responses := make([]*TicketResponse, len(related))
 	for i, item := range related {
@@ -396,7 +396,7 @@ func (s *TicketAssociationService) AddConfigurationItem(ctx context.Context, tic
 		AddTicketIDs(ticketID).
 		Save(ctx)
 	if err != nil {
-		return fmt.Errorf("添加配置项关联失败: %w", err)
+		return fmt.Errorf("Failed to add configuration item association: %w", err)
 	}
 	return nil
 }
@@ -417,7 +417,7 @@ func (s *TicketAssociationService) RemoveConfigurationItem(ctx context.Context, 
 		RemoveTicketIDs(ticketID).
 		Save(ctx)
 	if err != nil {
-		return fmt.Errorf("移除配置项关联失败: %w", err)
+		return fmt.Errorf("Failed to remove configuration item association: %w", err)
 	}
 	return nil
 }
@@ -436,7 +436,7 @@ func (s *TicketAssociationService) GetConfigurationItems(ctx context.Context, ti
 		).
 		All(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("获取配置项列表失败: %w", err)
+		return nil, fmt.Errorf("Failed to obtain configuration item list: %w", err)
 	}
 
 	responses := make([]*ConfigurationItemResponse, 0, len(items))
@@ -467,13 +467,13 @@ func (s *TicketAssociationService) SetConfigurationItems(ctx context.Context, ti
 		).
 		All(ctx)
 	if err != nil {
-		return fmt.Errorf("查询现有关联配置项失败: %w", err)
+		return fmt.Errorf("Failed to query existing associated configuration items: %w", err)
 	}
 	for _, item := range existingItems {
 		if _, err := s.client.ConfigurationItem.UpdateOneID(item.ID).
 			RemoveTicketIDs(ticketID).
 			Save(ctx); err != nil {
-			return fmt.Errorf("清除现有配置项关联失败: %w", err)
+			return fmt.Errorf("Failed to clear existing configuration item associations: %w", err)
 		}
 	}
 
@@ -499,9 +499,9 @@ func (s *TicketAssociationService) getTicketForAssociation(ctx context.Context, 
 		Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, common.NewBusinessError(common.NotFoundCode, "工单不存在", "")
+			return nil, common.NewBusinessError(common.NotFoundCode, "The work order does not exist", "")
 		}
-		return nil, fmt.Errorf("获取工单失败: %w", err)
+		return nil, fmt.Errorf("Failed to obtain work order: %w", err)
 	}
 	return ticketEntity, nil
 }
@@ -514,7 +514,7 @@ func (s *TicketAssociationService) getConfigurationItemForAssociation(ctx contex
 		).
 		Only(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("配置项不存在")
+		return nil, fmt.Errorf("Configuration item does not exist")
 	}
 	return ci, nil
 }

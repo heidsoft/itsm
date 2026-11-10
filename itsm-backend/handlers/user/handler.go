@@ -55,13 +55,13 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 	var req dto.CreateUserRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		h.logger.Errorf("参数绑定失败: %v", err)
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
 	tenantID := c.GetInt("tenant_id")
 	if tenantID == 0 {
-		common.Fail(c, common.UnauthorizedCode, "租户信息缺失")
+		common.Fail(c, common.UnauthorizedCode, "Tenant information is missing")
 		return
 	}
 
@@ -73,7 +73,7 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 	// 等于没有这道检查。
 	callerRole := c.GetString("role")
 	if req.TenantID > 0 && req.TenantID != tenantID && callerRole != "super_admin" {
-		common.Forbidden(c, "无权限跨租户创建用户")
+		common.Forbidden(c, "No permission to create users across tenants")
 		return
 	}
 
@@ -89,18 +89,18 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 	if strings.TrimSpace(req.Role) != "" {
 		targetRole := normalizeRole(req.Role)
 		if !domainrole.IsBuiltinCode(targetRole) {
-			common.Forbidden(c, "无效的用户角色")
+			common.Forbidden(c, "Invalid user role")
 			return
 		}
 		if domainrole.Rank(targetRole) > domainrole.Rank(callerRole) {
-			common.Forbidden(c, "无权限分配高于自身角色的用户角色")
+			common.Forbidden(c, "No permission to assign a user role higher than its own role")
 			return
 		}
 	}
 	// RoleIDs 越权防护：roleIds 中的角色不得高于调用者自身权限等级
 	if len(req.RoleIDs) > 0 {
 		if err := h.userService.CanGrantRoles(c.Request.Context(), targetTenantID, req.RoleIDs, callerRole); err != nil {
-			common.ForbiddenWithErr(c, err, "权限不足")
+			common.ForbiddenWithErr(c, err, "Insufficient permissions")
 			return
 		}
 	}
@@ -112,11 +112,11 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 			return
 		}
 		// 业务错误：用户名/邮箱重复
-		if strings.Contains(err.Error(), "已存在") {
-			common.ParamErrorWithErr(c, err, "请求参数错误")
+		if strings.Contains(err.Error(), "already exists") || strings.Contains(err.Error(), "已存在") {
+			common.ParamErrorWithErr(c, err, "Wrong request parameters")
 			return
 		}
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -143,7 +143,7 @@ func (h *UserHandler) ListUsers(c *gin.Context) {
 	var req dto.ListUsersRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
 		h.logger.Errorf("参数绑定失败: %v", err)
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
@@ -157,14 +157,14 @@ func (h *UserHandler) ListUsers(c *gin.Context) {
 
 	tenantID := c.GetInt("tenant_id")
 	if tenantID == 0 {
-		common.Fail(c, common.UnauthorizedCode, "租户信息缺失")
+		common.Fail(c, common.UnauthorizedCode, "Tenant information is missing")
 		return
 	}
 
 	result, err := h.userService.ListUsers(c.Request.Context(), &req, tenantID)
 	if err != nil {
 		h.logger.Errorf("获取用户列表失败: %v", err)
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -186,24 +186,24 @@ func (h *UserHandler) GetUser(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		common.Fail(c, 1001, "用户ID格式错误")
+		common.Fail(c, 1001, "User ID format error")
 		return
 	}
 
 	tenantID := c.GetInt("tenant_id")
 	if tenantID == 0 {
-		common.Fail(c, common.UnauthorizedCode, "租户信息缺失")
+		common.Fail(c, common.UnauthorizedCode, "Tenant information is missing")
 		return
 	}
 
 	user, err := h.userService.GetUserByID(c.Request.Context(), id, tenantID)
 	if err != nil {
 		h.logger.Errorf("获取用户详情失败: %v", err)
-		if strings.Contains(err.Error(), "用户不存在") {
-			common.NotFound(c, "用户不存在")
+		if strings.Contains(err.Error(), "User does not exist") || strings.Contains(err.Error(), "用户不存在") {
+			common.NotFound(c, "User does not exist")
 			return
 		}
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -228,20 +228,20 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		common.Fail(c, 1001, "用户ID格式错误")
+		common.Fail(c, 1001, "User ID format error")
 		return
 	}
 
 	var req dto.UpdateUserRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		h.logger.Errorf("参数绑定失败: %v", err)
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
 	tenantID := c.GetInt("tenant_id")
 	if tenantID == 0 {
-		common.Fail(c, common.UnauthorizedCode, "租户信息缺失")
+		common.Fail(c, common.UnauthorizedCode, "Tenant information is missing")
 		return
 	}
 
@@ -250,18 +250,18 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 	if strings.TrimSpace(req.Role) != "" {
 		targetRole := normalizeRole(req.Role)
 		if !domainrole.IsBuiltinCode(targetRole) {
-			common.Forbidden(c, "无效的用户角色")
+			common.Forbidden(c, "Invalid user role")
 			return
 		}
 		if domainrole.Rank(targetRole) > domainrole.Rank(callerRole) {
-			common.Forbidden(c, "无权限分配高于自身角色的用户角色")
+			common.Forbidden(c, "No permission to assign a user role higher than its own role")
 			return
 		}
 	}
 	// RoleIDs 越权防护：roleIds 中的角色不得高于调用者自身权限等级
 	if len(req.RoleIDs) > 0 {
 		if err := h.userService.CanGrantRoles(c.Request.Context(), tenantID, req.RoleIDs, callerRole); err != nil {
-			common.ForbiddenWithErr(c, err, "权限不足")
+			common.ForbiddenWithErr(c, err, "Insufficient permissions")
 			return
 		}
 	}
@@ -269,15 +269,15 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 	user, err := h.userService.UpdateUser(c.Request.Context(), id, &req, tenantID)
 	if err != nil {
 		h.logger.Errorf("更新用户失败: %v", err)
-		if strings.Contains(err.Error(), "用户不存在") {
-			common.NotFound(c, "用户不存在")
+		if strings.Contains(err.Error(), "User does not exist") || strings.Contains(err.Error(), "用户不存在") {
+			common.NotFound(c, "User does not exist")
 			return
 		}
-		if strings.Contains(err.Error(), "已存在") {
-			common.ParamErrorWithErr(c, err, "请求参数错误")
+		if strings.Contains(err.Error(), "already exists") || strings.Contains(err.Error(), "已存在") {
+			common.ParamErrorWithErr(c, err, "Wrong request parameters")
 			return
 		}
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -307,7 +307,7 @@ func (h *UserHandler) ensureTargetRankNotAboveCaller(c *gin.Context, targetID, t
 	}
 	callerRole := c.GetString("role")
 	if domainrole.Rank(string(target.Role)) > domainrole.Rank(callerRole) {
-		common.Forbidden(c, "无权限操作高于自身角色的用户")
+		common.Forbidden(c, "Users who do not have permission to operate higher than their own roles")
 		return true
 	}
 	return false
@@ -317,13 +317,13 @@ func (h *UserHandler) DeleteUser(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		common.Fail(c, 1001, "用户ID格式错误")
+		common.Fail(c, 1001, "User ID format error")
 		return
 	}
 
 	tenantID := c.GetInt("tenant_id")
 	if tenantID == 0 {
-		common.Fail(c, common.UnauthorizedCode, "租户信息缺失")
+		common.Fail(c, common.UnauthorizedCode, "Tenant information is missing")
 		return
 	}
 
@@ -334,11 +334,11 @@ func (h *UserHandler) DeleteUser(c *gin.Context) {
 	err = h.userService.DeleteUser(c.Request.Context(), id, tenantID)
 	if err != nil {
 		h.logger.Errorf("删除用户失败: %v", err)
-		if strings.Contains(err.Error(), "用户不存在") {
-			common.NotFound(c, "用户不存在")
+		if strings.Contains(err.Error(), "User does not exist") || strings.Contains(err.Error(), "用户不存在") {
+			common.NotFound(c, "User does not exist")
 			return
 		}
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -361,14 +361,14 @@ func (h *UserHandler) ChangeUserStatus(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		common.Fail(c, 1001, "用户ID格式错误")
+		common.Fail(c, 1001, "User ID format error")
 		return
 	}
 
 	var req dto.ChangeUserStatusRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		h.logger.Errorf("参数绑定失败: %v", err)
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
@@ -376,7 +376,7 @@ func (h *UserHandler) ChangeUserStatus(c *gin.Context) {
 	currentUserID := c.GetInt("user_id")
 	tenantID := c.GetInt("tenant_id")
 	if tenantID == 0 {
-		common.Fail(c, common.UnauthorizedCode, "租户信息缺失")
+		common.Fail(c, common.UnauthorizedCode, "Tenant information is missing")
 		return
 	}
 
@@ -387,11 +387,11 @@ func (h *UserHandler) ChangeUserStatus(c *gin.Context) {
 	err = h.userService.ChangeUserStatus(c.Request.Context(), id, req.Active, currentUserID, tenantID)
 	if err != nil {
 		h.logger.Errorf("更改用户状态失败: %v", err)
-		if strings.Contains(err.Error(), "用户不存在") {
-			common.NotFound(c, "用户不存在")
+		if strings.Contains(err.Error(), "User does not exist") || strings.Contains(err.Error(), "用户不存在") {
+			common.NotFound(c, "User does not exist")
 			return
 		}
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -414,34 +414,34 @@ func (h *UserHandler) ResetPassword(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		common.Fail(c, 1001, "用户ID格式错误")
+		common.Fail(c, 1001, "User ID format error")
 		return
 	}
 
 	var req dto.ResetPasswordRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		h.logger.Errorf("参数绑定失败: %v", err)
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
 	tenantID := c.GetInt("tenant_id")
 	if tenantID == 0 {
-		common.Fail(c, common.UnauthorizedCode, "租户信息缺失")
+		common.Fail(c, common.UnauthorizedCode, "Tenant information is missing")
 		return
 	}
 
 	err = h.userService.ResetPassword(c.Request.Context(), id, req.NewPassword, tenantID)
 	if err != nil {
 		h.logger.Errorf("重置密码失败: %v", err)
-		if strings.Contains(err.Error(), "用户不存在") {
-			common.NotFound(c, "用户不存在")
+		if strings.Contains(err.Error(), "User does not exist") || strings.Contains(err.Error(), "用户不存在") {
+			common.NotFound(c, "User does not exist")
 			return
 		}
 		if mapUserServiceError(c, err) {
 			return
 		}
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -460,14 +460,14 @@ func (h *UserHandler) ResetPassword(c *gin.Context) {
 func (h *UserHandler) GetUserStats(c *gin.Context) {
 	tenantID := c.GetInt("tenant_id")
 	if tenantID == 0 {
-		common.Fail(c, common.UnauthorizedCode, "租户信息缺失")
+		common.Fail(c, common.UnauthorizedCode, "Tenant information is missing")
 		return
 	}
 
 	stats, err := h.userService.GetUserStats(c.Request.Context(), tenantID)
 	if err != nil {
 		h.logger.Errorf("获取用户统计失败: %v", err)
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -488,13 +488,13 @@ func (h *UserHandler) BatchUpdateUsers(c *gin.Context) {
 	var req dto.BatchUpdateUsersRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		h.logger.Errorf("参数绑定失败: %v", err)
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
 	tenantID := c.GetInt("tenant_id")
 	if tenantID == 0 {
-		common.Fail(c, common.UnauthorizedCode, "租户信息缺失")
+		common.Fail(c, common.UnauthorizedCode, "Tenant information is missing")
 		return
 	}
 	req.OperatorID = c.GetInt("user_id")
@@ -502,7 +502,7 @@ func (h *UserHandler) BatchUpdateUsers(c *gin.Context) {
 	err := h.userService.BatchUpdateUsers(c.Request.Context(), &req, tenantID)
 	if err != nil {
 		h.logger.Errorf("批量更新用户失败: %v", err)
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -526,19 +526,19 @@ func (h *UserHandler) SearchUsers(c *gin.Context) {
 	if c.Request.Method == "POST" {
 		if err := c.ShouldBindJSON(&req); err != nil {
 			h.logger.Errorf("参数绑定失败: %v", err)
-			common.ParamErrorWithErr(c, err, "请求参数错误")
+			common.ParamErrorWithErr(c, err, "Wrong request parameters")
 			return
 		}
 	} else {
 		if err := c.ShouldBindQuery(&req); err != nil {
 			h.logger.Errorf("参数绑定失败: %v", err)
-			common.ParamErrorWithErr(c, err, "请求参数错误")
+			common.ParamErrorWithErr(c, err, "Wrong request parameters")
 			return
 		}
 	}
 
 	if strings.TrimSpace(req.Keyword) == "" {
-		common.Fail(c, 1001, "搜索关键词不能为空")
+		common.Fail(c, 1001, "Search keyword cannot be empty")
 		return
 	}
 
@@ -549,14 +549,14 @@ func (h *UserHandler) SearchUsers(c *gin.Context) {
 
 	tenantID := c.GetInt("tenant_id")
 	if tenantID == 0 {
-		common.Fail(c, common.UnauthorizedCode, "租户信息缺失")
+		common.Fail(c, common.UnauthorizedCode, "Tenant information is missing")
 		return
 	}
 
 	users, err := h.userService.SearchUsers(c.Request.Context(), &req, tenantID)
 	if err != nil {
 		h.logger.Errorf("搜索用户失败: %v", err)
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 

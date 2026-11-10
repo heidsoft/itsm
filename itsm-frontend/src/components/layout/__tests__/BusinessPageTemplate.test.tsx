@@ -19,9 +19,9 @@ describe('BusinessPageTemplate statistics', () => {
       </BusinessPageTemplate>
     );
 
-    const statsGrid = screen.getByRole('group', { name: '页面统计' });
+    const statsGrid = screen.getByRole('group', { name: "Page Statistics" });
     expect(statsGrid.children).toHaveLength(4);
     expect(statsGrid.querySelector('.ant-col')).not.toBeInTheDocument();
-    expect(screen.getByLabelText('平均解决时间统计')).toHaveTextContent('0分钟');
+    expect(screen.getByLabelText("平均解决时间 Statistics")).toHaveTextContent("0分钟");
   });
 });

@@ -25,15 +25,15 @@ describe('QueryProvider 重试策略', () => {
     expect(typeof retry).toBe('function');
 
     const shouldRetry = retry as (count: number, error: unknown) => boolean;
-    expect(shouldRetry(0, new ApiRequestError('无权限', 403))).toBe(false);
+    expect(shouldRetry(0, new ApiRequestError("无Permissions", 403))).toBe(false);
     expect(shouldRetry(0, new ApiRequestError('冲突', 409))).toBe(false);
     expect(shouldRetry(0, new ApiRequestError('不存在', 404))).toBe(false);
-    expect(shouldRetry(0, new ApiRequestError('参数错误', 422))).toBe(false);
+    expect(shouldRetry(0, new ApiRequestError("ParametersError", 422))).toBe(false);
   });
 
   it('读操作对可能自愈的失败重试（网络错误 / 5xx / 429）', () => {
     const retry = defaults.queries?.retry as (count: number, error: unknown) => boolean;
-    expect(retry(0, new ApiRequestError('网关错误', 502))).toBe(true);
+    expect(retry(0, new ApiRequestError("Gateway error", 502))).toBe(true);
     expect(retry(0, new ApiRequestError('限流', 429))).toBe(true);
     // 网络层失败不会被包装成 ApiRequestError
     expect(retry(0, new Error('Failed to fetch'))).toBe(true);
@@ -41,6 +41,6 @@ describe('QueryProvider 重试策略', () => {
 
   it('读操作重试次数有上限', () => {
     const retry = defaults.queries?.retry as (count: number, error: unknown) => boolean;
-    expect(retry(3, new ApiRequestError('网关错误', 502))).toBe(false);
+    expect(retry(3, new ApiRequestError("Gateway error", 502))).toBe(false);
   });
 });

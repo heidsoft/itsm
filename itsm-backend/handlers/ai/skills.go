@@ -105,7 +105,7 @@ type TriageSkill struct {
 func NewTriageSkill(svc *Service) *TriageSkill {
 	b := service.NewBaseSkill(
 		"ai.triage",
-		"AI 智能分诊",
+		"AI Triage",
 		"v1",
 		"ga",
 		[]string{"ai", "triage", "ticket", "llm", "ga"},
@@ -113,23 +113,23 @@ func NewTriageSkill(svc *Service) *TriageSkill {
 		[]string{"ticket.classify", "ticket.suggest_priority"},
 	).WithProvider("itsm-backend").
 		WithAuthor("itsm-backend").
-		WithDescription("使用 LLM 对工单标题和描述做智能分类与优先级建议")
+		WithDescription("Use an LLM to classify ticket titles and descriptions and suggest priorities")
 	return &TriageSkill{BaseSkill: b, svc: svc}
 }
 
 // Manifest 复用 BaseSkill 字段并附加输入/输出 schema 与 long description。
 func (s *TriageSkill) Manifest() service.SkillManifest {
 	m := s.BuildManifest()
-	m.LongDescription = "TriageSkill 接受工单的标题与描述，返回建议的 category/priority/confidence/reasoning。" +
-		" 内部委托给 service.TriageService 走 LLM 推理；LLM 不可用时降级为关键词匹配。"
+	m.LongDescription = "TriageSkill accepts a ticket title and description and returns suggested category, priority, confidence and reasoning." +
+		" Delegates to service.TriageService for LLM inference and falls back to keyword matching when the LLM is unavailable."
 	m.InputSchema = map[string]any{
 		"type":     "object",
 		"required": []string{"title", "description", "tenantId"},
 		"properties": map[string]any{
-			"tenantId":    map[string]any{"type": "integer", "description": "租户 ID（必填）"},
-			"title":       map[string]any{"type": "string", "description": "工单标题"},
-			"description": map[string]any{"type": "string", "description": "工单描述"},
-			"category":    map[string]any{"type": "string", "description": "已知的类别，可选"},
+			"tenantId":    map[string]any{"type": "integer", "description": "Tenant ID (required)"},
+			"title":       map[string]any{"type": "string", "description": "Ticket Title"},
+			"description": map[string]any{"type": "string", "description": "Ticket Description"},
+			"category":    map[string]any{"type": "string", "description": "Known category (optional)"},
 			"priority":    map[string]any{"type": "string", "enum": []any{"low", "medium", "high", "critical"}},
 		},
 	}
@@ -206,7 +206,7 @@ type ChatSkill struct {
 func NewChatSkill(svc *Service) *ChatSkill {
 	b := service.NewBaseSkill(
 		"ai.chat",
-		"AI 知识对话",
+		"AI Knowledge Chat",
 		"v1",
 		"ga",
 		[]string{"ai", "chat", "rag", "llm", "ga"},
@@ -214,14 +214,14 @@ func NewChatSkill(svc *Service) *ChatSkill {
 		[]string{"rag.query", "conversation.persist"},
 	).WithProvider("itsm-backend").
 		WithAuthor("itsm-backend").
-		WithDescription("基于知识库的 RAG 对话：检索 + 大模型生成，保持对话历史")
+		WithDescription("Knowledge-based RAG chat: retrieval and LLM generation with conversation history")
 	return &ChatSkill{BaseSkill: b, svc: svc}
 }
 
 func (s *ChatSkill) Manifest() service.SkillManifest {
 	m := s.BuildManifest()
-	m.LongDescription = "ChatSkill 接受 user 的自然语言 query，调用 RAGService 检索知识库并由 LLM 整合答案；" +
-		"对话历史会自动持久化到 conversations/messages 表。"
+	m.LongDescription = "ChatSkill accepts a natural-language query, searches the knowledge base with RAGService and uses an LLM to compose an answer." +
+		" Conversation history is persisted in the conversations/messages tables."
 	m.InputSchema = map[string]any{
 		"type":     "object",
 		"required": []string{"tenantId", "userId", "query"},
@@ -230,7 +230,7 @@ func (s *ChatSkill) Manifest() service.SkillManifest {
 			"userId":         map[string]any{"type": "integer"},
 			"query":          map[string]any{"type": "string"},
 			"limit":          map[string]any{"type": "integer", "default": 5},
-			"conversationId": map[string]any{"type": "integer", "description": "已有会话 ID；缺省自动新建"},
+			"conversationId": map[string]any{"type": "integer", "description": "Existing conversation ID; creates a new conversation when omitted"},
 		},
 	}
 	m.OutputSchema = map[string]any{
@@ -303,7 +303,7 @@ type KnowledgeSearchSkill struct {
 func NewKnowledgeSearchSkill(svc *Service) *KnowledgeSearchSkill {
 	b := service.NewBaseSkill(
 		"ai.knowledge_search",
-		"知识库检索",
+		"Knowledge Base Search",
 		"v1",
 		"ga",
 		[]string{"ai", "rag", "search", "knowledge", "ga"},
@@ -311,7 +311,7 @@ func NewKnowledgeSearchSkill(svc *Service) *KnowledgeSearchSkill {
 		[]string{"rag.query", "vector.similarity_search"},
 	).WithProvider("itsm-backend").
 		WithAuthor("itsm-backend").
-		WithDescription("RAG 知识库语义检索，仅检索不生成")
+		WithDescription("RAG knowledge base semantic search without answer generation")
 	return &KnowledgeSearchSkill{BaseSkill: b, svc: svc}
 }
 
@@ -366,7 +366,7 @@ type SummarizeSkill struct {
 func NewSummarizeSkill(svc *Service) *SummarizeSkill {
 	b := service.NewBaseSkill(
 		"ai.summarize",
-		"工单摘要",
+		"Ticket Summary",
 		"v1",
 		"ga",
 		[]string{"ai", "summarize", "ticket", "llm", "ga"},
@@ -374,7 +374,7 @@ func NewSummarizeSkill(svc *Service) *SummarizeSkill {
 		[]string{"ticket.summarize"},
 	).WithProvider("itsm-backend").
 		WithAuthor("itsm-backend").
-		WithDescription("基于工单上下文生成可读的摘要描述")
+		WithDescription("Generate a readable summary from ticket context")
 	return &SummarizeSkill{BaseSkill: b, svc: svc}
 }
 
@@ -423,7 +423,7 @@ type AnalyzeSkill struct {
 func NewAnalyzeSkill(svc *Service) *AnalyzeSkill {
 	b := service.NewBaseSkill(
 		"ai.analyze",
-		"工单根因分析",
+		"Ticket Root Cause Analysis",
 		"v1",
 		"ga",
 		[]string{"ai", "analyze", "rca", "ticket", "llm", "ga"},
@@ -431,7 +431,7 @@ func NewAnalyzeSkill(svc *Service) *AnalyzeSkill {
 		[]string{"ticket.rca", "ticket.classify"},
 	).WithProvider("itsm-backend").
 		WithAuthor("itsm-backend").
-		WithDescription("基于 LLM 的工单根因分析（RCA）")
+		WithDescription("LLM-based ticket root cause analysis (RCA)")
 	return &AnalyzeSkill{BaseSkill: b, svc: svc}
 }
 
@@ -473,7 +473,7 @@ type AnalyticsSkill struct {
 func NewAnalyticsSkill(svc *Service) *AnalyticsSkill {
 	b := service.NewBaseSkill(
 		"ai.analytics",
-		"深度数据分析",
+		"Advanced Data Analysis",
 		"v1",
 		"pilot",
 		[]string{"ai", "analytics", "report", "llm", "pilot"},
@@ -481,7 +481,7 @@ func NewAnalyticsSkill(svc *Service) *AnalyticsSkill {
 		[]string{"report.deep_analytics"},
 	).WithProvider("itsm-backend").
 		WithAuthor("itsm-backend").
-		WithDescription("多维度工单数据深度分析与图表生成（pilot）")
+		WithDescription("Multidimensional ticket data analysis and chart generation (pilot)")
 	return &AnalyticsSkill{BaseSkill: b, svc: svc}
 }
 
@@ -582,7 +582,7 @@ type TrendPredictionSkill struct {
 func NewTrendPredictionSkill(svc *Service) *TrendPredictionSkill {
 	b := service.NewBaseSkill(
 		"ai.trend_prediction",
-		"趋势预测",
+		"Trend Forecast",
 		"v1",
 		"pilot",
 		[]string{"ai", "prediction", "forecast", "llm", "pilot"},
@@ -590,7 +590,7 @@ func NewTrendPredictionSkill(svc *Service) *TrendPredictionSkill {
 		[]string{"report.trend_forecast"},
 	).WithProvider("itsm-backend").
 		WithAuthor("itsm-backend").
-		WithDescription("基于历史工单的趋势与 SLA 风险预测（pilot，优先使用 SLAForecastSkill）")
+		WithDescription("Forecast trends and SLA risks from historical tickets (pilot; prefer SLAForecastSkill)")
 	return &TrendPredictionSkill{BaseSkill: b, svc: svc}
 }
 
@@ -651,7 +651,7 @@ type CreateTicketSkill struct {
 func NewCreateTicketSkill(svc *Service) *CreateTicketSkill {
 	b := service.NewBaseSkill(
 		"ai.create_ticket",
-		"AI 创建工单",
+		"AI Ticket Creation",
 		"v1",
 		"pilot",
 		[]string{"ai", "ticket", "create", "llm", "pilot"},
@@ -659,7 +659,7 @@ func NewCreateTicketSkill(svc *Service) *CreateTicketSkill {
 		[]string{"ticket.create_draft"},
 	).WithProvider("itsm-backend").
 		WithAuthor("itsm-backend").
-		WithDescription("从自然语言描述生成工单草稿：自动建议分类与优先级（pilot）")
+		WithDescription("Generate a ticket draft from a natural-language description with suggested category and priority (pilot)")
 	return &CreateTicketSkill{BaseSkill: b, svc: svc}
 }
 
@@ -713,7 +713,7 @@ type AgentToolSkill struct {
 func NewAgentToolSkill(svc *Service) *AgentToolSkill {
 	b := service.NewBaseSkill(
 		"ai.agent_tool",
-		"AI 工具执行",
+		"AI Tool Execution",
 		"v1",
 		"pilot",
 		[]string{"ai", "tool", "agent", "rbac", "pilot"},
@@ -721,14 +721,14 @@ func NewAgentToolSkill(svc *Service) *AgentToolSkill {
 		[]string{"tool.execute", "tool.audit"},
 	).WithProvider("itsm-backend").
 		WithAuthor("itsm-backend").
-		WithDescription("通过统一入口执行 AI 注册工具（含 RBAC 校验与审计记录；pilot）")
+		WithDescription("Execute registered AI tools through a unified entry with RBAC checks and audit records (pilot)")
 	return &AgentToolSkill{BaseSkill: b, svc: svc}
 }
 
 func (s *AgentToolSkill) Manifest() service.SkillManifest {
 	m := s.BuildManifest()
-	m.LongDescription = "AgentToolSkill 接受 tool 名称与参数，调用 Service.ExecuteTool，" +
-		"其内部已实现 Gate 2 工具级 RBAC + 写工具的审批队列逻辑。"
+	m.LongDescription = "AgentToolSkill accepts a tool name and arguments and calls Service.ExecuteTool." +
+		" It applies Gate 2 tool-level RBAC and the approval queue for write tools."
 	m.InputSchema = map[string]any{
 		"type":     "object",
 		"required": []string{"tenantId", "userId", "role", "name"},
@@ -800,7 +800,7 @@ type MetricsSkill struct {
 func NewMetricsSkill(svc *Service) *MetricsSkill {
 	b := service.NewBaseSkill(
 		"ai.metrics",
-		"AI 指标聚合",
+		"AI Metrics Aggregation",
 		"v1",
 		"ga",
 		[]string{"ai", "metrics", "audit", "ga"},
@@ -808,7 +808,7 @@ func NewMetricsSkill(svc *Service) *MetricsSkill {
 		[]string{"audit.metrics_query"},
 	).WithProvider("itsm-backend").
 		WithAuthor("itsm-backend").
-		WithDescription("AI 使用指标聚合（反馈量/成功率/调用次数/延迟）")
+		WithDescription("Aggregate AI usage metrics: feedback volume, success rate, call count and latency")
 	return &MetricsSkill{BaseSkill: b, svc: svc}
 }
 
@@ -861,7 +861,7 @@ type FeedbackSkill struct {
 func NewFeedbackSkill(svc *Service) *FeedbackSkill {
 	b := service.NewBaseSkill(
 		"ai.feedback",
-		"AI 反馈收集",
+		"AI Feedback Collection",
 		"v1",
 		"ga",
 		[]string{"ai", "feedback", "telemetry", "ga"},
@@ -869,7 +869,7 @@ func NewFeedbackSkill(svc *Service) *FeedbackSkill {
 		[]string{"telemetry.feedback_record"},
 	).WithProvider("itsm-backend").
 		WithAuthor("itsm-backend").
-		WithDescription("收集对 AI 输出的有用性反馈，用于评估模型质量")
+		WithDescription("Collect usefulness feedback on AI output to evaluate model quality")
 	return &FeedbackSkill{BaseSkill: b, svc: svc}
 }
 

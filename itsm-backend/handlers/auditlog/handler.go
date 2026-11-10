@@ -43,20 +43,20 @@ func NewHandler(s *service.AuditLogService, logger *zap.SugaredLogger) *Handler 
 func (h *Handler) ListAuditLogs(ctx *gin.Context) {
 	var req dto.ListAuditLogsRequest
 	if err := ctx.ShouldBindQuery(&req); err != nil {
-		common.ParamErrorWithErr(ctx, err, "请求参数错误")
+		common.ParamErrorWithErr(ctx, err, "Wrong request parameters")
 		return
 	}
 
 	tenantID, err := middleware.GetTenantID(ctx)
 	if err != nil || tenantID <= 0 {
-		common.Fail(ctx, common.AuthFailedCode, "租户信息缺失")
+		common.Fail(ctx, common.AuthFailedCode, "Tenant information is missing")
 		return
 	}
 
 	resp, err := h.service.ListAuditLogs(ctx, &req, tenantID)
 	if err != nil {
 		h.logger.Errorw("Failed to list audit logs", "error", err, "tenant_id", tenantID)
-		common.RespondError(ctx, err, "操作失败")
+		common.RespondError(ctx, err, "Operation failed")
 		return
 	}
 	common.Success(ctx, resp)

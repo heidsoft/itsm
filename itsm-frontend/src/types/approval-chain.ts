@@ -50,21 +50,21 @@ export type ApprovalType = 'serial' | 'parallel' | 'all' | 'or';
 export type FallbackAction = 'block' | 'auto_approve' | 'escalate' | 'auto_reject';
 
 export const APPROVAL_TYPE_LABELS: Record<ApprovalType, string> = {
-  serial: '顺序审批',
-  parallel: '并行会签（达到阈值通过）',
-  all: '全员通过（会签）',
-  or: '任一通过（或签）',
+  serial: 'Sequential approval',
+  parallel: 'Parallel countersign (passed when reaching the threshold)',
+  all: 'Passed by all members (countersigned)',
+  or: 'Either passed (or signed)',
 };
 
 /** 会签类审批方式需要配置阈值；serial/or 的阈值在后端恒为 1 */
 export const QUORUM_APPROVAL_TYPES: ApprovalType[] = ['parallel', 'all'];
 
 export const ENTITY_TYPE_LABELS: Record<string, string> = {
-  ticket: '工单',
-  incident: '事件',
-  problem: '问题',
-  change: '变更',
-  service_request: '服务请求',
+  ticket: 'Ticket',
+  incident: 'Incident',
+  problem: 'Problem',
+  change: 'Change',
+  service_request: 'Service Request',
 };
 
 /** 未指定时按默认工单展示；未知取值原样回显，避免把其它实体类型误标成工单 */
@@ -72,10 +72,10 @@ export const entityTypeLabel = (entityType?: string): string =>
   entityType ? ENTITY_TYPE_LABELS[entityType] ?? entityType : ENTITY_TYPE_LABELS.ticket;
 
 export const FALLBACK_ACTION_LABELS: Record<FallbackAction, string> = {
-  block: '阻断（无人可审时报错）',
-  escalate: '升级到指定审批人/角色',
-  auto_approve: '自动通过',
-  auto_reject: '自动拒绝',
+  block: 'Blocked (no one can review the error)',
+  escalate: 'Upgrade to designated approver/role',
+  auto_approve: 'Pass automatically',
+  auto_reject: 'Automatically rejected',
 };
 
 /** 与 ITSM 实体 priority 实际取值一致（后端按不区分大小写比较） */
@@ -83,10 +83,10 @@ export const APPROVAL_CONDITION_PRIORITIES = ['low', 'medium', 'high', 'critical
 
 /** 优先级展示文案；配置值与后端比较仍使用英文枚举 */
 export const PRIORITY_LABELS: Record<string, string> = {
-  low: '低',
-  medium: '中',
-  high: '高',
-  critical: '紧急',
+  low: 'Low',
+  medium: 'Medium',
+  high: 'High',
+  critical: 'Urgent',
 };
 
 export interface ApprovalChainStats {

@@ -35,18 +35,18 @@ func defaultDashboardWidgets() []gin.H {
 		{
 			"id":          "ticket_overview",
 			"type":        "metric",
-			"title":       "工单总览",
-			"description": "工单数量与状态概览",
+			"title":       "Ticket Overview",
+			"description": "Ticket counts and status overview",
 			"position":    gin.H{"x": 0, "y": 0, "w": 3, "h": 2},
-			"config":      gin.H{"showTitle": true, "showBorder": true, "metric": "total", "unit": "个"},
+			"config":      gin.H{"showTitle": true, "showBorder": true, "metric": "total", "unit": "tickets"},
 			"dataSource":  "tickets",
 			"isVisible":   true,
 		},
 		{
 			"id":          "ticket_trend",
 			"type":        "chart",
-			"title":       "工单趋势",
-			"description": "近期工单创建与解决趋势",
+			"title":       "Ticket Trends",
+			"description": "Recent ticket creation and resolution trends",
 			"position":    gin.H{"x": 3, "y": 0, "w": 6, "h": 4},
 			"config":      gin.H{"showTitle": true, "showBorder": true, "chartType": "line", "xAxis": "date", "yAxis": "count"},
 			"dataSource":  "ticket_trend",
@@ -55,8 +55,8 @@ func defaultDashboardWidgets() []gin.H {
 		{
 			"id":          "sla_status",
 			"type":        "progress",
-			"title":       "SLA 达成率",
-			"description": "服务级别协议履约情况",
+			"title":       "SLA Compliance",
+			"description": "Service level agreement compliance",
 			"position":    gin.H{"x": 9, "y": 0, "w": 3, "h": 2},
 			"config":      gin.H{"showTitle": true, "showBorder": true, "metric": "slaCompliance", "unit": "%"},
 			"dataSource":  "sla",
@@ -69,8 +69,8 @@ func defaultDashboardConfig() gin.H {
 	now := time.Now().Format(time.RFC3339)
 	return gin.H{
 		"id":          1,
-		"name":        "默认仪表盘",
-		"description": "系统默认运维视图",
+		"name":        "Default Dashboard",
+		"description": "Default operations view",
 		"isDefault":   true,
 		"isPublic":    false,
 		"layout":      defaultDashboardLayout(),
@@ -78,10 +78,10 @@ func defaultDashboardConfig() gin.H {
 		"filters": []gin.H{
 			{
 				"id":         "time_range",
-				"name":       "时间范围",
+				"name":       "Time Range",
 				"type":       "select",
 				"field":      "timeRange",
-				"options":    []gin.H{{"label": "最近7天", "value": "7d"}, {"label": "最近30天", "value": "30d"}},
+				"options":    []gin.H{{"label": "Last 7 Days", "value": "7d"}, {"label": "Last 30 Days", "value": "30d"}},
 				"isRequired": false,
 				"isVisible":  true,
 			},
@@ -100,8 +100,8 @@ func defaultDashboardConfig() gin.H {
 func defaultDashboardTemplate() gin.H {
 	return gin.H{
 		"id":            1,
-		"name":          "ITSM 运营总览",
-		"description":   "适用于服务台、SLA 与工单趋势的默认模板",
+		"name":          "ITSM Operations Overview",
+		"description":   "Default template for service desk, SLA, and ticket trends",
 		"category":      "operations",
 		"tags":          []string{"itsm", "ticket", "sla"},
 		"layout":        defaultDashboardLayout(),
@@ -131,12 +131,12 @@ type DashboardConfigStore interface {
 func dashboardCtx(c *gin.Context) (tenantID, userID int, ok bool) {
 	tid, exists := c.Get("tenant_id")
 	if !exists {
-		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		common.Fail(c, common.UnauthorizedCode, "Unauthorized access")
 		return 0, 0, false
 	}
 	t, valid := tid.(int)
 	if !valid || t == 0 {
-		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		common.Fail(c, common.UnauthorizedCode, "Unauthorized access")
 		return 0, 0, false
 	}
 	uid, _ := c.Get("user_id")
@@ -189,7 +189,7 @@ func SetupDashboardRoutes(tenant *gin.RouterGroup, h *handlers.DashboardHandler,
 			if cfgStore != nil {
 				cfg, err := cfgStore.LoadDashboardConfig(c.Request.Context(), tid, uid)
 				if err != nil {
-					common.FailWithErr(c, err, "读取仪表盘配置失败")
+					common.FailWithErr(c, err, "Failed to read dashboard configuration")
 					return
 				}
 				if cfg != nil {
@@ -206,15 +206,15 @@ func SetupDashboardRoutes(tenant *gin.RouterGroup, h *handlers.DashboardHandler,
 			}
 			var payload map[string]any
 			if err := c.ShouldBindJSON(&payload); err != nil {
-				common.ParamErrorWithErr(c, err, "请求参数错误")
+				common.ParamErrorWithErr(c, err, "Wrong request parameters")
 				return
 			}
 			if cfgStore == nil {
-				common.Fail(c, common.ServiceUnavailableCode, "仪表盘配置存储未就绪，无法保存")
+				common.Fail(c, common.ServiceUnavailableCode, "Dashboard configuration storage is not ready and cannot be saved.")
 				return
 			}
 			if err := cfgStore.SaveDashboardConfig(c.Request.Context(), tid, uid, payload); err != nil {
-				common.FailWithErr(c, err, "保存仪表盘配置失败")
+				common.FailWithErr(c, err, "Failed to save dashboard configuration")
 				return
 			}
 			common.Success(c, payload)
@@ -228,7 +228,7 @@ func SetupDashboardRoutes(tenant *gin.RouterGroup, h *handlers.DashboardHandler,
 			if cfgStore != nil {
 				layout, err := cfgStore.LoadDashboardLayout(c.Request.Context(), tid, uid)
 				if err != nil {
-					common.FailWithErr(c, err, "读取仪表盘布局失败")
+					common.FailWithErr(c, err, "Failed to read dashboard layout")
 					return
 				}
 				if layout != nil {
@@ -245,15 +245,15 @@ func SetupDashboardRoutes(tenant *gin.RouterGroup, h *handlers.DashboardHandler,
 			}
 			var payload map[string]any
 			if err := c.ShouldBindJSON(&payload); err != nil {
-				common.ParamErrorWithErr(c, err, "请求参数错误")
+				common.ParamErrorWithErr(c, err, "Wrong request parameters")
 				return
 			}
 			if cfgStore == nil {
-				common.Fail(c, common.ServiceUnavailableCode, "仪表盘配置存储未就绪，无法保存")
+				common.Fail(c, common.ServiceUnavailableCode, "Dashboard configuration storage is not ready and cannot be saved.")
 				return
 			}
 			if err := cfgStore.SaveDashboardLayout(c.Request.Context(), tid, uid, payload); err != nil {
-				common.FailWithErr(c, err, "保存仪表盘布局失败")
+				common.FailWithErr(c, err, "Failed to save dashboard layout")
 				return
 			}
 			common.Success(c, payload)
@@ -273,7 +273,7 @@ func SetupDashboardRoutes(tenant *gin.RouterGroup, h *handlers.DashboardHandler,
 			if cfgStore != nil {
 				widgets, err := cfgStore.LoadDashboardWidgets(c.Request.Context(), tid, uid)
 				if err != nil {
-					common.FailWithErr(c, err, "读取仪表盘部件失败")
+					common.FailWithErr(c, err, "Failed to read dashboard part")
 					return
 				}
 				if widgets != nil {
@@ -290,11 +290,11 @@ func SetupDashboardRoutes(tenant *gin.RouterGroup, h *handlers.DashboardHandler,
 			}
 			var payload map[string]any
 			if err := c.ShouldBindJSON(&payload); err != nil {
-				common.ParamErrorWithErr(c, err, "请求参数错误")
+				common.ParamErrorWithErr(c, err, "Wrong request parameters")
 				return
 			}
 			if cfgStore == nil {
-				common.Fail(c, common.ServiceUnavailableCode, "仪表盘配置存储未就绪，无法保存")
+				common.Fail(c, common.ServiceUnavailableCode, "Dashboard configuration storage is not ready and cannot be saved.")
 				return
 			}
 			if payload["id"] == nil || payload["id"] == "" {
@@ -303,12 +303,12 @@ func SetupDashboardRoutes(tenant *gin.RouterGroup, h *handlers.DashboardHandler,
 			// 追加语义：先读现有清单再合并，避免整表覆盖掉其他部件。
 			existing, err := cfgStore.LoadDashboardWidgets(c.Request.Context(), tid, uid)
 			if err != nil {
-				common.FailWithErr(c, err, "读取仪表盘部件失败")
+				common.FailWithErr(c, err, "Failed to read dashboard part")
 				return
 			}
 			merged := mergeWidgetByID(existing, payload)
 			if err := cfgStore.SaveDashboardWidgets(c.Request.Context(), tid, uid, merged); err != nil {
-				common.FailWithErr(c, err, "保存仪表盘部件失败")
+				common.FailWithErr(c, err, "Failed to save dashboard part")
 				return
 			}
 			common.Success(c, gin.H{"widget": payload})
@@ -319,12 +319,12 @@ func SetupDashboardRoutes(tenant *gin.RouterGroup, h *handlers.DashboardHandler,
 				return
 			}
 			if cfgStore == nil {
-				common.Fail(c, common.ServiceUnavailableCode, "仪表盘配置存储未就绪，无法删除")
+				common.Fail(c, common.ServiceUnavailableCode, "Dashboard configuration storage is not ready and cannot be deleted")
 				return
 			}
 			widgets, err := cfgStore.LoadDashboardWidgets(c.Request.Context(), tid, uid)
 			if err != nil {
-				common.FailWithErr(c, err, "读取仪表盘部件失败")
+				common.FailWithErr(c, err, "Failed to read dashboard part")
 				return
 			}
 			target := c.Param("widget_id")
@@ -338,11 +338,11 @@ func SetupDashboardRoutes(tenant *gin.RouterGroup, h *handlers.DashboardHandler,
 				kept = append(kept, w)
 			}
 			if !found {
-				common.Fail(c, common.NotFoundCode, "部件不存在")
+				common.Fail(c, common.NotFoundCode, "Part does not exist")
 				return
 			}
 			if err := cfgStore.SaveDashboardWidgets(c.Request.Context(), tid, uid, kept); err != nil {
-				common.FailWithErr(c, err, "删除仪表盘部件失败")
+				common.FailWithErr(c, err, "Failed to delete dashboard part")
 				return
 			}
 			common.Success(c, gin.H{"deletedId": target})
@@ -378,16 +378,16 @@ func SetupDashboardRoutes(tenant *gin.RouterGroup, h *handlers.DashboardHandler,
 		// 现在统一回 501（能力未实现），语义与 capability registry 一致。
 		// 报表的**真实**能力在 /api/v1/reports/* （见 SetupReportsRoutes，接各域真实统计）。
 		dashboard.GET("/reports", middleware.RequirePermission("dashboard", "read"), func(c *gin.Context) {
-			common.Fail(c, common.NotImplementedCode, "报表列表与生成在当前版本未实现，请使用 /api/v1/reports/*")
+			common.Fail(c, common.NotImplementedCode, "Report list and generation are not implemented in the current version, please use /api/v1/reports/*")
 		})
 		dashboard.POST("/reports/:report_type", middleware.RequirePermission("dashboard", "admin"), func(c *gin.Context) {
-			common.Fail(c, common.NotImplementedCode, "自定义报表生成在当前版本未实现，请使用 /api/v1/reports/*")
+			common.Fail(c, common.NotImplementedCode, "Custom report generation is not implemented in the current version, please use /api/v1/reports/*")
 		})
 		dashboard.GET("/reports/:report_id/download", middleware.RequirePermission("dashboard", "read"), func(c *gin.Context) {
-			common.Fail(c, common.NotImplementedCode, "报表下载在当前版本未实现，请使用各报表页的 CSV 导出")
+			common.Fail(c, common.NotImplementedCode, "Report downloading is not implemented in the current version. Please use the CSV export of each report page.")
 		})
 		dashboard.POST("/export", middleware.RequirePermission("dashboard", "admin"), func(c *gin.Context) {
-			common.Fail(c, common.NotImplementedCode, "仪表盘导出在当前版本未实现，请使用各报表页的 CSV 导出")
+			common.Fail(c, common.NotImplementedCode, "Dashboard export is not implemented in the current version, please use the CSV export of each report page")
 		})
 		// 模板集是**内置只读**的（产品提供的预置布局），保持返回内置模板。
 		dashboard.GET("/templates", middleware.RequirePermission("dashboard", "read"), func(c *gin.Context) {
@@ -400,12 +400,12 @@ func SetupDashboardRoutes(tenant *gin.RouterGroup, h *handlers.DashboardHandler,
 			}
 			// 应用模板 = 把内置布局写入该用户的持久化配置（真实生效，不再是空回显）。
 			if cfgStore == nil {
-				common.Fail(c, common.ServiceUnavailableCode, "仪表盘配置存储未就绪，无法应用模板")
+				common.Fail(c, common.ServiceUnavailableCode, "Dashboard configuration store is not ready, template cannot be applied")
 				return
 			}
 			layout := defaultDashboardLayout()
 			if err := cfgStore.SaveDashboardLayout(c.Request.Context(), tid, uid, layout); err != nil {
-				common.FailWithErr(c, err, "应用仪表盘模板失败")
+				common.FailWithErr(c, err, "Failed to apply dashboard template")
 				return
 			}
 			common.Success(c, gin.H{"templateId": c.Param("template_id"), "layout": layout})
@@ -434,13 +434,13 @@ type reportEntry struct {
 // 成为两份互不相干的文本，谁也不会因为对方缺失而失败。提取成变量后，
 // 守卫测试可以逐条断言每个 path 都真的注册了。
 var reportCatalog = []reportEntry{
-	{ID: "tickets", Name: "工单报表", Path: "/reports/tickets"},
-	{ID: "incidents", Name: "事件报表", Path: "/reports/incidents"},
-	{ID: "problems", Name: "问题报表", Path: "/reports/problems"},
-	{ID: "changes", Name: "变更报表", Path: "/reports/changes"},
-	{ID: "sla", Name: "SLA报表", Path: "/reports/sla"},
-	{ID: "cmdb-quality", Name: "CMDB质量报表", Path: "/reports/cmdb-quality", requiresCMDB: true},
-	{ID: "catalog-usage", Name: "服务目录使用报表", Path: "/reports/catalog-usage", requiresCatalog: true},
+	{ID: "tickets", Name: "Ticket Reports", Path: "/reports/tickets"},
+	{ID: "incidents", Name: "Incident Reports", Path: "/reports/incidents"},
+	{ID: "problems", Name: "Problem Reports", Path: "/reports/problems"},
+	{ID: "changes", Name: "Change Reports", Path: "/reports/changes"},
+	{ID: "sla", Name: "SLA Reports", Path: "/reports/sla"},
+	{ID: "cmdb-quality", Name: "CMDB Quality Reports", Path: "/reports/cmdb-quality", requiresCMDB: true},
+	{ID: "catalog-usage", Name: "Service Catalog Usage Reports", Path: "/reports/catalog-usage", requiresCatalog: true},
 }
 
 // availableReports 返回当前装配下**真的可打开**的报表清单。

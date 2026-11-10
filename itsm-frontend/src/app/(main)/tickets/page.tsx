@@ -63,7 +63,7 @@ function TicketsPageContent() {
         router.replace('/tickets/analytics');
       } catch (navErr) {
         console.error('[nav]', navErr);
-        message.error('导航失败，请稍后重试');
+        message.error('Navigation failed, please try again later');
       }
       return;
     }
@@ -109,7 +109,7 @@ function TicketsPageContent() {
         router.push('/tickets/analytics');
       } catch (navErr) {
         console.error('[nav]', navErr);
-        message.error('导航失败，请稍后重试');
+        message.error('Navigation failed, please try again later');
       }
       return;
     }
@@ -120,7 +120,7 @@ function TicketsPageContent() {
       router.push(`/tickets?${newParams.toString()}`, { scroll: false });
     } catch (navErr) {
       console.error('[nav]', navErr);
-      message.error('导航失败，请稍后重试');
+      message.error('Navigation failed, please try again later');
     }
   };
 
@@ -206,7 +206,7 @@ function TicketsPageContent() {
                     router.push(`/tickets?${newParams.toString()}`, { scroll: false });
                   } catch (navErr) {
                     console.error('[nav]', navErr);
-                    message.error('导航失败，请稍后重试');
+                    message.error('Navigation failed, please try again later');
                   }
                 }}
               >
@@ -221,7 +221,7 @@ function TicketsPageContent() {
                       router.push('/tickets?tab=list&overdue=true', { scroll: false });
                     } catch (navErr) {
                       console.error('[nav]', navErr);
-                      message.error('导航失败，请稍后重试');
+                      message.error('Navigation failed, please try again later');
                     }
                   }}
                 >
@@ -335,7 +335,7 @@ function TicketsPageContent() {
                 router.push(`/tickets/${ticket.id}`);
               } catch (navErr) {
                 console.error('[nav]', navErr);
-                message.error('导航失败，请稍后重试');
+                message.error('Navigation failed, please try again later');
               }
             }}
           />
@@ -346,7 +346,7 @@ function TicketsPageContent() {
       <div className='fixed bottom-6 right-6 z-50'>
         <Space orientation='vertical' size='middle'>
           <Button
-            aria-label='新增'
+            aria-label="New"
             type='primary'
             shape='circle'
             size='large'
@@ -356,7 +356,7 @@ function TicketsPageContent() {
                 router.push('/tickets/create');
               } catch (navErr) {
                 console.error('[nav]', navErr);
-                message.error('导航失败，请稍后重试');
+                message.error('Navigation failed, please try again later');
               }
             }}
             className='shadow-lg hover:scale-110 transition-transform'

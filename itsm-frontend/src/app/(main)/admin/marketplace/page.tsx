@@ -70,16 +70,16 @@ const { Text } = Typography;
 type StatusFilter = 'all' | CatalogItemStatus;
 
 const STATUS_OPTIONS: { label: string; value: StatusFilter }[] = [
-  { label: '全部', value: 'all' },
-  { label: '已上架', value: 'published' },
-  { label: '草稿', value: 'draft' },
-  { label: '已下架', value: 'deprecated' },
+  { label: 'All', value: 'all' },
+  { label: 'Already on the shelves', value: 'published' },
+  { label: 'Draft', value: 'draft' },
+  { label: 'Removed', value: 'deprecated' },
 ];
 
 const TYPE_OPTIONS: { label: string; value: CatalogItemType }[] = [
-  { label: '连接器', value: 'connector' },
-  { label: '技能', value: 'skill' },
-  { label: '插件', value: 'plugin' },
+  { label: 'Connectors', value: 'connector' },
+  { label: 'Skill', value: 'skill' },
+  { label: 'Plug-in', value: 'plugin' },
 ];
 
 interface ItemFormValues {
@@ -132,7 +132,7 @@ export default function MarketplaceCatalogAdminPage() {
       setItems(data.items ?? []);
       setTotal(data.total ?? 0);
     } catch (error) {
-      message.error(error instanceof Error ? error.message : '加载商品目录失败');
+      message.error(error instanceof Error ? error.message : 'Failed to load product catalog');
       setItems([]);
       setTotal(0);
     } finally {
@@ -204,15 +204,15 @@ export default function MarketplaceCatalogAdminPage() {
         delete payload.name;
         delete payload.type;
         await updateCatalogItem(editing.id, payload);
-        message.success('已保存');
+        message.success('Saved');
       } else {
         await createCatalogItem({ ...payload, version: values.version });
-        message.success('已创建草稿，确认版本后点击「上架」才会对租户可见');
+        message.success('A draft has been created. After confirming the version, click "Publish" to make it visible to tenants.');
       }
       setFormOpen(false);
       await load();
     } catch (error) {
-      message.error(error instanceof Error ? error.message : '保存失败');
+      message.error(error instanceof Error ? error.message : 'SaveFailed');
     } finally {
       setSubmitting(false);
     }
@@ -226,18 +226,18 @@ export default function MarketplaceCatalogAdminPage() {
     } catch (error) {
       // 后端的 409 文案本身就是处置指引（先发布版本 / 先下架 / 已有租户安装），
       // 原样透出比「操作失败」有用得多。
-      message.error(error instanceof Error ? error.message : '操作失败');
+      message.error(error instanceof Error ? error.message : 'Operation failed');
     }
   };
 
   const confirmDelete = (item: CatalogItem) => {
     modal.confirm({
-      title: `删除「${item.title}」？`,
-      content: '仅未上架且从未被安装的条目可以删除。已上架的请先下架。',
+      title: `Delete "${item.title}」？`,
+      content: 'Only items that are not listed and have never been installed can be deleted. If it is already on the shelves, please remove it first.',
       okButtonProps: { danger: true },
-      okText: '删除',
-      cancelText: '取消',
-      onOk: () => runAction(() => deleteCatalogItem(item.id), '已删除'),
+      okText: 'Delete',
+      cancelText: 'Cancel',
+      onOk: () => runAction(() => deleteCatalogItem(item.id), 'Deleted'),
     });
   };
 
@@ -247,7 +247,7 @@ export default function MarketplaceCatalogAdminPage() {
       setVersionTarget(await getCatalogItem(item.id));
       setVersionsOpen(true);
     } catch (error) {
-      message.error(error instanceof Error ? error.message : '加载版本失败');
+      message.error(error instanceof Error ? error.message : 'Failed to load version');
     }
   };
 
@@ -263,11 +263,11 @@ export default function MarketplaceCatalogAdminPage() {
     setSubmitting(true);
     try {
       await createItemVersion(versionTarget.item.id, values);
-      message.success('版本已创建（草稿）。发布后才会推进线上版本号');
+      message.success('Version created (draft). The online version number will be promoted after release');
       versionForm.resetFields();
       await refreshVersions();
     } catch (error) {
-      message.error(error instanceof Error ? error.message : '新增版本失败');
+      message.error(error instanceof Error ? error.message : 'Failed to add new version');
     } finally {
       setSubmitting(false);
     }
@@ -275,7 +275,7 @@ export default function MarketplaceCatalogAdminPage() {
 
   const columns: ColumnsType<CatalogItem> = [
     {
-      title: '商品',
+      title: 'Product',
       dataIndex: 'title',
       render: (_: unknown, item) => (
         <Space orientation='vertical' size={0}>
@@ -287,7 +287,7 @@ export default function MarketplaceCatalogAdminPage() {
       ),
     },
     {
-      title: '类型',
+      title: 'Type',
       dataIndex: 'type',
       width: 90,
       render: (type: CatalogItemType) => (
@@ -295,7 +295,7 @@ export default function MarketplaceCatalogAdminPage() {
       ),
     },
     {
-      title: '状态',
+      title: 'Status',
       dataIndex: 'status',
       width: 110,
       render: (value: CatalogItemStatus) => {
@@ -308,25 +308,25 @@ export default function MarketplaceCatalogAdminPage() {
       },
     },
     {
-      title: '线上版本',
+      title: 'Online version',
       dataIndex: 'latestVersion',
       width: 110,
       render: (version: string) =>
-        version ? <Text code>{version}</Text> : <Text type='secondary'>未发布</Text>,
+        version ? <Text code>{version}</Text> : <Text type='secondary'>Not published</Text>,
     },
     {
-      title: '安装数',
+      title: 'Number of installations',
       dataIndex: 'installCount',
       width: 90,
     },
     {
-      title: '更新时间',
+      title: 'Updated At',
       dataIndex: 'updatedAt',
       width: 170,
       render: (value: string) => formatDateTime(value) || '—',
     },
     {
-      title: '操作',
+      title: 'Actions',
       key: 'actions',
       width: 260,
       render: (_: unknown, item) => (
@@ -336,25 +336,29 @@ export default function MarketplaceCatalogAdminPage() {
               type='link'
               size='small'
               icon={<ArrowDownCircle size={14} />}
-              onClick={() => runAction(() => unpublishCatalogItem(item.id), '已下架：停止新安装，已安装租户不受影响')}
+              onClick={() => runAction(() => unpublishCatalogItem(item.id), 'Delisted: Stop new installations, already installed tenants will not be affected')}
             >
-              下架
+
+              Removed
             </Button>
           ) : (
             <Button
               type='link'
               size='small'
               icon={<ArrowUpCircle size={14} />}
-              onClick={() => runAction(() => publishCatalogItem(item.id), '已上架')}
+              onClick={() => runAction(() => publishCatalogItem(item.id), 'Already on the shelves')}
             >
-              上架
+
+              On the shelves
             </Button>
           )}
           <Button type='link' size='small' icon={<History size={14} />} onClick={() => void openVersions(item)}>
-            版本
+
+            Version
           </Button>
           <Button type='link' size='small' icon={<Pencil size={14} />} onClick={() => openEdit(item)}>
-            编辑
+
+            Edit
           </Button>
           {item.status !== 'published' && (
             <Button
@@ -364,7 +368,8 @@ export default function MarketplaceCatalogAdminPage() {
               icon={<Trash2 size={14} />}
               onClick={() => confirmDelete(item)}
             >
-              删除
+
+              Delete
             </Button>
           )}
         </Space>
@@ -374,47 +379,47 @@ export default function MarketplaceCatalogAdminPage() {
 
   const versionColumns: ColumnsType<CatalogItemVersion> = [
     {
-      title: '版本',
+      title: 'Version',
       dataIndex: 'version',
       width: 100,
       render: (version: string) => <Text code>{version}</Text>,
     },
     {
-      title: '状态',
+      title: 'Status',
       dataIndex: 'status',
       width: 100,
       render: (value: CatalogItemVersion['status']) => (
         <Tag color={value === 'published' ? 'green' : value === 'draft' ? 'default' : 'orange'}>
-          {value === 'published' ? '已发布' : value === 'draft' ? '草稿' : value === 'deprecated' ? '已弃用' : '已撤回'}
+          {value === 'published' ? 'Published' : value === 'draft' ? 'Draft' : value === 'deprecated' ? 'Deprecated' : 'Withdrawn'}
         </Tag>
       ),
     },
-    { title: '更新日志', dataIndex: 'changelog', render: (text: string) => text || '—' },
+    { title: 'Update Log', dataIndex: 'changelog', render: (text: string) => text || '—' },
     {
-      title: '发布时间',
+      title: 'Release time',
       dataIndex: 'releasedAt',
       width: 170,
       render: (value: string) => formatDateTime(value) || '—',
     },
     {
-      title: '操作',
+      title: 'Actions',
       key: 'actions',
       width: 130,
       render: (_: unknown, version) => {
         const isLive = versionTarget?.item.latestVersion === version.version;
         return (
-          <Tooltip title={isLive ? '当前线上版本' : '发布该版本会把线上版本推进/回滚到它'}>
+          <Tooltip title={isLive ? 'Current online version' : 'Publishing this version will push/rollback the online version to it'}>
             <Button
               type='link'
               size='small'
               disabled={isLive || version.status === 'withdrawn'}
               onClick={() =>
                 versionTarget &&
-                runAction(() => publishItemVersion(versionTarget.item.id, version.version), `已发布 ${version.version}`)
+                runAction(() => publishItemVersion(versionTarget.item.id, version.version), `Published ${version.version}`)
                   .then(refreshVersions)
               }
             >
-              {isLive ? '线上' : '发布'}
+              {isLive ? 'Online' : 'Release'}
             </Button>
           </Tooltip>
         );
@@ -424,14 +429,16 @@ export default function MarketplaceCatalogAdminPage() {
 
   return (
     <PageContainer
-      header={{ title: '商品目录' }}
+      header={{ title: 'Product Catalog' }}
       extra={
         <Space>
           <Button icon={<RefreshCw size={16} />} onClick={() => void load()} loading={loading}>
-            刷新
+
+            Refresh
           </Button>
           <Button type='primary' icon={<Plus size={16} />} onClick={openCreate}>
-            新建商品
+
+            Create new product
           </Button>
         </Space>
       }
@@ -440,22 +447,22 @@ export default function MarketplaceCatalogAdminPage() {
         <Row gutter={16}>
           <Col xs={12} md={6}>
             <Card size='small'>
-              <Statistic title='商品总数' value={total} prefix={<Boxes size={16} />} />
+              <Statistic title="Total number of items" value={total} prefix={<Boxes size={16} />} />
             </Card>
           </Col>
           <Col xs={12} md={6}>
             <Card size='small'>
-              <Statistic title='已上架' value={summary.published} styles={{ content: { color: '#3f8600' } }} />
+              <Statistic title="Already on the shelves" value={summary.published} styles={{ content: { color: '#3f8600' } }} />
             </Card>
           </Col>
           <Col xs={12} md={6}>
             <Card size='small'>
-              <Statistic title='草稿' value={summary.draft} styles={{ content: { color: '#d48806' } }} />
+              <Statistic title="Draft" value={summary.draft} styles={{ content: { color: '#d48806' } }} />
             </Card>
           </Col>
           <Col xs={12} md={6}>
             <Card size='small'>
-              <Statistic title='本页安装数' value={summary.installed} />
+              <Statistic title="Number of installations on this page" value={summary.installed} />
             </Card>
           </Col>
         </Row>
@@ -463,8 +470,8 @@ export default function MarketplaceCatalogAdminPage() {
         <Alert
           type='info'
           showIcon
-          title='目录是全局的，对所有租户生效'
-          description='上架后所有租户都能浏览与安装；下架只停止新安装，已安装租户不受影响。连接器类商品的名称必须对应一个已注册的连接器（如 feishu / wecom / dingtalk / webhook），否则安装时无法启动运行态。'
+          title="The directory is global and takes effect for all tenants"
+          description="After being put on the shelf, all tenants can browse and install it; taking it off the shelf will only stop new installations, and already installed tenants will not be affected. The name of the connector product must correspond to a registered connector (such as feishu / wecom / dingtalk / webhook), otherwise the running state cannot be started during installation."
         />
 
         <Space wrap>
@@ -478,7 +485,7 @@ export default function MarketplaceCatalogAdminPage() {
           />
           <Input.Search
             allowClear
-            placeholder='按名称/标题/提供商搜索'
+            placeholder="Search by name/title/provider"
             style={{ width: 280 }}
             onSearch={value => {
               setPage(1);
@@ -505,8 +512,8 @@ export default function MarketplaceCatalogAdminPage() {
               <Empty
                 description={
                   total === 0
-                    ? '目录为空。可以新建商品，或确认 seeder 是否已导入出厂商品'
-                    : '没有符合筛选条件的商品'
+                    ? 'Directory is empty. You can create new products or confirm whether the seeder has imported factory products.'
+                    : 'No products matching the filter criteria'
                 }
               />
             ),
@@ -515,15 +522,16 @@ export default function MarketplaceCatalogAdminPage() {
       </Space>
 
       <Drawer
-        title={editing ? `编辑：${editing.title}` : '新建商品'}
+        title={editing ? `Edit:${editing.title}` : 'Create new product'}
         width={520}
         open={formOpen}
         onClose={() => setFormOpen(false)}
         extra={
           <Space>
-            <Button onClick={() => setFormOpen(false)}>取消</Button>
+            <Button onClick={() => setFormOpen(false)}>Cancel</Button>
             <Button type='primary' loading={submitting} onClick={() => void submitForm()}>
-              保存
+
+              Save
             </Button>
           </Space>
         }
@@ -531,55 +539,55 @@ export default function MarketplaceCatalogAdminPage() {
         <Form form={form} layout='vertical'>
           <Form.Item
             name='name'
-            label='标识（name）'
+            label="identification (name)"
             extra={
               editing
-                ? '名称创建后不可修改：它决定安装时的连接器 provider。'
-                : '小写字母/数字/连字符。连接器类请用 <provider>-connector，如 feishu-connector。'
+                ? 'The name cannot be modified after creation: it determines the connector provider during installation.'
+                : 'Lowercase letters/numbers/hyphens. Please use <provider>-connector for connector class, such as feishu-connector.'
             }
-            rules={[{ required: true, message: '请输入标识' }]}
+            rules={[{ required: true, message: 'Please enter ID' }]}
           >
             <Input disabled={Boolean(editing)} placeholder='feishu-connector' />
           </Form.Item>
-          <Form.Item name='type' label='类型' rules={[{ required: true }]} extra='创建后不可修改'>
+          <Form.Item name='type' label="Type" rules={[{ required: true }]} extra="cannot be modified after creation">
             <Select options={TYPE_OPTIONS} disabled={Boolean(editing)} />
           </Form.Item>
           <Form.Item
             name='title'
-            label='显示名称'
-            rules={[{ required: true, message: '请输入显示名称' }]}
-            extra={selectedType === 'connector' && !editing ? '留空则取连接器 manifest 中的标题' : undefined}
+            label="Display Name"
+            rules={[{ required: true, message: 'Please enter a display name' }]}
+            extra={selectedType === 'connector' && !editing ? 'Leave blank to take the title from the connector manifest' : undefined}
           >
-            <Input placeholder='飞书审批增强连接器' />
+            <Input placeholder="Feishu approves enhanced connector" />
           </Form.Item>
-          <Form.Item name='provider' label='提供商' extra='展示用，与连接器 provider 无关'>
+          <Form.Item name='provider' label="Provider" extra="For display purposes, has nothing to do with the connector provider">
             <Input placeholder='ITSM Foundation' />
           </Form.Item>
-          <Form.Item name='category' label='分类'>
+          <Form.Item name='category' label="Category">
             <Input placeholder='im / monitoring / ai' />
           </Form.Item>
-          <Form.Item name='description' label='简介'>
+          <Form.Item name='description' label="Introduction">
             <Input.TextArea rows={2} maxLength={200} showCount />
           </Form.Item>
-          <Form.Item name='tags' label='标签'>
-            <Select mode='tags' placeholder='回车添加' />
+          <Form.Item name='tags' label="Tags">
+            <Select mode='tags' placeholder="Enter to add" />
           </Form.Item>
-          <Form.Item name='iconUrl' label='图标 URL'>
+          <Form.Item name='iconUrl' label="Icon URL">
             <Input placeholder='https://…' />
           </Form.Item>
           <Row gutter={12}>
             <Col span={8}>
-              <Form.Item name='isOfficial' label='官方' valuePropName='checked'>
+              <Form.Item name='isOfficial' label="Official" valuePropName='checked'>
                 <Switch />
               </Form.Item>
             </Col>
             <Col span={8}>
-              <Form.Item name='isFree' label='免费' valuePropName='checked'>
+              <Form.Item name='isFree' label="Free" valuePropName='checked'>
                 <Switch />
               </Form.Item>
             </Col>
             <Col span={8}>
-              <Form.Item name='price' label='价格'>
+              <Form.Item name='price' label="Price">
                 <InputNumber min={0} precision={2} style={{ width: '100%' }} disabled={form.getFieldValue('isFree')} />
               </Form.Item>
             </Col>
@@ -587,11 +595,11 @@ export default function MarketplaceCatalogAdminPage() {
           {!editing && (
             <Form.Item
               name='version'
-              label='初始版本号'
+              label="Initial version number"
               extra={
                 selectedType === 'connector'
-                  ? '连接器类留空则取运行时 manifest 版本；填写时必须与 manifest 一致。'
-                  : '技能/插件类必填，格式 x.y.z。'
+                  ? 'If the connector class is left blank, the runtime manifest version will be used; it must be consistent with the manifest when filled in.'
+                  : 'Skill/plug-in type is required, format x.y.z.'
               }
             >
               <Input placeholder='1.0.0' />
@@ -601,7 +609,7 @@ export default function MarketplaceCatalogAdminPage() {
       </Drawer>
 
       <Drawer
-        title={versionTarget ? `版本：${versionTarget.item.title}` : '版本'}
+        title={versionTarget ? `Version:${versionTarget.item.title}` : 'Version'}
         width={720}
         open={versionsOpen}
         onClose={() => setVersionsOpen(false)}
@@ -609,32 +617,34 @@ export default function MarketplaceCatalogAdminPage() {
         {versionTarget && (
           <Space orientation='vertical' size={16} style={{ width: '100%' }}>
             <Descriptions size='small' column={2} bordered>
-              <Descriptions.Item label='线上版本'>
-                {versionTarget.item.latestVersion || '未发布'}
+              <Descriptions.Item label="Online version">
+                {versionTarget.item.latestVersion || 'Not published'}
               </Descriptions.Item>
-              <Descriptions.Item label='状态'>
+              <Descriptions.Item label="Status">
                 <Tag color={CATALOG_STATUS_META[versionTarget.item.status].color}>
                   {CATALOG_STATUS_META[versionTarget.item.status].label}
                 </Tag>
               </Descriptions.Item>
             </Descriptions>
 
-            <Card size='small' title='新增版本'>
+            <Card size='small' title="New version">
               <Form form={versionForm} layout='inline' style={{ rowGap: 12 }}>
-                <Form.Item name='version' rules={[{ required: true, message: '版本号' }]}>
-                  <Input placeholder='版本号，如 1.1.0' style={{ width: 160 }} />
+                <Form.Item name='version' rules={[{ required: true, message: 'Version' }]}>
+                  <Input placeholder="version number, such as 1.1.0" style={{ width: 160 }} />
                 </Form.Item>
                 <Form.Item name='changelog'>
-                  <Input placeholder='更新日志' style={{ width: 300 }} />
+                  <Input placeholder="Update Log" style={{ width: 300 }} />
                 </Form.Item>
                 <Form.Item>
                   <Button type='primary' loading={submitting} onClick={() => void submitVersion()}>
-                    新增
+
+                    New
                   </Button>
                 </Form.Item>
               </Form>
               <Text type='secondary' style={{ fontSize: 12 }}>
-                新版本默认草稿，发布后才会推进线上版本号。连接器类版本号必须与运行时 manifest 一致。
+
+                The new version is a draft by default, and the online version number will be promoted after it is released. The connector class version number must be consistent with the runtime manifest.
               </Text>
             </Card>
 
@@ -644,7 +654,7 @@ export default function MarketplaceCatalogAdminPage() {
               columns={versionColumns}
               dataSource={versionTarget.versions}
               pagination={false}
-              locale={{ emptyText: <Empty description='还没有版本，先新增一个' /> }}
+              locale={{ emptyText: <Empty description="There is no version yet, please add one first." /> }}
             />
           </Space>
         )}

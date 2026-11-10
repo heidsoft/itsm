@@ -148,7 +148,7 @@ func (h *WebhookHandler) callWebhook(ctx context.Context, variables map[string]i
 	timeout := GetIntFromVars(variables, "timeout")
 
 	if webhookURL == "" {
-		return nil, fmt.Errorf("webhook URL不能为空")
+		return nil, fmt.Errorf("webhook URL cannot be empty")
 	}
 	if err := validateWebhookURL(webhookURL); err != nil {
 		return nil, err
@@ -175,7 +175,7 @@ func (h *WebhookHandler) callWebhook(ctx context.Context, variables map[string]i
 
 	req, err := http.NewRequestWithContext(ctx, method, webhookURL, body)
 	if err != nil {
-		return nil, fmt.Errorf("创建Webhook请求失败: %w", err)
+		return nil, fmt.Errorf("Failed to create Webhook request: %w", err)
 	}
 
 	// 设置请求头
@@ -216,7 +216,7 @@ func (h *WebhookHandler) callWebhook(ctx context.Context, variables map[string]i
 	resp, err := h.httpClient.Do(req)
 	if err != nil {
 		h.logger.Errorw("Webhook call failed", "webhook_url", webhookURL, "error", err)
-		return nil, fmt.Errorf("调用Webhook失败: %w", err)
+		return nil, fmt.Errorf("Failed to call Webhook: %w", err)
 	}
 	defer resp.Body.Close()
 

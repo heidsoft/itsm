@@ -76,7 +76,7 @@ func (h *IncidentServiceTaskHandler) Validate(ctx context.Context, config map[st
 // 这是所有操作的前置守卫，防止 IDOR。
 func (h *IncidentServiceTaskHandler) getIncidentByIDWithTenant(ctx context.Context, incidentID, tenantID int) (*ent.Incident, error) {
 	if incidentID <= 0 {
-		return nil, fmt.Errorf("无效的事件ID: %d", incidentID)
+		return nil, fmt.Errorf("Invalid event ID: %d", incidentID)
 	}
 	i, err := h.client.Incident.Query().
 		Where(
@@ -85,7 +85,7 @@ func (h *IncidentServiceTaskHandler) getIncidentByIDWithTenant(ctx context.Conte
 		).
 		Only(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("事件不存在或不属于当前租户: %d (tenant=%d)", incidentID, tenantID)
+		return nil, fmt.Errorf("The event does not exist or does not belong to the current tenant: %d (tenant=%d)", incidentID, tenantID)
 	}
 	return i, nil
 }
@@ -101,11 +101,11 @@ func (h *IncidentServiceTaskHandler) createIncident(ctx context.Context, variabl
 	tenantID, err := ResolveTenantID(ctx, variables)
 	if err != nil {
 		h.logger.Errorw("BPMN createIncident 缺少租户上下文", "error", err)
-		return nil, fmt.Errorf("创建事件失败: %w", err)
+		return nil, fmt.Errorf("Failed to create event: %w", err)
 	}
 
 	if title == "" {
-		return nil, fmt.Errorf("事件标题不能为空")
+		return nil, fmt.Errorf("Event title cannot be empty")
 	}
 
 	incident, err := h.client.Incident.Create().
@@ -119,7 +119,7 @@ func (h *IncidentServiceTaskHandler) createIncident(ctx context.Context, variabl
 		SetTenantID(tenantID).
 		Save(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("创建事件失败: %w", err)
+		return nil, fmt.Errorf("Failed to create event: %w", err)
 	}
 
 	h.logger.Infow("Incident created via BPMN", "incident_id", incident.ID, "title", title, "tenant_id", tenantID)
@@ -144,7 +144,7 @@ func (h *IncidentServiceTaskHandler) assignIncident(ctx context.Context, variabl
 	assigneeID := GetIntFromVars(variables, "assignee_id")
 	tenantID, err := ResolveTenantID(ctx, variables)
 	if err != nil {
-		return nil, fmt.Errorf("分配事件失败: %w", err)
+		return nil, fmt.Errorf("Failed to allocate event: %w", err)
 	}
 
 	inc, err := h.getIncidentByIDWithTenant(ctx, incidentID, tenantID)
@@ -158,8 +158,8 @@ func (h *IncidentServiceTaskHandler) assignIncident(ctx context.Context, variabl
 	}
 	if assigneeID <= 0 {
 		return nil, fmt.Errorf(
-			"分配事件失败: 未指定处理人（incident_id=%d, tenant=%d）："+
-				"请在触发流程时通过 variables.assignee_id 传入处理人，或改用 userTask 让人工分配",
+			"Failed to assign event: No handler specified (incident_id=%d, tenant=%d):"+
+				"Please pass variables.assignee_id to the handler when triggering the process, or use userTask instead to allow manual assignment.",
 			incidentID, tenantID,
 		)
 	}
@@ -169,7 +169,7 @@ func (h *IncidentServiceTaskHandler) assignIncident(ctx context.Context, variabl
 		SetStatus(common.IncidentStatusAssigned).
 		Save(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("分配事件失败: %w", err)
+		return nil, fmt.Errorf("Failed to allocate event: %w", err)
 	}
 
 	h.logger.Infow("Incident assigned via BPMN", "incident_id", incidentID, "assignee_id", assigneeID, "tenant_id", tenantID)
@@ -187,7 +187,7 @@ func (h *IncidentServiceTaskHandler) escalateIncident(ctx context.Context, varia
 	reason, _ := variables["escalation_reason"].(string)
 	tenantID, err := ResolveTenantID(ctx, variables)
 	if err != nil {
-		return nil, fmt.Errorf("升级事件失败: %w", err)
+		return nil, fmt.Errorf("Upgrade event failed: %w", err)
 	}
 
 	inc, err := h.getIncidentByIDWithTenant(ctx, incidentID, tenantID)
@@ -207,7 +207,7 @@ func (h *IncidentServiceTaskHandler) escalateIncident(ctx context.Context, varia
 		SetStatus(common.IncidentStatusEscalated).
 		Save(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("升级事件失败: %w", err)
+		return nil, fmt.Errorf("Upgrade event failed: %w", err)
 	}
 
 	h.logger.Infow("Incident escalated via BPMN",
@@ -225,7 +225,7 @@ func (h *IncidentServiceTaskHandler) resolveIncident(ctx context.Context, variab
 	resolution, _ := variables["resolution"].(string)
 	tenantID, err := ResolveTenantID(ctx, variables)
 	if err != nil {
-		return nil, fmt.Errorf("解决事件失败: %w", err)
+		return nil, fmt.Errorf("Failed to resolve incident: %w", err)
 	}
 
 	if _, err := h.getIncidentByIDWithTenant(ctx, incidentID, tenantID); err != nil {
@@ -238,7 +238,7 @@ func (h *IncidentServiceTaskHandler) resolveIncident(ctx context.Context, variab
 		SetResolvedAt(now).
 		Save(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("解决事件失败: %w", err)
+		return nil, fmt.Errorf("Failed to resolve incident: %w", err)
 	}
 
 	h.logger.Infow("Incident resolved via BPMN", "incident_id", incidentID, "resolution", resolution, "tenant_id", tenantID)
@@ -255,7 +255,7 @@ func (h *IncidentServiceTaskHandler) closeIncident(ctx context.Context, variable
 	feedback, _ := variables["feedback"].(string)
 	tenantID, err := ResolveTenantID(ctx, variables)
 	if err != nil {
-		return nil, fmt.Errorf("关闭事件失败: %w", err)
+		return nil, fmt.Errorf("Failed to close event: %w", err)
 	}
 
 	if _, err := h.getIncidentByIDWithTenant(ctx, incidentID, tenantID); err != nil {
@@ -268,7 +268,7 @@ func (h *IncidentServiceTaskHandler) closeIncident(ctx context.Context, variable
 		SetClosedAt(now).
 		Save(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("关闭事件失败: %w", err)
+		return nil, fmt.Errorf("Failed to close event: %w", err)
 	}
 
 	h.logger.Infow("Incident closed via BPMN", "incident_id", incidentID, "feedback", feedback, "tenant_id", tenantID)
@@ -284,7 +284,7 @@ func (h *IncidentServiceTaskHandler) updateIncident(ctx context.Context, variabl
 	incidentID := GetIntFromVars(variables, "incident_id")
 	tenantID, err := ResolveTenantID(ctx, variables)
 	if err != nil {
-		return nil, fmt.Errorf("更新事件失败: %w", err)
+		return nil, fmt.Errorf("Update event failed: %w", err)
 	}
 
 	if _, err := h.getIncidentByIDWithTenant(ctx, incidentID, tenantID); err != nil {
@@ -311,7 +311,7 @@ func (h *IncidentServiceTaskHandler) updateIncident(ctx context.Context, variabl
 
 	_, err = updateQuery.Save(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("更新事件失败: %w", err)
+		return nil, fmt.Errorf("Update event failed: %w", err)
 	}
 
 	h.logger.Infow("Incident updated via BPMN", "incident_id", incidentID, "tenant_id", tenantID)
@@ -327,7 +327,7 @@ func (h *IncidentServiceTaskHandler) acknowledgeIncident(ctx context.Context, va
 	incidentID := GetIntFromVars(variables, "incident_id")
 	tenantID, err := ResolveTenantID(ctx, variables)
 	if err != nil {
-		return nil, fmt.Errorf("确认事件失败: %w", err)
+		return nil, fmt.Errorf("Failed to acknowledge event: %w", err)
 	}
 
 	if _, err := h.getIncidentByIDWithTenant(ctx, incidentID, tenantID); err != nil {
@@ -338,7 +338,7 @@ func (h *IncidentServiceTaskHandler) acknowledgeIncident(ctx context.Context, va
 		SetStatus(common.IncidentStatusAcknowledged).
 		Save(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("确认事件失败: %w", err)
+		return nil, fmt.Errorf("Failed to acknowledge event: %w", err)
 	}
 
 	h.logger.Infow("Incident acknowledged via BPMN", "incident_id", incidentID, "tenant_id", tenantID)
@@ -356,7 +356,7 @@ func (h *IncidentServiceTaskHandler) categorizeIncident(ctx context.Context, var
 	subcategory, _ := variables["subcategory"].(string)
 	tenantID, err := ResolveTenantID(ctx, variables)
 	if err != nil {
-		return nil, fmt.Errorf("分类事件失败: %w", err)
+		return nil, fmt.Errorf("Failed to classify event: %w", err)
 	}
 
 	if _, err := h.getIncidentByIDWithTenant(ctx, incidentID, tenantID); err != nil {
@@ -373,7 +373,7 @@ func (h *IncidentServiceTaskHandler) categorizeIncident(ctx context.Context, var
 
 	_, err = updateQuery.Save(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("分类事件失败: %w", err)
+		return nil, fmt.Errorf("Failed to classify event: %w", err)
 	}
 
 	h.logger.Infow("Incident categorized via BPMN",

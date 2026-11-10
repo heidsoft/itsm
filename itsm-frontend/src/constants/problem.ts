@@ -15,12 +15,12 @@ export enum ProblemStatus {
 
 // 状态描述映射
 export const ProblemStatusLabels: Record<ProblemStatus, string> = {
-  [ProblemStatus.OPEN]: '待处理',
-  [ProblemStatus.INVESTIGATING]: '调查中',
-  [ProblemStatus.IN_PROGRESS]: '处理中',
-  [ProblemStatus.RESOLVED]: '已解决',
-  [ProblemStatus.CLOSED]: '已关闭',
-  [ProblemStatus.IDENTIFIED]: '已识别',
+  [ProblemStatus.OPEN]: 'Pending',
+  [ProblemStatus.INVESTIGATING]: 'Investigating',
+  [ProblemStatus.IN_PROGRESS]: 'In Progress',
+  [ProblemStatus.RESOLVED]: 'Resolved',
+  [ProblemStatus.CLOSED]: 'Closed',
+  [ProblemStatus.IDENTIFIED]: 'Identified',
 };
 
 // 优先级
@@ -32,10 +32,10 @@ export enum ProblemPriority {
 }
 
 export const ProblemPriorityLabels: Record<ProblemPriority, string> = {
-  [ProblemPriority.LOW]: '低',
-  [ProblemPriority.MEDIUM]: '中',
-  [ProblemPriority.HIGH]: '高',
-  [ProblemPriority.CRITICAL]: '极高',
+  [ProblemPriority.LOW]: 'Low',
+  [ProblemPriority.MEDIUM]: 'Medium',
+  [ProblemPriority.HIGH]: 'High',
+  [ProblemPriority.CRITICAL]: 'Critical',
 };
 
 // 问题分类——中文字面量为存储值，不走 i18n，避免后端/前端枚举不一致。
@@ -54,13 +54,13 @@ export const ProblemCategoryValues = [
 export type ProblemCategory = (typeof ProblemCategoryValues)[number];
 
 export const ProblemCategoryLabels: Record<ProblemCategory, string> = {
-  系统问题: '系统问题',
-  网络问题: '网络问题',
-  数据库问题: '数据库问题',
-  应用问题: '应用问题',
-  安全问题: '安全问题',
-  硬件问题: '硬件问题',
-  其他: '其他',
+  系统问题: 'System problem',
+  网络问题: 'Network problem',
+  数据库问题: 'Database problem',
+  应用问题: 'Application problem',
+  安全问题: 'Security issue',
+  硬件问题: 'Hardware problem',
+  其他: 'Other',
 };
 
 // 给 Select options 用的全量列表，便于 new/edit/filter 共享。

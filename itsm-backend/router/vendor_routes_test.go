@@ -146,7 +146,7 @@ func TestVendorRoutes(t *testing.T) {
 			jsonBody(`{"name":"华为重复","code":"hw-001","vendorType":"硬件供应商"}`), fx.userA)
 		assert.Equal(t, http.StatusConflict, w, "body=%s", string(env.Data))
 		assert.Equal(t, 4090, env.Code)
-		assert.Contains(t, env.Message, "供应商编码已存在")
+		assert.Contains(t, env.Message, "Supplier code already exists")
 	})
 
 	t.Run("缺少必填字段是 400 参数错误", func(t *testing.T) {

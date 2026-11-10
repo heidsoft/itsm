@@ -55,7 +55,7 @@ func (s *RoleService) getRolePermissionsByIDs(ctx context.Context, roleIDs []int
 		).
 		All(ctx)
 	if err != nil {
-		return result, fmt.Errorf("查询角色权限关联失败: %w", err)
+		return result, fmt.Errorf("Failed to query role permission association: %w", err)
 	}
 
 	// 收集所有 permission IDs
@@ -75,7 +75,7 @@ func (s *RoleService) getRolePermissionsByIDs(ctx context.Context, roleIDs []int
 		).
 		All(ctx)
 	if err != nil {
-		return result, fmt.Errorf("查询权限详情失败: %w", err)
+		return result, fmt.Errorf("Failed to query permission details: %w", err)
 	}
 
 	permMap := make(map[int]*ent.Permission, len(perms))
@@ -132,7 +132,7 @@ func (s *RoleService) CreateRole(ctx context.Context, req *dto.CreateRoleRequest
 		SetIsActive(req.Status != dto.RoleStatusInactive). // 默认启用，仅显式 inactive 时禁用
 		Save(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("创建角色失败: %w", err)
+		return nil, fmt.Errorf("Failed to create role: %w", err)
 	}
 
 	if len(req.Permissions) > 0 {
@@ -158,9 +158,9 @@ func (s *RoleService) GetRole(ctx context.Context, id int, tenantID int) (*dto.R
 		Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, fmt.Errorf("角色不存在")
+			return nil, fmt.Errorf("Role does not exist")
 		}
-		return nil, fmt.Errorf("查询角色失败: %w", err)
+		return nil, fmt.Errorf("Failed to query role: %w", err)
 	}
 
 	resp := s.buildRoleResponse(roleEntity)
@@ -198,7 +198,7 @@ func (s *RoleService) ListRoles(ctx context.Context, tenantID int, params *dto.G
 
 	total, err := query.Clone().Count(ctx)
 	if err != nil {
-		return nil, 0, fmt.Errorf("统计角色数量失败: %w", err)
+		return nil, 0, fmt.Errorf("Failed to count the number of characters: %w", err)
 	}
 
 	roles, err := query.
@@ -206,7 +206,7 @@ func (s *RoleService) ListRoles(ctx context.Context, tenantID int, params *dto.G
 		Limit(pageSize).
 		All(ctx)
 	if err != nil {
-		return nil, 0, fmt.Errorf("查询角色列表失败: %w", err)
+		return nil, 0, fmt.Errorf("Failed to query role list: %w", err)
 	}
 
 	roleIDs := make([]int, len(roles))
@@ -244,9 +244,9 @@ func (s *RoleService) UpdateRole(ctx context.Context, id int, req *dto.UpdateRol
 		Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, fmt.Errorf("角色不存在或无权访问")
+			return nil, fmt.Errorf("Role does not exist or does not have access rights")
 		}
-		return nil, fmt.Errorf("查询角色失败: %w", err)
+		return nil, fmt.Errorf("Failed to query role: %w", err)
 	}
 
 	update := s.client.Role.Update().
@@ -272,7 +272,7 @@ func (s *RoleService) UpdateRole(ctx context.Context, id int, req *dto.UpdateRol
 
 	_, err = update.Save(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("更新角色失败: %w", err)
+		return nil, fmt.Errorf("Failed to update role: %w", err)
 	}
 
 	if req.Permissions != nil {
@@ -315,7 +315,7 @@ func (s *RoleService) permissionIDsByCodes(ctx context.Context, permissionCodes 
 		).
 		All(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("查询权限失败: %w", err)
+		return nil, fmt.Errorf("Failed to query permissions: %w", err)
 	}
 	if len(perms) != len(normalizedCodes) {
 		found := make(map[string]struct{}, len(perms))
@@ -328,7 +328,7 @@ func (s *RoleService) permissionIDsByCodes(ctx context.Context, permissionCodes 
 				missing = append(missing, code)
 			}
 		}
-		return nil, fmt.Errorf("权限不存在，请先初始化权限字典: %s", strings.Join(missing, ", "))
+		return nil, fmt.Errorf("Permission does not exist, please initialize the permission dictionary first: %s", strings.Join(missing, ", "))
 	}
 
 	ids := make([]int, 0, len(perms))
@@ -349,11 +349,11 @@ func (s *RoleService) DeleteRole(ctx context.Context, id int, tenantID int) erro
 		).
 		Only(ctx)
 	if err != nil {
-		return fmt.Errorf("角色不存在: %w", err)
+		return fmt.Errorf("Role does not exist: %w", err)
 	}
 
 	if roleEntity.IsSystem {
-		return common.NewBusinessError(common.ConflictCode, "系统角色不能删除", roleEntity.Code)
+		return common.NewBusinessError(common.ConflictCode, "System role cannot be deleted", roleEntity.Code)
 	}
 
 	// P0 双重保护：即使 seed 时 IsSystem 字段漏设，
@@ -361,7 +361,7 @@ func (s *RoleService) DeleteRole(ctx context.Context, id int, tenantID int) erro
 	if domainrole.IsBuiltinCode(roleEntity.Code) {
 		s.logger.Warnw("Blocked deletion of builtin role (is_system=false but code matches)",
 			"role_id", roleEntity.ID, "role_code", roleEntity.Code, "tenant_id", tenantID)
-		return common.NewBusinessError(common.ConflictCode, "内置系统角色不能删除（请升级或联系管理员）", roleEntity.Code)
+		return common.NewBusinessError(common.ConflictCode, "Built-in system roles cannot be deleted (please upgrade or contact the administrator)", roleEntity.Code)
 	}
 
 	count, err := s.client.User.Query().
@@ -371,10 +371,10 @@ func (s *RoleService) DeleteRole(ctx context.Context, id int, tenantID int) erro
 		).
 		Count(ctx)
 	if err != nil {
-		return fmt.Errorf("检查用户失败: %w", err)
+		return fmt.Errorf("Failed to check user: %w", err)
 	}
 	if count > 0 {
-		return fmt.Errorf("有%d个用户使用此角色，无法删除", count)
+		return fmt.Errorf("There are %d users using this role and cannot be deleted", count)
 	}
 
 	roleCode := roleEntity.Code
@@ -394,7 +394,7 @@ func (s *RoleService) DeleteRole(ctx context.Context, id int, tenantID int) erro
 		).
 		Exec(ctx)
 	if err != nil {
-		return fmt.Errorf("删除角色失败: %w", err)
+		return fmt.Errorf("Failed to delete role: %w", err)
 	}
 
 	middleware.InvalidateRolePermissionCache(roleCode, tenantID)
@@ -407,7 +407,7 @@ func (s *RoleService) DeleteRole(ctx context.Context, id int, tenantID int) erro
 // 防止"旧权限已清空、新权限只写入部分"的越权/失权静默故障。
 // ErrPermissionNotInTenant 表示请求绑定的权限中存在不属于当前租户（或不存在）的项。
 // 属于调用方输入错误（应映射为 400），而非服务端内部错误（500）。
-var ErrPermissionNotInTenant = errors.New("部分权限不存在或不属于当前租户")
+var ErrPermissionNotInTenant = errors.New("Some permissions do not exist or do not belong to the current tenant")
 
 func (s *RoleService) AssignPermissions(ctx context.Context, roleID int, permissionIDs []int, tenantID int) error {
 	s.logger.Infow("Assigning permissions to role", "role_id", roleID, "permission_count", len(permissionIDs))
@@ -419,7 +419,7 @@ func (s *RoleService) AssignPermissions(ctx context.Context, roleID int, permiss
 		).
 		Only(ctx)
 	if err != nil {
-		return fmt.Errorf("角色不存在: %w", err)
+		return fmt.Errorf("Role does not exist: %w", err)
 	}
 
 	// 权限变更审计： 事务前快照旧权限（code 列表），用于 after 提交后写 diff。
@@ -440,7 +440,7 @@ func (s *RoleService) AssignPermissions(ctx context.Context, roleID int, permiss
 			).
 			All(ctx)
 		if err != nil {
-			return fmt.Errorf("查询权限失败: %w", err)
+			return fmt.Errorf("Failed to query permissions: %w", err)
 		}
 		if len(perms) != len(permissionIDs) {
 			return ErrPermissionNotInTenant
@@ -450,7 +450,7 @@ func (s *RoleService) AssignPermissions(ctx context.Context, roleID int, permiss
 	// 开启事务：DELETE + CREATE BULK 必须原子化
 	tx, err := s.client.Tx(ctx)
 	if err != nil {
-		return fmt.Errorf("开启事务失败: %w", err)
+		return fmt.Errorf("Failed to open transaction: %w", err)
 	}
 	defer tx.Rollback()
 
@@ -462,7 +462,7 @@ func (s *RoleService) AssignPermissions(ctx context.Context, roleID int, permiss
 		).
 		Exec(ctx)
 	if err != nil {
-		return fmt.Errorf("清除权限关联失败: %w", err)
+		return fmt.Errorf("Failed to clear permission associations: %w", err)
 	}
 
 	// 批量添加新权限关联（使用 CreateBulk 避免循环）
@@ -477,12 +477,12 @@ func (s *RoleService) AssignPermissions(ctx context.Context, roleID int, permiss
 		}
 		if err := tx.RolePermission.CreateBulk(bulk...).Exec(ctx); err != nil {
 			// CreateBulk 任何一条失败全部回滚，避免部分写入
-			return fmt.Errorf("创建权限关联失败: %w", err)
+			return fmt.Errorf("Failed to create permission association: %w", err)
 		}
 	}
 
 	if err := tx.Commit(); err != nil {
-		return fmt.Errorf("提交事务失败: %w", err)
+		return fmt.Errorf("Failed to commit transaction: %w", err)
 	}
 
 	middleware.InvalidateRolePermissionCache(roleEntity.Code, tenantID)
@@ -589,7 +589,7 @@ func (s *PermissionService) CreatePermission(ctx context.Context, req *dto.Creat
 		SetTenantID(tenantID).
 		Save(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("创建权限失败: %w", err)
+		return nil, fmt.Errorf("Failed to create permission: %w", err)
 	}
 
 	return s.toPermissionResponse(permEntity), nil
@@ -606,7 +606,7 @@ func (s *PermissionService) ListPermissions(ctx context.Context, tenantID int, r
 
 	perms, err := query.All(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("查询权限列表失败: %w", err)
+		return nil, fmt.Errorf("Failed to query permission list: %w", err)
 	}
 
 	responses := make([]*dto.PermissionResponse, len(perms))

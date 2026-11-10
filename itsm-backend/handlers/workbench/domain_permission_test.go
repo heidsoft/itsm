@@ -222,13 +222,13 @@ func seedDomainRecords(t *testing.T, ctx context.Context, client *ent.Client, te
 		Save(ctx)
 	require.NoError(t, err)
 	_, err = client.Ticket.Create().
-		SetTitle("工单").SetTicketNumber("TK-DOM-1").
+		SetTitle("Ticket").SetTicketNumber("TK-DOM-1").
 		SetRequesterID(actor.ID).SetAssigneeID(actor.ID).SetTenantID(tenantID).
 		SetStatus("open").SetPriority("high").Save(ctx)
 	require.NoError(t, err)
 
 	_, err = client.Incident.Create().
-		SetTitle("事件").SetIncidentNumber("IN-DOM-1").
+		SetTitle("Incident").SetIncidentNumber("IN-DOM-1").
 		SetReporterID(actor.ID).SetAssigneeID(actor.ID).SetTenantID(tenantID).
 		SetStatus("new").SetPriority("critical").Save(ctx)
 	require.NoError(t, err)

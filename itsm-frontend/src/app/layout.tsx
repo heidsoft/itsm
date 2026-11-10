@@ -17,9 +17,9 @@ const inter = { variable: '--font-inter' };
 const notoSansSC = { variable: '--font-noto-sans-sc' };
 
 export const metadata: Metadata = {
-  title: 'AI-Native ITSM - AI驱动的IT服务管理系统',
-  description: 'AI-Native ITSM 是一款开源的AI驱动IT服务管理系统，提供工单管理、CMDB、知识库RAG、BPMN工作流、SLA监控、AI 辅助分诊等核心功能',
-  keywords: 'ITSM, AI, 工单管理, CMDB, 知识库, BPMN, SLA, IT服务管理, 开源',
+  title: 'AI-Native ITSM - AI-driven IT service management system',
+  description: 'AI-Native ITSM is an open source AI-driven IT service management system that provides core functions such as work order management, CMDB, knowledge base RAG, BPMN workflow, SLA monitoring, and AI-assisted triage.',
+  keywords: 'ITSM, AI, work order management, CMDB, knowledge base, BPMN, SLA, IT service management, open source',
   authors: [{ name: 'AI-Native ITSM Team' }],
   creator: 'AI-Native ITSM',
   publisher: 'AI-Native ITSM',
@@ -40,16 +40,16 @@ export const metadata: Metadata = {
     },
   },
   openGraph: {
-    title: 'AI-Native ITSM - AI驱动的IT服务管理系统',
-    description: 'AI-Native ITSM 是一款开源的AI驱动IT服务管理系统，提供工单管理、CMDB、知识库RAG、BPMN工作流、SLA监控、AI 辅助分诊等核心功能',
+    title: 'AI-Native ITSM - AI-driven IT service management system',
+    description: 'AI-Native ITSM is an open source AI-driven IT service management system that provides core functions such as work order management, CMDB, knowledge base RAG, BPMN workflow, SLA monitoring, and AI-assisted triage.',
     type: 'website',
-    locale: 'zh_CN',
+    locale: 'en_US',
     siteName: 'AI-Native ITSM',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'AI-Native ITSM - AI驱动的IT服务管理系统',
-    description: 'AI-Native ITSM 是一款开源的AI驱动IT服务管理系统，提供工单管理、CMDB、知识库RAG、BPMN工作流、SLA监控、AI 辅助分诊等核心功能',
+    title: 'AI-Native ITSM - AI-driven IT service management system',
+    description: 'AI-Native ITSM is an open source AI-driven IT service management system that provides core functions such as work order management, CMDB, knowledge base RAG, BPMN workflow, SLA monitoring, and AI-assisted triage.',
   },
   icons: {
     icon: '/file.svg',
@@ -72,7 +72,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="zh-CN" suppressHydrationWarning>
+    <html lang="en-US" suppressHydrationWarning>
       <head>
         {/* 安全相关头部 */}
         <meta httpEquiv="X-UA-Compatible" content="IE=edge" />

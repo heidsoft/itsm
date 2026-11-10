@@ -204,7 +204,7 @@ describe('API Integration Tests', () => {
           type: 'incident' as const,
         };
 
-         
+
         await expect(TicketApi.createTicket(invalidData as any)).rejects.toThrow(
           '请求参数错误: title is required'
         );
@@ -335,7 +335,7 @@ describe('API Integration Tests', () => {
     it('should handle CORS errors', async () => {
       (fetch as jest.Mock).mockRejectedValueOnce(new TypeError('Failed to fetch'));
 
-      await expect(TicketApi.getTickets()).rejects.toThrow('无法连接到服务器');
+      await expect(TicketApi.getTickets()).rejects.toThrow("Unable to connect to the server");
     });
   });
 

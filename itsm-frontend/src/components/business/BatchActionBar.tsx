@@ -82,7 +82,7 @@ export const BatchActionBar: React.FC<BatchActionBarProps> = ({
   selectedCount,
   actions,
   onClear,
-  itemLabel = '项',
+  itemLabel = 'items',
   leftExtra,
   loading = false,
   className,
@@ -113,8 +113,8 @@ export const BatchActionBar: React.FC<BatchActionBarProps> = ({
         key={action.key}
         title={action.confirmTitle}
         onConfirm={() => void action.onClick()}
-        okText="确定"
-        cancelText="取消"
+        okText="OK"
+        cancelText="Cancel"
         okButtonProps={{ danger: true }}
         disabled={action.disabled || loading}
       >
@@ -159,7 +159,8 @@ export const BatchActionBar: React.FC<BatchActionBarProps> = ({
       <div className="text-sm">
         {leftExtra ?? (
           <>
-            已选择 <span className="font-semibold text-blue-600">{selectedCount}</span> 个{itemLabel}
+
+            Selected <span className="font-semibold text-blue-600">{selectedCount}</span>  items{itemLabel}
           </>
         )}
       </div>
@@ -168,7 +169,8 @@ export const BatchActionBar: React.FC<BatchActionBarProps> = ({
         {overflowActions.length > 0 && (
           <Dropdown menu={overflowMenu} disabled={loading}>
             <Button size="small">
-              更多
+
+              More
               <ChevronDown size={14} className="ml-1" />
             </Button>
           </Dropdown>
@@ -181,7 +183,8 @@ export const BatchActionBar: React.FC<BatchActionBarProps> = ({
             onClick={onClear}
             disabled={loading}
           >
-            取消选择
+
+            Cancel Selection
           </Button>
         )}
       </Space>

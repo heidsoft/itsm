@@ -97,9 +97,9 @@ describe('attributeSchemaUtils', () => {
 
     it('非法类型报错，空值/非法 JSON 有对应结果', () => {
       const schema = JSON.stringify({ fields: [{ key: 'x', type: 'file' }] });
-      expect(validateAttributeSchema(schema)).toContain('type 仅支持');
+      expect(validateAttributeSchema(schema)).toContain("type only supports");
       expect(validateAttributeSchema('')).toBeNull();
-      expect(validateAttributeSchema('{oops')).toBe('请输入合法的 JSON');
+      expect(validateAttributeSchema('{oops')).toBe("Please enter legal JSON");
     });
   });
 

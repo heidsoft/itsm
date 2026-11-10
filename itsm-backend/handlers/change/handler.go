@@ -25,7 +25,7 @@ func tenantIDFromCtx(c *gin.Context) (int, bool) {
 func userIDFromCtx(c *gin.Context) (int, bool) {
 	userID, err := middleware.GetUserID(c)
 	if err != nil {
-		common.Fail(c, common.AuthFailedCode, "用户信息缺失")
+		common.Fail(c, common.AuthFailedCode, "User information is missing")
 		return 0, false
 	}
 	return userID, true
@@ -129,7 +129,7 @@ func (h *Handler) CreateChange(c *gin.Context) {
 
 	res, err := h.svc.CreateChange(c.Request.Context(), changeEntity)
 	if err != nil {
-		common.RespondError(c, err, "创建变更失败")
+		common.RespondError(c, err, "Failed to create change")
 		return
 	}
 
@@ -199,7 +199,7 @@ func (h *Handler) GetApprovalSummary(c *gin.Context) {
 
 	summary, err := h.svc.GetApprovalSummary(c.Request.Context(), id, tenantID)
 	if err != nil {
-		common.RespondError(c, err, "获取审批摘要失败")
+		common.RespondError(c, err, "Failed to obtain approval summary")
 		return
 	}
 
@@ -230,16 +230,16 @@ func (h *Handler) GetRiskAssessment(c *gin.Context) {
 	// 变更不存在必须 404：不能把「变更不存在」伪装成「尚未评估」。
 	if _, err := h.svc.GetChange(c.Request.Context(), id, tenantID); err != nil {
 		if ent.IsNotFound(err) {
-			common.NotFound(c, "变更不存在")
+			common.NotFound(c, "Change does not exist")
 			return
 		}
-		common.RespondError(c, err, "获取变更失败")
+		common.RespondError(c, err, "Failed to get changes")
 		return
 	}
 
 	ra, err := h.svc.GetRisk(c.Request.Context(), id, tenantID)
 	if err != nil {
-		common.RespondError(c, err, "获取风险评估失败")
+		common.RespondError(c, err, "Failed to obtain risk assessment")
 		return
 	}
 
@@ -312,7 +312,7 @@ func (h *Handler) UpdateRisk(c *gin.Context) {
 		RiskReviewDate:     req.RiskReviewDate,
 	})
 	if err != nil {
-		common.RespondError(c, err, "更新风险评估失败")
+		common.RespondError(c, err, "Failed to update risk assessment")
 		return
 	}
 	common.Success(c, dto.ChangeRiskAssessment{
@@ -354,7 +354,7 @@ func (h *Handler) GetCMDBImpactSummary(c *gin.Context) {
 
 	summary, err := h.svc.GetCMDBImpactSummary(c.Request.Context(), id, tenantID)
 	if err != nil {
-		common.RespondError(c, err, "获取CMDB影响摘要失败")
+		common.RespondError(c, err, "Failed to obtain CMDB impact summary")
 		return
 	}
 
@@ -396,7 +396,7 @@ func (h *Handler) ListChanges(c *gin.Context) {
 
 	list, total, err := h.svc.ListChanges(c.Request.Context(), tenantID, pg.Page, pg.PageSize, status, search, riskLevel, currentUserID, currentRole)
 	if err != nil {
-		common.RespondError(c, err, "查询变更列表失败")
+		common.RespondError(c, err, "Failed to query change list")
 		return
 	}
 
@@ -492,7 +492,7 @@ func (h *Handler) UpdateChange(c *gin.Context) {
 
 	res, err := h.svc.UpdateChange(c.Request.Context(), existing, actorID, actorRole)
 	if err != nil {
-		common.RespondError(c, err, "更新变更失败")
+		common.RespondError(c, err, "Failed to update changes")
 		return
 	}
 
@@ -543,7 +543,7 @@ func (h *Handler) SubmitApproval(c *gin.Context) {
 
 	res, err := h.svc.SubmitApproval(c.Request.Context(), record, tenantID)
 	if err != nil {
-		common.RespondError(c, err, "提交审批失败")
+		common.RespondError(c, err, "Failed to submit for approval")
 		return
 	}
 
@@ -589,7 +589,7 @@ func (h *Handler) SubmitChange(c *gin.Context) {
 	if err != nil {
 		// 影响分析门禁返回 422 AppError，必须语义分流（RespondError），
 		// 不得被 InternalError 兜底吞成 500。
-		common.RespondError(c, err, "提交变更失败")
+		common.RespondError(c, err, "Failed to commit changes")
 		return
 	}
 
@@ -613,7 +613,7 @@ func (h *Handler) GetStats(c *gin.Context) {
 	}
 	res, err := h.svc.GetStats(c.Request.Context(), tenantID)
 	if err != nil {
-		common.RespondError(c, err, "获取统计信息失败")
+		common.RespondError(c, err, "Failed to obtain statistics")
 		return
 	}
 	// Map domain stats -> DTO so the response shape stays governed by dto.ChangeStatsResponse
@@ -725,13 +725,13 @@ func (h *Handler) TransitionStatus(c *gin.Context) {
 			errors.Is(err, ErrQuorumRequiresWorkflow):
 			common.Conflict(c, err.Error(), nil)
 		case errors.Is(err, ErrNotApprover):
-			common.Fail(c, common.ForbiddenCode, "您不是该变更的待办审批人")
+			common.Fail(c, common.ForbiddenCode, "You are not the pending approver of this change")
 		case isForbiddenAppErr(err):
-			common.FailWithErr(c, err, "操作失败")
+			common.FailWithErr(c, err, "Operation failed")
 		case errors.Is(err, ErrChangeNotFound):
-			common.Fail(c, common.NotFoundCode, "变更不存在")
+			common.Fail(c, common.NotFoundCode, "Change does not exist")
 		default:
-			common.RespondError(c, err, "状态转换失败")
+			common.RespondError(c, err, "State transition failed")
 		}
 		return
 	}
@@ -778,13 +778,13 @@ func (h *Handler) AssignChange(c *gin.Context) {
 	actorID := c.GetInt("user_id")
 	actorRole := c.GetString("role")
 	if !datascope.CanWriteResource(actorID, actorRole, existing.CreatedBy, existing.AssigneeID) {
-		common.RespondError(c, common.NewForbiddenError("无权限分配该变更单：仅创建人、受理人或管理员可操作"), "操作失败")
+		common.RespondError(c, common.NewForbiddenError("No permission to assign this change order: only the creator, assignee or administrator can operate"), "Operation failed")
 		return
 	}
 	existing.AssigneeID = &req.AssigneeID
 	res, err := h.svc.UpdateChange(c.Request.Context(), existing, actorID, actorRole)
 	if err != nil {
-		common.RespondError(c, err, "分配变更失败")
+		common.RespondError(c, err, "Allocation change failed")
 		return
 	}
 	common.Success(c, toDTO(res))
@@ -811,7 +811,7 @@ func (h *Handler) GetApprovals(c *gin.Context) {
 	}
 	history, err := h.svc.GetApprovalHistory(c.Request.Context(), id, tenantID)
 	if err != nil {
-		common.RespondError(c, err, "获取审批历史失败")
+		common.RespondError(c, err, "Failed to obtain approval history")
 		return
 	}
 	common.Success(c, history)
@@ -840,7 +840,7 @@ func (h *Handler) DeleteChange(c *gin.Context) {
 	actorRole := c.GetString("role")
 
 	if err := h.svc.DeleteChange(c.Request.Context(), id, tenantID, actorID, actorRole); err != nil {
-		common.RespondError(c, err, "删除变更失败")
+		common.RespondError(c, err, "Failed to delete changes")
 		return
 	}
 	common.Success(c, gin.H{"message": "deleted"})
@@ -874,7 +874,7 @@ func (h *Handler) GetCalendar(c *gin.Context) {
 
 	res, err := h.svc.GetCalendarView(c.Request.Context(), tenantID, req.StartDate, req.EndDate, req.Status)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -922,14 +922,14 @@ func (h *Handler) CreatePIR(c *gin.Context) {
 
 	pir, err := h.svc.CreatePIR(c.Request.Context(), &req, userID, tenantID)
 	if err != nil {
-		if strings.Contains(err.Error(), "已存在") {
+		if strings.Contains(err.Error(), "already exists") || strings.Contains(err.Error(), "已存在") {
 			common.Conflict(c, err.Error(), nil)
 			return
 		}
 		// 用 RespondError 而不是 FailWithErr：后者会把 AppError 的领域文案替换成
 		// 兜底串，而 PIR 的状态门禁提示（"尚未实施完成，不能做实施后回顾"）正是
 		// 使用者需要看到的那句话。
-		common.RespondError(c, err, "创建实施后回顾失败")
+		common.RespondError(c, err, "Create post-implementation review failed")
 		return
 	}
 
@@ -960,11 +960,11 @@ func (h *Handler) GetPIR(c *gin.Context) {
 
 	pir, err := h.svc.GetPIRByChange(c.Request.Context(), changeID, tenantID)
 	if err != nil {
-		if strings.Contains(err.Error(), "无PIR记录") {
+		if strings.Contains(err.Error(), "no PIR record") || strings.Contains(err.Error(), "无PIR记录") {
 			common.NotFoundWithErr(c, err, "resource not found")
 			return
 		}
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -996,7 +996,7 @@ func (h *Handler) ListPIRs(c *gin.Context) {
 
 	pirs, err := h.svc.ListPIRs(c.Request.Context(), tenantID, pg.Page, pg.PageSize, result)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -1037,11 +1037,11 @@ func (h *Handler) UpdatePIR(c *gin.Context) {
 
 	pir, err := h.svc.UpdatePIR(c.Request.Context(), pirID, &req, tenantID)
 	if err != nil {
-		if strings.Contains(err.Error(), "不存在") {
+		if strings.Contains(err.Error(), "does not exist") || strings.Contains(err.Error(), "不存在") {
 			common.NotFoundWithErr(c, err, "resource not found")
 			return
 		}
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -1072,11 +1072,11 @@ func (h *Handler) DeletePIR(c *gin.Context) {
 	}
 
 	if err := h.svc.DeletePIR(c.Request.Context(), pirID, tenantID); err != nil {
-		if strings.Contains(err.Error(), "不存在") {
+		if strings.Contains(err.Error(), "does not exist") || strings.Contains(err.Error(), "不存在") {
 			common.NotFoundWithErr(c, err, "resource not found")
 			return
 		}
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -1130,9 +1130,9 @@ func failRollbackChecklist(c *gin.Context, err error, fallback string) {
 	case errors.Is(err, ErrRollbackChecklistLocked), errors.Is(err, ErrRollbackStepAlreadyResolved):
 		common.RespondError(c, err, fallback)
 	case errors.Is(err, ErrRollbackStepNotFound):
-		common.Fail(c, common.NotFoundCode, "回滚步骤不存在或不属于该变更")
+		common.Fail(c, common.NotFoundCode, "The rollback step does not exist or does not belong to this change")
 	case errors.Is(err, ErrChangeNotFound):
-		common.Fail(c, common.NotFoundCode, "变更不存在")
+		common.Fail(c, common.NotFoundCode, "Change does not exist")
 	default:
 		common.RespondError(c, err, fallback)
 	}
@@ -1192,7 +1192,7 @@ func (h *Handler) ReplaceRollbackSteps(c *gin.Context) {
 	}
 	var req dto.ReplaceRollbackStepsRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamError(c, "请求体格式错误：steps 应为字符串数组，例如 {\"steps\":[\"摘除流量\",\"回滚镜像\"]}")
+		common.ParamError(c, "Request body format error: steps should be a string array, for example {\"steps\":[\"Remove Traffic\",\"Rollback Mirroring\"]}")
 		return
 	}
 	steps, err := h.svc.ReplaceRollbackSteps(c.Request.Context(), id, tenantID, req.Steps)
@@ -1238,7 +1238,7 @@ func (h *Handler) ResolveRollbackStep(c *gin.Context) {
 	}
 	var req dto.ResolveRollbackStepRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamError(c, "请求体格式错误：需要 status（done/skipped/failed/pending），跳过或失败时还需 note")
+		common.ParamError(c, "Request body format error: status (done/skipped/failed/pending) is required, and note is required when skipped or failed.")
 		return
 	}
 	step, err := h.svc.ResolveRollbackStep(c.Request.Context(), id, tenantID, stepID, userID, req.Status, req.Note)

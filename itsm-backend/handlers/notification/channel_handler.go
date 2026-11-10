@@ -68,12 +68,12 @@ type ChannelStatus struct {
 func (h *ChannelHandler) GetChannels(c *gin.Context) {
 	tenantID, err := currentTenantID(c)
 	if err != nil {
-		common.Fail(c, common.AuthFailedCode, "租户上下文缺失")
+		common.Fail(c, common.AuthFailedCode, "Tenant context missing")
 		return
 	}
 	userID, err := currentUserID(c)
 	if err != nil {
-		common.Fail(c, common.AuthFailedCode, "用户上下文缺失")
+		common.Fail(c, common.AuthFailedCode, "User context missing")
 		return
 	}
 
@@ -82,10 +82,10 @@ func (h *ChannelHandler) GetChannels(c *gin.Context) {
 		Only(c.Request.Context())
 	if err != nil {
 		if ent.IsNotFound(err) {
-			common.Fail(c, common.AuthFailedCode, "当前用户不存在或已停用")
+			common.Fail(c, common.AuthFailedCode, "The current user does not exist or has been disabled")
 			return
 		}
-		common.RespondError(c, err, "查询用户失败")
+		common.RespondError(c, err, "Failed to query user")
 		return
 	}
 

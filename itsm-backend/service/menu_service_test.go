@@ -345,7 +345,7 @@ func TestDeleteMenu_StateAndTenantSemantics(t *testing.T) {
 	var bizErr *common.BusinessError
 	require.True(t, errors.As(err, &bizErr), "有子菜单应返回业务 conflict，实际: %v", err)
 	require.Equal(t, common.ConflictCode, bizErr.Code)
-	require.Equal(t, "请先删除子菜单", bizErr.Message)
+	require.Equal(t, "Please delete the submenu first", bizErr.Message)
 	_, err = client.Menu.Get(ctx, parent.ID)
 	require.NoError(t, err, "冲突拒绝不得删掉父菜单")
 

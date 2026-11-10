@@ -139,7 +139,7 @@ func TestFail_ParamError(t *testing.T) {
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
 
-	Fail(c, ParamErrorCode, "参数错误")
+	Fail(c, ParamErrorCode, "Parameter error")
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 
@@ -147,7 +147,7 @@ func TestFail_ParamError(t *testing.T) {
 	err := json.Unmarshal(w.Body.Bytes(), &resp)
 	assert.NoError(t, err)
 	assert.Equal(t, ParamErrorCode, resp.Code)
-	assert.Equal(t, "参数错误", resp.Message)
+	assert.Equal(t, "Parameter error", resp.Message)
 }
 
 func TestFail_ValidationError(t *testing.T) {
@@ -163,7 +163,7 @@ func TestFail_AuthFailed(t *testing.T) {
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
 
-	Fail(c, AuthFailedCode, "认证失败")
+	Fail(c, AuthFailedCode, "Authentication failed")
 
 	assert.Equal(t, http.StatusUnauthorized, w.Code)
 }
@@ -558,12 +558,12 @@ func TestRespondError_FallbackOnInternal(t *testing.T) {
 	c, _ := gin.CreateTestContext(w)
 	c.Request = httptest.NewRequest("POST", "/api/v1/test", nil)
 	raw := errors.New("pq: connection refused")
-	RespondError(c, raw, "操作失败")
+	RespondError(c, raw, "Operation failed")
 	assert.Equal(t, http.StatusInternalServerError, w.Code)
 	var resp Response
 	assert.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
 	assert.Equal(t, InternalErrorCode, resp.Code)
-	assert.Equal(t, "操作失败", resp.Message)
+	assert.Equal(t, "Operation failed", resp.Message)
 	assert.NotContains(t, w.Body.String(), "connection refused")
 }
 
@@ -623,7 +623,7 @@ func TestFailWithErr_ClassifiesDomainErrors(t *testing.T) {
 		{"app_unavailable", NewAppError(ErrCodeInternal, "db down", http.StatusServiceUnavailable, nil), ServiceUnavailableCode, http.StatusServiceUnavailable},
 		{"business_error", NewBusinessError(4220, "无法受理", "detail leaks"), UnprocessableEntityCode, http.StatusUnprocessableEntity},
 		{"wrapped_app_not_found", fmt.Errorf("load: %w", NewNotFoundError("ticket")), NotFoundCode, http.StatusNotFound},
-		{"version_conflict", NewVersionConflictError("工单", 7, 2, 5), ConflictCode, http.StatusConflict},
+		{"version_conflict", NewVersionConflictError("Ticket", 7, 2, 5), ConflictCode, http.StatusConflict},
 		{"unclassified", errors.New("pq: duplicate key value violates unique constraint"), InternalErrorCode, http.StatusInternalServerError},
 		{"nil", nil, InternalErrorCode, http.StatusInternalServerError},
 	}
@@ -633,13 +633,13 @@ func TestFailWithErr_ClassifiesDomainErrors(t *testing.T) {
 			c, _ := gin.CreateTestContext(w)
 			c.Request = httptest.NewRequest("GET", "/api/v1/test", nil)
 
-			FailWithErr(c, tc.err, "操作失败")
+			FailWithErr(c, tc.err, "Operation failed")
 
 			assert.Equal(t, tc.wantHTTP, w.Code)
 			var resp Response
 			assert.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
 			assert.Equal(t, tc.wantCode, resp.Code)
-			assert.Equal(t, "操作失败", resp.Message, "消息必须是 handler 文案，不得透领域/驱动文本")
+			assert.Equal(t, "Operation failed", resp.Message, "消息必须是 handler 文案，不得透领域/驱动文本")
 			assert.NotContains(t, w.Body.String(), "pq:")
 			assert.NotContains(t, w.Body.String(), "duplicate key")
 			assert.NotContains(t, w.Body.String(), "not found", "领域英文文案也不得替换掉 UX 文案")
@@ -655,13 +655,13 @@ func TestFailWithErr_VersionConflictCarriesPayload(t *testing.T) {
 	c, _ := gin.CreateTestContext(w)
 	c.Request = httptest.NewRequest("PATCH", "/api/v1/tickets/7", nil)
 
-	FailWithErr(c, NewVersionConflictError("工单", 7, 2, 5), "操作失败")
+	FailWithErr(c, NewVersionConflictError("Ticket", 7, 2, 5), "Operation failed")
 
 	assert.Equal(t, http.StatusConflict, w.Code)
 	var resp Response
 	assert.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
 	assert.Equal(t, ConflictCode, resp.Code)
-	assert.Equal(t, "操作失败", resp.Message)
+	assert.Equal(t, "Operation failed", resp.Message)
 	data, ok := resp.Data.(map[string]interface{})
 	is := assert.New(t)
 	is.True(ok, "版本冲突必须带 data 载荷，got=%v", resp.Data)
@@ -678,7 +678,7 @@ func TestRespondError_MatchesFailWithErrClassification(t *testing.T) {
 		NewForbiddenError("no permission"),
 		NewConflictError("ticket", "dup"),
 		NewBusinessError(4220, "无法受理", ""),
-		NewVersionConflictError("工单", 7, 2, 5),
+		NewVersionConflictError("Ticket", 7, 2, 5),
 		errors.New("pq: duplicate key"),
 	}
 	for _, err := range errs {
@@ -712,7 +712,7 @@ func TestErrorHandler_Middleware_ClassifiesWrappedErrors(t *testing.T) {
 	}{
 		{"wrapped_not_found", fmt.Errorf("svc: %w", NewNotFoundError("ticket")), http.StatusNotFound, NotFoundCode, "ticket not found"},
 		{"top_level_business", NewBusinessError(4090, "状态冲突", ""), http.StatusConflict, ConflictCode, "状态冲突"},
-		{"wrapped_conflict", fmt.Errorf("save: %w", NewVersionConflictError("工单", 7, 2, 5)), http.StatusConflict, ConflictCode, "版本冲突"},
+		{"wrapped_conflict", fmt.Errorf("save: %w", NewVersionConflictError("Ticket", 7, 2, 5)), http.StatusConflict, ConflictCode, "版本冲突"},
 		{"unclassified", errors.New("pq: connection refused"), http.StatusInternalServerError, InternalErrorCode, "内部服务器错误"},
 	}
 	for _, tc := range cases {

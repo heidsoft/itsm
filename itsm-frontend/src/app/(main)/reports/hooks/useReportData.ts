@@ -25,7 +25,7 @@ export const useReportData = () => {
   const loadReportMetrics = async () => {
     try {
       setLoading(true);
-      
+
       // 调用真实API获取数据
       const [analyticsRes, statsRes] = await Promise.all([
         ticketAnalyticsService.getAnalytics({
@@ -49,7 +49,7 @@ export const useReportData = () => {
 
       setMetrics(fetchedMetrics);
     } catch (error) {
-      console.error('加载报表数据失败:', error);
+      console.error('Failed to load report data:', error);
       // 不再使用模拟数据，保持null状态
       setMetrics(null);
     } finally {

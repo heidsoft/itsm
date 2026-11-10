@@ -22,10 +22,10 @@ interface OverviewTabProps {
 }
 
 const getSLAStatus = (compliance: number) => {
-  if (compliance >= 95) return { color: 'success', text: '优秀' };
-  if (compliance >= 85) return { color: 'normal', text: '良好' };
-  if (compliance >= 75) return { color: 'exception', text: '需改进' };
-  return { color: 'exception', text: '严重' };
+  if (compliance >= 95) return { color: 'success', text: 'Excellent' };
+  if (compliance >= 85) return { color: 'normal', text: 'Good' };
+  if (compliance >= 75) return { color: 'exception', text: 'Needs improvement' };
+  return { color: 'exception', text: 'Critical' };
 };
 
 export const OverviewTab: React.FC<OverviewTabProps> = ({ metrics }) => {
@@ -33,10 +33,10 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({ metrics }) => {
     <div className="space-y-6">
       <Row gutter={[16, 16]}>
         <Col xs={24} lg={12}>
-          <Card title="工单状态分布">
+          <Card title="Work order status distribution">
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <Text>已解决</Text>
+                <Text>Resolved</Text>
                 <div className="flex items-center">
                   <Progress
                     percent={Math.round(
@@ -51,7 +51,7 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({ metrics }) => {
                 </div>
               </div>
               <div className="flex items-center justify-between">
-                <Text>待处理</Text>
+                <Text>Pending</Text>
                 <div className="flex items-center">
                   <Progress
                     percent={Math.round(
@@ -66,7 +66,7 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({ metrics }) => {
                 </div>
               </div>
               <div className="flex items-center justify-between">
-                <Text>紧急工单</Text>
+                <Text>Emergency work order</Text>
                 <div className="flex items-center">
                   <Progress
                     percent={Math.round(
@@ -86,10 +86,10 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({ metrics }) => {
           </Card>
         </Col>
         <Col xs={24} lg={12}>
-          <Card title="服务质量指标">
+          <Card title="Service quality indicator">
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <Text>SLA达标率</Text>
+                <Text>SLA compliance rate</Text>
                 <div className="flex items-center">
                   <Tag
                     color={
@@ -106,21 +106,21 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({ metrics }) => {
                 </div>
               </div>
               <div className="flex items-center justify-between">
-                <Text>平均解决时间</Text>
+                <Text>Avg Resolution Time</Text>
                 <div className="flex items-center">
                   <Tag color={metrics && metrics.avgResolutionTime <= 12 ? 'green' : 'orange'}>
-                    {metrics && metrics.avgResolutionTime <= 12 ? '优秀' : '需改进'}
+                    {metrics && metrics.avgResolutionTime <= 12 ? 'Excellent' : 'Needs improvement'}
                   </Tag>
                   <Text strong className="ml-2">
-                    {metrics?.avgResolutionTime}小时
+                    {metrics?.avgResolutionTime}hours
                   </Text>
                 </div>
               </div>
               <div className="flex items-center justify-between">
-                <Text>满意度评分</Text>
+                <Text>Satisfaction Score</Text>
                 <div className="flex items-center">
                   <Tag color={metrics && metrics.satisfactionScore >= 4.0 ? 'green' : 'orange'}>
-                    {metrics && metrics.satisfactionScore >= 4.0 ? '满意' : '需改进'}
+                    {metrics && metrics.satisfactionScore >= 4.0 ? 'Satisfied' : 'Needs improvement'}
                   </Tag>
                   <Text strong className="ml-2">
                     {metrics?.satisfactionScore}/5.0

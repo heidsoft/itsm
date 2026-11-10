@@ -5,9 +5,9 @@ describe('formatUptime', () => {
     [0, '—'],
     [-1, '—'],
     [Number.NaN, '—'],
-    [59, '59秒'],
-    [3600, '1小时 0分钟'],
-    [90061, '1天 1小时'],
+    [59, '59 seconds'],
+    [3600, '1 hours 0 minutes'],
+    [90061, '1 days 1 hours'],
   ])('%s 秒显示为 %s', (seconds, expected) => {
     expect(formatUptime(seconds)).toBe(expected);
   });

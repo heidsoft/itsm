@@ -149,7 +149,7 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
       setData(resp as unknown as Incident);
     } catch (error) {
       setLoadError(true);
-      handleError(error, 'loadIncident', '加载事件详情失败');
+      handleError(error, 'loadIncident', 'Failed to load event details');
     } finally {
       setLoading(false);
     }
@@ -179,7 +179,7 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
         setClassificationData(classification.value || null);
       }
     } catch (error) {
-      console.error('加载分析数据失败:', error);
+      console.error('Failed to load analysis data:', error);
     } finally {
       setAnalysisLoading(false);
     }
@@ -221,7 +221,7 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
         reason: values.reason,
         autoAssign: values.autoAssign,
       });
-      message.success('事件升级成功');
+      message.success('Incident escalated successfully');
       setEscalateModalVisible(false);
       loadData(); // 刷新数据
     } catch (error) {
@@ -243,17 +243,17 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
     if (!data) return;
 
     if (!isValidIncidentTransition(data.status, IncidentStatus.IN_PROGRESS)) {
-      message.error('当前状态不允许开始处理');
+      message.error('Current status does not allow processing to start');
       return;
     }
 
     setStarting(true);
     try {
       await IncidentAPI.updateIncidentStatus(data.id, { status: IncidentStatus.IN_PROGRESS });
-      message.success('已开始处理');
+      message.success('Processing started');
       loadData();
     } catch (error) {
-      handleError(error, 'startProcessing', '开始处理失败');
+      handleError(error, 'startProcessing', 'Failed to start processing');
     } finally {
       setStarting(false);
     }
@@ -265,7 +265,7 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
 
     // 状态转换验证
     if (!isValidIncidentTransition(data.status, 'resolved')) {
-      message.error('当前状态不允许直接解决');
+      message.error('The current status does not allow direct resolution');
       return;
     }
 
@@ -276,11 +276,11 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
         resolution: values.resolution,
         resolutionCode: values.resolutionCode,
       });
-      message.success('事件已解决');
+      message.success('Incident resolved');
       setResolveModalVisible(false);
       loadData();
     } catch (error) {
-      handleError(error, 'resolveIncident', '解决失败');
+      handleError(error, 'resolveIncident', 'Resolution failed');
     } finally {
       setResolving(false);
     }
@@ -292,10 +292,10 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
     setReopening(true);
     try {
       await IncidentAPI.reopenIncident(data.id);
-      message.success('事件已重新打开');
+      message.success('Incident reopened');
       loadData();
     } catch (error) {
-      handleError(error, 'reopenIncident', '重新打开失败');
+      handleError(error, 'reopenIncident', 'Reopen failed');
     } finally {
       setReopening(false);
     }
@@ -313,12 +313,12 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
     setAssigning(true);
     try {
       await IncidentAPI.assignIncident(data.id, values.assigneeId);
-      message.success('事件指派成功');
+      message.success('Incident assigned successfully');
       setAssignModalVisible(false);
       assignForm.resetFields();
       loadData();
     } catch (error) {
-      handleError(error, 'assignIncident', '指派失败');
+      handleError(error, 'assignIncident', 'Assignment failed');
     } finally {
       setAssigning(false);
     }
@@ -334,12 +334,12 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
     setEscalatingMajor(true);
     try {
       await IncidentAPI.escalateMajorIncident(data.id, values);
-      message.success('已升级为重大事件');
+      message.success('Escalated to major incident');
       setMajorModalVisible(false);
       majorForm.resetFields();
       loadData();
     } catch (error) {
-      handleError(error, 'escalateMajorIncident', '升级为重大事件失败');
+      handleError(error, 'escalateMajorIncident', 'Failed to escalate to major incident');
     } finally {
       setEscalatingMajor(false);
     }
@@ -377,15 +377,15 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
 
       if (rootCauseData?.id) {
         await IncidentAPI.updateRootCauseAnalysis(rootCauseData.id, request);
-        message.success('根因分析已更新');
+        message.success('Root cause analysis updated');
       } else {
         await IncidentAPI.createRootCauseAnalysis(request);
-        message.success('根因分析已创建');
+        message.success('Root cause analysis created');
       }
       setRootCauseModalVisible(false);
       loadAnalysisData();
     } catch (error) {
-      handleError(error, 'saveRootCause', '保存根因分析失败');
+      handleError(error, 'saveRootCause', 'Failed to save root cause analysis');
     } finally {
       setSavingAnalysis(false);
     }
@@ -425,15 +425,15 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
 
       if (impactData?.id) {
         await IncidentAPI.updateImpactAssessment(impactData.id, request);
-        message.success('影响评估已更新');
+        message.success('Impact assessment updated');
       } else {
         await IncidentAPI.createImpactAssessment(request);
-        message.success('影响评估已创建');
+        message.success('Impact assessment created');
       }
       setImpactModalVisible(false);
       loadAnalysisData();
     } catch (error) {
-      handleError(error, 'saveImpact', '保存影响评估失败');
+      handleError(error, 'saveImpact', 'Failed to save impact assessment');
     } finally {
       setSavingAnalysis(false);
     }
@@ -476,7 +476,7 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
       // 后端 GetClassification 只返回 {incidentId, category, subcategory}，永远没有 id，
       // 故不存在「更新已有分类」分支；POST 即唯一且幂等的写入口。
       await IncidentAPI.createIncidentClassification(request);
-      message.success('事件分类已保存');
+      message.success('Event classification saved');
 
       setCategoryModalVisible(false);
       loadAnalysisData();
@@ -486,7 +486,7 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
       // 提示；这里显式展示后端的语义化文案（冲突 4090 / 越权 2003）。
       handleError(error, 'saveCategory');
       const detail = error instanceof Error ? error.message : '';
-      message.error(detail || '保存事件分类失败');
+      message.error(detail || 'Failed to save incident classification');
     } finally {
       setSavingAnalysis(false);
     }
@@ -514,8 +514,8 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
   if (!data) {
     return (
       <Card>
-        <Empty description={loadError ? '事件详情加载失败' : '未找到事件'}>
-          {loadError && <Button type="primary" onClick={loadData}>重新加载</Button>}
+        <Empty description={loadError ? 'Failed to load event details' : 'Incident not found'}>
+          {loadError && <Button type="primary" onClick={loadData}>Reload</Button>}
         </Empty>
       </Card>
     );
@@ -533,7 +533,8 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
               </span>
               {data.isMajorIncident && (
                 <Tag color="red" icon={<AlertCircle size={12} style={{ marginRight: 4, verticalAlign: -1 }} />}>
-                  重大事件
+
+                  Major Incident
                 </Tag>
               )}
               <Tag color={data.status === IncidentStatus.RESOLVED ? 'success' : 'blue'}>
@@ -545,27 +546,32 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
                 icon={<Pencil />}
                 onClick={() => router.push(`/incidents/${data.id}/edit`)}
               >
-                编辑
+
+                Edit
               </Button>
               <Button icon={<ArrowUp />} onClick={handleEscalate} loading={escalating}>
-                升级
+
+                Escalate
               </Button>
               {data.status !== IncidentStatus.RESOLVED && data.status !== IncidentStatus.CLOSED && (
                 <Button icon={<UserCheck />} onClick={handleAssignClick} loading={loadingUsers}>
-                  指派
+
+                  Assign
                 </Button>
               )}
               {!data.isMajorIncident &&
                 data.status !== IncidentStatus.RESOLVED &&
                 data.status !== IncidentStatus.CLOSED && (
                   <Button danger icon={<Siren />} onClick={() => setMajorModalVisible(true)}>
-                    升级为重大事件
+
+                    Escalate to Major Incident
                   </Button>
                 )}
               {/* 开始处理：new/acknowledged/assigned/on_hold → in_progress（解决前置步骤） */}
               {isValidIncidentTransition(data.status, IncidentStatus.IN_PROGRESS) && (
                 <Button icon={<Play />} onClick={handleStartProcessing} loading={starting}>
-                  开始处理
+
+                  Start Processing
                 </Button>
               )}
               {data.status !== IncidentStatus.RESOLVED && data.status !== IncidentStatus.CLOSED && (
@@ -575,51 +581,54 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
                   onClick={handleResolveClick}
                   loading={resolving}
                 >
-                  解决
+
+                  Resolve
                 </Button>
               )}
               {(data.status === IncidentStatus.RESOLVED || data.status === IncidentStatus.CLOSED) && (
                 <Button onClick={handleReopen} loading={reopening}>
-                  重新打开
+
+                  Reopen
                 </Button>
               )}
             </Space>
           </div>
           {(data.escalationLevel ?? 0) > 0 && (
             <Alert className="mt-4" type="warning" showIcon
-              title={`该事件已升级至 ${data.escalationLevel} 级，请优先处理并保持沟通记录。`} />
+              title={`This incident has been escalated to ${data.escalationLevel} level, please prioritize and keep communication records.`} />
           )}
         </Card>
 
         {/* 基本信息 */}
-        <Card title="基本信息" extra={<Button type="link" icon={<Pencil />} onClick={handleEditCategory}>编辑分类</Button>}>
+        <Card title="Basic Info" extra={<Button type="link" icon={<Pencil />} onClick={handleEditCategory}>Edit Category</Button>}>
           <Descriptions column={{ xs: 1, sm: 2 }}>
-            <Descriptions.Item label="报告人">{getUserName(data.reporterId)}</Descriptions.Item>
-            <Descriptions.Item label="负责人">{getUserName(data.assigneeId)}</Descriptions.Item>
-            <Descriptions.Item label="优先级">
+            <Descriptions.Item label="Reporter">{getUserName(data.reporterId)}</Descriptions.Item>
+            <Descriptions.Item label="Assignee">{getUserName(data.assigneeId)}</Descriptions.Item>
+            <Descriptions.Item label="Priority">
               {incidentPriorityLabel(data.priority)}
             </Descriptions.Item>
-            <Descriptions.Item label="严重程度">
+            <Descriptions.Item label="Severity">
               {IncidentSeverityLabels[data.severity]}
             </Descriptions.Item>
-            <Descriptions.Item label="分类">{data.category || '-'}</Descriptions.Item>
-            <Descriptions.Item label="子分类">{data.subcategory || '-'}</Descriptions.Item>
-            <Descriptions.Item label="检测时间">
+            <Descriptions.Item label="Category">{data.category || '-'}</Descriptions.Item>
+            <Descriptions.Item label="Subcategory">{data.subcategory || '-'}</Descriptions.Item>
+            <Descriptions.Item label="Detected At">
               {data.detectedAt ? dayjs(data.detectedAt).format('YYYY-MM-DD HH:mm:ss') : '-'}
             </Descriptions.Item>
-            <Descriptions.Item label="来源">{data.source}</Descriptions.Item>
+            <Descriptions.Item label="Source">{data.source}</Descriptions.Item>
             {data.problemId && (
-              <Descriptions.Item label="关联问题">
+              <Descriptions.Item label="Association problem">
                 <Button type="link" className="h-auto p-0" onClick={() => router.push(`/problems/${data.problemId}`)}>
-                  查看问题 #{data.problemId}
+
+                  View issue #{data.problemId}
                 </Button>
               </Descriptions.Item>
             )}
           </Descriptions>
           <Divider />
-          <Descriptions title="详细描述" column={1}>
-            <Descriptions.Item label="描述">
-              <SafeTextBlock content={data.description} fallback="暂无描述" />
+          <Descriptions title="Detailed description" column={1}>
+            <Descriptions.Item label="Description">
+              <SafeTextBlock content={data.description} fallback="No description" />
             </Descriptions.Item>
           </Descriptions>
 
@@ -627,7 +636,7 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
           {data.impactAnalysis && (
             <>
               <Divider />
-              <Descriptions title="影响分析" column={1}>
+              <Descriptions title="Impact Analysis" column={1}>
                 <Descriptions.Item>
                   <pre>{JSON.stringify(data.impactAnalysis, null, 2)}</pre>
                 </Descriptions.Item>
@@ -644,28 +653,29 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
               title={
                 <Space>
                   <FileText />
-                  根因分析
+
+                  Root Cause Analysis
                   {rootCauseData?.status && (
                     <Tag color={rootCauseData.status === 'completed' ? 'success' : 'processing'}>
-                      {rootCauseData.status === 'completed' ? '已完成' : '进行中'}
+                      {rootCauseData.status === 'completed' ? 'Completed' : 'In Progress'}
                     </Tag>
                   )}
                 </Space>
               }
               extra={
                 <Button type="link" icon={<Pencil />} onClick={handleEditRootCause}>
-                  {rootCauseData?.id ? '编辑' : '添加'}
+                  {rootCauseData?.id ? 'Edit' : 'Add'}
                 </Button>
               }
             >
               {rootCauseData ? (
                 <Descriptions column={2} size="small">
-                  <Descriptions.Item label="分析方法">{rootCauseData.analysisMethod || '-'}</Descriptions.Item>
-                  <Descriptions.Item label="状态">{rootCauseData.status || '-'}</Descriptions.Item>
-                  <Descriptions.Item label="根本原因" span={2}>
-                    <SafeTextBlock content={rootCauseData.rootCause} fallback="未填写" />
+                  <Descriptions.Item label="Analysis Method">{rootCauseData.analysisMethod || '-'}</Descriptions.Item>
+                  <Descriptions.Item label="Status">{rootCauseData.status || '-'}</Descriptions.Item>
+                  <Descriptions.Item label="Root Cause" span={2}>
+                    <SafeTextBlock content={rootCauseData.rootCause} fallback="Not filled in" />
                   </Descriptions.Item>
-                  <Descriptions.Item label="促成因素" span={2}>
+                  <Descriptions.Item label="Contributing Factors" span={2}>
                     {rootCauseData.contributingFactors?.length ? (
                       <Space wrap>
                         {rootCauseData.contributingFactors.map((factor, i) => (
@@ -674,7 +684,7 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
                       </Space>
                     ) : '-'}
                   </Descriptions.Item>
-                  <Descriptions.Item label="预防措施" span={2}>
+                  <Descriptions.Item label="Prevention Measure" span={2}>
                     {rootCauseData.preventiveActions?.length ? (
                       <Space wrap>
                         {rootCauseData.preventiveActions.map((action, i) => (
@@ -683,14 +693,15 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
                       </Space>
                     ) : '-'}
                   </Descriptions.Item>
-                  <Descriptions.Item label="创建时间">
+                  <Descriptions.Item label="Created">
                     {rootCauseData.createdAt ? dayjs(rootCauseData.createdAt).format('YYYY-MM-DD HH:mm') : '-'}
                   </Descriptions.Item>
                 </Descriptions>
               ) : (
-                <Empty description="暂无根因分析" image={Empty.PRESENTED_IMAGE_SIMPLE}>
+                <Empty description="No root cause analysis yet" image={Empty.PRESENTED_IMAGE_SIMPLE}>
                   <Button type="primary" icon={<Plus />} onClick={handleEditRootCause}>
-                    添加根因分析
+
+                    Add Root Cause Analysis
                   </Button>
                 </Empty>
               )}
@@ -701,7 +712,8 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
               title={
                 <Space>
                   <AreaChart />
-                  影响评估
+
+                  Impact Assessment
                   {(impactData?.businessImpact || impactData?.technicalImpact) && (
                     <Badge
                       status={impactData?.businessImpact === 'critical' ? 'error' : 'processing'}
@@ -717,23 +729,23 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
               }
               extra={
                 <Button type="link" icon={<Pencil />} onClick={handleEditImpact}>
-                  {impactData?.id ? '编辑' : '添加'}
+                  {impactData?.id ? 'Edit' : 'Add'}
                 </Button>
               }
             >
               {impactData ? (
                 <Descriptions column={3} size="small">
-                  <Descriptions.Item label="业务影响">{renderImpactTag(impactData.businessImpact)}</Descriptions.Item>
-                  <Descriptions.Item label="技术影响">{renderImpactTag(impactData.technicalImpact)}</Descriptions.Item>
-                  <Descriptions.Item label="声誉影响">{renderImpactTag(impactData.reputationImpact)}</Descriptions.Item>
-                  <Descriptions.Item label="受影响用户">{impactData.affectedUsersCount || 0}</Descriptions.Item>
-                  <Descriptions.Item label="财务影响">¥{impactData.financialImpact || 0}</Descriptions.Item>
-                  <Descriptions.Item label="合规影响">
+                  <Descriptions.Item label="Business Impact">{renderImpactTag(impactData.businessImpact)}</Descriptions.Item>
+                  <Descriptions.Item label="Technical Impact">{renderImpactTag(impactData.technicalImpact)}</Descriptions.Item>
+                  <Descriptions.Item label="Reputation Impact">{renderImpactTag(impactData.reputationImpact)}</Descriptions.Item>
+                  <Descriptions.Item label="Affected Users">{impactData.affectedUsersCount || 0}</Descriptions.Item>
+                  <Descriptions.Item label="Financial impact">¥{impactData.financialImpact || 0}</Descriptions.Item>
+                  <Descriptions.Item label="Compliance Impact">
                     <Tag color={impactData.complianceImpact ? 'red' : 'default'}>
-                      {impactData.complianceImpact ? '是' : '否'}
+                      {impactData.complianceImpact ? 'Yes' : 'No'}
                     </Tag>
                   </Descriptions.Item>
-                  <Descriptions.Item label="受影响服务" span={3}>
+                  <Descriptions.Item label="Affected services" span={3}>
                     {impactData.affectedServices?.length ? (
                       <Space wrap>
                         {impactData.affectedServices.map((service, i) => (
@@ -742,17 +754,18 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
                       </Space>
                     ) : '-'}
                   </Descriptions.Item>
-                  <Descriptions.Item label="评估备注" span={3}>
+                  <Descriptions.Item label="Assessment Notes" span={3}>
                     <SafeTextBlock content={impactData.assessmentNotes} fallback="-" />
                   </Descriptions.Item>
-                  <Descriptions.Item label="评估时间">
+                  <Descriptions.Item label="Assessment Time">
                     {impactData.createdAt ? dayjs(impactData.createdAt).format('YYYY-MM-DD HH:mm') : '-'}
                   </Descriptions.Item>
                 </Descriptions>
               ) : (
-                <Empty description="暂无影响评估" image={Empty.PRESENTED_IMAGE_SIMPLE}>
+                <Empty description="No impact assessment" image={Empty.PRESENTED_IMAGE_SIMPLE}>
                   <Button type="primary" icon={<Plus />} onClick={handleEditImpact}>
-                    添加影响评估
+
+                    Add Impact Assessment
                   </Button>
                 </Empty>
               )}
@@ -763,36 +776,39 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
               title={
                 <Space>
                   <Plug />
-                  事件分类
+
+                  Incident Category
                   {classificationData?.classificationConfidence !== undefined && (
                     <Tag color={classificationData.classificationConfidence >= 80 ? 'green' : 'orange'}>
-                      置信度 {classificationData.classificationConfidence}%
+
+                      Confidence {classificationData.classificationConfidence}%
                     </Tag>
                   )}
                 </Space>
               }
               extra={
                 <Button type="link" icon={<Pencil />} onClick={handleEditCategory}>
-                  {classificationData?.id ? '编辑' : '添加'}
+                  {classificationData?.id ? 'Edit' : 'Add'}
                 </Button>
               }
             >
               {classificationData ? (
                 <Descriptions column={3} size="small">
-                  <Descriptions.Item label="分类">{classificationData.category || '-'}</Descriptions.Item>
-                  <Descriptions.Item label="子分类">{classificationData.subcategory || '-'}</Descriptions.Item>
-                  <Descriptions.Item label="服务类型">{classificationData.serviceType || '-'}</Descriptions.Item>
-                  <Descriptions.Item label="故障类型">{classificationData.failureType || '-'}</Descriptions.Item>
-                  <Descriptions.Item label="紧急程度">{renderImpactTag(classificationData.urgency)}</Descriptions.Item>
-                  <Descriptions.Item label="影响程度">{renderImpactTag(classificationData.impact)}</Descriptions.Item>
-                  <Descriptions.Item label="创建时间" span={3}>
+                  <Descriptions.Item label="Category">{classificationData.category || '-'}</Descriptions.Item>
+                  <Descriptions.Item label="Subcategory">{classificationData.subcategory || '-'}</Descriptions.Item>
+                  <Descriptions.Item label="Service Type">{classificationData.serviceType || '-'}</Descriptions.Item>
+                  <Descriptions.Item label="Failure Type">{classificationData.failureType || '-'}</Descriptions.Item>
+                  <Descriptions.Item label="Urgency">{renderImpactTag(classificationData.urgency)}</Descriptions.Item>
+                  <Descriptions.Item label="Impact Level">{renderImpactTag(classificationData.impact)}</Descriptions.Item>
+                  <Descriptions.Item label="Created" span={3}>
                     {classificationData.createdAt ? dayjs(classificationData.createdAt).format('YYYY-MM-DD HH:mm') : '-'}
                   </Descriptions.Item>
                 </Descriptions>
               ) : (
-                <Empty description="暂无事件分类" image={Empty.PRESENTED_IMAGE_SIMPLE}>
+                <Empty description="No incident classification" image={Empty.PRESENTED_IMAGE_SIMPLE}>
                   <Button type="primary" icon={<Plus />} onClick={handleEditCategory}>
-                    添加事件分类
+
+                    Add Incident Classification
                   </Button>
                 </Empty>
               )}
@@ -802,11 +818,11 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
 
         {/* 解决记录 (如果有) */}
         {data.resolutionSteps && data.resolutionSteps.length > 0 && (
-          <Card title="处理流程">
+          <Card title="Processing Steps">
             <Timeline>
               {data.resolutionSteps.map((step, index) => (
                 <Timeline.Item key={index}>
-                  <p>{(step as unknown as { description?: string }).description || '处理步骤'}</p>
+                  <p>{(step as unknown as { description?: string }).description || 'Processing Step'}</p>
                   <span style={{ fontSize: '12px', color: '#999' }}>{(step as unknown as { timestamp?: string }).timestamp}</span>
                 </Timeline.Item>
               ))}
@@ -817,7 +833,7 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
 
       {escalateModalVisible && (
         <Modal
-          title="升级事件"
+          title="Escalate Incident"
           open={escalateModalVisible}
           onCancel={() => setEscalateModalVisible(false)}
           confirmLoading={escalating}
@@ -826,27 +842,27 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
           <Form form={form} layout="vertical" onFinish={handleEscalateSubmit}>
             <Form.Item
               name="escalationLevel"
-              label="升级级别"
-              rules={[{ required: true, message: '请选择升级级别' }]}
+              label="Escalation Level"
+              rules={[{ required: true, message: 'Please select an escalation level' }]}
             >
-              <Select placeholder="请选择升级级别">
-                <Select.Option value={1}>级别 1 - 主管</Select.Option>
-                <Select.Option value={2}>级别 2 - 经理</Select.Option>
-                <Select.Option value={3}>级别 3 - 总监</Select.Option>
-                <Select.Option value={4}>级别 4 - VP</Select.Option>
+              <Select placeholder="Please select an escalation level">
+                <Select.Option value={1}>Level 1 - Supervisor</Select.Option>
+                <Select.Option value={2}>Level 2 - Manager</Select.Option>
+                <Select.Option value={3}>Level 3 - Director</Select.Option>
+                <Select.Option value={4}>Level 4 - VP</Select.Option>
               </Select>
             </Form.Item>
             <Form.Item
               name="reason"
-              label="升级原因"
-              rules={[{ required: true, message: '请输入升级原因' }]}
+              label="Escalation Reason"
+              rules={[{ required: true, message: 'Please enter escalation reason' }]}
             >
-              <Input.TextArea rows={3} placeholder="请输入升级原因" />
+              <Input.TextArea rows={3} placeholder="Please enter escalation reason" />
             </Form.Item>
-            <Form.Item name="autoAssign" label="自动分配">
-              <Select placeholder="是否自动分配给上级">
-                <Select.Option value={true}>是</Select.Option>
-                <Select.Option value={false}>否</Select.Option>
+            <Form.Item name="autoAssign" label="Auto Assign">
+              <Select placeholder="Auto assign to superior">
+                <Select.Option value={true}>Yes</Select.Option>
+                <Select.Option value={false}>No</Select.Option>
               </Select>
             </Form.Item>
           </Form>
@@ -858,7 +874,8 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
         title={
           <Space>
             <UserCheck style={{ color: '#1677ff' }} />
-            指派事件
+
+            Assign Incident
           </Space>
         }
         open={assignModalVisible}
@@ -868,18 +885,18 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
         }}
         confirmLoading={assigning}
         onOk={() => assignForm.submit()}
-        okText="确认指派"
-        cancelText="取消"
+        okText="Confirm Assignment"
+        cancelText="Cancel"
         width={480}
       >
         <Form form={assignForm} layout="vertical" onFinish={handleAssignSubmit}>
           <Form.Item
             name="assigneeId"
-            label="指派给"
-            rules={[{ required: true, message: '请选择处理人' }]}
+            label="Assign To"
+            rules={[{ required: true, message: 'Please select an assignee' }]}
           >
             <Select
-              placeholder="请选择处理人"
+              placeholder="Please select an assignee"
               loading={loadingUsers}
               showSearch
               optionFilterProp="label"
@@ -897,7 +914,8 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
         title={
           <Space>
             <Siren style={{ color: '#ff4d4f' }} />
-            升级为重大事件
+
+            Escalate to Major Incident
           </Space>
         }
         open={majorModalVisible}
@@ -907,46 +925,47 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
         }}
         confirmLoading={escalatingMajor}
         onOk={() => majorForm.submit()}
-        okText="确认升级"
+        okText="Confirm Escalation"
         okButtonProps={{ danger: true }}
-        cancelText="取消"
+        cancelText="Cancel"
         width={520}
       >
         <div style={{ marginBottom: 16, color: '#8c8c8c', fontSize: 13 }}>
-          升级后事件严重程度将提升为“严重”，并记录影响评估与审计日志，此操作不可撤销。
+
+          After the upgrade, the event severity will be increased to "Critical" and impact assessment and audit logs will be recorded. This operation cannot be undone.
         </div>
         <Form form={majorForm} layout="vertical" onFinish={handleMajorSubmit}>
           <Form.Item
             name="impactScope"
-            label="影响范围"
-            rules={[{ required: true, message: '请选择影响范围' }]}
+            label="Impact Range"
+            rules={[{ required: true, message: 'Please select impact scope' }]}
           >
-            <Select placeholder="请选择影响范围">
-              <Select.Option value="low">低 - 少量用户受影响</Select.Option>
-              <Select.Option value="medium">中 - 部分部门/服务受影响</Select.Option>
-              <Select.Option value="high">高 - 多个核心服务受影响</Select.Option>
-              <Select.Option value="critical">严重 - 全局性业务中断</Select.Option>
+            <Select placeholder="Please select impact scope">
+              <Select.Option value="low">Low - Few users affected</Select.Option>
+              <Select.Option value="medium">Medium - Some departments/services affected</Select.Option>
+              <Select.Option value="high">High - Multiple core services affected</Select.Option>
+              <Select.Option value="critical">Critical - Global business interruption</Select.Option>
             </Select>
           </Form.Item>
           <Form.Item
             name="businessImpact"
-            label="业务影响评估"
+            label="Business Impact Assessment"
             rules={[
-              { required: true, message: '请填写业务影响评估' },
-              { min: 10, message: '业务影响评估至少需要10个字符' },
+              { required: true, message: 'Please fill in business impact assessment' },
+              { min: 10, message: 'Business impact assessment requires at least 10 characters' },
             ]}
           >
             <Input.TextArea
               rows={4}
-              placeholder="请描述受影响的业务/系统范围、用户数量、预估损失等..."
+              placeholder="Please describe the affected business/system scope, number of users, estimated losses, etc..."
               showCount
               maxLength={2000}
             />
           </Form.Item>
-          <Form.Item name="communicationPlan" label="危机沟通计划">
+          <Form.Item name="communicationPlan" label="Crisis Communication Plan">
             <Input.TextArea
               rows={3}
-              placeholder="可选：说明通报对象、沟通频率、作战室/应急群等安排..."
+              placeholder="Optional: describe notification targets, frequency, war room/emergency group arrangements..."
               showCount
               maxLength={1000}
             />
@@ -959,46 +978,47 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
         title={
           <Space>
             <CheckCircle style={{ color: '#52c41a' }} />
-            解决事件
+
+            Resolve Incident
           </Space>
         }
         open={resolveModalVisible}
         onCancel={() => setResolveModalVisible(false)}
         confirmLoading={resolving}
         onOk={() => resolveForm.submit()}
-        okText="确认解决"
-        cancelText="取消"
+        okText="Confirm Resolution"
+        cancelText="Cancel"
         width={500}
       >
         <Form form={resolveForm} layout="vertical" onFinish={handleResolveSubmit}>
           <Form.Item
             name="resolution"
-            label="解决方案"
+            label="Solutions"
             rules={[
-              { required: true, message: '请填写解决方案' },
-              { min: 10, message: '解决方案至少需要10个字符' },
+              { required: true, message: 'Please fill in the resolution' },
+              { min: 10, message: 'Resolution requires at least 10 characters' },
             ]}
           >
             <Input.TextArea
               rows={4}
-              placeholder="请详细描述问题的解决方案和处理步骤..."
+              placeholder="Please describe the solution and processing steps of the problem in detail..."
               showCount
               maxLength={2000}
             />
           </Form.Item>
-          <Form.Item name="resolutionCode" label="解决分类">
-            <Select placeholder="选择解决分类（可选）">
-              <Select.Option value="fixed">已修复</Select.Option>
-              <Select.Option value="workaround">临时解决方案</Select.Option>
-              <Select.Option value="no_action">无需操作</Select.Option>
-              <Select.Option value="third_party">第三方解决</Select.Option>
-              <Select.Option value="user_error">用户错误</Select.Option>
+          <Form.Item name="resolutionCode" label="Resolution Code">
+            <Select placeholder="Select resolution code (optional)">
+              <Select.Option value="fixed">Fixed</Select.Option>
+              <Select.Option value="workaround">Workaround</Select.Option>
+              <Select.Option value="no_action">No Action Required</Select.Option>
+              <Select.Option value="third_party">Third Party Resolved</Select.Option>
+              <Select.Option value="user_error">User Error</Select.Option>
             </Select>
           </Form.Item>
           {data?.problemId && (
             <div style={{ padding: '8px 12px', background: '#f5f5f5', borderRadius: 4 }}>
               <AlertCircle style={{ marginRight: 8, color: '#faad14' }} />
-              <span>此事件已关联问题记录 #{data.problemId}</span>
+              <span>This event has an associated problem record #{data.problemId}</span>
             </div>
           )}
         </Form>
@@ -1009,48 +1029,49 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
         title={
           <Space>
             <FileText />
-            根因分析
+
+            Root Cause Analysis
           </Space>
         }
         open={rootCauseModalVisible}
         onCancel={() => setRootCauseModalVisible(false)}
         confirmLoading={savingAnalysis}
         onOk={() => rootCauseForm.submit()}
-        okText="保存"
-        cancelText="取消"
+        okText="Save"
+        cancelText="Cancel"
         width={600}
       >
         <Form form={rootCauseForm} layout="vertical" onFinish={handleSaveRootCause}>
-          <Form.Item name="analysisMethod" label="分析方法" rules={[{ required: true }]}>
-            <Select placeholder="选择分析方法">
-              <Select.Option value="5-whys">5 Whys（五问法）</Select.Option>
-              <Select.Option value="fishbone">鱼骨图（ Ishikawa）</Select.Option>
-              <Select.Option value="timeline">时间线分析</Select.Option>
-              <Select.Option value="fault-tree">故障树分析（FTA）</Select.Option>
+          <Form.Item name="analysisMethod" label="Analysis Method" rules={[{ required: true }]}>
+            <Select placeholder="Select analysis method">
+              <Select.Option value="5-whys">5 Whys</Select.Option>
+              <Select.Option value="fishbone">Fishbone (Ishikawa)</Select.Option>
+              <Select.Option value="timeline">Timeline Analysis</Select.Option>
+              <Select.Option value="fault-tree">Fault Tree Analysis (FTA)</Select.Option>
             </Select>
           </Form.Item>
           <Form.Item
             name="rootCause"
-            label="根本原因"
-            rules={[{ required: true, message: '请填写根本原因' }]}
+            label="Root Cause"
+            rules={[{ required: true, message: 'Please fill in root cause' }]}
           >
-            <Input.TextArea rows={3} placeholder="分析并描述问题的根本原因..." showCount maxLength={500} />
+            <Input.TextArea rows={3} placeholder="Analyze and describe the root cause..." showCount maxLength={500} />
           </Form.Item>
-          <Form.Item name="contributingFactors" label="促成因素（每行一个）">
-            <Input.TextArea rows={3} placeholder="列出促成因素，每行一个..." showCount maxLength={500} />
+          <Form.Item name="contributingFactors" label="Contributing Factors (one per line)">
+            <Input.TextArea rows={3} placeholder="List contributing factors, one per line..." showCount maxLength={500} />
           </Form.Item>
-          <Form.Item name="evidence" label="证据（每行一个）">
-            <Input.TextArea rows={3} placeholder="列出支持分析的证据，每行一个..." showCount maxLength={500} />
+          <Form.Item name="evidence" label="Evidence (one per line)">
+            <Input.TextArea rows={3} placeholder="List supporting evidence, one per line..." showCount maxLength={500} />
           </Form.Item>
-          <Form.Item name="preventiveActions" label="预防措施（每行一个）">
-            <Input.TextArea rows={3} placeholder="列出预防措施，每行一个..." showCount maxLength={500} />
+          <Form.Item name="preventiveActions" label="Preventive Actions (one per line)">
+            <Input.TextArea rows={3} placeholder="List preventive actions, one per line..." showCount maxLength={500} />
           </Form.Item>
-          <Form.Item name="status" label="状态">
-            <Select placeholder="选择状态">
-              <Select.Option value="draft">草稿</Select.Option>
-              <Select.Option value="in-progress">进行中</Select.Option>
-              <Select.Option value="completed">已完成</Select.Option>
-              <Select.Option value="approved">已批准</Select.Option>
+          <Form.Item name="status" label="Status">
+            <Select placeholder="Select status">
+              <Select.Option value="draft">Draft</Select.Option>
+              <Select.Option value="in-progress">In Progress</Select.Option>
+              <Select.Option value="completed">Completed</Select.Option>
+              <Select.Option value="approved">Approved</Select.Option>
             </Select>
           </Form.Item>
         </Form>
@@ -1061,57 +1082,58 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
         title={
           <Space>
             <AreaChart />
-            影响评估
+
+            Impact Assessment
           </Space>
         }
         open={impactModalVisible}
         onCancel={() => setImpactModalVisible(false)}
         confirmLoading={savingAnalysis}
         onOk={() => impactForm.submit()}
-        okText="保存"
-        cancelText="取消"
+        okText="Save"
+        cancelText="Cancel"
         width={600}
       >
         <Form form={impactForm} layout="vertical" onFinish={handleSaveImpact}>
-          <Form.Item name="businessImpact" label="业务影响" rules={[{ required: true }]}>
-            <Select placeholder="选择业务影响等级">
-              <Select.Option value="low">低 - 最小业务影响</Select.Option>
-              <Select.Option value="medium">中 - 部分业务受影响</Select.Option>
-              <Select.Option value="high">高 - 显著业务影响</Select.Option>
-              <Select.Option value="critical">严重 - 业务中断</Select.Option>
+          <Form.Item name="businessImpact" label="Business Impact" rules={[{ required: true }]}>
+            <Select placeholder="Select business impact level">
+              <Select.Option value="low">Low - Minimal business impact</Select.Option>
+              <Select.Option value="medium">Medium - Some services are affected</Select.Option>
+              <Select.Option value="high">High - Significant business impact</Select.Option>
+              <Select.Option value="critical">Critical - Business interruption</Select.Option>
             </Select>
           </Form.Item>
-          <Form.Item name="technicalImpact" label="技术影响" rules={[{ required: true }]}>
-            <Select placeholder="选择技术影响等级">
-              <Select.Option value="low">低 - 最小技术影响</Select.Option>
-              <Select.Option value="medium">中 - 部分系统受影响</Select.Option>
-              <Select.Option value="high">高 - 核心系统受影响</Select.Option>
-              <Select.Option value="critical">严重 - 系统不可用</Select.Option>
+          <Form.Item name="technicalImpact" label="Technical Impact" rules={[{ required: true }]}>
+            <Select placeholder="Select technology impact level">
+              <Select.Option value="low">Low - minimal technical impact</Select.Option>
+              <Select.Option value="medium">Medium - Some systems affected</Select.Option>
+              <Select.Option value="high">High - Core system affected</Select.Option>
+              <Select.Option value="critical">Critical - System unavailable</Select.Option>
             </Select>
           </Form.Item>
-          <Form.Item name="affectedServices" label="受影响服务（逗号分隔）">
-            <Input.TextArea rows={2} placeholder="列出受影响的服务，用逗号分隔..." />
+          <Form.Item name="affectedServices" label="Affected Services (comma separated)">
+            <Input.TextArea rows={2} placeholder="List affected services, comma separated..." />
           </Form.Item>
-          <Form.Item name="affectedUsersCount" label="受影响用户数">
-            <Input type="number" placeholder="估计受影响的用户数量" min={0} />
+          <Form.Item name="affectedUsersCount" label="Affected User Count">
+            <Input type="number" placeholder="Estimated number of affected users" min={0} />
           </Form.Item>
-          <Form.Item name="financialImpact" label="财务影响（元）">
-            <Input type="number" placeholder="估计的财务损失" min={0} />
+          <Form.Item name="financialImpact" label="Financial Impact">
+            <Input type="number" placeholder="Estimated financial loss" min={0} />
           </Form.Item>
-          <Form.Item name="reputationImpact" label="声誉影响">
-            <Select placeholder="选择声誉影响等级">
-              <Select.Option value="low">低</Select.Option>
-              <Select.Option value="medium">中</Select.Option>
-              <Select.Option value="high">高</Select.Option>
-              <Select.Option value="critical">严重</Select.Option>
+          <Form.Item name="reputationImpact" label="Reputation Impact">
+            <Select placeholder="Select reputation impact level">
+              <Select.Option value="low">Low</Select.Option>
+              <Select.Option value="medium">Medium</Select.Option>
+              <Select.Option value="high">High</Select.Option>
+              <Select.Option value="critical">Critical</Select.Option>
             </Select>
           </Form.Item>
-          <Form.Item name="complianceImpact" label="合规影响" valuePropName="checked">
+          <Form.Item name="complianceImpact" label="Compliance Impact" valuePropName="checked">
             <Input type="checkbox" style={{ width: 16 }} />
-            <span style={{ marginLeft: 8 }}>此事件涉及合规问题</span>
+            <span style={{ marginLeft: 8 }}>This incident involves compliance issues</span>
           </Form.Item>
-          <Form.Item name="assessmentNotes" label="评估备注">
-            <Input.TextArea rows={3} placeholder="补充评估说明..." showCount maxLength={500} />
+          <Form.Item name="assessmentNotes" label="Assessment Notes">
+            <Input.TextArea rows={3} placeholder="Additional assessment notes..." showCount maxLength={500} />
           </Form.Item>
         </Form>
       </Modal>
@@ -1121,66 +1143,67 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
         title={
           <Space>
             <Plug />
-            事件分类
+
+            Incident Category
           </Space>
         }
         open={categoryModalVisible}
         onCancel={() => setCategoryModalVisible(false)}
         confirmLoading={savingAnalysis}
         onOk={() => categoryForm.submit()}
-        okText="保存"
-        cancelText="取消"
+        okText="Save"
+        cancelText="Cancel"
         width={600}
       >
         <Form form={categoryForm} layout="vertical" onFinish={handleSaveCategory}>
-          <Form.Item name="category" label="事件分类" rules={[{ required: true, message: '请选择事件分类' }]}>
-            <Select placeholder="选择事件分类">
-              <Select.Option value="基础设施">基础设施</Select.Option>
-              <Select.Option value="应用系统">应用系统</Select.Option>
-              <Select.Option value="网络连接">网络连接</Select.Option>
-              <Select.Option value="安全事件">安全事件</Select.Option>
-              <Select.Option value="数据问题">数据问题</Select.Option>
-              <Select.Option value="用户体验">用户体验</Select.Option>
-              <Select.Option value="其他">其他</Select.Option>
+          <Form.Item name="category" label="Incident Category" rules={[{ required: true, message: 'Please select an incident category' }]}>
+            <Select placeholder="Select incident category">
+              <Select.Option value="Infrastructure">Infrastructure</Select.Option>
+              <Select.Option value="Application Systems">Application Systems</Select.Option>
+              <Select.Option value="Network">Network</Select.Option>
+              <Select.Option value="Security Incident">Security Incident</Select.Option>
+              <Select.Option value="Data Issue">Data Issue</Select.Option>
+              <Select.Option value="User Experience">User Experience</Select.Option>
+              <Select.Option value="Other">Other</Select.Option>
             </Select>
           </Form.Item>
-          <Form.Item name="subcategory" label="子分类">
-            <Input placeholder="请输入子分类" />
+          <Form.Item name="subcategory" label="Subcategory">
+            <Input placeholder="Enter subcategory" />
           </Form.Item>
-          <Form.Item name="serviceType" label="服务类型">
-            <Select placeholder="选择服务类型">
-              <Select.Option value="计算">计算</Select.Option>
-              <Select.Option value="存储">存储</Select.Option>
-              <Select.Option value="网络">网络</Select.Option>
-              <Select.Option value="数据库">数据库</Select.Option>
-              <Select.Option value="中间件">中间件</Select.Option>
-              <Select.Option value="应用服务">应用服务</Select.Option>
+          <Form.Item name="serviceType" label="Service Type">
+            <Select placeholder="Select service type">
+              <Select.Option value="Compute">Compute</Select.Option>
+              <Select.Option value="Storage">Storage</Select.Option>
+              <Select.Option value="Network">Network</Select.Option>
+              <Select.Option value="Database">Database</Select.Option>
+              <Select.Option value="Middleware">Middleware</Select.Option>
+              <Select.Option value="Application Service">Application Service</Select.Option>
             </Select>
           </Form.Item>
-          <Form.Item name="failureType" label="故障类型">
-            <Select placeholder="选择故障类型">
-              <Select.Option value="性能下降">性能下降</Select.Option>
-              <Select.Option value="服务不可用">服务不可用</Select.Option>
-              <Select.Option value="功能异常">功能异常</Select.Option>
-              <Select.Option value="数据丢失">数据丢失</Select.Option>
-              <Select.Option value="安全漏洞">安全漏洞</Select.Option>
-              <Select.Option value="配置错误">配置错误</Select.Option>
+          <Form.Item name="failureType" label="Failure Type">
+            <Select placeholder="Select failure type">
+              <Select.Option value="Performance Degradation">Performance Degradation</Select.Option>
+              <Select.Option value="Service Unavailable">Service Unavailable</Select.Option>
+              <Select.Option value="Function Error">Function Error</Select.Option>
+              <Select.Option value="Data Loss">Data Loss</Select.Option>
+              <Select.Option value="Security Vulnerability">Security Vulnerability</Select.Option>
+              <Select.Option value="Configuration Error">Configuration Error</Select.Option>
             </Select>
           </Form.Item>
-          <Form.Item name="urgency" label="紧急程度" rules={[{ required: true }]}>
-            <Select placeholder="选择紧急程度">
-              <Select.Option value="low">低 - 普通响应</Select.Option>
-              <Select.Option value="medium">中 - 4小时内响应</Select.Option>
-              <Select.Option value="high">高 - 1小时内响应</Select.Option>
-              <Select.Option value="critical">紧急 - 立即响应</Select.Option>
+          <Form.Item name="urgency" label="Urgency" rules={[{ required: true }]}>
+            <Select placeholder="Select urgency">
+              <Select.Option value="low">Low - Normal response</Select.Option>
+              <Select.Option value="medium">Medium - Response within 4 hours</Select.Option>
+              <Select.Option value="high">High - Response within 1 hour</Select.Option>
+              <Select.Option value="critical">Critical - Immediate response</Select.Option>
             </Select>
           </Form.Item>
-          <Form.Item name="impact" label="影响程度" rules={[{ required: true }]}>
-            <Select placeholder="选择影响程度">
-              <Select.Option value="low">低 - 单个用户</Select.Option>
-              <Select.Option value="medium">中 - 部分用户</Select.Option>
-              <Select.Option value="high">高 - 部门/团队</Select.Option>
-              <Select.Option value="critical">严重 - 全局/客户</Select.Option>
+          <Form.Item name="impact" label="Impact Level" rules={[{ required: true }]}>
+            <Select placeholder="Select impact level">
+              <Select.Option value="low">Low - Single user</Select.Option>
+              <Select.Option value="medium">Medium - Some users</Select.Option>
+              <Select.Option value="high">High - Department/team</Select.Option>
+              <Select.Option value="critical">Critical - Global/customer</Select.Option>
             </Select>
           </Form.Item>
         </Form>

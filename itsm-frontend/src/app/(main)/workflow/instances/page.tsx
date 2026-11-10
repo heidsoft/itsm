@@ -33,16 +33,16 @@ const statusColorMap: Record<string, string> = {
 
 // 工作流实例状态文本映射
 const statusTextMap: Record<string, string> = {
-  running: '运行中',
-  completed: '已完成',
-  suspended: '已暂停',
-  terminated: '已终止',
-  failed: '失败',
+  running: 'Running',
+  completed: 'Completed',
+  suspended: 'Paused',
+  terminated: 'Terminated',
+  failed: 'Failed',
 };
 
 export default function WorkflowInstancesPage() {
   return (
-    <Suspense fallback={<div className="p-6 text-center text-gray-500">加载中…</div>}>
+    <Suspense fallback={<div className="p-6 text-center text-gray-500">Loading…</div>}>
       <WorkflowInstancesContent />
     </Suspense>
   );
@@ -119,7 +119,7 @@ function WorkflowInstancesContent() {
       setStats(statsResponse);
     } catch (error) {
       console.error('Failed to load workflow instances:', error);
-      message.error('加载工作流实例失败');
+      message.error('Failed to load workflow instance');
       setInstances([]);
     } finally {
       setLoading(false);
@@ -140,7 +140,7 @@ function WorkflowInstancesContent() {
       const { workflows } = await WorkflowApi.getWorkflows({ page: 1, pageSize: 100 });
       setDefinitions(workflows.filter(w => String(w.status) === 'active'));
     } catch {
-      message.error('加载流程定义失败');
+      message.error('Failed to load process definition');
       setDefinitions([]);
     } finally {
       setDefinitionsLoading(false);
@@ -156,7 +156,7 @@ function WorkflowInstancesContent() {
         try {
           variables = JSON.parse(values.variables);
         } catch {
-          message.error('流程变量必须是合法的 JSON 对象');
+          message.error('Process variables must be valid JSON objects');
           return;
         }
       }
@@ -166,14 +166,14 @@ function WorkflowInstancesContent() {
         businessKey: values.businessKey || undefined,
         variables: variables as Record<string, unknown> | undefined,
       });
-      message.success(`流程实例已启动：${instance.id}`);
+      message.success(`Process instance started:${instance.id}`);
       setStartModalVisible(false);
       startForm.resetFields();
       loadData();
     } catch (error) {
       // validateFields 失败时不提示；API 失败提示错误
       if (error instanceof Error) {
-        message.error(`启动流程失败：${error.message}`);
+        message.error(`Failed to start process:${error.message}`);
       }
     } finally {
       setStartSubmitting(false);
@@ -195,47 +195,47 @@ function WorkflowInstancesContent() {
   const columns = useMemo(
     () => [
       {
-        title: '实例 ID',
+        title: 'Instance ID',
         dataIndex: 'id',
         key: 'id',
         render: (value: string) => <span className="font-mono text-xs">{value}</span>,
         width: 180,
       },
       {
-        title: '流程 Key',
+        title: 'Process Key',
         dataIndex: 'processDefinitionKey',
         key: 'processDefinitionKey',
         width: 150,
       },
       {
-        title: '业务键',
+        title: 'Business key',
         dataIndex: 'businessKey',
         key: 'businessKey',
         width: 150,
       },
       {
-        title: '状态',
+        title: 'Status',
         dataIndex: 'status',
         key: 'status',
         width: 100,
         render: (value: string) => <Tag color={statusColorMap[value] || 'default'}>{statusTextMap[value] || value}</Tag>,
       },
       {
-        title: '启动时间',
+        title: 'Startup time',
         dataIndex: 'startTime',
         key: 'startTime',
         width: 180,
         render: (value: string) => formatDateTime(value) || '-',
       },
       {
-        title: '结束时间',
+        title: 'End Time',
         dataIndex: 'endTime',
         key: 'endTime',
         width: 180,
         render: (value: string) => formatDateTime(value) || '-',
       },
       {
-        title: '操作',
+        title: 'Actions',
         key: 'actions',
         width: 200,
         render: (_: unknown, record: InstanceRow) => (
@@ -246,7 +246,8 @@ function WorkflowInstancesContent() {
               onClick={() => handleViewDetail(record)}
               size="small"
             >
-              详情
+
+              Details
             </Button>
             {record.status === 'running' && (
               <>
@@ -255,24 +256,25 @@ function WorkflowInstancesContent() {
                   icon={<PauseCircle className="h-4 w-4" />}
                   onClick={() => {
                     modal.confirm({
-                      title: '暂停流程实例',
-                      content: `确定要暂停实例 ${record.id} 吗？暂停后待办任务将不可处理，可随时恢复。`,
-                      okText: '暂停',
-                      cancelText: '取消',
+                      title: 'Pause process instance',
+                      content: `Are you sure you want to pause the instance? ${record.id} ? To-do tasks cannot be processed after being paused and can be resumed at any time.`,
+                      okText: 'On Hold',
+                      cancelText: 'Cancel',
                       onOk: async () => {
                         try {
                           await WorkflowApi.suspendWorkflow(record.id);
-                          message.success('实例已暂停');
+                          message.success('Instance paused');
                           loadData();
                         } catch {
-                          message.error('暂停实例失败');
+                          message.error('Failed to suspend instance');
                         }
                       },
                     });
                   }}
                   size="small"
                 >
-                  暂停
+
+                  On Hold
                 </Button>
                 <Button
                   type="text"
@@ -280,25 +282,26 @@ function WorkflowInstancesContent() {
                   icon={<StopCircle className="h-4 w-4" />}
                   onClick={() => {
                     modal.confirm({
-                      title: '终止流程实例',
-                      content: `确定要终止实例 ${record.id} 吗？终止后流程不可恢复，未完成的审批链将被中断。`,
-                      okText: '终止',
+                      title: 'Terminating process instance',
+                      content: `Are you sure you want to terminate the instance? ${record.id} ? After termination, the process cannot be resumed and the unfinished approval chain will be interrupted.`,
+                      okText: 'Termination',
                       okType: 'danger',
-                      cancelText: '取消',
+                      cancelText: 'Cancel',
                       onOk: async () => {
                         try {
-                          await WorkflowApi.terminateWorkflow(record.id, '前端终止');
-                          message.success('实例已终止');
+                          await WorkflowApi.terminateWorkflow(record.id, 'Frontend terminated');
+                          message.success('Instance terminated');
                           loadData();
                         } catch {
-                          message.error('终止实例失败');
+                          message.error('Failed to terminate instance');
                         }
                       },
                     });
                   }}
                   size="small"
                 >
-                  终止
+
+                  Termination
                 </Button>
               </>
             )}
@@ -308,24 +311,25 @@ function WorkflowInstancesContent() {
                 icon={<PlayCircle className="h-4 w-4" />}
                 onClick={() => {
                   modal.confirm({
-                    title: '恢复流程实例',
-                    content: `确定要恢复实例 ${record.id} 吗？恢复后流程将继续执行。`,
-                    okText: '恢复',
-                    cancelText: '取消',
+                    title: 'Recovery process instance',
+                    content: `Are you sure you want to restore the instance? ${record.id} ? The process will continue after recovery.`,
+                    okText: 'Restore',
+                    cancelText: 'Cancel',
                     onOk: async () => {
                       try {
                         await WorkflowApi.resumeWorkflow(record.id);
-                        message.success('实例已恢复');
+                        message.success('Instance restored');
                         loadData();
                       } catch {
-                        message.error('恢复实例失败');
+                        message.error('Failed to restore instance');
                       }
                     },
                   });
                 }}
                 size="small"
               >
-                恢复
+
+                Restore
               </Button>
             )}
           </Space>
@@ -338,22 +342,22 @@ function WorkflowInstancesContent() {
   return (
     <div className="space-y-6">
       <ManagementPageHeader
-        title="工作流实例"
-        description="查看流程实例的运行状态、起止时间和持续时长，支持按状态和流程筛选。"
+        title="Workflow Instances"
+        description="View the running status, start and end time, and duration of a process instance, and support filtering by status and process."
         notice={
           <ManagementNotice
-            message="本版本"
-            description="支持实例列表、状态操作（暂停/恢复/终止）和详情查看。任务列表与会签视图将在后续版本补充。"
+            message="This version"
+            description="Supports instance list, status operations (pause/resume/terminate) and detailed viewing. Task list and countersign views will be added in subsequent versions."
           />
         }
       />
 
       <StatsOverview
         items={[
-          { key: 'total', title: '总实例', value: stats.total, accentColor: '#1677ff' },
-          { key: 'running', title: '运行中', value: stats.running, accentColor: '#52c41a' },
-          { key: 'completed', title: '已完成', value: stats.completed, accentColor: '#1677ff' },
-          { key: 'suspended', title: '已暂停', value: stats.suspended, accentColor: '#faad14' },
+          { key: 'total', title: 'Total instances', value: stats.total, accentColor: '#1677ff' },
+          { key: 'running', title: 'Running', value: stats.running, accentColor: '#52c41a' },
+          { key: 'completed', title: 'Completed', value: stats.completed, accentColor: '#1677ff' },
+          { key: 'suspended', title: 'Paused', value: stats.suspended, accentColor: '#faad14' },
         ]}
       />
 
@@ -361,24 +365,24 @@ function WorkflowInstancesContent() {
         filters={
           <>
             <Input
-              placeholder="按流程 Key 搜索"
+              placeholder="Search by process Key"
               value={keyword}
               allowClear
               onChange={event => setKeyword(event.target.value)}
               style={{ width: 250 }}
             />
             <Select
-              placeholder="状态筛选"
+              placeholder="Status"
               allowClear
               value={status}
               onChange={setStatus}
               style={{ width: 180 }}
               options={[
-                { label: '运行中', value: 'running' },
-                { label: '已完成', value: 'completed' },
-                { label: '已暂停', value: 'suspended' },
-                { label: '已终止', value: 'terminated' },
-                { label: '失败', value: 'failed' },
+                { label: 'Running', value: 'running' },
+                { label: 'Completed', value: 'completed' },
+                { label: 'Paused', value: 'suspended' },
+                { label: 'Terminated', value: 'terminated' },
+                { label: 'Failed', value: 'failed' },
               ]}
             />
           </>
@@ -386,10 +390,12 @@ function WorkflowInstancesContent() {
         actions={
           <Space>
             <Button type="primary" icon={<Rocket className="h-4 w-4" />} onClick={openStartModal}>
-              发起流程
+
+              Initiate process
             </Button>
             <Button icon={<RefreshCw className="h-4 w-4" />} onClick={loadData}>
-              刷新
+
+              Refresh
             </Button>
           </Space>
         }
@@ -398,11 +404,11 @@ function WorkflowInstancesContent() {
       <Card className="rounded-xl shadow-sm">
         <LoadingEmptyError
           state={loading ? 'loading' : instances.length === 0 ? 'empty' : 'success'}
-          loadingText="正在加载工作流实例..."
+          loadingText="Loading workflow instance..."
           empty={{
-            title: '暂无工作流实例',
-            description: '当前筛选条件下没有实例数据。',
-            actionText: '重新加载',
+            title: 'No workflow instance yet',
+            description: 'There is no instance data under the current filter criteria.',
+            actionText: 'Reload',
             onAction: loadData,
           }}
         >
@@ -417,7 +423,7 @@ function WorkflowInstancesContent() {
       </Card>
 
       <Modal
-        title="发起流程实例"
+        title="Initiate process instance"
         open={startModalVisible}
         onCancel={() => {
           setStartModalVisible(false);
@@ -425,36 +431,36 @@ function WorkflowInstancesContent() {
         }}
         onOk={handleStartSubmit}
         confirmLoading={startSubmitting}
-        okText="启动"
-        cancelText="取消"
+        okText="Start"
+        cancelText="Cancel"
         destroyOnHidden
       >
         <Form form={startForm} layout="vertical">
           <Form.Item
             name="processDefinitionKey"
-            label="流程定义"
-            rules={[{ required: true, message: '请选择要发起的流程定义' }]}
+            label="Process Definitions"
+            rules={[{ required: true, message: 'Please select the process definition to initiate' }]}
           >
             <Select
-              placeholder="选择已激活的流程定义"
+              placeholder="Select an activated process definition"
               showSearch
               optionFilterProp="label"
               loading={definitionsLoading}
               options={definitions.map(w => ({ label: `${w.name} (${w.code})`, value: w.code }))}
-              notFoundContent="没有已激活的流程定义，请先部署/激活"
+              notFoundContent="No activated process definition, please deploy/activate first"
             />
           </Form.Item>
           <Form.Item
             name="businessKey"
-            label="业务键（可选）"
-            tooltip="关联的业务单据标识，如工单号、变更号；留空将自动生成"
+            label="Business key (optional)"
+            tooltip="associated business document identification, such as work order number, change number; leaving blank will be automatically generated"
           >
-            <Input placeholder="例如 TICKET-2026-0001" />
+            <Input placeholder="For example TICKET-2026-0001" />
           </Form.Item>
           <Form.Item
             name="variables"
-            label="流程变量（可选，JSON）"
-            tooltip='以 JSON 对象形式传入启动变量，例如 {"priority": "high"}'
+            label="Process variables (optional, JSON)"
+            tooltip="Pass startup variables as JSON objects, for example {&quot;priority&quot;: &quot;high&quot;}"
           >
             <Input.TextArea rows={4} placeholder='{"priority": "high"}' />
           </Form.Item>
@@ -462,7 +468,7 @@ function WorkflowInstancesContent() {
       </Modal>
 
       <Modal
-        title={selectedInstanceSummary ? `实例详情 · ${selectedInstanceSummary.id}` : '实例详情'}
+        title={selectedInstanceSummary ? `Instance details · ${selectedInstanceSummary.id}` : 'Instance details'}
         open={detailModalVisible}
         onCancel={() => setDetailModalVisible(false)}
         footer={null}

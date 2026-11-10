@@ -136,7 +136,7 @@ func RateLimitMiddleware(limiter *RateLimiter) gin.HandlerFunc {
 		clientIP := c.ClientIP()
 
 		if !limiter.Allow(clientIP) {
-			common.Fail(c, common.RateLimitCode, "请求过于频繁，请稍后再试")
+			common.Fail(c, common.RateLimitCode, "Requests are too frequent, please try again later.")
 			c.Abort()
 			return
 		}
@@ -176,7 +176,7 @@ func IPWhitelistMiddleware(allowedIPs []string) gin.HandlerFunc {
 
 		clientIP := net.ParseIP(c.ClientIP())
 		if clientIP == nil {
-			common.Fail(c, common.ForbiddenCode, "无效的客户端IP")
+			common.Fail(c, common.ForbiddenCode, "Invalid client IP")
 			c.Abort()
 			return
 		}
@@ -197,7 +197,7 @@ func IPWhitelistMiddleware(allowedIPs []string) gin.HandlerFunc {
 			}
 		}
 
-		common.Fail(c, common.ForbiddenCode, "IP地址不在白名单中")
+		common.Fail(c, common.ForbiddenCode, "IP address is not in the whitelist")
 		c.Abort()
 	}
 }
@@ -232,7 +232,7 @@ func XSSProtectionMiddleware() gin.HandlerFunc {
 		for key, values := range c.Request.URL.Query() {
 			for _, value := range values {
 				if containsXSS(value, xssPatterns) {
-					common.Fail(c, common.ParamErrorCode, fmt.Sprintf("检测到潜在的XSS攻击: 参数 %s", key))
+					common.Fail(c, common.ParamErrorCode, fmt.Sprintf("Potential XSS attack detected: Parameter %s", key))
 					c.Abort()
 					return
 				}
@@ -291,7 +291,7 @@ func SecurityHeadersMiddleware() gin.HandlerFunc {
 func RequestSizeMiddleware(maxSize int64) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if c.Request.ContentLength > maxSize {
-			common.Fail(c, common.ParamErrorCode, "请求体过大")
+			common.Fail(c, common.ParamErrorCode, "Request body too large")
 			c.Abort()
 			return
 		}

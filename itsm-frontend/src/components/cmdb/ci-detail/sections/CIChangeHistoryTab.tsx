@@ -36,11 +36,12 @@ export const CIChangeHistoryTab: React.FC<CIChangeHistoryTabProps> = ({
 
   return (
     <Card
-      title="CI变更历史"
+      title="CI change history"
       size="small"
       extra={
-        <Button size="small" onClick={onLoad} loading={historyLoading} aria-label="刷新变更历史">
-          刷新
+        <Button size="small" onClick={onLoad} loading={historyLoading} aria-label="Refresh change history">
+
+          Refresh
         </Button>
       }
     >
@@ -48,11 +49,11 @@ export const CIChangeHistoryTab: React.FC<CIChangeHistoryTabProps> = ({
         <Alert
           type="error"
           showIcon
-          title="变更历史加载失败"
-          description="加载失败，请重试或确认具备 cmdb:read 权限"
+          title="Change history loading failed"
+          description="Loading failed, please try again or confirm you have cmdb:read permissions"
         />
       ) : items.length === 0 ? (
-        <Empty description={historyLoading ? '加载中...' : '暂无历史审计记录'} />
+        <Empty description={historyLoading ? 'Loading...' : 'No historical audit record yet'} />
       ) : (
         <>
           <Timeline
@@ -63,7 +64,7 @@ export const CIChangeHistoryTab: React.FC<CIChangeHistoryTabProps> = ({
                   <Space size="small" wrap>
                     <Tag color={ciOperationColor(log.operation)}>{ciOperationLabel(log.operation)}</Tag>
                     <Text type="secondary">v{log.version}</Text>
-                    {log.operatorName && <Text type="secondary">操作人: {log.operatorName}</Text>}
+                    {log.operatorName && <Text type="secondary">Operator: {log.operatorName}</Text>}
                     <Text type="secondary">
                       {dayjs(log.createdAt).format('YYYY-MM-DD HH:mm:ss')}
                     </Text>
@@ -75,7 +76,7 @@ export const CIChangeHistoryTab: React.FC<CIChangeHistoryTabProps> = ({
                   )}
                   {log.changedFields && log.changedFields.length > 0 && (
                     <div>
-                      <Text type="secondary">变更字段: {log.changedFields.join(', ')}</Text>
+                      <Text type="secondary">Change fields: {log.changedFields.join(', ')}</Text>
                     </div>
                   )}
                 </div>
@@ -84,23 +85,26 @@ export const CIChangeHistoryTab: React.FC<CIChangeHistoryTabProps> = ({
           />
           <Space size="small">
             <Text type="secondary">
-              共 {total} 条，第 {page}/{Math.max(totalPages, 1)} 页
+
+              Total {total}  Article, Article {page}/{Math.max(totalPages, 1)}  Page
             </Text>
             <Button
               size="small"
               onClick={() => onPageChange(page - 1)}
               disabled={page <= 1 || historyLoading}
-              aria-label="变更历史上一页"
+              aria-label="Change history previous page"
             >
-              上一页
+
+              Previous page
             </Button>
             <Button
               size="small"
               onClick={() => onPageChange(page + 1)}
               disabled={page >= totalPages || historyLoading}
-              aria-label="变更历史下一页"
+              aria-label="Change history next page"
             >
-              下一页
+
+              Next page
             </Button>
           </Space>
         </>

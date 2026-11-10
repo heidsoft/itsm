@@ -111,13 +111,13 @@ func (s *BPMNEventService) TriggerEvent(ctx context.Context, req *EventTriggerRe
 	// 获取事件定义
 	eventDef, err := s.getEventDefinition(ctx, req.EventDefinitionID, req.TenantID)
 	if err != nil {
-		return nil, fmt.Errorf("获取事件定义失败: %w", err)
+		return nil, fmt.Errorf("Failed to get event definition: %w", err)
 	}
 
 	// 创建事件实例
 	eventInstance, err := s.createEventInstance(ctx, req, eventDef)
 	if err != nil {
-		return nil, fmt.Errorf("创建事件实例失败: %w", err)
+		return nil, fmt.Errorf("Failed to create event instance: %w", err)
 	}
 
 	// 根据事件类型处理
@@ -132,7 +132,7 @@ func (s *BPMNEventService) TriggerEvent(ctx context.Context, req *EventTriggerRe
 	case EventBoundary:
 		result, err = s.handleBoundaryEvent(ctx, eventDef, eventInstance, req)
 	default:
-		return nil, fmt.Errorf("不支持的事件类型: %s", eventDef.Type)
+		return nil, fmt.Errorf("Unsupported event type: %s", eventDef.Type)
 	}
 
 	if err != nil {
@@ -161,7 +161,7 @@ func (s *BPMNEventService) handleStartEvent(ctx context.Context, eventDef *Event
 		// 创建新的流程实例
 		processInstance, err := s.createProcessInstanceFromStartEvent(ctx, eventDef, req)
 		if err != nil {
-			return nil, fmt.Errorf("创建流程实例失败: %w", err)
+			return nil, fmt.Errorf("Failed to create process instance: %w", err)
 		}
 
 		result.NextActivities = s.getNextActivitiesFromEvent(eventDef)
@@ -216,7 +216,7 @@ func (s *BPMNEventService) handleEndEvent(ctx context.Context, eventDef *EventDe
 		if req.ProcessInstanceID != "" {
 			err := s.terminateProcessInstance(ctx, req.ProcessInstanceID, req.TenantID)
 			if err != nil {
-				return nil, fmt.Errorf("终止流程实例失败: %w", err)
+				return nil, fmt.Errorf("Failed to terminate process instance: %w", err)
 			}
 		}
 	case TriggerError:
@@ -230,7 +230,7 @@ func (s *BPMNEventService) handleEndEvent(ctx context.Context, eventDef *EventDe
 		if req.ProcessInstanceID != "" {
 			err := s.completeProcessInstance(ctx, req.ProcessInstanceID, req.TenantID)
 			if err != nil {
-				return nil, fmt.Errorf("完成流程实例失败: %w", err)
+				return nil, fmt.Errorf("Failed to complete process instance: %w", err)
 			}
 		}
 	}
@@ -252,7 +252,7 @@ func (s *BPMNEventService) handleBoundaryEvent(ctx context.Context, eventDef *Ev
 		// 中断当前活动
 		err := s.interruptCurrentActivity(ctx, req.ProcessInstanceID, req.TenantID)
 		if err != nil {
-			return nil, fmt.Errorf("中断当前活动失败: %w", err)
+			return nil, fmt.Errorf("Failed to interrupt current activity: %w", err)
 		}
 
 		// 获取异常处理流程
@@ -432,22 +432,22 @@ func (s *BPMNEventService) GetEventStatistics(ctx context.Context, tenantID int,
 // ValidateEventDefinition 验证事件定义
 func (s *BPMNEventService) ValidateEventDefinition(eventDef *EventDefinition) error {
 	if eventDef.ID == "" {
-		return fmt.Errorf("事件ID不能为空")
+		return fmt.Errorf("Event ID cannot be empty")
 	}
 
 	if eventDef.Type == "" {
-		return fmt.Errorf("事件类型不能为空")
+		return fmt.Errorf("Event type cannot be empty")
 	}
 
 	// 验证事件类型特定的规则
 	switch eventDef.Type {
 	case EventStart:
 		if len(eventDef.Incoming) > 0 {
-			return fmt.Errorf("开始事件不能有入向流")
+			return fmt.Errorf("Start event cannot have incoming flow")
 		}
 	case EventEnd:
 		if len(eventDef.Outgoing) > 0 {
-			return fmt.Errorf("结束事件不能有出向流")
+			return fmt.Errorf("End event cannot have outbound flow")
 		}
 	}
 

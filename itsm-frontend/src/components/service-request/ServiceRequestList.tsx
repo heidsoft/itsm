@@ -71,7 +71,7 @@ const ServiceRequestList: React.FC = () => {
       setData(resp.items);
       setTotal(resp.total);
     } catch {
-      message.error('加载服务请求失败');
+      message.error('Failed to load service request');
     } finally {
       setLoading(false);
     }
@@ -79,7 +79,7 @@ const ServiceRequestList: React.FC = () => {
 
   useEffect(() => {
     loadData();
-     
+
   }, [query, activeTab]);
 
   // 处理Tab切换
@@ -96,17 +96,17 @@ const ServiceRequestList: React.FC = () => {
       width: 80,
     },
     {
-      title: '标题',
+      title: 'Title',
       dataIndex: 'title',
       render: (text: string, record: ServiceRequest) => (
         <div className="flex flex-col">
-          <span className="font-medium text-gray-900">{text || `请求 #${record.id}`}</span>
-          <span className="text-xs text-gray-500">{record.catalog?.name || '未知服务'}</span>
+          <span className="font-medium text-gray-900">{text || `Request #${record.id}`}</span>
+          <span className="text-xs text-gray-500">{record.catalog?.name || 'Unknown Service'}</span>
         </div>
       ),
     },
     {
-      title: '状态',
+      title: 'Status',
       dataIndex: 'status',
       width: 150,
       render: (status: string) => (
@@ -114,7 +114,7 @@ const ServiceRequestList: React.FC = () => {
       ),
     },
     {
-      title: '当前步骤',
+      title: 'Current step',
       dataIndex: 'currentLevel',
       width: 120,
       render: (level: number, record: ServiceRequest) => (
@@ -125,32 +125,32 @@ const ServiceRequestList: React.FC = () => {
       responsive: ['md'],
     },
     {
-      title: '提交时间',
+      title: 'Submission time',
       dataIndex: 'createdAt',
       width: 180,
       render: (date: string) => dayjs(date).format('YYYY-MM-DD HH:mm'),
       responsive: ['sm'],
     },
     {
-      title: '操作',
+      title: 'Actions',
       key: 'action',
       width: 120,
       render: (_: unknown, record: ServiceRequest) => (
         <Space size="small">
-          <Tooltip title="查看详情">
+          <Tooltip title="View Details">
             <Button
               type="text"
-              aria-label={`查看服务请求 ${record.id} 详情`}
+              aria-label={`View service requests ${record.id} Details`}
               icon={<Eye />}
               className="text-blue-600 hover:text-blue-800 hover:bg-blue-50"
               onClick={() => router.push(`/service-requests/${record.id}`)}
             />
           </Tooltip>
           {activeTab === 'approvals' && (
-            <Tooltip title="审批">
+            <Tooltip title="Approval">
               <Button
                 type="text"
-                aria-label={`审批服务请求 ${record.id}`}
+                aria-label={`Approval Service Request ${record.id}`}
                 icon={<CheckCircle />}
                 className="text-green-600 hover:text-green-800 hover:bg-green-50"
                 onClick={() => router.push(`/service-requests/${record.id}`)}
@@ -171,12 +171,13 @@ const ServiceRequestList: React.FC = () => {
           size="large"
           className="flex-1"
           items={[
-            { label: '我的请求', key: 'my-requests' },
-            { label: '待办审批', key: 'approvals' },
+            { label: 'My Requests', key: 'my-requests' },
+            { label: 'Pending approval', key: 'approvals' },
           ]}
         />
         <Button icon={<RefreshCw />} onClick={loadData}>
-          刷新
+
+          Refresh
         </Button>
       </div>
 
@@ -191,8 +192,8 @@ const ServiceRequestList: React.FC = () => {
             <LoadingEmptyError
               state="empty"
               empty={{
-                title: '暂无服务请求数据',
-                actionText: '新建服务请求',
+                title: 'No service request data yet',
+                actionText: 'New service request',
                 onAction: () => router.push('/service-requests/new'),
                 showAction: canCreateServiceRequest,
                 icon: <CheckCircle size={48} />,
@@ -207,7 +208,7 @@ const ServiceRequestList: React.FC = () => {
           onChange: (page, pageSize) => setQuery(prev => ({ ...prev, page, pageSize })),
           showSizeChanger: true,
           showQuickJumper: true,
-          showTotal: total => `共 ${total} 条记录`,
+          showTotal: total => `Total ${total} records`,
           pageSizeOptions: ['10', '20', '50', '100'],
         }}
       />

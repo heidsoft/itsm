@@ -153,7 +153,7 @@ func TestGetPerformanceReports_HonorsCamelCaseDateRange(t *testing.T) {
 	status, body = doMSPRequest(t, r, "/api/v1/msp/reports/performance?startDate=2024-01-01&endDate=2024-12-31")
 	require.Equal(t, http.StatusForbidden, status, body["message"])
 	assert.Equal(t, float64(2003), body["code"])
-	assert.Contains(t, body["message"], "非MSP用户")
+	assert.Contains(t, body["message"], "Non-MSP user")
 }
 
 func TestGetPerformanceReports_MSPUserIDFilterIsRejected(t *testing.T) {
@@ -242,7 +242,7 @@ func TestGetCustomerTickets_FailsClosedWithoutMSPContext(t *testing.T) {
 	require.Equal(t, http.StatusForbidden, status,
 		"MSP 上下文缺失必须按授权失败返回 403，历史实现 panic 后由 Recovery 返回 500")
 	assert.Equal(t, float64(2003), body["code"])
-	assert.Contains(t, body["message"], "非MSP用户")
+	assert.Contains(t, body["message"], "Non-MSP user")
 }
 
 func TestGetMSPStatusAndContext_WithoutMSPContext(t *testing.T) {

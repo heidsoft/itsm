@@ -10,16 +10,16 @@
   <!-- 特点: 根因分析、知识沉淀、预防机制                        -->
   <!-- ======================================================== -->
 
-  <bpmn:process id="problem_management_flow_cn" name="问题管理流程(国内企业版)" isExecutable="true">
+  <bpmn:process id="problem_management_flow_cn" name="Problem Management Workflow (Enterprise Edition)" isExecutable="true">
     <bpmn:extensionElements>
       <bpmn:metaData name="category">problem</bpmn:metaData>
       <bpmn:metaData name="version">2.0.0</bpmn:metaData>
-      <bpmn:metaData name="description">国内企业问题管理流程，专注根因分析和预防</bpmn:metaData>
+      <bpmn:metaData name="description">Enterprise problem management workflow focused on root cause analysis and prevention</bpmn:metaData>
       <bpmn:metaData name="enterprise_type">cn_enterprise</bpmn:metaData>
     </bpmn:extensionElements>
 
     <!-- ========== 开始节点 ========== -->
-    <bpmn:startEvent id="StartEvent_ProblemCreate" name="问题创建">
+    <bpmn:startEvent id="StartEvent_ProblemCreate" name="Problem Created">
       <bpmn:extensionElements>
         <bpmn:metaData name="source">incident,user_report,monitoring</bpmn:metaData>
         <bpmn:metaData name="link_incident_required">true</bpmn:metaData>
@@ -28,7 +28,7 @@
     </bpmn:startEvent>
 
     <!-- ========== 问题分类 ========== -->
-    <bpmn:serviceTask id="Activity_AutoClassify" name="自动分类">
+    <bpmn:serviceTask id="Activity_AutoClassify" name="Automatic Classification">
       <bpmn:extensionElements>
         <bpmn:metaData name="service_task_type">generic_task</bpmn:metaData>
         <bpmn:metaData name="action">classify_problem</bpmn:metaData>
@@ -40,7 +40,7 @@
     </bpmn:serviceTask>
 
     <!-- ========== 问题经理分配 ========== -->
-    <bpmn:userTask id="Activity_ProblemManagerAssign" name="问题经理分配">
+    <bpmn:userTask id="Activity_ProblemManagerAssign" name="Problem Manager Assignment">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">pm_assign_problem</bpmn:metaData>
         <bpmn:metaData name="assignee_type">manager</bpmn:metaData>
@@ -51,7 +51,7 @@
     </bpmn:userTask>
 
     <!-- ========== 根因分析阶段 ========== -->
-    <bpmn:userTask id="Activity_RootCauseAnalysis" name="根因分析">
+    <bpmn:userTask id="Activity_RootCauseAnalysis" name="Root Cause Analysis">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">root_cause_analysis</bpmn:metaData>
         <bpmn:metaData name="assignee_type">it_admin</bpmn:metaData>
@@ -63,14 +63,14 @@
     </bpmn:userTask>
 
     <!-- 根因判定网关 -->
-    <bpmn:exclusiveGateway id="Gateway_RootCauseStatus" name="根因判定">
+    <bpmn:exclusiveGateway id="Gateway_RootCauseStatus" name="Determine Root Cause">
       <bpmn:incoming>Flow_P4</bpmn:incoming>
       <bpmn:outgoing>Flow_RootCauseFound</bpmn:outgoing>
       <bpmn:outgoing>Flow_RootCausePending</bpmn:outgoing>
     </bpmn:exclusiveGateway>
 
     <!-- 根因已确定 -->
-    <bpmn:userTask id="Activity_RootCauseConfirmed" name="根因确认">
+    <bpmn:userTask id="Activity_RootCauseConfirmed" name="Confirm Root Cause">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">confirm_root_cause</bpmn:metaData>
         <bpmn:metaData name="assignee_type">manager</bpmn:metaData>
@@ -82,7 +82,7 @@
     </bpmn:userTask>
 
     <!-- 根因待确认（需要更多时间） -->
-    <bpmn:serviceTask id="Activity_RootCausePendingNotify" name="通知相关人">
+    <bpmn:serviceTask id="Activity_RootCausePendingNotify" name="Notify Stakeholders">
       <bpmn:extensionElements>
         <bpmn:metaData name="service_task_type">generic_task</bpmn:metaData>
         <bpmn:metaData name="action">notify_root_cause_pending</bpmn:metaData>
@@ -92,7 +92,7 @@
       <bpmn:outgoing>Flow_P5_Pending</bpmn:outgoing>
     </bpmn:serviceTask>
 
-    <bpmn:userTask id="Activity_WaitRootCause" name="等待根因分析">
+    <bpmn:userTask id="Activity_WaitRootCause" name="Await Root Cause Analysis">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">wait_for_root_cause</bpmn:metaData>
         <bpmn:metaData name="timeout_days">7</bpmn:metaData>
@@ -103,7 +103,7 @@
     </bpmn:userTask>
 
     <!-- ========== 解决方案制定 ========== -->
-    <bpmn:userTask id="Activity_SolutionDesign" name="解决方案设计">
+    <bpmn:userTask id="Activity_SolutionDesign" name="Solution Design">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">design_solution</bpmn:metaData>
         <bpmn:metaData name="assignee_type">it_admin</bpmn:metaData>
@@ -115,14 +115,14 @@
     </bpmn:userTask>
 
     <!-- 解决方案评审网关 -->
-    <bpmn:exclusiveGateway id="Gateway_SolutionReview" name="解决方案评审">
+    <bpmn:exclusiveGateway id="Gateway_SolutionReview" name="Solution Review">
       <bpmn:incoming>Flow_P6</bpmn:incoming>
       <bpmn:outgoing>Flow_SolutionApproved</bpmn:outgoing>
       <bpmn:outgoing>Flow_SolutionRejected</bpmn:outgoing>
     </bpmn:exclusiveGateway>
 
     <!-- 解决方案通过 -->
-    <bpmn:userTask id="Activity_SolutionApproved" name="解决方案审批">
+    <bpmn:userTask id="Activity_SolutionApproved" name="Solution Approval">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">approve_solution</bpmn:metaData>
         <bpmn:metaData name="assignee_type">it_admin</bpmn:metaData>
@@ -133,7 +133,7 @@
     </bpmn:userTask>
 
     <!-- 解决方案驳回 -->
-    <bpmn:userTask id="Activity_SolutionRevise" name="解决方案修订">
+    <bpmn:userTask id="Activity_SolutionRevise" name="Revise Solution">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">revise_solution</bpmn:metaData>
         <bpmn:metaData name="assignee_type">it_admin</bpmn:metaData>
@@ -144,7 +144,7 @@
     </bpmn:userTask>
 
     <!-- ========== 变更实施 ========== -->
-    <bpmn:serviceTask id="Activity_CreateRFC" name="创建变更请求">
+    <bpmn:serviceTask id="Activity_CreateRFC" name="Create Change Request">
       <bpmn:extensionElements>
         <bpmn:metaData name="service_task_type">generic_task</bpmn:metaData>
         <bpmn:metaData name="action">create_change_request</bpmn:metaData>
@@ -154,7 +154,7 @@
       <bpmn:outgoing>Flow_P8</bpmn:outgoing>
     </bpmn:serviceTask>
 
-    <bpmn:userTask id="Activity_ImplementSolution" name="解决方案实施">
+    <bpmn:userTask id="Activity_ImplementSolution" name="Implement Solution">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">implement_solution</bpmn:metaData>
         <bpmn:metaData name="assignee_type">technician</bpmn:metaData>
@@ -166,7 +166,7 @@
     </bpmn:userTask>
 
     <!-- ========== 验证与关闭 ========== -->
-    <bpmn:userTask id="Activity_VerifySolution" name="解决方案验证">
+    <bpmn:userTask id="Activity_VerifySolution" name="Verify Solution">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">verify_solution</bpmn:metaData>
         <bpmn:metaData name="assignee_type">manager</bpmn:metaData>
@@ -178,14 +178,14 @@
     </bpmn:userTask>
 
     <!-- 验证结果网关 -->
-    <bpmn:exclusiveGateway id="Gateway_VerifyResult" name="验证结果判定">
+    <bpmn:exclusiveGateway id="Gateway_VerifyResult" name="Determine Verification Result">
       <bpmn:incoming>Flow_P10</bpmn:incoming>
       <bpmn:outgoing>Flow_Success</bpmn:outgoing>
       <bpmn:outgoing>Flow_Failed</bpmn:outgoing>
     </bpmn:exclusiveGateway>
 
     <!-- 验证失败需重新设计 -->
-    <bpmn:userTask id="Activity_ReviseSolution" name="修订解决方案">
+    <bpmn:userTask id="Activity_ReviseSolution" name="Revise Solution">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">revise_solution</bpmn:metaData>
         <bpmn:metaData name="assignee_type">it_admin</bpmn:metaData>
@@ -196,7 +196,7 @@
     </bpmn:userTask>
 
     <!-- ========== 知识沉淀 ========== -->
-    <bpmn:serviceTask id="Activity_CreateKBArticle" name="创建知识库">
+    <bpmn:serviceTask id="Activity_CreateKBArticle" name="Create Knowledge Article">
       <bpmn:extensionElements>
         <bpmn:metaData name="service_task_type">generic_task</bpmn:metaData>
         <bpmn:metaData name="action">create_knowledge_article</bpmn:metaData>
@@ -208,7 +208,7 @@
     </bpmn:serviceTask>
 
     <!-- 预防措施触发 -->
-    <bpmn:serviceTask id="Activity_TriggerPrevention" name="触发预防措施">
+    <bpmn:serviceTask id="Activity_TriggerPrevention" name="Trigger Preventive Measures">
       <bpmn:extensionElements>
         <bpmn:metaData name="service_task_type">generic_task</bpmn:metaData>
         <bpmn:metaData name="action">trigger_prevention_measures</bpmn:metaData>
@@ -219,7 +219,7 @@
     </bpmn:serviceTask>
 
     <!-- ========== 问题关闭 ========== -->
-    <bpmn:userTask id="Activity_ProblemClose" name="问题关闭">
+    <bpmn:userTask id="Activity_ProblemClose" name="Problem Closed">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">close_problem</bpmn:metaData>
         <bpmn:metaData name="require_lessons_learned">true</bpmn:metaData>
@@ -230,7 +230,7 @@
     </bpmn:userTask>
 
     <!-- 结束事件 -->
-    <bpmn:endEvent id="EndEvent_ProblemComplete" name="问题关闭">
+    <bpmn:endEvent id="EndEvent_ProblemComplete" name="Problem Closed">
       <bpmn:incoming>Flow_End</bpmn:incoming>
     </bpmn:endEvent>
 

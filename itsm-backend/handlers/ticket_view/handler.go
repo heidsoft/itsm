@@ -33,14 +33,14 @@ func (h *Handler) ListTicketViews(c *gin.Context) {
 	tenantID := c.GetInt("tenant_id")
 	userID := c.GetInt("user_id")
 	if tenantID == 0 || userID == 0 {
-		common.Fail(c, common.AuthFailedCode, "认证信息缺失")
+		common.Fail(c, common.AuthFailedCode, "Authentication information missing")
 		return
 	}
 
 	views, err := h.viewService.ListTicketViews(c.Request.Context(), tenantID, &userID)
 	if err != nil {
 		h.logger.Errorw("Failed to list ticket views", "error", err, "tenant_id", tenantID)
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -54,20 +54,20 @@ func (h *Handler) ListTicketViews(c *gin.Context) {
 func (h *Handler) GetTicketView(c *gin.Context) {
 	viewID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "无效的视图ID")
+		common.Fail(c, common.ParamErrorCode, "Invalid view ID")
 		return
 	}
 
 	tenantID := c.GetInt("tenant_id")
 	if tenantID == 0 {
-		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		common.Fail(c, common.AuthFailedCode, "Tenant information is missing")
 		return
 	}
 
 	view, err := h.viewService.GetTicketView(c.Request.Context(), viewID, tenantID)
 	if err != nil {
 		h.logger.Errorw("Failed to get ticket view", "error", err, "view_id", viewID, "tenant_id", tenantID)
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -78,7 +78,7 @@ func (h *Handler) GetTicketView(c *gin.Context) {
 func (h *Handler) CreateTicketView(c *gin.Context) {
 	var req dto.CreateTicketViewRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 	req.Normalize()
@@ -86,14 +86,14 @@ func (h *Handler) CreateTicketView(c *gin.Context) {
 	tenantID := c.GetInt("tenant_id")
 	userID := c.GetInt("user_id")
 	if tenantID == 0 || userID == 0 {
-		common.Fail(c, common.AuthFailedCode, "认证信息缺失")
+		common.Fail(c, common.AuthFailedCode, "Authentication information missing")
 		return
 	}
 
 	view, err := h.viewService.CreateTicketView(c.Request.Context(), &req, userID, tenantID)
 	if err != nil {
 		h.logger.Errorw("Failed to create ticket view", "error", err, "tenant_id", tenantID)
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -104,13 +104,13 @@ func (h *Handler) CreateTicketView(c *gin.Context) {
 func (h *Handler) UpdateTicketView(c *gin.Context) {
 	viewID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "无效的视图ID")
+		common.Fail(c, common.ParamErrorCode, "Invalid view ID")
 		return
 	}
 
 	var req dto.UpdateTicketViewRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 	req.Normalize()
@@ -118,14 +118,14 @@ func (h *Handler) UpdateTicketView(c *gin.Context) {
 	tenantID := c.GetInt("tenant_id")
 	userID := c.GetInt("user_id")
 	if tenantID == 0 || userID == 0 {
-		common.Fail(c, common.AuthFailedCode, "认证信息缺失")
+		common.Fail(c, common.AuthFailedCode, "Authentication information missing")
 		return
 	}
 
 	view, err := h.viewService.UpdateTicketView(c.Request.Context(), viewID, &req, userID, tenantID)
 	if err != nil {
 		h.logger.Errorw("Failed to update ticket view", "error", err, "view_id", viewID, "tenant_id", tenantID)
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -136,21 +136,21 @@ func (h *Handler) UpdateTicketView(c *gin.Context) {
 func (h *Handler) DeleteTicketView(c *gin.Context) {
 	viewID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "无效的视图ID")
+		common.Fail(c, common.ParamErrorCode, "Invalid view ID")
 		return
 	}
 
 	tenantID := c.GetInt("tenant_id")
 	userID := c.GetInt("user_id")
 	if tenantID == 0 || userID == 0 {
-		common.Fail(c, common.AuthFailedCode, "认证信息缺失")
+		common.Fail(c, common.AuthFailedCode, "Authentication information missing")
 		return
 	}
 
 	err = h.viewService.DeleteTicketView(c.Request.Context(), viewID, userID, tenantID)
 	if err != nil {
 		h.logger.Errorw("Failed to delete ticket view", "error", err, "view_id", viewID, "tenant_id", tenantID)
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -161,13 +161,13 @@ func (h *Handler) DeleteTicketView(c *gin.Context) {
 func (h *Handler) ShareTicketView(c *gin.Context) {
 	viewID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "无效的视图ID")
+		common.Fail(c, common.ParamErrorCode, "Invalid view ID")
 		return
 	}
 
 	var req dto.ShareTicketViewRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 	req.Normalize()
@@ -175,14 +175,14 @@ func (h *Handler) ShareTicketView(c *gin.Context) {
 	tenantID := c.GetInt("tenant_id")
 	userID := c.GetInt("user_id")
 	if tenantID == 0 || userID == 0 {
-		common.Fail(c, common.AuthFailedCode, "认证信息缺失")
+		common.Fail(c, common.AuthFailedCode, "Authentication information missing")
 		return
 	}
 
 	err = h.viewService.ShareTicketView(c.Request.Context(), viewID, &req, userID, tenantID)
 	if err != nil {
 		h.logger.Errorw("Failed to share ticket view", "error", err, "view_id", viewID, "tenant_id", tenantID)
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 

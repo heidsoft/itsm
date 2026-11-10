@@ -137,8 +137,8 @@ describe('/reports/problem-efficiency', () => {
     // 第 100 条之后的问题被静默截断，根本不进图。
     expect(status).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ key: 'open', name: '待处理', value: 60 }),
-        expect.objectContaining({ key: 'identified', name: '已识别', value: 2 }),
+        expect.objectContaining({ key: 'open', name: "Pending", value: 60 }),
+        expect.objectContaining({ key: 'identified', name: "Identified", value: 2 }),
       ]),
     );
     expect(status).toHaveLength(7);
@@ -146,7 +146,7 @@ describe('/reports/problem-efficiency', () => {
     // identified 不属于任何单值桶，只有分布能让两份切片都与 total 对账。
     expect(status.reduce((sum, slice) => sum + slice.value, 0)).toBe(150);
     expect(priority.reduce((sum, slice) => sum + slice.value, 0)).toBe(150);
-    expect(statisticText('处理中')).toContain('50');
+    expect(statisticText("In Progress")).toContain('50');
   });
 
   it('keeps out-of-vocabulary values visible and unstyled rather than merging them', async () => {
@@ -175,13 +175,13 @@ describe('/reports/problem-efficiency', () => {
 
     render(<ProblemEfficiencyPage />);
 
-    await waitFor(() => expect(screen.getByText('解决率')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText("Resolution rate")).toBeInTheDocument());
 
-    expect(statisticText('问题总数')).toContain('8');
+    expect(statisticText("Total number of questions")).toContain('8');
     expect(screen.getByText('25.0%')).toBeInTheDocument();
     expect(screen.getByText('37.5%')).toBeInTheDocument();
     expect(screen.getByText('12.5%')).toBeInTheDocument();
-    expect(screen.getByText('已解决 2 / 总数 8')).toBeInTheDocument();
+    expect(screen.getByText('Resolved 2 /Total 8')).toBeInTheDocument();
   });
 
   it('shows an explicit empty state instead of NaN rates when the tenant has no problems', async () => {
@@ -199,9 +199,9 @@ describe('/reports/problem-efficiency', () => {
 
     render(<ProblemEfficiencyPage />);
 
-    await waitFor(() => expect(screen.getByText('当前租户还没有问题记录')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText("There is no problem record for the current tenant")).toBeInTheDocument());
     // 空租户不渲染解决率：(0/0)*100 会在页面上出现 "NaN%" 读数。
-    expect(screen.queryByText('解决率')).not.toBeInTheDocument();
+    expect(screen.queryByText("Resolution rate")).not.toBeInTheDocument();
     expect(screen.queryByText(/NaN/)).not.toBeInTheDocument();
     expect(screen.queryByTestId('chart-data')).not.toBeInTheDocument();
   });
@@ -212,11 +212,11 @@ describe('/reports/problem-efficiency', () => {
 
     render(<ProblemEfficiencyPage />);
 
-    await waitFor(() => expect(screen.getByText('问题统计加载失败')).toBeInTheDocument());
-    expect(screen.getByRole('button', { name: '重试' })).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByText("Problem statistics loading failed")).toBeInTheDocument());
+    expect(screen.getByRole('button', { name: "Retry" })).toBeInTheDocument();
     // 失败不得只 console.warn + toast 后继续渲染全 0 的「问题总数」卡片，
     // 那会把故障伪装成空态。
-    expect(screen.queryByText('问题总数')).not.toBeInTheDocument();
+    expect(screen.queryByText("Total number of questions")).not.toBeInTheDocument();
     expect(screen.queryByTestId('chart-data')).not.toBeInTheDocument();
   });
 
@@ -226,7 +226,7 @@ describe('/reports/problem-efficiency', () => {
 
     render(<ProblemEfficiencyPage />);
 
-    await waitFor(() => expect(screen.getByText('问题统计加载失败')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText("Problem statistics loading failed")).toBeInTheDocument());
     expect(screen.getByText(/服务不可用/)).toBeInTheDocument();
   });
 
@@ -236,10 +236,10 @@ describe('/reports/problem-efficiency', () => {
 
     render(<ProblemEfficiencyPage />);
 
-    await waitFor(() => expect(screen.getByText('最新问题列表')).toBeInTheDocument());
-    expect(screen.getByText('已识别')).toBeInTheDocument();
-    expect(screen.getByText('极高')).toBeInTheDocument();
-    expect(screen.getByText('处理人: 张三')).toBeInTheDocument();
-    expect(screen.getByText('处理人: 未分配')).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByText("Latest issue list")).toBeInTheDocument());
+    expect(screen.getByText("Identified")).toBeInTheDocument();
+    expect(screen.getByText("Critical")).toBeInTheDocument();
+    expect(screen.getByText("Processor: 张三")).toBeInTheDocument();
+    expect(screen.getByText("Processor: Unassigned")).toBeInTheDocument();
   });
 });

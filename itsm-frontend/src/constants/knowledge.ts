@@ -8,8 +8,8 @@ export const KnowledgeStatus = {
 };
 
 export const KnowledgeStatusLabels = {
-  [KnowledgeStatus.PUBLISHED]: '已发布',
-  [KnowledgeStatus.DRAFT]: '草稿',
+  [KnowledgeStatus.PUBLISHED]: 'Published',
+  [KnowledgeStatus.DRAFT]: 'Draft',
 };
 
 export const KnowledgeStatusColors = {
@@ -32,10 +32,10 @@ export const ReviewStatus = {
 export type ReviewStatus = (typeof ReviewStatus)[keyof typeof ReviewStatus];
 
 export const ReviewStatusLabels: Record<ReviewStatus, string> = {
-  [ReviewStatus.DRAFT]: '草稿',
-  [ReviewStatus.UNDER_REVIEW]: '评审中',
-  [ReviewStatus.APPROVED]: '已通过',
-  [ReviewStatus.REJECTED]: '已驳回',
+  [ReviewStatus.DRAFT]: 'Draft',
+  [ReviewStatus.UNDER_REVIEW]: 'Under review',
+  [ReviewStatus.APPROVED]: 'Approved',
+  [ReviewStatus.REJECTED]: 'Rejected',
 };
 
 export const ReviewStatusColors: Record<ReviewStatus, string> = {

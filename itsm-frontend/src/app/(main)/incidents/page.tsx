@@ -118,16 +118,16 @@ export default function IncidentsPage() {
         return;
       }
       const columns: CsvColumn<IncidentApiItem>[] = [
-        { title: '编号', render: (row) => row.incidentNumber || `#${row.id}` },
-        { title: '标题', render: (row) => row.title },
-        { title: '状态', render: (row) => row.status },
-        { title: '优先级', render: (row) => row.priority },
-        { title: '来源', render: (row) => row.source },
-        { title: '处理人', render: (row) => row.assignee?.name },
-        { title: '创建时间', render: (row) => csvDate(row.createdAt) },
-        { title: '解决时间', render: (row) => csvDate(row.resolvedAt) },
+        { title: 'Number', render: (row) => row.incidentNumber || `#${row.id}` },
+        { title: 'Title', render: (row) => row.title },
+        { title: 'Status', render: (row) => row.status },
+        { title: 'Priority', render: (row) => row.priority },
+        { title: 'Source', render: (row) => row.source },
+        { title: 'Assignee', render: (row) => row.assignee?.name },
+        { title: 'Created', render: (row) => csvDate(row.createdAt) },
+        { title: 'Resolved At', render: (row) => csvDate(row.resolvedAt) },
       ];
-      downloadCsv(`事件列表-${new Date().toISOString().slice(0, 10)}`, buildCsv(columns, rows));
+      downloadCsv(`Event List-${new Date().toISOString().slice(0, 10)}`, buildCsv(columns, rows));
       message.success(t('incidents.exportSuccess', { count: rows.length }));
     } catch (error) {
       console.error('Failed to export incidents:', error);

@@ -183,7 +183,7 @@ export class ServiceCatalogApi {
   // ==================== 内部适配（对齐后端 /api/v1/service-catalogs & /api/v1/service-requests） ====================
 
   private static unsupportedFeature(feature: string): never {
-    throw new Error(`${feature}暂未开放`);
+    throw new Error(`${feature} Not yet open`);
   }
 
   private static toBackendStatus(status?: unknown): 'enabled' | 'disabled' | undefined {
@@ -251,7 +251,7 @@ export class ServiceCatalogApi {
     };
   }
 
-   
+
   private static toServiceRequest(raw: ServiceRequestRaw): ServiceRequestDetail {
     const catalogId = raw?.catalogId ?? raw?.serviceId;
     const requesterId = raw?.requesterId ?? raw?.requestedBy;
@@ -259,13 +259,13 @@ export class ServiceCatalogApi {
     const updatedAt = raw?.updatedAt;
     const catalog = raw?.catalog || {
       id: catalogId,
-      name: raw?.serviceName || raw?.title || (catalogId ? `服务 #${catalogId}` : '未知服务'),
+      name: raw?.serviceName || raw?.title || (catalogId ? `Service #${catalogId}` : 'Unknown Service'),
       category: raw?.category || '',
       description: raw?.reason || '',
     };
     const requester = raw?.requester || {
       id: requesterId,
-      name: raw?.requesterName || raw?.requestedByName || (requesterId ? `用户 #${requesterId}` : '-'),
+      name: raw?.requesterName || raw?.requestedByName || (requesterId ? `User #${requesterId}` : '-'),
       email: raw?.requestedByEmail || '',
     };
 
@@ -651,18 +651,18 @@ export class ServiceCatalogApi {
    * 添加收藏
    */
   static async addFavorite(serviceId: string): Promise<ServiceFavorite> {
-     
+
     const _serviceId = serviceId;
-    return ServiceCatalogApi.unsupportedFeature('服务收藏');
+    return ServiceCatalogApi.unsupportedFeature('Service collection');
   }
 
   /**
    * 取消收藏
    */
   static async removeFavorite(serviceId: string): Promise<void> {
-     
+
     const _serviceId = serviceId;
-    ServiceCatalogApi.unsupportedFeature('服务收藏');
+    ServiceCatalogApi.unsupportedFeature('Service collection');
   }
 
   /**
@@ -670,7 +670,7 @@ export class ServiceCatalogApi {
    */
   static async getFavorites(): Promise<ServiceFavorite[]> {
     // 后端没有收藏接口。读取路径同样显式失败，空列表无法区分「没收藏」和「能力未接」。
-    return ServiceCatalogApi.unsupportedFeature('服务收藏');
+    return ServiceCatalogApi.unsupportedFeature('Service collection');
   }
 
   /**
@@ -681,9 +681,9 @@ export class ServiceCatalogApi {
     rating: number,
     comment?: string
   ): Promise<ServiceRating> {
-     
+
     const _args = { serviceId, rating, comment };
-    return ServiceCatalogApi.unsupportedFeature('服务评分');
+    return ServiceCatalogApi.unsupportedFeature('Service Rating');
   }
 
   /**
@@ -701,16 +701,16 @@ export class ServiceCatalogApi {
     avgRating: number;
   }> {
     const _args = { serviceId, params };
-    return ServiceCatalogApi.unsupportedFeature('服务评分查询');
+    return ServiceCatalogApi.unsupportedFeature('Service rating query');
   }
 
   /**
    * 标记评分有用
    */
   static async markRatingHelpful(ratingId: string): Promise<void> {
-     
+
     const _ratingId = ratingId;
-    ServiceCatalogApi.unsupportedFeature('评分有用标记');
+    ServiceCatalogApi.unsupportedFeature('Rating useful mark');
   }
 
   // ==================== 门户配置 ====================
@@ -722,7 +722,7 @@ export class ServiceCatalogApi {
     // 本地只提供只读默认配置；未接后端的能力默认关闭，避免页面展示不可持久化操作。
     return {
       id: 'default',
-      name: '默认门户',
+      name: "Default Portal",
       branding: {
         primaryColor: '#1890ff',
       },
@@ -743,9 +743,9 @@ export class ServiceCatalogApi {
    * 更新门户配置
    */
   static async updatePortalConfig(config: Partial<PortalConfig>): Promise<PortalConfig> {
-     
+
     const _config = config;
-    return ServiceCatalogApi.unsupportedFeature('门户配置更新');
+    return ServiceCatalogApi.unsupportedFeature('Portal configuration update');
   }
 
   // ==================== 统计和分析 ====================
@@ -765,7 +765,7 @@ export class ServiceCatalogApi {
   static async recordServiceView(serviceId: string): Promise<void> {
     const _serviceId = serviceId;
     // 写入路径必须显式失败，静默丢弃会让调用方以为浏览量已记录。
-    return ServiceCatalogApi.unsupportedFeature('服务浏览记录');
+    return ServiceCatalogApi.unsupportedFeature('Service browsing history');
   }
 }
 

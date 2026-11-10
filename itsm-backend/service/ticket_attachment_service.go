@@ -315,7 +315,7 @@ func (s *TicketAttachmentService) DeleteAttachment(ctx context.Context, ticketID
 		ticketInfo.RequesterID == userID
 	if !canDelete {
 		// 同租户但非上传人/处理人/申请人 → 403；裸 error 会被 classifyError 兜底成 500。
-		return common.NewBusinessError(common.ForbiddenCode, "只有附件上传人、工单处理人或申请人可以删除附件", "")
+		return common.NewBusinessError(common.ForbiddenCode, "Only the person who uploaded the attachment, the ticket handler or the applicant can delete the attachment.", "")
 	}
 
 	// 删除文件

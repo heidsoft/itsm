@@ -11,9 +11,9 @@ describe('ReportsPage', () => {
     render(<ReportsPage />);
 
     expect(screen.getByText('supported-report-directory')).toBeInTheDocument();
-    expect(screen.queryByText('高级分析')).not.toBeInTheDocument();
-    expect(screen.queryByText('自定义分析')).not.toBeInTheDocument();
-    expect(screen.queryByText('实时监控')).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /导出/ })).not.toBeInTheDocument();
+    expect(screen.queryByText("高级Analysis")).not.toBeInTheDocument();
+    expect(screen.queryByText("CustomAnalysis")).not.toBeInTheDocument();
+    expect(screen.queryByText("SLA real-time monitoring")).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Export/ })).not.toBeInTheDocument();
   });
 });

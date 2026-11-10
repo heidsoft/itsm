@@ -55,10 +55,10 @@ func (h *CCTaskHandler) Execute(ctx context.Context, task *ent.ProcessTask, vari
 	tenantID := GetIntFromVars(variables, "tenant_id")
 
 	if ticketID == 0 {
-		return nil, fmt.Errorf("工单ID不能为空")
+		return nil, fmt.Errorf("Work order ID cannot be empty")
 	}
 	if tenantID == 0 {
-		return nil, fmt.Errorf("租户ID不能为空")
+		return nil, fmt.Errorf("Tenant ID cannot be empty")
 	}
 
 	h.logger.Infow(
@@ -158,11 +158,11 @@ func (h *CCTaskHandler) resolveCCUsers(ctx context.Context, ccType, ccUserIds, c
 		return h.getUserIDsFromRoles(ctx, roleIds, tenantID)
 	case "variable":
 		if ccVariable == "" {
-			return nil, fmt.Errorf("动态变量名不能为空")
+			return nil, fmt.Errorf("Dynamic variable name cannot be empty")
 		}
 		value, ok := variables[ccVariable]
 		if !ok {
-			return nil, fmt.Errorf("变量 %s 不存在", ccVariable)
+			return nil, fmt.Errorf("Variable %s does not exist", ccVariable)
 		}
 		// 处理不同类型的变量值
 		switch v := value.(type) {
@@ -194,7 +194,7 @@ func (h *CCTaskHandler) resolveCCUsers(ctx context.Context, ccType, ccUserIds, c
 		case float64:
 			return []int{int(v)}, nil
 		default:
-			return nil, fmt.Errorf("不支持的变量类型 %T", v)
+			return nil, fmt.Errorf("Unsupported variable type %T", v)
 		}
 	default:
 		// 默认按用户ID处理
@@ -288,7 +288,7 @@ func (h *CCTaskHandler) getUserIDsFromGroups(ctx context.Context, groupIds []int
 		Select(user.FieldID).
 		Ints(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("查询用户组成员失败: %w", err)
+		return nil, fmt.Errorf("Failed to query user group members: %w", err)
 	}
 	return users, nil
 }
@@ -303,7 +303,7 @@ func (h *CCTaskHandler) getUserIDsFromRoles(ctx context.Context, roleIds []int, 
 		Select(user.FieldID).
 		Ints(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("查询角色成员失败: %w", err)
+		return nil, fmt.Errorf("Failed to query role members: %w", err)
 	}
 	return users, nil
 }

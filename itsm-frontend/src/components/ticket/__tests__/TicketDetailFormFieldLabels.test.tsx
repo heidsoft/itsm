@@ -175,8 +175,8 @@ describe('TicketDetail 动态表单字段 — 标签解析回归', () => {
 
     await waitFor(() => expect(mockGetTicketType).toHaveBeenCalledWith(5));
 
-    expect(await screen.findByText('AI 工单类型')).toBeInTheDocument();
-    expect(screen.getByText('硬件')).toBeInTheDocument();
+    expect(await screen.findByText("AI ticket type")).toBeInTheDocument();
+    expect(screen.getByText("Hardware")).toBeInTheDocument();
     expect(screen.queryByText('aiTicketType')).toBeNull();
     expect(screen.queryByText('hardware')).toBeNull();
   });

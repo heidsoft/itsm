@@ -152,7 +152,7 @@ func TestTicketTagWriteRoutes(t *testing.T) {
 		w, env := fx.do(t, http.MethodPost, ticketTagsPath, jsonBody(`{"name":"network"}`), fx.userA)
 		assert.Equal(t, http.StatusConflict, w, "body=%s", string(env.Data))
 		assert.Equal(t, 4090, env.Code)
-		assert.Contains(t, env.Message, "标签名称已存在")
+		assert.Contains(t, env.Message, "Tag name already exists")
 	})
 
 	t.Run("空白名称是 400 参数错误", func(t *testing.T) {
@@ -206,7 +206,7 @@ func TestTicketTagWriteRoutes(t *testing.T) {
 		w, env := fx.do(t, http.MethodPut, fmt.Sprintf("%s/%d", ticketTagsPath, vpnID), jsonBody(`{"name":"network"}`), fx.userA)
 		assert.Equal(t, http.StatusConflict, w, "body=%s", string(env.Data))
 		assert.Equal(t, 4090, env.Code)
-		assert.Contains(t, env.Message, "标签名称已存在")
+		assert.Contains(t, env.Message, "Tag name already exists")
 	})
 
 	t.Run("跨租户读写删除别人的标签一律 404", func(t *testing.T) {

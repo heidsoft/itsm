@@ -7,20 +7,20 @@
                  targetNamespace="http://bpmn.io/schema/bpmn"
                  id="Definitions_1">
 
-  <bpmn:process id="ticket_general_flow" name="通用工单流程" isExecutable="true">
+  <bpmn:process id="ticket_general_flow" name="General Ticket Workflow" isExecutable="true">
     <bpmn:extensionElements>
       <bpmn:metaData name="category">ticket</bpmn:metaData>
       <bpmn:metaData name="version">1.0.0</bpmn:metaData>
-      <bpmn:metaData name="description">通用工单处理流程</bpmn:metaData>
+      <bpmn:metaData name="description">General ticket handling workflow</bpmn:metaData>
     </bpmn:extensionElements>
 
     <!-- 开始事件：工单创建 -->
-    <bpmn:startEvent id="StartEvent_1" name="工单创建">
+    <bpmn:startEvent id="StartEvent_1" name="Ticket Created">
       <bpmn:outgoing>Flow_1</bpmn:outgoing>
     </bpmn:startEvent>
 
     <!-- 任务分配 -->
-    <bpmn:userTask id="Activity_Assign" name="任务分配" instantiate="false">
+    <bpmn:userTask id="Activity_Assign" name="Assign Task" instantiate="false">
       <bpmn:extensionElements>
         <bpmn:metaData name="service_task_type">ticket_task</bpmn:metaData>
         <bpmn:metaData name="action">assign</bpmn:metaData>
@@ -31,7 +31,7 @@
     </bpmn:userTask>
 
     <!-- 处理任务 -->
-    <bpmn:userTask id="Activity_Handle" name="工单处理">
+    <bpmn:userTask id="Activity_Handle" name="Handle Ticket">
       <bpmn:extensionElements>
         <bpmn:metaData name="service_task_type">ticket_task</bpmn:metaData>
         <bpmn:metaData name="action">update_status</bpmn:metaData>
@@ -42,14 +42,14 @@
     </bpmn:userTask>
 
     <!-- 升级判断网关 -->
-    <bpmn:exclusiveGateway id="Gateway_Escalate" name="是否需要升级?">
+    <bpmn:exclusiveGateway id="Gateway_Escalate" name="Escalation Required?">
       <bpmn:incoming>Flow_3</bpmn:incoming>
       <bpmn:outgoing>Flow_4</bpmn:outgoing>
       <bpmn:outgoing>Flow_Resolve</bpmn:outgoing>
     </bpmn:exclusiveGateway>
 
     <!-- 升级处理 -->
-    <bpmn:userTask id="Activity_Escalate" name="升级处理">
+    <bpmn:userTask id="Activity_Escalate" name="Handle Escalation">
       <bpmn:extensionElements>
         <bpmn:metaData name="service_task_type">ticket_task</bpmn:metaData>
         <bpmn:metaData name="action">escalate</bpmn:metaData>
@@ -59,7 +59,7 @@
     </bpmn:userTask>
 
     <!-- 解决工单 -->
-    <bpmn:userTask id="Activity_Resolve" name="解决工单">
+    <bpmn:userTask id="Activity_Resolve" name="Resolve Ticket">
       <bpmn:extensionElements>
         <bpmn:metaData name="service_task_type">ticket_task</bpmn:metaData>
         <bpmn:metaData name="action">update_status</bpmn:metaData>
@@ -69,7 +69,7 @@
     </bpmn:userTask>
 
     <!-- 通知请求人 -->
-    <bpmn:serviceTask id="Activity_NotifyRequester" name="通知请求人" implementation="##WebService">
+    <bpmn:serviceTask id="Activity_NotifyRequester" name="Notify Requester" implementation="##WebService">
       <bpmn:extensionElements>
         <bpmn:metaData name="service_task_type">ticket_task</bpmn:metaData>
         <bpmn:metaData name="action">notify_requester</bpmn:metaData>
@@ -79,24 +79,24 @@
     </bpmn:serviceTask>
 
     <!-- 结束事件：工单关闭 -->
-    <bpmn:endEvent id="EndEvent_1" name="工单关闭">
+    <bpmn:endEvent id="EndEvent_1" name="Ticket Closed">
       <bpmn:incoming>Flow_6</bpmn:incoming>
     </bpmn:endEvent>
 
     <!-- 审批判断 -->
-    <bpmn:exclusiveGateway id="Gateway_Approval" name="是否需要审批?">
+    <bpmn:exclusiveGateway id="Gateway_Approval" name="Approval Required?">
       <bpmn:incoming>Flow_Approval</bpmn:incoming>
       <bpmn:outgoing>Flow_ApprovalTask</bpmn:outgoing>
       </bpmn:exclusiveGateway>
 
     <!-- 审批任务 -->
-    <bpmn:userTask id="Activity_Approval" name="工单审批">
+    <bpmn:userTask id="Activity_Approval" name="Ticket Approval">
       <bpmn:incoming>Flow_ApprovalTask</bpmn:incoming>
       <bpmn:outgoing>Flow_ApprovalResult</bpmn:outgoing>
     </bpmn:userTask>
 
     <!-- 审批结果网关 -->
-    <bpmn:exclusiveGateway id="Gateway_ApprovalResult" name="审批结果?">
+    <bpmn:exclusiveGateway id="Gateway_ApprovalResult" name="Approval Result?">
       <bpmn:incoming>Flow_ApprovalResult</bpmn:incoming>
       <bpmn:outgoing>Flow_Reject</bpmn:outgoing>
     </bpmn:exclusiveGateway>

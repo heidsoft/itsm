@@ -72,10 +72,10 @@ export function ApprovalChainFilters({
       <Row gutter={[16, 16]} align="middle">
         <Col xs={24} sm={12} md={8} lg={6}>
           <div className="mb-2">
-            <span className="text-sm font-medium text-gray-700">搜索名称</span>
+            <span className="text-sm font-medium text-gray-700">Search name</span>
           </div>
           <Search
-            placeholder="搜索审批链名称..."
+            placeholder="Search approval chain name..."
             value={localFilters.name || ''}
             onChange={e => handleSearch(e.target.value)}
             onSearch={handleSearch}
@@ -85,10 +85,10 @@ export function ApprovalChainFilters({
 
         <Col xs={24} sm={12} md={8} lg={6}>
           <div className="mb-2">
-            <span className="text-sm font-medium text-gray-700">适用对象</span>
+            <span className="text-sm font-medium text-gray-700">Applicable objects</span>
           </div>
           <Select
-            placeholder="选择适用对象"
+            placeholder="Select applicable objects"
             value={localFilters.entityType}
             onChange={handleEntityTypeChange}
             style={{ width: '100%' }}
@@ -102,35 +102,38 @@ export function ApprovalChainFilters({
 
         <Col xs={24} sm={12} md={8} lg={6}>
           <div className="mb-2">
-            <span className="text-sm font-medium text-gray-700">状态</span>
+            <span className="text-sm font-medium text-gray-700">Status</span>
           </div>
           <Select
-            placeholder="选择状态"
+            placeholder="Select status"
             value={localFilters.status}
             onChange={handleStatusChange}
             style={{ width: '100%' }}
             allowClear
             options={[
-              { value: 'active', label: '活跃' },
-              { value: 'inactive', label: '非活跃' },
+              { value: 'active', label: 'Active' },
+              { value: 'inactive', label: 'Inactive' },
             ]}
           />
         </Col>
 
         <Col xs={24} sm={12} md={8} lg={6}>
           <div className="mb-2">
-            <span className="text-sm font-medium text-gray-700">操作</span>
+            <span className="text-sm font-medium text-gray-700">Actions</span>
           </div>
           <Space>
             <Button icon={<RefreshCw className="w-4 h-4" />} onClick={onRefresh} loading={loading}>
-              刷新
+
+              Refresh
             </Button>
             <Button icon={<Filter className="w-4 h-4" />} onClick={handleReset}>
-              重置
+
+              Reset
             </Button>
             {onCreate && (
               <Button type="primary" icon={<Plus className="w-4 h-4" />} onClick={onCreate}>
-                创建审批链
+
+                Create approval chain
               </Button>
             )}
           </Space>

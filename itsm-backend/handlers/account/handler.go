@@ -47,12 +47,12 @@ func (h *Handler) ChangePassword(c *gin.Context) {
 		NewPassword string `json:"newPassword" binding:"required"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误：oldPassword 与 newPassword 均为必填")
+		common.ParamErrorWithErr(c, err, "Request parameter error: both oldPassword and newPassword are required")
 		return
 	}
 
 	if h.userService == nil {
-		common.Fail(c, common.ServiceUnavailableCode, "账号服务未就绪")
+		common.Fail(c, common.ServiceUnavailableCode, "Account service is not ready")
 		return
 	}
 
@@ -60,12 +60,12 @@ func (h *Handler) ChangePassword(c *gin.Context) {
 	tid, _ := tenantID.(int)
 
 	if err := h.userService.ChangeOwnPassword(c.Request.Context(), userID, req.OldPassword, req.NewPassword, tid); err != nil {
-		common.RespondError(c, err, "修改密码失败")
+		common.RespondError(c, err, "Failed to change password")
 		return
 	}
 
 	common.Success(c, gin.H{
-		"message":       "密码修改成功，请重新登录",
+		"message":       "Password changed successfully, please log in again",
 		"reLogin":       true,
 		"tokensRevoked": true,
 	})
@@ -85,12 +85,12 @@ func (h *Handler) UpdateProfile(c *gin.Context) {
 
 	var req dto.UpdateOwnProfileRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误：name 与 email 均为必填且需合法")
+		common.ParamErrorWithErr(c, err, "Request parameter error: name and email are required and must be legal")
 		return
 	}
 
 	if h.userService == nil {
-		common.Fail(c, common.ServiceUnavailableCode, "账号服务未就绪")
+		common.Fail(c, common.ServiceUnavailableCode, "Account service is not ready")
 		return
 	}
 
@@ -99,7 +99,7 @@ func (h *Handler) UpdateProfile(c *gin.Context) {
 
 	updated, err := h.userService.UpdateOwnProfile(c.Request.Context(), userID, tid, &req)
 	if err != nil {
-		common.RespondError(c, err, "更新个人资料失败")
+		common.RespondError(c, err, "Failed to update profile")
 		return
 	}
 
@@ -110,12 +110,12 @@ func (h *Handler) UpdateProfile(c *gin.Context) {
 func accountUserID(c *gin.Context) (int, bool) {
 	v, exists := c.Get("user_id")
 	if !exists {
-		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		common.Fail(c, common.UnauthorizedCode, "Unauthorized access")
 		return 0, false
 	}
 	id, ok := v.(int)
 	if !ok || id <= 0 {
-		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		common.Fail(c, common.UnauthorizedCode, "Unauthorized access")
 		return 0, false
 	}
 	return id, true

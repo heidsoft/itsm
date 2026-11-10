@@ -37,7 +37,7 @@ func (h *Handler) SSOInitiate(c *gin.Context) {
 
 	response, err := h.sso.Initiate(c.Request.Context(), req.Provider, req.TenantCode, bindUserID)
 	if err != nil {
-		common.RespondError(c, err, "SSO 登录发起失败")
+		common.RespondError(c, err, "SSO login initiation failed")
 		return
 	}
 	common.Success(c, response)
@@ -49,7 +49,7 @@ func (h *Handler) SSOCallback(c *gin.Context) {
 	providerCode := strings.TrimSpace(c.Query("provider"))
 	var req dto.SSOCallbackRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "参数错误")
+		common.ParamErrorWithErr(c, err, "Parameter error")
 		return
 	}
 
@@ -58,7 +58,7 @@ func (h *Handler) SSOCallback(c *gin.Context) {
 	if err != nil {
 		h.sso.logger.Warnw("sso callback failed", "provider", providerCode, "error", err)
 		middleware.RecordLoginAudit(auditCtx, h.sso.client, 0, 0, providerCode, "LOGIN_FAILED", "SSO 回调失败")
-		common.AuthFailedWithErr(c, err, "SSO 回调失败")
+		common.AuthFailedWithErr(c, err, "SSO callback failed")
 		return
 	}
 
@@ -71,7 +71,7 @@ func (h *Handler) SSOCallback(c *gin.Context) {
 func (h *Handler) SSOListEnabledProviders(c *gin.Context) {
 	providers, err := h.sso.ListEnabledProviders(c.Request.Context(), c.Query("tenantCode"))
 	if err != nil {
-		common.InternalError(c, "查询 SSO 提供方失败")
+		common.InternalError(c, "Failed to query SSO provider")
 		return
 	}
 	common.Success(c, providers)
@@ -81,50 +81,50 @@ func (h *Handler) SSOListEnabledProviders(c *gin.Context) {
 func (h *Handler) SSOBind(c *gin.Context) {
 	userID := c.GetInt("user_id")
 	if userID == 0 {
-		common.AuthFailed(c, "用户未认证")
+		common.AuthFailed(c, "User not authenticated")
 		return
 	}
 	var req dto.SSOBindRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "参数错误")
+		common.ParamErrorWithErr(c, err, "Parameter error")
 		return
 	}
 	if err := h.sso.Bind(c.Request.Context(), userID, req.Provider, req.Code, req.State); err != nil {
-		common.AuthFailedWithErr(c, err, "绑定失败")
+		common.AuthFailedWithErr(c, err, "Binding failed")
 		return
 	}
-	common.SuccessWithMessage(c, "绑定成功", nil)
+	common.SuccessWithMessage(c, "Binding successful", nil)
 }
 
 // SSOUnbind 处理 POST /api/v1/auth/sso/unbind（已认证）。
 func (h *Handler) SSOUnbind(c *gin.Context) {
 	userID := c.GetInt("user_id")
 	if userID == 0 {
-		common.AuthFailed(c, "用户未认证")
+		common.AuthFailed(c, "User not authenticated")
 		return
 	}
 	var req dto.SSOUnbindRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "参数错误")
+		common.ParamErrorWithErr(c, err, "Parameter error")
 		return
 	}
 	if err := h.sso.Unbind(c.Request.Context(), userID, req.Provider); err != nil {
-		common.AuthFailedWithErr(c, err, "解除绑定失败")
+		common.AuthFailedWithErr(c, err, "Unbinding failed")
 		return
 	}
-	common.SuccessWithMessage(c, "已解除绑定", nil)
+	common.SuccessWithMessage(c, "Unbound", nil)
 }
 
 // SSOListIdentities 处理 GET /api/v1/auth/sso/identities（已认证）。
 func (h *Handler) SSOListIdentities(c *gin.Context) {
 	userID := c.GetInt("user_id")
 	if userID == 0 {
-		common.AuthFailed(c, "用户未认证")
+		common.AuthFailed(c, "User not authenticated")
 		return
 	}
 	identities, err := h.sso.ListIdentities(c.Request.Context(), userID)
 	if err != nil {
-		common.InternalError(c, "查询身份绑定失败")
+		common.InternalError(c, "Failed to query identity binding")
 		return
 	}
 	common.Success(c, identities)
@@ -136,7 +136,7 @@ func (h *Handler) SSOAdminListProviders(c *gin.Context) {
 	pagination := common.GetPaginationFromQuery(c)
 	items, total, err := h.sso.ListProviders(c.Request.Context(), tenantID, pagination.Page, pagination.PageSize)
 	if err != nil {
-		common.InternalError(c, "查询提供方失败")
+		common.InternalError(c, "Failed to query provider")
 		return
 	}
 	common.SuccessWithList(c, items, total, pagination.Page, pagination.PageSize)
@@ -147,12 +147,12 @@ func (h *Handler) SSOAdminGetProvider(c *gin.Context) {
 	tenantID := c.GetInt("tenant_id")
 	providerID, err := strconv.Atoi(c.Param("id"))
 	if err != nil || providerID <= 0 {
-		common.ParamError(c, "参数错误: id 非法")
+		common.ParamError(c, "Parameter error: id is illegal")
 		return
 	}
 	provider, err := h.sso.GetProvider(c.Request.Context(), tenantID, providerID)
 	if err != nil {
-		common.NotFoundWithErr(c, err, "提供方不存在")
+		common.NotFoundWithErr(c, err, "Provider does not exist")
 		return
 	}
 	common.Success(c, provider)
@@ -163,15 +163,15 @@ func (h *Handler) SSOAdminCreateProvider(c *gin.Context) {
 	tenantID := c.GetInt("tenant_id")
 	var req dto.SSOCreateProviderRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "参数错误")
+		common.ParamErrorWithErr(c, err, "Parameter error")
 		return
 	}
 	provider, err := h.sso.CreateProvider(c.Request.Context(), tenantID, &req)
 	if err != nil {
-		common.RespondError(c, err, "创建提供方失败")
+		common.RespondError(c, err, "Failed to create provider")
 		return
 	}
-	common.SuccessWithMessage(c, "创建成功", provider)
+	common.SuccessWithMessage(c, "Created", provider)
 }
 
 // SSOAdminUpdateProvider 处理 PUT /api/v1/admin/sso/providers/:id。
@@ -179,20 +179,20 @@ func (h *Handler) SSOAdminUpdateProvider(c *gin.Context) {
 	tenantID := c.GetInt("tenant_id")
 	providerID, err := strconv.Atoi(c.Param("id"))
 	if err != nil || providerID <= 0 {
-		common.ParamError(c, "参数错误: id 非法")
+		common.ParamError(c, "Parameter error: id is illegal")
 		return
 	}
 	var req dto.SSOUpdateProviderRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "参数错误")
+		common.ParamErrorWithErr(c, err, "Parameter error")
 		return
 	}
 	provider, err := h.sso.UpdateProvider(c.Request.Context(), tenantID, providerID, &req)
 	if err != nil {
-		common.RespondError(c, err, "更新提供方失败")
+		common.RespondError(c, err, "Failed to update provider")
 		return
 	}
-	common.SuccessWithMessage(c, "更新成功", provider)
+	common.SuccessWithMessage(c, "Updated", provider)
 }
 
 // SSOAdminDeleteProvider 处理 DELETE /api/v1/admin/sso/providers/:id。
@@ -200,14 +200,14 @@ func (h *Handler) SSOAdminDeleteProvider(c *gin.Context) {
 	tenantID := c.GetInt("tenant_id")
 	providerID, err := strconv.Atoi(c.Param("id"))
 	if err != nil || providerID <= 0 {
-		common.ParamError(c, "参数错误: id 非法")
+		common.ParamError(c, "Parameter error: id is illegal")
 		return
 	}
 	if err := h.sso.DeleteProvider(c.Request.Context(), tenantID, providerID); err != nil {
-		common.RespondError(c, err, "删除提供方失败")
+		common.RespondError(c, err, "Failed to delete provider")
 		return
 	}
-	common.SuccessWithMessage(c, "删除成功", nil)
+	common.SuccessWithMessage(c, "Deleted", nil)
 }
 
 // requestRawAccessToken 与 handlers/common 的 requestAccessToken 同口径：

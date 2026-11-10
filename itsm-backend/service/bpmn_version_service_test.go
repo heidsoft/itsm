@@ -368,7 +368,7 @@ func TestBPMNVersion_GetChangeLogsByProcessKey_NotFound(t *testing.T) {
 
 	_, err := f.svc.GetChangeLogsByProcessKey(ctx, "no_such_key", f.tenantID)
 	require.Error(t, err)
-	assert.Contains(t, err.Error(), "流程定义不存在")
+	assert.Contains(t, err.Error(), "Process definition does not exist")
 }
 
 func TestBPMNVersion_GetChangeLogsByProcessDefinitionID(t *testing.T) {

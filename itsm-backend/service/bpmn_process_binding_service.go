@@ -46,7 +46,7 @@ func (s *ProcessBindingService) CreateBinding(ctx context.Context, binding *dto.
 			// 用 AppError 承载 404 语义，common.RespondError 才能把它分流成 4004；
 			// 裸 fmt.Errorf 会被兜底成 500。
 			return nil, common.NewAppError(common.ErrCodeNotFound,
-				fmt.Sprintf("流程定义 %s 不存在", binding.ProcessDefinitionKey),
+				fmt.Sprintf("Process definition %s does not exist", binding.ProcessDefinitionKey),
 				http.StatusNotFound, err)
 		}
 		return nil, errors.Wrap(err, "验证流程定义失败")
@@ -111,7 +111,7 @@ func (s *ProcessBindingService) UpdateBinding(ctx context.Context, id int, bindi
 		return nil, errors.Wrap(err, "查询流程绑定失败")
 	}
 	if binding.TenantID > 0 && entity.TenantID != binding.TenantID {
-		return nil, fmt.Errorf("无权操作此流程绑定")
+		return nil, fmt.Errorf("No permission to operate this process binding")
 	}
 
 	// 如果设置为默认，需要取消同类型其他默认绑定
@@ -141,7 +141,7 @@ func (s *ProcessBindingService) UpdateBinding(ctx context.Context, id int, bindi
 			processdefinition.IsActive(true),
 		).Order(ent.Desc(processdefinition.FieldCreatedAt)).First(ctx)
 		if verifyErr != nil {
-			return nil, fmt.Errorf("目标流程定义不可用: %w", verifyErr)
+			return nil, fmt.Errorf("Target process definition is not available: %w", verifyErr)
 		}
 		update.SetProcessDefinitionKey(binding.ProcessDefinitionKey)
 		var version int
@@ -195,7 +195,7 @@ func (s *ProcessBindingService) DeleteBinding(ctx context.Context, id int, tenan
 	}
 
 	if entity.TenantID != tenantID {
-		return fmt.Errorf("无权操作此流程绑定")
+		return fmt.Errorf("No permission to operate this process binding")
 	}
 
 	return s.client.ProcessBinding.DeleteOne(entity).Exec(ctx)
@@ -209,7 +209,7 @@ func (s *ProcessBindingService) GetBinding(ctx context.Context, id int, tenantID
 	}
 
 	if entity.TenantID != tenantID {
-		return nil, fmt.Errorf("无权访问此流程绑定")
+		return nil, fmt.Errorf("No access to this process binding")
 	}
 
 	return s.toBindingResponse(entity), nil
@@ -308,7 +308,7 @@ func (s *ProcessBindingService) BatchCreateBindings(ctx context.Context, req *dt
 	for i, binding := range req.Bindings {
 		_, err := s.CreateBinding(ctx, &binding)
 		if err != nil {
-			return fmt.Errorf("创建流程绑定失败（索引 %d）: %w", i, err)
+			return fmt.Errorf("Failed to create process binding (index %d): %w", i, err)
 		}
 	}
 	return nil
@@ -489,7 +489,7 @@ func (s *ProcessBindingService) GetDepartmentBindings(ctx context.Context, tenan
 func (s *ProcessBindingService) InitDepartmentDefaultBindings(ctx context.Context, tenantID, departmentID int, departmentType string) error {
 	templates, ok := scenario.GetAllTemplates()[departmentType]
 	if !ok || len(templates) == 0 {
-		return fmt.Errorf("未知部门类型: %s", departmentType)
+		return fmt.Errorf("Unknown department type: %s", departmentType)
 	}
 
 	deployable, err := BuiltinProcessTemplateKeys()
@@ -576,7 +576,7 @@ func (s *ProcessBindingService) InitDepartmentDefaultBindings(ctx context.Contex
 		reasons = append(reasons, fmt.Sprintf("流程定义未在租户 %d 部署（IsActive+IsLatest）: %s",
 			tenantID, strings.Join(notDeployed, ", ")))
 	}
-	return fmt.Errorf("部门类型 %s 未创建任何流程绑定（%s）；缺载体的场景需先在 service/bpmn 提供同名模板并部署",
+	return fmt.Errorf("No process binding (%s) has been created for department type %s; if the carrier is missing, the template with the same name must be provided and deployed in service/bpmn first",
 		departmentType, strings.Join(reasons, "；"))
 }
 

@@ -63,19 +63,19 @@ export const RelationPanel: React.FC<RelationPanelProps> = ({
 
   const getRelationTypeLabel = (type: TicketRelationType) => {
     const labels: Record<TicketRelationType, string> = {
-      [TicketRelationType.PARENT_CHILD]: '父子关系',
-      [TicketRelationType.BLOCKS]: '阻塞',
-      [TicketRelationType.BLOCKED_BY]: '被阻塞',
-      [TicketRelationType.DEPENDS_ON]: '依赖于',
-      [TicketRelationType.RELATES_TO]: '相关',
-      [TicketRelationType.DUPLICATES]: '重复',
-      [TicketRelationType.DUPLICATED_BY]: '被重复',
-      [TicketRelationType.CAUSES]: '导致',
-      [TicketRelationType.CAUSED_BY]: '由...导致',
-      [TicketRelationType.REPLACES]: '替代',
-      [TicketRelationType.REPLACED_BY]: '被替代',
-      [TicketRelationType.SPLITS_FROM]: '分离自',
-      [TicketRelationType.MERGED_INTO]: '合并到',
+      [TicketRelationType.PARENT_CHILD]: 'Parent-child relationship',
+      [TicketRelationType.BLOCKS]: 'blocking',
+      [TicketRelationType.BLOCKED_BY]: 'blocked',
+      [TicketRelationType.DEPENDS_ON]: 'Depends on',
+      [TicketRelationType.RELATES_TO]: 'Related',
+      [TicketRelationType.DUPLICATES]: 'Duplicate',
+      [TicketRelationType.DUPLICATED_BY]: 'repeated',
+      [TicketRelationType.CAUSES]: 'causes',
+      [TicketRelationType.CAUSED_BY]: 'Caused by',
+      [TicketRelationType.REPLACES]: 'Replacement',
+      [TicketRelationType.REPLACED_BY]: 'replaced',
+      [TicketRelationType.SPLITS_FROM]: 'separated from',
+      [TicketRelationType.MERGED_INTO]: 'Merge into',
     };
     return labels[type] || type;
   };
@@ -104,7 +104,7 @@ export const RelationPanel: React.FC<RelationPanelProps> = ({
       setModalVisible(false);
       form.resetFields();
     } catch (error) {
-      message.error('创建关联失败');
+      message.error('Failed to create association');
     }
   };
 
@@ -112,7 +112,7 @@ export const RelationPanel: React.FC<RelationPanelProps> = ({
     try {
       await deleteMutation.mutateAsync({ relationId });
     } catch (error) {
-      message.error('删除关联失败');
+      message.error('Failed to delete association');
     }
   };
 
@@ -127,9 +127,10 @@ export const RelationPanel: React.FC<RelationPanelProps> = ({
 
     if (!relations || relations.length === 0) {
       return (
-        <Empty description="暂无关联工单" image={Empty.PRESENTED_IMAGE_SIMPLE}>
+        <Empty description="No associated work orders yet" image={Empty.PRESENTED_IMAGE_SIMPLE}>
           <Button type="primary" icon={<Plus />} onClick={() => setModalVisible(true)}>
-            添加关联
+
+            Add association
           </Button>
         </Empty>
       );
@@ -145,7 +146,7 @@ export const RelationPanel: React.FC<RelationPanelProps> = ({
           return (
             <List.Item
               actions={[
-                <Tooltip key="view" title="查看工单">
+                <Tooltip key="view" title="View work order">
                   <Button
                     type="link"
                     size="small"
@@ -155,18 +156,20 @@ export const RelationPanel: React.FC<RelationPanelProps> = ({
                       )
                     }
                   >
-                    查看
+
+                    View
                   </Button>
                 </Tooltip>,
                 <Popconfirm
                   key="delete"
-                  title="确认删除此关联？"
+                  title="Confirm to delete this association?"
                   onConfirm={() => handleDeleteRelation(relation.id)}
-                  okText="确认"
-                  cancelText="取消"
+                  okText="Confirm"
+                  cancelText="Cancel"
                 >
                   <Button type="link" danger size="small" icon={<Trash2 />}>
-                    删除
+
+                    Delete
                   </Button>
                 </Popconfirm>,
               ]}
@@ -200,7 +203,7 @@ export const RelationPanel: React.FC<RelationPanelProps> = ({
       key: 'all',
       label: (
         <Badge count={stats?.totalRelations || 0} showZero>
-          <span>全部关联</span>
+          <span>All related</span>
         </Badge>
       ),
       children: renderRelationsList(),
@@ -209,19 +212,19 @@ export const RelationPanel: React.FC<RelationPanelProps> = ({
       key: 'hierarchy',
       label: (
         <Badge count={stats?.childrenCount || 0} showZero>
-          <span>父子关系</span>
+          <span>Parent-child relationship</span>
         </Badge>
       ),
-      children: <div>父子关系视图</div>,
+      children: <div>Parent-child relationship view</div>,
     },
     {
       key: 'dependencies',
       label: (
         <Badge count={stats?.blockedByCount || 0} showZero>
-          <span>依赖关系</span>
+          <span>Dependencies</span>
         </Badge>
       ),
-      children: <div>依赖关系视图</div>,
+      children: <div>Dependency view</div>,
     },
   ];
 
@@ -230,7 +233,7 @@ export const RelationPanel: React.FC<RelationPanelProps> = ({
       title={
         <Space>
           <Link />
-          <span>工单关联</span>
+          <span>Association</span>
           {stats && stats.totalRelations > 0 && <Badge count={stats.totalRelations} showZero />}
         </Space>
       }
@@ -241,7 +244,8 @@ export const RelationPanel: React.FC<RelationPanelProps> = ({
           onClick={() => setModalVisible(true)}
           size="small"
         >
-          添加关联
+
+          Add association
         </Button>
       }
     >
@@ -249,7 +253,7 @@ export const RelationPanel: React.FC<RelationPanelProps> = ({
 
       {/* 创建关联模态框 */}
       <Modal
-        title="添加工单关联"
+        title="Add work order association"
         open={modalVisible}
         onCancel={() => {
           setModalVisible(false);
@@ -260,23 +264,23 @@ export const RelationPanel: React.FC<RelationPanelProps> = ({
       >
         <Form form={form} layout="vertical">
           <Form.Item
-            label="关联类型"
+            label="Relationship Type"
             name="relationType"
-            rules={[{ required: true, message: '请选择关联类型' }]}
+            rules={[{ required: true, message: 'Please select the association type' }]}
           >
-            <Select placeholder="选择关联类型" options={[{ value: TicketRelationType.RELATES_TO, label: "相关" }, { value: TicketRelationType.BLOCKS, label: "阻塞" }, { value: TicketRelationType.DEPENDS_ON, label: "依赖于" }, { value: TicketRelationType.DUPLICATES, label: "重复" }, { value: TicketRelationType.PARENT_CHILD, label: "父子关系" }]} />
+            <Select placeholder="Select association type" options={[{ value: TicketRelationType.RELATES_TO, label: "Related" }, { value: TicketRelationType.BLOCKS, label: "blocking" }, { value: TicketRelationType.DEPENDS_ON, label: "Depends on" }, { value: TicketRelationType.DUPLICATES, label: "Duplicate" }, { value: TicketRelationType.PARENT_CHILD, label: "Parent-child relationship" }]} />
           </Form.Item>
 
           <Form.Item
-            label="目标工单"
+            label="Target work order"
             name="targetTicketId"
-            rules={[{ required: true, message: '请输入目标工单ID' }]}
+            rules={[{ required: true, message: 'Please enter the target work order ID' }]}
           >
-            <Input type="number" placeholder="输入工单ID" addonBefore="#" />
+            <Input type="number" placeholder="Enter the work order ID" addonBefore="#" />
           </Form.Item>
 
-          <Form.Item label="描述" name="description">
-            <TextArea rows={3} placeholder="添加关联描述（可选）" />
+          <Form.Item label="Description" name="description">
+            <TextArea rows={3} placeholder="Add association description (optional)" />
           </Form.Item>
         </Form>
       </Modal>

@@ -27,18 +27,20 @@ export default function Error({
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <Result
         status="500"
-        title="页面出错了"
-        subTitle="抱歉，页面遇到了一个意外错误。请尝试重试或返回仪表盘。"
+        title="Page error"
+        subTitle="Sorry, the page encountered an unexpected error. Please try again or return to the dashboard."
         extra={[
           <Button key="retry" type="primary" icon={<RotateCcw />} onClick={() => reset()}>
-            重试
+
+            Retry
           </Button>,
           <Button
             key="dashboard"
             icon={<LayoutDashboard />}
             onClick={() => router.push('/dashboard')}
           >
-            返回仪表盘
+
+            Return to dashboard
           </Button>,
         ]}
       />

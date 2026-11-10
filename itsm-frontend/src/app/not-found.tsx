@@ -17,7 +17,7 @@ export default function NotFound() {
       <Result
         status='404'
         title='404'
-        subTitle='抱歉，您访问的页面不存在。'
+        subTitle="Sorry, the page you visited does not exist."
         extra={[
           <Button
             key='dashboard'
@@ -28,11 +28,12 @@ export default function NotFound() {
                 router.push('/dashboard');
               } catch (navErr) {
                 console.error('[nav]', navErr);
-                message.error('导航失败，请稍后重试');
+                message.error('Navigation failed, please try again later');
               }
             }}
           >
-            返回仪表盘
+
+            Return to dashboard
           </Button>,
           <Button
             key='home'
@@ -42,11 +43,12 @@ export default function NotFound() {
                 router.push('/');
               } catch (navErr) {
                 console.error('[nav]', navErr);
-                message.error('导航失败，请稍后重试');
+                message.error('Navigation failed, please try again later');
               }
             }}
           >
-            返回首页
+
+            Return to homepage
           </Button>,
         ]}
       />

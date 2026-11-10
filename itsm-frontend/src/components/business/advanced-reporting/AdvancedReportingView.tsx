@@ -16,12 +16,13 @@ export function AdvancedReportingView({
       title={
         <Space>
           <BarChart3 size={18} />
-          <span>报表中心</span>
+          <span>Report Center</span>
         </Space>
       }
       extra={
         <Button icon={<RefreshCw size={16} />} onClick={onReload} loading={loading}>
-          刷新
+
+          Refresh
         </Button>
       }
     >
@@ -29,16 +30,16 @@ export function AdvancedReportingView({
         <Alert
           type="error"
           showIcon
-          title="无法加载报表目录"
+          title="Unable to load report directory"
           description={error}
-          action={<Button onClick={onReload}>重试</Button>}
+          action={<Button onClick={onReload}>Retry</Button>}
           style={{ marginBottom: 16 }}
         />
       )}
       {loading ? (
         <Skeleton active />
       ) : reports.length === 0 ? (
-        <Empty description="暂无可用报表" />
+        <Empty description="No report available yet" />
       ) : (
         <Space orientation="vertical" size={0} style={{ width: '100%' }}>
           {reports.map(report => (
@@ -53,7 +54,8 @@ export function AdvancedReportingView({
               </div>
               {onOpenReport && (
                 <Button type="link" onClick={() => onOpenReport(report)}>
-                  查看
+
+                  View
                 </Button>
               )}
             </div>

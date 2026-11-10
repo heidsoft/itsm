@@ -32,20 +32,20 @@ describe('ErrorMessageHandler.formatApiError', () => {
   });
 
   it('handles unknown types', () => {
-    expect(ErrorMessageHandler.formatApiError(123).message).toBe('未知错误，请稍后重试');
+    expect(ErrorMessageHandler.formatApiError(123).message).toBe("Unknown error, please try again later");
   });
 });
 
 describe('ErrorMessageHandler.formatNetworkError', () => {
   it('detects network keyword', () => {
     const info = ErrorMessageHandler.formatNetworkError(new Error('network failure'));
-    expect(info.message).toContain('网络连接');
-    expect(info.actionText).toBe('重试');
+    expect(info.message).toContain("Network");
+    expect(info.actionText).toBe("Retry");
   });
 
   it('detects timeout keyword', () => {
     const info = ErrorMessageHandler.formatNetworkError(new Error('request timeout'));
-    expect(info.message).toContain('超时');
+    expect(info.message).toBe('Request timed out, please try again later.');
   });
 });
 
@@ -105,10 +105,10 @@ describe('parseErrorCode', () => {
 
 describe('getErrorMessageByCode', () => {
   it('returns known message', () => {
-    expect(getErrorMessageByCode('NOT_FOUND')).toBe('请求的资源不存在');
+    expect(getErrorMessageByCode('NOT_FOUND')).toBe("The requested resource does not exist");
   });
   it('returns default for unknown code', () => {
-    expect(getErrorMessageByCode('SOMETHING')).toBe('发生了一个错误');
+    expect(getErrorMessageByCode('SOMETHING')).toBe("An error occurred");
   });
 });
 

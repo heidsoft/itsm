@@ -334,7 +334,7 @@ func TestTicketService_CreateTicketRejectsCrossTenantReferences(t *testing.T) {
 	_, err = service.CreateTicket(ctx, &dto.CreateTicketRequest{
 		Title: "Invalid parent", Description: "invalid", Priority: "medium", RequesterID: userA.ID, ParentTicketID: &foreignParent.ID,
 	}, tenantA.ID)
-	require.ErrorContains(t, err, "父工单不存在")
+	require.ErrorContains(t, err, "The parent ticket does not exist")
 }
 
 func TestTicketService_GetTicketStatsCountsNewAsPending(t *testing.T) {
@@ -707,13 +707,13 @@ func TestTicketService_GetTicketByID(t *testing.T) {
 			expectedError: false,
 		},
 		{
-			name:          "工单不存在",
+			name:          "The work order does not exist",
 			ticketID:      99999,
 			tenantID:      testTenant.ID,
 			expectedError: true,
 		},
 		{
-			name:          "租户不匹配",
+			name:          "Tenant mismatch",
 			ticketID:      testTicket.ID,
 			tenantID:      99999,
 			expectedError: true,
@@ -813,7 +813,7 @@ func TestTicketService_UpdateTicket(t *testing.T) {
 			expectedError: false,
 		},
 		{
-			name:     "工单不存在",
+			name:     "The work order does not exist",
 			ticketID: 99999,
 			request: &dto.UpdateTicketRequest{
 				Title:   "新标题",
@@ -957,7 +957,7 @@ func TestTicketService_DeleteTicket(t *testing.T) {
 			expectedError: false,
 		},
 		{
-			name:          "工单不存在",
+			name:          "The work order does not exist",
 			ticketID:      99999,
 			tenantID:      testTenant.ID,
 			expectedError: true,

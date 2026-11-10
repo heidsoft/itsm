@@ -28,10 +28,10 @@ import { formatDateTime } from '@/lib/formatters';
 const { Title, Text } = Typography;
 
 const STATE_LABELS: Record<string, string> = {
-  pending: '待审批',
-  approved: '已通过',
-  rejected: '已驳回',
-  auto: '自动执行',
+  pending: 'Pending Approval',
+  approved: 'Approved',
+  rejected: 'Rejected',
+  auto: 'Automatic execution',
 };
 
 const stateColor = (s: string): string => {
@@ -79,7 +79,7 @@ const AIApprovalQueue: React.FC = () => {
       const res: ToolApprovalListResponse = await aiGetToolApprovals(state);
       setItems(res.items ?? []);
     } catch (e) {
-      message.error(`加载审批队列失败：${(e as Error).message}`);
+      message.error(`Failed to load approval queue:${(e as Error).message}`);
     } finally {
       setLoading(false);
     }
@@ -92,10 +92,10 @@ const AIApprovalQueue: React.FC = () => {
   const handleApprove = async (id: number) => {
     try {
       await aiApproveTool(id, { approve: true });
-      message.success('已通过');
+      message.success('Approved');
       fetchList();
     } catch (e) {
-      message.error(`操作失败：${(e as Error).message}`);
+      message.error(`Operation failed:${(e as Error).message}`);
     }
   };
 
@@ -103,12 +103,12 @@ const AIApprovalQueue: React.FC = () => {
     if (rejectId == null) return;
     try {
       await aiApproveTool(rejectId, { approve: false, reason: rejectReason });
-      message.success('已驳回');
+      message.success('Rejected');
       setRejectId(null);
       setRejectReason('');
       fetchList();
     } catch (e) {
-      message.error(`操作失败：${(e as Error).message}`);
+      message.error(`Operation failed:${(e as Error).message}`);
     }
   };
 
@@ -120,14 +120,14 @@ const AIApprovalQueue: React.FC = () => {
       width: 70,
     },
     {
-      title: '工具',
+      title: 'Tools',
       dataIndex: 'toolName',
       key: 'toolName',
       width: 150,
       render: (v: string) => <Tag color="geekblue">{v}</Tag>,
     },
     {
-      title: '参数',
+      title: 'Parameters',
       dataIndex: 'arguments',
       key: 'arguments',
       ellipsis: true,
@@ -139,7 +139,7 @@ const AIApprovalQueue: React.FC = () => {
       ),
     },
     {
-      title: '权限校验',
+      title: 'Permission verification',
       dataIndex: 'permissionCheck',
       key: 'permissionCheck',
       width: 120,
@@ -150,21 +150,21 @@ const AIApprovalQueue: React.FC = () => {
       ),
     },
     {
-      title: '状态',
+      title: 'Status',
       dataIndex: 'approvalState',
       key: 'approvalState',
       width: 100,
       render: (v: string) => <Tag color={stateColor(v)}>{STATE_LABELS[v] ?? v}</Tag>,
     },
     {
-      title: '创建时间',
+      title: 'Created',
       dataIndex: 'createdAt',
       key: 'createdAt',
       width: 170,
       render: (v: string) => formatDateTime(v),
     },
     {
-      title: '操作',
+      title: 'Actions',
       key: 'action',
       width: 150,
       render: (_: unknown, r: ToolApproval) =>
@@ -176,14 +176,16 @@ const AIApprovalQueue: React.FC = () => {
               icon={<CheckCircle2 size={14} />}
               onClick={() => handleApprove(r.id)}
             >
-              通过
+
+              Approve
             </Button>
             <Button danger size="small" icon={<XCircle size={14} />} onClick={() => setRejectId(r.id)}>
-              驳回
+
+              Reject
             </Button>
           </Space>
         ) : (
-          <Text type="secondary">已处理</Text>
+          <Text type="secondary">Processed</Text>
         ),
     },
   ];
@@ -194,7 +196,8 @@ const AIApprovalQueue: React.FC = () => {
         <Space align="center">
           <ShieldAlert size={22} color="#1677ff" />
           <Title level={4} style={{ margin: 0 }}>
-            AI 工具审批队列
+
+            AI tool approval queue
           </Title>
         </Space>
         <Space>
@@ -205,7 +208,7 @@ const AIApprovalQueue: React.FC = () => {
             options={Object.entries(STATE_LABELS).map(([k, label]) => ({ value: k, label }))}
           />
           <a onClick={fetchList}>
-            <RefreshCw size={16} /> 刷新
+            <RefreshCw size={16} />  Refresh
           </a>
         </Space>
       </Space>
@@ -217,7 +220,7 @@ const AIApprovalQueue: React.FC = () => {
           loading={loading}
           dataSource={items}
           columns={columns}
-          pagination={{ pageSize: 20, showTotal: (t) => `共 ${t} 条` }}
+          pagination={{ pageSize: 20, showTotal: (t) => `Total ${t} items` }}
           expandable={{
             expandedRowRender: (r) => (
               <pre style={{ margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-all', fontSize: 12 }}>
@@ -225,24 +228,24 @@ const AIApprovalQueue: React.FC = () => {
               </pre>
             ),
           }}
-          locale={{ emptyText: <Empty description="当前筛选条件下没有待处理项" /> }}
+          locale={{ emptyText: <Empty description="There are no pending items under the current filter criteria" /> }}
         />
       </Card>
 
       <Modal
-        title="驳回工具调用"
+        title="Reject tool call"
         open={rejectId != null}
         onOk={handleRejectOk}
         onCancel={() => {
           setRejectId(null);
           setRejectReason('');
         }}
-        okText="确认驳回"
+        okText="Confirm rejection"
         okButtonProps={{ danger: true }}
       >
         <Input.TextArea
           rows={3}
-          placeholder="驳回原因（可选）"
+          placeholder="Reason for rejection (optional)"
           value={rejectReason}
           onChange={(e) => setRejectReason(e.target.value)}
         />

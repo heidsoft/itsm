@@ -49,7 +49,7 @@ func (s *BPMNLintService) LintBPMNXML(xmlData []byte) (*dto.BPMNLintResult, erro
 
 	definitions, err := s.parser.ParseXML(xmlData)
 	if err != nil {
-		return nil, fmt.Errorf("BPMN XML 解析失败: %w", err)
+		return nil, fmt.Errorf("BPMN XML parsing failed: %w", err)
 	}
 	// 复用部署服务同款命名空间检查
 	if err := s.parser.ValidateBPMNXML(xmlData); err != nil {

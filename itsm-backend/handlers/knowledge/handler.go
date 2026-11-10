@@ -55,17 +55,17 @@ func (h *Handler) toArticleDTO(a *Article) *dto.KnowledgeArticleResponse {
 		status = "published"
 	}
 	return &dto.KnowledgeArticleResponse{
-		ID:        a.ID,
-		Title:     a.Title,
-		Content:   a.Content,
-		Category:  a.Category,
-		Author:    a.AuthorName,
+		ID:          a.ID,
+		Title:       a.Title,
+		Content:     a.Content,
+		Category:    a.Category,
+		Author:      a.AuthorName,
 		Tags:        a.Tags,
 		Status:      status,
 		IsPublished: a.IsPublished,
 		TenantID:    a.TenantID,
-		CreatedAt: a.CreatedAt,
-		UpdatedAt: a.UpdatedAt,
+		CreatedAt:   a.CreatedAt,
+		UpdatedAt:   a.UpdatedAt,
 
 		// 评审状态与发布状态各自独立透出：status 只回答「是否对外可见」，
 		// 发布门禁与前端评审按钮看的是 reviewStatus。
@@ -142,7 +142,7 @@ func (h *Handler) CreateArticle(c *gin.Context) {
 	// 时效窗口自检：生效时间不早于失效时间属于配置错误，
 	// 会让文章从创建起就永远不可被引用，而界面上看不出原因，必须在入口挡住。
 	if req.ValidFrom != nil && req.ValidUntil != nil && !req.ValidFrom.Before(*req.ValidUntil) {
-		common.ParamError(c, "生效时间必须早于失效时间")
+		common.ParamError(c, "The effective time must be earlier than the expiration time")
 		return
 	}
 
@@ -167,7 +167,7 @@ func (h *Handler) CreateArticle(c *gin.Context) {
 
 	res, err := h.svc.CreateArticle(c.Request.Context(), article)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -225,7 +225,7 @@ func (h *Handler) ListArticles(c *gin.Context) {
 
 	list, total, err := h.svc.ListArticles(h.requestContext(c), tenantID, pg.Page, pg.PageSize, category, search, status)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -304,13 +304,13 @@ func (h *Handler) UpdateArticle(c *gin.Context) {
 	// 单看每次都合法，合起来却可能倒挂，导致文章永远不可引用。
 	if existing.ValidFrom != nil && existing.ValidUntil != nil &&
 		!existing.ValidFrom.Before(*existing.ValidUntil) {
-		common.ParamError(c, "生效时间必须早于失效时间")
+		common.ParamError(c, "The effective time must be earlier than the expiration time")
 		return
 	}
 
 	res, err := h.svc.UpdateArticle(h.requestContext(c), existing)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -388,7 +388,7 @@ func (h *Handler) setArticlePublished(c *gin.Context, published bool) {
 	res, err := h.svc.SetArticlePublished(h.requestContext(c), id, tenantID, published)
 	if err != nil {
 		// ent.NotFoundError → 4004/404；评审未通过 → 4090/409。
-		common.RespondError(c, err, "操作失败")
+		common.RespondError(c, err, "Operation failed")
 		return
 	}
 
@@ -416,7 +416,7 @@ func (h *Handler) DeleteArticle(c *gin.Context) {
 	}
 
 	if err := h.svc.DeleteArticle(c.Request.Context(), id, tenantID); err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -426,12 +426,12 @@ func (h *Handler) DeleteArticle(c *gin.Context) {
 // GetArticleComments handles GET /api/v1/knowledge/articles/:id/comments
 // 评论尚未落地（无存储模型）：显式返回 unready，而不是空成功伪装成"暂无评论"。
 func (h *Handler) GetArticleComments(c *gin.Context) {
-	common.Fail(c, common.ServiceUnavailableCode, "知识文章评论功能尚未实现")
+	common.Fail(c, common.ServiceUnavailableCode, "The comment function of knowledge articles has not been implemented yet")
 }
 
 // AddArticleComment handles POST /api/v1/knowledge/articles/:id/comments
 func (h *Handler) AddArticleComment(c *gin.Context) {
-	common.Fail(c, common.ServiceUnavailableCode, "知识文章评论功能尚未实现")
+	common.Fail(c, common.ServiceUnavailableCode, "The comment function of knowledge articles has not been implemented yet")
 }
 
 // ListRestrictedCategories handles GET /api/v1/knowledge/categories/restricted
@@ -439,14 +439,14 @@ func (h *Handler) AddArticleComment(c *gin.Context) {
 func (h *Handler) ListRestrictedCategories(c *gin.Context) {
 	tenantID := c.GetInt("tenant_id")
 	if tenantID == 0 {
-		common.ParamError(c, "租户信息缺失")
+		common.ParamError(c, "Tenant information is missing")
 		return
 	}
 
 	restricted, err := h.svc.ListRestrictedCategories(c.Request.Context(), tenantID)
 	if err != nil {
 		h.svc.logger.Warnw("获取受限知识分类失败", "error", err, "tenant_id", tenantID)
-		common.FailWithErr(c, err, "获取受限分类失败")
+		common.FailWithErr(c, err, "Failed to obtain restricted classification")
 		return
 	}
 
@@ -458,7 +458,7 @@ func (h *Handler) ListRestrictedCategories(c *gin.Context) {
 func (h *Handler) SetCategoryRestriction(c *gin.Context) {
 	tenantID := c.GetInt("tenant_id")
 	if tenantID == 0 {
-		common.ParamError(c, "租户信息缺失")
+		common.ParamError(c, "Tenant information is missing")
 		return
 	}
 
@@ -467,7 +467,7 @@ func (h *Handler) SetCategoryRestriction(c *gin.Context) {
 		Restricted *bool  `json:"restricted"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "参数错误")
+		common.ParamErrorWithErr(c, err, "Parameter error")
 		return
 	}
 	if req.Restricted == nil {
@@ -478,7 +478,7 @@ func (h *Handler) SetCategoryRestriction(c *gin.Context) {
 	if err := h.svc.SetCategoryRestriction(c.Request.Context(), tenantID, req.Category, *req.Restricted); err != nil {
 		h.svc.logger.Warnw("设置知识分类可见性失败",
 			"error", err, "tenant_id", tenantID, "category", req.Category)
-		common.FailWithErr(c, err, "设置失败")
+		common.FailWithErr(c, err, "Setup failed")
 		return
 	}
 
@@ -493,7 +493,7 @@ func (h *Handler) SearchArticles(c *gin.Context) {
 		PageSize int    `json:"pageSize"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "参数错误")
+		common.ParamErrorWithErr(c, err, "Parameter error")
 		return
 	}
 
@@ -520,7 +520,7 @@ func (h *Handler) SearchArticles(c *gin.Context) {
 
 	articles, err := h.svc.SearchArticles(searchCtx, tenantIDInt, req.Query, req.Category, limit)
 	if err != nil {
-		common.FailWithErr(c, err, "搜索失败")
+		common.FailWithErr(c, err, "Search failed")
 		return
 	}
 
@@ -573,7 +573,7 @@ func (h *Handler) GetRecommendations(c *gin.Context) {
 	limit := 5
 	articles, _, err := h.svc.ListArticles(h.requestContext(c), tenantID, 1, limit, "", "", "published")
 	if err != nil {
-		common.FailWithErr(c, err, "获取推荐文章失败")
+		common.FailWithErr(c, err, "Failed to obtain recommended articles")
 		return
 	}
 
@@ -601,7 +601,7 @@ func (h *Handler) GetRecentArticles(c *gin.Context) {
 	limit := 10
 	articles, _, err := h.svc.ListArticles(h.requestContext(c), tenantID, 1, limit, "", "", "published")
 	if err != nil {
-		common.FailWithErr(c, err, "获取最近文章失败")
+		common.FailWithErr(c, err, "Failed to get recent articles")
 		return
 	}
 
@@ -629,7 +629,7 @@ func (h *Handler) GetCategories(c *gin.Context) {
 
 	list, err := h.svc.GetCategories(h.requestContext(c), tenantID)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -653,7 +653,7 @@ func (h *Handler) GetStats(c *gin.Context) {
 
 	stats, err := h.svc.GetStats(h.requestContext(c), tenantID)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -768,7 +768,7 @@ func knowledgeVersionError(c *gin.Context, err error) {
 		common.NotFound(c, "Article or version not found")
 		return
 	}
-	common.RespondError(c, err, "版本操作失败")
+	common.RespondError(c, err, "Version operation failed")
 }
 
 // diffChange 单行差异：type 为 added / removed。

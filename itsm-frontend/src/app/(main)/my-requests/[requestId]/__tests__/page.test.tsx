@@ -67,14 +67,14 @@ describe('服务请求详情取消动作', () => {
 
     renderPage();
 
-    const cancelButton = await screen.findByRole('button', { name: /取消请求/ });
+    const cancelButton = await screen.findByRole('button', { name: /Cancel request/ });
     fireEvent.click(cancelButton);
 
     expect(mockCancelServiceRequest).not.toHaveBeenCalled();
 
-    const reasonInput = await screen.findByPlaceholderText('例如：需求变更，改为申请更大的规格');
+    const reasonInput = await screen.findByPlaceholderText("For example: requirements change, apply for larger specifications instead");
     fireEvent.change(reasonInput, { target: { value: '需求变更' } });
-    fireEvent.click(screen.getByRole('button', { name: '确认取消' }));
+    fireEvent.click(screen.getByRole('button', { name: "Confirm cancellation" }));
 
     await waitFor(() => expect(mockCancelServiceRequest).toHaveBeenCalledWith(3, '需求变更'));
     await waitFor(() => expect(mockGetServiceRequest).toHaveBeenCalledTimes(2));
@@ -88,7 +88,7 @@ describe('服务请求详情取消动作', () => {
       renderPage();
 
       expect(await screen.findByText('测试服务请求')).toBeInTheDocument();
-      expect(screen.queryByRole('button', { name: /取消请求/ })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /Cancel request/ })).not.toBeInTheDocument();
     }
   );
 });

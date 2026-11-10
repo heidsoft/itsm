@@ -71,7 +71,7 @@ export const useKeyboardShortcuts = (shortcuts: KeyboardShortcut[]) => {
     message.info({
       content: (
         <div className="text-left whitespace-pre-line">
-          <div className="font-semibold mb-2">快捷键说明</div>
+          <div className="font-semibold mb-2">Shortcut key description</div>
           {helpText}
         </div>
       ),
@@ -222,7 +222,8 @@ export const useSkipNavigation = (targetId: string) => {
       onClick={handleSkip}
       className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:px-4 focus:py-2 focus:bg-blue-600 focus:text-white focus:rounded"
     >
-      跳到主内容
+
+      Skip to main content
     </a>
   );
 

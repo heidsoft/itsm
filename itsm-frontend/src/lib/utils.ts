@@ -24,7 +24,7 @@ export function formatDate(
   const dateObj = typeof date === 'string' ? new Date(date) : date;
 
   if (isNaN(dateObj.getTime())) {
-    return '无效日期';
+    return 'Invalid date';
   }
 
   const now = new Date();
@@ -32,9 +32,9 @@ export function formatDate(
 
   // 相对时间（小于1天）
   if (diffInSeconds < 86400) {
-    if (diffInSeconds < 60) return '刚刚';
-    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}分钟前`;
-    return `${Math.floor(diffInSeconds / 3600)}小时前`;
+    if (diffInSeconds < 60) return 'Just now';
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`;
+    return `${Math.floor(diffInSeconds / 3600)} hours ago`;
   }
 
   // 格式化选项
@@ -51,7 +51,7 @@ export function formatDate(
     },
   };
 
-  return dateObj.toLocaleDateString('zh-CN', formatOptions[format]);
+  return dateObj.toLocaleDateString('en-US', formatOptions[format]);
 }
 
 /**

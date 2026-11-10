@@ -86,7 +86,7 @@ func SetupTicketRoutes(tenant *gin.RouterGroup, config *RouterConfig) {
 				}
 				deps, err := config.TicketAssociationService.GetTicketDependencies(c.Request.Context(), ticketID, tenantID)
 				if err != nil {
-					common.RespondError(c, err, "获取工单关联失败")
+					common.RespondError(c, err, "Failed to obtain work order association")
 					return
 				}
 				common.Success(c, gin.H{
@@ -102,7 +102,7 @@ func SetupTicketRoutes(tenant *gin.RouterGroup, config *RouterConfig) {
 				}
 				deps, err := config.TicketAssociationService.GetTicketDependencies(c.Request.Context(), ticketID, tenantID)
 				if err != nil {
-					common.RespondError(c, err, "获取工单关联统计失败")
+					common.RespondError(c, err, "Failed to obtain work order related statistics")
 					return
 				}
 				common.Success(c, gin.H{
@@ -127,7 +127,7 @@ func SetupTicketRoutes(tenant *gin.RouterGroup, config *RouterConfig) {
 				}
 				items, err := config.TicketAssociationService.GetConfigurationItems(c.Request.Context(), ticketID, tenantID)
 				if err != nil {
-					common.RespondError(c, err, "获取工单配置项失败")
+					common.RespondError(c, err, "Failed to obtain work order configuration items")
 					return
 				}
 				common.Success(c, items)
@@ -147,12 +147,12 @@ func SetupTicketRoutes(tenant *gin.RouterGroup, config *RouterConfig) {
 				}
 				var req service.UpdateAssociationsRequest
 				if err := c.ShouldBindJSON(&req); err != nil {
-					common.Fail(c, common.ParamErrorCode, "请求参数格式错误")
+					common.Fail(c, common.ParamErrorCode, "Request parameter format error")
 					return
 				}
 				if err := config.TicketAssociationService.UpdateTicketAssociations(
 					c.Request.Context(), ticketID, tenantID, &req); err != nil {
-					common.RespondError(c, err, "更新工单关联失败")
+					common.RespondError(c, err, "Failed to update work order association")
 					return
 				}
 				common.Success(c, gin.H{

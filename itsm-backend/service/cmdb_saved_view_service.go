@@ -39,17 +39,17 @@ func (s *CMDBSavedViewService) CreateSavedView(ctx context.Context, req *dto.Cre
 		Exist(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to check saved view existence", "error", err, "tenant_id", tenantID, "name", req.Name)
-		return nil, fmt.Errorf("检查视图是否存在失败: %w", err)
+		return nil, fmt.Errorf("Failed to check if view exists: %w", err)
 	}
 	if exists {
-		return nil, fmt.Errorf("已存在同名的视图")
+		return nil, fmt.Errorf("A view with the same name already exists")
 	}
 
 	// 转换过滤条件为JSON
 	filtersJSON, err := toJSONMap(&req.Filters)
 	if err != nil {
 		s.logger.Errorw("Failed to marshal filters to JSON", "error", err)
-		return nil, fmt.Errorf("序列化过滤条件失败: %w", err)
+		return nil, fmt.Errorf("Failed to serialize filter: %w", err)
 	}
 
 	// 创建视图
@@ -66,7 +66,7 @@ func (s *CMDBSavedViewService) CreateSavedView(ctx context.Context, req *dto.Cre
 		Save(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to create saved view", "error", err, "tenant_id", tenantID, "name", req.Name)
-		return nil, fmt.Errorf("创建视图失败: %w", err)
+		return nil, fmt.Errorf("Failed to create view: %w", err)
 	}
 
 	s.logger.Infow("Saved view created successfully", "view_id", view.ID, "name", view.Name, "tenant_id", tenantID)
@@ -83,10 +83,10 @@ func (s *CMDBSavedViewService) GetSavedView(ctx context.Context, id int, tenantI
 		First(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, fmt.Errorf("视图不存在")
+			return nil, fmt.Errorf("View does not exist")
 		}
 		s.logger.Errorw("Failed to get saved view", "error", err, "view_id", id)
-		return nil, fmt.Errorf("获取视图失败: %w", err)
+		return nil, fmt.Errorf("Failed to get view: %w", err)
 	}
 
 	return s.convertToViewDTO(view), nil
@@ -110,7 +110,7 @@ func (s *CMDBSavedViewService) ListSavedViews(ctx context.Context, tenantID int,
 	total, err := query.Count(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to count saved views", "error", err, "tenant_id", tenantID)
-		return nil, fmt.Errorf("统计视图数量失败: %w", err)
+		return nil, fmt.Errorf("Failed to count the number of views: %w", err)
 	}
 
 	// 查询列表
@@ -121,7 +121,7 @@ func (s *CMDBSavedViewService) ListSavedViews(ctx context.Context, tenantID int,
 		All(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to list saved views", "error", err, "tenant_id", tenantID)
-		return nil, fmt.Errorf("获取视图列表失败: %w", err)
+		return nil, fmt.Errorf("Failed to get view list: %w", err)
 	}
 
 	// 转换为DTO
@@ -152,10 +152,10 @@ func (s *CMDBSavedViewService) UpdateSavedView(ctx context.Context, id int, tena
 		First(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, fmt.Errorf("视图不存在或没有权限修改")
+			return nil, fmt.Errorf("View does not exist or does not have permission to modify")
 		}
 		s.logger.Errorw("Failed to get saved view for update", "error", err, "view_id", id)
-		return nil, fmt.Errorf("获取视图失败: %w", err)
+		return nil, fmt.Errorf("Failed to get view: %w", err)
 	}
 
 	update := s.client.CMDBSavedView.UpdateOne(view)
@@ -172,10 +172,10 @@ func (s *CMDBSavedViewService) UpdateSavedView(ctx context.Context, id int, tena
 			Exist(ctx)
 		if err != nil {
 			s.logger.Errorw("Failed to check duplicate view name", "error", err, "view_id", id, "name", *req.Name)
-			return nil, fmt.Errorf("检查名称是否重复失败: %w", err)
+			return nil, fmt.Errorf("Check for duplicate names failed: %w", err)
 		}
 		if exists {
-			return nil, fmt.Errorf("已存在同名的视图")
+			return nil, fmt.Errorf("A view with the same name already exists")
 		}
 		update.SetName(*req.Name)
 	}
@@ -188,7 +188,7 @@ func (s *CMDBSavedViewService) UpdateSavedView(ctx context.Context, id int, tena
 		filtersJSON, err := toJSONMap(req.Filters)
 		if err != nil {
 			s.logger.Errorw("Failed to marshal filters to JSON", "error", err)
-			return nil, fmt.Errorf("序列化过滤条件失败: %w", err)
+			return nil, fmt.Errorf("Failed to serialize filter: %w", err)
 		}
 		update.SetFilters(filtersJSON)
 	}
@@ -209,7 +209,7 @@ func (s *CMDBSavedViewService) UpdateSavedView(ctx context.Context, id int, tena
 	updatedView, err := update.Save(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to update saved view", "error", err, "view_id", id)
-		return nil, fmt.Errorf("更新视图失败: %w", err)
+		return nil, fmt.Errorf("Failed to update view: %w", err)
 	}
 
 	s.logger.Infow("Saved view updated successfully", "view_id", id, "tenant_id", tenantID)
@@ -228,17 +228,17 @@ func (s *CMDBSavedViewService) DeleteSavedView(ctx context.Context, id int, tena
 		First(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return fmt.Errorf("视图不存在或没有权限删除")
+			return fmt.Errorf("View does not exist or does not have permission to delete")
 		}
 		s.logger.Errorw("Failed to get saved view for delete", "error", err, "view_id", id)
-		return fmt.Errorf("获取视图失败: %w", err)
+		return fmt.Errorf("Failed to get view: %w", err)
 	}
 
 	// 删除视图
 	err = s.client.CMDBSavedView.DeleteOne(view).Exec(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to delete saved view", "error", err, "view_id", id)
-		return fmt.Errorf("删除视图失败: %w", err)
+		return fmt.Errorf("Failed to delete view: %w", err)
 	}
 
 	s.logger.Infow("Saved view deleted successfully", "view_id", id, "tenant_id", tenantID)

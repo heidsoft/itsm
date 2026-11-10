@@ -73,7 +73,7 @@ describe('normalizeNodeProperties — documentation', () => {
   it('rejects a non-text value instead of corrupting the document', () => {
     const { moddle } = makeModdle();
     const result = normalizeNodeProperties({ documentation: 123 }, makeContext(moddle));
-    expect(result).toEqual({ ok: false, error: '描述信息只能是文本' });
+    expect(result).toEqual({ ok: false, error: "Description information can only be text" });
   });
 });
 
@@ -137,7 +137,7 @@ describe('normalizeNodeProperties — reference properties', () => {
   it('rejects an unknown default flow id', () => {
     const { moddle } = makeModdle();
     const result = normalizeNodeProperties({ default: 'Flow_missing' }, makeContext(moddle));
-    expect(result).toEqual({ ok: false, error: '默认分支 "Flow_missing" 不是当前流程中的连线' });
+    expect(result).toEqual({ ok: false, error: "Default flow \"Flow_missing\" is not a connection in the current process" });
   });
 
   it('rejects writing operationRef as text (serializes as "undefined")', () => {

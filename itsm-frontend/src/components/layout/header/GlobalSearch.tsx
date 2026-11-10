@@ -105,7 +105,7 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
       title={
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <Search size={18} style={{ color: DESIGN.colors.accent }} />
-          <span>全局搜索</span>
+          <span>Global search</span>
         </div>
       }
       open={open}
@@ -120,7 +120,7 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
         <Input
           ref={searchInputRef}
           className={styles.globalSearchModalInput}
-          placeholder='搜索工单、事件...'
+          placeholder="Search for work orders, incidents..."
           prefix={<Search size={16} style={{ color: DESIGN.colors.textMuted }} />}
           value={searchValue}
           onChange={e => setSearchValue(e.target.value)}
@@ -139,7 +139,7 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
       {searchResults && searchResults.results.length > 0 ? (
         <div style={{ padding: '0 20px' }}>
           <List
-            header={<strong>搜索结果</strong>}
+            header={<strong>Search Results</strong>}
             dataSource={searchResults.results}
             renderItem={(item: SearchResult) => (
               <List.Item>
@@ -154,11 +154,13 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
         </div>
       ) : searchResults && !isSearching ? (
         <div style={{ padding: 40, textAlign: 'center', color: DESIGN.colors.textMuted }}>
-          未找到结果
+
+          No results found
         </div>
       ) : (
         <div style={{ padding: 40, textAlign: 'center', color: DESIGN.colors.textMuted }}>
-          输入关键词搜索...
+
+          Enter keyword search...
         </div>
       )}
     </Modal>
@@ -177,7 +179,7 @@ export const SearchInput: React.FC<SearchInputProps> = ({ value, onChange, onSea
   return (
     <Input
       className={styles.headerSearchInput}
-      placeholder='搜索...'
+      placeholder="Search..."
       prefix={<Search size={14} style={{ color: DESIGN.colors.textMuted }} />}
       suffix={
         <kbd

@@ -56,7 +56,7 @@ func TestCreate_RejectsCrossTenantAssignee(t *testing.T) {
 		ReporterID: reporter.ID,
 		AssigneeID: &foreign,
 	})
-	require.ErrorContains(t, err, "处理人不存在或不可用")
+	require.ErrorContains(t, err, "Processor does not exist or is unavailable")
 
 	count, err := client.Incident.Query().Count(ctx)
 	require.NoError(t, err)
@@ -75,7 +75,7 @@ func TestCreate_RejectsCrossTenantAssignee(t *testing.T) {
 		AssigneeID: &same,
 	})
 	if err != nil {
-		require.NotContains(t, err.Error(), "处理人不存在或不可用",
+		require.NotContains(t, err.Error(), "Processor does not exist or is unavailable",
 			"同租户在职受指人不得被误拒")
 	}
 }

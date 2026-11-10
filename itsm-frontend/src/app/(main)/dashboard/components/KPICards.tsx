@@ -92,7 +92,7 @@ const EnterpriseKPICard: React.FC<{ metric: KPIMetric }> = React.memo(({ metric 
     <Col xs={24} sm={12} md={12} lg={8} xl={6} xxl={6}>
       <Card
         className="h-full transition-all duration-200 hover:border-blue-500 hover:shadow-md group rounded-lg bg-white shadow-sm border border-gray-200"
-       
+
         styles={{
           body: {
             padding: '20px',
@@ -159,7 +159,8 @@ const EnterpriseKPICard: React.FC<{ metric: KPIMetric }> = React.memo(({ metric 
           {comparable && (
             <div className="mt-auto pt-3 border-t border-gray-100">
               <span className="text-xs text-gray-500">
-                相比上期
+
+                Compared with the previous issue
                 <span
                   className="ml-2 font-semibold"
                   style={{
@@ -194,12 +195,12 @@ export const KPICards: React.FC<KPICardsProps> = React.memo(({ metrics, loading 
             <Col key={index} xs={24} sm={12} md={12} lg={8} xl={6} xxl={4}>
               <Card
                 className="h-44 rounded-lg shadow-sm border border-gray-200"
-               
+
               >
                 <div className="flex items-center justify-center h-full">
                   <div className="text-center">
                     <Spin size="large" />
-                    <p className="text-xs text-gray-400 mt-3">加载中...</p>
+                    <p className="text-xs text-gray-400 mt-3">Loading...</p>
                   </div>
                 </div>
               </Card>
@@ -215,14 +216,14 @@ export const KPICards: React.FC<KPICardsProps> = React.memo(({ metrics, loading 
       <div className="mb-6">
         <Card
           className="text-center py-12 rounded-lg bg-gray-50 border border-dashed border-gray-300"
-         
+
         >
           <div className="text-gray-500">
             <div className="w-16 h-16 rounded-lg bg-gray-100 flex items-center justify-center mx-auto mb-4">
               <LayoutDashboard className="text-3xl text-gray-400" />
             </div>
-            <p className="text-base font-medium text-gray-700 mb-1">暂无KPI数据</p>
-            <p className="text-sm text-gray-500">系统正在收集数据，请稍后查看</p>
+            <p className="text-base font-medium text-gray-700 mb-1">No KPI data yet</p>
+            <p className="text-sm text-gray-500">The system is collecting data, please check later</p>
           </div>
         </Card>
       </div>

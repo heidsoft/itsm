@@ -24,6 +24,7 @@ import { CheckCircle, XCircle, Timer } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import dayjs from 'dayjs';
 
+import { serviceCategoryLabel } from '@/constants/service-catalog';
 import { ServiceRequestApi } from '@/lib/api/';
 import { ServiceRequestStatus, ApprovalStatus, ApprovalAction, serviceRequestStatusLabel } from '@/constants/service-request';
 import type { ServiceRequest, ServiceRequestApproval } from '@/lib/api/service-request-api';
@@ -87,7 +88,7 @@ const ServiceRequestDetail: React.FC = () => {
       setRequest(data);
       setApprovals(data.approvals ?? []);
     } catch {
-      message.error('加载详情失败');
+      message.error('Failed to load details');
     } finally {
       setLoading(false);
     }
@@ -102,7 +103,7 @@ const ServiceRequestDetail: React.FC = () => {
     if (!hasValidId || !currentAction) return;
 
     if (currentAction === ApprovalAction.REJECT && !comment.trim()) {
-      message.error('拒绝操作必须填写原因');
+      message.error('The reason for rejecting the operation must be filled in');
       return;
     }
 
@@ -113,12 +114,12 @@ const ServiceRequestDetail: React.FC = () => {
         currentAction === ApprovalAction.APPROVE ? 'approve' : 'reject',
         comment
       );
-      message.success('操作成功');
+      message.success('Operation succeeded');
       setActionModalVisible(false);
       loadDetail(); // 刷新数据
     } catch (error: unknown) {
       // console.error(error);
-      message.error(error instanceof Error ? error.message : '操作失败');
+      message.error(error instanceof Error ? error.message : 'Operation failed');
     } finally {
       setSubmitting(false);
     }
@@ -139,12 +140,12 @@ const ServiceRequestDetail: React.FC = () => {
         ServiceRequestStatus.CANCELLED,
         cancelReason.trim() || undefined
       );
-      message.success('服务请求已取消');
+      message.success('Service request canceled');
       setCancelModalOpen(false);
       setCancelReason('');
       await loadDetail();
     } catch (error) {
-      message.error(error instanceof Error ? error.message : '取消失败');
+      message.error(error instanceof Error ? error.message : 'Cancellation failed');
     } finally {
       setCancelling(false);
     }
@@ -159,7 +160,7 @@ const ServiceRequestDetail: React.FC = () => {
         color: 'green',
         content: (
           <>
-            <p>提交申请</p>
+            <p>Submitted</p>
             <small>{dayjs(request?.createdAt).format('YYYY-MM-DD HH:mm')}</small>
           </>
         ),
@@ -177,7 +178,7 @@ const ServiceRequestDetail: React.FC = () => {
           ),
         content: (
           <Space orientation="vertical" size={2}>
-            <Text strong>{`${app.level}. ${app.step.toUpperCase()} 审批`}</Text>
+            <Text strong>{`${app.level}. ${app.step.toUpperCase()} Approval`}</Text>
             <div>
               <Tag color={approvalStatusColors[app.status]}>
                 {t(approvalStatusLabelKeys[app.status] || app.status)}
@@ -216,7 +217,7 @@ const ServiceRequestDetail: React.FC = () => {
     approvals.some(a => a.status === ApprovalStatus.PENDING && a.level === request?.currentLevel);
 
   if (loading) return <Spin size="large" style={{ display: 'block', margin: '50px auto' }} />;
-  if (!request) return <div>未找到请求</div>;
+  if (!request) return <div>Request not found</div>;
 
   return (
     <div style={{ padding: '24px' }}>
@@ -225,12 +226,13 @@ const ServiceRequestDetail: React.FC = () => {
         <Card>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
             <div>
-              <Title level={3}>{request.title || '服务请求'}</Title>
+              <Title level={3}>{request.title || 'Service Request'}</Title>
               <Space size="middle">
-                <Tag>{request.catalog?.category}</Tag>
+                <Tag>{serviceCategoryLabel(request.catalog?.category)}</Tag>
                 <Text type="secondary">ID: {request.id}</Text>
                 <Text type="secondary">
-                  提交于: {dayjs(request.createdAt).format('YYYY-MM-DD HH:mm')}
+
+                  Filed under: {dayjs(request.createdAt).format('YYYY-MM-DD HH:mm')}
                 </Text>
               </Space>
             </div>
@@ -247,7 +249,8 @@ const ServiceRequestDetail: React.FC = () => {
                   style={{ marginTop: 12 }}
                   onClick={() => setCancelModalOpen(true)}
                 >
-                  取消请求
+
+                  Cancel request
                 </Button>
               )}
             </div>
@@ -257,19 +260,19 @@ const ServiceRequestDetail: React.FC = () => {
         <div style={{ display: 'flex', gap: '24px' }}>
           {/* 左侧：详情 */}
           <div style={{ flex: 2 }}>
-            <Card title="请求详情">
+            <Card title="Request Detail">
               <Descriptions column={1} bordered>
-                <Descriptions.Item label="服务名称">{request.catalog?.name}</Descriptions.Item>
-                <Descriptions.Item label="申请原因">{request.reason}</Descriptions.Item>
-                <Descriptions.Item label="成本中心">{request.costCenter || '-'}</Descriptions.Item>
-                <Descriptions.Item label="数据分类">
+                <Descriptions.Item label="Service Name">{request.catalog?.name}</Descriptions.Item>
+                <Descriptions.Item label="Reason">{request.reason}</Descriptions.Item>
+                <Descriptions.Item label="Cost Center">{request.costCenter || '-'}</Descriptions.Item>
+                <Descriptions.Item label="Data Classification">
                   {request.dataClassification || 'Public'}
                 </Descriptions.Item>
-                <Descriptions.Item label="需要公网IP">
-                  {request.needsPublicIp ? '是' : '否'}
+                <Descriptions.Item label="Public IP required">
+                  {request.needsPublicIp ? 'Yes' : 'No'}
                 </Descriptions.Item>
                 {request.formData && (
-                  <Descriptions.Item label="表单数据">
+                  <Descriptions.Item label="Form data">
                     <pre style={{ margin: 0, fontSize: '12px' }}>
                       {JSON.stringify(request.formData, null, 2)}
                     </pre>
@@ -281,7 +284,7 @@ const ServiceRequestDetail: React.FC = () => {
 
           {/* 右侧：审批流 & 操作 */}
           <div style={{ flex: 1 }}>
-            <Card title="审批流程">
+            <Card title="Workflow">
               {renderApprovalTimeline()}
 
               {/* 审批操作区 */}
@@ -290,21 +293,23 @@ const ServiceRequestDetail: React.FC = () => {
                 request.status !== ServiceRequestStatus.CANCELLED && (
                   <>
                     <Divider />
-                    <Title level={5}>审批操作</Title>
+                    <Title level={5}>Approval operation</Title>
                     <Space style={{ width: '100%', justifyContent: 'center' }}>
                       <Button
                         type="primary"
                         icon={<CheckCircle />}
                         onClick={() => openActionModal(ApprovalAction.APPROVE)}
                       >
-                        通过
+
+                        Approve
                       </Button>
                       <Button
                         danger
                         icon={<XCircle />}
                         onClick={() => openActionModal(ApprovalAction.REJECT)}
                       >
-                        拒绝
+
+                        Rejected
                       </Button>
                     </Space>
                   </>
@@ -326,44 +331,44 @@ const ServiceRequestDetail: React.FC = () => {
 
       {/* 审批确认弹窗 */}
       <Modal
-        title={currentAction === ApprovalAction.APPROVE ? '确认批准' : '确认拒绝'}
+        title={currentAction === ApprovalAction.APPROVE ? 'Confirm approval' : 'Confirm Rejection'}
         open={actionModalVisible}
         onOk={handleSubmitApproval}
         onCancel={() => setActionModalVisible(false)}
         confirmLoading={submitting}
-        okText="提交"
-        cancelText="取消"
+        okText="Submit"
+        cancelText="Cancel"
         okButtonProps={{ danger: currentAction === ApprovalAction.REJECT }}
       >
-        <p>确定要{currentAction === ApprovalAction.APPROVE ? '批准' : '拒绝'}此请求吗？</p>
+        <p>OK{currentAction === ApprovalAction.APPROVE ? 'Approve' : 'Rejected'}This request?</p>
         <TextArea
           rows={4}
           value={comment}
           onChange={e => setComment(e.target.value)}
           placeholder={
-            currentAction === ApprovalAction.REJECT ? '请填写拒绝原因 (必填)' : '审批意见 (选填)'
+            currentAction === ApprovalAction.REJECT ? 'Please fill in the reason for rejection (required)' : 'Approval comments (optional)'
           }
         />
       </Modal>
 
       {/* 取消确认弹窗 */}
       <Modal
-        title="取消服务请求"
+        title="Cancel service request"
         open={cancelModalOpen}
         onOk={handleCancelRequest}
         onCancel={() => setCancelModalOpen(false)}
         confirmLoading={cancelling}
-        okText="确认取消"
-        cancelText="返回"
+        okText="Confirm cancellation"
+        cancelText="Back"
         okButtonProps={{ danger: true }}
         destroyOnHidden
       >
-        <p>取消后待审批记录会作废、关联流程实例会终止，且不可恢复。</p>
+        <p>After cancellation, the record to be approved will be invalidated, the associated process instance will be terminated, and it cannot be recovered.</p>
         <TextArea
           rows={4}
           value={cancelReason}
           onChange={e => setCancelReason(e.target.value)}
-          placeholder="取消原因（选填）"
+          placeholder="Reason for cancellation (optional)"
           maxLength={500}
           showCount
         />

@@ -49,7 +49,7 @@ export function TicketListToolbar({
         <Col flex='auto'>
           <Space size='middle'>
             <Search
-              placeholder='搜索工单标题、描述或工单号'
+              placeholder="Search for ticket title, description or ticket number"
               value={searchValue}
               onChange={e => onSearchChange(e.target.value)}
               onSearch={onSearchSubmit}
@@ -61,10 +61,12 @@ export function TicketListToolbar({
               onClick={onToggleFilters}
               type={showFilters ? 'primary' : 'default'}
             >
-              过滤器
+
+              filter
             </Button>
             <Button icon={<RotateCcw />} onClick={onRefresh} loading={loading}>
-              刷新
+
+              Refresh
             </Button>
           </Space>
         </Col>
@@ -72,17 +74,20 @@ export function TicketListToolbar({
           <Space>
             {canBatchDelete && selectedCount > 0 && (
               <Button danger icon={<Trash2 />} onClick={onBatchDelete}>
-                批量删除 ({selectedCount})
+
+                Batch delete ({selectedCount})
               </Button>
             )}
             {canExport && (
               <Button icon={<Download />} onClick={onExport}>
-                导出
+
+                Export
               </Button>
             )}
             {canCreate && (
               <Button type='primary' icon={<Plus />} onClick={onCreate}>
-                创建工单
+
+                Create a work order
               </Button>
             )}
           </Space>

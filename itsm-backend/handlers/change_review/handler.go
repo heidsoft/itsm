@@ -38,7 +38,7 @@ func tenantIDFromCtx(c *gin.Context) (int, bool) {
 func (h *Handler) ListMembers(c *gin.Context) {
 	tenantID, ok := tenantIDFromCtx(c)
 	if !ok {
-		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		common.Fail(c, common.AuthFailedCode, "Tenant information is missing")
 		return
 	}
 	boardType := c.DefaultQuery("type", "REVIEW")
@@ -47,7 +47,7 @@ func (h *Handler) ListMembers(c *gin.Context) {
 	}
 	members, err := h.svc.ListMembers(c.Request.Context(), boardType, tenantID)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 	common.Success(c, members)
@@ -57,17 +57,17 @@ func (h *Handler) ListMembers(c *gin.Context) {
 func (h *Handler) AddMember(c *gin.Context) {
 	tenantID, ok := tenantIDFromCtx(c)
 	if !ok {
-		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		common.Fail(c, common.AuthFailedCode, "Tenant information is missing")
 		return
 	}
 	var req dto.AddChangeReviewMemberRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 	member, err := h.svc.AddMember(c.Request.Context(), &req, tenantID)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 	common.Success(c, member)
@@ -77,22 +77,22 @@ func (h *Handler) AddMember(c *gin.Context) {
 func (h *Handler) UpdateMember(c *gin.Context) {
 	tenantID, ok := tenantIDFromCtx(c)
 	if !ok {
-		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		common.Fail(c, common.AuthFailedCode, "Tenant information is missing")
 		return
 	}
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.Fail(c, common.BadRequestCode, "无效的成员ID")
+		common.Fail(c, common.BadRequestCode, "Invalid member ID")
 		return
 	}
 	var req dto.UpdateChangeReviewMemberRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 	member, err := h.svc.UpdateMember(c.Request.Context(), id, tenantID, req.Role, req.IsActive)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 	common.Success(c, member)
@@ -102,16 +102,16 @@ func (h *Handler) UpdateMember(c *gin.Context) {
 func (h *Handler) RemoveMember(c *gin.Context) {
 	tenantID, ok := tenantIDFromCtx(c)
 	if !ok {
-		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		common.Fail(c, common.AuthFailedCode, "Tenant information is missing")
 		return
 	}
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.Fail(c, common.BadRequestCode, "无效的成员ID")
+		common.Fail(c, common.BadRequestCode, "Invalid member ID")
 		return
 	}
 	if err := h.svc.RemoveMember(c.Request.Context(), id, tenantID); err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 	common.Success(c, gin.H{"deleted": id})

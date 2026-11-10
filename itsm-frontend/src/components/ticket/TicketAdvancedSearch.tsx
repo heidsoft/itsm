@@ -79,38 +79,38 @@ export interface TicketAdvancedSearchProps {
 
 // 预定义的筛选选项
 const TICKET_STATUS_OPTIONS = [
-  { label: '新建', value: 'new', color: 'blue' },
-  { label: '待处理', value: 'open', color: 'blue' },
-  { label: '处理中', value: 'in_progress', color: 'orange' },
-  { label: '等待中', value: 'pending', color: 'yellow' },
-  { label: '已解决', value: 'resolved', color: 'green' },
-  { label: '已关闭', value: 'closed', color: 'default' },
-  { label: '已取消', value: 'cancelled', color: 'red' },
+  { label: 'Create', value: 'new', color: 'blue' },
+  { label: 'Pending', value: 'open', color: 'blue' },
+  { label: 'In Progress', value: 'in_progress', color: 'orange' },
+  { label: 'Waiting', value: 'pending', color: 'yellow' },
+  { label: 'Resolved', value: 'resolved', color: 'green' },
+  { label: 'Closed', value: 'closed', color: 'default' },
+  { label: 'Cancelled', value: 'cancelled', color: 'red' },
 ];
 
 const TICKET_PRIORITY_OPTIONS = [
-  { label: '低', value: 'low', color: 'green' },
-  { label: '中', value: 'medium', color: 'orange' },
-  { label: '高', value: 'high', color: 'red' },
-  { label: '紧急', value: 'urgent', color: 'purple' },
-  { label: '严重', value: 'critical', color: 'red' },
+  { label: 'Low', value: 'low', color: 'green' },
+  { label: 'Medium', value: 'medium', color: 'orange' },
+  { label: 'High', value: 'high', color: 'red' },
+  { label: 'Urgent', value: 'urgent', color: 'purple' },
+  { label: 'Critical', value: 'critical', color: 'red' },
 ];
 
 const TICKET_TYPE_OPTIONS = [
-  { label: '事件', value: 'incident' },
-  { label: '请求', value: 'request' },
-  { label: '问题', value: 'problem' },
-  { label: '变更', value: 'change' },
-  { label: '任务', value: 'task' },
+  { label: 'Incident', value: 'incident' },
+  { label: 'Request', value: 'request' },
+  { label: 'Problem', value: 'problem' },
+  { label: 'Change', value: 'change' },
+  { label: 'Task', value: 'task' },
 ];
 
 const TICKET_SOURCE_OPTIONS = [
-  { label: '邮件', value: 'email' },
-  { label: '电话', value: 'phone' },
-  { label: '门户网站', value: 'portal' },
+  { label: 'Email', value: 'email' },
+  { label: 'Phone', value: 'phone' },
+  { label: 'Portal', value: 'portal' },
   { label: 'API', value: 'api' },
-  { label: '监控', value: 'monitoring' },
-  { label: '手动', value: 'manual' },
+  { label: 'Monitoring', value: 'monitoring' },
+  { label: 'Manual', value: 'manual' },
 ];
 
 // 预设搜索模板 — assigneeId 使用 CURRENT_USER_ID 占位符，在 applyTemplate 时由认证上下文替换
@@ -118,38 +118,38 @@ const CURRENT_USER_ID = Symbol('currentUserId');
 
 const SEARCH_TEMPLATES = [
   {
-    name: '我的待办工单',
-    description: '分配给我且未完成的工单',
+    name: "My to-do work order",
+    description: 'Unfinished work order assigned to me',
     filters: {
       status: ['new', 'open', 'in_progress'],
       assigneeId: CURRENT_USER_ID as unknown as number,
     },
   },
   {
-    name: '高优先级工单',
-    description: '所有高优先级和紧急工单',
+    name: "High priority ticket",
+    description: 'All high priority and emergency tickets',
     filters: {
       priority: ['high', 'urgent', 'critical'],
     },
   },
   {
-    name: 'SLA即将超时',
-    description: 'SLA即将超时的工单',
+    name: "SLA is about to time out",
+    description: 'Work order with SLA about to expire',
     filters: {
       slaWarning: true,
     },
   },
   {
-    name: '本周创建工单',
-    description: '本周内创建的所有工单',
+    name: "Create a work order this week",
+    description: 'All tickets created within this week',
     filters: {
       createdAfter: dayjs().startOf('week').format('YYYY-MM-DD'),
       createdBefore: dayjs().endOf('week').format('YYYY-MM-DD'),
     },
   },
   {
-    name: '已解决未关闭',
-    description: '已解决但未关闭的工单',
+    name: "Resolved but not closed",
+    description: 'Resolved but not closed ticket',
     filters: {
       status: ['resolved'],
     },
@@ -169,40 +169,40 @@ const TicketAdvancedSearch: React.FC<TicketAdvancedSearchProps> = ({
 
   // 快速日期范围（需要在面板定义之前）
   const quickDateRanges: RangePickerProps['ranges'] = {
-    今天: [dayjs().startOf('day'), dayjs().endOf('day')],
-    昨天: [dayjs().subtract(1, 'day').startOf('day'), dayjs().subtract(1, 'day').endOf('day')],
-    本周: [dayjs().startOf('week'), dayjs().endOf('week')],
-    上周: [dayjs().subtract(1, 'week').startOf('week'), dayjs().subtract(1, 'week').endOf('week')],
-    本月: [dayjs().startOf('month'), dayjs().endOf('month')],
-    上月: [
+    Today: [dayjs().startOf('day'), dayjs().endOf('day')],
+    Yesterday: [dayjs().subtract(1, 'day').startOf('day'), dayjs().subtract(1, 'day').endOf('day')],
+    'This week': [dayjs().startOf('week'), dayjs().endOf('week')],
+    'Last week': [dayjs().subtract(1, 'week').startOf('week'), dayjs().subtract(1, 'week').endOf('week')],
+    'This month': [dayjs().startOf('month'), dayjs().endOf('month')],
+    'Last month': [
       dayjs().subtract(1, 'month').startOf('month'),
       dayjs().subtract(1, 'month').endOf('month'),
     ],
-    最近7天: [dayjs().subtract(7, 'day'), dayjs()],
-    最近30天: [dayjs().subtract(30, 'day'), dayjs()],
+    'Last 7 days': [dayjs().subtract(7, 'day'), dayjs()],
+    'Last 30 days': [dayjs().subtract(30, 'day'), dayjs()],
   };
 
   // 面板内容
   const basicInfoPanel = (
     <Row gutter={[16, 0]}>
       <Col span={6}>
-        <Form.Item label="关键字搜索" name="keyword">
-          <Input placeholder="标题、描述、工单号..." prefix={<Search />} />
+        <Form.Item label="Keyword search" name="keyword">
+          <Input placeholder="Title, description, ticket number..." prefix={<Search />} />
         </Form.Item>
       </Col>
       <Col span={6}>
-        <Form.Item label="工单号" name="ticket_number">
-          <Input placeholder="精确工单号" />
+        <Form.Item label="Work order number" name="ticket_number">
+          <Input placeholder="Precise work order number" />
         </Form.Item>
       </Col>
       <Col span={6}>
-        <Form.Item label="工单标题" name="title">
-          <Input placeholder="工单标题" />
+        <Form.Item label="Ticket Title" name="title">
+          <Input placeholder="Ticket Title" />
         </Form.Item>
       </Col>
       <Col span={6}>
-        <Form.Item label="工单描述" name="description">
-          <TextArea rows={1} placeholder="工单描述" />
+        <Form.Item label="Ticket Description" name="description">
+          <TextArea rows={1} placeholder="Ticket Description" />
         </Form.Item>
       </Col>
     </Row>
@@ -211,23 +211,23 @@ const TicketAdvancedSearch: React.FC<TicketAdvancedSearchProps> = ({
   const statusPanel = (
     <Row gutter={[16, 0]}>
       <Col span={6}>
-        <Form.Item label="状态" name="status">
-          <Select mode="multiple" placeholder="选择状态" allowClear options={TICKET_STATUS_OPTIONS.map(option => ({ value: option.value, label: <Tag color={option.color}>{option.label}</Tag> }))} />
+        <Form.Item label="Status" name="status">
+          <Select mode="multiple" placeholder="Select status" allowClear options={TICKET_STATUS_OPTIONS.map(option => ({ value: option.value, label: <Tag color={option.color}>{option.label}</Tag> }))} />
         </Form.Item>
       </Col>
       <Col span={6}>
-        <Form.Item label="优先级" name="priority">
-          <Select mode="multiple" placeholder="选择优先级" allowClear options={TICKET_PRIORITY_OPTIONS.map(option => ({ value: option.value, label: <Tag color={option.color}>{option.label}</Tag> }))} />
+        <Form.Item label="Priority" name="priority">
+          <Select mode="multiple" placeholder="Select priority" allowClear options={TICKET_PRIORITY_OPTIONS.map(option => ({ value: option.value, label: <Tag color={option.color}>{option.label}</Tag> }))} />
         </Form.Item>
       </Col>
       <Col span={6}>
-        <Form.Item label="工单类型" name="type">
-          <Select mode="multiple" placeholder="选择类型" allowClear options={TICKET_TYPE_OPTIONS.map(option => ({ value: option.value, label: option.label }))} />
+        <Form.Item label="Ticket Types" name="type">
+          <Select mode="multiple" placeholder="Select" allowClear options={TICKET_TYPE_OPTIONS.map(option => ({ value: option.value, label: option.label }))} />
         </Form.Item>
       </Col>
       <Col span={6}>
-        <Form.Item label="来源" name="source">
-          <Select mode="multiple" placeholder="选择来源" allowClear options={TICKET_SOURCE_OPTIONS.map(option => ({ value: option.value, label: option.label }))} />
+        <Form.Item label="Source" name="source">
+          <Select mode="multiple" placeholder="Select Source" allowClear options={TICKET_SOURCE_OPTIONS.map(option => ({ value: option.value, label: option.label }))} />
         </Form.Item>
       </Col>
     </Row>
@@ -236,7 +236,7 @@ const TicketAdvancedSearch: React.FC<TicketAdvancedSearchProps> = ({
   const timePanel = (
     <Row gutter={[16, 0]}>
       <Col span={12}>
-        <Form.Item label="创建时间" name="created_range">
+        <Form.Item label="Created" name="created_range">
           <AppDateRangePicker
             ranges={quickDateRanges}
             onChange={(dates: [Dayjs | null, Dayjs | null] | null) => {
@@ -253,7 +253,7 @@ const TicketAdvancedSearch: React.FC<TicketAdvancedSearchProps> = ({
         </Form.Item>
       </Col>
       <Col span={12}>
-        <Form.Item label="更新时间" name="updated_range">
+        <Form.Item label="Updated At" name="updated_range">
           <AppDateRangePicker
             ranges={quickDateRanges}
             onChange={(dates: [Dayjs | null, Dayjs | null] | null) => {
@@ -270,7 +270,7 @@ const TicketAdvancedSearch: React.FC<TicketAdvancedSearchProps> = ({
         </Form.Item>
       </Col>
       <Col span={12}>
-        <Form.Item label="截止时间" name="due_range">
+        <Form.Item label="Deadline" name="due_range">
           <AppDateRangePicker
             ranges={quickDateRanges}
             onChange={(dates: [Dayjs | null, Dayjs | null] | null) => {
@@ -287,7 +287,7 @@ const TicketAdvancedSearch: React.FC<TicketAdvancedSearchProps> = ({
         </Form.Item>
       </Col>
       <Col span={12}>
-        <Form.Item label="解决时间" name="resolved_range">
+        <Form.Item label="Resolved At" name="resolved_range">
           <AppDateRangePicker
             ranges={quickDateRanges}
             onChange={(dates: [Dayjs | null, Dayjs | null] | null) => {
@@ -309,8 +309,8 @@ const TicketAdvancedSearch: React.FC<TicketAdvancedSearchProps> = ({
   const slaPanel = (
     <Row gutter={[16, 0]}>
       <Col span={6}>
-        <Form.Item label="SLA状态" name="sla_status">
-          <Select placeholder="选择SLA状态" allowClear options={[{ value: "breach", label: "已超时" }, { value: "warning", label: "即将超时" }, { value: "normal", label: "正常" }]} />
+        <Form.Item label="SLAStatus" name="sla_status">
+          <Select placeholder="Select SLA status" allowClear options={[{ value: "breach", label: "Timed out" }, { value: "warning", label: "Timeout imminent" }, { value: "normal", label: "OK" }]} />
         </Form.Item>
       </Col>
     </Row>
@@ -367,7 +367,7 @@ const TicketAdvancedSearch: React.FC<TicketAdvancedSearchProps> = ({
       title={
         <div className="flex items-center">
           <Filter className="mr-2" />
-          <span>高级搜索</span>
+          <span>Advanced Search</span>
         </div>
       }
       size="small"
@@ -375,7 +375,8 @@ const TicketAdvancedSearch: React.FC<TicketAdvancedSearchProps> = ({
       {/* 预设模板 */}
       <div className="mb-4">
         <Text strong className="mb-2 block">
-          快速搜索模板：
+
+          Quick search template:
         </Text>
         <Space wrap>
           {SEARCH_TEMPLATES.map(template => (
@@ -399,10 +400,10 @@ const TicketAdvancedSearch: React.FC<TicketAdvancedSearchProps> = ({
           defaultActiveKey={['basic']}
           ghost
           items={[
-            { key: 'basic', label: '基础信息', children: basicInfoPanel },
-            { key: 'status', label: '状态和分类', children: statusPanel },
-            { key: 'time', label: '时间范围', children: timePanel },
-            { key: 'sla', label: 'SLA监控', children: slaPanel },
+            { key: 'basic', label: 'Basic Information', children: basicInfoPanel },
+            { key: 'status', label: 'Status and Classification', children: statusPanel },
+            { key: 'time', label: 'Time Range', children: timePanel },
+            { key: 'sla', label: 'SLA Monitor', children: slaPanel },
           ]}
         />
 
@@ -410,10 +411,12 @@ const TicketAdvancedSearch: React.FC<TicketAdvancedSearchProps> = ({
         <div className="flex justify-between items-center mt-6">
           <Space>
             <Button type="primary" icon={<Search />} htmlType="submit" loading={loading}>
-              搜索
+
+              Search
             </Button>
             <Button icon={<RotateCcw />} onClick={handleReset}>
-              重置
+
+              Reset
             </Button>
           </Space>
         </div>

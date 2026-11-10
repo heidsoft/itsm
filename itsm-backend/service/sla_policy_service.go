@@ -104,32 +104,32 @@ func (s *SLAPolicyService) UpdateSLAPolicyForTenant(ctx context.Context, id, ten
 
 func validateCreateSLAPolicy(input dto.CreateSLAPolicyRequest) error {
 	if strings.TrimSpace(input.Name) == "" {
-		return fmt.Errorf("SLA策略名称不能为空")
+		return fmt.Errorf("SLA policy name cannot be empty")
 	}
 	if input.TenantID <= 0 {
-		return fmt.Errorf("租户信息无效")
+		return fmt.Errorf("Invalid tenant information")
 	}
 	if input.ResponseTimeMinutes <= 0 || input.ResolutionTimeMinutes <= 0 {
-		return fmt.Errorf("响应时间和解决时间必须大于0分钟")
+		return fmt.Errorf("Response time and resolution time must be greater than 0 minutes")
 	}
 	if input.ResolutionTimeMinutes < input.ResponseTimeMinutes {
-		return fmt.Errorf("解决时间不能短于响应时间")
+		return fmt.Errorf("Resolution time cannot be shorter than response time")
 	}
 	return nil
 }
 
 func validateUpdateSLAPolicy(input dto.UpdateSLAPolicyRequest) error {
 	if input.Name != nil && strings.TrimSpace(*input.Name) == "" {
-		return fmt.Errorf("SLA策略名称不能为空")
+		return fmt.Errorf("SLA policy name cannot be empty")
 	}
 	if input.ResponseTimeMinutes != nil && *input.ResponseTimeMinutes <= 0 {
-		return fmt.Errorf("响应时间必须大于0分钟")
+		return fmt.Errorf("Response time must be greater than 0 minutes")
 	}
 	if input.ResolutionTimeMinutes != nil && *input.ResolutionTimeMinutes <= 0 {
-		return fmt.Errorf("解决时间必须大于0分钟")
+		return fmt.Errorf("Resolution time must be greater than 0 minutes")
 	}
 	if input.ResponseTimeMinutes != nil && input.ResolutionTimeMinutes != nil && *input.ResolutionTimeMinutes < *input.ResponseTimeMinutes {
-		return fmt.Errorf("解决时间不能短于响应时间")
+		return fmt.Errorf("Resolution time cannot be shorter than response time")
 	}
 	return nil
 }

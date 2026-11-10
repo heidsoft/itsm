@@ -71,7 +71,7 @@ func (s *DashboardConfigStore) LoadDashboardWidgets(ctx context.Context, tenantI
 func (s *DashboardConfigStore) SaveDashboardWidgets(ctx context.Context, tenantID, userID int, widgets []map[string]any) error {
 	raw, err := json.Marshal(widgets)
 	if err != nil {
-		return fmt.Errorf("序列化仪表盘部件失败: %w", err)
+		return fmt.Errorf("Failed to serialize dashboard part: %w", err)
 	}
 	return s.writeRaw(ctx, tenantID, fmt.Sprintf("%s.%d", dashboardWidgetKeyPrefix, userID), "仪表盘自定义部件", string(raw))
 }
@@ -83,7 +83,7 @@ func (s *DashboardConfigStore) DeleteDashboardWidgets(ctx context.Context, tenan
 		return err // 含 not-found（已视为幂等成功）
 	}
 	if err := s.client.SystemConfig.DeleteOneID(row.ID).Exec(ctx); err != nil {
-		return fmt.Errorf("删除仪表盘部件配置失败: %w", err)
+		return fmt.Errorf("Failed to delete dashboard widget configuration: %w", err)
 	}
 	return nil
 }
@@ -101,7 +101,7 @@ func (s *DashboardConfigStore) find(ctx context.Context, tenantID int, key strin
 		if ent.IsNotFound(err) {
 			return nil, nil
 		}
-		return nil, fmt.Errorf("查询配置失败: %w", err)
+		return nil, fmt.Errorf("Failed to query configuration: %w", err)
 	}
 	return row, nil
 }
@@ -131,7 +131,7 @@ func (s *DashboardConfigStore) loadJSON(ctx context.Context, tenantID int, key s
 func (s *DashboardConfigStore) saveJSON(ctx context.Context, tenantID int, key, desc string, v map[string]any) error {
 	raw, err := json.Marshal(v)
 	if err != nil {
-		return fmt.Errorf("序列化配置失败: %w", err)
+		return fmt.Errorf("Serialization configuration failed: %w", err)
 	}
 	return s.writeRaw(ctx, tenantID, key, desc, string(raw))
 }
@@ -153,7 +153,7 @@ func (s *DashboardConfigStore) writeRaw(ctx context.Context, tenantID int, key, 
 			SetDescription(desc).
 			SetUpdatedAt(now).
 			Save(ctx); err != nil {
-			return fmt.Errorf("更新配置失败: %w", err)
+			return fmt.Errorf("Failed to update configuration: %w", err)
 		}
 		return nil
 	default:
@@ -167,7 +167,7 @@ func (s *DashboardConfigStore) writeRaw(ctx context.Context, tenantID int, key, 
 			SetCreatedAt(now).
 			SetUpdatedAt(now).
 			Save(ctx); err != nil {
-			return fmt.Errorf("创建配置失败: %w", err)
+			return fmt.Errorf("Failed to create configuration: %w", err)
 		}
 		return nil
 	}

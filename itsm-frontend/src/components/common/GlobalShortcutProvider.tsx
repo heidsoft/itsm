@@ -11,29 +11,29 @@ const { Title, Text } = Typography;
 // 快捷键配置
 const SHORTCUTS = [
   {
-    category: '导航',
+    category: 'Navigation',
     items: [
-      { key: 'g d', description: '跳转到仪表盘', action: '/dashboard' },
-      { key: 'g t', description: '跳转到工单列表', action: '/tickets' },
-      { key: 'g c', description: '跳转到CMDB', action: '/cmdb' },
-      { key: 'g k', description: '跳转到知识库', action: '/knowledge' },
-      { key: 'g w', description: '跳转到工作流', action: '/workflows' },
+      { key: 'g d', description: 'Jump to dashboard', action: '/dashboard' },
+      { key: 'g t', description: 'Jump to the work order list', action: '/tickets' },
+      { key: 'g c', description: 'Jump to CMDB', action: '/cmdb' },
+      { key: 'g k', description: 'Jump to knowledge base', action: '/knowledge' },
+      { key: 'g w', description: 'Jump to workflow', action: '/workflows' },
     ],
   },
   {
-    category: '操作',
+    category: 'Actions',
     items: [
-      { key: 'ctrl+n / cmd+n', description: '新建工单', action: '/tickets/create' },
-      { key: 'ctrl+k / cmd+k', description: '打开全局搜索', action: 'search' },
-      { key: 'ctrl+b / cmd+b', description: '切换侧边栏折叠', action: 'toggleSidebar' },
-      { key: 'ctrl+r / cmd+r', description: '刷新当前页面数据', action: 'refresh' },
+      { key: 'ctrl+n / cmd+n', description: 'New Ticket', action: '/tickets/create' },
+      { key: 'ctrl+k / cmd+k', description: 'Turn on global search', action: 'search' },
+      { key: 'ctrl+b / cmd+b', description: 'Toggle sidebar collapse', action: 'toggleSidebar' },
+      { key: 'ctrl+r / cmd+r', description: 'Refresh current page data', action: 'refresh' },
     ],
   },
   {
-    category: '帮助',
+    category: 'Help',
     items: [
-      { key: '? / ctrl+/ / cmd+/', description: '显示快捷键帮助', action: 'help' },
-      { key: 'esc', description: '关闭弹窗/取消操作', action: 'close' },
+      { key: '? / ctrl+/ / cmd+/', description: 'Show shortcut key help', action: 'help' },
+      { key: 'esc', description: 'Close pop-up window/cancel operation', action: 'close' },
     ],
   },
 ];
@@ -78,10 +78,10 @@ export default function GlobalShortcutProvider({ children }: GlobalShortcutProvi
   return (
     <>
       {children}
-      
+
       {/* 快捷键帮助弹窗 */}
       <Modal
-        title="键盘快捷键"
+        title="Keyboard shortcuts"
         open={helpVisible}
         onCancel={() => setHelpVisible(false)}
         footer={null}

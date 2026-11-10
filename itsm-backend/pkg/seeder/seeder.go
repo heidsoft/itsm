@@ -633,40 +633,40 @@ func getEmbeddedConfig() *SeedConfig {
 	return &SeedConfig{
 		SeedWorkflows: true,
 		Departments: []DepartmentSeed{
-			{Name: "信息技术部", Code: "IT", Desc: "IT整体管理"},
-			{Name: "IT基础架构", Code: "IT-INFRA", Desc: "基础设施运维", ParentCode: "IT"},
-			{Name: "IT应用服务", Code: "IT-APP", Desc: "应用系统运维", ParentCode: "IT"},
-			{Name: "IT安全", Code: "IT-SEC", Desc: "信息安全管理", ParentCode: "IT"},
-			{Name: "IT项目管理", Code: "IT-PMO", Desc: "IT项目管理", ParentCode: "IT"},
-			{Name: "运营管理部", Code: "OPS", Desc: "IT运营管理"},
-			{Name: "服务台", Code: "OPS-SD", Desc: "一线服务支持", ParentCode: "OPS"},
-			{Name: "运维中心", Code: "OPS-NOC", Desc: "7x24运维监控", ParentCode: "OPS"},
-			{Name: "客户服务", Code: "OPS-CS", Desc: "客户服务体验", ParentCode: "OPS"},
-			{Name: "研发部", Code: "RD", Desc: "产品研发"},
-			{Name: "测试部", Code: "QA", Desc: "质量保证"},
-			{Name: "人力资源部", Code: "HR", Desc: "人力资源管理"},
-			{Name: "财务部", Code: "FIN", Desc: "财务管理"},
-			{Name: "行政部", Code: "ADMIN", Desc: "行政管理"},
+			{Name: "Information Technology", Code: "IT", Desc: "IT management"},
+			{Name: "IT Infrastructure", Code: "IT-INFRA", Desc: "Infrastructure operations", ParentCode: "IT"},
+			{Name: "IT Applications", Code: "IT-APP", Desc: "Application operations", ParentCode: "IT"},
+			{Name: "IT Security", Code: "IT-SEC", Desc: "Information security management", ParentCode: "IT"},
+			{Name: "IT Project Management", Code: "IT-PMO", Desc: "IT Project Management", ParentCode: "IT"},
+			{Name: "Operations", Code: "OPS", Desc: "IT operations management"},
+			{Name: "Service Desk", Code: "OPS-SD", Desc: "First-line support", ParentCode: "OPS"},
+			{Name: "Operations Center", Code: "OPS-NOC", Desc: "24/7 operations monitoring", ParentCode: "OPS"},
+			{Name: "Customer Service", Code: "OPS-CS", Desc: "Customer service experience", ParentCode: "OPS"},
+			{Name: "Research and Development", Code: "RD", Desc: "Product development"},
+			{Name: "Quality Assurance", Code: "QA", Desc: "Quality assurance"},
+			{Name: "Human Resources", Code: "HR", Desc: "Human resources management"},
+			{Name: "Finance", Code: "FIN", Desc: "Financial management"},
+			{Name: "Administration", Code: "ADMIN", Desc: "Administration management"},
 		},
 		Teams: []TeamSeed{
-			{Name: "服务台-L1", Description: "一线服务支持"},
-			{Name: "服务台-L2", Description: "二线技术支持"},
-			{Name: "服务台-L3", Description: "三线技术专家"},
-			{Name: "服务器运维", Description: "服务器运维管理"},
-			{Name: "网络运维", Description: "网络设备运维"},
-			{Name: "数据库运维", Description: "数据库运维管理"},
-			{Name: "云平台运维", Description: "云计算平台运维"},
-			{Name: "ERP支持", Description: "ERP系统支持"},
-			{Name: "CRM支持", Description: "CRM系统支持"},
-			{Name: "OA支持", Description: "OA办公系统支持"},
-			{Name: "安全运营", Description: "安全监控与响应"},
-			{Name: "安全合规", Description: "安全合规管理"},
-			{Name: "后端开发", Description: "后端开发团队"},
-			{Name: "前端开发", Description: "前端开发团队"},
-			{Name: "移动开发", Description: "移动端开发团队"},
-			{Name: "测试团队", Description: "测试与质量保证"},
-			{Name: "客户成功", Description: "客户成功管理"},
-			{Name: "技术支持", Description: "客户服务技术支持"},
+			{Code: "服务台-l1", Name: "Service Desk L1", Description: "First-line support"},
+			{Code: "服务台-l2", Name: "Service Desk L2", Description: "Second-line technical support"},
+			{Code: "服务台-l3", Name: "Service Desk L3", Description: "Third-line technical specialists"},
+			{Code: "服务器运维", Name: "Server Operations", Description: "Server operations management"},
+			{Code: "网络运维", Name: "Network Operations", Description: "Network device operations"},
+			{Code: "数据库运维", Name: "Database Operations", Description: "Database operations management"},
+			{Code: "云平台运维", Name: "Cloud Operations", Description: "Cloud platform operations"},
+			{Code: "erp支持", Name: "ERP Support", Description: "ERP system support"},
+			{Code: "crm支持", Name: "CRM Support", Description: "CRM system support"},
+			{Code: "oa支持", Name: "Office Applications Support", Description: "Office application support"},
+			{Code: "安全运营", Name: "Security Operations", Description: "Security monitoring and response"},
+			{Code: "安全合规", Name: "Security Compliance", Description: "Security compliance management"},
+			{Code: "后端开发", Name: "Backend Development", Description: "Backend development team"},
+			{Code: "前端开发", Name: "Frontend Development", Description: "Frontend development team"},
+			{Code: "移动开发", Name: "Mobile Development", Description: "Mobile development team"},
+			{Code: "测试团队", Name: "Testing Team", Description: "Testing and quality assurance"},
+			{Code: "客户成功", Name: "Customer Success", Description: "Customer success management"},
+			{Code: "技术支持", Name: "Technical Support", Description: "Customer technical support"},
 		},
 		// 角色与审批组的词表权威在 Go 清单（BuiltinRoles/PracticeRoles/BuiltinGroups），
 		// JSON 只提供租户级覆盖，不再复制同名的内置条目。
@@ -678,59 +678,59 @@ func getEmbeddedConfig() *SeedConfig {
 		// 从角色对应人员中拉人后即生效。
 		Groups: BuiltinGroups(),
 		SLADefinitions: []SLADefinitionSeed{
-			{Name: "SLA-P0-紧急", Description: "P0紧急级别SLA", ServiceType: "incident", Priority: "urgent", ResponseTime: 15, ResolutionTime: 120},
-			{Name: "SLA-P1-高", Description: "P1高级别SLA", ServiceType: "incident", Priority: "high", ResponseTime: 30, ResolutionTime: 240},
-			{Name: "SLA-P2-中", Description: "P2中级别SLA", ServiceType: "incident", Priority: "medium", ResponseTime: 120, ResolutionTime: 480},
-			{Name: "SLA-P3-低", Description: "P3低级别SLA", ServiceType: "incident", Priority: "low", ResponseTime: 240, ResolutionTime: 1440},
-			{Name: "SLA-服务请求", Description: "服务请求标准SLA", ServiceType: "service_request", Priority: "medium", ResponseTime: 480, ResolutionTime: 4320},
-			{Name: "SLA-变更", Description: "变更请求SLA", ServiceType: "change", Priority: "high", ResponseTime: 60, ResolutionTime: 1440},
+			{Name: "SLA-P0-Urgent", Description: "P0 urgent SLA", ServiceType: "incident", Priority: "urgent", ResponseTime: 15, ResolutionTime: 120},
+			{Name: "SLA-P1-High", Description: "P1 high priority SLA", ServiceType: "incident", Priority: "high", ResponseTime: 30, ResolutionTime: 240},
+			{Name: "SLA-P2-Medium", Description: "P2 medium priority SLA", ServiceType: "incident", Priority: "medium", ResponseTime: 120, ResolutionTime: 480},
+			{Name: "SLA-P3-Low", Description: "P3 low priority SLA", ServiceType: "incident", Priority: "low", ResponseTime: 240, ResolutionTime: 1440},
+			{Name: "SLA-Service Request", Description: "Standard service request SLA", ServiceType: "service_request", Priority: "medium", ResponseTime: 480, ResolutionTime: 4320},
+			{Name: "SLA-Change", Description: "Change request SLA", ServiceType: "change", Priority: "high", ResponseTime: 60, ResolutionTime: 1440},
 		},
 		ServiceCatalog: []ServiceCatalogSeed{
-			{Name: "云服务器 ECS", Description: "弹性云服务器", Category: "云计算", ServiceType: "vm", RequiresApproval: true, DeliveryTime: 1},
-			{Name: "云数据库 RDS", Description: "MySQL/PostgreSQL数据库", Category: "数据库", ServiceType: "rds", RequiresApproval: true, DeliveryTime: 1},
-			{Name: "对象存储 OSS", Description: "海量云存储", Category: "存储", ServiceType: "oss", RequiresApproval: false, DeliveryTime: 0},
-			{Name: "CDN 加速", Description: "内容分发加速", Category: "网络", ServiceType: "network", RequiresApproval: false, DeliveryTime: 0},
-			{Name: "负载均衡 SLB", Description: "流量分发服务", Category: "网络", ServiceType: "network", RequiresApproval: true, DeliveryTime: 1},
-			{Name: "VPN 网关", Description: "VPN加密通道", Category: "安全", ServiceType: "security", RequiresApproval: true, DeliveryTime: 2},
-			{Name: "企业邮箱", Description: "企业域名邮箱", Category: "通讯", ServiceType: "custom", RequiresApproval: false, DeliveryTime: 1},
-			{Name: "企业网盘", Description: "文件存储共享", Category: "协作", ServiceType: "custom", RequiresApproval: false, DeliveryTime: 0},
-			{Name: "视频会议", Description: "高清视频会议", Category: "通讯", ServiceType: "custom", RequiresApproval: false, DeliveryTime: 0},
-			{Name: "企业IM", Description: "即时通讯工具", Category: "通讯", ServiceType: "custom", RequiresApproval: false, DeliveryTime: 0},
-			{Name: "漏洞扫描", Description: "Web漏洞扫描", Category: "安全", ServiceType: "security", RequiresApproval: true, DeliveryTime: 1},
-			{Name: "渗透测试", Description: "安全渗透测试", Category: "安全", ServiceType: "security", RequiresApproval: true, DeliveryTime: 5},
-			{Name: "等保合规", Description: "等级保护咨询", Category: "安全", ServiceType: "security", RequiresApproval: true, DeliveryTime: 30},
-			{Name: "IT服务台", Description: "IT问题咨询支持", Category: "支持", ServiceType: "custom", RequiresApproval: false, DeliveryTime: 0},
-			{Name: "软件安装", Description: "标准软件安装", Category: "支持", ServiceType: "custom", RequiresApproval: false, DeliveryTime: 1},
-			{Name: "账户申请", Description: "新员工账户开通", Category: "支持", ServiceType: "custom", RequiresApproval: true, DeliveryTime: 1},
-			{Name: "网络接入", Description: "网络接入申请", Category: "支持", ServiceType: "custom", RequiresApproval: true, DeliveryTime: 2},
-			{Name: "域名申请", Description: "内部域名注册", Category: "支持", ServiceType: "custom", RequiresApproval: true, DeliveryTime: 3},
-			{Name: "代码仓库", Description: "Git代码仓库", Category: "开发", ServiceType: "custom", RequiresApproval: false, DeliveryTime: 0},
-			{Name: "CI/CD流水线", Description: "自动化部署", Category: "开发", ServiceType: "custom", RequiresApproval: false, DeliveryTime: 0},
-			{Name: "测试环境", Description: "预发布测试环境", Category: "开发", ServiceType: "custom", RequiresApproval: true, DeliveryTime: 2},
-			{Name: "API网关", Description: "API接口管理", Category: "开发", ServiceType: "custom", RequiresApproval: true, DeliveryTime: 3},
+			{Name: "ECS Cloud Server", Description: "Elastic cloud server", Category: "云计算", ServiceType: "vm", RequiresApproval: true, DeliveryTime: 1},
+			{Name: "RDS Cloud Database", Description: "MySQL/PostgreSQL database", Category: "数据库", ServiceType: "rds", RequiresApproval: true, DeliveryTime: 1},
+			{Name: "OSS Object Storage", Description: "Scalable cloud storage", Category: "存储", ServiceType: "oss", RequiresApproval: false, DeliveryTime: 0},
+			{Name: "CDN Acceleration", Description: "Content delivery acceleration", Category: "网络", ServiceType: "network", RequiresApproval: false, DeliveryTime: 0},
+			{Name: "SLB Load Balancer", Description: "Traffic distribution service", Category: "网络", ServiceType: "network", RequiresApproval: true, DeliveryTime: 1},
+			{Name: "VPN Gateway", Description: "Encrypted VPN tunnel", Category: "安全", ServiceType: "security", RequiresApproval: true, DeliveryTime: 2},
+			{Name: "Enterprise Email", Description: "Corporate domain email", Category: "通讯", ServiceType: "custom", RequiresApproval: false, DeliveryTime: 1},
+			{Name: "Enterprise File Storage", Description: "File storage and sharing", Category: "协作", ServiceType: "custom", RequiresApproval: false, DeliveryTime: 0},
+			{Name: "Video Conferencing", Description: "HD video conferencing", Category: "通讯", ServiceType: "custom", RequiresApproval: false, DeliveryTime: 0},
+			{Name: "Enterprise Messaging", Description: "Instant messaging", Category: "通讯", ServiceType: "custom", RequiresApproval: false, DeliveryTime: 0},
+			{Name: "Vulnerability Scanning", Description: "Web vulnerability scanning", Category: "安全", ServiceType: "security", RequiresApproval: true, DeliveryTime: 1},
+			{Name: "Penetration Testing", Description: "Security penetration testing", Category: "安全", ServiceType: "security", RequiresApproval: true, DeliveryTime: 5},
+			{Name: "Security Compliance Assessment", Description: "Classified protection compliance consulting", Category: "安全", ServiceType: "security", RequiresApproval: true, DeliveryTime: 30},
+			{Name: "IT Service Desk", Description: "IT consultation and support", Category: "支持", ServiceType: "custom", RequiresApproval: false, DeliveryTime: 0},
+			{Name: "Software Installation", Description: "Standard Software Installation", Category: "支持", ServiceType: "custom", RequiresApproval: false, DeliveryTime: 1},
+			{Name: "Account Request", Description: "New Employee Account Setup", Category: "支持", ServiceType: "custom", RequiresApproval: true, DeliveryTime: 1},
+			{Name: "Network Access", Description: "Network access request", Category: "支持", ServiceType: "custom", RequiresApproval: true, DeliveryTime: 2},
+			{Name: "Domain Request", Description: "Internal domain registration", Category: "支持", ServiceType: "custom", RequiresApproval: true, DeliveryTime: 3},
+			{Name: "Code Repository", Description: "Git code repository", Category: "开发", ServiceType: "custom", RequiresApproval: false, DeliveryTime: 0},
+			{Name: "CI/CD Pipeline", Description: "Automated deployment", Category: "开发", ServiceType: "custom", RequiresApproval: false, DeliveryTime: 0},
+			{Name: "Test Environment", Description: "Staging test environment", Category: "开发", ServiceType: "custom", RequiresApproval: true, DeliveryTime: 2},
+			{Name: "API Gateway", Description: "API management", Category: "开发", ServiceType: "custom", RequiresApproval: true, DeliveryTime: 3},
 		},
 		ServiceCatalogItems: []ServiceCatalogItemSeed{
-			{CatalogName: "云服务器 ECS", Name: "ECS 实例申请", Description: "申请新建弹性云服务器实例", BusinessSubType: "service_request", ProcessDefinitionKey: "service_request_flow", RequiresApproval: true, EstimatedDays: 1},
-			{CatalogName: "云服务器 ECS", Name: "ECS 配置变更", Description: "变更现有 ECS 实例规格", BusinessSubType: "change", ProcessDefinitionKey: "change_normal_flow", RequiresApproval: true, EstimatedDays: 1},
-			{CatalogName: "云服务器 ECS", Name: "ECS 故障报修", Description: "ECS 实例运行异常报修", BusinessSubType: "incident", ProcessDefinitionKey: "incident_emergency_flow", RequiresApproval: false, EstimatedDays: 0},
-			{CatalogName: "云数据库 RDS", Name: "RDS 实例申请", Description: "申请新建数据库实例", BusinessSubType: "service_request", ProcessDefinitionKey: "service_request_flow", RequiresApproval: true, EstimatedDays: 1},
-			{CatalogName: "云数据库 RDS", Name: "数据库备份恢复", Description: "申请数据库备份恢复服务", BusinessSubType: "service_request", ProcessDefinitionKey: "service_request_flow", RequiresApproval: true, EstimatedDays: 2},
-			{CatalogName: "IT服务台", Name: "IT 问题咨询", Description: "IT 相关问题咨询与解答", BusinessSubType: "ticket", ProcessDefinitionKey: "ticket_general_flow", RequiresApproval: false, EstimatedDays: 0},
-			{CatalogName: "IT服务台", Name: "密码重置", Description: "账户密码重置服务", BusinessSubType: "service_request", ProcessDefinitionKey: "service_request_flow", RequiresApproval: false, EstimatedDays: 0},
-			{CatalogName: "软件安装", Name: "标准软件安装", Description: "安装公司授权的标准软件", BusinessSubType: "service_request", ProcessDefinitionKey: "service_request_flow", RequiresApproval: false, EstimatedDays: 1},
-			{CatalogName: "账户申请", Name: "新员工账户开通", Description: "新员工 IT 账户与权限开通", BusinessSubType: "service_request", ProcessDefinitionKey: "service_request_flow", RequiresApproval: true, EstimatedDays: 1},
-			{CatalogName: "账户申请", Name: "业务权限变更", Description: "业务系统、数据库或基础设施权限调整", BusinessSubType: "service_request", ProcessDefinitionKey: "service_request_flow", RequiresApproval: true, EstimatedDays: 2},
-			{CatalogName: "网络接入", Name: "办公网络接入", Description: "申请办公网络接入权限", BusinessSubType: "service_request", ProcessDefinitionKey: "service_request_flow", RequiresApproval: true, EstimatedDays: 2},
-			{CatalogName: "域名申请", Name: "内部域名注册", Description: "注册内部系统域名", BusinessSubType: "service_request", ProcessDefinitionKey: "service_request_flow", RequiresApproval: true, EstimatedDays: 3},
-			{CatalogName: "代码仓库", Name: "Git 仓库创建", Description: "申请创建新的 Git 代码仓库", BusinessSubType: "service_request", ProcessDefinitionKey: "service_request_flow", RequiresApproval: false, EstimatedDays: 0},
-			{CatalogName: "测试环境", Name: "测试环境申请", Description: "申请预发布测试环境", BusinessSubType: "service_request", ProcessDefinitionKey: "service_request_flow", RequiresApproval: true, EstimatedDays: 2},
-			{CatalogName: "漏洞扫描", Name: "Web 漏洞扫描", Description: "申请 Web 应用安全漏洞扫描", BusinessSubType: "service_request", ProcessDefinitionKey: "service_request_flow", RequiresApproval: true, EstimatedDays: 1},
-			{CatalogName: "渗透测试", Name: "安全渗透测试", Description: "申请系统安全渗透测试", BusinessSubType: "service_request", ProcessDefinitionKey: "service_request_flow", RequiresApproval: true, EstimatedDays: 5},
+			{CatalogName: "ECS Cloud Server", Name: "ECS Instance Request", Description: "Request a new elastic cloud server instance", BusinessSubType: "service_request", ProcessDefinitionKey: "service_request_flow", RequiresApproval: true, EstimatedDays: 1},
+			{CatalogName: "ECS Cloud Server", Name: "ECS Configuration Change", Description: "Change the specifications of an existing ECS instance", BusinessSubType: "change", ProcessDefinitionKey: "change_normal_flow", RequiresApproval: true, EstimatedDays: 1},
+			{CatalogName: "ECS Cloud Server", Name: "ECS Incident Report", Description: "Report an ECS instance incident", BusinessSubType: "incident", ProcessDefinitionKey: "incident_emergency_flow", RequiresApproval: false, EstimatedDays: 0},
+			{CatalogName: "RDS Cloud Database", Name: "RDS Instance Request", Description: "Request a new database instance", BusinessSubType: "service_request", ProcessDefinitionKey: "service_request_flow", RequiresApproval: true, EstimatedDays: 1},
+			{CatalogName: "RDS Cloud Database", Name: "Database Backup Recovery", Description: "Request database backup recovery", BusinessSubType: "service_request", ProcessDefinitionKey: "service_request_flow", RequiresApproval: true, EstimatedDays: 2},
+			{CatalogName: "IT Service Desk", Name: "IT Consultation", Description: "IT questions and assistance", BusinessSubType: "ticket", ProcessDefinitionKey: "ticket_general_flow", RequiresApproval: false, EstimatedDays: 0},
+			{CatalogName: "IT Service Desk", Name: "Password Reset", Description: "Account password reset service", BusinessSubType: "service_request", ProcessDefinitionKey: "service_request_flow", RequiresApproval: false, EstimatedDays: 0},
+			{CatalogName: "Software Installation", Name: "Standard Software Installation", Description: "Install approved corporate software", BusinessSubType: "service_request", ProcessDefinitionKey: "service_request_flow", RequiresApproval: false, EstimatedDays: 1},
+			{CatalogName: "Account Request", Name: "New Employee Account Setup", Description: "Set up IT accounts and access for new employees", BusinessSubType: "service_request", ProcessDefinitionKey: "service_request_flow", RequiresApproval: true, EstimatedDays: 1},
+			{CatalogName: "Account Request", Name: "Business Access Change", Description: "Change application, database, or infrastructure access", BusinessSubType: "service_request", ProcessDefinitionKey: "service_request_flow", RequiresApproval: true, EstimatedDays: 2},
+			{CatalogName: "Network Access", Name: "Office Network Access", Description: "Request office network access", BusinessSubType: "service_request", ProcessDefinitionKey: "service_request_flow", RequiresApproval: true, EstimatedDays: 2},
+			{CatalogName: "Domain Request", Name: "Internal domain registration", Description: "Register an internal system domain", BusinessSubType: "service_request", ProcessDefinitionKey: "service_request_flow", RequiresApproval: true, EstimatedDays: 3},
+			{CatalogName: "Code Repository", Name: "Git Repository Creation", Description: "Request a new Git repository", BusinessSubType: "service_request", ProcessDefinitionKey: "service_request_flow", RequiresApproval: false, EstimatedDays: 0},
+			{CatalogName: "Test Environment", Name: "Test Environment Request", Description: "Request a staging test environment", BusinessSubType: "service_request", ProcessDefinitionKey: "service_request_flow", RequiresApproval: true, EstimatedDays: 2},
+			{CatalogName: "Vulnerability Scanning", Name: "Web Vulnerability Scan", Description: "Request a web application vulnerability scan", BusinessSubType: "service_request", ProcessDefinitionKey: "service_request_flow", RequiresApproval: true, EstimatedDays: 1},
+			{CatalogName: "Penetration Testing", Name: "Security penetration testing", Description: "Request a security penetration test", BusinessSubType: "service_request", ProcessDefinitionKey: "service_request_flow", RequiresApproval: true, EstimatedDays: 5},
 		},
 		ApprovalWorkflows: []ApprovalWorkflowSeed{
-			{Name: "P0/P1事件审批", Desc: "紧急和高优先级事件需要主管审批", TicketType: "incident", Priority: "urgent,high", Nodes: []map[string]interface{}{{"type": "approval", "name": "主管审批", "approver_type": "manager", "timeout": 60}}},
-			{Name: "变更审批", Desc: "所有变更请求需要多级审批", TicketType: "change", Priority: "", Nodes: []map[string]interface{}{{"type": "approval", "name": "技术审批", "approver_type": "role", "role": "engineer", "timeout": 240}, {"type": "approval", "name": "经理审批", "approver_type": "role", "role": "manager", "timeout": 480}}},
-			{Name: "服务请求审批", Desc: "高价值服务请求需要审批", TicketType: "service_request", Priority: "high", Nodes: []map[string]interface{}{{"type": "approval", "name": "服务审批", "approver_type": "manager", "timeout": 120}}},
+			{Name: "P0/P1 Incident Approval", Desc: "Urgent and high priority incidents require supervisor approval", TicketType: "incident", Priority: "urgent,high", Nodes: []map[string]interface{}{{"type": "approval", "name": "Supervisor Approval", "approver_type": "manager", "timeout": 60}}},
+			{Name: "Change Approval", Desc: "All change requests require multilevel approval", TicketType: "change", Priority: "", Nodes: []map[string]interface{}{{"type": "approval", "name": "Technical Approval", "approver_type": "role", "role": "engineer", "timeout": 240}, {"type": "approval", "name": "Manager Approval", "approver_type": "role", "role": "manager", "timeout": 480}}},
+			{Name: "Service Request Approval", Desc: "High value service requests require approval", TicketType: "service_request", Priority: "high", Nodes: []map[string]interface{}{{"type": "approval", "name": "Service Approval", "approver_type": "manager", "timeout": 120}}},
 		},
 		// 工单聚合只承载 ticket 域流程：这里的 incident/problem/change/service_request
 		// 是工单的 type 取值，不是 incident/problem/change 领域的单据。外域流程的服务任务
@@ -744,11 +744,11 @@ func getEmbeddedConfig() *SeedConfig {
 			{BusinessType: "ticket", ProcessDefinitionKey: "ticket_general_flow", IsDefault: true},
 		},
 		TicketViews: []TicketViewSeed{
-			{Name: "我的待办工单", Desc: "分配给我的未关闭工单", IsShared: false, Columns: []string{"id", "title", "priority", "status", "assignee", "created_at"}},
-			{Name: "我创建的工单", Desc: "我提交的工单", IsShared: false, Columns: []string{"id", "title", "priority", "status", "assignee", "created_at"}},
-			{Name: "紧急工单", Desc: "紧急和高优先级工单", IsShared: true, Columns: []string{"id", "title", "priority", "status", "assignee", "created_at"}},
-			{Name: "未分配工单", Desc: "尚未分配的工单", IsShared: true, Columns: []string{"id", "title", "priority", "status", "creator", "created_at"}},
-			{Name: "已关闭工单", Desc: "已完成的工单", IsShared: false, Columns: []string{"id", "title", "priority", "status", "assignee", "closed_at"}},
+			{Name: "My Pending Tickets", Desc: "Open tickets assigned to me", IsShared: false, Columns: []string{"id", "title", "priority", "status", "assignee", "created_at"}},
+			{Name: "Tickets I Created", Desc: "Tickets submitted by me", IsShared: false, Columns: []string{"id", "title", "priority", "status", "assignee", "created_at"}},
+			{Name: "Urgent Tickets", Desc: "Urgent and high priority tickets", IsShared: true, Columns: []string{"id", "title", "priority", "status", "assignee", "created_at"}},
+			{Name: "Unassigned Tickets", Desc: "Tickets awaiting assignment", IsShared: true, Columns: []string{"id", "title", "priority", "status", "creator", "created_at"}},
+			{Name: "Closed Tickets", Desc: "Completed tickets", IsShared: false, Columns: []string{"id", "title", "priority", "status", "assignee", "closed_at"}},
 		},
 	}
 }
@@ -1056,8 +1056,8 @@ func (s *Seeder) seedAdmin(ctx context.Context) error {
 		SetRole("super_admin").
 		SetPasswordHash(string(passHash)).
 		SetEmail("admin@example.com").
-		SetName("系统管理员").
-		SetDepartment("IT部门").
+		SetName("System Administrator").
+		SetDepartment("IT Department").
 		SetActive(true).
 		SetTenantID(t.ID).
 		Save(ctx); err != nil {
@@ -1188,12 +1188,12 @@ func teamCode(spec TeamSeed) string {
 // 见 ExpandGroupsToUsers 与 resolveLegacyApprovalAssignee。
 func BuiltinGroups() []GroupSeed {
 	return []GroupSeed{
-		{Name: "approvers-l1", Description: "一线审批组：从 agent 角色人员中拉人组成"},
-		{Name: "approvers-l2", Description: "二线审批组：从 technician / it_admin 角色人员中拉人组成"},
-		{Name: "approvers-l3", Description: "三线审批组：从 it_admin / security_admin 角色人员中拉人组成"},
-		{Name: "approvers-managers", Description: "管理审批组：从 manager 角色人员中拉人组成"},
-		{Name: "approvers-security", Description: "安全审批组：从 security_admin 角色人员中拉人组成"},
-		{Name: "approvers-change", Description: "变更审批组：从 change_manager / manager 角色人员中拉人组成（变更委员会）"},
+		{Name: "approvers-l1", Description: "First-line approval group: add members with the agent role"},
+		{Name: "approvers-l2", Description: "Second-line approval group: add members with technician or it_admin roles"},
+		{Name: "approvers-l3", Description: "Third-line approval group: add members with it_admin or security_admin roles"},
+		{Name: "approvers-managers", Description: "Management approval group: add members with the manager role"},
+		{Name: "approvers-security", Description: "Security approval group: add members with the security_admin role"},
+		{Name: "approvers-change", Description: "Change advisory board: add members with change_manager or manager roles"},
 	}
 }
 
@@ -1251,16 +1251,16 @@ func (s *Seeder) seedGroups(ctx context.Context) {
 // ITIL 实践角色与 MSP 协作角色由 PracticeRoles 提供，只通过 user_roles 边叠加。
 func BuiltinRoles() []RoleSeed {
 	return []RoleSeed{
-		{Code: domainrole.SuperAdmin, Name: "超级管理员", Description: "全部权限，跨租户引导", IsSystem: true},
-		{Code: domainrole.Admin, Name: "租户管理员", Description: "租户内业务与配置全量管理", IsSystem: true},
-		{Code: domainrole.SysAdmin, Name: "系统管理员", Description: "等保三员①：系统与集成运维", IsSystem: true},
-		{Code: domainrole.SecurityAdmin, Name: "安全管理员", Description: "等保三员②：安全策略与合规，L3 审批人", IsSystem: true},
-		{Code: domainrole.AuditAdmin, Name: "安全审计员", Description: "等保三员③：全域只读与审计轨迹", IsSystem: true},
-		{Code: domainrole.ITAdmin, Name: "IT管理员", Description: "ITIL 流程运营，L2 审批人", IsSystem: true},
-		{Code: domainrole.Manager, Name: "部门经理", Description: "部门审批与 L1 审批人", IsSystem: true},
-		{Code: domainrole.Agent, Name: "服务台坐席", Description: "一线支持与工单处理", IsSystem: true},
-		{Code: domainrole.Technician, Name: "技术员", Description: "二线技术处理", IsSystem: true},
-		{Code: domainrole.EndUser, Name: "最终用户", Description: "服务请求与查看本人工单", IsSystem: true},
+		{Code: domainrole.SuperAdmin, Name: "Super Administrator", Description: "Full access and cross-tenant initialization", IsSystem: true},
+		{Code: domainrole.Admin, Name: "Tenant Administrator", Description: "Manage all tenant operations and configuration", IsSystem: true},
+		{Code: domainrole.SysAdmin, Name: "System Administrator", Description: "System administration and integration operations", IsSystem: true},
+		{Code: domainrole.SecurityAdmin, Name: "Security Administrator", Description: "Security policies, compliance, and L3 approvals", IsSystem: true},
+		{Code: domainrole.AuditAdmin, Name: "Security Auditor", Description: "Read-only access and audit trails", IsSystem: true},
+		{Code: domainrole.ITAdmin, Name: "IT Administrator", Description: "ITIL process operations and L2 approvals", IsSystem: true},
+		{Code: domainrole.Manager, Name: "Department Manager", Description: "Department and L1 approvals", IsSystem: true},
+		{Code: domainrole.Agent, Name: "Service Desk Agent", Description: "First-line support and ticket handling", IsSystem: true},
+		{Code: domainrole.Technician, Name: "Technician", Description: "Second-line technical support", IsSystem: true},
+		{Code: domainrole.EndUser, Name: "End User", Description: "Submit service requests and view own tickets", IsSystem: true},
 	}
 }
 
@@ -1269,16 +1269,16 @@ func BuiltinRoles() []RoleSeed {
 // is_system=false 是有意的：租户可按需增删这些协作身份，但内置主角色受保护。
 func PracticeRoles() []RoleSeed {
 	return []RoleSeed{
-		{Code: domainrole.ChangeManager, Name: "变更经理", Description: "变更生命周期、CAB 与发布联动", IsSystem: false},
-		{Code: domainrole.ProblemManager, Name: "问题经理", Description: "根因分析、已知错误与变通方案", IsSystem: false},
-		{Code: domainrole.KnowledgeManager, Name: "知识管理员", Description: "知识文章生命周期与评审发布", IsSystem: false},
-		{Code: domainrole.CmdbAdmin, Name: "配置管理员", Description: "CI 类型/实例/关系与对账", IsSystem: false},
-		{Code: domainrole.ServiceCatalogAdmin, Name: "服务目录管理员", Description: "服务目录、请求模板与工单模板配置", IsSystem: false},
-		{Code: domainrole.MspViewer, Name: "MSP查看者", Description: "MSP 客户工单只读协作", IsSystem: false},
-		{Code: domainrole.MspTech, Name: "MSP技术员", Description: "MSP 派单处理协作", IsSystem: false},
-		{Code: domainrole.MspSpecialist, Name: "MSP专家", Description: "MSP 专家级处理与客户维护", IsSystem: false},
-		{Code: domainrole.MspManager, Name: "MSP经理", Description: "MSP 交付与资源分配管理", IsSystem: false},
-		{Code: domainrole.MspAdmin, Name: "MSP管理员", Description: "MSP 全量协作管理", IsSystem: false},
+		{Code: domainrole.ChangeManager, Name: "Change Manager", Description: "Change lifecycle, CAB reviews, and release coordination", IsSystem: false},
+		{Code: domainrole.ProblemManager, Name: "Problem Manager", Description: "Root cause analysis, known errors, and workarounds", IsSystem: false},
+		{Code: domainrole.KnowledgeManager, Name: "Knowledge Administrator", Description: "Knowledge article lifecycle, review, and publishing", IsSystem: false},
+		{Code: domainrole.CmdbAdmin, Name: "Configuration Administrator", Description: "CI types, instances, relationships, and reconciliation", IsSystem: false},
+		{Code: domainrole.ServiceCatalogAdmin, Name: "Service Catalog Administrator", Description: "Service catalogs, request templates, and ticket templates", IsSystem: false},
+		{Code: domainrole.MspViewer, Name: "MSP Viewer", Description: "Read-only collaboration on MSP customer tickets", IsSystem: false},
+		{Code: domainrole.MspTech, Name: "MSP Technician", Description: "MSP ticket assignment and handling", IsSystem: false},
+		{Code: domainrole.MspSpecialist, Name: "MSP Specialist", Description: "MSP specialist support and customer management", IsSystem: false},
+		{Code: domainrole.MspManager, Name: "MSP Manager", Description: "MSP delivery and resource allocation", IsSystem: false},
+		{Code: domainrole.MspAdmin, Name: "MSP Administrator", Description: "Full MSP collaboration management", IsSystem: false},
 	}
 }
 
@@ -1418,7 +1418,7 @@ func (s *Seeder) seedSLADefinitions(ctx context.Context) error {
 	created := 0
 	for _, sla := range s.config.SLADefinitions {
 		exists, err := s.client.SLADefinition.Query().
-			Where(sladefinition.TenantIDEQ(t.ID), sladefinition.NameEQ(sla.Name)).
+			Where(sladefinition.TenantIDEQ(t.ID), sladefinition.NameIn(builtinSeedNames("sla_definitions", sla.Name)...)).
 			Exist(ctx)
 		if err != nil {
 			return fmt.Errorf("check SLA definition %s: %w", sla.Name, err)
@@ -1463,6 +1463,25 @@ func (s *Seeder) seedSLAPolicies(ctx context.Context) {
 		existing, err := s.client.SLAPolicy.Query().
 			Where(slapolicy.TenantIDEQ(t.ID), slapolicy.NameEQ(sla.Name)).
 			First(ctx)
+		if ent.IsNotFound(err) {
+			// A legacy name identifies an existing tenant-owned policy. The
+			// translation migration may have skipped it due to customization;
+			// recognizing its identity must not reset its configured behavior.
+			for _, name := range builtinSeedNames("sla_policies", sla.Name)[1:] {
+				existing, err = s.client.SLAPolicy.Query().
+					Where(slapolicy.TenantIDEQ(t.ID), slapolicy.NameEQ(name)).First(ctx)
+				if !ent.IsNotFound(err) {
+					break
+				}
+			}
+			if err == nil {
+				continue
+			}
+		}
+		if err != nil && !ent.IsNotFound(err) {
+			s.sugar.Warnw("query SLA policy failed", "error", err, "name", sla.Name)
+			continue
+		}
 		if err == nil {
 			_, err = existing.Update().
 				SetDescription(sla.Description).
@@ -1506,8 +1525,8 @@ func (s *Seeder) seedSLAPolicies(ctx context.Context) {
 func defaultSLAPolicySeeds() []SLAPolicySeed {
 	return []SLAPolicySeed{
 		{
-			Name:                  "默认P1事件SLA",
-			Description:           "高优先级事件响应与解决策略",
+			Name:                  "Default P1 Incident SLA",
+			Description:           "High priority incident response and resolution policy",
 			Priority:              "high",
 			ResponseTimeMinutes:   30,
 			ResolutionTimeMinutes: 240,
@@ -1517,8 +1536,8 @@ func defaultSLAPolicySeeds() []SLAPolicySeed {
 			PriorityScore:         90,
 		},
 		{
-			Name:                  "默认P2事件SLA",
-			Description:           "中优先级事件响应与解决策略",
+			Name:                  "Default P2 Incident SLA",
+			Description:           "Medium priority incident response and resolution policy",
 			Priority:              "medium",
 			ResponseTimeMinutes:   120,
 			ResolutionTimeMinutes: 1440,
@@ -1528,8 +1547,8 @@ func defaultSLAPolicySeeds() []SLAPolicySeed {
 			PriorityScore:         60,
 		},
 		{
-			Name:                  "默认服务请求SLA",
-			Description:           "标准服务请求履约策略",
+			Name:                  "Default Service Request SLA",
+			Description:           "Standard service request fulfillment policy",
 			Priority:              "low",
 			ResponseTimeMinutes:   240,
 			ResolutionTimeMinutes: 2880,
@@ -1581,8 +1600,8 @@ func (s *Seeder) seedSLAAlertRules(ctx context.Context) error {
 			AlertLevel string
 			Threshold  int
 		}{
-			{Name: sla.Name + "-响应告警", AlertLevel: "warning", Threshold: 50},
-			{Name: sla.Name + "-解决告警", AlertLevel: "critical", Threshold: 80},
+			{Name: sla.Name + "-Response Alert", AlertLevel: "warning", Threshold: 50},
+			{Name: sla.Name + "-Resolution Alert", AlertLevel: "critical", Threshold: 80},
 		}
 		for _, rule := range rules {
 			if _, err := s.client.SLAAlertRule.Create().
@@ -1613,7 +1632,7 @@ func (s *Seeder) seedApprovalWorkflows(ctx context.Context) error {
 	created := 0
 	for _, wf := range s.config.ApprovalWorkflows {
 		exists, err := s.client.ApprovalWorkflow.Query().
-			Where(approvalworkflow.TenantIDEQ(t.ID), approvalworkflow.NameEQ(wf.Name)).
+			Where(approvalworkflow.TenantIDEQ(t.ID), approvalworkflow.NameIn(builtinSeedNames("approval_workflows", wf.Name)...)).
 			Exist(ctx)
 		if err != nil {
 			return fmt.Errorf("check approval workflow %s: %w", wf.Name, err)
@@ -1780,7 +1799,7 @@ func (s *Seeder) seedTicketViews(ctx context.Context) error {
 	created := 0
 	for _, v := range s.config.TicketViews {
 		exists, err := s.client.TicketView.Query().
-			Where(ticketview.TenantIDEQ(t.ID), ticketview.NameEQ(v.Name)).
+			Where(ticketview.TenantIDEQ(t.ID), ticketview.NameIn(builtinSeedNames("ticket_views", v.Name)...)).
 			Exist(ctx)
 		if err != nil {
 			return fmt.Errorf("check ticket view %s: %w", v.Name, err)
@@ -1790,15 +1809,15 @@ func (s *Seeder) seedTicketViews(ctx context.Context) error {
 		}
 
 		filters := map[string]interface{}{}
-		if v.Name == "我的待办工单" {
+		if v.Name == "My Pending Tickets" || v.Name == "我的待办工单" {
 			filters = map[string]interface{}{"assignee_id": admin.ID, "status": []string{"open", "in_progress", "pending"}}
-		} else if v.Name == "我创建的工单" {
+		} else if v.Name == "Tickets I Created" || v.Name == "我创建的工单" {
 			filters = map[string]interface{}{"creator_id": admin.ID}
-		} else if v.Name == "紧急工单" {
+		} else if v.Name == "Urgent Tickets" || v.Name == "紧急工单" {
 			filters = map[string]interface{}{"priority": []string{"urgent", "high"}}
-		} else if v.Name == "未分配工单" {
+		} else if v.Name == "Unassigned Tickets" || v.Name == "未分配工单" {
 			filters = map[string]interface{}{"assignee_id": nil, "status": []string{"open"}}
-		} else if v.Name == "已关闭工单" {
+		} else if v.Name == "Closed Tickets" || v.Name == "已关闭工单" {
 			filters = map[string]interface{}{"status": []string{"closed", "resolved"}}
 		}
 
@@ -2261,7 +2280,7 @@ func (s *Seeder) seedServiceCatalog(ctx context.Context) error {
 	for _, svc := range s.config.ServiceCatalog {
 		exists, err := s.client.ServiceCatalog.Query().Where(
 			servicecatalog.TenantIDEQ(t.ID),
-			servicecatalog.NameEQ(svc.Name),
+			servicecatalog.NameIn(builtinSeedNames("service_catalogs", svc.Name)...),
 		).Exist(ctx)
 		if err != nil {
 			return fmt.Errorf("check service catalog %s: %w", svc.Name, err)
@@ -2318,13 +2337,21 @@ func (s *Seeder) seedServiceCatalogItems(ctx context.Context) error {
 	for _, item := range s.config.ServiceCatalogItems {
 		parentID, ok := parentIDs[item.CatalogName]
 		if !ok {
+			for _, legacyName := range builtinSeedNames("service_catalogs", item.CatalogName) {
+				if id, found := parentIDs[legacyName]; found {
+					parentID, ok = id, true
+					break
+				}
+			}
+		}
+		if !ok {
 			return fmt.Errorf("service catalog item %s references unknown catalog %s", item.Name, item.CatalogName)
 		}
 
 		exists, err := s.client.ServiceCatalogItem.Query().Where(
 			servicecatalogitem.TenantIDEQ(t.ID),
 			servicecatalogitem.CatalogIDEQ(parentID),
-			servicecatalogitem.NameEQ(item.Name),
+			servicecatalogitem.NameIn(builtinSeedNames("service_catalog_items", item.Name)...),
 		).Exist(ctx)
 		if err != nil {
 			return fmt.Errorf("check service catalog item %s: %w", item.Name, err)
@@ -2453,7 +2480,7 @@ func (s *Seeder) seedStandardChanges(ctx context.Context) error {
 	created := 0
 	for _, sc := range s.expectedStandardChanges() {
 		exists, err := s.client.StandardChange.Query().
-			Where(standardchange.TenantIDEQ(t.ID), standardchange.TitleEQ(sc.Title)).
+			Where(standardchange.TenantIDEQ(t.ID), standardchange.TitleIn(builtinSeedNames("standard_changes", sc.Title)...)).
 			Exist(ctx)
 		if err != nil {
 			return fmt.Errorf("check standard change %s: %w", sc.Title, err)
@@ -2513,7 +2540,7 @@ func (s *Seeder) seedTicketTags(ctx context.Context) error {
 		// 幂等键用 (tenant_id, name)：ticket_tags 没有 code 列，
 		// 且 name 是该域对外的唯一标识（创建/更新/解析全按 name）。
 		exists, err := s.client.TicketTag.Query().
-			Where(tickettag.TenantIDEQ(t.ID), tickettag.NameEQ(ticketTag.Name)).
+			Where(tickettag.TenantIDEQ(t.ID), tickettag.NameIn(builtinSeedNames("ticket_tags", ticketTag.Name)...)).
 			Exist(ctx)
 		if err != nil {
 			return fmt.Errorf("check ticket tag %s: %w", ticketTag.Name, err)
@@ -2683,7 +2710,7 @@ func marketplaceSeedStatus(raw string) (marketplaceitem.Status, error) {
 		marketplaceitem.StatusDeprecated:
 		return status, nil
 	default:
-		return "", fmt.Errorf("未知的 status %q", raw)
+		return "", fmt.Errorf("Unknown status %q", raw)
 	}
 }
 
@@ -2697,13 +2724,13 @@ func validateMarketplaceSeed(item MarketplaceItemSeed) error {
 	}
 	locator := strings.TrimSpace(item.ManifestPath)
 	if locator == "" {
-		return fmt.Errorf("技能商品缺少 manifest_path（应形如 skill://ai.triage）")
+		return fmt.Errorf("The skill product is missing manifest_path (should be in the form of skill://ai.triage)")
 	}
 	if !strings.HasPrefix(locator, "skill://") {
-		return fmt.Errorf("技能商品的 manifest_path 必须是 skill://<技能码>，当前为 %q", locator)
+		return fmt.Errorf("The manifest_path of the skill product must be skill://<skill code>, currently it is %q", locator)
 	}
 	if strings.TrimSpace(strings.TrimPrefix(locator, "skill://")) == "" {
-		return fmt.Errorf("技能商品的 manifest_path 缺少技能码：%q", locator)
+		return fmt.Errorf("The manifest_path of the skill product is missing the skill code: %q", locator)
 	}
 	return nil
 }
@@ -2712,7 +2739,7 @@ func validateMarketplaceSeed(item MarketplaceItemSeed) error {
 func (s *Seeder) seedMarketplaceItemVersion(ctx context.Context, item *ent.MarketplaceItem, seed MarketplaceItemSeed) (int, error) {
 	version := strings.TrimSpace(item.LatestVersion)
 	if version == "" {
-		return 0, fmt.Errorf("marketplace item %s 没有 latest_version，无法写版本行", item.Name)
+		return 0, fmt.Errorf("marketplace item %s does not have latest_version, cannot write version line", item.Name)
 	}
 	exists, err := s.client.ItemVersion.Query().
 		Where(itemversion.ItemID(item.ID), itemversion.Version(version)).

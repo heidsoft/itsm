@@ -1,6 +1,6 @@
 interface UserPreferences {
   theme: 'light' | 'dark' | 'auto';
-  language: 'zh-CN' | 'en-US';
+  language: 'en-US';
   timezone: string;
   dateFormat: string;
   pageSize: number;
@@ -24,7 +24,7 @@ interface UserPreferences {
 
 const defaultPreferences: UserPreferences = {
   theme: 'light',
-  language: 'zh-CN',
+  language: 'en-US',
   timezone: 'Asia/Shanghai',
   dateFormat: 'YYYY-MM-DD HH:mm:ss',
   pageSize: 20,
@@ -52,7 +52,7 @@ class UserPreferencesManager {
 
     try {
       const saved = localStorage.getItem('user_preferences');
-      return saved ? { ...defaultPreferences, ...JSON.parse(saved) } : defaultPreferences;
+      return saved ? { ...defaultPreferences, ...JSON.parse(saved), language: 'en-US' } : defaultPreferences;
     } catch {
       return defaultPreferences;
     }
@@ -69,7 +69,7 @@ class UserPreferencesManager {
   }
 
   update(updates: Partial<UserPreferences>) {
-    this.preferences = { ...this.preferences, ...updates };
+    this.preferences = { ...this.preferences, ...updates, language: 'en-US' };
     this.savePreferences();
   }
 

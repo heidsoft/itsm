@@ -72,7 +72,7 @@ export default function DepartmentProcessPage() {
       setDepartments(flattenDepartments(data));
     } catch (error) {
       console.error('Failed to load departments:', error);
-      message.error('加载部门失败');
+      message.error('Failed to load department');
     }
   };
 
@@ -83,7 +83,7 @@ export default function DepartmentProcessPage() {
       setDeptProcesses(data);
     } catch (error) {
       console.error('Failed to load department processes:', error);
-      message.error('加载部门流程失败');
+      message.error('Failed to load department process');
     } finally {
       setLoading(false);
     }
@@ -94,12 +94,12 @@ export default function DepartmentProcessPage() {
 
     try {
       await ProcessBindingApi.initDepartmentProcesses(selectedDeptId, departmentType);
-      message.success('部门流程初始化成功');
+      message.success('Department process initialization successful');
       loadDeptProcesses(selectedDeptId);
       setShowInitModal(false);
     } catch (error) {
       console.error('Failed to initialize department processes:', error);
-      message.error('初始化部门流程失败');
+      message.error('Failed to initialize department process');
     }
   };
 
@@ -133,39 +133,39 @@ export default function DepartmentProcessPage() {
   // Table columns
   const columns = [
     {
-      title: '场景',
+      title: 'Scene',
       dataIndex: 'scenario',
       key: 'scenario',
       render: (scenario: string) => (
         <Tag color={getScenarioColor(scenario)}>
-          {scenario || '默认'}
+          {scenario || 'Default'}
         </Tag>
       ),
     },
     {
-      title: '业务类型',
+      title: 'Business Type',
       dataIndex:'businessType',
       key:'businessType',
       render: (type: string) => <Tag>{type}</Tag>,
     },
     {
-      title: '流程定义',
+      title: 'Process Definitions',
       dataIndex:'processDefinitionKey',
       key:'processDefinitionKey',
       render: (key: string) => <Tag color="cyan">{key}</Tag>,
     },
     {
-      title: '优先级',
+      title: 'Priority',
       dataIndex: 'priority',
       key: 'priority',
     },
     {
-      title: '状态',
+      title: 'Status',
       dataIndex: 'isActive',
       key: 'isActive',
       render: (active: boolean) => (
         <Tag icon={active ? <CheckCircle /> : <AlertTriangle />} color={active ? 'success' : 'error'}>
-          {active ? '启用' : '停用'}
+          {active ? 'Enabled' : 'Disable'}
         </Tag>
       ),
     },
@@ -184,13 +184,13 @@ export default function DepartmentProcessPage() {
       <Alert
         type="info"
         showIcon
-        title="部门流程配置用于查看各部门已绑定的流程"
+        title="Department process configuration is used to view the processes bound to each department"
       />
-      <Card title="部门流程配置">
+      <Card title="Department process configuration">
         <Row gutter={24}>
           {/* Department Tree */}
           <Col span={8}>
-            <Card title="部门列表" size="small">
+            <Card title="Department list" size="small">
               <Tree
                 showIcon
                 treeData={buildDeptTree(departments)}
@@ -211,13 +211,13 @@ export default function DepartmentProcessPage() {
                 {/* Department Info */}
                 <Card size="small" style={{ marginBottom: 16 }}>
                   <Descriptions size="small">
-                    <Descriptions.Item label="部门名称">
+                    <Descriptions.Item label="Department Name">
                       {selectedDept?.name}
                     </Descriptions.Item>
-                    <Descriptions.Item label="编码">
+                    <Descriptions.Item label="Encoding">
                       <Tag>{selectedDept?.code}</Tag>
                     </Descriptions.Item>
-                    <Descriptions.Item label="描述">
+                    <Descriptions.Item label="Description">
                       {selectedDept?.description || '-'}
                     </Descriptions.Item>
                   </Descriptions>
@@ -227,17 +227,17 @@ export default function DepartmentProcessPage() {
                 <Row gutter={16} style={{ marginBottom: 16 }}>
                   <Col span={8}>
                     <Card size="small">
-                      <Statistic title="流程总数" value={stats.total} />
+                      <Statistic title="Total number of processes" value={stats.total} />
                     </Card>
                   </Col>
                   <Col span={8}>
                     <Card size="small">
-                      <Statistic title="已启用" value={stats.active} styles={{ content: { color: '#3f8600' } }} />
+                      <Statistic title="Enabled" value={stats.active} styles={{ content: { color: '#3f8600' } }} />
                     </Card>
                   </Col>
                   <Col span={8}>
                     <Card size="small">
-                      <Statistic title="场景数" value={stats.scenarios} />
+                      <Statistic title="Number of scenes" value={stats.scenarios} />
                     </Card>
                   </Col>
                 </Row>
@@ -250,13 +250,15 @@ export default function DepartmentProcessPage() {
                       icon={<Plus />}
                       onClick={() => setShowInitModal(true)}
                     >
-                      初始化默认流程模板
+
+                      Initialize default process template
                     </Button>
                     <Button
                       icon={<RefreshCw />}
                       onClick={() => loadDeptProcesses(selectedDeptId)}
                     >
-                      刷新
+
+                      Refresh
                     </Button>
                   </Space>
                 </Card>
@@ -276,7 +278,7 @@ export default function DepartmentProcessPage() {
               <Card>
                 <div style={{ textAlign: 'center', padding: 48, color: '#999' }}>
                   <Building2 style={{ width: 48, height: 48, marginBottom: 16 }} />
-                  <p>请从左侧选择一个部门查看流程配置</p>
+                  <p>Please select a department from the left to view the process configuration</p>
                 </div>
               </Card>
             )}
@@ -286,23 +288,23 @@ export default function DepartmentProcessPage() {
 
       {/* Initialize Modal */}
       <Modal
-        title="初始化部门流程"
+        title="Initialize department process"
         open={showInitModal}
         onCancel={() => setShowInitModal(false)}
         onOk={handleInitDefaults}
       >
         <Alert
-          title="将为所选部门创建默认流程模板（不会影响已有配置）"
+          title="A default process template will be created for the selected department (will not affect existing configuration)"
           type="info"
           showIcon
           style={{ marginBottom: 16 }}
         />
         <Form layout="vertical">
-          <Form.Item label="部门类型">
+          <Form.Item label="Department type">
             <Select
               value={departmentType}
               onChange={setDepartmentType}
-              options={[{ value: 'operations', label: '运维（告警处理、变更发布）' }, { value: 'rd', label: '研发（代码发布、需求变更）' }, { value: 'finance', label: '财务（费用审批、预算管理）' }, { value: 'hr', label: '人力（请假、招聘）' }]}
+              options={[{ value: 'operations', label: 'Operation and maintenance (alarm processing, change release)' }, { value: 'rd', label: 'Research and development (code release, requirement changes)' }, { value: 'finance', label: 'Finance (expense approval, budget management)' }, { value: 'hr', label: 'Manpower (leave, recruitment)' }]}
             />
           </Form.Item>
         </Form>

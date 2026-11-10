@@ -44,18 +44,18 @@ func (p *ECSProvider) Execute(ctx context.Context, req cloud.ExecuteRequest) (*c
 		return nil, err
 	}
 	if strings.TrimSpace(req.Region) == "" {
-		return nil, fmt.Errorf("交付参数缺少 regionId")
+		return nil, fmt.Errorf("Delivery parameter missing regionId")
 	}
 	if req.Credential.AccessKeyID == "" || req.Credential.AccessKeySecret == "" {
-		return nil, fmt.Errorf("阿里云凭据不完整，拒绝发起交付")
+		return nil, fmt.Errorf("Alibaba Cloud credentials are incomplete and delivery is refused.")
 	}
 	if strings.TrimSpace(req.ClientToken) == "" {
-		return nil, fmt.Errorf("交付任务缺少幂等键，拒绝发起交付")
+		return nil, fmt.Errorf("The delivery task lacks an idempotent key and the delivery is refused.")
 	}
 
 	client, err := newECSClient(req.Region, req.Credential)
 	if err != nil {
-		return nil, fmt.Errorf("创建阿里云 ECS 客户端失败: %w", err)
+		return nil, fmt.Errorf("Failed to create Alibaba Cloud ECS client: %w", err)
 	}
 
 	runReq := buildRunInstancesRequest(req, params)
@@ -65,12 +65,12 @@ func (p *ECSProvider) Execute(ctx context.Context, req cloud.ExecuteRequest) (*c
 		// 业务拒绝（余额不足/配额/参数不存在）重试不会成功，标成永久错误让上层
 		// 停止自动重投；网络抖动、限流、5xx 仍按可重试处理。
 		if code := aliyunErrorCode(err); code != "" && isPermanentAliyunCode(code) {
-			return nil, fmt.Errorf("%w: 阿里云 RunInstances 失败: %s", cloud.ErrPermanent, suffix)
+			return nil, fmt.Errorf("%w: Alibaba Cloud RunInstances failed: %s", cloud.ErrPermanent, suffix)
 		}
-		return nil, fmt.Errorf("阿里云 RunInstances 失败: %s", suffix)
+		return nil, fmt.Errorf("Alibaba Cloud RunInstances failed: %s", suffix)
 	}
 	if resp == nil || resp.Body == nil || resp.Body.InstanceIdSets == nil {
-		return nil, fmt.Errorf("阿里云 RunInstances 未返回实例集合")
+		return nil, fmt.Errorf("Alibaba Cloud RunInstances did not return the instance collection")
 	}
 
 	instanceIDs := make([]string, 0, len(resp.Body.InstanceIdSets.InstanceIdSet))
@@ -80,7 +80,7 @@ func (p *ECSProvider) Execute(ctx context.Context, req cloud.ExecuteRequest) (*c
 		}
 	}
 	if len(instanceIDs) == 0 {
-		return nil, fmt.Errorf("阿里云 RunInstances 返回成功但未返回实例 ID，拒绝标记交付成功")
+		return nil, fmt.Errorf("Alibaba Cloud RunInstances returns successfully but does not return the instance ID, rejecting the mark delivery successfully")
 	}
 
 	result := map[string]string{
@@ -126,12 +126,12 @@ type ecsLaunchParams struct {
 
 func parseECSLaunchParams(payload map[string]any) (*ecsLaunchParams, error) {
 	if payload == nil {
-		return nil, fmt.Errorf("交付参数为空")
+		return nil, fmt.Errorf("Delivery parameter is empty")
 	}
 	if needsPublicIP, _ := payload["needsPublicIp"].(bool); needsPublicIP {
 		// 公网交付必须先落实源 IP 白名单。当前 Provider 没有安全组规则管理权限，
 		// 无法证明白名单已生效，因此明确拒绝，而不是开出一台全公网可达的机器。
-		return nil, fmt.Errorf("当前交付未开放公网 IP：源 IP 白名单需要安全组规则管理权限，请先按内网实例交付或由运维预置受限安全组")
+		return nil, fmt.Errorf("The current delivery does not open public IP: the source IP whitelist requires security group rule management rights. Please first deliver it according to the intranet instance or preset the restricted security group by operation and maintenance.")
 	}
 
 	params := &ecsLaunchParams{
@@ -164,7 +164,7 @@ func parseECSLaunchParams(payload map[string]any) (*ecsLaunchParams, error) {
 		missing = append(missing, "vSwitchId")
 	}
 	if len(missing) > 0 {
-		return nil, fmt.Errorf("交付参数缺少必填字段: %s", strings.Join(missing, ", "))
+		return nil, fmt.Errorf("Delivery parameters are missing required fields: %s", strings.Join(missing, ", "))
 	}
 
 	if size := stringParam(payload, "systemDiskSize"); size != "" {
@@ -174,7 +174,7 @@ func parseECSLaunchParams(payload map[string]any) (*ecsLaunchParams, error) {
 		params.InstanceChargeType = "PostPaid"
 	}
 	if params.InstanceChargeType != "PostPaid" {
-		return nil, fmt.Errorf("当前只支持按量付费（instanceChargeType=PostPaid），拒绝创建 %s 实例", params.InstanceChargeType)
+		return nil, fmt.Errorf("Currently only pay-as-you-go (instanceChargeType=PostPaid) is supported, and the creation of %s instance is refused.", params.InstanceChargeType)
 	}
 	if amount := int32Param(payload, "quantity", 1); amount > 1 && amount <= 100 {
 		params.Amount = amount
@@ -265,10 +265,10 @@ func BuildDryRunRequest(req cloud.ExecuteRequest) (*ecs.RunInstancesRequest, err
 		return nil, err
 	}
 	if strings.TrimSpace(req.Region) == "" {
-		return nil, fmt.Errorf("交付参数缺少 regionId")
+		return nil, fmt.Errorf("Delivery parameter missing regionId")
 	}
 	if strings.TrimSpace(req.ClientToken) == "" {
-		return nil, fmt.Errorf("交付任务缺少幂等键，拒绝发起校验")
+		return nil, fmt.Errorf("The delivery task lacks an idempotent key and the verification is refused.")
 	}
 	runReq := buildRunInstancesRequest(req, params)
 	runReq.DryRun = tea.Bool(true)

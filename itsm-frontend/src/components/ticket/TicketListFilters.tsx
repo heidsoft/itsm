@@ -61,7 +61,7 @@ export function TicketListFilters({ values, onChange, onClear }: TicketListFilte
       <Row gutter={[16, 16]}>
         <Col xs={24} sm={12} md={6}>
           <Select<TicketStatus>
-            placeholder='状态'
+            placeholder="Status"
             value={values.status}
             onChange={handleStatusChange}
             allowClear
@@ -71,7 +71,7 @@ export function TicketListFilters({ values, onChange, onClear }: TicketListFilte
         </Col>
         <Col xs={24} sm={12} md={6}>
           <Select<TicketPriority>
-            placeholder='优先级'
+            placeholder="Priority"
             value={values.priority}
             onChange={handlePriorityChange}
             allowClear
@@ -81,7 +81,7 @@ export function TicketListFilters({ values, onChange, onClear }: TicketListFilte
         </Col>
         <Col xs={24} sm={12} md={6}>
           <Select<TicketType>
-            placeholder='类型'
+            placeholder="Type"
             value={values.type}
             onChange={handleTypeChange}
             allowClear
@@ -91,7 +91,7 @@ export function TicketListFilters({ values, onChange, onClear }: TicketListFilte
         </Col>
         <Col xs={24} sm={12} md={6}>
           <RangePicker
-            placeholder={['开始日期', '结束日期']}
+            placeholder={['Start Date', 'end date']}
             value={values.createdRange ? (values.createdRange as [Dayjs, Dayjs]) : null}
             onChange={dates => handleDateChange(dates as readonly [Dayjs, Dayjs] | null)}
             style={{ width: '100%' }}
@@ -100,7 +100,7 @@ export function TicketListFilters({ values, onChange, onClear }: TicketListFilte
       </Row>
       <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
         <Col>
-          <Button onClick={onClear}>清空过滤器</Button>
+          <Button onClick={onClear}>Clear filter</Button>
         </Col>
       </Row>
     </>

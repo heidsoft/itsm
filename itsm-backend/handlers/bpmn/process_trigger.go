@@ -84,7 +84,7 @@ func (c *ProcessTriggerHandler) RegisterRoutes(r *gin.RouterGroup) {
 func (c *ProcessTriggerHandler) TriggerProcess(ctx *gin.Context) {
 	var req dto.ProcessTriggerRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(ctx, err, "请求参数错误")
+		common.ParamErrorWithErr(ctx, err, "Wrong request parameters")
 		return
 	}
 
@@ -98,7 +98,7 @@ func (c *ProcessTriggerHandler) TriggerProcess(ctx *gin.Context) {
 
 	result, err := c.triggerService.TriggerProcess(ctx.Request.Context(), &req)
 	if err != nil {
-		common.RespondError(ctx, err, "触发流程失败")
+		common.RespondError(ctx, err, "Failed to trigger process")
 		return
 	}
 
@@ -109,7 +109,7 @@ func (c *ProcessTriggerHandler) TriggerProcess(ctx *gin.Context) {
 func (c *ProcessTriggerHandler) GetProcessStatus(ctx *gin.Context) {
 	instanceID, err := strconv.Atoi(ctx.Param("instance_id"))
 	if err != nil {
-		common.Fail(ctx, 1001, "无效的流程实例ID")
+		common.Fail(ctx, 1001, "Invalid process instance ID")
 		return
 	}
 
@@ -120,7 +120,7 @@ func (c *ProcessTriggerHandler) GetProcessStatus(ctx *gin.Context) {
 
 	result, err := c.triggerService.GetProcessStatus(ctx.Request.Context(), instanceID, tenantID)
 	if err != nil {
-		common.RespondError(ctx, err, "查询流程状态失败")
+		common.RespondError(ctx, err, "Failed to query process status")
 		return
 	}
 
@@ -131,7 +131,7 @@ func (c *ProcessTriggerHandler) GetProcessStatus(ctx *gin.Context) {
 func (c *ProcessTriggerHandler) CancelProcess(ctx *gin.Context) {
 	instanceID, err := strconv.Atoi(ctx.Param("instance_id"))
 	if err != nil {
-		common.Fail(ctx, 1001, "无效的流程实例ID")
+		common.Fail(ctx, 1001, "Invalid process instance ID")
 		return
 	}
 
@@ -141,7 +141,7 @@ func (c *ProcessTriggerHandler) CancelProcess(ctx *gin.Context) {
 	// 绑定失败必须显式拦截：非法 body 会让 reason 变空串，取消流程时丢掉
 	// 取消理由却仍返回成功（gosec G104）。
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(ctx, err, "请求参数错误")
+		common.ParamErrorWithErr(ctx, err, "Wrong request parameters")
 		return
 	}
 
@@ -152,18 +152,18 @@ func (c *ProcessTriggerHandler) CancelProcess(ctx *gin.Context) {
 
 	err = c.triggerService.CancelProcess(ctx.Request.Context(), instanceID, req.Reason, tenantID)
 	if err != nil {
-		common.RespondError(ctx, err, "取消流程失败")
+		common.RespondError(ctx, err, "Cancellation process failed")
 		return
 	}
 
-	common.SuccessWithMessage(ctx, "流程已取消", nil)
+	common.SuccessWithMessage(ctx, "Process canceled", nil)
 }
 
 // SuspendProcess 暂停流程
 func (c *ProcessTriggerHandler) SuspendProcess(ctx *gin.Context) {
 	instanceID, err := strconv.Atoi(ctx.Param("instance_id"))
 	if err != nil {
-		common.Fail(ctx, 1001, "无效的流程实例ID")
+		common.Fail(ctx, 1001, "Invalid process instance ID")
 		return
 	}
 
@@ -172,7 +172,7 @@ func (c *ProcessTriggerHandler) SuspendProcess(ctx *gin.Context) {
 	}
 	// 同上：绑定失败会让挂起理由丢失（gosec G104）。
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(ctx, err, "请求参数错误")
+		common.ParamErrorWithErr(ctx, err, "Wrong request parameters")
 		return
 	}
 
@@ -183,18 +183,18 @@ func (c *ProcessTriggerHandler) SuspendProcess(ctx *gin.Context) {
 
 	err = c.triggerService.SuspendProcess(ctx.Request.Context(), instanceID, req.Reason, tenantID)
 	if err != nil {
-		common.RespondError(ctx, err, "暂停流程失败")
+		common.RespondError(ctx, err, "Failed to suspend process")
 		return
 	}
 
-	common.SuccessWithMessage(ctx, "流程已暂停", nil)
+	common.SuccessWithMessage(ctx, "Process paused", nil)
 }
 
 // ResumeProcess 恢复流程
 func (c *ProcessTriggerHandler) ResumeProcess(ctx *gin.Context) {
 	instanceID, err := strconv.Atoi(ctx.Param("instance_id"))
 	if err != nil {
-		common.Fail(ctx, 1001, "无效的流程实例ID")
+		common.Fail(ctx, 1001, "Invalid process instance ID")
 		return
 	}
 
@@ -205,18 +205,18 @@ func (c *ProcessTriggerHandler) ResumeProcess(ctx *gin.Context) {
 
 	err = c.triggerService.ResumeProcess(ctx.Request.Context(), instanceID, tenantID)
 	if err != nil {
-		common.RespondError(ctx, err, "恢复流程失败")
+		common.RespondError(ctx, err, "Recovery process failed")
 		return
 	}
 
-	common.SuccessWithMessage(ctx, "流程已恢复", nil)
+	common.SuccessWithMessage(ctx, "Process resumed", nil)
 }
 
 // CreateBinding 创建流程绑定
 func (c *ProcessTriggerHandler) CreateBinding(ctx *gin.Context) {
 	var binding dto.ProcessBinding
 	if err := ctx.ShouldBindJSON(&binding); err != nil {
-		common.ParamErrorWithErr(ctx, err, "请求参数错误")
+		common.ParamErrorWithErr(ctx, err, "Wrong request parameters")
 		return
 	}
 
@@ -228,7 +228,7 @@ func (c *ProcessTriggerHandler) CreateBinding(ctx *gin.Context) {
 
 	result, err := c.bindingService.CreateBinding(ctx.Request.Context(), &binding)
 	if err != nil {
-		common.RespondError(ctx, err, "创建流程绑定失败")
+		common.RespondError(ctx, err, "Failed to create process binding")
 		return
 	}
 
@@ -239,7 +239,7 @@ func (c *ProcessTriggerHandler) CreateBinding(ctx *gin.Context) {
 func (c *ProcessTriggerHandler) GetBinding(ctx *gin.Context) {
 	id, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
-		common.Fail(ctx, 1001, "无效的绑定ID")
+		common.Fail(ctx, 1001, "Invalid binding ID")
 		return
 	}
 
@@ -250,7 +250,7 @@ func (c *ProcessTriggerHandler) GetBinding(ctx *gin.Context) {
 
 	result, err := c.bindingService.GetBinding(ctx.Request.Context(), id, tenantID)
 	if err != nil {
-		common.RespondError(ctx, err, "查询流程绑定失败")
+		common.RespondError(ctx, err, "Query process binding failed")
 		return
 	}
 
@@ -261,7 +261,7 @@ func (c *ProcessTriggerHandler) GetBinding(ctx *gin.Context) {
 func (c *ProcessTriggerHandler) QueryBindings(ctx *gin.Context) {
 	var req dto.ProcessBindingQueryRequest
 	if err := ctx.ShouldBindQuery(&req); err != nil {
-		common.ParamErrorWithErr(ctx, err, "请求参数错误")
+		common.ParamErrorWithErr(ctx, err, "Wrong request parameters")
 		return
 	}
 
@@ -273,7 +273,7 @@ func (c *ProcessTriggerHandler) QueryBindings(ctx *gin.Context) {
 
 	result, err := c.bindingService.QueryBindings(ctx.Request.Context(), &req)
 	if err != nil {
-		common.RespondError(ctx, err, "查询流程绑定失败")
+		common.RespondError(ctx, err, "Query process binding failed")
 		return
 	}
 
@@ -284,13 +284,13 @@ func (c *ProcessTriggerHandler) QueryBindings(ctx *gin.Context) {
 func (c *ProcessTriggerHandler) UpdateBinding(ctx *gin.Context) {
 	id, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
-		common.Fail(ctx, 1001, "无效的绑定ID")
+		common.Fail(ctx, 1001, "Invalid binding ID")
 		return
 	}
 
 	var binding dto.ProcessBinding
 	if err := ctx.ShouldBindJSON(&binding); err != nil {
-		common.ParamErrorWithErr(ctx, err, "请求参数错误")
+		common.ParamErrorWithErr(ctx, err, "Wrong request parameters")
 		return
 	}
 
@@ -302,7 +302,7 @@ func (c *ProcessTriggerHandler) UpdateBinding(ctx *gin.Context) {
 
 	result, err := c.bindingService.UpdateBinding(ctx.Request.Context(), id, &binding)
 	if err != nil {
-		common.RespondError(ctx, err, "更新流程绑定失败")
+		common.RespondError(ctx, err, "Update process binding failed")
 		return
 	}
 
@@ -313,7 +313,7 @@ func (c *ProcessTriggerHandler) UpdateBinding(ctx *gin.Context) {
 func (c *ProcessTriggerHandler) DeleteBinding(ctx *gin.Context) {
 	id, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
-		common.Fail(ctx, 1001, "无效的绑定ID")
+		common.Fail(ctx, 1001, "Invalid binding ID")
 		return
 	}
 
@@ -324,11 +324,11 @@ func (c *ProcessTriggerHandler) DeleteBinding(ctx *gin.Context) {
 
 	err = c.bindingService.DeleteBinding(ctx.Request.Context(), id, tenantID)
 	if err != nil {
-		common.RespondError(ctx, err, "删除流程绑定失败")
+		common.RespondError(ctx, err, "Failed to delete process binding")
 		return
 	}
 
-	common.SuccessWithMessage(ctx, "绑定已删除", nil)
+	common.SuccessWithMessage(ctx, "Binding deleted", nil)
 }
 
 // GetBindingsByBusinessType 根据业务类型获取绑定列表
@@ -342,7 +342,7 @@ func (c *ProcessTriggerHandler) GetBindingsByBusinessType(ctx *gin.Context) {
 
 	result, err := c.bindingService.GetBindingsByBusinessType(ctx.Request.Context(), businessType, tenantID)
 	if err != nil {
-		common.RespondError(ctx, err, "查询业务类型绑定失败")
+		common.RespondError(ctx, err, "Failed to query business type binding")
 		return
 	}
 
@@ -353,7 +353,7 @@ func (c *ProcessTriggerHandler) GetBindingsByBusinessType(ctx *gin.Context) {
 func (c *ProcessTriggerHandler) GetDepartmentProcesses(ctx *gin.Context) {
 	departmentID, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
-		common.Fail(ctx, 1001, "无效的部门ID")
+		common.Fail(ctx, 1001, "Invalid department ID")
 		return
 	}
 
@@ -364,7 +364,7 @@ func (c *ProcessTriggerHandler) GetDepartmentProcesses(ctx *gin.Context) {
 
 	result, err := c.bindingService.GetDepartmentBindings(ctx.Request.Context(), tenantID, departmentID)
 	if err != nil {
-		common.RespondError(ctx, err, "查询部门流程失败")
+		common.RespondError(ctx, err, "Failed to query department process")
 		return
 	}
 
@@ -375,7 +375,7 @@ func (c *ProcessTriggerHandler) GetDepartmentProcesses(ctx *gin.Context) {
 func (c *ProcessTriggerHandler) InitDepartmentProcesses(ctx *gin.Context) {
 	departmentID, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
-		common.Fail(ctx, 1001, "无效的部门ID")
+		common.Fail(ctx, 1001, "Invalid department ID")
 		return
 	}
 
@@ -383,7 +383,7 @@ func (c *ProcessTriggerHandler) InitDepartmentProcesses(ctx *gin.Context) {
 		DepartmentType string `json:"departmentType" binding:"required"`
 	}
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(ctx, err, "请求参数错误")
+		common.ParamErrorWithErr(ctx, err, "Wrong request parameters")
 		return
 	}
 
@@ -393,11 +393,11 @@ func (c *ProcessTriggerHandler) InitDepartmentProcesses(ctx *gin.Context) {
 	}
 
 	if err := c.bindingService.InitDepartmentDefaultBindings(ctx.Request.Context(), tenantID, departmentID, req.DepartmentType); err != nil {
-		common.RespondError(ctx, err, "初始化部门流程失败")
+		common.RespondError(ctx, err, "Failed to initialize department process")
 		return
 	}
 
-	common.SuccessWithMessage(ctx, "部门流程模板已初始化", nil)
+	common.SuccessWithMessage(ctx, "Department process template has been initialized", nil)
 }
 
 // ListDomainConfigs 查询当前租户配置
@@ -410,7 +410,7 @@ func (c *ProcessTriggerHandler) ListDomainConfigs(ctx *gin.Context) {
 
 	result, err := c.configService.ListConfigs(ctx.Request.Context(), tenantID, configType)
 	if err != nil {
-		common.RespondError(ctx, err, "查询域配置失败")
+		common.RespondError(ctx, err, "Failed to query domain configuration")
 		return
 	}
 
@@ -429,7 +429,7 @@ func (c *ProcessTriggerHandler) SetDomainConfig(ctx *gin.Context) {
 		Description  string                 `json:"description"`
 	}
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(ctx, err, "请求参数错误")
+		common.ParamErrorWithErr(ctx, err, "Wrong request parameters")
 		return
 	}
 	if req.InheritMode == "" {
@@ -452,11 +452,11 @@ func (c *ProcessTriggerHandler) SetDomainConfig(ctx *gin.Context) {
 		req.Description,
 	)
 	if err != nil {
-		common.RespondError(ctx, err, "设置域配置失败")
+		common.RespondError(ctx, err, "Failed to set domain configuration")
 		return
 	}
 
-	common.SuccessWithMessage(ctx, "配置已保存", nil)
+	common.SuccessWithMessage(ctx, "Configuration saved", nil)
 }
 
 // GetEffectiveDomainConfig 获取继承解析后的有效配置
@@ -467,18 +467,18 @@ func (c *ProcessTriggerHandler) GetEffectiveDomainConfig(ctx *gin.Context) {
 	}
 	departmentID, err := parseOptionalIntQuery(ctx, "departmentId")
 	if err != nil {
-		common.Fail(ctx, 1001, "无效的部门ID")
+		common.Fail(ctx, 1001, "Invalid department ID")
 		return
 	}
 	teamID, err := parseOptionalIntQuery(ctx, "teamId")
 	if err != nil {
-		common.Fail(ctx, 1001, "无效的团队ID")
+		common.Fail(ctx, 1001, "Invalid team ID")
 		return
 	}
 	configType := ctx.Query("configType")
 	configKey := ctx.Query("configKey")
 	if configType == "" || configKey == "" {
-		common.Fail(ctx, 1001, "configType 和 configKey 不能为空")
+		common.Fail(ctx, 1001, "configType and configKey cannot be empty")
 		return
 	}
 
@@ -489,7 +489,7 @@ func (c *ProcessTriggerHandler) GetEffectiveDomainConfig(ctx *gin.Context) {
 			common.Success(ctx, nil)
 			return
 		}
-		common.RespondError(ctx, err, "查询生效域配置失败")
+		common.RespondError(ctx, err, "Failed to query effective domain configuration")
 		return
 	}
 

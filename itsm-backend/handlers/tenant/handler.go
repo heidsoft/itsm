@@ -28,17 +28,17 @@ func NewHandler(svc Service, initialization *InitializationService, logger *zap.
 func (h *Handler) GetInitializationStatus(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "无效的租户ID")
+		common.Fail(c, common.ParamErrorCode, "Invalid tenant ID")
 		return
 	}
 	if h.initialization == nil {
-		common.Fail(c, common.ServerErrorCode, "初始化状态服务未配置")
+		common.Fail(c, common.ServerErrorCode, "Initialization state service is not configured")
 		return
 	}
 	status, err := h.initialization.Status(c.Request.Context(), id)
 	if err != nil {
 		h.logger.Errorf("读取租户初始化状态失败: %v", err)
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 	common.Success(c, status)
@@ -77,7 +77,7 @@ func (h *Handler) ensureTenantScope(c *gin.Context, targetTenantID int) bool {
 	if callerTenant := c.GetInt("tenant_id"); callerTenant != 0 && callerTenant == targetTenantID {
 		return false
 	}
-	common.Forbidden(c, "无权限操作其他租户")
+	common.Forbidden(c, "No permission to operate other tenants")
 	return true
 }
 
@@ -89,7 +89,7 @@ func (h *Handler) blockIfLockingSystemTenant(c *gin.Context, tenantID int, statu
 		return false
 	}
 	if target.Code == protectedSystemTenantCode && isLockingTenantStatus(status) {
-		common.Conflict(c, "系统默认租户不允许"+verb, gin.H{"tenantId": tenantID, "code": target.Code})
+		common.Conflict(c, "Not allowed by the system default tenant"+verb, gin.H{"tenantId": tenantID, "code": target.Code})
 		return true
 	}
 	return false
@@ -100,19 +100,19 @@ func (h *Handler) CreateTenant(c *gin.Context) {
 	var req dto.CreateTenantRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		h.logger.Errorf("参数绑定失败: %v", err)
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
 	if !common.IsValidTenantCode(req.Code) {
-		common.Fail(c, common.ParamErrorCode, "租户编码只能包含字母、数字、下划线或连字符，且需以字母或数字开头")
+		common.Fail(c, common.ParamErrorCode, "Tenant ID can only contain letters, numbers, underscores or hyphens, and must start with a letter or number")
 		return
 	}
 
 	tenant, err := h.svc.CreateTenant(c.Request.Context(), &req)
 	if err != nil {
 		h.logger.Errorf("创建租户失败: %v", err)
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -125,14 +125,14 @@ func (h *Handler) ListTenants(c *gin.Context) {
 	var req dto.ListTenantsRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
 		h.logger.Errorf("参数绑定失败: %v", err)
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
 	tenants, total, err := h.svc.ListTenants(c.Request.Context(), &req)
 	if err != nil {
 		h.logger.Errorf("获取租户列表失败: %v", err)
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -161,24 +161,24 @@ func (h *Handler) UpdateTenantStatus(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		common.Fail(c, 1001, "无效的租户ID")
+		common.Fail(c, 1001, "Invalid tenant ID")
 		return
 	}
 
 	var req map[string]string
 	if err := c.ShouldBindJSON(&req); err != nil {
 		h.logger.Errorf("参数绑定失败: %v", err)
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
 	status, exists := req["status"]
 	if !exists {
-		common.Fail(c, 1001, "缺少状态参数")
+		common.Fail(c, 1001, "Missing status parameter")
 		return
 	}
 	if !allowedTenantStatusTransitions[status] {
-		common.Fail(c, common.ParamErrorCode, "无效的租户状态，允许值: active/suspended/expired")
+		common.Fail(c, common.ParamErrorCode, "Invalid tenant status, allowed values: active/suspended/expired")
 		return
 	}
 
@@ -193,7 +193,7 @@ func (h *Handler) UpdateTenantStatus(c *gin.Context) {
 	err = h.svc.UpdateTenantStatus(c.Request.Context(), id, status)
 	if err != nil {
 		h.logger.Errorf("更新租户状态失败: %v", err)
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -206,14 +206,14 @@ func (h *Handler) GetTenant(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		common.Fail(c, 1001, "无效的租户ID")
+		common.Fail(c, 1001, "Invalid tenant ID")
 		return
 	}
 
 	tenant, err := h.svc.GetTenant(c.Request.Context(), id)
 	if err != nil {
 		h.logger.Errorf("获取租户详情失败: %v", err)
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -225,14 +225,14 @@ func (h *Handler) UpdateTenant(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		common.Fail(c, 1001, "无效的租户ID")
+		common.Fail(c, 1001, "Invalid tenant ID")
 		return
 	}
 
 	var req dto.UpdateTenantRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		h.logger.Errorf("参数绑定失败: %v", err)
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
@@ -247,7 +247,7 @@ func (h *Handler) UpdateTenant(c *gin.Context) {
 	tenant, err := h.svc.UpdateTenant(c.Request.Context(), id, &req)
 	if err != nil {
 		h.logger.Errorf("更新租户失败: %v", err)
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -260,7 +260,7 @@ func (h *Handler) DeleteTenant(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		common.Fail(c, 1001, "无效的租户ID")
+		common.Fail(c, 1001, "Invalid tenant ID")
 		return
 	}
 
@@ -275,7 +275,7 @@ func (h *Handler) DeleteTenant(c *gin.Context) {
 	err = h.svc.DeleteTenant(c.Request.Context(), id)
 	if err != nil {
 		h.logger.Errorf("删除租户失败: %v", err)
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -301,14 +301,14 @@ func (h *Handler) ListTenantsAdmin(c *gin.Context) {
 	var req dto.ListTenantsRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
 		h.logger.Errorf("参数绑定失败: %v", err)
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
 	tenants, total, err := h.svc.ListTenants(c.Request.Context(), &req)
 	if err != nil {
 		h.logger.Errorf("获取租户列表失败: %v", err)
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -336,12 +336,12 @@ func (h *Handler) GetTenantSettings(c *gin.Context) {
 	tenantID, ok := c.Get("tenant_id")
 	if !ok {
 		// 租户上下文缺失属认证问题，统一为 401（对齐上游 TenantMiddleware 与项目多数派）。
-		common.Fail(c, common.AuthFailedCode, "无法获取租户信息")
+		common.Fail(c, common.AuthFailedCode, "Unable to obtain tenant information")
 		return
 	}
 	tenant, err := h.svc.GetTenant(c.Request.Context(), tenantID.(int))
 	if err != nil {
-		common.FailWithErr(c, err, "获取租户设置失败")
+		common.FailWithErr(c, err, "Failed to obtain tenant settings")
 		return
 	}
 	common.Success(c, gin.H{
@@ -364,23 +364,23 @@ func (h *Handler) UpdateTenantSettings(c *gin.Context) {
 	tenantID, ok := c.Get("tenant_id")
 	if !ok {
 		// 租户上下文缺失属认证问题，统一为 401（对齐上游 TenantMiddleware 与项目多数派）。
-		common.Fail(c, common.AuthFailedCode, "无法获取租户信息")
+		common.Fail(c, common.AuthFailedCode, "Unable to obtain tenant information")
 		return
 	}
 	var req dto.UpdateTenantRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 	// settings 面向当前租户自助配置；Status 变更必须走受 blockIfLockingSystemTenant
 	// 守卫的专用端点（/tenants/:id/status、DELETE），这里直改会绕过系统租户锁定防护。
 	if req.Status != nil {
-		common.Fail(c, common.ParamErrorCode, "租户状态请通过状态管理接口变更")
+		common.Fail(c, common.ParamErrorCode, "Please change the tenant status through the status management interface.")
 		return
 	}
 	updated, err := h.svc.UpdateTenant(c.Request.Context(), tenantID.(int), &req)
 	if err != nil {
-		common.FailWithErr(c, err, "更新租户设置失败")
+		common.FailWithErr(c, err, "Failed to update tenant settings")
 		return
 	}
 	common.Success(c, gin.H{

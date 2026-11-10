@@ -47,38 +47,38 @@ const severityColorMap: Record<string, string> = {
 };
 
 const bottleneckTypeLabel: Record<string, string> = {
-  processing: '处理耗时',
-  waiting: '等待耗时',
-  resource: '资源受限',
+  processing: 'Processing time',
+  waiting: 'Waiting time consuming',
+  resource: 'Resource limited',
 };
 
 // 严重程度、资源类型、约束类型都是后端枚举，统一映射中文，不直接回显原始值。
 const severityLabel: Record<string, string> = {
-  low: '低',
-  medium: '中',
-  high: '高',
-  critical: '严重',
+  low: 'Low',
+  medium: 'Medium',
+  high: 'High',
+  critical: 'Critical',
 };
 
 const resourceTypeLabel: Record<string, string> = {
-  human: '人工',
-  system: '系统',
-  external: '外部',
+  human: 'Manual',
+  system: 'System',
+  external: 'External',
 };
 
 const constraintTypeLabel: Record<string, string> = {
-  capacity: '处理容量',
-  skill: '技能匹配',
-  permission: '权限',
-  dependency: '外部依赖',
+  capacity: 'Processing capacity',
+  skill: 'Skill matching',
+  permission: 'Permissions',
+  dependency: 'External dependencies',
 };
 
 function formatSeconds(s: number): string {
   if (!s || s <= 0) return '-';
-  if (s < 60) return `${s} 秒`;
-  if (s < 3600) return `${(s / 60).toFixed(1)} 分`;
-  if (s < 86400) return `${(s / 3600).toFixed(1)} 小时`;
-  return `${(s / 86400).toFixed(1)} 天`;
+  if (s < 60) return `${s} seconds`;
+  if (s < 3600) return `${(s / 60).toFixed(1)} points`;
+  if (s < 86400) return `${(s / 3600).toFixed(1)} hours`;
+  return `${(s / 86400).toFixed(1)} days`;
 }
 
 export default function BottlenecksPage() {
@@ -128,7 +128,7 @@ export default function BottlenecksPage() {
       .catch(err => {
         console.error(err);
         if (alive) {
-          message.warning('流程列表加载失败，可直接输入流程 Key 分析');
+          message.warning('Failed to load the process list, you can directly enter the process key for analysis');
         }
       });
     return () => {
@@ -153,10 +153,10 @@ export default function BottlenecksPage() {
         });
       })
       .catch(err => {
-         
+
         console.error(err);
         if (alive) {
-          message.error('加载瓶颈分析失败');
+          message.error('Loading bottleneck analysis failed');
           setAnalysis(null);
         }
       })
@@ -187,7 +187,7 @@ export default function BottlenecksPage() {
 
   const taskColumns = [
     {
-      title: '任务',
+      title: 'Task',
       key: 'task',
       render: (_: unknown, t: BottleneckTask) => (
         <Space size="small" wrap>
@@ -198,7 +198,7 @@ export default function BottlenecksPage() {
       ),
     },
     {
-      title: '影响分',
+      title: 'Impact points',
       dataIndex: 'impactScore',
       key: 'impactScore',
       width: 130,
@@ -211,7 +211,7 @@ export default function BottlenecksPage() {
       ),
     },
     {
-      title: '等待时间',
+      title: 'Waiting time',
       key: 'wait',
       width: 120,
       render: (_: unknown, t: BottleneckTask) => (
@@ -222,44 +222,44 @@ export default function BottlenecksPage() {
       ),
     },
     {
-      title: '处理时间',
+      title: 'Processing time',
       key: 'processing',
       width: 120,
       render: (_: unknown, t: BottleneckTask) => formatSeconds(t.processingTimeSeconds),
     },
     {
-      title: 'P95 等待',
+      title: 'P95 waiting',
       key: 'p95wait',
       width: 120,
       render: (_: unknown, t: BottleneckTask) => formatSeconds(t.p95WaitTimeSeconds),
     },
     {
-      title: 'P95 处理',
+      title: 'P95 processing',
       key: 'p95processing',
       width: 120,
       render: (_: unknown, t: BottleneckTask) => formatSeconds(t.p95ProcessingTimeSeconds),
     },
     {
-      title: '样本数',
+      title: 'Number of samples',
       dataIndex: 'sampleCount',
       key: 'sampleCount',
       width: 90,
     },
     {
-      title: '处理人',
+      title: 'Assignee',
       dataIndex: 'assignee',
       key: 'assignee',
       width: 110,
       render: (v: string) => v || '-',
     },
     {
-      title: '队列长度',
+      title: 'Queue length',
       dataIndex: 'queueLength',
       key: 'queueLength',
       width: 90,
     },
     {
-      title: '优化建议',
+      title: 'Optimization Suggestions',
       dataIndex: 'recommendation',
       key: 'recommendation',
       render: (v: string) => (v ? <Text type="secondary">{v}</Text> : '-'),
@@ -271,10 +271,12 @@ export default function BottlenecksPage() {
       <div>
         <Title level={3} style={{ marginBottom: 4 }}>
           <BarChart3 style={{ marginRight: 8 }} />
-          BPMN 节点停留时间分析
+
+          BPMN node residence time analysis
         </Title>
         <Paragraph type="secondary">
-          分析每个 BPMN 节点的等待时间和处理时间，识别流程瓶颈。等待时间 = 节点创建到被领取；处理时间 = 领取到完成；总耗时 = 等待 + 处理。
+
+          Analyze the waiting time and processing time of each BPMN node to identify process bottlenecks. Waiting time = node creation to collection; processing time = collection to completion; total time spent = waiting + processing.
         </Paragraph>
       </div>
 
@@ -283,7 +285,7 @@ export default function BottlenecksPage() {
           <Select
             showSearch
             allowClear
-            placeholder="选择流程 key"
+            placeholder="Select process key"
             style={{ minWidth: 320 }}
             value={selectedProcess ?? undefined}
             onChange={v => setSelectedProcess(v ?? null)}
@@ -296,7 +298,7 @@ export default function BottlenecksPage() {
             }
           />
           <Input
-            placeholder="或输入流程 key 检索"
+            placeholder="Or enter the process key to retrieve"
             allowClear
             prefix={<Search />}
             value={keyword}
@@ -308,10 +310,10 @@ export default function BottlenecksPage() {
             onChange={setTimeRange}
             style={{ width: 140 }}
             options={[
-              { label: '最近 1 小时', value: '1h' },
-              { label: '最近 24 小时', value: '24h' },
-              { label: '最近 7 天', value: '7d' },
-              { label: '最近 30 天', value: '30d' },
+              { label: 'Last 1 hour', value: '1h' },
+              { label: 'Last 24 hours', value: '24h' },
+              { label: 'Last 7 days', value: '7d' },
+              { label: 'Last 30 days', value: '30d' },
             ]}
           />
           <Button
@@ -320,14 +322,15 @@ export default function BottlenecksPage() {
               if (keyword) setSelectedProcess(keyword);
             }}
           >
-            分析
+
+            Analysis
           </Button>
         </Space>
       </Card>
 
       {!selectedProcess ? (
         <Card>
-          <Empty description="请选择要分析的流程" />
+          <Empty description="Please select the process to analyze" />
         </Card>
       ) : (
         <>
@@ -335,7 +338,7 @@ export default function BottlenecksPage() {
             <Col xs={24} sm={6}>
               <Card>
                 <Statistic
-                  title="严重程度"
+                  title="Severity"
                   value={severityLabel[analysis?.severity ?? 'low'] ?? analysis?.severity ?? '-'}
                   styles={{ content: { color: severityColorMap[analysis?.severity ?? 'low'] ?? 'green' } }}
                   prefix={<AlertTriangle />}
@@ -345,7 +348,7 @@ export default function BottlenecksPage() {
             <Col xs={24} sm={6}>
               <Card>
                 <Statistic
-                  title="瓶颈任务数"
+                  title="Number of bottleneck tasks"
                   value={analysis?.bottleneckTasks.length ?? 0}
                   prefix={<Zap />}
                 />
@@ -353,13 +356,13 @@ export default function BottlenecksPage() {
             </Col>
             <Col xs={24} sm={6}>
               <Card>
-                <Statistic title="总等待时间" value={formatSeconds(totalWait)} styles={{ content: { color: '#fa8c16' } }} />
+                <Statistic title="Total wait time" value={formatSeconds(totalWait)} styles={{ content: { color: '#fa8c16' } }} />
               </Card>
             </Col>
             <Col xs={24} sm={6}>
               <Card>
                 <Statistic
-                  title="总处理时间"
+                  title="Total processing time"
                   value={formatSeconds(totalProcessing)}
                   styles={{ content: { color: '#1677ff' } }}
                 />
@@ -371,7 +374,7 @@ export default function BottlenecksPage() {
             <Alert
               type={analysis.severity === 'critical' ? 'error' : 'warning'}
               showIcon
-              title="系统优化建议"
+              title="System optimization suggestions"
               description={
                 <ul style={{ marginBottom: 0, paddingLeft: 20 }}>
                   {analysis.recommendations.map((r, i) => (
@@ -382,9 +385,9 @@ export default function BottlenecksPage() {
             />
           )}
 
-          <Card title={`瓶颈任务明细 - ${selectedProcess}`} loading={loading}>
+          <Card title={`Bottleneck task details - ${selectedProcess}`} loading={loading}>
             {analysis?.bottleneckTasks.length === 0 ? (
-              <Empty description="暂无瓶颈任务" />
+              <Empty description="No bottleneck tasks yet" />
             ) : (
               <Table
                 rowKey="taskId"
@@ -398,22 +401,22 @@ export default function BottlenecksPage() {
           </Card>
 
           {analysis && analysis.slowestPaths.length > 0 && (
-            <Card title="最慢路径">
+            <Card title="Slowest path">
               <Table
                 rowKey="pathId"
                 dataSource={analysis.slowestPaths}
                 columns={[
-                  { title: '路径', dataIndex: 'pathName', key: 'pathName' },
+                  { title: 'path', dataIndex: 'pathName', key: 'pathName' },
                   {
-                    title: '总耗时',
+                    title: 'Total time spent',
                     dataIndex: 'totalDurationSeconds',
                     key: 'totalDurationSeconds',
                     width: 120,
                     render: (value: number) => formatSeconds(value),
                   },
-                  { title: '任务数', dataIndex: 'taskCount', key: 'taskCount', width: 100 },
+                  { title: 'Number of tasks', dataIndex: 'taskCount', key: 'taskCount', width: 100 },
                   {
-                    title: '瓶颈任务',
+                    title: 'Bottleneck task',
                     dataIndex: 'bottleneckTasks',
                     key: 'bottleneckTasks',
                     render: (tasks: string[]) => (
@@ -426,7 +429,7 @@ export default function BottlenecksPage() {
                       </Space>
                     ),
                   },
-                  { title: '优化建议', dataIndex: 'optimization', key: 'optimization' },
+                  { title: 'Optimization Suggestions', dataIndex: 'optimization', key: 'optimization' },
                 ]}
                 pagination={false}
                 size="small"
@@ -435,20 +438,20 @@ export default function BottlenecksPage() {
           )}
 
           {analysis && analysis.resourceConstraints.length > 0 && (
-            <Card title="资源约束">
+            <Card title="Resource constraints">
               <Table
                 rowKey={r => `${r.resourceType}-${r.resourceName}`}
                 dataSource={analysis.resourceConstraints}
                 columns={[
                   {
-                    title: '类型',
+                    title: 'Type',
                     dataIndex: 'resourceType',
                     key: 'resourceType',
                     render: (v: string) => resourceTypeLabel[v] ?? v,
                   },
-                  { title: '资源', dataIndex: 'resourceName', key: 'resourceName' },
+                  { title: 'Resources', dataIndex: 'resourceName', key: 'resourceName' },
                   {
-                    title: '利用率',
+                    title: 'Utilization',
                     dataIndex: 'utilization',
                     key: 'utilization',
                     render: (v: number) => (
@@ -459,10 +462,10 @@ export default function BottlenecksPage() {
                       />
                     ),
                   },
-                  { title: '容量', dataIndex: 'capacity', key: 'capacity' },
-                  { title: '当前负载', dataIndex: 'currentLoad', key: 'currentLoad' },
+                  { title: 'Capacity', dataIndex: 'capacity', key: 'capacity' },
+                  { title: 'Current load', dataIndex: 'currentLoad', key: 'currentLoad' },
                   {
-                    title: '约束',
+                    title: 'Constraints',
                     dataIndex: 'constraintType',
                     key: 'constraintType',
                     render: (v: string) => (

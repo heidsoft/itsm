@@ -43,7 +43,7 @@ export default function EditKnowledgeArticlePage() {
         setCategories((list || []).filter(name => !/^\d+$/.test(String(name))));
       })
       .catch(() => {
-        message.error('加载知识分类失败，可手动输入分类名称');
+        message.error('Failed to load knowledge classification. You can enter the classification name manually.');
       });
   }, [message]);
 
@@ -78,10 +78,10 @@ export default function EditKnowledgeArticlePage() {
         category: values.category.trim(),
         tags: values.tags || [],
       });
-      message.success('文章更新成功');
+      message.success('Article updated successfully');
       router.push(`/knowledge/articles/${id}`);
     } catch (e: unknown) {
-      message.error('更新失败：' + (e instanceof Error ? e.message : '未知错误'));
+      message.error('Update failed:' + (e instanceof Error ? e.message : 'Unknown error'));
     } finally {
       setLoading(false);
     }
@@ -91,8 +91,8 @@ export default function EditKnowledgeArticlePage() {
     return (
       <div className="max-w-4xl mx-auto p-6">
         <Card>
-          <Title level={4}>文章不存在或已被删除</Title>
-          <Button onClick={() => router.push('/knowledge')}>返回知识库</Button>
+          <Title level={4}>The article does not exist or has been deleted</Title>
+          <Button onClick={() => router.push('/knowledge')}>Return to knowledge base</Button>
         </Card>
       </div>
     );
@@ -102,18 +102,20 @@ export default function EditKnowledgeArticlePage() {
     <div className="max-w-4xl mx-auto p-6">
       <Breadcrumb
         items={[
-          { title: '知识库', href: '/knowledge' },
-          { title: '编辑文章' },
+          { title: 'Knowledge Base', href: '/knowledge' },
+          { title: 'Edit Article' },
         ]}
         className="mb-4"
       />
       <Card>
         <Space className="mb-4">
           <Button icon={<ArrowLeft />} onClick={() => router.push(`/knowledge/articles/${id}`)}>
-            返回
+
+            Back
           </Button>
           <Title level={3} style={{ margin: 0 }}>
-            编辑知识库文章
+
+            Edit knowledge base article
           </Title>
         </Space>
         {fetching ? (
@@ -122,19 +124,19 @@ export default function EditKnowledgeArticlePage() {
           <Form form={form} layout="vertical" onFinish={onFinish} initialValues={{ tags: [] }}>
             <Form.Item
               name="title"
-              label="标题"
-              rules={[{ required: true, message: '请输入标题' }]}
+              label="Title"
+              rules={[{ required: true, message: 'Please enter a title' }]}
             >
-              <Input placeholder="例如：VPN 拨号失败排查指南" maxLength={200} />
+              <Input placeholder="Example: VPN dial-up failure troubleshooting guide" maxLength={200} />
             </Form.Item>
 
             <Form.Item
               name="category"
-              label="分类"
-              rules={[{ required: true, message: '请选择或输入分类' }]}
+              label="Category"
+              rules={[{ required: true, message: 'Please select or enter a category' }]}
             >
               <AutoComplete
-                placeholder="选择或输入分类，如「故障排查」"
+                placeholder="Select or enter a category, such as &quot;Troubleshooting&quot;"
                 options={categories.map(name => ({ value: name }))}
                 filterOption={(input, option) =>
                   String(option?.value ?? '').toLowerCase().includes(input.toLowerCase())
@@ -142,10 +144,10 @@ export default function EditKnowledgeArticlePage() {
               />
             </Form.Item>
 
-            <Form.Item name="tags" label="标签">
+            <Form.Item name="tags" label="Tags">
               <Select
                 mode="tags"
-                placeholder="输入标签后回车"
+                placeholder="Enter the label and press Enter"
                 tagRender={({ label, closable, onClose }) => (
                   <Tag
                     closable={closable}
@@ -160,18 +162,21 @@ export default function EditKnowledgeArticlePage() {
 
             <Form.Item
               name="content"
-              label="内容（支持 Markdown）"
-              rules={[{ required: true, message: '请输入内容' }]}
+              label="Content (supports Markdown)"
+              rules={[{ required: true, message: 'Please enter content' }]}
             >
-              <TextArea rows={15} placeholder="# 问题描述&#10;&#10;请输入内容..." />
+              <TextArea rows={15} placeholder="#Problem description
+
+Please enter content..." />
             </Form.Item>
 
             <Form.Item>
               <Space>
                 <Button type="primary" htmlType="submit" icon={<Save />} loading={loading}>
-                  保存修改
+
+                  Save Changes
                 </Button>
-                <Button onClick={() => router.push(`/knowledge/articles/${id}`)}>取消</Button>
+                <Button onClick={() => router.push(`/knowledge/articles/${id}`)}>Cancel</Button>
               </Space>
             </Form.Item>
           </Form>

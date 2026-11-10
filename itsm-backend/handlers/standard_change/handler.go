@@ -120,7 +120,7 @@ func (h *Handler) GetStandardChange(c *gin.Context) {
 func (h *Handler) CreateStandardChange(c *gin.Context) {
 	var req dto.CreateStandardChangeRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
@@ -151,7 +151,7 @@ func (h *Handler) CreateStandardChange(c *gin.Context) {
 
 	sc, err := h.svc.CreateStandardChange(c.Request.Context(), input)
 	if err != nil {
-		common.FailWithErr(c, err, "创建标准变更模板失败")
+		common.FailWithErr(c, err, "Failed to create standard change template")
 		return
 	}
 
@@ -166,7 +166,7 @@ func (h *Handler) UpdateStandardChange(c *gin.Context) {
 
 	var req dto.UpdateStandardChangeRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
@@ -255,7 +255,7 @@ func (h *Handler) GetCategories(c *gin.Context) {
 
 	cats, err := h.svc.GetCategories(c.Request.Context(), tenantID)
 	if err != nil {
-		common.InternalError(c, "获取分类失败")
+		common.InternalError(c, "Failed to obtain classification")
 		return
 	}
 
@@ -277,11 +277,11 @@ func (h *Handler) InstantiateStandardChange(c *gin.Context) {
 
 	var req dto.InstantiateStandardChangeRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamError(c, "实例化参数错误")
+		common.ParamError(c, "Error in instantiation parameters")
 		return
 	}
 	if createdBy <= 0 {
-		common.AuthFailed(c, "用户信息缺失")
+		common.AuthFailed(c, "User information is missing")
 		return
 	}
 	change, err := h.svc.Instantiate(c.Request.Context(), tenantID, id, createdBy, &req)
@@ -313,12 +313,12 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 func (h *Handler) getTenantID(c *gin.Context) (int, bool) {
 	tenantIDVal, ok := c.Get("tenant_id")
 	if !ok {
-		common.Fail(c, common.AuthErrorCode, "租户上下文缺失")
+		common.Fail(c, common.AuthErrorCode, "Tenant context missing")
 		return 0, false
 	}
 	tenantID, ok := tenantIDVal.(int)
 	if !ok || tenantID == 0 {
-		common.Fail(c, common.AuthErrorCode, "无效的租户上下文")
+		common.Fail(c, common.AuthErrorCode, "Invalid tenant context")
 		return 0, false
 	}
 	return tenantID, true

@@ -26,14 +26,14 @@ func NewNotificationService(client *ent.Client) *NotificationService {
 func (s *NotificationService) CreateNotification(ctx context.Context, req *dto.CreateNotificationRequest) (*dto.Notification, error) {
 	// 验证用户是否存在，且必须属于同一租户（防止越权给别租户 user 发通知）
 	if req.TenantID <= 0 {
-		return nil, fmt.Errorf("tenant_id 不能为空")
+		return nil, fmt.Errorf("tenant_id cannot be empty")
 	}
 	_, err := s.client.User.Query().
 		Where(user.ID(req.UserID)).
 		Where(user.TenantID(req.TenantID)).
 		Only(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("用户不存在或不属于当前租户: %w", err)
+		return nil, fmt.Errorf("User does not exist or does not belong to the current tenant: %w", err)
 	}
 
 	// 创建通知
@@ -47,7 +47,7 @@ func (s *NotificationService) CreateNotification(ctx context.Context, req *dto.C
 		SetNillableActionText(req.ActionText).
 		Save(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("创建通知失败: %w", err)
+		return nil, fmt.Errorf("Failed to create notification: %w", err)
 	}
 
 	return s.convertToDTO(notification), nil
@@ -56,7 +56,7 @@ func (s *NotificationService) CreateNotification(ctx context.Context, req *dto.C
 // GetNotifications 获取通知列表
 func (s *NotificationService) GetNotifications(ctx context.Context, req *dto.GetNotificationsRequest) (*dto.NotificationListResponse, error) {
 	if req.UserID <= 0 || req.TenantID <= 0 {
-		return nil, fmt.Errorf("用户或租户信息无效")
+		return nil, fmt.Errorf("Invalid user or tenant information")
 	}
 	// 归一只为落 Offset/Limit 服务：pageSize=0 在 Ent 里是 Limit(0)，等价于不加 LIMIT
 	// 整表返回，page<=0 会算出负 OFFSET。HTTP 入口已按 common 的查询通道夹紧，这里是
@@ -77,7 +77,7 @@ func (s *NotificationService) GetNotifications(ctx context.Context, req *dto.Get
 	// 获取总数
 	total, err := query.Clone().Count(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("获取通知总数失败: %w", err)
+		return nil, fmt.Errorf("Failed to get total number of notifications: %w", err)
 	}
 
 	// 分页查询
@@ -88,7 +88,7 @@ func (s *NotificationService) GetNotifications(ctx context.Context, req *dto.Get
 		Limit(req.PageSize).
 		All(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("获取通知列表失败: %w", err)
+		return nil, fmt.Errorf("Failed to get notification list: %w", err)
 	}
 
 	// 转换为DTO
@@ -119,9 +119,9 @@ func (s *NotificationService) MarkNotificationRead(ctx context.Context, req *dto
 		if ent.IsNotFound(err) {
 			// 必须返回分类错误（404），普通 fmt.Errorf 会被 RespondError 兜底成 500，
 			// 违反「业务拒绝禁 500」约定。
-			return common.NewNotFoundError("通知")
+			return common.NewNotFoundError("Notification")
 		}
-		return fmt.Errorf("标记已读失败: %w", err)
+		return fmt.Errorf("Failed to mark as read: %w", err)
 	}
 
 	return nil
@@ -137,7 +137,7 @@ func (s *NotificationService) MarkAllNotificationsRead(ctx context.Context, req 
 		SetUpdatedAt(time.Now()).
 		Save(ctx)
 	if err != nil {
-		return fmt.Errorf("标记全部已读失败: %w", err)
+		return fmt.Errorf("Mark all read failed: %w", err)
 	}
 
 	return nil
@@ -151,9 +151,9 @@ func (s *NotificationService) DeleteNotification(ctx context.Context, req *dto.D
 	if err != nil {
 		if ent.IsNotFound(err) {
 			// 删他人通知与删不存在通知同态：404 而非 500（不暴露资源归属信息）。
-			return common.NewNotFoundError("通知")
+			return common.NewNotFoundError("Notification")
 		}
-		return fmt.Errorf("删除通知失败: %w", err)
+		return fmt.Errorf("Failed to delete notification: %w", err)
 	}
 
 	return nil
@@ -163,7 +163,7 @@ func (s *NotificationService) DeleteNotification(ctx context.Context, req *dto.D
 func (s *NotificationService) MarkNotificationsRead(ctx context.Context, notificationIDs []int, userID, tenantID int) (int, error) {
 	ids := uniquePositiveIDs(notificationIDs)
 	if len(ids) == 0 {
-		return 0, fmt.Errorf("通知ID列表不能为空")
+		return 0, fmt.Errorf("Notification ID list cannot be empty")
 	}
 	count, err := s.client.Notification.Update().
 		Where(notification.IDIn(ids...), notification.UserID(userID), notification.TenantID(tenantID), notification.Read(false)).
@@ -171,7 +171,7 @@ func (s *NotificationService) MarkNotificationsRead(ctx context.Context, notific
 		SetUpdatedAt(time.Now()).
 		Save(ctx)
 	if err != nil {
-		return 0, fmt.Errorf("批量标记已读失败: %w", err)
+		return 0, fmt.Errorf("Batch mark read failed: %w", err)
 	}
 	return count, nil
 }
@@ -180,13 +180,13 @@ func (s *NotificationService) MarkNotificationsRead(ctx context.Context, notific
 func (s *NotificationService) DeleteNotifications(ctx context.Context, notificationIDs []int, userID, tenantID int) (int, error) {
 	ids := uniquePositiveIDs(notificationIDs)
 	if len(ids) == 0 {
-		return 0, fmt.Errorf("通知ID列表不能为空")
+		return 0, fmt.Errorf("Notification ID list cannot be empty")
 	}
 	count, err := s.client.Notification.Delete().
 		Where(notification.IDIn(ids...), notification.UserID(userID), notification.TenantID(tenantID)).
 		Exec(ctx)
 	if err != nil {
-		return 0, fmt.Errorf("批量删除通知失败: %w", err)
+		return 0, fmt.Errorf("Batch deletion of notifications failed: %w", err)
 	}
 	return count, nil
 }
@@ -199,7 +199,7 @@ func (s *NotificationService) GetUnreadCount(ctx context.Context, userID, tenant
 		Where(notification.Read(false)).
 		Count(ctx)
 	if err != nil {
-		return 0, fmt.Errorf("获取未读数量失败: %w", err)
+		return 0, fmt.Errorf("Failed to get unread count: %w", err)
 	}
 
 	return count, nil
@@ -209,14 +209,14 @@ func (s *NotificationService) GetUnreadCount(ctx context.Context, userID, tenant
 func (s *NotificationService) CreateSystemNotification(ctx context.Context, title, message, notificationType string, userIDs []int, tenantID int) error {
 	ids := uniquePositiveIDs(userIDs)
 	if tenantID <= 0 || len(ids) == 0 {
-		return fmt.Errorf("租户和收件人不能为空")
+		return fmt.Errorf("Tenant and recipient cannot be empty")
 	}
 	validCount, err := s.client.User.Query().Where(user.IDIn(ids...), user.TenantID(tenantID), user.Active(true)).Count(ctx)
 	if err != nil {
-		return fmt.Errorf("校验通知收件人失败: %w", err)
+		return fmt.Errorf("Verification notification recipient failed: %w", err)
 	}
 	if validCount != len(ids) {
-		return fmt.Errorf("部分收件人不存在、不属于当前租户或已停用")
+		return fmt.Errorf("Some recipients do not exist, do not belong to the current tenant, or are deactivated")
 	}
 	notifications := make([]*ent.NotificationCreate, len(ids))
 	for i, userID := range ids {
@@ -230,7 +230,7 @@ func (s *NotificationService) CreateSystemNotification(ctx context.Context, titl
 
 	_, err = s.client.Notification.CreateBulk(notifications...).Save(ctx)
 	if err != nil {
-		return fmt.Errorf("创建系统通知失败: %w", err)
+		return fmt.Errorf("Failed to create system notification: %w", err)
 	}
 
 	return nil

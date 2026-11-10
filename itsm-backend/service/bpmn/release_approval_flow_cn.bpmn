@@ -10,16 +10,16 @@
   <!-- 特点: 严格测试阶段、分级审批、灰度发布、回滚机制          -->
   <!-- ======================================================== -->
 
-  <bpmn:process id="release_approval_flow_cn" name="发布审批流程(国内企业版)" isExecutable="true">
+  <bpmn:process id="release_approval_flow_cn" name="Release Approval Workflow (Enterprise Edition)" isExecutable="true">
     <bpmn:extensionElements>
       <bpmn:metaData name="category">release</bpmn:metaData>
       <bpmn:metaData name="version">2.0.0</bpmn:metaData>
-      <bpmn:metaData name="description">国内企业软件发布审批流程，含严格测试和灰度发布</bpmn:metaData>
+      <bpmn:metaData name="description">Enterprise software release approval workflow with comprehensive testing and canary deployment</bpmn:metaData>
       <bpmn:metaData name="enterprise_type">cn_enterprise</bpmn:metaData>
     </bpmn:extensionElements>
 
     <!-- ========== 开始节点 ========== -->
-    <bpmn:startEvent id="StartEvent_ReleaseRequest" name="发布申请">
+    <bpmn:startEvent id="StartEvent_ReleaseRequest" name="Release Request">
       <bpmn:extensionElements>
         <bpmn:metaData name="form_required">true</bpmn:metaData>
         <bpmn:metaData name="impact_analysis">true</bpmn:metaData>
@@ -28,7 +28,7 @@
     </bpmn:startEvent>
 
     <!-- ========== 发布经理初审 ========== -->
-    <bpmn:userTask id="Activity_ReleaseManagerReview" name="发布经理初审">
+    <bpmn:userTask id="Activity_ReleaseManagerReview" name="Initial Release Manager Review">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">release_manager_review</bpmn:metaData>
         <bpmn:metaData name="assignee_type">manager</bpmn:metaData>
@@ -40,7 +40,7 @@
     </bpmn:userTask>
 
     <!-- 发布类型判定 -->
-    <bpmn:exclusiveGateway id="Gateway_ReleaseType" name="发布类型判定">
+    <bpmn:exclusiveGateway id="Gateway_ReleaseType" name="Determine Release Type">
       <bpmn:incoming>Flow_R2</bpmn:incoming>
       <bpmn:outgoing>Flow_Hotfix</bpmn:outgoing>
       <bpmn:outgoing>Flow_Normal</bpmn:outgoing>
@@ -48,7 +48,7 @@
     </bpmn:exclusiveGateway>
 
     <!-- ========== 热修复路径 (紧急修复) ========== -->
-    <bpmn:userTask id="Activity_HotfixTest" name="快速测试">
+    <bpmn:userTask id="Activity_HotfixTest" name="Quick Tests">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">hotfix_quick_test</bpmn:metaData>
         <bpmn:metaData name="assignee_type">agent</bpmn:metaData>
@@ -59,7 +59,7 @@
       <bpmn:outgoing>Flow_R3_Hotfix</bpmn:outgoing>
     </bpmn:userTask>
 
-    <bpmn:userTask id="Activity_HotfixApproval" name="热修复审批">
+    <bpmn:userTask id="Activity_HotfixApproval" name="Hotfix Approval">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">hotfix_approval</bpmn:metaData>
         <bpmn:metaData name="assignee_type">manager</bpmn:metaData>
@@ -69,7 +69,7 @@
       <bpmn:outgoing>Flow_R4_Hotfix</bpmn:outgoing>
     </bpmn:userTask>
 
-    <bpmn:serviceTask id="Activity_HotfixDeploy" name="热修复部署">
+    <bpmn:serviceTask id="Activity_HotfixDeploy" name="Deploy Hotfix">
       <bpmn:extensionElements>
         <bpmn:metaData name="service_task_type">generic_task</bpmn:metaData>
         <bpmn:metaData name="action">hotfix_deploy</bpmn:metaData>
@@ -81,7 +81,7 @@
       <bpmn:outgoing>Flow_R5_Hotfix</bpmn:outgoing>
     </bpmn:serviceTask>
 
-    <bpmn:userTask id="Activity_HotfixVerify" name="热修复验证">
+    <bpmn:userTask id="Activity_HotfixVerify" name="Verify Hotfix">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">hotfix_verify</bpmn:metaData>
         <bpmn:metaData name="assignee_type">agent</bpmn:metaData>
@@ -92,7 +92,7 @@
     </bpmn:userTask>
 
     <!-- ========== 常规发布路径 ========== -->
-    <bpmn:userTask id="Activity_UnitTest" name="单元测试">
+    <bpmn:userTask id="Activity_UnitTest" name="Unit Tests">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">unit_test</bpmn:metaData>
         <bpmn:metaData name="assignee_type">technician</bpmn:metaData>
@@ -103,7 +103,7 @@
       <bpmn:outgoing>Flow_R3_Normal</bpmn:outgoing>
     </bpmn:userTask>
 
-    <bpmn:userTask id="Activity_IntegrationTest" name="集成测试">
+    <bpmn:userTask id="Activity_IntegrationTest" name="Integration Tests">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">integration_test</bpmn:metaData>
         <bpmn:metaData name="assignee_type">technician</bpmn:metaData>
@@ -113,7 +113,7 @@
       <bpmn:outgoing>Flow_R4_Normal</bpmn:outgoing>
     </bpmn:userTask>
 
-    <bpmn:userTask id="Activity_UAT" name="用户验收测试">
+    <bpmn:userTask id="Activity_UAT" name="User Acceptance Tests">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">user_acceptance_test</bpmn:metaData>
         <bpmn:metaData name="assignee_type">manager</bpmn:metaData>
@@ -123,13 +123,13 @@
       <bpmn:outgoing>Flow_R5_Normal</bpmn:outgoing>
     </bpmn:userTask>
 
-    <bpmn:exclusiveGateway id="Gateway_NormalTest" name="测试结果判定">
+    <bpmn:exclusiveGateway id="Gateway_NormalTest" name="Determine Test Result">
       <bpmn:incoming>Flow_R5_Normal</bpmn:incoming>
       <bpmn:outgoing>Flow_TestPass</bpmn:outgoing>
       <bpmn:outgoing>Flow_TestFail</bpmn:outgoing>
     </bpmn:exclusiveGateway>
 
-    <bpmn:userTask id="Activity_NormalApproval" name="常规发布审批">
+    <bpmn:userTask id="Activity_NormalApproval" name="Standard Release Approval">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">normal_release_approval</bpmn:metaData>
         <bpmn:metaData name="assignee_type">manager</bpmn:metaData>
@@ -139,7 +139,7 @@
       <bpmn:outgoing>Flow_R6_Normal</bpmn:outgoing>
     </bpmn:userTask>
 
-    <bpmn:serviceTask id="Activity_StagingDeploy" name="预发布部署">
+    <bpmn:serviceTask id="Activity_StagingDeploy" name="Deploy to Staging">
       <bpmn:extensionElements>
         <bpmn:metaData name="service_task_type">generic_task</bpmn:metaData>
         <bpmn:metaData name="action">staging_deploy</bpmn:metaData>
@@ -150,7 +150,7 @@
     </bpmn:serviceTask>
 
     <!-- 测试失败返回修复 -->
-    <bpmn:userTask id="Activity_FixIssues" name="修复问题">
+    <bpmn:userTask id="Activity_FixIssues" name="Fix Issues">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">fix_test_issues</bpmn:metaData>
         <bpmn:metaData name="assignee_type">technician</bpmn:metaData>
@@ -161,7 +161,7 @@
     </bpmn:userTask>
 
     <!-- ========== 重大发布路径 ========== -->
-    <bpmn:userTask id="Activity_SecurityTest" name="安全测试">
+    <bpmn:userTask id="Activity_SecurityTest" name="Security Tests">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">security_test</bpmn:metaData>
         <bpmn:metaData name="assignee_type">security_admin</bpmn:metaData>
@@ -172,7 +172,7 @@
       <bpmn:outgoing>Flow_R3_Major</bpmn:outgoing>
     </bpmn:userTask>
 
-    <bpmn:userTask id="Activity_PerformanceTest" name="性能测试">
+    <bpmn:userTask id="Activity_PerformanceTest" name="Performance Tests">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">performance_test</bpmn:metaData>
         <bpmn:metaData name="assignee_type">it_admin</bpmn:metaData>
@@ -183,7 +183,7 @@
       <bpmn:outgoing>Flow_R4_Major</bpmn:outgoing>
     </bpmn:userTask>
 
-    <bpmn:userTask id="Activity_IntegrationTest_Major" name="集成测试">
+    <bpmn:userTask id="Activity_IntegrationTest_Major" name="Integration Tests">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">integration_test</bpmn:metaData>
         <bpmn:metaData name="assignee_type">technician</bpmn:metaData>
@@ -193,7 +193,7 @@
       <bpmn:outgoing>Flow_R5_Major</bpmn:outgoing>
     </bpmn:userTask>
 
-    <bpmn:userTask id="Activity_UAT_Major" name="用户验收测试">
+    <bpmn:userTask id="Activity_UAT_Major" name="User Acceptance Tests">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">user_acceptance_test</bpmn:metaData>
         <bpmn:metaData name="assignee_type">manager</bpmn:metaData>
@@ -203,14 +203,14 @@
       <bpmn:outgoing>Flow_R6_Major</bpmn:outgoing>
     </bpmn:userTask>
 
-    <bpmn:exclusiveGateway id="Gateway_MajorTest" name="测试结果判定">
+    <bpmn:exclusiveGateway id="Gateway_MajorTest" name="Determine Test Result">
       <bpmn:incoming>Flow_R6_Major</bpmn:incoming>
       <bpmn:outgoing>Flow_MajorTestPass</bpmn:outgoing>
       <bpmn:outgoing>Flow_MajorTestFail</bpmn:outgoing>
     </bpmn:exclusiveGateway>
 
     <!-- 重大发布多级审批 -->
-    <bpmn:userTask id="Activity_MajorTechApproval" name="技术评审">
+    <bpmn:userTask id="Activity_MajorTechApproval" name="Technical Review">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">technical_review_approval</bpmn:metaData>
         <bpmn:metaData name="assignee_type">it_admin</bpmn:metaData>
@@ -220,7 +220,7 @@
       <bpmn:outgoing>Flow_R7_Major</bpmn:outgoing>
     </bpmn:userTask>
 
-    <bpmn:userTask id="Activity_MajorSecurityApproval" name="安全审批">
+    <bpmn:userTask id="Activity_MajorSecurityApproval" name="Security Approval">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">security_approval</bpmn:metaData>
         <bpmn:metaData name="assignee_type">security_admin</bpmn:metaData>
@@ -230,7 +230,7 @@
       <bpmn:outgoing>Flow_R8_Major</bpmn:outgoing>
     </bpmn:userTask>
 
-    <bpmn:userTask id="Activity_MajorITDirectorApproval" name="IT总监审批">
+    <bpmn:userTask id="Activity_MajorITDirectorApproval" name="IT Director Approval">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">it_director_approval</bpmn:metaData>
         <bpmn:metaData name="assignee_type">it_admin</bpmn:metaData>
@@ -241,7 +241,7 @@
       <bpmn:outgoing>Flow_R9_Major</bpmn:outgoing>
     </bpmn:userTask>
 
-    <bpmn:serviceTask id="Activity_StagingDeploy_Major" name="预发布部署">
+    <bpmn:serviceTask id="Activity_StagingDeploy_Major" name="Deploy to Staging">
       <bpmn:extensionElements>
         <bpmn:metaData name="service_task_type">generic_task</bpmn:metaData>
         <bpmn:metaData name="action">staging_deploy</bpmn:metaData>
@@ -252,7 +252,7 @@
     </bpmn:serviceTask>
 
     <!-- 重大发布测试失败 -->
-    <bpmn:userTask id="Activity_FixIssues_Major" name="修复问题">
+    <bpmn:userTask id="Activity_FixIssues_Major" name="Fix Issues">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">fix_test_issues</bpmn:metaData>
         <bpmn:metaData name="assignee_type">technician</bpmn:metaData>
@@ -263,7 +263,7 @@
     </bpmn:userTask>
 
     <!-- ========== 灰度发布 ========== -->
-    <bpmn:serviceTask id="Activity_CanaryDeploy" name="灰度发布(10%)">
+    <bpmn:serviceTask id="Activity_CanaryDeploy" name="Canary Deployment (10%)">
       <bpmn:extensionElements>
         <bpmn:metaData name="service_task_type">generic_task</bpmn:metaData>
         <bpmn:metaData name="action">canary_deploy</bpmn:metaData>
@@ -277,7 +277,7 @@
       <bpmn:outgoing>Flow_R_Canary</bpmn:outgoing>
     </bpmn:serviceTask>
 
-    <bpmn:userTask id="Activity_CanaryMonitor" name="灰度监控">
+    <bpmn:userTask id="Activity_CanaryMonitor" name="Canary Monitoring">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">canary_monitoring</bpmn:metaData>
         <bpmn:metaData name="assignee_type">manager</bpmn:metaData>
@@ -288,14 +288,14 @@
       <bpmn:outgoing>Flow_R_CanaryCheck</bpmn:outgoing>
     </bpmn:userTask>
 
-    <bpmn:exclusiveGateway id="Gateway_CanaryResult" name="灰度结果判定">
+    <bpmn:exclusiveGateway id="Gateway_CanaryResult" name="Determine Canary Result">
       <bpmn:incoming>Flow_R_CanaryCheck</bpmn:incoming>
       <bpmn:outgoing>Flow_CanaryPass</bpmn:outgoing>
       <bpmn:outgoing>Flow_CanaryFail</bpmn:outgoing>
     </bpmn:exclusiveGateway>
 
     <!-- 灰度失败自动回滚 -->
-    <bpmn:serviceTask id="Activity_AutoRollback" name="自动回滚">
+    <bpmn:serviceTask id="Activity_AutoRollback" name="Automatic Rollback">
       <bpmn:extensionElements>
         <bpmn:metaData name="service_task_type">generic_task</bpmn:metaData>
         <bpmn:metaData name="action">auto_rollback</bpmn:metaData>
@@ -306,7 +306,7 @@
     </bpmn:serviceTask>
 
     <!-- ========== 全量发布 ========== -->
-    <bpmn:serviceTask id="Activity_FullDeploy" name="全量发布">
+    <bpmn:serviceTask id="Activity_FullDeploy" name="Full Deployment">
       <bpmn:extensionElements>
         <bpmn:metaData name="service_task_type">generic_task</bpmn:metaData>
         <bpmn:metaData name="action">full_deploy</bpmn:metaData>
@@ -317,7 +317,7 @@
       <bpmn:outgoing>Flow_R_Full</bpmn:outgoing>
     </bpmn:serviceTask>
 
-    <bpmn:userTask id="Activity_PostReleaseVerify" name="发布后验证">
+    <bpmn:userTask id="Activity_PostReleaseVerify" name="Post-Release Verification">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">post_release_verify</bpmn:metaData>
         <bpmn:metaData name="assignee_type">agent</bpmn:metaData>
@@ -329,7 +329,7 @@
     </bpmn:userTask>
 
     <!-- ========== 关闭 ========== -->
-    <bpmn:userTask id="Activity_ReleaseClose" name="发布关闭">
+    <bpmn:userTask id="Activity_ReleaseClose" name="Release Closed">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">release_close</bpmn:metaData>
         <bpmn:metaData name="create_release_notes">true</bpmn:metaData>
@@ -340,7 +340,7 @@
       <bpmn:outgoing>Flow_Final</bpmn:outgoing>
     </bpmn:userTask>
 
-    <bpmn:endEvent id="EndEvent_ReleaseComplete" name="发布完成">
+    <bpmn:endEvent id="EndEvent_ReleaseComplete" name="Release Completed">
       <bpmn:incoming>Flow_Final</bpmn:incoming>
     </bpmn:endEvent>
 

@@ -245,7 +245,7 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
     setSerializeError(error);
     onSerializeErrorRef.current?.(error);
     if (error) {
-      messageRef.current.error(`流程无法序列化，画布已停止同步：${error}`);
+      messageRef.current.error(`Process cannot be serialized, canvas has stopped syncing:${error}`);
     }
   }, []);
 
@@ -510,7 +510,7 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
     if (!modeler) return;
     try {
       const result = await modeler.saveXML({ format: true });
-      if (!result.xml) throw new Error('序列化结果为空');
+      if (!result.xml) throw new Error('Serialization result is empty');
       setCurrentXML(result.xml);
       emittedXmlRef.current = result.xml;
       reportSerializeError(null);
@@ -1063,7 +1063,7 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
       if (implementation && !supported.has(implementation)) {
         errors.push({
           type: 'error',
-          message: `服务任务 ${bo.name || task.id} 的处理器“${implementation}”未注册，当前不可发布`,
+          message: `Service Task ${bo.name || task.id} Processor "${implementation}"Not registered, currently unavailable for publishing`,
           elementId: task.id,
           elementType: task.type,
           elementName: bo.name || task.id,
@@ -1074,7 +1074,7 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
     elementRegistry.filter(el => el.type === 'bpmn:ScriptTask').forEach(task => {
       errors.push({
         type: 'error',
-        message: `脚本任务 ${task.businessObject?.name || task.id} 尚无隔离执行器，当前不可发布`,
+        message: `Script task ${task.businessObject?.name || task.id} There is no isolation actuator and it is not currently available for release`,
         elementId: task.id,
         elementType: task.type,
         elementName: task.businessObject?.name || task.id,
@@ -1185,7 +1185,7 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
     } catch (err) {
       console.error('Failed to update element properties:', err);
       messageRef.current.error(
-        `节点属性写入失败：${err instanceof Error ? err.message : String(err)}`
+        `Failed to write node attributes:${err instanceof Error ? err.message : String(err)}`
       );
       return false;
     }
@@ -1693,8 +1693,8 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
           <Alert
             type="error"
             showIcon
-            title="流程无法序列化，保存已阻断"
-            description={`${serializeError}。请撤销最近一次属性修改，或改用该节点支持的配置项后再保存。`}
+            title="The process cannot be serialized and the save has been blocked."
+            description={`${serializeError}. Please undo the latest attribute modification, or use the configuration items supported by the node before saving.`}
             style={{ width: 460, maxWidth: '86vw' }}
           />
         )}

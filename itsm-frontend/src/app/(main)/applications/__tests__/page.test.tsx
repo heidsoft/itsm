@@ -44,8 +44,8 @@ describe('应用管理类型列（D14）', () => {
     );
     await waitFor(() => expect(applicationService.listApplications).toHaveBeenCalled());
 
-    expect(await screen.findByText('Web应用')).toBeInTheDocument();
-    expect(screen.getByText('移动应用')).toBeInTheDocument();
+    expect(await screen.findByText("Web Application")).toBeInTheDocument();
+    expect(screen.getByText("Mobile App")).toBeInTheDocument();
 
     const body = document.body.textContent || '';
     expect(body).not.toContain('UNKNOWN');

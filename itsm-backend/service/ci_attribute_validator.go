@@ -74,7 +74,7 @@ func (v *CIAttributeValidator) collectEffectiveAttributeDefinitions(ctx context.
 			Order(ent.Asc(ciattributedefinition.FieldTenantID)).
 			All(ctx)
 		if queryErr != nil {
-			return nil, fmt.Errorf("查询CI属性定义失败: %w", queryErr)
+			return nil, fmt.Errorf("Failed to query CI attribute definition: %w", queryErr)
 		}
 		for _, def := range defs {
 			definitionMap[def.Name] = def
@@ -107,7 +107,7 @@ func (v *CIAttributeValidator) RequiredAttributes(ctx context.Context, tenantID,
 	for _, def := range defs {
 		rules, err := parseValidationRules(def.ValidationRules)
 		if err != nil {
-			return nil, fmt.Errorf("属性 %s 验证规则格式错误: %w", def.DisplayName, err)
+			return nil, fmt.Errorf("Validation rule for attribute %s is malformed: %w", def.DisplayName, err)
 		}
 		requirements = append(requirements, CIAttributeRequirement{
 			Name:         def.Name,
@@ -147,7 +147,7 @@ func (v *CIAttributeValidator) NormalizeAttributes(ctx context.Context, tenantID
 		if (!exists || value == nil || isBlankAttributeString(value)) && def.DefaultValue != "" {
 			parsedDefault, err := parseAttributeValue(def.Type, def.DefaultValue)
 			if err != nil {
-				return nil, fmt.Errorf("属性 %s 默认值无效: %w", def.DisplayName, err)
+				return nil, fmt.Errorf("Invalid default value for attribute %s: %w", def.DisplayName, err)
 			}
 			normalized[name] = parsedDefault
 			value = parsedDefault
@@ -155,7 +155,7 @@ func (v *CIAttributeValidator) NormalizeAttributes(ctx context.Context, tenantID
 		}
 
 		if def.Required && (!exists || value == nil || isBlankAttributeString(value)) {
-			return nil, fmt.Errorf("属性 %s 为必填项 (%w)", def.DisplayName, ErrCIAttributeValidation)
+			return nil, fmt.Errorf("Property %s is required (%w)", def.DisplayName, ErrCIAttributeValidation)
 		}
 		if !exists || value == nil {
 			continue
@@ -163,17 +163,17 @@ func (v *CIAttributeValidator) NormalizeAttributes(ctx context.Context, tenantID
 
 		normalizedValue, err := normalizeAttributeValue(def, value)
 		if err != nil {
-			return nil, fmt.Errorf("属性 %s 校验失败: %w (%w)", def.DisplayName, err, ErrCIAttributeValidation)
+			return nil, fmt.Errorf("Validation failed for attribute %s: %w (%w)", def.DisplayName, err, ErrCIAttributeValidation)
 		}
 		normalized[name] = normalizedValue
 
 		if def.Unique {
 			duplicate, err := v.hasDuplicateAttributeValue(ctx, tenantID, ciTypeID, name, normalizedValue, existingID)
 			if err != nil {
-				return nil, fmt.Errorf("校验属性 %s 唯一性失败: %w", def.DisplayName, err)
+				return nil, fmt.Errorf("Failed to verify uniqueness of attribute %s: %w", def.DisplayName, err)
 			}
 			if duplicate {
-				return nil, fmt.Errorf("属性 %s 的值必须唯一 (%w)", def.DisplayName, ErrCIAttributeValidation)
+				return nil, fmt.Errorf("The value of attribute %s must be unique (%w)", def.DisplayName, ErrCIAttributeValidation)
 			}
 		}
 	}
@@ -188,14 +188,14 @@ func (v *CIAttributeValidator) resolveCITypeChain(ctx context.Context, ciTypeID,
 	currentID := ciTypeID
 	for currentID != 0 {
 		if _, exists := visited[currentID]; exists {
-			return nil, fmt.Errorf("CI类型继承关系存在循环")
+			return nil, fmt.Errorf("There is a cycle in CI type inheritance relationship")
 		}
 		visited[currentID] = struct{}{}
 		current, err := v.client.CIType.Query().
 			Where(citype.ID(currentID), citype.TenantID(tenantID)).
 			First(ctx)
 		if err != nil {
-			return nil, fmt.Errorf("查询CI类型继承关系失败: %w", err)
+			return nil, fmt.Errorf("Failed to query CI type inheritance relationship: %w", err)
 		}
 		ids = append(ids, current.ID)
 		if current.ParentTypeID == nil {
@@ -233,7 +233,7 @@ func normalizeAttributeValue(def *ent.CIAttributeDefinition, value interface{}) 
 
 	rules, err := parseValidationRules(def.ValidationRules)
 	if err != nil {
-		return nil, fmt.Errorf("验证规则格式错误: %w", err)
+		return nil, fmt.Errorf("Validation rule malformed: %w", err)
 	}
 
 	if err := applyAttributeValidationRules(def.Type, normalized, rules); err != nil {
@@ -297,14 +297,14 @@ func applyAttributeValidationRules(attributeType string, value interface{}, rule
 			}
 		}
 		if !matched {
-			return fmt.Errorf("值 %q 不在允许范围内", actual)
+			return fmt.Errorf("Value %q is not within the allowed range", actual)
 		}
 	}
 
 	if pattern, ok := rules["pattern"].(string); ok && pattern != "" {
 		actual := fmt.Sprint(value)
 		if !strings.Contains(actual, pattern) && actual != pattern {
-			return fmt.Errorf("值 %q 不符合约束 %q", actual, pattern)
+			return fmt.Errorf("Value %q does not comply with constraint %q", actual, pattern)
 		}
 	}
 
@@ -312,10 +312,10 @@ func applyAttributeValidationRules(attributeType string, value interface{}, rule
 	case "string", "reference", "enum":
 		actual := fmt.Sprint(value)
 		if minLen, ok := numericRuleValue(rules, "min_length"); ok && float64(len(actual)) < minLen {
-			return fmt.Errorf("长度不能小于 %.0f", minLen)
+			return fmt.Errorf("Length cannot be less than %.0f", minLen)
 		}
 		if maxLen, ok := numericRuleValue(rules, "max_length"); ok && float64(len(actual)) > maxLen {
-			return fmt.Errorf("长度不能大于 %.0f", maxLen)
+			return fmt.Errorf("Length cannot be greater than %.0f", maxLen)
 		}
 	case "integer", "int", "float", "number":
 		actual, err := attrToFloat(value)
@@ -323,10 +323,10 @@ func applyAttributeValidationRules(attributeType string, value interface{}, rule
 			return err
 		}
 		if minValue, ok := numericRuleValue(rules, "min"); ok && actual < minValue {
-			return fmt.Errorf("不能小于 %v", minValue)
+			return fmt.Errorf("Cannot be less than %v", minValue)
 		}
 		if maxValue, ok := numericRuleValue(rules, "max"); ok && actual > maxValue {
-			return fmt.Errorf("不能大于 %v", maxValue)
+			return fmt.Errorf("Cannot be larger than %v", maxValue)
 		}
 	}
 
@@ -375,12 +375,12 @@ func attrToInt(value interface{}) (int, error) {
 		return int(typed), nil
 	case float32:
 		if math.Mod(float64(typed), 1) != 0 {
-			return 0, fmt.Errorf("需要整数")
+			return 0, fmt.Errorf("Integer required")
 		}
 		return int(typed), nil
 	case float64:
 		if math.Mod(typed, 1) != 0 {
-			return 0, fmt.Errorf("需要整数")
+			return 0, fmt.Errorf("Integer required")
 		}
 		return int(typed), nil
 	case json.Number:
@@ -389,11 +389,11 @@ func attrToInt(value interface{}) (int, error) {
 	case string:
 		v, err := strconv.Atoi(strings.TrimSpace(typed))
 		if err != nil {
-			return 0, fmt.Errorf("需要整数")
+			return 0, fmt.Errorf("Integer required")
 		}
 		return v, nil
 	default:
-		return 0, fmt.Errorf("需要整数")
+		return 0, fmt.Errorf("Integer required")
 	}
 }
 
@@ -414,11 +414,11 @@ func attrToFloat(value interface{}) (float64, error) {
 	case string:
 		v, err := strconv.ParseFloat(strings.TrimSpace(typed), 64)
 		if err != nil {
-			return 0, fmt.Errorf("需要数值")
+			return 0, fmt.Errorf("Value required")
 		}
 		return v, nil
 	default:
-		return 0, fmt.Errorf("需要数值")
+		return 0, fmt.Errorf("Value required")
 	}
 }
 
@@ -433,10 +433,10 @@ func attrToBool(value interface{}) (bool, error) {
 		case "false", "0", "no", "n":
 			return false, nil
 		default:
-			return false, fmt.Errorf("需要布尔值")
+			return false, fmt.Errorf("Boolean required")
 		}
 	default:
-		return false, fmt.Errorf("需要布尔值")
+		return false, fmt.Errorf("Boolean required")
 	}
 }
 
@@ -447,11 +447,11 @@ func attrToTimeString(value interface{}, layout string) (string, error) {
 	case string:
 		parsed, err := time.Parse(layout, strings.TrimSpace(typed))
 		if err != nil {
-			return "", fmt.Errorf("时间格式无效")
+			return "", fmt.Errorf("Invalid time format")
 		}
 		return parsed.Format(layout), nil
 	default:
-		return "", fmt.Errorf("需要时间字符串")
+		return "", fmt.Errorf("Time string required")
 	}
 }
 

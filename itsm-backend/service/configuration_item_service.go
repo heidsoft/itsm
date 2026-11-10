@@ -478,7 +478,7 @@ func (s *ConfigurationItemService) UpdateCI(ctx context.Context, id, tenantID in
 		First(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, fmt.Errorf("CI不存在: %w", err)
+			return nil, fmt.Errorf("CI does not exist: %w", err)
 		}
 		s.logger.Errorw("Failed to get old CI for update", "error", err, "ci_id", id)
 		return nil, fmt.Errorf("failed to get CI: %w", err)
@@ -486,7 +486,7 @@ func (s *ConfigurationItemService) UpdateCI(ctx context.Context, id, tenantID in
 
 	// 乐观锁检查
 	if req.Version > 0 && oldCI.Version != req.Version {
-		return nil, common.NewVersionConflictError("配置项", id, req.Version, oldCI.Version)
+		return nil, common.NewVersionConflictError("Configuration item", id, req.Version, oldCI.Version)
 	}
 
 	update := s.client.ConfigurationItem.UpdateOneID(id).
@@ -596,7 +596,7 @@ func (s *ConfigurationItemService) UpdateCI(ctx context.Context, id, tenantID in
 	// 同值写入按未传处理，保证导入/发现重跑幂等。
 	if req.LifecycleStatus != "" && req.LifecycleStatus != oldCI.LifecycleStatus {
 		if req.LifecycleStatus == common.CILifecycleStatusScrapped {
-			return nil, common.NewValidationError("退役必须通过生命周期接口并携带受控退役理由", nil)
+			return nil, common.NewValidationError("Retirement must go through the lifecycle interface and carry controlled retirement reasons", nil)
 		}
 		if !common.CanTransitionCILifecycle(oldCI.LifecycleStatus, req.LifecycleStatus) {
 			return nil, invalidTransitionError(oldCI.LifecycleStatus, req.LifecycleStatus)
@@ -663,7 +663,7 @@ func (s *ConfigurationItemService) DeleteCI(ctx context.Context, id, tenantID in
 	).Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return fmt.Errorf("CI不存在: %w", err)
+			return fmt.Errorf("CI does not exist: %w", err)
 		}
 		s.logger.Errorw("Failed to get CI for delete", "error", err, "ci_id", id)
 		return fmt.Errorf("failed to get CI: %w", err)
@@ -719,7 +719,7 @@ func (s *ConfigurationItemService) retireCIInTx(ctx context.Context, tx *ent.Tx,
 // invalidTransitionError 把状态机外的迁移统一映射为 409 业务冲突。
 func invalidTransitionError(from, to string) error {
 	return common.NewBusinessError(common.ConflictCode,
-		fmt.Sprintf("非法的生命周期状态迁移: %s -> %s", from, to), "")
+		fmt.Sprintf("Illegal life cycle state migration: %s -> %s", from, to), "")
 }
 
 // staleCIStateError 在乐观锁条件更新未命中时，区分「并发修改」（409）与
@@ -742,11 +742,11 @@ func (s *ConfigurationItemService) staleCIStateErrorInTx(ctx context.Context, tx
 		First(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return fmt.Errorf("CI不存在或已退役: %w", err)
+			return fmt.Errorf("CI does not exist or has been retired: %w", err)
 		}
-		return fmt.Errorf("获取CI失败: %w", err)
+		return fmt.Errorf("Failed to obtain CI: %w", err)
 	}
-	return common.NewVersionConflictError("配置项", id, expectedVersion, current.Version)
+	return common.NewVersionConflictError("Configuration item", id, expectedVersion, current.Version)
 }
 
 // GetCIStats 获取配置项统计
@@ -1556,7 +1556,7 @@ type LifecycleChangeParams struct {
 // 不存在/已退役映射 404。
 func (s *ConfigurationItemService) UpdateLifecycleStatus(ctx context.Context, id int, tenantID int, params LifecycleChangeParams, operatorID int, operatorName string) (*dto.CIResponse, error) {
 	if !common.IsValidCILifecycleStatus(params.Status) {
-		return nil, common.NewValidationError(fmt.Sprintf("无效的生命周期状态: %s", params.Status), nil)
+		return nil, common.NewValidationError(fmt.Sprintf("Invalid lifecycle state: %s", params.Status), nil)
 	}
 
 	ci, err := s.client.ConfigurationItem.Query().
@@ -1568,15 +1568,15 @@ func (s *ConfigurationItemService) UpdateLifecycleStatus(ctx context.Context, id
 		First(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, fmt.Errorf("CI不存在: %w", err)
+			return nil, fmt.Errorf("CI does not exist: %w", err)
 		}
 		s.logger.Errorw("Failed to get CI for lifecycle update", "error", err, "ci_id", id)
-		return nil, fmt.Errorf("获取CI失败: %w", err)
+		return nil, fmt.Errorf("Failed to obtain CI: %w", err)
 	}
 
 	// 乐观锁前置校验：客户端基于过期版本提交时直接拒绝，不做静默覆盖。
 	if params.ExpectedVersion > 0 && ci.Version != params.ExpectedVersion {
-		return nil, common.NewVersionConflictError("配置项", id, params.ExpectedVersion, ci.Version)
+		return nil, common.NewVersionConflictError("Configuration item", id, params.ExpectedVersion, ci.Version)
 	}
 
 	// 状态没变视为幂等成功。
@@ -1589,7 +1589,7 @@ func (s *ConfigurationItemService) UpdateLifecycleStatus(ctx context.Context, id
 		if err := common.CanRetireCILifecycle(ci.LifecycleStatus, params.RetirementReason); err != nil {
 			if errors.Is(err, common.ErrUnknownCIRetirementReason) {
 				return nil, common.NewValidationError(
-					"退役必须提供受控理由: manual/decommissioned/replaced/discovery_missing/end_of_life", err)
+					"Decommissioning must provide a controlled reason: manual/decommissioned/replaced/discovery_missing/end_of_life", err)
 			}
 			return nil, invalidTransitionError(ci.LifecycleStatus, params.Status)
 		}
@@ -1600,7 +1600,7 @@ func (s *ConfigurationItemService) UpdateLifecycleStatus(ctx context.Context, id
 
 	tx, err := s.client.Tx(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("启动生命周期事务失败: %w", err)
+		return nil, fmt.Errorf("Failed to start lifecycle transaction: %w", err)
 	}
 	defer func() { _ = tx.Rollback() }()
 
@@ -1624,7 +1624,7 @@ func (s *ConfigurationItemService) UpdateLifecycleStatus(ctx context.Context, id
 			Save(ctx)
 		if err != nil {
 			s.logger.Errorw("Failed to update CI lifecycle status", "error", err, "ci_id", id, "status", params.Status)
-			return nil, fmt.Errorf("更新生命周期状态失败: %w", err)
+			return nil, fmt.Errorf("Failed to update lifecycle state: %w", err)
 		}
 		if n != 1 {
 			return nil, s.staleCIStateErrorInTx(ctx, tx, id, tenantID, ci.Version)
@@ -1636,11 +1636,11 @@ func (s *ConfigurationItemService) UpdateLifecycleStatus(ctx context.Context, id
 		after.Version = ci.Version + 1
 		txHistoryService := NewCIHistoryService(tx.Client(), s.logger)
 		if err := txHistoryService.RecordCIHistory(ctx, id, tenantID, operatorID, operatorName, "lifecycle_update", remark, ci, &after); err != nil {
-			return nil, fmt.Errorf("记录生命周期审计失败: %w", err)
+			return nil, fmt.Errorf("Record lifecycle audit failed: %w", err)
 		}
 	}
 	if err := tx.Commit(); err != nil {
-		return nil, fmt.Errorf("提交生命周期事务失败: %w", err)
+		return nil, fmt.Errorf("Failed to commit lifecycle transaction: %w", err)
 	}
 
 	s.logger.Infow("CI lifecycle status updated", "ci_id", id, "old_status", ci.LifecycleStatus, "new_status", params.Status, "tenant_id", tenantID)
@@ -1703,10 +1703,10 @@ func (s *ConfigurationItemService) GetLifecycleHistory(ctx context.Context, id i
 		First(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, fmt.Errorf("CI不存在: %w", err)
+			return nil, fmt.Errorf("CI does not exist: %w", err)
 		}
 		s.logger.Errorw("Failed to get CI lifecycle history", "error", err, "ci_id", id)
-		return nil, fmt.Errorf("获取生命周期历史失败: %w", err)
+		return nil, fmt.Errorf("Failed to obtain life cycle history: %w", err)
 	}
 
 	histories, err := s.client.ConfigurationItemHistory.Query().
@@ -1718,7 +1718,7 @@ func (s *ConfigurationItemService) GetLifecycleHistory(ctx context.Context, id i
 		Order(ent.Desc(configurationitemhistory.FieldVersion)).
 		All(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("获取生命周期历史失败: %w", err)
+		return nil, fmt.Errorf("Failed to obtain life cycle history: %w", err)
 	}
 
 	result := make([]map[string]interface{}, 0, len(histories))
@@ -1752,7 +1752,7 @@ func (s *ConfigurationItemService) LinkTicketToCI(ctx context.Context, tenantID,
 		return fmt.Errorf("configuration item service not initialized")
 	}
 	if ciID <= 0 || ticketID <= 0 {
-		return common.NewBusinessError(common.ParamErrorCode, "ci_id 与 ticket_id 必须为正整数", "")
+		return common.NewBusinessError(common.ParamErrorCode, "ci_id and ticket_id must be positive integers", "")
 	}
 
 	// 1) 校验 CI 归属当前租户且未软删除
@@ -1763,10 +1763,10 @@ func (s *ConfigurationItemService) LinkTicketToCI(ctx context.Context, tenantID,
 			configurationitem.LifecycleStatusNEQ(common.CILifecycleStatusScrapped),
 		).Exist(ctx)
 	if err != nil {
-		return fmt.Errorf("校验配置项失败: %w", err)
+		return fmt.Errorf("Failed to verify configuration items: %w", err)
 	}
 	if !ciExists {
-		return common.NewBusinessError(common.NotFoundCode, "配置项不存在或无权访问", "")
+		return common.NewBusinessError(common.NotFoundCode, "The configuration item does not exist or has no permission to access", "")
 	}
 
 	// 2) 校验工单归属当前租户且未软删除
@@ -1777,17 +1777,17 @@ func (s *ConfigurationItemService) LinkTicketToCI(ctx context.Context, tenantID,
 			entticket.DeletedAtIsNil(),
 		).Exist(ctx)
 	if err != nil {
-		return fmt.Errorf("校验工单失败: %w", err)
+		return fmt.Errorf("Failed to verify ticket: %w", err)
 	}
 	if !ticketExists {
-		return common.NewBusinessError(common.NotFoundCode, "工单不存在或无权访问", "")
+		return common.NewBusinessError(common.NotFoundCode, "The work order does not exist or does not have access rights.", "")
 	}
 
 	// 3) 写入外键关联
 	if err := s.client.ConfigurationItem.UpdateOneID(ciID).
 		AddTicketIDs(ticketID).
 		Exec(ctx); err != nil {
-		return fmt.Errorf("关联工单到配置项失败: %w", err)
+		return fmt.Errorf("Failed to associate work order to configuration item: %w", err)
 	}
 
 	s.logger.Infow("Ticket linked to CI (ontology)", "tenant_id", tenantID, "ci_id", ciID, "ticket_id", ticketID)
@@ -1800,7 +1800,7 @@ func (s *ConfigurationItemService) UnlinkTicketFromCI(ctx context.Context, tenan
 		return fmt.Errorf("configuration item service not initialized")
 	}
 	if ciID <= 0 || ticketID <= 0 {
-		return common.NewBusinessError(common.ParamErrorCode, "ci_id 与 ticket_id 必须为正整数", "")
+		return common.NewBusinessError(common.ParamErrorCode, "ci_id and ticket_id must be positive integers", "")
 	}
 	ciExists, err := s.client.ConfigurationItem.Query().
 		Where(
@@ -1809,15 +1809,15 @@ func (s *ConfigurationItemService) UnlinkTicketFromCI(ctx context.Context, tenan
 			configurationitem.LifecycleStatusNEQ(common.CILifecycleStatusScrapped),
 		).Exist(ctx)
 	if err != nil {
-		return fmt.Errorf("校验配置项失败: %w", err)
+		return fmt.Errorf("Failed to verify configuration items: %w", err)
 	}
 	if !ciExists {
-		return common.NewBusinessError(common.NotFoundCode, "配置项不存在或无权访问", "")
+		return common.NewBusinessError(common.NotFoundCode, "The configuration item does not exist or has no permission to access", "")
 	}
 	if err := s.client.ConfigurationItem.UpdateOneID(ciID).
 		RemoveTicketIDs(ticketID).
 		Exec(ctx); err != nil {
-		return fmt.Errorf("解除工单关联失败: %w", err)
+		return fmt.Errorf("Failed to disassociate work order: %w", err)
 	}
 	return nil
 }
@@ -1829,7 +1829,7 @@ func (s *ConfigurationItemService) ListCITickets(ctx context.Context, tenantID, 
 		return nil, fmt.Errorf("configuration item service not initialized")
 	}
 	if ciID <= 0 {
-		return nil, common.NewBusinessError(common.ParamErrorCode, "ci_id 必须为正整数", "")
+		return nil, common.NewBusinessError(common.ParamErrorCode, "ci_id must be a positive integer", "")
 	}
 	if limit <= 0 || limit > 100 {
 		limit = 20
@@ -1843,9 +1843,9 @@ func (s *ConfigurationItemService) ListCITickets(ctx context.Context, tenantID, 
 		).Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, common.NewBusinessError(common.NotFoundCode, "配置项不存在或无权访问", "")
+			return nil, common.NewBusinessError(common.NotFoundCode, "The configuration item does not exist or has no permission to access", "")
 		}
-		return nil, fmt.Errorf("查询配置项失败: %w", err)
+		return nil, fmt.Errorf("Failed to query configuration items: %w", err)
 	}
 
 	// 关联工单同样按租户 + 软删除过滤，避免越权读取
@@ -1858,7 +1858,7 @@ func (s *ConfigurationItemService) ListCITickets(ctx context.Context, tenantID, 
 		Limit(limit).
 		All(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("查询配置项关联工单失败: %w", err)
+		return nil, fmt.Errorf("Failed to query the work order associated with the configuration item: %w", err)
 	}
 
 	result := make([]map[string]interface{}, 0, len(tickets))

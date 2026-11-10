@@ -104,7 +104,7 @@ func TestBPMNVariable_CreateValidationReject(t *testing.T) {
 		TenantID:          f.tenantID,
 	})
 	require.Error(t, err)
-	assert.Contains(t, err.Error(), "变量值不能为空")
+	assert.Contains(t, err.Error(), "Variable value cannot be empty")
 }
 
 func TestBPMNVariable_Update(t *testing.T) {
@@ -242,7 +242,7 @@ func TestBPMNVariable_GetVariableValue_NotFound(t *testing.T) {
 
 	_, err := f.svc.GetVariableValue(ctx, "nonexistent", ScopeInstance, "1", f.tenantID)
 	require.Error(t, err)
-	assert.Contains(t, err.Error(), "不存在")
+	assert.Contains(t, err.Error(), "does not exist")
 }
 
 func TestBPMNVariable_DeleteVariablesByScope(t *testing.T) {

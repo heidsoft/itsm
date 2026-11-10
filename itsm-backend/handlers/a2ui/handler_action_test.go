@@ -177,7 +177,7 @@ func TestHandleActionSubmitRejectsInvalidForm(t *testing.T) {
 				"action": "submit", "surfaceId": "s1",
 				"context": map[string]interface{}{"data": map[string]interface{}{"title": "   "}},
 			},
-			wantMessage: "工单标题不能为空",
+			wantMessage: "Work order title cannot be empty",
 		},
 		{
 			name: "非法优先级",
@@ -185,12 +185,12 @@ func TestHandleActionSubmitRejectsInvalidForm(t *testing.T) {
 				"action": "submit", "surfaceId": "s1",
 				"context": map[string]interface{}{"data": map[string]interface{}{"title": "标题", "priority": "p0"}},
 			},
-			wantMessage: "无效的工单优先级",
+			wantMessage: "Invalid ticket priority",
 		},
 		{
 			name:        "缺少表单数据",
 			body:        map[string]interface{}{"action": "submit", "surfaceId": "s1"},
-			wantMessage: "缺少工单表单数据",
+			wantMessage: "Missing ticket form data",
 		},
 	}
 	for _, tc := range cases {
@@ -211,7 +211,7 @@ func TestHandleActionSubmitRejectsInvalidForm(t *testing.T) {
 // 未登记的表单错误必须落到固定文案：响应里不得出现原始错误串（棘轮锁的是调用形态，
 // 这里锁行为）。
 func TestA2UIPublicFormErrorHidesUnlistedErrors(t *testing.T) {
-	assert.Equal(t, "工单标题不能为空", a2uiPublicFormError(errA2UITitleRequired))
+	assert.Equal(t, "Work order title cannot be empty", a2uiPublicFormError(errA2UITitleRequired))
 	assert.Equal(t, "工单表单数据不完整", a2uiPublicFormError(errors.New("sql: driver closed connection")))
 }
 
@@ -228,7 +228,7 @@ func TestHandleActionRejectsUnknownAction(t *testing.T) {
 
 func TestHandleActionSubmitMapsDomainError(t *testing.T) {
 	creator := &fakeTicketCreator{
-		err: common.NewBadRequestError("title不能为空", nil),
+		err: common.NewBadRequestError("title cannot be empty", nil),
 	}
 	h := NewHandler(nil, creator, nil)
 	r := newActionRouter(h)

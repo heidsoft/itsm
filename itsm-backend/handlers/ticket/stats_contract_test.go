@@ -513,9 +513,9 @@ func TestTicketStatsWindowedContract(t *testing.T) {
 			query   string
 			message string
 		}{
-			{"只传 dateFrom", "dateFrom=" + label, "dateFrom 与 dateTo 必须同时提供"},
-			{"只传 dateTo", "dateTo=" + label, "dateFrom 与 dateTo 必须同时提供"},
-			{"区间倒置", "dateFrom=" + label + "&dateTo=" + yesterday, "dateFrom 不能晚于 dateTo"},
+			{"只传 dateFrom", "dateFrom=" + label, "dateFrom and dateTo must be provided at the same time"},
+			{"只传 dateTo", "dateTo=" + label, "dateFrom and dateTo must be provided at the same time"},
+			{"区间倒置", "dateFrom=" + label + "&dateTo=" + yesterday, "dateFrom cannot be later than dateTo"},
 			{"格式非法", "dateFrom=2026%2F01%2F01&dateTo=" + label, "dateFrom 格式错误"},
 			{"跨度过大", "dateFrom=" + tooWide + "&dateTo=" + label, "统计窗口最长 366 天"},
 		}

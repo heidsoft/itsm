@@ -119,8 +119,8 @@ describe('工作流版本页', () => {
     expect(WorkflowAPI.listVersions).toHaveBeenCalledWith('incident_flow');
 
     expect(within(table).getAllByRole('row')).toHaveLength(3);
-    expect(within(table).getAllByText('已激活')).toHaveLength(1);
-    expect(within(table).getAllByText('未激活')).toHaveLength(1);
+    expect(within(table).getAllByText("Activated")).toHaveLength(1);
+    expect(within(table).getAllByText("Inactive")).toHaveLength(1);
     expect(duplicateKeyErrors).toEqual([]);
   });
 
@@ -139,19 +139,19 @@ describe('工作流版本页', () => {
     renderPage();
 
     await screen.findByRole('table');
-    expect(screen.getByLabelText('激活版本 v2')).toBeDisabled();
-    expect(screen.getByLabelText('删除版本 v2')).toBeDisabled();
-    expect(screen.getByLabelText('激活版本 v1')).not.toBeDisabled();
+    expect(screen.getByLabelText("Activate version v 2")).toBeDisabled();
+    expect(screen.getByLabelText("Delete version v 2")).toBeDisabled();
+    expect(screen.getByLabelText("Activate version v 1")).not.toBeDisabled();
   });
 
   it('版本详情弹窗预览该版本的 BPMN 图形', async () => {
     renderPage();
 
     await screen.findByRole('table');
-    fireEvent.click(screen.getByLabelText('查看版本 v1 详情'));
+    fireEvent.click(screen.getByLabelText("View version v 1 Details"));
 
     const dialog = await screen.findByRole('dialog');
-    expect(within(dialog).getByText('流程预览')).toBeInTheDocument();
+    expect(within(dialog).getByText("Process preview")).toBeInTheDocument();
     expect(within(dialog).getByTestId('bpmn-preview')).toHaveAttribute(
       'data-xml',
       '<definitions>v1</definitions>'
@@ -164,15 +164,15 @@ describe('工作流版本页', () => {
     renderPage();
 
     await screen.findByRole('table');
-    fireEvent.click(screen.getByLabelText('比较版本 v1 与最新版本'));
+    fireEvent.click(screen.getByLabelText("Compare version v 1 with the latest version"));
 
     await waitFor(() =>
       expect(WorkflowAPI.compareVersions).toHaveBeenCalledWith('incident_flow', 1, 2)
     );
 
     const dialog = await screen.findByRole('dialog');
-    expect(within(dialog).getByText('高风险变更')).toBeInTheDocument();
-    expect(within(dialog).getByText('存在 1 项破坏性变更，运行中的流程实例可能受影响。')).toBeInTheDocument();
+    expect(within(dialog).getByText("High risk change")).toBeInTheDocument();
+    expect(within(dialog).getByText("exists 1 A destructive change may affect running process instances.")).toBeInTheDocument();
     // 破坏性变更清单与变更明细各出现一次
     expect(within(dialog).getAllByText('assignee changed')).toHaveLength(2);
     expect(within(dialog).getByText(/审批/)).toBeInTheDocument();
@@ -183,9 +183,9 @@ describe('工作流版本页', () => {
     renderPage();
 
     await screen.findByRole('table');
-    fireEvent.click(screen.getByLabelText('比较版本 v2 与最新版本'));
+    fireEvent.click(screen.getByLabelText("Compare version v 2 with the latest version"));
 
-    expect(await screen.findByText('当前版本已经是最新版本，无需比较。')).toBeInTheDocument();
+    expect(await screen.findByText("The current version is already the latest version, no need to compare.")).toBeInTheDocument();
     expect(WorkflowAPI.compareVersions).not.toHaveBeenCalled();
   });
 
@@ -194,9 +194,9 @@ describe('工作流版本页', () => {
     renderPage();
 
     await screen.findByRole('table');
-    fireEvent.click(screen.getByLabelText('比较版本 v1 与最新版本'));
+    fireEvent.click(screen.getByLabelText("Compare version v 1 with the latest version"));
 
-    expect(await screen.findByText('版本相同，无需比较。')).toBeInTheDocument();
+    expect(await screen.findByText("The versions are the same, no need to compare.")).toBeInTheDocument();
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
@@ -207,11 +207,11 @@ describe('工作流版本页', () => {
     renderPage();
 
     await screen.findByRole('table');
-    fireEvent.click(screen.getByLabelText('比较版本 v1 与最新版本'));
+    fireEvent.click(screen.getByLabelText("Compare version v 1 with the latest version"));
 
     const dialog = await screen.findByRole('dialog');
-    expect(within(dialog).getByText('兼容性：unknown')).toBeInTheDocument();
-    expect(within(dialog).getByText('未发现破坏性变更。')).toBeInTheDocument();
-    expect(within(dialog).getByText('两个版本之间没有检测到结构变更。')).toBeInTheDocument();
+    expect(within(dialog).getByText('Compatibility:unknown')).toBeInTheDocument();
+    expect(within(dialog).getByText("No breaking changes found.")).toBeInTheDocument();
+    expect(within(dialog).getByText("No structural changes detected between the two versions.")).toBeInTheDocument();
   });
 });

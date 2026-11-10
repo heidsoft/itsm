@@ -58,7 +58,7 @@ export interface TemplateInstallSummary {
 }
 
 const failureReason = (error: unknown): string =>
-  error instanceof Error && error.message ? error.message : '未知错误';
+  error instanceof Error && error.message ? error.message : 'Unknown error';
 
 export class SLATemplateApi {
   /** 列出预置模板及其在当前租户的安装状态 */

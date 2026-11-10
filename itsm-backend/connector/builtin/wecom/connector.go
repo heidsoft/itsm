@@ -33,10 +33,10 @@ func (w *WeCom) Manifest() connector.Manifest {
 	return connector.Manifest{
 		Name:        "wecom",
 		Version:     "1.0.0",
-		Title:       "企业微信 WeCom",
+		Title:       "WeCom",
 		Provider:    "wecom",
 		Type:        connector.TypeIM,
-		Description: "企业微信连接器：应用消息（精确到 UserID/部门/标签）+ 群机器人 Webhook + 回调验签与解密。支持 text/markdown/textcard/news。",
+		Description: "WeCom connector: application messages targeting users, departments or tags; group bot webhooks; callback signature verification and decryption. Supports text, markdown, textcard and news.",
 		Capabilities: []connector.Capability{
 			connector.CapSendMessage,
 			connector.CapSendCard,

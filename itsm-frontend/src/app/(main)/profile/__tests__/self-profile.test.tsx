@@ -91,18 +91,18 @@ describe('/profile 自助资料面', () => {
 
     await waitFor(() => expect(mockedUserApi.getOwnProfile).toHaveBeenCalledTimes(1));
 
-    const phone = await screen.findByLabelText('电话');
+    const phone = await screen.findByLabelText("Phone");
     expect(phone).toHaveValue('13900001111');
-    expect(screen.getByLabelText('部门')).toHaveValue('财务部');
+    expect(screen.getByLabelText("Department")).toHaveValue('财务部');
   });
 
   it('保存走 PUT /api/v1/account/profile，不再打需要 user:write 的 /users/:id', async () => {
     renderPage();
     const nameInput = await screen.findByTestId('profile-name-input');
-    await waitFor(() => expect(screen.getByLabelText('电话')).toHaveValue('13900001111'));
+    await waitFor(() => expect(screen.getByLabelText("Phone")).toHaveValue('13900001111'));
 
     fireEvent.change(nameInput, { target: { value: '改名成功' } });
-    fireEvent.click(screen.getByRole('button', { name: '保存修改' }));
+    fireEvent.click(screen.getByRole('button', { name: "Save Changes" }));
 
     await waitFor(() => expect(mockedUserApi.updateOwnProfile).toHaveBeenCalledTimes(1));
     const payload = mockedUserApi.updateOwnProfile.mock.calls[0][0];
@@ -124,16 +124,16 @@ describe('/profile 自助资料面', () => {
 
     renderPage();
     const nameInput = await screen.findByTestId('profile-name-input');
-    await waitFor(() => expect(screen.getByLabelText('电话')).toHaveValue('13900001111'));
+    await waitFor(() => expect(screen.getByLabelText("Phone")).toHaveValue('13900001111'));
 
     fireEvent.change(nameInput, { target: { value: '用户输入的原值' } });
-    fireEvent.click(screen.getByRole('button', { name: '保存修改' }));
+    fireEvent.click(screen.getByRole('button', { name: "Save Changes" }));
 
     await waitFor(() => expect(mockedUserApi.updateOwnProfile).toHaveBeenCalledTimes(1));
     await waitFor(() => expect(screen.getByText(/服务端修剪后/)).toBeInTheDocument());
     // 表单值同样来自响应 DTO（服务端 trim 后的原样），不是用户键入的 '用户输入的原值'。
     expect(screen.getByTestId('profile-name-input')).toHaveValue('  服务端修剪后  ');
-    expect(screen.getByLabelText('电话')).toHaveValue('13800000000');
+    expect(screen.getByLabelText("Phone")).toHaveValue('13800000000');
   });
 
   it('保存失败时透出服务端原因，不只说「请重试」', async () => {
@@ -143,10 +143,10 @@ describe('/profile 自助资料面', () => {
 
     renderPage();
     const nameInput = await screen.findByTestId('profile-name-input');
-    await waitFor(() => expect(screen.getByLabelText('电话')).toHaveValue('13900001111'));
+    await waitFor(() => expect(screen.getByLabelText("Phone")).toHaveValue('13900001111'));
 
     fireEvent.change(nameInput, { target: { value: '撞邮箱' } });
-    fireEvent.click(screen.getByRole('button', { name: '保存修改' }));
+    fireEvent.click(screen.getByRole('button', { name: "Save Changes" }));
 
     expect(await screen.findByText(/该邮箱已被其他账号使用/)).toBeInTheDocument();
   });

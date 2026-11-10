@@ -70,7 +70,7 @@ func (h *Handler) CreateSchedule(c *gin.Context) {
 	}
 	var req scheduleRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "参数错误")
+		common.ParamErrorWithErr(c, err, "Parameter error")
 		return
 	}
 	schedule, err := h.service.CreateSchedule(c.Request.Context(), tenantID, ScheduleInput(req))
@@ -117,7 +117,7 @@ func (h *Handler) UpdateSchedule(c *gin.Context) {
 	}
 	var req scheduleRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "参数错误")
+		common.ParamErrorWithErr(c, err, "Parameter error")
 		return
 	}
 	schedule, err := h.service.UpdateSchedule(c.Request.Context(), tenantID, scheduleID, ScheduleInput{
@@ -147,7 +147,7 @@ func (h *Handler) DeleteSchedule(c *gin.Context) {
 		h.fail(c, err, "删除值班排班失败")
 		return
 	}
-	common.SuccessWithMessage(c, "排班已删除", nil)
+	common.SuccessWithMessage(c, "Shift schedule deleted", nil)
 }
 
 // ListShifts 列出班次，可按排班表与时间窗过滤。
@@ -190,7 +190,7 @@ func (h *Handler) CreateShift(c *gin.Context) {
 	}
 	var req shiftRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "参数错误")
+		common.ParamErrorWithErr(c, err, "Parameter error")
 		return
 	}
 	shift, err := h.service.CreateShift(c.Request.Context(), tenantID, req.ScheduleID, req.UserID, req.StartAt, req.EndAt)
@@ -216,7 +216,7 @@ func (h *Handler) UpdateShift(c *gin.Context) {
 	}
 	var req shiftRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "参数错误")
+		common.ParamErrorWithErr(c, err, "Parameter error")
 		return
 	}
 	shift, err := h.service.UpdateShift(c.Request.Context(), tenantID, shiftID, req.ScheduleID, req.UserID, req.StartAt, req.EndAt)
@@ -244,7 +244,7 @@ func (h *Handler) DeleteShift(c *gin.Context) {
 		h.fail(c, err, "删除班次失败")
 		return
 	}
-	common.SuccessWithMessage(c, "班次已删除", nil)
+	common.SuccessWithMessage(c, "Shift deleted", nil)
 }
 
 // Current 返回某支持组此刻的值班人。邮件受理的兜底派单与告警路由都依赖它。
@@ -260,14 +260,14 @@ func (h *Handler) Current(c *gin.Context) {
 	}
 	groupID, err := strconv.Atoi(c.Query("groupId"))
 	if err != nil || groupID <= 0 {
-		common.ParamError(c, "groupId 必须是正整数")
+		common.ParamError(c, "groupId must be a positive integer")
 		return
 	}
 	at := time.Now()
 	if raw := c.Query("at"); raw != "" {
 		parsed, err := time.Parse(time.RFC3339, raw)
 		if err != nil {
-			common.ParamError(c, "at 必须是 RFC3339 时间")
+			common.ParamError(c, "at must be RFC3339 time")
 			return
 		}
 		at = parsed
@@ -283,7 +283,7 @@ func (h *Handler) Current(c *gin.Context) {
 func (h *Handler) tenant(c *gin.Context) (int, bool) {
 	tenantID := c.GetInt("tenant_id")
 	if tenantID <= 0 {
-		common.ParamError(c, "租户信息错误")
+		common.ParamError(c, "Wrong tenant information")
 		return 0, false
 	}
 	return tenantID, true
@@ -292,7 +292,7 @@ func (h *Handler) tenant(c *gin.Context) (int, bool) {
 func (h *Handler) pathID(c *gin.Context, label string) (int, bool) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil || id <= 0 {
-		common.ParamError(c, label+"格式错误")
+		common.ParamError(c, label+"Format error")
 		return 0, false
 	}
 	return id, true
@@ -305,7 +305,7 @@ func (h *Handler) queryTime(c *gin.Context, key string) (*time.Time, bool) {
 	}
 	parsed, err := time.Parse(time.RFC3339, raw)
 	if err != nil {
-		common.ParamError(c, key+" 必须是 RFC3339 时间")
+		common.ParamError(c, key+"Must be RFC3339 time")
 		return nil, false
 	}
 	return &parsed, true
@@ -316,17 +316,17 @@ func (h *Handler) queryTime(c *gin.Context, key string) (*time.Time, bool) {
 func (h *Handler) fail(c *gin.Context, err error, fallback string) {
 	switch {
 	case errors.Is(err, ErrInvalidShift):
-		common.ParamErrorWithErr(c, err, "值班班次参数无效")
+		common.ParamErrorWithErr(c, err, "Invalid shift parameter")
 	case errors.Is(err, ErrInvalidSchedule):
-		common.ParamErrorWithErr(c, err, "值班计划参数无效")
+		common.ParamErrorWithErr(c, err, "Invalid duty plan parameters")
 	case errors.Is(err, ErrOverlappingShift):
-		common.Conflict(c, "班次时间与已有班次重叠", nil)
+		common.Conflict(c, "The shift time overlaps with an existing shift", nil)
 	case errors.Is(err, ErrScheduleHasShift):
-		common.Conflict(c, "排班仍包含班次，无法删除", nil)
+		common.Conflict(c, "The shift schedule still contains shifts and cannot be deleted.", nil)
 	case errors.Is(err, ErrScheduleNotFound), errors.Is(err, ErrShiftNotFound):
-		common.NotFound(c, "值班计划或班次不存在")
+		common.NotFound(c, "Duty plan or shift does not exist")
 	case errors.Is(err, ErrNoOnCall):
-		common.NotFound(c, "该支持组当前没有值班人")
+		common.NotFound(c, "This support group is currently unavailable")
 	default:
 		h.logger.Errorw("on-call request failed", "error", err)
 		common.InternalError(c, fallback)

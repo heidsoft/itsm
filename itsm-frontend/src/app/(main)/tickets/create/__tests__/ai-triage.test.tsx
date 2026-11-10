@@ -114,9 +114,9 @@ describe('CreateTicketPage AI 辅助分类', () => {
     await userEvent.click(await screen.findByText('账号申请'));
     expect(await screen.findByLabelText('目标系统')).toBeInTheDocument();
 
-    await userEvent.type(screen.getByLabelText('标题'), 'VPN 无法连接内网');
+    await userEvent.type(screen.getByLabelText("Title"), 'VPN 无法连接内网');
 
-    await userEvent.click(screen.getByRole('button', { name: /获取 AI 建议/ }));
+    await userEvent.click(screen.getByRole('button', { name: /Get AI suggestions/ }));
 
     // 关键断言：请求真的发出去了
     await waitFor(() =>
@@ -127,7 +127,7 @@ describe('CreateTicketPage AI 辅助分类', () => {
     );
 
     // 关键断言：不得把「表单没填完」说成「服务故障」
-    expect(screen.queryByText(/AI 分类服务暂时不可用/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/AI classification service is temporarily unavailable, please try again later/)).not.toBeInTheDocument();
   });
 
   it('AI 返回英文分类 code 时应映射成中文分类名并如实提示已应用', async () => {
@@ -138,13 +138,13 @@ describe('CreateTicketPage AI 辅助分类', () => {
     renderPage();
 
     await userEvent.click(await screen.findByText('账号申请'));
-    await userEvent.type(await screen.findByLabelText('标题'), 'VPN 无法连接内网');
-    await userEvent.click(screen.getByRole('button', { name: /获取 AI 建议/ }));
+    await userEvent.type(await screen.findByLabelText("Title"), 'VPN 无法连接内网');
+    await userEvent.click(screen.getByRole('button', { name: /Get AI suggestions/ }));
 
     // 提示必须说清回填了什么，且分类用中文名而不是 network
-    expect(await screen.findByText(/AI 建议已应用：分类「网络故障」/)).toBeInTheDocument();
+    expect(await screen.findByText(/AI suggestion applied:Category「网络故障」/)).toBeInTheDocument();
     // 原始 slug 不应出现在建议标签里
-    expect(screen.queryByText(/分类: network/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Category: network/)).not.toBeInTheDocument();
   });
 
   it('AI 分类不在主数据中时不得谎报成功', async () => {
@@ -155,11 +155,11 @@ describe('CreateTicketPage AI 辅助分类', () => {
     renderPage();
 
     await userEvent.click(await screen.findByText('账号申请'));
-    await userEvent.type(await screen.findByLabelText('标题'), '打印机坏了');
-    await userEvent.click(screen.getByRole('button', { name: /获取 AI 建议/ }));
+    await userEvent.type(await screen.findByLabelText("Title"), '打印机坏了');
+    await userEvent.click(screen.getByRole('button', { name: /Get AI suggestions/ }));
 
     // 只有优先级被应用，不能整体报成功
-    expect(await screen.findByText(/AI 建议分类「unknown_slug」不在当前分类主数据中/)).toBeInTheDocument();
-    expect(screen.queryByText(/AI 分类建议已应用/)).not.toBeInTheDocument();
+    expect(await screen.findByText(/AI suggested classification "unknown_slug"is not in the current classification master data/)).toBeInTheDocument();
+    expect(screen.queryByText(/AI suggestion applied:Category/)).not.toBeInTheDocument();
   });
 });

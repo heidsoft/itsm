@@ -146,10 +146,10 @@ describe('/reports/incident-trends', () => {
     expect(Object.keys(trend[0]).sort()).toEqual(['created', 'date', 'resolved']);
 
     expect(priority.map(slice => [slice.key, slice.name, slice.value])).toEqual([
-      ['low', '低', 1],
-      ['medium', '中', 2],
-      ['high', '高', 1],
-      ['critical', '紧急', 2],
+      ['low', "Low", 1],
+      ['medium', "Medium", 2],
+      ['high', "High", 1],
+      ['critical', "Urgent", 2],
     ]);
     expect(status).toHaveLength(4);
     // 分片颜色取自词表映射：toSlices 把原始取值字符串当色值塞给 <Cell fill> 时，
@@ -165,8 +165,8 @@ describe('/reports/incident-trends', () => {
     // 后端保证两份分布之和都等于窗口内新建数，前端原样透传。
     expect(status.reduce((sum, slice) => sum + slice.value, 0)).toBe(6);
     expect(priority.reduce((sum, slice) => sum + slice.value, 0)).toBe(6);
-    expect(statisticText('窗口内新建')).toContain('6');
-    expect(statisticText('窗口内解决')).toContain('3');
+    expect(statisticText("New in window")).toContain('6');
+    expect(statisticText("Solved within window")).toContain('3');
   });
 
   it('keeps out-of-vocabulary values visible instead of merging them into known buckets', async () => {
@@ -187,9 +187,9 @@ describe('/reports/incident-trends', () => {
   it('labels the average resolution duration with the unit the number actually means', async () => {
     // 后端的 avgResolutionTime 是分钟：toFixed(1) + 固定 suffix="小时" 会让读数差 60 倍。
     const cases: Array<{ minutes: number; want: string }> = [
-      { minutes: 45, want: '45 分钟' },
-      { minutes: 90, want: '1.5 小时' },
-      { minutes: 60 * 24 * 3 + 60, want: '3.0 天' },
+      { minutes: 45, want: '45 minutes' },
+      { minutes: 90, want: '1.5 hours' },
+      { minutes: 60 * 24 * 3 + 60, want: '3.0 days' },
     ];
     for (const testCase of cases) {
       mockGetIncidentReport.mockResolvedValue(
@@ -198,7 +198,7 @@ describe('/reports/incident-trends', () => {
       const { unmount } = render(<IncidentTrendsPage />);
       await waitFor(() => expect(screen.getByText(testCase.want)).toBeInTheDocument());
       // 旧实现直接把分钟值挂上「小时」后缀。
-      expect(screen.queryByText(`${testCase.minutes.toFixed(1)} 小时`)).not.toBeInTheDocument();
+      expect(screen.queryByText(`${testCase.minutes.toFixed(1)} hours`)).not.toBeInTheDocument();
       unmount();
     }
   });
@@ -217,9 +217,9 @@ describe('/reports/incident-trends', () => {
 
     render(<IncidentTrendsPage />);
 
-    await waitFor(() => expect(screen.getByText('窗口内无解决事件')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText("No resolved events in window")).toBeInTheDocument());
     // 后端对空集合 COALESCE 出 0，那是「无样本」而不是「0 分钟」。
-    expect(statisticText('平均解决时长')).not.toContain('0 分钟');
+    expect(statisticText("Average resolution time")).not.toContain("0 minute(s)");
   });
 
   it('surfaces the load failure instead of rendering zeroed cards', async () => {
@@ -227,23 +227,23 @@ describe('/reports/incident-trends', () => {
 
     render(<IncidentTrendsPage />);
 
-    await waitFor(() => expect(screen.getByText('事件趋势数据加载失败')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText("Event trend data loading failed")).toBeInTheDocument());
     expect(screen.getByText(/网络异常/)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '重试' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: "Retry" })).toBeInTheDocument();
     // 失败不得只 console.error + toast 后让四张卡片继续显示 0，那会把故障伪装成空态。
-    expect(screen.queryByText('窗口内新建')).not.toBeInTheDocument();
+    expect(screen.queryByText("New in window")).not.toBeInTheDocument();
     expect(screen.queryByTestId('chart-data')).not.toBeInTheDocument();
   });
 
   it('reloads the same window when retry is pressed', async () => {
     mockGetIncidentReport.mockRejectedValueOnce(new Error('超时'));
     render(<IncidentTrendsPage />);
-    await waitFor(() => expect(screen.getByText('事件趋势数据加载失败')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText("Event trend data loading failed")).toBeInTheDocument());
 
     mockGetIncidentReport.mockResolvedValue(reportFixture());
-    fireEvent.click(screen.getByRole('button', { name: '重试' }));
+    fireEvent.click(screen.getByRole('button', { name: "Retry" }));
 
-    await waitFor(() => expect(screen.getByText('窗口内新建')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText("New in window")).toBeInTheDocument());
     expect(mockGetIncidentReport).toHaveBeenCalledTimes(2);
     expect(mockGetIncidentReport).toHaveBeenLastCalledWith({
       dateFrom: '2026-09-05',
@@ -268,7 +268,7 @@ describe('/reports/incident-trends', () => {
 
     render(<IncidentTrendsPage />);
 
-    await waitFor(() => expect(screen.getByText('所选窗口内没有事件记录')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText("No events recorded in the selected window")).toBeInTheDocument());
     expect(screen.queryByTestId('chart-data')).not.toBeInTheDocument();
     expect(screen.queryByText(/NaN/)).not.toBeInTheDocument();
   });
@@ -282,8 +282,8 @@ describe('/reports/incident-trends', () => {
     render(<IncidentTrendsPage />);
 
     await waitFor(() =>
-      expect(screen.getByText(/2026-09-06 至 2026-10-04（29 天/)).toBeInTheDocument(),
+      expect(screen.getByText(/2026-09-06 to 2026-10-04（29 day/)).toBeInTheDocument(),
     );
-    expect(statisticText('统计天数')).toContain('29');
+    expect(statisticText("Statistics days")).toContain('29');
   });
 });

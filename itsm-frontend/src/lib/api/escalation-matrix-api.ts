@@ -27,19 +27,19 @@ export type EscalationMatrix = Record<string, EscalationLevel[]>;
 // 与后端 service.DefaultEscalationMatrix 逐字段一致，仅用于加载失败时标注「内置默认」展示。
 export const DEFAULT_ESCALATION_MATRIX: EscalationMatrix = {
   critical: [
-    { level: 1, afterMinutes: 15, notifyRoles: ['manager'], notifyUserIDs: [], description: '15分钟未响应升级至部门经理' },
-    { level: 2, afterMinutes: 30, notifyRoles: ['it_admin'], notifyUserIDs: [], description: '30分钟未响应升级至IT管理员' },
-    { level: 3, afterMinutes: 60, notifyRoles: ['admin'], notifyUserIDs: [], description: '60分钟未响应升级至租户管理员' },
+    { level: 1, afterMinutes: 15, notifyRoles: ['manager'], notifyUserIDs: [], description: 'No response for 15 minutes, escalate to department manager' },
+    { level: 2, afterMinutes: 30, notifyRoles: ['it_admin'], notifyUserIDs: [], description: 'No response for 30 minutes. Escalate to IT administrator.' },
+    { level: 3, afterMinutes: 60, notifyRoles: ['admin'], notifyUserIDs: [], description: 'No response for 60 minutes. Escalate to tenant administrator.' },
   ],
   high: [
-    { level: 1, afterMinutes: 60, notifyRoles: ['manager'], notifyUserIDs: [], description: '1小时未响应升级至部门经理' },
-    { level: 2, afterMinutes: 240, notifyRoles: ['it_admin'], notifyUserIDs: [], description: '4小时未响应升级至IT管理员' },
+    { level: 1, afterMinutes: 60, notifyRoles: ['manager'], notifyUserIDs: [], description: 'No response for 1 hour. Escalated to department manager.' },
+    { level: 2, afterMinutes: 240, notifyRoles: ['it_admin'], notifyUserIDs: [], description: 'No response for 4 hours Escalate to IT administrator' },
   ],
   medium: [
-    { level: 1, afterMinutes: 240, notifyRoles: ['manager'], notifyUserIDs: [], description: '4小时未响应升级至部门经理' },
+    { level: 1, afterMinutes: 240, notifyRoles: ['manager'], notifyUserIDs: [], description: 'No response for 4 hours. Escalated to department manager.' },
   ],
   low: [
-    { level: 1, afterMinutes: 480, notifyRoles: ['manager'], notifyUserIDs: [], description: '8小时未响应升级至部门经理' },
+    { level: 1, afterMinutes: 480, notifyRoles: ['manager'], notifyUserIDs: [], description: 'No response for 8 hours. Escalated to department manager.' },
   ],
 };
 
@@ -48,7 +48,7 @@ export class EscalationMatrixApi {
   static async getMatrix(): Promise<EscalationMatrix> {
     const matrix = await httpClient.get<EscalationMatrix | null>('/api/v1/escalation-matrices');
     if (!matrix || typeof matrix !== 'object' || Object.keys(matrix).length === 0) {
-      throw new Error('升级矩阵返回为空，无法确认当前生效配置');
+      throw new Error('The upgrade matrix returned is empty and the current effective configuration cannot be confirmed.');
     }
     return matrix;
   }

@@ -45,13 +45,13 @@ func serviceTaskActionError(handlerType string, task *ent.ProcessTask, action st
 
 	if strings.TrimSpace(action) == "" {
 		return fmt.Errorf(
-			"服务任务缺少 action 配置（handler=%s, %s）："+
-				"请在 BPMN 定义中为该 serviceTask 设置 variables.action，可选值 [%s]",
+			"The service task is missing action configuration (handler=%s, %s):"+
+				"Please set variables.action for this serviceTask in the BPMN definition, optional value [%s]",
 			handlerType, where, strings.Join(sorted, ", "),
 		)
 	}
 	return fmt.Errorf(
-		"未知的服务任务动作 %q（handler=%s, %s）：可选值 [%s]",
+		"Unknown service task action %q (handler=%s, %s): optional value [%s]",
 		action, handlerType, where, strings.Join(sorted, ", "),
 	)
 }
@@ -64,7 +64,7 @@ func validateServiceTaskAction(handlerType string, config map[string]interface{}
 		sorted := append([]string(nil), allowed...)
 		sort.Strings(sorted)
 		return fmt.Errorf(
-			"服务任务缺少 action 配置（handler=%s）：可选值 [%s]",
+			"The service task is missing action configuration (handler=%s): optional value [%s]",
 			handlerType, strings.Join(sorted, ", "),
 		)
 	}
@@ -76,7 +76,7 @@ func validateServiceTaskAction(handlerType string, config map[string]interface{}
 	sorted := append([]string(nil), allowed...)
 	sort.Strings(sorted)
 	return fmt.Errorf(
-		"未知的服务任务动作 %q（handler=%s）：可选值 [%s]",
+		"Unknown service task action %q (handler=%s): optional value [%s]",
 		action, handlerType, strings.Join(sorted, ", "),
 	)
 }

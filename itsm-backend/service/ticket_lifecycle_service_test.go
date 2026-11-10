@@ -70,7 +70,7 @@ func TestTicketLifecycleService_ResolveTicket(t *testing.T) {
 			expectedStatus: "resolved",
 		},
 		{
-			name:           "工单不存在",
+			name:           "The work order does not exist",
 			ticketID:       99999,
 			tenantID:       testTenant.ID,
 			resolution:     "问题已解决",
@@ -79,7 +79,7 @@ func TestTicketLifecycleService_ResolveTicket(t *testing.T) {
 			expectedStatus: "",
 		},
 		{
-			name:           "租户不匹配",
+			name:           "Tenant mismatch",
 			ticketID:       testTicket.ID,
 			tenantID:       99999,
 			resolution:     "问题已解决",
@@ -291,7 +291,7 @@ func TestTicketLifecycleService_UpdateTicketStatus(t *testing.T) {
 			expectedStatus: "",
 		},
 		{
-			name:           "工单不存在",
+			name:           "The work order does not exist",
 			ticketID:       99999,
 			newStatus:      "in_progress",
 			tenantID:       testTenant.ID,

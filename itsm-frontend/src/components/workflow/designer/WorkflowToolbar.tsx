@@ -150,7 +150,7 @@ export default function WorkflowToolbar({
         )}
 
         {serializeBlocked && (
-          <Tag color="error">流程序列化异常，保存已阻断</Tag>
+          <Tag color="error">Process serialization exception, saving blocked</Tag>
         )}
       </div>
 

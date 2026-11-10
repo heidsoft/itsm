@@ -26,11 +26,11 @@ import (
 func exportCorpus(tenantID int, outPath string, limit int) (int, error) {
 	cfg, err := config.LoadConfig()
 	if err != nil {
-		return 0, fmt.Errorf("读配置: %w", err)
+		return 0, fmt.Errorf("Read configuration: %w", err)
 	}
 	db, err := database.InitDB(&cfg.Database)
 	if err != nil {
-		return 0, fmt.Errorf("连数据库: %w", err)
+		return 0, fmt.Errorf("Connecting to database: %w", err)
 	}
 	defer db.Close()
 
@@ -46,16 +46,16 @@ func exportCorpus(tenantID int, outPath string, limit int) (int, error) {
 		ORDER BY id
 		LIMIT $2`, tenantID, limit)
 	if err != nil {
-		return 0, fmt.Errorf("查询知识文章: %w", err)
+		return 0, fmt.Errorf("Query knowledge articles: %w", err)
 	}
 	defer rows.Close()
 
 	if err := os.MkdirAll(filepath.Dir(outPath), 0o755); err != nil {
-		return 0, fmt.Errorf("建输出目录: %w", err)
+		return 0, fmt.Errorf("Create output directory: %w", err)
 	}
 	f, err := os.Create(outPath)
 	if err != nil {
-		return 0, fmt.Errorf("建语料文件: %w", err)
+		return 0, fmt.Errorf("Create corpus file: %w", err)
 	}
 	defer f.Close()
 
@@ -65,13 +65,13 @@ func exportCorpus(tenantID int, outPath string, limit int) (int, error) {
 		var a eval.RAGCorpusArticle
 		var tenant int
 		if err := rows.Scan(&a.Title, &a.Content, &a.Category, &a.Tags, &tenant); err != nil {
-			return count, fmt.Errorf("读行: %w", err)
+			return count, fmt.Errorf("Read line: %w", err)
 		}
 		a.TenantID = tenant
 		published := true
 		a.Published = &published
 		if err := enc.Encode(a); err != nil {
-			return count, fmt.Errorf("写行: %w", err)
+			return count, fmt.Errorf("Write line: %w", err)
 		}
 		count++
 	}
@@ -99,7 +99,7 @@ func runExport(args []string) error {
 		return err
 	}
 	if n == 0 {
-		return fmt.Errorf("租户 %d 没有可导出的已发布文章（语料不能为空，装载会拒绝）", *tenant)
+		return fmt.Errorf("Tenant %d has no published articles that can be exported (the corpus cannot be empty, the load will be rejected)", *tenant)
 	}
 	fmt.Printf("已导出 %d 篇到 %s\n", n, outPath)
 	fmt.Println("下一步：人工标注 rag.jsonl 的 expected_refs（见 docs/operations/ai-eval-corpus-guide.md）")

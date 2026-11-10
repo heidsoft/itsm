@@ -435,7 +435,7 @@ func classifyError(err error) (code int, safeMsg string, ok bool) {
 	//    不回显 err.Error()：ent 的原始消息会带上实体名等内部结构信息。
 	var notFound *ent.NotFoundError
 	if errors.As(err, &notFound) {
-		return NotFoundCode, "资源不存在或已被删除", true
+		return NotFoundCode, "Resource not found or has been deleted", true
 	}
 	return InternalErrorCode, "", false
 }

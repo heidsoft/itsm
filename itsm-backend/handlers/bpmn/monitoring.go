@@ -57,13 +57,13 @@ func (c *MonitoringHandler) RegisterRoutes(r *gin.RouterGroup) {
 func tenantIDFromCtx(ctx *gin.Context) (int, bool) {
 	tenantID, exists := ctx.Get("tenant_id")
 	if !exists {
-		common.Fail(ctx, common.AuthFailedCode, "未授权访问")
+		common.Fail(ctx, common.AuthFailedCode, "Unauthorized access")
 		return 0, false
 	}
 	id, ok := tenantID.(int)
 	if !ok {
 		// 租户上下文类型错误本质是认证/上下文问题，统一为 401（对齐上游中间件）。
-		common.Fail(ctx, common.AuthFailedCode, "租户ID类型错误")
+		common.Fail(ctx, common.AuthFailedCode, "Wrong tenant ID type")
 		return 0, false
 	}
 	return id, true
@@ -81,7 +81,7 @@ func parseTimeFilter(ctx *gin.Context, name string) (*time.Time, bool) {
 	}
 	parsed, err := time.Parse(time.RFC3339, raw)
 	if err != nil {
-		common.Fail(ctx, common.ParamErrorCode, name+" 需使用 ISO 8601 时间（例如 2024-01-01T00:00:00Z）")
+		common.Fail(ctx, common.ParamErrorCode, name+"ISO 8601 time required (e.g. 2024-01-01T00:00:00Z)")
 		return nil, false
 	}
 	return &parsed, true
@@ -117,7 +117,7 @@ func (c *MonitoringHandler) GetProcessMetrics(ctx *gin.Context) {
 
 	metrics, err := c.monitoringService.GetProcessMetrics(ctx, req)
 	if err != nil {
-		common.RespondError(ctx, err, "获取流程指标失败")
+		common.RespondError(ctx, err, "Failed to obtain process indicators")
 		return
 	}
 
@@ -128,7 +128,7 @@ func (c *MonitoringHandler) GetProcessMetrics(ctx *gin.Context) {
 func (c *MonitoringHandler) GetProcessMetricsByKey(ctx *gin.Context) {
 	processKey := ctx.Param("processKey")
 	if processKey == "" {
-		common.Fail(ctx, common.ParamErrorCode, "流程定义键不能为空")
+		common.Fail(ctx, common.ParamErrorCode, "Process definition key cannot be empty")
 		return
 	}
 
@@ -161,7 +161,7 @@ func (c *MonitoringHandler) GetProcessMetricsByKey(ctx *gin.Context) {
 
 	metrics, err := c.monitoringService.GetProcessMetrics(ctx, req)
 	if err != nil {
-		common.RespondError(ctx, err, "获取流程指标失败")
+		common.RespondError(ctx, err, "Failed to obtain process indicators")
 		return
 	}
 
@@ -173,7 +173,7 @@ func (c *MonitoringHandler) GetProcessInstanceStatus(ctx *gin.Context) {
 	instanceIDStr := ctx.Param("instanceId")
 	instanceID, err := strconv.Atoi(instanceIDStr)
 	if err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "无效的流程实例ID")
+		common.Fail(ctx, common.ParamErrorCode, "Invalid process instance ID")
 		return
 	}
 
@@ -184,7 +184,7 @@ func (c *MonitoringHandler) GetProcessInstanceStatus(ctx *gin.Context) {
 
 	status, err := c.monitoringService.GetProcessInstanceStatus(ctx, instanceID, tenantID)
 	if err != nil {
-		common.RespondError(ctx, err, "获取流程实例状态失败")
+		common.RespondError(ctx, err, "Failed to obtain process instance status")
 		return
 	}
 
@@ -226,7 +226,7 @@ func (c *MonitoringHandler) ListProcessInstancesStatus(ctx *gin.Context) {
 
 	statuses, total, err := c.monitoringService.ListProcessInstancesStatus(ctx, query)
 	if err != nil {
-		common.RespondError(ctx, err, "获取流程实例状态失败")
+		common.RespondError(ctx, err, "Failed to obtain process instance status")
 		return
 	}
 
@@ -237,7 +237,7 @@ func (c *MonitoringHandler) ListProcessInstancesStatus(ctx *gin.Context) {
 func (c *MonitoringHandler) GetProcessTimeline(ctx *gin.Context) {
 	processInstanceKey := ctx.Param("instanceId")
 	if processInstanceKey == "" {
-		common.Fail(ctx, common.ParamErrorCode, "流程实例Key不能为空")
+		common.Fail(ctx, common.ParamErrorCode, "Process instance Key cannot be empty")
 		return
 	}
 	tenantID, ok := tenantIDFromCtx(ctx)
@@ -247,7 +247,7 @@ func (c *MonitoringHandler) GetProcessTimeline(ctx *gin.Context) {
 
 	entries, err := c.monitoringService.GetProcessTimeline(ctx, processInstanceKey, tenantID)
 	if err != nil {
-		common.RespondError(ctx, err, "获取流程时间线失败")
+		common.RespondError(ctx, err, "Failed to obtain process timeline")
 		return
 	}
 
@@ -274,7 +274,7 @@ func (c *MonitoringHandler) GetPerformanceMetrics(ctx *gin.Context) {
 
 	metrics, err := c.monitoringService.GetProcessMetrics(ctx, req)
 	if err != nil {
-		common.RespondError(ctx, err, "获取性能指标失败")
+		common.RespondError(ctx, err, "Failed to obtain performance indicators")
 		return
 	}
 
@@ -290,7 +290,7 @@ func (c *MonitoringHandler) GetPerformanceAlerts(ctx *gin.Context) {
 
 	alerts, err := c.monitoringService.GetPerformanceAlerts(ctx, tenantID)
 	if err != nil {
-		common.RespondError(ctx, err, "获取性能告警失败")
+		common.RespondError(ctx, err, "Failed to obtain performance alarm")
 		return
 	}
 
@@ -306,7 +306,7 @@ func (c *MonitoringHandler) GetSystemHealth(ctx *gin.Context) {
 
 	health, err := c.monitoringService.GetSystemHealth(ctx, tenantID)
 	if err != nil {
-		common.RespondError(ctx, err, "获取系统健康状态失败")
+		common.RespondError(ctx, err, "Failed to obtain system health status")
 		return
 	}
 

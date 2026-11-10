@@ -98,7 +98,7 @@ func TestNormalizeAttributesTableDriven(t *testing.T) {
 		{
 			name:       "整数类型非法",
 			attributes: map[string]interface{}{"owner": "张三", "cpu_cores": "abc"},
-			wantErr:    "需要整数",
+			wantErr:    "Integer required",
 		},
 		{
 			name:       "数值超出范围",

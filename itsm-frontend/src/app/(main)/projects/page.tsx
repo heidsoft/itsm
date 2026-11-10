@@ -28,9 +28,9 @@ const { RangePicker } = DatePicker;
 
 // 项目状态枚举与后端 ent/schema/project.go 保持一致（active/completed/suspended）
 const projectStatusLabels: Record<string, string> = {
-  active: '进行中',
-  completed: '已完成',
-  suspended: '已暂停',
+  active: 'In Progress',
+  completed: 'Completed',
+  suspended: 'Paused',
 };
 
 export default function ProjectsPage() {
@@ -98,7 +98,7 @@ export default function ProjectsPage() {
 
   const columns = [
     {
-      title: '项目名称',
+      title: 'Project Name',
       dataIndex: 'name',
       key: 'name',
       render: (text: string) => (
@@ -109,45 +109,45 @@ export default function ProjectsPage() {
       ),
     },
     {
-      title: '项目代码',
+      title: 'Project code',
       dataIndex: 'code',
       key: 'code',
     },
     {
-      title: '所属部门',
+      title: 'Department',
       dataIndex:'departmentName',
       key: 'department',
       render: (id: number) => <span>ID: {id}</span>,
     },
     {
-      title: '负责人',
+      title: 'Assignee',
       dataIndex:'managerName',
       key: 'manager',
       render: (id: number) => <span>ID: {id}</span>,
     },
     {
-      title: '进度',
+      title: 'Progress',
       dataIndex: 'progress', // Not in API yet
       key: 'progress',
       render: (percent: number) => <Progress percent={percent || 0} size="small" />,
       width: 200,
     },
     {
-      title: '状态',
+      title: 'Status',
       dataIndex: 'status',
       key: 'status',
       render: (status: string) => <Tag>{projectStatusLabels[status] || status || '-'}</Tag>,
     },
     {
-      title: '操作',
+      title: 'Actions',
       key: 'action',
       render: (_: unknown, record: Project) => (
         <Space size="middle">
-          <Button aria-label="编辑项目" type="text" icon={<Pencil />} onClick={() => handleEdit(record)} />
+          <Button aria-label="Edit Project" type="text" icon={<Pencil />} onClick={() => handleEdit(record)} />
           <Button
             type="text"
             danger
-            aria-label="删除项目"
+            aria-label="Delete project"
             icon={<Trash2 />}
             onClick={() => handleDelete(record)}
           />
@@ -164,8 +164,8 @@ export default function ProjectsPage() {
 
   const handleDelete = (record: Project) => {
     modal.confirm({
-      title: '确认删除',
-      content: `确定要删除项目 "${record.name}" 吗？`,
+      title: 'Confirm Delete',
+      content: `Are you sure you want to delete the project"${record.name}"?`,
       onOk: async () => {
         try {
           await projectService.deleteProject(record.id);
@@ -206,12 +206,13 @@ export default function ProjectsPage() {
   return (
     <PageContainer
       header={{
-        title: '项目管理',
-        breadcrumb: { items: [{ title: '首页' }, { title: '项目管理' }] },
+        title: 'Projects',
+        breadcrumb: { items: [{ title: 'Home page' }, { title: 'Projects' }] },
       }}
       extra={[
         <Button key="refresh" icon={<RefreshCw />} onClick={fetchProjects} loading={fetching}>
-          刷新
+
+          Refresh
         </Button>,
         <Button
           key="create"
@@ -223,14 +224,15 @@ export default function ProjectsPage() {
             setIsModalVisible(true);
           }}
         >
-          新建项目
+
+          Create Project
         </Button>,
       ]}
     >
       <Table columns={columns} dataSource={projects} rowKey="id" loading={fetching} />
 
       <Modal
-        title="新建/编辑项目"
+        title="New/Edit Project"
         open={isModalVisible}
         onOk={handleOk}
         onCancel={() => {
@@ -243,27 +245,27 @@ export default function ProjectsPage() {
         <Form form={form} layout="vertical">
           <Form.Item
             name="name"
-            label="项目名称"
-            rules={[{ required: true, message: '请输入项目名称' }]}
+            label="Project Name"
+            rules={[{ required: true, message: 'Please enter the project name' }]}
           >
-            <Input placeholder="请输入项目名称" />
+            <Input placeholder="Please enter the project name" />
           </Form.Item>
           <Form.Item
             name="code"
-            label="项目代码"
-            rules={[{ required: true, message: '请输入项目代码' }]}
+            label="Project code"
+            rules={[{ required: true, message: 'Please enter the project code' }]}
           >
-            <Input placeholder="请输入项目代码" />
+            <Input placeholder="Please enter the project code" />
           </Form.Item>
           <div className="grid grid-cols-2 gap-4">
-            <Form.Item name="departmentId" label="所属部门">
-              <Select placeholder="请选择部门" options={departmentOptions} />
+            <Form.Item name="departmentId" label="Department">
+              <Select placeholder="Select department" options={departmentOptions} />
             </Form.Item>
-            <Form.Item name="managerId" label="负责人">
-              <Select placeholder="请选择负责人" options={userOptions} />
+            <Form.Item name="managerId" label="Assignee">
+              <Select placeholder="Please select manager" options={userOptions} />
             </Form.Item>
           </div>
-          <Form.Item name="description" label="描述">
+          <Form.Item name="description" label="Description">
             <Input.TextArea rows={4} />
           </Form.Item>
         </Form>

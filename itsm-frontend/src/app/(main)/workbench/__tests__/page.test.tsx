@@ -64,7 +64,7 @@ describe('工作台分页文案（D9）', () => {
     );
     await waitFor(() => expect(mockQueryWorkbench).toHaveBeenCalled());
 
-    expect(await screen.findByText('共 1 条记录')).toBeInTheDocument();
+    expect(await screen.findByText("Total 1 records")).toBeInTheDocument();
     expect(document.body.textContent || '').not.toMatch(/\bitems\b/);
   });
 });

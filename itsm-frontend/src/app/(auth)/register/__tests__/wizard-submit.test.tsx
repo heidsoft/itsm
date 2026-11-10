@@ -33,17 +33,17 @@ function setValue(label: string, value: string) {
 }
 
 async function completeStepOne(user: ReturnType<typeof userEvent.setup>, username = 'newbie') {
-  setValue('用户名', username);
-  setValue('邮箱', 'newbie@example.com');
-  setValue('密码', 'password123');
-  setValue('确认密码', 'password123');
-  await user.click(screen.getByRole('button', { name: /下一步/ }));
+  setValue('Username', username);
+  setValue('Email', 'newbie@example.com');
+  setValue('Password', 'password123');
+  setValue('Confirm Password', 'password123');
+  await user.click(screen.getByRole('button', { name: /Next/ }));
 }
 
 async function submitStepTwo(user: ReturnType<typeof userEvent.setup>) {
-  setValue('姓名', '新员工');
-  setValue('手机号', '13900001018');
-  await user.click(screen.getByRole('button', { name: /注册/ }));
+  setValue('Name', '新员工');
+  setValue('Phone', '13900001018');
+  await user.click(screen.getByRole('button', { name: /Register/ }));
 }
 
 describe('注册页两步向导', () => {
@@ -82,9 +82,9 @@ describe('注册页两步向导', () => {
     render(<RegisterPage />);
     await completeStepOne(user, 'new_user');
 
-    expect(await screen.findByText('用户名只能用字母和数字')).toBeInTheDocument();
+    expect(await screen.findByText("Username may only contain letters and numbers")).toBeInTheDocument();
     // 仍停留在第一步：第二步字段容器保持 hidden
-    expect(screen.getByLabelText('姓名').closest('[hidden]')).not.toBeNull();
+    expect(screen.getByLabelText('Name').closest('[hidden]')).not.toBeNull();
     expect(mockRegister).not.toHaveBeenCalled();
   });
 

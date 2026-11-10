@@ -36,20 +36,20 @@ function renderActions(canUpdate: boolean, status: string) {
 describe('工单列表行内操作 — 权限收口', () => {
   it('无 ticket:update 时不提供编辑与关闭入口', () => {
     renderActions(false, 'resolved');
-    expect(screen.getByLabelText('查看工单')).toBeInTheDocument();
-    expect(screen.queryByLabelText('编辑工单')).toBeNull();
-    expect(screen.queryByLabelText('关闭工单')).toBeNull();
+    expect(screen.getByLabelText("View work order")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Edit Ticket")).toBeNull();
+    expect(screen.queryByLabelText("Close ticket")).toBeNull();
   });
 
   it('有 ticket:update 且工单已解决时给出编辑与关闭', () => {
     renderActions(true, 'resolved');
-    expect(screen.getByLabelText('编辑工单')).toBeInTheDocument();
-    expect(screen.getByLabelText('关闭工单')).toBeInTheDocument();
+    expect(screen.getByLabelText("Edit Ticket")).toBeInTheDocument();
+    expect(screen.getByLabelText("Close ticket")).toBeInTheDocument();
   });
 
   it('终态工单只隐藏关闭，不隐藏编辑', () => {
     renderActions(true, 'closed');
-    expect(screen.getByLabelText('编辑工单')).toBeInTheDocument();
-    expect(screen.queryByLabelText('关闭工单')).toBeNull();
+    expect(screen.getByLabelText("Edit Ticket")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Close ticket")).toBeNull();
   });
 });

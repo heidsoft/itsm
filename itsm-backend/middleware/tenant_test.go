@@ -62,7 +62,7 @@ func TestTenantMiddleware(t *testing.T) {
 		// 契约变更：400 → 401，与域内 TenantIDOrUnauthorized
 		// 及「租户不匹配」分支语义对齐；租户缺失是认证问题而非参数问题。
 		assert.Equal(t, http.StatusUnauthorized, w.Code)
-		assert.Contains(t, w.Body.String(), "租户信息缺失")
+		assert.Contains(t, w.Body.String(), "Tenant information is missing")
 	})
 
 	t.Run("Non-existent Tenant Returns Not Found", func(t *testing.T) {
@@ -74,7 +74,7 @@ func TestTenantMiddleware(t *testing.T) {
 		TenantMiddleware(client)(c)
 
 		assert.Equal(t, http.StatusNotFound, w.Code)
-		assert.Contains(t, w.Body.String(), "租户不存在")
+		assert.Contains(t, w.Body.String(), "Tenant does not exist")
 	})
 
 	t.Run("Inactive Tenant Returns Forbidden", func(t *testing.T) {
@@ -86,7 +86,7 @@ func TestTenantMiddleware(t *testing.T) {
 		TenantMiddleware(client)(c)
 
 		assert.Equal(t, http.StatusForbidden, w.Code)
-		assert.Contains(t, w.Body.String(), "租户已被暂停或过期")
+		assert.Contains(t, w.Body.String(), "Tenant has been suspended or expired")
 	})
 
 	t.Run("Expired Tenant Returns Forbidden", func(t *testing.T) {
@@ -98,7 +98,7 @@ func TestTenantMiddleware(t *testing.T) {
 		TenantMiddleware(client)(c)
 
 		assert.Equal(t, http.StatusForbidden, w.Code)
-		assert.Contains(t, w.Body.String(), "租户已过期")
+		assert.Contains(t, w.Body.String(), "Tenant has expired")
 	})
 
 	t.Run("Valid Tenant Succeeds", func(t *testing.T) {

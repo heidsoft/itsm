@@ -18,7 +18,7 @@ type Service struct {
 
 // nameConflict 给管理员返回可直接定位的中文冲突提示，重名的具体值只进 Detail 供日志使用。
 func nameConflict(name string) error {
-	return common.NewAppError(common.ErrCodeConflict, "服务目录名称已存在，请换一个名称", http.StatusConflict, nil).WithDetail(name)
+	return common.NewAppError(common.ErrCodeConflict, "The service directory name already exists, please change it to a different name", http.StatusConflict, nil).WithDetail(name)
 }
 
 // NewService creates a new Service
@@ -38,11 +38,11 @@ func validateReferencesFor(ctx context.Context, repo Repository, tenantID, ciTyp
 	}
 	switch {
 	case errors.Is(err, ErrCITypeUnavailable):
-		return common.NewBadRequestError("关联的 CI 类型不存在或未启用", err)
+		return common.NewBadRequestError("The associated CI type does not exist or is not enabled", err)
 	case errors.Is(err, ErrCloudServiceUnavailable):
-		return common.NewBadRequestError("关联的云服务不存在或未启用", err)
+		return common.NewBadRequestError("The associated cloud service does not exist or is not enabled", err)
 	default:
-		return common.NewInternalError("关联资源校验失败", err)
+		return common.NewInternalError("Verification of associated resources failed", err)
 	}
 }
 
@@ -50,13 +50,13 @@ func (s *Service) Create(ctx context.Context, catalog *ServiceCatalog) (*Service
 	catalog.Name = strings.TrimSpace(catalog.Name)
 	catalog.Category = strings.TrimSpace(catalog.Category)
 	if catalog.Name == "" || catalog.Category == "" {
-		return nil, common.NewBadRequestError("服务名称与服务分类不能为空", nil)
+		return nil, common.NewBadRequestError("Service name and service category cannot be empty", nil)
 	}
 	if catalog.DeliveryTime == 0 {
 		catalog.DeliveryTime = 1
 	}
 	if catalog.DeliveryTime < 1 || catalog.DeliveryTime > 3650 {
-		return nil, common.NewBadRequestError("交付天数必须在 1 到 3650 之间", nil)
+		return nil, common.NewBadRequestError("Delivery days must be between 1 and 3650", nil)
 	}
 	if catalog.Status == "" {
 		catalog.Status = "enabled"
@@ -65,7 +65,7 @@ func (s *Service) Create(ctx context.Context, catalog *ServiceCatalog) (*Service
 		return nil, common.NewBadRequestError(msgInvalidStatus, nil)
 	}
 	if catalog.CloudServiceID > 0 && catalog.CITypeID == 0 {
-		return nil, common.NewBadRequestError("关联云服务时必须选择 CI 类型", nil)
+		return nil, common.NewBadRequestError("CI type must be selected when associating cloud services", nil)
 	}
 	exists, err := s.repo.NameExists(ctx, catalog.TenantID, catalog.Name, 0)
 	if err != nil {
@@ -103,14 +103,14 @@ func (s *Service) Update(ctx context.Context, tenantID int, id int, patch *Catal
 	if patch.Name != nil {
 		name := strings.TrimSpace(*patch.Name)
 		if name == "" {
-			return nil, common.NewBadRequestError("服务名称不能为空", nil)
+			return nil, common.NewBadRequestError("Service name cannot be empty", nil)
 		}
 		current.Name = name
 	}
 	if patch.Category != nil {
 		category := strings.TrimSpace(*patch.Category)
 		if category == "" {
-			return nil, common.NewBadRequestError("服务分类不能为空", nil)
+			return nil, common.NewBadRequestError("Service category cannot be empty", nil)
 		}
 		current.Category = category
 	}
@@ -123,26 +123,26 @@ func (s *Service) Update(ctx context.Context, tenantID int, id int, patch *Catal
 	if patch.ServiceType != nil {
 		serviceType := strings.TrimSpace(*patch.ServiceType)
 		if serviceType != "" && !isValidServiceType(serviceType) {
-			return nil, common.NewBadRequestError("服务类型只能是 vm/rds/oss/network/storage/security/custom", nil)
+			return nil, common.NewBadRequestError("The service type can only be vm/rds/oss/network/storage/security/custom", nil)
 		}
 		current.ServiceType = serviceType
 	}
 	if patch.Price != nil {
 		if *patch.Price < 0 {
-			return nil, common.NewBadRequestError("价格不能为负数", nil)
+			return nil, common.NewBadRequestError("Price cannot be negative", nil)
 		}
 		current.Price = *patch.Price
 	}
 	if patch.Unit != nil {
 		unit := strings.TrimSpace(*patch.Unit)
 		if unit != "" && !isValidUnit(unit) {
-			return nil, common.NewBadRequestError("计价单位只能是 月/次/用户", nil)
+			return nil, common.NewBadRequestError("The pricing unit can only be month/time/user", nil)
 		}
 		current.Unit = unit
 	}
 	if patch.DeliveryTime != nil {
 		if *patch.DeliveryTime < 1 || *patch.DeliveryTime > 3650 {
-			return nil, common.NewBadRequestError("交付天数必须在 1 到 3650 之间", nil)
+			return nil, common.NewBadRequestError("Delivery days must be between 1 and 3650", nil)
 		}
 		current.DeliveryTime = *patch.DeliveryTime
 	}
@@ -151,31 +151,31 @@ func (s *Service) Update(ctx context.Context, tenantID int, id int, patch *Catal
 	}
 	if patch.ApprovalLevel != nil {
 		if *patch.ApprovalLevel < 0 || *patch.ApprovalLevel > 3 {
-			return nil, common.NewBadRequestError("审批级别必须在 0 到 3 之间（0 表示未配置）", nil)
+			return nil, common.NewBadRequestError("Approval level must be between 0 and 3 (0 means not configured)", nil)
 		}
 		current.ApprovalLevel = *patch.ApprovalLevel
 	}
 	if patch.SLAResponseTime != nil {
 		if *patch.SLAResponseTime < 0 {
-			return nil, common.NewBadRequestError("SLA 响应时限不能为负数", nil)
+			return nil, common.NewBadRequestError("SLA response time limit cannot be negative", nil)
 		}
 		current.SLAResponseTime = *patch.SLAResponseTime
 	}
 	if patch.SLAResolutionTime != nil {
 		if *patch.SLAResolutionTime < 0 {
-			return nil, common.NewBadRequestError("SLA 解决时限不能为负数", nil)
+			return nil, common.NewBadRequestError("SLA resolution time limit cannot be negative", nil)
 		}
 		current.SLAResolutionTime = *patch.SLAResolutionTime
 	}
 	if patch.CITypeID != nil {
 		if *patch.CITypeID < 0 {
-			return nil, common.NewBadRequestError("CI 类型 ID 无效", nil)
+			return nil, common.NewBadRequestError("Invalid CI type ID", nil)
 		}
 		current.CITypeID = *patch.CITypeID
 	}
 	if patch.CloudServiceID != nil {
 		if *patch.CloudServiceID < 0 {
-			return nil, common.NewBadRequestError("云服务 ID 无效", nil)
+			return nil, common.NewBadRequestError("Invalid cloud service ID", nil)
 		}
 		current.CloudServiceID = *patch.CloudServiceID
 	}
@@ -184,7 +184,7 @@ func (s *Service) Update(ctx context.Context, tenantID int, id int, patch *Catal
 	}
 	if patch.SortOrder != nil {
 		if *patch.SortOrder < 0 {
-			return nil, common.NewBadRequestError("排序不能为负数", nil)
+			return nil, common.NewBadRequestError("Sort cannot be negative", nil)
 		}
 		current.SortOrder = *patch.SortOrder
 	}
@@ -200,7 +200,7 @@ func (s *Service) Update(ctx context.Context, tenantID int, id int, patch *Catal
 
 	// 云服务依赖 CI 类型：解绑 CI 会让已关联的云服务失去归属，必须一起拒绝。
 	if current.CloudServiceID > 0 && current.CITypeID == 0 {
-		return nil, common.NewBadRequestError("关联云服务时必须选择 CI 类型", nil)
+		return nil, common.NewBadRequestError("CI type must be selected when associating cloud services", nil)
 	}
 	if patch.Status != nil {
 		status := strings.TrimSpace(*patch.Status)

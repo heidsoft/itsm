@@ -37,7 +37,7 @@ func tenantID(c *gin.Context) int {
 func pathID(c *gin.Context, param string) (int, bool) {
 	id, err := strconv.Atoi(c.Param(param))
 	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "无效的ID参数")
+		common.Fail(c, common.ParamErrorCode, "Invalid ID parameter")
 		return 0, false
 	}
 	return id, true
@@ -49,7 +49,7 @@ func (h *Handler) ListAutomationRules(c *gin.Context) {
 	rules, err := h.ruleService.ListAutomationRules(c.Request.Context(), tid)
 	if err != nil {
 		h.logger.Errorw("Failed to list automation rules", "error", err, "tenant_id", tid)
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -71,10 +71,10 @@ func (h *Handler) GetAutomationRule(c *gin.Context) {
 	if err != nil {
 		h.logger.Errorw("Failed to get automation rule", "error", err, "rule_id", ruleID)
 		if ent.IsNotFound(err) {
-			common.NotFoundWithErr(c, err, "自动化规则不存在或无权访问")
+			common.NotFoundWithErr(c, err, "Automation rule does not exist or does not have access")
 			return
 		}
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -85,7 +85,7 @@ func (h *Handler) GetAutomationRule(c *gin.Context) {
 func (h *Handler) CreateAutomationRule(c *gin.Context) {
 	var req dto.CreateAutomationRuleRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
@@ -94,7 +94,7 @@ func (h *Handler) CreateAutomationRule(c *gin.Context) {
 	rule, err := h.ruleService.CreateAutomationRule(c.Request.Context(), &req, uid, tid)
 	if err != nil {
 		h.logger.Errorw("Failed to create automation rule", "error", err, "tenant_id", tid)
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -110,7 +110,7 @@ func (h *Handler) UpdateAutomationRule(c *gin.Context) {
 
 	var req dto.UpdateAutomationRuleRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
@@ -118,7 +118,7 @@ func (h *Handler) UpdateAutomationRule(c *gin.Context) {
 	rule, err := h.ruleService.UpdateAutomationRule(c.Request.Context(), ruleID, &req, tid)
 	if err != nil {
 		h.logger.Errorw("Failed to update automation rule", "error", err, "rule_id", ruleID)
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -136,7 +136,7 @@ func (h *Handler) DeleteAutomationRule(c *gin.Context) {
 	err := h.ruleService.DeleteAutomationRule(c.Request.Context(), ruleID, tid)
 	if err != nil {
 		h.logger.Errorw("Failed to delete automation rule", "error", err, "rule_id", ruleID)
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -152,7 +152,7 @@ func (h *Handler) TestAutomationRule(c *gin.Context) {
 
 	var req dto.TestAutomationRuleRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
@@ -161,7 +161,7 @@ func (h *Handler) TestAutomationRule(c *gin.Context) {
 	response, err := h.ruleService.TestAutomationRule(c.Request.Context(), &req, tid)
 	if err != nil {
 		h.logger.Errorw("Failed to test automation rule", "error", err, "rule_id", ruleID)
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 

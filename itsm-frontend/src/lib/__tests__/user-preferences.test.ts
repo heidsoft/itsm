@@ -23,7 +23,7 @@ describe('UserPreferencesManager', () => {
     userPreferences = await loadModule();
     const prefs = userPreferences.get();
     expect(prefs.theme).toBe('light');
-    expect(prefs.language).toBe('zh-CN');
+    expect(prefs.language).toBe('en-US');
     expect(prefs.pageSize).toBe(20);
     expect(prefs.sidebarCollapsed).toBe(false);
   });
@@ -69,10 +69,10 @@ describe('UserPreferencesManager', () => {
     userPreferences = await loadModule();
     const listener = jest.fn();
     const unsubscribe = userPreferences.subscribe(listener);
-    
+
     userPreferences.update({ theme: 'dark' });
     expect(listener).toHaveBeenCalled();
-    
+
     unsubscribe();
     userPreferences.update({ theme: 'light' });
     expect(listener).toHaveBeenCalledTimes(1);

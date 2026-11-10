@@ -62,7 +62,7 @@ describe('audit-log-history-adapter', () => {
       );
     });
 
-    it('returns mapped history records with readable Chinese descriptions', async () => {
+    it('returns mapped history records with readable English descriptions', async () => {
       mockListAuditLogs.mockResolvedValue(
         makeResponse([
           makeLog({
@@ -88,7 +88,7 @@ describe('audit-log-history-adapter', () => {
           id: 1,
           createdAt: '2026-01-01T00:00:00Z',
           action: 'create',
-          details: '创建工单',
+          details: "CreateTicket",
           user: { name: '张三' },
         })
       );
@@ -112,8 +112,8 @@ describe('audit-log-history-adapter', () => {
 
       const records = await fetchAuditLogHistory('incident', 9);
 
-      expect(records[0]?.details).toBe('删除事件');
-      expect(records[0]?.user).toEqual({ name: '用户#42' });
+      expect(records[0]?.details).toBe("DeleteIncident");
+      expect(records[0]?.user).toEqual({ name: "User#42" });
     });
 
     it('keeps only logs whose path starts with /api/v1/<plural>/<id> (with or without trailing segment)', async () => {

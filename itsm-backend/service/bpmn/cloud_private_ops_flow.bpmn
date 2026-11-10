@@ -1,70 +1,70 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" id="Definitions_PrivateCloudOps" targetNamespace="http://bpmn.io/schema/bpmn" exporter="ITSM Platform" exporterVersion="1.0">
-  <process id="cloud_private_ops" name="私有云/混合云运维流程" isExecutable="true" camunda:versionTag="1.0">
-    <documentation>私有云（VMware/OpenStack/Kubernetes）资源申请、变更、运维流程</documentation>
+  <process id="cloud_private_ops" name="Private and Hybrid Cloud Operations Workflow" isExecutable="true" camunda:versionTag="1.0">
+    <documentation>Private cloud resource request, change, and operations workflow for VMware, OpenStack, and Kubernetes</documentation>
 
     <!-- 开始事件 -->
-    <startEvent id="StartEvent_1" name="开始">
+    <startEvent id="StartEvent_1" name="Start">
       <outgoing>Flow_1</outgoing>
     </startEvent>
 
     <!-- 用户提交申请 -->
-    <userTask id="Task_Submit" name="提交私有云资源申请" camunda:assignee="${initiator}">
+    <userTask id="Task_Submit" name="Submit Private Cloud Resource Request" camunda:assignee="${initiator}">
       <incoming>Flow_1</incoming>
       <outgoing>Flow_2</outgoing>
     </userTask>
 
     <!-- 资源池审批 -->
-    <userTask id="Task_ResourceApproval" name="资源池管理员审批">
+    <userTask id="Task_ResourceApproval" name="Resource Pool Administrator Approval">
       <incoming>Flow_2</incoming>
       <outgoing>Flow_3</outgoing>
     </userTask>
 
     <!-- 容量评估 -->
-    <userTask id="Task_CapacityCheck" name="容量评估与规划" camunda:assignee="technician">
+    <userTask id="Task_CapacityCheck" name="Capacity Assessment and Planning" camunda:assignee="technician">
       <incoming>Flow_3</incoming>
       <outgoing>Flow_4</outgoing>
     </userTask>
 
     <!-- 技术审批 -->
-    <exclusiveGateway id="Gateway_Tech" name="技术审批" default="Flow_6">
+    <exclusiveGateway id="Gateway_Tech" name="Technical Approval" default="Flow_6">
       <incoming>Flow_4</incoming>
       <outgoing>Flow_5</outgoing>
       <outgoing>Flow_6</outgoing>
     </exclusiveGateway>
 
     <!-- 拒绝流程 -->
-    <userTask id="Task_Reject" name="告知申请人">
+    <userTask id="Task_Reject" name="Notify Requester">
       <incoming>Flow_5</incoming>
       <outgoing>Flow_10</outgoing>
     </userTask>
 
     <!-- 基础设施准备 -->
-    <userTask id="Task_InfraPrepare" name="基础设施准备">
+    <userTask id="Task_InfraPrepare" name="Prepare Infrastructure">
       <incoming>Flow_6</incoming>
       <outgoing>Flow_7</outgoing>
     </userTask>
 
     <!-- 资源创建/变更 -->
-    <userTask id="Task_ResourceOps" name="执行资源操作" camunda:assignable="true">
+    <userTask id="Task_ResourceOps" name="Execute Resource Operation" camunda:assignable="true">
       <incoming>Flow_7</incoming>
       <outgoing>Flow_8</outgoing>
     </userTask>
 
     <!-- 监控配置 -->
-    <userTask id="Task_Monitoring" name="配置监控告警">
+    <userTask id="Task_Monitoring" name="Configure Monitoring and Alerts">
       <incoming>Flow_8</incoming>
       <outgoing>Flow_9</outgoing>
     </userTask>
 
     <!-- 验收确认 -->
-    <userTask id="Task_Acceptance" name="验收确认" camunda:assignee="${initiator}">
+    <userTask id="Task_Acceptance" name="Acceptance Confirmation" camunda:assignee="${initiator}">
       <incoming>Flow_9</incoming>
       <outgoing>Flow_11</outgoing>
     </userTask>
 
     <!-- 结束 -->
-    <endEvent id="EndEvent_1" name="结束">
+    <endEvent id="EndEvent_1" name="End">
       <incoming>Flow_10</incoming>
       <incoming>Flow_11</incoming>
     </endEvent>
@@ -74,10 +74,10 @@
     <sequenceFlow id="Flow_2" sourceRef="Task_Submit" targetRef="Task_ResourceApproval"/>
     <sequenceFlow id="Flow_3" sourceRef="Task_ResourceApproval" targetRef="Task_CapacityCheck"/>
     <sequenceFlow id="Flow_4" sourceRef="Task_CapacityCheck" targetRef="Gateway_Tech"/>
-    <sequenceFlow id="Flow_5" sourceRef="Gateway_Tech" name="拒绝" targetRef="Task_Reject">
+    <sequenceFlow id="Flow_5" sourceRef="Gateway_Tech" name="Rejected" targetRef="Task_Reject">
       <conditionExpression xsi:type="tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">${approved == false}</conditionExpression>
     </sequenceFlow>
-    <sequenceFlow id="Flow_6" sourceRef="Gateway_Tech" name="通过" targetRef="Task_InfraPrepare"/>
+    <sequenceFlow id="Flow_6" sourceRef="Gateway_Tech" name="Approved" targetRef="Task_InfraPrepare"/>
     <sequenceFlow id="Flow_7" sourceRef="Task_InfraPrepare" targetRef="Task_ResourceOps"/>
     <sequenceFlow id="Flow_8" sourceRef="Task_ResourceOps" targetRef="Task_Monitoring"/>
     <sequenceFlow id="Flow_9" sourceRef="Task_Monitoring" targetRef="Task_Acceptance"/>

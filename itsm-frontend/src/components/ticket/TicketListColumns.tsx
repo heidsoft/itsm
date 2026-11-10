@@ -50,8 +50,8 @@ export const TICKET_TYPE_CONFIG: Readonly<Record<string, string>> = {
   [ITSMMainType.SERVICE_REQUEST]: ITSMMainTypeConfig[ITSMMainType.SERVICE_REQUEST].label,
   [ITSMMainType.PROBLEM]: ITSMMainTypeConfig[ITSMMainType.PROBLEM].label,
   [ITSMMainType.CHANGE]: ITSMMainTypeConfig[ITSMMainType.CHANGE].label,
-  ticket: '工单',
-  improvement: '持续改进',
+  ticket: 'Ticket',
+  improvement: 'Continuous improvement',
 };
 
 // Terminal statuses hide the "close" action. `cancelled` is also terminal -
@@ -93,7 +93,7 @@ export function buildTicketListColumns(
 
   return [
     {
-      title: '工单号',
+      title: 'Work order number',
       dataIndex: 'ticketNumber',
       key: 'ticketNumber',
       width: 200,
@@ -108,7 +108,7 @@ export function buildTicketListColumns(
       ),
     },
     {
-      title: '标题',
+      title: 'Title',
       dataIndex: 'title',
       key: 'title',
       width: 280,
@@ -120,7 +120,7 @@ export function buildTicketListColumns(
       ),
     },
     {
-      title: '状态',
+      title: 'Status',
       dataIndex: 'status',
       key: 'status',
       width: 100,
@@ -132,7 +132,7 @@ export function buildTicketListColumns(
       },
     },
     {
-      title: '优先级',
+      title: 'Priority',
       dataIndex: 'priority',
       key: 'priority',
       width: 100,
@@ -144,27 +144,27 @@ export function buildTicketListColumns(
       },
     },
     {
-      title: '类型',
+      title: 'Type',
       dataIndex: 'type',
       key: 'type',
       width: 100,
       render: (type: TicketType) => <Tag>{TICKET_TYPE_CONFIG[type] ?? type}</Tag>,
     },
     {
-      title: '来源',
+      title: 'Source',
       dataIndex: 'source',
       key: 'source',
       width: 100,
       render: (source: string) => <Tag color='blue'>{source}</Tag>,
     },
     {
-      title: '处理人',
+      title: 'Assignee',
       key: 'assignee',
       width: 120,
-      render: (_, record: Ticket) => displayUserName(record.assigneeName, record.assigneeId, '未分配'),
+      render: (_, record: Ticket) => displayUserName(record.assigneeName, record.assigneeId, 'Unassigned'),
     },
     {
-      title: '创建时间',
+      title: 'Created',
       dataIndex: 'createdAt',
       key: 'createdAt',
       width: 160,
@@ -173,7 +173,7 @@ export function buildTicketListColumns(
       render: (createdAt: string) => dayjs(createdAt).format('YYYY-MM-DD HH:mm'),
     },
     {
-      title: '更新时间',
+      title: 'Updated At',
       dataIndex: 'updatedAt',
       key: 'updatedAt',
       width: 160,
@@ -182,7 +182,7 @@ export function buildTicketListColumns(
       render: (updatedAt: string) => dayjs(updatedAt).format('YYYY-MM-DD HH:mm'),
     },
     {
-      title: '操作',
+      title: 'Actions',
       key: 'actions',
       width: 150,
       fixed: 'right',
@@ -190,29 +190,29 @@ export function buildTicketListColumns(
         const isTerminal = TERMINAL_STATUSES.includes(record.status);
         return (
           <Space size={0} className='opacity-70 transition-opacity hover:opacity-100'>
-            <Tooltip title='查看 (o)'>
+            <Tooltip title="View (o)">
               <Button
                 type='text'
-                aria-label='查看工单'
+                aria-label="View work order"
                 icon={<Eye size={16} />}
                 onClick={() => onOpen(record)}
               />
             </Tooltip>
             {canUpdate && (
-              <Tooltip title='编辑'>
+              <Tooltip title="Edit">
                 <Button
                   type='text'
-                  aria-label='编辑工单'
+                  aria-label="Edit Ticket"
                   icon={<Pencil size={16} />}
                   onClick={() => onEdit(record)}
                 />
               </Tooltip>
             )}
             {canUpdate && !isTerminal && (record.status === 'resolved' || record.status === 'approved') && (
-              <Tooltip title='关闭'>
+              <Tooltip title="Close">
                 <Button
                   type='text'
-                  aria-label='关闭工单'
+                  aria-label="Close ticket"
                   icon={<CheckCircle size={16} />}
                   onClick={() => onClose(record)}
                 />

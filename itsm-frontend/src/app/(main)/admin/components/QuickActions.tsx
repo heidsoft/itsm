@@ -76,43 +76,43 @@ export const QuickActions: React.FC = () => {
   const actionGroups = [
     {
       id: 'users',
-      title: '用户与权限',
-      subtitle: '管理用户账户、角色和权限',
+      title: 'User & Permissions',
+      subtitle: 'Manage user accounts, roles and permissions',
       icon: Users,
       accent: '#3b82f6',
       items: [
-        { title: '用户管理', desc: '用户账户与组织', href: '/admin/users', color: '#3b82f6', icon: UserCheck },
-        { title: '角色管理', desc: '角色与权限配置', href: '/admin/roles', color: '#6366f1', icon: UserCog },
-        { title: '用户组', desc: '组织架构管理', href: '/admin/groups', color: '#06b6d4', icon: UserPlus },
-        { title: '权限矩阵', desc: '细粒度权限控制', href: '/admin/permissions', color: '#8b5cf6', icon: Lock },
+        { title: 'User Management', desc: 'User Accounts and Organizations', href: '/admin/users', color: '#3b82f6', icon: UserCheck },
+        { title: 'Role Management', desc: 'Role and permission configuration', href: '/admin/roles', color: '#6366f1', icon: UserCog },
+        { title: 'User group', desc: 'Organizational Structure Management', href: '/admin/groups', color: '#06b6d4', icon: UserPlus },
+        { title: 'Permission Matrix', desc: 'Fine-grained permission control', href: '/admin/permissions', color: '#8b5cf6', icon: Lock },
       ],
     },
     {
       id: 'process',
-      title: '流程与自动化',
-      subtitle: '配置工作流和审批规则',
+      title: 'Process and Automation',
+      subtitle: 'Configure workflow and approval rules',
       icon: Workflow,
       accent: '#10b981',
       items: [
-        { title: '工单类型', desc: '绑定流程、SLA、审批与分配', href: '/tickets/types', color: '#059669', icon: ClipboardList },
-        { title: '工作流设计', desc: 'BPMN流程编排', href: '/admin/workflows', color: '#10b981', icon: Workflow },
-        { title: '审批链', desc: '多级审批规则', href: '/admin/approval-chains', color: '#14b8a6', icon: CheckSquare },
-        { title: 'SLA定义', desc: '服务级别协议', href: '/admin/sla-definitions', color: '#f59e0b', icon: Clock },
-        { title: 'SLA 告警规则', desc: '阈值告警配置', href: '/admin/escalation-rules', color: '#f97316', icon: AlertTriangle },
+        { title: 'Ticket Types', desc: 'Binding process, SLA, approval and allocation', href: '/tickets/types', color: '#059669', icon: ClipboardList },
+        { title: 'Workflow design', desc: 'BPMN process orchestration', href: '/admin/workflows', color: '#10b981', icon: Workflow },
+        { title: 'Approval Chain', desc: 'Multi-level approval rules', href: '/admin/approval-chains', color: '#14b8a6', icon: CheckSquare },
+        { title: 'SLA Definitions', desc: 'Service Level Agreement', href: '/admin/sla-definitions', color: '#f59e0b', icon: Clock },
+        { title: 'SLA Alert Rule', desc: 'Threshold alarm configuration', href: '/admin/escalation-rules', color: '#f97316', icon: AlertTriangle },
       ],
     },
     {
       id: 'system',
-      title: '系统配置',
-      subtitle: '服务目录和通知设置',
+      title: 'System Configuration',
+      subtitle: 'Service Catalog and Notification Settings',
       icon: Settings,
       accent: '#8b5cf6',
       items: [
-        { title: '服务目录', desc: '服务项管理', href: '/admin/service-catalogs', color: '#ec4899', icon: BookOpen },
-        { title: '通知配置', desc: '消息推送规则', href: '/notifications', color: '#ef4444', icon: Megaphone },
-        { title: '死信与重放', desc: '命令死信重放 / 失败投递重试', href: '/admin/operations', color: '#dc2626', icon: AlertTriangle },
-        { title: '工单分类', desc: '分类与模板', href: '/admin/ticket-categories', color: '#64748b', icon: Folder },
-        { title: '系统设置', desc: '全局参数配置', href: '/admin/system-config', color: '#0f172a', icon: Cog },
+        { title: 'Service Catalog', desc: 'Service item management', href: '/admin/service-catalogs', color: '#ec4899', icon: BookOpen },
+        { title: 'Notification Configuration', desc: 'Message push rules', href: '/notifications', color: '#ef4444', icon: Megaphone },
+        { title: 'Dead Letters and Replays', desc: 'Command dead letter replay/failed delivery retry', href: '/admin/operations', color: '#dc2626', icon: AlertTriangle },
+        { title: 'Ticket Categories', desc: 'Categories and Templates', href: '/admin/ticket-categories', color: '#64748b', icon: Folder },
+        { title: 'System settings', desc: 'Global parameter configuration', href: '/admin/system-config', color: '#0f172a', icon: Cog },
       ],
     },
   ];
@@ -334,11 +334,13 @@ export const QuickActions: React.FC = () => {
               letterSpacing: '-0.02em',
             }}
           >
-            快捷操作
+
+            Quick operation
           </Title>
         </div>
         <Text style={{ fontSize: 14, color: DESIGN.colors.textMuted }}>
-          快速访问系统管理和配置功能
+
+          Quick access to system management and configuration functions
         </Text>
       </div>
 

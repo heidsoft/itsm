@@ -111,13 +111,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse, mobile 
   const menuError =
     menusQuery.error ||
     (menusQuery.data && menusQuery.data.main.length === 0 && menusQuery.data.admin.length === 0
-      ? new Error('菜单为空，请检查角色权限或刷新页面重试')
+      ? new Error('The menu is empty, please check the role permissions or refresh the page and try again')
       : null);
 
   // 显示错误提示
   useEffect(() => {
     if (menuError) {
-      message.error(menuError.message || '菜单加载失败，请刷新页面重试');
+      message.error(menuError.message || 'Menu loading failed, please refresh the page and try again.');
     }
   }, [menuError, message]);
 
@@ -132,7 +132,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse, mobile 
       router.push(normalizedPath);
     } catch (error) {
       console.error('Menu navigation error:', error);
-      message.error('导航失败，请稍后重试');
+      message.error('Navigation failed, please try again later');
     }
   };
 
@@ -168,7 +168,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse, mobile 
       const children = menu.children ? filterByCapability(menu.children) : undefined;
       return [{
         ...menu,
-        badge: capability?.maturity === 'pilot' ? '预览' : menu.badge,
+        badge: capability?.maturity === 'pilot' ? 'Preview' : menu.badge,
         children,
       }];
     });
@@ -222,7 +222,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse, mobile 
       {/* 管理员菜单 */}
       {isAdmin && (
         <div className={styles.adminMenuContainer}>
-          {!collapsed && <div className={styles.adminMenuHeader}>管理功能</div>}
+          {!collapsed && <div className={styles.adminMenuHeader}>Management functions</div>}
           <div className={styles.adminMenu}>
             {capabilitiesLoading ? (
               <Skeleton active paragraph={{ rows: 3 }} />
@@ -243,7 +243,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse, mobile 
               <div className={styles.userRole}>
                 {/* 角色标识与头部 chip 统一走 PRIMARY_ROLE_LABEL 中文映射（审计报告 3.3-⑦：
                     此前裸显英文码 capitalize，「End_user」「Technician」与头部「用户」不一致） */}
-                {PRIMARY_ROLE_LABEL[user?.role ?? ''] || user?.role || '最终用户'}
+                {PRIMARY_ROLE_LABEL[user?.role ?? ''] || user?.role || 'End User'}
               </div>
             </div>
           </div>

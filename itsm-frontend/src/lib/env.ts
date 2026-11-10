@@ -47,7 +47,7 @@ export const env = {
 };
 
 // 日志工具
- 
+
 export const logger = {
   // 开发环境日志
   debug: (...args: unknown[]) => {
@@ -172,7 +172,7 @@ export const errorHandler = {
     return {
       success: false,
       errors,
-      message: '表单验证失败',
+      message: 'Form validation failed',
     };
   },
 
@@ -192,14 +192,14 @@ export const errorHandler = {
 
       return {
         success: false,
-        error: '网络连接失败，请检查网络设置',
+        error: 'Network connection failed, please check network settings',
         type: 'network',
       };
     }
 
     return {
       success: false,
-      error: '未知错误',
+      error: 'Unknown error',
       type: 'unknown',
     };
   },

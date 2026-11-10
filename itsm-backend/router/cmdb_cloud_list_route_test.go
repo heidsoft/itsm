@@ -300,7 +300,7 @@ func TestCMDBCloudListSurfaceRouteContract(t *testing.T) {
 		status, body, env := get(t, a, "/api/v1/cmdb/cloud-resources?serviceId=abc")
 		assert.Equal(t, http.StatusBadRequest, status, body)
 		assert.Equal(t, 1001, env.Code, body)
-		assert.Equal(t, "请求参数错误", env.Message, "响应必须给稳定公开文案: body=%s", body)
+		assert.Equal(t, "Wrong request parameters", env.Message, "响应必须给稳定公开文案: body=%s", body)
 		assert.NotContains(t, body, "strconv", body)
 		assert.NotContains(t, body, "invalid syntax", body)
 	})

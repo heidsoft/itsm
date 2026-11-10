@@ -228,7 +228,7 @@ func TestTicketRelationsRoutesTenantScope(t *testing.T) {
 			}
 			require.NoError(t, json.Unmarshal(body, &env), "body=%s", body)
 			assert.Equal(t, 4004, env.Code, "body=%s", body)
-			assert.NotContains(t, string(body), "获取工单失败", "底层错误串不得透出: body=%s", body)
+			assert.NotContains(t, string(body), "Failed to obtain work order", "底层错误串不得透出: body=%s", body)
 			assert.NotContains(t, string(body), "ent:", "Ent 错误串不得透出: body=%s", body)
 		}
 	})

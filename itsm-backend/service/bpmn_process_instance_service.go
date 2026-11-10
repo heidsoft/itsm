@@ -88,18 +88,18 @@ func (s *bpmnProcessInstanceService) GetProcessInstance(ctx context.Context, pro
 		return instance, nil
 	}
 	if !ent.IsNotFound(err) {
-		return nil, fmt.Errorf("获取流程实例失败: %w", err)
+		return nil, fmt.Errorf("Failed to obtain process instance: %w", err)
 	}
 
 	numericID, convErr := strconv.Atoi(processInstanceID)
 	if convErr != nil || numericID <= 0 {
-		return nil, fmt.Errorf("获取流程实例失败: %w", err)
+		return nil, fmt.Errorf("Failed to obtain process instance: %w", err)
 	}
 	instance, byIDErr := s.client.ProcessInstance.Query().
 		Where(processinstance.IDEQ(numericID), processinstance.TenantID(tenantID)).
 		First(ctx)
 	if byIDErr != nil {
-		return nil, fmt.Errorf("获取流程实例失败: %w", byIDErr)
+		return nil, fmt.Errorf("Failed to obtain process instance: %w", byIDErr)
 	}
 	return instance, nil
 }
@@ -111,7 +111,7 @@ func (s *bpmnProcessInstanceService) ListProcessInstances(ctx context.Context, r
 	}
 	tenantID := ctxTenantID
 	if req.TenantID > 0 && req.TenantID != ctxTenantID {
-		return nil, 0, fmt.Errorf("请求租户 %d 与上下文租户 %d 不一致，已拒绝", req.TenantID, ctxTenantID)
+		return nil, 0, fmt.Errorf("Requesting tenant %d is inconsistent with context tenant %d, rejected", req.TenantID, ctxTenantID)
 	}
 
 	query := s.client.ProcessInstance.Query().
@@ -129,7 +129,7 @@ func (s *bpmnProcessInstanceService) ListProcessInstances(ctx context.Context, r
 
 	total, err := query.Count(ctx)
 	if err != nil {
-		return nil, 0, fmt.Errorf("获取流程实例总数失败: %w", err)
+		return nil, 0, fmt.Errorf("Failed to get total number of process instances: %w", err)
 	}
 
 	if req.Page > 0 && req.PageSize > 0 {
@@ -139,7 +139,7 @@ func (s *bpmnProcessInstanceService) ListProcessInstances(ctx context.Context, r
 
 	instances, err := query.Order(ent.Desc(processinstance.FieldStartTime)).All(ctx)
 	if err != nil {
-		return nil, 0, fmt.Errorf("获取流程实例列表失败: %w", err)
+		return nil, 0, fmt.Errorf("Failed to get process instance list: %w", err)
 	}
 
 	return instances, total, nil
@@ -165,7 +165,7 @@ func (s *bpmnProcessInstanceService) SetProcessInstanceVariables(ctx context.Con
 	_, err = updateProcessInstanceVariablesCAS(ctx, s.client, instance.ID, instance.TenantID, func(vars map[string]interface{}) error {
 		for key, value := range variables {
 			if strings.HasPrefix(key, "_") {
-				return fmt.Errorf("流程内部变量 %s 不允许通过 API 覆盖", key)
+				return fmt.Errorf("Process internal variable %s is not allowed to be overridden via API", key)
 			}
 			vars[key] = value
 		}
@@ -196,7 +196,7 @@ func (s *bpmnProcessInstanceService) GetProcessInstanceHistory(ctx context.Conte
 
 	history, err := query.Order(ent.Asc(processexecutionhistory.FieldTimestamp)).All(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("获取流程实例历史失败: %w", err)
+		return nil, fmt.Errorf("Failed to obtain process instance history: %w", err)
 	}
 
 	return history, nil
@@ -212,7 +212,7 @@ func (s *bpmnProcessInstanceService) GetInstanceStatistics(ctx context.Context, 
 	}
 	tenantID := ctxTenantID
 	if req.TenantID > 0 && req.TenantID != ctxTenantID {
-		return nil, fmt.Errorf("请求租户 %d 与上下文租户 %d 不一致，已拒绝", req.TenantID, ctxTenantID)
+		return nil, fmt.Errorf("Requesting tenant %d is inconsistent with context tenant %d, rejected", req.TenantID, ctxTenantID)
 	}
 
 	query := s.client.ProcessInstance.Query().
@@ -230,7 +230,7 @@ func (s *bpmnProcessInstanceService) GetInstanceStatistics(ctx context.Context, 
 
 	instances, err := query.All(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("获取实例统计失败: %w", err)
+		return nil, fmt.Errorf("Failed to obtain instance statistics: %w", err)
 	}
 
 	stats := &InstanceStatistics{

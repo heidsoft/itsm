@@ -56,7 +56,7 @@ func (s *ProcessTriggerService) TriggerProcess(ctx context.Context, req *dto.Pro
 		}
 	}
 	if processDefKey == "" {
-		return nil, fmt.Errorf("未找到业务类型 %s 对应的流程绑定", req.BusinessType)
+		return nil, fmt.Errorf("No process binding corresponding to business type %s found", req.BusinessType)
 	}
 
 	// 3. 获取流程定义（仅要求 IsActive，不过滤 IsLatest 以支持触发特定版本）
@@ -70,7 +70,7 @@ func (s *ProcessTriggerService) TriggerProcess(ctx context.Context, req *dto.Pro
 	definition, err := definitionQuery.First(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, fmt.Errorf("流程定义 %s 不存在", processDefKey)
+			return nil, fmt.Errorf("Process definition %s does not exist", processDefKey)
 		}
 		return nil, errors.Wrap(err, "查询流程定义失败")
 	}
@@ -209,7 +209,7 @@ func (s *ProcessTriggerService) GetProcessStatus(ctx context.Context, processIns
 		Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, fmt.Errorf("流程实例 %d 不存在", processInstanceID)
+			return nil, fmt.Errorf("Process instance %d does not exist", processInstanceID)
 		}
 		return nil, errors.Wrap(err, "查询流程实例失败")
 	}
@@ -242,13 +242,13 @@ func (s *ProcessTriggerService) GetProcessStatus(ctx context.Context, processIns
 // validateTriggerRequest 验证触发请求
 func (s *ProcessTriggerService) validateTriggerRequest(req *dto.ProcessTriggerRequest) error {
 	if req.BusinessType == "" {
-		return fmt.Errorf("业务类型不能为空")
+		return fmt.Errorf("Business type cannot be empty")
 	}
 	if req.BusinessID <= 0 {
-		return fmt.Errorf("业务ID必须大于0")
+		return fmt.Errorf("Business ID must be greater than 0")
 	}
 	if req.TenantID <= 0 {
-		return fmt.Errorf("租户ID必须大于0")
+		return fmt.Errorf("Tenant ID must be greater than 0")
 	}
 	return nil
 }

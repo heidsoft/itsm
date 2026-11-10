@@ -49,36 +49,36 @@ type InstallForm = {
 
 const statusConfig = {
   active: {
-    label: '运行中',
+    label: 'Running',
     color: 'bg-green-100 text-green-800',
     icon: <CheckCircle2 className="h-4 w-4 text-green-500" />,
   },
   disabled: {
-    label: '已禁用',
+    label: 'Deactivated',
     color: 'bg-gray-100 text-gray-800',
     icon: <XCircle className="h-4 w-4 text-gray-500" />,
   },
   failed: {
-    label: '运行失败',
+    label: 'Run failed',
     color: 'bg-red-100 text-red-800',
     icon: <AlertCircle className="h-4 w-4 text-red-500" />,
   },
   installing: {
-    label: '安装中',
+    label: 'Installing',
     color: 'bg-blue-100 text-blue-800',
     icon: <Clock className="h-4 w-4 text-blue-500" />,
   },
   uninstalled: {
-    label: '已卸载',
+    label: 'Uninstalled',
     color: 'bg-gray-100 text-gray-800',
     icon: <XCircle className="h-4 w-4 text-gray-500" />,
   },
 };
 
 const typeNames = {
-  connector: '连接器',
-  skill: '技能',
-  plugin: '插件',
+  connector: 'Connectors',
+  skill: 'Skill',
+  plugin: 'Plug-in',
 };
 
 // 商品展示字段由安装列表接口按商品边扁平带出（itemName/itemTitle/...），
@@ -88,13 +88,13 @@ const connectorRuntimeName = (installation: TenantInstallation) =>
   installation.itemName?.replace(/-connector$/, '') || '';
 
 const dependencyStatusLabel: Record<string, string> = {
-  ok: '依赖已对齐',
-  unsatisfied: '前置未满足',
-  declaration_missing: '目录缺版本声明',
+  ok: 'Dependencies are aligned',
+  unsatisfied: 'Prerequisite not satisfied',
+  declaration_missing: 'Directory missing version statement',
 };
 
 const maskSensitive = (key: string, value: unknown) => {
-  if (value === undefined || value === null || value === '') return '未配置';
+  if (value === undefined || value === null || value === '') return 'Not configured';
   if (/secret|token|key|access|refresh/i.test(key)) return '******';
   return String(value);
 };
@@ -157,7 +157,7 @@ const InstallationsPage = () => {
         connectorService.configs().catch(() => []),
         // 依赖对齐是独立读面：它失败时不能说「依赖健康」，要说查不到。
         marketplaceService.dependencyStatus().catch((error: unknown) => {
-          setDependencyError(error instanceof Error ? error.message : '依赖对齐状态查询失败');
+          setDependencyError(error instanceof Error ? error.message : 'Dependency alignment status query failed');
           return null;
         }),
       ]);
@@ -168,7 +168,7 @@ const InstallationsPage = () => {
       setForms(Object.fromEntries(installationRes.map(item => [item.id, makeForm(item)])));
     } catch (error: unknown) {
       console.error('Failed to fetch installations:', error);
-      setLoadError(error instanceof Error ? error.message : '加载已安装应用失败');
+      setLoadError(error instanceof Error ? error.message : 'Failed to load installed application');
       setInstallations([]);
     } finally {
       setLoading(false);
@@ -204,8 +204,8 @@ const InstallationsPage = () => {
   );
 
   const handleUninstall = async (installation: TenantInstallation) => {
-    const title = installation.itemTitle || installation.itemName || '应用';
-    if (!confirm(`确定要卸载「${title}」吗？卸载后相关功能将无法使用。`)) return;
+    const title = installation.itemTitle || installation.itemName || 'Application';
+    if (!confirm(`Confirm to uninstall "${title}"?" Relevant functions will not be available after uninstallation.`)) return;
     try {
       await marketplaceService.uninstallItem(installation.itemId);
       setInstallations(items => items.filter(item => item.id !== installation.id));
@@ -214,7 +214,7 @@ const InstallationsPage = () => {
       console.error('Failed to uninstall item:', error);
       // 卸载被拒时后端会说明原因（例如「连接器运行实例未能注销，卸载已中止」），
       // 折叠成「卸载失败」会让人以为网络问题而反复重试。
-      message.error(serverErrorMessage(error, '卸载失败'));
+      message.error(serverErrorMessage(error, 'Uninstall failed'));
     }
   };
 
@@ -229,7 +229,7 @@ const InstallationsPage = () => {
       setDependencyReport(await marketplaceService.dependencyStatus());
       setDependencyError(null);
     } catch (error: unknown) {
-      setDependencyError(error instanceof Error ? error.message : '依赖对齐状态查询失败');
+      setDependencyError(error instanceof Error ? error.message : 'Dependency alignment status query failed');
     }
   };
 
@@ -256,7 +256,7 @@ const InstallationsPage = () => {
     } catch {
       // 清单拉不到但目录确实有更新时，仍允许升到 latestVersion；
       // 无更新（已最新）则必须禁用确认，不能静默按当前版本重跑一次升级。
-      setUpgradeVersionsError('版本清单加载失败，暂时只能升到目录最新版本');
+      setUpgradeVersionsError('Failed to load the version list. Currently, you can only upgrade to the latest version of the directory.');
       if (initialTarget === installation.installedVersion || initialTarget === '') {
         setUpgradeVersion('');
       }
@@ -271,14 +271,14 @@ const InstallationsPage = () => {
     try {
       updateInstallationRow(await marketplaceService.upgradeItem(installation.itemId, targetVersion));
       // 目标版本可能比当前更旧（回滚），统一说「切换到」，不要报成「已升级到」。
-      message.success(`版本已切换到 v${target}`);
+      message.success(`Version switched to v ${target}`);
       setUpgradeTarget(null);
       await refreshDependencyStatus();
     } catch (error) {
       console.error('Failed to upgrade item:', error);
       // 409 会说「升级未完成，仍在使用当前版本」：这条必须原样展示，
       // 否则管理员以为已经换了版本，而运行态仍停在旧发布物上。
-      message.error(serverErrorMessage(error, '升级失败'));
+      message.error(serverErrorMessage(error, 'Escalation failed'));
     } finally {
       setUpgradingId(null);
     }
@@ -289,10 +289,10 @@ const InstallationsPage = () => {
     setAutoUpgradeId(installation.itemId);
     try {
       updateInstallationRow(await marketplaceService.setAutoUpgrade(installation.itemId, next));
-      message.success(next ? '已开启自动升级' : '已关闭自动升级');
+      message.success(next ? 'Automatic upgrade is enabled' : 'Automatic upgrade is turned off');
     } catch (error) {
       console.error('Failed to update auto upgrade preference:', error);
-      message.error(serverErrorMessage(error, next ? '开启自动升级失败' : '关闭自动升级失败'));
+      message.error(serverErrorMessage(error, next ? 'Failed to enable automatic upgrade' : 'Failed to turn off automatic upgrade'));
     } finally {
       setAutoUpgradeId(null);
     }
@@ -337,7 +337,7 @@ const InstallationsPage = () => {
       console.error('Failed to save installation config:', error);
       // 后端在「新配置没能让连接器起来」时返回 409 并说明原因，且明确告知
       // 已保留原配置——这条信息必须原样展示，否则用户会以为保存成功了。
-      message.error(serverErrorMessage(error, '保存配置失败'));
+      message.error(serverErrorMessage(error, 'Failed to save configuration'));
     } finally {
       setSavingId(null);
     }
@@ -351,7 +351,7 @@ const InstallationsPage = () => {
       }
     } catch (error) {
       console.error('Failed to start Feishu OAuth:', error);
-      message.error(error instanceof Error ? error.message : '无法获取飞书授权链接，请先保存 App ID 和 App Secret');
+      message.error(error instanceof Error ? error.message : 'Unable to obtain Feishu authorization link, please save App ID and App Secret first');
     }
   };
 
@@ -367,13 +367,14 @@ const InstallationsPage = () => {
     <div className="container mx-auto px-4 py-6">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">我的应用</h1>
-          <p className="text-gray-500 mt-1">管理已安装的连接器、AI技能和扩展插件</p>
+          <h1 className="text-3xl font-bold tracking-tight">My application</h1>
+          <p className="text-gray-500 mt-1">Manage installed connectors, AI skills and extensions</p>
         </div>
         {canManageMarketplace && <Link href="/marketplace">
           <Button>
             <PlusCircle className="h-4 w-4 mr-2" />
-            安装应用
+
+            Install application
           </Button>
         </Link>}
       </div>
@@ -384,7 +385,7 @@ const InstallationsPage = () => {
             <div className="relative">
               <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
               <Input
-                placeholder="搜索应用名称或描述..."
+                placeholder="Search app name or description..."
                 value={search}
                 onChange={event => setSearch(event.target.value)}
                 className="pl-10"
@@ -394,27 +395,27 @@ const InstallationsPage = () => {
           <div className="w-full md:w-40">
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger>
-                <SelectValue placeholder="状态" />
+                <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">全部状态</SelectItem>
-                <SelectItem value="active">运行中</SelectItem>
-                <SelectItem value="disabled">已禁用</SelectItem>
-                <SelectItem value="failed">运行失败</SelectItem>
-                <SelectItem value="installing">安装中</SelectItem>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="active">Running</SelectItem>
+                <SelectItem value="disabled">Deactivated</SelectItem>
+                <SelectItem value="failed">Run failed</SelectItem>
+                <SelectItem value="installing">Installing</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <div className="w-full md:w-40">
             <Select value={typeFilter} onValueChange={setTypeFilter}>
               <SelectTrigger>
-                <SelectValue placeholder="类型" />
+                <SelectValue placeholder="Type" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">全部类型</SelectItem>
-                <SelectItem value="connector">连接器</SelectItem>
-                <SelectItem value="skill">技能</SelectItem>
-                <SelectItem value="plugin">插件</SelectItem>
+                <SelectItem value="all">All Types</SelectItem>
+                <SelectItem value="connector">Connectors</SelectItem>
+                <SelectItem value="skill">Skill</SelectItem>
+                <SelectItem value="plugin">Plug-in</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -431,7 +432,7 @@ const InstallationsPage = () => {
       {dependencyError && (
         <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded text-sm text-yellow-800 flex items-start gap-2">
           <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
-          <span>依赖对齐状态暂不可查：{dependencyError}。下方列表不据此判断健康。</span>
+          <span>The dependency alignment status is temporarily unavailable:{dependencyError}. The list below is not intended to be used as a guide to health.</span>
         </div>
       )}
 
@@ -441,8 +442,8 @@ const InstallationsPage = () => {
             <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0 text-yellow-700" />
             <div>
               <div className="font-medium text-yellow-800">
-                {dependencyReport.total} 个已安装组件中，{dependencyReport.unsatisfied} 个前置未满足、
-                {dependencyReport.declarationMissing} 个目录缺版本声明
+                Installed components: {dependencyReport.total}; unmet prerequisites: {dependencyReport.unsatisfied};
+                missing version declarations: {dependencyReport.declarationMissing}
               </div>
               <ul className="mt-2 space-y-1 text-yellow-900">
                 {dependencyReport.findings
@@ -460,7 +461,8 @@ const InstallationsPage = () => {
                   ))}
               </ul>
               <p className="mt-2 text-xs text-yellow-800">
-                补齐前置组件后升级才会放行；目录缺版本声明需要先在应用管理里发布版本行。
+
+                The upgrade will not be released until the pre-requisite components are completed; the directory lacks a version statement and a version line needs to be published in the application management first.
               </p>
             </div>
           </div>
@@ -475,7 +477,7 @@ const InstallationsPage = () => {
           const isFeishu = runtimeName === 'feishu';
           const isEditing = editingId === installation.id;
           const form = forms[installation.id] || makeForm(installation);
-          const displayName = installation.itemTitle || installation.itemName || `应用 #${installation.itemId}`;
+          const displayName = installation.itemTitle || installation.itemName || `Application #${installation.itemId}`;
           // 配置面只有连接器有：技能没有租户级配置项，后端会明确拒绝，
           // 摆一个点了必然失败的按钮比不摆更糟。
           const isConnector = installation.itemType === 'connector';
@@ -488,7 +490,7 @@ const InstallationsPage = () => {
                       {installation.itemIconUrl ? (
                         <img src={installation.itemIconUrl} alt={displayName} className="w-full h-full object-cover" />
                       ) : (
-                        <span className="text-sm">{installation.itemType ? typeNames[installation.itemType] : '应用'}</span>
+                        <span className="text-sm">{installation.itemType ? typeNames[installation.itemType] : 'Application'}</span>
                       )}
                     </div>
                     <div>
@@ -505,7 +507,7 @@ const InstallationsPage = () => {
                           </Badge>
                         )}
                       </div>
-                      <CardDescription className="mt-1">{installation.itemDescription || '暂无描述'}</CardDescription>
+                      <CardDescription className="mt-1">{installation.itemDescription || 'No description'}</CardDescription>
                     </div>
                   </div>
                   {canManageMarketplace && <div className="flex items-center gap-2">
@@ -519,10 +521,10 @@ const InstallationsPage = () => {
                     >
                       <ArrowUpCircle className="h-4 w-4 mr-1" />
                       {upgradingId === installation.itemId
-                        ? '升级中...'
+                        ? 'Upgrading...'
                         : installation.upgradeAvailable
-                          ? `升级到 v${installation.latestVersion}`
-                          : '升级/回滚'}
+                          ? `Upgrade to v ${installation.latestVersion}`
+                          : 'Upgrade/Rollback'}
                     </Button>
                     <Button
                       variant="secondary"
@@ -530,17 +532,20 @@ const InstallationsPage = () => {
                       onClick={() => handleToggleAutoUpgrade(installation)}
                       disabled={autoUpgradeId === installation.itemId}
                     >
-                      自动升级：{installation.autoUpgrade ? '开' : '关'}
+
+                      Automatic upgrade:{installation.autoUpgrade ? 'On' : 'Off'}
                     </Button>
                     {isConnector && (
                       <Button variant="secondary" size="sm" onClick={() => setEditingId(isEditing ? null : installation.id)}>
                         <Settings className="h-4 w-4 mr-1" />
-                        配置
+
+                        Configure
                       </Button>
                     )}
                     <Button variant="destructive" size="sm" onClick={() => handleUninstall(installation)}>
                       <Trash2 className="h-4 w-4 mr-1" />
-                      卸载
+
+                      Uninstall
                     </Button>
                   </div>}
                 </div>
@@ -554,24 +559,24 @@ const InstallationsPage = () => {
                 )}
 
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
-                  <Info label="已安装版本" value={`v${installation.installedVersion}`} />
-                  <Info label="目录最新版本" value={installation.latestVersion ? `v${installation.latestVersion}` : '未知'} />
-                  <Info label="安装时间" value={formatDateTime(installation.installedAt)} />
+                  <Info label="Installed version" value={`v${installation.installedVersion}`} />
+                  <Info label="latest version of directory" value={installation.latestVersion ? `v${installation.latestVersion}` : 'Unknown'} />
+                  <Info label="Installation time" value={formatDateTime(installation.installedAt)} />
                   {/* 上次更新：从未更新过的记录用安装时间兜底，lastUpdatedAt 是契约里的可选字段 */}
-                  <Info label="上次更新" value={formatDateTime(installation.lastUpdatedAt || installation.installedAt)} />
-                  <Info label="最近使用" value={formatDateTime(installation.lastUsedAt) || '从未使用'} />
+                  <Info label="Last updated" value={formatDateTime(installation.lastUpdatedAt || installation.installedAt)} />
+                  <Info label="Recently used" value={formatDateTime(installation.lastUsedAt) || 'Never Used'} />
                 </div>
 
                 {isConnector && (
                   <div className="rounded-md border bg-gray-50 p-3">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
-                      <Info label="运行时名称" value={runtimeName || '未识别'} />
-                      <Info label="启用状态" value={runtimeConfig?.enabled ? '已启用' : '未启用'} />
-                      <Info label="健康状态" value={runtimeConfig ? (runtimeConfig.healthy ? '健康' : '待检查') : '未初始化'} />
+                      <Info label="runtime name" value={runtimeName || 'Not recognized'} />
+                      <Info label="Enabled" value={runtimeConfig?.enabled ? 'Enabled' : 'Not Enabled'} />
+                      <Info label="Health status" value={runtimeConfig ? (runtimeConfig.healthy ? 'Healthy' : 'To be checked') : 'not initialized'} />
                     </div>
                     <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
                       {Object.entries((installation.config?.credentials || {}) as Record<string, unknown>).map(([key, value]) => (
-                        <Info key={key} label={`凭据 ${key}`} value={maskSensitive(key, value)} />
+                        <Info key={key} label={`Credentials ${key}`} value={maskSensitive(key, value)} />
                       ))}
                       {Object.entries((installation.config?.oauth || {}) as Record<string, unknown>).map(([key, value]) => (
                         <Info key={key} label={`OAuth ${key}`} value={maskSensitive(key, value)} />
@@ -589,14 +594,14 @@ const InstallationsPage = () => {
                       <Field label="Encrypt Key" type="password" value={form.encryptKey} onChange={value => updateForm(installation.id, { encryptKey: value })} />
                       <Field label="Debug Channel" value={form.debugChannel} onChange={value => updateForm(installation.id, { debugChannel: value })} />
                       <div>
-                        <div className="text-sm font-medium mb-1">区域</div>
+                        <div className="text-sm font-medium mb-1">Area</div>
                         <Select value={form.region} onValueChange={value => updateForm(installation.id, { region: value })}>
                           <SelectTrigger>
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="cn">中国大陆</SelectItem>
-                            <SelectItem value="intl">海外 Lark</SelectItem>
+                            <SelectItem value="cn">Mainland China</SelectItem>
+                            <SelectItem value="intl">Overseas Lark</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -604,12 +609,13 @@ const InstallationsPage = () => {
                     <div className="flex flex-wrap gap-2">
                       <Button onClick={() => handleSaveConfig(installation)} disabled={savingId === installation.id}>
                         <Save className="h-4 w-4 mr-2" />
-                        {savingId === installation.id ? '保存中...' : '保存配置'}
+                        {savingId === installation.id ? 'Saving...' : 'Save Configuration'}
                       </Button>
                       {isFeishu && (
                         <Button variant="secondary" onClick={handleFeishuOAuth}>
                           <ExternalLink className="h-4 w-4 mr-2" />
-                          飞书 OAuth 授权
+
+                          Feishu OAuth authorization
                         </Button>
                       )}
                     </div>
@@ -625,10 +631,10 @@ const InstallationsPage = () => {
         <div className="bg-white rounded-lg shadow-sm p-10 text-center">
           <div className="flex flex-col items-center justify-center">
             <Search className="h-12 w-12 text-gray-300 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">没有找到匹配的应用</h3>
-            <p className="text-gray-500 mb-4">尝试调整搜索条件或过滤选项</p>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No matching application found</h3>
+            <p className="text-gray-500 mb-4">Try adjusting search criteria or filtering options</p>
             <Link href="/marketplace">
-              <Button>浏览应用市场</Button>
+              <Button>Browse the App Market</Button>
             </Link>
           </div>
         </div>
@@ -639,7 +645,7 @@ const InstallationsPage = () => {
           必须先让操作人看清「从哪个版本到哪个版本」再执行。 */}
       <Modal
         open={upgradeTarget !== null}
-        title={`升级 / 回滚：${upgradeTarget?.itemTitle || upgradeTarget?.itemName || ''}`}
+        title={`Upgrade/Rollback:${upgradeTarget?.itemTitle || upgradeTarget?.itemName || ''}`}
         onCancel={() => setUpgradeTarget(null)}
         footer={null}
         destroyOnHidden
@@ -647,21 +653,23 @@ const InstallationsPage = () => {
         {upgradeTarget && (
           <div className="space-y-4">
             <div className="text-sm text-gray-600">
-              当前已安装版本：
+
+              Currently installed version:
               <span className="font-medium text-gray-900">v{upgradeTarget.installedVersion}</span>
             </div>
 
             <div>
-              <div className="text-sm font-medium mb-1">目标版本</div>
+              <div className="text-sm font-medium mb-1">target version</div>
               <Select
                 value={upgradeVersion || undefined}
                 onValueChange={setUpgradeVersion}
                 disabled={upgradeVersionsLoading || switchableVersions.length === 0}
-                placeholder="选择目标版本"
+                placeholder="Select target version"
               >
                 {upgradeVersions.length === 0 ? (
                   <SelectItem value="__no_published_version__" disabled>
-                    暂无其他已发布版本
+
+                    No other released version yet
                   </SelectItem>
                 ) : (
                   upgradeVersions.map(v => (
@@ -671,41 +679,47 @@ const InstallationsPage = () => {
                       disabled={v.version === upgradeTarget.installedVersion}
                     >
                       v{v.version}
-                      {v.version === upgradeTarget.installedVersion ? '（当前版本）' : ''}
+                      {v.version === upgradeTarget.installedVersion ? '(current version)' : ''}
                     </SelectItem>
                   ))
                 )}
               </Select>
               {upgradeVersionsLoading && (
-                <div className="text-xs text-gray-500 mt-1">正在加载可用版本…</div>
+                <div className="text-xs text-gray-500 mt-1">Loading available versions…</div>
               )}
               {upgradeVersionsError && (
                 <div className="text-xs text-red-600 mt-1">{upgradeVersionsError}</div>
               )}
               {!upgradeVersionsLoading && !upgradeVersionsError && switchableVersions.length === 0 && (
                 <div className="text-xs text-gray-500 mt-1">
-                  该商品目前只有 v{upgradeTarget.installedVersion} 一个已发布版本，暂无可升级或回滚的目标版本。
+
+                  This product currently only has v{upgradeTarget.installedVersion}  A released version, there is currently no target version for upgrade or rollback.
                 </div>
               )}
             </div>
 
             {upgradeVersion ? (
               <div className="text-sm">
-                将从
+
+                Will be from
                 <span className="font-medium"> v{upgradeTarget.installedVersion} </span>
-                变更为
+
+                changed to
                 <span className="font-medium"> v{upgradeVersion} </span>
-                。升级会重新装载运行态，回滚会退回旧发布物。
+
+                . An upgrade will reload the running state, and a rollback will return the old publication.
               </div>
             ) : (
               <div className="text-sm text-gray-500">
-                暂无可切换的目标版本，请先在应用管理里发布其他版本后再来。
+
+                There is currently no target version to switch to. Please publish other versions in the application management first and then try again.
               </div>
             )}
 
             <div className="flex justify-end gap-2">
               <Button variant="secondary" onClick={() => setUpgradeTarget(null)}>
-                取消
+
+                Cancel
               </Button>
               <Button
                 onClick={() => void handleUpgrade(upgradeTarget, upgradeVersion)}
@@ -715,7 +729,7 @@ const InstallationsPage = () => {
                   upgradeVersion === upgradeTarget.installedVersion
                 }
               >
-                {upgradingId === upgradeTarget.itemId ? '执行中...' : '确认执行'}
+                {upgradingId === upgradeTarget.itemId ? 'Executing...' : 'Confirm execution'}
               </Button>
             </div>
           </div>

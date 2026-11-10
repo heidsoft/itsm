@@ -282,13 +282,13 @@ export function StatusBadge({ status, children, size = 'sm', className = '' }: S
   };
 
   const statusLabels = {
-    new: '新建',
-    open: '开放',
-    inProgress: '处理中',
-    pending: '待处理',
-    resolved: '已解决',
-    closed: '已关闭',
-    cancelled: '已取消',
+    new: 'Create',
+    open: 'Open',
+    inProgress: 'In Progress',
+    pending: 'Pending',
+    resolved: 'Resolved',
+    closed: 'Closed',
+    cancelled: 'Cancelled',
   };
 
   return (
@@ -333,11 +333,11 @@ export function PriorityBadge({
   };
 
   const priorityLabels = {
-    low: '低',
-    normal: '普通',
-    high: '高',
-    urgent: '紧急',
-    critical: '关键',
+    low: 'Low',
+    normal: 'Normal',
+    high: 'High',
+    urgent: 'Urgent',
+    critical: 'Critical',
   };
 
   return (
@@ -352,9 +352,9 @@ export function ThemeToggle({ className = '' }: { className?: string }) {
   const { mode, setMode } = useTheme();
 
   const modes: Array<{ value: ThemeMode; label: string; icon: string }> = [
-    { value: 'light', label: '浅色主题', icon: '☀️' },
-    { value: 'dark', label: '深色主题', icon: '🌙' },
-    { value: 'system', label: '跟随系统', icon: '💻' },
+    { value: 'light', label: 'Light theme', icon: '☀️' },
+    { value: 'dark', label: 'Dark theme', icon: '🌙' },
+    { value: 'system', label: 'Follow the system', icon: '💻' },
   ];
 
   return (

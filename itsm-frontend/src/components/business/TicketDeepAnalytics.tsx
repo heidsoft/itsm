@@ -115,36 +115,36 @@ export const TicketDeepAnalytics: React.FC<TicketDeepAnalyticsProps> = ({
   const availableDimensions: AnalyticsDimension[] = [
     {
       key: 'status',
-      label: '状态',
+      label: 'Status',
       type: 'category',
       options: ['open', 'in_progress', 'resolved', 'closed'],
     },
     {
       key: 'priority',
-      label: '优先级',
+      label: 'Priority',
       type: 'category',
       options: ['low', 'medium', 'high', 'urgent'],
     },
     {
       key: 'type',
-      label: '类型',
+      label: 'Type',
       type: 'category',
       options: ['incident', 'service_request', 'problem', 'change'],
     },
-    { key: 'category', label: '分类', type: 'category' },
-    { key: 'assignee', label: '处理人', type: 'category' },
-    { key: 'department', label: '部门', type: 'category' },
-    { key:'createdDate', label: '创建日期', type: 'time' },
-    { key:'resolvedDate', label: '解决日期', type: 'time' },
+    { key: 'category', label: 'Category', type: 'category' },
+    { key: 'assignee', label: 'Assignee', type: 'category' },
+    { key: 'department', label: 'Department', type: 'category' },
+    { key:'createdDate', label: 'Creation date', type: 'time' },
+    { key:'resolvedDate', label: 'Resolution date', type: 'time' },
   ];
 
   // 可用指标
   const availableMetrics: AnalyticsMetric[] = [
-    { key: 'count', label: '数量', type: 'count' },
-    { key:'responseTime', label: '平均响应时间', type: 'avg', field: 'response_time' },
-    { key:'resolutionTime', label: '平均解决时间', type: 'avg', field: 'resolution_time' },
-    { key:'slaCompliance', label: 'SLA合规率', type: 'avg', field: 'sla_compliance' },
-    { key:'customerSatisfaction', label: '客户满意度', type: 'avg', field: 'rating' },
+    { key: 'count', label: 'Count', type: 'count' },
+    { key:'responseTime', label: 'Avg Response Time', type: 'avg', field: 'response_time' },
+    { key:'resolutionTime', label: 'Avg Resolution Time', type: 'avg', field: 'resolution_time' },
+    { key:'slaCompliance', label: 'SLA Compliance Rate', type: 'avg', field: 'sla_compliance' },
+    { key:'customerSatisfaction', label: 'Customer Satisfaction', type: 'avg', field: 'rating' },
   ];
 
   // 加载分析数据
@@ -169,10 +169,10 @@ export const TicketDeepAnalytics: React.FC<TicketDeepAnalyticsProps> = ({
           slaCompliance: 0,
           customerSatisfaction: 0,
         });
-        antMessage.info('未找到符合条件的数据');
+        antMessage.info('No matching data found');
       }
     } catch (error) {
-      antMessage.error('加载分析数据失败');
+      antMessage.error('Failed to load analysis data');
       // 出错时重置为空状态
       setChartData([]);
       setSummaryData({
@@ -203,10 +203,10 @@ export const TicketDeepAnalytics: React.FC<TicketDeepAnalyticsProps> = ({
       setConfig(newConfig);
       setConfigModalVisible(false);
       onConfigChange?.(newConfig);
-      antMessage.success('配置已保存');
+      antMessage.success('Configuration saved');
       loadAnalyticsData();
     } catch (error) {
-      antMessage.error('保存配置失败');
+      antMessage.error('Failed to save configuration');
     }
   }, [form, config, onConfigChange, antMessage, loadAnalyticsData]);
 
@@ -224,17 +224,17 @@ export const TicketDeepAnalytics: React.FC<TicketDeepAnalyticsProps> = ({
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
-      antMessage.success('导出成功');
+      antMessage.success('Exported');
     } catch (error) {
-      console.error('导出失败:', error);
-        antMessage.error('导出失败，请稍后再试');
+      console.error('Export failed:', error);
+        antMessage.error('Export failed, please try again later.');
     }
   }, [config, antMessage]);
 
   // 渲染图表
   const renderChart = () => {
     if (chartData.length === 0) {
-      return <Empty description="暂无数据" />;
+      return <Empty description="No data" />;
     }
 
     const COLORS = ['#1890ff', '#52c41a', '#faad14', '#f5222d', '#722ed1', '#13c2c2'];
@@ -312,10 +312,10 @@ export const TicketDeepAnalytics: React.FC<TicketDeepAnalyticsProps> = ({
           <Table
             dataSource={chartData}
             columns={[
-              { title: '名称', dataIndex: 'name', key: 'name' },
-              { title: '数值', dataIndex: 'value', key: 'value' },
+              { title: 'Name', dataIndex: 'name', key: 'name' },
+              { title: 'Value', dataIndex: 'value', key: 'value' },
               ...(config.metrics.includes('response_time')
-                ? [{ title: '平均响应时间', dataIndex:'avgTime', key:'avgTime' }]
+                ? [{ title: 'Avg Response Time', dataIndex:'avgTime', key:'avgTime' }]
                 : []),
             ]}
             rowKey="name"
@@ -334,7 +334,8 @@ export const TicketDeepAnalytics: React.FC<TicketDeepAnalyticsProps> = ({
       <Card>
         <div className="flex items-center justify-between mb-4">
           <Title level={5} style={{ margin: 0 }}>
-            深度数据分析
+
+            Deep Data Analysis
           </Title>
           <Space>
             <Button
@@ -344,15 +345,18 @@ export const TicketDeepAnalytics: React.FC<TicketDeepAnalyticsProps> = ({
                 setConfigModalVisible(true);
               }}
             >
-              配置
+
+              Configure
             </Button>
             {canExport && (
               <Button icon={<Download />} onClick={handleExport}>
-                导出
+
+                Export
               </Button>
             )}
             <Button icon={<RotateCcw />} onClick={loadAnalyticsData} loading={loading}>
-              刷新
+
+              Refresh
             </Button>
           </Space>
         </div>
@@ -378,11 +382,11 @@ export const TicketDeepAnalytics: React.FC<TicketDeepAnalyticsProps> = ({
             onChange={value => setConfig({ ...config, chartType: value })}
             style={{ width: 120 }}
             options={[
-              { value: 'line', label: '折线图' },
-              { value: 'bar', label: '柱状图' },
-              { value: 'pie', label: '饼图' },
-              { value: 'area', label: '面积图' },
-              { value: 'table', label: '表格' },
+              { value: 'line', label: 'Line chart' },
+              { value: 'bar', label: 'Bar chart' },
+              { value: 'pie', label: 'Pie chart' },
+              { value: 'area', label: 'Area Chart' },
+              { value: 'table', label: 'Table' },
             ]}
           />
         </Space>
@@ -393,7 +397,7 @@ export const TicketDeepAnalytics: React.FC<TicketDeepAnalyticsProps> = ({
         <Col xs={24} sm={12} md={6}>
           <Card>
             <Statistic
-              title="总工单数"
+              title="Total Tickets"
               value={summaryData.total || 0}
               prefix={<BarChart3 />}
             />
@@ -402,7 +406,7 @@ export const TicketDeepAnalytics: React.FC<TicketDeepAnalyticsProps> = ({
         <Col xs={24} sm={12} md={6}>
           <Card>
             <Statistic
-              title="已解决"
+              title="Resolved"
               value={summaryData.resolved || 0}
               styles={{ content: { color: '#3f8600' } }}
               prefix={<CheckCircle />}
@@ -412,10 +416,10 @@ export const TicketDeepAnalytics: React.FC<TicketDeepAnalyticsProps> = ({
         <Col xs={24} sm={12} md={6}>
           <Card>
             <Statistic
-              title="平均响应时间"
+              title="Avg Response Time"
               value={summaryData.avgResponseTime || 0}
               precision={1}
-              suffix="小时"
+              suffix="hours"
               styles={{ content: { color: '#1890ff' } }}
             />
           </Card>
@@ -423,7 +427,7 @@ export const TicketDeepAnalytics: React.FC<TicketDeepAnalyticsProps> = ({
         <Col xs={24} sm={12} md={6}>
           <Card>
             <Statistic
-              title="SLA合规率"
+              title="SLA Compliance Rate"
               value={summaryData.slaCompliance || 0}
               precision={1}
               suffix="%"
@@ -434,13 +438,13 @@ export const TicketDeepAnalytics: React.FC<TicketDeepAnalyticsProps> = ({
       </Row>
 
       {/* 图表 */}
-      <Card title="数据分析图表" loading={loading}>
+      <Card title="Data analysis chart" loading={loading}>
         {renderChart()}
       </Card>
 
       {/* 配置模态框 */}
       <Modal
-        title="分析配置"
+        title="Analysis configuration"
         open={configModalVisible}
         onOk={handleSaveConfig}
         onCancel={() => setConfigModalVisible(false)}
@@ -449,8 +453,8 @@ export const TicketDeepAnalytics: React.FC<TicketDeepAnalyticsProps> = ({
         <Form form={form} layout="vertical">
           <Form.Item
             name="dimensions"
-            label="分析维度"
-            rules={[{ required: true, message: '请至少选择一个维度' }]}
+            label="Analysis Dimensions"
+            rules={[{ required: true, message: 'Please select at least one dimension' }]}
           >
             <CheckboxGroup>
               {availableDimensions.map(dim => (
@@ -462,8 +466,8 @@ export const TicketDeepAnalytics: React.FC<TicketDeepAnalyticsProps> = ({
           </Form.Item>
           <Form.Item
             name="metrics"
-            label="分析指标"
-            rules={[{ required: true, message: '请至少选择一个指标' }]}
+            label="Analysis indicators"
+            rules={[{ required: true, message: 'Please select at least one indicator' }]}
           >
             <CheckboxGroup>
               {availableMetrics.map(metric => (
@@ -473,17 +477,17 @@ export const TicketDeepAnalytics: React.FC<TicketDeepAnalyticsProps> = ({
               ))}
             </CheckboxGroup>
           </Form.Item>
-          <Form.Item name="chartType" label="图表类型">
+          <Form.Item name="chartType" label="Chart type">
             <Radio.Group>
-              <Radio value="line">折线图</Radio>
-              <Radio value="bar">柱状图</Radio>
-              <Radio value="pie">饼图</Radio>
-              <Radio value="area">面积图</Radio>
-              <Radio value="table">表格</Radio>
+              <Radio value="line">Line chart</Radio>
+              <Radio value="bar">Bar chart</Radio>
+              <Radio value="pie">Pie chart</Radio>
+              <Radio value="area">Area Chart</Radio>
+              <Radio value="table">Table</Radio>
             </Radio.Group>
           </Form.Item>
-          <Form.Item name="groupBy" label="分组方式">
-            <Select placeholder="请选择分组方式" allowClear options={availableDimensions
+          <Form.Item name="groupBy" label="Grouping method">
+            <Select placeholder="Please select a grouping method" allowClear options={availableDimensions
               .filter(d => d.type === 'category')
               .map(dim => ({
                 value: dim.key,

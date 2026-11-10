@@ -396,14 +396,14 @@ class AuthApiClient {
       if (!response.ok) {
         throw new Error(
           response.status === 404 || response.status === 501
-            ? 'SSO 登录暂未启用，请使用账号密码登录'
-            : 'SSO 登录失败，请稍后重试'
+            ? 'SSO login is not enabled yet. Please use your account and password to log in.'
+            : 'SSO login failed, please try again later.'
         );
       }
 
       const data = await response.json();
       if (data?.code !== 0 || !data?.data) {
-        throw new Error(data?.message || 'SSO 登录失败');
+        throw new Error(data?.message || 'SSO login failed');
       }
 
       return { success: true, data: data.data };

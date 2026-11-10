@@ -78,7 +78,7 @@ func (s *TicketAssignmentService) AssignTicket(ctx context.Context, req *Assignm
 		Where(ticket.IDEQ(req.TicketID), ticket.TenantIDEQ(req.TenantID), ticket.DeletedAtIsNil()).
 		Only(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("获取工单失败: %w", err)
+		return nil, fmt.Errorf("Failed to obtain work order: %w", err)
 	}
 	_ = ticketEntity
 
@@ -129,7 +129,7 @@ func (s *TicketAssignmentService) autoAssignTicket(ctx context.Context, req *Ass
 		SetAssigneeID(bestUser.UserID).
 		Exec(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("分配工单失败: %w", err)
+		return nil, fmt.Errorf("Failed to assign work order: %w", err)
 	}
 
 	return &AssignmentResponse{
@@ -150,7 +150,7 @@ func (s *TicketAssignmentService) getAvailableUsers(ctx context.Context, req *As
 		Where(user.ActiveEQ(true)).
 		All(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("获取用户失败: %w", err)
+		return nil, fmt.Errorf("Failed to get user: %w", err)
 	}
 
 	var availableUsers []UserWorkload
@@ -417,7 +417,7 @@ func (s *TicketAssignmentService) assignToSpecificUser(ctx context.Context, req 
 		Where(user.IDEQ(userID), user.TenantIDEQ(req.TenantID), user.ActiveEQ(true)).
 		Only(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("用户不存在: %w", err)
+		return nil, fmt.Errorf("User does not exist: %w", err)
 	}
 
 	// 执行分配
@@ -426,7 +426,7 @@ func (s *TicketAssignmentService) assignToSpecificUser(ctx context.Context, req 
 		SetAssigneeID(userID).
 		Exec(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("分配工单失败: %w", err)
+		return nil, fmt.Errorf("Failed to assign work order: %w", err)
 	}
 
 	return &AssignmentResponse{
@@ -488,7 +488,7 @@ func (s *TicketAssignmentService) ReassignTicket(ctx context.Context, ticketID i
 		SetAssigneeID(newAssigneeID).
 		Exec(ctx)
 	if err != nil {
-		return fmt.Errorf("重新分配失败: %w", err)
+		return fmt.Errorf("Reallocation failed: %w", err)
 	}
 
 	// 这里可以添加分配历史记录和通知逻辑
@@ -556,7 +556,7 @@ func (s *TicketAssignmentService) GetTicketsByAssignee(ctx context.Context, assi
 		Order(ent.Desc(ticket.FieldCreatedAt)).
 		All(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("获取处理人工单失败: %w", err)
+		return nil, fmt.Errorf("Failed to obtain and process manual order: %w", err)
 	}
 	return tickets, nil
 }
@@ -570,7 +570,7 @@ func (s *TicketAssignmentService) AssignTickets(ctx context.Context, tenantID in
 	// 验证用户是否存在
 	_, err := s.client.User.Get(ctx, assigneeID)
 	if err != nil {
-		return fmt.Errorf("用户不存在: %w", err)
+		return fmt.Errorf("User does not exist: %w", err)
 	}
 
 	// 批量更新工单分配人

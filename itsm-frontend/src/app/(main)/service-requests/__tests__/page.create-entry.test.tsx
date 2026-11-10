@@ -70,7 +70,7 @@ describe('服务请求列表创建入口', () => {
     mockPermissions = { 'service_request:write': true };
     await renderPage();
 
-    const button = screen.getByRole('button', { name: /新建服务请求/ });
+    const button = screen.getByRole('button', { name: /New service request/ });
     await userEvent.click(button);
 
     expect(mockPush).toHaveBeenCalledWith('/service-requests/new');
@@ -79,6 +79,6 @@ describe('服务请求列表创建入口', () => {
   it('无写权限时不展示新建按钮', async () => {
     await renderPage();
 
-    expect(screen.queryByRole('button', { name: /新建服务请求/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /New service request/ })).not.toBeInTheDocument();
   });
 });

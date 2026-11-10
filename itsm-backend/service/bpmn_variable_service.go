@@ -125,13 +125,13 @@ type ListVariablesRequest struct {
 func (s *BPMNVariableService) CreateVariable(ctx context.Context, req *CreateVariableRequest) (*ent.ProcessVariable, error) {
 	// 验证变量值
 	if err := s.validateVariableValue(req.Value, req.Type); err != nil {
-		return nil, fmt.Errorf("变量值验证失败: %w", err)
+		return nil, fmt.Errorf("Variable value validation failed: %w", err)
 	}
 
 	// 序列化变量值
 	valueBytes, err := json.Marshal(req.Value)
 	if err != nil {
-		return nil, fmt.Errorf("序列化变量值失败: %w", err)
+		return nil, fmt.Errorf("Failed to serialize variable value: %w", err)
 	}
 
 	// 序列化默认值 - 暂时不使用，因为ProcessVariable没有DefaultValue字段
@@ -170,7 +170,7 @@ func (s *BPMNVariableService) CreateVariable(ctx context.Context, req *CreateVar
 		SetTenantID(req.TenantID).
 		Save(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("创建流程变量失败: %w", err)
+		return nil, fmt.Errorf("Failed to create process variable: %w", err)
 	}
 
 	return variable, nil
@@ -185,7 +185,7 @@ func (s *BPMNVariableService) GetVariable(ctx context.Context, id string, tenant
 		Where(processvariable.TenantID(tenantID)).
 		Only(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("获取流程变量失败: %w", err)
+		return nil, fmt.Errorf("Failed to get process variables: %w", err)
 	}
 
 	return variable, nil
@@ -209,7 +209,7 @@ func (s *BPMNVariableService) UpdateVariable(ctx context.Context, id string, req
 		// 序列化新值
 		valueBytes, err := json.Marshal(req.Value)
 		if err != nil {
-			return nil, fmt.Errorf("序列化变量值失败: %w", err)
+			return nil, fmt.Errorf("Failed to serialize variable value: %w", err)
 		}
 		updateBuilder.SetVariableValue(string(valueBytes))
 	}
@@ -222,7 +222,7 @@ func (s *BPMNVariableService) UpdateVariable(ctx context.Context, id string, req
 	// 执行更新
 	_, err = updateBuilder.Save(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("更新流程变量失败: %w", err)
+		return nil, fmt.Errorf("Failed to update process variables: %w", err)
 	}
 
 	// 返回更新后的变量
@@ -245,7 +245,7 @@ func (s *BPMNVariableService) DeleteVariable(ctx context.Context, id string, ten
 	// 删除变量
 	err = s.client.ProcessVariable.DeleteOne(variable).Exec(ctx)
 	if err != nil {
-		return fmt.Errorf("删除流程变量失败: %w", err)
+		return fmt.Errorf("Failed to delete process variable: %w", err)
 	}
 
 	return nil
@@ -292,7 +292,7 @@ func (s *BPMNVariableService) ListVariables(ctx context.Context, req *ListVariab
 	// 获取总数
 	total, err := query.Clone().Count(ctx)
 	if err != nil {
-		return nil, 0, fmt.Errorf("查询变量总数失败: %w", err)
+		return nil, 0, fmt.Errorf("Failed to query the total number of variables: %w", err)
 	}
 
 	// 分页查询
@@ -304,7 +304,7 @@ func (s *BPMNVariableService) ListVariables(ctx context.Context, req *ListVariab
 	// 按创建时间倒序排列
 	variables, err := query.Order(ent.Desc(processvariable.FieldCreatedAt)).All(ctx)
 	if err != nil {
-		return nil, 0, fmt.Errorf("查询变量列表失败: %w", err)
+		return nil, 0, fmt.Errorf("Failed to query variable list: %w", err)
 	}
 
 	return variables, total, nil
@@ -334,7 +334,7 @@ func (s *BPMNVariableService) GetVariablesByScope(ctx context.Context, scope Var
 
 	variables, err := query.All(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("查询作用域变量失败: %w", err)
+		return nil, fmt.Errorf("Failed to query scope variables: %w", err)
 	}
 
 	return variables, nil
@@ -403,13 +403,13 @@ func (s *BPMNVariableService) GetVariableValue(ctx context.Context, name string,
 			// 反序列化变量值 - ProcessVariable的Value是string类型
 			var value interface{}
 			if err := json.Unmarshal([]byte(variable.VariableValue), &value); err != nil {
-				return nil, fmt.Errorf("反序列化变量值失败: %w", err)
+				return nil, fmt.Errorf("Failed to deserialize variable value: %w", err)
 			}
 			return value, nil
 		}
 	}
 
-	return nil, fmt.Errorf("变量 %s 不存在", name)
+	return nil, fmt.Errorf("Variable %s does not exist", name)
 }
 
 // DeleteVariablesByScope 删除指定作用域的所有变量
@@ -439,7 +439,7 @@ func (s *BPMNVariableService) DeleteVariablesByScope(ctx context.Context, scope 
 			Where(processvariable.VariableIDIn(ids...)).
 			Exec(ctx)
 		if err != nil {
-			return fmt.Errorf("批量删除变量失败: %w", err)
+			return fmt.Errorf("Batch deletion of variables failed: %w", err)
 		}
 	}
 
@@ -449,41 +449,41 @@ func (s *BPMNVariableService) DeleteVariablesByScope(ctx context.Context, scope 
 // validateVariableValue 验证变量值
 func (s *BPMNVariableService) validateVariableValue(value interface{}, varType VariableType) error {
 	if value == nil {
-		return fmt.Errorf("变量值不能为空")
+		return fmt.Errorf("Variable value cannot be empty")
 	}
 
 	switch varType {
 	case TypeString:
 		if _, ok := value.(string); !ok {
-			return fmt.Errorf("变量类型不匹配，期望string类型")
+			return fmt.Errorf("Variable type mismatch, string type expected")
 		}
 	case TypeInteger:
 		if _, ok := value.(int); !ok {
-			return fmt.Errorf("变量类型不匹配，期望integer类型")
+			return fmt.Errorf("Variable type mismatch, expected integer type")
 		}
 	case TypeFloat:
 		if _, ok := value.(float64); !ok {
-			return fmt.Errorf("变量类型不匹配，期望float类型")
+			return fmt.Errorf("Variable type mismatch, expected float type")
 		}
 	case TypeBoolean:
 		if _, ok := value.(bool); !ok {
-			return fmt.Errorf("变量类型不匹配，期望boolean类型")
+			return fmt.Errorf("Variable type mismatch, expected boolean type")
 		}
 	case TypeDate, TypeDateTime:
 		if _, ok := value.(time.Time); !ok {
-			return fmt.Errorf("变量类型不匹配，期望时间类型")
+			return fmt.Errorf("Variable type mismatch, expected time type")
 		}
 	case TypeJSON:
 		// JSON类型可以接受任何可序列化的值
 		if _, err := json.Marshal(value); err != nil {
-			return fmt.Errorf("变量值无法序列化为JSON: %w", err)
+			return fmt.Errorf("Variable value cannot be serialized to JSON: %w", err)
 		}
 	case TypeBinary:
 		if _, ok := value.([]byte); !ok {
-			return fmt.Errorf("变量类型不匹配，期望binary类型")
+			return fmt.Errorf("Variable type mismatch, binary type expected")
 		}
 	default:
-		return fmt.Errorf("不支持的变量类型: %s", varType)
+		return fmt.Errorf("Unsupported variable type: %s", varType)
 	}
 
 	return nil

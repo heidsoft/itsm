@@ -48,14 +48,14 @@ function AISummaryPanel({ incidentId }: { incidentId: number }) {
         message: data.message,
       });
       if (data.degraded) {
-        message.warning(data.message || 'AI 摘要服务暂时不可用');
+        message.warning(data.message || 'AI summary service is temporarily unavailable');
       } else if (data.summary) {
-        message.success('AI 摘要生成成功');
+        message.success('AI summary generated successfully');
       }
     } catch (e) {
       const err = e instanceof Error ? e.message : String(e);
       setState({ loading: false, error: err });
-      message.error(`AI 摘要调用失败：${err}`);
+      message.error(`AI summary call failed:${err}`);
     }
   };
 
@@ -64,8 +64,8 @@ function AISummaryPanel({ incidentId }: { incidentId: number }) {
       <Alert
         type="info"
         showIcon
-        title="AI 智能摘要"
-        description="基于标题、描述与历史自动生成摘要，辅助快速了解事件全貌，重要信息请以人工确认为准。"
+        title="AI Intelligent Summary"
+        description="Automatically generate a summary based on the title, description and history to help quickly understand the full story of the event. Important information is subject to manual confirmation."
       />
       <Space className="mt-3 mb-3">
         <Button
@@ -74,15 +74,16 @@ function AISummaryPanel({ incidentId }: { incidentId: number }) {
           loading={state.loading}
           onClick={runSummarize}
         >
-          生成 AI 摘要
+
+          Generate AI summary
         </Button>
-        {state.summary && <Tag color="green">已生成</Tag>}
-        {state.degraded && <Tag color="orange">降级</Tag>}
+        {state.summary && <Tag color="green">Generated</Tag>}
+        {state.degraded && <Tag color="orange">Downgrade</Tag>}
       </Space>
 
       {state.loading && (
         <div className="py-8 text-center">
-          <Spin tip="正在生成摘要..." />
+          <Spin tip="Generating summary..." />
         </div>
       )}
 
@@ -90,7 +91,7 @@ function AISummaryPanel({ incidentId }: { incidentId: number }) {
         <Alert
           type="error"
           showIcon
-          title="AI 摘要调用失败"
+          title="AI summary call failed"
           description={state.error}
           className="mt-2"
         />
@@ -100,8 +101,8 @@ function AISummaryPanel({ incidentId }: { incidentId: number }) {
         <Alert
           type="warning"
           showIcon
-          title={state.message || 'AI 摘要服务暂时不可用'}
-          description="可能原因：LLM 网关未配置、模型调用失败或网络异常。请稍后重试或联系管理员。"
+          title={state.message || 'AI summary service is temporarily unavailable'}
+          description="Possible reasons: The LLM gateway is not configured, the model call fails, or the network is abnormal. Please try again later or contact your administrator."
           className="mt-2"
         />
       )}
@@ -113,7 +114,7 @@ function AISummaryPanel({ incidentId }: { incidentId: number }) {
       )}
 
       {!state.summary && !state.loading && !state.error && !state.degraded && (
-        <Empty description="点击上方按钮生成 AI 摘要" />
+        <Empty description="Click the button above to generate AI summary" />
       )}
     </div>
   );
@@ -129,11 +130,11 @@ function AIAnalyzePanel({ incidentId }: { incidentId: number }) {
     try {
       const result = await AIApi.analyzeIncident(incidentId);
       setState({ loading: false, result });
-      message.success('AI 分析完成');
+      message.success('AI analysis completed');
     } catch (e) {
       const err = e instanceof Error ? e.message : String(e);
       setState({ loading: false, error: err });
-      message.error(`AI 分析失败：${err}`);
+      message.error(`AI analysis failed:${err}`);
     }
   };
 
@@ -142,8 +143,8 @@ function AIAnalyzePanel({ incidentId }: { incidentId: number }) {
       <Alert
         type="info"
         showIcon
-        title="AI 影响分析"
-        description="基于事件内容与历史数据，分析潜在影响范围、关联资源与处置建议。结果仅供辅助决策。"
+        title="AI Impact Analysis"
+        description="Based on the event content and historical data, analyze the potential impact scope, associated resources and disposal suggestions. Results are provided to assist decision-making only."
       />
       <Space className="mt-3 mb-3">
         <Button
@@ -152,13 +153,14 @@ function AIAnalyzePanel({ incidentId }: { incidentId: number }) {
           loading={state.loading}
           onClick={runAnalyze}
         >
-          执行 AI 分析
+
+          Perform AI analysis
         </Button>
       </Space>
 
       {state.loading && (
         <div className="py-8 text-center">
-          <Spin tip="正在执行 AI 分析..." />
+          <Spin tip="Performing AI analysis..." />
         </div>
       )}
 
@@ -166,7 +168,7 @@ function AIAnalyzePanel({ incidentId }: { incidentId: number }) {
         <Alert
           type="error"
           showIcon
-          title="AI 分析失败"
+          title="AI analysis failed"
           description={state.error}
           className="mt-2"
         />
@@ -183,7 +185,7 @@ function AIAnalyzePanel({ incidentId }: { incidentId: number }) {
       )}
 
       {state.result === undefined && !state.loading && !state.error && (
-        <Empty description="点击上方按钮执行 AI 分析" />
+        <Empty description="Click the button above to perform AI analysis" />
       )}
     </div>
   );
@@ -241,7 +243,8 @@ export default function IncidentDetailPage() {
                   label: (
                     <span>
                       <Sparkles size={14} className="inline mr-1" />
-                      AI 智能摘要
+
+                      AI Intelligent Summary
                     </span>
                   ),
                   children: <AISummaryPanel incidentId={numericId} />,
@@ -251,7 +254,8 @@ export default function IncidentDetailPage() {
                   label: (
                     <span>
                       <Bot size={14} className="inline mr-1" />
-                      AI 影响分析
+
+                      AI Impact Analysis
                     </span>
                   ),
                   children: <AIAnalyzePanel incidentId={numericId} />,

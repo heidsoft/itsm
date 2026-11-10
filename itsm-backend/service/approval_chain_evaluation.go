@@ -79,7 +79,7 @@ type ApprovalChainEvaluation struct {
 // approvals 为「level -> 已批准该层的用户ID列表」；传 nil 表示尚未有任何批准（用于生成审批计划）。
 func EvaluateApprovalChain(ctx context.Context, client *ent.Client, logger *zap.SugaredLogger, chain *ent.ApprovalChain, evalCtx ApprovalEvalContext, approvals map[int][]int) (*ApprovalChainEvaluation, error) {
 	if chain == nil {
-		return nil, fmt.Errorf("审批链为空")
+		return nil, fmt.Errorf("Approval chain is empty")
 	}
 
 	// 按 level 升序分组
@@ -309,7 +309,7 @@ func (s *ApprovalChainService) ResolveApprovalPlan(ctx context.Context, tenantID
 		return nil, err
 	}
 	if chain == nil {
-		return nil, fmt.Errorf("未找到实体类型 %s 的激活审批链（租户 %d）", entityType, tenantID)
+		return nil, fmt.Errorf("Activation approval chain not found for entity type %s (tenant %d)", entityType, tenantID)
 	}
 	return s.Evaluate(ctx, chain, evalCtx, approvals)
 }
@@ -322,7 +322,7 @@ func resolveChainApprovers(ctx context.Context, client *ent.Client, logger *zap.
 			Where(user.ID(step.ApproverID), user.TenantIDEQ(evalCtx.TenantID)).
 			Only(ctx)
 		if err != nil || u == nil {
-			return nil, nil, fmt.Errorf("审批人 %d 不属于租户 %d", step.ApproverID, evalCtx.TenantID)
+			return nil, nil, fmt.Errorf("Approver %d does not belong to tenant %d", step.ApproverID, evalCtx.TenantID)
 		}
 		return []int{u.ID}, []string{u.Name}, nil
 	}
@@ -345,7 +345,7 @@ func resolveChainApprovers(ctx context.Context, client *ent.Client, logger *zap.
 	case "dept_manager", "team_leader", "project_manager", "temp_team_leader":
 		scopeID, err := strconv.Atoi(assigneeValue)
 		if err != nil {
-			return nil, nil, fmt.Errorf("无效的审批人范围ID: %s", assigneeValue)
+			return nil, nil, fmt.Errorf("Invalid approver range ID: %s", assigneeValue)
 		}
 		appCtx := &approver.ApproverContext{TenantID: evalCtx.TenantID}
 		switch assigneeType {
@@ -394,7 +394,7 @@ func resolveChainApprovers(ctx context.Context, client *ent.Client, logger *zap.
 // resolveReviewMembers 按评审组类型（REVIEW/EREVIEW）解析活跃成员用户，租户隔离。
 func resolveReviewMembers(ctx context.Context, client *ent.Client, tenantID int, boardType string) ([]int, []string, error) {
 	if boardType != "REVIEW" && boardType != "EREVIEW" {
-		return nil, nil, fmt.Errorf("无效的评审组类型: %s", boardType)
+		return nil, nil, fmt.Errorf("Invalid review group type: %s", boardType)
 	}
 	members, err := client.ChangeReviewMember.Query().
 		Where(changereviewmember.Type(boardType), changereviewmember.TenantID(tenantID), changereviewmember.IsActive(true)).
@@ -445,7 +445,7 @@ func resolveFallbackApprovers(ctx context.Context, client *ent.Client, logger *z
 	if fallbackRole != "" {
 		return resolveChainApprovers(ctx, client, logger, schema.ApprovalChainStep{Role: fallbackRole}, evalCtx)
 	}
-	return nil, nil, fmt.Errorf("无可用兜底审批人")
+	return nil, nil, fmt.Errorf("No back-up approver available")
 }
 
 // approverInfosToIDs 把 ApproverInfo 列表转换为 ID/Name 切片。

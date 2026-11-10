@@ -126,11 +126,11 @@ func (c *oidcClient) resolveEndpoints(ctx context.Context, providerID int, issue
 				return endpoints, nil
 			}
 		}
-		return oidcEndpoints{}, fmt.Errorf("OIDC discovery 失败且端点配置不完整: %w", err)
+		return oidcEndpoints{}, fmt.Errorf("OIDC discovery failed with incomplete endpoint configuration: %w", err)
 	}
 	// Discovery 的 issuer 必须与配置一致，否则可能是中间人替换的发现文档。
 	if doc.Issuer != "" && doc.Issuer != endpoints.Issuer {
-		return oidcEndpoints{}, fmt.Errorf("OIDC discovery issuer 不匹配: 期望 %q，实际 %q", endpoints.Issuer, doc.Issuer)
+		return oidcEndpoints{}, fmt.Errorf("OIDC discovery issuer mismatch: expected %q, actual %q", endpoints.Issuer, doc.Issuer)
 	}
 	endpoints = mergeEndpoints(endpoints, oidcEndpoints{
 		AuthorizationEndpoint: doc.AuthorizationEndpoint,
@@ -141,7 +141,7 @@ func (c *oidcClient) resolveEndpoints(ctx context.Context, providerID int, issue
 	})
 
 	if endpoints.TokenEndpoint == "" || endpoints.JWKSURI == "" || endpoints.AuthorizationEndpoint == "" {
-		return oidcEndpoints{}, fmt.Errorf("OIDC 端点不完整：authorization=%t token=%t jwks=%t（请补全提供方配置或修复 Discovery 文档）",
+		return oidcEndpoints{}, fmt.Errorf("OIDC endpoint is incomplete: authorization=%t token=%t jwks=%t (please complete the provider configuration or repair the Discovery document)",
 			endpoints.AuthorizationEndpoint != "", endpoints.TokenEndpoint != "", endpoints.JWKSURI != "")
 	}
 
@@ -179,7 +179,7 @@ func (c *oidcClient) cachedEndpointsFor(providerID int) (oidcEndpoints, bool) {
 
 func (c *oidcClient) fetchDiscovery(ctx context.Context, issuer string) (discoveryDocument, error) {
 	if issuer == "" {
-		return discoveryDocument{}, fmt.Errorf("issuer 为空，无法执行 OIDC discovery")
+		return discoveryDocument{}, fmt.Errorf("issuer is empty and OIDC discovery cannot be performed.")
 	}
 	discoveryURL := strings.TrimSuffix(issuer, "/") + "/.well-known/openid-configuration"
 	reqCtx, cancel := context.WithTimeout(ctx, oidcDiscoveryTimeout)
@@ -187,19 +187,19 @@ func (c *oidcClient) fetchDiscovery(ctx context.Context, issuer string) (discove
 
 	req, err := http.NewRequestWithContext(reqCtx, http.MethodGet, discoveryURL, nil)
 	if err != nil {
-		return discoveryDocument{}, fmt.Errorf("构造 discovery 请求失败: %w", err)
+		return discoveryDocument{}, fmt.Errorf("Failed to construct discovery request: %w", err)
 	}
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
-		return discoveryDocument{}, fmt.Errorf("请求 %s 失败: %w", discoveryURL, err)
+		return discoveryDocument{}, fmt.Errorf("Request %s failed: %w", discoveryURL, err)
 	}
 	defer func() { _ = resp.Body.Close() }()
 	if resp.StatusCode != http.StatusOK {
-		return discoveryDocument{}, fmt.Errorf("discovery 端点返回 %d", resp.StatusCode)
+		return discoveryDocument{}, fmt.Errorf("discovery endpoint returned %d", resp.StatusCode)
 	}
 	var doc discoveryDocument
 	if err := json.NewDecoder(io.LimitReader(resp.Body, 1<<20)).Decode(&doc); err != nil {
-		return discoveryDocument{}, fmt.Errorf("解析 discovery 文档失败: %w", err)
+		return discoveryDocument{}, fmt.Errorf("Failed to parse discovery document: %w", err)
 	}
 	return doc, nil
 }
@@ -232,19 +232,19 @@ func (c *oidcClient) jwksKeys(ctx context.Context, jwksURI string, forceRefresh 
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, jwksURI, nil)
 	if err != nil {
-		return nil, fmt.Errorf("构造 JWKS 请求失败: %w", err)
+		return nil, fmt.Errorf("Failed to construct JWKS request: %w", err)
 	}
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("请求 JWKS 失败: %w", err)
+		return nil, fmt.Errorf("Request JWKS failed: %w", err)
 	}
 	defer func() { _ = resp.Body.Close() }()
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("JWKS 端点返回 %d", resp.StatusCode)
+		return nil, fmt.Errorf("JWKS endpoint returned %d", resp.StatusCode)
 	}
 	var doc jwksDocument
 	if err := json.NewDecoder(io.LimitReader(resp.Body, 4<<20)).Decode(&doc); err != nil {
-		return nil, fmt.Errorf("解析 JWKS 失败: %w", err)
+		return nil, fmt.Errorf("Failed to parse JWKS: %w", err)
 	}
 	keys := make(map[string]interface{}, len(doc.Keys))
 	for _, k := range doc.Keys {
@@ -260,7 +260,7 @@ func (c *oidcClient) jwksKeys(ctx context.Context, jwksURI string, forceRefresh 
 		}
 	}
 	if len(keys) == 0 {
-		return nil, fmt.Errorf("JWKS 未包含任何可用签名密钥")
+		return nil, fmt.Errorf("JWKS does not contain any available signing keys")
 	}
 	c.mu.Lock()
 	c.jwks[jwksURI] = cachedJWKS{keys: keys, fetchedAt: time.Now()}
@@ -272,7 +272,7 @@ func jwkToPublicKey(k jwkKey) (interface{}, error) {
 	switch k.Kty {
 	case "RSA":
 		if k.N == "" || k.E == "" {
-			return nil, fmt.Errorf("RSA JWK 缺少 n/e")
+			return nil, fmt.Errorf("RSA JWK missing n/e")
 		}
 		nBytes, err := base64.RawURLEncoding.DecodeString(k.N)
 		if err != nil {
@@ -287,12 +287,12 @@ func jwkToPublicKey(k jwkKey) (interface{}, error) {
 			e = e<<8 | int(b)
 		}
 		if e == 0 {
-			return nil, fmt.Errorf("RSA JWK 指数为 0")
+			return nil, fmt.Errorf("RSA JWK index is 0")
 		}
 		return &rsa.PublicKey{N: new(big.Int).SetBytes(nBytes), E: e}, nil
 	case "EC":
 		if k.Crv == "" || k.X == "" || k.Y == "" {
-			return nil, fmt.Errorf("EC JWK 缺少 crv/x/y")
+			return nil, fmt.Errorf("EC JWK missing crv/x/y")
 		}
 		var ecCurve elliptic.Curve
 		switch k.Crv {
@@ -303,7 +303,7 @@ func jwkToPublicKey(k jwkKey) (interface{}, error) {
 		case "P-521":
 			ecCurve = elliptic.P521()
 		default:
-			return nil, fmt.Errorf("不支持的 EC 曲线 %s", k.Crv)
+			return nil, fmt.Errorf("Unsupported EC curve %s", k.Crv)
 		}
 		xBytes, err := base64.RawURLEncoding.DecodeString(k.X)
 		if err != nil {
@@ -316,18 +316,18 @@ func jwkToPublicKey(k jwkKey) (interface{}, error) {
 		return &ecdsa.PublicKey{Curve: ecCurve, X: new(big.Int).SetBytes(xBytes), Y: new(big.Int).SetBytes(yBytes)}, nil
 	case "OKP":
 		if k.Crv != "Ed25519" || k.X == "" {
-			return nil, fmt.Errorf("仅支持 Ed25519 OKP 密钥")
+			return nil, fmt.Errorf("Only supports Ed25519 OKP keys")
 		}
 		xBytes, err := base64.RawURLEncoding.DecodeString(k.X)
 		if err != nil {
 			return nil, err
 		}
 		if len(xBytes) != ed25519.PublicKeySize {
-			return nil, fmt.Errorf("Ed25519 公钥长度非法")
+			return nil, fmt.Errorf("Ed25519 The public key length is illegal")
 		}
 		return ed25519.PublicKey(xBytes), nil
 	default:
-		return nil, fmt.Errorf("不支持的 JWK 类型 %s", k.Kty)
+		return nil, fmt.Errorf("Unsupported JWK type %s", k.Kty)
 	}
 }
 
@@ -359,31 +359,31 @@ func (c *oidcClient) exchangeCode(ctx context.Context, endpoints oidcEndpoints, 
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoints.TokenEndpoint, strings.NewReader(form.Encode()))
 	if err != nil {
-		return nil, fmt.Errorf("构造令牌请求失败: %w", err)
+		return nil, fmt.Errorf("Failed to construct token request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("令牌交换请求失败: %w", err)
+		return nil, fmt.Errorf("Token exchange request failed: %w", err)
 	}
 	defer func() { _ = resp.Body.Close() }()
 	body, err := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
 	if err != nil {
-		return nil, fmt.Errorf("读取令牌响应失败: %w", err)
+		return nil, fmt.Errorf("Failed to read token response: %w", err)
 	}
 	var tokenResp tokenResponse
 	_ = json.Unmarshal(body, &tokenResp) // 非 JSON 错误体时靠状态码分支兜底
 	if resp.StatusCode != http.StatusOK {
 		if tokenResp.Error != "" {
-			return nil, fmt.Errorf("IdP 拒绝授权码: %s: %s", tokenResp.Error, tokenResp.ErrorDesc)
+			return nil, fmt.Errorf("IdP rejected authorization code: %s: %s", tokenResp.Error, tokenResp.ErrorDesc)
 		}
-		return nil, fmt.Errorf("令牌交换返回 %d", resp.StatusCode)
+		return nil, fmt.Errorf("Token exchange returned %d", resp.StatusCode)
 	}
 	if tokenResp.Error != "" {
-		return nil, fmt.Errorf("IdP 拒绝授权码: %s: %s", tokenResp.Error, tokenResp.ErrorDesc)
+		return nil, fmt.Errorf("IdP rejected authorization code: %s: %s", tokenResp.Error, tokenResp.ErrorDesc)
 	}
 	if tokenResp.AccessToken == "" && tokenResp.IDToken == "" {
-		return nil, fmt.Errorf("令牌响应既无 access_token 也无 id_token")
+		return nil, fmt.Errorf("Token response has neither access_token nor id_token")
 	}
 	return &tokenResp, nil
 }
@@ -394,7 +394,7 @@ func (c *oidcClient) exchangeCode(ctx context.Context, endpoints oidcEndpoints, 
 func (c *oidcClient) verifyIDToken(ctx context.Context, endpoints oidcEndpoints, issuer, clientID, idToken, expectedNonce string, warn func(format string, args ...interface{})) (*oidcIdentity, error) {
 	keys, err := c.jwksKeys(ctx, endpoints.JWKSURI, false)
 	if err != nil {
-		return nil, fmt.Errorf("获取 JWKS 失败: %w", err)
+		return nil, fmt.Errorf("Failed to get JWKS: %w", err)
 	}
 
 	identity, err := parseAndVerifyIDToken(idToken, keys, issuer, clientID, expectedNonce)
@@ -403,7 +403,7 @@ func (c *oidcClient) verifyIDToken(ctx context.Context, endpoints oidcEndpoints,
 			// 密钥轮换期：强制刷新 JWKS 重试一次。
 			keys, kErr := c.jwksKeys(ctx, endpoints.JWKSURI, true)
 			if kErr != nil {
-				return nil, fmt.Errorf("JWKS 强制刷新失败: %w", kErr)
+				return nil, fmt.Errorf("JWKS force refresh failed: %w", kErr)
 			}
 			identity, err = parseAndVerifyIDToken(idToken, keys, issuer, clientID, expectedNonce)
 		}
@@ -434,18 +434,18 @@ func parseAndVerifyIDToken(idToken string, keys map[string]interface{}, issuer, 
 		return key, nil
 	}, jwt.WithValidMethods(allowedOIDCAlgs), jwt.WithIssuer(issuer), jwt.WithAudience(clientID), jwt.WithLeeway(60*time.Second))
 	if err != nil {
-		return nil, fmt.Errorf("id_token 验签失败: %w", err)
+		return nil, fmt.Errorf("id_token signature verification failed: %w", err)
 	}
 	if !token.Valid {
-		return nil, fmt.Errorf("id_token 无效")
+		return nil, fmt.Errorf("id_token is invalid")
 	}
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok {
-		return nil, fmt.Errorf("id_token claims 类型异常")
+		return nil, fmt.Errorf("id_token claims type exception")
 	}
 	sub, _ := claims["sub"].(string)
 	if sub == "" {
-		return nil, fmt.Errorf("id_token 缺少 sub 声明")
+		return nil, fmt.Errorf("id_token is missing sub declaration")
 	}
 	identity.Subject = sub
 	identity.Email, _ = claims["email"].(string)
@@ -459,7 +459,7 @@ func parseAndVerifyIDToken(idToken string, keys map[string]interface{}, issuer, 
 	// nonce 完全缺失 → 只告警不阻断：部分企业 IdP 不回填 nonce，
 	// state 单次消费 + PKCE 已提供等价的重放防护（见 verifyIDToken 注释）。
 	if expectedNonce != "" && identity.Nonce != "" && identity.Nonce != expectedNonce {
-		return nil, fmt.Errorf("id_token nonce 与发起时不符")
+		return nil, fmt.Errorf("id_token nonce does not match when initiated")
 	}
 	return identity, nil
 }
@@ -480,27 +480,27 @@ func isUnknownKid(err error) bool {
 // fetchUserinfo 是 id_token 缺失时的兜底身份源。
 func (c *oidcClient) fetchUserinfo(ctx context.Context, endpoints oidcEndpoints, accessToken string) (*oidcIdentity, error) {
 	if endpoints.UserinfoEndpoint == "" {
-		return nil, fmt.Errorf("IdP 未返回 id_token 且未配置 userinfo 端点，无法获取身份")
+		return nil, fmt.Errorf("IdP did not return id_token and userinfo endpoint was not configured, unable to obtain identity")
 	}
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoints.UserinfoEndpoint, nil)
 	if err != nil {
-		return nil, fmt.Errorf("构造 userinfo 请求失败: %w", err)
+		return nil, fmt.Errorf("Failed to construct userinfo request: %w", err)
 	}
 	req.Header.Set("Authorization", "Bearer "+accessToken)
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("userinfo 请求失败: %w", err)
+		return nil, fmt.Errorf("userinfo request failed: %w", err)
 	}
 	defer func() { _ = resp.Body.Close() }()
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("userinfo 端点返回 %d", resp.StatusCode)
+		return nil, fmt.Errorf("userinfo endpoint returned %d", resp.StatusCode)
 	}
 	var identity oidcIdentity
 	if err := json.NewDecoder(io.LimitReader(resp.Body, 1<<20)).Decode(&identity); err != nil {
-		return nil, fmt.Errorf("解析 userinfo 失败: %w", err)
+		return nil, fmt.Errorf("Failed to parse userinfo: %w", err)
 	}
 	if identity.Subject == "" {
-		return nil, fmt.Errorf("userinfo 响应缺少 sub")
+		return nil, fmt.Errorf("userinfo response missing sub")
 	}
 	return &identity, nil
 }

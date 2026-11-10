@@ -31,14 +31,14 @@ func (h *Handler) SSOEnabled() bool { return h.sso != nil }
 func (h *Handler) Register(c *gin.Context) {
 	var req dto.RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "参数错误")
+		common.ParamErrorWithErr(c, err, "Parameter error")
 		return
 	}
 	response, err := h.service.Register(c.Request.Context(), &req)
 	if err != nil {
 		// 注册失败的原因（用户名已占用、自助注册未开放）是用户下一步动作的依据，
 		// 统一压成 2001/「认证失败」会让新用户以为是自己填错了凭据。
-		common.RespondError(c, err, "注册失败")
+		common.RespondError(c, err, "Registration failed")
 		return
 	}
 	common.Success(c, response)
@@ -47,14 +47,14 @@ func (h *Handler) Register(c *gin.Context) {
 func (h *Handler) ForgotPassword(c *gin.Context) {
 	var req dto.ForgotPasswordRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "参数错误")
+		common.ParamErrorWithErr(c, err, "Parameter error")
 		return
 	}
 	response, err := h.service.ForgotPassword(c.Request.Context(), &req)
 	if err != nil {
 		// service 明确用 5003 表达「邮件服务未配置」；压成 2001 会让用户以为是
 		// 自己的邮箱有问题并反复重试。
-		common.RespondError(c, err, "密码找回请求失败")
+		common.RespondError(c, err, "Password retrieval request failed")
 		return
 	}
 	common.Success(c, response)
@@ -63,12 +63,12 @@ func (h *Handler) ForgotPassword(c *gin.Context) {
 func (h *Handler) ResetPassword(c *gin.Context) {
 	var req dto.PasswordResetRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "参数错误")
+		common.ParamErrorWithErr(c, err, "Parameter error")
 		return
 	}
 	response, err := h.service.ResetPassword(c.Request.Context(), &req)
 	if err != nil {
-		common.AuthFailedWithErr(c, err, "认证失败")
+		common.AuthFailedWithErr(c, err, "Authentication failed")
 		return
 	}
 	common.Success(c, response)
@@ -77,12 +77,12 @@ func (h *Handler) ResetPassword(c *gin.Context) {
 func (h *Handler) ValidateResetToken(c *gin.Context) {
 	var req dto.ValidateResetTokenRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "参数错误")
+		common.ParamErrorWithErr(c, err, "Parameter error")
 		return
 	}
 	response, err := h.service.ValidateResetToken(c.Request.Context(), &req)
 	if err != nil {
-		common.AuthFailedWithErr(c, err, "认证失败")
+		common.AuthFailedWithErr(c, err, "Authentication failed")
 		return
 	}
 	common.Success(c, response)
@@ -91,17 +91,17 @@ func (h *Handler) ValidateResetToken(c *gin.Context) {
 func (h *Handler) SwitchTenant(c *gin.Context) {
 	var req dto.SwitchTenantRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "参数错误")
+		common.ParamErrorWithErr(c, err, "Parameter error")
 		return
 	}
 	userID := c.GetInt("user_id")
 	if userID == 0 {
-		common.AuthFailed(c, "用户未认证")
+		common.AuthFailed(c, "User not authenticated")
 		return
 	}
 	response, err := h.service.SwitchTenant(c.Request.Context(), userID, req.TenantID)
 	if err != nil {
-		common.ForbiddenWithErr(c, err, "权限不足")
+		common.ForbiddenWithErr(c, err, "Insufficient permissions")
 		return
 	}
 	setAuthCookies(c, response.AccessToken, response.RefreshToken)

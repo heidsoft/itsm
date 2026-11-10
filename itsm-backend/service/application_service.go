@@ -29,10 +29,10 @@ func (s *ApplicationService) validateProjectTenant(ctx context.Context, projectI
 		Where(project.IDEQ(projectID), project.TenantIDEQ(tenantID)).
 		Exist(ctx)
 	if err != nil {
-		return fmt.Errorf("检查所属项目失败: %w", err)
+		return fmt.Errorf("Failed to check owned project: %w", err)
 	}
 	if !exists {
-		return common.NewBusinessError(common.ParamErrorCode, "所属项目不存在或不属于当前租户", "")
+		return common.NewBusinessError(common.ParamErrorCode, "The project does not exist or does not belong to the current tenant", "")
 	}
 	return nil
 }
@@ -46,10 +46,10 @@ func (s *ApplicationService) validateApplicationTenant(ctx context.Context, appI
 		Where(application.IDEQ(appID), application.TenantIDEQ(tenantID), application.DeletedAtIsNil()).
 		Exist(ctx)
 	if err != nil {
-		return fmt.Errorf("检查所属应用失败: %w", err)
+		return fmt.Errorf("Failed to check owned application: %w", err)
 	}
 	if !exists {
-		return common.NewBusinessError(common.ParamErrorCode, "所属应用不存在或不属于当前租户", "")
+		return common.NewBusinessError(common.ParamErrorCode, "The application does not exist or does not belong to the current tenant", "")
 	}
 	return nil
 }
@@ -64,10 +64,10 @@ func (s *ApplicationService) CreateApplication(ctx context.Context, name, code, 
 		Where(application.CodeEQ(code), application.TenantIDEQ(tenantID), application.DeletedAtIsNil()).
 		Exist(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("检查应用代码失败: %w", err)
+		return nil, fmt.Errorf("Failed to check application code: %w", err)
 	}
 	if codeExists {
-		return nil, fmt.Errorf("应用代码已存在: %s", code)
+		return nil, fmt.Errorf("Application code already exists: %s", code)
 	}
 	query := s.client.Application.Create().
 		SetName(name).
@@ -136,10 +136,10 @@ func (s *ApplicationService) UpdateApplication(ctx context.Context, id int, name
 			Where(application.CodeEQ(*code), application.TenantIDEQ(tenantID), application.DeletedAtIsNil(), application.IDNEQ(id)).
 			Exist(ctx)
 		if err != nil {
-			return nil, fmt.Errorf("检查应用代码失败: %w", err)
+			return nil, fmt.Errorf("Failed to check application code: %w", err)
 		}
 		if codeExists {
-			return nil, fmt.Errorf("应用代码已存在: %s", *code)
+			return nil, fmt.Errorf("Application code already exists: %s", *code)
 		}
 		update = update.SetCode(*code)
 	}
@@ -157,9 +157,9 @@ func (s *ApplicationService) UpdateApplication(ctx context.Context, id int, name
 	updated, err := update.Save(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, common.NewBusinessError(common.NotFoundCode, "应用不存在", "")
+			return nil, common.NewBusinessError(common.NotFoundCode, "Application does not exist", "")
 		}
-		return nil, fmt.Errorf("更新应用失败: %w", err)
+		return nil, fmt.Errorf("Failed to update application: %w", err)
 	}
 	return updated, nil
 }
@@ -172,9 +172,9 @@ func (s *ApplicationService) DeleteApplication(ctx context.Context, id int, tena
 		Save(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return common.NewBusinessError(common.NotFoundCode, "应用不存在", "")
+			return common.NewBusinessError(common.NotFoundCode, "Application does not exist", "")
 		}
-		return fmt.Errorf("删除应用失败: %w", err)
+		return fmt.Errorf("Failed to delete application: %w", err)
 	}
 	return nil
 }
@@ -229,9 +229,9 @@ func (s *ApplicationService) UpdateMicroservice(ctx context.Context, id int, nam
 	updated, err := update.Save(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, common.NewBusinessError(common.NotFoundCode, "微服务不存在", "")
+			return nil, common.NewBusinessError(common.NotFoundCode, "Microservice does not exist", "")
 		}
-		return nil, fmt.Errorf("更新微服务失败: %w", err)
+		return nil, fmt.Errorf("Failed to update microservice: %w", err)
 	}
 	return updated, nil
 }
@@ -242,10 +242,10 @@ func (s *ApplicationService) DeleteMicroservice(ctx context.Context, id int, ten
 		Where(microservice.IDEQ(id), microservice.TenantIDEQ(tenantID)).
 		Exec(ctx)
 	if err != nil {
-		return fmt.Errorf("删除微服务失败: %w", err)
+		return fmt.Errorf("Failed to delete microservice: %w", err)
 	}
 	if deleted == 0 {
-		return common.NewBusinessError(common.NotFoundCode, "微服务不存在", "")
+		return common.NewBusinessError(common.NotFoundCode, "Microservice does not exist", "")
 	}
 	return nil
 }

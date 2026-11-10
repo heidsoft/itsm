@@ -1,21 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" id="Definitions_CloudSecurity" targetNamespace="http://bpmn.io/schema/bpmn" exporter="ITSM Platform" exporterVersion="1.0">
-  <process id="cloud_security_scan" name="云安全扫描与漏洞修复流程" isExecutable="true" camunda:versionTag="1.0">
-    <documentation>云环境安全扫描、漏洞修复、合规检查流程</documentation>
+  <process id="cloud_security_scan" name="Cloud Security Scan and Remediation Workflow" isExecutable="true" camunda:versionTag="1.0">
+    <documentation>Cloud security scanning, vulnerability remediation, and compliance checks</documentation>
 
     <!-- 开始事件 -->
-    <startEvent id="StartEvent_1" name="开始">
+    <startEvent id="StartEvent_1" name="Start">
       <outgoing>Flow_1</outgoing>
     </startEvent>
 
     <!-- 触发安全扫描 -->
-    <userTask id="Task_TriggerScan" name="触发安全扫描">
+    <userTask id="Task_TriggerScan" name="Trigger Security Scan">
       <incoming>Flow_1</incoming>
       <outgoing>Flow_2</outgoing>
     </userTask>
 
     <!-- 自动执行扫描 (Service Task) -->
-    <serviceTask id="Task_AutoScan" name="自动安全扫描" camunda:type="external" camunda:topic="security-scan">
+    <serviceTask id="Task_AutoScan" name="Automated Security Scan" camunda:type="external" camunda:topic="security-scan">
       <extensionElements>
         <metaData name="service_task_type">generic_task</metaData>
       </extensionElements>
@@ -24,13 +24,13 @@
     </serviceTask>
 
     <!-- 分析扫描结果 -->
-    <userTask id="Task_AnalyzeResult" name="分析扫描结果">
+    <userTask id="Task_AnalyzeResult" name="Analyze Scan Results">
       <incoming>Flow_3</incoming>
       <outgoing>Flow_4</outgoing>
     </userTask>
 
     <!-- 判断风险等级 -->
-    <exclusiveGateway id="Gateway_Risk" name="风险等级判定" default="Flow_6">
+    <exclusiveGateway id="Gateway_Risk" name="Determine Risk Level" default="Flow_6">
       <incoming>Flow_4</incoming>
       <outgoing>Flow_5</outgoing>
       <outgoing>Flow_6</outgoing>
@@ -38,39 +38,39 @@
     </exclusiveGateway>
 
     <!-- 高风险：立即处置 -->
-    <userTask id="Task_HighRisk" name="高风险立即处置">
+    <userTask id="Task_HighRisk" name="Immediate High-Risk Remediation">
       <incoming>Flow_5</incoming>
       <outgoing>Flow_8</outgoing>
     </userTask>
 
     <!-- 中风险：计划修复 -->
-    <userTask id="Task_MediumRisk" name="计划修复">
+    <userTask id="Task_MediumRisk" name="Schedule Remediation">
       <incoming>Flow_6</incoming>
       <outgoing>Flow_9</outgoing>
     </userTask>
 
     <!-- 低风险：记录监控 -->
-    <userTask id="Task_LowRisk" name="记录并持续监控">
+    <userTask id="Task_LowRisk" name="Record and Monitor">
       <incoming>Flow_7</incoming>
       <outgoing>Flow_10</outgoing>
     </userTask>
 
     <!-- 修复验证 -->
-    <userTask id="Task_VerifyFix" name="修复验证">
+    <userTask id="Task_VerifyFix" name="Verify Remediation">
       <incoming>Flow_8</incoming>
       <incoming>Flow_9</incoming>
       <outgoing>Flow_11</outgoing>
     </userTask>
 
     <!-- 生成报告 -->
-    <userTask id="Task_Report" name="生成安全报告">
+    <userTask id="Task_Report" name="Generate Security Report">
       <incoming>Flow_10</incoming>
       <incoming>Flow_11</incoming>
       <outgoing>Flow_12</outgoing>
     </userTask>
 
     <!-- 结束 -->
-    <endEvent id="EndEvent_1" name="结束">
+    <endEvent id="EndEvent_1" name="End">
       <incoming>Flow_12</incoming>
     </endEvent>
 
@@ -79,13 +79,13 @@
     <sequenceFlow id="Flow_2" sourceRef="Task_TriggerScan" targetRef="Task_AutoScan"/>
     <sequenceFlow id="Flow_3" sourceRef="Task_AutoScan" targetRef="Task_AnalyzeResult"/>
     <sequenceFlow id="Flow_4" sourceRef="Task_AnalyzeResult" targetRef="Gateway_Risk"/>
-    <sequenceFlow id="Flow_5" sourceRef="Gateway_Risk" name="高风险" targetRef="Task_HighRisk">
+    <sequenceFlow id="Flow_5" sourceRef="Gateway_Risk" name="High Risk" targetRef="Task_HighRisk">
       <conditionExpression xsi:type="tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">${riskLevel == 'high'}</conditionExpression>
     </sequenceFlow>
-    <sequenceFlow id="Flow_6" sourceRef="Gateway_Risk" name="中风险" targetRef="Task_MediumRisk">
+    <sequenceFlow id="Flow_6" sourceRef="Gateway_Risk" name="Medium Risk" targetRef="Task_MediumRisk">
       <conditionExpression xsi:type="tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">${riskLevel == 'medium'}</conditionExpression>
     </sequenceFlow>
-    <sequenceFlow id="Flow_7" sourceRef="Gateway_Risk" name="低风险" targetRef="Task_LowRisk">
+    <sequenceFlow id="Flow_7" sourceRef="Gateway_Risk" name="Low Risk" targetRef="Task_LowRisk">
       <conditionExpression xsi:type="tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">${riskLevel == 'low'}</conditionExpression>
     </sequenceFlow>
     <sequenceFlow id="Flow_8" sourceRef="Task_HighRisk" targetRef="Task_VerifyFix"/>

@@ -75,7 +75,7 @@ export default function RegisterPage() {
           router.push('/login');
         } catch (navErr) {
           console.error('[nav]', navErr);
-          message.error('导航失败，请稍后重试');
+          message.error('Navigation failed, please try again later');
         }
       } else {
         // 服务端原因（用户名已占用、自助注册未开放）是用户下一步动作的依据，
@@ -83,7 +83,7 @@ export default function RegisterPage() {
         setError(result.message);
       }
     } catch (err) {
-      logger.error('注册错误:', err);
+      logger.error('Registration error:', err);
       setError(err instanceof Error ? err.message : t('auth.register.registerFailed'));
     } finally {
       setLoading(false);
@@ -103,7 +103,7 @@ export default function RegisterPage() {
   const password = form.getFieldValue('password');
   const strength = getPasswordStrength(password || '');
   const strengthColors = ['#ff4d4f', '#ff4d4f', '#faad14', '#faad14', '#52c41a', '#52c41a'];
-  const strengthLabels = ['非常弱', '弱', '一般', '中等', '强', '非常强'];
+  const strengthLabels = ['Very weak', 'weak', 'Average', 'Medium', 'Strong', 'Very strong'];
 
   return (
     <ConfigProvider theme={antdTheme}>
@@ -207,7 +207,8 @@ export default function RegisterPage() {
                     className='w-full'
                     icon={<ArrowRight size={14} />}
                   >
-                    下一步
+
+                    Next
                   </Button>
                 </Form.Item>
               </div>
@@ -248,7 +249,8 @@ export default function RegisterPage() {
                 <Form.Item>
                   <Flex gap={8}>
                     <Button onClick={() => setStep(1)} className='flex-1' disabled={loading}>
-                      上一步
+
+                      Previous
                     </Button>
                     <Button
                       type='primary'
@@ -281,7 +283,7 @@ export default function RegisterPage() {
                       router.push('/login');
                     } catch (navErr) {
                       console.error('[nav]', navErr);
-                      message.error('导航失败，请稍后重试');
+                      message.error('Navigation failed, please try again later');
                     }
                   }}
                 >

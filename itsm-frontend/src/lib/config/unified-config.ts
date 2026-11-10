@@ -291,9 +291,9 @@ export const PERMISSION_CONFIG = {
 
 // 国际化配置
 export const I18N_CONFIG = {
-  DEFAULT_LOCALE: 'zh-CN',
-  SUPPORTED_LOCALES: ['zh-CN', 'en-US'],
-  FALLBACK_LOCALE: 'zh-CN',
+  DEFAULT_LOCALE: 'en-US',
+  SUPPORTED_LOCALES: ['en-US'],
+  FALLBACK_LOCALE: 'en-US',
 
   // 资源路径
   RESOURCES_PATH: '/locales',

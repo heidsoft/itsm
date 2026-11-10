@@ -77,7 +77,7 @@ describe('HistoryTimeline', () => {
     await waitFor(() => {
       expect(screen.getByText('张三')).toBeInTheDocument();
     });
-    expect(screen.getByText('更新')).toBeInTheDocument();
+    expect(screen.getByText('Update')).toBeInTheDocument();
     expect(screen.queryByText('update')).not.toBeInTheDocument();
   });
 

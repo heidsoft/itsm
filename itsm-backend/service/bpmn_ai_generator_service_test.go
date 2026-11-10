@@ -36,10 +36,11 @@ func TestBPMNAIGeneratorUsesConfiguredProviderModel(t *testing.T) {
 func TestBPMNTemplateServiceSuggestsBuiltInTemplates(t *testing.T) {
 	svc := NewBPMNTemplateService(nil)
 
-	results, err := svc.SuggestTemplates(context.Background(), 7, "紧急", "incident")
+	results, err := svc.SuggestTemplates(context.Background(), 7, "emergency", "incident")
 
 	require.NoError(t, err)
 	require.NotEmpty(t, results)
 	require.Equal(t, "incident_emergency_flow", results[0].ID)
+	require.Equal(t, "Emergency Incident Workflow", results[0].Name)
 	require.Equal(t, "incident", results[0].ProcessType)
 }

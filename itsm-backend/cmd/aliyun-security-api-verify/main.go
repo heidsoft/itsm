@@ -267,7 +267,7 @@ func runProbe(ctx context.Context, cred *cloud.ResolvedCredential, p probe) (*al
 	case "cms":
 		return aliyun.ProbeCloudMonitor(ctx, cred.AccessKeyID, cred.AccessKeySecret, cred.SessionToken, p.action, p.params)
 	default:
-		return nil, fmt.Errorf("未知探测范围 %q", p.scope)
+		return nil, fmt.Errorf("Unknown detection range %q", p.scope)
 	}
 }
 

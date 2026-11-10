@@ -38,25 +38,25 @@ func NewHandler(predictionService *service.PredictionService, logger *zap.Sugare
 func (h *Handler) ExportPredictionReport(ctx *gin.Context) {
 	var req dto.TrendPredictionRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(ctx, err, "请求参数错误")
+		common.ParamErrorWithErr(ctx, err, "Wrong request parameters")
 		return
 	}
 
 	format := ctx.DefaultQuery("format", "csv")
 	if format != "csv" && format != "excel" && format != "pdf" {
-		common.Fail(ctx, common.ParamErrorCode, "不支持的导出格式，支持: csv, excel, pdf")
+		common.Fail(ctx, common.ParamErrorCode, "Unsupported export format, supported: csv, excel, pdf")
 		return
 	}
 
 	tenantID, exists := ctx.Get("tenant_id")
 	if !exists {
-		common.Fail(ctx, common.UnauthorizedCode, "未授权访问: 租户信息缺失")
+		common.Fail(ctx, common.UnauthorizedCode, "Unauthorized access: Tenant information is missing")
 		return
 	}
 
 	data, filename, err := h.predictionService.ExportPredictionReport(ctx.Request.Context(), &req, format, tenantID.(int))
 	if err != nil {
-		common.RespondError(ctx, err, "导出预测报告失败")
+		common.RespondError(ctx, err, "Failed to export forecast report")
 		return
 	}
 

@@ -91,7 +91,7 @@ func (s *Service) acknowledgeGuard(ctx context.Context, id, actorID int, actorRo
 		return err
 	}
 	if !datascope.CanWriteResource(actorID, actorRole, current.ReporterID, current.AssigneeID) {
-		return common.NewForbiddenError("无权限操作该事件单：仅报告人、受理人或管理员可执行生命周期操作")
+		return common.NewForbiddenError("No permission to operate this incident ticket: only the reporter, assignee or administrator can perform life cycle operations")
 	}
 	return nil
 }
@@ -140,21 +140,21 @@ func (s *Service) Delete(ctx context.Context, id, tenantID int, actorID int, act
 		return err
 	}
 	if !datascope.CanWriteResource(actorID, actorRole, current.ReporterID, current.AssigneeID) {
-		return common.NewForbiddenError("无权限删除该事件单：仅报告人、受理人或管理员可操作")
+		return common.NewForbiddenError("No permission to delete this incident ticket: only the reporter, assignee or administrator can operate")
 	}
 	return lifecycleError(s.productionService.DeleteIncident(ctx, id, tenantID))
 }
 
 func (s *Service) PauseSLA(ctx context.Context, id, tenantID int) error {
 	if s.slaMonitor == nil {
-		return common.NewBusinessError(common.ServiceUnavailableCode, "SLA 计时服务未接入", "")
+		return common.NewBusinessError(common.ServiceUnavailableCode, "SLA timing service is not connected", "")
 	}
 	return s.slaMonitor.PauseSLA(ctx, tenantID, "incident", id, "事件SLA人工暂停")
 }
 
 func (s *Service) ResumeSLA(ctx context.Context, id, tenantID int) error {
 	if s.slaMonitor == nil {
-		return common.NewBusinessError(common.ServiceUnavailableCode, "SLA 计时服务未接入", "")
+		return common.NewBusinessError(common.ServiceUnavailableCode, "SLA timing service is not connected", "")
 	}
 	return s.slaMonitor.ResumeSLA(ctx, tenantID, "incident", id)
 }
@@ -182,7 +182,7 @@ func (s *Service) Create(ctx context.Context, tenantID int, i *Incident) (*Incid
 	// 该依赖恒由 internal/bootstrap/app.go 注入，nil 只出现在单测里。
 	if i.AssigneeID != nil && *i.AssigneeID > 0 && s.productionService != nil {
 		if err := s.productionService.ValidateAssignee(ctx, *i.AssigneeID, tenantID); err != nil {
-			return nil, fmt.Errorf("处理人不存在或不可用: %w", err)
+			return nil, fmt.Errorf("Processor does not exist or is unavailable: %w", err)
 		}
 	}
 
@@ -383,7 +383,7 @@ func (s *Service) updateIncident(ctx context.Context, tenantID int, id int, upda
 		return nil, err
 	}
 	if !datascope.CanWriteResource(actorID, actorRole, current.ReporterID, current.AssigneeID) {
-		return nil, common.NewForbiddenError("无权限修改该事件单：仅报告人、受理人或管理员可操作")
+		return nil, common.NewForbiddenError("No permission to modify this incident ticket: only the reporter, assignee or administrator can operate")
 	}
 
 	// 客户端乐观锁：updates.Version 由 handler 从 UpdateIncidentRequest.Version 注入。
@@ -627,24 +627,24 @@ func (s *Service) CreateIncidentComment(ctx context.Context, incidentID, tenantI
 func lifecycleError(err error) error {
 	switch {
 	case errors.Is(err, service.ErrIncidentInvalidTransition):
-		return common.NewBusinessError(common.ConflictCode, "当前事件状态不允许此操作", "")
+		return common.NewBusinessError(common.ConflictCode, "The current event status does not allow this operation", "")
 	case errors.Is(err, service.ErrIncidentVersionConflict):
-		return common.NewBusinessError(common.ConflictCode, "事件已被修改，请刷新后重试", "")
+		return common.NewBusinessError(common.ConflictCode, "The event has been modified, please refresh and try again", "")
 	case errors.Is(err, ErrStaleVersion):
 		// 仓储条件更新未命中：读取快照后行已被并发写入推进。与客户端版本不符
 		// 同属冲突语义，必须提示刷新重试而不是 500。
-		return common.NewBusinessError(common.ConflictCode, "事件已被修改，请刷新后重试", "")
+		return common.NewBusinessError(common.ConflictCode, "The event has been modified, please refresh and try again", "")
 	case errors.Is(err, service.ErrIncidentResolutionRequired):
-		return common.NewBusinessError(common.ParamErrorCode, "请填写解决方案", "")
+		return common.NewBusinessError(common.ParamErrorCode, "Please fill in the resolution", "")
 	case errors.Is(err, service.ErrIncidentCloseNotesRequired):
-		return common.NewBusinessError(common.ParamErrorCode, "请填写关闭说明", "")
+		return common.NewBusinessError(common.ParamErrorCode, "Please fill in the closing instructions", "")
 	case errors.Is(err, service.ErrIncidentNotFound):
-		return common.NewBusinessError(common.NotFoundCode, "事件不存在", "")
+		return common.NewBusinessError(common.NotFoundCode, "Event does not exist", "")
 	case ent.IsNotFound(err):
 		// 仓储读/条件更新未命中：资源不存在或跨租户（fail closed 后同样表现为
 		// 不存在）。必须映射成 404/4004，否则经 common.RespondError 的写路径
 		//（Update/Escalate）会掉进 500 兜底，与 failIncidentOperation 不一致。
-		return common.NewBusinessError(common.NotFoundCode, "事件不存在", "")
+		return common.NewBusinessError(common.NotFoundCode, "Event does not exist", "")
 	default:
 		return err
 	}

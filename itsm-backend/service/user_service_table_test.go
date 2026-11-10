@@ -665,7 +665,7 @@ func TestDeleteUser_TableDriven(t *testing.T) {
 		{
 			name:        "delete non-existent user",
 			wantErr:     true,
-			errContains: "用户不存在",
+			errContains: "User does not exist",
 			setup:       nil,
 		},
 	}

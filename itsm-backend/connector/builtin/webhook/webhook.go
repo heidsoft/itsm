@@ -38,10 +38,10 @@ func (w *Webhook) Manifest() connector.Manifest {
 	return connector.Manifest{
 		Name:                "webhook",
 		Version:             "1.0.0",
-		Title:               "通用 Webhook 出站",
+		Title:               "Generic Outbound Webhook",
 		Provider:            "generic",
 		Type:                connector.TypeWebhook,
-		Description:         "把 ITSM 事件以 HTTP POST 推送到任意端点，支持 HMAC-SHA256 签名",
+		Description:         "Send ITSM events to an endpoint using HTTP POST with optional HMAC-SHA256 signatures",
 		Capabilities:        []connector.Capability{connector.CapSendMessage, connector.CapCreateTicket, connector.CapUpdateTicket},
 		Tags:                []string{"webhook", "outbound", "generic"},
 		IsOfficial:          true,

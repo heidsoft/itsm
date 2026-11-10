@@ -27,13 +27,13 @@ export const TICKET_PRIORITY_CONFIG = TicketPriorityConfig;
 
 // 工单类型配置（legacy - 转换 label -> text），键为后端 type 值
 export const TICKET_TYPE_CONFIG = {
-  [ITSMMainType.INCIDENT]: { ...ITSMMainTypeConfig[ITSMMainType.INCIDENT], text: '事件' },
+  [ITSMMainType.INCIDENT]: { ...ITSMMainTypeConfig[ITSMMainType.INCIDENT], text: 'Incident' },
   [ITSMMainType.SERVICE_REQUEST]: {
     ...ITSMMainTypeConfig[ITSMMainType.SERVICE_REQUEST],
-    text: '服务请求',
+    text: 'Service Request',
   },
-  [ITSMMainType.PROBLEM]: { ...ITSMMainTypeConfig[ITSMMainType.PROBLEM], text: '问题' },
-  [ITSMMainType.CHANGE]: { ...ITSMMainTypeConfig[ITSMMainType.CHANGE], text: '变更' },
+  [ITSMMainType.PROBLEM]: { ...ITSMMainTypeConfig[ITSMMainType.PROBLEM], text: 'Problem' },
+  [ITSMMainType.CHANGE]: { ...ITSMMainTypeConfig[ITSMMainType.CHANGE], text: 'Change' },
 } as const;
 
 /** 未知/未来新增的状态值仍需要可渲染的兜底，因此保留显式 fallback。 */

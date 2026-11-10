@@ -158,7 +158,7 @@ func TestMigrateWorkflowToBPMN_NotFound(t *testing.T) {
 	var resp map[string]interface{}
 	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
 	assert.Equal(t, float64(4004), resp["code"])
-	assert.Equal(t, "资源不存在或已被删除", resp["message"])
+	assert.Equal(t, "Resource not found or has been deleted", resp["message"])
 	notFoundLeak := []string{"ent:", "approval_workflow", "not found", "sql:", "driver:"}
 	for _, needle := range notFoundLeak {
 		assert.NotContains(t, resp["message"], needle, "响应消息不得泄漏原始 driver 错误串")

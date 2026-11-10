@@ -56,10 +56,10 @@ const { Text, Paragraph } = Typography;
 // （只有 is_published 布尔），导致本页过滤条件永远命中不到任何数据 ——
 // 页面看着正常，实际上恒为空。改为读真实 review_status 后才真正可用。
 const statusTagMap: Record<string, { color: string; text: string; icon?: React.ReactNode }> = {
-  [KnowledgeReviewStatus.DRAFT]: { color: 'default', text: '草稿' },
-  [KnowledgeReviewStatus.UNDER_REVIEW]: { color: 'orange', text: '待审核', icon: <Clock /> },
-  [KnowledgeReviewStatus.APPROVED]: { color: 'green', text: '已通过', icon: <CheckCircle /> },
-  [KnowledgeReviewStatus.REJECTED]: { color: 'red', text: '已驳回', icon: <XCircle /> },
+  [KnowledgeReviewStatus.DRAFT]: { color: 'default', text: 'Draft' },
+  [KnowledgeReviewStatus.UNDER_REVIEW]: { color: 'orange', text: 'Pending review', icon: <Clock /> },
+  [KnowledgeReviewStatus.APPROVED]: { color: 'green', text: 'Approved', icon: <CheckCircle /> },
+  [KnowledgeReviewStatus.REJECTED]: { color: 'red', text: 'Rejected', icon: <XCircle /> },
 };
 
 /** 是否处于评审中（唯一允许 approve/reject 的状态）。 */
@@ -106,7 +106,7 @@ export default function KnowledgeReviewListPage() {
       }
     } catch (error) {
       console.error('Failed to fetch articles:', error);
-      message.error('获取文章列表失败');
+      message.error('Failed to obtain article list');
     } finally {
       setLoading(false);
     }
@@ -123,7 +123,7 @@ export default function KnowledgeReviewListPage() {
       // 驳回必须给理由：后端 ReviewRequiresComment 会拒绝空意见，
       // 前端先拦一道给出明确提示，而不是等一次 400。
       if (reviewAction === 'reject' && !reviewComment.trim()) {
-        message.error('驳回必须填写评审意见');
+        message.error('Review comments must be filled in for rejection');
         return;
       }
 
@@ -134,13 +134,13 @@ export default function KnowledgeReviewListPage() {
       } else {
         await KnowledgeBaseApi.rejectReview(id, reviewComment);
       }
-      message.success(reviewAction === 'approve' ? '已批准并发布' : '已驳回');
+      message.success(reviewAction === 'approve' ? 'Approved and published' : 'Rejected');
       setReviewModalVisible(false);
       setSelectedArticle(null);
       setReviewComment('');
       fetchArticles();
     } catch (error: unknown) {
-      message.error((error instanceof Error ? error.message : undefined) || '操作失败');
+      message.error((error instanceof Error ? error.message : undefined) || 'Operation failed');
     } finally {
       setSubmitting(false);
     }
@@ -157,7 +157,7 @@ export default function KnowledgeReviewListPage() {
 
   const columns: ColumnsType<ArticleItem> = [
     {
-      title: '标题',
+      title: 'Title',
       dataIndex: 'title',
       key: 'title',
       render: (title: string, record) => (
@@ -172,33 +172,33 @@ export default function KnowledgeReviewListPage() {
       ),
     },
     {
-      title: '分类',
+      title: 'Category',
       dataIndex: 'category',
       key: 'category',
       width: 120,
     },
     {
-      title: '作者',
+      title: 'Author',
       dataIndex: 'authorName',
       key: 'authorName',
       width: 120,
     },
     {
-      title: '评审状态',
+      title: 'Review status',
       dataIndex: 'reviewStatus',
       key: 'reviewStatus',
       width: 100,
       render: (reviewStatus: string) => getStatusTag(reviewStatus),
     },
     {
-      title: '最近评审时间',
+      title: 'Last review time',
       dataIndex: 'reviewedAt',
       key: 'reviewedAt',
       width: 180,
       render: (date: string) => (date ? dayjs(date).format('YYYY-MM-DD HH:mm') : '-'),
     },
     {
-      title: '操作',
+      title: 'Actions',
       key: 'action',
       width: 180,
       render: (_, record) => (
@@ -211,7 +211,8 @@ export default function KnowledgeReviewListPage() {
               setDetailModalVisible(true);
             }}
           >
-            查看
+
+            View
           </Button>
           {isPendingReview(record.reviewStatus) && (
             <>
@@ -224,7 +225,8 @@ export default function KnowledgeReviewListPage() {
                   setReviewModalVisible(true);
                 }}
               >
-                批准
+
+                Approve
               </Button>
               <Button
                 type="link"
@@ -236,7 +238,8 @@ export default function KnowledgeReviewListPage() {
                   setReviewModalVisible(true);
                 }}
               >
-                拒绝
+
+                Rejected
               </Button>
             </>
           )}
@@ -246,28 +249,28 @@ export default function KnowledgeReviewListPage() {
   ];
 
   const statusOptions: Array<{ value: KnowledgeReviewStatus | string; label: string }> = [
-    { value: KnowledgeReviewStatus.UNDER_REVIEW, label: '待审核' },
-    { value: KnowledgeReviewStatus.APPROVED, label: '已通过' },
-    { value: KnowledgeReviewStatus.REJECTED, label: '已驳回' },
-    { value: KnowledgeReviewStatus.DRAFT, label: '草稿' },
-    { value: 'rejected', label: '已拒绝' },
-    { value: ArticleStatus.DRAFT, label: '草稿' },
+    { value: KnowledgeReviewStatus.UNDER_REVIEW, label: 'Pending review' },
+    { value: KnowledgeReviewStatus.APPROVED, label: 'Approved' },
+    { value: KnowledgeReviewStatus.REJECTED, label: 'Rejected' },
+    { value: KnowledgeReviewStatus.DRAFT, label: 'Draft' },
+    { value: 'rejected', label: 'Rejected' },
+    { value: ArticleStatus.DRAFT, label: 'Draft' },
   ];
 
   return (
-    <PageContainer title="知识库审核" description="审核待发布的知识文章">
+    <PageContainer title="Knowledge Base Review" description="Review knowledge articles to be published">
       <Card className="shadow-sm rounded-lg">
         <div className="mb-4">
           <Space wrap>
             <Select
-              placeholder="状态筛选"
+              placeholder="Status"
               value={statusFilter}
               onChange={setStatusFilter}
               allowClear
               options={statusOptions}
               style={{ width: 150 }}
             />
-            <Button onClick={fetchArticles}>刷新</Button>
+            <Button onClick={fetchArticles}>Refresh</Button>
           </Space>
         </div>
 
@@ -283,7 +286,7 @@ export default function KnowledgeReviewListPage() {
               total,
               showSizeChanger: true,
               showQuickJumper: true,
-              showTotal: total => `共 ${total} 条记录`,
+              showTotal: total => `Total ${total} records`,
               onChange: (p, ps) => {
                 setPage(p);
                 setPageSize(ps);
@@ -295,8 +298,8 @@ export default function KnowledgeReviewListPage() {
             image={Empty.PRESENTED_IMAGE_SIMPLE}
             description={
               isPendingReview(statusFilter) || !statusFilter
-                ? '暂没有待审核的文章'
-                : '没有找到符合条件的文章'
+                ? 'There are no articles to be reviewed yet'
+                : 'No matching articles found'
             }
           />
         )}
@@ -304,7 +307,7 @@ export default function KnowledgeReviewListPage() {
 
       {/* 文章详情弹窗 */}
       <Modal
-        title="文章详情"
+        title="Article details"
         open={detailModalVisible}
         onCancel={() => {
           setDetailModalVisible(false);
@@ -312,7 +315,8 @@ export default function KnowledgeReviewListPage() {
         }}
         footer={[
           <Button key="close" onClick={() => setDetailModalVisible(false)}>
-            关闭
+
+            Close
           </Button>,
           isPendingReview(selectedArticle?.reviewStatus) && (
             <Button
@@ -325,7 +329,8 @@ export default function KnowledgeReviewListPage() {
                 setReviewModalVisible(true);
               }}
             >
-              拒绝
+
+              Rejected
             </Button>
           ),
           isPendingReview(selectedArticle?.reviewStatus) && (
@@ -339,7 +344,8 @@ export default function KnowledgeReviewListPage() {
                 setReviewModalVisible(true);
               }}
             >
-              批准发布
+
+              Approved for publication
             </Button>
           ),
         ]}
@@ -348,17 +354,17 @@ export default function KnowledgeReviewListPage() {
         {selectedArticle && (
           <div>
             <Descriptions column={2} bordered size="small">
-              <Descriptions.Item label="标题" span={2}>
+              <Descriptions.Item label="Title" span={2}>
                 {selectedArticle.title}
               </Descriptions.Item>
-              <Descriptions.Item label="分类">{selectedArticle.category || '-'}</Descriptions.Item>
-              <Descriptions.Item label="评审状态">
+              <Descriptions.Item label="Category">{selectedArticle.category || '-'}</Descriptions.Item>
+              <Descriptions.Item label="Review status">
                 {getStatusTag(selectedArticle.reviewStatus ?? KnowledgeReviewStatus.DRAFT)}
               </Descriptions.Item>
-              <Descriptions.Item label="作者">
+              <Descriptions.Item label="Author">
                 {selectedArticle.authorName || selectedArticle.author || '-'}
               </Descriptions.Item>
-              <Descriptions.Item label="提交时间">
+              <Descriptions.Item label="Submission time">
                 {selectedArticle.submittedAt
                   ? dayjs(selectedArticle.submittedAt).format('YYYY-MM-DD HH:mm')
                   : '-'}
@@ -367,14 +373,14 @@ export default function KnowledgeReviewListPage() {
 
             {selectedArticle.summary && (
               <>
-                <Divider>摘要</Divider>
+                <Divider>Summary</Divider>
                 <Paragraph>{selectedArticle.summary}</Paragraph>
               </>
             )}
 
             {selectedArticle.content && (
               <>
-                <Divider>内容预览</Divider>
+                <Divider>Content Preview</Divider>
                 <SafeContent
                   className="prose max-w-none"
                   sanitizeHtml
@@ -388,7 +394,7 @@ export default function KnowledgeReviewListPage() {
 
             {selectedArticle.tags && selectedArticle.tags.length > 0 && (
               <>
-                <Divider>标签</Divider>
+                <Divider>Tags</Divider>
                 <Space>
                   {selectedArticle.tags.map((tag, idx) => (
                     <Tag key={idx}>{tag}</Tag>
@@ -407,7 +413,7 @@ export default function KnowledgeReviewListPage() {
             <AlertCircle
               style={{ color: reviewAction === 'approve' ? '#52c41a' : '#ff4d4f' }}
             />
-            {reviewAction === 'approve' ? '批准发布' : '拒绝发布'}
+            {reviewAction === 'approve' ? 'Approved for publication' : 'Refuse to publish'}
           </Space>
         }
         open={reviewModalVisible}
@@ -417,22 +423,24 @@ export default function KnowledgeReviewListPage() {
           setSelectedArticle(null);
           setReviewComment('');
         }}
-        okText={reviewAction === 'approve' ? '批准' : '拒绝'}
+        okText={reviewAction === 'approve' ? 'Approve' : 'Rejected'}
         okButtonProps={{ danger: reviewAction === 'reject', loading: submitting }}
-        cancelText="取消"
+        cancelText="Cancel"
       >
         <div className="py-4">
           <p className="mb-4">
-            确定要{reviewAction === 'approve' ? '批准' : '拒绝'}发布文章 &quot;
-            <Text strong>{selectedArticle?.title}</Text>&quot; 吗？
+
+            OK{reviewAction === 'approve' ? 'Approve' : 'Rejected'}Publish article "
+            <Text strong>{selectedArticle?.title}</Text>"?
           </p>
           <div>
             <Text type="secondary" className="mb-2 block">
-              审核意见（可选）：
+
+              Review comments (optional):
             </Text>
             <textarea
               className="w-full border rounded p-2 min-h-[80px]"
-              placeholder="请输入审核意见..."
+              placeholder="Please enter review comments..."
               value={reviewComment}
               onChange={e => setReviewComment(e.target.value)}
             />

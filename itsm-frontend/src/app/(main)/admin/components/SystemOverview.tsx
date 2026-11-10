@@ -61,39 +61,39 @@ export const SystemOverview: React.FC<SystemOverviewProps> = ({ stats }) => {
   // 数值均来自后端真实统计接口；接口失败时显示 '—'，不展示虚构的增长百分比或进度。
   const systemStats = [
     {
-      title: '活跃用户',
+      title: 'Active Users',
       value: formatValue(stats?.activeUsers),
       icon: Users,
       color: DESIGN_SYSTEM.colors.accent,
       gradient: DESIGN_SYSTEM.colors.gradient.accent,
-      description: stats?.activeUsers == null ? '用户统计接口不可用' : '来自用户中心实时统计',
+      description: stats?.activeUsers == null ? 'User statistics interface is unavailable' : 'Real-time statistics from user center',
       placeholder: stats?.activeUsers == null,
     },
     {
-      title: '运行中的流程',
+      title: 'Running process',
       value: formatValue(stats?.runningWorkflows),
       icon: Workflow,
       color: DESIGN_SYSTEM.colors.success,
       gradient: DESIGN_SYSTEM.colors.gradient.success,
-      description: stats?.runningWorkflows == null ? '流程统计接口不可用' : '当前处于执行中的流程实例',
+      description: stats?.runningWorkflows == null ? 'Process statistics interface is not available' : 'Process instance currently executing',
       placeholder: stats?.runningWorkflows == null,
     },
     {
-      title: '服务目录项',
+      title: 'Service Catalog Items',
       value: formatValue(stats?.serviceCatalogItems),
       icon: BookOpen,
       color: '#8b5cf6',
       gradient: 'linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)',
-      description: stats?.serviceCatalogItems == null ? '服务目录接口不可用' : '服务目录中已登记的服务总数',
+      description: stats?.serviceCatalogItems == null ? 'Service catalog interface is not available' : 'Total number of registered services in the service directory',
       placeholder: stats?.serviceCatalogItems == null,
     },
     {
-      title: '待处理工单',
+      title: 'Pending work order',
       value: formatValue(stats?.pendingTickets),
       icon: AlertCircle,
       color: DESIGN_SYSTEM.colors.warning,
       gradient: DESIGN_SYSTEM.colors.gradient.warning,
-      description: stats?.pendingTickets == null ? '工单统计接口不可用' : '新建与处理中状态的工单',
+      description: stats?.pendingTickets == null ? 'The work order statistics interface is unavailable' : 'Work orders with new and processing status',
       placeholder: stats?.pendingTickets == null,
     },
   ];
@@ -169,7 +169,8 @@ export const SystemOverview: React.FC<SystemOverviewProps> = ({ stats }) => {
                 fontWeight: 600,
               }}
             >
-              暂无数据
+
+              No data
             </span>
           )}
         </div>
@@ -239,11 +240,13 @@ export const SystemOverview: React.FC<SystemOverviewProps> = ({ stats }) => {
               letterSpacing: '-0.02em',
             }}
           >
-            系统概览
+
+            System Overview
           </Text>
         </div>
         <Text style={{ color: DESIGN_SYSTEM.colors.textSecondary, fontSize: 14 }}>
-          实时监控系统关键指标和业务健康状态
+
+          Real-time monitoring of system key indicators and business health status
         </Text>
       </div>
 

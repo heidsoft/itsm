@@ -128,7 +128,7 @@ export default function WorkflowAIModal({
       setGeneratedProcess(result.bpmnXml);
       message.success(t('workflow.aiModal.generateCompleted', { name: result.processName || values.processName }));
     } catch (error) {
-      console.error('生成流程失败:', error);
+      console.error('Generation process failed:', error);
       const errorMessage = getErrorMessage(error);
       setGenerationError(errorMessage);
       message.error(t('workflow.aiModal.generateFailed', { message: errorMessage }));
@@ -151,7 +151,7 @@ export default function WorkflowAIModal({
       setPreviewResult(result);
       message.success(t('workflow.aiModal.previewGenerated'));
     } catch (error) {
-      console.error('预览流程失败:', error);
+      console.error('Preview process failed:', error);
       const errorMessage = getErrorMessage(error);
       setGenerationError(errorMessage);
       message.error(t('workflow.aiModal.previewFailed', { message: errorMessage }));
@@ -173,7 +173,7 @@ export default function WorkflowAIModal({
         message.info(t('workflow.aiModal.noMatchingTemplates'));
       }
     } catch (error) {
-      console.error('获取模板建议失败:', error);
+      console.error('Failed to get template suggestions:', error);
       message.error(t('workflow.aiModal.loadTemplatesFailed', { message: getErrorMessage(error) }));
     } finally {
       setTemplateLoading(false);
@@ -209,7 +209,7 @@ export default function WorkflowAIModal({
       setSuggestions(mappedSuggestions);
       message.success(t('workflow.aiModal.suggestionCount', { count: mappedSuggestions.length }));
     } catch (error) {
-      console.error('获取优化建议失败:', error);
+      console.error('Failed to obtain optimization suggestions:', error);
       message.error(t('workflow.aiModal.suggestionFailed'));
     } finally {
       setLoading(false);
@@ -233,7 +233,7 @@ export default function WorkflowAIModal({
       setComplianceIssues(mappedIssues);
       message.success(t('workflow.aiModal.complianceCompleted'));
     } catch (error) {
-      console.error('合规检查失败:', error);
+      console.error('Compliance check failed:', error);
       message.error(t('workflow.aiModal.complianceFailed'));
     } finally {
       setLoading(false);
@@ -324,11 +324,11 @@ export default function WorkflowAIModal({
                           { label: t('workflow.aiModal.processTypeChange'), value: 'change' },
                           { label: t('workflow.aiModal.processTypeProblem'), value: 'problem' },
                           { label: t('workflow.aiModal.processTypeServiceRequest'), value: 'service_request' },
-                          { label: '请假审批', value: 'leave' },
-                          { label: '费用报销', value: 'expense' },
-                          { label: '人事流程', value: 'hr' },
-                          { label: '采购审批', value: 'procurement' },
-                          { label: 'IT业务流程', value: 'it' },
+                          { label: 'Leave Approval', value: 'leave' },
+                          { label: 'Expense Reimbursement', value: 'expense' },
+                          { label: 'Personnel Process', value: 'hr' },
+                          { label: 'Purchase Approval', value: 'procurement' },
+                          { label: 'IT Business Process', value: 'it' },
                           { label: t('workflow.aiModal.processTypeCustom'), value: 'custom' },
                         ]}
                       />

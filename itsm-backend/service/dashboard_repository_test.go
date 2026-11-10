@@ -67,14 +67,14 @@ func TestDashboardRepository_RequireDB(t *testing.T) {
 		repo := newDashboardRepository(nil)
 		err := repo.requireDB()
 		require.Error(t, err)
-		assert.Contains(t, err.Error(), "数据库连接未初始化")
+		assert.Contains(t, err.Error(), "Database connection not initialized")
 	})
 
 	t.Run("nil 仓储（未构造）调用方法也安全", func(t *testing.T) {
 		var repo *dashboardRepository
 		_, _, err := repo.AvgResponseAndResolutionHours(context.Background(), 1)
 		require.Error(t, err)
-		assert.Contains(t, err.Error(), "数据库连接未初始化")
+		assert.Contains(t, err.Error(), "Database connection not initialized")
 	})
 
 	t.Run("已注入 db 时不返回错误", func(t *testing.T) {
@@ -134,7 +134,7 @@ func TestDashboardRepository_AvgResponseAndResolutionHours_RejectsInvalidTenant(
 	for _, badID := range []int{0, -1, -100} {
 		_, _, err := repo.AvgResponseAndResolutionHours(context.Background(), badID)
 		require.Error(t, err, "tenantID=%d 应被拒绝", badID)
-		assert.Contains(t, err.Error(), "tenantID 必须为正整数")
+		assert.Contains(t, err.Error(), "tenantID must be a positive integer")
 	}
 }
 
@@ -230,13 +230,13 @@ func TestDashboardRepository_KPIAvgAndSLAScope_RejectsInvalidInputs(t *testing.T
 	t.Run("时间窗口为零值", func(t *testing.T) {
 		_, _, _, _, _, _, err := repo.KPIAvgAndSLAScope(context.Background(), 1, time.Time{}, lastMonth, 0)
 		require.Error(t, err)
-		assert.Contains(t, err.Error(), "时间窗口")
+		assert.Contains(t, err.Error(), "time window")
 	})
 
 	t.Run("时间窗口顺序错误", func(t *testing.T) {
 		_, _, _, _, _, _, err := repo.KPIAvgAndSLAScope(context.Background(), 1, lastMonth, thisMonth, 0)
 		require.Error(t, err)
-		assert.Contains(t, err.Error(), "必须早于")
+		assert.Contains(t, err.Error(), "must be earlier than")
 	})
 }
 
@@ -306,7 +306,7 @@ func TestDashboardRepository_PreviousSLAScopeCount_RejectsInvalidInputs(t *testi
 	t.Run("时间窗口顺序错误", func(t *testing.T) {
 		_, _, err := repo.PreviousSLAScopeCount(context.Background(), 1, thisMonth, lastMonth, 0)
 		require.Error(t, err)
-		assert.Contains(t, err.Error(), "必须早于")
+		assert.Contains(t, err.Error(), "must be earlier than")
 	})
 	t.Run("零值时间", func(t *testing.T) {
 		_, _, err := repo.PreviousSLAScopeCount(context.Background(), 1, time.Time{}, thisMonth, 0)

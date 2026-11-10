@@ -95,7 +95,7 @@ func TestScenario4_CMDBCrudImpactAndDiscovery(t *testing.T) {
 	})
 
 	t.Run("cloud discovery - mark discovery source as aliyun", func(t *testing.T) {
-		ciType := mustCreateCIType(ctx, t, client, tenantA.ID, "云资源")
+		ciType := mustCreateCIType(ctx, t, client, tenantA.ID, "Cloud Resources")
 
 		discovered, err := client.ConfigurationItem.Create().
 			SetName("ecs-instance-001").

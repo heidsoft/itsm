@@ -19,7 +19,7 @@ export default function RelationshipsPage() {
   const cisQuery = useCIsQuery({ pageSize: 100 });
   const cis: CiOption[] = React.useMemo(() => {
     const items = (cisQuery.data?.items ?? []) as Array<{ id: number; name: string; type?: string }>;
-    return items.map(item => ({ id: item.id, name: item.name, type: item.type || '配置项' }));
+    return items.map(item => ({ id: item.id, name: item.name, type: item.type || 'Configuration item' }));
   }, [cisQuery.data]);
 
   const [selectedCiId, setSelectedCiId] = React.useState<number | undefined>(undefined);
@@ -32,7 +32,7 @@ export default function RelationshipsPage() {
   }, [cis, selectedCiId]);
 
   React.useEffect(() => {
-    if (cisQuery.isError) message.error('加载配置项失败');
+    if (cisQuery.isError) message.error('Failed to load configuration items');
   }, [cisQuery.isError, message]);
 
   const selectedCi = cis.find(item => item.id === selectedCiId) || null;
@@ -41,16 +41,16 @@ export default function RelationshipsPage() {
   return (
     <div className="space-y-6 p-6">
       <ManagementPageHeader
-        title="关系管理"
-        description="查看和管理配置项之间的依赖、托管、影响和包含关系。"
+        title="Relationship Management"
+        description="View and manage dependencies, hosting, influences, and inclusion relationships between configuration items."
       />
 
       <Card
-        title="选择根配置项"
+        title="Select root configuration item"
         extra={
           <Select
             showSearch
-            placeholder="选择一个配置项"
+            placeholder="Select a configuration item"
             value={selectedCiId}
             style={{ width: 320 }}
             loading={loading}
@@ -70,7 +70,7 @@ export default function RelationshipsPage() {
         ) : selectedCi ? (
           <CIRelationshipManager ciId={selectedCi.id} ciName={selectedCi.name} />
         ) : (
-          <Empty description="请选择一个配置项后查看关系图谱" />
+          <Empty description="Please select a configuration item to view the relationship diagram" />
         )}
       </Card>
     </div>

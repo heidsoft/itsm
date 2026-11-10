@@ -45,7 +45,7 @@ export function useDashboardData() {
     setAutoRefresh,
     setRefreshInterval,
     isConnected: !isError,
-    connectionStatus: isError ? '连接失败' : '已连接',
+    connectionStatus: isError ? 'Connection failed' : 'Connected',
   };
 }
 
@@ -55,24 +55,24 @@ function getInitialData(): DashboardData {
     // 扩展为8个KPI指标
     kpiMetrics: [
       // 第1行：工单数量指标
-      placeholderMetric('total-tickets', '总工单数', '个', '#3b82f6', '加载中...'),
-      placeholderMetric('pending-tickets', '待处理工单', '个', '#f59e0b', '加载中...', {
+      placeholderMetric('total-tickets', 'Total Tickets', 'items', '#3b82f6', 'Loading...'),
+      placeholderMetric('pending-tickets', 'Pending work order', 'items', '#f59e0b', 'Loading...', {
         alert: null,
       }),
-      placeholderMetric('in-progress-tickets', '处理中工单', '个', '#06b6d4', '加载中...'),
-      placeholderMetric('completed-tickets', '已完成工单', '个', '#10b981', '加载中...'),
+      placeholderMetric('in-progress-tickets', 'Work order in progress', 'items', '#06b6d4', 'Loading...'),
+      placeholderMetric('completed-tickets', 'Work order completed', 'items', '#10b981', 'Loading...'),
       // 第2行：时间与质量指标
-      placeholderMetric('avg-first-response', '平均首次响应时间', '小时', '#8b5cf6', '暂无数据', {
+      placeholderMetric('avg-first-response', 'Average first response time', 'hours', '#8b5cf6', 'No data', {
         target: 4,
       }),
-      placeholderMetric('avg-resolution', '平均解决时间', '小时', '#ec4899', '暂无数据', {
+      placeholderMetric('avg-resolution', 'Avg Resolution Time', 'hours', '#ec4899', 'No data', {
         target: 8,
       }),
-      placeholderMetric('sla-compliance', 'SLA达成率', '%', '#10b981', '暂无数据', {
+      placeholderMetric('sla-compliance', 'SLA achievement rate', '%', '#10b981', 'No data', {
         target: 95,
         alert: 'warning',
       }),
-      placeholderMetric('overdue-tickets', '超时工单', '个', '#ef4444', '暂无数据', {
+      placeholderMetric('overdue-tickets', 'Overdue', 'items', '#ef4444', 'No data', {
         alert: 'error',
       }),
     ],
@@ -84,29 +84,29 @@ function getInitialData(): DashboardData {
     quickActions: [
       {
         id: 'create-ticket',
-        title: '创建工单',
-        description: '快速创建新的IT工单',
+        title: 'Create a work order',
+        description: 'Quickly create new IT tickets',
         path: '/tickets/create',
         color: '#3b82f6',
       },
       {
         id: 'create-incident',
-        title: '报告事件',
-        description: '报告IT事件和故障',
+        title: 'Report incident',
+        description: 'Reporting IT incidents and incidents',
         path: '/incidents/create',
         color: '#ef4444',
       },
       {
         id: 'create-change',
-        title: '提交变更',
-        description: '提交IT变更请求',
+        title: 'Commit changes',
+        description: 'Submit IT change request',
         path: '/changes/new',
         color: '#10b981',
       },
       {
         id: 'view-reports',
-        title: '查看报表',
-        description: '查看系统报表和分析',
+        title: 'View report',
+        description: 'View system reports and analysis',
         path: '/reports',
         color: '#8b5cf6',
       },

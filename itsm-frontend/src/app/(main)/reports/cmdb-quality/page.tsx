@@ -171,8 +171,8 @@ const CMDBQualityReport = () => {
       });
       setHasData(true);
     } catch (error) {
-      console.warn('获取 CMDB 数据失败:', error);
-      message.error('加载CMDB质量数据失败');
+      console.warn('Failed to obtain CMDB data:', error);
+      message.error('Failed to load CMDB quality data');
       setQualityData([]);
       setOverall(null);
     } finally {
@@ -205,7 +205,7 @@ const CMDBQualityReport = () => {
     if (!hasData || qualityData.length === 0) {
       return (
         <Card>
-          <Empty description="暂无 CMDB 配置项，无法计算数据质量" />
+          <Empty description="There is no CMDB configuration item and data quality cannot be calculated." />
         </Card>
       );
     }
@@ -217,9 +217,9 @@ const CMDBQualityReport = () => {
           <Col xs={24} sm={6}>
             <Card>
               <Statistic
-                title="配置项总数"
+                title="Total CIs"
                 value={overall?.total ?? 0}
-                suffix="项"
+                suffix="items"
                 styles={{ content: { color: COLORS.completeness } }}
               />
             </Card>
@@ -227,7 +227,7 @@ const CMDBQualityReport = () => {
           <Col xs={24} sm={6}>
             <Card>
               <Statistic
-                title="整体完整度"
+                title="Overall integrity"
                 value={overall?.completeness ?? 0}
                 suffix="%"
                 styles={{ content: { color: COLORS.completeness } }}
@@ -237,7 +237,7 @@ const CMDBQualityReport = () => {
           <Col xs={24} sm={6}>
             <Card>
               <Statistic
-                title="整体准确度"
+                title="Overall accuracy"
                 value={overall?.accuracy ?? 0}
                 suffix="%"
                 styles={{ content: { color: COLORS.accuracy } }}
@@ -247,7 +247,7 @@ const CMDBQualityReport = () => {
           <Col xs={24} sm={6}>
             <Card>
               <Statistic
-                title="整体一致度"
+                title="Overall consistency"
                 value={overall?.consistency ?? 0}
                 suffix="%"
                 styles={{ content: { color: COLORS.consistency } }}
@@ -257,7 +257,7 @@ const CMDBQualityReport = () => {
         </Row>
 
         {/* 质量指标对比图 */}
-        <Card title="各类型配置项数据质量对比" className="mb-6">
+        <Card title="Comparison of data quality of various types of configuration items" className="mb-6">
           <ResponsiveContainer width="100%" height={350}>
             <BarChart data={qualityData}>
               <CartesianGrid strokeDasharray="3 3" />
@@ -265,15 +265,15 @@ const CMDBQualityReport = () => {
               <YAxis domain={[0, 100]} />
               <Tooltip content={<QualityTooltip />} />
               <Legend />
-              <Bar dataKey="completeness" name="完整度" fill={COLORS.completeness} />
-              <Bar dataKey="accuracy" name="准确度" fill={COLORS.accuracy} />
-              <Bar dataKey="consistency" name="一致度" fill={COLORS.consistency} />
+              <Bar dataKey="completeness" name="Completeness" fill={COLORS.completeness} />
+              <Bar dataKey="accuracy" name="Accuracy" fill={COLORS.accuracy} />
+              <Bar dataKey="consistency" name="Consistency" fill={COLORS.consistency} />
             </BarChart>
           </ResponsiveContainer>
         </Card>
 
         {/* 质量趋势 */}
-        <Card title="数据质量趋势（按类型）" className="mb-6">
+        <Card title="Data quality trends by type" className="mb-6">
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={qualityData}>
               <CartesianGrid strokeDasharray="3 3" />
@@ -284,21 +284,21 @@ const CMDBQualityReport = () => {
               <Line
                 type="monotone"
                 dataKey="completeness"
-                name="完整度"
+                name="Completeness"
                 stroke={COLORS.completeness}
                 strokeWidth={2}
               />
               <Line
                 type="monotone"
                 dataKey="accuracy"
-                name="准确度"
+                name="Accuracy"
                 stroke={COLORS.accuracy}
                 strokeWidth={2}
               />
               <Line
                 type="monotone"
                 dataKey="consistency"
-                name="一致度"
+                name="Consistency"
                 stroke={COLORS.consistency}
                 strokeWidth={2}
               />
@@ -307,7 +307,7 @@ const CMDBQualityReport = () => {
         </Card>
 
         {/* 数量分布参考 */}
-        <Card title="各类型配置项数量">
+        <Card title="Number of configuration items of each type">
           <ResponsiveContainer width="100%" height={250}>
             <BarChart data={qualityData}>
               <CartesianGrid strokeDasharray="3 3" />
@@ -315,7 +315,7 @@ const CMDBQualityReport = () => {
               <YAxis />
               <Tooltip content={<CountTooltip />} />
               <Legend />
-              <Bar dataKey="count" name="配置项数量" fill={COLORS.completeness} />
+              <Bar dataKey="count" name="Number of configuration items" fill={COLORS.completeness} />
             </BarChart>
           </ResponsiveContainer>
         </Card>
@@ -326,10 +326,11 @@ const CMDBQualityReport = () => {
   return (
     <div className="p-6 bg-gray-50 min-h-full">
       <header className="mb-6">
-        <Title level={2}>CMDB数据质量报表</Title>
+        <Title level={2}>CMDB data quality report</Title>
         <p className="text-gray-500 mt-1">
-          基于配置项实际字段填充、字段取值合法性与环境/状态一致性计算。
-          完整度 = 9 项核心字段均已填写；准确度 = status/criticality 在受控词表内；一致度 = 环境与状态组合符合规范。
+
+          Calculated based on actual field filling of configuration items, legality of field values, and environment/status consistency.
+Completeness = 9 core fields are filled in; Accuracy = status/criticality is within the controlled vocabulary; Consistency = Environment and status combinations meet specifications.
         </p>
       </header>
 
@@ -337,11 +338,12 @@ const CMDBQualityReport = () => {
       <Card className="mb-6">
         <Row justify="space-between" align="middle">
           <Col>
-            <Text className="text-gray-600">配置项数据质量监控</Text>
+            <Text className="text-gray-600">Configuration item data quality monitoring</Text>
           </Col>
           <Col>
             <Button icon={<RotateCcw />} onClick={loadData} loading={loading}>
-              刷新数据
+
+              Refresh Data
             </Button>
           </Col>
         </Row>
@@ -370,7 +372,7 @@ const QualityTooltip = ({
   if (active && payload && payload.length) {
     return (
       <div className="bg-white p-3 rounded-lg shadow-lg border border-gray-200">
-        <p className="font-semibold text-gray-800 mb-2">{`类型: ${label ?? ''}`}</p>
+        <p className="font-semibold text-gray-800 mb-2">{`Type: ${label ?? ''}`}</p>
         {payload.map((entry, index) => (
           <p
             key={`${entry.name ?? 'item'}-${index}`}
@@ -398,9 +400,9 @@ const CountTooltip = ({
   if (active && payload && payload.length) {
     return (
       <div className="bg-white p-3 rounded-lg shadow-lg border border-gray-200">
-        <p className="font-semibold text-gray-800 mb-2">{`类型: ${label ?? ''}`}</p>
+        <p className="font-semibold text-gray-800 mb-2">{`Type: ${label ?? ''}`}</p>
         <p className="text-sm" style={{ color: payload[0].color }}>
-          {`配置项数量: ${payload[0].value ?? 0}`}
+          {`Number of configuration items: ${payload[0].value ?? 0}`}
         </p>
       </div>
     );

@@ -43,13 +43,13 @@ func NewHandler(categoryService *service.TicketCategoryService, logger *zap.Suga
 func (h *Handler) CreateCategory(c *gin.Context) {
 	var req service.CreateCategoryRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
 	tenantID := c.GetInt("tenant_id")
 	if tenantID == 0 {
-		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		common.Fail(c, common.AuthFailedCode, "Tenant information is missing")
 		return
 	}
 	req.TenantID = tenantID
@@ -57,7 +57,7 @@ func (h *Handler) CreateCategory(c *gin.Context) {
 	category, err := h.categoryService.CreateCategory(c.Request.Context(), &req)
 	if err != nil {
 		h.logger.Errorw("Failed to create ticket category", "error", err, "tenant_id", tenantID)
-		common.RespondError(c, err, "操作失败")
+		common.RespondError(c, err, "Operation failed")
 		return
 	}
 
@@ -68,26 +68,26 @@ func (h *Handler) CreateCategory(c *gin.Context) {
 func (h *Handler) UpdateCategory(c *gin.Context) {
 	categoryID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "无效的分类ID")
+		common.Fail(c, common.ParamErrorCode, "Invalid category ID")
 		return
 	}
 
 	var req service.UpdateCategoryRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
 	tenantID := c.GetInt("tenant_id")
 	if tenantID == 0 {
-		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		common.Fail(c, common.AuthFailedCode, "Tenant information is missing")
 		return
 	}
 
 	category, err := h.categoryService.UpdateCategory(c.Request.Context(), categoryID, &req, tenantID)
 	if err != nil {
 		h.logger.Errorw("Failed to update ticket category", "error", err, "category_id", categoryID)
-		common.RespondError(c, err, "操作失败")
+		common.RespondError(c, err, "Operation failed")
 		return
 	}
 
@@ -98,44 +98,44 @@ func (h *Handler) UpdateCategory(c *gin.Context) {
 func (h *Handler) DeleteCategory(c *gin.Context) {
 	categoryID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "无效的分类ID")
+		common.Fail(c, common.ParamErrorCode, "Invalid category ID")
 		return
 	}
 
 	tenantID := c.GetInt("tenant_id")
 	if tenantID == 0 {
-		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		common.Fail(c, common.AuthFailedCode, "Tenant information is missing")
 		return
 	}
 
 	err = h.categoryService.DeleteCategory(c.Request.Context(), categoryID, tenantID)
 	if err != nil {
 		h.logger.Errorw("Failed to delete ticket category", "error", err, "category_id", categoryID)
-		common.RespondError(c, err, "操作失败")
+		common.RespondError(c, err, "Operation failed")
 		return
 	}
 
-	common.Success(c, gin.H{"message": "分类删除成功"})
+	common.Success(c, gin.H{"message": "CategoryDeleteSuccess"})
 }
 
 // GetCategory GET /api/v1/ticket-categories/:id
 func (h *Handler) GetCategory(c *gin.Context) {
 	categoryID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "无效的分类ID")
+		common.Fail(c, common.ParamErrorCode, "Invalid category ID")
 		return
 	}
 
 	tenantID := c.GetInt("tenant_id")
 	if tenantID == 0 {
-		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		common.Fail(c, common.AuthFailedCode, "Tenant information is missing")
 		return
 	}
 
 	category, err := h.categoryService.GetCategory(c.Request.Context(), categoryID, tenantID)
 	if err != nil {
 		h.logger.Errorw("Failed to get ticket category", "error", err, "category_id", categoryID)
-		common.Fail(c, common.NotFoundCode, "分类不存在")
+		common.Fail(c, common.NotFoundCode, "Category does not exist")
 		return
 	}
 
@@ -148,7 +148,7 @@ func (h *Handler) ListCategories(c *gin.Context) {
 
 	var req service.ListCategoriesRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "无效的查询参数")
+		common.Fail(c, common.ParamErrorCode, "Invalid query parameter")
 		return
 	}
 	// tenantId 只能来自认证上下文，禁止由查询参数注入。
@@ -160,7 +160,7 @@ func (h *Handler) ListCategories(c *gin.Context) {
 	categories, total, err := h.categoryService.ListCategories(c.Request.Context(), &req)
 	if err != nil {
 		h.logger.Errorw("Failed to list ticket categories", "error", err, "tenant_id", tenantID)
-		common.RespondError(c, err, "操作失败")
+		common.RespondError(c, err, "Operation failed")
 		return
 	}
 
@@ -180,7 +180,7 @@ func (h *Handler) GetCategoryTree(c *gin.Context) {
 	tree, err := h.categoryService.GetCategoryTree(c.Request.Context(), tenantID)
 	if err != nil {
 		h.logger.Errorw("Failed to get category tree", "error", err, "tenant_id", tenantID)
-		common.RespondError(c, err, "操作失败")
+		common.RespondError(c, err, "Operation failed")
 		return
 	}
 
@@ -191,26 +191,26 @@ func (h *Handler) GetCategoryTree(c *gin.Context) {
 func (h *Handler) MoveCategory(c *gin.Context) {
 	categoryID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "无效的分类ID")
+		common.Fail(c, common.ParamErrorCode, "Invalid category ID")
 		return
 	}
 
 	var req service.MoveCategoryRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
 	tenantID := c.GetInt("tenant_id")
 	if tenantID == 0 {
-		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		common.Fail(c, common.AuthFailedCode, "Tenant information is missing")
 		return
 	}
 
 	category, err := h.categoryService.MoveCategory(c.Request.Context(), categoryID, &req, tenantID)
 	if err != nil {
 		h.logger.Errorw("Failed to move ticket category", "error", err, "category_id", categoryID)
-		common.RespondError(c, err, "操作失败")
+		common.RespondError(c, err, "Operation failed")
 		return
 	}
 
@@ -221,7 +221,7 @@ func (h *Handler) MoveCategory(c *gin.Context) {
 func (h *Handler) PreviewImport(c *gin.Context) {
 	rows, err := h.parseImportRows(c)
 	if err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
@@ -232,13 +232,13 @@ func (h *Handler) PreviewImport(c *gin.Context) {
 func (h *Handler) ExecuteImport(c *gin.Context) {
 	rows, err := h.parseImportRows(c)
 	if err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
 	tenantID := c.GetInt("tenant_id")
 	if tenantID == 0 {
-		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		common.Fail(c, common.AuthFailedCode, "Tenant information is missing")
 		return
 	}
 
@@ -274,7 +274,7 @@ func (h *Handler) parseImportRows(c *gin.Context) ([]importRow, error) {
 		return nil, err
 	}
 	if fileHeader.Size <= 0 || fileHeader.Size > maxSize {
-		return nil, fmt.Errorf("导入文件大小必须在 1 字节到 2 MiB 之间")
+		return nil, fmt.Errorf("Import file size must be between 1 Byte and 2 MiB")
 	}
 	file, err := fileHeader.Open()
 	if err != nil {
@@ -287,7 +287,7 @@ func (h *Handler) parseImportRows(c *gin.Context) ([]importRow, error) {
 		return nil, err
 	}
 	if len(content) > maxSize {
-		return nil, fmt.Errorf("导入文件超过 2 MiB 限制")
+		return nil, fmt.Errorf("Import file exceeds 2 MiB limit")
 	}
 	if len(content) == 0 {
 		return nil, io.ErrUnexpectedEOF

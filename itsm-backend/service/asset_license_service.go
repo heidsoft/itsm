@@ -155,7 +155,7 @@ func (s *AssetLicenseService) UpdateLicense(ctx context.Context, id, tenantID in
 	}
 
 	if req.UsedQuantity != nil {
-		return nil, common.NewBusinessError(common.BadRequestCode, "已使用数量由许可证分配操作维护，不能直接修改", "")
+		return nil, common.NewBusinessError(common.BadRequestCode, "The used quantity is maintained by the license allocation operation and cannot be modified directly", "")
 	}
 
 	update := s.client.AssetLicense.Update().
@@ -204,7 +204,7 @@ func (s *AssetLicenseService) UpdateLicense(ctx context.Context, id, tenantID in
 	totalQuantity := licenseEntity.TotalQuantity
 	if req.TotalQuantity != nil {
 		if *req.TotalQuantity < 0 {
-			return nil, common.NewBusinessError(common.BadRequestCode, "总数量不能为负数", "")
+			return nil, common.NewBusinessError(common.BadRequestCode, "Total quantity cannot be negative", "")
 		}
 		totalQuantity = *req.TotalQuantity
 		update.SetTotalQuantity(totalQuantity)
@@ -221,7 +221,7 @@ func (s *AssetLicenseService) UpdateLicense(ctx context.Context, id, tenantID in
 			return nil, fmt.Errorf("failed to validate license assignees: %w", err)
 		}
 		if len(invalid) > 0 {
-			return nil, common.NewBusinessError(common.BadRequestCode, "授权用户列表包含无效或跨租户用户", "")
+			return nil, common.NewBusinessError(common.BadRequestCode, "Authorized user list contains invalid or cross-tenant user", "")
 		}
 		if valid == nil {
 			valid = []int{}
@@ -233,7 +233,7 @@ func (s *AssetLicenseService) UpdateLicense(ctx context.Context, id, tenantID in
 
 	if usedQuantity > totalQuantity {
 		return nil, common.NewBusinessError(common.ConflictCode,
-			fmt.Sprintf("总数量 %d 小于已分配用户数 %d", totalQuantity, usedQuantity), "")
+			fmt.Sprintf("Total quantity %d is less than allocated users %d", totalQuantity, usedQuantity), "")
 	}
 
 	if usedQuantity >= totalQuantity {
@@ -255,7 +255,7 @@ func (s *AssetLicenseService) UpdateLicense(ctx context.Context, id, tenantID in
 	}
 	if affected == 0 {
 		if seatsTouched {
-			return nil, common.NewBusinessError(common.ConflictCode, "席位已被其他请求占用，请重试", "")
+			return nil, common.NewBusinessError(common.ConflictCode, "The seat is already occupied by other requests, please try again", "")
 		}
 		return nil, ErrLicenseNotFound
 	}
@@ -387,7 +387,7 @@ func (s *AssetLicenseService) AssignUsers(ctx context.Context, id, tenantID int,
 	// 2. 事务：在同一事务内 FOR UPDATE 读 + 条件 UPDATE，防止并发超发
 	tx, err := s.client.Tx(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("开启事务失败: %w", err)
+		return nil, fmt.Errorf("Failed to open transaction: %w", err)
 	}
 	defer tx.Rollback()
 
@@ -463,12 +463,12 @@ func (s *AssetLicenseService) AssignUsers(ctx context.Context, id, tenantID int,
 			SetStatus(string(dto.LicenseStatusDepleted)).
 			Save(ctx)
 		if err != nil {
-			return nil, fmt.Errorf("更新 depleted 状态失败: %w", err)
+			return nil, fmt.Errorf("Failed to update depleted status: %w", err)
 		}
 	}
 
 	if err := tx.Commit(); err != nil {
-		return nil, fmt.Errorf("提交事务失败: %w", err)
+		return nil, fmt.Errorf("Failed to commit transaction: %w", err)
 	}
 
 	// 返回最终记录

@@ -215,16 +215,16 @@ func versionSatisfies(installed, requirement string) (bool, error) {
 		}
 	}
 	if requirement == "" {
-		return false, fmt.Errorf("版本要求缺少版本号")
+		return false, fmt.Errorf("Version requirement missing version number")
 	}
 
 	installedParts, ok := parseVersionParts(installed)
 	if !ok {
-		return false, fmt.Errorf("已安装版本 %q 无法解析", installed)
+		return false, fmt.Errorf("Installed version %q cannot be resolved", installed)
 	}
 	requiredParts, ok := parseVersionParts(requirement)
 	if !ok {
-		return false, fmt.Errorf("版本要求 %q 无法解析", requirement)
+		return false, fmt.Errorf("Version requirement %q cannot be parsed", requirement)
 	}
 
 	cmp := compareVersionParts(installedParts, requiredParts)

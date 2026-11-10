@@ -69,7 +69,7 @@ export default function AuditLogsPage() {
       setTotal(result.total);
     } catch (error) {
       console.error('Failed to fetch audit logs:', error);
-      message.error('加载审计日志失败');
+      message.error('Failed to load audit log');
       setLogs([]);
       setTotal(0);
     } finally {
@@ -89,7 +89,7 @@ export default function AuditLogsPage() {
       setTimelineVisible(true);
     } catch (error) {
       console.error('Failed to fetch timeline:', error);
-      message.error('加载时间线失败');
+      message.error('Failed to load timeline');
     } finally {
       setTimelineLoading(false);
     }
@@ -128,14 +128,14 @@ export default function AuditLogsPage() {
 
   const columns = [
     {
-      title: t('bpmn.audit.timestamp') || '时间',
+      title: t('bpmn.audit.timestamp') || 'Timestamp',
       dataIndex: 'timestamp',
       key: 'timestamp',
       width: 180,
       render: (val: string) => formatDateTime(val) || '-',
     },
     {
-      title: t('bpmn.audit.action') || '操作',
+      title: t('bpmn.audit.action') || 'Actions',
       dataIndex: 'action',
       key: 'action',
       width: 120,
@@ -144,7 +144,7 @@ export default function AuditLogsPage() {
       ),
     },
     {
-      title: t('bpmn.audit.activityName') || '活动',
+      title: t('bpmn.audit.activityName') || 'Activity',
       dataIndex:'activityName',
       key:'activityName',
       width: 160,
@@ -157,19 +157,19 @@ export default function AuditLogsPage() {
       ),
     },
     {
-      title: t('bpmn.audit.user') || '操作人',
+      title: t('bpmn.audit.user') || 'Operator',
       dataIndex:'userName',
       key:'userName',
       width: 120,
     },
     {
-      title: t('bpmn.audit.assignee') || '受理人',
+      title: t('bpmn.audit.assignee') || 'Assignee',
       dataIndex:'assigneeName',
       key:'assigneeName',
       width: 120,
     },
     {
-      title: t('bpmn.audit.processInstance') || '流程实例',
+      title: t('bpmn.audit.processInstance') || 'Process Instances',
       dataIndex:'processInstanceKey',
       key:'processInstanceKey',
       width: 220,
@@ -180,13 +180,13 @@ export default function AuditLogsPage() {
       ),
     },
     {
-      title: t('bpmn.audit.comment') || '备注',
+      title: t('bpmn.audit.comment') || 'Notes',
       dataIndex: 'comment',
       key: 'comment',
       ellipsis: true,
     },
     {
-      title: t('common.actions') || '操作',
+      title: t('common.actions') || 'Actions',
       key: 'actions',
       width: 150,
       render: (_value: unknown, record: ProcessAuditLog) => (
@@ -197,14 +197,14 @@ export default function AuditLogsPage() {
             icon={<Eye size={14} />}
             onClick={() => setSelectedLog(record)}
           >
-            {t('common.view') || '详情'}
+            {t('common.view') || 'Details'}
           </Button>
           <Button
             type="link"
             size="small"
             onClick={() => fetchTimeline(record.processInstanceKey)}
           >
-            {t('bpmn.audit.timeline') || '时间线'}
+            {t('bpmn.audit.timeline') || 'Timeline'}
           </Button>
         </Space>
       ),
@@ -212,15 +212,15 @@ export default function AuditLogsPage() {
   ];
 
   const actionOptions = [
-    { label: '全部', value: '' },
-    { label: '启动 (started)', value: 'started' },
-    { label: '完成 (completed)', value: 'completed' },
-    { label: '分配 (assigned)', value: 'assigned' },
-    { label: '签收 (claimed)', value: 'claimed' },
-    { label: '暂停 (suspended)', value: 'suspended' },
-    { label: '恢复 (resumed)', value: 'resumed' },
-    { label: '终止 (terminated)', value: 'terminated' },
-    { label: '变量变更 (variable_changed)', value: 'variable_changed' },
+    { label: 'All', value: '' },
+    { label: 'started', value: 'started' },
+    { label: 'completed', value: 'completed' },
+    { label: 'assigned', value: 'assigned' },
+    { label: 'Signed (claimed)', value: 'claimed' },
+    { label: 'suspended', value: 'suspended' },
+    { label: 'resumed', value: 'resumed' },
+    { label: 'terminated', value: 'terminated' },
+    { label: 'Variable_changed', value: 'variable_changed' },
   ];
 
   return (
@@ -228,10 +228,10 @@ export default function AuditLogsPage() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">
-          {t('bpmn.audit.title') || 'BPMN审计日志'}
+          {t('bpmn.audit.title') || 'BPMN Audit Logs'}
         </h1>
         <Button icon={<RefreshCw size={16} />} onClick={fetchLogs}>
-          {t('common.refresh') || '刷新'}
+          {t('common.refresh') || 'Refresh'}
         </Button>
       </div>
 
@@ -239,20 +239,20 @@ export default function AuditLogsPage() {
       <Card size="small">
         <Space wrap>
           <Input
-            placeholder={t('bpmn.audit.processDefinitionKey') || '流程定义Key'}
+            placeholder={t('bpmn.audit.processDefinitionKey') || 'Process Definition Key'}
             style={{ width: 200 }}
             onChange={(e) => setFilters({ ...filters, processDefinitionKey: e.target.value || undefined })}
             allowClear
           />
           <Select
-            placeholder={t('bpmn.audit.action') || '操作类型'}
+            placeholder={t('bpmn.audit.action') || 'ActionsType'}
             style={{ width: 150 }}
             options={actionOptions}
             onChange={(val) => setFilters({ ...filters, action: val || undefined })}
             allowClear
           />
           <Input
-            placeholder={t('bpmn.audit.userId') || '用户ID'}
+            placeholder={t('bpmn.audit.userId') || 'User ID'}
             type="number"
             style={{ width: 100 }}
             onChange={(e) => setFilters({ ...filters, userId: e.target.value ? parseInt(e.target.value) : undefined })}
@@ -283,7 +283,7 @@ export default function AuditLogsPage() {
             pageSize,
             total,
             showSizeChanger: true,
-            showTotal: (total) => `总计 ${total} 条`,
+            showTotal: (total) => `Total ${total} items`,
             onChange: (p, ps) => {
               setPage(p);
               setPageSize(ps);
@@ -295,7 +295,7 @@ export default function AuditLogsPage() {
 
       {/* Detail Modal */}
       <Modal
-        title={t('bpmn.audit.detail') || '审计日志详情'}
+        title={t('bpmn.audit.detail') || 'Audit Log Details'}
         open={!!selectedLog}
         onCancel={() => setSelectedLog(null)}
         footer={null}
@@ -303,42 +303,42 @@ export default function AuditLogsPage() {
       >
         {selectedLog && (
           <Descriptions column={2} bordered size="small">
-            <Descriptions.Item label="时间" span={2}>
+            <Descriptions.Item label="Timestamp" span={2}>
               {formatDateTime(selectedLog.timestamp) || '-'}
             </Descriptions.Item>
-            <Descriptions.Item label="操作">
+            <Descriptions.Item label="Actions">
               <Tag color={getActionColor(selectedLog.action)}>{selectedLog.action}</Tag>
             </Descriptions.Item>
-            <Descriptions.Item label="活动类型">
+            <Descriptions.Item label="Activity type">
               {selectedLog.activityType}
             </Descriptions.Item>
-            <Descriptions.Item label="活动名称" span={2}>
+            <Descriptions.Item label="Activity" span={2}>
               {selectedLog.activityName}
             </Descriptions.Item>
-            <Descriptions.Item label="操作人">
+            <Descriptions.Item label="Operator">
               {selectedLog.userName} (ID: {selectedLog.userId})
             </Descriptions.Item>
-            <Descriptions.Item label="受理人">
+            <Descriptions.Item label="Assignee">
               {selectedLog.assigneeName} (ID: {selectedLog.assigneeId})
             </Descriptions.Item>
-            <Descriptions.Item label="流程实例Key" span={2}>
+            <Descriptions.Item label="Process Instance Key" span={2}>
               {selectedLog.processInstanceKey}
             </Descriptions.Item>
-            <Descriptions.Item label="流程定义Key" span={2}>
+            <Descriptions.Item label="Process Definition Key" span={2}>
               {selectedLog.processDefinitionKey}
             </Descriptions.Item>
-            <Descriptions.Item label="备注" span={2}>
+            <Descriptions.Item label="Notes" span={2}>
               {selectedLog.comment || '-'}
             </Descriptions.Item>
-            <Descriptions.Item label="IP地址" span={2}>
+            <Descriptions.Item label="IP Address" span={2}>
               {selectedLog.ipAddress || '-'}
             </Descriptions.Item>
-            <Descriptions.Item label="变量变更前" span={2}>
+            <Descriptions.Item label="Before variable change" span={2}>
               <pre className="text-xs bg-gray-50 p-2 rounded">
                 {JSON.stringify(selectedLog.variablesBefore, null, 2) || '-'}
               </pre>
             </Descriptions.Item>
-            <Descriptions.Item label="变量变更后" span={2}>
+            <Descriptions.Item label="After variable change" span={2}>
               <pre className="text-xs bg-gray-50 p-2 rounded">
                 {JSON.stringify(selectedLog.variablesAfter, null, 2) || '-'}
               </pre>
@@ -349,7 +349,7 @@ export default function AuditLogsPage() {
 
       {/* Timeline Modal */}
       <Modal
-        title={t('bpmn.audit.processTimeline') || '流程时间线'}
+        title={t('bpmn.audit.processTimeline') || 'Process Timeline'}
         open={timelineVisible}
         onCancel={() => setTimelineVisible(false)}
         footer={null}

@@ -49,7 +49,7 @@ const SLADetail: React.FC = () => {
       setData(await SLAApi.getSLADefinition(Number(id)));
     } catch (err) {
       setData(null);
-      setError(err instanceof Error ? err.message : '加载 SLA 详情失败');
+      setError(err instanceof Error ? err.message : 'Failed to load SLA details');
     } finally {
       setLoading(false);
     }
@@ -73,17 +73,19 @@ const SLADetail: React.FC = () => {
         <Alert
           type={error ? 'error' : 'warning'}
           showIcon
-          title={error ? 'SLA 详情加载失败' : '未找到该 SLA 定义'}
-          description={error ?? `SLA 定义 #${id ?? ''} 不存在或不属于当前租户。`}
+          title={error ? 'SLA details loading failed' : 'The SLA definition was not found'}
+          description={error ?? `SLA Definition #${id ?? ''} Does not exist or does not belong to the current tenant.`}
           action={
             <Space>
               {error && (
                 <Button size="small" icon={<RefreshCw className="w-4 h-4" />} onClick={loadDetail}>
-                  重新加载
+
+                  Reload
                 </Button>
               )}
               <Button type="primary" onClick={() => router.push('/sla')}>
-                返回列表
+
+                Back to List
               </Button>
             </Space>
           }
@@ -97,10 +99,10 @@ const SLADetail: React.FC = () => {
       <Breadcrumb
         className="mb-4"
         items={[
-          { title: '首页' },
-          { title: '服务级别管理' },
-          { title: 'SLA 定义', onClick: () => router.push('/sla') },
-          { title: '详情' },
+          { title: 'Home page' },
+          { title: 'Service Level Management' },
+          { title: 'SLA Definition', onClick: () => router.push('/sla') },
+          { title: 'Details' },
         ]}
       />
 
@@ -109,7 +111,8 @@ const SLADetail: React.FC = () => {
         title={<span className="text-lg font-bold">{data.name}</span>}
         extra={
           <Button icon={<ArrowLeft />} onClick={() => router.push('/sla')}>
-            返回列表
+
+            Back to List
           </Button>
         }
       >
@@ -118,40 +121,40 @@ const SLADetail: React.FC = () => {
           className="mb-6"
           column={2}
           items={[
-            { key: 'name', label: '名称', children: data.name },
-            { key: 'serviceType', label: '服务类型', children: data.serviceType || '-' },
+            { key: 'name', label: 'Name', children: data.name },
+            { key: 'serviceType', label: 'Service Type', children: data.serviceType || '-' },
             {
               key: 'priority',
-              label: '优先级',
+              label: 'Priority',
               children: (
                 <Tag color={getPriorityColor(data.priority)}>{getPriorityLabel(data.priority)}</Tag>
               ),
             },
             {
               key: 'status',
-              label: '状态',
-              children: data.isActive ? <Tag color="green">启用</Tag> : <Tag color="red">停用</Tag>,
+              label: 'Status',
+              children: data.isActive ? <Tag color="green">Enabled</Tag> : <Tag color="red">Disable</Tag>,
             },
-            { key: 'response', label: '响应时限', children: formatDuration(data.responseTime) },
-            { key: 'resolution', label: '解决时限', children: formatDuration(data.resolutionTime) },
-            { key: 'window', label: '服务窗口', children: formatBusinessHours(data.businessHours) },
-            { key: 'updated', label: '更新时间', children: displayDateTime(data.updatedAt) },
-            { key: 'description', label: '描述', span: 2, children: data.description || '无' },
+            { key: 'response', label: 'Response time limit', children: formatDuration(data.responseTime) },
+            { key: 'resolution', label: 'Resolution time limit', children: formatDuration(data.resolutionTime) },
+            { key: 'window', label: 'Service window', children: formatBusinessHours(data.businessHours) },
+            { key: 'updated', label: 'Updated At', children: displayDateTime(data.updatedAt) },
+            { key: 'description', label: 'Description', span: 2, children: data.description || 'None' },
           ]}
         />
 
-        <Divider>适用条件</Divider>
+        <Divider>Applicable conditions</Divider>
         {isEmptyRecord(data.conditions) ? (
-          <p className="text-gray-500 mb-6">未配置适用条件。</p>
+          <p className="text-gray-500 mb-6">No applicable conditions are configured.</p>
         ) : (
           <pre className="bg-gray-50 p-3 rounded text-sm overflow-auto mb-6">
             {JSON.stringify(data.conditions, null, 2)}
           </pre>
         )}
 
-        <Divider>升级规则</Divider>
+        <Divider>EscalationRule</Divider>
         {!data.escalationLevels || data.escalationLevels.length === 0 ? (
-          <p className="text-gray-500">未配置升级级别。</p>
+          <p className="text-gray-500">No upgrade level configured.</p>
         ) : (
           <Space wrap size={8}>
             {data.escalationLevels.map(level => (

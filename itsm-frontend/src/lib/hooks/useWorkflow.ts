@@ -109,7 +109,7 @@ export function useCreateWorkflowMutation() {
   return useMutation({
     mutationFn: WorkflowApi.createWorkflow,
     onSuccess: () => {
-      message.success('工作流已创建');
+      message.success('Workflow created');
       queryClient.invalidateQueries({ queryKey: WORKFLOW_KEYS.lists() });
     },
   });
@@ -126,7 +126,7 @@ export function useUpdateWorkflowMutation() {
       data: Parameters<typeof WorkflowApi.updateWorkflow>[1];
     }) => WorkflowApi.updateWorkflow(id, data),
     onSuccess: (_, variables) => {
-      message.success('工作流已更新');
+      message.success('Workflow updated');
       queryClient.invalidateQueries({
         queryKey: WORKFLOW_KEYS.detail(variables.id),
       });
@@ -140,7 +140,7 @@ export function useDeleteWorkflowMutation() {
   return useMutation({
     mutationFn: (id: string) => WorkflowApi.deleteWorkflow(id),
     onSuccess: () => {
-      message.success('工作流已删除');
+      message.success('Workflow deleted');
       queryClient.invalidateQueries({ queryKey: WORKFLOW_KEYS.lists() });
     },
   });
@@ -151,7 +151,7 @@ export function useActivateWorkflowMutation() {
   return useMutation({
     mutationFn: (id: string) => WorkflowApi.activateWorkflow(id),
     onSuccess: (_, id) => {
-      message.success('工作流已激活');
+      message.success('Workflow is activated');
       queryClient.invalidateQueries({ queryKey: WORKFLOW_KEYS.detail(id) });
       queryClient.invalidateQueries({ queryKey: WORKFLOW_KEYS.lists() });
     },
@@ -163,7 +163,7 @@ export function useDeactivateWorkflowMutation() {
   return useMutation({
     mutationFn: (id: string) => WorkflowApi.deactivateWorkflow(id),
     onSuccess: (_, id) => {
-      message.success('工作流已停用');
+      message.success('Workflow deactivated');
       queryClient.invalidateQueries({ queryKey: WORKFLOW_KEYS.detail(id) });
       queryClient.invalidateQueries({ queryKey: WORKFLOW_KEYS.lists() });
     },
@@ -175,7 +175,7 @@ export function useCloneWorkflowMutation() {
   return useMutation({
     mutationFn: ({ id, name }: { id: string; name: string }) => WorkflowApi.cloneWorkflow(id, name),
     onSuccess: () => {
-      message.success('工作流已复制');
+      message.success('Workflow copied');
       queryClient.invalidateQueries({ queryKey: WORKFLOW_KEYS.lists() });
     },
   });
@@ -186,7 +186,7 @@ export function useStartWorkflowMutation() {
   return useMutation({
     mutationFn: (request: StartWorkflowRequest) => WorkflowApi.startWorkflow(request),
     onSuccess: () => {
-      message.success('工作流已启动');
+      message.success('Workflow started');
       queryClient.invalidateQueries({ queryKey: WORKFLOW_KEYS.instances() });
     },
   });
@@ -198,7 +198,7 @@ export function useCancelInstanceMutation() {
     mutationFn: ({ instanceId, reason }: { instanceId: string; reason?: string }) =>
       WorkflowApi.cancelInstance(instanceId, reason),
     onSuccess: (_, variables) => {
-      message.success('工作流实例已取消');
+      message.success('Workflow instance canceled');
       queryClient.invalidateQueries({
         queryKey: WORKFLOW_KEYS.instance(variables.instanceId),
       });
@@ -212,7 +212,7 @@ export function useCompleteNodeMutation() {
   return useMutation({
     mutationFn: WorkflowApi.completeNode,
     onSuccess: (_, variables) => {
-      message.success('节点任务已完成');
+      message.success('Node task completed');
       queryClient.invalidateQueries({
         queryKey: WORKFLOW_KEYS.instance(variables.instanceId),
       });

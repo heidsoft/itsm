@@ -23,7 +23,7 @@ import { Filter, Plus, Pencil, Trash2, User, Calendar, Clock, ArrowUpDown, MoreH
 import type { MenuProps } from 'antd';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
-import 'dayjs/locale/zh-cn';
+import 'dayjs/locale/en';
 
 import { useRouter } from 'next/navigation';
 import type { Ticket } from '@/lib/api/types';
@@ -32,7 +32,7 @@ import { useTickets } from '@/lib/hooks/useTickets';
 import { useDebounce } from '@/lib/component-utils';
 
 dayjs.extend(relativeTime);
-dayjs.locale('zh-cn');
+dayjs.locale('en');
 
 const { Title, Text, Paragraph } = Typography;
 const { Search } = Input;
@@ -43,21 +43,21 @@ interface TicketKanbanProps {
 
 // 状态配置
 const KANBAN_STATUS_CONFIG = [
-  { key: 'new', title: '新建', color: '#1890ff' },
-  { key: 'open', title: '待处理', color: '#1890ff' },
-  { key: 'in_progress', title: '处理中', color: '#fa8c16' },
-  { key: 'pending', title: '等待中', color: '#faad14' },
-  { key: 'resolved', title: '已解决', color: '#52c41a' },
-  { key: 'closed', title: '已关闭', color: '#d9d9d9' },
+  { key: 'new', title: 'Create', color: '#1890ff' },
+  { key: 'open', title: 'Pending', color: '#1890ff' },
+  { key: 'in_progress', title: 'In Progress', color: '#fa8c16' },
+  { key: 'pending', title: 'Waiting', color: '#faad14' },
+  { key: 'resolved', title: 'Resolved', color: '#52c41a' },
+  { key: 'closed', title: 'Closed', color: '#d9d9d9' },
 ];
 
 // 优先级配置
 const PRIORITY_CONFIG = {
-  low: { color: 'green', text: '低', icon: '↓' },
-  medium: { color: 'orange', text: '中', icon: '→' },
-  high: { color: 'red', text: '高', icon: '↑' },
-  urgent: { color: 'purple', text: '紧急', icon: '⚡' },
-  critical: { color: 'red', text: '严重', icon: '🚨' },
+  low: { color: 'green', text: 'Low', icon: '↓' },
+  medium: { color: 'orange', text: 'Medium', icon: '→' },
+  high: { color: 'red', text: 'High', icon: '↑' },
+  urgent: { color: 'purple', text: 'Urgent', icon: '⚡' },
+  critical: { color: 'red', text: 'Critical', icon: '🚨' },
 };
 
 const TicketKanban: React.FC<TicketKanbanProps> = ({ onTicketSelect }) => {
@@ -140,7 +140,7 @@ const TicketKanban: React.FC<TicketKanbanProps> = ({ onTicketSelect }) => {
     {
       key: 'view',
       icon: <Pencil />,
-      label: '查看详情',
+      label: 'View Details',
       onClick: () => {
         if (onTicketSelect) {
           onTicketSelect(ticket);
@@ -152,7 +152,7 @@ const TicketKanban: React.FC<TicketKanbanProps> = ({ onTicketSelect }) => {
     {
       key: 'edit',
       icon: <Pencil />,
-      label: '编辑',
+      label: 'Edit',
       onClick: () => router.push(`/tickets/${ticket.id}`),
     },
     {
@@ -161,7 +161,7 @@ const TicketKanban: React.FC<TicketKanbanProps> = ({ onTicketSelect }) => {
     {
       key: 'delete',
       icon: <Trash2 />,
-      label: '删除',
+      label: 'Delete',
       danger: true,
       onClick: () => handleDeleteTicket(ticket),
     },
@@ -171,17 +171,17 @@ const TicketKanban: React.FC<TicketKanbanProps> = ({ onTicketSelect }) => {
   const handleDeleteTicket = useCallback(
     async (ticket: Ticket) => {
       Modal.confirm({
-        title: '确认删除',
-        content: `确定要删除工单 ${ticket.ticketNumber || '-'} 吗？此操作不可撤销。`,
-        okText: '确认删除',
-        cancelText: '取消',
+        title: 'Confirm Delete',
+        content: `Are you sure you want to delete the work order? ${ticket.ticketNumber || '-'} ? This action cannot be undone.`,
+        okText: 'Confirm Delete',
+        cancelText: 'Cancel',
         okType: 'danger',
         onOk: async () => {
           try {
             await deleteTicket(ticket.id);
-            message.success('删除成功');
+            message.success('Deleted');
           } catch (error) {
-            message.error('删除失败');
+            message.error('Delete failed');
           }
         },
       });
@@ -194,9 +194,9 @@ const TicketKanban: React.FC<TicketKanbanProps> = ({ onTicketSelect }) => {
     async (ticket: Ticket, newStatus: string) => {
       try {
         await updateTicket(ticket.id, { status: newStatus });
-        message.success('状态更新成功');
+        message.success('Status updated successfully');
       } catch (error) {
-        message.error('状态更新失败');
+        message.error('Failed to update status');
       }
     },
     [updateTicket]
@@ -207,7 +207,7 @@ const TicketKanban: React.FC<TicketKanbanProps> = ({ onTicketSelect }) => {
     // 未知优先级兼容：避免 PRIORITY_CONFIG 查不到时读 undefined.color 崩溃
     const priorityConfig =
       PRIORITY_CONFIG[ticket.priority as keyof typeof PRIORITY_CONFIG] ??
-      ({ color: '#d9d9d9', text: '未知', icon: '•' } as (typeof PRIORITY_CONFIG)[keyof typeof PRIORITY_CONFIG]);
+      ({ color: '#d9d9d9', text: 'Unknown', icon: '•' } as (typeof PRIORITY_CONFIG)[keyof typeof PRIORITY_CONFIG]);
 
     return (
       <Card
@@ -220,7 +220,7 @@ const TicketKanban: React.FC<TicketKanbanProps> = ({ onTicketSelect }) => {
         }}
         actions={[
           <Dropdown key="more" menu={{ items: getTicketMenu(ticket) }} trigger={['click']}>
-            <Button aria-label="更多操作" type="text" icon={<MoreHorizontal />} size="small" />
+            <Button aria-label="More actions" type="text" icon={<MoreHorizontal />} size="small" />
           </Dropdown>,
         ]}
       >
@@ -276,7 +276,7 @@ const TicketKanban: React.FC<TicketKanbanProps> = ({ onTicketSelect }) => {
                 minHeight: '2.6em',
               }}
             >
-              {ticket.description || '无描述'}
+              {ticket.description || 'No description'}
             </div>
           </Tooltip>
 
@@ -299,7 +299,8 @@ const TicketKanban: React.FC<TicketKanbanProps> = ({ onTicketSelect }) => {
             <div className="flex items-center mt-1">
               <Calendar className="mr-1 text-xs text-red-500" />
               <Text className="text-xs text-red-500">
-                截止: {dayjs(ticket.slaResolutionDeadline).format('MM-DD HH:mm')}
+
+                Deadline: {dayjs(ticket.slaResolutionDeadline).format('MM-DD HH:mm')}
               </Text>
             </div>
           )}
@@ -316,14 +317,14 @@ const TicketKanban: React.FC<TicketKanbanProps> = ({ onTicketSelect }) => {
           <Col flex="auto">
             <Space size="middle">
               <Search
-                placeholder="搜索工单..."
+                placeholder="Searching for tickets..."
                 value={searchValue}
                 onChange={e => setSearchValue(e.target.value)}
                 style={{ width: 300 }}
                 allowClear
               />
               <Select
-                placeholder="状态"
+                placeholder="Status"
                 value={selectedStatus}
                 onChange={setSelectedStatus}
                 allowClear
@@ -334,7 +335,7 @@ const TicketKanban: React.FC<TicketKanbanProps> = ({ onTicketSelect }) => {
                 }))}
               />
               <Select
-                placeholder="优先级"
+                placeholder="Priority"
                 value={selectedPriority}
                 onChange={setSelectedPriority}
                 allowClear
@@ -353,9 +354,9 @@ const TicketKanban: React.FC<TicketKanbanProps> = ({ onTicketSelect }) => {
                 onChange={setSortBy}
                 style={{ width: 140 }}
                 options={[
-                  { value: 'created_at', label: '创建时间' },
-                  { value: 'priority', label: '优先级' },
-                  { value: 'title', label: '标题' },
+                  { value: 'created_at', label: 'Created' },
+                  { value: 'priority', label: 'Priority' },
+                  { value: 'title', label: 'Title' },
                 ]}
               />
             </Space>
@@ -367,7 +368,8 @@ const TicketKanban: React.FC<TicketKanbanProps> = ({ onTicketSelect }) => {
                 icon={<Plus />}
                 onClick={() => router.push('/tickets/create')}
               >
-                新建工单
+
+                New Ticket
               </Button>
             </Space>
           </Col>
@@ -419,7 +421,7 @@ const TicketKanban: React.FC<TicketKanbanProps> = ({ onTicketSelect }) => {
               ))}
               {(!ticketsByStatus[status.key] || ticketsByStatus[status.key].length === 0) && (
                 <div className="text-center text-gray-400 py-8">
-                  <Text type="secondary">暂无工单</Text>
+                  <Text type="secondary">No work order yet</Text>
                 </div>
               )}
             </div>
@@ -429,12 +431,13 @@ const TicketKanban: React.FC<TicketKanbanProps> = ({ onTicketSelect }) => {
 
       {/* 工单详情模态框 */}
       <Modal
-        title="工单详情"
+        title="Ticket Detail"
         open={viewModalVisible}
         onCancel={() => setViewModalVisible(false)}
         footer={[
           <Button key="close" onClick={() => setViewModalVisible(false)}>
-            关闭
+
+            Close
           </Button>,
           <Button
             key="view"
@@ -446,7 +449,8 @@ const TicketKanban: React.FC<TicketKanbanProps> = ({ onTicketSelect }) => {
               }
             }}
           >
-            查看详情
+
+            View Details
           </Button>,
         ]}
         width={800}
@@ -458,24 +462,24 @@ const TicketKanban: React.FC<TicketKanbanProps> = ({ onTicketSelect }) => {
               <Title level={4}>{selectedTicket.title}</Title>
             </div>
             <div>
-              <Text>描述:</Text>
+              <Text>Description:</Text>
               <Paragraph>{selectedTicket.description}</Paragraph>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Text>状态:</Text>
+                <Text>Status:</Text>
                 <div>{selectedTicket.status}</div>
               </div>
               <div>
-                <Text>优先级:</Text>
+                <Text>Priority:</Text>
                 <div>{selectedTicket.priority}</div>
               </div>
               <div>
-                <Text>创建时间:</Text>
+                <Text>Creation time:</Text>
                 <div>{dayjs(selectedTicket.createdAt).format('YYYY-MM-DD HH:mm')}</div>
               </div>
               <div>
-                <Text>更新时间:</Text>
+                <Text>Update time:</Text>
                 <div>{dayjs(selectedTicket.updatedAt).format('YYYY-MM-DD HH:mm')}</div>
               </div>
             </div>

@@ -22,7 +22,7 @@ func TestRBACMiddleware(t *testing.T) {
 		RBACMiddleware(nil)(c)
 
 		assert.Equal(t, http.StatusUnauthorized, w.Code)
-		assert.Contains(t, w.Body.String(), "用户未认证")
+		assert.Contains(t, w.Body.String(), "User not authenticated")
 	})
 
 	t.Run("No Tenant ID in Context", func(t *testing.T) {
@@ -34,7 +34,7 @@ func TestRBACMiddleware(t *testing.T) {
 		RBACMiddleware(nil)(c)
 
 		assert.Equal(t, http.StatusUnauthorized, w.Code)
-		assert.Contains(t, w.Body.String(), "租户信息缺失")
+		assert.Contains(t, w.Body.String(), "Tenant information is missing")
 	})
 
 	// Note: "No Role in Context" test requires a valid client to query the database
@@ -54,7 +54,7 @@ func TestRequirePermissionForRBAC(t *testing.T) {
 		RequirePermission("ticket", "read")(c)
 
 		assert.Equal(t, http.StatusUnauthorized, w.Code)
-		assert.Contains(t, w.Body.String(), "用户角色信息缺失")
+		assert.Contains(t, w.Body.String(), "User role information is missing")
 	})
 
 	t.Run("Missing Tenant ID Returns Error", func(t *testing.T) {
@@ -67,7 +67,7 @@ func TestRequirePermissionForRBAC(t *testing.T) {
 		RequirePermission("ticket", "read")(c)
 
 		assert.Equal(t, http.StatusUnauthorized, w.Code)
-		assert.Contains(t, w.Body.String(), "租户信息缺失")
+		assert.Contains(t, w.Body.String(), "Tenant information is missing")
 	})
 }
 
@@ -82,7 +82,7 @@ func TestRequireRole(t *testing.T) {
 		RequireRole("admin", "manager")(c)
 
 		assert.Equal(t, http.StatusForbidden, w.Code)
-		assert.Contains(t, w.Body.String(), "缺少角色信息")
+		assert.Contains(t, w.Body.String(), "Missing role information")
 	})
 
 	t.Run("Role Not Allowed Returns Error", func(t *testing.T) {
@@ -94,7 +94,7 @@ func TestRequireRole(t *testing.T) {
 		RequireRole("admin", "manager")(c)
 
 		assert.Equal(t, http.StatusForbidden, w.Code)
-		assert.Contains(t, w.Body.String(), "无权限执行该操作")
+		assert.Contains(t, w.Body.String(), "No permission to perform this operation")
 	})
 
 	t.Run("Role Allowed Succeeds", func(t *testing.T) {

@@ -196,13 +196,13 @@ func TestKnowledgeService_GetArticle(t *testing.T) {
 			expectedError: false,
 		},
 		{
-			name:          "文章不存在",
+			name:          "The article does not exist",
 			articleID:     99999,
 			tenantID:      testTenant.ID,
 			expectedError: true,
 		},
 		{
-			name:          "租户不匹配",
+			name:          "Tenant mismatch",
 			articleID:     testArticle.ID,
 			tenantID:      99999,
 			expectedError: true,
@@ -312,7 +312,7 @@ func TestKnowledgeService_UpdateArticle(t *testing.T) {
 			expectedError: false,
 		},
 		{
-			name:      "文章不存在",
+			name:      "The article does not exist",
 			articleID: 99999,
 			request: &dto.UpdateKnowledgeArticleRequest{
 				Title: testStringPtr("不存在的文章"),
@@ -567,7 +567,7 @@ func TestKnowledgeService_DeleteArticle(t *testing.T) {
 			expectedError: false,
 		},
 		{
-			name:          "文章不存在",
+			name:          "The article does not exist",
 			articleID:     99999,
 			tenantID:      testTenant.ID,
 			expectedError: true,
@@ -652,7 +652,7 @@ func TestKnowledgeService_LikeArticle(t *testing.T) {
 			expectedError: false,
 		},
 		{
-			name:          "文章不存在",
+			name:          "The article does not exist",
 			articleID:     99999,
 			userID:        testUser.ID,
 			tenantID:      testTenant.ID,

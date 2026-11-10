@@ -267,7 +267,7 @@ func TestCreateInvestigation_DuplicateIsConflict(t *testing.T) {
 	}
 	require.NoError(t, json.Unmarshal(second.Body.Bytes(), &resp))
 	assert.Equal(t, common.ConflictCode, resp.Code)
-	assert.Equal(t, "该问题已存在调查记录", resp.Message)
+	assert.Equal(t, "This problem already has an investigation record", resp.Message)
 	assert.NotContains(t, second.Body.String(), "pq:", "响应不得泄漏驱动层错误")
 }
 

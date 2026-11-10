@@ -204,12 +204,12 @@ const CreateCIPage: React.FC = () => {
   return (
     <div className='space-y-6'>
       <ManagementPageHeader
-        title='录入配置项'
-        description='填写新配置项的基础信息、云资源关联和扩展属性，所有字段一次录入完整。'
+        title="Enter configuration items"
+        description="Fill in the basic information, cloud resource association and extended attributes of the new configuration item, and enter all fields at once."
         notice={
           <ManagementNotice
-            message='优先选择云资源引用'
-            description='如果配置项来自云发现，先绑定云资源，系统会自动带出 Region、Zone、资源类型和动态属性。'
+            message="Prioritize cloud resource references"
+            description="If the configuration item comes from cloud discovery, bind the cloud resource first, and the system will automatically bring out Region, Zone, resource type and dynamic attributes."
           />
         }
       />
@@ -226,7 +226,7 @@ const CreateCIPage: React.FC = () => {
             schemaFields={schemaFields}
             typeSchemaFields={typeSchemaFields}
             saving={createMutation.isPending}
-            submitText='保存配置项'
+            submitText="Save configuration items"
             onSubmit={handleSubmit}
             onCancel={handleCancel}
             onCITypeChange={handleCITypeChange}

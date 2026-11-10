@@ -7,20 +7,20 @@
                  targetNamespace="http://bpmn.io/schema/bpmn"
                  id="Definitions_1">
 
-  <bpmn:process id="dev_approval_ops_flow" name="开发审批运维流程" isExecutable="true">
+  <bpmn:process id="dev_approval_ops_flow" name="Development Approval and Operations Workflow" isExecutable="true">
     <bpmn:extensionElements>
       <bpmn:metaData name="category">ticket</bpmn:metaData>
       <bpmn:metaData name="version">1.0.0</bpmn:metaData>
-      <bpmn:metaData name="description">开发提交→主管审批→运维操作三级流程</bpmn:metaData>
+      <bpmn:metaData name="description">Three-stage workflow: development submission, supervisor approval, and operations execution</bpmn:metaData>
     </bpmn:extensionElements>
 
     <!-- 开始事件 -->
-    <bpmn:startEvent id="StartEvent_1" name="流程开始">
+    <bpmn:startEvent id="StartEvent_1" name="Workflow Started">
       <bpmn:outgoing>Flow_1</bpmn:outgoing>
     </bpmn:startEvent>
 
     <!-- 开发提交 -->
-    <bpmn:userTask id="Activity_DevSubmit" name="开发提交">
+    <bpmn:userTask id="Activity_DevSubmit" name="Development Submission">
       <bpmn:extensionElements>
         <bpmn:metaData name="service_task_type">ticket_task</bpmn:metaData>
         <bpmn:metaData name="action">dev_submit</bpmn:metaData>
@@ -32,7 +32,7 @@
     </bpmn:userTask>
 
     <!-- 主管审批 -->
-    <bpmn:userTask id="Activity_ManagerApproval" name="主管审批">
+    <bpmn:userTask id="Activity_ManagerApproval" name="Supervisor Approval">
       <bpmn:extensionElements>
         <bpmn:metaData name="service_task_type">ticket_task</bpmn:metaData>
         <bpmn:metaData name="action">manager_approval</bpmn:metaData>
@@ -45,14 +45,14 @@
     </bpmn:userTask>
 
     <!-- 审批结果网关 -->
-    <bpmn:exclusiveGateway id="Gateway_ApprovalResult" name="审批结果">
+    <bpmn:exclusiveGateway id="Gateway_ApprovalResult" name="Approval Result">
       <bpmn:incoming>Flow_3</bpmn:incoming>
       <bpmn:outgoing>Flow_Approved</bpmn:outgoing>
       <bpmn:outgoing>Flow_Rejected</bpmn:outgoing>
     </bpmn:exclusiveGateway>
 
     <!-- 运维操作 -->
-    <bpmn:userTask id="Activity_OpsExecute" name="运维操作">
+    <bpmn:userTask id="Activity_OpsExecute" name="Operations Execution">
       <bpmn:extensionElements>
         <bpmn:metaData name="service_task_type">ticket_task</bpmn:metaData>
         <bpmn:metaData name="action">ops_execute</bpmn:metaData>
@@ -64,7 +64,7 @@
     </bpmn:userTask>
 
     <!-- 驳回到开发 -->
-    <bpmn:userTask id="Activity_DevRework" name="开发修改">
+    <bpmn:userTask id="Activity_DevRework" name="Development Revision">
       <bpmn:extensionElements>
         <bpmn:metaData name="service_task_type">ticket_task</bpmn:metaData>
         <bpmn:metaData name="action">dev_rework</bpmn:metaData>
@@ -76,7 +76,7 @@
     </bpmn:userTask>
 
     <!-- 结束事件 -->
-    <bpmn:endEvent id="EndEvent_1" name="流程结束">
+    <bpmn:endEvent id="EndEvent_1" name="Workflow Ended">
       <bpmn:incoming>Flow_4</bpmn:incoming>
     </bpmn:endEvent>
 

@@ -95,7 +95,7 @@ function chartData(): { status: StatusSliceView[]; type: TypeSliceView[] } {
 // antd Statistic 会把整数和小数拆成两个 span（-value-int / -value-decimal），
 // 拼好的「60.0」并不是任何单个文本节点，所以从卡片容器取 textContent 断言。
 function successRateText(): string {
-  const statistic = screen.getByText('成功率').closest('.ant-statistic');
+  const statistic = screen.getByText('Success rate').closest('.ant-statistic');
   if (!statistic) throw new Error('成功率 statistic 未渲染');
   return statistic.textContent ?? '';
 }
@@ -115,22 +115,22 @@ describe('/reports/change-success', () => {
     const { status, type } = chartData();
     expect(status).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ name: '实施中', value: 5 }),
-        expect.objectContaining({ name: '草稿', value: 4 }),
+        expect.objectContaining({ name: "In Progress", value: 5 }),
+        expect.objectContaining({ name: "Draft", value: 4 }),
       ]),
     );
     // 键必须与后端 DTO 同名（inProgress 而非 implementing）：读错的键永远是 0，
     // DTO 里没有的字段也不该凭空出现一个分片。
     expect(status).toEqual(
-      expect.arrayContaining([expect.objectContaining({ name: '已完成', value: 3 })]),
+      expect.arrayContaining([expect.objectContaining({ name: "Completed", value: 3 })]),
     );
 
     // 类型分布必须来自真实计数：用 Math.floor(total*0.3/0.5/0.2) 造数时，
     // total=20 会显示 6/10/4 而不是真实的 8/9/3。
     expect(type).toEqual([
-      { type: 'standard', name: '标准变更', count: 8, color: expect.any(String) },
-      { type: 'normal', name: '普通变更', count: 9, color: expect.any(String) },
-      { type: 'emergency', name: '紧急变更', count: 3, color: expect.any(String) },
+      { type: 'standard', name: "Standard Change", count: 8, color: expect.any(String) },
+      { type: 'normal', name: "Normal Change", count: 9, color: expect.any(String) },
+      { type: 'emergency', name: "Emergency Change", count: 3, color: expect.any(String) },
     ]);
   });
 
@@ -139,14 +139,14 @@ describe('/reports/change-success', () => {
 
     render(<ChangeSuccessReport />);
 
-    await waitFor(() => expect(screen.getByText('成功率')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText('Success rate')).toBeInTheDocument());
 
     const rate = successRateText();
     // completed 3 / (completed 3 + failed 1 + rolledBack 1) = 60.0
     // 分母换成 total=20 会得到 15%，把草稿和待审批都算成不成功。
     expect(rate).toContain('60.0');
-    expect(screen.getByText('已实施变更')).toBeInTheDocument();
-    expect(screen.getByText('/ 完成+失败+回滚')).toBeInTheDocument();
+    expect(screen.getByText("Change implemented")).toBeInTheDocument();
+    expect(screen.getByText('/Complete+Failed+Rollback')).toBeInTheDocument();
   });
 
   it('shows an explicit unavailable rate when nothing has been implemented', async () => {
@@ -156,8 +156,8 @@ describe('/reports/change-success', () => {
 
     render(<ChangeSuccessReport />);
 
-    await waitFor(() => expect(screen.getByText('成功率')).toBeInTheDocument());
-    expect(screen.getByText('暂无实施结果')).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByText('Success rate')).toBeInTheDocument());
+    expect(screen.getByText("No implementation result yet")).toBeInTheDocument();
     // 分母为 0 不能显示成 0.0%：那会把「还没有实施结果」伪装成一个真实的成功率读数。
     expect(successRateText()).not.toContain('%');
   });
@@ -167,8 +167,8 @@ describe('/reports/change-success', () => {
 
     render(<ChangeSuccessReport />);
 
-    await waitFor(() => expect(screen.getByText('变更统计加载失败')).toBeInTheDocument());
-    expect(screen.getByRole('button', { name: '重试' })).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByText("Change statistics loading failed")).toBeInTheDocument());
+    expect(screen.getByRole('button', { name: "Retry" })).toBeInTheDocument();
     expect(screen.queryByTestId('chart-data')).not.toBeInTheDocument();
   });
 
@@ -191,7 +191,7 @@ describe('/reports/change-success', () => {
 
     render(<ChangeSuccessReport />);
 
-    await waitFor(() => expect(screen.getByText('当前租户还没有变更记录')).toBeInTheDocument());
-    expect(screen.queryByText('变更状态分布')).not.toBeInTheDocument();
+    await waitFor(() => expect(screen.getByText("The current tenant has no change records yet")).toBeInTheDocument());
+    expect(screen.queryByText("Change status distribution")).not.toBeInTheDocument();
   });
 });

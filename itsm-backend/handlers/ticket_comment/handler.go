@@ -34,21 +34,21 @@ func NewHandler(commentService *service.TicketCommentService, logger *zap.Sugare
 func (h *Handler) ListTicketComments(c *gin.Context) {
 	ticketID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "无效的工单ID")
+		common.Fail(c, common.ParamErrorCode, "Invalid ticket ID")
 		return
 	}
 
 	tenantID := c.GetInt("tenant_id")
 	userID := c.GetInt("user_id")
 	if tenantID == 0 || userID == 0 {
-		common.Fail(c, common.AuthFailedCode, "认证信息缺失")
+		common.Fail(c, common.AuthFailedCode, "Authentication information missing")
 		return
 	}
 
 	comments, err := h.commentService.ListTicketComments(c.Request.Context(), ticketID, tenantID, userID)
 	if err != nil {
 		h.logger.Errorw("Failed to list ticket comments", "error", err, "ticket_id", ticketID, "tenant_id", tenantID)
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -62,13 +62,13 @@ func (h *Handler) ListTicketComments(c *gin.Context) {
 func (h *Handler) CreateTicketComment(c *gin.Context) {
 	ticketID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "无效的工单ID")
+		common.Fail(c, common.ParamErrorCode, "Invalid ticket ID")
 		return
 	}
 
 	var req dto.CreateTicketCommentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 	req.Normalize()
@@ -76,14 +76,14 @@ func (h *Handler) CreateTicketComment(c *gin.Context) {
 	tenantID := c.GetInt("tenant_id")
 	userID := c.GetInt("user_id")
 	if tenantID == 0 || userID == 0 {
-		common.Fail(c, common.AuthFailedCode, "认证信息缺失")
+		common.Fail(c, common.AuthFailedCode, "Authentication information missing")
 		return
 	}
 
 	comment, err := h.commentService.CreateTicketComment(c.Request.Context(), ticketID, &req, userID, tenantID)
 	if err != nil {
 		h.logger.Errorw("Failed to create ticket comment", "error", err, "ticket_id", ticketID, "tenant_id", tenantID)
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -94,19 +94,19 @@ func (h *Handler) CreateTicketComment(c *gin.Context) {
 func (h *Handler) UpdateTicketComment(c *gin.Context) {
 	ticketID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "无效的工单ID")
+		common.Fail(c, common.ParamErrorCode, "Invalid ticket ID")
 		return
 	}
 
 	commentID, err := strconv.Atoi(c.Param("comment_id"))
 	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "无效的评论ID")
+		common.Fail(c, common.ParamErrorCode, "Invalid comment ID")
 		return
 	}
 
 	var req dto.UpdateTicketCommentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 	req.Normalize()
@@ -114,14 +114,14 @@ func (h *Handler) UpdateTicketComment(c *gin.Context) {
 	tenantID := c.GetInt("tenant_id")
 	userID := c.GetInt("user_id")
 	if tenantID == 0 || userID == 0 {
-		common.Fail(c, common.AuthFailedCode, "认证信息缺失")
+		common.Fail(c, common.AuthFailedCode, "Authentication information missing")
 		return
 	}
 
 	comment, err := h.commentService.UpdateTicketComment(c.Request.Context(), ticketID, commentID, &req, userID, tenantID)
 	if err != nil {
 		h.logger.Errorw("Failed to update ticket comment", "error", err, "ticket_id", ticketID, "comment_id", commentID, "tenant_id", tenantID)
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -132,27 +132,27 @@ func (h *Handler) UpdateTicketComment(c *gin.Context) {
 func (h *Handler) DeleteTicketComment(c *gin.Context) {
 	ticketID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "无效的工单ID")
+		common.Fail(c, common.ParamErrorCode, "Invalid ticket ID")
 		return
 	}
 
 	commentID, err := strconv.Atoi(c.Param("comment_id"))
 	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "无效的评论ID")
+		common.Fail(c, common.ParamErrorCode, "Invalid comment ID")
 		return
 	}
 
 	tenantID := c.GetInt("tenant_id")
 	userID := c.GetInt("user_id")
 	if tenantID == 0 || userID == 0 {
-		common.Fail(c, common.AuthFailedCode, "认证信息缺失")
+		common.Fail(c, common.AuthFailedCode, "Authentication information missing")
 		return
 	}
 
 	err = h.commentService.DeleteTicketComment(c.Request.Context(), ticketID, commentID, userID, tenantID)
 	if err != nil {
 		h.logger.Errorw("Failed to delete ticket comment", "error", err, "ticket_id", ticketID, "comment_id", commentID, "tenant_id", tenantID)
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 

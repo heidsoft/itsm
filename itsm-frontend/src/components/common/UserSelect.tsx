@@ -26,7 +26,7 @@ export const UserSelect: React.FC<UserSelectProps> = ({
   value,
   onChange,
   mode = 'multiple',
-  placeholder = '选择用户',
+  placeholder = 'Choose user',
   style,
   disabled = false,
   allowClear = true,
@@ -78,7 +78,7 @@ export const UserSelect: React.FC<UserSelectProps> = ({
       showSearch
       filterOption={false}
       onSearch={setSearchInput}
-      notFoundContent={isFetching ? <Spin size="small" /> : isError ? '用户列表加载失败' : '未找到用户'}
+      notFoundContent={isFetching ? <Spin size="small" /> : isError ? 'User list loading failed' : 'User not found'}
       optionLabelProp="label"
       options={options}
       popupRender={menu => (

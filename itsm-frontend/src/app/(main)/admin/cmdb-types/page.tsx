@@ -70,30 +70,30 @@ const CMDBTypesManagement = () => {
 
   // 预设图标列表
   const iconOptions = [
-    { value: 'server', label: '服务器' },
-    { value: 'database', label: '数据库' },
-    { value: 'cloud', label: '云服务' },
-    { value: 'network', label: '网络' },
-    { value: 'storage', label: '存储' },
-    { value: 'desktop', label: '终端' },
-    { value: 'code', label: '应用' },
-    { value: 'monitor', label: '监控' },
-    { value: 'security', label: '安全' },
-    { value: 'mail', label: '邮件' },
-    { value: 'phone', label: '电话' },
-    { value: 'printer', label: '打印机' },
+    { value: 'server', label: 'Servers' },
+    { value: 'database', label: 'Database' },
+    { value: 'cloud', label: 'Cloud services' },
+    { value: 'network', label: 'Network' },
+    { value: 'storage', label: 'Storage' },
+    { value: 'desktop', label: 'Terminal' },
+    { value: 'code', label: 'Application' },
+    { value: 'monitor', label: 'Monitoring' },
+    { value: 'security', label: 'Safe' },
+    { value: 'mail', label: 'Email' },
+    { value: 'phone', label: 'Phone' },
+    { value: 'printer', label: 'Printer' },
   ];
 
   // 预设颜色列表
   const colorOptions = [
-    { value: '#1890ff', label: '蓝色' },
-    { value: '#52c41a', label: '绿色' },
-    { value: '#faad14', label: '橙色' },
-    { value: '#f5222d', label: '红色' },
-    { value: '#722ed1', label: '紫色' },
-    { value: '#13c2c2', label: '青色' },
-    { value: '#eb2f96', label: '粉色' },
-    { value: '#fa541c', label: '橙红' },
+    { value: '#1890ff', label: 'blue' },
+    { value: '#52c41a', label: 'green' },
+    { value: '#faad14', label: 'Orange' },
+    { value: '#f5222d', label: 'red' },
+    { value: '#722ed1', label: 'Purple' },
+    { value: '#13c2c2', label: 'cyan' },
+    { value: '#eb2f96', label: 'pink' },
+    { value: '#fa541c', label: 'orange red' },
   ];
 
   // 统计数据
@@ -119,7 +119,7 @@ const CMDBTypesManagement = () => {
         inactive: types.length - activeCount,
       });
     } catch (error) {
-      message.error('获取CI类型失败');
+      message.error('Failed to obtain CI type');
     } finally {
       setLoading(false);
     }
@@ -133,7 +133,7 @@ const CMDBTypesManagement = () => {
   const handleSubmit = async (values: Record<string, unknown>) => {
     try {
       if (editingType && hasUnsupportedSchema) {
-        message.error('该类型包含当前可视化编辑器不支持的历史属性格式，请先迁移模板后再编辑');
+        message.error('This type contains historical attribute formats that are not supported by the current visual editor. Please migrate the template first before editing.');
         return;
       }
       const normalizedFields = normalizeAttributeTemplateFields(values.schemaFields as AttributeTemplateField[]);
@@ -141,7 +141,7 @@ const CMDBTypesManagement = () => {
         .map(field => field.key)
         .filter((key, index, keys): key is string => Boolean(key) && keys.indexOf(key) !== index);
       if (duplicateKeys.length > 0) {
-        message.error(`字段标识不能重复：${Array.from(new Set(duplicateKeys)).join('、')}`);
+        message.error(`Field ID cannot be repeated:${Array.from(new Set(duplicateKeys)).join('、')}`);
         return;
       }
 
@@ -165,10 +165,10 @@ const CMDBTypesManagement = () => {
 
       if (editingType) {
         await CMDBApi.updateCITypes(editingType.id, payload);
-        message.success('CI类型更新成功');
+        message.success('CI type updated successfully');
       } else {
         await CMDBApi.createCITypes(payload);
-        message.success('CI类型创建成功');
+        message.success('CI type created successfully');
       }
       setShowModal(false);
       setEditingType(null);
@@ -176,7 +176,7 @@ const CMDBTypesManagement = () => {
       form.resetFields();
       fetchCITypes();
     } catch (error: unknown) {
-      message.error((error instanceof Error ? error.message : undefined) || (editingType ? '更新失败' : '创建失败'));
+      message.error((error instanceof Error ? error.message : undefined) || (editingType ? 'Update failed' : 'Creation failed'));
     }
   };
 
@@ -200,10 +200,10 @@ const CMDBTypesManagement = () => {
   const handleDelete = async (id: number) => {
     try {
       await CMDBApi.deleteCITypes(id);
-      message.success('删除成功');
+      message.success('Deleted');
       fetchCITypes();
     } catch (error: unknown) {
-      message.error((error instanceof Error ? error.message : undefined) || '删除失败');
+      message.error((error instanceof Error ? error.message : undefined) || 'Delete failed');
     }
   };
 
@@ -216,7 +216,7 @@ const CMDBTypesManagement = () => {
   const handleFormatAttributeSchema = () => {
     const schemaText = buildAttributeSchemaFromFields(form.getFieldValue('schemaFields'));
     if (!schemaText) {
-      message.info('请先添加至少一个字段');
+      message.info('Please add at least one field first');
       return;
     }
 
@@ -225,7 +225,7 @@ const CMDBTypesManagement = () => {
       message.error(schemaError);
       return;
     }
-    message.success('属性模板校验通过，可在下方 JSON 预览中核对');
+    message.success('The attribute template verification passed, which can be checked in the JSON preview below');
   };
 
   // 过滤CI类型
@@ -244,7 +244,7 @@ const CMDBTypesManagement = () => {
   // 表格列定义
   const columns = [
     {
-      title: '类型名称',
+      title: 'Type Name',
       dataIndex: 'name',
       key: 'name',
       render: (name: string, record: CIType) => (
@@ -269,14 +269,14 @@ const CMDBTypesManagement = () => {
       ),
     },
     {
-      title: '图标',
+      title: 'Icon',
       dataIndex: 'icon',
       key: 'icon',
       width: 100,
       render: (icon: string) => <Tag color='default'>{icon || '-'}</Tag>,
     },
     {
-      title: '颜色',
+      title: 'Color',
       dataIndex: 'color',
       key: 'color',
       width: 100,
@@ -288,17 +288,17 @@ const CMDBTypesManagement = () => {
       ),
     },
     {
-      title: '属性模板',
+      title: 'Property template',
       dataIndex: 'attributeSchema',
       key: 'attributeSchema',
       width: 120,
       render: (schema: string) => {
         const fieldCount = getAttributeSchemaFieldCount(schema);
-        return fieldCount > 0 ? <Tag color='blue'>{fieldCount} 个字段</Tag> : <Tag>未配置</Tag>;
+        return fieldCount > 0 ? <Tag color='blue'>{fieldCount}  fields</Tag> : <Tag>Not configured</Tag>;
       },
     },
     {
-      title: '状态',
+      title: 'Status',
       dataIndex: 'isActive',
       key: 'isActive',
       width: 100,
@@ -309,12 +309,12 @@ const CMDBTypesManagement = () => {
             isActive ? <CheckCircle className='w-3 h-3' /> : <AlertCircle className='w-3 h-3' />
           }
         >
-          {isActive ? '激活' : '停用'}
+          {isActive ? 'Active' : 'Disable'}
         </Tag>
       ),
     },
     {
-      title: '创建时间',
+      title: 'Created',
       dataIndex: 'createdAt',
       key: 'createdAt',
       width: 150,
@@ -325,14 +325,14 @@ const CMDBTypesManagement = () => {
       ),
     },
     {
-      title: '操作',
+      title: 'Actions',
       key: 'action',
       width: 120,
       render: (_: unknown, record: CIType) => (
         <Space>
-          <Tooltip title='编辑'>
+          <Tooltip title="Edit">
             <Button
-              aria-label="编辑"
+              aria-label="Edit"
               type='text'
               icon={<Edit className='w-4 h-4' />}
               onClick={() => handleEdit(record)}
@@ -340,14 +340,14 @@ const CMDBTypesManagement = () => {
             />
           </Tooltip>
           <Popconfirm
-            title='确定要删除这个CI类型吗？'
-            description='如果存在使用该类型的CI实例，将无法删除'
+            title="Are you sure you want to delete this CI type?"
+            description="If there is a CI instance using this type, it cannot be deleted."
             onConfirm={() => handleDelete(record.id)}
-            okText='确定'
-            cancelText='取消'
+            okText="OK"
+            cancelText="Cancel"
           >
-            <Tooltip title='删除'>
-              <Button aria-label="删除" type='text' icon={<Trash2 className='w-4 h-4' />} danger size='small' />
+            <Tooltip title="Delete">
+              <Button aria-label="Delete" type='text' icon={<Trash2 className='w-4 h-4' />} danger size='small' />
             </Tooltip>
           </Popconfirm>
         </Space>
@@ -361,21 +361,22 @@ const CMDBTypesManagement = () => {
       <div className='mb-6'>
         <Title level={2} className='!mb-2'>
           <Database className='inline-block w-6 h-6 mr-2' />
-          CI类型管理
+
+          CI type management
         </Title>
-        <Text type='secondary'>管理CMDB配置项类型，自定义IT基础设施分类</Text>
+        <Text type='secondary'>Manage CMDB configuration item type, customize IT infrastructure classification</Text>
       </div>
 
       <UsageGuideCard
         style={{ marginBottom: 16 }}
-        title='CI 类型怎么用'
-        intro='CI 类型定义配置项的字段模板。CMDB 中创建配置项（CI 实例）时先选类型，再按该类型的属性模板录入字段。'
+        title="How to use CI type"
+        intro="CI type defines the field template of the configuration item. When creating a configuration item (CI instance) in the CMDB, first select the type, and then enter the fields according to the attribute template of the type."
         steps={[
-          '点“创建类型”填写名称等基本信息；建议按资产层次组织，如“服务器 → 物理服务器 / 虚拟机”。',
-          '属性模板：在表单中逐行维护字段（名称、类型、必填），支持文本、数字、布尔、日期、枚举选择五种类型；改完点“校验模板配置”确认无误，“JSON 预览”用于核对最终结构，提交时自动保存。',
-          '继承类型（可选）：选择父类型后自动继承其全部属性，当前类型定义同名属性时覆盖父类型，避免重复维护公共字段。',
-          '通过行内开关启用/停用类型；停用不会删除已有配置项数据。',
-          '删除限制：存在使用该类型的 CI 实例时无法删除，需先迁移或清理相关实例。',
+          'Click "Create Type" to fill in basic information such as name; it is recommended to organize by asset hierarchy, such as "Server → Physical Server/Virtual Machine".',
+          'Attribute template: maintain fields (name, type, required) line by line in the form, supporting five types of text, number, Boolean, date, and enumeration selection; after making changes, click "Verify Template Configuration" to confirm that it is correct, and "JSON Preview" is used to check the final structure, which is automatically saved when submitting.',
+          'Inherited type (optional): After selecting a parent type, it automatically inherits all its attributes. When the current type defines attributes with the same name, it overwrites the parent type to avoid repeated maintenance of public fields.',
+          'Enable/disable type through inline switch; disabling will not delete existing configuration item data.',
+          'Restriction on deletion: CI instances using this type cannot be deleted, and related instances must be migrated or cleaned up first.',
         ]}
       />
 
@@ -384,7 +385,7 @@ const CMDBTypesManagement = () => {
         <Col xs={24} sm={12} lg={8}>
           <Card className='enterprise-card'>
             <Statistic
-              title='总类型数'
+              title="Total number of types"
               value={stats.total}
               prefix={<Database className='w-5 h-5' />}
               styles={{ content: { color: '#1890ff' } }}
@@ -394,7 +395,7 @@ const CMDBTypesManagement = () => {
         <Col xs={24} sm={12} lg={8}>
           <Card className='enterprise-card'>
             <Statistic
-              title='激活类型'
+              title="Activation type"
               value={stats.active}
               prefix={<CheckCircle className='w-5 h-5' />}
               styles={{ content: { color: '#52c41a' } }}
@@ -404,7 +405,7 @@ const CMDBTypesManagement = () => {
         <Col xs={24} sm={12} lg={8}>
           <Card className='enterprise-card'>
             <Statistic
-              title='停用类型'
+              title="Deactivation type"
               value={stats.inactive}
               prefix={<AlertCircle className='w-5 h-5' />}
               styles={{ content: { color: '#ff4d4f' } }}
@@ -418,7 +419,7 @@ const CMDBTypesManagement = () => {
         <Row gutter={[16, 16]} align='middle'>
           <Col xs={24} sm={12} md={8}>
             <Input
-              placeholder='搜索CI类型...'
+              placeholder="Search CI type..."
               prefix={<Search className='w-4 h-4' />}
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
@@ -428,13 +429,13 @@ const CMDBTypesManagement = () => {
           </Col>
           <Col xs={24} sm={12} md={4}>
             <Select
-              placeholder='状态筛选'
+              placeholder="Status"
               value={statusFilter}
               onChange={setStatusFilter}
               allowClear
               style={{ width: '100%' }}
               size='middle'
-              options={[{ value: 'active', label: '激活' }, { value: 'inactive', label: '停用' }]}
+              options={[{ value: 'active', label: 'Active' }, { value: 'inactive', label: 'Disable' }]}
             />
           </Col>
           <Col xs={24} sm={24} md={12}>
@@ -450,10 +451,12 @@ const CMDBTypesManagement = () => {
                   setShowModal(true);
                 }}
               >
-                新建CI类型
+
+                Create a new CI type
               </Button>
               <Button icon={<RefreshCw className='w-4 h-4' />} onClick={fetchCITypes}>
-                刷新
+
+                Refresh
               </Button>
             </Space>
           </Col>
@@ -470,7 +473,7 @@ const CMDBTypesManagement = () => {
           pagination={{
             showSizeChanger: true,
             showQuickJumper: true,
-            showTotal: total => `共 ${total} 条记录`,
+            showTotal: total => `Total ${total} records`,
           }}
           scroll={{ x: 800 }}
         />
@@ -481,7 +484,7 @@ const CMDBTypesManagement = () => {
         title={
           <span>
             <Database className='w-4 h-4 mr-2' />
-            {editingType ? '编辑CI类型' : '新建CI类型'}
+            {editingType ? 'Edit CI type' : 'Create a new CI type'}
           </span>
         }
         open={showModal}
@@ -501,10 +504,11 @@ const CMDBTypesManagement = () => {
                 form.resetFields();
               }}
             >
-              取消
+
+              Cancel
             </Button>
             <Button type='primary' htmlType='submit' form={formId}>
-              {editingType ? '更新' : '创建'}
+              {editingType ? 'Update' : 'Create'}
             </Button>
           </Space>
         }
@@ -519,33 +523,33 @@ const CMDBTypesManagement = () => {
         >
           <Form.Item
             name='name'
-            label='类型名称'
+            label="Type Name"
             rules={[
-              { required: true, message: '请输入类型名称' },
-              { max: 255, message: '类型名称不能超过255个字符' },
+              { required: true, message: 'Please enter the type name' },
+              { max: 255, message: 'Type name cannot exceed 255 characters' },
             ]}
           >
-            <Input placeholder='请输入类型名称，如：服务器、数据库、网络设备' />
+            <Input placeholder="Please enter the type name, such as: server, database, network device" />
           </Form.Item>
 
           <Form.Item
             name='description'
-            label='类型描述'
-            rules={[{ max: 1000, message: '描述不能超过1000个字符' }]}
+            label="Description"
+            rules={[{ max: 1000, message: 'Description cannot exceed 1000 characters' }]}
           >
-            <Input.TextArea rows={3} placeholder='请输入类型描述' showCount maxLength={1000} />
+            <Input.TextArea rows={3} placeholder="Please enter a type description" showCount maxLength={1000} />
           </Form.Item>
 
           <Form.Item
             name='parentTypeId'
-            label='继承类型'
-            extra='继承父类型的属性定义；当前类型定义同名属性时会覆盖父类型。'
+            label="Inherited type"
+            extra="Inherit the attribute definition of the parent type; when the current type defines an attribute with the same name, it will overwrite the parent type."
           >
             <Select
               allowClear
               showSearch
               optionFilterProp='label'
-              placeholder='可选，例如“物理服务器”继承“服务器”'
+              placeholder="Optional, for example &quot;physical server&quot; inherits &quot;server&quot;"
               options={ciTypes
                 .filter(type => type.id !== editingType?.id)
                 .map(type => ({ label: type.name, value: type.id }))}
@@ -553,24 +557,24 @@ const CMDBTypesManagement = () => {
           </Form.Item>
 
           <Form.Item
-            label='属性模板'
-            extra='这些字段会出现在配置项录入表单中，支持文本/数字/布尔/日期/枚举选择五种类型，适合环境、负责人团队、实例规格等标准字段。'
+            label="Property template"
+            extra="These fields will appear in the configuration item entry form, supporting five types of text/number/Boolean/date/enumeration selection, suitable for standard fields such as environment, responsible team, instance specifications, etc."
           >
             {hasUnsupportedSchema && (
               <Alert
                 className='mb-3'
                 type='warning'
                 showIcon
-                title='检测到历史属性格式'
-                description='为避免静默丢失未知字段，当前页面禁止覆盖保存。请先通过受控迁移转换模板格式。'
+                title="Historical attribute format detected"
+                description="To avoid silent loss of unknown fields, overwriting and saving of the current page is prohibited. Please convert the template format via controlled migration first."
               />
             )}
             <Alert
               className='mb-3'
               type='info'
               showIcon
-              title='不用手写 JSON，按字段逐项配置即可'
-              description='字段标识用于保存数据，建议使用英文小写和下划线；枚举类型的选项可用换行或逗号分隔。'
+              title="No need to write JSON by hand, just configure it item by field"
+              description="Field identifier is used to save data. It is recommended to use English lowercase and underscores; enumeration type options can be separated by newlines or commas."
             />
             <Form.List name='schemaFields'>
               {(fields, { add, remove }) => (
@@ -579,10 +583,11 @@ const CMDBTypesManagement = () => {
                     <Card
                       key={key}
                       size='small'
-                      title={`字段 ${index + 1}`}
+                      title={`Field ${index + 1}`}
                       extra={
                         <Button size='small' danger type='text' onClick={() => remove(name)}>
-                          删除
+
+                          Delete
                         </Button>
                       }
                     >
@@ -591,26 +596,26 @@ const CMDBTypesManagement = () => {
                           <Form.Item
                             {...restField}
                             name={[name, 'key']}
-                            label='字段标识'
+                            label="Field Key"
                             rules={[
-                              { required: true, message: '请输入字段标识' },
+                              { required: true, message: 'Please enter the field ID' },
                               {
                                 pattern: /^[a-z][a-z0-9_]*$/,
-                                message: '仅支持英文小写、数字和下划线，并以字母开头',
+                                message: 'Only supports English lowercase, numbers and underscores, and starts with a letter',
                               },
                             ]}
                           >
-                            <Input placeholder='例如 environment' allowClear />
+                            <Input placeholder="for example environment" allowClear />
                           </Form.Item>
                         </Col>
                         <Col xs={24} md={12}>
                           <Form.Item
                             {...restField}
                             name={[name, 'label']}
-                            label='字段名称'
-                            rules={[{ required: true, message: '请输入字段名称' }]}
+                            label="Field Name"
+                            rules={[{ required: true, message: 'Please enter the field name' }]}
                           >
-                            <Input placeholder='例如 环境' allowClear />
+                            <Input placeholder="example environment" allowClear />
                           </Form.Item>
                         </Col>
                       </Row>
@@ -619,9 +624,9 @@ const CMDBTypesManagement = () => {
                           <Form.Item
                             {...restField}
                             name={[name, 'type']}
-                            label='字段类型'
+                            label="Field type"
                             initialValue='string'
-                            rules={[{ required: true, message: '请选择字段类型' }]}
+                            rules={[{ required: true, message: 'Please select field type' }]}
                           >
                             <Select options={ATTRIBUTE_FIELD_TYPE_OPTIONS} />
                           </Form.Item>
@@ -629,28 +634,28 @@ const CMDBTypesManagement = () => {
                             <Form.Item
                               {...restField}
                               name={[name, 'options']}
-                              label='可选项'
-                              rules={[{ required: true, message: '请输入至少一个可选项' }]}
+                              label="optional"
+                              rules={[{ required: true, message: 'Please enter at least one option' }]}
                             >
                               <Input.TextArea
                                 rows={3}
-                                placeholder={'生产\n预发布\n开发'}
+                                placeholder={'Production\nPre-release\nDevelopment'}
                                 allowClear
                               />
                             </Form.Item>
                           )}
                         </Col>
                         <Col xs={24} md={12}>
-                          <Form.Item {...restField} name={[name, 'placeholder']} label='输入提示'>
-                            <Input placeholder='例如 请选择环境' allowClear />
+                          <Form.Item {...restField} name={[name, 'placeholder']} label="Input prompt">
+                            <Input placeholder="For example please select environment" allowClear />
                           </Form.Item>
                           <Form.Item
                             {...restField}
                             name={[name, 'required']}
-                            label='是否必填'
+                            label="Is it required?"
                             valuePropName='checked'
                           >
-                            <Switch checkedChildren='必填' unCheckedChildren='选填' />
+                            <Switch checkedChildren="Required" unCheckedChildren="Optional" />
                           </Form.Item>
                         </Col>
                       </Row>
@@ -670,7 +675,8 @@ const CMDBTypesManagement = () => {
                       })
                     }
                   >
-                    添加字段
+
+                    Add field
                   </Button>
                 </div>
               )}
@@ -679,10 +685,12 @@ const CMDBTypesManagement = () => {
 
           <div className='-mt-4 mb-4 flex flex-wrap gap-2'>
             <Button size='small' onClick={handleUseDefaultAttributeSchema}>
-              使用示例模板
+
+              Using sample templates
             </Button>
             <Button size='small' onClick={handleFormatAttributeSchema}>
-              校验模板配置
+
+              Verification template configuration
             </Button>
             <Button
               size='small'
@@ -692,13 +700,14 @@ const CMDBTypesManagement = () => {
                 })
               }
             >
-              清空模板
+
+              Clear template
             </Button>
           </div>
 
           <Form.Item
-            label='JSON 预览'
-            extra='提交时会自动保存该 JSON。高级用户可用于核对最终结构。'
+            label="JSON Preview"
+            extra="The JSON is automatically saved on submission. It can be used by advanced users to check the final structure."
           >
             <Input.TextArea
               rows={5}
@@ -710,19 +719,19 @@ const CMDBTypesManagement = () => {
 
           <Row gutter={16}>
             <Col span={12}>
-              <Form.Item name='icon' label='图标标识'>
-                <Select placeholder='选择图标标识' allowClear options={iconOptions} />
+              <Form.Item name='icon' label="Icon ID">
+                <Select placeholder="Select icon ID" allowClear options={iconOptions} />
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item name='color' label='颜色'>
-                <Select placeholder='选择颜色' options={colorOptions.map(opt => ({ value: opt.value, label: opt.label }))} />
+              <Form.Item name='color' label="Color">
+                <Select placeholder="Select color" options={colorOptions.map(opt => ({ value: opt.value, label: opt.label }))} />
               </Form.Item>
             </Col>
           </Row>
 
-          <Form.Item name='isActive' label='状态' valuePropName='checked' initialValue={true}>
-            <Switch checkedChildren='激活' unCheckedChildren='停用' />
+          <Form.Item name='isActive' label="Status" valuePropName='checked' initialValue={true}>
+            <Switch checkedChildren="Active" unCheckedChildren="Disable" />
           </Form.Item>
         </Form>
       </Modal>

@@ -101,8 +101,8 @@ describe('我的应用页读取扁平安装 DTO', () => {
 
     expect(await screen.findByText('智能分诊技能')).toBeInTheDocument();
     expect(screen.getByText('按标题自动分诊')).toBeInTheDocument();
-    expect(screen.queryByText(/^应用 #/)).toBeNull();
-    expect(screen.getByText('目录最新版本')).toBeInTheDocument();
+    expect(screen.queryByText(/^Application #/)).toBeNull();
+    expect(screen.getByText("latest version of directory")).toBeInTheDocument();
     expect(screen.getByText('v1.1.0')).toBeInTheDocument();
   });
 
@@ -110,17 +110,17 @@ describe('我的应用页读取扁平安装 DTO', () => {
     renderPage();
 
     await screen.findByText('智能分诊技能');
-    expect(screen.queryByRole('button', { name: '配置' })).toBeNull();
+    expect(screen.queryByRole('button', { name: "Configure" })).toBeNull();
   });
 
   it('搜索按标题命中真实字段（此前读 edges 时任何关键词都查不到）', async () => {
     renderPage();
 
     await screen.findByText('智能分诊技能');
-    fireEvent.change(screen.getByPlaceholderText('搜索应用名称或描述...'), {
+    fireEvent.change(screen.getByPlaceholderText("Search app name or description..."), {
       target: { value: '分诊' },
     });
-    await waitFor(() => expect(screen.queryByText('没有找到匹配的应用')).toBeNull());
+    await waitFor(() => expect(screen.queryByText("No matching application found")).toBeNull());
     expect(screen.getByText('智能分诊技能')).toBeInTheDocument();
   });
 });
@@ -131,19 +131,19 @@ describe('升级与自动升级', () => {
     mockedService.upgradeItem.mockResolvedValue(upgraded);
     renderPage();
 
-    const button = await screen.findByRole('button', { name: '升级到 v1.1.0' });
+    const button = await screen.findByRole('button', { name: "Upgrade to v 1.1.0" });
     fireEvent.click(button);
 
     // 二次确认必须先出现，且写明从哪个版本到哪个版本（换版本会重载运行态）。
-    expect(await screen.findByText(/升级 \/ 回滚/)).toBeInTheDocument();
+    expect(await screen.findByText(/Upgrade\/Rollback/)).toBeInTheDocument();
     await waitFor(() => expect(screen.getAllByText('v1.0.0').length).toBeGreaterThan(0));
 
-    fireEvent.click(screen.getByRole('button', { name: '确认执行' }));
+    fireEvent.click(screen.getByRole('button', { name: "Confirm execution" }));
 
     await waitFor(() => expect(mockedService.upgradeItem).toHaveBeenCalledWith(5, '1.1.0'));
     // 升完之后「已安装版本」与「目录最新版本」同为 1.1.0，两处都要一致。
     await waitFor(() => expect(screen.getAllByText('v1.1.0')).toHaveLength(2));
-    expect(screen.queryByRole('button', { name: '升级到 v1.1.0' })).toBeNull();
+    expect(screen.queryByRole('button', { name: "Upgrade to v 1.1.0" })).toBeNull();
     // 换版本会重新过依赖闸门，报告要随之刷新。
     expect(mockedService.dependencyStatus).toHaveBeenCalledTimes(2);
   });
@@ -153,8 +153,8 @@ describe('升级与自动升级', () => {
     mockedService.upgradeItem.mockResolvedValue(rolledBack);
     renderPage();
 
-    fireEvent.click(await screen.findByRole('button', { name: '升级到 v1.1.0' }));
-    await screen.findByText(/升级 \/ 回滚/);
+    fireEvent.click(await screen.findByRole('button', { name: "Upgrade to v 1.1.0" }));
+    await screen.findByText(/Upgrade\/Rollback/);
 
     // 选一个比当前更旧的版本 → 必须带 targetVersion 发给后端。
     // 弹窗内的目标版本下拉（页面上还有筛选用的 combobox，必须限定在弹窗内取）。
@@ -169,7 +169,7 @@ describe('升级与自动升级', () => {
       return opt as HTMLElement;
     });
     fireEvent.click(olderOption);
-    fireEvent.click(screen.getByRole('button', { name: '确认执行' }));
+    fireEvent.click(screen.getByRole('button', { name: "Confirm execution" }));
 
     await waitFor(() => expect(mockedService.upgradeItem).toHaveBeenCalledWith(5, '0.9.0'));
   });
@@ -188,12 +188,12 @@ describe('升级与自动升级', () => {
     mockedService.upgradeItem.mockResolvedValue({ ...upToDate, installedVersion: '1.0.0' });
     renderPage();
 
-    fireEvent.click(await screen.findByRole('button', { name: '升级/回滚' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Upgrade/Rollback' }));
     const dialog = await screen.findByRole('dialog');
 
     // 默认目标必须是「确实不同的版本」：若仍是已装的 1.1.0，确认执行等于原地重装。
-    await waitFor(() => expect(within(dialog).getByText(/将从/)).toHaveTextContent('v1.0.0'));
-    fireEvent.click(screen.getByRole('button', { name: '确认执行' }));
+    await waitFor(() => expect(within(dialog).getByText(/Will be from/)).toHaveTextContent('v1.0.0'));
+    fireEvent.click(screen.getByRole('button', { name: "Confirm execution" }));
 
     await waitFor(() => expect(mockedService.upgradeItem).toHaveBeenCalledWith(5, '1.0.0'));
   });
@@ -207,11 +207,11 @@ describe('升级与自动升级', () => {
     ]);
     renderPage();
 
-    fireEvent.click(await screen.findByRole('button', { name: '升级/回滚' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Upgrade/Rollback' }));
     const dialog = await screen.findByRole('dialog');
 
-    expect(await within(dialog).findByText(/暂无可升级或回滚的目标版本/)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '确认执行' })).toBeDisabled();
+    expect(await within(dialog).findByText(/A released version, there is currently no target version for upgrade or rollback\./)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: "Confirm execution" })).toBeDisabled();
     expect(mockedService.upgradeItem).not.toHaveBeenCalled();
   });
 
@@ -222,11 +222,11 @@ describe('升级与自动升级', () => {
     mockedListItemVersions.mockRejectedValue(new Error('版本服务不可用'));
     renderPage();
 
-    fireEvent.click(await screen.findByRole('button', { name: '升级/回滚' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Upgrade/Rollback' }));
     const dialog = await screen.findByRole('dialog');
 
-    expect(await within(dialog).findByText(/版本清单加载失败/)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '确认执行' })).toBeDisabled();
+    expect(await within(dialog).findByText(/Failed to load the version list/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: "Confirm execution" })).toBeDisabled();
     expect(mockedService.upgradeItem).not.toHaveBeenCalled();
   });
 
@@ -234,19 +234,19 @@ describe('升级与自动升级', () => {
     mockedService.setAutoUpgrade.mockResolvedValue({ ...skillInstallation, autoUpgrade: false });
     renderPage();
 
-    const button = await screen.findByRole('button', { name: '自动升级：开' });
+    const button = await screen.findByRole('button', { name: "Automatic upgrade:On" });
     fireEvent.click(button);
 
     await waitFor(() => expect(mockedService.setAutoUpgrade).toHaveBeenCalledWith(5, false));
-    await waitFor(() => expect(screen.getByRole('button', { name: '自动升级：关' })).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByRole('button', { name: "Automatic upgrade:Off" })).toBeInTheDocument());
   });
 
   it('升级失败时展示后端原因（409 会说升级未完成、仍在旧版本）', async () => {
     mockedService.upgradeItem.mockRejectedValue(new Error('升级未完成，仍在使用当前版本'));
     renderPage();
 
-    fireEvent.click(await screen.findByRole('button', { name: '升级到 v1.1.0' }));
-    fireEvent.click(await screen.findByRole('button', { name: '确认执行' }));
+    fireEvent.click(await screen.findByRole('button', { name: "Upgrade to v 1.1.0" }));
+    fireEvent.click(await screen.findByRole('button', { name: "Confirm execution" }));
 
     expect(await screen.findByText('升级未完成，仍在使用当前版本')).toBeInTheDocument();
     expect(screen.getAllByText('v1.0.0').length).toBeGreaterThan(0);
@@ -274,7 +274,7 @@ describe('依赖对齐视图', () => {
     });
     renderPage();
 
-    expect(await screen.findByText(/1 个前置未满足/)).toBeInTheDocument();
+    expect(await screen.findByText(/unmet prerequisites: 1/)).toBeInTheDocument();
     expect(screen.getByText('缺少前置组件 base-skill（>=1.0.0）')).toBeInTheDocument();
   });
 
@@ -282,13 +282,13 @@ describe('依赖对齐视图', () => {
     mockedService.dependencyStatus.mockRejectedValue(new Error('依赖服务不可用'));
     renderPage();
 
-    expect(await screen.findByText(/依赖对齐状态暂不可查：依赖服务不可用/)).toBeInTheDocument();
+    expect(await screen.findByText(/The dependency alignment status is temporarily unavailable:依赖服务不可用/)).toBeInTheDocument();
   });
 
   it('全部对齐时不打扰用户', async () => {
     renderPage();
 
     await screen.findByText('智能分诊技能');
-    expect(screen.queryByText(/前置未满足/)).toBeNull();
+    expect(screen.queryByText(/Prerequisite not satisfied/)).toBeNull();
   });
 });

@@ -42,58 +42,58 @@ interface LoadingEmptyErrorProps {
 
 // 预定义的空状态配置
 const getDefaultEmptyConfig = (context?: string, t?: (key: string) => string) => {
-  const defaultTitle = t ? t('common.noData') : '暂无数据';
-  const defaultDesc = t ? t('common.noData') : '暂无数据';
-  const defaultAction = t ? t('common.create') : '创建';
+  const defaultTitle = t ? t('common.noData') : 'No data';
+  const defaultDesc = t ? t('common.noData') : 'No data';
+  const defaultAction = t ? t('common.create') : 'Create';
 
   switch (context) {
     case 'tickets':
       return {
         title: defaultTitle,
-        description: t ? t('common.noData') : '暂无工单数据',
-        actionText: t ? t('common.create') : '创建工单',
+        description: t ? t('common.noData') : 'No ticket data',
+        actionText: t ? t('common.create') : 'Create a work order',
         icon: <FileText size={48} />,
       };
     case 'incidents':
       return {
         title: defaultTitle,
-        description: t ? t('common.noData') : '暂无事件数据',
-        actionText: t ? t('common.create') : '创建事件',
+        description: t ? t('common.noData') : 'No event data yet',
+        actionText: t ? t('common.create') : 'Create event',
         icon: <AlertTriangle size={48} />,
       };
     case 'problems':
       return {
         title: defaultTitle,
-        description: t ? t('common.noData') : '暂无问题数据',
-        actionText: t ? t('common.create') : '创建问题',
+        description: t ? t('common.noData') : 'No problem data yet',
+        actionText: t ? t('common.create') : 'Create issue',
         icon: <AlertTriangle size={48} />,
       };
     case 'changes':
       return {
         title: defaultTitle,
-        description: t ? t('common.noData') : '暂无变更数据',
-        actionText: t ? t('common.create') : '创建变更',
+        description: t ? t('common.noData') : 'No change data yet',
+        actionText: t ? t('common.create') : 'Create Change',
         icon: <Settings size={48} />,
       };
     case 'cmdb':
       return {
         title: defaultTitle,
-        description: t ? t('common.noData') : '暂无配置项数据',
-        actionText: t ? t('common.create') : '创建配置项',
+        description: t ? t('common.noData') : 'No configuration item data yet',
+        actionText: t ? t('common.create') : 'Create configuration item',
         icon: <Database size={48} />,
       };
     case 'users':
       return {
         title: defaultTitle,
-        description: t ? t('common.noData') : '暂无用户数据',
-        actionText: t ? t('common.create') : '创建用户',
+        description: t ? t('common.noData') : 'No user data yet',
+        actionText: t ? t('common.create') : 'Create user',
         icon: <User size={48} />,
       };
     case 'workflows':
       return {
         title: defaultTitle,
-        description: t ? t('common.noData') : '暂无工作流数据',
-        actionText: t ? t('common.create') : '创建工作流',
+        description: t ? t('common.noData') : 'No workflow data yet',
+        actionText: t ? t('common.create') : 'Create Workflow',
         icon: <Settings size={48} />,
       };
     default:

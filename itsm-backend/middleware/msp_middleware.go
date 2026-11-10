@@ -39,7 +39,7 @@ func MSPMiddleware(client *ent.Client) gin.HandlerFunc {
 			// 资源不存在而重试创建；503 + capability 状态才能区分「没开」和「没有」。
 			c.JSON(http.StatusServiceUnavailable, gin.H{
 				"code":    common.ServiceUnavailableCode,
-				"message": "MSP 能力在当前部署形态下未启用",
+				"message": "MSP capability is not enabled in the current deployment form",
 				"data": gin.H{
 					"capability": "msp",
 					"state":      "disabled",
@@ -53,7 +53,7 @@ func MSPMiddleware(client *ent.Client) gin.HandlerFunc {
 		if !exists {
 			// MSP 中间件必须 fail closed：AuthMiddleware 漏接或顺序错误时，
 			// 不能把匿名请求继续交给跨租户处理器。
-			common.AuthFailed(c, "缺少认证用户上下文")
+			common.AuthFailed(c, "Missing authenticated user context")
 			c.Abort()
 			return
 		}
@@ -62,7 +62,7 @@ func MSPMiddleware(client *ent.Client) gin.HandlerFunc {
 		if !ok {
 			c.JSON(http.StatusUnauthorized, gin.H{
 				"code":    http.StatusUnauthorized,
-				"message": "用户ID格式错误",
+				"message": "User ID format error",
 			})
 			c.Abort()
 			return
@@ -79,12 +79,12 @@ func MSPMiddleware(client *ent.Client) gin.HandlerFunc {
 			if ent.IsNotFound(err) {
 				c.JSON(http.StatusUnauthorized, gin.H{
 					"code":    http.StatusUnauthorized,
-					"message": "用户不存在",
+					"message": "User does not exist",
 				})
 			} else {
 				c.JSON(http.StatusInternalServerError, gin.H{
 					"code":    http.StatusInternalServerError,
-					"message": "查询用户失败",
+					"message": "Failed to query user",
 				})
 			}
 			c.Abort()
@@ -95,7 +95,7 @@ func MSPMiddleware(client *ent.Client) gin.HandlerFunc {
 		if tenants == nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"code":    http.StatusInternalServerError,
-				"message": "用户租户信息缺失",
+				"message": "User tenant information is missing",
 			})
 			c.Abort()
 			return
@@ -126,7 +126,7 @@ func MSPMiddleware(client *ent.Client) gin.HandlerFunc {
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, gin.H{
 					"code":    http.StatusInternalServerError,
-					"message": "查询MSP分配失败",
+					"message": "Failed to query MSP allocation",
 				})
 				c.Abort()
 				return
@@ -149,7 +149,7 @@ func MSPMiddleware(client *ent.Client) gin.HandlerFunc {
 				if convErr != nil {
 					c.JSON(http.StatusBadRequest, gin.H{
 						"code":    http.StatusBadRequest,
-						"message": "目标客户租户ID格式错误",
+						"message": "The target customer tenant ID format is incorrect.",
 					})
 					c.Abort()
 					return
@@ -165,7 +165,7 @@ func MSPMiddleware(client *ent.Client) gin.HandlerFunc {
 				if !hasAccess {
 					c.JSON(http.StatusForbidden, gin.H{
 						"code":    http.StatusForbidden,
-						"message": "MSP员工无权访问此客户租户",
+						"message": "MSP employees do not have access to this customer tenant",
 						"data": gin.H{
 							"msp_user_id":       userID,
 							"target_customer":   targetTenantID,

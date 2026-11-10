@@ -138,12 +138,12 @@ export const validateSiderWidth = (width: number): boolean => {
 if (process.env.NODE_ENV === 'development') {
   console.assert(
     validateHeaderHeight(LAYOUT_CONFIG.header.height),
-    `❌ Header高度 ${LAYOUT_CONFIG.header.height}px 不符合 Ant Design 公式 (48+8n)`
+    `❌ Header height ${LAYOUT_CONFIG.header.height} px does not conform to the Ant Design formula (48+8n)`
   );
 
   console.assert(
     validateSiderWidth(LAYOUT_CONFIG.sider.width),
-    `❌ Sider宽度 ${LAYOUT_CONFIG.sider.width}px 不符合 Ant Design 公式 (200+8n)`
+    `❌ Sider width ${LAYOUT_CONFIG.sider.width} px does not conform to Ant Design formula (200+8n)`
   );
 }
 

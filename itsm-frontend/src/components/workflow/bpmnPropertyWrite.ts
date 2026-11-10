@@ -42,7 +42,7 @@ function normalizeDocumentation(value: unknown, moddle: ModdleCreate): Normalize
   if (isNil(value)) return { ok: true, properties: { documentation: [] } };
   if (Array.isArray(value)) return { ok: true, properties: { documentation: value } };
   if (typeof value !== 'string') {
-    return { ok: false, error: '描述信息只能是文本' };
+    return { ok: false, error: 'Description information can only be text' };
   }
   return {
     ok: true,
@@ -73,7 +73,7 @@ function normalizeConditionExpression(value: unknown, moddle: ModdleCreate): Nor
     }
   }
 
-  return { ok: false, error: '条件表达式只能是文本或 bpmn:FormalExpression' };
+  return { ok: false, error: 'Conditional expression can only be text or bpmn:FormalExpression' };
 }
 
 function normalizeDefaultFlow(
@@ -83,11 +83,11 @@ function normalizeDefaultFlow(
   if (isNil(value)) return { ok: true, properties: { default: null } };
   if (typeof value !== 'string') return { ok: true, properties: { default: value } };
   if (!resolveElement) {
-    return { ok: false, error: '无法解析默认分支：画布未就绪' };
+    return { ok: false, error: 'Unable to resolve default branch: canvas not ready' };
   }
   const target = resolveElement(value);
   if (!target?.businessObject) {
-    return { ok: false, error: `默认分支 "${value}" 不是当前流程中的连线` };
+    return { ok: false, error: `Default flow "${value}" is not a connection in the current process` };
   }
   return { ok: true, properties: { default: target.businessObject } };
 }
@@ -207,7 +207,7 @@ export function normalizeNodeProperties(
     if (REFERENCE_PROPERTIES.has(key)) {
       return {
         ok: false,
-        error: `属性 ${key} 是 BPMN 引用，不能按文本写入`,
+        error: `Properties ${key} is a BPMN reference and cannot be written as text`,
       };
     }
 

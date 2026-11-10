@@ -42,7 +42,7 @@ func (h *Handler) ListAlerts(c *gin.Context) {
 	}
 	var query AlertListQuery
 	if err := c.ShouldBindQuery(&query); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 	pagination := common.GetPaginationFromQuery(c)
@@ -137,7 +137,7 @@ func (h *Handler) ListFindings(c *gin.Context) {
 	}
 	var query FindingListQuery
 	if err := c.ShouldBindQuery(&query); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 	pagination := common.GetPaginationFromQuery(c)
@@ -175,7 +175,7 @@ func (h *Handler) FindingSummary(c *gin.Context) {
 	}
 	summary, err := h.svc.FindingSummary(c.Request.Context(), tenantID)
 	if err != nil {
-		common.FailWithErr(c, err, "查询安全漏洞统计失败")
+		common.FailWithErr(c, err, "Failed to query security vulnerability statistics")
 		return
 	}
 	if summary == nil {
@@ -251,7 +251,7 @@ func (h *Handler) SyncStatus(c *gin.Context) {
 	}
 	states, err := h.svc.SyncStatus(c.Request.Context(), tenantID)
 	if err != nil {
-		common.FailWithErr(c, err, "查询云信号同步状态失败")
+		common.FailWithErr(c, err, "Failed to query cloud signal synchronization status")
 		return
 	}
 	items := toSyncStateDTOList(states)
@@ -261,7 +261,7 @@ func (h *Handler) SyncStatus(c *gin.Context) {
 func parseSignalID(c *gin.Context) (int64, bool) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil || id <= 0 {
-		common.ParamError(c, "ID 不合法")
+		common.ParamError(c, "ID is illegal")
 		return 0, false
 	}
 	return id, true
@@ -271,9 +271,9 @@ func parseSignalID(c *gin.Context) (int64, bool) {
 func (h *Handler) respondError(c *gin.Context, err error, internalMsg, invalidFilterMsg string) {
 	switch {
 	case errors.Is(err, ErrSignalNotFound):
-		common.NotFound(c, "云信号不存在")
+		common.NotFound(c, "Cloud signal does not exist")
 	case errors.Is(err, ErrSignalStateConflict):
-		common.Conflict(c, "云信号状态已变化，请刷新后重试", nil)
+		common.Conflict(c, "Cloud signal status has changed, please refresh and try again", nil)
 	case errors.Is(err, ErrSignalInvalidFilter):
 		common.ParamErrorWithErr(c, err, invalidFilterMsg)
 	default:

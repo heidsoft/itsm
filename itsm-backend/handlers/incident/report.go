@@ -109,7 +109,7 @@ func ResolveReportPeriod(dateFrom, dateTo string, now time.Time) (ReportPeriod, 
 	}
 	if dateFrom == "" || dateTo == "" {
 		return ReportPeriod{}, common.NewBusinessError(common.ParamErrorCode,
-			"dateFrom 与 dateTo 必须同时提供", "事件报表窗口需要成对的日期边界")
+			"dateFrom and dateTo must be provided at the same time", "Event report window requires paired date boundaries")
 	}
 
 	from, err := parseReportDate(dateFrom, "dateFrom")
@@ -129,11 +129,11 @@ func ResolveReportPeriod(dateFrom, dateTo string, now time.Time) (ReportPeriod, 
 	}
 	if days <= 0 {
 		return ReportPeriod{}, common.NewBusinessError(common.ParamErrorCode,
-			"dateFrom 不能晚于 dateTo", "事件报表窗口区间倒置")
+			"dateFrom cannot be later than dateTo", "Event report window interval is inverted")
 	}
 	if days > maxReportDays {
 		return ReportPeriod{}, common.NewBusinessError(common.ParamErrorCode,
-			fmt.Sprintf("统计窗口最长 %d 天", maxReportDays), "事件报表窗口跨度过大")
+			fmt.Sprintf("The longest statistical window is %d days", maxReportDays), "Event report window span is too large")
 	}
 	return ReportPeriod{Start: start, End: end}, nil
 }
@@ -147,7 +147,7 @@ func parseReportDate(value, name string) (time.Time, error) {
 		return ts, nil
 	}
 	return time.Time{}, common.NewBusinessError(common.ParamErrorCode,
-		name+" 格式错误（RFC3339 或 YYYY-MM-DD）", "事件报表窗口日期无法解析")
+		name+"Bad format (RFC3339 or YYYY-MM-DD)", "Event report window date cannot be parsed")
 }
 
 // dayLabel 把时间归到本地时区的日历日；窗口边界本身是本地整日，

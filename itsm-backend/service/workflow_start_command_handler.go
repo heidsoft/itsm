@@ -344,8 +344,8 @@ func (h *WorkflowStartCommandHandler) pickExistingDefinition(ctx context.Context
 		}
 	}
 	return "", fmt.Errorf(
-		"tenant %d 没有任何可用的流程定义（候选 %v 均不存在或已停用）："+
-			"请确认内置模板已部署（启动日志 bpmn-template-bootstrap-deploy），或为该业务类型配置 process_bindings",
+		"tenant %d does not have any available process definitions (candidate %v does not exist or is deactivated):"+
+			"Please confirm that the built-in template has been deployed (startup log bpmn-template-bootstrap-deploy), or configure process_bindings for this business type",
 		tenantID, candidates,
 	)
 }

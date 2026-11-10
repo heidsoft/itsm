@@ -27,10 +27,10 @@ const { Title, Text } = Typography;
 const DELIVERY_STATUSES = new Set(['security_approved', 'provisioning', 'delivered', 'failed']);
 
 const TASK_STATUS: Record<string, { color: string; label: string }> = {
-  pending: { color: 'default', label: '待执行' },
-  running: { color: 'processing', label: '执行中' },
-  succeeded: { color: 'success', label: '成功' },
-  failed: { color: 'error', label: '失败' },
+  pending: { color: 'default', label: 'Pending execution' },
+  running: { color: 'processing', label: 'Running' },
+  succeeded: { color: 'success', label: 'Success' },
+  failed: { color: 'error', label: 'Failed' },
 };
 
 function taskStatusTag(status: string) {
@@ -72,7 +72,7 @@ const ServiceRequestProvisioningPanel: React.FC<ServiceRequestProvisioningPanelP
       setTasks((await serviceRequestAPI.listProvisioningTasks(requestId)) || []);
     } catch (e) {
       setTasks([]);
-      message.error(e instanceof Error ? e.message : '加载交付任务失败');
+      message.error(e instanceof Error ? e.message : 'Failed to load delivery task');
     } finally {
       setLoadingTasks(false);
     }
@@ -92,10 +92,10 @@ const ServiceRequestProvisioningPanel: React.FC<ServiceRequestProvisioningPanelP
     try {
       setExecuting(true);
       await serviceRequestAPI.startProvisioning(requestId);
-      message.success('已启动交付任务');
+      message.success('Delivery task started');
       await refresh();
     } catch (e) {
-      message.error(e instanceof Error ? e.message : '启动交付失败');
+      message.error(e instanceof Error ? e.message : 'Failed to initiate delivery');
     } finally {
       setExecuting(false);
     }
@@ -105,10 +105,10 @@ const ServiceRequestProvisioningPanel: React.FC<ServiceRequestProvisioningPanelP
     try {
       setExecuting(true);
       await serviceRequestAPI.executeProvisioningTask(taskId);
-      message.success('交付任务执行中');
+      message.success('Delivery task in progress');
       await refresh();
     } catch (e) {
-      message.error(e instanceof Error ? e.message : '执行交付任务失败');
+      message.error(e instanceof Error ? e.message : 'Failed to execute delivery task');
     } finally {
       setExecuting(false);
     }
@@ -118,11 +118,11 @@ const ServiceRequestProvisioningPanel: React.FC<ServiceRequestProvisioningPanelP
   const handleRetryTask = async (taskId: number) => {
     try {
       setRetryingTaskId(taskId);
-      const task = await serviceRequestAPI.retryProvisioningTask(taskId, '运维在详情页发起重试');
-      message.success(task?.status === 'pending' ? '已重新排队，等待执行' : '已提交重试');
+      const task = await serviceRequestAPI.retryProvisioningTask(taskId, 'Operation and maintenance initiates a retry on the details page');
+      message.success(task?.status === 'pending' ? 'Requeued, waiting for execution' : 'Submitted for retry');
       await refresh();
     } catch (e) {
-      message.error(e instanceof Error ? e.message : '重试交付任务失败');
+      message.error(e instanceof Error ? e.message : 'Retry delivery task failed');
     } finally {
       setRetryingTaskId(null);
     }
@@ -137,7 +137,7 @@ const ServiceRequestProvisioningPanel: React.FC<ServiceRequestProvisioningPanelP
   const handleResolveTask = async () => {
     if (!resolveTask) return;
     if (!resolveNote.trim()) {
-      message.warning('请填写判定依据（工单号、资源 ID 或失败原因分析）');
+      message.warning('Please fill in the basis for judgment (work order number, resource ID or failure reason analysis)');
       return;
     }
     try {
@@ -147,12 +147,12 @@ const ServiceRequestProvisioningPanel: React.FC<ServiceRequestProvisioningPanelP
         resolveOutcome,
         resolveNote.trim()
       );
-      message.success('已提交人工判定');
+      message.success('Manual determination submitted');
       setResolveTask(null);
       setResolveNote('');
       await refresh();
     } catch (e) {
-      message.error(e instanceof Error ? e.message : '人工判定失败');
+      message.error(e instanceof Error ? e.message : 'Manual judgment failed');
     } finally {
       setResolving(false);
     }
@@ -170,7 +170,8 @@ const ServiceRequestProvisioningPanel: React.FC<ServiceRequestProvisioningPanelP
           onClick={() => handleExecuteTask(task.id)}
           loading={executing}
         >
-          执行
+
+          Execute
         </Button>
       );
     }
@@ -185,11 +186,13 @@ const ServiceRequestProvisioningPanel: React.FC<ServiceRequestProvisioningPanelP
               onClick={() => handleRetryTask(task.id)}
               loading={retryingTaskId === task.id}
             >
-              重试
+
+              Retry
             </Button>
           )}
           <Button type='link' size='small' onClick={() => openResolveModal(task)}>
-            人工判定
+
+            Manual judgment
           </Button>
         </Space>
       );
@@ -201,7 +204,8 @@ const ServiceRequestProvisioningPanel: React.FC<ServiceRequestProvisioningPanelP
           size='small'
           onClick={() => message.info(JSON.stringify(task.result, null, 2))}
         >
-          查看结果
+
+          View results
         </Button>
       );
     }
@@ -212,10 +216,10 @@ const ServiceRequestProvisioningPanel: React.FC<ServiceRequestProvisioningPanelP
     <>
       {status === 'security_approved' && (
         <>
-          <Title level={4}>交付操作</Title>
+          <Title level={4}>Delivery operation</Title>
           <Alert
-            title='审批已全部通过'
-            description='可以启动交付任务，系统将自动创建云资源'
+            title="All approvals passed"
+            description="The delivery task can be started and the system will automatically create cloud resources"
             type='success'
             showIcon
             style={{ marginBottom: 16 }}
@@ -228,7 +232,8 @@ const ServiceRequestProvisioningPanel: React.FC<ServiceRequestProvisioningPanelP
               loading={executing}
               size='large'
             >
-              启动交付
+
+              Start delivery
             </Button>
           )}
         </>
@@ -237,7 +242,8 @@ const ServiceRequestProvisioningPanel: React.FC<ServiceRequestProvisioningPanelP
       {(status === 'provisioning' || status === 'delivered' || status === 'failed') && (
         <>
           <Title level={4}>
-            交付任务
+
+            Delivery task
             <Button
               type='link'
               icon={<RotateCcw />}
@@ -245,11 +251,12 @@ const ServiceRequestProvisioningPanel: React.FC<ServiceRequestProvisioningPanelP
               loading={loadingTasks}
               size='small'
             >
-              刷新
+
+              Refresh
             </Button>
           </Title>
           {tasks.length === 0 ? (
-            <Text type='secondary'>暂无交付任务</Text>
+            <Text type='secondary'>No delivery tasks yet</Text>
           ) : (
             <Table<ProvisioningTask>
               rowKey='id'
@@ -259,36 +266,36 @@ const ServiceRequestProvisioningPanel: React.FC<ServiceRequestProvisioningPanelP
               size='small'
               columns={[
                 { title: 'ID', dataIndex: 'id', width: 80 },
-                { title: '资源类型', dataIndex: 'resourceType', width: 120 },
+                { title: 'Resource Type', dataIndex: 'resourceType', width: 120 },
                 {
-                  title: '状态',
+                  title: 'Status',
                   dataIndex: 'status',
                   width: 100,
                   render: (value: string) => taskStatusTag(value),
                 },
-                { title: '提供商', dataIndex: 'provider', width: 100 },
+                { title: 'Provider', dataIndex: 'provider', width: 100 },
                 {
                   // 尝试次数决定「还能不能重试」，按服务端下发的 maxAttempts 判断。
-                  title: '尝试',
+                  title: 'Try',
                   key: 'attempts',
                   width: 90,
                   render: (_, task) => `${task.attemptCount ?? 0}/${task.maxAttempts ?? 5}`,
                 },
                 {
-                  title: '错误信息',
+                  title: 'Error message',
                   dataIndex: 'errorMessage',
                   ellipsis: true,
                   render: (value: string, task) =>
-                    value || (task.resolutionNote ? `人工判定：${task.resolutionNote}` : '-'),
+                    value || (task.resolutionNote ? `Manual judgment:${task.resolutionNote}` : '-'),
                 },
                 {
-                  title: '创建时间',
+                  title: 'Created',
                   dataIndex: 'createdAt',
                   width: 180,
                   render: (value: string) => formatDateTime(value) || '-',
                 },
                 {
-                  title: '操作',
+                  title: 'Actions',
                   key: 'actions',
                   width: 180,
                   render: (_, task) => renderActions(task),
@@ -309,7 +316,8 @@ const ServiceRequestProvisioningPanel: React.FC<ServiceRequestProvisioningPanelP
                   }}
                   loading={executing}
                 >
-                  执行待处理任务
+
+                  Execute pending tasks
                 </Button>
               </div>
             )}
@@ -318,11 +326,11 @@ const ServiceRequestProvisioningPanel: React.FC<ServiceRequestProvisioningPanelP
 
       <Modal
         open={resolveTask !== null}
-        title='人工判定交付结果'
+        title="Manual judgment of delivery results"
         onCancel={() => setResolveTask(null)}
         onOk={handleResolveTask}
-        okText='提交判定'
-        cancelText='取消'
+        okText="Submit decision"
+        cancelText="Cancel"
         confirmLoading={resolving}
         destroyOnHidden
       >
@@ -330,28 +338,28 @@ const ServiceRequestProvisioningPanel: React.FC<ServiceRequestProvisioningPanelP
           <Alert
             type='warning'
             showIcon
-            title='仅在自动重试无法成功时使用'
-            description='凭据吊销、配额封禁或资源已在平台外建好时，请在此给出终态判定。判定会写入服务请求状态，并记录判定人与依据。'
+            title="Only used if automatic retry fails"
+            description="When credentials are revoked, quotas are banned, or resources have been built outside the platform, please give the final status here. The decision will be written into the service request status, and the person and basis for the decision will be recorded."
           />
           <div>
-            <Text type='secondary'>判定结果</Text>
+            <Text type='secondary'>Judgment result</Text>
             <div style={{ marginTop: 8 }}>
               <Radio.Group
                 value={resolveOutcome}
                 onChange={e => setResolveOutcome(e.target.value)}
               >
-                <Radio.Button value='delivered'>已交付</Radio.Button>
-                <Radio.Button value='failed'>交付失败</Radio.Button>
+                <Radio.Button value='delivered'>Delivered</Radio.Button>
+                <Radio.Button value='failed'>Failed</Radio.Button>
               </Radio.Group>
             </div>
           </div>
           <div>
-            <Text type='secondary'>判定依据（必填）</Text>
+            <Text type='secondary'>Judgment basis (required)</Text>
             <Input.TextArea
               rows={3}
               value={resolveNote}
               onChange={e => setResolveNote(e.target.value)}
-              placeholder='例如：资源已在控制台手工创建 i-abc123，凭据吊销无法走自动交付'
+              placeholder="For example: the resource i-abc123 has been manually created in the console, and automatic delivery cannot be performed if the credentials are revoked."
               maxLength={500}
               showCount
               style={{ marginTop: 8 }}

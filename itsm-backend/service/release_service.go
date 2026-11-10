@@ -64,10 +64,10 @@ func (s *ReleaseService) validateReferences(ctx context.Context, tenantID int, c
 			Where(change.IDEQ(*changeID), change.TenantIDEQ(tenantID)).
 			Exist(ctx)
 		if err != nil {
-			return fmt.Errorf("校验关联变更失败: %w", err)
+			return fmt.Errorf("Failed to verify association changes: %w", err)
 		}
 		if !exists {
-			return fmt.Errorf("关联变更不存在或不属于当前租户")
+			return fmt.Errorf("The associated change does not exist or does not belong to the current tenant")
 		}
 	}
 	if ownerID != nil && *ownerID > 0 {
@@ -75,10 +75,10 @@ func (s *ReleaseService) validateReferences(ctx context.Context, tenantID int, c
 			Where(user.IDEQ(*ownerID), user.TenantIDEQ(tenantID)).
 			Exist(ctx)
 		if err != nil {
-			return fmt.Errorf("校验负责人失败: %w", err)
+			return fmt.Errorf("Verification of responsible person failed: %w", err)
 		}
 		if !exists {
-			return fmt.Errorf("负责人不存在或不属于当前租户")
+			return fmt.Errorf("The responsible person does not exist or does not belong to the current tenant")
 		}
 	}
 	return nil
@@ -366,7 +366,7 @@ func (s *ReleaseService) UpdateRelease(ctx context.Context, id, tenantID int, re
 	if !datascope.CanWriteResource(actorID, actorRole, releaseEntity.CreatedBy, releaseEntity.OwnerID) {
 		s.logger.Warnw("Release update rejected by row-level guard",
 			"release_id", id, "tenant_id", tenantID, "actor_id", actorID, "actor_role", actorRole)
-		return nil, common.NewForbiddenError("无权限操作该发布单：仅创建人、负责人或管理员可操作")
+		return nil, common.NewForbiddenError("No permission to operate this release order: only the creator, person in charge or administrator can operate it")
 	}
 
 	if err := s.validateReferences(ctx, tenantID, req.ChangeID, req.OwnerID); err != nil {
@@ -448,7 +448,7 @@ func (s *ReleaseService) UpdateRelease(ctx context.Context, id, tenantID int, re
 
 // ErrInvalidReleaseTransition 表示发布状态机白名单拒绝了本次状态流转。
 // 属于调用方输入错误（应映射为 400），而非服务端内部错误（500）。
-var ErrInvalidReleaseTransition = errors.New("非法的发布状态转换")
+var ErrInvalidReleaseTransition = errors.New("Illegal release status transition")
 
 // UpdateReleaseStatus 更新发布状态，流转必须过 isValidReleaseStatusTransition 白名单，
 // 否则持 release:write 的人可以绕过审批门禁：
@@ -476,7 +476,7 @@ func (s *ReleaseService) UpdateReleaseStatus(ctx context.Context, id, tenantID i
 	if !datascope.CanWriteResource(actorID, actorRole, releaseEntity.CreatedBy, releaseEntity.OwnerID) {
 		s.logger.Warnw("Release status transition rejected by row-level guard",
 			"release_id", id, "tenant_id", tenantID, "actor_id", actorID, "actor_role", actorRole, "target_status", status)
-		return nil, common.NewForbiddenError("无权限操作该发布单：仅创建人、负责人或管理员可执行状态流转")
+		return nil, common.NewForbiddenError("No permission to operate this release order: only the creator, person in charge or administrator can perform status transfer")
 	}
 
 	// 1. 状态机白名单校验
@@ -508,7 +508,7 @@ func (s *ReleaseService) UpdateReleaseStatus(ctx context.Context, id, tenantID i
 	}
 	if affected == 0 {
 		return nil, common.NewBusinessError(common.ConflictCode,
-			"发布状态已被并发修改，请刷新后重试",
+			"The publishing status has been modified concurrently, please refresh and try again",
 			fmt.Sprintf("expected %s", releaseEntity.Status))
 	}
 
@@ -573,7 +573,7 @@ func isValidReleaseStatusTransition(current, newStatus string) bool {
 // 则中止业务审批，避免发布状态与流程状态分叉。
 func (s *ReleaseService) ApplyReleaseApproval(ctx context.Context, id, tenantID, actorID int, action, comment string) (*dto.ReleaseResponse, error) {
 	if action != "approve" && action != "reject" {
-		return nil, fmt.Errorf("无效的审批操作: %s", action)
+		return nil, fmt.Errorf("Invalid approval operation: %s", action)
 	}
 
 	releaseEntity, err := s.client.Release.Query().
@@ -593,7 +593,7 @@ func (s *ReleaseService) ApplyReleaseApproval(ctx context.Context, id, tenantID,
 		// 非法状态属于 conflict（409），不是服务器故障——必须类型化，
 		// 否则 RespondError 分类不到会兜底 500。
 		return nil, common.NewBusinessError(common.ConflictCode,
-			"当前发布状态不允许审批", string(releaseEntity.Status))
+			"Current publishing status does not allow approval", string(releaseEntity.Status))
 	}
 
 	// 审批人校验：必须是本租户有效用户，且创建人不能审批自己的发布
@@ -601,15 +601,15 @@ func (s *ReleaseService) ApplyReleaseApproval(ctx context.Context, id, tenantID,
 		Where(user.ID(actorID), user.TenantID(tenantID), user.Active(true)).
 		Exist(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("校验审批人失败: %w", err)
+		return nil, fmt.Errorf("Failed to verify approver: %w", err)
 	}
 	if !exists {
-		return nil, common.NewForbiddenError("审批人不存在或已停用")
+		return nil, common.NewForbiddenError("The approver does not exist or is disabled")
 	}
 	if actorID == releaseEntity.CreatedBy {
 		// 自审批属于业务拒绝（conflict 语义），必须类型化避免 500 兜底。
 		return nil, common.NewBusinessError(common.ConflictCode,
-			"发布创建人不能审批自己的发布", "")
+			"The publication creator cannot approve his own publication", "")
 	}
 
 	// BPMN 任务完成与业务状态更新必须在同一事务内，否则会出现"流程已批、业务未批"。
@@ -620,12 +620,12 @@ func (s *ReleaseService) ApplyReleaseApproval(ctx context.Context, id, tenantID,
 
 	tx, err := s.client.Tx(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("开启审批事务失败: %w", err)
+		return nil, fmt.Errorf("Failed to open approval transaction: %w", err)
 	}
 	defer tx.Rollback()
 
 	if s.approvalBridge == nil {
-		return nil, common.NewBusinessError(common.ConflictCode, "没有可处理的 BPMN 审批任务，请先确认流程绑定与待办状态", "")
+		return nil, common.NewBusinessError(common.ConflictCode, "There is no BPMN approval task that can be processed. Please confirm the process binding and to-do status first.", "")
 	}
 	// 老 release_approval_flow 起流后停在 Activity_TechReview（审批前置的评审节点），
 	// 而产品没有独立的「完成技术评审」入口；此前业务审批永远拿不到审批待办，
@@ -634,16 +634,16 @@ func (s *ReleaseService) ApplyReleaseApproval(ctx context.Context, id, tenantID,
 	if _, advanceErr := s.approvalBridge.AdvanceBusinessWorkTaskWithClient(
 		ctx, tx.Client(), tenantID, actorID, string(dto.BusinessTypeRelease), id, nil,
 	); advanceErr != nil {
-		return nil, fmt.Errorf("推进发布前置评审待办失败: %w", advanceErr)
+		return nil, fmt.Errorf("Advance release pre-review pending failed: %w", advanceErr)
 	}
 	completed, bridgeErr := s.approvalBridge.CompleteBusinessApprovalTaskWithClient(
 		ctx, tx.Client(), tenantID, actorID, string(dto.BusinessTypeRelease), id, action, comment,
 	)
 	if bridgeErr != nil {
-		return nil, fmt.Errorf("同步流程审批任务失败: %w", bridgeErr)
+		return nil, fmt.Errorf("Synchronization process approval task failed: %w", bridgeErr)
 	}
 	if !completed {
-		return nil, common.NewBusinessError(common.ConflictCode, "没有可处理的 BPMN 审批任务，请先确认流程绑定与待办状态", "")
+		return nil, common.NewBusinessError(common.ConflictCode, "There is no BPMN approval task that can be processed. Please confirm the process binding and to-do status first.", "")
 	}
 
 	// 审批状态推进同样走 CAS：防止并发窗口里已进入 in_progress 的发布
@@ -662,7 +662,7 @@ func (s *ReleaseService) ApplyReleaseApproval(ctx context.Context, id, tenantID,
 	}
 	if affected == 0 {
 		return nil, common.NewBusinessError(common.ConflictCode,
-			"发布状态已被并发修改，请刷新后重试",
+			"The publishing status has been modified concurrently, please refresh and try again",
 			fmt.Sprintf("expected %s", releaseEntity.Status))
 	}
 	updated, err := tx.Release.Query().
@@ -674,7 +674,7 @@ func (s *ReleaseService) ApplyReleaseApproval(ctx context.Context, id, tenantID,
 	}
 
 	if err := tx.Commit(); err != nil {
-		return nil, fmt.Errorf("提交审批事务失败: %w", err)
+		return nil, fmt.Errorf("Failed to submit approval transaction: %w", err)
 	}
 
 	s.logger.Infow("Release approval applied",
@@ -707,7 +707,7 @@ func (s *ReleaseService) DeleteRelease(ctx context.Context, id, tenantID int, ac
 	if !datascope.CanWriteResource(actorID, actorRole, releaseEntity.CreatedBy, releaseEntity.OwnerID) {
 		s.logger.Warnw("Release delete rejected by row-level guard",
 			"release_id", id, "tenant_id", tenantID, "actor_id", actorID, "actor_role", actorRole)
-		return common.NewForbiddenError("无权限删除该发布单：仅创建人、负责人或管理员可删除")
+		return common.NewForbiddenError("No permission to delete this release: only the creator, person in charge or administrator can delete it")
 	}
 
 	deleted, err := s.client.Release.Delete().

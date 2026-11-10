@@ -97,7 +97,7 @@ func TestProberConnectorHealthIsTenantScoped(t *testing.T) {
 	// 未配置该连接器的租户不能被伪报为健康
 	unconfigured := prober.HealthFor(ctx, "connector.feishu", 3)
 	require.False(t, unconfigured.OK)
-	require.Contains(t, unconfigured.Reason, "尚未启用")
+	require.Contains(t, unconfigured.Reason, "not enabled")
 }
 
 // Manager 的 key 是 tenantID/name/provider；能力键只有 name，不能直接用 name 索引。
@@ -127,7 +127,7 @@ func TestProberConnectorWithoutRuntimeIsUnhealthy(t *testing.T) {
 	prober := NewProber(db, nil, nil, nil)
 	health := prober.HealthFor(context.Background(), "connector.feishu", 1)
 	require.False(t, health.OK)
-	require.Equal(t, "连接器运行时未装配", health.Reason)
+	require.Equal(t, "Connector runtime is not configured", health.Reason)
 }
 
 // 没有数据库连接时不得返回「健康」：这正是旧实现 LastHealthCheckAt = time.Now()
@@ -237,7 +237,7 @@ func TestHandlerDegradesCapabilityWhenProbeFails(t *testing.T) {
 	require.False(t, wecom.DeploymentReady)
 	// 探测失败原因优先于 readinessEnv 降级原因（handler 的覆盖顺序）：
 	// 本测试无 DB，探测失败原因为「数据库连接未装配」。
-	require.Equal(t, "数据库连接未装配", wecom.DegradedReason)
+	require.Equal(t, "Database connection is not configured", wecom.DegradedReason)
 	require.NotNil(t, wecom.Health)
 }
 
@@ -326,4 +326,45 @@ func TestAICapabilityHealthReflectsLLMConfig(t *testing.T) {
 		require.False(t, ai.Health.OK)
 		require.NotContains(t, ai.AllowedActions, "manage", "健康降级时不得下发管理动作")
 	})
+}
+
+// Exercise cached healthy infrastructure through the production HTTP handler so
+// dependency configuration messages are tested without a database or providers.
+func TestCapabilityProbeEnglishConfigurationMessagesHTTP(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	now := time.Now()
+	prober := NewProber(nil, nil, connector.NewManager(connector.NewRegistry(), nil), nil)
+	prober.SetLLMConfigured(func() bool { return false })
+	prober.snapshot = &probeSnapshot{at: now, dbOK: true, connectorByTenant: map[int]map[string]connector.HealthStatus{7: {}}}
+	engine := gin.New()
+	engine.GET("/api/v1/capabilities", func(c *gin.Context) {
+		c.Set("tenant_id", 7)
+		c.Set("role", "admin")
+		NewHandler(prober)(c)
+	})
+	recorder := httptest.NewRecorder()
+	engine.ServeHTTP(recorder, httptest.NewRequest(http.MethodGet, "/api/v1/capabilities", nil))
+	require.Equal(t, http.StatusOK, recorder.Code)
+	var response struct {
+		Code int `json:"code"`
+		Data struct {
+			Items []Capability `json:"items"`
+		} `json:"data"`
+	}
+	require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &response))
+	require.Zero(t, response.Code)
+	byKey := map[string]Capability{}
+	for _, item := range response.Data.Items {
+		byKey[item.Key] = item
+	}
+	for key, reason := range map[string]string{
+		"ai":               "LLM is not configured (llm.*): advanced AI uses fallback processing; triage, RAG answers and summaries do not use a model",
+		"connector.feishu": "This connector is not enabled for the current tenant",
+	} {
+		item := byKey[key]
+		require.NotNil(t, item.Health)
+		require.False(t, item.Health.OK)
+		require.Equal(t, reason, item.Health.Reason)
+		require.NotContains(t, item.AllowedActions, "manage")
+	}
 }

@@ -41,16 +41,10 @@ func (s *SummarizeService) Summarize(ctx context.Context, text string, maxLen in
 	}
 
 	// Build prompt for summarization
-	prompt := fmt.Sprintf(`请用简洁的语言总结以下IT工单内容，摘要长度不超过%d字：
-
----
-%s
----
-
-请只输出摘要内容，不需要任何额外解释。`, maxLen, text)
+	prompt := fmt.Sprintf("Please summarize the following IT work order content in concise language. The length of the summary should not exceed %d words:\n\n---\n%s\n---\n\nPlease output only the summary content without any additional explanation.", maxLen, text)
 
 	messages := []LLMMessage{
-		{Role: "system", Content: "你是一个专业的IT服务管理助手，负责将工单内容浓缩成简洁的摘要。"},
+		{Role: "system", Content: "You are a professional IT service management assistant. Summarize ticket content clearly and concisely in English."},
 		{Role: "user", Content: prompt},
 	}
 
@@ -86,20 +80,10 @@ func (s *SummarizeService) SummarizeWithContext(ctx context.Context, text, conte
 		return s.Summarize(ctx, text, maxLen)
 	}
 
-	prompt := fmt.Sprintf(`请用简洁的语言总结以下IT工单内容，摘要长度不超过%d字。
-
-相关上下文信息：
-%s
-
-工单内容：
----
-%s
----
-
-请只输出摘要内容，不需要任何额外解释。`, maxLen, contextInfo, text)
+	prompt := fmt.Sprintf("Please summarize the following IT work order content in concise language. The length of the summary should not exceed %d words.\n\nRelated contextual information:\n%s\n\nWork order content:\n---\n%s\n---", maxLen, contextInfo, text)
 
 	messages := []LLMMessage{
-		{Role: "system", Content: "你是一个专业的IT服务管理助手，负责将工单内容浓缩成简洁的摘要。"},
+		{Role: "system", Content: "You are a professional IT service management assistant. Summarize ticket content clearly and concisely in English."},
 		{Role: "user", Content: prompt},
 	}
 
@@ -127,16 +111,10 @@ func (s *SummarizeService) GenerateActionItems(ctx context.Context, text string)
 		return []string{}, nil
 	}
 
-	prompt := fmt.Sprintf(`请从以下IT工单中提取可执行的操作项，只输出列表格式，每行一个：
-
----
-%s
----
-
-操作项：`, text)
+	prompt := fmt.Sprintf("Please extract executable action items from the following IT work orders, and only output them in list format, one per line:\n\n---\n%s\n---\n\nAction items:", text)
 
 	messages := []LLMMessage{
-		{Role: "system", Content: "你是一个IT服务管理助手，负责从工单中提取可执行的行动项。"},
+		{Role: "system", Content: "You are an IT service management assistant. Extract actionable items from tickets and respond in English."},
 		{Role: "user", Content: prompt},
 	}
 
@@ -175,7 +153,7 @@ func simpleTruncate(text string, maxLen int) string {
 
 // SummarizePromptVersion 是摘要的 prompt/口径版本，随响应透出并写入 AI 审计底账。
 // 换 prompt 模板就必须换它，否则底账里两代 prompt 的产出无法区分。
-const SummarizePromptVersion = "ticket-summary-v1"
+const SummarizePromptVersion = "ticket-summary-v2-en-US"
 
 // SummaryWithMetadata includes metadata about the summary
 //
@@ -234,16 +212,10 @@ func (s *SummarizeService) SummarizeWithMetadata(ctx context.Context, text strin
 		return result, nil
 	}
 
-	prompt := fmt.Sprintf(`请用简洁的语言总结以下IT工单内容，摘要长度不超过%d字：
-
----
-%s
----
-
-请只输出摘要内容，不需要任何额外解释。`, maxLen, text)
+	prompt := fmt.Sprintf("Please summarize the following IT work order content in concise language. The length of the summary should not exceed %d words:\n\n---\n%s\n---\n\nPlease output only the summary content without any additional explanation.", maxLen, text)
 
 	messages := []LLMMessage{
-		{Role: "system", Content: "你是一个专业的IT服务管理助手，负责将工单内容浓缩成简洁的摘要。"},
+		{Role: "system", Content: "You are a professional IT service management assistant. Summarize ticket content clearly and concisely in English."},
 		{Role: "user", Content: prompt},
 	}
 

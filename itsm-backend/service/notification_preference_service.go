@@ -35,7 +35,7 @@ func (s *NotificationPreferenceService) GetUserPreferences(ctx context.Context, 
 		).
 		All(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("查询通知偏好失败: %w", err)
+		return nil, fmt.Errorf("Failed to query notification preferences: %w", err)
 	}
 
 	responses := make([]*dto.NotificationPreferenceResponse, len(prefs))
@@ -60,7 +60,7 @@ func (s *NotificationPreferenceService) GetUserPreferenceByEventType(ctx context
 			// 返回默认偏好
 			return s.getDefaultPreference(userID, tenantID, eventType), nil
 		}
-		return nil, fmt.Errorf("查询通知偏好失败: %w", err)
+		return nil, fmt.Errorf("Failed to query notification preferences: %w", err)
 	}
 
 	return s.toPreferenceResponse(pref), nil
@@ -79,7 +79,7 @@ func (s *NotificationPreferenceService) CreateOrUpdatePreference(ctx context.Con
 		).
 		Only(ctx)
 	if err != nil && !ent.IsNotFound(err) {
-		return nil, fmt.Errorf("查询通知偏好失败: %w", err)
+		return nil, fmt.Errorf("Failed to query notification preferences: %w", err)
 	}
 
 	emailEnabled := true
@@ -119,7 +119,7 @@ func (s *NotificationPreferenceService) CreateOrUpdatePreference(ctx context.Con
 			SetTimezone(timezone).
 			Save(ctx)
 		if err != nil {
-			return nil, fmt.Errorf("更新通知偏好失败: %w", err)
+			return nil, fmt.Errorf("Failed to update notification preferences: %w", err)
 		}
 		return s.toPreferenceResponse(updated), nil
 	}
@@ -137,7 +137,7 @@ func (s *NotificationPreferenceService) CreateOrUpdatePreference(ctx context.Con
 		SetTimezone(timezone).
 		Save(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("创建通知偏好失败: %w", err)
+		return nil, fmt.Errorf("Failed to create notification preferences: %w", err)
 	}
 
 	return s.toPreferenceResponse(created), nil
@@ -173,7 +173,7 @@ func (s *NotificationPreferenceService) DeletePreference(ctx context.Context, us
 		).
 		Exec(ctx)
 	if err != nil {
-		return fmt.Errorf("删除通知偏好失败: %w", err)
+		return fmt.Errorf("Failed to delete notification preferences: %w", err)
 	}
 
 	return nil
@@ -191,7 +191,7 @@ func (s *NotificationPreferenceService) ResetToDefaults(ctx context.Context, use
 		).
 		Exec(ctx)
 	if err != nil {
-		return fmt.Errorf("重置通知偏好失败: %w", err)
+		return fmt.Errorf("Failed to reset notification preferences: %w", err)
 	}
 
 	return nil

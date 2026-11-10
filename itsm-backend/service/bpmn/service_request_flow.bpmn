@@ -3,67 +3,67 @@
                  xmlns:itsm="https://github.com/heidsoft/itsm/schema/bpmn"
                  targetNamespace="http://bpmn.io/schema/bpmn">
 
-  <bpmn:process id="service_request_flow" name="服务请求流程" isExecutable="true">
+  <bpmn:process id="service_request_flow" name="Service Request Workflow" isExecutable="true">
     <bpmn:extensionElements>
       <bpmn:metaData name="category">service_request</bpmn:metaData>
       <bpmn:metaData name="version">2.1.0</bpmn:metaData>
-      <bpmn:metaData name="description">标准服务请求处理流程（审批层级与审批人由流程变量驱动）</bpmn:metaData>
+      <bpmn:metaData name="description">Standard service request workflow with approval levels and approvers determined by process variables</bpmn:metaData>
     </bpmn:extensionElements>
 
-    <bpmn:startEvent id="StartEvent_1" name="请求提交">
+    <bpmn:startEvent id="StartEvent_1" name="Submit Request">
       <bpmn:outgoing>Flow_2</bpmn:outgoing>
     </bpmn:startEvent>
 
     <!-- 提交即受理：受理不再是一个用户任务，否则审批桥接会把「受理」当成审批待办。 -->
-    <bpmn:exclusiveGateway id="Gateway_Approval" name="需要审批?">
+    <bpmn:exclusiveGateway id="Gateway_Approval" name="Approval Required?">
       <bpmn:incoming>Flow_2</bpmn:incoming>
       <bpmn:outgoing>Flow_3</bpmn:outgoing>
       <bpmn:outgoing>Flow_4</bpmn:outgoing>
     </bpmn:exclusiveGateway>
 
     <!-- 一级审批：审批人与会签阈值来自 approval_plan 变量。 -->
-    <bpmn:userTask id="Activity_Approval_L1" name="一级审批"
+    <bpmn:userTask id="Activity_Approval_L1" name="Level 1 Approval"
                    itsm:taskPurpose="approval" itsm:approvalLevel="1"
                    itsm:approvalMode="single" itsm:commentRequiredOnReject="true">
       <bpmn:incoming>Flow_3</bpmn:incoming>
       <bpmn:outgoing>Flow_L1_Result</bpmn:outgoing>
     </bpmn:userTask>
 
-    <bpmn:exclusiveGateway id="Gateway_L1_Result" name="一级审批结果?">
+    <bpmn:exclusiveGateway id="Gateway_L1_Result" name="Level 1 Approval Result?">
       <bpmn:incoming>Flow_L1_Result</bpmn:incoming>
       <bpmn:outgoing>Flow_L1_Pass_Next</bpmn:outgoing>
       <bpmn:outgoing>Flow_L1_Pass_Last</bpmn:outgoing>
       <bpmn:outgoing>Flow_Reject</bpmn:outgoing>
     </bpmn:exclusiveGateway>
 
-    <bpmn:userTask id="Activity_Approval_L2" name="二级审批"
+    <bpmn:userTask id="Activity_Approval_L2" name="Level 2 Approval"
                    itsm:taskPurpose="approval" itsm:approvalLevel="2"
                    itsm:approvalMode="single" itsm:commentRequiredOnReject="true">
       <bpmn:incoming>Flow_L1_Pass_Next</bpmn:incoming>
       <bpmn:outgoing>Flow_L2_Result</bpmn:outgoing>
     </bpmn:userTask>
 
-    <bpmn:exclusiveGateway id="Gateway_L2_Result" name="二级审批结果?">
+    <bpmn:exclusiveGateway id="Gateway_L2_Result" name="Level 2 Approval Result?">
       <bpmn:incoming>Flow_L2_Result</bpmn:incoming>
       <bpmn:outgoing>Flow_L2_Pass_Next</bpmn:outgoing>
       <bpmn:outgoing>Flow_L2_Pass_Last</bpmn:outgoing>
       <bpmn:outgoing>Flow_L2_Reject</bpmn:outgoing>
     </bpmn:exclusiveGateway>
 
-    <bpmn:userTask id="Activity_Approval_L3" name="三级审批"
+    <bpmn:userTask id="Activity_Approval_L3" name="Level 3 Approval"
                    itsm:taskPurpose="approval" itsm:approvalLevel="3"
                    itsm:approvalMode="single" itsm:commentRequiredOnReject="true">
       <bpmn:incoming>Flow_L2_Pass_Next</bpmn:incoming>
       <bpmn:outgoing>Flow_L3_Result</bpmn:outgoing>
     </bpmn:userTask>
 
-    <bpmn:exclusiveGateway id="Gateway_L3_Result" name="三级审批结果?">
+    <bpmn:exclusiveGateway id="Gateway_L3_Result" name="Level 3 Approval Result?">
       <bpmn:incoming>Flow_L3_Result</bpmn:incoming>
       <bpmn:outgoing>Flow_L3_Pass</bpmn:outgoing>
       <bpmn:outgoing>Flow_L3_Reject</bpmn:outgoing>
     </bpmn:exclusiveGateway>
 
-    <bpmn:serviceTask id="Activity_RejectNotify" name="驳回通知" implementation="##WebService">
+    <bpmn:serviceTask id="Activity_RejectNotify" name="Rejection Notification" implementation="##WebService">
       <bpmn:extensionElements>
         <bpmn:metaData name="service_task_type">generic_task</bpmn:metaData>
         <bpmn:metaData name="action">notify_rejection</bpmn:metaData>
@@ -74,7 +74,7 @@
       <bpmn:outgoing>Flow_EndReject</bpmn:outgoing>
     </bpmn:serviceTask>
 
-    <bpmn:userTask id="Activity_Execute" name="执行服务" itsm:taskPurpose="work">
+    <bpmn:userTask id="Activity_Execute" name="Fulfill Service" itsm:taskPurpose="work">
       <bpmn:incoming>Flow_4</bpmn:incoming>
       <bpmn:incoming>Flow_L1_Pass_Last</bpmn:incoming>
       <bpmn:incoming>Flow_L2_Pass_Last</bpmn:incoming>
@@ -82,23 +82,23 @@
       <bpmn:outgoing>Flow_6</bpmn:outgoing>
     </bpmn:userTask>
 
-    <bpmn:userTask id="Activity_Confirm" name="用户确认" itsm:taskPurpose="work">
+    <bpmn:userTask id="Activity_Confirm" name="User Confirmation" itsm:taskPurpose="work">
       <bpmn:incoming>Flow_6</bpmn:incoming>
       <bpmn:outgoing>Flow_7</bpmn:outgoing>
     </bpmn:userTask>
 
-    <bpmn:exclusiveGateway id="Gateway_Satisfaction" name="满意?">
+    <bpmn:exclusiveGateway id="Gateway_Satisfaction" name="Satisfied?">
       <bpmn:incoming>Flow_7</bpmn:incoming>
       <bpmn:outgoing>Flow_8</bpmn:outgoing>
       <bpmn:outgoing>Flow_Feedback</bpmn:outgoing>
     </bpmn:exclusiveGateway>
 
-    <bpmn:userTask id="Activity_Feedback" name="改进服务" itsm:taskPurpose="work">
+    <bpmn:userTask id="Activity_Feedback" name="Improve Service" itsm:taskPurpose="work">
       <bpmn:incoming>Flow_Feedback</bpmn:incoming>
       <bpmn:outgoing>Flow_FeedbackLoop</bpmn:outgoing>
     </bpmn:userTask>
 
-    <bpmn:serviceTask id="Activity_Complete" name="服务完成" implementation="##WebService">
+    <bpmn:serviceTask id="Activity_Complete" name="Service Completed" implementation="##WebService">
       <bpmn:extensionElements>
         <bpmn:metaData name="service_task_type">generic_task</bpmn:metaData>
         <bpmn:metaData name="action">complete_service</bpmn:metaData>
@@ -107,11 +107,11 @@
       <bpmn:outgoing>Flow_End</bpmn:outgoing>
     </bpmn:serviceTask>
 
-    <bpmn:endEvent id="EndEvent_1" name="流程结束">
+    <bpmn:endEvent id="EndEvent_1" name="Workflow Ended">
       <bpmn:incoming>Flow_End</bpmn:incoming>
     </bpmn:endEvent>
 
-    <bpmn:endEvent id="EndEvent_Reject" name="请求被拒">
+    <bpmn:endEvent id="EndEvent_Reject" name="Request Rejected">
       <bpmn:incoming>Flow_EndReject</bpmn:incoming>
     </bpmn:endEvent>
 

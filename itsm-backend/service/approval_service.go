@@ -638,20 +638,20 @@ func (s *ApprovalService) resolveApprover(ctx context.Context, assigneeType, ass
 			First(ctx)
 		if err != nil || user == nil {
 			// 如果没找到，返回错误而不是回退到用户ID 1
-			return 0, "", fmt.Errorf("未找到具有角色 '%s' 的有效用户", assigneeValue)
+			return 0, "", fmt.Errorf("No valid user found with role '%s'", assigneeValue)
 		}
 		return user.ID, user.Name, nil
 	case "user":
 		// 根据用户ID查找
 		userID, err := strconv.Atoi(assigneeValue)
 		if err != nil {
-			return 0, "", fmt.Errorf("无效的用户ID: %s", assigneeValue)
+			return 0, "", fmt.Errorf("Invalid user ID: %s", assigneeValue)
 		}
 		user, err := s.client.User.Query().
 			Where(user.ID(userID), user.TenantID(tenantID)).
 			Only(ctx)
 		if err != nil || user == nil {
-			return 0, "", fmt.Errorf("未找到用户ID: %d", userID)
+			return 0, "", fmt.Errorf("User ID not found: %d", userID)
 		}
 		return user.ID, user.Name, nil
 	case "group":
@@ -663,7 +663,7 @@ func (s *ApprovalService) resolveApprover(ctx context.Context, assigneeType, ass
 			return 0, "", err
 		}
 		if len(ids) == 0 {
-			return 0, "", fmt.Errorf("审批组 '%s' 未解析到成员", assigneeValue)
+			return 0, "", fmt.Errorf("Approval group '%s' did not resolve to members", assigneeValue)
 		}
 		return ids[0], "", nil
 	case "dept_manager", "team_leader", "project_manager", "temp_team_leader":
@@ -686,7 +686,7 @@ func (s *ApprovalService) resolveApprover(ctx context.Context, assigneeType, ass
 			}
 		}
 		if scopeID == 0 {
-			return 0, "", fmt.Errorf("%s 缺少有效的范围 ID（department/team/project）", assigneeType)
+			return 0, "", fmt.Errorf("%s is missing a valid scope ID (department/team/project)", assigneeType)
 		}
 
 		appCtx := &approver.ApproverContext{TenantID: tenantID}
@@ -710,7 +710,7 @@ func (s *ApprovalService) resolveApprover(ctx context.Context, assigneeType, ass
 			return 0, "", err
 		}
 		if len(approvers) == 0 {
-			return 0, "", fmt.Errorf("未解析到审批人: %s/%s", assigneeType, assigneeValue)
+			return 0, "", fmt.Errorf("Not resolved to approver: %s/%s", assigneeType, assigneeValue)
 		}
 		return approvers[0].UserID, approvers[0].UserName, nil
 	case "amount_based":
@@ -732,7 +732,7 @@ func (s *ApprovalService) resolveApprover(ctx context.Context, assigneeType, ass
 		}
 		return approvers[0].UserID, approvers[0].UserName, nil
 	default:
-		return 0, "", fmt.Errorf("不支持的审批人类型: %s", assigneeType)
+		return 0, "", fmt.Errorf("Unsupported approver type: %s", assigneeType)
 	}
 }
 

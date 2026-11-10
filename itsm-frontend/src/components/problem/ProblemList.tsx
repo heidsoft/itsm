@@ -117,7 +117,7 @@ const ProblemList: React.FC<ProblemListProps> = ({
         !('name' in error && (error as { name?: string }).name === 'ValidationError')
       ) {
         console.error('Failed to load problems:', error);
-        message.error('加载问题列表失败');
+        message.error('Failed to load problem list');
       }
     } finally {
       setLoading(false);
@@ -152,15 +152,15 @@ const ProblemList: React.FC<ProblemListProps> = ({
 
   const handleDelete = (id: number) => {
     Modal.confirm({
-      title: '确认删除',
-      content: '确定要删除该问题吗？此操作不可撤销。',
+      title: 'Confirm Delete',
+      content: 'Are you sure you want to delete this question? This action cannot be undone.',
       onOk: async () => {
         try {
           await ProblemApi.deleteProblem(id);
-          message.success('删除成功');
+          message.success('Deleted');
           loadData();
         } catch (error) {
-          message.error('删除失败');
+          message.error('Delete failed');
         }
       },
     });
@@ -173,12 +173,12 @@ const ProblemList: React.FC<ProblemListProps> = ({
       width: 80,
     },
     {
-      title: '标题',
+      title: 'Title',
       dataIndex: 'title',
       ellipsis: true,
     },
     {
-      title: '状态',
+      title: 'Status',
       dataIndex: 'status',
       width: 100,
       render: (status: string) => (
@@ -186,7 +186,7 @@ const ProblemList: React.FC<ProblemListProps> = ({
       ),
     },
     {
-      title: '优先级',
+      title: 'Priority',
       dataIndex: 'priority',
       width: 100,
       render: (priority: string) => (
@@ -194,43 +194,43 @@ const ProblemList: React.FC<ProblemListProps> = ({
       ),
     },
     {
-      title: '分类',
+      title: 'Category',
       dataIndex: 'category',
       width: 120,
     },
     {
-      title: '更新时间',
+      title: 'Updated At',
       dataIndex: 'updatedAt',
       width: 180,
       render: (date: string) => dayjs(date).format('YYYY-MM-DD HH:mm'),
     },
     {
-      title: '操作',
+      title: 'Actions',
       key: 'action',
       width: 150,
       render: (_: unknown, record: Problem) => (
         <Space size="small">
-          <Tooltip title="查看详情">
+          <Tooltip title="View Details">
             <Button
               type="text"
-              aria-label={`查看问题 ${record.id}`}
+              aria-label={`Inspect issues ${record.id}`}
               icon={<Eye />}
               onClick={() => router.push(`/problems/${record.id}`)}
             />
           </Tooltip>
-          <Tooltip title="编辑">
+          <Tooltip title="Edit">
             <Button
               type="text"
-              aria-label={`编辑问题 ${record.id}`}
+              aria-label={`Edit Problem ${record.id}`}
               icon={<Pencil />}
               onClick={() => router.push(`/problems/${record.id}/edit`)}
             />
           </Tooltip>
-          <Tooltip title="删除">
+          <Tooltip title="Delete">
             <Button
               type="text"
               danger
-              aria-label={`删除问题 ${record.id}`}
+              aria-label={`Delete issue ${record.id}`}
               icon={<Trash2 />}
               onClick={() => handleDelete(record.id)}
             />
@@ -261,8 +261,8 @@ const ProblemList: React.FC<ProblemListProps> = ({
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">问题管理</h1>
-          <p className="text-gray-500 mt-1">识别、分析和消除事件发生的根本原因</p>
+          <h1 className="text-2xl font-bold text-gray-900">Problems</h1>
+          <p className="text-gray-500 mt-1">Identify, analyze and eliminate root causes of incidents</p>
         </div>
         <Button
           type="primary"
@@ -270,7 +270,8 @@ const ProblemList: React.FC<ProblemListProps> = ({
           onClick={() => router.push('/problems/new')}
           size="large"
         >
-          新建问题
+
+          New Problem
         </Button>
       </div>
 
@@ -278,7 +279,7 @@ const ProblemList: React.FC<ProblemListProps> = ({
         <Form form={form} layout="inline" className="mb-6 flex-wrap gap-y-4">
           <Form.Item name="keyword" className="mb-0">
             <Input
-              placeholder="搜索标题或内容"
+              placeholder="Search title or content"
               allowClear
               prefix={<Search className="text-gray-400" />}
               className="w-64"
@@ -286,7 +287,7 @@ const ProblemList: React.FC<ProblemListProps> = ({
           </Form.Item>
           <Form.Item name="status" className="mb-0">
             <Select
-              placeholder="状态"
+              placeholder="Status"
               className="w-32"
               allowClear
               options={Object.entries(ProblemStatusLabels).map(([value, label]) => ({
@@ -297,7 +298,7 @@ const ProblemList: React.FC<ProblemListProps> = ({
           </Form.Item>
           <Form.Item name="priority" className="mb-0">
             <Select
-              placeholder="优先级"
+              placeholder="Priority"
               className="w-32"
               allowClear
               options={Object.entries(ProblemPriorityLabels).map(([value, label]) => ({
@@ -309,17 +310,19 @@ const ProblemList: React.FC<ProblemListProps> = ({
           <Form.Item className="mb-0">
             <Space>
               <Button type="primary" onClick={handleSearch}>
-                查询
+
+                Query
               </Button>
-              <Button onClick={handleReset}>重置</Button>
+              <Button onClick={handleReset}>Reset</Button>
             </Space>
           </Form.Item>
         </Form>
 
         {data.length === 0 && !loading ? (
-          <Empty description="暂无问题记录" image={Empty.PRESENTED_IMAGE_SIMPLE}>
+          <Empty description="No problem records" image={Empty.PRESENTED_IMAGE_SIMPLE}>
             <Button type="primary" onClick={() => router.push('/problems/new')}>
-              创建问题
+
+              Create issue
             </Button>
           </Empty>
         ) : (
@@ -335,7 +338,7 @@ const ProblemList: React.FC<ProblemListProps> = ({
               onChange: (page, pageSize) => setQuery(prev => ({ ...prev, page, pageSize })),
               showSizeChanger: true,
               showQuickJumper: true,
-              showTotal: total => `共 ${total} 条记录`,
+              showTotal: total => `Total ${total} records`,
               pageSizeOptions: ['10', '20', '50', '100'],
             }}
             scroll={{ x: 1000 }}

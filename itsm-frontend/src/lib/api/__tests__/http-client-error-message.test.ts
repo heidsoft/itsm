@@ -15,30 +15,30 @@ describe('serverErrorMessage', () => {
       409,
       4090
     );
-    expect(serverErrorMessage(err, '操作失败')).toBe(
+    expect(serverErrorMessage(err, "Operation failed")).toBe(
       'approval quorum requires a running workflow instance: 该变更未绑定运行中的审批流程实例，审批决定无法持久化'
     );
   });
 
   it('透传 403 非审批人提示，而不是折叠成本地文案', () => {
     const err = new ApiRequestError('您不是该变更的待办审批人', 403, 2003);
-    expect(serverErrorMessage(err, '审批失败')).toBe('您不是该变更的待办审批人');
+    expect(serverErrorMessage(err, "Approval failed")).toBe('您不是该变更的待办审批人');
   });
 
   it('message 为空的 ApiRequestError 回退本地文案（避免提示空白）', () => {
     const err = new ApiRequestError('', 500);
-    expect(serverErrorMessage(err, '操作失败')).toBe('操作失败');
+    expect(serverErrorMessage(err, "Operation failed")).toBe("Operation failed");
   });
 
   it('普通 Error 与未知值一律回退本地文案（网络错误没有业务原因）', () => {
-    expect(serverErrorMessage(new Error('Failed to fetch'), '操作失败')).toBe('操作失败');
-    expect(serverErrorMessage('boom', '操作失败')).toBe('操作失败');
-    expect(serverErrorMessage(undefined, '操作失败')).toBe('操作失败');
+    expect(serverErrorMessage(new Error('Failed to fetch'), "Operation failed")).toBe("Operation failed");
+    expect(serverErrorMessage('boom', "Operation failed")).toBe("Operation failed");
+    expect(serverErrorMessage(undefined, "Operation failed")).toBe("Operation failed");
   });
 
   it('不改变既有权限判定的语义', () => {
-    expect(isPermissionDeniedError(new ApiRequestError('无权限', 403))).toBe(true);
-    expect(isPermissionDeniedError(new ApiRequestError('无权限', 200, 2003))).toBe(true);
+    expect(isPermissionDeniedError(new ApiRequestError("无Permissions", 403))).toBe(true);
+    expect(isPermissionDeniedError(new ApiRequestError("无Permissions", 200, 2003))).toBe(true);
     expect(isPermissionDeniedError(new ApiRequestError('冲突', 409, 4090))).toBe(false);
   });
 });

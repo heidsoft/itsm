@@ -464,7 +464,7 @@ func TestGetTicketWorkflowStateV2_NoTicketReturnsError(t *testing.T) {
 	svc := NewTicketWorkflowService(client, zaptest.NewLogger(t).Sugar())
 	_, err := svc.GetTicketWorkflowStateV2(context.Background(), 999999, user.ID, tenant.ID)
 	require.Error(t, err)
-	assert.Contains(t, err.Error(), "工单不存在")
+	assert.Contains(t, err.Error(), "The work order does not exist")
 }
 
 func TestGetTicketWorkflowStateV2_TenantIsolation(t *testing.T) {
@@ -528,7 +528,7 @@ func TestGetTicketWorkflowStateV2_HTTPContract(t *testing.T) {
 		c.Set("tenant_id", tenant.ID)
 		tid, err := strconv.Atoi(c.Param("id"))
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"code": "PARAM_INVALID", "message": "无效的工单ID"})
+			c.JSON(http.StatusBadRequest, gin.H{"code": "PARAM_INVALID", "message": "Invalid ticket ID"})
 			return
 		}
 		svc := NewTicketWorkflowService(client, zaptest.NewLogger(t).Sugar())

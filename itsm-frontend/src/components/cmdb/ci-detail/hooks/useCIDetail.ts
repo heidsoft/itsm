@@ -47,7 +47,7 @@ export const useCIDetail = (): UseCIDetailReturn => {
   const detailFailed = ciQuery.isError && !ciQuery.data;
   useEffect(() => {
     if (detailFailed) {
-      message.error('加载资产详情失败');
+      message.error('Failed to load asset details');
     }
   }, [detailFailed, message]);
 

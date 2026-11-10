@@ -1,16 +1,20 @@
 {
-  "name": "ITSM智能服务管理系统",
+  "name": "ITSM Intelligent Service Management System",
   "short_name": "ITSM",
-  "description": "基于AI的智能IT服务管理系统，提供工单管理、事件管理、问题管理、变更管理等核心功能",
+  "description": "AI-based intelligent IT service management system, providing core functions such as work order management, incident management, problem management, and change management.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#1890ff",
   "orientation": "portrait-primary",
   "scope": "/",
-  "lang": "zh-CN",
+  "lang": "en-US",
   "dir": "ltr",
-  "categories": ["productivity", "business", "utilities"],
+  "categories": [
+    "productivity",
+    "business",
+    "utilities"
+  ],
   "icons": [
     {
       "src": "/file.svg",
@@ -27,9 +31,9 @@
   ],
   "shortcuts": [
     {
-      "name": "工单管理",
-      "short_name": "工单",
-      "description": "快速访问工单管理功能",
+      "name": "Ticket Management",
+      "short_name": "Ticket",
+      "description": "Quick access to work order management functions",
       "url": "/tickets",
       "icons": [
         {
@@ -39,9 +43,9 @@
       ]
     },
     {
-      "name": "事件管理",
-      "short_name": "事件",
-      "description": "快速访问事件管理功能",
+      "name": "Incidents",
+      "short_name": "Incident",
+      "description": "Quick access to event management functions",
       "url": "/incidents",
       "icons": [
         {
@@ -51,9 +55,9 @@
       ]
     },
     {
-      "name": "问题管理",
-      "short_name": "问题",
-      "description": "快速访问问题管理功能",
+      "name": "Problems",
+      "short_name": "Problem",
+      "description": "Quick access to problem management features",
       "url": "/problems",
       "icons": [
         {
@@ -63,9 +67,9 @@
       ]
     },
     {
-      "name": "变更管理",
-      "short_name": "变更",
-      "description": "快速访问变更管理功能",
+      "name": "Changes",
+      "short_name": "Change",
+      "description": "Quick access to change management capabilities",
       "url": "/changes",
       "icons": [
         {
@@ -99,9 +103,15 @@
     {
       "action": "/upload",
       "accept": {
-        "text/csv": [".csv"],
-        "application/vnd.ms-excel": [".xls"],
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"]
+        "text/csv": [
+          ".csv"
+        ],
+        "application/vnd.ms-excel": [
+          ".xls"
+        ],
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [
+          ".xlsx"
+        ]
       }
     }
   ],
@@ -116,7 +126,11 @@
       "files": [
         {
           "name": "file",
-          "accept": ["image/*", "text/*", "application/pdf"]
+          "accept": [
+            "image/*",
+            "text/*",
+            "application/pdf"
+          ]
         }
       ]
     }

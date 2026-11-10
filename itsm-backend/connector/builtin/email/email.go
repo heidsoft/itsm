@@ -47,7 +47,7 @@ func init()           { connector.MustRegister(func() connector.Connector { retu
 func New() *Connector { return &Connector{} }
 
 func (c *Connector) Manifest() connector.Manifest {
-	return connector.Manifest{Name: "email", Version: "1.1.1", Title: "IMAP/SMTP 邮箱", Provider: "standard", Type: connector.TypeEmail, Description: "通过安全 IMAP 接收报障邮件并通过 SMTP 回复，支持主流公网邮箱服务", Capabilities: []connector.Capability{connector.CapSendMessage, connector.CapReceiveMessage, connector.CapReplyMessage, connector.CapHealthCheck}, Tags: []string{"email", "imap", "smtp", "qq", "163", "gmail", "outlook", "exchange"}, IsOfficial: true, RequiredPermissions: []string{"connector:write", "email_intake:review"}, ConfigSchema: `{"type":"object","required":["username","password","imapHost","smtpHost"],"properties":{"username":{"type":"string","title":"邮箱账号"},"password":{"type":"string","format":"password","title":"授权码/密码"},"imapHost":{"type":"string","title":"IMAP 服务器"},"imapPort":{"type":"integer","default":993},"imapTlsMode":{"type":"string","enum":["ssl","starttls"],"default":"ssl"},"smtpHost":{"type":"string","title":"SMTP 服务器"},"smtpPort":{"type":"integer","default":465},"smtpTlsMode":{"type":"string","enum":["ssl","starttls"],"default":"ssl"},"mailbox":{"type":"string","default":"INBOX"},"pollIntervalSeconds":{"type":"integer","minimum":15,"default":30},"fromName":{"type":"string","title":"发件人名称"}}}`}
+	return connector.Manifest{Name: "email", Version: "1.1.1", Title: "IMAP/SMTP Email", Provider: "standard", Type: connector.TypeEmail, Description: "Receive incident reports over secure IMAP and reply through SMTP. Supports major public email providers.", Capabilities: []connector.Capability{connector.CapSendMessage, connector.CapReceiveMessage, connector.CapReplyMessage, connector.CapHealthCheck}, Tags: []string{"email", "imap", "smtp", "qq", "163", "gmail", "outlook", "exchange"}, IsOfficial: true, RequiredPermissions: []string{"connector:write", "email_intake:review"}, ConfigSchema: `{"type":"object","required":["username","password","imapHost","smtpHost"],"properties":{"username":{"type":"string","title":"Email Account"},"password":{"type":"string","format":"password","title":"Authorization Code / Password"},"imapHost":{"type":"string","title":"IMAP Server"},"imapPort":{"type":"integer","default":993},"imapTlsMode":{"type":"string","enum":["ssl","starttls"],"default":"ssl"},"smtpHost":{"type":"string","title":"SMTP Server"},"smtpPort":{"type":"integer","default":465},"smtpTlsMode":{"type":"string","enum":["ssl","starttls"],"default":"ssl"},"mailbox":{"type":"string","default":"INBOX"},"pollIntervalSeconds":{"type":"integer","minimum":15,"default":30},"fromName":{"type":"string","title":"Sender Name"}}}`}
 }
 
 func (c *Connector) Init(_ context.Context, cfg connector.Config) error {
@@ -245,7 +245,7 @@ func (c *Connector) Send(ctx context.Context, msg *connector.Message) error {
 	if c.fromName != "" {
 		fromAddr.Name = c.fromName
 	}
-	subject := mime.QEncoding.Encode("UTF-8", defaultString(msg.Title, "ITSM 通知"))
+	subject := mime.QEncoding.Encode("UTF-8", defaultString(msg.Title, "ITSM Notification"))
 	messageID := strings.Trim(strings.TrimSpace(msg.ID), "<>")
 	if messageID == "" {
 		messageID = fmt.Sprintf("email-%d", time.Now().UnixNano())

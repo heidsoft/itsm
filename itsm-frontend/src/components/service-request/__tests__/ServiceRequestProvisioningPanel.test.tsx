@@ -65,7 +65,7 @@ describe('ServiceRequestProvisioningPanel', () => {
 
     renderPanel('security_approved', onChanged);
 
-    fireEvent.click(await screen.findByRole('button', { name: /启动交付/ }));
+    fireEvent.click(await screen.findByRole('button', { name: /Start delivery/ }));
 
     await waitFor(() => expect(mockStart).toHaveBeenCalledWith(3));
     await waitFor(() => expect(onChanged).toHaveBeenCalled());
@@ -76,8 +76,8 @@ describe('ServiceRequestProvisioningPanel', () => {
 
     renderPanel('security_approved');
 
-    expect(await screen.findByText('审批已全部通过')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /启动交付/ })).not.toBeInTheDocument();
+    expect(await screen.findByText("All approvals passed")).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Start delivery/ })).not.toBeInTheDocument();
   });
 
   it('到达重试上限后重试按钮消失，人工判定写入判定依据', async () => {
@@ -86,16 +86,16 @@ describe('ServiceRequestProvisioningPanel', () => {
     renderPanel('failed');
 
     expect(await screen.findByText('quota exceeded')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: '重试' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: "Retry" })).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: '人工判定' }));
+    fireEvent.click(screen.getByRole('button', { name: "Manual judgment" }));
     fireEvent.change(
       screen.getByPlaceholderText(
-        '例如：资源已在控制台手工创建 i-abc123，凭据吊销无法走自动交付'
+        "For example: the resource i-abc123 has been manually created in the console, and automatic delivery cannot be performed if the credentials are revoked."
       ),
       { target: { value: '资源已在控制台手工创建' } }
     );
-    fireEvent.click(screen.getByRole('button', { name: '提交判定' }));
+    fireEvent.click(screen.getByRole('button', { name: "Submit decision" }));
 
     await waitFor(() =>
       expect(mockResolve).toHaveBeenCalledWith(11, 'delivered', '资源已在控制台手工创建')
@@ -109,8 +109,8 @@ describe('ServiceRequestProvisioningPanel', () => {
     renderPanel('failed');
 
     expect(await screen.findByText('quota exceeded')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: '重试' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: '人工判定' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: "Retry" })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: "Manual judgment" })).not.toBeInTheDocument();
   });
 
   it('非交付阶段不加载任务', () => {

@@ -43,7 +43,7 @@ func TestAssignTicket_RejectsCrossTenantAssignee(t *testing.T) {
 	)
 
 	_, err = svc.AssignTicket(ctx, tk.ID, assigneeT2.ID, tenant1.ID)
-	require.ErrorContains(t, err, "处理人不存在或不可用")
+	require.ErrorContains(t, err, "Processor does not exist or is unavailable")
 
 	// 跨租户 assignee 不得落库
 	reloaded, err := client.Ticket.Get(ctx, tk.ID)
@@ -85,7 +85,7 @@ func TestUpdate_RejectsCrossTenantAssignee(t *testing.T) {
 
 	assigneeID := assigneeT2.ID
 	_, err = svc.Update(ctx, tenant1.ID, tk.ID, &UpdateParams{AssigneeID: &assigneeID}, requester.ID, "super_admin")
-	require.ErrorContains(t, err, "处理人不存在或不可用")
+	require.ErrorContains(t, err, "Processor does not exist or is unavailable")
 
 	reloaded, err := client.Ticket.Get(ctx, tk.ID)
 	require.NoError(t, err)

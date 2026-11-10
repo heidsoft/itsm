@@ -26,7 +26,7 @@ func (s *GroupService) CreateGroup(ctx context.Context, req *dto.CreateGroupRequ
 		SetTenantID(req.TenantID).
 		Save(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("创建组失败: %w", err)
+		return nil, fmt.Errorf("Failed to create group: %w", err)
 	}
 	return g, nil
 }
@@ -41,7 +41,7 @@ func (s *GroupService) GetGroup(ctx context.Context, id, tenantID int) (*ent.Gro
 		WithMembers().
 		Only(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("组不存在或无权访问: %w", err)
+		return nil, fmt.Errorf("Group does not exist or does not have access: %w", err)
 	}
 	return g, nil
 }
@@ -60,7 +60,7 @@ func (s *GroupService) ListGroups(ctx context.Context, req *dto.ListGroupsReques
 
 	total, err := query.Count(ctx)
 	if err != nil {
-		return nil, 0, fmt.Errorf("查询总数失败: %w", err)
+		return nil, 0, fmt.Errorf("Failed to query total number: %w", err)
 	}
 
 	groups, err := query.
@@ -69,7 +69,7 @@ func (s *GroupService) ListGroups(ctx context.Context, req *dto.ListGroupsReques
 		Order(ent.Asc(group.FieldCreatedAt)).
 		All(ctx)
 	if err != nil {
-		return nil, 0, fmt.Errorf("查询组列表失败: %w", err)
+		return nil, 0, fmt.Errorf("Failed to query group list: %w", err)
 	}
 
 	return groups, total, nil
@@ -85,10 +85,10 @@ func (s *GroupService) UpdateGroup(ctx context.Context, id int, req *dto.UpdateG
 		).
 		Exist(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("查询组失败: %w", err)
+		return nil, fmt.Errorf("Query group failed: %w", err)
 	}
 	if !exists {
-		return nil, fmt.Errorf("组不存在或无权访问")
+		return nil, fmt.Errorf("Group does not exist or does not have access")
 	}
 
 	update := s.client.Group.UpdateOneID(id)
@@ -101,7 +101,7 @@ func (s *GroupService) UpdateGroup(ctx context.Context, id int, req *dto.UpdateG
 
 	g, err := update.Save(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("更新组失败: %w", err)
+		return nil, fmt.Errorf("Failed to update group: %w", err)
 	}
 	return g, nil
 }
@@ -116,16 +116,16 @@ func (s *GroupService) DeleteGroup(ctx context.Context, id, tenantID int) error 
 		).
 		Exist(ctx)
 	if err != nil {
-		return fmt.Errorf("查询组失败: %w", err)
+		return fmt.Errorf("Query group failed: %w", err)
 	}
 	if !exists {
-		return fmt.Errorf("组不存在或无权访问")
+		return fmt.Errorf("Group does not exist or does not have access")
 	}
 
 	// 删除组（会自动清除关联）
 	err = s.client.Group.DeleteOneID(id).Exec(ctx)
 	if err != nil {
-		return fmt.Errorf("删除组失败: %w", err)
+		return fmt.Errorf("Failed to delete group: %w", err)
 	}
 	return nil
 }
@@ -140,10 +140,10 @@ func (s *GroupService) AddUserToGroup(ctx context.Context, groupID, userID, tena
 		).
 		Exist(ctx)
 	if err != nil {
-		return fmt.Errorf("查询组失败: %w", err)
+		return fmt.Errorf("Query group failed: %w", err)
 	}
 	if !exists {
-		return fmt.Errorf("组不存在或无权访问")
+		return fmt.Errorf("Group does not exist or does not have access")
 	}
 
 	// 验证用户是否存在且属于当前租户
@@ -154,7 +154,7 @@ func (s *GroupService) AddUserToGroup(ctx context.Context, groupID, userID, tena
 		).
 		Only(ctx)
 	if err != nil {
-		return fmt.Errorf("用户不存在或无权访问: %w", err)
+		return fmt.Errorf("User does not exist or does not have access rights: %w", err)
 	}
 
 	// 添加用户到组
@@ -162,7 +162,7 @@ func (s *GroupService) AddUserToGroup(ctx context.Context, groupID, userID, tena
 		AddMembers(u).
 		Exec(ctx)
 	if err != nil {
-		return fmt.Errorf("添加用户到组失败: %w", err)
+		return fmt.Errorf("Failed to add user to group: %w", err)
 	}
 	return nil
 }
@@ -177,10 +177,10 @@ func (s *GroupService) RemoveUserFromGroup(ctx context.Context, groupID, userID,
 		).
 		Exist(ctx)
 	if err != nil {
-		return fmt.Errorf("查询组失败: %w", err)
+		return fmt.Errorf("Query group failed: %w", err)
 	}
 	if !exists {
-		return fmt.Errorf("组不存在或无权访问")
+		return fmt.Errorf("Group does not exist or does not have access")
 	}
 
 	// 移除用户（使用ID直接移除）
@@ -188,7 +188,7 @@ func (s *GroupService) RemoveUserFromGroup(ctx context.Context, groupID, userID,
 		RemoveMemberIDs(userID).
 		Exec(ctx)
 	if err != nil {
-		return fmt.Errorf("从组移除用户失败: %w", err)
+		return fmt.Errorf("Failed to remove user from group: %w", err)
 	}
 	return nil
 }
@@ -204,7 +204,7 @@ func (s *GroupService) GetGroupMembers(ctx context.Context, groupID, tenantID in
 
 	total, err := query.Count(ctx)
 	if err != nil {
-		return nil, 0, fmt.Errorf("查询成员总数失败: %w", err)
+		return nil, 0, fmt.Errorf("Failed to query the total number of members: %w", err)
 	}
 
 	users, err := query.
@@ -213,7 +213,7 @@ func (s *GroupService) GetGroupMembers(ctx context.Context, groupID, tenantID in
 		Order(ent.Asc(user.FieldUsername)).
 		All(ctx)
 	if err != nil {
-		return nil, 0, fmt.Errorf("查询组成员失败: %w", err)
+		return nil, 0, fmt.Errorf("Failed to query group members: %w", err)
 	}
 
 	return users, total, nil

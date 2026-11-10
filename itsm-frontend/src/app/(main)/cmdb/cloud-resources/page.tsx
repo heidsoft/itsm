@@ -29,14 +29,14 @@ import type { CloudResource } from '@/types/biz/cmdb';
 // 与后端 cloud.KnownProviders 同源（后端 dto 枚举由守卫测试强制对齐）。
 // 火山引擎与 k8s 的发现适配器已接入，缺这两项时前端根本选不到、能力等于零。
 const providerOptions = [
-  { value: 'aliyun', label: '阿里云' },
-  { value: 'huawei', label: '华为云' },
-  { value: 'tencent', label: '腾讯云' },
+  { value: 'aliyun', label: 'Aliyun' },
+  { value: 'huawei', label: 'Huawei Cloud' },
+  { value: 'tencent', label: 'Tencent Cloud' },
   { value: 'azure', label: 'Azure' },
   { value: 'aws', label: 'AWS' },
-  { value: 'volcengine', label: '火山引擎' },
+  { value: 'volcengine', label: 'Volcengine' },
   { value: 'k8s', label: 'Kubernetes' },
-  { value: 'onprem', label: '私有云' },
+  { value: 'onprem', label: 'Private Cloud' },
 ];
 
 const statusColors: Record<string, string> = {
@@ -50,59 +50,59 @@ const statusColors: Record<string, string> = {
 
 // 云资源状态中文映射
 const cloudResourceStatusTextMap: Record<string, string> = {
-  running: '运行中',
-  stopped: '已停止',
-  active: '活跃',
-  inactive: '未激活',
-  available: '可用',
-  unavailable: '不可用',
-  pending: '处理中',
-  failed: '失败',
+  running: 'Running',
+  stopped: 'Stopped',
+  active: 'Active',
+  inactive: 'Inactive',
+  available: 'Available',
+  unavailable: 'Not available',
+  pending: 'In Progress',
+  failed: 'Failed',
 };
 
 // 发现适配器写入 metadata 的字段名（snake_case）→ 展示标签。
 // 各厂商字段并不完全一致，未登记的键按原文展示，避免静默丢字段。
 const cloudMetadataLabels: Record<string, string> = {
-  instance_type: '实例规格',
-  instance_type_family: '规格族',
+  instance_type: 'Instance specification',
+  instance_type_family: 'Specification family',
   cpu: 'vCPU',
-  memory: '内存 (MiB)',
-  memory_gib: '内存 (GiB)',
-  os_type: '系统类型',
-  os_name: '操作系统',
-  host_name: '主机名',
-  hostname: '主机名',
-  image_id: '镜像 ID',
-  public_ip_address: '公网 IP',
-  public_ip_addresses: '公网 IP',
-  public_ip: '公网 IP',
-  inner_ip_address: '内网 IP',
-  private_ip_address: '内网 IP',
-  private_ip_addresses: '内网 IP',
-  private_ip: '内网 IP',
-  primary_ip: '主 IP',
-  eip_ip_address: '弹性 IP',
-  eip_bandwidth: '弹性 IP 带宽 (Mbps)',
+  memory: 'Memory (MiB)',
+  memory_gib: 'Memory (GiB)',
+  os_type: 'System type',
+  os_name: 'Operating System',
+  host_name: 'hostname',
+  hostname: 'hostname',
+  image_id: 'Image ID',
+  public_ip_address: 'Public IP',
+  public_ip_addresses: 'Public IP',
+  public_ip: 'Public IP',
+  inner_ip_address: 'Intranet IP',
+  private_ip_address: 'Intranet IP',
+  private_ip_addresses: 'Intranet IP',
+  private_ip: 'Intranet IP',
+  primary_ip: 'Primary IP',
+  eip_ip_address: 'Elastic IP',
+  eip_bandwidth: 'Elastic IP Bandwidth (Mbps)',
   vpc_id: 'VPC',
-  vswitch_id: '交换机',
-  subnet_id: '子网',
-  security_groups: '安全组',
-  instance_charge_type: '计费方式',
-  charge_type: '计费方式',
-  expired_time: '到期时间',
-  start_time: '启动时间',
-  availability_zone: '可用区',
-  architecture: '架构',
-  key_pair_name: '密钥对',
-  key_name: '密钥对',
-  serial_number: '序列号',
-  io_optimized: 'IO 优化',
-  deletion_protection: '删除保护',
-  spot_strategy: '抢占策略',
-  gpu_spec: 'GPU 规格',
-  gpu_amount: 'GPU 数量',
-  instance_network_type: '网络类型',
-  description: '描述',
+  vswitch_id: 'switch',
+  subnet_id: 'Subnet',
+  security_groups: 'Security group',
+  instance_charge_type: 'Billing method',
+  charge_type: 'Billing method',
+  expired_time: 'Expiration Date',
+  start_time: 'Startup time',
+  availability_zone: 'Availability Zone',
+  architecture: 'Architecture',
+  key_pair_name: 'Key pair',
+  key_name: 'Key pair',
+  serial_number: 'Serial Number',
+  io_optimized: 'IO optimization',
+  deletion_protection: 'Delete protection',
+  spot_strategy: 'Preemption strategy',
+  gpu_spec: 'GPU specifications',
+  gpu_amount: 'Number of GPUs',
+  instance_network_type: 'Network type',
+  description: 'Description',
 };
 
 const cloudMetadataOrder = Object.keys(cloudMetadataLabels);
@@ -112,7 +112,7 @@ function formatMetadataValue(value: unknown): string {
   if (Array.isArray(value)) {
     return value.length > 0 ? value.map(item => formatMetadataValue(item)).join('、') : '-';
   }
-  if (typeof value === 'boolean') return value ? '是' : '否';
+  if (typeof value === 'boolean') return value ? 'Yes' : 'No';
   if (typeof value === 'object') return JSON.stringify(value);
   return String(value);
 }
@@ -201,7 +201,7 @@ export default function CloudResourcePage() {
     mutationFn: ({ ciId, data }: { ciId: string; data: Parameters<typeof CMDBApi.updateCI>[1] }) =>
       CMDBApi.updateCI(ciId, data),
     onSuccess: () => {
-      message.success('已绑定到配置项');
+      message.success('Already bound to configuration item');
       setBinding(null);
       setBindCIOption(undefined);
       queryClient.invalidateQueries({ queryKey: CMDB_KEYS.cis() });
@@ -210,9 +210,9 @@ export default function CloudResourcePage() {
     },
     onError: error => {
       if (error instanceof Error) {
-        message.error(error.message || '绑定失败');
+        message.error(error.message || 'Binding failed');
       } else {
-        message.error('绑定失败');
+        message.error('Binding failed');
       }
     },
   });
@@ -243,7 +243,7 @@ export default function CloudResourcePage() {
 
   const columns = [
     {
-      title: '厂商',
+      title: 'Vendor',
       dataIndex: 'provider',
       width: 100,
       render: (value: string) => {
@@ -252,7 +252,7 @@ export default function CloudResourcePage() {
       },
     },
     {
-      title: '服务',
+      title: 'Service',
       width: 140,
       render: (_: unknown, record: CloudResource) => {
         const serviceId = record.serviceId;
@@ -261,7 +261,7 @@ export default function CloudResourcePage() {
       },
     },
     {
-      title: '资源类型',
+      title: 'Resource Type',
       width: 120,
       render: (_: unknown, record: CloudResource) => {
         const serviceId = record.serviceId;
@@ -270,13 +270,13 @@ export default function CloudResourcePage() {
       },
     },
     {
-      title: '资源ID',
+      title: 'Resource ID',
       dataIndex: 'resourceId',
       width: 180,
       ellipsis: true,
     },
     {
-      title: '资源名称',
+      title: 'Resource name',
       dataIndex: 'resourceName',
       width: 160,
       ellipsis: true,
@@ -295,15 +295,15 @@ export default function CloudResourcePage() {
       render: (value?: string) => value || '-',
     },
     {
-      title: '状态',
+      title: 'Status',
       dataIndex: 'status',
       width: 100,
       render: (value?: string) => (
-        <Tag color={statusColors[value || ''] || 'default'}>{value || '未知'}</Tag>
+        <Tag color={statusColors[value || ''] || 'default'}>{value || 'Unknown'}</Tag>
       ),
     },
     {
-      title: '最近发现',
+      title: 'Recently discovered',
       width: 150,
       render: (_: unknown, record: CloudResource) => {
         const value = record.lastSeenAt;
@@ -311,14 +311,14 @@ export default function CloudResourcePage() {
       },
     },
     {
-      title: '操作',
+      title: 'Actions',
       key: 'action',
       width: 160,
       render: (_: unknown, record: CloudResource) => (
         <Space>
-          <Tooltip title='查看详情'>
+          <Tooltip title="View Details">
             <Button
-              aria-label="查看详情"
+              aria-label="View Details"
               type='text'
               icon={<Eye />}
               onClick={() => handleViewDetail(record)}
@@ -330,7 +330,8 @@ export default function CloudResourcePage() {
             size='small'
             onClick={() => router.push(`/cmdb/cis/create?cloudResourceRefId=${record.id}`)}
           >
-            新建CI
+
+            Create new CI
           </Button>
           <Button
             type="link"
@@ -340,7 +341,8 @@ export default function CloudResourcePage() {
               setBindCIOption(undefined);
             }}
           >
-            绑定
+
+            Binding
           </Button>
         </Space>
       ),
@@ -350,17 +352,17 @@ export default function CloudResourcePage() {
   return (
     <Card>
       <div className='mb-4'>
-        <h1 className='text-2xl font-bold'>云资源列表</h1>
-        <p className='text-gray-500 mt-1'>查看已发现的云资源，并将资源新建或绑定为 CMDB 配置项。</p>
+        <h1 className='text-2xl font-bold'>Cloud resource list</h1>
+        <p className='text-gray-500 mt-1'>View the discovered cloud resources and create or bind the resources as CMDB configuration items.</p>
       </div>
 
       <Breadcrumb
         style={{ marginBottom: 16 }}
         items={[
-          { title: '首页' },
-          { title: '配置管理' },
+          { title: 'Home page' },
+          { title: 'Configuration Management' },
           { title: <a onClick={() => router.push('/cmdb')}>CMDB</a> },
-          { title: '云资源列表' },
+          { title: 'Cloud resource list' },
         ]}
       />
 
@@ -368,11 +370,11 @@ export default function CloudResourcePage() {
       <div className='mb-4 flex flex-wrap items-center gap-3'>
         <Form form={form} layout='inline' className='flex-wrap gap-2'>
           <Form.Item name='provider' className='!mb-0'>
-            <Select placeholder='云厂商' style={{ width: 140 }} allowClear options={providerOptions} />
+            <Select placeholder="Cloud Provider" style={{ width: 140 }} allowClear options={providerOptions} />
           </Form.Item>
           <Form.Item name='serviceId' className='!mb-0'>
             <Select
-              placeholder='云服务'
+              placeholder="Cloud services"
               style={{ width: 180 }}
               allowClear
               showSearch
@@ -391,22 +393,25 @@ export default function CloudResourcePage() {
           <Form.Item className='!mb-0'>
             <Space>
               <Button type='primary' icon={<Search />} onClick={handleSearch}>
-                查询
+
+                Query
               </Button>
               <Button
                 icon={<RotateCcw />}
                 onClick={() => resourcesQuery.refetch()}
                 loading={resourcesQuery.isFetching}
               >
-                刷新
+
+                Refresh
               </Button>
             </Space>
           </Form.Item>
         </Form>
         <Space className='ml-auto'>
-          <span className='text-sm text-gray-500'>共 {total} 条资源</span>
+          <span className='text-sm text-gray-500'>Total {total}  resource</span>
           <Button icon={<ShieldAlert />} onClick={() => router.push('/cmdb/cloud-signals')}>
-            安全与告警
+
+            Security and Alarms
           </Button>
         </Space>
       </div>
@@ -422,7 +427,7 @@ export default function CloudResourcePage() {
           total: total,
           showSizeChanger: true,
           showQuickJumper: true,
-          showTotal: total => `共 ${total} 条记录`,
+          showTotal: total => `Total ${total} records`,
           pageSizeOptions: ['10', '20', '50', '100'],
           onChange: handleTableChange,
         }}
@@ -431,7 +436,7 @@ export default function CloudResourcePage() {
 
       {/* 绑定已有配置项模态框 */}
       <Modal
-        title='绑定已有配置项'
+        title="Bind existing configuration items"
         open={Boolean(binding)}
         onCancel={() => {
           setBinding(null);
@@ -439,15 +444,15 @@ export default function CloudResourcePage() {
         }}
         onOk={handleBindExisting}
         confirmLoading={bindMutation.isPending}
-        okText='绑定'
+        okText="Binding"
         destroyOnHidden
         width={480}
       >
         <Form form={bindForm} layout='vertical'>
           <Form.Item
             name='ciId'
-            label='配置项'
-            rules={[{ required: true, message: '请选择要绑定的配置项' }]}
+            label="Configuration item"
+            rules={[{ required: true, message: 'Please select the configuration item to be bound' }]}
           >
             <CISearchSelect
               onChange={(value, option) => {
@@ -455,12 +460,12 @@ export default function CloudResourcePage() {
                 setBindCIOption(option);
               }}
               style={{ width: '100%' }}
-              placeholder='输入名称搜索配置项'
+              placeholder="Enter name to search for configuration items"
             />
           </Form.Item>
           {binding && (
             <div className='p-3 bg-gray-50 rounded text-sm text-gray-600'>
-              <div className='font-medium mb-1'>将绑定资源：</div>
+              <div className='font-medium mb-1'>Resources will be bound:</div>
               <div>
                 {binding.resourceName || binding.resourceId}
               </div>
@@ -475,7 +480,7 @@ export default function CloudResourcePage() {
 
       {/* 资源详情模态框 */}
       <Modal
-        title='云资源详情'
+        title="Cloud resource details"
         open={detailOpen}
         onCancel={() => {
           setDetailOpen(false);
@@ -483,7 +488,8 @@ export default function CloudResourcePage() {
         }}
         footer={[
           <Button key='close' onClick={() => setDetailOpen(false)}>
-            关闭
+
+            Close
           </Button>,
           <Button
             key='signals'
@@ -496,7 +502,8 @@ export default function CloudResourcePage() {
               }
             }}
           >
-            安全与告警
+
+            Security and Alarms
           </Button>,
           <Button
             key='create'
@@ -508,7 +515,8 @@ export default function CloudResourcePage() {
               }
             }}
           >
-            新建CI
+
+            Create new CI
           </Button>,
         ]}
         width={720}
@@ -517,7 +525,7 @@ export default function CloudResourcePage() {
           <div className='space-y-3'>
             <div className='grid grid-cols-2 gap-3'>
               <div>
-                <div className='text-sm text-gray-500'>云厂商</div>
+                <div className='text-sm text-gray-500'>Cloud Provider</div>
                 <div>
                   {providerOptions.find(p => p.value === selectedRow.provider)?.label ||
                     selectedRow.provider ||
@@ -525,15 +533,15 @@ export default function CloudResourcePage() {
                 </div>
               </div>
               <div>
-                <div className='text-sm text-gray-500'>服务类型</div>
+                <div className='text-sm text-gray-500'>Service Type</div>
                 <div>{serviceMap.get(selectedRow.serviceId)?.serviceName || '-'}</div>
               </div>
               <div>
-                <div className='text-sm text-gray-500'>资源ID</div>
+                <div className='text-sm text-gray-500'>Resource ID</div>
                 <div className='font-mono text-sm'>{selectedRow.resourceId || '-'}</div>
               </div>
               <div>
-                <div className='text-sm text-gray-500'>资源名称</div>
+                <div className='text-sm text-gray-500'>Resource name</div>
                 <div>{selectedRow.resourceName || '-'}</div>
               </div>
               <div>
@@ -545,15 +553,15 @@ export default function CloudResourcePage() {
                 <div>{selectedRow.zone || '-'}</div>
               </div>
               <div>
-                <div className='text-sm text-gray-500'>状态</div>
+                <div className='text-sm text-gray-500'>Status</div>
                 <Tag color={statusColors[selectedRow.status || ''] || 'default'}>
                   {cloudResourceStatusTextMap[selectedRow.status || ''] ||
                     selectedRow.status ||
-                    '未知'}
+                    'Unknown'}
                 </Tag>
               </div>
               <div>
-                <div className='text-sm text-gray-500'>最近发现</div>
+                <div className='text-sm text-gray-500'>Recently discovered</div>
                 <div>
                   {selectedRow.lastSeenAt
                     ? dayjs(selectedRow.lastSeenAt).format('YYYY-MM-DD HH:mm:ss')
@@ -564,7 +572,7 @@ export default function CloudResourcePage() {
 
             {selectedMetadata.length > 0 && (
               <div>
-                <div className='text-sm text-gray-500 mb-2'>实例详情</div>
+                <div className='text-sm text-gray-500 mb-2'>Instance details</div>
                 <Descriptions bordered size='small' column={2}>
                   {selectedMetadata.map(([key, value]) => (
                     <Descriptions.Item key={key} label={cloudMetadataLabels[key] || key}>
@@ -577,7 +585,7 @@ export default function CloudResourcePage() {
 
             {selectedRow.tags && Object.keys(selectedRow.tags).length > 0 && (
               <div>
-                <div className='text-sm text-gray-500 mb-2'>标签</div>
+                <div className='text-sm text-gray-500 mb-2'>Tags</div>
                 <Space wrap>
                   {Object.entries(selectedRow.tags).map(([key, value]) => (
                     <Tag key={key}>

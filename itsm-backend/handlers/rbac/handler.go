@@ -46,7 +46,7 @@ func normalizeRoleStatus(c *gin.Context, status string) (string, bool) {
 	}
 	active, ok := dto.RoleActiveFromStatus(status)
 	if !ok {
-		common.ParamError(c, "status 取值非法，仅支持 active/inactive")
+		common.ParamError(c, "status value is illegal, only active/inactive is supported")
 		return "", false
 	}
 	return dto.RoleStatusFromActive(active), true
@@ -56,13 +56,13 @@ func normalizeRoleStatus(c *gin.Context, status string) (string, bool) {
 func (h *Handler) CreateRole(c *gin.Context) {
 	tenantID, err := middleware.GetTenantID(c)
 	if err != nil || tenantID == 0 {
-		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		common.Fail(c, common.UnauthorizedCode, "Unauthorized access")
 		return
 	}
 
 	var req dto.CreateRoleRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "参数错误")
+		common.ParamErrorWithErr(c, err, "Parameter error")
 		return
 	}
 
@@ -74,7 +74,7 @@ func (h *Handler) CreateRole(c *gin.Context) {
 
 	role, err := h.roleService.CreateRole(c.Request.Context(), &req, tenantID)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -85,13 +85,13 @@ func (h *Handler) CreateRole(c *gin.Context) {
 func (h *Handler) GetRole(c *gin.Context) {
 	tenantID, err := middleware.GetTenantID(c)
 	if err != nil || tenantID == 0 {
-		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		common.Fail(c, common.UnauthorizedCode, "Unauthorized access")
 		return
 	}
 
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.ParamError(c, "无效的角色ID")
+		common.ParamError(c, "Invalid role ID")
 		return
 	}
 
@@ -108,7 +108,7 @@ func (h *Handler) GetRole(c *gin.Context) {
 func (h *Handler) ListRoles(c *gin.Context) {
 	tenantID, err := middleware.GetTenantID(c)
 	if err != nil || tenantID == 0 {
-		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		common.Fail(c, common.UnauthorizedCode, "Unauthorized access")
 		return
 	}
 
@@ -128,7 +128,7 @@ func (h *Handler) ListRoles(c *gin.Context) {
 
 	roles, total, err := h.roleService.ListRoles(c.Request.Context(), tenantID, params)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -172,19 +172,19 @@ func (h *Handler) ListRoles(c *gin.Context) {
 func (h *Handler) UpdateRole(c *gin.Context) {
 	tenantID, err := middleware.GetTenantID(c)
 	if err != nil || tenantID == 0 {
-		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		common.Fail(c, common.UnauthorizedCode, "Unauthorized access")
 		return
 	}
 
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.ParamError(c, "无效的角色ID")
+		common.ParamError(c, "Invalid role ID")
 		return
 	}
 
 	var req dto.UpdateRoleRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "参数错误")
+		common.ParamErrorWithErr(c, err, "Parameter error")
 		return
 	}
 
@@ -204,7 +204,7 @@ func (h *Handler) UpdateRole(c *gin.Context) {
 
 	role, err := h.roleService.UpdateRole(c.Request.Context(), id, &req, tenantID)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -215,19 +215,19 @@ func (h *Handler) UpdateRole(c *gin.Context) {
 func (h *Handler) DeleteRole(c *gin.Context) {
 	tenantID, err := middleware.GetTenantID(c)
 	if err != nil || tenantID == 0 {
-		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		common.Fail(c, common.UnauthorizedCode, "Unauthorized access")
 		return
 	}
 
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.ParamError(c, "无效的角色ID")
+		common.ParamError(c, "Invalid role ID")
 		return
 	}
 
 	err = h.roleService.DeleteRole(c.Request.Context(), id, tenantID)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -238,19 +238,19 @@ func (h *Handler) DeleteRole(c *gin.Context) {
 func (h *Handler) AssignPermissions(c *gin.Context) {
 	tenantID, err := middleware.GetTenantID(c)
 	if err != nil || tenantID == 0 {
-		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		common.Fail(c, common.UnauthorizedCode, "Unauthorized access")
 		return
 	}
 
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.ParamError(c, "无效的角色ID")
+		common.ParamError(c, "Invalid role ID")
 		return
 	}
 
 	var req dto.AssignPermissionsRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "参数错误")
+		common.ParamErrorWithErr(c, err, "Parameter error")
 		return
 	}
 
@@ -260,10 +260,10 @@ func (h *Handler) AssignPermissions(c *gin.Context) {
 		if errors.Is(err, service.ErrPermissionNotInTenant) {
 			h.logger.Warnw("Cross-tenant permission assignment rejected",
 				"role_id", id, "tenant_id", tenantID, "error", err)
-			common.ParamErrorWithErr(c, err, "请求参数错误")
+			common.ParamErrorWithErr(c, err, "Wrong request parameters")
 			return
 		}
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -278,19 +278,19 @@ func (h *Handler) AssignPermissions(c *gin.Context) {
 func (h *Handler) CreatePermission(c *gin.Context) {
 	tenantID, err := middleware.GetTenantID(c)
 	if err != nil || tenantID == 0 {
-		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		common.Fail(c, common.UnauthorizedCode, "Unauthorized access")
 		return
 	}
 
 	var req dto.CreatePermissionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "参数错误")
+		common.ParamErrorWithErr(c, err, "Parameter error")
 		return
 	}
 
 	perm, err := h.permissionService.CreatePermission(c.Request.Context(), &req, tenantID)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -301,7 +301,7 @@ func (h *Handler) CreatePermission(c *gin.Context) {
 func (h *Handler) ListPermissions(c *gin.Context) {
 	tenantID, err := middleware.GetTenantID(c)
 	if err != nil || tenantID == 0 {
-		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		common.Fail(c, common.UnauthorizedCode, "Unauthorized access")
 		return
 	}
 
@@ -309,7 +309,7 @@ func (h *Handler) ListPermissions(c *gin.Context) {
 
 	perms, err := h.permissionService.ListPermissions(c.Request.Context(), tenantID, resource)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -325,17 +325,17 @@ func (h *Handler) ListPermissions(c *gin.Context) {
 func (h *Handler) InitDefaultPermissions(c *gin.Context) {
 	tenantID, err := middleware.GetTenantID(c)
 	if err != nil || tenantID == 0 {
-		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		common.Fail(c, common.UnauthorizedCode, "Unauthorized access")
 		return
 	}
 
 	err = h.permissionService.InitDefaultPermissions(c.Request.Context(), tenantID)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
-	common.Success(c, gin.H{"message": "权限初始化成功"})
+	common.Success(c, gin.H{"message": "Permission initialization successful"})
 }
 
 // =============================================================================
@@ -347,24 +347,24 @@ func (h *Handler) InitDefaultPermissions(c *gin.Context) {
 func (h *Handler) ListMenus(c *gin.Context) {
 	tid, ok := c.Get("tenant_id")
 	if !ok {
-		common.Fail(c, common.UnauthorizedCode, "未授权访问: 租户信息缺失")
+		common.Fail(c, common.UnauthorizedCode, "Unauthorized access: Tenant information is missing")
 		return
 	}
 	tenantID, ok2 := tid.(int)
 	if !ok2 {
-		common.Fail(c, common.UnauthorizedCode, "租户上下文类型错误")
+		common.Fail(c, common.UnauthorizedCode, "Wrong tenant context type")
 		return
 	}
 
 	if override := c.Query("tenantId"); override != "" {
 		role, _ := c.Get("role")
 		if role != "super_admin" {
-			common.Fail(c, common.ForbiddenCode, "仅超级管理员可查看其他租户菜单")
+			common.Fail(c, common.ForbiddenCode, "Only super administrators can view other tenant menus")
 			return
 		}
 		overrideID, err := strconv.Atoi(override)
 		if err != nil || overrideID <= 0 {
-			common.Fail(c, common.ParamErrorCode, "无效的租户ID")
+			common.Fail(c, common.ParamErrorCode, "Invalid tenant ID")
 			return
 		}
 		tenantID = overrideID
@@ -372,7 +372,7 @@ func (h *Handler) ListMenus(c *gin.Context) {
 
 	menus, err := h.menuService.ListMenus(c.Request.Context(), tenantID)
 	if err != nil {
-		common.RespondError(c, err, "查询菜单失败")
+		common.RespondError(c, err, "Failed to query menu")
 		return
 	}
 
@@ -389,24 +389,24 @@ func (h *Handler) ListMenus(c *gin.Context) {
 func (h *Handler) GetMenu(c *gin.Context) {
 	tid, ok := c.Get("tenant_id")
 	if !ok {
-		common.Fail(c, common.UnauthorizedCode, "未授权访问: 租户信息缺失")
+		common.Fail(c, common.UnauthorizedCode, "Unauthorized access: Tenant information is missing")
 		return
 	}
 	tenantID, ok2 := tid.(int)
 	if !ok2 {
-		common.Fail(c, common.UnauthorizedCode, "租户上下文类型错误")
+		common.Fail(c, common.UnauthorizedCode, "Wrong tenant context type")
 		return
 	}
 
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "无效的菜单ID")
+		common.Fail(c, common.ParamErrorCode, "Invalid menu ID")
 		return
 	}
 
 	menu, err := h.menuService.GetMenu(c.Request.Context(), id, tenantID)
 	if err != nil {
-		common.RespondError(c, err, "查询菜单失败")
+		common.RespondError(c, err, "Failed to query menu")
 		return
 	}
 
@@ -417,24 +417,24 @@ func (h *Handler) GetMenu(c *gin.Context) {
 func (h *Handler) CreateMenu(c *gin.Context) {
 	tid, ok := c.Get("tenant_id")
 	if !ok {
-		common.Fail(c, common.UnauthorizedCode, "未授权访问: 租户信息缺失")
+		common.Fail(c, common.UnauthorizedCode, "Unauthorized access: Tenant information is missing")
 		return
 	}
 	tenantID, ok2 := tid.(int)
 	if !ok2 {
-		common.Fail(c, common.UnauthorizedCode, "租户上下文类型错误")
+		common.Fail(c, common.UnauthorizedCode, "Wrong tenant context type")
 		return
 	}
 
 	var req dto.CreateMenuRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
 	menu, err := h.menuService.CreateMenu(c.Request.Context(), &req, tenantID)
 	if err != nil {
-		common.RespondError(c, err, "创建菜单失败")
+		common.RespondError(c, err, "Failed to create menu")
 		return
 	}
 
@@ -445,30 +445,30 @@ func (h *Handler) CreateMenu(c *gin.Context) {
 func (h *Handler) UpdateMenu(c *gin.Context) {
 	tid, ok := c.Get("tenant_id")
 	if !ok {
-		common.Fail(c, common.UnauthorizedCode, "未授权访问: 租户信息缺失")
+		common.Fail(c, common.UnauthorizedCode, "Unauthorized access: Tenant information is missing")
 		return
 	}
 	tenantID, ok2 := tid.(int)
 	if !ok2 {
-		common.Fail(c, common.UnauthorizedCode, "租户上下文类型错误")
+		common.Fail(c, common.UnauthorizedCode, "Wrong tenant context type")
 		return
 	}
 
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "无效的菜单ID")
+		common.Fail(c, common.ParamErrorCode, "Invalid menu ID")
 		return
 	}
 
 	var req dto.UpdateMenuRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
 	menu, err := h.menuService.UpdateMenu(c.Request.Context(), id, &req, tenantID)
 	if err != nil {
-		common.RespondError(c, err, "更新菜单失败")
+		common.RespondError(c, err, "Failed to update menu")
 		return
 	}
 
@@ -479,24 +479,24 @@ func (h *Handler) UpdateMenu(c *gin.Context) {
 func (h *Handler) DeleteMenu(c *gin.Context) {
 	tid, ok := c.Get("tenant_id")
 	if !ok {
-		common.Fail(c, common.UnauthorizedCode, "未授权访问: 租户信息缺失")
+		common.Fail(c, common.UnauthorizedCode, "Unauthorized access: Tenant information is missing")
 		return
 	}
 	tenantID, ok2 := tid.(int)
 	if !ok2 {
-		common.Fail(c, common.UnauthorizedCode, "租户上下文类型错误")
+		common.Fail(c, common.UnauthorizedCode, "Wrong tenant context type")
 		return
 	}
 
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "无效的菜单ID")
+		common.Fail(c, common.ParamErrorCode, "Invalid menu ID")
 		return
 	}
 
 	err = h.menuService.DeleteMenu(c.Request.Context(), id, tenantID)
 	if err != nil {
-		common.RespondError(c, err, "删除菜单失败")
+		common.RespondError(c, err, "Failed to delete menu")
 		return
 	}
 
@@ -507,21 +507,21 @@ func (h *Handler) DeleteMenu(c *gin.Context) {
 func (h *Handler) GetUserMenus(c *gin.Context) {
 	userIDVal, exists := c.Get("user_id")
 	if !exists {
-		common.Fail(c, common.AuthFailedCode, "用户未认证")
+		common.Fail(c, common.AuthFailedCode, "User not authenticated")
 		return
 	}
 	userID := userIDVal.(int)
 
 	tenantIDVal, exists := c.Get("tenant_id")
 	if !exists {
-		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		common.Fail(c, common.AuthFailedCode, "Tenant information is missing")
 		return
 	}
 	tenantID := tenantIDVal.(int)
 
 	menus, err := h.menuService.GetUserMenus(c.Request.Context(), userID, tenantID)
 	if err != nil {
-		common.RespondError(c, err, "查询用户菜单失败")
+		common.RespondError(c, err, "Failed to query user menu")
 		return
 	}
 
@@ -532,18 +532,18 @@ func (h *Handler) GetUserMenus(c *gin.Context) {
 func (h *Handler) ExportMenus(c *gin.Context) {
 	tid, ok := c.Get("tenant_id")
 	if !ok {
-		common.Fail(c, common.UnauthorizedCode, "未授权访问: 租户信息缺失")
+		common.Fail(c, common.UnauthorizedCode, "Unauthorized access: Tenant information is missing")
 		return
 	}
 	tenantID, ok2 := tid.(int)
 	if !ok2 {
-		common.Fail(c, common.UnauthorizedCode, "租户上下文类型错误")
+		common.Fail(c, common.UnauthorizedCode, "Wrong tenant context type")
 		return
 	}
 
 	items, err := h.menuService.ExportMenus(c.Request.Context(), tenantID)
 	if err != nil {
-		common.RespondError(c, err, "导出菜单失败")
+		common.RespondError(c, err, "Failed to export menu")
 		return
 	}
 
@@ -554,18 +554,18 @@ func (h *Handler) ExportMenus(c *gin.Context) {
 func (h *Handler) InitDefaultMenus(c *gin.Context) {
 	tid, ok := c.Get("tenant_id")
 	if !ok {
-		common.Fail(c, common.UnauthorizedCode, "未授权访问: 租户信息缺失")
+		common.Fail(c, common.UnauthorizedCode, "Unauthorized access: Tenant information is missing")
 		return
 	}
 	tenantID, ok2 := tid.(int)
 	if !ok2 {
-		common.Fail(c, common.UnauthorizedCode, "租户上下文类型错误")
+		common.Fail(c, common.UnauthorizedCode, "Wrong tenant context type")
 		return
 	}
 
 	diff, err := h.menuService.InitMenusFromBaseline(c.Request.Context(), tenantID)
 	if err != nil {
-		common.RespondError(c, err, "初始化菜单失败")
+		common.RespondError(c, err, "Failed to initialize menu")
 		return
 	}
 

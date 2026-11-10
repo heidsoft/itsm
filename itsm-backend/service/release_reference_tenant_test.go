@@ -50,7 +50,7 @@ func TestCreateRelease_RejectsCrossTenantChangeReference(t *testing.T) {
 		Type:     "normal",
 		ChangeID: &foreignID,
 	}, actor.ID, tenant1.ID)
-	require.ErrorContains(t, err, "关联变更不存在或不属于当前租户")
+	require.ErrorContains(t, err, "The associated change does not exist or does not belong to the current tenant")
 
 	count, err := client.Release.Query().Count(ctx)
 	require.NoError(t, err)
@@ -88,7 +88,7 @@ func TestCreateRelease_RejectsCrossTenantOwnerReference(t *testing.T) {
 		Type:    "normal",
 		OwnerID: &foreignID,
 	}, actor.ID, tenant1.ID)
-	require.ErrorContains(t, err, "负责人不存在或不属于当前租户")
+	require.ErrorContains(t, err, "The responsible person does not exist or does not belong to the current tenant")
 
 	// 同租户负责人必须放行，证明谓词不是无差别拒绝。
 	ownID := actor.ID

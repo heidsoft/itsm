@@ -41,21 +41,21 @@ const priorityColors: Record<string, string> = {
 };
 
 const categoryLabels: Record<string, string> = {
-  database: '数据库',
-  network: '网络',
-  server: '服务器',
-  application: '应用',
-  security: '安全',
-  storage: '存储',
-  userAccess: '用户访问',
-  general: '通用',
+  database: 'Database',
+  network: 'Network',
+  server: 'Servers',
+  application: 'Application',
+  security: 'Safe',
+  storage: 'Storage',
+  userAccess: 'User access',
+  general: 'General',
 };
 
 const priorityLabels: Record<string, string> = {
-  critical: '紧急',
-  high: '高',
-  medium: '中',
-  low: '低',
+  critical: 'Urgent',
+  high: 'High',
+  medium: 'Medium',
+  low: 'Low',
 };
 
 export function AISuggestionPanel({
@@ -82,7 +82,7 @@ export function AISuggestionPanel({
         const result = await aiTriage(title, description || '');
         setSuggestion(result);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'AI分析失败');
+        setError(err instanceof Error ? err.message : 'AI analysis failed');
         setSuggestion(null);
       } finally {
         setLoading(false);
@@ -101,7 +101,7 @@ export function AISuggestionPanel({
   const reportAudit = (accepted: boolean, s: TriageResult) => {
     if (typeof s.auditId === 'number' && s.auditId > 0) {
       aiUpdateAuditAccepted(s.auditId, accepted).catch((err) => {
-        console.warn('[AIAudit] 底账翻转失败（不阻塞）', err);
+        console.warn('[AIAudit] Failed to flip the bottom account (not blocking)', err);
       });
       return;
     }
@@ -117,7 +117,7 @@ export function AISuggestionPanel({
       },
       accepted,
     }).catch((err) => {
-      console.warn('[AIAudit] 上报失败（不阻塞）', err);
+      console.warn('[AIAudit] reporting failure (not blocking)', err);
     });
   };
 
@@ -155,7 +155,8 @@ export function AISuggestionPanel({
           <Space>
             <Sparkles className="w-4 h-4 text-gray-400" />
             <Text type="secondary" className="text-sm">
-              AI建议已忽略
+
+              AI suggestion ignored
             </Text>
           </Space>
           <Button
@@ -164,7 +165,8 @@ export function AISuggestionPanel({
             icon={<RefreshCw className="w-3 h-3" />}
             onClick={handleRefresh}
           >
-            重新分析
+
+            Reanalyze
           </Button>
         </div>
       </Card>
@@ -182,9 +184,10 @@ export function AISuggestionPanel({
         <div className="flex items-center gap-3">
           <Spin size="small" />
           <div>
-            <Text className="text-sm font-medium text-blue-700">AI 分析中...</Text>
+            <Text className="text-sm font-medium text-blue-700">AI analysis...</Text>
             <Paragraph type="secondary" className="text-xs mb-0">
-              基于标题和描述分析工单分类
+
+              Analyze ticket classification based on title and description
             </Paragraph>
           </div>
         </div>
@@ -204,7 +207,8 @@ export function AISuggestionPanel({
           <Space>
             <AlertCircle className="w-4 h-4 text-gray-400" />
             <Text type="secondary" className="text-sm">
-              AI分析暂不可用
+
+              AI analysis is temporarily unavailable
             </Text>
           </Space>
           <Button
@@ -213,7 +217,8 @@ export function AISuggestionPanel({
             icon={<RefreshCw className="w-3 h-3" />}
             onClick={handleRefresh}
           >
-            重试
+
+            Retry
           </Button>
         </div>
       </Card>
@@ -237,12 +242,12 @@ export function AISuggestionPanel({
       title={
         <Space>
           <Sparkles className="w-4 h-4 text-indigo-600" />
-          <span className="font-medium text-indigo-700">AI 分析建议</span>
+          <span className="font-medium text-indigo-700">AI analysis suggestions</span>
         </Space>
       }
       extra={
         <Button
-          aria-label="关闭"
+          aria-label="Close"
           type="text"
           size="small"
           icon={<X className="w-3 h-3" />}
@@ -252,7 +257,8 @@ export function AISuggestionPanel({
     >
       {collapsed ? (
         <Text type="secondary" className="text-xs">
-          点击展开查看AI分析详情
+
+          Click to expand to view AI analysis details
         </Text>
       ) : (
         <>
@@ -260,7 +266,8 @@ export function AISuggestionPanel({
             {/* Category */}
             <div className="text-center">
               <Text type="secondary" className="text-xs block mb-1">
-                建议分类
+
+                Suggested classification
               </Text>
               <Tag color={categoryColors[suggestion.category] || 'default'} className="text-sm">
                 {categoryLabels[suggestion.category] || suggestion.category}
@@ -270,7 +277,8 @@ export function AISuggestionPanel({
             {/* Priority */}
             <div className="text-center">
               <Text type="secondary" className="text-xs block mb-1">
-                建议优先级
+
+                Suggested priority
               </Text>
               <Tag color={priorityColors[suggestion.priority] || 'default'} className="text-sm">
                 {priorityLabels[suggestion.priority] || suggestion.priority}
@@ -280,7 +288,8 @@ export function AISuggestionPanel({
             {/* Confidence */}
             <div className="text-center">
               <Text type="secondary" className="text-xs block mb-1">
-                置信度
+
+                Confidence
               </Text>
               <Progress
                 percent={confidencePercent}
@@ -309,7 +318,8 @@ export function AISuggestionPanel({
           {/* Action buttons */}
           <div className="flex justify-end gap-2">
             <Button size="small" icon={<X className="w-3 h-3" />} onClick={handleDismiss}>
-              忽略
+
+              ignore
             </Button>
             <Button
               type="primary"
@@ -317,7 +327,8 @@ export function AISuggestionPanel({
               icon={<Check className="w-3 h-3" />}
               onClick={handleAccept}
             >
-              采纳建议
+
+              Adopt suggestion
             </Button>
           </div>
         </>

@@ -188,7 +188,7 @@ func (h *DashboardHandler) GetOverview(c *gin.Context) {
 	tenantID, err := middleware.GetTenantID(c)
 	if err != nil {
 		h.logger.Errorw("Failed to get tenant ID", "error", err)
-		common.Fail(c, common.InternalErrorCode, "获取租户ID失败")
+		common.Fail(c, common.InternalErrorCode, "Failed to obtain tenant ID")
 		return
 	}
 
@@ -196,7 +196,7 @@ func (h *DashboardHandler) GetOverview(c *gin.Context) {
 	overviewData, err := h.dashboardService.GetDashboardOverview(c.Request.Context(), tenantID, dashboardViewer(c))
 	if err != nil {
 		h.logger.Errorw("Failed to get dashboard overview", "error", err)
-		common.Fail(c, common.InternalErrorCode, "获取Dashboard数据失败")
+		common.Fail(c, common.InternalErrorCode, "Failed to obtain Dashboard data")
 		return
 	}
 
@@ -204,7 +204,7 @@ func (h *DashboardHandler) GetOverview(c *gin.Context) {
 	overviewStats, err := h.dashboardService.GetDashboardOverviewStats(c.Request.Context(), tenantID)
 	if err != nil {
 		h.logger.Errorw("Failed to get dashboard overview stats", "error", err)
-		common.Fail(c, common.InternalErrorCode, "获取Dashboard统计数据失败")
+		common.Fail(c, common.InternalErrorCode, "Failed to obtain Dashboard statistics")
 		return
 	}
 
@@ -390,14 +390,14 @@ func (h *DashboardHandler) GetKPIMetrics(c *gin.Context) {
 	tenantID, err := middleware.GetTenantID(c)
 	if err != nil {
 		h.logger.Errorw("Failed to get tenant ID", "error", err)
-		common.Fail(c, common.InternalErrorCode, "获取租户ID失败")
+		common.Fail(c, common.InternalErrorCode, "Failed to obtain tenant ID")
 		return
 	}
 
 	overviewData, err := h.dashboardService.GetDashboardOverview(c.Request.Context(), tenantID, dashboardViewer(c))
 	if err != nil {
 		h.logger.Errorw("Failed to get dashboard overview", "error", err)
-		common.Fail(c, common.InternalErrorCode, "获取KPI指标失败")
+		common.Fail(c, common.InternalErrorCode, "Failed to obtain KPI indicators")
 		return
 	}
 
@@ -418,7 +418,7 @@ func (h *DashboardHandler) GetTicketTrend(c *gin.Context) {
 	tenantID, err := middleware.GetTenantID(c)
 	if err != nil {
 		h.logger.Errorw("Failed to get tenant ID", "error", err)
-		common.Fail(c, common.InternalErrorCode, "获取租户ID失败")
+		common.Fail(c, common.InternalErrorCode, "Failed to obtain tenant ID")
 		return
 	}
 
@@ -431,7 +431,7 @@ func (h *DashboardHandler) GetTicketTrend(c *gin.Context) {
 	trend, err := h.dashboardService.GetTicketTrend(c.Request.Context(), tenantID, days)
 	if err != nil {
 		h.logger.Errorw("Failed to get ticket trend", "error", err)
-		common.Fail(c, common.InternalErrorCode, "获取工单趋势失败")
+		common.Fail(c, common.InternalErrorCode, "Failed to obtain work order trend")
 		return
 	}
 
@@ -451,14 +451,14 @@ func (h *DashboardHandler) GetIncidentDistribution(c *gin.Context) {
 	tenantID, err := middleware.GetTenantID(c)
 	if err != nil {
 		h.logger.Errorw("Failed to get tenant ID", "error", err)
-		common.Fail(c, common.InternalErrorCode, "获取租户ID失败")
+		common.Fail(c, common.InternalErrorCode, "Failed to obtain tenant ID")
 		return
 	}
 
 	overviewData, err := h.dashboardService.GetDashboardOverview(c.Request.Context(), tenantID, dashboardViewer(c))
 	if err != nil {
 		h.logger.Errorw("Failed to get incident distribution", "error", err)
-		common.Fail(c, common.InternalErrorCode, "获取事件分布失败")
+		common.Fail(c, common.InternalErrorCode, "Failed to obtain event distribution")
 		return
 	}
 
@@ -478,14 +478,14 @@ func (h *DashboardHandler) GetSLAData(c *gin.Context) {
 	tenantID, err := middleware.GetTenantID(c)
 	if err != nil {
 		h.logger.Errorw("Failed to get tenant ID", "error", err)
-		common.Fail(c, common.InternalErrorCode, "获取租户ID失败")
+		common.Fail(c, common.InternalErrorCode, "Failed to obtain tenant ID")
 		return
 	}
 
 	overviewData, err := h.dashboardService.GetDashboardOverview(c.Request.Context(), tenantID, dashboardViewer(c))
 	if err != nil {
 		h.logger.Errorw("Failed to get SLA data", "error", err)
-		common.Fail(c, common.InternalErrorCode, "获取SLA数据失败")
+		common.Fail(c, common.InternalErrorCode, "Failed to obtain SLA data")
 		return
 	}
 
@@ -506,7 +506,7 @@ func (h *DashboardHandler) GetSatisfactionData(c *gin.Context) {
 	tenantID, err := middleware.GetTenantID(c)
 	if err != nil {
 		h.logger.Errorw("Failed to get tenant ID", "error", err)
-		common.Fail(c, common.InternalErrorCode, "获取租户ID失败")
+		common.Fail(c, common.InternalErrorCode, "Failed to obtain tenant ID")
 		return
 	}
 
@@ -519,7 +519,7 @@ func (h *DashboardHandler) GetSatisfactionData(c *gin.Context) {
 	overviewData, err := h.dashboardService.GetDashboardOverview(c.Request.Context(), tenantID, dashboardViewer(c))
 	if err != nil {
 		h.logger.Errorw("Failed to get satisfaction data", "error", err)
-		common.Fail(c, common.InternalErrorCode, "获取满意度数据失败")
+		common.Fail(c, common.InternalErrorCode, "Failed to obtain satisfaction data")
 		return
 	}
 
@@ -553,32 +553,32 @@ func (h *DashboardHandler) GetQuickActions(c *gin.Context) {
 	allActions := []QuickAction{
 		{
 			ID:          "create-ticket",
-			Title:       "创建工单",
-			Description: "快速创建新的IT工单",
+			Title:       "Create Ticket",
+			Description: "Quickly create a new IT ticket",
 			Path:        "/tickets/create",
 			Color:       "#3b82f6",
 			Permission:  "ticket:create",
 		},
 		{
 			ID:          "create-incident",
-			Title:       "报告事件",
-			Description: "报告IT事件和故障",
+			Title:       "Report Incident",
+			Description: "Report IT incidents and outages",
 			Path:        "/incidents/new",
 			Color:       "#ef4444",
 			Permission:  "incident:create",
 		},
 		{
 			ID:          "create-change",
-			Title:       "提交变更",
-			Description: "提交IT变更请求",
+			Title:       "Submit Change",
+			Description: "Submit an IT change request",
 			Path:        "/changes/new",
 			Color:       "#10b981",
 			Permission:  "change:create",
 		},
 		{
 			ID:          "view-reports",
-			Title:       "查看报表",
-			Description: "查看系统报表和分析",
+			Title:       "View Reports",
+			Description: "View system reports and analytics",
 			Path:        "/reports",
 			Color:       "#8b5cf6",
 			Permission:  "report:view",
@@ -615,7 +615,7 @@ func (h *DashboardHandler) GetRecentActivities(c *gin.Context) {
 	tenantID, err := middleware.GetTenantID(c)
 	if err != nil {
 		h.logger.Errorw("Failed to get tenant ID", "error", err)
-		common.Fail(c, common.InternalErrorCode, "获取租户ID失败")
+		common.Fail(c, common.InternalErrorCode, "Failed to obtain tenant ID")
 		return
 	}
 
@@ -628,7 +628,7 @@ func (h *DashboardHandler) GetRecentActivities(c *gin.Context) {
 	overviewData, err := h.dashboardService.GetDashboardOverview(c.Request.Context(), tenantID, dashboardViewer(c))
 	if err != nil {
 		h.logger.Errorw("Failed to get recent activities", "error", err)
-		common.Fail(c, common.InternalErrorCode, "获取最近活动失败")
+		common.Fail(c, common.InternalErrorCode, "Failed to get recent activities")
 		return
 	}
 
@@ -672,7 +672,7 @@ func (h *DashboardHandler) GetUserStats(c *gin.Context) {
 	}
 	stats, err := h.dashboardService.GetUserStats(c.Request.Context(), tenantID)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 	common.Success(c, stats)
@@ -690,7 +690,7 @@ func (h *DashboardHandler) GetUserStats(c *gin.Context) {
 func (h *DashboardHandler) GetSystemStats(c *gin.Context) {
 	stats, err := h.dashboardService.GetSystemStats(c.Request.Context())
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 	common.Success(c, stats)
@@ -735,14 +735,14 @@ func (h *DashboardHandler) GetServiceQuality(c *gin.Context) {
 		return
 	}
 	if h.qualityService == nil {
-		common.Fail(c, common.ServiceUnavailableCode, "服务质量视图聚合器未装配")
+		common.Fail(c, common.ServiceUnavailableCode, "Quality of Service View Aggregator not assembled")
 		return
 	}
 
 	report, err := h.qualityService.Build(c.Request.Context(), tenantID, dashboardViewer(c), parseQualityWindow(c.Query("days")))
 	if err != nil {
 		h.logger.Errorw("failed to build service quality report", "error", err, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, "获取服务质量视图失败")
+		common.Fail(c, common.InternalErrorCode, "Failed to obtain quality of service view")
 		return
 	}
 	common.Success(c, report)

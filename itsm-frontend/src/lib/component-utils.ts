@@ -10,9 +10,9 @@ import { debounce as _debounce, throttle as _throttle } from 'lodash-es';
 import { logger } from '@/lib/env';
 
 // Cast lodash functions - lodash-es debounce/throttle have known TS generic limitations
- 
+
 const debounce = _debounce as any;
- 
+
 const throttle = _throttle as any;
 
 // 防抖Hook
@@ -180,7 +180,7 @@ export const useAsync = <T>(asyncFunction: () => Promise<T>, dependencies: unkno
       setState({ data: null, loading: false, error: error as Error });
       throw error;
     }
-     
+
   }, dependencies);
 
   useEffect(() => {
@@ -307,7 +307,7 @@ export const useKeyPress = (
 
     document.addEventListener('keydown', handleKeyPress);
     return () => document.removeEventListener('keydown', handleKeyPress);
-     
+
   }, [...dependencies]);
 };
 
@@ -327,12 +327,12 @@ export const useClipboard = () => {
     try {
       await navigator.clipboard.writeText(text);
       setCopied(true);
-      message.success('已复制到剪贴板');
+      message.success('Copied to clipboard');
 
       setTimeout(() => setCopied(false), 2000);
     } catch (error) {
-      logger.error('复制失败:', error);
-      message.error('复制失败');
+      logger.error('Copy failed:', error);
+      message.error('Copy failed');
     }
   }, []);
 

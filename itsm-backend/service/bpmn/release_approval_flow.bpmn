@@ -5,20 +5,20 @@
                  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
                  targetNamespace="http://bpmn.io/schema/bpmn">
 
-  <bpmn:process id="release_approval_flow" name="发布审批流程" isExecutable="true">
+  <bpmn:process id="release_approval_flow" name="Release Approval Workflow" isExecutable="true">
     <bpmn:extensionElements>
       <bpmn:metaData name="category">release</bpmn:metaData>
       <bpmn:metaData name="version">1.0.0</bpmn:metaData>
-      <bpmn:metaData name="description">软件发布审批管理流程</bpmn:metaData>
+      <bpmn:metaData name="description">Software release approval workflow</bpmn:metaData>
     </bpmn:extensionElements>
 
     <!-- 开始事件：发布申请 -->
-    <bpmn:startEvent id="StartEvent_1" name="发布申请">
+    <bpmn:startEvent id="StartEvent_1" name="Release Request">
       <bpmn:outgoing>Flow_1</bpmn:outgoing>
     </bpmn:startEvent>
 
     <!-- 技术评审 -->
-    <bpmn:userTask id="Activity_TechReview" name="技术评审">
+    <bpmn:userTask id="Activity_TechReview" name="Technical Review">
       <bpmn:extensionElements>
         <bpmn:metaData name="service_task_type">release_task</bpmn:metaData>
         <bpmn:metaData name="action">tech_review</bpmn:metaData>
@@ -28,14 +28,14 @@
     </bpmn:userTask>
 
     <!-- 技术评审结果判断 -->
-    <bpmn:exclusiveGateway id="Gateway_TechResult" name="评审通过?">
+    <bpmn:exclusiveGateway id="Gateway_TechResult" name="Review Passed?">
       <bpmn:incoming>Flow_2</bpmn:incoming>
       <bpmn:outgoing>Flow_Approval</bpmn:outgoing>
       <bpmn:outgoing>Flow_Reject</bpmn:outgoing>
     </bpmn:exclusiveGateway>
 
     <!-- 发布审批 -->
-    <bpmn:userTask id="Activity_Approval" name="发布审批">
+    <bpmn:userTask id="Activity_Approval" name="Release Approval">
       <bpmn:extensionElements>
         <bpmn:metaData name="service_task_type">release_task</bpmn:metaData>
         <bpmn:metaData name="action">approval</bpmn:metaData>
@@ -45,14 +45,14 @@
     </bpmn:userTask>
 
     <!-- 审批结果判断 -->
-    <bpmn:exclusiveGateway id="Gateway_ApprovalResult" name="审批结果?">
+    <bpmn:exclusiveGateway id="Gateway_ApprovalResult" name="Approval Result?">
       <bpmn:incoming>Flow_3</bpmn:incoming>
       <bpmn:outgoing>Flow_Schedule</bpmn:outgoing>
       <bpmn:outgoing>Flow_RejectApproval</bpmn:outgoing>
     </bpmn:exclusiveGateway>
 
     <!-- 计划发布 -->
-    <bpmn:userTask id="Activity_Schedule" name="计划发布">
+    <bpmn:userTask id="Activity_Schedule" name="Schedule Release">
       <bpmn:extensionElements>
         <bpmn:metaData name="service_task_type">release_task</bpmn:metaData>
         <bpmn:metaData name="action">schedule</bpmn:metaData>
@@ -62,7 +62,7 @@
     </bpmn:userTask>
 
     <!-- 执行发布 -->
-    <bpmn:userTask id="Activity_Execute" name="执行发布">
+    <bpmn:userTask id="Activity_Execute" name="Execute Release">
       <bpmn:extensionElements>
         <bpmn:metaData name="service_task_type">release_task</bpmn:metaData>
         <bpmn:metaData name="action">execute</bpmn:metaData>
@@ -72,7 +72,7 @@
     </bpmn:userTask>
 
     <!-- 验证确认 -->
-    <bpmn:userTask id="Activity_Verify" name="验证确认">
+    <bpmn:userTask id="Activity_Verify" name="Verification Confirmation">
       <bpmn:extensionElements>
         <bpmn:metaData name="service_task_type">release_task</bpmn:metaData>
         <bpmn:metaData name="action">verify</bpmn:metaData>
@@ -82,12 +82,12 @@
     </bpmn:userTask>
 
     <!-- 结束事件：发布完成 -->
-    <bpmn:endEvent id="EndEvent_Complete" name="发布完成">
+    <bpmn:endEvent id="EndEvent_Complete" name="Release Completed">
       <bpmn:incoming>Flow_Complete</bpmn:incoming>
     </bpmn:endEvent>
 
     <!-- 拒绝发布 -->
-    <bpmn:endEvent id="EndEvent_Reject" name="发布拒绝">
+    <bpmn:endEvent id="EndEvent_Reject" name="Release Rejected">
       <bpmn:incoming>Flow_Reject</bpmn:incoming>
     </bpmn:endEvent>
 

@@ -54,7 +54,7 @@ const errorReason = (error: unknown, fallback: string) =>
 // conditions 是安装时原样写入定义的适配条件，键名保留存储层写法
 const renderConditions = (conditions: Record<string, unknown>) => {
   const entries = Object.entries(conditions ?? {});
-  if (entries.length === 0) return '无';
+  if (entries.length === 0) return 'None';
   return (
     <Space size={[4, 4]} wrap>
       {entries.map(([key, value]) => (
@@ -82,7 +82,7 @@ export default function SLATemplatesPage() {
       setTemplates(await SLATemplateApi.listTemplates());
     } catch (error) {
       setTemplates([]);
-      setLoadError(errorReason(error, '加载 SLA 模板失败'));
+      setLoadError(errorReason(error, 'Failed to load SLA template'));
     } finally {
       setLoading(false);
     }
@@ -116,14 +116,14 @@ export default function SLATemplatesPage() {
       // 安装状态以服务端为准：重新拉列表，刷新后不会退回「未安装」
       await loadTemplates();
       if (result.created) {
-        message.success(`模板「${result.templateKey}」已安装到当前租户`);
+        message.success(`Template "${result.templateKey}"Already installed in the current tenant"`);
       } else {
-        message.info(`模板「${result.templateKey}」此前已安装，未重复创建`);
+        message.info(`Template "${result.templateKey}"It has been installed before and has not been re-created.`);
       }
     } catch (error) {
-      const reason = errorReason(error, '安装失败');
+      const reason = errorReason(error, 'Installation failed');
       setFailures([{ templateKey: key, reason }]);
-      message.error(`安装模板「${key}」失败：${reason}`);
+      message.error(`Installation template "${key}"Failed:${reason}`);
     } finally {
       setInstallingKey(null);
     }
@@ -140,13 +140,13 @@ export default function SLATemplatesPage() {
       const existed = summary.results.filter(r => !r.created).length;
       if (summary.failures.length > 0) {
         message.error(
-          `批量安装结束：新增 ${created} 个、已存在 ${existed} 个、失败 ${summary.failures.length} 个`
+          `Batch installation completed: new ${created} , already exists ${existed} , failed ${summary.failures.length} items`
         );
       } else {
-        message.success(`批量安装完成：新增 ${created} 个，已存在 ${existed} 个`);
+        message.success(`Batch installation completed: New ${created} already exists ${existed} items`);
       }
     } catch (error) {
-      message.error(errorReason(error, '批量安装失败'));
+      message.error(errorReason(error, 'Batch installation failed'));
     } finally {
       setInstallingKey(null);
     }
@@ -154,14 +154,14 @@ export default function SLATemplatesPage() {
 
   const columns: ColumnsType<SLATemplate> = [
     {
-      title: '模板',
+      title: 'Templates',
       key: 'template',
       render: (_, t) => (
         <Space orientation="vertical" size={2}>
           <Space size="small">
             <Text strong>{t.name}</Text>
             <Tag color="blue">{t.key}</Tag>
-            {t.recommended && <Tag color="green">推荐</Tag>}
+            {t.recommended && <Tag color="green">Recommended</Tag>}
           </Space>
           <Text type="secondary" style={{ fontSize: 12 }}>
             {t.description}
@@ -170,21 +170,21 @@ export default function SLATemplatesPage() {
       ),
     },
     {
-      title: '行业',
+      title: 'Industry',
       dataIndex: 'industry',
       key: 'industry',
       width: 100,
       render: (value: string) => <Tag color="geekblue">{getIndustryLabel(value)}</Tag>,
     },
     {
-      title: '服务类型',
+      title: 'Service Type',
       dataIndex: 'serviceType',
       key: 'serviceType',
       width: 120,
       render: (value: string) => getServiceTypeLabel(value),
     },
     {
-      title: '优先级',
+      title: 'Priority',
       dataIndex: 'priority',
       key: 'priority',
       width: 90,
@@ -193,60 +193,62 @@ export default function SLATemplatesPage() {
       ),
     },
     {
-      title: '响应时限',
+      title: 'Response time limit',
       dataIndex: 'responseTime',
       key: 'responseTime',
       width: 120,
       render: (value: number) => formatDuration(value),
     },
     {
-      title: '解决时限',
+      title: 'Resolution time limit',
       dataIndex: 'resolutionTime',
       key: 'resolutionTime',
       width: 120,
       render: (value: number) => formatDuration(value),
     },
     {
-      title: '服务窗口',
+      title: 'Service window',
       key: 'businessHours',
       width: 200,
       render: (_, t) => formatBusinessHours(t.businessHours),
     },
     {
-      title: '安装状态',
+      title: 'InstallationStatus',
       key: 'installStatus',
       width: 130,
       render: (_, t) =>
         t.installed ? (
           <Tooltip
-            title={`安装时间 ${displayDateTime(t.installedAt)} · SLA 定义 #${t.slaDefinitionId ?? '-'}`}
+            title={`Installation time ${displayDateTime(t.installedAt)} · SLA Definition #${t.slaDefinitionId ?? '-'}`}
           >
             <Tag color="green" icon={<CheckCircle size={12} />}>
-              已安装
+
+              Already installed
             </Tag>
           </Tooltip>
         ) : (
-          <Text type="secondary">未安装</Text>
+          <Text type="secondary">Not installed</Text>
         ),
     },
     {
-      title: '操作',
+      title: 'Actions',
       key: 'actions',
       width: 200,
       render: (_, t) => (
         <Space>
           <Button size="small" icon={<Eye size={14} />} onClick={() => setDetailKey(t.key)}>
-            查看
+
+            View
           </Button>
           <Popconfirm
-            title={`确认安装模板「${t.name}」？`}
+            title={`Confirm installation template "${t.name}」？`}
             description={
               t.installed
-                ? '当前租户已安装，重复安装会直接跳过'
-                : '安装后当前租户生成对应 SLA 定义并参与计时'
+                ? 'The current tenant has already been installed. Repeated installation will be skipped directly.'
+                : 'After installation, the current tenant generates the corresponding SLA definition and participates in timing'
             }
-            okText="确认安装"
-            cancelText="取消"
+            okText="Confirm installation"
+            cancelText="Cancel"
             onConfirm={() => handleInstall(t.key)}
           >
             <Button
@@ -255,7 +257,8 @@ export default function SLATemplatesPage() {
               icon={<Download size={14} />}
               loading={installingKey === t.key}
             >
-              安装
+
+              Installation
             </Button>
           </Popconfirm>
         </Space>
@@ -265,54 +268,54 @@ export default function SLATemplatesPage() {
 
   const descriptionItems = detail
     ? [
-        { key: 'name', label: '名称', children: detail.name, span: 2 },
+        { key: 'name', label: 'Name', children: detail.name, span: 2 },
         {
           key: 'key',
-          label: '模板 Key',
+          label: 'Template Key',
           children: <Tag color="blue">{detail.key}</Tag>,
           span: 2,
         },
         {
           key: 'industry',
-          label: '行业',
+          label: 'Industry',
           children: <Tag color="geekblue">{getIndustryLabel(detail.industry)}</Tag>,
         },
         {
           key: 'serviceType',
-          label: '服务类型',
+          label: 'Service Type',
           children: getServiceTypeLabel(detail.serviceType),
         },
         {
           key: 'priority',
-          label: '优先级',
+          label: 'Priority',
           children: (
             <Tag color={getPriorityColor(detail.priority)}>{getPriorityLabel(detail.priority)}</Tag>
           ),
         },
         {
           key: 'recommended',
-          label: '推荐模板',
-          children: detail.recommended ? <Tag color="green">是</Tag> : <Tag>否</Tag>,
+          label: 'Recommended Templates',
+          children: detail.recommended ? <Tag color="green">Yes</Tag> : <Tag>No</Tag>,
         },
         {
           key: 'response',
-          label: '响应时限',
+          label: 'Response time limit',
           children: formatDuration(detail.responseTime),
         },
         {
           key: 'resolution',
-          label: '解决时限',
+          label: 'Resolution time limit',
           children: formatDuration(detail.resolutionTime),
         },
         {
           key: 'window',
-          label: '服务窗口',
+          label: 'Service window',
           children: formatBusinessHours(detail.businessHours),
           span: 2,
         },
         {
           key: 'escalation',
-          label: '升级级别',
+          label: 'Escalation Level',
           span: 2,
           children: detail.escalationLevels?.length ? (
             <Space size={[4, 4]} wrap>
@@ -321,24 +324,24 @@ export default function SLATemplatesPage() {
               ))}
             </Space>
           ) : (
-            '未配置（升级动作需在「升级规则」「升级矩阵」页面配置）'
+            'Not configured (upgrade action needs to be configured on the "Upgrade Rules" "Upgrade Matrix" page)'
           ),
         },
         {
           key: 'installStatus',
-          label: '安装状态',
+          label: 'InstallationStatus',
           span: 2,
           children: detail.installed
-            ? `已安装于 ${displayDateTime(detail.installedAt)}（SLA 定义 #${detail.slaDefinitionId ?? '-'}）`
-            : '未安装',
+            ? `Installed in ${displayDateTime(detail.installedAt)}(SLA Definition #${detail.slaDefinitionId ?? '-'}）`
+            : 'Not installed',
         },
         {
           key: 'conditions',
-          label: '适用条件',
+          label: 'Applicable conditions',
           span: 2,
           children: renderConditions(detail.conditions),
         },
-        { key: 'description', label: '说明', children: detail.description, span: 2 },
+        { key: 'description', label: 'Description', children: detail.description, span: 2 },
       ]
     : [];
 
@@ -347,38 +350,40 @@ export default function SLATemplatesPage() {
       <div>
         <Title level={3} style={{ marginBottom: 4 }}>
           <Rocket style={{ marginRight: 8 }} />
-          SLA 模板
+
+          SLA Template
         </Title>
         <Paragraph type="secondary">
-          按业务类型与优先级预置的 SLA 时限套餐。安装到当前租户后即生成对应 SLA 定义；安装状态记录在服务端，刷新页面不会丢失。
+
+          SLA time limit packages preset according to business type and priority. After being installed into the current tenant, the corresponding SLA definition is generated; the installation status is recorded on the server and will not be lost when the page is refreshed.
         </Paragraph>
       </div>
 
       <UsageGuideCard
         style={{ marginBottom: 16 }}
-        title="SLA 模板怎么用"
-        intro="模板是预置的 SLA 时限套餐。安装到当前租户后生成一条 SLA 定义并参与工单计时，无需逐项手工配置。"
+        title="How to use SLA template"
+        intro="The template is a preset SLA time-limited package. After being installed into the current tenant, an SLA definition is generated and participates in ticket timing, eliminating the need for manual configuration one by one."
         steps={[
-          '先看模板行或「查看」详情，确认各优先级的响应 / 解决时限与服务窗口符合组织约定。',
-          '点「安装」（或顶部「批量安装全部推荐模板」）安装到当前租户。安装按租户幂等：重复点击只会跳过，不会产生第二份相同配置。',
-          '「安装状态」列显示服务端记录的安装事实（含安装时间与生成的 SLA 定义编号），刷新页面或改掉定义名称都不会退回「未安装」。',
-          '安装出的定义可在「SLA 定义」页继续调整或停用；模板目录本身是内置的，不会被修改。',
-          '注意：模板里的升级级别只是随定义写入的参考配置，当前没有运行时消费者。超时告警与逐级升级请在「升级规则」「升级矩阵」页面配置，那才是实际生效的入口。',
+          'First read the template line or "View" details to confirm that the response/resolution time limit and service window of each priority level comply with the organization\'s agreement.',
+          'Click "Install" (or "Batch Install All Recommended Templates" at the top) to install it to the current tenant. The installation is idempotent by tenant: repeated clicks will only skip and will not generate a second copy of the same configuration.',
+          'The "Installation Status" column displays the installation facts recorded by the server (including the installation time and the generated SLA definition number). Refreshing the page or changing the definition name will not return "Not Installed".',
+          'The installed definition can be adjusted or deactivated on the "SLA Definition" page; the template directory itself is built-in and will not be modified.',
+          'Note: The upgrade level in the template is only a reference configuration written with the definition, and there is currently no runtime consumer. Please configure the timeout alarm and step-by-step upgrade on the "Upgrade Rules" and "Upgrade Matrix" pages. That is the actual entrance.',
         ]}
       />
 
       <Row gutter={[16, 16]}>
         <Col xs={24} sm={6}>
           <Card>
-            <Statistic title="模板总数" value={stats.total} suffix="个" />
+            <Statistic title="Total number of templates" value={stats.total} suffix="items" />
           </Card>
         </Col>
         <Col xs={24} sm={6}>
           <Card>
             <Statistic
-              title="推荐模板"
+              title="Recommended Templates"
               value={stats.recommended}
-              suffix="个"
+              suffix="items"
               styles={{ content: { color: '#52c41a' } }}
             />
           </Card>
@@ -386,16 +391,16 @@ export default function SLATemplatesPage() {
         <Col xs={24} sm={6}>
           <Card>
             <Statistic
-              title="本租户已安装"
+              title="This tenant has already been installed"
               value={stats.installed}
-              suffix="个"
+              suffix="items"
               styles={{ content: { color: '#1677ff' } }}
             />
           </Card>
         </Col>
         <Col xs={24} sm={6}>
           <Card>
-            <Statistic title="覆盖行业" value={stats.industries} suffix="个" />
+            <Statistic title="Covered industries" value={stats.industries} suffix="items" />
           </Card>
         </Col>
       </Row>
@@ -404,11 +409,12 @@ export default function SLATemplatesPage() {
         <Alert
           type="error"
           showIcon
-          title="SLA 模板加载失败"
+          title="SLA template loading failed"
           description={loadError}
           action={
             <Button size="small" onClick={() => void loadTemplates()} loading={loading}>
-              重试
+
+              Retry
             </Button>
           }
         />
@@ -418,7 +424,7 @@ export default function SLATemplatesPage() {
         <Alert
           type="error"
           showIcon
-          title={`${failures.length} 个模板安装失败`}
+          title={`${failures.length} Template installation failed`}
           description={
             <ul style={{ margin: 0, paddingLeft: 18 }}>
               {failures.map(failure => (
@@ -428,7 +434,8 @@ export default function SLATemplatesPage() {
           }
           action={
             <Button size="small" onClick={() => setFailures([])}>
-              忽略
+
+              ignore
             </Button>
           }
         />
@@ -436,17 +443,17 @@ export default function SLATemplatesPage() {
 
       <Card>
         <Alert
-          title="安装模板会为当前租户创建 SLA 定义；同一模板重复安装会自动跳过"
+          title="Installing a template will create an SLA definition for the current tenant; repeated installations of the same template will be automatically skipped"
           type="info"
           showIcon
           style={{ marginBottom: 16 }}
         />
         <Space style={{ marginBottom: 12 }}>
           <Popconfirm
-            title="批量安装全部推荐模板？"
-            description="仅安装标记为推荐的模板，已安装的自动跳过"
-            okText="全部安装"
-            cancelText="取消"
+            title="Install all recommended templates in batches?"
+            description="Only install templates marked as recommended, and installed ones will be automatically skipped."
+            okText="Install all"
+            cancelText="Cancel"
             onConfirm={handleInstallAll}
           >
             <Button
@@ -455,11 +462,13 @@ export default function SLATemplatesPage() {
               loading={installingKey === '__ALL__'}
               disabled={stats.recommended === 0 || loading}
             >
-              批量安装全部推荐模板
+
+              Install all recommended templates in batches
             </Button>
           </Popconfirm>
           <Button onClick={() => void loadTemplates()} loading={loading}>
-            刷新
+
+            Refresh
           </Button>
         </Space>
         <Table<SLATemplate>
@@ -470,18 +479,19 @@ export default function SLATemplatesPage() {
           pagination={false}
           scroll={{ x: 'max-content' }}
           locale={{
-            emptyText: <Empty description={loadError ? '模板加载失败' : '暂无可用模板'} />,
+            emptyText: <Empty description={loadError ? 'Template loading failed' : 'No template available yet'} />,
           }}
         />
       </Card>
 
       <Modal
         open={!!detail}
-        title={detail ? `模板详情 · ${detail.name}` : '模板详情'}
+        title={detail ? `Template details · ${detail.name}` : 'Template details'}
         onCancel={() => setDetailKey(null)}
         footer={[
           <Button key="close" onClick={() => setDetailKey(null)}>
-            关闭
+
+            Close
           </Button>,
         ]}
         width={720}

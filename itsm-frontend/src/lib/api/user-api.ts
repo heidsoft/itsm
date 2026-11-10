@@ -23,16 +23,16 @@ export type UserRole =
  * 组管理页成员选择器的角色筛选也复用此词表。
  */
 export const PRIMARY_ROLE_OPTIONS: { value: UserRole; label: string }[] = [
-  { value: 'end_user', label: '最终用户' },
-  { value: 'agent', label: '服务台坐席' },
-  { value: 'technician', label: '技术员' },
-  { value: 'manager', label: '部门经理' },
-  { value: 'it_admin', label: 'IT管理员' },
-  { value: 'security_admin', label: '安全管理员' },
-  { value: 'audit_admin', label: '审计管理员' },
-  { value: 'sysadmin', label: '系统运维' },
-  { value: 'admin', label: '系统管理员' },
-  { value: 'super_admin', label: '超级管理员' },
+  { value: 'end_user', label: 'End User' },
+  { value: 'agent', label: 'Help Desk Agent' },
+  { value: 'technician', label: 'Technician' },
+  { value: 'manager', label: 'Manager' },
+  { value: 'it_admin', label: 'IT Administrator' },
+  { value: 'security_admin', label: 'Security Administrator' },
+  { value: 'audit_admin', label: 'Audit Administrator' },
+  { value: 'sysadmin', label: 'System operation and maintenance' },
+  { value: 'admin', label: 'System Administrator' },
+  { value: 'super_admin', label: 'Super Admin' },
 ];
 
 export const PRIMARY_ROLE_LABEL: Record<string, string> =

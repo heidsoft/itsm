@@ -62,7 +62,7 @@ export function ApprovalChainTable({
     () => [
       {
         key: 'name',
-        title: '审批链名称',
+        title: 'Approval ChainsName',
         dataIndex: 'name',
         width: 200,
         render: (value: unknown, record: ApprovalChain) => (
@@ -76,25 +76,25 @@ export function ApprovalChainTable({
       },
       {
         key: 'entityType',
-        title: '适用对象',
+        title: 'Applicable objects',
         dataIndex: 'entityType',
         width: 100,
         render: (value: unknown) => <Tag>{entityTypeLabel(value as string)}</Tag>,
       },
       {
         key: 'status',
-        title: '状态',
+        title: 'Status',
         dataIndex: 'isActive',
         width: 100,
         render: (value: unknown) => (
           <Tag color={(value as boolean) ? 'green' : 'red'}>
-            {(value as boolean) ? '活跃' : '非活跃'}
+            {(value as boolean) ? 'Active' : 'Inactive'}
           </Tag>
         ),
       },
       {
         key: 'approvalType',
-        title: '审批方式',
+        title: 'Approval method',
         dataIndex: 'steps',
         width: 180,
         render: (value: unknown, record: ApprovalChain) => {
@@ -113,7 +113,7 @@ export function ApprovalChainTable({
       },
       {
         key: 'steps',
-        title: '步骤数',
+        title: 'Number of steps',
         dataIndex: 'steps',
         width: 100,
         render: (value: unknown) => (
@@ -122,21 +122,21 @@ export function ApprovalChainTable({
       },
       {
         key: 'createdAt',
-        title: '创建时间',
+        title: 'Created',
         dataIndex: 'createdAt',
         width: 150,
         render: (value: unknown) => formatDateTime(value as string),
       },
       {
         key: 'updatedAt',
-        title: '更新时间',
+        title: 'Updated At',
         dataIndex: 'updatedAt',
         width: 150,
         render: (value: unknown) => formatDateTime(value as string),
       },
       {
         key: 'actions',
-        title: '操作',
+        title: 'Actions',
         width: 120,
         render: (_: unknown, record: ApprovalChain) => {
           const menuProps = {
@@ -144,33 +144,33 @@ export function ApprovalChainTable({
               {
                 key: 'view',
                 icon: <Eye className="w-4 h-4" />,
-                label: '查看详情',
+                label: 'View Details',
                 onClick: () => onView(record),
               },
               {
                 key: 'edit',
                 icon: <Edit className="w-4 h-4" />,
-                label: '编辑',
+                label: 'Edit',
                 onClick: () => onEdit(record),
               },
               {
                 key: 'copy',
                 icon: <Copy className="w-4 h-4" />,
-                label: '复制',
+                label: 'Copy',
                 onClick: () => onCopy(record),
               },
               { type: 'divider' as const },
               {
                 key: 'toggle',
                 icon: record.isActive ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />,
-                label: record.isActive ? '停用' : '启用',
+                label: record.isActive ? 'Disable' : 'Enabled',
                 onClick: () => onToggleStatus(record),
               },
               { type: 'divider' as const },
               {
                 key: 'delete',
                 icon: <Trash2 className="w-4 h-4" />,
-                label: '删除',
+                label: 'Delete',
                 danger: true,
                 onClick: () => onDelete(record),
               },
@@ -179,18 +179,18 @@ export function ApprovalChainTable({
 
           return (
             <Space>
-              <Tooltip title="查看详情">
+              <Tooltip title="View Details">
                 <Button
-                  aria-label="查看详情"
+                  aria-label="View Details"
                   type="text"
                   icon={<Eye className="w-4 h-4" />}
                   onClick={() => onView(record)}
                   size="small"
                 />
               </Tooltip>
-              <Tooltip title="编辑">
+              <Tooltip title="Edit">
                 <Button
-                  aria-label="编辑"
+                  aria-label="Edit"
                   type="text"
                   icon={<Edit className="w-4 h-4" />}
                   onClick={() => onEdit(record)}
@@ -198,7 +198,7 @@ export function ApprovalChainTable({
                 />
               </Tooltip>
               <Dropdown menu={menuProps} trigger={['click']}>
-                <Button aria-label="更多操作" type="text" icon={<MoreHorizontal className="w-4 h-4" />} size="small" />
+                <Button aria-label="More actions" type="text" icon={<MoreHorizontal className="w-4 h-4" />} size="small" />
               </Dropdown>
             </Space>
           );
@@ -225,7 +225,7 @@ export function ApprovalChainTable({
     () => [
       {
         key: 'batch-delete',
-        label: '批量删除',
+        label: 'Batch Delete',
         icon: <Trash2 className="w-4 h-4" />,
         type: 'default',
         danger: true,
@@ -242,7 +242,7 @@ export function ApprovalChainTable({
       {selectedRowKeys.length > 0 && (
         <div className="mb-4 p-3 bg-blue-50 rounded-lg">
           <div className="flex items-center justify-between">
-            <span className="text-sm text-blue-600">已选择 {selectedRowKeys.length} 项</span>
+            <span className="text-sm text-blue-600">Selected {selectedRowKeys.length}  items</span>
             <Space>
               {batchActions.map(action => (
                 <Button
@@ -275,7 +275,7 @@ export function ApprovalChainTable({
                 onShowSizeChange: onPaginationChange,
                 showSizeChanger: true,
                 showQuickJumper: true,
-                showTotal: (total, range) => `第 ${range[0]}-${range[1]} 条，共 ${total} 条`,
+                showTotal: (total, range) => `No. ${range[0]}-${range[1]} items, total ${total} items`,
               }
             : false
         }

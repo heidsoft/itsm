@@ -84,7 +84,7 @@ var registry = []definition{
 	// 理由必须与代码同步，由 TestServiceRequestPilotReasonReflectsDeliveryReality 双向锁定。
 	{
 		key: "serviceRequest", maturity: MaturityPilot, built: true, dependencies: []string{"workflow", "notification"},
-		pilotReason: "交付已接阿里云 ECS RunInstances 真实 Provider（租户云账号 + secret:// 或 env://ITSM_ALIYUN 凭据引用，未配置即失败关闭），审批→交付→SLA/流程/CMDB 收尾已打通；ClientToken 幂等、失败审计带对账证据、永久性云错误快速失败、人工裁决落审计谱系均已闭环。2026-11-02 真实账号端到端验收已跑到 RunInstances（云侧因账号余额不足拒绝，凭据/签名/账号/地域链路全部验证通过）。剩余阻断：① 只覆盖 ECS 一种资源；② 缺自动释放/回滚动作，中途失败靠幂等键对账与人工判定兜底；③ 目录项到 CI Type、交付模板、BPMN、SLA 的绑定口径仍分散。晋升条件：账号充值后完成一次真实账号创建并释放 ECS 的闭环验收 + 目录项绑定统一 + 自动补偿或第二资源类型。",
+		pilotReason: "Delivery uses the real Alibaba Cloud ECS RunInstances provider with tenant cloud accounts and secret:// or env://ITSM_ALIYUN credential references; missing configuration fails closed. Approval, provisioning and SLA/workflow/CMDB completion are connected. ClientToken idempotency, failure audits with reconciliation evidence, fast failure for permanent cloud errors and audited manual adjudication are implemented. Real-account end-to-end acceptance on 2026-11-02 reached RunInstances: insufficient account balance prevented creation, while credentials, signatures, account and region were verified. Remaining blockers: only ECS is supported; automatic release/rollback is missing, so partial failures require idempotency reconciliation and manual decisions; catalog bindings to CI types, delivery templates, BPMN and SLA remain scattered. Promotion criteria: fund the account and complete real-account ECS creation and release acceptance, unify catalog bindings, and add automatic compensation or a second resource type.",
 	},
 	{key: "cmdb", maturity: MaturityGA, built: true},
 	{key: "cmdb.configurationItems", maturity: MaturityGA, built: true, dependencies: []string{"cmdb"}},
@@ -103,11 +103,11 @@ var registry = []definition{
 	// 每轮全量分页列举、只按 missing_count 判失联；剩下的阻断是增量水位线与真实账号验收。
 	{
 		key: "cmdbDiscovery", maturity: MaturityPilot, built: true, dependencies: []string{"cmdb"}, readinessEnv: "ITSM_CMDB_DISCOVERY_READY",
-		pilotReason: "执行链与定时调度已闭环（Job 执行器 + 每分钟 cron 消费 schedule），五个厂商适配器已装配，云服务类型基线随 cmdb-core 预置，发现结果按「云服务类型 → CI 类型」映射回写配置项（表外类型显式跳过，必填属性凑不齐时不建账）；凑不齐必填项的资源已有补录入口（GET /discovery/pending-resources 列出属性缺口，POST .../register 补录建账）。剩余阻断：每轮发现都是全量分页列举，没有增量水位线（只按 missing_count 判定既有资源失联），真实账号下的发现未验收。晋升条件：增量水位线 + 真实账号下的全量与增量发现验收。",
+		pilotReason: "The execution chain and scheduler are connected: the Job executor runs discovery and minute-level cron consumes schedules. Five provider adapters and the cmdb-core cloud service baseline are installed. Discovery maps cloud service types to CI types; unknown types are skipped and resources missing required attributes are not registered. GET /discovery/pending-resources lists missing attributes, and POST .../register completes registration. Remaining blockers: scans perform full pagination without incremental watermarks; missing_count only detects missing existing resources; discovery has not been accepted against real accounts. Promotion criteria: incremental watermarks and real-account full and incremental discovery acceptance.",
 	},
 	{
 		key: "cmdbReconciliation", maturity: MaturityPilot, built: true, dependencies: []string{"cmdb", "cmdbDiscovery"}, readinessEnv: "ITSM_CMDB_DISCOVERY_READY",
-		pilotReason: "差异能算、能决策（POST /discovery/results/:id/apply|reject），应用后同步刷新配置项并把反查 ID 记在差异上；但回写目前只覆盖基线内的云主机/Pod 类型，云上连续缺失只把配置项标成同步滞后、不给出退役建议，且缺少真实数据验收。晋升条件：真实数据对账验收 + 覆盖更多资源类型。",
+		pilotReason: "Differences can be calculated and decided through POST /discovery/results/:id/apply|reject. Applying a difference refreshes its CI and records the reverse CI ID. Write-back currently covers only baseline cloud VM/Pod types. Repeatedly missing cloud resources are marked as lagging synchronization without retirement recommendations, and real-data acceptance is missing. Promotion criteria: real-data reconciliation acceptance and more resource types.",
 	},
 	// 2026-10-31 运行时降为 Pilot，与 README 成熟度表、商业能力契约对齐：
 	// 此前矩阵对客户下发 GA，但问题域创建从不落 workflow.start 命令
@@ -116,7 +116,7 @@ var registry = []definition{
 	// 结束事件驱动且无内置模板。
 	{
 		key: "workflow", maturity: MaturityPilot, built: true,
-		pilotReason: "流程定义、绑定、实例、任务、变量与历史齐备，工单与事件已使用持久化 command/outbox 启动流程，但运行时仍有跨域缺口：问题域创建不落 workflow.start（problem 分支无生产者，生命周期仅在已有实例时桥接）、ServiceTask 外部副作用与流程完成分属两个事务、补偿只支持结束事件驱动且无内置模板、存量 pending 待办与跨域实例级 E2E 未补。晋升条件：问题域 workflow.start 生产者 + ServiceTask 与流程完成同事务 + 补偿内置模板 + 跨域实例级 E2E。",
+		pilotReason: "Definitions, bindings, instances, tasks, variables and history are available. Tickets and incidents start workflows through durable command/outbox records. Runtime gaps remain: the problem domain does not produce workflow.start on creation and bridges lifecycle only when an instance already exists; ServiceTask external side effects and workflow completion use separate transactions; compensation supports only end-event triggers and has no built-in templates; existing pending tasks and cross-domain instance-level E2E coverage remain incomplete. Promotion criteria: a problem domain workflow.start producer, atomic ServiceTask and workflow completion, built-in compensation templates and cross-domain instance-level E2E coverage.",
 	},
 	{key: "sla", maturity: MaturityGA, built: true},
 	// 报表域此前只在能力契约表里（报表/运营 = Pilot），矩阵里根本没有这一行——
@@ -128,7 +128,7 @@ var registry = []definition{
 	// 统计），并挂 report:read + 域 read 双闸门——报表页不是权限的旁路。
 	{
 		key: "report", maturity: MaturityPilot, built: true,
-		pilotReason: "管理者服务质量视图（GET /reports/service-quality）已把 KPI/SLA/事件分布/满意度/趋势/工单统计聚合成单请求并携带 metricVersion 口径版本；报表目录也不再有死链（清单与路由共用同一份 reportCatalog，守卫测试逐条断言每个 path 都已注册）。但 MSP 跨租户汇总边界仍未定义（服务商视角拿不到下属租户的合并口径），导出只有动作级审计、缺少导出行数与数据范围摘要。晋升条件：MSP 汇总口径 + 导出产物审计。",
+		pilotReason: "GET /reports/service-quality aggregates manager-facing KPI, SLA, incident distribution, satisfaction, trends and ticket statistics in one request with a metricVersion definition version. Report paths share reportCatalog with route registration, and guard tests verify every path is registered. MSP cross-tenant aggregation boundaries remain undefined, so providers cannot obtain consolidated customer metrics. Export audits record the action but lack exported row counts and a data-scope summary. Promotion criteria: MSP aggregation definitions and export artifact auditing.",
 	},
 	// 2026-10-30 「线上是哪个版本」已收敛到 published_version 指针：发布时
 	// （评审通过 /publish / PUT status 三条入口）在同一事务内为即将上线的正文
@@ -138,7 +138,7 @@ var registry = []definition{
 	// publishedVersion 一律忽略。
 	{
 		key: "knowledge", maturity: MaturityPilot, built: true,
-		pilotReason: "发布版本语义已收敛：published_version 指向线上正文对应的版本快照，三条发布入口（评审通过 /publish / PUT status=published）与已发布文章的在线更新统一维护该指针，撤回与恢复清指针，客户端无法伪造；2026-10-31 分类可见性也已在列表、详情、分类、统计、推荐/最近、检索与问题页反查读面统一收口：SQL 先过滤后分页（total 真实）、作者豁免、权限状态不可得时失败关闭，跨角色回归已覆盖。但知识检索仍缺人工验收口径：典型问题集召回率与真实语料下的引用质量未做验收。晋升条件：典型问题集召回率人工验收 + 真实语料引用质量验收。",
+		pilotReason: "published_version identifies the snapshot of the online article. Review approval, /publish, PUT status=published and online edits consistently maintain the pointer; withdrawal and restoration clear it, and clients cannot forge it. Since 2026-10-31, category visibility is enforced in lists, details, categories, statistics, recommendations/recent items, retrieval and reverse lookup from problems: SQL filters before pagination, totals are accurate, authors retain access, permission lookup failures fail closed and cross-role regressions are covered. Retrieval still lacks human acceptance against representative question sets and real-corpus citation quality. Promotion criteria: human recall acceptance on representative questions and citation quality acceptance with real content.",
 	},
 	// AI 2026-10-23 三契约落地（分诊 + 工单 RCA）：响应带 promptVersion/model/auditId，
 	// 服务端自动落 ai_audit 底账（accepted=NULL），采纳/拒绝走 PATCH 翻转；
@@ -152,7 +152,7 @@ var registry = []definition{
 	// 语料验收尚未跑过，指标达标与否没有人签过字。
 	{
 		key: "ai", maturity: MaturityPilot, built: true, readinessEnv: "ITSM_AI_READY",
-		pilotReason: "分诊与工单 RCA 已强制 promptVersion/model/confidence 并落 ai_audit 底账（采纳/拒绝经 PATCH 翻转，不再由前端自报）；LLM 调用已按租户归集（ai_llm_calls 带 tenant_id/request_id，/ai/metrics 为租户口径；升级前的历史行无法回填归因，按哨兵值排除、租户无归因行时如实报不可用）。溯源已覆盖全能力面且 model 不再失真：分诊/RCA 之外，摘要（method 三态 llm/direct/fallback + 真实模型名）、预测（口径版本 + 真实置信度 + auditId）、chat（检索模式 + 真实命中分 + auditId）均已强制溯源并落 ai_audit 底账；此前 TriageService 把 model 写死成 gpt-4o-mini（生产配的并不是它，底账系统性地指向错误模型）、邮件抽取器未配模型时兜底成同一个硬编码值，现改由 provider 自报（ModelReportingProvider），报不出时如实写 unknown。深度分析（SQL 聚合）刻意不补 model 而只给口径版本与 method=aggregate——给没有模型参与的聚合伪造 model 比缺失更危险。token 配额与成本口径已落地（AIQuotaService：租户月度配额从既有 ai_llm_calls 计量读取不建新表、未配置=不限制且如实报 quotaConfigured=false、超限网关拒绝并留计量痕、评估失败 fail-open——配额是预算保护不是安全边界；单价未配置时 estimatedCost=0 且 costConfigured=false，绝不给猜的单价；/ai/metrics 附带 quota/cost，告警分 warning/exceeded 两级）。评测门禁的自我实现已修（此前候选=期望答案，三项指标恒满分且把实现改坏照样绿），且 CI 评测已接真实生产路径：RAG 期望按文章标题引用真实语料（datasets/corpus/rag_corpus.jsonl，与库的主键解耦），检索走生产 service.RAGService 关键词路径（真实 SQL，召回率 0.80 为真实测得而非自我实现）；预测分数由生产 SLABreachPredictor 产出（排序层=预计解决时长/SLA 窗口，与人工标注独立产生），标注依据逐条留存；摘要候选走 SummarizeService 真实降级路径并有退化敏感性守卫。LLM 档验收通道已就绪（cmd/ai-eval：由人执行、读 llm.* 配置构造真实 provider、配置缺失报错不悄悄降级、产出归档报告，指标与 CI 同口径）。记忆层已落地（短期层）：会话历史回读并抽出实体/实义短语，作为**独立补充检索路**参与召回——此前每轮只用当前 query 检索，「它怎么修」这类指代在整串包含语义下必然零命中，是结构性的不可能；实测指代型 query 由零命中变为命中相关文档。不新建表（数据本就在 messages 表）、不拼接 query（拼接会让当前 query 也命不中）、记忆条目带 fromMemory/memoryQuery 标注且在 prompt 中显式区分「会话记忆线索」与「知识库正文」，不得让模型把「聊过」说成「文档里写着」。情景层亦已落地：历史工单处置经验（tickets.resolution）按标题关键词召回——此前 RAG 关键词检索只覆盖知识文章，「上次这个故障怎么解决的」结构上答不了；情景召回必须经 datascope.ApplyTicketFilter 行级过滤（工单是业务数据，把用户无权查看的工单处置喂给 LLM 等于绕过权限外泄内容），且只取已解决且有处置结论的工单，条目标 object_type=ticket_experience 并在 prompt 中标注「历史工单处置经验，非知识库正文」——历史结论是先例不是标准流程。语义层（RAG+知识库）与程序性层（Skills）此前已具备。渐进式披露亦已落地：检索结果带 truncated/contentLength 信号位（模型此前无从判断片段是否完整，拿半截内容当全文硬答），新增只读工具 get_kb_article 按需读全文（此前工具清单只有检索没有读全文，需要细节的问题结构上答不了——evidence gap 无法闭合）；读全文与检索共用同一套准入（租户/未软删/已发布/时效/分类可见性），两处口径不同会出现「检索命中但读不到」或「绕过权限的读通道」；读不到时报错而非返回空内容（空内容会让模型当「没有正文」然后编造）。剩余阻断：LLM 档与真实生产语料的验收**尚未由人执行过**——指标达标与否没有任何一次真实运行与签字记录，CI 的降级档不能代替真实模型的质量结论（此句曾在记忆层批次合成时意外丢失，本次恢复）。晋升条件：跑一次 cmd/ai-eval -mode llm + 真实知识库语料的质量验收并归档报告（召回率/摘要质量/预测 AUC 达标，验收人确认）。剩余阻断：LLM 档与真实生产语料的验收**尚未由人执行过**——指标达标与否没有任何一次真实运行与签字记录，CI 的降级档不能代替真实模型的质量结论。晋升条件：跑一次 cmd/ai-eval -mode llm + 真实知识库语料的质量验收并归档报告（召回率/摘要质量/预测 AUC 达标，验收人确认）。",
+		pilotReason: "Triage and ticket RCA require promptVersion/model/confidence and persist ai_audit records; acceptance/rejection is changed through PATCH rather than client assertions. ai_llm_calls attributes calls by tenant_id/request_id and /ai/metrics is tenant-scoped. Historical calls without attributable ownership are excluded using sentinel values; tenants without attributed rows are reported unavailable. Provenance also covers summaries (llm/direct/fallback method and actual model), predictions (definition version, actual confidence and auditId), and chat (retrieval mode, actual hit scores and auditId). ModelReportingProvider supplies the actual model; unavailable identity is recorded as unknown rather than the former hard-coded gpt-4o-mini in triage and email extraction. SQL aggregation uses method=aggregate and a definition version without inventing a model. AIQuotaService reads monthly tenant usage from ai_llm_calls without a new table. Unconfigured quotas are unlimited with quotaConfigured=false; exceeding quota is rejected and metered by the gateway. Quota evaluation failures fail open because quotas protect budgets rather than security boundaries. Missing unit prices yield estimatedCost=0 and costConfigured=false; /ai/metrics includes quota/cost with warning/exceeded levels. Evaluation no longer compares expected answers to themselves. CI exercises production RAGService keyword retrieval using real SQL and article titles in datasets/corpus/rag_corpus.jsonl rather than database IDs; recall 0.80 is measured. Production SLABreachPredictor scores use estimated resolution duration divided by the SLA window, independently of documented human labels. Summary candidates use the real SummarizeService fallback with degradation sensitivity guards. Human-run cmd/ai-eval reads llm.* configuration, constructs real providers, fails on missing configuration and archives reports using the CI metric definitions. Short-term memory reads conversation history and extracts entities/meaningful phrases as an independent retrieval path, enabling follow-up references. It reuses messages without a new table or concatenating the current query. Entries carry fromMemory/memoryQuery and prompts distinguish conversation memory from knowledge text. Episodic memory retrieves resolved ticket resolutions using title keywords. datascope.ApplyTicketFilter enforces row-level access; only resolved tickets with conclusions are included, with object_type=ticket_experience and prompts identifying historical experience rather than authoritative knowledge. Semantic RAG/knowledge and procedural Skills memory already exist. Progressive disclosure adds truncated/contentLength signals and read-only get_kb_article for full text. Retrieval and full-text reads share tenant, deletion, publication, validity and category visibility checks; inaccessible full text returns an error rather than empty content. Remaining blocker: no human has executed and signed off LLM acceptance with real production content; CI fallback evaluation cannot establish real-model quality. Promotion criteria: run cmd/ai-eval -mode llm, validate real knowledge corpus recall, summary quality and prediction AUC, and archive a reviewer-approved report.",
 	},
 	// 通知域 2026-10-20/21 闭环三件事：投递审计读面（GET /notification-deliveries）、
 	// 失败重试（保留旧记录作失败证据）、渠道诊断（GET /notifications/channels：
@@ -163,7 +163,7 @@ var registry = []definition{
 	// 审计注入），维持 Pilot 的原因是「没有真实租户联调证据」，不是实现缺失。
 	{
 		key: "connector.feishu", maturity: MaturityPilot, built: true, dependencies: []string{"notification"}, readinessEnv: "ITSM_FEISHU_READY",
-		pilotReason: "Send/HealthCheck/VerifySignature/ParseInbound 与入站去重、回调路由、审计注入齐备，死信重放（/admin/operations）与市场安装闭环也已接通；但这些覆盖仍停在单测与路由测试，未与真实飞书租户做生产验收，也没有在真实渠道故障下演练过死信重放。晋升条件：真实租户收发 + 验签 + 一次真实故障的死信重放演练。",
+		pilotReason: "Send/HealthCheck/VerifySignature/ParseInbound, inbound deduplication, callback routes and audit injection are implemented. Dead-letter replay through /admin/operations and marketplace installation are connected. Coverage remains limited to unit and route tests; production acceptance with a real Feishu tenant and dead-letter replay during a real channel failure have not been performed. Promotion criteria: real-tenant messaging and signature verification, plus a dead-letter replay drill after a real failure.",
 	},
 	// 市场目录 2026-10-23 补齐管理面：平台级权限码 marketplace_catalog:read/write
 	// （只授 sysadmin，租户 admin 仍只有 marketplace:write 用于安装/卸载）+ 目录项
@@ -205,7 +205,7 @@ var registry = []definition{
 	// 工单标签、ticket_tags 0 行）。现已改为写 ticket_tags，并加守卫测试锁表。
 	{
 		key: "tag", maturity: MaturityPilot, built: true,
-		pilotReason: "工单标签（ticket_tags）CRUD、工单绑定与 /admin/tags 页已完整，种子基线也不再错写进组织标签表；但组织标签（tags 表，挂项目/应用/微服务/部门/团队）只有只读查询（GET /api/v1/system/tags 与兼容别名 GET /api/v1/tags），仓储里的 Create/Delete 没有注册路由、整套 TagService 未装配，两张表并存且组织标签侧无写入口。晋升条件：组织标签管理面（写入与挂接）或与工单标签收敛。",
+		pilotReason: "Ticket tag CRUD in ticket_tags, ticket binding and /admin/tags are complete, and the seed baseline no longer writes to the organization tag table. Organization tags in tags, attached to projects/applications/microservices/departments/teams, have read-only GET /api/v1/system/tags and the compatibility alias GET /api/v1/tags. Repository Create/Delete methods have no registered routes, TagService is not wired and the two tables coexist without organization tag write operations. Promotion criteria: organization tag management for writing and association, or convergence with ticket tags.",
 	},
 	// 2026-10-22 晋升 GA：模板的真实表面是 /api/v1/tickets/templates 的 8 个端点
 	// （列表/分类/创建/详情/更新/状态/复制/删除，权限码 ticket_template:*），
@@ -218,7 +218,7 @@ var registry = []definition{
 	// 是否真正可用取决于租户有没有启用身份提供方，由 HealthFor 如实报告。
 	{
 		key: "identity.oidc", maturity: MaturityPilot, built: true,
-		pilotReason: "SSO/OIDC 的 11 个端点与服务齐备，已有 httptest 假 IdP 覆盖登录→回调→换票→JWT 会话整条链路，租户未启用 IdP 时 health 如实降级；但没有与真实 IdP 的联调证据（验签算法、声明映射与时钟偏差以线上为准）。晋升条件：至少一家真实 IdP 的登录/回调/换票验收。",
+		pilotReason: "All 11 SSO/OIDC endpoints and services are available. An httptest fake IdP covers login, callback, token exchange and JWT sessions; health degrades when the tenant has no enabled IdP. Integration acceptance with a real IdP is missing; production signature algorithms, claim mapping and clock skew still require validation. Promotion criteria: login, callback and token exchange acceptance with at least one real IdP.",
 	},
 	// 企微/钉钉连接器（2026-10-21 Disabled→Pilot 转正）：Send/HealthCheck/VerifySignature/
 	// ParseInbound 四项核心与飞书同层级实现（connector/builtin/{wecom,dingtalk}，编译期
@@ -228,11 +228,11 @@ var registry = []definition{
 	// 如实申报，代码能力不再按「未包含在商业发布」隐藏。
 	{
 		key: "connector.wecom", maturity: MaturityPilot, built: true, dependencies: []string{"notification"}, readinessEnv: "ITSM_WECOM_READY",
-		pilotReason: "回调验签与消息收发未与真实企业微信租户联调；OAuth 授权、任务双向同步等飞书级深度集成未做。晋升条件：真实租户收发 + 验签验收。",
+		pilotReason: "Callback signature verification and messaging have not been integrated with a real WeCom tenant. Deeper integration comparable to Feishu, including OAuth and bidirectional task synchronization, is not implemented. Promotion criteria: real-tenant messaging and signature verification acceptance.",
 	},
 	{
 		key: "connector.dingtalk", maturity: MaturityPilot, built: true, dependencies: []string{"notification"}, readinessEnv: "ITSM_DINGTALK_READY",
-		pilotReason: "回调验签与消息收发未与真实钉钉租户联调；工作通知/待办同步等深度集成未做。晋升条件：真实租户收发 + 验签验收。",
+		pilotReason: "Callback signature verification and messaging have not been integrated with a real DingTalk tenant. Deeper work notification and to-do synchronization integration is not implemented. Promotion criteria: real-tenant messaging and signature verification acceptance.",
 	},
 }
 

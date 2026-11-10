@@ -12,6 +12,7 @@ import {
   UserX,
 } from 'lucide-react';
 
+import { departmentLabel } from '@/constants/user';
 import React, { useState, useEffect } from 'react';
 import {
   Card,
@@ -286,7 +287,7 @@ const UserManagement: React.FC = () => {
       width: 100,
     },
     {
-      title: '角色',
+      title: 'Role',
       dataIndex: 'role',
       key: 'role',
       width: 140,
@@ -318,6 +319,7 @@ const UserManagement: React.FC = () => {
       dataIndex: 'department',
       key: 'department',
       width: 110,
+      render: (value: string) => departmentLabel(value),
     },
     {
       title: t('users.columns.phone'),
@@ -332,7 +334,7 @@ const UserManagement: React.FC = () => {
       width: 90,
       render: (active: boolean, record: User) => (
         <Switch
-          aria-label={`切换用户 ${record.name} 的启用状态`}
+          aria-label={`Switch user ${record.name} enabled status`}
           checked={active}
           loading={loading}
           onChange={() => handleToggleUserStatus(record.id, active)}
@@ -475,7 +477,7 @@ const UserManagement: React.FC = () => {
                 allowClear
                 showSearch
                 onChange={value => handleFilterChange('department', value || '')}
-                options={departments.map(d => ({ value: d, label: d }))}
+                options={departments.map(d => ({ value: d, label: departmentLabel(d) }))}
               />
             </Space>
           </Col>
@@ -492,19 +494,19 @@ const UserManagement: React.FC = () => {
                 icon={<Download size={16} />}
                 onClick={() => {
                   // 导出用户数据
-                  const exportData = users.map(user => ({
-                    用户名: user.username,
-                    姓名: user.name,
-                    邮箱: user.email,
-                    部门: user.department || '',
-                    电话: user.phone || '',
-                    状态: user.active ? '激活' : '禁用',
-                    创建时间: user.createdAt,
-                  }));
-                  const headers = ['用户名', '姓名', '邮箱', '部门', '电话', '状态', '创建时间'];
+                  const exportData = users.map(user => [
+                    user.username,
+                    user.name,
+                    user.email,
+                    user.department || '',
+                    user.phone || '',
+                    user.active ? 'Active' : 'Disabled',
+                    user.createdAt,
+                  ]);
+                  const headers = ['User Name', 'Name', 'Email', 'Department', 'Phone', 'Status', 'Created'];
                   const csvContent = [
                     headers.join(','),
-                    ...exportData.map(row => headers.map(header => row[header as keyof typeof row]).join(',')),
+                    ...exportData.map(row => row.join(',')),
                   ].join('\n');
                   const blob = new Blob(['\ufeff' + csvContent], {
                     type: 'text/csv;charset=utf-8;',
@@ -613,7 +615,7 @@ const UserManagement: React.FC = () => {
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item name="department" label={t('users.columns.department')}>
-                <Select placeholder={t('users.form.departmentPlaceholder')} options={[{ value: 'IT部门', label: 'IT部门' }, { value: '财务部门', label: '财务部门' }, { value: '人事部门', label: '人事部门' }, { value: '市场部门', label: '市场部门' }]} />
+                <Select placeholder={t('users.form.departmentPlaceholder')} options={[{ value: 'IT部门', label: 'IT' }, { value: '财务部门', label: 'Finance' }, { value: '人事部门', label: 'HR' }, { value: '市场部门', label: 'Marketing' }]} />
               </Form.Item>
             </Col>
             <Col span={12}>
@@ -633,22 +635,22 @@ const UserManagement: React.FC = () => {
             <Col span={12}>
               <Form.Item
                 name="role"
-                label="主角色"
+                label="Main character"
                 initialValue="end_user"
                 // 角色分层（后端 domain/role 包）：主角色只有 Tier 1 内置 10 值；
                 // 变更经理/问题经理/知识经理/CMDB管理员/服务目录管理员及 5 个 MSP
                 // 角色是 Tier 2/3 叠加角色（副角色），设计上不进主角色词表。
-                tooltip="主角色仅含平台内置角色。变更经理、问题经理、CMDB 管理员等专职角色属「附加角色」，请在右侧 RBAC 角色中叠加授予。"
+                tooltip="The main role only contains platform built-in roles. Full-time roles such as change manager, issue manager, and CMDB administrator are &quot;additional roles&quot; and should be granted in the RBAC role on the right."
               >
-                <Select placeholder="请选择主角色" options={PRIMARY_ROLE_OPTIONS} />
+                <Select placeholder="Please select the main role" options={PRIMARY_ROLE_OPTIONS} />
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item name="roleIds" label="附加角色（可多选）" tooltip="专职经理角色（变更/问题/知识/CMDB/服务目录）与 MSP 协作角色在此叠加授予，与主角色权限取并集。">
+              <Form.Item name="roleIds" label="Additional roles (multiple choices available)" tooltip="The dedicated manager role (Change/Problem/Knowledge/CMDB/Service Catalog) and the MSP collaboration role are superimposed and granted here, and are combined with the main role permissions.">
                 <Select
                   mode="multiple"
                   allowClear
-                  placeholder="请选择附加角色"
+                  placeholder="Please select additional roles"
                   optionFilterProp="label"
                   options={rbacRoles.map(r => ({ value: r.id, label: r.name }))}
                 />
@@ -721,15 +723,15 @@ const UserManagement: React.FC = () => {
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item name="role" label={t('users.role')}>
-                <Select placeholder="不修改则留空" allowClear options={PRIMARY_ROLE_OPTIONS} />
+                <Select placeholder="Leave blank if not modified" allowClear options={PRIMARY_ROLE_OPTIONS} />
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item name="roleIds" label="附加角色（可多选）" tooltip="专职经理角色（变更/问题/知识/CMDB/服务目录）与 MSP 协作角色在此叠加授予，与主角色权限取并集。">
+              <Form.Item name="roleIds" label="Additional roles (multiple choices available)" tooltip="The dedicated manager role (Change/Problem/Knowledge/CMDB/Service Catalog) and the MSP collaboration role are superimposed and granted here, and are combined with the main role permissions.">
                 <Select
                   mode="multiple"
                   allowClear
-                  placeholder="请选择附加角色"
+                  placeholder="Please select additional roles"
                   optionFilterProp="label"
                   options={rbacRoles.map(r => ({ value: r.id, label: r.name }))}
                 />
@@ -740,7 +742,7 @@ const UserManagement: React.FC = () => {
             <Select
               placeholder={t('users.form.departmentPlaceholder')}
               allowClear
-              options={departments.map(dept => ({ value: dept, label: dept }))}
+              options={departments.map(dept => ({ value: dept, label: departmentLabel(dept) }))}
             />
           </Form.Item>
           <Form.Item>
@@ -779,7 +781,7 @@ const UserManagement: React.FC = () => {
             label={t('users.form.newPassword')}
             rules={[
               { required: true, message: t('users.form.requiredNewPassword') },
-              { min: 6, message: '密码至少6个字符' },
+              { min: 6, message: 'Password must be at least 6 characters' },
             ]}
           >
             <Input.Password placeholder={t('users.form.newPasswordPlaceholder')} />
@@ -796,7 +798,8 @@ const UserManagement: React.FC = () => {
                   setSelectedUser(null);
                 }}
               >
-                取消
+
+                Cancel
               </Button>
             </Space>
           </Form.Item>

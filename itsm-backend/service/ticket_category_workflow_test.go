@@ -215,7 +215,7 @@ func TestTicketCategoryWorkflowKeyMustResolve(t *testing.T) {
 	var invalid *common.AppError
 	require.True(t, errors.As(err, &invalid), "未知流程 Key 必须返回参数错误，实际: %v", err)
 	require.Equal(t, 400, invalid.HTTPStatus)
-	require.Equal(t, "工作流不存在、未激活或不属于当前租户", invalid.Message)
+	require.Equal(t, "The workflow does not exist, is not active, or does not belong to the current tenant", invalid.Message)
 
 	existing, err := svc.CreateCategory(ctx, &CreateCategoryRequest{
 		Name: "ok", Code: "ok", TenantID: tenantA.ID, IsActive: true,

@@ -18,7 +18,7 @@ const { Title, Text } = Typography;
  * 后端此时回填全零的 WorkflowUserInfo，所以按 id 判定而不是按文案猜测。
  */
 const ccActorLabel = (info: WorkflowUserInfo): string =>
-  info.id > 0 ? info.fullName : '已删除用户';
+  info.id > 0 ? info.fullName : 'User deleted';
 
 const priorityColor: Record<string, string> = {
   critical: 'red',
@@ -51,7 +51,7 @@ export default function MyTicketCCPage() {
       const resp = await TicketApi.getMyCCRecords();
       setRecords(resp.items);
     } catch (error) {
-      message.error(error instanceof Error ? error.message : '加载抄送记录失败');
+      message.error(error instanceof Error ? error.message : 'Failed to load CC records');
     } finally {
       setLoading(false);
     }
@@ -63,7 +63,7 @@ export default function MyTicketCCPage() {
 
   const columns: ColumnsType<TicketCCRecord> = [
     {
-      title: '工单',
+      title: 'Ticket',
       dataIndex: 'title',
       key: 'title',
       render: (_, record) => (
@@ -76,35 +76,35 @@ export default function MyTicketCCPage() {
       ),
     },
     {
-      title: '状态',
+      title: 'Status',
       dataIndex: 'status',
       key: 'status',
       width: 110,
       render: value => <Tag color={statusColor[value] || 'default'}>{value}</Tag>,
     },
     {
-      title: '优先级',
+      title: 'Priority',
       dataIndex: 'priority',
       key: 'priority',
       width: 110,
       render: value => <Tag color={priorityColor[value] || 'default'}>{value}</Tag>,
     },
     {
-      title: '抄送人',
+      title: 'Cc person',
       dataIndex: ['user', 'fullName'],
       key: 'user',
       width: 140,
       render: (_, record) => ccActorLabel(record.user),
     },
     {
-      title: '添加人',
+      title: 'Add person',
       dataIndex: ['addedBy', 'fullName'],
       key: 'addedBy',
       width: 140,
       render: (_, record) => ccActorLabel(record.addedBy),
     },
     {
-      title: '抄送时间',
+      title: 'Cc time',
       dataIndex: 'addedAt',
       key: 'addedAt',
       width: 180,
@@ -120,13 +120,15 @@ export default function MyTicketCCPage() {
             <Inbox className="w-6 h-6 text-blue-600" />
             <div>
               <Title level={3} className="!mb-0">
-                我的抄送
+
+                My CC
               </Title>
-              <Text type="secondary">集中查看所有抄送给我的工单和抄送历史</Text>
+              <Text type="secondary">Centrally view all tickets and CC history sent to me</Text>
             </div>
           </Space>
           <Button icon={<RefreshCw size={16} />} onClick={loadRecords} loading={loading}>
-            刷新
+
+            Refresh
           </Button>
         </div>
 

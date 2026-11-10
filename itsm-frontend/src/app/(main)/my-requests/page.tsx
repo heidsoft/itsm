@@ -53,15 +53,15 @@ import { formatDateTime } from '@/lib/formatters';
 
 const RequestStatusBadge = ({ status }: { status: string }) => {
   const statusConfig = {
-    submitted: { label: '已提交', color: 'gold', icon: Clock, pulse: true },
-    manager_approved: { label: '主管已批', color: 'blue', icon: Hourglass, pulse: true },
-    it_approved: { label: 'IT已批', color: 'blue', icon: Hourglass, pulse: true },
-    security_approved: { label: '安全已批', color: 'green', icon: CheckCircle, pulse: false },
-    provisioning: { label: '交付中', color: 'processing', icon: Hourglass, pulse: true },
-    delivered: { label: '已交付', color: 'success', icon: CheckCircle, pulse: false },
-    failed: { label: '交付失败', color: 'error', icon: XCircle, pulse: false },
-    rejected: { label: '已拒绝', color: 'error', icon: XCircle, pulse: false },
-    cancelled: { label: '已取消', color: 'default', icon: XCircle, pulse: false },
+    submitted: { label: 'Submitted', color: 'gold', icon: Clock, pulse: true },
+    manager_approved: { label: 'Manager Approved', color: 'blue', icon: Hourglass, pulse: true },
+    it_approved: { label: 'IT Approved', color: 'blue', icon: Hourglass, pulse: true },
+    security_approved: { label: 'Security Approved', color: 'green', icon: CheckCircle, pulse: false },
+    provisioning: { label: 'Provisioning', color: 'processing', icon: Hourglass, pulse: true },
+    delivered: { label: 'Delivered', color: 'success', icon: CheckCircle, pulse: false },
+    failed: { label: 'Failed', color: 'error', icon: XCircle, pulse: false },
+    rejected: { label: 'Rejected', color: 'error', icon: XCircle, pulse: false },
+    cancelled: { label: 'Cancelled', color: 'default', icon: XCircle, pulse: false },
   };
 
   const config = statusConfig[status as keyof typeof statusConfig] || { label: status || '-', color: 'default', icon: XCircle, pulse: false };
@@ -81,7 +81,7 @@ const RequestCard = ({ request }: { request: ServiceRequest }) => {
   return (
     <Card
       className="mb-4 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow"
-     
+
     >
       <div className="flex items-start justify-between mb-4">
         <div className="flex-1">
@@ -92,7 +92,7 @@ const RequestCard = ({ request }: { request: ServiceRequest }) => {
             <RequestStatusBadge status={request.status} />
           </div>
           <h3 className="text-lg font-semibold text-gray-900 mb-2">
-            {request.catalog?.name || '未知服务'}
+            {request.catalog?.name || 'Unknown Service'}
           </h3>
           <p className="text-sm text-gray-600 mb-3">
             {request.catalog?.description || request.reason}
@@ -108,12 +108,13 @@ const RequestCard = ({ request }: { request: ServiceRequest }) => {
           </div>
           <div className="flex items-center gap-1">
             <FileText className="w-4 h-4" />
-            <span>{request.catalog?.category || '其他'}</span>
+            <span>{request.catalog?.category || 'Other'}</span>
           </div>
         </div>
         <Link href={`/my-requests/${request.id}`}>
           <Button type="link" className="flex items-center gap-1 p-0 h-auto">
-            查看详情
+
+            View Details
             <ChevronRight className="w-4 h-4" />
           </Button>
         </Link>
@@ -164,9 +165,9 @@ const MyRequestsPage = () => {
       setTotalPages(Math.max(1, data.totalPages));
     } catch (error) {
       if (requestId !== listRequestIdRef.current) return;
-      console.error('API调用失败:', error);
-      setError('加载失败，请重试');
-      message.error('加载服务请求失败');
+      console.error('API call failed:', error);
+      setError('Loading failed, please try again');
+      message.error('Failed to load service request');
       setRequests([]);
       setTotal(0);
       setTotalPages(1);
@@ -201,7 +202,7 @@ const MyRequestsPage = () => {
     } catch (error) {
       if (requestId !== countsRequestIdRef.current) return;
       // 计数失败不能影响列表主流程，同时不展示过期数字
-      console.error('加载状态计数失败:', error);
+      console.error('Failed to load status count:', error);
       setStatusCounts({});
     }
   };
@@ -224,11 +225,11 @@ const MyRequestsPage = () => {
   }, [debouncedSearch]);
 
   const filterOptions = [
-    { value: 'all', label: '全部', count: statusCounts.all ?? 0 },
-    { value: 'submitted', label: '已提交', count: statusCounts.submitted ?? 0 },
-    { value: 'provisioning', label: '交付中', count: statusCounts.provisioning ?? 0 },
-    { value: 'delivered', label: '已交付', count: statusCounts.delivered ?? 0 },
-    { value: 'rejected', label: '已拒绝', count: statusCounts.rejected ?? 0 },
+    { value: 'all', label: 'All', count: statusCounts.all ?? 0 },
+    { value: 'submitted', label: 'Submitted', count: statusCounts.submitted ?? 0 },
+    { value: 'provisioning', label: 'Provisioning', count: statusCounts.provisioning ?? 0 },
+    { value: 'delivered', label: 'Delivered', count: statusCounts.delivered ?? 0 },
+    { value: 'rejected', label: 'Rejected', count: statusCounts.rejected ?? 0 },
   ];
 
   return (
@@ -238,14 +239,15 @@ const MyRequestsPage = () => {
         <div className="mb-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 mb-1">我的请求</h1>
-              <p className="text-gray-500">查看和跟踪您提交的所有服务请求</p>
+              <h1 className="text-2xl font-bold text-gray-900 mb-1">My Requests</h1>
+              <p className="text-gray-500">View and track all your service requests</p>
             </div>
             <Button
               onClick={() => fetchRequests(currentPage, filter, debouncedSearch)}
               icon={<RefreshCw className="w-4 h-4" />}
             >
-              刷新
+
+              Refresh
             </Button>
           </div>
         </div>
@@ -254,13 +256,14 @@ const MyRequestsPage = () => {
         {error && (
           <Alert
             title={error}
-            description="请检查网络连接或稍后重试"
+            description="Please check your network connection or try again later"
             type="error"
             showIcon
             className="mb-6"
             action={
               <Button size="small" onClick={() => fetchRequests(currentPage, filter, debouncedSearch)}>
-                重试
+
+                Retry
               </Button>
             }
           />
@@ -272,7 +275,7 @@ const MyRequestsPage = () => {
             {/* 搜索框 */}
             <div className="flex-1">
               <Input
-                placeholder="搜索服务名称或描述..."
+                placeholder="Search service name or description..."
                 prefix={<Search className="text-gray-400 w-4 h-4" />}
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
@@ -319,31 +322,32 @@ const MyRequestsPage = () => {
         ) : (
           <Card
             className="text-center py-12 rounded-lg shadow-sm border border-gray-200"
-           
+
           >
             <Empty
               image={Empty.PRESENTED_IMAGE_SIMPLE}
               description={
                 <div className="mb-4">
                   <h3 className="text-lg font-medium text-gray-900 mb-2">
-                    {debouncedSearch ? '没有匹配的请求' : '暂无请求'}
+                    {debouncedSearch ? 'No matching request' : 'No requests'}
                   </h3>
                   <p className="text-gray-500">
                     {debouncedSearch
-                      ? `未找到包含“${debouncedSearch}”的请求`
+                      ? `No file containing "${debouncedSearch}"Request`
                       : filter === 'all'
-                        ? '您还没有提交任何服务请求'
-                        : '当前状态下没有请求'}
+                        ? 'You have not submitted any service requests'
+                        : 'No request in current status'}
                   </p>
                 </div>
               }
             >
               {debouncedSearch ? (
-                <Button onClick={() => setSearchTerm('')}>清除搜索</Button>
+                <Button onClick={() => setSearchTerm('')}>Clear search</Button>
               ) : (
                 <Link href="/service-catalog">
                   <Button type="primary" icon={<FileText className="w-4 h-4" />}>
-                    浏览服务目录
+
+                    Browse service catalog
                   </Button>
                 </Link>
               )}
@@ -355,13 +359,14 @@ const MyRequestsPage = () => {
         {totalPages > 1 && (
           <Card
             className="mt-8 rounded-lg shadow-sm border border-gray-200"
-           
+
             styles={{ body: { padding: '16px 24px' } }}
           >
             <div className="flex items-center justify-between">
               <div className="text-sm text-gray-500">
-                显示第 {(currentPage - 1) * pageSize + 1} -{' '}
-                {Math.min(currentPage * pageSize, total)} 条，共 {total} 条记录
+
+                Show the {(currentPage - 1) * pageSize + 1} -{' '}
+                {Math.min(currentPage * pageSize, total)}  items, total {total}  records
               </div>
               <Pagination
                 current={currentPage}

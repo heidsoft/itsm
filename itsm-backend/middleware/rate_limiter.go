@@ -29,7 +29,7 @@ func LoginRateLimiter() gin.HandlerFunc {
 		// Peek checks without incrementing (to check if already limited)
 		ctx, err := limiterInstance.Peek(c.Request.Context(), key)
 		if err != nil {
-			common.Fail(c, common.InternalErrorCode, "限流服务异常")
+			common.Fail(c, common.InternalErrorCode, "Current limiting service exception")
 			c.Abort()
 			return
 		}
@@ -41,7 +41,7 @@ func LoginRateLimiter() gin.HandlerFunc {
 				retryAfter = 1
 			}
 			c.Header("Retry-After", itoa(retryAfter))
-			common.FailWithData(c, common.RateLimitCode, "登录请求过于频繁，请稍后再试", gin.H{
+			common.FailWithData(c, common.RateLimitCode, "Login requests are too frequent, please try again later.", gin.H{
 				"retryAfterSeconds": retryAfter,
 			})
 			c.Abort()
@@ -50,7 +50,7 @@ func LoginRateLimiter() gin.HandlerFunc {
 
 		// Actually increment the counter for this valid request
 		if _, err := limiterInstance.Get(c.Request.Context(), key); err != nil {
-			common.Fail(c, common.InternalErrorCode, "限流服务异常")
+			common.Fail(c, common.InternalErrorCode, "Current limiting service exception")
 			c.Abort()
 			return
 		}

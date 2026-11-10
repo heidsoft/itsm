@@ -59,18 +59,18 @@ const SLAComplianceChart: React.FC<{ data: SLAData[]; overallValue?: number }> =
   };
 
   const getSLAStatus = (value: number) => {
-    if (value >= 95) return { text: '优秀', color: 'success' };
-    if (value >= 90) return { text: '良好', color: 'processing' };
-    if (value >= 85) return { text: '一般', color: 'warning' };
-    return { text: '需改进', color: 'error' };
+    if (value >= 95) return { text: 'Excellent', color: 'success' };
+    if (value >= 90) return { text: 'Good', color: 'processing' };
+    if (value >= 85) return { text: 'Average', color: 'warning' };
+    return { text: 'Needs improvement', color: 'error' };
   };
 
   const status = getSLAStatus(averageSLA);
 
   return (
     <DashboardChartCard
-      title="SLA 达成率监控"
-      subtitle="服务水平协议整体达成情况"
+      title="SLA achievement rate monitoring"
+      subtitle="Overall achievement of service level agreement"
       icon={<GaugeIcon style={{ width: 20, height: 20 }} />}
       iconColor="#8b5cf6"
       extra={<Tag color={status.color as any}>{status.text}</Tag>}
@@ -87,7 +87,7 @@ const SLAComplianceChart: React.FC<{ data: SLAData[]; overallValue?: number }> =
         {validData.length > 0 && typeof percentValue === 'number' && !isNaN(percentValue) ? (
           <>
             <Statistic
-              title="SLA 达成率"
+              title="SLA achievement rate"
               value={averageSLA}
               precision={1}
               suffix="%"
@@ -119,7 +119,8 @@ const SLAComplianceChart: React.FC<{ data: SLAData[]; overallValue?: number }> =
               color: '#999',
             }}
           >
-            暂无数据
+
+            No data
           </div>
         )}
       </div>
@@ -133,7 +134,7 @@ const SLAComplianceChart: React.FC<{ data: SLAData[]; overallValue?: number }> =
             return (
               <div key={index} className="flex items-center justify-between">
                 <span className="text-sm text-gray-600 font-medium">
-                  {item.service || '未知服务'}
+                  {item.service || 'Unknown Service'}
                 </span>
                 <div className="flex items-center gap-3">
                   <Progress
@@ -143,7 +144,7 @@ const SLAComplianceChart: React.FC<{ data: SLAData[]; overallValue?: number }> =
                     style={{ width: 120 }}
                     format={percent => `${percent?.toFixed(1) || 0}%`}
                   />
-                  <span className="text-xs text-gray-500 w-12 text-right">目标{target}%</span>
+                  <span className="text-xs text-gray-500 w-12 text-right">Target{target}%</span>
                 </div>
               </div>
             );

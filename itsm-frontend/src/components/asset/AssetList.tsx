@@ -44,10 +44,10 @@ const typeColors: Record<string, string> = {
 
 // 类型中文名映射（与 AssetDetail、筛选下拉保持一致）
 const typeLabels: Record<string, string> = {
-  hardware: '硬件',
-  software: '软件',
-  cloud: '云资源',
-  license: '许可证',
+  hardware: 'Hardware',
+  software: 'Software',
+  cloud: 'Cloud Resources',
+  license: 'Licenses',
 };
 
 interface AssetListProps {
@@ -85,7 +85,7 @@ const AssetList: React.FC<AssetListProps> = ({ showActions = true }) => {
       setTotal(resp.total);
     } catch (error) {
       setLoadError(true);
-      message.error('加载资产列表失败');
+      message.error('Failed to load asset list');
     } finally {
       setLoading(false);
     }
@@ -110,7 +110,7 @@ const AssetList: React.FC<AssetListProps> = ({ showActions = true }) => {
 
   const columns = [
     {
-      title: '资产编号',
+      title: 'Asset Number',
       dataIndex:'assetNumber',
       key:'assetNumber',
       width: 130,
@@ -123,7 +123,7 @@ const AssetList: React.FC<AssetListProps> = ({ showActions = true }) => {
       ),
     },
     {
-      title: '资产名称',
+      title: 'Asset Name',
       dataIndex: 'name',
       key: 'name',
       width: 180,
@@ -137,7 +137,7 @@ const AssetList: React.FC<AssetListProps> = ({ showActions = true }) => {
       ),
     },
     {
-      title: '类型',
+      title: 'Type',
       dataIndex: 'type',
       key: 'type',
       width: 100,
@@ -146,28 +146,28 @@ const AssetList: React.FC<AssetListProps> = ({ showActions = true }) => {
       ),
     },
     {
-      title: '状态',
+      title: 'Status',
       dataIndex: 'status',
       key: 'status',
       width: 100,
       render: (status: string) => (
         <Tag color={statusColors[status] || 'default'}>
           {status === 'in-use'
-            ? '使用中'
+            ? 'In Use'
             : status === 'available'
-              ? '可用'
+              ? 'Available'
               : status === 'maintenance'
-                ? '维护中'
+                ? 'Maintenance'
                 : status === 'retired'
-                  ? '已退役'
+                  ? 'Retired'
                   : status === 'disposed'
-                    ? '已处置'
+                    ? 'Disposed'
                     : status}
         </Tag>
       ),
     },
     {
-      title: '分类',
+      title: 'Category',
       dataIndex: 'category',
       key: 'category',
       width: 120,
@@ -180,7 +180,7 @@ const AssetList: React.FC<AssetListProps> = ({ showActions = true }) => {
       ),
     },
     {
-      title: '分配给',
+      title: 'Assigned To',
       dataIndex:'assignedToName',
       key:'assignedToName',
       width: 120,
@@ -193,7 +193,7 @@ const AssetList: React.FC<AssetListProps> = ({ showActions = true }) => {
       ),
     },
     {
-      title: '位置',
+      title: 'Location',
       dataIndex: 'location',
       key: 'location',
       width: 150,
@@ -207,38 +207,38 @@ const AssetList: React.FC<AssetListProps> = ({ showActions = true }) => {
       ),
     },
     {
-      title: '采购日期',
+      title: 'Purchase date',
       dataIndex:'purchaseDate',
       key:'purchaseDate',
       width: 120,
     },
     {
-      title: '创建时间',
+      title: 'Created',
       dataIndex: 'createdAt',
       key: 'createdAt',
       width: 150,
       render: (date: string) => dayjs(date).format('YYYY-MM-DD HH:mm'),
     },
     {
-      title: '操作',
+      title: 'Actions',
       key: 'action',
       width: 120,
       render: (_: any, record: any) => (
-        <Space aria-label="操作按钮">
-          <Tooltip title="查看资产详情">
+        <Space aria-label="Action button">
+          <Tooltip title="View asset details">
             <Button
               type="text"
               icon={<Eye />}
               onClick={() => router.push(`/assets/${record.id}`)}
-              aria-label={`查看资产 ${record.name || record.assetNumber}`}
+              aria-label={`View assets ${record.name || record.assetNumber}`}
             />
           </Tooltip>
-          <Tooltip title="编辑资产信息">
+          <Tooltip title="Edit asset information">
             <Button
               type="text"
               icon={<Pencil />}
               onClick={() => router.push(`/assets/${record.id}/edit`)}
-              aria-label={`编辑资产 ${record.name || record.assetNumber}`}
+              aria-label={`Edit assets ${record.name || record.assetNumber}`}
             />
           </Tooltip>
         </Space>
@@ -250,51 +250,53 @@ const AssetList: React.FC<AssetListProps> = ({ showActions = true }) => {
     <div style={{ padding: '24px' }}>
       <Card>
         <Form form={form} layout="inline" style={{ marginBottom: 16 }}>
-          <Form.Item name="status" label="状态">
+          <Form.Item name="status" label="Status">
             <Select
-              placeholder="选择状态"
+              placeholder="Select status"
               allowClear
               style={{ width: 150 }}
               onChange={handleSearch}
               options={[
-                { value: 'available', label: '可用' },
-                { value: 'in-use', label: '使用中' },
-                { value: 'maintenance', label: '维护中' },
-                { value: 'retired', label: '已退役' },
-                { value: 'disposed', label: '已处置' },
+                { value: 'available', label: 'Available' },
+                { value: 'in-use', label: 'In Use' },
+                { value: 'maintenance', label: 'Maintenance' },
+                { value: 'retired', label: 'Retired' },
+                { value: 'disposed', label: 'Disposed' },
               ]}
             />
           </Form.Item>
-          <Form.Item name="type" label="类型">
+          <Form.Item name="type" label="Type">
             <Select
-              placeholder="选择类型"
+              placeholder="Select"
               allowClear
               style={{ width: 150 }}
               onChange={handleSearch}
               options={[
-                { value: 'hardware', label: '硬件' },
-                { value: 'software', label: '软件' },
-                { value: 'cloud', label: '云资源' },
-                { value: 'license', label: '许可证' },
+                { value: 'hardware', label: 'Hardware' },
+                { value: 'software', label: 'Software' },
+                { value: 'cloud', label: 'Cloud Resources' },
+                { value: 'license', label: 'Licenses' },
               ]}
             />
           </Form.Item>
-          <Form.Item name="category" label="分类">
-            <Input placeholder="分类" style={{ width: 150 }} />
+          <Form.Item name="category" label="Category">
+            <Input placeholder="Category" style={{ width: 150 }} />
           </Form.Item>
           <Form.Item>
             <Space>
               <Button type="primary" icon={<Search />} onClick={handleSearch}>
-                搜索
+
+                Search
               </Button>
-              <Button onClick={handleReset}>重置</Button>
+              <Button onClick={handleReset}>Reset</Button>
               {showActions && (
                 <Button
                   type="primary"
                   icon={<Plus />}
                   onClick={() => router.push('/assets/new')}
                 >
-                  创建资产
+
+                  Create assets
                 </Button>
               )}
             </Space>
@@ -312,8 +314,8 @@ const AssetList: React.FC<AssetListProps> = ({ showActions = true }) => {
               <LoadingEmptyError
                 state="empty"
                 empty={{
-                  title: '暂无资产数据',
-                  actionText: '新增资产',
+                  title: 'No asset data yet',
+                  actionText: 'Add Asset',
                   onAction: () => router.push('/assets/new'),
                   showAction: canCreateAsset,
                   icon: <Monitor size={48} />,
@@ -328,7 +330,7 @@ const AssetList: React.FC<AssetListProps> = ({ showActions = true }) => {
             onChange: handlePageChange,
             showSizeChanger: true,
             showQuickJumper: true,
-            showTotal: total => `共 ${total} 条`,
+            showTotal: total => `Total ${total} items`,
           }}
         />
       </Card>

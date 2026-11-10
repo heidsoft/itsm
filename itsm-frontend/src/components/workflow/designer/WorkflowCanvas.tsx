@@ -13,7 +13,7 @@ const BPMNDesigner = dynamic(() => import('../BPMNDesigner'), {
   ssr: false,
   loading: () => (
     <div className="flex items-center justify-center h-full">
-      <Spin size="large" description="加载流程设计器..." />
+      <Spin size="large" description="Loading process designer..." />
     </div>
   ),
 });

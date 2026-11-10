@@ -37,7 +37,7 @@ const defaultConfig: ErrorHandlerConfig = {
   showMessage: true,
   logToConsole: true,
   reportToService: true,
-  fallbackMessage: '操作失败，请稍后重试',
+  fallbackMessage: 'Operation failed, please try again later.',
 };
 
 // 获取用户友好的错误消息
@@ -50,27 +50,27 @@ const getUserFriendlyMessage = (error: unknown): string => {
     const message = error.message;
     // 网络错误
     if (message.includes('Network Error')) {
-      return '网络连接失败，请检查网络设置';
+      return 'Network connection failed, please check network settings';
     }
 
     // 超时错误
     if (message.includes('timeout')) {
-      return '请求超时，请稍后重试';
+      return 'Request timed out, please try again later.';
     }
 
     // 权限错误
     if (message.includes('401') || message.includes('Unauthorized')) {
-      return '登录已过期，请重新登录';
+      return 'Login has expired, please log in again';
     }
 
     // 权限不足
     if (message.includes('403') || message.includes('Forbidden')) {
-      return '权限不足，无法执行此操作';
+      return 'Insufficient permissions to perform this operation';
     }
 
     // 资源不存在
     if (message.includes('404') || message.includes('Not Found')) {
-      return '请求的资源不存在';
+      return 'The requested resource does not exist';
     }
 
     // 版本冲突（乐观锁）
@@ -81,7 +81,7 @@ const getUserFriendlyMessage = (error: unknown): string => {
       message.includes('版本冲突') ||
       message.includes('已被修改')
     ) {
-      return '数据已被其他用户修改，请刷新页面后重试';
+      return 'The data has been modified by other users, please refresh the page and try again';
     }
 
     // 状态转换错误
@@ -91,25 +91,25 @@ const getUserFriendlyMessage = (error: unknown): string => {
       message.includes('不允许') ||
       message.includes('状态转换')
     ) {
-      return '当前状态不允许此操作，请刷新页面查看最新状态';
+      return 'This operation is not allowed in the current status. Please refresh the page to view the latest status.';
     }
 
     // 服务器错误
     if (message.includes('500') || message.includes('Internal Server Error')) {
-      return '服务器内部错误，请联系管理员';
+      return 'Internal server error, please contact the administrator';
     }
 
     return message;
   }
 
-  return '未知错误';
+  return 'Unknown error';
 };
 
 // 展示文案：有动作标签时仍要带上原因。只说「分配失败」，用户无法区分
 // 权限不足、版本冲突和参数错误，只会反复点同一个按钮。
 const buildDisplayMessage = (friendlyMessage: string, customMessage?: string): string => {
   if (!customMessage) return friendlyMessage;
-  if (!friendlyMessage || friendlyMessage === customMessage || friendlyMessage === '未知错误') {
+  if (!friendlyMessage || friendlyMessage === customMessage || friendlyMessage === 'Unknown error') {
     return customMessage;
   }
   return `${customMessage}：${friendlyMessage}`;
@@ -206,7 +206,7 @@ export const useErrorHandler = (config: Partial<ErrorHandlerConfig> = {}) => {
       const errorMessages = errors
         .map(err => (err instanceof Error ? err.message : String(err)))
         .join('; ');
-      handleError(new Error(errorMessages), context, '表单验证失败');
+      handleError(new Error(errorMessages), context, 'Form validation failed');
     },
     [handleError]
   );
@@ -214,16 +214,16 @@ export const useErrorHandler = (config: Partial<ErrorHandlerConfig> = {}) => {
   // 处理网络错误
   const handleNetworkError = useCallback(
     (error: unknown, context?: string) => {
-      let message = '网络连接失败';
+      let message = 'Network connection failed';
 
       if (error instanceof Error) {
         const err = error as any;
         if (err.code === 'NETWORK_ERROR') {
-          message = '网络连接失败，请检查网络设置';
+          message = "Network connection failed, please check network settings";
         } else if (err.code === 'TIMEOUT') {
-          message = '请求超时，请稍后重试';
+          message = "Request timed out, please try again later.";
         } else if (err.code === 'SERVER_ERROR') {
-          message = '服务器错误，请稍后重试';
+          message = "Server error, please try again later";
         }
       }
 
@@ -271,8 +271,8 @@ export const handleErrorBoundary = (error: Error, errorInfo: unknown) => {
 
   const appError: AppError = {
     code: 'COMPONENT_ERROR',
-    message: error?.message || '组件渲染错误',
-    displayMessage: error?.message || '组件渲染错误',
+    message: error?.message || 'Component rendering error',
+    displayMessage: error?.message || 'Component rendering error',
     details: errorDetails,
     context: 'ErrorBoundary',
   };

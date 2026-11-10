@@ -161,9 +161,9 @@ export const CATALOG_STATUS_META: Record<
   CatalogItemStatus,
   { label: string; color: string; hint: string }
 > = {
-  draft: { label: '草稿', color: 'default', hint: '尚未上架，租户看不到' },
-  reviewing: { label: '待审', color: 'processing', hint: '审核中，尚未上架' },
-  published: { label: '已上架', color: 'green', hint: '租户可浏览并安装' },
-  rejected: { label: '已驳回', color: 'red', hint: '审核未通过，需修改后重新上架' },
-  deprecated: { label: '已下架', color: 'orange', hint: '停止新安装；已安装租户不受影响' },
+  draft: { label: 'Draft', color: 'default', hint: 'Not yet on the shelves, tenants cannot see it' },
+  reviewing: { label: 'Pending review', color: 'processing', hint: 'Under review, not yet on the shelves' },
+  published: { label: 'Already on the shelves', color: 'green', hint: 'Tenant can browse and install' },
+  rejected: { label: 'Rejected', color: 'red', hint: 'The review failed and needs to be modified and re-listed.' },
+  deprecated: { label: 'Removed', color: 'orange', hint: 'Stop new installations; already installed tenants are not affected' },
 };

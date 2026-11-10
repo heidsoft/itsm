@@ -37,14 +37,14 @@ func (h *Handler) reviewHandler(action string) gin.HandlerFunc {
 			operatorID, _ = v.(int)
 		}
 		if operatorID <= 0 {
-			common.Fail(c, common.UnauthorizedCode, "未授权访问")
+			common.Fail(c, common.UnauthorizedCode, "Unauthorized access")
 			return
 		}
 
 		var req reviewRequest
 		// 允许空 body：submit/withdraw 无需意见。只有解析失败才算参数错误。
 		if err := c.ShouldBindJSON(&req); err != nil && !strings.Contains(err.Error(), "EOF") {
-			common.ParamErrorWithErr(c, err, "请求参数错误")
+			common.ParamErrorWithErr(c, err, "Wrong request parameters")
 			return
 		}
 
@@ -65,14 +65,14 @@ func (h *Handler) reviewHandler(action string) gin.HandlerFunc {
 		case ReviewActionRepubish:
 			article, err = h.svc.RepublishReview(ctx, id, tenantID, operatorID, req.Comment)
 		default:
-			common.Fail(c, common.NotImplementedCode, "未实现的评审动作: "+action)
+			common.Fail(c, common.NotImplementedCode, "Unimplemented review action:"+action)
 			return
 		}
 
 		if err != nil {
 			// 状态机拒绝（当前状态不允许）由 service 返回 409 型错误，
 			// RespondError 负责映射，不要在此吞成 500。
-			common.RespondError(c, err, "评审操作失败")
+			common.RespondError(c, err, "Review operation failed")
 			return
 		}
 

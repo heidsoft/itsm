@@ -41,15 +41,15 @@ func (s *AnalyticsService) GetDeepAnalytics(ctx context.Context, req *dto.DeepAn
 	// 把「你没传 timeRange」表现为「服务端故障」。改用 AppError 后
 	// classifyError 会按 HTTPStatus 归类为 400。
 	if len(req.TimeRange) != 2 {
-		return nil, common.NewBadRequestError("timeRange 必须恰好包含起止两个日期（YYYY-MM-DD）", nil)
+		return nil, common.NewBadRequestError("timeRange must contain exactly two dates (YYYY-MM-DD)", nil)
 	}
 	startTime, err := time.Parse("2006-01-02", req.TimeRange[0])
 	if err != nil {
-		return nil, common.NewBadRequestError("timeRange 起始日期格式非法，应为 YYYY-MM-DD", err)
+		return nil, common.NewBadRequestError("timeRange start date format is illegal, should be YYYY-MM-DD", err)
 	}
 	endTime, err := time.Parse("2006-01-02", req.TimeRange[1])
 	if err != nil {
-		return nil, common.NewBadRequestError("timeRange 结束日期格式非法，应为 YYYY-MM-DD", err)
+		return nil, common.NewBadRequestError("timeRange end date format is illegal, should be YYYY-MM-DD", err)
 	}
 	endTime = endTime.Add(24 * time.Hour) // 包含结束日期
 
@@ -155,16 +155,16 @@ func (s *AnalyticsService) getDimensionValue(t *ent.Ticket, dimension string) st
 		return t.Priority
 	case "assignee":
 		if t.AssigneeID > 0 {
-			return fmt.Sprintf("用户%d", t.AssigneeID)
+			return fmt.Sprintf("User %d", t.AssigneeID)
 		}
-		return "未分配"
+		return "Unassigned"
 	case "category":
 		if t.CategoryID > 0 {
-			return fmt.Sprintf("分类%d", t.CategoryID)
+			return fmt.Sprintf("Category %d", t.CategoryID)
 		}
-		return "未分类"
+		return "Uncategorized"
 	default:
-		return "未知"
+		return "Unknown"
 	}
 }
 
@@ -313,7 +313,7 @@ func (s *AnalyticsService) exportToCSV(response *dto.DeepAnalyticsResponse) ([]b
 	var csvData bytes.Buffer
 	csvData.WriteString("\xEF\xBB\xBF")
 	w := csv.NewWriter(&csvData)
-	if err := w.Write([]string{"名称", "数值", "数量", "平均时间"}); err != nil {
+	if err := w.Write([]string{"Name", "Value", "Count", "Average Time"}); err != nil {
 		return nil, "", err
 	}
 
@@ -330,13 +330,13 @@ func (s *AnalyticsService) exportToCSV(response *dto.DeepAnalyticsResponse) ([]b
 
 	// 添加汇总信息
 	_ = w.Write([]string{})
-	_ = w.Write([]string{"汇总信息"})
-	_ = w.Write([]string{"总计", fmt.Sprint(response.Summary.Total)})
-	_ = w.Write([]string{"已解决", fmt.Sprint(response.Summary.Resolved)})
-	_ = w.Write([]string{"平均响应时间", fmt.Sprintf("%.2f", response.Summary.AvgResponseTime)})
-	_ = w.Write([]string{"平均解决时间", fmt.Sprintf("%.2f", response.Summary.AvgResolutionTime)})
-	_ = w.Write([]string{"SLA合规率", fmt.Sprintf("%.2f%%", response.Summary.SLACompliance)})
-	_ = w.Write([]string{"客户满意度", fmt.Sprintf("%.2f", response.Summary.CustomerSatisfaction)})
+	_ = w.Write([]string{"Summary"})
+	_ = w.Write([]string{"Total", fmt.Sprint(response.Summary.Total)})
+	_ = w.Write([]string{"Resolved", fmt.Sprint(response.Summary.Resolved)})
+	_ = w.Write([]string{"Average Response Time", fmt.Sprintf("%.2f", response.Summary.AvgResponseTime)})
+	_ = w.Write([]string{"Average Resolution Time", fmt.Sprintf("%.2f", response.Summary.AvgResolutionTime)})
+	_ = w.Write([]string{"SLA Compliance", fmt.Sprintf("%.2f%%", response.Summary.SLACompliance)})
+	_ = w.Write([]string{"Customer Satisfaction", fmt.Sprintf("%.2f", response.Summary.CustomerSatisfaction)})
 	w.Flush()
 	if err := w.Error(); err != nil {
 		return nil, "", err

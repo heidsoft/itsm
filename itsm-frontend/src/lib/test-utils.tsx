@@ -120,19 +120,19 @@ export const mockTickets = () =>
   mockData.array(
     () => ({
       id: mockData.string(8),
-      title: `工单标题 ${mockData.string(10)}`,
-      description: `工单描述 ${mockData.string(50)}`,
+      title: `Ticket Title ${mockData.string(10)}`,
+      description: `Ticket Description ${mockData.string(50)}`,
       status: ['open', 'in_progress', 'resolved', 'closed'][mockData.number(0, 3)],
       priority: ['low', 'medium', 'high', 'urgent'][mockData.number(0, 3)],
       category: ['incident', 'request', 'problem', 'change'][mockData.number(0, 3)],
       assignee: {
         id: mockData.string(6),
-        name: `用户 ${mockData.string(5)}`,
+        name: `Users ${mockData.string(5)}`,
         email: mockData.email(),
       },
       requester: {
         id: mockData.string(6),
-        name: `请求者 ${mockData.string(5)}`,
+        name: `Requester ${mockData.string(5)}`,
         email: mockData.email(),
       },
       createdAt: mockData.date(),
@@ -146,10 +146,10 @@ export const mockUsers = () =>
   mockData.array(
     () => ({
       id: mockData.string(6),
-      name: `用户 ${mockData.string(5)}`,
+      name: `Users ${mockData.string(5)}`,
       email: mockData.email(),
       role: ['admin', 'user', 'agent', 'manager'][mockData.number(0, 3)],
-      department: `部门 ${mockData.string(4)}`,
+      department: `Department ${mockData.string(4)}`,
       status: ['active', 'inactive'][mockData.number(0, 1)],
       createdAt: mockData.date(),
     }),

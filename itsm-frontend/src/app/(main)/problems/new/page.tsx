@@ -25,10 +25,15 @@ const CreateProblemPageContent = () => {
 
     if (incidentId) {
       form.setFieldsValue({
-        title: `由事件 ${incidentId} 引起的问题: ${incidentTitle || ''}`,
-        description: `此问题由以下事件引发：\n事件ID: ${incidentId}\n事件标题: ${
+        title: `by event ${incidentId} Problem caused by: ${incidentTitle || ''}`,
+        description: `This problem is caused by the following event:
+Event ID: ${incidentId}
+Event title: ${
           incidentTitle || ''
-        }\n事件描述: ${incidentDescription || ''}\n\n请在此处填写问题的详细描述和根本原因分析...`,
+        }
+Event description: ${incidentDescription || ''}
+
+Please fill in a detailed description and root cause analysis of the problem here...`,
       });
     }
   }, [searchParams, form]);
@@ -55,7 +60,7 @@ const CreateProblemPageContent = () => {
       message.success(t('problems.createSuccess'));
       router.push('/problems');
     } catch (error) {
-      console.error('创建问题失败:', error);
+      console.error('Failed to create issue:', error);
       message.error(t('problems.createFailed'));
     } finally {
       setLoading(false);
@@ -63,10 +68,10 @@ const CreateProblemPageContent = () => {
   };
 
   const priorityOptions = [
-    { value: ProblemPriority.LOW, label: '低' },
-    { value: ProblemPriority.MEDIUM, label: '中' },
-    { value: ProblemPriority.HIGH, label: '高' },
-    { value: ProblemPriority.CRITICAL, label: '紧急' },
+    { value: ProblemPriority.LOW, label: 'Low' },
+    { value: ProblemPriority.MEDIUM, label: 'Medium' },
+    { value: ProblemPriority.HIGH, label: 'High' },
+    { value: ProblemPriority.CRITICAL, label: 'Urgent' },
   ];
 
   return (
@@ -75,13 +80,14 @@ const CreateProblemPageContent = () => {
         <button
           onClick={() => router.back()}
           className="flex items-center text-blue-600 hover:underline mb-4"
-          aria-label="返回问题列表"
+          aria-label="Back to problem list"
         >
           <ArrowLeft className="w-5 h-5 mr-2" />
-          返回问题列表
+
+          Back to problem list
         </button>
-        <h2 className="text-4xl font-bold text-gray-800">新建问题</h2>
-        <p className="text-gray-500 mt-1">识别、分析和解决IT服务的根本原因</p>
+        <h2 className="text-4xl font-bold text-gray-800">New Problem</h2>
+        <p className="text-gray-500 mt-1">Identify, analyze and resolve root causes of IT services</p>
       </header>
 
       <Card className="shadow-md">
@@ -91,12 +97,12 @@ const CreateProblemPageContent = () => {
           onFinish={handleSubmit}
           initialValues={{
             priority: ProblemPriority.MEDIUM,
-            category: '系统问题',
+            category: 'System problem',
           }}
         >
           {searchParams.get('fromIncidentId') && (
             <Alert
-              title={`此问题由事件 ${searchParams.get('fromIncidentId')} 触发`}
+              title={`This issue is caused by the event ${searchParams.get('fromIncidentId')} trigger`}
               type="info"
               showIcon
               className="mb-6"
@@ -104,73 +110,74 @@ const CreateProblemPageContent = () => {
           )}
 
           <Form.Item
-            label="问题标题"
+            label="Question title"
             name="title"
             rules={[
-              { required: true, message: '请输入问题标题' },
-              { min: 2, max: 200, message: '标题长度应在2-200字符之间' },
+              { required: true, message: 'Please enter a question title' },
+              { min: 2, max: 200, message: 'Title length should be between 2-200 characters' },
             ]}
           >
-            <Input placeholder="简要描述问题内容" />
+            <Input placeholder="Briefly describe the problem content" />
           </Form.Item>
 
           <Form.Item
-            label="详细描述"
+            label="Detailed description"
             name="description"
             rules={[
-              { required: true, message: '请输入问题详细描述' },
-              { min: 10, max: 5000, message: '描述长度应在10-5000字符之间' },
+              { required: true, message: 'Please enter a detailed description of the problem' },
+              { min: 10, max: 5000, message: 'Description length should be between 10-5000 characters' },
             ]}
           >
             <TextArea
               rows={6}
-              placeholder="请提供问题的详细信息，包括影响范围、发生时间、已观察到的现象等..."
+              placeholder="Please provide detailed information about the problem, including scope of impact, time of occurrence, observed phenomena, etc..."
             />
           </Form.Item>
 
           <Form.Item
-            label="优先级"
+            label="Priority"
             name="priority"
-            rules={[{ required: true, message: '请选择优先级' }]}
+            rules={[{ required: true, message: 'Please select priority' }]}
           >
-            <Select placeholder="选择优先级" options={priorityOptions} />
+            <Select placeholder="Select priority" options={priorityOptions} />
           </Form.Item>
 
           <Form.Item
-            label="分类"
+            label="Category"
             name="category"
-            rules={[{ required: true, message: '请选择分类' }]}
+            rules={[{ required: true, message: 'Please select a category' }]}
           >
-            <Select placeholder="选择分类" options={ProblemCategoryOptions} />
+            <Select placeholder="Select category" options={ProblemCategoryOptions} />
           </Form.Item>
 
           <Form.Item
-            label="根本原因分析 (RCA)"
+            label="Root Cause Analysis (RCA)"
             name="rootCause"
             rules={[
-              { required: true, message: '请输入根本原因分析' },
-              { min: 10, max: 5000, message: '内容长度应在10-5000字符之间' },
+              { required: true, message: 'Please enter root cause analysis' },
+              { min: 10, max: 5000, message: 'Content length should be between 10-5000 characters' },
             ]}
           >
-            <TextArea rows={4} placeholder="请详细说明问题的根本原因..." />
+            <TextArea rows={4} placeholder="Please elaborate on the root cause of the problem..." />
           </Form.Item>
 
           <Form.Item
-            label="影响范围"
+            label="Impact Range"
             name="impact"
             rules={[
-              { required: true, message: '请输入影响范围' },
-              { min: 10, max: 5000, message: '内容长度应在10-5000字符之间' },
+              { required: true, message: 'Please enter the scope of influence' },
+              { min: 10, max: 5000, message: 'Content length should be between 10-5000 characters' },
             ]}
           >
-            <TextArea rows={3} placeholder="请描述问题的影响范围，如影响哪些用户、服务或业务..." />
+            <TextArea rows={3} placeholder="Please describe the scope of the problem, such as which users, services or businesses are affected..." />
           </Form.Item>
 
           <Form.Item className="mb-0">
             <div className="flex justify-end space-x-4">
-              <Button onClick={() => router.back()}>取消</Button>
+              <Button onClick={() => router.back()}>Cancel</Button>
               <Button type="primary" htmlType="submit" loading={loading}>
-                创建问题
+
+                Create issue
               </Button>
             </div>
           </Form.Item>

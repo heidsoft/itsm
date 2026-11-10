@@ -36,7 +36,7 @@ describe('useVersionControl', () => {
       expect(error.currentVersion).toBe(1);
       expect(error.serverVersion).toBe(3);
       expect(error.serverData).toEqual({ id: 1 });
-      expect(error.message).toContain('版本冲突');
+      expect(error.message).toContain("Version conflict");
     });
   });
 

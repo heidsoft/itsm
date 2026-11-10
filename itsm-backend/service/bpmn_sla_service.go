@@ -56,7 +56,7 @@ func (s *BPMNSLAService) GetProcessSLA(ctx context.Context, processDefinitionKey
 		Where(processdefinition.Key(processDefinitionKey)).
 		First(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("获取流程定义失败: %w", err)
+		return nil, fmt.Errorf("Failed to get process definition: %w", err)
 	}
 
 	// 从流程变量中获取SLA配置
@@ -244,7 +244,7 @@ func (s *BPMNSLAService) CheckSLAViolations(ctx context.Context, tenantID int) (
 		Where(processinstance.TenantID(tenantID)).
 		All(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("查询流程实例失败: %w", err)
+		return nil, fmt.Errorf("Failed to query process instance: %w", err)
 	}
 
 	for _, instance := range instances {
@@ -274,7 +274,7 @@ func (s *BPMNSLAService) CheckSLAViolations(ctx context.Context, tenantID int) (
 		Where(processtask.TenantID(tenantID)).
 		All(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("查询任务失败: %w", err)
+		return nil, fmt.Errorf("Query task failed: %w", err)
 	}
 
 	for _, task := range tasks {

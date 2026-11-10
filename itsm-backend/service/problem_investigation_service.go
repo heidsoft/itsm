@@ -55,7 +55,7 @@ func (s *ProblemInvestigationService) CreateKnowledgeArticle(ctx context.Context
 	// source_problem_id 是问题→知识的权威来源字段：写入前必须确认问题属于当前租户，
 	// 跨租户 ID 与不存在同样返回 404，避免用知识文章反查别家问题的标题。
 	if _, ok, err := s.repo.FetchProblemTitle(ctx, req.ProblemID, tenantID); err != nil {
-		return nil, fmt.Errorf("查询问题失败: %w", err)
+		return nil, fmt.Errorf("Query problem failed: %w", err)
 	} else if !ok {
 		return nil, notFoundError("问题不存在", req.ProblemID)
 	}
@@ -90,7 +90,7 @@ var problemInvestigationStatusTransitions = map[string]map[string]struct{}{
 func (s *ProblemInvestigationService) transitionProblemStatus(ctx context.Context, problemID int, tenantID int, targetStatus string) error {
 	currentStatus, err := s.repo.CurrentProblemStatus(ctx, problemID, tenantID)
 	if err != nil {
-		return fmt.Errorf("查询问题状态失败: %v", err)
+		return fmt.Errorf("Failed to query problem status: %v", err)
 	}
 
 	if currentStatus == targetStatus {
@@ -98,19 +98,19 @@ func (s *ProblemInvestigationService) transitionProblemStatus(ctx context.Contex
 	}
 	allowed, ok := problemInvestigationStatusTransitions[currentStatus]
 	if !ok {
-		return fmt.Errorf("问题当前状态 %q 非法，拒绝状态联动", currentStatus)
+		return fmt.Errorf("The current status of the problem %q is illegal and status linkage is refused.", currentStatus)
 	}
 	if _, ok := allowed[targetStatus]; !ok {
-		return fmt.Errorf("问题状态 %q 不允许转换为 %q", currentStatus, targetStatus)
+		return fmt.Errorf("Problem status %q is not allowed to convert to %q", currentStatus, targetStatus)
 	}
 
 	updated, err := s.repo.UpdateProblemStatusWithGuard(ctx, problemID, tenantID, currentStatus, targetStatus, time.Now())
 	if err != nil {
-		return fmt.Errorf("更新问题状态失败: %v", err)
+		return fmt.Errorf("Failed to update problem status: %v", err)
 	}
 	if !updated {
 		// 并发竞争：状态已被其他请求改变，按失败处理由调用方决定是否重试
-		return fmt.Errorf("问题状态已被并发修改，请刷新后重试")
+		return fmt.Errorf("The problem status has been modified concurrently, please refresh and try again")
 	}
 	return nil
 }
@@ -122,7 +122,7 @@ func (s *ProblemInvestigationService) GetRootCauseAnalysis(ctx context.Context, 
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, notFoundError("根因分析不存在", id)
 		}
-		return nil, fmt.Errorf("查询根因分析失败: %v", err)
+		return nil, fmt.Errorf("Query root cause analysis failed: %v", err)
 	}
 	return analysis, nil
 }
@@ -134,7 +134,7 @@ func (s *ProblemInvestigationService) GetProblemSolution(ctx context.Context, id
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, notFoundError("解决方案不存在", id)
 		}
-		return nil, fmt.Errorf("查询解决方案失败: %v", err)
+		return nil, fmt.Errorf("Failed to query solution: %v", err)
 	}
 	return solution, nil
 }
@@ -143,7 +143,7 @@ func (s *ProblemInvestigationService) GetProblemSolution(ctx context.Context, id
 func (s *ProblemInvestigationService) CreateProblemInvestigation(ctx context.Context, req *dto.CreateProblemInvestigationRequest, tenantID int) (*dto.ProblemInvestigationResponse, error) {
 	// 检查问题是否存在
 	if _, ok, err := s.repo.FetchProblemTitle(ctx, req.ProblemID, tenantID); err != nil {
-		return nil, fmt.Errorf("查询问题失败: %v", err)
+		return nil, fmt.Errorf("Query problem failed: %v", err)
 	} else if !ok {
 		return nil, notFoundError("问题不存在", req.ProblemID)
 	}
@@ -151,7 +151,7 @@ func (s *ProblemInvestigationService) CreateProblemInvestigation(ctx context.Con
 	// 检查是否已存在调查记录
 	exists, err := s.repo.InvestigationExistsByProblem(ctx, req.ProblemID, tenantID)
 	if err != nil {
-		return nil, fmt.Errorf("查询调查记录失败: %v", err)
+		return nil, fmt.Errorf("Failed to query investigation records: %v", err)
 	}
 	if exists {
 		return nil, duplicateInvestigationError(req.ProblemID)
@@ -169,7 +169,7 @@ func (s *ProblemInvestigationService) CreateProblemInvestigation(ctx context.Con
 		if isUniqueViolation(err) {
 			return nil, duplicateInvestigationError(req.ProblemID)
 		}
-		return nil, fmt.Errorf("创建问题调查失败: %v", err)
+		return nil, fmt.Errorf("Failed to create problem investigation: %v", err)
 	}
 
 	// 联动问题状态为"调查中"（经状态机校验，closed 终态拒绝联动；调查记录仍创建）
@@ -189,7 +189,7 @@ func (s *ProblemInvestigationService) GetProblemInvestigation(ctx context.Contex
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, notFoundError("问题调查不存在", investigationID)
 		}
-		return nil, fmt.Errorf("获取问题调查失败: %v", err)
+		return nil, fmt.Errorf("Failed to get problem investigation: %v", err)
 	}
 
 	return investigation, nil
@@ -210,7 +210,7 @@ func (s *ProblemInvestigationService) UpdateProblemInvestigation(ctx context.Con
 		InvestigationSummary:    req.InvestigationSummary,
 	}
 	if err := s.repo.UpdateInvestigation(ctx, investigationID, upd, int64(tenantID), time.Now().Unix()); err != nil {
-		return nil, fmt.Errorf("更新问题调查失败: %v", err)
+		return nil, fmt.Errorf("Failed to investigate update problem: %v", err)
 	}
 
 	// 如果状态更新为完成，联动问题状态为"已解决"（经状态机校验，closed 终态不可复活）
@@ -230,7 +230,7 @@ func (s *ProblemInvestigationService) CreateInvestigationStep(ctx context.Contex
 	// 检查调查记录是否存在
 	problemID, err := s.repo.FetchInvestigationProblemID(ctx, req.InvestigationID, tenantID)
 	if err != nil {
-		return nil, fmt.Errorf("查询调查记录失败: %v", err)
+		return nil, fmt.Errorf("Failed to query investigation records: %v", err)
 	}
 	if problemID == 0 {
 		return nil, notFoundError("调查记录不存在", req.InvestigationID)
@@ -250,7 +250,7 @@ func (s *ProblemInvestigationService) CreateInvestigationStep(ctx context.Contex
 		Notes:           notesPtr,
 	}, time.Now())
 	if err != nil {
-		return nil, fmt.Errorf("创建调查步骤失败: %v", err)
+		return nil, fmt.Errorf("Failed to create survey step: %v", err)
 	}
 
 	// 获取分配人员姓名
@@ -281,7 +281,7 @@ func (s *ProblemInvestigationService) UpdateInvestigationStep(ctx context.Contex
 	// 检查步骤是否存在
 	investigationID, err := s.repo.FetchStepInvestigationID(ctx, stepID, tenantID)
 	if err != nil {
-		return nil, fmt.Errorf("查询调查步骤失败: %v", err)
+		return nil, fmt.Errorf("Query investigation step failed: %v", err)
 	}
 	if investigationID == 0 {
 		return nil, notFoundError("调查步骤不存在", stepID)
@@ -297,7 +297,7 @@ func (s *ProblemInvestigationService) UpdateInvestigationStep(ctx context.Contex
 		Notes:           req.Notes,
 	}
 	if err := s.repo.UpdateStep(ctx, stepID, upd, time.Now()); err != nil {
-		return nil, fmt.Errorf("更新调查步骤失败: %v", err)
+		return nil, fmt.Errorf("Failed to update investigation step: %v", err)
 	}
 
 	// 返回更新后的步骤
@@ -308,7 +308,7 @@ func (s *ProblemInvestigationService) UpdateInvestigationStep(ctx context.Contex
 func (s *ProblemInvestigationService) getInvestigationStep(ctx context.Context, stepID, tenantID int) (*dto.InvestigationStepResponse, error) {
 	step, err := s.repo.GetInvestigationStep(ctx, stepID, tenantID)
 	if err != nil {
-		return nil, fmt.Errorf("获取调查步骤失败: %v", err)
+		return nil, fmt.Errorf("Failed to get survey step: %v", err)
 	}
 	return step, nil
 }
@@ -317,7 +317,7 @@ func (s *ProblemInvestigationService) getInvestigationStep(ctx context.Context, 
 func (s *ProblemInvestigationService) CreateRootCauseAnalysis(ctx context.Context, req *dto.CreateRootCauseAnalysisRequest, tenantID int) (*dto.RootCauseAnalysisResponse, error) {
 	// 检查问题是否存在
 	if _, ok, err := s.repo.FetchProblemTitle(ctx, req.ProblemID, tenantID); err != nil {
-		return nil, fmt.Errorf("查询问题失败: %v", err)
+		return nil, fmt.Errorf("Query problem failed: %v", err)
 	} else if !ok {
 		return nil, notFoundError("问题不存在", req.ProblemID)
 	}
@@ -325,7 +325,7 @@ func (s *ProblemInvestigationService) CreateRootCauseAnalysis(ctx context.Contex
 	// 检查是否已存在根本原因分析
 	exists, err := s.repo.RootCauseExistsByProblem(ctx, req.ProblemID, tenantID)
 	if err != nil {
-		return nil, fmt.Errorf("查询根因分析失败: %v", err)
+		return nil, fmt.Errorf("Query root cause analysis failed: %v", err)
 	}
 	if exists {
 		return nil, duplicateRootCauseError(req.ProblemID)
@@ -334,7 +334,7 @@ func (s *ProblemInvestigationService) CreateRootCauseAnalysis(ctx context.Contex
 	// 创建根本原因分析
 	confidence, err := parseConfidenceLevel(string(req.ConfidenceLevel))
 	if err != nil {
-		return nil, fmt.Errorf("置信度解析失败: %v", err)
+		return nil, fmt.Errorf("Confidence parsing failed: %v", err)
 	}
 	var contributing *string
 	if req.ContributingFactors != "" {
@@ -357,7 +357,7 @@ func (s *ProblemInvestigationService) CreateRootCauseAnalysis(ctx context.Contex
 		if isUniqueViolation(err) {
 			return nil, duplicateRootCauseError(req.ProblemID)
 		}
-		return nil, fmt.Errorf("创建根本原因分析失败: %v", err)
+		return nil, fmt.Errorf("Failed to create root cause analysis: %v", err)
 	}
 
 	// 获取分析师姓名
@@ -386,7 +386,7 @@ func (s *ProblemInvestigationService) CreateRootCauseAnalysis(ctx context.Contex
 func (s *ProblemInvestigationService) CreateProblemSolution(ctx context.Context, req *dto.CreateProblemSolutionRequest, tenantID int) (*dto.ProblemSolutionResponse, error) {
 	// 检查问题是否存在
 	if _, ok, err := s.repo.FetchProblemTitle(ctx, req.ProblemID, tenantID); err != nil {
-		return nil, fmt.Errorf("查询问题失败: %v", err)
+		return nil, fmt.Errorf("Query problem failed: %v", err)
 	} else if !ok {
 		return nil, notFoundError("问题不存在", req.ProblemID)
 	}
@@ -408,7 +408,7 @@ func (s *ProblemInvestigationService) CreateProblemSolution(ctx context.Context,
 		ApprovalStatus:       "pending",
 	}, time.Now())
 	if err != nil {
-		return nil, fmt.Errorf("创建问题解决方案失败: %v", err)
+		return nil, fmt.Errorf("Failed to create problem solution: %v", err)
 	}
 
 	// 获取提议者姓名
@@ -440,7 +440,7 @@ func (s *ProblemInvestigationService) CreateProblemSolution(ctx context.Context,
 func (s *ProblemInvestigationService) GetProblemInvestigationSummary(ctx context.Context, problemID, tenantID int) (*dto.ProblemInvestigationSummaryResponse, error) {
 	// 检查问题是否存在
 	if _, ok, err := s.repo.FetchProblemTitle(ctx, problemID, tenantID); err != nil {
-		return nil, fmt.Errorf("查询问题失败: %v", err)
+		return nil, fmt.Errorf("Query problem failed: %v", err)
 	} else if !ok {
 		return nil, notFoundError("问题不存在", problemID)
 	}
@@ -468,7 +468,7 @@ func (s *ProblemInvestigationService) GetProblemInvestigationSummary(ctx context
 		).
 		Order(ent.Desc(knowledgearticle.FieldCreatedAt)).
 		All(ctx); err != nil {
-		return nil, fmt.Errorf("查询沉淀知识失败: %w", err)
+		return nil, fmt.Errorf("Failed to query precipitated knowledge: %w", err)
 	} else if len(kbArticles) > 0 {
 		if s.knowledgeGuard != nil {
 			viewer, _ := knowledgeaccess.ViewerFrom(ctx)
@@ -518,11 +518,11 @@ func (s *ProblemInvestigationService) GetProblemInvestigationSummary(ctx context
 	// 监控抓不到、用户看不出、自动化验证还会误判 PASS。
 	// 宁可 500 也不要静默空数据。
 	if investigationID, ok, err := s.repo.FetchInvestigationIDByProblem(ctx, problemID, tenantID); err != nil {
-		return nil, fmt.Errorf("查询调查记录失败: %v", err)
+		return nil, fmt.Errorf("Failed to query investigation records: %v", err)
 	} else if ok {
 		investigation, err := s.GetProblemInvestigation(ctx, investigationID, tenantID)
 		if err != nil {
-			return nil, fmt.Errorf("查询调查详情失败: %v", err)
+			return nil, fmt.Errorf("Failed to query investigation details: %v", err)
 		}
 		summary.Investigation = investigation
 	}
@@ -531,18 +531,18 @@ func (s *ProblemInvestigationService) GetProblemInvestigationSummary(ctx context
 	if summary.Investigation != nil {
 		steps, err := s.repo.ListInvestigationSteps(ctx, summary.Investigation.ID, tenantID)
 		if err != nil {
-			return nil, fmt.Errorf("查询调查步骤失败: %v", err)
+			return nil, fmt.Errorf("Query investigation step failed: %v", err)
 		}
 		summary.Steps = steps
 	}
 
 	// 获取根本原因分析
 	if id, ok, err := s.repo.FetchRootCauseAnalysisIDByProblem(ctx, problemID, tenantID); err != nil {
-		return nil, fmt.Errorf("查询根因分析失败: %v", err)
+		return nil, fmt.Errorf("Query root cause analysis failed: %v", err)
 	} else if ok {
 		analysis, err := s.repo.GetRootCauseAnalysis(ctx, id, tenantID)
 		if err != nil {
-			return nil, fmt.Errorf("查询根因分析详情失败: %v", err)
+			return nil, fmt.Errorf("Failed to query root cause analysis details: %v", err)
 		}
 		summary.RootCauseAnalysis = analysis
 	}
@@ -550,7 +550,7 @@ func (s *ProblemInvestigationService) GetProblemInvestigationSummary(ctx context
 	// 获取解决方案
 	solutions, err := s.repo.ListProblemSolutions(ctx, problemID, tenantID)
 	if err != nil {
-		return nil, fmt.Errorf("查询解决方案失败: %v", err)
+		return nil, fmt.Errorf("Failed to query solution: %v", err)
 	}
 	summary.Solutions = solutions
 
@@ -564,7 +564,7 @@ func (s *ProblemInvestigationService) UpdateRootCauseAnalysis(ctx context.Contex
 	// 检查根因分析是否存在
 	count, err := s.repo.CountRootCauseAnalysis(ctx, id, tenantID)
 	if err != nil {
-		return nil, fmt.Errorf("查询根因分析失败: %v", err)
+		return nil, fmt.Errorf("Query root cause analysis failed: %v", err)
 	}
 	if count == 0 {
 		return nil, notFoundError("根因分析不存在", id)
@@ -574,7 +574,7 @@ func (s *ProblemInvestigationService) UpdateRootCauseAnalysis(ctx context.Contex
 	if req.ConfidenceLevel != nil {
 		confidence, err = parseConfidenceLevel(string(*req.ConfidenceLevel))
 		if err != nil {
-			return nil, fmt.Errorf("置信度解析失败: %v", err)
+			return nil, fmt.Errorf("Confidence parsing failed: %v", err)
 		}
 	}
 
@@ -587,7 +587,7 @@ func (s *ProblemInvestigationService) UpdateRootCauseAnalysis(ctx context.Contex
 		ReviewedBy:           req.ReviewedBy,
 	}
 	if err := s.repo.UpdateRootCauseAnalysis(ctx, id, tenantID, upd, time.Now()); err != nil {
-		return nil, fmt.Errorf("更新根因分析失败: %v", err)
+		return nil, fmt.Errorf("Failed to update root cause analysis: %v", err)
 	}
 
 	// 获取更新后的数据
@@ -600,7 +600,7 @@ func (s *ProblemInvestigationService) DeleteRootCauseAnalysis(ctx context.Contex
 
 	deleted, err := s.repo.DeleteRootCauseAnalysis(ctx, id, tenantID)
 	if err != nil {
-		return fmt.Errorf("删除根因分析失败: %v", err)
+		return fmt.Errorf("Delete root cause analysis failed: %v", err)
 	}
 	if !deleted {
 		return notFoundError("根因分析不存在", id)
@@ -616,7 +616,7 @@ func (s *ProblemInvestigationService) UpdateProblemSolution(ctx context.Context,
 	// 检查解决方案是否存在
 	count, err := s.repo.CountProblemSolution(ctx, id, tenantID)
 	if err != nil {
-		return nil, fmt.Errorf("查询解决方案失败: %v", err)
+		return nil, fmt.Errorf("Failed to query solution: %v", err)
 	}
 	if count == 0 {
 		return nil, notFoundError("解决方案不存在", id)
@@ -632,7 +632,7 @@ func (s *ProblemInvestigationService) UpdateProblemSolution(ctx context.Context,
 		RiskAssessment:       req.RiskAssessment,
 	}
 	if err := s.repo.UpdateProblemSolution(ctx, id, tenantID, upd, time.Now()); err != nil {
-		return nil, fmt.Errorf("更新解决方案失败: %v", err)
+		return nil, fmt.Errorf("Failed to update solution: %v", err)
 	}
 
 	// 获取更新后的数据
@@ -645,7 +645,7 @@ func (s *ProblemInvestigationService) DeleteProblemSolution(ctx context.Context,
 
 	deleted, err := s.repo.DeleteProblemSolution(ctx, id, tenantID)
 	if err != nil {
-		return fmt.Errorf("删除解决方案失败: %v", err)
+		return fmt.Errorf("Failed to delete solution: %v", err)
 	}
 	if !deleted {
 		return notFoundError("解决方案不存在", id)
@@ -661,7 +661,7 @@ func (s *ProblemInvestigationService) ApproveSolution(ctx context.Context, id in
 	// 检查解决方案是否存在
 	count, err := s.repo.CountProblemSolution(ctx, id, tenantID)
 	if err != nil {
-		return nil, fmt.Errorf("查询解决方案失败: %v", err)
+		return nil, fmt.Errorf("Failed to query solution: %v", err)
 	}
 	if count == 0 {
 		return nil, notFoundError("解决方案不存在", id)
@@ -674,7 +674,7 @@ func (s *ProblemInvestigationService) ApproveSolution(ctx context.Context, id in
 	}
 
 	if err := s.repo.ApproveSolution(ctx, id, tenantID, approverID, approvalStatus, now); err != nil {
-		return nil, fmt.Errorf("更新审批状态失败: %v", err)
+		return nil, fmt.Errorf("Failed to update approval status: %v", err)
 	}
 
 	// 如果批准，更新解决方案状态为待实施
@@ -700,12 +700,12 @@ func notFoundError(message string, id int) error {
 // duplicateInvestigationError 一个 problem 只允许一条调查记录：服务层前置校验之外，
 // problem_investigations.problem_id UNIQUE 也兜住并发竞态，两种路径统一返回 4090/409。
 func duplicateInvestigationError(problemID int) error {
-	return common.NewBusinessError(common.ConflictCode, "该问题已存在调查记录", fmt.Sprintf("problem_id=%d", problemID))
+	return common.NewBusinessError(common.ConflictCode, "This problem already has an investigation record", fmt.Sprintf("problem_id=%d", problemID))
 }
 
 // duplicateRootCauseError 与调查记录同理：根因分析按 problem 唯一。
 func duplicateRootCauseError(problemID int) error {
-	return common.NewBusinessError(common.ConflictCode, "该问题已存在根本原因分析", fmt.Sprintf("problem_id=%d", problemID))
+	return common.NewBusinessError(common.ConflictCode, "This issue already has a root cause analysis", fmt.Sprintf("problem_id=%d", problemID))
 }
 
 // isUniqueViolation 判断驱动层报错是否为唯一约束冲突（Postgres 23505 /
@@ -766,7 +766,7 @@ func parseConfidenceLevel(raw string) (*float64, error) {
 	}
 	if f, err := strconv.ParseFloat(raw, 64); err == nil {
 		if f < 0 || f > 1 {
-			return nil, fmt.Errorf("置信度超出 [0,1] 范围: %v", f)
+			return nil, fmt.Errorf("Confidence outside range [0,1]: %v", f)
 		}
 		return &f, nil
 	}
@@ -781,5 +781,5 @@ func parseConfidenceLevel(raw string) (*float64, error) {
 		v := 0.9
 		return &v, nil
 	}
-	return nil, fmt.Errorf("无法解析置信度: %q", raw)
+	return nil, fmt.Errorf("Unable to parse confidence: %q", raw)
 }

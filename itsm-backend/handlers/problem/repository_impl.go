@@ -114,7 +114,7 @@ func (r *EntRepository) AddAssociations(ctx context.Context, tenantID, problemID
 		return err
 	}
 	if !exists {
-		return common.NewBusinessError(common.NotFoundCode, "问题不存在或已被删除", "")
+		return common.NewBusinessError(common.NotFoundCode, "The question does not exist or has been deleted", "")
 	}
 
 	switch relatedType {
@@ -126,7 +126,7 @@ func (r *EntRepository) AddAssociations(ctx context.Context, tenantID, problemID
 			return err
 		}
 		if count != len(relatedIDs) {
-			return common.NewBusinessError(common.BadRequestCode, "关联工单不存在或已被删除", "")
+			return common.NewBusinessError(common.BadRequestCode, "The associated work order does not exist or has been deleted", "")
 		}
 	case "incident":
 		// 显式过滤软删：只靠全局拦截器时，deleted_at 非空的行被过滤掉后
@@ -138,7 +138,7 @@ func (r *EntRepository) AddAssociations(ctx context.Context, tenantID, problemID
 			return err
 		}
 		if count != len(relatedIDs) {
-			return common.NewBusinessError(common.NotFoundCode, "关联事件不存在或已被删除", "")
+			return common.NewBusinessError(common.NotFoundCode, "The associated event does not exist or has been deleted", "")
 		}
 	case "change":
 		count, err := r.client.Change.Query().
@@ -148,11 +148,11 @@ func (r *EntRepository) AddAssociations(ctx context.Context, tenantID, problemID
 			return err
 		}
 		if count != len(relatedIDs) {
-			return common.NewBusinessError(common.NotFoundCode, "关联变更不存在或已被删除", "")
+			return common.NewBusinessError(common.NotFoundCode, "The associated change does not exist or has been deleted", "")
 		}
 	default:
 		return common.NewBusinessError(common.BadRequestCode,
-			fmt.Sprintf("不支持的关联类型：%s", relatedType), "")
+			fmt.Sprintf("Unsupported association type: %s", relatedType), "")
 	}
 
 	update := r.client.Problem.Update().
@@ -167,7 +167,7 @@ func (r *EntRepository) AddAssociations(ctx context.Context, tenantID, problemID
 	}
 	updated, err := update.Save(ctx)
 	if err == nil && updated != 1 {
-		return common.NewBusinessError(common.NotFoundCode, "问题不存在或已被删除", "")
+		return common.NewBusinessError(common.NotFoundCode, "The question does not exist or has been deleted", "")
 	}
 	return err
 }
@@ -189,7 +189,7 @@ func (r *EntRepository) RemoveAssociation(ctx context.Context, tenantID, problem
 
 	updated, err := update.Save(ctx)
 	if err == nil && updated != 1 {
-		return common.NewBusinessError(common.NotFoundCode, "问题不存在或已被删除", "")
+		return common.NewBusinessError(common.NotFoundCode, "The question does not exist or has been deleted", "")
 	}
 	return err
 }
@@ -236,7 +236,7 @@ func (r *EntRepository) Create(ctx context.Context, p *Problem) (*Problem, error
 	// 生成问题编号（PRB-YYYYMMDD-XXXX，租户内日序列）
 	number := fmt.Sprintf("PRB-%s-%04d", time.Now().Format("20060102"), saved.ID)
 	if _, err := tx.Problem.UpdateOneID(saved.ID).SetProblemNumber(number).Save(ctx); err != nil {
-		return rollback(fmt.Errorf("写入问题编号失败: %w", err))
+		return rollback(fmt.Errorf("Failed to write problem number: %w", err))
 	}
 	if err := tx.Commit(); err != nil {
 		return rollback(err)
@@ -384,7 +384,7 @@ func (r *EntRepository) UpdateTx(ctx context.Context, txc *ent.Client, p *Proble
 			if _, lerr := r.client.Problem.Query().
 				Where(problem.IDEQ(p.ID), problem.TenantIDEQ(p.TenantID)).
 				First(ctx); lerr == nil {
-				return nil, fmt.Errorf("%w: 期望状态 '%s'", ErrProblemStatusMoved, expectedStatus)
+				return nil, fmt.Errorf("%w: expected status '%s'", ErrProblemStatusMoved, expectedStatus)
 			}
 			return nil, err
 		}

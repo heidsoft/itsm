@@ -211,7 +211,7 @@ export default function WorkflowNodeInspector({
         });
       }
     } catch (err) {
-      console.error('加载用户列表失败:', err);
+      console.error('Failed to load user list:', err);
     } finally {
       if (!cancelledRef.current) setLoadingUsers(false);
     }
@@ -222,7 +222,7 @@ export default function WorkflowNodeInspector({
     setLoadingGroups(true);
     try {
       const tenantId = httpClient.getTenantId();
-      if (!tenantId) throw new Error('缺少有效租户上下文');
+      if (!tenantId) throw new Error('Missing valid tenant context');
       const resp = await GroupAPI.getGroups({ page: 1, pageSize: 100, tenantId, search });
       if (!cancelledRef.current) {
         setGroups(prev => {
@@ -232,7 +232,7 @@ export default function WorkflowNodeInspector({
         });
       }
     } catch (err) {
-      console.error('加载组列表失败:', err);
+      console.error('Failed to load group list:', err);
     } finally {
       if (!cancelledRef.current) setLoadingGroups(false);
     }
@@ -248,7 +248,7 @@ export default function WorkflowNodeInspector({
         const list = resp.items.map(({ id, name, code }) => ({ id, name, code: code ?? '' }));
         if (!cancelled) setRoles(list);
       } catch (err) {
-        console.error('加载角色列表失败:', err);
+        console.error('Failed to load character list:', err);
       } finally {
         if (!cancelled) setLoadingRoles(false);
       }
@@ -267,7 +267,7 @@ export default function WorkflowNodeInspector({
       setLoadingGroups(true);
       try {
         const tenantId = httpClient.getTenantId();
-        if (!tenantId) throw new Error('缺少有效租户上下文');
+        if (!tenantId) throw new Error('Missing valid tenant context');
         const [userResp, groupResp] = await Promise.all([
           UserApi.getUsers({ page: 1, pageSize: BACKEND_MAX_PAGE_SIZE, search: '' }),
           GroupAPI.getGroups({ page: 1, pageSize: 100, tenantId, search: '' }),
@@ -277,7 +277,7 @@ export default function WorkflowNodeInspector({
           setGroups(groupResp.items || []);
         }
       } catch (err) {
-        console.error('加载用户/组列表失败:', err);
+        console.error('Failed to load user/group list:', err);
       } finally {
         if (!cancelled) {
           setLoadingUsers(false);
@@ -298,18 +298,18 @@ export default function WorkflowNodeInspector({
         title={
           <Space>
             <TagIcon className="w-4 h-4" />
-            <span>节点属性</span>
+            <span>Properties</span>
           </Space>
         }
         className="h-full rounded-lg shadow-sm border border-gray-200"
         extra={
           onRefresh && (
-            <Tooltip title="刷新选中节点属性">
+            <Tooltip title="Refresh selected node attributes">
               <Button
                 type="text"
                 size="small"
                 icon={<RefreshCw className="w-3 h-3" />}
-                aria-label="刷新节点属性"
+                aria-label="Refresh node attributes"
                 onClick={onRefresh}
               />
             </Tooltip>
@@ -321,21 +321,23 @@ export default function WorkflowNodeInspector({
           description={
             <Space orientation="vertical" size={0} align="center">
               <span className="text-xs text-gray-500">
-                点击画布上的节点查看/编辑属性
+
+                Click on a node on the canvas to view/edit properties
               </span>
               <Text type="secondary" className="text-xs">
-                支持拖拽节点、连接线、条件配置
+
+                Supports dragging nodes, connecting lines, and conditional configuration
               </Text>
             </Space>
           }
         />
         {/* 快捷操作提示 */}
         <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-          <Text strong className="text-xs block mb-2">💡 快捷操作</Text>
+          <Text strong className="text-xs block mb-2">💡 Quick operation</Text>
           <Space orientation="vertical" size={2} className="w-full">
-            <Text type="secondary" className="text-xs">• 双击节点可快速编辑名称</Text>
-            <Text type="secondary" className="text-xs">• 点击连接线设置流转条件</Text>
-            <Text type="secondary" className="text-xs">• 拖拽节点左侧/右侧创建新流程</Text>
+            <Text type="secondary" className="text-xs">• Double-click a node to quickly edit its name</Text>
+            <Text type="secondary" className="text-xs">• Click on the connection line to set flow conditions</Text>
+            <Text type="secondary" className="text-xs">• Drag the left/right side of a node to create a new process</Text>
           </Space>
         </div>
       </Card>
@@ -370,7 +372,7 @@ export default function WorkflowNodeInspector({
   const isCallActivity = nodeType === 'CallActivity';
 
   // 事件类型判断
-  const isTimerEvent = selection.businessObject?.eventDefinitionType === 'timer' || 
+  const isTimerEvent = selection.businessObject?.eventDefinitionType === 'timer' ||
     (selection.businessObject?.eventDefinitions as BpmnEventDefinition[])?.some(d => d.$type === 'bpmn:TimerEventDefinition');
   const isMessageEvent = selection.businessObject?.eventDefinitionType === 'message' ||
     (selection.businessObject?.eventDefinitions as BpmnEventDefinition[])?.some(d => d.$type === 'bpmn:MessageEventDefinition');
@@ -496,7 +498,7 @@ export default function WorkflowNodeInspector({
     ...roles
       .filter(r => r.code && !groupNameSet.has(r.code))
       .map(r => ({
-        label: `角色: ${r.name} (${r.code})`,
+        label: `Role: ${r.name} (${r.code})`,
         value: r.code,
       })),
   ];
@@ -534,30 +536,30 @@ export default function WorkflowNodeInspector({
 
   // 服务实现类型选项
   const implementationOptions = [
-    { label: 'HTTP 接口调用（未就绪）', value: 'http', disabled: true },
-    { label: 'Java 类调用（未支持）', value: 'java', disabled: true },
-    { label: '表达式（未就绪）', value: 'expression', disabled: true },
+    { label: 'HTTP interface call (not ready)', value: 'http', disabled: true },
+    { label: 'Java class call (not supported)', value: 'java', disabled: true },
+    { label: 'expression (not ready)', value: 'expression', disabled: true },
     { label: 'Webhook', value: 'webhook' },
-    { label: '系统内置服务（请选择已注册 handler）', value: 'generic_handler' },
-    { label: '邮件发送（未就绪）', value: 'mail', disabled: true },
-    { label: '自动抄送', value: 'cc_handler' }
+    { label: 'System built-in service (please select a registered handler)', value: 'generic_handler' },
+    { label: 'Email sent (not ready)', value: 'mail', disabled: true },
+    { label: 'Automatic carbon copy', value: 'cc_handler' }
   ];
 
   const notifyChannelOptions = [
-    { label: '站内信', value: 'in_app' },
-    { label: '邮件', value: 'email' },
-    { label: '短信', value: 'sms' },
-    { label: '飞书', value: 'feishu' },
-    { label: '钉钉', value: 'dingtalk' },
-    { label: '企业微信', value: 'wecom' },
+    { label: 'In-App', value: 'in_app' },
+    { label: 'Email', value: 'email' },
+    { label: 'SMS', value: 'sms' },
+    { label: 'Feishu', value: 'feishu' },
+    { label: 'DingTalk', value: 'dingtalk' },
+    { label: 'WeCom', value: 'wecom' },
     { label: 'Webhook', value: 'webhook' }
   ];
 
   // 定时类型选项
   const timerTypeOptions = [
-    { label: '持续时间', value: 'duration' },
-    { label: '周期执行', value: 'cycle' },
-    { label: '指定时间', value: 'date' }
+    { label: 'Duration', value: 'duration' },
+    { label: 'Periodic execution', value: 'cycle' },
+    { label: 'Specified time', value: 'date' }
   ];
 
   // 应用修改
@@ -575,10 +577,10 @@ export default function WorkflowNodeInspector({
       title={
         <Space>
           <TagIcon className="w-4 h-4" />
-          <span>节点属性</span>
-          <Tag 
+          <span>Properties</span>
+          <Tag
             color={
-              isUserTask ? 'blue' : 
+              isUserTask ? 'blue' :
               isServiceTask ? 'purple' :
               isScriptTask ? 'cyan' :
               isExclusiveGateway ? 'orange' :
@@ -587,7 +589,7 @@ export default function WorkflowNodeInspector({
               isBoundaryEvent ? 'geekblue' :
               isSubProcess ? 'gold' :
               'default'
-            } 
+            }
             className="ml-1"
           >
             {nodeType}
@@ -603,7 +605,8 @@ export default function WorkflowNodeInspector({
             icon={<RefreshCw className="w-3 h-3" />}
             onClick={onRefresh}
           >
-            刷新
+
+            Refresh
           </Button>
         )
       }
@@ -613,20 +616,22 @@ export default function WorkflowNodeInspector({
         {/* 基础信息 - 所有节点通用 */}
         <div>
           <Text type="secondary" className="text-xs">
-            节点 ID
+
+            Node ID
           </Text>
           <div className="font-mono text-xs mt-1 px-2 py-1 bg-gray-50 rounded">
             {selection.id}
           </div>
-          
+
           <div className="mt-2">
             <Text type="secondary" className="text-xs">
-              节点名称
+
+              Node name
             </Text>
             <DebouncedInput
               value={currentName}
               onCommit={value => apply({ name: value })}
-              placeholder="输入节点显示名称"
+              placeholder="Enter node display name"
               size="small"
               className="mt-1"
             />
@@ -634,12 +639,13 @@ export default function WorkflowNodeInspector({
 
           <div className="mt-2">
             <Text type="secondary" className="text-xs">
-              描述信息
+
+              Description information
             </Text>
             <DebouncedTextArea
               value={currentDocumentation}
               onCommit={value => apply({ documentation: value })}
-              placeholder="输入节点功能描述（可选）"
+              placeholder="Enter node function description (optional)"
               size="small"
               rows={2}
               className="mt-1"
@@ -654,12 +660,12 @@ export default function WorkflowNodeInspector({
 
             <div className="mb-3 p-3 border border-blue-100 rounded-lg bg-blue-50/50">
               <Text strong className="text-sm flex items-center mb-2">
-                <Shield className="w-3.5 h-3.5 mr-1" />审批语义
+                <Shield className="w-3.5 h-3.5 mr-1" />Approval Semantics
               </Text>
               <Select
                 value={currentTaskPurpose}
                 onChange={value => apply({ taskPurpose: value })}
-                options={[{ label: '普通人工任务', value: 'work' }, { label: '审批任务', value: 'approval' }]}
+                options={[{ label: 'Common manual tasks', value: 'work' }, { label: 'Approval task', value: 'approval' }]}
                 className="w-full" size="small"
               />
               {currentTaskPurpose === 'approval' && (
@@ -668,34 +674,34 @@ export default function WorkflowNodeInspector({
                     value={currentApprovalMode}
                     onChange={value => apply({ approvalMode: value })}
                     options={[
-                      { label: '单人审批', value: 'single' }, { label: '任一通过', value: 'any' },
-                      { label: '全部通过', value: 'all' },
-                      { label: '比例/阈值通过', value: 'threshold' },
-                      { label: '顺序会签', value: 'sequential' },
+                      { label: 'Single approver', value: 'single' }, { label: 'Any pass', value: 'any' },
+                      { label: 'All passed', value: 'all' },
+                      { label: 'Ratio/threshold passed', value: 'threshold' },
+                      { label: 'Sequential countersigning', value: 'sequential' },
                     ]}
                     className="w-full" size="small"
                   />
                   {currentApprovalMode === 'threshold' && (
                     <DebouncedInput type="number" min={1} value={String(currentApprovalThreshold)}
                       onCommit={value => apply({ approvalThreshold: Number(value || 1) })}
-                      addonBefore="通过人数" size="small" />
+                      addonBefore="Number of people passing" size="small" />
                   )}
                   <Select value={currentRejectStrategy} onChange={value => apply({ rejectStrategy: value })}
                     options={[
-                      { label: '终止流程', value: 'terminate' },
-                      { label: '退回发起人', value: 'to_requester' },
-                      { label: '进入拒绝分支', value: 'gateway' },
+                      { label: 'Terminating process', value: 'terminate' },
+                      { label: 'Return to originator', value: 'to_requester' },
+                      { label: 'Entering reject branch', value: 'gateway' },
                     ]}
                     className="w-full" size="small" />
                   <Select value={currentTimeoutAction} onChange={value => apply({ timeoutAction: value })}
                     allowClear
-                    placeholder="选择超时动作"
-                    options={[{ label: '仅提醒', value: 'notify' }, { label: '升级审批', value: 'escalate' }, { label: '自动拒绝', value: 'auto_reject' }, { label: '自动通过', value: 'auto_approve' }]}
+                    placeholder="Select timeout action"
+                    options={[{ label: 'Alert only', value: 'notify' }, { label: 'Upgrade Approval', value: 'escalate' }, { label: 'Automatically rejected', value: 'auto_reject' }, { label: 'Pass automatically', value: 'auto_approve' }]}
                     className="w-full" size="small" />
                   <Space wrap>
-                    <Switch size="small" aria-label="允许委托" checked={currentAllowDelegate} onChange={v => apply({ allowDelegate: v })} />允许委托
-                    <Switch size="small" aria-label="允许加签" checked={currentAllowAddApprover} onChange={v => apply({ allowAddApprover: v })} />允许加签
-                    <Switch size="small" aria-label="拒绝意见必填" checked={currentCommentRequiredOnReject} onChange={v => apply({ commentRequiredOnReject: v })} />拒绝意见必填
+                    <Switch size="small" aria-label="Allow delegation" checked={currentAllowDelegate} onChange={v => apply({ allowDelegate: v })} />Allow delegation
+                    <Switch size="small" aria-label="Allow signature" checked={currentAllowAddApprover} onChange={v => apply({ allowAddApprover: v })} />Allow signature
+                    <Switch size="small" aria-label="Required for rejecting comments" checked={currentCommentRequiredOnReject} onChange={v => apply({ commentRequiredOnReject: v })} />Required for rejecting comments
                   </Space>
                 </Space>
               )}
@@ -704,27 +710,30 @@ export default function WorkflowNodeInspector({
             {/* 快捷操作栏 */}
             <div className="mb-3 p-2 bg-blue-50 rounded-lg">
               <Space wrap>
-                <Text strong className="text-xs text-blue-700">⚡ 常用配置：</Text>
+                <Text strong className="text-xs text-blue-700">⚡ Common configuration:</Text>
                 <Button
                   size="small"
                   type="text"
                   onClick={() => apply({ assignee: currentAssignee || 'admin' })}
                 >
-                  设为管理员
+
+                  Set as administrator
                 </Button>
                 <Button
                   size="small"
                   type="text"
                   disabled
                 >
-                  普通优先级（未就绪）
+
+                  Normal priority (not ready)
                 </Button>
                 <Button
                   size="small"
                   type="text"
                   disabled
                 >
-                  24小时超时（未就绪）
+
+                  24 hours timeout (not ready)
                 </Button>
               </Space>
             </div>
@@ -733,13 +742,14 @@ export default function WorkflowNodeInspector({
             <div>
               <Text strong className="text-sm flex items-center mb-2">
                 <UserCheck className="w-3.5 h-3.5 mr-1" />
-                受理人 (assignee)
-                <Tag color="blue" className="ml-2 text-xs">单人</Tag>
+
+                assignee
+                <Tag color="blue" className="ml-2 text-xs">Solo</Tag>
               </Text>
               <Select
                 allowClear
                 showSearch
-                placeholder="选择受理人（单一用户）"
+                placeholder="Select assignee (single user)"
                 value={currentAssignee || undefined}
                 onChange={value => apply({ assignee: value || '' })}
                 className="w-full"
@@ -751,7 +761,8 @@ export default function WorkflowNodeInspector({
                 size="small"
               />
               <Text type="secondary" className="text-xs mt-1 block">
-                指定单一用户为该任务的处理人
+
+                Designate a single user as the handler for this task
               </Text>
             </div>
 
@@ -759,11 +770,12 @@ export default function WorkflowNodeInspector({
             <div className="mt-3">
               <Text strong className="text-sm flex items-center mb-2">
                 <User className="w-3.5 h-3.5 mr-1" />
-                候选人 (candidateUsers)
+
+                candidates (candidateUsers)
               </Text>
               <Select
                 mode="multiple"
-                placeholder="选择候选人（多选）"
+                placeholder="Select candidates (multiple choices)"
                 value={currentCandidateUsers}
                 onChange={values => apply({ candidateUsers: toCsv(values) })}
                 onSearch={value => {
@@ -782,7 +794,8 @@ export default function WorkflowNodeInspector({
                 size="small"
               />
               <Text type="secondary" className="text-xs mt-1 block">
-                任一候选人可处理该任务
+
+                Any candidate can handle this task
               </Text>
             </div>
 
@@ -791,7 +804,8 @@ export default function WorkflowNodeInspector({
               <Space>
                 <Text strong className="text-sm flex items-center">
                   <Users className="w-3.5 h-3.5 mr-1" />
-                  候选组 (candidateGroups)
+
+                  candidateGroups
                 </Text>
                 <Badge
                   count={currentCandidateGroups.length}
@@ -801,7 +815,7 @@ export default function WorkflowNodeInspector({
               </Space>
               <Select
                 mode="multiple"
-                placeholder="选择审批组（多选）"
+                placeholder="Select approval group (multiple selection)"
                 value={currentCandidateGroups}
                 onChange={values => apply({ candidateGroups: toCsv(values) })}
                 onSearch={value => {
@@ -818,17 +832,20 @@ export default function WorkflowNodeInspector({
                 maxTagCount="responsive"
                 notFoundContent={
                   loadingGroups ? (
-                    <span className="text-gray-400">加载中...</span>
+                    <span className="text-gray-400">Loading...</span>
                   ) : (
                     <Empty
                       image={Empty.PRESENTED_IMAGE_SIMPLE}
                       description={
                         <span className="text-xs">
-                          暂无审批组，请先到{' '}
+
+                          There is no approval group yet, please come first{' '}
                           <a href="/admin/groups" target="_blank" rel="noreferrer">
-                            组管理
+
+                            Group Management
                           </a>{' '}
-                          创建
+
+                          Create
                         </span>
                       }
                     />
@@ -841,7 +858,7 @@ export default function WorkflowNodeInspector({
                 type="info"
                 showIcon
                 className="mt-2 text-xs"
-                title="审批组中任一成员审批即视为该节点通过"
+                title="Approval by any member of the approval group is deemed as the node has passed."
               />
             </div>
 
@@ -851,10 +868,11 @@ export default function WorkflowNodeInspector({
             <div>
               <Text strong className="text-sm flex items-center mb-2">
                 <FileText className="w-3.5 h-3.5 mr-1" />
-                表单键 (formKey)
+
+                formKey (formKey)
               </Text>
               <DebouncedInput
-                placeholder="例如：approve_form_v1"
+                placeholder="For example: approve_form_v1"
                 value={currentFormKey}
                 onCommit={value => apply({ formKey: value })}
                 allowClear
@@ -865,11 +883,12 @@ export default function WorkflowNodeInspector({
             <div className="mt-2">
               <Text strong className="text-sm flex items-center mb-2">
                 <Hash className="w-3.5 h-3.5 mr-1" />
-                优先级 (priority)
+
+                priority
               </Text>
               <DebouncedInput
                 type="number"
-                placeholder="0-100，数值越高优先级越高"
+                placeholder="0-100, the higher the value, the higher the priority."
                 value={currentPriority}
                 onCommit={value => apply({ priority: value })}
                 allowClear
@@ -882,10 +901,11 @@ export default function WorkflowNodeInspector({
             <div className="mt-2">
               <Text strong className="text-sm flex items-center mb-2">
                 <Clock className="w-3.5 h-3.5 mr-1" />
-                截止时间 (dueDate)
+
+                due date (dueDate)
               </Text>
               <DebouncedInput
-                placeholder="ISO 8601 格式，例如 2026-09-20T18:00:00+08:00"
+                placeholder="ISO 8601 format, for example 2026-09-20T18:00:00+08:00"
                 value={currentDueDate}
                 onCommit={value => apply({ dueDate: value })}
                 allowClear
@@ -896,10 +916,11 @@ export default function WorkflowNodeInspector({
             <div className="mt-2">
               <Text strong className="text-sm flex items-center mb-2">
                 <Timer className="w-3.5 h-3.5 mr-1" />
-                提醒时间 (followUpDate)
+
+                Reminder time (followUpDate)
               </Text>
               <DebouncedInput
-                placeholder="ISO 8601 格式，例如 2026-09-19T09:00:00+08:00"
+                placeholder="ISO 8601 format, for example 2026-09-19T09:00:00+08:00"
                 value={currentFollowUpDate}
                 onCommit={value => apply({ followUpDate: value })}
                 allowClear
@@ -917,30 +938,33 @@ export default function WorkflowNodeInspector({
             <div>
               <Text strong className="text-sm flex items-center mb-2">
                 <Server className="w-3.5 h-3.5 mr-1" />
-                服务实现类型
+
+                Service implementation type
               </Text>
               <Select
                 value={currentImplementation || undefined}
                 onChange={value => apply({ implementation: value || '' })}
-                placeholder="选择服务实现类型"
+                placeholder="Select service implementation type"
                 className="w-full"
                 size="small"
                 options={implementationOptions}
               />
               <Text type="secondary" className="text-xs mt-1 block">
-                处理器由该属性唯一决定，仅可选运行时有实现的 handler
+
+                The handler is uniquely determined by this attribute, and only optional runtime handlers are implemented.
               </Text>
             </div>
 
             <div className="mt-2">
               <Text strong className="text-sm flex items-center mb-2">
                 <Hash className="w-3.5 h-3.5 mr-1" />
-                结果存储变量名
+
+                Result storage variable name
               </Text>
               <DebouncedInput
                 value={currentResultVariable}
                 onCommit={value => apply({ resultVariable: value })}
-                placeholder="运行时尚未支持结果回写变量"
+                placeholder="The runtime does not yet support result writeback variables"
                 disabled
                 size="small"
               />
@@ -949,17 +973,19 @@ export default function WorkflowNodeInspector({
             <div className="mt-2">
               <Text strong className="text-sm flex items-center mb-2">
                 <Settings className="w-3.5 h-3.5 mr-1" />
-                异步执行
+
+                Asynchronous execution
               </Text>
               <Switch
-                aria-label="异步执行"
+                aria-label="Asynchronous execution"
                 checked={currentAsync}
                 onChange={checked => apply({ async: checked })}
                 disabled
                 size="small"
               />
               <Text type="secondary" className="text-xs mt-1 block">
-                服务任务当前同步执行，异步调度尚未接线
+
+                The service task is currently executed synchronously, and the asynchronous schedule has not yet been wired.
               </Text>
             </div>
 
@@ -967,7 +993,7 @@ export default function WorkflowNodeInspector({
               type="info"
               showIcon
               className="mt-2 text-xs"
-              title="服务任务会在流程执行到该节点时自动调用配置的外部接口或服务，无需人工干预。"
+              title="The service task will automatically call the configured external interface or service when the process is executed to this node, without manual intervention."
             />
           </>
         )}
@@ -980,19 +1006,20 @@ export default function WorkflowNodeInspector({
             <div>
               <Text strong className="text-sm flex items-center mb-2">
                 <Users className="w-3.5 h-3.5 mr-1" />
-                抄送类型
+
+                Cc type
               </Text>
               <Select
                 value={currentCCType}
                 onChange={value => apply({ ccType: value })}
-                placeholder="选择抄送类型"
+                placeholder="Select CC type"
                 className="w-full"
                 size="small"
                 options={[
-                  { label: '单个用户', value: 'user' },
-                  { label: '用户组', value: 'group' },
-                  { label: '角色', value: 'role' },
-                  { label: '动态变量', value: 'variable' }
+                  { label: 'Single user', value: 'user' },
+                  { label: 'User group', value: 'group' },
+                  { label: 'Role', value: 'role' },
+                  { label: 'Dynamic variable', value: 'variable' }
                 ]}
               />
             </div>
@@ -1001,13 +1028,14 @@ export default function WorkflowNodeInspector({
               <div className="mt-2">
                 <Text strong className="text-sm flex items-center mb-2">
                   <User className="w-3.5 h-3.5 mr-1" />
-                  抄送人
+
+                  Cc person
                 </Text>
                 <Select
                   mode="multiple"
                   value={parseCsv(currentCCUserIds)}
                   onChange={values => apply({ ccUserIds: toCsv(values) })}
-                  placeholder="请选择抄送用户"
+                  placeholder="Please select the user to copy"
                   className="w-full"
                   size="small"
                   loading={loadingUsers}
@@ -1022,13 +1050,14 @@ export default function WorkflowNodeInspector({
               <div className="mt-2">
                 <Text strong className="text-sm flex items-center mb-2">
                   <Users className="w-3.5 h-3.5 mr-1" />
-                  用户组
+
+                  User group
                 </Text>
                 <Select
                   mode="multiple"
                   value={parseCsv(currentCCGroupIds)}
                   onChange={values => apply({ ccGroupIds: toCsv(values) })}
-                  placeholder="请选择用户组"
+                  placeholder="Please select a user group"
                   className="w-full"
                   size="small"
                   loading={loadingGroups}
@@ -1043,13 +1072,14 @@ export default function WorkflowNodeInspector({
               <div className="mt-2">
                 <Text strong className="text-sm flex items-center mb-2">
                   <Shield className="w-3.5 h-3.5 mr-1" />
-                  角色
+
+                  Role
                 </Text>
                 <Select
                   mode="multiple"
                   value={parseCsv(currentCCRoleIds)}
                   onChange={values => apply({ ccRoleIds: toCsv(values) })}
-                  placeholder="请选择角色"
+                  placeholder="Please select a role"
                   className="w-full"
                   size="small"
                   loading={loadingRoles}
@@ -1064,12 +1094,13 @@ export default function WorkflowNodeInspector({
               <div className="mt-2">
                 <Text strong className="text-sm flex items-center mb-2">
                   <Hash className="w-3.5 h-3.5 mr-1" />
-                  动态变量名
+
+                  Dynamic variable name
                 </Text>
                 <DebouncedInput
                   value={currentCCVariable}
                   onCommit={value => apply({ ccVariable: value })}
-                  placeholder="变量名，如 ccUserIds，变量值应为用户ID数组"
+                  placeholder="Variable name, such as ccUserIds, variable value should be user ID array"
                   size="small"
                 />
               </div>
@@ -1078,14 +1109,15 @@ export default function WorkflowNodeInspector({
             <div className="mt-2">
               <Text strong className="text-sm flex items-center mb-2">
                 <Bell className="w-3.5 h-3.5 mr-1" />
-                发送通知
+
+                Send notification
               </Text>
               <Switch
-                aria-label="发送通知"
+                aria-label="Send notification"
                 checked={currentCCNotify}
                 onChange={checked => apply({ ccNotify: checked })}
-                checkedChildren="开启"
-                unCheckedChildren="关闭"
+                checkedChildren="On"
+                unCheckedChildren="Close"
               />
             </div>
 
@@ -1093,13 +1125,14 @@ export default function WorkflowNodeInspector({
               <div className="mt-2">
                 <Text strong className="text-sm flex items-center mb-2">
                   <MessageCircle className="w-3.5 h-3.5 mr-1" />
-                  通知渠道
+
+                  Notification Channels
                 </Text>
                 <Select
                   mode="multiple"
                   value={currentNotifyChannels}
                   onChange={values => apply({ notifyChannels: toCsv(values) })}
-                  placeholder="请选择通知渠道"
+                  placeholder="Please select notification channels"
                   className="w-full"
                   size="small"
                   options={notifyChannelOptions}
@@ -1116,7 +1149,7 @@ export default function WorkflowNodeInspector({
 
             <Alert
               type="warning"
-              title="脚本任务尚未提供隔离执行器，配置可保留但流程不可发布"
+              title="The script task has not yet provided an isolation executor. The configuration can be retained but the process cannot be published."
               showIcon
               className="mb-3"
             />
@@ -1124,7 +1157,8 @@ export default function WorkflowNodeInspector({
             <div>
               <Text strong className="text-sm flex items-center mb-2">
                 <Code className="w-3.5 h-3.5 mr-1" />
-                脚本语言
+
+                Scripting language
               </Text>
               <Select
                 disabled
@@ -1139,17 +1173,19 @@ export default function WorkflowNodeInspector({
             <div className="mt-2">
               <Text strong className="text-sm flex items-center mb-2">
                 <Code className="w-3.5 h-3.5 mr-1" />
-                脚本内容
+
+                Script content
               </Text>
               <DebouncedTextArea
                 value={currentScript}
                 onCommit={value => apply({ script: value })}
-                placeholder="输入要执行的脚本代码"
+                placeholder="Enter the script code to be executed"
                 rows={6}
                 className="font-mono text-xs"
               />
               <Text type="secondary" className="text-xs mt-1 block">
-                可以通过 execution.getVariable('变量名') 获取流程变量，通过 execution.setVariable('变量名', 值) 设置变量
+
+                Process variables can be obtained through execution.getVariable('variable name') and variables can be set through execution.setVariable('variable name', value)
               </Text>
             </div>
           </>
@@ -1163,12 +1199,13 @@ export default function WorkflowNodeInspector({
             <div>
               <Text strong className="text-sm flex items-center mb-2">
                 <Database className="w-3.5 h-3.5 mr-1" />
-                规则引用 (ruleRef)
+
+                Rule Reference (ruleRef)
               </Text>
               <DebouncedInput
                 value={currentRuleRef}
                 onCommit={value => apply({ ruleRef: value })}
-                placeholder="业务规则ID或名称"
+                placeholder="Business rule ID or name"
                 size="small"
               />
             </div>
@@ -1176,12 +1213,13 @@ export default function WorkflowNodeInspector({
             <div className="mt-2">
               <Text strong className="text-sm flex items-center mb-2">
                 <FileText className="w-3.5 h-3.5 mr-1" />
-                输入参数
+
+                Input parameters
               </Text>
               <DebouncedTextArea
                 value={currentRuleInput}
                 onCommit={value => apply({ ruleInput: value })}
-                placeholder="输入参数映射，JSON格式"
+                placeholder="Input parameter mapping, JSON format"
                 rows={3}
                 className="font-mono text-xs"
               />
@@ -1190,12 +1228,13 @@ export default function WorkflowNodeInspector({
             <div className="mt-2">
               <Text strong className="text-sm flex items-center mb-2">
                 <FileText className="w-3.5 h-3.5 mr-1" />
-                输出参数
+
+                Output parameters
               </Text>
               <DebouncedTextArea
                 value={currentRuleOutput}
                 onCommit={value => apply({ ruleOutput: value })}
-                placeholder="输出结果映射，JSON格式"
+                placeholder="Output result mapping, JSON format"
                 rows={3}
                 className="font-mono text-xs"
               />
@@ -1204,10 +1243,11 @@ export default function WorkflowNodeInspector({
             <div className="mt-2">
               <Text strong className="text-sm flex items-center mb-2">
                 <Settings className="w-3.5 h-3.5 mr-1" />
-                异步执行
+
+                Asynchronous execution
               </Text>
               <Switch
-                aria-label="异步执行"
+                aria-label="Asynchronous execution"
                 checked={currentAsync}
                 onChange={checked => apply({ async: checked })}
                 size="small"
@@ -1224,12 +1264,13 @@ export default function WorkflowNodeInspector({
             <div>
               <Text strong className="text-sm flex items-center mb-2">
                 <MessageCircle className="w-3.5 h-3.5 mr-1" />
-                消息引用 (messageRef)
+
+                message reference (messageRef)
               </Text>
               <DebouncedInput
                 value={currentMessageRef}
                 onCommit={value => apply({ messageRef: value })}
-                placeholder="消息定义ID"
+                placeholder="Message definition ID"
                 size="small"
               />
             </div>
@@ -1237,12 +1278,13 @@ export default function WorkflowNodeInspector({
             <div className="mt-2">
               <Text strong className="text-sm flex items-center mb-2">
                 <Settings className="w-3.5 h-3.5 mr-1" />
-                操作 (operation)
+
+                operation
               </Text>
               <DebouncedInput
                 value={currentOperation}
                 onCommit={value => apply({ operation: value })}
-                placeholder="发送操作标识"
+                placeholder="Send operation identification"
                 size="small"
               />
             </div>
@@ -1257,12 +1299,13 @@ export default function WorkflowNodeInspector({
             <div>
               <Text strong className="text-sm flex items-center mb-2">
                 <MessageCircle className="w-3.5 h-3.5 mr-1" />
-                消息引用 (messageRef)
+
+                message reference (messageRef)
               </Text>
               <DebouncedInput
                 value={currentMessageRef}
                 onCommit={value => apply({ messageRef: value })}
-                placeholder="等待接收的消息定义ID"
+                placeholder="Message definition ID waiting to be received"
                 size="small"
               />
             </div>
@@ -1277,16 +1320,18 @@ export default function WorkflowNodeInspector({
             <div>
               <Text strong className="text-sm flex items-center mb-2">
                 <GitBranch className="w-3.5 h-3.5 mr-1" />
-                默认分支
+
+                Default branch
               </Text>
               <DebouncedInput
                 value={currentDefaultFlow}
                 onCommit={value => apply({ default: value })}
-                placeholder="输入默认流转的节点ID"
+                placeholder="Enter the node ID of the default transfer"
                 size="small"
               />
               <Text type="secondary" className="text-xs mt-1 block">
-                当所有条件都不满足时，流程将走默认分支
+
+                When all conditions are not met, the process will take the default branch
               </Text>
             </div>
 
@@ -1294,7 +1339,7 @@ export default function WorkflowNodeInspector({
               type="info"
               showIcon
               className="mt-2 text-xs"
-              title="网关的具体条件需要在输出的序列流上分别配置，点击对应的连接线即可设置条件表达式。"
+              title="The specific conditions of the gateway need to be configured separately on the output sequence stream. Click the corresponding connection line to set the conditional expression."
             />
           </>
         )}
@@ -1307,12 +1352,13 @@ export default function WorkflowNodeInspector({
             <div>
               <Text strong className="text-sm flex items-center mb-2">
                 <GitBranch className="w-3.5 h-3.5 mr-1" />
-                默认分支
+
+                Default branch
               </Text>
               <DebouncedInput
                 value={currentDefaultFlow}
                 onCommit={value => apply({ default: value })}
-                placeholder="输入默认流转的节点ID"
+                placeholder="Enter the node ID of the default transfer"
                 size="small"
               />
             </div>
@@ -1321,7 +1367,7 @@ export default function WorkflowNodeInspector({
               type="info"
               showIcon
               className="mt-2 text-xs"
-              title="包容网关会执行所有条件为true的分支，全部完成后才会继续向下执行。"
+              title="The inclusive gateway will execute all branches whose conditions are true, and will continue to execute downwards after all are completed."
             />
           </>
         )}
@@ -1334,12 +1380,13 @@ export default function WorkflowNodeInspector({
             <div>
               <Text strong className="text-sm flex items-center mb-2">
                 <Settings className="w-3.5 h-3.5 mr-1" />
-                激活条件
+
+                Activation conditions
               </Text>
               <DebouncedTextArea
                 value={currentCondition}
                 onCommit={value => apply({ activationCondition: value })}
-                placeholder="输入激活条件表达式"
+                placeholder="Enter activation condition expression"
                 rows={3}
                 className="font-mono text-xs"
               />
@@ -1349,7 +1396,7 @@ export default function WorkflowNodeInspector({
               type="info"
               showIcon
               className="mt-2 text-xs"
-              title="复杂网关支持自定义的分支合并条件，适用于复杂的流程控制场景。"
+              title="Complex gateway supports customized branch merge conditions, which is suitable for complex process control scenarios."
             />
           </>
         )}
@@ -1362,18 +1409,19 @@ export default function WorkflowNodeInspector({
             <div>
               <Text strong className="text-sm flex items-center mb-2">
                 <GitBranch className="w-3.5 h-3.5 mr-1" />
-                流转条件表达式
+
+                Flow condition expression
               </Text>
               <DebouncedTextArea
                 value={currentConditionExpression}
                 onCommit={value => applyCondition(value)}
-                placeholder={'例如：${variables["amount"] > 10000}'}
+                placeholder={'For example: ${variables["amount"] > 10000}'}
                 rows={3}
                 className="font-mono text-xs"
               />
               <Text type="secondary" className="text-xs mt-1 block">
-                {'使用 ${variables[键]} 形式读取流程变量；运行时按 expr-lang 求值，'}
-                {'不支持 JavaScript 语法，返回 true 时沿此连线流转'}
+                {'Use the form ${variables[key]} to read process variables; press expr-lang to evaluate at runtime,'}
+                {'JavaScript syntax is not supported. Return true along this connection.'}
               </Text>
             </div>
           </>
@@ -1388,11 +1436,11 @@ export default function WorkflowNodeInspector({
               <div className="mb-2">
                 <Text strong className="text-sm flex items-center mb-2">
                   <Clock className="w-3.5 h-3.5 mr-1" />
-                  {isBoundaryEvent ? '定时边界事件' : '定时启动事件'}
+                  {isBoundaryEvent ? 'Timed boundary event' : 'Scheduled start event'}
                 </Text>
                 <Switch
                   size="small"
-                  aria-label={isBoundaryEvent ? '定时边界事件' : '定时启动事件'}
+                  aria-label={isBoundaryEvent ? 'Timed boundary event' : 'Scheduled start event'}
                   checked={currentHasTimerDefinition}
                   onChange={checked => {
                     if (checked) {
@@ -1405,10 +1453,10 @@ export default function WorkflowNodeInspector({
                 />
                 <Text type="secondary" className="text-xs ml-2">
                   {currentHasTimerDefinition
-                    ? '已启用，关闭将移除定时器配置'
+                    ? 'Enabled, turning off will remove the timer configuration'
                     : isBoundaryEvent
-                      ? '开启后任务超时将中断并走异常路径'
-                      : '开启后按周期自动启动流程'}
+                      ? 'When enabled, the task will be interrupted and take an abnormal path when it times out.'
+                      : 'Automatically start the process periodically after being turned on'}
                 </Text>
               </div>
             )}
@@ -1418,7 +1466,8 @@ export default function WorkflowNodeInspector({
                 <div>
                   <Text strong className="text-sm flex items-center mb-2">
                     <Clock className="w-3.5 h-3.5 mr-1" />
-                    定时类型
+
+                    Timing type
                   </Text>
                   <Select
                     value={currentTimerType}
@@ -1447,16 +1496,18 @@ export default function WorkflowNodeInspector({
                   <div className="mt-2">
                     <Text strong className="text-sm flex items-center mb-2">
                       <Timer className="w-3.5 h-3.5 mr-1" />
-                      持续时间
+
+                      Duration
                     </Text>
                     <DebouncedInput
                       value={currentTimerDefinition}
                       onCommit={value => apply({ timeDuration: value })}
-                      placeholder="例如：PT1H（1小时后执行）"
+                      placeholder="For example: PT1H (executed after 1 hour)"
                       size="small"
                     />
                     <Text type="secondary" className="text-xs mt-1 block">
-                      支持 ISO 8601 时长格式：PnYnMnDTnHnMnS；清空即移除定时器
+
+                      Support ISO 8601 duration format: PnYnMnDTnHnMnS; clear to remove the timer
                     </Text>
                   </div>
                 )}
@@ -1465,16 +1516,18 @@ export default function WorkflowNodeInspector({
                   <div className="mt-2">
                     <Text strong className="text-sm flex items-center mb-2">
                       <Timer className="w-3.5 h-3.5 mr-1" />
-                      周期表达式
+
+                      Periodic expression
                     </Text>
                     <DebouncedInput
                       value={currentTimerCycle}
                       onCommit={value => apply({ timeCycle: value })}
-                      placeholder="例如：R/PT1H（每小时执行一次）"
+                      placeholder="For example: R/PT1H (executed once every hour)"
                       size="small"
                     />
                     <Text type="secondary" className="text-xs mt-1 block">
-                      支持重复执行格式 R[次数]/[间隔时间]，例如 R/PT1H 表示每小时执行一次
+
+                      Supports repeated execution format R[number of times]/[interval time], for example, R/PT1H means execution once every hour
                     </Text>
                   </div>
                 )}
@@ -1483,16 +1536,18 @@ export default function WorkflowNodeInspector({
                   <div className="mt-2">
                     <Text strong className="text-sm flex items-center mb-2">
                       <Timer className="w-3.5 h-3.5 mr-1" />
-                      指定时间
+
+                      Specified time
                     </Text>
                     <DebouncedInput
                       value={currentTimerDate}
                       onCommit={value => apply({ timeDate: value })}
-                      placeholder="例如：2026-12-31T23:59:59Z"
+                      placeholder="For example: 2026-12-31T23:59:59Z"
                       size="small"
                     />
                     <Text type="secondary" className="text-xs mt-1 block">
-                      支持 ISO 8601 日期时间格式（RFC3339）
+
+                      Support ISO 8601 date and time format (RFC3339)
                     </Text>
                   </div>
                 )}
@@ -1509,12 +1564,13 @@ export default function WorkflowNodeInspector({
             <div>
               <Text strong className="text-sm flex items-center mb-2">
                 <MessageCircle className="w-3.5 h-3.5 mr-1" />
-                消息引用 (messageRef)
+
+                message reference (messageRef)
               </Text>
               <DebouncedInput
                 value={currentMessageRef}
                 onCommit={value => apply({ messageRef: value })}
-                placeholder="消息定义ID或名称"
+                placeholder="Message definition ID or name"
                 size="small"
               />
             </div>
@@ -1529,12 +1585,13 @@ export default function WorkflowNodeInspector({
             <div>
               <Text strong className="text-sm flex items-center mb-2">
                 <Radio className="w-3.5 h-3.5 mr-1" />
-                信号引用 (signalRef)
+
+                signal reference (signalRef)
               </Text>
               <DebouncedInput
                 value={currentSignalRef}
                 onCommit={value => apply({ signalRef: value })}
-                placeholder="信号定义ID或名称"
+                placeholder="Signal definition ID or name"
                 size="small"
               />
             </div>
@@ -1549,12 +1606,13 @@ export default function WorkflowNodeInspector({
             <div>
               <Text strong className="text-sm flex items-center mb-2">
                 <AlertTriangle className="w-3.5 h-3.5 mr-1" />
-                错误代码 (errorCode)
+
+                error code (errorCode)
               </Text>
               <DebouncedInput
                 value={currentErrorCode}
                 onCommit={value => apply({ errorCode: value })}
-                placeholder="要捕获或抛出的错误代码"
+                placeholder="Error code to catch or throw"
                 size="small"
               />
             </div>
@@ -1569,12 +1627,13 @@ export default function WorkflowNodeInspector({
             <div>
               <Text strong className="text-sm flex items-center mb-2">
                 <AlertTriangle className="w-3.5 h-3.5 mr-1" />
-                升级代码 (escalationCode)
+
+                escalation code (escalationCode)
               </Text>
               <DebouncedInput
                 value={currentEscalationCode}
                 onCommit={value => apply({ escalationCode: value })}
-                placeholder="升级事件代码"
+                placeholder="Upgrade event code"
                 size="small"
               />
             </div>
@@ -1589,12 +1648,13 @@ export default function WorkflowNodeInspector({
             <div>
               <Text strong className="text-sm flex items-center mb-2">
                 <Settings className="w-3.5 h-3.5 mr-1" />
-                条件表达式
+
+                Conditional expression
               </Text>
               <DebouncedTextArea
                 value={currentCondition}
                 onCommit={value => apply({ condition: value })}
-                placeholder="输入条件表达式，返回true时触发事件"
+                placeholder="Enter a conditional expression and trigger an event when true is returned"
                 rows={3}
                 className="font-mono text-xs"
               />
@@ -1610,16 +1670,18 @@ export default function WorkflowNodeInspector({
             <div>
               <Text strong className="text-sm flex items-center mb-2">
                 <Settings className="w-3.5 h-3.5 mr-1" />
-                中断原任务
+
+                Interrupt original task
               </Text>
               <Switch
-                aria-label="中断原任务"
+                aria-label="Interrupt original task"
                 checked={currentCancelActivity}
                 onChange={checked => apply({ cancelActivity: checked })}
                 size="small"
               />
               <Text type="secondary" className="text-xs mt-1 block">
-                开启时事件触发会中断原任务执行，关闭时事件触发后原任务继续执行
+
+                When the event is turned on, the execution of the original task will be interrupted. When the event is turned off, the original task will continue to execute after the event is triggered.
               </Text>
             </div>
           </>
@@ -1633,32 +1695,36 @@ export default function WorkflowNodeInspector({
             <div>
               <Text strong className="text-sm flex items-center mb-2">
                 <Settings className="w-3.5 h-3.5 mr-1" />
-                事件触发
+
+                event triggered
               </Text>
               <Switch
-                aria-label="事件触发"
+                aria-label="event triggered"
                 checked={currentTriggeredByEvent}
                 onChange={checked => apply({ triggeredByEvent: checked })}
                 size="small"
               />
               <Text type="secondary" className="text-xs mt-1 block">
-                开启时该子流程为事件子流程，由事件触发执行
+
+                When enabled, this sub-process is an event sub-process and is executed triggered by events.
               </Text>
             </div>
 
             <div className="mt-2">
               <Text strong className="text-sm flex items-center mb-2">
                 <Settings className="w-3.5 h-3.5 mr-1" />
-                补偿流程
+
+                Compensation Process
               </Text>
               <Switch
-                aria-label="补偿流程"
+                aria-label="Compensation Process"
                 checked={currentIsForCompensation}
                 onChange={checked => apply({ isForCompensation: checked })}
                 size="small"
               />
               <Text type="secondary" className="text-xs mt-1 block">
-                开启时该子流程为补偿流程，用于事务回滚时执行
+
+                When enabled, this sub-process is a compensation process and is used to execute when a transaction is rolled back.
               </Text>
             </div>
 
@@ -1666,15 +1732,16 @@ export default function WorkflowNodeInspector({
               <div className="mt-2">
                 <Text strong className="text-sm flex items-center mb-2">
                   <Settings className="w-3.5 h-3.5 mr-1" />
-                  事务方法
+
+                  Transaction method
                 </Text>
                 <Select
                   value={currentTransactionMethod}
                   onChange={value => apply({ transactionMethod: value })}
                   options={[
-                    { label: '标准事务', value: 'standard' },
-                    { label: '嵌套事务', value: 'nested' },
-                    { label: '独立事务', value: 'requiresNew' }
+                    { label: 'Standard transaction', value: 'standard' },
+                    { label: 'Nested transactions', value: 'nested' },
+                    { label: 'Independent transaction', value: 'requiresNew' }
                   ]}
                   size="small"
                   className="w-full"
@@ -1692,12 +1759,13 @@ export default function WorkflowNodeInspector({
             <div>
               <Text strong className="text-sm flex items-center mb-2">
                 <Link className="w-3.5 h-3.5 mr-1" />
-                调用流程ID
+
+                Calling process ID
               </Text>
               <DebouncedInput
                 value={currentCalledElement}
                 onCommit={value => apply({ calledElement: value })}
-                placeholder="要调用的外部流程定义ID"
+                placeholder="ID of the external process definition to be called"
                 size="small"
               />
             </div>
@@ -1705,32 +1773,36 @@ export default function WorkflowNodeInspector({
             <div className="mt-2">
               <Text strong className="text-sm flex items-center mb-2">
                 <Settings className="w-3.5 h-3.5 mr-1" />
-                继承变量
+
+                Inherited variables
               </Text>
               <Switch
-                aria-label="继承变量"
+                aria-label="Inherited variables"
                 checked={currentInheritVariables}
                 onChange={checked => apply({ inheritVariables: checked })}
                 size="small"
               />
               <Text type="secondary" className="text-xs mt-1 block">
-                开启时子流程继承父流程的所有变量
+
+                The sub-process inherits all variables of the parent process when it is started.
               </Text>
             </div>
 
             <div className="mt-2">
               <Text strong className="text-sm flex items-center mb-2">
                 <Settings className="w-3.5 h-3.5 mr-1" />
-                继承业务主键
+
+                Inherit business primary key
               </Text>
               <Switch
-                aria-label="继承业务主键"
+                aria-label="Inherit business primary key"
                 checked={currentInheritBusinessKey}
                 onChange={checked => apply({ inheritBusinessKey: checked })}
                 size="small"
               />
               <Text type="secondary" className="text-xs mt-1 block">
-                开启时子流程继承父流程的业务主键
+
+                The sub-process inherits the business primary key of the parent process when it is started.
               </Text>
             </div>
           </>

@@ -293,14 +293,14 @@ describe('ServiceCatalogApi', () => {
 
   describe('getFavorites', () => {
     it('should fail explicitly (no backend endpoint)', async () => {
-      await expect(ServiceCatalogApi.getFavorites()).rejects.toThrow(/服务收藏/);
+      await expect(ServiceCatalogApi.getFavorites()).rejects.toThrow(/Service collection/);
     });
   });
 
   describe('getPortalConfig', () => {
     it('should return default config', async () => {
       const result = await ServiceCatalogApi.getPortalConfig();
-      expect(result.name).toBe('默认门户');
+      expect(result.name).toBe("Default Portal");
     });
   });
 
@@ -409,20 +409,20 @@ describe('ServiceCatalogApi', () => {
 
   describe('getFavorites', () => {
     it('should fail explicitly instead of an empty list', async () => {
-      await expect(ServiceCatalogApi.getFavorites()).rejects.toThrow(/服务收藏/);
+      await expect(ServiceCatalogApi.getFavorites()).rejects.toThrow(/Service collection/);
     });
   });
 
   describe('getServiceRatings', () => {
     it('should fail explicitly instead of zero-filled ratings', async () => {
-      await expect(ServiceCatalogApi.getServiceRatings('1')).rejects.toThrow(/服务评分查询/);
+      await expect(ServiceCatalogApi.getServiceRatings('1')).rejects.toThrow(/Service rating query/);
       expect(mockGet).not.toHaveBeenCalled();
     });
   });
 
   describe('recordServiceView', () => {
     it('should fail explicitly instead of silently dropping the write', async () => {
-      await expect(ServiceCatalogApi.recordServiceView('1')).rejects.toThrow(/服务浏览记录/);
+      await expect(ServiceCatalogApi.recordServiceView('1')).rejects.toThrow(/Service browsing history/);
     });
   });
 

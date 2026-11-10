@@ -12,6 +12,7 @@ import { Alert, Button, Card, Col, Empty, Input, Row, Spin, Tag, Typography } fr
 import { ArrowLeft, ArrowRight, Clock, Search } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
+import { serviceCategoryLabel } from '@/constants/service-catalog';
 import { ServiceCatalogApi } from '@/lib/api/service-catalog-api';
 import { ServiceStatus, type ServiceItem } from '@/types/service-catalog';
 import { usePermissions } from '@/lib/hooks/use-permissions';
@@ -42,7 +43,7 @@ export default function NewServiceRequestPage() {
       setCatalogs(result.services);
     } catch (err) {
       setCatalogs([]);
-      setError(err instanceof Error ? err.message : '服务目录加载失败，请稍后重试');
+      setError(err instanceof Error ? err.message : 'Service directory loading failed, please try again later.');
     } finally {
       setLoading(false);
     }
@@ -60,7 +61,7 @@ export default function NewServiceRequestPage() {
     const query = keyword.trim().toLowerCase();
     if (!query) return catalogs;
     return catalogs.filter(catalog =>
-      [catalog.name, String(catalog.category), catalog.shortDescription]
+      [catalog.name, serviceCategoryLabel(catalog.category), String(catalog.category), catalog.shortDescription]
         .filter(Boolean)
         .some(value => String(value).toLowerCase().includes(query))
     );
@@ -72,10 +73,10 @@ export default function NewServiceRequestPage() {
         <Alert
           type="warning"
           showIcon
-          title="没有创建服务请求的权限"
-          description="请联系管理员确认你的角色是否包含 service_request:write。"
+          title="No permission to create service request"
+          description="Please contact your administrator to confirm whether your role includes service_request:write."
           action={
-            <Button onClick={() => router.push('/service-requests')}>返回服务请求</Button>
+            <Button onClick={() => router.push('/service-requests')}>Return service request</Button>
           }
         />
       </div>
@@ -92,12 +93,14 @@ export default function NewServiceRequestPage() {
             onClick={() => router.push('/service-requests')}
             className="!px-0 mb-2"
           >
-            返回服务请求
+
+            Return service request
           </Button>
           <Title level={2} style={{ marginBottom: 4 }}>
-            新建服务请求
+
+            New service request
           </Title>
-          <Text type="secondary">先选择一个已发布的服务，再填写申请信息。</Text>
+          <Text type="secondary">First select a published service and then fill in the application information.</Text>
         </div>
       </div>
 
@@ -106,13 +109,14 @@ export default function NewServiceRequestPage() {
           <Input
             allowClear
             prefix={<Search size={16} className="text-gray-400" />}
-            placeholder="搜索服务名称或分类"
+            placeholder="Search service name or category"
             value={keyword}
             onChange={e => setKeyword(e.target.value)}
             style={{ maxWidth: 320 }}
           />
           <Text type="secondary">
-            共 {filteredCatalogs.length} 个可申请服务
+
+            Total {filteredCatalogs.length}  Available services
           </Text>
         </div>
       </Card>
@@ -122,9 +126,9 @@ export default function NewServiceRequestPage() {
           className="mb-4"
           type="error"
           showIcon
-          title="服务目录加载失败"
+          title="Failed to load service catalog"
           description={error}
-          action={<Button onClick={loadCatalogs}>重新加载</Button>}
+          action={<Button onClick={loadCatalogs}>Reload</Button>}
         />
       )}
 
@@ -136,10 +140,10 @@ export default function NewServiceRequestPage() {
         <Card>
           <Empty
             description={
-              error ? '服务目录暂时不可用' : '没有可申请的服务，请联系服务目录管理员'
+              error ? 'Service catalog is temporarily unavailable' : 'No services available for application, please contact the service catalog administrator'
             }
           >
-            <Button onClick={() => router.push('/service-catalog')}>查看服务目录</Button>
+            <Button onClick={() => router.push('/service-catalog')}>View service catalog</Button>
           </Empty>
         </Card>
       ) : (
@@ -151,15 +155,16 @@ export default function NewServiceRequestPage() {
                   <Title level={4} className="!m-0 !text-base">
                     {catalog.name}
                   </Title>
-                  <Tag className="!m-0">{catalog.category}</Tag>
+                  <Tag className="!m-0">{serviceCategoryLabel(catalog.category)}</Tag>
                 </div>
                 <Text className="mt-2 block min-h-[40px] text-gray-600">
-                  {catalog.shortDescription || catalog.fullDescription || '暂无服务说明'}
+                  {catalog.shortDescription || catalog.fullDescription || 'No service description yet'}
                 </Text>
                 <div className="mt-3 flex items-center text-gray-500">
                   <Clock size={14} className="mr-1" />
                   <Text type="secondary" className="!text-xs">
-                    交付周期：{catalog.deliveryDays != null ? `${catalog.deliveryDays} 天` : '待确认'}
+
+                    Delivery time:{catalog.deliveryDays != null ? `${catalog.deliveryDays} days` : 'Pending'}
                   </Text>
                 </div>
                 <Button
@@ -167,10 +172,11 @@ export default function NewServiceRequestPage() {
                   type="primary"
                   block
                   icon={<ArrowRight size={16} />}
-                  aria-label={`申请 ${catalog.name}`}
+                  aria-label={`Apply ${catalog.name}`}
                   onClick={() => router.push(`/service-catalog/request/${catalog.id}`)}
                 >
-                  申请
+
+                  Apply
                 </Button>
               </Card>
             </Col>

@@ -77,11 +77,11 @@ func (p *DiscoveryCIProjector) ListPending(ctx context.Context, tenantID int) ([
 	}
 	resources, err := p.repo.ListCloudResources(ctx, tenantID, CloudResourceFilter{})
 	if err != nil {
-		return nil, fmt.Errorf("查询云资源失败: %w", err)
+		return nil, fmt.Errorf("Failed to query cloud resources: %w", err)
 	}
 	cis, err := p.repo.ListCIsForReconciliation(ctx, tenantID)
 	if err != nil {
-		return nil, fmt.Errorf("查询已建账配置项失败: %w", err)
+		return nil, fmt.Errorf("Failed to query established account configuration items: %w", err)
 	}
 	linkedRefIDs := make(map[int]struct{}, len(cis))
 	linkedIdentities := make(map[string]struct{}, len(cis))
@@ -121,7 +121,7 @@ func (p *DiscoveryCIProjector) ListPending(ctx context.Context, tenantID int) ([
 			var err error
 			defs, err = p.requirements.ListRequiredCIAttributes(ctx, tenantID, ciTypeID)
 			if err != nil {
-				return nil, fmt.Errorf("查询 CI 类型 %s 必填属性失败: %w", ciTypeName, err)
+				return nil, fmt.Errorf("Failed to query required attributes of CI type %s: %w", ciTypeName, err)
 			}
 			requirementsCache[ciTypeID] = defs
 		}
@@ -187,24 +187,24 @@ func (p *DiscoveryCIProjector) CompleteManually(
 	res, err := p.repo.GetCloudResource(ctx, tenantID, resourceID)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, common.NewNotFoundError("云资源")
+			return nil, common.NewNotFoundError("Cloud Resources")
 		}
-		return nil, fmt.Errorf("查询云资源失败: %w", err)
+		return nil, fmt.Errorf("Failed to query cloud resources: %w", err)
 	}
 
 	ciTypeName, ok := CITypeForCloudResource(res.ServiceCode, res.ResourceType)
 	if !ok {
 		return nil, common.NewValidationError(
-			fmt.Sprintf("资源类型 %s|%s 未登记 CI 类型映射，请手工创建配置项", res.ServiceCode, res.ResourceType), nil)
+			fmt.Sprintf("Resource type %s|%s has not registered CI type mapping, please create configuration items manually", res.ServiceCode, res.ResourceType), nil)
 	}
 	ciTypeID, found := p.resolveCITypeID(ctx, tenantID, ciTypeName)
 	if !found {
 		return nil, common.NewValidationError(
-			fmt.Sprintf("租户尚未创建 CI 类型 %s，无法按发现结果建账", ciTypeName), nil)
+			fmt.Sprintf("The tenant has not created CI type %s and cannot create accounts based on the discovery results.", ciTypeName), nil)
 	}
 	if linked := p.findLinkedCI(ctx, res); linked != nil {
-		return nil, common.NewConflictError("云资源已建账",
-			fmt.Sprintf("该资源已关联配置项 #%d（%s），请直接编辑该配置项", linked.ID, linked.CINumber))
+		return nil, common.NewConflictError("Cloud resources have been accounted for",
+			fmt.Sprintf("This resource is associated with configuration item #%d (%s), please edit the configuration item directly", linked.ID, linked.CINumber))
 	}
 
 	createReq := p.newCreateCIRequest(res, ciTypeID)
@@ -233,7 +233,7 @@ func (p *DiscoveryCIProjector) CompleteManually(
 		}
 		p.logger.Warnw("discovery manual completion failed",
 			"tenant_id", tenantID, "cloud_resource_id", resourceID, "operator_id", operatorID, "error", err)
-		return nil, fmt.Errorf("创建配置项失败: %w", err)
+		return nil, fmt.Errorf("Failed to create configuration item: %w", err)
 	}
 	p.logger.Infow("configuration item created by manual completion",
 		"tenant_id", tenantID, "ci_id", created.ID, "cloud_resource_id", resourceID, "operator_id", operatorID)

@@ -143,7 +143,7 @@ func AuthMiddleware(jwtSecret string) gin.HandlerFunc {
 				"path", c.Request.URL.Path,
 				"ip", c.ClientIP(),
 			)
-			common.Fail(c, common.AuthFailedCode, "缺少认证token")
+			common.Fail(c, common.AuthFailedCode, "Missing authentication token")
 			c.Abort()
 			return
 		}
@@ -155,7 +155,7 @@ func AuthMiddleware(jwtSecret string) gin.HandlerFunc {
 				"path", c.Request.URL.Path,
 				"prefix", authHeader[:min(10, len(authHeader))],
 			)
-			common.Fail(c, common.AuthFailedCode, "token格式错误")
+			common.Fail(c, common.AuthFailedCode, "token format error")
 			c.Abort()
 			return
 		}
@@ -167,7 +167,7 @@ func AuthMiddleware(jwtSecret string) gin.HandlerFunc {
 				"AuthMiddleware: empty token",
 				"path", c.Request.URL.Path,
 			)
-			common.Fail(c, common.AuthFailedCode, "token不能为空")
+			common.Fail(c, common.AuthFailedCode, "token cannot be empty")
 			c.Abort()
 			return
 		}
@@ -194,7 +194,7 @@ func AuthMiddleware(jwtSecret string) gin.HandlerFunc {
 				"error", err.Error(),
 				"error_type", fmt.Sprintf("%T", err),
 			)
-			common.Fail(c, common.AuthFailedCode, "token无效")
+			common.Fail(c, common.AuthFailedCode, "invalid token")
 			c.Abort()
 			return
 		}
@@ -204,7 +204,7 @@ func AuthMiddleware(jwtSecret string) gin.HandlerFunc {
 				"AuthMiddleware: token invalid",
 				"path", c.Request.URL.Path,
 			)
-			common.Fail(c, common.AuthFailedCode, "token无效")
+			common.Fail(c, common.AuthFailedCode, "invalid token")
 			c.Abort()
 			return
 		}
@@ -218,7 +218,7 @@ func AuthMiddleware(jwtSecret string) gin.HandlerFunc {
 					"path", c.Request.URL.Path,
 					"token_type", claims.TokenType,
 				)
-				common.Fail(c, common.AuthFailedCode, "无效的token类型，请使用access token")
+				common.Fail(c, common.AuthFailedCode, "Invalid token type, please use access token")
 				c.Abort()
 				return
 			}
@@ -227,14 +227,14 @@ func AuthMiddleware(jwtSecret string) gin.HandlerFunc {
 			if revocationErr != nil {
 				zap.S().Errorw("AuthMiddleware: token revocation check failed",
 					"path", c.Request.URL.Path, "error", revocationErr)
-				common.Fail(c, common.AuthFailedCode, "token状态验证失败")
+				common.Fail(c, common.AuthFailedCode, "Token status verification failed")
 				c.Abort()
 				return
 			}
 			if revoked {
 				zap.S().Warnw("AuthMiddleware: revoked token rejected",
 					"path", c.Request.URL.Path, "user_id", claims.UserID)
-				common.Fail(c, common.AuthFailedCode, "token已失效")
+				common.Fail(c, common.AuthFailedCode, "token has expired")
 				c.Abort()
 				return
 			}
@@ -247,7 +247,7 @@ func AuthMiddleware(jwtSecret string) gin.HandlerFunc {
 				// 查询失败按安全默认拒绝（fail-closed），与吊销检查语义一致。
 				zap.S().Errorw("AuthMiddleware: user token min issued-at check failed",
 					"path", c.Request.URL.Path, "user_id", claims.UserID, "error", minIATErr)
-				common.Fail(c, common.AuthFailedCode, "token状态验证失败")
+				common.Fail(c, common.AuthFailedCode, "Token status verification failed")
 				c.Abort()
 				return
 			}
@@ -255,7 +255,7 @@ func AuthMiddleware(jwtSecret string) gin.HandlerFunc {
 				zap.S().Warnw("AuthMiddleware: token issued before user permission change, rejected",
 					"path", c.Request.URL.Path, "user_id", claims.UserID,
 					"issued_at", claims.IssuedAt.Time, "min_issued_at", minIAT)
-				common.Fail(c, common.AuthFailedCode, "账号权限已变更，请重新登录")
+				common.Fail(c, common.AuthFailedCode, "Account permissions have been changed, please log in again")
 				c.Abort()
 				return
 			}
@@ -279,7 +279,7 @@ func AuthMiddleware(jwtSecret string) gin.HandlerFunc {
 				"AuthMiddleware: failed to extract claims",
 				"path", c.Request.URL.Path,
 			)
-			common.Fail(c, common.AuthFailedCode, "token解析失败")
+			common.Fail(c, common.AuthFailedCode, "token parsing failed")
 			c.Abort()
 			return
 		}

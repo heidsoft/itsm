@@ -223,7 +223,7 @@ func (s *Service) GetProblemSLA(ctx context.Context, id, tenantID int) (*Problem
 func (s *Service) AddComment(ctx context.Context, tenantID, problemID, userID int, content string, isInternal bool, mentions, attachments []int) (*ProblemComment, error) {
 	content = strings.TrimSpace(content)
 	if content == "" {
-		return nil, common.NewBusinessError(common.ValidationError, "评论内容不能为空", "empty content")
+		return nil, common.NewBusinessError(common.ValidationError, "Comment cannot be empty", "empty content")
 	}
 	return s.repo.CreateComment(ctx, &ProblemComment{
 		ProblemID:   problemID,
@@ -273,7 +273,7 @@ func (s *Service) PromoteToKnowledge(ctx context.Context, tenantID, problemID, u
 	resolution := strings.TrimSpace(p.Resolution)
 	if rootCause == "" && resolution == "" {
 		return nil, common.NewBusinessError(common.UnprocessableEntityCode,
-			"问题尚无根因或解决方案，沉淀为知识没有可复用价值", "root_cause and resolution both empty")
+			"There is no root cause or solution to the problem, and it is accumulated as knowledge with no reusable value.", "root_cause and resolution both empty")
 	}
 
 	title := strings.TrimSpace(in.Title)
@@ -327,7 +327,7 @@ func (s *Service) PromoteToKnowledge(ctx context.Context, tenantID, problemID, u
 
 	if s.kbRepo == nil {
 		return nil, common.NewBusinessError(common.ServiceUnavailableCode,
-			"知识沉淀能力未装配", "knowledge repository not wired in bootstrap")
+			"Knowledge accumulation ability is not equipped", "knowledge repository not wired in bootstrap")
 	}
 
 	return s.kbRepo.Create(ctx, &knowledge.Article{
@@ -362,13 +362,13 @@ func (s *Service) ListProblemKnowledge(ctx context.Context, tenantID, problemID 
 // validateAssignee 统一受指人同租户/在职校验入口。
 func (s *Service) validateAssignee(ctx context.Context, assigneeID, tenantID int) error {
 	if assigneeID <= 0 {
-		return fmt.Errorf("受理人 ID 无效")
+		return fmt.Errorf("Invalid assignee ID")
 	}
 	if s.validator == nil {
-		return fmt.Errorf("受理人校验器未配置，拒绝写入受指人引用")
+		return fmt.Errorf("Assignee validator is not configured, rejecting writing of referee reference")
 	}
 	if err := s.validator.ValidateAssignee(ctx, assigneeID, tenantID); err != nil {
-		return fmt.Errorf("处理人不存在或不可用: %w", err)
+		return fmt.Errorf("Processor does not exist or is unavailable: %w", err)
 	}
 	return nil
 }
@@ -380,7 +380,7 @@ func (s *Service) Create(ctx context.Context, tenantID int, p *Problem) (*Proble
 	if !isValidProblemPriority(p.Priority) {
 		// 非法枚举是参数错误，不是服务端故障；裸 fmt.Errorf 会被 FailWithErr 兜底成 500。
 		return nil, common.NewBusinessError(common.BadRequestCode,
-			fmt.Sprintf("无效的问题优先级：%s（可选 low/medium/high/critical）", p.Priority), "")
+			fmt.Sprintf("Invalid issue priority: %s (optional low/medium/high/critical)", p.Priority), "")
 	}
 	// AssigneeID 可指向任意租户的用户：写入前必须校验同租户 +在职，
 	// 否则问题单（含根因等敏感内容）可以被静默指给别家租户员工。
@@ -454,7 +454,7 @@ func (s *Service) Update(ctx context.Context, tenantID int, id int, p *Problem, 
 	}
 	// 写权限 ⊆ 读权限：普通角色仅可修改本人创建或受理的问题单。
 	if !datascope.CanWriteResource(actorID, actorRole, existing.CreatedBy, existing.AssigneeID) {
-		return nil, common.NewForbiddenError("无权限修改该问题单：仅创建人、受理人或管理员可操作")
+		return nil, common.NewForbiddenError("No permission to modify this ticket: only the creator, assignee or administrator can operate it")
 	}
 
 	// Update fields if they are set (non-zero/non-empty check in Handler or here)
@@ -480,7 +480,7 @@ func (s *Service) Update(ctx context.Context, tenantID int, id int, p *Problem, 
 			// 内部错误返回 500，前端会把合法的流程防护当成服务器故障。
 			return nil, common.NewBusinessError(
 				common.ConflictCode,
-				"当前问题状态不允许此操作",
+				"The current issue status does not allow this operation",
 				fmt.Sprintf("%s -> %s", existing.Status, p.Status),
 			)
 		}
@@ -513,7 +513,7 @@ func (s *Service) Update(ctx context.Context, tenantID int, id int, p *Problem, 
 		if !isValidProblemPriority(p.Priority) {
 			return nil, common.NewBusinessError(
 				common.ParamErrorCode,
-				"无效的问题优先级",
+				"Invalid issue priority",
 				p.Priority,
 			)
 		}
@@ -572,8 +572,8 @@ func (s *Service) Update(ctx context.Context, tenantID int, id int, p *Problem, 
 				if errors.Is(err, ErrProblemStatusMoved) {
 					return nil, common.NewBusinessError(
 						common.ConflictCode,
-						"问题单状态已被并发修改，请刷新后重试",
-						fmt.Sprintf("期望状态 '%s'", expectedStatus),
+						"The ticket status has been modified concurrently, please refresh and try again.",
+						fmt.Sprintf("Expected status '%s'", expectedStatus),
 					)
 				}
 				return nil, err
@@ -600,8 +600,8 @@ func (s *Service) Update(ctx context.Context, tenantID int, id int, p *Problem, 
 		if errors.Is(err, ErrProblemStatusMoved) {
 			return nil, common.NewBusinessError(
 				common.ConflictCode,
-				"问题单状态已被并发修改，请刷新后重试",
-				fmt.Sprintf("期望状态 '%s'", expectedStatus),
+				"The ticket status has been modified concurrently, please refresh and try again.",
+				fmt.Sprintf("Expected status '%s'", expectedStatus),
 			)
 		}
 		return nil, err
@@ -640,7 +640,7 @@ func (s *Service) advanceProblemWorkflow(ctx context.Context, txc *ent.Client, p
 		ctx, txc, tenantID, actorID, string(dto.BusinessTypeProblem), problemID, variables, 1,
 	)
 	if err != nil {
-		return fmt.Errorf("同步流程任务失败: %w", err)
+		return fmt.Errorf("Synchronization process task failed: %w", err)
 	}
 	if handled {
 		s.logger.Infow("Problem lifecycle bridged to BPMN task",
@@ -691,14 +691,14 @@ func validateCloseEvidence(p *Problem) error {
 	if strings.TrimSpace(p.Resolution) == "" {
 		return common.NewBusinessError(
 			common.ConflictCode,
-			"问题关闭前必须填写解决方案",
+			"The solution must be filled in before the issue is closed.",
 			"resolution is required before closing a problem",
 		)
 	}
 	if strings.TrimSpace(p.RootCause) == "" {
 		return common.NewBusinessError(
 			common.ConflictCode,
-			"问题关闭前必须明确根因；若无法确定，请在根因中写明判定依据",
+			"The root cause must be clarified before the problem is closed; if it cannot be determined, please write down the basis for determination in the root cause.",
 			"root_cause is required before closing a problem",
 		)
 	}
@@ -762,7 +762,7 @@ func (s *Service) Delete(ctx context.Context, id int, tenantID int, actorID int,
 		return err
 	}
 	if !datascope.CanWriteResource(actorID, actorRole, existing.CreatedBy, existing.AssigneeID) {
-		return common.NewForbiddenError("无权限删除该问题单：仅创建人、受理人或管理员可操作")
+		return common.NewForbiddenError("No permission to delete this ticket: only the creator, assignee or administrator can do this")
 	}
 	return s.repo.Delete(ctx, id, tenantID)
 }

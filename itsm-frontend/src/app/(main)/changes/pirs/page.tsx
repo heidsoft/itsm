@@ -55,7 +55,7 @@ export default function PIRListPage() {
     } catch (error) {
       if (seq !== listRequest.current) return;
       console.error('Failed to fetch PIRs:', error);
-      message.error('获取PIR列表失败');
+      message.error('Failed to obtain PIR list');
     } finally {
       if (seq === listRequest.current) setLoading(false);
     }
@@ -70,12 +70,12 @@ export default function PIRListPage() {
     setDeleting(true);
     try {
       await ChangeApi.deletePIR(selectedPIR.id);
-      message.success('PIR已删除');
+      message.success('PIR deleted');
       setDeleteModalVisible(false);
       setSelectedPIR(null);
       fetchPIRs();
     } catch (error: unknown) {
-      message.error(error instanceof Error ? error.message : '删除失败');
+      message.error(error instanceof Error ? error.message : 'Delete failed');
     } finally {
       setDeleting(false);
     }
@@ -86,19 +86,22 @@ export default function PIRListPage() {
       case 'successful':
         return (
           <Tag icon={<CheckCircle />} color="success">
-            成功
+
+            Success
           </Tag>
         );
       case 'partially_successful':
         return (
           <Tag icon={<AlertTriangle />} color="warning">
-            部分成功
+
+            Partially successful
           </Tag>
         );
       case 'failed':
         return (
           <Tag icon={<XCircle />} color="error">
-            失败
+
+            Failed
           </Tag>
         );
       default:
@@ -108,7 +111,7 @@ export default function PIRListPage() {
 
   const columns: ColumnsType<PIRResponse> = [
     {
-      title: '变更ID',
+      title: 'Change ID',
       dataIndex: 'changeId',
       key: 'changeId',
       width: 100,
@@ -119,48 +122,48 @@ export default function PIRListPage() {
       ),
     },
     {
-      title: '变更标题',
+      title: 'Change title',
       dataIndex: 'changeTitle',
       key: 'changeTitle',
       ellipsis: true,
     },
     {
-      title: '审查人',
+      title: 'Reviewer',
       dataIndex: 'reviewerName',
       key: 'reviewerName',
       width: 120,
     },
     {
-      title: '审查日期',
+      title: 'Review date',
       dataIndex: 'reviewDate',
       key: 'reviewDate',
       width: 180,
       render: (date: string) => dayjs(date).format('YYYY-MM-DD HH:mm'),
     },
     {
-      title: '总体结果',
+      title: 'Overall results',
       dataIndex: 'overallResult',
       key: 'overallResult',
       width: 120,
       render: (result: PIROverallResult) => getResultTag(result),
     },
     {
-      title: '目标达成',
+      title: 'Goal achieved',
       dataIndex: 'objectivesAchieved',
       key: 'objectivesAchieved',
       width: 100,
       render: (achieved: boolean) =>
-        achieved ? <Tag color="success">是</Tag> : <Tag color="error">否</Tag>,
+        achieved ? <Tag color="success">Yes</Tag> : <Tag color="error">No</Tag>,
     },
     {
-      title: '回滚',
+      title: 'Rollback',
       dataIndex: 'rollbackPerformed',
       key: 'rollbackPerformed',
       width: 80,
-      render: (performed: boolean) => (performed ? <Tag color="warning">是</Tag> : <Tag>否</Tag>),
+      render: (performed: boolean) => (performed ? <Tag color="warning">Yes</Tag> : <Tag>No</Tag>),
     },
     {
-      title: '操作',
+      title: 'Actions',
       key: 'action',
       width: 150,
       render: (_, record) => (
@@ -173,7 +176,8 @@ export default function PIRListPage() {
               setDetailModalVisible(true);
             }}
           >
-            查看
+
+            View
           </Button>
           <Button
             type="link"
@@ -184,7 +188,8 @@ export default function PIRListPage() {
               setDeleteModalVisible(true);
             }}
           >
-            删除
+
+            Delete
           </Button>
         </Space>
       ),
@@ -192,19 +197,19 @@ export default function PIRListPage() {
   ];
 
   const resultOptions = [
-    { value: '全部', label: '全部结果' },
-    { value: 'successful', label: '成功' },
-    { value: 'partially_successful', label: '部分成功' },
-    { value: 'failed', label: '失败' },
+    { value: '全部', label: 'All results' },
+    { value: 'successful', label: 'Success' },
+    { value: 'partially_successful', label: 'Partially successful' },
+    { value: 'failed', label: 'Failed' },
   ];
 
   return (
-    <PageContainer title="实施后审查 (PIR)" description="变更实施后的审查记录">
+    <PageContainer title="Post-Implementation Review (PIR)" description="Review record after change implementation">
       <Card className="shadow-sm rounded-lg">
         <div className="mb-4">
           <Space wrap>
             <Select
-              placeholder="结果筛选"
+              placeholder="Filter results"
               value={resultFilter}
               onChange={setResultFilter}
               allowClear
@@ -225,7 +230,7 @@ export default function PIRListPage() {
             total,
             showSizeChanger: true,
             showQuickJumper: true,
-            showTotal: total => `共 ${total} 条记录`,
+            showTotal: total => `Total ${total} records`,
             onChange: (p, ps) => {
               setPage(p);
               setPageSize(ps);
@@ -236,7 +241,7 @@ export default function PIRListPage() {
 
       {/* PIR详情弹窗 */}
       <Modal
-        title="PIR详情"
+        title="PIR details"
         open={detailModalVisible}
         onCancel={() => {
           setDetailModalVisible(false);
@@ -244,7 +249,8 @@ export default function PIRListPage() {
         }}
         footer={[
           <Button key="close" onClick={() => setDetailModalVisible(false)}>
-            关闭
+
+            Close
           </Button>,
           <Button
             key="edit"
@@ -256,7 +262,8 @@ export default function PIRListPage() {
               }
             }}
           >
-            编辑
+
+            Edit
           </Button>,
         ]}
         width={700}
@@ -264,65 +271,65 @@ export default function PIRListPage() {
         {selectedPIR && (
           <div>
             <Descriptions column={2} bordered>
-              <Descriptions.Item label="变更ID">
+              <Descriptions.Item label="Change ID">
                 <Button type="link" onClick={() => router.push(`/changes/${selectedPIR.changeId}`)}>
                   C-{selectedPIR.changeId}
                 </Button>
               </Descriptions.Item>
-              <Descriptions.Item label="变更标题">{selectedPIR.changeTitle}</Descriptions.Item>
-              <Descriptions.Item label="审查人">{selectedPIR.reviewerName}</Descriptions.Item>
-              <Descriptions.Item label="审查日期">
+              <Descriptions.Item label="Change title">{selectedPIR.changeTitle}</Descriptions.Item>
+              <Descriptions.Item label="Reviewer">{selectedPIR.reviewerName}</Descriptions.Item>
+              <Descriptions.Item label="Review date">
                 {dayjs(selectedPIR.reviewDate).format('YYYY-MM-DD HH:mm')}
               </Descriptions.Item>
-              <Descriptions.Item label="总体结果">
+              <Descriptions.Item label="Overall results">
                 {getResultTag(selectedPIR.overallResult as PIROverallResult)}
               </Descriptions.Item>
-              <Descriptions.Item label="目标达成">
+              <Descriptions.Item label="Goal achieved">
                 {selectedPIR.objectivesAchieved ? (
-                  <Tag color="success">是</Tag>
+                  <Tag color="success">Yes</Tag>
                 ) : (
-                  <Tag color="error">否</Tag>
+                  <Tag color="error">No</Tag>
                 )}
               </Descriptions.Item>
-              <Descriptions.Item label="实际持续时间">
-                {selectedPIR.actualDurationMinutes} 分钟
+              <Descriptions.Item label="Actual duration">
+                {selectedPIR.actualDurationMinutes}  minutes
               </Descriptions.Item>
-              <Descriptions.Item label="回滚">
-                {selectedPIR.rollbackPerformed ? <Tag color="warning">是</Tag> : <Tag>否</Tag>}
+              <Descriptions.Item label="Rollback">
+                {selectedPIR.rollbackPerformed ? <Tag color="warning">Yes</Tag> : <Tag>No</Tag>}
               </Descriptions.Item>
             </Descriptions>
 
             {selectedPIR.successSummary && (
               <>
-                <Divider>成功总结</Divider>
+                <Divider>Successful summary</Divider>
                 <p>{selectedPIR.successSummary}</p>
               </>
             )}
 
             {selectedPIR.issuesEncountered && (
               <>
-                <Divider>遇到的问题</Divider>
+                <Divider>Problem encountered</Divider>
                 <p>{selectedPIR.issuesEncountered}</p>
               </>
             )}
 
             {selectedPIR.lessonsLearned && (
               <>
-                <Divider>经验教训</Divider>
+                <Divider>Lessons Learned</Divider>
                 <p>{selectedPIR.lessonsLearned}</p>
               </>
             )}
 
             {selectedPIR.improvementRecommendations && (
               <>
-                <Divider>改进建议</Divider>
+                <Divider>ImprovementSuggestion</Divider>
                 <p>{selectedPIR.improvementRecommendations}</p>
               </>
             )}
 
             {selectedPIR.rollbackReason && (
               <>
-                <Divider>回滚原因</Divider>
+                <Divider>Rollback Reason</Divider>
                 <p>{selectedPIR.rollbackReason}</p>
               </>
             )}
@@ -335,7 +342,8 @@ export default function PIRListPage() {
         title={
           <Space>
             <AlertCircle style={{ color: '#faad14' }} />
-            确认删除
+
+            Confirm Delete
           </Space>
         }
         open={deleteModalVisible}
@@ -344,11 +352,11 @@ export default function PIRListPage() {
           setDeleteModalVisible(false);
           setSelectedPIR(null);
         }}
-        okText="删除"
+        okText="Delete"
         okButtonProps={{ danger: true, loading: deleting }}
-        cancelText="取消"
+        cancelText="Cancel"
       >
-        <p>确定要删除这个实施后审查记录吗？此操作不可撤销。</p>
+        <p>Are you sure you want to delete this post-implementation review record? This action cannot be undone.</p>
       </Modal>
     </PageContainer>
   );

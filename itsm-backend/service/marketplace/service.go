@@ -482,7 +482,7 @@ func (s *Service) UpdateInstallationConfig(ctx context.Context, tenantID, itemID
 		if !IsDeliverableType(item.Type) {
 			return nil, ErrMarketplaceDeliveryUnsupported
 		}
-		return nil, fmt.Errorf("%w: %s 类组件的配置由目录版本声明，租户侧没有可配置项", ErrMarketplaceConfigUnsupported, item.Type)
+		return nil, fmt.Errorf("%w: The configuration of the %s class component is declared by the directory version, and there are no configurable items on the tenant side.", ErrMarketplaceConfigUnsupported, item.Type)
 	}
 
 	// 验证配置是否符合商品的 ConfigSchema

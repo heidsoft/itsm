@@ -25,9 +25,9 @@ interface ProblemAssociationsTabProps {
 type RelatedType = 'ticket' | 'incident' | 'change';
 
 const TYPE_CONFIG: Record<RelatedType, { label: string; icon: React.ReactNode; color: string }> = {
-  ticket: { label: '工单', icon: <FileText />, color: 'blue' },
-  incident: { label: '事件', icon: <AlertTriangle />, color: 'orange' },
-  change: { label: '变更', icon: <ArrowLeftRight />, color: 'purple' },
+  ticket: { label: 'Ticket', icon: <FileText />, color: 'blue' },
+  incident: { label: 'Incident', icon: <AlertTriangle />, color: 'orange' },
+  change: { label: 'Change', icon: <ArrowLeftRight />, color: 'purple' },
 };
 
 const STATUS_COLOR_MAP: Record<string, string> = {
@@ -64,7 +64,7 @@ const ProblemAssociationsTab: React.FC<ProblemAssociationsTabProps> = ({ problem
       setIncidents(data.incidents || []);
       setChanges(data.changes || []);
     } catch {
-      message.error('加载关联数据失败');
+      message.error('Failed to load associated data');
     } finally {
       setLoading(false);
     }
@@ -78,28 +78,28 @@ const ProblemAssociationsTab: React.FC<ProblemAssociationsTabProps> = ({ problem
     try {
       const req: ProblemRemoveAssociationRequest = { relatedType: type, relatedId: id };
       await ProblemApi.removeAssociation(problemId, req);
-      message.success('已移除关联');
+      message.success('Association removed');
       loadData();
     } catch {
-      message.error('移除关联失败');
+      message.error('Unlink failed');
     }
   };
 
   const handleAdd = async () => {
     if (selectedIds.length === 0) {
-      message.warning('请选择要关联的项');
+      message.warning('Please select the item to be associated');
       return;
     }
     try {
       const req: ProblemAssociationRequest = { relatedType: addType, relatedIds: selectedIds };
       await ProblemApi.addAssociation(problemId, req);
-      message.success('关联添加成功');
+      message.success('Association added successfully');
       setAddModalVisible(false);
       setSelectedIds([]);
       setSearchResults([]);
       loadData();
     } catch {
-      message.error('添加关联失败');
+      message.error('Failed to add association');
     }
   };
 
@@ -155,7 +155,7 @@ const ProblemAssociationsTab: React.FC<ProblemAssociationsTabProps> = ({ problem
       }
       setSearchResults(results);
     } catch {
-      message.error('搜索失败');
+      message.error('Search failed');
     } finally {
       setSearchLoading(false);
     }
@@ -165,20 +165,20 @@ const ProblemAssociationsTab: React.FC<ProblemAssociationsTabProps> = ({ problem
     const config = TYPE_CONFIG[type];
     const columns = [
       {
-        title: '编号',
+        title: 'Number',
         dataIndex: 'number',
         key: 'number',
         width: 140,
         render: (text: string) => text || '-',
       },
       {
-        title: '标题',
+        title: 'Title',
         dataIndex: 'title',
         key: 'title',
         ellipsis: true,
       },
       {
-        title: '状态',
+        title: 'Status',
         dataIndex: 'status',
         key: 'status',
         width: 100,
@@ -187,20 +187,21 @@ const ProblemAssociationsTab: React.FC<ProblemAssociationsTabProps> = ({ problem
         ),
       },
       {
-        title: '操作',
+        title: 'Actions',
         key: 'action',
         width: 80,
         render: (_: unknown, record: AssociatedItem) => (
           <Popconfirm
-            title="确认移除该关联？"
-            description="移除后可重新添加关联。"
-            okText="移除"
+            title="Confirm to remove this association?"
+            description="Association can be re-added after removal."
+            okText="Remove"
             okButtonProps={{ danger: true }}
-            cancelText="取消"
+            cancelText="Cancel"
             onConfirm={() => handleRemove(type, record.id)}
           >
             <Button type="link" danger size="small" icon={<Trash2 />}>
-              移除
+
+              Remove
             </Button>
           </Popconfirm>
         ),
@@ -225,12 +226,13 @@ const ProblemAssociationsTab: React.FC<ProblemAssociationsTabProps> = ({ problem
             icon={<Plus />}
             onClick={() => openAddModal(type)}
           >
-            添加{config.label}
+
+            Add{config.label}
           </Button>
         }
       >
         {items.length === 0 ? (
-          <Empty description={`暂无关联${config.label}`} image={Empty.PRESENTED_IMAGE_SIMPLE} />
+          <Empty description={`No association yet ${config.label}`} image={Empty.PRESENTED_IMAGE_SIMPLE} />
         ) : (
           <Table
             columns={columns}
@@ -262,7 +264,7 @@ const ProblemAssociationsTab: React.FC<ProblemAssociationsTabProps> = ({ problem
         title={
           <Space>
             <Link />
-            <span>添加{TYPE_CONFIG[addType].label}关联</span>
+            <span>Add{TYPE_CONFIG[addType].label}Relations</span>
           </Space>
         }
         open={addModalVisible}
@@ -272,12 +274,12 @@ const ProblemAssociationsTab: React.FC<ProblemAssociationsTabProps> = ({ problem
           setSelectedIds([]);
           setSearchResults([]);
         }}
-        okText="确认关联"
-        cancelText="取消"
+        okText="Confirm association"
+        cancelText="Cancel"
         width={600}
       >
         <Input.Search
-          placeholder={`搜索${TYPE_CONFIG[addType].label}标题或编号`}
+          placeholder={`Search ${TYPE_CONFIG[addType].label} Title or number`}
           enterButton={<Search />}
           onSearch={handleSearch}
           loading={searchLoading}
@@ -286,14 +288,14 @@ const ProblemAssociationsTab: React.FC<ProblemAssociationsTabProps> = ({ problem
         <Table
           columns={[
             {
-              title: '编号',
+              title: 'Number',
               dataIndex: 'number',
               width: 120,
               render: (t: string) => t || '-',
             },
-            { title: '标题', dataIndex: 'title', ellipsis: true },
+            { title: 'Title', dataIndex: 'title', ellipsis: true },
             {
-              title: '状态',
+              title: 'Status',
               dataIndex: 'status',
               width: 80,
               render: (s: string) => <Tag color={STATUS_COLOR_MAP[s] || 'default'}>{s}</Tag>,

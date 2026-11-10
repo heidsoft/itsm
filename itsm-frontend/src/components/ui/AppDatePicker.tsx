@@ -35,12 +35,12 @@ const AppDatePicker: React.FC<AppDatePickerProps> = ({
 export type AppDateRangePickerProps = RangePickerProps;
 
 const defaultPresets: NonNullable<RangePickerProps['presets']> = [
-  { label: '今天', value: [dayjs(), dayjs()] as [Dayjs, Dayjs] },
-  { label: '昨天', value: [dayjs().subtract(1, 'day'), dayjs().subtract(1, 'day')] as [Dayjs, Dayjs] },
-  { label: '近 7 天', value: [dayjs().subtract(6, 'day'), dayjs()] as [Dayjs, Dayjs] },
-  { label: '近 30 天', value: [dayjs().subtract(29, 'day'), dayjs()] as [Dayjs, Dayjs] },
-  { label: '本月', value: [dayjs().startOf('month'), dayjs().endOf('month')] as [Dayjs, Dayjs] },
-  { label: '上月', value: [dayjs().subtract(1, 'month').startOf('month'), dayjs().subtract(1, 'month').endOf('month')] as [Dayjs, Dayjs] },
+  { label: 'Today', value: [dayjs(), dayjs()] as [Dayjs, Dayjs] },
+  { label: 'Yesterday', value: [dayjs().subtract(1, 'day'), dayjs().subtract(1, 'day')] as [Dayjs, Dayjs] },
+  { label: 'Last 7 days', value: [dayjs().subtract(6, 'day'), dayjs()] as [Dayjs, Dayjs] },
+  { label: 'Last 30 days', value: [dayjs().subtract(29, 'day'), dayjs()] as [Dayjs, Dayjs] },
+  { label: 'This Month', value: [dayjs().startOf('month'), dayjs().endOf('month')] as [Dayjs, Dayjs] },
+  { label: 'Last Month', value: [dayjs().subtract(1, 'month').startOf('month'), dayjs().subtract(1, 'month').endOf('month')] as [Dayjs, Dayjs] },
 ];
 
 const AppDateRangePicker: React.FC<AppDateRangePickerProps> = ({

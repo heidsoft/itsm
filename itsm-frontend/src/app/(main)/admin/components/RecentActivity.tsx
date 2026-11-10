@@ -22,13 +22,13 @@ const formatRelativeTime = (iso: string): string => {
   const ts = new Date(iso).getTime();
   if (Number.isNaN(ts)) return iso;
   const diffSec = Math.floor((Date.now() - ts) / 1000);
-  if (diffSec < 60) return '刚刚';
+  if (diffSec < 60) return 'Just now';
   const diffMin = Math.floor(diffSec / 60);
-  if (diffMin < 60) return `${diffMin}分钟前`;
+  if (diffMin < 60) return `${diffMin} minutes ago`;
   const diffHour = Math.floor(diffMin / 60);
-  if (diffHour < 24) return `${diffHour}小时前`;
+  if (diffHour < 24) return `${diffHour} hours ago`;
   const diffDay = Math.floor(diffHour / 24);
-  if (diffDay < 30) return `${diffDay}天前`;
+  if (diffDay < 30) return `${diffDay} days ago`;
   return formatDateTime(iso);
 };
 
@@ -73,7 +73,7 @@ export const RecentActivity: React.FC = () => {
         <Space>
           <Activity className="w-5 h-5" />
           {t('admin.recentActivity')}
-          <Tag color="blue">实时</Tag>
+          <Tag color="blue">real time</Tag>
         </Space>
       }
       extra={

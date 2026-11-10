@@ -40,18 +40,18 @@ const statusColors: Record<string, string> = {
 };
 
 const statusLabels: Record<string, string> = {
-  available: '可用',
-  'in-use': '使用中',
-  maintenance: '维护中',
-  retired: '已退役',
-  disposed: '已处置',
+  available: 'Available',
+  'in-use': 'In Use',
+  maintenance: 'Maintenance',
+  retired: 'Retired',
+  disposed: 'Disposed',
 };
 
 const typeLabels: Record<string, string> = {
-  hardware: '硬件',
-  software: '软件',
-  cloud: '云资源',
-  license: '许可证',
+  hardware: 'Hardware',
+  software: 'Software',
+  cloud: 'Cloud Resources',
+  license: 'Licenses',
 };
 
 const AssetDetail: React.FC = () => {
@@ -76,7 +76,7 @@ const AssetDetail: React.FC = () => {
       const data = await AssetApi.getAsset(Number(id));
       setAsset(data);
     } catch (error) {
-      message.error('加载资产详情失败');
+      message.error('Failed to load asset details');
     } finally {
       setLoading(false);
     }
@@ -86,25 +86,25 @@ const AssetDetail: React.FC = () => {
     try {
       const values = await form.validateFields();
       await AssetApi.assignAsset(Number(id), values.assignedTo);
-      message.success('分配成功');
+      message.success('Allocation successful');
       setAssignModalVisible(false);
       loadDetail();
     } catch (error) {
-      message.error('分配失败');
+      message.error('Assignment failed');
     }
   };
 
   const handleRetire = async () => {
     Modal.confirm({
-      title: '确认退役',
-      content: '确定要退役此资产吗？',
+      title: 'Retirement confirmed',
+      content: 'Are you sure you want to retire this asset?',
       onOk: async () => {
         try {
-          await AssetApi.retireAsset(Number(id), '手动退役');
-          message.success('退役成功');
+          await AssetApi.retireAsset(Number(id), 'Manual retirement');
+          message.success('Retired successfully');
           loadDetail();
         } catch (error) {
-          message.error('退役失败');
+          message.error('Retirement failed');
         }
       },
     });
@@ -124,10 +124,11 @@ const AssetDetail: React.FC = () => {
         <Result
           status="404"
           title="404"
-          subTitle="抱歉，您访问的资产不存在"
+          subTitle="Sorry, the asset you visited does not exist"
           extra={
             <Button type="primary" onClick={() => router.push('/assets')}>
-              返回列表
+
+              Back to List
             </Button>
           }
         />
@@ -144,7 +145,8 @@ const AssetDetail: React.FC = () => {
             onClick={() => router.push('/assets')}
             style={{ marginBottom: 16 }}
           >
-            返回列表
+
+            Back to List
           </Button>
           <div
             style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}
@@ -153,7 +155,7 @@ const AssetDetail: React.FC = () => {
               <Title level={3} style={{ marginBottom: 8 }}>
                 {asset.name}
               </Title>
-              <Text type="secondary">资产编号: {asset.assetNumber}</Text>
+              <Text type="secondary">Asset number: {asset.assetNumber}</Text>
             </div>
             <Space>
               <Tag color={statusColors[asset.status]} style={{ padding: '4px 12px', fontSize: 14 }}>
@@ -165,46 +167,46 @@ const AssetDetail: React.FC = () => {
         </div>
 
         <Descriptions bordered column={2}>
-          <Descriptions.Item label="资产编号">{asset.assetNumber}</Descriptions.Item>
-          <Descriptions.Item label="资产名称">{asset.name}</Descriptions.Item>
-          <Descriptions.Item label="类型">
+          <Descriptions.Item label="Asset Number">{asset.assetNumber}</Descriptions.Item>
+          <Descriptions.Item label="Asset Name">{asset.name}</Descriptions.Item>
+          <Descriptions.Item label="Type">
             <Tag>{typeLabels[asset.type]}</Tag>
           </Descriptions.Item>
-          <Descriptions.Item label="状态">
+          <Descriptions.Item label="Status">
             <Tag color={statusColors[asset.status]}>{statusLabels[asset.status]}</Tag>
           </Descriptions.Item>
-          <Descriptions.Item label="分类">{asset.category || '-'}</Descriptions.Item>
-          <Descriptions.Item label="子分类">{asset.subcategory || '-'}</Descriptions.Item>
-          <Descriptions.Item label="序列号">{asset.serialNumber || '-'}</Descriptions.Item>
-          <Descriptions.Item label="型号">{asset.model || '-'}</Descriptions.Item>
-          <Descriptions.Item label="制造商">{asset.manufacturer || '-'}</Descriptions.Item>
-          <Descriptions.Item label="供应商">{asset.vendor || '-'}</Descriptions.Item>
-          <Descriptions.Item label="分配给">{asset.assignedToName || '-'}</Descriptions.Item>
-          <Descriptions.Item label="所属部门">{asset.department || '-'}</Descriptions.Item>
-          <Descriptions.Item label="位置">{asset.location || '-'}</Descriptions.Item>
-          <Descriptions.Item label="采购日期">{asset.purchaseDate || '-'}</Descriptions.Item>
-          <Descriptions.Item label="采购价格">
+          <Descriptions.Item label="Category">{asset.category || '-'}</Descriptions.Item>
+          <Descriptions.Item label="Subcategory">{asset.subcategory || '-'}</Descriptions.Item>
+          <Descriptions.Item label="Serial Number">{asset.serialNumber || '-'}</Descriptions.Item>
+          <Descriptions.Item label="Model">{asset.model || '-'}</Descriptions.Item>
+          <Descriptions.Item label="Manufacturer">{asset.manufacturer || '-'}</Descriptions.Item>
+          <Descriptions.Item label="Supplier">{asset.vendor || '-'}</Descriptions.Item>
+          <Descriptions.Item label="Assigned To">{asset.assignedToName || '-'}</Descriptions.Item>
+          <Descriptions.Item label="Department">{asset.department || '-'}</Descriptions.Item>
+          <Descriptions.Item label="Location">{asset.location || '-'}</Descriptions.Item>
+          <Descriptions.Item label="Purchase date">{asset.purchaseDate || '-'}</Descriptions.Item>
+          <Descriptions.Item label="Purchase price">
             {asset.purchasePrice ? `¥${asset.purchasePrice}` : '-'}
           </Descriptions.Item>
-          <Descriptions.Item label="保修期到期">{asset.warrantyExpiry || '-'}</Descriptions.Item>
-          <Descriptions.Item label="支持期到期">{asset.supportExpiry || '-'}</Descriptions.Item>
-          <Descriptions.Item label="创建时间">
+          <Descriptions.Item label="Warranty expired">{asset.warrantyExpiry || '-'}</Descriptions.Item>
+          <Descriptions.Item label="Support period expired">{asset.supportExpiry || '-'}</Descriptions.Item>
+          <Descriptions.Item label="Created">
             {dayjs(asset.createdAt).format('YYYY-MM-DD HH:mm')}
           </Descriptions.Item>
-          <Descriptions.Item label="更新时间">
+          <Descriptions.Item label="Updated At">
             {dayjs(asset.updatedAt).format('YYYY-MM-DD HH:mm')}
           </Descriptions.Item>
         </Descriptions>
       </Card>
 
       {asset.description && (
-        <Card title="描述">
+        <Card title="Description">
           <Text>{asset.description}</Text>
         </Card>
       )}
 
       {asset.specifications && Object.keys(asset.specifications).length > 0 && (
-        <Card title="规格参数">
+        <Card title="Specifications">
           <Descriptions column={1}>
             {Object.entries(asset.specifications).map(([key, value]) => (
               <Descriptions.Item key={key} label={key}>
@@ -216,7 +218,7 @@ const AssetDetail: React.FC = () => {
       )}
 
       {asset.tags && asset.tags.length > 0 && (
-        <Card title="标签">
+        <Card title="Tags">
           <Space wrap>
             {asset.tags.map((tag, index) => (
               <Tag key={index}>{tag}</Tag>
@@ -228,26 +230,29 @@ const AssetDetail: React.FC = () => {
       <Card>
         <Space>
           <Button type="primary" onClick={() => router.push(`/assets/${asset.id}/edit`)}>
-            编辑
+
+            Edit
           </Button>
           {asset.status === 'available' && (
             <Button
               icon={<UserIcon />}
               onClick={() => setAssignModalVisible(true)}
             >
-              分配资产
+
+              Assign assets
             </Button>
           )}
           {asset.status !== 'retired' && asset.status !== 'disposed' && (
             <Button danger onClick={handleRetire}>
-              退役资产
+
+              Retired assets
             </Button>
           )}
         </Space>
       </Card>
 
       <Modal
-        title="分配资产"
+        title="Assign assets"
         open={assignModalVisible}
         onOk={handleAssign}
         onCancel={() => setAssignModalVisible(false)}
@@ -255,15 +260,15 @@ const AssetDetail: React.FC = () => {
         <Form form={form} layout="vertical">
           <Form.Item
             name="assignedTo"
-            label="分配给用户"
-            rules={[{ required: true, message: '请选择用户' }]}
+            label="assigned to user"
+            rules={[{ required: true, message: 'Please select a user' }]}
           >
             <Select
-              placeholder="选择用户"
+              placeholder="Choose user"
               showSearch
               optionFilterProp="children"
               loading={usersLoading}
-              notFoundContent={usersLoading ? '加载中...' : '暂无用户'}
+              notFoundContent={usersLoading ? 'Loading...' : 'No users yet'}
               options={users.map((user) => ({
                 value: user.id,
                 label: user.name || user.username,

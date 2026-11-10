@@ -48,18 +48,18 @@ const { RangePicker } = DatePicker;
 
 // 任务状态是后端枚举（created/assigned/completed/...），统一映射中文，不在表格里直出英文。
 const taskStatusLabel: Record<string, string> = {
-  created: '已创建',
-  pending: '待处理',
-  assigned: '已分配',
-  claimed: '已领取',
-  in_progress: '处理中',
-  running: '执行中',
-  completed: '已完成',
-  cancelled: '已取消',
-  terminated: '已终止',
-  failed: '已失败',
-  skipped: '已跳过',
-  suspended: '已挂起',
+  created: 'Created',
+  pending: 'Pending',
+  assigned: 'Assigned',
+  claimed: 'Received',
+  in_progress: 'In Progress',
+  running: 'Running',
+  completed: 'Completed',
+  cancelled: 'Cancelled',
+  terminated: 'Terminated',
+  failed: 'Failed',
+  skipped: 'Skipped',
+  suspended: 'Suspended',
 };
 
 export default function BPMNDashboardPage() {
@@ -88,7 +88,7 @@ export default function BPMNDashboardPage() {
       setMetrics(data);
     } catch (error) {
       console.error('Failed to fetch dashboard metrics:', error);
-      message.error('加载工作流仪表盘指标失败');
+      message.error('Failed to load workflow dashboard metrics');
     } finally {
       setLoading(false);
     }
@@ -124,34 +124,34 @@ export default function BPMNDashboardPage() {
 
   const topProcessColumns: ColumnsType<ProcessStat> = [
     {
-      title: t('workflow.processKey') || '流程Key',
+      title: t('workflow.processKey') || 'Process Key',
       dataIndex: 'processDefinitionKey',
       key: 'processDefinitionKey',
       ellipsis: true,
     },
     {
-      title: t('workflow.totalInstances') || '总实例数',
+      title: t('workflow.totalInstances') || 'Total Instances',
       dataIndex: 'totalInstances',
       key: 'totalInstances',
       width: 100,
       align: 'right',
     },
     {
-      title: t('workflow.running') || '进行中',
+      title: t('workflow.running') || 'In Progress',
       dataIndex: 'runningInstances',
       key: 'runningInstances',
       width: 90,
       align: 'right',
     },
     {
-      title: t('workflow.completed') || '已完成',
+      title: t('workflow.completed') || 'Completed',
       dataIndex: 'completedInstances',
       key: 'completedInstances',
       width: 90,
       align: 'right',
     },
     {
-      title: t('workflow.avgDuration') || '平均耗时(分钟)',
+      title: t('workflow.avgDuration') || 'Avg Duration (min)',
       dataIndex: 'avgDurationMinutes',
       key: 'avgDurationMinutes',
       width: 130,
@@ -162,7 +162,7 @@ export default function BPMNDashboardPage() {
 
   const taskDistColumns: ColumnsType<TaskStat> = [
     {
-      title: t('workflow.status') || '状态',
+      title: t('workflow.status') || 'Status',
       dataIndex: 'status',
       key: 'status',
       render: (status: string) => (
@@ -170,14 +170,14 @@ export default function BPMNDashboardPage() {
       ),
     },
     {
-      title: t('workflow.count') || '数量',
+      title: t('workflow.count') || 'Count',
       dataIndex: 'count',
       key: 'count',
       width: 90,
       align: 'right',
     },
     {
-      title: t('workflow.percentage') || '占比',
+      title: t('workflow.percentage') || 'Percentage',
       dataIndex: 'percent',
       key: 'percent',
       width: 100,
@@ -198,8 +198,8 @@ export default function BPMNDashboardPage() {
     return (
       <div className='p-6'>
         <Alert
-          title={t('notificationCenter.typeLabels.warning') || '警告'}
-          description={t('auth.login.subtitle') || '请先登录以查看工作流仪表盘'}
+          title={t('notificationCenter.typeLabels.warning') || 'Warning'}
+          description={t('auth.login.subtitle') || 'Please log in first to view the workflow dashboard'}
           type='warning'
           showIcon
         />
@@ -222,7 +222,7 @@ export default function BPMNDashboardPage() {
       {/* Header */}
       <div className='flex justify-between items-center'>
         <h1 className='text-2xl font-bold'>
-          {t('workflow.bpmnDashboard.title') || 'BPMN流程监控仪表盘'}
+          {t('workflow.bpmnDashboard.title') || 'BPMN Process Monitor Dashboard'}
         </h1>
         <Space>
           <RangePicker
@@ -234,7 +234,7 @@ export default function BPMNDashboardPage() {
             value={[dateRange[0], dateRange[1]]}
           />
           <Button icon={<RefreshCw size={16} />} onClick={fetchMetrics} loading={loading}>
-            {t('common.refresh') || '刷新'}
+            {t('common.refresh') || 'Refresh'}
           </Button>
         </Space>
       </div>
@@ -244,7 +244,7 @@ export default function BPMNDashboardPage() {
         <Col xs={24} sm={12} lg={6}>
           <Card style={{ height: '100%' }}>
             <Statistic
-              title={t('workflow.bpmnDashboard.totalProcesses') || '流程定义'}
+              title={t('workflow.bpmnDashboard.totalProcesses') || 'Process Definitions'}
               value={metrics?.totalProcesses || 0}
               prefix={<BarChart3 size={18} />}
             />
@@ -253,7 +253,7 @@ export default function BPMNDashboardPage() {
         <Col xs={24} sm={12} lg={6}>
           <Card style={{ height: '100%' }}>
             <Statistic
-              title={t('workflow.bpmnDashboard.activeInstances') || '运行实例'}
+              title={t('workflow.bpmnDashboard.activeInstances') || 'Active Instances'}
               value={metrics?.activeInstances || 0}
               prefix={<Activity size={18} />}
               styles={{ content: { color: '#1890ff' } }}
@@ -263,7 +263,7 @@ export default function BPMNDashboardPage() {
         <Col xs={24} sm={12} lg={6}>
           <Card style={{ height: '100%' }}>
             <Statistic
-              title={t('workflow.bpmnDashboard.completedToday') || '今日完成'}
+              title={t('workflow.bpmnDashboard.completedToday') || 'Completed Today'}
               value={metrics?.completedToday || 0}
               prefix={<CheckCircle size={18} />}
               styles={{ content: { color: '#52c41a' } }}
@@ -273,7 +273,7 @@ export default function BPMNDashboardPage() {
         <Col xs={24} sm={12} lg={6}>
           <Card style={{ height: '100%' }}>
             <Statistic
-              title={t('workflow.bpmnDashboard.openTasks') || '待处理任务'}
+              title={t('workflow.bpmnDashboard.openTasks') || 'Open Tasks'}
               value={metrics?.openTasks || 0}
               prefix={<Clock size={18} />}
               styles={{ content: { color: '#faad14' } }}
@@ -286,13 +286,13 @@ export default function BPMNDashboardPage() {
       <Row gutter={[16, 16]}>
         <Col xs={24} lg={12}>
           <Card
-            title={t('workflow.bpmnDashboard.processHealth') || '流程健康度'}
+            title={t('workflow.bpmnDashboard.processHealth') || 'Process Health'}
             style={{ height: '100%' }}
           >
             <Row gutter={16}>
               <Col span={8}>
                 <Statistic
-                  title={t('workflow.bpmnDashboard.healthy') || '健康'}
+                  title={t('workflow.bpmnDashboard.healthy') || 'Healthy'}
                   value={metrics?.processHealth?.healthy || 0}
                   prefix={<CheckCircle size={16} />}
                   styles={{ content: { color: '#52c41a' } }}
@@ -300,7 +300,7 @@ export default function BPMNDashboardPage() {
               </Col>
               <Col span={8}>
                 <Statistic
-                  title={t('workflow.bpmnDashboard.warning') || '警告'}
+                  title={t('workflow.bpmnDashboard.warning') || 'Warning'}
                   value={metrics?.processHealth?.warning || 0}
                   prefix={<AlertTriangle size={16} />}
                   styles={{ content: { color: '#faad14' } }}
@@ -308,7 +308,7 @@ export default function BPMNDashboardPage() {
               </Col>
               <Col span={8}>
                 <Statistic
-                  title={t('workflow.bpmnDashboard.critical') || '严重'}
+                  title={t('workflow.bpmnDashboard.critical') || 'Critical'}
                   value={metrics?.processHealth?.critical || 0}
                   prefix={<XCircle size={16} />}
                   styles={{ content: { color: '#ff4d4f' } }}
@@ -317,7 +317,7 @@ export default function BPMNDashboardPage() {
             </Row>
             <div className='mt-4 text-center'>
               <Statistic
-                title={t('workflow.bpmnDashboard.healthScore') || '健康度评分'}
+                title={t('workflow.bpmnDashboard.healthScore') || 'Health Score'}
                 value={healthScore}
                 precision={1}
                 suffix='/100'
@@ -328,7 +328,7 @@ export default function BPMNDashboardPage() {
         </Col>
         <Col xs={24} lg={12}>
           <Card
-            title={t('workflow.bpmnDashboard.slaCompliance') || 'SLA合规率'}
+            title={t('workflow.bpmnDashboard.slaCompliance') || 'SLA Compliance Rate'}
             style={{ height: '100%' }}
           >
             {slaTotalSamples > 0 ? (
@@ -340,15 +340,15 @@ export default function BPMNDashboardPage() {
                   styles={{ content: { fontSize: 48, color: slaColor } }}
                 />
                 <p className='text-gray-500 mt-2'>
-                  {t('workflow.bpmnDashboard.slaComplianceRate') || 'SLA合规率'} ·{' '}
-                  {slaCompliantSamples}/{slaTotalSamples} 个已完成实例达标
+                  {t('workflow.bpmnDashboard.slaComplianceRate') || 'SLA Compliance Rate'} ·{' '}
+                  {slaCompliantSamples}/{slaTotalSamples}  Completed instances meet the criteria
                 </p>
               </div>
             ) : (
               <div className='h-full flex items-center justify-center py-8'>
                 <Empty
                   image={Empty.PRESENTED_IMAGE_SIMPLE}
-                  description='所选时间范围内暂无已完成的流程实例，无法计算 SLA 合规率'
+                  description="There are no completed process instances in the selected time range, and the SLA compliance rate cannot be calculated."
                 />
               </div>
             )}
@@ -360,7 +360,7 @@ export default function BPMNDashboardPage() {
       <Row gutter={[16, 16]}>
         <Col xs={24} lg={12}>
           <Card
-            title={t('workflow.bpmnDashboard.topProcesses') || '热门流程'}
+            title={t('workflow.bpmnDashboard.topProcesses') || 'Top Processes'}
             style={{ height: '100%' }}
           >
             <Table<ProcessStat>
@@ -370,13 +370,13 @@ export default function BPMNDashboardPage() {
               size='small'
               pagination={false}
               scroll={{ x: 620 }}
-              locale={{ emptyText: '暂无流程实例数据' }}
+              locale={{ emptyText: 'No process instance data yet' }}
             />
           </Card>
         </Col>
         <Col xs={24} lg={12}>
           <Card
-            title={t('workflow.bpmnDashboard.taskDistribution') || '任务分布'}
+            title={t('workflow.bpmnDashboard.taskDistribution') || 'Task Distribution'}
             style={{ height: '100%' }}
           >
             <Table<TaskStat>
@@ -385,14 +385,14 @@ export default function BPMNDashboardPage() {
               rowKey='status'
               size='small'
               pagination={false}
-              locale={{ emptyText: '暂无任务数据' }}
+              locale={{ emptyText: 'No task data yet' }}
             />
           </Card>
         </Col>
       </Row>
 
       {/* Trend：渲染后端真实 trendData，不再固定显示空态 */}
-      <Card title={t('workflow.bpmnDashboard.trend') || '流程趋势'}>
+      <Card title={t('workflow.bpmnDashboard.trend') || 'Process Trend'}>
         {trendData.length > 0 ? (
           <div style={{ width: '100%', height: 280 }}>
             <ResponsiveContainer width="100%" height="100%">
@@ -401,10 +401,10 @@ export default function BPMNDashboardPage() {
                 <XAxis dataKey="date" tick={{ fontSize: 12 }} />
                 <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
                 <Tooltip
-                  formatter={(value) => [`${value ?? 0}`, '实例数']}
-                  labelFormatter={(label) => `日期：${label}`}
+                  formatter={(value) => [`${value ?? 0}`, 'Number of instances']}
+                  labelFormatter={(label) => `Date:${label}`}
                 />
-                <Legend formatter={() => '每日启动实例数'} />
+                <Legend formatter={() => 'Number of instances started per day'} />
                 <Line
                   type="monotone"
                   dataKey="count"
@@ -418,7 +418,7 @@ export default function BPMNDashboardPage() {
           </div>
         ) : (
           <div className='h-48 flex items-center justify-center'>
-            <Empty description='所选时间范围内暂无流程趋势数据' />
+            <Empty description="There is no process trend data in the selected time range." />
           </div>
         )}
       </Card>

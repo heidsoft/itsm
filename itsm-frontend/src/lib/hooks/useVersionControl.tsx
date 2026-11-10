@@ -16,7 +16,7 @@ export class VersionConflictError extends Error {
     public serverVersion: number,
     public serverData?: unknown
   ) {
-    super(`版本冲突：当前版本 ${currentVersion}，服务器版本 ${serverVersion}`);
+    super(`Version conflict: current version ${currentVersion}, server version ${serverVersion}`);
     this.name = 'VersionConflictError';
   }
 }
@@ -146,7 +146,7 @@ export function useVersionControl<T extends { version?: number; id?: number }>(
     initialData,
     fetchLatest,
     updateData,
-    dataName = '数据',
+    dataName = 'data',
     autoDetectConflict = true,
     conflictCheckInterval = 0,
   } = config;
@@ -177,24 +177,26 @@ export function useVersionControl<T extends { version?: number; id?: number }>(
           title: (
             <span>
               <AlertCircle style={{ color: '#faad14', marginRight: 8 }} />
-              检测到并发修改
+
+              Concurrent modification detected
             </span>
           ),
           content: (
             <div>
               <p>
-                该{dataName}已被其他用户修改（服务器版本: {serverVersion ?? '?'}， 您的版本:{' '}
+
+                The{dataName}Modified by other users (server version: {serverVersion ?? '?'}, your version:{' '}
                 {version}）。
               </p>
-              <p>请选择操作：</p>
+              <p>Please select an action:</p>
               <ul>
-                <li>点击&quot;刷新&quot;放弃您的更改，加载最新版本</li>
-                <li>点击&quot;覆盖&quot;使用您的更改覆盖服务器版本（可能导致数据丢失）</li>
+                <li>Click "Refresh" to discard your changes and load the latest version</li>
+                <li>Clicking "Overwrite" overwrites the server version with your changes (potentially causing data loss)</li>
               </ul>
             </div>
           ),
-          okText: '刷新',
-          cancelText: '覆盖',
+          okText: 'Refresh',
+          cancelText: 'Coverage',
           onOk: () => resolve(false),
           onCancel: () => resolve(true),
         });
@@ -295,10 +297,10 @@ export function useVersionControl<T extends { version?: number; id?: number }>(
         setHasConflict(false);
         setConflictInfo(null);
 
-        message.success('已强制覆盖，请注意检查数据完整性');
+        message.success('Forced overwriting, please check data integrity');
         return result;
       } catch (error) {
-        message.error('强制更新失败');
+        message.error('Force update failed');
         throw error;
       } finally {
         setIsUpdating(false);
@@ -324,7 +326,7 @@ export function useVersionControl<T extends { version?: number; id?: number }>(
       lastCheckRef.current = Date.now();
       return result;
     } catch (error) {
-      message.error(`刷新${dataName}失败`);
+      message.error(`Refresh ${dataName} Failed`);
       throw error;
     } finally {
       setIsLoading(false);
@@ -335,7 +337,7 @@ export function useVersionControl<T extends { version?: number; id?: number }>(
   const discardLocalChanges = useCallback(async (): Promise<void> => {
     try {
       await refresh();
-      message.info('已加载最新版本');
+      message.info('Latest version loaded');
     } catch (error) {
       // Error already handled in refresh
     }

@@ -37,7 +37,7 @@ func (h *Handler) CreateGroup(c *gin.Context) {
 	var req dto.CreateGroupRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		h.logger.Errorf("参数绑定失败: %v", err)
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
@@ -52,7 +52,7 @@ func (h *Handler) CreateGroup(c *gin.Context) {
 	group, err := h.svc.CreateGroup(c.Request.Context(), &req)
 	if err != nil {
 		h.logger.Errorf("创建组失败: %v", err)
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -75,7 +75,7 @@ func (h *Handler) ListGroups(c *gin.Context) {
 	var req dto.ListGroupsRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
 		h.logger.Errorf("参数绑定失败: %v", err)
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
@@ -99,7 +99,7 @@ func (h *Handler) ListGroups(c *gin.Context) {
 	groups, total, err := h.svc.ListGroups(c.Request.Context(), &req)
 	if err != nil {
 		h.logger.Errorf("查询组列表失败: %v", err)
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -143,7 +143,7 @@ func (h *Handler) GetGroup(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "无效的组ID")
+		common.Fail(c, common.ParamErrorCode, "Invalid group ID")
 		return
 	}
 
@@ -200,14 +200,14 @@ func (h *Handler) UpdateGroup(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "无效的组ID")
+		common.Fail(c, common.ParamErrorCode, "Invalid group ID")
 		return
 	}
 
 	var req dto.UpdateGroupRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		h.logger.Errorf("参数绑定失败: %v", err)
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
@@ -219,7 +219,7 @@ func (h *Handler) UpdateGroup(c *gin.Context) {
 	group, err := h.svc.UpdateGroup(c.Request.Context(), id, &req, tenantID)
 	if err != nil {
 		h.logger.Errorf("更新组失败: %v", err)
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -241,7 +241,7 @@ func (h *Handler) DeleteGroup(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "无效的组ID")
+		common.Fail(c, common.ParamErrorCode, "Invalid group ID")
 		return
 	}
 
@@ -253,11 +253,11 @@ func (h *Handler) DeleteGroup(c *gin.Context) {
 	err = h.svc.DeleteGroup(c.Request.Context(), id, tenantID)
 	if err != nil {
 		h.logger.Errorf("删除组失败: %v", err)
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
-	common.Success(c, gin.H{"message": "删除成功"})
+	common.Success(c, gin.H{"message": "Deleted"})
 }
 
 // AddUserToGroup 添加用户到组
@@ -276,14 +276,14 @@ func (h *Handler) AddUserToGroup(c *gin.Context) {
 	idStr := c.Param("id")
 	groupID, err := strconv.Atoi(idStr)
 	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "无效的组ID")
+		common.Fail(c, common.ParamErrorCode, "Invalid group ID")
 		return
 	}
 
 	var req dto.AddUserToGroupRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		h.logger.Errorf("参数绑定失败: %v", err)
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
@@ -295,11 +295,11 @@ func (h *Handler) AddUserToGroup(c *gin.Context) {
 	err = h.svc.AddUserToGroup(c.Request.Context(), groupID, req.UserID, tenantID)
 	if err != nil {
 		h.logger.Errorf("添加用户到组失败: %v", err)
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
-	common.Success(c, gin.H{"message": "添加成功"})
+	common.Success(c, gin.H{"message": "Added successfully"})
 }
 
 // RemoveUserFromGroup 从组移除用户
@@ -318,14 +318,14 @@ func (h *Handler) RemoveUserFromGroup(c *gin.Context) {
 	idStr := c.Param("id")
 	groupID, err := strconv.Atoi(idStr)
 	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "无效的组ID")
+		common.Fail(c, common.ParamErrorCode, "Invalid group ID")
 		return
 	}
 
 	var req dto.RemoveUserFromGroupRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		h.logger.Errorf("参数绑定失败: %v", err)
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
@@ -337,11 +337,11 @@ func (h *Handler) RemoveUserFromGroup(c *gin.Context) {
 	err = h.svc.RemoveUserFromGroup(c.Request.Context(), groupID, req.UserID, tenantID)
 	if err != nil {
 		h.logger.Errorf("从组移除用户失败: %v", err)
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
-	common.Success(c, gin.H{"message": "移除成功"})
+	common.Success(c, gin.H{"message": "Removed successfully"})
 }
 
 // GetGroupMembers 获取组成员
@@ -360,7 +360,7 @@ func (h *Handler) GetGroupMembers(c *gin.Context) {
 	idStr := c.Param("id")
 	groupID, err := strconv.Atoi(idStr)
 	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "无效的组ID")
+		common.Fail(c, common.ParamErrorCode, "Invalid group ID")
 		return
 	}
 
@@ -376,7 +376,7 @@ func (h *Handler) GetGroupMembers(c *gin.Context) {
 	users, total, err := h.svc.GetGroupMembers(c.Request.Context(), groupID, tenantID, page, pageSize)
 	if err != nil {
 		h.logger.Errorf("查询组成员失败: %v", err)
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 

@@ -47,7 +47,7 @@ func tenantIDFromCtx(c *gin.Context) (int, bool) {
 func (h *Handler) ListAssets(c *gin.Context) {
 	tenantID, ok := tenantIDFromCtx(c)
 	if !ok {
-		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		common.Fail(c, common.UnauthorizedCode, "Unauthorized access")
 		return
 	}
 
@@ -62,7 +62,7 @@ func (h *Handler) ListAssets(c *gin.Context) {
 	assets, err := h.svc.ListAssets(c.Request.Context(), tenantID, pagination.Page, pagination.PageSize, assetType, status, category)
 	if err != nil {
 		h.logger.Errorw("List assets failed", "error", err, "tenant_id", tenantID)
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 	common.Success(c, assets)
@@ -72,20 +72,20 @@ func (h *Handler) ListAssets(c *gin.Context) {
 func (h *Handler) CreateAsset(c *gin.Context) {
 	tenantID, ok := tenantIDFromCtx(c)
 	if !ok {
-		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		common.Fail(c, common.UnauthorizedCode, "Unauthorized access")
 		return
 	}
 
 	var req dto.CreateAssetRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
 	asset, err := h.svc.CreateAsset(c.Request.Context(), &req, tenantID)
 	if err != nil {
 		h.logger.Errorw("Create asset failed", "error", err, "tenant_id", tenantID)
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 	common.Success(c, asset)
@@ -95,24 +95,24 @@ func (h *Handler) CreateAsset(c *gin.Context) {
 func (h *Handler) GetAsset(c *gin.Context) {
 	tenantID, ok := tenantIDFromCtx(c)
 	if !ok {
-		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		common.Fail(c, common.UnauthorizedCode, "Unauthorized access")
 		return
 	}
 
 	assetID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.ParamError(c, "无效的资产ID")
+		common.ParamError(c, "Invalid asset ID")
 		return
 	}
 
 	asset, err := h.svc.GetAssetByID(c.Request.Context(), assetID, tenantID)
 	if err != nil {
 		h.logger.Errorw("Get asset failed", "error", err, "asset_id", assetID)
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 	if asset == nil {
-		common.Fail(c, common.NotFoundCode, "资产不存在")
+		common.Fail(c, common.NotFoundCode, "Asset does not exist")
 		return
 	}
 	common.Success(c, asset)
@@ -122,30 +122,30 @@ func (h *Handler) GetAsset(c *gin.Context) {
 func (h *Handler) UpdateAsset(c *gin.Context) {
 	tenantID, ok := tenantIDFromCtx(c)
 	if !ok {
-		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		common.Fail(c, common.UnauthorizedCode, "Unauthorized access")
 		return
 	}
 
 	assetID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.ParamError(c, "无效的资产ID")
+		common.ParamError(c, "Invalid asset ID")
 		return
 	}
 
 	var req dto.UpdateAssetRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
 	asset, err := h.svc.UpdateAsset(c.Request.Context(), assetID, tenantID, &req)
 	if err != nil {
 		h.logger.Errorw("Update asset failed", "error", err, "asset_id", assetID)
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 	if asset == nil {
-		common.Fail(c, common.NotFoundCode, "资产不存在")
+		common.Fail(c, common.NotFoundCode, "Asset does not exist")
 		return
 	}
 	common.Success(c, asset)
@@ -155,30 +155,30 @@ func (h *Handler) UpdateAsset(c *gin.Context) {
 func (h *Handler) UpdateAssetStatus(c *gin.Context) {
 	tenantID, ok := tenantIDFromCtx(c)
 	if !ok {
-		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		common.Fail(c, common.UnauthorizedCode, "Unauthorized access")
 		return
 	}
 
 	assetID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.ParamError(c, "无效的资产ID")
+		common.ParamError(c, "Invalid asset ID")
 		return
 	}
 
 	var req dto.AssetStatusUpdateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
 	asset, err := h.svc.UpdateAssetStatus(c.Request.Context(), assetID, tenantID, string(req.Status), req.AssignedTo)
 	if err != nil {
 		h.logger.Errorw("Update asset status failed", "error", err, "asset_id", assetID)
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 	if asset == nil {
-		common.Fail(c, common.NotFoundCode, "资产不存在")
+		common.Fail(c, common.NotFoundCode, "Asset does not exist")
 		return
 	}
 	common.Success(c, asset)
@@ -188,13 +188,13 @@ func (h *Handler) UpdateAssetStatus(c *gin.Context) {
 func (h *Handler) DeleteAsset(c *gin.Context) {
 	tenantID, ok := tenantIDFromCtx(c)
 	if !ok {
-		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		common.Fail(c, common.UnauthorizedCode, "Unauthorized access")
 		return
 	}
 
 	assetID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.ParamError(c, "无效的资产ID")
+		common.ParamError(c, "Invalid asset ID")
 		return
 	}
 
@@ -202,10 +202,10 @@ func (h *Handler) DeleteAsset(c *gin.Context) {
 	if err != nil {
 		h.logger.Errorw("Delete asset failed", "error", err, "asset_id", assetID)
 		if errors.Is(err, service.ErrAssetNotFound) {
-			common.Fail(c, common.NotFoundCode, "资产不存在")
+			common.Fail(c, common.NotFoundCode, "Asset does not exist")
 			return
 		}
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 	common.Success(c, nil)
@@ -215,14 +215,14 @@ func (h *Handler) DeleteAsset(c *gin.Context) {
 func (h *Handler) GetAssetStats(c *gin.Context) {
 	tenantID, ok := tenantIDFromCtx(c)
 	if !ok {
-		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		common.Fail(c, common.UnauthorizedCode, "Unauthorized access")
 		return
 	}
 
 	stats, err := h.svc.GetAssetStats(c.Request.Context(), tenantID)
 	if err != nil {
 		h.logger.Errorw("Get asset stats failed", "error", err, "tenant_id", tenantID)
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 	common.Success(c, stats)
@@ -232,19 +232,19 @@ func (h *Handler) GetAssetStats(c *gin.Context) {
 func (h *Handler) AssignAsset(c *gin.Context) {
 	tenantID, ok := tenantIDFromCtx(c)
 	if !ok {
-		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		common.Fail(c, common.UnauthorizedCode, "Unauthorized access")
 		return
 	}
 
 	assetID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.ParamError(c, "无效的资产ID")
+		common.ParamError(c, "Invalid asset ID")
 		return
 	}
 
 	var req dto.AssetAssignRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
@@ -252,10 +252,10 @@ func (h *Handler) AssignAsset(c *gin.Context) {
 	if err != nil {
 		h.logger.Errorw("Assign asset failed", "error", err, "asset_id", assetID)
 		if errors.Is(err, service.ErrAssetNotFound) {
-			common.Fail(c, common.NotFoundCode, "资产不存在")
+			common.Fail(c, common.NotFoundCode, "Asset does not exist")
 			return
 		}
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 	common.Success(c, asset)
@@ -265,19 +265,19 @@ func (h *Handler) AssignAsset(c *gin.Context) {
 func (h *Handler) RetireAsset(c *gin.Context) {
 	tenantID, ok := tenantIDFromCtx(c)
 	if !ok {
-		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		common.Fail(c, common.UnauthorizedCode, "Unauthorized access")
 		return
 	}
 
 	assetID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.ParamError(c, "无效的资产ID")
+		common.ParamError(c, "Invalid asset ID")
 		return
 	}
 
 	var req dto.AssetRetireRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
@@ -285,10 +285,10 @@ func (h *Handler) RetireAsset(c *gin.Context) {
 	if err != nil {
 		h.logger.Errorw("Retire asset failed", "error", err, "asset_id", assetID)
 		if errors.Is(err, service.ErrAssetNotFound) {
-			common.Fail(c, common.NotFoundCode, "资产不存在")
+			common.Fail(c, common.NotFoundCode, "Asset does not exist")
 			return
 		}
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 	common.Success(c, asset)
@@ -300,7 +300,7 @@ func (h *Handler) RetireAsset(c *gin.Context) {
 func (h *Handler) ListLicenses(c *gin.Context) {
 	tenantID, ok := tenantIDFromCtx(c)
 	if !ok {
-		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		common.Fail(c, common.UnauthorizedCode, "Unauthorized access")
 		return
 	}
 
@@ -311,7 +311,7 @@ func (h *Handler) ListLicenses(c *gin.Context) {
 	licenses, err := h.licenseSvc.ListLicenses(c.Request.Context(), tenantID, pagination.Page, pagination.PageSize, licenseType, status)
 	if err != nil {
 		h.logger.Errorw("List licenses failed", "error", err, "tenant_id", tenantID)
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 	common.Success(c, licenses)
@@ -321,20 +321,20 @@ func (h *Handler) ListLicenses(c *gin.Context) {
 func (h *Handler) CreateLicense(c *gin.Context) {
 	tenantID, ok := tenantIDFromCtx(c)
 	if !ok {
-		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		common.Fail(c, common.UnauthorizedCode, "Unauthorized access")
 		return
 	}
 
 	var req dto.CreateLicenseRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
 	license, err := h.licenseSvc.CreateLicense(c.Request.Context(), &req, tenantID)
 	if err != nil {
 		h.logger.Errorw("Create license failed", "error", err, "tenant_id", tenantID)
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 	common.Success(c, license)
@@ -344,24 +344,24 @@ func (h *Handler) CreateLicense(c *gin.Context) {
 func (h *Handler) GetLicense(c *gin.Context) {
 	tenantID, ok := tenantIDFromCtx(c)
 	if !ok {
-		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		common.Fail(c, common.UnauthorizedCode, "Unauthorized access")
 		return
 	}
 
 	licenseID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.ParamError(c, "无效的许可证ID")
+		common.ParamError(c, "Invalid license ID")
 		return
 	}
 
 	license, err := h.licenseSvc.GetLicenseByID(c.Request.Context(), licenseID, tenantID)
 	if err != nil {
 		h.logger.Errorw("Get license failed", "error", err, "license_id", licenseID)
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 	if license == nil {
-		common.Fail(c, common.NotFoundCode, "许可证不存在")
+		common.Fail(c, common.NotFoundCode, "License does not exist")
 		return
 	}
 	common.Success(c, license)
@@ -371,19 +371,19 @@ func (h *Handler) GetLicense(c *gin.Context) {
 func (h *Handler) UpdateLicense(c *gin.Context) {
 	tenantID, ok := tenantIDFromCtx(c)
 	if !ok {
-		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		common.Fail(c, common.UnauthorizedCode, "Unauthorized access")
 		return
 	}
 
 	licenseID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.ParamError(c, "无效的许可证ID")
+		common.ParamError(c, "Invalid license ID")
 		return
 	}
 
 	var req dto.UpdateLicenseRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
@@ -392,11 +392,11 @@ func (h *Handler) UpdateLicense(c *gin.Context) {
 		h.logger.Errorw("Update license failed", "error", err, "license_id", licenseID)
 		// RespondError 保留领域错误自带的业务码与文案：直接改已用席位是 4000，
 		// 席位不足/并发冲突是 4090，不能都降级成「操作失败」。
-		common.RespondError(c, err, "操作失败")
+		common.RespondError(c, err, "Operation failed")
 		return
 	}
 	if license == nil {
-		common.Fail(c, common.NotFoundCode, "许可证不存在")
+		common.Fail(c, common.NotFoundCode, "License does not exist")
 		return
 	}
 	common.Success(c, license)
@@ -406,13 +406,13 @@ func (h *Handler) UpdateLicense(c *gin.Context) {
 func (h *Handler) DeleteLicense(c *gin.Context) {
 	tenantID, ok := tenantIDFromCtx(c)
 	if !ok {
-		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		common.Fail(c, common.UnauthorizedCode, "Unauthorized access")
 		return
 	}
 
 	licenseID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.ParamError(c, "无效的许可证ID")
+		common.ParamError(c, "Invalid license ID")
 		return
 	}
 
@@ -420,10 +420,10 @@ func (h *Handler) DeleteLicense(c *gin.Context) {
 	if err != nil {
 		h.logger.Errorw("Delete license failed", "error", err, "license_id", licenseID)
 		if errors.Is(err, service.ErrLicenseNotFound) {
-			common.Fail(c, common.NotFoundCode, "许可证不存在")
+			common.Fail(c, common.NotFoundCode, "License does not exist")
 			return
 		}
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 	common.Success(c, nil)
@@ -433,14 +433,14 @@ func (h *Handler) DeleteLicense(c *gin.Context) {
 func (h *Handler) GetLicenseStats(c *gin.Context) {
 	tenantID, ok := tenantIDFromCtx(c)
 	if !ok {
-		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		common.Fail(c, common.UnauthorizedCode, "Unauthorized access")
 		return
 	}
 
 	stats, err := h.licenseSvc.GetLicenseStats(c.Request.Context(), tenantID)
 	if err != nil {
 		h.logger.Errorw("Get license stats failed", "error", err, "tenant_id", tenantID)
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 	common.Success(c, stats)
@@ -450,19 +450,19 @@ func (h *Handler) GetLicenseStats(c *gin.Context) {
 func (h *Handler) AssignUsers(c *gin.Context) {
 	tenantID, ok := tenantIDFromCtx(c)
 	if !ok {
-		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		common.Fail(c, common.UnauthorizedCode, "Unauthorized access")
 		return
 	}
 
 	licenseID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.ParamError(c, "无效的许可证ID")
+		common.ParamError(c, "Invalid license ID")
 		return
 	}
 
 	var req dto.LicenseAssignRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
@@ -471,14 +471,14 @@ func (h *Handler) AssignUsers(c *gin.Context) {
 		h.logger.Errorw("Assign users to license failed", "error", err, "license_id", licenseID)
 		switch {
 		case errors.Is(err, service.ErrLicenseNotFound):
-			common.Fail(c, common.NotFoundCode, "许可证不存在")
+			common.Fail(c, common.NotFoundCode, "License does not exist")
 		case errors.Is(err, service.ErrLicenseInsufficient):
 			// 席位不足属于业务冲突：当前可用数与请求数都写进日志后给 409。
-			common.Conflict(c, "许可证席位不足", nil)
+			common.Conflict(c, "Insufficient license seats", nil)
 		case errors.Is(err, service.ErrLicenseSeatRace):
-			common.Conflict(c, "席位已被其他请求占用，请重试", nil)
+			common.Conflict(c, "The seat is already occupied by other requests, please try again", nil)
 		default:
-			common.FailWithErr(c, err, "操作失败")
+			common.FailWithErr(c, err, "Operation failed")
 		}
 		return
 	}

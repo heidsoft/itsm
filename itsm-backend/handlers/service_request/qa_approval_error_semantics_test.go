@@ -42,7 +42,7 @@ func TestApplyApproval_UnauthorizedActorReturnsForbiddenNotInternalError(t *test
 		"非该节点审批人应返回 403 Forbidden；实际 body=%s", srStr(resp))
 
 	msg, _ := resp.Data.(string)
-	assert.NotContains(t, srStr(resp), "操作失败",
+	assert.NotContains(t, srStr(resp), "Operation failed",
 		"错误文案不得被兜底覆盖成「操作失败」，应透传可行动原因")
 	_ = msg
 }

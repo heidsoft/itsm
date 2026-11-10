@@ -32,19 +32,19 @@ const { Title, Paragraph } = Typography;
 // 首次登录引导里的 AI 分诊演示直接打印枚举值会显示 network / high，
 // 对新用户来说既不可读也看不出这是中文产品，这里补一层展示映射。
 const TRIAGE_LABELS: Record<string, string> = {
-  network: '网络故障',
-  hardware: '硬件故障',
-  software: '软件故障',
-  database: '数据库问题',
-  security: '安全问题',
-  performance: '性能问题',
-  config: '配置问题',
-  other: '其他',
-  critical: '紧急',
-  urgent: '紧急',
-  high: '高',
-  medium: '中',
-  low: '低',
+  network: 'Network failure',
+  hardware: 'Hardware failure',
+  software: 'Software failure',
+  database: 'Database problem',
+  security: 'Security issue',
+  performance: 'Performance issue',
+  config: 'Configuration problem',
+  other: 'Other',
+  critical: 'Urgent',
+  urgent: 'Urgent',
+  high: 'High',
+  medium: 'Medium',
+  low: 'Low',
 };
 
 const triageLabel = (value: string): string => TRIAGE_LABELS[value] ?? value;
@@ -52,11 +52,11 @@ const triageLabel = (value: string): string => TRIAGE_LABELS[value] ?? value;
 type StepKey = 'welcome' | 'first-ticket' | 'catalog' | 'cmdb' | 'ai-triage' | 'done';
 
 const STEPS: Array<{ key: StepKey; title: string; icon: React.ReactNode }> = [
-  { key: 'welcome', title: '欢迎', icon: <Rocket /> },
-  { key: 'first-ticket', title: '创建工单', icon: <PlusCircle /> },
-  { key: 'catalog', title: '服务目录', icon: <LayoutGrid /> },
+  { key: 'welcome', title: 'Welcome', icon: <Rocket /> },
+  { key: 'first-ticket', title: 'Create a work order', icon: <PlusCircle /> },
+  { key: 'catalog', title: 'Service Catalog', icon: <LayoutGrid /> },
   { key: 'cmdb', title: 'CMDB', icon: <Database /> },
-  { key: 'ai-triage', title: 'AI 分诊', icon: <Bot /> },
+  { key: 'ai-triage', title: 'AI triage', icon: <Bot /> },
 ];
 
 interface WizardProps {
@@ -89,7 +89,7 @@ export default function FirstRunWizard({ initialStep, onFinish }: WizardProps) {
   };
 
   const skip = () => {
-    message.info('已跳过引导，可稍后在「个人中心」再次查看');
+    message.info('Guidance has been skipped. You can view it again in "Personal Center" later.');
     setCurrent('done');
     onFinish?.();
   };
@@ -99,10 +99,12 @@ export default function FirstRunWizard({ initialStep, onFinish }: WizardProps) {
       <Space orientation="vertical" size="large" style={{ width: '100%' }}>
         <div>
           <Title level={2} style={{ marginBottom: 8 }}>
-            欢迎使用 AI-Native ITSM
+
+            Welcome to AI-Native ITSM
           </Title>
           <Paragraph type="secondary">
-            智能服务管理 · 让 IT 服务更高效
+
+            Intelligent service management · Make IT services more efficient
           </Paragraph>
         </div>
 
@@ -125,12 +127,13 @@ export default function FirstRunWizard({ initialStep, onFinish }: WizardProps) {
         {current !== 'done' && (
           <Space style={{ justifyContent: 'space-between', width: '100%' }}>
             <Button onClick={skip} type="text">
-              跳过引导
+
+              Skipping boot
             </Button>
             <Space>
-              {currentIndex > 0 && <Button onClick={goPrev}>上一步</Button>}
+              {currentIndex > 0 && <Button onClick={goPrev}>Previous</Button>}
               <Button type="primary" onClick={goNext} icon={<CheckCircle />}>
-                {currentIndex === STEPS.length - 1 ? '完成' : '下一步'}
+                {currentIndex === STEPS.length - 1 ? 'Complete' : 'Next'}
               </Button>
             </Space>
           </Space>
@@ -144,13 +147,13 @@ function WelcomeStep() {
   return (
     <Result
       icon={<Rocket style={{ color: '#3b82f6' }} />}
-      title="5 分钟快速了解 AI-Native ITSM"
-      subTitle="我们将引导你完成：创建第一个工单、浏览服务目录、配置 CMDB、体验 AI 分诊。"
+      title="Quickly understand AI-Native ITSM in 5 minutes"
+      subTitle="We will guide you through: creating your first work order, browsing the service catalog, configuring CMDB, and experiencing AI triage."
       extra={
         <Alert
           type="info"
           showIcon
-          title="本引导为功能演示，不会写入实际数据"
+          title="This boot is a functional demonstration and no actual data will be written."
         />
       }
     />
@@ -160,16 +163,17 @@ function WelcomeStep() {
 function FirstTicketStep() {
   return (
     <Space orientation="vertical" size="middle" style={{ width: '100%' }}>
-      <Title level={4}>第 1 步：创建你的第一个工单</Title>
+      <Title level={4}>Step 1: Create your first ticket</Title>
       <Paragraph>
-        工单（Ticket）是 ITSM 的核心实体，记录一次服务请求或故障处理的全过程。
+
+        Ticket is the core entity of ITSM, recording the entire process of a service request or fault handling.
       </Paragraph>
-      <Card type="inner" title="操作演示">
-        <Paragraph>1. 点击左侧菜单 <strong>工单管理 → 新建工单</strong></Paragraph>
-        <Paragraph>2. 填写标题、描述、优先级</Paragraph>
-        <Paragraph>3. 提交后系统会自动分派并触发 SLA 计时</Paragraph>
+      <Card type="inner" title="Operation demonstration">
+        <Paragraph>1. Click on the left menu <strong>Work order management → Create new work order</strong></Paragraph>
+        <Paragraph>2. Fill in title, description, priority</Paragraph>
+        <Paragraph>3. After submission, the system will automatically dispatch and trigger SLA timing</Paragraph>
       </Card>
-      <Tag color="blue">预计耗时：30 秒</Tag>
+      <Tag color="blue">Estimated time: 30 seconds</Tag>
     </Space>
   );
 }
@@ -177,15 +181,16 @@ function FirstTicketStep() {
 function CatalogStep() {
   return (
     <Space orientation="vertical" size="middle" style={{ width: '100%' }}>
-      <Title level={4}>第 2 步：浏览服务目录</Title>
+      <Title level={4}>Step 2: Browse the Services Catalog</Title>
       <Paragraph>
-        服务目录（Service Catalog）将 IT 服务标准化，员工可自助申请，审批自动流转。
+
+        Service Catalog standardizes IT services, employees can apply for them by themselves, and approvals are transferred automatically.
       </Paragraph>
-      <Card type="inner" title="内置服务">
-        <Paragraph>· 申请新员工账号</Paragraph>
-        <Paragraph>· 申请云资源（开发/测试/生产）</Paragraph>
-        <Paragraph>· 申请软件许可证</Paragraph>
-        <Paragraph>· 申请 VPN / VPN 组</Paragraph>
+      <Card type="inner" title="Built-in service">
+        <Paragraph>· Apply for a new employee account</Paragraph>
+        <Paragraph>· Apply for cloud resources (development/test/production)</Paragraph>
+        <Paragraph>· Apply for software license</Paragraph>
+        <Paragraph>· Apply for VPN / VPN group</Paragraph>
       </Card>
     </Space>
   );
@@ -194,14 +199,15 @@ function CatalogStep() {
 function CMDBStep() {
   return (
     <Space orientation="vertical" size="middle" style={{ width: '100%' }}>
-      <Title level={4}>第 3 步：配置 CMDB 第一个 CI</Title>
+      <Title level={4}>Step 3: Configure CMDB First CI</Title>
       <Paragraph>
-        CMDB（Configuration Management Database）记录所有受管的配置项（CI）及其关系。
+
+        CMDB (Configuration Management Database) records all managed configuration items (CI) and their relationships.
       </Paragraph>
-      <Card type="inner" title="推荐起点">
-        <Paragraph>· 录入一台核心业务服务器</Paragraph>
-        <Paragraph>· 添加与数据库的依赖关系</Paragraph>
-        <Paragraph>· 后续可在变更管理中自动做影响分析</Paragraph>
+      <Card type="inner" title="Recommended starting point">
+        <Paragraph>· Enter a core business server</Paragraph>
+        <Paragraph>· Add dependency on database</Paragraph>
+        <Paragraph>· Impact analysis can be automatically performed in change management later.</Paragraph>
       </Card>
     </Space>
   );
@@ -209,22 +215,22 @@ function CMDBStep() {
 
 function AITriageStep() {
   const { message } = App.useApp();
-  const [description, setDescription] = useState('VPN 连不上，多个同事无法访问内网系统。');
+  const [description, setDescription] = useState('The VPN cannot be connected, and multiple colleagues cannot access the intranet system.');
   const [result, setResult] = useState<TriageResult | null>(null);
   const [loading, setLoading] = useState(false);
 
   const runTriage = async () => {
     const trimmed = description.trim();
     if (!trimmed) {
-      message.warning('请先描述一个问题');
+      message.warning('Please describe a problem first');
       return;
     }
     setLoading(true);
     try {
-      setResult(await AIApi.triage('VPN 连接问题', trimmed));
+      setResult(await AIApi.triage('VPN connection issues', trimmed));
     } catch {
       setResult(null);
-      message.error('AI 分诊暂时不可用，请稍后重试');
+      message.error('AI triage is temporarily unavailable, please try again later.');
     } finally {
       setLoading(false);
     }
@@ -233,18 +239,20 @@ function AITriageStep() {
   return (
     <Space orientation="vertical" size="middle" style={{ width: '100%' }}>
       <Title level={4}>
-        第 4 步：体验 AI 分诊
-        <Tag color="blue" style={{ marginLeft: 12 }}>抢先体验</Tag>
+
+        Step 4: Experience AI Triage
+        <Tag color="blue" style={{ marginLeft: 12 }}>Early Access</Tag>
       </Title>
       <Paragraph>
-        AI 分诊会自动分析工单内容，推荐分类、优先级和处理人。
+
+        AI triage will automatically analyze the content of the work order and recommend classification, priority and handler.
       </Paragraph>
-      <Alert type="info" showIcon title="AI 辅助分诊" description="根据工单内容推荐分类和优先级，结果仅供参考。" />
-      <Card type="inner" title="效果演示">
+      <Alert type="info" showIcon title="AI-assisted triage" description="Recommend classification and priority based on work order content, the results are for reference only." />
+      <Card type="inner" title="Effect demonstration">
         <Space orientation="vertical" style={{ width: '100%' }}>
-          <textarea value={description} onChange={(event) => setDescription(event.target.value)} rows={3} style={{ width: '100%', padding: 8 }} aria-label="问题描述" />
-          <Button type="primary" icon={<Bot size={16} />} loading={loading} onClick={runTriage}>运行 AI 分诊</Button>
-          {result && <Alert type="success" title={`分类：${triageLabel(result.category)} · 优先级：${triageLabel(result.priority)}`} description={`置信度 ${(result.confidence * 100).toFixed(0)}%${result.explanation ? ` · ${result.explanation}` : ''}`} />}
+          <textarea value={description} onChange={(event) => setDescription(event.target.value)} rows={3} style={{ width: '100%', padding: 8 }} aria-label="Problem description" />
+          <Button type="primary" icon={<Bot size={16} />} loading={loading} onClick={runTriage}>Running AI Triage</Button>
+          {result && <Alert type="success" title={`Category:${triageLabel(result.category)} · Priority:${triageLabel(result.priority)}`} description={`Confidence ${(result.confidence * 100).toFixed(0)}%${result.explanation ? ` · ${result.explanation}` : ''}`} />}
         </Space>
       </Card>
     </Space>
@@ -255,11 +263,12 @@ function DoneStep({ onEnterApp }: { onEnterApp: () => void }) {
   return (
     <Result
       status="success"
-      title="引导完成！"
-      subTitle="你已经了解了 AI-Native ITSM 的核心能力。"
+      title="Booting completed!"
+      subTitle="You have understood the core capabilities of AI-Native ITSM."
       extra={[
         <Button type="primary" key="enter" onClick={onEnterApp}>
-          进入工作台
+
+          Enter workbench
         </Button>,
       ]}
     />

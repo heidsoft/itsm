@@ -70,12 +70,12 @@ func TestUserService_DeleteUser_SeparatesFromDisable(t *testing.T) {
 
 		_, err = svc.GetUserByID(ctx, deletedID, tenant.ID)
 		require.Error(t, err, "已删除用户应查询不到")
-		assert.Contains(t, err.Error(), "用户不存在")
+		assert.Contains(t, err.Error(), "User does not exist")
 
 		// toggle 启用对已删除用户必须拒绝——删除语义不可被启用复活
 		err = svc.ChangeUserStatus(ctx, deletedID, true, 0, tenant.ID)
 		require.Error(t, err)
-		assert.Contains(t, err.Error(), "用户不存在")
+		assert.Contains(t, err.Error(), "User does not exist")
 
 		// 2. 停用语义：active=false 但仍可见、可再启用
 		require.NoError(t, svc.ChangeUserStatus(ctx, disabledID, false, 0, tenant.ID))

@@ -35,28 +35,28 @@ import type {
 const { Title, Text } = Typography;
 
 const COMMAND_STATUS_LABEL: Record<string, { text: string; color: string }> = {
-  pending: { text: '待处理', color: 'default' },
-  processing: { text: '处理中', color: 'processing' },
-  succeeded: { text: '成功', color: 'success' },
-  dead_letter: { text: '死信', color: 'error' },
-  cancelled: { text: '已取消', color: 'warning' },
+  pending: { text: 'Pending', color: 'default' },
+  processing: { text: 'In Progress', color: 'processing' },
+  succeeded: { text: 'Success', color: 'success' },
+  dead_letter: { text: 'Dead letter', color: 'error' },
+  cancelled: { text: 'Cancelled', color: 'warning' },
 };
 
 const COMMAND_STATUS_OPTIONS = [
-  { value: 'dead_letter', label: '死信（默认）' },
-  { value: 'pending', label: '待处理' },
-  { value: 'processing', label: '处理中' },
-  { value: 'cancelled', label: '已取消' },
+  { value: 'dead_letter', label: 'Dead letter (default)' },
+  { value: 'pending', label: 'Pending' },
+  { value: 'processing', label: 'In Progress' },
+  { value: 'cancelled', label: 'Cancelled' },
 ];
 
 const CHANNEL_OPTIONS = [
-  { value: '', label: '全部渠道' },
-  { value: 'email', label: '邮件' },
-  { value: 'in_app', label: '站内' },
-  { value: 'feishu', label: '飞书' },
-  { value: 'wecom', label: '企业微信' },
-  { value: 'dingtalk', label: '钉钉' },
-  { value: 'sms', label: '短信' },
+  { value: '', label: 'All Channels' },
+  { value: 'email', label: 'Email' },
+  { value: 'in_app', label: 'Within the site' },
+  { value: 'feishu', label: 'Feishu' },
+  { value: 'wecom', label: 'WeCom' },
+  { value: 'dingtalk', label: 'DingTalk' },
+  { value: 'sms', label: 'SMS' },
   { value: 'webhook', label: 'Webhook' },
 ];
 
@@ -113,7 +113,7 @@ export default function OperationsPage() {
       setCommandTotal(page.total ?? 0);
       setSummary(page.summary ?? null);
     } catch (error) {
-      message.error(serverErrorMessage(error, '加载运维命令失败'));
+      message.error(serverErrorMessage(error, 'Failed to load operation and maintenance commands'));
     } finally {
       setCommandsLoading(false);
     }
@@ -131,7 +131,7 @@ export default function OperationsPage() {
       setDeliveries(page.items ?? []);
       setDeliveryTotal(page.pagination?.total ?? 0);
     } catch (error) {
-      message.error(serverErrorMessage(error, '加载失败投递失败'));
+      message.error(serverErrorMessage(error, 'Loading failed and delivery failed.'));
     } finally {
       setDeliveriesLoading(false);
     }
@@ -149,10 +149,10 @@ export default function OperationsPage() {
     setReplayingId(command.id);
     try {
       await operationsService.replayCommand(command.id);
-      message.success(`命令 #${command.id} 已重新入箱`);
+      message.success(`Command #${command.id} Reboxed`);
       await loadCommands();
     } catch (error) {
-      message.error(serverErrorMessage(error, `命令 #${command.id} 重放失败`));
+      message.error(serverErrorMessage(error, `Command #${command.id} Replay failed`));
     } finally {
       setReplayingId(null);
     }
@@ -166,12 +166,12 @@ export default function OperationsPage() {
         commandType: commandType || undefined,
       });
       message.success(
-        `已重放 ${result.updated} 条命令` +
-          (result.skipped > 0 ? `（${result.skipped} 条因状态变化被跳过）` : '')
+        `Replayed ${result.updated} command` +
+          (result.skipped > 0 ? `（${result.skipped} Entry skipped due to status change)` : '')
       );
       await loadCommands();
     } catch (error) {
-      message.error(serverErrorMessage(error, '批量重放失败'));
+      message.error(serverErrorMessage(error, 'Batch replay failed'));
     } finally {
       setBulkReplaying(false);
     }
@@ -181,11 +181,11 @@ export default function OperationsPage() {
     setRetryingId(delivery.id);
     try {
       const result = await operationsService.retryDelivery(delivery.id);
-      message.success(`投递 #${delivery.id} 已重新入队（命令 #${result.commandId}）`);
+      message.success(`Delivery #${delivery.id} Requeued (command #${result.commandId}）`);
       await loadDeliveries();
     } catch (error) {
       // 409 是幂等守卫的正常输出（已有在途重试 / 已重试成功），必须原样透出。
-      message.error(serverErrorMessage(error, `投递 #${delivery.id} 重试失败`));
+      message.error(serverErrorMessage(error, `Delivery #${delivery.id} Retry failed`));
     } finally {
       setRetryingId(null);
     }
@@ -200,12 +200,12 @@ export default function OperationsPage() {
         render: (id: number) => <Text strong>#{id}</Text>,
       },
       {
-        title: '命令类型',
+        title: 'Command type',
         dataIndex: 'commandType',
         render: (value: string) => <Text code>{value}</Text>,
       },
       {
-        title: '聚合对象',
+        title: 'Aggregation object',
         dataIndex: 'aggregateType',
         render: (value: string, row) => (
           <Text>
@@ -214,7 +214,7 @@ export default function OperationsPage() {
         ),
       },
       {
-        title: '尝试',
+        title: 'Try',
         dataIndex: 'attempt',
         width: 100,
         render: (attempt: number, row) => (
@@ -224,7 +224,7 @@ export default function OperationsPage() {
         ),
       },
       {
-        title: '状态',
+        title: 'Status',
         dataIndex: 'status',
         width: 110,
         render: (status: string) => {
@@ -233,7 +233,7 @@ export default function OperationsPage() {
         },
       },
       {
-        title: '最后错误',
+        title: 'Last error',
         dataIndex: 'lastError',
         render: (value?: string) =>
           value ? (
@@ -247,28 +247,28 @@ export default function OperationsPage() {
           ),
       },
       {
-        title: '创建时间',
+        title: 'Created',
         dataIndex: 'createdAt',
         width: 180,
         render: (value: string) => formatTime(value),
       },
       {
-        title: '操作',
+        title: 'Actions',
         key: 'actions',
         width: 110,
         fixed: 'right',
         render: (_: unknown, row) => (
           <Popconfirm
             title={
-              row.commandType === 'ai.tool.execute' ? '确认重放 AI 写工具？' : '重新入箱这条命令？'
+              row.commandType === 'ai.tool.execute' ? 'Confirm replay AI writing tool?' : 'Rebox this command?'
             }
             description={
               row.commandType === 'ai.tool.execute'
-                ? `将恢复工具调用 #${row.aggregateId} 并使用原幂等键重跑。若中断前已写入业务数据，重放可能再次执行，请先核对对象与审计。`
-                : '使用原始 payload 与幂等键重跑一次；是否重复副作用取决于具体命令的幂等保护。'
+                ? `Invoking the recovery tool #${row.aggregateId} And rerun using the original idempotent keys. If business data has been written before the interruption, replay may be executed again. Please check the object and audit first.`
+                : 'Rerun with original payload and idempotent keys; whether to repeat side effects depends on the idempotent protection of the specific command.'
             }
-            okText='重放'
-            cancelText='取消'
+            okText="Replay"
+            cancelText="Cancel"
             onConfirm={() => handleReplay(row)}
           >
             <Button
@@ -278,7 +278,8 @@ export default function OperationsPage() {
               loading={replayingId === row.id}
               disabled={row.status !== 'dead_letter' && row.status !== 'cancelled'}
             >
-              重放
+
+              Replay
             </Button>
           </Popconfirm>
         ),
@@ -296,28 +297,28 @@ export default function OperationsPage() {
         render: (id: number) => <Text strong>#{id}</Text>,
       },
       {
-        title: '渠道',
+        title: 'Channel',
         dataIndex: 'channel',
         width: 110,
         render: (value: string) => <Tag>{value}</Tag>,
       },
       {
-        title: '接收人',
+        title: 'Recipient',
         dataIndex: 'recipientId',
         width: 110,
         render: (value: number, row) => (
-          <Tooltip title={`收件目标 ${row.targetMasked}`}>
-            <Text>用户 #{value}</Text>
+          <Tooltip title={`Receiving destination ${row.targetMasked}`}>
+            <Text>User #{value}</Text>
           </Tooltip>
         ),
       },
       {
-        title: '尝试',
+        title: 'Try',
         dataIndex: 'attempt',
         width: 80,
       },
       {
-        title: '失败原因',
+        title: 'Failure reason',
         dataIndex: 'errorMessage',
         render: (value: string | undefined, row) =>
           value ? (
@@ -331,22 +332,22 @@ export default function OperationsPage() {
           ),
       },
       {
-        title: '失败时间',
+        title: 'Failure time',
         dataIndex: 'createdAt',
         width: 180,
         render: (value: string) => formatTime(value),
       },
       {
-        title: '操作',
+        title: 'Actions',
         key: 'actions',
         width: 110,
         fixed: 'right',
         render: (_: unknown, row) => (
           <Popconfirm
-            title='重新发送这条通知？'
-            description='会真实调用连接器发送一次；若已有在途或已成功的重试，服务端会拒绝。'
-            okText='重试'
-            cancelText='取消'
+            title="Resend this notification?"
+            description="The connector will actually be called to send once; if there is already a retry in progress or has been successful, the server will reject it."
+            okText="Retry"
+            cancelText="Cancel"
             onConfirm={() => handleRetryDelivery(row)}
           >
             <Button
@@ -355,7 +356,8 @@ export default function OperationsPage() {
               icon={<RefreshCw size={14} />}
               loading={retryingId === row.id}
             >
-              重试
+
+              Retry
             </Button>
           </Popconfirm>
         ),
@@ -368,11 +370,13 @@ export default function OperationsPage() {
     <div className='space-y-6'>
       <div>
         <Title level={3} style={{ marginBottom: 4 }}>
-          死信与投递重放
+
+          Dead Letter and Delivery Replay
         </Title>
         <Text type='secondary'>
-          命令死信保留原幂等键重放，失败投递重试会真实再发一次消息；AI
-          写工具中断后重放前需先核对业务结果。
+
+          The command dead letter retains the original idempotent key for replay, and the failed delivery retry will actually send the message again; AI After the
+writing tool is interrupted, the business results must be checked before replaying.
         </Text>
       </div>
 
@@ -380,7 +384,7 @@ export default function OperationsPage() {
         <Col xs={12} md={6}>
           <Card size='small'>
             <Statistic
-              title='死信命令'
+              title="Dead letter command"
               value={summary?.deadLetter ?? 0}
               styles={{ content: { color: (summary?.deadLetter ?? 0) > 0 ? '#cf1322' : undefined } }}
               prefix={<AlertTriangle size={16} />}
@@ -389,18 +393,18 @@ export default function OperationsPage() {
         </Col>
         <Col xs={12} md={6}>
           <Card size='small'>
-            <Statistic title='待处理' value={summary?.pending ?? 0} />
+            <Statistic title="Pending" value={summary?.pending ?? 0} />
           </Card>
         </Col>
         <Col xs={12} md={6}>
           <Card size='small'>
-            <Statistic title='处理中' value={summary?.processing ?? 0} />
+            <Statistic title="In Progress" value={summary?.processing ?? 0} />
           </Card>
         </Col>
         <Col xs={12} md={6}>
           <Card size='small'>
             <Statistic
-              title='租约卡住'
+              title="Lease stuck"
               value={summary?.stuckLeases ?? 0}
               styles={{ content: { color: (summary?.stuckLeases ?? 0) > 0 ? '#d46b08' : undefined } }}
             />
@@ -411,12 +415,13 @@ export default function OperationsPage() {
       <Alert
         type='info'
         showIcon
-        title='重放的边界'
+        title="Replay boundary"
         description={
           <span>
-            「命令死信」重放保留原幂等键，worker 仍按原身份去重；AI 写工具若在中断前已产生副作用，
-            重放仍可能再次执行，必须先核对业务对象与审计。「失败投递」已有在途重试或上一次重试成功时返回
-            409。
+
+            "Command Dead Letter" replay retains the original idempotent key, and the worker still deduplicates according to the original identity; if the AI writing tool has produced side effects before being interrupted,
+replay may still be executed again, and the business objects and audits must be checked first. "Failed delivery" has been retried in transit or returned when the last retry was successful.
+409.
           </span>
         }
       />
@@ -428,7 +433,7 @@ export default function OperationsPage() {
           items={[
             {
               key: 'commands',
-              label: '命令死信',
+              label: 'Command dead letter',
               children: (
                 <div className='space-y-4'>
                   <Space wrap>
@@ -444,7 +449,7 @@ export default function OperationsPage() {
                     <Input
                       allowClear
                       style={{ width: 240 }}
-                      placeholder='按命令类型过滤，如 notification.deliver'
+                      placeholder="Filter by command type, such as notification.deliver"
                       value={commandTypeDraft}
                       onChange={event => setCommandTypeDraft(event.target.value)}
                       onPressEnter={() => {
@@ -459,20 +464,22 @@ export default function OperationsPage() {
                         setCommandPage(1);
                       }}
                     >
-                      查询
+
+                      Query
                     </Button>
                     <Button
                       icon={<RefreshCw size={14} />}
                       onClick={() => void loadCommands()}
                       loading={commandsLoading}
                     >
-                      刷新
+
+                      Refresh
                     </Button>
                     <Popconfirm
-                      title={`批量重放 ${commandTotal} 条命令？`}
-                      description='按当前筛选条件匹配，单次最多 200 条并保留幂等键；包含 AI 写工具时，请先逐条核对中断前是否已写入业务数据。'
-                      okText='全部重放'
-                      cancelText='取消'
+                      title={`Batch replay ${commandTotal} A command?`}
+                      description="Match according to the current filtering conditions, with a maximum of 200 entries at a time and retaining idempotent keys; when including the AI writing tool, please first check one by one whether the business data has been written before the interruption."
+                      okText="Replay all"
+                      cancelText="Cancel"
                       onConfirm={handleBulkReplay}
                       disabled={commandTotal === 0 || commandStatus !== 'dead_letter'}
                     >
@@ -483,7 +490,8 @@ export default function OperationsPage() {
                         loading={bulkReplaying}
                         disabled={commandTotal === 0 || commandStatus !== 'dead_letter'}
                       >
-                        批量重放
+
+                        Batch replay
                       </Button>
                     </Popconfirm>
                   </Space>
@@ -495,13 +503,13 @@ export default function OperationsPage() {
                     columns={commandColumns}
                     dataSource={commands}
                     scroll={{ x: 1100 }}
-                    locale={{ emptyText: <Empty description='没有匹配的命令' /> }}
+                    locale={{ emptyText: <Empty description="No matching command" /> }}
                     pagination={{
                       current: commandPage,
                       pageSize: commandPageSize,
                       total: commandTotal,
                       showSizeChanger: true,
-                      showTotal: total => `共 ${total} 条`,
+                      showTotal: total => `Total ${total} items`,
                       onChange: (page, size) => {
                         setCommandPage(page);
                         setCommandPageSize(size);
@@ -516,7 +524,8 @@ export default function OperationsPage() {
               label: (
                 <Space size={4}>
                   <MailWarning size={14} />
-                  失败投递
+
+                  Delivery failed
                 </Space>
               ),
               children: (
@@ -536,9 +545,10 @@ export default function OperationsPage() {
                       onClick={() => void loadDeliveries()}
                       loading={deliveriesLoading}
                     >
-                      刷新
+
+                      Refresh
                     </Button>
-                    <Text type='secondary'>共 {deliveryTotal} 条失败记录</Text>
+                    <Text type='secondary'>Total {deliveryTotal}  failed records</Text>
                   </Space>
 
                   <Table<NotificationDelivery>
@@ -548,13 +558,13 @@ export default function OperationsPage() {
                     columns={deliveryColumns}
                     dataSource={deliveries}
                     scroll={{ x: 1000 }}
-                    locale={{ emptyText: <Empty description='没有失败的投递记录' /> }}
+                    locale={{ emptyText: <Empty description="No failed delivery record" /> }}
                     pagination={{
                       current: deliveryPage,
                       pageSize: deliveryPageSize,
                       total: deliveryTotal,
                       showSizeChanger: true,
-                      showTotal: total => `共 ${total} 条`,
+                      showTotal: total => `Total ${total} items`,
                       onChange: (page, size) => {
                         setDeliveryPage(page);
                         setDeliveryPageSize(size);

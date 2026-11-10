@@ -94,22 +94,22 @@ func TestResolveReportPeriodRejects(t *testing.T) {
 
 	// 只传一端不得静默补另一端：否则页面以为自己按日期过滤，实际读的是缺省窗口。
 	_, err := ResolveReportPeriod("2026-05-01", "", now)
-	requireParamError(t, err, "dateFrom 与 dateTo 必须同时提供")
+	requireParamError(t, err, "dateFrom and dateTo must be provided at the same time")
 	_, err = ResolveReportPeriod("", "2026-05-10", now)
-	requireParamError(t, err, "dateFrom 与 dateTo 必须同时提供")
+	requireParamError(t, err, "dateFrom and dateTo must be provided at the same time")
 
 	_, err = ResolveReportPeriod("2026-05-10", "2026-05-01", now)
-	requireParamError(t, err, "dateFrom 不能晚于 dateTo")
+	requireParamError(t, err, "dateFrom cannot be later than dateTo")
 
 	_, err = ResolveReportPeriod(now.AddDate(0, 0, -maxReportDays).Format("2006-01-02"), "2026-05-20", now)
 	requireParamError(t, err, "统计窗口最长 366 天")
 
 	for _, bad := range []string{"2026/05/01", "2026-13-45", "May 1, 2026"} {
 		_, err = ResolveReportPeriod(bad, "2026-05-10", now)
-		requireParamError(t, err, "dateFrom 格式错误（RFC3339 或 YYYY-MM-DD）")
+		requireParamError(t, err, "dateFrom format error (RFC3339 or YYYY-MM-DD)")
 	}
 	_, err = ResolveReportPeriod("2026-05-01", "not-a-date", now)
-	requireParamError(t, err, "dateTo 格式错误（RFC3339 或 YYYY-MM-DD）")
+	requireParamError(t, err, "dateTo format error (RFC3339 or YYYY-MM-DD)")
 }
 
 func TestReportPeriodDayLabelsOnEmptyWindow(t *testing.T) {

@@ -31,12 +31,12 @@ func NewHandler(chainService *service.ApprovalChainService, logger *zap.SugaredL
 func tenantID(c *gin.Context) (int, bool) {
 	tid, exists := c.Get("tenant_id")
 	if !exists {
-		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		common.Fail(c, common.UnauthorizedCode, "Unauthorized access")
 		return 0, false
 	}
 	id, ok := tid.(int)
 	if !ok || id == 0 {
-		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		common.Fail(c, common.UnauthorizedCode, "Unauthorized access")
 		return 0, false
 	}
 	return id, true
@@ -46,7 +46,7 @@ func tenantID(c *gin.Context) (int, bool) {
 func pathID(c *gin.Context, param string) (int, bool) {
 	id, err := strconv.Atoi(c.Param(param))
 	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "无效的ID参数")
+		common.Fail(c, common.ParamErrorCode, "Invalid ID parameter")
 		return 0, false
 	}
 	return id, true
@@ -67,7 +67,7 @@ func (h *Handler) ListChains(c *gin.Context) {
 
 	chains, total, err := h.chainService.ListApprovalChains(c.Request.Context(), tid, entityType, status, name, page, pageSize)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -115,14 +115,14 @@ func (h *Handler) CreateChain(c *gin.Context) {
 
 	var req dto.ApprovalChainRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "参数错误")
+		common.ParamErrorWithErr(c, err, "Parameter error")
 		return
 	}
 	req.TenantID = tid
 
 	entity, err := h.chainService.CreateApprovalChain(c.Request.Context(), &req, tid)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -143,13 +143,13 @@ func (h *Handler) UpdateChain(c *gin.Context) {
 
 	var req dto.ApprovalChainRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "参数错误")
+		common.ParamErrorWithErr(c, err, "Parameter error")
 		return
 	}
 
 	entity, err := h.chainService.UpdateApprovalChain(c.Request.Context(), id, &req, tid)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -170,7 +170,7 @@ func (h *Handler) DeleteChain(c *gin.Context) {
 
 	err := h.chainService.DeleteApprovalChain(c.Request.Context(), id, tid)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -186,7 +186,7 @@ func (h *Handler) GetStats(c *gin.Context) {
 
 	stats, err := h.chainService.GetApprovalChainStats(c.Request.Context(), tid)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 

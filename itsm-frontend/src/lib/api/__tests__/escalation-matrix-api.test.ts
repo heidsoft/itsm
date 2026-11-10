@@ -63,14 +63,14 @@ describe('EscalationMatrixApi', () => {
     it('空矩阵属不可用而非「未配置」，必须抛出而不是静默回落默认', async () => {
       mockGet.mockResolvedValue({});
       await expect(EscalationMatrixApi.getMatrix()).rejects.toThrow(
-        '升级矩阵返回为空，无法确认当前生效配置',
+        "The upgrade matrix returned is empty and the current effective configuration cannot be confirmed.",
       );
     });
 
     it('响应缺失同样抛出', async () => {
       mockGet.mockResolvedValue(null);
       await expect(EscalationMatrixApi.getMatrix()).rejects.toThrow(
-        '升级矩阵返回为空，无法确认当前生效配置',
+        "The upgrade matrix returned is empty and the current effective configuration cannot be confirmed.",
       );
     });
 

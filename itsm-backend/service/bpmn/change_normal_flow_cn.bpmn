@@ -10,16 +10,16 @@
   <!-- 特点: 审批层级清晰、分级授权、风险评估                   -->
   <!-- ======================================================== -->
 
-  <bpmn:process id="change_normal_flow_cn" name="标准变更流程(国内企业版)" isExecutable="true">
+  <bpmn:process id="change_normal_flow_cn" name="Standard Change Workflow (Enterprise Edition)" isExecutable="true">
     <bpmn:extensionElements>
       <bpmn:metaData name="category">change</bpmn:metaData>
       <bpmn:metaData name="version">2.0.0</bpmn:metaData>
-      <bpmn:metaData name="description">国内企业标准变更流程，包含多级审批和风险评估</bpmn:metaData>
+      <bpmn:metaData name="description">Enterprise standard change workflow with multi-level approval and risk assessment</bpmn:metaData>
       <bpmn:metaData name="enterprise_type">cn_enterprise</bpmn:metaData>
     </bpmn:extensionElements>
 
     <!-- ========== 开始节点 ========== -->
-    <bpmn:startEvent id="StartEvent_RFC" name="变更申请提交">
+    <bpmn:startEvent id="StartEvent_RFC" name="Submit Change Request">
       <bpmn:extensionElements>
         <bpmn:metaData name="form_required">true</bpmn:metaData>
         <bpmn:metaData name="auto_assign">false</bpmn:metaData>
@@ -28,7 +28,7 @@
     </bpmn:startEvent>
 
     <!-- ========== 阶段1: 变更经理初审 ========== -->
-    <bpmn:userTask id="Activity_CMReview" name="变更经理初审">
+    <bpmn:userTask id="Activity_CMReview" name="Initial Change Manager Review">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">cm_initial_review</bpmn:metaData>
         <bpmn:metaData name="assignee_type">manager</bpmn:metaData>
@@ -40,7 +40,7 @@
     </bpmn:userTask>
 
     <!-- 变更类型判定网关 -->
-    <bpmn:exclusiveGateway id="Gateway_ChangeType" name="变更类型判定">
+    <bpmn:exclusiveGateway id="Gateway_ChangeType" name="Determine Change Type">
       <bpmn:incoming>Flow_C2</bpmn:incoming>
       <bpmn:outgoing>Flow_LowRisk</bpmn:outgoing>
       <bpmn:outgoing>Flow_MediumRisk</bpmn:outgoing>
@@ -48,7 +48,7 @@
     </bpmn:exclusiveGateway>
 
     <!-- ========== 低风险变更路径 ========== -->
-    <bpmn:userTask id="Activity_LowRiskApprove" name="低风险审批">
+    <bpmn:userTask id="Activity_LowRiskApprove" name="Low-Risk Approval">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">low_risk_approve</bpmn:metaData>
         <bpmn:metaData name="assignee_type">manager</bpmn:metaData>
@@ -59,14 +59,14 @@
       <bpmn:outgoing>Flow_LowRiskApproved</bpmn:outgoing>
     </bpmn:userTask>
 
-    <bpmn:exclusiveGateway id="Gateway_LowRisk" name="低风险审批结果">
+    <bpmn:exclusiveGateway id="Gateway_LowRisk" name="Low-Risk Approval Result">
       <bpmn:incoming>Flow_LowRiskApproved</bpmn:incoming>
       <bpmn:outgoing>Flow_ToImplementation_Low</bpmn:outgoing>
       <bpmn:outgoing>Flow_Rejected_Low</bpmn:outgoing>
     </bpmn:exclusiveGateway>
 
     <!-- ========== 中风险变更路径 ========== -->
-    <bpmn:userTask id="Activity_MediumRiskTechReview" name="技术评审">
+    <bpmn:userTask id="Activity_MediumRiskTechReview" name="Technical Review">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">technical_review</bpmn:metaData>
         <bpmn:metaData name="assignee_type">technician</bpmn:metaData>
@@ -77,7 +77,7 @@
       <bpmn:outgoing>Flow_C3</bpmn:outgoing>
     </bpmn:userTask>
 
-    <bpmn:userTask id="Activity_MediumRiskManagerApprove" name="运维经理审批">
+    <bpmn:userTask id="Activity_MediumRiskManagerApprove" name="Operations Manager Approval">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">ops_manager_approve</bpmn:metaData>
         <bpmn:metaData name="assignee_type">manager</bpmn:metaData>
@@ -87,14 +87,14 @@
       <bpmn:outgoing>Flow_C4</bpmn:outgoing>
     </bpmn:userTask>
 
-    <bpmn:exclusiveGateway id="Gateway_MediumRisk" name="中风险审批结果">
+    <bpmn:exclusiveGateway id="Gateway_MediumRisk" name="Medium-Risk Approval Result">
       <bpmn:incoming>Flow_C4</bpmn:incoming>
       <bpmn:outgoing>Flow_ToImplementation_Medium</bpmn:outgoing>
       <bpmn:outgoing>Flow_Rejected_Medium</bpmn:outgoing>
     </bpmn:exclusiveGateway>
 
     <!-- ========== 高风险变更路径 ========== -->
-    <bpmn:userTask id="Activity_HighRiskTechReview" name="专家技术评审">
+    <bpmn:userTask id="Activity_HighRiskTechReview" name="Expert Technical Review">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">expert_technical_review</bpmn:metaData>
         <bpmn:metaData name="assignee_type">it_admin</bpmn:metaData>
@@ -105,7 +105,7 @@
       <bpmn:outgoing>Flow_C5</bpmn:outgoing>
     </bpmn:userTask>
 
-    <bpmn:userTask id="Activity_HighRiskSecurityCheck" name="安全合规检查">
+    <bpmn:userTask id="Activity_HighRiskSecurityCheck" name="Security Compliance Check">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">security_compliance_check</bpmn:metaData>
         <bpmn:metaData name="assignee_type">security_admin</bpmn:metaData>
@@ -116,7 +116,7 @@
       <bpmn:outgoing>Flow_C6</bpmn:outgoing>
     </bpmn:userTask>
 
-    <bpmn:userTask id="Activity_HighRiskOpsDirectorApprove" name="运维总监审批">
+    <bpmn:userTask id="Activity_HighRiskOpsDirectorApprove" name="Operations Director Approval">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">ops_director_approve</bpmn:metaData>
         <bpmn:metaData name="assignee_type">it_admin</bpmn:metaData>
@@ -126,7 +126,7 @@
       <bpmn:outgoing>Flow_C7</bpmn:outgoing>
     </bpmn:userTask>
 
-    <bpmn:userTask id="Activity_HighRiskITDirectorApprove" name="IT总监审批">
+    <bpmn:userTask id="Activity_HighRiskITDirectorApprove" name="IT Director Approval">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">it_director_approve</bpmn:metaData>
         <bpmn:metaData name="assignee_type">it_admin</bpmn:metaData>
@@ -137,14 +137,14 @@
       <bpmn:outgoing>Flow_C8</bpmn:outgoing>
     </bpmn:userTask>
 
-    <bpmn:exclusiveGateway id="Gateway_HighRisk" name="高风险审批结果">
+    <bpmn:exclusiveGateway id="Gateway_HighRisk" name="High-Risk Approval Result">
       <bpmn:incoming>Flow_C8</bpmn:incoming>
       <bpmn:outgoing>Flow_ToImplementation_High</bpmn:outgoing>
       <bpmn:outgoing>Flow_Rejected_High</bpmn:outgoing>
     </bpmn:exclusiveGateway>
 
     <!-- ========== 实施阶段 ========== -->
-    <bpmn:userTask id="Activity_Implementation_Low" name="低风险变更实施">
+    <bpmn:userTask id="Activity_Implementation_Low" name="Implement Low-Risk Change">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">implement_change</bpmn:metaData>
         <bpmn:metaData name="assignee_type">agent</bpmn:metaData>
@@ -155,7 +155,7 @@
       <bpmn:outgoing>Flow_Verify_Low</bpmn:outgoing>
     </bpmn:userTask>
 
-    <bpmn:userTask id="Activity_Implementation_Medium" name="中风险变更实施">
+    <bpmn:userTask id="Activity_Implementation_Medium" name="Implement Medium-Risk Change">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">implement_change</bpmn:metaData>
         <bpmn:metaData name="assignee_type">technician</bpmn:metaData>
@@ -166,7 +166,7 @@
       <bpmn:outgoing>Flow_Verify_Medium</bpmn:outgoing>
     </bpmn:userTask>
 
-    <bpmn:userTask id="Activity_Implementation_High" name="高风险变更实施">
+    <bpmn:userTask id="Activity_Implementation_High" name="Implement High-Risk Change">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">implement_change</bpmn:metaData>
         <bpmn:metaData name="assignee_type">it_admin</bpmn:metaData>
@@ -179,7 +179,7 @@
     </bpmn:userTask>
 
     <!-- ========== 验证阶段 ========== -->
-    <bpmn:userTask id="Activity_Verify_Low" name="低风险验证">
+    <bpmn:userTask id="Activity_Verify_Low" name="Low-Risk Verification">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">verify_change</bpmn:metaData>
         <bpmn:metaData name="assignee_type">agent</bpmn:metaData>
@@ -189,7 +189,7 @@
       <bpmn:outgoing>Flow_Close_Low</bpmn:outgoing>
     </bpmn:userTask>
 
-    <bpmn:userTask id="Activity_Verify_Medium" name="中风险验证">
+    <bpmn:userTask id="Activity_Verify_Medium" name="Medium-Risk Verification">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">verify_change</bpmn:metaData>
         <bpmn:metaData name="assignee_type">manager</bpmn:metaData>
@@ -199,7 +199,7 @@
       <bpmn:outgoing>Flow_Close_Medium</bpmn:outgoing>
     </bpmn:userTask>
 
-    <bpmn:userTask id="Activity_Verify_High" name="高风险验证">
+    <bpmn:userTask id="Activity_Verify_High" name="High-Risk Verification">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">verify_change</bpmn:metaData>
         <bpmn:metaData name="assignee_type">it_admin</bpmn:metaData>
@@ -211,7 +211,7 @@
     </bpmn:userTask>
 
     <!-- ========== 关闭与后评估 ========== -->
-    <bpmn:userTask id="Activity_ChangeClose" name="变更关闭">
+    <bpmn:userTask id="Activity_ChangeClose" name="Change Closed">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">change_close</bpmn:metaData>
         <bpmn:metaData name="require_review_result">true</bpmn:metaData>
@@ -224,12 +224,12 @@
     </bpmn:userTask>
 
     <!-- 结束事件 -->
-    <bpmn:endEvent id="EndEvent_ChangeComplete" name="变更完成">
+    <bpmn:endEvent id="EndEvent_ChangeComplete" name="Change Completed">
       <bpmn:incoming>Flow_End</bpmn:incoming>
     </bpmn:endEvent>
 
     <!-- ========== 拒绝路径 ========== -->
-    <bpmn:serviceTask id="Activity_NotifyRejection" name="通知申请被拒绝">
+    <bpmn:serviceTask id="Activity_NotifyRejection" name="Notify Request Rejection">
       <bpmn:extensionElements>
         <bpmn:metaData name="service_task_type">generic_task</bpmn:metaData>
         <bpmn:metaData name="action">notify_rejection</bpmn:metaData>
@@ -242,7 +242,7 @@
       <bpmn:outgoing>Flow_EndRejected</bpmn:outgoing>
     </bpmn:serviceTask>
 
-    <bpmn:endEvent id="EndEvent_ChangeRejected" name="变更被拒绝">
+    <bpmn:endEvent id="EndEvent_ChangeRejected" name="Change Rejected">
       <bpmn:incoming>Flow_EndRejected</bpmn:incoming>
     </bpmn:endEvent>
 

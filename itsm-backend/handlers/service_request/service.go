@@ -230,7 +230,7 @@ func (s *Service) Create(ctx context.Context, tenantID, requesterID int, catalog
 		return nil, common.NewNotFoundError("Service Catalog not found")
 	}
 	if cat.CloudServiceID > 0 && cat.CITypeID == 0 {
-		return nil, common.NewBadRequestError("关联云服务时必须配置CI类型", nil)
+		return nil, common.NewBadRequestError("CI type must be configured when associating cloud services", nil)
 	}
 	if cat.Status != "enabled" && cat.Status != "active" {
 		return nil, common.NewBadRequestError("Service Catalog is not enabled", nil)
@@ -416,7 +416,7 @@ func (s *Service) ensureLinkedCI(ctx context.Context, tenantID int, cat *service
 			return existing.ID, nil
 		}
 		if err != nil && !ent.IsNotFound(err) {
-			return 0, common.NewInternalError("查询关联CI失败", err)
+			return 0, common.NewInternalError("Failed to query related CI", err)
 		}
 	}
 	// 新 CI 必须在审批完成后的 provisioning 阶段由履约器/连接器创建，
@@ -563,7 +563,7 @@ func nodeUserListContains(node map[string]interface{}, key string, userID int) b
 func (s *Service) ApplyApproval(ctx context.Context, id, tenantID, actorID int, action, comment string, userRole, userDept string) (*ServiceRequest, []*ServiceRequestApproval, error) {
 	// 1. Validate Inputs before any tenant-scoped reads.
 	if tenantID <= 0 || actorID <= 0 {
-		return nil, nil, common.NewUnauthorizedError("缺少审批身份或租户上下文")
+		return nil, nil, common.NewUnauthorizedError("Missing approval identity or tenant context")
 	}
 	if id <= 0 {
 		return nil, nil, common.NewBadRequestError("Invalid ID", nil)
@@ -589,7 +589,7 @@ func (s *Service) ApplyApproval(ctx context.Context, id, tenantID, actorID int, 
 	}
 	// 审批只存在于审批阶段：终态或已进入履约的请求即使残留 pending 审批行也不得再投票。
 	if req.CurrentLevel <= 0 || req.Status != srApprovalStageStatus(req.CurrentLevel) {
-		return nil, nil, common.NewConflictError("当前请求不在审批阶段", req.Status)
+		return nil, nil, common.NewConflictError("The current request is not in the approval stage", req.Status)
 	}
 
 	// 3. Find Pending Approval for Current Level
@@ -613,7 +613,7 @@ func (s *Service) ApplyApproval(ctx context.Context, id, tenantID, actorID int, 
 	// 可能仍有静态指派的待办可完成，不属于这里能判定的场景。
 	if onlyRequester := approvalOnlyHasRequester(currentApproval.Node, req.RequesterID); onlyRequester {
 		return nil, nil, common.NewBusinessError(common.ConflictCode,
-			"该审批节点的审批人集合只包含发起人本人，流程禁止自审批：请为服务目录配置其他审批人，或改由他人提交申请", "")
+			"The approver set of this approval node only includes the initiator himself, and the process prohibits self-approval: please configure other approvers for the service catalog, or let others submit the application instead.", "")
 	}
 
 	// normalize 之后名单为空会打显式标记（= 引擎不会指派任何待办）。
@@ -623,7 +623,7 @@ func (s *Service) ApplyApproval(ctx context.Context, id, tenantID, actorID int, 
 		if unstaffed, _ := currentApproval.Node["approval_unstaffed"].(bool); unstaffed {
 			role := approvalStepRole(currentApproval.Step)
 			return nil, nil, common.NewBusinessError(common.ConflictCode,
-				fmt.Sprintf("第 %d 级审批（%s）没有可审批的人：请为租户内除申请人外的用户分配 role=%s 角色，再由该用户完成审批；也可删除本请求重新提交",
+				fmt.Sprintf("There is no person who can approve the %d level approval (%s): Please assign the role=%s role to users in the tenant except the applicant, and then let the user complete the approval; you can also delete this request and resubmit it",
 					currentApproval.Level, currentApproval.Step, role), "")
 		}
 	}
@@ -643,7 +643,7 @@ func (s *Service) ApplyApproval(ctx context.Context, id, tenantID, actorID int, 
 	// BPMN 待办是审批写入的前置条件，缺少 bridge/实例/待办均不得回退直批。
 	// BPMN 任务完成与业务写入必须在同一事务内，防止"流程已批、业务未批"的不一致。
 	if s.approvalBridge == nil || s.client == nil {
-		return nil, nil, common.NewBusinessError(common.ConflictCode, "没有可处理的 BPMN 审批任务，请先确认流程绑定与待办状态", "")
+		return nil, nil, common.NewBusinessError(common.ConflictCode, "There is no BPMN approval task that can be processed. Please confirm the process binding and to-do status first.", "")
 	}
 	// 待办不存在时不得收集投票：会签要等凑齐 quorum 才完成待办，但前提是流程确实
 	// 停在该审批节点上，否则业务侧会记下流程从未裁决的票。
@@ -652,12 +652,12 @@ func (s *Service) ApplyApproval(ctx context.Context, id, tenantID, actorID int, 
 		return nil, nil, err
 	}
 	if !bound {
-		return nil, nil, common.NewBusinessError(common.ConflictCode, "没有可处理的 BPMN 审批任务，请先确认流程绑定与待办状态", "")
+		return nil, nil, common.NewBusinessError(common.ConflictCode, "There is no BPMN approval task that can be processed. Please confirm the process binding and to-do status first.", "")
 	}
 
 	tx, err := s.client.Tx(ctx)
 	if err != nil {
-		return nil, nil, fmt.Errorf("开启审批事务失败: %w", err)
+		return nil, nil, fmt.Errorf("Failed to open approval transaction: %w", err)
 	}
 	defer tx.Rollback()
 
@@ -724,14 +724,14 @@ func (s *Service) ApplyApproval(ctx context.Context, id, tenantID, actorID int, 
 					return nil, nil, common.NewDatabaseError("Failed to update approval", err)
 				}
 				if err := tx.Commit(); err != nil {
-					return nil, nil, fmt.Errorf("提交审批事务失败: %w", err)
+					return nil, nil, fmt.Errorf("Failed to submit approval transaction: %w", err)
 				}
 				// 会签未凑齐时已记下一票，同样属于首次人工响应。
 				s.markSLAFirstResponse(ctx, tenantID, id)
 				return s.Get(ctx, id, tenantID)
 			}
 			if !quorumMet {
-				return nil, nil, common.NewBusinessError(common.ConflictCode, "审批并发冲突，请刷新后重试", "")
+				return nil, nil, common.NewBusinessError(common.ConflictCode, "Approval concurrency conflict, please refresh and try again", "")
 			}
 			// 本级 quorum 满足
 			nextReqStatus = srLevelApprovedStatus(req.CurrentLevel, req.TotalLevels)
@@ -768,10 +768,10 @@ func (s *Service) ApplyApproval(ctx context.Context, id, tenantID, actorID int, 
 		if errors.As(bridgeErr, &appErr) {
 			return nil, nil, appErr
 		}
-		return nil, nil, fmt.Errorf("同步流程审批任务失败: %w", bridgeErr)
+		return nil, nil, fmt.Errorf("Synchronization process approval task failed: %w", bridgeErr)
 	}
 	if !completed {
-		return nil, nil, common.NewBusinessError(common.ConflictCode, "没有可处理的 BPMN 审批任务，请先确认流程绑定与待办状态", "")
+		return nil, nil, common.NewBusinessError(common.ConflictCode, "There is no BPMN approval task that can be processed. Please confirm the process binding and to-do status first.", "")
 	}
 
 	currentApproval.Status = status
@@ -789,13 +789,13 @@ func (s *Service) ApplyApproval(ctx context.Context, id, tenantID, actorID int, 
 	if err := s.repo.UpdateRequestAndApprovalWithClient(ctx, tx.Client(), req, currentApproval); err != nil {
 		// 审批/请求行被并发终审或推进：涉及已完成的 BPMN 桥接动作，不可自动重放，明确报冲突。
 		if errors.Is(err, ErrApprovalWriteConflict) || errors.Is(err, ErrRequestWriteConflict) {
-			return nil, nil, common.NewBusinessError(common.ConflictCode, "审批已被并发处理，请刷新后重试", "")
+			return nil, nil, common.NewBusinessError(common.ConflictCode, "Approval has been processed concurrently, please refresh and try again", "")
 		}
 		return nil, nil, common.NewDatabaseError("Failed to update request", err)
 	}
 
 	if err := tx.Commit(); err != nil {
-		return nil, nil, fmt.Errorf("提交审批事务失败: %w", err)
+		return nil, nil, fmt.Errorf("Failed to submit approval transaction: %w", err)
 	}
 
 	// 审批动作本身就是对该请求的首次人工响应。
@@ -855,7 +855,7 @@ func (s *Service) checkEligibility(actorID int, actorRole, actorDept, requesterD
 					return nil
 				}
 			}
-			return common.NewForbiddenError("无权限执行该审批链层级的审批")
+			return common.NewForbiddenError("No authority to perform approval at this approval chain level")
 		}
 	}
 
@@ -1087,7 +1087,7 @@ func (s *Service) ensureActionableApprovalPlan(approvals []*ServiceRequestApprov
 		}
 		role := approvalStepRole(app.Step)
 		return common.NewBadRequestError(
-			fmt.Sprintf("第 %d 级审批（%s）没有可审批的人：租户内除申请人外没有 role=%s 的在职用户。请为该角色至少分配一名其他用户，或改由他人提交本申请",
+			fmt.Sprintf("There is no approver for the %d level approval (%s): There is no active user with role=%s in the tenant except the applicant. Please assign at least one other user to this role, or have someone else submit this application instead",
 				app.Level, app.Step, role), nil)
 	}
 	return nil
@@ -1140,7 +1140,7 @@ func (s *Service) resolveServiceRequestChain(ctx context.Context, tenantID, requ
 		return nil, err
 	}
 	if plan.Blocked {
-		return nil, fmt.Errorf("审批链存在阻塞层级（缺少审批人且策略为阻断）")
+		return nil, fmt.Errorf("There is a blocking level in the approval chain (the approver is missing and the policy is blocking)")
 	}
 	return plan, nil
 }
@@ -1165,7 +1165,7 @@ func stringsToIfaces(in []string) []interface{} {
 func (s *Service) ListPendingApprovals(ctx context.Context, tenantID, userID int, role string, page, size int) ([]*ServiceRequest, int, error) {
 	role = strings.ToLower(strings.TrimSpace(role))
 	if tenantID <= 0 || userID <= 0 {
-		return nil, 0, common.NewUnauthorizedError("缺少审批身份或租户上下文")
+		return nil, 0, common.NewUnauthorizedError("Missing approval identity or tenant context")
 	}
 	actorDept, _, err := s.repo.GetUserContext(ctx, userID, tenantID)
 	if err != nil {
@@ -1271,7 +1271,7 @@ func (s *Service) classifyWriteFailure(ctx context.Context, req *ServiceRequest,
 	if checkErr != nil {
 		return common.NewNotFoundError("Service Request")
 	}
-	return common.NewVersionConflictError("服务请求", req.ID, req.Version, current.Version)
+	return common.NewVersionConflictError("Service Request", req.ID, req.Version, current.Version)
 }
 
 // UpdateStatus updates a service request status with tenant isolation.

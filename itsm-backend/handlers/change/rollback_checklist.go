@@ -128,7 +128,7 @@ func (s *Service) ReplaceRollbackSteps(ctx context.Context, changeID, tenantID i
 		steps = append(steps, &RollbackStep{ChangeID: changeID, TenantID: tenantID, StepNo: i + 1, Description: desc})
 	}
 	if err := s.repo.ReplaceRollbackSteps(ctx, changeID, tenantID, steps); err != nil {
-		return nil, fmt.Errorf("保存回滚清单失败: %w", err)
+		return nil, fmt.Errorf("Failed to save rollback list: %w", err)
 	}
 	s.logger.Infow("回滚清单已更新", "change_id", changeID, "tenant_id", tenantID, "steps", len(steps))
 	return s.repo.ListRollbackSteps(ctx, changeID, tenantID)
@@ -176,7 +176,7 @@ func (s *Service) ResolveRollbackStep(ctx context.Context, changeID, tenantID, s
 	}
 	ok, err := s.repo.ResolveRollbackStep(ctx, stepID, changeID, tenantID, actorID, status, note, time.Now())
 	if err != nil {
-		return nil, fmt.Errorf("确认回滚步骤失败: %w", err)
+		return nil, fmt.Errorf("Confirm rollback step failed: %w", err)
 	}
 	if !ok {
 		// 未命中：要么步骤不存在/跨租户，要么已被别人确认过。
@@ -199,7 +199,7 @@ func (s *Service) ResolveRollbackStep(ctx context.Context, changeID, tenantID, s
 
 	steps, err := s.repo.ListRollbackSteps(ctx, changeID, tenantID)
 	if err != nil {
-		return nil, fmt.Errorf("读取回滚清单失败: %w", err)
+		return nil, fmt.Errorf("Failed to read rollback list: %w", err)
 	}
 	for _, step := range steps {
 		if step.ID == stepID {
@@ -222,7 +222,7 @@ func (s *Service) ResolveRollbackStep(ctx context.Context, changeID, tenantID, s
 func (s *Service) validateRollbackChecklist(ctx context.Context, changeID, tenantID int) error {
 	steps, err := s.repo.ListRollbackSteps(ctx, changeID, tenantID)
 	if err != nil {
-		return fmt.Errorf("读取回滚清单失败，无法确认回滚是否已逐项执行: %w", err)
+		return fmt.Errorf("Failed to read rollback list, unable to confirm whether rollback has been executed item by item: %w", err)
 	}
 	if len(steps) == 0 {
 		return nil

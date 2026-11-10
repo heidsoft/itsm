@@ -81,7 +81,7 @@ func (s *TicketNotificationService) SendNotification(
 	if !ticketExists {
 		// BusinessError 让 FailWithErr 稳定映射 404；裸 `ticket not found` 会被
 		// classifyError 兜底成 5001，跨租户探测就表现为 5xx 毛刺（B4 钉住后修复）。
-		return common.NewBusinessError(common.NotFoundCode, "工单不存在或已被删除", "")
+		return common.NewBusinessError(common.NotFoundCode, "The ticket does not exist or has been deleted", "")
 	}
 
 	// 为每个用户创建通知记录
@@ -138,7 +138,7 @@ func (s *TicketNotificationService) SendNotification(
 				SetUserID(userID).
 				SetTenantID(tenantID).
 				SetNillableActionURL(ticketNotificationStringPtr(fmt.Sprintf("/tickets/%d", ticketID))).
-				SetNillableActionText(ticketNotificationStringPtr("查看工单")).
+				SetNillableActionText(ticketNotificationStringPtr("View Ticket")).
 				Save(ctx)
 
 			// 如果是站内消息，立即标记为已发送
@@ -224,7 +224,7 @@ func (s *TicketNotificationService) enqueueNotificationDeliveries(ctx context.Co
 		return fmt.Errorf("failed to check ticket existence: %w", err)
 	}
 	if !ticketExists {
-		return common.NewBusinessError(common.NotFoundCode, "工单不存在或已被删除", "")
+		return common.NewBusinessError(common.NotFoundCode, "The ticket does not exist or has been deleted", "")
 	}
 
 	channel := req.Channel
@@ -434,7 +434,7 @@ func (s *TicketNotificationService) NotifyTicketCreated(ctx context.Context, tic
 		return nil
 	}
 
-	content := fmt.Sprintf("新工单已创建：%s (#%s)", ticket.Title, ticket.TicketNumber)
+	content := fmt.Sprintf("New ticket created: %s (#%s)", ticket.Title, ticket.TicketNumber)
 	return s.SendNotification(ctx, ticket.ID, &dto.SendTicketNotificationRequest{
 		UserIDs: userIDs,
 		Type:    "created",
@@ -450,7 +450,7 @@ func (s *TicketNotificationService) NotifyTicketAssigned(ctx context.Context, ti
 		return fmt.Errorf("failed to get ticket: %w", err)
 	}
 
-	content := fmt.Sprintf("您被分配了工单：%s (#%s)", ticket.Title, ticket.TicketNumber)
+	content := fmt.Sprintf("A ticket has been assigned to you: %s (#%s)", ticket.Title, ticket.TicketNumber)
 	return s.SendNotification(ctx, ticketID, &dto.SendTicketNotificationRequest{
 		UserIDs: []int{assigneeID},
 		Type:    "assigned",
@@ -471,7 +471,7 @@ func (s *TicketNotificationService) NotifyTicketStatusChanged(
 		return fmt.Errorf("failed to get ticket: %w", err)
 	}
 
-	content := fmt.Sprintf("工单 #%s 状态已从 %s 变更为 %s", ticket.TicketNumber, oldStatus, newStatus)
+	content := fmt.Sprintf("Ticket #%s status changed from %s to %s", ticket.TicketNumber, oldStatus, newStatus)
 	userIDs := []int{ticket.RequesterID}
 	if ticket.AssigneeID > 0 {
 		userIDs = append(userIDs, ticket.AssigneeID)
@@ -524,7 +524,7 @@ func (s *TicketNotificationService) NotifyTicketCommented(
 		return nil
 	}
 
-	content := fmt.Sprintf("工单 #%s 有新的评论", ticket.TicketNumber)
+	content := fmt.Sprintf("Ticket #%s has a new comment", ticket.TicketNumber)
 	return s.SendNotification(ctx, ticketID, &dto.SendTicketNotificationRequest{
 		UserIDs: userIDs,
 		Type:    "commented",
@@ -546,11 +546,11 @@ func (s *TicketNotificationService) NotifySLAWarning(
 		return fmt.Errorf("failed to get ticket: %w", err)
 	}
 
-	content := fmt.Sprintf("工单 #%s 的SLA %s 即将在 %s 到期",
+	content := fmt.Sprintf("Ticket #%s SLA %s is due at %s",
 		ticket.TicketNumber,
 		map[string]string{
-			"response_deadline":   "响应时间",
-			"resolution_deadline": "解决时间",
+			"response_deadline":   "Response Time",
+			"resolution_deadline": "Resolution Time",
 		}[warningType],
 		deadline.Format("2006-01-02 15:04:05"))
 
@@ -581,11 +581,11 @@ func (s *TicketNotificationService) NotifySLABreached(
 	}
 
 	slaType := map[string]string{
-		"response_time":   "响应时间",
-		"resolution_time": "解决时间",
+		"response_time":   "Response Time",
+		"resolution_time": "Resolution Time",
 	}[violationType]
 
-	content := fmt.Sprintf("【SLA违规】工单 #%s 的%s已违反SLA，超时 %.1f 分钟",
+	content := fmt.Sprintf("[SLA Breach] Ticket #%s %s exceeded the SLA by %.1f minutes",
 		ticket.TicketNumber, slaType, exceededMinutes)
 
 	// 获取需要通知的用户列表（创建人、处理人、相关经理）
@@ -643,11 +643,11 @@ func (s *TicketNotificationService) NotifySLAAlertLevelChanged(
 	}
 
 	levelText := map[string]string{
-		"warning":  "警告",
-		"critical": "严重",
+		"warning":  "Warning",
+		"critical": "Critical",
 	}[alertLevel]
 
-	content := fmt.Sprintf("【SLA%s】工单 #%s 剩余时间不足 %.1f%%，请及时处理！",
+	content := fmt.Sprintf("[SLA %s] Ticket #%s has less than %.1f%% time remaining; please act promptly",
 		levelText, ticket.TicketNumber, percentage)
 
 	userIDs := []int{ticket.RequesterID}
@@ -678,7 +678,7 @@ func (s *TicketNotificationService) NotifyTicketCreatedTx(ctx context.Context, t
 	if len(userIDs) == 0 {
 		return nil
 	}
-	content := fmt.Sprintf("新工单已创建：%s (#%s)", ticket.Title, ticket.TicketNumber)
+	content := fmt.Sprintf("New ticket created: %s (#%s)", ticket.Title, ticket.TicketNumber)
 	occurrenceKey := fmt.Sprintf("created:%d:%d", ticket.TenantID, ticket.ID)
 	for _, recipientID := range userIDs {
 		if err := enqueueTicketNotificationCommandTx(ctx, tx, ticket.TenantID, ticket.ID, recipientID, "created", "in_app", content, occurrenceKey); err != nil {
@@ -708,10 +708,10 @@ func (s *TicketNotificationService) NotifySLABreachedTx(
 		return fmt.Errorf("tenant mismatch on SLA breach notification (ticket=%d, request=%d)", ticket.TenantID, tenantID)
 	}
 	slaType := map[string]string{
-		"response_time":   "响应时间",
-		"resolution_time": "解决时间",
+		"response_time":   "Response Time",
+		"resolution_time": "Resolution Time",
 	}[violationType]
-	content := fmt.Sprintf("【SLA违规】工单 #%s 的%s已违反SLA，超时 %.1f 分钟",
+	content := fmt.Sprintf("[SLA Breach] Ticket #%s %s exceeded the SLA by %.1f minutes",
 		ticket.TicketNumber, slaType, exceededMinutes)
 	userIDs := uniquePositiveRecipients(ticket.RequesterID, ticket.AssigneeID)
 	occurrenceKey := fmt.Sprintf("sla_breached:%d:%s:%d", ticket.ID, violationType, int64(exceededMinutes))
@@ -745,10 +745,10 @@ func (s *TicketNotificationService) NotifySLAAlertLevelChangedTx(
 		return fmt.Errorf("tenant mismatch on SLA alert notification (ticket=%d, request=%d)", ticket.TenantID, tenantID)
 	}
 	levelText := map[string]string{
-		"warning":  "警告",
-		"critical": "严重",
+		"warning":  "Warning",
+		"critical": "Critical",
 	}[alertLevel]
-	content := fmt.Sprintf("【SLA%s】工单 #%s 剩余时间不足 %.1f%%，请及时处理！",
+	content := fmt.Sprintf("[SLA %s] Ticket #%s has less than %.1f%% time remaining; please act promptly",
 		levelText, ticket.TicketNumber, percentage)
 	userIDs := uniquePositiveRecipients(ticket.RequesterID, ticket.AssigneeID)
 	occurrenceKey := fmt.Sprintf("sla_alert:%d:%s:%d", ticket.ID, alertLevel, int64(percentage))
@@ -970,7 +970,7 @@ func (s *TicketNotificationService) SendAssignmentNotification(ticketID, assigne
 		return
 	}
 	ctx := context.Background()
-	content := fmt.Sprintf("您被分配了工单 #%d", ticketID)
+	content := fmt.Sprintf("Ticket #%d has been assigned to you", ticketID)
 
 	tenantID := s.resolveTenantID(ctx, ticketID)
 	if err := s.SendNotification(ctx, ticketID, &dto.SendTicketNotificationRequest{
@@ -989,7 +989,7 @@ func (s *TicketNotificationService) SendEscalationNotification(ticketID, newAssi
 		return
 	}
 	ctx := context.Background()
-	content := fmt.Sprintf("工单 #%d 已被升级，新处理人: %d", ticketID, newAssignee)
+	content := fmt.Sprintf("Ticket #%d has been escalated; new assignee: %d", ticketID, newAssignee)
 
 	tenantID := s.resolveTenantID(ctx, ticketID)
 	if err := s.SendNotification(ctx, ticketID, &dto.SendTicketNotificationRequest{
@@ -1008,7 +1008,7 @@ func (s *TicketNotificationService) SendResolutionNotification(ticketID, request
 		return
 	}
 	ctx := context.Background()
-	content := fmt.Sprintf("工单 #%d 已被解决", ticketID)
+	content := fmt.Sprintf("Ticket #%d has been resolved", ticketID)
 
 	tenantID := s.resolveTenantID(ctx, ticketID)
 	if err := s.SendNotification(ctx, ticketID, &dto.SendTicketNotificationRequest{

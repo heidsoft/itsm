@@ -549,7 +549,7 @@ func (s *Service) ChatStream(
 				"status":       "approval_pending",
 				"tool":         name,
 				"invocationId": invID,
-				"message":      fmt.Sprintf("操作已提交，等待人工审批后执行（invocationId=%d）", invID),
+				"message":      fmt.Sprintf("The operation has been submitted and is waiting for manual approval before execution (invocationId=%d)", invID),
 			}, nil
 		}
 		return res, nil
@@ -752,7 +752,7 @@ func (s *Service) CreateTicketByAI(ctx context.Context, description string, tena
 			"reasoning":          result.Explanation,
 			"tenant_id":          tenantID,
 			"status":             "draft",
-			"message":            "AI 已分析描述，请确认后提交工单",
+			"message":            "AI has analyzed the description, please confirm and submit a work order",
 		}, nil
 	}
 
@@ -765,7 +765,7 @@ func (s *Service) CreateTicketByAI(ctx context.Context, description string, tena
 		"reasoning":          "基于关键词分析",
 		"tenant_id":          tenantID,
 		"status":             "draft",
-		"message":            "AI 服务不可用，已返回默认建议",
+		"message":            "AI service is unavailable and default suggestions have been returned",
 	}, nil
 }
 
@@ -1100,12 +1100,12 @@ func (s *Service) SearchKnowledge(ctx context.Context, tenantID int, query strin
 	s.logger.Infow("Knowledge Search", "query", query, "type", searchType, "tenantID", tenantID)
 
 	if s.rag == nil {
-		return nil, fmt.Errorf("RAG 服务未配置")
+		return nil, fmt.Errorf("RAG service not configured")
 	}
 
 	results, err := s.rag.Ask(ctx, tenantID, query, limit)
 	if err != nil {
-		return nil, fmt.Errorf("RAG 搜索失败: %w", err)
+		return nil, fmt.Errorf("RAG search failed: %w", err)
 	}
 
 	return results, nil

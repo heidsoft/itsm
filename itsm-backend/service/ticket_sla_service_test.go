@@ -74,14 +74,14 @@ func TestTicketSLAService_GetTicketSLAInfo(t *testing.T) {
 			},
 		},
 		{
-			name:          "工单不存在",
+			name:          "The work order does not exist",
 			ticketID:      99999,
 			tenantID:      testTenant.ID,
 			expectedError: true,
 			checkResult:   nil,
 		},
 		{
-			name:          "租户不匹配",
+			name:          "Tenant mismatch",
 			ticketID:      testTicket.ID,
 			tenantID:      99999,
 			expectedError: true,

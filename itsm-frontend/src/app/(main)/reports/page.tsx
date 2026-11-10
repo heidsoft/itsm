@@ -7,8 +7,8 @@ export default function ReportsPage() {
   return (
     <div className="space-y-6 p-6">
       <ManagementPageHeader
-        title="报表中心"
-        description="ITSM 业务报表"
+        title="Report Center"
+        description="ITSM Business Report"
       />
       <AdvancedReporting />
     </div>

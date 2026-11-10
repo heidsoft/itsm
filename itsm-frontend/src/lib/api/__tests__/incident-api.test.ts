@@ -333,7 +333,7 @@ describe('IncidentAPI', () => {
     it('should simulate alert and create incident', async () => {
       mockPost.mockResolvedValue({ id: 1 });
       await IncidentAPI.simulateAlibabaCloudAlert();
-      expect(mockPost).toHaveBeenCalledWith('/api/v1/incidents/alibaba-cloud-alert', expect.objectContaining({ alertName: 'CPU使用率过高告警' }));
+      expect(mockPost).toHaveBeenCalledWith('/api/v1/incidents/alibaba-cloud-alert', expect.objectContaining({ alertName: "High CPU usage alarm" }));
     });
   });
 

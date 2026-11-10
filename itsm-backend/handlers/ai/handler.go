@@ -34,11 +34,11 @@ func (h *Handler) ListTools(c *gin.Context) {
 	tenantID := c.GetInt("tenant_id")
 
 	if tenantID <= 0 || c.GetInt("user_id") <= 0 || role == "" {
-		common.AuthFailed(c, "缺少有效身份上下文")
+		common.AuthFailed(c, "Missing valid identity context")
 		return
 	}
 	if h.svc.entClient == nil || h.svc.tools == nil {
-		common.Fail(c, common.ServiceUnavailableCode, "AI 工具权限服务未就绪")
+		common.Fail(c, common.ServiceUnavailableCode, "AI tool permission service is not ready")
 		return
 	}
 
@@ -61,20 +61,20 @@ func (h *Handler) ExecuteTool(c *gin.Context) {
 		Args map[string]interface{} `json:"args"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
 	tenantID := c.GetInt("tenant_id")
 	if tenantID <= 0 {
-		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		common.Fail(c, common.AuthFailedCode, "Tenant information is missing")
 		return
 	}
 
 	// 校验工具存在性；写工具（!ReadOnly）交由 ExecuteTool 统一走审批流
 	// （创建 pending invocation + 入队等待人工审批），与聊天路径行为一致。
 	if h.svc.tools == nil {
-		common.Fail(c, common.ServiceUnavailableCode, "AI 工具注册表未就绪")
+		common.Fail(c, common.ServiceUnavailableCode, "AI tool registry is not ready")
 		return
 	}
 	toolDef := h.svc.tools.GetTool(req.Name)
@@ -89,7 +89,7 @@ func (h *Handler) ExecuteTool(c *gin.Context) {
 
 	userID := c.GetInt("user_id")
 	if userID <= 0 {
-		common.AuthFailed(c, "用户信息缺失")
+		common.AuthFailed(c, "User information is missing")
 		return
 	}
 	role := c.GetString("role")
@@ -97,19 +97,19 @@ func (h *Handler) ExecuteTool(c *gin.Context) {
 	res, invocationID, err := h.svc.ExecuteTool(c.Request.Context(), userID, tenantID, role, req.Name, req.Args)
 	if err != nil {
 		if errors.Is(err, ErrToolUnavailable) {
-			common.Fail(c, common.ServiceUnavailableCode, "AI 工具权限服务未就绪")
+			common.Fail(c, common.ServiceUnavailableCode, "AI tool permission service is not ready")
 			return
 		}
 		// 区分权限拒绝与未知工具的错误码
 		if errors.Is(err, ErrToolPermissionDenied) {
-			common.Fail(c, common.ToolPermissionDeniedCode, "无权执行该工具")
+			common.Fail(c, common.ToolPermissionDeniedCode, "No permission to execute this tool")
 			return
 		}
 		if errors.Is(err, ErrUnknownTool) {
-			common.Fail(c, common.UnknownToolCode, "工具不存在")
+			common.Fail(c, common.UnknownToolCode, "Tool does not exist")
 			return
 		}
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -137,7 +137,7 @@ func (h *Handler) Chat(c *gin.Context) {
 		ConversationID int    `json:"conversationId"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
@@ -145,7 +145,7 @@ func (h *Handler) Chat(c *gin.Context) {
 	userID := c.GetInt("user_id")
 	role := c.GetString("role")
 	if tenantID <= 0 || userID <= 0 || role == "" {
-		common.AuthFailed(c, "缺少有效身份上下文")
+		common.AuthFailed(c, "Missing valid identity context")
 		return
 	}
 
@@ -164,7 +164,7 @@ func (h *Handler) Chat(c *gin.Context) {
 			"answers":        []interface{}{},
 			"conversationId": 0,
 			"degraded":       true,
-			"message":        "AI 服务暂时不可用，请稍后重试",
+			"message":        "AI service is temporarily unavailable, please try again later",
 		})
 		return
 	}
@@ -192,7 +192,7 @@ func (h *Handler) ChatStream(c *gin.Context) {
 		ConversationID int    `json:"conversationId"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
@@ -200,7 +200,7 @@ func (h *Handler) ChatStream(c *gin.Context) {
 	userID := c.GetInt("user_id")
 	role := c.GetString("role")
 	if tenantID == 0 {
-		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		common.Fail(c, common.AuthFailedCode, "Tenant information is missing")
 		return
 	}
 
@@ -219,7 +219,7 @@ func (h *Handler) ChatStream(c *gin.Context) {
 			knowledgeaccess.WithViewer(c.Request.Context(), knowledgeaccess.Viewer{UserID: userID, Role: role}),
 			tenantID, userID, req.Query, req.PageSize, req.ConversationID)
 		if err != nil {
-			common.FailWithErr(c, err, "操作失败")
+			common.FailWithErr(c, err, "Operation failed")
 			return
 		}
 		common.Success(c, gin.H{"answers": answers, "conversationId": convID})
@@ -269,17 +269,17 @@ func (h *Handler) ChatStream(c *gin.Context) {
 func (h *Handler) ListConversations(c *gin.Context) {
 	tenantID := c.GetInt("tenant_id")
 	if tenantID == 0 {
-		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		common.Fail(c, common.AuthFailedCode, "Tenant information is missing")
 		return
 	}
 	if c.GetInt("user_id") <= 0 || c.GetString("role") == "" {
-		common.AuthFailed(c, "缺少有效身份上下文")
+		common.AuthFailed(c, "Missing valid identity context")
 		return
 	}
 	userID := c.GetInt("user_id")
 	convs, err := h.svc.ListConversations(c.Request.Context(), tenantID, userID)
 	if err != nil {
-		common.FailWithErr(c, err, "获取会话列表失败")
+		common.FailWithErr(c, err, "Failed to get session list")
 		return
 	}
 	common.Success(c, gin.H{"items": convs})
@@ -289,24 +289,24 @@ func (h *Handler) ListConversations(c *gin.Context) {
 func (h *Handler) GetConversation(c *gin.Context) {
 	tenantID := c.GetInt("tenant_id")
 	if tenantID == 0 {
-		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		common.Fail(c, common.AuthFailedCode, "Tenant information is missing")
 		return
 	}
 	userID := c.GetInt("user_id")
 	if userID <= 0 || c.GetString("role") == "" {
-		common.AuthFailed(c, "缺少有效身份上下文")
+		common.AuthFailed(c, "Missing valid identity context")
 		return
 	}
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.ParamError(c, "无效的会话ID")
+		common.ParamError(c, "Invalid session ID")
 		return
 	}
 	// 会话是用户私有的：校验租户 + 属主。他人会话与不存在都走同一条 404 路径，
 	// 不通过错误差异暴露「这个 id 是否存在」。
 	messages, err := h.svc.GetConversationMessages(c.Request.Context(), id, tenantID, userID)
 	if err != nil {
-		common.NotFound(c, "会话不存在")
+		common.NotFound(c, "Session does not exist")
 		return
 	}
 	common.Success(c, gin.H{"items": messages})
@@ -316,21 +316,21 @@ func (h *Handler) GetConversation(c *gin.Context) {
 func (h *Handler) DeleteConversation(c *gin.Context) {
 	tenantID := c.GetInt("tenant_id")
 	if tenantID == 0 {
-		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		common.Fail(c, common.AuthFailedCode, "Tenant information is missing")
 		return
 	}
 	userID := c.GetInt("user_id")
 	if userID <= 0 || c.GetString("role") == "" {
-		common.AuthFailed(c, "缺少有效身份上下文")
+		common.AuthFailed(c, "Missing valid identity context")
 		return
 	}
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.ParamError(c, "无效的会话ID")
+		common.ParamError(c, "Invalid session ID")
 		return
 	}
 	if err := h.svc.DeleteConversation(c.Request.Context(), id, tenantID, userID); err != nil {
-		common.NotFound(c, "会话不存在")
+		common.NotFound(c, "Session does not exist")
 		return
 	}
 	common.Success(c, nil)
@@ -340,7 +340,7 @@ func (h *Handler) DeleteConversation(c *gin.Context) {
 func (h *Handler) ListAIAnalysisResults(c *gin.Context) {
 	tenantID := c.GetInt("tenant_id")
 	if tenantID == 0 {
-		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		common.Fail(c, common.AuthFailedCode, "Tenant information is missing")
 		return
 	}
 	analysisType := c.Query("type")
@@ -352,7 +352,7 @@ func (h *Handler) ListAIAnalysisResults(c *gin.Context) {
 	}
 	results, err := h.svc.ListAIAnalysisResults(c.Request.Context(), tenantID, analysisType, limit)
 	if err != nil {
-		common.FailWithErr(c, err, "获取分析历史失败")
+		common.FailWithErr(c, err, "Failed to obtain analysis history")
 		return
 	}
 	common.Success(c, gin.H{"items": results})
@@ -362,17 +362,17 @@ func (h *Handler) ListAIAnalysisResults(c *gin.Context) {
 func (h *Handler) GetAIAnalysisResult(c *gin.Context) {
 	tenantID := c.GetInt("tenant_id")
 	if tenantID == 0 {
-		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		common.Fail(c, common.AuthFailedCode, "Tenant information is missing")
 		return
 	}
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.ParamError(c, "无效的记录ID")
+		common.ParamError(c, "Invalid record ID")
 		return
 	}
 	result, err := h.svc.GetAIAnalysisResult(c.Request.Context(), id, tenantID)
 	if err != nil {
-		common.FailWithErr(c, err, "获取分析结果失败")
+		common.FailWithErr(c, err, "Failed to obtain analysis results")
 		return
 	}
 	common.Success(c, result)
@@ -382,16 +382,16 @@ func (h *Handler) GetAIAnalysisResult(c *gin.Context) {
 func (h *Handler) DeleteAIAnalysisResult(c *gin.Context) {
 	tenantID := c.GetInt("tenant_id")
 	if tenantID == 0 {
-		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		common.Fail(c, common.AuthFailedCode, "Tenant information is missing")
 		return
 	}
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.ParamError(c, "无效的记录ID")
+		common.ParamError(c, "Invalid record ID")
 		return
 	}
 	if err := h.svc.DeleteAIAnalysisResult(c.Request.Context(), id, tenantID); err != nil {
-		common.FailWithErr(c, err, "删除分析结果失败")
+		common.FailWithErr(c, err, "Failed to delete analysis results")
 		return
 	}
 	common.Success(c, nil)
@@ -401,7 +401,7 @@ func (h *Handler) DeleteAIAnalysisResult(c *gin.Context) {
 func (h *Handler) GetDeepAnalytics(c *gin.Context) {
 	var req dto.DeepAnalyticsRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 	tenantID, ok := handlerctx.ResolveTenantID(c)
@@ -410,7 +410,7 @@ func (h *Handler) GetDeepAnalytics(c *gin.Context) {
 	}
 	res, err := h.svc.GetDeepAnalytics(c.Request.Context(), &req, tenantID)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 	common.Success(c, res)
@@ -420,7 +420,7 @@ func (h *Handler) GetDeepAnalytics(c *gin.Context) {
 func (h *Handler) GetTrendPrediction(c *gin.Context) {
 	var req dto.TrendPredictionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 	tenantID, ok := handlerctx.ResolveTenantID(c)
@@ -431,7 +431,7 @@ func (h *Handler) GetTrendPrediction(c *gin.Context) {
 	userID := c.GetInt("user_id")
 	res, err := h.svc.GetTrendPrediction(c.Request.Context(), &req, tenantID, userID)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 	common.Success(c, res)
@@ -447,14 +447,14 @@ func (h *Handler) AnalyzeTicket(c *gin.Context) {
 	}
 	tenantID := c.GetInt("tenant_id")
 	if tenantID == 0 {
-		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		common.Fail(c, common.AuthFailedCode, "Tenant information is missing")
 		return
 	}
 	userID := c.GetInt("user_id")
 
 	res, err := h.svc.AnalyzeTicketWithAudit(c.Request.Context(), id, tenantID, userID)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 	common.Success(c, res)
@@ -469,21 +469,21 @@ func (h *Handler) AnalyzeIncident(c *gin.Context) {
 	}
 	tenantID := c.GetInt("tenant_id")
 	if tenantID == 0 {
-		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		common.Fail(c, common.AuthFailedCode, "Tenant information is missing")
 		return
 	}
 	userID := c.GetInt("user_id")
 	res, err := h.svc.AnalyzeIncidentWithAudit(c.Request.Context(), id, tenantID, userID)
 	if err != nil {
 		if errors.Is(err, service.ErrIncidentNotFound) {
-			common.NotFoundWithErr(c, err, "事件不存在")
+			common.NotFoundWithErr(c, err, "Event does not exist")
 			return
 		}
 		if errors.Is(err, service.ErrAIAnalysisUnavailable) {
-			common.Fail(c, common.ServiceUnavailableCode, "AI 事件分析服务尚未就绪")
+			common.Fail(c, common.ServiceUnavailableCode, "AI event analysis service is not ready yet")
 			return
 		}
-		common.FailWithErr(c, err, "事件分析失败")
+		common.FailWithErr(c, err, "Event analysis failed")
 		return
 	}
 	common.Success(c, res)
@@ -500,7 +500,7 @@ func (h *Handler) SummarizeTicket(c *gin.Context) {
 	}
 	tenantID := c.GetInt("tenant_id")
 	if tenantID == 0 {
-		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		common.Fail(c, common.AuthFailedCode, "Tenant information is missing")
 		return
 	}
 	// userID 用于把决策底账归属到具体操作者：谁采纳/拒绝了这条 AI 建议，
@@ -512,7 +512,7 @@ func (h *Handler) SummarizeTicket(c *gin.Context) {
 		h.svc.logger.Warnw("AI摘要失败，返回降级响应", "error", err, "ticketID", id)
 		common.Success(c, gin.H{
 			"degraded": true,
-			"message":  "AI 摘要服务暂时不可用，请稍后重试",
+			"message":  "AI summary service is temporarily unavailable, please try again later",
 			"summary":  "",
 		})
 		return
@@ -533,7 +533,7 @@ func (h *Handler) SaveFeedback(c *gin.Context) {
 		Accepted *bool   `json:"accepted"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
@@ -554,7 +554,7 @@ func (h *Handler) SaveFeedback(c *gin.Context) {
 
 	err := h.svc.SaveFeedback(c.Request.Context(), tenantID, userID, requestID, req.Kind, req.Query, itemTypeVal, req.ItemID, req.Useful, req.Score, req.Notes, req.Accepted)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 	common.Success(c, gin.H{"message": "Feedback saved"})
@@ -574,19 +574,19 @@ func (h *Handler) RecordAudit(c *gin.Context) {
 		Notes         string                 `json:"notes"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 	// 置信度契约统一 0-1：超出区间或 NaN/Inf 一律 400，不再静默 clamp——
 	// 非法值进入 evaluator 的置信度校准分桶会把整个桶污染成"低置信"。
 	if req.Confidence < 0 || req.Confidence > 1 || math.IsNaN(req.Confidence) || math.IsInf(req.Confidence, 0) {
-		common.Fail(c, common.ValidationError, "confidence 必须在 0-1 之间（0 与 1 边界合法）")
+		common.Fail(c, common.ValidationError, "confidence must be between 0-1 (the boundary between 0 and 1 is legal)")
 		return
 	}
 
 	tenantID := c.GetInt("tenant_id")
 	if tenantID == 0 {
-		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		common.Fail(c, common.AuthFailedCode, "Tenant information is missing")
 		return
 	}
 	userID := c.GetInt("user_id")
@@ -614,7 +614,7 @@ func (h *Handler) RecordAudit(c *gin.Context) {
 	}
 
 	if err := h.svc.SaveFeedback(c.Request.Context(), tenantID, userID, requestID, req.Scenario, req.InputRef, itemType, nil, req.Accepted, &score, &note, &req.Accepted); err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -639,7 +639,7 @@ func (h *Handler) GetEvaluation(c *gin.Context) {
 	}
 	report, err := h.svc.Evaluate(c.Request.Context(), tenantID, days)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 	common.Success(c, report)
@@ -658,7 +658,7 @@ func (h *Handler) GetAuditLogs(c *gin.Context) {
 	}
 	entries, total, err := h.svc.ListAuditLogs(c.Request.Context(), tenantID, pg.Page, pg.PageSize, kind, days)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 	common.SuccessWithPagination(c, entries, pg.Page, pg.PageSize, int64(total))
@@ -675,14 +675,14 @@ func (h *Handler) UpdateAuditAccepted(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil || id <= 0 {
-		common.ParamErrorWithErr(c, err, "id 参数非法")
+		common.ParamErrorWithErr(c, err, "The id parameter is illegal")
 		return
 	}
 	var req struct {
 		Accepted bool `json:"accepted" binding:"required"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
@@ -693,10 +693,10 @@ func (h *Handler) UpdateAuditAccepted(c *gin.Context) {
 
 	if err := h.svc.UpdateAuditAccepted(c.Request.Context(), tenantID, id, req.Accepted); err != nil {
 		if errors.Is(err, service.ErrFeedbackNotFound) {
-			common.NotFoundWithErr(c, err, "audit-logs 行不存在或非 ai_audit")
+			common.NotFoundWithErr(c, err, "audit-logs line does not exist or is not ai_audit")
 			return
 		}
-		common.FailWithErr(c, err, "更新 accepted 失败")
+		common.FailWithErr(c, err, "Update accepted failed")
 		return
 	}
 	common.Success(c, gin.H{"id": id, "accepted": req.Accepted})
@@ -716,7 +716,7 @@ func queryInt(c *gin.Context, key string, def int) int {
 func (h *Handler) GetMetrics(c *gin.Context) {
 	tenantID := c.GetInt("tenant_id")
 	if tenantID == 0 {
-		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		common.Fail(c, common.AuthFailedCode, "Tenant information is missing")
 		return
 	}
 	lookbackDays := 7
@@ -727,7 +727,7 @@ func (h *Handler) GetMetrics(c *gin.Context) {
 	}
 	metrics, err := h.svc.GetMetrics(c.Request.Context(), tenantID, lookbackDays)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 	common.Success(c, metrics)
@@ -741,13 +741,13 @@ func (h *Handler) KnowledgeSearch(c *gin.Context) {
 		Type     string `json:"type"` // kb|incident
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
 	tenantID := c.GetInt("tenant_id")
 	if tenantID == 0 {
-		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		common.Fail(c, common.AuthFailedCode, "Tenant information is missing")
 		return
 	}
 	userID := c.GetInt("user_id")
@@ -768,7 +768,7 @@ func (h *Handler) KnowledgeSearch(c *gin.Context) {
 		common.Success(c, gin.H{
 			"items":    []interface{}{},
 			"degraded": true,
-			"message":  "AI 搜索服务暂时不可用，请稍后重试",
+			"message":  "AI search service is temporarily unavailable, please try again later",
 		})
 		return
 	}
@@ -787,13 +787,13 @@ func (h *Handler) Triage(c *gin.Context) {
 		Priority    string `json:"priority"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.BindValidationError(c, err, "请求参数错误")
+		common.BindValidationError(c, err, "Wrong request parameters")
 		return
 	}
 
 	tenantID := c.GetInt("tenant_id")
 	if tenantID == 0 {
-		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		common.Fail(c, common.AuthFailedCode, "Tenant information is missing")
 		return
 	}
 
@@ -805,7 +805,7 @@ func (h *Handler) Triage(c *gin.Context) {
 			"description": req.Description,
 			"suggestions": map[string]interface{}{},
 			"degraded":    true,
-			"message":     "AI 分诊服务暂时不可用，请稍后重试",
+			"message":     "AI triage service is temporarily unavailable, please try again later",
 		})
 		return
 	}
@@ -820,13 +820,13 @@ func (h *Handler) CreateTicketByAI(c *gin.Context) {
 		TenantID    int    `json:"tenantId"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
 	tenantID := c.GetInt("tenant_id")
 	if tenantID == 0 {
-		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		common.Fail(c, common.AuthFailedCode, "Tenant information is missing")
 		return
 	}
 
@@ -850,7 +850,7 @@ func (h *Handler) GetToolInvocation(c *gin.Context) {
 	}
 	tenantID := c.GetInt("tenant_id")
 	if tenantID == 0 {
-		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		common.Fail(c, common.AuthFailedCode, "Tenant information is missing")
 		return
 	}
 
@@ -883,14 +883,14 @@ func (h *Handler) ListToolInvocations(c *gin.Context) {
 	}
 	tenantID := c.GetInt("tenant_id")
 	if tenantID == 0 {
-		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		common.Fail(c, common.AuthFailedCode, "Tenant information is missing")
 		return
 	}
 
 	invs, err := h.svc.repo.ListToolInvocations(c.Request.Context(), tenantID, state)
 	if err != nil {
 		h.svc.logger.Warnw("查询工具调用列表失败", "error", err, "tenantID", tenantID)
-		common.Fail(c, common.InternalErrorCode, "查询工具调用失败")
+		common.Fail(c, common.InternalErrorCode, "Query tool call failed")
 		return
 	}
 
@@ -928,12 +928,12 @@ func (h *Handler) ApproveTool(c *gin.Context) {
 		Reason  string `json:"reason"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "请求参数错误")
+		common.Fail(c, common.ParamErrorCode, "Wrong request parameters")
 		return
 	}
 	tenantID := c.GetInt("tenant_id")
 	if tenantID == 0 {
-		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		common.Fail(c, common.AuthFailedCode, "Tenant information is missing")
 		return
 	}
 	userID := c.GetInt("user_id")
@@ -941,7 +941,7 @@ func (h *Handler) ApproveTool(c *gin.Context) {
 	state, err := h.svc.ApproveTool(c.Request.Context(), id, tenantID, userID, req.Approve, req.Reason)
 	if err != nil {
 		// 不存在是 404，重复审批是 409，其余内部错误 500——不能一律折叠成 404。
-		common.RespondError(c, err, "工具调用审批失败")
+		common.RespondError(c, err, "Tool call approval failed")
 		return
 	}
 	common.Success(c, gin.H{"invocationId": id, "approvalState": state})

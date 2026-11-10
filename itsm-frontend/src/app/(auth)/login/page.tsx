@@ -84,10 +84,10 @@ function LoginForm() {
         setSsoLoading(null);
         return;
       }
-      logger.info('跳转 SSO 提供方', { provider: providerCode });
+      logger.info('Jump to SSO provider', { provider: providerCode });
       window.location.href = result.redirectUrl;
     } catch (err) {
-      logger.error('SSO 登录发起失败:', err);
+      logger.error('SSO login initiation failed:', err);
       setError(err instanceof Error ? err.message : t('auth.login.ssoFailed'));
       setSsoLoading(null);
     }
@@ -129,7 +129,7 @@ function LoginForm() {
   // 处理登录提交
   const handleLogin = async (values: { username: string; password: string }) => {
     // 只记录用户名：表单值含明文密码，不得进入日志。
-    logger.info('开始登录:', { username: values.username });
+    logger.info('Start logging in:', { username: values.username });
     setLoading(true);
     setError('');
 
@@ -138,14 +138,14 @@ function LoginForm() {
 
       if (result.ok) {
         setLoading(false);
-        logger.info('认证信息已存储，准备跳转');
+        logger.info('Authentication information has been stored, ready to jump');
         try {
           router.push(redirectPath);
         } catch (navErr) {
-          logger.error('导航失败:', navErr);
+          logger.error('Navigation failed:', navErr);
           setError(t('auth.login.navFailed'));
         }
-        logger.info('已执行跳转命令');
+        logger.info('Jump command executed');
         return;
       }
 
@@ -158,7 +158,7 @@ function LoginForm() {
 
       setError(result.message || t('auth.login.loginFailedUnknown'));
     } catch (err) {
-      logger.error('登录错误:', err);
+      logger.error('Login error:', err);
       setError(err instanceof Error ? err.message : t('auth.login.loginFailedUnknown'));
     }
     setLoading(false);
@@ -219,7 +219,7 @@ function LoginForm() {
         form={form}
         onFinish={handleLogin}
         onFinishFailed={({ values, errorFields }) => {
-          logger.warn('表单验证失败:', errorFields);
+          logger.warn('Form validation failed:', errorFields);
           if (errorFields.length > 0) {
             setError(errorFields[0].errors[0] || t('auth.login.loginFailed'));
           }

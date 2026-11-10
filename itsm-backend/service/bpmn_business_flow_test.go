@@ -724,7 +724,7 @@ func TestBiz_StartNonExistentProcess(t *testing.T) {
 
 	_, err := engine.StartProcess(ctx, "nonexistent_key", "BK-BIZ-014", nil)
 	require.Error(t, err)
-	assert.Contains(t, err.Error(), "获取流程定义失败",
+	assert.Contains(t, err.Error(), "Failed to obtain process definition",
 		"Should return clear error when process definition doesn't exist")
 }
 

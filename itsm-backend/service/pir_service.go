@@ -43,9 +43,9 @@ func (s *ChangePIRService) CreatePIR(ctx context.Context, req *dto.CreateChangeP
 		First(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, fmt.Errorf("变更不存在")
+			return nil, fmt.Errorf("Change does not exist")
 		}
-		return nil, fmt.Errorf("获取变更失败: %w", err)
+		return nil, fmt.Errorf("Failed to get changes: %w", err)
 	}
 
 	// PIR 是「实施后回顾」：只有真正实施过的变更才有可回顾的事实。
@@ -57,8 +57,8 @@ func (s *ChangePIRService) CreatePIR(ctx context.Context, req *dto.CreateChangeP
 	default:
 		return nil, common.NewAppError(
 			common.ErrCodeConflict,
-			fmt.Sprintf("变更当前状态为 '%s'，尚未实施完成，不能做实施后回顾（PIR）。"+
-				"请等变更进入 completed / rolled_back / failed 之后再创建", changeEntity.Status),
+			fmt.Sprintf("The current status of the change is '%s', the implementation has not been completed, and post-implementation review (PIR) cannot be performed."+
+				"Please wait until the changes enter completed / rolled_back / failed before creating", changeEntity.Status),
 			http.StatusConflict,
 			ErrPIRRequiresImplementedChange,
 		)
@@ -69,10 +69,10 @@ func (s *ChangePIRService) CreatePIR(ctx context.Context, req *dto.CreateChangeP
 		Where(changepir.HasChangeWith(change.ID(req.ChangeID))).
 		Exist(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("检查PIR失败: %w", err)
+		return nil, fmt.Errorf("Failed to check PIR: %w", err)
 	}
 	if existingPIR {
-		return nil, fmt.Errorf("该变更已存在PIR，请使用更新接口")
+		return nil, fmt.Errorf("This change already exists in PIR, please use the update interface")
 	}
 
 	// 计算实际持续时间
@@ -93,7 +93,7 @@ func (s *ChangePIRService) CreatePIR(ctx context.Context, req *dto.CreateChangeP
 		Save(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to create PIR", "error", err, "change_id", req.ChangeID)
-		return nil, fmt.Errorf("创建PIR失败: %w", err)
+		return nil, fmt.Errorf("Failed to create PIR: %w", err)
 	}
 
 	// 设置可选字段
@@ -137,9 +137,9 @@ func (s *ChangePIRService) GetPIR(ctx context.Context, id, tenantID int) (*dto.C
 		First(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, fmt.Errorf("PIR不存在")
+			return nil, fmt.Errorf("PIR does not exist")
 		}
-		return nil, fmt.Errorf("获取PIR失败: %w", err)
+		return nil, fmt.Errorf("Failed to obtain PIR: %w", err)
 	}
 
 	changeTitle := ""
@@ -160,9 +160,9 @@ func (s *ChangePIRService) GetPIRByChange(ctx context.Context, changeID, tenantI
 		First(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, fmt.Errorf("该变更无PIR记录")
+			return nil, fmt.Errorf("There is no PIR record for this change")
 		}
-		return nil, fmt.Errorf("获取PIR失败: %w", err)
+		return nil, fmt.Errorf("Failed to obtain PIR: %w", err)
 	}
 
 	changeTitle := ""
@@ -190,7 +190,7 @@ func (s *ChangePIRService) ListPIRs(ctx context.Context, tenantID int, page, pag
 	// 获取总数
 	total, err := query.Count(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("获取PIR总数失败: %w", err)
+		return nil, fmt.Errorf("Failed to obtain total number of PIRs: %w", err)
 	}
 
 	// 分页查询
@@ -202,7 +202,7 @@ func (s *ChangePIRService) ListPIRs(ctx context.Context, tenantID int, page, pag
 		Limit(pageSize).
 		All(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("获取PIR列表失败: %w", err)
+		return nil, fmt.Errorf("Failed to obtain PIR list: %w", err)
 	}
 
 	// 构建响应列表
@@ -241,9 +241,9 @@ func (s *ChangePIRService) UpdatePIR(ctx context.Context, id int, req *dto.Updat
 		First(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, fmt.Errorf("PIR不存在")
+			return nil, fmt.Errorf("PIR does not exist")
 		}
-		return nil, fmt.Errorf("获取PIR失败: %w", err)
+		return nil, fmt.Errorf("Failed to obtain PIR: %w", err)
 	}
 
 	// 构建更新
@@ -270,7 +270,7 @@ func (s *ChangePIRService) UpdatePIR(ctx context.Context, id int, req *dto.Updat
 	pir, err = update.Save(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to update PIR", "error", err, "pir_id", id)
-		return nil, fmt.Errorf("更新PIR失败: %w", err)
+		return nil, fmt.Errorf("Failed to update PIR: %w", err)
 	}
 
 	s.logger.Infow("PIR updated successfully", "pir_id", id)
@@ -294,14 +294,14 @@ func (s *ChangePIRService) DeletePIR(ctx context.Context, id, tenantID int) erro
 		First(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return fmt.Errorf("PIR不存在")
+			return fmt.Errorf("PIR does not exist")
 		}
-		return fmt.Errorf("获取PIR失败: %w", err)
+		return fmt.Errorf("Failed to obtain PIR: %w", err)
 	}
 
 	err = s.client.ChangePIR.DeleteOne(pir).Exec(ctx)
 	if err != nil {
-		return fmt.Errorf("删除PIR失败: %w", err)
+		return fmt.Errorf("Failed to delete PIR: %w", err)
 	}
 
 	s.logger.Infow("PIR deleted successfully", "pir_id", id)

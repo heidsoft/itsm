@@ -122,7 +122,7 @@ func (p *Prober) probeDatabase(ctx context.Context) *probeSnapshot {
 	}
 	if p.db == nil {
 		snapshot.dbOK = false
-		snapshot.dbReason = "数据库连接未装配"
+		snapshot.dbReason = "Database connection is not configured"
 		return snapshot
 	}
 	// 快照是跨请求共享的缓存：发起刷新的请求取消时，不能把「数据库不可达」
@@ -131,7 +131,7 @@ func (p *Prober) probeDatabase(ctx context.Context) *probeSnapshot {
 	defer cancel()
 	if err := p.db.PingContext(probeCtx); err != nil {
 		snapshot.dbOK = false
-		snapshot.dbReason = "数据库不可达"
+		snapshot.dbReason = "Database is unreachable"
 		p.logger.Warnw("capability health probe: database unreachable", "error", err)
 	}
 	return snapshot
@@ -218,13 +218,13 @@ func (p *Prober) HealthFor(ctx context.Context, key string, tenantID int) *Healt
 		name := strings.TrimPrefix(key, "connector.")
 		if p.connectors == nil {
 			health.OK = false
-			health.Reason = "连接器运行时未装配"
+			health.Reason = "Connector runtime is not configured"
 			break
 		}
 		status, found := connectorHealth(p.connectorStatuses(ctx, tenantID), name)
 		if !found {
 			health.OK = false
-			health.Reason = "当前租户尚未启用该连接器"
+			health.Reason = "This connector is not enabled for the current tenant"
 			break
 		}
 		health.CheckedAt = status.CheckedAt
@@ -232,7 +232,7 @@ func (p *Prober) HealthFor(ctx context.Context, key string, tenantID int) *Healt
 			health.OK = false
 			health.Reason = status.Message
 			if health.Reason == "" {
-				health.Reason = "连接器健康检查失败"
+				health.Reason = "Connector health check failed"
 			}
 		}
 	case key == "identity.oidc":
@@ -240,22 +240,22 @@ func (p *Prober) HealthFor(ctx context.Context, key string, tenantID int) *Healt
 		if err != nil {
 			// 探测失败不谎报健康：如实降级并保留原因。
 			health.OK = false
-			health.Reason = "身份提供方配置读取失败"
+			health.Reason = "Failed to load identity provider configuration"
 			p.logger.Warnw("capability health probe: sso provider query failed",
 				"tenant_id", tenantID, "error", err)
 		} else if !configured {
 			health.OK = false
-			health.Reason = "当前租户尚未启用身份提供方"
+			health.Reason = "No identity provider is enabled for the current tenant"
 		}
 	case key == "ai":
 		// LLM 未配置不是部署故障（降级路径是产品语义），但对「AI 能力健康」
 		// 而言必须如实可见：矩阵若照报健康，调用方会把降级路径当完整能力卖。
 		if p.llmConfigured == nil {
 			health.OK = false
-			health.Reason = "LLM 配置探测未装配"
+			health.Reason = "LLM configuration probe is not configured"
 		} else if !p.llmConfigured() {
 			health.OK = false
-			health.Reason = "LLM 未配置（llm.*）：深度 AI 走降级路径，分诊/RAG 问答/摘要不经过模型"
+			health.Reason = "LLM is not configured (llm.*): advanced AI uses fallback processing; triage, RAG answers and summaries do not use a model"
 		}
 	}
 	return health

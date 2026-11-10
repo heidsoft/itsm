@@ -27,7 +27,7 @@ func (p *StubProvider) Execute(ctx context.Context, req cloud.ExecuteRequest) (*
 
 	if v, ok := req.Payload["compliance_ack"]; ok {
 		if b, ok2 := v.(bool); ok2 && !b {
-			return nil, fmt.Errorf("未确认合规条款")
+			return nil, fmt.Errorf("Compliance terms not confirmed")
 		}
 	}
 

@@ -103,7 +103,7 @@ func TestProvisioningCIProjectorSkipsWhenProviderResultIsIncomplete(t *testing.T
 }
 
 func TestProvisioningCIProjectorDefersWhenRequiredAttributesMissing(t *testing.T) {
-	writer := &fakeCIWriter{createErr: fmt.Errorf("属性 %s 为必填项 (%w)", "负责人", service.ErrCIAttributeValidation)}
+	writer := &fakeCIWriter{createErr: fmt.Errorf("Property %s is required (%w)", "负责人", service.ErrCIAttributeValidation)}
 
 	result := provisioningProjectorWith(&mockRepository{}, writer).
 		ProjectProvisionedResource(context.Background(), provisioningProjectionRequest())

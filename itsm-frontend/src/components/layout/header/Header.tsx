@@ -1,14 +1,13 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Layout, Button, Tooltip, Badge, Dropdown, message, Breadcrumb } from 'antd';
-import { PanelLeftClose, PanelLeftOpen, Bell, Bot, Globe, Home, Moon, Sun } from 'lucide-react';
+import { Layout, Button, Tooltip, Badge, message, Breadcrumb } from 'antd';
+import { PanelLeftClose, PanelLeftOpen, Bell, Bot, Home, Moon, Sun } from 'lucide-react';
 import { useTheme } from '@/lib/design-system/theme';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuthStore, useAuthStoreHydration } from '@/lib/store/auth-store';
 import { AuthService } from '@/lib/services/auth-service';
 import { DESIGN } from '@/design-system/tokens';
-import { useI18n } from '@/lib/i18n';
 import {
   TicketNotificationApi,
   toTicketNotification,
@@ -49,7 +48,6 @@ export const Header: React.FC<HeaderProps> = ({
   const pathname = usePathname();
   const { user, hasPermission, isAdmin } = useAuthStore();
   const { isDark, toggleTheme } = useTheme();
-  const { language, changeLanguage } = useI18n();
   useAuthStoreHydration();
 
   // 动态菜单驱动的面包屑：与 Sidebar 共享 useUserMenusQuery 缓存，
@@ -193,32 +191,6 @@ export const Header: React.FC<HeaderProps> = ({
     }
   }, []);
 
-  // 语言切换菜单
-  const languageItems = [
-    {
-      key: 'zh-CN',
-      label: (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ fontSize: 14 }}>中</span>
-          <span>中文</span>
-          {language === 'zh-CN' && <span style={{ color: DESIGN.colors.accent }}>✓</span>}
-        </div>
-      ),
-      onClick: () => changeLanguage('zh-CN'),
-    },
-    {
-      key: 'en-US',
-      label: (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ fontSize: 14 }}>En</span>
-          <span>English</span>
-          {language === 'en-US' && <span style={{ color: DESIGN.colors.accent }}>✓</span>}
-        </div>
-      ),
-      onClick: () => changeLanguage('en-US'),
-    },
-  ];
-
   return (
     <AntHeader className={styles.header} style={{ background: DESIGN.colors.surface }}>
       {/* 主行：面包屑/收缩按钮 + 右侧工具 */}
@@ -229,8 +201,8 @@ export const Header: React.FC<HeaderProps> = ({
             type="text"
             icon={collapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
             onClick={() => onCollapse(!collapsed)}
-            aria-label={collapsed ? '展开侧边栏' : '收起侧边栏'}
-            title={collapsed ? '展开侧边栏' : '收起侧边栏'}
+            aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
             className={styles.collapseButton}
             style={{
               width: 36,
@@ -244,7 +216,7 @@ export const Header: React.FC<HeaderProps> = ({
             // Hide breadcrumb on root/dashboard (single item with no navigation value)
             if (items.length <= 1 && (pathname === '/' || pathname === '/dashboard')) return null;
             return (
-              <div className={styles.breadcrumb} role="navigation" aria-label="面包屑导航">
+              <div className={styles.breadcrumb} role="navigation" aria-label="Breadcrumb navigation">
                 <Breadcrumb items={items} separator="/" />
               </div>
             );
@@ -266,13 +238,13 @@ export const Header: React.FC<HeaderProps> = ({
 
           {/* AI 助手入口：权限码与后端 permissions 表对齐（ai:read），admin 默认放行 */}
           {hasPermission('ai:read') || isAdmin() ? (
-            <Tooltip title="AI助手">
+            <Tooltip title="AI Assistant">
               <Button
                 type="text"
                 className={styles.actionButton}
                 onClick={() => router.push('/ai/chat')}
-                aria-label="AI助手"
-                title="AI助手"
+                aria-label="AI Assistant"
+                title="AI Assistant"
               >
                 <Bot size={18} />
               </Button>
@@ -280,14 +252,14 @@ export const Header: React.FC<HeaderProps> = ({
           ) : null}
 
           {/* 通知 */}
-          <Tooltip title="通知中心">
+          <Tooltip title="Notification Center">
             <Badge count={unreadCount} size="small" offset={[-2, 2]}>
               <Button
                 type="text"
                 className={`${styles.actionButton} ${styles.notificationButton}${notificationsOpen ? ` ${styles.active}` : ''}`}
                 onClick={() => setNotificationsOpen(true)}
-                aria-label="通知中心"
-                title="通知中心"
+                aria-label="Notification Center"
+                title="Notification Center"
               >
                 <Bell size={18} />
               </Button>
@@ -295,31 +267,18 @@ export const Header: React.FC<HeaderProps> = ({
           </Tooltip>
 
           {/* 主题切换 */}
-          <Tooltip title={isDark ? '切换到亮色' : '切换到暗色'}>
+          <Tooltip title={isDark ? 'Switch to light theme' : 'Switch to dark theme'}>
             <Button
               type="text"
               className={styles.actionButton}
               onClick={toggleTheme}
-              aria-label={isDark ? '切换到亮色' : '切换到暗色'}
-              title={isDark ? '切换到亮色' : '切换到暗色'}
+              aria-label={isDark ? 'Switch to light theme' : 'Switch to dark theme'}
+              title={isDark ? 'Switch to light theme' : 'Switch to dark theme'}
             >
               {isDark ? <Sun size={18} /> : <Moon size={18} />}
             </Button>
           </Tooltip>
 
-          {/* 语言切换 */}
-          <Dropdown menu={{ items: languageItems }} placement="bottomRight" trigger={['click']}>
-            <Tooltip title={language === 'zh-CN' ? '切换语言' : 'Switch Language'}>
-              <Button
-                type="text"
-                className={styles.actionButton}
-                aria-label={language === 'zh-CN' ? '切换语言' : 'Switch Language'}
-                title={language === 'zh-CN' ? '切换语言' : 'Switch Language'}
-              >
-                <Globe size={18} />
-              </Button>
-            </Tooltip>
-          </Dropdown>
 
           {/* 用户菜单 */}
           {isClient && (

@@ -439,7 +439,7 @@ func TestTicketServiceTaskHandler_Execute(t *testing.T) {
 			},
 		},
 		{
-			name: "无效的 business_id",
+			name: "Invalid business_id",
 			variables: map[string]interface{}{
 				"business_id": 99999,
 				"action":      "update_status",

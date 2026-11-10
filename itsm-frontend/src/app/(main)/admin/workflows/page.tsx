@@ -80,32 +80,32 @@ interface Workflow {
 // 工作流类型配置
 const WORKFLOW_TYPE_CONFIG = {
   [WORKFLOW_TYPES.TICKET]: {
-    label: '工单流程',
+    label: 'Ticket Process',
     color: 'cyan',
     icon: <FileText className="w-3 h-3" />,
   },
   [WORKFLOW_TYPES.INCIDENT]: {
-    label: '事件管理',
+    label: 'Incidents',
     color: 'red',
     icon: <AlertCircle className="w-3 h-3" />,
   },
   [WORKFLOW_TYPES.SERVICE_REQUEST]: {
-    label: '服务请求',
+    label: 'Service Request',
     color: 'blue',
     icon: <Users className="w-3 h-3" />,
   },
   [WORKFLOW_TYPES.CHANGE]: {
-    label: '变更管理',
+    label: 'Changes',
     color: 'orange',
     icon: <GitBranch className="w-3 h-3" />,
   },
   [WORKFLOW_TYPES.PROBLEM]: {
-    label: '问题管理',
+    label: 'Problems',
     color: 'purple',
     icon: <Settings className="w-3 h-3" />,
   },
   [WORKFLOW_TYPES.APPROVAL]: {
-    label: '审批流程',
+    label: 'Workflow',
     color: 'green',
     icon: <CheckCircle className="w-3 h-3" />,
   },
@@ -114,17 +114,17 @@ const WORKFLOW_TYPE_CONFIG = {
 // 工作流状态配置
 const STATUS_CONFIG = {
   [WORKFLOW_STATUS.ACTIVE]: {
-    label: '已启用',
+    label: 'Enabled',
     color: 'success',
     icon: <Play className="w-3 h-3" />,
   },
   [WORKFLOW_STATUS.INACTIVE]: {
-    label: '已停用',
+    label: 'Disabled',
     color: 'default',
     icon: <Pause className="w-3 h-3" />,
   },
   [WORKFLOW_STATUS.DRAFT]: {
-    label: '草稿',
+    label: 'Draft',
     color: 'processing',
     icon: <Edit className="w-3 h-3" />,
   },
@@ -168,7 +168,7 @@ const WorkflowManagement = () => {
       setWorkflows(workflowList);
     } catch (error) {
       console.error('Failed to load workflows:', error);
-      message.error('加载工作流数据失败');
+      message.error('Failed to load workflow data');
     } finally {
       setLoading(false);
     }
@@ -230,10 +230,10 @@ const WorkflowManagement = () => {
           return w;
         })
       );
-      message.success('工作流状态已更新');
+      message.success('Workflow status updated');
     } catch (error) {
       console.error('Failed to toggle workflow status:', error);
-      message.error('更新状态失败');
+      message.error('Failed to update status');
     }
   };
 
@@ -243,14 +243,14 @@ const WorkflowManagement = () => {
       setLoading(true);
       await WorkflowAPI.cloneProcessDefinition(workflow.id, {
         newKey: `${workflow.id}_copy_${Date.now()}`,
-        newName: `${workflow.name} (副本)`,
+        newName: `${workflow.name} (Copy)`,
         description: workflow.description,
       });
-      message.success('工作流已复制');
+      message.success('Workflow copied');
       loadWorkflows();
     } catch (error) {
       console.error('Failed to duplicate workflow:', error);
-      message.error('复制工作流失败');
+      message.error('Failed to copy workflow');
     } finally {
       setLoading(false);
     }
@@ -261,11 +261,11 @@ const WorkflowManagement = () => {
     try {
       setLoading(true);
       await WorkflowAPI.deleteWorkflow(workflowKey);
-      message.success('工作流已删除');
+      message.success('Workflow deleted');
       loadWorkflows();
     } catch (error) {
       console.error('Failed to delete workflow:', error);
-      message.error('删除工作流失败');
+      message.error('Failed to delete workflow');
     } finally {
       setLoading(false);
     }
@@ -278,12 +278,12 @@ const WorkflowManagement = () => {
       await Promise.all(
         selectedRowKeys.map(key => WorkflowAPI.deleteWorkflow(String(key)))
       );
-      message.success(`已删除 ${selectedRowKeys.length} 个工作流`);
+      message.success(`Deleted ${selectedRowKeys.length} workflows`);
       setSelectedRowKeys([]);
       loadWorkflows();
     } catch (error) {
       console.error('Failed to batch delete workflows:', error);
-      message.error('批量删除失败');
+      message.error('Batch delete failed');
     } finally {
       setLoading(false);
     }
@@ -306,7 +306,7 @@ const WorkflowManagement = () => {
         setDetailXml(definition.bpmnXml || '');
       })
       .catch(() => {
-        if (requestId === detailXmlRequestRef.current) setDetailXmlError('加载流程定义失败，无法预览');
+        if (requestId === detailXmlRequestRef.current) setDetailXmlError('Failed to load process definition and cannot preview');
       })
       .finally(() => {
         if (requestId === detailXmlRequestRef.current) setDetailXmlLoading(false);
@@ -325,7 +325,7 @@ const WorkflowManagement = () => {
           description: values.description,
           category: values.type,
         } as never);
-        message.success('工作流更新成功');
+        message.success('Workflow updated successfully');
       } else {
         const created = await WorkflowAPI.createWorkflow({
           code: values.name,
@@ -334,15 +334,15 @@ const WorkflowManagement = () => {
           type: (values.type as 'approval') || 'approval',
           status: 'draft',
         } as never);
-        message.success('工作流创建成功');
+        message.success('Workflow created successfully');
 
         const createdId = (created as { id?: number | string } | undefined)?.id;
         if (createdId) {
           modal.confirm({
-            title: '是否立即进入设计器编排流程？',
-            content: '工作流已创建为草稿，需要在设计器中编排节点后才能启用。',
-            okText: '进入设计器',
-            cancelText: '稍后再说',
+            title: 'Do you want to enter the designer orchestration process immediately?',
+            content: 'The workflow has been created as a draft and needs to be orchestrated in the designer before it can be enabled.',
+            okText: 'Enter the designer',
+            cancelText: 'Talk to you later',
             onOk: () => {
               router.push(`/workflow/designer?id=${createdId}`);
             },
@@ -356,7 +356,7 @@ const WorkflowManagement = () => {
       loadWorkflows();
     } catch (error) {
       console.error('Failed to save workflow:', error);
-      message.error('保存失败，请检查必填项或后端可用性');
+      message.error('Save failed, please check required fields or backend availability');
     } finally {
       setLoading(false);
     }
@@ -374,7 +374,7 @@ const WorkflowManagement = () => {
   // 表格列定义
   const columns = [
     {
-      title: '工作流信息',
+      title: 'Workflow information',
       dataIndex: 'name',
       key: 'name',
       width: 360,
@@ -390,13 +390,13 @@ const WorkflowManagement = () => {
             </Text>
           )}
           {record.createdBy && (
-            <div className="text-xs text-gray-500 mt-1">创建者: {record.createdBy}</div>
+            <div className="text-xs text-gray-500 mt-1">Created by: {record.createdBy}</div>
           )}
         </div>
       ),
     },
     {
-      title: '类型',
+      title: 'Type',
       dataIndex: 'type',
       key: 'type',
       align: 'center' as const,
@@ -412,7 +412,7 @@ const WorkflowManagement = () => {
       },
     },
     {
-      title: '状态',
+      title: 'Status',
       dataIndex: 'status',
       key: 'status',
       align: 'center' as const,
@@ -428,7 +428,7 @@ const WorkflowManagement = () => {
       },
     },
     {
-      title: '最后修改',
+      title: 'Last Modified',
       dataIndex: 'lastModified',
       key: 'lastModified',
       align: 'center' as const,
@@ -451,7 +451,7 @@ const WorkflowManagement = () => {
       },
     },
     {
-      title: '操作',
+      title: 'Actions',
       key: 'actions',
       align: 'center' as const,
       width: 180,
@@ -461,13 +461,13 @@ const WorkflowManagement = () => {
         const moreItems: MenuProps['items'] = [
           {
             key: 'view',
-            label: '查看详情',
+            label: 'View Details',
             icon: <Eye className="w-4 h-4" />,
             onClick: () => handleViewDetail(record),
           },
           {
             key: 'edit',
-            label: '编辑元数据',
+            label: 'Edit metadata',
             icon: <Edit className="w-4 h-4" />,
             onClick: () => {
               setSelectedWorkflow(record);
@@ -477,22 +477,22 @@ const WorkflowManagement = () => {
           },
           {
             key: 'duplicate',
-            label: '复制',
+            label: 'Copy',
             icon: <Copy className="w-4 h-4" />,
             onClick: () => handleDuplicate(record),
           },
           { type: 'divider' },
           {
             key: 'delete',
-            label: '删除',
+            label: 'Delete',
             icon: <Trash2 className="w-4 h-4" />,
             danger: true,
             onClick: () => {
               modal.confirm({
-                title: '确定要删除这个工作流吗？',
-                content: `将删除流程定义「${record.name}」，删除后无法恢复。`,
-                okText: '确定删除',
-                cancelText: '取消',
+                title: 'Are you sure you want to delete this workflow?',
+                content: `Process definition "will be deleted"${record.name}", it cannot be restored after deletion.`,
+                okText: 'Confirm deletion',
+                cancelText: 'Cancel',
                 okType: 'danger',
                 onOk: () => handleDelete(record.id),
               });
@@ -501,17 +501,17 @@ const WorkflowManagement = () => {
         ];
         return (
           <Space>
-            <Tooltip title="设计流程">
+            <Tooltip title="Design Process">
               <Button
-                aria-label="设计流程"
+                aria-label="Design Process"
                 type="text"
                 icon={<GitBranch className="w-4 h-4" />}
                 onClick={() => router.push(`/workflow/designer?id=${encodeURIComponent(record.id)}`)}
               />
             </Tooltip>
-            <Tooltip title={record.status === WORKFLOW_STATUS.ACTIVE ? '停用' : '启用'}>
+            <Tooltip title={record.status === WORKFLOW_STATUS.ACTIVE ? 'Disable' : 'Enabled'}>
               <Button
-                aria-label={record.status === WORKFLOW_STATUS.ACTIVE ? '停用' : '启用'}
+                aria-label={record.status === WORKFLOW_STATUS.ACTIVE ? 'Disable' : 'Enabled'}
                 type="text"
                 icon={
                   record.status === WORKFLOW_STATUS.ACTIVE ? (
@@ -525,10 +525,10 @@ const WorkflowManagement = () => {
               />
             </Tooltip>
             <Dropdown menu={{ items: moreItems }} trigger={['click']}>
-              <Tooltip title="更多">
+              <Tooltip title="More">
                 <Button
                   type="text"
-                  aria-label="更多操作"
+                  aria-label="More actions"
                   icon={<MoreHorizontal className="w-4 h-4" />}
                 />
               </Tooltip>
@@ -545,21 +545,22 @@ const WorkflowManagement = () => {
       <div>
         <Title level={2} className="!mb-2">
           <GitBranch className="inline-block w-6 h-6 mr-2" />
-          工作流管理
+
+          Workflow Management
         </Title>
-        <Text type="secondary">设计和管理业务流程，配置审批节点和自动化规则</Text>
+        <Text type="secondary">Design and manage business processes, configure approval nodes and automation rules</Text>
       </div>
 
       <UsageGuideCard
         style={{ marginBottom: 16 }}
-        title="工作流管理怎么用"
-        intro="本页管流程定义（新建/复制/启停/删除），节点编排要去 BPMN 设计器做。"
+        title="How to use workflow management"
+        intro="This page manages process definition (create/copy/start/stop/delete), and node arrangement needs to be done in BPMN designer."
         steps={[
-          '新建流程：点"创建工作流"填名称和说明（先存为草稿），进设计器排好节点和连线，再回本页启用。草稿没排好前不能启用。',
-          '行操作：点"设计流程"进设计器；点"复制"基于现有流程生成草稿副本；可启用/停用/删除，启用中的流程不能批量删。',
-          '想从模板导入（比如请假审批）：导入后去设计器确认节点连线完整再保存。',
-          '点"流程路由"进绑定页，把流程关联到工单等业务场景；业务对象满足路由规则时才会启动对应的流程实例。',
-          '验证：启用后建一条匹配的业务数据，去"工作流实例"看执行状态和待办任务，去"工作流审计"看流转记录。',
+          'Create a new process: Click "Create Workflow" to fill in the name and description (save as a draft first), enter the designer to arrange the nodes and connections, and then return to this page to enable it. The draft cannot be activated until it is scheduled.',
+          'Operation: Click "Design Process" to enter the designer; click "Copy" to generate a draft copy based on the existing process; it can be enabled/disabled/delete, and activated processes cannot be deleted in batches.',
+          'If you want to import from a template (such as leave approval): After importing, go to the designer to confirm that the node connections are complete before saving.',
+          'Click "Process Routing" to enter the binding page and associate the process with business scenarios such as work orders; the corresponding process instance will be started only when the business object meets the routing rules.',
+          'Verification: After enabling it, create a matching business data, go to "Workflow Instance" to see the execution status and to-do tasks, and go to "Workflow Audit" to see the transfer records.',
         ]}
       />
 
@@ -570,7 +571,7 @@ const WorkflowManagement = () => {
         <Col xs={24} sm={8}>
           <Card className="enterprise-card">
             <Statistic
-              title="工作流总数"
+              title="Total Workflows"
               value={stats.total}
               prefix={<GitBranch className="w-5 h-5" />}
               styles={{ content: { color: '#1890ff' } }}
@@ -580,7 +581,7 @@ const WorkflowManagement = () => {
         <Col xs={24} sm={8}>
           <Card className="enterprise-card">
             <Statistic
-              title="已启用"
+              title="Enabled"
               value={stats.active}
               prefix={<Play className="w-5 h-5" />}
               styles={{ content: { color: '#52c41a' } }}
@@ -590,7 +591,7 @@ const WorkflowManagement = () => {
         <Col xs={24} sm={8}>
           <Card className="enterprise-card">
             <Statistic
-              title="草稿"
+              title="Draft"
               value={stats.draft}
               prefix={<Edit className="w-5 h-5" />}
               styles={{ content: { color: '#722ed1' } }}
@@ -604,7 +605,7 @@ const WorkflowManagement = () => {
         <Row gutter={[16, 16]} align="middle">
           <Col xs={24} md={8}>
             <Input
-              placeholder="搜索工作流名称或描述..."
+              placeholder="Search workflow name or description..."
               prefix={<Search className="w-4 h-4 text-gray-400" />}
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
@@ -613,34 +614,35 @@ const WorkflowManagement = () => {
           </Col>
           <Col xs={24} md={4}>
             <Select
-              placeholder="工作流类型"
+              placeholder="Workflow type"
               value={typeFilter}
               onChange={setTypeFilter}
               style={{ width: '100%' }}
-              options={[{ value: 'all', label: '全部类型' }, ...Object.entries(WORKFLOW_TYPE_CONFIG).map(([key, config]) => ({ value: key, label: config.label }))]}
+              options={[{ value: 'all', label: 'All Types' }, ...Object.entries(WORKFLOW_TYPE_CONFIG).map(([key, config]) => ({ value: key, label: config.label }))]}
             />
           </Col>
           <Col xs={24} md={4}>
             <Select
-              placeholder="状态"
+              placeholder="Status"
               value={statusFilter}
               onChange={setStatusFilter}
               style={{ width: '100%' }}
-              options={[{ value: 'all', label: '全部状态' }, ...Object.entries(STATUS_CONFIG).map(([key, config]) => ({ value: key, label: config.label }))]}
+              options={[{ value: 'all', label: 'All Status' }, ...Object.entries(STATUS_CONFIG).map(([key, config]) => ({ value: key, label: config.label }))]}
             />
           </Col>
           <Col xs={24} md={8} className="text-right">
             <Space>
               {selectedRowKeys.length > 0 && (
                 <Popconfirm
-                  title="确定要批量删除选中的工作流吗？"
+                  title="Are you sure you want to delete the selected workflows in batches?"
                   onConfirm={handleBatchDelete}
-                  okText="确定删除"
-                  cancelText="取消"
+                  okText="Confirm deletion"
+                  cancelText="Cancel"
                   okType="danger"
                 >
                   <Button danger icon={<Trash2 className="w-4 h-4" />}>
-                    批量删除 ({selectedRowKeys.length})
+
+                    Batch delete ({selectedRowKeys.length})
                   </Button>
                 </Popconfirm>
               )}
@@ -648,7 +650,8 @@ const WorkflowManagement = () => {
                 icon={<Settings className="w-4 h-4" />}
                 onClick={() => router.push('/admin/process-routing')}
               >
-                绑定规则
+
+                Binding rules
               </Button>
               <Button
                 type="primary"
@@ -659,7 +662,8 @@ const WorkflowManagement = () => {
                   setShowCreateModal(true);
                 }}
               >
-                创建工作流
+
+                Create Workflow
               </Button>
             </Space>
           </Col>
@@ -669,7 +673,7 @@ const WorkflowManagement = () => {
       {/* 工作流列表 */}
       <Card className="enterprise-card">
         {filteredWorkflows.length === 0 && !loading ? (
-          <Empty description="暂无工作流，点击右上角按钮创建" />
+          <Empty description="There is no workflow yet. Click the button in the upper right corner to create it." />
         ) : (
           <Table
             columns={columns}
@@ -683,7 +687,7 @@ const WorkflowManagement = () => {
               pageSize: 10,
               showSizeChanger: true,
               showQuickJumper: true,
-              showTotal: total => `共 ${total} 条记录`,
+              showTotal: total => `Total ${total} records`,
             }}
             className="enterprise-table"
           />
@@ -695,7 +699,7 @@ const WorkflowManagement = () => {
         title={
           <span>
             <GitBranch className="w-4 h-4 mr-2" />
-            {selectedWorkflow ? '编辑工作流' : '创建工作流'}
+            {selectedWorkflow ? 'Edit Workflow' : 'Create Workflow'}
           </span>
         }
         open={showCreateModal}
@@ -707,36 +711,36 @@ const WorkflowManagement = () => {
         }}
         width={600}
         confirmLoading={loading}
-        okText="保存"
-        cancelText="取消"
+        okText="Save"
+        cancelText="Cancel"
       >
         <Form form={form} layout="vertical" className="mt-4">
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item
-                label="工作流名称"
+                label="Workflow Name"
                 name="name"
-                rules={[{ required: true, message: '请输入工作流名称' }]}
+                rules={[{ required: true, message: 'Please enter the workflow name' }]}
               >
-                <Input placeholder="请输入工作流名称" />
+                <Input placeholder="Please enter the workflow name" />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item
-                label="工作流类型"
+                label="Workflow type"
                 name="type"
-                rules={[{ required: true, message: '请选择工作流类型' }]}
+                rules={[{ required: true, message: 'Please select a workflow type' }]}
               >
-                <Select placeholder="选择工作流类型" options={Object.entries(WORKFLOW_TYPE_CONFIG).map(([key, config]) => ({ value: key, label: config.label }))} />
+                <Select placeholder="Select workflow type" options={Object.entries(WORKFLOW_TYPE_CONFIG).map(([key, config]) => ({ value: key, label: config.label }))} />
               </Form.Item>
             </Col>
           </Row>
           <Form.Item
-            label="描述"
+            label="Description"
             name="description"
-            rules={[{ required: true, message: '请输入工作流描述' }]}
+            rules={[{ required: true, message: 'Please enter the workflow description' }]}
           >
-            <Input.TextArea rows={3} placeholder="请输入工作流描述" />
+            <Input.TextArea rows={3} placeholder="Please enter the workflow description" />
           </Form.Item>
         </Form>
       </Modal>
@@ -746,7 +750,7 @@ const WorkflowManagement = () => {
         title={
           <div className="flex items-center gap-2">
             <Eye className="w-5 h-5" />
-            <span>工作流详情</span>
+            <span>Workflow details</span>
           </div>
         }
         open={showDetailModal}
@@ -755,7 +759,8 @@ const WorkflowManagement = () => {
         destroyOnHidden
         footer={[
           <Button key="close" onClick={() => setShowDetailModal(false)}>
-            关闭
+
+            Close
           </Button>,
         ]}
       >
@@ -767,10 +772,10 @@ const WorkflowManagement = () => {
             </div>
 
             <div>
-              <Title level={5}>基本信息</Title>
+              <Title level={5}>Basic Info</Title>
               <Row gutter={[16, 8]}>
                 <Col span={12}>
-                  <Text strong>工作流类型：</Text>
+                  <Text strong>Workflow type:</Text>
                   <Tag
                     color={
                       WORKFLOW_TYPE_CONFIG[
@@ -791,7 +796,7 @@ const WorkflowManagement = () => {
                   </Tag>
                 </Col>
                 <Col span={12}>
-                  <Text strong>当前状态：</Text>
+                  <Text strong>Current status:</Text>
                   <Tag
                     color={
                       STATUS_CONFIG[selectedWorkflow.status as keyof typeof STATUS_CONFIG]?.color
@@ -804,29 +809,29 @@ const WorkflowManagement = () => {
                   </Tag>
                 </Col>
                 <Col span={12}>
-                  <Text strong>版本：</Text>
+                  <Text strong>Version:</Text>
                   <Text>v{selectedWorkflow.version}</Text>
                 </Col>
                 <Col span={12}>
-                  <Text strong>流程标识：</Text>
+                  <Text strong>Process identification:</Text>
                   <Text copyable>{selectedWorkflow.id}</Text>
                 </Col>
                 <Col span={12}>
-                  <Text strong>创建时间：</Text>
+                  <Text strong>Creation time:</Text>
                   <Text>{selectedWorkflow.createdAt || '-'}</Text>
                 </Col>
                 <Col span={12}>
-                  <Text strong>最后修改：</Text>
+                  <Text strong>Last modified:</Text>
                   <Text>{selectedWorkflow.lastModified || '-'}</Text>
                 </Col>
               </Row>
             </div>
 
             <div>
-              <Title level={5}>流程预览</Title>
+              <Title level={5}>Process preview</Title>
               {detailXmlLoading ? (
                 <div className="flex h-[320px] items-center justify-center rounded border border-dashed border-gray-200">
-                  <Text type="secondary">正在加载流程定义...</Text>
+                  <Text type="secondary">Loading process definition...</Text>
                 </div>
               ) : detailXmlError ? (
                 <Text type="danger">{detailXmlError}</Text>
@@ -844,7 +849,8 @@ const WorkflowManagement = () => {
                   setShowDetailModal(false);
                 }}
               >
-                打开工作流设计器
+
+                Open Workflow Designer
               </Button>
             </div>
           </div>

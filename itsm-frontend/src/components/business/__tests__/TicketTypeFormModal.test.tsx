@@ -83,10 +83,10 @@ const renderModalWithBoundWorkflow = () => {
 };
 
 const fillBasicInfo = () => {
-  fireEvent.change(screen.getByPlaceholderText('例如：incident_bug'), {
+  fireEvent.change(screen.getByPlaceholderText("e.g. incident_bug"), {
     target: { value: 'incident_bug' },
   });
-  fireEvent.change(screen.getByPlaceholderText('例如：故障工单'), {
+  fireEvent.change(screen.getByPlaceholderText("e.g. Incident Bug"), {
     target: { value: '故障工单' },
   });
 };
@@ -98,11 +98,11 @@ describe('TicketTypeFormModal', () => {
   it('renders all configuration tabs in create mode', () => {
     renderModal(jest.fn().mockResolvedValue(undefined));
 
-    expect(screen.getByRole('tab', { name: /基本信息/ })).toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: /自定义字段/ })).toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: /审批设置/ })).toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: /SLA 设置/ })).toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: /自动分派/ })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: /Basic Info/ })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: /Custom Fields/ })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: /Approval Settings/ })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: /SLA Settings/ })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: /Auto Assignment/ })).toBeInTheDocument();
   });
 
   // 审批设置页签的字段必须在同一个 Form 内：Form 只包裹基本信息时，其余页签的
@@ -111,10 +111,10 @@ describe('TicketTypeFormModal', () => {
     const user = userEvent.setup();
     renderModal(jest.fn().mockResolvedValue(undefined));
 
-    await user.click(screen.getByRole('tab', { name: /审批设置/ }));
+    await user.click(screen.getByRole('tab', { name: /Approval Settings/ }));
 
-    expect(screen.getByText('审批级次在流程里配置')).toBeInTheDocument();
-    expect(screen.getByText('绑定 BPMN 工作流')).toBeInTheDocument();
+    expect(screen.getByText("Approval levels live in the workflow")).toBeInTheDocument();
+    expect(screen.getByText("Bind BPMN Workflow")).toBeInTheDocument();
   });
 
   // 审批链在本域运行时零消费（resolveApprovalWorkflow 只读 ProcessBinding 与 legacy
@@ -123,27 +123,27 @@ describe('TicketTypeFormModal', () => {
     const user = userEvent.setup();
     renderModal(jest.fn().mockResolvedValue(undefined));
 
-    await user.click(screen.getByRole('tab', { name: /审批设置/ }));
+    await user.click(screen.getByRole('tab', { name: /Approval Settings/ }));
 
-    expect(screen.queryByText('启用审批流程')).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /新增审批级/ })).not.toBeInTheDocument();
-    expect(screen.getByText('还没绑定工作流，这类工单不会进入审批')).toBeInTheDocument();
+    expect(screen.queryByText("Enable Approval Workflow")).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Add Approval Level/ })).not.toBeInTheDocument();
+    expect(screen.getByText("No workflow bound yet, so this ticket type will not go through approval")).toBeInTheDocument();
   });
 
   it('previews approval nodes of the bound workflow', async () => {
     const user = userEvent.setup();
     renderModalWithBoundWorkflow();
 
-    await user.click(screen.getByRole('tab', { name: /审批设置/ }));
+    await user.click(screen.getByRole('tab', { name: /Approval Settings/ }));
 
     expect(await screen.findByText('直属主管审批')).toBeInTheDocument();
     expect(screen.getByText('技术总监审批')).toBeInTheDocument();
     // serviceTask 不计入，所以是 2 而不是 3
-    expect(screen.getByText('当前流程包含 2 个人工节点')).toBeInTheDocument();
-    expect(screen.getByText('任一人通过即可')).toBeInTheDocument();
-    expect(screen.getByText('会签，需要全部通过')).toBeInTheDocument();
+    expect(screen.getByText("The bound workflow has 2 user task(s)")).toBeInTheDocument();
+    expect(screen.getByText("Any one approver is enough")).toBeInTheDocument();
+    expect(screen.getByText("Countersign, all approvers required")).toBeInTheDocument();
     expect(screen.getByText('team_lead')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /打开流程设计器/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Open workflow designer/ })).toBeInTheDocument();
   });
 
   it('surfaces a warning when the bound workflow cannot be loaded', async () => {
@@ -153,10 +153,10 @@ describe('TicketTypeFormModal', () => {
 
     renderModalWithBoundWorkflow();
 
-    fireEvent.click(screen.getByRole('tab', { name: /审批设置/ }));
+    fireEvent.click(screen.getByRole('tab', { name: /Approval Settings/ }));
 
     expect(
-      await screen.findByText('绑定流程的审批节点加载失败，请到流程设计器里确认'),
+      await screen.findByText("Could not load the approval nodes of the bound workflow. Please check it in the workflow designer."),
     ).toBeInTheDocument();
   });
 
@@ -164,11 +164,11 @@ describe('TicketTypeFormModal', () => {
     const user = userEvent.setup();
     renderModal(jest.fn().mockResolvedValue(undefined));
 
-    await user.click(screen.getByRole('tab', { name: /SLA 设置/ }));
-    expect(screen.getByText('启用 SLA')).toBeInTheDocument();
+    await user.click(screen.getByRole('tab', { name: /SLA Settings/ }));
+    expect(screen.getByText("Enable SLA")).toBeInTheDocument();
 
-    await user.click(screen.getByRole('tab', { name: /自动分派/ }));
-    expect(screen.getByText('启用自动分派')).toBeInTheDocument();
+    await user.click(screen.getByRole('tab', { name: /Auto Assignment/ }));
+    expect(screen.getByText("Enable auto assignment")).toBeInTheDocument();
   });
 
   it('collects form values on submit', async () => {
@@ -176,7 +176,7 @@ describe('TicketTypeFormModal', () => {
     renderModal(onSubmit);
 
     fillBasicInfo();
-    fireEvent.click(screen.getByRole('button', { name: /创\s*建/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Create/ }));
 
     await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
     const payload = onSubmit.mock.calls[0][0] as Record<string, unknown>;
@@ -194,12 +194,12 @@ describe('TicketTypeFormModal', () => {
 
     fillBasicInfo();
 
-    fireEvent.click(screen.getByRole('tab', { name: /自定义字段/ }));
-    fireEvent.click(screen.getByRole('button', { name: /新增字段/ }));
+    fireEvent.click(screen.getByRole('tab', { name: /Custom Fields/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Add Field/ }));
 
-    fireEvent.click(screen.getByRole('button', { name: /创\s*建/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Create/ }));
 
-    expect(await screen.findByText(/缺少显示名称/)).toBeInTheDocument();
+    expect(await screen.findByText(/Field #1 is missing a display name/)).toBeInTheDocument();
     expect(onSubmit).not.toHaveBeenCalled();
   });
 
@@ -208,11 +208,11 @@ describe('TicketTypeFormModal', () => {
     renderModal(onSubmit);
 
     fillBasicInfo();
-    fireEvent.click(screen.getByRole('button', { name: /创\s*建/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Create/ }));
 
     await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
-    expect(screen.getByRole('button', { name: /创\s*建/ })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: /创\s*建/ }));
+    expect(screen.getByRole('button', { name: /Create/ })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /Create/ }));
     await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(2));
   });
 });

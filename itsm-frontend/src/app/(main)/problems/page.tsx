@@ -167,17 +167,17 @@ export default function ProblemListPage() {
         return;
       }
       const columns: CsvColumn<Problem>[] = [
-        { title: '编号', render: (row) => row.problemNumber || `#${row.id}` },
-        { title: '标题', render: (row) => row.title },
-        { title: '状态', render: (row) => row.status },
-        { title: '优先级', render: (row) => row.priority },
-        { title: '分类', render: (row) => row.category },
-        { title: '处理人', render: (row) => row.assigneeName },
-        { title: '创建人', render: (row) => row.createdByName },
-        { title: '创建时间', render: (row) => csvDate(row.createdAt) },
-        { title: '更新时间', render: (row) => csvDate(row.updatedAt) },
+        { title: 'Number', render: (row) => row.problemNumber || `#${row.id}` },
+        { title: 'Title', render: (row) => row.title },
+        { title: 'Status', render: (row) => row.status },
+        { title: 'Priority', render: (row) => row.priority },
+        { title: 'Category', render: (row) => row.category },
+        { title: 'Assignee', render: (row) => row.assigneeName },
+        { title: 'Creator', render: (row) => row.createdByName },
+        { title: 'Created', render: (row) => csvDate(row.createdAt) },
+        { title: 'Updated At', render: (row) => csvDate(row.updatedAt) },
       ];
-      downloadCsv(`问题列表-${new Date().toISOString().slice(0, 10)}`, buildCsv(columns, rows));
+      downloadCsv(`Question List-${new Date().toISOString().slice(0, 10)}`, buildCsv(columns, rows));
       message.success(t('problems.exportSuccess', { count: rows.length }));
     } catch (error) {
       console.error('Failed to export problems:', error);

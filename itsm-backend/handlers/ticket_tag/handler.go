@@ -33,7 +33,7 @@ func NewHandler(tagService *service.TicketTagService, logger *zap.SugaredLogger)
 func tenantID(c *gin.Context) (int, bool) {
 	tid := c.GetInt("tenant_id")
 	if tid == 0 {
-		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		common.Fail(c, common.AuthFailedCode, "Tenant information is missing")
 		return 0, false
 	}
 	return tid, true
@@ -43,7 +43,7 @@ func tenantID(c *gin.Context) (int, bool) {
 func pathID(c *gin.Context) (int, bool) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "无效的ID参数")
+		common.Fail(c, common.ParamErrorCode, "Invalid ID parameter")
 		return 0, false
 	}
 	return id, true
@@ -56,17 +56,17 @@ func (h *Handler) failTagError(c *gin.Context, rawErr error, opMsg string, tagID
 	switch {
 	case errors.Is(rawErr, service.ErrTicketTagNameExists):
 		h.logger.Warnw("Ticket tag name conflict", "error", rawErr, "tenant_id", tid)
-		common.Conflict(c, "标签名称已存在", nil)
+		common.Conflict(c, "Tag name already exists", nil)
 	case errors.Is(rawErr, service.ErrTicketTagInUse):
 		h.logger.Warnw("Ticket tag still in use", "error", rawErr, "tag_id", tagID, "tenant_id", tid)
-		common.Conflict(c, "标签仍被工单使用，无法删除", nil)
+		common.Conflict(c, "The label is still used by the ticket and cannot be deleted.", nil)
 	case errors.Is(rawErr, service.ErrTicketTagNameBlank):
 		h.logger.Warnw("Ticket tag name blank", "error", rawErr, "tenant_id", tid)
-		common.Fail(c, common.ParamErrorCode, "标签名称不能为空")
+		common.Fail(c, common.ParamErrorCode, "Tag name cannot be empty")
 	case errors.Is(rawErr, service.ErrTicketTagNotFound), ent.IsNotFound(rawErr):
 		// 查询都带租户谓词，所以跨租户与真实不存在同样表现为 not found。
 		h.logger.Warnw("Ticket tag not found", "error", rawErr, "tag_id", tagID, "tenant_id", tid)
-		common.Fail(c, common.NotFoundCode, "标签不存在或无权访问")
+		common.Fail(c, common.NotFoundCode, "Tag does not exist or does not have access rights")
 	default:
 		h.logger.Errorw("Ticket tag operation failed",
 			"error", rawErr, "operation", opMsg, "tag_id", tagID, "tenant_id", tid)
@@ -78,7 +78,7 @@ func (h *Handler) failTagError(c *gin.Context, rawErr error, opMsg string, tagID
 func (h *Handler) CreateTag(c *gin.Context) {
 	var req service.CreateTagRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
@@ -106,7 +106,7 @@ func (h *Handler) UpdateTag(c *gin.Context) {
 
 	var req service.UpdateTagRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
@@ -142,7 +142,7 @@ func (h *Handler) DeleteTag(c *gin.Context) {
 		return
 	}
 
-	common.Success(c, gin.H{"message": "标签删除成功"})
+	common.Success(c, gin.H{"message": "Tag deleted successfully"})
 }
 
 // GetTag 获取标签
@@ -215,7 +215,7 @@ func (h *Handler) AssignTagsToTicket(c *gin.Context) {
 		Tags   []string `json:"tags"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
@@ -228,13 +228,13 @@ func (h *Handler) AssignTagsToTicket(c *gin.Context) {
 	if len(tagIDs) == 0 && len(req.Tags) > 0 {
 		resolved, resolveErr := h.tagService.ResolveTagIDsByNames(c.Request.Context(), req.Tags, tid, true)
 		if resolveErr != nil {
-			common.ParamErrorWithErr(c, resolveErr, "请求参数错误")
+			common.ParamErrorWithErr(c, resolveErr, "Wrong request parameters")
 			return
 		}
 		tagIDs = resolved
 	}
 	if len(tagIDs) == 0 {
-		common.Fail(c, common.ParamErrorCode, "tagIds 或 tags 必填")
+		common.Fail(c, common.ParamErrorCode, "tagIds or tags required")
 		return
 	}
 
@@ -244,7 +244,7 @@ func (h *Handler) AssignTagsToTicket(c *gin.Context) {
 		return
 	}
 
-	common.Success(c, gin.H{"message": "标签分配成功"})
+	common.Success(c, gin.H{"message": "Tag assigned successfully"})
 }
 
 // RemoveTagsFromTicket 从工单移除标签
@@ -259,7 +259,7 @@ func (h *Handler) RemoveTagsFromTicket(c *gin.Context) {
 		Tags   []string `json:"tags"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
@@ -272,13 +272,13 @@ func (h *Handler) RemoveTagsFromTicket(c *gin.Context) {
 	if len(tagIDs) == 0 && len(req.Tags) > 0 {
 		resolved, resolveErr := h.tagService.ResolveTagIDsByNames(c.Request.Context(), req.Tags, tid, false)
 		if resolveErr != nil {
-			common.ParamErrorWithErr(c, resolveErr, "请求参数错误")
+			common.ParamErrorWithErr(c, resolveErr, "Wrong request parameters")
 			return
 		}
 		tagIDs = resolved
 	}
 	if len(tagIDs) == 0 {
-		common.Fail(c, common.ParamErrorCode, "tagIds 或 tags 必填")
+		common.Fail(c, common.ParamErrorCode, "tagIds or tags required")
 		return
 	}
 
@@ -288,5 +288,5 @@ func (h *Handler) RemoveTagsFromTicket(c *gin.Context) {
 		return
 	}
 
-	common.Success(c, gin.H{"message": "标签移除成功"})
+	common.Success(c, gin.H{"message": "Tag removed successfully"})
 }

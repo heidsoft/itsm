@@ -16,25 +16,25 @@ interface ProblemStatsProps {
 const statCards = [
   {
     key: 'total',
-    label: '总问题数',
+    label: 'Total Problems',
     icon: <AlertTriangle className="w-5 h-5" />,
     tone: 'blue',
   },
   {
     key: 'open',
-    label: '待处理',
+    label: 'Pending',
     icon: <AlertTriangle className="w-5 h-5" />,
     tone: 'orange',
   },
   {
     key: 'inProgress',
-    label: '处理中',
+    label: 'In Progress',
     icon: <RefreshCw className="w-5 h-5" />,
     tone: 'cyan',
   },
   {
     key: 'resolved',
-    label: '已解决',
+    label: 'Resolved',
     icon: <AlertTriangle className="w-5 h-5" />,
     tone: 'green',
   },

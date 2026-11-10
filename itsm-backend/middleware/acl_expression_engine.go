@@ -140,7 +140,7 @@ func (l *Lexer) Tokenize() ([]Token, error) {
 				ident := l.readIdentifier()
 				l.tokens = append(l.tokens, Token{TokenIdentifier, ident})
 			} else {
-				return nil, fmt.Errorf("非法字符: %c (位置 %d)", ch, l.pos)
+				return nil, fmt.Errorf("Illegal character: %c (position %d)", ch, l.pos)
 			}
 		}
 	}
@@ -166,7 +166,7 @@ func (l *Lexer) readString() (string, error) {
 		sb.WriteByte(ch)
 		l.pos++
 	}
-	return "", fmt.Errorf("字符串未闭合")
+	return "", fmt.Errorf("String not closed")
 }
 
 func (l *Lexer) readNumber() string {
@@ -268,7 +268,7 @@ func (p *aclParser) advance() Token {
 func (p *aclParser) expect(t TokenType) (Token, error) {
 	tok := p.advance()
 	if tok.Type != t {
-		return tok, fmt.Errorf("期望 token 类型 %d, 实际 %d (%s)", t, tok.Type, tok.Value)
+		return tok, fmt.Errorf("Expected token type %d, actual %d (%s)", t, tok.Type, tok.Value)
 	}
 	return tok, nil
 }
@@ -354,7 +354,7 @@ func (p *aclParser) parseValue() (interface{}, error) {
 		p.advance()
 		num, err := strconv.Atoi(tok.Value)
 		if err != nil {
-			return nil, fmt.Errorf("无效数字: %s", tok.Value)
+			return nil, fmt.Errorf("Invalid number: %s", tok.Value)
 		}
 		return num, nil
 
@@ -378,7 +378,7 @@ func (p *aclParser) parseValue() (interface{}, error) {
 		val, exists := p.variables[varPath]
 		if !exists {
 			// 变量不存在，返回 nil（比较时将返回 false）
-			return nil, fmt.Errorf("变量未定义: %s", varPath)
+			return nil, fmt.Errorf("Undefined variable: %s", varPath)
 		}
 		return val, nil
 
@@ -394,7 +394,7 @@ func (p *aclParser) parseValue() (interface{}, error) {
 		return result, nil
 
 	default:
-		return nil, fmt.Errorf("意外的 token: %s (类型 %d)", tok.Value, tok.Type)
+		return nil, fmt.Errorf("Unexpected token: %s (type %d)", tok.Value, tok.Type)
 	}
 }
 
@@ -441,7 +441,7 @@ func compareValues(left, right interface{}, op string) (bool, error) {
 		return leftStr <= rightStr, nil
 	}
 
-	return false, fmt.Errorf("不支持的运算符: %s", op)
+	return false, fmt.Errorf("Unsupported operator: %s", op)
 }
 
 // toFloat64 尝试将值转为 float64

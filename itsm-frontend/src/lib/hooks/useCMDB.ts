@@ -288,7 +288,7 @@ export function useCreateCIMutation() {
   return useMutation({
     mutationFn: CMDBApi.createCI,
     onSuccess: () => {
-      message.success('配置项已创建');
+      message.success('Configuration item has been created');
       queryClient.invalidateQueries({ queryKey: CMDB_KEYS.cis() });
       queryClient.invalidateQueries({ queryKey: CMDB_KEYS.stats() });
     },
@@ -301,7 +301,7 @@ export function useUpdateCIMutation() {
     mutationFn: ({ id, data }: { id: string; data: Parameters<typeof CMDBApi.updateCI>[1] }) =>
       CMDBApi.updateCI(id, data),
     onSuccess: (_, variables) => {
-      message.success('配置项已更新');
+      message.success('Configuration item has been updated');
       queryClient.invalidateQueries({
         queryKey: CMDB_KEYS.ciDetail(variables.id),
       });
@@ -315,7 +315,7 @@ export function useDeleteCIMutation() {
   return useMutation({
     mutationFn: (id: string) => CMDBApi.deleteCI(id),
     onSuccess: () => {
-      message.success('配置项已删除');
+      message.success('Configuration item deleted');
       queryClient.invalidateQueries({ queryKey: CMDB_KEYS.cis() });
       queryClient.invalidateQueries({ queryKey: CMDB_KEYS.stats() });
     },
@@ -327,7 +327,7 @@ export function useBatchCreateCIsMutation() {
   return useMutation({
     mutationFn: CMDBApi.batchCreateCIs,
     onSuccess: result => {
-      message.success(`已批量创建 ${result.length} 个配置项`);
+      message.success(`Created in batches ${result.length} configuration items`);
       queryClient.invalidateQueries({ queryKey: CMDB_KEYS.cis() });
       queryClient.invalidateQueries({ queryKey: CMDB_KEYS.stats() });
     },
@@ -340,7 +340,7 @@ export function useCreateRelationshipMutation() {
     mutationFn: (data: Parameters<typeof CIRelationshipAPI.createRelationship>[0]) =>
       CIRelationshipAPI.createRelationship(data),
     onSuccess: result => {
-      message.success('关系已创建');
+      message.success('Relationship created');
       queryClient.invalidateQueries({
         queryKey: CMDB_KEYS.ciRelationships(String(result.sourceCiId)),
       });
@@ -359,7 +359,7 @@ export function useUpdateRelationshipMutation() {
     mutationFn: ({ id, data }: { id: number; data: Parameters<typeof CIRelationshipAPI.updateRelationship>[1] }) =>
       CIRelationshipAPI.updateRelationship(id, data),
     onSuccess: () => {
-      message.success('关系已更新');
+      message.success('Relationship updated');
       queryClient.invalidateQueries({ queryKey: [...CMDB_KEYS.all, 'relationships'] });
       queryClient.invalidateQueries({ queryKey: [...CMDB_KEYS.all, 'topology'] });
     },
@@ -374,7 +374,7 @@ export function useDeleteRelationshipMutation() {
         ? CIRelationshipAPI.deleteRelationship(id)
         : CIRelationshipAPI.deleteRelationship(Number(id)),
     onSuccess: () => {
-      message.success('关系已删除');
+      message.success('Relationship deleted');
       queryClient.invalidateQueries({ queryKey: [...CMDB_KEYS.all, 'relationships'] });
       queryClient.invalidateQueries({ queryKey: [...CMDB_KEYS.all, 'topology'] });
     },
@@ -386,7 +386,7 @@ export function useRunDiscoveryRuleMutation() {
   return useMutation({
     mutationFn: (ruleId: string) => CMDBApi.runDiscoveryRule(ruleId),
     onSuccess: () => {
-      message.success('发现规则已启动');
+      message.success('Found rule started');
       queryClient.invalidateQueries({ queryKey: CMDB_KEYS.discovery() });
     },
   });

@@ -92,9 +92,9 @@ describe('我的请求服务端过滤与计数（D17）', () => {
     await waitFor(() => expect(screen.getByText('云主机')).toBeInTheDocument());
 
     // 当前页只有 2 条，但“全部”必须显示服务端 7 条
-    expect(buttonByPrefix('全部')?.textContent).toContain('(7)');
-    expect(buttonByPrefix('已提交')?.textContent).toContain('(3)');
-    expect(buttonByPrefix('已交付')?.textContent).toContain('(1)');
+    expect(buttonByPrefix('All')?.textContent).toContain('(7)');
+    expect(buttonByPrefix("Submitted")?.textContent).toContain('(3)');
+    expect(buttonByPrefix('Delivered')?.textContent).toContain('(1)');
   });
 
   it('搜索关键字经防抖后透传给后端，并用服务端返回结果渲染', async () => {
@@ -121,7 +121,7 @@ describe('我的请求服务端过滤与计数（D17）', () => {
     renderPage();
     await waitFor(() => expect(screen.getByText('云主机')).toBeInTheDocument());
 
-    fireEvent.change(screen.getByPlaceholderText('搜索服务名称或描述...'), {
+    fireEvent.change(screen.getByPlaceholderText("Search service name or description..."), {
       target: { value: '数据库' },
     });
 
@@ -155,7 +155,7 @@ describe('我的请求服务端过滤与计数（D17）', () => {
     expect(listResolvers[0].query.status).toBeUndefined();
 
     // 切换为“已交付”，触发第二个请求并先返回
-    fireEvent.click(buttonByPrefix('已交付') as HTMLElement);
+    fireEvent.click(buttonByPrefix('Delivered') as HTMLElement);
     await waitFor(() => expect(listResolvers).toHaveLength(2));
 
     await act(async () => {
@@ -168,7 +168,7 @@ describe('我的请求服务端过滤与计数（D17）', () => {
       });
     });
     expect(screen.getByText('已交付请求')).toBeInTheDocument();
-    expect(document.body.textContent).toContain('共 30 条记录');
+    expect(document.body.textContent).toMatch(/total\s+30\s+records/i);
 
     // 旧的“全部”请求此时才返回，必须被守卫丢弃（含其 total/分页，不得回退页面数据范围）
     await act(async () => {
@@ -182,6 +182,6 @@ describe('我的请求服务端过滤与计数（D17）', () => {
     });
     expect(screen.queryByText('过期全部请求')).not.toBeInTheDocument();
     expect(screen.getByText('已交付请求')).toBeInTheDocument();
-    expect(document.body.textContent).toContain('共 30 条记录');
+    expect(document.body.textContent).toMatch(/total\s+30\s+records/i);
   });
 });

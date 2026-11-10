@@ -389,7 +389,7 @@ class HttpClient {
 
     // 在开发模式下，如果后端服务不可用，使用模拟数据
     if (process.env.NODE_ENV === 'development' && this.baseURL.includes('localhost')) {
-      logger.warn('开发模式：正在连接到后端服务，如果后端服务未运行，将显示错误');
+      logger.warn('Development mode: Connecting to the backend service, if the backend service is not running, an error will be displayed');
     }
 
     try {
@@ -479,10 +479,10 @@ class HttpClient {
         this.clearToken();
         if (outcome.state === 'expired') {
           this.redirectToLoginOnExpiredSession();
-          throw new Error('会话已过期，请重新登录');
+          throw new Error('Session has expired, please log in again');
         }
         // unavailable：不能断定会话失效，交给调用方展示错误并重试。
-        throw new Error(`无法确认会话状态：${outcome.reason}`);
+        throw new Error(`Unable to confirm session status:${outcome.reason}`);
       }
 
       if (!response?.ok) {
@@ -536,11 +536,11 @@ class HttpClient {
         // ApiRequestError 来自真实响应，服务端已可达，不能被网络文案替换掉状态码。
         if (error instanceof ApiRequestError) throw error;
         if (error.message.includes('fetch')) {
-          throw new Error('无法连接到服务器，请检查网络连接和后端服务是否运行');
+          throw new Error('Unable to connect to the server, please check whether the network connection and backend services are running');
         }
         throw error;
       }
-      throw new Error('未知错误发生');
+      throw new Error('An unknown error occurred');
     }
   }
 

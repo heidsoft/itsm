@@ -11,6 +11,7 @@ import (
 	"strings"
 	"testing"
 	"time"
+	"unicode"
 	"unicode/utf8"
 
 	"github.com/gin-gonic/gin"
@@ -45,6 +46,9 @@ func TestHandlerReturnsTenantAwareCapabilityContract(t *testing.T) {
 	require.Equal(t, acceptanceVersion, response.Data.AcceptanceVersion)
 	for _, item := range response.Data.Items {
 		require.Equal(t, acceptanceVersion, item.AcceptanceVersion)
+		for _, ch := range item.PilotReason {
+			require.False(t, unicode.Is(unicode.Han, ch), "fixed pilot explanation must use English")
+		}
 	}
 
 	byKey := make(map[string]Capability)
@@ -201,8 +205,8 @@ func TestWorkflowCapabilityStaysPilotUntilBridgingIsClosed(t *testing.T) {
 	require.NotNil(t, found, "能力矩阵缺少 workflow 条目")
 	require.Equal(t, MaturityPilot, found.maturity, "workflow 未补齐跨域闭环前不得申报 GA")
 	require.True(t, found.built)
-	require.Contains(t, found.pilotReason, "晋升条件")
-	require.Contains(t, found.pilotReason, "问题域")
+	require.Contains(t, found.pilotReason, "Promotion criteria")
+	require.Contains(t, found.pilotReason, "problem domain")
 }
 
 // TestPromotedCapabilitiesAreGA 锁定 2026-10-21 的通知域 GA 晋升：
@@ -321,13 +325,13 @@ func TestPilotReasonsDoNotCiteClosedBlockers(t *testing.T) {
 func validateServiceRequestPilotReason(reason string) error {
 	// 已落地/已澄清的事实，必须逐处在理由里出现。
 	for _, phrase := range []string{
-		"env://ITSM_ALIYUN", // 凭据双形态；真实账号验收用的正是 env://
-		"ClientToken",       // 幂等键 + 失败对账证据
-		"人工裁决",              // 判定落审计谱系
-		"永久性",               // 永久云错误快速失败，不再重投
-		"真实账号",              // 端到端验收已执行
-		"自动释放",              // 仍缺的动作，不能再笼统写成「缺补偿」
-		"晋升条件",
+		"env://ITSM_ALIYUN",   // 凭据双形态；真实账号验收用的正是 env://
+		"ClientToken",         // 幂等键 + 失败对账证据
+		"manual adjudication", // 判定落审计谱系
+		"permanent",           // 永久云错误快速失败，不再重投
+		"real-account",        // 端到端验收已执行
+		"automatic release",   // 仍缺的动作，不能再笼统写成「缺补偿」
+		"Promotion criteria",
 	} {
 		if !strings.Contains(reason, phrase) {
 			return fmt.Errorf("pilotReason 缺少已落地/已澄清事实 %q", phrase)
@@ -368,7 +372,7 @@ func TestServiceRequestPilotReasonReflectsDeliveryReality(t *testing.T) {
 
 	// 反向验证二：逐项删掉一个已落地事实也必须被拒，防止断言取并集后
 	// 靠其它关键词偶然通过。
-	for _, drop := range []string{"ClientToken", "人工裁决", "env://ITSM_ALIYUN"} {
+	for _, drop := range []string{"ClientToken", "manual adjudication", "env://ITSM_ALIYUN"} {
 		require.Error(t, validateServiceRequestPilotReason(strings.Replace(item.pilotReason, drop, "", 1)),
 			"移除 %q 后守卫仍应拒绝", drop)
 	}
@@ -388,7 +392,7 @@ func TestReportCapabilityIsTracked(t *testing.T) {
 	}
 	require.NotNil(t, found, "报表域必须在能力矩阵中可查")
 	require.Equal(t, MaturityPilot, found.maturity)
-	require.Contains(t, found.pilotReason, "晋升条件")
+	require.Contains(t, found.pilotReason, "Promotion criteria")
 }
 
 // TestPilotReasonsAreCurrentAndActionable 把「为什么还是 Pilot」从 Go 注释
@@ -409,7 +413,7 @@ func TestPilotReasonsAreCurrentAndActionable(t *testing.T) {
 			require.NotEmptyf(t, reason, "pilot 能力必须声明 pilotReason: %s", item.key)
 			require.GreaterOrEqualf(t, utf8.RuneCountInString(reason), 30,
 				"pilotReason 太短，无法说明阻断项: %s", item.key)
-			require.Containsf(t, reason, "晋升条件", "pilotReason 必须给出可验证的晋升条件: %s", item.key)
+			require.Containsf(t, reason, "Promotion criteria", "pilotReason 必须给出可验证的晋升条件: %s", item.key)
 			for _, placeholder := range []string{"TODO", "待补", "暂不支持", "未知"} {
 				require.NotContainsf(t, reason, placeholder,
 					"pilotReason 含占位词 %q，读者无法据此推进: %s", placeholder, item.key)

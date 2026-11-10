@@ -133,7 +133,7 @@ describe('/reports/tickets', () => {
     // 总数必须来自 getTicketStats。用 listTickets({pageSize:200}) 在浏览器里数，
     // 201 条只会数出 200，页面却把它当全量展示。
     expect(mockListTickets).not.toHaveBeenCalled();
-    expect(statisticText('工单总数')).toContain('201');
+    expect(statisticText("Total number of work orders")).toContain('201');
   });
 
   it('reports the real SLA breach count instead of a never-matching overdue status', async () => {
@@ -141,11 +141,11 @@ describe('/reports/tickets', () => {
 
     render(<TicketsReportPage />);
 
-    await waitFor(() => expect(screen.getByText('SLA 超时')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText("SLA timeout")).toBeInTheDocument());
 
     // 'overdue' 不是工单状态机的取值，按它过滤的卡片会永远显示 0；
     // 权威口径是 sla_states 里已超时的工单数。
-    expect(statisticText('SLA 超时')).toContain('7');
+    expect(statisticText("SLA timeout")).toContain('7');
   });
 
   it('keeps resolved and closed separate and labels the distribution from the shared taxonomy', async () => {
@@ -172,8 +172,8 @@ describe('/reports/tickets', () => {
       ]),
     );
     expect(priority).toHaveLength(5);
-    expect(statisticText('已解决')).toContain('50');
-    expect(statisticText('已关闭')).toContain('60');
+    expect(statisticText("Resolved")).toContain('50');
+    expect(statisticText("Closed")).toContain('60');
   });
 
   it('surfaces the load failure instead of rendering empty charts', async () => {
@@ -181,12 +181,12 @@ describe('/reports/tickets', () => {
 
     render(<TicketsReportPage />);
 
-    await waitFor(() => expect(screen.getByText('工单统计加载失败')).toBeInTheDocument());
-    expect(screen.getByRole('button', { name: '重试' })).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByText("Failed to load work order statistics")).toBeInTheDocument());
+    expect(screen.getByRole('button', { name: "Retry" })).toBeInTheDocument();
     // 异常不得只弹一条 toast 后继续渲染全 0 卡片和「暂无数据」图表：
     // 那会把接口故障伪装成「这个租户没有工单」。
     expect(screen.queryByTestId('chart-data')).not.toBeInTheDocument();
-    expect(screen.queryByText('工单总数')).not.toBeInTheDocument();
+    expect(screen.queryByText("Total number of work orders")).not.toBeInTheDocument();
   });
 
   it('shows the empty state for a tenant without tickets', async () => {
@@ -196,7 +196,7 @@ describe('/reports/tickets', () => {
 
     render(<TicketsReportPage />);
 
-    await waitFor(() => expect(screen.getByText('当前租户还没有工单')).toBeInTheDocument());
-    expect(screen.queryByText('工单状态分布')).not.toBeInTheDocument();
+    await waitFor(() => expect(screen.getByText("The current tenant does not have a work order yet")).toBeInTheDocument());
+    expect(screen.queryByText("Work order status distribution")).not.toBeInTheDocument();
   });
 });

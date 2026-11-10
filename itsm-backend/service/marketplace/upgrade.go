@@ -118,7 +118,7 @@ func (s *Service) UpgradeInstallation(ctx context.Context, tenantID, itemID int,
 		target = strings.TrimSpace(item.LatestVersion)
 	}
 	if target == "" {
-		return nil, fmt.Errorf("%w: 商品 %s 没有可升级到的版本", ErrMarketplaceUpgradeTargetInvalid, item.Name)
+		return nil, fmt.Errorf("%w: Product %s has no version to upgrade to", ErrMarketplaceUpgradeTargetInvalid, item.Name)
 	}
 	if target == normalizeUpgradeVersion(installation.InstalledVersion) {
 		return &UpgradeResult{Installation: installation, FromVersion: target, ToVersion: target}, nil

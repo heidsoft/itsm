@@ -1,7 +1,7 @@
 # 🛣️ ITSM Roadmap
 
 > **Source of truth for what is shipping, what is shipping next, and
-> what is parked.** Updated as part of every release. Last synced: 2026-11-03（应用市场交付语义闭环并晋升「可用」，条目见下方「当前未发布改进」；能力矩阵 `marketplace` 行同步摘除 pilotReason）。此前 2026-10-29：v1.6.16–v1.6.20 五版本条目级回填完成——此前该区间只有 CHANGELOG 无 ROADMAP 条目；v1.6.21–v1.6.34 的增量以 `CHANGELOG.md` 为准，待下个发布节点统一回填。同日：v1.7 两项提前收口确认——AI Evaluator CI gate（v1.6.16 落地，四指标阈值已进 backend-ci）与 Skill Registry UI（v1.6.16 落地）。P0 数据库结构护栏迁移 `20261027_prod_schema_guards.sql` 落地 29 索引/唯一键）。
+> what is parked.** Updated as part of every release. Last synced: 2026-11-06（应用市场交付语义闭环并晋升「可用」，条目见下方「当前未发布改进」；能力矩阵 `marketplace` 行同步摘除 pilotReason）。此前 2026-10-29：v1.6.16–v1.6.20 五版本条目级回填完成——此前该区间只有 CHANGELOG 无 ROADMAP 条目；v1.6.21–v1.6.34 的增量以 `CHANGELOG.md` 为准，待下个发布节点统一回填。同日：v1.7 两项提前收口确认——AI Evaluator CI gate（v1.6.16 落地，四指标阈值已进 backend-ci）与 Skill Registry UI（v1.6.16 落地）。P0 数据库结构护栏迁移 `20261027_prod_schema_guards.sql` 落地 29 索引/唯一键）。
 >
 > Cross-references:
 > - Design outlines: [docs/prd/](./docs/prd)（当前仅 1 篇）+ [plans/](./plans)（专项计划与审计）
@@ -105,7 +105,7 @@ Concretely that means:
 - [x] **分层迁移收尾** — legacy controller 全部退役，新代码统一进入 `handlers/<domain>` 垂直分层；swagger 路由冲突、菜单/认证契约断裂等收敛问题清零。
 - [x] **状态机与错误语义加固** — 变更状态推进 CAS 并发防护；问题/事件状态机违规返回 409 业务语义而非 500；`super_admin` 通配权限链路（登录 / `/auth/me` / 前端判定）对齐。
 - [x] **可靠执行补强** — commandbus 对聚合已删除的命令立即死信；审批链收口 SQL 缺列修复；业务流程回归套件（63 项集成 + 27 项生命周期深度）全绿。
-- [x] **开源体验补强** — `make dev-seed-demo` 一键演示数据集（事件/问题/变更/知识库，幂等），README 快速开始接入；产品定位明示 **v1.6.x 界面中文优先**，完整界面 i18n 规划至 v1.7。
+- [x] **开源体验补强** — `make dev-seed-demo` 一键演示数据集（事件/问题/变更/知识库，幂等），README 快速开始接入；This checkout now uses English-only UI text; saved-language migration and login rendering are covered by the English regression tests.
 - [x] **行级权限守卫（写路径对称）** — incident 生命周期（ack/resolve/close/reopen/escalate）、ticket 四操作、change 非审批路径、release 写路径统一补 owner/role 守卫；四域 Update/Delete 接入 DataScope 校验；RBAC ResourceActionMap 补齐 releases 显式映射（`controller/` 已清空，仅余空目录）。
 - [x] **错误语义与可观测性统一** — 行级拒绝 403 被 handler 兜底吞成 500 的根因修复，四域错误映射统一走 `common.RespondError`；AI 持久化失败经 zap 与计数器暴露，静默失败不再不可观测。
 - [x] **租户隔离与上下文防线** — 租户/用户上下文缺失统一为 401（`TenantIDOrUnauthorized`）；change / cloud / BPMN 等域 30+ 处无保护类型断言与 `tenantID=0` fail-open 跨租户风险清零；`tenant_id` 豁免单一源 + 启动扫表 guard 接入长驻进程与 cmd/cmdb 路径。

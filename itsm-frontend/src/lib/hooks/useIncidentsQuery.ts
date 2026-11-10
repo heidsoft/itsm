@@ -32,7 +32,7 @@ export interface UseIncidentsQueryResult {
 }
 
 const DEFAULT_PAGE_SIZE = 10;
-const DEFAULT_ERROR_MESSAGE = '加载事件列表失败，请稍后重试';
+const DEFAULT_ERROR_MESSAGE = 'Failed to load incident list, please try again later';
 
 /**
  * Manages the incident list query lifecycle: pagination, filter inputs,

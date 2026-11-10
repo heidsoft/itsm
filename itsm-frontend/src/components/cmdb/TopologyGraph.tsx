@@ -98,7 +98,7 @@ const CINode: React.FC<NodeProps<any>> = ({ data }) => {
         </div>
       </div>
 
-      <Tooltip title={`重要性: ${data.criticality}`}>
+      <Tooltip title={`Importance: ${data.criticality}`}>
         <div
           style={{
             position: 'absolute',
@@ -205,8 +205,8 @@ const TopologyGraphViewInner: React.FC<TopologyGraphViewProps> = ({
       setGraph(null);
       setNodes([]);
       setEdges([]);
-      setLoadError('拓扑数据加载失败，请稍后重试。');
-      message.error('加载拓扑图失败');
+      setLoadError('Topology data loading failed, please try again later.');
+      message.error('Failed to load topology map');
     } finally {
       setLoading(false);
     }
@@ -260,7 +260,7 @@ const TopologyGraphViewInner: React.FC<TopologyGraphViewProps> = ({
       const analysis = await CIRelationshipAPI.analyzeImpact(node.id);
       setImpactAnalysis(analysis);
     } catch (error) {
-      message.error('获取影响分析失败');
+      message.error('Failed to obtain impact analysis');
     }
   };
 
@@ -272,10 +272,10 @@ const TopologyGraphViewInner: React.FC<TopologyGraphViewProps> = ({
   };
 
   const riskLevelLabels: Record<string, string> = {
-    critical: '致命',
-    high: '高',
-    medium: '中',
-    low: '低',
+    critical: 'Fatal',
+    high: 'High',
+    medium: 'Medium',
+    low: 'Low',
   };
 
   return (
@@ -284,8 +284,8 @@ const TopologyGraphViewInner: React.FC<TopologyGraphViewProps> = ({
         title={
           <Space>
             <Network />
-            <span>服务拓扑图</span>
-            {graph && <Tag color='blue'>{graph.totalNodes} 个节点</Tag>}
+            <span>Service topology diagram</span>
+            {graph && <Tag color='blue'>{graph.totalNodes}  nodes</Tag>}
           </Space>
         }
         extra={
@@ -295,18 +295,18 @@ const TopologyGraphViewInner: React.FC<TopologyGraphViewProps> = ({
               onChange={setDepth}
               style={{ width: 100 }}
               options={[
-                { value: 1, label: '1层' },
-                { value: 2, label: '2层' },
-                { value: 3, label: '3层' },
+                { value: 1, label: '1st floor' },
+                { value: 2, label: '2nd floor' },
+                { value: 3, label: '3rd floor' },
               ]}
             />
-            <Tooltip title='刷新'>
+            <Tooltip title="Refresh">
               <Button
                 icon={<RotateCcw />}
                 onClick={loadTopology}
                 loading={loading}
                 disabled={loading}
-                aria-label='刷新拓扑'
+                aria-label="Refresh topology"
               />
             </Tooltip>
           </Space>
@@ -324,7 +324,7 @@ const TopologyGraphViewInner: React.FC<TopologyGraphViewProps> = ({
             <div
               style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height }}
             >
-              <Spin size='large' description='加载拓扑图...' />
+              <Spin size='large' description="Loading topology map..." />
             </div>
           ) : loadError ? (
             <div
@@ -333,11 +333,12 @@ const TopologyGraphViewInner: React.FC<TopologyGraphViewProps> = ({
               <Alert
                 type='warning'
                 showIcon
-                title='拓扑图暂不可用'
+                title="Topology map is temporarily unavailable"
                 description={loadError}
                 action={
                   <Button size='small' onClick={loadTopology}>
-                    重试
+
+                    Retry
                   </Button>
                 }
               />
@@ -346,7 +347,7 @@ const TopologyGraphViewInner: React.FC<TopologyGraphViewProps> = ({
             <div
               style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height }}
             >
-              <Empty description='暂无拓扑数据' image={Empty.PRESENTED_IMAGE_SIMPLE} />
+              <Empty description="No topology data yet" image={Empty.PRESENTED_IMAGE_SIMPLE} />
             </div>
           ) : (
             <ReactFlow
@@ -386,17 +387,17 @@ const TopologyGraphViewInner: React.FC<TopologyGraphViewProps> = ({
         >
           <Space split='|'>
             <Space>
-              <span>节点状态:</span>
-              <Badge color='#52c41a' text='正常' />
-              <Badge color='#faad14' text='警告' />
-              <Badge color='#ff4d4f' text='故障' />
+              <span>Node status:</span>
+              <Badge color='#52c41a' text="OK" />
+              <Badge color='#faad14' text="Warning" />
+              <Badge color='#ff4d4f' text="Bug" />
             </Space>
             <Space>
-              <span>关系强度:</span>
-              <span style={{ color: '#ff4d4f' }}>● 关键</span>
-              <span style={{ color: '#fa8c16' }}>● 高</span>
-              <span style={{ color: '#1890ff' }}>● 中</span>
-              <span style={{ color: '#8c8c8c' }}>● 低</span>
+              <span>Relationship Strength:</span>
+              <span style={{ color: '#ff4d4f' }}>● Key</span>
+              <span style={{ color: '#fa8c16' }}>● High</span>
+              <span style={{ color: '#1890ff' }}>● Medium</span>
+              <span style={{ color: '#8c8c8c' }}>● Low</span>
             </Space>
           </Space>
         </div>
@@ -407,10 +408,10 @@ const TopologyGraphViewInner: React.FC<TopologyGraphViewProps> = ({
         title={
           <Space>
             <AlertTriangle />
-            <span>影响分析 - {selectedNode?.name}</span>
+            <span>Impact Analysis - {selectedNode?.name}</span>
             {impactAnalysis && (
               <Tag color={riskLevelColors[impactAnalysis.riskLevel]}>
-                {riskLevelLabels[impactAnalysis.riskLevel]}风险
+                {riskLevelLabels[impactAnalysis.riskLevel]}Risk
               </Tag>
             )}
           </Space>
@@ -430,23 +431,23 @@ const TopologyGraphViewInner: React.FC<TopologyGraphViewProps> = ({
                   | 'info'
                   | 'success'
               }
-              title='影响摘要'
+              title="Impact summary"
               description={impactAnalysis.summary}
               showIcon
               style={{ marginBottom: 16 }}
             />
 
             {/* 上游影响 */}
-            <Card title='上游影响（依赖此CI的）' size='small' style={{ marginBottom: 16 }}>
+            <Card title="Upstream impact (depending on this CI)" size='small' style={{ marginBottom: 16 }}>
               {impactAnalysis.upstreamImpact.length > 0 ? (
                 <List
                   dataSource={impactAnalysis.upstreamImpact}
                   renderItem={item => (
                     <List.Item>
                       <Descriptions column={1} size='small'>
-                        <Descriptions.Item label='CI名称'>{item.ciName}</Descriptions.Item>
-                        <Descriptions.Item label='关系'>{item.relationship}</Descriptions.Item>
-                        <Descriptions.Item label='影响程度'>
+                        <Descriptions.Item label="CI name">{item.ciName}</Descriptions.Item>
+                        <Descriptions.Item label="Relationship">{item.relationship}</Descriptions.Item>
+                        <Descriptions.Item label="Impact Level">
                           <Tag color={riskLevelColors[item.impactLevel]}>
                             {riskLevelLabels[item.impactLevel]}
                           </Tag>
@@ -456,21 +457,21 @@ const TopologyGraphViewInner: React.FC<TopologyGraphViewProps> = ({
                   )}
                 />
               ) : (
-                <Empty description='无上游影响' image={Empty.PRESENTED_IMAGE_SIMPLE} />
+                <Empty description="No upstream impact" image={Empty.PRESENTED_IMAGE_SIMPLE} />
               )}
             </Card>
 
             {/* 下游影响 */}
-            <Card title='下游影响（此CI依赖的）' size='small' style={{ marginBottom: 16 }}>
+            <Card title="Downstream impact (this CI depends on)" size='small' style={{ marginBottom: 16 }}>
               {impactAnalysis.downstreamImpact.length > 0 ? (
                 <List
                   dataSource={impactAnalysis.downstreamImpact}
                   renderItem={item => (
                     <List.Item>
                       <Descriptions column={1} size='small'>
-                        <Descriptions.Item label='CI名称'>{item.ciName}</Descriptions.Item>
-                        <Descriptions.Item label='关系'>{item.relationship}</Descriptions.Item>
-                        <Descriptions.Item label='影响程度'>
+                        <Descriptions.Item label="CI name">{item.ciName}</Descriptions.Item>
+                        <Descriptions.Item label="Relationship">{item.relationship}</Descriptions.Item>
+                        <Descriptions.Item label="Impact Level">
                           <Tag color={riskLevelColors[item.impactLevel]}>
                             {riskLevelLabels[item.impactLevel]}
                           </Tag>
@@ -480,16 +481,16 @@ const TopologyGraphViewInner: React.FC<TopologyGraphViewProps> = ({
                   )}
                 />
               ) : (
-                <Empty description='无下游影响' image={Empty.PRESENTED_IMAGE_SIMPLE} />
+                <Empty description="No downstream effects" image={Empty.PRESENTED_IMAGE_SIMPLE} />
               )}
             </Card>
 
             {/* 关键依赖 */}
             {impactAnalysis.criticalDependencies.length > 0 && (
-              <Card title='关键依赖' size='small' style={{ marginBottom: 16 }}>
+              <Card title="Critical dependency" size='small' style={{ marginBottom: 16 }}>
                 <Alert
                   type='error'
-                  title='以下为关键依赖，变更需谨慎'
+                  title="The following are key dependencies, please be careful when making changes."
                   description={
                     <ul style={{ margin: '8px 0', paddingLeft: 20 }}>
                       {impactAnalysis.criticalDependencies.map((dep, idx) => (
@@ -505,7 +506,7 @@ const TopologyGraphViewInner: React.FC<TopologyGraphViewProps> = ({
 
             {/* 受影响的工单 */}
             {impactAnalysis.affectedTickets.length > 0 && (
-              <Card title='受影响的工单' size='small' style={{ marginBottom: 16 }}>
+              <Card title="Affected Tickets" size='small' style={{ marginBottom: 16 }}>
                 <List
                   size='small'
                   dataSource={impactAnalysis.affectedTickets}
@@ -513,7 +514,7 @@ const TopologyGraphViewInner: React.FC<TopologyGraphViewProps> = ({
                     <List.Item>
                       <List.Item.Meta
                         title={`#${ticket.id} ${ticket.title}`}
-                        description={`状态: ${ticket.status} | 优先级: ${ticket.priority}`}
+                        description={`Status: ${ticket.status} | Priority: ${ticket.priority}`}
                       />
                     </List.Item>
                   )}
@@ -523,7 +524,7 @@ const TopologyGraphViewInner: React.FC<TopologyGraphViewProps> = ({
 
             {/* 受影响的事件 */}
             {impactAnalysis.affectedIncidents.length > 0 && (
-              <Card title='受影响的事件' size='small'>
+              <Card title="Affected events" size='small'>
                 <List
                   size='small'
                   dataSource={impactAnalysis.affectedIncidents}
@@ -531,7 +532,7 @@ const TopologyGraphViewInner: React.FC<TopologyGraphViewProps> = ({
                     <List.Item>
                       <List.Item.Meta
                         title={`#${incident.id} ${incident.title}`}
-                        description={`状态: ${incident.status} | 严重程度: ${incident.severity}`}
+                        description={`Status: ${incident.status} | Severity: ${incident.severity}`}
                       />
                     </List.Item>
                   )}
@@ -540,7 +541,7 @@ const TopologyGraphViewInner: React.FC<TopologyGraphViewProps> = ({
             )}
           </div>
         ) : (
-          <Spin description='加载影响分析...' />
+          <Spin description="Loading impact analysis..." />
         )}
       </Drawer>
     </>

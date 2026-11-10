@@ -103,7 +103,7 @@ export class ErrorHandler {
       errorInfo = {
         type: this.mapHttpStatusToErrorType(error.status || 500),
         severity: this.mapErrorTypeToSeverity(this.mapHttpStatusToErrorType(error.status || 500)),
-        message: error.message || 'API请求失败',
+        message: error.message || 'API request failed',
         code: error.status,
         details: { context, originalError: error },
         timestamp: new Date().toISOString(),
@@ -123,7 +123,7 @@ export class ErrorHandler {
       errorInfo = {
         type: ErrorType.UNKNOWN,
         severity: ErrorSeverity.MEDIUM,
-        message: '未知错误',
+        message: 'Unknown error',
         details: { context, originalError: error },
         timestamp: new Date().toISOString(),
         url: window.location.href,
@@ -154,7 +154,7 @@ export class ErrorHandler {
     const errorInfo: ErrorInfo = {
       type: ErrorType.VALIDATION,
       severity: ErrorSeverity.LOW,
-      message: '表单验证失败',
+      message: 'Form validation failed',
       details: { validationErrors: errors },
       timestamp: new Date().toISOString(),
       url: window.location.href,
@@ -189,21 +189,21 @@ export class ErrorHandler {
   // 显示用户通知
   private showUserNotification(errorInfo: ErrorInfo): void {
     const { severity, message: errorMessage } = errorInfo;
-     
+
     const _type = errorInfo.type;
 
     // 根据严重程度选择通知方式
     switch (severity) {
       case ErrorSeverity.CRITICAL:
         notification.error({
-          message: '系统错误',
+          message: 'System error',
           description: errorMessage,
           duration: 0, // 不自动关闭
         });
         break;
       case ErrorSeverity.HIGH:
         notification.error({
-          message: '操作失败',
+          message: 'Operation failed',
           description: errorMessage,
           duration: 5,
         });
@@ -344,13 +344,14 @@ export class ErrorBoundary extends React.Component<
       return (
         <div className={styles.errorBoundary}>
           <div className={styles.errorBoundaryContent}>
-            <h2 className={styles.errorBoundaryTitle}>出现错误</h2>
+            <h2 className={styles.errorBoundaryTitle}>An error occurred</h2>
             <p className={styles.errorBoundaryMessage}>{this.state.error?.message}</p>
             <button
               onClick={() => this.setState({ hasError: false, error: undefined })}
               className={styles.retryButton}
             >
-              重试
+
+              Retry
             </button>
           </div>
         </div>

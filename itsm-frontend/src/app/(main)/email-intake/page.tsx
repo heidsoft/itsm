@@ -48,27 +48,27 @@ interface User {
 const { Title, Text, Paragraph } = Typography;
 
 const statusMeta: Record<string, { color: string; label: string }> = {
-  PROCESSING: { color: 'processing', label: '处理中' },
-  NEED_INFORMATION: { color: 'warning', label: '缺少资料' },
-  WAITING_CUSTOMER: { color: 'warning', label: '等待客户' },
-  MANUAL_REVIEW: { color: 'orange', label: '人工复核' },
-  VERIFIED: { color: 'success', label: '核验通过' },
-  INCIDENT_CREATED: { color: 'blue', label: '已创建事件' },
-  REJECTED: { color: 'error', label: '已拒绝' },
+  PROCESSING: { color: 'processing', label: 'In Progress' },
+  NEED_INFORMATION: { color: 'warning', label: 'Missing data' },
+  WAITING_CUSTOMER: { color: 'warning', label: 'Waiting for customers' },
+  MANUAL_REVIEW: { color: 'orange', label: 'Manual review' },
+  VERIFIED: { color: 'success', label: 'Verification passed' },
+  INCIDENT_CREATED: { color: 'blue', label: 'Event created' },
+  REJECTED: { color: 'error', label: 'Rejected' },
 };
 
 // 客户状态：后端 service_customer.status（启用/停用，停用由 DisableCustomer 置为 inactive）
 const customerStatusMeta: Record<string, { color: string; label: string }> = {
-  active: { color: 'green', label: '启用' },
-  inactive: { color: 'default', label: '已停用' },
+  active: { color: 'green', label: 'Enabled' },
+  inactive: { color: 'default', label: 'Disabled' },
 };
 
 // 支持合同状态：后端 support_contract.status（active/terminated/expired/pending）
 const contractStatusMeta: Record<string, { color: string; label: string }> = {
-  active: { color: 'success', label: '生效中' },
-  terminated: { color: 'error', label: '已终止' },
-  expired: { color: 'warning', label: '已过期' },
-  pending: { color: 'default', label: '待生效' },
+  active: { color: 'success', label: 'In effect' },
+  terminated: { color: 'error', label: 'Terminated' },
+  expired: { color: 'warning', label: 'Expired' },
+  pending: { color: 'default', label: 'To be effective' },
 };
 
 const formatTime = (value?: string): string => formatDateTime(value) || '-';
@@ -112,7 +112,7 @@ export default function EmailIntakePage() {
       setTotal(response.total);
     } catch (error) {
       if (requestId === listRequest.current) {
-        message.error(`加载邮件处理队列失败：${(error as Error).message}`);
+        message.error(`Failed to load mail processing queue:${(error as Error).message}`);
       }
     } finally {
       if (requestId === listRequest.current) setLoading(false);
@@ -145,7 +145,7 @@ export default function EmailIntakePage() {
           }))
         );
     } catch (error) {
-      message.error(`加载主数据失败：${(error as Error).message}`);
+      message.error(`Failed to load master data:${(error as Error).message}`);
     }
   }, [message]);
 
@@ -165,7 +165,7 @@ export default function EmailIntakePage() {
       setDetail(result);
       correctionForm.setFieldsValue(result.canonicalData ?? {});
     } catch (error) {
-      message.error(`加载会话详情失败：${(error as Error).message}`);
+      message.error(`Failed to load session details:${(error as Error).message}`);
     } finally {
       if (requestId === detailRequest.current) setDetailLoading(false);
     }
@@ -176,10 +176,10 @@ export default function EmailIntakePage() {
     setActionLoading(true);
     try {
       const updated = await emailIntakeService[action](detail.id, detail.version);
-      message.success('操作已完成');
+      message.success('Operation completed');
       await Promise.all([loadConversations(), openDetail(updated)]);
     } catch (error) {
-      message.error(error instanceof Error && error.message ? error.message : '操作失败');
+      message.error(error instanceof Error && error.message ? error.message : 'Operation failed');
     } finally {
       setActionLoading(false);
     }
@@ -191,10 +191,10 @@ export default function EmailIntakePage() {
     try {
       const fields = await correctionForm.validateFields();
       const updated = await emailIntakeService.correct(detail.id, detail.version, fields);
-      message.success('修正已保存并重新核验');
+      message.success('Correction saved and rechecked');
       await Promise.all([loadConversations(), openDetail(updated)]);
     } catch (error) {
-      if (error instanceof Error) message.error(error.message ? error.message : '保存修正失败');
+      if (error instanceof Error) message.error(error.message ? error.message : 'Failed to save fixes');
     } finally {
       setActionLoading(false);
     }
@@ -208,10 +208,10 @@ export default function EmailIntakePage() {
       const updated = await emailIntakeService.override(detail.id, detail.version, values.reason);
       setOverrideOpen(false);
       overrideForm.resetFields();
-      message.success('已记录强制开单原因并创建事件');
+      message.success('Forced billing reason has been recorded and event created');
       await Promise.all([loadConversations(), openDetail(updated)]);
     } catch (error) {
-      if (error instanceof Error) message.error(error.message ? error.message : '强制开单失败');
+      if (error instanceof Error) message.error(error.message ? error.message : 'Forced order opening failed');
     } finally {
       setActionLoading(false);
     }
@@ -278,21 +278,21 @@ export default function EmailIntakePage() {
           endAt: values.period[1].toISOString(),
         });
       }
-      message.success('保存成功');
+      message.success('SaveSuccess');
       setEntityModal(undefined);
       setEditingCustomer(undefined);
       setEditingContract(undefined);
       form.resetFields();
       await loadMasterData();
     } catch (error) {
-      if (error instanceof Error) message.error(error.message ? error.message : '保存失败');
+      if (error instanceof Error) message.error(error.message ? error.message : 'SaveFailed');
     }
   };
 
   const columns = useMemo(
     () => [
       {
-        title: '状态',
+        title: 'Status',
         dataIndex: 'status',
         width: 110,
         render: (value: string) => (
@@ -300,25 +300,25 @@ export default function EmailIntakePage() {
         ),
       },
       {
-        title: '客户',
+        title: 'Customer',
         dataIndex: 'customerName',
         ellipsis: true,
         render: (value: string) => value || '-',
       },
       {
-        title: '分部',
+        title: 'Branch',
         dataIndex: 'branchName',
         width: 140,
         render: (value: string) => value || '-',
       },
       {
-        title: '合同',
+        title: 'Contract',
         dataIndex: 'contractNumber',
         width: 150,
         render: (value: string) => value || '-',
       },
       {
-        title: '可信度',
+        title: 'Credibility',
         dataIndex: 'confidence',
         width: 130,
         render: (value: number) => (
@@ -326,20 +326,21 @@ export default function EmailIntakePage() {
         ),
       },
       {
-        title: '事件',
+        title: 'Incident',
         dataIndex: 'incidentNumber',
         width: 150,
         render: (value: string, record: EmailConversation) =>
           value ? <a href={`/incidents/${record.incidentId}`}>{value}</a> : '-',
       },
-      { title: '最后邮件', dataIndex: 'lastMessageAt', width: 180, render: formatTime },
+      { title: 'Last email', dataIndex: 'lastMessageAt', width: 180, render: formatTime },
       {
-        title: '操作',
+        title: 'Actions',
         width: 80,
         fixed: 'right' as const,
         render: (_: unknown, record: EmailConversation) => (
           <Button type='link' onClick={() => openDetail(record)}>
-            处理
+
+            Process
           </Button>
         ),
       },
@@ -352,7 +353,7 @@ export default function EmailIntakePage() {
       <Space className='mb-4' wrap>
         <Select
           allowClear
-          placeholder='全部状态'
+          placeholder="All Status"
           value={status}
           onChange={(value?: string) => {
             setStatus(value);
@@ -365,7 +366,8 @@ export default function EmailIntakePage() {
           }))}
         />
         <Button icon={<RefreshCw size={14} />} onClick={loadConversations}>
-          刷新
+
+          Refresh
         </Button>
       </Space>
       <Table
@@ -375,13 +377,13 @@ export default function EmailIntakePage() {
         columns={columns}
         dataSource={conversations}
         scroll={{ x: 1100 }}
-        locale={{ emptyText: '暂无邮件报障记录' }}
+        locale={{ emptyText: 'No email fault report record yet' }}
         pagination={{
           current: page,
           pageSize,
           total,
           showSizeChanger: true,
-          showTotal: (value) => `共 ${value} 条会话`,
+          showTotal: (value) => `Total ${value} conversations`,
           onChange: (nextPage, nextSize) => {
             setPage(nextPage);
             setPageSize(nextSize);
@@ -395,25 +397,26 @@ export default function EmailIntakePage() {
     <div className='space-y-4'>
       <Space wrap>
         <Button type='primary' onClick={() => setEntityModal('customer')}>
-          新增客户
+
+          Add new customer
         </Button>
-        <Button onClick={() => setEntityModal('branch')}>新增分部</Button>
-        <Button onClick={() => setEntityModal('contract')}>新增支持合同</Button>
-        <Button onClick={() => setEntityModal('source')}>新增来源组织</Button>
-        <Button onClick={() => setEntityModal('externalReference')}>新增外部合同映射</Button>
+        <Button onClick={() => setEntityModal('branch')}>Add new branch</Button>
+        <Button onClick={() => setEntityModal('contract')}>Add support contract</Button>
+        <Button onClick={() => setEntityModal('source')}>Add new source organization</Button>
+        <Button onClick={() => setEntityModal('externalReference')}>Add external contract mapping</Button>
       </Space>
-      <Card title='服务客户'>
+      <Card title="Serving Customers">
         <Table
           rowKey='id'
           size='small'
           pagination={false}
           dataSource={customers}
           columns={[
-            { title: '名称', dataIndex: 'name' },
-            { title: '简称', dataIndex: 'shortName' },
-            { title: '别名', dataIndex: 'aliases', render: (v: string[]) => v?.join('、') || '-' },
+            { title: 'Name', dataIndex: 'name' },
+            { title: 'Abbreviation', dataIndex: 'shortName' },
+            { title: 'Alias', dataIndex: 'aliases', render: (v: string[]) => v?.join('、') || '-' },
             {
-              title: '状态',
+              title: 'Status',
               dataIndex: 'status',
               render: (v: string) => {
                 const meta = customerStatusMeta[v];
@@ -421,7 +424,7 @@ export default function EmailIntakePage() {
               },
             },
             {
-              title: '操作',
+              title: 'Actions',
               render: (_: unknown, record: ServiceCustomer) => (
                 <Space>
                   <Button
@@ -432,7 +435,8 @@ export default function EmailIntakePage() {
                       form.setFieldsValue(record);
                     }}
                   >
-                    编辑
+
+                    Edit
                   </Button>
                   <Button
                     type='link'
@@ -440,7 +444,7 @@ export default function EmailIntakePage() {
                     disabled={record.status !== 'active'}
                     onClick={() =>
                       modal.confirm({
-                        title: '停用该客户？',
+                        title: 'Deactivate this customer?',
                         onOk: async () => {
                           await emailIntakeService.disableCustomer(record.id);
                           await loadMasterData();
@@ -448,7 +452,8 @@ export default function EmailIntakePage() {
                       })
                     }
                   >
-                    停用
+
+                    Disable
                   </Button>
                 </Space>
               ),
@@ -456,21 +461,21 @@ export default function EmailIntakePage() {
           ]}
         />
       </Card>
-      <Card title='支持合同'>
+      <Card title="Support Contract">
         <Table
           rowKey='id'
           size='small'
           pagination={false}
           dataSource={contracts}
           columns={[
-            { title: '合同号', dataIndex: 'contractNumber' },
+            { title: 'Contract number', dataIndex: 'contractNumber' },
             {
-              title: '客户',
+              title: 'Customer',
               dataIndex: 'customerId',
               render: (id: number) => customers.find(item => item.id === id)?.name ?? id,
             },
             {
-              title: '状态',
+              title: 'Status',
               dataIndex: 'status',
               render: (v: string) => {
                 const meta = contractStatusMeta[v];
@@ -478,12 +483,12 @@ export default function EmailIntakePage() {
               },
             },
             {
-              title: '有效期',
+              title: 'Validity date',
               render: (_: unknown, record: SupportContract) =>
                 `${formatTime(record.startAt)} — ${formatTime(record.endAt)}`,
             },
             {
-              title: '操作',
+              title: 'Actions',
               render: (_: unknown, record: SupportContract) => (
                 <Space>
                   <Button
@@ -503,7 +508,8 @@ export default function EmailIntakePage() {
                       });
                     }}
                   >
-                    编辑
+
+                    Edit
                   </Button>
                   <Button
                     type='link'
@@ -511,8 +517,8 @@ export default function EmailIntakePage() {
                     disabled={record.status !== 'active'}
                     onClick={() =>
                       modal.confirm({
-                        title: '终止该合同？',
-                        content: '终止后自动开单将立即被阻止。',
+                        title: 'Terminate this contract?',
+                        content: 'Automatic order opening will be blocked immediately after termination.',
                         onOk: async () => {
                           await emailIntakeService.terminateContract(record.id);
                           await loadMasterData();
@@ -520,7 +526,8 @@ export default function EmailIntakePage() {
                       })
                     }
                   >
-                    终止
+
+                    Termination
                   </Button>
                 </Space>
               ),
@@ -528,28 +535,28 @@ export default function EmailIntakePage() {
           ]}
         />
       </Card>
-      <Card title='来源组织'>
+      <Card title="Source organization">
         <Table
           rowKey='id'
           size='small'
           pagination={false}
           dataSource={sources}
           columns={[
-            { title: '组织', dataIndex: 'name' },
+            { title: 'Organization', dataIndex: 'name' },
             {
-              title: '邮箱',
+              title: 'Email',
               dataIndex: 'emailAddresses',
               render: (v: string[]) => v?.join('、') || '-',
             },
             {
-              title: '域名',
+              title: 'Domain',
               dataIndex: 'emailDomains',
               render: (v: string[]) => v?.join('、') || '-',
             },
           ]}
         />
       </Card>
-      <Card title='外部合同号映射'>
+      <Card title="External contract number mapping">
         <Table
           rowKey='id'
           size='small'
@@ -557,25 +564,25 @@ export default function EmailIntakePage() {
           dataSource={externalReferences}
           columns={[
             {
-              title: '来源组织',
+              title: 'Source organization',
               dataIndex: 'sourceOrganizationId',
               render: (id: number) => sources.find(item => item.id === id)?.name ?? id,
             },
-            { title: '外部合同号', dataIndex: 'externalContractNumber' },
+            { title: 'External contract number', dataIndex: 'externalContractNumber' },
             {
-              title: '内部支持合同',
+              title: 'Internal Support Contract',
               dataIndex: 'supportContractId',
               render: (id: number) => contracts.find(item => item.id === id)?.contractNumber ?? id,
             },
             {
-              title: '操作',
+              title: 'Actions',
               render: (_: unknown, record: ExternalContractReference) => (
                 <Button
                   type='link'
                   danger
                   onClick={() =>
                     modal.confirm({
-                      title: '删除该映射？',
+                      title: 'Delete this mapping?',
                       onOk: async () => {
                         await emailIntakeService.deleteExternalContractReference(record.id);
                         await loadMasterData();
@@ -583,7 +590,8 @@ export default function EmailIntakePage() {
                     })
                   }
                 >
-                  删除
+
+                  Delete
                 </Button>
               ),
             },
@@ -597,34 +605,38 @@ export default function EmailIntakePage() {
     <div className='space-y-5'>
       <div>
         <Title level={2} className='!mb-1'>
-          客户与合同
+
+          Customers and Contracts
         </Title>
         <Text type='secondary'>
-          AI 邮件报障工作台：客户、支持合同与来源组织主数据，AI 负责提取，客户与合同规则负责授权开单。
+
+          AI email fault reporting workbench: customer, support contract and source organization master data, AI is responsible for extraction, customer and contract rules are responsible for authorizing billing.
         </Text>
       </div>
       <Alert
         type='info'
         showIcon
-        title='自动开单默认关闭，建议先用观察模式验证后再启用'
+        title="Automatic order opening is turned off by default. It is recommended to use observation mode to verify before enabling it."
       />
       <Tabs
         items={[
-          { key: 'queue', label: 'NOC 处理队列', children: queue },
-          { key: 'master', label: '客户与合同主数据', children: masterData },
+          { key: 'queue', label: 'NOC processing queue', children: queue },
+          { key: 'master', label: 'Customer and Contract Master Data', children: masterData },
           {
             key: 'oncall',
-            label: '值班配置',
+            label: 'Duty configuration',
             children: (
               <Card>
                 <Space>
                   <Button type='primary' onClick={() => setEntityModal('schedule')}>
-                    新增排班
+
+                    Add new shift schedule
                   </Button>
-                  <Button onClick={() => setEntityModal('shift')}>新增班次</Button>
+                  <Button onClick={() => setEntityModal('shift')}>Add new flight</Button>
                 </Space>
                 <Paragraph type='secondary' className='!mt-4'>
-                  PoC 使用显式起止时间班次；值班用户必须是对应支持组的启用成员。
+
+                  PoC uses explicit start and end time shifts; the shift user must be an enabled member of the corresponding support group.
                 </Paragraph>
               </Card>
             ),
@@ -634,7 +646,7 @@ export default function EmailIntakePage() {
 
       <Drawer
         width={760}
-        title={`会话 ${detail?.conversationToken ?? ''}`}
+        title={`Session ${detail?.conversationToken ?? ''}`}
         open={Boolean(detail)}
         loading={detailLoading}
         onClose={() => {
@@ -654,37 +666,37 @@ export default function EmailIntakePage() {
               size='small'
               column={2}
               items={[
-                { key: 'customer', label: '客户', children: detail.customerName || '-' },
-                { key: 'branch', label: '分部', children: detail.branchName || '-' },
-                { key: 'contract', label: '合同', children: detail.contractNumber || '-' },
+                { key: 'customer', label: 'Customer', children: detail.customerName || '-' },
+                { key: 'branch', label: 'Branch', children: detail.branchName || '-' },
+                { key: 'contract', label: 'Contract', children: detail.contractNumber || '-' },
                 {
                   key: 'confidence',
-                  label: 'AI 可信度',
+                  label: 'AI credibility',
                   children: `${Math.round(detail.confidence * 100)}%`,
                 },
                 {
                   key: 'missing',
-                  label: '缺失字段',
+                  label: 'Missing field',
                   span: 2,
-                  children: detail.missingFields?.join('、') || '无',
+                  children: detail.missingFields?.join('、') || 'None',
                 },
               ]}
             />
-            <Card size='small' title='人工修正'>
+            <Card size='small' title="Manual correction">
               <Form form={correctionForm} layout='vertical'>
-                <Form.Item name='customerName' label='客户名称'>
+                <Form.Item name='customerName' label="Customer name">
                   <Input />
                 </Form.Item>
-                <Form.Item name='branchName' label='分部名称'>
+                <Form.Item name='branchName' label="Branch name">
                   <Input />
                 </Form.Item>
-                <Form.Item name='reportedContractNumber' label='报障合同号'>
+                <Form.Item name='reportedContractNumber' label="Failure report contract number">
                   <Input />
                 </Form.Item>
-                <Form.Item name='title' label='标题'>
+                <Form.Item name='title' label="Title">
                   <Input maxLength={500} />
                 </Form.Item>
-                <Form.Item name='description' label='故障描述'>
+                <Form.Item name='description' label="Fault description">
                   <Input.TextArea rows={4} maxLength={5000} />
                 </Form.Item>
                 <Space wrap>
@@ -693,10 +705,12 @@ export default function EmailIntakePage() {
                     disabled={actionLoading}
                     onClick={saveCorrections}
                   >
-                    保存并重新核验
+
+                    Save and recheck
                   </Button>
                   <Button disabled={actionLoading} onClick={() => runAction('revalidate')}>
-                    仅重新核验
+
+                    Recheck only
                   </Button>
                   <Button
                     type='primary'
@@ -704,13 +718,16 @@ export default function EmailIntakePage() {
                     disabled={actionLoading || detail.status !== 'VERIFIED'}
                     onClick={() => runAction('confirm')}
                   >
-                    确认开单
+
+                    Confirm billing
                   </Button>
                   <Button danger disabled={actionLoading} onClick={() => runAction('reject')}>
-                    拒绝
+
+                    Rejected
                   </Button>
                   <Button disabled={actionLoading} onClick={() => runAction('retry')}>
-                    重试
+
+                    Retry
                   </Button>
                   <Button
                     danger
@@ -718,17 +735,19 @@ export default function EmailIntakePage() {
                     icon={<ShieldAlert size={14} />}
                     onClick={() => setOverrideOpen(true)}
                   >
-                    强制开单
+
+                    Forced order opening
                   </Button>
                 </Space>
               </Form>
             </Card>
-            <Card size='small' title='邮件原文安全预览'>
+            <Card size='small' title="Security preview of original email text">
               {detail.messages.length ? (
                 <>
                   <Text strong>{detail.messages[detail.messages.length - 1].subject}</Text>
                   <Paragraph type='secondary'>
-                    来自：{detail.messages[detail.messages.length - 1].fromAddress} ·{' '}
+
+                    From:{detail.messages[detail.messages.length - 1].fromAddress} ·{' '}
                     {formatTime(detail.messages[detail.messages.length - 1].receivedAt)}
                   </Paragraph>
                   <pre className='max-h-80 overflow-auto whitespace-pre-wrap rounded bg-slate-50 p-3'>
@@ -736,10 +755,10 @@ export default function EmailIntakePage() {
                   </pre>
                 </>
               ) : (
-                '暂无邮件'
+                'No email yet'
               )}
             </Card>
-            <Card size='small' title='AI 与发送审计'>
+            <Card size='small' title="AI and sending audit">
               <pre className='max-h-72 overflow-auto rounded bg-slate-50 p-3 text-xs'>
                 {JSON.stringify(
                   { analyses: detail.analyses, outboundMessages: detail.outboundMessages },
@@ -753,25 +772,25 @@ export default function EmailIntakePage() {
       </Drawer>
 
       <Modal
-        title='高风险：强制开单'
+        title="High risk: forced opening of orders"
         open={overrideOpen}
         confirmLoading={actionLoading}
         onCancel={() => setOverrideOpen(false)}
         onOk={submitOverride}
         okButtonProps={{ danger: true }}
-        okText='确认并开单'
+        okText="Confirm and issue order"
       >
         <Alert
           type='warning'
           showIcon
-          title='此操作会绕过合同状态限制，并记录操作者、原因及输入快照。'
+          title="This operation bypasses contract status restrictions and records the operator, reason, and input snapshot."
           className='mb-4'
         />
         <Form form={overrideForm} layout='vertical'>
           <Form.Item
             name='reason'
-            label='强制原因'
-            rules={[{ required: true, min: 5, message: '请填写至少 5 个字符的原因' }]}
+            label="Forced reason"
+            rules={[{ required: true, min: 5, message: 'Please enter a reason of at least 5 characters' }]}
           >
             <Input.TextArea rows={4} maxLength={1000} />
           </Form.Item>
@@ -779,7 +798,7 @@ export default function EmailIntakePage() {
       </Modal>
 
       <Modal
-        title={editingCustomer || editingContract ? '编辑配置' : '新增配置'}
+        title={editingCustomer || editingContract ? 'Edit configuration' : 'New configuration'}
         open={Boolean(entityModal)}
         onCancel={() => {
           setEntityModal(undefined);
@@ -796,25 +815,25 @@ export default function EmailIntakePage() {
           initialValues={{ status: 'active', timezone: 'Asia/Shanghai' }}
         >
           {['customer', 'branch', 'source', 'schedule'].includes(entityModal ?? '') && (
-            <Form.Item name='name' label='名称' rules={[{ required: true }]}>
+            <Form.Item name='name' label="Name" rules={[{ required: true }]}>
               <Input />
             </Form.Item>
           )}
           {entityModal === 'customer' && (
             <>
-              <Form.Item name='shortName' label='简称'>
+              <Form.Item name='shortName' label="Abbreviation">
                 <Input />
               </Form.Item>
               <Form.Item name='aliases' label='Alias'>
                 <Select mode='tags' />
               </Form.Item>
-              <Form.Item name='historicalNames' label='历史名称'>
+              <Form.Item name='historicalNames' label="Historical name">
                 <Select mode='tags' />
               </Form.Item>
             </>
           )}
           {['branch', 'contract'].includes(entityModal ?? '') && (
-            <Form.Item name='customerId' label='客户' rules={[{ required: true }]}>
+            <Form.Item name='customerId' label="Customer" rules={[{ required: true }]}>
               <Select options={customers.map(item => ({ value: item.id, label: item.name }))} />
             </Form.Item>
           )}
@@ -825,45 +844,45 @@ export default function EmailIntakePage() {
           )}
           {entityModal === 'contract' && (
             <>
-              <Form.Item name='contractNumber' label='合同号' rules={[{ required: true }]}>
+              <Form.Item name='contractNumber' label="Contract number" rules={[{ required: true }]}>
                 <Input />
               </Form.Item>
-              <Form.Item name='branchId' label='分部 ID'>
+              <Form.Item name='branchId' label="Division ID">
                 <InputNumber className='w-full' min={1} />
               </Form.Item>
-              <Form.Item name='status' label='状态' rules={[{ required: true }]}>
+              <Form.Item name='status' label="Status" rules={[{ required: true }]}>
                 <Select
                   options={['active', 'terminated', 'expired', 'pending'].map(value => ({ value }))}
                 />
               </Form.Item>
-              <Form.Item name='period' label='有效期'>
+              <Form.Item name='period' label="Validity date">
                 <DatePicker.RangePicker showTime allowEmpty={[true, true]} className='w-full' />
               </Form.Item>
             </>
           )}
           {entityModal === 'source' && (
             <>
-              <Form.Item name='emailAddresses' label='发件邮箱'>
+              <Form.Item name='emailAddresses' label="Sending email">
                 <Select mode='tags' />
               </Form.Item>
-              <Form.Item name='emailDomains' label='发件域名'>
+              <Form.Item name='emailDomains' label="Sending domain name">
                 <Select mode='tags' />
               </Form.Item>
             </>
           )}
           {entityModal === 'externalReference' && (
             <>
-              <Form.Item name='sourceOrganizationId' label='来源组织' rules={[{ required: true }]}>
+              <Form.Item name='sourceOrganizationId' label="Source organization" rules={[{ required: true }]}>
                 <Select options={sources.map(item => ({ value: item.id, label: item.name }))} />
               </Form.Item>
-              <Form.Item name='supportContractId' label='内部支持合同' rules={[{ required: true }]}>
+              <Form.Item name='supportContractId' label="Internal Support Contract" rules={[{ required: true }]}>
                 <Select
                   options={contracts.map(item => ({ value: item.id, label: item.contractNumber }))}
                 />
               </Form.Item>
               <Form.Item
                 name='externalContractNumber'
-                label='外部合同号'
+                label="External contract number"
                 rules={[{ required: true }]}
               >
                 <Input />
@@ -872,36 +891,36 @@ export default function EmailIntakePage() {
           )}
           {entityModal === 'schedule' && (
             <>
-              <Form.Item name='groupId' label='支持组 ID' rules={[{ required: true }]}>
+              <Form.Item name='groupId' label="Support group ID" rules={[{ required: true }]}>
                 <InputNumber className='w-full' min={1} />
               </Form.Item>
-              <Form.Item name='timezone' label='时区'>
+              <Form.Item name='timezone' label="Time zone">
                 <Input />
               </Form.Item>
             </>
           )}
           {entityModal === 'shift' && (
             <>
-              <Form.Item name='scheduleId' label='排班' rules={[{ required: true }]}>
+              <Form.Item name='scheduleId' label="Scheduling" rules={[{ required: true }]}>
                 <Select
-                  placeholder='选择排班'
+                  placeholder="Select shift"
                   showSearch
                   optionFilterProp='label'
                   options={schedules.map(s => ({ value: s.id, label: s.name }))}
                 />
               </Form.Item>
-              <Form.Item name='userId' label='值班工程师' rules={[{ required: true }]}>
+              <Form.Item name='userId' label="Engineer on duty" rules={[{ required: true }]}>
                 <Select
-                  placeholder='选择工程师'
+                  placeholder="Select Engineer"
                   showSearch
                   optionFilterProp='label'
                   options={users.map(u => ({
                     value: u.id,
-                    label: u.name || u.email || `用户#${u.id}`,
+                    label: u.name || u.email || `User#${u.id}`,
                   }))}
                 />
               </Form.Item>
-              <Form.Item name='period' label='班次时间' rules={[{ required: true }]}>
+              <Form.Item name='period' label="Shift time" rules={[{ required: true }]}>
                 <DatePicker.RangePicker showTime className='w-full' />
               </Form.Item>
             </>

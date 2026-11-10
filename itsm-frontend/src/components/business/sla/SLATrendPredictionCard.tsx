@@ -45,10 +45,10 @@ interface Props {
 }
 
 const TYPE_OPTIONS: Array<{ value: TrendPredictionType; label: string }> = [
-  { value: 'volume', label: '工单量' },
-  { value: 'priority', label: '按优先级' },
-  { value: 'type', label: '按类型' },
-  { value: 'resource', label: '资源需求' },
+  { value: 'volume', label: 'Work order quantity' },
+  { value: 'priority', label: 'By priority' },
+  { value: 'type', label: 'By type' },
+  { value: 'resource', label: 'Resource requirements' },
 ];
 
 export const SLATrendPredictionCard: React.FC<Props> = ({
@@ -77,7 +77,7 @@ export const SLATrendPredictionCard: React.FC<Props> = ({
       });
       setData(res);
     } catch (e) {
-      setError(e instanceof Error ? e.message : '预测失败');
+      setError(e instanceof Error ? e.message : 'Prediction failed');
       setData(null);
     } finally {
       setLoading(false);
@@ -105,7 +105,7 @@ export const SLATrendPredictionCard: React.FC<Props> = ({
       title={
         <Space>
           <Sparkles size={16} />
-          <span>AI 趋势预测</span>
+          <span>AI trend prediction</span>
         </Space>
       }
       extra={
@@ -122,9 +122,9 @@ export const SLATrendPredictionCard: React.FC<Props> = ({
               </Radio.Button>
             ))}
           </Radio.Group>
-          <Tooltip title="刷新预测">
+          <Tooltip title="Refresh forecast">
             <Button
-              aria-label="刷新预测"
+              aria-label="Refresh forecast"
               size="small"
               icon={<RefreshCw size={14} />}
               onClick={() => void load()}
@@ -139,11 +139,12 @@ export const SLATrendPredictionCard: React.FC<Props> = ({
           className="mb-3"
           type="error"
           showIcon
-          title="预测请求失败"
+          title="Prediction request failed"
           description={error}
           action={
             <Button size="small" onClick={() => void load()}>
-              重试
+
+              Retry
             </Button>
           }
         />
@@ -151,7 +152,7 @@ export const SLATrendPredictionCard: React.FC<Props> = ({
 
       <Spin spinning={loading}>
         {!data || points.length === 0 ? (
-          <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无预测数据" />
+          <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="No forecast data yet" />
         ) : (() => {
           // 后端 predictedValue 全 0(历史样本不足)时,即使置信度返回高值也是误导。
           // 这里给出「样本不足」的明确提示,避免渲染一条全 0 的曲线给用户。
@@ -162,14 +163,17 @@ export const SLATrendPredictionCard: React.FC<Props> = ({
                 image={Empty.PRESENTED_IMAGE_SIMPLE}
                 description={
                   <Space orientation="vertical" size={4}>
-                    <span>当前时间窗口内历史工单样本不足,暂无可信预测。</span>
+                    <span>There are insufficient historical work order samples in the current time window, and there is no credible prediction yet.</span>
                     <Text type="secondary">
-                      模型:<Tag color="blue">{data.model}</Tag>
-                      整体置信度:
+
+                      Model:<Tag color="blue">{data.model}</Tag>
+
+                      Overall confidence:
                       <Tag color="orange">
                         {(data.confidence * 100).toFixed(0)}%
                       </Tag>
-                      (仅供参考,不建议作为决策依据)
+
+                      (for reference only, not recommended as a basis for decision-making)
                     </Text>
                   </Space>
                 }
@@ -180,10 +184,12 @@ export const SLATrendPredictionCard: React.FC<Props> = ({
             <>
               <Space size="large" className="mb-3" wrap>
                 <Text type="secondary">
-                  模型：<Tag color="blue">{data.model}</Tag>
+
+                  Model:<Tag color="blue">{data.model}</Tag>
                 </Text>
                 <Text type="secondary">
-                  整体置信度：
+
+                  Overall confidence:
                   <Tag color={data.confidence >= 0.8 ? 'green' : 'orange'}>
                     {(data.confidence * 100).toFixed(0)}%
                   </Tag>
@@ -191,10 +197,12 @@ export const SLATrendPredictionCard: React.FC<Props> = ({
               {summary && (
                 <>
                   <Text type="secondary">
-                    平均：<strong>{summary.avg.toFixed(1)}</strong>
+
+                    Average:<strong>{summary.avg.toFixed(1)}</strong>
                   </Text>
                   <Text type="secondary">
-                    峰值：<strong>{summary.peak.predictedValue.toFixed(1)}</strong>
+
+                    Peak:<strong>{summary.peak.predictedValue.toFixed(1)}</strong>
                     <Text type="secondary" className="ml-1 text-xs">
                       ({summary.peak.date})
                     </Text>
@@ -210,7 +218,8 @@ export const SLATrendPredictionCard: React.FC<Props> = ({
       </Spin>
 
       <Text type="secondary" className="mt-2 block text-xs">
-        预测窗口：{range[0]} ~ {range[1]} · 由平台预测服务提供
+
+        Prediction window:{range[0]} ~ {range[1]}  · Provided by platform prediction service
       </Text>
     </Card>
   );
@@ -232,27 +241,27 @@ const PredictionList: React.FC<{ points: PredictionDataPoint[] }> = ({ points })
               <div
                 className="absolute inset-y-0 left-0 bg-blue-400/70"
                 style={{ width: `${widthPct}%` }}
-                aria-label="预测值"
+                aria-label="Predicted value"
               />
               <div
                 className="absolute inset-y-0 left-0 border-r border-red-400"
                 style={{
                   width: `${Math.min(100, Math.max(0, (p.lowerBound / (p.predictedValue || 1)) * widthPct))}%`,
                 }}
-                aria-label="下界"
+                aria-label="Nether"
               />
               <div
                 className="absolute inset-y-0 left-0 border-r-2 border-green-500"
                 style={{
                   width: `${Math.min(100, (p.upperBound / (p.predictedValue || 1)) * widthPct)}%`,
                 }}
-                aria-label="上界"
+                aria-label="Upper bound"
               />
             </div>
             <Text className="w-20 shrink-0 text-right text-sm font-medium">
               {p.predictedValue.toFixed(1)}
             </Text>
-            <Tooltip title={`置信度 ${(p.confidence * 100).toFixed(0)}%`}>
+            <Tooltip title={`Confidence ${(p.confidence * 100).toFixed(0)}%`}>
               <TrendingUp size={14} className="shrink-0 text-gray-400" />
             </Tooltip>
           </div>

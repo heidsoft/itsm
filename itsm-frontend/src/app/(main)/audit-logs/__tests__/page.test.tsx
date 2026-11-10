@@ -73,10 +73,10 @@ describe('审计日志操作与资源中文化（D16）', () => {
 
     await waitFor(() => expect(mockListAuditLogs).toHaveBeenCalled());
 
-    expect(await screen.findByText('登录成功')).toBeInTheDocument();
-    expect(screen.getByText('认证')).toBeInTheDocument();
-    expect(screen.getByText('工单类型')).toBeInTheDocument();
-    expect(screen.getByText('编辑')).toBeInTheDocument();
+    expect(await screen.findByText("Login Successful")).toBeInTheDocument();
+    expect(screen.getByText("Authentication")).toBeInTheDocument();
+    expect(screen.getByText("Ticket Types")).toBeInTheDocument();
+    expect(screen.getByText("Edit")).toBeInTheDocument();
 
     const body = document.body.textContent || '';
     expect(body).not.toContain('LOGIN_SUCCESS');

@@ -190,11 +190,11 @@ func (s *Service) GetCatalogItem(ctx context.Context, itemID int) (*CatalogItemD
 func (s *Service) CreateCatalogItem(ctx context.Context, patch CatalogItemPatch) (*CatalogItemDetail, error) {
 	name := strings.TrimSpace(derefString(patch.Name))
 	if !catalogNamePattern.MatchString(name) {
-		return nil, fmt.Errorf("%w: %q 必须是小写字母/数字/连字符，且不以连字符开头或结尾", ErrCatalogNameInvalid, name)
+		return nil, fmt.Errorf("%w: %q must be lowercase letters/numbers/hyphens and does not start or end with a hyphen", ErrCatalogNameInvalid, name)
 	}
 	itemType := marketplaceitem.Type(strings.TrimSpace(derefString(patch.Type)))
 	if !validCatalogType(itemType) {
-		return nil, fmt.Errorf("%w: type 必须是 %s", ErrCatalogTypeNotDeliverable, strings.Join(catalogTypeNames(), "/"))
+		return nil, fmt.Errorf("%w: type must be %s", ErrCatalogTypeNotDeliverable, strings.Join(catalogTypeNames(), "/"))
 	}
 	// 先校验 provider 是否已注册：未注册时后面的 manifest 补齐会静默跳过，
 	// 报错会退化成「title 必填」这种与真实原因无关的提示。
@@ -253,7 +253,7 @@ func (s *Service) CreateCatalogItem(ctx context.Context, patch CatalogItemPatch)
 	if err != nil {
 		_ = tx.Rollback()
 		if ent.IsConstraintError(err) {
-			return nil, fmt.Errorf("%w: name=%q 已存在", ErrCatalogNameInvalid, name)
+			return nil, fmt.Errorf("%w: name=%q already exists", ErrCatalogNameInvalid, name)
 		}
 		return nil, fmt.Errorf("failed to create catalog item: %w", err)
 	}
@@ -294,13 +294,13 @@ func (s *Service) UpdateCatalogItem(ctx context.Context, itemID int, patch Catal
 		return nil, fmt.Errorf("failed to get catalog item: %w", err)
 	}
 	if patch.Name != nil && strings.TrimSpace(*patch.Name) != item.Name {
-		return nil, fmt.Errorf("%w: name 不可修改（安装时决定连接器 provider）", ErrCatalogItemIdentityImmutable)
+		return nil, fmt.Errorf("%w: name cannot be modified (the connector provider is determined during installation)", ErrCatalogItemIdentityImmutable)
 	}
 	if patch.Type != nil && marketplaceitem.Type(*patch.Type) != item.Type {
-		return nil, fmt.Errorf("%w: type 不可修改（决定安装副作用路径）", ErrCatalogItemIdentityImmutable)
+		return nil, fmt.Errorf("%w: type cannot be modified (determines the path to install side effects)", ErrCatalogItemIdentityImmutable)
 	}
 	if patch.Version != nil || patch.ManifestPath != nil {
-		return nil, fmt.Errorf("%w: 版本与交付物定位符只能通过版本接口维护", ErrCatalogVersionInvalid)
+		return nil, fmt.Errorf("%w: Version and deliverable locators can only be maintained through the version interface", ErrCatalogVersionInvalid)
 	}
 
 	update := applyUpdatePatch(s.db.MarketplaceItem.UpdateOneID(itemID), patch)
@@ -329,7 +329,7 @@ func (s *Service) PublishCatalogItem(ctx context.Context, itemID int) (*CatalogI
 	// 不受理的类型即使已有版本行也不能上架：上架意味着租户可以点安装，
 	// 而安装面会拒绝这个类型——那正是要避免的「能上架、装不了」。
 	if !IsDeliverableType(item.Type) {
-		return nil, fmt.Errorf("%w: type=%s（平台只交付 %s）",
+		return nil, fmt.Errorf("%w: type=%s (the platform only delivers %s)",
 			ErrCatalogTypeNotDeliverable, item.Type, strings.Join(catalogTypeNames(), "/"))
 	}
 
@@ -472,7 +472,7 @@ func (s *Service) CreateItemVersion(ctx context.Context, itemID int, in ItemVers
 		if manifest, ok := catalogConnectorManifest(item.Name, item.Type); ok {
 			manifestVersion, _ := normalizeCatalogVersion(manifest.Version)
 			if manifestVersion != version {
-				return nil, fmt.Errorf("%w: 连接器 %s 的运行时版本是 %s，目录不能声明 %s",
+				return nil, fmt.Errorf("%w: The runtime version of connector %s is %s, the directory cannot declare %s",
 					ErrCatalogVersionInvalid, item.Name, manifestVersion, version)
 			}
 		}
@@ -622,7 +622,7 @@ func initialCatalogVersion(patch CatalogItemPatch, hasManifest bool, manifest co
 			return v, nil
 		}
 	}
-	return "", fmt.Errorf("%w: 非连接器商品必须提供初始版本号", ErrCatalogVersionInvalid)
+	return "", fmt.Errorf("%w: An initial version number must be provided for non-connector products", ErrCatalogVersionInvalid)
 }
 
 // catalogConnectorManifest 解析连接器商品对应的运行时 manifest。
@@ -649,7 +649,7 @@ func validateConnectorProvider(name string, itemType marketplaceitem.Type) error
 	}
 	provider := strings.TrimSuffix(name, "-connector")
 	if _, ok := connector.Default().GetManifest(provider); !ok {
-		return fmt.Errorf("%w: %q（已注册：%s）", ErrCatalogConnectorUnregistered, provider,
+		return fmt.Errorf("%w: %q (registered: %s)", ErrCatalogConnectorUnregistered, provider,
 			strings.Join(connector.Default().Names(), ", "))
 	}
 	return nil
@@ -804,7 +804,7 @@ func normalizeCatalogVersion(raw string) (string, error) {
 	v := strings.TrimSpace(raw)
 	v = strings.TrimPrefix(strings.TrimPrefix(v, "v"), "V")
 	if !catalogVersionPattern.MatchString(v) {
-		return "", fmt.Errorf("%w: %q 必须是 x.y.z（可带 -预发布后缀）", ErrCatalogVersionInvalid, raw)
+		return "", fmt.Errorf("%w: %q must be x.y.z (can have -pre-release suffix)", ErrCatalogVersionInvalid, raw)
 	}
 	return v, nil
 }

@@ -33,7 +33,7 @@ func NewHandler(ticketTypeService *service.TicketTypeService, logger *zap.Sugare
 func (h *Handler) CreateTicketType(c *gin.Context) {
 	var req dto.CreateTicketTypeRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
@@ -46,7 +46,7 @@ func (h *Handler) CreateTicketType(c *gin.Context) {
 	ticketType, err := h.ticketTypeService.CreateTicketType(c.Request.Context(), &req, tenantID, userID)
 	if err != nil {
 		h.logger.Errorw("Failed to create ticket type", "error", err, "tenant_id", tenantID)
-		common.RespondError(c, err, "操作失败")
+		common.RespondError(c, err, "Operation failed")
 		return
 	}
 
@@ -57,13 +57,13 @@ func (h *Handler) CreateTicketType(c *gin.Context) {
 func (h *Handler) UpdateTicketType(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "无效的工单类型ID")
+		common.Fail(c, common.ParamErrorCode, "Invalid ticket type ID")
 		return
 	}
 
 	var req dto.UpdateTicketTypeRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
@@ -76,7 +76,7 @@ func (h *Handler) UpdateTicketType(c *gin.Context) {
 	ticketType, err := h.ticketTypeService.UpdateTicketType(c.Request.Context(), id, &req, tenantID, userID)
 	if err != nil {
 		h.logger.Errorw("Failed to update ticket type", "error", err, "id", id, "tenant_id", tenantID)
-		common.RespondError(c, err, "操作失败")
+		common.RespondError(c, err, "Operation failed")
 		return
 	}
 
@@ -87,7 +87,7 @@ func (h *Handler) UpdateTicketType(c *gin.Context) {
 func (h *Handler) GetTicketType(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "无效的工单类型ID")
+		common.Fail(c, common.ParamErrorCode, "Invalid ticket type ID")
 		return
 	}
 
@@ -99,7 +99,7 @@ func (h *Handler) GetTicketType(c *gin.Context) {
 	ticketType, err := h.ticketTypeService.GetTicketType(c.Request.Context(), id, tenantID)
 	if err != nil {
 		h.logger.Errorw("Failed to get ticket type", "error", err, "id", id, "tenant_id", tenantID)
-		common.Fail(c, common.NotFoundCode, "工单类型不存在")
+		common.Fail(c, common.NotFoundCode, "Work order type does not exist")
 		return
 	}
 
@@ -110,7 +110,7 @@ func (h *Handler) GetTicketType(c *gin.Context) {
 func (h *Handler) ListTicketTypes(c *gin.Context) {
 	var req dto.ListTicketTypesRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
@@ -129,7 +129,7 @@ func (h *Handler) ListTicketTypes(c *gin.Context) {
 	response, err := h.ticketTypeService.ListTicketTypes(c.Request.Context(), &req, tenantID)
 	if err != nil {
 		h.logger.Errorw("Failed to list ticket types", "error", err, "tenant_id", tenantID)
-		common.RespondError(c, err, "操作失败")
+		common.RespondError(c, err, "Operation failed")
 		return
 	}
 
@@ -140,7 +140,7 @@ func (h *Handler) ListTicketTypes(c *gin.Context) {
 func (h *Handler) DeleteTicketType(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "无效的工单类型ID")
+		common.Fail(c, common.ParamErrorCode, "Invalid ticket type ID")
 		return
 	}
 
@@ -153,11 +153,11 @@ func (h *Handler) DeleteTicketType(c *gin.Context) {
 	err = h.ticketTypeService.DeleteTicketType(c.Request.Context(), id, tenantID, userID)
 	if err != nil {
 		h.logger.Errorw("Failed to delete ticket type", "error", err, "id", id, "tenant_id", tenantID)
-		common.RespondError(c, err, "操作失败")
+		common.RespondError(c, err, "Operation failed")
 		return
 	}
 
-	common.Success(c, gin.H{"message": "工单类型已归档"})
+	common.Success(c, gin.H{"message": "Ticket type archived"})
 }
 
 // EnableTicketType POST /api/v1/ticket-types/:id/enable
@@ -173,7 +173,7 @@ func (h *Handler) DisableTicketType(c *gin.Context) {
 func (h *Handler) setStatus(c *gin.Context, status dto.TicketTypeStatus) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "无效的工单类型ID")
+		common.Fail(c, common.ParamErrorCode, "Invalid ticket type ID")
 		return
 	}
 	tenantID, ok := handlerctx.ResolveTenantID(c)
@@ -182,7 +182,7 @@ func (h *Handler) setStatus(c *gin.Context, status dto.TicketTypeStatus) {
 	}
 	result, err := h.ticketTypeService.SetStatus(c.Request.Context(), id, tenantID, c.GetInt("user_id"), status)
 	if err != nil {
-		common.RespondError(c, err, "操作失败")
+		common.RespondError(c, err, "Operation failed")
 		return
 	}
 	common.Success(c, result)
@@ -192,7 +192,7 @@ func (h *Handler) setStatus(c *gin.Context, status dto.TicketTypeStatus) {
 func (h *Handler) CloneTicketType(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "无效的工单类型ID")
+		common.Fail(c, common.ParamErrorCode, "Invalid ticket type ID")
 		return
 	}
 	var req struct {
@@ -200,7 +200,7 @@ func (h *Handler) CloneTicketType(c *gin.Context) {
 		Name string `json:"name" binding:"required"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 	tenantID, ok := handlerctx.ResolveTenantID(c)
@@ -209,7 +209,7 @@ func (h *Handler) CloneTicketType(c *gin.Context) {
 	}
 	result, err := h.ticketTypeService.CloneTicketType(c.Request.Context(), id, tenantID, c.GetInt("user_id"), req.Code, req.Name)
 	if err != nil {
-		common.RespondError(c, err, "操作失败")
+		common.RespondError(c, err, "Operation failed")
 		return
 	}
 	common.Success(c, result)
@@ -219,7 +219,7 @@ func (h *Handler) CloneTicketType(c *gin.Context) {
 func (h *Handler) RestoreTicketType(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "无效的工单类型ID")
+		common.Fail(c, common.ParamErrorCode, "Invalid ticket type ID")
 		return
 	}
 	tenantID, ok := handlerctx.ResolveTenantID(c)
@@ -228,7 +228,7 @@ func (h *Handler) RestoreTicketType(c *gin.Context) {
 	}
 	result, err := h.ticketTypeService.RestoreTicketType(c.Request.Context(), id, tenantID, c.GetInt("user_id"))
 	if err != nil {
-		common.RespondError(c, err, "操作失败")
+		common.RespondError(c, err, "Operation failed")
 		return
 	}
 	common.Success(c, result)
@@ -243,7 +243,7 @@ func (h *Handler) ListPresets(c *gin.Context) {
 func (h *Handler) InstallPreset(c *gin.Context) {
 	var req dto.InstallTicketTypePresetRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 	tenantID, ok := handlerctx.ResolveTenantID(c)
@@ -252,7 +252,7 @@ func (h *Handler) InstallPreset(c *gin.Context) {
 	}
 	result, err := h.ticketTypeService.InstallPreset(c.Request.Context(), c.Param("presetId"), &req, tenantID, c.GetInt("user_id"))
 	if err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 	common.Success(c, result)

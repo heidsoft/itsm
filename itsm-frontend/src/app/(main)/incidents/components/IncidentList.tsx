@@ -34,25 +34,25 @@ export const IncidentList: React.FC<IncidentListProps> = ({
     // 新建/待处理状态
     new: {
       color: '#1890ff',
-      text: t('incidents.statusNew') || '新建',
+      text: t('incidents.statusNew') || 'Create',
       backgroundColor: '#e6f7ff',
     },
     // 已确认状态
     acknowledged: {
       color: '#722ed1',
-      text: t('incidents.statusAcknowledged') || '已确认',
+      text: t('incidents.statusAcknowledged') || 'Acknowledged',
       backgroundColor: '#f9f0ff',
     },
     // 已分配状态
     assigned: {
       color: '#13c2c2',
-      text: t('incidents.statusAssigned') || '已分配',
+      text: t('incidents.statusAssigned') || 'Assigned',
       backgroundColor: '#e6fffb',
     },
     // 调查中状态
     investigating: {
       color: '#722ed1',
-      text: t('incidents.statusInvestigating') || '调查中',
+      text: t('incidents.statusInvestigating') || 'Investigating',
       backgroundColor: '#f9f0ff',
     },
     // 处理中状态 (both camelCase and snake_case from API)
@@ -69,19 +69,19 @@ export const IncidentList: React.FC<IncidentListProps> = ({
     // 已分类状态
     triaged: {
       color: '#faad14',
-      text: t('incidents.statusTriaged') || '已分类',
+      text: t('incidents.statusTriaged') || 'Triaged',
       backgroundColor: '#fffbe6',
     },
     // 已升级状态
     escalated: {
       color: '#ff4d4f',
-      text: t('incidents.statusEscalated') || '已升级',
+      text: t('incidents.statusEscalated') || 'Escalated',
       backgroundColor: '#fff2f0',
     },
     // 已暂停
     'on_hold': {
       color: '#fa8c16',
-      text: t('incidents.statusOnHold') || '已暂停',
+      text: t('incidents.statusOnHold') || 'Paused',
       backgroundColor: '#fff7e6',
     },
     // 已解决状态
@@ -93,7 +93,7 @@ export const IncidentList: React.FC<IncidentListProps> = ({
     // 已取消状态
     cancelled: {
       color: '#00000073',
-      text: t('incidents.statusCancelled') || '已取消',
+      text: t('incidents.statusCancelled') || 'Cancelled',
       backgroundColor: '#fafafa',
     },
     // 已关闭状态
@@ -244,17 +244,17 @@ export const IncidentList: React.FC<IncidentListProps> = ({
       width: 150,
       render: (_: unknown, record: Incident) => {
         // 后端列表接口回填 reporterName；缺失时回退用户 ID，不再恒显「未知」
-        const text = record.reporterName || (record.reporter?.name || (record.reporterId ? `用户#${record.reporterId}` : t('incidents.unknown')));
+        const text = record.reporterName || (record.reporter?.name || (record.reporterId ? `User#${record.reporterId}` : t('incidents.unknown')));
         return <div style={{ fontSize: 'small' }}>{text}</div>;
       },
     },
     {
-      title: '处理人',
+      title: 'Assignee',
       dataIndex: 'assigneeName',
       key: 'assignee',
       width: 130,
       render: (_: unknown, record: Incident) => {
-        const text = record.assigneeName || record.assignee?.name || (record.assigneeId ? `用户#${record.assigneeId}` : '-');
+        const text = record.assigneeName || record.assignee?.name || (record.assigneeId ? `User#${record.assigneeId}` : '-');
         return <div style={{ fontSize: 'small' }}>{text}</div>;
       },
     },
@@ -276,24 +276,24 @@ export const IncidentList: React.FC<IncidentListProps> = ({
       render: (_: unknown, record: Incident) => {
         const handleDelete = () => {
           Modal.confirm({
-            title: '确认删除',
+            title: 'Confirm Delete',
             content: (
               <div>
-                <p>确定要删除事件「{record.title}」吗？</p>
-                <p style={{ color: '#ff4d4f' }}>此操作不可撤销。</p>
+                <p>Confirm to delete event "{record.title}"?"</p>
+                <p style={{ color: '#ff4d4f' }}>This operation cannot be undone.</p>
               </div>
             ),
-            okText: '确认删除',
+            okText: 'Confirm Delete',
             okType: 'danger',
-            cancelText: '取消',
+            cancelText: 'Cancel',
             onOk: async () => {
               try {
                 await IncidentAPI.deleteIncident(record.id);
-                message.success(t('incidents.deleteSuccess') || '删除成功');
+                message.success(t('incidents.deleteSuccess') || 'Deleted');
                 onRefresh?.();
               } catch (error) {
                 console.error('Failed to delete incident:', error);
-                message.error(t('incidents.deleteFailed') || '删除失败');
+                message.error(t('incidents.deleteFailed') || 'Delete failed');
               }
             },
           });
@@ -302,7 +302,7 @@ export const IncidentList: React.FC<IncidentListProps> = ({
         const items: MenuProps['items'] = [
           {
             key: 'delete',
-            label: t('common.delete') || '删除',
+            label: t('common.delete') || 'Delete',
             icon: <Trash2 size={14} />,
             danger: true,
             onClick: handleDelete,
@@ -316,7 +316,7 @@ export const IncidentList: React.FC<IncidentListProps> = ({
               size="small"
               icon={<Eye size={16} />}
               href={`/incidents/${record.id}`}
-              aria-label={`查看事件 ${record.title}`}
+              aria-label={`View events ${record.title}`}
               className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-0 rounded-lg transition-all duration-200 p-2"
               title={t('incidents.viewDetails')}
             />
@@ -325,7 +325,7 @@ export const IncidentList: React.FC<IncidentListProps> = ({
               size="small"
               icon={<Edit size={16} />}
               onClick={() => onEdit(record)}
-              aria-label={`编辑事件 ${record.title}`}
+              aria-label={`Edit Incident ${record.title}`}
               className="text-green-600 hover:text-green-700 hover:bg-green-50 border-0 rounded-lg transition-all duration-200 p-2"
               title={t('incidents.editIncident')}
             />

@@ -39,7 +39,7 @@ func (s *SurveyService) SubmitResponse(ctx context.Context, req *dto.SubmitSurve
 	}
 	if !surveyExists {
 		// 引用型资源缺失（不存在或跨租户）：400/1001，与工单评论提及口径一致。
-		return common.NewBusinessError(common.ParamErrorCode, "问卷不存在或不属于当前租户", "")
+		return common.NewBusinessError(common.ParamErrorCode, "The questionnaire does not exist or does not belong to the current tenant", "")
 	}
 	// ticketId 同为本租引用面：无效引用会让响应挂在不存在/他租工单上。
 	ticketExists, err := s.client.Ticket.Query().
@@ -50,7 +50,7 @@ func (s *SurveyService) SubmitResponse(ctx context.Context, req *dto.SubmitSurve
 		return fmt.Errorf("check ticket for submit: %w", err)
 	}
 	if !ticketExists {
-		return common.NewBusinessError(common.ParamErrorCode, "评分工单不存在或不属于当前租户", "")
+		return common.NewBusinessError(common.ParamErrorCode, "The scoring ticket does not exist or does not belong to the current tenant", "")
 	}
 
 	_, err = s.client.SurveyResponse.Create().

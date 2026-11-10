@@ -50,20 +50,20 @@ const { Title, Text } = Typography;
 type WindowKey = '24h' | '7d' | '30d';
 
 const WINDOWS: Record<WindowKey, { label: string; milliseconds: number }> = {
-  '24h': { label: '最近 24 小时', milliseconds: 24 * 60 * 60 * 1000 },
-  '7d': { label: '最近 7 天', milliseconds: 7 * 24 * 60 * 60 * 1000 },
-  '30d': { label: '最近 30 天', milliseconds: 30 * 24 * 60 * 60 * 1000 },
+  '24h': { label: 'Last 24 hours', milliseconds: 24 * 60 * 60 * 1000 },
+  '7d': { label: 'Last 7 days', milliseconds: 7 * 24 * 60 * 60 * 1000 },
+  '30d': { label: 'Last 30 days', milliseconds: 30 * 24 * 60 * 60 * 1000 },
 };
 
 // 分组行数量级远小于工单数；后端 pageSize 上限是 200。
 const PERFORMANCE_PAGE_SIZE = 200;
 
 const PRIORITY_LABELS: Record<string, string> = {
-  critical: '紧急',
-  urgent: '紧急',
-  high: '高',
-  medium: '中',
-  low: '低',
+  critical: 'Urgent',
+  urgent: 'Urgent',
+  high: 'High',
+  medium: 'Medium',
+  low: 'Low',
 };
 
 const PRIORITY_COLORS: Record<string, string> = {
@@ -75,19 +75,19 @@ const PRIORITY_COLORS: Record<string, string> = {
 };
 
 const SERVICE_TYPE_LABELS: Record<string, string> = {
-  incident: '事件',
-  problem: '问题',
-  change: '变更',
-  release: '发布',
-  service_request: '服务请求',
+  incident: 'Incident',
+  problem: 'Problem',
+  change: 'Change',
+  release: 'Release',
+  service_request: 'Service Request',
   // 后端用固定 key 表示「工单未绑定 SLA 定义」，这部分工单不得被丢弃
-  unassigned: '未绑定 SLA',
+  unassigned: 'SLA not bound',
 };
 
 const ALERT_LEVEL_LABELS: Record<string, string> = {
-  warning: '警告',
-  severe: '严重',
-  critical: '紧急',
+  warning: 'Warning',
+  severe: 'Critical',
+  critical: 'Urgent',
 };
 
 const PRIORITY_FILTER_OPTIONS = Object.entries(PRIORITY_LABELS)
@@ -108,22 +108,22 @@ function formatRate(value: number): string {
 /** 达成率必须带样本数；样本为 0 是「暂无数据」，不是 0% 合规 */
 function renderAchievement(rate: number, samples: number): React.ReactNode {
   if (!samples) {
-    return <Text type="secondary">暂无样本</Text>;
+    return <Text type="secondary">No sample yet</Text>;
   }
   return <Text>{formatRate(rate)}</Text>;
 }
 
 function formatDuration(minutes: number): string {
   if (!Number.isFinite(minutes) || minutes <= 0) {
-    return '0 分钟';
+    return '0 minutes';
   }
   if (minutes < 60) {
-    return `${minutes.toFixed(1)} 分钟`;
+    return `${minutes.toFixed(1)} minutes`;
   }
   if (minutes < 60 * 24) {
-    return `${(minutes / 60).toFixed(1)} 小时`;
+    return `${(minutes / 60).toFixed(1)} hours`;
   }
-  return `${(minutes / (60 * 24)).toFixed(1)} 天`;
+  return `${(minutes / (60 * 24)).toFixed(1)} days`;
 }
 
 function formatDateTime(value?: string): string {
@@ -148,13 +148,13 @@ function renderTimeRemaining(value?: SLATimeRemaining): React.ReactNode {
     hours += 1;
     minutes = 0;
   }
-  const label = `${hours}小时${minutes}分钟`;
+  const label = `${hours} hours ${minutes} minutes`;
   const overdue = value.hours < 0;
   const color = overdue ? '#ff4d4f' : value.hours < 2 ? '#faad14' : '#52c41a';
   return (
-    <Tooltip title={`截止时间 ${formatDateTime(value.deadline)}`}>
+    <Tooltip title={`Deadline ${formatDateTime(value.deadline)}`}>
       <Text strong style={{ color }}>
-        {overdue ? `已超时 ${label}` : `剩余 ${label}`}
+        {overdue ? `Timed out ${label}` : `remaining ${label}`}
       </Text>
     </Tooltip>
   );
@@ -175,7 +175,7 @@ function buildPerformanceColumns(
   labelOf: (key: string) => string,
 ): ColumnsType<SLAPerformanceRow> {
   const withSamples = (samples: number, cell: React.ReactNode) =>
-    samples ? cell : <Text type="secondary">暂无样本</Text>;
+    samples ? cell : <Text type="secondary">No sample yet</Text>;
 
   return [
     {
@@ -186,28 +186,28 @@ function buildPerformanceColumns(
       render: (key: string) => labelOf(key),
     },
     {
-      title: '工单数',
+      title: 'Number of work orders',
       dataIndex: 'totalTickets',
       key: 'totalTickets',
       width: 90,
       render: (value: number) => value ?? 0,
     },
     {
-      title: '已解决',
+      title: 'Resolved',
       dataIndex: 'resolvedTickets',
       key: 'resolvedTickets',
       width: 90,
       render: (value: number) => value ?? 0,
     },
     {
-      title: '解决率',
+      title: 'Resolution rate',
       dataIndex: 'resolutionRate',
       key: 'resolutionRate',
       width: 100,
       render: (value: number, record) => withSamples(record.totalTickets, formatRate(value)),
     },
     {
-      title: '违规工单',
+      title: 'Violation work order',
       dataIndex: 'violatedTickets',
       key: 'violatedTickets',
       width: 100,
@@ -216,36 +216,36 @@ function buildPerformanceColumns(
       ),
     },
     {
-      title: 'SLA 合规率',
+      title: 'SLA Compliance Rate',
       dataIndex: 'complianceRate',
       key: 'complianceRate',
       width: 120,
       render: (value: number, record) => withSamples(record.totalTickets, formatRate(value)),
     },
     {
-      title: '响应达成率',
+      title: 'Response achievement rate',
       dataIndex: 'responseAchievementRate',
       key: 'responseAchievementRate',
       width: 130,
       render: (value: number, record) => (
-        <Tooltip title={`样本 ${record.responseSamples}`}>
+        <Tooltip title={`Sample ${record.responseSamples}`}>
           <span>{withSamples(record.responseSamples, formatRate(value))}</span>
         </Tooltip>
       ),
     },
     {
-      title: '解决达成率',
+      title: 'Resolution achievement rate',
       dataIndex: 'resolutionAchievementRate',
       key: 'resolutionAchievementRate',
       width: 130,
       render: (value: number, record) => (
-        <Tooltip title={`样本 ${record.resolutionSamples}`}>
+        <Tooltip title={`Sample ${record.resolutionSamples}`}>
           <span>{withSamples(record.resolutionSamples, formatRate(value))}</span>
         </Tooltip>
       ),
     },
     {
-      title: '平均响应时长',
+      title: 'Average response time',
       dataIndex: 'averageResponseMinutes',
       key: 'averageResponseMinutes',
       width: 140,
@@ -253,7 +253,7 @@ function buildPerformanceColumns(
         record.responseSamples ? formatDuration(value) : <Text type="secondary">—</Text>,
     },
     {
-      title: '平均解决时长',
+      title: 'Average resolution time',
       dataIndex: 'averageResolutionMinutes',
       key: 'averageResolutionMinutes',
       width: 140,
@@ -322,7 +322,7 @@ export const SLAMonitorDashboard: React.FC<SLAMonitorDashboardProps> = ({
       setLoadError(null);
     } catch (error) {
       // 保留上一次成功数据并标注其时间，同时显式暴露失败原因，不静默清空或伪造。
-      setLoadError(error instanceof Error ? error.message : '加载SLA数据失败');
+      setLoadError(error instanceof Error ? error.message : 'Failed to load SLA data');
     } finally {
       setLoading(false);
     }
@@ -358,7 +358,7 @@ export const SLAMonitorDashboard: React.FC<SLAMonitorDashboardProps> = ({
 
   const handleRefresh = useCallback(() => {
     void loadData();
-    antMessage.success('数据已刷新');
+    antMessage.success('Data has been refreshed');
   }, [loadData, antMessage]);
 
   const getComplianceColor = (rate: number) => {
@@ -375,7 +375,7 @@ export const SLAMonitorDashboard: React.FC<SLAMonitorDashboardProps> = ({
   const alertColumns: ColumnsType<SLAAlertItem> = useMemo(
     () => [
       {
-        title: '工单编号',
+        title: 'Ticket Number',
         dataIndex: 'ticketNumber',
         key: 'ticketNumber',
         width: 160,
@@ -384,7 +384,7 @@ export const SLAMonitorDashboard: React.FC<SLAMonitorDashboardProps> = ({
         ),
       },
       {
-        title: '工单标题',
+        title: 'Ticket Title',
         dataIndex: 'ticketTitle',
         key: 'ticketTitle',
         ellipsis: true,
@@ -392,7 +392,7 @@ export const SLAMonitorDashboard: React.FC<SLAMonitorDashboardProps> = ({
         render: (text: string, record) => text || `#${record.ticketId}`,
       },
       {
-        title: '优先级',
+        title: 'Priority',
         dataIndex: 'priority',
         key: 'priority',
         width: 100,
@@ -403,7 +403,7 @@ export const SLAMonitorDashboard: React.FC<SLAMonitorDashboardProps> = ({
         ),
       },
       {
-        title: '告警级别',
+        title: 'Alarm level',
         dataIndex: 'alertLevel',
         key: 'alertLevel',
         width: 110,
@@ -419,26 +419,26 @@ export const SLAMonitorDashboard: React.FC<SLAMonitorDashboardProps> = ({
         ),
       },
       {
-        title: '告警规则',
+        title: 'Alarm rules',
         dataIndex: 'alertRuleName',
         key: 'alertRuleName',
         width: 180,
         ellipsis: true,
         render: (name: string, record) => (
-          <Tooltip title={`阈值 ${record.thresholdPercentage}% · 实际 ${record.actualPercentage.toFixed(1)}%`}>
+          <Tooltip title={`Threshold ${record.thresholdPercentage}% · actual ${record.actualPercentage.toFixed(1)}%`}>
             {name || '—'}
           </Tooltip>
         ),
       },
       {
-        title: '剩余时间',
+        title: 'Remaining time',
         dataIndex: 'timeRemaining',
         key: 'timeRemaining',
         width: 150,
         render: (value?: SLATimeRemaining) => renderTimeRemaining(value),
       },
       {
-        title: '触发时间',
+        title: 'Trigger time',
         dataIndex: 'createdAt',
         key: 'createdAt',
         width: 160,
@@ -449,11 +449,11 @@ export const SLAMonitorDashboard: React.FC<SLAMonitorDashboardProps> = ({
   );
 
   const serviceTypeColumns = useMemo(
-    () => buildPerformanceColumns('服务类型', key => SERVICE_TYPE_LABELS[key] || key),
+    () => buildPerformanceColumns('Service Type', key => SERVICE_TYPE_LABELS[key] || key),
     [],
   );
   const priorityColumns = useMemo(
-    () => buildPerformanceColumns('优先级', key => PRIORITY_LABELS[key] || key),
+    () => buildPerformanceColumns('Priority', key => PRIORITY_LABELS[key] || key),
     [],
   );
 
@@ -476,7 +476,7 @@ export const SLAMonitorDashboard: React.FC<SLAMonitorDashboardProps> = ({
   if (loading && !monitoring) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Spin size="large" description="加载SLA监控数据..." />
+        <Spin size="large" description="Loading SLA monitoring data..." />
       </div>
     );
   }
@@ -509,7 +509,8 @@ export const SLAMonitorDashboard: React.FC<SLAMonitorDashboardProps> = ({
             }}
           >
             <Activity className="inline-block mr-2" size={isFullscreen ? 32 : 24} />
-            SLA实时监控大屏
+
+            SLA real-time monitoring large screen
           </Title>
           <Text
             style={{
@@ -518,8 +519,8 @@ export const SLAMonitorDashboard: React.FC<SLAMonitorDashboardProps> = ({
             }}
           >
             {monitoring
-              ? `统计周期 ${formatDateTime(monitoring.startTime)} ~ ${formatDateTime(monitoring.endTime)} · 最后更新 ${updatedAt ? format(updatedAt, 'HH:mm:ss') : '—'}`
-              : '尚无成功加载的数据'}
+              ? `Period ${formatDateTime(monitoring.startTime)} ~ ${formatDateTime(monitoring.endTime)} · Last updated ${updatedAt ? format(updatedAt, 'HH:mm:ss') : '—'}`
+              : 'No successfully loaded data yet'}
           </Text>
         </div>
         <Space wrap size="small">
@@ -527,7 +528,7 @@ export const SLAMonitorDashboard: React.FC<SLAMonitorDashboardProps> = ({
             value={windowKey}
             onChange={setWindowKey}
             style={{ width: 140 }}
-            aria-label="统计周期"
+            aria-label="Period"
             options={(Object.keys(WINDOWS) as WindowKey[]).map(key => ({
               value: key,
               label: WINDOWS[key].label,
@@ -536,19 +537,19 @@ export const SLAMonitorDashboard: React.FC<SLAMonitorDashboardProps> = ({
           <Select
             value={serviceTypeFilter}
             onChange={value => setServiceTypeFilter(value)}
-            placeholder="全部服务类型"
+            placeholder="All service types"
             allowClear
             style={{ width: 160 }}
-            aria-label="绩效过滤：服务类型"
+            aria-label="Performance Filter: Service Type"
             options={serviceTypeOptions}
           />
           <Select
             value={priorityFilter}
             onChange={value => setPriorityFilter(value)}
-            placeholder="全部优先级"
+            placeholder="All priorities"
             allowClear
             style={{ width: 130 }}
-            aria-label="绩效过滤：优先级"
+            aria-label="Performance Filtering: Priority"
             options={PRIORITY_FILTER_OPTIONS}
           />
           <Button
@@ -562,7 +563,8 @@ export const SLAMonitorDashboard: React.FC<SLAMonitorDashboardProps> = ({
               borderColor: isFullscreen ? 'rgba(255,255,255,0.3)' : undefined,
             }}
           >
-            刷新
+
+            Refresh
           </Button>
           <Button
             icon={isFullscreen ? <Minimize /> : <Maximize />}
@@ -574,7 +576,7 @@ export const SLAMonitorDashboard: React.FC<SLAMonitorDashboardProps> = ({
               borderColor: isFullscreen ? 'rgba(255,255,255,0.3)' : undefined,
             }}
           >
-            {isFullscreen ? '退出全屏' : '全屏'}
+            {isFullscreen ? 'Exit full screen' : 'full screen'}
           </Button>
         </Space>
       </div>
@@ -584,15 +586,16 @@ export const SLAMonitorDashboard: React.FC<SLAMonitorDashboardProps> = ({
           type="error"
           showIcon
           className="mb-6"
-          title={`数据加载失败：${loadError}`}
+          title={`Data loading failed:${loadError}`}
           description={
             monitoring
-              ? `当前展示的是 ${updatedAt ? format(updatedAt, 'yyyy-MM-dd HH:mm:ss') : '未知时间'} 成功加载的数据。`
-              : '请重试刷新，或确认后端 SLA 监控接口是否可用。'
+              ? `Currently displayed is ${updatedAt ? format(updatedAt, 'yyyy-MM-dd HH:mm:ss') : 'Unknown time'} Successfully loaded data.`
+              : 'Please try the refresh again, or confirm whether the backend SLA monitoring interface is available.'
           }
           action={
             <Button size="small" onClick={handleRefresh} loading={loading}>
-              重试
+
+              Retry
             </Button>
           }
         />
@@ -603,7 +606,7 @@ export const SLAMonitorDashboard: React.FC<SLAMonitorDashboardProps> = ({
           type="warning"
           showIcon
           className="mb-6"
-          title="窗口内工单数超过扫描上限，以下指标基于部分样本计算，不代表全量结果。"
+          title="The number of work orders in the window exceeds the scanning upper limit. The following indicators are calculated based on partial samples and do not represent the full results."
         />
       ) : null}
 
@@ -612,7 +615,7 @@ export const SLAMonitorDashboard: React.FC<SLAMonitorDashboardProps> = ({
         <Col xs={24} sm={12} lg={6}>
           <Card className="sla-stat-card" style={cardStyle}>
             <Statistic
-              title={<Text style={textStyle}>工单解决率</Text>}
+              title={<Text style={textStyle}>Work order resolution rate</Text>}
               value={monitoring?.resolutionRate ?? 0}
               precision={1}
               suffix="%"
@@ -627,7 +630,8 @@ export const SLAMonitorDashboard: React.FC<SLAMonitorDashboardProps> = ({
             />
             <div className="mt-4">
               <Text style={footerStyle}>
-                已解决 {monitoring?.resolvedTickets ?? 0} / {monitoring?.totalTickets ?? 0} 单
+
+                Resolved {monitoring?.resolvedTickets ?? 0} / {monitoring?.totalTickets ?? 0}  Single
               </Text>
             </div>
           </Card>
@@ -635,7 +639,7 @@ export const SLAMonitorDashboard: React.FC<SLAMonitorDashboardProps> = ({
         <Col xs={24} sm={12} lg={6}>
           <Card className="sla-stat-card" style={cardStyle}>
             <Statistic
-              title={<Text style={textStyle}>SLA 合规率</Text>}
+              title={<Text style={textStyle}>SLA Compliance Rate</Text>}
               value={monitoring?.complianceRate ?? 0}
               precision={1}
               suffix="%"
@@ -650,7 +654,8 @@ export const SLAMonitorDashboard: React.FC<SLAMonitorDashboardProps> = ({
             />
             <div className="mt-4">
               <Text style={footerStyle}>
-                达标 {monitoring?.metSlaTickets ?? 0} · 违规 {monitoring?.violatedTickets ?? 0}（
+
+                Compliance {monitoring?.metSlaTickets ?? 0}  · Violation {monitoring?.violatedTickets ?? 0}（
                 {formatRate(monitoring?.violationRate ?? 0)}）
               </Text>
             </div>
@@ -659,7 +664,7 @@ export const SLAMonitorDashboard: React.FC<SLAMonitorDashboardProps> = ({
         <Col xs={24} sm={12} lg={6}>
           <Card className="sla-stat-card" style={cardStyle}>
             <Statistic
-              title={<Text style={textStyle}>活跃告警</Text>}
+              title={<Text style={textStyle}>Active alarm</Text>}
               value={monitoring?.activeAlerts ?? 0}
               styles={{
                 content: {
@@ -672,8 +677,9 @@ export const SLAMonitorDashboard: React.FC<SLAMonitorDashboardProps> = ({
             />
             <div className="mt-4">
               <Text style={footerStyle}>
-                未解决违规 {monitoring?.activeViolations ?? 0} 条 · 告警规则{' '}
-                {monitoring?.activeAlertRules ?? 0} 条
+
+                Open Violations {monitoring?.activeViolations ?? 0}  Article · Alarm rules{' '}
+                {monitoring?.activeAlertRules ?? 0}  items
               </Text>
             </div>
           </Card>
@@ -681,7 +687,7 @@ export const SLAMonitorDashboard: React.FC<SLAMonitorDashboardProps> = ({
         <Col xs={24} sm={12} lg={6}>
           <Card className="sla-stat-card" style={cardStyle}>
             <Statistic
-              title={<Text style={textStyle}>风险工单</Text>}
+              title={<Text style={textStyle}>Risk work order</Text>}
               value={monitoring?.atRiskTickets ?? 0}
               styles={{
                 content: {
@@ -694,7 +700,8 @@ export const SLAMonitorDashboard: React.FC<SLAMonitorDashboardProps> = ({
             />
             <div className="mt-4">
               <Text style={footerStyle}>
-                启用 SLA 定义 {monitoring?.activeSlas ?? 0} 个
+
+                Enable SLA definition {monitoring?.activeSlas ?? 0}  items
               </Text>
             </div>
           </Card>
@@ -708,7 +715,7 @@ export const SLAMonitorDashboard: React.FC<SLAMonitorDashboardProps> = ({
             title={
               <div className="flex items-center gap-2">
                 <Clock style={{ fontSize: '20px' }} />
-                <span style={{ fontSize: isFullscreen ? '20px' : '16px' }}>响应达成率</span>
+                <span style={{ fontSize: isFullscreen ? '20px' : '16px' }}>Response achievement rate</span>
               </div>
             }
             style={cardStyle}
@@ -724,19 +731,21 @@ export const SLAMonitorDashboard: React.FC<SLAMonitorDashboardProps> = ({
                 />
                 <div className="mt-4">
                   <Text style={footerStyle}>
-                    样本 {monitoring.responseTimeSamples} · 达标 {monitoring.responseTimeMet}
+
+                    Sample {monitoring.responseTimeSamples}  · Meet the standard {monitoring.responseTimeMet}
                   </Text>
                 </div>
                 <div>
                   <Text style={footerStyle}>
-                    平均响应时长 {formatDuration(monitoring.averageResponseMinutes)}
+
+                    Average response time {formatDuration(monitoring.averageResponseMinutes)}
                   </Text>
                 </div>
               </div>
             ) : (
               <Empty
                 image={Empty.PRESENTED_IMAGE_SIMPLE}
-                description="窗口内没有同时具备响应截止时间和首次响应时间的工单，暂无响应达成率样本"
+                description="There is no work order with both response deadline and first response time in the window, and there is no response achievement rate sample yet."
               />
             )}
           </Card>
@@ -746,7 +755,7 @@ export const SLAMonitorDashboard: React.FC<SLAMonitorDashboardProps> = ({
             title={
               <div className="flex items-center gap-2">
                 <Zap style={{ fontSize: '20px' }} />
-                <span style={{ fontSize: isFullscreen ? '20px' : '16px' }}>解决达成率</span>
+                <span style={{ fontSize: isFullscreen ? '20px' : '16px' }}>Resolution achievement rate</span>
               </div>
             }
             style={cardStyle}
@@ -762,19 +771,21 @@ export const SLAMonitorDashboard: React.FC<SLAMonitorDashboardProps> = ({
                 />
                 <div className="mt-4">
                   <Text style={footerStyle}>
-                    样本 {monitoring.resolutionTimeSamples} · 达标 {monitoring.resolutionTimeMet}
+
+                    Sample {monitoring.resolutionTimeSamples}  · Meet the standard {monitoring.resolutionTimeMet}
                   </Text>
                 </div>
                 <div>
                   <Text style={footerStyle}>
-                    平均解决时长 {formatDuration(monitoring.averageResolutionMinutes)}
+
+                    Average resolution time {formatDuration(monitoring.averageResolutionMinutes)}
                   </Text>
                 </div>
               </div>
             ) : (
               <Empty
                 image={Empty.PRESENTED_IMAGE_SIMPLE}
-                description="窗口内没有同时具备解决截止时间和解决时间的工单，暂无解决达成率样本"
+                description="There is no work order with both resolution deadline and resolution time in the window, and there is no resolution achievement rate sample yet."
               />
             )}
           </Card>
@@ -788,10 +799,10 @@ export const SLAMonitorDashboard: React.FC<SLAMonitorDashboardProps> = ({
             title={
               <div className="flex items-center gap-2">
                 <XCircle style={{ fontSize: '18px' }} />
-                <span style={{ fontSize: isFullscreen ? '20px' : '16px' }}>各服务类型绩效</span>
+                <span style={{ fontSize: isFullscreen ? '20px' : '16px' }}>Performance of each service type</span>
               </div>
             }
-            extra={<Text style={footerStyle}>{`共 ${serviceTypeTotal} 组`}</Text>}
+            extra={<Text style={footerStyle}>{`Total ${serviceTypeTotal} Group`}</Text>}
             style={cardStyle}
           >
             <Table<SLAPerformanceRow>
@@ -802,11 +813,11 @@ export const SLAMonitorDashboard: React.FC<SLAMonitorDashboardProps> = ({
               loading={loading}
               pagination={false}
               scroll={{ x: 'max-content' }}
-              locale={{ emptyText: '所选周期与过滤条件下没有工单' }}
+              locale={{ emptyText: 'There is no work order under the selected period and filter conditions' }}
             />
             {serviceTypeTotal > serviceTypeRows.length ? (
               <Text type="secondary" className="mt-2 block">
-                {`仅展示前 ${serviceTypeRows.length} 组，共 ${serviceTypeTotal} 组`}
+                {`Show front only ${serviceTypeRows.length} Group, total ${serviceTypeTotal} Group`}
               </Text>
             ) : null}
           </Card>
@@ -816,10 +827,10 @@ export const SLAMonitorDashboard: React.FC<SLAMonitorDashboardProps> = ({
             title={
               <div className="flex items-center gap-2">
                 <XCircle style={{ fontSize: '18px' }} />
-                <span style={{ fontSize: isFullscreen ? '20px' : '16px' }}>各优先级绩效</span>
+                <span style={{ fontSize: isFullscreen ? '20px' : '16px' }}>Performance by priority</span>
               </div>
             }
-            extra={<Text style={footerStyle}>{`共 ${priorityTotal} 组`}</Text>}
+            extra={<Text style={footerStyle}>{`Total ${priorityTotal} Group`}</Text>}
             style={cardStyle}
           >
             <Table<SLAPerformanceRow>
@@ -830,11 +841,11 @@ export const SLAMonitorDashboard: React.FC<SLAMonitorDashboardProps> = ({
               loading={loading}
               pagination={false}
               scroll={{ x: 'max-content' }}
-              locale={{ emptyText: '所选周期与过滤条件下没有工单' }}
+              locale={{ emptyText: 'There is no work order under the selected period and filter conditions' }}
             />
             {priorityTotal > priorityRows.length ? (
               <Text type="secondary" className="mt-2 block">
-                {`仅展示前 ${priorityRows.length} 组，共 ${priorityTotal} 组`}
+                {`Show front only ${priorityRows.length} Group, total ${priorityTotal} Group`}
               </Text>
             ) : null}
           </Card>
@@ -846,11 +857,11 @@ export const SLAMonitorDashboard: React.FC<SLAMonitorDashboardProps> = ({
         title={
           <div className="flex items-center gap-2">
             <Bell style={{ fontSize: '20px' }} />
-            <span style={{ fontSize: isFullscreen ? '24px' : '18px' }}>SLA告警列表</span>
+            <span style={{ fontSize: isFullscreen ? '24px' : '18px' }}>SLA alarm list</span>
             <Badge count={monitoring?.activeAlerts ?? 0} showZero className="ml-2" />
           </div>
         }
-        extra={<Text style={footerStyle}>{`明细 ${monitoring?.alerts.length ?? 0} 条`}</Text>}
+        extra={<Text style={footerStyle}>{`Details ${monitoring?.alerts.length ?? 0} items`}</Text>}
         style={cardStyle}
         styles={{
           body: {
@@ -881,7 +892,7 @@ export const SLAMonitorDashboard: React.FC<SLAMonitorDashboardProps> = ({
               }}
             />
             <Text style={{ color: isFullscreen ? 'rgba(255,255,255,0.7)' : undefined }}>
-              {monitoring ? '所选周期内没有未解决的 SLA 告警' : '暂无告警数据'}
+              {monitoring ? 'There are no unresolved SLA alarms in the selected period' : 'No alarm data yet'}
             </Text>
           </div>
         )}

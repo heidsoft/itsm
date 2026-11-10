@@ -535,7 +535,7 @@ export class CMDBApi {
       try {
         results.push(await this.createCI(request));
       } catch (error) {
-        console.error('批量创建CI失败:', error);
+        console.error('Batch creation of CI failed:', error);
       }
     }
     return results;

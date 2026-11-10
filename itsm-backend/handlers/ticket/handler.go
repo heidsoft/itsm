@@ -193,7 +193,7 @@ func ticketStatsToDTO(s *TicketStats) *dto.TicketStatsResponse {
 func (h *Handler) CreateTicket(c *gin.Context) {
 	var req dto.CreateTicketRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
@@ -243,7 +243,7 @@ func (h *Handler) CreateTicket(c *gin.Context) {
 	ticket, err := h.service.Create(c.Request.Context(), tenantID, params)
 	if err != nil {
 		// 统一错误出口：AppError/BusinessError 按语义分流，其余兜底 500。
-		common.RespondError(c, err, "创建工单失败")
+		common.RespondError(c, err, "Failed to create ticket")
 		return
 	}
 
@@ -275,7 +275,7 @@ func (h *Handler) GetTicket(c *gin.Context) {
 	if err != nil {
 		// 读取失败不等于「不存在」：驱动故障必须按统一分类上报为 500，
 		// 全部压成 404 会让真实故障在监控里表现为大量客户端错误。
-		common.RespondError(c, err, "获取工单失败")
+		common.RespondError(c, err, "Failed to obtain work order")
 		return
 	}
 
@@ -286,7 +286,7 @@ func (h *Handler) GetTicket(c *gin.Context) {
 func (h *Handler) ListTickets(c *gin.Context) {
 	var req dto.ListTicketsRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
@@ -344,7 +344,7 @@ func (h *Handler) ListTickets(c *gin.Context) {
 
 	tickets, total, err := h.service.List(c.Request.Context(), tenantID, page, pageSize, filters, currentUserID, currentRole)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -356,13 +356,13 @@ func (h *Handler) ListTickets(c *gin.Context) {
 func (h *Handler) UpdateTicket(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "无效的工单ID")
+		common.Fail(c, common.ParamErrorCode, "Invalid ticket ID")
 		return
 	}
 
 	var req dto.UpdateTicketRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
@@ -375,7 +375,7 @@ func (h *Handler) UpdateTicket(c *gin.Context) {
 
 	params, paramErr := buildUpdateParams(&req)
 	if paramErr != nil {
-		common.RespondError(c, paramErr, "请求参数错误")
+		common.RespondError(c, paramErr, "Wrong request parameters")
 		return
 	}
 
@@ -392,7 +392,7 @@ func (h *Handler) UpdateTicket(c *gin.Context) {
 func (h *Handler) DeleteTicket(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "无效的工单ID")
+		common.Fail(c, common.ParamErrorCode, "Invalid ticket ID")
 		return
 	}
 
@@ -405,21 +405,21 @@ func (h *Handler) DeleteTicket(c *gin.Context) {
 
 	if err := h.service.Delete(c.Request.Context(), id, tenantID, actorID, actorRole); err != nil {
 		if isForbiddenErr(err) {
-			common.RespondError(c, err, "操作失败")
+			common.RespondError(c, err, "Operation failed")
 			return
 		}
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
-	common.Success(c, gin.H{"message": "工单删除成功"})
+	common.Success(c, gin.H{"message": "Ticket deleted successfully"})
 }
 
 // UpdateStatus handles PUT /api/v1/tickets/:id/status
 func (h *Handler) UpdateTicketStatus(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "无效的工单ID")
+		common.Fail(c, common.ParamErrorCode, "Invalid ticket ID")
 		return
 	}
 
@@ -427,7 +427,7 @@ func (h *Handler) UpdateTicketStatus(c *gin.Context) {
 		Status string `json:"status" binding:"required"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
@@ -451,7 +451,7 @@ func (h *Handler) UpdateTicketStatus(c *gin.Context) {
 func (h *Handler) BatchDeleteTickets(c *gin.Context) {
 	var req dto.BatchDeleteRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
@@ -464,15 +464,15 @@ func (h *Handler) BatchDeleteTickets(c *gin.Context) {
 
 	if err := h.service.BatchDelete(c.Request.Context(), req.TicketIDs, tenantID, actorID, actorRole); err != nil {
 		if isForbiddenErr(err) {
-			common.RespondError(c, err, "操作失败")
+			common.RespondError(c, err, "Operation failed")
 			return
 		}
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
 	common.Success(c, gin.H{
-		"message":      "批量删除成功",
+		"message":      "Batch deletion successful",
 		"deletedCount": len(req.TicketIDs),
 	})
 }
@@ -491,7 +491,7 @@ func (h *Handler) GetTicketStats(c *gin.Context) {
 	if err != nil {
 		// RespondError 而非 FailWithErr：窗口参数错误要说清是哪一端缺失或非法，
 		// 压成「操作失败」会让调用方以为端点没实现日期筛选。
-		common.RespondError(c, err, "统计时间窗口参数错误")
+		common.RespondError(c, err, "Wrong statistical time window parameter")
 		return
 	}
 
@@ -500,7 +500,7 @@ func (h *Handler) GetTicketStats(c *gin.Context) {
 
 	stats, err := h.service.GetStats(c.Request.Context(), tenantID, currentUserID, currentRole, window)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -513,17 +513,17 @@ func (h *Handler) GetTicketStats(c *gin.Context) {
 func (h *Handler) AssignTicket(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "无效的工单ID")
+		common.Fail(c, common.ParamErrorCode, "Invalid ticket ID")
 		return
 	}
 
 	var req dto.AssignTicketRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 	if req.AssigneeID <= 0 {
-		common.Fail(c, common.ParamErrorCode, "assigneeId 必填")
+		common.Fail(c, common.ParamErrorCode, "assigneeId required")
 		return
 	}
 
@@ -534,7 +534,7 @@ func (h *Handler) AssignTicket(c *gin.Context) {
 
 	ticket, err := h.service.AssignTicket(c.Request.Context(), id, req.AssigneeID, tenantID)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -545,13 +545,13 @@ func (h *Handler) AssignTicket(c *gin.Context) {
 func (h *Handler) EscalateTicket(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "无效的工单ID")
+		common.Fail(c, common.ParamErrorCode, "Invalid ticket ID")
 		return
 	}
 
 	var req dto.EscalateTicketRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
@@ -575,13 +575,13 @@ func (h *Handler) EscalateTicket(c *gin.Context) {
 func (h *Handler) ResolveTicket(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "无效的工单ID")
+		common.Fail(c, common.ParamErrorCode, "Invalid ticket ID")
 		return
 	}
 
 	var req dto.ResolveTicketRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
@@ -610,13 +610,13 @@ func (h *Handler) ResolveTicket(c *gin.Context) {
 func (h *Handler) CloseTicket(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "无效的工单ID")
+		common.Fail(c, common.ParamErrorCode, "Invalid ticket ID")
 		return
 	}
 
 	var req dto.CloseTicketRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
@@ -640,7 +640,7 @@ func (h *Handler) CloseTicket(c *gin.Context) {
 func (h *Handler) SearchTickets(c *gin.Context) {
 	keyword := c.Query("q")
 	if keyword == "" {
-		common.Fail(c, common.ParamErrorCode, "搜索关键词不能为空")
+		common.Fail(c, common.ParamErrorCode, "Search keyword cannot be empty")
 		return
 	}
 
@@ -654,7 +654,7 @@ func (h *Handler) SearchTickets(c *gin.Context) {
 	currentRole := c.GetString("role")
 	tickets, total, err := h.service.Search(c.Request.Context(), keyword, tenantID, pagination.Page, pagination.PageSize, currentUserID, currentRole)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -674,7 +674,7 @@ func (h *Handler) GetOverdueTickets(c *gin.Context) {
 	currentRole := c.GetString("role")
 	tickets, total, err := h.service.GetOverdueTickets(c.Request.Context(), tenantID, pagination.Page, pagination.PageSize, currentUserID, currentRole)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -686,7 +686,7 @@ func (h *Handler) GetOverdueTickets(c *gin.Context) {
 func (h *Handler) GetTicketsByAssignee(c *gin.Context) {
 	assigneeID, err := strconv.Atoi(c.Param("assignee_id"))
 	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "无效的处理人ID")
+		common.Fail(c, common.ParamErrorCode, "Invalid handler ID")
 		return
 	}
 
@@ -696,7 +696,7 @@ func (h *Handler) GetTicketsByAssignee(c *gin.Context) {
 	}
 	tickets, err := h.service.GetTicketsByAssignee(c.Request.Context(), assigneeID, tenantID)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -710,7 +710,7 @@ func (h *Handler) GetTicketsByAssignee(c *gin.Context) {
 func (h *Handler) GetTicketSLAInfo(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "无效的工单ID")
+		common.Fail(c, common.ParamErrorCode, "Invalid ticket ID")
 		return
 	}
 
@@ -723,7 +723,7 @@ func (h *Handler) GetTicketSLAInfo(c *gin.Context) {
 		// 与 GetTicket 同一口径：驱动故障必须按统一分类上报为 500。全部压成
 		// 404 会让 DB 故障在监控里表现为一片客户端错误，也会让调用方误判
 		// 「工单不存在」而反复重试。
-		common.RespondError(c, err, "获取工单 SLA 信息失败")
+		common.RespondError(c, err, "Failed to obtain work order SLA information")
 		return
 	}
 
@@ -734,7 +734,7 @@ func (h *Handler) GetTicketSLAInfo(c *gin.Context) {
 func (h *Handler) ExportTickets(c *gin.Context) {
 	var req dto.TicketExportRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
@@ -748,7 +748,7 @@ func (h *Handler) ExportTickets(c *gin.Context) {
 	}
 	data, err := h.service.ExportTickets(c.Request.Context(), tenantID, filters, req.Format)
 	if err != nil {
-		common.FailWithErr(c, err, "工单导出失败")
+		common.FailWithErr(c, err, "Work order export failed")
 		return
 	}
 
@@ -772,7 +772,7 @@ func ticketExportDisposition(format string) (contentType, filename string) {
 func (h *Handler) ImportTickets(c *gin.Context) {
 	var req dto.TicketImportRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
@@ -782,18 +782,18 @@ func (h *Handler) ImportTickets(c *gin.Context) {
 	}
 	fileData := []byte(req.File)
 	if err := h.service.ImportTickets(c.Request.Context(), tenantID, fileData, req.Format); err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
-	common.Success(c, gin.H{"message": "工单导入成功", "format": req.Format})
+	common.Success(c, gin.H{"message": "Work order imported successfully", "format": req.Format})
 }
 
 // AssignTickets handles POST /api/v1/tickets/assign
 func (h *Handler) AssignTickets(c *gin.Context) {
 	var req dto.TicketAssignmentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
@@ -802,12 +802,12 @@ func (h *Handler) AssignTickets(c *gin.Context) {
 		return
 	}
 	if err := h.service.AssignTickets(c.Request.Context(), tenantID, req.TicketIDs, req.AssigneeID); err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
 	common.Success(c, gin.H{
-		"message":       "工单分配成功",
+		"message":       "Ticket assigned successfully",
 		"assignedCount": len(req.TicketIDs),
 	})
 }
@@ -820,7 +820,7 @@ func (h *Handler) GetTicketTemplates(c *gin.Context) {
 	}
 	templates, err := h.service.GetTicketTemplates(c.Request.Context(), tenantID)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -840,7 +840,7 @@ func (h *Handler) GetTicketTemplates(c *gin.Context) {
 func (h *Handler) GetTicketTemplate(c *gin.Context) {
 	templateID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "无效的模板ID")
+		common.Fail(c, common.ParamErrorCode, "Invalid template ID")
 		return
 	}
 
@@ -850,7 +850,7 @@ func (h *Handler) GetTicketTemplate(c *gin.Context) {
 	}
 	tmpl, err := h.service.GetTicketTemplate(c.Request.Context(), tenantID, templateID)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -861,7 +861,7 @@ func (h *Handler) GetTicketTemplate(c *gin.Context) {
 func (h *Handler) CreateTicketTemplate(c *gin.Context) {
 	var tmpl dto.TicketTemplate
 	if err := c.ShouldBindJSON(&tmpl); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
@@ -871,7 +871,7 @@ func (h *Handler) CreateTicketTemplate(c *gin.Context) {
 	}
 	created, err := h.service.CreateTicketTemplate(c.Request.Context(), tenantID, &tmpl)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -882,13 +882,13 @@ func (h *Handler) CreateTicketTemplate(c *gin.Context) {
 func (h *Handler) UpdateTicketTemplate(c *gin.Context) {
 	templateID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "无效的模板ID")
+		common.Fail(c, common.ParamErrorCode, "Invalid template ID")
 		return
 	}
 
 	var tmpl dto.TicketTemplate
 	if err := c.ShouldBindJSON(&tmpl); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
@@ -898,7 +898,7 @@ func (h *Handler) UpdateTicketTemplate(c *gin.Context) {
 	}
 	updated, err := h.service.UpdateTicketTemplate(c.Request.Context(), tenantID, templateID, &tmpl)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -909,7 +909,7 @@ func (h *Handler) UpdateTicketTemplate(c *gin.Context) {
 func (h *Handler) DeleteTicketTemplate(c *gin.Context) {
 	templateID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "无效的模板ID")
+		common.Fail(c, common.ParamErrorCode, "Invalid template ID")
 		return
 	}
 
@@ -918,18 +918,18 @@ func (h *Handler) DeleteTicketTemplate(c *gin.Context) {
 		return
 	}
 	if err := h.service.DeleteTicketTemplate(c.Request.Context(), tenantID, templateID); err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
-	common.Success(c, gin.H{"message": "工单模板删除成功", "templateId": templateID})
+	common.Success(c, gin.H{"message": "Work order template deleted successfully", "templateId": templateID})
 }
 
 // UpdateTicketTemplateStatus handles PUT /api/v1/tickets/templates/:id/status
 func (h *Handler) UpdateTicketTemplateStatus(c *gin.Context) {
 	templateID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "无效的模板ID")
+		common.Fail(c, common.ParamErrorCode, "Invalid template ID")
 		return
 	}
 
@@ -937,11 +937,11 @@ func (h *Handler) UpdateTicketTemplateStatus(c *gin.Context) {
 		IsActive *bool `json:"isActive"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 	if req.IsActive == nil {
-		common.Fail(c, common.ParamErrorCode, "isActive 字段不能为空")
+		common.Fail(c, common.ParamErrorCode, "isActive field cannot be empty")
 		return
 	}
 
@@ -951,7 +951,7 @@ func (h *Handler) UpdateTicketTemplateStatus(c *gin.Context) {
 	}
 	tmpl, err := h.service.UpdateTicketTemplateStatus(c.Request.Context(), tenantID, templateID, *req.IsActive)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -962,7 +962,7 @@ func (h *Handler) UpdateTicketTemplateStatus(c *gin.Context) {
 func (h *Handler) CopyTicketTemplate(c *gin.Context) {
 	templateID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "无效的模板ID")
+		common.Fail(c, common.ParamErrorCode, "Invalid template ID")
 		return
 	}
 
@@ -973,7 +973,7 @@ func (h *Handler) CopyTicketTemplate(c *gin.Context) {
 	// 副本名被静默丢弃（服务层回退为「源模板 - 副本」），复制照样成功并返回
 	// 200——请求被部分执行，而调用方以为自己的参数生效了（gosec G104）。
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
@@ -983,7 +983,7 @@ func (h *Handler) CopyTicketTemplate(c *gin.Context) {
 	}
 	tmpl, err := h.service.CopyTicketTemplate(c.Request.Context(), tenantID, templateID, req.Name)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -998,7 +998,7 @@ func (h *Handler) GetTicketTemplateCategories(c *gin.Context) {
 	}
 	categories, err := h.service.GetTicketTemplateCategories(c.Request.Context(), tenantID)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -1009,7 +1009,7 @@ func (h *Handler) GetTicketTemplateCategories(c *gin.Context) {
 func (h *Handler) GetSubtasks(c *gin.Context) {
 	parentID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "无效的工单ID")
+		common.Fail(c, common.ParamErrorCode, "Invalid ticket ID")
 		return
 	}
 
@@ -1022,7 +1022,7 @@ func (h *Handler) GetSubtasks(c *gin.Context) {
 
 	tickets, _, err := h.service.GetSubtasks(c.Request.Context(), parentID, tenantID, currentUserID, currentRole)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -1036,13 +1036,13 @@ func (h *Handler) GetSubtasks(c *gin.Context) {
 func (h *Handler) CreateSubtask(c *gin.Context) {
 	parentID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "无效的工单ID")
+		common.Fail(c, common.ParamErrorCode, "Invalid ticket ID")
 		return
 	}
 
 	var req dto.CreateSubtaskRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
@@ -1073,7 +1073,7 @@ func (h *Handler) CreateSubtask(c *gin.Context) {
 			common.Fail(c, businessErr.Code, businessErr.Message)
 			return
 		}
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -1084,18 +1084,18 @@ func (h *Handler) CreateSubtask(c *gin.Context) {
 func (h *Handler) UpdateSubtask(c *gin.Context) {
 	parentID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "无效的父工单ID")
+		common.Fail(c, common.ParamErrorCode, "Invalid parent ticket ID")
 		return
 	}
 	subtaskID, err := strconv.Atoi(c.Param("subtask_id"))
 	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "无效的子任务ID")
+		common.Fail(c, common.ParamErrorCode, "Invalid subtask ID")
 		return
 	}
 
 	var req dto.UpdateTicketRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
@@ -1109,17 +1109,17 @@ func (h *Handler) UpdateSubtask(c *gin.Context) {
 	// Verify subtask belongs to parent
 	current, err := h.service.Get(c.Request.Context(), subtaskID, tenantID)
 	if err != nil {
-		common.RespondError(c, err, "子任务不存在")
+		common.RespondError(c, err, "Subtask does not exist")
 		return
 	}
 	if current.ParentTicketID == nil || *current.ParentTicketID != parentID {
-		common.Fail(c, common.ParamErrorCode, "子任务不属于指定的父工单")
+		common.Fail(c, common.ParamErrorCode, "Subtask does not belong to the specified parent work order")
 		return
 	}
 
 	params, paramErr := buildUpdateParams(&req)
 	if paramErr != nil {
-		common.RespondError(c, paramErr, "请求参数错误")
+		common.RespondError(c, paramErr, "Wrong request parameters")
 		return
 	}
 
@@ -1136,12 +1136,12 @@ func (h *Handler) UpdateSubtask(c *gin.Context) {
 func (h *Handler) DeleteSubtask(c *gin.Context) {
 	parentID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "无效的父工单ID")
+		common.Fail(c, common.ParamErrorCode, "Invalid parent ticket ID")
 		return
 	}
 	subtaskID, err := strconv.Atoi(c.Param("subtask_id"))
 	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "无效的子任务ID")
+		common.Fail(c, common.ParamErrorCode, "Invalid subtask ID")
 		return
 	}
 
@@ -1155,20 +1155,20 @@ func (h *Handler) DeleteSubtask(c *gin.Context) {
 	// Verify subtask belongs to parent
 	current, err := h.service.Get(c.Request.Context(), subtaskID, tenantID)
 	if err != nil {
-		common.Fail(c, common.NotFoundCode, "子任务不存在")
+		common.Fail(c, common.NotFoundCode, "Subtask does not exist")
 		return
 	}
 	if current.ParentTicketID == nil || *current.ParentTicketID != parentID {
-		common.Fail(c, common.ParamErrorCode, "子任务不属于指定的父工单")
+		common.Fail(c, common.ParamErrorCode, "Subtask does not belong to the specified parent work order")
 		return
 	}
 
 	if err := h.service.DeleteSubtask(c.Request.Context(), subtaskID, tenantID, actorID, actorRole); err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
-	common.Success(c, gin.H{"message": "子任务删除成功"})
+	common.Success(c, gin.H{"message": "Subtask deleted successfully"})
 }
 
 // PauseSLA handles PUT /api/v1/tickets/:id/sla/pause
@@ -1178,7 +1178,7 @@ func (h *Handler) DeleteSubtask(c *gin.Context) {
 func (h *Handler) PauseSLA(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.ParamError(c, "无效的工单ID")
+		common.ParamError(c, "Invalid ticket ID")
 		return
 	}
 
@@ -1186,7 +1186,7 @@ func (h *Handler) PauseSLA(c *gin.Context) {
 		Reason string `json:"reason" binding:"required"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamError(c, "暂停原因为必填项")
+		common.ParamError(c, "Reason for suspension is required")
 		return
 	}
 
@@ -1195,22 +1195,22 @@ func (h *Handler) PauseSLA(c *gin.Context) {
 		return
 	}
 	if tenantID == 0 {
-		common.AuthFailed(c, "缺少租户上下文")
+		common.AuthFailed(c, "Missing tenant context")
 		return
 	}
 
 	if err := h.service.PauseSLA(c.Request.Context(), tenantID, id, req.Reason); err != nil {
-		common.RespondError(c, err, "暂停SLA失败")
+		common.RespondError(c, err, "Failed to suspend SLA")
 		return
 	}
-	common.Success(c, gin.H{"message": "SLA已暂停", "ticketId": id, "slaStatus": "paused"})
+	common.Success(c, gin.H{"message": "SLA suspended", "ticketId": id, "slaStatus": "paused"})
 }
 
 // ResumeSLA handles PUT /api/v1/tickets/:id/sla/resume
 func (h *Handler) ResumeSLA(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.ParamError(c, "无效的工单ID")
+		common.ParamError(c, "Invalid ticket ID")
 		return
 	}
 
@@ -1219,15 +1219,15 @@ func (h *Handler) ResumeSLA(c *gin.Context) {
 		return
 	}
 	if tenantID == 0 {
-		common.AuthFailed(c, "缺少租户上下文")
+		common.AuthFailed(c, "Missing tenant context")
 		return
 	}
 
 	if err := h.service.ResumeSLA(c.Request.Context(), tenantID, id); err != nil {
-		common.RespondError(c, err, "恢复SLA失败")
+		common.RespondError(c, err, "Failed to restore SLA")
 		return
 	}
-	common.Success(c, gin.H{"message": "SLA已恢复", "ticketId": id, "slaStatus": "active"})
+	common.Success(c, gin.H{"message": "SLA restored", "ticketId": id, "slaStatus": "active"})
 }
 
 // -----------------------------------------------------------------------------
@@ -1270,15 +1270,15 @@ func isForbiddenErr(err error) bool {
 // FailWithErr 兜底被吞成 500。
 func failTicketOperation(c *gin.Context, err error) {
 	if isForbiddenErr(err) {
-		common.RespondError(c, err, "操作失败")
+		common.RespondError(c, err, "Operation failed")
 		return
 	}
 	var bizErr *common.BusinessError
 	if errors.As(err, &bizErr) {
-		common.RespondError(c, err, "操作失败")
+		common.RespondError(c, err, "Operation failed")
 		return
 	}
-	common.FailWithErr(c, err, "操作失败")
+	common.FailWithErr(c, err, "Operation failed")
 }
 
 // buildUpdateParams 把更新请求转换成仓储参数。工单与子任务共用同一份映射，
@@ -1286,7 +1286,7 @@ func failTicketOperation(c *gin.Context, err error) {
 func buildUpdateParams(req *dto.UpdateTicketRequest) (*UpdateParams, error) {
 	if len(req.Tags) > 0 {
 		// 本端点没有标签名解析能力；静默丢弃会让调用方以为标签已写入。
-		return nil, common.NewBusinessError(common.ParamErrorCode, "工单标签请使用 PATCH /api/v1/tickets/:id/relations（tagIds）", "")
+		return nil, common.NewBusinessError(common.ParamErrorCode, "Please use PATCH /api/v1/tickets/:id/relations (tagIds) for ticket tags", "")
 	}
 	params := &UpdateParams{Version: req.Version}
 	if req.Title != "" {
@@ -1333,10 +1333,10 @@ func respondTicketUpdateError(c *gin.Context, err error) {
 		return
 	}
 	if isUserInputUpdateError(err) {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
-	common.RespondError(c, err, "操作失败")
+	common.RespondError(c, err, "Operation failed")
 }
 
 func isUserInputUpdateError(err error) bool {
@@ -1345,6 +1345,7 @@ func isUserInputUpdateError(err error) bool {
 	}
 	msg := err.Error()
 	patterns := []string{
+		// Accept legacy provider errors while returning English response messages.
 		"工单分类不存在或不可用",
 		"处理人不存在或不可用",
 		"验证处理人失败",
@@ -1353,6 +1354,14 @@ func isUserInputUpdateError(err error) bool {
 		"解析工单标签失败",
 		"无法解析工单标签",
 		"工单分类名称不存在",
+		"The work order category does not exist or is unavailable",
+		"Processor does not exist or is unavailable",
+		"Failed to verify handler",
+		"Failed to verify ticket classification",
+		"Unable to parse work order classification",
+		"Failed to parse ticket tag",
+		"Unable to parse ticket tag",
+		"The work order category name does not exist",
 	}
 	for _, p := range patterns {
 		if strings.Contains(msg, p) {
@@ -1375,7 +1384,7 @@ func (h *Handler) GetTicketActivity(c *gin.Context) {
 	}
 	result, err := h.service.GetTicketActivity(c.Request.Context(), id, tenantID)
 	if err != nil {
-		common.FailWithErr(c, err, "获取活动日志失败")
+		common.FailWithErr(c, err, "Failed to obtain activity log")
 		return
 	}
 	common.Success(c, result)

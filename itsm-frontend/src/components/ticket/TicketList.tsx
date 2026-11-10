@@ -110,7 +110,7 @@ const TicketList: React.FC<TicketListProps> = ({
   useEffect(() => {
     if (advancedFilters === undefined) return;
     updateFilters(advancedFilters);
-     
+
   }, [advancedFiltersKey]);
 
   const openTicket = useCallback(
@@ -150,18 +150,18 @@ const TicketList: React.FC<TicketListProps> = ({
   const closeTicket = useCallback(
     (ticket: Ticket) => {
       modal.confirm({
-        title: `关闭工单 ${ticket.ticketNumber}？`,
-        content: '关闭后工单将进入终态，请确认处理结果已经记录。',
-        okText: '确认关闭',
-        cancelText: '取消',
+        title: `Close ticket ${ticket.ticketNumber}？`,
+        content: 'The work order will enter the final state after closing. Please confirm that the processing results have been recorded.',
+        okText: 'Confirm Close',
+        cancelText: 'Cancel',
         okButtonProps: { danger: true },
         onOk: async () => {
           try {
             await TicketApi.closeTicket(ticket.id);
-            message.success('工单已关闭');
+            message.success('Ticket Closed');
             await fetchTickets(filtersRef.current);
           } catch (error) {
-            message.error(error instanceof Error ? error.message : '关闭工单失败');
+            message.error(error instanceof Error ? error.message : 'Failed to close ticket');
             // antd v5's `modal.confirm` resolves with `false` (not rejection) on
             // throw inside onOk; the dialog closes either way. We swallow here
             // so the confirm flow returns cleanly. The error toast above is the
@@ -193,15 +193,15 @@ const TicketList: React.FC<TicketListProps> = ({
   // 单条删除有确认弹窗、CMDB 有 Popconfirm，唯独批量删除此前点了就删。
   const handleBatchDelete = useCallback(() => {
     if (selection.count === 0) {
-      message.warning('请选择要删除的工单');
+      message.warning('Please select the ticket to delete');
       return;
     }
     const count = selection.count;
     modal.confirm({
-      title: `批量删除 ${count} 个工单？`,
-      content: '删除后工单及其关联数据不可恢复。若部分工单因状态或权限限制无法删除，系统会在结果中单独列出。',
-      okText: `确认删除 ${count} 个`,
-      cancelText: '取消',
+      title: `Batch Delete ${count} Work order?`,
+      content: 'The work order and its associated data cannot be recovered after deletion. If some work orders cannot be deleted due to status or permission restrictions, the system will list them separately in the results.',
+      okText: `Confirm Delete ${count} items`,
+      cancelText: 'Cancel',
       okButtonProps: { danger: true },
       onOk: async () => {
         // batchDeleteTickets uses Promise.allSettled internally and toasts
@@ -227,11 +227,11 @@ const TicketList: React.FC<TicketListProps> = ({
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
-      message.success('导出成功');
+      message.success('Exported');
     } catch (error) {
       // 「导出失败」四个字让使用者无法判断是筛选条件太大、权限不足还是后端故障。
       // 服务端 message 在 400/403/422 上都是可行动的，优先透出。
-      message.error(serverErrorMessage(error, '导出失败'));
+      message.error(serverErrorMessage(error, 'Export failed'));
     }
   }, [filters, message]);
 
@@ -380,10 +380,11 @@ const TicketList: React.FC<TicketListProps> = ({
       )}
 
       <Card className='rounded-lg shadow-sm'>
-        <div className='mb-3 flex justify-end text-xs text-gray-500' aria-label='键盘快捷键'>
-          快捷键：<kbd className='mx-1 rounded border bg-gray-50 px-1.5'>j</kbd>/
-          <kbd className='mx-1 rounded border bg-gray-50 px-1.5'>k</kbd> 导航，
-          <kbd className='mx-1 rounded border bg-gray-50 px-1.5'>o</kbd> 打开
+        <div className='mb-3 flex justify-end text-xs text-gray-500' aria-label="Keyboard shortcuts">
+
+          Shortcut key:<kbd className='mx-1 rounded border bg-gray-50 px-1.5'>j</kbd>/
+          <kbd className='mx-1 rounded border bg-gray-50 px-1.5'>k</kbd>  Navigation,
+          <kbd className='mx-1 rounded border bg-gray-50 px-1.5'>o</kbd>  Open
         </div>
         <Table<Ticket>
           columns={columns}
@@ -397,7 +398,7 @@ const TicketList: React.FC<TicketListProps> = ({
             total: pagination.total,
             showSizeChanger: true,
             showQuickJumper: true,
-            showTotal: (total, range) => `第 ${range[0]}-${range[1]} 条，共 ${total} 条`,
+            showTotal: (total, range) => `No. ${range[0]}-${range[1]} items, total ${total} items`,
             pageSizeOptions: ['10', '20', '50', '100'],
           }}
           onChange={handleTableChange}

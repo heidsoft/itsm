@@ -91,7 +91,7 @@ func TestCrossTenantUserList(t *testing.T) {
 		r.GET("/api/v1/admin/users", func(c *gin.Context) {
 			isAdmin, _ := c.Get("is_admin")
 			if !isAdmin.(bool) {
-				c.JSON(http.StatusForbidden, gin.H{"code": 2001, "message": "权限不足"})
+				c.JSON(http.StatusForbidden, gin.H{"code": 2001, "message": "Insufficient permissions"})
 				return
 			}
 			c.JSON(http.StatusOK, gin.H{"code": 0, "data": []string{}})
@@ -116,7 +116,7 @@ func TestCrossTenantUserList(t *testing.T) {
 		r.GET("/api/v1/admin/users", func(c *gin.Context) {
 			isAdmin, _ := c.Get("is_admin")
 			if !isAdmin.(bool) {
-				c.JSON(http.StatusForbidden, gin.H{"code": 2001, "message": "权限不足"})
+				c.JSON(http.StatusForbidden, gin.H{"code": 2001, "message": "Insufficient permissions"})
 				return
 			}
 			c.JSON(http.StatusOK, gin.H{"code": 0, "data": []string{"user1"}})
@@ -147,7 +147,7 @@ func TestCrossTenantUserList(t *testing.T) {
 			// 这里简化为：ticket 999 属于 tenant2
 			if ticketID == "999" {
 				// 返回 404 而不是 403，避免泄露存在性
-				c.JSON(http.StatusNotFound, gin.H{"code": 1004, "message": "工单不存在"})
+				c.JSON(http.StatusNotFound, gin.H{"code": 1004, "message": "The work order does not exist"})
 				return
 			}
 

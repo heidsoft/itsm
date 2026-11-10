@@ -139,7 +139,7 @@ func (c *Handler) AdminListItems(ctx *gin.Context) {
 	}
 	items, total, err := c.service.AdminListItems(ctx, filter)
 	if err != nil {
-		common.RespondError(ctx, err, "查询目录失败")
+		common.RespondError(ctx, err, "Failed to query directory")
 		return
 	}
 	common.SuccessWithList(ctx, items, total, filter.Page, filter.PageSize)
@@ -167,7 +167,7 @@ func (c *Handler) GetCatalogItem(ctx *gin.Context) {
 func (c *Handler) CreateCatalogItem(ctx *gin.Context) {
 	var req catalogItemRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.BadRequestWithErr(ctx, err, "请求参数错误")
+		common.BadRequestWithErr(ctx, err, "Wrong request parameters")
 		return
 	}
 	detail, err := c.service.CreateCatalogItem(ctx, req.toPatch())
@@ -188,7 +188,7 @@ func (c *Handler) UpdateCatalogItem(ctx *gin.Context) {
 	}
 	var req catalogItemRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.BadRequestWithErr(ctx, err, "请求参数错误")
+		common.BadRequestWithErr(ctx, err, "Wrong request parameters")
 		return
 	}
 	detail, err := c.service.UpdateCatalogItem(ctx, itemID, req.toPatch())
@@ -272,7 +272,7 @@ func (c *Handler) CreateItemVersion(ctx *gin.Context) {
 	}
 	var req itemVersionRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.BadRequestWithErr(ctx, err, "请求参数错误")
+		common.BadRequestWithErr(ctx, err, "Wrong request parameters")
 		return
 	}
 	version, err := c.service.CreateItemVersion(ctx, itemID, marketplace.ItemVersionInput{
@@ -332,30 +332,30 @@ func toCatalogDetailResponse(detail *marketplace.CatalogItemDetail) *catalogItem
 func respondCatalogError(ctx *gin.Context, err error, fallback string) {
 	switch {
 	case errors.Is(err, marketplace.ErrMarketplaceItemNotFound), errors.Is(err, marketplace.ErrCatalogVersionNotFound):
-		common.NotFoundWithErr(ctx, err, "目录项或版本不存在")
+		common.NotFoundWithErr(ctx, err, "Catalog entry or version does not exist")
 	case errors.Is(err, marketplace.ErrCatalogNameInvalid),
 		errors.Is(err, marketplace.ErrCatalogFieldRequired),
 		errors.Is(err, marketplace.ErrCatalogVersionInvalid),
 		errors.Is(err, marketplace.ErrCatalogConnectorUnregistered):
 		// 参数错误必须带上具体原因：运营看到的应该是「ghost 未注册，已注册有 …」
 		// 而不是「参数不合法」——后者无法转化为任何下一步动作。
-		common.BadRequestWithErr(ctx, err, "目录参数不合法："+err.Error())
+		common.BadRequestWithErr(ctx, err, "The directory parameter is illegal:"+err.Error())
 	case errors.Is(err, marketplace.ErrCatalogTypeNotDeliverable):
 		// 平台没有插件宿主，这是契约层面的不可受理，不是内部错误。
-		common.BadRequestWithErr(ctx, err, "目录不受理该类型："+err.Error())
+		common.BadRequestWithErr(ctx, err, "The directory does not accept this type:"+err.Error())
 	case errors.Is(err, marketplace.ErrCatalogSkillLocatorInvalid):
 		// 报错里已带上当前运行时可用的技能码清单，运营据此决定改定位符还是先发技能。
-		common.BadRequestWithErr(ctx, err, "技能交付物定位符不可用："+err.Error())
+		common.BadRequestWithErr(ctx, err, "Skill deliverable locator is not available:"+err.Error())
 	case errors.Is(err, marketplace.ErrCatalogVersionExists):
-		common.Conflict(ctx, "版本号已存在，请换一个版本号："+err.Error(), nil)
+		common.Conflict(ctx, "The version number already exists, please change a version number:"+err.Error(), nil)
 	case errors.Is(err, marketplace.ErrCatalogItemIdentityImmutable):
-		common.Conflict(ctx, "名称与类型创建后不可修改："+err.Error(), nil)
+		common.Conflict(ctx, "The name and type cannot be modified after creation:"+err.Error(), nil)
 	case errors.Is(err, marketplace.ErrCatalogNoPublishedVersion):
-		common.Conflict(ctx, "该目录项还没有已发布版本，请先新增并发布一个版本再上架", nil)
+		common.Conflict(ctx, "There is no published version of this catalog item yet. Please add and publish a version first before putting it on the shelf.", nil)
 	case errors.Is(err, marketplace.ErrCatalogItemPublished):
-		common.Conflict(ctx, "已上架的目录项不能删除，请先下架", nil)
+		common.Conflict(ctx, "The catalog item that has been put on the shelf cannot be deleted. Please remove it from the shelf first.", nil)
 	case errors.Is(err, marketplace.ErrCatalogItemInstalled):
-		common.Conflict(ctx, "已有租户安装该目录项，不能删除（下架即可停止新安装）："+err.Error(), nil)
+		common.Conflict(ctx, "This directory item has been installed by a tenant and cannot be deleted (removing it will stop new installations):"+err.Error(), nil)
 	default:
 		common.RespondError(ctx, err, fallback)
 	}

@@ -37,7 +37,7 @@ func (h *Handler) CreateApplication(ctx *gin.Context) {
 	}
 
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(ctx, err, "请求参数错误")
+		common.ParamErrorWithErr(ctx, err, "Wrong request parameters")
 		return
 	}
 
@@ -47,7 +47,7 @@ func (h *Handler) CreateApplication(ctx *gin.Context) {
 	}
 	app, err := h.service.CreateApplication(ctx.Request.Context(), req.Name, req.Code, req.Type, req.ProjectID, tenantID)
 	if err != nil {
-		common.RespondError(ctx, err, "操作失败")
+		common.RespondError(ctx, err, "Operation failed")
 		return
 	}
 
@@ -69,7 +69,7 @@ func (h *Handler) ListApplications(ctx *gin.Context) {
 	}
 	apps, err := h.service.ListApplications(ctx.Request.Context(), tenantID)
 	if err != nil {
-		common.RespondError(ctx, err, "操作失败")
+		common.RespondError(ctx, err, "Operation failed")
 		return
 	}
 	common.Success(ctx, apps)
@@ -94,7 +94,7 @@ func (h *Handler) CreateMicroservice(ctx *gin.Context) {
 	}
 
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(ctx, err, "请求参数错误")
+		common.ParamErrorWithErr(ctx, err, "Wrong request parameters")
 		return
 	}
 
@@ -104,7 +104,7 @@ func (h *Handler) CreateMicroservice(ctx *gin.Context) {
 	}
 	svc, err := h.service.CreateMicroservice(ctx.Request.Context(), req.Name, req.Code, req.Language, req.Framework, req.ApplicationID, tenantID)
 	if err != nil {
-		common.RespondError(ctx, err, "操作失败")
+		common.RespondError(ctx, err, "Operation failed")
 		return
 	}
 
@@ -125,7 +125,7 @@ func (h *Handler) UpdateApplication(ctx *gin.Context) {
 	idStr := ctx.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "无效的应用ID")
+		common.Fail(ctx, common.ParamErrorCode, "Invalid application ID")
 		return
 	}
 
@@ -137,7 +137,7 @@ func (h *Handler) UpdateApplication(ctx *gin.Context) {
 	}
 
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(ctx, err, "请求参数错误")
+		common.ParamErrorWithErr(ctx, err, "Wrong request parameters")
 		return
 	}
 
@@ -148,7 +148,7 @@ func (h *Handler) UpdateApplication(ctx *gin.Context) {
 
 	app, err := h.service.UpdateApplication(ctx.Request.Context(), id, req.Name, req.Code, req.Type, req.ProjectID, tenantID)
 	if err != nil {
-		common.RespondError(ctx, err, "操作失败")
+		common.RespondError(ctx, err, "Operation failed")
 		return
 	}
 
@@ -168,7 +168,7 @@ func (h *Handler) DeleteApplication(ctx *gin.Context) {
 	idStr := ctx.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "无效的应用ID")
+		common.Fail(ctx, common.ParamErrorCode, "Invalid application ID")
 		return
 	}
 
@@ -179,11 +179,11 @@ func (h *Handler) DeleteApplication(ctx *gin.Context) {
 
 	err = h.service.DeleteApplication(ctx.Request.Context(), id, tenantID)
 	if err != nil {
-		common.RespondError(ctx, err, "操作失败")
+		common.RespondError(ctx, err, "Operation failed")
 		return
 	}
 
-	common.Success(ctx, gin.H{"message": "删除成功"})
+	common.Success(ctx, gin.H{"message": "Deleted"})
 }
 
 // ListMicroservices 获取微服务列表
@@ -201,7 +201,7 @@ func (h *Handler) ListMicroservices(ctx *gin.Context) {
 	}
 	microservices, err := h.service.ListMicroservices(ctx.Request.Context(), tenantID)
 	if err != nil {
-		common.RespondError(ctx, err, "操作失败")
+		common.RespondError(ctx, err, "Operation failed")
 		return
 	}
 	common.Success(ctx, microservices)
@@ -221,7 +221,7 @@ func (h *Handler) UpdateMicroservice(ctx *gin.Context) {
 	idStr := ctx.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "无效的微服务ID")
+		common.Fail(ctx, common.ParamErrorCode, "Invalid microservice ID")
 		return
 	}
 
@@ -234,7 +234,7 @@ func (h *Handler) UpdateMicroservice(ctx *gin.Context) {
 	}
 
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(ctx, err, "请求参数错误")
+		common.ParamErrorWithErr(ctx, err, "Wrong request parameters")
 		return
 	}
 
@@ -245,7 +245,7 @@ func (h *Handler) UpdateMicroservice(ctx *gin.Context) {
 
 	svc, err := h.service.UpdateMicroservice(ctx.Request.Context(), id, req.Name, req.Code, req.Language, req.Framework, req.ApplicationID, tenantID)
 	if err != nil {
-		common.RespondError(ctx, err, "操作失败")
+		common.RespondError(ctx, err, "Operation failed")
 		return
 	}
 
@@ -265,7 +265,7 @@ func (h *Handler) DeleteMicroservice(ctx *gin.Context) {
 	idStr := ctx.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "无效的微服务ID")
+		common.Fail(ctx, common.ParamErrorCode, "Invalid microservice ID")
 		return
 	}
 
@@ -276,9 +276,9 @@ func (h *Handler) DeleteMicroservice(ctx *gin.Context) {
 
 	err = h.service.DeleteMicroservice(ctx.Request.Context(), id, tenantID)
 	if err != nil {
-		common.RespondError(ctx, err, "操作失败")
+		common.RespondError(ctx, err, "Operation failed")
 		return
 	}
 
-	common.Success(ctx, gin.H{"message": "删除成功"})
+	common.Success(ctx, gin.H{"message": "Deleted"})
 }

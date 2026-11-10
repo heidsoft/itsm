@@ -40,7 +40,7 @@ function SSOCallbackContent() {
 
         // 处理错误情况
         if (error) {
-          logger.error('SSO错误:', error, errorDescription);
+          logger.error('SSO error:', error, errorDescription);
           setStatus('error');
           setErrorMessage(errorDescription || error);
           return;
@@ -49,35 +49,35 @@ function SSOCallbackContent() {
         // 缺少授权码
         if (!code) {
           setStatus('error');
-          setErrorMessage('未收到授权码，请重试');
+          setErrorMessage('Authorization code not received, please try again');
           return;
         }
 
-        logger.info('处理SSO回调:', { state, provider });
+        logger.info('Handling SSO callback:', { state, provider });
 
         const ssoResult = await AuthAPI.ssoCallback(code, state, provider);
 
         if (!ssoResult.success || !ssoResult.data) {
-          throw new Error(ssoResult.error || 'SSO 登录失败');
+          throw new Error(ssoResult.error || 'SSO login failed');
         }
 
         // 回调只负责让后端基于授权码签发会话；身份、租户范围与权限一律回后端会话端点读取，
         // 不采信回调响应里的 user/tenant/accessToken 字段。
         const outcome = await AuthService.syncSession();
         if (outcome.state === 'unauthenticated') {
-          throw new Error('SSO 回调已被接受，但后端未建立会话，请重新登录');
+          throw new Error('SSO callback has been accepted, but the backend did not establish a session, please log in again');
         }
         if (outcome.state === 'unavailable') {
-          throw new Error('暂时无法确认会话，请稍后重试');
+          throw new Error('Unable to confirm session, please try again later');
         }
 
         if (cancelled) return;
         setStatus('success');
       } catch (err) {
-        logger.error('SSO回调处理失败:', err);
+        logger.error('SSO callback processing failed:', err);
         if (cancelled) return;
         setStatus('error');
-        setErrorMessage(err instanceof Error ? err.message : 'SSO登录失败');
+        setErrorMessage(err instanceof Error ? err.message : 'SSO login failed');
       }
     };
 
@@ -101,10 +101,11 @@ function SSOCallbackContent() {
               </div>
 
               <Title level={3} className="!mb-2 !text-gray-900 !text-xl">
-                正在处理SSO登录
+
+                Processing SSO login
               </Title>
 
-              <Text className="!text-gray-500 !text-sm block">请稍候，正在验证您的身份...</Text>
+              <Text className="!text-gray-500 !text-sm block">Please wait, your identity is being verified...</Text>
 
               <Flex justify="center" className="mt-6">
                 <div className="flex gap-2">
@@ -143,10 +144,11 @@ function SSOCallbackContent() {
               </div>
 
               <Title level={3} className="!mb-2 !text-gray-900 !text-xl">
-                SSO登录成功
+
+                SSO login successful
               </Title>
 
-              <Text className="!text-gray-500 !text-sm block">正在跳转到仪表盘...</Text>
+              <Text className="!text-gray-500 !text-sm block">Jumping to dashboard...</Text>
 
               <Flex justify="center" className="mt-6">
                 <div className="flex gap-2">
@@ -185,18 +187,20 @@ function SSOCallbackContent() {
             </div>
 
             <Title level={3} className="!mb-2 !text-gray-900 !text-xl">
-              SSO登录失败
+
+              SSO login failed
             </Title>
 
             <Text className="!text-gray-500 !text-sm block !mb-6">
-              {errorMessage || 'SSO登录过程中出现错误'}
+              {errorMessage || 'Error occurred during SSO login process'}
             </Text>
 
             <button
               onClick={() => router.push('/login')}
               className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm font-medium"
             >
-              返回登录页
+
+              Return to login page
             </button>
           </div>
         </Card>
@@ -224,7 +228,8 @@ export default function SSOCallbackPage() {
                   <Loader2 size={32} className="text-blue-600 animate-spin" />
                 </div>
                 <Title level={3} className="!mb-2 !text-gray-900 !text-xl">
-                  正在加载...
+
+                  Loading...
                 </Title>
               </div>
             </Card>

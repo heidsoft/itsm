@@ -152,9 +152,9 @@ const ChangeSuccessReport = () => {
     } catch (err) {
       // 接口失败必须和「没有变更」区分开：置 error 态而不是只写回空数据。
       setData(EMPTY_REPORT);
-      const reason = err instanceof Error ? err.message : '未知错误';
+      const reason = err instanceof Error ? err.message : 'Unknown error';
       setError(reason);
-      message.error(`加载变更统计失败：${reason}`);
+      message.error(`Failed to load change statistics:${reason}`);
     } finally {
       setLoading(false);
     }
@@ -169,18 +169,19 @@ const ChangeSuccessReport = () => {
   return (
     <div className="p-6 bg-gray-50 min-h-full">
       <header className="mb-6">
-        <Title level={2}>变更成功率报表</Title>
-        <Text className="text-gray-500">展示变更管理的状态分布和成功率统计</Text>
+        <Title level={2}>Change success rate report</Title>
+        <Text className="text-gray-500">Display status distribution and success rate statistics of change management</Text>
       </header>
 
       <Card className="mb-6">
         <Row justify="space-between" align="middle">
           <Col>
-            <Text className="text-gray-600">变更执行情况监控</Text>
+            <Text className="text-gray-600">Change execution monitoring</Text>
           </Col>
           <Col>
             <Button icon={<RotateCcw />} onClick={loadData} loading={loading}>
-              刷新数据
+
+              Refresh Data
             </Button>
           </Col>
         </Row>
@@ -188,18 +189,19 @@ const ChangeSuccessReport = () => {
 
       {loading ? (
         <div className="flex items-center justify-center h-64">
-          <Spin description="加载报表数据..." />
+          <Spin description="Loading report data..." />
         </div>
       ) : error ? (
         // 失败态不得渲染成 0 值卡片或「还没有变更记录」空态：那会把接口故障伪装成空数据。
         <Alert
           type="error"
           showIcon
-          title="变更统计加载失败"
-          description={`${error}。请确认已登录且有变更读取权限，或稍后重试。`}
+          title="Change statistics loading failed"
+          description={`${error}. Please make sure you are logged in and have change read permissions, or try again later.`}
           action={
             <Button size="small" icon={<RotateCcw />} onClick={loadData}>
-              重试
+
+              Retry
             </Button>
           }
         />
@@ -208,13 +210,13 @@ const ChangeSuccessReport = () => {
           <Row gutter={[16, 16]} className="mb-6">
             <Col xs={24} sm={12} lg={6}>
               <Card>
-                <Statistic title="变更总数" value={data.total} styles={{ content: { color: '#1890ff' } }} />
+                <Statistic title="Total number of changes" value={data.total} styles={{ content: { color: '#1890ff' } }} />
               </Card>
             </Col>
             <Col xs={24} sm={12} lg={6}>
               <Card>
                 <Statistic
-                  title="已完成"
+                  title="Completed"
                   value={data.completed}
                   styles={{ content: { color: '#52c41a' } }}
                 />
@@ -223,9 +225,9 @@ const ChangeSuccessReport = () => {
             <Col xs={24} sm={12} lg={6}>
               <Card>
                 <Statistic
-                  title="已实施变更"
+                  title="Change implemented"
                   value={data.implemented}
-                  suffix="/ 完成+失败+回滚"
+                  suffix="/Complete+Failed+Rollback"
                   styles={{ content: { color: '#722ed1' } }}
                 />
               </Card>
@@ -235,13 +237,13 @@ const ChangeSuccessReport = () => {
                 {data.successRate === null ? (
                   // 空分母不是 0%：显示「暂无实施结果」而不是伪装成一个真实的低成功率。
                   <Statistic
-                    title="成功率"
-                    value="暂无实施结果"
+                    title="Success rate"
+                    value="No implementation result yet"
                     styles={{ content: { fontSize: 18, color: '#8c8c8c' } }}
                   />
                 ) : (
                   <Statistic
-                    title="成功率"
+                    title="Success rate"
                     value={data.successRate}
                     precision={1}
                     suffix="%"
@@ -261,7 +263,7 @@ const ChangeSuccessReport = () => {
           ) : (
             <Row gutter={[16, 16]}>
               <Col xs={24} lg={12}>
-                <Card title="变更状态分布">
+                <Card title="Change status distribution">
                   <ResponsiveContainer width="100%" height={300}>
                     <PieChart>
                       <Pie
@@ -285,7 +287,7 @@ const ChangeSuccessReport = () => {
               </Col>
 
               <Col xs={24} lg={12}>
-                <Card title="变更类型分布">
+                <Card title="Change type distribution">
                   <ResponsiveContainer width="100%" height={300}>
                     <BarChart data={data.byType}>
                       <CartesianGrid strokeDasharray="3 3" />
@@ -293,7 +295,7 @@ const ChangeSuccessReport = () => {
                       <YAxis allowDecimals={false} />
                       <Tooltip />
                       <Legend />
-                      <Bar dataKey="count" name="变更数量" fill="#1890ff">
+                      <Bar dataKey="count" name="Change quantity" fill="#1890ff">
                         {data.byType.map(entry => (
                           <Cell key={entry.type} fill={entry.color} />
                         ))}
@@ -306,7 +308,7 @@ const ChangeSuccessReport = () => {
           )}
 
           {!isEmpty && (
-            <Card title="状态说明" className="mt-6">
+            <Card title="Status description" className="mt-6">
               <Row gutter={[16, 16]}>
                 {data.byStatus.map(entry => (
                   <Col xs={12} sm={8} md={6} key={entry.status}>
@@ -330,9 +332,10 @@ const ChangeSuccessReport = () => {
 function EmptyChangeStats() {
   return (
     <div className="py-8 text-center">
-      <p className="text-gray-600">当前租户还没有变更记录</p>
+      <p className="text-gray-600">The current tenant has no change records yet</p>
       <p className="text-gray-400 text-sm mt-1">
-        创建变更并流转到相应状态后，这里会显示真实的状态分布与类型分布。
+
+        After a change is created and transferred to the corresponding state, the real state distribution and type distribution will be displayed here.
       </p>
     </div>
   );

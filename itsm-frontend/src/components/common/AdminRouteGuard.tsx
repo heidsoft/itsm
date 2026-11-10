@@ -95,10 +95,11 @@ function DeniedResult({ router }: { router: ReturnType<typeof useRouter> }) {
     <Result
       status="403"
       title="403"
-      subTitle="抱歉，您没有权限访问此页面。"
+      subTitle="Sorry, you do not have permission to access this page."
       extra={
         <Button type="primary" onClick={() => router.push('/')}>
-          返回首页
+
+          Return to homepage
         </Button>
       }
     />

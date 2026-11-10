@@ -33,29 +33,29 @@ interface StatusCount {
 }
 
 const PROVIDER_LABEL_MAP: Record<string, string> = {
-  aliyun: '阿里云',
-  huawei: '华为云',
-  tencent: '腾讯云',
+  aliyun: 'Aliyun',
+  huawei: 'Huawei Cloud',
+  tencent: 'Tencent Cloud',
   azure: 'Azure',
   aws: 'AWS',
-  volcengine: '火山引擎',
+  volcengine: 'Volcengine',
   k8s: 'Kubernetes',
-  onprem: '私有云',
-  private: '私有云',
+  onprem: 'Private Cloud',
+  private: 'Private Cloud',
   gcp: 'GCP',
 };
 
 const STATUS_LABEL_MAP: Record<string, { label: string; color: string }> = {
-  running: { label: '运行中', color: '#22c55e' },
-  active: { label: '运行中', color: '#22c55e' },
-  stopped: { label: '已停止', color: '#64748b' },
-  inactive: { label: '已停止', color: '#64748b' },
-  available: { label: '可用', color: '#22c55e' },
-  unavailable: { label: '不可用', color: '#ef4444' },
-  pending: { label: '处理中', color: '#f59e0b' },
-  warning: { label: '警告', color: '#f59e0b' },
-  error: { label: '错误', color: '#ef4444' },
-  failed: { label: '失败', color: '#ef4444' },
+  running: { label: 'Running', color: '#22c55e' },
+  active: { label: 'Running', color: '#22c55e' },
+  stopped: { label: 'Stopped', color: '#64748b' },
+  inactive: { label: 'Stopped', color: '#64748b' },
+  available: { label: 'Available', color: '#22c55e' },
+  unavailable: { label: 'Not available', color: '#ef4444' },
+  pending: { label: 'In Progress', color: '#f59e0b' },
+  warning: { label: 'Warning', color: '#f59e0b' },
+  error: { label: 'Error', color: '#ef4444' },
+  failed: { label: 'Failed', color: '#ef4444' },
 };
 
 const FALLBACK_COLORS = ['#2563eb', '#16a34a', '#d97706', '#dc2626', '#0891b2', '#7c3aed'];
@@ -117,8 +117,8 @@ export const ResourceDistributionChart: React.FC = () => {
         setData(aggregateByProvider(list));
       } catch (error) {
         if (!isMounted) return;
-        console.warn('加载云资源分布失败:', error);
-        message.error('加载云资源分布失败');
+        console.warn('Failed to load cloud resource distribution:', error);
+        message.error('Failed to load cloud resource distribution');
         setData([]);
       } finally {
         if (isMounted) setLoading(false);
@@ -135,7 +135,7 @@ export const ResourceDistributionChart: React.FC = () => {
   }
 
   if (data.length === 0) {
-    return <Empty description="暂无云资源分布数据" />;
+    return <Empty description="No cloud resource distribution data yet" />;
   }
 
   return (
@@ -165,7 +165,7 @@ export const ResourceDistributionChart: React.FC = () => {
           labelStyle={{ color: chart.tooltipText }}
         />
         <Legend wrapperStyle={{ color: chart.legendText }} />
-        <Bar dataKey="value" name="资源数" fill={chart.palette[0]} radius={[4, 4, 0, 0]} />
+        <Bar dataKey="value" name="Number of resources" fill={chart.palette[0]} radius={[4, 4, 0, 0]} />
       </BarChart>
     </ResponsiveContainer>
   );
@@ -188,8 +188,8 @@ export const ResourceHealthPieChart: React.FC = () => {
         setData(aggregateByStatus(list));
       } catch (error) {
         if (!isMounted) return;
-        console.warn('加载资源健康状态失败:', error);
-        message.error('加载资源健康状态失败');
+        console.warn('Failed to load resource health status:', error);
+        message.error('Failed to load resource health status');
         setData([]);
       } finally {
         if (isMounted) setLoading(false);
@@ -206,7 +206,7 @@ export const ResourceHealthPieChart: React.FC = () => {
   }
 
   if (data.length === 0) {
-    return <Empty description="暂无资源健康状态数据" />;
+    return <Empty description="No resource health status data yet" />;
   }
 
   return (
@@ -244,7 +244,7 @@ export const ResourceHealthPieChart: React.FC = () => {
 
 // 兼容旧 Card 包装器 — 占位用，后续可由真实组件替换
 export const CloudResourceDistributionCard: React.FC<{ title?: string }> = ({ title }) => (
-  <Card title={title ?? '多云资源分布'}>
+  <Card title={title ?? 'Multi-cloud resource distribution'}>
     <ResourceDistributionChart />
   </Card>
 );

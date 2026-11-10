@@ -26,16 +26,16 @@ const formatAvgResolutionTime = (hours: number | undefined): string => {
 
   if (hours < 1) {
     const minutes = Math.round(hours * 60);
-    return `${minutes}分钟`;
+    return `${minutes} minutes`;
   }
 
   if (hours < 24) {
-    return `${hours.toFixed(1)}小时`;
+    return `${hours.toFixed(1)} hours`;
   }
 
   const days = Math.floor(hours / 24);
   const remainingHours = (hours % 24).toFixed(1);
-  return `${days}天${remainingHours}小时`;
+  return `${days} days ${remainingHours} hours`;
 };
 
 export const IncidentStats: React.FC<IncidentStatsProps> = ({ metrics, className }) => {

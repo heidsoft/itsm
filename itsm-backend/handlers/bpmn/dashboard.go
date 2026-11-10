@@ -44,7 +44,7 @@ func resolveTenantID(ctx *gin.Context) (int, bool) {
 		zap.S().Warnw("BPMN Dashboard: tenant_id missing in context, rejecting request",
 			"path", ctx.Request.URL.Path,
 			"remote_ip", ctx.ClientIP())
-		common.Fail(ctx, common.AuthFailedCode, "租户信息缺失")
+		common.Fail(ctx, common.AuthFailedCode, "Tenant information is missing")
 		return 0, false
 	}
 	return tenantID, true
@@ -58,7 +58,7 @@ func (c *DashboardHandler) failInternal(ctx *gin.Context, action string, err err
 		"tenant_id", ctx.GetInt("tenant_id"),
 		"error", err,
 	)
-	common.Fail(ctx, 5001, action+"失败，请稍后重试或联系管理员")
+	common.Fail(ctx, 5001, action+"Failed, please try again later or contact the administrator")
 }
 
 func (c *DashboardHandler) RegisterRoutes(r *gin.RouterGroup) {
@@ -136,7 +136,7 @@ func (c *DashboardHandler) GetDashboardMetrics(ctx *gin.Context) {
 func (c *DashboardHandler) GetProcessMetrics(ctx *gin.Context) {
 	key := ctx.Param("key")
 	if key == "" {
-		common.Fail(ctx, 1001, "流程定义Key不能为空")
+		common.Fail(ctx, 1001, "Process definition Key cannot be empty")
 		return
 	}
 
@@ -257,7 +257,7 @@ func (c *DashboardHandler) GetAuditLogs(ctx *gin.Context) {
 func (c *DashboardHandler) GetUserActivity(ctx *gin.Context) {
 	userID, err := strconv.Atoi(ctx.Param("userId"))
 	if err != nil {
-		common.Fail(ctx, 1001, "无效的用户ID")
+		common.Fail(ctx, 1001, "Invalid user ID")
 		return
 	}
 
@@ -322,7 +322,7 @@ func (c *DashboardHandler) GetSLAViolations(ctx *gin.Context) {
 func (c *DashboardHandler) GetSLACompliance(ctx *gin.Context) {
 	key := ctx.Query("key")
 	if key == "" {
-		common.Fail(ctx, 1001, "流程定义Key不能为空")
+		common.Fail(ctx, 1001, "Process definition Key cannot be empty")
 		return
 	}
 
@@ -373,7 +373,7 @@ func (c *DashboardHandler) GetTenantStats(ctx *gin.Context) {
 
 	stats, err := c.tenantService.GetTenantStatistics(ctx.Request.Context(), tenantID)
 	if err != nil {
-		common.RespondError(ctx, err, "获取租户统计失败")
+		common.RespondError(ctx, err, "Failed to obtain tenant statistics")
 		return
 	}
 
@@ -389,7 +389,7 @@ func (c *DashboardHandler) GetTenantStats(ctx *gin.Context) {
 func (c *DashboardHandler) GetBottleneckAnalysis(ctx *gin.Context) {
 	key := ctx.Query("key")
 	if key == "" {
-		common.Fail(ctx, 1001, "流程定义Key不能为空")
+		common.Fail(ctx, 1001, "Process definition Key cannot be empty")
 		return
 	}
 

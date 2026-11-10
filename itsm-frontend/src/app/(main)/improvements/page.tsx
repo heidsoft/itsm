@@ -9,7 +9,7 @@ import { useI18n } from '@/lib/i18n';
 import { displayUserName, formatDateTime } from '@/lib/formatters';
 import type { Ticket, TicketListResponse } from '@/lib/api/api-config';
 
-type ImprovementStatus = '进行中' | '待评估' | '已完成';
+type ImprovementStatus = 'In Progress' | 'Pending Review' | 'Completed';
 
 interface Improvement {
   id: string;
@@ -22,9 +22,9 @@ interface Improvement {
 }
 
 const statusColors: Record<ImprovementStatus, string> = {
-  进行中: 'blue',
-  待评估: 'gold',
-  已完成: 'green',
+  'In Progress': 'blue',
+  'Pending Review': 'gold',
+  Completed: 'green',
 };
 
 const ImprovementListPage = () => {
@@ -32,7 +32,7 @@ const ImprovementListPage = () => {
   const { message } = App.useApp();
   const { t } = useI18n();
   const [improvements, setImprovements] = useState<Improvement[]>([]);
-  const [filter, setFilter] = useState<string>('全部');
+  const [filter, setFilter] = useState<string>('All');
   const [loading, setLoading] = useState(false);
 
   // 加载改进计划
@@ -51,8 +51,8 @@ const ImprovementListPage = () => {
         ticketId: ticket.id,
         title: ticket.title,
         status: mapStatus(ticket.status),
-        owner: displayUserName(ticket.assigneeName, ticket.assigneeId, '未分配'),
-        target: ticket.description || '无目标描述',
+        owner: displayUserName(ticket.assigneeName, ticket.assigneeId, 'Unassigned'),
+        target: ticket.description || 'No target description',
         createdAt: formatDateTime(ticket.createdAt) || '-',
       }));
 
@@ -68,25 +68,25 @@ const ImprovementListPage = () => {
   const mapStatus = (ticketStatus: string): ImprovementStatus => {
     switch (ticketStatus) {
       case 'open':
-        return '待评估';
+        return 'Pending Review';
       case 'in_progress':
-        return '进行中';
+        return 'In Progress';
       case 'resolved':
       case 'closed':
-        return '已完成';
+        return 'Completed';
       default:
-        return '待评估';
+        return 'Pending Review';
     }
   };
 
   const filteredImprovements = improvements.filter(imp => {
-    if (filter === '全部') return true;
+    if (filter === 'All') return true;
     return imp.status === filter;
   });
 
   const columns: ColumnsType<Improvement> = [
     {
-      title: '计划ID',
+      title: 'Plan ID',
       dataIndex: 'id',
       key: 'id',
       width: 120,
@@ -97,32 +97,32 @@ const ImprovementListPage = () => {
       ),
     },
     {
-      title: '标题',
+      title: 'Title',
       dataIndex: 'title',
       key: 'title',
       ellipsis: true,
     },
     {
-      title: '状态',
+      title: 'Status',
       dataIndex: 'status',
       key: 'status',
       width: 100,
       render: (status: ImprovementStatus) => <Tag color={statusColors[status]}>{status}</Tag>,
     },
     {
-      title: '负责人',
+      title: 'Assignee',
       dataIndex: 'owner',
       key: 'owner',
       width: 120,
     },
     {
-      title: '目标',
+      title: 'Target',
       dataIndex: 'target',
       key: 'target',
       ellipsis: true,
     },
     {
-      title: '创建时间',
+      title: 'Created',
       dataIndex: 'createdAt',
       key: 'createdAt',
       width: 120,
@@ -134,28 +134,30 @@ const ImprovementListPage = () => {
       <Card>
         <div className="mb-6 flex justify-between items-center">
           <div>
-            <h2 className="text-2xl font-bold text-gray-800">持续改进</h2>
-            <p className="text-gray-500 mt-1">识别、规划和实施IT服务和流程的改进</p>
+            <h2 className="text-2xl font-bold text-gray-800">Continuous improvement</h2>
+            <p className="text-gray-500 mt-1">Identify, plan and implement improvements to IT services and processes</p>
           </div>
           <Space>
             <Button icon={<RotateCcw />} onClick={loadImprovements} loading={loading}>
-              刷新
+
+              Refresh
             </Button>
             <Button
               type="primary"
               icon={<Plus />}
               onClick={() => router.push('/tickets/create?type=improvement')}
             >
-              新建改进计划
+
+              Create a new improvement plan
             </Button>
           </Space>
         </div>
 
         {/* 筛选器 */}
         <div className="mb-4 flex items-center gap-2">
-          <span className="text-sm font-semibold">筛选:</span>
+          <span className="text-sm font-semibold">Filter:</span>
           <Space>
-            {['全部', '进行中', '待评估', '已完成'].map(f => (
+            {['All', 'In Progress', 'Pending Review', 'Completed'].map(f => (
               <Button
                 key={f}
                 type={filter === f ? 'primary' : 'default'}
@@ -170,9 +172,10 @@ const ImprovementListPage = () => {
 
         {/* 改进计划列表 */}
         {filteredImprovements.length === 0 && !loading ? (
-          <Empty description="暂无改进计划">
+          <Empty description="No improvement plan yet">
             <Button type="primary" onClick={() => router.push('/tickets/create?type=improvement')}>
-              创建改进计划
+
+              Create an improvement plan
             </Button>
           </Empty>
         ) : (
@@ -184,7 +187,7 @@ const ImprovementListPage = () => {
             pagination={{
               pageSize: 10,
               showSizeChanger: true,
-              showTotal: total => `共 ${total} 条记录`,
+              showTotal: total => `Total ${total} records`,
             }}
           />
         )}

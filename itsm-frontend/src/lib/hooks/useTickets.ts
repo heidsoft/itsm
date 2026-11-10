@@ -182,10 +182,10 @@ export const useTickets = (): UseTicketsReturn => {
         await ticketService.deleteTicket(id);
         // 提示由本 hook 统一给出（TicketKanban 等调用方不自绘 toast），
         // 因此调用方不要再 toast 一次，否则会出现两条相互矛盾的提示。
-        message.success('工单删除成功');
+        message.success('Ticket deleted successfully');
         await refreshData();
       } catch (err) {
-        message.error(serverErrorMessage(err, '删除工单失败'));
+        message.error(serverErrorMessage(err, 'Failed to delete ticket'));
         throw err;
       }
     },
@@ -218,11 +218,11 @@ export const useTickets = (): UseTicketsReturn => {
         }
       });
       if (failedIds.length === 0) {
-        message.success(`成功删除 ${successCount} 个工单`);
+        message.success(`Deleted successfully ${successCount} work orders`);
       } else if (successCount === 0) {
-        message.error(`批量删除失败：${failedIds.length} 个工单均未删除`);
+        message.error(`Batch deletion failed:${failedIds.length} None of the work orders have been deleted`);
       } else {
-        message.warning(`部分成功：${successCount} 个删除成功，${failedIds.length} 个失败`);
+        message.warning(`Partial success:${successCount} Deletion successful,${failedIds.length} failures`);
       }
       await refreshData();
       return { successCount, failedIds, errors };

@@ -19,10 +19,10 @@ describe('ApprovalChainStatsCards', () => {
   it('should render all stat cards correctly', () => {
     render(<ApprovalChainStatsCards stats={mockStats} />);
 
-    expect(screen.getByText('总审批链数')).toBeInTheDocument();
-    expect(screen.getByText('活跃审批链')).toBeInTheDocument();
-    expect(screen.getByText('非活跃审批链')).toBeInTheDocument();
-    expect(screen.getByText('平均步骤数')).toBeInTheDocument();
+    expect(screen.getByText("Total number of approval chains")).toBeInTheDocument();
+    expect(screen.getByText("Active approval chain")).toBeInTheDocument();
+    expect(screen.getByText("Inactive approval chain")).toBeInTheDocument();
+    expect(screen.getByText("average number of steps")).toBeInTheDocument();
 
     // Check that numbers are rendered (exact format varies by Ant Design version)
     const values = screen.getAllByText(/100|80|20|2\.?5?/);
@@ -41,10 +41,10 @@ describe('ApprovalChainStatsCards', () => {
     render(<ApprovalChainStatsCards stats={mockStats} />);
 
     // 检查图标是否存在
-    expect(screen.getByText('总审批链数')).toBeInTheDocument();
-    expect(screen.getByText('活跃审批链')).toBeInTheDocument();
-    expect(screen.getByText('非活跃审批链')).toBeInTheDocument();
-    expect(screen.getByText('平均步骤数')).toBeInTheDocument();
+    expect(screen.getByText("Total number of approval chains")).toBeInTheDocument();
+    expect(screen.getByText("Active approval chain")).toBeInTheDocument();
+    expect(screen.getByText("Inactive approval chain")).toBeInTheDocument();
+    expect(screen.getByText("average number of steps")).toBeInTheDocument();
   });
 
   it('should handle zero values', () => {
@@ -59,7 +59,7 @@ describe('ApprovalChainStatsCards', () => {
     render(<ApprovalChainStatsCards stats={zeroStats} />);
 
     // Multiple zero values exist, verify component renders
-    expect(screen.getByText('总审批链数')).toBeInTheDocument();
+    expect(screen.getByText("Total number of approval chains")).toBeInTheDocument();
   });
 
   it('should handle large numbers', () => {
@@ -74,8 +74,8 @@ describe('ApprovalChainStatsCards', () => {
     render(<ApprovalChainStatsCards stats={largeStats} />);
 
     // Component should render with large numbers - check titles are present
-    expect(screen.getByText('总审批链数')).toBeInTheDocument();
-    expect(screen.getByText('活跃审批链')).toBeInTheDocument();
-    expect(screen.getByText('非活跃审批链')).toBeInTheDocument();
+    expect(screen.getByText("Total number of approval chains")).toBeInTheDocument();
+    expect(screen.getByText("Active approval chain")).toBeInTheDocument();
+    expect(screen.getByText("Inactive approval chain")).toBeInTheDocument();
   });
 });

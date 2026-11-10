@@ -50,7 +50,7 @@ describe('ServiceRequestDetail', () => {
   it('ID 不是正整数时直接显示未找到，不请求后端', async () => {
     renderDetail();
 
-    expect(await screen.findByText('未找到请求')).toBeInTheDocument();
+    expect(await screen.findByText("Request not found")).toBeInTheDocument();
     expect(mockGetServiceRequest).not.toHaveBeenCalled();
   });
 
@@ -59,6 +59,7 @@ describe('ServiceRequestDetail', () => {
     mockGetServiceRequest.mockResolvedValue({
       id: 3,
       title: '测试服务请求',
+      catalog: { name: 'Customer service', category: '支持' },
       status: 'submitted',
       currentLevel: 1,
       totalLevels: 3,
@@ -70,6 +71,8 @@ describe('ServiceRequestDetail', () => {
 
     await waitFor(() => expect(mockGetServiceRequest).toHaveBeenCalledWith(3));
     expect(await screen.findByText('测试服务请求')).toBeInTheDocument();
+    expect(screen.getByText('Account & Permissions')).toBeInTheDocument();
+    expect(screen.queryByText('支持')).not.toBeInTheDocument();
   });
 
   it('待审批状态下可取消，交付中不可取消', async () => {
@@ -87,11 +90,11 @@ describe('ServiceRequestDetail', () => {
 
     renderDetail();
 
-    fireEvent.click(await screen.findByRole('button', { name: /取消请求/ }));
-    fireEvent.change(screen.getByPlaceholderText('取消原因（选填）'), {
+    fireEvent.click(await screen.findByRole('button', { name: /Cancel request/ }));
+    fireEvent.change(screen.getByPlaceholderText("Reason for cancellation (optional)"), {
       target: { value: '需求取消' },
     });
-    fireEvent.click(screen.getByRole('button', { name: '确认取消' }));
+    fireEvent.click(screen.getByRole('button', { name: "Confirm cancellation" }));
 
     await waitFor(() =>
       expect(mockUpdateServiceRequestStatus).toHaveBeenCalledWith(3, 'cancelled', '需求取消')
@@ -113,6 +116,6 @@ describe('ServiceRequestDetail', () => {
     renderDetail();
 
     expect(await screen.findByText('测试服务请求')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /取消请求/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Cancel request/ })).not.toBeInTheDocument();
   });
 });

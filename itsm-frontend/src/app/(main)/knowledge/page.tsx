@@ -41,10 +41,10 @@ const { Title, Text } = Typography;
 
 // 可信 RAG：权威等级 → 文案
 const authorityLabel = (level: number): string => {
-  if (level >= 30) return '唯一真相源';
-  if (level >= 20) return '官方标准';
-  if (level >= 10) return '部门推荐';
-  return '普通';
+  if (level >= 30) return 'The One Source of Truth';
+  if (level >= 20) return 'official standard';
+  if (level >= 10) return 'Department recommendation';
+  return 'Normal';
 };
 
 // 可信 RAG：时效窗口 → 文案（后端 L1 已过滤失效/未生效/逾期复核条目）
@@ -55,10 +55,10 @@ const freshnessLabel = (result: {
   if (result.validUntil) {
     const until = new Date(result.validUntil);
     if (!isNaN(until.getTime())) {
-      return `有效至 ${formatDateTime(result.validUntil)}`;
+      return `Valid until ${formatDateTime(result.validUntil)}`;
     }
   }
-  return '长期有效';
+  return 'Long-term validity';
 };
 
 export default function KnowledgePage() {
@@ -369,7 +369,7 @@ export default function KnowledgePage() {
             onSearch={handleAISearch}
             loading={aiSearchLoading}
             enterButton={
-              <Button type="text" aria-label="AI 搜索" icon={<Sparkles className="w-4 h-4 text-yellow-500" />} />
+              <Button type="text" aria-label="AI Search" icon={<Sparkles className="w-4 h-4 text-yellow-500" />} />
             }
             style={{ width: 300 }}
             onPressEnter={handleAISearch}
@@ -433,7 +433,7 @@ export default function KnowledgePage() {
                       {/* 可信 RAG：权限标签（分类级可见性守卫 L0） */}
                       {isRestricted !== undefined && (
                         <Tag color={isRestricted ? 'red' : 'green'}>
-                          {isRestricted ? '受限' : '公开'}
+                          {isRestricted ? 'Restricted' : 'Public'}
                         </Tag>
                       )}
                       <Tag

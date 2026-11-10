@@ -21,7 +21,7 @@ func (p *BPMNParser) ParseXML(xmlData []byte) (*BPMNDefinitions, error) {
 	var definitions BPMNDefinitions
 	err := xml.Unmarshal(xmlData, &definitions)
 	if err != nil {
-		return nil, fmt.Errorf("解析BPMN XML失败: %w", err)
+		return nil, fmt.Errorf("Failed to parse BPMN XML: %w", err)
 	}
 
 	// 后处理：填充 outgoing 声明索引 + serviceTask 的 metaData 处理器类型。
@@ -29,7 +29,7 @@ func (p *BPMNParser) ParseXML(xmlData []byte) (*BPMNDefinitions, error) {
 
 	// 验证BPMN结构
 	if err := p.validateBPMN(&definitions); err != nil {
-		return nil, fmt.Errorf("BPMN验证失败: %w", err)
+		return nil, fmt.Errorf("BPMN validation failed: %w", err)
 	}
 
 	return &definitions, nil
@@ -142,7 +142,7 @@ func (p *BPMNParser) enrichProcessElements(xmlData []byte, definitions *BPMNDefi
 func (p *BPMNParser) ParseXMLFromReader(reader io.Reader) (*BPMNDefinitions, error) {
 	xmlData, err := io.ReadAll(reader)
 	if err != nil {
-		return nil, fmt.Errorf("读取XML数据失败: %w", err)
+		return nil, fmt.Errorf("Failed to read XML data: %w", err)
 	}
 	return p.ParseXML(xmlData)
 }
@@ -150,12 +150,12 @@ func (p *BPMNParser) ParseXMLFromReader(reader io.Reader) (*BPMNDefinitions, err
 // validateBPMN 验证BPMN结构
 func (p *BPMNParser) validateBPMN(definitions *BPMNDefinitions) error {
 	if len(definitions.Processes) == 0 {
-		return fmt.Errorf("BPMN定义必须包含至少一个流程")
+		return fmt.Errorf("BPMN definition must contain at least one process")
 	}
 
 	for _, process := range definitions.Processes {
 		if err := p.validateProcess(process); err != nil {
-			return fmt.Errorf("流程验证失败 [%s]: %w", process.ID, err)
+			return fmt.Errorf("Process verification failed [%s]: %w", process.ID, err)
 		}
 	}
 
@@ -166,25 +166,25 @@ func (p *BPMNParser) validateBPMN(definitions *BPMNDefinitions) error {
 func (p *BPMNParser) validateProcess(process *BPMNProcess) error {
 	// 检查必要元素
 	if process.ID == "" {
-		return fmt.Errorf("流程ID不能为空")
+		return fmt.Errorf("Process ID cannot be empty")
 	}
 
 	if len(process.StartEvents) == 0 {
-		return fmt.Errorf("流程必须包含至少一个开始事件")
+		return fmt.Errorf("Process must contain at least one start event")
 	}
 
 	if len(process.EndEvents) == 0 {
-		return fmt.Errorf("流程必须包含至少一个结束事件")
+		return fmt.Errorf("Process must contain at least one end event")
 	}
 
 	// 验证顺序流
 	if err := p.validateSequenceFlows(process); err != nil {
-		return fmt.Errorf("顺序流验证失败: %w", err)
+		return fmt.Errorf("Sequence flow validation failed: %w", err)
 	}
 
 	// 验证网关配置
 	if err := p.validateGateways(process); err != nil {
-		return fmt.Errorf("网关验证失败: %w", err)
+		return fmt.Errorf("Gateway authentication failed: %w", err)
 	}
 
 	return nil
@@ -195,20 +195,20 @@ func (p *BPMNParser) validateSequenceFlows(process *BPMNProcess) error {
 	// 检查所有顺序流的源和目标是否有效
 	for _, flow := range process.SequenceFlows {
 		if flow.SourceRef == "" {
-			return fmt.Errorf("顺序流 [%s] 缺少源引用", flow.ID)
+			return fmt.Errorf("Sequence flow [%s] is missing source reference", flow.ID)
 		}
 		if flow.TargetRef == "" {
-			return fmt.Errorf("顺序流 [%s] 缺少目标引用", flow.ID)
+			return fmt.Errorf("Sequence flow [%s] is missing target reference", flow.ID)
 		}
 
 		// 检查源元素是否存在
 		if !p.elementExists(process, flow.SourceRef) {
-			return fmt.Errorf("顺序流 [%s] 的源元素 [%s] 不存在", flow.ID, flow.SourceRef)
+			return fmt.Errorf("Source element [%s] of sequence flow [%s] does not exist", flow.ID, flow.SourceRef)
 		}
 
 		// 检查目标元素是否存在
 		if !p.elementExists(process, flow.TargetRef) {
-			return fmt.Errorf("顺序流 [%s] 的目标元素 [%s] 不存在", flow.ID, flow.TargetRef)
+			return fmt.Errorf("Target element [%s] of sequence flow [%s] does not exist", flow.ID, flow.TargetRef)
 		}
 	}
 
@@ -222,7 +222,7 @@ func (p *BPMNParser) validateGateways(process *BPMNProcess) error {
 		if gateway.DefaultFlow != "" {
 			// 检查默认流是否存在
 			if !p.elementExists(process, gateway.DefaultFlow) {
-				return fmt.Errorf("排他网关 [%s] 的默认流 [%s] 不存在", gateway.ID, gateway.DefaultFlow)
+				return fmt.Errorf("Default flow [%s] for exclusive gateway [%s] does not exist", gateway.ID, gateway.DefaultFlow)
 			}
 		}
 	}
@@ -232,7 +232,7 @@ func (p *BPMNParser) validateGateways(process *BPMNProcess) error {
 		if gateway.DefaultFlow != "" {
 			// 检查默认流是否存在
 			if !p.elementExists(process, gateway.DefaultFlow) {
-				return fmt.Errorf("包容网关 [%s] 的默认流 [%s] 不存在", gateway.ID, gateway.DefaultFlow)
+				return fmt.Errorf("Default flow [%s] for inclusive gateway [%s] does not exist", gateway.ID, gateway.DefaultFlow)
 			}
 		}
 	}
@@ -641,7 +641,7 @@ func (p *BPMNParser) ValidateBPMNXML(xmlData []byte) error {
 	// 检查是否包含BPMN命名空间
 	xmlStr := string(xmlData)
 	if !strings.Contains(xmlStr, "bpmn:") && !strings.Contains(xmlStr, "xmlns:bpmn") {
-		return fmt.Errorf("XML文件缺少BPMN命名空间声明")
+		return fmt.Errorf("XML file is missing BPMN namespace declaration")
 	}
 
 	return nil
@@ -761,7 +761,7 @@ func (p *BPMNParser) ExportToXML(definitions *BPMNDefinitions) ([]byte, error) {
 	// 添加XML声明和格式化
 	xmlData, err := xml.MarshalIndent(definitions, "", "  ")
 	if err != nil {
-		return nil, fmt.Errorf("XML序列化失败: %w", err)
+		return nil, fmt.Errorf("XML serialization failed: %w", err)
 	}
 
 	// 添加XML声明
@@ -1010,10 +1010,10 @@ func (p *BPMNParser) GetBPMNStatistics(definitions *BPMNDefinitions) map[string]
 // FindPathBetweenElements 查找两个元素之间的路径
 func (p *BPMNParser) FindPathBetweenElements(process *BPMNProcess, sourceID, targetID string) ([]string, error) {
 	if !p.elementExists(process, sourceID) {
-		return nil, fmt.Errorf("源元素 [%s] 不存在", sourceID)
+		return nil, fmt.Errorf("Source element [%s] does not exist", sourceID)
 	}
 	if !p.elementExists(process, targetID) {
-		return nil, fmt.Errorf("目标元素 [%s] 不存在", targetID)
+		return nil, fmt.Errorf("Target element [%s] does not exist", targetID)
 	}
 
 	// 使用广度优先搜索查找最短路径
@@ -1042,7 +1042,7 @@ func (p *BPMNParser) FindPathBetweenElements(process *BPMNProcess, sourceID, tar
 		}
 	}
 
-	return nil, fmt.Errorf("无法找到从 [%s] 到 [%s] 的路径", sourceID, targetID)
+	return nil, fmt.Errorf("Unable to find path from [%s] to [%s]", sourceID, targetID)
 }
 
 // GetElementDependencies 获取元素的依赖关系

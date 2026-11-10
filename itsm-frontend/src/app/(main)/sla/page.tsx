@@ -33,9 +33,9 @@ function formatDuration(minutes: number, language: string): string {
     if (hours > 0) return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
     return `${mins}m`;
   }
-  if (days > 0) return hours > 0 ? `${days} 天 ${hours} 小时` : `${days} 天`;
-  if (hours > 0) return mins > 0 ? `${hours} 小时 ${mins} 分钟` : `${hours} 小时`;
-  return `${mins} 分钟`;
+  if (days > 0) return hours > 0 ? `${days} days ${hours} hours` : `${days} days`;
+  if (hours > 0) return mins > 0 ? `${hours} hours ${mins} minutes` : `${hours} hours`;
+  return `${mins} minutes`;
 }
 
 export default function SLAPage() {

@@ -12,11 +12,10 @@ An open-source IT service management system for enterprises, covering ITIL core 
 [![Frontend CI](https://github.com/heidsoft/itsm/actions/workflows/frontend-ci.yml/badge.svg)](https://github.com/heidsoft/itsm/actions/workflows/frontend-ci.yml)
 [![Stars](https://img.shields.io/github/stars/heidsoft/itsm?style=flat)](https://github.com/heidsoft/itsm/stargazers)
 
-**[简体中文](./README.md)** · **English**
+**English**
 
 </div>
 
-> **Translation status**: `README.md` (Simplified Chinese) is the single source of truth for project content; this file is its English counterpart and must stay in sync with it — section structure, the capability/maturity table, and every command/tool count. If the two disagree, the Chinese README wins and this file is the one to fix. Product UI text is Chinese-first through v1.6.x (see the language note under Quick Start). Terminology is fixed throughout this file: Preview / Available for maturity states, knowledge capture for 知识沉淀, fulfillment for 服务请求交付, extension delivery for 扩展交付, and Alibaba Cloud / Tencent Cloud / AWS / Volcengine / Kubernetes for the five discovery providers. US spelling is used consistently (for example `fulfillment`, not `fulfilment`).
 
 ## Table of Contents
 
@@ -93,7 +92,7 @@ Key design choices:
 
 ## Quick Start
 
-> **Language note**: through v1.6.x the product UI is **Chinese-first** (targeting China private-deployment scenarios). The English README covers onboarding; full UI localization (en-US etc.) is planned for v1.7 — see the [ROADMAP](ROADMAP.md).
+> **Language**: this checkout uses English (`en-US`) exclusively. Chinese language selection and fallback translations have been removed. Existing browser preferences are normalized to English. For an existing database, apply `itsm-backend/migrations/20261106_english_navigation.sql` through the normal migration process to translate unchanged built-in navigation labels. Custom names and user content are preserved.
 
 ### Prerequisites
 

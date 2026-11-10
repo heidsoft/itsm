@@ -39,7 +39,7 @@ func (h *Handler) CreateProject(ctx *gin.Context) {
 	}
 
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(ctx, err, "请求参数错误")
+		common.ParamErrorWithErr(ctx, err, "Wrong request parameters")
 		return
 	}
 
@@ -50,7 +50,7 @@ func (h *Handler) CreateProject(ctx *gin.Context) {
 
 	project, err := h.service.CreateProject(ctx.Request.Context(), req.Name, req.Code, req.DepartmentID, req.ManagerID, tenantID)
 	if err != nil {
-		common.RespondError(ctx, err, "操作失败")
+		common.RespondError(ctx, err, "Operation failed")
 		return
 	}
 
@@ -73,7 +73,7 @@ func (h *Handler) ListProjects(ctx *gin.Context) {
 
 	projects, err := h.service.ListProjects(ctx.Request.Context(), tenantID)
 	if err != nil {
-		common.RespondError(ctx, err, "操作失败")
+		common.RespondError(ctx, err, "Operation failed")
 		return
 	}
 
@@ -93,7 +93,7 @@ func (h *Handler) GetProject(ctx *gin.Context) {
 	idStr := ctx.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "无效的项目ID")
+		common.Fail(ctx, common.ParamErrorCode, "Invalid project ID")
 		return
 	}
 
@@ -104,7 +104,7 @@ func (h *Handler) GetProject(ctx *gin.Context) {
 
 	project, err := h.service.GetProject(ctx.Request.Context(), id, tenantID)
 	if err != nil {
-		common.RespondError(ctx, err, "操作失败")
+		common.RespondError(ctx, err, "Operation failed")
 		return
 	}
 
@@ -125,7 +125,7 @@ func (h *Handler) UpdateProject(ctx *gin.Context) {
 	idStr := ctx.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "无效的项目ID")
+		common.Fail(ctx, common.ParamErrorCode, "Invalid project ID")
 		return
 	}
 
@@ -137,7 +137,7 @@ func (h *Handler) UpdateProject(ctx *gin.Context) {
 	}
 
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(ctx, err, "请求参数错误")
+		common.ParamErrorWithErr(ctx, err, "Wrong request parameters")
 		return
 	}
 
@@ -148,7 +148,7 @@ func (h *Handler) UpdateProject(ctx *gin.Context) {
 
 	project, err := h.service.UpdateProject(ctx.Request.Context(), id, req.Name, req.Code, req.DepartmentID, req.ManagerID, tenantID)
 	if err != nil {
-		common.RespondError(ctx, err, "操作失败")
+		common.RespondError(ctx, err, "Operation failed")
 		return
 	}
 
@@ -168,7 +168,7 @@ func (h *Handler) DeleteProject(ctx *gin.Context) {
 	idStr := ctx.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "无效的项目ID")
+		common.Fail(ctx, common.ParamErrorCode, "Invalid project ID")
 		return
 	}
 
@@ -179,9 +179,9 @@ func (h *Handler) DeleteProject(ctx *gin.Context) {
 
 	err = h.service.DeleteProject(ctx.Request.Context(), id, tenantID)
 	if err != nil {
-		common.RespondError(ctx, err, "操作失败")
+		common.RespondError(ctx, err, "Operation failed")
 		return
 	}
 
-	common.Success(ctx, gin.H{"message": "删除成功"})
+	common.Success(ctx, gin.H{"message": "Deleted"})
 }

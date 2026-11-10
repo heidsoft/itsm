@@ -80,7 +80,7 @@ func (h *ChangeServiceTaskHandler) Validate(ctx context.Context, config map[stri
 // 这是所有操作的前置守卫，防止 IDOR。
 func (h *ChangeServiceTaskHandler) getChangeByIDWithTenant(ctx context.Context, changeID, tenantID int) (*ent.Change, error) {
 	if changeID <= 0 {
-		return nil, fmt.Errorf("无效的变更ID: %d", changeID)
+		return nil, fmt.Errorf("Invalid change ID: %d", changeID)
 	}
 	c, err := h.client.Change.Query().
 		Where(
@@ -89,7 +89,7 @@ func (h *ChangeServiceTaskHandler) getChangeByIDWithTenant(ctx context.Context, 
 		).
 		Only(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("变更不存在或不属于当前租户: %d (tenant=%d)", changeID, tenantID)
+		return nil, fmt.Errorf("The change does not exist or does not belong to the current tenant: %d (tenant=%d)", changeID, tenantID)
 	}
 	return c, nil
 }
@@ -104,11 +104,11 @@ func (h *ChangeServiceTaskHandler) createChange(ctx context.Context, variables m
 	tenantID, err := ResolveTenantID(ctx, variables)
 	if err != nil {
 		h.logger.Errorw("BPMN createChange 缺少租户上下文", "error", err)
-		return nil, fmt.Errorf("创建变更失败: %w", err)
+		return nil, fmt.Errorf("Failed to create change: %w", err)
 	}
 
 	if title == "" {
-		return nil, fmt.Errorf("变更标题不能为空")
+		return nil, fmt.Errorf("Change title cannot be empty")
 	}
 
 	change, err := h.client.Change.Create().
@@ -121,7 +121,7 @@ func (h *ChangeServiceTaskHandler) createChange(ctx context.Context, variables m
 		SetTenantID(tenantID).
 		Save(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("创建变更失败: %w", err)
+		return nil, fmt.Errorf("Failed to create change: %w", err)
 	}
 
 	h.logger.Infow("Change created via BPMN", "change_id", change.ID, "title", title, "tenant_id", tenantID)
@@ -138,7 +138,7 @@ func (h *ChangeServiceTaskHandler) updateChange(ctx context.Context, variables m
 	changeID := GetIntFromVars(variables, "change_id")
 	tenantID, err := ResolveTenantID(ctx, variables)
 	if err != nil {
-		return nil, fmt.Errorf("更新变更失败: %w", err)
+		return nil, fmt.Errorf("Failed to update changes: %w", err)
 	}
 
 	// 前置租户校验，防止 IDOR
@@ -160,7 +160,7 @@ func (h *ChangeServiceTaskHandler) updateChange(ctx context.Context, variables m
 
 	_, err = updateQuery.Save(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("更新变更失败: %w", err)
+		return nil, fmt.Errorf("Failed to update changes: %w", err)
 	}
 
 	h.logger.Infow("Change updated via BPMN", "change_id", changeID, "tenant_id", tenantID)
@@ -176,7 +176,7 @@ func (h *ChangeServiceTaskHandler) approveChange(ctx context.Context, variables 
 	changeID := GetIntFromVars(variables, "change_id")
 	tenantID, err := ResolveTenantID(ctx, variables)
 	if err != nil {
-		return nil, fmt.Errorf("审批变更失败: %w", err)
+		return nil, fmt.Errorf("Failed to approve changes: %w", err)
 	}
 
 	if _, err := h.getChangeByIDWithTenant(ctx, changeID, tenantID); err != nil {
@@ -187,7 +187,7 @@ func (h *ChangeServiceTaskHandler) approveChange(ctx context.Context, variables 
 		SetStatus("pending_approval").
 		Save(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("更新变更状态失败: %w", err)
+		return nil, fmt.Errorf("Failed to update change status: %w", err)
 	}
 
 	h.logger.Infow("Change submitted for approval via BPMN", "change_id", changeID, "tenant_id", tenantID)
@@ -204,7 +204,7 @@ func (h *ChangeServiceTaskHandler) rejectChange(ctx context.Context, variables m
 	reason, _ := variables["reject_reason"].(string)
 	tenantID, err := ResolveTenantID(ctx, variables)
 	if err != nil {
-		return nil, fmt.Errorf("驳回变更失败: %w", err)
+		return nil, fmt.Errorf("Failed to reject change: %w", err)
 	}
 
 	if _, err := h.getChangeByIDWithTenant(ctx, changeID, tenantID); err != nil {
@@ -215,7 +215,7 @@ func (h *ChangeServiceTaskHandler) rejectChange(ctx context.Context, variables m
 		SetStatus("rejected").
 		Save(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("驳回变更失败: %w", err)
+		return nil, fmt.Errorf("Failed to reject change: %w", err)
 	}
 
 	h.logger.Infow("Change rejected via BPMN", "change_id", changeID, "reason", reason, "tenant_id", tenantID)
@@ -231,7 +231,7 @@ func (h *ChangeServiceTaskHandler) scheduleChange(ctx context.Context, variables
 	changeID := GetIntFromVars(variables, "change_id")
 	tenantID, err := ResolveTenantID(ctx, variables)
 	if err != nil {
-		return nil, fmt.Errorf("排期变更失败: %w", err)
+		return nil, fmt.Errorf("Schedule change failed: %w", err)
 	}
 
 	if _, err := h.getChangeByIDWithTenant(ctx, changeID, tenantID); err != nil {
@@ -257,7 +257,7 @@ func (h *ChangeServiceTaskHandler) scheduleChange(ctx context.Context, variables
 
 	_, err = updateQuery.Save(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("排期变更失败: %w", err)
+		return nil, fmt.Errorf("Schedule change failed: %w", err)
 	}
 
 	h.logger.Infow("Change scheduled via BPMN", "change_id", changeID, "tenant_id", tenantID)
@@ -273,7 +273,7 @@ func (h *ChangeServiceTaskHandler) implementChange(ctx context.Context, variable
 	changeID := GetIntFromVars(variables, "change_id")
 	tenantID, err := ResolveTenantID(ctx, variables)
 	if err != nil {
-		return nil, fmt.Errorf("实施变更失败: %w", err)
+		return nil, fmt.Errorf("Failed to implement changes: %w", err)
 	}
 
 	c, err := h.getChangeByIDWithTenant(ctx, changeID, tenantID)
@@ -287,7 +287,7 @@ func (h *ChangeServiceTaskHandler) implementChange(ctx context.Context, variable
 		SetActualStartDate(now).
 		Save(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("实施变更失败: %w", err)
+		return nil, fmt.Errorf("Failed to implement changes: %w", err)
 	}
 
 	h.logger.Infow("Change implementation started via BPMN", "change_id", changeID, "title", c.Title, "tenant_id", tenantID)
@@ -304,7 +304,7 @@ func (h *ChangeServiceTaskHandler) verifyChange(ctx context.Context, variables m
 	verificationResult, _ := variables["verification_result"].(string)
 	tenantID, err := ResolveTenantID(ctx, variables)
 	if err != nil {
-		return nil, fmt.Errorf("验证变更失败: %w", err)
+		return nil, fmt.Errorf("Failed to verify changes: %w", err)
 	}
 
 	if _, err := h.getChangeByIDWithTenant(ctx, changeID, tenantID); err != nil {
@@ -320,7 +320,7 @@ func (h *ChangeServiceTaskHandler) verifyChange(ctx context.Context, variables m
 		SetStatus(change.Status(newStatus)).
 		Save(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("验证变更失败: %w", err)
+		return nil, fmt.Errorf("Failed to verify changes: %w", err)
 	}
 
 	h.logger.Infow("Change verification via BPMN", "change_id", changeID, "result", verificationResult, "tenant_id", tenantID)
@@ -337,7 +337,7 @@ func (h *ChangeServiceTaskHandler) closeChange(ctx context.Context, variables ma
 	feedback, _ := variables["feedback"].(string)
 	tenantID, err := ResolveTenantID(ctx, variables)
 	if err != nil {
-		return nil, fmt.Errorf("关闭变更失败: %w", err)
+		return nil, fmt.Errorf("Failed to close changes: %w", err)
 	}
 
 	if _, err := h.getChangeByIDWithTenant(ctx, changeID, tenantID); err != nil {
@@ -350,7 +350,7 @@ func (h *ChangeServiceTaskHandler) closeChange(ctx context.Context, variables ma
 		SetActualEndDate(now).
 		Save(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("关闭变更失败: %w", err)
+		return nil, fmt.Errorf("Failed to close changes: %w", err)
 	}
 
 	h.logger.Infow("Change closed via BPMN", "change_id", changeID, "feedback", feedback, "tenant_id", tenantID)
@@ -366,7 +366,7 @@ func (h *ChangeServiceTaskHandler) assessRisk(ctx context.Context, variables map
 	changeID := GetIntFromVars(variables, "change_id")
 	tenantID, err := ResolveTenantID(ctx, variables)
 	if err != nil {
-		return nil, fmt.Errorf("评估变更风险失败: %w", err)
+		return nil, fmt.Errorf("Failed to assess change risk: %w", err)
 	}
 
 	c, err := h.getChangeByIDWithTenant(ctx, changeID, tenantID)
@@ -386,7 +386,7 @@ func (h *ChangeServiceTaskHandler) assessRisk(ctx context.Context, variables map
 		SetRiskLevel(riskLevel).
 		Save(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("评估风险失败: %w", err)
+		return nil, fmt.Errorf("Failed to assess risk: %w", err)
 	}
 
 	h.logger.Infow("Change risk assessed via BPMN",
@@ -408,7 +408,7 @@ func (h *ChangeServiceTaskHandler) notifyStakeholders(ctx context.Context, varia
 	notificationType, _ := variables["notification_type"].(string)
 	tenantID, err := ResolveTenantID(ctx, variables)
 	if err != nil {
-		return nil, fmt.Errorf("通知利益相关者失败: %w", err)
+		return nil, fmt.Errorf("Failed to notify stakeholders: %w", err)
 	}
 
 	c, err := h.getChangeByIDWithTenant(ctx, changeID, tenantID)

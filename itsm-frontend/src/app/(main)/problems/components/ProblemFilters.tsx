@@ -26,15 +26,15 @@ export const ProblemFilters: React.FC<ProblemFiltersProps> = ({
       style={{ marginBottom: 24 }}
     >
       <div className="mb-4">
-        <h3 className="text-lg font-semibold text-gray-900 mb-1">筛选器</h3>
-        <p className="text-sm text-gray-500">使用筛选条件快速查找问题</p>
+        <h3 className="text-lg font-semibold text-gray-900 mb-1">Filter</h3>
+        <p className="text-sm text-gray-500">Use filters to find issues quickly</p>
       </div>
       <Row gutter={20} align="middle">
         <Col xs={24} sm={12} md={8}>
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">搜索</label>
+            <label className="block text-sm font-medium text-gray-700">Search</label>
             <SearchInput
-              placeholder="搜索问题标题、ID或描述..."
+              placeholder="Search problem title, ID or description..."
               allowClear
               onSearch={onSearch}
               size="large"
@@ -48,26 +48,26 @@ export const ProblemFilters: React.FC<ProblemFiltersProps> = ({
         </Col>
         <Col xs={24} sm={12} md={4}>
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">状态</label>
+            <label className="block text-sm font-medium text-gray-700">Status</label>
             <Select
-              placeholder="状态筛选"
+              placeholder="Status"
               size="large"
               allowClear
               onChange={onFilterChange}
               style={{ width: '100%' }}
               className="rounded-md"
               options={[
-                { value: ProblemStatus.OPEN, label: '待处理' },
-                { value: ProblemStatus.INVESTIGATING, label: '处理中' },
-                { value: ProblemStatus.RESOLVED, label: '已解决' },
-                { value: ProblemStatus.CLOSED, label: '已关闭' },
+                { value: ProblemStatus.OPEN, label: 'Pending' },
+                { value: ProblemStatus.INVESTIGATING, label: 'In Progress' },
+                { value: ProblemStatus.RESOLVED, label: 'Resolved' },
+                { value: ProblemStatus.CLOSED, label: 'Closed' },
               ]}
             />
           </div>
         </Col>
         <Col xs={24} sm={12} md={4}>
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">操作</label>
+            <label className="block text-sm font-medium text-gray-700">Actions</label>
             <Button
               icon={<RefreshCw size={20} />}
               onClick={onRefresh}
@@ -76,7 +76,8 @@ export const ProblemFilters: React.FC<ProblemFiltersProps> = ({
               style={{ width: '100%' }}
               className="flex items-center justify-center gap-2 bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100 hover:border-blue-300 rounded-md transition-colors duration-200"
             >
-              刷新
+
+              Refresh
             </Button>
           </div>
         </Col>

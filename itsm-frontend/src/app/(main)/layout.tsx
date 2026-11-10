@@ -208,10 +208,11 @@ export default function MainLayout({
     return (
       <div className="flex items-center justify-center min-h-screen p-4">
         <Alert
-          title="暂时无法确认登录状态"
+          title="Unable to confirm login status temporarily"
           description={
             <span>
-              服务暂时不可用，当前页面无法判断会话是否仍然有效。
+
+              The service is temporarily unavailable, and the current page cannot determine whether the session is still valid.
               {sessionError ? <span className="block mt-1 text-gray-500">{sessionError}</span> : null}
             </span>
           }
@@ -219,7 +220,8 @@ export default function MainLayout({
           showIcon
           action={
             <Button type="primary" onClick={retrySessionCheck}>
-              重新检查
+
+              Recheck
             </Button>
           }
         />
@@ -262,7 +264,8 @@ function ThemedMainLayout({
         href="#main-content"
         className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:bg-primary-600 focus:text-white focus:px-4 focus:py-2 focus:rounded-lg focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-primary-400"
       >
-        跳转到主要内容
+
+        Skip to main content
       </a>
       <NetworkStatus />
       <Layout
@@ -310,7 +313,7 @@ function ThemedMainLayout({
 
           {/* 页脚（可选） */}
           <footer className="text-center p-4 bg-transparent text-gray-400 text-xs">
-            AI-Native ITSM ©{new Date().getFullYear()} - AI驱动的IT服务管理系统
+            AI-Native ITSM ©{new Date().getFullYear()}  - AI driven IT service management system
           </footer>
         </Layout>
 

@@ -83,14 +83,14 @@ async function openEditModal() {
       <ServiceCatalogManagement />
     </App>,
   );
-  const rowAction = await screen.findByLabelText('编辑');
+  const rowAction = await screen.findByLabelText("Edit");
   fireEvent.click(rowAction);
-  return screen.findByText('编辑服务目录');
+  return screen.findByText("Edit service directory");
 }
 
 // antd 给两字按钮插入空格，accessible name 是「更 新」而不是「更新」。
 async function clickUpdateButton() {
-  fireEvent.click(await screen.findByRole('button', { name: /更\s*新/ }));
+  fireEvent.click(await screen.findByRole('button', { name: /Update/ }));
 }
 
 // antd Select 的清除按钮始终在 DOM 里（默认透明），mousedown 即清空表单值。
@@ -107,6 +107,18 @@ describe('ServiceCatalogManagement 编辑表单', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockLoaders();
+  });
+
+  it('shows English pricing units without changing the stored catalog unit', async () => {
+    render(<App><ServiceCatalogManagement /></App>);
+    expect(await screen.findByText('12.5 / month')).toBeInTheDocument();
+    expect(screen.getByText('IT Service')).toBeInTheDocument();
+    fireEvent.click(screen.getByLabelText('Edit'));
+    await screen.findByText('Edit service directory');
+    await clickUpdateButton();
+    await waitFor(() => expect(mockedApi.updateService).toHaveBeenCalledWith(
+      '7', expect.objectContaining({ unit: '月', category: ServiceCategory.IT_SERVICE })
+    ));
   });
 
   it('不改任何字段直接提交也必须带上全部可写字段', async () => {

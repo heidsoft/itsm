@@ -38,19 +38,19 @@ describe('base-api-handler', () => {
 
     it('should map Network Error', () => {
       const err = new Error('Network Error');
-      expect(getFriendlyErrorMessage(err)).toBe('网络连接失败，请检查您的网络');
+      expect(getFriendlyErrorMessage(err)).toBe("Network connection failed, please check your network");
     });
 
     it('should map timeout', () => {
       const err = new Error('timeout');
-      expect(getFriendlyErrorMessage(err)).toBe('请求超时，请稍后重试');
+      expect(getFriendlyErrorMessage(err)).toBe("Request timed out, please try again later.");
     });
 
     it('should map HTTP status codes', () => {
-      expect(getFriendlyErrorMessage(new Error('401'))).toBe('未授权，请重新登录');
-      expect(getFriendlyErrorMessage(new Error('403'))).toBe('没有权限执行此操作');
-      expect(getFriendlyErrorMessage(new Error('404'))).toBe('请求的资源不存在');
-      expect(getFriendlyErrorMessage(new Error('500'))).toBe('服务器内部错误');
+      expect(getFriendlyErrorMessage(new Error('401'))).toBe("Unauthorized, please log in again");
+      expect(getFriendlyErrorMessage(new Error('403'))).toBe("No permission to perform this operation");
+      expect(getFriendlyErrorMessage(new Error('404'))).toBe("The requested resource does not exist");
+      expect(getFriendlyErrorMessage(new Error('500'))).toBe("Server internal error");
     });
 
     it('should return error message for unmapped errors', () => {
@@ -58,9 +58,9 @@ describe('base-api-handler', () => {
     });
 
     it('should handle non-Error values', () => {
-      expect(getFriendlyErrorMessage('string error')).toBe('操作失败，请稍后重试');
-      expect(getFriendlyErrorMessage(null)).toBe('操作失败，请稍后重试');
-      expect(getFriendlyErrorMessage(undefined)).toBe('操作失败，请稍后重试');
+      expect(getFriendlyErrorMessage('string error')).toBe("Operation failed, please try again later.");
+      expect(getFriendlyErrorMessage(null)).toBe("Operation failed, please try again later.");
+      expect(getFriendlyErrorMessage(undefined)).toBe("Operation failed, please try again later.");
     });
   });
 
@@ -82,7 +82,7 @@ describe('base-api-handler', () => {
 
     it('should show error message on failure', async () => {
       await expect(ApiHandler.handleRequest(Promise.reject(new Error('Network Error')))).rejects.toThrow();
-      expect(message.error).toHaveBeenCalledWith('网络连接失败，请检查您的网络');
+      expect(message.error).toHaveBeenCalledWith("Network connection failed, please check your network");
     });
 
     it('should show custom error message when provided', async () => {
@@ -114,7 +114,7 @@ describe('base-api-handler', () => {
 
     it('should show error on failure when not continueOnError', async () => {
       await expect(ApiHandler.handleBatchRequests([Promise.reject(new Error('fail'))])).rejects.toThrow();
-      expect(message.error).toHaveBeenCalledWith('批量操作失败');
+      expect(message.error).toHaveBeenCalledWith("Batch operation failed");
     });
 
     it('should use custom error message', async () => {

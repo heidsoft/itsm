@@ -62,10 +62,11 @@ export const CIDetail: React.FC = () => {
         <Result
           status='404'
           title='404'
-          subTitle='抱歉，您访问的配置项不存在'
+          subTitle="Sorry, the configuration item you visited does not exist"
           extra={
             <Button type='primary' onClick={() => router.push('/cmdb/cis')}>
-              返回列表
+
+              Back to List
             </Button>
           }
         />
@@ -76,14 +77,14 @@ export const CIDetail: React.FC = () => {
   const tabItems = [
     {
       key: 'basic',
-      label: '基本信息',
+      label: 'Basic Info',
       children: <CIBasicInfo ci={ci} typeInfo={typeInfo} />,
     },
     {
       key: 'topology',
       label: (
         <span>
-          <Network /> 服务拓扑
+          <Network />  Service topology
         </span>
       ),
       children: <CITopologyGraph ciId={ci.id} />,
@@ -92,7 +93,7 @@ export const CIDetail: React.FC = () => {
       key: 'relationships',
       label: (
         <span>
-          <Link /> 关系管理
+          <Link />  Relationship Management
         </span>
       ),
       children: (
@@ -109,7 +110,7 @@ export const CIDetail: React.FC = () => {
       key: 'impact',
       label: (
         <span>
-          <Network /> 影响分析
+          <Network />  Impact Analysis
         </span>
       ),
       children: (
@@ -124,7 +125,7 @@ export const CIDetail: React.FC = () => {
       key: 'history',
       label: (
         <span>
-          <History /> 变更历史
+          <History />  Change History
         </span>
       ),
       children: (
@@ -144,10 +145,10 @@ export const CIDetail: React.FC = () => {
       <Breadcrumb
         style={{ marginBottom: 16 }}
         items={[
-          { title: '首页' },
-          { title: '配置管理' },
-          { title: <a onClick={() => router.push('/cmdb/cis')}>配置项列表</a> },
-          { title: '资产详情' },
+          { title: 'Home page' },
+          { title: 'Configuration Management' },
+          { title: <a onClick={() => router.push('/cmdb/cis')}>Configuration Item List</a> },
+          { title: 'Asset details' },
         ]}
       />
 
@@ -158,7 +159,8 @@ export const CIDetail: React.FC = () => {
             onClick={() => router.push('/cmdb/cis')}
             style={{ marginBottom: 16 }}
           >
-            返回列表
+
+            Back to List
           </Button>
           <div
             style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}
@@ -167,7 +169,7 @@ export const CIDetail: React.FC = () => {
               <Title level={3} style={{ margin: 0 }}>
                 {ci.name}
               </Title>
-              <Text type='secondary'>配置项 ID: {ci.id}</Text>
+              <Text type='secondary'>Configuration item ID: {ci.id}</Text>
             </Space>
             <Tag color={STATUS_COLORS[ci.status]} style={{ padding: '4px 12px', fontSize: 14 }}>
               {CIStatusLabels[ci.status] || ci.status}

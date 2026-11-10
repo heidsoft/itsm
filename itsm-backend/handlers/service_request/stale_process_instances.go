@@ -79,7 +79,7 @@ func (s *Service) TerminateStaleServiceRequestInstances(ctx context.Context, ten
 		Order(ent.Asc(processinstance.FieldID)).
 		All(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("查询在途服务请求流程实例失败: %w", err)
+		return nil, fmt.Errorf("Failed to query the service request process instance in transit: %w", err)
 	}
 
 	results := make([]StaleInstanceResult, 0, len(instances))
@@ -140,7 +140,7 @@ func (s *Service) TerminateStaleServiceRequestInstances(ctx context.Context, ten
 			if err := s.approvalBridge.TerminateBusinessWorkflow(
 				ctx, tenantID, actorID, string(dto.BusinessTypeServiceRequest), requestID, reason,
 			); err != nil {
-				return results, fmt.Errorf("终止服务请求 %d 的残留流程实例失败: %w", requestID, err)
+				return results, fmt.Errorf("Failed to terminate residual process instance for service request %d: %w", requestID, err)
 			}
 			result.Applied = true
 			s.recordStaleTerminationAudit(ctx, tenantID, actorID, &result)
@@ -168,7 +168,7 @@ func (s *Service) TerminateStaleServiceRequestInstances(ctx context.Context, ten
 				results = append(results, result)
 				continue
 			}
-			return results, fmt.Errorf("取消服务请求 %d 失败: %w", requestID, err)
+			return results, fmt.Errorf("Failed to cancel service request %d: %w", requestID, err)
 		}
 		s.cancelApprovalFollowUps(ctx, tenantID, actorID, requestID)
 		s.recordStaleTerminationAudit(ctx, tenantID, actorID, &result)
@@ -189,7 +189,7 @@ func (s *Service) latestDefinitionsByKey(ctx context.Context, tenantID int) (map
 		).
 		All(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("查询最新流程定义失败: %w", err)
+		return nil, fmt.Errorf("Failed to query the latest process definition: %w", err)
 	}
 	latest := make(map[string]*ent.ProcessDefinition, len(definitions))
 	for _, definition := range definitions {

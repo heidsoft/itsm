@@ -472,7 +472,7 @@ func approvalWriteSnapshot(t *testing.T, client *ent.Client) []byte {
 func bpmnAbsentApprovalMessage(state string) string {
 	switch state {
 	case "noInstance", "foreignInstance":
-		return "没有可处理的 BPMN 审批任务，请先确认流程绑定与待办状态"
+		return "There is no BPMN approval task that can be processed. Please confirm the process binding and to-do status first."
 	default:
 		return "流程已绑定但当前没有可处理的审批待办，请勿直接业务审批"
 	}

@@ -71,8 +71,8 @@ export const NetworkStatus: React.FC = () => {
         }}
       >
         <Alert
-          title="网络连接已断开"
-          description="请检查您的网络连接，部分功能可能不可用。"
+          title="Network connection lost"
+          description="Please check your network connection, some functions may not be available."
           type="error"
           showIcon
           icon={<Wifi />}
@@ -96,8 +96,8 @@ export const NetworkStatus: React.FC = () => {
         }}
       >
         <Alert
-          title="网络已恢复"
-          description="网络连接已恢复正常。"
+          title="Network restored"
+          description="The network connection has returned to normal."
           type="success"
           showIcon
           icon={<Server />}

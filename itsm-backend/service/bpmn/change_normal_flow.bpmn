@@ -5,21 +5,21 @@
                  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
                  targetNamespace="http://bpmn.io/schema/bpmn">
 
-  <bpmn:process id="change_normal_flow" name="普通变更流程" isExecutable="true">
+  <bpmn:process id="change_normal_flow" name="Normal Change Workflow" isExecutable="true">
     <bpmn:extensionElements>
       <bpmn:metaData name="category">change</bpmn:metaData>
       <bpmn:metaData name="sub_category">normal</bpmn:metaData>
       <bpmn:metaData name="version">1.0.0</bpmn:metaData>
-      <bpmn:metaData name="description">普通变更管理流程</bpmn:metaData>
+      <bpmn:metaData name="description">Normal change management workflow</bpmn:metaData>
     </bpmn:extensionElements>
 
     <!-- 开始事件：变更申请 -->
-    <bpmn:startEvent id="StartEvent_1" name="变更申请">
+    <bpmn:startEvent id="StartEvent_1" name="Change Request">
       <bpmn:outgoing>Flow_1</bpmn:outgoing>
     </bpmn:startEvent>
 
     <!-- 变更评估 -->
-    <bpmn:userTask id="Activity_Assessment" name="变更评估">
+    <bpmn:userTask id="Activity_Assessment" name="Change Assessment">
       <bpmn:extensionElements>
         <bpmn:metaData name="service_task_type">change_task</bpmn:metaData>
         <bpmn:metaData name="action">update_change</bpmn:metaData>
@@ -29,14 +29,14 @@
     </bpmn:userTask>
 
     <!-- 审批判断网关 -->
-    <bpmn:exclusiveGateway id="Gateway_Approval" name="是否需要审批?">
+    <bpmn:exclusiveGateway id="Gateway_Approval" name="Approval Required?">
       <bpmn:incoming>Flow_2</bpmn:incoming>
       <bpmn:outgoing>Flow_3</bpmn:outgoing>
       <bpmn:outgoing>Flow_Schedule</bpmn:outgoing>
     </bpmn:exclusiveGateway>
 
     <!-- CAB审批 -->
-    <bpmn:userTask id="Activity_CABApproval" name="CAB审批">
+    <bpmn:userTask id="Activity_CABApproval" name="CAB Approval">
       <bpmn:extensionElements>
         <bpmn:metaData name="service_task_type">change_task</bpmn:metaData>
         <bpmn:metaData name="action">approve_change</bpmn:metaData>
@@ -46,14 +46,14 @@
     </bpmn:userTask>
 
     <!-- 审批结果网关 -->
-    <bpmn:exclusiveGateway id="Gateway_ApprovalResult" name="审批结果?">
+    <bpmn:exclusiveGateway id="Gateway_ApprovalResult" name="Approval Result?">
       <bpmn:incoming>Flow_ApprovalResult</bpmn:incoming>
       <bpmn:outgoing>Flow_ScheduleApproved</bpmn:outgoing>
       <bpmn:outgoing>Flow_Reject</bpmn:outgoing>
     </bpmn:exclusiveGateway>
 
     <!-- 驳回处理 -->
-    <bpmn:userTask id="Activity_Reject" name="变更驳回">
+    <bpmn:userTask id="Activity_Reject" name="Reject Change">
       <bpmn:extensionElements>
         <bpmn:metaData name="service_task_type">change_task</bpmn:metaData>
         <bpmn:metaData name="action">reject_change</bpmn:metaData>
@@ -63,7 +63,7 @@
     </bpmn:userTask>
 
     <!-- 排期 -->
-    <bpmn:userTask id="Activity_Schedule" name="变更排期">
+    <bpmn:userTask id="Activity_Schedule" name="Schedule Change">
       <bpmn:extensionElements>
         <bpmn:metaData name="service_task_type">change_task</bpmn:metaData>
         <bpmn:metaData name="action">schedule_change</bpmn:metaData>
@@ -74,7 +74,7 @@
     </bpmn:userTask>
 
     <!-- 实施 -->
-    <bpmn:userTask id="Activity_Implement" name="变更实施">
+    <bpmn:userTask id="Activity_Implement" name="Implement Change">
       <bpmn:extensionElements>
         <bpmn:metaData name="service_task_type">change_task</bpmn:metaData>
         <bpmn:metaData name="action">implement_change</bpmn:metaData>
@@ -84,7 +84,7 @@
     </bpmn:userTask>
 
     <!-- 验证 -->
-    <bpmn:userTask id="Activity_Verify" name="变更验证">
+    <bpmn:userTask id="Activity_Verify" name="Verify Change">
       <bpmn:extensionElements>
         <bpmn:metaData name="service_task_type">change_task</bpmn:metaData>
         <bpmn:metaData name="action">verify_change</bpmn:metaData>
@@ -94,7 +94,7 @@
     </bpmn:userTask>
 
     <!-- 验证结果网关 -->
-    <bpmn:exclusiveGateway id="Gateway_VerifyResult" name="验证结果?">
+    <bpmn:exclusiveGateway id="Gateway_VerifyResult" name="Verification Result?">
       <bpmn:incoming>Flow_6</bpmn:incoming>
       <bpmn:outgoing>Flow_Close</bpmn:outgoing>
       <bpmn:outgoing>Flow_BackToImplement</bpmn:outgoing>
@@ -106,7 +106,7 @@
     </bpmn:sequenceFlow>
 
     <!-- 关闭 -->
-    <bpmn:userTask id="Activity_Close" name="关闭变更">
+    <bpmn:userTask id="Activity_Close" name="Close Change">
       <bpmn:extensionElements>
         <bpmn:metaData name="service_task_type">change_task</bpmn:metaData>
         <bpmn:metaData name="action">close_change</bpmn:metaData>
@@ -116,7 +116,7 @@
     </bpmn:userTask>
 
     <!-- 结束事件 -->
-    <bpmn:endEvent id="EndEvent_1" name="变更完成">
+    <bpmn:endEvent id="EndEvent_1" name="Change Completed">
       <bpmn:incoming>Flow_End</bpmn:incoming>
     </bpmn:endEvent>
 

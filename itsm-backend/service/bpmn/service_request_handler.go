@@ -56,7 +56,7 @@ func (h *ServiceRequestServiceTaskHandler) Execute(ctx context.Context, task *en
 	case "cancel_request":
 		return h.cancelRequest(ctx, variables)
 	default:
-		return nil, fmt.Errorf("未知的服务任务动作: %s", action)
+		return nil, fmt.Errorf("Unknown service task action: %s", action)
 	}
 }
 
@@ -68,7 +68,7 @@ func (h *ServiceRequestServiceTaskHandler) Validate(ctx context.Context, config 
 // getRequestByIDWithTenant 按 ID + TenantID 查询，找不到或不属于该租户均返回错误。
 func (h *ServiceRequestServiceTaskHandler) getRequestByIDWithTenant(ctx context.Context, requestID, tenantID int) (*ent.ServiceRequest, error) {
 	if requestID <= 0 {
-		return nil, fmt.Errorf("无效的请求ID: %d", requestID)
+		return nil, fmt.Errorf("Invalid request ID: %d", requestID)
 	}
 	sr, err := h.client.ServiceRequest.Query().
 		Where(
@@ -77,7 +77,7 @@ func (h *ServiceRequestServiceTaskHandler) getRequestByIDWithTenant(ctx context.
 		).
 		Only(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("服务请求不存在或不属于当前租户: %d (tenant=%d)", requestID, tenantID)
+		return nil, fmt.Errorf("The service request does not exist or does not belong to the current tenant: %d (tenant=%d)", requestID, tenantID)
 	}
 	return sr, nil
 }
@@ -92,17 +92,17 @@ func (h *ServiceRequestServiceTaskHandler) createRequest(ctx context.Context, va
 	tenantID, err := ResolveTenantID(ctx, variables)
 	if err != nil {
 		h.logger.Errorw("BPMN createRequest 缺少租户上下文", "error", err)
-		return nil, fmt.Errorf("创建服务请求失败: %w", err)
+		return nil, fmt.Errorf("Failed to create service request: %w", err)
 	}
 
 	if title == "" {
-		return nil, fmt.Errorf("请求标题不能为空")
+		return nil, fmt.Errorf("Request header cannot be empty")
 	}
 	if catalogID <= 0 {
-		return nil, fmt.Errorf("服务目录ID不能为空")
+		return nil, fmt.Errorf("Service directory ID cannot be empty")
 	}
 	if requesterID <= 0 {
-		return nil, fmt.Errorf("申请人ID不能为空")
+		return nil, fmt.Errorf("Applicant ID cannot be empty")
 	}
 
 	sr, err := h.client.ServiceRequest.Create().
@@ -114,7 +114,7 @@ func (h *ServiceRequestServiceTaskHandler) createRequest(ctx context.Context, va
 		SetStatus("submitted").
 		Save(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("创建服务请求失败: %w", err)
+		return nil, fmt.Errorf("Failed to create service request: %w", err)
 	}
 
 	h.logger.Infow("ServiceRequest created via BPMN",
@@ -132,7 +132,7 @@ func (h *ServiceRequestServiceTaskHandler) updateRequest(ctx context.Context, va
 	requestID := GetIntFromVars(variables, "request_id")
 	tenantID, err := ResolveTenantID(ctx, variables)
 	if err != nil {
-		return nil, fmt.Errorf("更新服务请求失败: %w", err)
+		return nil, fmt.Errorf("Update service request failed: %w", err)
 	}
 
 	if _, err := h.getRequestByIDWithTenant(ctx, requestID, tenantID); err != nil {
@@ -153,7 +153,7 @@ func (h *ServiceRequestServiceTaskHandler) updateRequest(ctx context.Context, va
 
 	_, err = updateQuery.Save(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("更新服务请求失败: %w", err)
+		return nil, fmt.Errorf("Update service request failed: %w", err)
 	}
 
 	h.logger.Infow("ServiceRequest updated via BPMN", "request_id", requestID, "tenant_id", tenantID)
@@ -170,7 +170,7 @@ func (h *ServiceRequestServiceTaskHandler) approveRequest(ctx context.Context, v
 	comment, _ := variables["approver_comment"].(string)
 	tenantID, err := ResolveTenantID(ctx, variables)
 	if err != nil {
-		return nil, fmt.Errorf("审批服务请求失败: %w", err)
+		return nil, fmt.Errorf("Failed to approve service request: %w", err)
 	}
 
 	sr, err := h.getRequestByIDWithTenant(ctx, requestID, tenantID)
@@ -192,7 +192,7 @@ func (h *ServiceRequestServiceTaskHandler) approveRequest(ctx context.Context, v
 		SetApproverComment(comment).
 		Save(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("审批服务请求失败: %w", err)
+		return nil, fmt.Errorf("Failed to approve service request: %w", err)
 	}
 
 	h.logger.Infow("ServiceRequest approved via BPMN",
@@ -210,7 +210,7 @@ func (h *ServiceRequestServiceTaskHandler) rejectRequest(ctx context.Context, va
 	reason, _ := variables["reject_reason"].(string)
 	tenantID, err := ResolveTenantID(ctx, variables)
 	if err != nil {
-		return nil, fmt.Errorf("驳回服务请求失败: %w", err)
+		return nil, fmt.Errorf("Rejection of service request failed: %w", err)
 	}
 
 	if _, err := h.getRequestByIDWithTenant(ctx, requestID, tenantID); err != nil {
@@ -222,7 +222,7 @@ func (h *ServiceRequestServiceTaskHandler) rejectRequest(ctx context.Context, va
 		SetApproverComment(reason).
 		Save(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("驳回服务请求失败: %w", err)
+		return nil, fmt.Errorf("Rejection of service request failed: %w", err)
 	}
 
 	h.logger.Infow("ServiceRequest rejected via BPMN",
@@ -240,7 +240,7 @@ func (h *ServiceRequestServiceTaskHandler) assignRequest(ctx context.Context, va
 	assigneeID := GetIntFromVars(variables, "assignee_id")
 	tenantID, err := ResolveTenantID(ctx, variables)
 	if err != nil {
-		return nil, fmt.Errorf("分配服务请求失败: %w", err)
+		return nil, fmt.Errorf("Failed to allocate service request: %w", err)
 	}
 
 	if _, err := h.getRequestByIDWithTenant(ctx, requestID, tenantID); err != nil {
@@ -252,7 +252,7 @@ func (h *ServiceRequestServiceTaskHandler) assignRequest(ctx context.Context, va
 		SetStatus("in_progress").
 		Save(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("分配服务请求失败: %w", err)
+		return nil, fmt.Errorf("Failed to allocate service request: %w", err)
 	}
 
 	h.logger.Infow("ServiceRequest assigned via BPMN",
@@ -270,7 +270,7 @@ func (h *ServiceRequestServiceTaskHandler) provisionResource(ctx context.Context
 	resourceType, _ := variables["resource_type"].(string)
 	tenantID, err := ResolveTenantID(ctx, variables)
 	if err != nil {
-		return nil, fmt.Errorf("预置资源失败: %w", err)
+		return nil, fmt.Errorf("Failed to provision resources: %w", err)
 	}
 
 	if _, err := h.getRequestByIDWithTenant(ctx, requestID, tenantID); err != nil {
@@ -282,7 +282,7 @@ func (h *ServiceRequestServiceTaskHandler) provisionResource(ctx context.Context
 		SetStartedAt(time.Now()).
 		Save(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("预置资源失败: %w", err)
+		return nil, fmt.Errorf("Failed to provision resources: %w", err)
 	}
 
 	h.logger.Infow("ServiceRequest resource provisioning via BPMN",
@@ -300,7 +300,7 @@ func (h *ServiceRequestServiceTaskHandler) completeRequest(ctx context.Context, 
 	note, _ := variables["completion_note"].(string)
 	tenantID, err := ResolveTenantID(ctx, variables)
 	if err != nil {
-		return nil, fmt.Errorf("完成服务请求失败: %w", err)
+		return nil, fmt.Errorf("Failed to complete service request: %w", err)
 	}
 
 	if _, err := h.getRequestByIDWithTenant(ctx, requestID, tenantID); err != nil {
@@ -313,7 +313,7 @@ func (h *ServiceRequestServiceTaskHandler) completeRequest(ctx context.Context, 
 		SetCompletionNote(note).
 		Save(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("完成服务请求失败: %w", err)
+		return nil, fmt.Errorf("Failed to complete service request: %w", err)
 	}
 
 	h.logger.Infow("ServiceRequest completed via BPMN",
@@ -331,7 +331,7 @@ func (h *ServiceRequestServiceTaskHandler) cancelRequest(ctx context.Context, va
 	reason, _ := variables["cancel_reason"].(string)
 	tenantID, err := ResolveTenantID(ctx, variables)
 	if err != nil {
-		return nil, fmt.Errorf("取消服务请求失败: %w", err)
+		return nil, fmt.Errorf("Failed to cancel service request: %w", err)
 	}
 
 	if _, err := h.getRequestByIDWithTenant(ctx, requestID, tenantID); err != nil {
@@ -342,7 +342,7 @@ func (h *ServiceRequestServiceTaskHandler) cancelRequest(ctx context.Context, va
 		SetStatus("cancelled").
 		Save(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("取消服务请求失败: %w", err)
+		return nil, fmt.Errorf("Failed to cancel service request: %w", err)
 	}
 
 	h.logger.Infow("ServiceRequest cancelled via BPMN",

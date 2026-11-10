@@ -11,7 +11,7 @@ import (
 // 与网络抖动/限流/MQ 超时的区别在于「重试的期望收益为零」：自动重投只会
 // 重复打出同样的请求、刷出同样的告警，并把真正的处置动作（充值、改参数、
 // 人工裁决）埋在一堆重试记录里。调用方拿到它必须停止自动重试。
-var ErrPermanent = errors.New("云侧拒绝且自动重试不会成功")
+var ErrPermanent = errors.New("Rejected by the cloud side and automatic retry will not succeed.")
 
 // ExecuteResult 交付执行结果。
 type ExecuteResult struct {

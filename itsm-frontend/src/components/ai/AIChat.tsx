@@ -90,7 +90,7 @@ const AIChat: React.FC = () => {
     } catch {
       // 2026-10-14 修复：原为静默，用户看不到会话列表加载失败，
       // 会误以为「没有历史会话」。失败必须有反馈。
-      antdMessage.warning('会话列表加载失败，请稍后重试');
+      antdMessage.warning('Session list loading failed, please try again later.');
     } finally {
       setLoadingConvs(false);
     }
@@ -115,7 +115,7 @@ const AIChat: React.FC = () => {
         setMessages(mapped);
         setConvId(conv.id);
       } catch {
-        antdMessage.error('加载会话失败');
+        antdMessage.error('Failed to load session');
       }
     },
     [streaming]
@@ -139,9 +139,9 @@ const AIChat: React.FC = () => {
           setMessages([]);
           setConvId(undefined);
         }
-        antdMessage.success('会话已删除');
+        antdMessage.success('Session deleted');
       } catch {
-        antdMessage.error('删除失败');
+        antdMessage.error('Delete failed');
       }
     },
     [convId]
@@ -225,7 +225,7 @@ const AIChat: React.FC = () => {
       } catch (err) {
         const aborted = (err as Error)?.name === 'AbortError';
         if (aborted) {
-          updateAssistant(assistantId, { streaming: false, error: '已停止生成' });
+          updateAssistant(assistantId, { streaming: false, error: 'Generation stopped' });
           return;
         }
         try {
@@ -240,7 +240,7 @@ const AIChat: React.FC = () => {
             .join('\n\n');
           updateAssistant(assistantId, {
             streaming: false,
-            content: fallbackText || '抱歉，我没有找到相关的答案。',
+            content: fallbackText || 'Sorry, I found no relevant answer.',
             sources: answers.filter((a): a is RagAnswer => typeof a === 'object' && a !== null),
           });
           if (res?.conversationId) {
@@ -249,9 +249,9 @@ const AIChat: React.FC = () => {
           }
         } catch (fallbackErr) {
           const fallbackMsg =
-            fallbackErr instanceof Error ? fallbackErr.message : '流式请求与降级请求均失败';
+            fallbackErr instanceof Error ? fallbackErr.message : 'Both streaming and downgrade requests failed';
           updateAssistant(assistantId, { streaming: false, error: fallbackMsg });
-          antdMessage.error('AI 回答失败，请稍后重试');
+          antdMessage.error('AI failed to answer, please try again later.');
         }
       } finally {
         abortRef.current = null;
@@ -297,7 +297,7 @@ const AIChat: React.FC = () => {
 
   const currentConvTitle = useMemo(() => {
     if (!convId) return null;
-    return conversations.find(c => c.id === convId)?.title || `会话 #${convId}`;
+    return conversations.find(c => c.id === convId)?.title || `Session #${convId}`;
   }, [convId, conversations]);
 
   // 格式化时间
@@ -306,9 +306,9 @@ const AIChat: React.FC = () => {
       const d = new Date(iso);
       const now = new Date();
       const diff = now.getTime() - d.getTime();
-      if (diff < 60_000) return '刚刚';
-      if (diff < 3_600_000) return `${Math.floor(diff / 60_000)} 分钟前`;
-      if (diff < 86_400_000) return `${Math.floor(diff / 3_600_000)} 小时前`;
+      if (diff < 60_000) return 'Just now';
+      if (diff < 3_600_000) return `${Math.floor(diff / 60_000)} minutes ago`;
+      if (diff < 86_400_000) return `${Math.floor(diff / 3_600_000)} hours ago`;
       return formatDateTime(iso);
     } catch {
       return '';
@@ -336,20 +336,20 @@ const AIChat: React.FC = () => {
       >
         <div style={{ padding: '12px 12px 8px', display: 'flex', alignItems: 'center', gap: 8 }}>
           <MessageSquare size={15} style={{ color: '#667' }} />
-          <Text strong style={{ fontSize: 13, flex: 1 }}>会话历史</Text>
+          <Text strong style={{ fontSize: 13, flex: 1 }}>Session History</Text>
           <Button
             type="text"
             size="small"
             icon={<Plus size={14} />}
             onClick={startNewConversation}
-            title="新建会话"
+            title="Create new session"
           />
           <Button
             type="text"
             size="small"
             icon={<ChevronRight size={14} />}
             onClick={() => setSidebarOpen(false)}
-            title="收起"
+            title="Collapse"
           />
         </div>
 
@@ -360,7 +360,7 @@ const AIChat: React.FC = () => {
             </div>
           ) : conversations.length === 0 ? (
             <div style={{ padding: 16, textAlign: 'center' }}>
-              <Text type="secondary" style={{ fontSize: 12 }}>暂无会话记录</Text>
+              <Text type="secondary" style={{ fontSize: 12 }}>No session record yet</Text>
             </div>
           ) : (
             <List
@@ -383,7 +383,7 @@ const AIChat: React.FC = () => {
                       style={{ fontSize: 13, display: 'block' }}
                       ellipsis
                     >
-                      {conv.title || `会话 #${conv.id}`}
+                      {conv.title || `Session #${conv.id}`}
                     </Text>
                     <Space size={4}>
                       <Clock size={10} style={{ color: '#aaa' }} />
@@ -391,14 +391,14 @@ const AIChat: React.FC = () => {
                     </Space>
                   </div>
                   <Popconfirm
-                    title="删除此会话？"
+                    title="Delete this session?"
                     onConfirm={e => handleDeleteConversation(e!, conv.id)}
-                    okText="删除"
-                    cancelText="取消"
+                    okText="Delete"
+                    cancelText="Cancel"
                     okButtonProps={{ danger: true, size: 'small' }}
                   >
                     <Button
-                      aria-label="删除"
+                      aria-label="Delete"
                       type="text"
                       size="small"
                       danger
@@ -424,11 +424,11 @@ const AIChat: React.FC = () => {
                 size="small"
                 icon={<MessageSquare size={14} />}
                 onClick={() => setSidebarOpen(true)}
-                title="展开会话历史"
+                title="Expand session history"
               />
             )}
             <Bot size={18} />
-            <span>AI 助手</span>
+            <span>AI Assistant</span>
             {currentConvTitle ? (
               <Tag style={{ maxWidth: 200 }}>
                 <Text style={{ fontSize: 11 }} ellipsis>{currentConvTitle}</Text>
@@ -436,7 +436,8 @@ const AIChat: React.FC = () => {
             ) : null}
             {streaming ? (
               <Tag color="processing" icon={<LoaderCircle size={12} className="animate-spin" />}>
-                生成中
+
+                Generating
               </Tag>
             ) : null}
           </Space>
@@ -445,11 +446,13 @@ const AIChat: React.FC = () => {
           <Space>
             {streaming ? (
               <Button size="small" danger icon={<StopCircle size={14} />} onClick={handleStop}>
-                停止生成
+
+                Stop generating
               </Button>
             ) : null}
             <Button size="small" icon={<Eraser size={14} />} onClick={handleClear} disabled={streaming}>
-              清空对话
+
+              Clear conversation
             </Button>
           </Space>
         }
@@ -467,7 +470,7 @@ const AIChat: React.FC = () => {
         <div ref={scrollRef} style={{ flex: 1, overflowY: 'auto', padding: '16px' }}>
           {isEmpty ? (
             <Empty
-              description="发起提问，AI 将结合知识库为你回答，并给出引用来源。选择左侧会话可继续历史对话。"
+              description="Initiate a question, and AI will answer it for you based on the knowledge base and provide citation sources. Select a conversation on the left to continue a historical conversation."
               style={{ marginTop: 96 }}
             />
           ) : (
@@ -487,9 +490,9 @@ const AIChat: React.FC = () => {
                     }
                     title={
                       <Space size={6}>
-                        <Text strong>{item.role === 'user' ? '你' : 'AI 助手'}</Text>
-                        {item.streaming ? <Tag color="processing">流式</Tag> : null}
-                        {item.error ? <Tag color="error">失败</Tag> : null}
+                        <Text strong>{item.role === 'user' ? 'you' : 'AI Assistant'}</Text>
+                        {item.streaming ? <Tag color="processing">Streaming</Tag> : null}
+                        {item.error ? <Tag color="error">Failed</Tag> : null}
                       </Space>
                     }
                     description={
@@ -512,7 +515,7 @@ const AIChat: React.FC = () => {
                         ) : item.streaming ? (
                           <Space size={6} align="center">
                             <Spin size="small" />
-                            <Text type="secondary">检索知识库并生成回答…</Text>
+                            <Text type="secondary">Search the knowledge base and generate answers…</Text>
                           </Space>
                         ) : null}
                         {item.error ? (
@@ -540,7 +543,8 @@ const AIChat: React.FC = () => {
                             }}
                           >
                             <Text type="secondary" style={{ fontSize: 12 }}>
-                              未引用知识库文章 · 若本回答有价值，可沉淀为知识
+
+                              Uncited knowledge base article · If this answer is valuable, it can be deposited into knowledge
                             </Text>
                             <Button
                               size="small"
@@ -549,7 +553,8 @@ const AIChat: React.FC = () => {
                               style={{ padding: 0, height: 'auto' }}
                               onClick={() => router.push('/knowledge/articles/new')}
                             >
-                              补充为知识文章
+
+                              Supplemented as knowledge article
                             </Button>
                           </div>
                         ) : null}
@@ -567,7 +572,7 @@ const AIChat: React.FC = () => {
         <div style={{ padding: '16px' }}>
           <Space.Compact style={{ width: '100%' }}>
             <Input
-              placeholder="请输入你的问题，Enter 发送"
+              placeholder="Please enter your question, Enter to send"
               value={query}
               onChange={e => setQuery(e.target.value)}
               onPressEnter={handleSend}
@@ -581,7 +586,8 @@ const AIChat: React.FC = () => {
               loading={streaming}
               disabled={streaming || !query.trim()}
             >
-              发送
+
+              Send
             </Button>
           </Space.Compact>
         </div>
@@ -609,11 +615,12 @@ const SourceList: React.FC<{ sources: RagAnswer[] }> = ({ sources }) => {
   return (
     <div style={{ marginTop: 6 }}>
       <Text type="secondary" style={{ fontSize: 12 }}>
-        引用来源 · {sources.length}
+
+        Citing source · {sources.length}
       </Text>
       <ul style={{ paddingLeft: 18, marginTop: 6, marginBottom: 0 }}>
         {sources.map((s, idx) => {
-          const title = s.title || s.snippet?.slice(0, 30) || `来源 ${idx + 1}`;
+          const title = s.title || s.snippet?.slice(0, 30) || `Source ${idx + 1}`;
           const scoreLabel =
             typeof s.score === 'number' ? `${(s.score * 100).toFixed(0)}%` : undefined;
           return (
@@ -623,13 +630,13 @@ const SourceList: React.FC<{ sources: RagAnswer[] }> = ({ sources }) => {
                 <Text strong style={{ fontSize: 13 }}>
                   {title}
                 </Text>
-                {scoreLabel ? <Tag color="green">相关度 {scoreLabel}</Tag> : null}
+                {scoreLabel ? <Tag color="green">Relevance {scoreLabel}</Tag> : null}
               </Space>
               {s.snippet ? (
                 <Paragraph
                   type="secondary"
                   style={{ marginTop: 4, marginBottom: 0, fontSize: 12 }}
-                  ellipsis={{ rows: 2, expandable: true, symbol: '展开' }}
+                  ellipsis={{ rows: 2, expandable: true, symbol: 'Expand' }}
                 >
                   {s.snippet}
                 </Paragraph>

@@ -72,8 +72,8 @@ async function rowOf(templateName: string): Promise<HTMLElement> {
 
 async function clickInstall(templateName: string) {
   const row = await rowOf(templateName);
-  fireEvent.click(within(row).getByRole('button', { name: /安装/ }));
-  fireEvent.click(await screen.findByText('确认安装'));
+  fireEvent.click(within(row).getByRole('button', { name: /^Installation$/ }));
+  fireEvent.click(await screen.findByText("Confirm installation"));
 }
 
 async function renderPage() {
@@ -103,25 +103,25 @@ describe('SLATemplatesPage', () => {
     const installedRow = await renderPage();
 
     // 页面加载即从后端拿到 installed，已装模板刷新后不会退回「未安装」
-    expect(within(installedRow).getByText('已安装')).toBeInTheDocument();
-    expect(within(installedRow).queryByText('未安装')).not.toBeInTheDocument();
+    expect(within(installedRow).getByText('Already installed')).toBeInTheDocument();
+    expect(within(installedRow).queryByText("Not installed")).not.toBeInTheDocument();
 
     const pendingRow = await rowOf(changeNormal.name);
-    expect(within(pendingRow).getByText('未安装')).toBeInTheDocument();
-    expect(screen.getByText('本租户已安装')).toBeInTheDocument();
+    expect(within(pendingRow).getByText("Not installed")).toBeInTheDocument();
+    expect(screen.getByText("This tenant has already been installed")).toBeInTheDocument();
   });
 
   it('优先级、服务窗口、时限使用与 SLA 定义页相同的展示口径', async () => {
     const row = await renderPage();
 
     // 后端词表是 critical，不是 P1；旧页面按 P1..P4 上色导致整列空白
-    expect(within(row).getByText('紧急')).toBeInTheDocument();
+    expect(within(row).getByText('Urgent')).toBeInTheDocument();
     expect(within(row).queryByText('critical')).not.toBeInTheDocument();
-    expect(within(row).getByText('15 分钟')).toBeInTheDocument();
-    expect(within(row).getByText('4 小时')).toBeInTheDocument();
+    expect(within(row).getByText("15 minutes")).toBeInTheDocument();
+    expect(within(row).getByText("4 hours")).toBeInTheDocument();
     expect(within(row).getByText('7×24')).toBeInTheDocument();
-    expect(within(row).getByText('事件')).toBeInTheDocument();
-    expect(within(row).getByText('事件管理')).toBeInTheDocument();
+    expect(within(row).getByText('Incidents')).toBeInTheDocument();
+    expect(within(row).getByText("Incident")).toBeInTheDocument();
   });
 
   it('安装成功后以服务端列表为准重新拉取，而不是本地记一笔', async () => {
@@ -133,7 +133,7 @@ describe('SLATemplatesPage', () => {
     await waitFor(() => expect(mockedApi.installTemplate).toHaveBeenCalledWith(changeNormal.key));
     await waitFor(() => expect(mockedApi.listTemplates).toHaveBeenCalledTimes(2));
     expect(
-      await screen.findByText(`模板「${changeNormal.key}」已安装到当前租户`)
+      await screen.findByText(`Template "${changeNormal.key}"Already installed in the current tenant"`)
     ).toBeInTheDocument();
   });
 
@@ -150,7 +150,7 @@ describe('SLATemplatesPage', () => {
     await clickInstall(changeNormal.name);
 
     expect(
-      await screen.findByText(`模板「${changeNormal.key}」此前已安装，未重复创建`)
+      await screen.findByText(`Template "${changeNormal.key}"It has been installed before and has not been re-created.`)
     ).toBeInTheDocument();
   });
 
@@ -160,10 +160,10 @@ describe('SLATemplatesPage', () => {
     await renderPage();
     await clickInstall(changeNormal.name);
 
-    expect(await screen.findByText('1 个模板安装失败')).toBeInTheDocument();
+    expect(await screen.findByText("1 Template installation failed")).toBeInTheDocument();
     expect(screen.getByText('change_normal：租户上下文缺失')).toBeInTheDocument();
     expect(mockedApi.listTemplates).toHaveBeenCalledTimes(1);
-    expect(screen.queryByText(/已安装到当前租户/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Already installed in the current tenant/)).not.toBeInTheDocument();
   });
 
   it('批量安装逐个提交并点名失败模板', async () => {
@@ -182,12 +182,12 @@ describe('SLATemplatesPage', () => {
 
     await renderPage();
 
-    fireEvent.click(screen.getByText('批量安装全部推荐模板'));
-    fireEvent.click(await screen.findByText('全部安装'));
+    fireEvent.click(screen.getByText("Install all recommended templates in batches"));
+    fireEvent.click(await screen.findByText("Install all"));
 
     await waitFor(() => expect(mockedApi.installAllRecommended).toHaveBeenCalledTimes(1));
-    expect(await screen.findByText('1 个模板安装失败')).toBeInTheDocument();
-    expect(screen.getByText('change_normal：安装 SLA 模板失败')).toBeInTheDocument();
+    expect(await screen.findByText("1 Template installation failed")).toBeInTheDocument();
+    expect(screen.getByText("change_normal：安装 SLA 模板失败")).toBeInTheDocument();
     expect(mockedApi.listTemplates).toHaveBeenCalledTimes(2);
   });
 
@@ -200,11 +200,11 @@ describe('SLATemplatesPage', () => {
       </App>
     );
 
-    expect(await screen.findByText('SLA 模板加载失败')).toBeInTheDocument();
+    expect(await screen.findByText("SLA template loading failed")).toBeInTheDocument();
     expect(screen.getByText('SLA 模板服务暂不可用')).toBeInTheDocument();
-    expect(screen.getByText('模板加载失败')).toBeInTheDocument();
+    expect(screen.getByText("Template loading failed")).toBeInTheDocument();
 
-    fireEvent.click(screen.getByText(/重\s*试/));
+    fireEvent.click(screen.getByText(/Retry/));
 
     await waitFor(() => expect(mockedApi.listTemplates).toHaveBeenCalledTimes(2));
     expect(await rowOf(p1.name)).toBeInTheDocument();
@@ -213,12 +213,12 @@ describe('SLATemplatesPage', () => {
   it('详情弹窗用后端投影字段渲染升级级别，不再打印原始 JSON', async () => {
     const row = await renderPage();
 
-    fireEvent.click(within(row).getByRole('button', { name: /查看/ }));
+    fireEvent.click(within(row).getByRole('button', { name: /View/ }));
 
     const modal = await screen.findByRole('dialog');
-    expect(within(modal).getByText('L1 · 15 分钟后升级 → manager')).toBeInTheDocument();
-    expect(within(modal).getByText('L2 · 30 分钟后升级 → it_admin')).toBeInTheDocument();
-    expect(within(modal).getByText(/已安装于/)).toBeInTheDocument();
+    expect(within(modal).getByText("L1 · 15 minutes before escalation → manager")).toBeInTheDocument();
+    expect(within(modal).getByText("L2 · 30 minutes before escalation → it_admin")).toBeInTheDocument();
+    expect(within(modal).getByText(/Installed in/)).toBeInTheDocument();
     expect(within(modal).queryByText(/threshold_minutes/)).not.toBeInTheDocument();
     expect(within(modal).queryByText(/notify_roles/)).not.toBeInTheDocument();
   });

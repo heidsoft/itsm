@@ -28,19 +28,19 @@ export interface RelationshipTypeMeta {
 
 /** 静态默认词表（后端不可达时的降级值） */
 export const DEFAULT_RELATIONSHIP_VOCABULARY: RelationshipTypeMeta[] = [
-  { type: 'depends_on', name: '依赖', description: '源CI依赖目标CI', direction: 'uni-directional', reverse: 'impacted_by', icon: 'link' },
-  { type: 'hosts', name: '托管', description: '源CI托管目标CI', direction: 'uni-directional', reverse: 'hosted_on', icon: 'server' },
-  { type: 'hosted_on', name: '承载于', description: '源CI运行或部署在目标CI上', direction: 'uni-directional', reverse: 'hosts', icon: 'hard-drive' },
-  { type: 'connects_to', name: '连接到', description: '源CI与目标CI存在网络连接', direction: 'bi-directional', reverse: 'connects_to', icon: 'network' },
-  { type: 'runs_on', name: '运行于', description: '源CI运行在目标CI之上', direction: 'uni-directional', icon: 'play' },
-  { type: 'contains', name: '包含', description: '源CI包含目标CI', direction: 'uni-directional', reverse: 'part_of', icon: 'box' },
-  { type: 'part_of', name: '组成部分', description: '源CI是目标CI的一部分', direction: 'uni-directional', reverse: 'contains', icon: 'component' },
-  { type: 'impacts', name: '影响', description: '源CI故障会影响目标CI', direction: 'uni-directional', reverse: 'impacted_by', icon: 'activity' },
-  { type: 'impacted_by', name: '受影响于', description: '源CI受目标CI故障影响', direction: 'uni-directional', reverse: 'depends_on', icon: 'activity' },
-  { type: 'owns', name: '拥有', description: '源CI拥有目标CI', direction: 'uni-directional', reverse: 'owned_by', icon: 'key' },
-  { type: 'owned_by', name: '被拥有', description: '源CI被目标CI拥有', direction: 'uni-directional', reverse: 'owns', icon: 'key' },
-  { type: 'uses', name: '使用', description: '源CI使用目标CI能力', direction: 'uni-directional', reverse: 'used_by', icon: 'plug' },
-  { type: 'used_by', name: '被使用', description: '源CI能力被目标CI使用', direction: 'uni-directional', reverse: 'uses', icon: 'plug' },
+  { type: 'depends_on', name: 'dependency', description: 'Source CI depends on target CI', direction: 'uni-directional', reverse: 'impacted_by', icon: 'link' },
+  { type: 'hosts', name: 'Hosting', description: 'Source CI hosts target CI', direction: 'uni-directional', reverse: 'hosted_on', icon: 'server' },
+  { type: 'hosted_on', name: 'Hosted by', description: 'Source CI is running or deployed on target CI', direction: 'uni-directional', reverse: 'hosts', icon: 'hard-drive' },
+  { type: 'connects_to', name: 'Connect to', description: 'There is a network connection between the source CI and the target CI', direction: 'bi-directional', reverse: 'connects_to', icon: 'network' },
+  { type: 'runs_on', name: 'Running on', description: 'Source CI is running on target CI', direction: 'uni-directional', icon: 'play' },
+  { type: 'contains', name: 'Contains', description: 'Source CI contains target CI', direction: 'uni-directional', reverse: 'part_of', icon: 'box' },
+  { type: 'part_of', name: 'Components', description: 'Source CI is part of target CI', direction: 'uni-directional', reverse: 'contains', icon: 'component' },
+  { type: 'impacts', name: 'Impact', description: 'Source CI failure affects target CI', direction: 'uni-directional', reverse: 'impacted_by', icon: 'activity' },
+  { type: 'impacted_by', name: 'Affected by', description: 'Source CI affected by target CI failure', direction: 'uni-directional', reverse: 'depends_on', icon: 'activity' },
+  { type: 'owns', name: 'Owned', description: 'Source CI owns target CI', direction: 'uni-directional', reverse: 'owned_by', icon: 'key' },
+  { type: 'owned_by', name: 'owned', description: 'Source CI is owned by target CI', direction: 'uni-directional', reverse: 'owns', icon: 'key' },
+  { type: 'uses', name: 'use', description: 'Source CI uses target CI capabilities', direction: 'uni-directional', reverse: 'used_by', icon: 'plug' },
+  { type: 'used_by', name: 'used', description: 'Source CI capability is used by target CI', direction: 'uni-directional', reverse: 'uses', icon: 'plug' },
 ];
 
 let runtimeVocabulary: RelationshipTypeMeta[] | null = null;

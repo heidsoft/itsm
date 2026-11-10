@@ -12,7 +12,7 @@ import (
 
 // ErrLinkedProblemNotFound 表示 problemId 指向的问题不存在，或属于其他租户。
 // 两种情况对外都必须是 404：区分开会把「别家租户有没有这个 ID」变成探测面。
-var ErrLinkedProblemNotFound = errors.New("关联的问题不存在或不属于当前租户")
+var ErrLinkedProblemNotFound = errors.New("The associated problem does not exist or does not belong to the current tenant")
 
 type Service struct {
 	client *ent.Client
@@ -70,7 +70,7 @@ func (s *Service) CreateKnownError(ctx context.Context, input *KnownErrorCreateI
 			if ent.IsNotFound(err) {
 				return nil, ErrLinkedProblemNotFound
 			}
-			return nil, fmt.Errorf("校验关联问题失败: %w", err)
+			return nil, fmt.Errorf("Verification association problem failed: %w", err)
 		}
 		create = create.AddProblemIDs(input.ProblemID)
 	}

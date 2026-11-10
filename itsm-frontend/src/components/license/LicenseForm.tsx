@@ -47,7 +47,7 @@ const LicenseForm: React.FC = () => {
       setDetail(data);
       form.setFieldsValue(data);
     } catch (error) {
-      message.error('加载许可证详情失败');
+      message.error('Failed to load license details');
     } finally {
       setLoading(false);
     }
@@ -92,14 +92,14 @@ const LicenseForm: React.FC = () => {
 
       if (isEdit) {
         await AssetApi.updateLicense(Number(id), data);
-        message.success('更新成功');
+        message.success('Updated');
       } else {
         await AssetApi.createLicense(data);
-        message.success('创建成功');
+        message.success('Created');
       }
       router.push('/licenses');
     } catch (error) {
-      message.error(isEdit ? '更新失败' : '创建失败');
+      message.error(isEdit ? 'Update failed' : 'Creation failed');
     } finally {
       setLoading(false);
     }
@@ -118,92 +118,93 @@ const LicenseForm: React.FC = () => {
       >
         <div style={{ marginBottom: 16 }}>
           <Button icon={<ArrowLeft />} onClick={() => router.push('/licenses')}>
-            返回列表
+
+            Back to List
           </Button>
         </div>
 
-        <Divider>基本信息</Divider>
+        <Divider>Basic Info</Divider>
 
         <Form.Item
           name="name"
-          label="许可证名称"
-          rules={[{ required: true, message: '请输入许可证名称' }]}
+          label="LicensesName"
+          rules={[{ required: true, message: 'Please enter the license name' }]}
         >
-          <Input placeholder="例如: Microsoft 365 E3" />
+          <Input placeholder="Example: Microsoft 365 E3" />
         </Form.Item>
 
-        <Form.Item name="description" label="描述">
-          <TextArea rows={3} placeholder="许可证描述" />
+        <Form.Item name="description" label="Description">
+          <TextArea rows={3} placeholder="License description" />
         </Form.Item>
 
-        <Form.Item name="vendor" label="供应商">
-          <Input placeholder="例如: Microsoft" />
+        <Form.Item name="vendor" label="Supplier">
+          <Input placeholder="Example: Microsoft" />
         </Form.Item>
 
-        <Form.Item name="licenseType" label="许可证类型">
+        <Form.Item name="licenseType" label="License type">
           <Select options={[
-            { value: 'perpetual', label: '永久 (Perpetual)' },
-            { value: 'subscription', label: '订阅 (Subscription)' },
-            { value: 'per-user', label: '按用户 (Per-User)' },
-            { value: 'per-seat', label: '按席位 (Per-Seat)' },
-            { value: 'site', label: '站点 (Site)' },
+            { value: 'perpetual', label: 'Perpetual' },
+            { value: 'subscription', label: 'Subscription' },
+            { value: 'per-user', label: 'Per-User' },
+            { value: 'per-seat', label: 'Per-Seat' },
+            { value: 'site', label: 'Site' },
           ]} />
         </Form.Item>
 
-        <Form.Item name="licenseKey" label="许可证密钥">
-          <TextArea rows={2} placeholder="许可证密钥" />
+        <Form.Item name="licenseKey" label="License Key">
+          <TextArea rows={2} placeholder="License Key" />
         </Form.Item>
 
-        <Divider>数量与使用</Divider>
+        <Divider>Quantity and Usage</Divider>
 
-        <Form.Item name="totalQuantity" label="总数量">
+        <Form.Item name="totalQuantity" label="Total quantity">
           <InputNumber min={1} style={{ width: '100%' }} />
         </Form.Item>
 
-        <Divider>采购与财务</Divider>
+        <Divider>Purchasing and Finance</Divider>
 
-        <Form.Item name="purchaseDate" label="采购日期">
-          <DatePicker style={{ width: '100%' }} placeholder="选择采购日期" />
+        <Form.Item name="purchaseDate" label="Purchase date">
+          <DatePicker style={{ width: '100%' }} placeholder="Select purchase date" />
         </Form.Item>
 
-        <Form.Item name="purchasePrice" label="采购价格">
-          <InputNumber style={{ width: '100%' }} min={0} precision={2} placeholder="采购价格" />
+        <Form.Item name="purchasePrice" label="Purchase price">
+          <InputNumber style={{ width: '100%' }} min={0} precision={2} placeholder="Purchase price" />
         </Form.Item>
 
-        <Form.Item name="expiryDate" label="到期日期">
-          <DatePicker style={{ width: '100%' }} placeholder="选择到期日期" />
+        <Form.Item name="expiryDate" label="Expiration date">
+          <DatePicker style={{ width: '100%' }} placeholder="Select expiration date" />
         </Form.Item>
 
-        <Form.Item name="renewalCost" label="续费成本">
-          <Input placeholder="续费成本" />
+        <Form.Item name="renewalCost" label="Renewal cost">
+          <Input placeholder="Renewal cost" />
         </Form.Item>
 
-        <Divider>支持信息</Divider>
+        <Divider>Support information</Divider>
 
-        <Form.Item name="supportVendor" label="支持供应商">
-          <Input placeholder="支持供应商" />
+        <Form.Item name="supportVendor" label="Support Supplier">
+          <Input placeholder="Support Supplier" />
         </Form.Item>
 
-        <Form.Item name="supportContact" label="支持联系方式">
-          <Input placeholder="支持联系方式" />
+        <Form.Item name="supportContact" label="Support Contact">
+          <Input placeholder="Support Contact" />
         </Form.Item>
 
-        <Divider>其他</Divider>
+        <Divider>Other</Divider>
 
-        <Form.Item name="notes" label="备注">
-          <TextArea rows={3} placeholder="备注信息" />
+        <Form.Item name="notes" label="Notes">
+          <TextArea rows={3} placeholder="Remarks information" />
         </Form.Item>
 
-        <Form.Item name="tags" label="标签">
-          <Input placeholder="标签，用逗号分隔" />
+        <Form.Item name="tags" label="Tags">
+          <Input placeholder="Tags, separated by commas" />
         </Form.Item>
 
         <Form.Item>
           <Space>
             <Button type="primary" htmlType="submit" icon={<Save />} loading={loading}>
-              {isEdit ? '保存' : '创建'}
+              {isEdit ? 'Save' : 'Create'}
             </Button>
-            <Button onClick={() => router.push('/licenses')}>取消</Button>
+            <Button onClick={() => router.push('/licenses')}>Cancel</Button>
           </Space>
         </Form.Item>
       </Form>

@@ -56,27 +56,27 @@ describe('WorkflowAutomationPage 加载失败语义', () => {
     mockedApi.listRules.mockRejectedValue(new ApiRequestError('权限不足', 403, 2003));
     renderPage();
 
-    expect(await screen.findByText('没有权限查看自动化规则')).toBeInTheDocument();
-    expect(screen.getByText(/这里不是「系统里没有规则」/)).toBeInTheDocument();
-    expect(screen.queryByText('自动分配规则')).not.toBeInTheDocument();
+    expect(await screen.findByText("No permission to view automation rules")).toBeInTheDocument();
+    expect(screen.getByText(/The current role is not granted read permission for automation rules\. This is not "there are no rules in the system"\. Please contact the administrator to configure permissions for your role's opening rules\./)).toBeInTheDocument();
+    expect(screen.queryByText("Auto-assign rules")).not.toBeInTheDocument();
     expect(hasEmptyTable()).toBe(false);
-    expect(screen.queryByText('新建规则')).not.toBeInTheDocument();
+    expect(screen.queryByText("Create Rule")).not.toBeInTheDocument();
   });
 
   it('服务端错误时给出原因并提供重试', async () => {
     mockedApi.listRules.mockRejectedValue(new ApiRequestError('HTTP error! status: 500', 500));
     renderPage();
 
-    expect(await screen.findByText('加载规则失败')).toBeInTheDocument();
+    expect(await screen.findByText("Failed to load rules")).toBeInTheDocument();
     expect(screen.getByText('HTTP error! status: 500')).toBeInTheDocument();
-    expect(screen.queryByText('自动升级规则')).not.toBeInTheDocument();
+    expect(screen.queryByText("Automatic upgrade rules")).not.toBeInTheDocument();
 
     mockedApi.listRules.mockResolvedValue({ items: [RULE], total: 1 });
-    await userEvent.click(screen.getByRole('button', { name: '重试' }));
+    await userEvent.click(screen.getByRole('button', { name: "Retry" }));
 
     await waitFor(() => expect(mockedApi.listRules).toHaveBeenCalledTimes(2));
     expect(await screen.findByText('P1 自动派值班')).toBeInTheDocument();
-    expect(screen.queryByText('加载规则失败')).not.toBeInTheDocument();
+    expect(screen.queryByText("Failed to load rules")).not.toBeInTheDocument();
   });
 
   it('加载成功且确实没有规则时才显示统计卡与空表', async () => {
@@ -84,7 +84,7 @@ describe('WorkflowAutomationPage 加载失败语义', () => {
     renderPage();
 
     await waitFor(() => expect(mockedApi.listRules).toHaveBeenCalledTimes(1));
-    expect(screen.getByText('自动分配规则')).toBeInTheDocument();
+    expect(screen.getByText("Auto-assign rules")).toBeInTheDocument();
     expect(hasEmptyTable()).toBe(true);
     expect(screen.queryByText(/权限/)).not.toBeInTheDocument();
   });

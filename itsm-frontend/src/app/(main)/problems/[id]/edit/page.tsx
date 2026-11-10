@@ -58,7 +58,7 @@ export default function ProblemEditPage() {
           impact: data.impact,
         });
         if (rawCategory && !safeCategory) {
-          message.warning(`原分类 “${rawCategory}” 不在当前枚举内，请重新选择`);
+          message.warning(`Original category “${rawCategory}” is not in the current enumeration, please select again`);
         }
       } catch (error) {
         message.error(t('problems.getFailed'));
@@ -107,13 +107,14 @@ export default function ProblemEditPage() {
           onClick={() => router.back()}
           style={{ paddingLeft: 0, color: '#666' }}
         >
-          返回
+
+          Back
         </Button>
       </div>
 
       <Card
         title={
-          <span className="text-lg font-medium">编辑问题 - #{problemData?.id}</span>
+          <span className="text-lg font-medium">Edit question - #{problemData?.id}</span>
         }
         loading={fetching}
       >
@@ -130,10 +131,10 @@ export default function ProblemEditPage() {
             <Col span={24}>
               <Form.Item
                 name="title"
-                label="问题标题"
-                rules={[{ required: true, message: '请输入问题标题' }]}
+                label="Question title"
+                rules={[{ required: true, message: 'Please enter a question title' }]}
               >
-                <Input placeholder="请输入问题标题" />
+                <Input placeholder="Please enter a question title" />
               </Form.Item>
             </Col>
           </Row>
@@ -142,28 +143,28 @@ export default function ProblemEditPage() {
             <Col span={12}>
               <Form.Item
                 name="status"
-                label="状态"
-                rules={[{ required: true, message: '请选择状态' }]}
+                label="Status"
+                rules={[{ required: true, message: 'Please select status' }]}
               >
-                <Select placeholder="请选择状态" options={[{ value: "open", label: "待处理" }, { value: "investigating", label: "调查中" }, { value: "resolved", label: "已解决" }, { value: "closed", label: "已关闭" }]} />
+                <Select placeholder="Please select status" options={[{ value: "open", label: "Pending" }, { value: "investigating", label: "Investigating" }, { value: "resolved", label: "Resolved" }, { value: "closed", label: "Closed" }]} />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item
                 name="priority"
-                label="优先级"
-                rules={[{ required: true, message: '请选择优先级' }]}
+                label="Priority"
+                rules={[{ required: true, message: 'Please select priority' }]}
               >
-                <Select placeholder="请选择优先级" options={[{ value: "low", label: "低" }, { value: "medium", label: "中" }, { value: "high", label: "高" }, { value: "critical", label: "紧急" }]} />
+                <Select placeholder="Please select priority" options={[{ value: "low", label: "Low" }, { value: "medium", label: "Medium" }, { value: "high", label: "High" }, { value: "critical", label: "Urgent" }]} />
               </Form.Item>
             </Col>
           </Row>
 
           <Row gutter={24}>
             <Col span={24}>
-              <Form.Item name="category" label="分类">
+              <Form.Item name="category" label="Category">
                 <Select
-                  placeholder="请选择分类"
+                  placeholder="Please select a category"
                   allowClear
                   // 旧数据 category 可能不在前枚举里，先把原始值附加为额外选项，
                   // 这样既能保留原有内容、又能让 Select 正常显示旧值。
@@ -175,7 +176,7 @@ export default function ProblemEditPage() {
                       ? [
                           {
                             value: problemData.category,
-                            label: `${problemData.category}（旧值）`,
+                            label: `${problemData.category}(old value)`,
                           },
                         ]
                       : []),
@@ -187,24 +188,24 @@ export default function ProblemEditPage() {
 
           <Row gutter={24}>
             <Col span={24}>
-              <Form.Item name="description" label="问题描述">
-                <TextArea rows={4} placeholder="请详细描述问题情况" />
+              <Form.Item name="description" label="Problem description">
+                <TextArea rows={4} placeholder="Please describe the problem in detail" />
               </Form.Item>
             </Col>
           </Row>
 
           <Row gutter={24}>
             <Col span={24}>
-              <Form.Item name="rootCause" label="根本原因分析">
-                <TextArea rows={4} placeholder="请详细描述问题的根本原因" />
+              <Form.Item name="rootCause" label="Root Cause Analysis">
+                <TextArea rows={4} placeholder="Describe the root cause in detail" />
               </Form.Item>
             </Col>
           </Row>
 
           <Row gutter={24}>
             <Col span={24}>
-              <Form.Item name="impact" label="影响范围">
-                <TextArea rows={3} placeholder="请描述问题的影响范围" />
+              <Form.Item name="impact" label="Impact Range">
+                <TextArea rows={3} placeholder="Please describe the scope of the problem" />
               </Form.Item>
             </Col>
           </Row>
@@ -214,9 +215,10 @@ export default function ProblemEditPage() {
           <Form.Item>
             <Space>
               <Button type="primary" htmlType="submit" icon={<Save />} loading={loading}>
-                保存
+
+                Save
               </Button>
-              <Button onClick={handleCancel}>取消</Button>
+              <Button onClick={handleCancel}>Cancel</Button>
             </Space>
           </Form.Item>
         </Form>

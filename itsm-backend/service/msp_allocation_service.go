@@ -82,10 +82,10 @@ func (s *MSPAllocationService) Create(
 			WithTenant().
 			Only(ctx)
 		if err != nil {
-			return nil, fmt.Errorf("MSP用户不存在: %w", err)
+			return nil, fmt.Errorf("MSP user does not exist: %w", err)
 		}
 		if u.Edges.Tenant == nil || !tenantmode.IsMSPProviderTenantType(string(u.Edges.Tenant.Type)) {
-			return nil, fmt.Errorf("用户不属于MSP租户")
+			return nil, fmt.Errorf("User does not belong to MSP tenant")
 		}
 	}
 
@@ -94,10 +94,10 @@ func (s *MSPAllocationService) Create(
 		Where(tenant.IDEQ(customerTenantID)).
 		Only(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("客户租户不存在: %w", err)
+		return nil, fmt.Errorf("Customer tenant does not exist: %w", err)
 	}
 	if !isAdmin && !tenantmode.IsCustomerTenantType(string(cust.Type)) {
-		return nil, fmt.Errorf("目标租户不是客户类型")
+		return nil, fmt.Errorf("Target tenant is not a customer type")
 	}
 
 	// 3. 检查是否已存在有效的未解除分配
@@ -109,10 +109,10 @@ func (s *MSPAllocationService) Create(
 		).
 		Exist(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("查询现有分配失败: %w", err)
+		return nil, fmt.Errorf("Failed to query existing allocations: %w", err)
 	}
 	if exists {
-		return nil, fmt.Errorf("已存在有效分配记录")
+		return nil, fmt.Errorf("A valid allocation record already exists")
 	}
 
 	// 4. 创建新的分配记录。
@@ -127,7 +127,7 @@ func (s *MSPAllocationService) Create(
 		SetAssignedAt(time.Now()).
 		Save(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("创建分配记录失败: %w", err)
+		return nil, fmt.Errorf("Failed to create allocation record: %w", err)
 	}
 
 	s.writeAllocationAudit(ctx, operatorID, "msp_allocation_create", "/api/v1/msp/allocations", mspUserID, customerTenantID)
@@ -138,11 +138,11 @@ func (s *MSPAllocationService) Create(
 func (s *MSPAllocationService) requireSameMSPTenant(ctx context.Context, operatorID, mspUserID int) error {
 	operator, err := s.client.User.Query().Where(user.IDEQ(operatorID)).WithTenant().Only(ctx)
 	if err != nil {
-		return fmt.Errorf("操作者不存在: %w", err)
+		return fmt.Errorf("Operator does not exist: %w", err)
 	}
 	target, err := s.client.User.Query().Where(user.IDEQ(mspUserID)).WithTenant().Only(ctx)
 	if err != nil {
-		return fmt.Errorf("MSP用户不存在: %w", err)
+		return fmt.Errorf("MSP user does not exist: %w", err)
 	}
 	if operator.Edges.Tenant == nil || target.Edges.Tenant == nil ||
 		operator.Edges.Tenant.ID != target.Edges.Tenant.ID ||
@@ -224,7 +224,7 @@ func (s *MSPAllocationService) ListByMSPUser(ctx context.Context, mspUserID int)
 		WithCustomerTenant().
 		All(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("查询分配失败: %w", err)
+		return nil, fmt.Errorf("Query allocation failed: %w", err)
 	}
 
 	dtos := make([]*dto.MSPAllocationDTO, 0, len(allocations))
@@ -246,7 +246,7 @@ func (s *MSPAllocationService) ListByCustomer(ctx context.Context, customerTenan
 		Where(mspallocation.HasCustomerTenantWith(tenant.IDEQ(customerTenantID))).
 		All(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("查询分配失败: %w", err)
+		return nil, fmt.Errorf("Query allocation failed: %w", err)
 	}
 
 	dtos := make([]*dto.MSPAllocationDTO, 0, len(allocations))
@@ -282,7 +282,7 @@ func (s *MSPAllocationService) Deactivate(ctx context.Context, operatorID, mspUs
 		SetDeassignedAt(time.Now()).
 		Save(ctx)
 	if err != nil {
-		return fmt.Errorf("解除分配失败: %w", err)
+		return fmt.Errorf("Deallocation failed: %w", err)
 	}
 	if affected == 0 {
 		return ErrMSPAllocationNotFound
@@ -301,7 +301,7 @@ func (s *MSPAllocationService) ListHistory(
 	filter MSPAllocationHistoryFilter,
 ) ([]*dto.MSPAllocationDTO, int, error) {
 	if filter.MSPTenantID == 0 {
-		return nil, 0, errors.New("缺少 MSP 租户上下文")
+		return nil, 0, errors.New("Missing MSP tenant context")
 	}
 
 	predicates := []predicate.MSPAllocation{
@@ -336,7 +336,7 @@ func (s *MSPAllocationService) ListHistory(
 	// Count 与 List 复用同一条件；Ent 的 Where 会就地修改接收者，必须先 Clone。
 	total, err := base.Clone().Count(ctx)
 	if err != nil {
-		return nil, 0, fmt.Errorf("查询分配历史数量失败: %w", err)
+		return nil, 0, fmt.Errorf("Failed to query allocation history quantity: %w", err)
 	}
 
 	allocations, err := base.
@@ -347,7 +347,7 @@ func (s *MSPAllocationService) ListHistory(
 		Limit(pageSize).
 		All(ctx)
 	if err != nil {
-		return nil, 0, fmt.Errorf("查询分配历史失败: %w", err)
+		return nil, 0, fmt.Errorf("Failed to query allocation history: %w", err)
 	}
 
 	dtos := make([]*dto.MSPAllocationDTO, 0, len(allocations))
@@ -394,7 +394,7 @@ func (s *MSPAllocationService) GetActiveAllocations(ctx context.Context) ([]*dto
 		WithMspUser().
 		All(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("查询有效分配失败: %w", err)
+		return nil, fmt.Errorf("Query for valid allocation failed: %w", err)
 	}
 
 	dtos := make([]*dto.MSPAllocationDTO, 0, len(allocations))
@@ -415,7 +415,7 @@ func (s *MSPAllocationService) GetMSPCustomers(ctx context.Context, mspUserID in
 		WithCustomerTenant().
 		All(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("查询客户列表失败: %w", err)
+		return nil, fmt.Errorf("Failed to query customer list: %w", err)
 	}
 
 	customers := make([]*ent.Tenant, 0, len(allocations))
@@ -435,7 +435,7 @@ func (s *MSPAllocationService) GetTicketsForCustomer(ctx context.Context, custom
 
 	total, err := query.Count(ctx)
 	if err != nil {
-		return nil, 0, fmt.Errorf("查询工单数量失败: %w", err)
+		return nil, 0, fmt.Errorf("Failed to query work order quantity: %w", err)
 	}
 
 	tickets, err := query.
@@ -444,7 +444,7 @@ func (s *MSPAllocationService) GetTicketsForCustomer(ctx context.Context, custom
 		Limit(pageSize).
 		All(ctx)
 	if err != nil {
-		return nil, 0, fmt.Errorf("查询工单列表失败: %w", err)
+		return nil, 0, fmt.Errorf("Failed to query the work order list: %w", err)
 	}
 
 	return tickets, total, nil

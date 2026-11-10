@@ -38,7 +38,7 @@ import dayjs from 'dayjs';
 const { Title, Text, Paragraph } = Typography;
 const { TextArea } = Input;
 // Steps.Step 已被移除，直接使用 Steps 组件
- 
+
 const _Step = Steps;
 
 interface ChangeRollbackPlanProps {
@@ -89,26 +89,26 @@ const ChangeRollbackPlan: React.FC<ChangeRollbackPlanProps> = ({
   // 回滚策略选项
   const rollbackStrategies = {
     full: {
-      label: '完整回滚',
-      description: '恢复所有变更，包括系统、数据和配置',
+      label: 'Full rollback',
+      description: 'Revert all changes including system, data and configuration',
       risk: 'high',
       time: 'high',
     },
     partial: {
-      label: '部分回滚',
-      description: '只回滚特定的变更组件',
+      label: 'Partial rollback',
+      description: 'Only roll back specific changed components',
       risk: 'medium',
       time: 'medium',
     },
     dataOnly: {
-      label: '仅数据回滚',
-      description: '只恢复数据变更，保持系统和配置变更',
+      label: 'Data rollback only',
+      description: 'Only restore data changes, keep system and configuration changes',
       risk: 'low',
       time: 'low',
     },
     configOnly: {
-      label: '仅配置回滚',
-      description: '只恢复配置变更，保持数据和系统变更',
+      label: 'Configuration rollback only',
+      description: 'Only restore configuration changes, keep data and system changes',
       risk: 'medium',
       time: 'low',
     },
@@ -116,16 +116,16 @@ const ChangeRollbackPlan: React.FC<ChangeRollbackPlanProps> = ({
 
   // 回滚触发条件
   const rollbackTriggers = [
-    '系统错误率超过阈值',
-    '性能显著下降',
-    '数据完整性问题',
-    '安全漏洞发现',
-    '用户体验严重下降',
-    '业务流程中断',
-    '关键服务不可用',
-    '第三方服务异常',
-    '监控告警超过阈值',
-    '用户投诉激增',
+    'System error rate exceeds threshold',
+    'Significant performance degradation',
+    'Data integrity issue',
+    'Security vulnerability discovered',
+    'User experience is severely degraded',
+    'Business process interrupted',
+    'Critical service unavailable',
+    'Third-party service exception',
+    'Monitoring alarm exceeds threshold',
+    'Increase in user complaints',
   ];
 
   // 步骤类型图标
@@ -186,7 +186,7 @@ const ChangeRollbackPlan: React.FC<ChangeRollbackPlanProps> = ({
 
       onSave?.(rollbackData);
     } catch (error) {
-      message.error('表单验证失败');
+      message.error('Form validation failed');
     } finally {
       setSubmitting(false);
     }
@@ -195,14 +195,14 @@ const ChangeRollbackPlan: React.FC<ChangeRollbackPlanProps> = ({
   // 回滚步骤表格列
   const stepColumns = [
     {
-      title: '步骤',
+      title: 'Step',
       dataIndex: 'id',
       key: 'id',
       width: 80,
       render: (_: unknown, __: unknown, index: number) => index + 1,
     },
     {
-      title: '标题',
+      title: 'Title',
       dataIndex: 'title',
       key: 'title',
       width: 200,
@@ -210,13 +210,13 @@ const ChangeRollbackPlan: React.FC<ChangeRollbackPlanProps> = ({
         <Input
           value={text}
           onChange={e => updateRollbackStep(index, 'title', e.target.value)}
-          placeholder="输入步骤标题"
+          placeholder="Enter step title"
           disabled={readOnly}
         />
       ),
     },
     {
-      title: '类型',
+      title: 'Type',
       dataIndex: 'type',
       key: 'type',
       width: 120,
@@ -234,7 +234,7 @@ const ChangeRollbackPlan: React.FC<ChangeRollbackPlanProps> = ({
       ),
     },
     {
-      title: '预计时间(分钟)',
+      title: 'Estimated time (minutes)',
       dataIndex:'estimatedTime',
       key:'estimatedTime',
       width: 130,
@@ -249,7 +249,7 @@ const ChangeRollbackPlan: React.FC<ChangeRollbackPlanProps> = ({
       ),
     },
     {
-      title: '负责人',
+      title: 'Assignee',
       dataIndex:'responsiblePerson',
       key:'responsiblePerson',
       width: 120,
@@ -257,19 +257,20 @@ const ChangeRollbackPlan: React.FC<ChangeRollbackPlanProps> = ({
         <Input
           value={person}
           onChange={e => updateRollbackStep(index, 'responsible_person' as any, e.target.value)}
-          placeholder="负责人"
+          placeholder="Assignee"
           disabled={readOnly}
         />
       ),
     },
     {
-      title: '操作',
+      title: 'Actions',
       key: 'actions',
       width: 80,
       render: (_: unknown, record: RollbackStep, index: number) =>
         !readOnly ? (
           <Button type="text" danger size="small" onClick={() => deleteRollbackStep(index)}>
-            删除
+
+            Delete
           </Button>
         ) : null,
     },
@@ -280,13 +281,14 @@ const ChangeRollbackPlan: React.FC<ChangeRollbackPlanProps> = ({
       title={
         <Space>
           <RotateCcw className="w-5 h-5 text-blue-600" />
-          <span>变更回滚计划</span>
+          <span>Change rollback plan</span>
         </Space>
       }
       extra={
         !readOnly && (
           <Button type="primary" onClick={handleSubmit} loading={submitting}>
-            保存回滚计划
+
+            Save rollback plan
           </Button>
         )
       }
@@ -297,11 +299,11 @@ const ChangeRollbackPlan: React.FC<ChangeRollbackPlanProps> = ({
         <Row gutter={[24, 16]}>
           <Col xs={24}>
             <Form.Item
-              label="回滚策略"
+              label="Rollback policy"
               name="rollbackStrategy"
-              rules={[{ required: true, message: '请选择回滚策略' }]}
+              rules={[{ required: true, message: 'Please select a rollback strategy' }]}
             >
-              <Select placeholder="选择回滚策略" options={Object.entries(rollbackStrategies).map(([key, strategy]) => ({
+              <Select placeholder="Select rollback strategy" options={Object.entries(rollbackStrategies).map(([key, strategy]) => ({
                 value: key,
                 label: (
                   <div className="p-2">
@@ -319,7 +321,8 @@ const ChangeRollbackPlan: React.FC<ChangeRollbackPlanProps> = ({
                               : 'green'
                         }
                       >
-                        风险: {strategy.risk}
+
+                        Risk: {strategy.risk}
                       </Tag>
                       <Tag
                         color={
@@ -330,7 +333,8 @@ const ChangeRollbackPlan: React.FC<ChangeRollbackPlanProps> = ({
                               : 'green'
                         }
                       >
-                        时间: {strategy.time}
+
+                        Time: {strategy.time}
                       </Tag>
                     </div>
                   </div>
@@ -342,11 +346,11 @@ const ChangeRollbackPlan: React.FC<ChangeRollbackPlanProps> = ({
           {/* 回滚触发条件 */}
           <Col xs={24} lg={12}>
             <Form.Item
-              label="回滚触发条件"
+              label="Rollback trigger condition"
               name="rollbackTriggers"
-              rules={[{ required: true, message: '请选择触发条件' }]}
+              rules={[{ required: true, message: 'Please select trigger conditions' }]}
             >
-              <Select mode="multiple" placeholder="选择触发回滚的条件" style={{ width: '100%' }} options={rollbackTriggers.map(trigger => ({
+              <Select mode="multiple" placeholder="Select conditions that trigger rollback" style={{ width: '100%' }} options={rollbackTriggers.map(trigger => ({
                 value: trigger,
                 label: (
                   <Space>
@@ -361,16 +365,16 @@ const ChangeRollbackPlan: React.FC<ChangeRollbackPlanProps> = ({
           {/* 回滚团队 */}
           <Col xs={24} lg={12}>
             <Form.Item
-              label="回滚团队"
+              label="Rollback Team"
               name="rollbackTeam"
-              rules={[{ required: true, message: '请指定回滚团队成员' }]}
+              rules={[{ required: true, message: 'Please specify rollback team members' }]}
             >
-              <Select mode="tags" placeholder="指定回滚团队成员" style={{ width: '100%' }} options={[
-                { value: '系统管理员', label: '系统管理员' },
-                { value: '数据库管理员', label: '数据库管理员' },
-                { value: '网络工程师', label: '网络工程师' },
-                { value: '应用开发', label: '应用开发' },
-                { value: '安全专员', label: '安全专员' },
+              <Select mode="tags" placeholder="Specify rollback team members" style={{ width: '100%' }} options={[
+                { value: '系统管理员', label: 'System Administrator' },
+                { value: '数据库管理员', label: 'Database Administrator' },
+                { value: '网络工程师', label: 'Network Engineer' },
+                { value: '应用开发', label: 'Application Development' },
+                { value: '安全专员', label: 'Security Specialist' },
               ]} />
             </Form.Item>
           </Col>
@@ -380,13 +384,15 @@ const ChangeRollbackPlan: React.FC<ChangeRollbackPlanProps> = ({
         <Card size="small" className="mb-4">
           <div className="flex justify-between items-center mb-4">
             <Title level={5} className="mb-0">
-              回滚步骤明细
+
+              Rollback step details
             </Title>
             <Space>
-              <Text type="secondary">总预计时间: {getTotalRollbackTime()} 分钟</Text>
+              <Text type="secondary">Total estimated time: {getTotalRollbackTime()}  minutes</Text>
               {!readOnly && (
                 <Button type="dashed" icon={<FileText />} onClick={addRollbackStep}>
-                  添加步骤
+
+                  Add Step
                 </Button>
               )}
             </Space>
@@ -395,7 +401,7 @@ const ChangeRollbackPlan: React.FC<ChangeRollbackPlanProps> = ({
           {rollbackSteps.length === 0 ? (
             <div className="text-center py-8">
               <RotateCcw className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <Text type="secondary">暂无回滚步骤，请添加详细的回滚步骤</Text>
+              <Text type="secondary">There are no rollback steps yet. Please add detailed rollback steps.</Text>
             </div>
           ) : (
             <Table
@@ -414,23 +420,23 @@ const ChangeRollbackPlan: React.FC<ChangeRollbackPlanProps> = ({
         <Row gutter={[24, 16]}>
           <Col xs={24} lg={12}>
             <Form.Item
-              label="回滚测试计划"
+              label="Rollback test plan"
               name="rollbackTestPlan"
-              rules={[{ required: true, message: '请制定测试计划' }]}
+              rules={[{ required: true, message: 'Please develop a test plan' }]}
             >
-              <TextArea rows={4} placeholder="描述回滚前的测试方案..." maxLength={1000} showCount />
+              <TextArea rows={4} placeholder="Describe the test plan before rollback..." maxLength={1000} showCount />
             </Form.Item>
           </Col>
 
           <Col xs={24} lg={12}>
             <Form.Item
-              label="回滚验证方案"
+              label="Rollback verification scheme"
               name="rollbackVerification"
-              rules={[{ required: true, message: '请制定验证方案' }]}
+              rules={[{ required: true, message: 'Please develop a verification plan' }]}
             >
               <TextArea
                 rows={4}
-                placeholder="描述回滚成功后的验证方法..."
+                placeholder="Describe the verification method after successful rollback..."
                 maxLength={1000}
                 showCount
               />
@@ -440,13 +446,13 @@ const ChangeRollbackPlan: React.FC<ChangeRollbackPlanProps> = ({
           {/* 风险评估 */}
           <Col xs={24}>
             <Form.Item
-              label="回滚风险评估"
+              label="Rollback risk assessment"
               name="rollbackRiskAssessment"
-              rules={[{ required: true, message: '请进行风险评估' }]}
+              rules={[{ required: true, message: 'Please conduct a risk assessment' }]}
             >
               <TextArea
                 rows={4}
-                placeholder="评估回滚过程可能遇到的风险和应对措施..."
+                placeholder="Assess possible risks and countermeasures during rollback..."
                 maxLength={1000}
                 showCount
               />
@@ -456,15 +462,15 @@ const ChangeRollbackPlan: React.FC<ChangeRollbackPlanProps> = ({
 
         {/* 时间窗口建议 */}
         <Alert
-          title="回滚时间窗口建议"
+          title="Rollback time window suggestion"
           description={
             <div>
-              <p>建议设置以下时间窗口进行回滚操作：</p>
+              <p>It is recommended to set the following time window for rollback operation:</p>
               <ul>
-                <li>业务低峰期（通常为凌晨2-5点）</li>
-                <li>避开重要业务活动和结算周期</li>
-                <li>确保有足够的时间完成回滚和验证</li>
-                <li>提前通知所有相关方</li>
+                <li>Low business peak period (usually 2-5 am)</li>
+                <li>Avoid important business activities and billing cycles</li>
+                <li>Ensure sufficient time to complete rollback and verification</li>
+                <li>Notify all relevant parties in advance</li>
               </ul>
             </div>
           }

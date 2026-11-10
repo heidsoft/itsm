@@ -138,7 +138,7 @@ func TestAddApproverTask_EmptyTarget_ReturnsError(t *testing.T) {
 
 	err := engine.TaskService().AddApproverTask(workflowCtx, "TASK-ADDAPPROVER-1", "  ")
 	require.Error(t, err)
-	assert.Contains(t, err.Error(), "加签目标不能为空")
+	assert.Contains(t, err.Error(), "The signature target cannot be empty")
 }
 
 func TestAddApproverTaskByID_CreatesCorrectly(t *testing.T) {

@@ -20,7 +20,7 @@ func TestAuthMiddleware(t *testing.T) {
 		AuthMiddleware("test-secret")(c)
 
 		assert.Equal(t, http.StatusUnauthorized, w.Code)
-		assert.Contains(t, w.Body.String(), "缺少认证token")
+		assert.Contains(t, w.Body.String(), "Missing authentication token")
 	})
 
 	t.Run("Invalid Token Format", func(t *testing.T) {
@@ -32,7 +32,7 @@ func TestAuthMiddleware(t *testing.T) {
 		AuthMiddleware("test-secret")(c)
 
 		assert.Equal(t, http.StatusUnauthorized, w.Code)
-		assert.Contains(t, w.Body.String(), "token格式错误")
+		assert.Contains(t, w.Body.String(), "token format error")
 	})
 
 	// Note: Valid token test would require a shared secret/mocking key generation logic
@@ -51,7 +51,7 @@ func TestRequirePermission(t *testing.T) {
 		RequirePermission("ticket", "read")(c)
 
 		assert.Equal(t, http.StatusUnauthorized, w.Code)
-		assert.Contains(t, w.Body.String(), "用户角色信息缺失")
+		assert.Contains(t, w.Body.String(), "User role information is missing")
 	})
 
 	t.Run("Missing Tenant in Context", func(t *testing.T) {
@@ -64,7 +64,7 @@ func TestRequirePermission(t *testing.T) {
 		RequirePermission("ticket", "read")(c)
 
 		assert.Equal(t, http.StatusUnauthorized, w.Code)
-		assert.Contains(t, w.Body.String(), "租户信息缺失")
+		assert.Contains(t, w.Body.String(), "Tenant information is missing")
 	})
 
 	t.Run("Has Permission", func(t *testing.T) {

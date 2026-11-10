@@ -197,5 +197,5 @@ export const isSuccess = (code: number): boolean => code === 0;
 /**
  * 获取错误消息
  */
-export const getErrorMessage = (message: string, defaultMessage: string = '操作失败'): string =>
+export const getErrorMessage = (message: string, defaultMessage: string = 'Operation failed'): string =>
   message || defaultMessage;

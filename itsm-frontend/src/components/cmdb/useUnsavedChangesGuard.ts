@@ -15,11 +15,11 @@ export function useUnsavedChangesGuard(router: { push: (href: string) => void; b
     if (confirmingRef.current) return;
     confirmingRef.current = true;
     Modal.confirm({
-      title: '确认离开？',
-      content: '表单内容尚未保存，离开后将丢失已填写的内容。',
-      okText: '离开',
+      title: 'Confirm to leave?',
+      content: 'The form content has not been saved, and the filled-in content will be lost after leaving.',
+      okText: 'Leave',
       okButtonProps: { danger: true },
-      cancelText: '继续编辑',
+      cancelText: 'Continue Editing',
       onOk: () => {
         dirtyRef.current = false;
         leave();

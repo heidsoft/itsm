@@ -70,8 +70,8 @@ describe('ArticleDetail 写操作入口 — 按权限码渲染', () => {
     await renderDetail();
 
     expect(await screen.findByText('如何重置密码')).toBeInTheDocument();
-    expect(screen.queryByText('发布文章')).toBeNull();
-    expect(screen.queryByText('编辑文章')).toBeNull();
+    expect(screen.queryByText("Publish")).toBeNull();
+    expect(screen.queryByText("Edit Article")).toBeNull();
   });
 
   it('持 knowledge:write 时草稿文章给出提交评审与编辑（不再给必然 409 的发布）', async () => {
@@ -79,16 +79,16 @@ describe('ArticleDetail 写操作入口 — 按权限码渲染', () => {
     await renderDetail();
 
     // 2026-10-22 发布门禁：未过评审的草稿只能提交评审，发布由审批通过触发。
-    expect(await screen.findByText('提交评审')).toBeInTheDocument();
-    expect(screen.queryByText('发布文章')).toBeNull();
-    expect(screen.getByText('编辑文章')).toBeInTheDocument();
+    expect(await screen.findByText("Submit for review")).toBeInTheDocument();
+    expect(screen.queryByText("Publish")).toBeNull();
+    expect(screen.getByText("Edit Article")).toBeInTheDocument();
   });
 
   it('持 knowledge:admin 等同写权限（与后端 resource:admin 判定一致）', async () => {
     mockPermissions.push('knowledge:read', 'knowledge:admin');
     await renderDetail();
 
-    expect(await screen.findByText('编辑文章')).toBeInTheDocument();
+    expect(await screen.findByText("Edit Article")).toBeInTheDocument();
   });
 });
 
@@ -108,8 +108,8 @@ describe('ArticleDetail 发布入口 — 按评审阶段渲染', () => {
     mockGetArticle.mockResolvedValue({ ...draftArticle, reviewStatus: 'approved' });
     await renderDetail();
 
-    expect(await screen.findByText('发布文章')).toBeInTheDocument();
-    expect(screen.queryByText('提交评审')).toBeNull();
+    expect(await screen.findByText("Publish")).toBeInTheDocument();
+    expect(screen.queryByText("Submit for review")).toBeNull();
   });
 
   it('评审中只给禁用的评审中提示，既不可发布也不可重复提交', async () => {
@@ -117,19 +117,19 @@ describe('ArticleDetail 发布入口 — 按评审阶段渲染', () => {
     await renderDetail();
 
     // 评审阶段同时出现在状态徽标与按钮上，按角色定位按钮避免多匹配。
-    const label = await screen.findByRole('button', { name: '评审中' });
+    const label = await screen.findByRole('button', { name: "Under review" });
     expect(label).toBeDisabled();
     // 徽标必须与按钮同口径展示评审阶段，不能仍显示「草稿」。
-    expect(screen.getByText('评审中', { selector: '.ant-tag' })).toBeInTheDocument();
-    expect(screen.queryByText('发布文章')).toBeNull();
-    expect(screen.queryByText('提交评审')).toBeNull();
+    expect(screen.getByText("Under review", { selector: '.ant-tag' })).toBeInTheDocument();
+    expect(screen.queryByText("Publish")).toBeNull();
+    expect(screen.queryByText("Submit for review")).toBeNull();
   });
 
   it('已驳回的文章允许修改后重新提交评审', async () => {
     mockGetArticle.mockResolvedValue({ ...draftArticle, reviewStatus: 'rejected' });
     await renderDetail();
 
-    expect(await screen.findByText('提交评审')).toBeInTheDocument();
-    expect(screen.queryByText('发布文章')).toBeNull();
+    expect(await screen.findByText("Submit for review")).toBeInTheDocument();
+    expect(screen.queryByText("Publish")).toBeNull();
   });
 });

@@ -18,13 +18,13 @@ import (
 func (h *DashboardHandler) GetDashboardData(c *gin.Context) {
 	tenantID := c.GetInt("tenant_id")
 	if tenantID <= 0 {
-		common.Fail(c, common.UnauthorizedCode, "租户信息缺失")
+		common.Fail(c, common.UnauthorizedCode, "Tenant information is missing")
 		return
 	}
 	dashboardData, err := h.dashboardService.GetDashboardData(c.Request.Context(), tenantID)
 	if err != nil {
 		h.logger.Errorw("Failed to get dashboard data", "error", err)
-		common.Fail(c, common.InternalErrorCode, "获取仪表盘数据失败")
+		common.Fail(c, common.InternalErrorCode, "Failed to obtain dashboard data")
 		return
 	}
 
@@ -43,13 +43,13 @@ func (h *DashboardHandler) GetDashboardData(c *gin.Context) {
 func (h *DashboardHandler) GetResourceDistribution(c *gin.Context) {
 	tenantID := c.GetInt("tenant_id")
 	if tenantID <= 0 {
-		common.Fail(c, common.UnauthorizedCode, "租户信息缺失")
+		common.Fail(c, common.UnauthorizedCode, "Tenant information is missing")
 		return
 	}
 	dashboardData, err := h.dashboardService.GetDashboardData(c.Request.Context(), tenantID)
 	if err != nil {
 		h.logger.Errorw("Failed to get resource distribution", "error", err)
-		common.Fail(c, common.InternalErrorCode, "获取仪表盘数据失败")
+		common.Fail(c, common.InternalErrorCode, "Failed to obtain dashboard data")
 		return
 	}
 
@@ -68,13 +68,13 @@ func (h *DashboardHandler) GetResourceDistribution(c *gin.Context) {
 func (h *DashboardHandler) GetResourceHealth(c *gin.Context) {
 	tenantID := c.GetInt("tenant_id")
 	if tenantID <= 0 {
-		common.Fail(c, common.UnauthorizedCode, "租户信息缺失")
+		common.Fail(c, common.UnauthorizedCode, "Tenant information is missing")
 		return
 	}
 	dashboardData, err := h.dashboardService.GetDashboardData(c.Request.Context(), tenantID)
 	if err != nil {
 		h.logger.Errorw("Failed to get resource health", "error", err)
-		common.Fail(c, common.InternalErrorCode, "获取仪表盘数据失败")
+		common.Fail(c, common.InternalErrorCode, "Failed to obtain dashboard data")
 		return
 	}
 

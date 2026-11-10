@@ -89,7 +89,7 @@ const MarketplacePage = () => {
           iconUrl: it.iconUrl || '',
           rating: typeof it.rating === 'number' ? it.rating : 0,
           installCount: it.installCount ?? 0,
-          category: it.category || '未分类',
+          category: it.category || 'Uncategorized',
           tags: Array.isArray(it.tags) ? it.tags : [],
           isOfficial: Boolean(it.isOfficial),
           latestVersion: it.latestVersion || '1.0.0',
@@ -98,7 +98,7 @@ const MarketplacePage = () => {
       } catch (error: unknown) {
         if (cancelled) return;
         console.error('Failed to fetch marketplace items:', error);
-        setLoadError(error instanceof Error ? error.message : '加载应用市场失败，请稍后重试');
+        setLoadError(error instanceof Error ? error.message : 'Failed to load the app store, please try again later.');
         setItems([]);
       } finally {
         if (!cancelled) setLoading(false);
@@ -114,7 +114,7 @@ const MarketplacePage = () => {
   // 过滤数据
   const filteredItems = items.filter(item => {
     // 搜索过滤
-    const matchesSearch = !search || 
+    const matchesSearch = !search ||
       item.title.toLowerCase().includes(search.toLowerCase()) ||
       item.description.toLowerCase().includes(search.toLowerCase()) ||
       item.tags.some(tag => tag.toLowerCase().includes(search.toLowerCase()));
@@ -126,7 +126,7 @@ const MarketplacePage = () => {
     const matchesCategory = category === 'all' || item.category === category;
 
     // 官方过滤
-    const matchesOfficial = isOfficial === 'all' || 
+    const matchesOfficial = isOfficial === 'all' ||
       (isOfficial === 'true' && item.isOfficial) ||
       (isOfficial === 'false' && !item.isOfficial);
 
@@ -155,13 +155,14 @@ const MarketplacePage = () => {
     <div className="container mx-auto px-4 py-6">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">应用市场</h1>
-          <p className="text-gray-500 mt-1">发现和安装连接器、AI技能和扩展插件，提升IT服务管理效率</p>
+          <h1 className="text-3xl font-bold tracking-tight">ApplyMarketplace</h1>
+          <p className="text-gray-500 mt-1">Discover and install connectors, AI skills and extensions to improve IT service management efficiency</p>
         </div>
         <Link href="/installations">
           <Button variant="default">
             <PlusCircle className="h-4 w-4 mr-2" />
-            我的应用
+
+            My application
           </Button>
         </Link>
       </div>
@@ -173,7 +174,7 @@ const MarketplacePage = () => {
             <div className="relative">
               <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
               <Input
-                placeholder="搜索应用名称、描述或标签..."
+                placeholder="Search for app name, description or tags..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="pl-10"
@@ -183,10 +184,10 @@ const MarketplacePage = () => {
           <div className="w-full md:w-48">
             <Select value={category} onValueChange={setCategory}>
               <SelectTrigger>
-                <SelectValue placeholder="分类" />
+                <SelectValue placeholder="Category" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">全部分类</SelectItem>
+                <SelectItem value="all">All categories</SelectItem>
                 {categories.map(cat => (
                   <SelectItem key={cat} value={cat}>
                     {marketplaceCategoryLabel(cat)}
@@ -198,25 +199,25 @@ const MarketplacePage = () => {
           <div className="w-full md:w-48">
             <Select value={isOfficial} onValueChange={setIsOfficial}>
               <SelectTrigger>
-                <SelectValue placeholder="提供商" />
+                <SelectValue placeholder="Provider" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">全部提供商</SelectItem>
-                <SelectItem value="true">官方</SelectItem>
-                <SelectItem value="false">社区</SelectItem>
+                <SelectItem value="all">All providers</SelectItem>
+                <SelectItem value="true">Official</SelectItem>
+                <SelectItem value="false">Community</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <div className="w-full md:w-48">
             <Select value={activeTab} onValueChange={setActiveTab}>
               <SelectTrigger>
-                <SelectValue placeholder="类型" />
+                <SelectValue placeholder="Type" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">全部类型</SelectItem>
-                <SelectItem value="connector">连接器</SelectItem>
-                <SelectItem value="skill">AI 技能</SelectItem>
-                <SelectItem value="plugin">插件</SelectItem>
+                <SelectItem value="all">All Types</SelectItem>
+                <SelectItem value="connector">Connectors</SelectItem>
+                <SelectItem value="skill">AI skills</SelectItem>
+                <SelectItem value="plugin">Plug-in</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -245,7 +246,8 @@ const MarketplacePage = () => {
                       </Badge>
                       {item.isOfficial && (
                         <Badge variant="default" className="bg-blue-100 text-blue-800 hover:bg-blue-200 text-xs">
-                          官方
+
+                          Official
                         </Badge>
                       )}
                     </CardDescription>
@@ -287,7 +289,7 @@ const MarketplacePage = () => {
                 </div>
               </div>
               <Link href={`/marketplace/${item.id}`}>
-                <Button size="sm">详情</Button>
+                <Button size="sm">Details</Button>
               </Link>
             </CardFooter>
           </Card>
@@ -298,8 +300,8 @@ const MarketplacePage = () => {
         <div className="bg-white rounded-lg shadow-sm p-10 text-center">
           <div className="flex flex-col items-center justify-center">
             <Search className="h-12 w-12 text-gray-300 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">没有找到匹配的应用</h3>
-            <p className="text-gray-500">尝试调整搜索条件或过滤选项</p>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No matching application found</h3>
+            <p className="text-gray-500">Try adjusting search criteria or filtering options</p>
           </div>
         </div>
       )}

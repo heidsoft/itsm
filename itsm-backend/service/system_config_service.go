@@ -33,10 +33,10 @@ func (s *SystemConfigService) CreateSystemConfig(ctx context.Context, req *dto.S
 		Exist(ctx)
 	if err != nil {
 		s.logger.Errorf("检查配置key失败: %v", err)
-		return nil, fmt.Errorf("检查配置key失败: %w", err)
+		return nil, fmt.Errorf("Failed to check configuration key: %w", err)
 	}
 	if exists {
-		return nil, fmt.Errorf("配置key已存在: %s", req.Key)
+		return nil, fmt.Errorf("Configuration key already exists: %s", req.Key)
 	}
 
 	config, err := s.client.SystemConfig.Create().
@@ -51,7 +51,7 @@ func (s *SystemConfigService) CreateSystemConfig(ctx context.Context, req *dto.S
 		Save(ctx)
 	if err != nil {
 		s.logger.Errorf("创建系统配置失败: %v", err)
-		return nil, fmt.Errorf("创建系统配置失败: %w", err)
+		return nil, fmt.Errorf("Failed to create system configuration: %w", err)
 	}
 
 	return config, nil
@@ -65,10 +65,10 @@ func (s *SystemConfigService) GetSystemConfig(ctx context.Context, id int, tenan
 		First(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, fmt.Errorf("配置不存在: %d", id)
+			return nil, fmt.Errorf("Configuration does not exist: %d", id)
 		}
 		s.logger.Errorf("获取系统配置失败: %v", err)
-		return nil, fmt.Errorf("获取系统配置失败: %w", err)
+		return nil, fmt.Errorf("Failed to obtain system configuration: %w", err)
 	}
 	return config, nil
 }
@@ -81,10 +81,10 @@ func (s *SystemConfigService) GetSystemConfigByKey(ctx context.Context, key stri
 		First(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, fmt.Errorf("配置不存在: %s", key)
+			return nil, fmt.Errorf("Configuration does not exist: %s", key)
 		}
 		s.logger.Errorf("获取系统配置失败: %v", err)
-		return nil, fmt.Errorf("获取系统配置失败: %w", err)
+		return nil, fmt.Errorf("Failed to obtain system configuration: %w", err)
 	}
 	return config, nil
 }
@@ -98,7 +98,7 @@ func (s *SystemConfigService) ListSystemConfigs(ctx context.Context, tenantID in
 		Count(ctx)
 	if err != nil {
 		s.logger.Errorf("获取配置总数失败: %v", err)
-		return nil, 0, fmt.Errorf("获取配置总数失败: %w", err)
+		return nil, 0, fmt.Errorf("Failed to obtain configuration total: %w", err)
 	}
 
 	// 懒加载首次默认配置（与 InitDefaultConfigs 端点等价，但不要求 UI 手动触发）
@@ -126,7 +126,7 @@ func (s *SystemConfigService) ListSystemConfigs(ctx context.Context, tenantID in
 		All(ctx)
 	if err != nil {
 		s.logger.Errorf("获取配置列表失败: %v", err)
-		return nil, 0, fmt.Errorf("获取配置列表失败: %w", err)
+		return nil, 0, fmt.Errorf("Failed to get configuration list: %w", err)
 	}
 
 	return configs, total, nil
@@ -141,10 +141,10 @@ func (s *SystemConfigService) UpdateSystemConfig(ctx context.Context, id int, re
 		Exist(ctx)
 	if err != nil {
 		s.logger.Errorf("检查配置失败: %v", err)
-		return nil, fmt.Errorf("检查配置失败: %w", err)
+		return nil, fmt.Errorf("Failed to check configuration: %w", err)
 	}
 	if !exists {
-		return nil, fmt.Errorf("配置不存在: %d", id)
+		return nil, fmt.Errorf("Configuration does not exist: %d", id)
 	}
 
 	update := s.client.SystemConfig.UpdateOneID(id).
@@ -164,7 +164,7 @@ func (s *SystemConfigService) UpdateSystemConfig(ctx context.Context, id int, re
 	updated, err := update.Save(ctx)
 	if err != nil {
 		s.logger.Errorf("更新系统配置失败: %v", err)
-		return nil, fmt.Errorf("更新系统配置失败: %w", err)
+		return nil, fmt.Errorf("Failed to update system configuration: %w", err)
 	}
 
 	return updated, nil
@@ -225,10 +225,10 @@ func (s *SystemConfigService) DeleteSystemConfig(ctx context.Context, id int, te
 		Exist(ctx)
 	if err != nil {
 		s.logger.Errorf("检查配置失败: %v", err)
-		return fmt.Errorf("检查配置失败: %w", err)
+		return fmt.Errorf("Failed to check configuration: %w", err)
 	}
 	if !exists {
-		return fmt.Errorf("配置不存在: %d", id)
+		return fmt.Errorf("Configuration does not exist: %d", id)
 	}
 
 	_, err = s.client.SystemConfig.UpdateOneID(id).
@@ -237,7 +237,7 @@ func (s *SystemConfigService) DeleteSystemConfig(ctx context.Context, id int, te
 		Save(ctx)
 	if err != nil {
 		s.logger.Errorf("删除系统配置失败: %v", err)
-		return fmt.Errorf("删除系统配置失败: %w", err)
+		return fmt.Errorf("Failed to delete system configuration: %w", err)
 	}
 
 	return nil
@@ -249,36 +249,36 @@ func (s *SystemConfigService) DeleteSystemConfig(ctx context.Context, id int, te
 func (s *SystemConfigService) InitDefaultConfigs(ctx context.Context, tenantID int) error {
 	defaultConfigs := []dto.SystemConfigRequest{
 		// —— 通用设置 ——
-		{Key: "systemName", Value: "ITSM系统", ValueType: "string", Category: "general", Description: "系统名称"},
-		{Key: "systemUrl", Value: "http://localhost:3000", ValueType: "string", Category: "general", Description: "系统URL"},
-		{Key: "timezone", Value: "Asia/Shanghai", ValueType: "string", Category: "general", Description: "时区"},
-		{Key: "language", Value: "zh-CN", ValueType: "string", Category: "general", Description: "语言"},
-		{Key: "dateFormat", Value: "YYYY-MM-DD", ValueType: "string", Category: "general", Description: "日期格式"},
-		{Key: "timeFormat", Value: "24h", ValueType: "string", Category: "general", Description: "时间格式"},
+		{Key: "systemName", Value: "ITSM System", ValueType: "string", Category: "general", Description: "System Name"},
+		{Key: "systemUrl", Value: "http://localhost:3000", ValueType: "string", Category: "general", Description: "System URL"},
+		{Key: "timezone", Value: "Asia/Shanghai", ValueType: "string", Category: "general", Description: "Time Zone"},
+		{Key: "language", Value: "en-US", ValueType: "string", Category: "general", Description: "Language"},
+		{Key: "dateFormat", Value: "YYYY-MM-DD", ValueType: "string", Category: "general", Description: "Date Format"},
+		{Key: "timeFormat", Value: "24h", ValueType: "string", Category: "general", Description: "Time Format"},
 		// —— 会话设置 ——
-		{Key: "sessionTimeout", Value: "30", ValueType: "number", Category: "session", Description: "会话超时时间(分钟)"},
+		{Key: "sessionTimeout", Value: "30", ValueType: "number", Category: "session", Description: "Session Timeout (minutes)"},
 		// —— 上传设置 ——
-		{Key: "maxFileSize", Value: "10", ValueType: "number", Category: "upload", Description: "最大文件大小(MB)"},
-		{Key: "allowedFileTypes", Value: ".pdf,.doc,.docx,.xls,.xlsx,.jpg,.png,.gif", ValueType: "string", Category: "upload", Description: "允许的文件类型"},
+		{Key: "maxFileSize", Value: "10", ValueType: "number", Category: "upload", Description: "Maximum File Size (MB)"},
+		{Key: "allowedFileTypes", Value: ".pdf,.doc,.docx,.xls,.xlsx,.jpg,.png,.gif", ValueType: "string", Category: "upload", Description: "Allowed File Types"},
 		// —— 安全设置：密码策略 ——
-		{Key: "passwordMinLength", Value: "8", ValueType: "number", Category: "security", Description: "密码最小长度"},
-		{Key: "passwordRequireUppercase", Value: "true", ValueType: "boolean", Category: "security", Description: "需要大写字母"},
-		{Key: "passwordRequireLowercase", Value: "true", ValueType: "boolean", Category: "security", Description: "需要小写字母"},
-		{Key: "passwordRequireNumbers", Value: "true", ValueType: "boolean", Category: "security", Description: "需要数字"},
-		{Key: "passwordRequireSpecialChars", Value: "false", ValueType: "boolean", Category: "security", Description: "需要特殊字符"},
+		{Key: "passwordMinLength", Value: "8", ValueType: "number", Category: "security", Description: "Minimum Password Length"},
+		{Key: "passwordRequireUppercase", Value: "true", ValueType: "boolean", Category: "security", Description: "Require Uppercase Letters"},
+		{Key: "passwordRequireLowercase", Value: "true", ValueType: "boolean", Category: "security", Description: "Require Lowercase Letters"},
+		{Key: "passwordRequireNumbers", Value: "true", ValueType: "boolean", Category: "security", Description: "Require Numbers"},
+		{Key: "passwordRequireSpecialChars", Value: "false", ValueType: "boolean", Category: "security", Description: "Require Special Characters"},
 		// —— 安全设置：账户安全 ——
-		{Key: "loginMaxAttempts", Value: "5", ValueType: "number", Category: "security", Description: "登录失败次数限制"},
-		{Key: "accountLockoutDuration", Value: "30", ValueType: "number", Category: "security", Description: "账户锁定时间(分钟)"},
-		{Key: "enable2FA", Value: "false", ValueType: "boolean", Category: "security", Description: "启用双因素认证"},
+		{Key: "loginMaxAttempts", Value: "5", ValueType: "number", Category: "security", Description: "Maximum Failed Login Attempts"},
+		{Key: "accountLockoutDuration", Value: "30", ValueType: "number", Category: "security", Description: "Account Lockout Duration (minutes)"},
+		{Key: "enable2FA", Value: "false", ValueType: "boolean", Category: "security", Description: "Enable Two-Factor Authentication"},
 		// —— 邮件设置：SMTP ——
-		{Key: "smtpHost", Value: "smtp.example.com", ValueType: "string", Category: "email", Description: "SMTP服务器"},
-		{Key: "smtpPort", Value: "465", ValueType: "number", Category: "email", Description: "SMTP端口"},
-		{Key: "smtpUsername", Value: "noreply@example.com", ValueType: "string", Category: "email", Description: "SMTP用户名"},
-		{Key: "smtpPassword", Value: "", ValueType: "string", Category: "email", Description: "SMTP密码"},
-		{Key: "smtpEnableSSL", Value: "true", ValueType: "boolean", Category: "email", Description: "启用SSL/TLS"},
+		{Key: "smtpHost", Value: "smtp.example.com", ValueType: "string", Category: "email", Description: "SMTP Server"},
+		{Key: "smtpPort", Value: "465", ValueType: "number", Category: "email", Description: "SMTP Port"},
+		{Key: "smtpUsername", Value: "noreply@example.com", ValueType: "string", Category: "email", Description: "SMTP Username"},
+		{Key: "smtpPassword", Value: "", ValueType: "string", Category: "email", Description: "SMTP Password"},
+		{Key: "smtpEnableSSL", Value: "true", ValueType: "boolean", Category: "email", Description: "Enable SSL/TLS"},
 		// —— 邮件设置：模板 ——
-		{Key: "emailFrom", Value: "noreply@example.com", ValueType: "string", Category: "email", Description: "发件人邮箱"},
-		{Key: "systemNotificationTemplate", Value: "您好 {username}：\n您有一条新的系统通知：{message}\n— ITSM 团队", ValueType: "string", Category: "email", Description: "系统通知模板"},
+		{Key: "emailFrom", Value: "noreply@example.com", ValueType: "string", Category: "email", Description: "Sender Email Address"},
+		{Key: "systemNotificationTemplate", Value: "Hello {username},\nYou have a new system notification: {message}\n— ITSM Team", ValueType: "string", Category: "email", Description: "System Notification Template"},
 	}
 
 	for _, cfg := range defaultConfigs {

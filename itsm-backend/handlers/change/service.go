@@ -108,16 +108,16 @@ func (s *Service) UpdateChange(ctx context.Context, c *Change, actorID int, acto
 	// caller to return to draft for re-approval instead.
 	existing, err := s.repo.Get(ctx, c.ID, c.TenantID)
 	if err != nil || existing == nil {
-		return nil, common.NewBusinessError(common.NotFoundCode, "变更不存在或已被删除", "")
+		return nil, common.NewBusinessError(common.NotFoundCode, "The change does not exist or has been deleted", "")
 	}
 	// 写权限 ⊆ 读权限：普通角色仅可修改本人创建或受理的变更单。
 	if !datascope.CanWriteResource(actorID, actorRole, existing.CreatedBy, existing.AssigneeID) {
-		return nil, common.NewForbiddenError("无权限修改该变更单：仅创建人、受理人或管理员可操作")
+		return nil, common.NewForbiddenError("No permission to modify this change order: only the creator, assignee or administrator can operate")
 	}
 	if existing.Status != "draft" {
 		if blocked := governanceFieldDiffs(existing, c); len(blocked) > 0 {
 			return nil, fmt.Errorf(
-				"当前变更状态为 %q，不允许直接修改治理字段 %v。请先将变更退回 draft 后再修改并重新提审",
+				"The current change status is %q, and direct modification of the governance field %v is not allowed. Please return the changes to the draft before modifying and re-submitting",
 				existing.Status, blocked,
 			)
 		}
@@ -137,7 +137,7 @@ func (s *Service) UpdateChange(ctx context.Context, c *Change, actorID int, acto
 		var notFound *ent.NotFoundError
 		if errors.As(err, &notFound) {
 			return nil, common.NewConflictError("change",
-				fmt.Sprintf("变更单状态已由 %q 变为其他值（可能正被审批推进），请刷新后重试", existing.Status))
+				fmt.Sprintf("The change order status has changed from %q to another value (may be being approved for approval), please refresh and try again", existing.Status))
 		}
 		return nil, err
 	}
@@ -199,10 +199,10 @@ func (s *Service) DeleteChange(ctx context.Context, id int, tenantID int, actorI
 		// 用 AppError(404) 而不是裸 fmt.Errorf：裸错误未分类，RespondError 会
 		// 按内部错误返回 500，于是「删除一条不存在的变更」在监控里表现为服务端
 		// 故障，前端也会提示重试——这是客户端错误，必须是 404。
-		return common.NewNotFoundError("变更单")
+		return common.NewNotFoundError("Change Order")
 	}
 	if !datascope.CanWriteResource(actorID, actorRole, existing.CreatedBy, existing.AssigneeID) {
-		return common.NewForbiddenError("无权限删除该变更单：仅创建人、受理人或管理员可操作")
+		return common.NewForbiddenError("No permission to delete this change order: only the creator, assignee or administrator can operate")
 	}
 	return s.repo.Delete(ctx, id, tenantID)
 }
@@ -273,7 +273,7 @@ func (s *Service) validateImpactGate(ctx context.Context, changeID, tenantID int
 	}
 	if summary.RequiresReview && c.RiskLevel != "high" {
 		return common.NewValidationError(
-			fmt.Sprintf("该变更命中高风险特征（关键 CI %d 个、关联未关闭事件 %d 个），风险等级必须显式设为 high 才能提交审批；当前为 '%s'。请先在变更详情中完成风险评估",
+			fmt.Sprintf("This change hits high-risk features (key CI %d, associated unclosed events %d), and the risk level must be explicitly set to high before it can be submitted for approval; currently it is '%s'. Please complete the risk assessment in the change details first",
 				summary.CriticalCICount, summary.OpenIncidentCount, c.RiskLevel),
 			fmt.Errorf("impact review required: %w", ErrSubmitGateBlocked),
 		)
@@ -307,7 +307,7 @@ func (s *Service) validateSubmitGate(c *Change) error {
 		return nil
 	}
 	return common.NewValidationError(
-		fmt.Sprintf("该变更关联了 %d 个受影响 CI，提交审批前必须补齐：%s。请先在变更详情中完善计划，或先解除不需要的 CI 关联",
+		fmt.Sprintf("This change is associated with %d affected CIs, which must be completed before submitting for approval: %s. Please refine the plan in the change details first, or remove unnecessary CI associations first",
 			len(c.AffectedCIs), strings.Join(missing, "、")),
 		ErrSubmitGateBlocked,
 	)
@@ -361,7 +361,7 @@ func (s *Service) checkWindowConflict(ctx context.Context, c *Change) error {
 		return nil
 	}
 	return common.NewValidationError(
-		fmt.Sprintf("排期窗口与以下活跃变更冲突（时间重叠且涉及相同 CI），请调整排期或复核受影响 CI：%s",
+		fmt.Sprintf("The scheduling window conflicts with the following active changes (overlapping time and involving the same CI), please adjust the scheduling or review the affected CI: %s",
 			strings.Join(conflicts, "；")),
 		fmt.Errorf("window conflict: %w", ErrSubmitGateBlocked),
 	)
@@ -388,7 +388,7 @@ func (s *Service) SubmitChange(ctx context.Context, changeID, tenantID, submitte
 	// 1. Get the change
 	c, err := s.repo.Get(ctx, changeID, tenantID)
 	if err != nil {
-		return nil, common.NewBusinessError(common.NotFoundCode, "变更不存在或已被删除", "")
+		return nil, common.NewBusinessError(common.NotFoundCode, "The change does not exist or has been deleted", "")
 	}
 
 	// 2. Check if change is in draft status
@@ -396,7 +396,7 @@ func (s *Service) SubmitChange(ctx context.Context, changeID, tenantID, submitte
 		// 业务拒绝必须自带业务码：裸 fmt.Errorf 会被 RespondError 兜底成 500/5001，
 		// 前端重试与告警会把「重复提交」误判为服务端故障。
 		return nil, common.NewBusinessError(common.ConflictCode,
-			"只有草稿状态的变更可以提交审批",
+			"Only changes in draft status can be submitted for approval",
 			fmt.Sprintf("currentStatus=%s", c.Status))
 	}
 
@@ -424,7 +424,7 @@ func (s *Service) SubmitChange(ctx context.Context, changeID, tenantID, submitte
 		chainPlan, cerr := s.resolveChangeChainPlan(ctx, tenantID, c.ID, c.CreatedBy, c.Priority)
 		if cerr != nil {
 			return nil, common.NewBusinessError(common.ConflictCode,
-				"变更审批链未就绪或解析失败，无法提交", cerr.Error())
+				"The change approval chain is not ready or parsing failed and cannot be submitted.", cerr.Error())
 		}
 		plan = chainPlan
 	}
@@ -440,7 +440,7 @@ func (s *Service) SubmitChange(ctx context.Context, changeID, tenantID, submitte
 			if cerr != nil {
 				s.logger.Warnw("Failed to resolve default change approvers", "error", cerr, "change_id", changeID)
 				return nil, common.NewBusinessError(common.InternalErrorCode,
-					"无法确定变更审批人，请稍后重试或联系管理员配置审批链", cerr.Error())
+					"The change approver cannot be determined. Please try again later or contact the administrator to configure the approval chain.", cerr.Error())
 			}
 			ids = candidates
 		} else {
@@ -450,7 +450,7 @@ func (s *Service) SubmitChange(ctx context.Context, changeID, tenantID, submitte
 			for _, approverID := range ids {
 				if approverID == c.CreatedBy {
 					return nil, common.NewBusinessError(common.ConflictCode,
-						"创建人不能审批自己提交的变更，请指定其他审批人",
+						"The creator cannot approve the changes submitted by himself, please designate another approver.",
 						fmt.Sprintf("changeId=%d creatorId=%d", changeID, c.CreatedBy))
 				}
 			}
@@ -460,7 +460,7 @@ func (s *Service) SubmitChange(ctx context.Context, changeID, tenantID, submitte
 			// BusinessError.Detail 不会进入响应体（common.writeClassified 只回 message），
 			// 可行动指引必须写进 Message，否则用户只看到「没有审批人」却不知道怎么办。
 			return nil, common.NewBusinessError(common.ConflictCode,
-				"没有可用的变更审批人，禁止创建人自审：请在租户内为具备 change:approve 权限的角色（如变更经理）配置用户，或在提交时指定 approverIds",
+				"No change approvers are available, creator self-approval is prohibited: Please configure a user within the tenant for a role with change:approve permissions (such as change manager), or specify approverIds when submitting",
 				fmt.Sprintf("changeId=%d creatorId=%d", changeID, c.CreatedBy))
 		}
 		s.logger.Infow("Change resolved approver chain without active approval chain",
@@ -469,12 +469,12 @@ func (s *Service) SubmitChange(ctx context.Context, changeID, tenantID, submitte
 			valid, verr := s.repo.ValidateApproverBelongsToTenant(ctx, approverID, tenantID)
 			if verr != nil {
 				s.logger.Warnw("Failed to validate approver", "error", verr, "approver_id", approverID)
-				return nil, common.NewBusinessError(common.BadRequestCode, "审批人校验失败，请更换审批人后重试", "")
+				return nil, common.NewBusinessError(common.BadRequestCode, "Approver verification failed, please change the approver and try again.", "")
 			}
 			if !valid {
 				s.logger.Warnw("Approver does not belong to tenant", "approver_id", approverID, "tenant_id", tenantID)
 				return nil, common.NewBusinessError(common.BadRequestCode,
-					fmt.Sprintf("审批人 %d 不属于当前租户", approverID), "")
+					fmt.Sprintf("Approver %d does not belong to the current tenant", approverID), "")
 			}
 		}
 		plan = []ApprovalLevelPlan{{Level: 1, ApprovalType: "serial", Threshold: 1, Required: true, ApproverIDs: ids}}
@@ -503,7 +503,7 @@ func (s *Service) SubmitChange(ctx context.Context, changeID, tenantID, submitte
 	}
 	if submitErr != nil {
 		s.logger.Warnw("Failed to atomically submit change", "error", submitErr, "change_id", changeID)
-		return nil, fmt.Errorf("提交变更审批失败: %w", submitErr)
+		return nil, fmt.Errorf("Failed to submit change for approval: %w", submitErr)
 	}
 
 	// 审批记录、审批链和 notification.deliver 命令已由仓储在同一事务提交。
@@ -552,7 +552,7 @@ func (s *Service) resolveChangeChainPlan(ctx context.Context, tenantID, changeID
 	}
 	if plan.Blocked {
 		return nil, common.NewBusinessError(common.ConflictCode,
-			"审批链存在阻塞层级（必需层缺少审批人），请先配置审批人", "")
+			"There is a blocking level in the approval chain (the required level lacks the approver), please configure the approver first.", "")
 	}
 	out := make([]ApprovalLevelPlan, 0, len(plan.Levels))
 	for _, lv := range plan.Levels {
@@ -594,7 +594,7 @@ func (s *Service) SubmitApproval(ctx context.Context, record *ApprovalRecord, te
 	// Custom business logic: when submitting, we check if change exists
 	c, err := s.repo.Get(ctx, record.ChangeID, tenantID)
 	if err != nil {
-		return nil, common.NewBusinessError(common.NotFoundCode, "变更不存在或已被删除", "")
+		return nil, common.NewBusinessError(common.NotFoundCode, "The change does not exist or has been deleted", "")
 	}
 
 	// 审批人来源只能取自本变更的审批链（change_approval_chains），
@@ -604,16 +604,16 @@ func (s *Service) SubmitApproval(ctx context.Context, record *ApprovalRecord, te
 	// 1) 审批人必须属于本租户。
 	belongs, err := s.repo.ValidateApproverBelongsToTenant(ctx, record.ApproverID, tenantID)
 	if err != nil {
-		return nil, fmt.Errorf("校验审批人失败: %w", err)
+		return nil, fmt.Errorf("Failed to verify approver: %w", err)
 	}
 	if !belongs {
 		return nil, common.NewBusinessError(common.BadRequestCode,
-			fmt.Sprintf("审批人 %d 不属于租户 %d，无权作为该变更审批人", record.ApproverID, tenantID), "")
+			fmt.Sprintf("Approver %d does not belong to tenant %d and does not have the right to be the approver of this change", record.ApproverID, tenantID), "")
 	}
 	// 2) 审批人必须是该变更审批链中指定的审批人。
 	chain, err := s.repo.GetApprovalChain(ctx, record.ChangeID, tenantID)
 	if err != nil {
-		return nil, fmt.Errorf("获取审批链失败: %w", err)
+		return nil, fmt.Errorf("Failed to obtain approval chain: %w", err)
 	}
 	designated := make(map[int]struct{}, len(chain))
 	for _, node := range chain {
@@ -621,7 +621,7 @@ func (s *Service) SubmitApproval(ctx context.Context, record *ApprovalRecord, te
 	}
 	if _, ok := designated[record.ApproverID]; !ok {
 		return nil, common.NewBusinessError(common.ForbiddenCode,
-			fmt.Sprintf("用户 %d 不是变更 %d 的指定审批人，无法提交审批", record.ApproverID, record.ChangeID), "")
+			fmt.Sprintf("User %d is not the designated approver of change %d and cannot submit for approval", record.ApproverID, record.ChangeID), "")
 	}
 
 	// 3) 在同一 *sql.Tx 中"写审批记录 + CAS 推进 draft→pending"。
@@ -638,7 +638,7 @@ func (s *Service) SubmitApproval(ctx context.Context, record *ApprovalRecord, te
 	rec, promoted, err := s.repo.SubmitApprovalRecordTx(ctx, record.ChangeID, tenantID, record.ApproverID, comment, now)
 	if err != nil {
 		s.logger.Errorw("SubmitApproval: atomic submit failed", "error", err, "change_id", c.ID, "approver_id", record.ApproverID)
-		return nil, fmt.Errorf("提交审批失败: %w", err)
+		return nil, fmt.Errorf("Submission for approval failed: %w", err)
 	}
 	s.logger.Infow("SubmitApproval: atomic submit succeeded",
 		"change_id", c.ID, "approver_id", record.ApproverID, "tenant_id", tenantID, "promoted", promoted)
@@ -660,7 +660,7 @@ func (s *Service) SubmitApproval(ctx context.Context, record *ApprovalRecord, te
 func (s *Service) ConfigureWorkflow(ctx context.Context, changeID, tenantID int, items []*ApprovalChain) error {
 	// Clear existing and set new
 	if _, err := s.repo.Get(ctx, changeID, tenantID); err != nil {
-		return common.NewBusinessError(common.NotFoundCode, "变更不存在或已被删除", "")
+		return common.NewBusinessError(common.NotFoundCode, "The change does not exist or has been deleted", "")
 	}
 	for _, item := range items {
 		item.ChangeID = changeID
@@ -703,7 +703,7 @@ func (s *Service) GetRisk(ctx context.Context, changeID int, tenantID int) (*Ris
 func (s *Service) UpdateRisk(ctx context.Context, ra *RiskAssessment) (*RiskAssessment, error) {
 	changeEntity, err := s.repo.Get(ctx, ra.ChangeID, ra.TenantID)
 	if err != nil || changeEntity == nil {
-		return nil, common.NewBusinessError(common.NotFoundCode, "变更不存在或已被删除", "")
+		return nil, common.NewBusinessError(common.NotFoundCode, "The change does not exist or has been deleted", "")
 	}
 	existing, err := s.repo.GetRiskAssessment(ctx, ra.ChangeID, ra.TenantID)
 	if err != nil {
@@ -722,7 +722,7 @@ func (s *Service) GetCMDBImpactSummary(ctx context.Context, changeID, tenantID i
 
 	changeEntity, err := s.repo.Get(ctx, changeID, tenantID)
 	if err != nil {
-		return nil, common.NewBusinessError(common.NotFoundCode, "变更不存在或已被删除", "")
+		return nil, common.NewBusinessError(common.NotFoundCode, "The change does not exist or has been deleted", "")
 	}
 
 	ciIDs := make([]int, 0, len(changeEntity.AffectedCIs))
@@ -755,7 +755,7 @@ func (s *Service) GetCMDBImpactSummary(ctx context.Context, changeID, tenantID i
 		).
 		All(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("查询受影响CI失败: %w", err)
+		return nil, fmt.Errorf("Failed to query affected CIs: %w", err)
 	}
 
 	summary.TotalAffectedCIs = len(cis)
@@ -896,13 +896,13 @@ func (s *Service) TransitionStatus(ctx context.Context, id, tenantID, userID int
 
 	if targetStatus != "approved" && targetStatus != "rejected" && targetStatus != "rolled_back" {
 		if !datascope.CanWriteResource(userID, actorRole, c.CreatedBy, c.AssigneeID) {
-			return nil, common.NewForbiddenError("无权限操作该变更单：仅创建人、受理人或管理员可执行状态流转")
+			return nil, common.NewForbiddenError("No permission to operate this change order: only the creator, assignee or administrator can perform status transfer")
 		}
 	}
 
 	// Validate state transition (使用 service 包的 canonical 状态机，保证与 legacy service 一致)
 	if !service.IsValidChangeStatusTransition(c.Status, targetStatus, c.Type) {
-		return nil, fmt.Errorf("%w: 从 '%s' 到 '%s'", ErrInvalidTransition, c.Status, targetStatus)
+		return nil, fmt.Errorf("%w: from '%s' to '%s'", ErrInvalidTransition, c.Status, targetStatus)
 	}
 
 	// 回滚门禁：清单存在则必须逐项确认（2026-10-22，链路 C「失败可回退」）。
@@ -928,8 +928,8 @@ func (s *Service) TransitionStatus(ctx context.Context, id, tenantID, userID int
 	outcomeNote := strings.TrimSpace(comment)
 	if outcomeNote == "" && (targetStatus == "failed" || targetStatus == "rolled_back") {
 		return nil, common.NewValidationError(
-			fmt.Sprintf("把变更标记为 '%s' 必须填写原因（请求体 reason 或 comment）："+
-				"该原因会写入实施结果说明并进入 PIR 与审计，用于判断影响是否已复原、是否需要重新排期", targetStatus),
+			fmt.Sprintf("To mark the change as '%s', the reason must be filled in (request body reason or comment):"+
+				"This reason will be written into the implementation result description and entered into PIR and audit to determine whether the impact has been restored and whether it needs to be rescheduled.", targetStatus),
 			ErrOutcomeNoteRequired,
 		)
 	}
@@ -959,12 +959,12 @@ func (s *Service) TransitionStatus(ctx context.Context, id, tenantID, userID int
 			var txErr error
 			tx, txErr = starter.BeginWorkflowTx(ctx)
 			if txErr != nil {
-				return nil, fmt.Errorf("开启事务失败: %w", txErr)
+				return nil, fmt.Errorf("Failed to open transaction: %w", txErr)
 			}
 		} else {
 			entTx, txErr := s.entClient.Tx(ctx)
 			if txErr != nil {
-				return nil, fmt.Errorf("开启事务失败: %w", txErr)
+				return nil, fmt.Errorf("Failed to open transaction: %w", txErr)
 			}
 			tx = wrapEntTx(entTx)
 		}
@@ -1010,7 +1010,7 @@ func (s *Service) TransitionStatus(ctx context.Context, id, tenantID, userID int
 			// 其他请求推进，此时返回"不是审批人"会误导调用方（用户其实是审批人，
 			// 只是来晚了），也会让运维误判为权限配置问题。
 			if fresh, getErr := s.repo.Get(ctx, id, tenantID); getErr == nil && fresh.Status != c.Status {
-				return nil, fmt.Errorf("%w: 审批已被并发处理（状态 '%s' → '%s'）",
+				return nil, fmt.Errorf("%w: Approval has been processed concurrently (status '%s' → '%s')",
 					ErrConcurrentModification, c.Status, fresh.Status)
 			}
 			return nil, fmt.Errorf("%w: user_id=%d", ErrNotApprover, userID)
@@ -1030,13 +1030,13 @@ func (s *Service) TransitionStatus(ctx context.Context, id, tenantID, userID int
 			if _, advanceErr := s.approvalBridge.AdvanceBusinessWorkTaskWithClient(
 				ctx, tx.Client(), tenantID, userID, string(dto.BusinessTypeChange), id, nil,
 			); advanceErr != nil {
-				return nil, fmt.Errorf("推进流程前置评估待办失败: %w", advanceErr)
+				return nil, fmt.Errorf("Advance process pre-assessment pending failed: %w", advanceErr)
 			}
 			handled, bridgeErr := s.approvalBridge.CompleteBusinessApprovalTaskWithClient(
 				ctx, tx.Client(), tenantID, userID, string(dto.BusinessTypeChange), id, action, comment,
 			)
 			if bridgeErr != nil {
-				return nil, fmt.Errorf("同步流程审批任务失败: %w", bridgeErr)
+				return nil, fmt.Errorf("Synchronization process approval task failed: %w", bridgeErr)
 			}
 			approvalDecidedByBridge = handled
 			if !handled {
@@ -1058,26 +1058,26 @@ func (s *Service) TransitionStatus(ctx context.Context, id, tenantID, userID int
 			if _, bridgeErr := s.approvalBridge.AdvanceBusinessWorkflowWithClient(
 				ctx, tx.Client(), tenantID, userID, string(dto.BusinessTypeChange), id, nil, 2,
 			); bridgeErr != nil {
-				return nil, fmt.Errorf("同步流程驳回任务失败: %w", bridgeErr)
+				return nil, fmt.Errorf("Synchronization process failed to reject task: %w", bridgeErr)
 			}
 		case "scheduled":
 			if _, bridgeErr := s.approvalBridge.AdvanceBusinessWorkflowWithClient(
 				ctx, tx.Client(), tenantID, userID, string(dto.BusinessTypeChange), id, nil, 1,
 			); bridgeErr != nil {
-				return nil, fmt.Errorf("同步流程排期任务失败: %w", bridgeErr)
+				return nil, fmt.Errorf("Synchronization process scheduling task failed: %w", bridgeErr)
 			}
 		case "in_progress":
 			if _, bridgeErr := s.approvalBridge.AdvanceBusinessWorkflowWithClient(
 				ctx, tx.Client(), tenantID, userID, string(dto.BusinessTypeChange), id, nil, 1,
 			); bridgeErr != nil {
-				return nil, fmt.Errorf("同步流程实施任务失败: %w", bridgeErr)
+				return nil, fmt.Errorf("Synchronization process implementation task failed: %w", bridgeErr)
 			}
 		case "completed":
 			if _, bridgeErr := s.approvalBridge.AdvanceBusinessWorkflowWithClient(
 				ctx, tx.Client(), tenantID, userID, string(dto.BusinessTypeChange), id,
 				map[string]interface{}{"verify_passed": true}, 4,
 			); bridgeErr != nil {
-				return nil, fmt.Errorf("同步流程验证任务失败: %w", bridgeErr)
+				return nil, fmt.Errorf("Synchronization process verification task failed: %w", bridgeErr)
 			}
 		}
 	}
@@ -1110,11 +1110,11 @@ func (s *Service) TransitionStatus(ctx context.Context, id, tenantID, userID int
 		applyChainLevels(chain, decisions)
 		outcome := evaluateApprovalQuorum(chain, decisions)
 		if outcome.Rejected {
-			return nil, fmt.Errorf("%w: 审批链已出现驳回票，不能再通过", ErrInvalidTransition)
+			return nil, fmt.Errorf("%w: A rejection ticket has appeared in the approval chain and cannot be passed again.", ErrInvalidTransition)
 		}
 		if !outcome.ChainEmpty && !outcome.AllRequiredMet {
 			if commitErr := tx.Commit(); commitErr != nil {
-				return nil, fmt.Errorf("提交事务失败: %w", commitErr)
+				return nil, fmt.Errorf("Failed to commit transaction: %w", commitErr)
 			}
 			s.logger.Infow("TransitionStatus: 审批决策已记录，会签未集齐，状态保持不变",
 				"change_id", id, "tenant_id", tenantID, "actor_user_id", userID,
@@ -1149,9 +1149,9 @@ func (s *Service) TransitionStatus(ctx context.Context, id, tenantID, userID int
 				"change_id", id, "tenant_id", tenantID, "actor_user_id", userID,
 				"required_votes", fallback.RequiredVotes, "missing_levels", fallback.MissingLevels)
 			return nil, fmt.Errorf(
-				"%w: 该变更未绑定运行中的审批流程实例，审批决定无法持久化，会签票无法累积"+
-					"（该链需要 %d 票，本次仅 1 票，未达标层级 %v）；"+
-					"请为该变更类型配置审批流程模板后重新提交，或将审批链改为单审批人",
+				"%w: This change is not bound to the running approval process instance, the approval decision cannot be persisted, and countersigning tickets cannot be accumulated."+
+					"(This chain requires %d votes, only 1 vote this time, and does not meet the standard level %v);"+
+					"Please configure the approval process template for this change type and resubmit, or change the approval chain to a single approver",
 				ErrQuorumRequiresWorkflow, fallback.RequiredVotes, fallback.MissingLevels)
 		}
 	}
@@ -1177,7 +1177,7 @@ func (s *Service) TransitionStatus(ctx context.Context, id, tenantID, userID int
 					return nil, fmt.Errorf("failed to update change status: %w", casErr)
 				}
 				if !ok {
-					return nil, fmt.Errorf("%w: 期望 '%s' → '%s'，但状态已被其他请求修改",
+					return nil, fmt.Errorf("%w: Expected '%s' → '%s', but status has been modified by other requests",
 						ErrConcurrentModification, c.Status, targetStatus)
 				}
 			} else {
@@ -1186,7 +1186,7 @@ func (s *Service) TransitionStatus(ctx context.Context, id, tenantID, userID int
 					return nil, fmt.Errorf("failed to update change status: %w", casErr)
 				}
 				if !ok {
-					return nil, fmt.Errorf("%w: 期望 '%s' → '%s'，但状态已被其他请求修改",
+					return nil, fmt.Errorf("%w: Expected '%s' → '%s', but status has been modified by other requests",
 						ErrConcurrentModification, c.Status, targetStatus)
 				}
 				if outcomeNote != "" {
@@ -1217,7 +1217,7 @@ func (s *Service) TransitionStatus(ctx context.Context, id, tenantID, userID int
 		if _, updateErr := terminalUpdate.Save(ctx); updateErr != nil {
 			// StatusEQ 未命中 → 状态已被并发请求抢先推进，属预期内的业务冲突。
 			if ent.IsNotFound(updateErr) {
-				return nil, fmt.Errorf("%w: 期望 '%s' → '%s'，但状态已被其他请求修改",
+				return nil, fmt.Errorf("%w: Expected '%s' → '%s', but status has been modified by other requests",
 					ErrConcurrentModification, c.Status, targetStatus)
 			}
 			return nil, fmt.Errorf("failed to update change status: %w", updateErr)
@@ -1228,12 +1228,12 @@ func (s *Service) TransitionStatus(ctx context.Context, id, tenantID, userID int
 		rawTxAvailable := true
 		if closeErr := tx.ClosePendingApprovalChains(ctx, id, tenantID); closeErr != nil {
 			if !errors.Is(closeErr, errRawTxUnavailable) {
-				return nil, fmt.Errorf("收口审批链失败: %w", closeErr)
+				return nil, fmt.Errorf("Failed to close approval chain: %w", closeErr)
 			}
 			rawTxAvailable = false
 		}
 		if commitErr := tx.Commit(); commitErr != nil {
-			return nil, fmt.Errorf("提交事务失败: %w", commitErr)
+			return nil, fmt.Errorf("Failed to commit transaction: %w", commitErr)
 		}
 		if !rawTxAvailable {
 			// 纯 ent 事务（无 *sql.DB 句柄）：退化为提交后收口并记日志。
@@ -1255,7 +1255,7 @@ func (s *Service) TransitionStatus(ctx context.Context, id, tenantID, userID int
 			return nil, fmt.Errorf("failed to update change status: %w", casErr)
 		}
 		if !ok {
-			return nil, fmt.Errorf("%w: 期望 '%s' → '%s'，但状态已被其他请求修改",
+			return nil, fmt.Errorf("%w: Expected '%s' → '%s', but status has been modified by other requests",
 				ErrConcurrentModification, c.Status, targetStatus)
 		}
 	} else {
@@ -1267,11 +1267,11 @@ func (s *Service) TransitionStatus(ctx context.Context, id, tenantID, userID int
 			return nil, fmt.Errorf("failed to update change status: %w", err)
 		}
 		if affected == 0 {
-			return nil, fmt.Errorf("%w: 期望 '%s' → '%s'，但状态已被其他请求修改",
+			return nil, fmt.Errorf("%w: Expected '%s' → '%s', but status has been modified by other requests",
 				ErrConcurrentModification, c.Status, targetStatus)
 		}
 		if commitErr := tx.Commit(); commitErr != nil {
-			return nil, fmt.Errorf("提交事务失败: %w", commitErr)
+			return nil, fmt.Errorf("Failed to commit transaction: %w", commitErr)
 		}
 	}
 

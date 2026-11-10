@@ -32,7 +32,7 @@ export const routes: RouteConfig[] = [
   {
     path: '/',
     name: 'dashboard',
-    title: '仪表盘',
+    title: 'Dashboard',
     icon: 'LayoutDashboard',
     component: 'Dashboard',
     permissions: [{ resource: 'dashboard', action: 'read' }],
@@ -44,7 +44,7 @@ export const routes: RouteConfig[] = [
   {
     path: '/tickets',
     name: 'tickets',
-    title: '工单管理',
+    title: 'Ticket Management',
     icon: 'Ticket',
     permissions: [{ resource: 'ticket', action: 'read' }],
     meta: {
@@ -55,7 +55,7 @@ export const routes: RouteConfig[] = [
       {
         path: '/tickets',
         name: 'ticket-list',
-        title: '工单列表',
+        title: 'Ticket List',
         component: 'TicketList',
         permissions: [{ resource: 'ticket', action: 'read' }],
         meta: {
@@ -66,7 +66,7 @@ export const routes: RouteConfig[] = [
       {
         path: '/tickets/create',
         name: 'ticket-create',
-        title: '创建工单',
+        title: 'Create a work order',
         component: 'TicketCreate',
         permissions: [{ resource: 'ticket', action: 'create' }],
         meta: {
@@ -76,7 +76,7 @@ export const routes: RouteConfig[] = [
       {
         path: '/tickets/:id',
         name: 'ticket-detail',
-        title: '工单详情',
+        title: 'Ticket Detail',
         component: 'TicketDetail',
         permissions: [{ resource: 'ticket', action: 'read' }],
         hidden: true,
@@ -87,7 +87,7 @@ export const routes: RouteConfig[] = [
       {
         path: '/tickets/:id/edit',
         name: 'ticket-edit',
-        title: '编辑工单',
+        title: 'Edit Ticket',
         component: 'TicketEdit',
         permissions: [{ resource: 'ticket', action: 'update' }],
         hidden: true,
@@ -100,7 +100,7 @@ export const routes: RouteConfig[] = [
   {
     path: '/incidents',
     name: 'incidents',
-    title: '事件管理',
+    title: 'Incidents',
     icon: 'AlertTriangle',
     permissions: [{ resource: 'incident', action: 'read' }],
     meta: {
@@ -111,7 +111,7 @@ export const routes: RouteConfig[] = [
       {
         path: '/incidents',
         name: 'incident-list',
-        title: '事件列表',
+        title: 'Event List',
         component: 'IncidentList',
         permissions: [{ resource: 'incident', action: 'read' }],
         meta: {
@@ -122,7 +122,7 @@ export const routes: RouteConfig[] = [
       {
         path: '/incidents/create',
         name: 'incident-create',
-        title: '创建事件',
+        title: 'Create event',
         component: 'IncidentCreate',
         permissions: [{ resource: 'incident', action: 'create' }],
         meta: {
@@ -132,7 +132,7 @@ export const routes: RouteConfig[] = [
       {
         path: '/incidents/:id',
         name: 'incident-detail',
-        title: '事件详情',
+        title: 'Incident Detail',
         component: 'IncidentDetail',
         permissions: [{ resource: 'incident', action: 'read' }],
         hidden: true,
@@ -145,7 +145,7 @@ export const routes: RouteConfig[] = [
   {
     path: '/problems',
     name: 'problems',
-    title: '问题管理',
+    title: 'Problems',
     icon: 'Bug',
     permissions: [{ resource: 'problem', action: 'read' }],
     meta: {
@@ -156,7 +156,7 @@ export const routes: RouteConfig[] = [
       {
         path: '/problems',
         name: 'problem-list',
-        title: '问题列表',
+        title: 'Problem List',
         component: 'ProblemList',
         permissions: [{ resource: 'problem', action: 'read' }],
         meta: {
@@ -167,7 +167,7 @@ export const routes: RouteConfig[] = [
       {
         path: '/problems/create',
         name: 'problem-create',
-        title: '创建问题',
+        title: 'Create issue',
         component: 'ProblemCreate',
         permissions: [{ resource: 'problem', action: 'create' }],
         meta: {
@@ -177,7 +177,7 @@ export const routes: RouteConfig[] = [
       {
         path: '/problems/:id',
         name: 'problem-detail',
-        title: '问题详情',
+        title: 'Problem Detail',
         component: 'ProblemDetail',
         permissions: [{ resource: 'problem', action: 'read' }],
         hidden: true,
@@ -190,7 +190,7 @@ export const routes: RouteConfig[] = [
   {
     path: '/releases',
     name: 'releases',
-    title: '发布管理',
+    title: 'Release Management',
     icon: 'Rocket',
     permissions: [{ resource: 'release', action: 'read' }],
     meta: {
@@ -201,7 +201,7 @@ export const routes: RouteConfig[] = [
       {
         path: '/releases',
         name: 'release-list',
-        title: '发布列表',
+        title: 'Release list',
         component: 'ReleaseList',
         permissions: [{ resource: 'release', action: 'read' }],
         meta: {
@@ -212,7 +212,7 @@ export const routes: RouteConfig[] = [
       {
         path: '/releases/new',
         name: 'release-create',
-        title: '创建发布',
+        title: 'Create publication',
         component: 'ReleaseForm',
         permissions: [{ resource: 'release', action: 'create' }],
         meta: {
@@ -222,7 +222,7 @@ export const routes: RouteConfig[] = [
       {
         path: '/releases/:id',
         name: 'release-detail',
-        title: '发布详情',
+        title: 'Release details',
         component: 'ReleaseDetail',
         permissions: [{ resource: 'release', action: 'read' }],
         hidden: true,
@@ -235,7 +235,7 @@ export const routes: RouteConfig[] = [
   {
     path: '/changes',
     name: 'changes',
-    title: '变更管理',
+    title: 'Changes',
     icon: 'GitBranch',
     permissions: [{ resource: 'change', action: 'read' }],
     meta: {
@@ -246,7 +246,7 @@ export const routes: RouteConfig[] = [
       {
         path: '/changes',
         name: 'change-list',
-        title: '变更列表',
+        title: 'Change List',
         component: 'ChangeList',
         permissions: [{ resource: 'change', action: 'read' }],
         meta: {
@@ -257,7 +257,7 @@ export const routes: RouteConfig[] = [
       {
         path: '/changes/new',
         name: 'change-create',
-        title: '创建变更',
+        title: 'Create Change',
         component: 'ChangeCreate',
         permissions: [{ resource: 'change', action: 'create' }],
         meta: {
@@ -267,7 +267,7 @@ export const routes: RouteConfig[] = [
       {
         path: '/changes/:id',
         name: 'change-detail',
-        title: '变更详情',
+        title: 'Change Detail',
         component: 'ChangeDetail',
         permissions: [{ resource: 'change', action: 'read' }],
         hidden: true,
@@ -280,7 +280,7 @@ export const routes: RouteConfig[] = [
   {
     path: '/assets',
     name: 'assets',
-    title: '资产管理',
+    title: 'Asset Management',
     icon: 'Desktop',
     permissions: [{ resource: 'asset', action: 'read' }],
     meta: {
@@ -291,7 +291,7 @@ export const routes: RouteConfig[] = [
       {
         path: '/assets',
         name: 'asset-list',
-        title: '资产列表',
+        title: 'Asset List',
         component: 'AssetList',
         permissions: [{ resource: 'asset', action: 'read' }],
         meta: {
@@ -302,7 +302,7 @@ export const routes: RouteConfig[] = [
       {
         path: '/assets/new',
         name: 'asset-create',
-        title: '创建资产',
+        title: 'Create assets',
         component: 'AssetForm',
         permissions: [{ resource: 'asset', action: 'create' }],
         meta: {
@@ -312,7 +312,7 @@ export const routes: RouteConfig[] = [
       {
         path: '/assets/:id',
         name: 'asset-detail',
-        title: '资产详情',
+        title: 'Asset details',
         component: 'AssetDetail',
         permissions: [{ resource: 'asset', action: 'read' }],
         hidden: true,
@@ -325,7 +325,7 @@ export const routes: RouteConfig[] = [
   {
     path: '/licenses',
     name: 'licenses',
-    title: '许可证管理',
+    title: 'License Management',
     icon: 'Key',
     permissions: [{ resource: 'license', action: 'read' }],
     meta: {
@@ -336,7 +336,7 @@ export const routes: RouteConfig[] = [
       {
         path: '/licenses',
         name: 'license-list',
-        title: '许可证列表',
+        title: 'License List',
         component: 'LicenseList',
         permissions: [{ resource: 'license', action: 'read' }],
         meta: {
@@ -347,7 +347,7 @@ export const routes: RouteConfig[] = [
       {
         path: '/licenses/new',
         name: 'license-create',
-        title: '创建许可证',
+        title: 'Create license',
         component: 'LicenseForm',
         permissions: [{ resource: 'license', action: 'create' }],
         meta: {
@@ -357,7 +357,7 @@ export const routes: RouteConfig[] = [
       {
         path: '/licenses/:id',
         name: 'license-detail',
-        title: '许可证详情',
+        title: 'License details',
         component: 'LicenseDetail',
         permissions: [{ resource: 'license', action: 'read' }],
         hidden: true,
@@ -370,7 +370,7 @@ export const routes: RouteConfig[] = [
   {
     path: '/knowledge',
     name: 'knowledge',
-    title: '知识库',
+    title: 'Knowledge Base',
     icon: 'BookOpen',
     permissions: [{ resource: 'knowledge', action: 'read' }],
     meta: {
@@ -381,7 +381,7 @@ export const routes: RouteConfig[] = [
       {
         path: '/knowledge',
         name: 'knowledge-list',
-        title: '知识文章',
+        title: 'Knowledge Article',
         component: 'KnowledgeList',
         permissions: [{ resource: 'knowledge', action: 'read' }],
         meta: {
@@ -392,7 +392,7 @@ export const routes: RouteConfig[] = [
       {
         path: '/knowledge/create',
         name: 'knowledge-create',
-        title: '创建文章',
+        title: 'Create article',
         component: 'KnowledgeCreate',
         permissions: [{ resource: 'knowledge', action: 'create' }],
         meta: {
@@ -402,7 +402,7 @@ export const routes: RouteConfig[] = [
       {
         path: '/knowledge/:id',
         name: 'knowledge-detail',
-        title: '文章详情',
+        title: 'Article details',
         component: 'KnowledgeDetail',
         permissions: [{ resource: 'knowledge', action: 'read' }],
         hidden: true,
@@ -415,7 +415,7 @@ export const routes: RouteConfig[] = [
   {
     path: '/ai',
     name: 'ai',
-    title: '智能助手',
+    title: 'Intelligent Assistant',
     icon: 'Bot',
     permissions: [{ resource: 'ai', action: 'read' }],
     meta: {
@@ -426,7 +426,7 @@ export const routes: RouteConfig[] = [
       {
         path: '/ai/chat',
         name: 'ai-chat',
-        title: 'AI 问答',
+        title: 'AI Q&A',
         component: 'AIChat',
         permissions: [{ resource: 'ai', action: 'read' }],
         meta: {
@@ -439,7 +439,7 @@ export const routes: RouteConfig[] = [
   {
     path: '/cmdb',
     name: 'cmdb',
-    title: '配置管理',
+    title: 'Configuration Management',
     icon: 'Database',
     permissions: [{ resource: 'cmdb', action: 'read' }],
     meta: {
@@ -450,7 +450,7 @@ export const routes: RouteConfig[] = [
       {
         path: '/cmdb/cis',
         name: 'ci-list',
-        title: '配置项',
+        title: 'Configuration item',
         component: 'CIList',
         permissions: [{ resource: 'cmdb', action: 'read' }],
         meta: {
@@ -461,7 +461,7 @@ export const routes: RouteConfig[] = [
       {
         path: '/cmdb/ci-types',
         name: 'ci-type-list',
-        title: '配置项类型',
+        title: 'Configuration item type',
         component: 'CITypeList',
         permissions: [{ resource: 'cmdb', action: 'manage' }],
         meta: {
@@ -471,7 +471,7 @@ export const routes: RouteConfig[] = [
       {
         path: '/cmdb/relationships',
         name: 'ci-relationship-list',
-        title: '关系管理',
+        title: 'Relationship Management',
         component: 'CIRelationshipList',
         permissions: [{ resource: 'cmdb', action: 'read' }],
         meta: {
@@ -483,7 +483,7 @@ export const routes: RouteConfig[] = [
   {
     path: '/reports',
     name: 'reports',
-    title: '报表分析',
+    title: 'Reports & Analytics',
     icon: 'BarChart3',
     permissions: [{ resource: 'report', action: 'read' }],
     meta: {
@@ -494,7 +494,7 @@ export const routes: RouteConfig[] = [
       {
         path: '/reports/dashboard',
         name: 'report-dashboard',
-        title: '报表仪表盘',
+        title: 'Report Dashboard',
         component: 'ReportDashboard',
         permissions: [{ resource: 'report', action: 'read' }],
         meta: {
@@ -504,7 +504,7 @@ export const routes: RouteConfig[] = [
       {
         path: '/reports/tickets',
         name: 'ticket-reports',
-        title: '工单报表',
+        title: 'Work order report',
         component: 'TicketReports',
         permissions: [{ resource: 'report', action: 'read' }],
         meta: {
@@ -514,7 +514,7 @@ export const routes: RouteConfig[] = [
       {
         path: '/reports/sla',
         name: 'sla-reports',
-        title: 'SLA报表',
+        title: 'SLA report',
         component: 'SLAReports',
         permissions: [{ resource: 'report', action: 'read' }],
         meta: {
@@ -526,7 +526,7 @@ export const routes: RouteConfig[] = [
   {
     path: '/testing',
     name: 'testing',
-    title: '测试管理',
+    title: 'Test Management',
     icon: 'Code',
     permissions: [{ resource: 'testing', action: 'read' }],
     meta: {
@@ -538,7 +538,7 @@ export const routes: RouteConfig[] = [
       {
         path: '/testing/runner',
         name: 'test-runner',
-        title: '测试运行器',
+        title: 'test runner',
         component: 'TestRunner',
         permissions: [{ resource: 'testing', action: 'execute' }],
         meta: {
@@ -548,7 +548,7 @@ export const routes: RouteConfig[] = [
       {
         path: '/testing/coverage',
         name: 'test-coverage',
-        title: '测试覆盖率',
+        title: 'Test coverage',
         component: 'TestCoverage',
         permissions: [{ resource: 'testing', action: 'read' }],
         meta: {
@@ -560,7 +560,7 @@ export const routes: RouteConfig[] = [
   {
     path: '/admin',
     name: 'admin',
-    title: '系统管理',
+    title: 'System Admin',
     icon: 'Settings',
     permissions: [{ resource: 'admin', action: 'read' }],
     meta: {
@@ -572,7 +572,7 @@ export const routes: RouteConfig[] = [
       {
         path: '/admin',
         name: 'admin-overview',
-        title: '系统概览',
+        title: 'System Overview',
         component: 'AdminDashboard',
         permissions: [{ resource: 'admin', action: 'read' }],
         meta: {
@@ -584,7 +584,7 @@ export const routes: RouteConfig[] = [
       {
         path: '/admin/users',
         name: 'user-management',
-        title: '用户管理',
+        title: 'User Management',
         component: 'UserManagement',
         permissions: [{ resource: 'user', action: 'manage' }],
         meta: {
@@ -595,7 +595,7 @@ export const routes: RouteConfig[] = [
       {
         path: '/admin/change-review',
         name: 'change-review-management',
-        title: '评审组管理',
+        title: 'Review team management',
         component: 'ChangeReviewManagement',
         permissions: [{ resource: 'change', action: 'read' }],
         meta: {
@@ -606,7 +606,7 @@ export const routes: RouteConfig[] = [
       {
         path: '/admin/roles',
         name: 'role-management',
-        title: '角色管理',
+        title: 'Role Management',
         component: 'RoleManagement',
         permissions: [{ resource: 'role', action: 'manage' }],
         meta: {
@@ -617,7 +617,7 @@ export const routes: RouteConfig[] = [
       {
         path: '/admin/tenants',
         name: 'tenant-management',
-        title: '租户管理',
+        title: 'Tenant Management',
         component: 'TenantManagement',
         permissions: [{ resource: 'tenant', action: 'manage' }],
         meta: {
@@ -628,7 +628,7 @@ export const routes: RouteConfig[] = [
       {
         path: '/notifications',
         name: 'notification-settings',
-        title: '通知配置',
+        title: 'Notification Configuration',
         component: 'NotificationsPage',
         permissions: [{ resource: 'system', action: 'manage' }],
         meta: {
@@ -639,7 +639,7 @@ export const routes: RouteConfig[] = [
       {
         path: '/workflow/audit',
         name: 'audit-logs',
-        title: '操作日志',
+        title: 'Operation log',
         component: 'AuditLogsPage',
         permissions: [{ resource: 'system', action: 'view_logs' }],
         meta: {
@@ -650,7 +650,7 @@ export const routes: RouteConfig[] = [
       {
         path: '/admin/cmdb-types',
         name: 'cmdb-types',
-        title: 'CMDB 类型',
+        title: 'CMDB type',
         component: 'CMDBTypesManagement',
         permissions: [{ resource: 'cmdb', action: 'manage' }],
         meta: {
@@ -661,7 +661,7 @@ export const routes: RouteConfig[] = [
       {
         path: '/admin/system-config',
         name: 'system-settings',
-        title: '系统设置',
+        title: 'System settings',
         component: 'SystemConfiguration',
         permissions: [{ resource: 'system', action: 'manage' }],
         meta: {

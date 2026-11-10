@@ -124,7 +124,7 @@ const TicketCategoryManagementPage = () => {
       setCategories(list);
     } catch (error) {
       console.error('Failed to load categories:', error);
-      message.error('加载分类失败');
+      message.error('Failed to load category');
       setCategories([]);
     } finally {
       setLoading(false);
@@ -213,7 +213,7 @@ const TicketCategoryManagementPage = () => {
   const handleCopyCategory = async (category: TicketCategory) => {
     try {
       await TicketCategoryApi.createCategory({
-        name: `${category.name} - 副本`,
+        name: `${category.name} - copy`,
         code: `${category.code}_COPY_${Date.now().toString(36).toUpperCase()}`,
         description: category.description,
         parentId: category.parentId || undefined,
@@ -222,23 +222,23 @@ const TicketCategoryManagementPage = () => {
         workflowDefinitionKey: category.workflowDefinitionKey || undefined,
         departmentId: category.departmentId || undefined,
       });
-      message.success('分类复制成功');
+      message.success('Category copy successful');
       loadCategories();
     } catch (error) {
       console.error('Failed to copy category:', error);
-      message.error(error instanceof Error ? error.message : '复制分类失败');
+      message.error(error instanceof Error ? error.message : 'Failed to copy category');
     }
   };
 
   const handleDeleteCategory = async (id: number) => {
     try {
       await TicketCategoryApi.deleteCategory(id);
-      message.success('分类删除成功');
+      message.success('CategoryDeleteSuccess');
       loadCategories();
     } catch (error) {
       console.error('Failed to delete category:', error);
       // 展示后端保护性错误信息（如：无法删除有子分类的分类 / 无法删除正在使用的分类）
-      message.error(error instanceof Error ? error.message : '删除失败');
+      message.error(error instanceof Error ? error.message : 'Delete failed');
     }
   };
 
@@ -259,7 +259,7 @@ const TicketCategoryManagementPage = () => {
           workflowDefinitionKey: values.workflowDefinitionKey || '',
           departmentId: values.departmentId ?? 0,
         });
-        message.success('分类更新成功');
+        message.success('CategoryUpdateSuccess');
       } else {
         await TicketCategoryApi.createCategory({
           name: values.name,
@@ -271,7 +271,7 @@ const TicketCategoryManagementPage = () => {
           workflowDefinitionKey: values.workflowDefinitionKey,
           departmentId: values.departmentId,
         });
-        message.success('分类创建成功');
+        message.success('CategoryCreateSuccess');
       }
 
       setModalVisible(false);
@@ -279,9 +279,9 @@ const TicketCategoryManagementPage = () => {
       loadCategories();
     } catch (error) {
       if (error instanceof Error) {
-        message.error(error.message ? error.message : '保存分类失败');
+        message.error(error.message ? error.message : 'Failed to save category');
       }
-      console.error('保存分类失败:', error);
+      console.error('Failed to save category:', error);
     } finally {
       setSaving(false);
     }
@@ -293,47 +293,47 @@ const TicketCategoryManagementPage = () => {
       setCategories(prev =>
         prev.map(c => (c.id === category.id ? { ...c, isActive: checked } : c))
       );
-      message.success(checked ? '分类已启用' : '分类已停用');
+      message.success(checked ? 'Classification is enabled' : 'Classification is disabled');
     } catch (error) {
       console.error('Failed to update category status:', error);
-      message.error('状态更新失败');
+      message.error('Failed to update status');
     }
   };
 
   const workflowNameOf = (key: string) =>
     key ? workflows.find(w => w.key === key)?.name || key : null;
   const departmentNameOf = (id: number | null) =>
-    id ? departments.find(d => d.id === id)?.name || `部门 #${id}` : null;
+    id ? departments.find(d => d.id === id)?.name || `Department #${id}` : null;
 
   const handleViewCategory = (category: TicketCategory) => {
     Modal.info({
-      title: '分类详情',
+      title: 'Classification details',
       width: 560,
       content: (
         <div className="space-y-2 pt-2">
           <p>
-            <Text strong>名称：</Text>
+            <Text strong>Name:</Text>
             {category.name}
           </p>
           <p>
-            <Text strong>编码：</Text>
+            <Text strong>Encoding:</Text>
             {category.code || '-'}
           </p>
           <p>
-            <Text strong>描述：</Text>
+            <Text strong>Description:</Text>
             {category.description || '-'}
           </p>
           <p>
-            <Text strong>关联工作流：</Text>
+            <Text strong>Associated workflow:</Text>
             {workflowNameOf(category.workflowDefinitionKey) || '-'}
           </p>
           <p>
-            <Text strong>所属部门：</Text>
+            <Text strong>Department:</Text>
             {departmentNameOf(category.departmentId) || '-'}
           </p>
           <p>
-            <Text strong>状态：</Text>
-            {category.isActive ? '启用' : '停用'}
+            <Text strong>Status:</Text>
+            {category.isActive ? 'Enabled' : 'Disable'}
           </p>
         </div>
       ),
@@ -342,7 +342,7 @@ const TicketCategoryManagementPage = () => {
 
   const columns = [
     {
-      title: '分类名称',
+      title: 'Category Name',
       dataIndex: 'name',
       key: 'name',
       render: (text: string, record: TicketCategory) => (
@@ -353,7 +353,7 @@ const TicketCategoryManagementPage = () => {
       ),
     },
     {
-      title: '描述',
+      title: 'Description',
       dataIndex: 'description',
       key: 'description',
       render: (text: string) => (
@@ -363,14 +363,14 @@ const TicketCategoryManagementPage = () => {
       ),
     },
     {
-      title: '层级',
+      title: 'Hierarchy',
       dataIndex: 'level',
       key: 'level',
       width: 80,
-      render: (level: number) => <Tag color={level === 1 ? 'blue' : 'cyan'}>{level} 级</Tag>,
+      render: (level: number) => <Tag color={level === 1 ? 'blue' : 'cyan'}>{level}  level</Tag>,
     },
     {
-      title: '排序',
+      title: 'Sort Order',
       dataIndex: 'sortOrder',
       key: 'sortOrder',
       width: 90,
@@ -382,7 +382,7 @@ const TicketCategoryManagementPage = () => {
       ),
     },
     {
-      title: '关联工作流',
+      title: 'Associated Workflow',
       dataIndex: 'workflowDefinitionKey',
       key: 'workflowDefinitionKey',
       render: (workflowDefinitionKey: string) => {
@@ -391,7 +391,7 @@ const TicketCategoryManagementPage = () => {
       },
     },
     {
-      title: '所属部门',
+      title: 'Department',
       dataIndex: 'departmentId',
       key: 'departmentId',
       render: (departmentId: number | null) => {
@@ -400,12 +400,12 @@ const TicketCategoryManagementPage = () => {
       },
     },
     {
-      title: '状态',
+      title: 'Status',
       key: 'status',
       width: 90,
       render: (record: TicketCategory) => (
         <Switch
-          aria-label={`切换分类 ${record.name} 的启用状态`}
+          aria-label={`Switch category ${record.name} enabled status`}
           checked={record.isActive}
           size="small"
           onChange={checked => handleToggleStatus(record, checked)}
@@ -413,37 +413,37 @@ const TicketCategoryManagementPage = () => {
       ),
     },
     {
-      title: '操作',
+      title: 'Actions',
       key: 'actions',
       width: 160,
       render: (record: TicketCategory) => (
         <Space>
-          <Tooltip title="查看详情">
-            <Button aria-label="查看详情" size="small" icon={<Eye size={14} />} onClick={() => handleViewCategory(record)} />
+          <Tooltip title="View Details">
+            <Button aria-label="View Details" size="small" icon={<Eye size={14} />} onClick={() => handleViewCategory(record)} />
           </Tooltip>
-          <Tooltip title="编辑">
+          <Tooltip title="Edit">
             <Button
-              aria-label="编辑"
+              aria-label="Edit"
               size="small"
               icon={<Edit size={14} />}
               onClick={() => handleEditCategory(record)}
             />
           </Tooltip>
-          <Tooltip title="复制">
+          <Tooltip title="Copy">
             <Button
-              aria-label="复制"
+              aria-label="Copy"
               size="small"
               icon={<Copy size={14} />}
               onClick={() => handleCopyCategory(record)}
             />
           </Tooltip>
           <Popconfirm
-            title="确定要删除这个分类吗？"
+            title="Are you sure you want to delete this category?"
             onConfirm={() => handleDeleteCategory(record.id)}
-            okText="确定"
-            cancelText="取消"
+            okText="OK"
+            cancelText="Cancel"
           >
-            <Button aria-label="删除" size="small" danger icon={<Delete size={14} />} />
+            <Button aria-label="Delete" size="small" danger icon={<Delete size={14} />} />
           </Popconfirm>
         </Space>
       ),
@@ -460,17 +460,17 @@ const TicketCategoryManagementPage = () => {
           <Text type="secondary" className="text-xs">
             {category.code}
           </Text>
-          {!category.isActive && <Tag color="default">已停用</Tag>}
+          {!category.isActive && <Tag color="default">Disabled</Tag>}
         </div>
         <div className="flex items-center gap-1">
           <Switch
-            aria-label={`切换分类 ${category.name} 的启用状态`}
+            aria-label={`Switch category ${category.name} enabled status`}
             checked={category.isActive}
             size="small"
             onChange={checked => handleToggleStatus(category, checked)}
           />
           <Button
-            aria-label="编辑"
+            aria-label="Edit"
             size="small"
             icon={<Edit size={12} />}
             onClick={e => {
@@ -497,9 +497,10 @@ const TicketCategoryManagementPage = () => {
         <div className="flex justify-between items-center">
           <div>
             <Title level={4} className="mb-1">
-              工单分类管理
+
+              Work order classification management
             </Title>
-            <Text type="secondary">管理和配置工单分类体系，支持树形结构和工作流绑定</Text>
+            <Text type="secondary">Manage and configure the work order classification system, supporting tree structure and workflow binding</Text>
           </div>
           <Space>
             <Button.Group>
@@ -508,18 +509,21 @@ const TicketCategoryManagementPage = () => {
                 icon={<TableIcon size={16} />}
                 onClick={() => setViewMode('table')}
               >
-                表格视图
+
+                Table view
               </Button>
               <Button
                 type={viewMode === 'tree' ? 'primary' : 'default'}
                 icon={<Folder />}
                 onClick={() => setViewMode('tree')}
               >
-                树形视图
+
+                Tree view
               </Button>
             </Button.Group>
             <Button type="primary" icon={<Plus size={16} />} onClick={handleCreateCategory}>
-              创建分类
+
+              Create category
             </Button>
           </Space>
         </div>
@@ -536,9 +540,10 @@ const TicketCategoryManagementPage = () => {
             expandable={{ defaultExpandAllRows: true }}
             locale={{
               emptyText: (
-                <Empty description="暂无工单分类">
+                <Empty description="No work order classification yet">
                   <Button type="primary" onClick={handleCreateCategory}>
-                    创建分类
+
+                    Create category
                   </Button>
                 </Empty>
               ),
@@ -547,7 +552,7 @@ const TicketCategoryManagementPage = () => {
               pageSize: 20,
               showSizeChanger: true,
               showQuickJumper: true,
-              showTotal: total => `共 ${total} 条记录`,
+              showTotal: total => `Total ${total} records`,
             }}
           />
         ) : treeData.length > 0 ? (
@@ -559,9 +564,10 @@ const TicketCategoryManagementPage = () => {
             className="category-tree"
           />
         ) : (
-          <Empty description="暂无工单分类">
+          <Empty description="No work order classification yet">
             <Button type="primary" onClick={handleCreateCategory}>
-              创建分类
+
+              Create category
             </Button>
           </Empty>
         )}
@@ -569,12 +575,12 @@ const TicketCategoryManagementPage = () => {
 
       {/* 创建/编辑分类模态框 */}
       <Modal
-        title={editingCategory ? '编辑分类' : '创建分类'}
+        title={editingCategory ? 'Edit Category' : 'Create category'}
         open={modalVisible}
         onOk={handleSaveCategory}
         onCancel={() => setModalVisible(false)}
-        okText="保存"
-        cancelText="取消"
+        okText="Save"
+        cancelText="Cancel"
         confirmLoading={saving}
         width={600}
       >
@@ -583,70 +589,70 @@ const TicketCategoryManagementPage = () => {
             <Col span={12}>
               <Form.Item
                 name="name"
-                label="分类名称"
-                rules={[{ required: true, message: '请输入分类名称' }]}
+                label="Category Name"
+                rules={[{ required: true, message: 'Please enter the category name' }]}
               >
-                <Input placeholder="请输入分类名称" />
+                <Input placeholder="Please enter the category name" />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item
                 name="code"
-                label="分类编码"
-                tooltip="租户内唯一，创建后作为分类的稳定标识"
+                label="Classification code"
+                tooltip="unique within the tenant and used as a stable identifier for classification after creation"
                 rules={[
-                  { required: true, message: '请输入分类编码' },
+                  { required: true, message: 'Please enter the classification code' },
                   {
                     pattern: /^[A-Za-z][A-Za-z0-9_-]*$/,
-                    message: '以字母开头，仅允许字母、数字、下划线和连字符',
+                    message: 'Starts with a letter, only letters, numbers, underscores and hyphens are allowed',
                   },
                 ]}
               >
-                <Input placeholder="如 INCIDENT_NETWORK" />
+                <Input placeholder="Such as INCIDENT_NETWORK" />
               </Form.Item>
             </Col>
           </Row>
 
-          <Form.Item name="parentId" label="父级分类">
+          <Form.Item name="parentId" label="Parent category">
             <TreeSelect
-              placeholder="不选择则为顶级分类"
+              placeholder="If not selected, it will be the top category"
               allowClear
               treeDefaultExpandAll
               treeData={parentTreeData}
             />
           </Form.Item>
 
-          <Form.Item name="description" label="分类描述">
-            <TextArea rows={3} placeholder="请输入分类描述" />
+          <Form.Item name="description" label="Category Description">
+            <TextArea rows={3} placeholder="Please enter a category description" />
           </Form.Item>
 
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item
                 name="workflowDefinitionKey"
-                label="关联工作流"
-                tooltip="该分类下的工单默认走此工作流；工单类型已配置工作流时以工单类型为准"
+                label="Associated Workflow"
+                tooltip="Work orders under this category follow this workflow by default; when the work order type has configured workflow, the work order type shall prevail."
               >
-                <Select placeholder="请选择工作流（可选）" allowClear showSearch optionFilterProp="children" options={workflows.map(w => ({ value: w.key, label: w.name }))} />
+                <Select placeholder="Please select a workflow (optional)" allowClear showSearch optionFilterProp="children" options={workflows.map(w => ({ value: w.key, label: w.name }))} />
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item name="departmentId" label="所属部门">
-                <Select placeholder="请选择部门（可选）" allowClear showSearch optionFilterProp="children" options={departments.map(d => ({ value: d.id, label: d.name }))} />
+              <Form.Item name="departmentId" label="Department">
+                <Select placeholder="Please select a department (optional)" allowClear showSearch optionFilterProp="children" options={departments.map(d => ({ value: d.id, label: d.name }))} />
               </Form.Item>
             </Col>
           </Row>
 
           <Row gutter={16}>
             <Col span={12}>
-              <Form.Item name="sortOrder" label="排序顺序" initialValue={1}>
-                <InputNumber min={0} style={{ width: '100%' }} placeholder="数字越小越靠前" />
+              <Form.Item name="sortOrder" label="Sort order" initialValue={1}>
+                <InputNumber min={0} style={{ width: '100%' }} placeholder="The smaller the number, the higher it is." />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item
                 name="isActive"
-                label="启用状态"
+                label="Enabled"
                 valuePropName="checked"
                 initialValue={true}
               >

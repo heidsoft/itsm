@@ -54,7 +54,7 @@ describe('SystemHealth', () => {
 
     expect(screen.getByText('95.0%')).toBeInTheDocument();
     expect(screen.getByText('4.2')).toBeInTheDocument();
-    expect(screen.queryByText('实时')).not.toBeInTheDocument();
+    expect(screen.queryByText("real time")).not.toBeInTheDocument();
   });
 
   it('未接入的指标显示"未接入"，且不参与整体健康评级', async () => {
@@ -75,10 +75,10 @@ describe('SystemHealth', () => {
 
     render(<SystemHealth />);
 
-    await waitFor(() => expect(screen.getAllByText('未接入').length).toBeGreaterThan(0));
+    await waitFor(() => expect(screen.getAllByText("Not measured").length).toBeGreaterThan(0));
     expect(screen.queryByText('0.0%')).not.toBeInTheDocument();
-    expect(screen.queryByText('严重')).not.toBeInTheDocument();
-    expect(screen.getAllByText('优秀').length).toBeGreaterThan(0);
+    expect(screen.queryByText("Critical")).not.toBeInTheDocument();
+    expect(screen.getAllByText("Excellent").length).toBeGreaterThan(0);
   });
 
   it('HTTP 指标未采集到时不出错误率与吞吐读数', async () => {
@@ -99,7 +99,7 @@ describe('SystemHealth', () => {
 
     render(<SystemHealth />);
 
-    await waitFor(() => expect(screen.getAllByText('未接入').length).toBeGreaterThan(1));
+    await waitFor(() => expect(screen.getAllByText("Not measured").length).toBeGreaterThan(1));
     // 未采集时不能把默认 0 渲染成「0.00% 错误率 / 0.0 吞吐」。
     expect(screen.queryByText('0.00%')).not.toBeInTheDocument();
     expect(screen.queryByText('0.0')).not.toBeInTheDocument();
@@ -110,8 +110,8 @@ describe('SystemHealth', () => {
 
     render(<SystemHealth />);
 
-    await waitFor(() => expect(screen.getByText('采样区间 400ms')).toBeInTheDocument());
-    expect(screen.queryByText('采样区间 0s')).not.toBeInTheDocument();
+    await waitFor(() => expect(screen.getByText("Sample window 400ms")).toBeInTheDocument());
+    expect(screen.queryByText("Sample window 0s")).not.toBeInTheDocument();
   });
 
   it('最后更新时间取服务端采样时间而不是浏览器当前时间', async () => {
@@ -121,7 +121,7 @@ describe('SystemHealth', () => {
 
     const expected = formatDateTime('2026-10-14T02:00:00.000Z');
     await waitFor(() =>
-      expect(screen.getByText(`最后更新: ${expected}`)).toBeInTheDocument(),
+      expect(screen.getByText(`Last Update: ${expected}`)).toBeInTheDocument(),
     );
   });
 });

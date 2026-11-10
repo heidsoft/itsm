@@ -235,7 +235,7 @@ func (r *EntRepository) DecideToolInvocation(ctx context.Context, id, tenantID, 
 		return nil, err
 	}
 	if existing.ApprovalState != "pending" {
-		return nil, common.NewBusinessError(common.ConflictCode, "该工具调用已审批，不能重复处理", "")
+		return nil, common.NewBusinessError(common.ConflictCode, "The tool call has been approved and cannot be processed again.", "")
 	}
 
 	state := "rejected"
@@ -252,7 +252,7 @@ func (r *EntRepository) DecideToolInvocation(ctx context.Context, id, tenantID, 
 	}
 	updated, err := update.Save(ctx)
 	if ent.IsNotFound(err) {
-		return nil, common.NewBusinessError(common.ConflictCode, "该工具调用已审批，不能重复处理", "")
+		return nil, common.NewBusinessError(common.ConflictCode, "The tool call has been approved and cannot be processed again.", "")
 	}
 	if err != nil {
 		return nil, err

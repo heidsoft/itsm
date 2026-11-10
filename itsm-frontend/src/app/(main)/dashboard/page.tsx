@@ -134,7 +134,7 @@ export default function DashboardPage() {
           router.push(action.path);
         } catch (error) {
           console.error('Navigation error:', error);
-          message.error('导航失败，请稍后重试');
+          message.error('Navigation failed, please try again later');
         }
       } else {
         console.warn('Quick action missing path:', action);
@@ -147,7 +147,7 @@ export default function DashboardPage() {
   const handleRefreshIntervalChange = useCallback(
     (interval: number) => {
       setRefreshInterval(interval);
-      message.success(`刷新间隔已更新为 ${interval / 1000}秒`);
+      message.success(`The refresh interval has been updated to ${interval / 1000} seconds`);
     },
     [setRefreshInterval]
   );
@@ -156,7 +156,7 @@ export default function DashboardPage() {
   const handleAutoRefreshToggle = useCallback(
     (enabled: boolean) => {
       setAutoRefresh(enabled);
-      message.success(`自动刷新已${enabled ? '启用' : '禁用'}`);
+      message.success(`Auto refresh failed ${enabled ? 'Enabled' : 'Disabled'}`);
     },
     [setAutoRefresh]
   );
@@ -170,8 +170,8 @@ export default function DashboardPage() {
           className='flex items-center justify-between min-w-[200px]'
           onClick={e => e.stopPropagation()}
         >
-          <span className='text-sm font-medium'>自动刷新</span>
-          <Switch aria-label='自动刷新' checked={autoRefresh} onChange={handleAutoRefreshToggle} size='small' />
+          <span className='text-sm font-medium'>Auto refresh</span>
+          <Switch aria-label="Auto refresh" checked={autoRefresh} onChange={handleAutoRefreshToggle} size='small' />
         </div>
       ),
     },
@@ -182,7 +182,7 @@ export default function DashboardPage() {
           className='flex items-center justify-between min-w-[200px]'
           onClick={e => e.stopPropagation()}
         >
-          <span className='text-sm font-medium'>刷新间隔</span>
+          <span className='text-sm font-medium'>Refresh interval</span>
           <Select
             value={refreshInterval}
             onChange={value => handleRefreshIntervalChange(Number(value))}
@@ -191,10 +191,10 @@ export default function DashboardPage() {
             disabled={!autoRefresh}
             onClick={e => e.stopPropagation()}
             options={[
-              { value: 10000, label: '10秒' },
-              { value: 30000, label: '30秒' },
-              { value: 60000, label: '1分钟' },
-              { value: 300000, label: '5分钟' },
+              { value: 10000, label: '10 seconds' },
+              { value: 30000, label: '30 seconds' },
+              { value: 60000, label: '1 minute' },
+              { value: 300000, label: '5 minutes' },
             ]}
           />
         </div>
@@ -205,10 +205,10 @@ export default function DashboardPage() {
       key: 'connection',
       label: (
         <div className='flex items-center justify-between min-w-[200px]'>
-          <span className='text-sm font-medium'>连接状态</span>
+          <span className='text-sm font-medium'>Connection status</span>
           <Badge
             status={isConnected ? 'success' : 'error'}
-            text={isConnected ? '已连接' : '未连接'}
+            text={isConnected ? 'Connected' : 'Disconnected'}
           />
         </div>
       ),
@@ -217,9 +217,9 @@ export default function DashboardPage() {
       key: 'last-updated',
       label: (
         <div className='flex items-center justify-between min-w-[200px]'>
-          <span className='text-sm font-medium'>最后更新</span>
+          <span className='text-sm font-medium'>Last Update</span>
           <span className='text-xs text-gray-500 font-medium'>
-            {formatDateTime(lastUpdated) || '从未'}
+            {formatDateTime(lastUpdated) || 'Never'}
           </span>
         </div>
       ),
@@ -233,7 +233,7 @@ export default function DashboardPage() {
         <div className='text-red-500 mb-4 flex justify-center'>
           <LayoutDashboard size={64} />
         </div>
-        <h3 className='text-xl font-bold text-gray-900 mb-2'>仪表盘加载失败</h3>
+        <h3 className='text-xl font-bold text-gray-900 mb-2'>Dashboard loading failed</h3>
         <p className='text-gray-600 mb-6'>{error}</p>
         <Button
           type='primary'
@@ -242,7 +242,8 @@ export default function DashboardPage() {
           icon={<RefreshCw />}
           className='h-11 rounded-lg'
         >
-          重新加载
+
+          Reload
         </Button>
       </Card>
     );
@@ -273,16 +274,18 @@ export default function DashboardPage() {
       <div className='flex items-center justify-between mb-6 pb-4 border-b border-gray-200'>
         <div>
           <h1 className='text-2xl font-bold text-gray-900 flex items-center gap-2'>
-            AI-Native ITSM 运营仪表盘
-            {isConnected && <Badge status='success' text='在线' />}
+
+            AI-Native ITSM Operations Dashboard
+            {isConnected && <Badge status='success' text="Online" />}
           </h1>
-          <p className='text-sm text-gray-600 mt-1'>实时监控系统运行状态和关键业务指标</p>
+          <p className='text-sm text-gray-600 mt-1'>Real-time monitoring of system operating status and key business indicators</p>
         </div>
 
         <Space size='middle'>
           {lastUpdated && (
             <span className='text-sm text-gray-500'>
-              更新于 {formatDateTime(lastUpdated)}
+
+              updated on {formatDateTime(lastUpdated)}
             </span>
           )}
 
@@ -292,7 +295,8 @@ export default function DashboardPage() {
             onClick={() => refresh()}
             loading={loading}
           >
-            刷新
+
+            Refresh
           </Button>
 
           <Button
@@ -300,7 +304,8 @@ export default function DashboardPage() {
             icon={<Settings />}
             onClick={() => setSettingsOpen(true)}
           >
-            设置
+
+            Settings
           </Button>
         </Space>
       </div>
@@ -315,16 +320,18 @@ export default function DashboardPage() {
             <div className='mb-2 flex flex-wrap items-center gap-x-2 text-xs text-gray-500'>
               {ticketKpiScope === 'own' ? (
                 <span className='px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 font-medium'>
-                  工单指标：仅本人创建或受理
+
+                  Work order indicator: Only I can create or accept it
                 </span>
               ) : (
                 ticketKpiScope === 'tenant' && (
                   <span className='px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 font-medium'>
-                    工单指标：本租户全部工单
+
+                    Work order indicator: all work orders of this tenant
                   </span>
                 )
               )}
-              <span>趋势、负载与分布图表为租户全量统计</span>
+              <span>Trend, load and distribution charts provide full statistics for tenants</span>
             </div>
             <KPICards metrics={data?.kpiMetrics || []} loading={loading} />
           </div>
@@ -336,9 +343,10 @@ export default function DashboardPage() {
             <div className='mb-4'>
               <h2 className='text-lg font-bold text-gray-900 mb-1 flex items-center gap-2'>
                 <Zap className='text-orange-500 w-5 h-5' />
-                快速操作
+
+                Quick Actions
               </h2>
-              <p className='text-sm text-gray-600'>常用功能快捷入口，提升工作效率</p>
+              <p className='text-sm text-gray-600'>Quick access to commonly used functions to improve work efficiency</p>
             </div>
             {(!data?.quickActions || data.quickActions.length === 0) && !loading ? (
               <Row gutter={[16, 16]}>
@@ -348,10 +356,11 @@ export default function DashboardPage() {
                       <div className='w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center text-blue-600 mb-3'>
                         <Ticket className='w-6 h-6' />
                       </div>
-                      <h3 className='text-base font-semibold text-gray-900 mb-1'>创建工单</h3>
-                      <p className='text-sm text-gray-500 mb-4'>提交 IT 服务请求或报告问题</p>
+                      <h3 className='text-base font-semibold text-gray-900 mb-1'>Create a work order</h3>
+                      <p className='text-sm text-gray-500 mb-4'>Submit an IT service request or report an issue</p>
                       <Button type='primary' onClick={() => router.push('/tickets/create')}>
-                        去创建
+
+                        Go create
                       </Button>
                     </div>
                   </Card>
@@ -362,10 +371,11 @@ export default function DashboardPage() {
                       <div className='w-12 h-12 bg-green-50 rounded-lg flex items-center justify-center text-green-600 mb-3'>
                         <Compass className='w-6 h-6' />
                       </div>
-                      <h3 className='text-base font-semibold text-gray-900 mb-1'>浏览服务目录</h3>
-                      <p className='text-sm text-gray-500 mb-4'>查看可用的 IT 服务目录</p>
+                      <h3 className='text-base font-semibold text-gray-900 mb-1'>Browse service catalog</h3>
+                      <p className='text-sm text-gray-500 mb-4'>View available IT services catalog</p>
                       <Button type='primary' onClick={() => router.push('/service-catalog')}>
-                        去浏览
+
+                        Go to browse
                       </Button>
                     </div>
                   </Card>
@@ -376,10 +386,11 @@ export default function DashboardPage() {
                       <div className='w-12 h-12 bg-purple-50 rounded-lg flex items-center justify-center text-purple-600 mb-3'>
                         <Database className='w-6 h-6' />
                       </div>
-                      <h3 className='text-base font-semibold text-gray-900 mb-1'>配置 CMDB</h3>
-                      <p className='text-sm text-gray-500 mb-4'>管理配置项和资产关系拓扑</p>
+                      <h3 className='text-base font-semibold text-gray-900 mb-1'>Configure CMDB</h3>
+                      <p className='text-sm text-gray-500 mb-4'>Managing Configuration Items and Asset Relationship Topology</p>
                       <Button type='primary' onClick={() => router.push('/cmdb')}>
-                        去配置
+
+                        Go to configuration
                       </Button>
                     </div>
                   </Card>
@@ -390,10 +401,11 @@ export default function DashboardPage() {
                       <div className='w-12 h-12 bg-amber-50 rounded-lg flex items-center justify-center text-amber-600 mb-3'>
                         <BookOpen className='w-6 h-6' />
                       </div>
-                      <h3 className='text-base font-semibold text-gray-900 mb-1'>查阅知识库</h3>
-                      <p className='text-sm text-gray-500 mb-4'>搜索解决方案和 IT 知识文档</p>
+                      <h3 className='text-base font-semibold text-gray-900 mb-1'>Check the knowledge base</h3>
+                      <p className='text-sm text-gray-500 mb-4'>Search solutions and IT knowledge documents</p>
                       <Button type='primary' onClick={() => router.push('/knowledge')}>
-                        去查阅
+
+                        Go check
                       </Button>
                     </div>
                   </Card>
@@ -418,9 +430,10 @@ export default function DashboardPage() {
               <div className='mb-5'>
                 <h2 className='text-lg font-bold text-gray-900 mb-1 flex items-center gap-2'>
                   <LineChart className='text-blue-500 w-5 h-5' />
-                  数据分析与趋势
+
+                  Data Analysis and Trends
                 </h2>
-                <p className='text-sm text-gray-600'>系统性能和业务趋势的可视化分析</p>
+                <p className='text-sm text-gray-600'>Visual analysis of system performance and business trends</p>
               </div>
 
               <Tabs
@@ -433,7 +446,8 @@ export default function DashboardPage() {
                     label: (
                       <span className='flex items-center gap-2'>
                         <LayoutDashboard />
-                        全部图表
+
+                        All charts
                       </span>
                     ),
                     children: (
@@ -483,7 +497,8 @@ export default function DashboardPage() {
                     label: (
                       <span className='flex items-center gap-2'>
                         <LineChart />
-                        工单与事件
+
+                        Tickets and Incidents
                       </span>
                     ),
                     children: (
@@ -510,7 +525,8 @@ export default function DashboardPage() {
                     label: (
                       <span className='flex items-center gap-2'>
                         <TrendingUp />
-                        性能与满意度
+
+                        Performance and Satisfaction
                       </span>
                     ),
                     children: (
@@ -552,7 +568,7 @@ export default function DashboardPage() {
 
       {/* 仪表盘设置抽屉 */}
       <Drawer
-        title='仪表盘设置'
+        title="Dashboard settings"
         placement='right'
         width={420}
         open={settingsOpen}
@@ -564,20 +580,22 @@ export default function DashboardPage() {
               onClick={() => {
                 userPreferences.reset();
                 setPrefs(userPreferences.get());
-                message.success('设置已重置为默认');
+                message.success('Settings reset to default');
               }}
             >
-              重置
+
+              Reset
             </Button>
             <Button type='primary' onClick={() => setSettingsOpen(false)}>
-              完成
+
+              Complete
             </Button>
           </Space>
         }
       >
         {prefs ? (
           <Form layout='vertical'>
-            <Form.Item label='主题模式'>
+            <Form.Item label="Theme mode">
               <Radio.Group
                 value={themeMode}
                 onChange={e => {
@@ -585,37 +603,36 @@ export default function DashboardPage() {
                   updatePref({ theme: e.target.value });
                 }}
               >
-                <Radio.Button value='light'>浅色</Radio.Button>
-                <Radio.Button value='dark'>深色</Radio.Button>
-                <Radio.Button value='system'>跟随系统</Radio.Button>
+                <Radio.Button value='light'>light color</Radio.Button>
+                <Radio.Button value='dark'>Dark</Radio.Button>
+                <Radio.Button value='system'>Follow the system</Radio.Button>
               </Radio.Group>
             </Form.Item>
 
-            <Form.Item label='语言'>
+            <Form.Item label="Language">
               <Select
                 value={prefs.language}
                 onChange={v => updatePref({ language: v })}
                 options={[
-                  { value: 'zh-CN', label: '简体中文' },
                   { value: 'en-US', label: 'English' },
                 ]}
               />
             </Form.Item>
 
-            <Form.Item label='时区'>
+            <Form.Item label="Time zone">
               <Select
                 value={prefs.timezone}
                 onChange={v => updatePref({ timezone: v })}
                 options={[
-                  { value: 'Asia/Shanghai', label: '(UTC+8) 上海' },
-                  { value: 'Asia/Tokyo', label: '(UTC+9) 东京' },
-                  { value: 'UTC', label: '(UTC+0) 协调世界时' },
-                  { value: 'America/New_York', label: '(UTC-5) 纽约' },
+                  { value: 'Asia/Shanghai', label: '(UTC+8) Shanghai' },
+                  { value: 'Asia/Tokyo', label: '(UTC+9) Tokyo' },
+                  { value: 'UTC', label: '(UTC+0) Coordinated Universal Time' },
+                  { value: 'America/New_York', label: '(UTC-5) New York' },
                 ]}
               />
             </Form.Item>
 
-            <Form.Item label='日期格式'>
+            <Form.Item label="date format">
               <Select
                 value={prefs.dateFormat}
                 onChange={v => updatePref({ dateFormat: v })}
@@ -627,43 +644,43 @@ export default function DashboardPage() {
               />
             </Form.Item>
 
-            <Form.Item label='表格每页条数'>
+            <Form.Item label="Number of entries per table page">
               <Select
                 value={prefs.pageSize}
                 onChange={v => updatePref({ pageSize: Number(v) })}
-                options={[10, 20, 50, 100].map(n => ({ value: n, label: `${n} 条/页` }))}
+                options={[10, 20, 50, 100].map(n => ({ value: n, label: `${n} Article/page` }))}
               />
             </Form.Item>
 
-            <Divider>数据刷新</Divider>
-            <Form.Item label='自动刷新'>
+            <Divider>Data refresh</Divider>
+            <Form.Item label="Auto refresh">
               <Switch
                 checked={autoRefresh}
                 onChange={checked => {
                   setAutoRefresh(checked);
-                  message.success(`自动刷新已${checked ? '启用' : '关闭'}`);
+                  message.success(`Auto refresh failed ${checked ? 'Enabled' : 'Close'}`);
                 }}
               />
             </Form.Item>
-            <Form.Item label='刷新间隔'>
+            <Form.Item label="Refresh interval">
               <Select
                 value={refreshInterval}
                 disabled={!autoRefresh}
                 onChange={v => {
                   setRefreshInterval(Number(v));
-                  message.success(`刷新间隔已更新为 ${Number(v) / 1000} 秒`);
+                  message.success(`The refresh interval has been updated to ${Number(v) / 1000} seconds`);
                 }}
                 options={[
-                  { value: 10000, label: '10 秒' },
-                  { value: 30000, label: '30 秒' },
-                  { value: 60000, label: '1 分钟' },
-                  { value: 300000, label: '5 分钟' },
+                  { value: 10000, label: '10 seconds' },
+                  { value: 30000, label: '30 seconds' },
+                  { value: 60000, label: '1 minute' },
+                  { value: 300000, label: '5 minutes' },
                 ]}
               />
             </Form.Item>
 
-            <Divider>通知</Divider>
-            <Form.Item label='通知渠道'>
+            <Divider>Notification</Divider>
+            <Form.Item label="Notification Channels">
               <Checkbox.Group
                 value={Object.entries(prefs.notifications || {})
                   .filter(([k, v]) => k !== 'types' && v)
@@ -679,9 +696,9 @@ export default function DashboardPage() {
                   });
                 }}
               >
-                <Checkbox value='email'>邮件</Checkbox>
-                <Checkbox value='browser'>浏览器</Checkbox>
-                <Checkbox value='mobile'>移动端</Checkbox>
+                <Checkbox value='email'>Email</Checkbox>
+                <Checkbox value='browser'>Browser</Checkbox>
+                <Checkbox value='mobile'>Mobile version</Checkbox>
               </Checkbox.Group>
             </Form.Item>
           </Form>

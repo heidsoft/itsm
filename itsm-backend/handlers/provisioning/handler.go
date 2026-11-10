@@ -37,17 +37,17 @@ func NewHandler(provisioningService *service.ProvisioningService, logger *zap.Su
 func (h *Handler) StartProvisioning(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "无效的服务请求ID")
+		common.Fail(c, common.ParamErrorCode, "Invalid service request ID")
 		return
 	}
 	tenantID := c.GetInt("tenant_id")
 	if tenantID == 0 {
-		common.Fail(c, common.UnauthorizedCode, "租户信息缺失")
+		common.Fail(c, common.UnauthorizedCode, "Tenant information is missing")
 		return
 	}
 	userID := c.GetInt("user_id")
 	if userID == 0 {
-		common.Fail(c, common.UnauthorizedCode, "用户未认证")
+		common.Fail(c, common.UnauthorizedCode, "User not authenticated")
 		return
 	}
 
@@ -59,7 +59,7 @@ func (h *Handler) StartProvisioning(c *gin.Context) {
 		// FailWithErr 会用兜底文案「创建交付任务失败」把它整段吞掉，运维拿到
 		// 409 却不知道该去补审批链还是改状态，只能翻后端日志。未分类的错误
 		// （事务/DB 故障）safeMsg 为空，仍回落兜底文案，不泄内部细节。
-		common.RespondError(c, err, "创建交付任务失败")
+		common.RespondError(c, err, "Failed to create delivery task")
 		return
 	}
 
@@ -70,18 +70,18 @@ func (h *Handler) StartProvisioning(c *gin.Context) {
 func (h *Handler) ListProvisioningTasks(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "无效的服务请求ID")
+		common.Fail(c, common.ParamErrorCode, "Invalid service request ID")
 		return
 	}
 	tenantID := c.GetInt("tenant_id")
 	if tenantID == 0 {
-		common.Fail(c, common.UnauthorizedCode, "租户信息缺失")
+		common.Fail(c, common.UnauthorizedCode, "Tenant information is missing")
 		return
 	}
 
 	tasks, err := h.provisioningService.ListTasksByServiceRequest(c.Request.Context(), id, tenantID)
 	if err != nil {
-		common.FailWithErr(c, err, "获取交付任务列表失败")
+		common.FailWithErr(c, err, "Failed to obtain delivery task list")
 		return
 	}
 	out := make([]*dto.ProvisioningTaskResponse, 0, len(tasks))
@@ -95,17 +95,17 @@ func (h *Handler) ListProvisioningTasks(c *gin.Context) {
 func (h *Handler) ExecuteProvisioningTask(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "无效的交付任务ID")
+		common.Fail(c, common.ParamErrorCode, "Invalid delivery task ID")
 		return
 	}
 	tenantID := c.GetInt("tenant_id")
 	if tenantID == 0 {
-		common.Fail(c, common.UnauthorizedCode, "租户信息缺失")
+		common.Fail(c, common.UnauthorizedCode, "Tenant information is missing")
 		return
 	}
 	userID := c.GetInt("user_id")
 	if userID == 0 {
-		common.Fail(c, common.UnauthorizedCode, "用户未认证")
+		common.Fail(c, common.UnauthorizedCode, "User not authenticated")
 		return
 	}
 
@@ -126,17 +126,17 @@ func (h *Handler) ExecuteProvisioningTask(c *gin.Context) {
 func (h *Handler) RetryProvisioningTask(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "无效的交付任务ID")
+		common.Fail(c, common.ParamErrorCode, "Invalid delivery task ID")
 		return
 	}
 	tenantID := c.GetInt("tenant_id")
 	if tenantID == 0 {
-		common.Fail(c, common.UnauthorizedCode, "租户信息缺失")
+		common.Fail(c, common.UnauthorizedCode, "Tenant information is missing")
 		return
 	}
 	userID := c.GetInt("user_id")
 	if userID == 0 {
-		common.Fail(c, common.UnauthorizedCode, "用户未认证")
+		common.Fail(c, common.UnauthorizedCode, "User not authenticated")
 		return
 	}
 
@@ -144,7 +144,7 @@ func (h *Handler) RetryProvisioningTask(c *gin.Context) {
 	var req dto.RetryProvisioningTaskRequest
 	if c.Request.ContentLength > 0 {
 		if err := c.ShouldBindJSON(&req); err != nil {
-			common.ParamError(c, "请求参数错误")
+			common.ParamError(c, "Wrong request parameters")
 			return
 		}
 	}
@@ -164,23 +164,23 @@ func (h *Handler) RetryProvisioningTask(c *gin.Context) {
 func (h *Handler) ResolveProvisioningTask(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "无效的交付任务ID")
+		common.Fail(c, common.ParamErrorCode, "Invalid delivery task ID")
 		return
 	}
 	tenantID := c.GetInt("tenant_id")
 	if tenantID == 0 {
-		common.Fail(c, common.UnauthorizedCode, "租户信息缺失")
+		common.Fail(c, common.UnauthorizedCode, "Tenant information is missing")
 		return
 	}
 	userID := c.GetInt("user_id")
 	if userID == 0 {
-		common.Fail(c, common.UnauthorizedCode, "用户未认证")
+		common.Fail(c, common.UnauthorizedCode, "User not authenticated")
 		return
 	}
 
 	var req dto.ResolveProvisioningTaskRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamError(c, "判定结果（delivered/failed）与依据说明均为必填")
+		common.ParamError(c, "Both the judgment result (delivered/failed) and the basis description are required.")
 		return
 	}
 
@@ -199,15 +199,15 @@ func (h *Handler) ResolveProvisioningTask(c *gin.Context) {
 func (h *Handler) respondProvisioningError(c *gin.Context, err error, fallback string) {
 	switch {
 	case errors.Is(err, service.ErrProvisioningTaskSucceeded):
-		common.Fail(c, common.ConflictCode, "该交付任务已完成，不能重复执行（重复执行会造成重复交付）")
+		common.Fail(c, common.ConflictCode, "The delivery task has been completed and cannot be repeated (repeated execution will cause repeated delivery)")
 	case errors.Is(err, service.ErrProvisioningTaskInProgress):
-		common.Fail(c, common.ConflictCode, "该交付任务正在执行中，请等待本次执行结束后再操作")
+		common.Fail(c, common.ConflictCode, "The delivery task is being executed, please wait until the execution is completed before proceeding.")
 	case errors.Is(err, service.ErrProvisioningTaskAttemptsExhausted):
-		common.Fail(c, common.ConflictCode, "该交付任务重试次数已达上限，请人工判定交付结果")
+		common.Fail(c, common.ConflictCode, "The number of retries for this delivery task has reached the upper limit. Please manually determine the delivery result.")
 	case errors.Is(err, service.ErrProvisioningTaskNotRetryable):
-		common.Fail(c, common.ConflictCode, "该交付任务当前状态不允许重试（仅失败任务可重试）")
+		common.Fail(c, common.ConflictCode, "The current status of this delivery task does not allow retry (only failed tasks can be retried)")
 	case errors.Is(err, service.ErrProvisioningTaskNotResolvable):
-		common.Fail(c, common.ConflictCode, "该交付任务当前状态不允许人工判定（执行中或已完成）")
+		common.Fail(c, common.ConflictCode, "The current status of this delivery task does not allow manual judgment (executing or completed)")
 	default:
 		common.FailWithErr(c, err, fallback)
 	}

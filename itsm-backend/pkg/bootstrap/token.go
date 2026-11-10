@@ -143,8 +143,8 @@ func (m *BootstrapTokenManager) ConsumeToken(ctx context.Context, rawToken strin
 		SetRole("super_admin").
 		SetPasswordHash(string(passHash)).
 		SetEmail("admin@example.com").
-		SetName("系统管理员").
-		SetDepartment("IT部门").
+		SetName("System Administrator").
+		SetDepartment("IT Department").
 		SetActive(true).
 		SetTenantID(tenantID).
 		SetIsBootstrapAdmin(true).
@@ -255,8 +255,8 @@ func (m *BootstrapTokenManager) BreakGlassCreateAdmin(ctx context.Context, tenan
 		SetRole("super_admin").
 		SetPasswordHash(string(passHash)).
 		SetEmail("admin@example.com").
-		SetName("系统管理员 (emergency)").
-		SetDepartment("IT部门").
+		SetName("System Administrator (emergency)").
+		SetDepartment("IT Department").
 		SetActive(true).
 		SetTenantID(tenantID).
 		SetIsBootstrapAdmin(true).

@@ -73,17 +73,17 @@ func AbortIfTenantError(c *gin.Context, err error) bool {
 	case ErrNoTenantContext:
 		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
 			"code":    2001,
-			"message": "租户上下文缺失",
+			"message": "Tenant context missing",
 		})
 	case ErrMSPCustomerDenied:
 		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{
 			"code":    2003,
-			"message": "MSP员工无权访问该客户租户",
+			"message": "MSP employees do not have access to this customer tenant",
 		})
 	default:
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
 			"code":    5001,
-			"message": "租户解析失败",
+			"message": "Tenant resolution failed",
 			"data":    gin.H{"error": err.Error()},
 		})
 	}

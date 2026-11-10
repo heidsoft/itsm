@@ -40,33 +40,33 @@ export default function HomePage() {
   const features = [
     {
       icon: <Ticket className="w-6 h-6" />,
-      title: '工单管理',
-      description: '完整的工单生命周期管理，支持多级分类、优先级、SLA关联与自动分配。',
+      title: 'Ticket Management',
+      description: 'Complete work order life cycle management, supporting multi-level classification, priority, SLA association and automatic allocation.',
     },
     {
       icon: <Database className="w-6 h-6" />,
       title: 'CMDB',
-      description: '配置管理数据库，支持自定义 CI 类型、关系拓扑图与变更追溯。',
+      description: 'Configuration management database, supporting custom CI types, relationship topology diagrams and change tracing.',
     },
     {
       icon: <BookOpen className="w-6 h-6" />,
-      title: '知识库 RAG',
-      description: '基于 RAG 的智能知识库，支持文档检索、向量相似度匹配与 AI 问答。',
+      title: 'Knowledge Base RAG',
+      description: 'Intelligent knowledge base based on RAG, supporting document retrieval, vector similarity matching and AI question and answer.',
     },
     {
       icon: <Workflow className="w-6 h-6" />,
-      title: 'BPMN 工作流',
-      description: '集成 BPMN 2.0 流程引擎，支持可视化流程设计与自动化审批流转。',
+      title: 'BPMN workflow',
+      description: 'Integrate BPMN 2.0 process engine to support visual process design and automated approval flow.',
     },
     {
       icon: <Gauge className="w-6 h-6" />,
-      title: 'SLA 监控',
-      description: '服务级别协议实时监控，自动告警与升级机制，保障服务质量达标。',
+      title: 'SLA Monitor',
+      description: 'Real-time monitoring of service level agreement, automatic alarm and upgrade mechanism to ensure that service quality meets standards.',
     },
     {
       icon: <BrainCircuit className="w-6 h-6" />,
-      title: 'AI 辅助分诊',
-      description: 'AI 驱动的工单分诊与分类，自动推荐处理人与解决方案。',
+      title: 'AI-assisted triage',
+      description: 'AI-driven work order triage and classification, automatically recommending handlers and solutions.',
     },
   ];
 
@@ -75,7 +75,7 @@ export default function HomePage() {
     'React 19',
     'Ant Design v6',
     'Tailwind CSS v4',
-    'Go (后端)',
+    'Go (backend)',
     'PostgreSQL',
     'Redis',
     'MinIO',
@@ -108,7 +108,8 @@ export default function HomePage() {
                   href="/dashboard"
                   className="flex items-center gap-1.5 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
                 >
-                  进入系统
+
+                  Enter the system
                   <ArrowRight className="w-4 h-4" />
                 </Link>
               ) : (
@@ -116,7 +117,8 @@ export default function HomePage() {
                   href="/login"
                   className="flex items-center gap-1.5 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
                 >
-                  登录
+
+                  Login
                   <ArrowRight className="w-4 h-4" />
                 </Link>
               )}
@@ -131,14 +133,15 @@ export default function HomePage() {
           <div className="text-center max-w-4xl mx-auto">
             <div className="inline-flex items-center gap-2 bg-blue-50 border border-blue-100 px-4 py-1.5 rounded-full mb-6">
               <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-              <span className="text-sm text-blue-700 font-medium">开源 · AI 驱动 · 开箱即用</span>
+              <span className="text-sm text-blue-700 font-medium">Open source · AI driven · Ready out of the box</span>
             </div>
             <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight">
               AI-Native ITSM
             </h1>
             <p className="text-lg md:text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-              一款开源的 AI 驱动 IT 服务管理系统，涵盖工单管理、CMDB、知识库 RAG、
-              BPMN 工作流、SLA 监控与 AI 辅助分诊，帮助企业高效管理 IT 服务全流程。
+
+              An open source AI-driven IT service management system, covering work order management, CMDB, knowledge base RAG,
+BPMN workflow, SLA monitoring and AI-assisted triage help enterprises efficiently manage the entire IT service process.
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-4 mb-12">
               <Link
@@ -148,14 +151,16 @@ export default function HomePage() {
                 className="flex items-center justify-center gap-2 bg-gray-900 text-white px-6 py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors"
               >
                 <Github className="w-5 h-5" />
-                查看源码
+
+                View source code
               </Link>
               {isLoggedIn ? (
                 <Link
                   href="/dashboard"
                   className="flex items-center justify-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors"
                 >
-                  进入系统
+
+                  Enter the system
                   <ArrowRight className="w-5 h-5" />
                 </Link>
               ) : (
@@ -163,7 +168,8 @@ export default function HomePage() {
                   href="/login"
                   className="flex items-center justify-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors"
                 >
-                  立即登录
+
+                  Login now
                   <ArrowRight className="w-5 h-5" />
                 </Link>
               )}
@@ -172,10 +178,10 @@ export default function HomePage() {
             {/* Quick Stats */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-3xl mx-auto pt-8 border-t border-gray-100">
               {[
-                { label: '开源协议', value: 'Apache 2.0' },
-                { label: '技术栈', value: 'Next.js + Go' },
-                { label: 'AI 能力', value: 'RAG + LLM' },
-                { label: '部署方式', value: 'Docker' },
+                { label: 'Open source protocol', value: 'Apache 2.0' },
+                { label: 'Technology stack', value: 'Next.js + Go' },
+                { label: 'AI Capabilities', value: 'RAG + LLM' },
+                { label: 'Deployment method', value: 'Docker' },
               ].map((stat, index) => (
                 <div key={index} className="text-center">
                   <div className="text-xl md:text-2xl font-bold text-gray-900 mb-1">
@@ -193,8 +199,8 @@ export default function HomePage() {
       <section className="py-20 bg-gray-50">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">核心功能</h2>
-            <p className="text-lg text-gray-600">覆盖 IT 服务管理全场景的六大核心能力</p>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Core Functions</h2>
+            <p className="text-lg text-gray-600">Six core capabilities covering all scenarios of IT service management</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
@@ -218,8 +224,8 @@ export default function HomePage() {
       <section className="py-20">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">快速开始</h2>
-            <p className="text-lg text-gray-600">使用 Docker Compose 一键启动完整环境</p>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Quick start</h2>
+            <p className="text-lg text-gray-600">Use Docker Compose to start the complete environment with one click</p>
           </div>
 
           <div className="max-w-3xl mx-auto">
@@ -232,20 +238,20 @@ export default function HomePage() {
                 </div>
                 <div className="flex items-center gap-1.5 text-gray-400 text-xs ml-2">
                   <Terminal className="w-3.5 h-3.5" />
-                  <span>终端</span>
+                  <span>Terminal</span>
                 </div>
               </div>
               <div className="p-6 font-mono text-sm">
-                <div className="text-gray-500 mb-1"># 克隆仓库</div>
+                <div className="text-gray-500 mb-1"># Clone repository</div>
                 <div className="text-green-400 mb-3">
                   $ git clone https://github.com/heidsoft/itsm.git
                 </div>
-                <div className="text-gray-500 mb-1"># 进入项目目录</div>
+                <div className="text-gray-500 mb-1"># Enter the project directory</div>
 				<div className="text-green-400 mb-3">$ cd itsm</div>
-				<div className="text-gray-500 mb-1"># 启动本地开发环境</div>
+				<div className="text-gray-500 mb-1"># Start local development environment</div>
 				<div className="text-green-400 mb-3">$ cp .env.dev.example .env</div>
 				<div className="text-green-400 mb-3">$ make dev-start-docker</div>
-                <div className="text-gray-500 mb-1"># 访问应用</div>
+                <div className="text-gray-500 mb-1">#Access application</div>
                 <div className="text-blue-400">$ open http://localhost:3000</div>
               </div>
             </div>
@@ -259,20 +265,22 @@ export default function HomePage() {
                     ADMIN_PASSWORD 创建，bootstrap token 是可选流程（默认未启用），不是默认模型。 */}
                 {process.env.NODE_ENV === 'development' ? (
                   <>
-                    <p className="font-medium mb-1">本地开发默认账户</p>
+                    <p className="font-medium mb-1">Local development default account</p>
                     <p>
-                      仅本地开发环境可使用 <code className="bg-blue-100 px-1.5 py-0.5 rounded text-blue-900">admin</code> /{' '}
-                      <code className="bg-blue-100 px-1.5 py-0.5 rounded text-blue-900">admin123</code>。请勿在任何可被其他人访问的部署中保留该账号。
+
+                      Only available in local development environment <code className="bg-blue-100 px-1.5 py-0.5 rounded text-blue-900">admin</code> /{' '}
+                      <code className="bg-blue-100 px-1.5 py-0.5 rounded text-blue-900">admin123</code>. Do not keep this account in any deployment that can be accessed by others.
                     </p>
                   </>
                 ) : (
                   <>
-                    <p className="font-medium mb-1">管理员凭据</p>
+                    <p className="font-medium mb-1">Administrator credentials</p>
                     <p>
-                      生产部署的管理员密码由 <code className="bg-blue-100 px-1.5 py-0.5 rounded text-blue-900">.env.prod</code> 中的{' '}
-                      <code className="bg-blue-100 px-1.5 py-0.5 rounded text-blue-900">ADMIN_PASSWORD</code> 决定（由{' '}
-                      <code className="bg-blue-100 px-1.5 py-0.5 rounded text-blue-900">itsm-init</code> 首次启动写入）。
-                      请在首次启动前设置强密码，并同步更换 JWT、数据库与 Redis 凭据。
+
+                      The admin password for the production deployment is given by <code className="bg-blue-100 px-1.5 py-0.5 rounded text-blue-900">.env.prod</code>  in{' '}
+                      <code className="bg-blue-100 px-1.5 py-0.5 rounded text-blue-900">ADMIN_PASSWORD</code>  Decision (by{' '}
+                      <code className="bg-blue-100 px-1.5 py-0.5 rounded text-blue-900">itsm-init</code>  Writing initiated for the first time).
+Please set a strong password before starting for the first time, and replace JWT, database and Redis credentials simultaneously.
                     </p>
                   </>
                 )}
@@ -286,8 +294,8 @@ export default function HomePage() {
       <section className="py-16 bg-gray-50">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">技术栈</h2>
-            <p className="text-gray-600">现代化的全栈技术方案</p>
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Technology stack</h2>
+            <p className="text-gray-600">Modern full-stack technology solution</p>
           </div>
           <div className="flex flex-wrap justify-center gap-3 max-w-3xl mx-auto">
             {techStack.map((tech, index) => (
@@ -329,7 +337,8 @@ export default function HomePage() {
                 rel="noopener noreferrer"
                 className="text-gray-400 hover:text-white transition-colors text-sm"
               >
-                问题反馈
+
+                Problem feedback
               </Link>
               <Link
                 href="https://github.com/heidsoft/itsm/blob/main/LICENSE"

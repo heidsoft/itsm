@@ -183,39 +183,39 @@ export const darkColors = {
 export const colorUsage = {
   // 主色调使用
   primary: {
-    description: '品牌主色，用于主要操作按钮、链接、选中状态等',
-    usage: ['主要按钮', '链接', '选中状态', '进度条', '品牌标识'],
-    avoid: ['大面积背景', '文本颜色', '边框颜色'],
+    description: 'The main color of the brand, used for main operation buttons, links, selected states, etc.',
+    usage: ['Main button', 'Link', 'selected state', 'Progress bar', 'Brand Identity'],
+    avoid: ['Large area background', 'Text color', 'Border color'],
   },
 
   // 中性色使用
   neutral: {
-    description: '用于文本、边框、背景等基础元素',
-    usage: ['文本颜色', '边框颜色', '背景颜色', '分割线'],
-    avoid: ['强调元素', '交互状态'],
+    description: 'Used for basic elements such as text, borders, and backgrounds',
+    usage: ['Text color', 'Border color', 'background color', 'dividing line'],
+    avoid: ['Emphasis on elements', 'Interactive status'],
   },
 
   // 语义色使用
   semantic: {
     success: {
-      description: '成功状态，用于成功提示、完成状态等',
-      usage: ['成功提示', '完成状态', '确认按钮', '进度完成'],
-      avoid: ['错误状态', '警告状态'],
+      description: 'Success status, used for success prompts, completion status, etc.',
+      usage: ['Success prompt', 'Complete status', 'Confirm button', 'Progress completed'],
+      avoid: ['Error status', 'Warning status'],
     },
     warning: {
-      description: '警告状态，用于警告提示、注意事项等',
-      usage: ['警告提示', '注意事项', '待处理状态'],
-      avoid: ['错误状态', '成功状态'],
+      description: 'Warning status, used for warning tips, precautions, etc.',
+      usage: ['Warning prompt', 'Precautions', 'Pending status'],
+      avoid: ['Error status', 'Success status'],
     },
     error: {
-      description: '错误状态，用于错误提示、危险操作等',
-      usage: ['错误提示', '危险操作', '删除按钮', '验证失败'],
-      avoid: ['成功状态', '警告状态'],
+      description: 'Error status, used for error prompts, dangerous operations, etc.',
+      usage: ['Error Message', 'Dangerous operation', 'Delete button', 'Authentication failed'],
+      avoid: ['Success status', 'Warning status'],
     },
     info: {
-      description: '信息状态，用于信息提示、帮助说明等',
-      usage: ['信息提示', '帮助说明', '中性操作'],
-      avoid: ['强调操作', '状态指示'],
+      description: 'Information status, used for information prompts, help instructions, etc.',
+      usage: ['Information prompt', 'Help instructions', 'Neutral operation'],
+      avoid: ['Emphasize action', 'Status indication'],
     },
   },
 } as const;
@@ -306,12 +306,12 @@ export const themeConfig = {
   light: {
     colors: colors,
     name: 'light',
-    description: '浅色主题，适合日间使用',
+    description: 'Light theme, suitable for daytime use',
   },
   dark: {
     colors: darkColors,
     name: 'dark',
-    description: '深色主题，适合夜间使用',
+    description: 'Dark theme, suitable for night use',
   },
 } as const;
 

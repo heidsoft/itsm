@@ -137,7 +137,7 @@ describe('CIBasicInfo', () => {
     render(<CIBasicInfo {...defaultProps} />);
 
     // 资产分类显示为 "类型 {ci_type_id}"
-    expect(screen.getByText(/类型 1/i)).toBeInTheDocument();
+    expect(screen.getByText(/Type 1/i)).toBeInTheDocument();
   });
 
   it('应该显示标签和重要性', () => {
@@ -179,6 +179,6 @@ describe('CIBasicInfo', () => {
     expect(screen.getByText('CPU 核数')).toBeInTheDocument();
     expect(screen.getByText('16')).toBeInTheDocument();
     expect(screen.getByText('纳入监控')).toBeInTheDocument();
-    expect(screen.getByText('是')).toBeInTheDocument();
+    expect(screen.getByText("Yes")).toBeInTheDocument();
   });
 });

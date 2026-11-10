@@ -43,7 +43,7 @@ func failServiceRequest(c *gin.Context, err error) {
 		common.Fail(c, common.NotFoundErrorCode, "Service request not found")
 		return
 	}
-	common.RespondError(c, err, "操作失败")
+	common.RespondError(c, err, "Operation failed")
 }
 
 func NewHandler(service *Service) *Handler {
@@ -120,7 +120,7 @@ func toApprovalDTOs(approvals []*ServiceRequestApproval) []dto.ServiceRequestApp
 func (h *Handler) Create(c *gin.Context) {
 	var req dto.CreateServiceRequestRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 	normalizeCreateServiceRequest(&req)
@@ -187,9 +187,9 @@ func (h *Handler) Get(c *gin.Context) {
 		if ent.IsNotFound(err) {
 			common.Fail(c, common.NotFoundErrorCode, "Not Found")
 		} else if common.IsAppError(err) {
-			common.FailWithErr(c, err, "操作失败")
+			common.FailWithErr(c, err, "Operation failed")
 		} else {
-			common.FailWithErr(c, err, "操作失败")
+			common.FailWithErr(c, err, "Operation failed")
 		}
 		return
 	}
@@ -212,13 +212,13 @@ func (h *Handler) toDTOForActor(req *ServiceRequest, approvals []*ServiceRequest
 func (h *Handler) ListApprovals(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "无效的服务请求ID")
+		common.Fail(c, common.ParamErrorCode, "Invalid service request ID")
 		return
 	}
 
 	tenantID := c.GetInt("tenant_id")
 	if tenantID == 0 {
-		common.Fail(c, common.UnauthorizedCode, "租户信息缺失")
+		common.Fail(c, common.UnauthorizedCode, "Tenant information is missing")
 		return
 	}
 
@@ -280,7 +280,7 @@ func (h *Handler) List(c *gin.Context) {
 
 	list, total, err := h.service.List(c.Request.Context(), tenantID, filters)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -302,7 +302,7 @@ func (h *Handler) ApplyApproval(c *gin.Context) {
 
 	var req dto.ServiceRequestApprovalActionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
@@ -421,7 +421,7 @@ func (h *Handler) Update(c *gin.Context) {
 
 	var req dto.UpdateServiceRequestRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 	normalizeUpdateServiceRequest(&req)
@@ -466,7 +466,7 @@ func (h *Handler) UpdateStatus(c *gin.Context) {
 
 	var req dto.UpdateServiceRequestStatusRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 	status := normalizeServiceRequestStatus(req.Status)
@@ -614,7 +614,7 @@ func (h *Handler) GetServiceRequestSLA(c *gin.Context) {
 		if ent.IsNotFound(err) {
 			common.Fail(c, common.NotFoundErrorCode, "Not Found")
 		} else {
-			common.FailWithErr(c, err, "操作失败")
+			common.FailWithErr(c, err, "Operation failed")
 		}
 		return
 	}

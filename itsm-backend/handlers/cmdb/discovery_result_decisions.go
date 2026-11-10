@@ -58,7 +58,7 @@ func (s *Service) ApplyDiscoveryResult(ctx context.Context, tenantID, userID, id
 		return nil, fmt.Errorf("claim discovery result %d: %w", id, err)
 	}
 	if claimed != 1 {
-		return nil, common.NewConflictError("discoveryResult", "差异已被其他操作者处理")
+		return nil, common.NewConflictError("discoveryResult", "Difference has been processed by another operator")
 	}
 
 	resource, err := s.repo.GetCloudResourceByIdentity(ctx, tenantID, result.ResourceIdentity)
@@ -66,7 +66,7 @@ func (s *Service) ApplyDiscoveryResult(ctx context.Context, tenantID, userID, id
 		if ent.IsNotFound(err) {
 			s.failApplyingDiscoveryResult(ctx, tenantID, id, "resource_missing", "资源已不存在")
 			return nil, common.NewConflictError("discoveryResult",
-				"资源已不存在（可能已被删除），请重跑发现后再决策")
+				"The resource no longer exists (may have been deleted), please rerun the discovery before making a decision.")
 		}
 		s.failApplyingDiscoveryResult(ctx, tenantID, id, "resource_load_failed", err.Error())
 		return nil, fmt.Errorf("load cloud resource by identity: %w", err)
@@ -79,7 +79,7 @@ func (s *Service) ApplyDiscoveryResult(ctx context.Context, tenantID, userID, id
 	if result.BeforeHash == "" || resource.SourceFingerprint != result.BeforeHash {
 		s.failApplyingDiscoveryResult(ctx, tenantID, id, "resource_changed", "资源在差异生成后已变化，快照过期")
 		return nil, common.NewConflictError("discoveryResult",
-			"资源自差异生成后已发生变化，当前快照已过期，请重跑发现后再决策")
+			"The resource has changed since the difference was generated. The current snapshot has expired. Please rerun the discovery before making a decision.")
 	}
 
 	applyDiscoveredSnapshot(resource, result)
@@ -98,7 +98,7 @@ func (s *Service) ApplyDiscoveryResult(ctx context.Context, tenantID, userID, id
 		return nil, fmt.Errorf("persist applied discovery result %d: %w", id, err)
 	}
 	if changed != 1 {
-		return nil, common.NewConflictError("discoveryResult", "差异状态已被其他操作者改变")
+		return nil, common.NewConflictError("discoveryResult", "Difference status has been changed by another operator")
 	}
 	result.Status = DiscoveryResultApplied
 	result.ErrorCode = ""
@@ -143,7 +143,7 @@ func (s *Service) RejectDiscoveryResult(ctx context.Context, tenantID, userID, i
 		return nil, fmt.Errorf("persist rejected discovery result %d: %w", id, err)
 	}
 	if changed != 1 {
-		return nil, common.NewConflictError("discoveryResult", "差异已被其他操作者处理")
+		return nil, common.NewConflictError("discoveryResult", "Difference has been processed by another operator")
 	}
 	result.Status = DiscoveryResultRejected
 	result.ErrorCode = ""
@@ -167,15 +167,15 @@ func (s *Service) failApplyingDiscoveryResult(ctx context.Context, tenantID, id 
 func ensureDecidableDiscoveryResult(result *DiscoveryResult) error {
 	if result.Status != DiscoveryResultPending {
 		return common.NewConflictError("discoveryResult",
-			fmt.Sprintf("差异已处理（%s），不能重复决策", result.Status))
+			fmt.Sprintf("Difference has been processed (%s), decision cannot be repeated", result.Status))
 	}
 	if result.Action != "update" {
 		return common.NewConflictError("discoveryResult",
-			fmt.Sprintf("只有 update 差异需要人工决策（当前 %s）：create 在发现时已落库，delete 不产生差异", result.Action))
+			fmt.Sprintf("Only update differences require manual decision-making (currently %s): create has been dropped when discovered, and delete does not produce differences.", result.Action))
 	}
 	if strings.TrimSpace(result.ResourceIdentity) == "" {
 		return common.NewConflictError("discoveryResult",
-			"差异缺少规范身份哈希，无法定位资源，请重跑发现")
+			"The difference lacks the canonical identity hash and the resource cannot be located. Please rerun to find out.")
 	}
 	return nil
 }

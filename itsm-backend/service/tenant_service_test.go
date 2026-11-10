@@ -214,7 +214,7 @@ func TestTenantService_CreateTenant_DuplicateCode(t *testing.T) {
 
 	_, err = service.CreateTenant(ctx, req2)
 	require.Error(t, err)
-	assert.Contains(t, err.Error(), "租户代码已存在")
+	assert.Contains(t, err.Error(), "Tenant code already exists")
 }
 
 func TestTenantService_CreateTenant_WithExpiry(t *testing.T) {
@@ -261,7 +261,7 @@ func TestTenantService_GetTenantByCode_NotFound(t *testing.T) {
 
 	_, err := service.GetTenantByCode(ctx, "NOT-EXIST")
 	require.Error(t, err)
-	assert.Contains(t, err.Error(), "租户不存在")
+	assert.Contains(t, err.Error(), "Tenant does not exist")
 }
 
 func TestTenantService_GetTenant_Success(t *testing.T) {
@@ -289,7 +289,7 @@ func TestTenantService_GetTenant_NotFound(t *testing.T) {
 
 	_, err := service.GetTenant(ctx, 99999)
 	require.Error(t, err)
-	assert.Contains(t, err.Error(), "租户不存在")
+	assert.Contains(t, err.Error(), "Tenant does not exist")
 }
 
 // ==================== 更新租户状态测试 ====================
@@ -512,7 +512,7 @@ func TestTenantService_UpdateTenant_NotFound(t *testing.T) {
 
 	_, err := service.UpdateTenant(ctx, 99999, req)
 	require.Error(t, err)
-	assert.Contains(t, err.Error(), "租户不存在")
+	assert.Contains(t, err.Error(), "Tenant does not exist")
 }
 
 func TestTenantService_UpdateTenant_PartialUpdate(t *testing.T) {
@@ -571,7 +571,7 @@ func TestTenantService_DeleteTenant_NotFound(t *testing.T) {
 
 	err := service.DeleteTenant(ctx, 99999)
 	require.Error(t, err)
-	assert.Contains(t, err.Error(), "租户不存在")
+	assert.Contains(t, err.Error(), "Tenant does not exist")
 }
 
 func TestTenantService_DeleteTenant_WithUsers(t *testing.T) {

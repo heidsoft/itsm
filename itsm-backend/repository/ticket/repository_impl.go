@@ -280,7 +280,7 @@ func (r *EntRepository) Update(ctx context.Context, id int, params *UpdateParams
 	// 乐观锁检查：冲突必须以类型化 VersionConflictError 上抛，
 	// handler/classifyError 依赖它映射为 409(4090)，裸字符串会掉进 500 兜底。
 	if current.Version != params.Version {
-		return nil, common.NewVersionConflictError("工单", id, params.Version, current.Version)
+		return nil, common.NewVersionConflictError("Ticket", id, params.Version, current.Version)
 	}
 
 	builder := r.Client().Ticket.UpdateOneID(id).
@@ -344,7 +344,7 @@ func (r *EntRepository) Update(ctx context.Context, id int, params *UpdateParams
 				Where(ticket.IDEQ(id), ticket.TenantIDEQ(tenantID), ticket.DeletedAtIsNil()).
 				Only(ctx)
 			if lerr == nil {
-				return nil, common.NewVersionConflictError("工单", id, params.Version, latest.Version)
+				return nil, common.NewVersionConflictError("Ticket", id, params.Version, latest.Version)
 			}
 			return nil, fmt.Errorf("ticket not found: %w", lerr)
 		}
@@ -369,7 +369,7 @@ func (r *EntRepository) UpdateWithTxHook(ctx context.Context, id int, params *Up
 		return nil, fmt.Errorf("get ticket for update: %w", err)
 	}
 	if currentEntity.Version != params.Version {
-		return nil, common.NewVersionConflictError("工单", id, params.Version, currentEntity.Version)
+		return nil, common.NewVersionConflictError("Ticket", id, params.Version, currentEntity.Version)
 	}
 	builder := tx.Ticket.UpdateOneID(id).
 		Where(ticket.TenantIDEQ(tenantID), ticket.DeletedAtIsNil(), ticket.VersionEQ(params.Version)).
@@ -427,7 +427,7 @@ func (r *EntRepository) UpdateWithTxHook(ctx context.Context, id int, params *Up
 				Where(ticket.IDEQ(id), ticket.TenantIDEQ(tenantID), ticket.DeletedAtIsNil()).
 				Only(ctx)
 			if lerr == nil {
-				return nil, common.NewVersionConflictError("工单", id, params.Version, latest.Version)
+				return nil, common.NewVersionConflictError("Ticket", id, params.Version, latest.Version)
 			}
 			return nil, fmt.Errorf("ticket not found: %w", lerr)
 		}

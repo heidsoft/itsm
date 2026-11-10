@@ -59,10 +59,10 @@ describe('CreateTicketPage 工单分类加载', () => {
 
     renderPage();
 
-    expect(await screen.findByText(/没有「查看工单分类」权限/)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '重试加载分类' })).toBeEnabled();
+    expect(await screen.findByText(/The current account does not have the "View Work Order Category" permission\. You can still submit the category if it is left blank\. Please contact the administrator to grant this permission for your role\./)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: "Retry loading categories" })).toBeEnabled();
     // 403 不是「后端没数据」，两种失败不得共用一句文案。
-    expect(screen.queryByText(/工单分类加载失败/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Failed to load work order category:/)).not.toBeInTheDocument();
   });
 
   it('服务端失败给出原因，重试成功后错误提示消失', async () => {
@@ -74,14 +74,14 @@ describe('CreateTicketPage 工单分类加载', () => {
 
     renderPage();
 
-    expect(await screen.findByText(/工单分类加载失败：HTTP error! status: 500/)).toBeInTheDocument();
+    expect(await screen.findByText(/Failed to load work order category:HTTP error! status: 500/)).toBeInTheDocument();
 
-    await userEvent.click(screen.getByRole('button', { name: '重试加载分类' }));
+    await userEvent.click(screen.getByRole('button', { name: "Retry loading categories" }));
 
     await waitFor(() => expect(mockedCategoryApi.getCategories).toHaveBeenCalledTimes(2));
     expect(
       await waitFor(() =>
-        expect(screen.queryByText(/工单分类加载失败/)).not.toBeInTheDocument(),
+        expect(screen.queryByText(/Failed to load work order category:/)).not.toBeInTheDocument(),
       ),
     ).toBeUndefined();
   });
@@ -94,7 +94,7 @@ describe('CreateTicketPage 工单分类加载', () => {
     renderPage();
 
     await waitFor(() => expect(mockedCategoryApi.getCategories).toHaveBeenCalledTimes(1));
-    expect(screen.queryByText(/查看工单分类」权限/)).not.toBeInTheDocument();
-    expect(screen.queryByText(/工单分类加载失败/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/The current account does not have the "View Work Order Category" permission\. You can still submit the category if it is left blank\. Please contact the administrator to grant this permission for your role\./)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Failed to load work order category:/)).not.toBeInTheDocument();
   });
 });

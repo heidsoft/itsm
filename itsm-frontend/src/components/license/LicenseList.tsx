@@ -70,7 +70,7 @@ const LicenseList: React.FC = () => {
       setData(resp.items);
       setTotal(resp.total);
     } catch (error) {
-      message.error('加载许可证列表失败');
+      message.error('Failed to load license list');
     } finally {
       setLoading(false);
     }
@@ -105,7 +105,7 @@ const LicenseList: React.FC = () => {
 
   const columns = [
     {
-      title: '许可证名称',
+      title: 'LicensesName',
       dataIndex: 'name',
       key: 'name',
       width: 200,
@@ -119,47 +119,47 @@ const LicenseList: React.FC = () => {
       ),
     },
     {
-      title: '类型',
+      title: 'Type',
       dataIndex:'licenseType',
       key:'licenseType',
       width: 120,
       render: (type: string) => (
         <Tag color={typeColors[type] || 'default'}>
           {type === 'perpetual'
-            ? '永久'
+            ? 'Permanent'
             : type === 'subscription'
-              ? '订阅'
+              ? 'Subscribe'
               : type === 'per-user'
-                ? '按用户'
+                ? 'By user'
                 : type === 'per-seat'
-                  ? '按席位'
+                  ? 'By seat'
                   : type === 'site'
-                    ? '站点'
+                    ? 'site'
                     : type}
         </Tag>
       ),
     },
     {
-      title: '状态',
+      title: 'Status',
       dataIndex: 'status',
       key: 'status',
       width: 100,
       render: (status: string) => (
         <Tag color={statusColors[status] || 'default'}>
           {status === 'active'
-            ? '有效'
+            ? 'valid'
             : status === 'expired'
-              ? '已过期'
+              ? 'Expired'
               : status === 'expiring-soon'
-                ? '即将过期'
+                ? 'Expiring soon'
                 : status === 'depleted'
-                  ? '已耗尽'
+                  ? 'Exhausted'
                   : status}
         </Tag>
       ),
     },
     {
-      title: '使用情况',
+      title: 'Usage',
       key: 'usage',
       width: 150,
       render: (_: any, record: any) => {
@@ -176,7 +176,7 @@ const LicenseList: React.FC = () => {
       },
     },
     {
-      title: '供应商',
+      title: 'Supplier',
       dataIndex: 'vendor',
       key: 'vendor',
       width: 150,
@@ -189,48 +189,48 @@ const LicenseList: React.FC = () => {
       ),
     },
     {
-      title: '到期日期',
+      title: 'Expiration date',
       dataIndex:'expiryDate',
       key:'expiryDate',
       width: 120,
       render: (date: string) => {
         // 处理空值和空白字符串
-        if (!date || date.trim() === '') return '永久';
+        if (!date || date.trim() === '') return 'Permanent';
         const days = dayjs(date).diff(dayjs(), 'day');
         return (
           <span style={{ color: days < 30 ? '#ff4d4f' : undefined }}>
-            {date} {days > 0 && days < 30 && `(${days}天后到期)`}
+            {date} {days > 0 && days < 30 && `(${days} Expires days later)`}
           </span>
         );
       },
     },
     {
-      title: '创建时间',
+      title: 'Created',
       dataIndex: 'createdAt',
       key: 'createdAt',
       width: 150,
       render: (date: string) => dayjs(date).format('YYYY-MM-DD HH:mm'),
     },
     {
-      title: '操作',
+      title: 'Actions',
       key: 'action',
       width: 120,
       render: (_: any, record: any) => (
-        <Space aria-label="操作按钮">
-          <Tooltip title="查看许可证详情">
+        <Space aria-label="Action button">
+          <Tooltip title="View license details">
             <Button
               type="text"
               icon={<Eye />}
               onClick={() => router.push(`/licenses/${record.id}`)}
-              aria-label={`查看许可证 ${record.name || '详情'}`}
+              aria-label={`View license ${record.name || 'Details'}`}
             />
           </Tooltip>
-          <Tooltip title="编辑许可证信息">
+          <Tooltip title="Edit license information">
             <Button
               type="text"
               icon={<Pencil />}
               onClick={() => router.push(`/licenses/${record.id}/edit`)}
-              aria-label={`编辑许可证 ${record.name || '详情'}`}
+              aria-label={`Edit license ${record.name || 'Details'}`}
             />
           </Tooltip>
         </Space>
@@ -243,13 +243,13 @@ const LicenseList: React.FC = () => {
       <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
         <Col xs={24} sm={12} md={8} lg={6} xl={4}>
           <Card>
-            <Statistic title="总许可证" value={stats.total || 0} prefix={<Key />} />
+            <Statistic title="General license" value={stats.total || 0} prefix={<Key />} />
           </Card>
         </Col>
         <Col xs={24} sm={12} md={8} lg={6} xl={4}>
           <Card>
             <Statistic
-              title="有效"
+              title="valid"
               value={stats.active || 0}
               styles={{ content: { color: '#52c41a' } }}
             />
@@ -258,7 +258,7 @@ const LicenseList: React.FC = () => {
         <Col xs={24} sm={12} md={8} lg={6} xl={4}>
           <Card>
             <Statistic
-              title="即将过期"
+              title="Expiring soon"
               value={stats.expiringSoon || 0}
               styles={{ content: { color: '#faad14' } }}
             />
@@ -267,7 +267,7 @@ const LicenseList: React.FC = () => {
         <Col xs={24} sm={12} md={8} lg={6} xl={4}>
           <Card>
             <Statistic
-              title="已过期"
+              title="Expired"
               value={stats.expired || 0}
               styles={{ content: { color: '#ff4d4f' } }}
             />
@@ -276,7 +276,7 @@ const LicenseList: React.FC = () => {
         <Col xs={24} sm={12} md={8} lg={6} xl={4}>
           <Card>
             <Statistic
-              title="合规率"
+              title="Compliance Rate"
               value={stats.complianceRate || 0}
               suffix="%"
               styles={{
@@ -289,47 +289,49 @@ const LicenseList: React.FC = () => {
 
       <Card>
         <Form form={form} layout="inline" style={{ marginBottom: 16 }}>
-          <Form.Item name="status" label="状态">
+          <Form.Item name="status" label="Status">
             <Select
-              placeholder="选择状态"
+              placeholder="Select status"
               allowClear
               style={{ width: 150 }}
               onChange={handleSearch}
               options={[
-                { value: 'active', label: '有效' },
-                { value: 'expired', label: '已过期' },
-                { value: 'expiring-soon', label: '即将过期' },
-                { value: 'depleted', label: '已耗尽' },
+                { value: 'active', label: 'valid' },
+                { value: 'expired', label: 'Expired' },
+                { value: 'expiring-soon', label: 'Expiring soon' },
+                { value: 'depleted', label: 'Exhausted' },
               ]}
             />
           </Form.Item>
-          <Form.Item name="licenseType" label="类型">
+          <Form.Item name="licenseType" label="Type">
             <Select
-              placeholder="选择类型"
+              placeholder="Select"
               allowClear
               style={{ width: 150 }}
               onChange={handleSearch}
               options={[
-                { value: 'perpetual', label: '永久' },
-                { value: 'subscription', label: '订阅' },
-                { value: 'per-user', label: '按用户' },
-                { value: 'per-seat', label: '按席位' },
-                { value: 'site', label: '站点' },
+                { value: 'perpetual', label: 'Permanent' },
+                { value: 'subscription', label: 'Subscribe' },
+                { value: 'per-user', label: 'By user' },
+                { value: 'per-seat', label: 'By seat' },
+                { value: 'site', label: 'site' },
               ]}
             />
           </Form.Item>
           <Form.Item>
             <Space>
               <Button type="primary" icon={<Search />} onClick={handleSearch}>
-                搜索
+
+                Search
               </Button>
-              <Button onClick={handleReset}>重置</Button>
+              <Button onClick={handleReset}>Reset</Button>
               <Button
                 type="primary"
                 icon={<Plus />}
                 onClick={() => router.push('/licenses/new')}
               >
-                创建许可证
+
+                Create license
               </Button>
             </Space>
           </Form.Item>
@@ -343,9 +345,10 @@ const LicenseList: React.FC = () => {
           scroll={{ x: 'max-content' }}
           locale={{
             emptyText: (
-              <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无许可证数据">
+              <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="No license data yet">
                 <Button type="primary" onClick={() => router.push('/licenses/new')}>
-                  创建许可证
+
+                  Create license
                 </Button>
               </Empty>
             ),
@@ -357,7 +360,7 @@ const LicenseList: React.FC = () => {
             onChange: handlePageChange,
             showSizeChanger: true,
             showQuickJumper: true,
-            showTotal: total => `共 ${total} 条`,
+            showTotal: total => `Total ${total} items`,
             pageSizeOptions: ['10', '20', '50', '100'],
           }}
         />

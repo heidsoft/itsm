@@ -33,7 +33,7 @@ export default function CustomersPage() {
       setCustomers(c.items);
       setBranches(b.items);
     } catch {
-      message.error('加载数据失败');
+      message.error('Failed to load data');
     } finally {
       setLoading(false);
     }
@@ -46,21 +46,21 @@ export default function CustomersPage() {
     try {
       if (editingCustomer) {
         await emailIntakeService.updateCustomer(editingCustomer.id, { ...editingCustomer, ...values });
-        message.success('客户已更新');
+        message.success('Customer updated');
       } else {
         await emailIntakeService.createCustomer({ ...values, status: 'active' });
-        message.success('客户已创建');
+        message.success('Customer has been created');
       }
       setCustomerModal(false);
       customerForm.resetFields();
       setEditingCustomer(null);
       load();
-    } catch { message.error('保存失败'); }
+    } catch { message.error('SaveFailed'); }
   };
 
   const disableCustomer = async (id: number) => {
     await emailIntakeService.disableCustomer(id);
-    message.success('客户已停用');
+    message.success('Customer deactivated');
     load();
   };
 
@@ -68,17 +68,17 @@ export default function CustomersPage() {
     const values = await branchForm.validateFields();
     try {
       await emailIntakeService.createBranch({ ...values, customerId: selectedCustomer!.id, status: 'active' });
-      message.success('分支已添加');
+      message.success('Branch added');
       setBranchModal(false);
       branchForm.resetFields();
       load();
-    } catch { message.error('保存失败'); }
+    } catch { message.error('SaveFailed'); }
   };
 
   const branchColumns = [
     { title: 'ID', dataIndex: 'id', width: 60 },
-    { title: '名称', dataIndex: 'name' },
-    { title: '状态', dataIndex: 'status', render: (s: string) => <Tag color={s === 'active' ? 'green' : 'default'}>{s === 'active' ? '活跃' : '停用'}</Tag> },
+    { title: 'Name', dataIndex: 'name' },
+    { title: 'Status', dataIndex: 'status', render: (s: string) => <Tag color={s === 'active' ? 'green' : 'default'}>{s === 'active' ? 'Active' : 'Disable'}</Tag> },
   ];
 
   const expandedRowRender = (record: ServiceCustomer) => {
@@ -87,7 +87,8 @@ export default function CustomersPage() {
       <div className="pl-8">
         <Space className="mb-2">
           <Button size="small" icon={<PlusOutlined />} onClick={() => { setSelectedCustomer(record); setBranchModal(true); }}>
-            添加分支
+
+            Add branch
           </Button>
         </Space>
         <Table
@@ -100,22 +101,22 @@ export default function CustomersPage() {
 
   const columns = [
     { title: 'ID', dataIndex: 'id', width: 60 },
-    { title: '客户名称', dataIndex: 'name' },
-    { title: '简称', dataIndex: 'shortName' },
-    { title: '别名', dataIndex: 'aliases', render: (v: string[]) => v?.length ? v.map(a => <Tag key={a}>{a}</Tag>) : null },
-    { title: '分支数', render: (_: unknown, r: ServiceCustomer) => branches.filter(b => b.customerId === r.id && b.status === 'active').length },
-    { title: '状态', dataIndex: 'status', render: (s: string) => <Tag color={s === 'active' ? 'green' : 'default'}>{s === 'active' ? '活跃' : '停用'}</Tag> },
+    { title: 'Customer name', dataIndex: 'name' },
+    { title: 'Abbreviation', dataIndex: 'shortName' },
+    { title: 'Alias', dataIndex: 'aliases', render: (v: string[]) => v?.length ? v.map(a => <Tag key={a}>{a}</Tag>) : null },
+    { title: 'Number of branches', render: (_: unknown, r: ServiceCustomer) => branches.filter(b => b.customerId === r.id && b.status === 'active').length },
+    { title: 'Status', dataIndex: 'status', render: (s: string) => <Tag color={s === 'active' ? 'green' : 'default'}>{s === 'active' ? 'Active' : 'Disable'}</Tag> },
     {
-      title: '操作', width: 160, render: (_: unknown, r: ServiceCustomer) => (
+      title: 'Actions', width: 160, render: (_: unknown, r: ServiceCustomer) => (
         <Space>
           <Button size="small" icon={<EditOutlined />} onClick={() => {
             setEditingCustomer(r);
             customerForm.setFieldsValue(r);
             setCustomerModal(true);
-          }}>编辑</Button>
+          }}>Edit</Button>
           {r.status === 'active' && (
-            <Popconfirm title="确定停用该客户？" onConfirm={() => disableCustomer(r.id)}>
-              <Button size="small" danger icon={<DeleteOutlined />}>停用</Button>
+            <Popconfirm title="Are you sure you want to deactivate this customer?" onConfirm={() => disableCustomer(r.id)}>
+              <Button size="small" danger icon={<DeleteOutlined />}>Disable</Button>
             </Popconfirm>
           )}
         </Space>
@@ -127,14 +128,14 @@ export default function CustomersPage() {
     <div>
       <Card>
         <div className="flex items-center justify-between mb-4">
-          <Title level={4} className="!mb-0">客户资料管理</Title>
+          <Title level={4} className="!mb-0">Customer data management</Title>
           <Space>
-            <Button icon={<ReloadOutlined />} onClick={load}>刷新</Button>
+            <Button icon={<ReloadOutlined />} onClick={load}>Refresh</Button>
             <Button type="primary" icon={<PlusOutlined />} onClick={() => {
               setEditingCustomer(null);
               customerForm.resetFields();
               setCustomerModal(true);
-            }}>新增客户</Button>
+            }}>Add new customer</Button>
           </Space>
         </div>
         <Table
@@ -145,32 +146,32 @@ export default function CustomersPage() {
       </Card>
 
       <Modal
-        title={editingCustomer ? '编辑客户' : '新增客户'} open={customerModal}
+        title={editingCustomer ? 'Edit customer' : 'Add new customer'} open={customerModal}
         onOk={saveCustomer} onCancel={() => setCustomerModal(false)}
       >
         <Form form={customerForm} layout="vertical">
-          <Form.Item name="name" label="客户名称" rules={[{ required: true }]}>
-            <Input placeholder="例如：北京某某科技有限公司" />
+          <Form.Item name="name" label="Customer name" rules={[{ required: true }]}>
+            <Input placeholder="For example: Beijing XX Technology Co., Ltd." />
           </Form.Item>
-          <Form.Item name="shortName" label="简称">
-            <Input placeholder="例如：某某科技" />
+          <Form.Item name="shortName" label="Abbreviation">
+            <Input placeholder="For example: XX Technology" />
           </Form.Item>
-          <Form.Item name="aliases" label="别名（逗号分隔）">
-            <Input placeholder="客户名称的其他写法" />
+          <Form.Item name="aliases" label="Aliases (comma separated)">
+            <Input placeholder="Alternative ways of writing customer name" />
           </Form.Item>
         </Form>
       </Modal>
 
       <Modal
-        title={`添加分支 - ${selectedCustomer?.name || ''}`} open={branchModal}
+        title={`Add branch - ${selectedCustomer?.name || ''}`} open={branchModal}
         onOk={saveBranch} onCancel={() => setBranchModal(false)}
       >
         <Form form={branchForm} layout="vertical">
-          <Form.Item name="name" label="分支名称" rules={[{ required: true }]}>
-            <Input placeholder="例如：上海分公司" />
+          <Form.Item name="name" label="Branch name" rules={[{ required: true }]}>
+            <Input placeholder="For example: Shanghai Branch" />
           </Form.Item>
-          <Form.Item name="aliases" label="别名（逗号分隔）">
-            <Input placeholder="分支的其他写法" />
+          <Form.Item name="aliases" label="Aliases (comma separated)">
+            <Input placeholder="Other ways to write branches" />
           </Form.Item>
         </Form>
       </Modal>

@@ -93,10 +93,10 @@ describe('TicketTypesPage 权限门禁', () => {
   it('只读角色不渲染写操作，并说明需要哪个权限码', async () => {
     renderPage();
 
-    expect(await screen.findByText('只读')).toBeInTheDocument();
-    expect(screen.getByText(/新建、编辑、复制、启停和恢复需要 ticket_type:manage/)).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: '新建类型' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: '编辑' })).not.toBeInTheDocument();
+    expect(await screen.findByText("Readonly")).toBeInTheDocument();
+    expect(screen.getByText(/The current role only has view permissions\. New, edit, copy, start, stop, and restore require ticket_type:manage\. Preset installation requires ticket_type:install_preset\./)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: "New type" })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: "Edit" })).not.toBeInTheDocument();
   });
 
   // 预设库降为 ticket_type:read 后，坐席可以浏览内容，但安装按钮不出现。
@@ -104,13 +104,13 @@ describe('TicketTypesPage 权限门禁', () => {
     const user = userEvent.setup();
     renderPage();
 
-    await user.click(screen.getByRole('button', { name: '从预设安装' }));
+    await user.click(screen.getByRole('button', { name: "Install from default" }));
 
     const dialog = await screen.findByRole('dialog');
     expect(within(dialog).getByText('通用事件')).toBeInTheDocument();
     expect(mockedApi.listPresets).toHaveBeenCalledTimes(1);
-    expect(within(dialog).queryByRole('button', { name: '安装' })).not.toBeInTheDocument();
-    expect(within(dialog).getByText(/安装需要 ticket_type:install_preset/)).toBeInTheDocument();
+    expect(within(dialog).queryByRole('button', { name: "Installation" })).not.toBeInTheDocument();
+    expect(within(dialog).getByText(/The current role can browse the preset content, but the installation requires ticket_type:install_preset\. Please contact the administrator to enable it for the current role\./)).toBeInTheDocument();
   });
 
   // it_admin 口径：manage + install_preset 都补齐后，写按钮与安装按钮恢复。
@@ -120,11 +120,11 @@ describe('TicketTypesPage 权限门禁', () => {
     const user = userEvent.setup();
     renderPage();
 
-    expect(screen.getByRole('button', { name: /新建类型/ })).toBeInTheDocument();
-    expect(await screen.findByRole('button', { name: '编辑' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /New type/ })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: "Edit" })).toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: '从预设安装' }));
-    const installButton = await screen.findByRole('button', { name: '安装' });
+    await user.click(screen.getByRole('button', { name: "Install from default" }));
+    const installButton = await screen.findByRole('button', { name: "Installation" });
     await user.click(installButton);
     await waitFor(() => expect(mockedApi.installPreset).toHaveBeenCalledWith('general-incident'));
     // 安装成功后关弹窗并回读列表，使用者能在表格里看到新类型
@@ -141,8 +141,8 @@ describe('TicketTypesPage 权限门禁', () => {
     const user = userEvent.setup();
     renderPage();
 
-    await user.click(screen.getByRole('button', { name: '从预设安装' }));
-    const installButton = await screen.findByRole('button', { name: '安装' });
+    await user.click(screen.getByRole('button', { name: "Install from default" }));
+    const installButton = await screen.findByRole('button', { name: "Installation" });
     await user.click(installButton);
     expect(mockedApi.installPreset).toHaveBeenCalledTimes(1);
     expect(installButton).toBeDisabled();
@@ -160,9 +160,9 @@ describe('TicketTypesPage 权限门禁', () => {
     const user = userEvent.setup();
     renderPage();
 
-    await user.click(screen.getByRole('button', { name: '从预设安装' }));
+    await user.click(screen.getByRole('button', { name: "Install from default" }));
 
-    expect(await screen.findByText(/权限不足。该操作需要 ticket_type:read/)).toBeInTheDocument();
+    expect(await screen.findByText(/权限不足\. This operation requires ticket_type:read/)).toBeInTheDocument();
     expect(screen.queryByText('通用事件')).not.toBeInTheDocument();
   });
 });

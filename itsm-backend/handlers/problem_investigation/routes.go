@@ -36,7 +36,7 @@ func viewerContext(c *gin.Context) context.Context {
 func pathID(c *gin.Context, field string, label string) (int, bool) {
 	id, err := strconv.Atoi(c.Param(field))
 	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "无效的"+label+"ID")
+		common.Fail(c, common.ParamErrorCode, "Invalid"+label+"ID")
 		return 0, false
 	}
 	return id, true
@@ -46,7 +46,7 @@ func pathID(c *gin.Context, field string, label string) (int, bool) {
 func (h *Handler) CreateProblemInvestigation(c *gin.Context) {
 	var req dto.CreateProblemInvestigationRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
@@ -64,12 +64,12 @@ func (h *Handler) CreateProblemInvestigation(c *gin.Context) {
 	investigation, err := h.invService.CreateProblemInvestigation(c.Request.Context(), &req, tid)
 	if err != nil {
 		h.logger.Errorw("Create problem investigation failed", "error", err, "tenant_id", tid)
-		common.RespondError(c, err, "操作失败")
+		common.RespondError(c, err, "Operation failed")
 		return
 	}
 
 	common.Success(c, gin.H{
-		"message":         "问题调查创建成功",
+		"message":         "Problem investigation created successfully",
 		"investigationId": investigation.ID,
 		"investigation":   investigation,
 	})
@@ -90,7 +90,7 @@ func (h *Handler) GetProblemInvestigation(c *gin.Context) {
 	investigation, err := h.invService.GetProblemInvestigation(c.Request.Context(), investigationID, tid)
 	if err != nil {
 		h.logger.Errorw("Get problem investigation failed", "error", err, "investigation_id", investigationID, "tenant_id", tid)
-		common.RespondError(c, err, "操作失败")
+		common.RespondError(c, err, "Operation failed")
 		return
 	}
 
@@ -106,7 +106,7 @@ func (h *Handler) UpdateProblemInvestigation(c *gin.Context) {
 
 	var req dto.UpdateProblemInvestigationRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
@@ -118,12 +118,12 @@ func (h *Handler) UpdateProblemInvestigation(c *gin.Context) {
 	investigation, err := h.invService.UpdateProblemInvestigation(c.Request.Context(), investigationID, &req, tid)
 	if err != nil {
 		h.logger.Errorw("Update problem investigation failed", "error", err, "investigation_id", investigationID, "tenant_id", tid)
-		common.RespondError(c, err, "操作失败")
+		common.RespondError(c, err, "Operation failed")
 		return
 	}
 
 	common.Success(c, gin.H{
-		"message":       "问题调查更新成功",
+		"message":       "Problem investigation updated successfully",
 		"investigation": investigation,
 	})
 }
@@ -132,7 +132,7 @@ func (h *Handler) UpdateProblemInvestigation(c *gin.Context) {
 func (h *Handler) CreateInvestigationStep(c *gin.Context) {
 	var req dto.CreateInvestigationStepRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
@@ -144,12 +144,12 @@ func (h *Handler) CreateInvestigationStep(c *gin.Context) {
 	step, err := h.invService.CreateInvestigationStep(c.Request.Context(), &req, tid)
 	if err != nil {
 		h.logger.Errorw("Create investigation step failed", "error", err, "tenant_id", tid)
-		common.RespondError(c, err, "操作失败")
+		common.RespondError(c, err, "Operation failed")
 		return
 	}
 
 	common.Success(c, gin.H{
-		"message": "调查步骤创建成功",
+		"message": "Investigation step created successfully",
 		"step":    step,
 	})
 }
@@ -163,7 +163,7 @@ func (h *Handler) UpdateInvestigationStep(c *gin.Context) {
 
 	var req dto.UpdateInvestigationStepRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
@@ -175,12 +175,12 @@ func (h *Handler) UpdateInvestigationStep(c *gin.Context) {
 	step, err := h.invService.UpdateInvestigationStep(c.Request.Context(), stepID, &req, tid)
 	if err != nil {
 		h.logger.Errorw("Update investigation step failed", "error", err, "step_id", stepID, "tenant_id", tid)
-		common.RespondError(c, err, "操作失败")
+		common.RespondError(c, err, "Operation failed")
 		return
 	}
 
 	common.Success(c, gin.H{
-		"message": "调查步骤更新成功",
+		"message": "Investigation steps updated successfully",
 		"step":    step,
 	})
 }
@@ -189,7 +189,7 @@ func (h *Handler) UpdateInvestigationStep(c *gin.Context) {
 func (h *Handler) CreateRootCauseAnalysis(c *gin.Context) {
 	var req dto.CreateRootCauseAnalysisRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
@@ -207,12 +207,12 @@ func (h *Handler) CreateRootCauseAnalysis(c *gin.Context) {
 	analysis, err := h.invService.CreateRootCauseAnalysis(c.Request.Context(), &req, tid)
 	if err != nil {
 		h.logger.Errorw("Create root cause analysis failed", "error", err, "tenant_id", tid)
-		common.RespondError(c, err, "操作失败")
+		common.RespondError(c, err, "Operation failed")
 		return
 	}
 
 	common.Success(c, gin.H{
-		"message":  "根本原因分析创建成功",
+		"message":  "Root cause analysis created successfully",
 		"analysis": analysis,
 	})
 }
@@ -226,7 +226,7 @@ func (h *Handler) UpdateRootCauseAnalysis(c *gin.Context) {
 
 	var req dto.UpdateRootCauseAnalysisRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
@@ -238,12 +238,12 @@ func (h *Handler) UpdateRootCauseAnalysis(c *gin.Context) {
 	analysis, err := h.invService.UpdateRootCauseAnalysis(c.Request.Context(), analysisID, &req, tid)
 	if err != nil {
 		h.logger.Errorw("Update root cause analysis failed", "error", err, "analysis_id", analysisID, "tenant_id", tid)
-		common.RespondError(c, err, "操作失败")
+		common.RespondError(c, err, "Operation failed")
 		return
 	}
 
 	common.Success(c, gin.H{
-		"message":  "根本原因分析更新成功",
+		"message":  "Root cause analysis updated successfully",
 		"analysis": analysis,
 	})
 }
@@ -252,7 +252,7 @@ func (h *Handler) UpdateRootCauseAnalysis(c *gin.Context) {
 func (h *Handler) CreateProblemSolution(c *gin.Context) {
 	var req dto.CreateProblemSolutionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
@@ -270,12 +270,12 @@ func (h *Handler) CreateProblemSolution(c *gin.Context) {
 	solution, err := h.invService.CreateProblemSolution(c.Request.Context(), &req, tid)
 	if err != nil {
 		h.logger.Errorw("Create problem solution failed", "error", err, "tenant_id", tid)
-		common.RespondError(c, err, "操作失败")
+		common.RespondError(c, err, "Operation failed")
 		return
 	}
 
 	common.Success(c, gin.H{
-		"message":  "问题解决方案创建成功",
+		"message":  "Problem solution created successfully",
 		"solution": solution,
 	})
 }
@@ -289,7 +289,7 @@ func (h *Handler) UpdateProblemSolution(c *gin.Context) {
 
 	var req dto.UpdateProblemSolutionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
@@ -301,12 +301,12 @@ func (h *Handler) UpdateProblemSolution(c *gin.Context) {
 	solution, err := h.invService.UpdateProblemSolution(c.Request.Context(), solutionID, &req, tid)
 	if err != nil {
 		h.logger.Errorw("Update problem solution failed", "error", err, "solution_id", solutionID, "tenant_id", tid)
-		common.RespondError(c, err, "操作失败")
+		common.RespondError(c, err, "Operation failed")
 		return
 	}
 
 	common.Success(c, gin.H{
-		"message":  "问题解决方案更新成功",
+		"message":  "Problem solution updated successfully",
 		"solution": solution,
 	})
 }
@@ -326,7 +326,7 @@ func (h *Handler) GetProblemSolutions(c *gin.Context) {
 	summary, err := h.invService.GetProblemInvestigationSummary(c.Request.Context(), problemID, tid)
 	if err != nil {
 		h.logger.Errorw("Get problem solutions failed", "error", err, "problem_id", problemID, "tenant_id", tid)
-		common.RespondError(c, err, "操作失败")
+		common.RespondError(c, err, "Operation failed")
 		return
 	}
 
@@ -351,7 +351,7 @@ func (h *Handler) GetProblemInvestigationSummary(c *gin.Context) {
 	summary, err := h.invService.GetProblemInvestigationSummary(viewerContext(c), problemID, tid)
 	if err != nil {
 		h.logger.Errorw("Get problem investigation summary failed", "error", err, "problem_id", problemID, "tenant_id", tid)
-		common.RespondError(c, err, "操作失败")
+		common.RespondError(c, err, "Operation failed")
 		return
 	}
 
@@ -374,7 +374,7 @@ func (h *Handler) GetInvestigationSteps(c *gin.Context) {
 	investigation, err := h.invService.GetProblemInvestigation(c.Request.Context(), investigationID, tid)
 	if err != nil {
 		h.logger.Errorw("Get investigation steps failed - investigation not found", "error", err, "investigation_id", investigationID, "tenant_id", tid)
-		common.RespondError(c, err, "调查记录不存在")
+		common.RespondError(c, err, "Investigation record does not exist")
 		return
 	}
 
@@ -382,7 +382,7 @@ func (h *Handler) GetInvestigationSteps(c *gin.Context) {
 	summary, err := h.invService.GetProblemInvestigationSummary(c.Request.Context(), investigation.ProblemID, tid)
 	if err != nil {
 		h.logger.Errorw("Get investigation steps failed", "error", err, "investigation_id", investigationID, "tenant_id", tid)
-		common.RespondError(c, err, "操作失败")
+		common.RespondError(c, err, "Operation failed")
 		return
 	}
 
@@ -396,7 +396,7 @@ func (h *Handler) GetInvestigationSteps(c *gin.Context) {
 func (h *Handler) CreateProblemRelationship(c *gin.Context) {
 	var req dto.CreateProblemRelationshipRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
@@ -414,7 +414,7 @@ func (h *Handler) CreateProblemRelationship(c *gin.Context) {
 		"tenant_id", tid)
 
 	common.Success(c, gin.H{
-		"message":     "问题关联创建成功",
+		"message":     "Problem association created successfully",
 		"problemId":   req.ProblemID,
 		"relatedType": req.RelatedType,
 		"relatedId":   req.RelatedID,
@@ -446,7 +446,7 @@ func (h *Handler) GetProblemRelationships(c *gin.Context) {
 func (h *Handler) CreateKnowledgeArticle(c *gin.Context) {
 	var req dto.CreateProblemKnowledgeArticleRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
@@ -459,14 +459,14 @@ func (h *Handler) CreateKnowledgeArticle(c *gin.Context) {
 	article, err := h.invService.CreateKnowledgeArticle(c.Request.Context(), tid, uid, &req)
 	if err != nil {
 		h.logger.Errorw("Create knowledge article failed", "error", err, "tenant_id", tid)
-		common.RespondError(c, err, "操作失败")
+		common.RespondError(c, err, "Operation failed")
 		return
 	}
 
 	h.logger.Info("Created knowledge article from problem", "article_id", article.ID, "tenant_id", tid)
 
 	common.Success(c, gin.H{
-		"message":   "知识库文章创建成功",
+		"message":   "Knowledge base article created successfully",
 		"articleId": article.ID,
 		"article": gin.H{
 			"id":       article.ID,

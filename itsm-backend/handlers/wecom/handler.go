@@ -41,7 +41,7 @@ func (h *Handler) Webhook(c *gin.Context) {
 	instanceID := c.Param("instance_id")
 	conn, tenantID, ok := h.manager.GetByCallbackInstanceID("wecom", instanceID)
 	if !ok {
-		common.Fail(c, common.NotFoundCode, "未找到企业微信连接器实例")
+		common.Fail(c, common.NotFoundCode, "Enterprise WeChat connector instance not found")
 		return
 	}
 	rcv, ok := conn.(connector.Receiver)
@@ -49,7 +49,7 @@ func (h *Handler) Webhook(c *gin.Context) {
 		// 501 而非 500：企业微信连接器 2026-10-21 起在 capability registry 为 Pilot/built:true，
 		// 且 builtin 实现有 Receiver 编译期断言，本分支按理不可达；保留作为防御——
 		// 若未来注册未实现 Receiver 的实例类型，报 501 让调用方明确是能力边界而非服务故障。
-		common.Fail(c, common.NotImplementedCode, "企业微信连接器实例未实现入站接收能力")
+		common.Fail(c, common.NotImplementedCode, "The enterprise WeChat connector instance does not implement inbound receiving capabilities")
 		return
 	}
 	rawData, _ := c.GetRawData()
@@ -61,13 +61,13 @@ func (h *Handler) Webhook(c *gin.Context) {
 	}
 	if err := rcv.VerifySignature(headers, rawData); err != nil {
 		h.recordAuditFailure(tenantID, "wecom.webhook.verify_signature", err.Error(), headers)
-		common.Fail(c, common.ForbiddenCode, "签名校验失败")
+		common.Fail(c, common.ForbiddenCode, "Signature verification failed")
 		return
 	}
 	msg, err := rcv.ParseInbound(rawData)
 	if err != nil {
 		h.recordAuditFailure(tenantID, "wecom.webhook.parse_inbound", err.Error(), headers)
-		common.Fail(c, common.ParamErrorCode, "事件 payload 解析失败")
+		common.Fail(c, common.ParamErrorCode, "Event payload parsing failed")
 		return
 	}
 	if msg.Type == "url_verification" {
@@ -78,7 +78,7 @@ func (h *Handler) Webhook(c *gin.Context) {
 		seen, err := h.dedup.HandleBeforeProcess(c.Request.Context(), tenantID, "wecom", msg.MessageID, rawData)
 		if err != nil {
 			h.logger.Errorw("wecom inbound dedup error", "tenant_id", tenantID, "error", err)
-			common.Fail(c, common.InternalErrorCode, "持久化去重失败")
+			common.Fail(c, common.InternalErrorCode, "Persistence deduplication failed")
 			return
 		}
 		if seen {

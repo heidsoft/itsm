@@ -71,10 +71,10 @@ const hasPath = (edges: TopologyEdge[], from: number, to: number): boolean => {
 
 // 关系强度标签
 const strengthLabels: Record<string, { color: string; label: string }> = {
-  critical: { color: 'red', label: '关键' },
-  high: { color: 'orange', label: '高' },
-  medium: { color: 'blue', label: '中' },
-  low: { color: 'default', label: '低' },
+  critical: { color: 'red', label: 'Critical' },
+  high: { color: 'orange', label: 'High' },
+  medium: { color: 'blue', label: 'Medium' },
+  low: { color: 'default', label: 'Low' },
 };
 
 interface CIRelationshipManagerProps {
@@ -156,7 +156,7 @@ const CIRelationshipManager: React.FC<CIRelationshipManagerProps> = ({
     // 环检测：若拓扑数据源可达，新增 source→target 会成环
     const graph = topologyQuery.data;
     if (graph?.edges && hasPath(graph.edges, destCiId, sourceCiId)) {
-      message.error('无法创建关系：该关系会与现有关系形成循环依赖');
+      message.error('Unable to create relationship: it would create a circular dependency on an existing relationship');
       return;
     }
 
@@ -173,7 +173,7 @@ const CIRelationshipManager: React.FC<CIRelationshipManagerProps> = ({
       form.resetFields();
       onRefresh?.();
     } catch (e: unknown) {
-      message.error(e instanceof Error ? e.message : '创建关系失败');
+      message.error(e instanceof Error ? e.message : 'Failed to create relationship');
     }
   };
 
@@ -191,13 +191,13 @@ const CIRelationshipManager: React.FC<CIRelationshipManagerProps> = ({
   // 表格列定义
   const columns = [
     {
-      title: '关系类型',
+      title: 'Relationship Type',
       dataIndex: 'relationshipTypeName',
       key: 'relationshipType',
       width: 100,
     },
     {
-      title: '关联CI',
+      title: 'Associated CI',
       key: 'relatedCi',
       render: (_: unknown, record: CIRelationship) => (
         <Space orientation='vertical' size={0}>
@@ -211,7 +211,7 @@ const CIRelationshipManager: React.FC<CIRelationshipManagerProps> = ({
       ),
     },
     {
-      title: '强度',
+      title: 'Strength',
       dataIndex: 'strength',
       key: 'strength',
       width: 80,
@@ -221,7 +221,7 @@ const CIRelationshipManager: React.FC<CIRelationshipManagerProps> = ({
       },
     },
     {
-      title: '影响',
+      title: 'Impact',
       dataIndex: 'impactLevel',
       key: 'impactLevel',
       width: 80,
@@ -231,31 +231,31 @@ const CIRelationshipManager: React.FC<CIRelationshipManagerProps> = ({
       },
     },
     {
-      title: '状态',
+      title: 'Status',
       dataIndex: 'isActive',
       key: 'isActive',
       width: 80,
       render: (active: boolean) => (
-        <Badge status={active ? 'success' : 'default'} text={active ? '启用' : '禁用'} />
+        <Badge status={active ? 'success' : 'default'} text={active ? 'Enabled' : 'Disabled'} />
       ),
     },
     {
-      title: '创建时间',
+      title: 'Created',
       dataIndex: 'createdAt',
       key: 'createdAt',
       width: 160,
       render: (date: string) => dayjs(date).format('YYYY-MM-DD HH:mm'),
     },
     {
-      title: '操作',
+      title: 'Actions',
       key: 'action',
       width: 100,
       render: (_: unknown, record: CIRelationship) => (
         <Space>
-          <Tooltip title='删除'>
+          <Tooltip title="Delete">
             <Popconfirm
-              title='确认删除'
-              description='确定要删除此关系吗？'
+              title="Confirm Delete"
+              description="Are you sure you want to delete this relationship?"
               onConfirm={() => handleDelete(record.id)}
             >
               <Button
@@ -264,7 +264,7 @@ const CIRelationshipManager: React.FC<CIRelationshipManagerProps> = ({
                 icon={<Trash2 />}
                 size='small'
                 loading={deleteMutation.isPending && deleteMutation.variables === record.id}
-                aria-label='删除关系'
+                aria-label="Delete relationship"
               />
             </Popconfirm>
           </Tooltip>
@@ -278,7 +278,7 @@ const CIRelationshipManager: React.FC<CIRelationshipManagerProps> = ({
       key: 'outgoing',
       label: (
         <span>
-          <Link /> 出向关系 ({outgoingRelations.length})
+          <Link />  Outbound relationship ({outgoingRelations.length})
         </span>
       ),
       children: (
@@ -287,7 +287,7 @@ const CIRelationshipManager: React.FC<CIRelationshipManagerProps> = ({
           dataSource={outgoingRelations}
           rowKey='id'
           scroll={{ x: 'max-content' }}
-          pagination={{ pageSize: 10, showSizeChanger: true, showTotal: total => `共 ${total} 条` }}
+          pagination={{ pageSize: 10, showSizeChanger: true, showTotal: total => `Total ${total} items` }}
           size='small'
           loading={isLoading}
         />
@@ -297,7 +297,7 @@ const CIRelationshipManager: React.FC<CIRelationshipManagerProps> = ({
       key: 'incoming',
       label: (
         <span>
-          <Network /> 入向关系 ({incomingRelations.length})
+          <Network />  Incoming relationship ({incomingRelations.length})
         </span>
       ),
       children: (
@@ -306,7 +306,7 @@ const CIRelationshipManager: React.FC<CIRelationshipManagerProps> = ({
           dataSource={incomingRelations}
           rowKey='id'
           scroll={{ x: 'max-content' }}
-          pagination={{ pageSize: 10, showSizeChanger: true, showTotal: total => `共 ${total} 条` }}
+          pagination={{ pageSize: 10, showSizeChanger: true, showTotal: total => `Total ${total} items` }}
           size='small'
           loading={isLoading}
         />
@@ -320,17 +320,19 @@ const CIRelationshipManager: React.FC<CIRelationshipManagerProps> = ({
         title={
           <Space>
             <Link />
-            <span>CI关系管理</span>
+            <span>CI relationship management</span>
             <Text type='secondary'>({ciName})</Text>
           </Space>
         }
         extra={
           <Space>
             <Button type='primary' icon={<Plus />} onClick={() => handleOpenCreate('outgoing')}>
-              添加出向关系
+
+              Add outbound relationship
             </Button>
             <Button icon={<Plus />} onClick={() => handleOpenCreate('incoming')}>
-              添加入向关系
+
+              Add inbound relationship
             </Button>
           </Space>
         }
@@ -340,7 +342,7 @@ const CIRelationshipManager: React.FC<CIRelationshipManagerProps> = ({
 
       {/* 创建关系模态框 */}
       <Modal
-        title={createType === 'outgoing' ? '添加出向关系' : '添加入向关系'}
+        title={createType === 'outgoing' ? 'Add outbound relationship' : 'Add inbound relationship'}
         open={createModalOpen}
         onCancel={handleCloseCreate}
         footer={null}
@@ -354,12 +356,12 @@ const CIRelationshipManager: React.FC<CIRelationshipManagerProps> = ({
         >
           <Form.Item
             name='targetCiId'
-            label={createType === 'outgoing' ? '目标CI' : '源CI'}
-            rules={[{ required: true, message: '请选择CI' }]}
+            label={createType === 'outgoing' ? 'Target CI' : 'Source CI'}
+            rules={[{ required: true, message: 'Please select CI' }]}
           >
             <Select
               showSearch
-              placeholder='搜索CI名称'
+              placeholder="Search CI name"
               optionFilterProp='children'
               onSearch={setSearchTerm}
               filterOption={false}
@@ -373,39 +375,40 @@ const CIRelationshipManager: React.FC<CIRelationshipManagerProps> = ({
 
           <Form.Item
             name='relationshipType'
-            label='关系类型'
-            rules={[{ required: true, message: '请选择关系类型' }]}
+            label="Relationship Type"
+            rules={[{ required: true, message: 'Please select a relationship type' }]}
           >
-            <Select placeholder='选择关系类型' style={{ width: '100%' }} options={relationshipTypes.map(type => ({ value: type.type, label: <Tooltip title={type.description ? type.description : undefined}>
+            <Select placeholder="Select relationship type" style={{ width: '100%' }} options={relationshipTypes.map(type => ({ value: type.type, label: <Tooltip title={type.description ? type.description : undefined}>
                     <Space>
                       <span>{type.name}</span>
-                      <Tag>{type.direction === 'bi-directional' ? '双向' : '单向'}</Tag>
+                      <Tag>{type.direction === 'bi-directional' ? 'Bidirectional' : 'One-way'}</Tag>
                     </Space>
                   </Tooltip> }))} />
           </Form.Item>
 
           <Row gutter={16}>
             <Col span={12}>
-              <Form.Item name='strength' label='关系强度'>
-                <Select placeholder='选择强度' style={{ width: '100%' }} options={[{ value: "critical", label: "关键" }, { value: "high", label: "高" }, { value: "medium", label: "中" }, { value: "low", label: "低" }]} />
+              <Form.Item name='strength' label="Relationship Strength">
+                <Select placeholder="Select intensity" style={{ width: '100%' }} options={[{ value: "critical", label: "Critical" }, { value: "high", label: "High" }, { value: "medium", label: "Medium" }, { value: "low", label: "Low" }]} />
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item name='impactLevel' label='影响程度'>
-                <Select placeholder='选择程度' style={{ width: '100%' }} options={[{ value: "critical", label: "致命" }, { value: "high", label: "高" }, { value: "medium", label: "中" }, { value: "low", label: "低" }]} />
+              <Form.Item name='impactLevel' label="Impact Level">
+                <Select placeholder="Degree of selection" style={{ width: '100%' }} options={[{ value: "critical", label: "Fatal" }, { value: "high", label: "High" }, { value: "medium", label: "Medium" }, { value: "low", label: "Low" }]} />
               </Form.Item>
             </Col>
           </Row>
 
-          <Form.Item name='description' label='描述'>
-            <TextArea rows={3} placeholder='输入关系描述（可选）' />
+          <Form.Item name='description' label="Description">
+            <TextArea rows={3} placeholder="Enter relationship description (optional)" />
           </Form.Item>
 
           <Form.Item style={{ marginBottom: 0, textAlign: 'right' }}>
             <Space>
-              <Button onClick={handleCloseCreate}>取消</Button>
+              <Button onClick={handleCloseCreate}>Cancel</Button>
               <Button type='primary' htmlType='submit' loading={createMutation.isPending}>
-                创建
+
+                Create
               </Button>
             </Space>
           </Form.Item>

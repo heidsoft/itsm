@@ -125,7 +125,7 @@ func (h *Handler) GetStatus(c *gin.Context) {
 	cfg, err := connectorVector.LoadConfig(raw)
 	if err != nil {
 		resp.Capability = "error"
-		resp.Message = "向量存储配置解析失败，请检查 VECTOR_STORE_CONFIG 内容"
+		resp.Message = "Failed to parse vector store configuration; check VECTOR_STORE_CONFIG"
 		h.logger.Warnw("vector store config parse failed", "error", err)
 		common.Success(c, resp)
 		return
@@ -141,16 +141,16 @@ func (h *Handler) GetStatus(c *gin.Context) {
 	switch {
 	case !configured:
 		resp.Capability = "unconfigured"
-		resp.Message = "未配置外部向量库，RAG 使用内置关键字检索回退"
+		resp.Message = "No external vector store is configured; RAG uses the built-in keyword search fallback"
 	case pingErr != nil && cfg.Fallback:
 		resp.Capability = "degraded"
-		resp.Message = fmt.Sprintf("主后端不可用，已回退关键字检索: %s", maskSecret(pingErr.Error()))
+		resp.Message = fmt.Sprintf("Primary backend unavailable; using keyword search fallback: %s", maskSecret(pingErr.Error()))
 	case pingErr != nil:
 		resp.Capability = "error"
-		resp.Message = fmt.Sprintf("主后端不可用且未启用回退: %s", maskSecret(pingErr.Error()))
+		resp.Message = fmt.Sprintf("Primary backend unavailable and fallback is disabled: %s", maskSecret(pingErr.Error()))
 	default:
 		resp.Capability = "ready"
-		resp.Message = fmt.Sprintf("%s 连接正常 (%dms)", cfg.Backend, latency.Milliseconds())
+		resp.Message = fmt.Sprintf("%s connection healthy (%dms)", cfg.Backend, latency.Milliseconds())
 	}
 
 	if h.store != nil {
@@ -195,7 +195,7 @@ func (h *Handler) TestConnection(c *gin.Context) {
 	if err != nil {
 		common.Success(c, VectorStoreTestResponse{
 			OK: false, Backend: "unknown", Fallback: false,
-			Message: "配置解析失败，请检查 VECTOR_STORE_CONFIG", CheckedAt: time.Now(),
+			Message: "Failed to parse configuration; check VECTOR_STORE_CONFIG", CheckedAt: time.Now(),
 		})
 		return
 	}
@@ -212,7 +212,7 @@ func (h *Handler) TestConnection(c *gin.Context) {
 		h.logger.Warnw("vector store connectivity test failed",
 			"backend", cfg.Backend, "error_class", "connectivity")
 	} else {
-		resp.Message = "连接正常"
+		resp.Message = "Connection healthy"
 	}
 	common.Success(c, resp)
 }

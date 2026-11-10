@@ -140,14 +140,14 @@ func (s *Service) skillRuntimeCodesForError() string {
 func (s *Service) resolveSkillCode(locator string) (string, error) {
 	code := normalizeSkillLocator(locator)
 	if code == "" {
-		return "", fmt.Errorf("%w: 技能商品必须用 manifestPath 声明运行时的技能码（当前可用：%s）",
+		return "", fmt.Errorf("%w: Skill products must use manifestPath to declare the runtime skill code (currently available: %s)",
 			ErrMarketplaceSkillArtifactMissing, s.skillRuntimeCodesForError())
 	}
 	if s.skillRuntime == nil {
-		return "", fmt.Errorf("%w: 无法校验技能 %q", ErrMarketplaceRuntimeUnavailable, code)
+		return "", fmt.Errorf("%w: Unable to verify skill %q", ErrMarketplaceRuntimeUnavailable, code)
 	}
 	if !s.skillRuntime.Has(code) {
-		return "", fmt.Errorf("%w: %q（当前可用：%s）", ErrMarketplaceSkillRuntimeMissing, code, s.skillRuntimeCodesForError())
+		return "", fmt.Errorf("%w: %q (currently available: %s)", ErrMarketplaceSkillRuntimeMissing, code, s.skillRuntimeCodesForError())
 	}
 	return code, nil
 }
@@ -159,7 +159,7 @@ func (s *Service) resolveSkillCode(locator string) (string, error) {
 // 没有它就只能靠 latest_version 猜，而 latest_version 正是最容易与实际发布物脱钩的字段。
 func (s *Service) publishedVersionRow(ctx context.Context, itemID int, version string) (*ent.ItemVersion, error) {
 	if strings.TrimSpace(version) == "" {
-		return nil, fmt.Errorf("%w: item=%d 缺少版本号", ErrMarketplaceVersionUnavailable, itemID)
+		return nil, fmt.Errorf("%w: item=%d missing version number", ErrMarketplaceVersionUnavailable, itemID)
 	}
 	row, err := s.db.ItemVersion.Query().
 		Where(
@@ -170,7 +170,7 @@ func (s *Service) publishedVersionRow(ctx context.Context, itemID int, version s
 		Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, fmt.Errorf("%w: item=%d version=%s 没有已发布版本行",
+			return nil, fmt.Errorf("%w: item=%d version=%s has no published version row",
 				ErrMarketplaceVersionUnavailable, itemID, version)
 		}
 		return nil, fmt.Errorf("failed to load published version row: %w", err)
@@ -228,7 +228,7 @@ func (s *Service) provisionRuntime(
 	config map[string]interface{},
 ) error {
 	if item == nil {
-		return fmt.Errorf("%w: 商品为空", ErrMarketplaceDeliveryUnsupported)
+		return fmt.Errorf("%w: The product is empty", ErrMarketplaceDeliveryUnsupported)
 	}
 	switch item.Type {
 	case marketplaceitem.TypeConnector:
@@ -279,7 +279,7 @@ type SkillEntitlement struct {
 // 「查不到就放行」等于把市场开通做成装饰。
 func (s *Service) SkillInvocationEntitlement(ctx context.Context, tenantID int, code string) (SkillEntitlement, error) {
 	if strings.TrimSpace(code) == "" {
-		return SkillEntitlement{}, fmt.Errorf("技能码不能为空")
+		return SkillEntitlement{}, fmt.Errorf("Skill code cannot be empty")
 	}
 
 	versions, err := s.db.ItemVersion.Query().

@@ -1,5 +1,6 @@
 'use client';
 
+import { departmentLabel } from '@/constants/user';
 import React, { useState, useEffect } from 'react';
 import {
   App,
@@ -140,7 +141,7 @@ export default function ProfilePage() {
       const values = await passwordForm.validateFields();
 
       if (values.newPassword !== values.confirmPassword) {
-        message.error('两次输入的密码不一致');
+        message.error('Passwords do not match');
         return;
       }
 
@@ -151,7 +152,7 @@ export default function ProfilePage() {
       // 服务端已吊销该用户全部存量 access token，本地会话必须一并清掉，
       // 否则前端还拿着失效 token 继续请求，只会得到一片 401。
       useAuthStore.getState().logout();
-      message.success('密码修改成功，请重新登录');
+      message.success('Password changed successfully, please log in again');
       setPasswordModalVisible(false);
       passwordForm.resetFields();
     } catch (error) {
@@ -160,8 +161,8 @@ export default function ProfilePage() {
       // 统一成「请重试」会让用户在错误的旧密码上反复提交。
       message.error(
         error instanceof Error && error.message
-          ? `密码修改失败：${error.message}`
-          : '密码修改失败，请重试'
+          ? `Password modification failed:${error.message}`
+          : 'Failed to change password, please try again'
       );
     } finally {
       setPasswordLoading(false);
@@ -200,8 +201,8 @@ export default function ProfilePage() {
       // 静默降级会让用户以为电话/部门真的是空。
       message.error(
         error instanceof Error && error.message
-          ? `个人资料读取失败：${error.message}`
-          : '个人资料读取失败，显示的信息可能不完整'
+          ? `Failed to read personal data:${error.message}`
+          : 'Failed to read personal data, the displayed information may be incomplete.'
       );
       if (user) {
         const fallback = {
@@ -276,7 +277,7 @@ export default function ProfilePage() {
         phone: values.phone ?? '',
         department: values.department ?? '',
       });
-      message.success('个人信息更新成功');
+      message.success('Profile updated successfully');
       setEditing(false);
       // 以响应 DTO 为准回填，而不是把表单值拼进旧状态：后端会 trim 字段，
       // 组件里保留用户输入的原值会让界面与服务端真相分叉。
@@ -307,8 +308,8 @@ export default function ProfilePage() {
       // 会话过期都发生在同一路径上，只说「更新失败，请重试」会让用户反复提交。
       message.error(
         error instanceof Error && error.message
-          ? `更新失败：${error.message}`
-          : '更新失败，请重试'
+          ? `Update failed:${error.message}`
+          : 'Update failed, please try again'
       );
     } finally {
       setLoading(false);
@@ -351,10 +352,10 @@ export default function ProfilePage() {
       });
 
       await NotificationPreferenceApi.bulkUpdate({ preferences });
-      message.success('偏好设置已保存到服务器');
+      message.success('Preferences saved to server');
     } catch (error) {
       console.error('Failed to save preferences:', error);
-      message.error('保存失败，请重试');
+      message.error('Save failed, please try again');
     } finally {
       setPrefsLoading(false);
     }
@@ -375,7 +376,7 @@ export default function ProfilePage() {
         const desktopNotify = data.preferences.some(p => p.inAppEnabled);
         const timezone = data.preferences.find(p => p.timezone)?.timezone || 'Asia/Shanghai';
         preferencesForm.setFieldsValue({
-          language: 'zh-CN',
+          language: 'en-US',
           timezone,
           emailNotify,
           desktopNotify,
@@ -383,7 +384,7 @@ export default function ProfilePage() {
       } else {
         // 无偏好记录，使用默认表单初始值
         preferencesForm.setFieldsValue({
-          language: 'zh-CN',
+          language: 'en-US',
           timezone: 'Asia/Shanghai',
           emailNotify: true,
           desktopNotify: true,
@@ -393,7 +394,7 @@ export default function ProfilePage() {
       console.error('Failed to load notification preferences:', error);
       // 后端不可用时使用默认值
       preferencesForm.setFieldsValue({
-        language: 'zh-CN',
+        language: 'en-US',
         timezone: 'Asia/Shanghai',
         emailNotify: true,
         desktopNotify: true,
@@ -409,7 +410,7 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen" style={{ background: DESIGN.colors.bgSubtle }}>
-      <PageHeader title="个人中心" />
+      <PageHeader title="Profile" />
 
       <div style={{ padding: '24px', maxWidth: 1200, margin: '0 auto' }}>
         <Row gutter={[24, 24]}>
@@ -467,7 +468,7 @@ export default function ProfilePage() {
 
                 <div style={{ textAlign: 'center', marginBottom: 16 }}>
                   <Title level={4} style={{ margin: 0, marginBottom: 4 }}>
-                    {profile?.name || profile?.username || '用户'}
+                    {profile?.name || profile?.username || 'Users'}
                   </Title>
                   <Text style={{ color: DESIGN.colors.textMuted }}>
                     {profile?.email || 'user@example.com'}
@@ -486,10 +487,10 @@ export default function ProfilePage() {
                     }}
                   >
                     {profile?.role === 'admin'
-                      ? '管理员'
+                      ? 'Admin'
                       : profile?.role === 'super_admin'
-                        ? '超级管理员'
-                        : '用户'}
+                        ? 'Super Admin'
+                        : 'Users'}
                   </Tag>
                   <Tag
                     style={{
@@ -500,7 +501,7 @@ export default function ProfilePage() {
                       border: 'none',
                     }}
                   >
-                    <CheckCircle size={12} /> 已激活
+                    <CheckCircle size={12} />  Activated
                   </Tag>
                 </div>
 
@@ -510,15 +511,15 @@ export default function ProfilePage() {
                 <Space orientation="vertical" style={{ width: '100%' }} size="middle">
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     <Building size={16} style={{ color: DESIGN.colors.textMuted }} />
-                    <Text>{profile?.department || '未设置'}</Text>
+                    <Text>{departmentLabel(profile?.department) || 'Not set'}</Text>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     <Phone size={16} style={{ color: DESIGN.colors.textMuted }} />
-                    <Text>{profile?.phone || '未设置'}</Text>
+                    <Text>{profile?.phone || 'Not set'}</Text>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     <Clock size={16} style={{ color: DESIGN.colors.textMuted }} />
-                    <Text>上次登录: {profile?.lastLogin || '刚刚'}</Text>
+                    <Text>Last login: {profile?.lastLogin || 'Just now'}</Text>
                   </div>
                 </Space>
               </div>
@@ -534,26 +535,27 @@ export default function ProfilePage() {
               }}
             >
               <Title level={5} style={{ marginBottom: 20 }}>
-                工作统计
+
+                Work Stats
               </Title>
               <Row gutter={[16, 16]}>
                 <Col span={12}>
                   <Statistic
-                    title="提交工单"
+                    title="Submit a work order"
                     value={stats?.totalTickets || 0}
                     prefix={<Ticket size={16} style={{ color: DESIGN.colors.accent }} />}
                   />
                 </Col>
                 <Col span={12}>
                   <Statistic
-                    title="已解决"
+                    title="Resolved"
                     value={stats?.resolvedTickets || 0}
                     prefix={<CheckCircle size={16} style={{ color: DESIGN.colors.success }} />}
                   />
                 </Col>
                 <Col span={12}>
                   <Statistic
-                    title="满意度"
+                    title="Satisfaction"
                     value={stats?.satisfactionScore || 0}
                     suffix="/5"
                     prefix={<Star size={16} style={{ color: DESIGN.colors.warning }} />}
@@ -561,7 +563,7 @@ export default function ProfilePage() {
                 </Col>
                 <Col span={12}>
                   <Statistic
-                    title="响应率"
+                    title="Response Rate"
                     value={stats?.responseRate || 0}
                     suffix="%"
                     prefix={<Activity size={16} style={{ color: DESIGN.colors.accent }} />}
@@ -589,7 +591,8 @@ export default function ProfilePage() {
                     label: (
                       <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                         <User size={16} />
-                        基本信息
+
+                        Basic Info
                       </span>
                     ),
                     children: (
@@ -602,13 +605,13 @@ export default function ProfilePage() {
                         <Row gutter={24}>
                           <Col xs={24} md={12}>
                             <Form.Item
-                              label="姓名"
+                              label="Name"
                               name="name"
-                              rules={[{ required: true, message: '请输入姓名' }]}
+                              rules={[{ required: true, message: 'Please enter name' }]}
                             >
                               <Input
                                 data-testid="profile-name-input"
-                                aria-label="姓名"
+                                aria-label="Name"
                                 prefix={
                                   <User size={16} style={{ color: DESIGN.colors.textMuted }} />
                                 }
@@ -616,7 +619,7 @@ export default function ProfilePage() {
                             </Form.Item>
                           </Col>
                           <Col xs={24} md={12}>
-                            <Form.Item label="用户名" name="username">
+                            <Form.Item label="User Name" name="username">
                               <Input
                                 disabled
                                 prefix={
@@ -627,9 +630,9 @@ export default function ProfilePage() {
                           </Col>
                           <Col xs={24} md={12}>
                             <Form.Item
-                              label="邮箱"
+                              label="Email"
                               name="email"
-                              rules={[{ required: true, type: 'email', message: '请输入有效邮箱' }]}
+                              rules={[{ required: true, type: 'email', message: 'Please enter a valid email address' }]}
                             >
                               <Input
                                 prefix={
@@ -639,7 +642,7 @@ export default function ProfilePage() {
                             </Form.Item>
                           </Col>
                           <Col xs={24} md={12}>
-                            <Form.Item label="电话" name="phone">
+                            <Form.Item label="Phone" name="phone">
                               <Input
                                 prefix={
                                   <Phone size={16} style={{ color: DESIGN.colors.textMuted }} />
@@ -648,7 +651,7 @@ export default function ProfilePage() {
                             </Form.Item>
                           </Col>
                           <Col xs={24} md={12}>
-                            <Form.Item label="部门" name="department">
+                            <Form.Item label="Department" name="department">
                               <Input
                                 prefix={
                                   <Building size={16} style={{ color: DESIGN.colors.textMuted }} />
@@ -657,13 +660,13 @@ export default function ProfilePage() {
                             </Form.Item>
                           </Col>
                           <Col xs={24} md={12}>
-                            <Form.Item label="角色">
+                            <Form.Item label="Role">
                               <Tag color={roleColor} style={{ padding: '4px 12px' }}>
                                 {profile?.role === 'admin'
-                                  ? '管理员'
+                                  ? 'Admin'
                                   : profile?.role === 'super_admin'
-                                    ? '超级管理员'
-                                    : '用户'}
+                                    ? 'Super Admin'
+                                    : 'Users'}
                               </Tag>
                             </Form.Item>
                           </Col>
@@ -671,7 +674,7 @@ export default function ProfilePage() {
 
                         <div style={{ marginTop: 24, textAlign: 'right' }}>
                           <Space>
-                            {editing && <Button onClick={() => setEditing(false)}>取消</Button>}
+                            {editing && <Button onClick={() => setEditing(false)}>Cancel</Button>}
                             <Button
                               type="primary"
                               htmlType="submit"
@@ -682,7 +685,8 @@ export default function ProfilePage() {
                                 boxShadow: DESIGN.shadows.glow(DESIGN.colors.accent),
                               }}
                             >
-                              保存修改
+
+                              Save Changes
                             </Button>
                           </Space>
                         </div>
@@ -694,7 +698,8 @@ export default function ProfilePage() {
                     label: (
                       <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                         <Settings size={16} />
-                        偏好设置
+
+                        Preferences
                       </span>
                     ),
                     children: (
@@ -703,44 +708,44 @@ export default function ProfilePage() {
                         layout="vertical"
                         onFinish={handleSavePreferences}
                         initialValues={{
-                          language: 'zh-CN',
+                          language: 'en-US',
                           timezone: 'Asia/Shanghai',
                           emailNotify: true,
                           desktopNotify: true,
                         }}
                       >
-                        <Title level={5}>通知设置</Title>
+                        <Title level={5}>Notifications</Title>
                         <Row gutter={24}>
                           <Col xs={24}>
-                            <Form.Item label="语言" name="language">
+                            <Form.Item label="Language" name="language">
                               <Select>
-                                <Select.Option value="zh-CN">简体中文</Select.Option>
                                 <Select.Option value="en-US">English</Select.Option>
                               </Select>
                             </Form.Item>
                           </Col>
                           <Col xs={24}>
-                            <Form.Item label="时区" name="timezone">
+                            <Form.Item label="Time zone" name="timezone">
                               <Select>
                                 <Select.Option value="Asia/Shanghai">
-                                  中国标准时间 (UTC+8)
+
+                                  China Standard Time (UTC+8)
                                 </Select.Option>
                                 <Select.Option value="UTC">UTC</Select.Option>
                               </Select>
                             </Form.Item>
                           </Col>
                           <Col xs={24}>
-                            <Form.Item label="邮件通知" name="emailNotify" valuePropName="checked">
-                              <Switch checkedChildren="开启" unCheckedChildren="关闭" />
+                            <Form.Item label="Email notification" name="emailNotify" valuePropName="checked">
+                              <Switch checkedChildren="On" unCheckedChildren="Close" />
                             </Form.Item>
                           </Col>
                           <Col xs={24}>
                             <Form.Item
-                              label="桌面通知"
+                              label="Desktop notification"
                               name="desktopNotify"
                               valuePropName="checked"
                             >
-                              <Switch checkedChildren="开启" unCheckedChildren="关闭" />
+                              <Switch checkedChildren="On" unCheckedChildren="Close" />
                             </Form.Item>
                           </Col>
                         </Row>
@@ -755,7 +760,8 @@ export default function ProfilePage() {
                               background: DESIGN.colors.gradient.primary,
                             }}
                           >
-                            保存设置
+
+                            Save Settings
                           </Button>
                         </div>
                       </Form>
@@ -766,7 +772,8 @@ export default function ProfilePage() {
                     label: (
                       <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                         <Activity size={16} />
-                        最近活动
+
+                        Recent activity
                       </span>
                     ),
                     children: (
@@ -779,7 +786,8 @@ export default function ProfilePage() {
                               color: DESIGN.colors.textMuted,
                             }}
                           >
-                            暂无活动记录
+
+                            No activity record yet
                           </div>
                         ) : (
                           activities.map((activity, index) => (
@@ -831,7 +839,8 @@ export default function ProfilePage() {
                     label: (
                       <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                         <Lock size={16} />
-                        安全设置
+
+                        Security
                       </span>
                     ),
                     children: (
@@ -851,16 +860,18 @@ export default function ProfilePage() {
                             }}
                           >
                             <div>
-                              <div style={{ fontWeight: 600, marginBottom: 4 }}>修改密码</div>
+                              <div style={{ fontWeight: 600, marginBottom: 4 }}>Change password</div>
                               <div style={{ color: DESIGN.colors.textMuted, fontSize: 13 }}>
-                                定期修改密码可以保护账户安全
+
+                                Regularly changing passwords can protect account security
                               </div>
                             </div>
                             <Button
                               icon={<Key size={16} />}
                               onClick={() => setPasswordModalVisible(true)}
                             >
-                              修改
+
+                              Modify
                             </Button>
                           </div>
                         </Card>
@@ -877,7 +888,7 @@ export default function ProfilePage() {
 
       {/* 修改密码模态框 */}
       <Modal
-        title="修改密码"
+        title="Change password"
         open={passwordModalVisible}
         onOk={handlePasswordChange}
         onCancel={() => {
@@ -885,45 +896,45 @@ export default function ProfilePage() {
           passwordForm.resetFields();
         }}
         confirmLoading={passwordLoading}
-        okText="确认修改"
-        cancelText="取消"
+        okText="Confirm modification"
+        cancelText="Cancel"
       >
         <Form form={passwordForm} layout="vertical" style={{ marginTop: 16 }}>
           <Form.Item
             name="oldPassword"
-            label="当前密码"
-            rules={[{ required: true, message: '请输入当前密码' }]}
+            label="Current Password"
+            rules={[{ required: true, message: 'Please enter current password' }]}
           >
-            <Input.Password placeholder="请输入当前密码" />
+            <Input.Password placeholder="Please enter current password" />
           </Form.Item>
           <Form.Item
             name="newPassword"
-            label="新密码"
+            label="New Password"
             // 与后端 service.validatePassword 对齐：12-128 位，
             // 且必须同时包含大写、小写、数字、特殊字符。前端先拦一道，
             // 避免用户填完提交才被后端拒绝。
             rules={[
-              { required: true, message: '请输入新密码' },
-              { min: 12, max: 128, message: '密码长度需为 12 到 128 位' },
+              { required: true, message: 'Please enter new password' },
+              { min: 12, max: 128, message: 'Password length needs to be 12 to 128 characters' },
               {
                 validator: async (_, value: string) => {
                   if (!value) return;
                   const classes = [/[A-Z]/, /[a-z]/, /[0-9]/, /[^A-Za-z0-9]/];
                   if (!classes.some((re) => re.test(value))) {
-                    throw new Error('密码必须同时包含大写字母、小写字母、数字和特殊字符');
+                    throw new Error('Password must contain a combination of uppercase letters, lowercase letters, numbers, and special characters');
                   }
                 },
               },
             ]}
           >
-            <Input.Password placeholder="至少12位，含大小写字母、数字与特殊字符" />
+            <Input.Password placeholder="At least 12 characters, including uppercase and lowercase letters, numbers and special characters" />
           </Form.Item>
           <Form.Item
             name="confirmPassword"
-            label="确认新密码"
-            rules={[{ required: true, message: '请确认新密码' }]}
+            label="Confirm New Password"
+            rules={[{ required: true, message: 'Please confirm new password' }]}
           >
-            <Input.Password placeholder="请再次输入新密码" />
+            <Input.Password placeholder="Please re-enter new password" />
           </Form.Item>
         </Form>
       </Modal>

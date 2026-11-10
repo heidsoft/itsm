@@ -36,7 +36,7 @@ func (s *ProjectService) validateRefTenant(ctx context.Context, tenantID, manage
 			return fmt.Errorf("check project manager: %w", err)
 		}
 		if !exists {
-			return common.NewBusinessError(common.ParamErrorCode, "项目经理不存在或不属于当前租户", "")
+			return common.NewBusinessError(common.ParamErrorCode, "The project manager does not exist or does not belong to the current tenant", "")
 		}
 	}
 	if deptID != 0 {
@@ -47,7 +47,7 @@ func (s *ProjectService) validateRefTenant(ctx context.Context, tenantID, manage
 			return fmt.Errorf("check project department: %w", err)
 		}
 		if !exists {
-			return common.NewBusinessError(common.ParamErrorCode, "所属部门不存在或不属于当前租户", "")
+			return common.NewBusinessError(common.ParamErrorCode, "The department does not exist or does not belong to the current tenant", "")
 		}
 	}
 	return nil
@@ -131,7 +131,7 @@ func (s *ProjectService) UpdateProject(ctx context.Context, id int, name, code *
 	updated, err := update.Save(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, common.NewBusinessError(common.NotFoundCode, "项目不存在", "")
+			return nil, common.NewBusinessError(common.NotFoundCode, "Project does not exist", "")
 		}
 		return nil, fmt.Errorf("update project %d: %w", id, err)
 	}
@@ -149,7 +149,7 @@ func (s *ProjectService) DeleteProject(ctx context.Context, id int, tenantID int
 		return fmt.Errorf("delete project %d: %w", id, err)
 	}
 	if deleted == 0 {
-		return common.NewBusinessError(common.NotFoundCode, "项目不存在", "")
+		return common.NewBusinessError(common.NotFoundCode, "Project does not exist", "")
 	}
 
 	return nil

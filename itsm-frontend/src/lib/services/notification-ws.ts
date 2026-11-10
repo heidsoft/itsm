@@ -79,7 +79,7 @@ class NotificationWSService {
         method: 'POST',
       });
       if (!data?.ticket) {
-        throw new Error('获取 WebSocket 票据失败');
+        throw new Error('Failed to obtain WebSocket ticket');
       }
       ticket = data.ticket;
     } catch (err) {

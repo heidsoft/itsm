@@ -38,25 +38,25 @@ func (h *Handler) AnalyzeDependencyImpact(ctx *gin.Context) {
 	ticketIDStr := ctx.Param("id")
 	ticketID, err := strconv.Atoi(ticketIDStr)
 	if err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "无效的工单ID")
+		common.Fail(ctx, common.ParamErrorCode, "Invalid ticket ID")
 		return
 	}
 
 	var req dto.RelationImpactAnalysisRequest
 	if err := ctx.ShouldBindQuery(&req); err != nil {
 		h.logger.Warnw("Invalid dependency impact query", "error", err, "ticket_id", ticketID)
-		common.Fail(ctx, common.ParamErrorCode, "action 必填，且只能是 close、delete、change_status 之一")
+		common.Fail(ctx, common.ParamErrorCode, "action is required and can only be one of close, delete, or change_status")
 		return
 	}
 
 	tenantID, exists := ctx.Get("tenant_id")
 	if !exists {
-		common.Fail(ctx, common.UnauthorizedCode, "未授权访问: 租户信息缺失")
+		common.Fail(ctx, common.UnauthorizedCode, "Unauthorized access: Tenant information is missing")
 		return
 	}
 	tid, ok := tenantID.(int)
 	if !ok {
-		common.Fail(ctx, common.UnauthorizedCode, "未授权访问: 租户信息缺失")
+		common.Fail(ctx, common.UnauthorizedCode, "Unauthorized access: Tenant information is missing")
 		return
 	}
 
@@ -71,11 +71,11 @@ func (h *Handler) AnalyzeDependencyImpact(ctx *gin.Context) {
 		// 跨租户与真实不存在都按「不存在」处理，不确认对方资源存在；原始错误只进日志。
 		if errors.Is(err, service.ErrDependencyTicketNotFound) {
 			h.logger.Warnw("Dependency impact target not found", "ticket_id", ticketID, "tenant_id", tid, "error", err)
-			common.Fail(ctx, common.NotFoundCode, "工单不存在或无权访问")
+			common.Fail(ctx, common.NotFoundCode, "The work order does not exist or does not have access rights.")
 			return
 		}
 		h.logger.Errorw("Failed to analyze dependency impact", "error", err, "ticket_id", ticketID, "tenant_id", tid)
-		common.Fail(ctx, common.InternalErrorCode, "分析依赖影响失败")
+		common.Fail(ctx, common.InternalErrorCode, "Failed to analyze dependency impact")
 		return
 	}
 

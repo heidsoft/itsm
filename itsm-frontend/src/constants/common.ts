@@ -8,6 +8,6 @@ export const TeamStatuses = {
 };
 
 export const TeamStatusLabels = {
-  [TeamStatuses.ACTIVE]: '活跃',
-  [TeamStatuses.INACTIVE]: '禁用',
+  [TeamStatuses.ACTIVE]: 'Active',
+  [TeamStatuses.INACTIVE]: 'Disabled',
 };

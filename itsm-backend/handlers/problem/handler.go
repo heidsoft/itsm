@@ -151,7 +151,7 @@ func problemUserIDs(problems []*Problem) []int {
 func (h *Handler) Create(c *gin.Context) {
 	var req dto.CreateProblemRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
@@ -178,7 +178,7 @@ func (h *Handler) Create(c *gin.Context) {
 
 	created, err := h.service.Create(c.Request.Context(), tenantID, problem)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -218,7 +218,7 @@ func (h *Handler) Get(c *gin.Context) {
 		if h.service.IsNotFound(err) {
 			common.Fail(c, common.NotFoundErrorCode, "Problem not found")
 		} else {
-			common.FailWithErr(c, err, "操作失败")
+			common.FailWithErr(c, err, "Operation failed")
 		}
 		return
 	}
@@ -258,7 +258,7 @@ func (h *Handler) GetAssociations(c *gin.Context) {
 		if h.service.IsNotFound(err) {
 			common.Fail(c, common.NotFoundErrorCode, "Problem not found")
 		} else {
-			common.FailWithErr(c, err, "操作失败")
+			common.FailWithErr(c, err, "Operation failed")
 		}
 		return
 	}
@@ -309,7 +309,7 @@ func (h *Handler) AddAssociation(c *gin.Context) {
 
 	var req dto.ProblemAssociationRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
@@ -323,13 +323,13 @@ func (h *Handler) AddAssociation(c *gin.Context) {
 		if h.service.IsNotFound(err) {
 			common.Fail(c, common.NotFoundErrorCode, "Problem not found")
 		} else {
-			common.FailWithErr(c, err, "操作失败")
+			common.FailWithErr(c, err, "Operation failed")
 		}
 		return
 	}
 
 	if err := h.service.AddAssociations(c.Request.Context(), tenantID, id, req.RelatedType, req.RelatedIDs); err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -359,7 +359,7 @@ func (h *Handler) RemoveAssociation(c *gin.Context) {
 
 	var req dto.ProblemRemoveAssociationRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
@@ -373,13 +373,13 @@ func (h *Handler) RemoveAssociation(c *gin.Context) {
 		if h.service.IsNotFound(err) {
 			common.Fail(c, common.NotFoundErrorCode, "Problem not found")
 		} else {
-			common.FailWithErr(c, err, "操作失败")
+			common.FailWithErr(c, err, "Operation failed")
 		}
 		return
 	}
 
 	if err := h.service.RemoveAssociation(c.Request.Context(), tenantID, id, req.RelatedType, req.RelatedID); err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -407,7 +407,7 @@ func (h *Handler) RemoveAssociation(c *gin.Context) {
 func (h *Handler) List(c *gin.Context) {
 	var req dto.ListProblemsRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
@@ -443,7 +443,7 @@ func (h *Handler) List(c *gin.Context) {
 
 	list, total, err := h.service.List(c.Request.Context(), tenantID, req.Page, req.PageSize, filters, currentUserID, currentRole)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -491,7 +491,7 @@ func (h *Handler) Update(c *gin.Context) {
 
 	var req dto.UpdateProblemRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
@@ -536,7 +536,7 @@ func (h *Handler) Update(c *gin.Context) {
 
 	updated, err := h.service.Update(c.Request.Context(), tenantID, id, updates, actorID, actorRole)
 	if err != nil {
-		common.RespondError(c, err, "操作失败")
+		common.RespondError(c, err, "Operation failed")
 		return
 	}
 
@@ -593,7 +593,7 @@ func (h *Handler) UpdateRootCause(c *gin.Context) {
 	}
 	var req dto.UpdateProblemRootCauseRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 	actorID, actorRole := actorContext(c)
@@ -623,7 +623,7 @@ func (h *Handler) UpdateSolution(c *gin.Context) {
 	}
 	var req dto.UpdateProblemResolutionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 	resolution := req.Resolution
@@ -657,7 +657,7 @@ func (h *Handler) CloseProblem(c *gin.Context) {
 	}
 	var req dto.CloseProblemRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 	actorID, actorRole := actorContext(c)
@@ -694,9 +694,9 @@ func (h *Handler) respondProblemMutation(c *gin.Context, updated *Problem, err e
 			// 业务规则错误（状态机违规/参数校验）按声明的业务码响应，不得落为 500
 			common.Fail(c, bizErr.Code, bizErr.Message)
 		case strings.Contains(err.Error(), "required"):
-			common.ParamErrorWithErr(c, err, "请求参数错误")
+			common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		default:
-			common.FailWithErr(c, err, "操作失败")
+			common.FailWithErr(c, err, "Operation failed")
 		}
 		return
 	}
@@ -739,7 +739,7 @@ func (h *Handler) Delete(c *gin.Context) {
 	actorID, actorRole := actorContext(c)
 	err = h.service.Delete(c.Request.Context(), id, tenantID, actorID, actorRole)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -762,7 +762,7 @@ func (h *Handler) GetStats(c *gin.Context) {
 	}
 	stats, err := h.service.GetStats(c.Request.Context(), tenantID)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -823,7 +823,7 @@ func (h *Handler) GetTrends(c *gin.Context) {
 
 	data, err := h.service.GetTrend(c.Request.Context(), tenantID, startDate, endDate)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 	common.Success(c, data)
@@ -866,7 +866,7 @@ func (h *Handler) GetHotspots(c *gin.Context) {
 
 	data, err := h.service.GetHotspot(c.Request.Context(), tenantID, startDate, endDate)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 	common.Success(c, data)
@@ -900,7 +900,7 @@ func (h *Handler) GetProblemSLA(c *gin.Context) {
 		if h.service.IsNotFound(err) {
 			common.Fail(c, common.NotFoundErrorCode, "Problem not found")
 		} else {
-			common.FailWithErr(c, err, "操作失败")
+			common.FailWithErr(c, err, "Operation failed")
 		}
 		return
 	}
@@ -955,7 +955,7 @@ func (h *Handler) GetProblemComments(c *gin.Context) {
 		if errors.Is(err, ErrProblemNotVisible) {
 			common.Fail(c, common.NotFoundErrorCode, "Problem not found")
 		} else {
-			common.FailWithErr(c, err, "操作失败")
+			common.FailWithErr(c, err, "Operation failed")
 		}
 		return
 	}
@@ -1016,13 +1016,13 @@ func (h *Handler) AddProblemComment(c *gin.Context) {
 	}
 	userID := c.GetInt("user_id")
 	if userID <= 0 {
-		common.Fail(c, common.UnauthorizedCode, "未认证的用户")
+		common.Fail(c, common.UnauthorizedCode, "Unauthenticated user")
 		return
 	}
 
 	var req dto.CreateProblemCommentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
@@ -1033,7 +1033,7 @@ func (h *Handler) AddProblemComment(c *gin.Context) {
 			return
 		}
 		// 业务校验（空内容等）已由 service 转 BusinessError；其余按内部错误。
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -1115,7 +1115,7 @@ func (h *Handler) PromoteProblemKnowledge(c *gin.Context) {
 	}
 	userID := c.GetInt("user_id")
 	if userID <= 0 {
-		common.Fail(c, common.UnauthorizedCode, "未认证的用户")
+		common.Fail(c, common.UnauthorizedCode, "Unauthenticated user")
 		return
 	}
 
@@ -1124,7 +1124,7 @@ func (h *Handler) PromoteProblemKnowledge(c *gin.Context) {
 	// 空 body 直接走全兜底路径。
 	if c.Request.ContentLength > 0 {
 		if err := c.ShouldBindJSON(&req); err != nil {
-			common.ParamErrorWithErr(c, err, "请求参数错误")
+			common.ParamErrorWithErr(c, err, "Wrong request parameters")
 			return
 		}
 	}
@@ -1136,7 +1136,7 @@ func (h *Handler) PromoteProblemKnowledge(c *gin.Context) {
 			common.Fail(c, common.NotFoundErrorCode, "Problem not found")
 			return
 		}
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 	common.Success(c, toKnowledgeArticleDTO(article))
@@ -1173,7 +1173,7 @@ func (h *Handler) ListProblemKnowledge(c *gin.Context) {
 			common.Fail(c, common.NotFoundErrorCode, "Problem not found")
 			return
 		}
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 

@@ -30,7 +30,7 @@ func NewBPMNWorkflowTemplateCatalog(db *sql.DB) *BPMNWorkflowTemplateCatalog {
 
 func (s *BPMNWorkflowTemplateCatalog) List(ctx context.Context, tenantID int, keyword, domain, status string, page, pageSize int) (*dto.WorkflowTemplateListResponse, error) {
 	if s == nil || s.db == nil || tenantID <= 0 {
-		return nil, fmt.Errorf("模板目录数据库未配置")
+		return nil, fmt.Errorf("Template directory database is not configured")
 	}
 	page, pageSize = normalizePage(page, pageSize)
 	where := []string{"tenant_id = $1"}
@@ -54,12 +54,12 @@ func (s *BPMNWorkflowTemplateCatalog) List(ctx context.Context, tenantID int, ke
 	base := " FROM workflow_templates WHERE " + strings.Join(where, " AND ")
 	var total int
 	if err := s.db.QueryRowContext(ctx, "SELECT COUNT(*)"+base, args...).Scan(&total); err != nil {
-		return nil, fmt.Errorf("查询模板总数失败: %w", err)
+		return nil, fmt.Errorf("Failed to query the total number of templates: %w", err)
 	}
 	args = append(args, pageSize, (page-1)*pageSize)
 	rows, err := s.db.QueryContext(ctx, "SELECT id,key,name,description,domain,form_schema,approval_policy,ontology_bindings,sla_config,bpmn_xml,version,status,is_public,created_by,created_at,updated_at"+base+fmt.Sprintf(" ORDER BY updated_at DESC, id DESC LIMIT $%d OFFSET $%d", arg, arg+1), args...)
 	if err != nil {
-		return nil, fmt.Errorf("查询模板列表失败: %w", err)
+		return nil, fmt.Errorf("Failed to query template list: %w", err)
 	}
 	defer rows.Close()
 	items := make([]*dto.WorkflowTemplate, 0)
@@ -71,14 +71,14 @@ func (s *BPMNWorkflowTemplateCatalog) List(ctx context.Context, tenantID int, ke
 		items = append(items, item)
 	}
 	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("读取模板列表失败: %w", err)
+		return nil, fmt.Errorf("Failed to read template list: %w", err)
 	}
 	return &dto.WorkflowTemplateListResponse{Items: items, Total: total, Page: page, PageSize: pageSize, TotalPages: int(math.Ceil(float64(total) / float64(pageSize)))}, nil
 }
 
 func (s *BPMNWorkflowTemplateCatalog) Get(ctx context.Context, tenantID int, key, version string) (*dto.WorkflowTemplate, error) {
 	if s == nil || s.db == nil || tenantID <= 0 {
-		return nil, fmt.Errorf("模板目录数据库未配置")
+		return nil, fmt.Errorf("Template directory database is not configured")
 	}
 	query := "SELECT id,key,name,description,domain,form_schema,approval_policy,ontology_bindings,sla_config,bpmn_xml,version,status,is_public,created_by,created_at,updated_at FROM workflow_templates WHERE tenant_id=$1 AND key=$2"
 	args := []interface{}{tenantID, key}
@@ -101,11 +101,11 @@ func (s *BPMNWorkflowTemplateCatalog) CreateDraft(ctx context.Context, tenantID,
 		return nil, err
 	}
 	if s == nil || s.db == nil || tenantID <= 0 || userID <= 0 {
-		return nil, fmt.Errorf("模板目录上下文未配置")
+		return nil, fmt.Errorf("Template directory context not configured")
 	}
 	var draftExists bool
 	if err := s.db.QueryRowContext(ctx, "SELECT EXISTS(SELECT 1 FROM workflow_templates WHERE tenant_id=$1 AND key=$2 AND status='draft')", tenantID, req.Key).Scan(&draftExists); err != nil {
-		return nil, fmt.Errorf("检查模板草稿失败: %w", err)
+		return nil, fmt.Errorf("Failed to check template draft: %w", err)
 	}
 	if draftExists {
 		return nil, ErrWorkflowTemplateConflict
@@ -123,7 +123,7 @@ func (s *BPMNWorkflowTemplateCatalog) CreateDraft(ctx context.Context, tenantID,
 		if strings.Contains(strings.ToLower(err.Error()), "unique") {
 			return nil, ErrWorkflowTemplateConflict
 		}
-		return nil, fmt.Errorf("创建模板草稿失败: %w", err)
+		return nil, fmt.Errorf("Failed to create template draft: %w", err)
 	}
 	return s.Get(ctx, tenantID, req.Key, version)
 }
@@ -174,7 +174,7 @@ func (s *BPMNWorkflowTemplateCatalog) UpdateDraft(ctx context.Context, tenantID 
 	}
 	if req.BPMNXML != nil {
 		if strings.TrimSpace(*req.BPMNXML) == "" {
-			return nil, fmt.Errorf("%w: bpmnXml 不能为空", ErrWorkflowTemplateInvalid)
+			return nil, fmt.Errorf("%w: bpmnXml cannot be empty", ErrWorkflowTemplateInvalid)
 		}
 		add("bpmn_xml", *req.BPMNXML)
 	}
@@ -187,7 +187,7 @@ func (s *BPMNWorkflowTemplateCatalog) UpdateDraft(ctx context.Context, tenantID 
 	sets = append(sets, "updated_at=NOW()")
 	_, err = s.db.ExecContext(ctx, "UPDATE workflow_templates SET "+strings.Join(sets, ", ")+" WHERE tenant_id=$1 AND key=$2 AND version=$3 AND status='draft'", args...)
 	if err != nil {
-		return nil, fmt.Errorf("更新模板草稿失败: %w", err)
+		return nil, fmt.Errorf("Failed to update template draft: %w", err)
 	}
 	return s.Get(ctx, tenantID, key, current.Version)
 }
@@ -203,13 +203,13 @@ func (s *BPMNWorkflowTemplateCatalog) Publish(ctx context.Context, tenantID int,
 	result, err := NewBPMNLintService().LintBPMNXML([]byte(draft.BPMNXML))
 	if err != nil || result.HasErrors {
 		if err != nil {
-			return nil, fmt.Errorf("%w: BPMN 校验失败", ErrWorkflowTemplateInvalid)
+			return nil, fmt.Errorf("%w: BPMN verification failed", ErrWorkflowTemplateInvalid)
 		}
-		return nil, fmt.Errorf("%w: BPMN 存在 %d 个错误", ErrWorkflowTemplateInvalid, result.ErrorCount)
+		return nil, fmt.Errorf("%w: BPMN has %d errors", ErrWorkflowTemplateInvalid, result.ErrorCount)
 	}
 	updated, err := s.db.ExecContext(ctx, "UPDATE workflow_templates SET status='published', updated_at=NOW() WHERE tenant_id=$1 AND key=$2 AND version=$3 AND status='draft'", tenantID, key, draft.Version)
 	if err != nil {
-		return nil, fmt.Errorf("发布模板失败: %w", err)
+		return nil, fmt.Errorf("Failed to publish template: %w", err)
 	}
 	if count, _ := updated.RowsAffected(); count != 1 {
 		return nil, ErrWorkflowTemplateConflict
@@ -224,11 +224,11 @@ func (s *BPMNWorkflowTemplateCatalog) Archive(ctx context.Context, tenantID int,
 		return ErrWorkflowTemplateNotFound
 	}
 	if err != nil {
-		return fmt.Errorf("查询待停用模板失败: %w", err)
+		return fmt.Errorf("Failed to query the template to be deactivated: %w", err)
 	}
 	result, err := s.db.ExecContext(ctx, "UPDATE workflow_templates SET status='archived', updated_at=NOW() WHERE tenant_id=$1 AND key=$2 AND version=$3 AND status='published'", tenantID, key, version)
 	if err != nil {
-		return fmt.Errorf("停用模板失败: %w", err)
+		return fmt.Errorf("Failed to deactivate template: %w", err)
 	}
 	if count, _ := result.RowsAffected(); count != 1 {
 		return ErrWorkflowTemplateNotFound
@@ -251,10 +251,10 @@ func (s *BPMNWorkflowTemplateCatalog) Archive(ctx context.Context, tenantID int,
 // （schema 未声明 soft_delete_fields），使用原生 SQL 与 Ent 视图保持一致。
 func (s *BPMNWorkflowTemplateCatalog) Reload(ctx context.Context, tenantID int, key string) (*dto.ReloadWorkflowTemplateResponse, error) {
 	if s == nil || s.db == nil || tenantID <= 0 {
-		return nil, fmt.Errorf("模板目录数据库未配置")
+		return nil, fmt.Errorf("Template directory database is not configured")
 	}
 	if strings.TrimSpace(key) == "" {
-		return nil, fmt.Errorf("%w: key 不能为空", ErrWorkflowTemplateInvalid)
+		return nil, fmt.Errorf("%w: key cannot be empty", ErrWorkflowTemplateInvalid)
 	}
 
 	// 1. 取最新已发布版本（status='published'）
@@ -268,7 +268,7 @@ func (s *BPMNWorkflowTemplateCatalog) Reload(ctx context.Context, tenantID int, 
 		return nil, ErrWorkflowTemplateNotFound
 	}
 	if err != nil {
-		return nil, fmt.Errorf("查询已发布模板失败: %w", err)
+		return nil, fmt.Errorf("Failed to query published templates: %w", err)
 	}
 	if description.Valid {
 		template.Description = description.String
@@ -285,20 +285,20 @@ func (s *BPMNWorkflowTemplateCatalog) Reload(ctx context.Context, tenantID int, 
 		}
 	}
 	if strings.TrimSpace(template.BPMNXML) == "" {
-		return nil, fmt.Errorf("%w: 已发布版本没有 BPMN XML，无法重新部署", ErrWorkflowTemplateInvalid)
+		return nil, fmt.Errorf("%w: Released version does not have BPMN XML and cannot be redeployed", ErrWorkflowTemplateInvalid)
 	}
 
 	// 2. 计算下一个版本号：取该 key 当前 process_definitions 中最新版本 + minor+1
 	var latestVersion sql.NullString
 	if err := s.db.QueryRowContext(ctx, `SELECT version FROM process_definitions WHERE tenant_id=$1 AND key=$2 ORDER BY updated_at DESC, id DESC LIMIT 1`, tenantID, key).Scan(&latestVersion); err != nil && !errors.Is(err, sql.ErrNoRows) {
-		return nil, fmt.Errorf("查询当前部署版本失败: %w", err)
+		return nil, fmt.Errorf("Failed to query current deployment version: %w", err)
 	}
 	nextVersion := bumpMinorVersion(latestVersion.String)
 
 	// 3. 创建部署记录 + 新的 process_definition 并降级旧版本（事务保证原子性）
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
-		return nil, fmt.Errorf("开始重载事务失败: %w", err)
+		return nil, fmt.Errorf("Failed to start reload transaction: %w", err)
 	}
 	defer func() { _ = tx.Rollback() }()
 
@@ -309,7 +309,7 @@ func (s *BPMNWorkflowTemplateCatalog) Reload(ctx context.Context, tenantID int, 
 		`INSERT INTO process_deployments (deployment_id, deployment_name, deployment_source, deployment_comment, deployment_time, is_active, tenant_id) VALUES ($1,$2,$3,$4,NOW(),true,$5) RETURNING id`,
 		deploymentIDStr, deploymentName, template.BPMNXML, "Reload from workflow_templates catalog", tenantID,
 	).Scan(&deploymentID); err != nil {
-		return nil, fmt.Errorf("创建部署记录失败: %w", err)
+		return nil, fmt.Errorf("Failed to create deployment record: %w", err)
 	}
 
 	// 把同 key 旧 is_latest=true 的降级
@@ -317,7 +317,7 @@ func (s *BPMNWorkflowTemplateCatalog) Reload(ctx context.Context, tenantID int, 
 		`UPDATE process_definitions SET is_latest=false, updated_at=NOW() WHERE tenant_id=$1 AND key=$2 AND is_latest=true`,
 		tenantID, key,
 	); err != nil {
-		return nil, fmt.Errorf("降级旧版本失败: %w", err)
+		return nil, fmt.Errorf("Failed to downgrade old version: %w", err)
 	}
 
 	var definitionID int
@@ -325,11 +325,11 @@ func (s *BPMNWorkflowTemplateCatalog) Reload(ctx context.Context, tenantID int, 
 		`INSERT INTO process_definitions (key, name, description, version, category, bpmn_xml, process_variables, is_active, is_latest, deployment_id, deployment_name, deployed_at, tenant_id, created_at, updated_at) VALUES ($1,$2,$3,$4,$5,$6,'{}',true,true,$7,$8,NOW(),$9,NOW(),NOW()) RETURNING id`,
 		key, template.Name, template.Description, nextVersion, "default", template.BPMNXML, deploymentID, deploymentName, tenantID,
 	).Scan(&definitionID); err != nil {
-		return nil, fmt.Errorf("创建新流程定义失败: %w", err)
+		return nil, fmt.Errorf("Failed to create new process definition: %w", err)
 	}
 
 	if err := tx.Commit(); err != nil {
-		return nil, fmt.Errorf("提交重载事务失败: %w", err)
+		return nil, fmt.Errorf("Failed to commit reload transaction: %w", err)
 	}
 
 	return &dto.ReloadWorkflowTemplateResponse{
@@ -370,7 +370,7 @@ func bumpMinorVersion(current string) string {
 func (s *BPMNWorkflowTemplateCatalog) Versions(ctx context.Context, tenantID int, key string) ([]*dto.WorkflowTemplate, error) {
 	rows, err := s.db.QueryContext(ctx, "SELECT id,key,name,description,domain,form_schema,approval_policy,ontology_bindings,sla_config,bpmn_xml,version,status,is_public,created_by,created_at,updated_at FROM workflow_templates WHERE tenant_id=$1 AND key=$2 ORDER BY updated_at DESC, id DESC", tenantID, key)
 	if err != nil {
-		return nil, fmt.Errorf("查询模板版本失败: %w", err)
+		return nil, fmt.Errorf("Failed to query template version: %w", err)
 	}
 	defer rows.Close()
 	items := make([]*dto.WorkflowTemplate, 0)
@@ -407,7 +407,7 @@ func (s *BPMNWorkflowTemplateCatalog) nextVersion(ctx context.Context, tenantID 
 
 func validateTemplateRequest(req *dto.CreateWorkflowTemplateRequest) error {
 	if req == nil || strings.TrimSpace(req.Key) == "" || strings.TrimSpace(req.Name) == "" || strings.TrimSpace(req.Domain) == "" || strings.TrimSpace(req.BPMNXML) == "" {
-		return fmt.Errorf("%w: 模板基本字段不能为空", ErrWorkflowTemplateInvalid)
+		return fmt.Errorf("%w: Template basic field cannot be empty", ErrWorkflowTemplateInvalid)
 	}
 	return nil
 }
@@ -420,7 +420,7 @@ func marshalTemplateJSON(values ...map[string]interface{}) ([]byte, []byte, []by
 		}
 		data, err := json.Marshal(value)
 		if err != nil {
-			return nil, nil, nil, nil, fmt.Errorf("%w: JSON 配置无效", ErrWorkflowTemplateInvalid)
+			return nil, nil, nil, nil, fmt.Errorf("%w: Invalid JSON configuration", ErrWorkflowTemplateInvalid)
 		}
 		result[i] = data
 	}
@@ -436,7 +436,7 @@ func scanWorkflowTemplate(row workflowTemplateScanner) (*dto.WorkflowTemplate, e
 	var form, approval, bindings, sla, xml []byte
 	var created, updated time.Time
 	if err := row.Scan(&item.ID, &item.Key, &item.Name, &item.Description, &item.Domain, &form, &approval, &bindings, &sla, &xml, &item.Version, &item.Status, &item.IsPublic, &item.CreatedBy, &created, &updated); err != nil {
-		return nil, fmt.Errorf("读取模板记录失败: %w", err)
+		return nil, fmt.Errorf("Failed to read template record: %w", err)
 	}
 	for _, entry := range []struct {
 		data   []byte
@@ -444,7 +444,7 @@ func scanWorkflowTemplate(row workflowTemplateScanner) (*dto.WorkflowTemplate, e
 	}{{form, &item.FormSchema}, {approval, &item.ApprovalPolicy}, {bindings, &item.OntologyBindings}, {sla, &item.SLAConfig}} {
 		if len(entry.data) > 0 && string(entry.data) != "null" {
 			if err := json.Unmarshal(entry.data, entry.target); err != nil {
-				return nil, fmt.Errorf("解析模板配置失败: %w", err)
+				return nil, fmt.Errorf("Failed to parse template configuration: %w", err)
 			}
 		}
 	}

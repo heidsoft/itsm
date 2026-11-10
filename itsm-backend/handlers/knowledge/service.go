@@ -130,10 +130,10 @@ func (s *Service) applyReview(
 	action, comment string,
 ) (*Article, error) {
 	if !IsReviewAction(action) {
-		return nil, common.NewValidationError("未知的评审动作: "+action, nil)
+		return nil, common.NewValidationError("Unknown review action:"+action, nil)
 	}
 	if ReviewRequiresComment(action) && strings.TrimSpace(comment) == "" {
-		return nil, common.NewValidationError("驳回必须填写评审意见", nil)
+		return nil, common.NewValidationError("Review comments must be filled in for rejection", nil)
 	}
 
 	current, err := s.ensureArticleReadable(ctx, articleID, tenantID)
@@ -146,7 +146,7 @@ func (s *Service) applyReview(
 			s.logger.Warnw("知识评审拒绝自审",
 				"article_id", articleID, "author_id", current.AuthorID, "action", action)
 			return nil, common.NewBusinessError(
-				common.ForbiddenCode, "不能评审自己撰写的文章", "",
+				common.ForbiddenCode, "Cannot review articles written by yourself", "",
 			)
 		}
 	}
@@ -343,8 +343,8 @@ func (s *Service) UpdateArticle(ctx context.Context, a *Article) (*Article, erro
 		if NormalizeReviewStatus(current.ReviewStatus) != ReviewStatusApproved {
 			return nil, common.NewBusinessError(
 				common.ConflictCode,
-				"文章尚未通过评审，不能发布",
-				"请先提交评审（review/submit），由其他评审人审批通过（review/approve）后自动发布",
+				"The article has not passed review and cannot be published.",
+				"Please submit for review (review/submit) first, and it will be automatically published after approval by other reviewers (review/approve).",
 			)
 		}
 	}
@@ -382,8 +382,8 @@ func (s *Service) SetArticlePublished(ctx context.Context, id, tenantID int, pub
 		if status != ReviewStatusApproved {
 			return nil, common.NewBusinessError(
 				common.ConflictCode,
-				"文章尚未通过评审，不能发布",
-				"请先提交评审（review/submit），由其他评审人审批通过（review/approve）后自动发布",
+				"The article has not passed review and cannot be published.",
+				"Please submit for review (review/submit) first, and it will be automatically published after approval by other reviewers (review/approve).",
 			)
 		}
 		if article.IsPublished {
@@ -571,13 +571,13 @@ func (s *Service) GetStats(ctx context.Context, tenantID int) (*dto.KnowledgeSta
 // ListRestrictedCategories 返回当前租户已被纳管的知识分类。
 func (s *Service) ListRestrictedCategories(ctx context.Context, tenantID int) ([]string, error) {
 	if s.client == nil {
-		return nil, fmt.Errorf("知识分类纳管能力未装配（ent client 缺失）")
+		return nil, fmt.Errorf("Knowledge classification management capability is not installed (ent client is missing)")
 	}
 	perms, err := s.client.Permission.Query().
 		Where(permission.TenantIDEQ(tenantID), permission.ResourceEQ(knowledgeaccess.CategoryResource)).
 		All(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("查询受限分类失败: %w", err)
+		return nil, fmt.Errorf("Failed to query restricted categories: %w", err)
 	}
 	cats := make([]string, 0, len(perms))
 	for _, p := range perms {
@@ -598,11 +598,11 @@ func (s *Service) ListRestrictedCategories(ctx context.Context, tenantID int) ([
 // 解除纳管即删除对应 permission 记录，该分类恢复为全租户可读。
 func (s *Service) SetCategoryRestriction(ctx context.Context, tenantID int, category string, restricted bool) error {
 	if s.client == nil {
-		return fmt.Errorf("知识分类纳管能力未装配（ent client 缺失）")
+		return fmt.Errorf("Knowledge classification management capability is not installed (ent client is missing)")
 	}
 	category = strings.TrimSpace(category)
 	if category == "" {
-		return fmt.Errorf("分类名不能为空")
+		return fmt.Errorf("Category name cannot be empty")
 	}
 
 	action := knowledgeaccess.ActionForCategory(category)
@@ -615,7 +615,7 @@ func (s *Service) SetCategoryRestriction(ctx context.Context, tenantID int, cate
 				permission.ActionEQ(action),
 			).Exec(ctx)
 		if err != nil {
-			return fmt.Errorf("解除纳管失败: %w", err)
+			return fmt.Errorf("Failed to unmanage: %w", err)
 		}
 		s.logger.Infow("知识分类已解除纳管", "tenant_id", tenantID, "category", category, "deleted", n)
 		if s.knowledgeGuard != nil {
@@ -632,7 +632,7 @@ func (s *Service) SetCategoryRestriction(ctx context.Context, tenantID int, cate
 			permission.ActionEQ(action),
 		).Exist(ctx)
 	if err != nil {
-		return fmt.Errorf("校验纳管状态失败: %w", err)
+		return fmt.Errorf("Failed to verify management status: %w", err)
 	}
 	if !exists {
 		_, err = s.client.Permission.Create().
@@ -643,7 +643,7 @@ func (s *Service) SetCategoryRestriction(ctx context.Context, tenantID int, cate
 			SetAction(action).
 			SetTenantID(tenantID).Save(ctx)
 		if err != nil {
-			return fmt.Errorf("纳管分类失败: %w", err)
+			return fmt.Errorf("Failed to manage classification: %w", err)
 		}
 		s.logger.Infow("知识分类已纳管", "tenant_id", tenantID, "category", category)
 	}

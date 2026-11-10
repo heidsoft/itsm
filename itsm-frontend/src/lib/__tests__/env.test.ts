@@ -117,7 +117,7 @@ describe('Environment Utilities', () => {
     it('should handle validation errors', () => {
       const result = errorHandler.handleValidationError({ name: ['required'] });
       expect(result.success).toBe(false);
-      expect(result.message).toBe('表单验证失败');
+      expect(result.message).toBe("Form validation failed");
     });
 
     it('should handle network errors', () => {

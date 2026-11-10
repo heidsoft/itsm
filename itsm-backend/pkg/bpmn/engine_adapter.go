@@ -23,7 +23,7 @@ func NewEngineAdapter() *EngineAdapter {
 func (e *EngineAdapter) LoadDefinition(xmlData []byte) (*bpmn_engine.ProcessInfo, error) {
 	processInfo, err := e.engine.LoadFromBytes(xmlData)
 	if err != nil {
-		return nil, fmt.Errorf("解析 BPMN XML 失败: %w", err)
+		return nil, fmt.Errorf("Failed to parse BPMN XML: %w", err)
 	}
 	return processInfo, nil
 }
@@ -33,7 +33,7 @@ func (e *EngineAdapter) LoadDefinition(xmlData []byte) (*bpmn_engine.ProcessInfo
 func (e *EngineAdapter) CreateInstance(processDefinitionKey int64, variables map[string]interface{}) (int64, error) {
 	instance, err := e.engine.CreateAndRunInstance(processDefinitionKey, variables)
 	if err != nil {
-		return 0, fmt.Errorf("启动流程实例失败: %w", err)
+		return 0, fmt.Errorf("Failed to start process instance: %w", err)
 	}
 	return instance.GetInstanceKey(), nil
 }

@@ -8,22 +8,22 @@ import { message } from 'antd';
 // 错误消息映射
 const ERROR_MESSAGES: Record<string, string> = {
   // 网络错误
-  'Network Error': '网络连接失败，请检查您的网络',
-  timeout: '请求超时，请稍后重试',
-  'Request timeout': '请求超时，请稍后重试',
+  'Network Error': 'Network connection failed, please check your network',
+  timeout: 'Request timed out, please try again later.',
+  'Request timeout': 'Request timed out, please try again later.',
 
   // HTTP 状态码错误
-  '400': '请求参数错误',
-  '401': '未授权，请重新登录',
-  '403': '没有权限执行此操作',
-  '404': '请求的资源不存在',
-  '409': '资源冲突，请刷新后重试',
-  '422': '数据验证失败',
-  '429': '请求过于频繁，请稍后再试',
-  '500': '服务器内部错误',
-  '502': '网关错误',
-  '503': '服务暂时不可用',
-  '504': '网关超时',
+  '400': 'Wrong request parameters',
+  '401': 'Unauthorized, please log in again',
+  '403': 'No permission to perform this operation',
+  '404': 'The requested resource does not exist',
+  '409': 'Resource conflict, please refresh and try again',
+  '422': 'Data validation failed',
+  '429': 'Requests are too frequent, please try again later.',
+  '500': 'Server internal error',
+  '502': 'Gateway error',
+  '503': 'Service is temporarily unavailable',
+  '504': 'Gateway timeout',
 };
 
 // API错误类
@@ -59,7 +59,7 @@ export const getFriendlyErrorMessage = (error: unknown): string => {
     return error.message;
   }
 
-  return '操作失败，请稍后重试';
+  return 'Operation failed, please try again later.';
 };
 
 /**
@@ -138,7 +138,7 @@ export class ApiHandler {
     }
   ): Promise<T[]> {
     const {
-      errorMessage = '批量操作失败',
+      errorMessage = 'Batch operation failed',
       showError = true,
       continueOnError = false,
     } = options || {};
@@ -161,7 +161,7 @@ export class ApiHandler {
 
         // 如果有失败的请求，显示警告
         if (failed.length > 0 && showError) {
-          message.warning(`${successful.length}个操作成功，${failed.length}个操作失败`);
+          message.warning(`${successful.length} Operations successful,${failed.length} Operations failed`);
         }
 
         return successful;

@@ -41,13 +41,13 @@ describe('useIncidentStats', () => {
     await waitFor(() => expect(result.current.loading).toBe(false));
 
     expect(result.current.stats).toHaveLength(4);
-    expect(result.current.stats[0]).toMatchObject({ label: '总事件数', value: 42 });
-    expect(result.current.stats[1]).toMatchObject({ label: '待处理', value: 10 });
-    expect(result.current.stats[2]).toMatchObject({ label: '紧急事件', value: 3 });
+    expect(result.current.stats[0]).toMatchObject({ label: "Total Incidents", value: 42 });
+    expect(result.current.stats[1]).toMatchObject({ label: "Pending", value: 10 });
+    expect(result.current.stats[2]).toMatchObject({ label: "Urgent", value: 3 });
     expect(result.current.stats[3]).toMatchObject({
-      label: '平均解决时间',
+      label: "Avg Resolution Time",
       value: 120,
-      suffix: '分钟',
+      suffix: "minutes",
     });
     // Every entry has an icon
     expect(result.current.stats.every(s => s.icon !== undefined)).toBe(true);

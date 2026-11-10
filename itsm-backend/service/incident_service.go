@@ -129,7 +129,7 @@ func (s *IncidentService) advanceIncidentWorkflow(ctx context.Context, txc *ent.
 		ctx, txc, tenantID, userID, string(dto.BusinessTypeIncident), incidentID, variables, 1,
 	)
 	if err != nil {
-		return fmt.Errorf("同步流程任务失败: %w", err)
+		return fmt.Errorf("Synchronization process task failed: %w", err)
 	}
 	if handled {
 		s.logger.Infow("Incident lifecycle bridged to BPMN task",
@@ -224,10 +224,10 @@ func (s *IncidentService) ValidateAssignee(ctx context.Context, assigneeID, tena
 		Where(user.IDEQ(assigneeID), user.TenantIDEQ(tenantID), user.ActiveEQ(true)).
 		Exist(ctx)
 	if err != nil {
-		return fmt.Errorf("验证处理人失败: %w", err)
+		return fmt.Errorf("Failed to verify handler: %w", err)
 	}
 	if !exists {
-		return fmt.Errorf("处理人不存在或不可用")
+		return fmt.Errorf("Processor does not exist or is unavailable")
 	}
 	return nil
 }
@@ -669,7 +669,7 @@ func (s *IncidentService) UpdateIncident(ctx context.Context, id int, req *dto.U
 	// 版本检查（乐观锁）
 	if req.Version > 0 && currentIncident.Version != req.Version {
 		return nil, common.NewVersionConflictError(
-			"事件",
+			"Incident",
 			id,
 			req.Version,
 			currentIncident.Version,
@@ -791,7 +791,7 @@ func (s *IncidentService) UpdateIncident(ctx context.Context, id int, req *dto.U
 					Where(incident.IDEQ(id), incident.TenantIDEQ(tenantID), incident.DeletedAtIsNil()).
 					Only(ctx)
 				if lookupErr == nil {
-					return nil, common.NewVersionConflictError("事件", id, req.Version, latest.Version)
+					return nil, common.NewVersionConflictError("Incident", id, req.Version, latest.Version)
 				}
 			}
 			return nil, ErrIncidentNotFound
@@ -2289,9 +2289,9 @@ func (s *IncidentService) GetWorkflowStatus(ctx context.Context, incidentID int,
 		Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, fmt.Errorf("未找到事件关联的流程实例")
+			return nil, fmt.Errorf("The process instance associated with the event was not found")
 		}
-		return nil, fmt.Errorf("查询流程实例失败: %w", err)
+		return nil, fmt.Errorf("Failed to query process instance: %w", err)
 	}
 
 	processDefName := ""

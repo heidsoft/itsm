@@ -53,7 +53,7 @@ var reviewTransitions = map[string]map[string]string{
 // 用独立错误而非泛化 error，handler 才能把它映射成 409 而不是 500 ——
 // 「当前状态不允许」是业务拒绝，不是服务端故障。
 var ErrReviewTransition = common.NewBusinessError(
-	common.ConflictCode, "当前评审状态不允许该操作", "",
+	common.ConflictCode, "The current review status does not allow this operation", "",
 )
 
 // NormalizeReviewStatus 把空/未知状态归一到合法值。
@@ -73,7 +73,7 @@ func NormalizeReviewStatus(s string) string {
 func nextReviewStatus(action, current string) (string, error) {
 	byFrom, ok := reviewTransitions[action]
 	if !ok {
-		return "", common.NewValidationError("未知的评审动作: "+action, nil)
+		return "", common.NewValidationError("Unknown review action:"+action, nil)
 	}
 	current = NormalizeReviewStatus(current)
 	to, ok := byFrom[current]

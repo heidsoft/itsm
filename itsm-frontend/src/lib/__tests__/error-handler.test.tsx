@@ -64,7 +64,7 @@ describe('ErrorHandler', () => {
 
     it('should handle unknown errors', () => {
       const result = handler.handleApiError('string error', 'test');
-      expect(result.message).toBe('未知错误');
+      expect(result.message).toBe("Unknown error");
     });
 
     it('should handle 401 as authentication error', () => {

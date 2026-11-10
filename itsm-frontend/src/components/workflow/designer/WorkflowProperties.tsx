@@ -135,18 +135,19 @@ export default function WorkflowProperties({
       <div className="h-full">
         <Card className="rounded-lg shadow-sm border border-gray-200">
           <div className="flex justify-between items-center mb-6">
-            <h3 className="text-base font-semibold mb-0">版本历史</h3>
+            <h3 className="text-base font-semibold mb-0">Version History</h3>
             <Button
               type="primary"
               icon={<GitBranch className="w-4 h-4" />}
               onClick={onShowVersionModal}
             >
-              创建新版本
+
+              Create new version
             </Button>
           </div>
 
           {workflowVersions.length === 0 ? (
-            <Empty description="暂无版本记录" />
+            <Empty description="No version record yet" />
           ) : (
             <Timeline className="mt-4">
               {workflowVersions.map((version: WorkflowVersion) => (
@@ -155,13 +156,13 @@ export default function WorkflowProperties({
                   dot={
                     <Badge
                       status={version.status === 'active' ? 'success' : 'default'}
-                      text={version.status === 'active' ? '当前' : ''}
+                      text={version.status === 'active' ? 'current' : ''}
                     />
                   }
                 >
                   <div className="flex justify-between items-center ml-2">
                     <div>
-                      <Text strong>版本 {version.version}</Text>
+                      <Text strong>Version {version.version}</Text>
                       <div className="text-sm text-gray-500 mt-1">{version.changeLog}</div>
                       <div className="text-xs text-gray-400 mt-1">
                         {formatDateTime(version.createdAt)} - {version.createdBy}
@@ -173,7 +174,8 @@ export default function WorkflowProperties({
                         icon={<Eye className="w-3 h-3" />}
                         onClick={() => onSwitchVersion?.(version.id)}
                       >
-                        查看
+
+                        View
                       </Button>
                       {version.status !== 'active' && (
                         <Button
@@ -181,7 +183,8 @@ export default function WorkflowProperties({
                           type="primary"
                           onClick={() => onSwitchVersion?.(version.id)}
                         >
-                          切换到此版本
+
+                          Switch to this version
                         </Button>
                       )}
                     </Space>
@@ -201,7 +204,7 @@ export default function WorkflowProperties({
       <Row gutter={[24, 24]}>
         <Col span={12}>
           <Card
-            title="审批配置"
+            title="Approval"
             className="h-full rounded-lg shadow-sm border border-gray-200"
           >
             <div className="space-y-6">
@@ -209,14 +212,15 @@ export default function WorkflowProperties({
               <div>
                 <Text strong className="block mb-2">
                   <Space size={4}>
-                    审批类型
+
+                    Approval Type
                     <Tooltip
                       title={
                         <div>
-                          <div><b>单人（single）</b>：任一审批人通过即结束。</div>
-                          <div><b>串行（sequential）</b>：按顺序逐个审批。</div>
-                          <div><b>并行（parallel）</b>：所有人需同时通过。</div>
-                          <div><b>条件（conditional）</b>：按表达式动态决定。</div>
+                          <div><b>single</b>: It ends when any approver passes it.</div>
+                          <div><b>serial</b>: Approval one by one in order.</div>
+                          <div><b>parallel</b>：Everyone needs to pass at the same time.</div>
+                          <div><b>conditional</b>: Dynamically determined by expression.</div>
                         </div>
                       }
                     >
@@ -229,10 +233,10 @@ export default function WorkflowProperties({
                   onChange={handleApprovalTypeChange}
                   className="w-full"
                   options={[
-                    { value: "single", label: "单人审批" },
-                    { value: "parallel", label: "并行审批" },
-                    { value: "sequential", label: "串行审批" },
-                    { value: "conditional", label: "条件审批" },
+                    { value: "single", label: "Single approver" },
+                    { value: "parallel", label: "Parallel" },
+                    { value: "sequential", label: "Sequential" },
+                    { value: "conditional", label: "Conditional" },
                   ]}
                 />
               </div>
@@ -240,11 +244,12 @@ export default function WorkflowProperties({
               {/* 审批人 */}
               <div>
                 <Text strong className="block mb-2">
-                  审批人
+
+                  Approver
                 </Text>
                 <Select
                   mode="multiple"
-                  placeholder="选择审批人"
+                  placeholder="Select approvers"
                   value={approvalConfig.approvers}
                   onChange={handleApproversChange}
                   className="w-full"
@@ -258,16 +263,18 @@ export default function WorkflowProperties({
               <div className="p-3 border border-dashed border-gray-300 rounded-md bg-gray-50">
                 <div className="flex items-center mb-1">
                   <Users className="w-4 h-4 mr-1 text-gray-500" />
-                  <Text strong>审批组</Text>
+                  <Text strong>Approval Group</Text>
                   <Text type="secondary" className="ml-auto text-xs">
-                    节点级配置
+
+                    Node level configuration
                   </Text>
                 </div>
                 <Text type="secondary" className="text-xs block">
-                  审批组是节点级的，需在画布上选中某个
-                  <b>审批节点</b>后，在右侧「节点属性」面板的 <b>「候选组」</b> 字段中选择。
-                  选中的组会写入 BPMN XML 的 <code className="text-xs">candidateGroups</code> 属性，
-                  后端引擎会在任务创建时按组成员自动展开为具体审批人。
+
+                  The approval group is at the node level and needs to be selected on the canvas.
+                  <b>Approval node</b>After that, in the "Node Properties" panel on the right <b>"Candidate Group"</b>  Select in field.
+The selected group will be written to the BPMN XML <code className="text-xs">candidateGroups</code>  attribute, The
+backend engine automatically expands group members into specific approvers when a task is created.
                 </Text>
               </div>
 
@@ -277,18 +284,19 @@ export default function WorkflowProperties({
 
         <Col span={12}>
           <Card
-            title="SLA配置"
+            title="SLA"
             className="h-full rounded-lg shadow-sm border border-gray-200"
           >
             <div className="space-y-6">
               {/* 响应时间 */}
               <div>
                 <Text strong className="block mb-2">
-                  响应时间
+
+                  Response Time
                 </Text>
                 <Input
                   type="number"
-                  suffix="小时"
+                  suffix="hours"
                   value={workflow?.slaConfig?.responseTimeHours}
                   onChange={e => handleResponseTimeChange(e.target.value)}
                 />
@@ -297,11 +305,12 @@ export default function WorkflowProperties({
               {/* 解决时间 */}
               <div>
                 <Text strong className="block mb-2">
-                  解决时间
+
+                  Resolved At
                 </Text>
                 <Input
                   type="number"
-                  suffix="小时"
+                  suffix="hours"
                   value={workflow?.slaConfig?.resolutionTimeHours}
                   onChange={e => handleResolutionTimeChange(e.target.value)}
                 />
@@ -310,7 +319,8 @@ export default function WorkflowProperties({
               {/* 工作时间设置 */}
               <div>
                 <Text strong className="block mb-2">
-                  工作时间设置
+
+                  Business Hours
                 </Text>
                 <div className="space-y-3">
                   <div className="flex items-center">
@@ -318,7 +328,8 @@ export default function WorkflowProperties({
                       checked={workflow?.slaConfig?.businessHoursOnly}
                       onChange={e => handleBusinessHoursChange(e.target.checked)}
                     >
-                      仅工作时间
+
+                      Business hours only
                     </Checkbox>
                   </div>
                   <div className="flex items-center">
@@ -326,7 +337,8 @@ export default function WorkflowProperties({
                       checked={workflow?.slaConfig?.excludeWeekends}
                       onChange={e => handleExcludeWeekendsChange(e.target.checked)}
                     >
-                      排除周末
+
+                      Exclude weekends
                     </Checkbox>
                   </div>
                   <div className="flex items-center">
@@ -334,7 +346,8 @@ export default function WorkflowProperties({
                       checked={workflow?.slaConfig?.excludeHolidays}
                       onChange={e => handleExcludeHolidaysChange(e.target.checked)}
                     >
-                      排除节假日
+
+                      Exclude holidays
                     </Checkbox>
                   </div>
                 </div>

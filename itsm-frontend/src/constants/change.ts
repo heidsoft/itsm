@@ -15,9 +15,9 @@ export { ChangeType, ChangeStatus };
 
 // 变更类型配置 (legacy)
 export const ChangeTypeLabels: Record<ChangeType, string> = {
-  [ChangeType.NORMAL]: '普通变更',
-  [ChangeType.STANDARD]: '标准变更',
-  [ChangeType.EMERGENCY]: '紧急变更',
+  [ChangeType.NORMAL]: 'Normal Change',
+  [ChangeType.STANDARD]: 'Standard Change',
+  [ChangeType.EMERGENCY]: 'Emergency Change',
 };
 
 // 变更优先级 (复用 TicketPriority)
@@ -29,10 +29,10 @@ export enum ChangePriority {
 }
 
 export const ChangePriorityLabels: Record<ChangePriority, string> = {
-  [ChangePriority.LOW]: '低',
-  [ChangePriority.MEDIUM]: '中',
-  [ChangePriority.HIGH]: '高',
-  [ChangePriority.CRITICAL]: '极高',
+  [ChangePriority.LOW]: 'Low',
+  [ChangePriority.MEDIUM]: 'Medium',
+  [ChangePriority.HIGH]: 'High',
+  [ChangePriority.CRITICAL]: 'Critical',
 };
 
 // 影响范围
@@ -43,9 +43,9 @@ export enum ChangeImpact {
 }
 
 export const ChangeImpactLabels: Record<ChangeImpact, string> = {
-  [ChangeImpact.LOW]: '低',
-  [ChangeImpact.MEDIUM]: '中',
-  [ChangeImpact.HIGH]: '高',
+  [ChangeImpact.LOW]: 'Low',
+  [ChangeImpact.MEDIUM]: 'Medium',
+  [ChangeImpact.HIGH]: 'High',
 };
 
 // 风险等级
@@ -56,22 +56,22 @@ export enum ChangeRisk {
 }
 
 export const ChangeRiskLabels: Record<ChangeRisk, string> = {
-  [ChangeRisk.LOW]: '低',
-  [ChangeRisk.MEDIUM]: '中',
-  [ChangeRisk.HIGH]: '高',
+  [ChangeRisk.LOW]: 'Low',
+  [ChangeRisk.MEDIUM]: 'Medium',
+  [ChangeRisk.HIGH]: 'High',
 };
 
 // 向后兼容的映射
 export const ChangeStatusLabels: Record<ChangeStatus, string> = {
-  [ChangeStatus.DRAFT]: '草稿',
-  [ChangeStatus.PENDING]: '待审批',
-  [ChangeStatus.APPROVED]: '已批准',
-  [ChangeStatus.REJECTED]: '已拒绝',
-  [ChangeStatus.SCHEDULED]: '已排期',
-  [ChangeStatus.IN_PROGRESS]: '实施中',
-  [ChangeStatus.COMPLETED]: '已完成',
-  [ChangeStatus.FAILED]: '实施失败',
-  [ChangeStatus.ROLLED_BACK]: '已回滚',
-  [ChangeStatus.CANCELLED]: '已取消',
-  [ChangeStatus.CLOSED]: '已关闭',
+  [ChangeStatus.DRAFT]: 'Draft',
+  [ChangeStatus.PENDING]: 'Pending Approval',
+  [ChangeStatus.APPROVED]: 'Approved',
+  [ChangeStatus.REJECTED]: 'Rejected',
+  [ChangeStatus.SCHEDULED]: 'Scheduled',
+  [ChangeStatus.IN_PROGRESS]: 'In Progress',
+  [ChangeStatus.COMPLETED]: 'Completed',
+  [ChangeStatus.FAILED]: 'Implementation failed',
+  [ChangeStatus.ROLLED_BACK]: 'Rolled Back',
+  [ChangeStatus.CANCELLED]: 'Cancelled',
+  [ChangeStatus.CLOSED]: 'Closed',
 };

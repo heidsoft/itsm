@@ -27,12 +27,12 @@ const TeamWorkloadChart: React.FC<{ data: TeamWorkload[] }> = React.memo(({ data
         fill: '#666',
         fontSize: 12,
       },
-      formatter: (datum: { ticketCount: number }) => `${datum.ticketCount}个`,
+      formatter: (datum: { ticketCount: number }) => `${datum.ticketCount} items`,
     },
     tooltip: {
       formatter: (datum: { ticketCount: number; completionRate: number }) => ({
-        name: '工单数',
-        value: `${datum.ticketCount}个 (完成率: ${datum.completionRate}%)`,
+        name: "Number of work orders",
+        value: `${datum.ticketCount}(Completion rate: ${datum.completionRate}%)`,
       }),
     },
     legend: false,
@@ -48,13 +48,13 @@ const TeamWorkloadChart: React.FC<{ data: TeamWorkload[] }> = React.memo(({ data
 
   return (
     <DashboardChartCard
-      title="团队工作负载"
-      subtitle="各成员工单处理情况"
+      title="Team Workload"
+      subtitle="Processing of employee orders for each employee"
       icon={<Users style={{ width: 20, height: 20 }} />}
       iconColor="#3b82f6"
       extra={
         <div style={{ textAlign: 'right' }}>
-          <div style={{ fontSize: 12, color: '#8c8c8c' }}>平均完成率</div>
+          <div style={{ fontSize: 12, color: '#8c8c8c' }}>Average completion rate</div>
           <div style={{ fontSize: 16, fontWeight: 600, color: '#1890ff' }}>
             {avgCompletion.toFixed(1)}%
           </div>
@@ -67,7 +67,7 @@ const TeamWorkloadChart: React.FC<{ data: TeamWorkload[] }> = React.memo(({ data
         ) : (
           <Empty
             image={Empty.PRESENTED_IMAGE_SIMPLE}
-            description="暂无团队工作负载数据"
+            description="No team workload data yet"
             style={{ paddingTop: 60 }}
           />
         )}

@@ -45,7 +45,7 @@ func tenantUserID(c *gin.Context) (tenantID, userID int, ok bool) {
 func pathID(c *gin.Context) (int, bool) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "无效的ID参数")
+		common.Fail(c, common.ParamErrorCode, "Invalid ID parameter")
 		return 0, false
 	}
 	return id, true
@@ -60,13 +60,13 @@ func (h *Handler) ListTicketNotifications(c *gin.Context) {
 
 	tenantID, _, ok := tenantUserID(c)
 	if !ok {
-		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		common.Fail(c, common.UnauthorizedCode, "Unauthorized access")
 		return
 	}
 	notifications, err := h.notificationService.ListTicketNotifications(c.Request.Context(), ticketID, tenantID)
 	if err != nil {
 		h.logger.Errorw("Failed to list ticket notifications", "error", err, "ticket_id", ticketID, "tenant_id", tenantID)
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -85,19 +85,19 @@ func (h *Handler) SendTicketNotification(c *gin.Context) {
 
 	var req dto.SendTicketNotificationRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, "Wrong request parameters")
 		return
 	}
 
 	tenantID, _, ok := tenantUserID(c)
 	if !ok {
-		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		common.Fail(c, common.UnauthorizedCode, "Unauthorized access")
 		return
 	}
 	err := h.notificationService.SendNotification(c.Request.Context(), ticketID, &req, tenantID)
 	if err != nil {
 		h.logger.Errorw("Failed to send ticket notification", "error", err, "ticket_id", ticketID, "tenant_id", tenantID)
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 

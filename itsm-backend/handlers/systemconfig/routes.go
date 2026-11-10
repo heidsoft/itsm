@@ -16,7 +16,7 @@ import (
 func tenantID(c *gin.Context) (int, bool) {
 	tid, err := middleware.GetTenantID(c)
 	if err != nil || tid <= 0 {
-		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		common.Fail(c, common.UnauthorizedCode, "Unauthorized access")
 		return 0, false
 	}
 	return tid, true
@@ -31,14 +31,14 @@ func (h *Handler) ListConfigs(c *gin.Context) {
 
 	req := dto.ListSystemConfigsRequest{Page: 1, PageSize: 20}
 	if err := c.ShouldBindQuery(&req); err != nil {
-		common.ParamError(c, "分页参数错误")
+		common.ParamError(c, "Wrong paging parameter")
 		return
 	}
 	page, pageSize, category := req.Page, req.PageSize, req.Category
 
 	configs, total, err := h.configService.ListSystemConfigs(c.Request.Context(), tid, category, page, pageSize)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -76,7 +76,7 @@ func (h *Handler) GetConfig(c *gin.Context) {
 
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.ParamError(c, "无效的配置ID")
+		common.ParamError(c, "Invalid configuration ID")
 		return
 	}
 
@@ -138,19 +138,19 @@ func (h *Handler) UpdateConfig(c *gin.Context) {
 
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.ParamError(c, "无效的配置ID")
+		common.ParamError(c, "Invalid configuration ID")
 		return
 	}
 
 	var req dto.UpdateSystemConfigRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "参数错误")
+		common.ParamErrorWithErr(c, err, "Parameter error")
 		return
 	}
 
 	config, err := h.configService.UpdateSystemConfig(c.Request.Context(), id, &req, tid)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 
@@ -177,13 +177,13 @@ func (h *Handler) BatchUpdateConfigs(c *gin.Context) {
 
 	var reqs []dto.UpdateSystemConfigRequest
 	if err := c.ShouldBindJSON(&reqs); err != nil {
-		common.ParamErrorWithErr(c, err, "参数错误")
+		common.ParamErrorWithErr(c, err, "Parameter error")
 		return
 	}
 
 	configs, err := h.configService.BatchUpdateSystemConfigs(c.Request.Context(), reqs, tid)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "Operation failed")
 		return
 	}
 

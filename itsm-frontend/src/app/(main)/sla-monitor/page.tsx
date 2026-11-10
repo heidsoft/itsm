@@ -28,23 +28,23 @@ const { Title, Text } = Typography;
 // 后端 priority / severity 返回英文枚举，展示层只做文案本地化，
 // 不得用中文字符串匹配后端值（那样会永远命中不到而显示为空）。
 const PRIORITY_META: Record<string, { color: string; label: string }> = {
-  urgent: { color: 'red', label: '紧急' },
-  critical: { color: 'red', label: '紧急' },
-  high: { color: 'orange', label: '高' },
-  medium: { color: 'blue', label: '中' },
-  low: { color: 'default', label: '低' },
+  urgent: { color: 'red', label: 'Urgent' },
+  critical: { color: 'red', label: 'Urgent' },
+  high: { color: 'orange', label: 'High' },
+  medium: { color: 'blue', label: 'Medium' },
+  low: { color: 'default', label: 'Low' },
 };
 
 const SEVERITY_META: Record<string, { color: string; label: string }> = {
-  critical: { color: 'red', label: '严重' },
-  high: { color: 'orange', label: '高' },
-  medium: { color: 'gold', label: '中' },
-  low: { color: 'blue', label: '低' },
+  critical: { color: 'red', label: 'Critical' },
+  high: { color: 'orange', label: 'High' },
+  medium: { color: 'gold', label: 'Medium' },
+  low: { color: 'blue', label: 'Low' },
 };
 
 const VIOLATION_TYPE_LABELS: Record<string, string> = {
-  response: '响应超时',
-  resolution: '解决超时',
+  response: 'Response timeout',
+  resolution: 'Resolving timeout',
 };
 
 const formatDateTime = (value?: string): string => sharedFormatDateTime(value) || '-';
@@ -126,7 +126,7 @@ const SLAMonitorPage = () => {
       setServiceSLA(services);
     } catch (error) {
       console.error('Failed to fetch SLA stats:', error);
-      message.error('获取SLA统计数据失败，请稍后重试');
+      message.error('Failed to obtain SLA statistics, please try again later.');
     } finally {
       setLoading(false);
     }
@@ -139,13 +139,13 @@ const SLAMonitorPage = () => {
 
   const ticketColumns: ColumnsType<SLAViolation> = [
     {
-      title: '工单号',
+      title: 'Work order number',
       key: 'ticketNumber',
       width: 150,
       render: (_, record) => <a>{record.ticketNumber || `#${record.ticketId}`}</a>,
     },
     {
-      title: '标题',
+      title: 'Title',
       dataIndex: 'ticketTitle',
       key: 'ticketTitle',
       ellipsis: true,
@@ -154,7 +154,7 @@ const SLAMonitorPage = () => {
       ),
     },
     {
-      title: '优先级',
+      title: 'Priority',
       dataIndex: 'ticketPriority',
       key: 'ticketPriority',
       width: 90,
@@ -164,7 +164,7 @@ const SLAMonitorPage = () => {
       },
     },
     {
-      title: 'SLA 目标',
+      title: 'SLA target',
       dataIndex: 'slaName',
       key: 'slaName',
       width: 160,
@@ -172,14 +172,14 @@ const SLAMonitorPage = () => {
       render: (name: string | undefined) => name || '-',
     },
     {
-      title: '违规类型',
+      title: 'Violation Type',
       dataIndex: 'violationType',
       key: 'violationType',
       width: 110,
       render: (type: string) => VIOLATION_TYPE_LABELS[type] || type || '-',
     },
     {
-      title: '严重程度',
+      title: 'Severity',
       dataIndex: 'severity',
       key: 'severity',
       width: 100,
@@ -189,37 +189,37 @@ const SLAMonitorPage = () => {
       },
     },
     {
-      title: '违规时间',
+      title: 'Violation Time',
       dataIndex: 'violationTime',
       key: 'violationTime',
       width: 180,
       render: formatDateTime,
     },
     {
-      title: '状态',
+      title: 'Status',
       key: 'status',
       width: 90,
       render: (_, record) =>
-        record.isResolved ? <Tag color="green">已解决</Tag> : <Tag color="red">未解决</Tag>,
+        record.isResolved ? <Tag color="green">Resolved</Tag> : <Tag color="red">unresolved</Tag>,
     },
   ];
 
   const serviceColumns: ColumnsType<ServiceSLARow> = [
     {
-      title: '服务名称',
+      title: 'Service Name',
       dataIndex: 'serviceName',
       key: 'serviceName',
       ellipsis: true,
       render: (text: string) => <a>{text}</a>,
     },
     {
-      title: '服务类型',
+      title: 'Service Type',
       dataIndex: 'serviceType',
       key: 'serviceType',
       width: 130,
     },
     {
-      title: '优先级',
+      title: 'Priority',
       dataIndex: 'priority',
       key: 'priority',
       width: 90,
@@ -229,21 +229,21 @@ const SLAMonitorPage = () => {
       },
     },
     {
-      title: '响应目标',
+      title: 'Response target',
       dataIndex: 'responseTime',
       key: 'responseTime',
       width: 110,
-      render: (minutes: number) => `${minutes} 分钟`,
+      render: (minutes: number) => `${minutes} minutes`,
     },
     {
-      title: '解决目标',
+      title: 'Solve target',
       dataIndex: 'resolutionTime',
       key: 'resolutionTime',
       width: 110,
-      render: (minutes: number) => `${minutes} 分钟`,
+      render: (minutes: number) => `${minutes} minutes`,
     },
     {
-      title: '违规总数',
+      title: 'Total number of violations',
       dataIndex: 'violationTotal',
       key: 'violationTotal',
       width: 110,
@@ -251,7 +251,7 @@ const SLAMonitorPage = () => {
       render: (val: number) => <span className={val > 0 ? 'text-red-600' : ''}>{val}</span>,
     },
     {
-      title: '未解决违规',
+      title: 'Open Violations',
       dataIndex: 'violationOpen',
       key: 'violationOpen',
       width: 120,
@@ -259,11 +259,11 @@ const SLAMonitorPage = () => {
       render: (val: number) => <span className={val > 0 ? 'text-orange-600' : 'text-green-600'}>{val}</span>,
     },
     {
-      title: '状态',
+      title: 'Status',
       key: 'isActive',
       width: 90,
       render: (_, record) =>
-        record.isActive ? <Tag color="green">启用</Tag> : <Tag>停用</Tag>,
+        record.isActive ? <Tag color="green">Enabled</Tag> : <Tag>Disable</Tag>,
     },
   ];
 
@@ -282,9 +282,10 @@ const SLAMonitorPage = () => {
       <div className="mb-6 flex justify-between items-center">
         <div>
           <Title level={2} style={{ marginBottom: 4 }}>
-            SLA实时监控
+
+            SLA real-time monitoring
           </Title>
-          <Text type="secondary">实时监控SLA执行情况和关键指标</Text>
+          <Text type="secondary">Real-time monitoring of SLA execution and key indicators</Text>
         </div>
         <Space>
           <Select
@@ -292,14 +293,15 @@ const SLAMonitorPage = () => {
             onChange={setRefreshInterval}
             style={{ width: 120 }}
             options={[
-              { value: 10, label: '10秒' },
-              { value: 30, label: '30秒' },
-              { value: 60, label: '1分钟' },
-              { value: 300, label: '5分钟' },
+              { value: 10, label: '10 seconds' },
+              { value: 30, label: '30 seconds' },
+              { value: 60, label: '1 minute' },
+              { value: 300, label: '5 minutes' },
             ]}
           />
           <Button icon={<RefreshCw size={16} />} onClick={() => fetchStats()} loading={loading}>
-            刷新
+
+            Refresh
           </Button>
         </Space>
       </div>
@@ -309,7 +311,7 @@ const SLAMonitorPage = () => {
         <Col xs={24} sm={12} lg={6}>
           <Card className="rounded-lg shadow-sm" style={{ height: '100%' }}>
             <Statistic
-              title="SLA总数"
+              title="SLATotal"
               value={stats.totalDefinitions}
               prefix={<Clock size={18} className="text-blue-500 mr-2" />}
               styles={{ content: { color: '#1890ff' } }}
@@ -319,7 +321,7 @@ const SLAMonitorPage = () => {
         <Col xs={24} sm={12} lg={6}>
           <Card className="rounded-lg shadow-sm" style={{ height: '100%' }}>
             <Statistic
-              title="启用中"
+              title="Activating"
               value={stats.activeDefinitions}
               prefix={<CheckCircle size={18} className="text-green-500 mr-2" />}
               styles={{ content: { color: '#52c41a' } }}
@@ -330,7 +332,7 @@ const SLAMonitorPage = () => {
         <Col xs={24} sm={12} lg={6}>
           <Card className="rounded-lg shadow-sm" style={{ height: '100%' }}>
             <Statistic
-              title="违规总数"
+              title="Total number of violations"
               value={stats.totalViolations}
               prefix={<AlertTriangle size={18} className="text-orange-500 mr-2" />}
               styles={{ content: { color: '#fa8c16' } }}
@@ -340,7 +342,7 @@ const SLAMonitorPage = () => {
         <Col xs={24} sm={12} lg={6}>
           <Card className="rounded-lg shadow-sm" style={{ height: '100%' }}>
             <Statistic
-              title="未解决违规"
+              title="Open Violations"
               value={stats.openViolations}
               prefix={<AlertTriangle size={18} className="text-red-500 mr-2" />}
               styles={{ content: { color: '#ff4d4f' } }}
@@ -360,7 +362,8 @@ const SLAMonitorPage = () => {
               label: (
                 <span className="flex items-center gap-2">
                   <Clock size={16} />
-                  概览
+
+                  Overview
                 </span>
               ),
               children: (
@@ -375,7 +378,8 @@ const SLAMonitorPage = () => {
               label: (
                 <span className="flex items-center gap-2">
                   <AlertTriangle size={16} />
-                  工单SLA ({violations.filter((v) => !v.isResolved).length})
+
+                  Work Order SLA ({violations.filter((v) => !v.isResolved).length})
                 </span>
               ),
               children: (
@@ -387,7 +391,7 @@ const SLAMonitorPage = () => {
                   pagination={{ pageSize: 10, showSizeChanger: true }}
                   size="small"
                   scroll={{ x: 1100 }}
-                  locale={{ emptyText: '暂无 SLA 违规记录' }}
+                  locale={{ emptyText: 'No SLA violation record yet' }}
                 />
               ),
             },
@@ -396,7 +400,8 @@ const SLAMonitorPage = () => {
               label: (
                 <span className="flex items-center gap-2">
                   <CheckCircle size={16} />
-                  服务SLA ({serviceSLA.length})
+
+                  Service SLA ({serviceSLA.length})
                 </span>
               ),
               children: (
@@ -406,7 +411,7 @@ const SLAMonitorPage = () => {
                     <Col xs={24} sm={8}>
                       <Card size="small" className="bg-blue-50" style={{ height: '100%' }}>
                         <Statistic
-                          title="服务总数"
+                          title="Total Services"
                           value={serviceSummary.total}
                           prefix={<CheckCircle size={18} className="text-blue-500" />}
                         />
@@ -415,7 +420,7 @@ const SLAMonitorPage = () => {
                     <Col xs={24} sm={8}>
                       <Card size="small" className="bg-green-50" style={{ height: '100%' }}>
                         <Statistic
-                          title="启用中服务"
+                          title="Activating service"
                           value={serviceSummary.active}
                           prefix={<TrendingUp size={18} className="text-green-500" />}
                         />
@@ -424,7 +429,7 @@ const SLAMonitorPage = () => {
                     <Col xs={24} sm={8}>
                       <Card size="small" className="bg-purple-50" style={{ height: '100%' }}>
                         <Statistic
-                          title="总体合规率"
+                          title="Overall Compliance Rate"
                           value={serviceSummary.complianceRate}
                           precision={1}
                           suffix="%"
@@ -442,7 +447,7 @@ const SLAMonitorPage = () => {
                     loading={loading}
                     pagination={{ pageSize: 10, showSizeChanger: true }}
                     scroll={{ x: 1000 }}
-                    locale={{ emptyText: '暂无 SLA 定义，请先在 SLA 策略中创建' }}
+                    locale={{ emptyText: 'There is no SLA definition yet, please create it in the SLA policy first' }}
                   />
                 </div>
               ),

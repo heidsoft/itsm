@@ -33,26 +33,26 @@ const { Text } = Typography;
 // BPMN 活动类型在后端可能是 camelCase（userTask）或 snake_case（user_task），
 // 统一归一化为中文标签，不在卡片里直出英文枚举。
 const ACTIVITY_TYPE_LABELS: Record<string, string> = {
-  startevent: '开始事件',
-  endevent: '结束事件',
-  usertask: '用户任务',
-  servicetask: '服务任务',
-  scripttask: '脚本任务',
-  manualtask: '人工任务',
-  businessruletask: '规则任务',
-  sendtask: '发送任务',
-  receivetask: '接收任务',
-  exclusivegateway: '排他网关',
-  parallelgateway: '并行网关',
-  inclusivegateway: '包容网关',
-  eventbasedgateway: '事件网关',
-  subprocess: '子流程',
-  callactivity: '调用活动',
+  startevent: 'Start event',
+  endevent: 'End event',
+  usertask: 'User Task',
+  servicetask: 'Service Task',
+  scripttask: 'Script task',
+  manualtask: 'Human task',
+  businessruletask: 'Rule task',
+  sendtask: 'Send task',
+  receivetask: 'Receive task',
+  exclusivegateway: 'Exclusive Gateway',
+  parallelgateway: 'Parallel Gateway',
+  inclusivegateway: 'Inclusive Gateway',
+  eventbasedgateway: 'Event Gateway',
+  subprocess: 'Sub-process',
+  callactivity: 'Call activity',
 };
 
 function getActivityTypeLabel(type?: string | null): string {
   const key = (type || '').replace(/[_-]/g, '').toLowerCase();
-  return ACTIVITY_TYPE_LABELS[key] ?? (type || '用户任务');
+  return ACTIVITY_TYPE_LABELS[key] ?? (type || 'User Task');
 }
 
 export interface WorkflowProgressCardProps {
@@ -142,15 +142,15 @@ export const WorkflowProgressCard: React.FC<WorkflowProgressCardProps> = ({
         title={
           <Space size={6}>
             <WorkflowIcon size={14} />
-            <Text strong>流转进度</Text>
-            <Tag color="default">未启动</Tag>
+            <Text strong>Transfer progress</Text>
+            <Tag color="default">Not started</Tag>
           </Space>
         }
       >
         <Alert
           type="info"
           showIcon
-          title="该工单尚未绑定 BPMN 流程，使用简化审批模式。"
+          title="This work order has not been bound to the BPMN process and uses the simplified approval mode."
           className="text-xs"
         />
       </Card>
@@ -167,9 +167,9 @@ export const WorkflowProgressCard: React.FC<WorkflowProgressCardProps> = ({
         title={
           <Space size={6}>
             <WorkflowIcon size={14} />
-            <Text strong>流转进度</Text>
+            <Text strong>Transfer progress</Text>
             <Tag color={isTerminated ? 'red' : 'success'} icon={isTerminated ? <CircleSlash size={12} /> : <CheckCircle size={12} />}>
-              {isTerminated ? '已终止' : '已完成'}
+              {isTerminated ? 'Terminated' : 'Completed'}
             </Tag>
           </Space>
         }
@@ -180,7 +180,8 @@ export const WorkflowProgressCard: React.FC<WorkflowProgressCardProps> = ({
             icon={<ExternalLink size={12} />}
             onClick={() => openDiagram(state.processInstanceId)}
           >
-            查看流程实例
+
+            View Process Instance
           </Button>
         }
       >
@@ -193,7 +194,7 @@ export const WorkflowProgressCard: React.FC<WorkflowProgressCardProps> = ({
               type="error"
               showIcon
               icon={<CircleAlert size={14} />}
-              title="流程已终止，不会继续流转。"
+              title="The process has been terminated and will not continue to flow."
               className="text-xs"
             />
           )}
@@ -211,12 +212,12 @@ export const WorkflowProgressCard: React.FC<WorkflowProgressCardProps> = ({
         title={
           <Space size={6}>
             <WorkflowIcon size={14} />
-            <Text strong>流转进度</Text>
-            <Tag color="warning">已挂起</Tag>
+            <Text strong>Transfer progress</Text>
+            <Tag color="warning">Suspended</Tag>
           </Space>
         }
       >
-        <Alert type="warning" showIcon title="流程已被挂起，恢复后才能继续流转。" className="text-xs" />
+        <Alert type="warning" showIcon title="The process has been suspended and cannot continue until it is resumed." className="text-xs" />
       </Card>
     );
   }
@@ -230,8 +231,8 @@ export const WorkflowProgressCard: React.FC<WorkflowProgressCardProps> = ({
       title={
         <Space size={6}>
           <WorkflowIcon size={14} />
-          <Text strong>流转进度</Text>
-          <Tag color="processing">进行中</Tag>
+          <Text strong>Transfer progress</Text>
+          <Tag color="processing">In Progress</Tag>
         </Space>
       }
       extra={
@@ -244,7 +245,8 @@ export const WorkflowProgressCard: React.FC<WorkflowProgressCardProps> = ({
             onRefresh?.();
           }}
         >
-          查看完整流程图
+
+          View full flow chart
         </Button>
       }
     >
@@ -253,7 +255,8 @@ export const WorkflowProgressCard: React.FC<WorkflowProgressCardProps> = ({
         {state.currentActivityName && (
           <div>
             <Text type="secondary" className="text-xs">
-              当前节点
+
+              Current Node
             </Text>
             <div className="mt-1 flex items-center gap-2">
               <Tag color="blue" className="mr-0">
@@ -264,7 +267,8 @@ export const WorkflowProgressCard: React.FC<WorkflowProgressCardProps> = ({
             {state.currentAssignees && state.currentAssignees.length > 0 && (
               <Space size={4} className="mt-2" wrap>
                 <Text type="secondary" className="text-xs">
-                  处理人
+
+                  Assignee
                 </Text>
                 {state.currentAssignees.map((u) => (
                   <Tooltip key={u.id} title={u.fullName || u.username}>
@@ -282,7 +286,8 @@ export const WorkflowProgressCard: React.FC<WorkflowProgressCardProps> = ({
         {state.nextActivities && state.nextActivities.length > 0 && (
           <div>
             <Text type="secondary" className="text-xs">
-              下一步
+
+              Next
             </Text>
             <Space orientation="vertical" size={2} className="mt-1 w-full">
               {state.nextActivities.map((nx) => (
@@ -294,7 +299,8 @@ export const WorkflowProgressCard: React.FC<WorkflowProgressCardProps> = ({
                   <Text>{nx.activityName}</Text>
                   {nx.isGateway && (
                     <Tag color="orange" className="ml-1">
-                      网关分支
+
+                      Gateway Branch
                     </Tag>
                   )}
                 </Space>
@@ -306,7 +312,8 @@ export const WorkflowProgressCard: React.FC<WorkflowProgressCardProps> = ({
         {/* 进度条 */}
         <div>
           <Text type="secondary" className="text-xs">
-            进度 · {completed}/{total}
+
+            Progress · {completed}/{total}
           </Text>
           <Progress percent={percent} size="small" showInfo={false} />
         </div>

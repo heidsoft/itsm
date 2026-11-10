@@ -93,7 +93,7 @@ const pendingSteps = [
 
 // Tab 内容默认懒渲染：先切到「回滚清单」才拿得到步骤。
 async function openChecklistTab() {
-  const tab = await screen.findByRole('tab', { name: '回滚清单' });
+  const tab = await screen.findByRole('tab', { name: "Rollback checklist" });
   await userEvent.click(tab);
 }
 
@@ -107,11 +107,11 @@ describe('ChangeDetail 回滚清单', () => {
     mockChange = { ...baseChange, status: 'in_progress', rollbackSteps: pendingSteps };
     render(<ChangeDetail />);
 
-    const rollbackButtons = await screen.findAllByRole('button', { name: /回\s*滚/ });
+    const rollbackButtons = await screen.findAllByRole('button', { name: /Rollback/ });
     expect(rollbackButtons[0]).toBeDisabled();
 
     await openChecklistTab();
-    expect(await screen.findByText(/还有 1 步未确认/)).toBeInTheDocument();
+    expect(await screen.findByText(/1 step\(s\) still unconfirmed/)).toBeInTheDocument();
   });
 
   it('清单全部确认后「回滚」恢复可用', async () => {
@@ -122,7 +122,7 @@ describe('ChangeDetail 回滚清单', () => {
     };
     render(<ChangeDetail />);
 
-    const rollbackButtons = await screen.findAllByRole('button', { name: /回\s*滚/ });
+    const rollbackButtons = await screen.findAllByRole('button', { name: /Rollback/ });
     expect(rollbackButtons[0]).toBeEnabled();
   });
 
@@ -131,7 +131,7 @@ describe('ChangeDetail 回滚清单', () => {
     render(<ChangeDetail />);
     await openChecklistTab();
 
-    const doneButtons = await screen.findAllByRole('button', { name: '已完成' });
+    const doneButtons = await screen.findAllByRole('button', { name: "Done" });
     await userEvent.click(doneButtons[0]);
 
     await waitFor(() => expect(resolveRollbackStep).toHaveBeenCalledWith(9, 102, 'done', undefined));
@@ -142,11 +142,11 @@ describe('ChangeDetail 回滚清单', () => {
     render(<ChangeDetail />);
     await openChecklistTab();
 
-    const skippedButtons = await screen.findAllByRole('button', { name: /不\s*适\s*用/ });
+    const skippedButtons = await screen.findAllByRole('button', { name: /Not applicable/ });
     await userEvent.click(skippedButtons[0]);
 
     const dialog = await screen.findByRole('dialog');
-    const confirm = within(dialog).getByRole('button', { name: /确\s*定/ });
+    const confirm = within(dialog).getByRole('button', { name: /Confirm/ });
     expect(confirm).toBeDisabled();
 
     await userEvent.type(within(dialog).getByRole('textbox'), '本次未新增临时配置，无需清理');
@@ -167,14 +167,14 @@ describe('ChangeDetail 回滚清单', () => {
     render(<ChangeDetail />);
     await openChecklistTab();
 
-    await userEvent.click(await screen.findByRole('button', { name: '编排回滚清单' }));
+    await userEvent.click(await screen.findByRole('button', { name: "Edit rollback checklist" }));
 
     const dialog = await screen.findByRole('dialog');
     const textarea = within(dialog).getByRole('textbox') as HTMLTextAreaElement;
     // 预填时去掉行首序号，清单里不该带 "1." 这种噪音
-    expect(textarea.value).toBe('摘除 SLB 流量\n回滚镜像');
+    expect(textarea.value).toBe("摘除 SLB 流量\n回滚镜像");
 
-    await userEvent.click(within(dialog).getByRole('button', { name: /保\s*存/ }));
+    await userEvent.click(within(dialog).getByRole('button', { name: /Save/ }));
 
     await waitFor(() =>
       expect(replaceRollbackSteps).toHaveBeenCalledWith(9, ['摘除 SLB 流量', '回滚镜像'])
@@ -191,7 +191,7 @@ describe('ChangeDetail 回滚清单', () => {
     await openChecklistTab();
 
     expect(await screen.findByText('回滚卡住')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: '已完成' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: '撤销确认' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: "Done" })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: "Undo" })).not.toBeInTheDocument();
   });
 });

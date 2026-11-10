@@ -5,31 +5,31 @@
                  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                  id="Definitions_change_request" targetNamespace="http://bpmn.io/schema/bpmn">
-  <bpmn:process id="change_request" name="变更申请流程" isExecutable="true">
-    <bpmn:startEvent id="StartEvent_1" name="开始">
+  <bpmn:process id="change_request" name="Change Request Workflow" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_1" name="Start">
       <bpmn:outgoing>Flow_1</bpmn:outgoing>
     </bpmn:startEvent>
-    <bpmn:userTask id="Task_Submit" name="提交变更申请">
+    <bpmn:userTask id="Task_Submit" name="Submit Change Request">
       <bpmn:incoming>Flow_1</bpmn:incoming>
       <bpmn:outgoing>Flow_2</bpmn:outgoing>
     </bpmn:userTask>
-    <bpmn:userTask id="Task_ImpactAnalysis" name="影响分析">
+    <bpmn:userTask id="Task_ImpactAnalysis" name="Impact Analysis">
       <bpmn:incoming>Flow_2</bpmn:incoming>
       <bpmn:outgoing>Flow_3</bpmn:outgoing>
     </bpmn:userTask>
-    <bpmn:userTask id="Task_ITApproval" name="IT负责人审批">
+    <bpmn:userTask id="Task_ITApproval" name="IT Lead Approval">
       <bpmn:incoming>Flow_3</bpmn:incoming>
       <bpmn:outgoing>Flow_4</bpmn:outgoing>
     </bpmn:userTask>
-    <bpmn:userTask id="Task_Implementation" name="实施变更">
+    <bpmn:userTask id="Task_Implementation" name="Implement Change">
       <bpmn:incoming>Flow_4</bpmn:incoming>
       <bpmn:outgoing>Flow_5</bpmn:outgoing>
     </bpmn:userTask>
-    <bpmn:userTask id="Task_Verification" name="验证确认">
+    <bpmn:userTask id="Task_Verification" name="Verification Confirmation">
       <bpmn:incoming>Flow_5</bpmn:incoming>
       <bpmn:outgoing>Flow_6</bpmn:outgoing>
     </bpmn:userTask>
-    <bpmn:endEvent id="EndEvent_Completed" name="变更完成">
+    <bpmn:endEvent id="EndEvent_Completed" name="Change Completed">
       <bpmn:incoming>Flow_6</bpmn:incoming>
     </bpmn:endEvent>
     <bpmn:sequenceFlow id="Flow_1" sourceRef="StartEvent_1" targetRef="Task_Submit" />

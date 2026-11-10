@@ -88,7 +88,7 @@ func TestTicketAssignmentService_AssignTicket(t *testing.T) {
 			},
 		},
 		{
-			name: "工单不存在",
+			name: "The work order does not exist",
 			request: &AssignmentRequest{
 				TicketID:   99999,
 				TenantID:   testTenant.ID,
@@ -194,7 +194,7 @@ func TestTicketAssignmentService_GetUserWorkload(t *testing.T) {
 			},
 		},
 		{
-			name:          "用户不存在",
+			name:          "User does not exist",
 			userID:        99999,
 			expectedError: false,
 			checkResult: func(t *testing.T, workload *UserWorkload) {

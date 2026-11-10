@@ -29,21 +29,21 @@
     「流程已绑定但当前没有可处理的审批待办」，变更永久卡在 pending——所以
     「免审批」不是这个代码库的语义，只能是「少一级、快一步」。
   -->
-  <bpmn:process id="change_emergency_flow" name="紧急变更流程" isExecutable="true">
+  <bpmn:process id="change_emergency_flow" name="Emergency Change Workflow" isExecutable="true">
     <bpmn:extensionElements>
       <bpmn:metaData name="category">change</bpmn:metaData>
       <bpmn:metaData name="sub_category">emergency</bpmn:metaData>
       <bpmn:metaData name="version">1.0.0</bpmn:metaData>
-      <bpmn:metaData name="description">紧急变更快速处理流程（单级紧急审批，跳过 CAB 与排期）</bpmn:metaData>
+      <bpmn:metaData name="description">Expedited emergency change workflow with one approval level, bypassing CAB and scheduling</bpmn:metaData>
     </bpmn:extensionElements>
 
     <!-- 开始事件：紧急变更申请 -->
-    <bpmn:startEvent id="StartEvent_1" name="紧急变更申请">
+    <bpmn:startEvent id="StartEvent_1" name="Emergency Change Request">
       <bpmn:outgoing>Flow_1</bpmn:outgoing>
     </bpmn:startEvent>
 
     <!-- 紧急评估：影响面与回滚预案 -->
-    <bpmn:userTask id="Activity_Assessment" name="紧急评估">
+    <bpmn:userTask id="Activity_Assessment" name="Emergency Assessment">
       <bpmn:extensionElements>
         <bpmn:metaData name="service_task_type">change_task</bpmn:metaData>
         <bpmn:metaData name="action">update_change</bpmn:metaData>
@@ -53,7 +53,7 @@
     </bpmn:userTask>
 
     <!-- 单级紧急审批：快速审批路径，不走 CAB 全会 -->
-    <bpmn:userTask id="Activity_EmergencyApproval" name="紧急审批">
+    <bpmn:userTask id="Activity_EmergencyApproval" name="Emergency Approval">
       <bpmn:extensionElements>
         <bpmn:metaData name="service_task_type">change_task</bpmn:metaData>
         <bpmn:metaData name="action">approve_change</bpmn:metaData>
@@ -63,14 +63,14 @@
     </bpmn:userTask>
 
     <!-- 审批结果网关 -->
-    <bpmn:exclusiveGateway id="Gateway_ApprovalResult" name="审批结果?">
+    <bpmn:exclusiveGateway id="Gateway_ApprovalResult" name="Approval Result?">
       <bpmn:incoming>Flow_ApprovalResult</bpmn:incoming>
       <bpmn:outgoing>Flow_Implement</bpmn:outgoing>
       <bpmn:outgoing>Flow_Reject</bpmn:outgoing>
     </bpmn:exclusiveGateway>
 
     <!-- 驳回处理 -->
-    <bpmn:userTask id="Activity_Reject" name="紧急变更驳回">
+    <bpmn:userTask id="Activity_Reject" name="Reject Emergency Change">
       <bpmn:extensionElements>
         <bpmn:metaData name="service_task_type">change_task</bpmn:metaData>
         <bpmn:metaData name="action">reject_change</bpmn:metaData>
@@ -80,7 +80,7 @@
     </bpmn:userTask>
 
     <!-- 实施 -->
-    <bpmn:userTask id="Activity_Implement" name="紧急实施">
+    <bpmn:userTask id="Activity_Implement" name="Emergency Implementation">
       <bpmn:extensionElements>
         <bpmn:metaData name="service_task_type">change_task</bpmn:metaData>
         <bpmn:metaData name="action">implement_change</bpmn:metaData>
@@ -91,7 +91,7 @@
     </bpmn:userTask>
 
     <!-- 验证 -->
-    <bpmn:userTask id="Activity_Verify" name="紧急变更验证">
+    <bpmn:userTask id="Activity_Verify" name="Verify Emergency Change">
       <bpmn:extensionElements>
         <bpmn:metaData name="service_task_type">change_task</bpmn:metaData>
         <bpmn:metaData name="action">verify_change</bpmn:metaData>
@@ -101,7 +101,7 @@
     </bpmn:userTask>
 
     <!-- 验证结果网关 -->
-    <bpmn:exclusiveGateway id="Gateway_VerifyResult" name="验证结果?">
+    <bpmn:exclusiveGateway id="Gateway_VerifyResult" name="Verification Result?">
       <bpmn:incoming>Flow_4</bpmn:incoming>
       <bpmn:outgoing>Flow_Close</bpmn:outgoing>
       <bpmn:outgoing>Flow_BackToImplement</bpmn:outgoing>
@@ -113,7 +113,7 @@
     </bpmn:sequenceFlow>
 
     <!-- 关闭：补记录，供事后 CAB 复盘 / PIR -->
-    <bpmn:userTask id="Activity_Close" name="关闭紧急变更">
+    <bpmn:userTask id="Activity_Close" name="Close Emergency Change">
       <bpmn:extensionElements>
         <bpmn:metaData name="service_task_type">change_task</bpmn:metaData>
         <bpmn:metaData name="action">close_change</bpmn:metaData>
@@ -123,7 +123,7 @@
     </bpmn:userTask>
 
     <!-- 结束事件 -->
-    <bpmn:endEvent id="EndEvent_1" name="紧急变更完成">
+    <bpmn:endEvent id="EndEvent_1" name="Emergency Change Completed">
       <bpmn:incoming>Flow_End</bpmn:incoming>
       <bpmn:incoming>Flow_EndReject</bpmn:incoming>
     </bpmn:endEvent>

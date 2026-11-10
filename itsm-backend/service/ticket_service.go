@@ -279,16 +279,16 @@ func (s *TicketService) runCreateTicketTx(
 // CreateTicket 创建工单
 func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketRequest, tenantID int) (*ticket.Ticket, error) {
 	if req == nil {
-		return nil, common.NewBusinessError(common.ParamErrorCode, "request不能为nil", "")
+		return nil, common.NewBusinessError(common.ParamErrorCode, "request cannot be nil", "")
 	}
 	s.logger.Infow("Creating ticket", "tenant_id", tenantID, "title", req.Title)
 	if strings.TrimSpace(req.Title) == "" {
-		return nil, common.NewBusinessError(common.ParamErrorCode, "title不能为空", "")
+		return nil, common.NewBusinessError(common.ParamErrorCode, "title cannot be empty", "")
 	}
 	switch ticket.Priority(req.Priority) {
 	case ticket.PriorityLow, ticket.PriorityMedium, ticket.PriorityHigh, ticket.PriorityUrgent, ticket.PriorityCritical:
 	default:
-		return nil, common.NewBusinessError(common.ParamErrorCode, "无效的工单优先级", req.Priority)
+		return nil, common.NewBusinessError(common.ParamErrorCode, "Invalid ticket priority", req.Priority)
 	}
 	if err := s.validateCreateTicketReferences(ctx, req, tenantID); err != nil {
 		return nil, err
@@ -307,7 +307,7 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 	// 若仅传入分类名称（前端下拉选值），按名解析为分类ID，与 UpdateTicket 行为保持一致
 	if categoryID == nil && strings.TrimSpace(req.Category) != "" {
 		if s.client == nil {
-			return nil, common.NewBusinessError(common.ParamErrorCode, "无法解析工单分类", "")
+			return nil, common.NewBusinessError(common.ParamErrorCode, "Unable to parse work order classification", "")
 		}
 		category, err := s.client.TicketCategory.Query().
 			Where(ticketcategory.NameEQ(strings.TrimSpace(req.Category)), ticketcategory.TenantIDEQ(tenantID), ticketcategory.IsActiveEQ(true)).
@@ -561,7 +561,7 @@ func (s *TicketService) validateConfiguredTicketType(ctx context.Context, req *d
 		return nil, nil
 	}
 	if s.client == nil {
-		return nil, common.NewBusinessError(common.InternalErrorCode, "无法校验工单类型", "")
+		return nil, common.NewBusinessError(common.InternalErrorCode, "Unable to verify ticket type", "")
 	}
 	query := s.client.TicketType.Query().Where(tickettype.TenantIDEQ(int64(tenantID)))
 	if req.TicketTypeID != nil {
@@ -571,10 +571,10 @@ func (s *TicketService) validateConfiguredTicketType(ctx context.Context, req *d
 	}
 	configured, err := query.Only(ctx)
 	if err != nil {
-		return nil, common.NewBusinessError(common.NotFoundCode, "工单类型不存在", "")
+		return nil, common.NewBusinessError(common.NotFoundCode, "Work order type does not exist", "")
 	}
 	if configured.Status != string(dto.TicketTypeStatusActive) {
-		return nil, common.NewBusinessError(common.ParamErrorCode, "工单类型已停用", "")
+		return nil, common.NewBusinessError(common.ParamErrorCode, "Ticket type is deactivated", "")
 	}
 	if req.FormFields == nil {
 		req.FormFields = make(map[string]interface{})
@@ -585,7 +585,7 @@ func (s *TicketService) validateConfiguredTicketType(ctx context.Context, req *d
 		allowed[field.Name] = field
 		if field.Readonly {
 			if suppliedValue, supplied := req.FormFields[field.Name]; supplied && fmt.Sprint(suppliedValue) != fmt.Sprint(field.DefaultValue) {
-				return nil, common.NewBusinessError(common.ParamErrorCode, "字段 "+field.Label+" 为只读字段", "")
+				return nil, common.NewBusinessError(common.ParamErrorCode, "Field"+field.Label+"is a read-only field", "")
 			}
 			if field.DefaultValue != nil {
 				req.FormFields[field.Name] = field.DefaultValue
@@ -594,7 +594,7 @@ func (s *TicketService) validateConfiguredTicketType(ctx context.Context, req *d
 	}
 	for key := range req.FormFields {
 		if _, ok := allowed[key]; !ok {
-			return nil, common.NewBusinessError(common.ParamErrorCode, "包含未定义字段", key)
+			return nil, common.NewBusinessError(common.ParamErrorCode, "Contains undefined fields", key)
 		}
 	}
 	for _, field := range definitions {
@@ -604,22 +604,22 @@ func (s *TicketService) validateConfiguredTicketType(ctx context.Context, req *d
 			req.FormFields[field.Name] = value
 		}
 		if field.Required && (!exists || value == nil || strings.TrimSpace(fmt.Sprint(value)) == "") {
-			return nil, common.NewBusinessError(common.ParamErrorCode, "字段 "+field.Label+" 为必填项", "")
+			return nil, common.NewBusinessError(common.ParamErrorCode, "Field"+field.Label+"is required", "")
 		}
 		if !exists || value == nil {
 			continue
 		}
 		if (field.Type == dto.CustomFieldTypeSelect || field.Type == dto.CustomFieldTypeRadio) && !customFieldOptionExists(field.Options, value) {
-			return nil, common.NewBusinessError(common.ParamErrorCode, "字段 "+field.Label+" 的选项无效", "")
+			return nil, common.NewBusinessError(common.ParamErrorCode, "Field"+field.Label+"The option is invalid", "")
 		}
 		if field.Type == dto.CustomFieldTypeMultiSelect {
 			values, ok := value.([]interface{})
 			if !ok {
-				return nil, common.NewBusinessError(common.ParamErrorCode, "字段 "+field.Label+" 必须是数组", "")
+				return nil, common.NewBusinessError(common.ParamErrorCode, "Field"+field.Label+"Must be an array", "")
 			}
 			for _, item := range values {
 				if !customFieldOptionExists(field.Options, item) {
-					return nil, common.NewBusinessError(common.ParamErrorCode, "字段 "+field.Label+" 的选项无效", "")
+					return nil, common.NewBusinessError(common.ParamErrorCode, "Field"+field.Label+"The option is invalid", "")
 				}
 			}
 		}
@@ -638,77 +638,77 @@ func (s *TicketService) validateCustomFieldValue(ctx context.Context, tenantID i
 	case dto.CustomFieldTypeText, dto.CustomFieldTypeTextarea:
 		text, ok := value.(string)
 		if !ok {
-			return common.NewBusinessError(common.ParamErrorCode, "字段 "+field.Label+" 必须是文本", "")
+			return common.NewBusinessError(common.ParamErrorCode, "Field"+field.Label+"Must be text", "")
 		}
 		if field.Validation != nil {
 			if field.Validation.Min != nil && len([]rune(text)) < *field.Validation.Min {
-				return common.NewBusinessError(common.ParamErrorCode, "字段 "+field.Label+" 长度不足", "")
+				return common.NewBusinessError(common.ParamErrorCode, "Field"+field.Label+"Insufficient length", "")
 			}
 			if field.Validation.Max != nil && len([]rune(text)) > *field.Validation.Max {
-				return common.NewBusinessError(common.ParamErrorCode, "字段 "+field.Label+" 长度超限", "")
+				return common.NewBusinessError(common.ParamErrorCode, "Field"+field.Label+"Length exceeds limit", "")
 			}
 			if field.Validation.Pattern != "" {
 				pattern, err := regexp.Compile(field.Validation.Pattern)
 				if err != nil || !pattern.MatchString(text) {
-					return common.NewBusinessError(common.ParamErrorCode, "字段 "+field.Label+" 格式无效", "")
+					return common.NewBusinessError(common.ParamErrorCode, "Field"+field.Label+"Invalid format", "")
 				}
 			}
 		}
 	case dto.CustomFieldTypeNumber:
 		number, err := strconv.ParseFloat(fmt.Sprint(value), 64)
 		if err != nil {
-			return common.NewBusinessError(common.ParamErrorCode, "字段 "+field.Label+" 必须是数字", "")
+			return common.NewBusinessError(common.ParamErrorCode, "Field"+field.Label+"must be a number", "")
 		}
 		if field.Validation != nil {
 			if field.Validation.Min != nil && number < float64(*field.Validation.Min) {
-				return common.NewBusinessError(common.ParamErrorCode, "字段 "+field.Label+" 小于最小值", "")
+				return common.NewBusinessError(common.ParamErrorCode, "Field"+field.Label+"Less than minimum value", "")
 			}
 			if field.Validation.Max != nil && number > float64(*field.Validation.Max) {
-				return common.NewBusinessError(common.ParamErrorCode, "字段 "+field.Label+" 超过最大值", "")
+				return common.NewBusinessError(common.ParamErrorCode, "Field"+field.Label+"Maximum value exceeded", "")
 			}
 		}
 	case dto.CustomFieldTypeBoolean, dto.CustomFieldTypeCheckbox:
 		if _, ok := value.(bool); !ok {
-			return common.NewBusinessError(common.ParamErrorCode, "字段 "+field.Label+" 必须是布尔值", "")
+			return common.NewBusinessError(common.ParamErrorCode, "Field"+field.Label+"Must be a Boolean value", "")
 		}
 	case dto.CustomFieldTypeDate, dto.CustomFieldTypeDatetime:
 		dateValue, ok := value.(string)
 		if !ok {
-			return common.NewBusinessError(common.ParamErrorCode, "字段 "+field.Label+" 必须是日期字符串", "")
+			return common.NewBusinessError(common.ParamErrorCode, "Field"+field.Label+"Must be a date string", "")
 		}
 		layout := "2006-01-02"
 		if field.Type == dto.CustomFieldTypeDatetime {
 			layout = time.RFC3339
 		}
 		if _, err := time.Parse(layout, dateValue); err != nil {
-			return common.NewBusinessError(common.ParamErrorCode, "字段 "+field.Label+" 日期格式无效", "")
+			return common.NewBusinessError(common.ParamErrorCode, "Field"+field.Label+"Invalid date format", "")
 		}
 	case dto.CustomFieldTypeUser, dto.CustomFieldTypeUserPicker:
 		id, err := interfaceInt(value)
 		if err != nil {
-			return common.NewBusinessError(common.ParamErrorCode, "字段 "+field.Label+" 的用户无效", "")
+			return common.NewBusinessError(common.ParamErrorCode, "Field"+field.Label+"The user is invalid", "")
 		}
 		exists, _ := s.client.User.Query().Where(user.IDEQ(id), user.TenantIDEQ(tenantID), user.ActiveEQ(true)).Exist(ctx)
 		if !exists {
-			return common.NewBusinessError(common.ParamErrorCode, "字段 "+field.Label+" 的用户不存在或无权引用", "")
+			return common.NewBusinessError(common.ParamErrorCode, "Field"+field.Label+"The user does not exist or does not have permission to reference", "")
 		}
 	case dto.CustomFieldTypeDepartment, dto.CustomFieldTypeDepartmentPicker:
 		id, err := interfaceInt(value)
 		if err != nil {
-			return common.NewBusinessError(common.ParamErrorCode, "字段 "+field.Label+" 的部门无效", "")
+			return common.NewBusinessError(common.ParamErrorCode, "Field"+field.Label+"The department is invalid", "")
 		}
 		exists, _ := s.client.Department.Query().Where(department.IDEQ(id), department.TenantIDEQ(tenantID)).Exist(ctx)
 		if !exists {
-			return common.NewBusinessError(common.ParamErrorCode, "字段 "+field.Label+" 的部门不存在或无权引用", "")
+			return common.NewBusinessError(common.ParamErrorCode, "Field"+field.Label+"The department does not exist or does not have permission to reference", "")
 		}
 	case dto.CustomFieldTypeCI:
 		id, err := interfaceInt(value)
 		if err != nil {
-			return common.NewBusinessError(common.ParamErrorCode, "字段 "+field.Label+" 的CI无效", "")
+			return common.NewBusinessError(common.ParamErrorCode, "Field"+field.Label+"The CI is invalid", "")
 		}
 		exists, _ := s.client.ConfigurationItem.Query().Where(configurationitem.IDEQ(id), configurationitem.TenantIDEQ(tenantID)).Exist(ctx)
 		if !exists {
-			return common.NewBusinessError(common.ParamErrorCode, "字段 "+field.Label+" 的CI不存在或无权引用", "")
+			return common.NewBusinessError(common.ParamErrorCode, "Field"+field.Label+"The CI does not exist or does not have permission to reference", "")
 		}
 	}
 	return nil
@@ -754,26 +754,26 @@ func (s *TicketService) validateCreateTicketReferences(ctx context.Context, req 
 		return nil
 	}
 	if req.RequesterID <= 0 {
-		return common.NewBusinessError(common.ParamErrorCode, "requesterId必须为当前租户中的有效用户", "")
+		return common.NewBusinessError(common.ParamErrorCode, "requesterId must be a valid user in the current tenant", "")
 	}
 	requesterExists, err := s.client.User.Query().
 		Where(user.IDEQ(req.RequesterID), user.TenantIDEQ(tenantID), user.ActiveEQ(true)).
 		Exist(ctx)
 	if err != nil {
-		return fmt.Errorf("验证申请人失败: %w", err)
+		return fmt.Errorf("Failed to verify applicant: %w", err)
 	}
 	if !requesterExists {
-		return common.NewBusinessError(common.NotFoundCode, "申请人不存在或不可用", "")
+		return common.NewBusinessError(common.NotFoundCode, "Applicant does not exist or is unavailable", "")
 	}
 	if req.AssigneeID > 0 {
 		assigneeExists, err := s.client.User.Query().
 			Where(user.IDEQ(req.AssigneeID), user.TenantIDEQ(tenantID), user.ActiveEQ(true)).
 			Exist(ctx)
 		if err != nil {
-			return fmt.Errorf("验证处理人失败: %w", err)
+			return fmt.Errorf("Failed to verify handler: %w", err)
 		}
 		if !assigneeExists {
-			return common.NewBusinessError(common.NotFoundCode, "处理人不存在或不可用", "")
+			return common.NewBusinessError(common.NotFoundCode, "Processor does not exist or is unavailable", "")
 		}
 	}
 	if req.CategoryID != nil {
@@ -781,10 +781,10 @@ func (s *TicketService) validateCreateTicketReferences(ctx context.Context, req 
 			Where(ticketcategory.IDEQ(*req.CategoryID), ticketcategory.TenantIDEQ(tenantID), ticketcategory.IsActiveEQ(true)).
 			Exist(ctx)
 		if err != nil {
-			return fmt.Errorf("验证工单分类失败: %w", err)
+			return fmt.Errorf("Failed to verify ticket classification: %w", err)
 		}
 		if !categoryExists {
-			return common.NewBusinessError(common.NotFoundCode, "工单分类不存在或不可用", "")
+			return common.NewBusinessError(common.NotFoundCode, "The work order category does not exist or is unavailable", "")
 		}
 	}
 	if req.TemplateID != nil {
@@ -792,10 +792,10 @@ func (s *TicketService) validateCreateTicketReferences(ctx context.Context, req 
 			Where(tickettemplate.IDEQ(*req.TemplateID), tickettemplate.TenantIDEQ(tenantID), tickettemplate.IsActiveEQ(true)).
 			Exist(ctx)
 		if err != nil {
-			return fmt.Errorf("验证工单模板失败: %w", err)
+			return fmt.Errorf("Failed to verify ticket template: %w", err)
 		}
 		if !templateExists {
-			return fmt.Errorf("工单模板不存在或不可用")
+			return fmt.Errorf("The ticket template does not exist or is unavailable")
 		}
 	}
 	if req.ParentTicketID != nil {
@@ -803,10 +803,10 @@ func (s *TicketService) validateCreateTicketReferences(ctx context.Context, req 
 			Where(entTicket.IDEQ(*req.ParentTicketID), entTicket.TenantIDEQ(tenantID), entTicket.DeletedAtIsNil()).
 			Exist(ctx)
 		if err != nil {
-			return fmt.Errorf("验证父工单失败: %w", err)
+			return fmt.Errorf("Failed to verify parent ticket: %w", err)
 		}
 		if !parentExists {
-			return fmt.Errorf("父工单不存在")
+			return fmt.Errorf("The parent ticket does not exist")
 		}
 	}
 	tagIDs := uniqueIDs(req.TagIDs)
@@ -815,10 +815,10 @@ func (s *TicketService) validateCreateTicketReferences(ctx context.Context, req 
 			Where(tickettag.IDIn(tagIDs...), tickettag.TenantIDEQ(tenantID), tickettag.IsActiveEQ(true)).
 			Count(ctx)
 		if err != nil {
-			return fmt.Errorf("验证工单标签失败: %w", err)
+			return fmt.Errorf("Failed to verify ticket tag: %w", err)
 		}
 		if count != len(tagIDs) {
-			return fmt.Errorf("工单标签不存在或不可用")
+			return fmt.Errorf("Ticket tag does not exist or is not available")
 		}
 	}
 	return nil
@@ -890,7 +890,7 @@ func (s *TicketService) enforceTicketRowScope(ctx context.Context, id, tenantID,
 		owned = owned || *t.AssigneeID == currentUserID
 	}
 	if !owned {
-		return common.NewForbiddenError(fmt.Sprintf("无权限删除工单 %d：仅工单创建人或处理人可删除", id))
+		return common.NewForbiddenError(fmt.Sprintf("No permission to delete work order %d: Only the creator or handler of the work order can delete it", id))
 	}
 	return nil
 }
@@ -986,9 +986,9 @@ func (s *TicketService) GetWorkflowStatus(ctx context.Context, ticketID int, ten
 		Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, fmt.Errorf("未找到工单关联的流程实例")
+			return nil, fmt.Errorf("The process instance associated with the work order was not found")
 		}
-		return nil, fmt.Errorf("查询流程实例失败: %w", err)
+		return nil, fmt.Errorf("Failed to query process instance: %w", err)
 	}
 
 	processDefName := ""
@@ -1024,15 +1024,15 @@ func (s *TicketService) CancelWorkflow(ctx context.Context, ticketID int, tenant
 		Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return fmt.Errorf("未找到工单关联的流程实例")
+			return fmt.Errorf("The process instance associated with the work order was not found")
 		}
-		return fmt.Errorf("查询流程实例失败: %w", err)
+		return fmt.Errorf("Failed to query process instance: %w", err)
 	}
 
 	if s.processTriggerSvc != nil {
 		return s.processTriggerSvc.CancelProcess(ctx, processInstance.ID, reason, tenantID)
 	}
-	return fmt.Errorf("流程触发服务未配置")
+	return fmt.Errorf("The process triggering service is not configured")
 }
 
 // SyncTicketStatusWithWorkflow 同步工单状态与流程状态
@@ -1059,7 +1059,7 @@ func (s *TicketService) SyncTicketStatusWithWorkflow(ctx context.Context, ticket
 	}
 	_, err = s.updateTicketWithFeishuCommand(ctx, ticketID, &ticket.UpdateParams{Status: &newStatus, Version: current.Version}, tenantID, "workflow_status_synced")
 	if err != nil {
-		return fmt.Errorf("同步工单状态失败: %w", err)
+		return fmt.Errorf("Failed to synchronize work order status: %w", err)
 	}
 
 	s.logger.Infow(
@@ -1110,7 +1110,7 @@ func (s *TicketService) GetTicketByNumber(ctx context.Context, ticketNumber stri
 // UpdateTicket 更新工单
 func (s *TicketService) UpdateTicket(ctx context.Context, id int, req *dto.UpdateTicketRequest, tenantID int, currentUserID int, currentRole string) (*ticket.Ticket, error) {
 	if req == nil {
-		return nil, common.NewBusinessError(common.ParamErrorCode, "request不能为nil", "")
+		return nil, common.NewBusinessError(common.ParamErrorCode, "request cannot be nil", "")
 	}
 	s.logger.Infow("Updating ticket", "ticket_id", id, "tenant_id", tenantID)
 
@@ -1136,12 +1136,12 @@ func (s *TicketService) UpdateTicket(ctx context.Context, id int, req *dto.Updat
 	}
 	if req.Status == string(ticket.StatusResolved) && strings.TrimSpace(req.Resolution) == "" &&
 		(current.Resolution == nil || strings.TrimSpace(*current.Resolution) == "") {
-		return nil, fmt.Errorf("解决工单时必须填写解决方案")
+		return nil, fmt.Errorf("Solution is required when resolving a ticket")
 	}
 
 	// 转换更新参数——乐观锁要求客户端必须传入 version，禁止回退到 current.Version 绕过检查
 	if req.Version <= 0 {
-		return nil, fmt.Errorf("缺少 version 字段，更新必须携带当前版本号")
+		return nil, fmt.Errorf("Missing version field, updates must carry the current version number")
 	}
 	params := &ticket.UpdateParams{
 		Version: req.Version,
@@ -1159,7 +1159,7 @@ func (s *TicketService) UpdateTicket(ctx context.Context, id int, req *dto.Updat
 	}
 	if req.Type != "" {
 		if req.Type != "ticket" && !isSupportedTicketType(req.Type) {
-			return nil, fmt.Errorf("无效的工单类型: %s", req.Type)
+			return nil, fmt.Errorf("Invalid ticket type: %s", req.Type)
 		}
 		ticketType := normalizeCreateTicketType(req.Type)
 		params.Type = &ticketType
@@ -1170,7 +1170,7 @@ func (s *TicketService) UpdateTicket(ctx context.Context, id int, req *dto.Updat
 	}
 	if req.FormFields != nil {
 		if current.TicketTypeID == nil {
-			return nil, fmt.Errorf("未配置工单类型的工单不能写入动态字段")
+			return nil, fmt.Errorf("Dynamic fields cannot be written to work orders without a work order type configured.")
 		}
 		// 更新是 patch 语义：先合并已有值，再做整体校验，避免未传的必填字段误报缺失。
 		merged := make(map[string]interface{}, len(current.FormFields)+len(req.FormFields))
@@ -1195,13 +1195,13 @@ func (s *TicketService) UpdateTicket(ctx context.Context, id int, req *dto.Updat
 	categoryID := req.CategoryID
 	if categoryID == nil && strings.TrimSpace(req.Category) != "" {
 		if s.client == nil {
-			return nil, fmt.Errorf("无法解析工单分类")
+			return nil, fmt.Errorf("Unable to parse work order classification")
 		}
 		category, err := s.client.TicketCategory.Query().
 			Where(ticketcategory.NameEQ(strings.TrimSpace(req.Category)), ticketcategory.TenantIDEQ(tenantID), ticketcategory.IsActiveEQ(true)).
 			Only(ctx)
 		if err != nil {
-			return nil, fmt.Errorf("工单分类不存在或不可用")
+			return nil, fmt.Errorf("The work order category does not exist or is unavailable")
 		}
 		categoryID = &category.ID
 	}
@@ -1211,10 +1211,10 @@ func (s *TicketService) UpdateTicket(ctx context.Context, id int, req *dto.Updat
 				Where(ticketcategory.IDEQ(*categoryID), ticketcategory.TenantIDEQ(tenantID), ticketcategory.IsActiveEQ(true)).
 				Exist(ctx)
 			if err != nil {
-				return nil, fmt.Errorf("验证工单分类失败: %w", err)
+				return nil, fmt.Errorf("Failed to verify ticket classification: %w", err)
 			}
 			if !exists {
-				return nil, fmt.Errorf("工单分类不存在或不可用")
+				return nil, fmt.Errorf("The work order category does not exist or is unavailable")
 			}
 		}
 		params.CategoryID = categoryID
@@ -1223,11 +1223,11 @@ func (s *TicketService) UpdateTicket(ctx context.Context, id int, req *dto.Updat
 		params.ReplaceTags = true
 		if len(req.Tags) > 0 {
 			if s.client == nil {
-				return nil, fmt.Errorf("无法解析工单标签")
+				return nil, fmt.Errorf("Unable to parse ticket tag")
 			}
 			tagIDs, err := NewTicketTagService(s.client).ResolveTagIDsByNames(ctx, req.Tags, tenantID, true)
 			if err != nil {
-				return nil, fmt.Errorf("解析工单标签失败: %w", err)
+				return nil, fmt.Errorf("Failed to parse ticket tag: %w", err)
 			}
 			params.TagIDs = tagIDs
 		}
@@ -1374,10 +1374,10 @@ func (s *TicketService) ValidateAssignee(ctx context.Context, assigneeID, tenant
 		Where(user.IDEQ(assigneeID), user.TenantIDEQ(tenantID), user.ActiveEQ(true)).
 		Exist(ctx)
 	if err != nil {
-		return fmt.Errorf("验证处理人失败: %w", err)
+		return fmt.Errorf("Failed to verify handler: %w", err)
 	}
 	if !exists {
-		return fmt.Errorf("处理人不存在或不可用")
+		return fmt.Errorf("Processor does not exist or is unavailable")
 	}
 	return nil
 }
@@ -1425,7 +1425,7 @@ func (s *TicketService) ResolveTicket(ctx context.Context, ticketID int, resolut
 	s.logger.Infow("Resolving ticket", "ticket_id", ticketID)
 	resolution = strings.TrimSpace(resolution)
 	if resolution == "" {
-		return nil, fmt.Errorf("解决方案不能为空")
+		return nil, fmt.Errorf("Solution cannot be empty")
 	}
 
 	// 获取工单
@@ -1645,7 +1645,7 @@ func (s *TicketService) UpdateTicketStatus(ctx context.Context, ticketID int, st
 		return nil, fmt.Errorf("invalid status transition: %s -> %s", current.Status, status)
 	}
 	if status == string(ticket.StatusResolved) && (current.Resolution == nil || strings.TrimSpace(*current.Resolution) == "") {
-		return nil, fmt.Errorf("解决工单必须通过 ResolveTicket 提交解决方案")
+		return nil, fmt.Errorf("To resolve a ticket, you must submit a solution through ResolveTicket")
 	}
 
 	targetStatus := ticket.Status(status)
@@ -1817,7 +1817,7 @@ func (s *TicketService) BatchDeleteTickets(ctx context.Context, ticketIDs []int,
 				owned = owned || *t.AssigneeID == currentUserID
 			}
 			if !owned {
-				return common.NewForbiddenError(fmt.Sprintf("批量删除被拒绝：工单 %d 非当前用户创建或分配", id))
+				return common.NewForbiddenError(fmt.Sprintf("Batch deletion rejected: Ticket %d was not created or assigned by the current user", id))
 			}
 		}
 	}
@@ -1943,7 +1943,7 @@ func (s *TicketService) GetTicketActivity(ctx context.Context, ticketID int, ten
 	}
 	tkt, err := s.repo.GetByID(ctx, ticketID, tenantID)
 	if err != nil {
-		return nil, fmt.Errorf("工单不存在: %w", err)
+		return nil, fmt.Errorf("Ticket does not exist: %w", err)
 	}
 
 	// 响应契约与全局 API 字段规范一致：camelCase + id，前端历史 Tab 直接消费
@@ -2114,7 +2114,7 @@ func (s *TicketService) ExportTickets(ctx context.Context, tenantID int, filters
 	case "json":
 		return json.Marshal(exportData)
 	default:
-		return nil, fmt.Errorf("不支持的导出格式: %s", format)
+		return nil, fmt.Errorf("Unsupported export format: %s", format)
 	}
 }
 
@@ -2139,7 +2139,7 @@ func (s *TicketService) ImportTickets(ctx context.Context, tenantID int, data []
 			return err
 		}
 	default:
-		return fmt.Errorf("不支持的导入格式: %s", format)
+		return fmt.Errorf("Unsupported import format: %s", format)
 	}
 	for _, ticketData := range tickets {
 		title, _ := ticketData["标题"].(string)
@@ -2152,7 +2152,7 @@ func (s *TicketService) ImportTickets(ctx context.Context, tenantID int, data []
 			RequesterID: 1,
 		}, tenantID)
 		if err != nil {
-			return fmt.Errorf("导入工单失败: %v", err)
+			return fmt.Errorf("Failed to import tickets: %v", err)
 		}
 	}
 	return nil
@@ -2165,21 +2165,21 @@ func (s *TicketService) AssignTickets(ctx context.Context, tenantID int, ticketI
 	}
 	assigneeExists, err := s.client.User.Query().Where(user.IDEQ(assigneeID), user.TenantIDEQ(tenantID), user.ActiveEQ(true)).Exist(ctx)
 	if err != nil || !assigneeExists {
-		return fmt.Errorf("分配者不存在: %v", err)
+		return fmt.Errorf("Distributor does not exist: %v", err)
 	}
 	for _, ticketID := range ticketIDs {
 		current, err := s.repo.GetByID(ctx, ticketID, tenantID)
 		if err != nil {
-			return fmt.Errorf("查询工单 %d 失败: %v", ticketID, err)
+			return fmt.Errorf("Query for ticket %d failed: %v", ticketID, err)
 		}
 		if err := current.Assign(assigneeID); err != nil {
-			return fmt.Errorf("分配工单 %d 失败: %v", ticketID, err)
+			return fmt.Errorf("Failed to assign work order %d: %v", ticketID, err)
 		}
 		status := current.Status
 		if _, err := s.updateTicketWithFeishuCommand(ctx, ticketID, &ticket.UpdateParams{
 			AssigneeID: &assigneeID, Status: &status, Version: current.Version,
 		}, tenantID, "batch_assigned"); err != nil {
-			return fmt.Errorf("分配工单 %d 失败: %v", ticketID, err)
+			return fmt.Errorf("Failed to assign work order %d: %v", ticketID, err)
 		}
 	}
 	return nil
@@ -2238,7 +2238,7 @@ type BatchResult struct {
 func (s *TicketService) CreateTicketTemplate(ctx context.Context, tenantID int, req interface{}) (interface{}, error) {
 	createReq, ok := req.(*dto.TicketTemplate)
 	if !ok {
-		return nil, fmt.Errorf("无效的请求参数类型")
+		return nil, fmt.Errorf("Invalid request parameter type")
 	}
 	if s.client == nil {
 		return nil, fmt.Errorf("ent client not available for template")
@@ -2281,7 +2281,7 @@ func (s *TicketService) CreateTicketTemplate(ctx context.Context, tenantID int, 
 func (s *TicketService) UpdateTicketTemplate(ctx context.Context, tenantID int, templateID int, req interface{}) (interface{}, error) {
 	updateReq, ok := req.(*dto.TicketTemplate)
 	if !ok {
-		return nil, fmt.Errorf("无效的请求参数类型")
+		return nil, fmt.Errorf("Invalid request parameter type")
 	}
 	if s.client == nil {
 		return nil, fmt.Errorf("ent client not available for template")
@@ -2530,7 +2530,7 @@ func (s *TicketService) generateExcel(data []map[string]interface{}, headers []s
 	}
 	var buf bytes.Buffer
 	if err := f.Write(&buf); err != nil {
-		return nil, fmt.Errorf("生成Excel失败: %w", err)
+		return nil, fmt.Errorf("Failed to generate Excel: %w", err)
 	}
 	return buf.Bytes(), nil
 }
@@ -2543,7 +2543,7 @@ func (s *TicketService) parseCSV(data []byte) ([]map[string]interface{}, error) 
 		return nil, err
 	}
 	if len(records) < 2 {
-		return nil, fmt.Errorf("CSV文件格式错误")
+		return nil, fmt.Errorf("CSV file format error")
 	}
 	headers := records[0]
 	result := make([]map[string]interface{}, 0, len(records)-1)
@@ -2605,12 +2605,12 @@ func (s *TicketService) AssignMSPTechnician(ctx context.Context, ticketID, custo
 	t, err := s.client.Ticket.Get(ctx, ticketID)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, fmt.Errorf("工单不存在")
+			return nil, fmt.Errorf("The work order does not exist")
 		}
 		return nil, err
 	}
 	if t.TenantID != customerTenantID {
-		return nil, fmt.Errorf("工单不属于指定客户租户")
+		return nil, fmt.Errorf("The work order does not belong to the specified customer tenant")
 	}
 	// 分配与同步命令在 EntRepository 中同事务提交。
 	current, err := s.repo.GetByID(ctx, ticketID, customerTenantID)

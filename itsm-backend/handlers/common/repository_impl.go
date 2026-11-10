@@ -337,7 +337,7 @@ func (r *EntRepository) findTeam(ctx context.Context, teamID int, tenantID int) 
 		if ent.IsNotFound(err) {
 			return nil, common.NewNotFoundError("team")
 		}
-		return nil, fmt.Errorf("查询团队失败: %w", err)
+		return nil, fmt.Errorf("Failed to query team: %w", err)
 	}
 	return t, nil
 }
@@ -349,10 +349,10 @@ func (r *EntRepository) assertActiveTenantUser(ctx context.Context, userID int, 
 		Where(user.ID(userID), user.TenantID(tenantID), user.ActiveEQ(true)).
 		Exist(ctx)
 	if err != nil {
-		return fmt.Errorf("查询用户失败: %w", err)
+		return fmt.Errorf("Failed to query user: %w", err)
 	}
 	if !exists {
-		return common.NewValidationError("用户不存在、已停用或不属于当前租户", nil)
+		return common.NewValidationError("User does not exist, is deactivated, or does not belong to the current tenant", nil)
 	}
 	return nil
 }
@@ -366,7 +366,7 @@ func (r *EntRepository) teamOfUser(ctx context.Context, userID int, tenantID int
 		WithUsers(func(q *ent.UserQuery) { q.Select(user.FieldID) }).
 		All(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("查询团队成员关系失败: %w", err)
+		return nil, fmt.Errorf("Failed to query team member relationship: %w", err)
 	}
 	for _, t := range teams {
 		for _, u := range t.Edges.Users {
@@ -403,7 +403,7 @@ func (r *EntRepository) attachManagerNames(ctx context.Context, tenantID int, te
 		Select(user.FieldID, user.FieldName, user.FieldUsername).
 		All(ctx)
 	if err != nil {
-		return fmt.Errorf("查询团队负责人失败: %w", err)
+		return fmt.Errorf("Failed to query team leader: %w", err)
 	}
 	names := make(map[int]string, len(users))
 	for _, u := range users {
@@ -561,7 +561,7 @@ func (r *EntRepository) ListTeamMembers(ctx context.Context, teamID int, tenantI
 		QueryUsers()
 	total, err := query.Clone().Count(ctx)
 	if err != nil {
-		return nil, 0, fmt.Errorf("统计团队成员失败: %w", err)
+		return nil, 0, fmt.Errorf("Failed to count team members: %w", err)
 	}
 	users, err := query.
 		Select(user.FieldID, user.FieldUsername, user.FieldName, user.FieldEmail).
@@ -570,7 +570,7 @@ func (r *EntRepository) ListTeamMembers(ctx context.Context, teamID int, tenantI
 		Limit(pageSize).
 		All(ctx)
 	if err != nil {
-		return nil, 0, fmt.Errorf("查询团队成员失败: %w", err)
+		return nil, 0, fmt.Errorf("Failed to query team members: %w", err)
 	}
 	return toTeamMembers(users), total, nil
 }
@@ -595,7 +595,7 @@ func (r *EntRepository) AddTeamMember(ctx context.Context, teamID int, userID in
 		}
 		return common.NewAppError(
 			common.ErrCodeConflict,
-			fmt.Sprintf("用户已属于团队「%s」，请先从该团队移出", owner.Name),
+			fmt.Sprintf("The user already belongs to the team \"%s\", please move out of the team first", owner.Name),
 			http.StatusConflict,
 			nil,
 		)

@@ -32,17 +32,17 @@ import {
 const { Title, Text } = Typography;
 
 const ALERT_LEVEL_CONFIG: Record<string, { label: string; color: string }> = {
-  warning: { label: '预警', color: 'warning' },
-  critical: { label: '严重', color: 'error' },
-  severe: { label: '紧急', color: 'red' },
+  warning: { label: 'Early warning', color: 'warning' },
+  critical: { label: 'Critical', color: 'error' },
+  severe: { label: 'Urgent', color: 'red' },
 };
 
 const CHANNEL_CONFIG: Record<string, { label: string }> = {
-  email: { label: '邮件' },
-  sms: { label: '短信' },
-  in_app: { label: '站内信' },
+  email: { label: 'Email' },
+  sms: { label: 'SMS' },
+  in_app: { label: 'In-App' },
   webhook: { label: 'Webhook' },
-  feishu: { label: '飞书' },
+  feishu: { label: 'Feishu' },
 };
 
 const PRIORITY_TAG_COLOR: Record<string, string> = {
@@ -99,7 +99,7 @@ export default function EscalationRulesPage() {
       setRules(ruleData ?? []);
       setDefinitions(defData?.items ?? []);
     } catch (error) {
-      message.error(error instanceof Error ? error.message : '加载告警规则失败');
+      message.error(error instanceof Error ? error.message : 'Failed to load alarm rules');
     } finally {
       setLoading(false);
     }
@@ -161,10 +161,10 @@ export default function EscalationRulesPage() {
     setTogglingId(rule.id);
     try {
       await SLAApi.updateAlertRule(rule.id, { isActive: next });
-      message.success(next ? `规则「${rule.name}」已启用` : `规则「${rule.name}」已停用`);
+      message.success(next ? `Rule "${rule.name}"Enabled"` : `Rule "${rule.name}"Deactivated`);
       await loadRules();
     } catch (error) {
-      message.error(error instanceof Error ? error.message : '更新规则状态失败');
+      message.error(error instanceof Error ? error.message : 'Failed to update rule status');
     } finally {
       setTogglingId(null);
     }
@@ -174,17 +174,17 @@ export default function EscalationRulesPage() {
     setDuplicatingId(rule.id);
     try {
       await SLAApi.createAlertRule({
-        name: `${rule.name} (副本)`,
+        name: `${rule.name} (Copy)`,
         slaDefinitionId: rule.slaDefinitionId,
         alertLevel: rule.alertLevel,
         thresholdPercentage: rule.thresholdPercentage,
         notificationChannels: rule.notificationChannels,
         isActive: false,
       });
-      message.success('已复制为新规则（默认停用，确认后请手动启用）');
+      message.success('Copied as a new rule (disabled by default, please enable it manually after confirmation)');
       await loadRules();
     } catch (error) {
-      message.error(error instanceof Error ? error.message : '复制规则失败');
+      message.error(error instanceof Error ? error.message : 'Failed to copy rule');
     } finally {
       setDuplicatingId(null);
     }
@@ -193,10 +193,10 @@ export default function EscalationRulesPage() {
   const handleDelete = async (rule: SLAAlertRule) => {
     try {
       await SLAApi.deleteAlertRule(rule.id);
-      message.success(`规则「${rule.name}」已删除`);
+      message.success(`Rule "${rule.name}"Deleted`);
       await loadRules();
     } catch (error) {
-      message.error(error instanceof Error ? error.message : '删除规则失败');
+      message.error(error instanceof Error ? error.message : 'Failed to delete rule');
     }
   };
 
@@ -217,7 +217,7 @@ export default function EscalationRulesPage() {
           notificationChannels: values.notificationChannels,
           isActive: values.isActive,
         });
-        message.success('规则已更新');
+        message.success('Rule updated');
       } else {
         await SLAApi.createAlertRule({
           name: values.name,
@@ -227,14 +227,14 @@ export default function EscalationRulesPage() {
           notificationChannels: values.notificationChannels,
           isActive: values.isActive,
         });
-        message.success('规则已创建');
+        message.success('Rule created');
       }
       setShowEditModal(false);
       setSelectedRule(null);
       form.resetFields();
       await loadRules();
     } catch (error) {
-      message.error(error instanceof Error ? error.message : '保存规则失败');
+      message.error(error instanceof Error ? error.message : 'Failed to save rules');
     } finally {
       setSaving(false);
     }
@@ -242,7 +242,7 @@ export default function EscalationRulesPage() {
 
   const columns: ColumnsType<SLAAlertRule> = [
     {
-      title: '规则',
+      title: 'Rule',
       dataIndex: 'name',
       key: 'name',
       render: (_, record) => (
@@ -256,12 +256,12 @@ export default function EscalationRulesPage() {
       ),
     },
     {
-      title: '关联 SLA 定义',
+      title: 'Associated SLA definition',
       dataIndex: 'slaDefinitionId',
       key: 'slaDefinitionId',
       render: (slaDefinitionId: number) => {
         const def = definitionMap.get(slaDefinitionId);
-        if (!def) return <Text type="secondary">SLA 定义 #{slaDefinitionId}（已删除）</Text>;
+        if (!def) return <Text type="secondary">SLA Definition #{slaDefinitionId}(deleted)</Text>;
         return (
           <Space>
             <Text>{def.name}</Text>
@@ -271,14 +271,14 @@ export default function EscalationRulesPage() {
       },
     },
     {
-      title: '告警策略',
+      title: 'Alarm policy',
       key: 'strategy',
       render: (_, record) => {
         const level = ALERT_LEVEL_CONFIG[record.alertLevel] ?? { label: record.alertLevel, color: 'default' };
         return (
           <Space wrap>
             <Tag color={level.color}>{level.label}</Tag>
-            <Text style={{ fontSize: 12 }}>阈值 {record.thresholdPercentage}%</Text>
+            <Text style={{ fontSize: 12 }}>Threshold {record.thresholdPercentage}%</Text>
             {record.notificationChannels.map((channel) => (
               <Tag key={channel} style={{ fontSize: 12 }}>
                 {CHANNEL_CONFIG[channel]?.label ?? channel}
@@ -289,24 +289,26 @@ export default function EscalationRulesPage() {
       },
     },
     {
-      title: '状态',
+      title: 'Status',
       dataIndex: 'isActive',
       key: 'isActive',
       width: 90,
       render: (isActive: boolean) =>
-        isActive ? <Tag color="success">已启用</Tag> : <Tag color="default">已停用</Tag>,
+        isActive ? <Tag color="success">Enabled</Tag> : <Tag color="default">Disabled</Tag>,
     },
     {
-      title: '操作',
+      title: 'Actions',
       key: 'actions',
       width: 280,
       render: (_, record) => (
         <Space>
           <Button type="link" size="small" icon={<Eye size={14} />} onClick={() => openDetailDrawer(record)}>
-            详情
+
+            Details
           </Button>
           <Button type="link" size="small" icon={<Edit size={14} />} onClick={() => openEditModal(record)}>
-            编辑
+
+            Edit
           </Button>
           <Button
             type="link"
@@ -315,21 +317,23 @@ export default function EscalationRulesPage() {
             loading={duplicatingId === record.id}
             onClick={() => handleDuplicate(record)}
           >
-            复制
+
+            Copy
           </Button>
           <Button type="link" size="small" loading={togglingId === record.id} onClick={() => handleStatusToggle(record)}>
-            {record.isActive ? '停用' : '启用'}
+            {record.isActive ? 'Disable' : 'Enabled'}
           </Button>
           <Popconfirm
-            title="确定删除该告警规则吗？"
-            description={`规则「${record.name}」（ID: ${record.id}）删除后不可恢复，对应 SLA 定义上的告警将停止触发。`}
-            okText="删除"
-            cancelText="取消"
+            title="Are you sure you want to delete this alarm rule?"
+            description={`Rule "${record.name}」（ID: ${record.id}) cannot be recovered after deletion, and the alarms on the corresponding SLA definition will stop triggering.`}
+            okText="Delete"
+            cancelText="Cancel"
             okButtonProps={{ danger: true }}
             onConfirm={() => handleDelete(record)}
           >
             <Button type="link" size="small" danger icon={<Trash2 size={14} />}>
-              删除
+
+              Delete
             </Button>
           </Popconfirm>
         </Space>
@@ -345,22 +349,26 @@ export default function EscalationRulesPage() {
         <Title level={4} style={{ marginBottom: 8 }}>
           <Space>
             <Bell size={20} />
-            SLA 告警规则
+
+            SLA Alert Rule
           </Space>
         </Title>
         <Text type="secondary">
-          为 SLA 定义配置告警阈值：工单耗时达到阈值百分比时按渠道发出预警 / 严重 / 紧急告警
+
+          Configure alarm thresholds for SLA definition: when the work order time reaches the threshold percentage, an early warning/serious/emergency alarm will be issued by channel
         </Text>
         <Alert
           type="info"
           showIcon
           style={{ marginTop: 12 }}
-          title="本页配置的是 SLA 阈值告警，不是升级矩阵"
+          title="This page configures SLA threshold alarms, not the upgrade matrix."
           description={
             <span>
-              升级矩阵（优先级 → 通知角色链，如 15 分钟未响应升级至部门经理）在
-              <a href="/admin/escalation-matrices">升级矩阵</a>
-              页面配置。两者常被混为一谈，但触发时机与产出完全不同：告警规则产出通知，升级矩阵驱动工单升级。
+
+              Escalation matrix (priority → notification role chain, e.g. no response for 15 minutes escalates to department manager) in
+              <a href="/admin/escalation-matrices">Upgrade Matrix</a>
+
+              Page configuration. The two are often confused, but the trigger timing and output are completely different: alarm rules output notifications, and the upgrade matrix drives work order upgrades.
             </span>
           }
         />
@@ -369,22 +377,22 @@ export default function EscalationRulesPage() {
       <Row gutter={16} style={{ marginBottom: 16 }}>
         <Col xs={24} sm={12} lg={6}>
           <Card>
-            <Statistic title="告警规则总数" value={stats.total} />
+            <Statistic title="Total number of alarm rules" value={stats.total} />
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
           <Card>
-            <Statistic title="已启用" value={stats.active} />
+            <Statistic title="Enabled" value={stats.active} />
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
           <Card>
-            <Statistic title="已停用" value={stats.inactive} />
+            <Statistic title="Disabled" value={stats.inactive} />
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
           <Card>
-            <Statistic title="关联 SLA 定义" value={stats.linkedDefinitions} />
+            <Statistic title="Associated SLA definition" value={stats.linkedDefinitions} />
           </Card>
         </Col>
       </Row>
@@ -393,7 +401,7 @@ export default function EscalationRulesPage() {
         <Row gutter={[16, 12]} align="middle">
           <Col xs={24} md={8}>
             <Input
-              placeholder="搜索规则名称"
+              placeholder="Search rule name"
               allowClear
               prefix={<Search size={14} />}
               value={searchTerm}
@@ -406,9 +414,9 @@ export default function EscalationRulesPage() {
               value={statusFilter}
               onChange={setStatusFilter}
               options={[
-                { value: 'all', label: '全部状态' },
-                { value: 'active', label: '已启用' },
-                { value: 'inactive', label: '已停用' },
+                { value: 'all', label: 'All Status' },
+                { value: 'active', label: 'Enabled' },
+                { value: 'inactive', label: 'Disabled' },
               ]}
             />
           </Col>
@@ -416,7 +424,7 @@ export default function EscalationRulesPage() {
             <Select
               style={{ width: '100%' }}
               allowClear
-              placeholder="全部级别"
+              placeholder="All levels"
               value={levelFilter}
               onChange={(value) => setLevelFilter(value)}
               options={Object.entries(ALERT_LEVEL_CONFIG).map(([value, cfg]) => ({ value, label: cfg.label }))}
@@ -428,7 +436,7 @@ export default function EscalationRulesPage() {
               allowClear
               showSearch
               optionFilterProp="label"
-              placeholder="全部 SLA 定义"
+              placeholder="All SLA definitions"
               value={definitionFilter}
               onChange={(value) => setDefinitionFilter(value)}
               options={definitions.map((def) => ({ value: def.id, label: def.name }))}
@@ -436,7 +444,8 @@ export default function EscalationRulesPage() {
           </Col>
           <Col xs={12} md={3} style={{ textAlign: 'right' }}>
             <Button type="primary" icon={<Plus size={14} />} onClick={openCreateModal}>
-              新建规则
+
+              Create Rule
             </Button>
           </Col>
         </Row>
@@ -448,13 +457,13 @@ export default function EscalationRulesPage() {
           columns={columns}
           dataSource={filteredRules}
           loading={loading}
-          pagination={{ showSizeChanger: true, showTotal: (total) => `共 ${total} 条规则` }}
-          locale={{ emptyText: '暂无升级规则，点击「新建规则」为 SLA 定义配置告警' }}
+          pagination={{ showSizeChanger: true, showTotal: (total) => `Total ${total} Rules` }}
+          locale={{ emptyText: 'There is no upgrade rule yet. Click "New Rule" to configure alarms for SLA definition.' }}
         />
       </Card>
 
       <Modal
-        title={selectedRule ? '编辑升级规则' : '新建升级规则'}
+        title={selectedRule ? 'Edit upgrade rules' : 'Create new upgrade rule'}
         open={showEditModal}
         onCancel={() => {
           setShowEditModal(false);
@@ -463,8 +472,8 @@ export default function EscalationRulesPage() {
         onOk={handleSave}
         confirmLoading={saving}
         width={640}
-        okText="保存"
-        cancelText="取消"
+        okText="Save"
+        cancelText="Cancel"
         destroyOnHidden
       >
         <Form
@@ -477,30 +486,31 @@ export default function EscalationRulesPage() {
             isActive: false,
           }}
         >
-          <Form.Item name="name" label="规则名称" rules={[{ required: true, message: '请输入规则名称' }]}>
-            <Input placeholder="例如：P1 响应超时预警" />
+          <Form.Item name="name" label="Rule Name" rules={[{ required: true, message: 'Please enter a rule name' }]}>
+            <Input placeholder="For example: P1 response timeout warning" />
           </Form.Item>
           <Form.Item
             name="slaDefinitionId"
-            label="关联 SLA 定义"
-            rules={[{ required: true, message: '请选择 SLA 定义' }]}
+            label="Associated SLA definition"
+            rules={[{ required: true, message: 'Please select an SLA definition' }]}
           >
             <Select
               showSearch
               optionFilterProp="label"
               disabled={!!selectedRule}
-              placeholder="请选择要监控的 SLA 定义"
+              placeholder="Please select an SLA definition to monitor"
               options={definitions.map((def) => ({ value: def.id, label: `${def.name}（${def.priority}）` }))}
             />
           </Form.Item>
           {selectedRule && (
             <Text type="secondary" style={{ display: 'block', marginBottom: 16 }}>
-              关联的 SLA 定义创建后不可更改；如需更换请复制规则后重新关联。
+
+              The associated SLA definition cannot be changed after it is created; if you need to change it, please copy the rule and re-associate it.
             </Text>
           )}
           <Row gutter={16}>
             <Col span={8}>
-              <Form.Item name="alertLevel" label="告警级别" rules={[{ required: true, message: '请选择告警级别' }]}>
+              <Form.Item name="alertLevel" label="Alarm level" rules={[{ required: true, message: 'Please select the alarm level' }]}>
                 <Select
                   options={Object.entries(ALERT_LEVEL_CONFIG).map(([value, cfg]) => ({ value, label: cfg.label }))}
                 />
@@ -509,22 +519,22 @@ export default function EscalationRulesPage() {
             <Col span={8}>
               <Form.Item
                 name="thresholdPercentage"
-                label="告警阈值（%）"
-                rules={[{ required: true, message: '请输入告警阈值' }]}
+                label="Alarm threshold (%)"
+                rules={[{ required: true, message: 'Please enter the alarm threshold' }]}
               >
                 <InputNumber min={0} max={100} style={{ width: '100%' }} />
               </Form.Item>
             </Col>
             <Col span={8}>
-              <Form.Item name="isActive" label="启用状态" valuePropName="checked">
+              <Form.Item name="isActive" label="Enabled" valuePropName="checked">
                 <Switch />
               </Form.Item>
             </Col>
           </Row>
           <Form.Item
             name="notificationChannels"
-            label="通知渠道"
-            rules={[{ required: true, message: '请至少选择一个通知渠道' }]}
+            label="Notification Channels"
+            rules={[{ required: true, message: 'Please select at least one notification channel' }]}
           >
             <Select
               mode="multiple"
@@ -535,7 +545,7 @@ export default function EscalationRulesPage() {
       </Modal>
 
       <Drawer
-        title="升级规则详情"
+        title="Upgrade rule details"
         open={showDetailDrawer}
         onClose={() => setShowDetailDrawer(false)}
         size={480}
@@ -546,28 +556,28 @@ export default function EscalationRulesPage() {
             bordered
             size="small"
             items={[
-              { key: 'name', label: '规则名称', children: selectedRule.name },
-              { key: 'id', label: '规则 ID', children: selectedRule.id },
+              { key: 'name', label: 'Rule Name', children: selectedRule.name },
+              { key: 'id', label: 'Rule ID', children: selectedRule.id },
               {
                 key: 'definition',
-                label: '关联 SLA 定义',
+                label: 'Associated SLA definition',
                 children: detailDefinition
                   ? detailDefinition.name
-                  : `SLA 定义 #${selectedRule.slaDefinitionId}（已删除）`,
+                  : `SLA Definition #${selectedRule.slaDefinitionId}(deleted)`,
               },
               {
                 key: 'level',
-                label: '告警级别',
+                label: 'Alarm level',
                 children: (
                   <Tag color={ALERT_LEVEL_CONFIG[selectedRule.alertLevel]?.color ?? 'default'}>
                     {ALERT_LEVEL_CONFIG[selectedRule.alertLevel]?.label ?? selectedRule.alertLevel}
                   </Tag>
                 ),
               },
-              { key: 'threshold', label: '告警阈值', children: `${selectedRule.thresholdPercentage}%` },
+              { key: 'threshold', label: 'Alarm threshold', children: `${selectedRule.thresholdPercentage}%` },
               {
                 key: 'channels',
-                label: '通知渠道',
+                label: 'Notification Channels',
                 children: (
                   <Space wrap>
                     {selectedRule.notificationChannels.map((channel) => (
@@ -578,8 +588,8 @@ export default function EscalationRulesPage() {
               },
               {
                 key: 'status',
-                label: '状态',
-                children: selectedRule.isActive ? <Tag color="success">已启用</Tag> : <Tag color="default">已停用</Tag>,
+                label: 'Status',
+                children: selectedRule.isActive ? <Tag color="success">Enabled</Tag> : <Tag color="default">Disabled</Tag>,
               },
             ]}
           />

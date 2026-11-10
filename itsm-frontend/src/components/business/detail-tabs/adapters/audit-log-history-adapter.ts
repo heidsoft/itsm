@@ -6,27 +6,27 @@ function toReadableAction(action: string | undefined, resource: string): string 
   if (!action) return resource;
   const a = action.toLowerCase();
   const actionMap: Record<string, string> = {
-    create: '创建',
-    update: '更新',
-    delete: '删除',
-    search: '查询',
-    login_success: '登录成功',
-    login_failed: '登录失败',
+    create: 'Create',
+    update: 'Update',
+    delete: 'Delete',
+    search: 'Query',
+    login_success: 'Login Successful',
+    login_failed: 'Login Failed',
   };
   const resourceMap: Record<string, string> = {
-    problems: '问题',
-    incidents: '事件',
-    changes: '变更',
-    tickets: '工单',
-    releases: '发布',
-    users: '用户',
-    roles: '角色',
-    auth: '认证',
+    problems: 'Problem',
+    incidents: 'Incident',
+    changes: 'Change',
+    tickets: 'Ticket',
+    releases: 'Release',
+    users: 'Users',
+    roles: 'Role',
+    auth: 'Authentication',
     sla: 'SLA',
     ai: 'AI',
-    knowledge: '知识库',
+    knowledge: 'Knowledge Base',
     cmdb: 'CMDB',
-    service_requests: '服务请求',
+    service_requests: 'Service Request',
   };
   const r = resourceMap[resource] || resource.replace(/s$/, '').replace(/_/g, ' ');
   return actionMap[a] ? `${actionMap[a]}${r}` : action;
@@ -64,6 +64,6 @@ export async function fetchAuditLogHistory(
     details: toReadableAction(l.action, l.resource),
     // 后端 service 层 join user 表填充 userName（中文姓名优先，缺失回退 username）；
     // 后端兼容未升级前仍返回 `用户#<id>` 形式。
-    user: { name: l.userName || `用户#${l.userId}` },
+    user: { name: l.userName || `User#${l.userId}` },
   }));
 }

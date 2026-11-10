@@ -526,7 +526,7 @@ func TestService_AuditEventFailureStaysObservable(t *testing.T) {
 	t.Run("escalate", func(t *testing.T) {
 		repo := newSLAMockRepository()
 		repo.incidents[1] = &Incident{
-			ID: 1, TenantID: 1, Title: "事件", Status: "new", ReporterID: 101,
+			ID: 1, TenantID: 1, Title: "Incident", Status: "new", ReporterID: 101,
 		}
 		repo.failCreateEventErr = auditErr
 

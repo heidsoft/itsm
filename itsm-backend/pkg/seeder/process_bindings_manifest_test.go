@@ -41,6 +41,20 @@ func TestBuiltinProcessBindingsHaveDeployableTemplates(t *testing.T) {
 	}
 }
 
+func TestBuiltinWorkflowCatalogLabelsAreEnglish(t *testing.T) {
+	comments := regexp.MustCompile(`(?s)<!--.*?-->`)
+	for _, template := range workflowTemplateDefinitions() {
+		t.Run(template.key, func(t *testing.T) {
+			require.NotRegexp(t, `[\p{Han}]`, template.name)
+			require.NotRegexp(t, `[\p{Han}]`, template.desc)
+			content, err := seedWorkflowTemplateFS.ReadFile(template.bpmnFile)
+			require.NoError(t, err)
+			require.NotRegexp(t, `[\p{Han}]`, comments.ReplaceAllString(string(content), ""),
+				"built-in catalog diagrams must use English display labels")
+		})
+	}
+}
+
 // TestTicketProcessBindingsStayInTicketDomain 锁定「工单聚合只跑 ticket 域流程」。
 //
 // ticket 的 type=incident/problem/change/service_request 是工单分类，不是另外四个

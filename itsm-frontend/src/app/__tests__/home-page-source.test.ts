@@ -29,7 +29,7 @@ describe('开源首页快速开始契约', () => {
     expect(source).toContain('ADMIN_PASSWORD');
     expect(source).toContain('itsm-init');
     // bootstrap token 是可选流程且 prod 默认关闭，旧文案把它写成生产默认模型，与实测相反。
-    expect(source).not.toContain('生产部署使用一次性 bootstrap token');
-    expect(source).not.toContain('不提供默认密码');
+    expect(source).not.toContain("ProductionDeployuse一次性 bootstrap token");
+    expect(source).not.toContain("不提供DefaultPassword");
   });
 });

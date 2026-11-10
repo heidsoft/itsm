@@ -36,13 +36,13 @@ export class AuthService {
     });
 
     if (!response.ok) {
-      throw new Error('登录失败');
+      throw new Error('Login Failed');
     }
 
     // 回调只负责让后端签发会话；身份与租户范围一律回后端会话端点读取。
     const outcome = await loadSession();
     if (outcome.state !== 'authenticated') {
-      throw new Error('第三方登录已完成但会话不可用，请重新登录');
+      throw new Error('Third-party login completed but session unavailable, please log in again');
     }
     AuthService.applySession(outcome.user, outcome.tenants);
   }
@@ -93,9 +93,9 @@ export class AuthService {
 
     if (envelope === null || typeof envelope !== 'object') {
       if (!response.ok) {
-        throw new Error(`请求失败（HTTP ${response.status}）`);
+        throw new Error(`Request failed (HTTP ${response.status}）`);
       }
-      throw new Error('服务响应格式异常，请稍后重试');
+      throw new Error('The service response format is abnormal, please try again later.');
     }
 
     const responseData = envelope as {
@@ -108,7 +108,7 @@ export class AuthService {
       // 登录限流响应带 data.retryAfterSeconds，LoginForm 据此展示倒计时。
       const data = (responseData.data ?? null) as { retryAfterSeconds?: number } | null;
       const err = new Error(
-        responseData.message || `请求失败（HTTP ${response.status}）`
+        responseData.message || `Request failed (HTTP ${response.status}）`
       );
       if (data && typeof data.retryAfterSeconds === 'number') {
         (err as Error & { retryAfterSeconds?: number }).retryAfterSeconds = data.retryAfterSeconds;
@@ -139,7 +139,7 @@ export class AuthService {
     useAuthStore.getState().logout();
     void logoutSession().then(result => {
       if (!result.revoked) {
-        console.warn('[auth] 服务端会话吊销未完成:', result.reason);
+        console.warn('[auth] Server session revocation not completed:', result.reason);
       }
     });
   }
@@ -173,15 +173,15 @@ export class AuthService {
       }
       if (outcome.state === 'unavailable') {
         // 后端已接受凭据，但会话查询失败不能谎报「登录成功」，也不能说成密码错误。
-        return { ok: false, message: '登录已接受，但暂时无法确认会话，请稍后重试' };
+        return { ok: false, message: 'Login accepted, but session cannot be confirmed at this time, please try again later' };
       }
-      return { ok: false, message: '登录已被接受，但会话未能建立，请重试或联系管理员' };
+      return { ok: false, message: 'The login was accepted, but the session could not be established. Please try again or contact the administrator.' };
     } catch (error) {
       const e = error as Error & { retryAfterSeconds?: number };
       // retryAfterSeconds 由 makeRequest 从 429 信封带出，LoginForm 据此展示倒计时。
       return {
         ok: false,
-        message: e.message || '登录失败',
+        message: e.message || 'Login Failed',
         retryAfterSeconds: e.retryAfterSeconds,
       };
     }
@@ -217,7 +217,7 @@ export class AuthService {
       return { ok: true };
     } catch (error) {
       console.error('Registration failed:', error);
-      return { ok: false, message: error instanceof Error ? error.message : '注册失败' };
+      return { ok: false, message: error instanceof Error ? error.message : 'Registration failed' };
     }
   }
 
@@ -235,7 +235,7 @@ export class AuthService {
       return { ok: true };
     } catch (error) {
       console.error('Forgot password request failed:', error);
-      const msg = error instanceof Error ? error.message : '请求失败';
+      const msg = error instanceof Error ? error.message : 'Request failed';
       return { ok: false, message: msg };
     }
   }

@@ -85,7 +85,7 @@ func (r *GroupResolver) ExpandGroupsToUsers(ctx context.Context, tenantID int, c
 		WithMembers().
 		All(ctx)
 	if err != nil {
-		return nil, nil, fmt.Errorf("查询审批组失败: %w", err)
+		return nil, nil, fmt.Errorf("Failed to query approval group: %w", err)
 	}
 
 	found := make(map[string]bool, len(groupNames))
@@ -199,7 +199,7 @@ func (r *GroupResolver) GetUserGroupNames(ctx context.Context, tenantID, userID 
 		).
 		All(ctx)
 	if err != nil {
-		return "", fmt.Errorf("查询用户所属组失败: %w", err)
+		return "", fmt.Errorf("Failed to query the group to which the user belongs: %w", err)
 	}
 	names := make([]string, 0, len(groups))
 	for _, g := range groups {

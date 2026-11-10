@@ -312,8 +312,8 @@ export class SLAApi {
     // 调用方多用 Promise.allSettled，400 会静默降级成回退数据，所以在边界先拒绝。
     if (!isRFC3339Timestamp(params.startDate) || !isRFC3339Timestamp(params.endDate)) {
       throw new Error(
-        'SLAApi.getSLAComplianceReport 需要 RFC3339 时间戳（例如 2024-01-01T00:00:00Z），' +
-          `收到 startDate=${params.startDate}, endDate=${params.endDate}`,
+        'SLAApi.getSLAComplianceReport requires RFC3339 timestamp (e.g. 2024-01-01T00:00:00Z),' +
+          `Received startDate=${params.startDate}, endDate=${params.endDate}`,
       );
     }
 
@@ -369,7 +369,7 @@ export class SLAApi {
     );
     if (!response) {
       // 请求被取消或响应为空：交给调用方渲染错误态，禁止用全 0 数据伪装成功。
-      throw new Error('SLA 监控数据为空');
+      throw new Error('SLA monitoring data is empty');
     }
 
     return {

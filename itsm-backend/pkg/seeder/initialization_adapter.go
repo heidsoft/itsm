@@ -528,7 +528,7 @@ func (s *Seeder) verifyITILTemplates(ctx context.Context) error {
 	}
 	for _, expected := range expectedStandardChanges {
 		exists, err := s.client.StandardChange.Query().Where(
-			standardchange.TenantIDEQ(tenantID), standardchange.TitleEQ(expected.Title),
+			standardchange.TenantIDEQ(tenantID), standardchange.TitleIn(builtinSeedNames("standard_changes", expected.Title)...),
 		).Exist(ctx)
 		if err != nil {
 			return fmt.Errorf("verify standard change %s: %w", expected.Title, err)
@@ -553,7 +553,7 @@ func (s *Seeder) verifyITILTemplates(ctx context.Context) error {
 		// 一致用 (tenant_id, name)。此前断言 tags 表（组织标签）——那张表
 		// 没有读取方，断言永远绿却掩盖了「种子写错表」的账实分离。
 		exists, err := s.client.TicketTag.Query().Where(
-			tickettag.TenantIDEQ(tenantID), tickettag.NameEQ(expected.Name),
+			tickettag.TenantIDEQ(tenantID), tickettag.NameIn(builtinSeedNames("ticket_tags", expected.Name)...),
 		).Exist(ctx)
 		if err != nil {
 			return fmt.Errorf("verify ticket tag %s: %w", expected.Name, err)
@@ -601,8 +601,8 @@ func (s *Seeder) verifyWorkflowTemplates(ctx context.Context) error {
 				binding.ProcessDefinitionKey, tenantID, binding.BusinessType, binding.BusinessSubType, err)
 		}
 		if !exists {
-			return fmt.Errorf("verify process definition %s (tenant %d, binding %s/%s): 没有已部署的 active 流程定义；"+
-				"该绑定引用的 key 必须存在于 service/bpmn/*.bpmn 并由 BPMNTemplateService 部署，否则 workflow-core 组件回滚",
+			return fmt.Errorf("verify process definition %s (tenant %d, binding %s/%s): No deployed active process definition;"+
+				"The key referenced by this binding must exist in service/bpmn/*.bpmn and be deployed by BPMNTemplateService, otherwise the workflow-core component will be rolled back",
 				binding.ProcessDefinitionKey, tenantID, binding.BusinessType, binding.BusinessSubType)
 		}
 	}
@@ -620,9 +620,14 @@ func (s *Seeder) verifySLATemplates(ctx context.Context) error {
 	// Only the managed baseline definitions are checked; customer-authored SLA
 	// records are not forced to carry seeded alert rules.
 	for _, expected := range s.config.SLADefinitions {
-		definition, err := s.client.SLADefinition.Query().
-			Where(sladefinition.TenantIDEQ(tenantID), sladefinition.NameEQ(expected.Name)).
-			Only(ctx)
+		var definition *ent.SLADefinition
+		for _, name := range builtinSeedNames("sla_definitions", expected.Name) {
+			definition, err = s.client.SLADefinition.Query().
+				Where(sladefinition.TenantIDEQ(tenantID), sladefinition.NameEQ(name)).Only(ctx)
+			if !ent.IsNotFound(err) {
+				break
+			}
+		}
 		if err != nil {
 			return fmt.Errorf("verify SLA definition %s: %w", expected.Name, err)
 		}
@@ -696,7 +701,7 @@ func (s *Seeder) verifyMarketplaceItems(ctx context.Context) error {
 		}
 		version := strings.TrimSpace(existing.LatestVersion)
 		if version == "" {
-			return fmt.Errorf("verify marketplace items: %s 没有 latest_version", item.Name)
+			return fmt.Errorf("verify marketplace items: %s does not have latest_version", item.Name)
 		}
 		hasVersion, err := s.client.ItemVersion.Query().
 			Where(itemversion.ItemID(existing.ID), itemversion.Version(version)).
@@ -705,7 +710,7 @@ func (s *Seeder) verifyMarketplaceItems(ctx context.Context) error {
 			return fmt.Errorf("verify marketplace version %s@%s: %w", item.Name, version, err)
 		}
 		if !hasVersion {
-			return fmt.Errorf("verify marketplace items: %s 的 latest_version=%s 没有版本行（安装与升级会失败）", item.Name, version)
+			return fmt.Errorf("verify marketplace items: latest_version=%s for %s has no version line (installation and upgrade will fail)", item.Name, version)
 		}
 		if strings.EqualFold(strings.TrimSpace(item.Type), "skill") {
 			hasLocator, err := s.client.ItemVersion.Query().
@@ -719,7 +724,7 @@ func (s *Seeder) verifyMarketplaceItems(ctx context.Context) error {
 				return fmt.Errorf("verify marketplace skill locator %s: %w", item.Name, err)
 			}
 			if !hasLocator {
-				return fmt.Errorf("verify marketplace items: 技能 %s 的版本行缺少定位符 %q",
+				return fmt.Errorf("verify marketplace items: Version row for skill %s is missing locator %q",
 					item.Name, item.ManifestPath)
 			}
 		}
@@ -737,10 +742,15 @@ func (s *Seeder) verifyExtensionTemplates(ctx context.Context) error {
 	}
 	catalogIDs := make(map[string]int, len(s.config.ServiceCatalog))
 	for _, expected := range s.config.ServiceCatalog {
-		catalog, err := s.client.ServiceCatalog.Query().Where(
-			servicecatalog.TenantIDEQ(tenantID),
-			servicecatalog.NameEQ(expected.Name),
-		).Only(ctx)
+		var catalog *ent.ServiceCatalog
+		for _, name := range builtinSeedNames("service_catalogs", expected.Name) {
+			catalog, err = s.client.ServiceCatalog.Query().Where(
+				servicecatalog.TenantIDEQ(tenantID), servicecatalog.NameEQ(name),
+			).Only(ctx)
+			if !ent.IsNotFound(err) {
+				break
+			}
+		}
 		if err != nil {
 			return fmt.Errorf("verify service catalog %s: %w", expected.Name, err)
 		}
@@ -756,7 +766,7 @@ func (s *Seeder) verifyExtensionTemplates(ctx context.Context) error {
 		exists, err := s.client.ServiceCatalogItem.Query().Where(
 			servicecatalogitem.TenantIDEQ(tenantID),
 			servicecatalogitem.CatalogIDEQ(parentID),
-			servicecatalogitem.NameEQ(expected.Name),
+			servicecatalogitem.NameIn(builtinSeedNames("service_catalog_items", expected.Name)...),
 		).Exist(ctx)
 		if err != nil {
 			return fmt.Errorf("verify service catalog item %s: %w", expected.Name, err)

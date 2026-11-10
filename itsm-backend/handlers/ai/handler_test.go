@@ -156,7 +156,7 @@ func TestTriage_Handler_RequiresTenant(t *testing.T) {
 	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
 
 	assert.Equal(t, common.AuthFailedCode, resp.Code)
-	assert.Equal(t, "租户信息缺失", resp.Message)
+	assert.Equal(t, "Tenant information is missing", resp.Message)
 }
 
 func TestTriage_Handler_RequiresTitle(t *testing.T) {
@@ -202,7 +202,7 @@ func TestAnalyzeIncident_Handler_UnwiredServiceReturnsUnavailable(t *testing.T) 
 	}
 	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
 	assert.Equal(t, common.ServiceUnavailableCode, resp.Code)
-	assert.Equal(t, "AI 事件分析服务尚未就绪", resp.Message)
+	assert.Equal(t, "AI event analysis service is not ready yet", resp.Message)
 }
 
 // ==================== RAG 可见性过滤 HTTP 端到端测试 ====================

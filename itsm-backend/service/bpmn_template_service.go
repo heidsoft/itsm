@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
-	"path/filepath"
+	"path"
 	"sort"
 	"strconv"
 	"strings"
@@ -71,7 +71,7 @@ func (s *BPMNTemplateService) LoadAndDeployTemplates(ctx context.Context, tenant
 			continue
 		}
 
-		data, err := bpmnTemplates.ReadFile(filepath.Join("bpmn", tmpl.Filename))
+		data, err := bpmnTemplates.ReadFile(path.Join("bpmn", tmpl.Filename))
 		if err != nil {
 			s.logger.Sugar().Errorw("读取内置模板失败，跳过该模板", "template", tmpl.ID, "error", err)
 			deployFailures = append(deployFailures, tmpl.ID)
@@ -103,7 +103,7 @@ func (s *BPMNTemplateService) LoadAndDeployTemplates(ctx context.Context, tenant
 	}
 
 	if len(deployFailures) > 0 {
-		return deployed, fmt.Errorf("%d 个内置模板未通过部署门禁: %s", len(deployFailures), strings.Join(deployFailures, ", "))
+		return deployed, fmt.Errorf("%d built-in templates failed deployment gate: %s", len(deployFailures), strings.Join(deployFailures, ", "))
 	}
 	return deployed, nil
 }
@@ -146,7 +146,7 @@ func (s *BPMNTemplateService) listTemplates() ([]*TemplateInfo, error) {
 	templates := make([]*TemplateInfo, 0)
 
 	// 读取嵌入的模板文件
-	err := fs.WalkDir(bpmnTemplates, ".", func(path string, d fs.DirEntry, err error) error {
+	err := fs.WalkDir(bpmnTemplates, ".", func(templatePath string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
@@ -155,12 +155,12 @@ func (s *BPMNTemplateService) listTemplates() ([]*TemplateInfo, error) {
 			return nil
 		}
 
-		if !strings.HasSuffix(path, ".bpmn") {
+		if !strings.HasSuffix(templatePath, ".bpmn") {
 			return nil
 		}
 
 		// 解析文件名获取模板信息
-		filename := filepath.Base(path)
+		filename := path.Base(templatePath)
 		key := strings.TrimSuffix(filename, ".bpmn")
 
 		info := &TemplateInfo{
@@ -171,53 +171,80 @@ func (s *BPMNTemplateService) listTemplates() ([]*TemplateInfo, error) {
 		// 根据文件名设置默认值
 		switch key {
 		case "ticket_general_flow":
-			info.Name = "通用工单流程"
+			info.Name = "General Ticket Workflow"
 			info.Category = "ticket"
-			info.Description = "通用工单处理流程"
+			info.Description = "General ticket handling workflow"
 		case "ticket_assignment_flow":
-			info.Name = "工单分配流程"
+			info.Name = "Ticket Assignment Workflow"
 			info.Category = "ticket"
 			info.SubCategory = "assignment"
-			info.Description = "工单自动分配处理流程"
+			info.Description = "Automatic ticket assignment workflow"
 		case "change_normal_flow":
-			info.Name = "普通变更流程"
+			info.Name = "Normal Change Workflow"
 			info.Category = "change"
 			info.SubCategory = "normal"
-			info.Description = "普通变更管理流程"
+			info.Description = "Normal change management workflow"
 		case "change_emergency_flow":
-			info.Name = "紧急变更流程"
+			info.Name = "Emergency Change Workflow"
 			info.Category = "change"
 			info.SubCategory = "emergency"
-			info.Description = "紧急变更快速处理流程"
+			info.Description = "Expedited emergency change workflow"
 		case "incident_emergency_flow":
-			info.Name = "紧急事件流程"
+			info.Name = "Emergency Incident Workflow"
 			info.Category = "incident"
-			info.Description = "紧急事件快速响应流程"
+			info.Description = "Rapid emergency incident response workflow"
 		case "service_request_flow":
-			info.Name = "服务请求流程"
+			info.Name = "Service Request Workflow"
 			info.Category = "service_request"
-			info.Description = "标准服务请求处理流程"
+			info.Description = "Standard service request workflow"
 		case "problem_management_flow":
-			info.Name = "问题管理流程"
+			info.Name = "Problem Management Workflow"
 			info.Category = "problem"
-			info.Description = "问题管理全流程"
+			info.Description = "End-to-end problem management workflow"
 		case "release_approval_flow":
-			info.Name = "发布审批流程"
+			info.Name = "Release Approval Workflow"
 			info.Category = "release"
-			info.Description = "软件发布审批管理流程"
+			info.Description = "Software release approval workflow"
 		case "dev_approval_ops_flow":
-			info.Name = "开发审批运维流程"
+			info.Name = "Development Approval and Operations Workflow"
 			info.Category = "ticket"
 			info.SubCategory = "approval"
-			info.Description = "开发提交→主管审批→运维操作三级流程"
+			info.Description = "Three-stage workflow: development submission, supervisor approval, and operations execution"
 		default:
 			info.Name = key
 			info.Category = "default"
 		}
 
 		info.Version = "1.0.0"
-		if content, readErr := bpmnTemplates.ReadFile(filepath.Join("bpmn", filename)); readErr == nil {
+		if content, readErr := bpmnTemplates.ReadFile(path.Join("bpmn", filename)); readErr == nil {
 			info.Version = declaredTemplateVersion(content, info.Version)
+			// Variant and cloud templates carry their display metadata in XML;
+			// keep the filename as their stable key, never as the displayed title.
+			if info.Name == key {
+				var document struct {
+					Process struct {
+						Name              string `xml:"name,attr"`
+						Documentation     string `xml:"documentation"`
+						ExtensionElements struct {
+							MetaData []struct {
+								Name  string `xml:"name,attr"`
+								Value string `xml:",chardata"`
+							} `xml:"metaData"`
+						} `xml:"extensionElements"`
+					} `xml:"process"`
+				}
+				if xml.Unmarshal(content, &document) == nil {
+					if title := strings.TrimSpace(document.Process.Name); title != "" {
+						info.Name = title
+					}
+					info.Description = strings.TrimSpace(document.Process.Documentation)
+					for _, meta := range document.Process.ExtensionElements.MetaData {
+						if meta.Name == "description" {
+							info.Description = strings.TrimSpace(meta.Value)
+						}
+					}
+				}
+			}
 		}
 		templates = append(templates, info)
 		return nil
@@ -355,7 +382,7 @@ func (s *BPMNTemplateService) deployTemplate(ctx context.Context, tmpl *Template
 	lintSvc := NewBPMNLintService()
 	lintResult, lintErr := lintSvc.LintBPMNXML(data)
 	if lintErr != nil {
-		return fmt.Errorf("模板 %s 未通过 lint（XML 不可解析）: %w", tmpl.ID, lintErr)
+		return fmt.Errorf("Template %s failed lint (XML not parsable): %w", tmpl.ID, lintErr)
 	}
 	if lintResult != nil && lintResult.HasErrors {
 		msgs := make([]string, 0, lintResult.ErrorCount)
@@ -364,7 +391,7 @@ func (s *BPMNTemplateService) deployTemplate(ctx context.Context, tmpl *Template
 				msgs = append(msgs, is.Message)
 			}
 		}
-		return fmt.Errorf("模板 %s 未通过 lint（%d 个 error）: %s", tmpl.ID, lintResult.ErrorCount, strings.Join(msgs, "; "))
+		return fmt.Errorf("Template %s failed lint (%d errors): %s", tmpl.ID, lintResult.ErrorCount, strings.Join(msgs, "; "))
 	}
 
 	now := time.Now()
@@ -526,20 +553,20 @@ func (s *BPMNTemplateService) DeployTemplateByName(ctx context.Context, name str
 		if tmpl.ID != name {
 			continue
 		}
-		data, err := bpmnTemplates.ReadFile(filepath.Join("bpmn", tmpl.Filename))
+		data, err := bpmnTemplates.ReadFile(path.Join("bpmn", tmpl.Filename))
 		if err != nil {
 			return errors.Wrap(err, "读取模板文件失败")
 		}
 		return s.deployTemplate(ctx, tmpl, tenantID, tmpl.Version, data)
 	}
 
-	return fmt.Errorf("模板 %s 不存在", name)
+	return fmt.Errorf("Template %s does not exist", name)
 }
 
 // GetTemplateContent 获取模板内容
 func (s *BPMNTemplateService) GetTemplateContent(name string) ([]byte, error) {
-	path := filepath.Join("bpmn", name+".bpmn")
-	return bpmnTemplates.ReadFile(path)
+	templatePath := path.Join("bpmn", name+".bpmn")
+	return bpmnTemplates.ReadFile(templatePath)
 }
 
 // ExportTemplateToFile 将已部署的流程导出为BPMN文件

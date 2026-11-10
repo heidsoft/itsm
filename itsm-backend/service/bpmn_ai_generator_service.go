@@ -58,29 +58,29 @@ func (s *BPMNAIGeneratorService) GenerateBPMN(ctx context.Context, req *dto.Gene
 	// gpt-4o here made BPMN generation incompatible with MiniMax/local deployments.
 	response, err := s.llmGateway.Chat(ctx, "", messages)
 	if err != nil {
-		return nil, fmt.Errorf("调用AI生成BPMN失败: %w", err)
+		return nil, fmt.Errorf("Failed to call AI to generate BPMN: %w", err)
 	}
 
 	// 解析响应，提取BPMN XML和元数据
 	bpmnXML, metadata, err := s.parseLLMResponse(response)
 	if err != nil {
-		return nil, fmt.Errorf("解析AI响应失败: %w", err)
+		return nil, fmt.Errorf("Failed to parse AI response: %w", err)
 	}
 
 	// 验证生成的BPMN XML
 	if err := s.parser.ValidateBPMNXML([]byte(bpmnXML)); err != nil {
-		return nil, fmt.Errorf("生成的BPMN XML验证失败: %w", err)
+		return nil, fmt.Errorf("Generated BPMN XML failed validation: %w", err)
 	}
 
 	// 解析BPMN提取信息
 	definitions, err := s.parser.ParseXML([]byte(bpmnXML))
 	if err != nil {
-		return nil, fmt.Errorf("解析生成的BPMN XML失败: %w", err)
+		return nil, fmt.Errorf("Failed to parse generated BPMN XML: %w", err)
 	}
 
 	processInfo := s.parser.ExtractProcessInfo(definitions)
 	if processInfo == nil {
-		return nil, fmt.Errorf("无法提取流程信息")
+		return nil, fmt.Errorf("Unable to extract process information")
 	}
 
 	// 构建响应
@@ -96,7 +96,7 @@ func (s *BPMNAIGeneratorService) GenerateBPMN(ctx context.Context, req *dto.Gene
 		CandidateDefinition: buildBusinessProcessCandidate(req),
 	}
 	if err := validateBusinessProcessCandidate(resp.CandidateDefinition); err != nil {
-		return nil, fmt.Errorf("候选业务流程定义校验失败: %w", err)
+		return nil, fmt.Errorf("Candidate business process definition verification failed: %w", err)
 	}
 
 	// 生成后自动 Lint：语义层检查（连通性/网关/任务配置），
@@ -128,13 +128,13 @@ func (s *BPMNAIGeneratorService) GenerateBPMN(ctx context.Context, req *dto.Gene
 
 		deployment, err := s.deploymentService.DeployProcessDefinition(ctx, deployReq)
 		if err != nil {
-			return nil, fmt.Errorf("自动部署流程失败: %w", err)
+			return nil, fmt.Errorf("Automated deployment process failed: %w", err)
 		}
 
 		resp.DeploymentID = deployment.DeploymentID
 		definition, err := s.deploymentService.GetProcessDefinitionForDeployment(ctx, deployment.ID, req.TenantID)
 		if err != nil {
-			return nil, fmt.Errorf("自动部署成功但无法读取流程定义: %w", err)
+			return nil, fmt.Errorf("Auto-deployment successful but unable to read process definition: %w", err)
 		}
 		resp.ProcessDefinitionID = definition.ID
 		resp.Version = definition.Version
@@ -146,7 +146,7 @@ func (s *BPMNAIGeneratorService) GenerateBPMN(ctx context.Context, req *dto.Gene
 // SuggestTemplates returns tenant-scoped and immutable built-in template matches.
 func (s *BPMNAIGeneratorService) SuggestTemplates(ctx context.Context, tenantID int, keyword, processType string) ([]*dto.BPMNTemplateSuggestion, error) {
 	if s.templateService == nil {
-		return nil, fmt.Errorf("工作流模板目录未配置")
+		return nil, fmt.Errorf("Workflow template directory is not configured")
 	}
 	result := make([]*dto.BPMNTemplateSuggestion, 0)
 	if s.templateCatalog != nil {
@@ -213,30 +213,30 @@ func businessFields(specs ...string) []map[string]interface{} {
 // comparison grammar for now.
 func validateBusinessProcessCandidate(candidate *dto.BusinessProcessCandidate) error {
 	if candidate == nil || candidate.Domain == "" || candidate.FormSchema == nil || candidate.ApprovalPolicy == nil || candidate.OntologyBindings == nil {
-		return fmt.Errorf("缺少业务域、表单、本体或审批策略")
+		return fmt.Errorf("Missing business domain, form, ontology or approval policy")
 	}
 	if fields, ok := candidate.FormSchema["fields"].([]map[string]interface{}); !ok {
-		return fmt.Errorf("formSchema.fields 必须是结构化字段列表")
+		return fmt.Errorf("formSchema.fields must be a structured field list")
 	} else {
 		for _, field := range fields {
 			name, _ := field["name"].(string)
 			typ, _ := field["type"].(string)
 			if name == "" || typ == "" || field["required"] != true {
-				return fmt.Errorf("字段定义不完整")
+				return fmt.Errorf("Incomplete field definition")
 			}
 		}
 	}
 	if rules, exists := candidate.ApprovalPolicy["rules"]; exists {
 		items, ok := rules.([]interface{})
 		if !ok {
-			return fmt.Errorf("approvalPolicy.rules 必须是数组")
+			return fmt.Errorf("approvalPolicy.rules must be an array")
 		}
 		for _, item := range items {
 			rule, ok := item.(map[string]interface{})
 			when, _ := rule["when"].(string)
 			role, _ := rule["role"].(string)
 			if !ok || role == "" || !regexp.MustCompile(`^amount\s*(<|<=|>=|>)\s*[0-9]+$`).MatchString(when) {
-				return fmt.Errorf("审批条件仅支持 amount 数值比较")
+				return fmt.Errorf("Approval conditions only support amount numerical comparison")
 			}
 		}
 	}
@@ -263,13 +263,13 @@ func (s *BPMNAIGeneratorService) PreviewBPMN(ctx context.Context, req *dto.Previ
 	// Keep preview on the same deployment-configured model as generation.
 	response, err := s.llmGateway.Chat(ctx, "", messages)
 	if err != nil {
-		return nil, fmt.Errorf("调用AI预览流程失败: %w", err)
+		return nil, fmt.Errorf("Failed to call AI preview process: %w", err)
 	}
 
 	// 解析JSON响应
 	var previewResp dto.PreviewBPMNResponse
 	if err := json.Unmarshal([]byte(response), &previewResp); err != nil {
-		return nil, fmt.Errorf("解析预览响应失败: %w", err)
+		return nil, fmt.Errorf("Failed to parse preview response: %w", err)
 	}
 
 	return &previewResp, nil
@@ -308,7 +308,7 @@ func (s *BPMNAIGeneratorService) parseLLMResponse(response string) (string, *Gen
 	bpmnRegex := regexp.MustCompile(`(?s)<\?xml.*?<bpmn:definitions.*?</bpmn:definitions>`)
 	bpmnMatches := bpmnRegex.FindStringSubmatch(response)
 	if len(bpmnMatches) == 0 {
-		return "", nil, fmt.Errorf("未在响应中找到BPMN XML内容")
+		return "", nil, fmt.Errorf("BPMN XML content not found in response")
 	}
 	bpmnXML := bpmnMatches[0]
 

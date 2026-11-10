@@ -20,11 +20,11 @@ const impactScopeColors: Record<string, string> = {
 };
 
 const itilPracticeLabels: Record<string, string> = {
-  serviceConfigurationManagement: '服务配置管理',
-  changeEnablement: '变更启用',
-  incidentManagement: '事件管理',
-  riskManagement: '风险管理',
-  monitoringAndEventManagement: '监控与事件管理',
+  serviceConfigurationManagement: 'Service configuration management',
+  changeEnablement: 'Change enabled',
+  incidentManagement: 'Incidents',
+  riskManagement: 'Risk Management',
+  monitoringAndEventManagement: 'Monitoring and Event Management',
 };
 
 export interface ChangeCMDBImpactPanelProps {
@@ -46,7 +46,7 @@ export default function ChangeCMDBImpactPanel({ changeId }: ChangeCMDBImpactPane
         if (!cancelled) setData(res);
       } catch (e) {
         if (!cancelled) {
-          setError(e instanceof Error ? e.message : '加载失败');
+          setError(e instanceof Error ? e.message : 'LoadingFailed');
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -67,49 +67,49 @@ export default function ChangeCMDBImpactPanel({ changeId }: ChangeCMDBImpactPane
   }
 
   if (error) {
-    return <Alert type="error" title={`CMDB 影响摘要加载失败：${error}`} />;
+    return <Alert type="error" title={`CMDB impact summary load failed:${error}`} />;
   }
 
   if (!data) {
-    return <Empty description="暂无 CMDB 影响数据" />;
+    return <Empty description="No CMDB impact data yet" />;
   }
 
   return (
     <Space orientation="vertical" size="middle" className="w-full">
-      <Card size="small" title={<><Zap /> 总体评估</>}>
+      <Card size="small" title={<><Zap />  Overall assessment</>}>
         <Descriptions column={2} size="small">
-          <Descriptions.Item label="推荐风险等级">
+          <Descriptions.Item label="Recommended risk level">
             <Tag color={riskLevelColors[data.recommendedRiskLevel] || 'default'}>
               {data.recommendedRiskLevel?.toUpperCase()}
             </Tag>
           </Descriptions.Item>
-          <Descriptions.Item label="推荐影响范围">
+          <Descriptions.Item label="Recommended scope of influence">
             <Tag color={impactScopeColors[data.recommendedImpactScope] || 'default'}>
               {data.recommendedImpactScope?.toUpperCase()}
             </Tag>
           </Descriptions.Item>
-          <Descriptions.Item label="需要评审组审批">
-            {data.requiresReview ? <Tag color="red">是</Tag> : <Tag color="green">否</Tag>}
+          <Descriptions.Item label="Requires review team approval">
+            {data.requiresReview ? <Tag color="red">Yes</Tag> : <Tag color="green">No</Tag>}
           </Descriptions.Item>
-          <Descriptions.Item label="需要回滚计划">
-            {data.requiresBackoutPlan ? <Tag color="orange">是</Tag> : <Tag color="default">否</Tag>}
+          <Descriptions.Item label="Rollback plan required">
+            {data.requiresBackoutPlan ? <Tag color="orange">Yes</Tag> : <Tag color="default">No</Tag>}
           </Descriptions.Item>
         </Descriptions>
       </Card>
 
-      <Card size="small" title="受影响 CI">
+      <Card size="small" title="Affected CI">
         <Descriptions column={2} size="small">
-          <Descriptions.Item label="CI 总数">{data.totalAffectedCIs}</Descriptions.Item>
-          <Descriptions.Item label="关键 CI 数">{data.criticalCICount}</Descriptions.Item>
-          <Descriptions.Item label="高风险依赖数">{data.highRiskDependencyCount}</Descriptions.Item>
-          <Descriptions.Item label="未关闭事件数">{data.openIncidentCount}</Descriptions.Item>
+          <Descriptions.Item label="Total number of CIs">{data.totalAffectedCIs}</Descriptions.Item>
+          <Descriptions.Item label="Key CI number">{data.criticalCICount}</Descriptions.Item>
+          <Descriptions.Item label="Number of high-risk dependencies">{data.highRiskDependencyCount}</Descriptions.Item>
+          <Descriptions.Item label="Number of unclosed events">{data.openIncidentCount}</Descriptions.Item>
         </Descriptions>
       </Card>
 
       {data.workflowHints && data.workflowHints.length > 0 && (
         <Card
           size="small"
-          title={<><AlertTriangle /> 工作流提示</>}
+          title={<><AlertTriangle />  Workflow Tips</>}
         >
           <List
             size="small"
@@ -120,7 +120,7 @@ export default function ChangeCMDBImpactPanel({ changeId }: ChangeCMDBImpactPane
       )}
 
       {data.itilPractices && data.itilPractices.length > 0 && (
-        <Card size="small" title={<><Lightbulb /> ITIL 4 实践建议</>}>
+        <Card size="small" title={<><Lightbulb />  ITIL 4 Practical Advice</>}>
           <Space wrap>
             {data.itilPractices.map(p => (
               <Tag key={p} color="blue">
@@ -132,7 +132,7 @@ export default function ChangeCMDBImpactPanel({ changeId }: ChangeCMDBImpactPane
       )}
 
       {data.affectedCIs && data.affectedCIs.length > 0 && (
-        <Card size="small" title="受影响 CI ID 列表">
+        <Card size="small" title="List of affected CI IDs">
           <Space wrap>
             {data.affectedCIs.map(id => (
               <Tag key={id}>#{id}</Tag>

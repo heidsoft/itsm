@@ -50,9 +50,9 @@ describe('项目管理状态列（D13）', () => {
     );
     await waitFor(() => expect(projectService.listProjects).toHaveBeenCalled());
 
-    expect(await screen.findByText('进行中')).toBeInTheDocument();
-    expect(screen.getByText('已完成')).toBeInTheDocument();
-    expect(screen.getByText('已暂停')).toBeInTheDocument();
+    expect(await screen.findByText("In Progress")).toBeInTheDocument();
+    expect(screen.getByText("Completed")).toBeInTheDocument();
+    expect(screen.getByText("Paused")).toBeInTheDocument();
 
     const body = document.body.textContent || '';
     expect(body).not.toContain('Unknown');

@@ -44,7 +44,7 @@ const renderPage = () =>
   );
 
 const switchToLegacyTab = async () => {
-  const tab = await screen.findByRole('tab', { name: /业务待办/ });
+  const tab = await screen.findByRole('tab', { name: /Business backlog/ });
   tab.click();
 };
 
@@ -83,15 +83,15 @@ describe('审批中心业务待办状态列', () => {
     await switchToLegacyTab();
 
     await waitFor(() => {
-      expect(screen.getByText('处理中')).toBeInTheDocument();
+      expect(screen.getByText("In Progress")).toBeInTheDocument();
     });
 
     // 工单 in_progress → 处理中
-    expect(screen.getByText('处理中')).toBeInTheDocument();
+    expect(screen.getByText("In Progress")).toBeInTheDocument();
     // 变更 pending → 待审批
-    expect(screen.getByText('待审批')).toBeInTheDocument();
+    expect(screen.getByText("Pending Approval")).toBeInTheDocument();
     // 服务请求 submitted → 已提交
-    expect(screen.getByText('已提交')).toBeInTheDocument();
+    expect(screen.getByText("Submitted")).toBeInTheDocument();
 
     // 原始英文状态串不得出现在状态列
     expect(screen.queryByText('in_progress')).not.toBeInTheDocument();
@@ -121,9 +121,9 @@ describe('审批中心业务待办状态列', () => {
     await switchToLegacyTab();
 
     await waitFor(() => {
-      expect(screen.getByText('已提交')).toBeInTheDocument();
+      expect(screen.getByText("Submitted")).toBeInTheDocument();
     });
     // 工单词表里没有 submitted → 回退显示原值，这是可接受的（不误译优先于硬译）
-    expect(screen.queryByText('待审批')).not.toBeInTheDocument();
+    expect(screen.queryByText("Pending Approval")).not.toBeInTheDocument();
   });
 });

@@ -121,7 +121,7 @@ func TestCMDBCloudSurfaceTenantAndEnumRouteContract(t *testing.T) {
 			status, raw, env := call(t, http.MethodGet, path, a, &zero, nil)
 			assert.Equal(t, http.StatusUnauthorized, status, "path=%s body=%s", path, raw)
 			assert.Equal(t, 2001, env.Code, "path=%s body=%s", path, raw)
-			assert.Equal(t, "租户信息缺失", env.Message, raw)
+			assert.Equal(t, "Tenant information is missing", env.Message, raw)
 			assert.NotContains(t, raw, `"items"`, "无租户时绝不能返回列表载荷: path="+path+" body="+raw)
 		}
 	})
@@ -130,7 +130,7 @@ func TestCMDBCloudSurfaceTenantAndEnumRouteContract(t *testing.T) {
 		for _, tc := range []struct{ name, path, message string }{
 			{"云服务", fmt.Sprintf("/api/v1/cmdb/cloud-services/%d", b.serviceIDs[0]), "cloud service not found"},
 			{"云账号", fmt.Sprintf("/api/v1/cmdb/cloud-accounts/%d", b.accountID), "cloud account not found"},
-			{"云资源", fmt.Sprintf("/api/v1/cmdb/cloud-resources/%d", b.resourceIDs[0]), "cloud resource not found"},
+			{"Cloud Resources", fmt.Sprintf("/api/v1/cmdb/cloud-resources/%d", b.resourceIDs[0]), "cloud resource not found"},
 		} {
 			t.Run(tc.name, func(t *testing.T) {
 				raw := expectFailure(t, http.MethodGet, tc.path, a, nil, http.StatusNotFound, 4004, tc.message)
@@ -159,7 +159,7 @@ func TestCMDBCloudSurfaceTenantAndEnumRouteContract(t *testing.T) {
 		for _, tc := range []struct{ name, path, message string }{
 			{"云服务", fmt.Sprintf("/api/v1/cmdb/cloud-services/%d", b.serviceIDs[0]), "cloud service not found"},
 			{"云账号", fmt.Sprintf("/api/v1/cmdb/cloud-accounts/%d", b.accountID), "cloud account not found"},
-			{"云资源", fmt.Sprintf("/api/v1/cmdb/cloud-resources/%d", b.resourceIDs[0]), "cloud resource not found"},
+			{"Cloud Resources", fmt.Sprintf("/api/v1/cmdb/cloud-resources/%d", b.resourceIDs[0]), "cloud resource not found"},
 		} {
 			t.Run(tc.name, func(t *testing.T) {
 				expectFailure(t, http.MethodDelete, tc.path, a, nil, http.StatusNotFound, 4004, tc.message)
@@ -200,7 +200,7 @@ func TestCMDBCloudSurfaceTenantAndEnumRouteContract(t *testing.T) {
 			"/api/v1/cmdb/cloud-accounts",
 			"/api/v1/cmdb/cloud-resources",
 		} {
-			expectFailure(t, http.MethodGet, path+"?provider=alibaba", a, nil, http.StatusBadRequest, 1001, "请求参数错误")
+			expectFailure(t, http.MethodGet, path+"?provider=alibaba", a, nil, http.StatusBadRequest, 1001, "Wrong request parameters")
 
 			status, body, env := as(t, http.MethodGet, path+"?provider=aliyun", a, nil)
 			assert.Equal(t, http.StatusOK, status, "%s: %s", path, body)

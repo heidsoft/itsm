@@ -115,13 +115,15 @@ export default function GlobalError({
         <div style={containerStyle}>
           <div style={cardStyle}>
             <div style={iconStyle}>⚠️</div>
-            <h1 style={titleStyle}>系统发生错误</h1>
+            <h1 style={titleStyle}>System error occurred</h1>
             <p style={subtitleStyle}>
-              抱歉，应用遇到了一个严重错误。请尝试重试，如果问题持续存在，请联系技术支持。
+
+              Sorry, the application encountered a critical error. Please try again or contact technical support if the problem persists.
             </p>
             <div style={buttonContainerStyle}>
               <button style={primaryButtonStyle} onClick={() => reset()}>
-                🔄 重试
+
+                🔄 Try again
               </button>
               <button
                 style={secondaryButtonStyle}
@@ -129,11 +131,12 @@ export default function GlobalError({
                   window.location.href = '/dashboard';
                 }}
               >
-                🏠 返回仪表盘
+
+                🏠 Return to dashboard
               </button>
             </div>
             {error?.digest && (
-              <div style={errorIdStyle}>错误 ID: {error.digest}</div>
+              <div style={errorIdStyle}>Error ID: {error.digest}</div>
             )}
           </div>
         </div>

@@ -70,7 +70,7 @@ const ArticleVersionControl: React.FC<ArticleVersionControlProps> = ({
       const versionHistory = await KnowledgeBaseApi.getArticleVersions(articleId);
       setVersions(versionHistory.sort((a, b) => b.version - a.version));
     } catch (error) {
-      message.error('加载版本历史失败');
+      message.error('Failed to load version history');
     } finally {
       setLoading(false);
     }
@@ -80,24 +80,24 @@ const ArticleVersionControl: React.FC<ArticleVersionControlProps> = ({
   const handleRestoreVersion = async (version: number) => {
     try {
       Modal.confirm({
-        title: '确认恢复版本',
-        content: `确定要恢复到版本 ${version} 吗？这将创建一个新的版本。`,
+        title: 'Confirm recovery version',
+        content: `Are you sure you want to revert to version ${version} ? This will create a new version.`,
         onOk: async () => {
           await KnowledgeBaseApi.restoreVersion(articleId, version);
-          message.success('版本恢复成功');
+          message.success('Version restored successfully');
           loadVersions();
           onVersionChange?.(version);
         },
       });
     } catch (error) {
-      message.error('恢复版本失败');
+      message.error('Failed to restore version');
     }
   };
 
   // 比较版本
   const handleCompareVersions = async () => {
     if (!selectedVersions || selectedVersions[0] === selectedVersions[1]) {
-      message.warning('请选择两个不同的版本进行比较');
+      message.warning('Please select two different versions to compare');
       return;
     }
 
@@ -111,7 +111,7 @@ const ArticleVersionControl: React.FC<ArticleVersionControlProps> = ({
       setCompareResult(result);
       setCompareModalVisible(true);
     } catch (error) {
-      message.error('比较版本失败');
+      message.error('Failed to compare versions');
     } finally {
       setLoading(false);
     }
@@ -126,7 +126,7 @@ const ArticleVersionControl: React.FC<ArticleVersionControlProps> = ({
   // 版本表格列
   const versionColumns = [
     {
-      title: '版本',
+      title: 'Version',
       dataIndex: 'version',
       key: 'version',
       width: 80,
@@ -135,23 +135,23 @@ const ArticleVersionControl: React.FC<ArticleVersionControlProps> = ({
           <GitCommit className="w-4 h-4 text-blue-500" />
           <Tag color={version === currentVersion ? 'green' : 'default'}>
             v{version}
-            {version === currentVersion && ' (当前)'}
+            {version === currentVersion && " (current)"}
           </Tag>
         </Space>
       ),
     },
     {
-      title: '变更说明',
+      title: 'Change description',
       dataIndex: 'changeLog',
       key: 'changeLog',
       render: (text: string) => (
         <Text ellipsis={{ tooltip: text }} style={{ maxWidth: 200 }}>
-          {text || '无变更说明'}
+          {text || 'No change description'}
         </Text>
       ),
     },
     {
-      title: '创建者',
+      title: 'Creator',
       dataIndex: 'createdByName',
       key: 'createdByName',
       render: (name: string) => (
@@ -162,7 +162,7 @@ const ArticleVersionControl: React.FC<ArticleVersionControlProps> = ({
       ),
     },
     {
-      title: '创建时间',
+      title: 'Created',
       dataIndex: 'createdAt',
       key: 'createdAt',
       render: (date: string) => (
@@ -173,14 +173,14 @@ const ArticleVersionControl: React.FC<ArticleVersionControlProps> = ({
       ),
     },
     {
-      title: '操作',
+      title: 'Actions',
       key: 'actions',
       width: 200,
       render: (_: unknown, record: ArticleVersion) => (
         <Space>
-          <Tooltip title="预览版本">
+          <Tooltip title="Preview version">
             <Button
-              aria-label="预览版本"
+              aria-label="Preview version"
               type="text"
               icon={<Eye className="w-4 h-4" />}
               onClick={() => handlePreviewVersion(record)}
@@ -188,13 +188,13 @@ const ArticleVersionControl: React.FC<ArticleVersionControlProps> = ({
           </Tooltip>
 
           {record.version !== currentVersion && (
-            <Tooltip title="恢复到此版本">
+            <Tooltip title="Revert to this version">
               <Popconfirm
-                title="确认恢复版本"
-                description={`确定要恢复到版本 ${record.version} 吗？`}
+                title="Confirm recovery version"
+                description={`Are you sure you want to revert to version ${record.version} ?`}
                 onConfirm={() => handleRestoreVersion(record.version)}
               >
-                <Button aria-label="恢复到此版本" type="text" icon={<RotateCcw className="w-4 h-4 text-orange-500" />} />
+                <Button aria-label="Revert to this version" type="text" icon={<RotateCcw className="w-4 h-4 text-orange-500" />} />
               </Popconfirm>
             </Tooltip>
           )}
@@ -210,15 +210,15 @@ const ArticleVersionControl: React.FC<ArticleVersionControlProps> = ({
     return (
       <div className="space-y-4">
         <Alert
-          title="版本差异"
-          description={`比较版本 ${selectedVersions?.[0]} 和版本 ${selectedVersions?.[1]}`}
+          title="Version difference"
+          description={`Compare versions ${selectedVersions?.[0]} and version ${selectedVersions?.[1]}`}
           type="info"
           showIcon
         />
 
         {compareResult.changes && compareResult.changes.length > 0 ? (
           <div>
-            <Title level={5}>变更详情</Title>
+            <Title level={5}>Change Detail</Title>
             {compareResult.changes.map((change: any, index: number) => (
               <Card key={index} size="small" className="mb-2">
                 <Space>
@@ -227,7 +227,7 @@ const ArticleVersionControl: React.FC<ArticleVersionControlProps> = ({
                       change.type === 'added' ? 'green' : change.type === 'removed' ? 'red' : 'blue'
                     }
                   >
-                    {change.type === 'added' ? '新增' : change.type === 'removed' ? '删除' : '修改'}
+                    {change.type === 'added' ? 'New' : change.type === 'removed' ? 'Delete' : 'Modify'}
                   </Tag>
                   <Paragraph code style={{ margin: 0 }} ellipsis={{ rows: 3, expandable: true }}>
                     {change.content}
@@ -237,12 +237,12 @@ const ArticleVersionControl: React.FC<ArticleVersionControlProps> = ({
             ))}
           </div>
         ) : (
-          <Alert title="无差异" description="两个版本之间没有发现差异" type="success" showIcon />
+          <Alert title="No difference" description="No differences found between the two versions" type="success" showIcon />
         )}
 
         {compareResult.diff && (
           <div>
-            <Title level={5}>详细差异</Title>
+            <Title level={5}>Detailed differences</Title>
             <Card size="small">
               <pre className="whitespace-pre-wrap text-xs bg-gray-50 p-3 rounded">
                 {compareResult.diff}
@@ -259,7 +259,7 @@ const ArticleVersionControl: React.FC<ArticleVersionControlProps> = ({
       title={
         <Space>
           <History className="w-5 h-5 text-blue-600" />
-          <span>版本控制</span>
+          <span>Version Control</span>
         </Space>
       }
       extra={
@@ -271,12 +271,13 @@ const ArticleVersionControl: React.FC<ArticleVersionControlProps> = ({
                 setSelectedVersions([versions[0].version, versions[1].version]);
                 setCompareModalVisible(true);
               } else {
-                message.warning('需要至少两个版本才能进行比较');
+                message.warning('At least two versions are required to compare');
               }
             }}
             disabled={versions.length < 2}
           >
-            比较版本
+
+            Compare versions
           </Button>
         </Space>
       }
@@ -299,7 +300,7 @@ const ArticleVersionControl: React.FC<ArticleVersionControlProps> = ({
           <Card size="small">
             <div className="text-center">
               <div className="text-2xl font-bold text-blue-600">{versions.length}</div>
-              <Text type="secondary">总版本数</Text>
+              <Text type="secondary">Total version number</Text>
             </div>
           </Card>
         </Col>
@@ -307,7 +308,7 @@ const ArticleVersionControl: React.FC<ArticleVersionControlProps> = ({
           <Card size="small">
             <div className="text-center">
               <div className="text-2xl font-bold text-green-600">{currentVersion}</div>
-              <Text type="secondary">当前版本</Text>
+              <Text type="secondary">Current Version</Text>
             </div>
           </Card>
         </Col>
@@ -317,7 +318,7 @@ const ArticleVersionControl: React.FC<ArticleVersionControlProps> = ({
               <div className="text-2xl font-bold text-orange-600">
                 {versions.filter(v => v.changeLog).length}
               </div>
-              <Text type="secondary">有变更记录</Text>
+              <Text type="secondary">There is a change record</Text>
             </div>
           </Card>
         </Col>
@@ -327,7 +328,7 @@ const ArticleVersionControl: React.FC<ArticleVersionControlProps> = ({
               <div className="text-2xl font-bold text-purple-600">
                 {versions.filter(v => v.version > currentVersion).length}
               </div>
-              <Text type="secondary">可恢复版本</Text>
+              <Text type="secondary">Recoverable version</Text>
             </div>
           </Card>
         </Col>
@@ -338,7 +339,8 @@ const ArticleVersionControl: React.FC<ArticleVersionControlProps> = ({
         title={
           <Space>
             <GitBranch className="w-5 h-5" />
-            版本比较
+
+            Version comparison
           </Space>
         }
         open={compareModalVisible}
@@ -352,15 +354,15 @@ const ArticleVersionControl: React.FC<ArticleVersionControlProps> = ({
       >
         {!compareResult ? (
           <div className="space-y-4">
-            <Title level={5}>选择比较版本</Title>
+            <Title level={5}>Select Compare Version</Title>
             <Row gutter={16}>
               <Col span={12}>
-                <Text strong>源版本</Text>
+                <Text strong>Source version</Text>
                 <Select
                   style={{ width: '100%', marginTop: 8 }}
                   value={selectedVersions?.[0]}
                   onChange={value => setSelectedVersions([value, selectedVersions?.[1] || 0])}
-                  placeholder="选择源版本"
+                  placeholder="Select source version"
                   options={versions.map(version => ({
                     value: version.version,
                     label: `v${version.version} - ${format(new Date(version.createdAt), 'yyyy-MM-dd')}`,
@@ -368,12 +370,12 @@ const ArticleVersionControl: React.FC<ArticleVersionControlProps> = ({
                 />
               </Col>
               <Col span={12}>
-                <Text strong>目标版本</Text>
+                <Text strong>target version</Text>
                 <Select
                   style={{ width: '100%', marginTop: 8 }}
                   value={selectedVersions?.[1]}
                   onChange={value => setSelectedVersions([selectedVersions?.[0] || 0, value])}
-                  placeholder="选择目标版本"
+                  placeholder="Select target version"
                   options={versions.map(version => ({
                     value: version.version,
                     label: `v${version.version} - ${format(new Date(version.createdAt), 'yyyy-MM-dd')}`,
@@ -388,7 +390,8 @@ const ArticleVersionControl: React.FC<ArticleVersionControlProps> = ({
                 loading={loading}
                 disabled={!selectedVersions || selectedVersions[0] === selectedVersions[1]}
               >
-                开始比较
+
+                Start comparing
               </Button>
             </div>
           </div>
@@ -402,7 +405,8 @@ const ArticleVersionControl: React.FC<ArticleVersionControlProps> = ({
         title={
           <Space>
             <FileText className="w-5 h-5" />
-            版本预览 - v{previewVersion?.version}
+
+            Version Preview - v{previewVersion?.version}
           </Space>
         }
         open={previewModalVisible}
@@ -413,7 +417,8 @@ const ArticleVersionControl: React.FC<ArticleVersionControlProps> = ({
         width={800}
         footer={[
           <Button key="close" onClick={() => setPreviewModalVisible(false)}>
-            关闭
+
+            Close
           </Button>,
           previewVersion && previewVersion.version !== currentVersion && (
             <Button
@@ -424,7 +429,8 @@ const ArticleVersionControl: React.FC<ArticleVersionControlProps> = ({
                 setPreviewModalVisible(false);
               }}
             >
-              恢复到此版本
+
+              Revert to this version
             </Button>
           ),
         ]}
@@ -432,25 +438,25 @@ const ArticleVersionControl: React.FC<ArticleVersionControlProps> = ({
         {previewVersion && (
           <div className="space-y-4">
             <Descriptions column={2} bordered size="small">
-              <Descriptions.Item label="版本号">v{previewVersion.version}</Descriptions.Item>
-              <Descriptions.Item label="创建者">{previewVersion.createdByName}</Descriptions.Item>
-              <Descriptions.Item label="创建时间">
+              <Descriptions.Item label="Version">v{previewVersion.version}</Descriptions.Item>
+              <Descriptions.Item label="Creator">{previewVersion.createdByName}</Descriptions.Item>
+              <Descriptions.Item label="Created">
                 {format(new Date(previewVersion.createdAt), 'yyyy-MM-dd HH:mm:ss')}
               </Descriptions.Item>
-              <Descriptions.Item label="变更说明">
-                {previewVersion.changeLog || '无'}
+              <Descriptions.Item label="Change description">
+                {previewVersion.changeLog || 'None'}
               </Descriptions.Item>
             </Descriptions>
 
             {previewVersion.summary && (
               <div>
-                <Title level={5}>摘要</Title>
+                <Title level={5}>Summary</Title>
                 <Paragraph>{previewVersion.summary}</Paragraph>
               </div>
             )}
 
             <div>
-              <Title level={5}>内容预览</Title>
+              <Title level={5}>Content Preview</Title>
               <Card size="small">
                 <div
                   className="prose max-w-none"

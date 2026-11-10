@@ -68,7 +68,7 @@ func (h *TicketServiceTaskHandler) getTenantID(ctx context.Context, _ map[string
 
 func (h *TicketServiceTaskHandler) getTicket(ctx context.Context, ticketID int, tenantID int) (*ent.Ticket, error) {
 	if tenantID <= 0 {
-		return nil, fmt.Errorf("getTicket: 租户ID无效 (ticketID=%d, tenantID=%d)", ticketID, tenantID)
+		return nil, fmt.Errorf("getTicket: Invalid tenant ID (ticketID=%d, tenantID=%d)", ticketID, tenantID)
 	}
 	return h.client.Ticket.Query().
 		Where(ticket.ID(ticketID), ticket.TenantID(tenantID)).
@@ -85,7 +85,7 @@ func (h *TicketServiceTaskHandler) Execute(ctx context.Context, task *ent.Proces
 	case float64:
 		businessID = int(v)
 	default:
-		return nil, fmt.Errorf("无效的 business_id")
+		return nil, fmt.Errorf("Invalid business_id")
 	}
 
 	// 根据任务类型执行不同操作
@@ -150,7 +150,7 @@ func (h *TicketServiceTaskHandler) updateTicketStatus(ctx context.Context, ticke
 		Save(ctx)
 	if err != nil {
 		h.logger.Errorw("Failed to update ticket status", "ticket_id", ticketID, "error", err)
-		return nil, fmt.Errorf("更新工单状态失败: %w", err)
+		return nil, fmt.Errorf("Failed to update ticket status: %w", err)
 	}
 
 	h.logger.Infow("Ticket status updated via BPMN", "ticket_id", ticketID, "new_status", newStatus)
@@ -179,7 +179,7 @@ func (h *TicketServiceTaskHandler) notifyRequester(ctx context.Context, ticketID
 	tenantID := h.getTenantID(ctx, variables)
 	ticketEntity, err := h.getTicket(ctx, ticketID, tenantID)
 	if err != nil {
-		return nil, fmt.Errorf("工单不存在: %w", err)
+		return nil, fmt.Errorf("Ticket does not exist: %w", err)
 	}
 
 	// 发送通知给请求人
@@ -220,7 +220,7 @@ func (h *TicketServiceTaskHandler) notifyHandler(ctx context.Context, ticketID i
 	tenantID := h.getTenantID(ctx, variables)
 	ticketEntity, err := h.getTicket(ctx, ticketID, tenantID)
 	if err != nil {
-		return nil, fmt.Errorf("工单不存在: %w", err)
+		return nil, fmt.Errorf("Ticket does not exist: %w", err)
 	}
 
 	// 发送通知给处理人
@@ -257,7 +257,7 @@ func (h *TicketServiceTaskHandler) escalateTicket(ctx context.Context, ticketID 
 	tenantID := h.getTenantID(ctx, variables)
 	ticketEntity, err := h.getTicket(ctx, ticketID, tenantID)
 	if err != nil {
-		return nil, fmt.Errorf("工单不存在: %w", err)
+		return nil, fmt.Errorf("Ticket does not exist: %w", err)
 	}
 
 	// 升级工单：更新优先级和状态
@@ -271,7 +271,7 @@ func (h *TicketServiceTaskHandler) escalateTicket(ctx context.Context, ticketID 
 		SetUpdatedAt(time.Now()).
 		Save(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("升级工单失败: %w", err)
+		return nil, fmt.Errorf("Failed to upgrade ticket: %w", err)
 	}
 
 	// 通知管理员或升级处理人
@@ -309,14 +309,14 @@ func (h *TicketServiceTaskHandler) assignTicket(ctx context.Context, ticketID in
 	}
 
 	if assigneeID == 0 {
-		return nil, fmt.Errorf("分配失败: 未指定处理人ID")
+		return nil, fmt.Errorf("Assignment failed: No handler ID specified")
 	}
 
 	// 获取工单信息
 	tenantID := h.getTenantID(ctx, variables)
 	ticketEntity, err := h.getTicket(ctx, ticketID, tenantID)
 	if err != nil {
-		return nil, fmt.Errorf("工单不存在: %w", err)
+		return nil, fmt.Errorf("Ticket does not exist: %w", err)
 	}
 
 	// 更新工单分配
@@ -330,7 +330,7 @@ func (h *TicketServiceTaskHandler) assignTicket(ctx context.Context, ticketID in
 		SetUpdatedAt(time.Now()).
 		Save(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("分配工单失败: %w", err)
+		return nil, fmt.Errorf("Failed to assign work order: %w", err)
 	}
 
 	// 发送通知给新的处理人

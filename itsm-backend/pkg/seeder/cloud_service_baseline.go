@@ -37,11 +37,11 @@ type cloudServiceTypeSeed struct {
 // 让配置能凭空增删厂商就会与注册表分叉。
 func cloudServiceTypeDefinitions() []cloudServiceTypeSeed {
 	return []cloudServiceTypeSeed{
-		{Provider: "aliyun", Category: "compute", ServiceCode: "ecs", ServiceName: "云服务器 ECS", ResourceTypeCode: "instance", ResourceTypeName: "实例", APIVersion: "2014-05-26"},
-		{Provider: "tencent", Category: "compute", ServiceCode: "cvm", ServiceName: "云服务器 CVM", ResourceTypeCode: "instance", ResourceTypeName: "实例", APIVersion: "2017-03-12"},
-		{Provider: "aws", Category: "compute", ServiceCode: "ec2", ServiceName: "Amazon EC2 实例", ResourceTypeCode: "instance", ResourceTypeName: "实例", APIVersion: "2016-11-15"},
-		{Provider: "volcengine", Category: "compute", ServiceCode: "ecs", ServiceName: "云服务器 ECS（火山引擎）", ResourceTypeCode: "instance", ResourceTypeName: "实例", APIVersion: "2020-04-01"},
-		{Provider: "k8s", Category: "container", ServiceCode: "pod", ServiceName: "Kubernetes Pod", ResourceTypeCode: "pod", ResourceTypeName: "容器组", APIVersion: "v1"},
+		{Provider: "aliyun", Category: "compute", ServiceCode: "ecs", ServiceName: "ECS Cloud Server", ResourceTypeCode: "instance", ResourceTypeName: "Instance", APIVersion: "2014-05-26"},
+		{Provider: "tencent", Category: "compute", ServiceCode: "cvm", ServiceName: "CVM Cloud Server", ResourceTypeCode: "instance", ResourceTypeName: "Instance", APIVersion: "2017-03-12"},
+		{Provider: "aws", Category: "compute", ServiceCode: "ec2", ServiceName: "Amazon EC2 Instance", ResourceTypeCode: "instance", ResourceTypeName: "Instance", APIVersion: "2016-11-15"},
+		{Provider: "volcengine", Category: "compute", ServiceCode: "ecs", ServiceName: "Volcengine ECS Cloud Server", ResourceTypeCode: "instance", ResourceTypeName: "Instance", APIVersion: "2020-04-01"},
+		{Provider: "k8s", Category: "container", ServiceCode: "pod", ServiceName: "Kubernetes Pod", ResourceTypeCode: "pod", ResourceTypeName: "Pod", APIVersion: "v1"},
 	}
 }
 

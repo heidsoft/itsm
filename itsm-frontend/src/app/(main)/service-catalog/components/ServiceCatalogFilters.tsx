@@ -42,7 +42,7 @@ export const ServiceCatalogFilters: React.FC<ServiceCatalogFiltersProps> = ({
             onSearch={onSearch}
             size="large"
             enterButton
-            aria-label="搜索服务目录"
+            aria-label="Search service directory"
           />
         </Col>
         <Col xs={24} sm={12} md={4}>
@@ -61,7 +61,7 @@ export const ServiceCatalogFilters: React.FC<ServiceCatalogFiltersProps> = ({
         </Col>
         <Col xs={24} sm={12} md={3}>
           <Select
-            placeholder="CI类型"
+            placeholder="CI type"
             size="large"
             allowClear
             loading={optionsLoading}
@@ -72,7 +72,7 @@ export const ServiceCatalogFilters: React.FC<ServiceCatalogFiltersProps> = ({
         </Col>
         <Col xs={24} sm={12} md={4}>
           <Select
-            placeholder="云服务"
+            placeholder="Cloud services"
             size="large"
             allowClear
             loading={optionsLoading}
@@ -87,11 +87,11 @@ export const ServiceCatalogFilters: React.FC<ServiceCatalogFiltersProps> = ({
           />
         </Col>
         {onCreateService && <Col xs={24} sm={12} md={2}>
-          <Tooltip title="刷新列表">
+          <Tooltip title="Refresh list">
             <Button
               icon={<RefreshCw size={20} />}
               onClick={onRefresh}
-              aria-label="刷新服务目录"
+              aria-label="Refresh service directory"
               size="large"
               style={{ width: '100%' }}
             >

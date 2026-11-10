@@ -26,7 +26,7 @@ export class ErrorMessageHandler {
   static formatApiError(error: unknown): ErrorInfo {
     if (error instanceof Error) {
       return {
-        message: error.message || '操作失败，请稍后重试',
+        message: error.message || 'Operation failed, please try again later.',
         details: error.stack,
       };
     }
@@ -41,13 +41,13 @@ export class ErrorMessageHandler {
       const errorObj = error as Record<string, unknown>;
       return {
         code: errorObj.code as string | number | undefined,
-        message: (errorObj.message as string) || '操作失败，请稍后重试',
+        message: (errorObj.message as string) || 'Operation failed, please try again later.',
         details: errorObj.details as string | undefined,
       };
     }
 
     return {
-      message: '未知错误，请稍后重试',
+      message: 'Unknown error, please try again later',
     };
   }
 
@@ -60,16 +60,16 @@ export class ErrorMessageHandler {
     if (errorInfo.message.includes('fetch') || errorInfo.message.includes('network')) {
       return {
         ...errorInfo,
-        message: '网络连接失败，请检查网络设置',
-        actionText: '重试',
+        message: 'Network connection failed, please check network settings',
+        actionText: 'Retry',
       };
     }
 
     if (errorInfo.message.includes('timeout')) {
       return {
         ...errorInfo,
-        message: '请求超时，请稍后重试',
-        actionText: '重试',
+        message: 'Request timed out, please try again later.',
+        actionText: 'Retry',
       };
     }
 
@@ -84,7 +84,7 @@ export class ErrorMessageHandler {
 
     return {
       ...errorInfo,
-      message: errorInfo.message || '数据验证失败，请检查输入',
+      message: errorInfo.message || 'Data validation failed, please check input',
     };
   }
 
@@ -93,7 +93,7 @@ export class ErrorMessageHandler {
    */
   static formatPermissionError(error: unknown): ErrorInfo {
     return {
-      message: '您没有权限执行此操作',
+      message: 'You do not have permission to perform this operation',
       code: 'PERMISSION_DENIED',
     };
   }
@@ -101,9 +101,9 @@ export class ErrorMessageHandler {
   /**
    * 格式化404错误
    */
-  static formatNotFoundError(resource: string = '资源'): ErrorInfo {
+  static formatNotFoundError(resource: string = 'Resources'): ErrorInfo {
     return {
-      message: `${resource}不存在或已被删除`,
+      message: `${resource} Does not exist or has been deleted`,
       code: 'NOT_FOUND',
     };
   }
@@ -113,9 +113,9 @@ export class ErrorMessageHandler {
    */
   static formatServerError(): ErrorInfo {
     return {
-      message: '服务器错误，请稍后重试',
+      message: 'Server error, please try again later',
       code: 'SERVER_ERROR',
-      actionText: '重试',
+      actionText: 'Retry',
     };
   }
 }
@@ -239,20 +239,20 @@ export function createUserFriendlyError(error: unknown): string {
   const severity = getErrorSeverity(error);
   const isRetryable = isRetryableError(error);
 
-  let userMessage = '遇到了一个问题';
+  let userMessage = 'Encountered a problem';
 
   if (severity === 'critical') {
-    userMessage = '系统出现严重错误，请稍后重试或联系管理员';
+    userMessage = "A serious error occurred in the system. Please try again later or contact the administrator.";
   } else if (severity === 'high') {
-    userMessage = '操作失败，请检查输入或联系管理员';
+    userMessage = "Operation failed, please check your input or contact the administrator";
   } else if (severity === 'medium') {
-    userMessage = '操作未成功，请重试';
+    userMessage = "The operation was unsuccessful, please try again";
   } else if (severity === 'low') {
-    userMessage = '网络可能不稳定，请检查连接';
+    userMessage = "The network may be unstable, please check the connection";
   }
 
   if (isRetryable) {
-    userMessage += '。可以进行重试';
+    userMessage += ". Can retry";
   }
 
   return userMessage;
@@ -325,29 +325,29 @@ export function parseErrorCode(error: unknown): string {
 export function getErrorMessageByCode(code: string): string {
   const messages: Record<string, string> = {
     // HTTP 状态码
-    'BAD_REQUEST': '请求无效，请检查输入',
-    'UNAUTHORIZED': '未授权，请重新登录',
-    'FORBIDDEN': '没有权限执行此操作',
-    'NOT_FOUND': '请求的资源不存在',
-    'CONFLICT': '资源冲突，请刷新后重试',
-    'VALIDATION_ERROR': '数据验证失败',
-    'RATE_LIMITED': '请求过于频繁，请稍后重试',
-    'INTERNAL_ERROR': '服务器内部错误',
-    'BAD_GATEWAY': '网关错误',
-    'SERVICE_UNAVAILABLE': '服务暂时不可用',
-    'GATEWAY_TIMEOUT': '网关超时',
+    'BAD_REQUEST': 'Invalid request, please check your input',
+    'UNAUTHORIZED': 'Unauthorized, please log in again',
+    'FORBIDDEN': 'No permission to perform this operation',
+    'NOT_FOUND': 'The requested resource does not exist',
+    'CONFLICT': 'Resource conflict, please refresh and try again',
+    'VALIDATION_ERROR': 'Data validation failed',
+    'RATE_LIMITED': 'Requests are too frequent, please try again later.',
+    'INTERNAL_ERROR': 'Server internal error',
+    'BAD_GATEWAY': 'Gateway error',
+    'SERVICE_UNAVAILABLE': 'Service is temporarily unavailable',
+    'GATEWAY_TIMEOUT': 'Gateway timeout',
 
     // 自定义错误码
-    'NETWORK_ERROR': '网络连接失败，请检查网络',
-    'TIMEOUT': '请求超时，请稍后重试',
-    'PERMISSION_DENIED': '您没有权限执行此操作',
-    'RESOURCE_NOT_FOUND': '资源不存在',
-    'VALIDATION_FAILED': '输入数据验证失败',
-    'DUPLICATE_ENTRY': '记录已存在',
-    'DEPENDENCY_ERROR': '存在依赖关系，无法删除',
+    'NETWORK_ERROR': 'Network connection failed, please check the network',
+    'TIMEOUT': 'Request timed out, please try again later.',
+    'PERMISSION_DENIED': 'You do not have permission to perform this operation',
+    'RESOURCE_NOT_FOUND': 'Resource does not exist',
+    'VALIDATION_FAILED': 'Input data validation failed',
+    'DUPLICATE_ENTRY': 'Record already exists',
+    'DEPENDENCY_ERROR': 'Dependency exists and cannot be deleted',
   };
 
-  return messages[code] || '发生了一个错误';
+  return messages[code] || 'An error occurred';
 }
 
 /**
@@ -381,13 +381,13 @@ export function getFriendlyErrorMessage(error: unknown, context?: string): strin
 
   // 根据上下文提供更具体的错误消息
   const contextMessages: Record<string, string> = {
-    'tickets.load': '加载工单列表失败',
-    'tickets.create': '创建工单失败',
-    'tickets.update': '更新工单失败',
-    'tickets.delete': '删除工单失败',
-    'tickets.assign': '分配工单失败',
-    'tickets.resolve': '解决工单失败',
-    'tickets.close': '关闭工单失败',
+    'tickets.load': 'Failed to load work order list',
+    'tickets.create': 'Failed to create ticket',
+    'tickets.update': 'Failed to update ticket',
+    'tickets.delete': 'Failed to delete ticket',
+    'tickets.assign': 'Failed to assign work order',
+    'tickets.resolve': 'Failed to resolve ticket',
+    'tickets.close': 'Failed to close ticket',
   };
 
   if (context && contextMessages[context]) {

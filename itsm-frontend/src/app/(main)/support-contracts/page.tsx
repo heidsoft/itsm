@@ -15,7 +15,7 @@ import {
 const { Title } = Typography;
 
 const statusColor: Record<string, string> = { active: 'green', terminated: 'red', expired: 'orange', pending: 'blue' };
-const statusLabel: Record<string, string> = { active: '有效', terminated: '已终止', expired: '已过期', pending: '待生效' };
+const statusLabel: Record<string, string> = { active: 'valid', terminated: 'Terminated', expired: 'Expired', pending: 'To be effective' };
 
 export default function ContractsPage() {
   const { message } = App.useApp();
@@ -47,7 +47,7 @@ export default function ContractsPage() {
       setCustomers(s.items);
       setSources(r.items);
       setRefs(k.items);
-    } catch { message.error('加载失败'); } finally { setLoading(false); }
+    } catch { message.error('LoadingFailed'); } finally { setLoading(false); }
   };
   useEffect(() => { load(); }, []);
 
@@ -83,7 +83,7 @@ export default function ContractsPage() {
           startAt: v.range?.[0]?.toISOString(),
           endAt: v.range?.[1]?.toISOString(),
         });
-        message.success('合同已更新');
+        message.success('Contract updated');
       } else {
         await emailIntakeService.createContract({
           customerId: v.customerId,
@@ -93,31 +93,31 @@ export default function ContractsPage() {
           startAt: v.range?.[0]?.toISOString(),
           endAt: v.range?.[1]?.toISOString(),
         });
-        message.success('合同已创建');
+        message.success('Contract has been created');
       }
       setModal(false); form.resetFields(); setSelectedCustomer(undefined); setEditingContract(null);
       load();
-    } catch { message.error('保存失败'); }
+    } catch { message.error('SaveFailed'); }
   };
 
   const terminate = async (id: number) => {
     await emailIntakeService.terminateContract(id);
-    message.success('合同已终止'); load();
+    message.success('Contract has been terminated'); load();
   };
 
   const saveRef = async () => {
     const v = await refForm.validateFields();
     try {
       await emailIntakeService.createExternalContractReference(v);
-      message.success('外部合同映射已添加');
+      message.success('External contract mapping added');
       setRefModal(false); refForm.resetFields();
       load();
-    } catch { message.error('保存失败'); }
+    } catch { message.error('SaveFailed'); }
   };
 
   const deleteRef = async (id: number) => {
     await emailIntakeService.deleteExternalContractReference(id);
-    message.success('映射已删除'); load();
+    message.success('Mapping deleted'); load();
   };
 
   const filteredBranches = useMemo(
@@ -127,20 +127,20 @@ export default function ContractsPage() {
 
   const columns = [
     { title: 'ID', dataIndex: 'id', width: 60 },
-    { title: '合同号', dataIndex: 'contractNumber' },
-    { title: '客户', render: (_: unknown, r: SupportContract) => customerName(r.customerId) },
-    { title: '分支', render: (_: unknown, r: SupportContract) => branchName(r.branchId) },
-    { title: '状态', dataIndex: 'status', render: (s: string) => <Tag color={statusColor[s]}>{statusLabel[s] || s}</Tag> },
-    { title: '有效期', render: (_: unknown, r: SupportContract) =>
-      r.startAt || r.endAt ? `${r.startAt ? dayjs(r.startAt).format('YYYY-MM-DD') : '?'} ~ ${r.endAt ? dayjs(r.endAt).format('YYYY-MM-DD') : '?'}` : '永久' },
+    { title: 'Contract number', dataIndex: 'contractNumber' },
+    { title: 'Customer', render: (_: unknown, r: SupportContract) => customerName(r.customerId) },
+    { title: 'Branch', render: (_: unknown, r: SupportContract) => branchName(r.branchId) },
+    { title: 'Status', dataIndex: 'status', render: (s: string) => <Tag color={statusColor[s]}>{statusLabel[s] || s}</Tag> },
+    { title: 'Validity date', render: (_: unknown, r: SupportContract) =>
+      r.startAt || r.endAt ? `${r.startAt ? dayjs(r.startAt).format('YYYY-MM-DD') : '?'} ~ ${r.endAt ? dayjs(r.endAt).format('YYYY-MM-DD') : '?'}` : 'Permanent' },
     {
-      title: '操作', width: 120,
+      title: 'Actions', width: 120,
       render: (_: unknown, r: SupportContract) => (
         <Space>
-          <Button size="small" icon={<EditOutlined />} onClick={() => openEditModal(r)}>编辑</Button>
+          <Button size="small" icon={<EditOutlined />} onClick={() => openEditModal(r)}>Edit</Button>
           {r.status === 'active' && (
-            <Popconfirm title="确定终止该合同？" onConfirm={() => terminate(r.id)}>
-              <Button size="small" danger>终止</Button>
+            <Popconfirm title="Are you sure you want to terminate this contract?" onConfirm={() => terminate(r.id)}>
+              <Button size="small" danger>Termination</Button>
             </Popconfirm>
           )}
         </Space>
@@ -150,17 +150,17 @@ export default function ContractsPage() {
 
   const refColumns = [
     { title: 'ID', dataIndex: 'id', width: 60 },
-    { title: '来源组织', render: (_: unknown, r: ExternalContractReference) => sourceName(r.sourceOrganizationId) },
-    { title: '外部合同号', dataIndex: 'externalContractNumber' },
-    { title: '内部合同', render: (_: unknown, r: ExternalContractReference) => {
+    { title: 'Source organization', render: (_: unknown, r: ExternalContractReference) => sourceName(r.sourceOrganizationId) },
+    { title: 'External contract number', dataIndex: 'externalContractNumber' },
+    { title: 'Internal Contract', render: (_: unknown, r: ExternalContractReference) => {
         const c = contracts.find(x => x.id === r.supportContractId);
         return c?.contractNumber || `#${r.supportContractId}`;
       }},
     {
-      title: '操作', width: 80,
+      title: 'Actions', width: 80,
       render: (_: unknown, r: ExternalContractReference) => (
-        <Popconfirm title="删除该映射？" onConfirm={() => deleteRef(r.id)}>
-          <Button size="small" danger>删除</Button>
+        <Popconfirm title="Delete this mapping?" onConfirm={() => deleteRef(r.id)}>
+          <Button size="small" danger>Delete</Button>
         </Popconfirm>
       ),
     },
@@ -170,69 +170,71 @@ export default function ContractsPage() {
     <div className="space-y-4">
       <Card>
         <div className="flex items-center justify-between mb-4">
-          <Title level={4} className="!mb-0">支持合同管理</Title>
+          <Title level={4} className="!mb-0">Support contract management</Title>
           <Space>
-            <Button icon={<ReloadOutlined />} onClick={load}>刷新</Button>
+            <Button icon={<ReloadOutlined />} onClick={load}>Refresh</Button>
             <Button type="primary" icon={<PlusOutlined />} onClick={() => { form.resetFields(); setSelectedCustomer(undefined); setEditingContract(null); setModal(true); }}>
-              新增合同
+
+              New contract
             </Button>
           </Space>
         </div>
         <Table rowKey="id" loading={loading} columns={columns} dataSource={contracts} pagination={{ pageSize: 20 }} />
       </Card>
 
-      <Card title="外部合同号映射">
+      <Card title="External contract number mapping">
         <div className="mb-3">
           <Button icon={<PlusOutlined />} onClick={() => { refForm.resetFields(); setRefModal(true); }}>
-            添加映射
+
+            Add mapping
           </Button>
         </div>
         <Table rowKey="id" size="small" columns={refColumns} dataSource={refs} pagination={false} />
       </Card>
 
-      <Modal title={editingContract ? '编辑合同' : '新增合同'} open={modal} onOk={saveContract} onCancel={() => setModal(false)} width={520}>
+      <Modal title={editingContract ? 'Edit contract' : 'New contract'} open={modal} onOk={saveContract} onCancel={() => setModal(false)} width={520}>
         <Form form={form} layout="vertical">
-          <Form.Item name="customerId" label="客户" rules={[{ required: true }]}>
-            <Select placeholder="选择客户" showSearch optionFilterProp="label"
+          <Form.Item name="customerId" label="Customer" rules={[{ required: true }]}>
+            <Select placeholder="Select customer" showSearch optionFilterProp="label"
               options={customers.map(c => ({ value: c.id, label: c.name }))}
               onChange={(v) => { setSelectedCustomer(v); form.setFieldValue('branchId', undefined); }}
             />
           </Form.Item>
-          <Form.Item name="branchId" label="分支">
-            <Select placeholder="选择分支（可选）" allowClear
+          <Form.Item name="branchId" label="Branch">
+            <Select placeholder="Select branch (optional)" allowClear
               options={filteredBranches.map(b => ({ value: b.id, label: b.name }))}
             />
           </Form.Item>
-          <Form.Item name="contractNumber" label="合同号" rules={[{ required: true }]}>
-            <Input placeholder="内部合同编号" />
+          <Form.Item name="contractNumber" label="Contract number" rules={[{ required: true }]}>
+            <Input placeholder="Internal contract number" />
           </Form.Item>
-          <Form.Item name="range" label="有效期">
+          <Form.Item name="range" label="Validity date">
             <DatePicker.RangePicker className="w-full" />
           </Form.Item>
-          <Form.Item name="status" label="状态" initialValue="active">
+          <Form.Item name="status" label="Status" initialValue="active">
             <Select options={[
-              { value: 'active', label: '有效' },
-              { value: 'pending', label: '待生效' },
-              { value: 'terminated', label: '已终止' },
+              { value: 'active', label: 'valid' },
+              { value: 'pending', label: 'To be effective' },
+              { value: 'terminated', label: 'Terminated' },
             ]} />
           </Form.Item>
         </Form>
       </Modal>
 
-      <Modal title="添加外部合同号映射" open={refModal} onOk={saveRef} onCancel={() => setRefModal(false)}>
+      <Modal title="Add external contract number mapping" open={refModal} onOk={saveRef} onCancel={() => setRefModal(false)}>
         <Form form={refForm} layout="vertical">
-          <Form.Item name="sourceOrganizationId" label="来源组织" rules={[{ required: true }]}>
-            <Select placeholder="选择来源组织" showSearch optionFilterProp="label"
+          <Form.Item name="sourceOrganizationId" label="Source organization" rules={[{ required: true }]}>
+            <Select placeholder="Select source organization" showSearch optionFilterProp="label"
               options={sources.map(s => ({ value: s.id, label: s.name }))}
             />
           </Form.Item>
-          <Form.Item name="supportContractId" label="内部合同" rules={[{ required: true }]}>
-            <Select placeholder="选择内部合同" showSearch optionFilterProp="label"
+          <Form.Item name="supportContractId" label="Internal Contract" rules={[{ required: true }]}>
+            <Select placeholder="Select Internal Contract" showSearch optionFilterProp="label"
               options={contracts.map(c => ({ value: c.id, label: `${c.contractNumber} (${customerName(c.customerId)})` }))}
             />
           </Form.Item>
-          <Form.Item name="externalContractNumber" label="外部合同号" rules={[{ required: true }]}>
-            <Input placeholder="客户方使用的合同编号" />
+          <Form.Item name="externalContractNumber" label="External contract number" rules={[{ required: true }]}>
+            <Input placeholder="Contract number used by the customer" />
           </Form.Item>
         </Form>
       </Modal>

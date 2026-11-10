@@ -62,10 +62,10 @@ describe('Ticket Constants', () => {
 
   describe('TICKET_TYPE_CONFIG', () => {
     it('should have all type keys with text field', () => {
-      expect(TICKET_TYPE_CONFIG.incident.text).toBe('事件');
-      expect(TICKET_TYPE_CONFIG.service_request.text).toBe('服务请求');
-      expect(TICKET_TYPE_CONFIG.problem.text).toBe('问题');
-      expect(TICKET_TYPE_CONFIG.change.text).toBe('变更');
+      expect(TICKET_TYPE_CONFIG.incident.text).toBe("Incident");
+      expect(TICKET_TYPE_CONFIG.service_request.text).toBe("Service Request");
+      expect(TICKET_TYPE_CONFIG.problem.text).toBe("Problem");
+      expect(TICKET_TYPE_CONFIG.change.text).toBe("Change");
     });
   });
 

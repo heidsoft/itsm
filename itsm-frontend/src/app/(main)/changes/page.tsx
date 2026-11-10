@@ -286,19 +286,19 @@ function ChangesPageContent() {
         return;
       }
       const columns: CsvColumn<Change>[] = [
-        { title: '编号', render: (row) => `#${row.id}` },
-        { title: '标题', render: (row) => row.title },
-        { title: '类型', render: (row) => row.type },
-        { title: '状态', render: (row) => row.status },
-        { title: '优先级', render: (row) => row.priority },
-        { title: '风险等级', render: (row) => row.riskLevel },
-        { title: '影响范围', render: (row) => row.impactScope },
-        { title: '处理人', render: (row) => row.assigneeName },
-        { title: '创建人', render: (row) => row.createdByName },
-        { title: '计划开始', render: (row) => csvDate(row.plannedStartDate) },
-        { title: '计划结束', render: (row) => csvDate(row.plannedEndDate) },
+        { title: 'Number', render: (row) => `#${row.id}` },
+        { title: 'Title', render: (row) => row.title },
+        { title: 'Type', render: (row) => row.type },
+        { title: 'Status', render: (row) => row.status },
+        { title: 'Priority', render: (row) => row.priority },
+        { title: 'Risk Level', render: (row) => row.riskLevel },
+        { title: 'Impact Range', render: (row) => row.impactScope },
+        { title: 'Assignee', render: (row) => row.assigneeName },
+        { title: 'Creator', render: (row) => row.createdByName },
+        { title: 'Planning starts', render: (row) => csvDate(row.plannedStartDate) },
+        { title: 'Plan ends', render: (row) => csvDate(row.plannedEndDate) },
       ];
-      downloadCsv(`变更列表-${new Date().toISOString().slice(0, 10)}`, buildCsv(columns, rows));
+      downloadCsv(`Change List-${new Date().toISOString().slice(0, 10)}`, buildCsv(columns, rows));
       message.success(t('changes.exportSuccess', { count: rows.length }));
     } catch (error) {
       console.error('Failed to export changes:', error);
@@ -559,7 +559,7 @@ function ChangesPageContent() {
         </Card>
 
         <Card
-          title={t('changes.calendar.dateTitle', { date: selectedDate.format('YYYY年MM月DD日') })}
+          title={t('changes.calendar.dateTitle', { date: selectedDate.format('MM, DD, YYYY') })}
           className="mt-4"
         >
           {selectedChanges.length === 0 ? (

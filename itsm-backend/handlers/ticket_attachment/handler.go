@@ -35,7 +35,7 @@ func tenantUserID(c *gin.Context) (tenantID, userID int, ok bool) {
 	tenantID = c.GetInt("tenant_id")
 	userID = c.GetInt("user_id")
 	if tenantID == 0 || userID == 0 {
-		common.Fail(c, common.AuthFailedCode, "认证信息缺失")
+		common.Fail(c, common.AuthFailedCode, "Authentication information missing")
 		return 0, 0, false
 	}
 	return tenantID, userID, true
@@ -45,12 +45,12 @@ func tenantUserID(c *gin.Context) (tenantID, userID int, ok bool) {
 func pathIDs(c *gin.Context) (ticketID, attachmentID int, ok bool) {
 	ticketID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "无效的工单ID")
+		common.Fail(c, common.ParamErrorCode, "Invalid ticket ID")
 		return 0, 0, false
 	}
 	attachmentID, err = strconv.Atoi(c.Param("attachment_id"))
 	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "无效的附件ID")
+		common.Fail(c, common.ParamErrorCode, "Invalid attachment ID")
 		return 0, 0, false
 	}
 	return ticketID, attachmentID, true
@@ -63,13 +63,13 @@ func (h *Handler) failAttachmentAccess(c *gin.Context, rawErr error, ticketID, t
 	switch {
 	case errors.Is(rawErr, service.ErrAttachmentAccessDenied):
 		h.logger.Warnw("Attachment access denied", "error", rawErr, "ticket_id", ticketID, "tenant_id", tenantID)
-		common.Fail(c, common.ForbiddenCode, "无权访问该附件")
+		common.Fail(c, common.ForbiddenCode, "No permission to access this attachment")
 	case errors.Is(rawErr, service.ErrAttachmentNotFound):
 		h.logger.Warnw("Attachment not found", "error", rawErr, "ticket_id", ticketID, "tenant_id", tenantID)
-		common.Fail(c, common.NotFoundCode, "附件不存在或无权访问")
+		common.Fail(c, common.NotFoundCode, "Attachment does not exist or does not have access rights")
 	default:
 		h.logger.Errorw("Failed to read attachment", "error", rawErr, "ticket_id", ticketID, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, "附件读取失败")
+		common.Fail(c, common.InternalErrorCode, "Failed to read attachment")
 	}
 }
 
@@ -77,7 +77,7 @@ func (h *Handler) failAttachmentAccess(c *gin.Context, rawErr error, ticketID, t
 func (h *Handler) ListTicketAttachments(c *gin.Context) {
 	ticketID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "无效的工单ID")
+		common.Fail(c, common.ParamErrorCode, "Invalid ticket ID")
 		return
 	}
 
@@ -102,20 +102,20 @@ func (h *Handler) ListTicketAttachments(c *gin.Context) {
 func (h *Handler) UploadAttachment(c *gin.Context) {
 	ticketID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "无效的工单ID")
+		common.Fail(c, common.ParamErrorCode, "Invalid ticket ID")
 		return
 	}
 
 	file, err := c.FormFile("file")
 	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "请选择要上传的文件")
+		common.Fail(c, common.ParamErrorCode, "Please select the file to upload")
 		return
 	}
 
 	src, err := file.Open()
 	if err != nil {
 		h.logger.Errorw("Failed to open uploaded file", "error", err)
-		common.Fail(c, common.InternalErrorCode, "文件打开失败")
+		common.Fail(c, common.InternalErrorCode, "File opening failed")
 		return
 	}
 	defer src.Close()
@@ -130,14 +130,14 @@ func (h *Handler) UploadAttachment(c *gin.Context) {
 	tenantID := c.GetInt("tenant_id")
 	userID := c.GetInt("user_id")
 	if tenantID == 0 || userID == 0 {
-		common.Fail(c, common.AuthFailedCode, "认证信息缺失")
+		common.Fail(c, common.AuthFailedCode, "Authentication information missing")
 		return
 	}
 
 	attachment, err := h.attachmentService.UploadAttachment(c.Request.Context(), ticketID, fileHeader, userID, tenantID)
 	if err != nil {
 		h.logger.Errorw("Failed to upload attachment", "error", err, "ticket_id", ticketID, "tenant_id", tenantID)
-		common.Fail(c, common.ParamErrorCode, "附件上传失败，请检查文件类型和大小")
+		common.Fail(c, common.ParamErrorCode, "Attachment upload failed, please check file type and size")
 		return
 	}
 
@@ -220,7 +220,7 @@ func (h *Handler) DeleteAttachment(c *gin.Context) {
 	tenantID := c.GetInt("tenant_id")
 	userID := c.GetInt("user_id")
 	if tenantID == 0 || userID == 0 {
-		common.Fail(c, common.AuthFailedCode, "认证信息缺失")
+		common.Fail(c, common.AuthFailedCode, "Authentication information missing")
 		return
 	}
 
@@ -229,7 +229,7 @@ func (h *Handler) DeleteAttachment(c *gin.Context) {
 		h.logger.Errorw("Failed to delete attachment", "error", err, "ticket_id", ticketID, "attachment_id", attachmentID, "tenant_id", tenantID)
 		// service 已把 ent.NotFoundError 以 %w 包装、权限拒绝为 Forbidden 业务码；
 		// 不再一律 Fail(InternalErrorCode) 吞掉分类——not-found → 404、权限不足 → 403。
-		common.FailWithErr(c, err, "删除附件失败")
+		common.FailWithErr(c, err, "Failed to delete attachment")
 		return
 	}
 

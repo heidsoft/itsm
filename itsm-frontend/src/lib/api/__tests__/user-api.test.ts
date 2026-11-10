@@ -199,26 +199,27 @@ describe('role label vocabulary', () => {
     expect(PRIMARY_ROLE_LABEL.security).toBeUndefined();
   });
 
-  it('主角色与 RBAC 角色名重复时只保留一枚标签', () => {
+  it('preserves distinct RBAC names alongside the translated primary label', () => {
     const tags = resolveRoleTags({
       role: 'super_admin',
       roleNames: ['超级管理员', 'IT管理员'],
     });
     expect(tags).toEqual([
-      { label: '超级管理员', primary: true },
+      { label: 'Super Admin', primary: true },
+      { label: '超级管理员', primary: false },
       { label: 'IT管理员', primary: false },
     ]);
   });
 
   it('主角色与同名 RBAC 角色也去重', () => {
-    expect(resolveRoleTags({ role: 'security_admin', roleNames: ['安全管理员'] })).toEqual([
-      { label: '安全管理员', primary: true },
+    expect(resolveRoleTags({ role: 'security_admin', roleNames: ["Security Administrator"] })).toEqual([
+      { label: "Security Administrator", primary: true },
     ]);
   });
 
   it('无主角色时只展示 RBAC 角色，未知主角色回退原始值', () => {
-    expect(resolveRoleTags({ role: '', roleNames: ['服务台坐席'] })).toEqual([
-      { label: '服务台坐席', primary: false },
+    expect(resolveRoleTags({ role: '', roleNames: ["Help Desk Agent"] })).toEqual([
+      { label: "Help Desk Agent", primary: false },
     ]);
     expect(resolveRoleTags({ role: 'quality_lead', roleNames: [] })).toEqual([
       { label: 'quality_lead', primary: true },

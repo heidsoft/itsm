@@ -53,18 +53,18 @@ func (s *TicketCommentService) CreateTicketComment(ctx context.Context, ticketID
 	if !ticketExists {
 		// BusinessError 让 FailWithErr 稳定映射 404；裸 `ticket not found`
 		// 会被 classifyError 兜底成 5001，跨租户探测就表现为 5xx 毛刺。
-		return nil, common.NewBusinessError(common.NotFoundCode, "工单不存在或已被删除", "")
+		return nil, common.NewBusinessError(common.NotFoundCode, "The ticket does not exist or has been deleted", "")
 	}
 	req.Content = strings.TrimSpace(req.Content)
 	if req.Content == "" {
-		return nil, common.NewBusinessError(common.ValidationError, "评论内容不能为空", "")
+		return nil, common.NewBusinessError(common.ValidationError, "Comment cannot be empty", "")
 	}
 	privileged, err := s.canManageInternalComments(ctx, userID, tenantID)
 	if err != nil {
 		return nil, err
 	}
 	if req.IsInternal && !privileged {
-		return nil, common.NewBusinessError(common.ForbiddenCode, "内部备注仅支持角色可用", "")
+		return nil, common.NewBusinessError(common.ForbiddenCode, "Internal remarks only support roles.", "")
 	}
 	if err := s.validateCommentReferences(ctx, ticketID, tenantID, req.Mentions, req.Attachments); err != nil {
 		return nil, err
@@ -120,7 +120,7 @@ func (s *TicketCommentService) ListTicketComments(ctx context.Context, ticketID,
 		return nil, fmt.Errorf("failed to check ticket existence: %w", err)
 	}
 	if !ticketExists {
-		return nil, common.NewBusinessError(common.NotFoundCode, "工单不存在或已被删除", "")
+		return nil, common.NewBusinessError(common.NotFoundCode, "The ticket does not exist or has been deleted", "")
 	}
 
 	// 查询工单信息，判断当前用户是否有权限查看内部备注
@@ -212,7 +212,7 @@ func (s *TicketCommentService) UpdateTicketComment(ctx context.Context, ticketID
 	canEdit := comment.UserID == userID ||
 		(ticketInfo.AssigneeID > 0 && ticketInfo.AssigneeID == userID)
 	if !canEdit {
-		return nil, common.NewBusinessError(common.ForbiddenCode, "只有评论作者或工单处理人可以编辑", "")
+		return nil, common.NewBusinessError(common.ForbiddenCode, "Only the comment author or ticket handler can edit", "")
 	}
 
 	// 更新评论
@@ -231,7 +231,7 @@ func (s *TicketCommentService) UpdateTicketComment(ctx context.Context, ticketID
 				return nil, privilegeErr
 			}
 			if !privileged {
-				return nil, common.NewBusinessError(common.ForbiddenCode, "内部备注仅支持角色可用", "")
+				return nil, common.NewBusinessError(common.ForbiddenCode, "Internal remarks only support roles.", "")
 			}
 		}
 		update = update.SetIsInternal(*req.IsInternal)
@@ -277,7 +277,7 @@ func (s *TicketCommentService) validateCommentReferences(ctx context.Context, ti
 	seen := make(map[int]struct{}, len(mentions))
 	for _, id := range mentions {
 		if id <= 0 {
-			return common.NewBusinessError(common.ParamErrorCode, "无效的提及用户", "")
+			return common.NewBusinessError(common.ParamErrorCode, "Invalid mention of user", "")
 		}
 		if _, duplicate := seen[id]; duplicate {
 			continue
@@ -285,13 +285,13 @@ func (s *TicketCommentService) validateCommentReferences(ctx context.Context, ti
 		seen[id] = struct{}{}
 		exists, err := s.client.User.Query().Where(user.ID(id), user.TenantID(tenantID), user.Active(true)).Exist(ctx)
 		if err != nil || !exists {
-			return common.NewBusinessError(common.ParamErrorCode, fmt.Sprintf("提及的用户 %d 不存在或未激活", id), "")
+			return common.NewBusinessError(common.ParamErrorCode, fmt.Sprintf("The user %d mentioned does not exist or is not active", id), "")
 		}
 	}
 	for _, id := range attachments {
 		exists, err := s.client.TicketAttachment.Query().Where(ticketattachment.ID(id), ticketattachment.TicketID(ticketID), ticketattachment.TenantID(tenantID)).Exist(ctx)
 		if err != nil || !exists {
-			return common.NewBusinessError(common.ParamErrorCode, fmt.Sprintf("附件 %d 不属于该工单", id), "")
+			return common.NewBusinessError(common.ParamErrorCode, fmt.Sprintf("Attachment %d does not belong to this work order", id), "")
 		}
 	}
 	return nil
@@ -329,7 +329,7 @@ func (s *TicketCommentService) DeleteTicketComment(ctx context.Context, ticketID
 	canDelete := comment.UserID == userID ||
 		(ticketInfo.AssigneeID > 0 && ticketInfo.AssigneeID == userID)
 	if !canDelete {
-		return common.NewBusinessError(common.ForbiddenCode, "只有评论作者或工单处理人可以删除", "")
+		return common.NewBusinessError(common.ForbiddenCode, "Only the comment author or ticket handler can delete", "")
 	}
 
 	// 删除评论

@@ -103,10 +103,10 @@ const AutomationRulesPage: React.FC = () => {
   const handleDelete = async (id: number) => {
     try {
       await TicketAutomationRuleApi.deleteRule(id);
-      message.success('规则删除成功');
+      message.success('RuleDeleteSuccess');
       loadRules();
     } catch (error) {
-      message.error('删除失败');
+      message.error('Delete failed');
     }
   };
 
@@ -116,10 +116,10 @@ const AutomationRulesPage: React.FC = () => {
       await TicketAutomationRuleApi.updateRule(rule.id, {
         isActive: !rule.isActive,
       });
-      message.success(rule.isActive ? '规则已禁用' : '规则已启用');
+      message.success(rule.isActive ? 'Rule disabled' : 'Rule enabled');
       loadRules();
     } catch (error) {
-      message.error('操作失败');
+      message.error('Operation failed');
     }
   };
 
@@ -138,7 +138,7 @@ const AutomationRulesPage: React.FC = () => {
             try {
               config = JSON.parse(raw) as Record<string, unknown>;
             } catch {
-              message.error(`第 ${index + 1} 个动作的 config 不是合法 JSON`);
+              message.error(`No. ${index + 1} The config of action is not a valid JSON`);
               throw new Error('invalid action config json');
             }
           }
@@ -157,36 +157,36 @@ const AutomationRulesPage: React.FC = () => {
 
       if (editingRule) {
         await TicketAutomationRuleApi.updateRule(editingRule.id, ruleData);
-        message.success('规则更新成功');
+        message.success('RuleUpdateSuccess');
       } else {
         await TicketAutomationRuleApi.createRule(ruleData as CreateAutomationRuleRequest);
-        message.success('规则创建成功');
+        message.success('RuleCreateSuccess');
       }
 
       setModalVisible(false);
       loadRules();
     } catch (error) {
-      message.error('保存失败');
+      message.error('SaveFailed');
     }
   };
 
   // 表格列定义
   const columns = [
     {
-      title: '规则名称',
+      title: 'Rule Name',
       dataIndex: 'name',
       key: 'name',
       render: (text: string) => <span className="font-medium">{text}</span>,
     },
     {
-      title: '描述',
+      title: 'Description',
       dataIndex: 'description',
       key: 'description',
       ellipsis: true,
       render: (text: string) => <Text type="secondary">{text || '-'}</Text>,
     },
     {
-      title: '优先级',
+      title: 'Priority',
       dataIndex: 'priority',
       key: 'priority',
       width: 100,
@@ -195,44 +195,44 @@ const AutomationRulesPage: React.FC = () => {
       ),
     },
     {
-      title: '执行次数',
+      title: 'Number of executions',
       dataIndex:'executionCount',
       key:'executionCount',
       width: 100,
       render: (count: number) => <Tag>{count || 0}</Tag>,
     },
     {
-      title: '状态',
+      title: 'Status',
       dataIndex: 'isActive',
       key: 'isActive',
       width: 100,
       render: (active: boolean, record: AutomationRule) => (
         <Switch
-          aria-label={`切换规则 ${record.name} 的启用状态`}
+          aria-label={`Switching rules ${record.name} enabled status`}
           checked={active}
-          checkedChildren="启用"
-          unCheckedChildren="禁用"
+          checkedChildren="Enabled"
+          unCheckedChildren="Disabled"
           onChange={() => handleToggleActive(record)}
         />
       ),
     },
     {
-      title: '操作',
+      title: 'Actions',
       key: 'actions',
       width: 150,
       render: (_: unknown, record: AutomationRule) => (
         <Space>
-          <Tooltip title="编辑">
-            <Button aria-label="编辑" size="small" icon={<Edit size={14} />} onClick={() => handleEdit(record)} />
+          <Tooltip title="Edit">
+            <Button aria-label="Edit" size="small" icon={<Edit size={14} />} onClick={() => handleEdit(record)} />
           </Tooltip>
           <Popconfirm
-            title="确定要删除这个规则吗？"
+            title="Are you sure you want to delete this rule?"
             onConfirm={() => handleDelete(record.id)}
-            okText="确定"
-            cancelText="取消"
+            okText="OK"
+            cancelText="Cancel"
           >
-            <Tooltip title="删除">
-              <Button aria-label="删除" size="small" danger icon={<Delete size={14} />} />
+            <Tooltip title="Delete">
+              <Button aria-label="Delete" size="small" danger icon={<Delete size={14} />} />
             </Tooltip>
           </Popconfirm>
         </Space>
@@ -246,12 +246,14 @@ const AutomationRulesPage: React.FC = () => {
         <div className="flex justify-between items-center mb-4">
           <div>
             <Title level={3} style={{ marginBottom: 4 }}>
-              工单自动化规则
+
+              Work order automation rules
             </Title>
-            <Text type="secondary">配置自动化规则来简化工单处理流程</Text>
+            <Text type="secondary">Configure automation rules to streamline ticket processing</Text>
           </div>
           <Button type="primary" icon={<Plus size={16} />} onClick={handleCreate}>
-            创建规则
+
+            Create rule
           </Button>
         </div>
 
@@ -259,19 +261,19 @@ const AutomationRulesPage: React.FC = () => {
           className="mb-4"
           type="info"
           showIcon
-          title="条件触发自动处理工单；审批和多阶段流转请使用 BPMN 流程"
+          title="Conditions trigger automatic processing of work orders; please use BPMN process for approval and multi-stage transfer"
         />
 
         <UsageGuideCard
           style={{ marginBottom: 16 }}
-          title="从创建到启用：推荐的配置步骤"
-          intro="自动化规则 = 触发条件 + 执行动作，适用于单工单生命周期内的自动处理；需要多人审批、多阶段流转时用 BPMN 流程设计器。"
+          title="From creation to activation: Recommended configuration steps"
+          intro="Automation rule = trigger condition + execution action, suitable for automatic processing within the life cycle of a single work order; use BPMN process designer when multi-person approval and multi-stage transfer are required."
           steps={[
-            '点击"创建规则"，填写名称和优先级（数字越大越先执行）。',
-            '配置触发条件：字段选状态/优先级/类型/分类，操作符选等于/不等于/包含/在列表中；多个条件需同时满足。',
-            '配置执行动作（可多条）：自动分配、发送通知、更新字段、升级、自动关闭。',
-            '保存后先保持禁用，用一张真实工单修改对应字段验证命中效果，再切换启用。',
-            '启用后通过列表的"执行次数"观察规则是否被触发；未命中时检查条件字段值是否完全匹配。',
+            'Click "Create Rule" and fill in the name and priority (the larger the number, the earlier it will be executed).',
+            'Configure trigger conditions: select status/priority/type/category for the field, and select equal/not equal/included/in the list for the operator; multiple conditions need to be met at the same time.',
+            'Configure execution actions (can be multiple): automatic allocation, sending notifications, updating fields, upgrading, and automatic closing.',
+            'Keep it disabled after saving, use a real work order to modify the corresponding fields to verify the hit effect, and then switch to enable.',
+            'After enabling, observe whether the rule is triggered through the "number of executions" of the list; when it is not hit, check whether the condition field value completely matches.',
           ]}
         />
 
@@ -279,11 +281,11 @@ const AutomationRulesPage: React.FC = () => {
           <Alert
             type={loadError.denied ? 'warning' : 'error'}
             showIcon
-            title={loadError.denied ? '没有权限查看自动化规则' : '加载自动化规则失败'}
+            title={loadError.denied ? 'No permission to view automation rules' : 'Failed to load automation rules'}
             description={
               loadError.denied
-                ? '当前角色未被授予自动化规则的读取权限。这里不是「系统里没有规则」，请联系管理员为你的角色开放规则配置权限。'
-                : loadError.detail || '后端未能返回规则列表，请稍后重试。'
+                ? 'The current role is not granted read permission for automation rules. This is not "there are no rules in the system". Please contact the administrator to configure permissions for your role\'s opening rules.'
+                : loadError.detail || 'The backend failed to return the rule list, please try again later.'
             }
             action={
               <Button
@@ -292,7 +294,8 @@ const AutomationRulesPage: React.FC = () => {
                 onClick={loadRules}
                 loading={loading}
               >
-                重试
+
+                Retry
               </Button>
             }
           />
@@ -300,7 +303,7 @@ const AutomationRulesPage: React.FC = () => {
           <Alert
             type="info"
             showIcon
-            title="暂无自动化规则，点击上方按钮创建"
+            title="There is no automation rule yet, click the button above to create it"
           />
         ) : (
           <Table
@@ -311,7 +314,7 @@ const AutomationRulesPage: React.FC = () => {
             pagination={{
               pageSize: 10,
               showSizeChanger: true,
-              showTotal: total => `共 ${total} 条记录`,
+              showTotal: total => `Total ${total} records`,
             }}
           />
         )}
@@ -319,36 +322,36 @@ const AutomationRulesPage: React.FC = () => {
 
       {/* 创建/编辑弹窗 */}
       <Modal
-        title={editingRule ? '编辑自动化规则' : '创建自动化规则'}
+        title={editingRule ? 'Edit automation rules' : 'Create automation rules'}
         open={modalVisible}
         onOk={handleSave}
         onCancel={() => setModalVisible(false)}
-        okText="保存"
-        cancelText="取消"
+        okText="Save"
+        cancelText="Cancel"
         width={600}
       >
         <Form form={form} layout="vertical">
           <Form.Item
             name="name"
-            label="规则名称"
-            rules={[{ required: true, message: '请输入规则名称' }]}
+            label="Rule Name"
+            rules={[{ required: true, message: 'Please enter a rule name' }]}
           >
-            <Input placeholder="请输入规则名称" />
+            <Input placeholder="Please enter a rule name" />
           </Form.Item>
 
-          <Form.Item name="description" label="规则描述">
-            <TextArea rows={3} placeholder="请输入规则描述" />
+          <Form.Item name="description" label="Rule Description">
+            <TextArea rows={3} placeholder="Please enter a rule description" />
           </Form.Item>
 
-          <Form.Item name="priority" label="优先级" initialValue={1} tooltip="数字越大优先级越高">
+          <Form.Item name="priority" label="Priority" initialValue={1} tooltip="The larger the number, the higher the priority.">
             <InputNumber min={1} max={10} />
           </Form.Item>
 
-          <Form.Item name="isActive" label="启用状态" valuePropName="checked" initialValue={true}>
-            <Switch checkedChildren="启用" unCheckedChildren="禁用" />
+          <Form.Item name="isActive" label="Enabled" valuePropName="checked" initialValue={true}>
+            <Switch checkedChildren="Enabled" unCheckedChildren="Disabled" />
           </Form.Item>
 
-          <Form.Item label="触发条件" required>
+          <Form.Item label="Trigger Condition" required>
             <Form.List
               name="conditions"
               initialValue={[{ field: 'status', operator: 'equals', value: '' }]}
@@ -362,11 +365,11 @@ const AutomationRulesPage: React.FC = () => {
                         name={[name, 'field']}
                         noStyle
                       >
-                        <Select style={{ width: 120 }} placeholder="字段">
-                          <Select.Option value="status">状态</Select.Option>
-                          <Select.Option value="priority">优先级</Select.Option>
-                          <Select.Option value="type">类型</Select.Option>
-                          <Select.Option value="category">分类</Select.Option>
+                        <Select style={{ width: 120 }} placeholder="Field">
+                          <Select.Option value="status">Status</Select.Option>
+                          <Select.Option value="priority">Priority</Select.Option>
+                          <Select.Option value="type">Type</Select.Option>
+                          <Select.Option value="category">Category</Select.Option>
                         </Select>
                       </Form.Item>
                       <Form.Item
@@ -374,11 +377,11 @@ const AutomationRulesPage: React.FC = () => {
                         name={[name, 'operator']}
                         noStyle
                       >
-                        <Select style={{ width: 100 }} placeholder="操作符">
-                          <Select.Option value="equals">等于</Select.Option>
-                          <Select.Option value="not_equals">不等于</Select.Option>
-                          <Select.Option value="contains">包含</Select.Option>
-                          <Select.Option value="in">在列表中</Select.Option>
+                        <Select style={{ width: 100 }} placeholder="Operator">
+                          <Select.Option value="equals">equal to</Select.Option>
+                          <Select.Option value="not_equals">Not equal to</Select.Option>
+                          <Select.Option value="contains">Contains</Select.Option>
+                          <Select.Option value="in">In list</Select.Option>
                         </Select>
                       </Form.Item>
                       <Form.Item
@@ -386,20 +389,21 @@ const AutomationRulesPage: React.FC = () => {
                         name={[name, 'value']}
                         noStyle
                       >
-                        <Input placeholder="值" style={{ width: 150 }} />
+                        <Input placeholder="Value" style={{ width: 150 }} />
                       </Form.Item>
                       <Button type="text" danger icon={<Delete size={14} />} onClick={() => remove(name)} />
                     </Space>
                   ))}
                   <Button type="dashed" onClick={() => add()} block icon={<Plus size={14} />}>
-                    添加条件
+
+                    Add condition
                   </Button>
                 </>
               )}
             </Form.List>
           </Form.Item>
 
-          <Form.Item label="执行动作" required>
+          <Form.Item label="Action" required>
             <Form.List
               name="actions"
               initialValue={[{ type: 'notify', config: {} }]}
@@ -413,12 +417,12 @@ const AutomationRulesPage: React.FC = () => {
                         name={[name, 'type']}
                         noStyle
                       >
-                        <Select style={{ width: 140 }} placeholder="动作类型">
-                          <Select.Option value="assign">自动分配</Select.Option>
-                          <Select.Option value="notify">发送通知</Select.Option>
-                          <Select.Option value="update_field">更新字段</Select.Option>
-                          <Select.Option value="escalate">升级</Select.Option>
-                          <Select.Option value="close">自动关闭</Select.Option>
+                        <Select style={{ width: 140 }} placeholder="Action type">
+                          <Select.Option value="assign">Auto Assign</Select.Option>
+                          <Select.Option value="notify">Send notification</Select.Option>
+                          <Select.Option value="update_field">Update field</Select.Option>
+                          <Select.Option value="escalate">Escalate</Select.Option>
+                          <Select.Option value="close">Automatic shutdown</Select.Option>
                         </Select>
                       </Form.Item>
                       <Form.Item
@@ -436,7 +440,8 @@ const AutomationRulesPage: React.FC = () => {
                     </Space>
                   ))}
                   <Button type="dashed" onClick={() => add()} block icon={<Plus size={14} />}>
-                    添加动作
+
+                    Add action
                   </Button>
                 </>
               )}

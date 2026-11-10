@@ -147,19 +147,19 @@ const toTicketPriority = (value: string): TicketPriority =>
 // 后端内部生成的 formFields（如 A2UI 智能提单的 aiTicketType）没有租户工单类型
 // schema，键名与取值都是内部枚举。展示层必须本地化，不能直出 "aiTicketType: hardware"。
 const INTERNAL_FORM_FIELD_LABELS: Record<string, string> = {
-  aiTicketType: 'AI 工单类型',
+  aiTicketType: 'AI ticket type',
 };
 
 const INTERNAL_FORM_FIELD_VALUE_LABELS: Record<string, Record<string, string>> = {
   aiTicketType: {
-    hardware: '硬件',
-    software: '软件',
-    network: '网络',
-    access: '权限申请',
-    service_request: '服务请求',
-    problem: '问题',
-    change: '变更',
-    other: '其他',
+    hardware: 'Hardware',
+    software: 'Software',
+    network: 'Network',
+    access: 'Permission request',
+    service_request: 'Service Request',
+    problem: 'Problem',
+    change: 'Change',
+    other: 'Other',
   },
 };
 
@@ -551,7 +551,7 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
       if (values.status && ticket?.status && values.status !== ticket.status) {
         if (!isValidTransition(ticket.status as any, values.status as any)) {
           antMessage.error(
-            `不允许从 "${statusMap[ticket.status]?.text || ticket.status}" 转换到 "${statusMap[values.status]?.text || values.status}"`
+            `Not allowed from "${statusMap[ticket.status]?.text || ticket.status}"Convert to"${statusMap[values.status]?.text || values.status}"`
           );
           return;
         }
@@ -726,7 +726,7 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
             // 只比对 priority：后端 TicketResponse 不回传 category（写入口有、读出口无），
             // ticket.category 恒为 undefined，比对它等于永不相等。
             if (suggestion.priority === ticket.priority) {
-              antMessage.info('AI建议与当前优先级一致，无需更新');
+              antMessage.info('AI recommendations are consistent with the current priority and do not need to be updated');
               return;
             }
             try {
@@ -736,7 +736,7 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
                 version: ticket.version,
               });
               antMessage.success(
-                `已采纳AI建议：分类 ${suggestion.category}，优先级 ${suggestion.priority}`,
+                `AI suggestion adopted: classification ${suggestion.category}, priority ${suggestion.priority}`,
               );
               // Update local state immediately with the server response, then refetch in background
               if (updated.id) {
@@ -744,7 +744,7 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
               }
               await fetchTicket();
             } catch (err) {
-              handleError(err, 'applyAISuggestion', '采纳建议失败');
+              handleError(err, 'applyAISuggestion', 'Failed to adopt suggestion');
             }
           }}
         />
@@ -756,7 +756,7 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
         title={
           <Space>
             <Tag color="purple">AI-Native</Tag>
-            <span>受影响配置项</span>
+            <span>Affected configuration items</span>
             {cis.length > 0 && <Tag>{cis.length}</Tag>}
           </Space>
         }
@@ -766,7 +766,7 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
         ) : cis.length === 0 ? (
           <Empty
             image={Empty.PRESENTED_IMAGE_SIMPLE}
-            description="该工单尚未关联配置项"
+            description="This work order has not been associated with a configuration item"
           />
         ) : (
           <List
@@ -776,7 +776,8 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
               <List.Item
                 actions={[
                   <Link key="open" href={`/cmdb/cis/${ci.id}`}>
-                    查看
+
+                    View
                   </Link>,
                 ]}
               >
@@ -823,7 +824,7 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
 
           {/* 动态表单字段（来自 tenant 工单类型配置） */}
           {ticket.formFields && Object.keys(ticket.formFields).length > 0 && (
-            <Card size="small" title={t('ticketDetail.formFields') || '动态表单字段'} className="mt-2">
+            <Card size="small" title={t('ticketDetail.formFields') || 'Custom Fields'} className="mt-2">
               <Descriptions column={2} bordered size="small">
                 {Object.entries(ticket.formFields).map(([key, value]) => (
                   <Descriptions.Item
@@ -1159,8 +1160,8 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
                 <XCircle className="w-5 h-5 text-red-600" />
               )}
               {approvalAction === 'approve'
-                ? t('ticketDetail.approve') || '审批通过'
-                : t('ticketDetail.reject') || '审批驳回'}
+                ? t('ticketDetail.approve') || 'ApprovalApprove'
+                : t('ticketDetail.reject') || 'ApprovalReject'}
             </Space>
           }
           open={approvalModalVisible}
@@ -1173,14 +1174,14 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
         >
           <Form form={approvalForm} layout="vertical" onFinish={handleApprovalSubmit}>
             <Form.Item
-              label={t('ticketDetail.remark') || '备注'}
+              label={t('ticketDetail.remark') || 'Notes'}
               name="comment"
               rules={[
                 {
                   required: approvalAction === 'reject',
                   message:
                     approvalAction === 'reject'
-                      ? t('ticketDetail.assigneeRequired') || '请填写驳回原因'
+                      ? t('ticketDetail.assigneeRequired') || 'Describe why this is rejected'
                       : undefined,
                 },
               ]}
@@ -1189,8 +1190,8 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
                 rows={3}
                 placeholder={
                   approvalAction === 'approve'
-                    ? t('ticketDetail.assignRemarkPlaceholder') || '请输入审批意见（可选）'
-                    : t('ticketDetail.ccRemarkPlaceholder') || '请输入驳回原因'
+                    ? t('ticketDetail.assignRemarkPlaceholder') || 'Enter approval comment (optional)'
+                    : t('ticketDetail.ccRemarkPlaceholder') || 'Please enter the reason for rejection'
                 }
                 maxLength={500}
                 showCount
@@ -1215,8 +1216,8 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
                   loading={approvalAction === 'approve' ? approving : rejecting}
                 >
                   {approvalAction === 'approve'
-                    ? t('ticketDetail.confirmAssign') || '确认通过'
-                    : t('ticketDetail.confirmDelete') || '确认驳回'}
+                    ? t('ticketDetail.confirmAssign') || 'Confirmation passed'
+                    : t('ticketDetail.confirmDelete') || 'Confirm rejection'}
                 </Button>
               </Space>
             </Form.Item>

@@ -116,7 +116,7 @@ export default function SystemConfiguration() {
       setInitialConfig(configMap);
       form.setFieldsValue(configMap);
     } catch (error) {
-      message.error('加载系统配置失败');
+      message.error('Failed to load system configuration');
     }
   };
 
@@ -173,11 +173,11 @@ export default function SystemConfiguration() {
 
       await SystemConfigAPI.updateConfigs(updateRequests);
 
-      message.success('配置保存成功');
+      message.success('Configuration saved successfully');
       setHasChanges(false);
       setInitialConfig(values);
     } catch (error) {
-      message.error('保存配置失败');
+      message.error('Failed to save configuration');
     } finally {
       setIsSaving(false);
     }
@@ -188,25 +188,26 @@ export default function SystemConfiguration() {
     <div className="space-y-6">
       <div>
         <Title level={5} className="!mb-4">
-          基础设置
+
+          Basic Settings
         </Title>
         <Row gutter={[16, 16]}>
           <Col span={12}>
             <Form.Item
-              label="系统名称"
+              label="System name"
               name="systemName"
-              rules={[{ required: true, message: '请输入系统名称' }]}
+              rules={[{ required: true, message: 'Please enter system name' }]}
             >
-              <Input placeholder="请输入系统名称" />
+              <Input placeholder="Please enter system name" />
             </Form.Item>
           </Col>
           <Col span={12}>
             <Form.Item
-              label="系统URL"
+              label="System URL"
               name="systemUrl"
               rules={[
-                { required: true, message: '请输入系统URL' },
-                { type: 'url', message: '请输入有效的URL' },
+                { required: true, message: 'Please enter the system URL' },
+                { type: 'url', message: 'Please enter a valid URL' },
               ]}
             >
               <Input placeholder="https://example.com" />
@@ -217,20 +218,20 @@ export default function SystemConfiguration() {
         <Row gutter={[16, 16]}>
           <Col span={12}>
             <Form.Item
-              label="时区"
+              label="Time zone"
               name="timezone"
-              rules={[{ required: true, message: '请选择时区' }]}
+              rules={[{ required: true, message: 'Please select a time zone' }]}
             >
-              <Select placeholder="请选择时区" options={[{ value: "Asia/Shanghai", label: "亚洲/上海" }, { value: "Asia/Tokyo", label: "亚洲/东京" }, { value: "Europe/London", label: "欧洲/伦敦" }, { value: "America/New_York", label: "美洲/纽约" }]} />
+              <Select placeholder="Please select a time zone" options={[{ value: "Asia/Shanghai", label: "Asia/Shanghai" }, { value: "Asia/Tokyo", label: "Asia/Tokyo" }, { value: "Europe/London", label: "Europe/London" }, { value: "America/New_York", label: "America/New York" }]} />
             </Form.Item>
           </Col>
           <Col span={12}>
             <Form.Item
-              label="语言"
+              label="Language"
               name="language"
-              rules={[{ required: true, message: '请选择语言' }]}
+              rules={[{ required: true, message: 'Please select language' }]}
             >
-              <Select placeholder="请选择语言" options={[{ value: "zh-CN", label: "简体中文" }, { value: "en-US", label: "English" }, { value: "ja-JP", label: "日本語" }]} />
+              <Select placeholder="Please select language" options={[{ value: "en-US", label: "English" }]} />
             </Form.Item>
           </Col>
         </Row>
@@ -238,20 +239,20 @@ export default function SystemConfiguration() {
         <Row gutter={[16, 16]}>
           <Col span={12}>
             <Form.Item
-              label="日期格式"
+              label="date format"
               name="dateFormat"
-              rules={[{ required: true, message: '请选择日期格式' }]}
+              rules={[{ required: true, message: 'Please select date format' }]}
             >
-              <Select placeholder="请选择日期格式" options={[{ value: "YYYY-MM-DD", label: "YYYY-MM-DD" }, { value: "DD/MM/YYYY", label: "DD/MM/YYYY" }, { value: "MM/DD/YYYY", label: "MM/DD/YYYY" }]} />
+              <Select placeholder="Please select date format" options={[{ value: "YYYY-MM-DD", label: "YYYY-MM-DD" }, { value: "DD/MM/YYYY", label: "DD/MM/YYYY" }, { value: "MM/DD/YYYY", label: "MM/DD/YYYY" }]} />
             </Form.Item>
           </Col>
           <Col span={12}>
             <Form.Item
-              label="时间格式"
+              label="Time format"
               name="timeFormat"
-              rules={[{ required: true, message: '请选择时间格式' }]}
+              rules={[{ required: true, message: 'Please select time format' }]}
             >
-              <Select placeholder="请选择时间格式" options={[{ value: "24h", label: "24小时制" }, { value: "12h", label: "12小时制" }]} />
+              <Select placeholder="Please select time format" options={[{ value: "24h", label: "24-hour clock" }, { value: "12h", label: "12-hour clock" }]} />
             </Form.Item>
           </Col>
         </Row>
@@ -261,23 +262,24 @@ export default function SystemConfiguration() {
 
       <div>
         <Title level={5} className="!mb-4">
-          会话设置
+
+          Session settings
         </Title>
         <Row gutter={[16, 16]}>
           <Col span={12}>
             <Form.Item
-              label="会话超时时间(分钟)"
+              label="Session timeout (minutes)"
               name="sessionTimeout"
-              rules={[{ required: true, message: '请输入会话超时时间' }]}
+              rules={[{ required: true, message: 'Please enter session timeout' }]}
             >
               <InputNumber min={1} max={1440} style={{ width: '100%' }} />
             </Form.Item>
           </Col>
           <Col span={12}>
             <Form.Item
-              label="最大文件大小(MB)"
+              label="Maximum file size (MB)"
               name="maxFileSize"
-              rules={[{ required: true, message: '请输入最大文件大小' }]}
+              rules={[{ required: true, message: 'Please enter the maximum file size' }]}
             >
               <InputNumber min={1} max={1024} style={{ width: '100%' }} />
             </Form.Item>
@@ -285,9 +287,9 @@ export default function SystemConfiguration() {
         </Row>
 
         <Form.Item
-          label="允许的文件类型"
+          label="Allowed File Types"
           name="allowedFileTypes"
-          rules={[{ required: true, message: '请输入允许的文件类型' }]}
+          rules={[{ required: true, message: 'Please enter allowed file types' }]}
         >
           <Input placeholder=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.png,.gif" />
         </Form.Item>
@@ -300,14 +302,15 @@ export default function SystemConfiguration() {
     <div className="space-y-6">
       <div>
         <Title level={5} className="!mb-4">
-          密码策略
+
+          Password Policy
         </Title>
         <Row gutter={[16, 16]}>
           <Col span={12}>
             <Form.Item
-              label="密码最小长度"
+              label="Minimum password length"
               name="passwordMinLength"
-              rules={[{ required: true, message: '请输入密码最小长度' }]}
+              rules={[{ required: true, message: 'Please enter the minimum password length' }]}
             >
               <InputNumber min={6} max={32} style={{ width: '100%' }} />
             </Form.Item>
@@ -316,12 +319,12 @@ export default function SystemConfiguration() {
 
         <Row gutter={[16, 16]}>
           <Col span={12}>
-            <Form.Item label="需要大写字母" name="passwordRequireUppercase" valuePropName="checked">
+            <Form.Item label="Capital letters required" name="passwordRequireUppercase" valuePropName="checked">
               <Switch />
             </Form.Item>
           </Col>
           <Col span={12}>
-            <Form.Item label="需要小写字母" name="passwordRequireLowercase" valuePropName="checked">
+            <Form.Item label="lowercase letters required" name="passwordRequireLowercase" valuePropName="checked">
               <Switch />
             </Form.Item>
           </Col>
@@ -329,13 +332,13 @@ export default function SystemConfiguration() {
 
         <Row gutter={[16, 16]}>
           <Col span={12}>
-            <Form.Item label="需要数字" name="passwordRequireNumbers" valuePropName="checked">
+            <Form.Item label="Number required" name="passwordRequireNumbers" valuePropName="checked">
               <Switch />
             </Form.Item>
           </Col>
           <Col span={12}>
             <Form.Item
-              label="需要特殊字符"
+              label="Special characters required"
               name="passwordRequireSpecialChars"
               valuePropName="checked"
             >
@@ -349,30 +352,31 @@ export default function SystemConfiguration() {
 
       <div>
         <Title level={5} className="!mb-4">
-          账户安全
+
+          Account security
         </Title>
         <Row gutter={[16, 16]}>
           <Col span={12}>
             <Form.Item
-              label="登录失败次数限制"
+              label="Limit on failed login attempts"
               name="loginMaxAttempts"
-              rules={[{ required: true, message: '请输入登录失败次数限制' }]}
+              rules={[{ required: true, message: 'Please enter the limit for failed login attempts' }]}
             >
               <InputNumber min={1} max={10} style={{ width: '100%' }} />
             </Form.Item>
           </Col>
           <Col span={12}>
             <Form.Item
-              label="账户锁定时间(分钟)"
+              label="Account lock time (minutes)"
               name="accountLockoutDuration"
-              rules={[{ required: true, message: '请输入账户锁定时间' }]}
+              rules={[{ required: true, message: 'Please enter the account lock time' }]}
             >
               <InputNumber min={1} max={1440} style={{ width: '100%' }} />
             </Form.Item>
           </Col>
         </Row>
 
-        <Form.Item label="启用双因素认证" name="enable2FA" valuePropName="checked">
+        <Form.Item label="Enable two-factor authentication" name="enable2FA" valuePropName="checked">
           <Switch />
         </Form.Item>
       </div>
@@ -384,23 +388,24 @@ export default function SystemConfiguration() {
     <div className="space-y-6">
       <div>
         <Title level={5} className="!mb-4">
-          SMTP设置
+
+          SMTP settings
         </Title>
         <Row gutter={[16, 16]}>
           <Col span={12}>
             <Form.Item
-              label="SMTP服务器"
+              label="SMTP Server"
               name="smtpHost"
-              rules={[{ required: true, message: '请输入SMTP服务器' }]}
+              rules={[{ required: true, message: 'Please enter SMTP server' }]}
             >
               <Input placeholder="smtp.example.com" />
             </Form.Item>
           </Col>
           <Col span={12}>
             <Form.Item
-              label="SMTP端口"
+              label="SMTP Port"
               name="smtpPort"
-              rules={[{ required: true, message: '请输入SMTP端口' }]}
+              rules={[{ required: true, message: 'Please enter SMTP port' }]}
             >
               <InputNumber min={1} max={65535} style={{ width: '100%' }} />
             </Form.Item>
@@ -410,21 +415,21 @@ export default function SystemConfiguration() {
         <Row gutter={[16, 16]}>
           <Col span={12}>
             <Form.Item
-              label="SMTP用户名"
+              label="SMTP username"
               name="smtpUsername"
-              rules={[{ required: true, message: '请输入SMTP用户名' }]}
+              rules={[{ required: true, message: 'Please enter SMTP username' }]}
             >
               <Input placeholder="username@example.com" />
             </Form.Item>
           </Col>
           <Col span={12}>
-            <Form.Item label="SMTP密码" name="smtpPassword">
-              <Password placeholder="请输入密码" />
+            <Form.Item label="SMTP password" name="smtpPassword">
+              <Password placeholder="Please enter password" />
             </Form.Item>
           </Col>
         </Row>
 
-        <Form.Item label="启用SSL/TLS" name="smtpEnableSSL" valuePropName="checked">
+        <Form.Item label="Enable SSL/TLS" name="smtpEnableSSL" valuePropName="checked">
           <Switch />
         </Form.Item>
       </div>
@@ -433,21 +438,22 @@ export default function SystemConfiguration() {
 
       <div>
         <Title level={5} className="!mb-4">
-          邮件模板
+
+          Email Templates
         </Title>
         <Form.Item
-          label="发件人邮箱"
+          label="Sender's email address"
           name="emailFrom"
           rules={[
-            { required: true, message: '请输入发件人邮箱' },
-            { type: 'email', message: '请输入有效的邮箱地址' },
+            { required: true, message: 'Please enter the sender\'s email address' },
+            { type: 'email', message: 'Please enter a valid email address' },
           ]}
         >
           <Input placeholder="noreply@example.com" />
         </Form.Item>
 
-        <Form.Item label="系统通知模板" name="systemNotificationTemplate">
-          <TextArea rows={4} placeholder="请输入系统通知邮件模板" />
+        <Form.Item label="System notification template" name="systemNotificationTemplate">
+          <TextArea rows={4} placeholder="Please enter the system notification email template" />
         </Form.Item>
       </div>
     </div>
@@ -457,19 +463,19 @@ export default function SystemConfiguration() {
   const tabItems = [
     {
       key: 'general',
-      label: '通用设置',
+      label: 'General settings',
       children: <GeneralSettings />,
       icon: <Settings className="w-4 h-4" />,
     },
     {
       key: 'security',
-      label: '安全设置',
+      label: 'Security',
       children: <SecuritySettings />,
       icon: <Shield className="w-4 h-4" />,
     },
     {
       key: 'email',
-      label: '邮件设置',
+      label: 'Email settings',
       children: <EmailSettings />,
       icon: <Mail className="w-4 h-4" />,
     },
@@ -480,22 +486,23 @@ export default function SystemConfiguration() {
       <div>
         <Title level={2} className="!mb-2 !text-gray-900">
           <Settings className="inline-block w-6 h-6 mr-2" />
-          系统配置
+
+          System Configuration
         </Title>
-        <Text type="secondary">管理系统全局设置和集成配置</Text>
+        <Text type="secondary">Manage system global settings and integration configuration</Text>
       </div>
 
       <UsageGuideCard
         style={{ marginBottom: 16 }}
-        title="系统配置怎么用"
-        intro="本页管理全局默认值：基础信息、会话超时、密码策略、账户安全与 SMTP 邮件设置。修改会影响所有用户，请谨慎。"
+        title="How to use system configuration"
+        intro="This page manages global default values: basic information, session timeout, password policy, account security and SMTP email settings. Modifications will affect all users, please be careful."
         steps={[
-          '表单按标签页分组展示；修改任意字段后页面会出现“您有未保存的配置更改”提醒，点右上角“保存配置”统一提交，点“重置”放弃修改恢复上次保存值；未保存前修改不生效，请勿直接离开页面。',
-          '部署后建议先核对基础设置：系统名称与访问 URL、时区、语言与日期时间格式（影响时间展示与通知内容），以及会话超时时间。',
-          '上传限制（大小与允许类型）影响工单附件等所有文件上传，按组织规范调整。',
-          '密码策略与账户安全调整会作用于后续的设置与重置；收紧策略前请确认不会阻碍存量用户正常登录。',
-          '需要邮件通知时必须配好 SMTP（服务器、端口、账号、授权码）；保存后触发一条真实通知（如工单分配）验证邮件送达。',
-          '上方“系统运行时间 / Goroutine / CPU 核心 / 内存使用率”来自后端运行时采样，与首页系统健康卡同一口径，仅供健康观察、无需配置；运行环境测不到的指标显示「未接入」而不是 0%。',
+          'The form is displayed in groups according to tabs; after modifying any field, a reminder "You have unsaved configuration changes" will appear on the page. Click "Save Configuration" in the upper right corner to submit it uniformly. Click "Reset" to abandon modifications and restore the last saved value; modifications before saving will not take effect, so please do not leave the page directly.',
+          'After deployment, it is recommended to check the basic settings: system name and access URL, time zone, language and date and time format (affects time display and notification content), and session timeout.',
+          'Upload restrictions (size and allowed types) affect the upload of all files such as work order attachments, and are adjusted according to organizational specifications.',
+          'Password policy and account security adjustments will affect subsequent settings and resets; before tightening the policy, please confirm that it will not prevent existing users from logging in normally.',
+          'SMTP (server, port, account, authorization code) must be configured when email notification is required; after saving, a real notification (such as work order allocation) will be triggered to verify email delivery.',
+          'The "system running time/Goroutine/CPU core/memory usage" above is from the back-end runtime sampling, which is the same caliber as the system health card on the home page. It is only for health observation and does not require configuration. Indicators that cannot be measured in the running environment show "Not Connected" instead of 0%.',
         ]}
       />
 
@@ -504,7 +511,7 @@ export default function SystemConfiguration() {
         <Col xs={24} sm={12} lg={6}>
           <Card className="rounded-lg shadow-sm border border-gray-200">
             <Statistic
-              title="系统运行时间"
+              title="System Uptime"
               value={systemStats ? formatUptime(systemStats.uptime) : '—'}
               prefix={<Clock className="w-5 h-5" />}
               styles={{ content: { color: '#52c41a' } }}
@@ -514,7 +521,7 @@ export default function SystemConfiguration() {
         <Col xs={24} sm={12} lg={6}>
           <Card className="rounded-lg shadow-sm border border-gray-200">
             <Statistic
-              title="Goroutine 数"
+              title="Number of Goroutines"
               value={systemStats?.goroutines ?? 0}
               prefix={<Network className="w-5 h-5" />}
               styles={{ content: { color: '#1890ff' } }}
@@ -524,7 +531,7 @@ export default function SystemConfiguration() {
         <Col xs={24} sm={12} lg={6}>
           <Card className="rounded-lg shadow-sm border border-gray-200">
             <Statistic
-              title="CPU 核心数"
+              title="Number of CPU cores"
               value={systemStats?.cores ?? 0}
               prefix={<Cpu className="w-5 h-5" />}
               styles={{ content: { color: '#fa8c16' } }}
@@ -535,11 +542,11 @@ export default function SystemConfiguration() {
           <Card className="rounded-lg shadow-sm border border-gray-200">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-sm text-gray-500">内存使用率</div>
+                <div className="text-sm text-gray-500">Memory Usage</div>
                 <div className="text-2xl font-bold text-purple-600">
                   {memoryMeasured
                     ? `${Math.round(systemStats?.memoryUsage ?? 0)}%`
-                    : '未接入'}
+                    : 'Not measured'}
                 </div>
               </div>
               <MemoryStick className="w-8 h-8 text-purple-600" />
@@ -552,7 +559,8 @@ export default function SystemConfiguration() {
               />
             ) : (
               <Text type="secondary" className="text-xs">
-                当前运行环境测不到内存上限（容器无 cgroup 限制且主机非 Linux）
+
+                The current operating environment cannot detect the upper memory limit (the container has no cgroup restrictions and the host is not Linux)
               </Text>
             )}
           </Card>
@@ -562,7 +570,7 @@ export default function SystemConfiguration() {
       {/* 操作提示 */}
       {hasChanges && (
         <Alert
-          title="配置已修改，请及时保存"
+          title="The configuration has been modified, please save it in time"
           type="warning"
           showIcon
           closable
@@ -578,10 +586,11 @@ export default function SystemConfiguration() {
           onValuesChange={handleFormChange}
         >
           <div className="mb-4 flex justify-between items-center">
-            <Title level={4}>配置管理</Title>
+            <Title level={4}>Configuration Management</Title>
             <Space>
               <Button icon={<RefreshCw className="w-4 h-4" />} onClick={handleReset}>
-                重置
+
+                Reset
               </Button>
               <Button
                 type="primary"
@@ -589,7 +598,7 @@ export default function SystemConfiguration() {
                 loading={isSaving}
                 onClick={handleSave}
               >
-                {isSaving ? '保存中...' : '保存配置'}
+                {isSaving ? 'Saving...' : 'Save Configuration'}
               </Button>
             </Space>
           </div>

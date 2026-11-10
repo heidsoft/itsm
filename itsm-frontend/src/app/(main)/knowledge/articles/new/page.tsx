@@ -41,7 +41,7 @@ export default function NewKnowledgeArticlePage() {
       })
       .catch(() => {
         // 分类加载失败不阻塞写作，但必须让用户知道下拉不完整。
-        message.error('加载知识分类失败，可手动输入分类名称');
+        message.error('Failed to load knowledge classification. You can enter the classification name manually.');
       });
   }, [message]);
 
@@ -54,10 +54,10 @@ export default function NewKnowledgeArticlePage() {
         category: values.category.trim(),
         tags: values.tags || [],
       });
-      message.success('文章创建成功');
+      message.success('Article created successfully');
       router.push(`/knowledge/articles/${created.id}`);
     } catch (e: unknown) {
-      message.error('创建失败：' + (e instanceof Error ? e.message : '未知错误'));
+      message.error('Creation failed:' + (e instanceof Error ? e.message : 'Unknown error'));
     } finally {
       setLoading(false);
     }
@@ -66,16 +66,18 @@ export default function NewKnowledgeArticlePage() {
   return (
     <div className="max-w-4xl mx-auto p-6">
       <Breadcrumb
-        items={[{ title: '知识库', href: '/knowledge' }, { title: '新建文章' }]}
+        items={[{ title: 'Knowledge Base', href: '/knowledge' }, { title: 'New Article' }]}
         className="mb-4"
       />
       <Card>
         <Space className="mb-4">
           <Button icon={<ArrowLeft />} onClick={() => router.push('/knowledge')}>
-            返回
+
+            Back
           </Button>
           <Title level={3} style={{ margin: 0 }}>
-            新建知识库文章
+
+            Create a new knowledge base article
           </Title>
         </Space>
         <Form
@@ -84,19 +86,19 @@ export default function NewKnowledgeArticlePage() {
           onFinish={onFinish}
           initialValues={{ tags: [] }}
         >
-          <Form.Item name="title" label="标题" rules={[{ required: true, message: '请输入标题' }]}>
-            <Input placeholder="例如：VPN 拨号失败排查指南" maxLength={200} />
+          <Form.Item name="title" label="Title" rules={[{ required: true, message: 'Please enter a title' }]}>
+            <Input placeholder="Example: VPN dial-up failure troubleshooting guide" maxLength={200} />
           </Form.Item>
 
           {/* 分类在后端是自由字符串，因此用 AutoComplete：既可从已有分类中选择，
               也可直接输入新分类，避免后端分类为空时表单无法提交。 */}
           <Form.Item
             name="category"
-            label="分类"
-            rules={[{ required: true, message: '请选择或输入分类' }]}
+            label="Category"
+            rules={[{ required: true, message: 'Please select or enter a category' }]}
           >
             <AutoComplete
-              placeholder="选择或输入分类，如「故障排查」"
+              placeholder="Select or enter a category, such as &quot;Troubleshooting&quot;"
               options={categories.map(name => ({ value: name }))}
               filterOption={(input, option) =>
                 String(option?.value ?? '').toLowerCase().includes(input.toLowerCase())
@@ -104,10 +106,10 @@ export default function NewKnowledgeArticlePage() {
             />
           </Form.Item>
 
-          <Form.Item name="tags" label="标签">
+          <Form.Item name="tags" label="Tags">
             <Select
               mode="tags"
-              placeholder="输入标签后回车"
+              placeholder="Enter the label and press Enter"
               tagRender={({ label, closable, onClose }) => (
                 <Tag
                   closable={closable}
@@ -122,21 +124,24 @@ export default function NewKnowledgeArticlePage() {
 
           <Form.Item
             name="content"
-            label="内容（支持 Markdown）"
-            rules={[{ required: true, message: '请输入内容' }]}
+            label="Content (supports Markdown)"
+            rules={[{ required: true, message: 'Please enter content' }]}
           >
             <TextArea
               rows={15}
-              placeholder="# 问题描述&#10;&#10;请输入内容..."
+              placeholder="#Problem description
+
+Please enter content..."
             />
           </Form.Item>
 
           <Form.Item>
             <Space>
               <Button type="primary" htmlType="submit" icon={<Save />} loading={loading}>
-                保存草稿
+
+                Save draft
               </Button>
-              <Button onClick={() => router.push('/knowledge')}>取消</Button>
+              <Button onClick={() => router.push('/knowledge')}>Cancel</Button>
             </Space>
           </Form.Item>
         </Form>

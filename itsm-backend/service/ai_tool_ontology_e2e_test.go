@@ -197,7 +197,7 @@ func TestE2E_CreateTicketWithInvalidCIIDDegradesGracefully(t *testing.T) {
 	require.True(t, ok)
 	require.Equal(t, false, payload["ciLinked"])
 	require.NotEmpty(t, payload["ciLinkWarn"], "应回传绑定失败原因供 AI 提示用户")
-	require.True(t, strings.Contains(payload["ciLinkWarn"].(string), "配置项不存在或无权访问"))
+	require.True(t, strings.Contains(payload["ciLinkWarn"].(string), "The configuration item does not exist or has no permission to access"))
 }
 
 // TestE2E_LinkExistingTicketToCI 补挂场景：先建单、后定位到设备。

@@ -109,7 +109,7 @@ func run(mode, outDir, datasets string) error {
 		// 占位 + godotenv），否则 LoadLLMConfig 拿到的全是空串——LLM 档验收
 		// 一直报「配置为空」的直接根因就是这里没初始化。
 		if _, err := config.LoadConfig(); err != nil {
-			return fmt.Errorf("LLM 档需要读取 llm.* 配置: %w", err)
+			return fmt.Errorf("LLM file needs to read llm.* configuration: %w", err)
 		}
 		gateway, err := newGatewayFromConfig()
 		if err == nil {
@@ -120,11 +120,11 @@ func run(mode, outDir, datasets string) error {
 			// 探测失败直接拒绝产出报告（退出码 1），让验收人知道「没跑成」，
 			// 而不是拿一份假绿报告签字。
 			if probeErr := probeLLMConnectivity(gateway); probeErr != nil {
-				return fmt.Errorf("LLM 档连通性探测失败（不产出报告，这可能是限流/网络/凭据问题）: %w", probeErr)
+				return fmt.Errorf("LLM file connectivity detection failed (no report is generated, this may be a current limiting/network/credential issue): %w", probeErr)
 			}
 		}
 		if err != nil {
-			return fmt.Errorf("LLM 档需要可用的 llm.* 配置: %w", err)
+			return fmt.Errorf("LLM file requires available llm.* configuration: %w", err)
 		}
 		svc := service.NewSummarizeService(gateway, logger)
 		sumGen = eval.SummarizeCandidateGenerator(svc)
@@ -145,12 +145,12 @@ func run(mode, outDir, datasets string) error {
 	// ---- RAG（真实检索器 + 真实语料，与 CI 同一条链路） ----
 	corpus, err := eval.LoadRAGCorpus(filepath.Join(datasets, "corpus", "rag_corpus.jsonl"))
 	if err != nil {
-		return fmt.Errorf("载入 RAG 语料: %w", err)
+		return fmt.Errorf("Loading RAG corpus: %w", err)
 	}
 	ragCases := mustLoad[[]eval.RAGCase](filepath.Join(datasets, "rag.jsonl"))
 	retriever, err := eval.NewRealRAGRetriever("file:aieval_corpus?mode=memory&cache=shared&_fk=1", corpus, logger.Sugar())
 	if err != nil {
-		return fmt.Errorf("建 RAG 评测库: %w", err)
+		return fmt.Errorf("Create RAG evaluation library: %w", err)
 	}
 	defer retriever.Close()
 
@@ -212,7 +212,7 @@ func run(mode, outDir, datasets string) error {
 
 	// ---- 输出 ----
 	if err := os.MkdirAll(outDir, 0o755); err != nil {
-		return fmt.Errorf("建输出目录: %w", err)
+		return fmt.Errorf("Create output directory: %w", err)
 	}
 	raw, err := json.MarshalIndent(rep, "", "  ")
 	if err != nil {
@@ -220,7 +220,7 @@ func run(mode, outDir, datasets string) error {
 	}
 	path := filepath.Join(outDir, fmt.Sprintf("ai-eval-%s-%s.json", mode, rep.GeneratedAt.Format("20060102-150405")))
 	if err := os.WriteFile(path, raw, 0o644); err != nil {
-		return fmt.Errorf("写报告: %w", err)
+		return fmt.Errorf("Write report: %w", err)
 	}
 
 	fmt.Printf("ai-eval 报告已产出: %s\n", path)
@@ -238,11 +238,11 @@ func run(mode, outDir, datasets string) error {
 func newGatewayFromConfig() (*service.LLMGateway, error) {
 	cfg := service.LoadLLMConfig()
 	if cfg.APIKey == "" && cfg.Endpoint == "" {
-		return nil, fmt.Errorf("llm.* 配置为空（provider=%q）", cfg.Provider)
+		return nil, fmt.Errorf("llm.* configuration is empty (provider=%q)", cfg.Provider)
 	}
 	provider := service.NewProviderFromConfig(cfg)
 	if provider == nil {
-		return nil, fmt.Errorf("无法按配置构造 provider（provider=%q）", cfg.Provider)
+		return nil, fmt.Errorf("Unable to construct provider as configured (provider=%q)", cfg.Provider)
 	}
 	return service.NewLLMGateway(provider, nil, nil, cfg.Provider), nil
 }
@@ -262,7 +262,7 @@ func probeLLMConnectivity(gateway *service.LLMGateway) error {
 		return err
 	}
 	if strings.TrimSpace(resp) == "" {
-		return fmt.Errorf("LLM 返回空响应")
+		return fmt.Errorf("LLM returns empty response")
 	}
 	return nil
 }

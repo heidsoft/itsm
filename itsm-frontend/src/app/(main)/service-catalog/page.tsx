@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { serviceCategoryLabel } from '@/constants/service-catalog';
 import { Row, Col, Empty, Form, App, Tabs, Card, Typography, Button, Tag, Alert } from 'antd';
 import { Cloud, UserCog, ShieldCheck, Server, Database, Lock, Flame } from 'lucide-react';
 import { useServiceCatalogData } from './hooks/useServiceCatalogData';
@@ -85,7 +86,7 @@ export default function ServiceCatalogPage() {
     const items = [{ key: 'all', label: t('serviceCatalog.categories.all'), icon: <Server /> }];
     dynamicCategories.forEach((cat, idx) => {
       const IconComp = CATEGORY_ICONS[idx % CATEGORY_ICONS.length];
-      items.push({ key: cat, label: cat, icon: <IconComp /> });
+      items.push({ key: cat, label: serviceCategoryLabel(cat), icon: <IconComp /> });
     });
     return items;
   }, [dynamicCategories, t]);
@@ -204,7 +205,7 @@ export default function ServiceCatalogPage() {
                   className="flex w-full items-center justify-between rounded-lg border border-gray-200 bg-white p-4 text-left transition-colors hover:border-blue-400 hover:bg-blue-50"
                   onClick={() => window.location.assign(`/service-catalog/request/${catalog.id}`)}
                 >
-                  <span><span className="block font-medium">{catalog.name}</span><span className="text-xs text-gray-500">{catalog.category}</span></span>
+                  <span><span className="block font-medium">{catalog.name}</span><span className="text-xs text-gray-500">{serviceCategoryLabel(catalog.category)}</span></span>
                   <Tag color={index === 0 ? 'volcano' : 'blue'}>{catalog.requestCount ?? 0} {t('serviceCatalog.requestsCount')}</Tag>
                 </button>
               </Col>
@@ -257,8 +258,8 @@ export default function ServiceCatalogPage() {
           className="mb-4"
           type="warning"
           showIcon
-          title={`共有 ${total} 个已发布目录，本页最多载入 ${limit} 个`}
-          description="分类标签计数与筛选只覆盖已载入的部分，请用搜索词收窄范围。"
+          title={`Shared ${total} published directories, this page has the most loaded ${limit} items`}
+          description="Category tag counting and filtering only cover the loaded part, please use search terms to narrow the scope."
         />
       )}
       <ServiceCatalogFilters
@@ -282,7 +283,7 @@ export default function ServiceCatalogPage() {
                 <p className="text-gray-500 mb-4">{t('serviceCatalog.noMatchingServices')}</p>
                 {canManageCatalog ? <Button type="primary" onClick={handleCreateService}>
                   {t('serviceCatalog.createFirst')}
-                </Button> : <p className="text-sm text-gray-500">暂时没有可申请的服务，请联系服务目录管理员。</p>}
+                </Button> : <p className="text-sm text-gray-500">There are currently no services available for application, please contact the service directory administrator.</p>}
               </div>
             }
           />

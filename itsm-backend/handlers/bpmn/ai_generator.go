@@ -35,12 +35,12 @@ func NewAIGeneratorHandler(aiGeneratorService *service.BPMNAIGeneratorService) *
 func (c *AIGeneratorHandler) GenerateBPMN(ctx *gin.Context) {
 	var req dto.GenerateBPMNRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(ctx, err, "请求参数错误")
+		common.ParamErrorWithErr(ctx, err, "Wrong request parameters")
 		return
 	}
 	tenantID, err := middleware.GetTenantID(ctx)
 	if err != nil {
-		common.AuthFailed(ctx, "未授权访问：缺少有效租户上下文")
+		common.AuthFailed(ctx, "Unauthorized access: Missing valid tenant context")
 		return
 	}
 	req.TenantID = tenantID
@@ -49,14 +49,14 @@ func (c *AIGeneratorHandler) GenerateBPMN(ctx *gin.Context) {
 
 	resp, err := c.aiGeneratorService.GenerateBPMN(ctx.Request.Context(), &req, autoDeploy)
 	if err != nil {
-		common.Fail(ctx, common.ServiceUnavailableCode, "AI工作流生成服务暂不可用")
+		common.Fail(ctx, common.ServiceUnavailableCode, "AI workflow generation service is temporarily unavailable")
 		return
 	}
 	// 防御：service 返 nil（边界场景，理论上不应该）会让响应 data 为 null、
 	// 前端访问 null.bpmnXml 报错。这里直接以 5003 返回，避免前端出现
 	// "Cannot read properties of null (reading 'bpmnXml')"。
 	if resp == nil || resp.BPMNXML == "" {
-		common.Fail(ctx, common.ServiceUnavailableCode, "AI工作流生成服务暂不可用")
+		common.Fail(ctx, common.ServiceUnavailableCode, "AI workflow generation service is temporarily unavailable")
 		return
 	}
 
@@ -77,17 +77,17 @@ func (c *AIGeneratorHandler) GenerateBPMN(ctx *gin.Context) {
 func (c *AIGeneratorHandler) PreviewBPMN(ctx *gin.Context) {
 	var req dto.PreviewBPMNRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(ctx, err, "请求参数错误")
+		common.ParamErrorWithErr(ctx, err, "Wrong request parameters")
 		return
 	}
 	if _, err := middleware.GetTenantID(ctx); err != nil {
-		common.AuthFailed(ctx, "未授权访问：缺少有效租户上下文")
+		common.AuthFailed(ctx, "Unauthorized access: Missing valid tenant context")
 		return
 	}
 
 	resp, err := c.aiGeneratorService.PreviewBPMN(ctx.Request.Context(), &req)
 	if err != nil {
-		common.Fail(ctx, common.ServiceUnavailableCode, "AI工作流预览服务暂不可用")
+		common.Fail(ctx, common.ServiceUnavailableCode, "AI workflow preview service is temporarily unavailable")
 		return
 	}
 
@@ -109,18 +109,18 @@ func (c *AIGeneratorHandler) PreviewBPMN(ctx *gin.Context) {
 func (c *AIGeneratorHandler) GetTemplateSuggestions(ctx *gin.Context) {
 	keyword := ctx.Query("keyword")
 	if keyword == "" {
-		common.Fail(ctx, 1001, "关键词不能为空")
+		common.Fail(ctx, 1001, "Keyword cannot be empty")
 		return
 	}
 
 	tenantID, err := middleware.GetTenantID(ctx)
 	if err != nil {
-		common.AuthFailed(ctx, "未授权访问：缺少有效租户上下文")
+		common.AuthFailed(ctx, "Unauthorized access: Missing valid tenant context")
 		return
 	}
 	suggestions, err := c.aiGeneratorService.SuggestTemplates(ctx.Request.Context(), tenantID, keyword, ctx.Query("processType"))
 	if err != nil {
-		common.Fail(ctx, common.ServiceUnavailableCode, "工作流模板目录暂不可用")
+		common.Fail(ctx, common.ServiceUnavailableCode, "The workflow template directory is temporarily unavailable")
 		return
 	}
 

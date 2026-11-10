@@ -285,7 +285,7 @@ func TestDownloadAndPreviewAttachmentCrossTenant(t *testing.T) {
 			code, message, _ := decodeEnvelope(t, w)
 			require.Equal(t, http.StatusForbidden, w.Code, sub.name+" body=%s", w.Body.String())
 			require.Equal(t, 2003, code, sub.name)
-			require.Equal(t, "无权访问该附件", message, sub.name)
+			require.Equal(t, "No permission to access this attachment", message, sub.name)
 			require.NotContains(t, w.Body.String(), fx.contentA, sub.name+" 403 不得附带文件内容")
 		}
 	})

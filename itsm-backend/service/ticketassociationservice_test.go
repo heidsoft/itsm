@@ -71,7 +71,7 @@ func TestTicketAssociationService_RejectsCrossTenantConfigurationItemAssociation
 
 	err := service.AddConfigurationItem(ctx, ticket.ID, foreignCI.ID, tenantA.ID)
 	require.Error(t, err)
-	assert.Contains(t, err.Error(), "配置项不存在")
+	assert.Contains(t, err.Error(), "Configuration item does not exist")
 
 	items, err := service.GetConfigurationItems(ctx, ticket.ID, tenantA.ID)
 	require.NoError(t, err)
@@ -167,7 +167,7 @@ func TestTicketAssociationService_RejectsInvalidParentRelationships(t *testing.T
 	require.ErrorContains(t, err, "自己的父工单")
 
 	err = service.UpdateTicketAssociations(ctx, ticketA.ID, tenant.ID, &UpdateAssociationsRequest{ParentID: &foreignTicket.ID})
-	require.ErrorContains(t, err, "父工单不存在")
+	require.ErrorContains(t, err, "The parent ticket does not exist")
 
 	require.NoError(t, service.UpdateTicketAssociations(ctx, ticketB.ID, tenant.ID, &UpdateAssociationsRequest{ParentID: &ticketA.ID}))
 	err = service.UpdateTicketAssociations(ctx, ticketA.ID, tenant.ID, &UpdateAssociationsRequest{ParentID: &ticketB.ID})

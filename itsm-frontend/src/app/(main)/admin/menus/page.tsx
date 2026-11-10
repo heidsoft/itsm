@@ -508,13 +508,13 @@ export default function MenuManagementPage() {
                 label={t('menus.menuPath')}
                 name="path"
                 rules={[
-                  { required: true, message: t('menus.pathRequired', { name: '请输入路由路径' }) },
+                  { required: true, message: t('menus.pathRequired', { name: "Please enter the route path" }) },
                   {
                     pattern: /^\/[\w\-./]*$/,
-                    message: t('menus.pathFormatError', { name: '路径必须以 / 开头，仅支持字母、数字、- _ . /' }),
+                    message: t('menus.pathFormatError', { name: "Path must start with / and only contain letters, digits, - _ . /" }),
                   },
                 ]}
-                tooltip={t('menus.pathTooltip', { name: '前端路由地址，例如 /admin/sla-templates' })}
+                tooltip={t('menus.pathTooltip', { name: "Frontend route path, e.g. /admin/sla-templates" })}
               >
                 <Input
                   prefix={<LinkIcon className="w-4 h-4 text-gray-400" />}
@@ -529,7 +529,7 @@ export default function MenuManagementPage() {
               <Form.Item
                 label={t('menus.icon')}
                 name="icon"
-                tooltip={t('menus.iconTooltip', { name: 'Lucide React 图标名，可手输或从列表选择' })}
+                tooltip={t('menus.iconTooltip', { name: "Lucide React icon name; type it or pick from the list" })}
               >
                 <Input
                   placeholder={t('menus.iconPlaceholder')}
@@ -578,7 +578,7 @@ export default function MenuManagementPage() {
               <Form.Item
                 label={t('menus.sortOrder')}
                 name="sortOrder"
-                rules={[{ required: true, message: t('menus.sortOrderRequired', { name: '请输入排序号' }) }]}
+                rules={[{ required: true, message: t('menus.sortOrderRequired', { name: "Please enter sort order" }) }]}
               >
                 <InputNumber min={0} max={9999} style={{ width: '100%' }} />
               </Form.Item>
@@ -590,7 +590,7 @@ export default function MenuManagementPage() {
               <Form.Item
                 label={t('menus.permissionCode')}
                 name="permissionCode"
-                tooltip={t('menus.permissionCodeTooltip', { name: '菜单关联的权限码，留空则对所有登录用户可见' })}
+                tooltip={t('menus.permissionCodeTooltip', { name: "Permission code linked to this menu; leave empty to allow all logged-in users" })}
               >
                 <AutoComplete
                   options={permissionOptions}
@@ -605,7 +605,7 @@ export default function MenuManagementPage() {
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item label={t('menus.parentMenu')} name="parentId" tooltip={t('menus.parentMenuTooltip', { name: '二级菜单需指定父菜单' })}>
+              <Form.Item label={t('menus.parentMenu')} name="parentId" tooltip={t('menus.parentMenuTooltip', { name: "Submenu items must specify a parent menu" })}>
                 <AppSelect allowClear placeholder={t('menus.topLevelMenu')}
                 options={parentOptions.map(p => ({ value: p.id, label: p.name }))}
               />

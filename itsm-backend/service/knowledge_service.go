@@ -49,7 +49,7 @@ func (ks *KnowledgeService) CreateArticle(ctx context.Context, req *dto.CreateKn
 	ks.logger.Infow("Creating knowledge article", "title", req.Title, "tenant_id", tenantID, "author_id", authorID)
 
 	if strings.TrimSpace(req.Content) == "" {
-		return nil, fmt.Errorf("内容不能为空")
+		return nil, fmt.Errorf("Content cannot be empty")
 	}
 	// XSS 消毒：Title 走 strict（纯文本），Content 走 UGC（保留常见富文本，剥离 script/on*/javascript:）
 	req.Title = common.SanitizeText(req.Title)
@@ -75,7 +75,7 @@ func (ks *KnowledgeService) CreateArticle(ctx context.Context, req *dto.CreateKn
 		Save(ctx)
 	if err != nil {
 		ks.logger.Errorw("Failed to create knowledge article", "error", err, "tenant_id", tenantID)
-		return nil, fmt.Errorf("创建文章失败: %w", err)
+		return nil, fmt.Errorf("Failed to create article: %w", err)
 	}
 
 	ks.logger.Infow("Knowledge article created successfully", "id", article.ID, "tenant_id", tenantID)
@@ -93,9 +93,9 @@ func (ks *KnowledgeService) GetArticle(ctx context.Context, id, tenantID int) (*
 		Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, fmt.Errorf("文章不存在")
+			return nil, fmt.Errorf("The article does not exist")
 		}
-		return nil, fmt.Errorf("获取文章失败: %w", err)
+		return nil, fmt.Errorf("Failed to retrieve article: %w", err)
 	}
 
 	return article, nil
@@ -139,7 +139,7 @@ func (ks *KnowledgeService) ListArticles(ctx context.Context, req *dto.ListKnowl
 	// 获取总数
 	total, err := query.Count(ctx)
 	if err != nil {
-		return nil, 0, fmt.Errorf("获取文章总数失败: %w", err)
+		return nil, 0, fmt.Errorf("Failed to get total number of articles: %w", err)
 	}
 
 	// 分页查询
@@ -149,7 +149,7 @@ func (ks *KnowledgeService) ListArticles(ctx context.Context, req *dto.ListKnowl
 		Limit(req.PageSize).
 		All(ctx)
 	if err != nil {
-		return nil, 0, fmt.Errorf("获取文章列表失败: %w", err)
+		return nil, 0, fmt.Errorf("Failed to get article list: %w", err)
 	}
 
 	return articles, total, nil
@@ -190,21 +190,21 @@ func (ks *KnowledgeService) UpdateArticle(ctx context.Context, id int, req *dto.
 		case "draft":
 			update = update.SetIsPublished(false)
 		default:
-			return nil, fmt.Errorf("文章状态仅支持 draft 或 published")
+			return nil, fmt.Errorf("The article status only supports draft or published")
 		}
 	}
 
 	article, err := update.Save(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, fmt.Errorf("文章不存在")
+			return nil, fmt.Errorf("The article does not exist")
 		}
 		ks.logger.Errorw("Failed to update knowledge article", "error", err, "id", id, "tenant_id", tenantID)
-		return nil, fmt.Errorf("更新文章失败: %w", err)
+		return nil, fmt.Errorf("Failed to update article: %w", err)
 	}
 	if _, versionErr := ks.CreateVersion(ctx, existing, "文章更新前快照"); versionErr != nil {
 		ks.logger.Errorw("Failed to create article version", "error", versionErr, "id", id, "tenant_id", tenantID)
-		return nil, fmt.Errorf("文章已更新，但版本历史保存失败，请联系管理员: %w", versionErr)
+		return nil, fmt.Errorf("The article has been updated, but the version history failed to be saved. Please contact the administrator: %w", versionErr)
 	}
 
 	ks.logger.Infow("Knowledge article updated successfully", "id", id, "tenant_id", tenantID)
@@ -213,10 +213,10 @@ func (ks *KnowledgeService) UpdateArticle(ctx context.Context, id int, req *dto.
 
 func validateKnowledgeCategory(category string) error {
 	if category == "" {
-		return fmt.Errorf("分类不能为空")
+		return fmt.Errorf("Category cannot be empty")
 	}
 	if _, ok := allowedKnowledgeCategories[category]; !ok {
-		return fmt.Errorf("无效的知识库分类: %s", category)
+		return fmt.Errorf("Invalid knowledge base category: %s", category)
 	}
 	return nil
 }
@@ -233,10 +233,10 @@ func (ks *KnowledgeService) DeleteArticle(ctx context.Context, id, tenantID int)
 		Where(knowledgearticlesession.ArticleID(id), knowledgearticlesession.StatusIn("active", "idle")).
 		Count(ctx)
 	if err != nil {
-		return fmt.Errorf("检查文章协作状态失败: %w", err)
+		return fmt.Errorf("Failed to check article collaboration status: %w", err)
 	}
 	if activeSessions > 0 {
-		return fmt.Errorf("文章仍有协作者在线，请等待协作会话结束后再删除")
+		return fmt.Errorf("The article still has collaborators online, please wait until the collaboration session ends before deleting it.")
 	}
 
 	_, err = ks.client.KnowledgeArticle.UpdateOneID(id).
@@ -246,10 +246,10 @@ func (ks *KnowledgeService) DeleteArticle(ctx context.Context, id, tenantID int)
 	if err != nil {
 		if ent.IsNotFound(err) {
 			ks.logger.Warnw("Knowledge article not found", "id", id, "tenant_id", tenantID)
-			return fmt.Errorf("文章不存在")
+			return fmt.Errorf("The article does not exist")
 		}
 		ks.logger.Errorw("Failed to delete knowledge article", "error", err, "id", id)
-		return fmt.Errorf("删除文章失败: %w", err)
+		return fmt.Errorf("Failed to delete article: %w", err)
 	}
 
 	ks.logger.Infow("Knowledge article deleted successfully", "id", id)
@@ -263,7 +263,7 @@ func (ks *KnowledgeService) GetCategories(ctx context.Context, tenantID int) ([]
 		GroupBy(knowledgearticle.FieldCategory).
 		Strings(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("获取分类列表失败: %w", err)
+		return nil, fmt.Errorf("Failed to get category list: %w", err)
 	}
 
 	return categories, nil
@@ -280,10 +280,10 @@ func (ks *KnowledgeService) LikeArticle(ctx context.Context, id, userID, tenantI
 		).
 		Exist(ctx)
 	if err != nil {
-		return fmt.Errorf("检查文章失败: %w", err)
+		return fmt.Errorf("Failed to check article: %w", err)
 	}
 	if !exist {
-		return fmt.Errorf("文章不存在")
+		return fmt.Errorf("The article does not exist")
 	}
 
 	// 检查用户是否已经点赞
@@ -296,7 +296,7 @@ func (ks *KnowledgeService) LikeArticle(ctx context.Context, id, userID, tenantI
 		Only(ctx)
 
 	if err != nil && !ent.IsNotFound(err) {
-		return fmt.Errorf("检查点赞状态失败: %w", err)
+		return fmt.Errorf("Failed to check like status: %w", err)
 	}
 
 	// 如果已经点赞，则取消点赞
@@ -304,7 +304,7 @@ func (ks *KnowledgeService) LikeArticle(ctx context.Context, id, userID, tenantI
 		// 删除点赞记录
 		err = ks.client.KnowledgeArticleLike.DeleteOne(existingLike).Exec(ctx)
 		if err != nil {
-			return fmt.Errorf("取消点赞失败: %w", err)
+			return fmt.Errorf("Failed to cancel like: %w", err)
 		}
 
 		// 减少点赞数
@@ -326,7 +326,7 @@ func (ks *KnowledgeService) LikeArticle(ctx context.Context, id, userID, tenantI
 		SetTenantID(tenantID).
 		Save(ctx)
 	if err != nil {
-		return fmt.Errorf("创建点赞记录失败: %w", err)
+		return fmt.Errorf("Failed to create like record: %w", err)
 	}
 
 	// 增加点赞数
@@ -351,7 +351,7 @@ func (ks *KnowledgeService) GetLikeStatus(ctx context.Context, articleID, userID
 		).
 		Exist(ctx)
 	if err != nil {
-		return false, fmt.Errorf("检查点赞状态失败: %w", err)
+		return false, fmt.Errorf("Failed to check like status: %w", err)
 	}
 	return exist, nil
 }
@@ -366,7 +366,7 @@ func (ks *KnowledgeService) GetLikeCount(ctx context.Context, articleID, tenantI
 		).
 		Only(ctx)
 	if err != nil {
-		return 0, fmt.Errorf("获取文章失败: %w", err)
+		return 0, fmt.Errorf("Failed to retrieve article: %w", err)
 	}
 	return article.LikeCount, nil
 }
@@ -397,7 +397,7 @@ func (ks *KnowledgeService) CreateVersion(ctx context.Context, article *ent.Know
 		SetChangeSummary(changeSummary).
 		Save(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("创建版本失败: %w", err)
+		return nil, fmt.Errorf("Failed to create version: %w", err)
 	}
 
 	ks.logger.Infow("Article version created", "article_id", article.ID, "version", newVersion)
@@ -415,10 +415,10 @@ func (ks *KnowledgeService) ListVersions(ctx context.Context, articleID, tenantI
 		).
 		Exist(ctx)
 	if err != nil {
-		return nil, 0, fmt.Errorf("检查文章失败: %w", err)
+		return nil, 0, fmt.Errorf("Failed to check article: %w", err)
 	}
 	if !exist {
-		return nil, 0, fmt.Errorf("文章不存在")
+		return nil, 0, fmt.Errorf("The article does not exist")
 	}
 
 	// 查询总数
@@ -426,7 +426,7 @@ func (ks *KnowledgeService) ListVersions(ctx context.Context, articleID, tenantI
 		Where(knowledgearticleversion.ArticleID(articleID)).
 		Count(ctx)
 	if err != nil {
-		return nil, 0, fmt.Errorf("获取版本总数失败: %w", err)
+		return nil, 0, fmt.Errorf("Failed to get total number of versions: %w", err)
 	}
 
 	// 分页查询
@@ -438,7 +438,7 @@ func (ks *KnowledgeService) ListVersions(ctx context.Context, articleID, tenantI
 		Limit(pageSize).
 		All(ctx)
 	if err != nil {
-		return nil, 0, fmt.Errorf("获取版本列表失败: %w", err)
+		return nil, 0, fmt.Errorf("Failed to get version list: %w", err)
 	}
 
 	return versions, total, nil
@@ -455,10 +455,10 @@ func (ks *KnowledgeService) GetVersion(ctx context.Context, articleID, version, 
 		).
 		Exist(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("检查文章失败: %w", err)
+		return nil, fmt.Errorf("Failed to check article: %w", err)
 	}
 	if !exist {
-		return nil, fmt.Errorf("文章不存在")
+		return nil, fmt.Errorf("The article does not exist")
 	}
 
 	versionEntity, err := ks.client.KnowledgeArticleVersion.Query().
@@ -469,9 +469,9 @@ func (ks *KnowledgeService) GetVersion(ctx context.Context, articleID, version, 
 		Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, fmt.Errorf("版本不存在")
+			return nil, fmt.Errorf("Version does not exist")
 		}
-		return nil, fmt.Errorf("获取版本失败: %w", err)
+		return nil, fmt.Errorf("Failed to get version: %w", err)
 	}
 
 	return versionEntity, nil
@@ -494,7 +494,7 @@ func (ks *KnowledgeService) RestoreVersion(ctx context.Context, articleID, versi
 		).
 		Only(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("获取文章失败: %w", err)
+		return nil, fmt.Errorf("Failed to retrieve article: %w", err)
 	}
 
 	// 创建当前版本快照
@@ -511,7 +511,7 @@ func (ks *KnowledgeService) RestoreVersion(ctx context.Context, articleID, versi
 		SetTags(versionEntity.Tags).
 		Save(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("恢复版本失败: %w", err)
+		return nil, fmt.Errorf("Failed to restore version: %w", err)
 	}
 
 	ks.logger.Infow("Article restored to version", "article_id", articleID, "version", version)
@@ -531,10 +531,10 @@ func (ks *KnowledgeService) CreateSession(ctx context.Context, articleID, userID
 		).
 		Exist(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("检查文章失败: %w", err)
+		return nil, fmt.Errorf("Failed to check article: %w", err)
 	}
 	if !exist {
-		return nil, fmt.Errorf("文章不存在")
+		return nil, fmt.Errorf("The article does not exist")
 	}
 
 	// 检查是否已有活跃会话
@@ -545,7 +545,7 @@ func (ks *KnowledgeService) CreateSession(ctx context.Context, articleID, userID
 		).
 		Only(ctx)
 	if err != nil && !ent.IsNotFound(err) {
-		return nil, fmt.Errorf("检查会话失败: %w", err)
+		return nil, fmt.Errorf("Failed to check session: %w", err)
 	}
 
 	// 生成会话Token
@@ -558,7 +558,7 @@ func (ks *KnowledgeService) CreateSession(ctx context.Context, articleID, userID
 			SetLastHeartbeat(time.Now()).
 			Save(ctx)
 		if err != nil {
-			return nil, fmt.Errorf("加入会话失败: %w", err)
+			return nil, fmt.Errorf("Failed to join session: %w", err)
 		}
 		ks.logger.Infow("User joined existing session", "user_id", userID, "session_id", existingSession.ID)
 		return existingSession, nil
@@ -573,7 +573,7 @@ func (ks *KnowledgeService) CreateSession(ctx context.Context, articleID, userID
 		SetLastHeartbeat(time.Now()).
 		Save(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("创建会话失败: %w", err)
+		return nil, fmt.Errorf("Failed to create session: %w", err)
 	}
 
 	ks.logger.Infow("Session created", "session_id", session.ID, "article_id", articleID)
@@ -592,7 +592,7 @@ func (ks *KnowledgeService) Heartbeat(ctx context.Context, sessionToken string, 
 		SetStatus(knowledgearticlesession.StatusActive).
 		Save(ctx)
 	if err != nil {
-		return fmt.Errorf("更新心跳失败: %w", err)
+		return fmt.Errorf("Failed to update heartbeat: %w", err)
 	}
 
 	return nil
@@ -609,7 +609,7 @@ func (ks *KnowledgeService) GetSession(ctx context.Context, articleID, userID, t
 		).
 		Exist(ctx)
 	if err != nil || !exist {
-		return nil, fmt.Errorf("文章不存在")
+		return nil, fmt.Errorf("The article does not exist")
 	}
 
 	// 查询活跃会话
@@ -623,7 +623,7 @@ func (ks *KnowledgeService) GetSession(ctx context.Context, articleID, userID, t
 		if ent.IsNotFound(err) {
 			return nil, nil // 没有活跃会话
 		}
-		return nil, fmt.Errorf("获取会话失败: %w", err)
+		return nil, fmt.Errorf("Failed to get session: %w", err)
 	}
 
 	return session, nil
@@ -640,7 +640,7 @@ func (ks *KnowledgeService) ListParticipants(ctx context.Context, articleID, ten
 		).
 		Exist(ctx)
 	if err != nil || !exist {
-		return nil, fmt.Errorf("文章不存在")
+		return nil, fmt.Errorf("The article does not exist")
 	}
 
 	// 查询活跃会话
@@ -651,7 +651,7 @@ func (ks *KnowledgeService) ListParticipants(ctx context.Context, articleID, ten
 		).
 		All(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("获取参与者失败: %w", err)
+		return nil, fmt.Errorf("Failed to get participants: %w", err)
 	}
 
 	return sessions, nil
@@ -668,7 +668,7 @@ func (ks *KnowledgeService) LeaveSession(ctx context.Context, articleID, userID 
 		SetStatus(knowledgearticlesession.StatusInactive).
 		Save(ctx)
 	if err != nil {
-		return fmt.Errorf("离开会话失败: %w", err)
+		return fmt.Errorf("Failed to leave session: %w", err)
 	}
 
 	ks.logger.Infow("User left session", "user_id", userID, "article_id", articleID)

@@ -24,10 +24,10 @@ const CATEGORY_VALUES = IncidentCategoryOptions.map(option => option.value);
 // AI 建议标签的展示文案。此前标签直接打印枚举值，界面出现
 // 「优先级：high」「分类：hardware」这类英文标识，与下方中文下拉自相矛盾。
 const PRIORITY_LABELS: Record<string, string> = {
-  critical: '紧急',
-  high: '高',
-  medium: '中',
-  low: '低',
+  critical: 'Urgent',
+  high: 'High',
+  medium: 'Medium',
+  low: 'Low',
 };
 const CATEGORY_LABELS: Record<string, string> = IncidentCategoryOptions.reduce<
   Record<string, string>
@@ -40,10 +40,10 @@ const labelOf = (map: Record<string, string>, value: string): string => map[valu
 
 // CI状态中文映射
 const ciStatusNameMap: Record<string, string> = {
-  active: '活跃',
-  inactive: '未激活',
-  maintenance: '维护中',
-  retired: '已下线',
+  active: 'Active',
+  inactive: 'Inactive',
+  maintenance: 'Maintenance',
+  retired: 'Offline',
 };
 
 // 表单值类型定义
@@ -112,7 +112,7 @@ export default function CreateIncidentPage() {
           const result = await CMDBApi.getCIs({ search: ciSearchTerm });
           setCISearchResults(result.items);
         } catch (error) {
-          handleError(error, 'getCIs', '搜索配置项失败');
+          handleError(error, 'getCIs', 'Failed to search for configuration items');
           setCISearchResults([]);
         } finally {
           setCISearching(false);
@@ -147,7 +147,7 @@ export default function CreateIncidentPage() {
     const description: string = form.getFieldValue('description') || '';
 
     if (!title.trim() && !description.trim()) {
-      notify.warning('请先填写事件标题或描述，AI 才能据此给出建议');
+      notify.warning('Please fill in the event title or description first so that AI can give suggestions based on it.');
       return;
     }
 
@@ -173,7 +173,7 @@ export default function CreateIncidentPage() {
     setAiLoading(false);
 
     if (!hasResult) {
-      notify.aiUnavailable('AI 智能分析');
+      notify.aiUnavailable('AI intelligent analysis');
     }
   };
 
@@ -186,24 +186,24 @@ export default function CreateIncidentPage() {
 
     if (aiSuggestion.priority && PRIORITY_VALUES.includes(aiSuggestion.priority)) {
       patch.priority = aiSuggestion.priority;
-      applied.push('优先级');
+      applied.push('Priority');
     }
     if (aiSuggestion.urgency && PRIORITY_VALUES.includes(aiSuggestion.urgency)) {
       patch.urgency = aiSuggestion.urgency;
-      applied.push('紧急度');
+      applied.push('Urgency');
     }
     if (aiSuggestion.category && CATEGORY_VALUES.includes(aiSuggestion.category)) {
       patch.category = aiSuggestion.category;
-      applied.push('分类');
+      applied.push('Category');
     }
 
     if (applied.length === 0) {
-      notify.warning('AI 建议的字段与当前表单选项不匹配，请手动选择');
+      notify.warning('The AI suggested fields do not match the current form options, please select manually');
       return;
     }
 
     form.setFieldsValue(patch);
-    notify.success(`已采纳 ${applied.join('、')}，你仍可手动调整`);
+    notify.success(`Adopted ${applied.join('、')}, you can still adjust it manually`);
   };
 
   const handleSubmit = async (values: IncidentFormValues) => {
@@ -221,10 +221,10 @@ export default function CreateIncidentPage() {
         assigneeId: values.assignedTo,
         configurationItemIds: selectedCIs.map(ci => ci.id),
       });
-      message.success('事件创建成功');
+      message.success('Incident created successfully');
       router.push('/incidents');
     } catch (error) {
-      handleError(error, 'createIncident', '创建失败，请重试');
+      handleError(error, 'createIncident', 'Creation failed, please try again');
     } finally {
       setLoading(false);
     }
@@ -240,14 +240,15 @@ export default function CreateIncidentPage() {
           onClick={() => router.back()}
           style={{ paddingLeft: 0 }}
         >
-          返回列表
+
+          Back to List
         </Button>
       </div>
 
       {/* 页面标题 */}
       <div className="mb-6">
-        <Title level={2} style={{ marginBottom: 4 }}>创建事件</Title>
-        <Text type="secondary">填写事件信息以创建新的事件记录</Text>
+        <Title level={2} style={{ marginBottom: 4 }}>Create event</Title>
+        <Text type="secondary">Fill in event information to create a new event record</Text>
       </div>
 
       <Row gutter={24}>
@@ -273,25 +274,25 @@ export default function CreateIncidentPage() {
                 items={[
                   {
                     key: 'basic',
-                    label: '基本信息',
+                    label: 'Basic Info',
                     children: (
                       <>
                         <Form.Item
                           name="title"
-                          label="事件标题"
-                          rules={[{ required: true, message: '请输入事件标题' }]}
+                          label="Incident Title"
+                          rules={[{ required: true, message: 'Please enter event title' }]}
                         >
-                          <Input placeholder="简要描述事件" maxLength={200} showCount data-testid="incident-title-input" />
+                          <Input placeholder="Briefly describe the event" maxLength={200} showCount data-testid="incident-title-input" />
                         </Form.Item>
 
                         <Form.Item
                           name="description"
-                          label="详细描述"
-                          rules={[{ required: true, message: '请输入事件描述' }]}
+                          label="Detailed description"
+                          rules={[{ required: true, message: 'Please enter event description' }]}
                         >
                           <TextArea
                             rows={6}
-                            placeholder="详细描述事件的发生情况、影响范围、错误信息等"
+                            placeholder="Detailed description of the occurrence, scope of impact, error message, etc."
                             data-testid="incident-description-input"
                           />
                         </Form.Item>
@@ -304,10 +305,11 @@ export default function CreateIncidentPage() {
                             loading={aiLoading}
                             data-testid="incident-ai-analyze-btn"
                           >
-                            {aiLoading ? 'AI 分析中…' : 'AI 智能分析'}
+                            {aiLoading ? 'AI analysis in progress…' : 'AI intelligent analysis'}
                           </Button>
                           <Text type="secondary" className="ml-2" style={{ fontSize: 12 }}>
-                            根据标题与描述推荐优先级/分类，并检索相似历史事件作为参考
+
+                            Recommend priority/category based on title and description, and retrieve similar historical events for reference
                           </Text>
                         </div>
 
@@ -318,9 +320,10 @@ export default function CreateIncidentPage() {
                             title={
                               <Space>
                                 <Sparkles size={14} />
-                                <span>AI 分类建议</span>
+                                <span>AI classification suggestions</span>
                                 <Tag color="blue">
-                                  置信度{' '}
+
+                                  Confidence{' '}
                                   {Math.round(
                                     aiSuggestion.confidence > 1
                                       ? aiSuggestion.confidence
@@ -337,7 +340,8 @@ export default function CreateIncidentPage() {
                                 onClick={handleApplySuggestion}
                                 data-testid="incident-ai-apply-btn"
                               >
-                                采纳建议
+
+                                Adopt suggestion
                               </Button>
                             }
                           >
@@ -345,34 +349,39 @@ export default function CreateIncidentPage() {
                               <Space wrap size={4}>
                                 {aiSuggestion.priority && (
                                   <Tag color="red">
-                                    优先级：{labelOf(PRIORITY_LABELS, aiSuggestion.priority)}
+
+                                    Priority:{labelOf(PRIORITY_LABELS, aiSuggestion.priority)}
                                   </Tag>
                                 )}
                                 {aiSuggestion.urgency && (
                                   <Tag color="orange">
-                                    紧急度：{labelOf(PRIORITY_LABELS, aiSuggestion.urgency)}
+
+                                    Urgency:{labelOf(PRIORITY_LABELS, aiSuggestion.urgency)}
                                   </Tag>
                                 )}
                                 {aiSuggestion.category && (
                                   <Tag color="purple">
-                                    分类：{labelOf(CATEGORY_LABELS, aiSuggestion.category)}
+
+                                    Category:{labelOf(CATEGORY_LABELS, aiSuggestion.category)}
                                   </Tag>
                                 )}
                               </Space>
                               {aiSuggestion.explanation && (
                                 <Text type="secondary" style={{ fontSize: 12 }}>
-                                  依据：{aiSuggestion.explanation}
+
+                                  Based on:{aiSuggestion.explanation}
                                 </Text>
                               )}
                               <Text type="secondary" style={{ fontSize: 12 }}>
-                                建议仅供参考，需你点击「采纳建议」后才会写入表单。
+
+                                The suggestions are for reference only. You need to click "Accept Suggestions" before they will be written into the form.
                               </Text>
                             </Space>
                           </Card>
                         )}
 
                         {similarIncidents.length > 0 && (
-                          <Card size="small" className="mb-4" title="相似历史事件">
+                          <Card size="small" className="mb-4" title="Similar historical events">
                             <Space orientation="vertical" size={8} style={{ width: '100%' }}>
                               {similarIncidents.map(item => (
                                 <div
@@ -389,20 +398,20 @@ export default function CreateIncidentPage() {
                                       rel="noopener noreferrer"
                                       style={{ fontWeight: 500 }}
                                     >
-                                      {item.title || `事件 #${item.id}`}
+                                      {item.title || `Event #${item.id}`}
                                     </a>
                                     {typeof item.score === 'number' && (
-                                      <Tag>匹配度 {Math.round(item.score * 100)}%</Tag>
+                                      <Tag>Matching degree {Math.round(item.score * 100)}%</Tag>
                                     )}
                                     {item.authorityLevel !== undefined && (
                                       <Tag color={item.authorityLevel >= 20 ? 'green' : 'default'}>
                                         {item.authorityLevel >= 30
-                                          ? '唯一真相源'
+                                          ? 'The One Source of Truth'
                                           : item.authorityLevel >= 20
-                                            ? '官方标准'
+                                            ? 'official standard'
                                             : item.authorityLevel >= 10
-                                              ? '部门推荐'
-                                              : '普通'}
+                                              ? 'Department recommendation'
+                                              : 'Normal'}
                                       </Tag>
                                     )}
                                   </Space>
@@ -427,42 +436,42 @@ export default function CreateIncidentPage() {
                           <Col span={8}>
                             <Form.Item
                               name="priority"
-                              label="优先级"
+                              label="Priority"
                               rules={[{ required: true }]}
                             >
                               <Select options={[
-                                { value: 'critical', label: '紧急' },
-                                { value: 'high', label: '高' },
-                                { value: 'medium', label: '中' },
-                                { value: 'low', label: '低' },
+                                { value: 'critical', label: 'Urgent' },
+                                { value: 'high', label: 'High' },
+                                { value: 'medium', label: 'Medium' },
+                                { value: 'low', label: 'Low' },
                               ]} />
                             </Form.Item>
                           </Col>
                           <Col span={8}>
                             <Form.Item
                               name="source"
-                              label="来源"
+                              label="Source"
                               rules={[{ required: true }]}
                             >
                               <Select options={[
-                                { value: 'manual', label: '手动创建' },
-                                { value: 'monitoring', label: '监控告警' },
-                                { value: 'system', label: '系统' },
-                                { value: 'user', label: '用户' },
+                                { value: 'manual', label: 'Manually created' },
+                                { value: 'monitoring', label: 'Monitoring alarm' },
+                                { value: 'system', label: 'System' },
+                                { value: 'user', label: 'Users' },
                               ]} />
                             </Form.Item>
                           </Col>
                           <Col span={8}>
                             <Form.Item
                               name="type"
-                              label="类型"
+                              label="Type"
                               rules={[{ required: true }]}
                             >
                               <Select options={[
-                                { value: 'incident', label: '事件' },
-                                { value: 'service_request', label: '服务请求' },
-                                { value: 'security_event', label: '安全事件' },
-                                { value: 'alert', label: '告警' },
+                                { value: 'incident', label: 'Incident' },
+                                { value: 'service_request', label: 'Service Request' },
+                                { value: 'security_event', label: 'Security Incident' },
+                                { value: 'alert', label: 'Alarm' },
                               ]} />
                             </Form.Item>
                           </Col>
@@ -471,18 +480,18 @@ export default function CreateIncidentPage() {
                           <Col span={12}>
                             <Form.Item
                               name="category"
-                              label="事件分类"
+                              label="Incident Category"
                             >
-                              <Select placeholder="选择分类" options={IncidentCategoryOptions} />
+                              <Select placeholder="Select category" options={IncidentCategoryOptions} />
                             </Form.Item>
                           </Col>
                           <Col span={12}>
                             <Form.Item
                               name="assignedTo"
-                              label="指派给"
+                              label="Assign To"
                             >
                               <Select
-                                placeholder="选择负责人"
+                                placeholder="Select person in charge"
                                 allowClear
                                 loading={usersLoading}
                                 showSearch
@@ -497,7 +506,7 @@ export default function CreateIncidentPage() {
                         </Row>
 
                         {/* CI配置项关联 */}
-                        <Form.Item label="关联配置项">
+                        <Form.Item label="Associated configuration items">
                           <div className="space-y-3">
                             {/* 已选择的CI列表 */}
                             {selectedCIs.length > 0 && (
@@ -518,7 +527,7 @@ export default function CreateIncidentPage() {
                             {/* CI搜索框 */}
                             <div className="relative">
                               <Input
-                                placeholder="搜索配置项名称或编号"
+                                placeholder="Search configuration item name or number"
                                 prefix={<Search />}
                                 value={ciSearchTerm}
                                 onChange={e => setCISearchTerm(e.target.value)}
@@ -539,7 +548,7 @@ export default function CreateIncidentPage() {
 										<div className="text-xs text-gray-500">{ci.type || 'CI'} - {ciStatusNameMap[ci.status] || ci.status}</div>
                                       </div>
                                       {selectedCIs.find(item => item.id === ci.id) && (
-                                        <Tag color="green">已选择</Tag>
+                                        <Tag color="green">Selected</Tag>
                                       )}
                                     </div>
                                   ))}
@@ -553,35 +562,35 @@ export default function CreateIncidentPage() {
                   },
                   {
                     key: 'impact',
-                    label: '影响分析',
+                    label: 'Impact Analysis',
                     children: (
                       <>
                         <Row gutter={16}>
                           <Col span={12}>
                             <Form.Item
                               name="impact"
-                              label="影响范围"
+                              label="Impact Range"
                               rules={[{ required: true }]}
                             >
                               <Select options={[
-                                { value: 'critical', label: '全局' },
-                                { value: 'high', label: '部门级' },
-                                { value: 'medium', label: '团队级' },
-                                { value: 'low', label: '个人' },
+                                { value: 'critical', label: 'Global' },
+                                { value: 'high', label: 'Department level' },
+                                { value: 'medium', label: 'Team level' },
+                                { value: 'low', label: 'Personal' },
                               ]} />
                             </Form.Item>
                           </Col>
                           <Col span={12}>
                             <Form.Item
                               name="urgency"
-                              label="紧急程度"
+                              label="Urgency"
                               rules={[{ required: true }]}
                             >
                               <Select options={[
-                                { value: 'critical', label: '紧急' },
-                                { value: 'high', label: '高' },
-                                { value: 'medium', label: '中' },
-                                { value: 'low', label: '低' },
+                                { value: 'critical', label: 'Urgent' },
+                                { value: 'high', label: 'High' },
+                                { value: 'medium', label: 'Medium' },
+                                { value: 'low', label: 'Low' },
                               ]} />
                             </Form.Item>
                           </Col>
@@ -589,29 +598,29 @@ export default function CreateIncidentPage() {
 
                         <Form.Item
                           name="affectedSystems"
-                          label="受影响系统"
+                          label="Affected systems"
                         >
                           <Select
                             mode="multiple"
-                            placeholder="选择受影响的系统"
+                            placeholder="Select affected systems"
                             allowClear
                             options={[
-                              { value: 'web', label: 'Web网站' },
-                              { value: 'api', label: 'API服务' },
-                              { value: 'database', label: '数据库' },
-                              { value: 'network', label: '网络' },
-                              { value: 'storage', label: '存储' },
+                              { value: 'web', label: 'Web site' },
+                              { value: 'api', label: 'API Service' },
+                              { value: 'database', label: 'Database' },
+                              { value: 'network', label: 'Network' },
+                              { value: 'storage', label: 'Storage' },
                             ]}
                           />
                         </Form.Item>
 
                         <Form.Item
                           name="rootCause"
-                          label="初步原因分析"
+                          label="Preliminary cause analysis"
                         >
                           <TextArea
                             rows={4}
-                            placeholder="初步分析可能的原因"
+                            placeholder="Preliminary analysis of possible causes"
                           />
                         </Form.Item>
                       </>
@@ -619,12 +628,12 @@ export default function CreateIncidentPage() {
                   },
                   {
                     key: 'attachment',
-                    label: '附件',
+                    label: 'Attachments',
                     children: (
                       <>
                         <Form.Item
                           name="attachments"
-                          label="上传附件"
+                          label="Upload Attachment"
                           valuePropName="fileList"
                           getValueFromEvent={(e) => {
                             if (Array.isArray(e)) return e;
@@ -632,11 +641,12 @@ export default function CreateIncidentPage() {
                           }}
                         >
                           <Upload name="logo" action="/upload.do" listType="text">
-                            <Button icon={<Upload />}>上传附件</Button>
+                            <Button icon={<Upload />}>Upload Attachment</Button>
                           </Upload>
                         </Form.Item>
                         <Text type="secondary">
-                          支持上传图片、文档等附件，单个文件不超过10MB
+
+                          Supports uploading attachments such as pictures and documents. A single file does not exceed 10MB.
                         </Text>
                       </>
                     ),
@@ -654,9 +664,10 @@ export default function CreateIncidentPage() {
                     loading={loading}
                     data-testid="incident-submit-button"
                   >
-                    提交
+
+                    Submit
                   </Button>
-                  <Button onClick={() => router.back()}>取消</Button>
+                  <Button onClick={() => router.back()}>Cancel</Button>
                 </Space>
               </Form.Item>
             </Form>
@@ -665,23 +676,23 @@ export default function CreateIncidentPage() {
 
         {/* 右侧信息 */}
         <Col xs={24} lg={8}>
-          <Card title="创建提示" className="mb-4">
+          <Card title="Create prompt" className="mb-4">
             <Space orientation="vertical" className="w-full">
               <div>
-                <Text strong>优先级说明</Text>
+                <Text strong>Priority description</Text>
                 <ul className="mt-2 text-sm text-gray-600">
-                  <li>🔴 紧急：系统完全不可用</li>
-                  <li>🟠 高：核心功能受影响</li>
-                  <li>🔵 中：非核心功能受影响</li>
-                  <li>🟢 低：轻微问题</li>
+                  <li>🔴 Emergency: The system is completely unavailable</li>
+                  <li>🟠 High: Core functions are affected</li>
+                  <li>🔵 Medium: Non-core functions are affected</li>
+                  <li>🟢 Low: Minor problem</li>
                 </ul>
               </div>
               <Divider className="!my-2" />
               <div>
-                <Text strong>紧急联系方式</Text>
+                <Text strong>Emergency Contact Information</Text>
                 <ul className="mt-2 text-sm text-gray-600">
-                  <li>电话：400-XXX-XXXX</li>
-                  <li>邮箱：support@example.com</li>
+                  <li>Tel: 400-XXX-XXXX</li>
+                  <li>Email: support@example.com</li>
                 </ul>
               </div>
             </Space>
