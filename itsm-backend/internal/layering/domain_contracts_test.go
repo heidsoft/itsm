@@ -106,6 +106,16 @@ var (
 	_ cmdb.CIRequirementReader    = (*service.ConfigurationItemService)(nil)
 	_ cmdb.DiscoveryCIWriter      = (*service.ConfigurationItemService)(nil)
 	_ dto.ProvisioningCIProjector = (*cmdb.ProvisioningCIProjector)(nil)
+	// cmdb 专项 B：8 个域内窄契约（48 方法）。具体服务指针自动满足接口，
+	// 因此 app.go 零改动；任何签名漂移或方法集漏项都会在这里编译期变红。
+	_ cmdb.CITypeCatalog                = (*service.CITypeService)(nil)
+	_ cmdb.CIAttributeDefinitionCatalog = (*service.CIAttributeDefinitionService)(nil)
+	_ cmdb.ConfigurationItemCatalog     = (*service.ConfigurationItemService)(nil)
+	_ cmdb.CIRelationshipCatalog        = (*service.CIRelationshipService)(nil)
+	_ cmdb.CIHistoryCatalog             = (*service.CIHistoryService)(nil)
+	_ cmdb.CITagCatalog                 = (*service.CITagService)(nil)
+	_ cmdb.CMDBImportExportCatalog      = (*service.CMDBImportExportService)(nil)
+	_ cmdb.ToolRegistryCatalog          = (*service.ToolRegistry)(nil)
 )
 
 type domainSpec struct {
@@ -409,6 +419,13 @@ func TestSharedValueTypesRemainDTOAliases(t *testing.T) {
 		{"timer_cron.go", "return dto.ResolveLocation(tz)"},
 		{"timer_cron.go", "return dto.NextFireAt(expr, exprType, loc, after)"},
 		{"timer_cron.go", "dto.SplitCycleExpression(strings.TrimSpace(expr))"},
+		// cmdb 专项 B：签名闭包里的 2 个值类型、1 个 sentinel 与 operator context 委托。
+		{"configuration_item_service.go", "type LifecycleChangeParams = dto.LifecycleChangeParams"},
+		{"tool_registry.go", "type ToolDefinition = dto.ToolDefinition"},
+		{"ci_relationship_service.go", "var ErrInvalidRelationshipType = dto.ErrInvalidRelationshipType"},
+		{"operator_context.go", "const SystemOperatorID = dto.SystemOperatorID"},
+		{"operator_context.go", "return dto.WithOperator(ctx, operatorID, operatorName)"},
+		{"operator_context.go", "return dto.OperatorFromContext(ctx)"},
 	}
 	for _, a := range aliases {
 		body, err := os.ReadFile(filepath.Join("..", "..", "service", a.file))

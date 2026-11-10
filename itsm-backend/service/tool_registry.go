@@ -11,15 +11,7 @@ import (
 	"itsm-backend/ent/ticket"
 )
 
-type ToolDefinition struct {
-	Name         string                 `json:"name"`
-	Description  string                 `json:"description"`
-	ReadOnly     bool                   `json:"readOnly"`
-	Resource     string                 `json:"resource"`
-	Action       string                 `json:"action"`
-	ArgsSchema   map[string]interface{} `json:"argsSchema"`
-	ResultSchema map[string]interface{} `json:"resultSchema"`
-}
+type ToolDefinition = dto.ToolDefinition
 
 type ToolRegistry struct {
 	rag            *RAGService

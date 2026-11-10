@@ -1,6 +1,7 @@
 package layering
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"os"
@@ -15,19 +16,17 @@ import (
 	"itsm-backend/service"
 )
 
-// cmdb 是「部分归零」域：专项 A 归零 discovery_ci_projection.go、
-// discovery_manual_completion.go、discovery_scheduler.go、handler.go、
-// provisioning_ci_projection.go 共 5 个生产文件；production_service.go 与
-// ontology.go 仍在域内持有 7 个共享层具体类型，留给专项 B。因此 cmdb 不能
-// 进 contractDomains（那个守卫逐文件扫整个域），改由本文件按「实测计数 +
-// 基线 + 单文件形态」精确锁定。
-//
-// 本批下沉的不只是值类型，还有一整组 timer 纯函数：它们必须保持「dto 单一
-// 实现 + service 薄委托」，否则共享层与域内会悄悄长出两份时区/cron 口径。
+// cmdb 全域归零轨迹：专项 A 归零 5 个生产文件，专项 B 用 8 个域内窄契约
+// 收掉 production_service.go 的 7 个共享层具体类型与 ontology.go 的
+// ToolRegistry，并下沉 LifecycleChangeParams / ToolDefinition /
+// ErrInvalidRelationshipType 与 operator context 实现。至此整个域的生产
+// 文件都不 import 共享层，L.3 基线里的 cmdb 行必须删除（留 cmdb=0 等于
+// 保留一个能悄悄放宽回 N 的槽位）。本文件继续按「实测计数 + 基线 +
+// 单文件形态」精确锁定，不进 contractDomains（该守卫假设单一契约文件）。
 
 const cmdbSharedImport = `"itsm-backend/service"`
 
-const cmdbPartialZeroExpectedImports = 2
+const cmdbPartialZeroExpectedImports = 0
 
 func readCMDBFile(t *testing.T, rel string) string {
 	t.Helper()
@@ -82,7 +81,7 @@ func TestCMDBPartialZeroMeasuredImports(t *testing.T) {
 		t.Fatalf("扫描器零命中保护：handlers/cmdb 只剩 %d 个生产 .go 文件", prod)
 	}
 	if count != cmdbPartialZeroExpectedImports {
-		t.Errorf("handlers/cmdb 共享层依赖实测 %d，期望 %d（专项 A 归零 5 个文件，剩 production_service.go / ontology.go）", count, cmdbPartialZeroExpectedImports)
+		t.Errorf("handlers/cmdb 共享层依赖实测 %d，期望 %d（专项 A + B 已全域归零）", count, cmdbPartialZeroExpectedImports)
 	}
 
 	base, err := os.ReadFile(filepath.Join("..", "..", "..", "scripts", "docs-gate", "handler-service-imports-baseline.txt"))
@@ -92,15 +91,15 @@ func TestCMDBPartialZeroMeasuredImports(t *testing.T) {
 	if len(base) < 100 {
 		t.Fatalf("扫描器零命中保护：L.3 基线仅 %d 字节", len(base))
 	}
-	values := []string{}
+	lines := []string{}
 	for _, line := range strings.Split(string(base), "\n") {
 		line = strings.TrimSpace(line)
 		if strings.HasPrefix(line, "cmdb=") {
-			values = append(values, strings.TrimPrefix(line, "cmdb="))
+			lines = append(lines, line)
 		}
 	}
-	if len(values) != 1 || values[0] != "2" {
-		t.Errorf("L.3 基线 cmdb 期望恰好一条 cmdb=2，实际 %v（真下降必须同 commit 精确收紧）", values)
+	if len(lines) != 0 {
+		t.Errorf("L.3 基线必须删除 cmdb 行（整域归零后不留 cmdb=0 槽位），实际 %v", lines)
 	}
 }
 
@@ -125,6 +124,16 @@ func TestCMDBZeroedFilesUseDTOContracts(t *testing.T) {
 			"req dto.ProvisioningCIProjectionRequest) dto.ProvisioningCIProjectionResult",
 			"dto.ProvisioningCIProjectionUnavailable", "dto.ProvisioningCIProjectionCreated",
 			"dto.ProvisioningCIProjectionFailed", "dto.ErrCIAttributeValidation",
+		}},
+		{"production_service.go", []string{
+			"ciTypeService                CITypeCatalog",
+			"toolRegistry                 ToolRegistryCatalog",
+			"dto.WithOperator(ctx.Request.Context()",
+			"params := dto.LifecycleChangeParams{",
+			"dto.ErrInvalidRelationshipType",
+		}},
+		{"ontology.go", []string{
+			"SetToolRegistry(tr ToolRegistryCatalog)",
 		}},
 	}
 	for _, c := range cases {
@@ -312,5 +321,135 @@ func TestCMDBTimerPureFunctionsAreSingleSource(t *testing.T) {
 	}
 	if _, err := dto.ParseISO8601Duration("PT"); err == nil {
 		t.Error("空 duration 片段必须报错（静默 0 时长治理）")
+	}
+}
+
+// TestCMDBFullZeroContractShape 锁住专项 B 的「具体类型 → 域内窄契约」形态。
+// 编译期接口断言在 domain_contracts_test.go，这里额外锁「契约文件本身」
+// 与「组合根接线」：把 contracts.go 塞进共享层路径、或漏掉 SetToolRegistry
+// 装配，都能编译通过且 L.3 计数不变，但会在运行时静默退化。
+func TestCMDBFullZeroContractShape(t *testing.T) {
+	contract := readCMDBFile(t, "contracts.go")
+	if strings.Contains(contract, cmdbSharedImport) {
+		t.Error("handlers/cmdb/contracts.go 含共享层包路径字面量（连注释都算，L.3 全文 grep）")
+	}
+	for _, name := range []string{
+		"CITypeCatalog", "CIAttributeDefinitionCatalog", "ConfigurationItemCatalog",
+		"CIRelationshipCatalog", "CIHistoryCatalog", "CITagCatalog",
+		"CMDBImportExportCatalog", "ToolRegistryCatalog",
+	} {
+		if !regexp.MustCompile(`(?m)^type ` + name + ` interface \{`).MatchString(contract) {
+			t.Errorf("contracts.go 丢失窄契约 %s", name)
+		}
+	}
+	for _, needle := range []string{
+		"dto.LifecycleChangeParams", "[]dto.ToolDefinition", "*dto.ListResponse[dto.ExportCIResult]",
+	} {
+		if !strings.Contains(contract, needle) {
+			t.Errorf("contracts.go 签名闭包丢失 %q（下沉类型必须显式带 dto 限定符）", needle)
+		}
+	}
+
+	prod := readCMDBFile(t, "production_service.go")
+	if strings.Contains(prod, "*service.") {
+		t.Error("production_service.go 仍持有共享层具体类型指针（旧实现）")
+	}
+	for _, needle := range []string{
+		"ciTypeService                CITypeCatalog",
+		"ciService                    ConfigurationItemCatalog",
+		"importExportService          CMDBImportExportCatalog",
+		"toolRegistry                 ToolRegistryCatalog",
+		"ciTypeService CITypeCatalog,",
+	} {
+		if !strings.Contains(squashSpace(stripLineComments(prod)), squashSpace(needle)) {
+			t.Errorf("production_service.go 字段或构造参数未改用窄契约：%q", needle)
+		}
+	}
+
+	// 组合根零改动：装配语句必须仍在，且不应出现「域内自建 operator 上下文」。
+	app, err := os.ReadFile(filepath.Join("..", "..", "internal", "bootstrap", "app.go"))
+	if err != nil {
+		t.Fatalf("读取 internal/bootstrap/app.go 失败：%v", err)
+	}
+	appCode := string(app)
+	for _, needle := range []string{
+		"cmdbProductionService := cmdb.NewProductionService(",
+		"cmdbProductionService.SetToolRegistry(toolRegistry)",
+	} {
+		if !strings.Contains(appCode, needle) {
+			t.Errorf("app.go 装配接线丢失 %q（编译与 L.3 都看不出漏接线）", needle)
+		}
+	}
+	if strings.Contains(appCode, "dto.WithOperator") {
+		t.Error("app.go 不应为 operator 上下文新增装配（组合根零改动前提）")
+	}
+}
+
+// TestCMDBContractDTOAndOperatorIdentity 锁住 B 批 4 个下沉符号的身份与
+// operator context 的跨包往返。WithOperator 与 OperatorFromContext 若拆成
+// 两份实现（各自定义私有 context key），类型身份、L.3 计数和编译都不变，
+// 但 CI 变更历史会静默落成 SystemOperatorID。
+func TestCMDBContractDTOAndOperatorIdentity(t *testing.T) {
+	pairs := []struct {
+		name           string
+		shared, bottom reflect.Type
+	}{
+		{"LifecycleChangeParams", reflect.TypeOf(service.LifecycleChangeParams{}), reflect.TypeOf(dto.LifecycleChangeParams{})},
+		{"ToolDefinition", reflect.TypeOf(service.ToolDefinition{}), reflect.TypeOf(dto.ToolDefinition{})},
+	}
+	for _, p := range pairs {
+		if p.shared != p.bottom {
+			t.Errorf("%s：共享层与 dto 类型身份不一致（%v vs %v）", p.name, p.shared, p.bottom)
+		}
+	}
+	if !errors.Is(service.ErrInvalidRelationshipType, dto.ErrInvalidRelationshipType) {
+		t.Error("service.ErrInvalidRelationshipType 必须就是 dto 的同一实例（errors.Is）")
+	}
+	if service.SystemOperatorID != dto.SystemOperatorID {
+		t.Error("SystemOperatorID 在共享层与 dto 必须是同一个常量值")
+	}
+
+	ctx := dto.WithOperator(context.Background(), 42, "alice")
+	if id, name := service.OperatorFromContext(ctx); id != 42 || name != "alice" {
+		t.Errorf("dto.WithOperator → service.OperatorFromContext 往返失败：(%d, %q)", id, name)
+	}
+	ctx2 := service.WithOperator(context.Background(), 7, "bob")
+	if id, name := dto.OperatorFromContext(ctx2); id != 7 || name != "bob" {
+		t.Errorf("service.WithOperator → dto.OperatorFromContext 往返失败：(%d, %q)", id, name)
+	}
+	if id, _ := service.OperatorFromContext(dto.WithOperator(context.Background(), -1, "x")); id != dto.SystemOperatorID {
+		t.Errorf("非法 operatorID 未收敛到 SystemOperatorID：%d", id)
+	}
+
+	payload, err := json.Marshal(dto.ToolDefinition{
+		Name: "create_ticket", Description: "建单", ReadOnly: false, Resource: "ticket", Action: "write",
+		ArgsSchema: map[string]interface{}{"title": "string"}, ResultSchema: map[string]interface{}{"id": "int"},
+	})
+	if err != nil {
+		t.Fatalf("序列化 ToolDefinition 失败：%v", err)
+	}
+	for _, key := range []string{
+		`"name":"create_ticket"`, `"description":"建单"`, `"readOnly":false`,
+		`"resource":"ticket"`, `"action":"write"`, `"argsSchema":{`, `"resultSchema":{`,
+	} {
+		if !strings.Contains(string(payload), key) {
+			t.Errorf("ToolDefinition JSON 形状丢失 %s：%s", key, payload)
+		}
+	}
+
+	// service 侧必须是别名/薄委托，而不是重新定义 struct 或第二份 context key。
+	guards := []struct{ file, decl string }{
+		{"configuration_item_service.go", "type LifecycleChangeParams = dto.LifecycleChangeParams"},
+		{"tool_registry.go", "type ToolDefinition = dto.ToolDefinition"},
+		{"ci_relationship_service.go", "var ErrInvalidRelationshipType = dto.ErrInvalidRelationshipType"},
+		{"operator_context.go", "const SystemOperatorID = dto.SystemOperatorID"},
+		{"operator_context.go", "return dto.WithOperator(ctx, operatorID, operatorName)"},
+		{"operator_context.go", "return dto.OperatorFromContext(ctx)"},
+	}
+	for _, g := range guards {
+		body := readServiceFile(t, g.file)
+		if !strings.Contains(squashSpace(stripLineComments(body)), squashSpace(g.decl)) {
+			t.Errorf("service/%s 丢失别名/薄委托 %q", g.file, g.decl)
+		}
 	}
 }

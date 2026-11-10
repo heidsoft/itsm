@@ -11,7 +11,6 @@ import (
 	"itsm-backend/ent"
 	"itsm-backend/ent/schema"
 	"itsm-backend/middleware"
-	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -20,27 +19,27 @@ import (
 // ProductionService CMDB控制器
 type ProductionService struct {
 	logger                       *zap.SugaredLogger
-	ciTypeService                *service.CITypeService
-	ciAttributeDefinitionService *service.CIAttributeDefinitionService
-	ciService                    *service.ConfigurationItemService
-	ciRelationshipService        *service.CIRelationshipService
-	ciHistoryService             *service.CIHistoryService
-	ciTagService                 *service.CITagService
-	importExportService          *service.CMDBImportExportService
+	ciTypeService                CITypeCatalog
+	ciAttributeDefinitionService CIAttributeDefinitionCatalog
+	ciService                    ConfigurationItemCatalog
+	ciRelationshipService        CIRelationshipCatalog
+	ciHistoryService             CIHistoryCatalog
+	ciTagService                 CITagCatalog
+	importExportService          CMDBImportExportCatalog
 	savedViewService             *CMDBSavedViewService
-	toolRegistry                 *service.ToolRegistry // 可选：本体自描述端点暴露 AI 工具面
+	toolRegistry                 ToolRegistryCatalog // 可选：本体自描述端点暴露 AI 工具面
 }
 
 // NewProductionService 创建 CMDB 生产服务（自 controller 迁入）
 func NewProductionService(
 	logger *zap.SugaredLogger,
-	ciTypeService *service.CITypeService,
-	ciAttributeDefinitionService *service.CIAttributeDefinitionService,
-	ciService *service.ConfigurationItemService,
-	ciRelationshipService *service.CIRelationshipService,
-	ciHistoryService *service.CIHistoryService,
-	ciTagService *service.CITagService,
-	importExportService *service.CMDBImportExportService,
+	ciTypeService CITypeCatalog,
+	ciAttributeDefinitionService CIAttributeDefinitionCatalog,
+	ciService ConfigurationItemCatalog,
+	ciRelationshipService CIRelationshipCatalog,
+	ciHistoryService CIHistoryCatalog,
+	ciTagService CITagCatalog,
+	importExportService CMDBImportExportCatalog,
 	savedViewService *CMDBSavedViewService,
 ) *ProductionService {
 	return &ProductionService{
@@ -72,7 +71,7 @@ func NewProductionService(
 
 // operatorContext 将当前登录用户信息下传到请求 context，供服务层记录变更历史
 func (c *ProductionService) operatorContext(ctx *gin.Context) context.Context {
-	return service.WithOperator(ctx.Request.Context(), ctx.GetInt("user_id"), authenticatedOperatorName(ctx))
+	return dto.WithOperator(ctx.Request.Context(), ctx.GetInt("user_id"), authenticatedOperatorName(ctx))
 }
 
 // authenticatedOperatorName 读取当前登录用户名。键名单一事实源是 middleware/auth.go 写入的
@@ -708,7 +707,7 @@ func (c *ProductionService) CreateCIRelationship(ctx *gin.Context) {
 	result, err := c.ciRelationshipService.CreateCIRelationship(ctx.Request.Context(), &req, tenantID)
 	if err != nil {
 		// 词表收口： 词表外关系类型是客户端参数错误（400），不是服务端故障
-		if errors.Is(err, service.ErrInvalidRelationshipType) {
+		if errors.Is(err, dto.ErrInvalidRelationshipType) {
 			common.ParamError(ctx, "请求参数错误")
 			return
 		}
@@ -745,7 +744,7 @@ func (c *ProductionService) UpdateCIRelationship(ctx *gin.Context) {
 	result, err := c.ciRelationshipService.UpdateCIRelationship(ctx.Request.Context(), id, tenantID, &req)
 	if err != nil {
 		// 词表收口： 词表外关系类型是客户端参数错误（400），不是服务端故障
-		if errors.Is(err, service.ErrInvalidRelationshipType) {
+		if errors.Is(err, dto.ErrInvalidRelationshipType) {
 			common.ParamError(ctx, "请求参数错误")
 			return
 		}
@@ -1744,7 +1743,7 @@ func (c *ProductionService) UpdateLifecycleStatus(ctx *gin.Context) {
 	operatorID := ctx.GetInt("user_id")
 	operatorName := authenticatedOperatorName(ctx)
 
-	params := service.LifecycleChangeParams{
+	params := dto.LifecycleChangeParams{
 		Status:           req.Status,
 		Remark:           req.Remark,
 		RetirementReason: req.RetirementReason,
@@ -1784,7 +1783,7 @@ func (c *ProductionService) BatchUpdateLifecycleStatus(ctx *gin.Context) {
 	operatorID := ctx.GetInt("user_id")
 	operatorName := authenticatedOperatorName(ctx)
 
-	params := service.LifecycleChangeParams{
+	params := dto.LifecycleChangeParams{
 		Status:           req.Status,
 		Remark:           req.Remark,
 		RetirementReason: req.RetirementReason,

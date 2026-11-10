@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"itsm-backend/common"
@@ -19,7 +18,7 @@ import (
 
 // ErrInvalidRelationshipType 关系类型不在受控词表内（词表单一源见 ent/schema/ci_relationship.go）。
 // handler 通过 errors.Is 将其映射为 400 参数错误，而不是 500。
-var ErrInvalidRelationshipType = errors.New("invalid CI relationship type")
+var ErrInvalidRelationshipType = dto.ErrInvalidRelationshipType
 
 // validateRelationshipType 校验请求中的关系类型是否在受控词表内（创建与更新共用）。
 func validateRelationshipType(t dto.CIRelationshipType) error {

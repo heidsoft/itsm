@@ -8,7 +8,6 @@ import (
 	"itsm-backend/common/handlerctx"
 	"itsm-backend/dto"
 	"itsm-backend/ent/schema"
-	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
 )
@@ -18,7 +17,7 @@ import (
 const cmdbOntologyVersion = "2026-09-04.1"
 
 // SetToolRegistry 注入 AI 工具注册表（bootstrap 装配；未注入时 ontology 响应不含 aiTools）。
-func (c *ProductionService) SetToolRegistry(tr *service.ToolRegistry) { c.toolRegistry = tr }
+func (c *ProductionService) SetToolRegistry(tr ToolRegistryCatalog) { c.toolRegistry = tr }
 
 // listAllCITypes 逐页取完该租户的活跃 CI 类型。
 // 终止条件用「本页不满页长」或「已累计到 total」两者之一，避免依赖单一带边界含义的字段。

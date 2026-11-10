@@ -1541,14 +1541,7 @@ func (s *ConfigurationItemService) convertSortField(sortBy string) string {
 
 // UpdateLifecycleStatus 更新CI生命周期状态
 // LifecycleChangeParams CI 生命周期单条变更参数。
-type LifecycleChangeParams struct {
-	Status           string
-	Remark           string
-	RetirementReason string
-	// ExpectedVersion > 0 时启用乐观锁，不匹配返回 VersionConflictError；
-	// 批量路径传 0，跳过版本校验。
-	ExpectedVersion int
-}
+type LifecycleChangeParams = dto.LifecycleChangeParams
 
 // UpdateLifecycleStatus 按 common 状态机更新 CI 生命周期。
 // 目标 scrapped 走软删除终态（retireCIInTx：停用关系、Status=retired、
