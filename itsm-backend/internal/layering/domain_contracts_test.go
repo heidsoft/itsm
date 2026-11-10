@@ -88,6 +88,10 @@ var (
 	_ bpmn.WorkflowEngine     = (service.ProcessEngine)(nil)
 	_ bpmn.VersionCatalog     = (*service.BPMNVersionService)(nil)
 	_ bpmn.AIGeneratorCatalog = (*service.BPMNAIGeneratorService)(nil)
+	// 批次 3 第 5 步：lint.go 的窄契约与 inventory.go 的注入函数类型。
+	// 后者是函数到函数类型赋值，编译期锁住返回类型必须与 dto 值类型身份一致。
+	_ bpmn.BPMNLintCatalog         = (*service.BPMNLintService)(nil)
+	_ bpmn.PendingInventoryBuilder = service.BuildPendingWorkflowInventory
 )
 
 type domainSpec struct {
@@ -373,6 +377,12 @@ func TestSharedValueTypesRemainDTOAliases(t *testing.T) {
 		{"bpmn_process_engine.go", "type ProcessDefinitionService = dto.ProcessDefinitionCatalog"},
 		{"bpmn_process_engine.go", "type ProcessInstanceService = dto.ProcessInstanceCatalog"},
 		{"bpmn_process_engine.go", "type TaskService = dto.TaskCatalog"},
+		// 批次 3 第 5 步：存量待办盘点 5 个值类型，逐处比对不取并集。
+		{"bpmn_pending_inventory.go", "type PendingInventorySummary = dto.PendingInventorySummary"},
+		{"bpmn_pending_inventory.go", "type PendingTaskItem = dto.PendingTaskItem"},
+		{"bpmn_pending_inventory.go", "type PendingProcessGroup = dto.PendingProcessGroup"},
+		{"bpmn_pending_inventory.go", "type OrphanInstanceItem = dto.OrphanInstanceItem"},
+		{"bpmn_pending_inventory.go", "type PendingWorkflowInventory = dto.PendingWorkflowInventory"},
 	}
 	for _, a := range aliases {
 		body, err := os.ReadFile(filepath.Join("..", "..", "service", a.file))

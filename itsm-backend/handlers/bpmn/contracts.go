@@ -130,6 +130,17 @@ type AIGeneratorCatalog interface {
 	SuggestTemplates(ctx context.Context, tenantID int, keyword, processType string) ([]*dto.BPMNTemplateSuggestion, error)
 }
 
+// BPMNLintCatalog 是 lint.go 消费的窄契约（批次 3 第 5 步）。
+// 构造器由组合根传入具体实现，域内不再构造共享层对象。
+type BPMNLintCatalog interface {
+	LintBPMNXML(xmlData []byte) (*dto.BPMNLintResult, error)
+}
+
+// PendingInventoryBuilder 是 inventory.go 消费的包级盘点函数形态（批次 3 第 5 步）。
+// 用函数类型而非接口：共享层只有一个无状态包级函数，构造期传入即可；
+// 返回类型取自 dto，因此共享层的同名别名与本签名是同一类型，可直接赋值。
+type PendingInventoryBuilder func(ctx context.Context, client *ent.Client, tenantID, staleThresholdHours int) (*dto.PendingWorkflowInventory, error)
+
 // DomainConfigResolver 全局 → 租户 → 部门 → 团队的层级配置解析
 type DomainConfigResolver interface {
 	ListConfigs(ctx context.Context, tenantID int, configType string) ([]*ent.DomainConfig, error)

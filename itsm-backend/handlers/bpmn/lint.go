@@ -5,7 +5,6 @@ import (
 	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/middleware"
-	"itsm-backend/service"
 )
 
 // LintHandler BPMN Lint 控制器
@@ -13,14 +12,12 @@ import (
 // 提供后端流程校验真源：前端设计器「校验流程」与 BPMN AI 生成器
 // 共用同一 Lint 规则（结构/事件/任务配置/连通性/网关语义）。
 type LintHandler struct {
-	lintService *service.BPMNLintService
+	lintService BPMNLintCatalog
 }
 
-// NewLintHandler 创建控制器实例
-func NewLintHandler() *LintHandler {
-	return &LintHandler{
-		lintService: service.NewBPMNLintService(),
-	}
+// NewLintHandler 创建控制器实例。校验真源由组合根注入，域内不构造共享层对象。
+func NewLintHandler(lintService BPMNLintCatalog) *LintHandler {
+	return &LintHandler{lintService: lintService}
 }
 
 // LintBPMN 校验 BPMN XML

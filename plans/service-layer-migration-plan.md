@@ -659,7 +659,7 @@ ticket 有 20 个 service 文件分散在 10 个子域。策略：
 
 ## 批次 3 前置：BPMN 四组边界拆分设计（2026-11-10）
 
-> **状态：第 1、2、3 步已落地（2026-11-10，`workflow_template.go` / `dashboard.go` / `monitoring.go` / `process_trigger.go` 归零，L.3 `bpmn=8→7→5→4`）；第 4–5 步仍为设计态，代码未动。** 本节是批次 3 的开工依据。落地按「组 4 纯值 → 组 3 → 组 2 → 组 1 → 组合根专项」拆成独立提交，每组单独跑回归锁 + 反向验证 + 基线精确收紧；不按 `service/` 侧 36 文件清单整文件 `git mv`（见 :493）。
+> **状态：第 1–4 步与第 5 步 A 已落地（2026-11-10，L.3 `bpmn=8→7→5→4→2→0`，`handlers/bpmn/` 生产文件全域零共享层依赖，合计 20 文件 / 9 域、L.4 零依赖域 58）；第 5 步 B（`operations` / `problem` 组合根注入专项）待落地。** 本节是批次 3 的开工依据。落地按「组 4 纯值 → 组 3 → 组 2 → 组 1 → 组合根专项」拆成独立提交，每组单独跑回归锁 + 反向验证 + 基线精确收紧；不按 `service/` 侧 36 文件清单整文件 `git mv`（见 :493）。
 
 ### 现状盘点（只读实测，非推算）
 
@@ -702,9 +702,12 @@ ticket 有 20 个 service 文件分散在 10 个子域。策略：
 | 2 ✅ 已落地 | 组 3：实测 **21 个值类型**（3 请求 + 18 响应/嵌套）成组下沉 + 5 个服务窄接口，setter 改域内接口（设计表原估 3 个请求 DTO，详见落地记录） | 零改动 | **7 → 5**（实测，基线同 commit 收紧；合计 27 → 25 文件 / 10 域） |
 | 3 ✅ 已落地 | 组 2：`ResolvedConfig` + `ErrConfigNotFound` 下沉 + 3 接口（16 方法），`InheritanceLevel` 留在共享层 | 零改动 | **5 → 4**（实测，基线同 commit 收紧；合计 25 → 24 文件 / 10 域） |
 | 4 ✅ 已落地 | 组 1：17 个值类型 + 3 个子服务接口 + `ProcessEngine` 三访问器 + 版本服务；`ParseVersionNumber` 改注入函数字段；顺带收 `ai_generator.go` | 零改动 | **4 → 2**（实测，基线同 commit 收紧；设计表原写 4 → 1，见落地记录；合计 24 → 22 文件 / 10 域） |
-| 5 | 组 4 剩余（`lint.go` 构造 / `inventory.go` 包级函数）**与组合根专项合并**：`operations` / `problem` / `bpmn` 一次性改 `app.go` 并统一上调 C.6.4 基线 | 变更，一次调基线 | **2 → 0**，删 `bpmn` 行 |
+| 5A ✅ 已落地 | 组 4 剩余：`lint.go` 构造改窄契约注入、`inventory.go` 包级函数改注入函数类型，5 个盘点值类型下沉 `dto` | **两处 1:1 行内替换，净增 0 行，C.6.4 零调整** | **2 → 0**（实测，删 `bpmn` 行；合计 22 → 20 文件 / 10 → 9 域，L.4 57 → 58） |
+| 5B | 组合根注入专项：`operations`（包级 `RecoverInterruptedToolInvocationTx`，装配点在 `router/router.go`）+ `problem`（`TicketSLAService` / `BPMNApprovalBridge` 具体类型与域内构造） | 预计同为 1:1 行内替换；若真实增行再按 `measure` 精确上调 C.6.4 | 两域各 1 → 0，再删 2 行基线（→ 18 文件 / 7 域） |
 
-目标读数：L.3 **28 文件 / 10 域 → 20 文件 / 9 域**，L.4 零依赖域 **57 → 58**；L.1 140 不变，C.6.4 五项除第 5 步的 `bootstrap_app_lines` 外不变。第 3 步完成时实测为 **24 文件 / 10 域**，第 4 步完成后实测为 **22 文件 / 10 域**，距最终目标还差 2 个文件 / 1 个域。
+⚠️ **设计前提更正**：原写第 5 步「一次性改 `app.go` 并统一上调 C.6.4 基线」，理由是避免多次动组合根。实测 5A 的两处装配都是**行内替换、净增 0 行**（HEAD 2167 / 工作树 2169，后者来自并行会话未提交的 `zap.ReplaceGlobals` 两行 WIP，本批不代调）；`operations` 的装配点在 `router/router.go` 而非 `app.go`。前提已不成立，故把 5 拆成 5A（BPMN 收官）与 5B（组合根注入专项）两个独立可验证提交，不产生任何账本漂移。
+
+目标读数：L.3 **28 文件 / 10 域 → 20 文件 / 9 域**（5A 已达成），L.4 零依赖域 **57 → 58**；L.1 140 不变，C.6.4 五项全部不变。第 3 步完成时实测 **24 文件 / 10 域**，第 4 步 **22 / 10**，第 5 步 A **20 / 9**。5B 完成后将进一步降到 18 文件 / 7 域（超出本设计原定目标，属顺带收口）。
 
 **第 1 步落地记录（2026-11-10）**：新增 `dto/bpmn_workflow_template_sentinels.go`（3 个 `ErrWorkflowTemplate*` + `DefaultStaleThresholdHours`），`service/bpmn_workflow_template_catalog.go` 与 `service/bpmn_pending_inventory.go` 改为同名别名（sentinel 仍是同一 error 实例、常量仍是编译期常量）；`handlers/bpmn/contracts.go` 声明 `WorkflowTemplateCatalog`（8 个方法，签名全部只引用 `dto` 值类型，连注释都不含共享层包路径），`workflow_template.go` 的字段、构造参数与 12 处错误映射改域内契约与 `dto.Err*`，`inventory.go` 改读 `dto.DefaultStaleThresholdHours`，`app.go` **零改动**（具体指针自动满足窄接口）。`bpmn` 是**部分归零域**，不能进 `contractDomains`（该守卫逐文件扫整个域，其余 7 个文件仍依赖共享层）；改用 `internal/layering/bpmn_partial_contract_test.go` 的「单文件契约 + 实测计数与 L.3 基线双锁 + 纯值单一来源」守卫，既有集中锁另补 1 条编译期断言、3 组 sentinel 身份、4 条 service 侧别名与 1 个域错误映射用例。反向验证 5 处（旧 `workflow_template.go` / sentinel 各自 `errors.New` / 基线不收紧 / 旧 `inventory.go` / dto 阈值漂移）全部由断言变红且保持可编译，恢复后转绿。C.8 实测 **L.1 140 / L.3 27 文件 10 域 / L.4 57 / L.5 零复活，0 failures 0 warnings**；全仓 `go build ./...` 与 `internal/layering`、`dto`、`handlers/bpmn`、`service` 相关单测全绿。本步不改运行时行为，不重建 prod 镜像。
 
@@ -714,10 +717,12 @@ ticket 有 20 个 service 文件分散在 10 个子域。策略：
 
 **第 4 步落地记录（2026-11-10）**：组 1 是四组里最大的一组（`workflow.go` 1312 行、约 50 处调用）。按「窄契约方法集 = 域内生产文件调用并集」实测发现，只把 10 个 Request DTO 下沉不够：`ProcessEngine` 的三个访问器返回的是**共享层包内命名接口**，Go 要求方法签名类型完全一致（不能换成结构等价的域内接口），因此三个子服务接口（`ProcessDefinitionService` 9 方法 / `ProcessInstanceService` 6 方法 / `TaskService` 28 方法，合计 **43 方法**）连同签名闭包里的 **17 个值类型**（10 请求 + 7 响应/嵌套：统计、会签状态、版本、变更详情）必须一起收敛。做法是把子服务接口的唯一定义放进 `dto/bpmn_engine_dto.go`，共享层 `service/bpmn_process_engine.go` 改为 `type X = dto.Y` 别名；因为 `service.ProcessEngine` 的访问器返回的是这些别名（即同一 dto 接口），`bpmn.WorkflowEngine` 引用同一批 dto 接口后，`service.ProcessEngine` 的方法集自然覆盖域内契约，`app.go` **零改动**、且保留编译期类型安全（不需要 `any` + 运行时断言）。四个既有 `service/bpmn_*_service.go` 把 17 处 `type X struct {...}` 换成同名别名并调整 import；`ParseVersionNumber` 的单一实现移入 dto，共享层保留同名函数委托，handler 侧改为构造期注入的函数字段 `parseVersionNumber`（5 处调用），因此 `workflow.go` 与 `ai_generator.go` 都删掉共享层 import。顺带把 `ai_generator.go` 的字段/构造参数改成域内 `AIGeneratorCatalog`（3 方法：生成 / 预览 / 模板推荐——方法集必须覆盖三条路由，漏一条编译期就红）。用脚本与 `git show HEAD` 对 **17 个 struct 逐字段 + 3 个接口逐方法自动比对 0 diff**（含 JSON tag 与 `*dto.` 归一化），并补 `encoding/json` 形状锁防后续静默漂移。回归锁：部分归零域期望计数 4→2、基线期望 2，新增「组 1 单文件契约」「17 个 DTO 与 3 个接口单一来源（逐处比对不取并集）」「版本解析行为等价」「14 组 JSON tag 形状」四组守卫；集中锁补 3 条编译期接口断言（含接口到接口赋值 `(service.ProcessEngine)(nil)`）与 20 条 service 侧别名源码守卫。**如实口径**：设计表把第 4 步写成 `4 → 1`，实测在「组合根零改动」前提下只能归零 `workflow.go` + `ai_generator.go` 两个文件；`lint.go`（域内 `service.NewBPMNLintService()`）与 `inventory.go`（包级 `service.BuildPendingWorkflowInventory`）都必须上移构造到组合根，只能与第 5 步合并，故实测 **4 → 2**，第 5 步相应改为 **2 → 0**，最终 20 文件 / 9 域目标不变。本步不改运行时行为，不重建 prod 镜像。
 
+**第 5 步 A 落地记录（2026-11-10）**：最后两个生产文件的共享层依赖形态与前三组都不同——`lint.go` 在域内直接 `service.NewBPMNLintService()`（`NewLintHandler()` 无参），`inventory.go` 直接调包级函数 `service.BuildPendingWorkflowInventory`，两者都无法用「字段改窄接口」在零改动组合根的前提下消除。做法：① 5 个盘点响应值类型（41 个字段）从 `service/bpmn_pending_inventory.go` **用脚本按 HEAD 原文自动抽取**到新建 `dto/bpmn_inventory_dto.go`，共享层换 5 条同名别名，逐字段独立复核 0 diff；② `contracts.go` 追加 `BPMNLintCatalog`（1 方法）与 `PendingInventoryBuilder`（函数类型，返回 `*dto.PendingWorkflowInventory`）——因为共享层的返回类型已是 dto 别名，函数可直接赋值，编译期锁住类型身份；③ 两个 Handler 的字段与构造参数改域内契约，删共享层 import；④ `app.go` 两处装配 1:1 行内替换（传 `service.NewBPMNLintService()` 与 `service.BuildPendingWorkflowInventory`），**净增 0 行**，`internal/bootstrap/app.go` 的并行会话 WIP（`zap.ReplaceGlobals` 两行）用「HEAD 快照 + `git update-index --cacheinfo`」隔离暂存，提交里不含对方改动。回归锁：`bpmn_partial_contract_test.go` 期望计数 2→0 且断言**基线里不再有 `bpmn=` 行**（留 `bpmn=0` 等于保留一个可悄悄放宽的槽位），新增「最后两文件形态 + 组合根装配接线」与「5 个值类型单一来源 / `reflect.Type` 身份 / JSON 形状」两组守卫；集中锁补 2 条编译期断言（含函数到函数类型赋值）与 5 条别名守卫。反向验证覆盖「改回旧构造」「基线不删行」「装配漏接线」「dto tag 漂移」等，全部由断言变红且保持可编译。C.8 实测 **L.1 140 / L.3 20 文件 9 域 / L.4 58 / L.5 零复活，0 failures 0 warnings**；`bpmn` 基线行删除，其余两份基线零改动。本步不改运行时行为，不重建 prod 镜像。
+
 ### 与另外两条专项的界面
 
-- **LLMGateway 契约化**收 `email_intake` + `ai`：与 `bpmn` 域的剩余两项无交集（`ai_generator.go` 已随第 4 步归零，仅剩 `lint.go` / `inventory.go`），可完全并行。
-- **组合根注入**收 `operations` / `problem`：与第 5 步同型（包级函数 / `NewBPMNApprovalBridge` 域内构造），**必须合并成一个提交**，避免多次动 `app.go`、多次调 C.6.4 基线。
+- **LLMGateway 契约化**收 `email_intake` + `ai`：与 `bpmn` 域完全无交集（该域已随 5A 全量归零），可完全并行。
+- **组合根注入**收 `operations` / `problem`：与 5A 同型（包级函数 / 域内构造），但实测 5A 的 `app.go` 改动是零行增量、`operations` 的装配点在 `router/router.go`，故拆为独立的 5B 提交，不再要求「必须合并并统一上调 C.6.4」。
 - `dashboard` 域（16 符号全为方法返回 DTO）可用现模板直接收，与 BPMN 无交集，可作批次 3 前的暖身批。
 - 本设计不改运行时行为，**不需要重建 prod 镜像**；prod 当前 `v1.6.50`（HEAD `bed0cbe46` 干净快照），本节只动源码与基线。
 

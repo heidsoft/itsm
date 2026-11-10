@@ -841,9 +841,9 @@ func NewApplication() *Application {
 	bpmnTemplateHandler := bpmnHandler.NewWorkflowTemplateHandler(bpmnTemplateCatalog)
 
 	// BPMN Lint Handler（流程校验真源：设计器校验按钮与 AI 生成后自动 Lint 共用）
-	bpmnLintHandler := bpmnHandler.NewLintHandler()
+	bpmnLintHandler := bpmnHandler.NewLintHandler(service.NewBPMNLintService())
 	// BPMN Inventory Handler（存量待办盘点：管理面只读，不含自动迁移）
-	bpmnInventoryHandler := bpmnHandler.NewInventoryHandler(client)
+	bpmnInventoryHandler := bpmnHandler.NewInventoryHandler(client, service.BuildPendingWorkflowInventory)
 	bpmnHTTPHandler := bpmnHandler.NewHandler(
 		bpmnWorkflowHandler,
 		bpmnProcessTriggerHandler,

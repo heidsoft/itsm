@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"reflect"
 	"regexp"
 	"strings"
 	"testing"
@@ -12,17 +13,17 @@ import (
 	"itsm-backend/service"
 )
 
-// bpmn 是「部分归零」域：第 1 步归零 workflow_template.go，第 2 步归零
-// dashboard.go + monitoring.go，第 3 步归零 process_trigger.go，第 4 步归零
-// workflow.go + ai_generator.go，其余 2 个生产文件（lint.go / inventory.go）
-// 仍 import 共享层——它们的域内构造与包级函数必须上移组合根，留给第 5 步。
-// 因此它不能进 contractDomains（那个守卫逐文件扫整个域），改由本文件按
-// 「单文件 + 基线」精确锁定。后续每组归零时，把 bpmnPartialZeroExpectedImports
-// 与基线期望值同步下调即可。
+// bpmn 归零轨迹：第 1 步 workflow_template.go，第 2 步 dashboard.go +
+// monitoring.go，第 3 步 process_trigger.go，第 4 步 workflow.go +
+// ai_generator.go，第 5 步 lint.go + inventory.go（域内构造与包级函数上移
+// 组合根）。至此整个域的生产文件都不 import 共享层，L.3 基线里的 bpmn 行
+// 必须删除。本文件继续按「单文件 + 基线」精确锁定：不进 contractDomains
+// （那个守卫假设一个域只有一份契约文件与单一窄接口，bpmn 有 9+ 份）。
+// 归零后尤其要防「把文件删掉导致零命中」，故保留生产文件数量下限断言。
 
 const bpmnSharedImport = `"itsm-backend/service"`
 
-const bpmnPartialZeroExpectedImports = 2
+const bpmnPartialZeroExpectedImports = 0
 
 func readBPMNFile(t *testing.T, rel string) string {
 	t.Helper()
@@ -113,7 +114,7 @@ func TestBPMNPartialZeroMatchesL3Baseline(t *testing.T) {
 		}
 	}
 	if count != bpmnPartialZeroExpectedImports {
-		t.Errorf("handlers/bpmn 共享层依赖实测 %d，期望 %d（批次 3 第 1–4 步归零 6 个文件）", count, bpmnPartialZeroExpectedImports)
+		t.Errorf("handlers/bpmn 共享层依赖实测 %d，期望 %d（批次 3 第 1–5 步共归零 8 个文件）", count, bpmnPartialZeroExpectedImports)
 	}
 
 	base, err := os.ReadFile(filepath.Join("..", "..", "..", "scripts", "docs-gate", "handler-service-imports-baseline.txt"))
@@ -123,6 +124,8 @@ func TestBPMNPartialZeroMatchesL3Baseline(t *testing.T) {
 	if len(base) < 100 {
 		t.Fatalf("扫描器零命中保护：L.3 基线仅 %d 字节", len(base))
 	}
+	// 整域归零后基线里不能再有 bpmn= 行：留一条 bpmn=0 会永久保留一个
+	// 可以被悄悄放宽回 bpmn=N 的槽位，等于没删守卫。
 	values := []string{}
 	for _, line := range strings.Split(string(base), "\n") {
 		line = strings.TrimSpace(line)
@@ -130,9 +133,8 @@ func TestBPMNPartialZeroMatchesL3Baseline(t *testing.T) {
 			values = append(values, strings.TrimPrefix(line, "bpmn="))
 		}
 	}
-	want := "2"
-	if len(values) != 1 || values[0] != want {
-		t.Errorf("L.3 基线 bpmn 期望恰好一条 bpmn=%s，实际 %v（真下降必须同 commit 精确收紧）", want, values)
+	if len(values) != 0 {
+		t.Errorf("L.3 基线整域归零后必须删除 bpmn 行，实际残留 %v", values)
 	}
 }
 
@@ -678,6 +680,167 @@ func TestBPMNEngineDTOJSONShape(t *testing.T) {
 			if strings.Contains(body, key) {
 				t.Errorf("%s 的 JSON 形状意外出现 %s：%s", tc.name, key, body)
 			}
+		}
+	}
+}
+
+// 批次 3 第 5 步：最后两个生产文件靠「域内构造 / 包级函数上移组合根」归零。
+// 这里同时锁住 handler 侧形态与 bootstrap 侧接线——只改 handler 不接线会让
+// 端点在运行时 nil panic，而 L.3 计数与编译期类型检查都看不出来。
+func TestBPMNFullZeroLintAndInventoryGroup(t *testing.T) {
+	lint := readBPMNFile(t, "lint.go")
+	inv := readBPMNFile(t, "inventory.go")
+	for name, body := range map[string]string{"lint.go": lint, "inventory.go": inv} {
+		if strings.Contains(body, bpmnSharedImport) {
+			t.Errorf("handlers/bpmn/%s 重新引用共享层包，L.3 整域归零被破坏", name)
+		}
+		if strings.Contains(stripLineComments(body), "service.") {
+			t.Errorf("handlers/bpmn/%s 残留共享层限定符（旧实现）", name)
+		}
+	}
+
+	lintCode := stripLineComments(lint)
+	for _, want := range []string{
+		`\blintService\s+BPMNLintCatalog\b`,
+		`\bNewLintHandler\(lintService\s+BPMNLintCatalog\)`,
+	} {
+		if !regexp.MustCompile(want).MatchString(lintCode) {
+			t.Errorf("lint.go 缺少窄契约写法 %q", want)
+		}
+	}
+	if strings.Contains(lintCode, "NewBPMNLintService") {
+		t.Errorf("lint.go 仍在域内构造共享层 Lint 服务（旧实现）")
+	}
+	// 编译与 L.3 计数都不变、但请求体被换成 nil 会让校验永远失败。
+	if !strings.Contains(lintCode, "c.lintService.LintBPMNXML([]byte(req.BPMNXML))") {
+		t.Errorf("lint.go 未把请求里的 BPMNXML 原样送入校验真源")
+	}
+
+	invCode := stripLineComments(inv)
+	for _, want := range []string{
+		`\bbuildInventory\s+PendingInventoryBuilder\b`,
+		`\bNewInventoryHandler\(client\s+\*ent\.Client,\s*buildInventory\s+PendingInventoryBuilder\)`,
+		`c\.buildInventory\(`,
+		`dto\.DefaultStaleThresholdHours`,
+	} {
+		if !regexp.MustCompile(want).MatchString(invCode) {
+			t.Errorf("inventory.go 缺少注入函数写法 %q", want)
+		}
+	}
+	if strings.Contains(invCode, "BuildPendingWorkflowInventory") {
+		t.Errorf("inventory.go 仍直接调用共享层包级函数（旧实现）")
+	}
+	// 租户 ID 与阈值必须原样下传：换成 0 会编译通过、计数不变，但盘点会跨租户串数据。
+	if !strings.Contains(invCode, "c.buildInventory(ctx.Request.Context(), c.client, tenantID, staleThresholdHours)") {
+		t.Errorf("inventory.go 盘点调用丢失 tenantID 或 staleThresholdHours（跨租户数据面会失守）")
+	}
+
+	contract := readBPMNFile(t, "contracts.go")
+	if strings.Contains(contract, bpmnSharedImport) {
+		t.Errorf("contracts.go 出现共享层包路径字面量（连注释也会让 L.3 计数 +1）")
+	}
+	for _, decl := range []string{
+		"type BPMNLintCatalog interface",
+		"type PendingInventoryBuilder func(",
+		"LintBPMNXML(xmlData []byte) (*dto.BPMNLintResult, error)",
+		"(*dto.PendingWorkflowInventory, error)",
+	} {
+		if !strings.Contains(contract, decl) {
+			t.Errorf("contracts.go 缺少第 5 步契约声明 %q", decl)
+		}
+	}
+
+	app, err := os.ReadFile(filepath.Join("..", "..", "internal", "bootstrap", "app.go"))
+	if err != nil {
+		t.Fatalf("读取 internal/bootstrap/app.go 失败：%v", err)
+	}
+	if len(app) < 1000 {
+		t.Fatalf("扫描器零命中保护：app.go 仅 %d 字节", len(app))
+	}
+	appCode := stripLineComments(string(app))
+	for _, wire := range []string{
+		"bpmnHandler.NewLintHandler(service.NewBPMNLintService())",
+		"bpmnHandler.NewInventoryHandler(client, service.BuildPendingWorkflowInventory)",
+	} {
+		if !strings.Contains(appCode, wire) {
+			t.Errorf("组合根缺少第 5 步装配 %q（域内注入未接线，端点会 nil panic）", wire)
+		}
+	}
+}
+
+// 批次 3 第 5 步：5 个盘点值类型的定义只能有一份。逐处比对 service 别名，
+// 并用 reflect.Type 锁类型身份、用 encoding/json 锁响应 key——JSON tag 改一个
+// 字母不影响编译也不影响 L.3 计数，但前端会读到 undefined。
+var bpmnInventoryDTONames = []string{
+	"PendingInventorySummary", "PendingTaskItem", "PendingProcessGroup",
+	"OrphanInstanceItem", "PendingWorkflowInventory",
+}
+
+func TestBPMNInventoryDTOsHaveSingleSource(t *testing.T) {
+	bottom, err := os.ReadFile(filepath.Join("..", "..", "dto", "bpmn_inventory_dto.go"))
+	if err != nil {
+		t.Fatalf("读取 dto/bpmn_inventory_dto.go 失败：%v", err)
+	}
+	if len(bottom) < 1000 {
+		t.Fatalf("扫描器零命中保护：dto 盘点值类型文件仅 %d 字节", len(bottom))
+	}
+	if strings.Contains(string(bottom), bpmnSharedImport) {
+		t.Errorf("dto 不得反向依赖共享层")
+	}
+	for _, n := range bpmnInventoryDTONames {
+		if !regexp.MustCompile(`\btype\s+` + n + `\s+struct\s*\{`).MatchString(string(bottom)) {
+			t.Errorf("dto 缺少盘点值类型定义 %s", n)
+		}
+	}
+
+	svc := readEngineServiceFile(t, "bpmn_pending_inventory.go")
+	flat := squashSpace(stripLineComments(svc))
+	seen := 0
+	for _, n := range bpmnInventoryDTONames {
+		seen++
+		if !strings.Contains(flat, squashSpace("type "+n+" = dto."+n)) {
+			t.Errorf("service/bpmn_pending_inventory.go 丢失别名 %q", n)
+		}
+		if strings.Contains(flat, "type "+n+" struct") {
+			t.Errorf("共享层重新定义了 %s（值类型身份分裂）", n)
+		}
+	}
+	if seen != len(bpmnInventoryDTONames) {
+		t.Fatalf("扫描器零命中保护：别名检查覆盖 %d 处，期望 %d 处", seen, len(bpmnInventoryDTONames))
+	}
+
+	pairs := []struct {
+		shared, bottom reflect.Type
+	}{
+		{reflect.TypeOf(service.PendingInventorySummary{}), reflect.TypeOf(dto.PendingInventorySummary{})},
+		{reflect.TypeOf(service.PendingTaskItem{}), reflect.TypeOf(dto.PendingTaskItem{})},
+		{reflect.TypeOf(service.PendingProcessGroup{}), reflect.TypeOf(dto.PendingProcessGroup{})},
+		{reflect.TypeOf(service.OrphanInstanceItem{}), reflect.TypeOf(dto.OrphanInstanceItem{})},
+		{reflect.TypeOf(service.PendingWorkflowInventory{}), reflect.TypeOf(dto.PendingWorkflowInventory{})},
+	}
+	for i, p := range pairs {
+		if p.shared != p.bottom {
+			t.Errorf("%s 在共享层与 dto 之间类型身份分裂（%v vs %v）", bpmnInventoryDTONames[i], p.shared, p.bottom)
+		}
+	}
+
+	raw, err := json.Marshal(dto.PendingWorkflowInventory{
+		Summary:         dto.PendingInventorySummary{RunningInstances: 1},
+		PendingTasks:    []dto.PendingTaskItem{{TaskID: "t1"}},
+		ProcessGroups:   []dto.PendingProcessGroup{{ProcessKey: "k"}},
+		OrphanInstances: []dto.OrphanInstanceItem{{InstanceID: 2}},
+	})
+	if err != nil {
+		t.Fatalf("序列化 PendingWorkflowInventory 失败：%v", err)
+	}
+	body := string(raw)
+	for _, key := range []string{
+		`"generatedAt"`, `"tenantId"`, `"staleThresholdHours"`, `"summary"`,
+		`"pendingTasks"`, `"processGroups"`, `"orphanInstances"`, `"recommendations"`,
+		`"runningInstances"`, `"taskId"`, `"processKey"`, `"instanceId"`,
+	} {
+		if !strings.Contains(body, key) {
+			t.Errorf("盘点响应 JSON 契约丢失 key %s，实际 %s", key, body)
 		}
 	}
 }

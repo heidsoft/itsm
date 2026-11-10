@@ -7,7 +7,6 @@ import (
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/middleware"
-	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
 )
@@ -16,12 +15,14 @@ import (
 // 路由面刻意只有 GET：终结/改派都是写操作，必须经既有写端点人工执行，
 // 本控制器不提供任何自动迁移通道（盘点与修复分离）。
 type InventoryHandler struct {
-	client *ent.Client
+	client         *ent.Client
+	buildInventory PendingInventoryBuilder
 }
 
-// NewInventoryHandler 创建存量待办盘点控制器
-func NewInventoryHandler(client *ent.Client) *InventoryHandler {
-	return &InventoryHandler{client: client}
+// NewInventoryHandler 创建存量待办盘点控制器。
+// 盘点函数由组合根注入，域内不引用共享层包级函数。
+func NewInventoryHandler(client *ent.Client, buildInventory PendingInventoryBuilder) *InventoryHandler {
+	return &InventoryHandler{client: client, buildInventory: buildInventory}
 }
 
 // RegisterRoutes 注册路由。
@@ -59,7 +60,7 @@ func (c *InventoryHandler) GetPendingInventory(ctx *gin.Context) {
 		staleThresholdHours = parsed
 	}
 
-	inventory, err := service.BuildPendingWorkflowInventory(ctx.Request.Context(), c.client, tenantID, staleThresholdHours)
+	inventory, err := c.buildInventory(ctx.Request.Context(), c.client, tenantID, staleThresholdHours)
 	if err != nil {
 		common.RespondError(ctx, err, "生成存量待办盘点失败")
 		return
