@@ -75,7 +75,7 @@ func TestParseQualityWindow(t *testing.T) {
 func TestGetServiceQualityUnwiredIs503(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
-	h := NewDashboardHandler(nil, nil, nil, zap.NewNop().Sugar())
+	h := NewDashboardHandler(nil, zap.NewNop().Sugar())
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
 	c.Request = httptest.NewRequest("GET", "/api/v1/reports/service-quality", nil)

@@ -36,11 +36,7 @@ var serviceQualityBlockVersions = map[string]string{
 }
 
 // ServiceQualityWindow 报表统计窗口。
-type ServiceQualityWindow struct {
-	Days int       `json:"days"`
-	From time.Time `json:"from"`
-	To   time.Time `json:"to"`
-}
+type ServiceQualityWindow = dto.ServiceQualityWindow
 
 // ServiceQualityReport 管理者统一服务质量视图。
 //
@@ -48,22 +44,7 @@ type ServiceQualityWindow struct {
 // 工作台 KPI 与 analytics 工单统计里的局部指标合成**一次请求一张纸**的管理视图。
 // 全部复用既有服务的既有口径（聚合为主，不发明新指标）——这是它与各单域报表的
 // 唯一区别，也是 metric_version 存在的原因：聚合器的稳定性独立于各域。
-type ServiceQualityReport struct {
-	MetricVersion  string               `json:"metricVersion"`
-	MetricVersions map[string]string    `json:"metricVersions"`
-	GeneratedAt    time.Time            `json:"generatedAt"`
-	Window         ServiceQualityWindow `json:"window"`
-	Scope          string               `json:"scope"` // KPI 行级口径：tenant | own
-
-	KPI                  []KPIMetricData                   `json:"kpi"`
-	SLA                  *SLAComplianceData                `json:"sla"`
-	IncidentDistribution []IncidentDistributionData        `json:"incidentDistribution"`
-	Satisfaction         []SatisfactionData                `json:"satisfaction"`
-	TicketTrend          []TicketTrendData                 `json:"ticketTrend"`
-	TicketStats          *dto.AnalyticsTicketStatsResponse `json:"ticketStats,omitempty"`  // analytics 未装配时缺省
-	ProblemStats         *dto.ProblemStatsResponse         `json:"problemStats,omitempty"` // problem 域未装配时缺省
-	ChangeStats          *dto.ChangeStatsResponse          `json:"changeStats,omitempty"`  // change 域未装配时缺省
-}
+type ServiceQualityReport = dto.ServiceQualityReport
 
 // DashboardOverviewSource 统一视图对工作台服务的窄接口：只依赖「概览 + 趋势」
 // 两个用例。*DashboardService 天然实现；测试注入假实现，避免绑定 PG 方言 raw SQL。
@@ -116,7 +97,7 @@ func (s *ServiceQualityReportService) SetChangeStatsSource(src QualityChangeStat
 
 // MaxQualityWindowDays 窗口上限：管理者视图是给「看一段趋势」用的，
 // 不是全历史导出口；超出的历史走各单域报表或导出通道。
-const MaxQualityWindowDays = 90
+const MaxQualityWindowDays = dto.MaxQualityWindowDays
 
 // Build 组装统一服务质量视图。viewer 沿用工作台同一行级规则——
 // 管理角色拿全租户口径，坐席拿本人口径，scope 字段显式回传。

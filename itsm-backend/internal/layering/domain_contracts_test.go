@@ -21,6 +21,7 @@ import (
 	"itsm-backend/handlers/automation_rule"
 	"itsm-backend/handlers/bpmn"
 	"itsm-backend/handlers/cmdb"
+	"itsm-backend/handlers/dashboard"
 	"itsm-backend/handlers/escalation_matrix"
 	"itsm-backend/handlers/incident"
 	"itsm-backend/handlers/operations"
@@ -116,6 +117,10 @@ var (
 	_ cmdb.CITagCatalog                 = (*service.CITagService)(nil)
 	_ cmdb.CMDBImportExportCatalog      = (*service.CMDBImportExportService)(nil)
 	_ cmdb.ToolRegistryCatalog          = (*service.ToolRegistry)(nil)
+	// 成组 DTO 专项：dashboard 整域归零。方法集含 migrate.go 的三个兼容路由调用，
+	// 编译期断言同时锁住 14 个 dto 值类型的身份。
+	_ dashboard.DashboardOverviewProvider   = (*service.DashboardService)(nil)
+	_ dashboard.ServiceQualityReportBuilder = (*service.ServiceQualityReportService)(nil)
 )
 
 type domainSpec struct {
@@ -148,6 +153,7 @@ var contractDomains = []domainSpec{
 	{"incident", "service.go", "IncidentProductionService", "IncidentService,IncidentMonitoringService,IncidentAlertingService,RootCauseAnalysisService,SLAMonitorService", ""},
 	{"ticket", "service.go", "TicketProductionService", "TicketService,SLAMonitorService", ""},
 	{"timer", "service.go", "TimerReadStore", "TimerStore", "TimerStore"},
+	{"dashboard", "handler.go", "DashboardOverviewProvider", "DashboardService,ServiceQualityReportService,TicketService,IncidentService", ""},
 }
 
 // 只剔除行注释，避免把说明文字里的示例当成代码；L.3 门禁本身是全文 grep，
@@ -273,6 +279,9 @@ func TestSharedValueTypesRemainDTOAliases(t *testing.T) {
 		{"A2UIDeleteSurface", reflect.TypeOf(service.A2UIDeleteSurface{}), reflect.TypeOf(dto.A2UIDeleteSurface{})},
 		{"DeleteSurface", reflect.TypeOf(service.DeleteSurface{}), reflect.TypeOf(dto.DeleteSurface{})},
 		{"ResolvedConfig", reflect.TypeOf(service.ResolvedConfig{}), reflect.TypeOf(dto.ResolvedConfig{})},
+		{"DashboardOverviewData", reflect.TypeOf(service.DashboardOverviewData{}), reflect.TypeOf(dto.DashboardOverviewData{})},
+		{"ServiceQualityReport", reflect.TypeOf(service.ServiceQualityReport{}), reflect.TypeOf(dto.ServiceQualityReport{})},
+		{"ServiceQualityWindow", reflect.TypeOf(service.ServiceQualityWindow{}), reflect.TypeOf(dto.ServiceQualityWindow{})},
 	}
 	for _, p := range pairs {
 		if p.shared != p.bottom {
@@ -329,6 +338,9 @@ func TestSharedValueTypesRemainDTOAliases(t *testing.T) {
 	// 源码守卫：service 侧必须保留别名声明，不能重新定义值类型。
 	aliases := []struct{ file, decl string }{
 		{"dashboard_service.go", "type DashboardViewer = dto.DashboardViewer"},
+		{"dashboard_service.go", "type DashboardOverviewData = dto.DashboardOverviewData"},
+		{"service_quality_report_service.go", "type ServiceQualityReport = dto.ServiceQualityReport"},
+		{"service_quality_report_service.go", "const MaxQualityWindowDays = dto.MaxQualityWindowDays"},
 		{"escalation_matrix.go", "type EscalationMatrix = dto.EscalationMatrix"},
 		{"release_service.go", "var ErrInvalidReleaseTransition = dto.ErrInvalidReleaseTransition"},
 		{"ticket_assignment_rule_service.go", "ErrAssignmentRuleNotFound = dto.ErrAssignmentRuleNotFound"},

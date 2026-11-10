@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"itsm-backend/common"
+	"itsm-backend/dto"
 	"itsm-backend/middleware"
-	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -14,11 +14,9 @@ import (
 
 // DashboardHandler Dashboard相关的HTTP处理器
 type DashboardHandler struct {
-	dashboardService *service.DashboardService
-	ticketService    *service.TicketService
-	incidentService  *service.IncidentService
+	dashboardService DashboardOverviewProvider
 	// qualityService 管理者统一服务质量视图聚合器（2026-10-23 接线；nil → 503）。
-	qualityService *service.ServiceQualityReportService
+	qualityService ServiceQualityReportBuilder
 	logger         *zap.SugaredLogger
 }
 
@@ -30,15 +28,11 @@ type ErrorResponse struct {
 
 // NewDashboardHandler 创建Dashboard处理器
 func NewDashboardHandler(
-	dashboardService *service.DashboardService,
-	ticketService *service.TicketService,
-	incidentService *service.IncidentService,
+	dashboardService DashboardOverviewProvider,
 	logger *zap.SugaredLogger,
 ) *DashboardHandler {
 	return &DashboardHandler{
 		dashboardService: dashboardService,
-		ticketService:    ticketService,
-		incidentService:  incidentService,
 		logger:           logger,
 	}
 }
@@ -65,12 +59,12 @@ type KPIMetric struct {
 // KPI 里的工单类指标按读取者的行级范围统计，与 /tickets 列表、/tickets/stats 用同一规则
 // （datascope.ForTicketReader）；此前这些端点只取租户，坐席的工作台数字是租户全量。
 // user_id 缺失时 UserID 为 0，非管理角色会被收窄为空集，不做租户全量兜底。
-func dashboardViewer(c *gin.Context) service.DashboardViewer {
+func dashboardViewer(c *gin.Context) dto.DashboardViewer {
 	userID, err := middleware.GetUserID(c)
 	if err != nil {
 		userID = 0
 	}
-	return service.DashboardViewer{UserID: userID, Role: c.GetString("role")}
+	return dto.DashboardViewer{UserID: userID, Role: c.GetString("role")}
 }
 
 // TicketTrendData 工单趋势数据
@@ -148,7 +142,7 @@ type DashboardOverview struct {
 	KPIMetrics               []KPIMetric                    `json:"kpiMetrics"`
 	TicketTrend              []TicketTrendData              `json:"ticketTrend"`
 	IncidentDistribution     []IncidentDistributionData     `json:"incidentDistribution"`
-	SLAData                  *service.SLAComplianceData     `json:"slaData"`
+	SLAData                  *dto.SLAComplianceData         `json:"slaData"`
 	SatisfactionData         []SatisfactionData             `json:"satisfactionData"`
 	QuickActions             []QuickAction                  `json:"quickActions"`
 	RecentActivities         []RecentActivity               `json:"recentActivities"`
@@ -228,7 +222,7 @@ func (h *DashboardHandler) GetOverview(c *gin.Context) {
 }
 
 // 转换函数：将Service层的数据结构转换为Handler层的数据结构
-func convertKPIMetrics(metrics []service.KPIMetricData) []KPIMetric {
+func convertKPIMetrics(metrics []dto.KPIMetricData) []KPIMetric {
 	result := make([]KPIMetric, len(metrics))
 	for i, m := range metrics {
 		result[i] = KPIMetric{
@@ -248,7 +242,7 @@ func convertKPIMetrics(metrics []service.KPIMetricData) []KPIMetric {
 	return result
 }
 
-func convertTicketTrend(trend []service.TicketTrendData) []TicketTrendData {
+func convertTicketTrend(trend []dto.TicketTrendData) []TicketTrendData {
 	result := make([]TicketTrendData, len(trend))
 	for i, t := range trend {
 		result[i] = TicketTrendData{
@@ -262,7 +256,7 @@ func convertTicketTrend(trend []service.TicketTrendData) []TicketTrendData {
 	return result
 }
 
-func convertIncidentDistribution(dist []service.IncidentDistributionData) []IncidentDistributionData {
+func convertIncidentDistribution(dist []dto.IncidentDistributionData) []IncidentDistributionData {
 	result := make([]IncidentDistributionData, len(dist))
 	for i, d := range dist {
 		result[i] = IncidentDistributionData{
@@ -274,7 +268,7 @@ func convertIncidentDistribution(dist []service.IncidentDistributionData) []Inci
 	return result
 }
 
-func convertQuickActions(actions []service.QuickActionData) []QuickAction {
+func convertQuickActions(actions []dto.QuickActionData) []QuickAction {
 	result := make([]QuickAction, len(actions))
 	for i, a := range actions {
 		result[i] = QuickAction{
@@ -289,7 +283,7 @@ func convertQuickActions(actions []service.QuickActionData) []QuickAction {
 	return result
 }
 
-func convertRecentActivities(activities []service.RecentActivityData) []RecentActivity {
+func convertRecentActivities(activities []dto.RecentActivityData) []RecentActivity {
 	result := make([]RecentActivity, len(activities))
 	for i, a := range activities {
 		result[i] = RecentActivity{
@@ -306,7 +300,7 @@ func convertRecentActivities(activities []service.RecentActivityData) []RecentAc
 	return result
 }
 
-func convertSatisfactionData(satisfactionData []service.SatisfactionData) []SatisfactionData {
+func convertSatisfactionData(satisfactionData []dto.SatisfactionData) []SatisfactionData {
 	result := make([]SatisfactionData, len(satisfactionData))
 	for i, s := range satisfactionData {
 		result[i] = SatisfactionData{
@@ -318,7 +312,7 @@ func convertSatisfactionData(satisfactionData []service.SatisfactionData) []Sati
 	return result
 }
 
-func convertResponseTimeDistribution(data []service.ResponseTimeDistributionData) []ResponseTimeDistributionData {
+func convertResponseTimeDistribution(data []dto.ResponseTimeDistributionData) []ResponseTimeDistributionData {
 	result := make([]ResponseTimeDistributionData, len(data))
 	for i, d := range data {
 		result[i] = ResponseTimeDistributionData{
@@ -331,7 +325,7 @@ func convertResponseTimeDistribution(data []service.ResponseTimeDistributionData
 	return result
 }
 
-func convertTeamWorkload(data []service.TeamWorkloadData) []TeamWorkloadData {
+func convertTeamWorkload(data []dto.TeamWorkloadData) []TeamWorkloadData {
 	result := make([]TeamWorkloadData, len(data))
 	for i, d := range data {
 		result[i] = TeamWorkloadData{
@@ -345,7 +339,7 @@ func convertTeamWorkload(data []service.TeamWorkloadData) []TeamWorkloadData {
 	return result
 }
 
-func convertPeakHours(data []service.PeakHourData) []PeakHourData {
+func convertPeakHours(data []dto.PeakHourData) []PeakHourData {
 	result := make([]PeakHourData, len(data))
 	for i, d := range data {
 		result[i] = PeakHourData{
@@ -455,7 +449,7 @@ func (h *DashboardHandler) GetIncidentDistribution(c *gin.Context) {
 // @Tags Dashboard
 // @Accept json
 // @Produce json
-// @Success 200 {object} service.SLAComplianceData
+// @Success 200 {object} dto.SLAComplianceData
 // @Failure 500 {object} ErrorResponse
 // @Router /api/v1/dashboard/sla-data [get]
 func (h *DashboardHandler) GetSLAData(c *gin.Context) {
@@ -682,7 +676,7 @@ func (h *DashboardHandler) GetSystemStats(c *gin.Context) {
 
 // SetServiceQualityService 注入管理者统一服务质量视图聚合器（bootstrap 装配；
 // nil 时端点显式 503，不静默假成功）。
-func (h *DashboardHandler) SetServiceQualityService(s *service.ServiceQualityReportService) {
+func (h *DashboardHandler) SetServiceQualityService(s ServiceQualityReportBuilder) {
 	h.qualityService = s
 }
 
@@ -695,8 +689,8 @@ func parseQualityWindow(raw string) int {
 			days = parsed
 		}
 	}
-	if days > service.MaxQualityWindowDays {
-		days = service.MaxQualityWindowDays
+	if days > dto.MaxQualityWindowDays {
+		days = dto.MaxQualityWindowDays
 	}
 	return days
 }
@@ -707,7 +701,7 @@ func parseQualityWindow(raw string) int {
 // @Tags Dashboard
 // @Produce json
 // @Param days query int false "统计窗口天数（默认 30，上限 90）"
-// @Success 200 {object} common.Response{data=service.ServiceQualityReport}
+// @Success 200 {object} common.Response{data=dto.ServiceQualityReport}
 // @Failure 401 {object} common.Response
 // @Failure 500 {object} common.Response
 // @Failure 503 {object} common.Response

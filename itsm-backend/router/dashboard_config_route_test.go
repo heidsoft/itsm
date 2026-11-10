@@ -123,7 +123,7 @@ func newDashboardTestRouter(store DashboardConfigStore) *gin.Engine {
 		c.Set("client", (*ent.Client)(nil))
 		c.Next()
 	})
-	SetupDashboardRoutes(tenant, dashboardHandler.NewDashboardHandler(nil, nil, nil, nil), nil, store)
+	SetupDashboardRoutes(tenant, dashboardHandler.NewDashboardHandler(nil, nil), nil, store)
 	return r
 }
 

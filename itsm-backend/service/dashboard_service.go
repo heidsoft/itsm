@@ -73,25 +73,10 @@ var (
 )
 
 // DashboardOverviewStats Dashboard概览统计（扁平结构）
-type DashboardOverviewStats struct {
-	TotalTickets      int
-	PendingTickets    int
-	InProgressTickets int
-	ResolvedToday     int
-	AvgResponseTime   float64
-	AvgResolutionTime float64
-}
+type DashboardOverviewStats = dto.DashboardOverviewStats
 
 // SLAComplianceData SLA合规数据（扁平结构，匹配前端 sla_data 接口）
-type SLAComplianceData struct {
-	ComplianceRate           float64 `json:"complianceRate"`
-	ResponseTimeCompliance   float64 `json:"responseTimeCompliance"`
-	ResolutionTimeCompliance float64 `json:"resolutionTimeCompliance"`
-	AtRiskTickets            int     `json:"atRiskTickets"`
-	BreachedTickets          int     `json:"breachedTickets"`
-	TotalTickets             int     `json:"totalTickets"`
-	CompliantTickets         int     `json:"compliantTickets"`
-}
+type SLAComplianceData = dto.SLAComplianceData
 
 // NewDashboardService 创建仪表盘服务实例（向后兼容版本）。
 //
@@ -585,18 +570,7 @@ func (s *DashboardService) _stringPtr(str string) *string {
 }
 
 // DashboardOverviewData Dashboard概览数据结构（匹配前端期望格式）
-type DashboardOverviewData struct {
-	KPIMetrics               []KPIMetricData                `json:"kpiMetrics"`
-	TicketTrend              []TicketTrendData              `json:"ticketTrend"`
-	IncidentDistribution     []IncidentDistributionData     `json:"incidentDistribution"`
-	SLAData                  *SLAComplianceData             `json:"slaData"`
-	SatisfactionData         []SatisfactionData             `json:"satisfactionData"`
-	QuickActions             []QuickActionData              `json:"quickActions"`
-	RecentActivities         []RecentActivityData           `json:"recentActivities"`
-	ResponseTimeDistribution []ResponseTimeDistributionData `json:"responseTimeDistribution,omitempty"`
-	TeamWorkload             []TeamWorkloadData             `json:"teamWorkload,omitempty"`
-	PeakHours                []PeakHourData                 `json:"peakHours,omitempty"`
-}
+type DashboardOverviewData = dto.DashboardOverviewData
 
 // DashboardViewer 值类型已下沉到 dto 包，此处保留别名以保持 service 包公开 API
 // 与所有现行调用点的类型身份不变。依赖 datascope 的三个口径函数留在本包（未导出）。
@@ -626,43 +600,13 @@ func scopeKey(v DashboardViewer) string {
 }
 
 // KPIMetricData KPI指标数据
-type KPIMetricData struct {
-	ID          string  `json:"id"`
-	Title       string  `json:"title"`
-	Value       float64 `json:"value"`
-	Unit        string  `json:"unit"`
-	Color       string  `json:"color"`
-	Trend       string  `json:"trend"`
-	Change      float64 `json:"change"`
-	ChangeType  string  `json:"changeType"`
-	Description string  `json:"description,omitempty"`
-	Target      float64 `json:"target,omitempty"`
-	Alert       string  `json:"alert,omitempty"`
-	// Comparable 标识环比是否可信：false 表示读取者范围内没有可比的上期基线，
-	// 此时 Change 恒为 0，前端不得渲染"相比上期"。
-	Comparable bool `json:"comparable"`
-	// Scope 标识本组指标的行级范围：tenant = 全租户，own = 本人创建或受理。
-	Scope string `json:"scope"`
-}
+type KPIMetricData = dto.KPIMetricData
 
 // TicketTrendData 工单趋势数据
-type TicketTrendData struct {
-	Date             string `json:"date"`
-	Open             int    `json:"open"`
-	InProgress       int    `json:"inProgress"`
-	Resolved         int    `json:"resolved"`
-	Closed           int    `json:"closed"`
-	NewTickets       int    `json:"newTickets,omitempty"`
-	CompletedTickets int    `json:"completedTickets,omitempty"`
-	PendingTickets   int    `json:"pendingTickets,omitempty"`
-}
+type TicketTrendData = dto.TicketTrendData
 
 // IncidentDistributionData 事件分布数据
-type IncidentDistributionData struct {
-	Category string `json:"category"`
-	Count    int    `json:"count"`
-	Color    string `json:"color"`
-}
+type IncidentDistributionData = dto.IncidentDistributionData
 
 // SLAData SLA数据
 type SLAData struct {
@@ -672,59 +616,22 @@ type SLAData struct {
 }
 
 // SatisfactionData 满意度数据
-type SatisfactionData struct {
-	Month     string  `json:"month"`
-	Rating    float64 `json:"rating"`
-	Responses int     `json:"responses"`
-}
+type SatisfactionData = dto.SatisfactionData
 
 // QuickActionData 快速操作数据
-type QuickActionData struct {
-	ID          string `json:"id"`
-	Title       string `json:"title"`
-	Description string `json:"description"`
-	Path        string `json:"path"`
-	Color       string `json:"color"`
-	Permission  string `json:"permission,omitempty"`
-}
+type QuickActionData = dto.QuickActionData
 
 // RecentActivityData 最近活动数据
-type RecentActivityData struct {
-	ID           int       `json:"id"`
-	Type         string    `json:"type"`
-	TicketID     int       `json:"ticketId"`
-	TicketNumber string    `json:"ticketNumber"`
-	TicketTitle  string    `json:"ticketTitle"`
-	Status       string    `json:"status"`
-	StatusName   string    `json:"statusName"`
-	Operator     string    `json:"operator"`
-	Assignee     string    `json:"assignee"`
-	UpdatedAt    time.Time `json:"updatedAt"`
-}
+type RecentActivityData = dto.RecentActivityData
 
 // ResponseTimeDistributionData 响应时间分布数据
-type ResponseTimeDistributionData struct {
-	TimeRange  string  `json:"timeRange"`
-	Count      int     `json:"count"`
-	Percentage float64 `json:"percentage"`
-	AvgTime    float64 `json:"avgTime,omitempty"`
-}
+type ResponseTimeDistributionData = dto.ResponseTimeDistributionData
 
 // TeamWorkloadData 团队工作负载数据
-type TeamWorkloadData struct {
-	Assignee        string  `json:"assignee"`
-	TicketCount     int     `json:"ticketCount"`
-	AvgResponseTime float64 `json:"avgResponseTime"`
-	CompletionRate  float64 `json:"completionRate"`
-	ActiveTickets   int     `json:"activeTickets,omitempty"`
-}
+type TeamWorkloadData = dto.TeamWorkloadData
 
 // PeakHourData 高峰时段数据
-type PeakHourData struct {
-	Hour            string  `json:"hour"`
-	Count           int     `json:"count"`
-	AvgResponseTime float64 `json:"avgResponseTime,omitempty"`
-}
+type PeakHourData = dto.PeakHourData
 
 // GetDashboardOverview 获取Dashboard概览数据（匹配前端期望格式）
 //

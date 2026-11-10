@@ -13,9 +13,9 @@
 # 2026-11-10 批次 3 第 5 步 B：组合根注入专项。operations 的包级恢复函数改构造期注入的 ToolInvocationRecovery（22 处调用点全量显式传真实实现，router.go 接线）；problem 的 TicketSLAService / BPMNApprovalBridge 改 2 个域内窄契约、SLADeadlineResult 下沉 dto（service 侧同名别名）、桥接构造上移 app.go 与测试夹具。两域生产文件共享层依赖各 1 -> 0，整域基线行删除；合计 20 -> 18 文件 / 9 -> 7 域，L.4 零依赖域 58 -> 60。app.go 的 problem.NewService 为 1:1 行内替换、净增 0 行，L.1 140 与 C.6.4 五项不变（工作树 2169 > 基线 2167 仍为并行会话 WIP，本批不代调）。
 # 2026-11-10 cmdb 专项 A：5 个生产文件（discovery_ci_projection / discovery_manual_completion / discovery_scheduler / handler / provisioning_ci_projection）经「timer 纯函数组 + CMDB 投影值类型/sentinel/窄契约」成组下沉 dto、service 侧改同名别名与三处薄委托归零；实测 cmdb 7 -> 2，合计 18 -> 13 文件 / 7 域不变（剩 production_service.go 与 ontology.go 归专项 B）。timer_event_extractor.go 的 5 个私有 helper 与 cron 解析器一并移入 dto 单一实现，service 包 timer 单测口径不变；app.go 与 router.go 零改动，L.1 140、L.4 60 与 C.6.4 五项不变。
 # 2026-11-10 cmdb 专项 B：production_service.go 的 7 个共享层具体类型 + ontology.go 的 ToolRegistry 改 8 个域内窄契约（48 方法，Go AST 抽取签名），LifecycleChangeParams / ToolDefinition / ErrInvalidRelationshipType 与 operator context 完整实现下沉 dto（service 侧别名/薄委托）；实测 cmdb 2 -> 0，整域基线行删除，合计 13 -> 11 文件 / 7 -> 6 域，L.4 零依赖域 60 -> 61。具体服务指针自动满足窄接口，app.go 与 router.go 零改动，L.1 140 与 C.6.4 五项不变。
+# 2026-11-10 dashboard 成组 DTO 专项：handlers/dashboard/handler.go 经 2 个域内窄契约（方法集含 migrate.go 的 GetDashboardData）+ 14 个值类型与 MaxQualityWindowDays 常量成组下沉 dto（service 侧同名别名）归零；同时删除两个从未被调用的 ticketService / incidentService 构造参数。实测 dashboard 1 -> 0，整域基线行删除，合计 11 -> 10 文件 / 6 -> 5 域，L.4 零依赖域 61 -> 62；app.go 的 NewDashboardHandler 为 1:1 行内替换、净增 0 行，L.1 140 与 C.6.4 五项不变（工作树 2169 > 基线 2167 仍为并行会话 WIP，本批不代调）。
 ai=4
 change=1
-dashboard=1
 email_intake=2
 service_request=1
 skill=2

@@ -587,7 +587,7 @@ func NewApplication() *Application {
 	// 显式注入 *sql.DB，让 dashboardRepository 内 AVG/FILTER/CTE 复杂聚合走真实连接；
 	// 不再依赖全局 rawDB 兜底，便于测试隔离与多连接池演进。
 	dashboardService := service.NewDashboardServiceWithDB(client, database.GetRawDB(), sugar)
-	dashboardHandler := dashboardpkg.NewDashboardHandler(dashboardService, ticketService, incidentService, sugar)
+	dashboardHandler := dashboardpkg.NewDashboardHandler(dashboardService, sugar)
 	ticketService.EnableSideEffectOutbox()
 	_ = sequenceService // V2 内部通过 Repository.GenerateTicketNumber 使用 sequence；保留为运行时上下文依赖
 
