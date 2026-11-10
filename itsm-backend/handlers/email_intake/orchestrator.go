@@ -16,6 +16,7 @@ import (
 
 	"github.com/microcosm-cc/bluemonday"
 	"itsm-backend/connector"
+	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/emailconversation"
 	"itsm-backend/ent/emailintakeanalysis"
@@ -23,7 +24,6 @@ import (
 	"itsm-backend/ent/sourceorganization"
 	"itsm-backend/ent/systemconfig"
 	"itsm-backend/internal/commandbus"
-	"itsm-backend/service"
 )
 
 type IntakeMode string
@@ -64,12 +64,12 @@ type EmailIntakeOrchestrator struct {
 	client          *ent.Client
 	extractor       *EmailIntakeExtractor
 	resolver        *Resolver
-	incidentService *service.IncidentService
+	incidentService EmailIncidentCreator
 	onCall          *OnCallService
 	config          OrchestratorConfig
 }
 
-func NewEmailIntakeOrchestrator(client *ent.Client, extractor *EmailIntakeExtractor, incidentService *service.IncidentService, config OrchestratorConfig) *EmailIntakeOrchestrator {
+func NewEmailIntakeOrchestrator(client *ent.Client, extractor *EmailIntakeExtractor, incidentService EmailIncidentCreator, config OrchestratorConfig) *EmailIntakeOrchestrator {
 	if config.Mode == "" {
 		config.Mode = ModeObserveOnly
 	}
@@ -313,7 +313,7 @@ func (o *EmailIntakeOrchestrator) Confirm(ctx context.Context, tenantID, convers
 			assigneeID = &current.UserID
 		}
 	}
-	incidentResponse, err := o.incidentService.CreateFromEmail(ctx, tenantID, service.EmailIncidentCommand{ConversationID: conversation.ID, SupportContractID: resolution.SupportContractID, ReporterUserID: runtimeConfig.AutomationReporterUserID, AssignmentGroupID: runtimeConfig.DefaultAssignmentGroupID, AssigneeID: assigneeID, Title: defaultString(fields.Title, "邮件报障"), Description: fields.Description, Impact: defaultString(fields.Impact, "medium"), Urgency: defaultString(fields.Urgency, "medium"), Category: "network", Metadata: map[string]interface{}{"customerId": resolution.CustomerID, "branchId": resolution.BranchID, "sourceOrganizationId": resolution.SourceOrganizationID, "aiConfidence": fields.Confidence}})
+	incidentResponse, err := o.incidentService.CreateFromEmail(ctx, tenantID, dto.EmailIncidentCommand{ConversationID: conversation.ID, SupportContractID: resolution.SupportContractID, ReporterUserID: runtimeConfig.AutomationReporterUserID, AssignmentGroupID: runtimeConfig.DefaultAssignmentGroupID, AssigneeID: assigneeID, Title: defaultString(fields.Title, "邮件报障"), Description: fields.Description, Impact: defaultString(fields.Impact, "medium"), Urgency: defaultString(fields.Urgency, "medium"), Category: "network", Metadata: map[string]interface{}{"customerId": resolution.CustomerID, "branchId": resolution.BranchID, "sourceOrganizationId": resolution.SourceOrganizationID, "aiConfidence": fields.Confidence}})
 	if err != nil {
 		return nil, err
 	}
@@ -470,7 +470,7 @@ func (o *EmailIntakeOrchestrator) Override(ctx context.Context, tenantID, conver
 	if o.incidentService == nil || runtimeConfig.AutomationReporterUserID <= 0 {
 		return nil, errors.New("incident automation reporter is not configured")
 	}
-	response, err := o.incidentService.CreateFromEmail(ctx, tenantID, service.EmailIncidentCommand{ConversationID: conversation.ID, SupportContractID: *conversation.SupportContractID, ReporterUserID: runtimeConfig.AutomationReporterUserID, AssignmentGroupID: runtimeConfig.DefaultAssignmentGroupID, Title: defaultString(fields.Title, "邮件报障"), Description: fields.Description, Impact: defaultString(fields.Impact, "medium"), Urgency: defaultString(fields.Urgency, "medium"), Category: "network", OverrideContract: true, OverrideReason: reason, Metadata: map[string]interface{}{"aiConfidence": fields.Confidence, "contractOverrideBy": actorID, "contractOverrideReason": reason}})
+	response, err := o.incidentService.CreateFromEmail(ctx, tenantID, dto.EmailIncidentCommand{ConversationID: conversation.ID, SupportContractID: *conversation.SupportContractID, ReporterUserID: runtimeConfig.AutomationReporterUserID, AssignmentGroupID: runtimeConfig.DefaultAssignmentGroupID, Title: defaultString(fields.Title, "邮件报障"), Description: fields.Description, Impact: defaultString(fields.Impact, "medium"), Urgency: defaultString(fields.Urgency, "medium"), Category: "network", OverrideContract: true, OverrideReason: reason, Metadata: map[string]interface{}{"aiConfidence": fields.Confidence, "contractOverrideBy": actorID, "contractOverrideReason": reason}})
 	if err != nil {
 		return nil, err
 	}

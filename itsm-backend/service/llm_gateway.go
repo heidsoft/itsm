@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"itsm-backend/common/tenantctx"
+	"itsm-backend/dto"
 
 	openai "github.com/sashabaranov/go-openai"
 )
@@ -21,6 +22,12 @@ type LLMGateway struct {
 	// 为 nil 时无配额限制——旧部署行为不变。
 	quota *AIQuotaService
 }
+
+// LLMGatewayPort 是 dto 端口在 service 包的同名别名：RAG 方法参数用它，
+// 与域侧契约引用的是同一个接口类型，避免签名漂移。
+type LLMGatewayPort = dto.LLMGatewayPort
+
+var _ dto.LLMGatewayPort = (*LLMGateway)(nil)
 
 type LLMProvider interface {
 	Chat(ctx context.Context, model string, messages []LLMMessage) (string, error)
@@ -58,30 +65,11 @@ type ToolCallingStreamProvider interface {
 	ChatStreamWithTools(ctx context.Context, model string, messages []LLMMessage, tools []LLMTool, callback func(string), onToolCalls func([]LLMToolCall)) error
 }
 
-// LLMTool 声明可供模型调用的工具（OpenAI function calling 风格）。
-type LLMTool struct {
-	Name        string         `json:"name"`
-	Description string         `json:"description"`
-	Parameters  map[string]any `json:"parameters,omitempty"`
-}
-
-// LLMToolCall 模型发起的一次工具调用。
-type LLMToolCall struct {
-	ID        string `json:"id"`
-	Name      string `json:"name"`
-	Arguments string `json:"arguments"` // JSON 编码的参数
-}
-
-type LLMMessage struct {
-	Role    string
-	Content string
-	// Tools 请求侧：本消息声明可用工具（通常挂载在 user/system 消息上）。
-	Tools []LLMTool
-	// ToolCalls 响应侧：assistant 消息携带模型请求调用的工具列表。
-	ToolCalls []LLMToolCall
-	// ToolCallID 工具结果消息：对应被执行的 LLMToolCall.ID（OpenAI "tool" role）。
-	ToolCallID string
-}
+// 下列值类型的唯一定义在 dto 包，service 侧保留同名别名：
+// 运行时类型、字段与 JSON tag 完全一致，既有调用点零改动。
+type LLMTool = dto.LLMTool
+type LLMToolCall = dto.LLMToolCall
+type LLMMessage = dto.LLMMessage
 
 type TokenLimiter interface {
 	Allow(nTokens int) bool
@@ -104,7 +92,7 @@ func (g *LLMGateway) SetAIQuotaService(q *AIQuotaService) {
 
 // ErrQuotaExceeded 租户月度 token 配额已耗尽。调用方应映射为 429 而非 500：
 // 这是明确的业务拒绝（预算用完），不是服务故障。
-var ErrQuotaExceeded = errors.New("tenant monthly token quota exceeded")
+var ErrQuotaExceeded = dto.ErrQuotaExceeded
 
 // checkQuota 租户配额闸：超限返回 ErrQuotaExceeded，未装配/未配置/无租户
 // 归属/评估失败时放行。评估失败 fail-open 的取舍：配额是预算保护不是安全
@@ -383,11 +371,11 @@ func (g *LLMGateway) SupportsToolCalling() bool {
 }
 
 // Simple implementations
-var ErrRateLimited = &RateLimitError{Message: "rate limited"}
+// 下列错误与值类型的唯一实现在 dto 包；这里保留同名别名/同一实例，
+// 使 service 包既有调用点与 errors.Is 判定不发生改变。
+var ErrRateLimited = dto.ErrRateLimited
 
-type RateLimitError struct{ Message string }
-
-func (e *RateLimitError) Error() string { return e.Message }
+type RateLimitError = dto.RateLimitError
 
 type FixedWindowLimiter struct{ capacity int }
 

@@ -44,21 +44,8 @@ var (
 	ErrIncidentVersionConflict           = dto.ErrIncidentVersionConflict
 )
 
-type EmailIncidentCommand struct {
-	ConversationID    int
-	SupportContractID int
-	ReporterUserID    int
-	AssignmentGroupID *int
-	AssigneeID        *int
-	Title             string
-	Description       string
-	Impact            string
-	Urgency           string
-	Category          string
-	Metadata          map[string]interface{}
-	OverrideContract  bool
-	OverrideReason    string
-}
+// EmailIncidentCommand 值类型已下沉 dto；同名别名保持调用点零改动。
+type EmailIncidentCommand = dto.EmailIncidentCommand
 
 type incidentCreateOptions struct {
 	isAutomated           bool

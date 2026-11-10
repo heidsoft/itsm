@@ -23,7 +23,7 @@ type Service struct {
 	repo               Repository
 	logger             *zap.SugaredLogger
 	rag                RAGChatService
-	llmGateway         *service.LLMGateway
+	llmGateway         dto.LLMGatewayPort
 	tools              *service.ToolRegistry
 	analytics          *service.AnalyticsService
 	prediction         *service.PredictionService
@@ -52,9 +52,8 @@ var _ AuditLedgerWriter = (*service.AITelemetryService)(nil)
 
 // ragStreamer 是流式问答的可选能力接口，与 RAGChatService 分开声明。
 //
-// 其方法签名携带共享层 *service.LLMGateway / []service.LLMTool，因此定义在本
-// 文件（本就依赖共享层），不进零依赖的 rag_contract.go——否则会新增一个
-// import service 的生产文件，让 Gate C.8 / L.3 的 ai 计数由 4 升到 5。
+// 网关契约化后，其方法签名只引用 dto 端口与 dto 值类型；本批暂留本文件
+// （既有回归锁断言声明位置），AI 域整体归零批次再并入零依赖契约文件。
 // 生产实现 *service.RAGService 同时满足 RAGChatService 与 ragStreamer；
 // 只实现读面契约的域内实现（单测 fake）不具备流式能力，ChatStream 会走
 // 明确的降级错误而不是 panic。
@@ -64,9 +63,9 @@ type ragStreamer interface {
 		tenantID int,
 		query string,
 		supplemental []string,
-		gateway *service.LLMGateway,
+		gateway dto.LLMGatewayPort,
 		maxResults int,
-		tools []service.LLMTool,
+		tools []dto.LLMTool,
 		onSources func(sources []map[string]any),
 		onDelta func(delta string),
 		execTool func(name string, args map[string]any) (any, error),
@@ -112,7 +111,7 @@ func (s *Service) SetAuditLedger(l AuditLedgerWriter) {
 
 // SetLLMGateway wires an optional LLM gateway for streaming answers.
 // Kept as a setter to avoid churning existing NewService call sites.
-func (s *Service) SetLLMGateway(gateway *service.LLMGateway) {
+func (s *Service) SetLLMGateway(gateway dto.LLMGatewayPort) {
 	s.llmGateway = gateway
 }
 
@@ -540,7 +539,7 @@ func (s *Service) ChatStream(
 	// 但 System Prompt 依然告诉模型“必须调用工具”，导致模型在文本中假装调用
 	// (“正在调用 list_tickets 工具...”) 但永远拿不到结果。检测 provider
 	// 能力，不支持时不注入 tools，让 RAG 层退化为纯知识库问答（合规）。
-	var tools []service.LLMTool
+	var tools []dto.LLMTool
 	providerSupportsTools := s.llmGateway != nil && s.llmGateway.SupportsToolCalling()
 	if s.tools != nil && providerSupportsTools {
 		// 按租户动态化工具参数（list_cis 的 ci_type 枚举来自租户 CIType 表）
@@ -555,7 +554,7 @@ func (s *Service) ChatStream(
 					continue
 				}
 			}
-			tools = append(tools, service.LLMTool{
+			tools = append(tools, dto.LLMTool{
 				Name:        td.Name,
 				Description: td.Description,
 				Parameters:  td.ArgsSchema,

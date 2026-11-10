@@ -22,6 +22,7 @@ import (
 	"itsm-backend/handlers/bpmn"
 	"itsm-backend/handlers/cmdb"
 	"itsm-backend/handlers/dashboard"
+	"itsm-backend/handlers/email_intake"
 	"itsm-backend/handlers/escalation_matrix"
 	"itsm-backend/handlers/incident"
 	"itsm-backend/handlers/operations"
@@ -43,13 +44,15 @@ import (
 // 编译期断言：生产具体类型必须满足域内窄契约。契约方法集由各域 handler/routes
 // 的真实调用面决定，任何签名漂移都会在编译期暴露，而不是拖到运行时。
 var (
-	_ account.UserService                               = (*service.UserService)(nil)
-	_ analytics.AnalyticsService                        = (*service.AnalyticsService)(nil)
-	_ approval.ApprovalService                          = (*service.ApprovalService)(nil)
-	_ approval_chain.ApprovalChainService               = (*service.ApprovalChainService)(nil)
-	_ auth.EmailService                                 = (*service.EmailService)(nil)
-	_ automation_rule.AutomationRuleService             = (*service.TicketAutomationRuleService)(nil)
-	_ escalation_matrix.EscalationMatrixService         = (*service.EscalationMatrixService)(nil)
+	_ account.UserService                       = (*service.UserService)(nil)
+	_ analytics.AnalyticsService                = (*service.AnalyticsService)(nil)
+	_ approval.ApprovalService                  = (*service.ApprovalService)(nil)
+	_ approval_chain.ApprovalChainService       = (*service.ApprovalChainService)(nil)
+	_ auth.EmailService                         = (*service.EmailService)(nil)
+	_ automation_rule.AutomationRuleService     = (*service.TicketAutomationRuleService)(nil)
+	_ escalation_matrix.EscalationMatrixService = (*service.EscalationMatrixService)(nil)
+	// LLMGateway 契约化专项 A：邮件报障编排器只消费 CreateFromEmail。
+	_ email_intake.EmailIncidentCreator                 = (*service.IncidentService)(nil)
 	_ prediction.PredictionService                      = (*service.PredictionService)(nil)
 	_ problem_investigation.ProblemInvestigationService = (*service.ProblemInvestigationService)(nil)
 	_ release.ReleaseService                            = (*service.ReleaseService)(nil)
@@ -154,6 +157,7 @@ var contractDomains = []domainSpec{
 	{"ticket", "service.go", "TicketProductionService", "TicketService,SLAMonitorService", ""},
 	{"timer", "service.go", "TimerReadStore", "TimerStore", "TimerStore"},
 	{"dashboard", "handler.go", "DashboardOverviewProvider", "DashboardService,ServiceQualityReportService,TicketService,IncidentService", ""},
+	{"email_intake", "orchestrator.go", "EmailIncidentCreator", "IncidentService", ""},
 }
 
 // 只剔除行注释，避免把说明文字里的示例当成代码；L.3 门禁本身是全文 grep，

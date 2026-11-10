@@ -920,7 +920,7 @@ func (r *RAGService) keywordSearch(ctx context.Context, tenantID int, query stri
 }
 
 // AskWithLLM performs RAG with LLM-generated answer
-func (r *RAGService) AskWithLLM(ctx context.Context, tenantID int, query string, gateway *LLMGateway, maxResults int) (string, error) {
+func (r *RAGService) AskWithLLM(ctx context.Context, tenantID int, query string, gateway LLMGatewayPort, maxResults int) (string, error) {
 	if gateway == nil {
 		return "", fmt.Errorf("LLM gateway not configured")
 	}
@@ -990,7 +990,7 @@ func (r *RAGService) AskWithLLMStream(
 	ctx context.Context,
 	tenantID int,
 	query string,
-	gateway *LLMGateway,
+	gateway LLMGatewayPort,
 	maxResults int,
 	onSources func(sources []map[string]any),
 	onDelta func(delta string),
@@ -1008,7 +1008,7 @@ func (r *RAGService) AskWithLLMStreamMulti(
 	tenantID int,
 	query string,
 	supplemental []string,
-	gateway *LLMGateway,
+	gateway LLMGatewayPort,
 	maxResults int,
 	onSources func(sources []map[string]any),
 	onDelta func(delta string),
@@ -1151,7 +1151,7 @@ func (r *RAGService) AskWithLLMStreamWithTools(
 	ctx context.Context,
 	tenantID int,
 	query string,
-	gateway *LLMGateway,
+	gateway LLMGatewayPort,
 	maxResults int,
 	tools []LLMTool,
 	onSources func(sources []map[string]any),
@@ -1177,7 +1177,7 @@ func (r *RAGService) AskWithLLMStreamWithToolsMulti(
 	tenantID int,
 	query string,
 	supplemental []string,
-	gateway *LLMGateway,
+	gateway LLMGatewayPort,
 	maxResults int,
 	tools []LLMTool,
 	onSources func(sources []map[string]any),
