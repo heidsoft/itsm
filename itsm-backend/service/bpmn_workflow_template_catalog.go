@@ -14,10 +14,12 @@ import (
 	"itsm-backend/dto"
 )
 
+// 模板目录 sentinel 的唯一定义在 dto 包：这里是同一实例的别名，
+// 保证既有调用方 errors.Is(err, service.ErrWorkflowTemplateXxx) 语义不变。
 var (
-	ErrWorkflowTemplateNotFound = errors.New("workflow template not found")
-	ErrWorkflowTemplateConflict = errors.New("workflow template conflict")
-	ErrWorkflowTemplateInvalid  = errors.New("workflow template invalid")
+	ErrWorkflowTemplateNotFound = dto.ErrWorkflowTemplateNotFound
+	ErrWorkflowTemplateConflict = dto.ErrWorkflowTemplateConflict
+	ErrWorkflowTemplateInvalid  = dto.ErrWorkflowTemplateInvalid
 )
 
 type BPMNWorkflowTemplateCatalog struct {

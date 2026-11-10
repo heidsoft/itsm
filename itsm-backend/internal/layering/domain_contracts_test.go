@@ -19,6 +19,7 @@ import (
 	"itsm-backend/handlers/assignment_smart"
 	"itsm-backend/handlers/auth"
 	"itsm-backend/handlers/automation_rule"
+	"itsm-backend/handlers/bpmn"
 	"itsm-backend/handlers/escalation_matrix"
 	"itsm-backend/handlers/incident"
 	"itsm-backend/handlers/prediction"
@@ -67,6 +68,9 @@ var (
 	// 共享层是接口而非指针类型：接口到接口赋值同样在编译期检查方法集，
 	// 这能锁住 List/Stats 的 dto 值类型身份不被换成另一份同名结构。
 	_ timer.TimerReadStore = (service.TimerStore)(nil)
+	// 批次 3 第 1 步：bpmn 域只有 workflow_template.go 归零，不能进 contractDomains
+	// （那个守卫逐文件扫整个域，其余 7 个文件仍依赖共享层）；这里单独锁窄契约。
+	_ bpmn.WorkflowTemplateCatalog = (*service.BPMNWorkflowTemplateCatalog)(nil)
 )
 
 type domainSpec struct {
@@ -259,6 +263,9 @@ func TestSharedValueTypesRemainDTOAliases(t *testing.T) {
 		{"ErrIncidentResolutionRequired", service.ErrIncidentResolutionRequired, dto.ErrIncidentResolutionRequired},
 		{"ErrIncidentCloseNotesRequired", service.ErrIncidentCloseNotesRequired, dto.ErrIncidentCloseNotesRequired},
 		{"ErrIncidentVersionConflict", service.ErrIncidentVersionConflict, dto.ErrIncidentVersionConflict},
+		{"ErrWorkflowTemplateNotFound", service.ErrWorkflowTemplateNotFound, dto.ErrWorkflowTemplateNotFound},
+		{"ErrWorkflowTemplateConflict", service.ErrWorkflowTemplateConflict, dto.ErrWorkflowTemplateConflict},
+		{"ErrWorkflowTemplateInvalid", service.ErrWorkflowTemplateInvalid, dto.ErrWorkflowTemplateInvalid},
 	}
 	for _, s := range sentinels {
 		if !errors.Is(fmt.Errorf("wrapped: %w", s.shared), s.bottom) {
@@ -297,6 +304,10 @@ func TestSharedValueTypesRemainDTOAliases(t *testing.T) {
 		{"ticket_service.go", "type TicketSLAInfo = dto.TicketSLAInfo"},
 		{"timer_store.go", "type TimerListFilter = dto.TimerListFilter"},
 		{"timer_store.go", "type TimerStats = dto.TimerStats"},
+		{"bpmn_workflow_template_catalog.go", "ErrWorkflowTemplateNotFound = dto.ErrWorkflowTemplateNotFound"},
+		{"bpmn_workflow_template_catalog.go", "ErrWorkflowTemplateConflict = dto.ErrWorkflowTemplateConflict"},
+		{"bpmn_workflow_template_catalog.go", "ErrWorkflowTemplateInvalid = dto.ErrWorkflowTemplateInvalid"},
+		{"bpmn_pending_inventory.go", "const DefaultStaleThresholdHours = dto.DefaultStaleThresholdHours"},
 	}
 	for _, a := range aliases {
 		body, err := os.ReadFile(filepath.Join("..", "..", "service", a.file))
@@ -360,6 +371,10 @@ func TestDomainErrorMappingsUseDTOSentinels(t *testing.T) {
 			"dto.ErrIncidentVersionConflict", "dto.ErrIncidentInvalidTransition",
 			"dto.ErrIncidentResolutionRequired", "dto.ErrIncidentCloseNotesRequired",
 			"dto.ErrIncidentNotFound",
+		}},
+		{"bpmn", "workflow_template.go", []string{
+			"dto.ErrWorkflowTemplateNotFound", "dto.ErrWorkflowTemplateConflict",
+			"dto.ErrWorkflowTemplateInvalid",
 		}},
 	}
 	for _, c := range cases {

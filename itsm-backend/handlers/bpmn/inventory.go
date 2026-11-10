@@ -4,6 +4,7 @@ import (
 	"strconv"
 
 	"itsm-backend/common"
+	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/middleware"
 	"itsm-backend/service"
@@ -48,7 +49,7 @@ func (c *InventoryHandler) GetPendingInventory(ctx *gin.Context) {
 		return
 	}
 
-	staleThresholdHours := service.DefaultStaleThresholdHours
+	staleThresholdHours := dto.DefaultStaleThresholdHours
 	if raw := ctx.Query("staleThresholdHours"); raw != "" {
 		parsed, err := strconv.Atoi(raw)
 		if err != nil || parsed <= 0 {

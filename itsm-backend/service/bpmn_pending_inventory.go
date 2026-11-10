@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"itsm-backend/common"
+	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/change"
 	"itsm-backend/ent/incident"
@@ -113,8 +114,8 @@ var openInstanceStatuses = []string{"running", "suspended"}
 const maxInventoryTasks = 200
 
 // DefaultStaleThresholdHours 默认陈旧阈值（与 GA 就绪检查的 24h 口径一致）。
-// 导出：handler 与测试共用同一默认值，避免两处漂移。
-const DefaultStaleThresholdHours = 24
+// 唯一定义在 dto 包，这里保留常量别名：handler 与测试共用同一默认值。
+const DefaultStaleThresholdHours = dto.DefaultStaleThresholdHours
 
 // terminalBusinessStatuses 各业务域终态集合（按 businessKey 前缀索引）。
 // 来源为各域状态机白名单的「无出边」状态：

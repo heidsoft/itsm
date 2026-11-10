@@ -659,7 +659,7 @@ ticket 有 20 个 service 文件分散在 10 个子域。策略：
 
 ## 批次 3 前置：BPMN 四组边界拆分设计（2026-11-10）
 
-> **状态：设计定稿，代码未动。** 本节是批次 3 的开工依据。落地按「组 4 纯值 → 组 3 → 组 2 → 组 1 → 组合根专项」拆成独立提交，每组单独跑回归锁 + 反向验证 + 基线精确收紧；不按 `service/` 侧 36 文件清单整文件 `git mv`（见 :493）。
+> **状态：第 1 步已落地（2026-11-10，`workflow_template.go` 归零、L.3 `bpmn=8→7`）；第 2–5 步仍为设计态，代码未动。** 本节是批次 3 的开工依据。落地按「组 4 纯值 → 组 3 → 组 2 → 组 1 → 组合根专项」拆成独立提交，每组单独跑回归锁 + 反向验证 + 基线精确收紧；不按 `service/` 侧 36 文件清单整文件 `git mv`（见 :493）。
 
 ### 现状盘点（只读实测，非推算）
 
@@ -698,13 +698,15 @@ ticket 有 20 个 service 文件分散在 10 个子域。策略：
 
 | 步 | 范围 | `app.go` | 预期 L.3 |
 |:--|:---|:---|:---|
-| 1 | 组 4 纯值：3 个模板 sentinel + `DefaultStaleThresholdHours` 下沉 `dto/` + 别名；模板 DTO 本就在 `dto/` | 零改动 | 8 → 7（`workflow_template.go` 归零） |
+| 1 ✅ 已落地 | 组 4 纯值：3 个模板 sentinel + `DefaultStaleThresholdHours` 下沉 `dto/` + 别名；模板 DTO 本就在 `dto/` | 零改动 | **8 → 7**（实测，基线同 commit 收紧；合计 28 → 27 文件 / 10 域） |
 | 2 | 组 3：3 个请求 DTO 下沉 + 5 个服务窄接口，setter 改域内接口 | 零改动 | 7 → 5 |
 | 3 | 组 2：`ResolvedConfig` + `ErrConfigNotFound` 下沉 + 3 接口 | 零改动 | 5 → 4 |
 | 4 | 组 1：10 个 Request DTO + `ProcessEngine` 三访问器 + 版本服务；`ParseVersionNumber` 改注入函数字段 | 零改动 | 4 → 1（`workflow.go` 归零） |
 | 5 | 组 4 剩余（`lint.go` 构造 / `inventory.go` 包级函数）**与组合根专项合并**：`operations` / `problem` / `bpmn` 一次性改 `app.go` 并统一上调 C.6.4 基线 | 变更，一次调基线 | 1 → 0，删 `bpmn` 行 |
 
 目标读数：L.3 **28 文件 / 10 域 → 20 文件 / 9 域**，L.4 零依赖域 **57 → 58**；L.1 140 不变，C.6.4 五项除第 5 步的 `bootstrap_app_lines` 外不变。
+
+**第 1 步落地记录（2026-11-10）**：新增 `dto/bpmn_workflow_template_sentinels.go`（3 个 `ErrWorkflowTemplate*` + `DefaultStaleThresholdHours`），`service/bpmn_workflow_template_catalog.go` 与 `service/bpmn_pending_inventory.go` 改为同名别名（sentinel 仍是同一 error 实例、常量仍是编译期常量）；`handlers/bpmn/contracts.go` 声明 `WorkflowTemplateCatalog`（8 个方法，签名全部只引用 `dto` 值类型，连注释都不含共享层包路径），`workflow_template.go` 的字段、构造参数与 12 处错误映射改域内契约与 `dto.Err*`，`inventory.go` 改读 `dto.DefaultStaleThresholdHours`，`app.go` **零改动**（具体指针自动满足窄接口）。`bpmn` 是**部分归零域**，不能进 `contractDomains`（该守卫逐文件扫整个域，其余 7 个文件仍依赖共享层）；改用 `internal/layering/bpmn_partial_contract_test.go` 的「单文件契约 + 实测计数与 L.3 基线双锁 + 纯值单一来源」守卫，既有集中锁另补 1 条编译期断言、3 组 sentinel 身份、4 条 service 侧别名与 1 个域错误映射用例。反向验证 5 处（旧 `workflow_template.go` / sentinel 各自 `errors.New` / 基线不收紧 / 旧 `inventory.go` / dto 阈值漂移）全部由断言变红且保持可编译，恢复后转绿。C.8 实测 **L.1 140 / L.3 27 文件 10 域 / L.4 57 / L.5 零复活，0 failures 0 warnings**；全仓 `go build ./...` 与 `internal/layering`、`dto`、`handlers/bpmn`、`service` 相关单测全绿。本步不改运行时行为，不重建 prod 镜像。
 
 ### 与另外两条专项的界面
 

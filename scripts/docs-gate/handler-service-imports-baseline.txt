@@ -5,8 +5,9 @@
 # 2026-11-09 批次 2 补批三：4 个双符号域经窄契约 + dto 值类型下沉归零，实测 40 文件/21 域 -> 36 文件/17 域；L.1 140 与 C.6.4 五项不变。
 # 2026-11-09 批次 2 补批四：a2ui / assignment_smart / provisioning / ticket_tag 四域经窄契约 + dto 值类型与 sentinel 下沉归零，实测 36 文件/17 域 -> 32 文件/13 域；L.1 140 与 C.6.4 五项不变。
 # 2026-11-09 批次 2 补批五：incident / ticket / timer 三域经窄契约 + 成组值类型下沉（含异名别名 SLAMonitorMetrics）归零，实测 32 文件/13 域 -> 28 文件/10 域；L.1 140 与 C.6.4 五项不变。
+# 2026-11-10 批次 3 第 1 步：handlers/bpmn/workflow_template.go 经域内窄契约 WorkflowTemplateCatalog + 3 个模板 sentinel 与 DefaultStaleThresholdHours 下沉 dto 归零，实测 bpmn 8 -> 7（合计 28 -> 27 文件 / 10 域不变）；L.1 140、L.4 57 与 C.6.4 五项不变，app.go 零改动。
 ai=4
-bpmn=8
+bpmn=7
 change=1
 cmdb=7
 dashboard=1

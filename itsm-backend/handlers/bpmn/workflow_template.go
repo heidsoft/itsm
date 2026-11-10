@@ -8,11 +8,10 @@ import (
 	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/middleware"
-	"itsm-backend/service"
 )
 
 type WorkflowTemplateHandler struct {
-	catalog *service.BPMNWorkflowTemplateCatalog
+	catalog WorkflowTemplateCatalog
 }
 
 func (h *WorkflowTemplateHandler) RegisterRoutes(r *gin.RouterGroup) {
@@ -27,7 +26,7 @@ func (h *WorkflowTemplateHandler) RegisterRoutes(r *gin.RouterGroup) {
 	routes.POST("/:key/reload", middleware.RequirePermission("workflow", "write"), h.Reload)
 }
 
-func NewWorkflowTemplateHandler(catalog *service.BPMNWorkflowTemplateCatalog) *WorkflowTemplateHandler {
+func NewWorkflowTemplateHandler(catalog WorkflowTemplateCatalog) *WorkflowTemplateHandler {
 	return &WorkflowTemplateHandler{catalog: catalog}
 }
 
@@ -51,7 +50,7 @@ func (h *WorkflowTemplateHandler) Get(ctx *gin.Context) {
 		return
 	}
 	result, err := h.catalog.Get(ctx.Request.Context(), tenantID, ctx.Param("key"), ctx.Query("version"))
-	if errors.Is(err, service.ErrWorkflowTemplateNotFound) {
+	if errors.Is(err, dto.ErrWorkflowTemplateNotFound) {
 		common.Fail(ctx, common.NotFoundCode, "模板不存在")
 		return
 	}
@@ -78,11 +77,11 @@ func (h *WorkflowTemplateHandler) Create(ctx *gin.Context) {
 		return
 	}
 	result, err := h.catalog.CreateDraft(ctx.Request.Context(), tenantID, userID, &req)
-	if errors.Is(err, service.ErrWorkflowTemplateConflict) {
+	if errors.Is(err, dto.ErrWorkflowTemplateConflict) {
 		common.Fail(ctx, common.ConflictCode, "模板 key 已存在")
 		return
 	}
-	if errors.Is(err, service.ErrWorkflowTemplateInvalid) {
+	if errors.Is(err, dto.ErrWorkflowTemplateInvalid) {
 		common.Fail(ctx, common.ValidationError, "模板参数或 BPMN 内容无效")
 		return
 	}
@@ -104,15 +103,15 @@ func (h *WorkflowTemplateHandler) Update(ctx *gin.Context) {
 		return
 	}
 	result, err := h.catalog.UpdateDraft(ctx.Request.Context(), tenantID, ctx.Param("key"), &req)
-	if errors.Is(err, service.ErrWorkflowTemplateNotFound) {
+	if errors.Is(err, dto.ErrWorkflowTemplateNotFound) {
 		common.Fail(ctx, common.NotFoundCode, "模板不存在")
 		return
 	}
-	if errors.Is(err, service.ErrWorkflowTemplateConflict) {
+	if errors.Is(err, dto.ErrWorkflowTemplateConflict) {
 		common.Fail(ctx, common.ConflictCode, "只有草稿版本可以编辑")
 		return
 	}
-	if errors.Is(err, service.ErrWorkflowTemplateInvalid) {
+	if errors.Is(err, dto.ErrWorkflowTemplateInvalid) {
 		common.Fail(ctx, common.ValidationError, "模板参数无效")
 		return
 	}
@@ -129,15 +128,15 @@ func (h *WorkflowTemplateHandler) Publish(ctx *gin.Context) {
 		return
 	}
 	result, err := h.catalog.Publish(ctx.Request.Context(), tenantID, ctx.Param("key"))
-	if errors.Is(err, service.ErrWorkflowTemplateNotFound) {
+	if errors.Is(err, dto.ErrWorkflowTemplateNotFound) {
 		common.Fail(ctx, common.NotFoundCode, "模板不存在")
 		return
 	}
-	if errors.Is(err, service.ErrWorkflowTemplateConflict) {
+	if errors.Is(err, dto.ErrWorkflowTemplateConflict) {
 		common.Fail(ctx, common.ConflictCode, "只有草稿版本可以发布")
 		return
 	}
-	if errors.Is(err, service.ErrWorkflowTemplateInvalid) {
+	if errors.Is(err, dto.ErrWorkflowTemplateInvalid) {
 		common.Fail(ctx, common.ValidationError, "模板未通过 BPMN 校验")
 		return
 	}
@@ -154,7 +153,7 @@ func (h *WorkflowTemplateHandler) Archive(ctx *gin.Context) {
 		return
 	}
 	err := h.catalog.Archive(ctx.Request.Context(), tenantID, ctx.Param("key"))
-	if errors.Is(err, service.ErrWorkflowTemplateNotFound) {
+	if errors.Is(err, dto.ErrWorkflowTemplateNotFound) {
 		common.Fail(ctx, common.NotFoundCode, "已发布模板不存在")
 		return
 	}
@@ -175,11 +174,11 @@ func (h *WorkflowTemplateHandler) Reload(ctx *gin.Context) {
 	}
 	key := ctx.Param("key")
 	result, err := h.catalog.Reload(ctx.Request.Context(), tenantID, key)
-	if errors.Is(err, service.ErrWorkflowTemplateNotFound) {
+	if errors.Is(err, dto.ErrWorkflowTemplateNotFound) {
 		common.Fail(ctx, common.NotFoundCode, "已发布模板不存在，无法重载")
 		return
 	}
-	if errors.Is(err, service.ErrWorkflowTemplateInvalid) {
+	if errors.Is(err, dto.ErrWorkflowTemplateInvalid) {
 		common.BadRequestWithErr(ctx, err, "请求参数错误")
 		return
 	}
