@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strings"
 
-	"itsm-backend/service"
+	"itsm-backend/dto"
 )
 
 // CustomSkill 是 SkillRegistry 在运行期注册用户自定义 Skill 的统一容器。
@@ -27,8 +27,8 @@ import (
 //     2) 按照 target 类型返回约定结果（echo: 原样返回 input；noop: nil；static: 配置里的常量）；
 //     3) 其它 target 视为配置错误，返回错误。
 type CustomSkill struct {
-	*service.BaseSkill
-	manifest   service.SkillManifest
+	*dto.BaseSkill
+	manifest   dto.SkillManifest
 	executor   map[string]interface{}
 	executorOK bool
 }
@@ -87,7 +87,7 @@ func NewCustomSkill(cfg CustomSkillConfig) *CustomSkill {
 		description = "用户自定义 Skill"
 	}
 
-	b := service.NewBaseSkill(
+	b := dto.NewBaseSkill(
 		cfg.Code,
 		title,
 		cfg.Version,
@@ -118,7 +118,7 @@ func NewCustomSkill(cfg CustomSkillConfig) *CustomSkill {
 }
 
 // Manifest 返回 SkillManifest。
-func (s *CustomSkill) Manifest() service.SkillManifest {
+func (s *CustomSkill) Manifest() dto.SkillManifest {
 	return s.manifest
 }
 

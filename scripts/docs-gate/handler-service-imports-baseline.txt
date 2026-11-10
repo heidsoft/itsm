@@ -19,6 +19,14 @@
 # LLMGatewayPort 端口接口（service/rag_service.go 五处方法参数同步泛化）与 EmailIncidentCreator 窄契约归零；
 # 实测 email_intake 2 -> 0，整域基线行删除，合计 10 -> 8 文件 / 5 -> 4 域，L.4 零依赖域 62 -> 63。
 # L.1 140 与 C.6.4 五项不变，app.go 与 router.go 零改动（具体指针隐式满足端口/窄契约）。
+# 2026-11-10 skill 域归零：handlers/skill/handler.go + custom_skill.go 经
+# SkillRegistryCatalog 窄契约（7 方法 = 域内全部生产文件调用并集）+
+# SkillEntry/SkillInvokeResult 值类型与 4 个 sentinel（ErrSkillAlreadyRegistered/
+# ErrSkillNotFound/ErrSkillValidation/ErrSkillInvoke）下沉 dto（service 侧同名别名，
+# errors.Is 同一实例）归零；BaseSkill/SkillManifest 已随 LLMGateway 专项 B1 下沉。
+# NewHandler 的 nil registry 防御分支移除（全仓调用点均传真实注册表）。
+# 实测 skill 2 -> 0，整域基线行删除，合计 4 -> 2 文件 / 3 -> 2 域，
+# L.4 零依赖域 64 -> 65；L.1 140 与 C.6.4 五项不变，app.go 与 router.go 零改动。
 # 2026-11-10 LLMGateway 契约化专项 B2：handlers/ai/service.go 经 8 个域内窄契约
 # （ToolCatalog/DeepAnalyticsProvider/TrendPredictor/SLAForecastRunner/TriageAdvisor/
 # RootCauseAnalyzer/AITelemetryFacade/Summarizer）+ TriageResult/AIMetrics/QuotaUsage/
@@ -36,4 +44,3 @@
 # L.1 140 与 C.6.4 五项不变，app.go 与 router.go 零改动。
 change=1
 service_request=1
-skill=2

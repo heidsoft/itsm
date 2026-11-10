@@ -28,9 +28,9 @@ import (
 
 	"itsm-backend/common"
 	"itsm-backend/common/handlerctx"
+	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/middleware"
-	"itsm-backend/service"
 	"itsm-backend/service/marketplace"
 
 	"github.com/gin-gonic/gin"
@@ -40,7 +40,7 @@ import (
 // Handler 持有 SkillRegistry 与 Service 依赖。
 //
 // 设计要点：
-//   - 仅持有 service.SkillRegistry 引用；运行时注册表本身是 thread-safe，无需额外锁。
+//   - 仅持有共享层技能注册表（域内窄接口 SkillRegistryCatalog）；注册表本身 thread-safe。
 //   - 写操作（POST/PUT/DELETE）通过 admin 路径与 skill:write 权限保护；
 //     读操作（GET）通过 /skills 与 /skills/:code 路径与 skill:read 权限保护。
 //   - 调用入口（POST /:code/invoke）需要单独的 ai:read 权限——因为 Skill 调用时
@@ -50,7 +50,7 @@ import (
 //     否则声明形同虚设——任何持 ai:read 的角色都能调用声明了
 //     ticket:write 的 skill，等于把 skill 变成绕过路由级权限的后门。
 type Handler struct {
-	registry *service.SkillRegistry
+	registry SkillRegistryCatalog
 	logger   *zap.SugaredLogger
 	client   *ent.Client
 	// entitlements 由市场服务注入：目录里由商品交付的技能，只有该租户装了对应
@@ -72,10 +72,7 @@ func (h *Handler) SetSkillEntitlements(e SkillEntitlements) {
 // NewHandler 构造技能管理 Handler。
 // client 用于 Invoke 时按 DB 授权数据校验 skill 声明的 RequiredPermissions；
 // 传 nil 时权限判定退化为无 DB 数据源的模式结果，生产装配必须传入真实 client。
-func NewHandler(registry *service.SkillRegistry, logger *zap.SugaredLogger, client *ent.Client) *Handler {
-	if registry == nil {
-		registry = service.NewSkillRegistry()
-	}
+func NewHandler(registry SkillRegistryCatalog, logger *zap.SugaredLogger, client *ent.Client) *Handler {
 	if logger == nil {
 		logger = zap.NewNop().Sugar()
 	}
@@ -206,7 +203,7 @@ func (h *Handler) List(c *gin.Context) {
 		entries = h.registry.ListEntriesByTagScoped(tenantID, tag)
 	}
 
-	filtered := make([]service.SkillEntry, 0, len(entries))
+	filtered := make([]dto.SkillEntry, 0, len(entries))
 	for _, e := range entries {
 		if category != "" && !strings.EqualFold(e.Category, category) {
 			continue
@@ -321,7 +318,7 @@ func (h *Handler) Create(c *gin.Context) {
 		return
 	}
 	if err := h.registry.RegisterScoped(tenantID, skill); err != nil {
-		if errors.Is(err, service.ErrSkillAlreadyRegistered) {
+		if errors.Is(err, dto.ErrSkillAlreadyRegistered) {
 			common.Fail(c, common.ConflictCode, "skill already registered: "+req.Code)
 			return
 		}
@@ -600,7 +597,7 @@ func (h *Handler) Invoke(c *gin.Context) {
 // 拆分后走 middleware.HasResourcePermission 单一真源，避免本地再实现一套匹配。
 // 格式非法的码按不满足处理（fail-closed）：声明了无法解析的权限码，
 // 说明 manifest 本身有问题，不应放行。
-func (h *Handler) enforceRequiredPermissions(c *gin.Context, entry service.SkillEntry) bool {
+func (h *Handler) enforceRequiredPermissions(c *gin.Context, entry dto.SkillEntry) bool {
 	if len(entry.RequiredPerms) == 0 {
 		return true
 	}
@@ -628,9 +625,9 @@ func (h *Handler) enforceRequiredPermissions(c *gin.Context, entry service.Skill
 // failInvoke 翻译 SkillRegistry 调用错误为合适的 HTTP 响应码。
 func failInvoke(c *gin.Context, code string, err error) {
 	switch {
-	case errors.Is(err, service.ErrSkillNotFound):
+	case errors.Is(err, dto.ErrSkillNotFound):
 		common.Fail(c, common.NotFoundCode, "skill not found: "+code)
-	case errors.Is(err, service.ErrSkillValidation):
+	case errors.Is(err, dto.ErrSkillValidation):
 		common.ParamErrorWithErr(c, err, "请求参数错误")
 	default:
 		// ErrSkillInvoke 与其它内部错误都映射为 500，但保留 err 链路便于排查。
@@ -639,7 +636,7 @@ func failInvoke(c *gin.Context, code string, err error) {
 }
 
 // categoryIsCustom 检查 manifest 是否来自自定义 Skill（即可变）。
-func categoryIsCustom(m service.SkillManifest) bool {
+func categoryIsCustom(m dto.SkillManifest) bool {
 	for _, c := range m.Capabilities {
 		if strings.HasPrefix(c, "custom.") {
 			return true
@@ -649,7 +646,7 @@ func categoryIsCustom(m service.SkillManifest) bool {
 }
 
 // manifestToConfig 把 SkillManifest 转换为 CustomSkillConfig，便于 re-register。
-func manifestToConfig(m service.SkillManifest) CustomSkillConfig {
+func manifestToConfig(m dto.SkillManifest) CustomSkillConfig {
 	return CustomSkillConfig{
 		Code:                m.Name,
 		Version:             m.Version,

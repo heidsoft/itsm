@@ -32,6 +32,7 @@ import (
 	"itsm-backend/handlers/problem_investigation"
 	"itsm-backend/handlers/provisioning"
 	"itsm-backend/handlers/release"
+	"itsm-backend/handlers/skill"
 	"itsm-backend/handlers/ticket"
 	"itsm-backend/handlers/ticket_notification"
 	"itsm-backend/handlers/ticket_tag"
@@ -48,15 +49,17 @@ var (
 	_ account.UserService        = (*service.UserService)(nil)
 	_ analytics.AnalyticsService = (*service.AnalyticsService)(nil)
 	// B1+B2：AI 域已整域归零，锁全部 9 个域内窄契约的编译期满足。
-	_ ai.SkillRegistrar                         = (*service.SkillRegistry)(nil)
-	_ ai.ToolCatalog                            = (*service.ToolRegistry)(nil)
-	_ ai.DeepAnalyticsProvider                  = (*service.AnalyticsService)(nil)
-	_ ai.TrendPredictor                         = (*service.PredictionService)(nil)
-	_ ai.SLAForecastRunner                      = (*service.SLAForecastSkill)(nil)
-	_ ai.TriageAdvisor                          = (*service.TriageService)(nil)
-	_ ai.RootCauseAnalyzer                      = (*service.RootCauseService)(nil)
-	_ ai.AITelemetryFacade                      = (*service.AITelemetryService)(nil)
-	_ ai.Summarizer                             = (*service.SummarizeService)(nil)
+	_ ai.SkillRegistrar        = (*service.SkillRegistry)(nil)
+	_ ai.ToolCatalog           = (*service.ToolRegistry)(nil)
+	_ ai.DeepAnalyticsProvider = (*service.AnalyticsService)(nil)
+	_ ai.TrendPredictor        = (*service.PredictionService)(nil)
+	_ ai.SLAForecastRunner     = (*service.SLAForecastSkill)(nil)
+	_ ai.TriageAdvisor         = (*service.TriageService)(nil)
+	_ ai.RootCauseAnalyzer     = (*service.RootCauseService)(nil)
+	_ ai.AITelemetryFacade     = (*service.AITelemetryService)(nil)
+	_ ai.Summarizer            = (*service.SummarizeService)(nil)
+	// skill 域整域归零（2026-11-10）：窄契约与值类型/sentinel 全部走 dto。
+	_ skill.SkillRegistryCatalog                = (*service.SkillRegistry)(nil)
 	_ approval.ApprovalService                  = (*service.ApprovalService)(nil)
 	_ approval_chain.ApprovalChainService       = (*service.ApprovalChainService)(nil)
 	_ auth.EmailService                         = (*service.EmailService)(nil)
@@ -170,6 +173,7 @@ var contractDomains = []domainSpec{
 	{"dashboard", "handler.go", "DashboardOverviewProvider", "DashboardService,ServiceQualityReportService,TicketService,IncidentService", ""},
 	{"email_intake", "orchestrator.go", "EmailIncidentCreator", "IncidentService", ""},
 	{"ai", "service.go", "ToolCatalog", "ToolRegistry,AnalyticsService,PredictionService,SLAForecastSkill,TriageService,RootCauseService,AITelemetryService,SummarizeService", ""},
+	{"skill", "handler.go", "SkillRegistryCatalog", "SkillRegistry", ""},
 }
 
 // 只剔除行注释，避免把说明文字里的示例当成代码；L.3 门禁本身是全文 grep，

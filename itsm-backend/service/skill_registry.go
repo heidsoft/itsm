@@ -11,11 +11,12 @@ package service
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"sort"
 	"sync"
 	"time"
+
+	"itsm-backend/dto"
 )
 
 // SkillRegistry 注册表（运行期内存中心）。
@@ -30,7 +31,7 @@ import (
 type SkillRegistry struct {
 	mu       sync.RWMutex
 	skills   map[string]Skill
-	owners   map[string]int                // code -> 创建租户 ID；0 = 内置/全局
+	owners   map[string]int                 // code -> 创建租户 ID；0 = 内置/全局
 	tagIndex map[string]map[string]struct{} // tag -> codes 集合
 }
 
@@ -43,16 +44,16 @@ func NewSkillRegistry() *SkillRegistry {
 }
 
 // ErrSkillAlreadyRegistered skill code 已注册。
-var ErrSkillAlreadyRegistered = errors.New("skill already registered")
+var ErrSkillAlreadyRegistered = dto.ErrSkillAlreadyRegistered
 
 // ErrSkillNotFound skill code 未注册。
-var ErrSkillNotFound = errors.New("skill not found")
+var ErrSkillNotFound = dto.ErrSkillNotFound
 
 // ErrSkillValidation 注册或调用前的 manifest/input 校验失败。
-var ErrSkillValidation = errors.New("skill validation failed")
+var ErrSkillValidation = dto.ErrSkillValidation
 
 // ErrSkillInvoke 调用期失败。
-var ErrSkillInvoke = errors.New("skill invocation failed")
+var ErrSkillInvoke = dto.ErrSkillInvoke
 
 // Register 注册一个 Skill。code 必须唯一，且 manifest 必须通过基本完整性校验
 // （name/version/permissions 三项必填），以保持 marketplace 视图的有效性。
@@ -286,33 +287,8 @@ func (r *SkillRegistry) Count() int {
 	return len(r.skills)
 }
 
-// SkillEntry 管理面板 / API 视图：Skill 的扁平可序列化快照。
-//
-// 与 SkillManifest 的区别：SkillEntry 折叠了 Code/Name/Metrics 等从 Skill
-// 接口直接派生出的字段，方便前端直接渲染而不必再下钻 Manifest。
-type SkillEntry struct {
-	Code            string        `json:"code"`
-	Name            string        `json:"name"`
-	Version         string        `json:"version"`
-	Title           string        `json:"title"`
-	Provider        string        `json:"provider"`
-	Description     string        `json:"description"`
-	Category        string        `json:"category"` // ga / pilot / experimental
-	Tags            []string      `json:"tags"`
-	Capabilities    []string      `json:"capabilities"`
-	RequiredPerms   []string      `json:"requiredPermissions"`
-	Author          string        `json:"author,omitempty"`
-	IsOfficial      bool          `json:"isOfficial"`
-	Checksum        string        `json:"checksum,omitempty"`
-	IsBuiltin       bool          `json:"isBuiltin"`
-	// TenantID 是技能归属租户：0 表示内置/全局技能，>0 表示该租户自定义技能。
-	// 管理端据此区分「平台提供」与「本租户注册」。
-	TenantID        int           `json:"tenantId"`
-	Status          string        `json:"status"` // active / disabled
-	Manifest        SkillManifest `json:"manifest"`
-	Metrics         SkillMetrics  `json:"metrics"`
-	LongDescription string        `json:"longDescription,omitempty"`
-}
+// SkillEntry 值类型唯一实现在 dto 包；此处保留同名别名以保持 service 包公开 API。
+type SkillEntry = dto.SkillEntry
 
 // ListEntries 全部 Skill 的可序列化视图。
 func (r *SkillRegistry) ListEntries() []SkillEntry {
@@ -388,12 +364,8 @@ func (r *SkillRegistry) entries(skills []Skill) []SkillEntry {
 	return out
 }
 
-// SkillInvokeResult Invoke 的结构化返回，包含 latency / 错误码 / 是否被 metrics 追踪。
-type SkillInvokeResult struct {
-	Output         interface{}
-	LatencyMs      int64
-	SkippedMetrics bool
-}
+// SkillInvokeResult 值类型唯一实现在 dto 包；此处保留同名别名以保持 service 包公开 API。
+type SkillInvokeResult = dto.SkillInvokeResult
 
 // Invoke 是 Skill 的统一运行时调用入口。
 //
