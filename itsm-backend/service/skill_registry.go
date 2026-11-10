@@ -428,7 +428,7 @@ func (r *SkillRegistry) InvokeWithMetrics(ctx context.Context, code string, inpu
 	elapsed := time.Since(start)
 	tracked := false
 	if hasBase {
-		bs.recordResult(elapsed, execErr)
+		bs.RecordResult(elapsed, execErr)
 		tracked = true
 	}
 	if execErr != nil {
@@ -450,13 +450,13 @@ func (r *SkillRegistry) invokeWithMetrics(ctx context.Context, code string, inpu
 	return res.Output, err
 }
 
-// trackedSkill 内部接口：BaseSkill 私有地实现以让 Registry 累计指标。
-// 不导出，避免被外部 Skill 实现误用导致统计口径分裂。
+// trackedSkill 内部接口：BaseSkill 以导出钩子实现，供 Registry 累计指标。
+// 接口本身不导出，避免被外部 Skill 实现误用导致统计口径分裂。
 //
-// 同时承担：身份钩子 trackedSkill() + 单次结果统计 recordResult(elapsed, err)。
+// 同时承担：身份钩子 TrackedSkill() + 单次结果统计 RecordResult(elapsed, err)。
 // 之所以要求 skill 同时实现这两个方法，是为了让 Registry 知道"哪些调用会被
 // 自动统计"，并避免为不嵌入 BaseSkill 的自定义 Skill 引入静默指标丢失。
 type trackedSkill interface {
-	trackedSkill()
-	recordResult(elapsed time.Duration, err error)
+	TrackedSkill()
+	RecordResult(elapsed time.Duration, err error)
 }

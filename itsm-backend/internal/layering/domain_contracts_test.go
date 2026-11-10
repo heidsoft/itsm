@@ -13,6 +13,7 @@ import (
 	"itsm-backend/dto"
 	"itsm-backend/handlers/a2ui"
 	"itsm-backend/handlers/account"
+	"itsm-backend/handlers/ai"
 	"itsm-backend/handlers/analytics"
 	"itsm-backend/handlers/approval"
 	"itsm-backend/handlers/approval_chain"
@@ -44,8 +45,10 @@ import (
 // 编译期断言：生产具体类型必须满足域内窄契约。契约方法集由各域 handler/routes
 // 的真实调用面决定，任何签名漂移都会在编译期暴露，而不是拖到运行时。
 var (
-	_ account.UserService                       = (*service.UserService)(nil)
-	_ analytics.AnalyticsService                = (*service.AnalyticsService)(nil)
+	_ account.UserService        = (*service.UserService)(nil)
+	_ analytics.AnalyticsService = (*service.AnalyticsService)(nil)
+	// B1：AI 域仍是部分归零域，只锁 SkillRegistrar 编译期满足，不进 contractDomains。
+	_ ai.SkillRegistrar                         = (*service.SkillRegistry)(nil)
 	_ approval.ApprovalService                  = (*service.ApprovalService)(nil)
 	_ approval_chain.ApprovalChainService       = (*service.ApprovalChainService)(nil)
 	_ auth.EmailService                         = (*service.EmailService)(nil)

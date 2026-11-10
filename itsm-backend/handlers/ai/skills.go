@@ -17,7 +17,6 @@ import (
 	"strconv"
 
 	"itsm-backend/dto"
-	"itsm-backend/service"
 )
 
 // SkillInputError 输入校验失败的标准化错误。
@@ -42,10 +41,10 @@ func (e *SkillInputError) Unwrap() error { return e.Wrapped }
 // input["role"]，因此这里不会被调用方伪造；若 skill 被后台直接调用而未注入
 // 身份，则得到零值 viewer → 非管理角色 + userID=0 → 空集（fail-closed），
 // 不会退回全租户口径。
-func skillReportViewer(in map[string]any) service.DashboardViewer {
+func skillReportViewer(in map[string]any) dto.DashboardViewer {
 	userID, _ := inputInt(in, "userId", 0)
 	role, _ := inputString(in, "role", false)
-	return service.DashboardViewer{UserID: userID, Role: role}
+	return dto.DashboardViewer{UserID: userID, Role: role}
 }
 
 // helper：从 map 中按 key 取出 string，缺值时返回 SkillInputError。
@@ -110,12 +109,12 @@ type TriageSkillInput struct {
 
 // TriageSkill 是 ai.triage 的 Skill 包装。
 type TriageSkill struct {
-	*service.BaseSkill
+	*dto.BaseSkill
 	svc *Service
 }
 
 func NewTriageSkill(svc *Service) *TriageSkill {
-	b := service.NewBaseSkill(
+	b := dto.NewBaseSkill(
 		"ai.triage",
 		"AI 智能分诊",
 		"v1",
@@ -130,10 +129,10 @@ func NewTriageSkill(svc *Service) *TriageSkill {
 }
 
 // Manifest 复用 BaseSkill 字段并附加输入/输出 schema 与 long description。
-func (s *TriageSkill) Manifest() service.SkillManifest {
+func (s *TriageSkill) Manifest() dto.SkillManifest {
 	m := s.BuildManifest()
 	m.LongDescription = "TriageSkill 接受工单的标题与描述，返回建议的 category/priority/confidence/reasoning。" +
-		" 内部委托给 service.TriageService 走 LLM 推理；LLM 不可用时降级为关键词匹配。"
+		" 内部委托给分诊服务走 LLM 推理；LLM 不可用时降级为关键词匹配。"
 	m.InputSchema = map[string]any{
 		"type":     "object",
 		"required": []string{"title", "description", "tenantId"},
@@ -211,12 +210,12 @@ type ChatSkillInput struct {
 }
 
 type ChatSkill struct {
-	*service.BaseSkill
+	*dto.BaseSkill
 	svc *Service
 }
 
 func NewChatSkill(svc *Service) *ChatSkill {
-	b := service.NewBaseSkill(
+	b := dto.NewBaseSkill(
 		"ai.chat",
 		"AI 知识对话",
 		"v1",
@@ -230,7 +229,7 @@ func NewChatSkill(svc *Service) *ChatSkill {
 	return &ChatSkill{BaseSkill: b, svc: svc}
 }
 
-func (s *ChatSkill) Manifest() service.SkillManifest {
+func (s *ChatSkill) Manifest() dto.SkillManifest {
 	m := s.BuildManifest()
 	m.LongDescription = "ChatSkill 接受 user 的自然语言 query，调用 RAGService 检索知识库并由 LLM 整合答案；" +
 		"对话历史会自动持久化到 conversations/messages 表。"
@@ -308,12 +307,12 @@ type KnowledgeSearchSkillInput struct {
 }
 
 type KnowledgeSearchSkill struct {
-	*service.BaseSkill
+	*dto.BaseSkill
 	svc *Service
 }
 
 func NewKnowledgeSearchSkill(svc *Service) *KnowledgeSearchSkill {
-	b := service.NewBaseSkill(
+	b := dto.NewBaseSkill(
 		"ai.knowledge_search",
 		"知识库检索",
 		"v1",
@@ -327,7 +326,7 @@ func NewKnowledgeSearchSkill(svc *Service) *KnowledgeSearchSkill {
 	return &KnowledgeSearchSkill{BaseSkill: b, svc: svc}
 }
 
-func (s *KnowledgeSearchSkill) Manifest() service.SkillManifest {
+func (s *KnowledgeSearchSkill) Manifest() dto.SkillManifest {
 	return s.BuildManifest()
 }
 
@@ -371,12 +370,12 @@ type SummarizeSkillInput struct {
 }
 
 type SummarizeSkill struct {
-	*service.BaseSkill
+	*dto.BaseSkill
 	svc *Service
 }
 
 func NewSummarizeSkill(svc *Service) *SummarizeSkill {
-	b := service.NewBaseSkill(
+	b := dto.NewBaseSkill(
 		"ai.summarize",
 		"工单摘要",
 		"v1",
@@ -390,7 +389,7 @@ func NewSummarizeSkill(svc *Service) *SummarizeSkill {
 	return &SummarizeSkill{BaseSkill: b, svc: svc}
 }
 
-func (s *SummarizeSkill) Manifest() service.SkillManifest { return s.BuildManifest() }
+func (s *SummarizeSkill) Manifest() dto.SkillManifest { return s.BuildManifest() }
 
 func (s *SummarizeSkill) Validate(input interface{}) error {
 	in, err := coerceToMap(input)
@@ -428,12 +427,12 @@ type AnalyzeSkillInput struct {
 }
 
 type AnalyzeSkill struct {
-	*service.BaseSkill
+	*dto.BaseSkill
 	svc *Service
 }
 
 func NewAnalyzeSkill(svc *Service) *AnalyzeSkill {
-	b := service.NewBaseSkill(
+	b := dto.NewBaseSkill(
 		"ai.analyze",
 		"工单根因分析",
 		"v1",
@@ -447,7 +446,7 @@ func NewAnalyzeSkill(svc *Service) *AnalyzeSkill {
 	return &AnalyzeSkill{BaseSkill: b, svc: svc}
 }
 
-func (s *AnalyzeSkill) Manifest() service.SkillManifest { return s.BuildManifest() }
+func (s *AnalyzeSkill) Manifest() dto.SkillManifest { return s.BuildManifest() }
 
 func (s *AnalyzeSkill) Validate(input interface{}) error {
 	in, err := coerceToMap(input)
@@ -478,12 +477,12 @@ func (s *AnalyzeSkill) Execute(ctx context.Context, input interface{}) (interfac
 // ----------------------------------------------------------------------------
 
 type AnalyticsSkill struct {
-	*service.BaseSkill
+	*dto.BaseSkill
 	svc *Service
 }
 
 func NewAnalyticsSkill(svc *Service) *AnalyticsSkill {
-	b := service.NewBaseSkill(
+	b := dto.NewBaseSkill(
 		"ai.analytics",
 		"深度数据分析",
 		"v1",
@@ -497,7 +496,7 @@ func NewAnalyticsSkill(svc *Service) *AnalyticsSkill {
 	return &AnalyticsSkill{BaseSkill: b, svc: svc}
 }
 
-func (s *AnalyticsSkill) Manifest() service.SkillManifest {
+func (s *AnalyticsSkill) Manifest() dto.SkillManifest {
 	m := s.BuildManifest()
 	m.InputSchema = map[string]any{
 		"type":     "object",
@@ -587,12 +586,12 @@ func (s *AnalyticsSkill) Execute(ctx context.Context, input interface{}) (interf
 // ----------------------------------------------------------------------------
 
 type TrendPredictionSkill struct {
-	*service.BaseSkill
+	*dto.BaseSkill
 	svc *Service
 }
 
 func NewTrendPredictionSkill(svc *Service) *TrendPredictionSkill {
-	b := service.NewBaseSkill(
+	b := dto.NewBaseSkill(
 		"ai.trend_prediction",
 		"趋势预测",
 		"v1",
@@ -606,7 +605,7 @@ func NewTrendPredictionSkill(svc *Service) *TrendPredictionSkill {
 	return &TrendPredictionSkill{BaseSkill: b, svc: svc}
 }
 
-func (s *TrendPredictionSkill) Manifest() service.SkillManifest { return s.BuildManifest() }
+func (s *TrendPredictionSkill) Manifest() dto.SkillManifest { return s.BuildManifest() }
 
 func (s *TrendPredictionSkill) Validate(input interface{}) error {
 	in, err := coerceToMap(input)
@@ -658,12 +657,12 @@ func (s *TrendPredictionSkill) Execute(ctx context.Context, input interface{}) (
 // ----------------------------------------------------------------------------
 
 type CreateTicketSkill struct {
-	*service.BaseSkill
+	*dto.BaseSkill
 	svc *Service
 }
 
 func NewCreateTicketSkill(svc *Service) *CreateTicketSkill {
-	b := service.NewBaseSkill(
+	b := dto.NewBaseSkill(
 		"ai.create_ticket",
 		"AI 创建工单",
 		"v1",
@@ -677,7 +676,7 @@ func NewCreateTicketSkill(svc *Service) *CreateTicketSkill {
 	return &CreateTicketSkill{BaseSkill: b, svc: svc}
 }
 
-func (s *CreateTicketSkill) Manifest() service.SkillManifest { return s.BuildManifest() }
+func (s *CreateTicketSkill) Manifest() dto.SkillManifest { return s.BuildManifest() }
 
 func (s *CreateTicketSkill) Validate(input interface{}) error {
 	in, err := coerceToMap(input)
@@ -720,12 +719,12 @@ type AgentToolSkillInput struct {
 }
 
 type AgentToolSkill struct {
-	*service.BaseSkill
+	*dto.BaseSkill
 	svc *Service
 }
 
 func NewAgentToolSkill(svc *Service) *AgentToolSkill {
-	b := service.NewBaseSkill(
+	b := dto.NewBaseSkill(
 		"ai.agent_tool",
 		"AI 工具执行",
 		"v1",
@@ -739,7 +738,7 @@ func NewAgentToolSkill(svc *Service) *AgentToolSkill {
 	return &AgentToolSkill{BaseSkill: b, svc: svc}
 }
 
-func (s *AgentToolSkill) Manifest() service.SkillManifest {
+func (s *AgentToolSkill) Manifest() dto.SkillManifest {
 	m := s.BuildManifest()
 	m.LongDescription = "AgentToolSkill 接受 tool 名称与参数，调用 Service.ExecuteTool，" +
 		"其内部已实现 Gate 2 工具级 RBAC + 写工具的审批队列逻辑。"
@@ -807,12 +806,12 @@ func (s *AgentToolSkill) Execute(ctx context.Context, input interface{}) (interf
 // ----------------------------------------------------------------------------
 
 type MetricsSkill struct {
-	*service.BaseSkill
+	*dto.BaseSkill
 	svc *Service
 }
 
 func NewMetricsSkill(svc *Service) *MetricsSkill {
-	b := service.NewBaseSkill(
+	b := dto.NewBaseSkill(
 		"ai.metrics",
 		"AI 指标聚合",
 		"v1",
@@ -826,7 +825,7 @@ func NewMetricsSkill(svc *Service) *MetricsSkill {
 	return &MetricsSkill{BaseSkill: b, svc: svc}
 }
 
-func (s *MetricsSkill) Manifest() service.SkillManifest { return s.BuildManifest() }
+func (s *MetricsSkill) Manifest() dto.SkillManifest { return s.BuildManifest() }
 
 func (s *MetricsSkill) Validate(input interface{}) error {
 	in, err := coerceToMap(input)
@@ -868,12 +867,12 @@ type FeedbackSkillInput struct {
 }
 
 type FeedbackSkill struct {
-	*service.BaseSkill
+	*dto.BaseSkill
 	svc *Service
 }
 
 func NewFeedbackSkill(svc *Service) *FeedbackSkill {
-	b := service.NewBaseSkill(
+	b := dto.NewBaseSkill(
 		"ai.feedback",
 		"AI 反馈收集",
 		"v1",
@@ -887,7 +886,7 @@ func NewFeedbackSkill(svc *Service) *FeedbackSkill {
 	return &FeedbackSkill{BaseSkill: b, svc: svc}
 }
 
-func (s *FeedbackSkill) Manifest() service.SkillManifest { return s.BuildManifest() }
+func (s *FeedbackSkill) Manifest() dto.SkillManifest { return s.BuildManifest() }
 
 func (s *FeedbackSkill) Validate(input interface{}) error {
 	in, err := coerceToMap(input)

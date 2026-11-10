@@ -3,9 +3,10 @@ package service
 import (
 	"context"
 	"database/sql"
-	"errors"
 	"fmt"
 	"time"
+
+	"itsm-backend/dto"
 
 	"go.uber.org/zap"
 )
@@ -108,7 +109,7 @@ func (r *aiTelemetryRepository) UpdateFeedbackAccepted(ctx context.Context, tena
 
 // ErrFeedbackNotFound 当 UpdateFeedbackAccepted 没找到匹配行（id 错、
 // 租户错、或 item_type 不是 ai_audit）。
-var ErrFeedbackNotFound = errors.New("ai feedback row not found")
+var ErrFeedbackNotFound = dto.ErrFeedbackNotFound
 
 // FeedbackAggregate 是按租户聚合的反馈指标。
 type FeedbackAggregate struct {

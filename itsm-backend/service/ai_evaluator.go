@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"itsm-backend/common"
+	"itsm-backend/dto"
 )
 
 // ==================== AI 评估器 ====================
@@ -31,34 +32,11 @@ const (
 //   - BySkill 是新字段，结构与 ByScenario 一致，便于前端按"技能"维度渲染。
 //   - BySkillAlias 是 ByScenario 的反别名（统一返回两个字段，前端可任选）。
 //   - 旧 kind 字段（如 "triage"）会通过 scenarioToSkillCode 映射到 ai.triage。
-type AIEvaluationReport struct {
-	GeneratedAt           string                `json:"generatedAt"`
-	LookbackDays          int                   `json:"lookbackDays"`
-	TotalFeedback         int                   `json:"totalFeedback"`
-	UsefulRate            float64               `json:"usefulRate"`
-	AcceptedRate          float64               `json:"acceptedRate"`
-	AvgConfidence         float64               `json:"avgConfidence"`
-	HealthScore           float64               `json:"healthScore"`
-	HasData               bool                  `json:"hasData"`
-	ByScenario            []AIScenarioEval      `json:"byScenario"`
-	BySkill               []AISkillEval         `json:"bySkill"`
-	ConfidenceCalibration []AICalibrationBucket `json:"confidenceCalibration"`
-	Platform              LLMPlatformStats      `json:"platform"`
-}
 
 // AIScenarioEval 单个 AI 场景（triage/summarize/analyze/rag_search/...）的评估。
 //
 // 字段兼容性：保留 Kind（字段名同前），并新增 SkillCode / SkillName。
 // 旧"triage" → 新"ai.triage"由 scenarioToSkillCode 推导。
-type AIScenarioEval struct {
-	Kind          string  `json:"kind"`
-	SkillCode     string  `json:"skillCode,omitempty"`
-	SkillName     string  `json:"skillName,omitempty"`
-	Count         int     `json:"count"`
-	UsefulRate    float64 `json:"usefulRate"`
-	AcceptedRate  float64 `json:"acceptedRate"`
-	AvgConfidence float64 `json:"avgConfidence"`
-}
 
 // AISkillEval 按 Skill 维度的评估（来自 SkillRegistry 的 SkillEntity）。
 //
@@ -67,33 +45,19 @@ type AIScenarioEval struct {
 //   - 增加 HealthScore 字段，按 manifest.eval.successThreshold 与校准误差
 //     给出 0-100 的子健康分；
 //   - 配合 AIEvaluationReport.HealthScore 形成"总-分"健康分。
-type AISkillEval struct {
-	SkillCode     string  `json:"skillCode"`
-	SkillName     string  `json:"skillName,omitempty"`
-	Count         int     `json:"count"`
-	UsefulRate    float64 `json:"usefulRate"`
-	AcceptedRate  float64 `json:"acceptedRate"`
-	AvgConfidence float64 `json:"avgConfidence"`
-	HealthScore   float64 `json:"healthScore"`
-	IsPilot       bool    `json:"isPilot"`
-}
 
 // AICalibrationBucket 置信度分桶：中点=桶内置信度均值（评分校准的目标值），
 // CalibrationError = |实际有用率 - 中点|，越小说明置信度越可信。
-type AICalibrationBucket struct {
-	Bucket           string  `json:"bucket"`
-	Midpoint         float64 `json:"midpoint"`
-	Count            int     `json:"count"`
-	UsefulRate       float64 `json:"usefulRate"`
-	CalibrationError float64 `json:"calibrationError"`
-}
 
 // LLMPlatformStats 平台级 LLM 调用统计（ai_llm_calls，无租户维度）。
-type LLMPlatformStats struct {
-	LLMCallCount int     `json:"llmCallCount"`
-	SuccessRate  float64 `json:"successRate"`
-	AvgLatencyMs float64 `json:"avgLatencyMs"`
-}
+
+// AI 评估/审计值类型已下沉 dto；同名别名保持调用点零改动。
+type AIEvaluationReport = dto.AIEvaluationReport
+type AIScenarioEval = dto.AIScenarioEval
+type AISkillEval = dto.AISkillEval
+type AICalibrationBucket = dto.AICalibrationBucket
+type LLMPlatformStats = dto.LLMPlatformStats
+type AIAuditEntry = dto.AIAuditEntry
 
 // scenarioToSkillCode 把旧"kind"（scenarios）映射到 Skill 标识。
 //
@@ -365,21 +329,6 @@ func (s *AITelemetryService) loadPlatformStats(ctx context.Context, lookbackDays
 // AIAuditEntry 是 /api/v1/ai/audit-logs 列表项（camelCase）。
 // notes 字段为 JSON（promptVersion/model/confidence/suggestion/notes），
 // 由 RecordAudit 写入 ai_feedbacks.notes，此处解析为结构化字段。
-type AIAuditEntry struct {
-	ID            int64                  `json:"id"`
-	CreatedAt     string                 `json:"createdAt"`
-	TenantID      int                    `json:"tenantId"`
-	UserID        int                    `json:"userId"`
-	RequestID     string                 `json:"requestId"`
-	Scenario      string                 `json:"scenario"`
-	InputRef      string                 `json:"inputRef"`
-	PromptVersion string                 `json:"promptVersion"`
-	Model         string                 `json:"model"`
-	Confidence    float64                `json:"confidence"`
-	Accepted      bool                   `json:"accepted"`
-	Suggestion    map[string]interface{} `json:"suggestion"`
-	Notes         string                 `json:"notes"`
-}
 
 // ListAuditLogs 分页查询租户的 AI 审计记录（item_type='ai_audit'）。
 // kind 过滤通过占位符参数化，查询骨架为固定字符串，不拼接用户输入。

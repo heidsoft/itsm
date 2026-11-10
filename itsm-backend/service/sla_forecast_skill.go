@@ -11,53 +11,25 @@ import (
 	"go.uber.org/zap"
 
 	"itsm-backend/common"
+	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/ticket"
 	ticketrepo "itsm-backend/repository/ticket"
 )
 
 // ForecastInput 输入结构
-type ForecastInput struct {
-	TenantID  int
-	StartDate time.Time
-	EndDate   time.Time
-	Metrics   []string // ["volume", "response_time", "sla_compliance"]
-	// Viewer 是读取者身份（R1）。SLAForecastSkill 是 /api/v1/ai/predictions
-	// 的首选实现，此前与 legacy 预测一样只按 tenant 拉全量工单；零值 viewer
-	// 按最窄档收窄为空集，不会静默放宽。后台无请求者上下文的调用须显式
-	// 传 ScopeAll，而不是省略。
-	Viewer DashboardViewer
-}
 
 // PredictionPoint 单个预测点
-type PredictionPoint struct {
-	Date       time.Time `json:"date"`
-	Predicted  float64   `json:"predicted"`
-	LowerBound float64   `json:"lowerBound"`
-	UpperBound float64   `json:"upperBound"`
-	Confidence float64   `json:"confidence"`
-	Anomaly    bool      `json:"anomaly"`
-}
 
 // ForecastOutput 预测输出结构
-type ForecastOutput struct {
-	Predictions  []PredictionPoint `json:"predictions"`
-	Confidence   float64           `json:"confidence"`   // 真实计算
-	Model        string            `json:"model"`        // "statistical" | "llm_insight"
-	Insights     string            `json:"insights"`     // LLM生成的洞察
-	Seasonality  map[string]bool   `json:"seasonality"`  // 检测到的季节性
-	Trend        string            `json:"trend"`        // "increasing" | "decreasing" | "stable"
-	AnomalyDates []string          `json:"anomalyDates"` // 异常日期
-}
 
 // ForecastData 内部使用的数据结构
-type ForecastData struct {
-	HistoricalCounts []int           // 历史数据序列
-	Dates            []time.Time     // 对应日期
-	Mean             float64         // 均值
-	StdDev           float64         // 标准差
-	Seasonality      map[string]bool // 季节性
-}
+
+// SLA 预测值类型已下沉 dto；同名别名保持调用点零改动。
+type ForecastInput = dto.ForecastInput
+type PredictionPoint = dto.PredictionPoint
+type ForecastOutput = dto.ForecastOutput
+type ForecastData = dto.ForecastData
 
 // SLAForecastSkill AI-Native SLA 预测 Skill
 type SLAForecastSkill struct {

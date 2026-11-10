@@ -4,25 +4,25 @@ import (
 	"fmt"
 
 	"go.uber.org/zap"
-	"itsm-backend/service"
+	"itsm-backend/dto"
 )
 
 // RegisterBuiltinSkills 将 ITSM 内置 AI Skill 注入到指定 SkillRegistry。
 //
 // 调用方必须在 ai.Service 装配完成后调用（本函数只持有 *Service 引用）。
 //
-// 本期为"薄包装"形态：每个 Skill.Execute() 复用 service 已有的方法，未替换
+// 本期为"薄包装"形态：每个 Skill.Execute() 复用 AI 域已有的方法，未替换
 // 任何 HTTP 入口的逻辑。这样后续 Sprint 可以渐进迁移 endpoint 到 SkillRegistry。
 //
 // 返回首次注册失败的错误以触发启动期 fail-fast；后续调度不会阻断启动。
-func RegisterBuiltinSkills(reg *service.SkillRegistry, svc *Service, logger *zap.SugaredLogger) error {
+func RegisterBuiltinSkills(reg SkillRegistrar, svc *Service, logger *zap.SugaredLogger) error {
 	if reg == nil {
 		return fmt.Errorf("RegisterBuiltinSkills: nil registry")
 	}
 	if svc == nil {
 		return fmt.Errorf("RegisterBuiltinSkills: nil service")
 	}
-	builtins := []service.Skill{
+	builtins := []dto.Skill{
 		NewTriageSkill(svc),
 		NewChatSkill(svc),
 		NewKnowledgeSearchSkill(svc),

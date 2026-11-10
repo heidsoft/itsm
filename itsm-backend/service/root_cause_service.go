@@ -28,7 +28,7 @@ var allowedRootCauseCategories = map[string]struct{}{
 
 // ErrAIAnalysisUnavailable reports an operational readiness problem rather
 // than misclassifying missing AI wiring as invalid input or panicking.
-var ErrAIAnalysisUnavailable = fmt.Errorf("AI incident analysis unavailable")
+var ErrAIAnalysisUnavailable = dto.ErrAIAnalysisUnavailable
 
 type RootCauseService struct {
 	client  *ent.Client

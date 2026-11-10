@@ -14,7 +14,6 @@ import (
 	"itsm-backend/dto"
 	"itsm-backend/internal/knowledgeaccess"
 	"itsm-backend/middleware"
-	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
 )
@@ -45,7 +44,7 @@ func (h *Handler) ListTools(c *gin.Context) {
 	// 按租户动态化工具参数（list_cis 的 ci_type 枚举来自该租户 CIType 表）
 	allTools := h.svc.ListToolsForTenant(c.Request.Context(), tenantID)
 
-	visible := make([]service.ToolDefinition, 0, len(allTools))
+	visible := make([]dto.ToolDefinition, 0, len(allTools))
 	for _, t := range allTools {
 		if middleware.HasResourcePermission(c.Request.Context(), h.svc.entClient, role, t.Resource, t.Action, tenantID) {
 			visible = append(visible, t)
@@ -253,10 +252,10 @@ func (h *Handler) ChatStream(c *gin.Context) {
 		// 配额/限流拒绝携带可行动文案：SSE 已 200 开头，客户端只能靠 event 里
 		// 的语义字段区分「稍后再试（预算）」与「服务故障」。
 		payload := map[string]string{"message": err.Error()}
-		if errors.Is(err, service.ErrQuotaExceeded) {
+		if errors.Is(err, dto.ErrQuotaExceeded) {
 			payload["reason"] = "quota_exceeded"
 			payload["message"] = "本月 AI token 配额已用完，请联系管理员调整配额或下月再试"
-		} else if errors.Is(err, service.ErrRateLimited) {
+		} else if errors.Is(err, dto.ErrRateLimited) {
 			payload["reason"] = "rate_limited"
 		}
 		writeEvent("error", payload)
@@ -410,7 +409,7 @@ func (h *Handler) GetDeepAnalytics(c *gin.Context) {
 	}
 	// R1：viewer 只从认证上下文取，报表与列表/导出共用同一行级谓词。
 	userID, role := handlerctx.ReportViewer(c)
-	viewer := service.DashboardViewer{UserID: userID, Role: role}
+	viewer := dto.DashboardViewer{UserID: userID, Role: role}
 	res, err := h.svc.GetDeepAnalytics(c.Request.Context(), &req, tenantID, viewer)
 	if err != nil {
 		common.RespondError(c, err, "操作失败")
@@ -434,7 +433,7 @@ func (h *Handler) GetTrendPrediction(c *gin.Context) {
 	userID := c.GetInt("user_id")
 	// R1：预测底账归属用 userID；统计范围另用 viewer（角色 + 用户 ID）。
 	_, role := handlerctx.ReportViewer(c)
-	viewer := service.DashboardViewer{UserID: userID, Role: role}
+	viewer := dto.DashboardViewer{UserID: userID, Role: role}
 	res, err := h.svc.GetTrendPrediction(c.Request.Context(), &req, tenantID, userID, viewer)
 	if err != nil {
 		common.RespondError(c, err, "操作失败")
@@ -481,11 +480,11 @@ func (h *Handler) AnalyzeIncident(c *gin.Context) {
 	userID := c.GetInt("user_id")
 	res, err := h.svc.AnalyzeIncidentWithAudit(c.Request.Context(), id, tenantID, userID)
 	if err != nil {
-		if errors.Is(err, service.ErrIncidentNotFound) {
+		if errors.Is(err, dto.ErrIncidentNotFound) {
 			common.NotFoundWithErr(c, err, "事件不存在")
 			return
 		}
-		if errors.Is(err, service.ErrAIAnalysisUnavailable) {
+		if errors.Is(err, dto.ErrAIAnalysisUnavailable) {
 			common.Fail(c, common.ServiceUnavailableCode, "AI 事件分析服务尚未就绪")
 			return
 		}
@@ -698,7 +697,7 @@ func (h *Handler) UpdateAuditAccepted(c *gin.Context) {
 	}
 
 	if err := h.svc.UpdateAuditAccepted(c.Request.Context(), tenantID, id, req.Accepted); err != nil {
-		if errors.Is(err, service.ErrFeedbackNotFound) {
+		if errors.Is(err, dto.ErrFeedbackNotFound) {
 			common.NotFoundWithErr(c, err, "audit-logs 行不存在或非 ai_audit")
 			return
 		}
