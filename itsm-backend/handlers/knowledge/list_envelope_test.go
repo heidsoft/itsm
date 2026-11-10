@@ -100,6 +100,38 @@ func TestArticleResponse_IncludesAuthorDisplayName(t *testing.T) {
 	assert.Equal(t, "知识作者", item["author"], "响应 author 必须是作者展示名")
 }
 
+// 创建响应的 author 也必须是展示名：POST 与 GET 共用 KnowledgeArticleResponse，
+// 只修读取路径会让「刚创建的文章」返回空作者。
+func TestCreateArticle_ResponseIncludesAuthorDisplayName(t *testing.T) {
+	ctx := context.Background()
+	client := enttest.Open(t, "sqlite3", "file:knowledge_create_author?mode=memory&cache=shared&_fk=1")
+	defer client.Close()
+
+	tenant := client.Tenant.Create().
+		SetName("Knowledge").SetCode("knowledge-create-author").SetDomain("knowledge-create-author.test").SetStatus("active").
+		SaveX(ctx)
+	author, err := client.User.Create().
+		SetUsername("kb-creator").
+		SetEmail("kb-creator@example.com").
+		SetName("知识创建者").
+		SetPasswordHash("hash").
+		SetRole("super_admin").
+		SetActive(true).
+		SetTenantID(tenant.ID).
+		Save(ctx)
+	require.NoError(t, err)
+
+	svc := NewService(NewEntRepository(client), zaptest.NewLogger(t).Sugar())
+	svc.SetEntClient(client)
+
+	created, err := svc.CreateArticle(ctx, &Article{
+		Title: "create-author", Content: "content", AuthorID: author.ID, TenantID: tenant.ID,
+	})
+	require.NoError(t, err)
+	assert.Equal(t, "知识创建者", created.AuthorName,
+		"创建响应必须回填作者展示名，不能等 GET 才有值")
+}
+
 func listArticlesData(t *testing.T, h *Handler, tenantID int, query string) map[string]interface{} {
 	t.Helper()
 

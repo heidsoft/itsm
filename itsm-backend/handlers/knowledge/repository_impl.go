@@ -98,7 +98,12 @@ func (r *EntRepository) Create(ctx context.Context, a *Article) (*Article, error
 	if err != nil {
 		return nil, err
 	}
-	return toDomain(e), nil
+	created := toDomain(e)
+	// 创建响应与详情/列表是同一份 DTO，author 必须已回填；否则 POST 返回空作者，
+	// 客户端拿到「刚创建的文章没有作者」，与随后 GET 的结果自相矛盾。
+	names := r.userDisplayNames(ctx, []int{created.AuthorID})
+	created.AuthorName = names[created.AuthorID]
+	return created, nil
 }
 
 func (r *EntRepository) Get(ctx context.Context, id int, tenantID int) (*Article, error) {
