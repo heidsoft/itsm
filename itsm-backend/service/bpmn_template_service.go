@@ -30,11 +30,18 @@ var bpmnTemplates embed.FS
 type BPMNTemplateService struct {
 	client *ent.Client
 	logger *zap.Logger
+
+	// deployTemplateFn 只供包内测试替换单次部署动作，用来验证外层对
+	// ErrTemplateAlreadyDeployed 的幂等处理；生产路径恒等于 s.deployTemplate。
+	// 保留 nil 兜底，避免绕过构造器直接建对象时出现空指针。
+	deployTemplateFn func(context.Context, *TemplateInfo, int, string, []byte) error
 }
 
 // NewBPMNTemplateService 创建BPMN模板服务
 func NewBPMNTemplateService(client *ent.Client) *BPMNTemplateService {
-	return &BPMNTemplateService{client: client, logger: zap.NewNop()}
+	s := &BPMNTemplateService{client: client, logger: zap.NewNop()}
+	s.deployTemplateFn = s.deployTemplate
+	return s
 }
 
 // TemplateInfo 模板信息
@@ -62,6 +69,10 @@ func (s *BPMNTemplateService) LoadAndDeployTemplates(ctx context.Context, tenant
 
 	deployed := make([]*TemplateInfo, 0, len(templates))
 	deployFailures := make([]string, 0)
+	deployTemplate := s.deployTemplate
+	if s.deployTemplateFn != nil {
+		deployTemplate = s.deployTemplateFn
+	}
 
 	for _, tmpl := range templates {
 		latest, err := s.latestTemplateDefinition(ctx, tmpl.ID, tenantID)
@@ -86,9 +97,11 @@ func (s *BPMNTemplateService) LoadAndDeployTemplates(ctx context.Context, tenant
 
 		// 部署模板（deployTemplate 内含 lint 门禁）。
 		// 单个坏模板只告警并跳过，不阻断其余模板部署。
-		if err := s.deployTemplate(ctx, tmpl, tenantID, deployVersion, data); err != nil {
-			// 多副本同时启动时另一个实例可能已写入同一版本；唯一约束冲突视为已部署。
-			if ent.IsConstraintError(err) {
+		if err := deployTemplate(ctx, tmpl, tenantID, deployVersion, data); err != nil {
+			// 多副本同时启动时另一个实例可能已写入同一版本。deployTemplate
+			// 内部事务已随冲突回滚，这里按 sentinel 判幂等命中，不是在事务内
+			// 吞一个还需要善后的约束错误（静态门禁 5.13 的禁令针对后者）。
+			if errors.Is(err, ErrTemplateAlreadyDeployed) {
 				s.logger.Sugar().Infow("内置模板已由其他实例部署",
 					"template", tmpl.ID, "version", deployVersion, "tenant_id", tenantID)
 				deployed = append(deployed, tmpl)
@@ -348,6 +361,15 @@ func declaredTemplateVersion(data []byte, fallback string) string {
 
 // deployTemplate 部署单个模板版本。部署记录按版本区分，定义写入与
 // 「旧版本取消 latest」在同一事务内完成，避免中途失败留下两个 latest。
+//
+// 多副本并发部署同一版本时，唯一约束冲突会把本函数内部的事务连坐回滚
+// （defer Rollback 已执行，事务不可能再提交）。这里在出口统一把这类错误
+// 翻译为 ErrTemplateAlreadyDeployed——它对外层的语义是「幂等命中，本次
+// 无事可做」，而不是一个还需要事务善后动作的失败。外层据此吞错是安全的；
+// 直接在调用点摸 ent.IsConstraintError 无法表达「内部事务已回滚」这一事实，
+// 也是静态门禁 5.13 禁止的写法。
+var ErrTemplateAlreadyDeployed = errors.New("bpmn template version already deployed")
+
 func (s *BPMNTemplateService) deployTemplate(ctx context.Context, tmpl *TemplateInfo, tenantID int, version string, data []byte) error {
 	// 部署前 lint 门禁：内置模板与用户导入的模板走同一套发布校验，否则 XML 语法损坏或
 	// 连线悬空的模板会直接入库。解析失败或存在 error 级 issue 时拒绝部署；
@@ -375,6 +397,15 @@ func (s *BPMNTemplateService) deployTemplate(ctx context.Context, tmpl *Template
 	}
 	defer func() { _ = tx.Rollback() }()
 
+	// 事务体的所有错误在此统一出口翻译：走到这里时 defer Rollback 已把事务
+	// 收干净（提交成功后 Rollback 是无害的幂等空操作），约束冲突因此可以
+	// 安全地按「已回滚的幂等命中」对外报告。
+	return translateConstraintAsAlreadyDeployed(
+		s.deployTemplateTx(ctx, tx, tmpl, tenantID, version, data, now))
+}
+
+// deployTemplateTx 在调用方管理的事务内完成单个模板版本的全部写入与提交。
+func (s *BPMNTemplateService) deployTemplateTx(ctx context.Context, tx *ent.Tx, tmpl *TemplateInfo, tenantID int, version string, data []byte, now time.Time) error {
 	deployment, err := s.ensureTemplateDeployment(ctx, tx, tmpl, tenantID, version, now)
 	if err != nil {
 		return err
@@ -447,6 +478,18 @@ func (s *BPMNTemplateService) deployTemplate(ctx context.Context, tmpl *Template
 	}
 	return nil
 }
+
+// translateConstraintAsAlreadyDeployed 把部署事务内的约束冲突翻译为
+// ErrTemplateAlreadyDeployed：内部事务此刻已回滚（defer Rollback），调用方
+// 拿到该 sentinel 即可按幂等命中处理，不必也不能再做事务内善后。
+func translateConstraintAsAlreadyDeployed(err error) error {
+	if err != nil && ent.IsConstraintError(err) {
+		return ErrTemplateAlreadyDeployed
+	}
+	return err
+}
+
+// ensureTemplateDeployment 幂等地确保部署记录存在（同 ID 复用），返回部署行。
 
 func (s *BPMNTemplateService) ensureTemplateDeployment(ctx context.Context, tx *ent.Tx, tmpl *TemplateInfo, tenantID int, version string, now time.Time) (*ent.ProcessDeployment, error) {
 	deploymentID := fmt.Sprintf("%s-v%s", tmpl.ID, version)

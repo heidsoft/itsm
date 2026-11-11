@@ -8,6 +8,7 @@ import (
 
 	"entgo.io/ent/dialect"
 	_ "github.com/mattn/go-sqlite3"
+	pkgerrors "github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -174,4 +175,63 @@ func TestLoadAndDeployTemplates_ContentChangeWithoutVersionBumpDeploysPatch(t *t
 
 	latest := latestPublishedDefinition(t, client, tenantID, "service_request_flow")
 	assert.Equal(t, "2.1.1", latest.Version, "同版本内容变化应按补丁版本部署，避免与线上同版本唯一约束冲突")
+}
+
+// TestTranslateConstraintAsAlreadyDeployed 锁住 5.13 修复的核心契约：部署事务
+// 内的约束冲突必须统一翻译成 sentinel，供外层按「内部事务已回滚的幂等命中」
+// 处理；普通错误与 nil 原样透传，不得被误吞。
+func TestTranslateConstraintAsAlreadyDeployed(t *testing.T) {
+	constraint := &ent.ConstraintError{}
+	require.True(t, ent.IsConstraintError(constraint))
+
+	cases := map[string]error{
+		"bare_constraint":    constraint,
+		"pkg_errors_wrapped": pkgerrors.Wrap(constraint, "保存流程定义失败"),
+		"fmt_wrapped":        fmt.Errorf("更新流程定义失败: %w", constraint),
+	}
+	for name, err := range cases {
+		t.Run(name, func(t *testing.T) {
+			require.ErrorIs(t, translateConstraintAsAlreadyDeployed(err), ErrTemplateAlreadyDeployed,
+				"约束冲突必须翻译成幂等 sentinel")
+		})
+	}
+
+	plain := pkgerrors.New("lint 门禁拦截")
+	require.Equal(t, plain, translateConstraintAsAlreadyDeployed(plain), "普通错误必须原样透传")
+	require.NoError(t, translateConstraintAsAlreadyDeployed(nil))
+}
+
+// TestLoadAndDeployTemplates_TreatsSentinelAsIdempotent 是 5.13 的回归锁：
+// 旧写法在吞错点手摸 ent.IsConstraintError，对 sentinel 会判 false，于是把
+// 并发幂等命中误记为部署失败并让整批返回 error —— 旧实现下本用例必红。
+// 用包内钩子注入部署结果，避免依赖 SQLite 并发时序造成 flaky：顺序调用时
+// 「先查后插」会挡住重复插入，根本撞不到唯一约束。
+func TestLoadAndDeployTemplates_TreatsSentinelAsIdempotent(t *testing.T) {
+	client, tenantID := newTemplateUpgradeFixture(t)
+	svc := NewBPMNTemplateService(client)
+
+	svc.deployTemplateFn = func(_ context.Context, _ *TemplateInfo, _ int, _ string, _ []byte) error {
+		return fmt.Errorf("另一个实例已部署同一版本: %w", ErrTemplateAlreadyDeployed)
+	}
+
+	deployed, err := svc.LoadAndDeployTemplates(context.Background(), tenantID)
+	require.NoError(t, err, "并发幂等命中不得让整批部署失败")
+	templates, err := svc.listTemplates()
+	require.NoError(t, err)
+	require.Len(t, deployed, len(templates), "命中 sentinel 的模板应计入 deployed 而非 deployFailures")
+}
+
+// TestLoadAndDeployTemplates_DoesNotSwallowPlainErrors 防止修复被做成「任何
+// 错误都吞」：只有 sentinel 才是幂等命中，lint 拦截等真实失败仍须上报。
+func TestLoadAndDeployTemplates_DoesNotSwallowPlainErrors(t *testing.T) {
+	client, tenantID := newTemplateUpgradeFixture(t)
+	svc := NewBPMNTemplateService(client)
+
+	svc.deployTemplateFn = func(_ context.Context, _ *TemplateInfo, _ int, _ string, _ []byte) error {
+		return pkgerrors.New("lint 门禁拦截")
+	}
+
+	deployed, err := svc.LoadAndDeployTemplates(context.Background(), tenantID)
+	require.Error(t, err, "非 sentinel 的部署失败必须让整批返回错误")
+	require.Empty(t, deployed, "真实失败的模板不得计入 deployed")
 }

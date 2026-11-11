@@ -13,6 +13,7 @@ import (
 	"itsm-backend/ent/enttest"
 	"itsm-backend/handlers/service_catalog"
 	service_request "itsm-backend/handlers/service_request"
+	"itsm-backend/service"
 )
 
 // Scenario 10: 服务目录→请求→审批→配置→CI 闭环
@@ -55,8 +56,12 @@ func TestScenario10_ServiceCatalogFullLoop(t *testing.T) {
 
 	// 审批写入必须先完成 BPMN 待办（无实例/无待办不得回退业务直批），
 	// 因此这里必须按生产装配传入 entClient，让服务自己桥接 BPMN 审批。
+	// 桥接器在组合根改造后不再由 NewService 内部构造，必须显式注入
+	// （与 app.go:992、handlers/service_request/fixture_test.go 同口径），
+	// 否则 approvalBridge=nil，ApplyApproval 会 fail-closed 恒 4090。
 	srRepo := service_request.NewEntRepository(client)
-	srSvc := service_request.NewService(srRepo, scRepo, nil, client, logger, nil)
+	srSvc := service_request.NewService(srRepo, scRepo, nil, client, logger, nil,
+		service_request.WithApprovalBridge(service.NewBPMNApprovalBridge(client, logger)))
 
 	// ========== 1. Create service catalog ==========
 	t.Run("create service catalog", func(t *testing.T) {
