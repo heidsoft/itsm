@@ -1,6 +1,6 @@
 // Package escalation_matrix 的 HTTP 契约回归（B9.1）。
 //
-// service 层语义（深拷贝/先落库后缓存/降级）已由 service/escalation_matrix_test.go
+// 服务层语义（深拷贝/先落库后缓存/降级）已由本域 escalation_matrix_test.go
 // 与 escalation_matrix_persistence_test.go 覆盖；本文件经真实路由锁定 HTTP 面：
 //   - 权限码 sla:{read,write}（升级矩阵属 SLA 配置面）。
 //   - GET /escalation-matrices 未配置租户返回默认矩阵（非 nil）。
@@ -72,7 +72,7 @@ func newFixture(t *testing.T) *fixture {
 	gin.SetMode(gin.TestMode)
 	engine := gin.New()
 	const secret = "escalation-matrix-secret"
-	matrixSvc := service.NewEscalationMatrixServiceWithStore(logger, service.NewSystemConfigEscalationMatrixStore(client, logger))
+	matrixSvc := escalationMatrixHandler.NewEscalationMatrixServiceWithStore(logger, escalationMatrixHandler.NewSystemConfigEscalationMatrixStore(client, logger))
 	router.SetupRoutes(engine, &router.RouterConfig{
 		JWTSecret: secret,
 		Logger:    logger,

@@ -10,6 +10,7 @@ import (
 
 	"itsm-backend/dto"
 	"itsm-backend/ent/enttest"
+	escalationMatrix "itsm-backend/handlers/escalation_matrix"
 	"itsm-backend/service"
 	"itsm-backend/service/sla"
 )
@@ -38,7 +39,7 @@ func TestScenario5_SLAPolicyViolationEscalation(t *testing.T) {
 	// 与 internal/bootstrap/app.go:366-394 一致：sla_states 读依赖由 SetSLAStore 事后注入，
 	// 未注入时监控服务按 fail closed 返回 5003，不再 panic。
 	monitorSvc.SetSLAStore(sla.NewStore(client, sla.NewEngine(nil)))
-	escalationSvc := service.NewEscalationMatrixService(logger)
+	escalationSvc := escalationMatrix.NewEscalationMatrixService(logger)
 
 	t.Run("create SLA policy and match by priority", func(t *testing.T) {
 		policy, err := policySvc.CreateSLAPolicy(ctx, dto.CreateSLAPolicyRequest{

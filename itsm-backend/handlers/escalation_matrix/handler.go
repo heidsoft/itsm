@@ -1,6 +1,6 @@
 // Package escalation_matrix 是升级矩阵域的 HTTP handler 层（域切片架构）。
-// 业务逻辑仍由共享层的升级矩阵服务承载，本包只做参数解析与响应封装；
-// 依赖通过本域 EscalationMatrixService 窄契约注入。
+// 业务逻辑已随域归位到本包的 EscalationMatrixService / EscalationService，
+// 本包只做参数解析与响应封装；依赖通过本域 MatrixService 窄契约注入。
 package escalation_matrix
 
 import (
@@ -15,11 +15,11 @@ import (
 // Handler 升级矩阵 HTTP handler
 type Handler struct {
 	logger                  *zap.SugaredLogger
-	escalationMatrixService EscalationMatrixService
+	escalationMatrixService MatrixService
 }
 
 // NewHandler 创建升级矩阵 handler 实例
-func NewHandler(logger *zap.SugaredLogger, escalationMatrixService EscalationMatrixService) *Handler {
+func NewHandler(logger *zap.SugaredLogger, escalationMatrixService MatrixService) *Handler {
 	return &Handler{
 		logger:                  logger,
 		escalationMatrixService: escalationMatrixService,

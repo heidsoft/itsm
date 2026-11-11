@@ -69,10 +69,22 @@ func TestSLAServicesAreFullyInjected(t *testing.T) {
 		"escalationService.SetNotificationService(",
 		"escalationService.SetMatrixService(escalationMatrixService)",
 		"escalationMatrixHandler.NewHandler(sugar, escalationMatrixService)",
+		"escalationMatrixHandler.NewEscalationMatrixServiceWithStore(",
+		"escalationMatrixHandler.NewSystemConfigEscalationMatrixStore(client, sugar)",
+		"escalationMatrixHandler.NewEscalationService(client, sugar)",
 		"SLAMonitorService: slaMonitorService,",
 		"EscalationService: escalationService,",
 	} {
 		require.Truef(t, strings.Contains(assembly, required),
 			"NewApplication 缺少装配项 %q", required)
+	}
+
+	for _, forbidden := range []string{
+		"service.NewEscalationService(",
+		"service.NewEscalationMatrixServiceWithStore(",
+		"service.NewSystemConfigEscalationMatrixStore(",
+	} {
+		require.NotContainsf(t, assembly, forbidden,
+			"升级服务实现已归域，NewApplication 不得再构造共享层 %s", forbidden)
 	}
 }

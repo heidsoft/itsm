@@ -1,9 +1,10 @@
-package service
+package escalation_matrix
 
 import (
 	"testing"
 
 	"itsm-backend/ent/ticketnotification"
+	notificationservice "itsm-backend/service"
 
 	_ "github.com/mattn/go-sqlite3"
 
@@ -18,7 +19,7 @@ func TestEscalateToLevelByMatrix_ClaimOnce(t *testing.T) {
 	client, svc, ctx := setupEscalationTest(t)
 	defer client.Close()
 
-	svc.SetNotificationService(NewTicketNotificationService(client, zaptest.NewLogger(t).Sugar()))
+	svc.SetNotificationService(notificationservice.NewTicketNotificationService(client, zaptest.NewLogger(t).Sugar()))
 
 	tenant, err := createEscalationTestTenant(ctx, client, "claim")
 	require.NoError(t, err)

@@ -141,7 +141,7 @@ type Application struct {
 	// 会缺少 slaStore（CheckSLAViolations 每轮 fail closed 返回 503）、
 	// alertService（预警/告警计数恒 0）和 notificationSvc（升级不发通知）。
 	SLAMonitorService *service.SLAMonitorService
-	EscalationService *service.EscalationService
+	EscalationService *escalationMatrixHandler.EscalationService
 
 	// DiscoveryScheduler 消费 discovery_sources.schedule，为到期来源排上发现任务。
 	// 与 HTTP 路由共用同一个 cmdb.Service，调度不会产出「有 job 无命令」的任务。
@@ -967,9 +967,9 @@ func NewApplication() *Application {
 	mspAllocationService := mspHandler.NewMSPAllocationService(client, sugar)
 	// 升级矩阵落 system_configs（key=escalation.matrix）：纯内存态会导致
 	// PUT /escalation-matrices 返回成功后重启即丢配置，多副本之间也不共享。
-	escalationMatrixService := service.NewEscalationMatrixServiceWithStore(
+	escalationMatrixService := escalationMatrixHandler.NewEscalationMatrixServiceWithStore(
 		sugar,
-		service.NewSystemConfigEscalationMatrixStore(client, sugar),
+		escalationMatrixHandler.NewSystemConfigEscalationMatrixStore(client, sugar),
 	)
 	vendorService := vendorHandler.NewVendorService(client, sugar)
 	provisioningService := service.NewProvisioningService(client, sugar)
@@ -1241,7 +1241,7 @@ func NewApplication() *Application {
 	// SLA 告警与升级服务：与上方 slaMonitorService 是同一套实例，
 	// 由 Application 暴露给后台定时任务复用。
 	slaAlertService := service.NewSLAAlertService(client, sugar)
-	escalationService := service.NewEscalationService(client, sugar)
+	escalationService := escalationMatrixHandler.NewEscalationService(client, sugar)
 
 	// Wire up notification service
 	slaAlertService.SetNotificationService(ticketNotificationService)

@@ -1,4 +1,4 @@
-package service
+package escalation_matrix
 
 import (
 	"context"

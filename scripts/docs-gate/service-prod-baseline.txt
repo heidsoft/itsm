@@ -64,9 +64,6 @@ domain_command_handlers.go
 email_service.go
 embed_pipeline.go
 embedder_openai.go
-escalation_matrix.go
-escalation_matrix_store.go
-escalation_service.go
 export_security.go
 expression_engine.go
 guidance_client.go

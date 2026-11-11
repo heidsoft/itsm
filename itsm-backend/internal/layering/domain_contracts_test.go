@@ -64,16 +64,17 @@ var (
 	// 窄契约与值类型/sentinel 全部走 dto，具体实现从共享层搬入域包。
 	_ skill.SkillRegistryCatalog = (*skill.SkillRegistry)(nil)
 	// change / service_request 域整域归零（2026-11-10 收官批）：窄契约 + 值类型下沉。
-	_ change.ApprovalChainResolver              = (*service.ApprovalChainService)(nil)
-	_ change.ChangeApprovalBridge               = (*service.BPMNApprovalBridge)(nil)
-	_ service_request.ApprovalChainResolver     = (*service.ApprovalChainService)(nil)
-	_ service_request.SRApprovalBridge          = (*service.BPMNApprovalBridge)(nil)
-	_ service_request.SRSLAService              = (*service.TicketSLAService)(nil)
-	_ approval.ApprovalService                  = (*service.ApprovalService)(nil)
-	_ approval_chain.ApprovalChainService       = (*service.ApprovalChainService)(nil)
-	_ auth.EmailService                         = (*service.EmailService)(nil)
-	_ automation_rule.AutomationRuleService     = (*service.TicketAutomationRuleService)(nil)
-	_ escalation_matrix.EscalationMatrixService = (*service.EscalationMatrixService)(nil)
+	_ change.ApprovalChainResolver          = (*service.ApprovalChainService)(nil)
+	_ change.ChangeApprovalBridge           = (*service.BPMNApprovalBridge)(nil)
+	_ service_request.ApprovalChainResolver = (*service.ApprovalChainService)(nil)
+	_ service_request.SRApprovalBridge      = (*service.BPMNApprovalBridge)(nil)
+	_ service_request.SRSLAService          = (*service.TicketSLAService)(nil)
+	_ approval.ApprovalService              = (*service.ApprovalService)(nil)
+	_ approval_chain.ApprovalChainService   = (*service.ApprovalChainService)(nil)
+	_ auth.EmailService                     = (*service.EmailService)(nil)
+	_ automation_rule.AutomationRuleService = (*service.TicketAutomationRuleService)(nil)
+	_ escalation_matrix.MatrixService       = (*escalation_matrix.EscalationMatrixService)(nil)
+	_ escalation_matrix.NotificationSender  = (*service.TicketNotificationService)(nil)
 	// LLMGateway 契约化专项 A：邮件报障编排器只消费 CreateFromEmail。
 	_ email_intake.EmailIncidentCreator                 = (*service.IncidentService)(nil)
 	_ prediction.PredictionService                      = (*service.PredictionService)(nil)
@@ -161,7 +162,7 @@ var contractDomains = []domainSpec{
 	{"account", "handler.go", "UserService", "UserService", ""},
 	{"analytics", "handler.go", "AnalyticsService", "AnalyticsService", ""},
 	{"approval", "handler.go", "ApprovalService", "ApprovalService", ""},
-	{"escalation_matrix", "handler.go", "EscalationMatrixService", "EscalationMatrixService", ""},
+	{"escalation_matrix", "handler.go", "MatrixService", "EscalationMatrixService", ""},
 	{"prediction", "handler.go", "PredictionService", "PredictionService", ""},
 	{"release", "handler.go", "ReleaseService", "ReleaseService", ""},
 	{"approval_chain", "handler.go", "ApprovalChainService", "ApprovalChainService", ""},
@@ -299,8 +300,6 @@ func TestSharedValueTypesRemainDTOAliases(t *testing.T) {
 		bottom reflect.Type
 	}{
 		{"DashboardViewer", reflect.TypeOf(service.DashboardViewer{}), reflect.TypeOf(dto.DashboardViewer{})},
-		{"EscalationMatrix", reflect.TypeOf(service.EscalationMatrix{}), reflect.TypeOf(dto.EscalationMatrix{})},
-		{"EscalationLevel", reflect.TypeOf(service.EscalationLevel{}), reflect.TypeOf(dto.EscalationLevel{})},
 		{"CreateTagRequest", reflect.TypeOf(service.CreateTagRequest{}), reflect.TypeOf(dto.CreateTagRequest{})},
 		{"UpdateTagRequest", reflect.TypeOf(service.UpdateTagRequest{}), reflect.TypeOf(dto.UpdateTagRequest{})},
 		{"ListTagsRequest", reflect.TypeOf(service.ListTagsRequest{}), reflect.TypeOf(dto.ListTagsRequest{})},
@@ -360,7 +359,7 @@ func TestSharedValueTypesRemainDTOAliases(t *testing.T) {
 		}
 	}
 
-	// 导出的 String 方法必须随类型一起下沉（service/escalation_matrix_test.go 仍调用 m.String）。
+	// 导出的 String 方法必须随类型一起下沉（handlers/escalation_matrix/escalation_matrix_test.go 仍调用 m.String）。
 	matrix := dto.EscalationMatrix{"critical": {{Level: 1, AfterMinutes: 15, NotifyRoles: []string{"manager"}}}}
 	if got := matrix.String("critical"); !strings.Contains(got, "L1(15min") {
 		t.Errorf("EscalationMatrix.String 行为漂移：%q", got)
@@ -372,7 +371,6 @@ func TestSharedValueTypesRemainDTOAliases(t *testing.T) {
 		{"dashboard_service.go", "type DashboardOverviewData = dto.DashboardOverviewData"},
 		{"service_quality_report_service.go", "type ServiceQualityReport = dto.ServiceQualityReport"},
 		{"service_quality_report_service.go", "const MaxQualityWindowDays = dto.MaxQualityWindowDays"},
-		{"escalation_matrix.go", "type EscalationMatrix = dto.EscalationMatrix"},
 		{"release_service.go", "var ErrInvalidReleaseTransition = dto.ErrInvalidReleaseTransition"},
 		{"ticket_assignment_rule_service.go", "ErrAssignmentRuleNotFound = dto.ErrAssignmentRuleNotFound"},
 		{"ticket_assignment_rule_service.go", "ErrTestTicketNotFound = dto.ErrTestTicketNotFound"},

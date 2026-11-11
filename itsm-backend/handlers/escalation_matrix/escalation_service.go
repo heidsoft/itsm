@@ -1,4 +1,4 @@
-package service
+package escalation_matrix
 
 import (
 	"context"
@@ -20,7 +20,7 @@ import (
 type EscalationService struct {
 	client          *ent.Client
 	logger          *zap.SugaredLogger
-	notificationSvc *TicketNotificationService
+	notificationSvc NotificationSender
 	matrixSvc       *EscalationMatrixService
 }
 
@@ -33,7 +33,7 @@ func NewEscalationService(client *ent.Client, logger *zap.SugaredLogger) *Escala
 }
 
 // SetNotificationService 设置通知服务
-func (e *EscalationService) SetNotificationService(notificationSvc *TicketNotificationService) {
+func (e *EscalationService) SetNotificationService(notificationSvc NotificationSender) {
 	e.notificationSvc = notificationSvc
 }
 
