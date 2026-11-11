@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { ReactNode} from 'react';
 import { useState, lazy, Suspense, useEffect } from 'react';
 import { ApiRequestError } from '@/lib/api/http-client';
+import { isCapabilityUnavailableError } from '@/lib/utils/error-message-handler';
 
 // 动态导入ReactQueryDevtools，只在开发环境中使用
 // 使用 disableHydrationWarning 防止 SSR 水合错误
@@ -61,8 +62,15 @@ export const createQueryClient = () => {
  * - 5xx = 服务端暂时不可用，可能自愈，重试。
  * - 429 = 限流，退避后重试。
  * - 其余 4xx（401/403/404/409/422…）= 服务端明确拒绝，重试只会重复同样的失败。
+ * - 例外：503 + 业务码 5003 = 「能力未启用 / 尚未实现」，是永久状态而非临时故障。
+ *   后端 MSPMiddleware 特意用 503 区分「没开」和「没有」，但客户端若只看 status
+ *   就会把它当可自愈故障重试三次（指数退避 1s/2s/4s），用户白等且日志刷屏。
+ *   判定统一走 error-message-handler 的 isCapabilityUnavailableError。
  */
 function isRetryableError(error: unknown): boolean {
+  if (isCapabilityUnavailableError(error)) {
+    return false;
+  }
   if (!(error instanceof ApiRequestError)) {
     // 非 ApiRequestError（例如网络异常）无法判定状态码，按可重试处理。
     return true;

@@ -3,6 +3,39 @@
  * 用于统一格式化错误消息，提供友好的错误提示
  */
 
+/**
+ * 「能力未就绪」是后端契约：HTTP 503 + 业务码 5003。
+ *
+ * 它与「服务暂时不可用」有本质区别：MSP 部署形态关闭、知识文章评论尚未实现
+ * 属于永久状态，重试多少次都不会自愈。后端 MSPMiddleware 特意返回 503 而不是
+ * 404，就是为了让调用方区分「没开」和「没有」；响应体里还带
+ * `data:{capability,state:'disabled'}`。客户端若仍按 status>=500 一律重试，
+ * 这层语义就丢了：用户白等三次指数退避，提示还写「请稍后重试」。
+ *
+ * 这里作为前端唯一判定入口：重试策略、错误码、文案、建议动作、统一提示
+ * 都必须引用它，禁止各自再写一遍 `code === 5003`。
+ */
+export const CAPABILITY_UNAVAILABLE_CODE = 5003;
+export const CAPABILITY_UNAVAILABLE = 'CAPABILITY_UNAVAILABLE';
+
+export function isCapabilityUnavailableError(error: unknown): boolean {
+  if (typeof error !== 'object' || error === null) return false;
+  const e = error as Record<string, unknown>;
+  if (
+    e.code === CAPABILITY_UNAVAILABLE_CODE ||
+    e.code === String(CAPABILITY_UNAVAILABLE_CODE)
+  ) {
+    return true;
+  }
+  // 某些调用链只保留响应体而没有顶层业务码，仍按后端 data.state 判定。
+  const envelope = (e.data ??
+    (e.response as Record<string, unknown> | undefined)?.data) as
+    | Record<string, unknown>
+    | undefined;
+  const state = envelope?.state;
+  return state === 'disabled' || state === 'not_implemented';
+}
+
 export interface ErrorInfo {
   code?: string | number;
   message: string;
@@ -174,6 +207,11 @@ export function isRetryableError(error: unknown): boolean {
 
   const errorObj = error as Record<string, unknown>;
 
+  // 能力未就绪是永久状态，重试不会自愈；必须先于 5xx 分支判定。
+  if (isCapabilityUnavailableError(error)) {
+    return false;
+  }
+
   // 基于状态码
   if (typeof errorObj.status === 'number') {
     return [502, 503, 504, 408].includes(errorObj.status);
@@ -196,6 +234,11 @@ export function getErrorSeverity(error: unknown): ErrorSeverity {
   }
 
   const errorObj = error as Record<string, unknown>;
+
+  // 能力未就绪不是系统故障：别按 5xx 刷 critical 告警。
+  if (isCapabilityUnavailableError(error)) {
+    return 'medium';
+  }
 
   // 基于HTTP状态码
   if (typeof errorObj.status === 'number') {
@@ -292,6 +335,12 @@ export function parseErrorCode(error: unknown): string {
 
   const errorObj = error as Record<string, unknown>;
 
+  // 503 + 5003 不能折叠成 SERVICE_UNAVAILABLE：后者的建议动作是「稍后再试」，
+  // 对未启用/未实现的能力是误导。
+  if (isCapabilityUnavailableError(error)) {
+    return CAPABILITY_UNAVAILABLE;
+  }
+
   // 优先使用 code 字段
   if (typeof errorObj.code === 'string') {
     return errorObj.code as string;
@@ -336,6 +385,7 @@ export function getErrorMessageByCode(code: string): string {
     'BAD_GATEWAY': '网关错误',
     'SERVICE_UNAVAILABLE': '服务暂时不可用',
     'GATEWAY_TIMEOUT': '网关超时',
+    'CAPABILITY_UNAVAILABLE': '该能力在当前部署形态未启用或尚未实现',
 
     // 自定义错误码
     'NETWORK_ERROR': '网络连接失败，请检查网络',
@@ -366,6 +416,7 @@ export function mapErrorToAction(error: unknown): string {
     'NETWORK_ERROR': 'retry',
     'TIMEOUT': 'retry',
     'SERVICE_UNAVAILABLE': 'retry_later',
+    'CAPABILITY_UNAVAILABLE': 'contact_admin',
     'INTERNAL_ERROR': 'contact_support',
     'DEPENDENCY_ERROR': 'remove_dependencies_first',
   };

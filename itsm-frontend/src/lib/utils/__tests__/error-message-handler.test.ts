@@ -65,6 +65,9 @@ describe('isRetryableError', () => {
   it('returns true for 503 status', () => {
     expect(isRetryableError({ status: 503 })).toBe(true);
   });
+  it('returns false for 503 + 5003 (capability unavailable, never self-heals)', () => {
+    expect(isRetryableError({ status: 503, code: 5003 })).toBe(false);
+  });
   it('returns true for TIMEOUT code', () => {
     expect(isRetryableError({ code: 'TIMEOUT' })).toBe(true);
   });

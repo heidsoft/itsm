@@ -16,6 +16,8 @@
 
 import { Button, message, notification } from 'antd';
 import { getFriendlyErrorMessage } from '@/lib/api/base-api-handler';
+import { serverErrorMessage } from '@/lib/api/http-client';
+import { isCapabilityUnavailableError } from '@/lib/utils/error-message-handler';
 
 /** 提示中的「建议动作」，用于把用户从"知道失败"引导到"知道做什么" */
 export interface NotifyAction {
@@ -94,6 +96,16 @@ const ERROR_GUIDANCE: Record<string, ErrorGuidance> = {
   '502': {
     title: '网关异常',
     action: '请稍后重试；若持续出现请联系管理员',
+  },
+  // 后端「能力未就绪」契约：HTTP 503 + 业务码 5003（MSP 部署形态关闭、
+  // 知识文章评论尚未实现等）。这是永久状态，不是临时故障。
+  // resolveGuidanceKey 把 e.code 排在 e.status 前面，因此本条优先于 '503'：
+  // 否则用户会看到「服务正在维护或过载 / 请稍后重试」，一直重试一个
+  // 永远不会自愈的能力。
+  '5003': {
+    title: '该能力当前不可用',
+    reason: '当前部署形态未启用此能力，或该能力尚未实现',
+    action: '请联系管理员确认启用状态，重试不会改变结果',
   },
   '503': {
     title: '服务正在维护或过载',
@@ -216,7 +228,17 @@ export const notify = {
     const guidance = key ? ERROR_GUIDANCE[key] : undefined;
 
     let text: string;
-    if (guidance) {
+    if (isCapabilityUnavailableError(error)) {
+      // 后端 message 往往比通用引导更具体（「MSP 能力在当前部署形态下未启用」），
+      // 按 serverErrorMessage 约定优先透传；但保留「不要重试」这条建议动作，
+      // 避免把可行动文案替换回「稍后再试」。
+      const capabilityGuidance = ERROR_GUIDANCE['5003'];
+      const title = options.context
+        ? `${options.context}失败：${capabilityGuidance.title}`
+        : capabilityGuidance.title;
+      const reason = serverErrorMessage(error, capabilityGuidance.reason ?? '');
+      text = [title, reason, capabilityGuidance.action].filter(Boolean).join('，');
+    } else if (guidance) {
       text = composeMessage(guidance, options.context);
     } else {
       const friendly = getFriendlyErrorMessage(error);

@@ -11,6 +11,13 @@ export const PRODUCT_CAPABILITIES = {
   // 已开放：router/msp_routes.go 注册了 GET /api/v1/msp/allocations/history
   // （msp_allocation:read），查询按认证上下文的 MSP 租户收敛。
   // 解除原因与操作人没有落库字段，因此契约里也不出现这两个键。
+  //
+  // 注意：这个开关只表示「路由契约存在」，不表示「当前部署形态已启用 MSP」。
+  // MSPMiddleware 在 private 部署形态下会返回 503 + code 5003 +
+  // data.state=disabled（prod 全量回归中 MSP 分配/分配历史两项 WARN 即此）。
+  // 运行时可用性以后端响应为准，客户端必须按「能力未就绪」优雅降级：
+  // 不自动重试、不给「请稍后重试」提示，见
+  // lib/utils/error-message-handler.ts 的 isCapabilityUnavailableError。
   mspAllocationHistory: true,
   notificationTemplateManagement: false,
   notificationChannelManagement: false,

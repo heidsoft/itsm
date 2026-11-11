@@ -39,6 +39,16 @@ describe('QueryProvider 重试策略', () => {
     expect(retry(0, new Error('Failed to fetch'))).toBe(true);
   });
 
+  it('读操作不对「能力未就绪」(503 + 5003) 重试', () => {
+    // prod v1.6.54 全量回归里 MSP 分配 / 分配历史返回的就是这个组合。
+    // 能力未启用是永久状态：三次指数退避只会让用户白等并刷错误日志。
+    const retry = defaults.queries?.retry as (count: number, error: unknown) => boolean;
+    expect(retry(0, new ApiRequestError('MSP 能力在当前部署形态下未启用', 503, 5003))).toBe(false);
+    expect(retry(0, new ApiRequestError('知识文章评论功能尚未实现', 503, 5003))).toBe(false);
+    // 对照组：真正可自愈的 503 仍必须重试，防止把 5xx 一刀切禁掉。
+    expect(retry(0, new ApiRequestError('服务暂时不可用', 503))).toBe(true);
+  });
+
   it('读操作重试次数有上限', () => {
     const retry = defaults.queries?.retry as (count: number, error: unknown) => boolean;
     expect(retry(3, new ApiRequestError('网关错误', 502))).toBe(false);

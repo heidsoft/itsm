@@ -23,6 +23,7 @@ jest.mock('@/lib/api/base-api-handler', () => ({
 }));
 
 import { message, notification } from 'antd';
+import { ApiRequestError } from '@/lib/api/http-client';
 import { notify } from '../notify';
 
 const mockMessage = message as jest.Mocked<typeof message>;
@@ -97,6 +98,29 @@ describe('notify', () => {
 
       const text = mockMessage.error.mock.calls[0][0] as string;
       expect(text).toContain('请求超时');
+    });
+
+    it('503 + 5003 按「能力未就绪」提示，透传服务端原因且不引导重试', () => {
+      // prod v1.6.54 回归的 MSP 分配 WARN：后端用 503 区分「没开」和「没有」，
+      // 客户端不能把它折叠成「服务正在维护，请稍后重试」。
+      notify.error(new ApiRequestError('MSP 能力在当前部署形态下未启用', 503, 5003));
+
+      const text = mockMessage.error.mock.calls[0][0] as string;
+      expect(text).toContain('该能力当前不可用');
+      expect(text).toContain('MSP 能力在当前部署形态下未启用');
+      expect(text).toContain('重试不会改变结果');
+      expect(text).not.toContain('请稍后重试');
+      expect(text).not.toContain('服务正在维护或过载');
+    });
+
+    it('普通 503 仍按临时故障引导重试', () => {
+      const err = new Error('Service Unavailable');
+      (err as Error & { status: number }).status = 503;
+      notify.error(err);
+
+      const text = mockMessage.error.mock.calls[0][0] as string;
+      expect(text).toContain('服务正在维护或过载');
+      expect(text).toContain('请稍后重试');
     });
   });
 
