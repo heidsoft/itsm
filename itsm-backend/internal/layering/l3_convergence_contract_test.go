@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	"itsm-backend/dto"
+	"itsm-backend/handlers/skill"
 	"itsm-backend/service"
 )
 
@@ -255,7 +256,7 @@ func TestChangeServiceBridgeNilGuard(t *testing.T) {
 
 // TestServiceSentinelsUnchanged：确认本批没有动到既有 sentinel 语义。
 func TestServiceSentinelsUnchanged(t *testing.T) {
-	if !errors.Is(fmt.Errorf("wrapped: %w", dto.ErrSkillNotFound), service.ErrSkillNotFound) {
+	if !errors.Is(fmt.Errorf("wrapped: %w", dto.ErrSkillNotFound), skill.ErrSkillNotFound) {
 		t.Errorf("技能 sentinel 同一实例语义被破坏")
 	}
 }

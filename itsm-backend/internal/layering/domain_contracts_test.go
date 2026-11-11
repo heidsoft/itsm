@@ -51,7 +51,7 @@ var (
 	_ account.UserService        = (*service.UserService)(nil)
 	_ analytics.AnalyticsService = (*service.AnalyticsService)(nil)
 	// B1+B2：AI 域已整域归零，锁全部 9 个域内窄契约的编译期满足。
-	_ ai.SkillRegistrar        = (*service.SkillRegistry)(nil)
+	_ ai.SkillRegistrar        = (*skill.SkillRegistry)(nil)
 	_ ai.ToolCatalog           = (*service.ToolRegistry)(nil)
 	_ ai.DeepAnalyticsProvider = (*service.AnalyticsService)(nil)
 	_ ai.TrendPredictor        = (*service.PredictionService)(nil)
@@ -60,8 +60,9 @@ var (
 	_ ai.RootCauseAnalyzer     = (*service.RootCauseService)(nil)
 	_ ai.AITelemetryFacade     = (*service.AITelemetryService)(nil)
 	_ ai.Summarizer            = (*service.SummarizeService)(nil)
-	// skill 域整域归零（2026-11-10）：窄契约与值类型/sentinel 全部走 dto。
-	_ skill.SkillRegistryCatalog = (*service.SkillRegistry)(nil)
+	// skill 域整域归零（2026-11-10）；注册表实现迁入 handlers/skill（2026-11-11）：
+	// 窄契约与值类型/sentinel 全部走 dto，具体实现从共享层搬入域包。
+	_ skill.SkillRegistryCatalog = (*skill.SkillRegistry)(nil)
 	// change / service_request 域整域归零（2026-11-10 收官批）：窄契约 + 值类型下沉。
 	_ change.ApprovalChainResolver              = (*service.ApprovalChainService)(nil)
 	_ change.ChangeApprovalBridge               = (*service.BPMNApprovalBridge)(nil)

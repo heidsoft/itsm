@@ -29,7 +29,7 @@ import (
 //   - 平台不托管第三方代码：plugin 类型不受理（catalog 侧拒绝上架），
 //     这是安全默认而不是待补功能。
 
-// SkillRuntime 是市场侧对技能运行时的最小视图，由 service.SkillRegistry 实现。
+// SkillRuntime 是市场侧对技能运行时的最小视图，由 handlers/skill.SkillRegistry 实现。
 // 只暴露存在性查询：marketplace 不需要、也不应拿到 Skill 接口去调用执行。
 type SkillRuntime interface {
 	Has(code string) bool

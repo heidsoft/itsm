@@ -14,7 +14,7 @@ import (
 // Skill 注册表的值类型、接口与 BaseSkill 骨架（原定义在共享层 service 包）。
 // 整组闭包一起下沉：ComputeChecksum / ValidateForRegistration / BuildManifest
 // 都是值类型方法，不能与类型分家；TrackedSkill / RecordResult 原本是私有钩子，
-// 跨包后必须导出，否则 service.SkillRegistry 无法再识别并累计指标。
+// 跨包后必须导出，否则 skill.SkillRegistry 无法再识别并累计指标。
 
 // SkillManifest 技能自描述信息，用于市场展示和自动装配
 type SkillManifest struct {

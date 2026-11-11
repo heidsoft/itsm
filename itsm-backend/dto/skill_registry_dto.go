@@ -45,3 +45,13 @@ var (
 	ErrSkillValidation        = errors.New("skill validation failed")
 	ErrSkillInvoke            = errors.New("skill invocation failed")
 )
+
+// SkillMetadataSource 是 AI 评估侧对技能注册表的最小读面（窄端口）。
+//
+// 消费方是共享层 AITelemetryService（bySkill 维度聚合只调 Get）；具体注册表
+// 实现自 handlers/skill 包迁出后，组合根注入的 *skill.SkillRegistry 隐式满足
+// 本接口——Skill 接口在两侧是同一 dto 类型。
+type SkillMetadataSource interface {
+	// Get 按 code 取出 Skill；未注册时返回 ErrSkillNotFound。
+	Get(code string) (Skill, error)
+}

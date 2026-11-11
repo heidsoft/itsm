@@ -11,16 +11,19 @@ import (
 	"testing"
 
 	"itsm-backend/dto"
-	"itsm-backend/service"
+	"itsm-backend/handlers/skill"
 )
 
-// skill 域整域归零专项回归锁（2026-11-10）。
+// skill 域整域归零专项回归锁（2026-11-10；2026-11-11 实现归位）。
 //
-// 本批把 `handlers/skill/handler.go` + `custom_skill.go` 经
+// 第一批把 `handlers/skill/handler.go` + `custom_skill.go` 经
 // SkillRegistryCatalog 窄契约归零；SkillEntry / SkillInvokeResult 值类型与
-// 4 个技能 sentinel 下沉 dto，service 侧同名别名。最大假绿风险是 sentinel
-// 双实例：service 侧若保留（或改回）本地 errors.New，域内 errors.Is 永远
-// 判 false，注册重复返回 500 而不是 409——编译与 L.3 计数全绿。
+// 4 个技能 sentinel 下沉 dto。第二批（2026-11-11）把注册表实现本体
+// `service/skill_registry.go` 迁入 `handlers/skill/registry.go`（域包别名
+// 保持调用点零改动），`skill_base.go` / `skill_manifest.go` 两个纯别名文件
+// 随迁删除。最大假绿风险仍是 sentinel 双实例：域内若保留（或改回）本地
+// errors.New，errors.Is 永远判 false，注册重复返回 500 而不是 409——
+// 编译与 L.3 计数全绿。
 
 const skillSharedImport = `"itsm-backend/service"`
 
@@ -57,7 +60,7 @@ func TestSkillDomainIsFullyConverged(t *testing.T) {
 	if len(importing) != 0 {
 		t.Errorf("skill 域整域归零被破坏：仍 import 共享层的是 %v", importing)
 	}
-	for _, fn := range []string{"handler.go", "custom_skill.go", "contracts.go"} {
+	for _, fn := range []string{"handler.go", "custom_skill.go", "contracts.go", "registry.go"} {
 		body, err := os.ReadFile(filepath.Join(dir, fn))
 		if err != nil {
 			t.Fatalf("读取 handlers/skill/%s 失败：%v", fn, err)
@@ -92,19 +95,19 @@ func TestSkillSharedSentinelsAreSameInstance(t *testing.T) {
 		name           string
 		shared, bottom error
 	}{
-		{"ErrSkillAlreadyRegistered", service.ErrSkillAlreadyRegistered, dto.ErrSkillAlreadyRegistered},
-		{"ErrSkillNotFound", service.ErrSkillNotFound, dto.ErrSkillNotFound},
-		{"ErrSkillValidation", service.ErrSkillValidation, dto.ErrSkillValidation},
-		{"ErrSkillInvoke", service.ErrSkillInvoke, dto.ErrSkillInvoke},
+		{"ErrSkillAlreadyRegistered", skill.ErrSkillAlreadyRegistered, dto.ErrSkillAlreadyRegistered},
+		{"ErrSkillNotFound", skill.ErrSkillNotFound, dto.ErrSkillNotFound},
+		{"ErrSkillValidation", skill.ErrSkillValidation, dto.ErrSkillValidation},
+		{"ErrSkillInvoke", skill.ErrSkillInvoke, dto.ErrSkillInvoke},
 	} {
 		if !errors.Is(fmt.Errorf("wrapped: %w", s.bottom), s.shared) {
-			t.Errorf("service.%s 必须与 dto sentinel 是同一实例（双实例会让 409/404 退化成 500）", s.name)
+			t.Errorf("skill.%s 必须与 dto sentinel 是同一实例（双实例会让 409/404 退化成 500）", s.name)
 		}
 	}
-	// service 侧不得再出现本地 errors.New 的技能 sentinel（双实例源头）。
-	regSrc := readSkillRepoFile(t, "service", "skill_registry.go")
+	// 域内不得再出现本地 errors.New 的技能 sentinel（双实例源头）。
+	regSrc := readSkillRepoFile(t, "handlers", "skill", "registry.go")
 	if strings.Contains(regSrc, `errors.New("skill `) {
-		t.Errorf("service/skill_registry.go 出现本地 errors.New 技能 sentinel：唯一实例必须在 dto")
+		t.Errorf("handlers/skill/registry.go 出现本地 errors.New 技能 sentinel：唯一实例必须在 dto")
 	}
 }
 
@@ -115,12 +118,13 @@ func TestSkillValueTypesAreDTOAliases(t *testing.T) {
 		shared reflect.Type
 		bottom reflect.Type
 	}{
-		{"SkillEntry", reflect.TypeOf(service.SkillEntry{}), reflect.TypeOf(dto.SkillEntry{})},
-		{"SkillInvokeResult", reflect.TypeOf(service.SkillInvokeResult{}), reflect.TypeOf(dto.SkillInvokeResult{})},
+		{"SkillEntry", reflect.TypeOf(skill.SkillEntry{}), reflect.TypeOf(dto.SkillEntry{})},
+		{"SkillInvokeResult", reflect.TypeOf(skill.SkillInvokeResult{}), reflect.TypeOf(dto.SkillInvokeResult{})},
+		{"Skill", reflect.TypeOf((*skill.Skill)(nil)).Elem(), reflect.TypeOf((*dto.Skill)(nil)).Elem()},
 	}
 	for _, p := range pairs {
 		if p.shared != p.bottom {
-			t.Errorf("service.%s 与 dto.%s 不再是同一类型（别名被换成独立副本）", p.name, p.name)
+			t.Errorf("skill.%s 与 dto.%s 不再是同一类型（别名被换成独立副本）", p.name, p.name)
 		}
 	}
 	if got := fieldNames(reflect.TypeOf(dto.SkillEntry{})); got != "Code,Name,Version,Title,Provider,Description,Category,Tags,Capabilities,RequiredPerms,Author,IsOfficial,Checksum,IsBuiltin,TenantID,Status,Manifest,Metrics,LongDescription" {
@@ -137,18 +141,20 @@ func TestSkillValueTypesAreDTOAliases(t *testing.T) {
 		t.Errorf("SkillEntry.TenantID tag 漂移：%s", got)
 	}
 
-	// 逐处别名源码守卫。
+	// 逐处别名源码守卫（实现已迁 handlers/skill/registry.go）。
 	for _, a := range []struct{ file, decl string }{
-		{"skill_registry.go", "type SkillEntry = dto.SkillEntry"},
-		{"skill_registry.go", "type SkillInvokeResult = dto.SkillInvokeResult"},
-		{"skill_registry.go", "var ErrSkillAlreadyRegistered = dto.ErrSkillAlreadyRegistered"},
-		{"skill_registry.go", "var ErrSkillNotFound = dto.ErrSkillNotFound"},
-		{"skill_registry.go", "var ErrSkillValidation = dto.ErrSkillValidation"},
-		{"skill_registry.go", "var ErrSkillInvoke = dto.ErrSkillInvoke"},
+		{"registry.go", "type Skill = dto.Skill"},
+		{"registry.go", "type SkillEntry = dto.SkillEntry"},
+		{"registry.go", "type SkillInvokeResult = dto.SkillInvokeResult"},
+		{"registry.go", "var ErrSkillAlreadyRegistered = dto.ErrSkillAlreadyRegistered"},
+		{"registry.go", "var ErrSkillNotFound = dto.ErrSkillNotFound"},
+		{"registry.go", "var ErrSkillValidation = dto.ErrSkillValidation"},
+		{"registry.go", "var ErrSkillInvoke = dto.ErrSkillInvoke"},
+		{"registry.go", "func NewSkillRegistry() *SkillRegistry"},
 	} {
-		src := readSkillRepoFile(t, "service", a.file)
+		src := readSkillRepoFile(t, "handlers", "skill", a.file)
 		if !strings.Contains(squashSpace(src), squashSpace(a.decl)) {
-			t.Errorf("service/%s 缺少别名声明 %q", a.file, a.decl)
+			t.Errorf("handlers/skill/%s 缺少声明 %q", a.file, a.decl)
 		}
 	}
 }

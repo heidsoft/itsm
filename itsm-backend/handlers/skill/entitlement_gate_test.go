@@ -23,7 +23,6 @@ import (
 	"itsm-backend/ent/marketplaceitem"
 	"itsm-backend/handlers/skill"
 	"itsm-backend/middleware"
-	"itsm-backend/service"
 	marketplaceService "itsm-backend/service/marketplace"
 )
 
@@ -51,7 +50,7 @@ func newEntitlementFixture(t *testing.T, dsn string) *entitlementFixture {
 	client := enttest.Open(t, "sqlite3", "file:"+dsn+"?mode=memory&cache=shared&_fk=1")
 	t.Cleanup(func() { _ = client.Close() })
 
-	registry := service.NewSkillRegistry()
+	registry := skill.NewSkillRegistry()
 	svc := marketplaceService.NewService(client, zaptest.NewLogger(t).Sugar())
 	// 运行时代码集合直接用真实注册表：注册了哪些码，目录就只能声明哪些定位符。
 	svc.SetSkillRuntime(registry)
@@ -255,7 +254,7 @@ func TestNewHandlerKeepsEntClient(t *testing.T) {
 	middleware.PermissionConfig.Mode = middleware.PermissionConfigModeDBOnly
 	t.Cleanup(func() { middleware.PermissionConfig.Mode = middleware.PermissionConfigModeHardcodeOnly })
 
-	h := skill.NewHandler(service.NewSkillRegistry(), zap.NewNop().Sugar(), client)
+	h := skill.NewHandler(skill.NewSkillRegistry(), zap.NewNop().Sugar(), client)
 	r := gin.New()
 	v1 := r.Group("/api/v1")
 	v1.Use(func(c *gin.Context) {
@@ -279,7 +278,7 @@ func TestNewHandlerKeepsEntClient(t *testing.T) {
 	require.Equal(t, http.StatusOK, w.Code, w.Body.String())
 
 	// 对照组：同一个 handler 构造时不传 client，同一条请求必须被 fail-closed 拒绝。
-	broken := skill.NewHandler(service.NewSkillRegistry(), zap.NewNop().Sugar(), nil)
+	broken := skill.NewHandler(skill.NewSkillRegistry(), zap.NewNop().Sugar(), nil)
 	r2 := gin.New()
 	v2 := r2.Group("/api/v1")
 	v2.Use(func(c *gin.Context) {

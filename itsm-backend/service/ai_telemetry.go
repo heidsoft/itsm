@@ -32,10 +32,11 @@ import (
 type AITelemetryService struct {
 	db   *sql.DB
 	repo *aiTelemetryRepository
-	// skillRegistry 是可选的 SkillRegistry 引用（由 bootstrap 在服务组装阶段注入）。
+	// skillRegistry 是可选的技能注册表读面（由 bootstrap 在服务组装阶段注入，
+	// 类型为 dto.SkillMetadataSource 窄端口）。
 	// 设置后，Evaluate 会把 AIScenarioEval.Kind 映射到 Skill.code/Skill.name，
 	// 并额外生成 bySkill 维度的健康分；为 nil 时仍按旧"kind"维度聚合，向后兼容。
-	skillRegistry *SkillRegistry
+	skillRegistry dto.SkillMetadataSource
 	// entClient 可选；为 nil 时 GetMetrics 的 audit_logs 聚合回退到 sql 计数。
 	entClient *ent.Client
 	// quota 可选（AIQuotaService）；注入后 GetMetrics 附带配额用量与成本口径。
@@ -58,11 +59,12 @@ func (s *AITelemetryService) SetEntClient(client *ent.Client) {
 	s.entClient = client
 }
 
-// SetSkillRegistry 注入 SkillRegistry，使 AI 评估报告能够按 Skill 维度聚合。
+// SetSkillRegistry 注入技能注册表读面（dto.SkillMetadataSource 窄端口，
+// 组合根传 *skill.SkillRegistry 具体实现），使 AI 评估报告能够按 Skill 维度聚合。
 // 该方法在 bootstrap 期间调用；调用后 Evaluate 输出的 bySkill 字段将包含
 // Skill 元数据（code/name）与子健康分（HealthScore）。可在测试中保持 nil 以
 // 验证旧契约，向后兼容。
-func (s *AITelemetryService) SetSkillRegistry(reg *SkillRegistry) {
+func (s *AITelemetryService) SetSkillRegistry(reg dto.SkillMetadataSource) {
 	s.skillRegistry = reg
 }
 

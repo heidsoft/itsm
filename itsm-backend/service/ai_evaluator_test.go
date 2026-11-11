@@ -11,6 +11,8 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"itsm-backend/dto"
 )
 
 // newTelemetryTestDB 建立 sqlite 内存库的最小 ai_feedbacks / ai_llm_calls 表，
@@ -197,14 +199,25 @@ func TestEvaluate_EmptyState(t *testing.T) {
 	assert.Empty(t, report.BySkill)
 }
 
-// newRegistryWithFakeSkill 构造一个只包含单个 fake Skill 的最小 SkillRegistry，
+// newRegistryWithFakeSkill 构造一个只包含单个 fake Skill 的最小
+// dto.SkillMetadataSource 读面（注册表实现已迁 handlers/skill 域包，
+// 评估侧只依赖 Get 窄端口），
 // 用于评估器“带 SkillRegistry”的场景。Skill 的 Manifest.Category 决定 IsPilot。
-func newRegistryWithFakeSkill(code, name, category string) *SkillRegistry {
-	reg := NewSkillRegistry()
+type fakeSkillSource struct {
+	skills map[string]dto.Skill
+}
+
+func (s *fakeSkillSource) Get(code string) (dto.Skill, error) {
+	sk, ok := s.skills[code]
+	if !ok {
+		return nil, fmt.Errorf("%w: %s", dto.ErrSkillNotFound, code)
+	}
+	return sk, nil
+}
+
+func newRegistryWithFakeSkill(code, name, category string) dto.SkillMetadataSource {
 	fs := &fakeSkill{code: code, name: name, category: category}
-	// 直接绕开 register 的并发保护（测试中调用次序固定）。
-	reg.skills[code] = fs
-	return reg
+	return &fakeSkillSource{skills: map[string]dto.Skill{code: fs}}
 }
 
 // fakeSkill 是 SkillRegistry 测试用的最小实现：仅返回 Manifest/Name。
@@ -217,11 +230,11 @@ type fakeSkill struct {
 func (f *fakeSkill) Code() string   { return f.code }
 func (f *fakeSkill) Name() string   { return f.name }
 func (f *fakeSkill) Tags() []string { return nil }
-func (f *fakeSkill) Manifest() SkillManifest {
-	return SkillManifest{Name: f.code, Version: "v1", Category: f.category}
+func (f *fakeSkill) Manifest() dto.SkillManifest {
+	return dto.SkillManifest{Name: f.code, Version: "v1", Category: f.category}
 }
 
-func (f *fakeSkill) GetMetrics() SkillMetrics                                      { return SkillMetrics{} }
+func (f *fakeSkill) GetMetrics() dto.SkillMetrics                                  { return dto.SkillMetrics{} }
 func (f *fakeSkill) Validate(_ interface{}) error                                  { return nil }
 func (f *fakeSkill) Execute(_ context.Context, _ interface{}) (interface{}, error) { return nil, nil }
 

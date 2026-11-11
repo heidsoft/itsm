@@ -75,7 +75,7 @@ func (s *Service) SetConnectorManager(mgr *connector.Manager) {
 	s.connectorManager = mgr
 }
 
-// SetSkillRuntime 注入技能运行时（service.SkillRegistry），用于校验技能商品的
+// SetSkillRuntime 注入技能运行时（handlers/skill.SkillRegistry），用于校验技能商品的
 // 交付物是否真的在本进程可用。未注入时技能安装一律失败关闭。
 func (s *Service) SetSkillRuntime(rt SkillRuntime) {
 	s.skillRuntime = rt

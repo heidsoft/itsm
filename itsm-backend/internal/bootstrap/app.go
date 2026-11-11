@@ -129,7 +129,7 @@ type Application struct {
 	VectorStore       connectorVector.VectorStore
 	LegacyVectorStore *service.VectorStore
 	CommandWorker     *commandbus.Worker
-	SkillRegistry     *service.SkillRegistry
+	SkillRegistry     *skill.SkillRegistry
 	ProcessEngine     *service.CustomProcessEngine
 	TimerScheduler    *service.TimerScheduler
 
@@ -1067,9 +1067,9 @@ func NewApplication() *Application {
 	aiHandler := ai.NewHandler(aiServiceDomain)
 
 	// Skill Registry：在 ai.Service 装配完成后注入内置 Skill。
-	// 注册失败按"启动期 fail-fast"原则处理：以 service.SkillRegistry 注入到 ai package 中，
+	// 注册失败按"启动期 fail-fast"原则处理：以 skill.SkillRegistry 注入到 ai package 中，
 	// 供后续 handlers/skill 管理 API 调用。
-	skillRegistry := service.NewSkillRegistry()
+	skillRegistry := skill.NewSkillRegistry()
 	if err := ai.RegisterBuiltinSkills(skillRegistry, aiServiceDomain, sugar); err != nil {
 		sugar.Errorw("failed to register builtin AI skills; SkillRegistry will operate in partial mode",
 			"error", err)

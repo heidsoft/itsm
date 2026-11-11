@@ -1,4 +1,4 @@
-// Package service -Skill Registry v1.
+// Skill Registry v1.
 //
 // SkillRegistry 是运行期 Skill 一等公民的中央索引：
 //   - 启动时由 internal/bootstrap 通过 Register 注入 built-in Skill
@@ -7,7 +7,7 @@
 //
 // 该注册表是单进程内存表，未直接持久化自定义 Skill。本期范围聚焦"统一抽象"
 // 与"管理/发现"，DB-backed Skill 元数据存储留给后续 Sprint。
-package service
+package skill
 
 import (
 	"context"
@@ -18,6 +18,10 @@ import (
 
 	"itsm-backend/dto"
 )
+
+// Skill 接口与值类型的唯一实现在 dto 包；域内沿用短名（域包别名，
+// 既有调用点零改动）。
+type Skill = dto.Skill
 
 // SkillRegistry 注册表（运行期内存中心）。
 //
@@ -287,7 +291,7 @@ func (r *SkillRegistry) Count() int {
 	return len(r.skills)
 }
 
-// SkillEntry 值类型唯一实现在 dto 包；此处保留同名别名以保持 service 包公开 API。
+// SkillEntry 值类型唯一实现在 dto 包；此处保留同名别名以保持域包公开 API。
 type SkillEntry = dto.SkillEntry
 
 // ListEntries 全部 Skill 的可序列化视图。
@@ -364,7 +368,7 @@ func (r *SkillRegistry) entries(skills []Skill) []SkillEntry {
 	return out
 }
 
-// SkillInvokeResult 值类型唯一实现在 dto 包；此处保留同名别名以保持 service 包公开 API。
+// SkillInvokeResult 值类型唯一实现在 dto 包；此处保留同名别名以保持域包公开 API。
 type SkillInvokeResult = dto.SkillInvokeResult
 
 // Invoke 是 Skill 的统一运行时调用入口。

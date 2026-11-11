@@ -100,9 +100,6 @@ root_cause_analysis_service.go
 root_cause_service.go
 sequence_service.go
 service_quality_report_service.go
-skill_base.go
-skill_manifest.go
-skill_registry.go
 sla_alert_service.go
 sla_breach_predictor.go
 sla_forecast_skill.go

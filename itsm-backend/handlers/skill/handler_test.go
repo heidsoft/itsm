@@ -15,7 +15,6 @@ import (
 
 	"itsm-backend/handlers/skill"
 	"itsm-backend/middleware"
-	"itsm-backend/service"
 )
 
 // doRequest 构造 HTTP 请求并返回 recorder。
@@ -56,7 +55,7 @@ func parseData(t *testing.T, w *httptest.ResponseRecorder) map[string]interface{
 // setupRouter 构造一个最小可用的 Gin 路由，把 SkillHandler 挂到 /api/v1 前缀。
 // 同时关闭 RBAC 中间件（测试只关心 handler 行为；权限边界由 RequirePermission 在生产
 // 路径中验证）。
-func setupRouter(reg *service.SkillRegistry) *gin.Engine {
+func setupRouter(reg *skill.SkillRegistry) *gin.Engine {
 	gin.SetMode(gin.TestMode)
 	// Invoke 会校验 skill 声明的 RequiredPermissions，权限判定走 middleware 单一真源。
 	// 默认 Mode=0（DBOnly）在 client=nil 时 fail-closed，会让所有角色零权限，
@@ -95,7 +94,7 @@ func setupRouter(reg *service.SkillRegistry) *gin.Engine {
 
 // 1. 列出空注册表 → 200 + items: []
 func TestList_EmptyRegistry(t *testing.T) {
-	reg := service.NewSkillRegistry()
+	reg := skill.NewSkillRegistry()
 	r := setupRouter(reg)
 
 	w := doRequest(t, r, http.MethodGet, "/api/v1/skills", nil)
@@ -107,7 +106,7 @@ func TestList_EmptyRegistry(t *testing.T) {
 
 // 2. 注册一个自定义 Skill → 200
 func TestCreate_AndList(t *testing.T) {
-	reg := service.NewSkillRegistry()
+	reg := skill.NewSkillRegistry()
 	r := setupRouter(reg)
 
 	body := skill.SkillUpsertRequest{
@@ -139,7 +138,7 @@ func TestCreate_AndList(t *testing.T) {
 
 // 3. 重复注册 → 409 Conflict
 func TestCreate_DuplicateReturns409(t *testing.T) {
-	reg := service.NewSkillRegistry()
+	reg := skill.NewSkillRegistry()
 	r := setupRouter(reg)
 
 	body := skill.SkillUpsertRequest{
@@ -157,7 +156,7 @@ func TestCreate_DuplicateReturns409(t *testing.T) {
 
 // 4. 缺的必填字段 → 400
 func TestCreate_RequiresVersion(t *testing.T) {
-	reg := service.NewSkillRegistry()
+	reg := skill.NewSkillRegistry()
 	r := setupRouter(reg)
 
 	body := skill.SkillUpsertRequest{
@@ -171,7 +170,7 @@ func TestCreate_RequiresVersion(t *testing.T) {
 
 // 5. 缺的 requiredPermissions → 400
 func TestCreate_RequiresPermissions(t *testing.T) {
-	reg := service.NewSkillRegistry()
+	reg := skill.NewSkillRegistry()
 	r := setupRouter(reg)
 
 	body := skill.SkillUpsertRequest{
@@ -184,7 +183,7 @@ func TestCreate_RequiresPermissions(t *testing.T) {
 
 // 6. Get 详情 → 200 + manifest
 func TestGet_AfterCreate(t *testing.T) {
-	reg := service.NewSkillRegistry()
+	reg := skill.NewSkillRegistry()
 	r := setupRouter(reg)
 
 	create := skill.SkillUpsertRequest{
@@ -204,7 +203,7 @@ func TestGet_AfterCreate(t *testing.T) {
 
 // 7. 不存在的 Skill → 404
 func TestGet_NotFound(t *testing.T) {
-	reg := service.NewSkillRegistry()
+	reg := skill.NewSkillRegistry()
 	r := setupRouter(reg)
 
 	w := doRequest(t, r, http.MethodGet, "/api/v1/skills/does.not.exist", nil)
@@ -213,7 +212,7 @@ func TestGet_NotFound(t *testing.T) {
 
 // 8. 升级：pilot → ga
 func TestPromote_PilotToGa(t *testing.T) {
-	reg := service.NewSkillRegistry()
+	reg := skill.NewSkillRegistry()
 	r := setupRouter(reg)
 
 	create := skill.SkillUpsertRequest{
@@ -236,7 +235,7 @@ func TestPromote_PilotToGa(t *testing.T) {
 
 // 9. 禁用（DELETE）
 func TestDelete_DisablesSkill(t *testing.T) {
-	reg := service.NewSkillRegistry()
+	reg := skill.NewSkillRegistry()
 	r := setupRouter(reg)
 
 	create := skill.SkillUpsertRequest{
@@ -256,7 +255,7 @@ func TestDelete_DisablesSkill(t *testing.T) {
 
 // 10. Invoke 成功
 func TestInvoke_EchoSkill(t *testing.T) {
-	reg := service.NewSkillRegistry()
+	reg := skill.NewSkillRegistry()
 	r := setupRouter(reg)
 
 	create := skill.SkillUpsertRequest{
@@ -282,7 +281,7 @@ func TestInvoke_EchoSkill(t *testing.T) {
 
 // 11. Invoke 不存在的 Skill → 404
 func TestInvoke_NotFound(t *testing.T) {
-	reg := service.NewSkillRegistry()
+	reg := skill.NewSkillRegistry()
 	r := setupRouter(reg)
 
 	w := doRequest(t, r, http.MethodPost, "/api/v1/admin/skills/missing/invoke", nil)
@@ -291,7 +290,7 @@ func TestInvoke_NotFound(t *testing.T) {
 
 // 11.5 Invoke 身份只能来自认证上下文：请求体伪造 tenantId/userId/role 必须被覆盖
 func TestInvoke_IdentityFromContextOverridesBody(t *testing.T) {
-	reg := service.NewSkillRegistry()
+	reg := skill.NewSkillRegistry()
 	r := setupRouter(reg)
 
 	create := skill.SkillUpsertRequest{
@@ -325,7 +324,7 @@ func TestInvoke_IdentityFromContextOverridesBody(t *testing.T) {
 
 // 12. Update 路径
 func TestUpdate_VersionBump(t *testing.T) {
-	reg := service.NewSkillRegistry()
+	reg := skill.NewSkillRegistry()
 	r := setupRouter(reg)
 
 	create := skill.SkillUpsertRequest{
@@ -351,7 +350,7 @@ func TestUpdate_VersionBump(t *testing.T) {
 
 // 13. 模糊搜索
 func TestList_FilterByQuery(t *testing.T) {
-	reg := service.NewSkillRegistry()
+	reg := skill.NewSkillRegistry()
 	r := setupRouter(reg)
 
 	for _, code := range []string{"user.alpha", "user.beta"} {
@@ -374,7 +373,7 @@ func TestList_FilterByQuery(t *testing.T) {
 // 14. GET /api/v1/admin/skills 必须存在，返回 200 +
 // items/total/page/pageSize/totalPages 完整列表。
 func TestAdminList_ReturnsAllSkills(t *testing.T) {
-	reg := service.NewSkillRegistry()
+	reg := skill.NewSkillRegistry()
 	r := setupRouter(reg)
 
 	// 准备：先注册一个自定义 skill
@@ -408,7 +407,7 @@ func TestAdminList_ReturnsAllSkills(t *testing.T) {
 
 // 15. Admin 详情：覆盖 bug #1 — GET /api/v1/admin/skills/:code 必须存在
 func TestAdminGet_ReturnsFullEntry(t *testing.T) {
-	reg := service.NewSkillRegistry()
+	reg := skill.NewSkillRegistry()
 	r := setupRouter(reg)
 
 	create := skill.SkillUpsertRequest{
@@ -433,7 +432,7 @@ func TestAdminGet_ReturnsFullEntry(t *testing.T) {
 
 // 16. Admin 列表支持 page/pageSize 分页
 func TestAdminList_Pagination(t *testing.T) {
-	reg := service.NewSkillRegistry()
+	reg := skill.NewSkillRegistry()
 	r := setupRouter(reg)
 
 	// 注册 3 个 skill
@@ -462,7 +461,7 @@ func TestAdminList_Pagination(t *testing.T) {
 
 // 17. Admin 详情找不到 → 404
 func TestAdminGet_NotFound(t *testing.T) {
-	reg := service.NewSkillRegistry()
+	reg := skill.NewSkillRegistry()
 	r := setupRouter(reg)
 
 	w := doRequest(t, r, http.MethodGet, "/api/v1/admin/skills/does.not.exist", nil)
@@ -473,7 +472,7 @@ func TestAdminGet_NotFound(t *testing.T) {
 // 不再由 handler 私有实现把 >100 截断成 100（那是 MaxPageSize 之外的第二套界）；
 // size 别名继续不被接受，避免同一接口双轨分页契约。
 func TestAdminList_PageSizeFallsBackToPlatformDefault(t *testing.T) {
-	reg := service.NewSkillRegistry()
+	reg := skill.NewSkillRegistry()
 	r := setupRouter(reg)
 
 	for i := 0; i < 3; i++ {
@@ -533,7 +532,7 @@ func TestInvoke_EnforcesRequiredPermissions(t *testing.T) {
 	}
 
 	t.Run("held permission passes", func(t *testing.T) {
-		reg := service.NewSkillRegistry()
+		reg := skill.NewSkillRegistry()
 		r := setupRouter(reg)
 		create := doRequest(t, r, http.MethodPost, "/api/v1/admin/skills", newSkill("perm.ok", []string{"marketplace:read"}))
 		require.Equal(t, http.StatusOK, create.Code, create.Body.String())
@@ -542,7 +541,7 @@ func TestInvoke_EnforcesRequiredPermissions(t *testing.T) {
 	})
 
 	t.Run("missing permission is denied before execution", func(t *testing.T) {
-		reg := service.NewSkillRegistry()
+		reg := skill.NewSkillRegistry()
 		r := setupRouter(reg)
 		create := doRequest(t, r, http.MethodPost, "/api/v1/admin/skills", newSkill("perm.denied", []string{"msp:write"}))
 		require.Equal(t, http.StatusOK, create.Code, create.Body.String())
@@ -552,7 +551,7 @@ func TestInvoke_EnforcesRequiredPermissions(t *testing.T) {
 	})
 
 	t.Run("one missing permission denies the whole call", func(t *testing.T) {
-		reg := service.NewSkillRegistry()
+		reg := skill.NewSkillRegistry()
 		r := setupRouter(reg)
 		create := doRequest(t, r, http.MethodPost, "/api/v1/admin/skills", newSkill("perm.partial", []string{"marketplace:read", "msp:write"}))
 		require.Equal(t, http.StatusOK, create.Code, create.Body.String())
@@ -565,7 +564,7 @@ func TestInvoke_EnforcesRequiredPermissions(t *testing.T) {
 	// 只可能来自不经 Create 的内置 skill——那里由 RegisterBuiltinSkills
 	// 直接注册，不声明权限即不校验，保持内置能力可用。
 	t.Run("create rejects empty requiredPermissions", func(t *testing.T) {
-		reg := service.NewSkillRegistry()
+		reg := skill.NewSkillRegistry()
 		r := setupRouter(reg)
 		create := doRequest(t, r, http.MethodPost, "/api/v1/admin/skills", newSkill("perm.empty", nil))
 		assert.Equal(t, http.StatusBadRequest, create.Code, create.Body.String())
@@ -573,7 +572,7 @@ func TestInvoke_EnforcesRequiredPermissions(t *testing.T) {
 	})
 
 	t.Run("malformed permission code is denied fail-closed", func(t *testing.T) {
-		reg := service.NewSkillRegistry()
+		reg := skill.NewSkillRegistry()
 		r := setupRouter(reg)
 		create := doRequest(t, r, http.MethodPost, "/api/v1/admin/skills", newSkill("perm.malformed", []string{"no-colon-here"}))
 		require.Equal(t, http.StatusOK, create.Code, create.Body.String())

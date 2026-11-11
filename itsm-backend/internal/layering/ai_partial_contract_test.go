@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"itsm-backend/dto"
+	"itsm-backend/handlers/skill"
 	"itsm-backend/service"
 )
 
@@ -102,10 +103,6 @@ func TestAISharedValueTypesAreDTOAliases(t *testing.T) {
 		{"PredictionPoint", reflect.TypeOf(service.PredictionPoint{}), reflect.TypeOf(dto.PredictionPoint{})},
 		{"ForecastOutput", reflect.TypeOf(service.ForecastOutput{}), reflect.TypeOf(dto.ForecastOutput{})},
 		{"ForecastData", reflect.TypeOf(service.ForecastData{}), reflect.TypeOf(dto.ForecastData{})},
-		{"SkillManifest", reflect.TypeOf(service.SkillManifest{}), reflect.TypeOf(dto.SkillManifest{})},
-		{"SkillMetrics", reflect.TypeOf(service.SkillMetrics{}), reflect.TypeOf(dto.SkillMetrics{})},
-		{"SkillIdentity", reflect.TypeOf(service.SkillIdentity{}), reflect.TypeOf(dto.SkillIdentity{})},
-		{"BaseSkill", reflect.TypeOf(service.BaseSkill{}), reflect.TypeOf(dto.BaseSkill{})},
 		{"TriageResult", reflect.TypeOf(service.TriageResult{}), reflect.TypeOf(dto.TriageResult{})},
 		{"AIMetrics", reflect.TypeOf(service.AIMetrics{}), reflect.TypeOf(dto.AIMetrics{})},
 		{"QuotaUsage", reflect.TypeOf(service.QuotaUsage{}), reflect.TypeOf(dto.QuotaUsage{})},
@@ -117,8 +114,8 @@ func TestAISharedValueTypesAreDTOAliases(t *testing.T) {
 			t.Errorf("service.%s 与 dto.%s 不再是同一类型（别名被换成独立副本）", p.name, p.name)
 		}
 	}
-	if reflect.TypeOf((*service.Skill)(nil)).Elem() != reflect.TypeOf((*dto.Skill)(nil)).Elem() {
-		t.Errorf("service.Skill 与 dto.Skill 接口身份漂移")
+	if reflect.TypeOf((*skill.Skill)(nil)).Elem() != reflect.TypeOf((*dto.Skill)(nil)).Elem() {
+		t.Errorf("skill.Skill 与 dto.Skill 接口身份漂移（域包别名被换成独立副本）")
 	}
 
 	shapes := []struct {
@@ -177,11 +174,6 @@ func TestAISharedValueTypesAreDTOAliases(t *testing.T) {
 		{"sla_forecast_skill.go", "type PredictionPoint = dto.PredictionPoint"},
 		{"sla_forecast_skill.go", "type ForecastOutput = dto.ForecastOutput"},
 		{"sla_forecast_skill.go", "type ForecastData = dto.ForecastData"},
-		{"skill_manifest.go", "type SkillManifest = dto.SkillManifest"},
-		{"skill_manifest.go", "type SkillMetrics = dto.SkillMetrics"},
-		{"skill_manifest.go", "type Skill = dto.Skill"},
-		{"skill_base.go", "type BaseSkill = dto.BaseSkill"},
-		{"skill_base.go", "type SkillIdentity = dto.SkillIdentity"},
 		{"root_cause_service.go", "var ErrAIAnalysisUnavailable = dto.ErrAIAnalysisUnavailable"},
 		{"ai_telemetry_repository.go", "var ErrFeedbackNotFound = dto.ErrFeedbackNotFound"},
 		{"triage_service.go", "type TriageResult = dto.TriageResult"},
@@ -227,13 +219,13 @@ func TestSkillBaseHooksAreExported(t *testing.T) {
 			t.Errorf("dto/skill_dto.go 缺少 %q", decl)
 		}
 	}
-	registry := readAIRepoFile(t, "service", "skill_registry.go")
+	registry := readAIRepoFile(t, "handlers", "skill", "registry.go")
 	for _, decl := range []string{
 		"TrackedSkill()", "RecordResult(elapsed time.Duration, err error)",
 		"bs.RecordResult(elapsed, execErr)",
 	} {
 		if !strings.Contains(squashSpace(registry), squashSpace(decl)) {
-			t.Errorf("service/skill_registry.go 缺少公有两种子调用 %q", decl)
+			t.Errorf("handlers/skill/registry.go 缺少公有两种子调用 %q", decl)
 		}
 	}
 

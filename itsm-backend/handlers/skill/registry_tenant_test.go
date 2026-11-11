@@ -1,4 +1,4 @@
-package service
+package skill
 
 import (
 	"context"
@@ -6,6 +6,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
+	"itsm-backend/dto"
 )
 
 // 技能注册表租户隔离回归锁。
@@ -28,15 +30,15 @@ type scopedTestSkill struct {
 func (s *scopedTestSkill) Code() string   { return s.code }
 func (s *scopedTestSkill) Name() string   { return s.code }
 func (s *scopedTestSkill) Tags() []string { return s.tags }
-func (s *scopedTestSkill) Manifest() SkillManifest {
-	return SkillManifest{
+func (s *scopedTestSkill) Manifest() dto.SkillManifest {
+	return dto.SkillManifest{
 		Name:                s.code,
 		Version:             "v1",
 		Category:            "pilot",
 		RequiredPermissions: []string{"ai:read"},
 	}
 }
-func (s *scopedTestSkill) GetMetrics() SkillMetrics { return SkillMetrics{} }
+func (s *scopedTestSkill) GetMetrics() dto.SkillMetrics { return dto.SkillMetrics{} }
 func (s *scopedTestSkill) Validate(_ interface{}) error {
 	return nil
 }
@@ -136,7 +138,7 @@ func TestSkillRegistry_EntryCarriesOwner(t *testing.T) {
 	require.False(t, custom.IsBuiltin, "自定义技能不应被标成内置")
 }
 
-func codesOfEntries(entries []SkillEntry) []string {
+func codesOfEntries(entries []dto.SkillEntry) []string {
 	out := make([]string, 0, len(entries))
 	for _, e := range entries {
 		out = append(out, e.Code)
