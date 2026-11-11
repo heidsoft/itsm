@@ -5,7 +5,6 @@
 a2ui_ticket_service.go
 ai_evaluator.go
 ai_quota.go
-ai_services.go
 ai_telemetry.go
 ai_telemetry_repository.go
 analytics_service.go
@@ -62,8 +61,6 @@ dashboard_repository.go
 dashboard_service.go
 domain_command_handlers.go
 email_service.go
-embed_pipeline.go
-embedder_openai.go
 export_security.go
 expression_engine.go
 guidance_client.go
@@ -130,7 +127,6 @@ tool_registry.go
 triage_service.go
 user_lookup_repository.go
 user_service.go
-vector_store.go
 websocket_service.go
 workflow_helper.go
 workflow_start_command_handler.go

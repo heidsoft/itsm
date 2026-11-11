@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -16,7 +17,36 @@ import (
 	"itsm-backend/ent"
 	ka "itsm-backend/ent/knowledgearticle"
 	"itsm-backend/internal/knowledgeaccess"
+	"itsm-backend/internal/vectorstore"
 )
+
+// 向量存储与嵌入实现已归位 internal/vectorstore（service 层迁移收口批）。
+// 此处只保留 service 侧公开 API：类型用别名保证身份等价，函数用薄委托保证
+// 签名逐字一致，组合根与既有测试零改动。禁止在此复制实现或另起一份口径。
+type (
+	VectorStore        = vectorstore.VectorStore
+	VectorSearchResult = vectorstore.VectorSearchResult
+	Embedder           = vectorstore.Embedder
+	EmbeddingReadiness = vectorstore.EmbeddingReadiness
+	EmbeddingPipeline  = vectorstore.EmbeddingPipeline
+	OpenAIEmbedder     = vectorstore.OpenAIEmbedder
+)
+
+func NewVectorStore(db *sql.DB) *VectorStore { return vectorstore.NewVectorStore(db) }
+
+func NewOpenAIEmbedder() *OpenAIEmbedder { return vectorstore.NewOpenAIEmbedder() }
+
+func NewOpenAIEmbedderWithConfig(apiKey, endpoint, model string) *OpenAIEmbedder {
+	return vectorstore.NewOpenAIEmbedderWithConfig(apiKey, endpoint, model)
+}
+
+func NewEmbeddingPipeline(client *ent.Client, e Embedder, logger *zap.SugaredLogger, vectors *VectorStore) *EmbeddingPipeline {
+	return vectorstore.NewEmbeddingPipeline(client, e, logger, vectors)
+}
+
+func SimilarIncidents(ctx context.Context, vectors *VectorStore, embedder Embedder, tenantID int, query string, k int) ([]map[string]any, error) {
+	return vectorstore.SimilarIncidents(ctx, vectors, embedder, tenantID, query, k)
+}
 
 // RAGService provides retrieval augmented generation over Knowledge Base
 type RAGService struct {
