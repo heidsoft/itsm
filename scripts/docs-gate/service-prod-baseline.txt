@@ -98,8 +98,6 @@ root_cause_service.go
 sequence_service.go
 service_quality_report_service.go
 sla_alert_service.go
-sla_breach_predictor.go
-sla_forecast_skill.go
 sla_monitor_service.go
 sla_policy_service.go
 summarize_service.go

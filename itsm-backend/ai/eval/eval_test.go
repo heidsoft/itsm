@@ -28,6 +28,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 
+	"itsm-backend/handlers/sla"
 	"itsm-backend/service"
 )
 
@@ -214,7 +215,7 @@ func RAGHitRate(_ *testing.T, cases []RAGCase, retriever func(RAGCase) []string)
 // 此前分数直接取数据集自带的 breach_probability_min——分数与标签构造上一致
 // （期望违约的给 0.7、不违约的给 0.2），AUC 恒 1.00，那个门禁不测任何生产
 // 代码。现在 predictor 参数注入真实的生产 SLABreachPredictor。
-func PredictionROCAUC(_ *testing.T, cases []PredictionCase, predictor *service.SLABreachPredictor) float64 {
+func PredictionROCAUC(_ *testing.T, cases []PredictionCase, predictor *sla.SLABreachPredictor) float64 {
 	if len(cases) == 0 {
 		return 0
 	}
@@ -271,8 +272,8 @@ func PredictionROCAUC(_ *testing.T, cases []PredictionCase, predictor *service.S
 //
 // 类型断言失败时返回零值特征，Predict 会对非法输入报错并跳过该样本——
 // 比在映射层猜默认值诚实。
-func predictionFeatures(c PredictionCase) service.SLABreachFeatures {
-	f := service.SLABreachFeatures{
+func predictionFeatures(c PredictionCase) sla.SLABreachFeatures {
+	f := sla.SLABreachFeatures{
 		Priority:       str(c.Features["priority"]),
 		HorizonMinutes: c.HorizonMinutes,
 		CreatedHour:    int(fl(c.Features["created_hour"])),
@@ -418,11 +419,11 @@ func TestEval_RAG_HitRate(t *testing.T) {
 // TestEval_Prediction_ROCAUC 锁定 SLA breach 预测 ROC AUC 下界
 func TestEval_Prediction_ROCAUC(t *testing.T) {
 	cases := LoadPredictionCases(t)
-	// 分数来自**生产预测器**（service.SLABreachPredictor）：AUC 衡量的是
+	// 分数来自**生产预测器**（sla.SLABreachPredictor）：AUC 衡量的是
 	// 「预测器排序 vs 人工标注」的一致性。此前分数直接取数据集自带的
 	// breach_probability_min——分数与标签构造上一致，AUC 恒 1.00，那个门禁
 	// 不测任何生产代码。
-	predictor := service.NewSLABreachPredictor()
+	predictor := sla.NewSLABreachPredictor()
 	auc := PredictionROCAUC(t, cases, predictor)
 	t.Logf("prediction ROC AUC (真实预测器): %.2f (cases=%d)", auc, len(cases))
 	require.GreaterOrEqual(t, auc, 0.75, "prediction ROC AUC 应 ≥0.75，实际 %.2f", auc)
@@ -454,7 +455,7 @@ func TestEval_RegressionSnapshots(t *testing.T) {
 	ragRetriever := func(c RAGCase) []string { return ragSvc.Retrieve(context.Background(), c) }
 	snaps = append(snaps, snapshot{"rag", len(ragCases), "hitRate", RAGHitRate(t, ragCases, ragRetriever)})
 	predCases := LoadPredictionCases(t)
-	snaps = append(snaps, snapshot{"prediction", len(predCases), "rocAuc", PredictionROCAUC(t, predCases, service.NewSLABreachPredictor())})
+	snaps = append(snaps, snapshot{"prediction", len(predCases), "rocAuc", PredictionROCAUC(t, predCases, sla.NewSLABreachPredictor())})
 
 	// 输出表格，便于 CI summary
 	for _, s := range snaps {

@@ -48,6 +48,7 @@ import (
 
 	"itsm-backend/ai/eval"
 	"itsm-backend/config"
+	"itsm-backend/handlers/sla"
 	"itsm-backend/service"
 )
 
@@ -182,7 +183,7 @@ func run(mode, outDir, datasets string) error {
 
 	// ---- 预测（真实预测器） ----
 	predCases := mustLoad[[]eval.PredictionCase](filepath.Join(datasets, "prediction.jsonl"))
-	predictor := service.NewSLABreachPredictor()
+	predictor := sla.NewSLABreachPredictor()
 	pos, neg, correctPairs := 0, 0, 0.0
 	scores := make([]float64, 0, len(predCases))
 	labels := make([]bool, 0, len(predCases))

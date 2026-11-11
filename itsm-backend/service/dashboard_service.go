@@ -573,14 +573,11 @@ func (s *DashboardService) _stringPtr(str string) *string {
 type DashboardOverviewData = dto.DashboardOverviewData
 
 // DashboardViewer 值类型已下沉到 dto 包，此处保留别名以保持 service 包公开 API
-// 与所有现行调用点的类型身份不变。依赖 datascope 的三个口径函数留在本包（未导出）。
+// 与所有现行调用点的类型身份不变。行级口径判定已下沉 internal/datascope 单一源。
 type DashboardViewer = dto.DashboardViewer
 
 func ticketScope(v DashboardViewer) datascope.DataScope {
-	if v.ScopeAll {
-		return datascope.DataScopeAll
-	}
-	return datascope.ForTicketReader(v.Role)
+	return datascope.ViewerTicketScope(v.ScopeAll, v.Role)
 }
 
 // sqlViewerID 返回 raw SQL 的行级范围参数：全租户口径传 0，SQL 内 $4 = 0 即不过滤。

@@ -736,7 +736,7 @@ func NewApplication() *Application {
 	qualityReportService := service.NewServiceQualityReportService(dashboardService, analyticsService)
 	dashboardHandler.SetServiceQualityService(qualityReportService)
 	predictionService := service.NewPredictionService(client, sugar)
-	slaForecastSkill := service.NewSLAForecastSkill(client, llmGateway, sugar)
+	slaForecastSkill := sla.NewSLAForecastSkill(client, llmGateway, sugar)
 	// 市场服务
 	marketplaceSvc := marketplaceService.NewService(client, sugar)
 	marketplaceSvc.SetConnectorManager(connectorManager)

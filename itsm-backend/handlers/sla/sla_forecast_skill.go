@@ -1,4 +1,4 @@
-package service
+package sla
 
 import (
 	"context"
@@ -14,6 +14,7 @@ import (
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/ticket"
+	"itsm-backend/internal/datascope"
 	ticketrepo "itsm-backend/repository/ticket"
 )
 
@@ -25,7 +26,7 @@ import (
 
 // ForecastData 内部使用的数据结构
 
-// SLA 预测值类型已下沉 dto；同名别名保持调用点零改动。
+// SLA 预测值类型唯一实现在 dto；域包保留同名别名，调用点类型身份不变。
 type ForecastInput = dto.ForecastInput
 type PredictionPoint = dto.PredictionPoint
 type ForecastOutput = dto.ForecastOutput
@@ -33,13 +34,13 @@ type ForecastData = dto.ForecastData
 
 // SLAForecastSkill AI-Native SLA 预测 Skill
 type SLAForecastSkill struct {
-	gateway *LLMGateway
+	gateway dto.LLMGatewayPort
 	client  *ent.Client
 	logger  *zap.SugaredLogger
 }
 
 // NewSLAForecastSkill 创建 SLA 预测 Skill
-func NewSLAForecastSkill(client *ent.Client, gateway *LLMGateway, logger *zap.SugaredLogger) *SLAForecastSkill {
+func NewSLAForecastSkill(client *ent.Client, gateway dto.LLMGatewayPort, logger *zap.SugaredLogger) *SLAForecastSkill {
 	return &SLAForecastSkill{
 		client:  client,
 		gateway: gateway,
@@ -60,16 +61,16 @@ func (s *SLAForecastSkill) Execute(ctx context.Context, input *ForecastInput) (*
 			ticket.CreatedAtGTE(historyStart),
 			ticket.CreatedAtLTE(input.EndDate),
 		).
-		Where(ticketrepo.DataScopePredicates(ticketScope(input.Viewer), input.Viewer.UserID)...).
+		Where(ticketrepo.DataScopePredicates(datascope.ViewerTicketScope(input.Viewer.ScopeAll, input.Viewer.Role), input.Viewer.UserID)...).
 		Order(ent.Asc(ticket.FieldID)).
-		Limit(maxReportTickets + 1).
+		Limit(datascope.MaxReportTickets + 1).
 		All(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get history tickets: %w", err)
 	}
-	if len(tickets) > maxReportTickets {
+	if len(tickets) > datascope.MaxReportTickets {
 		return nil, common.NewBadRequestError(
-			fmt.Sprintf("统计范围内工单数超过 %d 条，请缩小时间范围", maxReportTickets), nil)
+			fmt.Sprintf("统计范围内工单数超过 %d 条，请缩小时间范围", datascope.MaxReportTickets), nil)
 	}
 
 	// 2. 构建时间序列数据
@@ -384,7 +385,7 @@ func (s *SLAForecastSkill) generateInsights(ctx context.Context, mean float64, p
 2. 潜在风险或建议
 `, mean, avgPredicted, trend, seasonalityStr, len(predictions))
 
-	messages := []LLMMessage{
+	messages := []dto.LLMMessage{
 		{Role: "system", Content: "你是一个专业的IT服务管理分析师。请用简洁专业的语言回复。"},
 		{Role: "user", Content: prompt},
 	}

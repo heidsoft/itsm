@@ -1,10 +1,11 @@
-package service
+package sla
 
 import (
 	"context"
 	"testing"
 	"time"
 
+	"itsm-backend/dto"
 	"itsm-backend/ent/enttest"
 
 	"github.com/stretchr/testify/assert"
@@ -28,7 +29,7 @@ func TestSLAForecastSkill_Execute(t *testing.T) {
 		StartDate: startDate,
 		EndDate:   endDate,
 		Metrics:   []string{"volume"},
-		Viewer:    DashboardViewer{ScopeAll: true},
+		Viewer:    dto.DashboardViewer{ScopeAll: true},
 	}
 
 	output, err := skill.Execute(ctx, input)

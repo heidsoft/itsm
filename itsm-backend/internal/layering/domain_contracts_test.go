@@ -35,6 +35,7 @@ import (
 	"itsm-backend/handlers/release"
 	"itsm-backend/handlers/service_request"
 	"itsm-backend/handlers/skill"
+	"itsm-backend/handlers/sla"
 	"itsm-backend/handlers/ticket"
 	"itsm-backend/handlers/ticket_notification"
 	"itsm-backend/handlers/ticket_tag"
@@ -55,7 +56,7 @@ var (
 	_ ai.ToolCatalog           = (*service.ToolRegistry)(nil)
 	_ ai.DeepAnalyticsProvider = (*service.AnalyticsService)(nil)
 	_ ai.TrendPredictor        = (*service.PredictionService)(nil)
-	_ ai.SLAForecastRunner     = (*service.SLAForecastSkill)(nil)
+	_ ai.SLAForecastRunner     = (*sla.SLAForecastSkill)(nil)
 	_ ai.TriageAdvisor         = (*service.TriageService)(nil)
 	_ ai.RootCauseAnalyzer     = (*service.RootCauseService)(nil)
 	_ ai.AITelemetryFacade     = (*service.AITelemetryService)(nil)

@@ -24,6 +24,22 @@ const (
 	DataScopeOwnedOrAssigned
 )
 
+// MaxReportTickets 是报表读面单次查询的工单上限。此前该常量只定义在
+// service/analytics_service.go，域包迁入 SLA 预测能力后若各自复制一份，
+// 两处上限会悄悄漂移（一边放宽即绕过内存保护）；此处作为唯一源，共享层与
+// 域包都引用同一常量。
+const MaxReportTickets = 50000
+
+// ViewerTicketScope 把「全租户可见 / 按角色收窄」的看板口径解析为 DataScope。
+// 与 MaxReportTickets 同理：service/dashboard_service.go 的 ticketScope 与
+// handlers/sla 的预测读面必须共用同一判定，避免两个读面权限口径分叉。
+func ViewerTicketScope(scopeAll bool, role string) DataScope {
+	if scopeAll {
+		return DataScopeAll
+	}
+	return ForTicketReader(role)
+}
+
 // ParseDataScope 从 ent Role 的 data_scope 字段解析 DataScope 常量。
 // 未知值默认返回 DataScopeOwnedOrAssigned（安全收窄）。
 func ParseDataScope(dataScope string) DataScope {

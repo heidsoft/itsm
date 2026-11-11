@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -103,14 +104,26 @@ func TestEscalationDomainImplementationIsDomainOwned(t *testing.T) {
 	}
 
 	drift := readEscalationRepoFile(t, "..", "scripts", "docs-gate", "product-surface-baseline.txt")
-	foundServiceFiles343 := false
+	// 棘轮语义：本批把上界从 350 压到 343；后续批次继续下降合规，
+	// 但任何回退到 350（含）以上的值都必须红。硬编码「精确 343」会在
+	// 下一批下调时误报（2026-11-11 sla 预测归位批实测踩到）。
+	serviceFiles := -1
 	for _, line := range strings.Split(drift, "\n") {
-		if strings.HasPrefix(line, "service_go_files=343") {
-			foundServiceFiles343 = true
+		if strings.HasPrefix(line, "service_go_files=") {
+			fields := strings.Fields(strings.TrimPrefix(line, "service_go_files="))
+			if len(fields) == 0 {
+				t.Fatal("C.6.4 service_go_files 行无数值")
+			}
+			v, err := strconv.Atoi(fields[0])
+			if err != nil {
+				t.Fatalf("C.6.4 service_go_files 数值非法：%v", err)
+			}
+			serviceFiles = v
+			break
 		}
 	}
-	if !foundServiceFiles343 {
-		t.Error("C.6.4 service_go_files 必须按 measure 口径精确下调到 343（350 − 3 生产 − 4 测试迁出）")
+	if serviceFiles < 0 || serviceFiles > 343 {
+		t.Errorf("C.6.4 service_go_files 上界必须 ≤343（本批 350 → 343，后续只许继续下降），当前 %d", serviceFiles)
 	}
 }
 

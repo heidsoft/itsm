@@ -7,7 +7,7 @@ package main
 
 import (
 	"itsm-backend/ai/eval"
-	"itsm-backend/service"
+	"itsm-backend/handlers/sla"
 )
 
 // auc 计算 ROC AUC（秩和法，ties 取平均秩）。
@@ -60,8 +60,8 @@ func auc(scores []float64, labels []bool) float64 {
 }
 
 // predictFeatures 把 JSON 特征映射为预测器输入（与 ai/eval 同口径）。
-func predictFeatures(c eval.PredictionCase) service.SLABreachFeatures {
-	return service.SLABreachFeatures{
+func predictFeatures(c eval.PredictionCase) sla.SLABreachFeatures {
+	return sla.SLABreachFeatures{
 		Priority:                     strField(c.Features["priority"]),
 		HorizonMinutes:               c.HorizonMinutes,
 		CreatedHour:                  int(flField(c.Features["created_hour"])),

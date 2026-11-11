@@ -14,6 +14,7 @@ import (
 
 	"itsm-backend/dto"
 	"itsm-backend/handlers/skill"
+	"itsm-backend/handlers/sla"
 	"itsm-backend/service"
 )
 
@@ -99,10 +100,10 @@ func TestAISharedValueTypesAreDTOAliases(t *testing.T) {
 		{"AICalibrationBucket", reflect.TypeOf(service.AICalibrationBucket{}), reflect.TypeOf(dto.AICalibrationBucket{})},
 		{"LLMPlatformStats", reflect.TypeOf(service.LLMPlatformStats{}), reflect.TypeOf(dto.LLMPlatformStats{})},
 		{"AIAuditEntry", reflect.TypeOf(service.AIAuditEntry{}), reflect.TypeOf(dto.AIAuditEntry{})},
-		{"ForecastInput", reflect.TypeOf(service.ForecastInput{}), reflect.TypeOf(dto.ForecastInput{})},
-		{"PredictionPoint", reflect.TypeOf(service.PredictionPoint{}), reflect.TypeOf(dto.PredictionPoint{})},
-		{"ForecastOutput", reflect.TypeOf(service.ForecastOutput{}), reflect.TypeOf(dto.ForecastOutput{})},
-		{"ForecastData", reflect.TypeOf(service.ForecastData{}), reflect.TypeOf(dto.ForecastData{})},
+		{"ForecastInput", reflect.TypeOf(sla.ForecastInput{}), reflect.TypeOf(dto.ForecastInput{})},
+		{"PredictionPoint", reflect.TypeOf(sla.PredictionPoint{}), reflect.TypeOf(dto.PredictionPoint{})},
+		{"ForecastOutput", reflect.TypeOf(sla.ForecastOutput{}), reflect.TypeOf(dto.ForecastOutput{})},
+		{"ForecastData", reflect.TypeOf(sla.ForecastData{}), reflect.TypeOf(dto.ForecastData{})},
 		{"TriageResult", reflect.TypeOf(service.TriageResult{}), reflect.TypeOf(dto.TriageResult{})},
 		{"AIMetrics", reflect.TypeOf(service.AIMetrics{}), reflect.TypeOf(dto.AIMetrics{})},
 		{"QuotaUsage", reflect.TypeOf(service.QuotaUsage{}), reflect.TypeOf(dto.QuotaUsage{})},
@@ -170,10 +171,6 @@ func TestAISharedValueTypesAreDTOAliases(t *testing.T) {
 		{"ai_evaluator.go", "type AICalibrationBucket = dto.AICalibrationBucket"},
 		{"ai_evaluator.go", "type LLMPlatformStats = dto.LLMPlatformStats"},
 		{"ai_evaluator.go", "type AIAuditEntry = dto.AIAuditEntry"},
-		{"sla_forecast_skill.go", "type ForecastInput = dto.ForecastInput"},
-		{"sla_forecast_skill.go", "type PredictionPoint = dto.PredictionPoint"},
-		{"sla_forecast_skill.go", "type ForecastOutput = dto.ForecastOutput"},
-		{"sla_forecast_skill.go", "type ForecastData = dto.ForecastData"},
 		{"root_cause_service.go", "var ErrAIAnalysisUnavailable = dto.ErrAIAnalysisUnavailable"},
 		{"ai_telemetry_repository.go", "var ErrFeedbackNotFound = dto.ErrFeedbackNotFound"},
 		{"triage_service.go", "type TriageResult = dto.TriageResult"},

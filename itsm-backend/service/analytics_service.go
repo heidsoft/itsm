@@ -12,6 +12,7 @@ import (
 	"itsm-backend/ent"
 	"itsm-backend/ent/slaviolation"
 	"itsm-backend/ent/ticket"
+	"itsm-backend/internal/datascope"
 	ticketrepo "itsm-backend/repository/ticket"
 
 	"go.uber.org/zap"
@@ -37,7 +38,7 @@ func NewAnalyticsService(client *ent.Client, logger *zap.SugaredLogger) *Analyti
 // 与 handlers/incident/report.go 的 366 天窗口上限保持同一口径。
 const (
 	maxReportWindowDays = 366
-	maxReportTickets    = 50000
+	maxReportTickets    = datascope.MaxReportTickets
 )
 
 // validateReportWindow 拒绝倒挂与超长窗口，并明确返回 400（AppError）。
