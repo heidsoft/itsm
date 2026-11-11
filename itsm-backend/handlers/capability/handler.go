@@ -28,13 +28,18 @@ const (
 
 // Capability is the backend-owned contract used by every product surface.
 type Capability struct {
-	Key               string     `json:"key"`
-	Maturity          Maturity   `json:"maturity"`
-	BuildAvailable    bool       `json:"buildAvailable"`
-	DeploymentReady   bool       `json:"deploymentReady"`
-	TenantReady       bool       `json:"tenantReady"`
-	AllowedActions    []string   `json:"allowedActions"`
-	Dependencies      []string   `json:"dependencies"`
+	Key             string   `json:"key"`
+	Maturity        Maturity `json:"maturity"`
+	BuildAvailable  bool     `json:"buildAvailable"`
+	DeploymentReady bool     `json:"deploymentReady"`
+	TenantReady     bool     `json:"tenantReady"`
+	AllowedActions  []string `json:"allowedActions"`
+	Dependencies    []string `json:"dependencies"`
+	// DependencyRisks 列出本能力直接依赖的、尚未达到 GA 的能力键。
+	// maturity 只描述本能力自身，不能替依赖背书：incident/problem/change
+	// 标 GA，却跑在仍是 Pilot 的 workflow 编排层上。该字段让发布门禁与
+	// 前端能读到这层传导风险，而不是让 "ga" 掩盖它。为空时 JSON 省略。
+	DependencyRisks   []string   `json:"dependencyRisks,omitempty"`
 	DegradedReason    string     `json:"degradedReason,omitempty"`
 	LastHealthCheckAt *time.Time `json:"lastHealthCheckAt,omitempty"`
 	// PilotReason 回答「为什么它还不是 GA」，以及晋升需要补哪块可验证证据。
@@ -256,6 +261,9 @@ func NewHandler(prober *Prober) gin.HandlerFunc {
 			}
 			deploymentReady := item.built
 			degradedReason := ""
+			// 依赖成熟度传导：只标注、不改写本能力自身 maturity（后者是
+			// README/商业契约共同引用的口径），但必须把未验收的依赖如实下发。
+			dependencyRisks := nonGADependencies(dependencies, registry)
 			if item.maturity == MaturityDisabled {
 				deploymentReady = false
 				degradedReason = "capability is not included in the current commercial release"
@@ -289,7 +297,8 @@ func NewHandler(prober *Prober) gin.HandlerFunc {
 				Key: item.key, Maturity: item.maturity, BuildAvailable: item.built,
 				DeploymentReady: deploymentReady, TenantReady: tenantReady,
 				AllowedActions: actions, Dependencies: dependencies,
-				DegradedReason: degradedReason, Health: health,
+				DependencyRisks: dependencyRisks,
+				DegradedReason:  degradedReason, Health: health,
 				AcceptanceVersion: acceptanceVersion,
 			}
 			// 只有 pilot 才下发理由：GA 条目带一条历史理由，等于让调用方

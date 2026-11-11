@@ -134,6 +134,7 @@
 - `buildAvailable`、`deploymentReady`、`tenantReady`；
 - `allowedActions`（当前 actor 可执行动作；契约里原写的 `permissions` 字段尚未返回，属待补项）；
 - `dependencies`、`degradedReason`、`lastHealthCheckAt`；
+- `dependencyRisks`（仅当存在未达 GA 的依赖时下发）：列出该能力直接依赖、成熟度仍为 `pilot`/`disabled` （或 registry 中查不到）的能力键。`maturity` 只描述本能力自身，不替依赖背书——例如 `incident`/`problem`/`change` 标 GA 但依赖仍是 Pilot 的 `workflow`，发布判定不得据此认为整条链路已验收；空集时字段省略，旧消费方零破坏。
 - `acceptanceVersion`：能力矩阵最近一次对账的日期（`YYYY.MM.DD`，当前 `2026.10.31`），核对 registry 成熟度、README/本契约口径、`pilotReason` 与对应回归证据。它是契约级基线，不是发布版本，也不代表全部能力已验收；各能力是否可承诺仍看 `maturity`、`deploymentReady` 与 `pilotReason`。该值不得早于 CHANGELOG 最新发布版本——发版未复核矩阵会让 `handlers/capability` 的守卫测试失败。
 
 CMDB、AI、RAG、连接器和外部通知首先接入；基础 ITIL 页面不因能力接口故障而不可用。
