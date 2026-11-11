@@ -158,6 +158,16 @@ func (s *Service) ForgotPassword(ctx context.Context, req *dto.ForgotPasswordReq
 	if s.emailService == nil {
 		return nil, common.NewBusinessError(common.ServiceUnavailableCode, "密码重置功能未启用：邮件服务未配置", "")
 	}
+	// 配置级不可用必须在查询用户之前判定。若只等发送失败才报错，「邮箱已注册」
+	// 会返回 503/5003 而「邮箱不存在」返回 200，等于给账号枚举开了一条通道。
+	// ValidateConfig 是可选能力（窄接口不强制所有实现提供），生产 EmailService 实现之。
+	if validator, ok := s.emailService.(interface{ ValidateConfig() error }); ok {
+		if err := validator.ValidateConfig(); err != nil {
+			s.logger.Warnw("password reset email service is not configured",
+				"error", err)
+			return nil, common.NewBusinessError(common.ServiceUnavailableCode, "密码重置功能未启用：邮件服务未配置", "")
+		}
+	}
 	genericOK := &dto.ForgotPasswordResponse{Message: "如果该邮箱已注册，我们将发送密码重置链接"}
 	query := s.client.User.Query().Where(user.EmailEQ(req.Email))
 	if req.TenantCode != "" {
@@ -175,11 +185,20 @@ func (s *Service) ForgotPassword(ctx context.Context, req *dto.ForgotPasswordReq
 	if err != nil {
 		return nil, fmt.Errorf("生成重置令牌失败: %w", err)
 	}
-	if _, err = s.client.PasswordResetToken.Create().SetUserID(userEntity.ID).SetEmail(req.Email).SetToken(token).SetExpiresAt(time.Now().Add(time.Hour)).Save(ctx); err != nil {
+	resetToken, err := s.client.PasswordResetToken.Create().SetUserID(userEntity.ID).SetEmail(req.Email).SetToken(token).SetExpiresAt(time.Now().Add(time.Hour)).Save(ctx)
+	if err != nil {
 		return nil, fmt.Errorf("生成重置令牌失败")
 	}
 	if err := s.emailService.SendPasswordResetEmail(ctx, []string{req.Email}, token, s.baseURL); err != nil {
+		// 邮件没发出去就不能回报「已发送」：用户会一直等一封永不抵达的邮件，
+		// 而库里还留着一枚用不掉的重置凭据。回滚 token 并如实报能力不可用。
 		s.logger.Errorw("Failed to send password reset email", "user_id", userEntity.ID, "error", err)
+		if cleanupErr := s.client.PasswordResetToken.DeleteOneID(resetToken.ID).Exec(ctx); cleanupErr != nil {
+			s.logger.Errorw("failed to revoke unsent password reset token",
+				"token_id", resetToken.ID, "error", cleanupErr)
+		}
+		return nil, common.NewBusinessError(common.ServiceUnavailableCode,
+			"密码重置邮件发送失败，请稍后重试或联系管理员", "")
 	}
 	return genericOK, nil
 }

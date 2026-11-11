@@ -494,9 +494,13 @@ func (s *Service) ExportTickets(ctx context.Context, tenantID int, filters map[s
 	return s.productionSvc.ExportTickets(ctx, tenantID, filters, format, viewerID, viewerRole)
 }
 
-// ImportTickets imports tickets (placeholder).
+// ImportTickets 工单导入当前未实现，且本能力没有注册路由（POST /tickets/import
+// 会被 /tickets/:id 捕获为 405）。按产品完整性计划「接真实现，或显式 unready
+// 且不注册路由」的口径，这里必须返回能力不可用的分类错误：普通 fmt.Errorf 会被
+// RespondError 兜底成 500，让客户端把「能力未实现」误判为服务端故障并反复重试。
+// 未来若注册路由，必须先在此实现真实导入并同步 authz 预检生成物，不能只放行 5003。
 func (s *Service) ImportTickets(ctx context.Context, tenantID int, data []byte, format string) error {
-	return fmt.Errorf("import not implemented in handlers layer")
+	return common.NewBusinessError(common.ServiceUnavailableCode, "工单导入能力未实现", "")
 }
 
 // AssignTickets assigns multiple tickets to a user.

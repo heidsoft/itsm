@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
@@ -17,6 +18,18 @@ import (
 	"go.uber.org/zap/zaptest"
 	"golang.org/x/crypto/bcrypt"
 )
+
+// fakeEmailService 是可控的邮件服务替身：刻意不实现 ValidateConfig，
+// 因此被 ForgotPassword 视为「配置有效」，只用来验证发送成功/失败两条路径。
+type fakeEmailService struct {
+	sendErr error
+	sent    int
+}
+
+func (f *fakeEmailService) SendPasswordResetEmail(_ context.Context, _ []string, _, _ string) error {
+	f.sent++
+	return f.sendErr
+}
 
 // =====================================================================
 // 测试夹具
@@ -249,7 +262,7 @@ func TestService_ForgotPassword(t *testing.T) {
 	})
 
 	// 后续子测试需要 emailService 非 nil 才能走到用户查找/token 生成逻辑
-	emailSvc := service.NewEmailService(service.EmailConfig{}, fx.service.logger)
+	emailSvc := &fakeEmailService{}
 	fx.service.SetEmailService(emailSvc)
 
 	t.Run("用户不存在时仍返回成功（安全考虑）", func(t *testing.T) {
@@ -457,6 +470,68 @@ func TestService_ResetPassword(t *testing.T) {
 }
 
 // =====================================================================
+// 批次：消灭忘记密码的假成功（产品完整性计划 批次 1 / R6-1 收尾）
+// =====================================================================
+
+func TestService_ForgotPassword_EmailFailureIsNotSilent(t *testing.T) {
+	fx := newAuthFixture(t)
+	defer fx.client.Close()
+
+	emailSvc := &fakeEmailService{sendErr: errors.New("smtp dial failed")}
+	fx.service.SetEmailService(emailSvc)
+
+	resp, err := fx.service.ForgotPassword(fx.ctx, &dto.ForgotPasswordRequest{Email: fx.user.Email})
+	require.Error(t, err)
+	assert.Nil(t, resp, "邮件没发出去不能回报通用成功文案")
+	var bizErr *common.BusinessError
+	require.ErrorAs(t, err, &bizErr)
+	assert.Equal(t, common.ServiceUnavailableCode, bizErr.Code)
+	assert.Contains(t, bizErr.Message, "邮件发送失败")
+	assert.Equal(t, 1, emailSvc.sent, "必须真的尝试发送一次")
+
+	count, err := fx.client.PasswordResetToken.Query().Count(fx.ctx)
+	require.NoError(t, err)
+	assert.Equal(t, 0, count, "发送失败后不得留下用不掉的重置凭据")
+}
+
+func TestService_ForgotPassword_UnconfiguredFailsBeforeEnumeration(t *testing.T) {
+	fx := newAuthFixture(t)
+	defer fx.client.Close()
+
+	// 生产 EmailService 实现 ValidateConfig：配置为空时必须与邮箱是否存在无关地报 5003，
+	// 否则「已注册 → 发送失败 503」与「未注册 → 200」会构成账号枚举通道。
+	fx.service.SetEmailService(service.NewEmailService(service.EmailConfig{}, fx.service.logger))
+	for _, email := range []string{fx.user.Email, "ghost@example.com"} {
+		resp, err := fx.service.ForgotPassword(fx.ctx, &dto.ForgotPasswordRequest{Email: email})
+		require.Error(t, err, email)
+		assert.Nil(t, resp, email)
+		var bizErr *common.BusinessError
+		require.ErrorAs(t, err, &bizErr, email)
+		assert.Equal(t, common.ServiceUnavailableCode, bizErr.Code, email)
+	}
+	count, err := fx.client.PasswordResetToken.Query().Count(fx.ctx)
+	require.NoError(t, err)
+	assert.Equal(t, 0, count, "配置无效时不应生成任何 token")
+}
+
+func TestService_ForgotPassword_SuccessRequiresSentEmail(t *testing.T) {
+	fx := newAuthFixture(t)
+	defer fx.client.Close()
+
+	emailSvc := &fakeEmailService{}
+	fx.service.SetEmailService(emailSvc)
+
+	resp, err := fx.service.ForgotPassword(fx.ctx, &dto.ForgotPasswordRequest{Email: fx.user.Email})
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	assert.Contains(t, resp.Message, "如果该邮箱已注册")
+	assert.Equal(t, 1, emailSvc.sent)
+	count, err := fx.client.PasswordResetToken.Query().Count(fx.ctx)
+	require.NoError(t, err)
+	assert.Equal(t, 1, count, "发送成功才保留重置凭据")
+}
+
+// =====================================================================
 // generateResetToken 唯一性（内部函数间接测试）
 // =====================================================================
 
@@ -466,7 +541,7 @@ func TestGenerateResetToken_Distinct(t *testing.T) {
 	defer fx.client.Close()
 
 	// ForgotPassword 要求 emailService 非 nil，否则直接返回 5003
-	emailSvc := service.NewEmailService(service.EmailConfig{}, fx.service.logger)
+	emailSvc := &fakeEmailService{}
 	fx.service.SetEmailService(emailSvc)
 
 	const N = 5

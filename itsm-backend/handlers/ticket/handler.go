@@ -787,7 +787,9 @@ func (h *Handler) ImportTickets(c *gin.Context) {
 	}
 	fileData := []byte(req.File)
 	if err := h.service.ImportTickets(c.Request.Context(), tenantID, fileData, req.Format); err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		// 能力未实现是 5003 分类错误，必须让 common 透出服务端文案；
+		// FailWithErr 会用「操作失败」覆盖，客户端无法区分未实现与故障。
+		common.RespondError(c, err, "工单导入失败")
 		return
 	}
 

@@ -391,3 +391,21 @@ Playwright 侧 `tests/e2e/harness.ts` 的 `isolatedBaseURL()` 是硬门禁：`IT
 6. 下一步仍是 #25：`tests/e2e/roles/*.spec.ts` 七个夹具还在用固定口令演示账号（`user1/user123`、`tenant1admin/ta123`、`security1` 的 `password:'test'`）与 `data.access_token`/`Bearer` 写法，隔离栈里必然登不上——这正是本批把夹具底座（cookie 会话 + 缓存 + proof 守卫）建好之后要收的账。以及 #26：常驻栈/生产库里可能已被历史夹具写入的用户与工单，需要只读盘点后再决定清理，按约定先给方案。
 
 **影响面**：新增 `scripts/e2e-isolated-stack.sh`、`docker-compose.e2e.yml`、`itsm-frontend/tests/e2e/{harness.ts,isolated-stack-guard.spec.ts}`；改 `playwright.config.ts`、`tests/e2e/fixtures/auth.ts`、`handlers/ticket/{handler.go,handler_test.go,repository_impl.go}`；文档同步 `CHANGELOG.md`、`README.md`「开发与测试」、`docs/dev-commands-reference.md` §2.5（新增小节，后续编号顺延）与本计划 §11。无新增 API 契约字段（六个过滤参数 DTO 早已声明，本批只是让它真的生效），因此不动 `docs/api-reference.md`。
+
+---
+
+## 12. 全面审核与批次 1 收口记录（2026-11-11）
+
+按本文 §0 的「以实测为准」口径，对本文、ROADMAP v1.6.x 与 `plans/product-remediation-plan-2026-10-03.md` 做了一次全量重测，所有行号与计数均重新取证（不沿用本文前半部分的旧数字）。完整矩阵见 `output/product-audit-2026-11-11.md`（本机证据）。
+
+**已闭环、不再列为待办**：批次 1 的 `GET /tickets/types` 硬编码 stub（`router/ticket_routes.go:51` 注释明确已摘除）、工单导出（`handlers/ticket/service.go:490` 委派 `productionSvc` 并下传 viewerID/viewerRole）、问题/知识评论（显式 5003 unready + 前端统一「重试不会改变结果」语义）、`/reports` 能力开关与 skills 管理 UI（v1.6.16 落地）、`/admin/tags` 菜单（菜单 100 条 vs 前端 173 页面路由差集 0）；批次 2 的知识检索 camelCase（`handlers/knowledge/search_contract_test.go` 回归锁）、enqueue 事务化（六 ITIL 域创建事务内投递）；批次 3 的 Delivery 读面（`/api/v1/notification-deliveries` 黑盒 PASS）与知识发布版本指针。R6 的 #1 入口检查、#3 fire-and-forget、#4 乐观锁、#5 硬编码 tenant、#6 裸 success 标识亦已重测闭环或零命中。
+
+**R6-1 的未完部分（本次修复）**：`emailService == nil` 已在早前批次返回 5003，但 `SendPasswordResetEmail` 返回错误时仍只 `logger.Errorw` 并回报「如果该邮箱已注册，我们将发送密码重置链接」，用户等不到邮件、库里留一枚无效凭据。现补：① 查用户前对 `ValidateConfig() error` 做可选接口断言，配置无效与邮箱存在性无关地返回 5003，堵住账号枚举通道；② 发送失败删除刚建的重置 token 并返回 5003 明确文案；③ 只有发送成功才返回通用成功文案并保留凭据。取舍如实记录：运行时 SMTP 单次故障仍会区分已注册/未注册邮箱，属「必须告知发送失败」与「完全不可枚举」之间的权衡，配置缺失这条常见路径已消除差异。
+
+**批次 1 #2 的未完部分（本次收口）**：工单导入占位 `fmt.Errorf("import not implemented in handlers layer")` 会被 `RespondError` 兜底成 500，`handler.go` 的 `FailWithErr` 又覆盖文案；当前 `POST /tickets/import` 未注册路由、被 `/tickets/:id` 捕获为 405。按「接真实现，或显式 unready 且不注册路由」选择后者：`common.NewBusinessError(5003, "工单导入能力未实现", "")` + `common.RespondError` 透传，注释写明注册路由前必须实现真实导入并同步 `cmd/authz-gen` 生成物。**未新增路由**，因此不触碰并行会话在途的 `middleware/rbac_precheck_gen.go`。
+
+**取证纪律的又一次验证**：以「`logger.Error/Warn` 后 8 行内出现 `common.Success`」粗扫 `handlers/**/*.go` 得 164 处候选，逐文件复核后**全部为跨函数窗口假阳性**（错误分支实际是 `FailWithErr` + `return`，被扫到的 Success 属于下一函数或正常分支）。四例典型（`ticket_rating`、`ticket_notification`、`ticket_view`、`asset`）逐一读到 `return` 确认。这正对应 `product-remediation-plan` §6「静态检测结论在下判断前必须逐文件复核」，扫描器结果不能直接进待办清单。另有 `handlers/change/handler.go:172` 的回滚清单降级为有意设计（真门禁在 `TransitionStatus`），不属假成功。
+
+**回归锁与验证**：`handlers/auth/service_test.go` 新增可控 `fakeEmailService` 与 3 组用例；`handlers/ticket/import_capability_test.go` 用 `functionBody` 精确截取函数体做源码守卫，并给扫描器加有效性探针（找不到目标函数即 `t.Fatal`，零命中不直接算绿）。反向验证 7/7 保持可编译但断言变红、byte-identical 恢复后转绿。`go build ./...` EXIT=0、两改动包全量绿、静态 8/8、Gate C.8 hard 0/0（L.1 126 / L.3 0 文件 0 域）；文档门禁唯一红为并行 zap WIP 的既有 `bootstrap_app_lines 2169>2167`，本批 `app.go` 零改动不代调。
+
+**仍未闭环且不代拍板**：`N3` 工作台租户内跨人可见范围；ROADMAP v1.6.x 的四条当前收敛项与发布证据常驻化；`workflow` 真实租户跨域联调人工签字；3 个连接器、AI LLM 档、CMDB 真实账号验收；12 项 Pilot 的晋升口径；service 层迁移 L.1 126 个生产文件（属 `plans/service-layer-migration-plan.md` 架构轨，与产品功能审核分轨）。本批未打 git tag、未重建 prod 镜像、未宣称 GA。
