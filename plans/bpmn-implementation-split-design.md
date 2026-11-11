@@ -1,6 +1,6 @@
 # BPMN 核心组实现归位：拆分边界设计（2026-11-11）
 
-> 状态：**设计产出，未落地**。本文只划分边界与迁移顺序，不改运行时行为、不重建 prod 镜像。
+> 状态：**G0 已部分落地（2026-11-11）**，G1–G3 仍为设计、未落地。本文划分边界与迁移顺序；已落地批次均不改运行时行为、不重建 prod 镜像。
 > 权威读数仍以 `scripts/docs-gate/check-product-drift.sh` 的 C.8 硬模式输出与
 > `plans/service-layer-migration-plan.md` 文末落地记录为准。
 
@@ -40,6 +40,19 @@ L.3 已归零（全部 handler 生产文件零 `import "itsm-backend/service"`�
 - 难点：`bpmn_template_digest.go` 依赖 `bpmnTemplates`（`//go:embed`，定义在其他
   service 文件），需把 embed FS 一起收进同一包，否则会出现两份模板清单。
 - 锁点：模板 key 集合与 digest 必须与 HEAD 逐字节一致（编辑模板应改版本账本）。
+
+**G0 已落地部分（2026-11-11）**：`bpmn_types.go`(425) 与 `bpmn_process_trigger_interface.go`(79)
+以 `git mv` 迁入 `internal/bpmncontracts/`（`types.go` / `interfaces.go`，包名 `bpmncontracts`），
+`service/bpmn_types.go` 保留为 28 个 `type X = bpmncontracts.X` 别名过渡层（未新增生产文件、
+`app.go` 净增 0 行、54 个外部测试包零改动）；`workflow_helper.go` 经全仓零消费方实证后退役。
+回归锁 `internal/layering/bpmn_contracts_ownership_test.go` 含 XML 往返行为锁与 7/7 反向验证。
+L.1 128→126、C.6.4 `service_go_files` 335→333，详见 `plans/service-layer-migration-plan.md` 文末落地记录。
+
+**G0 未落地部分（列为 G0-b，勿与本批混做）**：`bpmn_template_digest.go` 依赖
+`bpmn_template_service.go` 的包级 `bpmnTemplates` embed FS（`//go:embed bpmn/*.bpmn`，20 个模板）。
+Go embed 路径不能跨父目录，收口必须整体搬迁模板文件，并同步 `domain/role/contract_test.go` 等
+硬编码 `service/bpmn/*.bpmn` 的读面；模板 key 集合与 digest 必须与 HEAD 逐字节一致。
+`bpmn_service_task_adapter.go` 依赖 service 私有符号与 `service/bpmn` 子包，不属纯契约，归 G3。
 
 ### G1 域服务层 → `handlers/bpmn/`
 

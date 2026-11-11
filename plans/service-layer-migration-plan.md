@@ -788,3 +788,17 @@ ticket 有 20 个 service 文件分散在 10 个子域。策略：
 验证：全仓 `go build ./...` EXIT=0；`service`（71.7s 全量）/ `handlers/vector_store` / `handlers/knowledge` / `internal/layering` / `internal/bootstrap` 完整测试全绿；静态门禁 8/8、Gate C.8 hard **0 failures / 0 warnings**（L.1 **128**、L.3 0 文件 / 0 域、L.5 扫描 335 个顶层 `.go`）、C.6 仅既有红 `bootstrap_app_lines 2169>2167`（并行 WIP，本批不代调）。**指标实测**：L.1 **132→128**；C.6.4 `service_go_files` **339→335**（`ls service/*.go` 含测试口径，4 生产迁出）；`handlers_dirs` 69 / `ent_schema` 136 / `frontend_pages` 173 / `bootstrap_app_lines` 2167 零变化。
 
 **剩余**：L.1 128 个 `service/` 生产文件（BPMN 核心组 48 须按设计整组裁决、`ci_`+`cmdb_` 8 须连同 `configuration_item_service` 裁决、`ticket_` 14 等）、L.6 符号级白名单、`workflow` Pilot 真实租户跨域人工签字、`ROADMAP` v1.6.x 登记条目团队评审。本批不改运行时行为、不重建 prod 镜像。
+
+---
+
+**G0：BPMN 纯契约归位落地记录（2026-11-11）**：按 `plans/bpmn-implementation-split-design.md` 的 G0 边界，先把「纯类型 / 纯接口」这一最低风险层从 `service/` 拆出。`service/bpmn_types.go`（425 行、24 个顶层类型声明、只 import `encoding/xml`、所有 `GetID/GetName/GetType` 方法都在本文件内）与 `service/bpmn_process_trigger_interface.go`（4 个接口、只 import `dto`/`ent`，无环）以 `git mv` 迁入 `internal/bpmncontracts/`（`types.go` / `interfaces.go`，包名 `bpmncontracts`）；原 `service/bpmn_types.go` 文件名保留为 28 个 `type X = bpmncontracts.X` 别名过渡层，**未新增 service/ 生产文件**，`app.go` 净增 0 行、域包零改动。Go AST 与全仓 grep 复核：这两个文件的顶层符号没有在 `service/` 其他文件里定义方法，外部也没有 `service.BPMNProcess` 这类跨包引用，因此别名足够承接全部调用面。
+
+同时退役零消费方 `service/workflow_helper.go`：`MapProcessStatus` / `MapProcessStatusToTicketStatus` / `BuildBusinessKey` 三个导出函数与 `contains` / `containsSubstring` 两个私有辅助全仓零引用（`go build ./...` 实证），文件注释里「known_error_service.go 仍依赖」为陈旧陈述。
+
+**回归锁** `internal/layering/bpmn_contracts_ownership_test.go`：编译期双向赋值断言、23 个值类型 + 5 个接口的 `reflect.Type` 身份、XML 往返行为锁（`userTask id/name/approvalLevel` 与 `GetType()`，tag 被改会静默变空但编译全绿）、28 个别名逐行 lhs/rhs 精确比对（禁 squashSpace）、旧文件名与 5 个退役符号在 `service/` 顶层全目录扫描零复活（扫描器零命中直接失败）、契约包零 `service`/`handlers` 反向依赖、组合根不得直连契约包、L.1 行数与 C.6.4 `service_go_files` 上界棘轮（继续下降不误报 / 回退必红）。**反向验证 7/7**：别名退化成同形 struct、xml tag 静默漂移、退役符号复活、L.1 基线行复活、C.6.4 回退 335、组合根直连、契约包反向依赖字面量——七例全部保持可编译且由断言变红，try/finally byte-identical 恢复后重新转绿。
+
+**验证**：`go build ./...` EXIT=0；`service` 全量 78.4s、`internal/layering` 全量绿；54 个含 `service` 引用的测试包分批编译 54/54 ok（全仓一次性 `go test ./... -run '^$'` 在沙箱被 SIGTERM(137)，改按引用面定向分批）；静态门禁 8/8；Gate C.8 hard 0 failures / 0 warnings（L.1 **126**、L.3 0/0、L.5 扫描 333）；C.6 唯一红为既有 `bootstrap_app_lines 2169>2167`（并行 zap WIP，本批 app.go 零改动不代调）。指标：L.1 **128→126**、C.6.4 `service_go_files` **335→333**，`handlers_dirs` 69 / `bootstrap_app_lines` 2167 零变化。
+
+**G0 明确未做完的部分**：`bpmn_template_digest.go` 依赖 `service/bpmn_template_service.go` 里的包级 `bpmnTemplates` embed FS（`//go:embed bpmn/*.bpmn`，20 个模板），而 Go 的 embed 路径不能跨父目录，要收口必须连模板文件整体搬迁，并同步 `domain/role/contract_test.go` 等硬编码 `service/bpmn/*.bpmn` 的读面——单列 G0-b 批次，不与本批混做；`bpmn_service_task_adapter.go` 依赖 service 私有符号与 `service/bpmn` 子包，不是纯契约，归 G3 裁决。`timer_` 私有字段访问改造仍属 G2 前置，ServiceTask 完成事务凭据不得触碰。
+
+**剩余**：L.1 **126** 个 `service/` 生产文件（BPMN 核心组余 46 文件按 G1/G2/G3 裁决、`ci_`+`cmdb_` 8 连同 `configuration_item_service`、`ticket_` 14 等）、G0-b embed FS 收口、L.6 符号级白名单、`workflow` Pilot 真实租户跨域人工签字、`ROADMAP` v1.6.x 团队评审。本批不改运行时行为、不重建 prod 镜像。

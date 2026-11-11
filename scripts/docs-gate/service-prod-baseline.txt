@@ -31,7 +31,6 @@ bpmn_process_engine.go
 bpmn_process_executor.go
 bpmn_process_instance_service.go
 bpmn_process_lifecycle.go
-bpmn_process_trigger_interface.go
 bpmn_process_trigger_service.go
 bpmn_service_task_adapter.go
 bpmn_service_task_command_handler.go
@@ -128,5 +127,4 @@ triage_service.go
 user_lookup_repository.go
 user_service.go
 websocket_service.go
-workflow_helper.go
 workflow_start_command_handler.go
