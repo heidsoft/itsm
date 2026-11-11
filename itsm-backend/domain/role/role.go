@@ -185,6 +185,18 @@ func init() {
 	}
 }
 
+// IsPracticeCode 判断角色 code 是否属于 Tier 2 ITIL 实践角色。
+// 实践角色只存在于 roles 表、通过 user_roles 边叠加，不在 users.role 主角色词表里；
+// 调用方用它区分「拼写错误的主角色」与「放错字段的实践角色」，好给出可执行的提示。
+func IsPracticeCode(code string) bool {
+	for _, c := range Practice {
+		if c == code {
+			return true
+		}
+	}
+	return false
+}
+
 // IsBuiltinCode 判断角色 code 是否属于平台内置系统角色。
 // 内置角色受 schema.is_system + service 层双重保护，禁止删除。
 // 这是 service 层的第二道防线——即使 seed 时 IsSystem 字段漏设，

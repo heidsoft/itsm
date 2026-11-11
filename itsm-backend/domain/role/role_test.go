@@ -53,3 +53,27 @@ func TestAllNoDuplicates(t *testing.T) {
 		seen[r] = true
 	}
 }
+
+// 实践角色与主角色词表必须互斥：IsPracticeCode 是「用户把实践角色写进
+// users.role」这条错误路径的判据，词表重叠会让提示错判成主角色。
+func TestPracticeCodesAreDisjointFromMainRoles(t *testing.T) {
+	if len(Practice) == 0 {
+		t.Fatal("Practice 词表为空")
+	}
+	for _, code := range Practice {
+		if !IsPracticeCode(code) {
+			t.Errorf("IsPracticeCode(%q) = false, want true", code)
+		}
+		if IsBuiltinCode(code) {
+			t.Errorf("%q 同时出现在 Practice 与 All，users.role 判据会被误判", code)
+		}
+	}
+	for _, code := range All {
+		if IsPracticeCode(code) {
+			t.Errorf("主角色 %q 被 IsPracticeCode 命中，词表重叠", code)
+		}
+	}
+	if IsPracticeCode("") || IsPracticeCode("not_a_role") {
+		t.Error("未知/空 code 不得被判为实践角色")
+	}
+}

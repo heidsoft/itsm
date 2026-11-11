@@ -41,6 +41,24 @@ func mapUserServiceError(c *gin.Context, err error) bool {
 	return true
 }
 
+// mainRoleVocabulary 是 users.role 接受的主角色词表，与 dto.CreateUserRequest 的
+// oneof 校验保持一致；文案用它告诉调用方到底能填什么。
+const mainRoleVocabulary = "super_admin/admin/sysadmin/security_admin/audit_admin/it_admin/manager/agent/technician/end_user"
+
+// userCreateBindingMessage 把「role 字段不合法」从通用「请求参数错误」里拆出来。
+// 实践角色（knowledge_manager、cmdb_admin 等）本就不在 users.role 词表里，只能通过
+// roleIds 以 M2M 叠加；只回一句「请求参数错误」会让调用方以为服务端故障，无从知道
+// 该换字段还是换值。
+func userCreateBindingMessage(req dto.CreateUserRequest, bindErr error) string {
+	if bindErr == nil || !strings.Contains(bindErr.Error(), "CreateUserRequest.Role") {
+		return "请求参数错误"
+	}
+	if practice := strings.TrimSpace(req.Role); domainrole.IsPracticeCode(practice) {
+		return practice + " 是实践角色，不能写在 role 字段：请通过 roleIds 分配；role 只接受主角色（" + mainRoleVocabulary + "）"
+	}
+	return "role 必须是主角色（" + mainRoleVocabulary + "）；实践角色请通过 roleIds 分配"
+}
+
 // CreateUser 创建用户
 // @Summary 创建用户
 // @Description 创建新用户
@@ -55,7 +73,7 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 	var req dto.CreateUserRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		h.logger.Errorf("参数绑定失败: %v", err)
-		common.ParamErrorWithErr(c, err, "请求参数错误")
+		common.ParamErrorWithErr(c, err, userCreateBindingMessage(req, err))
 		return
 	}
 

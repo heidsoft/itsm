@@ -195,6 +195,54 @@ func TestCreateUser_DuplicateBusinessError(t *testing.T) {
 	assert.Equal(t, "请求参数错误", resp.Message)
 }
 
+// 实践角色（knowledge_manager 等）只有 roles 表实体，不在 users.role 主角色词表里，
+// 必须通过 roleIds 叠加。此前绑定失败只回「请求参数错误」，调用方以为服务端故障，
+// 也不知道该改字段还是改值。
+func TestCreateUser_PracticeRoleInRoleFieldPointsToRoleIDs(t *testing.T) {
+	m := &mockUserService{}
+	h, _ := newTestHandler(m)
+
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Request = httptest.NewRequest(http.MethodPost, "/api/v1/users", bytes.NewBufferString(`{"username":"alice","email":"alice@example.com","name":"Alice","password":"password123456","role":"knowledge_manager"}`))
+	c.Request.Header.Set("Content-Type", "application/json")
+	c.Set("tenant_id", 1)
+	c.Set("role", "admin")
+
+	h.CreateUser(c)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+	var resp common.Response
+	assert.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
+	assert.Equal(t, common.ParamErrorCode, resp.Code)
+	assert.Contains(t, resp.Message, "knowledge_manager")
+	assert.Contains(t, resp.Message, "roleIds", "提示必须指向正确的字段，而不是笼统的请求参数错误")
+	m.AssertNotCalled(t, "CreateUser")
+}
+
+// 拼写错误的主角色也要给出词表，而不是让客户端猜。
+func TestCreateUser_UnknownRoleListsMainRoleVocabulary(t *testing.T) {
+	m := &mockUserService{}
+	h, _ := newTestHandler(m)
+
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Request = httptest.NewRequest(http.MethodPost, "/api/v1/users", bytes.NewBufferString(`{"username":"alice","email":"alice@example.com","name":"Alice","password":"password123456","role":"knowledg_manager"}`))
+	c.Request.Header.Set("Content-Type", "application/json")
+	c.Set("tenant_id", 1)
+	c.Set("role", "admin")
+
+	h.CreateUser(c)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+	var resp common.Response
+	assert.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
+	assert.Equal(t, common.ParamErrorCode, resp.Code)
+	assert.Contains(t, resp.Message, "super_admin")
+	assert.Contains(t, resp.Message, "roleIds")
+	m.AssertNotCalled(t, "CreateUser")
+}
+
 func TestCreateUser_WeakPasswordMapsToValidationError(t *testing.T) {
 	// 密码策略属于输入校验；若被 common.FailWithErr 归为 500/5001「操作失败」，
 	// 客户端拿不到原因，自动化夹具也无法判断是密码不合规还是服务端故障。
