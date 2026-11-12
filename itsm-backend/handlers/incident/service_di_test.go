@@ -3,7 +3,7 @@ package incident
 import (
 	"testing"
 
-	production "itsm-backend/service"
+	production "itsm-backend/internal/services"
 
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"

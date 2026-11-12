@@ -12,7 +12,7 @@ import (
 	"testing"
 
 	"itsm-backend/dto"
-	"itsm-backend/service"
+	"itsm-backend/internal/services"
 )
 
 // LLMGateway 契约化专项回归锁（2026-11-10 批次 A）。
@@ -25,7 +25,7 @@ import (
 //    编译与 L.3 计数都不变，但契约语义已丢；③ 把 RAG 方法参数改回具体
 //    指针会让域内 ragStreamer 断言失效，必须锁住参数类型本身。
 
-const llmSharedImport = `"itsm-backend/service"`
+const llmSharedImport = `"itsm-backend/internal/services"`
 
 var _ dto.LLMGatewayPort = (*service.LLMGateway)(nil)
 
@@ -104,10 +104,10 @@ func TestLLMValueTypesShareOneDefinition(t *testing.T) {
 		{"ErrRateLimited", "llm_gateway.go", "var ErrRateLimited = dto.ErrRateLimited", service.ErrRateLimited, dto.ErrRateLimited},
 		{"ErrQuotaExceeded", "llm_gateway.go", "var ErrQuotaExceeded = dto.ErrQuotaExceeded", service.ErrQuotaExceeded, dto.ErrQuotaExceeded},
 	}
-	gatewaySrc := readLLMRepoFile(t, "service", "llm_gateway.go")
+	gatewaySrc := readLLMRepoFile(t, "internal", "services", "llm_gateway.go")
 	for _, s := range sentinels {
 		if !strings.Contains(squashSpace(gatewaySrc), squashSpace(s.decl)) {
-			t.Errorf("service/%s 缺少 %s 的同实例别名声明", s.file, s.name)
+			t.Errorf("internal/services/%s 缺少 %s 的同实例别名声明", s.file, s.name)
 		}
 		if !errors.Is(fmt.Errorf("wrapped: %w", s.bottom), s.shared) {
 			t.Errorf("service.%s 必须与 dto sentinel 是同一实例（errors.Is 身份漂移）", s.name)
@@ -125,12 +125,12 @@ func TestLLMValueTypesShareOneDefinition(t *testing.T) {
 	}
 	byFile := map[string]string{
 		"llm_gateway.go":      gatewaySrc,
-		"incident_service.go": readLLMRepoFile(t, "service", "incident_service.go"),
+		"incident_service.go": readLLMRepoFile(t, "internal", "services", "incident_service.go"),
 	}
 	for _, a := range aliasDecls {
 		src := squashSpace(byFile[a.file])
 		if !strings.Contains(src, squashSpace(a.decl)) {
-			t.Errorf("service/%s 缺少别名声明 %q", a.file, a.decl)
+			t.Errorf("internal/services/%s 缺少别名声明 %q", a.file, a.decl)
 		}
 	}
 
@@ -214,9 +214,9 @@ func TestLLMGatewayPortSignatureIsStable(t *testing.T) {
 		t.Errorf("handlers/ai/service.go 回退到网关具体指针")
 	}
 
-	ragSrc := readLLMRepoFile(t, "service", "rag_service.go")
+	ragSrc := readLLMRepoFile(t, "internal", "services", "rag_service.go")
 	if n := len(regexp.MustCompile(`\bgateway LLMGatewayPort\b`).FindAllString(ragSrc, -1)); n != 5 {
-		t.Errorf("service/rag_service.go 的网关端口参数应为 5 处，实测 %d（改回具体指针会让域内签名失配）", n)
+		t.Errorf("internal/services/rag_service.go 的网关端口参数应为 5 处，实测 %d（改回具体指针会让域内签名失配）", n)
 	}
 }
 

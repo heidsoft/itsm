@@ -4,7 +4,7 @@ import (
 	"itsm-backend/common"
 	"itsm-backend/common/handlerctx"
 	"itsm-backend/middleware"
-	"itsm-backend/service"
+	"itsm-backend/internal/services"
 
 	"github.com/gin-gonic/gin"
 )

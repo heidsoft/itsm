@@ -49,7 +49,7 @@ import (
 	"itsm-backend/ai/eval"
 	"itsm-backend/config"
 	"itsm-backend/handlers/sla"
-	"itsm-backend/service"
+	"itsm-backend/internal/services"
 )
 
 type sectionResult struct {

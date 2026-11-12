@@ -17,7 +17,7 @@ import (
 	domaincmdb "itsm-backend/handlers/cmdb"
 	"itsm-backend/handlers/service_catalog"
 	servicerequest "itsm-backend/handlers/service_request"
-	"itsm-backend/service"
+	"itsm-backend/internal/services"
 
 	"go.uber.org/zap"
 )

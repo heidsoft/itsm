@@ -13,7 +13,7 @@ import (
 	ticketHandler "itsm-backend/handlers/ticket"
 	"itsm-backend/middleware"
 	ticketrepo "itsm-backend/repository/ticket"
-	"itsm-backend/service"
+	"itsm-backend/internal/services"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/mattn/go-sqlite3"

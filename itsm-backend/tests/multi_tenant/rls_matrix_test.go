@@ -74,7 +74,7 @@ import (
 	"itsm-backend/handlers/service_request"
 	"itsm-backend/handlers/sla"
 	ticketrepo "itsm-backend/repository/ticket"
-	"itsm-backend/service"
+	"itsm-backend/internal/services"
 )
 
 var matrixDBCounter int64

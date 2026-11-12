@@ -16,7 +16,7 @@ import (
 	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/handlers/ai"
-	"itsm-backend/service"
+	"itsm-backend/internal/services"
 )
 
 // ledgerCall 记录一次 RecordDecisionAudit 调用的入参。

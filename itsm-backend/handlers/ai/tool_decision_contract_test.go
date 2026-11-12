@@ -20,7 +20,7 @@ import (
 	"itsm-backend/ent/operationalcommand"
 	"itsm-backend/handlers/ai"
 	"itsm-backend/internal/commandbus"
-	"itsm-backend/service"
+	"itsm-backend/internal/services"
 )
 
 func newToolDecisionFixture(t *testing.T) (*ent.Client, int, int, *ai.Service) {

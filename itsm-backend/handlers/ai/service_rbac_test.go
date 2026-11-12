@@ -14,7 +14,7 @@ import (
 	"itsm-backend/ent"
 	"itsm-backend/handlers/ai"
 	"itsm-backend/middleware"
-	"itsm-backend/service"
+	"itsm-backend/internal/services"
 )
 
 // rbacMockRepo 记录 CreateToolInvocation 调用，其余方法返回零值。

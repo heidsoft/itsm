@@ -18,7 +18,7 @@ import (
 	"go.uber.org/zap"
 
 	"itsm-backend/handlers/ai"
-	"itsm-backend/service"
+	"itsm-backend/internal/services"
 )
 
 // newAuditNotesDB 建 ai_feedbacks 表，写读共用同一条连接，

@@ -14,7 +14,7 @@ import (
 	"itsm-backend/ent/incident"
 	"itsm-backend/ent/operationalcommand"
 	"itsm-backend/internal/commandbus"
-	"itsm-backend/service"
+	"itsm-backend/internal/services"
 )
 
 func TestResolver_VerifiesActiveContractAndBranch(t *testing.T) {

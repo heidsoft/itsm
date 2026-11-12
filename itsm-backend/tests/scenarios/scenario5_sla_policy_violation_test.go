@@ -11,7 +11,7 @@ import (
 	"itsm-backend/dto"
 	"itsm-backend/ent/enttest"
 	escalationMatrix "itsm-backend/handlers/escalation_matrix"
-	"itsm-backend/service"
+	"itsm-backend/internal/services"
 	"itsm-backend/service/sla"
 )
 

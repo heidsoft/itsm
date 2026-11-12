@@ -25,7 +25,7 @@ import (
 // errors.New，errors.Is 永远判 false，注册重复返回 500 而不是 409——
 // 编译与 L.3 计数全绿。
 
-const skillSharedImport = `"itsm-backend/service"`
+const skillSharedImport = `"itsm-backend/internal/services"`
 
 // TestSkillDomainIsFullyConverged：全域生产文件零共享层 import，基线不得
 // 出现 skill=N。

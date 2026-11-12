@@ -18,7 +18,7 @@ import (
 	entuser "itsm-backend/ent/user"
 	"itsm-backend/handlers/cmdb"
 	"itsm-backend/handlers/service_catalog"
-	"itsm-backend/service"
+	"itsm-backend/internal/services"
 
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"

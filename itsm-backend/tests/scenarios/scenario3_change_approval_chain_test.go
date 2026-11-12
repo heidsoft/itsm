@@ -9,7 +9,7 @@ import (
 
 	"itsm-backend/ent/enttest"
 	"itsm-backend/ent/schema"
-	"itsm-backend/service"
+	"itsm-backend/internal/services"
 )
 
 // Scenario 3: 变更审批链（会签/或签）测试

@@ -12,7 +12,7 @@ import (
 	"itsm-backend/ent/enttest"
 	"itsm-backend/ent/operationalcommand"
 	"itsm-backend/internal/commandbus"
-	"itsm-backend/service"
+	"itsm-backend/internal/services"
 
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"

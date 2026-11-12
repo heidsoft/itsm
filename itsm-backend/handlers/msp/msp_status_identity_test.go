@@ -14,7 +14,7 @@ import (
 	entuser "itsm-backend/ent/user"
 	"itsm-backend/internal/authz"
 	"itsm-backend/middleware"
-	"itsm-backend/service"
+	"itsm-backend/internal/services"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/mattn/go-sqlite3"

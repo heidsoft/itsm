@@ -13,7 +13,7 @@ import (
 	"go.uber.org/zap"
 	"itsm-backend/ent/enttest"
 	"itsm-backend/handlers/ai"
-	"itsm-backend/service"
+	"itsm-backend/internal/services"
 )
 
 func TestExecuteToolReportsPendingApproval(t *testing.T) {

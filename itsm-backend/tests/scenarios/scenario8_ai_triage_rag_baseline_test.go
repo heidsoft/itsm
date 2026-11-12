@@ -6,7 +6,7 @@ import (
 
 	"go.uber.org/zap"
 
-	"itsm-backend/service"
+	"itsm-backend/internal/services"
 )
 
 // Scenario 8: AI 分诊准确率 + RAG 命中基线

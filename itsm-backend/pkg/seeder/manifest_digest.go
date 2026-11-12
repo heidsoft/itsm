@@ -8,7 +8,7 @@ import (
 	"sort"
 
 	"itsm-backend/internal/authz"
-	"itsm-backend/service"
+	"itsm-backend/internal/services"
 )
 
 // componentChecksum hashes the JSON seed manifest together with the in-code

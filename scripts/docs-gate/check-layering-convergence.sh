@@ -18,10 +18,14 @@
 #
 # 检查项
 # ------
-#   L.1 service/ 顶层生产 .go 文件**文件名棘轮**
-#         与 C.6.4 的 service_go_files 总数棘轮互补：总数棘轮挡不住「删一个加一个」，
-#         文件名棘轮能。新增生产文件一律 FAIL；新增 *_test.go 不阻断（回归锁是好事，
-#         不为测试增量制造摩擦）；减少则 PASS 并提示用 --update-baseline 收紧。
+#   L.1 internal/services/ 顶层生产 .go 文件**文件名棘轮**
+#         2026-11-12 收口批把 service/ 顶层包（125 生产 + 207 测试）整体归位
+#         internal/services/，包名仍是 service。归位目录被改名/删空时，空清单会
+#         让棘轮静默 PASS —— 因此 L.1 同时做「扫描 >=100 个 .go」有效性检查，
+#         L.1b 单独守「service/ 顶层零 .go」。与 C.6.4 总数棘轮互补：
+#         总数棘轮挡不住「删一个加一个」，文件名棘轮能。新增生产文件一律 FAIL；
+#         新增 *_test.go 不阻断；减少则 PASS 并提示用 --update-baseline 收紧。
+#   L.1b service/ 顶层零 .go（归位回归锁，不看 baseline）
 #   L.2 handlers/ 根目录零游离 .go 文件
 #         C.6.3 只遍历 handlers/*/ 目录，看不见根目录的松散文件 ——
 #         dashboard_handler.go 正是这样长期游离在领域切片之外（2026-11-07 收口）。
@@ -86,15 +90,22 @@ warn() {
   echo "  WARN: $1"
 }
 
-# 当前 service/ 顶层生产文件名清单（不含 *_test.go，排序，去重）。
+# 归位后 internal/services/ 顶层生产文件名清单（不含 *_test.go，排序，去重）。
 collect_service_prod() {
-  find "${BE}/service" -maxdepth 1 -name '*.go' -not -name '*_test.go' -print 2>/dev/null |
+  find "${BE}/internal/services" -maxdepth 1 -name '*.go' -not -name '*_test.go' -print 2>/dev/null |
     awk -F/ '{ print $NF }' | sort -u
+}
+
+# 旧 service/ 顶层：收口批之后必须恒为空。子包（service/cloud 等）不在此列。
+collect_legacy_service_go() {
+  find "${BE}/service" -maxdepth 1 -name '*.go' -print 2>/dev/null | sort
 }
 
 # 每个 handlers/<domain>/ 里 import service/ 的生产文件数；根目录松散文件归入 "<root>"。
 collect_import_counts() {
-  grep -rl '"itsm-backend/service"' "${BE}/handlers" --include='*.go' 2>/dev/null |
+  # 新旧两条共享实现包路径都算依赖：只扫旧路径会让「改 import 路径」
+  # 成为绕过 L.3 的通道。handlers 生产代码对该包的依赖必须恒为 0。
+  grep -rl -e '"itsm-backend/service"' -e '"itsm-backend/internal/services"' "${BE}/handlers" --include='*.go' 2>/dev/null |
     grep -v '_test.go' |
     awk -F/ '
       {
@@ -118,7 +129,9 @@ if [ "${ACTION}" = "update" ]; then
   tmp_i="$(mktemp "${TMPDIR:-/tmp}/layering-imp.XXXXXX")"
 
   {
-    echo "# Gate C.8 / L.1 — service/ 顶层生产 .go 文件名棘轮"
+    echo "# Gate C.8 / L.1 — internal/services/ 顶层生产 .go 文件名棘轮"
+    echo "# 2026-11-12 收口批：service/ 顶层包整体归位 internal/services/（包名不变）。"
+    echo "# 清单仍是同一批实现文件；service/ 顶层零 .go 由 L.1b 单独守。"
     echo "# 每行一个文件名（不含 *_test.go）。新增生产文件即 FAIL；存量下降后"
     echo "# 用 ./check-layering-convergence.sh --update-baseline 收紧本文件，"
     echo "# 并在 CHANGELOG [Unreleased] 记录下降数字。禁止为放行新代码上调。"
@@ -157,10 +170,15 @@ echo "== Gate C.8 分层收敛守卫 =="
 # ---------------------------------------------------------------------------
 # L.1 service/ 生产文件名棘轮
 # ---------------------------------------------------------------------------
-echo "-- L.1 service/ 生产文件棘轮"
+echo "-- L.1 internal/services/ 生产文件棘轮"
 if [ ! -f "${SERVICE_BASELINE}" ]; then
   fail "L.1 baseline 缺失：${SERVICE_BASELINE}（先跑 --update-baseline）"
 else
+  # 扫描器零命中保护：归位目录消失时棘轮会「零新增」静默 PASS。
+  l1_files="$(find "${BE}/internal/services" -maxdepth 1 -name '*.go' -print 2>/dev/null | wc -l | tr -d ' ')"
+  if [ "${l1_files}" -lt 100 ]; then
+    fail "L.1 扫描器失效：internal/services/ 顶层只扫到 ${l1_files} 个 .go（预期 >=100），零命中不可信"
+  fi
   cur_s="$(mktemp "${TMPDIR:-/tmp}/layering-cur-s.XXXXXX")"
   base_s="$(mktemp "${TMPDIR:-/tmp}/layering-base-s.XXXXXX")"
   collect_service_prod >"${cur_s}"
@@ -185,6 +203,21 @@ else
 fi
 
 # ---------------------------------------------------------------------------
+# L.1b service/ 顶层零 .go —— 归位后任何新落盘的顶层 .go 都是把业务逻辑
+# 写回共享上帝包；不看 baseline，避免「换个新文件名就绕过棘轮」。
+# ---------------------------------------------------------------------------
+echo "-- L.1b service/ 顶层零 .go（归位回归锁）"
+legacy_go="$(collect_legacy_service_go)"
+if [ -n "${legacy_go}" ]; then
+  legacy_count="$(printf '%s\n' "${legacy_go}" | wc -l | tr -d ' ')"
+  echo "  FAIL: L.1b service/ 顶层重新出现 ${legacy_count} 个 .go（共享实现只许在 internal/services/）："
+  printf '%s\n' "${legacy_go}" | sed 's/^/         /'
+  FAILS=$((FAILS + legacy_count))
+else
+  pass "service/ 顶层零 .go（子包不受影响）"
+fi
+
+# ---------------------------------------------------------------------------
 # L.2 handlers/ 根目录零游离文件
 # ---------------------------------------------------------------------------
 echo "-- L.2 handlers/ 根目录零游离文件"
@@ -201,7 +234,7 @@ fi
 # ---------------------------------------------------------------------------
 # L.3 按域 import service/ 计数棘轮
 # ---------------------------------------------------------------------------
-echo "-- L.3 handlers/ 对 service/ 的依赖棘轮"
+echo "-- L.3 handlers/ 对共享实现包的依赖棘轮（新旧路径双扫）"
 if [ ! -f "${IMPORT_BASELINE}" ]; then
   fail "L.3 baseline 缺失：${IMPORT_BASELINE}（先跑 --update-baseline）"
 else
@@ -251,20 +284,20 @@ echo "-- L.5 已退役遗留代码零复活"
 if [ ! -f "${RETIRED_LIST}" ]; then
   fail "L.5 退役清单缺失：${RETIRED_LIST}"
 else
-  l5_files="$(find "${BE}/service" -maxdepth 1 -name '*.go' -print 2>/dev/null | sort)"
+  l5_files="$(find "${BE}/internal/services" -maxdepth 1 -name '*.go' -print 2>/dev/null | sort)"
   l5_file_count="$(printf '%s\n' "${l5_files}" | grep -c '\.go$')"
   l5_entries=0
   l5_hits=0
   if [ "${l5_file_count}" -lt 100 ]; then
-    fail "L.5 扫描器失效：service/ 顶层只扫到 ${l5_file_count} 个 .go（预期 >=100），零命中不可信"
+    fail "L.5 扫描器失效：internal/services/ 顶层只扫到 ${l5_file_count} 个 .go（预期 >=100），零命中不可信"
     l5_hits=$((l5_hits + 1))
   else
     while IFS=' ' read -r l5_orig l5_syms l5_rest; do
       case "${l5_orig}" in '' | \#*) continue ;; esac
       [ -z "${l5_syms}" ] && continue
       l5_entries=$((l5_entries + 1))
-      if [ -f "${BE}/service/${l5_orig}" ]; then
-        fail "L.5 退役文件 ${l5_orig} 重新出现在 service/ 顶层"
+      if [ -f "${BE}/internal/services/${l5_orig}" ]; then
+        fail "L.5 退役文件 ${l5_orig} 重新出现在 internal/services/ 顶层"
         l5_hits=$((l5_hits + 1))
       fi
       IFS=',' read -r -a l5_arr <<<"${l5_syms}"
@@ -273,7 +306,7 @@ else
         # 逐符号比对，不取并集；扫描范围只限 service/ 顶层（含测试）。
         l5_hit="$(grep -lw "${l5_sym}" ${l5_files} 2>/dev/null | head -3)"
         if [ -n "${l5_hit}" ]; then
-          fail "L.5 退役符号 ${l5_sym}（来自 ${l5_orig}）在 service/ 顶层复活：$(printf '%s' "${l5_hit}" | tr '\n' ' ')"
+          fail "L.5 退役符号 ${l5_sym}（来自 ${l5_orig}）在 internal/services/ 顶层复活：$(printf '%s' "${l5_hit}" | tr '\n' ' ')"
           l5_hits=$((l5_hits + 1))
         fi
       done
@@ -284,7 +317,7 @@ else
     l5_hits=$((l5_hits + 1))
   fi
   if [ "${l5_hits}" -eq 0 ]; then
-    pass "${l5_entries} 项退役实现零复活（扫描 ${l5_file_count} 个 service/ 顶层 .go）"
+    pass "${l5_entries} 项退役实现零复活（扫描 ${l5_file_count} 个 internal/services/ 顶层 .go）"
   fi
 fi
 
@@ -303,7 +336,7 @@ for d in $(find "${BE}/handlers" -mindepth 1 -maxdepth 1 -type d -exec basename 
   fi
 done
 echo "  域包 ${total_domains} 个 / 已有 service.go ${with_service} 个 / 零 service/ 依赖 ${clean_count} 个"
-echo "  service/ 生产文件 $(collect_service_prod | wc -l | tr -d ' ') 个（目标 0，见 plans/service-layer-migration-plan.md）"
+echo "  internal/services/ 生产文件 $(collect_service_prod | wc -l | tr -d ' ') 个；service/ 顶层遗留 $(collect_legacy_service_go | wc -l | tr -d ' ') 个 .go（目标 0）"
 
 echo ""
 echo "Gate C.8: ${FAILS} failures, ${WARNS} warnings (mode=${MODE})"

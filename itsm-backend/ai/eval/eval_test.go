@@ -29,7 +29,7 @@ import (
 	"go.uber.org/zap"
 
 	"itsm-backend/handlers/sla"
-	"itsm-backend/service"
+	"itsm-backend/internal/services"
 )
 
 // TriageCase golden case for triage 评估

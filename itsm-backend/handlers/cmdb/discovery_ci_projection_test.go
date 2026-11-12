@@ -9,7 +9,7 @@ import (
 	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
-	"itsm-backend/service"
+	"itsm-backend/internal/services"
 
 	"github.com/stretchr/testify/require"
 )

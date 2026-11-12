@@ -19,7 +19,7 @@ import (
 	"itsm-backend/ent/enttest"
 	"itsm-backend/ent/processtask"
 	"itsm-backend/ent/ticketapproval"
-	"itsm-backend/service"
+	"itsm-backend/internal/services"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"

@@ -6,7 +6,7 @@ import (
 	"itsm-backend/dto"
 	changeHandler "itsm-backend/handlers/change"
 	problemHandler "itsm-backend/handlers/problem"
-	"itsm-backend/service"
+	"itsm-backend/internal/services"
 )
 
 // 统一服务质量视图（/reports/service-quality）对问题/变更域统计的装配：

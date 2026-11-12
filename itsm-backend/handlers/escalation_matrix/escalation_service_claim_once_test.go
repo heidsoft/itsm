@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"itsm-backend/ent/ticketnotification"
-	notificationservice "itsm-backend/service"
+	notificationservice "itsm-backend/internal/services"
 
 	_ "github.com/mattn/go-sqlite3"
 

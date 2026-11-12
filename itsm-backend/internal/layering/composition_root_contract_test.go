@@ -10,7 +10,7 @@ import (
 	"testing"
 
 	"itsm-backend/dto"
-	"itsm-backend/service"
+	"itsm-backend/internal/services"
 )
 
 // 批次 3 第 5 步 B：operations / problem 两域靠「组合根注入」整域归零。
@@ -22,7 +22,7 @@ import (
 // L.3 计数也是 0，运行时却会 nil panic 或静默不推进流程，因此本文件的
 // 断言必须同时覆盖域内形态与装配点源码。
 
-const sharedLayerImport = `"itsm-backend/service"`
+const sharedLayerImport = `"itsm-backend/internal/services"`
 
 func readRepoFile(t *testing.T, parts ...string) string {
 	t.Helper()
@@ -186,10 +186,10 @@ func TestProblemContractsAndBridgeWiring(t *testing.T) {
 	}
 
 	// 值类型只有一份定义：共享层别名 + reflect.Type 身份 + JSON 形状。
-	slaSvc := readRepoFile(t, "service", "ticket_sla_service.go")
+	slaSvc := readRepoFile(t, "internal", "services", "ticket_sla_service.go")
 	if !strings.Contains(squashSpace(stripLineComments(slaSvc)),
 		squashSpace("type SLADeadlineResult = dto.SLADeadlineResult")) {
-		t.Errorf("service/ticket_sla_service.go 丢失 SLADeadlineResult 别名")
+		t.Errorf("internal/services/ticket_sla_service.go 丢失 SLADeadlineResult 别名")
 	}
 	if reflect.TypeOf(service.SLADeadlineResult{}) != reflect.TypeOf(dto.SLADeadlineResult{}) {
 		t.Errorf("SLADeadlineResult 在共享层与 dto 之间类型身份分裂")

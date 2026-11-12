@@ -12,7 +12,7 @@ import (
 
 	"itsm-backend/dto"
 	"itsm-backend/handlers/skill"
-	"itsm-backend/service"
+	"itsm-backend/internal/services"
 )
 
 // L.3 归零收官专项回归锁（2026-11-10）。
@@ -60,7 +60,7 @@ func TestHandlersHaveZeroSharedLayerImport(t *testing.T) {
 			if len(body) < 40 {
 				t.Fatalf("扫描器零命中保护：handlers/%s/%s 仅 %d 字节", e.Name(), fn, len(body))
 			}
-			if strings.Contains(string(body), `"itsm-backend/service"`) {
+			if strings.Contains(string(body), `"itsm-backend/internal/services"`) {
 				importing = append(importing, e.Name()+"/"+fn)
 			}
 		}
@@ -131,9 +131,9 @@ func TestApprovalChainValueTypesAreDTOAliases(t *testing.T) {
 		{"approval_chain_evaluation.go", "type ApprovalChainEvaluation = dto.ApprovalChainEvaluation"},
 		{"approval_chain_shadow.go", "type ShadowResult = dto.ShadowResult"},
 	} {
-		src := readL3RepoFile(t, "service", a.file)
+		src := readL3RepoFile(t, "internal", "services", a.file)
 		if !strings.Contains(squashSpace(src), squashSpace(a.decl)) {
-			t.Errorf("service/%s 缺少别名声明 %q", a.file, a.decl)
+			t.Errorf("internal/services/%s 缺少别名声明 %q", a.file, a.decl)
 		}
 	}
 }
@@ -141,7 +141,7 @@ func TestApprovalChainValueTypesAreDTOAliases(t *testing.T) {
 // TestChangeStatusMachineIsSingleSource：变更状态机纯函数组唯一实现在 dto；
 // service 侧的迁移表变量必须是 dto 变量的别名（否则状态机与 DB CHECK 词表各说各话）。
 func TestChangeStatusMachineIsSingleSource(t *testing.T) {
-	src := readL3RepoFile(t, "service", "change_service.go")
+	src := readL3RepoFile(t, "internal", "services", "change_service.go")
 	for _, decl := range []string{
 		"var changeBaseTransitions = dto.ChangeBaseTransitions",
 		"var changeStandardTransitions = dto.ChangeStandardTransitions",
@@ -150,12 +150,12 @@ func TestChangeStatusMachineIsSingleSource(t *testing.T) {
 		"func IsValidChangeStatusTransition(currentStatus, newStatus, changeType string) bool {\n\treturn dto.IsValidChangeStatusTransition(currentStatus, newStatus, changeType)",
 	} {
 		if !strings.Contains(squashSpace(src), squashSpace(decl)) {
-			t.Errorf("service/change_service.go 缺少薄委托/别名 %q", decl)
+			t.Errorf("internal/services/change_service.go 缺少薄委托/别名 %q", decl)
 		}
 	}
 	// service 侧不得再出现第二份迁移表字面量。
 	if strings.Contains(src, "changeBaseTransitions = map[string][]string{") {
-		t.Errorf("service/change_service.go 仍有第二份迁移表字面量：唯一实现在 dto")
+		t.Errorf("internal/services/change_service.go 仍有第二份迁移表字面量：唯一实现在 dto")
 	}
 	// 行为锁：状态机的判定结果必须与下沉前一致（抽样若干组合）。
 	cases := []struct {
@@ -226,7 +226,7 @@ func TestChangeAndSRContractShapes(t *testing.T) {
 		{"handlers", "service_request", "service.go"},
 	} {
 		body := readL3RepoFile(t, rel...)
-		if strings.Contains(body, `"itsm-backend/service"`) {
+		if strings.Contains(body, `"itsm-backend/internal/services"`) {
 			t.Errorf("handlers/%s/%s 重新引用共享层包", rel[1], rel[2])
 		}
 	}

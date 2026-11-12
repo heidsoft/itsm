@@ -13,7 +13,7 @@ import (
 	"itsm-backend/ent/enttest"
 	"itsm-backend/handlers/service_catalog"
 	service_request "itsm-backend/handlers/service_request"
-	"itsm-backend/service"
+	"itsm-backend/internal/services"
 )
 
 // Scenario 10: 服务目录→请求→审批→配置→CI 闭环

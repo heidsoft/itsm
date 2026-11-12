@@ -18,7 +18,7 @@ import (
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
 	"itsm-backend/internal/knowledgeaccess"
-	"itsm-backend/service"
+	"itsm-backend/internal/services"
 
 	_ "github.com/mattn/go-sqlite3"
 

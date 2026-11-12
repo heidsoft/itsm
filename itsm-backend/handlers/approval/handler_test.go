@@ -12,7 +12,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 
 	"itsm-backend/ent/enttest"
-	"itsm-backend/service"
+	"itsm-backend/internal/services"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"

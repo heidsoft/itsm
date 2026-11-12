@@ -17,7 +17,7 @@ import (
 	"itsm-backend/ent/enttest"
 	"itsm-backend/middleware"
 	ticketrepo "itsm-backend/repository/ticket"
-	"itsm-backend/service"
+	"itsm-backend/internal/services"
 	"itsm-backend/service/sla"
 )
 

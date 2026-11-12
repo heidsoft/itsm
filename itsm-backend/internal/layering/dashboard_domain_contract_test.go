@@ -10,7 +10,7 @@ import (
 	"testing"
 
 	"itsm-backend/dto"
-	"itsm-backend/service"
+	"itsm-backend/internal/services"
 )
 
 // dashboard 整域归零回归锁（2026-11-10 成组 DTO 专项）。
@@ -24,7 +24,7 @@ import (
 //    都不变，只有值/身份断言能拦。因此本文件同时锁源码形态、装配接线、
 //    类型身份与 JSON 形状。
 
-const dashboardSharedImport = `"itsm-backend/service"`
+const dashboardSharedImport = `"itsm-backend/internal/services"`
 
 func readDashboardRepoFile(t *testing.T, parts ...string) string {
 	t.Helper()
@@ -169,7 +169,7 @@ func TestDashboardDTOsAreSingleSource(t *testing.T) {
 	for _, a := range aliases {
 		lines, ok := cache[a.file]
 		if !ok {
-			body := readDashboardRepoFile(t, "service", a.file)
+			body := readDashboardRepoFile(t, "internal", "services", a.file)
 			lines = strings.Split(body, "\n")
 			cache[a.file] = lines
 		}
@@ -181,7 +181,7 @@ func TestDashboardDTOsAreSingleSource(t *testing.T) {
 			}
 		}
 		if !found {
-			t.Errorf("service/%s 缺少逐处别名 %q（跨文件搬移不算）", a.file, a.decl)
+			t.Errorf("internal/services/%s 缺少逐处别名 %q（跨文件搬移不算）", a.file, a.decl)
 		}
 	}
 	if len(aliases) != 15 {

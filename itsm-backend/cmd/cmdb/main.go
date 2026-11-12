@@ -14,7 +14,7 @@ import (
 	"itsm-backend/handlers/cmdb"
 	"itsm-backend/internal/schema"
 	"itsm-backend/middleware"
-	"itsm-backend/service"
+	"itsm-backend/internal/services"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"

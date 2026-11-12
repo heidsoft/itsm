@@ -416,7 +416,10 @@ check_handlers_wiring() {
 measure() {
   case "$1" in
     handlers_dirs) count_handlers_dirs ;;
+    # 旧目录恒为 0 的上界棘轮：共享实现已整体归位 internal/services/。
     service_go_files) ls "${BE}/service"/*.go 2>/dev/null | wc -l | tr -d ' ' ;;
+    # 归位后的同名上界棘轮，防止「旧目录清空、新目录悄悄膨胀」。
+    shared_services_go_files) ls "${BE}/internal/services"/*.go 2>/dev/null | wc -l | tr -d ' ' ;;
     bootstrap_app_lines)
       if [ -f "${BE}/internal/bootstrap/app.go" ]; then
         wc -l <"${BE}/internal/bootstrap/app.go" | tr -d ' '

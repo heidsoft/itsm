@@ -35,7 +35,7 @@ import (
 	"itsm-backend/ent/tickettype"
 	"itsm-backend/ent/user"
 	"itsm-backend/internal/initialization"
-	"itsm-backend/service"
+	"itsm-backend/internal/services"
 )
 
 type productionComponentInitializer struct {

@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"itsm-backend/service"
+	"itsm-backend/internal/services"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -87,7 +87,7 @@ func TestAIRAGContractHasNoSharedServiceType(t *testing.T) {
 	require.Greater(t, len(contract), 200, "扫描器必须真的读到契约文件，零字节/空文件不算通过")
 	contractCode := stripLineComments(string(contract))
 	require.NotEmpty(t, strings.TrimSpace(contractCode), "剔除注释后仍须有可执行代码")
-	assert.NotContains(t, contractCode, `"itsm-backend/service"`,
+	assert.NotContains(t, contractCode, `"itsm-backend/internal/services"`,
 		"rag_contract.go 不得 import 共享 service 包，否则 L.3 的 ai 计数会上升")
 	assert.Contains(t, contractCode, `"itsm-backend/handlers/knowledge"`,
 		"必须复用知识域现成的 RAGRetriever 契约，不得另起同签名接口")

@@ -13,7 +13,7 @@ import (
 	"itsm-backend/ent/enttest"
 	"itsm-backend/ent/operationalcommand"
 	"itsm-backend/internal/commandbus"
-	toolsexec "itsm-backend/service"
+	toolsexec "itsm-backend/internal/services"
 
 	"entgo.io/ent/dialect"
 	_ "github.com/mattn/go-sqlite3"

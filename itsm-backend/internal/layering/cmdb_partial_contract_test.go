@@ -13,7 +13,7 @@ import (
 	"time"
 
 	"itsm-backend/dto"
-	"itsm-backend/service"
+	"itsm-backend/internal/services"
 )
 
 // cmdb 全域归零轨迹：专项 A 归零 5 个生产文件，专项 B 用 8 个域内窄契约
@@ -24,7 +24,7 @@ import (
 // 保留一个能悄悄放宽回 N 的槽位）。本文件继续按「实测计数 + 基线 +
 // 单文件形态」精确锁定，不进 contractDomains（该守卫假设单一契约文件）。
 
-const cmdbSharedImport = `"itsm-backend/service"`
+const cmdbSharedImport = `"itsm-backend/internal/services"`
 
 const cmdbPartialZeroExpectedImports = 0
 
@@ -42,7 +42,7 @@ func readCMDBFile(t *testing.T, rel string) string {
 
 func readServiceFile(t *testing.T, rel string) string {
 	t.Helper()
-	body, err := os.ReadFile(filepath.Join("..", "..", "service", rel))
+	body, err := os.ReadFile(filepath.Join("..", "..", "internal", "services", rel))
 	if err != nil {
 		t.Fatalf("读取 service/%s 失败：%v", rel, err)
 	}
@@ -250,11 +250,11 @@ func TestCMDBTimerPureFunctionsAreSingleSource(t *testing.T) {
 		"dto.SplitCycleExpression(strings.TrimSpace(expr))",
 	} {
 		if !strings.Contains(squashSpace(stripLineComments(cron)), squashSpace(needle)) {
-			t.Errorf("service/timer_cron.go 丢失薄委托 %q（禁止复制第二份实现）", needle)
+			t.Errorf("internal/services/timer_cron.go 丢失薄委托 %q（禁止复制第二份实现）", needle)
 		}
 	}
 	if strings.Contains(stripLineComments(cron), "cron.NewParser") {
-		t.Error("service/timer_cron.go 重新持有 cron 解析器（单一实现被破坏）")
+		t.Error("internal/services/timer_cron.go 重新持有 cron 解析器（单一实现被破坏）")
 	}
 	extractor := readServiceFile(t, "timer_event_extractor.go")
 	for _, name := range []string{
@@ -262,12 +262,12 @@ func TestCMDBTimerPureFunctionsAreSingleSource(t *testing.T) {
 		"func hasISO8601Component(", "func findChar(", "func extractNumber(",
 	} {
 		if strings.Contains(extractor, name) {
-			t.Errorf("service/timer_event_extractor.go 仍持有私有 helper %s（应整体下沉 dto）", name)
+			t.Errorf("internal/services/timer_event_extractor.go 仍持有私有 helper %s（应整体下沉 dto）", name)
 		}
 	}
 	store := readServiceFile(t, "timer_store.go")
 	if !strings.Contains(squashSpace(stripLineComments(store)), squashSpace("type ExpressionType = dto.ExpressionType")) {
-		t.Error("service/timer_store.go 的 ExpressionType 别名丢失")
+		t.Error("internal/services/timer_store.go 的 ExpressionType 别名丢失")
 	}
 
 	// 分类口径：ISO duration / RFC3339 / cycle / cron / 非法输入。
@@ -449,7 +449,7 @@ func TestCMDBContractDTOAndOperatorIdentity(t *testing.T) {
 	for _, g := range guards {
 		body := readServiceFile(t, g.file)
 		if !strings.Contains(squashSpace(stripLineComments(body)), squashSpace(g.decl)) {
-			t.Errorf("service/%s 丢失别名/薄委托 %q", g.file, g.decl)
+			t.Errorf("internal/services/%s 丢失别名/薄委托 %q", g.file, g.decl)
 		}
 	}
 }

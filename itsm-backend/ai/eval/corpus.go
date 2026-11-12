@@ -11,7 +11,7 @@ import (
 	"go.uber.org/zap"
 
 	"itsm-backend/ent"
-	"itsm-backend/service"
+	"itsm-backend/internal/services"
 
 	_ "github.com/mattn/go-sqlite3"
 )

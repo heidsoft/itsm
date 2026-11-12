@@ -1,6 +1,6 @@
 # service/ 层迁移收口计划
 
-> Status: 执行中 — 基于 2026-11-07 源码盘点编写。**本行不记进度数字**：L.1 / L.3 / L.4 的权威读数一律以 `scripts/docs-gate/check-product-drift.sh` 的 C.8 硬模式输出、`scripts/docs-gate/product-surface-baseline.txt` 的 HEAD 值，以及文末按批次追加的「落地记录」为准（此前本行写死的「L.3 55/34 → 28/10」在归零后长期未同步，与文末收官记录自相矛盾，故改为指向单一事实源）。阶段：批次 0（Gate C.8）、批次 1（退出批）、批次 2（handlers 侧依赖倒置，**L.3 已归零**）、六组中大型域实现归位（含 skill / escalation / sla 三批）均已落地。**剩余**：`service/` 生产实现清零（BPMN 整组与 `timer_` 对 `CustomProcessEngine` 私有字段强耦合，须一并裁决）、L.6 符号级白名单、`workflow` Pilot 真实租户跨域联调人工签字、`ROADMAP` v1.6.x 登记条目团队评审。
+> Status: 执行中 — 基于 2026-11-07 源码盘点编写。**本行不记进度数字**：L.1 / L.3 / L.4 的权威读数一律以 `scripts/docs-gate/check-product-drift.sh` 的 C.8 硬模式输出、`scripts/docs-gate/product-surface-baseline.txt` 的 HEAD 值，以及文末按批次追加的「落地记录」为准（此前本行写死的「L.3 55/34 → 28/10」在归零后长期未同步，与文末收官记录自相矛盾，故改为指向单一事实源）。阶段：批次 0（Gate C.8）、批次 1（退出批）、批次 2（handlers 侧依赖倒置，**L.3 已归零**）、六组中大型域实现归位（含 skill / escalation / sla 三批）均已落地。**收口批已落地（2026-11-12）**：`service/` 顶层 332 个 `.go` 整体归位 `internal/services/`（包名不变），L.1 归位目录文件名棘轮保持 125 条、旧目录生产文件与 C.6.4 `service_go_files` 双双归零；AST 实测最大无向连通分量 329 文件，证明按域拆包必须先解耦。**剩余**：G1/G2/G3 按域拆分、L.6 符号级白名单、`workflow` Pilot 真实租户跨域联调人工签字、`ROADMAP` v1.6.x 登记条目团队评审。
 
 ## 背景
 
@@ -811,3 +811,43 @@ ticket 有 20 个 service 文件分散在 10 个子域。策略：
 **验证**：`go build ./...` EXIT=0；`go test ./service/ -count=1` 全量绿（76.6s）、`internal/layering` / `pkg/seeder` / `domain/role` / `internal/bootstrap` / `handlers/bpmn` 全绿；静态门禁 8/8；Gate C.8 hard **0 failures / 0 warnings**（L.1 **125**、L.3 0 文件 / 0 域、L.5 零复活）。含并行 WIP 的主工作树跑 C.6 有 2 个红（`service_go_files=334`、`bootstrap_app_lines=2168`），分别来自并行会话实时新增的 `service/*_test.go` 与 `app.go` zap WIP，本批 `app.go` 零改动；按 HEAD 为唯一账本记账，不代调基线、不替对方放宽上界。
 
 **指标**：L.1 **126→125**；C.6.4 `service_go_files` **333→332**（按 `measure` 口径 `ls service/*.go`，以 HEAD 干净提交树实测）；L.3 0/0、L.4 67/69、L.5 零复活、`handlers_dirs` 69、`bootstrap_app_lines` 2167 不变。**剩余**：L.1 125 个 `service/` 生产文件（BPMN 核心组余 46 按 G1/G2/G3、`ci_`+`cmdb_` 8 连同 `configuration_item_service`、`ticket_` 14 等）、L.6 符号级白名单、`workflow` 真实租户跨域人工签字、`ROADMAP` v1.6.x 团队评审。本批不改运行时行为、不重建 prod 镜像。
+
+
+---
+
+## 收口批：`service/` 顶层包整体归位（2026-11-12）
+
+**结论：本计划「收口」阶段的时间线目标达成**——`service/` 顶层生产 `.go` 归零（125→0），
+C.8 L.4 报告 `service/ 顶层遗留 0 个 .go`。注意这是**物理归位**，不是按域拆分：
+`internal/services/` 仍是 125 个生产文件的共享包，依赖方向未变，L.3 之所以能保持 0 文件 / 0 域
+是因为此前 13 个域已完成域内窄契约倒置，不是靠改 import 路径。
+
+| 项 | 归位前 | 归位后 |
+|:--|:--|:--|
+| `service/` 顶层生产 `.go` | 125 | **0** |
+| `service/` 顶层全部 `.go`（C.6.4 `service_go_files`） | 332 | **0** |
+| `internal/services/` 顶层 `.go` | — | **332**（新增 `shared_services_go_files=332` 上界） |
+| L.1 文件名棘轮 | 125 条锁 `service/` | 125 条**逐行不变**，改锁 `internal/services/` |
+| L.3 handlers 生产文件依赖 | 0 文件 / 0 域 | 0 文件 / 0 域（改为新旧路径双扫） |
+| L.5 退役实现零复活扫描 | `service/` 332 文件 | `internal/services/` 332 文件 |
+| 全仓精确 import | `"itsm-backend/service"` ×136 | `"itsm-backend/internal/services"` ×136 |
+
+**为什么整包搬而不是继续逐文件搬**：Go AST 全量双向引用分析给出 332 个文件的无向连通分量
+= 5，最大 329（124 生产 + 205 测试）。私有符号与共享 helper 互为依赖时，任何「把一部分文件
+改包名」的动作都会立刻破坏编译；要按 G1/G2/G3 拆域，必须先把共享符号导出/下沉，属独立的
+解耦批次。本批选择先把位置归位并锁死，后续在 `internal/services/` 内部小步拆分不再受 L.1 制约。
+
+**守卫升级清单**（防止归零变成扫空假绿）：C.8 `collect_service_prod` 与 L.5 改扫新目录 +
+>=100 文件有效性检查、新增 L.1b 旧目录零 .go、L.3 新旧路径双扫、L.4 双读数；C.6.4
+`service_go_files` 精确下调到 0 并新增 `shared_services_go_files` 上界。回归锁
+`internal/layering/service_package_relocation_test.go` 覆盖 125 生产文件集合与内容摘要、
+包名、测试文件数量下界、全仓零旧 import、子包仍在、门禁脚本与基线强度；
+反向验证 8 红 + 1 正向不误报，恢复后转绿。
+
+**验证**：`go build ./...` EXIT=0；`go test ./internal/services/ -count=1` 71.4s 全绿；
+46 个改动包 `-run '^$'` 编译全绿；`internal/layering` / `pkg/seeder` / `domain/role` /
+`internal/bootstrap` / `handlers/bpmn` 全绿；静态 8/8；文档 8/8（C.8 hard 0/0、C.6 0 FAIL）。
+全仓 305 包分批编译因沙箱 SIGTERM(137) 中止，未宣称全量通过。
+
+**仍非 GA**：`workflow` Pilot 真实租户跨域人工签字未代签、L.6 白名单、L8 AI 底账 hash 链、
+G1/G2/G3 按域拆分、ROADMAP v1.6.x 团队评审均留后续；本批未重建 prod 镜像、未打 tag。

@@ -4,7 +4,7 @@ import (
 	"go.uber.org/zap"
 
 	"itsm-backend/ent"
-	"itsm-backend/service"
+	"itsm-backend/internal/services"
 )
 
 // newTestService 构造带真实 BPMN 桥接与审批链收口函数的变更域服务。

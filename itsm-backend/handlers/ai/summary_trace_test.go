@@ -11,7 +11,7 @@ import (
 	"itsm-backend/ent/enttest"
 	_ "itsm-backend/ent/runtime"
 	"itsm-backend/handlers/ai"
-	"itsm-backend/service"
+	"itsm-backend/internal/services"
 
 	_ "github.com/mattn/go-sqlite3"
 )

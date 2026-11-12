@@ -4,7 +4,7 @@ import (
 	"context"
 	"strings"
 
-	"itsm-backend/service"
+	"itsm-backend/internal/services"
 )
 
 // 本文件是 AI 评测门禁的**可复用实现层**（非 _test.go），因为门禁有效性守卫

@@ -36,7 +36,7 @@ func TestSkillRegistryImplIsDomainOwned(t *testing.T) {
 	if len(body) < 1000 {
 		t.Fatalf("扫描器零命中保护：handlers/skill/registry.go 仅 %d 字节", len(body))
 	}
-	if strings.Contains(string(body), `"itsm-backend/service"`) {
+	if strings.Contains(string(body), `"itsm-backend/internal/services"`) {
 		t.Errorf("handlers/skill/registry.go 不得 import 共享层包")
 	}
 

@@ -14,7 +14,7 @@ import (
 	"itsm-backend/ent/operationalcommand"
 	"itsm-backend/handlers/operations"
 	"itsm-backend/internal/commandbus"
-	toolsexec "itsm-backend/service"
+	toolsexec "itsm-backend/internal/services"
 )
 
 // Scenario 9: Outbox retry / dead-letter / replay 行为测试

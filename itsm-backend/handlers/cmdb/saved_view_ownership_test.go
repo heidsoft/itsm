@@ -22,6 +22,6 @@ func TestCMDBDomainOwnsSavedViewImplementation(t *testing.T) {
 func TestSavedViewImplementationHasNoSharedServiceImport(t *testing.T) {
 	body, err := os.ReadFile("saved_view_service.go")
 	require.NoError(t, err)
-	assert.NotContains(t, string(body), `"itsm-backend/service"`,
+	assert.NotContains(t, string(body), `"itsm-backend/internal/services"`,
 		"saved_view_service.go 不得 import 共享 service 包")
 }

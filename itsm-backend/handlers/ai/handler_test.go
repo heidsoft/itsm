@@ -21,7 +21,7 @@ import (
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
 	"itsm-backend/handlers/ai"
-	"itsm-backend/service"
+	"itsm-backend/internal/services"
 )
 
 type mockTriageLLMProvider struct {

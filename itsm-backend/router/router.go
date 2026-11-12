@@ -84,7 +84,7 @@ import (
 	wecomHandler "itsm-backend/handlers/wecom"
 	workbenchHandler "itsm-backend/handlers/workbench"
 	"itsm-backend/middleware"
-	"itsm-backend/service"
+	"itsm-backend/internal/services"
 
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus/promhttp"

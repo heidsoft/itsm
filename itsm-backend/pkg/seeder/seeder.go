@@ -48,7 +48,7 @@ import (
 	"itsm-backend/internal/authz"
 	"itsm-backend/pkg/credential"
 	"itsm-backend/pkg/menubaseline"
-	"itsm-backend/service"
+	"itsm-backend/internal/services"
 
 	"itsm-backend/config"
 	"itsm-backend/database"

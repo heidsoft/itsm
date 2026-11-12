@@ -33,7 +33,7 @@ import (
 	vectorStoreHandler "itsm-backend/handlers/vector_store"
 	"itsm-backend/middleware"
 	"itsm-backend/router"
-	"itsm-backend/service"
+	"itsm-backend/internal/services"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/mattn/go-sqlite3"

@@ -10,7 +10,7 @@ import (
 	"testing"
 
 	"itsm-backend/dto"
-	"itsm-backend/service"
+	"itsm-backend/internal/services"
 )
 
 // bpmn 归零轨迹：第 1 步 workflow_template.go，第 2 步 dashboard.go +
@@ -21,7 +21,7 @@ import (
 // （那个守卫假设一个域只有一份契约文件与单一窄接口，bpmn 有 9+ 份）。
 // 归零后尤其要防「把文件删掉导致零命中」，故保留生产文件数量下限断言。
 
-const bpmnSharedImport = `"itsm-backend/service"`
+const bpmnSharedImport = `"itsm-backend/internal/services"`
 
 const bpmnPartialZeroExpectedImports = 0
 
@@ -268,7 +268,7 @@ func TestBPMNMonitoringDTOsHaveSingleSource(t *testing.T) {
 	}
 	seen := 0
 	for file, list := range byFile {
-		body, err := os.ReadFile(filepath.Join("..", "..", "service", file))
+		body, err := os.ReadFile(filepath.Join("..", "..", "internal", "services", file))
 		if err != nil {
 			t.Fatalf("读取 service/%s 失败：%v", file, err)
 		}
@@ -280,7 +280,7 @@ func TestBPMNMonitoringDTOsHaveSingleSource(t *testing.T) {
 			seen++
 			want := squashSpace("type " + n + " = dto." + n)
 			if !strings.Contains(flat, want) {
-				t.Errorf("service/%s 丢失别名 %q（值类型不得在共享层另起一份）", file, n)
+				t.Errorf("internal/services/%s 丢失别名 %q（值类型不得在共享层另起一份）", file, n)
 			}
 		}
 	}
@@ -379,7 +379,7 @@ func TestBPMNDomainConfigValuesComeFromDTO(t *testing.T) {
 		}
 	}
 
-	svc, err := os.ReadFile(filepath.Join("..", "..", "service", "config_inheritance_service.go"))
+	svc, err := os.ReadFile(filepath.Join("..", "..", "internal", "services", "config_inheritance_service.go"))
 	if err != nil {
 		t.Fatalf("读取 service/config_inheritance_service.go 失败：%v", err)
 	}
@@ -392,7 +392,7 @@ func TestBPMNDomainConfigValuesComeFromDTO(t *testing.T) {
 		"type ResolvedConfig = dto.ResolvedConfig",
 	} {
 		if !strings.Contains(svcFlat, squashSpace(decl)) {
-			t.Errorf("service/config_inheritance_service.go 丢失别名 %q", decl)
+			t.Errorf("internal/services/config_inheritance_service.go 丢失别名 %q", decl)
 		}
 	}
 	if strings.Contains(svcFlat, "type ResolvedConfig struct") {
@@ -465,7 +465,7 @@ var bpmnEngineRequestNames = []string{
 
 func readEngineServiceFile(t *testing.T, rel string) string {
 	t.Helper()
-	body, err := os.ReadFile(filepath.Join("..", "..", "service", rel))
+	body, err := os.ReadFile(filepath.Join("..", "..", "internal", "services", rel))
 	if err != nil {
 		t.Fatalf("读取 service/%s 失败：%v", rel, err)
 	}
@@ -586,10 +586,10 @@ func TestBPMNEngineDTOsHaveSingleSource(t *testing.T) {
 		for _, n := range list {
 			seen++
 			if !strings.Contains(flat, squashSpace("type "+n+" = dto."+n)) {
-				t.Errorf("service/%s 丢失别名 %q（值类型不得在共享层另起一份）", file, n)
+				t.Errorf("internal/services/%s 丢失别名 %q（值类型不得在共享层另起一份）", file, n)
 			}
 			if strings.Contains(flat, "type "+n+" struct") {
-				t.Errorf("service/%s 重新定义了 %s（值类型身份分裂）", file, n)
+				t.Errorf("internal/services/%s 重新定义了 %s（值类型身份分裂）", file, n)
 			}
 		}
 	}
@@ -605,7 +605,7 @@ func TestBPMNEngineDTOsHaveSingleSource(t *testing.T) {
 		"type TaskService = dto.TaskCatalog",
 	} {
 		if !strings.Contains(engFlat, squashSpace(decl)) {
-			t.Errorf("service/bpmn_process_engine.go 丢失接口别名 %q", decl)
+			t.Errorf("internal/services/bpmn_process_engine.go 丢失接口别名 %q", decl)
 		}
 	}
 	// 版本解析只有一份实现：共享层必须委托 dto，不能被换成语义不同的另一份。
@@ -621,7 +621,7 @@ func TestBPMNEngineDTOsHaveSingleSource(t *testing.T) {
 	ver := readEngineServiceFile(t, "bpmn_version_service.go")
 	verFlat := squashSpace(stripLineComments(ver))
 	if !strings.Contains(verFlat, squashSpace("return dto.ParseVersionNumber(versionStr)")) {
-		t.Errorf("service/bpmn_version_service.go 的 ParseVersionNumber 未委托 dto（实现可能分裂）")
+		t.Errorf("internal/services/bpmn_version_service.go 的 ParseVersionNumber 未委托 dto（实现可能分裂）")
 	}
 }
 
@@ -799,7 +799,7 @@ func TestBPMNInventoryDTOsHaveSingleSource(t *testing.T) {
 	for _, n := range bpmnInventoryDTONames {
 		seen++
 		if !strings.Contains(flat, squashSpace("type "+n+" = dto."+n)) {
-			t.Errorf("service/bpmn_pending_inventory.go 丢失别名 %q", n)
+			t.Errorf("internal/services/bpmn_pending_inventory.go 丢失别名 %q", n)
 		}
 		if strings.Contains(flat, "type "+n+" struct") {
 			t.Errorf("共享层重新定义了 %s（值类型身份分裂）", n)

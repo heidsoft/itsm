@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"itsm-backend/service"
+	"itsm-backend/internal/services"
 )
 
 type fakeEmailLLM struct {

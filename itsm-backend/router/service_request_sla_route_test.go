@@ -17,7 +17,7 @@ import (
 	scHandler "itsm-backend/handlers/service_catalog"
 	srHandler "itsm-backend/handlers/service_request"
 	"itsm-backend/middleware"
-	"itsm-backend/service"
+	"itsm-backend/internal/services"
 	"itsm-backend/service/sla"
 
 	"github.com/gin-gonic/gin"

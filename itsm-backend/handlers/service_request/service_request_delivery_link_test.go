@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"itsm-backend/service"
+	"itsm-backend/internal/services"
 	"itsm-backend/service/sla"
 
 	"github.com/stretchr/testify/require"

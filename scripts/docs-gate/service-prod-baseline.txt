@@ -1,4 +1,6 @@
-# Gate C.8 / L.1 — service/ 顶层生产 .go 文件名棘轮
+# Gate C.8 / L.1 — internal/services/ 顶层生产 .go 文件名棘轮
+# 2026-11-12 收口批：service/ 顶层包整体归位 internal/services/（包名不变）。
+# 清单仍是同一批实现文件；service/ 顶层零 .go 由 L.1b 单独守。
 # 每行一个文件名（不含 *_test.go）。新增生产文件即 FAIL；存量下降后
 # 用 ./check-layering-convergence.sh --update-baseline 收紧本文件，
 # 并在 CHANGELOG [Unreleased] 记录下降数字。禁止为放行新代码上调。

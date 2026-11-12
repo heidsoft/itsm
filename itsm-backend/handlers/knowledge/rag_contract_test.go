@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"itsm-backend/service"
+	"itsm-backend/internal/services"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -67,7 +67,7 @@ func TestKnowledgeDomainHasNoSharedServiceType(t *testing.T) {
 	for _, name := range []string{"rag_contract.go", "service.go", "outbox.go"} {
 		body, err := os.ReadFile(name)
 		require.NoError(t, err, "读取 %s", name)
-		assert.NotContains(t, string(body), `"itsm-backend/service"`,
+		assert.NotContains(t, string(body), `"itsm-backend/internal/services"`,
 			"%s 不得 import 共享 service 包", name)
 		assert.NotContains(t, string(body), "*service.RAGService",
 			"%s 不得持有共享层 RAG 具体类型", name)

@@ -11,7 +11,7 @@ import (
 
 	"itsm-backend/handlers/vector_store"
 	"itsm-backend/internal/vectorstore"
-	"itsm-backend/service"
+	"itsm-backend/internal/services"
 )
 
 // 向量/嵌入共享基础设施归位专项回归锁（2026-11-11）。
@@ -125,8 +125,8 @@ func TestVectorStoreImplementationIsInfraOwned(t *testing.T) {
 
 	// 1) 旧文件名在 service/ 顶层零复活（编译可过，只有源码守卫能挡）。
 	for _, fn := range oldNames {
-		if _, err := os.Stat(filepath.Join("..", "..", "service", fn)); !os.IsNotExist(err) {
-			t.Errorf("service/%s 复活：实现本体必须只在 internal/vectorstore", fn)
+		if _, err := os.Stat(filepath.Join("..", "..", "internal", "services", fn)); !os.IsNotExist(err) {
+			t.Errorf("internal/services/%s 复活：实现本体必须只在 internal/vectorstore", fn)
 		}
 	}
 
@@ -136,7 +136,7 @@ func TestVectorStoreImplementationIsInfraOwned(t *testing.T) {
 		if !strings.HasPrefix(src, "package vectorstore\n") {
 			t.Errorf("internal/vectorstore/%s 包名漂移", fn)
 		}
-		if strings.Contains(src, `"itsm-backend/service"`) {
+		if strings.Contains(src, `"itsm-backend/internal/services"`) {
 			t.Errorf("internal/vectorstore/%s 反向依赖 service 包", fn)
 		}
 		if strings.Contains(src, `"itsm-backend/handlers/`) {
@@ -145,7 +145,7 @@ func TestVectorStoreImplementationIsInfraOwned(t *testing.T) {
 	}
 
 	// 3) service 侧只保留别名 + 薄委托，禁止复制实现。
-	rag := vsReadBackend(t, "service", "rag_service.go")
+	rag := vsReadBackend(t, "internal", "services", "rag_service.go")
 	for _, a := range []struct{ name, target string }{
 		{"VectorStore", "vectorstore.VectorStore"},
 		{"VectorSearchResult", "vectorstore.VectorSearchResult"},
@@ -155,7 +155,7 @@ func TestVectorStoreImplementationIsInfraOwned(t *testing.T) {
 		{"OpenAIEmbedder", "vectorstore.OpenAIEmbedder"},
 	} {
 		if !vsHasAlias(rag, a.name, a.target) {
-			t.Errorf("service/rag_service.go 缺少类型别名 %s = %s", a.name, a.target)
+			t.Errorf("internal/services/rag_service.go 缺少类型别名 %s = %s", a.name, a.target)
 		}
 	}
 	for _, decl := range []string{
@@ -166,7 +166,7 @@ func TestVectorStoreImplementationIsInfraOwned(t *testing.T) {
 		"return vectorstore.SimilarIncidents(ctx, vectors, embedder, tenantID, query, k)",
 	} {
 		if !vsHasLine(rag, decl) {
-			t.Errorf("service/rag_service.go 缺少薄委托 %q", decl)
+			t.Errorf("internal/services/rag_service.go 缺少薄委托 %q", decl)
 		}
 	}
 	if strings.Contains(rag, "type VectorStore struct") || strings.Contains(rag, "func (s *VectorStore)") {

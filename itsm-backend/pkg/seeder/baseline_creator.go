@@ -6,7 +6,7 @@ import (
 
 	"itsm-backend/ent"
 	"itsm-backend/ent/user"
-	"itsm-backend/service"
+	"itsm-backend/internal/services"
 )
 
 // Tenant-scoped baseline rows still need an audit owner, and the template

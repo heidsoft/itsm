@@ -10,7 +10,7 @@ import (
 	"itsm-backend/dto"
 	"itsm-backend/ent/enttest"
 	problemdomain "itsm-backend/handlers/problem"
-	"itsm-backend/service"
+	"itsm-backend/internal/services"
 )
 
 // Scenario 2: 事件→问题→知识 闭环自动化测试

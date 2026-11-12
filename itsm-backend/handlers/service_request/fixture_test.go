@@ -6,7 +6,7 @@ import (
 	"itsm-backend/ent"
 	"itsm-backend/handlers/cmdb"
 	"itsm-backend/handlers/service_catalog"
-	"itsm-backend/service"
+	"itsm-backend/internal/services"
 )
 
 // newTestService 构造带真实 BPMN 桥接的服务请求域服务。

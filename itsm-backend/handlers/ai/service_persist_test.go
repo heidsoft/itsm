@@ -15,7 +15,7 @@ import (
 	"itsm-backend/handlers/ai"
 	"itsm-backend/metrics"
 	"itsm-backend/middleware"
-	"itsm-backend/service"
+	"itsm-backend/internal/services"
 )
 
 // persistFailMockRepo 继承 rbacMockRepo 的字段，扩展 CreateToolInvocation 错误注入能力。

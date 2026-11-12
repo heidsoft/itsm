@@ -9,7 +9,7 @@ import (
 	"itsm-backend/ent/cloudresource"
 	"itsm-backend/ent/configurationitem"
 	"itsm-backend/ent/enttest"
-	"itsm-backend/service"
+	"itsm-backend/internal/services"
 	"itsm-backend/service/cloud"
 
 	"github.com/stretchr/testify/require"

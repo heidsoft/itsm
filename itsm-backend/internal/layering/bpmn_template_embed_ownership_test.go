@@ -14,7 +14,7 @@ import (
 	"testing"
 
 	"itsm-backend/internal/bpmntemplates"
-	"itsm-backend/service"
+	"itsm-backend/internal/services"
 )
 
 // G0-b 内置 BPMN 模板归位专项回归锁（2026-11-12）。
@@ -227,10 +227,10 @@ func TestBTEEmbeddedTemplatesAreSingleSource(t *testing.T) {
 // TestBTEServiceKeepsThinDelegates 锁 service 侧只有过渡变量与两个薄委托，
 // 不允许重新长出第二份 embed FS 或第二份 digest 实现。
 func TestBTEServiceKeepsThinDelegates(t *testing.T) {
-	src := bteReadBackend(t, "service", "bpmn_template_service.go")
+	src := bteReadBackend(t, "internal", "services", "bpmn_template_service.go")
 
 	if !strings.Contains(src, `"itsm-backend/internal/bpmntemplates"`) {
-		t.Error("service/bpmn_template_service.go 不再引用 internal/bpmntemplates")
+		t.Error("internal/services/bpmn_template_service.go 不再引用 internal/bpmntemplates")
 	}
 	if strings.Contains(src, "\t\"embed\"") {
 		t.Error("service 侧重新 import embed——模板 embed FS 只允许存在于 internal/bpmntemplates")
@@ -266,7 +266,7 @@ func TestBTEServiceKeepsThinDelegates(t *testing.T) {
 
 	// 全目录扫描：service/ 顶层生产文件不得再声明内置模板 embed；
 	// 旧 digest 文件与旧模板目录不得复活。
-	serviceDir := filepath.Join("..", "..", "service")
+	serviceDir := filepath.Join("..", "..", "internal", "services")
 	entries, err := os.ReadDir(serviceDir)
 	if err != nil {
 		t.Fatalf("读取 service/ 失败：%v", err)
@@ -286,21 +286,21 @@ func TestBTEServiceKeepsThinDelegates(t *testing.T) {
 			t.Fatalf("读取 service/%s 失败：%v", e.Name(), err)
 		}
 		if strings.Contains(string(body), "//go:embed bpmn/") {
-			t.Errorf("service/%s 重新声明内置模板 embed——会出现两份模板清单", e.Name())
+			t.Errorf("internal/services/%s 重新声明内置模板 embed——会出现两份模板清单", e.Name())
 		}
 	}
 	if scanned < 100 || !sawTemplateService {
 		t.Fatalf("扫描器零命中保护：只扫到 %d 个生产文件 / sawTemplateService=%v", scanned, sawTemplateService)
 	}
 	if _, err := os.Stat(filepath.Join(serviceDir, "bpmn_template_digest.go")); !os.IsNotExist(err) {
-		t.Errorf("service/bpmn_template_digest.go 复活（stat err=%v）", err)
+		t.Errorf("internal/services/bpmn_template_digest.go 复活（stat err=%v）", err)
 	}
 	leftovers, err := filepath.Glob(filepath.Join(serviceDir, "bpmn", "*.bpmn"))
 	if err != nil {
 		t.Fatalf("扫描旧模板目录失败：%v", err)
 	}
 	if len(leftovers) != 0 {
-		t.Errorf("service/bpmn/ 下仍有 .bpmn 模板：%v", leftovers)
+		t.Errorf("internal/services/bpmn/ 下仍有 .bpmn 模板：%v", leftovers)
 	}
 
 	// 模板包不得反向依赖共享层或 handler 层（否则 internal 归位名存实亡）。
@@ -319,7 +319,7 @@ func TestBTEServiceKeepsThinDelegates(t *testing.T) {
 		if err != nil {
 			t.Fatalf("读取 internal/bpmntemplates/%s 失败：%v", e.Name(), err)
 		}
-		if strings.Contains(string(body), `"itsm-backend/service"`) || strings.Contains(string(body), `"itsm-backend/handlers`) {
+		if strings.Contains(string(body), `"itsm-backend/internal/services"`) || strings.Contains(string(body), `"itsm-backend/handlers`) {
 			t.Errorf("internal/bpmntemplates/%s 反向引用共享层/handler 层", e.Name())
 		}
 	}
@@ -332,7 +332,7 @@ func TestBTEServiceKeepsThinDelegates(t *testing.T) {
 // 模板搬离 service/ 之后，任何按包内相对路径 "bpmn/..." 读磁盘的测试都会静默
 // 读成空集合（目录里只剩 Go 文件），必须统一走与生产同源的 bpmnTemplates FS。
 func TestBTEServiceTestsReadEmbeddedTemplates(t *testing.T) {
-	dir := filepath.Join("..", "..", "service")
+	dir := filepath.Join("..", "..", "internal", "services")
 	entries, err := os.ReadDir(dir)
 	if err != nil {
 		t.Fatalf("读取 service/ 失败：%v", err)
@@ -352,7 +352,7 @@ func TestBTEServiceTestsReadEmbeddedTemplates(t *testing.T) {
 		if strings.Contains(s, `os.ReadDir("bpmn"`) ||
 			strings.Contains(s, `os.ReadFile("bpmn/`) ||
 			strings.Contains(s, `os.ReadFile(filepath.Join("bpmn"`) {
-			t.Errorf("service/%s 仍按包内相对路径读 bpmn/ 目录；模板已迁至 internal/bpmntemplates，请改用 bpmnTemplates.Read*", e.Name())
+			t.Errorf("internal/services/%s 仍按包内相对路径读 bpmn/ 目录；模板已迁至 internal/bpmntemplates，请改用 bpmnTemplates.Read*", e.Name())
 		}
 		if strings.Contains(s, "bpmnTemplates.Read") || strings.Contains(s, "fs.ReadDir(bpmnTemplates") {
 			withEmbed++
@@ -379,7 +379,7 @@ func TestBTEReadFacesFollowMovedTemplates(t *testing.T) {
 
 	seeder := bteReadBackend(t, "pkg", "seeder", "process_bindings_manifest_test.go")
 	newJoin := `filepath.Join("..", "..", "internal", "bpmntemplates", "bpmn")`
-	oldJoin := `filepath.Join("..", "..", "service", "bpmn")`
+	oldJoin := `filepath.Join("..", "..", "internal", "services", "bpmn")`
 	if got := strings.Count(seeder, newJoin); got != 2 {
 		t.Errorf("seeder 清单守卫应有 2 处新模板目录读面，实测 %d", got)
 	}

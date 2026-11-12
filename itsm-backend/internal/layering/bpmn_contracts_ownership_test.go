@@ -10,7 +10,7 @@ import (
 	"testing"
 
 	"itsm-backend/internal/bpmncontracts"
-	"itsm-backend/service"
+	"itsm-backend/internal/services"
 )
 
 // BPMN 纯契约归位专项回归锁（G0，2026-11-11）。
@@ -102,7 +102,7 @@ func bcHasAlias(src, name, target string) bool {
 // contains 辅助函数不属本批退役范围）。返回命中文件数与扫描文件数，供零命中保护。
 func bcRetiredSymbolCount(t *testing.T, symbols []string) (hits []string, scanned int) {
 	t.Helper()
-	dir := filepath.Join("..", "..", "service")
+	dir := filepath.Join("..", "..", "internal", "services")
 	entries, err := os.ReadDir(dir)
 	if err != nil {
 		t.Fatalf("读取 service/ 失败：%v", err)
@@ -162,13 +162,13 @@ func bcL1Count(body string) int {
 func TestBPMNContractsAreInfraOwned(t *testing.T) {
 	// 1) 旧文件名零复活；别名过渡文件仍在（不新增生产文件）。
 	for _, fn := range []string{"bpmn_process_trigger_interface.go", "workflow_helper.go"} {
-		if _, err := os.Stat(filepath.Join("..", "..", "service", fn)); !os.IsNotExist(err) {
-			t.Errorf("service/%s 复活：实现本体必须只在 internal/bpmncontracts", fn)
+		if _, err := os.Stat(filepath.Join("..", "..", "internal", "services", fn)); !os.IsNotExist(err) {
+			t.Errorf("internal/services/%s 复活：实现本体必须只在 internal/bpmncontracts", fn)
 		}
 	}
-	alias := bcReadBackend(t, "service", "bpmn_types.go")
+	alias := bcReadBackend(t, "internal", "services", "bpmn_types.go")
 	if !strings.HasPrefix(alias, "package service\n") {
-		t.Error("service/bpmn_types.go 包名漂移")
+		t.Error("internal/services/bpmn_types.go 包名漂移")
 	}
 
 	// 2) 契约包两份实现归位、包名正确、不得反向依赖上层。
@@ -177,7 +177,7 @@ func TestBPMNContractsAreInfraOwned(t *testing.T) {
 		if !strings.HasPrefix(src, "package bpmncontracts\n") {
 			t.Errorf("internal/bpmncontracts/%s 包名漂移", fn)
 		}
-		if strings.Contains(src, `"itsm-backend/service"`) {
+		if strings.Contains(src, `"itsm-backend/internal/services"`) {
 			t.Errorf("internal/bpmncontracts/%s 反向依赖 service 包", fn)
 		}
 		if strings.Contains(src, `"itsm-backend/handlers/`) {
@@ -203,7 +203,7 @@ func TestBPMNContractsAreInfraOwned(t *testing.T) {
 	// 3) service 侧只保留 28 个别名，禁止任何实现复制（逐行精确，不取并集）。
 	for _, name := range bcAliasNames {
 		if !bcHasAlias(alias, name, "bpmncontracts."+name) {
-			t.Errorf("service/bpmn_types.go 缺少类型别名 %s = bpmncontracts.%s", name, name)
+			t.Errorf("internal/services/bpmn_types.go 缺少类型别名 %s = bpmncontracts.%s", name, name)
 		}
 	}
 	if strings.Contains(alias, "struct {") || strings.Contains(alias, "func (") || strings.Contains(alias, "interface {") {

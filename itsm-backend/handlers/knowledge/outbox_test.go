@@ -10,7 +10,7 @@ import (
 	"itsm-backend/ent/knowledgearticle"
 	"itsm-backend/ent/operationalcommand"
 	"itsm-backend/internal/commandbus"
-	"itsm-backend/service"
+	"itsm-backend/internal/services"
 
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/require"

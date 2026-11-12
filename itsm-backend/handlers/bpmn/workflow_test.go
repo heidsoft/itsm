@@ -12,7 +12,7 @@ import (
 
 	"itsm-backend/dto"
 	"itsm-backend/ent"
-	"itsm-backend/service"
+	"itsm-backend/internal/services"
 	"itsm-backend/service/bpmn"
 
 	"github.com/gin-gonic/gin"

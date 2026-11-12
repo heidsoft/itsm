@@ -20,7 +20,7 @@ import (
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
 	"itsm-backend/middleware"
-	"itsm-backend/service"
+	"itsm-backend/internal/services"
 )
 
 // 本文件覆盖 PUT /api/v1/incidents/:id 的 HTTP 契约，走真实 Ent 仓储 + 真实

@@ -12,7 +12,7 @@ import (
 	"itsm-backend/common"
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
-	"itsm-backend/service"
+	"itsm-backend/internal/services"
 )
 
 // Scenario 1: 工单全生命周期（创建→分配→流转→解决→关闭→重开拒绝）跨租户测试

@@ -17,7 +17,7 @@ import (
 	automationRuleHandler "itsm-backend/handlers/automation_rule"
 	ticketAttachmentHandler "itsm-backend/handlers/ticket_attachment"
 	"itsm-backend/middleware"
-	"itsm-backend/service"
+	"itsm-backend/internal/services"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/mattn/go-sqlite3"

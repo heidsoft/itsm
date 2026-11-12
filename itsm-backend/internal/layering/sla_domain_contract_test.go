@@ -20,7 +20,7 @@ import (
 // 风险不是 sentinel 双实例，而是「域包重新依赖共享层」：
 //
 //   - 构造器原本接收 `*service.LLMGateway`，若迁域时保留具体指针，域包会
-//     import "itsm-backend/service"，L.3 立刻回退；本批改为 dto.LLMGatewayPort。
+//     import "itsm-backend/internal/services"，L.3 立刻回退；本批改为 dto.LLMGatewayPort。
 //   - `ticketScope` / `maxReportTickets` 原本是 service 包私有符号，若在域内
 //     各复制一份，权限口径与 50000 行内存上限会悄悄漂移。本批下沉到
 //     internal/datascope 单一源，两个读面共用。
@@ -68,8 +68,8 @@ func slaHasLine(src, decl string) bool {
 func TestSLAPredictionImplementationIsDomainOwned(t *testing.T) {
 	// 1) 共享层两个旧文件名零复活（编译可过，只有源码守卫能挡）。
 	for _, fn := range []string{"sla_forecast_skill.go", "sla_breach_predictor.go"} {
-		if _, err := os.Stat(filepath.Join("..", "..", "service", fn)); !os.IsNotExist(err) {
-			t.Errorf("service/%s 复活：实现本体必须只在 handlers/sla 域包", fn)
+		if _, err := os.Stat(filepath.Join("..", "..", "internal", "services", fn)); !os.IsNotExist(err) {
+			t.Errorf("internal/services/%s 复活：实现本体必须只在 handlers/sla 域包", fn)
 		}
 	}
 
@@ -79,7 +79,7 @@ func TestSLAPredictionImplementationIsDomainOwned(t *testing.T) {
 		if !strings.HasPrefix(src, "package sla\n") {
 			t.Errorf("handlers/sla/%s 包名漂移", fn)
 		}
-		if strings.Contains(src, `"itsm-backend/service"`) {
+		if strings.Contains(src, `"itsm-backend/internal/services"`) {
 			t.Errorf("handlers/sla/%s 回退依赖共享层 service 包（L.3 归零被破坏）", fn)
 		}
 	}
@@ -139,13 +139,13 @@ func TestSLAPredictionImplementationIsDomainOwned(t *testing.T) {
 			t.Errorf("internal/datascope/datascope.go 缺少单一源声明 %q", decl)
 		}
 	}
-	analytics := readSLABackendFile(t, "service", "analytics_service.go")
+	analytics := readSLABackendFile(t, "internal", "services", "analytics_service.go")
 	if !slaHasLine(analytics, "maxReportTickets    = datascope.MaxReportTickets") {
-		t.Error("service/analytics_service.go 未引用 datascope.MaxReportTickets 单一源")
+		t.Error("internal/services/analytics_service.go 未引用 datascope.MaxReportTickets 单一源")
 	}
-	dashboard := readSLABackendFile(t, "service", "dashboard_service.go")
+	dashboard := readSLABackendFile(t, "internal", "services", "dashboard_service.go")
 	if !slaHasLine(dashboard, "return datascope.ViewerTicketScope(v.ScopeAll, v.Role)") {
-		t.Error("service/dashboard_service.go 未引用 datascope.ViewerTicketScope 单一源")
+		t.Error("internal/services/dashboard_service.go 未引用 datascope.ViewerTicketScope 单一源")
 	}
 
 	// 6) 组合根与评测链路：不得退回共享层构造器。

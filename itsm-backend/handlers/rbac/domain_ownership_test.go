@@ -39,7 +39,7 @@ func TestRBACDomainHasNoSharedServiceImport(t *testing.T) {
 	for _, name := range []string{"handler.go", "service.go", "role_service_impl.go", "menu_service_impl.go"} {
 		body, err := os.ReadFile(name)
 		require.NoError(t, err, "读取 %s", name)
-		assert.NotContains(t, string(body), `"itsm-backend/service"`,
+		assert.NotContains(t, string(body), `"itsm-backend/internal/services"`,
 			"%s 不得 import 共享 service 包", name)
 	}
 }

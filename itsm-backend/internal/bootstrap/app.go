@@ -107,7 +107,7 @@ import (
 	"itsm-backend/pkg/seeder"
 	repository_ticket "itsm-backend/repository/ticket"
 	"itsm-backend/router"
-	"itsm-backend/service"
+	"itsm-backend/internal/services"
 	cloudruntime "itsm-backend/service/cloud"
 	cloudadapters "itsm-backend/service/cloud/adapters"
 	slaEngine "itsm-backend/service/sla"

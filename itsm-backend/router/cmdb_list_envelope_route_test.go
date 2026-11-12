@@ -15,7 +15,7 @@ import (
 	"itsm-backend/ent/enttest"
 	cmdbHandler "itsm-backend/handlers/cmdb"
 	"itsm-backend/middleware"
-	"itsm-backend/service"
+	"itsm-backend/internal/services"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/mattn/go-sqlite3"

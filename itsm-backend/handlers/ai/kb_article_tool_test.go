@@ -6,7 +6,7 @@ import (
 
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
-	"itsm-backend/service"
+	"itsm-backend/internal/services"
 
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"

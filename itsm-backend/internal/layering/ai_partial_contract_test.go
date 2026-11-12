@@ -15,7 +15,7 @@ import (
 	"itsm-backend/dto"
 	"itsm-backend/handlers/skill"
 	"itsm-backend/handlers/sla"
-	"itsm-backend/service"
+	"itsm-backend/internal/services"
 )
 
 // AI 域整域归零专项回归锁（2026-11-10，LLMGateway 契约化专项 B1+B2）。
@@ -27,7 +27,7 @@ import (
 // dto 后，若有人把 TrackedSkill / RecordResult 改回私有名字，编译与 L.3
 // 计数都不变，但 SkillRegistry 的运行时类型断言会静默失效、指标不再累计。
 
-const aiSharedImport = `"itsm-backend/service"`
+const aiSharedImport = `"itsm-backend/internal/services"`
 
 func readAIRepoFile(t *testing.T, parts ...string) string {
 	t.Helper()
@@ -182,10 +182,10 @@ func TestAISharedValueTypesAreDTOAliases(t *testing.T) {
 	cache := map[string]string{}
 	for _, a := range aliasDecls {
 		if _, ok := cache[a.file]; !ok {
-			cache[a.file] = readAIRepoFile(t, "service", a.file)
+			cache[a.file] = readAIRepoFile(t, "internal", "services", a.file)
 		}
 		if !strings.Contains(squashSpace(cache[a.file]), squashSpace(a.decl)) {
-			t.Errorf("service/%s 缺少别名声明 %q", a.file, a.decl)
+			t.Errorf("internal/services/%s 缺少别名声明 %q", a.file, a.decl)
 		}
 	}
 

@@ -11,7 +11,7 @@ import (
 	"itsm-backend/ent/configurationitem"
 	"itsm-backend/ent/enttest"
 	problemdomain "itsm-backend/handlers/problem"
-	"itsm-backend/service"
+	"itsm-backend/internal/services"
 )
 
 // Scenario 6: 租户隔离跨域拒绝测试

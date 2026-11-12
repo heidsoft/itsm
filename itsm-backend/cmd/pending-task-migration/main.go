@@ -16,7 +16,7 @@ import (
 	"itsm-backend/common/tenantctx"
 	"itsm-backend/config"
 	"itsm-backend/database"
-	"itsm-backend/service"
+	"itsm-backend/internal/services"
 
 	"go.uber.org/zap"
 )

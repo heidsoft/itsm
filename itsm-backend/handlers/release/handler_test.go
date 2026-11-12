@@ -13,7 +13,7 @@ import (
 	"itsm-backend/ent/enttest"
 	entrelease "itsm-backend/ent/release"
 	"itsm-backend/middleware"
-	"itsm-backend/service"
+	"itsm-backend/internal/services"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/mattn/go-sqlite3"

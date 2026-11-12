@@ -35,9 +35,9 @@ func readEscalationRepoFile(t *testing.T, parts ...string) string {
 
 func TestEscalationDomainImplementationIsDomainOwned(t *testing.T) {
 	for _, old := range []string{"escalation_matrix.go", "escalation_matrix_store.go", "escalation_service.go"} {
-		path := filepath.Join("..", "..", "service", old)
+		path := filepath.Join("..", "..", "internal", "services", old)
 		if _, err := os.Stat(path); !os.IsNotExist(err) {
-			t.Errorf("service/%s 复活：实现必须只存在于 handlers/escalation_matrix", old)
+			t.Errorf("internal/services/%s 复活：实现必须只存在于 handlers/escalation_matrix", old)
 		}
 	}
 
@@ -46,7 +46,7 @@ func TestEscalationDomainImplementationIsDomainOwned(t *testing.T) {
 		"escalation_matrix_store.go", "escalation_service.go",
 	} {
 		src := readEscalationRepoFile(t, "handlers", "escalation_matrix", fn)
-		if strings.Contains(src, `"itsm-backend/service"`) {
+		if strings.Contains(src, `"itsm-backend/internal/services"`) {
 			t.Errorf("handlers/escalation_matrix/%s 重新引用共享层包，域归零被破坏", fn)
 		}
 	}

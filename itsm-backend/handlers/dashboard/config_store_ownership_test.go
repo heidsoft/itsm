@@ -22,6 +22,6 @@ func TestDashboardDomainOwnsConfigStore(t *testing.T) {
 func TestConfigStoreHasNoSharedServiceImport(t *testing.T) {
 	body, err := os.ReadFile("config_store.go")
 	require.NoError(t, err)
-	assert.NotContains(t, string(body), `"itsm-backend/service"`,
+	assert.NotContains(t, string(body), `"itsm-backend/internal/services"`,
 		"config_store.go 不得 import 共享 service 包")
 }

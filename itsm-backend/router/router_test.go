@@ -22,7 +22,7 @@ import (
 	userHandler "itsm-backend/handlers/user"
 	"itsm-backend/middleware"
 	"itsm-backend/migration"
-	"itsm-backend/service"
+	"itsm-backend/internal/services"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/mattn/go-sqlite3"

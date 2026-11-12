@@ -43,7 +43,7 @@ import (
 	"itsm-backend/handlers/ticket_workflow"
 	"itsm-backend/handlers/timer"
 	"itsm-backend/handlers/vector_store"
-	"itsm-backend/service"
+	"itsm-backend/internal/services"
 )
 
 // 编译期断言：生产具体类型必须满足域内窄契约。契约方法集由各域 handler/routes
@@ -212,7 +212,7 @@ func squashSpace(s string) string {
 // TestDomainContractsKeepSharedLayerOut 是集中式归属回归锁：
 // 逐域比对（不取并集）、扫描器零命中直接失败、字段类型必须能区分新旧实现。
 func TestDomainContractsKeepSharedLayerOut(t *testing.T) {
-	const sharedImport = `"itsm-backend/service"`
+	const sharedImport = `"itsm-backend/internal/services"`
 
 	for _, d := range contractDomains {
 		t.Run(d.name, func(t *testing.T) {
@@ -470,7 +470,7 @@ func TestSharedValueTypesRemainDTOAliases(t *testing.T) {
 		{"operator_context.go", "return dto.OperatorFromContext(ctx)"},
 	}
 	for _, a := range aliases {
-		body, err := os.ReadFile(filepath.Join("..", "..", "service", a.file))
+		body, err := os.ReadFile(filepath.Join("..", "..", "internal", "services", a.file))
 		if err != nil {
 			t.Fatalf("读取 service/%s 失败：%v", a.file, err)
 		}
@@ -478,7 +478,7 @@ func TestSharedValueTypesRemainDTOAliases(t *testing.T) {
 			t.Fatalf("扫描器零命中保护：service/%s 内容异常短（%d 字节）", a.file, len(body))
 		}
 		if !strings.Contains(squashSpace(stripLineComments(string(body))), squashSpace(a.decl)) {
-			t.Errorf("service/%s 丢失别名声明 %q", a.file, a.decl)
+			t.Errorf("internal/services/%s 丢失别名声明 %q", a.file, a.decl)
 		}
 	}
 }
