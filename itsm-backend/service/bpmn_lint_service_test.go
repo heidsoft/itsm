@@ -1,7 +1,6 @@
 package service
 
 import (
-	"os"
 	"strings"
 	"testing"
 )
@@ -9,7 +8,7 @@ import (
 // loadTestBPMN 读取内置流程模板（真实素材，非手写精简 XML）
 func loadTestBPMN(t *testing.T, name string) []byte {
 	t.Helper()
-	data, err := os.ReadFile("bpmn/" + name)
+	data, err := bpmnTemplates.ReadFile("bpmn/" + name)
 	if err != nil {
 		t.Fatalf("读取 BPMN 模板失败: %v", err)
 	}

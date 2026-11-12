@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"os"
 	"strconv"
 	"testing"
 	"time"
@@ -305,7 +304,7 @@ func TestSyncStartTimers_NoStoreIsNoop(t *testing.T) {
 // 模板里的 Timer Start Event 必须能真正注册成时间表。
 // 若模板被改动导致 cron 非法/被误删，本测试立即失败。
 func TestSyncStartTimers_ProductTemplate_IsSchedulable(t *testing.T) {
-	xmlBytes, err := os.ReadFile("bpmn/scheduled_inspection_flow.bpmn")
+	xmlBytes, err := bpmnTemplates.ReadFile("bpmn/scheduled_inspection_flow.bpmn")
 	require.NoError(t, err, "内置模板 scheduled_inspection_flow.bpmn 必须存在")
 
 	client := newTimerTestClient(t, "sync-start-template")

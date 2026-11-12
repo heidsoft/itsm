@@ -49,7 +49,7 @@ const (
 // 各自维护了一份同义列表并已经漂移（三份清单引用的 key 不一致），所以部门初始化
 // 只允许读取本包；新场景在这里加条目，不要再新增第二份 switch。
 //
-// ProcessKey 是否真的可用由 service 包按 go:embed bpmn/*.bpmn 判定：没有模板载体的
+// ProcessKey 是否真的可用由 internal/bpmntemplates 的 embed FS 判定：没有模板载体的
 // key 不会被绑定（详见 service.BuiltinProcessTemplateKeys 与绑定守卫测试）。
 type DepartmentProcessTemplate struct {
 	DepartmentCode    string                 `json:"departmentCode"`

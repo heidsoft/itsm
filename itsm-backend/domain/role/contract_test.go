@@ -352,7 +352,7 @@ var bpmnRoleValues = regexp.MustCompile(
 // 容易被忽略的承载面：内置 BPMN 模板的角色指派位，以及前端主角色词表。
 func TestContract_RetiredCodesHaveZeroHits(t *testing.T) {
 	for _, pattern := range []string{
-		"../../service/bpmn/*.bpmn",
+		"../../internal/bpmntemplates/bpmn/*.bpmn",
 		"../../pkg/seeder/templates/*.bpmn",
 	} {
 		files, err := filepath.Glob(pattern)

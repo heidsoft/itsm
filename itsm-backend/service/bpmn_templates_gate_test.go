@@ -1,7 +1,6 @@
 package service
 
 import (
-	"os"
 	"path/filepath"
 	"testing"
 )
@@ -17,7 +16,7 @@ import (
 // 新增模板时本测试自动纳入；有意放宽某条规则时必须显式修改本测试并说明。
 func TestBuiltinTemplates_Gate(t *testing.T) {
 	lintSvc := NewBPMNLintService()
-	entries, err := os.ReadDir("bpmn")
+	entries, err := bpmnTemplates.ReadDir("bpmn")
 	if err != nil {
 		t.Fatalf("读取 bpmn 目录失败: %v", err)
 	}
@@ -32,7 +31,7 @@ func TestBuiltinTemplates_Gate(t *testing.T) {
 		name := e.Name()
 		checked++
 
-		data, err := os.ReadFile(filepath.Join("bpmn", name))
+		data, err := bpmnTemplates.ReadFile(filepath.Join("bpmn", name))
 		if err != nil {
 			t.Fatalf("%s: 读取失败: %v", name, err)
 		}

@@ -314,7 +314,7 @@ func (h *WorkflowStartCommandHandler) definitionCategory(ctx context.Context, te
 //	已经创建成功——用户看到「工单建了但永远没有流程」，运维看到一条既无单据
 //	也无可操作建议的死信。两处真实故障都是这条路径：
 //	  · ticket 高/紧急优先级 → ProcessResolver.ResolveWithPriority 兜底
-//	    ticket_urgent_flow，而 service/bpmn/ 下从来没有这个模板；
+//	    ticket_urgent_flow，而内置模板目录下从来没有这个模板；
 //	  · 紧急变更 → ResolveForChange 兜底 change_emergency_flow，同样没有模板
 //	    （本轮已补 bpmn/change_emergency_flow.bpmn，但租户可能自行停用/删除，
 //	     仍需兜底）。

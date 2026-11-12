@@ -1,4 +1,4 @@
-package service
+package bpmntemplates
 
 import (
 	"crypto/sha256"
@@ -16,7 +16,7 @@ import (
 // authority for "does this key have a template carrier"; callers must not
 // maintain a second list of deployable keys.
 func BuiltinProcessTemplateKeys() (map[string]bool, error) {
-	entries, err := fs.ReadDir(bpmnTemplates, "bpmn")
+	entries, err := fs.ReadDir(embedded, "bpmn")
 	if err != nil {
 		return nil, fmt.Errorf("read embedded bpmn templates: %w", err)
 	}
@@ -37,7 +37,7 @@ func BuiltinProcessTemplateKeys() (map[string]bool, error) {
 // template files. Initialization component checksums include it so editing a
 // template is visible to the version ledger without a hand-maintained bump.
 func EmbeddedBPMNDigest() (string, error) {
-	entries, err := fs.ReadDir(bpmnTemplates, "bpmn")
+	entries, err := fs.ReadDir(embedded, "bpmn")
 	if err != nil {
 		return "", fmt.Errorf("read embedded bpmn templates: %w", err)
 	}
@@ -51,7 +51,7 @@ func EmbeddedBPMNDigest() (string, error) {
 
 	digest := sha256.New()
 	for _, name := range names {
-		content, err := bpmnTemplates.ReadFile("bpmn/" + name)
+		content, err := embedded.ReadFile("bpmn/" + name)
 		if err != nil {
 			return "", fmt.Errorf("read embedded bpmn template %s: %w", name, err)
 		}

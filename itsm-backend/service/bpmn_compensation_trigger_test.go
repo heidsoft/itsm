@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"os"
 	"path/filepath"
 	"testing"
 
@@ -147,7 +146,7 @@ func TestTriggerCompensationFailsClosedForCrossTenantAndUnknownActivity(t *testi
 // TestBuiltinCompensationTemplateHasTriggerNodes 内置模板必须真的带补偿节点，
 // 防止「补偿模板」变成一个只有名字的空壳文件。
 func TestBuiltinCompensationTemplateHasTriggerNodes(t *testing.T) {
-	data, err := os.ReadFile(filepath.Join("bpmn", "compensation_recovery_flow.bpmn"))
+	data, err := bpmnTemplates.ReadFile(filepath.Join("bpmn", "compensation_recovery_flow.bpmn"))
 	require.NoError(t, err)
 	defs, err := NewBPMNParser().ParseXML(data)
 	require.NoError(t, err)

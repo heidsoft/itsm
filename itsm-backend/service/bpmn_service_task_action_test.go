@@ -1,7 +1,6 @@
 package service
 
 import (
-	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -35,7 +34,7 @@ import (
 //   - <bpmn:metaData name="action">xxx</bpmn:metaData>（内建模板主约定）
 //   - <camunda:inputParameter name="action">xxx</camunda:inputParameter>（Camunda 标准）
 func TestServiceTaskAction_ParsedFromBuiltinTemplates(t *testing.T) {
-	entries, err := os.ReadDir("bpmn")
+	entries, err := bpmnTemplates.ReadDir("bpmn")
 	if err != nil {
 		t.Fatalf("读取 bpmn 目录失败: %v", err)
 	}
@@ -50,7 +49,7 @@ func TestServiceTaskAction_ParsedFromBuiltinTemplates(t *testing.T) {
 			continue
 		}
 		name := e.Name()
-		data, err := os.ReadFile(filepath.Join("bpmn", name))
+		data, err := bpmnTemplates.ReadFile(filepath.Join("bpmn", name))
 		if err != nil {
 			t.Fatalf("%s: 读取失败: %v", name, err)
 		}
@@ -207,7 +206,7 @@ func TestBPMNLint_ServiceTaskMissingActionIsError(t *testing.T) {
 // 这里只验证 action 被识别（走到业务分支），不关心业务结果，
 // 因为业务依赖 DB，属于别的测试的职责。
 func TestServiceTaskAction_HandlerAcceptsParsedAction(t *testing.T) {
-	data, err := os.ReadFile(filepath.Join("bpmn", "incident_emergency_flow.bpmn"))
+	data, err := bpmnTemplates.ReadFile(filepath.Join("bpmn", "incident_emergency_flow.bpmn"))
 	if err != nil {
 		t.Fatalf("读取模板失败: %v", err)
 	}

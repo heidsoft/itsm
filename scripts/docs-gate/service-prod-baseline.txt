@@ -36,7 +36,6 @@ bpmn_service_task_adapter.go
 bpmn_service_task_command_handler.go
 bpmn_sla_service.go
 bpmn_task_service.go
-bpmn_template_digest.go
 bpmn_template_service.go
 bpmn_tenant_service.go
 bpmn_timeout_scanner.go

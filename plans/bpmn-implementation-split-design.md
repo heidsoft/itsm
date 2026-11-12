@@ -1,6 +1,6 @@
 # BPMN 核心组实现归位：拆分边界设计（2026-11-11）
 
-> 状态：**G0 已部分落地（2026-11-11）**，G1–G3 仍为设计、未落地。本文划分边界与迁移顺序；已落地批次均不改运行时行为、不重建 prod 镜像。
+> 状态：**G0 已完整落地（G0 纯契约 2026-11-11 + G0-b 内置模板 2026-11-12）**，G1–G3 仍为设计、未落地。本文划分边界与迁移顺序；已落地批次均不改运行时行为、不重建 prod 镜像。
 > 权威读数仍以 `scripts/docs-gate/check-product-drift.sh` 的 C.8 硬模式输出与
 > `plans/service-layer-migration-plan.md` 文末落地记录为准。
 
@@ -48,11 +48,24 @@ L.3 已归零（全部 handler 生产文件零 `import "itsm-backend/service"`�
 回归锁 `internal/layering/bpmn_contracts_ownership_test.go` 含 XML 往返行为锁与 7/7 反向验证。
 L.1 128→126、C.6.4 `service_go_files` 335→333，详见 `plans/service-layer-migration-plan.md` 文末落地记录。
 
-**G0 未落地部分（列为 G0-b，勿与本批混做）**：`bpmn_template_digest.go` 依赖
-`bpmn_template_service.go` 的包级 `bpmnTemplates` embed FS（`//go:embed bpmn/*.bpmn`，20 个模板）。
-Go embed 路径不能跨父目录，收口必须整体搬迁模板文件，并同步 `domain/role/contract_test.go` 等
-硬编码 `service/bpmn/*.bpmn` 的读面；模板 key 集合与 digest 必须与 HEAD 逐字节一致。
-`bpmn_service_task_adapter.go` 依赖 service 私有符号与 `service/bpmn` 子包，不属纯契约，归 G3。
+**G0-b 已落地（2026-11-12）**：20 个 `.bpmn` 模板与 `BuiltinProcessTemplateKeys` /
+`EmbeddedBPMNDigest` 整体 `git mv` 进 `internal/bpmntemplates/bpmn/`（embed 声明与模板同包，
+FS 内路径仍为 `bpmn/<file>`）；`service/bpmn_template_digest.go` 退役为
+`bpmn_template_service.go` 里的两个薄委托，`bpmnTemplates` 过渡变量由
+`bpmntemplates.FS()` 提供，`app.go` 零改动。模板内容逐字节未变（迁移前后摘要
+`69a25a6808d1ef39a9f29d7a60a5e4d0937c4306c300625051099ce0d15f7ce6` 一致）。
+**设计里没预见到的第三类读面**：除 `domain/role/contract_test.go` 与
+`pkg/seeder/process_bindings_manifest_test.go` 两处磁盘枚举外，service 包内还有 5 个
+模板门禁测试按包内相对路径 `bpmn/…` 读磁盘（目录里只剩 Go 文件后静默读成空集合）；
+现统一改走 `bpmnTemplates.Read*`，与生产同源，后续再搬模板不再需要改测试。
+回归锁 `internal/layering/bpmn_template_embed_ownership_test.go` 锁完整性清单、
+摘要锚点、独立重算、委托形态、读面同源、零复活与两份基线棘轮，反向验证 8/8 全红。
+实测 L.1 **126→125**、C.6.4 `service_go_files` **333→332**，详见
+`plans/service-layer-migration-plan.md` 文末落地记录。
+
+**仍未落地**：`bpmn_service_task_adapter.go` 依赖 service 私有符号与 `service/bpmn`
+子包，不属纯契约，归 G3；`timer_` 私有字段访问改造仍属 G2 前置，ServiceTask
+完成事务凭据不得触碰；G1 域服务、G2 引擎核心、G3 编排桥接均保持本文原设计。
 
 ### G1 域服务层 → `handlers/bpmn/`
 

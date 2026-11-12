@@ -3,7 +3,6 @@ package service
 import (
 	"bytes"
 	"context"
-	"embed"
 	"encoding/xml"
 	"fmt"
 	"io/fs"
@@ -18,13 +17,30 @@ import (
 	"itsm-backend/ent"
 	"itsm-backend/ent/processdefinition"
 	"itsm-backend/ent/processdeployment"
+	"itsm-backend/internal/bpmntemplates"
 
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 )
 
-//go:embed bpmn/*.bpmn
-var bpmnTemplates embed.FS
+// bpmnTemplates 是内置 BPMN 模板的唯一 embed FS，实体归 internal/bpmntemplates。
+//
+// 这里只保留同包过渡变量与两个薄委托：模板文件不再位于 service/ 下，
+// 但 ReadFile/WalkDir 的路径布局（"bpmn/<filename>.bpmn"）保持不变，
+// 因此部署、lint、升级、变量守卫等所有既有调用面无需改动。
+// 禁止在此重新声明 //go:embed，否则会出现两份模板清单并让版本账本漂移。
+var bpmnTemplates = bpmntemplates.FS()
+
+// BuiltinProcessTemplateKeys 委派给模板包；key 集合的权威源仍是 embedded FS。
+func BuiltinProcessTemplateKeys() (map[string]bool, error) {
+	return bpmntemplates.BuiltinProcessTemplateKeys()
+}
+
+// EmbeddedBPMNDigest 委派给模板包；摘要口径与模板内容同处一个包，
+// 编辑模板会如实反映到初始化组件校验和，不需要手工改版本号。
+func EmbeddedBPMNDigest() (string, error) {
+	return bpmntemplates.EmbeddedBPMNDigest()
+}
 
 // BPMNTemplateService BPMN模板服务
 type BPMNTemplateService struct {
