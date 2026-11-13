@@ -594,8 +594,7 @@ func NewApplication() *Application {
 	// TicketAssociationService 工单关联服务
 	ticketAssociationService := service.NewTicketAssociationService(client)
 
-	// 为 IncidentService 注入序列服务与原生数据库连接
-	incidentService.SetSequenceService(sequenceService)
+	// 为 IncidentService 注入原生数据库连接（incident_number_seq 单一号源发号）
 	incidentService.SetRawDB(database.GetRawDB())
 
 	// problemService and changeService removed - using Handlers with domain services instead

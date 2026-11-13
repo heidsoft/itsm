@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"fmt"
-	"math/rand"
 	"time"
 
 	"itsm-backend/common"
@@ -88,8 +87,6 @@ func (s *ReleaseService) validateReferences(ctx context.Context, tenantID int, c
 //  1. release_number 由服务端生成，不信任客户端传入值（避免越权/冲突编号）。
 //  2. 两段写（先 Create 再对 JSON 字段二次 Save）包进单个事务，失败回滚，不留半成品。
 func (s *ReleaseService) CreateRelease(ctx context.Context, req *dto.CreateReleaseRequest, createdBy, tenantID int) (*dto.ReleaseResponse, error) {
-	releaseNumber := s.generateReleaseNumber(tenantID)
-
 	if err := s.validateReferences(ctx, tenantID, req.ChangeID, req.OwnerID); err != nil {
 		return nil, err
 	}
@@ -102,7 +99,7 @@ func (s *ReleaseService) CreateRelease(ctx context.Context, req *dto.CreateRelea
 	defer tx.Rollback()
 
 	releaseEntity, err := tx.Release.Create().
-		SetReleaseNumber(releaseNumber).
+		SetReleaseNumber("REL-PENDING").
 		SetTitle(req.Title).
 		SetDescription(req.Description).
 		SetType(req.Type).
@@ -127,9 +124,12 @@ func (s *ReleaseService) CreateRelease(ctx context.Context, req *dto.CreateRelea
 		return nil, fmt.Errorf("failed to create release: %w", err)
 	}
 
-	// 设置关联字段（Update() 返回构造器，必须 Save(ctx) 才落库）
-	updater := releaseEntity.Update()
-	needsUpdate := false
+	// 发布编号由自增 ID 同事务派生（REL-YYYYMMDD-NNNNNN），与 problem/change 同型：
+	// ID 唯一保证编号唯一，替代旧随机数发号（可静默重号且库中无唯一约束）。
+	// 占位编号只存在于本事务内，提交前必被覆写。
+	releaseNumber := fmt.Sprintf("REL-%s-%06d", time.Now().Format("20060102"), releaseEntity.ID)
+	updater := releaseEntity.Update().SetReleaseNumber(releaseNumber)
+	needsUpdate := true
 	if len(req.AffectedSystems) > 0 {
 		updater = updater.SetAffectedSystems(req.AffectedSystems)
 		needsUpdate = true
@@ -236,13 +236,6 @@ func (s *ReleaseService) triggerWorkflowForRelease(ctx context.Context, releaseI
 
 	s.logger.Infow("Workflow triggered for release", "release_id", rel.ID, "release_number", rel.ReleaseNumber, "tenant_id", tenantID)
 	return nil
-}
-
-// generateReleaseNumber 服务端生成发布编号（REL-YYYYMMDD-xxxxxx），
-// 不依赖客户端传入，避免越权/编号冲突。
-func (s *ReleaseService) generateReleaseNumber(tenantID int) string {
-	randPart := fmt.Sprintf("%06d", rand.Intn(1000000)) // #nosec G404 -- 业务编号（REL-YYYYMMDD-xxxxxx）的可读随机段，非安全令牌
-	return fmt.Sprintf("REL-%s-%s", time.Now().Format("20060102"), randPart)
 }
 
 // GetReleaseByID 根据ID获取发布

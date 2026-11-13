@@ -4,12 +4,17 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"time"
 
 	"itsm-backend/migration"
 	"itsm-backend/pkg/seeder"
 
 	"github.com/lib/pq"
 )
+
+// readinessQueryTimeout 是就绪探针的查询耗时上界。探针必须快速失败：
+// 无超时上界时 DB 高负载可让 /readyz 挂起数十分钟，编排层连续超时误判摘流。
+const readinessQueryTimeout = 5 * time.Second
 
 type initializationReadiness struct {
 	Ready                   bool   `json:"ready"`
@@ -30,6 +35,8 @@ func checkInitializationReadiness(ctx context.Context, db *sql.DB) initializatio
 		result.Reason = "database connection unavailable"
 		return result
 	}
+	ctx, cancel := context.WithTimeout(ctx, readinessQueryTimeout)
+	defer cancel()
 	if err := db.QueryRowContext(ctx, `
 		SELECT version FROM schema_migrations WHERE version = $1
 	`, result.RequiredSchemaVersion).Scan(&result.SchemaVersion); err != nil {

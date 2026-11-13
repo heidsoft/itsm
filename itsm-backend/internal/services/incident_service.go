@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"itsm-backend/common"
-	"itsm-backend/common/tenantctx"
 	"itsm-backend/database"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
@@ -59,11 +58,9 @@ type IncidentService struct {
 	priorityMatrixService *PriorityMatrixService
 	client                *ent.Client
 	logger                *zap.SugaredLogger
-	sequenceService       *SequenceService
 	processTriggerService ProcessTriggerServiceInterface
 	ruleEngine            *IncidentRuleEngine
-	rawDB                 *sql.DB // 事务内 SELECT ... FOR UPDATE 分配编号用
-	systemNumbering       *database.SystemNumberingExecutor
+	rawDB                 *sql.DB // incident_number_seq 单一号源发号用
 	workflowOutboxEnabled bool
 	rulesOutboxEnabled    bool
 	slaSvc                *TicketSLAService
@@ -133,19 +130,13 @@ func (s *IncidentService) SetProcessTriggerService(triggerService ProcessTrigger
 func (s *IncidentService) EnableWorkflowOutbox() { s.workflowOutboxEnabled = true }
 func (s *IncidentService) EnableRulesOutbox()    { s.rulesOutboxEnabled = true }
 
-// SetSequenceService 设置序列服务（用于 incident_number 生成）
 func (s *IncidentService) SetPriorityMatrixService(pms *PriorityMatrixService) {
 	s.priorityMatrixService = pms
 }
 
-func (s *IncidentService) SetSequenceService(seq *SequenceService) {
-	s.sequenceService = seq
-}
-
-// SetRawDB 设置原生数据库连接，供事务性编号分配使用
+// SetRawDB 设置原生数据库连接，供 incident_number_seq 单一号源发号使用
 func (s *IncidentService) SetRawDB(db *sql.DB) {
 	s.rawDB = db
-	s.systemNumbering = database.NewSystemNumberingExecutor(db, s.logger)
 }
 
 func (s *IncidentService) SetRuleEngine(engine *IncidentRuleEngine) {
@@ -264,7 +255,7 @@ func (s *IncidentService) createIncident(ctx context.Context, req *dto.CreateInc
 	}
 
 	// 生成事件编号
-	incidentNumber, err := s.generateIncidentNumber(ctx, tenantID)
+	incidentNumber, err := s.generateIncidentNumber(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate incident number: %w", err)
 	}
@@ -1314,92 +1305,17 @@ func (s *IncidentService) EscalateIncident(ctx context.Context, req *dto.Inciden
 	return response, nil
 }
 
-// generateIncidentNumber 生成事件编号，优先使用 Redis 序列
-//
-// incident_number 是全局唯一约束（不含 tenant_id），而 Redis 序列 key 只按年月分片、
-// 不区分租户来源，一旦某个编号已被其他写入方（含历史数据迁移、
-// 其他租户、人工补数）占用，序列返回的候选值就会与之碰撞，导致本次创建直接失败。
-// 因此这里对候选编号做全局存在性校验并向前跳号，把"必然失败"降级为"跳过占用号"。
-func (s *IncidentService) generateIncidentNumber(ctx context.Context, tenantID int) (string, error) {
+// generateIncidentNumber 与 HTTP 创建（handlers/incident）、BPMN 服务任务共用
+// incident_number_seq 单一号源（database.GenerateIncidentNumber）。
+// 云信号自动建单与邮件建单曾走独立的 Redis 序列 + 随机后缀，与 PG 序列是两套
+// 独立号源、会互撞；收敛后所有创建路径共用同一序列，禁止再引入第二套号源。
+func (s *IncidentService) generateIncidentNumber(ctx context.Context) (string, error) {
 	now := time.Now()
-	year := now.Year()
-	month := int(now.Month())
-	expiredAt := time.Date(year, time.Month(month)+1, 1, 0, 0, 0, 0, time.UTC)
-	key := fmt.Sprintf("sequence:incident:%d%02d", year, month)
-
-	// 优先使用 Redis 序列（原子递增，避免并发重复）
-	if s.sequenceService != nil {
-		// 最多跳号 maxProbe 次；超过则落到唯一后缀兜底，避免热点月份被长期占用时死循环
-		const maxProbe = 20
-		for i := 0; i < maxProbe; i++ {
-			seq, err := s.sequenceService.GetNextSequenceWithExpiry(ctx, key, expiredAt)
-			if err != nil {
-				s.logger.Warnw("Redis sequence failed for incident, fallback to DB", "error", err)
-				break
-			}
-			candidate := fmt.Sprintf("INC-%04d%02d-%06d", year, month, seq)
-
-			// 全局（跨租户）存在性校验：命中则继续取下一个序列值
-			taken, existErr := s.client.Incident.Query().
-				Where(incident.IncidentNumberEQ(candidate)).
-				Exist(ctx)
-			if existErr != nil {
-				// 校验失败不阻断创建，交由数据库唯一约束兜底
-				s.logger.Warnw("Incident number existence check failed, accepting candidate",
-					"error", existErr, "candidate", candidate)
-				return candidate, nil
-			}
-			if !taken {
-				return candidate, nil
-			}
-			s.logger.Warnw("Incident number already taken globally, probing next",
-				"candidate", candidate, "tenant_id", tenantID, "attempt", i+1)
-		}
-		s.logger.Warnw("Incident number probing exhausted, using unique suffix",
-			"tenant_id", tenantID)
-		return fmt.Sprintf("INC-%04d%02d-%s", year, month, uniqueFallbackSuffix()), nil
+	if s.rawDB != nil {
+		return database.GenerateIncidentNumber(ctx, s.rawDB, now.Year(), int(now.Month()))
 	}
-
-	// 备用方案：数据库查询
-	return s.generateIncidentNumberWithDB(ctx, tenantID, year, month)
-}
-
-// generateIncidentNumberWithDB 用数据库查询分配事件编号（备用方案）。
-// incident_number 在库中是全局唯一约束而不是按租户唯一，所以号段必须跨租户协调：
-// 各租户分别求当月最大值会算出同一编号，先建者占用全局唯一值，后者永久创建失败。
-// 这里在事务内对全表当月最大编号加锁（FOR UPDATE SKIP LOCKED）后递增，保证全局单调
-// 递增且唯一；当月无记录时用唯一后缀兜底。
-func (s *IncidentService) generateIncidentNumberWithDB(ctx context.Context, tenantID int, year, month int) (string, error) {
-	prefix := fmt.Sprintf("INC-%04d%02d-", year, month)
-
-	if s.systemNumbering != nil {
-		systemCtx := tenantctx.SystemContext(ctx, "incident:numbering", "allocate globally unique incident number")
-		candidate, err := s.systemNumbering.WithTx(systemCtx, "incident_number", func(tx *sql.Tx) (string, error) {
-			// 不加租户过滤：incident_number 全局唯一，必须跨租户协调最大号
-			query := `SELECT incident_number FROM incidents WHERE incident_number LIKE $1 AND incident_number IS NOT NULL AND incident_number != '' ORDER BY incident_number DESC LIMIT 1 FOR UPDATE SKIP LOCKED`
-			var maxNum string
-			scanErr := tx.QueryRowContext(systemCtx, query, prefix+"%").Scan(&maxNum)
-			if scanErr == nil {
-				seq := 0
-				if idx := strings.LastIndex(maxNum, "-"); idx >= 0 {
-					fmt.Sscanf(maxNum[idx+1:], "%d", &seq)
-				}
-				return fmt.Sprintf("INC-%04d%02d-%06d", year, month, seq+1), nil
-			}
-			if scanErr == sql.ErrNoRows {
-				// 全表当月无记录：用唯一后缀避免两租户同时落到 000001 而碰撞
-				return fmt.Sprintf("INC-%04d%02d-%s", year, month, uniqueFallbackSuffix()), nil
-			}
-			return "", scanErr
-		})
-		if err == nil {
-			return candidate, nil
-		}
-		s.logger.Warnw("Incident number system transaction failed, using random fallback", "error", err)
-	}
-
-	// 最终兜底（无 rawDB 或事务异常）：唯一后缀保证全局唯一约束不被打破
-	return fmt.Sprintf("INC-%04d%02d-%s", year, month, uniqueFallbackSuffix()), nil
+	// 测试夹具未注入 rawDB：唯一后缀兜底，保持全局唯一约束不被打破
+	return fmt.Sprintf("INC-%04d%02d-%s", now.Year(), int(now.Month()), uniqueFallbackSuffix()), nil
 }
 
 func (s *IncidentService) executeIncidentRules(ctx context.Context, incidentID int, tenantID int) {
