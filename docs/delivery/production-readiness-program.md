@@ -23,9 +23,17 @@ The repository already has a good skeleton:
 - health checks, Prometheus endpoint, Grafana provisioning
 - test case documentation for major domains
 
-The main gap is enforcement and execution discipline:
+The main gap is execution discipline and scorecard wiring. CI enforcement itself
+is now strict (the earlier "soft-fail" baseline claim is superseded):
 
-- CI contains `|| true` in backend lint/build/test stages, so failures can pass
+- Backend CI quality gates do NOT soft-fail (verified 2026-11-08 against
+  `.github/workflows/`): Build runs `go build -o itsm ./main.go`
+  (`backend-ci.yml:227`), Test runs `go test $TESTABLE_PKGS`
+  (`backend-ci.yml:293`), Lint runs staticcheck (`backend-ci.yml:136`) — none
+  wrapped in `|| true`. The remaining `|| true` hits are a documented cache
+  warm-up (`backend-ci.yml:114-115`; the real Build job surfaces any compile
+  error), docker cleanup, best-effort artifact copies, and grep filters used to
+  classify errors — not lint/build/test gates.
 - production readiness criteria are not encoded as release gates
 - there is no single execution board for multi-agent parallel work
 - domain completion is documented, but not tied to a release scorecard
@@ -170,7 +178,7 @@ Use one orchestrator and up to five workers. Avoid more unless file ownership is
 | Agent | Focus | Typical Files |
 | --- | --- | --- |
 | Orchestrator | sequencing, merge policy, scorecard, release decision | `docs/delivery/**`, `.orchestration/**`, `.github/workflows/**` |
-| Agent A | backend reliability | `itsm-backend/service/**`, `itsm-backend/controller/**`, backend tests |
+| Agent A | backend reliability | `itsm-backend/service/**`, `itsm-backend/handlers/**`, backend tests |
 | Agent B | frontend stability | `itsm-frontend/src/**`, frontend tests |
 | Agent C | release engineering | `.github/workflows/**`, `Makefile`, `scripts/**`, compose files |
 | Agent D | security and tenancy | auth, middleware, RBAC, tenant tests, config |
@@ -186,7 +194,9 @@ Use one orchestrator and up to five workers. Avoid more unless file ownership is
 
 ## First 5 Backlog Items
 
-1. Remove backend CI `|| true` soft-fail behavior and make failures visible.
+1. ~~Remove backend CI `|| true` soft-fail behavior and make failures visible.~~
+   Done / superseded (verified 2026-11-08): the enforced Build/Test/Lint gates
+   already fail hard; see Current Baseline. No soft-fail removal remains.
 2. Run a backend failure inventory and classify by flaky, real bug, or environment issue.
 3. Build a frontend route smoke matrix from existing test-case docs.
 4. Create a production scorecard tied to deploy, rollback, and monitoring checks.

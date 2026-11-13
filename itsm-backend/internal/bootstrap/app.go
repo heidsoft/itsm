@@ -356,6 +356,8 @@ func NewApplication() *Application {
 
 	// 2. 初始化日志系统
 	logger := initLogger(&cfg.Log)
+	// zap.S() 全局日志器默认 no-op；auth/rbac/tenant 等安全拒绝路径直接用 zap.S()，必须接线才落盘。
+	zap.ReplaceGlobals(logger)
 	sugar := logger.Sugar()
 	middleware.SetLogger(sugar)
 	LogDefaultCredentialRisks(

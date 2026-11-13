@@ -450,7 +450,6 @@ func (s *ProblemInvestigationService) GetProblemInvestigationSummary(ctx context
 		Steps:             []*dto.InvestigationStepResponse{},
 		Solutions:         []*dto.ProblemSolutionResponse{},
 		Implementations:   []*dto.SolutionImplementationResponse{},
-		Relationships:     []*dto.ProblemRelationshipResponse{},
 		KnowledgeArticles: []*dto.ProblemKnowledgeArticleResponse{},
 	}
 

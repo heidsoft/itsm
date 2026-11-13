@@ -129,24 +129,6 @@ describe('ProblemInvestigationAPI', () => {
     });
   });
 
-  describe('getRelationships', () => {
-    it('should get relationships', async () => {
-      mockGet.mockResolvedValue({ items: [{ id: 1 }] });
-      const result = await ProblemInvestigationAPI.getRelationships(1);
-      expect(mockGet).toHaveBeenCalledWith('/api/v1/problems/1/relationships');
-      expect(result).toHaveLength(1);
-    });
-  });
-
-  describe('createRelationship', () => {
-    it('should create relationship', async () => {
-      const data = { problemId: 1, relatedType: 'ticket', relatedId: 5, relationshipType: 'caused_by' };
-      mockPost.mockResolvedValue(data);
-      await ProblemInvestigationAPI.createRelationship(data);
-      expect(mockPost).toHaveBeenCalledWith('/api/v1/problem-relationships', data);
-    });
-  });
-
   describe('createKnowledgeArticle', () => {
     it('should create knowledge article', async () => {
       const data = { problemId: 1, articleTitle: 'How to fix', articleContent: 'Steps', articleType: 'solution' };

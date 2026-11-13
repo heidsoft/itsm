@@ -130,18 +130,6 @@ export interface SolutionImplementation {
   updatedAt: string;
 }
 
-// 问题关联
-export interface ProblemRelationship {
-  id: number;
-  problemId: number;
-  relatedType: string; // 'ticket' | 'change' | 'incident'
-  relatedId: number;
-  relatedTitle?: string;
-  relationshipType: string;
-  description?: string;
-  createdAt: string;
-}
-
 // 问题知识库文章
 export interface ProblemKnowledgeArticle {
   id: number;
@@ -191,11 +179,6 @@ interface SolutionsResponse {
   items: ProblemSolution[];
 }
 
-interface RelationshipsResponse {
-  problemId: number;
-  items: ProblemRelationship[];
-}
-
 interface KnowledgeArticleMutationResponse {
   message: string;
   articleId: number;
@@ -209,7 +192,6 @@ export interface ProblemInvestigationSummary {
   rootCauseAnalysis?: RootCauseAnalysis;
   solutions: ProblemSolution[];
   implementations: SolutionImplementation[];
-  relationships: ProblemRelationship[];
   knowledgeArticles: ProblemKnowledgeArticle[];
 }
 
@@ -400,25 +382,6 @@ export const ProblemInvestigationAPI = {
       data
     );
     return response.solution;
-  },
-
-  // 获取关联列表
-  async getRelationships(problemId: number): Promise<ProblemRelationship[]> {
-    const response = await httpClient.get<RelationshipsResponse>(
-      `/api/v1/problems/${problemId}/relationships`
-    );
-    return response.items || [];
-  },
-
-  // 创建关联
-  async createRelationship(data: {
-    problemId: number;
-    relatedType: string;
-    relatedId: number;
-    relationshipType: string;
-    description?: string;
-  }): Promise<ProblemRelationship> {
-    return httpClient.post('/api/v1/problem-relationships', data);
   },
 
   // 创建知识库文章

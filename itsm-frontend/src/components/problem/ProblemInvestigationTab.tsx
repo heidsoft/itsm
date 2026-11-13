@@ -24,7 +24,7 @@ import {
   Alert,
   Empty,
 } from 'antd';
-import { Plus, FileText, ClipboardCheck, FlaskConical, CheckCircle, BookOpen, Link } from 'lucide-react';
+import { Plus, FileText, ClipboardCheck, FlaskConical, CheckCircle, BookOpen } from 'lucide-react';
 import dayjs from 'dayjs';
 import { useParams } from 'next/navigation';
 
@@ -158,7 +158,6 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
               steps: data.steps ?? [],
               solutions: data.solutions ?? [],
               implementations: data.implementations ?? [],
-              relationships: data.relationships ?? [],
               knowledgeArticles: data.knowledgeArticles ?? [],
             }
           : null
@@ -751,62 +750,6 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
           ) : (
             <Empty
               description={t('problemInvestigation.knowledge.empty')}
-              image={Empty.PRESENTED_IMAGE_SIMPLE}
-            />
-          )}
-        </Card>
-      ),
-    },
-    {
-      key: 'relationships',
-      label: (
-        <span>
-          <Link /> {t('problemInvestigation.tabs.relationships', { count: summary?.relationships.length || 0 })}
-        </span>
-      ),
-      children: (
-        <Card title={t('problemInvestigation.relationships.title')}>
-          {summary?.relationships && summary.relationships.length > 0 ? (
-            <Table
-              columns={[
-                {
-                  title: t('problemInvestigation.columns.relatedType'),
-                  dataIndex: 'relatedType',
-                  key: 'relatedType',
-                  render: (type: string) => {
-                    const colors: Record<string, string> = {
-                      ticket: 'blue',
-                      change: 'purple',
-                      incident: 'red',
-                    };
-                    const labels: Record<string, string> = {
-                      ticket: t('problemInvestigation.relatedTypeLabels.ticket'),
-                      change: t('problemInvestigation.relatedTypeLabels.change'),
-                      incident: t('problemInvestigation.relatedTypeLabels.incident'),
-                    };
-                    return <Tag color={colors[type]}>{labels[type] || type}</Tag>;
-                  },
-                },
-                { title: t('problemInvestigation.columns.title'), dataIndex: 'relatedTitle', key: 'relatedTitle' },
-                {
-                  title: t('problemInvestigation.columns.relationshipType'),
-                  dataIndex: 'relationshipType',
-                  key: 'relationshipType',
-                },
-                {
-                  title: t('problemInvestigation.columns.description'),
-                  dataIndex: 'description',
-                  key: 'description',
-                  ellipsis: true,
-                },
-              ]}
-              dataSource={summary.relationships}
-              rowKey="id"
-              pagination={false}
-            />
-          ) : (
-            <Empty
-              description={t('problemInvestigation.relationships.empty')}
               image={Empty.PRESENTED_IMAGE_SIMPLE}
             />
           )}

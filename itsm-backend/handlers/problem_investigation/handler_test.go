@@ -89,8 +89,6 @@ func setupTestHandlerWithService(t *testing.T) (*gin.Engine, *ent.Client, *servi
 	r.PUT("/api/v1/problem-investigation/solutions/:id", h.UpdateProblemSolution)
 	r.GET("/api/v1/problem-investigation/problems/:id/solutions", h.GetProblemSolutions)
 	r.GET("/api/v1/problem-investigation/problems/:id/summary", h.GetProblemInvestigationSummary)
-	r.POST("/api/v1/problem-relationships", h.CreateProblemRelationship)
-	r.GET("/api/v1/problems/:id/relationships", h.GetProblemRelationships)
 	r.POST("/api/v1/problem-knowledge-articles", h.CreateKnowledgeArticle)
 
 	return r, client, invService
@@ -173,56 +171,6 @@ func TestHandler_UpdateProblemInvestigation_InvalidID(t *testing.T) {
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 	assert.Equal(t, http.StatusBadRequest, w.Code)
-}
-
-func TestHandler_CreateProblemRelationship_StubContract(t *testing.T) {
-	r := setupTestHandler(t)
-
-	body := []byte(`{"problemId":1,"relatedType":"incident","relatedId":5,"relationshipType":"caused_by"}`)
-	req, err := http.NewRequest("POST", "/api/v1/problem-relationships", bytes.NewReader(body))
-	require.NoError(t, err)
-	req.Header.Set("Content-Type", "application/json")
-
-	w := httptest.NewRecorder()
-	r.ServeHTTP(w, req)
-	assert.Equal(t, http.StatusOK, w.Code, "body=%s", w.Body.String())
-
-	var resp struct {
-		Code int `json:"code"`
-		Data struct {
-			Message     string `json:"message"`
-			ProblemID   int    `json:"problemId"`
-			RelatedType string `json:"relatedType"`
-			RelatedID   int    `json:"relatedId"`
-		} `json:"data"`
-	}
-	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
-	assert.Equal(t, 0, resp.Code)
-	assert.Equal(t, 1, resp.Data.ProblemID)
-	assert.Equal(t, "incident", resp.Data.RelatedType)
-	assert.Equal(t, 5, resp.Data.RelatedID)
-}
-
-func TestHandler_GetProblemRelationships_EmptyList(t *testing.T) {
-	r := setupTestHandler(t)
-
-	req, err := http.NewRequest("GET", "/api/v1/problems/1/relationships", nil)
-	require.NoError(t, err)
-
-	w := httptest.NewRecorder()
-	r.ServeHTTP(w, req)
-	assert.Equal(t, http.StatusOK, w.Code)
-
-	var resp struct {
-		Code int `json:"code"`
-		Data struct {
-			ProblemID     int           `json:"problemId"`
-			Relationships []interface{} `json:"relationships"`
-		} `json:"data"`
-	}
-	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
-	assert.Equal(t, 0, resp.Code)
-	assert.Empty(t, resp.Data.Relationships)
 }
 
 func TestHandler_CreateKnowledgeArticle(t *testing.T) {

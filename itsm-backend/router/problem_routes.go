@@ -34,7 +34,5 @@ func SetupProblemRoutes(tenant *gin.RouterGroup, h *problemHandler.Handler) {
 		problems.GET("/:id/associations", middleware.RequirePermission("problem", "read"), h.GetAssociations)
 		problems.POST("/:id/associations", middleware.RequirePermission("problem", "write"), h.AddAssociation)
 		problems.DELETE("/:id/associations", middleware.RequirePermission("problem", "write"), h.RemoveAssociation)
-		// 问题调查关联列表（前端契约：GET /api/v1/problems/:id/relationships）
-		// 注意：ProblemInvestigationHandler 在调用处通过 config 访问，需在 router.go 中保持该逻辑
 	}
 }

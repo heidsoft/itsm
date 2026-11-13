@@ -28,7 +28,7 @@ import (
 // Scenario 7: 连接器端到端（Feishu/DingTalk/WeCom 签名验证 + Manager 生命周期 + Router 去重）
 //
 // 覆盖：
-//   - 飞书 HMAC-SHA256 事件签名校验（合法/非法/空参数）
+//   - 飞书官方 concat-SHA256 事件签名校验（合法/非法/空参数/拒绝旧 HMAC 形式）
 //   - 钉钉 Stream 签名校验（合法/非法/5 分钟窗口/缺头拒绝）
 //   - 企微 SHA1 签名校验（合法/非法/排序拼接）
 //   - Manager Provision / Send / Revoke 生命周期
@@ -37,7 +37,7 @@ import (
 func TestScenario7_ConnectorE2E(t *testing.T) {
 	ctx := context.Background()
 
-	t.Run("feishu HMAC-SHA256 event signature", func(t *testing.T) {
+	t.Run("feishu official concat-SHA256 event signature", func(t *testing.T) {
 		encryptKey := "test-encrypt-key-12345"
 		client := feishu.NewClient("", "app_id", "app_secret", "verify_token", encryptKey)
 
@@ -45,14 +45,26 @@ func TestScenario7_ConnectorE2E(t *testing.T) {
 		nonce := "test-nonce"
 		body := []byte(`{"type":"event_callback"}`)
 
+		// 官方算法（larksuite/oapi-sdk-go event.Signature）：裸 SHA256 拼接
+		// timestamp + nonce + encrypt_key + body，不是 HMAC。
+		h := sha256.New()
+		h.Write([]byte(ts))
+		h.Write([]byte(nonce))
+		h.Write([]byte(encryptKey))
+		h.Write(body)
+		validSig := hex.EncodeToString(h.Sum(nil))
+
+		if !client.VerifyEventSignature(ts, nonce, validSig, body) {
+			t.Fatal("合法签名应通过校验")
+		}
+
+		// 旧 HMAC 形式必须拒绝：同一时刻只有一套算法能通过
 		mac := hmac.New(sha256.New, []byte(encryptKey))
 		mac.Write([]byte(ts))
 		mac.Write([]byte(nonce))
 		mac.Write(body)
-		validSig := hex.EncodeToString(mac.Sum(nil))
-
-		if !client.VerifyEventSignature(ts, nonce, validSig, body) {
-			t.Fatal("合法签名应通过校验")
+		if client.VerifyEventSignature(ts, nonce, hex.EncodeToString(mac.Sum(nil)), body) {
+			t.Fatal("HMAC 形式的签名不得通过官方算法校验")
 		}
 
 		if client.VerifyEventSignature(ts, nonce, "invalid-signature", body) {
@@ -69,11 +81,8 @@ func TestScenario7_ConnectorE2E(t *testing.T) {
 			t.Fatal("空 signature 应被拒绝")
 		}
 
-		wrongMac := hmac.New(sha256.New, []byte("wrong-key"))
-		wrongMac.Write([]byte(ts))
-		wrongMac.Write([]byte(nonce))
-		wrongMac.Write(body)
-		wrongSig := hex.EncodeToString(wrongMac.Sum(nil))
+		wrongHash := sha256.Sum256([]byte(ts + nonce + "wrong-key" + string(body)))
+		wrongSig := hex.EncodeToString(wrongHash[:])
 		if client.VerifyEventSignature(ts, nonce, wrongSig, body) {
 			t.Fatal("错误密钥生成的签名应被拒绝")
 		}

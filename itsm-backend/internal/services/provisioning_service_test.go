@@ -53,6 +53,7 @@ func TestCreateTaskFromServiceRequestEnqueuesExecuteCommandAtomically(t *testing
 	catalog, err := client.ServiceCatalog.Create().
 		SetTenantID(tenantID).
 		SetName("provisioning").
+		SetServiceType("vm").
 		SetStatus("enabled").
 		Save(ctx)
 	require.NoError(t, err)
@@ -94,6 +95,7 @@ func TestCreateTaskFromServiceRequestRejectsNonApprovedState(t *testing.T) {
 	catalog, err := client.ServiceCatalog.Create().
 		SetTenantID(tenantID).
 		SetName("provisioning").
+		SetServiceType("vm").
 		SetStatus("enabled").
 		Save(ctx)
 	require.NoError(t, err)
@@ -129,6 +131,7 @@ func TestCreateTaskFromServiceRequestRejectsSecondProvisioning(t *testing.T) {
 	catalog, err := client.ServiceCatalog.Create().
 		SetTenantID(tenantID).
 		SetName("provisioning").
+		SetServiceType("vm").
 		SetStatus("enabled").
 		Save(ctx)
 	require.NoError(t, err)

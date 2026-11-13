@@ -4820,7 +4820,6 @@ export const translations = {
         rootCause: '根因分析',
         solutions: '解决方案 ({count})',
         knowledge: '知识沉淀 ({count})',
-        relationships: '关联 ({count})',
       },
       statusLabels: {
         notStarted: '未开始',
@@ -4873,11 +4872,6 @@ export const translations = {
         implemented: '已实施',
         rejected: '已拒绝',
       },
-      relatedTypeLabels: {
-        ticket: '工单',
-        change: '变更',
-        incident: '事件',
-      },
       knowledgeArticleStatus: {
         published: '已发布',
         draft: '草稿',
@@ -4909,9 +4903,6 @@ export const translations = {
         tags: '标签',
         viewCount: '阅读量',
         createdAt: '创建时间',
-        relatedType: '类型',
-        title: '标题',
-        relationshipType: '关联类型',
       },
       messages: {
         complete: '完成',
@@ -4973,10 +4964,6 @@ export const translations = {
         title: '知识库文章',
         depositToKb: '沉淀到知识库',
         empty: '暂无知识库文章',
-      },
-      relationships: {
-        title: '关联的工单/变更',
-        empty: '暂无关联记录',
       },
       modals: {
         addStepTitle: '添加调查步骤',
@@ -9874,7 +9861,6 @@ export const translations = {
         rootCause: 'Root Cause Analysis',
         solutions: 'Solutions ({count})',
         knowledge: 'Knowledge Articles ({count})',
-        relationships: 'Relationships ({count})',
       },
       statusLabels: {
         notStarted: 'Not Started',
@@ -9927,11 +9913,6 @@ export const translations = {
         implemented: 'Implemented',
         rejected: 'Rejected',
       },
-      relatedTypeLabels: {
-        ticket: 'Ticket',
-        change: 'Change',
-        incident: 'Incident',
-      },
       knowledgeArticleStatus: {
         published: 'Published',
         draft: 'Draft',
@@ -9963,9 +9944,6 @@ export const translations = {
         tags: 'Tags',
         viewCount: 'Views',
         createdAt: 'Created At',
-        relatedType: 'Type',
-        title: 'Title',
-        relationshipType: 'Relationship Type',
       },
       messages: {
         complete: 'Complete',
@@ -10027,10 +10005,6 @@ export const translations = {
         title: 'Knowledge Articles',
         depositToKb: 'Save to Knowledge Base',
         empty: 'No knowledge articles yet',
-      },
-      relationships: {
-        title: 'Linked Tickets/Changes',
-        empty: 'No relationship records',
       },
       modals: {
         addStepTitle: 'Add Investigation Step',

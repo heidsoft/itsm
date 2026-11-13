@@ -392,56 +392,6 @@ func (h *Handler) GetInvestigationSteps(c *gin.Context) {
 	})
 }
 
-// CreateProblemRelationship 创建问题关联
-func (h *Handler) CreateProblemRelationship(c *gin.Context) {
-	var req dto.CreateProblemRelationshipRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
-		return
-	}
-
-	tid, ok := tenantID(c)
-	if !ok {
-		return
-	}
-
-	// 创建问题关联记录（沿用旧实现的简化处理：记录日志即返回成功，
-	// 未落库是迁移前既有行为，保持不变）
-	h.logger.Info("Creating problem relationship",
-		"problem_id", req.ProblemID,
-		"related_type", req.RelatedType,
-		"related_id", req.RelatedID,
-		"tenant_id", tid)
-
-	common.Success(c, gin.H{
-		"message":     "问题关联创建成功",
-		"problemId":   req.ProblemID,
-		"relatedType": req.RelatedType,
-		"relatedId":   req.RelatedID,
-	})
-}
-
-// GetProblemRelationships 获取问题关联列表
-func (h *Handler) GetProblemRelationships(c *gin.Context) {
-	problemID, ok := pathID(c, "id", "问题")
-	if !ok {
-		return
-	}
-
-	tid, ok := tenantID(c)
-	if !ok {
-		return
-	}
-
-	// 沿用旧实现的简化处理：返回空列表（迁移前既有行为，保持不变）
-	h.logger.Info("Getting problem relationships", "problem_id", problemID, "tenant_id", tid)
-
-	common.Success(c, gin.H{
-		"problemId": problemID,
-		"items":     []interface{}{},
-	})
-}
-
 // CreateKnowledgeArticle 创建知识库文章
 func (h *Handler) CreateKnowledgeArticle(c *gin.Context) {
 	var req dto.CreateProblemKnowledgeArticleRequest

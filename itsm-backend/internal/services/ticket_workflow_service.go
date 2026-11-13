@@ -1014,9 +1014,13 @@ func (s *TicketWorkflowService) CloseTicket(ctx context.Context, req *dto.CloseT
 		return txErr
 	}
 
-	// 关闭动作同事务推进最后一个作业待办，让流程实例随工单一同进入终态。
-	if err := advanceTicketWorkflowTx(ctx, txClient, s.logger, tenantID, userID,
-		req.TicketID, string(dto.WorkflowActionClose), req.CloseNotes, "closed"); err != nil {
+	// 关闭是业务终态，必须在同一事务内终止关联流程实例并取消其遗留待办。
+	// 旧实现只「完成一个作业待办」，引擎随即沿网关继续 createUserTask
+	// （内置 ticket_general_flow 的「升级处理」还是回环），造成
+	// 「工单已关闭、实例仍 running、待办常驻」的 F1 分叉；仅改列表查询
+	// 只会把待办藏起来，残留任务被完成后仍会复活。
+	if err := terminateTicketWorkflowTx(ctx, txClient, s.logger, tenantID, userID,
+		req.TicketID, req.CloseNotes); err != nil {
 		txErr = err
 		return txErr
 	}
@@ -2109,6 +2113,88 @@ func advanceTicketWorkflowTx(
 	logger.Infow("工单生命周期动作已同事务推进BPMN待办",
 		"ticket_id", ticketID, "tenant_id", tenantID, "action", action,
 		"task_id", task.TaskID, "actor_user_id", actorUserID)
+	return nil
+}
+
+// terminateTicketWorkflowTx 在调用方事务内终止工单关联的运行中/暂停流程实例，
+// 并把该实例所有未完成任务置为 cancelled。
+//
+// 与 BPMNApprovalBridge.TerminateBusinessWorkflow 的区别：后者用 b.client
+// 自建连接，还会操作 timer 调度器与 BPMN 审计（非事务资源）；这里只做 DB 侧
+// 的原子收口，保证「工单状态」与「流程状态」永远同生共死。
+//
+// 三态：
+//   - 无运行中实例 → nil（幂等，兼容未绑定流程的存量工单）；
+//   - 存在未完成的审批节点待办 → 409 fail-closed，绝不代签或绕过职责分离；
+//   - 其余 → 终止实例 + 取消遗留待办；失败原样上抛，外层事务整体回滚。
+func terminateTicketWorkflowTx(
+	ctx context.Context,
+	txc *ent.Client,
+	logger *zap.SugaredLogger,
+	tenantID, actorUserID, ticketID int,
+	reason string,
+) error {
+	if txc == nil || tenantID <= 0 || ticketID <= 0 {
+		return nil
+	}
+	businessKey := fmt.Sprintf("%s:%d", string(dto.BusinessTypeTicket), ticketID)
+	instances, err := txc.ProcessInstance.Query().
+		Where(
+			processinstance.BusinessKey(businessKey),
+			processinstance.TenantID(tenantID),
+			processinstance.StatusIn("running", "suspended"),
+		).
+		All(ctx)
+	if err != nil {
+		return fmt.Errorf("查询工单关联流程实例失败: %w", err)
+	}
+	if len(instances) == 0 {
+		return nil
+	}
+
+	now := time.Now()
+	for _, instance := range instances {
+		pendingTasks, err := txc.ProcessTask.Query().
+			Where(
+				processtask.ProcessInstanceID(instance.ID),
+				processtask.TenantID(tenantID),
+				processtask.StatusNEQ("completed"),
+				processtask.StatusNEQ("cancelled"),
+			).
+			All(ctx)
+		if err != nil {
+			return fmt.Errorf("查询工单流程遗留待办失败: %w", err)
+		}
+		// 关闭动作不能顺手取消审批签名：那等于业务侧绕过审批人作废在途审批。
+		// 与 advanceTicketWorkflowTx 的审批保护保持同一口径。
+		for _, task := range pendingTasks {
+			if ticketWorkflowApprovalNode(task) {
+				return common.NewBusinessError(common.ConflictCode,
+					"流程当前停在审批节点，请先完成流程审批后再关闭工单",
+					fmt.Sprintf("ticketId=%d taskId=%s", ticketID, task.TaskID))
+			}
+		}
+
+		if _, err := txc.ProcessInstance.UpdateOneID(instance.ID).
+			SetStatus("terminated").SetEndTime(now).Save(ctx); err != nil {
+			return fmt.Errorf("终止工单流程实例失败: %w", err)
+		}
+		if _, err := txc.ProcessTask.Update().
+			Where(
+				processtask.ProcessInstanceID(instance.ID),
+				processtask.TenantID(tenantID),
+				processtask.StatusNEQ("completed"),
+				processtask.StatusNEQ("cancelled"),
+			).
+			SetStatus("cancelled").SetCompletedTime(now).Save(ctx); err != nil {
+			return fmt.Errorf("取消工单流程遗留待办失败: %w", err)
+		}
+		logger.Infow("关闭工单已同事务终止BPMN流程实例",
+			"ticket_id", ticketID, "tenant_id", tenantID,
+			"process_instance_id", instance.ProcessInstanceID,
+			"cancelled_tasks", len(pendingTasks), "actor_user_id", actorUserID,
+			"reason", strings.TrimSpace(reason))
+	}
 	return nil
 }
 

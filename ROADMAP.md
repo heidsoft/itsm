@@ -1,7 +1,7 @@
 # 🛣️ ITSM Roadmap
 
 > **Source of truth for what is shipping, what is shipping next, and
-> what is parked.** Updated as part of every release. Last synced: 2026-11-03（应用市场交付语义闭环并晋升「可用」，条目见下方「当前未发布改进」；能力矩阵 `marketplace` 行同步摘除 pilotReason）。此前 2026-10-29：v1.6.16–v1.6.20 五版本条目级回填完成——此前该区间只有 CHANGELOG 无 ROADMAP 条目；v1.6.21–v1.6.34 的增量以 `CHANGELOG.md` 为准，待下个发布节点统一回填。同日：v1.7 两项提前收口确认——AI Evaluator CI gate（v1.6.16 落地，四指标阈值已进 backend-ci）与 Skill Registry UI（v1.6.16 落地）。P0 数据库结构护栏迁移 `20261027_prod_schema_guards.sql` 落地 29 索引/唯一键）。
+> what is parked.** Updated as part of every release. Last synced: 2026-11-08（事实漂移修正：「当前未发布改进」同步至 CHANGELOG [Unreleased] 最新口径；「当前收敛项」过期「剩余」改写为真实阻断；v1.7 两项提前收口在正文勾选。service/ 迁移收口条目仍待团队评审，本批不登记）。上次同步 2026-11-03：应用市场交付语义闭环并晋升「可用」，能力矩阵 `marketplace` 行同步摘除 pilotReason。此前 2026-10-29：v1.6.16–v1.6.20 五版本条目级回填完成——此前该区间只有 CHANGELOG 无 ROADMAP 条目；v1.6.21–v1.6.34 的增量以 `CHANGELOG.md` 为准，待下个发布节点统一回填。同日：v1.7 两项提前收口确认——AI Evaluator CI gate（v1.6.16 落地，四指标阈值已进 backend-ci）与 Skill Registry UI（v1.6.16 落地）。P0 数据库结构护栏迁移 `20261027_prod_schema_guards.sql` 落地 29 索引/唯一键）。
 >
 > Cross-references:
 > - Design outlines: [docs/prd/](./docs/prd)（当前仅 1 篇）+ [plans/](./plans)（专项计划与审计）
@@ -9,7 +9,7 @@
 > - Architecture: [docs/architecture/](./docs/architecture)
 > - Open issues & milestones: GitHub [Issues](https://github.com/heidsoft/itsm/issues) and [Projects](https://github.com/heidsoft/itsm/projects)
 
-### 当前未发布改进（2026-11-03）
+### 当前未发布改进（2026-11-08 同步）
 
 - 应用市场：交付语义补齐后晋升「可用」。技能与连接器是可交付类型——技能安装按版本行 `skill://<技能码>` 激活本进程技能运行时，定位符缺失或运行时不可用即置 `failed` 并列出可用技能码，不再返回虚假安装成功；`POST /marketplace/items/:id/upgrade` 承担升级与回滚（目标版本可点名、更旧即回滚、按目标版本复核依赖、运行态起不来保持原版本并 `409`）；`PATCH /items/:id/auto-upgrade` 是 `*bool` 显式开关并落审计，由 worker 每 15 分钟的 `RunAutoUpgradePass` 真正执行；`GET /marketplace/dependency-status` 逐条复核存量安装前置，缺版本声明的存量商品单列 `declaration_missing` 而不并入健康。目录写入与上架拒绝 plugin（平台无宿主运行时，安装/升级 `501`），历史 `jira-sync-plugin` 种子行置 `deprecated` 以保留安装记录与审计引用；路由回归覆盖租户、权限与状态码，装配回归锁死后台升级 pass 的执行者来源。制品分发（下载、签名、沙箱执行）仍属 v3.0 Plugin marketplace v2，不在本承诺内。
 - AI 评测：摘要评分改为调用候选生成器，空摘要、无关摘要和混合质量输出均有回归测试；仍是离线评测基础，不作为生产模型验收。
@@ -22,6 +22,13 @@
 - 用户管理：删除与停用语义分离——删除写 `deleted_at` 软删并统一屏蔽读路径（列表/搜索/关联查询/登录），不可再被"启用"复活；停用保持原语义（可见可启用）。存量 `active=false` 数据按停用对待，不回填。
 - CLI 工程：`bin/itsm.js` 构建陈旧守卫——src 比 dist 新时以 exit 70 拒绝执行并给出修复指令，消除「改 src 忘 build 静默跑旧编译产物」对 agent 判定的误导；dist 继续跟踪（fresh clone 直接可跑的政策不变）。
 - 上述连接器与身份能力仍为预览：入站解密/验签/去重已可用，但「消息→工单」业务派发、真实交付机制和生产候选评测尚未完成。
+- 工作流与工单主链路（2026-11-08）：ServiceTask 副作用与流程完成收进同一事务（完成凭据缺失即重放且幂等键不变），内置补偿模板 + 管理面 dry-run/apply 触发，存量待办迁移默认 dry-run；工单 accept/assign/resolve/close 与 BPMN 待办同事务推进，问题域创建同事务起流。跨租户跨业务域实例级 E2E 与验收证据脚本齐备，但真实租户跨域联调的人工签字仍未执行（签字栏留空，不得由脚本或 AI 代签），workflow 维持预览。
+- SLA、定时器与自动化（2026-11-08）：SLA 暂停/恢复事务化且恢复延长权威 deadline（消除恢复即再违规死循环）；委托/加签不得复活终态任务；Timer 崩溃滞留自动重驱、重试耗尽进死信指标并有人工重放入口；版本激活/回滚同步 start timer；自动化 set_status 走权威状态机闸门并留审计、assign 校验同租户活跃用户。
+- 云发现与报表（2026-11-07）：发现按 (source, serviceCode, region) 落覆盖水位线——中断断点续扫、同窗口补采不误退役、翻页封窗才做缺失扫描、连续失败自动重置；增量体现在覆盖进度推进，不是「只拉变化」。管理者统一视图补问题/变更统计块并接通前端消费，域未装配时显式「未接入」而不是全零冒充。
+- 连接器与事件（2026-11-07）：飞书验签改官方拼接 SHA256（旧 HMAC 实现会拒绝全部真实回调）并支持 Encrypt Key AES 加密回调；BPMN 自动建事件收敛单一发号器（此前必失败），事件根因分析 Tab 接通权威契约；WS 通知推送真正接线（事务提交后单播、幂等不重推）；CMDB 异步导出补下载通道（租户/操作人/完成/过期四重校验）且截断显式告警。
+- 前端体验（2026-11-07/08）：70 个路由页首屏假空态与统计假 0 消除（listLoading/actionLoading 拆分、统计卡门控）；流程设计器节点搜索（Ctrl/Cmd+F）与只读流程图预览接入详情/版本/模板页。
+- CLI 与 MCP（2026-11-04/05）：marketplace 租户面 10 条命令接入，infra.api DELETE 统一确认门（dry-run/MCP preview 与执行同源）；MCP 精选只读工具补全至 32（每主域至少 list+get），tools/list 不再泄漏内部字段；TUI 改路由注册表 + 通用兜底，与 agent 命令注册表同源。
+- 部署验收（2026-11-09）：prod 三镜像全新重建（v1.6.48）并从零部署验收——黑盒 81 PASS / 3 WARN / 0 FAIL，工作流 accept→resolve→close 全绿；git tag 账本停在 v1.6.37 属既有漂移，待团队补打 tag 或修订守卫口径。
 
 ---
 
@@ -148,23 +155,23 @@ Concretely that means:
 > 2026-09-12 复核：以下各项均按“已完成部分 / 剩余缺口”标注，避免把部分进展误读为闭环。
 
 - [x] **业务旅程 E2E** — 固化 TicketType 安装与绑定、工单创建、Workflow 实例/任务/历史、SLA、Assignment、审计的完整断言。（2026-10-27 收口：两层固化已齐——① `tests/scenarios` 十个业务旅程回归（工单生命周期/事件-问题-知识链/变更审批链/CMDB 影响分析/SLA 违规/租户隔离/连接器 E2E/AI 分诊基线/outbox 重试死信/服务目录全环）共 87 个子测试，在 backend-ci 的 `TESTABLE_PKGS`（`go list ./...` 全量，仅排 migrations）里每次 push 常驻；② ga-gate 在真实 compose 栈上跑 API 冒烟 + TicketType HTTP-worker 全链路 Playwright E2E（`playwright.ticket-type.config.ts`）。fresh-install-gate 每日从空卷证明全新安装链路。）
-  - 已完成：服务层 TicketType 安装到审计六环节全链路断言；工作流节点 e2e spec 入库。
-  - 剩余：跨服务 E2E 固化与 CI 常驻。
+  - 已完成：服务层 TicketType 安装到审计六环节全链路断言；工作流节点 e2e spec 入库；跨服务 E2E 固化与 CI 常驻（见收口注记）。
+  - 剩余：真实租户跨域联调的人工验收签字（`docs/acceptance/workflow-cross-domain-signoff.md` 签字栏为空，不得由脚本或 AI 代签）。
 - [x] **可靠执行统一** — 将剩余 ITIL 域从非可靠触发路径迁移到 command/outbox，并提供积压、重放和死信运维。（2026-10-27 代码清点收口：六个 ITIL 域的流程启动全部在创建事务内 enqueue `CommandStartBPMN`——ticket/incident（`service/ticket_service.go:397`、`service/incident_service.go:432`）、change（`handlers/change/repository_impl.go:268`）、service_request（`handlers/service_request/repository_impl.go:255`）、release（`service/release_service.go:164`）；problem 域不经「创建即启动实例」路径，其生命周期动作走 `BPMNApprovalBridge.AdvanceBusinessWorkflowWithClient` 与业务写入同事务的桥接模式（`handlers/problem/service.go:623`），不存在非可靠触发路径。运维面：死信/积压四指标 + 单条/批量重放 + 失败投递重试已在 `/admin/operations` 产品化，命令类型汇总与批量 replay/cancel 齐备。）
-  - 已完成：incident 告警与 provisioning 履约接入 outbox；运维命令批量 replay/cancel 与命令类型汇总。
-  - 剩余：其余 ITIL 域迁移。
+  - 已完成：incident 告警与 provisioning 履约接入 outbox；运维命令批量 replay/cancel 与命令类型汇总；六个 ITIL 域流程启动全部在创建事务内 enqueue（见收口注记）。
+  - 剩余：无域级迁移缺口；后续新增域的可靠触发按同一口径接入，运维重放/死信处置纳入常态演练。
 - [ ] **生产数据升级门禁** — 对每次 Schema 变化执行脱敏 PostgreSQL 副本迁移、兼容、回滚与耗时验证。
   - 已完成：migration ledger 调和、preflight、`migration-lint` 与发布证据。
   - 剩余：脱敏副本实跑与回滚演练常态化。
 - [ ] **Connector marketplace 生产化** — Feishu、DingTalk、WeCom、Webhook 的真实渠道健康检查、验签、重放与密钥治理。
-  - 已完成：钉钉 / 企微入站回调、持久化去重、健康度与凭据轮换。
-  - 剩余：真实渠道联调验收；飞书渠道补齐。
+  - 已完成：钉钉 / 企微入站回调、持久化去重、健康度与凭据轮换；飞书入站解析、官方拼接 SHA256 验签与 AES 加密回调（2026-11-07）。
+  - 剩余：三渠道真实租户联调验收与「消息→工单」业务派发（能力矩阵连接器行维持预览）。
 - [ ] **AI Audit/Evaluator** — 对建议保留接受/拒绝反馈，并形成可重复的质量基线。
-  - 已完成：AI 审计上报链路打通；评测集去占位。
-  - 剩余：接受/拒绝反馈闭环与 CI 质量基线门禁。
+  - 已完成：AI 审计上报链路打通；评测集去占位；接受/拒绝反馈端点（`POST /ai/feedback`，含 accepted/useful）；CI 四指标质量门禁（v1.6.16 提前收口，阈值进 backend-ci）。
+  - 剩余：LLM 档 + 真实生产语料的质量验收须人工执行（`cmd/ai-eval -mode llm`）并归档报告，CI 降级档不能代替真实模型结论；能力矩阵 `ai` 据此维持预览。
 - [ ] **CMDB 数据治理** — 发现 Job、Diff、调和、退役、质量指标与规模测试。
-  - 已完成：AI-Native P0/P1（见上）；v1.6.15 落地数据治理纯函数骨架（退役状态机 online -> retiring -> retired + 受控 reason 词表 + DiffReconciliation 4 类分类 + ComputeQualityMetrics），21 用例全绿，零 Repository 接口扩张。
-  - 剩余：service 层 GetReconciliation 接入 diff 与 metrics 字段；handler 暴露 `/cmdb/governance/report` + 退役 PUT；规模测试与发现 Job 闭环工作流。
+  - 已完成：AI-Native P0/P1（见上）；v1.6.15 落地数据治理纯函数骨架（退役状态机 online -> retiring -> retired + 受控 reason 词表 + DiffReconciliation 4 类分类 + ComputeQualityMetrics），21 用例全绿，零 Repository 接口扩张；`/cmdb/governance/report` 已暴露并消费 diff 与质量指标；退役经 lifecycle PUT 受控迁移（v1.6.18）；发现 Job 闭环 + 覆盖水位线增量推进（2026-11-07）。
+  - 剩余：规模测试；真实云账号下的全量/增量发现与退役治理验收（能力矩阵 `cmdbDiscovery` 维持预览）。
 
 ### 发布门禁
 
@@ -183,14 +190,15 @@ Concretely that means:
 
 ### Engineering
 
-- [ ] **AI Evaluator v1** — classification accuracy ≥85%, summarization
+- [x] **AI Evaluator v1** — classification accuracy ≥85%, summarization
       ROUGE ≥0.6, RAG hit-rate ≥70%. Regression suite in CI.
+      （v1.6.16 提前收口，见头部 2026-10-29 确认；CI 为降级档门禁，LLM 档真实模型验收另计，见「当前收敛项」AI Audit/Evaluator。）
 - [ ] **AI telemetry** — capture prompt/response/cost/latency for every
       skill invocation; dashboard at `/api/v1/ai/audit`.
 - [ ] **Knowledge base RAG v2** — chunking strategy improvements,
       re-ranking, hybrid search (BM25 + vector).
-- [ ] **Skill registry v1** — declarative skill manifests, hot-pluggable
-      pipeline, registry UI.
+- [x] **Skill registry v1** — declarative skill manifests, hot-pluggable
+      pipeline, registry UI.（v1.6.16 提前收口，见头部 2026-10-29 确认；`/admin/skills` 管理面板已落地。）
 
 ### Product
 

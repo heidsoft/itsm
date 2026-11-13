@@ -175,15 +175,6 @@ type UpdateSolutionImplementationRequest struct {
 	LessonsLearned        *string               `json:"lessonsLearned"`
 }
 
-// CreateProblemRelationshipRequest 创建问题关联请求
-type CreateProblemRelationshipRequest struct {
-	ProblemID        int    `json:"problemId" binding:"required"`
-	RelatedType      string `json:"relatedType" binding:"required"`
-	RelatedID        int    `json:"relatedId" binding:"required"`
-	RelationshipType string `json:"relationshipType" binding:"required"`
-	Description      string `json:"description"`
-}
-
 // CreateProblemKnowledgeArticleRequest 创建问题知识库文章请求
 type CreateProblemKnowledgeArticleRequest struct {
 	ProblemID      int      `json:"problemId" binding:"required"`
@@ -293,18 +284,6 @@ type SolutionImplementationResponse struct {
 	UpdatedAt             time.Time            `json:"updatedAt"`
 }
 
-// ProblemRelationshipResponse 问题关联响应
-type ProblemRelationshipResponse struct {
-	ID               int       `json:"id"`
-	ProblemID        int       `json:"problemId"`
-	RelatedType      string    `json:"relatedType"`
-	RelatedID        int       `json:"relatedId"`
-	RelatedTitle     string    `json:"relatedTitle"`
-	RelationshipType string    `json:"relationshipType"`
-	Description      *string   `json:"description"`
-	CreatedAt        time.Time `json:"createdAt"`
-}
-
 // ProblemKnowledgeArticleResponse 问题知识库文章响应
 type ProblemKnowledgeArticleResponse struct {
 	ID             int        `json:"id"`
@@ -330,6 +309,5 @@ type ProblemInvestigationSummaryResponse struct {
 	RootCauseAnalysis *RootCauseAnalysisResponse         `json:"rootCauseAnalysis"`
 	Solutions         []*ProblemSolutionResponse         `json:"solutions"`
 	Implementations   []*SolutionImplementationResponse  `json:"implementations"`
-	Relationships     []*ProblemRelationshipResponse     `json:"relationships"`
 	KnowledgeArticles []*ProblemKnowledgeArticleResponse `json:"knowledgeArticles"`
 }

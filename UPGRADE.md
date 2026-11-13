@@ -3827,6 +3827,16 @@ cd itsm-frontend && npm run test:unit -- --runTestsByPath src/lib/api/__tests__/
   本次只改**声明名**（Gin 路由参数、Swagger `@Param`/`@Router`、文档），HTTP 路径形状与请求方式不变，
   已按商品 ID 调用的客户端**无需改动**；此前误用安装行主键的调用方会继续拿到 404，但语义现在与文档一致。
 
+### 1.104 问题调查域「关联」桩端点退役，问题关联统一到 problem 域（2026-11-10，破坏性：端点移除）
+
+调查子域的两个关联端点从未真正工作（一个假成功不写库、一个恒返回空），本次整体移除。问题关联只有一个真实入口，已是问题详情页的默认 Tab：
+
+- **`POST /api/v1/problem-relationships` 已移除。** 创建问题关联改用 `POST /api/v1/problems/:id/associations`，body：`{"relatedType":"ticket|incident|change","relatedIds":[1,2]}`（`relatedIds` 至少一个，目标资源按租户校验）。
+- **`GET /api/v1/problems/:id/relationships` 已移除。** 读取改用 `GET /api/v1/problems/:id/associations`；删除改用 `DELETE /api/v1/problems/:id/associations`，body：`{"relatedType":"ticket|incident|change","relatedId":1}`。
+- **`GET /api/v1/problems/:id/summary` 不再返回 `relationships` 字段。** 该字段此前硬编码为空数组，前端调查 Tab 的关联子页是死面，已一并删除；需要关联数据请调用上面的 associations 端点。
+
+权限码不变（`problem:read` / `problem:write`）。无 DDL、无数据迁移——被移除的桩从未写入任何数据，存量问题关联（Ent 边）不受影响。
+
 ## 2. 环境变量变更
 
 本次升级**移除了多个"幽灵配置项"**（在示例文件中声明但代码/Compose 从不读取，用户配置了也不生效），并修正了一个 Grafana 密码安全缺陷。

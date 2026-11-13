@@ -71,10 +71,12 @@ const AutomationRulesPage: React.FC = () => {
     setEditingRule(null);
     form.resetFields();
     form.setFieldsValue({
+      name: '',
+      description: '',
       priority: 1,
       isActive: true,
-      conditions: [],
-      actions: [],
+      conditions: [{ field: 'status', operator: 'equals', value: '' }],
+      actions: [{ type: 'notify', config: '' }],
     });
     setModalVisible(true);
   };

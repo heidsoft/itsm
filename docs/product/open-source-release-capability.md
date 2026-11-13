@@ -1,6 +1,6 @@
 # 开源产品能力说明
 
-> Status: current。最后复盘：2026-11-07。本文描述当前源码可交付的业务边界，不以页面、规划或历史测试报告代替运行时事实。成熟度与运行时能力矩阵（`GET /api/v1/capabilities`，源 `handlers/capability/handler.go`）保持同口径。
+> Status: current。最后复盘：2026-11-08。本文描述当前源码可交付的业务边界，不以页面、规划或历史测试报告代替运行时事实。成熟度与运行时能力矩阵（`GET /api/v1/capabilities`，源 `handlers/capability/handler.go`）保持同口径。
 
 ## 产品承诺
 
@@ -37,7 +37,7 @@ TicketType 是运行时配置，不是前端静态枚举。创建工单时会校
 | CMDB 核心 | GA 候选 | CI 类型、实例、关系、历史、拓扑、影响分析、导入导出基础 | 数据质量、规模、恢复与调和需场景验收 |
 | 云发现 | Pilot | Job 执行器（租约认领/diff/证据落库/终态）+ 每分钟调度消费 `discovery_sources.schedule`、五厂商适配器（阿里云/腾讯云/AWS/火山引擎/K8s）、云服务类型基线随 cmdb-core 预置、按「云服务类型 → CI 类型」映射回写配置项、必填属性缺口转人工补录；覆盖水位线已落地（每 scope 的 coverage start/end + 分页完成证明 + provider watermark）：中断 scope 断点续扫、缺失判定按水位线窗口（补采不误退役）、连续失败自动重置自愈，调度按水位线增量推进、手动全量强制新窗 | 主流云 API 无 modified-since 过滤，发现仍是如实全量列举 + 指纹去重写（增量体现在覆盖进度推进，不是「只拉变化」）；真实账号下的全量与增量发现均未验收 |
 | CMDB 调和 | Pilot | 差异计算与决策（`POST /discovery/results/:id/apply|reject`），应用后同步刷新配置项并把反查 ID 记在差异上 | 回写只覆盖基线内云主机/Pod 类型；云上连续缺失只把配置项标成同步滞后、不给退役建议；缺真实数据验收 |
-| BPMN/审批 | Pilot | 定义、版本、绑定、实例、任务、变量和历史；审批资格由后端判定并随响应下发；工单与事件使用持久化 command/outbox 启动流程 | 问题域创建不落 workflow.start（problem 分支无生产者，生命周期仅在已有实例时桥接）；ServiceTask 外部副作用与流程完成分属两个事务；补偿只支持结束事件驱动且无内置模板；存量 pending 待办与跨域实例级 E2E 未补 |
+| BPMN/审批 | Pilot | 定义、版本、绑定、实例、任务、变量和历史；审批资格由后端判定并随响应下发；六业务域创建同事务投 workflow.start；ServiceTask 输出/完成凭据/receipt/审计/补偿登记/节点完成/流程推进同一 ent.Tx 原子提交，回滚后按凭据缺失重放且幂等键不变；内置补偿模板 + 管理面 dry-run/apply 触发；存量 pending 待办可执行迁移（默认 dry-run）；跨租户跨业务域实例级 E2E 与验收证据脚本齐备 | 真实租户跨域联调尚未由验收人执行并签字（docs/acceptance/workflow-cross-domain-signoff.md 签字栏为空），不得由脚本或 AI 代签；签字完成后在独立批次评估晋升 |
 | SLA | GA 候选 | 策略、业务日历、截止时间、预警、违规与指标 | 暂停恢复和跨领域一致性需持续验证 |
 | 知识/RAG | Pilot | 文章、可见性过滤（SQL 先过滤后分页、作者豁免、权限不可得时失败关闭）、关键词/向量检索、推荐与降级、发布门禁、`published_version` 线上版本指针（三条发布入口与在线更新同事务维护）、索引删除一致性（删除/驳回/撤编/版本恢复走同事务 outbox 同步清理向量库） | 典型问题集召回率与真实语料引用质量的人工验收未做 |
 | AI | Pilot | LLM Gateway、分诊、摘要、RAG、预测、chat 全能力面强制 promptVersion/model/confidence 并落 ai_audit 底账（采纳/拒绝经 PATCH 翻转）、LLM 调用按租户计量与配额/成本口径、`cmd/ai-eval` 四类 golden 集评测门禁（接真实生产路径，RAG/预测不自我实现）、记忆层（会话实体回读 + 历史工单处置经验召回，行级数据范围过滤） | LLM 档与真实生产语料的验收尚未由人执行——指标达标与否没有真实运行与签字记录，CI 降级档不能替代；离线评测结果只落 JSON 文件，无落库与前端报告面 |

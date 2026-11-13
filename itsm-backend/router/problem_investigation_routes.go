@@ -38,10 +38,10 @@ func SetupProblemInvestigationRoutes(tenant *gin.RouterGroup, h *problem_investi
 		problemInvestigation.GET("/problems/:id/summary", middleware.RequirePermission("problem", "read"), h.GetProblemInvestigationSummary)
 	}
 
-	// 关联管理与知识沉淀（前端契约：/api/v1/problem-relationships、/api/v1/problem-knowledge-articles）。
+	// 知识沉淀（前端契约：/api/v1/problem-knowledge-articles）。
 	// 知识反查统一走 GET /api/v1/problems/:id/knowledge：它按 source_problem_id 过滤并校验
 	// 问题可见性；legacy 的 GET /problem-knowledge-articles/problems/:id 忽略 problemID、
 	// 返回租户内全部文章，已于 2026-10-31 退役。
-	tenant.POST("/problem-relationships", middleware.RequirePermission("problem", "write"), h.CreateProblemRelationship)
+	// 问题关联唯一入口是 problem 域 /problems/:id/associations，调查域不再注册假成功桩。
 	tenant.POST("/problem-knowledge-articles", middleware.RequirePermission("problem", "write"), h.CreateKnowledgeArticle)
 }

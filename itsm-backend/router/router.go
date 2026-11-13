@@ -568,10 +568,6 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 		// ==================== Problems (DDD) ====================
 		if config.ProblemHandler != nil {
 			SetupProblemRoutes(tenant.(*gin.RouterGroup), config.ProblemHandler)
-			// 问题调查关联列表（前端契约：GET /api/v1/problems/:id/relationships）
-			if config.ProblemInvestigationHandler != nil {
-				tenant.(*gin.RouterGroup).GET("/problems/:id/relationships", middleware.RequirePermission("problem", "read"), config.ProblemInvestigationHandler.GetProblemRelationships)
-			}
 		}
 
 		// ==================== Changes (DDD) ====================
