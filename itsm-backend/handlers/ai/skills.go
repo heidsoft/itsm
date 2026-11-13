@@ -191,10 +191,12 @@ func (s *TriageSkill) Execute(ctx context.Context, input interface{}) (interface
 	description, _ := inputString(in, "description", false)
 	category, _ := inputString(in, "category", false)
 	priority, _ := inputString(in, "priority", false)
+	// ticketId 可选：带上后按工单幂等，复用该工单已有的分诊结论。
+	ticketID, _ := inputInt(in, "ticketId", 0)
 	if s.svc == nil {
 		return nil, errors.New("triage skill: underlying service is nil")
 	}
-	return s.svc.TriageTicket(ctx, tenantID, userID, title, description, category, priority)
+	return s.svc.TriageTicket(ctx, tenantID, userID, title, description, category, priority, ticketID)
 }
 
 // ----------------------------------------------------------------------------

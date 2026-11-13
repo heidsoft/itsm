@@ -1146,8 +1146,20 @@ func (s *Service) SearchKnowledge(ctx context.Context, tenantID int, query strin
 // AI 决策底账（item_type='ai_audit'，accepted=NULL 未决策）。响应携带 auditId，
 // 前端采纳/拒绝直接 PATCH /ai/audit-logs/:id 翻转底账，不再需要伪造 model
 // 二次 POST 自报。底账写失败不阻塞建议返回（best-effort），仅去掉 auditId。
-func (s *Service) TriageTicket(ctx context.Context, tenantID int, userID int, title, description, category, priority string) (interface{}, error) {
-	s.logger.Infow("Ticket Triage", "title", title, "tenantID", tenantID)
+//
+// ticketID > 0 时**按工单幂等**：已有分诊结论就直接复用，不重复调 LLM、不重复落底账。
+// 此前每次进入工单详情都会重跑一次分诊，同一工单的分类在「存储」与「网络」之间漂移，
+// 且每次都新增一条底账（prod 实测 F2）。复用结论时同样返回 auditId，
+// 前端据此显示「已采纳/未采纳」。
+func (s *Service) TriageTicket(ctx context.Context, tenantID int, userID int, title, description, category, priority string, ticketID int) (interface{}, error) {
+	s.logger.Infow("Ticket Triage", "title", title, "tenantID", tenantID, "ticket_id", ticketID)
+
+	// 按工单复用既有结论：同一工单只分析一次。
+	if ticketID > 0 {
+		if cached := s.cachedTriageForTicket(ctx, tenantID, ticketID); cached != nil {
+			return cached, nil
+		}
+	}
 
 	if s.triageService != nil {
 		// 用租户版 SuggestForTenant：此前调 Suggest 内部硬编码 tenant=1，
@@ -1193,6 +1205,10 @@ func (s *Service) TriageTicket(ctx context.Context, tenantID int, userID int, ti
 				response["auditId"] = auditID
 			}
 		}
+		// 落库分诊结论，供下次按工单复用（幂等的持久化载体）。
+		if ticketID > 0 {
+			s.persistTriageForTicket(ctx, tenantID, userID, ticketID, title, result, response)
+		}
 		return response, nil
 	}
 
@@ -1207,6 +1223,80 @@ func (s *Service) TriageTicket(ctx context.Context, tenantID int, userID int, ti
 			"urgency":    "medium",
 		},
 	}, nil
+}
+
+// triageAnalysisType 是分诊结论在 ai_analysis_results 里的分析类型。
+const triageAnalysisType = "triage"
+
+// cachedTriageForTicket 读取该工单既有的分诊结论并还原成响应。
+//
+// 返回 nil 表示「首次分析」，调用方照常跑一次分诊。
+// 复用时会把历史结论原样返回（含 category/priority/confidence），
+// 保证同一工单的分类不再在多次进入详情页之间漂移。
+func (s *Service) cachedTriageForTicket(ctx context.Context, tenantID, ticketID int) map[string]interface{} {
+	if s.repo == nil {
+		return nil
+	}
+	record, err := s.repo.GetLatestAIAnalysisResultByTicket(ctx, ticketID, tenantID, triageAnalysisType)
+	if err != nil || record == nil || record.ResultJSON == "" {
+		return nil
+	}
+	var stored map[string]interface{}
+	if err := json.Unmarshal([]byte(record.ResultJSON), &stored); err != nil {
+		return nil
+	}
+	suggestions, _ := stored["suggestions"].(map[string]interface{})
+	if suggestions == nil {
+		return nil
+	}
+	response := map[string]interface{}{
+		"title":         stored["title"],
+		"description":   stored["description"],
+		"promptVersion": stored["promptVersion"],
+		"model":         stored["model"],
+		"suggestions":   suggestions,
+		"cached":        true,
+	}
+	if auditID, ok := stored["auditId"]; ok {
+		response["auditId"] = auditID
+	}
+	if degraded, ok := stored["degraded"]; ok {
+		response["degraded"] = degraded
+	}
+	if degradedReason, ok := stored["degradedReason"]; ok {
+		response["degradedReason"] = degradedReason
+	}
+	s.logger.Infow("复用既有分诊结论（不再重复调用模型）", "tenant_id", tenantID, "ticket_id", ticketID)
+	return response
+}
+
+// persistTriageForTicket 把分诊结论落库，作为该工单下次复用的载体。
+//
+// best-effort：落库失败不影响本次建议返回，只是下次会重新分析。
+func (s *Service) persistTriageForTicket(ctx context.Context, tenantID, userID, ticketID int, title string, result dto.TriageResult, response map[string]interface{}) {
+	if s.repo == nil {
+		return
+	}
+	payload, err := json.Marshal(response)
+	if err != nil {
+		s.logger.Warnw("persistTriageForTicket: marshal failed", "error", err)
+		return
+	}
+	record := &AIAnalysisResult{
+		TenantID:        tenantID,
+		UserID:          userID,
+		AnalysisType:    triageAnalysisType,
+		TicketID:        ticketID,
+		TicketTitle:     title,
+		RequestPrompt:   title,
+		ResultJSON:      string(payload),
+		Model:           result.Model,
+		ConfidenceScore: result.Confidence,
+		Degraded:        result.Degraded,
+	}
+	if _, err := s.repo.SaveAIAnalysisResult(ctx, record); err != nil {
+		s.logger.Warnw("persistTriageForTicket: save failed", "error", err)
+	}
 }
 
 func (s *Service) determineUrgency(priority string) string {

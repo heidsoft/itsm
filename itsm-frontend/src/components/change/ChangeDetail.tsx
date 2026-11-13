@@ -30,7 +30,7 @@ import dayjs from 'dayjs';
 import { Modal, Input } from 'antd';
 
 import { ChangeApi } from '@/lib/api/';
-import { serverErrorMessage } from '@/lib/api/http-client';
+import { ApiRequestError, serverErrorMessage } from '@/lib/api/http-client';
 import { useI18n } from '@/lib/i18n/useI18n';
 import {
   ChangeStatus,
@@ -46,6 +46,7 @@ import ChangeRiskAssessment from './ChangeRiskAssessment';
 import ChangeCMDBImpactPanel from './ChangeCMDBImpactPanel';
 import ChangeRollbackPlan from './ChangeRollbackPlan';
 import { SafeTextBlock } from '@/components/common/SafeContent';
+import { UserSelect } from '@/components/common/UserSelect';
 import { formatDateTime } from '@/lib/formatters';
 
 const { Title, Text, Paragraph } = Typography;
@@ -68,6 +69,18 @@ const statusColors: Record<string, string> = {
   [ChangeStatus.REJECTED]: 'red',
   [ChangeStatus.ROLLED_BACK]: 'magenta',
 };
+
+/**
+ * 判断错误是否为「租户内没有可用的变更审批人」。
+ *
+ * 后端用 409 + 业务码 4090 表达，文案含「没有可用的变更审批人」。
+ * 这里同时看业务码与文案：只看码会把其它 409（如版本冲突）也误判成选人场景。
+ */
+function isNoEligibleApproverError(error: unknown): boolean {
+  if (!(error instanceof ApiRequestError)) return false;
+  if (error.code !== 4090 && error.status !== 409) return false;
+  return (error.message || '').includes('没有可用的变更审批人');
+}
 
 const ChangeDetail: React.FC = () => {
   const { id } = useParams() as { id: string };
@@ -96,6 +109,11 @@ const ChangeDetail: React.FC = () => {
   const [planText, setPlanText] = useState('');
   const [outcomeReason, setOutcomeReason] = useState('');
   const [processing, setProcessing] = useState(false);
+  // 审批人指定弹窗：租户内没人持有 change:approve 时（全新租户常见），
+  // 后端会以 409「没有可用的变更审批人」拒绝提交。此时由用户在界面上选人，
+  // 把 approverIds 一起带上——这是后端文档化的自助路径，否则用户只能去库里改数据。
+  const [approverModalVisible, setApproverModalVisible] = useState(false);
+  const [selectedApproverIds, setSelectedApproverIds] = useState<number[]>([]);
   // 写操作 in-flight 标志：按钮 loading 状态要等 render 提交后才生效，
   // 快速连续点击存在重复提交窗口。
   // 用 ref 做同步重入拦截，同一时刻只允许一个写请求在飞。
@@ -162,13 +180,50 @@ const ChangeDetail: React.FC = () => {
   };
 
   // 提交审批
+  //
+  // 两条路径：
+  //  1. 直接提交（租户内已有合格审批人）；
+  //  2. 提交被 409「没有可用的变更审批人」拒绝 → 弹出选人弹窗，让用户指定审批人后重提。
+  const submitForApproval = async (approverIds?: number[]) => {
+    await ChangeApi.submitForApproval(change!.id, approverIds?.length ? { approverIds } : undefined);
+  };
+
   const handleSubmit = async () => {
     if (!change || inFlightRef.current) return;
     inFlightRef.current = true;
     setProcessing(true);
     try {
-      await ChangeApi.submitForApproval(change.id);
+      await submitForApproval();
       message.success(t('changeDetail.submitSuccess'));
+      loadDetail();
+    } catch (error) {
+      // 409 + 「没有可用的变更审批人」：租户内没有合格审批人，改走选人重提。
+      if (isNoEligibleApproverError(error)) {
+        setSelectedApproverIds([]);
+        setApproverModalVisible(true);
+      } else {
+        message.error(serverErrorMessage(error, t('changeDetail.submitFailed')));
+      }
+    } finally {
+      inFlightRef.current = false;
+      setProcessing(false);
+    }
+  };
+
+  // 带选定审批人重新提交
+  const handleSubmitWithApprovers = async () => {
+    if (!change || inFlightRef.current) return;
+    if (selectedApproverIds.length === 0) {
+      message.warning('请至少选择一名审批人');
+      return;
+    }
+    inFlightRef.current = true;
+    setProcessing(true);
+    try {
+      await submitForApproval(selectedApproverIds);
+      message.success(t('changeDetail.submitSuccess'));
+      setApproverModalVisible(false);
+      setSelectedApproverIds([]);
       loadDetail();
     } catch (error) {
       message.error(serverErrorMessage(error, t('changeDetail.submitFailed')));
@@ -940,6 +995,31 @@ const ChangeDetail: React.FC = () => {
           ]}
         />
       </Card>
+
+      {/* 审批人指定弹窗：租户内无合格审批人时的自助路径 */}
+      <Modal
+        title='指定变更审批人'
+        open={approverModalVisible}
+        onCancel={() => setApproverModalVisible(false)}
+        onOk={handleSubmitWithApprovers}
+        okText='提交审批'
+        cancelText='取消'
+        confirmLoading={processing}
+        destroyOnHidden
+      >
+        <Alert
+          type='warning'
+          showIcon
+          style={{ marginBottom: 16 }}
+          message='租户内没有具备变更审批权限的用户'
+          description='请选择审批人后重新提交。若所选用户没有 change:approve 权限，审批时会被拒绝，请优先选择「系统运维」「系统管理员」或「变更经理」角色的用户。'
+        />
+        <UserSelect
+          value={selectedApproverIds}
+          onChange={setSelectedApproverIds}
+          placeholder='选择审批人（可多选）'
+        />
+      </Modal>
 
       {/* 实施结果弹窗（回滚 / 标记失败，原因必填） */}
       <Modal

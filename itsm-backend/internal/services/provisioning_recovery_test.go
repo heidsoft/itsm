@@ -45,6 +45,7 @@ func seedProvisioningTask(t *testing.T, client *ent.Client, ctx context.Context,
 	catalog, err := client.ServiceCatalog.Create().
 		SetTenantID(tenantID).
 		SetName("provisioning-" + string(status)).
+		SetServiceType("vm").
 		SetStatus("enabled").
 		Save(ctx)
 	require.NoError(t, err)

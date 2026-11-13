@@ -195,6 +195,11 @@ func (h *Handler) ResolveProvisioningTask(c *gin.Context) {
 //
 // 关键点：这些不是「服务器出错了」，而是「你这次操作和任务当前状态冲突」。
 // 压成 500 会让前端重试、让运维以为系统故障，实际应该去看任务状态。
+//
+// 另两类「配置不完整 / 云侧永久拒绝」此前落在 default 分支被兜底成 5001，
+// 前端只能看到「API Error: 500 Internal Server Error」这类原始报文（prod 实测 O1）。
+// 它们同样是**可行动的业务结果**：配置补齐或人工判定后即可继续，不该让运维
+// 以为系统故障、也不该让前端把原始 500 报文直接抛给用户。
 func (h *Handler) respondProvisioningError(c *gin.Context, err error, fallback string) {
 	switch {
 	case errors.Is(err, dto.ErrProvisioningTaskSucceeded):
@@ -207,6 +212,15 @@ func (h *Handler) respondProvisioningError(c *gin.Context, err error, fallback s
 		common.Fail(c, common.ConflictCode, "该交付任务当前状态不允许重试（仅失败任务可重试）")
 	case errors.Is(err, dto.ErrProvisioningTaskNotResolvable):
 		common.Fail(c, common.ConflictCode, "该交付任务当前状态不允许人工判定（执行中或已完成）")
+	case errors.Is(err, dto.ErrProvisioningNotExecutable):
+		// 交付配置不完整（缺地域/规格/云账号或凭据未装配）：重试不会成功，
+		// 必须由管理员补齐配置后人工重试。真实原因已写入任务 error_message，
+		// 这里给可行动文案而不透出原始报文。
+		common.Fail(c, common.ConflictCode, "交付配置不完整，自动重试不会成功：请检查服务目录可用地域、云账号与凭据配置后重试")
+	case errors.Is(err, dto.ErrProvisioningPermanentlyFailed):
+		// 云侧业务拒绝（余额不足/配额封禁/参数不存在）：重试期望收益为零，
+		// 处置权交回运维（充值或改参数后人工重试）。
+		common.Fail(c, common.ConflictCode, "云侧已拒绝该交付请求且自动重试不会成功，请修正账户或参数后人工重试")
 	default:
 		common.FailWithErr(c, err, fallback)
 	}

@@ -472,8 +472,14 @@ func (s *Service) SubmitChange(ctx context.Context, changeID, tenantID, submitte
 		if len(ids) == 0 {
 			// BusinessError.Detail 不会进入响应体（common.writeClassified 只回 message），
 			// 可行动指引必须写进 Message，否则用户只看到「没有审批人」却不知道怎么办。
+			//
+			// 指引必须指向**UI 上真实可达**的角色：change:approve 由 sysadmin /
+			// change_manager / admin 持有（internal/authz/roles.go），其中 sysadmin 与
+			// admin 就在「用户管理 → 主角色」下拉里，变更经理是附加角色。
+			// 旧文案只点名「变更经理」——它是实践角色，只出现在附加角色下拉，
+			// 全新租户的用户在主角色下拉里找不到它，自救路径在 UI 上走不通。
 			return nil, common.NewBusinessError(common.ConflictCode,
-				"没有可用的变更审批人，禁止创建人自审：请在租户内为具备 change:approve 权限的角色（如变更经理）配置用户，或在提交时指定 approverIds",
+				"没有可用的变更审批人，禁止创建人自审：请在租户内为具备 change:approve 权限的角色配置用户（主角色选「系统运维」或「系统管理员」，附加角色可选「变更经理」），或在提交审批时直接指定审批人",
 				fmt.Sprintf("changeId=%d creatorId=%d", changeID, c.CreatedBy))
 		}
 		s.logger.Infow("Change resolved approver chain without active approval chain",

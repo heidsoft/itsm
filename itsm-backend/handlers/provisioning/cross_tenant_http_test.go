@@ -96,6 +96,7 @@ func (fx *fixture) newApprovedSR(t *testing.T, title string) *ent.ServiceRequest
 	ctx := context.Background()
 	catalog := fx.client.ServiceCatalog.Create().
 		SetName("catalog for " + title).
+		SetServiceType("vm").
 		SetStatus("active").
 		SetTenantID(fx.tenantA.ID).
 		SaveX(ctx)

@@ -17,9 +17,18 @@ const { Text, Paragraph } = Typography;
 interface AISuggestionPanelProps {
   title: string;
   description?: string;
+  /**
+   * 关联工单 ID。
+   *
+   * 带上后后端按工单幂等：同一工单只分析一次，重复进入详情页复用既有结论，
+   * 不再重复调模型、分类也不再漂移（prod 实测 F2）。
+   */
+  ticketId?: number;
   onAccept?: (suggestion: TriageResult) => void;
   onDismiss?: () => void;
   initialSuggestion?: TriageResult | null;
+  /** 已采纳标记：外部（如工单详情）已持久化采纳状态时传入，按钮显示为「已采纳」。 */
+  accepted?: boolean;
 }
 
 const categoryColors: Record<string, string> = {
@@ -61,15 +70,22 @@ const priorityLabels: Record<string, string> = {
 export function AISuggestionPanel({
   title,
   description,
+  ticketId,
   onAccept,
   onDismiss,
   initialSuggestion,
+  accepted: acceptedProp,
 }: AISuggestionPanelProps) {
   const [loading, setLoading] = useState(false);
   const [suggestion, setSuggestion] = useState<TriageResult | null>(initialSuggestion ?? null);
   const [error, setError] = useState<string | null>(null);
   const [collapsed, setCollapsed] = useState(false);
   const [dismissed, setDismissed] = useState(false);
+  // 采纳状态：外部已持久化时以其为准，否则用本地态。
+  // 采纳后不再重复上报底账，也不再显示「采纳建议」按钮（prod 实测 F2：
+  // 刷新后按钮仍在、每次点击都改写一次审计底账）。
+  const [acceptedLocal, setAcceptedLocal] = useState(false);
+  const accepted = acceptedProp ?? acceptedLocal;
 
   // Fetch AI suggestion when title/description change
   useEffect(() => {
@@ -79,7 +95,8 @@ export function AISuggestionPanel({
       setLoading(true);
       setError(null);
       try {
-        const result = await aiTriage(title, description || '');
+        // 带 ticketId 时后端按工单幂等，重复进入详情页不会重复调用模型。
+        const result = await aiTriage(title, description || '', ticketId);
         setSuggestion(result);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'AI分析失败');
@@ -92,7 +109,7 @@ export function AISuggestionPanel({
     // Debounce the API call
     const timer = setTimeout(fetchSuggestion, 800);
     return () => clearTimeout(timer);
-  }, [title, description, dismissed]);
+  }, [title, description, dismissed, ticketId]);
 
   // 上报 AI 审计（GA AI trace 契约）：采纳/驳回只更新本地状态会让 /ai/audit-logs 永远是空的。
   // 优先翻转服务端决策底账（分诊响应携带 auditId，溯源字段由服务端写入，真实可信）；
@@ -122,8 +139,10 @@ export function AISuggestionPanel({
   };
 
   const handleAccept = () => {
-    if (suggestion && onAccept) {
+    if (suggestion && onAccept && !accepted) {
       reportAudit(true, suggestion);
+      // 先置采纳态：按钮随即变为「已采纳」，重复点击不再改写审计底账。
+      setAcceptedLocal(true);
       onAccept(suggestion);
     }
   };
@@ -311,14 +330,21 @@ export function AISuggestionPanel({
             <Button size="small" icon={<X className="w-3 h-3" />} onClick={handleDismiss}>
               忽略
             </Button>
-            <Button
-              type="primary"
-              size="small"
-              icon={<Check className="w-3 h-3" />}
-              onClick={handleAccept}
-            >
-              采纳建议
-            </Button>
+            {accepted ? (
+              // 已采纳：按钮变为只读状态，重复点击不再改写审计底账。
+              <Button size="small" icon={<Check className="w-3 h-3" />} disabled>
+                已采纳
+              </Button>
+            ) : (
+              <Button
+                type="primary"
+                size="small"
+                icon={<Check className="w-3 h-3" />}
+                onClick={handleAccept}
+              >
+                采纳建议
+              </Button>
+            )}
           </div>
         </>
       )}

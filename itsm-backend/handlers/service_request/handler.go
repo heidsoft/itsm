@@ -1,6 +1,7 @@
 package service_request
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strconv"
@@ -98,6 +99,50 @@ func (h *Handler) toDTO(req *ServiceRequest, approvals []*ServiceRequestApproval
 	return resp
 }
 
+// attachCatalog 补齐服务请求所属的服务目录项。
+//
+// 为什么必须下发：前端要据此判断「这个目录项是否支持自动云资源交付」，
+// 才能区分「审批通过后启动交付创建云资源」与「人工履约型目录项」。
+// 此前该字段恒为空，前端只能凭状态猜测，于是把「IT服务台」咨询类请求
+// 也渲染成可启动云资源交付（prod 实测 O1）。
+//
+// 目录项缺失不影响主流程：详情照常返回，只是前端拿不到交付类型。
+func (h *Handler) attachCatalog(ctx context.Context, tenantID int, resp *dto.ServiceRequestResponse) {
+	if resp == nil || resp.CatalogID <= 0 {
+		return
+	}
+	catalog, err := h.service.scRepo.Get(ctx, tenantID, resp.CatalogID)
+	if err != nil || catalog == nil {
+		return
+	}
+	resp.Catalog = &dto.ServiceCatalogResponse{
+		ID:                catalog.ID,
+		Name:              catalog.Name,
+		Category:          catalog.Category,
+		Description:       catalog.Description,
+		Icon:              catalog.Icon,
+		ServiceType:       catalog.ServiceType,
+		Price:             catalog.Price,
+		DeliveryTime:      strconv.Itoa(catalog.DeliveryTime),
+		Unit:              catalog.Unit,
+		RequiresApproval:  catalog.RequiresApproval,
+		ApprovalLevel:     catalog.ApprovalLevel,
+		Approvers:         catalog.Approvers,
+		SLAResponseTime:   catalog.SLAResponseTime,
+		SLAResolutionTime: catalog.SLAResolutionTime,
+		CITypeID:          catalog.CITypeID,
+		CloudServiceID:    catalog.CloudServiceID,
+		FormSchema:        catalog.FormSchema,
+		AvailableRegions:  catalog.AvailableRegions,
+		AvailableSpecs:    catalog.AvailableSpecs,
+		Status:            catalog.Status,
+		IsActive:          catalog.IsActive,
+		SortOrder:         catalog.SortOrder,
+		CreatedAt:         catalog.CreatedAt,
+		UpdatedAt:         catalog.UpdatedAt,
+	}
+}
+
 func toApprovalDTOs(approvals []*ServiceRequestApproval) []dto.ServiceRequestApprovalResponse {
 	responses := make([]dto.ServiceRequestApprovalResponse, len(approvals))
 	for i, app := range approvals {
@@ -167,10 +212,14 @@ func (h *Handler) Create(c *gin.Context) {
 	if err != nil {
 		h.service.logger.Errorw("Create: failed to get created service request", "error", err, "id", created.ID)
 		// Return the created object even if Get fails - created.ID is valid
-		common.Success(c, h.toDTO(created, nil))
+		createdDTO := h.toDTO(created, nil)
+		h.attachCatalog(c.Request.Context(), tenantID, createdDTO)
+		common.Success(c, createdDTO)
 		return
 	}
-	common.Success(c, h.toDTO(fullReq, approvals))
+	createdDTO := h.toDTO(fullReq, approvals)
+	h.attachCatalog(c.Request.Context(), tenantID, createdDTO)
+	common.Success(c, createdDTO)
 }
 
 func (h *Handler) Get(c *gin.Context) {
@@ -196,7 +245,14 @@ func (h *Handler) Get(c *gin.Context) {
 		}
 		return
 	}
-	common.Success(c, h.toDTOForActor(req, approvals, c.GetInt("user_id")))
+	common.Success(c, h.toDTOForActorWithCatalog(c.Request.Context(), tenantID, req, approvals, c.GetInt("user_id")))
+}
+
+// toDTOForActorWithCatalog 在通用 DTO 之上补上目录项，供前端判定交付类型。
+func (h *Handler) toDTOForActorWithCatalog(ctx context.Context, tenantID int, req *ServiceRequest, approvals []*ServiceRequestApproval, actorID int) *dto.ServiceRequestResponse {
+	resp := h.toDTOForActor(req, approvals, actorID)
+	h.attachCatalog(ctx, tenantID, resp)
+	return resp
 }
 
 // toDTOForActor 在通用 DTO 之上补上「当前用户是否具备审批资格」。

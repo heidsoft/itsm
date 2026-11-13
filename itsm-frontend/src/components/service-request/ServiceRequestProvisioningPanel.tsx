@@ -41,13 +41,27 @@ function taskStatusTag(status: string) {
 interface ServiceRequestProvisioningPanelProps {
   requestId: number;
   status: string;
+  /**
+   * 服务目录项的服务类型（vm|rds|oss|network|storage|security|custom）。
+   *
+   * 只有「vm」类目录项支持自动云资源交付；custom 等人工履约型目录项
+   * （IT服务台咨询、软件安装等）没有云资源要创建，此前界面仍提示
+   * 「审批已全部通过…系统将自动创建云资源」，点下去只得到一个注定失败的
+   * ECS 交付任务（prod 实测 O1）。
+   */
+  catalogServiceType?: string;
   /** 动作完成后回调，让详情页重新读取服务请求状态。 */
   onChanged?: () => void | Promise<void>;
 }
 
+// AUTO_DELIVERY_SERVICE_TYPES 是支持自动云资源交付的目录项类型。
+// 与后端 domain/provisioning 的资源类型映射保持同一口径。
+const AUTO_DELIVERY_SERVICE_TYPES = new Set(['vm']);
+
 const ServiceRequestProvisioningPanel: React.FC<ServiceRequestProvisioningPanelProps> = ({
   requestId,
   status,
+  catalogServiceType,
   onChanged,
 }) => {
   const { message } = App.useApp();
@@ -65,6 +79,11 @@ const ServiceRequestProvisioningPanel: React.FC<ServiceRequestProvisioningPanelP
   const [resolving, setResolving] = useState(false);
 
   const visible = DELIVERY_STATUSES.has(status);
+  // 目录项是否支持自动云资源交付。
+  // 目录项类型缺失时（历史数据 / 后端未下发）按「支持」处理，保持旧行为不倒退；
+  // 明确是 custom 等人工履约类型时，不展示「启动交付 / 自动创建云资源」。
+  const autoDeliverySupported =
+    !catalogServiceType || AUTO_DELIVERY_SERVICE_TYPES.has(catalogServiceType.toLowerCase());
 
   const loadTasks = useCallback(async () => {
     try {
@@ -93,11 +112,11 @@ const ServiceRequestProvisioningPanel: React.FC<ServiceRequestProvisioningPanelP
       setExecuting(true);
       await serviceRequestAPI.startProvisioning(requestId);
       message.success('已启动交付任务');
-      await refresh();
     } catch (e) {
       message.error(e instanceof Error ? e.message : '启动交付失败');
     } finally {
       setExecuting(false);
+      await refresh();
     }
   };
 
@@ -106,11 +125,14 @@ const ServiceRequestProvisioningPanel: React.FC<ServiceRequestProvisioningPanelP
       setExecuting(true);
       await serviceRequestAPI.executeProvisioningTask(taskId);
       message.success('交付任务执行中');
-      await refresh();
     } catch (e) {
       message.error(e instanceof Error ? e.message : '执行交付任务失败');
     } finally {
       setExecuting(false);
+      // 失败路径也必须刷新：服务端已把任务置为 failed 并写入失败原因与尝试次数，
+      // 不刷新的话界面停留在点击前的快照（仍显示「待执行 / 0/5」），
+      // 运维看不到真实失败原因（prod 实测 O1）。
+      await refresh();
     }
   };
 
@@ -210,7 +232,7 @@ const ServiceRequestProvisioningPanel: React.FC<ServiceRequestProvisioningPanelP
 
   return (
     <>
-      {status === 'security_approved' && (
+      {status === 'security_approved' && autoDeliverySupported && (
         <>
           <Title level={4}>交付操作</Title>
           <Alert
@@ -231,6 +253,18 @@ const ServiceRequestProvisioningPanel: React.FC<ServiceRequestProvisioningPanelP
               启动交付
             </Button>
           )}
+        </>
+      )}
+
+      {status === 'security_approved' && !autoDeliverySupported && (
+        <>
+          <Title level={4}>交付操作</Title>
+          <Alert
+            title='审批已全部通过'
+            description='该服务为人工履约项，不涉及云资源自动创建，请由服务台按流程处理'
+            type='info'
+            showIcon
+          />
         </>
       )}
 

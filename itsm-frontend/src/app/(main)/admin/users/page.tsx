@@ -37,6 +37,7 @@ import {
   UserApi,
   type User,
   PRIMARY_ROLE_OPTIONS,
+  MSP_ROLE_OPTIONS,
   resolveRoleTags,
 } from '@/lib/api/user-api';
 import { RoleAPI } from '@/lib/api/role-api';
@@ -182,6 +183,7 @@ const UserManagement: React.FC = () => {
     phone: string;
     role: string;
     roleIds: number[];
+    mspRole?: string;
   }) => {
     if (!selectedUser) return;
     setActionLoading(true);
@@ -195,6 +197,9 @@ const UserManagement: React.FC = () => {
         role: values.role,
         // 显式传当前表单值：后端非 undefined 时整体替换 user_roles 边
         roleIds: values.roleIds ?? [],
+        // MSP 员工身份：undefined=不动，''=清空。
+        // 不传时后端保持原值；传空串表示显式解除 MSP 身份。
+        ...(values.mspRole !== undefined ? { mspRole: values.mspRole } : {}),
       });
       message.success(t('users.messages.updateSuccess'));
       setIsEditModalVisible(false);
@@ -370,6 +375,8 @@ const UserManagement: React.FC = () => {
                     ...record,
                     role: record.role || undefined,
                     roleIds: record.roleIds ?? [],
+                    // MSP 员工身份：后端可能返回 undefined（未设置）。
+                    mspRole: record.mspRole || undefined,
                   });
                   setIsEditModalVisible(true);
                 },
@@ -733,6 +740,21 @@ const UserManagement: React.FC = () => {
                 <Select placeholder="不修改则留空" allowClear options={PRIMARY_ROLE_OPTIONS} />
               </Form.Item>
             </Col>
+            <Col span={12}>
+              <Form.Item
+                name="mspRole"
+                label="MSP 员工身份"
+                tooltip="MSP 工作台（客户管理 / 客户分配）的准入身份，与上方附加角色中的「MSP管理员」不同：不设置本项则无法进入 MSP 模块。仅在 MSP 服务商租户内生效。"
+              >
+                <Select
+                  placeholder="不修改则留空"
+                  allowClear
+                  options={MSP_ROLE_OPTIONS}
+                />
+              </Form.Item>
+            </Col>
+          </Row>
+          <Row gutter={16}>
             <Col span={12}>
               <Form.Item name="roleIds" label="附加角色（可多选）" tooltip="专职经理角色（变更/问题/知识/CMDB/服务目录）与 MSP 协作角色在此叠加授予，与主角色权限取并集。">
                 <Select

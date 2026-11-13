@@ -41,6 +41,8 @@ export interface ServiceRequest {
     category: string;
     description: string;
     deliveryTime: string;
+    /** 服务类型：vm|rds|oss|network|storage|security|custom。决定是否支持自动云资源交付。 */
+    serviceType?: string;
   };
   requester?: {
     id: number;
@@ -152,8 +154,23 @@ class ServiceRequestAPI {
       });
 
       if (!response.ok) {
+        // 后端统一返回 {code,message,data} 信封：优先透出领域文案，
+        // 让用户看到「交付配置不完整，请检查…可地域与凭据」这类可行动提示，
+        // 而不是把 `API Error: 500 Internal Server Error - {...}` 原始报文
+        // 直接抛给界面（prod 实测 O1）。
         const errorText = await response.text();
-        throw new Error(`API Error: ${response.status} ${response.statusText} - ${errorText}`);
+        let serverMessage = '';
+        try {
+          const parsed = JSON.parse(errorText);
+          if (parsed && typeof parsed.message === 'string' && parsed.message.trim()) {
+            serverMessage = parsed.message.trim();
+          }
+        } catch {
+          // 非 JSON 响应（如网关错误页）：退回状态码文案，不透出原始 HTML。
+        }
+        throw new Error(
+          serverMessage || `请求失败（HTTP ${response.status}），请稍后重试或联系管理员`
+        );
       }
 
       const data = await response.json();
@@ -205,6 +222,9 @@ class ServiceRequestAPI {
         category: raw?.category || '',
         description: raw?.reason || '',
         deliveryTime: raw?.deliveryTime || raw?.deliveryTime || '',
+        // 后端未下发目录项时没有类型证据，保留 undefined：
+        // 界面据此「不擅自断言」，而不是猜成 vm 去开云资源。
+        serviceType: undefined,
       },
       requester: raw?.requester || {
         id: requesterId,

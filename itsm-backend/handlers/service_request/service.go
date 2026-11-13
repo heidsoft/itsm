@@ -1085,7 +1085,13 @@ func (s *Service) normalizeApprovalPlan(approvals []*ServiceRequestApproval, req
 // CommandStartBPMN 的部署/测试形态走的是同步业务审批，不存在这个失败面。
 // 把校验放在创建时，用户当场就知道缺什么人，而不是提交后走到审批按钮才发现
 // 请求已经注定卡死、只能删掉重提。
+//
+// 缺口要**一次报齐**：默认三级审批（manager/it_admin/security_admin）在全新租户
+// 里往往同时无人可批。逐级只报第一级会让用户改完一个角色再提交、又撞下一级，
+// 连续三次 400 才补齐（prod 实测 O5）。这里收集全部无人可批的级别一起报，
+// 让用户一次把角色配齐。
 func (s *Service) ensureActionableApprovalPlan(approvals []*ServiceRequestApproval) error {
+	missing := make([]string, 0, len(approvals))
 	for _, app := range approvals {
 		if app.Status != ApprovalStatusPending {
 			continue
@@ -1095,11 +1101,14 @@ func (s *Service) ensureActionableApprovalPlan(approvals []*ServiceRequestApprov
 			continue
 		}
 		role := approvalStepRole(app.Step)
-		return common.NewBadRequestError(
-			fmt.Sprintf("第 %d 级审批（%s）没有可审批的人：租户内除申请人外没有 role=%s 的在职用户。请为该角色至少分配一名其他用户，或改由他人提交本申请",
-				app.Level, app.Step, role), nil)
+		missing = append(missing, fmt.Sprintf("第 %d 级（%s，需 role=%s）", app.Level, app.Step, role))
 	}
-	return nil
+	if len(missing) == 0 {
+		return nil
+	}
+	return common.NewBadRequestError(
+		fmt.Sprintf("以下审批级别没有可审批的人：%s。租户内除申请人外没有这些角色的在职用户，请为每个角色至少分配一名其他用户，或改由他人提交本申请",
+			strings.Join(missing, "、")), nil)
 }
 
 // enrichApprovalsWithApprovers 补充审批步骤的 approver_ids，确保 checkEligibility

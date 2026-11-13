@@ -329,9 +329,16 @@ export class ChangeApi {
   }
 
   // 提交变更审批
-  static async submitForApproval(id: number): Promise<void> {
+  //
+  // approverIds 用于显式指定审批人。租户内没人持有 change:approve 时（全新租户
+  // 只有创建人一个账号），后端会以 409「没有可用的变更审批人」拒绝；此时由调用方
+  // 在 UI 上选人传入，是后端文档化的自助路径（dto.SubmitChangeRequest.ApproverIDs）。
+  static async submitForApproval(
+    id: number,
+    payload?: { approverIds?: number[]; comment?: string }
+  ): Promise<void> {
     // 后端需要 JSON body（空 body 会触发 ShouldBindJSON EOF → 400），显式传空对象
-    return httpClient.post(`/api/v1/changes/${id}/submit`, {});
+    return httpClient.post(`/api/v1/changes/${id}/submit`, payload ?? {});
   }
 
   // 审批变更。

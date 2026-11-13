@@ -42,4 +42,9 @@ type Repository interface {
 	ListAIAnalysisResults(ctx context.Context, tenantID int, analysisType string, limit int) ([]*AIAnalysisResult, error)
 	GetAIAnalysisResult(ctx context.Context, id int, tenantID int) (*AIAnalysisResult, error)
 	DeleteAIAnalysisResult(ctx context.Context, id int, tenantID int) error
+	// GetLatestAIAnalysisResultByTicket 返回该工单指定分析类型的最近一条结果。
+	//
+	// 用于「按工单幂等」：同一工单重复进入详情页时复用既有分诊结论，
+	// 不再重复调 LLM（prod 实测 F2：每次进详情都重跑一次，分类还会漂移）。
+	GetLatestAIAnalysisResultByTicket(ctx context.Context, ticketID int, tenantID int, analysisType string) (*AIAnalysisResult, error)
 }

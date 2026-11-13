@@ -318,6 +318,7 @@ const ServiceRequestDetail: React.FC = () => {
             <ServiceRequestProvisioningPanel
               requestId={requestId}
               status={request.status}
+              catalogServiceType={request.catalog?.serviceType}
               onChanged={loadDetail}
             />
           </Card>

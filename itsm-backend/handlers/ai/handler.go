@@ -784,8 +784,12 @@ func (h *Handler) KnowledgeSearch(c *gin.Context) {
 }
 
 // Triage handles POST /api/v1/ai/triage - Ticket classification and recommendation
+//
+// ticketId 可选：带上后按工单幂等（同一工单只分析一次，重复进入详情页复用既有结论），
+// 避免每次刷新都重跑模型并让分类在多次之间漂移（prod 实测 F2）。
 func (h *Handler) Triage(c *gin.Context) {
 	var req struct {
+		TicketID    int    `json:"ticketId"`
 		Title       string `json:"title" binding:"required"`
 		Description string `json:"description"`
 		Category    string `json:"category"`
@@ -802,7 +806,7 @@ func (h *Handler) Triage(c *gin.Context) {
 		return
 	}
 
-	result, err := h.svc.TriageTicket(c.Request.Context(), tenantID, c.GetInt("user_id"), req.Title, req.Description, req.Category, req.Priority)
+	result, err := h.svc.TriageTicket(c.Request.Context(), tenantID, c.GetInt("user_id"), req.Title, req.Description, req.Category, req.Priority, req.TicketID)
 	if err != nil {
 		h.svc.logger.Warnw("AI分诊失败，返回降级响应", "error", err, "tenantID", tenantID)
 		common.Success(c, gin.H{

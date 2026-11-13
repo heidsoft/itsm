@@ -50,6 +50,7 @@ func TestCreateTaskFromServiceRequestRejectsUnsupportedResourceType(t *testing.T
 	catalog, err := client.ServiceCatalog.Create().
 		SetTenantID(tenantID).
 		SetName("provisioning").
+		SetServiceType("vm").
 		SetStatus("enabled").
 		Save(ctx)
 	require.NoError(t, err)
@@ -86,6 +87,7 @@ func TestCreateTaskFromServiceRequestNotifiesDeliveryStarted(t *testing.T) {
 	catalog, err := client.ServiceCatalog.Create().
 		SetTenantID(tenantID).
 		SetName("provisioning").
+		SetServiceType("vm").
 		SetStatus("enabled").
 		Save(ctx)
 	require.NoError(t, err)

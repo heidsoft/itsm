@@ -38,6 +38,22 @@ export const PRIMARY_ROLE_OPTIONS: { value: UserRole; label: string }[] = [
 export const PRIMARY_ROLE_LABEL: Record<string, string> =
   Object.fromEntries(PRIMARY_ROLE_OPTIONS.map(o => [o.value, o.label]));
 
+/**
+ * MSP 员工身份下拉选项。
+ *
+ * 与「附加角色」里的 MSP 协作角色是两条不同链路：本字段写入 users.msp_role，
+ * 是 MSP 工作台（/msp 客户管理、/msp/management 客户分配）的准入条件；
+ * 后端门控只认本字段，不认附加角色（middleware.IsMSPStaff）。
+ * 词表与后端 ent/schema/user.go 的 msp_role 枚举一致。
+ */
+export type MSPRole = 'provider_admin' | 'provider_agent' | 'customer_user';
+
+export const MSP_ROLE_OPTIONS: { value: MSPRole; label: string }[] = [
+  { value: 'provider_admin', label: 'MSP 管理员（服务商）' },
+  { value: 'provider_agent', label: 'MSP 客服（服务商）' },
+  { value: 'customer_user', label: '客户用户' },
+];
+
 export interface User {
   id: number;
   username: string;
@@ -53,6 +69,8 @@ export interface User {
   roleIds?: number[];
   /** RBAC 多角色名称（仅展示用） */
   roleNames?: string[];
+  /** MSP 员工身份（users.msp_role 枚举）；未设置时后端可能不返回该字段 */
+  mspRole?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -98,6 +116,11 @@ export interface UpdateUserRequest {
   role?: string;
   /** RBAC 多角色替换集：非 undefined 时整体替换；[] 表示清空 */
   roleIds?: number[];
+  /**
+   * MSP 员工身份变更（后端会吊销存量 token）。
+   * undefined=保持不变；''=清空；其余为 provider_admin|provider_agent|customer_user。
+   */
+  mspRole?: string;
 }
 
 /**

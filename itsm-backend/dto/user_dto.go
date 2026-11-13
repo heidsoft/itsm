@@ -35,6 +35,13 @@ type UpdateUserRequest struct {
 	Role string `json:"role,omitempty" binding:"omitempty,oneof=super_admin admin sysadmin security_admin audit_admin it_admin manager agent technician end_user user"`
 	// RBAC 多角色替换集（非 nil 时整体替换 user_roles 边）；空数组表示清空
 	RoleIDs []int `json:"roleIds,omitempty"`
+	// MSP 员工身份（provider_admin|provider_agent|customer_user）。
+	//
+	// 指针语义：nil=保持不变；空串=清空；非空=设为该身份。
+	// 它与 RoleIDs 里的「MSP管理员」附加角色是两条互不相通的链路：MSP 工作台
+	// 门控只认本字段（middleware.IsMSPStaff），不认附加角色。编辑用户时必须
+	// 能写它，否则「把某人设为 MSP 员工」在产品上无法完成（prod 实测 O4）。
+	MSPRole *string `json:"mspRole,omitempty" binding:"omitempty,oneof=provider_admin provider_agent customer_user"`
 }
 
 // UpdateOwnProfileRequest 用户自助更新本人资料的请求。

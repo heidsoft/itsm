@@ -808,6 +808,9 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
         <AISuggestionPanel
           title={ticket.title}
           description={ticket.description}
+          // 带 ticketId：后端按工单幂等，同一工单只分析一次，
+          // 重复进入详情页不会重复调用模型、分类也不再漂移（prod 实测 F2）。
+          ticketId={resolvedTicketId ? Number(resolvedTicketId) : undefined}
           onAccept={async suggestion => {
             // 采纳必须真正落库（updateTicket 写入建议的 category + priority），只打开编辑弹窗不算采纳。
             // 只比对 priority：后端 TicketResponse 不回传 category（写入口有、读出口无），

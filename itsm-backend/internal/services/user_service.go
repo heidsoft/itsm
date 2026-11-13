@@ -385,6 +385,39 @@ func (s *UserService) UpdateUser(ctx context.Context, id int, req *dto.UpdateUse
 		}
 	}
 
+	// MSP 员工身份（msp_role）写入。
+	//
+	// 为什么必须在这里开口子：MSP 工作台的门控（middleware.IsMSPStaff）只读
+	// users.msp_role + tenant.type，与 user_roles 里的「MSP管理员」附加角色是
+	// 两条互不相通的链路。此前只有 CreateUser 能写 msp_role，编辑用户改不了、
+	// 清不掉，UI 也没有入口——于是「分配 MSP 员工」这件事在产品上无法完成，
+	// /msp 与 /msp/management 对任何人都进不去（prod 实测 O4）。
+	//
+	// 指针语义：nil=不动；空串=清空；非空=设为该身份。
+	if req.MSPRole != nil {
+		normalized := strings.ToLower(strings.TrimSpace(*req.MSPRole))
+		switch normalized {
+		case "":
+			update = update.ClearMspRole()
+		case string(user.MspRoleProviderAdmin),
+			string(user.MspRoleProviderAgent),
+			string(user.MspRoleCustomerUser):
+			update = update.SetMspRole(user.MspRole(normalized))
+		default:
+			return nil, fmt.Errorf("无效的 MSP 角色: %s", normalized)
+		}
+		if normalized != string(existingUser.MspRole) {
+			// MSP 身份变更与角色变更同语义：吊销存量 token，避免旧身份在
+			// token 有效期内继续放行 / 继续被拒。
+			if err := middleware.InvalidateUserTokens(ctx, id, time.Now()); err != nil {
+				s.logger.Errorw("用户MSP身份变更后吊销存量token失败（权限延迟风险）",
+					"user_id", id, "old_msp_role", existingUser.MspRole, "new_msp_role", normalized, "error", err)
+			} else {
+				s.logger.Infow("用户MSP身份变更，已吊销存量access token", "user_id", id, "new_msp_role", normalized)
+			}
+		}
+	}
+
 	userEntity, err := update.Save(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("更新用户失败: %w", err)

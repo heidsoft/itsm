@@ -84,6 +84,7 @@ func newCloudDeliveryFixture(t *testing.T, availableRegions []string, needsPubli
 	catalog, err := client.ServiceCatalog.Create().
 		SetTenantID(tenantID).
 		SetName("ecs-delivery").
+		SetServiceType("vm").
 		SetStatus("enabled").
 		SetAvailableRegions(availableRegions).
 		Save(ctx)

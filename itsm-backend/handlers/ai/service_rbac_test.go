@@ -81,6 +81,10 @@ func (m *rbacMockRepo) GetAIAnalysisResult(_ context.Context, _ int, _ int) (*ai
 	return nil, nil
 }
 
+func (m *rbacMockRepo) GetLatestAIAnalysisResultByTicket(_ context.Context, _ int, _ int, _ string) (*ai.AIAnalysisResult, error) {
+	return nil, nil
+}
+
 func (m *rbacMockRepo) DeleteAIAnalysisResult(_ context.Context, _ int, _ int) error {
 	return nil
 }

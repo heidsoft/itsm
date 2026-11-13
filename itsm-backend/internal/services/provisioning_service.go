@@ -78,6 +78,37 @@ var supportedProvisioningResourceTypes = map[string]struct{}{
 	string(provisioning.ResourceECS): {},
 }
 
+// catalogServiceTypeToResourceType 把服务目录项的 service_type 映射到交付资源类型。
+//
+// 为什么必须由目录项决定（而不是猜表单）：
+// 目录项 service_type 的取值域是 vm|rds|oss|network|storage|security|custom，
+// 只有 vm（云服务器）对应真正可自动交付的云资源。custom 覆盖咨询类、IT 服务台、
+// 软件安装等**人工履约**目录项——它们没有云资源要创建。此前建任务时完全不读目录项，
+// resource_type 从表单猜且空值默认 ecs，于是「IT服务台」咨询被错当成 ECS 交付，
+// 生成一条注定失败、且会真去阿里云开机器的任务（prod 实测 O1）。
+//
+// 映射表外的目录项一律不落交付任务：没有自动交付能力的服务，只能走人工履约。
+var catalogServiceTypeToResourceType = map[string]string{
+	"vm": string(provisioning.ResourceECS),
+}
+
+// catalogDeliveryResourceType 判定服务目录项是否支持自动云资源交付。
+//
+// 返回值：
+//   - resourceType 非空且 supported=true → 支持，按该类型建交付任务；
+//   - supported=false → 人工履约目录项，调用方必须拒绝创建云资源交付任务。
+func catalogDeliveryResourceType(catalog *ent.ServiceCatalog) (string, bool) {
+	if catalog == nil {
+		return "", false
+	}
+	serviceType := strings.ToLower(strings.TrimSpace(catalog.ServiceType))
+	resourceType, ok := catalogServiceTypeToResourceType[serviceType]
+	if !ok {
+		return "", false
+	}
+	return resourceType, true
+}
+
 // normalizeProvisioningResourceType 空值按 ECS 处理（历史表单未传 resource_type），
 // 其余值统一小写去空白后落库。
 func normalizeProvisioningResourceType(value string) string {
@@ -151,12 +182,43 @@ func (s *ProvisioningService) CreateTaskFromServiceRequest(ctx context.Context, 
 		payload = sr.FormData
 	}
 
-	// 最小推断资源类型（后续基于 catalog/category 或专用字段）。
-	// 类型必须在建任务时就校验：否则会留下一批 provider 永远不认的交付任务。
-	rawResourceType := provisioningStringValue(payload, "resource_type")
-	resourceType := normalizeProvisioningResourceType(rawResourceType)
+	// 资源类型由「服务目录项」决定，而不是猜表单。
+	// 目录项是服务请求的归属主体，它声明自己能交付什么；表单只是申请人的填写，
+	// 咨询类目录项（custom）没有云资源要创建。此前完全不读目录项、空表单默认 ecs，
+	// 导致「IT服务台」咨询被生成 ECS 交付任务并真的去云侧开机器（prod O1）。
+	//
+	// 判定顺序刻意如此：
+	//  1. 表单显式声明的 resource_type 必须落在支持集内（申请人填了不支持的类型要立刻说清）；
+	//  2. 目录项必须支持自动交付（人工履约目录项不生成云资源任务）；
+	//  3. 表单声明与目录项推导不一致时报冲突，不静默采纳其中一方。
+	catalog, err := tx.ServiceCatalog.Query().
+		Where(servicecatalog.ID(sr.CatalogID), servicecatalog.TenantID(tenantID)).
+		Only(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("读取服务目录失败: %w", err)
+	}
+	resourceType, deliverySupported := catalogDeliveryResourceType(catalog)
+	if !deliverySupported {
+		// 人工履约目录项：明确拒绝创建云资源交付任务，并说明正确路径。
+		// 压成 500 会让前端提示「服务器错误」，运维只能翻日志才知道该人工处理。
+		return nil, common.NewBusinessError(common.ConflictCode,
+			fmt.Sprintf("服务目录项「%s」未配置自动交付模板，不支持创建云资源交付任务，请走人工履约流程", catalog.Name),
+			fmt.Sprintf("catalogId=%d serviceType=%s", catalog.ID, catalog.ServiceType))
+	}
 	if _, ok := supportedProvisioningResourceTypes[resourceType]; !ok {
 		return nil, common.NewBadRequestError("暂不支持交付资源类型 "+resourceType+"（当前仅支持 ecs）", nil)
+	}
+	// 表单显式声明的资源类型：必须在支持集内，且与目录项推导一致。
+	if rawResourceType := provisioningStringValue(payload, "resource_type"); rawResourceType != "" {
+		requested := normalizeProvisioningResourceType(rawResourceType)
+		if _, ok := supportedProvisioningResourceTypes[requested]; !ok {
+			return nil, common.NewBadRequestError("暂不支持交付资源类型 "+requested+"（当前仅支持 ecs）", nil)
+		}
+		if requested != resourceType {
+			return nil, common.NewBusinessError(common.ConflictCode,
+				fmt.Sprintf("申请单声明的交付资源类型 %s 与服务目录项「%s」的交付模板（%s）不一致", requested, catalog.Name, resourceType),
+				fmt.Sprintf("catalogId=%d requested=%s derived=%s", catalog.ID, requested, resourceType))
+		}
 	}
 
 	// 原子占用：只有仍处于 security_approved 的服务请求才能被推进到 provisioning。

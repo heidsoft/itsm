@@ -214,6 +214,15 @@ func (e *CustomProcessEngine) completeTaskWithClient(ctx context.Context, txc *e
 	if err != nil {
 		return nil, fmt.Errorf("获取流程实例失败: %w", err)
 	}
+	// 实例终态守卫：关闭工单会终止实例并取消遗留待办。若残留请求仍能完成
+	// 已取消的任务，executeStep 会重新 createUserTask，让「已关闭工单」的待办
+	// 再次复活（F1 的循环成因）。必须 fail closed，且用 BusinessError 以免被
+	// classifyError 兜底成 500。
+	if instance.Status == "terminated" || instance.Status == "completed" {
+		return nil, common.NewBusinessError(common.ConflictCode,
+			"流程实例已结束，不能继续完成任务",
+			fmt.Sprintf("instanceId=%d status=%s", instance.ID, instance.Status))
+	}
 
 	// 3. 获取流程定义并解析
 	// A running instance is immutable with respect to its deployed definition.
@@ -1135,6 +1144,13 @@ func (e *CustomProcessEngine) resolveTaskAssignment(ctx context.Context, txc *en
 }
 
 func (e *CustomProcessEngine) createUserTask(ctx context.Context, txc *ent.Client, instance *ent.ProcessInstance, process *BPMNProcess, task *BPMNUserTask) error {
+	// 纵深防御：终态实例不得再产生用户任务。关闭工单 / 拒绝终止等路径会把实例
+	// 置 terminated，此时任何在途的网关推进都必须停在这里，否则会留下永久待办。
+	if instance.Status == "terminated" || instance.Status == "completed" {
+		return common.NewBusinessError(common.ConflictCode,
+			"流程实例已结束，不能新建用户任务",
+			fmt.Sprintf("instanceId=%d status=%s", instance.ID, instance.Status))
+	}
 	// 幂等：同实例同节点已存在未结束任务时直接复用，避免 CompleteTask 流程推进失败重试时重复创建任务
 	// 必须使用事务客户端：CompleteTask 事务内刚创建的任务对外不可见，用 e.client 会漏读导致重复创建
 	if existing, _ := txc.ProcessTask.Query().

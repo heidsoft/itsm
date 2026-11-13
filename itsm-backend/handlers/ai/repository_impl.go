@@ -406,6 +406,32 @@ func (r *EntRepository) SaveAIAnalysisResult(ctx context.Context, a *AIAnalysisR
 	return toAIAnalysisResultDomain(e), nil
 }
 
+// GetLatestAIAnalysisResultByTicket 返回该工单指定分析类型的最近一条结果。
+//
+// 用于分诊幂等：同一工单重复打开详情页时复用既有结论，不重复调 LLM。
+// 找不到返回 (nil, nil)：调用方按「首次分析」处理，不当作错误。
+func (r *EntRepository) GetLatestAIAnalysisResultByTicket(ctx context.Context, ticketID int, tenantID int, analysisType string) (*AIAnalysisResult, error) {
+	if ticketID <= 0 || tenantID <= 0 {
+		return nil, nil
+	}
+	q := r.client.AIAnalysisResult.Query().
+		Where(
+			aianalysisresult.TicketID(ticketID),
+			aianalysisresult.TenantID(tenantID),
+		)
+	if analysisType != "" {
+		q = q.Where(aianalysisresult.AnalysisType(analysisType))
+	}
+	e, err := q.Order(ent.Desc(aianalysisresult.FieldCreatedAt)).First(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return toAIAnalysisResultDomain(e), nil
+}
+
 func (r *EntRepository) ListAIAnalysisResults(ctx context.Context, tenantID int, analysisType string, limit int) ([]*AIAnalysisResult, error) {
 	q := r.client.AIAnalysisResult.Query().
 		Where(aianalysisresult.TenantID(tenantID))
@@ -426,8 +452,7 @@ func (r *EntRepository) ListAIAnalysisResults(ctx context.Context, tenantID int,
 	return res, nil
 }
 
-func (r *EntRepository) GetAIAnalysisResult(ctx context.Context, id int, tenantID int) (*AIAnalysisResult, error) {
-	e, err := r.client.AIAnalysisResult.Query().
+func (r *EntRepository) GetAIAnalysisResult(ctx context.Context, id int, tenantID int) (*AIAnalysisResult, error) {	e, err := r.client.AIAnalysisResult.Query().
 		Where(aianalysisresult.ID(id), aianalysisresult.TenantID(tenantID)).
 		Only(ctx)
 	if err != nil {

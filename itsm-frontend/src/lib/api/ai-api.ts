@@ -88,13 +88,25 @@ export interface AIMessage {
   createdAt: string;
 }
 
-export async function aiTriage(title: string, description: string): Promise<TriageResult> {
+/**
+ * AI 分诊。
+ *
+ * ticketId 可选：带上后后端按工单幂等——同一工单只分析一次，重复进入详情页
+ * 复用既有结论，不会重复调模型、也不会让分类在多次之间漂移（prod 实测 F2）。
+ */
+export async function aiTriage(
+  title: string,
+  description: string,
+  ticketId?: number
+): Promise<TriageResult> {
   const res = await httpClient.post<{
     title: string;
     description: string;
     auditId?: number;
     promptVersion?: string;
     model?: string;
+    /** true 表示命中后端缓存的既有结论（本次没有重新调用模型）。 */
+    cached?: boolean;
     suggestions?: {
       category?: string;
       priority?: string;
@@ -102,7 +114,7 @@ export async function aiTriage(title: string, description: string): Promise<Tria
       reasoning?: string;
       urgency?: string;
     };
-  }>(`/api/v1/ai/triage`, { title, description });
+  }>(`/api/v1/ai/triage`, ticketId && ticketId > 0 ? { title, description, ticketId } : { title, description });
 
   const suggestions = res?.suggestions || {};
   return {
