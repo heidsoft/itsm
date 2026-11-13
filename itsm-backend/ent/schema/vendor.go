@@ -6,6 +6,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
+	"entgo.io/ent/schema/index"
 )
 
 type Vendor struct {
@@ -15,7 +16,7 @@ type Vendor struct {
 func (Vendor) Fields() []ent.Field {
 	return []ent.Field{
 		field.String("name").NotEmpty(),
-		field.String("code").NotEmpty().Unique(),
+		field.String("code").NotEmpty(),
 		field.String("vendor_type"), // IT服务, 硬件供应商, 软件供应商
 		field.String("contact_name"),
 		field.String("contact_email"),
@@ -34,5 +35,11 @@ func (Vendor) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.To("contracts", Contract.Type),
 		edge.To("assets", Asset.Type),
+	}
+}
+
+func (Vendor) Indexes() []ent.Index {
+	return []ent.Index{
+		index.Fields("tenant_id", "code").Unique(),
 	}
 }

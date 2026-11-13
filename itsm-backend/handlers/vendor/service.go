@@ -20,8 +20,8 @@ var (
 	// ErrVendorNotFound 表示本租户内不存在该供应商。查询都带租户谓词，
 	// 所以跨租户访问与真实不存在同样映射为 not found（fail closed，不泄漏存在性）。
 	ErrVendorNotFound = errors.New("vendor not found")
-	// ErrVendorCodeExists 表示供应商编码已被占用。vendors.code 是数据库唯一索引，
-	// 冲突由约束报错而不是前置查询产生。
+	// ErrVendorCodeExists 表示供应商编码在本租户内已被占用。(tenant_id, code) 组合
+	// 唯一索引由数据库保证，冲突由约束报错而不是前置查询产生。
 	ErrVendorCodeExists = errors.New("vendor code already exists")
 )
 
@@ -47,8 +47,7 @@ func (s *VendorService) CreateVendor(ctx context.Context, req *dto.CreateVendorR
 		SetTenantID(tenantID).
 		Save(ctx)
 	if err != nil {
-		// code 的唯一索引是全局的（不按 tenant 组合），所以其他租户占用的编码
-		// 同样表现为约束冲突；租户维度的唯一键收敛属于 E5 vendors 归属裁决范围。
+		// 唯一索引按 (tenant_id, code) 组合，其他租户占用同编码不构成冲突。
 		if ent.IsConstraintError(err) {
 			return nil, fmt.Errorf("%w: code=%s tenant_id=%d: %w", ErrVendorCodeExists, req.Code, tenantID, err)
 		}

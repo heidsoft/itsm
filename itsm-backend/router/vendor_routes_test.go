@@ -252,3 +252,42 @@ func TestVendorListRouteFailsClosedOnDBError(t *testing.T) {
 	assert.Equal(t, http.StatusInternalServerError, w, "单条读取同样不得伪装成 404: body=%s", string(env.Data))
 	assert.Equal(t, 5001, env.Code)
 }
+
+// TestVendorCodeUniqueIsTenantScoped 是 vendors.code 租户组合唯一的生产入口证明：
+// 修复前全局唯一索引把租户 B 使用同编码的请求拒成 409，修复后必须放行；
+// 同租户重编码仍 409，列表隔离与跨租户读 404 不受放宽影响。
+func TestVendorCodeUniqueIsTenantScoped(t *testing.T) {
+	fx := setupVendorRouteTest(t)
+
+	w, env := fx.do(t, http.MethodPost, vendorsPath,
+		jsonBody(`{"name":"华为（租户B）","code":"hw-001","vendorType":"硬件供应商"}`), fx.stranger)
+	require.Equal(t, http.StatusOK, w, "跨租户同编码必须放行: body=%s", string(env.Data))
+	require.Equal(t, 0, env.Code)
+	v := fx.vendorDTO(t, env)
+	assert.Equal(t, "hw-001", v["code"])
+	assert.Equal(t, fx.stranger.TenantID, int(v["tenantId"].(float64)))
+
+	w, env = fx.do(t, http.MethodPost, vendorsPath,
+		jsonBody(`{"name":"华为重复","code":"hw-001","vendorType":"硬件供应商"}`), fx.userA)
+	assert.Equal(t, http.StatusConflict, w, "同租户重编码必须仍被拒绝: body=%s", string(env.Data))
+	assert.Equal(t, 4090, env.Code)
+
+	var list struct {
+		Items []map[string]any `json:"items"`
+		Total int              `json:"total"`
+	}
+	w, env = fx.do(t, http.MethodGet, vendorsPath, nil, fx.userA)
+	require.Equal(t, http.StatusOK, w, "body=%s", string(env.Data))
+	require.NoError(t, json.Unmarshal(env.Data, &list))
+	assert.Equal(t, 1, list.Total, "租户 A 只看到自己的供应商")
+
+	w, env = fx.do(t, http.MethodGet, vendorsPath, nil, fx.stranger)
+	require.Equal(t, http.StatusOK, w, "body=%s", string(env.Data))
+	require.NoError(t, json.Unmarshal(env.Data, &list))
+	require.Equal(t, 1, list.Total, "租户 B 只看到自己的供应商")
+	assert.Equal(t, fx.stranger.TenantID, int(list.Items[0]["tenantId"].(float64)))
+
+	w, env = fx.do(t, http.MethodGet, fmt.Sprintf("%s/%d", vendorsPath, fx.vendorA.ID), nil, fx.stranger)
+	assert.Equal(t, http.StatusNotFound, w, "body=%s", string(env.Data))
+	assert.Equal(t, 4004, env.Code)
+}

@@ -6,6 +6,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
+	"entgo.io/ent/schema/index"
 )
 
 type Contract struct {
@@ -14,7 +15,7 @@ type Contract struct {
 
 func (Contract) Fields() []ent.Field {
 	return []ent.Field{
-		field.String("contract_number").NotEmpty().Unique(),
+		field.String("contract_number").NotEmpty(),
 		field.String("title"),
 		field.String("contract_type"), // 服务协议, 维护合同, 采购合同
 		field.Float("value").Default(0),
@@ -32,5 +33,11 @@ func (Contract) Fields() []ent.Field {
 func (Contract) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.From("vendor", Vendor.Type).Field("vendor_id").Ref("contracts").Unique(),
+	}
+}
+
+func (Contract) Indexes() []ent.Index {
+	return []ent.Index{
+		index.Fields("tenant_id", "contract_number").Unique(),
 	}
 }

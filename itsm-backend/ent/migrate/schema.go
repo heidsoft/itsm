@@ -1308,7 +1308,7 @@ var (
 	// ContractsColumns holds the columns for the "contracts" table.
 	ContractsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
-		{Name: "contract_number", Type: field.TypeString, Unique: true},
+		{Name: "contract_number", Type: field.TypeString},
 		{Name: "title", Type: field.TypeString},
 		{Name: "contract_type", Type: field.TypeString},
 		{Name: "value", Type: field.TypeFloat64, Default: 0},
@@ -1332,6 +1332,13 @@ var (
 				Columns:    []*schema.Column{ContractsColumns[12]},
 				RefColumns: []*schema.Column{VendorsColumns[0]},
 				OnDelete:   schema.SetNull,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "contract_tenant_id_contract_number",
+				Unique:  true,
+				Columns: []*schema.Column{ContractsColumns[9], ContractsColumns[1]},
 			},
 		},
 	}
@@ -5756,7 +5763,7 @@ var (
 	VendorsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "name", Type: field.TypeString},
-		{Name: "code", Type: field.TypeString, Unique: true},
+		{Name: "code", Type: field.TypeString},
 		{Name: "vendor_type", Type: field.TypeString},
 		{Name: "contact_name", Type: field.TypeString},
 		{Name: "contact_email", Type: field.TypeString},
@@ -5774,6 +5781,13 @@ var (
 		Name:       "vendors",
 		Columns:    VendorsColumns,
 		PrimaryKey: []*schema.Column{VendorsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "vendor_tenant_id_code",
+				Unique:  true,
+				Columns: []*schema.Column{VendorsColumns[11], VendorsColumns[2]},
+			},
+		},
 	}
 	// WorkflowTemplatesColumns holds the columns for the "workflow_templates" table.
 	WorkflowTemplatesColumns = []*schema.Column{
