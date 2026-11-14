@@ -26,6 +26,7 @@
 
 | 文件 | 主题 |
 |:--|:--|
+| [`ai-native-development-plan-2026-11-14.md`](ai-native-development-plan-2026-11-14.md) | AI-Native 六批次后续计划（编排前端闭环 / Skill 身份硬化 / 注册表持久化 / Evaluator 扩展 / 边缘组件硬化 / 编排深化），基于 `7804845bc` 摸底基线 |
 | [`ai-security-operations-blueprint.md`](ai-security-operations-blueprint.md) | 安全运营域 S1–S5 总蓝图 |
 | [`exposure-answer-design.md`](exposure-answer-design.md) | 前置环节 S0：外部安全事件暴露面自答 |
 | [`security-operations-feature-design.md`](security-operations-feature-design.md) | F1–F10 功能规格 |
