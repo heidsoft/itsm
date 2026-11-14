@@ -43,12 +43,8 @@ func (t *TriageService) normalizeResult(result TriageResult) TriageResult {
 	if result.Confidence < 0 || result.Confidence > 1 {
 		result.Confidence = 0.6
 	}
-	// Set default assignee based on category when not already assigned
-	if result.AssigneeID == 0 {
-		if assigneeID, ok := t.defaultAssignees[result.Category]; ok {
-			result.AssigneeID = assigneeID
-		}
-	}
+	// AssigneeID 不再做兜底注入：来源（sidecar/LLM）给不出建议时保持 0，
+	// 由调用方按「无建议」处理，而不是拼一个跨租户必错的假用户 ID。
 	return result
 }
 
@@ -106,80 +102,62 @@ func guidanceResultDegraded(r *GuidanceTriageResponse) bool {
 }
 
 // TriageService provides LLM-powered ticket triage and classification
+//
+// 分诊结果不再注入任何硬编码 assignee ID：旧 defaultAssignees（101-106）是
+// 伪造的客户业务数据，跨租户必然指向错误用户。AssigneeID 只透传 Guidance
+// sidecar / LLM 的真实建议，来源给不出时保持 0 =「无建议」。
 type TriageService struct {
-	gateway          *LLMGateway
-	guidanceClient   guidanceTriageClient
-	logger           *zap.Logger
-	keywordFallback  bool
-	defaultAssignees map[string]int
-}
-
-// Default assignee IDs by category
-var defaultAssignees = map[string]int{
-	"database":    101,
-	"network":     102,
-	"server":      103,
-	"application": 104,
-	"security":    100,
-	"storage":     105,
-	"user_access": 106,
-	"general":     0,
+	gateway         *LLMGateway
+	guidanceClient  guidanceTriageClient
+	logger          *zap.Logger
+	keywordFallback bool
 }
 
 // NewTriageService creates a new LLM-powered triage service
 func NewTriageService(gateway *LLMGateway, logger *zap.Logger) *TriageService {
 	return &TriageService{
-		gateway:          gateway,
-		logger:           logger,
-		keywordFallback:  true,
-		defaultAssignees: defaultAssignees,
+		gateway:         gateway,
+		logger:          logger,
+		keywordFallback: true,
 	}
 }
 
 // NewTriageServiceWithSugaredLogger creates a new LLM-powered triage service with SugaredLogger
 func NewTriageServiceWithSugaredLogger(gateway *LLMGateway, logger *zap.SugaredLogger) *TriageService {
 	return &TriageService{
-		gateway:          gateway,
-		logger:           logger.Desugar(),
-		keywordFallback:  true,
-		defaultAssignees: defaultAssignees,
+		gateway:         gateway,
+		logger:          logger.Desugar(),
+		keywordFallback: true,
 	}
 }
 
 // NewTriageServiceWithGuidance creates a triage service with Guidance sidecar
 func NewTriageServiceWithGuidance(gateway *LLMGateway, guidanceClient *GuidanceClient, logger *zap.Logger) *TriageService {
 	return &TriageService{
-		gateway:          gateway,
-		guidanceClient:   guidanceClient,
-		logger:           logger,
-		keywordFallback:  true,
-		defaultAssignees: defaultAssignees,
+		gateway:         gateway,
+		guidanceClient:  guidanceClient,
+		logger:          logger,
+		keywordFallback: true,
 	}
 }
 
 // NewTriageServiceWithGuidanceAndSugaredLogger creates with SugaredLogger
 func NewTriageServiceWithGuidanceAndSugaredLogger(gateway *LLMGateway, guidanceClient *GuidanceClient, logger *zap.SugaredLogger) *TriageService {
 	return &TriageService{
-		gateway:          gateway,
-		guidanceClient:   guidanceClient,
-		logger:           logger.Desugar(),
-		keywordFallback:  true,
-		defaultAssignees: defaultAssignees,
+		gateway:         gateway,
+		guidanceClient:  guidanceClient,
+		logger:          logger.Desugar(),
+		keywordFallback: true,
 	}
 }
 
 // NewTriageServiceWithConfig creates a service with custom configuration
-func NewTriageServiceWithConfig(gateway *LLMGateway, logger *zap.Logger, fallback bool, assignees map[string]int) *TriageService {
-	svc := &TriageService{
-		gateway:          gateway,
-		logger:           logger,
-		keywordFallback:  fallback,
-		defaultAssignees: defaultAssignees,
+func NewTriageServiceWithConfig(gateway *LLMGateway, logger *zap.Logger, fallback bool) *TriageService {
+	return &TriageService{
+		gateway:         gateway,
+		logger:          logger,
+		keywordFallback: fallback,
 	}
-	if assignees != nil {
-		svc.defaultAssignees = assignees
-	}
-	return svc
 }
 
 // Suggest 是无租户上下文的分诊入口，仅供离线工具与单元测试使用。
@@ -428,32 +406,25 @@ func (t *TriageService) keywordBasedSuggest(text string) TriageResult {
 	// Category detection based on keywords
 	if containsAny(text, "database", "db", "mysql", "postgresql", "oracle", "sql", "mongodb", "redis", "数据库", "慢查询", "连接池") {
 		result.Category = "database"
-		result.AssigneeID = t.defaultAssignees["database"]
 		result.Confidence = 0.7
 	} else if containsAny(text, "network", "wifi", "switch", "router", "firewall", "网络", "无法上网", "交换机", "路由器", "防火墙", "丢包") {
 		result.Category = "network"
-		result.AssigneeID = t.defaultAssignees["network"]
 		result.Confidence = 0.68
 	} else if containsAny(text, "storage", "disk space", "space", "backup", "snapshot", "存储", "磁盘空间", "空间不足", "备份", "快照", "容量") {
 		result.Category = "storage"
-		result.AssigneeID = t.defaultAssignees["storage"]
 		result.Confidence = 0.66
 	} else if containsAny(text, "server", "cpu", "memory", "disk", "linux", "windows server", "服务器", "主机", "内存", "磁盘", "操作系统") {
 		result.Category = "server"
-		result.AssigneeID = t.defaultAssignees["server"]
 		result.Confidence = 0.65
 	} else if containsAny(text, "application", "software", "app", "api", "deploy", "应用", "软件", "接口", "部署", "发布", "报错", "服务异常") {
 		result.Category = "application"
-		result.AssigneeID = t.defaultAssignees["application"]
 		result.Confidence = 0.62
 	} else if containsAny(text, "security", "vulnerability", "attack", "permission", "authentication", "安全", "漏洞", "攻击", "入侵", "恶意", "认证绕过") {
 		result.Category = "security"
-		result.AssigneeID = t.defaultAssignees["security"]
 		result.Confidence = 0.75
 		result.Priority = "critical"
 	} else if containsAny(text, "user", "account", "login", "password", "access", "用户", "账号", "账户", "登录", "密码", "权限", "访问") {
 		result.Category = "user_access"
-		result.AssigneeID = t.defaultAssignees["user_access"]
 		result.Confidence = 0.6
 	}
 
@@ -538,61 +509,6 @@ func (t *TriageService) SuggestWithMetadata(ctx context.Context, title, descript
 	result.Latency = time.Since(start)
 
 	return result, nil
-}
-
-// SuggestAssignee suggests an assignee based on ticket content
-func (t *TriageService) SuggestAssignee(ctx context.Context, category, title, description string) (int, string, error) {
-	if t.gateway != nil {
-		prompt := fmt.Sprintf(`Recommend the best handler for this IT ticket:
-
-Category: %s
-Title: %s
-Description: %s
-
-Choose from:
-- Zhang San (101) - Database expert
-- Li Si (102) - Network engineer
-- Wang Wu (103) - Server admin
-- Zhao Liu (104) - Application developer
-- Zhou Qi (100) - Security expert
-- Chen Ba (105) - Storage expert
-
-Return only the ID number, or 0 if unsure.`, category, title, description)
-
-		messages := []LLMMessage{
-			{Role: "system", Content: "You are an IT service management assistant."},
-			{Role: "user", Content: prompt},
-		}
-
-		resp, err := t.gateway.Chat(ctx, "", messages)
-		if err != nil {
-			t.logger.Warn("TriageService: assignee suggestion failed", zap.Error(err))
-		} else {
-			resp = strings.TrimSpace(resp)
-			for _, line := range strings.Split(resp, "\n") {
-				line = strings.TrimSpace(line)
-				if len(line) <= 3 {
-					continue
-				}
-				for i := len(line) - 1; i >= 0; i-- {
-					if line[i] < '0' || line[i] > '9' {
-						if i < len(line)-1 {
-							if id, err := parseAssigneeID(line[i+1:]); err == nil {
-								return id, "", nil
-							}
-						}
-						break
-					}
-				}
-			}
-		}
-	}
-
-	if assigneeID, ok := t.defaultAssignees[category]; ok {
-		return assigneeID, "", nil
-	}
-
-	return 0, "", nil
 }
 
 func parseAssigneeID(s string) (int, error) {

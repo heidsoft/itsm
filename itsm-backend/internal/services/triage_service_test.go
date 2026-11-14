@@ -39,7 +39,9 @@ func TestTriage_Suggest_Keyword_Database(t *testing.T) {
 	result := svc.Suggest(context.Background(), "MySQL connection failed", "database cannot be accessed")
 
 	assert.Equal(t, "database", result.Category)
-	assert.Equal(t, 101, result.AssigneeID)
+	// 关键词 fallback 不再注入硬编码 assignee ID（旧 defaultAssignees 101-106
+	// 是伪造数据，跨租户必错）：0 = 无建议，真实建议只能来自 sidecar/LLM。
+	assert.Equal(t, 0, result.AssigneeID)
 	assert.Greater(t, result.Confidence, 0.6)
 }
 
@@ -48,7 +50,7 @@ func TestTriage_Suggest_Keyword_Network(t *testing.T) {
 	result := svc.Suggest(context.Background(), "WiFi cannot connect", "router no response")
 
 	assert.Equal(t, "network", result.Category)
-	assert.Equal(t, 102, result.AssigneeID)
+	assert.Equal(t, 0, result.AssigneeID)
 }
 
 func TestTriage_Suggest_Keyword_Security(t *testing.T) {
@@ -57,7 +59,7 @@ func TestTriage_Suggest_Keyword_Security(t *testing.T) {
 
 	assert.Equal(t, "security", result.Category)
 	assert.Equal(t, "critical", result.Priority)
-	assert.Equal(t, 100, result.AssigneeID)
+	assert.Equal(t, 0, result.AssigneeID)
 }
 
 func TestTriage_Suggest_Keyword_ChineseDatabase(t *testing.T) {
@@ -66,7 +68,7 @@ func TestTriage_Suggest_Keyword_ChineseDatabase(t *testing.T) {
 
 	assert.Equal(t, "database", result.Category)
 	assert.Equal(t, "high", result.Priority)
-	assert.Equal(t, 101, result.AssigneeID)
+	assert.Equal(t, 0, result.AssigneeID)
 }
 
 func TestTriage_Suggest_Keyword_ChineseNetwork(t *testing.T) {
@@ -75,7 +77,7 @@ func TestTriage_Suggest_Keyword_ChineseNetwork(t *testing.T) {
 
 	assert.Equal(t, "network", result.Category)
 	assert.Equal(t, "high", result.Priority)
-	assert.Equal(t, 102, result.AssigneeID)
+	assert.Equal(t, 0, result.AssigneeID)
 }
 
 func TestTriage_Suggest_Keyword_ChineseUserAccess(t *testing.T) {
@@ -84,7 +86,7 @@ func TestTriage_Suggest_Keyword_ChineseUserAccess(t *testing.T) {
 
 	assert.Equal(t, "user_access", result.Category)
 	assert.Equal(t, "medium", result.Priority)
-	assert.Equal(t, 106, result.AssigneeID)
+	assert.Equal(t, 0, result.AssigneeID)
 }
 
 func TestTriage_Suggest_Keyword_ChineseUserImpactEscalation(t *testing.T) {
@@ -93,7 +95,7 @@ func TestTriage_Suggest_Keyword_ChineseUserImpactEscalation(t *testing.T) {
 
 	assert.Equal(t, "user_access", result.Category)
 	assert.Equal(t, "high", result.Priority)
-	assert.Equal(t, 106, result.AssigneeID)
+	assert.Equal(t, 0, result.AssigneeID)
 }
 
 func TestTriage_Suggest_Keyword_StorageBeforeServerDisk(t *testing.T) {
@@ -101,7 +103,7 @@ func TestTriage_Suggest_Keyword_StorageBeforeServerDisk(t *testing.T) {
 	result := svc.Suggest(context.Background(), "disk space alert", "backup volume capacity is almost full")
 
 	assert.Equal(t, "storage", result.Category)
-	assert.Equal(t, 105, result.AssigneeID)
+	assert.Equal(t, 0, result.AssigneeID)
 }
 
 func TestTriage_Suggest_Keyword_PriorityEscalation(t *testing.T) {
@@ -127,7 +129,7 @@ func TestTriage_Suggest_LLM_Success(t *testing.T) {
 
 	assert.Equal(t, "security", result.Category)
 	assert.Equal(t, "critical", result.Priority)
-	assert.Equal(t, 100, result.AssigneeID)
+	assert.Equal(t, 0, result.AssigneeID)
 	assert.Equal(t, 0.9, result.Confidence)
 }
 
@@ -143,7 +145,7 @@ func TestTriage_Suggest_LLM_IgnoresModelAssigneeID(t *testing.T) {
 	result := svc.Suggest(context.Background(), "发现恶意请求", "")
 
 	assert.Equal(t, "security", result.Category)
-	assert.Equal(t, 100, result.AssigneeID)
+	assert.Equal(t, 0, result.AssigneeID)
 }
 
 func TestTriage_SuggestForTenant_PassesTenantToGuidance(t *testing.T) {
@@ -161,7 +163,7 @@ func TestTriage_SuggestForTenant_PassesTenantToGuidance(t *testing.T) {
 
 	assert.Equal(t, 42, guidance.tenantID)
 	assert.Equal(t, "database", result.Category)
-	assert.Equal(t, 101, result.AssigneeID)
+	assert.Equal(t, 0, result.AssigneeID)
 }
 
 func TestTriage_Suggest_LLM_ParseError_Fallback(t *testing.T) {
@@ -230,7 +232,7 @@ func TestTriage_Suggest_LLM_LowConfidence_FallbackToKeyword(t *testing.T) {
 	result := svc.Suggest(context.Background(), "mysql connection failed", "cannot connect to database")
 
 	assert.Equal(t, "database", result.Category)
-	assert.Equal(t, 101, result.AssigneeID)
+	assert.Equal(t, 0, result.AssigneeID)
 	assert.Greater(t, result.Confidence, 0.5)
 }
 
@@ -246,7 +248,7 @@ func TestTriage_Suggest_LLM_HighConfidence_NoKeywordFallback(t *testing.T) {
 	result := svc.Suggest(context.Background(), "WiFi connection issues", "")
 
 	assert.Equal(t, "network", result.Category)
-	assert.Equal(t, 102, result.AssigneeID)
+	assert.Equal(t, 0, result.AssigneeID)
 	assert.Equal(t, 0.85, result.Confidence)
 }
 
@@ -263,7 +265,7 @@ func TestTriage_Suggest_LLM_JSONWithMarkdown(t *testing.T) {
 
 	assert.Equal(t, "storage", result.Category)
 	assert.Equal(t, "high", result.Priority)
-	assert.Equal(t, 105, result.AssigneeID)
+	assert.Equal(t, 0, result.AssigneeID)
 }
 
 func TestTriage_Suggest_Guidance_NormalizesEmptyFields(t *testing.T) {
@@ -329,7 +331,7 @@ func TestTriage_Suggest_Guidance_Error_FallsBackToLLM(t *testing.T) {
 	assert.Equal(t, "security", result.Category)
 	assert.Equal(t, "critical", result.Priority)
 	assert.Equal(t, 0.88, result.Confidence)
-	assert.Equal(t, 100, result.AssigneeID)
+	assert.Equal(t, 0, result.AssigneeID)
 }
 
 func TestTriage_Suggest_Guidance_Error_FallsBackToKeyword(t *testing.T) {
@@ -348,7 +350,7 @@ func TestTriage_Suggest_Guidance_Error_FallsBackToKeyword(t *testing.T) {
 
 	assert.Equal(t, 1, guidance.callCount)
 	assert.Equal(t, "database", result.Category)
-	assert.Equal(t, 101, result.AssigneeID)
+	assert.Equal(t, 0, result.AssigneeID)
 }
 
 func TestTriage_Suggest_Guidance_NormalizesEmptyCategory(t *testing.T) {
@@ -403,7 +405,7 @@ func TestTriage_Suggest_Guidance_NormalizesOutOfRangeConfidence(t *testing.T) {
 	result := svc.SuggestForTenant(context.Background(), "anything", "anything", 1)
 
 	assert.Equal(t, 0.6, result.Confidence)
-	assert.Equal(t, 102, result.AssigneeID)
+	assert.Equal(t, 0, result.AssigneeID)
 }
 
 func TestTriage_Suggest_Guidance_Success_PreservesAssignee(t *testing.T) {
@@ -437,7 +439,7 @@ func TestTriage_NormalizeResult_RejectsNegativeConfidence(t *testing.T) {
 	})
 	assert.Equal(t, 0.6, got.Confidence)
 	assert.Equal(t, "storage", got.Category)
-	assert.Equal(t, 105, got.AssigneeID)
+	assert.Equal(t, 0, got.AssigneeID)
 }
 
 func TestTriage_Suggest_GuidanceError_FallsBackToLLM(t *testing.T) {
@@ -457,7 +459,7 @@ func TestTriage_Suggest_GuidanceError_FallsBackToLLM(t *testing.T) {
 
 	assert.Equal(t, "security", result.Category)
 	assert.Equal(t, "critical", result.Priority)
-	assert.Equal(t, 100, result.AssigneeID)
+	assert.Equal(t, 0, result.AssigneeID)
 	assert.Equal(t, 0.92, result.Confidence)
 }
 
@@ -477,6 +479,6 @@ func TestTriage_Suggest_GuidanceErrorAndLLMError_FallsBackToKeyword(t *testing.T
 	result := svc.SuggestForTenant(context.Background(), "MySQL连接失败", "数据库无法访问", 1)
 
 	assert.Equal(t, "database", result.Category)
-	assert.Equal(t, 101, result.AssigneeID)
+	assert.Equal(t, 0, result.AssigneeID)
 	assert.Greater(t, result.Confidence, 0.5)
 }

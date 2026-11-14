@@ -433,7 +433,7 @@ func (s *Service) ChatWithTrace(ctx context.Context, tenantID, userID int, query
 		return out, nil
 	}
 	auditID, ledgerErr := s.auditLedger.RecordDecisionAudit(ctx, tenantID, userID,
-		fmt.Sprintf("chat_%d_%d", tenantID, time.Now().UnixNano()),
+		ledgerRequestID(ctx, "chat"),
 		"chat", fmt.Sprintf("query:%s", truncateForRef(query, 120)),
 		ragAskPromptVersion, mode, confidence,
 		map[string]interface{}{
@@ -762,6 +762,11 @@ func aiResultTrace(result interface{}) (confidence float64, promptVersion string
 }
 
 // CreateTicketByAI 通过 AI 解析自然语言描述，智能分析并返回工单创建建议
+//
+// 响应字段统一 camelCase（AGENTS.md 命名强制规则）：此前输出 suggested_title /
+// tenant_id 等 snake_case 字段。AI 链路不可用的 fallback 分支必须显式置
+// degraded=true——降级结果不能伪装成模型正常产出（与 TriageTicket 的降级
+// 契约同口径）。
 func (s *Service) CreateTicketByAI(ctx context.Context, description string, tenantID int) (map[string]interface{}, error) {
 	s.logger.Infow("AI CreateTicketByAI", "tenantID", tenantID)
 
@@ -769,27 +774,28 @@ func (s *Service) CreateTicketByAI(ctx context.Context, description string, tena
 	if s.triageService != nil {
 		result := s.triageService.SuggestForTenant(ctx, description, description, tenantID)
 		return map[string]interface{}{
-			"suggested_title":    description,
-			"suggested_category": result.Category,
-			"suggested_priority": result.Priority,
-			"confidence":         result.Confidence,
-			"reasoning":          result.Explanation,
-			"tenant_id":          tenantID,
-			"status":             "draft",
-			"message":            "AI 已分析描述，请确认后提交工单",
+			"suggestedTitle":    description,
+			"suggestedCategory": result.Category,
+			"suggestedPriority": result.Priority,
+			"confidence":        result.Confidence,
+			"reasoning":         result.Explanation,
+			"tenantId":          tenantID,
+			"status":            "draft",
+			"message":           "AI 已分析描述，请确认后提交工单",
 		}, nil
 	}
 
 	// fallback：基于关键词简单分析
 	return map[string]interface{}{
-		"suggested_title":    description,
-		"suggested_category": "general",
-		"suggested_priority": "medium",
-		"confidence":         0.5,
-		"reasoning":          "基于关键词分析",
-		"tenant_id":          tenantID,
-		"status":             "draft",
-		"message":            "AI 服务不可用，已返回默认建议",
+		"suggestedTitle":    description,
+		"suggestedCategory": "general",
+		"suggestedPriority": "medium",
+		"confidence":        0.5,
+		"reasoning":         "基于关键词分析",
+		"tenantId":          tenantID,
+		"status":            "draft",
+		"message":           "AI 服务不可用，已返回默认建议",
+		"degraded":          true,
 	}, nil
 }
 
@@ -878,7 +884,7 @@ func (s *Service) withSummaryAudit(ctx context.Context, ticketID, tenantID, user
 		return resp
 	}
 	auditID, err := s.auditLedger.RecordDecisionAudit(ctx, tenantID, userID,
-		fmt.Sprintf("summary_%d_%d", tenantID, time.Now().UnixNano()),
+		ledgerRequestID(ctx, "summary"),
 		"summary", fmt.Sprintf("ticket:%d", ticketID),
 		promptVersion, model, confidence,
 		map[string]interface{}{
@@ -992,7 +998,7 @@ func (s *Service) recordForecastAudit(ctx context.Context, tenantID, userID int,
 		return 0
 	}
 	auditID, err := s.auditLedger.RecordDecisionAudit(ctx, tenantID, userID,
-		fmt.Sprintf("forecast_%d_%d", tenantID, time.Now().UnixNano()),
+		ledgerRequestID(ctx, "forecast"),
 		"forecast", inputRef, slaForecastPromptVersion, model, confidence,
 		map[string]interface{}{"model": model},
 	)
@@ -1194,7 +1200,7 @@ func (s *Service) TriageTicket(ctx context.Context, tenantID int, userID int, ti
 				metadata["degradedReason"] = result.DegradedReason
 			}
 			auditID, ledgerErr := s.auditLedger.RecordDecisionAudit(ctx, tenantID, userID,
-				fmt.Sprintf("triage_%d_%d", tenantID, time.Now().UnixNano()),
+				ledgerRequestID(ctx, "triage"),
 				"triage", fmt.Sprintf("ticket:%s", title),
 				result.PromptVersion, result.Model, result.Confidence,
 				metadata,

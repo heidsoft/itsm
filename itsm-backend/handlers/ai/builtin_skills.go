@@ -28,6 +28,7 @@ func RegisterBuiltinSkills(reg SkillRegistrar, svc *Service, logger *zap.Sugared
 		NewKnowledgeSearchSkill(svc),
 		NewSummarizeSkill(svc),
 		NewAnalyzeSkill(svc),
+		NewInvestigateSkill(svc),
 		NewAnalyticsSkill(svc),
 		NewTrendPredictionSkill(svc),
 		NewCreateTicketSkill(svc),

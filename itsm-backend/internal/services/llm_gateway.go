@@ -377,12 +377,16 @@ var ErrRateLimited = dto.ErrRateLimited
 
 type RateLimitError = dto.RateLimitError
 
-type FixedWindowLimiter struct{ capacity int }
+// TokenCapLimiter 是单请求 token 预算闸：Allow(nTokens) 仅校验「本次请求的
+// token 估算量不超过容量上限」，不维护任何窗口/计数状态，不是限流器——
+// 旧名 FixedWindowLimiter 名不副实，容易让人误以为有速率窗口语义。
+// 请求级 QPS/速率控制属于网关或 provider 侧职责，不在此实现。
+type TokenCapLimiter struct{ capacity int }
 
-func NewFixedWindowLimiter(capacity int) *FixedWindowLimiter {
-	return &FixedWindowLimiter{capacity: capacity}
+func NewTokenCapLimiter(capacity int) *TokenCapLimiter {
+	return &TokenCapLimiter{capacity: capacity}
 }
-func (l *FixedWindowLimiter) Allow(n int) bool { return n <= l.capacity }
+func (l *TokenCapLimiter) Allow(n int) bool { return n <= l.capacity }
 
 type NoopObserver struct{}
 

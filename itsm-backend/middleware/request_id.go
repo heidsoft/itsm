@@ -22,10 +22,17 @@ func RequestIDMiddleware() gin.HandlerFunc {
 		c.Writer.Header().Set("X-Request-Id", reqID)
 		// 同步注入 request.Context：c.Set 只对 gin 链可见，service/observer 层
 		// 只能从 context.Context 取值（与 tenant 注入同口径）。
-		c.Request = c.Request.WithContext(context.WithValue(c.Request.Context(), requestIDCtxKey{}, reqID))
+		c.Request = c.Request.WithContext(WithRequestID(c.Request.Context(), reqID))
 
 		c.Next()
 	}
+}
+
+// WithRequestID 把 request ID 注入 context.Context。生产链路由
+// RequestIDMiddleware 调用；Worker/skill 等非 HTTP 入口也可复用，保证
+// 底账、日志、metric 的 request_id 归因同源。
+func WithRequestID(ctx context.Context, reqID string) context.Context {
+	return context.WithValue(ctx, requestIDCtxKey{}, reqID)
 }
 
 // RequestIDFromContext 返回请求链路携带的 request ID；未注入时 ok=false。

@@ -14,8 +14,8 @@ import (
 // withTrace(..., "guidance")，审计底账因此出现一条「模型决策」——事后无法区分
 // 哪些结论来自模型、哪些来自正则。以下用例锁死「降级必须可识别」这条不变量。
 
-// sidecar 明确降级时，不能直接采信为 guidance 决策：本地关键词启发式更完整
-// （带 category→assignee 映射），应优先于 sidecar 的降级结果。
+// sidecar 明确降级时，不能直接采信为 guidance 决策：本地关键词启发式
+// 分类枚举更完整，应优先于 sidecar 的降级结果。
 func TestTriage_GuidanceDegraded_PrefersLocalKeyword(t *testing.T) {
 	guidance := &fakeGuidanceClient{
 		result: &GuidanceTriageResponse{
@@ -34,7 +34,7 @@ func TestTriage_GuidanceDegraded_PrefersLocalKeyword(t *testing.T) {
 
 	assert.Equal(t, 1, guidance.callCount)
 	assert.Equal(t, "database", result.Category, "应回落到本地关键词启发式")
-	assert.Equal(t, 101, result.AssigneeID, "本地启发式带默认处理人映射")
+	assert.Equal(t, 0, result.AssigneeID, "关键词链路不再注入硬编码 assignee，0 = 无建议")
 	assert.Equal(t, "keyword", result.Model)
 	assert.True(t, result.Degraded, "关键词链路不是模型推理，必须标注降级")
 	assert.NotEmpty(t, result.DegradedReason)
@@ -111,7 +111,7 @@ func TestTriage_GuidanceDegraded_LastResortKeepsProvenance(t *testing.T) {
 			Degraded:   true,
 		},
 	}
-	svc := NewTriageServiceWithConfig(nil, zap.NewNop(), false, nil)
+	svc := NewTriageServiceWithConfig(nil, zap.NewNop(), false)
 	svc.guidanceClient = guidance
 
 	result := svc.SuggestForTenant(context.Background(), "主机负载过高", "", 1)
@@ -140,7 +140,7 @@ func TestTriage_GatewayError_UsesSidecarDegradedAsLastResort(t *testing.T) {
 			Degraded:   true,
 		},
 	}
-	svc := NewTriageServiceWithConfig(gateway, zap.NewNop(), false, nil)
+	svc := NewTriageServiceWithConfig(gateway, zap.NewNop(), false)
 	svc.guidanceClient = guidance
 
 	result := svc.SuggestForTenant(context.Background(), "疑似入侵", "", 1)

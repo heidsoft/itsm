@@ -87,6 +87,45 @@ func TestCreateTicketByAI_Handler(t *testing.T) {
 	}
 }
 
+// TestCreateTicketByAI_Handler_CamelCaseContract 验证响应字段 camelCase 契约：
+// 旧实现输出 suggested_title / tenant_id 等 snake_case（违反命名强制规则），
+// 本测试锁定修复后的字段名，并确认 fallback 分支显式携带 degraded=true。
+func TestCreateTicketByAI_Handler_CamelCaseContract(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	// triageService 为 nil，走 fallback 分支（同时验证降级标记）。
+	svc := ai.NewService(nil, zap.NewNop().Sugar(), nil, nil, nil, nil, nil, nil, nil, nil)
+	h := ai.NewHandler(svc)
+
+	r := gin.New()
+	r.POST("/api/v1/ai/ticket/create", func(c *gin.Context) {
+		c.Set("tenant_id", 1)
+		h.CreateTicketByAI(c)
+	})
+
+	body, _ := json.Marshal(map[string]string{"description": "服务器无法启动"})
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/ai/ticket/create", bytes.NewBuffer(body))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	require.Equal(t, http.StatusOK, w.Code)
+
+	var resp map[string]interface{}
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
+	data, ok := resp["data"].(map[string]interface{})
+	require.True(t, ok, "success response must expose data")
+
+	for _, key := range []string{"suggestedTitle", "suggestedCategory", "suggestedPriority", "tenantId", "status"} {
+		require.Contains(t, data, key, "contract key %s missing", key)
+	}
+	assert.Equal(t, true, data["degraded"], "fallback branch must self-report degraded")
+
+	for _, banned := range []string{"suggested_title", "suggested_category", "suggested_priority", "tenant_id"} {
+		assert.NotContains(t, data, banned, "snake_case contract key %s must not return", banned)
+	}
+}
+
 // TestSummarizeTicket_RouteExists 验证 SummarizeTicket 方法存在
 func TestSummarizeTicket_RouteExists(t *testing.T) {
 	gin.SetMode(gin.TestMode)

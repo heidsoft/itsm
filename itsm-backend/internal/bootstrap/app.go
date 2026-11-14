@@ -654,7 +654,7 @@ func NewApplication() *Application {
 	if tokenCap <= 0 {
 		tokenCap = 4000
 	}
-	llmLimiter := service.NewFixedWindowLimiter(tokenCap)
+	llmLimiter := service.NewTokenCapLimiter(tokenCap)
 	sugar.Infow("LLM token limiter wired", "capacity_runes_per_request", tokenCap)
 	// 网关级可观测性：每次 LLM 调用（成功/限流/失败）都会写入 ai_llm_calls，
 	// 供 /api/v1/ai/metrics 输出真实的 avg_response_time_seconds。

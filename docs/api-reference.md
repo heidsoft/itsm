@@ -52,6 +52,23 @@ POST /api/v1/ai/triage
 
 响应携带置信度与溯源字段：`suggestions.confidence`（0-1）之外，顶层还有 `promptVersion`（口径版本，当前 `triage-v1`，分词语义变更必须递增）、`model`（决策链路：`guidance`/`llm`/`keyword`）与 `auditId`（服务端决策底账行 ID）。服务端在产出建议时**自动**落一条 `item_type='ai_audit'` 底账（`accepted=NULL` 未决策，溯源字段由服务端写入）；前端采纳/拒绝直接 `PATCH /api/v1/ai/audit-logs/{auditId}` 翻转，不再需要客户端伪造 `model` 二次 POST 自报。底账写失败不阻塞建议返回，仅响应不携带 `auditId`。
 
+## AI 工单调查编排
+
+需要 `ai:read` + `ticket:read` 双权限（读取工单事实 + 调用 AI 工具链各按其权限码校验）。
+
+```http
+POST /api/v1/ai/tickets/{id}/investigate
+```
+
+服务端执行一条确定性调查链：**分诊**（Guidance→LLM→keyword 三级）→ **知识库检索**（`list_kb`）→ **CMDB 影响分析**（`list_cis` 定位 CI 后 `get_ci_impact` 两跳扩散）→ **LLM 综合**为结构化结论。关键语义：
+
+- 每个 AI 工具步骤经 `POST /agent/tools/execute` 同一套 Gate 2 RBAC + 审计；某一步权限不足或依赖未就绪只降级该步（`steps[].degraded=true` + `degradedReason`），不中断整链，且权限拒绝如实标注、不伪装成「无命中」。
+- 响应 `status`：`completed`（LLM 综合成功）/ `degraded`（LLM 不可用或输出非法 JSON，退化为确定性拼接——只如实汇总证据数量与分诊解释，不编造根因，`suspectedRootCause`/`suggestedActions` 为空）。
+- `suggestedActions` 是**建议**而非执行：只允许引用白名单内工具（`create_ticket`/`update_ticket`/`link_ticket_ci`/`create_ci_relationship`/`delete_ci_relationship`），全部 `requiresApproval=true`；写操作由操作者显式走 `POST /agent/tools/execute` 审批流（Gate 3），编排器绝不静默执行。
+- 契约字段（camelCase）：`ticketId`、`ticketNumber`、`status`、`degraded`、`promptVersion`（`investigation-v1`）、`model`、`confidence`、`latencyMs`、`steps[]`（`step`/`tool`/`degraded`/`degradedReason`/`hitCount`/`detail`）、`findings[]`、`suspectedRootCause`、`impactedServices[]`、`suggestedActions[]`、`auditId`。
+- 每次调用**全量重跑**并落两条持久记录：`item_type='ai_audit'` 决策底账（scenario=`investigation`，`inputRef=ticket:{id}`）与 `ai_analysis_results` 历史（`analysis_type='investigation'`）——调查对 CMDB/知识库新鲜度敏感，刻意不做按工单幂等复用（与分诊不同）。
+- 目标工单不存在返回 404 / `4004`（跨租户访问同样表现为 404，不泄漏存在性）；编排依赖未装配返回 503。
+
 ## AI 审计记录
 
 需要 `ai:read` 权限，租户范围只取认证上下文，查询参数中的同名字段不生效。

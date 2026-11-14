@@ -262,29 +262,29 @@ func TestLLMGateway_Chat_TokenCalculation(t *testing.T) {
 
 // ==================== Token Limiter 测试 ====================
 
-func TestNewFixedWindowLimiter(t *testing.T) {
-	limiter := NewFixedWindowLimiter(100)
+func TestNewTokenCapLimiter(t *testing.T) {
+	limiter := NewTokenCapLimiter(100)
 	require.NotNil(t, limiter)
 	assert.Equal(t, 100, limiter.capacity)
 }
 
-func TestFixedWindowLimiter_Allow_WithinCapacity(t *testing.T) {
-	limiter := NewFixedWindowLimiter(100)
+func TestTokenCapLimiter_Allow_WithinCapacity(t *testing.T) {
+	limiter := NewTokenCapLimiter(100)
 
 	assert.True(t, limiter.Allow(50))
 	assert.True(t, limiter.Allow(100))
 	assert.True(t, limiter.Allow(0))
 }
 
-func TestFixedWindowLimiter_Allow_ExceedCapacity(t *testing.T) {
-	limiter := NewFixedWindowLimiter(100)
+func TestTokenCapLimiter_Allow_ExceedCapacity(t *testing.T) {
+	limiter := NewTokenCapLimiter(100)
 
 	assert.False(t, limiter.Allow(101))
 	assert.False(t, limiter.Allow(200))
 }
 
-func TestFixedWindowLimiter_ZeroCapacity(t *testing.T) {
-	limiter := NewFixedWindowLimiter(0)
+func TestTokenCapLimiter_ZeroCapacity(t *testing.T) {
+	limiter := NewTokenCapLimiter(0)
 
 	// capacity=0 时，Allow(0) 返回 true，Allow(1) 返回 false
 	assert.True(t, limiter.Allow(0))  // 0 <= 0

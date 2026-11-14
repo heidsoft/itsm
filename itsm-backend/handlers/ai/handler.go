@@ -7,7 +7,6 @@ import (
 	"math"
 	"net/http"
 	"strconv"
-	"time"
 
 	"itsm-backend/common"
 	"itsm-backend/common/handlerctx"
@@ -465,6 +464,43 @@ func (h *Handler) AnalyzeTicket(c *gin.Context) {
 	common.Success(c, res)
 }
 
+// InvestigateTicket handles POST /api/v1/ai/tickets/:id/investigate.
+//
+// 触发一等公民的工单调查编排（triage → KB → CMDB → LLM 综合）。错误映射：
+// 目标工单不存在（含跨租户，不泄漏存在性）→ 404；编排依赖未装配 → 503。
+func (h *Handler) InvestigateTicket(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil || id <= 0 {
+		common.Fail(c, common.ParamErrorCode, "invalid ticket id")
+		return
+	}
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
+	userID, role := handlerctx.ReportViewer(c)
+	if userID <= 0 {
+		common.AuthFailed(c, "用户信息缺失")
+		return
+	}
+
+	res, err := h.svc.InvestigateTicket(c.Request.Context(), id, tenantID, userID, role)
+	if err != nil {
+		if errors.Is(err, ErrInvestigationTicketNotFound) {
+			common.NotFoundWithErr(c, err, "工单不存在")
+			return
+		}
+		if errors.Is(err, ErrInvestigationUnavailable) {
+			common.Fail(c, common.ServiceUnavailableCode, "AI 工单调查服务尚未就绪")
+			return
+		}
+		common.FailWithErr(c, err, "工单调查失败")
+		return
+	}
+	common.Success(c, res)
+}
+
 // AnalyzeIncident handles POST /api/v1/ai/incidents/:id/analyze.
 func (h *Handler) AnalyzeIncident(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
@@ -549,7 +585,9 @@ func (h *Handler) SaveFeedback(c *gin.Context) {
 	userID := c.GetInt("user_id")
 	requestID := c.GetString("request_id")
 	if requestID == "" {
-		requestID = fmt.Sprintf("req_%d_%d", time.Now().Unix(), userID)
+		// 幂等/归因身份禁止拼时间戳（AGENTS.md）：随机 128-bit ID 兜底，
+		// 用户归属已由 tenant_id/user_id 列承载，不再拼进 ID。
+		requestID = ledgerRequestID(c.Request.Context(), "feedback")
 	}
 
 	var itemTypeVal string
@@ -597,7 +635,8 @@ func (h *Handler) RecordAudit(c *gin.Context) {
 	userID := c.GetInt("user_id")
 	requestID := c.GetString("request_id")
 	if requestID == "" {
-		requestID = fmt.Sprintf("ai_audit_%d_%d", time.Now().Unix(), userID)
+		// 幂等/归因身份禁止拼时间戳（AGENTS.md）：随机 128-bit ID 兜底。
+		requestID = ledgerRequestID(c.Request.Context(), "ai_audit")
 	}
 
 	notePayload := map[string]interface{}{

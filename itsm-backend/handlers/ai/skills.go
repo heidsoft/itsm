@@ -475,6 +475,81 @@ func (s *AnalyzeSkill) Execute(ctx context.Context, input interface{}) (interfac
 }
 
 // ----------------------------------------------------------------------------
+// InvestigateSkill —— ai.investigate (pilot)
+// 工单调查编排（triage → KB → CMDB → LLM 综合）。身份注入：tenantId/userId/
+// role 由 Invoke 侧强制注入，输入只接受 ticketId。
+// ----------------------------------------------------------------------------
+
+type InvestigateSkillInput struct {
+	TenantID int `json:"tenantId"`
+	TicketID int `json:"ticketId"`
+}
+
+type InvestigateSkill struct {
+	*dto.BaseSkill
+	svc *Service
+}
+
+func NewInvestigateSkill(svc *Service) *InvestigateSkill {
+	b := dto.NewBaseSkill(
+		"ai.investigate",
+		"工单调查编排",
+		"v1",
+		"pilot",
+		[]string{"ai", "investigate", "triage", "kb", "cmdb", "llm", "pilot"},
+		[]string{"ai:read", "ticket:read"},
+		[]string{"ticket.rca", "ticket.classify", "ticket.triage"},
+	).WithProvider("itsm-backend").
+		WithAuthor("itsm-backend").
+		WithDescription("多步工单调查编排：分诊 → 知识库检索 → CMDB 影响分析 → LLM 综合结论（决策支持，写操作走审批流）")
+	return &InvestigateSkill{BaseSkill: b, svc: svc}
+}
+
+func (s *InvestigateSkill) Manifest() dto.SkillManifest {
+	m := s.BuildManifest()
+	m.InputSchema = map[string]any{
+		"type":     "object",
+		"required": []string{"tenantId", "ticketId"},
+		"properties": map[string]any{
+			"tenantId": map[string]any{"type": "integer"},
+			"ticketId": map[string]any{"type": "integer"},
+		},
+	}
+	return m
+}
+
+func (s *InvestigateSkill) Validate(input interface{}) error {
+	in, err := coerceToMap(input)
+	if err != nil {
+		return err
+	}
+	if _, err := inputInt(in, "tenantId", 0); err != nil {
+		return err
+	}
+	if _, err := inputInt(in, "ticketId", 0); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *InvestigateSkill) Execute(ctx context.Context, input interface{}) (interface{}, error) {
+	in, _ := coerceToMap(input)
+	tenantID, _ := inputInt(in, "tenantId", 0)
+	ticketID, _ := inputInt(in, "ticketId", 0)
+	if s.svc == nil {
+		return nil, errors.New("investigate skill: underlying service is nil")
+	}
+	if tenantID <= 0 {
+		return nil, errors.New("investigate skill: tenant context is required")
+	}
+	// userId/role 从输入读取（Invoke 侧注入）；缺省时底账归属降级为 0，
+	// 编排本身不因缺少身份而失败——调查是只读决策支持。
+	userID, _ := inputInt(in, "userId", 0)
+	role, _ := inputString(in, "role", false)
+	return s.svc.InvestigateTicket(ctx, ticketID, tenantID, userID, role)
+}
+
+// ----------------------------------------------------------------------------
 // AnalyticsSkill —— ai.analytics (pilot)
 // ----------------------------------------------------------------------------
 

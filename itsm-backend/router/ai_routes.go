@@ -27,6 +27,13 @@ func SetupAIRoutes(tenant *gin.RouterGroup, h *aiHandler.Handler) {
 			middleware.RequirePermission("incident", "read"),
 			h.AnalyzeIncident,
 		)
+		// 工单调查编排（triage → KB → CMDB → LLM 综合）：读取工单需要
+		// ticket:read，调用 AI 工具链需要 ai:read，双权限仿 incident analyze。
+		aiGrp.POST("/tickets/:id/investigate",
+			middleware.RequirePermission("ai", "read"),
+			middleware.RequirePermission("ticket", "read"),
+			h.InvestigateTicket,
+		)
 		aiGrp.POST("/feedback", middleware.RequirePermission("ai", "write"), h.SaveFeedback)
 		aiGrp.POST("/audit", middleware.RequirePermission("ai", "write"), h.RecordAudit)
 		aiGrp.GET("/metrics", middleware.RequirePermission("ai", "read"), h.GetMetrics)
