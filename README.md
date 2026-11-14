@@ -1,5 +1,7 @@
 <div align="center">
 
+<p><img src="./docs/images/itsm-logo.svg" alt="ITSM" width="280" height="60"></p>
+
 # AI-Native ITSM
 
 一个面向国内企业的开源 IT 服务管理系统，覆盖 ITIL 核心流程，支持 BPMN 工作流编排、CMDB、SLA、知识库和多租户。
@@ -8,8 +10,13 @@
 [![Next.js](https://img.shields.io/badge/Next.js-15.5-black?logo=next.js)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-6.0-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![License](https://img.shields.io/badge/License-Apache--2.0-green)](./LICENSE)
+
+[![Release](https://img.shields.io/github/v/release/heidsoft/itsm?label=Release)](https://github.com/heidsoft/itsm/releases)
 [![Backend CI](https://github.com/heidsoft/itsm/actions/workflows/backend-ci.yml/badge.svg)](https://github.com/heidsoft/itsm/actions/workflows/backend-ci.yml)
 [![Frontend CI](https://github.com/heidsoft/itsm/actions/workflows/frontend-ci.yml/badge.svg)](https://github.com/heidsoft/itsm/actions/workflows/frontend-ci.yml)
+[![Go Report Card](https://goreportcard.com/badge/github.com/heidsoft/itsm)](https://goreportcard.com/report/github.com/heidsoft/itsm)
+[![Docker](https://img.shields.io/badge/Container-GHCR-blue?logo=docker&logoColor=white)](https://github.com/heidsoft/itsm/pkgs/container)
+[![Last Commit](https://img.shields.io/github/last-commit/heidsoft/itsm)](https://github.com/heidsoft/itsm/commits/main)
 [![Stars](https://img.shields.io/github/stars/heidsoft/itsm?style=flat)](https://github.com/heidsoft/itsm/stargazers)
 
 [简体中文](./README.md) · [English](./README.en.md)

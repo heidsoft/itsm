@@ -1,5 +1,7 @@
 <div align="center">
 
+<p><img src="./docs/images/itsm-logo.svg" alt="ITSM" width="280" height="60"></p>
+
 # AI-Native ITSM
 
 An open-source IT service management system for enterprises, covering ITIL core processes with BPMN workflow orchestration, CMDB, SLA, knowledge base, and multi-tenancy.
@@ -8,8 +10,13 @@ An open-source IT service management system for enterprises, covering ITIL core 
 [![Next.js](https://img.shields.io/badge/Next.js-15.5-000000?style=flat&logo=nextdotjs)](https://nextjs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-6.0-3178C6?style=flat&logo=typescript)](https://typescriptlang.org)
 [![License](https://img.shields.io/badge/License-Apache_2.0-yellowgreen?style=flat)](LICENSE)
+
+[![Release](https://img.shields.io/github/v/release/heidsoft/itsm?label=Release)](https://github.com/heidsoft/itsm/releases)
 [![Backend CI](https://github.com/heidsoft/itsm/actions/workflows/backend-ci.yml/badge.svg)](https://github.com/heidsoft/itsm/actions/workflows/backend-ci.yml)
 [![Frontend CI](https://github.com/heidsoft/itsm/actions/workflows/frontend-ci.yml/badge.svg)](https://github.com/heidsoft/itsm/actions/workflows/frontend-ci.yml)
+[![Go Report Card](https://goreportcard.com/badge/github.com/heidsoft/itsm)](https://goreportcard.com/report/github.com/heidsoft/itsm)
+[![Docker](https://img.shields.io/badge/Container-GHCR-blue?logo=docker&logoColor=white)](https://github.com/heidsoft/itsm/pkgs/container)
+[![Last Commit](https://img.shields.io/github/last-commit/heidsoft/itsm)](https://github.com/heidsoft/itsm/commits/main)
 [![Stars](https://img.shields.io/github/stars/heidsoft/itsm?style=flat)](https://github.com/heidsoft/itsm/stargazers)
 
 **[简体中文](./README.md)** · **English**
