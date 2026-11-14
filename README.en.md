@@ -35,6 +35,12 @@ An open-source IT service management system for enterprises, covering ITIL core 
 </p>
 
 <p align="center">
+  <!-- CONTRIBUTORS-WALL:START -->
+<a href="https://github.com/heidsoft" title="heidsoft · 818 commits"><img src="https://avatars.githubusercontent.com/u/1329974?v=4&amp;s=64" width="56" height="56" alt="heidsoft" style="border-radius:50%;margin:4px;vertical-align:middle;"></a>
+<!-- CONTRIBUTORS-WALL:END -->
+</p>
+
+<p align="center">
   🤝 Community-driven · ⭐ Stars steadily growing —— <a href="./COMMUNITY.md">Community &amp; Contact</a> · <a href="https://github.com/heidsoft/itsm/discussions">Join the discussion</a>
 </p>
 

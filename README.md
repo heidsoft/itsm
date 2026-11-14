@@ -35,6 +35,12 @@
 </p>
 
 <p align="center">
+  <!-- CONTRIBUTORS-WALL:START -->
+<a href="https://github.com/heidsoft" title="heidsoft · 818 commits"><img src="https://avatars.githubusercontent.com/u/1329974?v=4&amp;s=64" width="56" height="56" alt="heidsoft" style="border-radius:50%;margin:4px;vertical-align:middle;"></a>
+<!-- CONTRIBUTORS-WALL:END -->
+</p>
+
+<p align="center">
   🤝 社区驱动 · ⭐ Star 持续增长 —— <a href="./COMMUNITY.md">了解社区与联系</a> · <a href="https://github.com/heidsoft/itsm/discussions">参与讨论</a>
 </p>
 
