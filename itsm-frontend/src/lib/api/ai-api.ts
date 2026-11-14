@@ -17,6 +17,48 @@ export interface TriageResult {
   model?: string;
 }
 
+/** 工单调查编排单步溯源（对齐后端 handlers/ai.InvestigationStep） */
+export interface InvestigationStep {
+  /** triage | knowledge | cmdb | synthesis */
+  step: string;
+  tool?: string;
+  degraded?: boolean;
+  degradedReason?: string;
+  hitCount?: number;
+  detail?: unknown;
+}
+
+/** 调查结论里的后续动作建议（只是建议；执行必须人工走各自表单/审批） */
+export interface InvestigationSuggestedAction {
+  /** 白名单内工具名：create_ticket | update_ticket | link_ticket_ci | create_ci_relationship | delete_ci_relationship */
+  action: string;
+  description: string;
+  tool?: string;
+  requiresApproval: boolean;
+}
+
+/** 工单调查编排响应（对齐后端 POST /api/v1/ai/tickets/:id/investigate） */
+export interface TicketInvestigationResponse {
+  ticketId: number;
+  ticketNumber?: string;
+  /** completed | degraded */
+  status: string;
+  degraded: boolean;
+  degradedReason?: string;
+  /** prompt/口径版本（investigation-v1） */
+  promptVersion: string;
+  model?: string;
+  confidence: number;
+  latencyMs?: number;
+  steps: InvestigationStep[];
+  findings?: string[];
+  suspectedRootCause?: string;
+  impactedServices?: string[];
+  suggestedActions?: InvestigationSuggestedAction[];
+  /** 服务端决策底账行 ID：有值时有用/不准反馈直接 PATCH /ai/audit-logs/:id 翻转 */
+  auditId?: number;
+}
+
 export interface RagAnswer {
   objectType: string;
   id: number;
@@ -286,6 +328,20 @@ export async function aiUpdateAuditAccepted(id: number, accepted: boolean): Prom
   return httpClient.patch<{ id: number; accepted: boolean }>(
     `/api/v1/ai/audit-logs/${id}`,
     { accepted },
+  );
+}
+
+// ==================== 工单调查编排（对应后端 POST /api/v1/ai/tickets/:id/investigate） ====================
+
+/**
+ * 触发工单调查编排：分诊 → 知识库检索 → CMDB 影响分析 → LLM 综合。
+ * 只读决策支持：suggestedActions 只是建议，写操作由操作员走各自表单与审批流，
+ * 本端点不执行任何写操作。每次调用全量重跑并落一条 ai_audit 底账（响应 auditId）。
+ */
+export async function aiInvestigateTicket(ticketId: number): Promise<TicketInvestigationResponse> {
+  return httpClient.post<TicketInvestigationResponse>(
+    `/api/v1/ai/tickets/${ticketId}/investigate`,
+    {},
   );
 }
 

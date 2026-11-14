@@ -56,6 +56,7 @@ import { useErrorHandler } from '@/lib/hooks/useErrorHandler';
 import { displayUserName, formatDateTime } from '@/lib/formatters';
 import { SafeTextBlock } from '@/components/common/SafeContent';
 import { AISuggestionPanel } from '@/components/business/AISuggestionPanel';
+import { AIInvestigationPanel } from '@/components/ticket/AIInvestigationPanel';
 import { WorkflowProgressCard } from '@/components/business/WorkflowProgressCard';
 import {
   isValidTransition,
@@ -838,6 +839,18 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
             }
           }}
         />
+      )}
+
+      {/* AI 调查编排：显式触发的只读调查链（triage→KB→CMDB→综合）。
+          ai:read 才展示；后端仍强制 ai:read + ticket:read 双权限授权，
+          前端显隐只是展示层。 */}
+      {ticket && resolvedTicketId && hasPermission('ai', 'read') && (
+        <div style={{ marginTop: 16 }}>
+          <AIInvestigationPanel
+            ticketId={Number(resolvedTicketId)}
+            ticketTitle={ticket.title}
+          />
+        </div>
       )}
 
       {/* AI-Native：受影响配置项（工单→CI 反向查询，复用本体链路外键） */}

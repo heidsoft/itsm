@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { Suspense, useState, useEffect, useRef, useCallback } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
   Card,
   Form,
@@ -120,8 +120,9 @@ const inferTicketType = (selectedType: RuntimeTicketType | null): TicketCreateTy
   return 'service_request';
 };
 
-export default function CreateTicketPage() {
+function CreateTicketPageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { message } = App.useApp();
   const { t } = useI18n();
   const [form] = Form.useForm();
@@ -255,6 +256,19 @@ export default function CreateTicketPage() {
   useEffect(() => {
     void loadCategories();
   }, [loadCategories]);
+
+  // AI 调查面板等入口的预填：只填标题/描述，不自动提交（用户仍需选类型并显式提交）。
+  // searchParams 在 Suspense 边界内读取（外层 default export 已包裹）。
+  useEffect(() => {
+    const prefillTitle = searchParams.get('prefillTitle');
+    const prefillDescription = searchParams.get('prefillDescription');
+    if (prefillTitle || prefillDescription) {
+      form.setFieldsValue({
+        title: prefillTitle ?? undefined,
+        description: prefillDescription ?? undefined,
+      });
+    }
+  }, [searchParams, form]);
 
   // 过滤后的类型列表（后端已按 sortOrder 排序，前端不再做分类筛选）
   const filteredTypes = ticketTypes;
@@ -953,5 +967,21 @@ export default function CreateTicketPage() {
         </Row>
       </Space>
     </div>
+  );
+}
+
+// useSearchParams 要求 Suspense 边界（Next.js App Router CSR bailout），与
+// tickets 列表页同构：内容组件读参数，default export 包裹。
+export default function CreateTicketPage() {
+  return (
+    <Suspense
+      fallback={
+        <div style={{ padding: 48, textAlign: 'center' }}>
+          <Spin />
+        </div>
+      }
+    >
+      <CreateTicketPageContent />
+    </Suspense>
   );
 }

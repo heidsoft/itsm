@@ -15,7 +15,10 @@ const mockAcceptTicket = jest.fn();
 const mockResolveTicketWorkflow = jest.fn();
 const mockCloseTicketWorkflow = jest.fn();
 
-jest.mock('next/navigation', () => ({ useParams: () => ({ ticketId: '17' }) }));
+jest.mock('next/navigation', () => ({
+  useParams: () => ({ ticketId: '17' }),
+  useRouter: () => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() }),
+}));
 
 jest.mock('next/link', () => {
   const Link = ({ children }: { children: React.ReactNode }) => <a>{children}</a>;

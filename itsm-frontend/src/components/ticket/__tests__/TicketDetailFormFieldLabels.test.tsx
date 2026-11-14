@@ -16,7 +16,10 @@ import TicketDetail from '../TicketDetail';
 const mockGetTicket = jest.fn();
 const mockGetTicketType = jest.fn();
 
-jest.mock('next/navigation', () => ({ useParams: () => ({ ticketId: '15' }) }));
+jest.mock('next/navigation', () => ({
+  useParams: () => ({ ticketId: '15' }),
+  useRouter: () => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() }),
+}));
 
 jest.mock('next/link', () => {
   const Link = ({ children }: { children: React.ReactNode }) => <a>{children}</a>;
