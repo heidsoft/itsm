@@ -30,7 +30,7 @@
   - `build-frontend-image.sh`（单行封装，仅构建前端）
   - `start-dev.sh` / `stop-dev.sh`（已是 `deploy-dev.sh` 的薄封装，设计良好）
   - `smoke-test.sh`、`release.sh`、`init_admin.sh`、`init_database.sh` 等
-  - `local-codex-*.sh` × 4（Agent 辅助脚本，与部署无关）
+  - ~~`local-codex-*.sh` × 4~~（Agent 辅助脚本，与部署无关；2026-11-14 已退役，见 `scripts/README.md` §2.7）
   - `lib/common.sh`（共享函数库，设计良好）
 
 **结论**：deploy-prod/deploy-dev 本身质量很高；真正的问题是**镜像构建层**和**脚本数量**。
@@ -103,7 +103,7 @@
 - **收敛冗余脚本**：`build-frontend-image.sh` 改为调用 `build-images.sh frontend` 的兼容封装，命令名不变。
 - **Makefile** 新增 `make build-images`（等价于 `./scripts/build-images.sh`）。
 - `deploy-prod.sh` / `deploy-dev.sh` 顶部 `export DOCKER_BUILDKIT=1`，生产构建追加 `--build-arg BUILDKIT_INLINE_CACHE=1`，让多阶段缓存挂载与层缓存生效。
-- `start-dev.sh` / `stop-dev.sh` 已是薄封装，保留；`local-codex-*.sh` 属于 Agent 辅助，与部署解耦，不在本次收敛范围。
+- `start-dev.sh` / `stop-dev.sh` 已是薄封装，保留；`local-codex-*.sh` 属于 Agent 辅助、与部署解耦，当时不在该次收敛范围，**已于 2026-11-14 退役**（硬编码本机路径、LaunchAgent 调度已停用，原件归档于本地备份）。
 
 **脚本收敛效果**：原本分散的“前端构建”逻辑（build-frontend-image.sh）并入统一构建器，后续新增服务只需在 `build-images.sh` 的 `ALL_SERVICES` 数组追加一行。
 
