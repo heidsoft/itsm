@@ -136,29 +136,48 @@ test('production dry-run exits before runtime verification and success reporting
 test('production deploy stops immediately when a compose start phase fails', () => {
   const script = fs.readFileSync(path.join(root, 'scripts', 'deploy-prod.sh'), 'utf8');
 
-  assert.match(
-    script,
-    /if ! run dc [^\n]+ up -d postgres redis minio; then[\s\S]*?return 1/
+  // 锁语义而非字面：服务列表与 compose 参数（--env-file / -f）允许随部署演进调整，
+  // 但每个启动阶段都必须是 `if ! run dc ... up -d ...; then ... return 1` 的 fail-fast 形态。
+  const guarded = [...script.matchAll(/if ! run dc ([^\n]*?) up -d ([^\n;]+); then/g)];
+  assert.ok(
+    guarded.length >= 4,
+    `expected at least 4 fail-guarded compose start phases, got ${guarded.length}`
   );
-  assert.match(
-    script,
-    /if ! run dc [^\n]+ up -d itsm-backend; then[\s\S]*?return 1/
-  );
-  assert.match(
-    script,
-    /if ! run dc [^\n]+ up -d itsm-frontend; then[\s\S]*?return 1/
-  );
+  for (const match of guarded) {
+    const block = script.slice(match.index, match.index + 400);
+    assert.match(
+      block,
+      /return 1/,
+      `start phase [${match[2]}] must return 1 immediately on compose failure`
+    );
+  }
+  for (const required of ['itsm-backend', 'itsm-frontend']) {
+    assert.ok(
+      guarded.some((match) => match[2].split(/\s+/).includes(required)),
+      `missing fail-guarded start phase for ${required}`
+    );
+  }
 });
 
 test('production init and backend services share one immutable image contract', () => {
   const compose = fs.readFileSync(path.join(root, 'docker-compose.prod.yml'), 'utf8');
-  const sharedImage = 'image: itsm-backend:${VERSION:-latest}';
+  const images = compose
+    .split('\n')
+    .filter((line) => /^\s*image:\s*itsm-backend:/.test(line))
+    .map((line) => line.trim());
 
-  assert.equal(
-    compose.split(sharedImage).length - 1,
-    2,
-    'itsm-init and itsm-backend must run the exact same backend image'
+  assert.ok(
+    images.length >= 2,
+    `expected at least 2 itsm-backend image references (init + backend), got ${images.length}`
   );
+  assert.equal(
+    new Set(images).size,
+    1,
+    'itsm-init, itsm-backend and any other backend worker must pin the exact same image expression'
+  );
+  // VERSION 必须强制提供（:?），不能退回默认值（:-），否则会部署未打标签的 latest 镜像。
+  assert.match(images[0], /\$\{VERSION:\?/, 'VERSION must be required, not defaulted');
+  assert.doesNotMatch(images[0], /:-/, 'a default VERSION allows deploying an untagged image');
 });
 
 test('backend production image excludes local binaries and coverage artifacts', () => {

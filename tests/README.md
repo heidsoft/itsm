@@ -1,266 +1,102 @@
-# ITSM自动化测试框架
-# ITSM Automated Test Framework
+# Tests 目录说明
 
-## 概述
+> Status: current（口径纠正于 2026-11-14，基于 HEAD `0de5fd68b`）
+> 权威层级遵循 [`docs/documentation-governance.md`](../docs/documentation-governance.md)：
+> 计划与历史报告不证明功能已实现，以当前源码、迁移、运行时与**当前 CI 结果**为准。
 
-本测试框架为ITSM系统提供完整的自动化测试解决方案，支持API测试、数据库测试和UI测试。
+## 1. 先读这一段：本目录不在当前 CI 链路上
 
-## 目录结构
+仓库当前被 CI 实际执行的测试是：
+
+| 层 | 位置 | Runner | CI |
+|:--|:--|:--|:--|
+| 后端单元 / 集成 | `itsm-backend/**/*_test.go` | `go test ./...` | `backend-ci.yml`、`make test-backend` |
+| 后端 RLS 专项 | `itsm-backend/database/rls/`、`integration/` | `go test -tags integration_rls` | `rls-golden-path.yml` |
+| 前端单元 | `itsm-frontend/src/**/*.test.ts(x)` | `jest` | `frontend-ci.yml`、`make test-frontend` |
+| 前端 E2E | `itsm-frontend/tests/e2e/` | `playwright test`（`testDir: './tests/e2e'`，相对前端目录） | `frontend-ci.yml`、`make test-e2e` |
+| 门禁脚本自测 | `scripts/__tests__/` | `node --test` | 见 `scripts/README.md` §2.6 |
+
+**根 `tests/` 目录：`.github/workflows/` 中对它零引用，根目录没有 `package.json`，
+也没有根级 `playwright.config.*`。** 因此本目录下的 pytest 用例、`.spec.ts` 与 `.cjs`
+浏览器脚本目前**不会被任何 CI job 或 npm script 执行**。
+
+本目录定位为「离线/本地验证框架与历史用例」，可手动运行，但其结果：
+- 不构成发布门禁证据；
+- 不得用于宣称「测试已通过」或「功能已实现」；
+- 新增测试用例请优先加到上面四层活跃链路。
+
+## 2. 目录结构
 
 ```
 tests/
-├── api/                    # API测试
-│   ├── __init__.py       # API客户端封装
-│   └── test_api_cases.py # API测试用例
-├── ui/                     # UI测试
-│   ├── __init__.py       # UI客户端封装
-│   └── test_ui_cases.py  # UI测试用例
-├── database/               # 数据库测试
-│   └── __init__.py       # 数据库客户端
-├── fixtures/               # 测试数据生成器
-│   └── __init__.py       # Fixtures
-├── reports/                # 测试报告输出目录
-├── config.ini              # 测试配置文件
-├── pytest.ini              # Pytest配置
-├── requirements.txt        # Python依赖
-└── run_tests.py          # 测试运行脚本
+├── api/          # API 客户端封装 + test_api_cases.py / test_complete_api.py
+├── ui/           # UI 客户端封装 + test_ui_cases.py / test_frontend_ui.py / test_frontend_complete.py
+├── database/     # 数据库客户端（__init__.py）
+├── fixtures/     # 测试数据生成器
+├── e2e/          # test_navigation.py / test_tickets_full.py + requirements.txt
+├── reports/      # pytest-html / junit 输出（本地产物，已被 gitignore）
+├── config.ini        # 本地环境配置
+├── pytest.ini        # pytest 配置（注意 addopts 依赖 pytest-html）
+├── requirements.txt  # Python 依赖
+├── run_tests.py      # 本地运行入口
+├── *.cjs / *.mjs     # 一次性浏览器验证脚本（无 runner，见 §4）
+└── *.spec.ts         # Playwright 风格用例（无根级 config，见 §4）
 ```
 
-## 快速开始
-
-### 1. 安装依赖
+## 3. 本地手动运行
 
 ```bash
 cd tests
-pip install -r requirements.txt
+python3 -m pip install -r requirements.txt
+playwright install chromium          # UI 用例需要
+python3 run_tests.py --type all      # 或 --type api / --type ui / --markers smoke
 ```
 
-### 2. 安装Playwright浏览器
+`pytest.ini` 的 `addopts` 含 `--html=reports/report.html --self-contained-html`，
+未安装 `pytest-html` 时会直接报错；仅跑纯单元测试可用 `pytest -o addopts=''`。
 
-```bash
-playwright install chromium firefox webkit
-```
+### 配置与凭据
 
-### 3. 运行测试
-
-#### 运行所有测试
-```bash
-python run_tests.py --type all
-```
-
-#### 仅运行API测试
-```bash
-python run_tests.py --type api
-```
-
-#### 仅运行UI测试
-```bash
-python run_tests.py --type ui
-```
-
-#### 运行冒烟测试
-```bash
-python run_tests.py --markers smoke
-```
-
-#### 运行回归测试(并行)
-```bash
-python run_tests.py --type regression --parallel
-```
-
-## 测试标记
-
-| 标记 | 说明 |
-|------|------|
-| `@pytest.mark.smoke` | 冒烟测试 |
-| `@pytest.mark.regression` | 回归测试 |
-| `@pytest.mark.api` | API测试 |
-| `@pytest.mark.ui` | UI测试 |
-| `@pytest.mark.database` | 数据库测试 |
-| `@pytest.mark.critical` | 关键路径测试 |
-
-## 测试配置
-
-编辑 `config.ini` 文件配置测试环境:
-
-```ini
-[api]
-base_url = http://localhost:8080
-timeout = 30
-
-[database]
-host = localhost
-port = 5432
-database = itsm
-user = postgres
-password = password
-
-[ui]
-base_url = http://localhost:3000
-headless = true
-```
-
-## 使用示例
-
-### API测试
+通过环境变量提供连接信息，**不要在 `config.ini` 或代码里写固定口令**：
 
 ```python
-from tests.api import ITSMAPIClient
-
-# 创建已认证的客户端
-client = ITSMAPIClient()
-client.login('admin', 'admin123')
-
-# 获取工单列表
-result = client.get_tickets({'page': 1, 'page_size': 10})
-
-# 创建工单
-ticket_data = {
-    'title': 'Test Ticket',
-    'description': 'Test Description',
-    'priority': 'medium'
-}
-result = client.create_ticket(ticket_data)
+import os
+base_url = os.environ.get('ITSM_BASE_URL', 'http://127.0.0.1:8090')
+username = os.environ['ITSM_TEST_USER']
+password = os.environ['ITSM_TEST_PASSWORD']
 ```
 
-### 数据库测试
+生产环境禁止使用固定默认口令；登录凭据取自部署时的 bootstrap 流程或本地密钥管理。
+（治理依据：`docs/documentation-governance.md` 维护规则 3 与 6。）
 
-```python
-from tests.database import ITSMDBClient
+## 4. 无 runner 的历史用例（待决策，不要误当作已覆盖）
 
-# 创建数据库客户端
-db = ITSMDBClient()
+- 3 个 `.spec.ts`：`e2e-ticket-flow.spec.ts`、`prod-button-test.spec.ts`、`ui/authz-roles-groups.spec.ts`
+  —— 根级无 playwright config，前端 config 的 `testDir` 也不覆盖本目录。
+- 10 个 `.cjs` / 1 个 `.mjs`：含 `browser-e2e-verify.cjs` 与 `-v2.cjs`、
+  `screenshot-workflows.cjs` 与 `-v2.cjs`、`verify-designer-fix.cjs` 与 `-v2.cjs` 等
+  v1/v2 迭代残留，以及 `inspect-canvas.cjs`、`screenshot-designer.cjs`、
+  `playwright-four-domain-journey.cjs`、`browser-test.mjs`。
 
-# 查询工单
-tickets = db.get_all_tickets(limit=10)
+这些文件是某次人工验证的脚本快照。三条可选去向（需项目侧拍板后统一执行）：
 
-# 统计工单
-stats = db.count_tickets_by_status()
-```
+1. **接线**：迁到 `itsm-frontend/tests/e2e/` 并纳入 `playwright.config.ts`，补 CI job；
+2. **标注**：保留为 historical 示例，在文件头写明「不参与 CI」；
+3. **归档**：移入本地归档并删除，结论迁移到 `docs/testing/` 规范文档。
 
-### UI测试
+在决策前，请勿把它们的结果写进 CHANGELOG 或发布报告。
 
-```python
-from tests.ui import ITSMUIClient
+## 5. 缓存与产物（不属于交付内容）
 
-# 创建UI客户端
-client = ITSMUIClient()
-client.start()
+`.pytest_cache/`、`__pycache__/`、`*.pyc`、`reports/`、`*.png` 失败截图均为本地产物，
+已被 `.gitignore` 忽略。2026-11-14 已清理 16 个 ignored 缓存/产物，并用
+`git add -u -- <path>` 移除 6 个历史上误入库的 `*.cpython-310.pyc`（原件归档于
+`output/backups/itsm-scripts-tests-cleanup-20261114-0850.tar.gz`）。
+**不要用 `git add -A` 把缓存带回索引**。
 
-# 登录
-client.login('admin', 'admin123')
+## 6. 相关文档
 
-# 创建工单
-client.create_ticket('Test Ticket', 'Description')
-```
-
-## 测试数据Fixtures
-
-系统提供多种测试数据生成器:
-
-```python
-from tests.fixtures import (
-    TicketFixture,
-    UserFixture,
-    KnowledgeArticleFixture,
-    IncidentFixture,
-    ProblemFixture,
-    ChangeFixture,
-    SLAFixture,
-    ServiceCatalogFixture
-)
-
-# 生成测试数据
-ticket_data = TicketFixture.create()
-users = UserFixture.create_batch(5)
-```
-
-## 持续集成
-
-GitHub Actions工作流已配置:
-
-- 自动运行冒烟测试
-- 定时运行回归测试
-- 生成HTML测试报告
-- 集成到CI/CD流程
-
-触发方式:
-1. 代码推送
-2. Pull Request创建
-3. 定时任务
-4. 手动触发
-
-## 报告查看
-
-测试报告保存在 `tests/reports/` 目录:
-
-- `report.html` - HTML测试报告
-- `junit.xml` - JUnit XML报告
-
-使用pytest-html生成的报告支持:
-
-- 测试结果统计
-- 失败详情
-- 执行时间
-- 历史趋势
-
-## 故障排除
-
-### 连接失败
-
-1. 检查服务是否启动
-2. 验证配置文件中的URL
-3. 检查网络连接
-
-### 数据库连接失败
-
-1. 确认PostgreSQL服务运行
-2. 验证数据库凭据
-3. 检查数据库是否存在
-
-### UI测试失败
-
-1. 确保Playwright已安装
-2. 检查浏览器驱动
-3. 验证页面选择器
-
-## 扩展测试
-
-### 添加新API测试
-
-1. 在 `api/test_api_cases.py` 中添加测试类
-2. 使用 `api_client` fixture
-3. 编写测试用例
-
-### 添加新UI测试
-
-1. 在 `ui/test_ui_cases.py` 中添加测试类
-2. 使用 `ui_client` fixture
-3. 编写测试用例
-
-### 添加新Fixtures
-
-1. 在 `fixtures/__init__.py` 中添加数据生成器
-2. 实现 `create()` 方法
-3. 可选实现 `create_batch()` 方法
-
-## 性能测试
-
-使用pytest-xdist实现并行测试:
-
-```bash
-pytest -n auto           # 自动CPU核心数
-pytest -n 4             # 4个并行进程
-```
-
-## 监控测试
-
-使用pytest-timeout设置超时:
-
-```bash
-pytest --timeout=300     # 5分钟超时
-```
-
-## 许可证
-
-MIT License
+- 测试与门禁入口索引：[`scripts/README.md`](../scripts/README.md)
+- 角色级产品测试计划：`docs/testing/role-based-product-test-plan.md`
+- 文档状态与事实源：[`docs/documentation-governance.md`](../docs/documentation-governance.md)
+- 完整盘点报告（本地）：`output/scripts-tests-plans-audit-2026-11-14.md`

@@ -32,6 +32,14 @@ on:
       - '.env.prod'
       - 'scripts/docs-gate/**'
       - '.github/workflows/docs-gate.yml'
+      # gate-unit-tests 现在整目录跑 scripts/__tests__/*.test.js；这些是被测对象，
+      # 不列进来则「改了被测脚本却不触发测试」，守卫会静默假绿。
+      - 'scripts/__tests__/**'
+      - 'scripts/build-images.sh'
+      - 'scripts/deploy-prod.sh'
+      - 'scripts/test-trend.js'
+      - 'scripts/generate-acl-manifest.js'
+      - 'docker-compose.prod.yml'
       # Gate C.6 ratchets and wiring checks read these paths directly;
       # without them here, drift introduced by a pure-code PR would never be gated.
       - 'itsm-backend/handlers/**'
@@ -50,6 +58,14 @@ on:
       - '.env.prod'
       - 'scripts/docs-gate/**'
       - '.github/workflows/docs-gate.yml'
+      # gate-unit-tests 现在整目录跑 scripts/__tests__/*.test.js；这些是被测对象，
+      # 不列进来则「改了被测脚本却不触发测试」，守卫会静默假绿。
+      - 'scripts/__tests__/**'
+      - 'scripts/build-images.sh'
+      - 'scripts/deploy-prod.sh'
+      - 'scripts/test-trend.js'
+      - 'scripts/generate-acl-manifest.js'
+      - 'docker-compose.prod.yml'
       - 'itsm-backend/handlers/**'
       - 'itsm-backend/ent/schema/**'
       - 'itsm-backend/internal/bootstrap/**'
@@ -84,9 +100,11 @@ env:
 jobs:
   gate-unit-tests:
     # The gate scripts encode their own regression tests (injection -> FAIL,
-    # compliant -> PASS). Without this job those tests never run in CI, so a
-    # gate that silently stopped detecting anything would stay green forever.
-    name: Docs Gate Script Tests
+    # compliant -> PASS). Run the whole __tests__ directory: previously only
+    # docs-gate.test.js ran here, leaving 3 test files with no runner at all.
+    # The other triggers above list the scripts these tests read, so editing a
+    # script under test actually re-runs its guard.
+    name: Script Guard Tests
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -98,8 +116,8 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
 
-      - name: Run docs-gate script tests
-        run: node --test scripts/__tests__/docs-gate.test.js
+      - name: Run all script guard tests
+        run: node --test scripts/__tests__/*.test.js
 
   gate:
     name: Docs Gate (C.6 hard)
