@@ -573,6 +573,16 @@ git push origin feature/your-feature
 
 [![GitHub Star 增长趋势](./docs/images/star-history.svg)](https://github.com/heidsoft/itsm/stargazers)
 
+## 社区与联系
+
+ITSM 是社区驱动的开源项目，欢迎所有关注、使用与贡献的朋友加入：
+
+- 🤝 **社区主交流区**：[GitHub Discussions](https://github.com/heidsoft/itsm/discussions)（公告 / 问答 / Show and tell）
+- 🐛 **问题反馈**：[Issues](https://github.com/heidsoft/itsm/issues)
+- 🌐 **官网 / 博客**：[cloudmesh.top](https://cloudmesh.top)
+- 📱 **微信公众号**：「云与数字化」（AI / 云原生 / ITSM 实践分享）
+- 📖 **社区与联系文档**：[COMMUNITY.md](./COMMUNITY.md)（含沟通渠道、参与方式与 Star 致谢名单）
+
 ## License
 
 本项目采用 [Apache License 2.0](./LICENSE)。允许商业使用、修改和分发；使用时请遵守许可证和 [NOTICE](./NOTICE) 要求。
