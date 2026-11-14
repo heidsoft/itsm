@@ -23,6 +23,23 @@
 
 </div>
 
+## 社区信号
+
+<p align="center">
+  <a href="https://github.com/heidsoft/itsm/graphs/contributors"><img src="https://img.shields.io/github/contributors/heidsoft/itsm?style=for-the-badge&label=%F0%9F%A4%9D%20Contributors&color=informational" alt="Contributors"></a>
+  <a href="https://github.com/heidsoft/itsm/discussions"><img src="https://img.shields.io/badge/%F0%9F%92%AC%20Discussions-参与讨论-2ea44f?style=for-the-badge" alt="Discussions"></a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/heidsoft/itsm/stargazers"><img src="./docs/images/star-history.svg" alt="Star 增长趋势" width="560"></a>
+</p>
+
+<p align="center">
+  🤝 社区驱动 · ⭐ Star 持续增长 —— <a href="./COMMUNITY.md">了解社区与联系</a> · <a href="https://github.com/heidsoft/itsm/discussions">参与讨论</a>
+</p>
+
+---
+
 ## 目录
 
 - [项目定位](#项目定位)
@@ -568,10 +585,6 @@ git push origin feature/your-feature
 提交前请显式挑选文件，并确认暂存区不含密码、密钥或 token 等凭据（`git add .` / `git add -A` 容易把本地凭据文件一并暂存）。
 
 - [查看贡献者](https://github.com/heidsoft/itsm/graphs/contributors)
-
-## Star 趋势
-
-[![GitHub Star 增长趋势](./docs/images/star-history.svg)](https://github.com/heidsoft/itsm/stargazers)
 
 ## 社区与联系
 

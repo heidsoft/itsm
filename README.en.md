@@ -23,6 +23,23 @@ An open-source IT service management system for enterprises, covering ITIL core 
 
 </div>
 
+## Community at a Glance
+
+<p align="center">
+  <a href="https://github.com/heidsoft/itsm/graphs/contributors"><img src="https://img.shields.io/github/contributors/heidsoft/itsm?style=for-the-badge&label=%F0%9F%A4%9D%20Contributors&color=informational" alt="Contributors"></a>
+  <a href="https://github.com/heidsoft/itsm/discussions"><img src="https://img.shields.io/badge/%F0%9F%92%AC%20Discussions-Join-2ea44f?style=for-the-badge" alt="Discussions"></a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/heidsoft/itsm/stargazers"><img src="./docs/images/star-history.svg" alt="Star History" width="560"></a>
+</p>
+
+<p align="center">
+  🤝 Community-driven · ⭐ Stars steadily growing —— <a href="./COMMUNITY.md">Community &amp; Contact</a> · <a href="https://github.com/heidsoft/itsm/discussions">Join the discussion</a>
+</p>
+
+---
+
 > **Translation status**: `README.md` (Simplified Chinese) is the single source of truth for project content; this file is its English counterpart and must stay in sync with it — section structure, the capability/maturity table, and every command/tool count. If the two disagree, the Chinese README wins and this file is the one to fix. Product UI text is Chinese-first through v1.6.x (see the language note under Quick Start). Terminology is fixed throughout this file: Preview / Available for maturity states, knowledge capture for 知识沉淀, fulfillment for 服务请求交付, extension delivery for 扩展交付, and Alibaba Cloud / Tencent Cloud / AWS / Volcengine / Kubernetes for the five discovery providers. US spelling is used consistently (for example `fulfillment`, not `fulfilment`).
 
 ## Table of Contents
@@ -569,10 +586,6 @@ Code style (ESLint + gofmt), commit message conventions, test requirements, and 
 Before submitting, stage files explicitly and confirm the staging area contains no passwords, keys, or tokens (`git add .` / `git add -A` may accidentally include local credential files).
 
 - [View contributors](https://github.com/heidsoft/itsm/graphs/contributors)
-
-## Star History
-
-[![GitHub Star History](./docs/images/star-history.svg)](https://github.com/heidsoft/itsm/stargazers)
 
 ## License
 
