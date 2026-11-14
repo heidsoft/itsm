@@ -1,0 +1,29 @@
+name: Sync Labels
+
+# §6.5 标签自动同步：docs/label-schema.md 定义 43 个标签，scripts/init-labels.sh
+# 幂等创建（已存在跳过）。此前仅靠维护者手动跑脚本，本 workflow 在
+# schema/script 变更时与手动触发时自动同步到仓库，缩短首次响应、减少遗漏。
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'docs/label-schema.md'
+      - 'scripts/init-labels.sh'
+
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    if: github.repository == 'heidsoft/itsm'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      issues: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Sync labels (idempotent)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./scripts/init-labels.sh

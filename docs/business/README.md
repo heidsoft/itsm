@@ -26,20 +26,36 @@
 - **标签与 Issue 治理**：[`docs/label-schema.md`](../label-schema.md)
 - **架构治理（ADR）**：[`docs/architecture/`](../architecture/)
 
-## 4. 按手册 §13 待建立（占位骨架，标注"待真实数据"后填充）
+## 4. 手册 §13 占位骨架（已建文件，均标注"待真实数据"，不得虚构）
 
-- `docs/business/IDEAL_CUSTOMER_PROFILE.md`
-- `docs/business/PRICING_AND_PACKAGING.md`
-- `docs/business/POC_PLAYBOOK.md`
-- `docs/business/SALES_PLAYBOOK.md`
-- `docs/business/COMPETITIVE_LANDSCAPE.md`
-- `docs/operations/OPEN_SOURCE_PLAYBOOK.md`
-- `docs/operations/ISSUE_TRIAGE.md`
-- `docs/operations/RELEASE_PROCESS.md`
-- `docs/operations/COMMUNITY_METRICS.md`
-- `docs/templates/CUSTOMER_INTERVIEW.md`
-- `docs/templates/POC_ACCEPTANCE.md`
-- `docs/templates/FEATURE_REQUEST.md`
+> 为落实手册 §13 业务/运营/模板文档树而建的占位骨架。内容结构已就位，**真实客户、价格、成交、指标须由真实数据填充**，不得编造。
+
+**业务（docs/business/）**
+
+| 文件 | 对应手册 | 用途 |
+|---|---|---|
+| [`IDEAL_CUSTOMER_PROFILE.md`](./IDEAL_CUSTOMER_PROFILE.md) | §2 / §3.3 | 理想客户画像（行业/规模/痛点/预算） |
+| [`PRICING_AND_PACKAGING.md`](./PRICING_AND_PACKAGING.md) | §3.2 / §5.2 | 开源免费 + 企业服务双轨定价（测试价、以 SOW 为准） |
+| [`POC_PLAYBOOK.md`](./POC_PLAYBOOK.md) | §5.3 / §9 R1 | 首发场景 PoC 流程与验收 |
+| [`SALES_PLAYBOOK.md`](./SALES_PLAYBOOK.md) | §8.4 / §7.3 | 销售材料清单与叙事主线 |
+| [`COMPETITIVE_LANDSCAPE.md`](./COMPETITIVE_LANDSCAPE.md) | §2 / §3.2 | 公开事实竞品对比（不编造） |
+
+**运营（docs/operations/）**
+
+| 文件 | 对应手册 | 用途 |
+|---|---|---|
+| [`OPEN_SOURCE_PLAYBOOK.md`](../operations/OPEN_SOURCE_PLAYBOOK.md) | §6 / §7.3 | 开源运营节奏与内容转化 |
+| [`ISSUE_TRIAGE.md`](../operations/ISSUE_TRIAGE.md) | §6.5 / §6.6 | Issue/PR 分诊 SLA 与步骤 |
+| [`RELEASE_PROCESS.md`](../operations/RELEASE_PROCESS.md) | §6.4 #6 / §9 | 发布检查单与 GA 门槛 |
+| [`COMMUNITY_METRICS.md`](../operations/COMMUNITY_METRICS.md) | §6.6 / §10.2 | 开源经营指标口径 |
+
+**模板（docs/templates/）**
+
+| 文件 | 对应手册 | 用途 |
+|---|---|---|
+| [`CUSTOMER_INTERVIEW.md`](../templates/CUSTOMER_INTERVIEW.md) | §13 模板 | 客户访谈记录模板 |
+| [`POC_ACCEPTANCE.md`](../templates/POC_ACCEPTANCE.md) | §13 模板 / §5.3 | PoC 验收表（事先约定阈值） |
+| [`FEATURE_REQUEST.md`](../templates/FEATURE_REQUEST.md) | §13 模板 / §6.4 #10 | 功能请求模板 |
 
 ## 5. 维护规则
 
