@@ -21,6 +21,8 @@ package skill
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"strings"
@@ -57,6 +59,25 @@ type Handler struct {
 	// 组件才能调。未注入（nil）时不施加该门禁——生产入口由 bootstrap 强制装配，
 	// 单测与未启用市场的部署形态保持原行为。
 	entitlements SkillEntitlements
+	// audits 是 Skill 调用的决策底账写口：每次成功/失败 Invoke 落一条
+	// scenario="skill:<code>" 的 ai_audit 行，让「谁在什么时候调了哪个 skill、
+	// 结果如何、耗时多少」可追溯，与 AI 建议底账同一张表、同一采纳翻转入口。
+	// 失败也留痕（带稳定错误分类）——失败的调用同样是审计素材。
+	// 未注入（nil）时跳过写入：保持未装配部署形态与既有测试的原行为。
+	audits DecisionAuditWriter
+}
+
+// DecisionAuditWriter 是 Skill 调用写 AI 决策底账所需的窄契约。
+// 生产实现是 internal/services.AITelemetryService（bootstrap 注入）——
+// 与 handlers/ai 的决策底账共用同一张表、同一写入口；包内定义接口，
+// 避免 handlers/skill 直接依赖 handlers/ai 或 internal/services。
+type DecisionAuditWriter interface {
+	RecordDecisionAudit(ctx context.Context, tenantID, userID int, reqID, scenario, inputRef, promptVersion, model string, confidence float64, suggestion map[string]interface{}) (int64, error)
+}
+
+// SetDecisionAuditWriter 注入决策底账写口。见 Handler.audits。
+func (h *Handler) SetDecisionAuditWriter(w DecisionAuditWriter) {
+	h.audits = w
 }
 
 // SkillEntitlements 市场侧的技能开通判定，由 service/marketplace.Service 实现。
@@ -571,11 +592,21 @@ func (h *Handler) Invoke(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), 60*time.Second)
 	defer cancel()
 
+	// skill 版本进底账 prompt_version 列：技能无 prompt 语义，版本是最近的口径标识。
+	entryVersion := ""
+	if entryErr == nil {
+		entryVersion = entry.Version
+	}
+
 	result, err := h.registry.InvokeWithMetrics(ctx, code, input)
 	if err != nil {
+		// 失败也留痕：稳定错误分类进 suggestion，不写错误原文（可能携带
+		// LLM provider 或内部细节）。审计是 best-effort，写失败不改变响应语义。
+		h.recordInvokeAudit(ctx, tenantID, userID, code, entryVersion, false, 0, classifyInvokeError(err))
 		failInvoke(c, code, err)
 		return
 	}
+	h.recordInvokeAudit(ctx, tenantID, userID, code, entryVersion, true, result.LatencyMs, "")
 
 	if entryErr != nil {
 		entry, _ = h.registry.GetEntryScoped(tenantID, code)
@@ -623,6 +654,69 @@ func (h *Handler) enforceRequiredPermissions(c *gin.Context, entry dto.SkillEntr
 }
 
 // failInvoke 翻译 SkillRegistry 调用错误为合适的 HTTP 响应码。
+// recordInvokeAudit 把一次 Skill 调用（成功或失败）写入决策底账。
+//
+// 与 handlers/ai 的 AI 建议底账同表同写口：scenario="skill:<code>"、
+// inputRef="skill:<code>"、prompt_version 填技能版本（skill 无 prompt/model
+// 语义，confidence 恒 0——合法值），suggestion 只带最小事实（skill、ok、
+// latencyMs、errorClass），不落输入输出正文（可能含私有工单内容）。
+// best-effort：写失败仅告警，不影响调用结果返回。
+func (h *Handler) recordInvokeAudit(ctx context.Context, tenantID, userID int, code, version string, ok bool, latencyMs int64, errClass string) {
+	if h.audits == nil {
+		return
+	}
+	suggestion := map[string]interface{}{
+		"skill": code,
+		"ok":    ok,
+		// 0ms 也是事实（快路径技能），总是写入，消费方无需判 key 缺失。
+		"latencyMs": latencyMs,
+	}
+	if errClass != "" {
+		suggestion["errorClass"] = errClass
+	}
+	_, err := h.audits.RecordDecisionAudit(ctx, tenantID, userID,
+		invokeRequestID(ctx, code),
+		"skill:"+code, "skill:"+code,
+		version, "", 0, suggestion)
+	if err != nil {
+		h.logger.Warnw("skill invoke audit write failed (best-effort)",
+			"skill", code, "tenant_id", tenantID, "error", err)
+	}
+}
+
+// invokeRequestID 为 skill 调用底账生成 request ID。
+// 与 handlers/ai trace.go 的 ledgerRequestID 同口径：优先复用请求链路注入的
+// X-Request-Id，无链路 ID 时 128-bit 随机兜底——禁止用时间戳拼身份（AGENTS.md
+// 幂等规则：时间戳不稳定且同刻碰撞）。
+func invokeRequestID(ctx context.Context, code string) string {
+	prefix := "skill_" + code
+	if rid, ok := middleware.RequestIDFromContext(ctx); ok && rid != "" {
+		return prefix + "_" + rid
+	}
+	var b [16]byte
+	if _, err := rand.Read(b[:]); err != nil {
+		// crypto/rand 失败极罕见；退化为空 hex，仍不带时间语义。
+	}
+	return prefix + "_" + hex.EncodeToString(b[:])
+}
+
+// classifyInvokeError 把 Invoke 失败收敛为稳定错误分类（底账/日志用）。
+// 不返回错误原文：skill 执行错误可能携带 LLM provider 细节或内部实现信息。
+func classifyInvokeError(err error) string {
+	switch {
+	case errors.Is(err, dto.ErrSkillNotFound):
+		return "not_found"
+	case errors.Is(err, dto.ErrSkillValidation):
+		return "validation"
+	case errors.Is(err, context.DeadlineExceeded):
+		return "timeout"
+	case errors.Is(err, context.Canceled):
+		return "canceled"
+	default:
+		return "internal"
+	}
+}
+
 func failInvoke(c *gin.Context, code string, err error) {
 	switch {
 	case errors.Is(err, dto.ErrSkillNotFound):

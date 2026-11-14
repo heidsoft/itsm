@@ -1088,6 +1088,9 @@ func NewApplication() *Application {
 	// client 用于 Invoke 时校验 skill 声明的 RequiredPermissions。
 	skillHandler := skill.NewHandler(skillRegistry, sugar, client)
 	skillHandler.SetSkillEntitlements(marketplaceSvc)
+	// Skill 调用写决策底账（scenario=skill:<code>，成功/失败都留痕）：
+	// 与 AI 建议底账同表同写口，生产装配缺了它 skill 调用就不可追溯。
+	skillHandler.SetDecisionAuditWriter(aiTelemetryService)
 	emailIntakeService := email_intake.NewService(client)
 	emailIntakeHandler := email_intake.NewHandler(emailIntakeService)
 	emailIntakeMode := email_intake.IntakeMode(os.Getenv("EMAIL_INTAKE_MODE"))

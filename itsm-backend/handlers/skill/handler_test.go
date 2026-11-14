@@ -2,6 +2,8 @@ package skill_test
 
 import (
 	"bytes"
+	"context"
+	"strings"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -64,6 +66,23 @@ func setupRouter(reg *skill.SkillRegistry) *gin.Engine {
 	r := gin.New()
 	r.Use(gin.Recovery())
 	h := skill.NewHandler(reg, zap.NewNop().Sugar(), nil)
+	return setupRoutes(r, h)
+}
+
+// setupRoutesWithAudit 同 setupRouter，但由测试自建 Handler 并注入决策底账写口。
+func setupRoutesWithAudit(reg *skill.SkillRegistry, audits skill.DecisionAuditWriter) *gin.Engine {
+	gin.SetMode(gin.TestMode)
+	middleware.PermissionConfig.Mode = middleware.PermissionConfigModeHardcodeOnly
+	r := gin.New()
+	r.Use(gin.Recovery())
+	h := skill.NewHandler(reg, zap.NewNop().Sugar(), nil)
+	h.SetDecisionAuditWriter(audits)
+	return setupRoutes(r, h)
+}
+
+// setupRoutes 把 handler 的真实路由挂到 /api/v1 前缀（跳过 RBAC 中间件，
+// 模拟认证上下文 tenant_id=1 / user_id=42 / role=admin）。
+func setupRoutes(r *gin.Engine, h *skill.Handler) *gin.Engine {
 	v1 := r.Group("/api/v1")
 	// 跳过 RequirePermission 中间件，专注于 handler 行为。
 	v1.Use(func(c *gin.Context) {
@@ -579,4 +598,129 @@ func TestInvoke_EnforcesRequiredPermissions(t *testing.T) {
 		w := doRequest(t, r, http.MethodPost, "/api/v1/admin/skills/perm.malformed/invoke", nil)
 		assert.Equal(t, http.StatusForbidden, w.Code, w.Body.String())
 	})
+}
+
+
+// ----------------------------------------------------------------------------
+// Skill 调用决策底账（scenario="skill:<code>"，成功/失败都留痕）
+// ----------------------------------------------------------------------------
+
+// recordingAuditWriter 记录 RecordDecisionAudit 的全部调用参数；err 非空时模拟写失败。
+type recordingAuditWriter struct {
+	err   error
+	calls []struct {
+		tenantID, userID int
+		reqID            string
+		scenario         string
+		inputRef         string
+		promptVersion    string
+		model            string
+		confidence       float64
+		suggestion       map[string]interface{}
+	}
+}
+
+func (r *recordingAuditWriter) RecordDecisionAudit(_ context.Context, tenantID, userID int, reqID, scenario, inputRef, promptVersion, model string, confidence float64, suggestion map[string]interface{}) (int64, error) {
+	r.calls = append(r.calls, struct {
+		tenantID, userID int
+		reqID            string
+		scenario         string
+		inputRef         string
+		promptVersion    string
+		model            string
+		confidence       float64
+		suggestion       map[string]interface{}
+	}{tenantID, userID, reqID, scenario, inputRef, promptVersion, model, confidence, suggestion})
+	if r.err != nil {
+		return 0, r.err
+	}
+	return int64(len(r.calls)), nil
+}
+
+func registerEchoSkillForAudit(t *testing.T, r *gin.Engine) {
+	t.Helper()
+	create := skill.SkillUpsertRequest{
+		Code:                "user.echo",
+		Version:             "v1",
+		RequiredPermissions: []string{"marketplace:read"},
+		Executor:            map[string]interface{}{"target": "echo"},
+	}
+	w := doRequest(t, r, http.MethodPost, "/api/v1/admin/skills", create)
+	require.Equal(t, http.StatusOK, w.Code, w.Body.String())
+}
+
+// 成功调用必须落一条 skill:<code> 底账：身份取认证上下文、promptVersion=技能版本、
+// suggestion 只带最小事实（skill/ok/latencyMs），confidence 恒 0（合法值）。
+func TestInvoke_AuditWrittenOnSuccess(t *testing.T) {
+	reg := skill.NewSkillRegistry()
+	writer := &recordingAuditWriter{}
+	r := setupRoutesWithAudit(reg, writer)
+	registerEchoSkillForAudit(t, r)
+
+	w := doRequest(t, r, http.MethodPost, "/api/v1/admin/skills/user.echo/invoke",
+		skill.SkillInvokeRequest{Input: map[string]interface{}{"hello": "world"}})
+	require.Equal(t, http.StatusOK, w.Code, w.Body.String())
+
+	require.Len(t, writer.calls, 1, "成功调用必须恰好落一条底账")
+	c := writer.calls[0]
+	assert.Equal(t, 1, c.tenantID)
+	assert.Equal(t, 42, c.userID)
+	assert.Equal(t, "skill:user.echo", c.scenario)
+	assert.Equal(t, "skill:user.echo", c.inputRef)
+	assert.Equal(t, "v1", c.promptVersion)
+	assert.Empty(t, c.model, "skill 调用无模型语义")
+	assert.InDelta(t, 0, c.confidence, 1e-9)
+	assert.NotEmpty(t, c.reqID, "request ID 必须存在（随机兜底，不含时间戳）")
+	assert.False(t, strings.Contains(c.reqID, "skill:user.echo_0"), "request ID 不得退化为零值拼接")
+	assert.Equal(t, "user.echo", c.suggestion["skill"])
+	assert.Equal(t, true, c.suggestion["ok"])
+	latency, isInt64 := c.suggestion["latencyMs"].(int64)
+	assert.True(t, isInt64, "latencyMs 必须是 int64")
+	assert.GreaterOrEqual(t, latency, int64(0))
+	_, hasErrClass := c.suggestion["errorClass"]
+	assert.False(t, hasErrClass, "成功调用的底账不得携带 errorClass")
+}
+
+// 失败调用同样留痕：目标不存在时 errorClass=not_found，HTTP 语义不变（404）。
+func TestInvoke_AuditWrittenOnFailure(t *testing.T) {
+	reg := skill.NewSkillRegistry()
+	writer := &recordingAuditWriter{}
+	r := setupRoutesWithAudit(reg, writer)
+
+	w := doRequest(t, r, http.MethodPost, "/api/v1/admin/skills/missing/invoke", nil)
+	assert.Equal(t, http.StatusNotFound, w.Code)
+
+	require.Len(t, writer.calls, 1, "失败调用也必须落底账")
+	c := writer.calls[0]
+	assert.Equal(t, "skill:missing", c.scenario)
+	assert.Equal(t, false, c.suggestion["ok"])
+	assert.Equal(t, "not_found", c.suggestion["errorClass"])
+	// 失败底账不得携带错误原文
+	for k := range c.suggestion {
+		assert.NotEqual(t, "error", k, "底账不得携带错误原文")
+	}
+}
+
+// 底账写失败是 best-effort：不影响调用结果返回（响应仍 200）。
+func TestInvoke_AuditWriteFailureIsBestEffort(t *testing.T) {
+	reg := skill.NewSkillRegistry()
+	writer := &recordingAuditWriter{err: fmt.Errorf("db down")}
+	r := setupRoutesWithAudit(reg, writer)
+	registerEchoSkillForAudit(t, r)
+
+	w := doRequest(t, r, http.MethodPost, "/api/v1/admin/skills/user.echo/invoke",
+		skill.SkillInvokeRequest{Input: map[string]interface{}{"hello": "world"}})
+	require.Equal(t, http.StatusOK, w.Code, "审计写失败不得改变响应语义: "+w.Body.String())
+	require.Len(t, writer.calls, 1, "写失败前调用已发生，必须被记录")
+}
+
+// 未注入写口（nil）时行为与旧版完全一致：正常执行、无 panic（向后兼容基线）。
+func TestInvoke_NilAuditWriterIsNoop(t *testing.T) {
+	reg := skill.NewSkillRegistry()
+	r := setupRouter(reg)
+	registerEchoSkillForAudit(t, r)
+
+	w := doRequest(t, r, http.MethodPost, "/api/v1/admin/skills/user.echo/invoke",
+		skill.SkillInvokeRequest{Input: map[string]interface{}{"hello": "world"}})
+	assert.Equal(t, http.StatusOK, w.Code, w.Body.String())
 }
