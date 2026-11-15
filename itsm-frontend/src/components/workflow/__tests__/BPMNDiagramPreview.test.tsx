@@ -12,7 +12,11 @@ const mockZoom = jest.fn((level?: string | number) => {
 });
 const mockOn = jest.fn();
 const mockDestroy = jest.fn();
+const mockAddMarker = jest.fn();
+const mockScrollToElement = jest.fn();
 let viewerInstances = 0;
+// 图上实际存在的元素 ID；测试按需改写，用于验证「高亮不存在的元素必须跳过」
+let registryElementIds: string[] = [];
 
 jest.mock('bpmn-js/lib/NavigatedViewer', () =>
   jest.fn().mockImplementation(() => {
@@ -21,7 +25,17 @@ jest.mock('bpmn-js/lib/NavigatedViewer', () =>
       importXML: (...args: unknown[]) => mockImportXML(...args),
       on: mockOn,
       destroy: mockDestroy,
-      get: (name: string) => (name === 'canvas' ? { zoom: mockZoom } : {}),
+      get: (name: string) => {
+        if (name === 'canvas') {
+          return { zoom: mockZoom, addMarker: mockAddMarker, scrollToElement: mockScrollToElement };
+        }
+        if (name === 'elementRegistry') {
+          return {
+            get: (id: string) => (registryElementIds.includes(id) ? { id } : undefined),
+          };
+        }
+        return {};
+      },
     };
   })
 );
@@ -46,6 +60,7 @@ describe('BPMNDiagramPreview', () => {
     viewerInstances = 0;
     zoomLevels = [];
     currentZoomLevel = 1;
+    registryElementIds = [];
     setContainerSize(800, 600);
   });
 
@@ -166,5 +181,77 @@ describe('BPMNDiagramPreview', () => {
     });
     expect(mockZoom).toHaveBeenLastCalledWith(0.96);
     expect(screen.getByText('96%')).toBeInTheDocument();
+  });
+
+  describe('当前节点高亮', () => {
+    it('传入 activeElementId 且元素存在时打标记并滚动到元素', async () => {
+      mockImportXML.mockResolvedValueOnce({});
+      registryElementIds = ['Activity_AutoAssign'];
+
+      render(
+        <BPMNDiagramPreview
+          xml="<definitions />"
+          activeElementId="Activity_AutoAssign"
+          activeElementLabel="自动分配"
+        />
+      );
+
+      await waitFor(() => expect(mockAddMarker).toHaveBeenCalledWith('Activity_AutoAssign', 'bpmn-current-activity'));
+      expect(mockScrollToElement).toHaveBeenCalledWith('Activity_AutoAssign');
+      // 图例要告诉用户橙色描边是什么，否则高亮等于没解释
+      expect(screen.getByText('当前节点：自动分配')).toBeInTheDocument();
+    });
+
+    it('不传 activeElementId 时完全不注册 marker（既有调用方零影响）', async () => {
+      mockImportXML.mockResolvedValueOnce({});
+
+      render(<BPMNDiagramPreview xml="<definitions />" />);
+
+      await waitFor(() => expect(mockZoom).toHaveBeenCalledWith('fit-viewport'));
+      expect(mockAddMarker).not.toHaveBeenCalled();
+      expect(mockScrollToElement).not.toHaveBeenCalled();
+      expect(screen.queryByText(/当前节点/)).not.toBeInTheDocument();
+    });
+
+    it('元素不在图上（流程改版后旧实例）时不打标记也不抛错，图仍正常渲染', async () => {
+      mockImportXML.mockResolvedValueOnce({});
+      // 实例的 currentActivityId 指向已被新版定义删除的节点
+      registryElementIds = ['Activity_Assign'];
+
+      render(<BPMNDiagramPreview xml="<definitions />" activeElementId="Activity_Gone" />);
+
+      await waitFor(() => expect(screen.getByText('100%')).toBeInTheDocument());
+      expect(mockAddMarker).not.toHaveBeenCalled();
+      expect(mockScrollToElement).not.toHaveBeenCalled();
+      // 关键：图必须仍然是 ready（不能因高亮失败让整张图变成错误/空白）
+      expect(screen.queryByText('流程图预览失败')).not.toBeInTheDocument();
+    });
+
+    it('高亮发生在 fit-viewport 之后（否则滚动位置会被 fit 重置）', async () => {
+      mockImportXML.mockResolvedValueOnce({});
+      registryElementIds = ['Task_1'];
+
+      render(<BPMNDiagramPreview xml="<definitions />" activeElementId="Task_1" />);
+
+      await waitFor(() => expect(mockAddMarker).toHaveBeenCalled());
+      const fitIndex = mockZoom.mock.calls.findIndex(call => call[0] === 'fit-viewport');
+      const markerOrder = mockAddMarker.mock.invocationCallOrder[0];
+      expect(markerOrder).toBeGreaterThan(mockZoom.mock.invocationCallOrder[fitIndex]);
+    });
+
+    it('同一份 XML 切换 activeElementId 时重新导入，旧实例高亮不残留', async () => {
+      mockImportXML.mockResolvedValue({});
+      registryElementIds = ['A', 'B'];
+
+      const { rerender } = render(<BPMNDiagramPreview xml="<definitions />" activeElementId="A" />);
+      await waitFor(() => expect(mockAddMarker).toHaveBeenCalledWith('A', 'bpmn-current-activity'));
+
+      rerender(<BPMNDiagramPreview xml="<definitions />" activeElementId="B" />);
+
+      await waitFor(() => expect(mockAddMarker).toHaveBeenCalledWith('B', 'bpmn-current-activity'));
+      // 旧标记由 importXML 重建 DOM 自然清除；关键是必须重新导入而不是只换 marker
+      expect(mockImportXML.mock.calls.length).toBeGreaterThanOrEqual(2);
+      expect(mockAddMarker).not.toHaveBeenCalledWith('B', undefined);
+    });
   });
 });

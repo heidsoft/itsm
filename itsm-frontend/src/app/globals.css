@@ -2251,3 +2251,14 @@ html:not(.dark) .ant-btn-default:focus {
   stroke-width: 3px !important;
   filter: drop-shadow(0 0 4px rgba(212, 56, 13, 0.45));
 }
+
+/* 流程实例「当前节点」高亮：只读预览里回答「我的单子卡在哪」。
+   与上方搜索高亮同一机制（canvas.addMarker 追加类名），但语义不同：
+   搜索高亮是「我找的东西」，当前节点高亮是「系统告诉我停在哪」，
+   因此用填充 + 描边双重强调，且在只读 Viewer 下也成立（不动 SVG 结构，
+   filter 会破坏 Viewer 的导出/截图，故只用 fill + stroke）。 */
+.djs-element.bpmn-current-activity .djs-visual > :nth-child(1) {
+  stroke: #fa8c16 !important;
+  stroke-width: 3px !important;
+  fill: #fff7e6 !important;
+}

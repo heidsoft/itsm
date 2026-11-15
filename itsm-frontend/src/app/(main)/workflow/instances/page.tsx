@@ -511,6 +511,10 @@ function WorkflowInstancesContent() {
               status: selectedInstanceSummary.status,
               startTime: selectedInstanceSummary.startTime,
               endTime: selectedInstanceSummary.endTime,
+              // 列表已经拿到当前节点，不传下去的话详情页会重新请求一次实例，
+              // 而且打开瞬间看不到「卡在哪」——这正是用户在列表里点进来的原因。
+              currentActivityId: selectedInstanceSummary.currentActivityId,
+              currentActivityName: selectedInstanceSummary.currentActivityName,
             } : undefined}
           />
         )}

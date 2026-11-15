@@ -11,15 +11,34 @@
  * 接受可选 `initialInstance` 用于列表场景下立即渲染基本信息。
  */
 
-import React, { useEffect, useMemo, useState } from 'react';
-import { App, Button, Descriptions, Space, Table, Tabs, Tag, Timeline, Badge } from 'antd';
-import { ArrowLeft, Clock, MessageSquare, RefreshCw, User } from 'lucide-react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import dynamic from 'next/dynamic';
+import { App, Button, Descriptions, Space, Spin, Table, Tabs, Tag, Timeline, Badge, Typography } from 'antd';
+import { ArrowLeft, Clock, ExternalLink, MessageSquare, RefreshCw, User } from 'lucide-react';
 
 import { LoadingEmptyError } from '@/components/ui/LoadingEmptyError';
 import { WorkflowApi } from '@/lib/api/workflow-api';
 import BPMNDashboardApi, { type ProcessAuditLog } from '@/lib/api/bpmn-dashboard-api';
 import { formatDateTime } from '@/lib/formatters';
+import { parseBusinessKey } from '@/lib/workflow/business-key';
 import type { NodeInstance, WorkflowInstance } from '@/types/workflow';
+
+/**
+ * BPMN 预览按需加载。
+ *
+ * 两个理由都必须写在代码里，否则下一个人会顺手改回静态 import：
+ * 1) bpmn-js 是 ESM-only 且体积大（含 diagram-js + bpmn-moddle）。详情页的
+ *    基本信息/任务列表根本不需要它，静态 import 会让每个打开实例详情的人都
+ *    下载整包；
+ * 2) jest 的 transformIgnorePatterns 不转换 node_modules，静态 import 会把
+ *    bpmn-js 的 `import inherits from 'inherits-browser'` 直接抛进测试运行时，
+ *    让所有引用本组件的测试全部无法启动（不是断言失败，是测试套件加载失败）。
+ * 用 dynamic 后本组件在测试里可正常渲染，预览面独立测。
+ */
+const BPMNDiagramPreview = dynamic(() => import('@/components/workflow/BPMNDiagramPreview'), {
+  ssr: false,
+  loading: () => <Spin />,
+});
 
 const formatDuration = (ms: number): string => {
   if (!Number.isFinite(ms) || ms < 0) return '-';
@@ -138,6 +157,15 @@ interface InstanceSummary {
   status: string;
   startTime?: string;
   endTime?: string;
+  /**
+   * 当前停留节点。
+   *
+   * 这两个字段是「我的单子走到哪了」唯一的权威来源（后端 ProcessInstance 的
+   * currentActivityId / currentActivityName）。此前 toSummary 把它们丢弃，
+   * 于是详情页只能靠任务表反推当前节点——任务表是历史，不是现状。
+   */
+  currentActivityId?: string;
+  currentActivityName?: string;
 }
 
 export interface WorkflowInstanceDetailProps {
@@ -164,6 +192,8 @@ const toSummary = (instance: WorkflowInstance): InstanceSummary => ({
   status: String(instance.status),
   startTime: instance.startTime ? new Date(instance.startTime).toISOString() : undefined,
   endTime: instance.endTime ? new Date(instance.endTime).toISOString() : undefined,
+  currentActivityId: instance.currentActivityId,
+  currentActivityName: instance.currentActivityName,
 });
 
 export const WorkflowInstanceDetail: React.FC<WorkflowInstanceDetailProps> = ({
@@ -178,6 +208,12 @@ export const WorkflowInstanceDetail: React.FC<WorkflowInstanceDetailProps> = ({
   const [summary, setSummary] = useState<InstanceSummary | undefined>(initialInstance);
   const [tasks, setTasks] = useState<NodeInstance[]>([]);
   const [auditLogs, setAuditLogs] = useState<ProcessAuditLog[]>([]);
+  // 流程定义 XML 只在「流程进度」Tab 首次打开时拉取：定义体量大（prod 实测
+  // ticket_general_flow 11.2KB），进详情页就加载会拖慢基本信息与任务表的首屏。
+  const [definitionXml, setDefinitionXml] = useState<string | undefined>(undefined);
+  const [definitionLoading, setDefinitionLoading] = useState(false);
+  const [definitionError, setDefinitionError] = useState<string | undefined>(undefined);
+  const definitionRequestedRef = useRef(false);
 
   const loadDetail = async () => {
     if (!instanceId) return;
@@ -210,6 +246,43 @@ export const WorkflowInstanceDetail: React.FC<WorkflowInstanceDetailProps> = ({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [instanceId]);
+
+  /**
+   * 懒加载流程定义 XML（供「流程进度」Tab 渲染 BPMN 图）。
+   *
+   * 用 getWorkflow(key) 而不是 getInstance 里的字段：实例接口不下发 XML。
+   * 注意取的是「当前最新版本」的定义 —— 与实例实际运行时用的版本可能不同
+   * （prod 实测实例 version=18 是实例自增序号，定义版本是 1.1.0，两套口径）。
+   * 因此高亮靠节点 ID 匹配而非版本对齐：节点 ID 在定义里不变，改版后旧实例
+   * 若引用了已删除的节点，BPMNDiagramPreview 会判掉不画高亮而不是崩图。
+   */
+  const loadDefinition = useCallback(async () => {
+    if (definitionRequestedRef.current) return;
+    const key = summary?.processDefinitionKey;
+    if (!key || key === '-') {
+      setDefinitionError('缺少流程定义 Key，无法渲染流程图');
+      return;
+    }
+    definitionRequestedRef.current = true;
+    setDefinitionLoading(true);
+    setDefinitionError(undefined);
+    try {
+      const definition = await WorkflowApi.getWorkflow(key);
+      const xml = definition.bpmnXml;
+      if (!xml || !xml.trim()) {
+        setDefinitionError('该流程定义没有可渲染的 BPMN 图形');
+        return;
+      }
+      setDefinitionXml(xml);
+    } catch (error) {
+      console.error('Failed to load process definition:', error);
+      // 失败必须可重试：把 requested 复位，否则用户点了重试也不会再发请求。
+      definitionRequestedRef.current = false;
+      setDefinitionError('加载流程定义失败');
+    } finally {
+      setDefinitionLoading(false);
+    }
+  }, [summary?.processDefinitionKey]);
 
   // taskColumns 只引用模块级常量（taskStatusColorMap / formatDateTime 等），
   // 这些值在组件生命周期内稳定。刻意省略依赖列表以避免每次 loading 切换时
@@ -273,6 +346,11 @@ export const WorkflowInstanceDetail: React.FC<WorkflowInstanceDetailProps> = ({
     []
   );
 
+  const businessKeyParsed = useMemo(
+    () => parseBusinessKey(summary?.businessKey),
+    [summary?.businessKey]
+  );
+
   const tabItems = useMemo(
     () => [
       {
@@ -284,11 +362,49 @@ export const WorkflowInstanceDetail: React.FC<WorkflowInstanceDetailProps> = ({
               <span className="font-mono text-xs">{summary.id}</span>
             </Descriptions.Item>
             <Descriptions.Item label="流程 Key">{summary.processDefinitionKey}</Descriptions.Item>
-            <Descriptions.Item label="业务键">{summary.businessKey}</Descriptions.Item>
+            <Descriptions.Item label="业务键">
+              {/* 业务键是实例与业务单据之间唯一的关联锚点（后端写死 `type:id` 格式）。
+                  只渲染文本的话，用户看完流程还得回列表页自己翻那张单，这里直接给一跳。 */}
+              {businessKeyParsed.href ? (
+                <a
+                  href={businessKeyParsed.href}
+                  className="inline-flex items-center gap-1"
+                  data-testid="business-key-link"
+                >
+                  {businessKeyParsed.label}
+                  <ExternalLink className="h-3 w-3" />
+                </a>
+              ) : (
+                <span className={businessKeyParsed.rawType ? 'font-mono text-xs' : ''}>
+                  {businessKeyParsed.label}
+                </span>
+              )}
+            </Descriptions.Item>
             <Descriptions.Item label="状态">
               <Tag color={statusColorMap[summary.status] || 'default'}>
                 {statusTextMap[summary.status] || summary.status}
               </Tag>
+            </Descriptions.Item>
+            {/* 当前节点排在状态之后：这两行合起来才完整回答「是否在跑 + 卡在哪」。
+                终态实例后端不再下发该字段，此时显式显示 '-' 而不是留空。 */}
+            <Descriptions.Item label="当前节点">
+              {summary.currentActivityName || summary.currentActivityId ? (
+                <Space size={4}>
+                  <Tag color="orange">进行中</Tag>
+                  <span>{summary.currentActivityName || summary.currentActivityId}</span>
+                  {summary.currentActivityName &&
+                    summary.currentActivityId &&
+                    summary.currentActivityName === summary.currentActivityId && (
+                      // 后端在节点无 name 时回退成原始 ID。透出 ID 便于运维去 XML 里
+                      // 定位配置缺失，但用等宽弱化样式区分「这是标识符不是业务名称」。
+                      <Typography.Text type="secondary" className="font-mono text-xs">
+                        无节点名称
+                      </Typography.Text>
+                    )}
+                </Space>
+              ) : (
+                <Typography.Text type="secondary">-（已结束或未进入任何节点）</Typography.Text>
+              )}
             </Descriptions.Item>
             <Descriptions.Item label="启动时间">{formatDateTime(summary.startTime) || '-'}</Descriptions.Item>
             <Descriptions.Item label="结束时间">{formatDateTime(summary.endTime) || '-'}</Descriptions.Item>
@@ -307,6 +423,54 @@ export const WorkflowInstanceDetail: React.FC<WorkflowInstanceDetailProps> = ({
             state="loading"
             loadingText="正在加载基本信息..."
           />
+        ),
+      },
+      {
+        key: 'progress',
+        label: '流程进度',
+        children: (
+          <div>
+            <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+              <span>
+                <Typography.Text type="secondary">当前节点：</Typography.Text>
+                <span className="font-medium">{summary?.currentActivityName || '-'}</span>
+              </span>
+              {tasks.length > 0 && (
+                <span>
+                  <Typography.Text type="secondary">已产生任务：</Typography.Text>
+                  <span className="font-medium">{tasks.length}</span>
+                </span>
+              )}
+              {auditLogs.length > 0 && (
+                <span>
+                  <Typography.Text type="secondary">执行记录：</Typography.Text>
+                  <span className="font-medium">{auditLogs.length}</span>
+                </span>
+              )}
+            </div>
+            <LoadingEmptyError
+              state={definitionLoading ? 'loading' : definitionError ? 'error' : 'success'}
+              loadingText="正在加载流程定义..."
+              error={{
+                title: '流程图加载失败',
+                description: definitionError || '未知错误',
+                actionText: '重新加载',
+                onAction: () => {
+                  definitionRequestedRef.current = false;
+                  void loadDefinition();
+                },
+              }}
+            >
+              {definitionXml ? (
+                <BPMNDiagramPreview
+                  xml={definitionXml}
+                  height={420}
+                  activeElementId={summary?.currentActivityId}
+                  activeElementLabel={summary?.currentActivityName || summary?.currentActivityId}
+                />
+              ) : null}
+            </LoadingEmptyError>
+          </div>
         ),
       },
       {
@@ -412,7 +576,18 @@ export const WorkflowInstanceDetail: React.FC<WorkflowInstanceDetailProps> = ({
         ),
       },
     ],
-    [loading, summary, tasks, auditLogs, taskColumns]
+    [
+      loading,
+      summary,
+      tasks,
+      auditLogs,
+      taskColumns,
+      businessKeyParsed,
+      definitionXml,
+      definitionLoading,
+      definitionError,
+      loadDefinition,
+    ]
   );
 
   const header = onBack ? (
@@ -434,7 +609,15 @@ export const WorkflowInstanceDetail: React.FC<WorkflowInstanceDetailProps> = ({
   return (
     <div>
       {header}
-      <Tabs activeKey={activeTab} onChange={setActiveTab} items={tabItems} />
+      {/* 切到「流程进度」时才拉定义 XML（懒加载），避免进详情页就拖 11KB 定义体。 */}
+      <Tabs
+        activeKey={activeTab}
+        onChange={next => {
+          setActiveTab(next);
+          if (next === 'progress') void loadDefinition();
+        }}
+        items={tabItems}
+      />
     </div>
   );
 };
