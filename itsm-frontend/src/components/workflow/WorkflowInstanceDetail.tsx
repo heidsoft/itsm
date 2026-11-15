@@ -351,6 +351,35 @@ export const WorkflowInstanceDetail: React.FC<WorkflowInstanceDetailProps> = ({
     [summary?.businessKey]
   );
 
+  /**
+   * 已走过节点的 ID 列表（供 BPMN 图标出路径）。
+   *
+   * 来源是任务表而不是审计日志：任务表的 nodeId 才是 BPMN 元素 ID，审计日志的
+   * activityName 是展示名，两者在 XML 里对不上。按 createdAt 升序保留时间顺序，
+   * 让图上「从哪来」的方向可读。
+   *
+   * 去重保留首次出现：回退/重入会让同一节点出现多条任务，图上标一次即可。
+   */
+  const visitedActivityIds = useMemo(() => {
+    const withTime = tasks
+      .filter(task => Boolean(task.nodeId))
+      .map(task => ({
+        id: task.nodeId as string,
+        // NodeInstance 的时间字段是 startTime（映射自后端的 createdTime），
+        // 没有 createdAt —— 写错会得到一个恒 0 的时间戳，排序静默失效。
+        at: task.startTime ? new Date(task.startTime).getTime() : 0,
+      }))
+      .sort((a, b) => a.at - b.at);
+    const seen = new Set<string>();
+    const result: string[] = [];
+    for (const { id } of withTime) {
+      if (seen.has(id)) continue;
+      seen.add(id);
+      result.push(id);
+    }
+    return result;
+  }, [tasks]);
+
   const tabItems = useMemo(
     () => [
       {
@@ -467,6 +496,7 @@ export const WorkflowInstanceDetail: React.FC<WorkflowInstanceDetailProps> = ({
                   height={420}
                   activeElementId={summary?.currentActivityId}
                   activeElementLabel={summary?.currentActivityName || summary?.currentActivityId}
+                  visitedElementIds={visitedActivityIds}
                 />
               ) : null}
             </LoadingEmptyError>

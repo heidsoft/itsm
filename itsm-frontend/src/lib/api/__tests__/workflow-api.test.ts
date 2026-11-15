@@ -869,6 +869,46 @@ describe('WorkflowApi', () => {
       expect(result[0].nodeName).toBe('Review');
     });
 
+    /**
+     * nodeId 必须是 BPMN 元素 ID，不能是 taskId。
+     *
+     * prod 实测（ticket_general_flow 实例的真实任务行）：
+     *   {'taskId': 'TASK-Activity_Assign-1794579980116057665',
+     *    'taskDefinitionKey': 'Activity_Assign', 'taskName': '任务分配'}
+     * taskId 是任务流水号（TASK-<元素ID>-<雪花>），把它当 nodeId 去 BPMN 图上
+     * 打标记会一个都打不中 —— 图上元素的 id 是 'Activity_Assign'。
+     */
+    it('nodeId 优先取 taskDefinitionKey（BPMN 元素 ID），而非 taskId 流水号', async () => {
+      (httpClient.get as jest.Mock)
+        .mockResolvedValueOnce({ id: 'inst1', instanceId: 'inst1', processDefinitionKey: 'wf1', status: 'running', startTime: '2024-01-01' })
+        .mockResolvedValueOnce([
+          {
+            id: 't1',
+            taskId: 'TASK-Activity_Assign-1794579980116057665',
+            taskDefinitionKey: 'Activity_Assign',
+            taskName: '任务分配',
+            name: '任务分配',
+            status: 'completed',
+            assignee: '5',
+          },
+        ]);
+      const result = await WorkflowApi.getNodeInstances('inst1');
+      expect(result[0].nodeId).toBe('Activity_Assign');
+      expect(result[0].nodeId).not.toBe('TASK-Activity_Assign-1794579980116057665');
+      expect(result[0].nodeName).toBe('任务分配');
+    });
+
+    it('缺 taskDefinitionKey 的历史数据退回 taskId，至少详情表还能显示一行', async () => {
+      // 老数据/系统任务可能没有 taskDefinitionKey；此时不能让 nodeId 变空，
+      // 否则详情表格整行丢失。退回 taskId 后仍无法在 BPMN 图上定位，
+      // 但预览组件打标记前有 elementRegistry 存在性判断会自然跳过。
+      (httpClient.get as jest.Mock)
+        .mockResolvedValueOnce({ id: 'inst1', instanceId: 'inst1', processDefinitionKey: 'wf1', status: 'running', startTime: '2024-01-01' })
+        .mockResolvedValueOnce([{ id: 't2', taskId: 'task-legacy', status: 'completed' }]);
+      const result = await WorkflowApi.getNodeInstances('inst1');
+      expect(result[0].nodeId).toBe('task-legacy');
+    });
+
     it('should return empty on error', async () => {
       (httpClient.get as jest.Mock).mockRejectedValueOnce(new Error('fail'));
       const result = await WorkflowApi.getNodeInstances('inst1');

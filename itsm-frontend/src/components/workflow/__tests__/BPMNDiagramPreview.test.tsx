@@ -254,4 +254,120 @@ describe('BPMNDiagramPreview', () => {
       expect(mockAddMarker).not.toHaveBeenCalledWith('B', undefined);
     });
   });
+
+  describe('已走过节点高亮', () => {
+    it('逐个打 bpmn-visited 标记，且不与当前节点重复标记', async () => {
+      mockImportXML.mockResolvedValueOnce({});
+      registryElementIds = ['Start_1', 'Activity_Create', 'Activity_Assign'];
+
+      render(
+        <BPMNDiagramPreview
+          xml="<definitions />"
+          activeElementId="Activity_Assign"
+          visitedElementIds={['Start_1', 'Activity_Create', 'Activity_Assign']}
+        />
+      );
+
+      await waitFor(() =>
+        expect(mockAddMarker).toHaveBeenCalledWith('Start_1', 'bpmn-visited')
+      );
+      expect(mockAddMarker).toHaveBeenCalledWith('Activity_Create', 'bpmn-visited');
+      // 「已走过」里若包含当前节点，会被浅色虚描边盖住橙色强调 —— 必须跳过
+      expect(mockAddMarker).not.toHaveBeenCalledWith('Activity_Assign', 'bpmn-visited');
+      expect(mockAddMarker).toHaveBeenCalledWith('Activity_Assign', 'bpmn-current-activity');
+      expect(screen.getByText('已走过')).toBeInTheDocument();
+    });
+
+    it('重复 ID 只标记一次（history 因回退/重入会重复记录同一节点）', async () => {
+      mockImportXML.mockResolvedValueOnce({});
+      registryElementIds = ['Activity_Create'];
+
+      render(
+        <BPMNDiagramPreview
+          xml="<definitions />"
+          visitedElementIds={['Activity_Create', 'Activity_Create']}
+        />
+      );
+
+      await waitFor(() => expect(mockAddMarker).toHaveBeenCalledWith('Activity_Create', 'bpmn-visited'));
+      expect(mockAddMarker.mock.calls.filter(c => c[1] === 'bpmn-visited')).toHaveLength(1);
+      expect(screen.getByText('已走过')).toBeInTheDocument();
+    });
+
+    it('图上不存在的已走过节点静默跳过，不抛错也不影响当前节点高亮', async () => {
+      mockImportXML.mockResolvedValueOnce({});
+      registryElementIds = ['Activity_Gone', 'Activity_Assign'];
+
+      render(
+        <BPMNDiagramPreview
+          xml="<definitions />"
+          activeElementId="Activity_Assign"
+          visitedElementIds={['Activity_DeletedByUpgrade', 'Activity_Gone']}
+        />
+      );
+
+      await waitFor(() =>
+        expect(mockAddMarker).toHaveBeenCalledWith('Activity_Assign', 'bpmn-current-activity')
+      );
+      expect(mockAddMarker).not.toHaveBeenCalledWith('Activity_DeletedByUpgrade', 'bpmn-visited');
+      expect(mockAddMarker).toHaveBeenCalledWith('Activity_Gone', 'bpmn-visited');
+      // 图仍是 ready
+      expect(screen.queryByText('流程图预览失败')).not.toBeInTheDocument();
+    });
+
+    it('只传 visitedElementIds 不传 activeElementId 也算有效高亮（终态实例只有历史）', async () => {
+      mockImportXML.mockResolvedValueOnce({});
+      registryElementIds = ['Start_1'];
+
+      render(<BPMNDiagramPreview xml="<definitions />" visitedElementIds={['Start_1']} />);
+
+      await waitFor(() => expect(mockAddMarker).toHaveBeenCalledWith('Start_1', 'bpmn-visited'));
+      expect(mockScrollToElement).not.toHaveBeenCalled();
+      expect(screen.getByText('已走过')).toBeInTheDocument();
+    });
+
+    /**
+     * 这条是本轮最容易被「顺手优化」掉、且代价最高的不变量：
+     *
+     * 若把 visitedElementIds 数组本身放进 runImport 的依赖数组，调用方每次渲染
+     * 用 history.map(...) 新建一个数组字面量，依赖就恒不相等 —— 结果是每次父组件
+     * 重渲染都会重新 importXML，整张画布持续闪烁（用户看到「图在抖」）。
+     * 组件用内容指纹（join('\u0001')）做依赖，所以内容相同的新数组必须零重导入。
+     */
+    it('内容相同的数组（每次都是新引用）不触发重新导入，避免画布每帧闪烁', async () => {
+      mockImportXML.mockResolvedValue({});
+      registryElementIds = ['Activity_Create'];
+
+      const { rerender } = render(
+        <BPMNDiagramPreview xml="<definitions />" visitedElementIds={['Activity_Create']} />
+      );
+      await waitFor(() => expect(mockAddMarker).toHaveBeenCalledWith('Activity_Create', 'bpmn-visited'));
+
+      const importsAfterFirstRender = mockImportXML.mock.calls.length;
+
+      // 模拟调用方每次渲染都新建数组（history.map 的真实行为）
+      rerender(<BPMNDiagramPreview xml="<definitions />" visitedElementIds={['Activity_Create']} />);
+      rerender(<BPMNDiagramPreview xml="<definitions />" visitedElementIds={[...['Activity_Create']]} />);
+
+      await waitFor(() => expect(screen.getByText('100%')).toBeInTheDocument());
+      expect(mockImportXML.mock.calls.length).toBe(importsAfterFirstRender);
+    });
+
+    it('内容变化时必须重新导入，新标记才不会漏', async () => {
+      mockImportXML.mockResolvedValue({});
+      registryElementIds = ['Activity_Create', 'Activity_Review'];
+
+      const { rerender } = render(
+        <BPMNDiagramPreview xml="<definitions />" visitedElementIds={['Activity_Create']} />
+      );
+      await waitFor(() => expect(mockAddMarker).toHaveBeenCalledWith('Activity_Create', 'bpmn-visited'));
+
+      rerender(
+        <BPMNDiagramPreview xml="<definitions />" visitedElementIds={['Activity_Create', 'Activity_Review']} />
+      );
+
+      await waitFor(() => expect(mockAddMarker).toHaveBeenCalledWith('Activity_Review', 'bpmn-visited'));
+      expect(mockImportXML.mock.calls.length).toBeGreaterThanOrEqual(2);
+    });
+  });
 });

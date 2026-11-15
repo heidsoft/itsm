@@ -30,6 +30,16 @@ interface BPMNDiagramPreviewProps {
   activeElementId?: string;
   /** 高亮元素的补充说明（如「当前节点：自动分配」），仅在 activeElementId 命中时展示 */
   activeElementLabel?: string;
+  /**
+   * 已走过的元素 ID 列表（通常是实例 history 里的 activityId）。
+   *
+   * 只高亮当前节点时，用户仍然只能看到「现在在哪」，看不到「已经走过哪些」——
+   * 而「走到这一步之前经过了谁」是排查卡单、复盘流转路径的核心信息。传入本字段后
+   * 这些元素会被打上 bpmn-visited 标记（浅色描边，不与当前节点的橙色争视觉焦点）。
+   *
+   * 排序语义由调用方负责：本组件只按传入顺序打标记，不做「谁是最后一步」的推断。
+   */
+  visitedElementIds?: string[];
 }
 
 interface CanvasService {
@@ -50,35 +60,71 @@ const SIZE_RETRY_LIMIT = 15;
 
 /** 当前节点高亮标记。样式见 src/app/globals.css 的 .djs-element.bpmn-current-activity */
 const CURRENT_ACTIVITY_MARKER = 'bpmn-current-activity';
+/** 已走过节点标记。浅色，不与当前节点的橙色争视觉焦点 */
+const VISITED_MARKER = 'bpmn-visited';
 
 /**
- * 给指定元素打标记并滚动到视野内。
+ * 取 canvas 与 elementRegistry，二者任一不可用即返回 null。
+ *
+ * 注册表不可用时不赌运气：宁可不高亮，也不让 exception 冒到 import 流程里。
+ * canvas.addMarker 内部会对元素对象直接读写 markers 字段，拿到 undefined 会抛
+ * TypeError —— 这个异常会顺着 importXML 的调用栈把整张图打成错误态。
+ */
+function resolveMarkerTargets(
+  viewer: BpmnNavigatedViewer
+): { canvas: CanvasService; registry: ElementRegistryService } | null {
+  const canvas = viewer.get('canvas') as CanvasService | undefined;
+  if (!canvas?.addMarker) return null;
+  const registry = viewer.get('elementRegistry') as ElementRegistryService | undefined;
+  if (!registry?.get) return null;
+  return { canvas, registry };
+}
+
+/**
+ * 给指定元素打标记；元素不在图上（如流程改版后旧实例引用了已删除节点）时跳过。
+ *
+ * prod 实测存在这种情形：实例的 currentActivityId 指向的元素在当前版本 XML 里
+ * 已不存在，此时必须提前判掉而不是依赖 addMarker 自己容错。
+ */
+function markIfPresent(
+  targets: { canvas: CanvasService; registry: ElementRegistryService },
+  elementId: string,
+  marker: string
+): boolean {
+  if (!targets.registry.get?.(elementId)) return false;
+  targets.canvas.addMarker?.(elementId, marker);
+  return true;
+}
+
+/**
+ * 应用三类标记（已走过 / 当前节点 / 滚动定位）。
  *
  * 全部步骤 best-effort：高亮只是「锦上添花」，任何一步失败都不能让整张图变空白——
- * 后者正是本轮要修的反面（预览失败必须能看见图）。
+ * 后者正是上一批要修的反面（预览失败必须能看见图）。
  *
- * 关键细节：先用 elementRegistry 判断元素是否在图上。prod 实测存在「实例的
- * currentActivityId 指向的元素在当前版本 XML 里已不存在」的情形（流程定义被改版后
- * 旧实例仍在跑），此时 canvas.addMarker 内部会取到 undefined 再读写 markens
- * 属性而抛 TypeError，必须提前判掉。
+ * 顺序固定：先 visited 再 current，最后滚动到 current。当前节点永远压在最上层，
+ * 否则「已走过」的浅色描边会盖住「现在就停在这」的强调。
  */
-function applyCurrentActivityMarker(
+function applyActivityMarkers(
   viewer: BpmnNavigatedViewer,
-  elementId: string | undefined
+  activeElementId: string | undefined,
+  visitedElementIds: string[] | undefined
 ): void {
-  if (!elementId) return;
+  if (!activeElementId && !visitedElementIds?.length) return;
   try {
-    const canvas = viewer.get('canvas') as CanvasService | undefined;
-    if (!canvas?.addMarker) return;
-    const registry = viewer.get('elementRegistry') as ElementRegistryService | undefined;
-    // 注册表不可用时不赌运气：宁可不高亮，也不让 exception 冒到 import 流程里。
-    if (!registry?.get) return;
-    if (!registry.get(elementId)) return;
+    const targets = resolveMarkerTargets(viewer);
+    if (!targets) return;
 
-    canvas.addMarker(elementId, CURRENT_ACTIVITY_MARKER);
-    canvas.scrollToElement?.(elementId);
+    // 去重：history 里同一节点可能因回退/重入出现多次，重复 addMarker 无意义
+    for (const id of new Set(visitedElementIds ?? [])) {
+      if (id && id !== activeElementId) markIfPresent(targets, id, VISITED_MARKER);
+    }
+
+    if (activeElementId && markIfPresent(targets, activeElementId, CURRENT_ACTIVITY_MARKER)) {
+      targets.canvas.scrollToElement?.(activeElementId);
+    }
   } catch {
-    // 高亮失败不影响图形本身，静默跳过
+    // 标记失败不影响图形本身，静默跳过
   }
 }
 
@@ -92,6 +138,7 @@ const BPMNDiagramPreview: React.FC<BPMNDiagramPreviewProps> = ({
   label,
   activeElementId,
   activeElementLabel,
+  visitedElementIds,
 }) => {
   const { t } = useI18n();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -102,6 +149,10 @@ const BPMNDiagramPreview: React.FC<BPMNDiagramPreviewProps> = ({
   const [status, setStatus] = useState<PreviewStatus>('loading');
   const [errorMessage, setErrorMessage] = useState('');
   const [zoom, setZoom] = useState(1);
+
+  // 用内容指纹代替数组引用做依赖（见 runImport 依赖数组处的注释）。
+  // 顺序有意义（历史按时间推进），故不做排序归一化。
+  const visitedKey = (visitedElementIds ?? []).join('\u0001');
 
   const readZoom = useCallback((): number => {
     const viewer = viewerRef.current;
@@ -193,7 +244,7 @@ const BPMNDiagramPreview: React.FC<BPMNDiagramPreviewProps> = ({
         setZoom(readZoom());
         // 先 fit-viewport 再标记：marker 自身不改视口，滚动到元素必须在
         // 「全图已在视野内」之后执行，否则会被 fit 的缩放重置掉目标位置。
-        applyCurrentActivityMarker(viewer, activeElementId);
+        applyActivityMarkers(viewer, activeElementId, visitedElementIds);
         setStatus('ready');
       } catch (err) {
         if (token !== importTokenRef.current) return;
@@ -205,7 +256,11 @@ const BPMNDiagramPreview: React.FC<BPMNDiagramPreviewProps> = ({
     await attempt(0);
     // activeElementId 必须在依赖里：同一份 XML 下切换实例时若不重跑导入，
     // 旧实例的高亮会一直挂在图上，用户会以为自己的单卡在别人那个节点。
-  }, [ensureViewer, readZoom, t, xml, activeElementId]);
+    //
+    // visitedElementIds 走序列化后的值而不是数组本身：数组是对象引用，调用方
+    // 每次渲染新建一个（如 history.map(...)）会让依赖恒不等，导致每帧都重新
+    // importXML，画布持续闪烁。用稳定字符串比较才是真正的「内容是否变化」。
+  }, [ensureViewer, readZoom, t, xml, activeElementId, visitedKey]);
 
   useEffect(() => {
     void runImport();
@@ -322,9 +377,10 @@ const BPMNDiagramPreview: React.FC<BPMNDiagramPreviewProps> = ({
         </div>
       )}
 
-      {/* 图例：光有橙色描边，用户不知道那是什么意思。仅在传了 activeElementId
-          且图已就绪时展示，避免在纯定义预览里凭空出现一个空图例。 */}
-      {status === 'ready' && activeElementId && (
+      {/* 图例：光有描边，用户不知道那是什么意思。仅在确实传了标记且图已就绪时
+          展示，避免在纯定义预览里凭空出现一个空图例。
+          已走过与当前节点必须同时出图例，否则两种颜色的差异只是「看起来不一样」。 */}
+      {status === 'ready' && (activeElementId || visitedKey) && (
         <div
           style={{
             position: 'absolute',
@@ -332,7 +388,8 @@ const BPMNDiagramPreview: React.FC<BPMNDiagramPreviewProps> = ({
             bottom: 8,
             display: 'flex',
             alignItems: 'center',
-            gap: 6,
+            flexWrap: 'wrap',
+            gap: 10,
             background: 'white',
             padding: '3px 8px',
             borderRadius: 6,
@@ -340,18 +397,38 @@ const BPMNDiagramPreview: React.FC<BPMNDiagramPreviewProps> = ({
             fontSize: 12,
           }}
         >
-          <span
-            aria-hidden
-            style={{
-              width: 10,
-              height: 10,
-              borderRadius: 2,
-              border: '2px solid #fa8c16',
-              background: '#fff7e6',
-              flex: '0 0 auto',
-            }}
-          />
-          <span>{activeElementLabel ? `当前节点：${activeElementLabel}` : '当前节点'}</span>
+          {activeElementId && (
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+              <span
+                aria-hidden
+                style={{
+                  width: 10,
+                  height: 10,
+                  borderRadius: 2,
+                  border: '2px solid #fa8c16',
+                  background: '#fff7e6',
+                  flex: '0 0 auto',
+                }}
+              />
+              <span>{activeElementLabel ? `当前节点：${activeElementLabel}` : '当前节点'}</span>
+            </span>
+          )}
+          {visitedKey && (
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+              <span
+                aria-hidden
+                style={{
+                  width: 10,
+                  height: 10,
+                  borderRadius: 2,
+                  border: '1.5px dashed #52c41a',
+                  background: 'transparent',
+                  flex: '0 0 auto',
+                }}
+              />
+              <span>已走过</span>
+            </span>
+          )}
         </div>
       )}
     </div>

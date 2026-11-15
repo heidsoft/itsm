@@ -2262,3 +2262,12 @@ html:not(.dark) .ant-btn-default:focus {
   stroke-width: 3px !important;
   fill: #fff7e6 !important;
 }
+
+/* 流程实例「已走过节点」标记：浅灰绿虚描边。
+   刻意比当前节点弱一档（无 fill、虚线、1.5px），否则与当前节点的橙色抢焦点，
+   用户会分不清「已经走过」和「现在就停在这」。 */
+.djs-element.bpmn-visited .djs-visual > :nth-child(1) {
+  stroke: #52c41a !important;
+  stroke-width: 1.5px !important;
+  stroke-dasharray: 4 3;
+}

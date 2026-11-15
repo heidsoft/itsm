@@ -1139,6 +1139,7 @@ export class WorkflowApi {
     interface TaskResponse {
       id?: string;
       taskId?: string;
+      taskDefinitionKey?: string;
       name?: string;
       status?: string;
       assignee?: string;
@@ -1157,7 +1158,13 @@ export class WorkflowApi {
         Array<{
           id: string;
           taskId: string;
-          name: string;
+          /** BPMN 元素 ID（如 Activity_Assign）。prod 实测该字段确实下发，
+           *  但此前映射把它整个丢弃，只用 taskId 冒充 nodeId —— taskId 是
+           *  `TASK-Activity_Assign-<雪花>` 这类任务流水号，与 XML 里的元素 ID
+           *  不同，拿去在 BPMN 图上打标记会一个都打不中。 */
+          taskDefinitionKey?: string;
+          taskName?: string;
+          name?: string;
           status: string;
           assignee?: string;
           assigneeName?: string;
@@ -1169,8 +1176,12 @@ export class WorkflowApi {
       return list.map(item => ({
         id: item.taskId || item.id || '',
         instanceId: instanceId,
-        nodeId: item.taskId || '',
-        nodeName: item.name || '',
+        // nodeId 必须是 BPMN 元素 ID：前端用它查「这条任务是哪个节点」、
+        // 在 BPMN 图上打「已走过」标记。taskId 是任务流水号，不能顶替。
+        // 后端历史数据可能缺该字段，此时退回 taskId —— 至少详情表还能显示一行，
+        // 只是无法在图上定位（打标记前有 elementRegistry 存在性判断会自然跳过）。
+        nodeId: item.taskDefinitionKey || item.taskId || '',
+        nodeName: item.taskName || item.name || '',
         status:
           (item.status as 'pending' | 'running' | 'completed' | 'failed' | 'skipped') || 'pending',
         assignee: item.assignee ? parseInt(item.assignee) : undefined,
