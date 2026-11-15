@@ -61,4 +61,14 @@ __pycache__/
 
 # Development files
 .dockerignore
-.dockerignore
+
+# Unrelated top-level trees — excluding them keeps the build context small
+# (research/release artifacts, verified never COPYed by any Dockerfile).
+# NOTE: lowercase openviking/ is a real build source and is NOT excluded here.
+release/
+OpenViking/
+easycloud/
+covers/
+output/
+reports/
+backups/

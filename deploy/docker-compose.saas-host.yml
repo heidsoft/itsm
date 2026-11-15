@@ -309,7 +309,10 @@ services:
     cpus: "1.0"
 
   itsm-frontend:
-    image: ${REGISTRY:-}itsm-frontend:${VERSION:?VERSION must be set}
+    # FRONTEND_VERSION allows shipping a frontend-only hotfix (e.g. the
+    # one-click demo build) without bumping VERSION for backend/ai/worker.
+    # Defaults to VERSION so existing deployments are unchanged.
+    image: ${REGISTRY:-}itsm-frontend:${FRONTEND_VERSION:-${VERSION:?VERSION must be set}}
     container_name: itsm-saas-frontend
     hostname: frontend
     environment:
