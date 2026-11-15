@@ -1,6 +1,7 @@
 import {
   ensureBpmnDI,
   hasBpmnDiagram,
+  hasBpmnDiagramWithShapes,
   type DefinitionsLike,
   type ModdleLike,
 } from '@/components/workflow/bpmnAutoLayout';
@@ -187,6 +188,145 @@ describe('bpmnAutoLayout', () => {
         get: () => undefined,
       } as unknown as DefinitionsLike;
       expect(() => ensureBpmnDI(moddle, definitions)).not.toThrow();
+    });
+  });
+
+  // 以下两组是 prod 事故的直接回归锁（2026-11-15，20 个流程定义实测）。
+  describe('空壳 DI：存在 BPMNDiagram 但零 shape/edge', () => {
+    // prod 有 3 个定义属于此类（ticket_assignment_flow / release_approval_flow /
+    // incident_emergency_flow_v1.1），plane 里只有一句注释。旧判据 hasBpmnDiagram
+    // 认为「已有 DI」直接跳过补全 → 画布空白且不报错。
+    const emptyShellDefinitions = () =>
+      makeDefinitions({
+        rootElements: [
+          {
+            $type: 'bpmn:Process',
+            id: 'Process_shell',
+            flowElements: [
+              createFlowNode('start', 'bpmn:StartEvent'),
+              createFlowNode('end', 'bpmn:EndEvent'),
+            ],
+          },
+        ],
+        diagrams: [
+          {
+            $type: 'bpmndi:BPMNDiagram',
+            id: 'BPMNDiagram_1',
+            plane: {
+              $type: 'bpmndi:BPMNPlane',
+              id: 'BPMNPlane_1',
+              planeElement: [],
+            },
+          },
+        ],
+      });
+
+    it('hasBpmnDiagram 仍按「有没有 diagram」判定（保持既有契约）', () => {
+      expect(hasBpmnDiagram(emptyShellDefinitions())).toBe(true);
+    });
+
+    it('hasBpmnDiagramWithShapes 必须识别出空壳 plane 并判为不可用', () => {
+      expect(hasBpmnDiagramWithShapes(emptyShellDefinitions())).toBe(false);
+      // 完全没有 DI 时同样不可用
+      expect(hasBpmnDiagramWithShapes(makeDefinitions())).toBe(false);
+      expect(hasBpmnDiagramWithShapes(null)).toBe(false);
+      expect(hasBpmnDiagramWithShapes(undefined)).toBe(false);
+    });
+
+    it('plane 缺 planeElement 字段（而非空数组）时也判为不可用', () => {
+      const definitions = makeDefinitions({
+        diagrams: [{ $type: 'bpmndi:BPMNDiagram', id: 'd1', plane: { $type: 'bpmndi:BPMNPlane' } }],
+      });
+      expect(hasBpmnDiagramWithShapes(definitions)).toBe(false);
+    });
+
+    it('真的含 shape 时才判为可用，且不能被空壳逻辑误伤', () => {
+      const definitions = makeDefinitions({
+        diagrams: [
+          {
+            $type: 'bpmndi:BPMNDiagram',
+            id: 'd1',
+            plane: {
+              $type: 'bpmndi:BPMNPlane',
+              planeElement: [{ $type: 'bpmndi:BPMNShape', id: 's1' }],
+            },
+          },
+        ],
+      });
+      expect(hasBpmnDiagramWithShapes(definitions)).toBe(true);
+    });
+
+    it('ensureBpmnDI 遇到空壳 plane 必须重建，而不是原样返回', () => {
+      const moddle = createModdleStub();
+      const definitions = emptyShellDefinitions();
+      const before = definitions.diagrams as unknown as Array<Record<string, unknown>>;
+
+      ensureBpmnDI(moddle, definitions);
+
+      const after = definitions.diagrams as unknown as Array<Record<string, unknown>>;
+      // 必须换成自动布局产出的 diagram（id 带 _auto_ 前缀）
+      expect(after.length).toBe(1);
+      expect(after[0].id).toBe('BPMNDiagram_auto_1');
+      // 且不再是原来那个空壳对象
+      expect(after[0]).not.toBe(before[0]);
+
+      const plane = after[0].plane as Record<string, unknown>;
+      const planeElements = (plane.planeElement as Array<Record<string, unknown>>) || [];
+      expect(planeElements.length).toBeGreaterThan(0);
+      expect(planeElements.every(el => el.$type === 'bpmndi:BPMNShape')).toBe(true);
+    });
+  });
+
+  describe('waypoint 类型必须是 dc:Point', () => {
+    // bpmn-moddle 的 di.json 把 di:Edge.waypoint 声明为 type=dc:Point。
+    // 写 'di:waypoint' 会抛 "unknown type <di:waypoint>"，被 ensureBpmnDI 的 catch
+    // 吞掉后整份 DI 一个元素都补不出来——这是"所有缺 DI 定义预览空白"的根因。
+    it('创建 waypoint 时用的是 dc:Point（moddle 已注册的类型）', () => {
+      const created: string[] = [];
+      const moddle: ModdleLike = {
+        create(type: string, props: Record<string, unknown> = {}) {
+          created.push(type);
+          const obj: Record<string, unknown> = { $type: type, ...props };
+          obj.set = (name: string, value: unknown) => {
+            obj[name] = value;
+          };
+          return obj;
+        },
+      };
+
+      const startNode = createFlowNode('start', 'bpmn:StartEvent');
+      const endNode = createFlowNode('end', 'bpmn:EndEvent');
+      const nodes = new Map([
+        ['start', startNode],
+        ['end', endNode],
+      ]);
+      const flow = createSequenceFlow('flow1', 'start', 'end', nodes);
+      const definitions = makeDefinitions({
+        rootElements: [
+          {
+            $type: 'bpmn:Process',
+            id: 'Process_1',
+            flowElements: [startNode, endNode, flow],
+          },
+        ],
+      });
+
+      ensureBpmnDI(moddle, definitions);
+
+      // 关键断言：绝不出现 di:waypoint，且必须有 dc:Point
+      expect(created).not.toContain('di:waypoint');
+      expect(created.filter(t => t === 'dc:Point')).toHaveLength(2);
+
+      // 产出的 edge 上挂的两个 waypoint 都应是 dc:Point
+      const diagrams = (definitions.diagrams ?? []) as unknown as Array<Record<string, unknown>>;
+      const plane = diagrams[0].plane as Record<string, unknown>;
+      const edges = ((plane.planeElement as Array<Record<string, unknown>>) || []).filter(
+        el => el.$type === 'bpmndi:BPMNEdge'
+      );
+      expect(edges).toHaveLength(1);
+      const waypoints = edges[0].waypoint as Array<Record<string, unknown>>;
+      expect(waypoints).toHaveLength(2);
+      waypoints.forEach(wp => expect(wp.$type).toBe('dc:Point'));
     });
   });
 });

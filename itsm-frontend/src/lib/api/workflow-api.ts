@@ -1039,6 +1039,8 @@ export class WorkflowApi {
         status: string;
         startTime: string;
         endTime?: string;
+        currentActivityId?: string;
+        currentActivityName?: string;
       }>;
       total?: number;
     }>('/api/v1/bpmn/process-instances', query);
@@ -1050,6 +1052,10 @@ export class WorkflowApi {
       version: 1,
       status: (item.status as WorkflowInstanceStatus) || WorkflowInstanceStatus.RUNNING,
       businessKey: item.businessKey || undefined,
+      // 列表页要直接回答「这条单子卡在哪个节点」，此前这两个字段在映射里被丢掉，
+      // 用户只能点进详情看任务表反推。
+      currentActivityId: item.currentActivityId || undefined,
+      currentActivityName: item.currentActivityName || undefined,
       variables: {},
       startTime: item.startTime ? new Date(item.startTime) : new Date(),
       endTime: item.endTime ? new Date(item.endTime) : undefined,
@@ -1074,6 +1080,8 @@ export class WorkflowApi {
       status: string;
       startTime: string;
       endTime?: string;
+      currentActivityId?: string;
+      currentActivityName?: string;
     }>(`/api/v1/bpmn/process-instances/${instanceId}`);
     return {
       id: item.instanceId,
@@ -1081,6 +1089,8 @@ export class WorkflowApi {
       workflowName: '',
       version: 1,
       status: (item.status as WorkflowInstanceStatus) || WorkflowInstanceStatus.RUNNING,
+      currentActivityId: item.currentActivityId || undefined,
+      currentActivityName: item.currentActivityName || undefined,
       variables: {},
       startTime: item?.startTime ? new Date(item.startTime) : new Date(),
       endTime: item?.endTime ? new Date(item.endTime) : undefined,

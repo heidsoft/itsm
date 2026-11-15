@@ -5,7 +5,7 @@ import { Alert, Button, Spin, Tooltip, Typography } from 'antd';
 import { Maximize, RefreshCw, ZoomIn, ZoomOut } from 'lucide-react';
 import BpmnNavigatedViewer from 'bpmn-js/lib/NavigatedViewer';
 import itsmModdleDescriptor from './itsm-moddle-descriptor';
-import { ensureBpmnDI, hasBpmnDiagram } from './bpmnAutoLayout';
+import { ensureBpmnDI, hasBpmnDiagramWithShapes } from './bpmnAutoLayout';
 import { useI18n } from '@/lib/i18n/useI18n';
 
 import 'bpmn-js/dist/assets/diagram-js.css';
@@ -78,10 +78,12 @@ const BPMNDiagramPreview: React.FC<BPMNDiagramPreviewProps> = ({ xml, height = 3
 
     // 模板/AI 产出的 XML 常常没有 <bpmndi:BPMNDiagram>，Viewer 没有自动布局能力，
     // 不补 DI 只会得到 "no diagram to display"。与设计器复用同一注入点。
+    // 判据用 hasBpmnDiagramWithShapes 而非 hasBpmnDiagram：prod 有 3 个定义带的是
+    // 零 shape/edge 的空壳 plane，只看「有没有 diagram」会让它们静默渲染成空白画布。
     viewer.on('import.parse.complete', 1500, (event: { definitions?: unknown; error?: unknown }) => {
       if (event?.error || !event.definitions) return;
-      const definitions = event.definitions as Parameters<typeof hasBpmnDiagram>[0];
-      if (hasBpmnDiagram(definitions)) return;
+      const definitions = event.definitions as Parameters<typeof hasBpmnDiagramWithShapes>[0];
+      if (hasBpmnDiagramWithShapes(definitions)) return;
       try {
         ensureBpmnDI(
           viewer.get('moddle') as unknown as Parameters<typeof ensureBpmnDI>[0],

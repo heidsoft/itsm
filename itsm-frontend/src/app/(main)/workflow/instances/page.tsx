@@ -1,7 +1,7 @@
 'use client';
 
 import React, { Suspense, useEffect, useMemo, useState } from 'react';
-import { App, Button, Card, Form, Input, Modal, Select, Space, Table, Tag } from 'antd';
+import { App, Button, Card, Form, Input, Modal, Select, Space, Table, Tag, Typography } from 'antd';
 import { Eye, PauseCircle, PlayCircle, RefreshCw, StopCircle, Rocket } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 
@@ -21,6 +21,9 @@ type InstanceRow = {
   status: string;
   startTime?: string;
   endTime?: string;
+  /** 当前停留节点的展示名（后端 currentActivityName），运行中实例必看 */
+  currentActivityName?: string;
+  currentActivityId?: string;
 };
 
 const statusColorMap: Record<string, string> = {
@@ -30,6 +33,8 @@ const statusColorMap: Record<string, string> = {
   terminated: 'red',
   failed: 'red',
 };
+
+const { Text } = Typography;
 
 // 工作流实例状态文本映射
 const statusTextMap: Record<string, string> = {
@@ -114,6 +119,9 @@ function WorkflowInstancesContent() {
         status: String(instance.status),
         startTime: instance.startTime?.toISOString(),
         endTime: instance.endTime?.toISOString(),
+        // 「这条单子卡在哪」是实例列表最高频的问题，必须带到行数据里。
+        currentActivityName: instance.currentActivityName || undefined,
+        currentActivityId: instance.currentActivityId || undefined,
       }));
 
       setInstances(rows);
@@ -220,6 +228,28 @@ function WorkflowInstancesContent() {
         key: 'status',
         width: 100,
         render: (value: string) => <Tag color={statusColorMap[value] || 'default'}>{statusTextMap[value] || value}</Tag>,
+      },
+      {
+        // 「当前节点」放在状态后面：运维扫列表时第一眼要看到的就是这两个字段的组合
+        // （是否在跑 + 卡在哪个节点）。已结束的实例没有当前节点，显示 '-' 而不是空白，
+        // 空白会让用户以为数据没加载出来。
+        title: '当前节点',
+        dataIndex: 'currentActivityName',
+        key: 'currentActivityName',
+        width: 160,
+        render: (value: string | undefined, record: InstanceRow) => {
+          if (!value) return <Text type="secondary">-</Text>;
+          // 后端在节点无 name 时会回退成原始 ID，这里透出 ID 让运维能去 XML 里定位，
+          // 但用等宽弱化样式区分「这是标识符不是业务名称」。
+          const looksLikeId = Boolean(record.currentActivityId) && value === record.currentActivityId;
+          return looksLikeId ? (
+            <Text type="secondary" className="font-mono text-xs">
+              {value}
+            </Text>
+          ) : (
+            <Text>{value}</Text>
+          );
+        },
       },
       {
         title: '启动时间',

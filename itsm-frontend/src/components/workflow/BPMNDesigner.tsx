@@ -37,7 +37,7 @@ import {
 import BpmnModeler from 'bpmn-js/lib/Modeler';
 import itsmModdleDescriptor from './itsm-moddle-descriptor';
 import gridModule from 'diagram-js/lib/features/grid-snapping';
-import { ensureBpmnDI, hasBpmnDiagram } from './bpmnAutoLayout';
+import { ensureBpmnDI, hasBpmnDiagramWithShapes } from './bpmnAutoLayout';
 import { formatElementType, toShortType, typeSearchTerms } from './bpmnElementTypes';
 import { normalizeNodeProperties, readReferenceId, type ModdleCreate } from './bpmnPropertyWrite';
 import { useI18n } from '@/lib/i18n/useI18n';
@@ -309,8 +309,10 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
         1500,
         (event: { definitions?: unknown; error?: unknown }) => {
           if (event?.error || !event.definitions) return;
-          const definitions = event.definitions as Parameters<typeof hasBpmnDiagram>[0];
-          if (hasBpmnDiagram(definitions)) return;
+          const definitions = event.definitions as Parameters<typeof hasBpmnDiagramWithShapes>[0];
+          // 用严格判据：只带空壳 plane（零 shape/edge）的定义同样必须重建，
+          // 否则 Modeler 认为 DI 已存在，画布空白且不报错。
+          if (hasBpmnDiagramWithShapes(definitions)) return;
           try {
             const moddle = modeler.get('moddle');
             ensureBpmnDI(

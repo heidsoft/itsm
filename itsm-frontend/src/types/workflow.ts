@@ -370,6 +370,15 @@ export interface WorkflowInstance {
   /** 业务键（如 ticket:42），由启动流程时写入，实例列表按它回溯业务单据 */
   businessKey?: string;
   currentNodeId?: string;
+  /**
+   * 当前停留节点的 ID 与展示名（后端 ProcessInstance 的 currentActivityId / currentActivityName）。
+   *
+   * 这是「我的单子走到哪了」唯一的权威来源：列表与详情都必须展示它，
+   * 不要让用户自己去任务表里反推。后端现在覆盖全部 14 类节点（网关/serviceTask/
+   * 开始事件等都有中文名），拿不到 name 时才回退成 ID。
+   */
+  currentActivityId?: string;
+  currentActivityName?: string;
   variables: Record<string, any>;
   startTime: Date;
   endTime?: Date;

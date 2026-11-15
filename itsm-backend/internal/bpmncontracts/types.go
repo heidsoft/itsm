@@ -423,3 +423,125 @@ type BPMNDefinitions struct {
 	TargetNamespace string         `xml:"targetNamespace,attr"`
 	Processes       []*BPMNProcess `xml:"process"`
 }
+
+// FindElementName 按元素 ID 解析节点的展示名（BPMN name 属性）；
+// 找不到该元素、或元素本身没有 name 时返回空串，由调用方决定回退口径。
+//
+// 为什么需要它：引擎写 ProcessInstance.CurrentActivityName 时曾经只认 userTask
+// 与 endEvent，其余节点（serviceTask / 网关 / 开始事件 / 中间事件 / 子流程 / callActivity）
+// 一律回退成原始元素 ID。prod 实测 incident_emergency_flow 的当前节点是
+// <bpmn:serviceTask id="Activity_AutoAssign" name="自动分配">，XML 里有中文名，
+// 但用户看到的是 "Activity_AutoAssign" —— 前端实例详情、工单详情、监控看板全都显示
+// 这个英文 ID，等于让非技术用户去读 XML 标识符。
+//
+// 用 BPMNElement 接口做统一遍历，而不是逐个类型穷举：新增节点类型时只要实现了
+// GetID/GetName 就自动被覆盖，不会再出现"新类型又漏了"的同类回归。
+func (p *BPMNProcess) FindElementName(id string) string {
+	if p == nil || id == "" {
+		return ""
+	}
+	if name := findNameInElements(p.flowElements(), id); name != "" {
+		return name
+	}
+	return ""
+}
+
+// flowElements 汇总本 Process 内所有可实现命名的节点，按 BPMNElement 接口暴露。
+//
+// 只收集「会成为 CurrentActivity」（即引擎 handleElement 可能落到的节点）：
+// DataObject / DataStore / SequenceFlow 不参与流转，不进这个集合。
+func (p *BPMNProcess) flowElements() []BPMNElement {
+	if p == nil {
+		return nil
+	}
+	// 预分配容量，避免每次调用多次扩容（典型流程 10~40 个节点）
+	capacity := len(p.StartEvents) + len(p.EndEvents) + len(p.UserTasks) +
+		len(p.ServiceTasks) + len(p.ScriptTasks) + len(p.BusinessRuleTasks) +
+		len(p.ManualTasks) + len(p.CallActivities) + len(p.ExclusiveGateways) +
+		len(p.ParallelGateways) + len(p.InclusiveGateways) + len(p.SubProcesses) +
+		len(p.BoundaryEvents) + len(p.IntermediateEvents)
+	elements := make([]BPMNElement, 0, capacity)
+
+	for _, e := range p.StartEvents {
+		if e != nil {
+			elements = append(elements, e)
+		}
+	}
+	for _, e := range p.EndEvents {
+		if e != nil {
+			elements = append(elements, e)
+		}
+	}
+	for _, e := range p.UserTasks {
+		if e != nil {
+			elements = append(elements, e)
+		}
+	}
+	for _, e := range p.ServiceTasks {
+		if e != nil {
+			elements = append(elements, e)
+		}
+	}
+	for _, e := range p.ScriptTasks {
+		if e != nil {
+			elements = append(elements, e)
+		}
+	}
+	for _, e := range p.BusinessRuleTasks {
+		if e != nil {
+			elements = append(elements, e)
+		}
+	}
+	for _, e := range p.ManualTasks {
+		if e != nil {
+			elements = append(elements, e)
+		}
+	}
+	for _, e := range p.CallActivities {
+		if e != nil {
+			elements = append(elements, e)
+		}
+	}
+	for _, e := range p.ExclusiveGateways {
+		if e != nil {
+			elements = append(elements, e)
+		}
+	}
+	for _, e := range p.ParallelGateways {
+		if e != nil {
+			elements = append(elements, e)
+		}
+	}
+	for _, e := range p.InclusiveGateways {
+		if e != nil {
+			elements = append(elements, e)
+		}
+	}
+	for _, e := range p.SubProcesses {
+		if e != nil {
+			elements = append(elements, e)
+		}
+	}
+	for _, e := range p.BoundaryEvents {
+		if e != nil {
+			elements = append(elements, e)
+		}
+	}
+	for _, e := range p.IntermediateEvents {
+		if e != nil {
+			elements = append(elements, e)
+		}
+	}
+
+	return elements
+}
+
+// findNameInElements 在元素集合里按 ID 找第一个匹配项的 name。
+func findNameInElements(elements []BPMNElement, id string) string {
+	for _, el := range elements {
+		if el.GetID() == id {
+			return el.GetName()
+		}
+	}
+	return ""
+}

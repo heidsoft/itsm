@@ -576,12 +576,16 @@ func (e *CustomProcessEngine) executeStep(ctx context.Context, txc *ent.Client, 
 }
 
 func (e *CustomProcessEngine) handleElement(ctx context.Context, txc *ent.Client, instance *ent.ProcessInstance, process *BPMNProcess, elementID string) error {
-	// Find the element name for logging
+	// 解析节点的展示名写入 CurrentActivityName。
+	// 这里必须覆盖所有节点类型，不能只认 userTask/endEvent：prod 实测
+	// incident_emergency_flow 停留在 <serviceTask id="Activity_AutoAssign" name="自动分配">，
+	// 旧实现只查 userTask 与 endEvent，于是把原始 ID "Activity_AutoAssign" 写进了
+	// CurrentActivityName —— 前端实例详情/工单详情/监控看板都直接展示这个字段，
+	// 用户看到的是 XML 标识符而不是「自动分配」。
+	// 回退口径保持 elementID：元素确实无 name 时才暴露 ID，便于运维定位配置缺失。
 	elementName := elementID
-	if task := e.findUserTask(process, elementID); task != nil {
-		elementName = task.Name
-	} else if endEvent := e.findEndEvent(process, elementID); endEvent != nil {
-		elementName = endEvent.Name
+	if name := process.FindElementName(elementID); name != "" {
+		elementName = name
 	}
 
 	_, err := txc.ProcessInstance.UpdateOne(instance).

@@ -282,8 +282,13 @@ function buildDiagramForProcess(
       bpmnElement: flow,
     }) as ModdleElementLike & { waypoint?: ModdleElementLike[] };
 
-    const wp1 = moddle.create('di:waypoint', { x: sourcePos.x, y: sourcePos.y }) as ModdleElementLike;
-    const wp2 = moddle.create('di:waypoint', { x: targetPos.x, y: targetPos.y }) as ModdleElementLike;
+    // waypoint 的类型是 dc:Point（见 bpmn-moddle 的 di.json：di:Edge.waypoint 声明
+    // type=dc:Point，且 xml.serialize=xsi:type）。写 'di:waypoint' 会命中 moddle
+    // 的 "unknown type <di:waypoint>" 异常，被 ensureBpmnDI 的 catch 吞掉后整份 DI
+    // 一个 shape 都补不出来——所有缺 DI 的定义因此全部预览空白。
+    // bpmn-js 官方 BpmnFactory 也走 create('dc:Point')，这里与之对齐。
+    const wp1 = moddle.create('dc:Point', { x: sourcePos.x, y: sourcePos.y }) as ModdleElementLike;
+    const wp2 = moddle.create('dc:Point', { x: targetPos.x, y: targetPos.y }) as ModdleElementLike;
     edge.set?.('waypoint', [wp1, wp2]);
 
     edge.set?.('sourceElement', sourceShape);
@@ -306,6 +311,36 @@ export function hasBpmnDiagram(definitions: DefinitionsLike | undefined | null):
 }
 
 /**
+ * 给定的 Definitions 是否具备「可渲染」的 BPMNDiagram——即至少一个 diagram 的
+ * plane 里真的挂了 BPMNShape / BPMNEdge。
+ *
+ * 为什么需要比 hasBpmnDiagram 更严格的口径：
+ * prod 实测 20 个流程定义里，有 3 个带的是一个空壳
+ * `<bpmndi:BPMNPlane bpmnElement="...">`（内部只有注释、零 shape、零 edge）。
+ * 这类 XML 能通过 hasBpmnDiagram，于是被当成「已有 DI」直接跳过自动布局，
+ * 画布上什么都不会画——预览/设计器同时变成空白页，而且不报错，最难排查。
+ *
+ * 判据刻意只看 planeElement 的**数量**而非元素与流程节点的对应关系：
+ * 这里只回答「跳过自动布局合不合理」。局部缺 shape 的定义属于数据侧缺陷
+ * （应由生成端/seder 修），前端兜底若也动手，会覆盖用户手工维护的坐标。
+ */
+export function hasBpmnDiagramWithShapes(
+  definitions: DefinitionsLike | undefined | null
+): boolean {
+  // hasBpmnDiagram 不是类型谓词，TS 不会据此收窄，故显式判空。
+  if (!definitions || !hasBpmnDiagram(definitions)) return false;
+  const diagrams = definitions.diagrams as ModdleElementLike[];
+  return diagrams.some(diagram => {
+    const plane = (diagram as ModdleElementLike & { plane?: ModdleElementLike }).plane;
+    if (!plane) return false;
+    const planeElements = (plane as ModdleElementLike & { planeElement?: ModdleElementLike[] })
+      .planeElement;
+    return Array.isArray(planeElements) && planeElements.length > 0;
+  });
+}
+
+
+/**
  * 为缺失 BPMNDI 的 Definitions 注入自动布局的 BPMNDiagram。
  *
  * 仅处理根级 Process（最常见的 AI 生成结构）；忽略 Collaboration 中的子流程。
@@ -318,9 +353,11 @@ export function ensureBpmnDI(
   definitions: DefinitionsLike
 ): DefinitionsLike {
   try {
-    if (hasBpmnDiagram(definitions)) {
+    if (hasBpmnDiagramWithShapes(definitions)) {
       return definitions;
     }
+    // 到这里有两种情况：完全没有 DI；或只有一个空壳 plane（prod 实测有 3 个定义是
+    // 后者）。两者都必须重建——空壳 plane 会让 bpmn-js 认为 DI 已存在而画空画布。
     const rootElements = definitions.rootElements || [];
     let diagramCounter = 0;
     const diagrams: ModdleElementLike[] = [];

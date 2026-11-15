@@ -253,6 +253,85 @@ describe('WorkflowApi', () => {
 
       expect(result.instances).toHaveLength(1);
     });
+
+    // 回归锁：实例列表必须带出 currentActivityId / currentActivityName。
+    // 事故背景（2026-11-15 prod 实测）：后端 GET /bpmn/process-instances 一直返回
+    // currentActivityId="Activity_Assign" / currentActivityName="任务分配"，
+    // 但前端 map 里把这两个字段丢掉了，导致「这条单子卡在哪」只能点进详情、
+    // 再从任务表反推。字段被丢弃属于静默回归——接口调用正常、页面不报错，
+    // 只是用户永远看不到这一步。
+    it('keeps currentActivityId / currentActivityName from the backend payload', async () => {
+      const mockData = {
+        items: [
+          {
+            id: '1',
+            instanceId: 'PI-ticket_general_flow-1',
+            processDefinitionKey: 'ticket_general_flow',
+            businessKey: 'ticket:1',
+            status: 'running',
+            startTime: '2024-01-01T10:00:00Z',
+            currentActivityId: 'Activity_Assign',
+            currentActivityName: '任务分配',
+          },
+        ],
+        total: 1,
+      };
+
+      (httpClient.get as jest.Mock).mockResolvedValueOnce(mockData);
+
+      const result = await WorkflowApi.getInstances({});
+
+      expect(result.instances[0].currentActivityId).toBe('Activity_Assign');
+      expect(result.instances[0].currentActivityName).toBe('任务分配');
+    });
+
+    it('leaves currentActivity fields undefined when the backend omits them', async () => {
+      // 已结束的实例没有当前节点，不应变成空串或 'undefined' 字面量，
+      // 否则列表列会把 '-' 渲染成 "undefined"。
+      const mockData = {
+        items: [
+          {
+            id: '1',
+            instanceId: 'PI-1',
+            processDefinitionKey: 'proc',
+            businessKey: 'biz:1',
+            status: 'completed',
+            startTime: '2024-01-01T10:00:00Z',
+            endTime: '2024-01-02T10:00:00Z',
+          },
+        ],
+        total: 1,
+      };
+
+      (httpClient.get as jest.Mock).mockResolvedValueOnce(mockData);
+
+      const result = await WorkflowApi.getInstances({});
+
+      expect(result.instances[0].currentActivityId).toBeUndefined();
+      expect(result.instances[0].currentActivityName).toBeUndefined();
+    });
+  });
+
+  describe('getInstance currentActivity', () => {
+    // 同一条链路的详情分支。详情页此前也没有接这两个字段，
+    // 它和列表一样把后端已返回的字段丢在 map 里。
+    it('keeps currentActivity fields on the single-instance payload', async () => {
+      (httpClient.get as jest.Mock).mockResolvedValueOnce({
+        id: '1',
+        instanceId: 'PI-ticket_general_flow-1',
+        processDefinitionKey: 'ticket_general_flow',
+        businessKey: 'ticket:1',
+        status: 'running',
+        startTime: '2024-01-01T10:00:00Z',
+        currentActivityId: 'Activity_Assign',
+        currentActivityName: '任务分配',
+      });
+
+      const result = await WorkflowApi.getInstance('PI-ticket_general_flow-1');
+
+      expect(result.currentActivityId).toBe('Activity_Assign');
+      expect(result.currentActivityName).toBe('任务分配');
+    });
   });
 
   describe('startWorkflow', () => {
