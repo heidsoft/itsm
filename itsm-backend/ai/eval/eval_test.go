@@ -119,10 +119,11 @@ func loadCases[T any](t *testing.T, name string) []T {
 	t.Helper()
 	// 显式白名单：仅接受内置 dataset 文件名，避免路径穿越
 	allowed := map[string]bool{
-		"triage.jsonl":     true,
-		"summarize.jsonl":  true,
-		"rag.jsonl":        true,
-		"prediction.jsonl": true,
+		"triage.jsonl":        true,
+		"summarize.jsonl":     true,
+		"rag.jsonl":           true,
+		"prediction.jsonl":    true,
+		"investigation.jsonl": true,
 	}
 	require.True(t, allowed[name], "dataset %q 未在白名单中", name)
 	path := filepath.Join("datasets", name)

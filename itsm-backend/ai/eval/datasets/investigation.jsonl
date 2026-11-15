@@ -1,0 +1,3 @@
+{"id":"disk-alarm","title":"数据库磁盘告警","description":"主库磁盘使用率 96%，告警持续 15 分钟","triage_explanation":"关键词命中存储","expected_kb_hits":2,"expected_cmdb_found":true}
+{"id":"network-flap","title":"内网丢包","description":"应用服务器到数据库内网丢包率 8%，间歇性超时","triage_explanation":"关键词命中网络","expected_kb_hits":1,"expected_cmdb_found":false}
+{"id":"account-lockout","title":"账号频繁锁定","description":"多个业务账号连续锁定，疑似暴力破解","triage_explanation":"关键词命中安全","expected_kb_hits":0,"expected_cmdb_found":false}

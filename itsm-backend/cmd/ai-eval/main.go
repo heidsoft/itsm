@@ -211,6 +211,49 @@ func run(mode, outDir, datasets string) error {
 		Description: "预测器排序与人工标注的一致性（AUC 只看排序，不看概率绝对值）。",
 	})
 
+	// ---- 调查编排（生产降级路径，结构契约指标） ----
+	// 与四类文本/排序指标不同：编排是结构化输出链，degraded 档锁的是
+	// 「降级行为契约」——链路完整、降级自报、证据如实转述（三者在确定性
+	// 降级路径下正确实现恒为 1.0，任何偏差都是回归）。LLM 档的综合质量
+	// 需要真实模型与人工验收，不在本报告自动化范围。
+	invCases := mustLoad[[]eval.InvestigationCase](filepath.Join(datasets, "investigation.jsonl"))
+	invHarness, invCleanup, err := eval.NewInvestigationHarness(
+		"file:aieval_inv?mode=memory&cache=shared&_fk=1", invCases)
+	if err != nil {
+		return fmt.Errorf("建调查编排评测库: %w", err)
+	}
+	defer invCleanup()
+	invResults := map[string]*eval.InvestigationResult{}
+	invCtx := context.Background()
+	for _, c := range invCases {
+		r, err := invHarness.RunCase(invCtx, c)
+		if err != nil {
+			return fmt.Errorf("调查 case %s 执行失败: %w", c.ID, err)
+		}
+		invResults[c.ID] = r
+	}
+	for _, m := range []struct {
+		metric, desc string
+		value        float64
+	}{
+		{"stepCompleteness",
+			"四步链（triage/knowledge/cmdb/synthesis）齐全的 case 占比。",
+			eval.InvestigationStepCompleteness(invCases, invResults)},
+		{"degradedHonesty",
+			"降级如实自报且不伪造根因/动作建议的 case 占比。",
+			eval.InvestigationDegradedHonesty(invCases, invResults)},
+		{"evidenceFidelity",
+			"降级结论如实转述证据（分诊解释/KB 命中数/CMDB 命中）的 case 占比。",
+			eval.InvestigationEvidenceFidelity(invCases, invResults)},
+	} {
+		rep.Sections = append(rep.Sections, sectionResult{
+			Task: "investigation", Mode: "degraded",
+			Basis: "生产 InvestigateTicket 降级路径（真实 ent 库 + 真实 ExecuteTool RBAC 链）",
+			Cases: len(invCases), Metric: m.metric, Value: m.value,
+			Description: m.desc,
+		})
+	}
+
 	// ---- 输出 ----
 	if err := os.MkdirAll(outDir, 0o755); err != nil {
 		return fmt.Errorf("建输出目录: %w", err)
