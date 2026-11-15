@@ -24,6 +24,7 @@ import { AuthService } from '@/lib/services/auth-service';
 import { AuthAPI, type SSOProviderBrief } from '@/lib/api/auth-api';
 import { logger } from '@/lib/env';
 import { useAuthStoreHydration } from '@/lib/store/auth-store';
+import { readDemoCredentials, shouldAutoDemoLogin } from '@/lib/demo/demo-login';
 
 const { Text, Title } = Typography;
 
@@ -50,6 +51,12 @@ function LoginForm() {
   const [ssoProviders, setSsoProviders] = useState<SSOProviderBrief[]>([]);
   const [ssoLoading, setSsoLoading] = useState<string | null>(null);
 
+  // 一键直达演示：状态与幂等守卫。
+  // demoStarted 防止 React StrictMode 下 effect 重跑造成重复登录（会撞 10r/m 限流）。
+  const [demoAutoLogging, setDemoAutoLogging] = useState(false);
+  const [demoAutoFailed, setDemoAutoFailed] = useState(false);
+  const demoStarted = useRef(false);
+
   // 清理倒计时定时器
   useEffect(() => {
     return () => {
@@ -58,6 +65,31 @@ function LoginForm() {
       }
     };
   }, []);
+
+  // 官网「在线体验」链接带 ?demo=1 时，用构建期注入的只读演示账号自动登录并直达首页。
+  // 开源版未配置 NEXT_PUBLIC_DEMO_* → shouldAutoDemoLogin 返回 false，行为完全不变。
+  // 失败时不重试，回退到普通登录表单让访客手动登录，避免无限撞限流。
+  useEffect(() => {
+    if (demoStarted.current || !shouldAutoDemoLogin(searchParams)) {
+      return;
+    }
+    const creds = readDemoCredentials();
+    if (!creds) {
+      return;
+    }
+    demoStarted.current = true;
+    setDemoAutoLogging(true);
+    void (async () => {
+      const result = await AuthService.login(creds.username, creds.password, creds.tenantCode);
+      if (result.ok) {
+        router.replace('/dashboard');
+        return;
+      }
+      setDemoAutoLogging(false);
+      setDemoAutoFailed(true);
+      setError(result.message || t('auth.login.loginFailedUnknown'));
+    })();
+  }, [searchParams, router, t]);
 
   // 加载启用中的 SSO 提供方（无提供方/后端未接入时静默为空）
   useEffect(() => {
@@ -190,6 +222,29 @@ function LoginForm() {
           className='mb-5'
           showIcon
           closable
+        />
+      )}
+
+      {/* 一键直达演示：正在自动登录的友好提示 */}
+      {demoAutoLogging && (
+        <Alert
+          title='正在进入在线演示环境…'
+          description='正在以只读演示账号为你登录，马上就好。'
+          type='info'
+          showIcon
+          className='mb-5'
+        />
+      )}
+
+      {/* 演示账号自动登录失败时，说明可手动登录 */}
+      {demoAutoFailed && !demoAutoLogging && (
+        <Alert
+          title='自动进入演示环境未成功'
+          description='演示环境可能正在重启，请稍后重试；也可以用下方账号手动登录。'
+          type='warning'
+          showIcon
+          closable
+          className='mb-5'
         />
       )}
 

@@ -60,6 +60,15 @@ ARG NEXT_PUBLIC_ENABLE_AI=true
 ARG NEXT_PUBLIC_API_URL=
 ARG NEXT_PUBLIC_API_VERSION=v1
 ARG NEXT_PUBLIC_API_TIMEOUT=30000
+# SaaS demo one-click login. Empty by default => the feature is OFF for the
+# open-source build. The SaaS build injects these at build time so no demo
+# credential is ever hardcoded in the shipped bundle or committed. The demo account is a
+# read-only audit_admin, so exposing its credential in the public JS bundle is
+# harmless. See src/lib/demo/demo-login.ts.
+ARG NEXT_PUBLIC_DEMO_ENABLED=false
+ARG NEXT_PUBLIC_DEMO_USER=
+ARG NEXT_PUBLIC_DEMO_PASSWORD=
+ARG NEXT_PUBLIC_DEMO_TENANT=default
 
 ENV NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1 \
@@ -67,7 +76,11 @@ ENV NODE_ENV=production \
     NEXT_PUBLIC_ENABLE_AI=${NEXT_PUBLIC_ENABLE_AI} \
     NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL} \
     NEXT_PUBLIC_API_VERSION=${NEXT_PUBLIC_API_VERSION} \
-    NEXT_PUBLIC_API_TIMEOUT=${NEXT_PUBLIC_API_TIMEOUT}
+    NEXT_PUBLIC_API_TIMEOUT=${NEXT_PUBLIC_API_TIMEOUT} \
+    NEXT_PUBLIC_DEMO_ENABLED=${NEXT_PUBLIC_DEMO_ENABLED} \
+    NEXT_PUBLIC_DEMO_USER=${NEXT_PUBLIC_DEMO_USER} \
+    NEXT_PUBLIC_DEMO_PASSWORD=${NEXT_PUBLIC_DEMO_PASSWORD} \
+    NEXT_PUBLIC_DEMO_TENANT=${NEXT_PUBLIC_DEMO_TENANT}
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
