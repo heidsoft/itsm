@@ -1,7 +1,7 @@
 # 🛣️ ITSM Roadmap
 
 > **Source of truth for what is shipping, what is shipping next, and
-> what is parked.** Updated as part of every release. Last synced: 2026-11-08（事实漂移修正：「当前未发布改进」同步至 CHANGELOG [Unreleased] 最新口径；「当前收敛项」过期「剩余」改写为真实阻断；v1.7 两项提前收口在正文勾选。service/ 迁移收口条目仍待团队评审，本批不登记）。上次同步 2026-11-03：应用市场交付语义闭环并晋升「可用」，能力矩阵 `marketplace` 行同步摘除 pilotReason。此前 2026-10-29：v1.6.16–v1.6.20 五版本条目级回填完成——此前该区间只有 CHANGELOG 无 ROADMAP 条目；v1.6.21–v1.6.34 的增量以 `CHANGELOG.md` 为准，待下个发布节点统一回填。同日：v1.7 两项提前收口确认——AI Evaluator CI gate（v1.6.16 落地，四指标阈值已进 backend-ci）与 Skill Registry UI（v1.6.16 落地）。P0 数据库结构护栏迁移 `20261027_prod_schema_guards.sql` 落地 29 索引/唯一键）。
+> what is parked.** Updated as part of every release. Last synced: 2026-11-15（F1 收口补全：关闭工单的收敛点从「详情页 handler」下移到工单域 service 层，`CloseTicket` / `UpdateStatus(closed)` 同事务终止 BPMN 实例；同时更正 2026-11-14 记录里「F1 已修复」的过宽结论——原修复只覆盖 `POST /tickets/workflow/close` 一条路径。飞书同步关闭与 F2 剩余一半（triage 缓存回放带 `accepted`）落在在途 connectors / AI 审计批次，未在本批修改，已登记为已知缺口）。上次同步 2026-11-08（事实漂移修正：「当前未发布改进」同步至 CHANGELOG [Unreleased] 最新口径；「当前收敛项」过期「剩余」改写为真实阻断；v1.7 两项提前收口在正文勾选。service/ 迁移收口条目仍待团队评审，本批不登记）。上次同步 2026-11-03：应用市场交付语义闭环并晋升「可用」，能力矩阵 `marketplace` 行同步摘除 pilotReason。此前 2026-10-29：v1.6.16–v1.6.20 五版本条目级回填完成——此前该区间只有 CHANGELOG 无 ROADMAP 条目；v1.6.21–v1.6.34 的增量以 `CHANGELOG.md` 为准，待下个发布节点统一回填。同日：v1.7 两项提前收口确认——AI Evaluator CI gate（v1.6.16 落地，四指标阈值已进 backend-ci）与 Skill Registry UI（v1.6.16 落地）。P0 数据库结构护栏迁移 `20261027_prod_schema_guards.sql` 落地 29 索引/唯一键）。
 >
 > Cross-references:
 > - Design outlines: [docs/prd/](./docs/prd)（当前仅 1 篇）+ [plans/](./plans)（专项计划与审计）
