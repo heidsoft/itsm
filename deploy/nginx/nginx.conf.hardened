@@ -1,0 +1,38 @@
+user nginx;
+worker_processes auto;
+error_log /var/log/nginx/error.log;
+pid /run/nginx.pid;
+
+include /usr/share/nginx/modules/*.conf;
+
+events {
+    worker_connections 1024;
+}
+
+http {
+    # Security: do not disclose nginx version in responses/error pages (2026-11-15 hardening)
+    server_tokens off;
+
+    log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+                      '$status $body_bytes_sent "$http_referer" '
+                      '"$http_user_agent" "$http_x_forwarded_for"';
+
+    access_log  /var/log/nginx/access.log  main;
+
+    sendfile            on;
+    tcp_nopush          on;
+    tcp_nodelay         on;
+    keepalive_timeout   65;
+    types_hash_max_size 4096;
+
+    include             /etc/nginx/mime.types;
+    default_type        application/octet-stream;
+
+    # Security: rate-limit zones (2026-11-15 hardening)
+    # 10r/m per IP for auth endpoints (brute-force protection);
+    # 60r/m per IP for general API (basic abuse/CC protection).
+    limit_req_zone $binary_remote_addr zone=itsm_auth:10m rate=10r/m;
+    limit_req_zone $binary_remote_addr zone=itsm_api:10m rate=60r/m;
+
+    include /etc/nginx/conf.d/*.conf;
+}
