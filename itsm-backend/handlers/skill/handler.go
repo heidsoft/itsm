@@ -65,6 +65,12 @@ type Handler struct {
 	// 失败也留痕（带稳定错误分类）——失败的调用同样是审计素材。
 	// 未注入（nil）时跳过写入：保持未装配部署形态与既有测试的原行为。
 	audits DecisionAuditWriter
+
+	// store 是 skill 元数据持久化写口（skill_definitions 表）：自定义技能的
+	// 注册/更新/删除双写持久层，内置技能由 bootstrap 启动时幂等 seed。
+	// DB 是持久化真源——重启后自定义技能从这里恢复。未注入（nil）时跳过
+	// 持久化：行为退化为旧版纯内存形态（既有测试与未装配部署）。
+	store DefinitionStore
 }
 
 // DecisionAuditWriter 是 Skill 调用写 AI 决策底账所需的窄契约。
@@ -78,6 +84,11 @@ type DecisionAuditWriter interface {
 // SetDecisionAuditWriter 注入决策底账写口。见 Handler.audits。
 func (h *Handler) SetDecisionAuditWriter(w DecisionAuditWriter) {
 	h.audits = w
+}
+
+// SetDefinitionStore 注入 skill 元数据持久化写口。见 Handler.store。
+func (h *Handler) SetDefinitionStore(store DefinitionStore) {
+	h.store = store
 }
 
 // SkillEntitlements 市场侧的技能开通判定，由 service/marketplace.Service 实现。
@@ -346,6 +357,24 @@ func (h *Handler) Create(c *gin.Context) {
 		common.FailWithErr(c, err, "操作失败")
 		return
 	}
+	// 双写持久层：DB 是持久化真源（重启后自定义技能从这里恢复）。
+	// 写库失败必须回滚内存注册，否则内存与持久层分叉——本次能用、重启丢失，
+	// 调用方却以为注册成功了。
+	if h.store != nil {
+		row, err := rowFromSkill(int64(tenantID), skill)
+		if err == nil {
+			if _, _, err := h.store.UpsertDefinition(c.Request.Context(), row); err != nil {
+				if rbErr := h.registry.UnregisterScoped(tenantID, req.Code); rbErr != nil {
+					h.logger.Errorw("rollback in-memory skill registration failed",
+						"code", req.Code, "tenant_id", tenantID, "error", rbErr)
+				}
+				common.FailWithErr(c, err, "技能持久化失败，已回滚注册")
+				return
+			}
+		} else {
+			h.logger.Errorw("flatten skill for persistence failed", "code", req.Code, "error", err)
+		}
+	}
 	h.logger.Infow("skill registered", "code", req.Code, "version", req.Version, "category", category)
 
 	entry, err := h.registry.GetEntryScoped(tenantID, req.Code)
@@ -443,6 +472,21 @@ func (h *Handler) Update(c *gin.Context) {
 		common.FailWithErr(c, err, "re-register failed")
 		return
 	}
+	// 双写持久层：更新失败必须回滚到旧版（内存与持久层不得分叉）。
+	if h.store != nil {
+		row, err := rowFromSkill(int64(tenantID), updated)
+		if err == nil {
+			if _, _, err := h.store.UpsertDefinition(c.Request.Context(), row); err != nil {
+				if rbErr := h.registry.UnregisterScoped(tenantID, code); rbErr == nil {
+					_ = h.registry.RegisterScoped(tenantID, existing)
+				}
+				common.FailWithErr(c, err, "技能更新持久化失败，已回滚到旧版")
+				return
+			}
+		} else {
+			h.logger.Errorw("flatten updated skill for persistence failed", "code", code, "error", err)
+		}
+	}
 	h.logger.Infow("skill updated", "code", code, "version", newManifest.Version)
 	common.Success(c, gin.H{"code": code, "updated": true, "manifest": newManifest})
 }
@@ -507,6 +551,19 @@ func (h *Handler) Delete(c *gin.Context) {
 	if err := h.registry.UnregisterScoped(tenantID, code); err != nil {
 		common.FailWithErr(c, err, "unregister failed")
 		return
+	}
+	// 双写持久层：删库失败必须恢复内存注册（否则重启后技能「复活」，
+	// 与删除意图矛盾——那是持久化失败的静默降级，不可接受）。
+	if h.store != nil {
+		deleted, err := h.store.DeleteDefinition(c.Request.Context(), int64(tenantID), code)
+		if err != nil {
+			_ = h.registry.RegisterScoped(tenantID, existing)
+			common.FailWithErr(c, err, "技能删除持久化失败，已恢复注册")
+			return
+		}
+		if !deleted {
+			h.logger.Infow("skill delete had no persisted row (legacy in-memory only)", "code", code)
+		}
 	}
 	h.logger.Infow("skill disabled", "code", code)
 	common.Success(c, gin.H{"code": code, "disabled": true})

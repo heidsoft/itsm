@@ -1091,6 +1091,29 @@ func NewApplication() *Application {
 	// Skill 调用写决策底账（scenario=skill:<code>，成功/失败都留痕）：
 	// 与 AI 建议底账同表同写口，生产装配缺了它 skill 调用就不可追溯。
 	skillHandler.SetDecisionAuditWriter(aiTelemetryService)
+
+	// Skill 元数据持久化（批次 C）：内置技能按 checksum 幂等 seed 进
+	// skill_definitions，租户自定义技能从库里恢复进运行时注册表——重启
+	// 不丢自定义技能。DB 是持久化真源；启动期同步失败不阻断进程（注册表
+	// 仍以内存形态可用），但必须留 error 级日志让装配缺口可诊断。
+	definitionStore := skill.NewDBDefinitionStore(database.GetRawDB())
+	skillHandler.SetDefinitionStore(definitionStore)
+	{
+		seedCtx, seedCancel := context.WithTimeout(context.Background(), 30*time.Second)
+		synced, changed, err := skill.SyncBuiltinSkillsToStore(seedCtx, skillRegistry, definitionStore)
+		if err != nil {
+			sugar.Errorw("builtin skill seed failed (registry stays in-memory)", "error", err)
+		} else {
+			sugar.Infow("builtin skills seeded to skill_definitions", "synced", synced, "changed", changed)
+		}
+		restored, err := skill.RestoreCustomSkillsFromStore(seedCtx, skillRegistry, definitionStore)
+		if err != nil {
+			sugar.Errorw("custom skill restore failed", "error", err)
+		} else if restored > 0 {
+			sugar.Infow("custom skills restored from skill_definitions", "restored", restored)
+		}
+		seedCancel()
+	}
 	emailIntakeService := email_intake.NewService(client)
 	emailIntakeHandler := email_intake.NewHandler(emailIntakeService)
 	emailIntakeMode := email_intake.IntakeMode(os.Getenv("EMAIL_INTAKE_MODE"))

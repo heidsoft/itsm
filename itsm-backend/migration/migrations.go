@@ -126,6 +126,15 @@ var RegisteredMigrations = []Migration{
 		Description: "Add nullable accepted column to ai_feedbacks so AI audit accept/reject decisions are first-class (was overloaded onto useful)",
 		RollbackSQL: "ALTER TABLE ai_feedbacks DROP COLUMN IF EXISTS accepted;",
 	},
+	{
+		// Skill 元数据持久层（AI-Native 计划批次 C）。新表无存量数据，
+		// UNIQUE(tenant_id, code) 无存量冲突负担。运行时注册表仍是内存
+		// 单源（Invoke 走内存）；本表负责：内置技能按 checksum 幂等 seed、
+		// 租户自定义技能跨重启恢复。
+		Version:     "023_add_skill_definitions",
+		Description: "Add skill_definitions table for AI skill metadata persistence (builtin idempotent seed + tenant custom skill restore)",
+		RollbackSQL: "DROP TABLE IF EXISTS skill_definitions;",
+	},
 }
 
 // PostSchemaMigrations returns a defensive copy of the canonical active stream.
@@ -878,6 +887,33 @@ ALTER TABLE ai_feedbacks ADD COLUMN IF NOT EXISTS accepted BOOLEAN;
 CREATE INDEX IF NOT EXISTS ai_feedbacks_accepted_idx
     ON ai_feedbacks (tenant_id, item_type, accepted)
     WHERE accepted IS NOT NULL;
+`
+	case "023_add_skill_definitions":
+		return `
+CREATE TABLE IF NOT EXISTS skill_definitions (
+    id BIGSERIAL PRIMARY KEY,
+    code VARCHAR(100) NOT NULL,
+    version VARCHAR(20) NOT NULL,
+    title VARCHAR(200) NOT NULL,
+    description TEXT NOT NULL DEFAULT '',
+    category VARCHAR(50) NOT NULL DEFAULT '',
+    tags JSONB NOT NULL DEFAULT '[]'::jsonb,
+    capabilities JSONB NOT NULL DEFAULT '[]'::jsonb,
+    required_permissions JSONB NOT NULL DEFAULT '[]'::jsonb,
+    input_schema JSONB NOT NULL DEFAULT '{}'::jsonb,
+    output_schema JSONB NOT NULL DEFAULT '{}'::jsonb,
+    executor JSONB NOT NULL DEFAULT '{}'::jsonb,
+    provider VARCHAR(100) NOT NULL DEFAULT '',
+    author VARCHAR(100) NOT NULL DEFAULT '',
+    checksum VARCHAR(80) NOT NULL,
+    enabled BOOLEAN NOT NULL DEFAULT TRUE,
+    tenant_id BIGINT NOT NULL DEFAULT 0,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    UNIQUE (tenant_id, code)
+);
+CREATE INDEX IF NOT EXISTS idx_skill_definitions_tenant ON skill_definitions(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_skill_definitions_checksum ON skill_definitions(checksum);
 `
 	default:
 		return ""
