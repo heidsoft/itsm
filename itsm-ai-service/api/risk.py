@@ -4,6 +4,8 @@
 """
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
+
+from api.contract import CamelModel
 from typing import Optional, List
 import logging
 
@@ -12,7 +14,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-class RiskFactor(BaseModel):
+class RiskFactor(CamelModel):
     """风险因素"""
     factor: str
     description: str
@@ -21,7 +23,7 @@ class RiskFactor(BaseModel):
     severity: float  # 0-1
 
 
-class ChangeRequest(BaseModel):
+class ChangeRequest(CamelModel):
     """变更请求"""
     change_id: Optional[int] = Field(None, description="变更ID")
     title: str = Field(..., description="变更标题")
@@ -33,7 +35,7 @@ class ChangeRequest(BaseModel):
     tenant_id: Optional[int] = Field(None, description="租户ID")
 
 
-class RiskMatrixCell(BaseModel):
+class RiskMatrixCell(CamelModel):
     """风险矩阵单元格"""
     impact: int  # 1-5
     probability: int  # 1-5
@@ -41,7 +43,7 @@ class RiskMatrixCell(BaseModel):
     color: str  # green/yellow/orange/red
 
 
-class RiskPrediction(BaseModel):
+class RiskPrediction(CamelModel):
     """风险预测"""
     overall_risk_level: str  # low/medium/high/critical
     overall_score: float  # 0-100
@@ -50,7 +52,7 @@ class RiskPrediction(BaseModel):
     mitigation_suggestions: List[str]
 
 
-class RiskResponse(BaseModel):
+class RiskResponse(CamelModel):
     """风险预测响应"""
     change_id: Optional[int]
     prediction: RiskPrediction

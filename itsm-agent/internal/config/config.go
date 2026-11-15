@@ -79,6 +79,11 @@ type PRConfig struct {
 	TitlePrefix string   `yaml:"title_prefix"`
 	BaseBranch  string   `yaml:"base_branch"`
 	AllowEdits  bool     `yaml:"allow_edits"`
+	// MergeWithAdmin 是否用 GitHub 管理员权限绕过分支保护合并（--admin）。
+	// 默认 false：审批通过后走正常合并路径，分支保护规则（必需 review /
+	// 必需 CI 通过）仍然生效。历史上硬编码 --admin 会让「人工审批」变成
+	// 唯一闸门，分支保护被静默架空——是否绕过它必须是一次显式配置决策。
+	MergeWithAdmin bool `yaml:"merge_with_admin"`
 }
 
 type HumanConfig struct {

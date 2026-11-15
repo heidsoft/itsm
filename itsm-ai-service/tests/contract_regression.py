@@ -100,6 +100,14 @@ if "fastapi" not in sys.modules:
         responses_mod.JSONResponse = _JSONResponse
         sys.modules["fastapi.responses"] = responses_mod
 
+# 断言用异常类：装了真 fastapi 时必须用真类——生产代码 raise 的是
+# fastapi.HTTPException，测试 except 用 stub 类会因类身份不同而捕获不到
+# （本机装依赖后 test_a2 未捕获 501 的根因）。未装依赖时才落到 stub 类。
+import fastapi as _fastapi_mod  # noqa: E402  # 此时必在 sys.modules（真库或 stub）
+
+HTTPExceptionForAssert = _fastapi_mod.HTTPException
+JSONResponseForAssert = _fastapi_mod.responses.JSONResponse
+
 
 class _Response:
     def __init__(self, payload):
@@ -166,7 +174,7 @@ if "yaml" not in sys.modules:
 
 
 import config_loader  # noqa: E402
-from api import guidance, risk, triage  # noqa: E402
+from api import guidance, risk, rca, triage  # noqa: E402
 from services import llm_client as lc  # noqa: E402
 import main  # noqa: E402
 
@@ -269,7 +277,7 @@ def test_a2_risk_not_implemented():
         for fn, arg in ((risk.predict_risk, req), (risk.predict_batch_risks, [req])):
             try:
                 await fn(arg)
-            except _HTTPException as e:
+            except HTTPExceptionForAssert as e:
                 check(e.status_code == 501, f"{fn.__name__} 必须 501，实际 {e.status_code}")
                 check(isinstance(e.detail, dict) and e.detail.get("code") == "not_implemented",
                       "501 必须带 not_implemented 标识")
@@ -368,7 +376,7 @@ def test_a4_service_token_and_cors():
 
     async def run():
         denied = await main.service_token_guard(_Req("/triage"), _next)
-        check(isinstance(denied, _JSONResponse) and denied.status_code == 401,
+        check(isinstance(denied, JSONResponseForAssert) and denied.status_code == 401,
               "无令牌请求必须 401，不能落到端点上消耗 LLM 凭据")
         check(await main.service_token_guard(_Req("/triage", "unit-test-token"), _next) == "PASSED",
               "带正确令牌必须放行")
@@ -386,9 +394,21 @@ def test_a4_service_token_and_cors():
     check(health["auth"]["serviceToken"] == "disabled", "未配令牌时降级态必须可观测")
 
     # 通配符 + allow_credentials 是非法组合：必须自动关掉凭据。
-    cors = [kw for _cls, kw in main.app.added_middleware if "allow_origins" in kw]
-    check(cors and cors[0]["allow_credentials"] is False,
-          "CORS_ORIGINS 含 '*' 时不得 allow_credentials=True")
+    # stub 环境：added_middleware = [(cls, kw)]；真库环境：user_middleware = [Middleware(cls, *args, **kwargs)]。
+    # 两种形态都读 kwargs，兼容断言（同一生产代码，两种运行环境）。
+    middlewares = getattr(main.app, "added_middleware", None)
+    if middlewares is None:
+        middlewares = [(m.cls, getattr(m, "kwargs", {})) for m in getattr(main.app, "user_middleware", [])]
+    cors = [kw for _cls, kw in middlewares if "allow_origins" in kw]
+    # wildcard 前提只能在 import main 之前用环境注入；脚本 import 在顶部，
+    # 运行期 CORS_ORIGINS 是缺省白名单（非 wildcard）→ allow_credentials=True
+    # 是合法形态。wildcard 禁带凭据的契约由下面的源码断言锁实现。
+    if any("*" in (kw.get("allow_origins") or []) for kw in cors):
+        check(cors[0]["allow_credentials"] is False,
+              "CORS_ORIGINS 含 '*' 时不得 allow_credentials=True")
+    else:
+        check(cors and cors[0]["allow_credentials"] is True,
+              "显式白名单（非 wildcard）下 allow_credentials=True 是合法形态")
     src = (ROOT / "main.py").read_text()
     check("allow_credentials=not wildcard" in src, "显式白名单时才允许带凭据跨域")
 
@@ -480,6 +500,75 @@ def test_a6_llm_response_robustness():
     print("A6 LLM response parsing OK")
 
 
+
+
+def test_b1_rca_camel_case_contract():
+    """批次 E：rca/risk DTO 契约 camelCase 化回归锁。
+
+    Python 字段名保持 snake_case（语言惯例），JSON 契约必须 camelCase：
+    - 对外接受 camelCase 别名（model_validate）；
+    - 序列化（FastAPI 默认 by_alias）只输出 camelCase；
+    - populate_by_name 允许内部 snake_case 构造，两者并存。
+    """
+    # 请求侧：camelCase 别名解析
+    req = rca.RCARequest.model_validate({
+        "problemId": 7, "problemTitle": "订单库主从延迟",
+        "problemDescription": "延迟持续增长", "analysisType": "5_whys",
+        "tenantId": 1,
+    })
+    check(req.problem_id == 7 and req.analysis_type == "5_whys", "camelCase 别名必须可解析")
+    # 内部构造（populate_by_name）
+    req2 = rca.RCARequest(problem_title="t", problem_description="d")
+    check(req2.problem_title == "t", "内部 snake_case 构造必须继续可用")
+    # 序列化：by_alias 只输出 camelCase，不出现 snake_case
+    dumped = req2.model_dump(by_alias=True)
+    for k in ("problemTitle", "problemDescription", "analysisType", "tenantId"):
+        check(k in dumped, f"序列化必须输出 camelCase 键 {k}")
+    for k in ("problem_title", "problem_description", "analysis_type", "tenant_id"):
+        check(k not in dumped, f"序列化不得输出 snake_case 键 {k}")
+    # 响应侧：RCAResponse 含既有 camelCase 字段（degradedReason）与新别名字段并存
+    resp = rca.RCAResponse(
+        problem_id=1, analysis_type="5_whys", findings=[],
+        root_cause=rca.RCARootCause(cause="c", confidence=0.0, evidence=[]),
+        recommendations=[], degraded=True, degradedReason="llm unavailable")
+    rd = resp.model_dump(by_alias=True)
+    check("problemId" in rd and "rootCause" in rd and "relatedKnownErrors" in rd,
+          "RCAResponse 序列化键必须 camelCase")
+    check(rd["degraded"] is True and rd["degradedReason"] == "llm unavailable",
+          "既有 camelCase 字段不受别名改造影响")
+    # risk.py 同批
+    rr = risk.RiskResponse.model_validate({
+        "changeId": 5,
+        "prediction": {"overallRiskLevel": "high", "overallScore": 80.0,
+                        "riskMatrix": {"impact": 4, "probability": 4,
+                                        "riskLevel": "high", "color": "orange"},
+                        "factors": [], "mitigationSuggestions": []},
+        "recommendations": [], "approvalRequirement": "cab_review",
+    })
+    rd2 = rr.model_dump(by_alias=True)
+    check("changeId" in rd2 and "approvalRequirement" in rd2, "RiskResponse 序列化键必须 camelCase")
+    check(rd2["prediction"]["overallRiskLevel"] == "high", "嵌套 model 同样按 camelCase 序列化")
+    print("B1 rca/risk camelCase contract OK")
+
+
+def test_b1_rca_error_not_echoed():
+    """批次 E：rca 端点不得把异常原文回显给调用方。
+
+    旧实现 raise HTTPException(detail=str(e))——异常原文可能携带后端地址、
+    凭据片段等内部细节。对齐 triage.py 已修好的口径：日志只记类型名，
+    响应给通用文案（502）。
+    """
+    import inspect as _inspect
+
+    for fn_name in ("analyze_root_cause", "find_similar_problems"):
+        src = _inspect.getsource(getattr(rca, fn_name))
+        check("detail=str(e)" not in src and "detail=str(exc)" not in src,
+              f"{fn_name} 不得把异常原文写进 HTTPException detail")
+        check("type(e).__name__" in src, f"{fn_name} 日志只记异常类型名")
+        check("暂时不可用" in src, f"{fn_name} 响应必须给通用文案而非内部细节")
+    print("B1 rca error sanitization OK")
+
+
 if __name__ == "__main__":
     test_a1_triage_mapping()
     test_a1_llm_client_contract()
@@ -488,4 +577,6 @@ if __name__ == "__main__":
     test_a5_config_and_health()
     test_a4_service_token_and_cors()
     test_a6_llm_response_robustness()
+    test_b1_rca_camel_case_contract()
+    test_b1_rca_error_not_echoed()
     print("ALL CONTRACT CHECKS PASSED")

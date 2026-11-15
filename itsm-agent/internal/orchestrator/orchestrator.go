@@ -34,7 +34,21 @@ type Agent struct {
 	// In-memory deduplication (backup if Redis unavailable)
 	processedIssues   map[int]bool
 	processedIssuesMu sync.Mutex
+
+	// In-flight PR 审批集合：PR 建成后审批等待移到独立 goroutine（不再阻塞
+	// 主循环分派新 issue），用 in-flight 标记防止同一 issue 在后续轮询中被
+	// 重复分派。审批结束（批准合并 / 超时 / 停机取消）后清除并标记 processed。
+	inFlight   map[int]bool
+	inFlightMu sync.Mutex
+
+	// reviewSlots 是并发审批上限信号量：每个在等审批的 goroutine 占一槽。
+	// 无上限会让大量 PR 同时轮询 gh（子进程风暴）；4 个并发审批等待对单人
+	// 审批节奏足够（审批是小时级事件，不是秒级）。
+	reviewSlots chan struct{}
 }
+
+// maxConcurrentReviews 同时等待审批的 PR 上限。
+const maxConcurrentReviews = 4
 
 // New creates a new agent
 func New(cfg *config.Config) *Agent {
@@ -50,6 +64,8 @@ func New(cfg *config.Config) *Agent {
 		ctx:             ctx,
 		cancel:          cancel,
 		processedIssues: make(map[int]bool),
+		inFlight:        make(map[int]bool),
+		reviewSlots:     make(chan struct{}, maxConcurrentReviews),
 	}
 
 	return agent
@@ -123,6 +139,10 @@ func (a *Agent) processIssues() {
 			logger.Debug("Issue #%d already processed, skipping", issue.Number)
 			continue
 		}
+		if a.isInFlight(issue.Number) {
+			logger.Debug("Issue #%d awaiting PR review in background, skipping", issue.Number)
+			continue
+		}
 
 		// Process each issue
 		a.processIssue(&issue)
@@ -141,6 +161,23 @@ func (a *Agent) markProcessed(issueNumber int) {
 	a.processedIssuesMu.Lock()
 	defer a.processedIssuesMu.Unlock()
 	a.processedIssues[issueNumber] = true
+	a.inFlightMu.Lock()
+	defer a.inFlightMu.Unlock()
+	delete(a.inFlight, issueNumber)
+}
+
+// isInFlight checks if issue's PR is currently awaiting review in background
+func (a *Agent) isInFlight(issueNumber int) bool {
+	a.inFlightMu.Lock()
+	defer a.inFlightMu.Unlock()
+	return a.inFlight[issueNumber]
+}
+
+// markInFlight marks issue as having a PR awaiting review in background
+func (a *Agent) markInFlight(issueNumber int) {
+	a.inFlightMu.Lock()
+	defer a.inFlightMu.Unlock()
+	a.inFlight[issueNumber] = true
 }
 
 // processIssue processes a single issue
@@ -220,33 +257,62 @@ func (a *Agent) processIssue(issue *watcher.Issue) {
 		logger.Warn("Failed to send review notification: %v", err)
 	}
 
-	// Wait for approval
-	approved, err := a.reviewer.WaitForApproval(prResult.PRNumber)
+	// 审批等待移入后台 goroutine：此前在本函数内同步 WaitForApproval（轮询
+	// 小时级超时），一个 PR 等审批会阻塞主循环、其他 issue 完全停摆。现在
+	// 建完 PR 即返回主循环，审批在后台等；in-flight 标记防止重复分派，
+	// reviewSlots 限制并发等待数，停机时经 ctx 取消。
+	a.markInFlight(issue.Number)
+
+	a.wg.Add(1)
+	go a.waitForApprovalAndMerge(issue, prResult.PRNumber)
+
+	logger.Info("Issue #%d handed off to background review (PR #%d)", issue.Number, prResult.PRNumber)
+}
+
+// waitForApprovalAndMerge 在后台等待人工审批；批准后合并 PR 并收尾状态。
+// 生命周期由 agent 的 ctx 与 wg 管理：停机时取消等待、wg 等待 goroutine 退出。
+func (a *Agent) waitForApprovalAndMerge(issue *watcher.Issue, prNumber int) {
+	defer a.wg.Done()
+
+	// 并发槽：满员时等待（ctx 感知，停机不悬挂）。
+	select {
+	case a.reviewSlots <- struct{}{}:
+	case <-a.ctx.Done():
+		a.markProcessed(issue.Number)
+		return
+	}
+	defer func() { <-a.reviewSlots }()
+
+	approved, err := a.reviewer.WaitForApproval(a.ctx, prNumber)
 	if err != nil {
-		logger.Warn("Error waiting for approval: %v", err)
-		// Don't fail - just note the error
+		logger.Warn("Error waiting for approval of PR #%d: %v", prNumber, err)
+		// 停机取消不算失败：不合并、不贴失败标签，只收尾。
+		if a.ctx.Err() != nil {
+			a.markProcessed(issue.Number)
+			return
+		}
 	}
 
 	if approved {
 		// Merge the PR
-		if err := a.prCreator.Merge(prResult.PRNumber); err != nil {
-			logger.Error("Failed to merge PR #%d: %v", prResult.PRNumber, err)
+		if err := a.prCreator.Merge(prNumber); err != nil {
+			logger.Error("Failed to merge PR #%d: %v", prNumber, err)
 			a.watcher.Comment(issue.Number, fmt.Sprintf("❌ Failed to merge PR: %v", err))
 		} else {
-			logger.Info("PR #%d merged successfully", prResult.PRNumber)
+			logger.Info("PR #%d merged successfully", prNumber)
 			a.watcher.Comment(issue.Number, "✅ PR merged successfully!")
 			a.watcher.RemoveLabel(issue.Number, "in-progress")
 			a.watcher.AddLabel(issue.Number, "ai-completed")
 		}
 	} else {
-		logger.Warn("PR #%d was not approved within timeout", prResult.PRNumber)
+		logger.Warn("PR #%d was not approved within timeout", prNumber)
 		a.watcher.AddLabel(issue.Number, "pending-review")
 	}
 
 	// Mark as processed
 	a.markProcessed(issue.Number)
 
-	logger.Info("Issue #%d processing complete", issue.Number)
+	logger.Info("Issue #%d background review complete", issue.Number)
 }
 
 // formatValidationErrors formats validation errors for display

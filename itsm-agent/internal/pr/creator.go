@@ -229,14 +229,21 @@ func (c *Creator) Close(prNumber int) error {
 	return nil
 }
 
-// Merge merges a PR (after human approval)
+// Merge merges a PR (after human approval).
+//
+// 默认走正常合并路径（分支保护规则继续生效）；仅在 PR 配置显式
+// merge_with_admin: true 时才附带 --admin 绕过保护。审批通过不等于
+// 应当架空分支保护——那是一次需要显式声明的运维决策。
 func (c *Creator) Merge(prNumber int) error {
 	logger.Info("Merging PR #%d", prNumber)
 
-	cmd := exec.Command(c.ghCLI, "pr", "merge",
-		"--repo", fmt.Sprintf("%s/%s", c.owner, c.repo),
-		"--admin", "--auto",
-		fmt.Sprintf("%d", prNumber))
+	withAdmin := false
+	if c.cfg != nil {
+		withAdmin = c.cfg.MergeWithAdmin
+	}
+	args := mergeArgs(c.ghCLI, c.owner, c.repo, prNumber, withAdmin)
+
+	cmd := exec.Command(c.ghCLI, args...)
 
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("failed to merge PR: %w", err)
@@ -244,4 +251,16 @@ func (c *Creator) Merge(prNumber int) error {
 
 	logger.Info("PR #%d merged successfully", prNumber)
 	return nil
+}
+
+// mergeArgs 构造 gh pr merge 的命令行参数（独立纯函数，便于回归测试
+// 锁住「默认不绕过分支保护」这一安全语义）。
+func mergeArgs(ghCLI, owner, repo string, prNumber int, withAdmin bool) []string {
+	args := []string{"pr", "merge",
+		"--repo", fmt.Sprintf("%s/%s", owner, repo)}
+	if withAdmin {
+		args = append(args, "--admin")
+	}
+	args = append(args, "--auto", fmt.Sprintf("%d", prNumber))
+	return args
 }

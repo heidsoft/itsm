@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field
 from typing import Optional, List
 import logging
 
+from api.contract import CamelModel
 from services.llm_client import get_llm_client
 
 logger = logging.getLogger(__name__)
@@ -14,7 +15,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-class RCARequest(BaseModel):
+class RCARequest(CamelModel):
     """根因分析请求"""
     problem_id: Optional[int] = Field(None, description="问题ID")
     problem_title: str = Field(..., description="问题标题")
@@ -24,7 +25,7 @@ class RCARequest(BaseModel):
     tenant_id: Optional[int] = Field(None, description="租户ID")
 
 
-class RCAFinding(BaseModel):
+class RCAFinding(CamelModel):
     """RCA发现"""
     step: int
     question: str
@@ -32,21 +33,21 @@ class RCAFinding(BaseModel):
     insight: Optional[str] = None
 
 
-class RCARootCause(BaseModel):
+class RCARootCause(CamelModel):
     """根因"""
     cause: str
     confidence: float
     evidence: List[str]
 
 
-class RCARecommendation(BaseModel):
+class RCARecommendation(CamelModel):
     """建议"""
     action: str
     priority: str
     estimated_effort: Optional[str] = None
 
 
-class RCAResponse(BaseModel):
+class RCAResponse(CamelModel):
     """根因分析响应"""
     problem_id: Optional[int]
     analysis_type: str
@@ -82,8 +83,10 @@ async def analyze_root_cause(request: RCARequest):
         return _rule_based_rca(request)
 
     except Exception as e:
-        logger.error(f"RCA error: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        # 不把内部异常原文回显给调用方（可能含后端地址、凭据片段）——
+        # 与 triage.py 同口径：日志只记类型名，响应给通用文案。
+        logger.error(f"RCA error: {type(e).__name__}")
+        raise HTTPException(status_code=502, detail="根因分析服务暂时不可用")
 
 
 @router.post("/similar", response_model=List[dict])
@@ -105,7 +108,7 @@ async def find_similar_problems(request: dict):
                         "title": r.get("title", ""),
                         "snippet": r.get("snippet", ""),
                         "similarity": r.get("score", 0.0),
-                        "root_cause": r.get("root_cause", ""),
+                        "rootCause": r.get("root_cause", ""),
                         "resolution": r.get("resolution", "")
                     }
                     for r in results
@@ -115,8 +118,9 @@ async def find_similar_problems(request: dict):
         return []
 
     except Exception as e:
-        logger.error(f"Similar problems error: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        # 同上：异常原文不外泄（可能含知识库/后端地址细节）。
+        logger.error(f"Similar problems error: {type(e).__name__}")
+        raise HTTPException(status_code=502, detail="相似问题检索服务暂时不可用")
 
 
 _WHY_QUESTIONS = [

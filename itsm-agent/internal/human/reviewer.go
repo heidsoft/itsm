@@ -2,6 +2,7 @@ package human
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -93,28 +94,42 @@ func (r *Reviewer) CheckApproval(prNumber int) (approved bool, err error) {
 		return false, fmt.Errorf("failed to parse PR info: %w", err)
 	}
 
-	// Check if merged
-	if prInfo.MergeStateStatus == "merged" || prInfo.State == "merged" {
-		return true, nil
-	}
-
-	// Check for approved reviews
+	reviews := make([]PRReviewState, 0, len(prInfo.Reviews))
 	for _, review := range prInfo.Reviews {
-		if review.State == "APPROVED" {
-			return true, nil
-		}
+		reviews = append(reviews, PRReviewState{State: review.State})
 	}
-
-	// Check for auto-merge
-	if prInfo.MergeStateStatus == "clean" {
-		return true, nil
-	}
-
-	return false, nil
+	return approvedFromPRView(prInfo.State, prInfo.MergeStateStatus, reviews), nil
 }
 
-// WaitForApproval waits for human approval with timeout
-func (r *Reviewer) WaitForApproval(prNumber int) (approved bool, err error) {
+// PRReviewState 是 gh pr view 的 reviews[] 元素里审批判定用到的字段。
+type PRReviewState struct {
+	State string
+}
+
+// approvedFromPRView 是审批判定纯函数（可回归测试）：
+//   - PR 已 merged（无论从 state 还是 mergeStateStatus 读到）→ 视为已批准；
+//   - 存在 APPROVED review → 已批准；
+//   - mergeStateStatus == "clean"（auto-merge 条件已满足）→ 已批准。
+func approvedFromPRView(state, mergeStateStatus string, reviews []PRReviewState) bool {
+	if mergeStateStatus == "merged" || state == "merged" {
+		return true
+	}
+	for _, review := range reviews {
+		if review.State == "APPROVED" {
+			return true
+		}
+	}
+	if mergeStateStatus == "clean" {
+		return true
+	}
+	return false
+}
+
+// WaitForApproval waits for human approval with timeout.
+//
+// ctx 支持取消：审批等待现在跑在独立 goroutine 里（不再阻塞主循环的
+// issue 分派），agent 停机时通过 ctx 中止等待而不是等到超时。
+func (r *Reviewer) WaitForApproval(ctx context.Context, prNumber int) (approved bool, err error) {
 	if !r.cfg.Enabled {
 		logger.Info("Human review not enabled, auto-approving")
 		return true, nil
@@ -131,6 +146,9 @@ func (r *Reviewer) WaitForApproval(prNumber int) (approved bool, err error) {
 
 	for {
 		select {
+		case <-ctx.Done():
+			logger.Warn("Waiting for approval of PR #%d cancelled by shutdown", prNumber)
+			return false, ctx.Err()
 		case <-ticker.C:
 			approved, err := r.CheckApproval(prNumber)
 			if err != nil {
