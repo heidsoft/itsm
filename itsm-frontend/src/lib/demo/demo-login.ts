@@ -51,3 +51,32 @@ export function shouldAutoDemoLogin(
   }
   return readDemoCredentials(env) !== null;
 }
+
+/**
+ * 构建期绑定版本 —— 客户端组件必须调用这一组，不能用上面的默认参数版本。
+ *
+ * 原因（踩坑记录）：Next.js 的 DefinePlugin 只把「字面的」
+ * `process.env.NEXT_PUBLIC_XXX` 成员访问在 next build 阶段替换成字符串常量。
+ * 若写成 `readDemoCredentials()` 依赖默认参数 `env = process.env`，编译后是
+ * `e.NEXT_PUBLIC_DEMO_USER`（e 为参数，默认 C.env），DefinePlugin 不会内联，
+ * 浏览器端 process.env 不含这些键 → 凭据恒为空 → 一键直达永远不触发。
+ *
+ * 这里对每个变量都用字面 `process.env.NEXT_PUBLIC_*` 访问，确保被静态内联进
+ * 公开 bundle；仅把内联后的基本类型值交给纯函数做判定，保持逻辑可单测。
+ */
+export function readBuiltinDemoCredentials(): DemoCredentials | null {
+  return readDemoCredentials({
+    NEXT_PUBLIC_DEMO_ENABLED: process.env.NEXT_PUBLIC_DEMO_ENABLED,
+    NEXT_PUBLIC_DEMO_USER: process.env.NEXT_PUBLIC_DEMO_USER,
+    NEXT_PUBLIC_DEMO_PASSWORD: process.env.NEXT_PUBLIC_DEMO_PASSWORD,
+    NEXT_PUBLIC_DEMO_TENANT: process.env.NEXT_PUBLIC_DEMO_TENANT,
+  });
+}
+
+/** 构建期绑定版本的一键直达判定；用法同上，客户端组件必须调用本函数。 */
+export function shouldAutoDemoLoginBuiltin(searchParams: URLSearchParams | null): boolean {
+  if (!searchParams || searchParams.get(DEMO_LOGIN_PARAM) !== '1') {
+    return false;
+  }
+  return readBuiltinDemoCredentials() !== null;
+}

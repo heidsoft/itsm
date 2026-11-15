@@ -24,7 +24,7 @@ import { AuthService } from '@/lib/services/auth-service';
 import { AuthAPI, type SSOProviderBrief } from '@/lib/api/auth-api';
 import { logger } from '@/lib/env';
 import { useAuthStoreHydration } from '@/lib/store/auth-store';
-import { readDemoCredentials, shouldAutoDemoLogin } from '@/lib/demo/demo-login';
+import { readBuiltinDemoCredentials, shouldAutoDemoLoginBuiltin } from '@/lib/demo/demo-login';
 
 const { Text, Title } = Typography;
 
@@ -67,13 +67,15 @@ function LoginForm() {
   }, []);
 
   // 官网「在线体验」链接带 ?demo=1 时，用构建期注入的只读演示账号自动登录并直达首页。
-  // 开源版未配置 NEXT_PUBLIC_DEMO_* → shouldAutoDemoLogin 返回 false，行为完全不变。
+  // 必须调用 *Builtin 版本：它在源码里直接访问 process.env.NEXT_PUBLIC_DEMO_*，
+  // Next.js 才能在 build 阶段把凭据内联进 bundle（默认参数版本 e.NEXT_PUBLIC_* 不会被内联）。
+  // 开源版未配置 NEXT_PUBLIC_DEMO_* → shouldAutoDemoLoginBuiltin 返回 false，行为完全不变。
   // 失败时不重试，回退到普通登录表单让访客手动登录，避免无限撞限流。
   useEffect(() => {
-    if (demoStarted.current || !shouldAutoDemoLogin(searchParams)) {
+    if (demoStarted.current || !shouldAutoDemoLoginBuiltin(searchParams)) {
       return;
     }
-    const creds = readDemoCredentials();
+    const creds = readBuiltinDemoCredentials();
     if (!creds) {
       return;
     }

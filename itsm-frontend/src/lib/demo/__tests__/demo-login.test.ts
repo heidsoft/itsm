@@ -2,6 +2,8 @@ import {
   DEMO_LOGIN_PARAM,
   readDemoCredentials,
   shouldAutoDemoLogin,
+  readBuiltinDemoCredentials,
+  shouldAutoDemoLoginBuiltin,
 } from '../demo-login';
 
 const fullEnv: Record<string, string | undefined> = {
@@ -57,6 +59,70 @@ describe('demo-login (一键直达演示)', () => {
       const params = new URLSearchParams('demo=1');
       expect(shouldAutoDemoLogin(params, {})).toBe(false);
       expect(shouldAutoDemoLogin(params, { NEXT_PUBLIC_DEMO_ENABLED: 'false' })).toBe(false);
+    });
+  });
+
+  /**
+   * 构建期绑定版本：客户端组件实际调用的函数。
+   * 这组词守护「Next.js DefinePlugin 内联」这条生产路径 —— 纯函数版本即使全绿，
+   * 也不能证明浏览器能拿到凭据；只有这组直接从 process.env 字面量取值的函数
+   * 在 build 阶段被内联，才是真正决定线上能不能一键直达的实现。
+   */
+  describe('builtin 版本（客户端实际调用 / 构建期内联路径）', () => {
+    const KEYS = [
+      'NEXT_PUBLIC_DEMO_ENABLED',
+      'NEXT_PUBLIC_DEMO_USER',
+      'NEXT_PUBLIC_DEMO_PASSWORD',
+      'NEXT_PUBLIC_DEMO_TENANT',
+    ] as const;
+    const original: Record<string, string | undefined> = {};
+
+    beforeEach(() => {
+      KEYS.forEach(k => { original[k] = process.env[k]; });
+    });
+    afterEach(() => {
+      KEYS.forEach(k => {
+        if (original[k] === undefined) delete process.env[k];
+        else process.env[k] = original[k];
+      });
+    });
+
+    function setEnv(values: Record<string, string>) {
+      KEYS.forEach(k => {
+        if (values[k] === undefined) delete process.env[k];
+        else process.env[k] = values[k];
+      });
+    }
+
+    it('从 process.env 字面量读取完整凭据', () => {
+      setEnv({
+        NEXT_PUBLIC_DEMO_ENABLED: 'true',
+        NEXT_PUBLIC_DEMO_USER: 'demo',
+        NEXT_PUBLIC_DEMO_PASSWORD: 'test-only-password',
+        NEXT_PUBLIC_DEMO_TENANT: 'default',
+      });
+      expect(readBuiltinDemoCredentials()).toEqual({
+        username: 'demo',
+        password: 'test-only-password',
+        tenantCode: 'default',
+      });
+      expect(shouldAutoDemoLoginBuiltin(new URLSearchParams('demo=1'))).toBe(true);
+    });
+
+    it('未配置环境变量时返回 null（开源版默认关闭）', () => {
+      setEnv({});
+      expect(readBuiltinDemoCredentials()).toBeNull();
+      expect(shouldAutoDemoLoginBuiltin(new URLSearchParams('demo=1'))).toBe(false);
+    });
+
+    it('反向验证：凭据存在但 URL 无 demo=1 时不触发', () => {
+      setEnv({
+        NEXT_PUBLIC_DEMO_ENABLED: 'true',
+        NEXT_PUBLIC_DEMO_USER: 'demo',
+        NEXT_PUBLIC_DEMO_PASSWORD: 'test-only-password',
+      });
+      expect(shouldAutoDemoLoginBuiltin(null)).toBe(false);
+      expect(shouldAutoDemoLoginBuiltin(new URLSearchParams('foo=bar'))).toBe(false);
     });
   });
 });
