@@ -17,8 +17,9 @@ import (
 )
 
 type FeishuSyncService struct {
-	client *ent.Client
-	logger *zap.SugaredLogger
+	client     *ent.Client
+	logger     *zap.SugaredLogger
+	terminator TicketWorkflowTerminator
 }
 
 func NewFeishuSyncService(client *ent.Client, logger *zap.SugaredLogger) *FeishuSyncService {
@@ -262,7 +263,22 @@ func (s *FeishuSyncService) markTaskDeleted(ctx context.Context, tenantID int, t
 		}
 		return nil, fmt.Errorf("query feishu sync record: %w", err)
 	}
-	ticket, err := s.client.Ticket.UpdateOneID(syncRecord.TicketID).
+	// 状态写入与流程终止必须同事务：否则会出现「工单已置 closed、实例仍在 running」
+	// 或反过来的「实例已终止、工单状态回滚」两种脏状态。前者正是 F1 在飞书侧的
+	// 复现路径（工单关了、待办还在，待办完成后回环网关继续造新待办）。
+	tx, err := s.client.Tx(ctx)
+	if err != nil {
+		_ = s.markSyncFailed(ctx, syncRecord, err)
+		return nil, fmt.Errorf("begin feishu task deletion tx: %w", err)
+	}
+	committed := false
+	defer func() {
+		if !committed {
+			_ = tx.Rollback()
+		}
+	}()
+
+	ticket, err := tx.Ticket.UpdateOneID(syncRecord.TicketID).
 		Where(entTicket.TenantID(tenantID)).
 		SetStatus("closed").
 		Save(ctx)
@@ -270,7 +286,16 @@ func (s *FeishuSyncService) markTaskDeleted(ctx context.Context, tenantID int, t
 		_ = s.markSyncFailed(ctx, syncRecord, err)
 		return nil, fmt.Errorf("close ticket after feishu task deletion: %w", err)
 	}
-	syncRecord, err = syncRecord.Update().
+
+	if err := s.terminateWorkflowTx(ctx, tx.Client(), tenantID, syncRecord.TicketID); err != nil {
+		_ = s.markSyncFailed(ctx, syncRecord, err)
+		return nil, fmt.Errorf("terminate ticket workflow after feishu task deletion: %w", err)
+	}
+
+	// 必须走 tx 而不是 syncRecord.Update()：ent 实体绑定的是创建它的 client
+	// （这里是事务外的 s.client），用它的 Update() 会把同步记录写成一个独立事务，
+	// 于是「工单关了、流程终止了、同步状态却没落地」——正是本函数要消灭的那种分叉。
+	syncRecord, err = tx.FeishuTicketSync.UpdateOneID(syncRecord.ID).
 		SetSyncStatus("deleted").
 		SetLastSyncDirection("feishu_to_itsm").
 		SetLastSyncedAt(time.Now()).
@@ -279,7 +304,29 @@ func (s *FeishuSyncService) markTaskDeleted(ctx context.Context, tenantID int, t
 	if err != nil {
 		return nil, fmt.Errorf("update feishu sync deletion status: %w", err)
 	}
+
+	if err := tx.Commit(); err != nil {
+		return nil, fmt.Errorf("commit feishu task deletion tx: %w", err)
+	}
+	committed = true
 	return toFeishuSyncResponse(syncRecord, ticket, &feishuConn.FeishuTask{GUID: taskGUID}), nil
+}
+
+// terminateWorkflowTx 在已开启的事务内终止工单关联的 BPMN 实例。
+//
+// 未注入终止器时不阻断关单（退回旧行为），但必须 Warnw：静默降级正是
+// F1 能长期存在而无人察觉的成因。operator 需要能从这个日志看出「本实例
+// 没有做流程收口」，而不是等到发现「关掉的工单还在造待办」才回头查。
+func (s *FeishuSyncService) terminateWorkflowTx(ctx context.Context, txc *ent.Client, tenantID, ticketID int) error {
+	if s.terminator == nil {
+		s.logger.Warnw("飞书任务删除关闭工单未触发流程收口：组装根未注入 TicketWorkflowTerminator，"+
+			"工单已置 closed 但关联 BPMN 实例可能仍在运行（F1 飞书侧分叉）",
+			"ticket_id", ticketID, "tenant_id", tenantID)
+		return nil
+	}
+	// actorUserID 传 0：本次状态推进由飞书侧事件驱动，没有 IT 侧操作人。
+	// 审计里靠 reason 区分来源（见 feishuCloseReason），不虚构一个操作人 ID。
+	return s.terminator.TerminateTicketWorkflowTx(ctx, txc, tenantID, 0, ticketID, feishuCloseReason)
 }
 
 func (s *FeishuSyncService) markSyncFailed(ctx context.Context, syncRecord *ent.FeishuTicketSync, err error) error {

@@ -875,6 +875,10 @@ func NewApplication() *Application {
 	// Connector Manager / Registry / Market —— 连接器/插件/技能市场基础设施
 	// Feishu 连接器控制器
 	feishuSyncService := feishuHandler.NewFeishuSyncService(client, sugar)
+	// 飞书侧删任务会关工单：必须与工单域一样终止关联 BPMN 实例，否则关了单
+	// 实例还在 running，待办完成后沿 ticket_general_flow 的回环继续造新待办
+	// （F1 在连接器域的同一条分叉）。
+	feishuSyncService.SetWorkflowTerminator(ticketWorkflowService)
 	inboundDedup := connector.NewInboundDeduper(client, 5*time.Minute)
 	feishuHTTPHandler := feishuHandler.NewHandler(connectorManager, feishuSyncService, marketplaceSvc, sugar)
 	feishuHTTPHandler.SetInboundDedup(inboundDedup)
