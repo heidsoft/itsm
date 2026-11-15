@@ -15,6 +15,7 @@ import { useRouter } from 'next/navigation';
 import { ServiceCatalogApi } from '@/lib/api/service-catalog-api';
 import { ServiceStatus, type ServiceItem } from '@/types/service-catalog';
 import { usePermissions } from '@/lib/hooks/use-permissions';
+import { PERM } from '@/lib/permissions';
 
 const { Title, Text } = Typography;
 
@@ -24,7 +25,7 @@ export default function NewServiceRequestPage() {
   const router = useRouter();
   const { hasPermission } = usePermissions();
   const canCreate =
-    hasPermission('service_request', 'write') || hasPermission('service_request', 'create');
+    hasPermission(PERM.service_request.write);
 
   const [catalogs, setCatalogs] = useState<ServiceItem[]>([]);
   const [loading, setLoading] = useState(true);

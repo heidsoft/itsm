@@ -7,6 +7,7 @@ import type { MenuProps } from 'antd';
 import type { Ticket, TicketStatus, TicketPriority } from '@/lib/api/types';
 import { TicketAPI } from '@/lib/api/ticket-api';
 import { usePermissions } from '@/lib/hooks/use-permissions';
+import { PERM } from '@/lib/permissions';
 import { useUserListQuery } from '@/lib/hooks/useUserListQuery';
 import { BACKEND_MAX_PAGE_SIZE } from '@/lib/api/pagination';
 import { TicketStatusConfig, TicketPriorityConfig } from '@/constants/taxonomy';
@@ -44,9 +45,9 @@ const TicketBatchOperations: React.FC<TicketBatchOperationsProps> = ({
   onOperationComplete,
   onSelectionClear,
 }) => {
-  const { hasPermission } = usePermissions();
+  const { hasPermission, hasResourcePermission } = usePermissions();
   // 处理人下拉复用带缓存的用户列表查询，不再使用写死的示例姓名。
-  const assignees = useUserListQuery({ pageSize: BACKEND_MAX_PAGE_SIZE, enabled: hasPermission('ticket', 'assign') });
+  const assignees = useUserListQuery({ pageSize: BACKEND_MAX_PAGE_SIZE, enabled: hasPermission(PERM.ticket.assign) });
   const assigneeOptions = useMemo(
     () =>
       (assignees.data?.items ?? []).map(user => ({
@@ -353,7 +354,7 @@ const TicketBatchOperations: React.FC<TicketBatchOperationsProps> = ({
   const permittedOperations = useMemo(
     () =>
       batchOperations.filter(
-        op => op.key !== 'divider1' && (!op.permission || hasPermission(op.permission[0], op.permission[1]))
+        op => op.key !== 'divider1' && (!op.permission || hasResourcePermission(op.permission[0], op.permission[1]))
       ),
     [batchOperations, hasPermission]
   );

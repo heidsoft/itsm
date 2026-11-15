@@ -83,6 +83,7 @@ import {
   ArrowUpCircle,
 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n/useI18n';
+import { PERM } from '@/lib/permissions';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -273,22 +274,22 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
   // 报障人（end_user）只持 ticket:read/write/create/update，没有 assign/escalate/
   // delete/approve，此前这些按钮照常渲染，点下去只有 403。
   // 隐藏只负责呈现，授权仍以后端为准（AGENTS「前端不得替代后端授权」）。
-  const canUpdateTicket = hasPermission('ticket', 'update');
-  const canAssignTicket = hasPermission('ticket', 'assign');
-  const canEscalateTicket = hasPermission('ticket', 'escalate');
-  const canDeleteTicket = hasPermission('ticket', 'delete');
+  const canUpdateTicket = hasPermission(PERM.ticket.update);
+  const canAssignTicket = hasPermission(PERM.ticket.assign);
+  const canEscalateTicket = hasPermission(PERM.ticket.escalate);
+  const canDeleteTicket = hasPermission(PERM.ticket.delete);
   // 批准/拒绝、抄送是「对这张工单的动作」，后端分别挂在 ticket:approve 与 ticket:assign；
   // workflow:write 的目录语义是流程定义管理（含发布流程模板），一线角色不持它，
   // 此前用它门控会让坐席看得到按钮却必然 403。
   // 审批优先走 BPMN 桥（ticket:approve），无审批链时兜底 PUT /tickets/:id/status
   // （ticket:update），因此两个码任一命中即为可操作。
-  const canApproveTicket = hasPermission('ticket', 'approve') || canUpdateTicket;
+  const canApproveTicket = hasPermission(PERM.ticket.approve) || canUpdateTicket;
   const canCcTicket = canAssignTicket;
   // /tickets/workflow/accept|resolve|close 各自的 RequirePermission 权限码；
   // 与后端路由闸门保持一致，避免出现「看得到、点下去必然 403」的按钮。
   const canAcceptTicket = canAssignTicket;
-  const canResolveTicket = hasPermission('ticket', 'resolve') || canUpdateTicket;
-  const canCloseTicket = hasPermission('ticket', 'close') || canUpdateTicket;
+  const canResolveTicket = hasPermission(PERM.ticket.resolve) || canUpdateTicket;
+  const canCloseTicket = hasPermission(PERM.ticket.close) || canUpdateTicket;
   const hasAnyTicketAction =
     canApproveTicket ||
     canAssignTicket ||
@@ -844,7 +845,7 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
       {/* AI 调查编排：显式触发的只读调查链（triage→KB→CMDB→综合）。
           ai:read 才展示；后端仍强制 ai:read + ticket:read 双权限授权，
           前端显隐只是展示层。 */}
-      {ticket && resolvedTicketId && hasPermission('ai', 'read') && (
+      {ticket && resolvedTicketId && hasPermission(PERM.ai.read) && (
         <div style={{ marginTop: 16 }}>
           <AIInvestigationPanel
             ticketId={Number(resolvedTicketId)}

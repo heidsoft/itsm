@@ -43,8 +43,7 @@ jest.mock('@/lib/api/service-request-api', () => ({
 let mockPermissions: Record<string, boolean> = {};
 jest.mock('@/lib/hooks/use-permissions', () => ({
   usePermissions: () => ({
-    hasPermission: (resource: string, action: string) =>
-      Boolean(mockPermissions[`${resource}:${action}`]),
+    hasPermission: (code: string) => Boolean(mockPermissions[code]),
   }),
 }));
 

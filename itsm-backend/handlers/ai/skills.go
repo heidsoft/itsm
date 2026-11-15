@@ -17,6 +17,7 @@ import (
 	"strconv"
 
 	"itsm-backend/dto"
+	"itsm-backend/internal/authz"
 )
 
 // SkillInputError 输入校验失败的标准化错误。
@@ -867,7 +868,10 @@ func (s *AgentToolSkill) Execute(ctx context.Context, input interface{}) (interf
 	if s.svc == nil {
 		return nil, errors.New("agent_tool skill: underlying service is nil")
 	}
-	res, _, err := s.svc.ExecuteTool(ctx, userID, tenantID, role, name, args)
+	// Skill 是 AI 自主执行路径：按 agent 主体走运行期 DB 策略（默认零权限 +
+	// 风险分级人工审批），不能继承调用人的全部角色权限。
+	agentCtx := authz.WithPrincipal(ctx, authz.PrincipalAgent)
+	res, _, err := s.svc.ExecuteTool(agentCtx, userID, tenantID, role, name, args)
 	if err != nil {
 		return nil, err
 	}

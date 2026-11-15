@@ -4,6 +4,7 @@ import { Button, Result, Spin } from 'antd';
 import { usePathname, useRouter } from 'next/navigation';
 import type { MenuItem } from '@/lib/api/menu-api';
 import { usePermissions } from '@/lib/hooks/use-permissions';
+import { PERM, type PermissionCode } from '@/lib/permissions';
 import { useUserMenusQuery } from '@/lib/hooks/useUserMenusQuery';
 
 // /admin 页面准入与后端菜单口径一致：菜单可见性由服务端按权限码过滤
@@ -17,8 +18,9 @@ function menuContainsPath(nodes: MenuItem[] | undefined, pathname: string): bool
 // 「系统管理」分组节点自 2026-10-26 起统一取 system_config:read（不再用 system:write），
 // 但个别子页面的真实授权码与分组不同（如 /admin/cmdb-types 后端路由要求 cmdb:write）。
 // 这类页面在此按后端路由同款权限码单独放行，避免为个别页面放宽整个菜单分组语义。
-const ADMIN_ROUTE_PERMISSIONS: Record<string, string> = {
-  '/admin/cmdb-types': 'cmdb:write',
+// 值类型是生成的权限码：引用码空间不存在的码会编译失败（幽灵码零容忍）。
+const ADMIN_ROUTE_PERMISSIONS: Record<string, PermissionCode> = {
+  '/admin/cmdb-types': PERM.cmdb.write,
 };
 
 // 菜单准入面：除 /admin 外，还有少数「纯管理/分析面」顶级页面。它们没有独立
@@ -44,10 +46,7 @@ export function AdminRouteGuard({ children }: { children: React.ReactNode }) {
   if (pathname.startsWith('/admin')) {
     const routePermission = ADMIN_ROUTE_PERMISSIONS[pathname];
     if (routePermission) {
-      const separatorIndex = routePermission.indexOf(':');
-      const allowed =
-        separatorIndex > 0 &&
-        hasPermission(routePermission.slice(0, separatorIndex), routePermission.slice(separatorIndex + 1));
+      const allowed = hasPermission(routePermission);
       if (!allowed) {
         return <DeniedResult router={router} />;
       }

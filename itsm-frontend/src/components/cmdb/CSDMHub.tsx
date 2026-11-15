@@ -13,6 +13,7 @@ import { useCapabilities } from '@/lib/hooks/useCapabilities';
 import { useI18n } from '@/lib/i18n/useI18n';
 import { usePermissions } from '@/lib/hooks/use-permissions';
 import { formatDateTime } from '@/lib/formatters';
+import { PERM } from '@/lib/permissions';
 
 const { Paragraph, Text, Title } = Typography;
 
@@ -44,7 +45,7 @@ export function CSDMHub() {
   const { message } = App.useApp();
   const { t } = useI18n();
   const { capabilities, allows } = useCapabilities();
-  const { hasPermission } = usePermissions();
+  const { hasPermission, hasResourcePermission } = usePermissions();
   const availableCapabilities = CMDB_CAPABILITIES.filter(item => allows(item.capabilityKey));
   // 能力卡片按权限过滤：管理面能力（如 CI 类型建模）只对持有所需权限码的用户展示入口，
   // 后端仍是唯一授权方；「生产可用能力」统计保持产品口径，不随个人权限变化。
@@ -52,12 +53,12 @@ export function CSDMHub() {
     if (!('requiredPermission' in item) || !item.requiredPermission) return true;
     const separatorIndex = item.requiredPermission.indexOf(':');
     if (separatorIndex <= 0) return true;
-    return hasPermission(
+    return hasResourcePermission(
       item.requiredPermission.slice(0, separatorIndex),
       item.requiredPermission.slice(separatorIndex + 1),
     );
   });
-  const canMaintainCITypes = hasPermission('cmdb', 'write');
+  const canMaintainCITypes = hasPermission(PERM.cmdb.write);
   const [overview, setOverview] = React.useState<CMDBOverview>({
     totalCIs: 0,
     ciTypes: 0,

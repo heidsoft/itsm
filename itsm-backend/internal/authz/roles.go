@@ -242,7 +242,11 @@ func BuiltinRolePermissionCodes() map[string][]string {
 			"automation_rule:read", "automation_rule:write",
 			"assignment_rule:read", "assignment_rule:write",
 			"org:read", "org:write",
-			"department:read", "department:create", "department:update", "department:delete",
+			// department 的 create/update/delete 由 write 经 synonymParity 派生，
+			// 这里只授 write 本体。历史上手写三个细分码，导致
+			// POST /departments/:id/init-processes（校验 department:write）
+			// 对租管恒 403——菜单可见、按钮点不动。
+			"department:read", "department:write",
 			// 团队面：admin 条目此前完全没有 team:*，DBOnly 下租管打开团队页与
 			// 任何成员写操作都是 403（菜单可见但接口拒绝）。
 			"team:read", "team:write",
@@ -266,6 +270,11 @@ func BuiltinRolePermissionCodes() map[string][]string {
 			"ticket:assign", "ticket:escalate",
 			// 接手后要能结单：解决/关闭属工单动作码，不再依赖流程定义管理码。
 			"ticket:resolve", "ticket:close",
+			// 建单/编辑工单页的分类下拉走 GET /ticket-categories（校验
+			// ticket_category:read）。技术员持 ticket:write（派生 create/update）
+			// 能建单却读不到分类，实测下拉空、保存时分类恒为未选（缺陷 O9）。
+			// 同一口径：agent / manager / end_user / it_admin 均已持有此码。
+			"ticket_category:read",
 			"notification:read",
 			"knowledge:read",
 			"cmdb:read",

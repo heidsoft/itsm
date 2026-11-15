@@ -79,7 +79,7 @@ describe('AdminRouteGuard', () => {
       </AdminRouteGuard>
     );
 
-    expect(mockPermissions.hasPermission).toHaveBeenCalledWith('cmdb', 'write');
+    expect(mockPermissions.hasPermission).toHaveBeenCalledWith('cmdb:write');
     expect(screen.getByText('PAGE_CONTENT')).toBeInTheDocument();
   });
 

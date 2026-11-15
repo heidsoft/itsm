@@ -9,6 +9,7 @@ import { persist } from 'zustand/middleware';
 import { clearAuthStorage } from '@/lib/auth/token-storage';
 import { setTenant, clearTenant } from '@/lib/auth/tenant-context';
 import { matchesPermission } from '@/lib/permissions/utils';
+import type { PermissionCode } from '@/lib/permissions';
 import type { User, Tenant } from '@/lib/api/api-config';
 import { httpClient } from '@/lib/api/http-client';
 
@@ -35,8 +36,8 @@ interface AuthState {
   setCurrentTenant: (tenant: Tenant) => void;
   clearTenant: () => void;
 
-  // 权限检查
-  hasPermission: (permission: string) => boolean;
+  // 权限检查（只接受后端码空间内的权限码，引用不存在的码编译期即失败）
+  hasPermission: (permission: PermissionCode) => boolean;
   hasRole: (role: string) => boolean;
   isAdmin: () => boolean;
 }
@@ -133,7 +134,7 @@ export const useAuthStore = create<AuthState>()(
       // 必须能匹配任意具体权限码；同时兼容 "resource:*"、"*:action"、"resource:admin"。
       // 判定集合与后端 RequirePermission 的 checkPermissionMatch 共用同一份实现
       // （permissions/utils.matchesPermission），避免「前端隐藏了后端允许的操作」。
-      hasPermission: (permission: string) => {
+      hasPermission: (permission: PermissionCode) => {
         const { user } = get();
         const permissions = user?.permissions;
         if (!permissions || permissions.length === 0) return false;

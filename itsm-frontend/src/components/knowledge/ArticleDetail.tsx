@@ -42,6 +42,7 @@ import ArticleVersionControl from './ArticleVersionControl';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeSanitize from 'rehype-sanitize';
+import { PERM } from '@/lib/permissions';
 
 const { Title, Paragraph, Text } = Typography;
 
@@ -51,7 +52,7 @@ const ArticleDetail: React.FC = () => {
   const { hasPermission } = usePermissions();
   // 发布/取消发布/更新在后端统一挂 knowledge:write；最终用户只有 knowledge:read，
   // 此前按钮照常渲染，点下去只剩 403。
-  const canWriteArticle = hasPermission('knowledge', 'write');
+  const canWriteArticle = hasPermission(PERM.knowledge.write);
   const [loading, setLoading] = useState(true);
   const [article, setArticle] = useState<KnowledgeArticle | null>(null);
   const [actionLoading, setActionLoading] = useState<

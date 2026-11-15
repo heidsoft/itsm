@@ -320,6 +320,83 @@ func (h *Handler) ListPermissions(c *gin.Context) {
 	common.Success(c, &dto.PermissionListResponse{Items: permItems, Total: len(permItems)})
 }
 
+// parsePermissionID 统一解析路径里的权限 ID，避免每个 handler 各写一套。
+func parsePermissionID(c *gin.Context) (int, bool) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil || id <= 0 {
+		common.ParamError(c, "无效的权限ID")
+		return 0, false
+	}
+	return id, true
+}
+
+// GetPermission 返回单条权限定义（含运行期策略）。
+func (h *Handler) GetPermission(c *gin.Context) {
+	tenantID, err := middleware.GetTenantID(c)
+	if err != nil || tenantID == 0 {
+		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		return
+	}
+	id, ok := parsePermissionID(c)
+	if !ok {
+		return
+	}
+	perm, err := h.permissionService.GetPermission(c.Request.Context(), id, tenantID)
+	if err != nil {
+		common.NotFoundWithErr(c, err, "resource not found")
+		return
+	}
+	common.Success(c, perm)
+}
+
+// UpdatePermission 整体替换一条权限的名称/描述/运行期策略。
+// 策略是安全配置：非法组合（例如允许 AI 执行高危操作却关闭审批）在 service 层拒绝。
+func (h *Handler) UpdatePermission(c *gin.Context) {
+	tenantID, err := middleware.GetTenantID(c)
+	if err != nil || tenantID == 0 {
+		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		return
+	}
+	id, ok := parsePermissionID(c)
+	if !ok {
+		return
+	}
+	var req dto.UpdatePermissionRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.ParamErrorWithErr(c, err, "参数错误")
+		return
+	}
+	perm, err := h.permissionService.UpdatePermission(c.Request.Context(), id, tenantID, &req)
+	if err != nil {
+		common.FailWithErr(c, err, "操作失败")
+		return
+	}
+	common.Success(c, perm)
+}
+
+// DeletePermission 停用权限（不物理删除，保留历史 role_permissions 引用）。
+func (h *Handler) DeletePermission(c *gin.Context) {
+	tenantID, err := middleware.GetTenantID(c)
+	if err != nil || tenantID == 0 {
+		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		return
+	}
+	id, ok := parsePermissionID(c)
+	if !ok {
+		return
+	}
+	if err := h.permissionService.DeletePermission(c.Request.Context(), id, tenantID); err != nil {
+		common.FailWithErr(c, err, "操作失败")
+		return
+	}
+	common.Success(c, gin.H{"message": "权限已停用"})
+}
+
+// GetPermissionCatalogMeta 返回展示口径闭集，前端据此渲染筛选/标签，不再内置词表。
+func (h *Handler) GetPermissionCatalogMeta(c *gin.Context) {
+	common.Success(c, h.permissionService.CatalogMeta())
+}
+
 // InitDefaultPermissions initializes default permissions
 func (h *Handler) InitDefaultPermissions(c *gin.Context) {
 	tenantID, err := middleware.GetTenantID(c)

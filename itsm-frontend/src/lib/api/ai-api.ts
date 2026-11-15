@@ -386,13 +386,17 @@ export interface ToolApproval {
   arguments: string; // JSON 字符串
   status: string;
   needsApproval: boolean;
-  approvalState: string; // pending | approved | rejected | auto
+  approvalState: string; // pending | approved | rejected | auto | pending_agent | pending_agent_two | awaiting_second
   approvalReason?: string;
   permissionCheck?: string;
   permissionReason?: string;
   createdAt: string;
   conversationId: number;
   userId: number;
+  /** 该工具对应权限码的运行期风险分级（后端从权限目录实时解析，unknown=目录不可读） */
+  riskLevel?: string;
+  /** 需要多少个互不相同的人类审批人（来自权限码策略） */
+  minApprovals?: number;
 }
 
 export interface ToolApprovalListResponse {

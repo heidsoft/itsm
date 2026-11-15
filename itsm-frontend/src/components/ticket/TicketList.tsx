@@ -23,6 +23,7 @@ import { TicketListToolbar } from './TicketListToolbar';
 import { TicketListFilters, type TicketFilterValues } from './TicketListFilters';
 import { TicketDeleteModal } from './TicketDeleteModal';
 import TicketBatchOperations from './TicketBatchOperations';
+import { PERM } from '@/lib/permissions';
 
 interface TicketListProps {
   readonly embedded?: boolean;
@@ -63,10 +64,10 @@ const TicketList: React.FC<TicketListProps> = ({
   // 按钮可见性与后端 RequirePermission 逐条对齐：只读角色（change_manager、
   // problem_manager、knowledge_manager、security_admin、audit_admin 等只有
   // ticket:read）点了编辑/关闭/批量删除只会拿到 403。
-  const canCreateTicket = hasPermission('ticket', 'create');
-  const canUpdateTicket = hasPermission('ticket', 'update');
-  const canDeleteTicket = hasPermission('ticket', 'delete');
-  const canExportTicket = hasPermission('ticket', 'export');
+  const canCreateTicket = hasPermission(PERM.ticket.create);
+  const canUpdateTicket = hasPermission(PERM.ticket.update);
+  const canDeleteTicket = hasPermission(PERM.ticket.delete);
+  const canExportTicket = hasPermission(PERM.ticket.export);
   const {
     tickets,
     loading,

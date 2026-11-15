@@ -49,13 +49,14 @@ describe('空态入口门控', () => {
       'utf8'
     );
     expect(assetList).toMatch(/showAction:\s*canCreateAsset\b/);
-    expect(assetList).toMatch(/hasPermission\('asset',\s*'write'\)/);
+    // 权限码单点化后：组件引用生成的 PERM 常量，不再手写 'asset','write' 两参字面量
+    expect(assetList).toMatch(/hasPermission\(PERM\.asset\.write\)/);
 
     const serviceRequestList = fs.readFileSync(
       path.join(SRC_ROOT, 'components', 'service-request', 'ServiceRequestList.tsx'),
       'utf8'
     );
     expect(serviceRequestList).toMatch(/showAction:\s*canCreateServiceRequest\b/);
-    expect(serviceRequestList).toMatch(/hasPermission\('service_request',\s*'write'\)/);
+    expect(serviceRequestList).toMatch(/hasPermission\(PERM\.service_request\.write\)/);
   });
 });

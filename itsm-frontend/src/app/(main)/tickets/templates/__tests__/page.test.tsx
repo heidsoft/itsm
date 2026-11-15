@@ -20,8 +20,7 @@ let permissionCodes: string[] = ['ticket_template:read', 'ticket_template:delete
 
 jest.mock('@/lib/hooks/use-permissions', () => ({
   usePermissions: () => ({
-    hasPermission: (resource: string, action: string) =>
-      permissionCodes.includes(`${resource}:${action}`),
+    hasPermission: (code: string) => permissionCodes.includes(code),
   }),
 }));
 

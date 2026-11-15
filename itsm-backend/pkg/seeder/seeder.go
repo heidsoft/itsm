@@ -46,9 +46,9 @@ import (
 	"itsm-backend/ent/ticketview"
 	"itsm-backend/ent/user"
 	"itsm-backend/internal/authz"
+	"itsm-backend/internal/services"
 	"itsm-backend/pkg/credential"
 	"itsm-backend/pkg/menubaseline"
-	"itsm-backend/internal/services"
 
 	"itsm-backend/config"
 	"itsm-backend/database"
@@ -1859,27 +1859,48 @@ func (s *Seeder) seedPermissions(ctx context.Context) {
 		return
 	}
 
-	// 定义所有权限
+	// 定义所有权限。permissionDefinitions() 只在**初始化**时读一次；
+	// 运行期真源是 DB 里的 permissions 行（含版本化策略信封）。
 	permissions := permissionDefinitions()
 
-	created := 0
-	updated := 0
+	created, migrated := 0, 0
 	for _, p := range permissions {
 		existing, err := s.client.Permission.Query().
 			Where(permission.CodeEQ(p.Code), permission.TenantIDEQ(t.ID)).
 			First(ctx)
 		if err == nil {
-			_, err = existing.Update().
-				SetName(p.Name).
-				SetResource(p.Resource).
-				SetAction(p.Action).
-				SetDescription(p.Description).
-				Save(ctx)
-			if err != nil {
-				s.sugar.Warnw("update permission failed", "error", err, "code", p.Code)
+			// 关键：已经是 v1 信封的行说明管理员在运行期配置过（或上次启动迁移过），
+			// 重启绝不能覆盖 —— 否则「DB 运行期可配」被 seeder 每次启动冲掉。
+			if authz.IsDefinitionEnvelope(existing.Description) {
 				continue
 			}
-			updated++
+			// 存量纯文本描述：一次性升级为信封，人类描述原样保留，
+			// 策略取派生初值（AllowedPrincipals=["human"]，即 AI 零权限）。
+			policy := authz.DerivePolicy(p.Resource, p.Action)
+			encoded, encErr := authz.EncodeDefinition(existing.Description, policy)
+			if encErr != nil {
+				s.sugar.Errorw("permission envelope encode failed", "code", p.Code, "error", encErr)
+				continue
+			}
+			if _, err := existing.Update().
+				SetResource(p.Resource).
+				SetAction(p.Action).
+				SetDescription(encoded).
+				Save(ctx); err != nil {
+				s.sugar.Warnw("permission envelope migration failed", "error", err, "code", p.Code)
+				continue
+			}
+			migrated++
+			continue
+		}
+		if !ent.IsNotFound(err) {
+			s.sugar.Warnw("query permission failed", "error", err, "code", p.Code)
+			continue
+		}
+		policy := authz.DerivePolicy(p.Resource, p.Action)
+		encoded, encErr := authz.EncodeDefinition(p.Description, policy)
+		if encErr != nil {
+			s.sugar.Errorw("permission envelope encode failed", "code", p.Code, "error", encErr)
 			continue
 		}
 		if _, err := s.client.Permission.Create().
@@ -1887,7 +1908,7 @@ func (s *Seeder) seedPermissions(ctx context.Context) {
 			SetName(p.Name).
 			SetResource(p.Resource).
 			SetAction(p.Action).
-			SetDescription(p.Description).
+			SetDescription(encoded).
 			SetTenantID(t.ID).
 			Save(ctx); err != nil {
 			s.sugar.Warnw("seed permission failed", "error", err, "code", p.Code)
@@ -1895,7 +1916,9 @@ func (s *Seeder) seedPermissions(ctx context.Context) {
 		}
 		created++
 	}
-	s.sugar.Infow("permissions ensured", "total", len(permissions), "created", created, "updated", updated)
+	authz.Shared().Invalidate(t.ID)
+	s.sugar.Infow("permissions ensured", "total", len(permissions),
+		"created", created, "legacy_envelopes_migrated", migrated)
 }
 
 // menuDefinitions 委托到 pkg/menubaseline 的权威基线定义。

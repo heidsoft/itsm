@@ -705,3 +705,33 @@ func TestSeedRolePermissionsCoverTicketLifecycle(t *testing.T) {
 		}
 	}
 }
+
+// 缺陷 O9：能建单的角色必须能读分类。
+//
+// 建单/编辑工单页的分类下拉走 GET /api/v1/ticket-categories
+// （router/ticket_category_routes.go:14 校验 ticket_category:read）。
+// technician 持 ticket:write（经同义补齐派生 create/update）却缺这个只读码，
+// 实测下拉空、保存时分类恒为未选。本测试把「建单角色 ⇒ 持分类读码」写成契约，
+// 而不是只断言某一处码表字面量——这样新增建单角色时漏授也会被同一处拦住。
+func TestSeedRolePermissionsBuildTicketImpliesReadCategory(t *testing.T) {
+	seeder, ctx := newTestSeeder(t, tenantmode.DeploymentModePrivate)
+	require.NoError(t, seeder.SeedProduction(ctx))
+
+	rootTenant, err := seeder.client.Tenant.Query().Where(tenant.CodeEQ("default")).Only(ctx)
+	require.NoError(t, err)
+
+	checked := 0
+	for _, roleCode := range []string{"agent", "technician", "manager", "it_admin", "end_user"} {
+		codes := rolePermissionCodes(t, seeder, ctx, rootTenant.ID, roleCode)
+		_, canCreate := codes["ticket:create"]
+		_, canWrite := codes["ticket:write"]
+		if !canCreate && !canWrite {
+			continue
+		}
+		checked++
+		assert.Contains(t, codes, "ticket_category:read",
+			roleCode+" 能建单（ticket:write/create）却缺 ticket_category:read，建单页分类下拉会 403")
+	}
+	// 防止被测角色清单整体改名后本测试静默变成空循环。
+	assert.GreaterOrEqual(t, checked, 4, "至少 4 个内置角色应当能建单；清单漂移会让本断言失效")
+}

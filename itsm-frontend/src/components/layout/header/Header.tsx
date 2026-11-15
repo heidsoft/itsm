@@ -6,6 +6,7 @@ import { PanelLeftClose, PanelLeftOpen, Bell, Bot, Globe, Home, Moon, Sun } from
 import { useTheme } from '@/lib/design-system/theme';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuthStore, useAuthStoreHydration } from '@/lib/store/auth-store';
+import { PERM } from '@/lib/permissions';
 import { AuthService } from '@/lib/services/auth-service';
 import { DESIGN } from '@/design-system/tokens';
 import { useI18n } from '@/lib/i18n';
@@ -265,7 +266,7 @@ export const Header: React.FC<HeaderProps> = ({
           />
 
           {/* AI 助手入口：权限码与后端 permissions 表对齐（ai:read），admin 默认放行 */}
-          {hasPermission('ai:read') || isAdmin() ? (
+          {hasPermission(PERM.ai.read) || isAdmin() ? (
             <Tooltip title="AI助手">
               <Button
                 type="text"

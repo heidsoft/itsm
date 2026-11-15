@@ -37,6 +37,7 @@ import marketplaceService from '@/lib/services/marketplace-service';
 import { useCapabilities } from '@/lib/hooks/useCapabilities';
 import { usePermissions } from '@/lib/hooks/use-permissions';
 import { formatDateTime } from '@/lib/formatters';
+import { PERM } from '@/lib/permissions';
 
 type InstallForm = {
   appId: string;
@@ -146,7 +147,7 @@ const InstallationsPage = () => {
   const { message, modal } = App.useApp();
   const { allows } = useCapabilities();
   const { hasPermission } = usePermissions();
-  const canManageMarketplace = allows('marketplace', 'manage') && hasPermission('marketplace', 'write');
+  const canManageMarketplace = allows('marketplace', 'manage') && hasPermission(PERM.marketplace.write);
 
   const loadInstallations = async () => {
     setLoading(true);

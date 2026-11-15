@@ -2640,6 +2640,63 @@ Authorization: Bearer <accessToken>
 
 `data` 为不分页的完整集合 `{items,total}`，`items[]` 为 `PermissionResponse`（`id`/`code`/`name`/`description`/`resource`/`action`/`tenantId`/`createdAt`），授权时传 `code`。此前同时返回的 `permissions` 纯码值数组已移除；该端点没有 `page`/`pageSize`/`totalPages`，不要按分页信封校验必填（[UPGRADE §1.84](../UPGRADE.md)）。
 
+## 权限码运行期策略与 AI 主体授权（2026-11-14）
+
+权限码的**唯一运行时真源**是 DB 的 `permissions` 表；`GET /api/v1/permissions`
+的 `items[]` 除身份字段外还返回运行期策略（由 `permissions.description` 里的
+版本化 JSON 信封解码，管理员可改、改完即时生效）：
+
+```json
+{
+  "id": 12,
+  "code": "ticket:delete",
+  "resource": "ticket",
+  "action": "delete",
+  "riskLevel": "critical",
+  "allowedPrincipals": ["human"],
+  "requiresApproval": true,
+  "minApprovals": 2,
+  "isActive": true,
+  "isSystem": true,
+  "configured": true,
+  "category": "serviceOps",
+  "categoryLabel": "服务运营",
+  "sortOrder": 0
+}
+```
+
+- `riskLevel`：`low`/`medium`/`high`/`critical`，决定 AI 执行该操作时需要的人类确认强度。
+- `allowedPrincipals`：允许执行该操作的主体类型闭集 `human`/`agent`/`service`。
+  **默认恒为 `["human"]`（AI 零权限）**——要让 AI 执行某个操作，必须由管理员
+  显式把 `agent` 加进对应码；提示词注入改变不了 DB 里没开过的权限。
+- `requiresApproval` / `minApprovals`：审批强度；允许 agent 的中高风险必须开审批、
+  高/危急必须 `minApprovals>=2`（`internal/authz.ValidatePolicy` 闭集校验，非法组合拒绝入库）。
+- `configured=false` 表示该行还是历史纯文本描述、策略为派生初值，管理页会提示管理员确认。
+
+配套端点（挂在 `permission:read` / `role:write` 下）：
+
+| 端点 | 权限 | 说明 |
+|:---|:---|:---|
+| `GET /api/v1/permissions/{id}` | `permission:read` | 单条权限（含策略） |
+| `PUT /api/v1/permissions/{id}` | `role:write` | 整体替换名称/描述/策略（`policy` 必传） |
+| `DELETE /api/v1/permissions/{id}` | `role:write` | 删除非系统码 |
+| `GET /api/v1/permissions/meta` | `permission:read` | 策略元数据（`minApprovalsMax` 等） |
+
+**AI 工具调用的审批展示面**：`GET /api/v1/agent/tools/invocations` 与
+`GET /api/v1/agent/tools/{id}` 的每条记录新增只读字段 `riskLevel` 与
+`minApprovals`（按 `toolName` → 权限码实时从目录解析；目录不可读时降级为
+`"unknown"`/`0`，安全判定不受影响，仍以执行时 Gate 2.5 的严格路径为准）。
+`approvalState` 取值含 `pending_agent`（AI 发起单人审批）、`pending_agent_two`
+（AI 发起双人审批）、`awaiting_second`（首审已过待二审）；AI 发起的调用
+**发起人不可自批**，二审必须来自不同审批人。
+
+**前端码空间单点化**：前端权限码只有一份构建期快照
+`itsm-frontend/src/lib/permissions/catalog.gen.ts`，由
+`cd itsm-backend && go run ./cmd/authz-gen` 从 `internal/authz/catalog.go`
+单向生成（禁手改；新鲜度由 `TestFrontendCatalogGenIsFresh` 与
+`catalog-contract.test.ts` 双向守卫）。前端组件一律引用生成的 `PERM.*`
+常量，引用码空间不存在的码会在 TypeScript 编译期失败。
+
 ## 团队管理接口
 
 ```http

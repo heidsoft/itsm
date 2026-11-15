@@ -9,6 +9,7 @@ import { serviceRequestAPI } from '@/lib/api/service-request-api';
 import { ServiceRequestStatus } from '@/constants/service-request';
 import { usePermissions } from '@/lib/hooks/use-permissions';
 import { formatDateTime } from '@/lib/formatters';
+import { PERM } from '@/lib/permissions';
 
 const { Title, Text } = Typography;
 
@@ -28,7 +29,7 @@ export default function ServiceRequestsPage() {
   const { message } = App.useApp();
   const { hasPermission } = usePermissions();
   const canCreateServiceRequest =
-    hasPermission('service_request', 'write') || hasPermission('service_request', 'create');
+    hasPermission(PERM.service_request.write);
   const [activeTab, setActiveTab] = useState('requests');
   const [pendingApprovals, setPendingApprovals] = useState<PendingApprovalRow[]>([]);
   const [stats, setStats] = useState({

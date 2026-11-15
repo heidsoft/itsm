@@ -99,15 +99,16 @@ import (
 	wecomHandler "itsm-backend/handlers/wecom"
 	workbenchHandler "itsm-backend/handlers/workbench"
 	cloudAlicloud "itsm-backend/infrastructure/cloud/alicloud"
+	"itsm-backend/internal/authz"
 	"itsm-backend/internal/commandbus"
 	"itsm-backend/internal/knowledgeaccess"
 	"itsm-backend/internal/schema"
+	"itsm-backend/internal/services"
 	"itsm-backend/middleware"
 	"itsm-backend/migration"
 	"itsm-backend/pkg/seeder"
 	repository_ticket "itsm-backend/repository/ticket"
 	"itsm-backend/router"
-	"itsm-backend/internal/services"
 	cloudruntime "itsm-backend/service/cloud"
 	cloudadapters "itsm-backend/service/cloud/adapters"
 	slaEngine "itsm-backend/service/sla"
@@ -1065,6 +1066,12 @@ func NewApplication() *Application {
 
 	// SLA 模板服务（开箱即用）
 
+	// 装配进程级共享权限注册表：必须在 AI 域装配前完成。
+	// 否则 aiServiceDomain 会捕获 init() 创建的 nil-client 注册表，
+	// 导致 AI 主体零信任判定永远 ErrCatalogUnavailable、所有 agent 工具被 fail-closed 拒绝。
+	// 权限管理 API 的写入与 AI 执行链的读取必须用同一个实例，否则策略改完只清掉一方缓存。
+	authz.ConfigureShared(client)
+
 	// AI Domain
 	aiRepo := ai.NewEntRepository(client)
 	aiServiceDomain := ai.NewService(aiRepo, sugar, ragService, toolRegistry, analyticsService, predictionService, slaForecastSkill, triageService, rootCauseService, aiTelemetryService)
@@ -1075,6 +1082,8 @@ func NewApplication() *Application {
 	aiServiceDomain.SetSummarizeService(summarizeService)
 	// ent client 供 AI 工具 RBAC 校验复用 hasResourcePermission
 	aiServiceDomain.SetEntClient(client)
+	// AI 主体零信任判定共享同一个注册表：权限策略改完，AI 执行链立即生效。
+	aiServiceDomain.SetPermissionCatalog(authz.Shared())
 	aiHandler := ai.NewHandler(aiServiceDomain)
 
 	// Skill Registry：在 ai.Service 装配完成后注入内置 Skill。
@@ -1098,32 +1107,6 @@ func NewApplication() *Application {
 	// client 用于 Invoke 时校验 skill 声明的 RequiredPermissions。
 	skillHandler := skill.NewHandler(skillRegistry, sugar, client)
 	skillHandler.SetSkillEntitlements(marketplaceSvc)
-	// Skill 调用写决策底账（scenario=skill:<code>，成功/失败都留痕）：
-	// 与 AI 建议底账同表同写口，生产装配缺了它 skill 调用就不可追溯。
-	skillHandler.SetDecisionAuditWriter(aiTelemetryService)
-
-	// Skill 元数据持久化（批次 C）：内置技能按 checksum 幂等 seed 进
-	// skill_definitions，租户自定义技能从库里恢复进运行时注册表——重启
-	// 不丢自定义技能。DB 是持久化真源；启动期同步失败不阻断进程（注册表
-	// 仍以内存形态可用），但必须留 error 级日志让装配缺口可诊断。
-	definitionStore := skill.NewDBDefinitionStore(database.GetRawDB())
-	skillHandler.SetDefinitionStore(definitionStore)
-	{
-		seedCtx, seedCancel := context.WithTimeout(context.Background(), 30*time.Second)
-		synced, changed, err := skill.SyncBuiltinSkillsToStore(seedCtx, skillRegistry, definitionStore)
-		if err != nil {
-			sugar.Errorw("builtin skill seed failed (registry stays in-memory)", "error", err)
-		} else {
-			sugar.Infow("builtin skills seeded to skill_definitions", "synced", synced, "changed", changed)
-		}
-		restored, err := skill.RestoreCustomSkillsFromStore(seedCtx, skillRegistry, definitionStore)
-		if err != nil {
-			sugar.Errorw("custom skill restore failed", "error", err)
-		} else if restored > 0 {
-			sugar.Infow("custom skills restored from skill_definitions", "restored", restored)
-		}
-		seedCancel()
-	}
 	emailIntakeService := email_intake.NewService(client)
 	emailIntakeHandler := email_intake.NewHandler(emailIntakeService)
 	emailIntakeMode := email_intake.IntakeMode(os.Getenv("EMAIL_INTAKE_MODE"))
@@ -1225,6 +1208,9 @@ func NewApplication() *Application {
 	// Group Handler
 	groupService := groupHandler.NewGroupService(client)
 	groupHTTPHandler := groupHandler.NewHandler(groupService, sugar)
+
+	// 进程级共享权限注册表已在 AI 域装配前初始化（见 authz.ConfigureShared），
+	// 此处不再重复调用，以免生成第二个实例让写入方与 AI 读取方缓存互相看不到。
 
 	// RBAC handler (database-backed with tenant isolation)
 	roleService := rbacHandler.NewRoleService(client, sugar)

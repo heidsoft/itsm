@@ -21,6 +21,7 @@ import type { ProvisioningTask } from '@/lib/api/service-request-api';
 import { serviceRequestAPI } from '@/lib/api/service-request-api';
 import { usePermissions } from '@/lib/hooks/use-permissions';
 import { formatDateTime } from '@/lib/formatters';
+import { PERM } from '@/lib/permissions';
 
 const { Title, Text } = Typography;
 
@@ -67,7 +68,7 @@ const ServiceRequestProvisioningPanel: React.FC<ServiceRequestProvisioningPanelP
   const { message } = App.useApp();
   const { hasPermission } = usePermissions();
   // 启动/执行/重试/判定都会真实创建云资源，权限口径与后端路由一致。
-  const canProvision = hasPermission('service_request', 'provision');
+  const canProvision = hasPermission(PERM.service_request.provision);
 
   const [tasks, setTasks] = useState<ProvisioningTask[]>([]);
   const [loadingTasks, setLoadingTasks] = useState(false);

@@ -374,7 +374,7 @@ describe('useAuthStore', () => {
 
       expect(useAuthStore.getState().hasPermission('ticket:assign')).toBe(true);
       expect(useAuthStore.getState().hasPermission('ticket:escalate')).toBe(true);
-      expect(useAuthStore.getState().hasPermission('incident:assign')).toBe(false);
+      expect(useAuthStore.getState().hasPermission('incident:write')).toBe(false);
     });
 
     it('permissions 为空数组时应返回 false', async () => {

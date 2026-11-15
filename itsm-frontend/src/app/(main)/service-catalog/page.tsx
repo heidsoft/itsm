@@ -13,6 +13,7 @@ import { useI18n } from '@/lib/i18n';
 import { CMDBApi } from '@/lib/api/cmdb-api';
 import type { CIType, CloudService } from '@/types/biz/cmdb';
 import { usePermissions } from '@/lib/hooks/use-permissions';
+import { PERM } from '@/lib/permissions';
 
 const { Title, Text } = Typography;
 
@@ -43,7 +44,7 @@ export default function ServiceCatalogPage() {
   const { message } = App.useApp();
   const { t } = useI18n();
   const { hasPermission } = usePermissions();
-  const canManageCatalog = hasPermission('service_catalog', 'write');
+  const canManageCatalog = hasPermission(PERM.service_catalog.write);
   const [activeCategory, setActiveCategory] = useState('all');
   const [creating, setCreating] = useState(false);
 

@@ -1,10 +1,18 @@
 import { useMemo } from 'react';
 import { useAuthStore } from '@/lib/store/auth-store';
 import { matchesPermission } from '@/lib/permissions/utils';
+import { PERM, type PermissionCode } from '@/lib/permissions';
 import type { RoutePermission } from '../router/route-config';
 
 /**
- * 权限管理Hook
+ * 权限管理 Hook
+ *
+ * 契约（2026-11-14 权限码单点化批次）：
+ * - 后端下发的 user.permissions 是唯一事实来源，缺权限一律 fail-closed；
+ * - hasPermission 只接受生成的权限码（PERM.* / PermissionCode），
+ *   引用后端码空间不存在的码会在 TypeScript 编译期直接失败（幽灵码零容忍）；
+ * - 码空间唯一来源：itsm-frontend/src/lib/permissions/catalog.gen.ts
+ *   （由后端 internal/authz/catalog.go 经 cmd/authz-gen 生成，禁手改）。
  */
 export const usePermissions = () => {
   const { user } = useAuthStore();
@@ -37,9 +45,23 @@ export const usePermissions = () => {
   );
 
   /**
-   * 检查是否有指定权限
+   * 检查是否有指定权限（接受生成的权限码，如 PERM.ticket.read）
    */
-  const hasPermission = (resource: string, action: string): boolean => {
+  const hasPermission = (code: PermissionCode): boolean => {
+    const separatorIndex = code.indexOf(':');
+    if (separatorIndex <= 0 || separatorIndex === code.length - 1) return false;
+    return matchesPermission(
+      permissionSet,
+      code.slice(0, separatorIndex),
+      code.slice(separatorIndex + 1),
+    );
+  };
+
+  /**
+   * 低层判定：权限 (resource, action) 由运行时动态拼出的场景使用
+   * （例如批量操作菜单的权限元组）。静态权限码请一律用 hasPermission(PERM.x.y)。
+   */
+  const hasResourcePermission = (resource: string, action: string): boolean => {
     return matchesPermission(permissionSet, resource, action);
   };
 
@@ -81,7 +103,7 @@ export const usePermissions = () => {
     // 检查资源权限
     if (routePermissions && routePermissions.length > 0) {
       return routePermissions.every(requiredPermission =>
-        hasPermission(requiredPermission.resource, requiredPermission.action)
+        hasResourcePermission(requiredPermission.resource, requiredPermission.action)
       );
     }
 
@@ -114,17 +136,11 @@ export const usePermissions = () => {
       .map(permission => permission.slice(prefix.length));
   };
 
-  /**
-   * 检查是否可以执行批量操作
-   */
-  const canBatchOperate = (resource: string, action: string): boolean => {
-    return hasPermission(resource, action) && hasPermission(resource, 'batch_' + action);
-  };
-
   return {
     userPermissions,
     userRoles,
     hasPermission,
+    hasResourcePermission,
     hasRole,
     hasAnyRole,
     hasAllRoles,
@@ -132,7 +148,6 @@ export const usePermissions = () => {
     isAdmin,
     isSuperAdmin,
     getAvailableActions,
-    canBatchOperate,
   };
 };
 
@@ -165,124 +180,127 @@ export const useRoutePermissions = () => {
 
 /**
  * 操作权限Hook
+ *
+ * 口径对齐（与后端 router/ 的 RequirePermission 声明逐条核对，2026-11-14）：
+ * - 后端 checkPermissionMatch 没有 write⇒create/update 派生，前端也不再做；
+ * - 每个操作挂的是后端路由实际要求的那个码（例：reopen 路由要求
+ *   ticket:close，resolve/close 路由要求 ticket:update），不再引用
+ *   码空间不存在的臆造码（ticket:reopen / incident:declare_major 等）；
+ * - 无后端路由支撑的「能力」（system:backup、report:schedule 等）直接删除，
+ *   不保留永远为假的摆设判定。
  */
 export const useOperationPermissions = () => {
   const { hasPermission } = usePermissions();
 
-  // 「能不能写」的口径与后端路由一致：
-  // 后端各域路由按 change:write / knowledge:write / cmdb:write 声明写操作，
-  // 只有工单族另有 create/update 细分码（write ⇒ create/update 同义派生）。
-  // 只查 create/update 会让「持 change:write 的人看不到新建变更按钮」，
-  // 所以写动作统一先看 write，再回落到细分动作码。
-  const canWrite = (resource: string) =>
-    hasPermission(resource, 'write') || hasPermission(resource, 'create');
-
-  // 工单操作权限
+  // 工单操作权限（码 = 路由真实声明，见 router/ticket_routes.go）
   const ticketPermissions = {
-    canView: () => hasPermission('ticket', 'read'),
-    canCreate: () => canWrite('ticket'),
-    canUpdate: () => hasPermission('ticket', 'write') || hasPermission('ticket', 'update'),
-    canDelete: () => hasPermission('ticket', 'delete'),
-    canAssign: () => hasPermission('ticket', 'assign'),
-    canEscalate: () => hasPermission('ticket', 'escalate'),
-    canResolve: () => hasPermission('ticket', 'resolve'),
-    canClose: () => hasPermission('ticket', 'close'),
-    canReopen: () => hasPermission('ticket', 'reopen'),
-    canBatchDelete: () => hasPermission('ticket', 'batch_delete'),
-    canExport: () => hasPermission('ticket', 'export'),
+    canView: () => hasPermission(PERM.ticket.read),
+    canCreate: () => hasPermission(PERM.ticket.create),
+    canUpdate: () => hasPermission(PERM.ticket.update),
+    canDelete: () => hasPermission(PERM.ticket.delete),
+    canAssign: () => hasPermission(PERM.ticket.assign),
+    canEscalate: () => hasPermission(PERM.ticket.escalate),
+    canApprove: () => hasPermission(PERM.ticket.approve),
+    // resolve/close 有两套路由族：/tickets/:id/* 挂 ticket:update，
+    // /tickets/workflow/* 挂 ticket:resolve / ticket:close —— 任一命中即可操作
+    canResolve: () => hasPermission(PERM.ticket.update) || hasPermission(PERM.ticket.resolve),
+    canClose: () => hasPermission(PERM.ticket.update) || hasPermission(PERM.ticket.close),
+    // reopen 路由声明的码是 ticket:close
+    canReopen: () => hasPermission(PERM.ticket.close),
+    // batch-delete 路由声明的码是 ticket:delete
+    canBatchDelete: () => hasPermission(PERM.ticket.delete),
+    canExport: () => hasPermission(PERM.ticket.export),
   };
 
-  // 事件操作权限
+  // 事件操作权限（incident 域全部写路由统一挂 incident:write）
   const incidentPermissions = {
-    canView: () => hasPermission('incident', 'read'),
-    canCreate: () => canWrite('incident'),
-    canUpdate: () => hasPermission('incident', 'write') || hasPermission('incident', 'update'),
-    canDelete: () => hasPermission('incident', 'delete'),
-    canAssign: () => hasPermission('incident', 'assign'),
-    canEscalate: () => hasPermission('incident', 'escalate'),
-    canResolve: () => hasPermission('incident', 'resolve'),
-    canClose: () => hasPermission('incident', 'close'),
-    canDeclareAsMajor: () => hasPermission('incident', 'declare_major'),
+    canView: () => hasPermission(PERM.incident.read),
+    canCreate: () => hasPermission(PERM.incident.write),
+    canUpdate: () => hasPermission(PERM.incident.write),
+    canDelete: () => hasPermission(PERM.incident.delete),
+    canAssign: () => hasPermission(PERM.incident.write),
+    canEscalate: () => hasPermission(PERM.incident.write),
+    canResolve: () => hasPermission(PERM.incident.write),
+    canClose: () => hasPermission(PERM.incident.write),
+    canReopen: () => hasPermission(PERM.incident.write),
+    canDeclareAsMajor: () => hasPermission(PERM.incident.write),
   };
 
-  // 问题操作权限
+  // 问题操作权限（problem 域写路由统一挂 problem:write）
   const problemPermissions = {
-    canView: () => hasPermission('problem', 'read'),
-    canCreate: () => canWrite('problem'),
-    canUpdate: () => hasPermission('problem', 'write') || hasPermission('problem', 'update'),
-    canDelete: () => hasPermission('problem', 'delete'),
-    canAssign: () => hasPermission('problem', 'assign'),
-    canResolve: () => hasPermission('problem', 'resolve'),
-    canClose: () => hasPermission('problem', 'close'),
+    canView: () => hasPermission(PERM.problem.read),
+    canCreate: () => hasPermission(PERM.problem.write),
+    canUpdate: () => hasPermission(PERM.problem.write),
+    canDelete: () => hasPermission(PERM.problem.delete),
+    canAssign: () => hasPermission(PERM.problem.write),
+    canResolve: () => hasPermission(PERM.problem.write),
+    canClose: () => hasPermission(PERM.problem.write),
   };
 
-  // 变更操作权限
+  // 变更操作权限（approve 路由同时承载批准与驳回）
   const changePermissions = {
-    canView: () => hasPermission('change', 'read'),
-    canCreate: () => canWrite('change'),
-    canUpdate: () => hasPermission('change', 'write') || hasPermission('change', 'update'),
-    canDelete: () => hasPermission('change', 'delete'),
-    canApprove: () => hasPermission('change', 'approve'),
-    canReject: () => hasPermission('change', 'reject'),
-    canImplement: () => hasPermission('change', 'implement'),
-    canReview: () => hasPermission('change', 'review'),
+    canView: () => hasPermission(PERM.change.read),
+    canCreate: () => hasPermission(PERM.change.write),
+    canUpdate: () => hasPermission(PERM.change.write),
+    canDelete: () => hasPermission(PERM.change.delete),
+    canApprove: () => hasPermission(PERM.change.approve),
+    canReject: () => hasPermission(PERM.change.approve),
+    canImplement: () => hasPermission(PERM.change.write),
+    canReview: () => hasPermission(PERM.change.read),
   };
 
-  // 知识库操作权限
+  // 知识库操作权限（publish/unpublish 路由挂 knowledge:write）
   const knowledgePermissions = {
-    canView: () => hasPermission('knowledge', 'read'),
-    canCreate: () => canWrite('knowledge'),
-    canUpdate: () => hasPermission('knowledge', 'write') || hasPermission('knowledge', 'update'),
-    canDelete: () => hasPermission('knowledge', 'delete'),
-    canPublish: () => hasPermission('knowledge', 'publish') || hasPermission('knowledge', 'write'),
-    canArchive: () => hasPermission('knowledge', 'archive'),
+    canView: () => hasPermission(PERM.knowledge.read),
+    canCreate: () => hasPermission(PERM.knowledge.write),
+    canUpdate: () => hasPermission(PERM.knowledge.write),
+    canDelete: () => hasPermission(PERM.knowledge.delete),
+    canPublish: () => hasPermission(PERM.knowledge.write),
+    canArchive: () => hasPermission(PERM.knowledge.write),
   };
 
-  // CMDB操作权限
+  // CMDB操作权限（import/export 的 POST 均挂 cmdb:write）
   const cmdbPermissions = {
-    canView: () => hasPermission('cmdb', 'read'),
-    canCreate: () => canWrite('cmdb'),
-    canUpdate: () => hasPermission('cmdb', 'write') || hasPermission('cmdb', 'update'),
-    canDelete: () => hasPermission('cmdb', 'delete'),
-    canManage: () => hasPermission('cmdb', 'write') || hasPermission('cmdb', 'manage'),
-    canImport: () => hasPermission('cmdb', 'import') || hasPermission('cmdb', 'write'),
-    canExport: () => hasPermission('cmdb', 'export') || hasPermission('cmdb', 'read'),
+    canView: () => hasPermission(PERM.cmdb.read),
+    canCreate: () => hasPermission(PERM.cmdb.write),
+    canUpdate: () => hasPermission(PERM.cmdb.write),
+    canDelete: () => hasPermission(PERM.cmdb.delete),
+    canManage: () => hasPermission(PERM.cmdb.write),
+    canImport: () => hasPermission(PERM.cmdb.write),
+    canExport: () => hasPermission(PERM.cmdb.write),
   };
 
-  // 用户管理权限
+  // 用户管理权限（CRUD/重置密码全部挂 user:write）
   const userPermissions = {
-    canView: () => hasPermission('user', 'read'),
-    canCreate: () => hasPermission('user', 'create'),
-    canUpdate: () => hasPermission('user', 'update'),
-    canDelete: () => hasPermission('user', 'delete'),
-    canManage: () => hasPermission('user', 'manage'),
-    canResetPassword: () => hasPermission('user', 'reset_password'),
+    canView: () => hasPermission(PERM.user.read),
+    canCreate: () => hasPermission(PERM.user.write),
+    canUpdate: () => hasPermission(PERM.user.write),
+    canDelete: () => hasPermission(PERM.user.delete),
+    canManage: () => hasPermission(PERM.user.write),
+    canResetPassword: () => hasPermission(PERM.user.write),
   };
 
-  // 角色管理权限
+  // 角色管理权限（CRUD/授权全部挂 role:write）
   const rolePermissions = {
-    canView: () => hasPermission('role', 'read'),
-    canCreate: () => hasPermission('role', 'create'),
-    canUpdate: () => hasPermission('role', 'update'),
-    canDelete: () => hasPermission('role', 'delete'),
-    canManage: () => hasPermission('role', 'manage'),
+    canView: () => hasPermission(PERM.role.read),
+    canCreate: () => hasPermission(PERM.role.write),
+    canUpdate: () => hasPermission(PERM.role.write),
+    canDelete: () => hasPermission(PERM.role.delete),
+    canManage: () => hasPermission(PERM.role.write),
   };
 
-  // 系统管理权限
+  // 系统管理权限（设置页挂 system_config:*，操作日志挂 audit:read）
   const systemPermissions = {
-    canViewSettings: () => hasPermission('system', 'read'),
-    canUpdateSettings: () => hasPermission('system', 'update'),
-    canManage: () => hasPermission('system', 'manage'),
-    canViewLogs: () => hasPermission('system', 'view_logs'),
-    canBackup: () => hasPermission('system', 'backup'),
+    canViewSettings: () => hasPermission(PERM.system_config.read),
+    canUpdateSettings: () => hasPermission(PERM.system_config.write),
+    canManage: () => hasPermission(PERM.system_config.write),
+    canViewLogs: () => hasPermission(PERM.audit.read),
   };
 
-  // 报表权限
+  // 报表权限（导出路由挂 report:read；create/schedule 无后端路由支撑，已删除）
   const reportPermissions = {
-    canView: () => hasPermission('report', 'read'),
-    canExport: () => hasPermission('report', 'export'),
-    canCreate: () => hasPermission('report', 'create'),
-    canSchedule: () => hasPermission('report', 'schedule'),
+    canView: () => hasPermission(PERM.report.read),
+    canExport: () => hasPermission(PERM.report.read),
   };
 
   return {
@@ -323,10 +341,10 @@ export const usePermissionGuard = () => {
   };
 
   /**
-   * 操作权限守卫
+   * 操作权限守卫（接受生成的权限码）
    */
-  const guardOperation = (resource: string, action: string, onDenied?: () => void): boolean => {
-    const hasAccess = hasPermission(resource, action);
+  const guardOperation = (code: PermissionCode, onDenied?: () => void): boolean => {
+    const hasAccess = hasPermission(code);
 
     if (!hasAccess && onDenied) {
       onDenied();

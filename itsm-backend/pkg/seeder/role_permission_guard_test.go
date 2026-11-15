@@ -36,7 +36,7 @@ func TestBuiltinRolePermissionCodes_Guard(t *testing.T) {
 		defByCode[d.Code] = d
 	}
 
-	// 契约 3：这些码一旦从对应角色消失就 CI 红（manager 27 / agent 7 / end_user 15）。
+	// 契约 3：这些码一旦从对应角色消失就 CI 红（manager 27 / agent 8 / end_user 15 / technician 5）。
 	// agent 用的是 alert:read 而不是 alerts:read —— 路由预检里没有任何 alerts:* 声明，
 	// alerts:read/alerts:write 只存在于权限清单，从未挂到路由。
 	n4Granted := map[string][]string{
@@ -52,6 +52,15 @@ func TestBuiltinRolePermissionCodes_Guard(t *testing.T) {
 		"agent": {
 			"notification:write", "dashboard:read", "service_catalog:read",
 			"change:write", "alert:read", "group:read", "bpmn:read",
+			// 建单/编辑工单页的分类下拉走 GET /ticket-categories（ticket_category:read）。
+			// agent 早就持有此码，但技术员漏授导致下拉空、分类恒未选（缺陷 O9）；
+			// 这里把 technician 一并锁进来，防止后续再被「精简权限面」清掉。
+			"ticket_category:read",
+		},
+		"technician": {
+			"ticket:create", "ticket:update", "ticket:assign", "ticket:escalate",
+			// O9 回归锁：技术员持 ticket:write 能建单，就必须能读分类。
+			"ticket_category:read",
 		},
 		// end_user 2026-10-26 收敛为自助门户最小集（15 码）：旧口径「其余资源一律只读」
 		// 让最终用户拿着 user:read 等管理面读码，菜单据此渲染系统管理入口。

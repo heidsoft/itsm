@@ -6,6 +6,8 @@ import type {
   UpdateRoleRequest,
   GetRolesParams,
   PermissionCatalogItem,
+  PermissionCatalogMeta,
+  PermissionPolicyPayload,
 } from './api-config';
 
 export class RoleAPI {
@@ -74,6 +76,20 @@ export class RoleAPI {
   static async getPermissionCatalog(): Promise<PermissionCatalogItem[]> {
     const response = await httpClient.get<{ items: PermissionCatalogItem[]; total: number }>('/api/v1/permissions');
     return response.items;
+  }
+
+  // 获取权限策略元数据（如 minApprovalsMax），对应 GET /api/v1/permissions/meta
+  static async getPermissionCatalogMeta(): Promise<PermissionCatalogMeta> {
+    return httpClient.get<PermissionCatalogMeta>('/api/v1/permissions/meta');
+  }
+
+  // 更新权限运行期策略（风险分级 / AI 主体授权 / 审批强度），对应 PUT /api/v1/permissions/:id。
+  // 后端做闭集校验：允许 AI 执行中高风险必须开审批、高/危急必须双人。
+  static async updatePermissionPolicy(
+    id: number,
+    data: { name?: string; description?: string; policy: PermissionPolicyPayload }
+  ): Promise<PermissionCatalogItem> {
+    return httpClient.put<PermissionCatalogItem>(`/api/v1/permissions/${id}`, data);
   }
 
   // 初始化当前租户的默认权限字典

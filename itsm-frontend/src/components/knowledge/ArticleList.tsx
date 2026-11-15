@@ -34,6 +34,7 @@ import {
   KnowledgeStatusColors,
 } from '@/constants/knowledge';
 import type { KnowledgeArticle, ArticleQuery } from '@/types/knowledge-base';
+import { PERM } from '@/lib/permissions';
 interface ArticleListProps {
   showHeader?: boolean;
 }
@@ -44,8 +45,8 @@ const ArticleList: React.FC<ArticleListProps> = ({ showHeader = true }) => {
   const { hasPermission } = usePermissions();
   // 后端把新增/更新/发布统一挂 knowledge:write，删除挂 knowledge:delete；
   // 只读角色（end_user 只有 knowledge:read）此前仍能看到这些按钮，点击只会 403。
-  const canWriteArticle = hasPermission('knowledge', 'write');
-  const canDeleteArticle = hasPermission('knowledge', 'delete');
+  const canWriteArticle = hasPermission(PERM.knowledge.write);
+  const canDeleteArticle = hasPermission(PERM.knowledge.delete);
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<KnowledgeArticle[]>([]);
   const [total, setTotal] = useState(0);

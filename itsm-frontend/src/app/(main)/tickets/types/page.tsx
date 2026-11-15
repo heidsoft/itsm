@@ -9,6 +9,7 @@ import { isPermissionDeniedError, serverErrorMessage } from '@/lib/api/http-clie
 import { usePermissions } from '@/lib/hooks/use-permissions';
 import { formatDateTime } from '@/lib/formatters';
 import type { CreateTicketTypeRequest, TicketTypeDefinition, TicketTypePresetDefinition, UpdateTicketTypeRequest } from '@/types/ticket-type';
+import { PERM } from '@/lib/permissions';
 
 const { Title, Text } = Typography;
 
@@ -24,8 +25,8 @@ function describeFailure(error: unknown, fallback: string, permission: string): 
 export default function TicketTypesPage() {
   const { message, modal } = App.useApp();
   const { hasPermission } = usePermissions();
-  const canManage = hasPermission('ticket_type', 'manage');
-  const canInstallPreset = hasPermission('ticket_type', 'install_preset');
+  const canManage = hasPermission(PERM.ticket_type.manage);
+  const canInstallPreset = hasPermission(PERM.ticket_type.install_preset);
   const [items, setItems] = useState<TicketTypeDefinition[]>([]);
   const [loading, setLoading] = useState(true);
   const [keyword, setKeyword] = useState('');

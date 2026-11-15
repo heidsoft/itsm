@@ -9,6 +9,7 @@ import { AssetApi } from '@/lib/api/asset-api';
 import BusinessPageTemplate from '@/components/layout/BusinessPageTemplate';
 import { useI18n } from '@/lib/i18n/useI18n';
 import { usePermissions } from '@/lib/hooks/use-permissions';
+import { PERM } from '@/lib/permissions';
 
 export default function AssetsPage() {
   const router = useRouter();
@@ -16,7 +17,7 @@ export default function AssetsPage() {
   const { t } = useI18n();
   // 资产录入按 asset:write 门控（后端 POST /assets 同码）。
   const { hasPermission } = usePermissions();
-  const canCreateAsset = hasPermission('asset', 'write') || hasPermission('asset', 'create');
+  const canCreateAsset = hasPermission(PERM.asset.write);
   const [loading, setLoading] = useState(true);
   const [searchValue, setSearchValue] = useState('');
   const [stats, setStats] = useState({

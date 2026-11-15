@@ -17,6 +17,7 @@ import (
 	"itsm-backend/ent/role"
 	"itsm-backend/ent/rolepermission"
 	"itsm-backend/ent/user"
+	"itsm-backend/internal/authz"
 	"itsm-backend/middleware"
 
 	"go.uber.org/zap"
@@ -270,16 +271,24 @@ func (s *roleServiceImpl) UpdateRole(ctx context.Context, id int, req *dto.Updat
 		update = update.SetIsActive(*req.Status == dto.RoleStatusActive)
 	}
 
+	// 权限码必须先校验再落库。历史实现把 Save 放在校验之前：只要有一个码
+	// 不在本租户目录里，名称/状态已经写入而权限未变，接口返回失败但数据库
+	// 留下半成品，前端提示「保存失败」也无法解释实际发生了什么。
+	var permissionIDs []int
+	if req.Permissions != nil {
+		permissionIDs, err = s.permissionIDsByCodes(ctx, req.Permissions, tenantID)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	_, err = update.Save(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("更新角色失败: %w", err)
 	}
 
-	if req.Permissions != nil {
-		permissionIDs, err := s.permissionIDsByCodes(ctx, req.Permissions, tenantID)
-		if err != nil {
-			return nil, err
-		}
+	// 非 nil 表示请求明确提交了权限字段；空切片是合法的「清空全部权限」。
+	if permissionIDs != nil {
 		if err := s.AssignPermissions(ctx, id, permissionIDs, tenantID); err != nil {
 			return nil, err
 		}
@@ -563,6 +572,10 @@ func (s *roleServiceImpl) writePermissionChangeAudit(ctx context.Context, roleEn
 }
 
 // permissionServiceImpl 是 PermissionService 接口的 Ent 实现。
+//
+// 权限码的运行期真源是 DB permissions 行；本实现只负责读写那一行，
+// 不再内联任何 resource/action 字典。策略以版本化信封存在 description 里，
+// 变更后通过 authz.Shared().Invalidate 让所有鉴权消费方立即看到。
 type permissionServiceImpl struct {
 	client *ent.Client
 	logger *zap.SugaredLogger
@@ -576,35 +589,109 @@ func NewPermissionService(client *ent.Client, logger *zap.SugaredLogger) Permiss
 	}
 }
 
-// CreatePermission 创建权限
+// policyFromPayload 把 API 载荷转成策略，isSystem 永远来自库中现有行。
+func policyFromPayload(p *dto.PermissionPolicyPayload, isSystem bool) authz.PermissionPolicy {
+	return authz.PermissionPolicy{
+		RiskLevel:         p.RiskLevel,
+		AllowedPrincipals: append([]string(nil), p.AllowedPrincipals...),
+		RequiresApproval:  p.RequiresApproval,
+		MinApprovals:      p.MinApprovals,
+		Category:          p.Category,
+		DisplayName:       p.DisplayName,
+		Icon:              p.Icon,
+		Color:             p.Color,
+		I18nKey:           p.I18nKey,
+		SortOrder:         p.SortOrder,
+		IsActive:          p.IsActive,
+		IsSystem:          isSystem,
+	}
+}
+
+// validateCodeTriple 拒绝 code 与 resource:action 不一致、以及非法字符，
+// 避免 DB 里出现「路由声明永远匹配不上」的死码。
+func validateCodeTriple(code, resource, action string) error {
+	code = strings.TrimSpace(code)
+	resource = strings.TrimSpace(resource)
+	action = strings.TrimSpace(action)
+	if code == "" || resource == "" || action == "" {
+		return fmt.Errorf("code/resource/action 均不能为空")
+	}
+	if code != resource+":"+action {
+		return fmt.Errorf("权限码 %q 必须等于 resource:action（%s:%s）", code, resource, action)
+	}
+	if strings.ContainsAny(code, " \t\n\r") {
+		return fmt.Errorf("权限码 %q 不得包含空白字符", code)
+	}
+	return nil
+}
+
+// CreatePermission 创建权限。
+//
+// 与旧实现的差别：写入前校验码三元组、同租户唯一性、策略闭集；
+// 描述统一编码成策略信封，并让共享注册表缓存失效。
 func (s *permissionServiceImpl) CreatePermission(ctx context.Context, req *dto.CreatePermissionRequest, tenantID int) (*dto.PermissionResponse, error) {
+	return s.createPermission(ctx, req, tenantID, false)
+}
+
+// createPermission 是唯一写入口。isSystem 由调用方决定：引导清单补齐的码受保护，
+// 管理员在运行期新建的码允许退役，客户端无法伪造这个标记。
+func (s *permissionServiceImpl) createPermission(ctx context.Context, req *dto.CreatePermissionRequest, tenantID int, isSystem bool) (*dto.PermissionResponse, error) {
 	s.logger.Infow("Creating permission", "code", req.Code, "tenant_id", tenantID)
 
+	if err := validateCodeTriple(req.Code, req.Resource, req.Action); err != nil {
+		return nil, fmt.Errorf("参数错误: %w", err)
+	}
+	exists, err := s.client.Permission.Query().
+		Where(permission.CodeEQ(strings.TrimSpace(req.Code)), permission.TenantIDEQ(tenantID)).
+		Exist(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("查询权限重复失败: %w", err)
+	}
+	if exists {
+		return nil, fmt.Errorf("权限码 %q 已存在", req.Code)
+	}
+
+	policy := authz.DerivePolicy(req.Resource, req.Action)
+	policy.IsSystem = isSystem
+	if req.Policy != nil {
+		policy = policyFromPayload(req.Policy, isSystem)
+		if err := authz.ValidatePolicy(policy); err != nil {
+			return nil, fmt.Errorf("参数错误: %w", err)
+		}
+	}
+	encoded, err := authz.EncodeDefinition(req.Description, policy)
+	if err != nil {
+		return nil, fmt.Errorf("参数错误: %w", err)
+	}
+
 	permEntity, err := s.client.Permission.Create().
-		SetCode(req.Code).
+		SetCode(strings.TrimSpace(req.Code)).
 		SetName(req.Name).
-		SetDescription(req.Description).
-		SetResource(req.Resource).
-		SetAction(req.Action).
+		SetDescription(encoded).
+		SetResource(strings.TrimSpace(req.Resource)).
+		SetAction(strings.TrimSpace(req.Action)).
 		SetTenantID(tenantID).
 		Save(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("创建权限失败: %w", err)
 	}
-
+	authz.Shared().Invalidate(tenantID)
 	return s.toPermissionResponse(permEntity), nil
 }
 
-// ListPermissions 获取权限列表
+// ListPermissions 获取权限列表。
+//
+// 读面用宽松解码（坏信封降级为派生默认策略而不是 500），但派生默认策略
+// 恒为 AI 零权限，所以降级方向是收紧而不是放宽。
 func (s *permissionServiceImpl) ListPermissions(ctx context.Context, tenantID int, resource string) ([]*dto.PermissionResponse, error) {
 	query := s.client.Permission.Query().
-		Where(permission.TenantID(tenantID))
+		Where(permission.TenantIDEQ(tenantID))
 
 	if resource != "" {
-		query = query.Where(permission.Resource(resource))
+		query = query.Where(permission.ResourceEQ(resource))
 	}
 
-	perms, err := query.All(ctx)
+	perms, err := query.Order(ent.Asc(permission.FieldCode)).All(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("查询权限列表失败: %w", err)
 	}
@@ -613,90 +700,190 @@ func (s *permissionServiceImpl) ListPermissions(ctx context.Context, tenantID in
 	for i, p := range perms {
 		responses[i] = s.toPermissionResponse(p)
 	}
-
 	return responses, nil
 }
 
-// InitDefaultPermissions 初始化默认权限
-func (s *permissionServiceImpl) InitDefaultPermissions(ctx context.Context, tenantID int) error {
-	defaultPermissions := []dto.CreatePermissionRequest{}
-	resourceActions := map[string][]string{
-		"dashboard":       {"read", "view"},
-		"ticket":          {"create", "read", "write", "update", "delete", "assign", "export"},
-		"ticket_category": {"create", "read", "write", "update", "delete"},
-		"ticket_type":     {"create", "read", "write", "update", "delete", "manage", "archive"},
-		"incident":        {"create", "read", "write", "update", "delete", "assign", "export"},
-		"problem":         {"create", "read", "write", "update", "delete", "export"},
-		"change":          {"create", "read", "write", "update", "delete", "approve", "export"},
-		"service_catalog": {"create", "read", "write", "update", "delete"},
-		"service_request": {"create", "read", "write", "update", "delete", "approve", "provision"},
-		"knowledge":       {"create", "read", "write", "update", "delete"},
-		"cmdb":            {"create", "read", "write", "update", "delete", "export"},
-		"asset":           {"create", "read", "write", "update", "delete", "assign"},
-		"license":         {"create", "read", "write", "update", "delete", "assign"},
-		"release":         {"create", "read", "write", "update", "delete"},
-		"report":          {"read", "view", "export"},
-		"user":            {"read", "write", "delete", "manage"},
-		"role":            {"read", "write", "delete", "manage"},
-		"groups":          {"read", "write", "delete"},
-		"org":             {"read", "write"},
-		"bpmn":            {"read", "write", "delete"},
-		"workflow":        {"read", "write", "delete"},
-		"system_config":   {"read", "write", "update"},
-		"admin":           {"read", "write", "all"},
-		"ai":              {"read", "write"},
+// GetPermission 按 ID 读取单条定义（租户隔离）。
+func (s *permissionServiceImpl) GetPermission(ctx context.Context, id, tenantID int) (*dto.PermissionResponse, error) {
+	p, err := s.client.Permission.Query().
+		Where(permission.IDEQ(id), permission.TenantIDEQ(tenantID)).
+		Only(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("权限不存在: %w", err)
+	}
+	return s.toPermissionResponse(p), nil
+}
+
+// UpdatePermission 整体替换名称/描述/策略，不改码身份。
+//
+// 写入前跑 ValidatePolicy：例如「允许 AI 执行高风险操作却关掉审批」会被拒绝，
+// 安全不变量不会因为管理员误操作而在 DB 里落地。
+func (s *permissionServiceImpl) UpdatePermission(ctx context.Context, id, tenantID int, req *dto.UpdatePermissionRequest) (*dto.PermissionResponse, error) {
+	existing, err := s.client.Permission.Query().
+		Where(permission.IDEQ(id), permission.TenantIDEQ(tenantID)).
+		Only(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("权限不存在: %w", err)
+	}
+	_, current, decErr := authz.DecodeDefinition(existing.Description, existing.Resource, existing.Action)
+	if decErr != nil {
+		// 坏信封不能就地覆盖：先报错让管理员走显式修复，避免静默丢数据。
+		return nil, fmt.Errorf("该权限的策略信封损坏，无法更新: %w", decErr)
+	}
+	policy := policyFromPayload(req.Policy, current.IsSystem)
+	if err := authz.ValidatePolicy(policy); err != nil {
+		return nil, fmt.Errorf("参数错误: %w", err)
+	}
+	description := req.Description
+	if description == "" {
+		description = currentDescription(existing.Description)
+	}
+	encoded, err := authz.EncodeDefinition(description, policy)
+	if err != nil {
+		return nil, fmt.Errorf("参数错误: %w", err)
 	}
 
-	for resource, actions := range resourceActions {
-		for _, action := range actions {
-			defaultPermissions = append(defaultPermissions, dto.CreatePermissionRequest{
-				Code:        fmt.Sprintf("%s:%s", resource, action),
-				Name:        fmt.Sprintf("%s %s", resource, action),
-				Description: fmt.Sprintf("允许对 %s 执行 %s 操作", resource, action),
-				Resource:    resource,
-				Action:      action,
-			})
-		}
+	update := s.client.Permission.UpdateOneID(id).
+		Where(permission.TenantIDEQ(tenantID)).
+		SetDescription(encoded)
+	if strings.TrimSpace(req.Name) != "" {
+		update.SetName(strings.TrimSpace(req.Name))
 	}
-	defaultPermissions = append(defaultPermissions, dto.CreatePermissionRequest{
-		Code:        "admin:all",
-		Name:        "完全管理",
-		Description: "平台级全部管理权限",
-		Resource:    "admin",
-		Action:      "all",
-	})
-
-	for _, req := range defaultPermissions {
-		exists, _ := s.client.Permission.Query().
-			Where(
-				permission.Code(req.Code),
-				permission.TenantID(tenantID),
-			).
-			Exist(ctx)
-		if exists {
-			continue
-		}
-
-		_, err := s.CreatePermission(ctx, &req, tenantID)
-		if err != nil {
-			s.logger.Warnw("Failed to create default permission", "code", req.Code, "error", err)
-		}
+	updated, err := update.Save(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("更新权限失败: %w", err)
 	}
+	authz.Shared().Invalidate(tenantID)
+	s.logger.Infow("permission policy updated",
+		"tenant_id", tenantID, "code", existing.Code,
+		"risk", policy.RiskLevel, "principals", policy.AllowedPrincipals,
+		"min_approvals", policy.MinApprovals, "active", policy.IsActive)
+	return s.toPermissionResponse(updated), nil
+}
 
+// DeletePermission 只做「停用」而不物理删除：role_permissions 与路由声明
+// 可能仍引用这个码，物理删除会让历史绑定变成悬空 ID。
+func (s *permissionServiceImpl) DeletePermission(ctx context.Context, id, tenantID int) error {
+	existing, err := s.client.Permission.Query().
+		Where(permission.IDEQ(id), permission.TenantIDEQ(tenantID)).
+		Only(ctx)
+	if err != nil {
+		return fmt.Errorf("权限不存在: %w", err)
+	}
+	_, policy, err := authz.DecodeDefinition(existing.Description, existing.Resource, existing.Action)
+	if err != nil {
+		return fmt.Errorf("该权限的策略信封损坏，无法停用: %w", err)
+	}
+	if policy.IsSystem {
+		return fmt.Errorf("引导清单权限码 %q 不允许删除，可将其停用", existing.Code)
+	}
+	policy.IsActive = false
+	encoded, err := authz.EncodeDefinition(currentDescription(existing.Description), policy)
+	if err != nil {
+		return err
+	}
+	if _, err := s.client.Permission.UpdateOneID(id).
+		Where(permission.TenantIDEQ(tenantID)).
+		SetDescription(encoded).Save(ctx); err != nil {
+		return fmt.Errorf("停用权限失败: %w", err)
+	}
+	authz.Shared().Invalidate(tenantID)
 	return nil
 }
 
+// CatalogMeta 返回展示口径闭集，前端零硬编码。
+func (s *permissionServiceImpl) CatalogMeta() *dto.PermissionCatalogMetaResponse {
+	labels := make(map[string]string, len(authz.AllCategories))
+	for _, key := range authz.AllCategories {
+		labels[key] = authz.CategoryLabel(key)
+	}
+	return &dto.PermissionCatalogMetaResponse{
+		Principals:      append([]string(nil), authz.AllPrincipals...),
+		RiskLevels:      append([]string(nil), authz.AllRiskLevels...),
+		Categories:      append([]string(nil), authz.AllCategories...),
+		CategoryLabels:  labels,
+		MinApprovalsMax: 2,
+	}
+}
+
+// InitDefaultPermissions 把引导清单补齐到当前租户。
+//
+// 这里曾经维护第二张手写 resourceActions 字典（含 dashboard:view / admin:all /
+// groups:* 等码空间里根本不存在的码），是「权限码到处散落」的主要来源。
+// 现在只从 authz.Definitions() 读——那是**唯一**的引导清单，且仅用于初始化。
+//
+// 幂等且尊重运行期配置：已存在的行一律不覆盖（管理员改过的策略/名称不会被
+// 重启冲掉），只有缺失的码才补齐。
+func (s *permissionServiceImpl) InitDefaultPermissions(ctx context.Context, tenantID int) error {
+	created := 0
+	for _, def := range authz.Definitions() {
+		exists, err := s.client.Permission.Query().
+			Where(permission.CodeEQ(def.Code), permission.TenantIDEQ(tenantID)).
+			Exist(ctx)
+		if err != nil {
+			return fmt.Errorf("查询权限 %s 失败: %w", def.Code, err)
+		}
+		if exists {
+			continue
+		}
+		req := &dto.CreatePermissionRequest{
+			Code:        def.Code,
+			Name:        def.Name,
+			Description: def.Description,
+			Resource:    def.Resource,
+			Action:      def.Action,
+		}
+		if _, err := s.createPermission(ctx, req, tenantID, true); err != nil {
+			return fmt.Errorf("补齐引导权限 %s 失败: %w", def.Code, err)
+		}
+		created++
+	}
+	authz.Shared().Invalidate(tenantID)
+	s.logger.Infow("permission bootstrap reconciled", "tenant_id", tenantID, "created", created, "total", len(authz.Definitions()))
+	return nil
+}
+
+// currentDescription 从信封里取出人类描述；纯文本/损坏信封原样返回。
+func currentDescription(raw string) string {
+	desc, policy, err := authz.DecodeDefinition(raw, "", "")
+	if err != nil {
+		return raw
+	}
+	_ = policy
+	return desc
+}
+
 func (s *permissionServiceImpl) toPermissionResponse(permEntity *ent.Permission) *dto.PermissionResponse {
+	raw := permEntity.Description
+	desc, policy := authz.DecodeDefinitionLenient(raw, permEntity.Resource, permEntity.Action)
+	trimmed := strings.TrimSpace(raw)
+	configured := strings.HasPrefix(trimmed, "{")
 	return &dto.PermissionResponse{
 		ID:          permEntity.ID,
 		Code:        permEntity.Code,
 		Name:        permEntity.Name,
-		Description: permEntity.Description,
+		Description: desc,
 		Resource:    permEntity.Resource,
 		Action:      permEntity.Action,
 		TenantID:    permEntity.TenantID,
 		CreatedAt:   permEntity.CreatedAt,
 		UpdatedAt:   permEntity.UpdatedAt,
+
+		RiskLevel:         policy.RiskLevel,
+		AllowedPrincipals: append([]string(nil), policy.AllowedPrincipals...),
+		RequiresApproval:  policy.RequiresApproval,
+		MinApprovals:      policy.MinApprovals,
+		IsActive:          policy.IsActive,
+		IsSystem:          policy.IsSystem,
+		Configured:        configured,
+
+		Category:      policy.Category,
+		CategoryLabel: authz.CategoryLabel(policy.Category),
+		DisplayName:   policy.DisplayName,
+		Icon:          policy.Icon,
+		Color:         policy.Color,
+		I18nKey:       policy.I18nKey,
+		SortOrder:     policy.SortOrder,
 	}
 }
 

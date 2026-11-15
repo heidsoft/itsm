@@ -7,6 +7,7 @@ jest.mock('@/lib/api/http-client', () => ({
 }));
 
 import { routes, RoutePermissionChecker, NavigationBuilder } from '../route-config';
+import { PERMISSION_CATALOG } from '@/lib/permissions';
 
 describe('Route Configuration', () => {
   describe('routes', () => {
@@ -85,26 +86,42 @@ describe('Route Configuration', () => {
         expect(RoutePermissionChecker.hasRoutePermission(route, [], ['admin'])).toBe(true);
       });
 
-      it('should resolve resource aliases (service → service_catalog)', () => {
+      it('should allow admin-override permissions like the backend matcher', () => {
         const route = {
-          path: '/services',
-          name: 'services',
-          title: 'Services',
-          permissions: [{ resource: 'service', action: 'read' }],
+          path: '/tickets',
+          name: 'tickets',
+          title: 'Tickets',
+          permissions: [{ resource: 'ticket', action: 'delete' }],
         };
-        const userPerms = [{ resource: 'service_catalog', action: 'read' }];
+        const userPerms = [{ resource: 'ticket', action: 'admin' }];
         expect(RoutePermissionChecker.hasRoutePermission(route, userPerms)).toBe(true);
       });
 
-      it('should resolve action aliases (manage → admin)', () => {
+      it('should not translate phantom actions (manage codes no longer aliased)', () => {
+        // 回归锁：别名映射（manage→admin、service→service_catalog）已删除。
+        // 持 user:write 的用户对「user:manage」声明不再被静默翻译放行——
+        // 路由配置里的码必须是后端码空间的真实码（类型层由 rp(PERM.x.y) 锁定）。
         const route = {
-          path: '/admin',
-          name: 'admin',
-          title: 'Admin',
+          path: '/admin/users',
+          name: 'users',
+          title: 'Users',
           permissions: [{ resource: 'user', action: 'manage' }],
         };
-        const userPerms = [{ resource: 'user', action: 'admin' }];
-        expect(RoutePermissionChecker.hasRoutePermission(route, userPerms)).toBe(true);
+        const userPerms = [{ resource: 'user', action: 'write' }];
+        expect(RoutePermissionChecker.hasRoutePermission(route, userPerms)).toBe(false);
+      });
+
+      it('should only declare codes from the generated catalog', () => {
+        // 路由权限码 ⊆ 后端码空间（构建期由 rp(PERM.x.y) 类型保证，这里再运行时锁一次）
+        const flatten = (rs: typeof routes): string[] =>
+          rs.flatMap(r => [
+            ...(r.permissions ?? []).map(p => `${p.resource}:${p.action}`),
+            ...(r.children ? flatten(r.children) : []),
+          ]);
+        const catalogCodes = new Set<string>(PERMISSION_CATALOG.map(e => e.code));
+        for (const code of flatten(routes)) {
+          expect(catalogCodes.has(code)).toBe(true);
+        }
       });
     });
 

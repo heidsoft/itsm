@@ -321,6 +321,43 @@ export interface PermissionCatalogItem {
   tenantId?: number;
   createdAt?: string;
   updatedAt?: string;
+  // 运行期策略（后端 dto.PermissionResponse；管理员可在权限页调整，改完即时生效）
+  riskLevel?: string;
+  allowedPrincipals?: string[];
+  requiresApproval?: boolean;
+  minApprovals?: number;
+  isActive?: boolean;
+  isSystem?: boolean;
+  /** false=仍是历史纯文本行、策略为派生初值（AI 零权限），需管理员显式确认 */
+  configured?: boolean;
+  category?: string;
+  categoryLabel?: string;
+  displayName?: string;
+  icon?: string;
+  color?: string;
+  i18nKey?: string;
+  sortOrder?: number;
+}
+
+/** 权限运行期策略更新载荷（对应后端 dto.UpdatePermissionRequest，整体替换） */
+export interface PermissionPolicyPayload {
+  riskLevel: string;
+  allowedPrincipals: string[];
+  requiresApproval: boolean;
+  minApprovals: number;
+  category: string;
+  displayName?: string;
+  icon?: string;
+  color?: string;
+  i18nKey?: string;
+  sortOrder: number;
+  isActive: boolean;
+}
+
+/** 权限策略元数据（对应 GET /api/v1/permissions/meta） */
+export interface PermissionCatalogMeta {
+  minApprovalsMax: number;
+  [key: string]: unknown;
 }
 
 // 系统配置相关接口

@@ -43,6 +43,7 @@ import {
 import { TicketApi } from '@/lib/api/ticket-api';
 import { isPermissionDeniedError } from '@/lib/api/http-client';
 import { usePermissions } from '@/lib/hooks/use-permissions';
+import { PERM } from '@/lib/permissions';
 // AppLayout is handled by layout.tsx
 
 const { Title, Text } = Typography;
@@ -132,9 +133,9 @@ const TicketTemplatesPage = () => {
   const router = useRouter();
   const { message } = App.useApp();
   const { hasPermission } = usePermissions();
-  const canCreate = hasPermission('ticket_template', 'create');
-  const canUpdate = hasPermission('ticket_template', 'update');
-  const canDelete = hasPermission('ticket_template', 'delete');
+  const canCreate = hasPermission(PERM.ticket_template.create);
+  const canUpdate = hasPermission(PERM.ticket_template.update);
+  const canDelete = hasPermission(PERM.ticket_template.delete);
   const [templates, setTemplates] = useState<TicketTemplate[]>([]);
   // 列表初值必须为 true：mount 必定发起首次拉取，初值 false 会让首帧先渲染
   // 空列表与全 0 的统计卡，再被真实数据覆盖。

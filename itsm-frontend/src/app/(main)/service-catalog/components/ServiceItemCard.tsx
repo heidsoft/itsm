@@ -29,6 +29,7 @@ import type { ServiceItem} from '@/types/service-catalog';
 import { ServiceCategory } from '@/types/service-catalog';
 import { useI18n } from '@/lib/i18n';
 import { usePermissions } from '@/lib/hooks/use-permissions';
+import { PERM } from '@/lib/permissions';
 
 const { Title, Text } = Typography;
 
@@ -52,7 +53,7 @@ export const ServiceItemCard: React.FC<ServiceItemCardProps> = ({ catalog, onDel
   const router = useRouter();
   const { message, modal } = App.useApp();
   const { hasPermission } = usePermissions();
-  const canManageCatalog = hasPermission('service_catalog', 'write');
+  const canManageCatalog = hasPermission(PERM.service_catalog.write);
   const [deleting, setDeleting] = useState(false);
   const categoryKey = String(catalog.category);
   const IconComponent = categoryIcons[categoryKey] || HardDrive;

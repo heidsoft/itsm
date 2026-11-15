@@ -159,8 +159,13 @@ func SetupCommonSystemRoutes(r *gin.Engine, tenant *gin.RouterGroup, config *Rou
 			permissions := tenant.Group("/permissions")
 			{
 				permissions.GET("", middleware.RequirePermission("permission", "read"), config.RBACHandler.ListPermissions)
+				permissions.GET("/meta", middleware.RequirePermission("permission", "read"), config.RBACHandler.GetPermissionCatalogMeta)
+				permissions.GET("/:id", middleware.RequirePermission("permission", "read"), config.RBACHandler.GetPermission)
 				permissions.POST("", middleware.RequirePermission("role", "write"), config.RBACHandler.CreatePermission)
 				permissions.POST("/init", middleware.RequirePermission("role", "write"), config.RBACHandler.InitDefaultPermissions)
+				// 运行期策略配置：改风险等级/主体授权/审批强度，改完即时生效。
+				permissions.PUT("/:id", middleware.RequirePermission("role", "write"), config.RBACHandler.UpdatePermission)
+				permissions.DELETE("/:id", middleware.RequirePermission("role", "write"), config.RBACHandler.DeletePermission)
 			}
 		}
 

@@ -16,6 +16,7 @@ import { ServiceRequestApi } from '@/lib/api/';
 import { ServiceRequestStatus, serviceRequestStatusLabel } from '@/constants/service-request';
 import type { ServiceRequest } from '@/lib/api/service-request-api';
 import { usePermissions } from '@/lib/hooks/use-permissions';
+import { PERM } from '@/lib/permissions';
 
 // 列表查询条件：这个组件只提供分页，状态过滤由后端 status 参数负责但当前视图没有入口，
 // 因此不再维护一个从不发送的 scope 字段（旧 ServiceRequestQuery 与后端契约无关）。
@@ -43,7 +44,7 @@ const ServiceRequestList: React.FC = () => {
   // 空态入口独立于页面 primaryAction，需自带门控（同 AssetList 的修法）。
   const { hasPermission } = usePermissions();
   const canCreateServiceRequest =
-    hasPermission('service_request', 'write') || hasPermission('service_request', 'create');
+    hasPermission(PERM.service_request.write);
   const [activeTab, setActiveTab] = useState('my-requests');
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<ServiceRequest[]>([]);

@@ -36,6 +36,7 @@ import {
   marketplaceTagLabel,
 } from '@/lib/marketplaceLabels';
 import { formatDateTime } from '@/lib/formatters';
+import { PERM } from '@/lib/permissions';
 
 const typeNames = MARKETPLACE_TYPE_LABELS;
 
@@ -54,7 +55,7 @@ const MarketplaceDetailPage = () => {
   // 能力矩阵的 manage 只区分 admin-like 角色（部门经理/审计员也算），
   // 真正的写权限以 RBAC 为准：没有 marketplace:write 时不展示会 403 的安装入口。
   const canManageMarketplace =
-    allows('marketplace', 'manage') && hasPermission('marketplace', 'write');
+    allows('marketplace', 'manage') && hasPermission(PERM.marketplace.write);
 
   const [item, setItem] = useState<MarketplaceItem | null>(null);
   const [installation, setInstallation] = useState<TenantInstallation | null>(null);

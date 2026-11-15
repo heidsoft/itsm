@@ -24,6 +24,7 @@ import LoadingEmptyError from '@/components/ui/LoadingEmptyError';
 
 import { AssetApi, AssetStatus, AssetType } from '@/lib/api/asset-api';
 import { usePermissions } from '@/lib/hooks/use-permissions';
+import { PERM } from '@/lib/permissions';
 
 // 状态颜色映射
 const statusColors: Record<string, string> = {
@@ -60,7 +61,7 @@ const AssetList: React.FC<AssetListProps> = ({ showActions = true }) => {
   // 空态里的「新增资产」是独立入口，不经过页面 primaryAction 的门控——
   // 只读角色会看到一个点进去 403 的按钮（2026-10-26 浏览器实测：end_user 仍可见）。
   const { hasPermission } = usePermissions();
-  const canCreateAsset = hasPermission('asset', 'write') || hasPermission('asset', 'create');
+  const canCreateAsset = hasPermission(PERM.asset.write);
   const [loading, setLoading] = useState(false);
   const [loadError, setLoadError] = useState(false);
   const [data, setData] = useState<any[]>([]);

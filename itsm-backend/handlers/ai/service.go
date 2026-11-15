@@ -12,6 +12,7 @@ import (
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/ticket"
+	"itsm-backend/internal/authz"
 	"itsm-backend/internal/knowledgeaccess"
 	"itsm-backend/metrics"
 	"itsm-backend/middleware"
@@ -33,6 +34,9 @@ type Service struct {
 	summarizeService Summarizer
 	// ent client，用于复用 RBAC hasResourcePermission
 	entClient *ent.Client
+	// catalog 是 AI 主体零信任判定的运行期权限真源（默认 authz.Shared()）。
+	// 允许单测注入 fake；不额外引入编译期码表。
+	catalog authz.Catalog
 	// auditLedger 服务端 AI 决策底账写口（窄接口，生产实现是 AITelemetryService）。
 	// nil 时分诊不落底账，响应不携带 auditId（降级不阻塞）。
 	auditLedger AuditLedgerWriter
@@ -122,6 +126,12 @@ func (s *Service) SetEntClient(client *ent.Client) {
 	s.entClient = client
 }
 
+// SetPermissionCatalog 注入运行期权限真源。生产装配用 bootstrap 里
+// authz.ConfigureShared 返回的共享实例；单测可注入 fake 覆盖 AI 主体策略。
+func (s *Service) SetPermissionCatalog(catalog authz.Catalog) {
+	s.catalog = catalog
+}
+
 // Tool Methods
 
 func (s *Service) ListTools() []dto.ToolDefinition {
@@ -205,14 +215,57 @@ func (s *Service) ExecuteTool(ctx context.Context, userID, tenantID int, role, n
 		}
 	}
 
+	// ---------------------------------------------------------------------
+	// Gate 2.5: AI 主体零信任（运行期 DB 策略）
+	//
+	// 人发起的操作继续走上面的角色 RBAC；LLM / skill 自主决定调用工具时
+	// 调用方用 authz.WithPrincipal(ctx, "agent") 标记，这里再做一次判定：
+	//   1. 该 resource:action 必须在 DB 权限目录里登记且启用；
+	//   2. 该码的 AllowedPrincipals 必须显式包含 agent（默认只有 human → 零权限）；
+	//   3. 按风险等级算出需要的人类确认人数。
+	// 任何一步读不出来都 deny —— 不回退到编译期引导清单。
+	//
+	// 这是「AI 安全攻击门槛低」的核心防线：提示词注入只能改变 LLM 想调什么，
+	// 改变不了 DB 里管理员没给 AI 开过的权限。
+	// ---------------------------------------------------------------------
+	principal := authz.PrincipalFromContext(ctx)
+	policyApproval, minApprovals, policyReason := false, 0, ""
+	if principal != authz.PrincipalHuman {
+		catalog := s.catalog
+		if catalog == nil {
+			catalog = authz.Shared()
+		}
+		code := toolDef.Resource + ":" + toolDef.Action
+		needs, min, err := catalog.AuthorizePrincipal(ctx, tenantID, code, principal)
+		if err != nil {
+			reason := fmt.Sprintf("AI 主体 %s 未获授权 %s: %v", principal, code, err)
+			permCheck, permReason, allowed = "denied", reason, false
+			s.logger.Warnw("AI tool denied by runtime permission catalog",
+				"tenant_id", tenantID, "user_id", userID, "tool", name,
+				"code", code, "principal", principal, "reason", err)
+		} else {
+			policyApproval, minApprovals = needs, min
+			risk := "unknown"
+			if def, lerr := catalog.Lookup(ctx, tenantID, code); lerr == nil && def != nil {
+				risk = def.Policy.RiskLevel
+			}
+			policyReason = fmt.Sprintf("principal=%s risk=%s minApprovals=%d", principal, risk, minApprovals)
+			if permReason != "" {
+				permReason += " | " + policyReason
+			} else {
+				permReason = policyReason
+			}
+		}
+	}
+
 	// Authorization is mandatory; feature flags must never bypass it.
 	if !allowed {
 		s.recordToolAudit(ctx, tenantID, userID, role, name, args, permCheck, permReason, "", nil, false)
 		return nil, 0, fmt.Errorf("%w: %s", ErrToolPermissionDenied, permReason)
 	}
 
-	// Check if needs approval
-	needsApproval := !toolDef.ReadOnly
+	// Check if needs approval：写工具恒需审批；agent 主体按风险策略追加审批。
+	needsApproval := !toolDef.ReadOnly || policyApproval
 
 	if !needsApproval {
 		res, err := s.tools.Execute(ctx, tenantID, name, args)
@@ -224,6 +277,18 @@ func (s *Service) ExecuteTool(ctx context.Context, userID, tenantID int, role, n
 		return res, 0, err
 	}
 
+	// 待审批状态同时承载「需要几个人批准」：
+	//   pending           = 人发起，单人审批（保留既有语义与测试）
+	//   pending_agent     = AI 发起，单人审批 + 禁止发起人自批
+	//   pending_agent_two = AI 发起，双人审批 + 禁止发起人自批 + 两名不同审批人
+	approvalState := "pending"
+	if principal != authz.PrincipalHuman {
+		approvalState = "pending_agent"
+		if minApprovals >= 2 {
+			approvalState = "pending_agent_two"
+		}
+	}
+
 	// 写工具：创建 pending invocation，等待审批
 	argsStr, _ := json.Marshal(args)
 	inv, err := s.repo.CreateToolInvocation(ctx, &ToolInvocation{
@@ -232,7 +297,7 @@ func (s *Service) ExecuteTool(ctx context.Context, userID, tenantID int, role, n
 		Arguments:        string(argsStr),
 		Status:           "pending",
 		NeedsApproval:    true,
-		ApprovalState:    "pending",
+		ApprovalState:    approvalState,
 		UserID:           userID,
 		PermissionCheck:  permCheck,
 		PermissionReason: permReason,
@@ -284,8 +349,14 @@ func (s *Service) recordToolAudit(ctx context.Context, tenantID, userID int, rol
 // 审批状态与待执行任务在同一事务内落库（见 Repository.DecideToolInvocation），
 // 因此通过审批不会再因为进程退出或队列满而丢失执行。
 func (s *Service) ApproveTool(ctx context.Context, id int, tenantID, userID int, approve bool, reason string) (string, error) {
-	if _, err := s.repo.DecideToolInvocation(ctx, id, tenantID, userID, approve, reason); err != nil {
+	// 返回仓储层的真实状态：双人审批的第一票是 awaiting_second，
+	// 不能对外谎报 approved（否则前端会以为操作已放行）。
+	decided, err := s.repo.DecideToolInvocation(ctx, id, tenantID, userID, approve, reason)
+	if err != nil {
 		return "", err
+	}
+	if decided != nil && decided.ApprovalState != "" {
+		return decided.ApprovalState, nil
 	}
 	if approve {
 		return "approved", nil
@@ -564,7 +635,10 @@ func (s *Service) ChatStream(
 		// LLM 自报的 user_id/requester_id 不可信，一律以认证上下文覆盖。
 		args["user_id"] = float64(userID)
 		args["requester_id"] = float64(userID)
-		res, invID, err := s.ExecuteTool(ctx, userID, tenantID, role, name, args)
+		// LLM 自主决定的工具调用按 agent 主体判定：进入 DB 运行期策略
+		// （默认零权限）+ 风险分级人工审批，而不是继承提问人的全部角色权限。
+		agentCtx := authz.WithPrincipal(ctx, authz.PrincipalAgent)
+		res, invID, err := s.ExecuteTool(agentCtx, userID, tenantID, role, name, args)
 		if err != nil {
 			return nil, err
 		}

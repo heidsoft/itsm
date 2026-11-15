@@ -22,10 +22,17 @@ type RoleService interface {
 }
 
 // PermissionService 定义权限域业务接口（依赖倒置）。
+//
+// 权限码的运行期增删改查全部收敛在这里；唯一持久化位置是 DB permissions 表，
+// 不存在第二份码空间定义。
 type PermissionService interface {
 	CreatePermission(ctx context.Context, req *dto.CreatePermissionRequest, tenantID int) (*dto.PermissionResponse, error)
+	GetPermission(ctx context.Context, id int, tenantID int) (*dto.PermissionResponse, error)
 	ListPermissions(ctx context.Context, tenantID int, resource string) ([]*dto.PermissionResponse, error)
+	UpdatePermission(ctx context.Context, id int, tenantID int, req *dto.UpdatePermissionRequest) (*dto.PermissionResponse, error)
+	DeletePermission(ctx context.Context, id int, tenantID int) error
 	InitDefaultPermissions(ctx context.Context, tenantID int) error
+	CatalogMeta() *dto.PermissionCatalogMetaResponse
 }
 
 // MenuService 定义菜单域业务接口（依赖倒置）。

@@ -633,6 +633,35 @@ func (m *mockPermissionService) InitDefaultPermissions(ctx context.Context, tena
 	return args.Error(0)
 }
 
+func (m *mockPermissionService) GetPermission(ctx context.Context, id int, tenantID int) (*dto.PermissionResponse, error) {
+	args := m.Called(ctx, id, tenantID)
+	if r, ok := args.Get(0).(*dto.PermissionResponse); ok {
+		return r, args.Error(1)
+	}
+	return nil, args.Error(1)
+}
+
+func (m *mockPermissionService) UpdatePermission(ctx context.Context, id int, tenantID int, req *dto.UpdatePermissionRequest) (*dto.PermissionResponse, error) {
+	args := m.Called(ctx, id, tenantID, req)
+	if r, ok := args.Get(0).(*dto.PermissionResponse); ok {
+		return r, args.Error(1)
+	}
+	return nil, args.Error(1)
+}
+
+func (m *mockPermissionService) DeletePermission(ctx context.Context, id int, tenantID int) error {
+	args := m.Called(ctx, id, tenantID)
+	return args.Error(0)
+}
+
+func (m *mockPermissionService) CatalogMeta() *dto.PermissionCatalogMetaResponse {
+	return &dto.PermissionCatalogMetaResponse{
+		Principals: []string{"human", "agent", "service"},
+		RiskLevels: []string{"low", "medium", "high", "critical"},
+		Categories: []string{"other"},
+	}
+}
+
 type mockMenuService struct{ mock.Mock }
 
 func (m *mockMenuService) CreateMenu(ctx context.Context, req *dto.CreateMenuRequest, tenantID int) (*dto.MenuDTO, error) {

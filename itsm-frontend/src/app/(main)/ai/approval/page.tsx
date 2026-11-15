@@ -23,6 +23,8 @@ import {
   type ToolApprovalListResponse,
 } from '@/lib/api/ai-api';
 import { useAuthStoreHydration } from '@/lib/store/auth-store';
+import { usePermissions } from '@/lib/hooks/use-permissions';
+import { PERM } from '@/lib/permissions';
 import { formatDateTime } from '@/lib/formatters';
 
 const { Title, Text } = Typography;
@@ -32,6 +34,11 @@ const STATE_LABELS: Record<string, string> = {
   approved: '已通过',
   rejected: '已驳回',
   auto: '自动执行',
+  // AI 主体（agent）专属状态：审批人数由权限码策略的 minApprovals 决定，
+  // 且后端强制「发起人不可自批」。
+  pending_agent: 'AI 待审批',
+  pending_agent_two: 'AI 待双人审批',
+  awaiting_second: 'AI 待二审',
 };
 
 const stateColor = (s: string): string => {
@@ -41,6 +48,42 @@ const stateColor = (s: string): string => {
     case 'approved':
       return 'green';
     case 'rejected':
+      return 'red';
+    case 'pending_agent':
+      return 'gold';
+    case 'pending_agent_two':
+    case 'awaiting_second':
+      return 'volcano';
+    default:
+      return 'default';
+  }
+};
+
+// AI 发起的双重审批进度：awaiting_second 表示首审已通过、待第二位审批人。
+const approvalProgress = (s: string, minApprovals?: number): string | null => {
+  if (s === 'pending_agent') return minApprovals && minApprovals > 1 ? '0/2' : '0/1';
+  if (s === 'pending_agent_two') return '0/2';
+  if (s === 'awaiting_second') return '1/2';
+  return null;
+};
+
+const RISK_LABELS: Record<string, string> = {
+  low: '低风险',
+  medium: '中风险',
+  high: '高风险',
+  critical: '危急',
+  unknown: '未知',
+};
+
+const riskColor = (r?: string): string => {
+  switch (r) {
+    case 'low':
+      return 'green';
+    case 'medium':
+      return 'gold';
+    case 'high':
+      return 'volcano';
+    case 'critical':
       return 'red';
     default:
       return 'default';
@@ -66,6 +109,9 @@ const prettyArgs = (raw?: string): string => {
 const AIApprovalQueue: React.FC = () => {
   const { message } = App.useApp();
   useAuthStoreHydration();
+  const { hasPermission } = usePermissions();
+  // 通过/驳回按钮与后端审批路由（ai:write）同码；见操作列。
+  const canApprove = hasPermission(PERM.ai.write);
 
   const [items, setItems] = useState<ToolApproval[]>([]);
   // 列表初值必须为 true：mount 必定发起首次拉取，初值 false 会让首帧先渲染
@@ -129,6 +175,19 @@ const AIApprovalQueue: React.FC = () => {
       render: (v: string) => <Tag color="geekblue">{v}</Tag>,
     },
     {
+      title: '风险',
+      dataIndex: 'riskLevel',
+      key: 'riskLevel',
+      width: 90,
+      render: (v: string, r: ToolApproval) => (
+        <TooltipWrapper
+          text={r.minApprovals ? `权限码策略要求 ${r.minApprovals} 名互不相同的人类审批人` : undefined}
+        >
+          <Tag color={riskColor(v)}>{RISK_LABELS[v] ?? v ?? '未知'}</Tag>
+        </TooltipWrapper>
+      ),
+    },
+    {
       title: '参数',
       dataIndex: 'arguments',
       key: 'arguments',
@@ -155,8 +214,24 @@ const AIApprovalQueue: React.FC = () => {
       title: '状态',
       dataIndex: 'approvalState',
       key: 'approvalState',
-      width: 100,
-      render: (v: string) => <Tag color={stateColor(v)}>{STATE_LABELS[v] ?? v}</Tag>,
+      width: 150,
+      render: (v: string, r: ToolApproval) => {
+        const isAgentFlow = v.startsWith('pending_agent') || v === 'awaiting_second';
+        const progress = approvalProgress(v, r.minApprovals);
+        return (
+          <Space size={4} wrap>
+            {isAgentFlow && (
+              <TooltipWrapper text="该调用由 AI 发起，需人类审批后才会执行；发起人不可自批">
+                <Tag color="purple">AI 发起</Tag>
+              </TooltipWrapper>
+            )}
+            <Tag color={stateColor(v)}>{STATE_LABELS[v] ?? v}</Tag>
+            {progress && (
+              <Tag color={progress.startsWith('1/') ? 'orange' : 'default'}>审批进度 {progress}</Tag>
+            )}
+          </Space>
+        );
+      },
     },
     {
       title: '创建时间',
@@ -169,8 +244,22 @@ const AIApprovalQueue: React.FC = () => {
       title: '操作',
       key: 'action',
       width: 150,
-      render: (_: unknown, r: ToolApproval) =>
-        r.approvalState === 'pending' ? (
+      render: (_: unknown, r: ToolApproval) => {
+        // 可操作状态：人发起的单人审批 + AI 发起的三种在途状态。
+        // （此前只认 pending，AI 发起的调用全部显示「已处理」且无按钮，
+        //  人工审批闭环在 UI 上是断的。）
+        const actionable =
+          r.approvalState === 'pending' ||
+          r.approvalState === 'pending_agent' ||
+          r.approvalState === 'pending_agent_two' ||
+          r.approvalState === 'awaiting_second';
+        // 审批动作挂 ai:write（与后端 POST /agent/tools/:id/approve 的
+        // RequirePermission 同码）；无权限只隐藏按钮，授权仍以后端为准。
+        if (!actionable) return <Text type="secondary">已处理</Text>;
+        if (!canApprove) {
+          return <Text type="secondary">无审批权限（需 ai:write）</Text>;
+        }
+        return (
           <Space>
             <Button
               type="primary"
@@ -184,9 +273,8 @@ const AIApprovalQueue: React.FC = () => {
               驳回
             </Button>
           </Space>
-        ) : (
-          <Text type="secondary">已处理</Text>
-        ),
+        );
+      },
     },
   ];
 

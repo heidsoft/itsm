@@ -1,12 +1,39 @@
 /**
  * 路由配置和权限管理
+ *
+ * 权限码契约（2026-11-14 权限码单点化批次）：
+ * - 路由权限码一律通过 rp(PERM.x.y) 声明，PERM 来自后端码空间生成物；
+ *   引用码空间不存在的码会在 TypeScript 编译期失败（幽灵码零容忍）；
+ * - 每个页面挂的码 = 后端对应路由实际 RequirePermission 的码，
+ *   不再使用 manage/view 等前端臆造动作，也不再需要别名映射。
  */
+
+import { PERM } from '@/lib/permissions';
+import type { PermissionCode } from '@/lib/permissions';
+import { matchesPermission } from '@/lib/permissions/utils';
 
 // 路由权限类型
 export interface RoutePermission {
   resource: string;
   action: string;
 }
+
+/**
+ * 把生成的权限码构造成路由权限声明。
+ * 这是路由配置里权限码的唯一合法写法（compile-time 校验）。
+ */
+const rp = (code: PermissionCode): RoutePermission[] => {
+  const separatorIndex = code.indexOf(':');
+  if (separatorIndex <= 0 || separatorIndex === code.length - 1) {
+    throw new Error(`非法权限码: ${code}`);
+  }
+  return [
+    {
+      resource: code.slice(0, separatorIndex),
+      action: code.slice(separatorIndex + 1),
+    },
+  ];
+};
 
 // 路由配置接口
 export interface RouteConfig {
@@ -35,7 +62,7 @@ export const routes: RouteConfig[] = [
     title: '仪表盘',
     icon: 'LayoutDashboard',
     component: 'Dashboard',
-    permissions: [{ resource: 'dashboard', action: 'read' }],
+    permissions: rp(PERM.dashboard.read),
     meta: {
       requireAuth: true,
       breadcrumb: true,
@@ -46,7 +73,7 @@ export const routes: RouteConfig[] = [
     name: 'tickets',
     title: '工单管理',
     icon: 'Ticket',
-    permissions: [{ resource: 'ticket', action: 'read' }],
+    permissions: rp(PERM.ticket.read),
     meta: {
       requireAuth: true,
       breadcrumb: true,
@@ -57,7 +84,7 @@ export const routes: RouteConfig[] = [
         name: 'ticket-list',
         title: '工单列表',
         component: 'TicketList',
-        permissions: [{ resource: 'ticket', action: 'read' }],
+        permissions: rp(PERM.ticket.read),
         meta: {
           requireAuth: true,
           keepAlive: true,
@@ -68,7 +95,7 @@ export const routes: RouteConfig[] = [
         name: 'ticket-create',
         title: '创建工单',
         component: 'TicketCreate',
-        permissions: [{ resource: 'ticket', action: 'create' }],
+        permissions: rp(PERM.ticket.create),
         meta: {
           requireAuth: true,
         },
@@ -78,7 +105,7 @@ export const routes: RouteConfig[] = [
         name: 'ticket-detail',
         title: '工单详情',
         component: 'TicketDetail',
-        permissions: [{ resource: 'ticket', action: 'read' }],
+        permissions: rp(PERM.ticket.read),
         hidden: true,
         meta: {
           requireAuth: true,
@@ -89,7 +116,7 @@ export const routes: RouteConfig[] = [
         name: 'ticket-edit',
         title: '编辑工单',
         component: 'TicketEdit',
-        permissions: [{ resource: 'ticket', action: 'update' }],
+        permissions: rp(PERM.ticket.update),
         hidden: true,
         meta: {
           requireAuth: true,
@@ -102,7 +129,7 @@ export const routes: RouteConfig[] = [
     name: 'incidents',
     title: '事件管理',
     icon: 'AlertTriangle',
-    permissions: [{ resource: 'incident', action: 'read' }],
+    permissions: rp(PERM.incident.read),
     meta: {
       requireAuth: true,
       breadcrumb: true,
@@ -113,7 +140,7 @@ export const routes: RouteConfig[] = [
         name: 'incident-list',
         title: '事件列表',
         component: 'IncidentList',
-        permissions: [{ resource: 'incident', action: 'read' }],
+        permissions: rp(PERM.incident.read),
         meta: {
           requireAuth: true,
           keepAlive: true,
@@ -124,7 +151,7 @@ export const routes: RouteConfig[] = [
         name: 'incident-create',
         title: '创建事件',
         component: 'IncidentCreate',
-        permissions: [{ resource: 'incident', action: 'create' }],
+        permissions: rp(PERM.incident.write),
         meta: {
           requireAuth: true,
         },
@@ -134,7 +161,7 @@ export const routes: RouteConfig[] = [
         name: 'incident-detail',
         title: '事件详情',
         component: 'IncidentDetail',
-        permissions: [{ resource: 'incident', action: 'read' }],
+        permissions: rp(PERM.incident.read),
         hidden: true,
         meta: {
           requireAuth: true,
@@ -147,7 +174,7 @@ export const routes: RouteConfig[] = [
     name: 'problems',
     title: '问题管理',
     icon: 'Bug',
-    permissions: [{ resource: 'problem', action: 'read' }],
+    permissions: rp(PERM.problem.read),
     meta: {
       requireAuth: true,
       breadcrumb: true,
@@ -158,7 +185,7 @@ export const routes: RouteConfig[] = [
         name: 'problem-list',
         title: '问题列表',
         component: 'ProblemList',
-        permissions: [{ resource: 'problem', action: 'read' }],
+        permissions: rp(PERM.problem.read),
         meta: {
           requireAuth: true,
           keepAlive: true,
@@ -169,7 +196,7 @@ export const routes: RouteConfig[] = [
         name: 'problem-create',
         title: '创建问题',
         component: 'ProblemCreate',
-        permissions: [{ resource: 'problem', action: 'create' }],
+        permissions: rp(PERM.problem.write),
         meta: {
           requireAuth: true,
         },
@@ -179,7 +206,7 @@ export const routes: RouteConfig[] = [
         name: 'problem-detail',
         title: '问题详情',
         component: 'ProblemDetail',
-        permissions: [{ resource: 'problem', action: 'read' }],
+        permissions: rp(PERM.problem.read),
         hidden: true,
         meta: {
           requireAuth: true,
@@ -192,7 +219,7 @@ export const routes: RouteConfig[] = [
     name: 'releases',
     title: '发布管理',
     icon: 'Rocket',
-    permissions: [{ resource: 'release', action: 'read' }],
+    permissions: rp(PERM.release.read),
     meta: {
       requireAuth: true,
       breadcrumb: true,
@@ -203,7 +230,7 @@ export const routes: RouteConfig[] = [
         name: 'release-list',
         title: '发布列表',
         component: 'ReleaseList',
-        permissions: [{ resource: 'release', action: 'read' }],
+        permissions: rp(PERM.release.read),
         meta: {
           requireAuth: true,
           keepAlive: true,
@@ -214,7 +241,7 @@ export const routes: RouteConfig[] = [
         name: 'release-create',
         title: '创建发布',
         component: 'ReleaseForm',
-        permissions: [{ resource: 'release', action: 'create' }],
+        permissions: rp(PERM.release.write),
         meta: {
           requireAuth: true,
         },
@@ -224,7 +251,7 @@ export const routes: RouteConfig[] = [
         name: 'release-detail',
         title: '发布详情',
         component: 'ReleaseDetail',
-        permissions: [{ resource: 'release', action: 'read' }],
+        permissions: rp(PERM.release.read),
         hidden: true,
         meta: {
           requireAuth: true,
@@ -237,7 +264,7 @@ export const routes: RouteConfig[] = [
     name: 'changes',
     title: '变更管理',
     icon: 'GitBranch',
-    permissions: [{ resource: 'change', action: 'read' }],
+    permissions: rp(PERM.change.read),
     meta: {
       requireAuth: true,
       breadcrumb: true,
@@ -248,7 +275,7 @@ export const routes: RouteConfig[] = [
         name: 'change-list',
         title: '变更列表',
         component: 'ChangeList',
-        permissions: [{ resource: 'change', action: 'read' }],
+        permissions: rp(PERM.change.read),
         meta: {
           requireAuth: true,
           keepAlive: true,
@@ -259,7 +286,7 @@ export const routes: RouteConfig[] = [
         name: 'change-create',
         title: '创建变更',
         component: 'ChangeCreate',
-        permissions: [{ resource: 'change', action: 'create' }],
+        permissions: rp(PERM.change.write),
         meta: {
           requireAuth: true,
         },
@@ -269,7 +296,7 @@ export const routes: RouteConfig[] = [
         name: 'change-detail',
         title: '变更详情',
         component: 'ChangeDetail',
-        permissions: [{ resource: 'change', action: 'read' }],
+        permissions: rp(PERM.change.read),
         hidden: true,
         meta: {
           requireAuth: true,
@@ -282,7 +309,7 @@ export const routes: RouteConfig[] = [
     name: 'assets',
     title: '资产管理',
     icon: 'Desktop',
-    permissions: [{ resource: 'asset', action: 'read' }],
+    permissions: rp(PERM.asset.read),
     meta: {
       requireAuth: true,
       breadcrumb: true,
@@ -293,7 +320,7 @@ export const routes: RouteConfig[] = [
         name: 'asset-list',
         title: '资产列表',
         component: 'AssetList',
-        permissions: [{ resource: 'asset', action: 'read' }],
+        permissions: rp(PERM.asset.read),
         meta: {
           requireAuth: true,
           keepAlive: true,
@@ -304,7 +331,7 @@ export const routes: RouteConfig[] = [
         name: 'asset-create',
         title: '创建资产',
         component: 'AssetForm',
-        permissions: [{ resource: 'asset', action: 'create' }],
+        permissions: rp(PERM.asset.write),
         meta: {
           requireAuth: true,
         },
@@ -314,7 +341,7 @@ export const routes: RouteConfig[] = [
         name: 'asset-detail',
         title: '资产详情',
         component: 'AssetDetail',
-        permissions: [{ resource: 'asset', action: 'read' }],
+        permissions: rp(PERM.asset.read),
         hidden: true,
         meta: {
           requireAuth: true,
@@ -327,7 +354,7 @@ export const routes: RouteConfig[] = [
     name: 'licenses',
     title: '许可证管理',
     icon: 'Key',
-    permissions: [{ resource: 'license', action: 'read' }],
+    permissions: rp(PERM.license.read),
     meta: {
       requireAuth: true,
       breadcrumb: true,
@@ -338,7 +365,7 @@ export const routes: RouteConfig[] = [
         name: 'license-list',
         title: '许可证列表',
         component: 'LicenseList',
-        permissions: [{ resource: 'license', action: 'read' }],
+        permissions: rp(PERM.license.read),
         meta: {
           requireAuth: true,
           keepAlive: true,
@@ -349,7 +376,7 @@ export const routes: RouteConfig[] = [
         name: 'license-create',
         title: '创建许可证',
         component: 'LicenseForm',
-        permissions: [{ resource: 'license', action: 'create' }],
+        permissions: rp(PERM.license.write),
         meta: {
           requireAuth: true,
         },
@@ -359,7 +386,7 @@ export const routes: RouteConfig[] = [
         name: 'license-detail',
         title: '许可证详情',
         component: 'LicenseDetail',
-        permissions: [{ resource: 'license', action: 'read' }],
+        permissions: rp(PERM.license.read),
         hidden: true,
         meta: {
           requireAuth: true,
@@ -372,7 +399,7 @@ export const routes: RouteConfig[] = [
     name: 'knowledge',
     title: '知识库',
     icon: 'BookOpen',
-    permissions: [{ resource: 'knowledge', action: 'read' }],
+    permissions: rp(PERM.knowledge.read),
     meta: {
       requireAuth: true,
       breadcrumb: true,
@@ -383,7 +410,7 @@ export const routes: RouteConfig[] = [
         name: 'knowledge-list',
         title: '知识文章',
         component: 'KnowledgeList',
-        permissions: [{ resource: 'knowledge', action: 'read' }],
+        permissions: rp(PERM.knowledge.read),
         meta: {
           requireAuth: true,
           keepAlive: true,
@@ -394,7 +421,7 @@ export const routes: RouteConfig[] = [
         name: 'knowledge-create',
         title: '创建文章',
         component: 'KnowledgeCreate',
-        permissions: [{ resource: 'knowledge', action: 'create' }],
+        permissions: rp(PERM.knowledge.write),
         meta: {
           requireAuth: true,
         },
@@ -404,7 +431,7 @@ export const routes: RouteConfig[] = [
         name: 'knowledge-detail',
         title: '文章详情',
         component: 'KnowledgeDetail',
-        permissions: [{ resource: 'knowledge', action: 'read' }],
+        permissions: rp(PERM.knowledge.read),
         hidden: true,
         meta: {
           requireAuth: true,
@@ -417,7 +444,7 @@ export const routes: RouteConfig[] = [
     name: 'ai',
     title: '智能助手',
     icon: 'Bot',
-    permissions: [{ resource: 'ai', action: 'read' }],
+    permissions: rp(PERM.ai.read),
     meta: {
       requireAuth: true,
       breadcrumb: true,
@@ -428,7 +455,7 @@ export const routes: RouteConfig[] = [
         name: 'ai-chat',
         title: 'AI 问答',
         component: 'AIChat',
-        permissions: [{ resource: 'ai', action: 'read' }],
+        permissions: rp(PERM.ai.read),
         meta: {
           requireAuth: true,
           keepAlive: true,
@@ -441,7 +468,7 @@ export const routes: RouteConfig[] = [
     name: 'cmdb',
     title: '配置管理',
     icon: 'Database',
-    permissions: [{ resource: 'cmdb', action: 'read' }],
+    permissions: rp(PERM.cmdb.read),
     meta: {
       requireAuth: true,
       breadcrumb: true,
@@ -452,7 +479,7 @@ export const routes: RouteConfig[] = [
         name: 'ci-list',
         title: '配置项',
         component: 'CIList',
-        permissions: [{ resource: 'cmdb', action: 'read' }],
+        permissions: rp(PERM.cmdb.read),
         meta: {
           requireAuth: true,
           keepAlive: true,
@@ -463,7 +490,7 @@ export const routes: RouteConfig[] = [
         name: 'ci-type-list',
         title: '配置项类型',
         component: 'CITypeList',
-        permissions: [{ resource: 'cmdb', action: 'manage' }],
+        permissions: rp(PERM.cmdb.write),
         meta: {
           requireAuth: true,
         },
@@ -473,7 +500,7 @@ export const routes: RouteConfig[] = [
         name: 'ci-relationship-list',
         title: '关系管理',
         component: 'CIRelationshipList',
-        permissions: [{ resource: 'cmdb', action: 'read' }],
+        permissions: rp(PERM.cmdb.read),
         meta: {
           requireAuth: true,
         },
@@ -485,7 +512,7 @@ export const routes: RouteConfig[] = [
     name: 'reports',
     title: '报表分析',
     icon: 'BarChart3',
-    permissions: [{ resource: 'report', action: 'read' }],
+    permissions: rp(PERM.report.read),
     meta: {
       requireAuth: true,
       breadcrumb: true,
@@ -496,7 +523,7 @@ export const routes: RouteConfig[] = [
         name: 'report-dashboard',
         title: '报表仪表盘',
         component: 'ReportDashboard',
-        permissions: [{ resource: 'report', action: 'read' }],
+        permissions: rp(PERM.report.read),
         meta: {
           requireAuth: true,
         },
@@ -506,7 +533,7 @@ export const routes: RouteConfig[] = [
         name: 'ticket-reports',
         title: '工单报表',
         component: 'TicketReports',
-        permissions: [{ resource: 'report', action: 'read' }],
+        permissions: rp(PERM.report.read),
         meta: {
           requireAuth: true,
         },
@@ -516,41 +543,7 @@ export const routes: RouteConfig[] = [
         name: 'sla-reports',
         title: 'SLA报表',
         component: 'SLAReports',
-        permissions: [{ resource: 'report', action: 'read' }],
-        meta: {
-          requireAuth: true,
-        },
-      },
-    ],
-  },
-  {
-    path: '/testing',
-    name: 'testing',
-    title: '测试管理',
-    icon: 'Code',
-    permissions: [{ resource: 'testing', action: 'read' }],
-    meta: {
-      requireAuth: true,
-      roles: ['admin', 'developer'],
-      breadcrumb: true,
-    },
-    children: [
-      {
-        path: '/testing/runner',
-        name: 'test-runner',
-        title: '测试运行器',
-        component: 'TestRunner',
-        permissions: [{ resource: 'testing', action: 'execute' }],
-        meta: {
-          requireAuth: true,
-        },
-      },
-      {
-        path: '/testing/coverage',
-        name: 'test-coverage',
-        title: '测试覆盖率',
-        component: 'TestCoverage',
-        permissions: [{ resource: 'testing', action: 'read' }],
+        permissions: rp(PERM.report.read),
         meta: {
           requireAuth: true,
         },
@@ -562,7 +555,7 @@ export const routes: RouteConfig[] = [
     name: 'admin',
     title: '系统管理',
     icon: 'Settings',
-    permissions: [{ resource: 'admin', action: 'read' }],
+    permissions: rp(PERM.system_config.read),
     meta: {
       requireAuth: true,
       roles: ['admin', 'super_admin'],
@@ -574,7 +567,7 @@ export const routes: RouteConfig[] = [
         name: 'admin-overview',
         title: '系统概览',
         component: 'AdminDashboard',
-        permissions: [{ resource: 'admin', action: 'read' }],
+        permissions: rp(PERM.system_config.read),
         meta: {
           requireAuth: true,
           roles: ['admin', 'super_admin'],
@@ -586,7 +579,7 @@ export const routes: RouteConfig[] = [
         name: 'user-management',
         title: '用户管理',
         component: 'UserManagement',
-        permissions: [{ resource: 'user', action: 'manage' }],
+        permissions: rp(PERM.user.read),
         meta: {
           requireAuth: true,
           roles: ['admin', 'super_admin'],
@@ -597,7 +590,7 @@ export const routes: RouteConfig[] = [
         name: 'change-review-management',
         title: '评审组管理',
         component: 'ChangeReviewManagement',
-        permissions: [{ resource: 'change', action: 'read' }],
+        permissions: rp(PERM.change.read),
         meta: {
           requireAuth: true,
           roles: ['admin', 'super_admin', 'change_manager'],
@@ -608,7 +601,7 @@ export const routes: RouteConfig[] = [
         name: 'role-management',
         title: '角色管理',
         component: 'RoleManagement',
-        permissions: [{ resource: 'role', action: 'manage' }],
+        permissions: rp(PERM.role.read),
         meta: {
           requireAuth: true,
           roles: ['admin', 'super_admin'],
@@ -619,7 +612,7 @@ export const routes: RouteConfig[] = [
         name: 'tenant-management',
         title: '租户管理',
         component: 'TenantManagement',
-        permissions: [{ resource: 'tenant', action: 'manage' }],
+        permissions: rp(PERM.tenant.read),
         meta: {
           requireAuth: true,
           roles: ['super_admin'],
@@ -630,7 +623,8 @@ export const routes: RouteConfig[] = [
         name: 'notification-settings',
         title: '通知配置',
         component: 'NotificationsPage',
-        permissions: [{ resource: 'system', action: 'manage' }],
+        // 通知偏好读写挂 notification:read（与后端通知路由同码）
+        permissions: rp(PERM.notification.read),
         meta: {
           requireAuth: true,
           roles: ['admin', 'super_admin'],
@@ -641,7 +635,7 @@ export const routes: RouteConfig[] = [
         name: 'audit-logs',
         title: '操作日志',
         component: 'AuditLogsPage',
-        permissions: [{ resource: 'system', action: 'view_logs' }],
+        permissions: rp(PERM.audit.read),
         meta: {
           requireAuth: true,
           roles: ['admin', 'super_admin'],
@@ -652,7 +646,7 @@ export const routes: RouteConfig[] = [
         name: 'cmdb-types',
         title: 'CMDB 类型',
         component: 'CMDBTypesManagement',
-        permissions: [{ resource: 'cmdb', action: 'manage' }],
+        permissions: rp(PERM.cmdb.write),
         meta: {
           requireAuth: true,
           roles: ['admin', 'super_admin'],
@@ -663,7 +657,7 @@ export const routes: RouteConfig[] = [
         name: 'system-settings',
         title: '系统设置',
         component: 'SystemConfiguration',
-        permissions: [{ resource: 'system', action: 'manage' }],
+        permissions: rp(PERM.system_config.read),
         meta: {
           requireAuth: true,
           roles: ['admin', 'super_admin'],
@@ -673,33 +667,13 @@ export const routes: RouteConfig[] = [
   },
 ];
 
-// 资源别名映射：前端使用的资源名 → 后端定义的资源名
-const resourceAliasMap: Record<string, string> = {
-  service: 'service_catalog', // 前端 service:read → 后端 service_catalog:read
-  workflow: 'bpmn', // 前端 workflow:read → 后端 bpmn:read
-};
-
-// Action 别名映射：前端使用的 action → 后端定义的 action
-const actionAliasMap: Record<string, string> = {
-  view: 'read', // view 是 read 的别名
-  use: 'read', // use 是 read 的别名
-  manage: 'admin', // manage 是 admin 的别名
-};
-
-// 解析资源别名
-function resolveResourceAlias(resource: string): string {
-  return resourceAliasMap[resource] || resource;
-}
-
-// 解析 Action 别名
-function resolveActionAlias(action: string): string {
-  return actionAliasMap[action] || action;
-}
-
 // 权限检查工具函数
 export class RoutePermissionChecker {
   /**
    * 检查用户是否有访问路由的权限
+   *
+   * 判定共用 permissions/utils.matchesPermission（与后端 checkPermissionMatch
+   * 同一套通配/管理员覆盖语义），不再维护前端私有的别名映射与手写匹配规则。
    */
   static hasRoutePermission(
     route: RouteConfig,
@@ -716,37 +690,23 @@ export class RoutePermissionChecker {
 
     // 检查资源权限
     if (route.permissions && route.permissions.length > 0) {
-      return route.permissions.every(requiredPermission => {
-        const resolvedResource = resolveResourceAlias(requiredPermission.resource);
-        const resolvedAction = resolveActionAlias(requiredPermission.action);
-
-        return userPermissions.some(userPermission => {
-          // 检查精确匹配（后端返回的权限已经是解析后的）
-          if (
-            userPermission.resource === resolvedResource &&
-            userPermission.action === resolvedAction
-          ) {
-            return true;
-          }
-          // 检查通配符权限（如 service_catalog:* 可以访问 service_catalog:read）
-          if (userPermission.resource === resolvedResource && userPermission.action === '*') {
-            return true;
-          }
-          // 检查原始格式匹配（未经过别名解析的权限）
-          if (
-            userPermission.resource === requiredPermission.resource &&
-            userPermission.action === requiredPermission.action
-          ) {
-            return true;
-          }
-          return false;
-        });
-      });
+      const permissionSet = new Set(
+        userPermissions.map(p => `${p.resource}:${p.action}`)
+      );
+      return route.permissions.every(requiredPermission =>
+        matchesPermission(
+          permissionSet,
+          requiredPermission.resource,
+          requiredPermission.action
+        )
+      );
     }
 
     return true;
   }
 
+  /**
+   * 过滤用户可访问的路由
   /**
    * 过滤用户可访问的路由
    */

@@ -1,6 +1,7 @@
 package ai
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -11,6 +12,7 @@ import (
 	"itsm-backend/common"
 	"itsm-backend/common/handlerctx"
 	"itsm-backend/dto"
+	"itsm-backend/internal/authz"
 	"itsm-backend/internal/knowledgeaccess"
 	"itsm-backend/middleware"
 
@@ -907,6 +909,7 @@ func (h *Handler) GetToolInvocation(c *gin.Context) {
 		common.Fail(c, common.NotFoundCode, "invocation not found")
 		return
 	}
+	riskLevel, minApprovals := h.invocationPolicyMeta(c.Request.Context(), tenantID, inv.ToolName)
 	common.Success(c, gin.H{
 		"id":             inv.ID,
 		"status":         inv.Status,
@@ -918,12 +921,18 @@ func (h *Handler) GetToolInvocation(c *gin.Context) {
 		"createdAt":      inv.CreatedAt,
 		"conversationId": inv.ConversationID,
 		"toolName":       inv.ToolName,
+		"riskLevel":      riskLevel,
+		"minApprovals":   minApprovals,
 	})
 }
 
 // ListToolInvocations handles GET /api/v1/agent/tools/invocations
 // 列出工具调用审批记录，供审批人查看待办。默认返回 pending（待审批），
 // 支持 ?state=approved|rejected|auto 查看其它状态。跨租户隔离由 tenant_id 强制。
+//
+// 每条记录附带该工具对应权限码的运行期策略摘要（riskLevel/minApprovals），
+// 供审批页展示风险分级与审批进度。策略缺失时降级为 unknown/0：
+// 展示面不因目录不可读而整体失败，安全判定仍以执行时 Gate 2.5 严格路径为准。
 func (h *Handler) ListToolInvocations(c *gin.Context) {
 	state := c.Query("state")
 	if state == "" {
@@ -944,6 +953,7 @@ func (h *Handler) ListToolInvocations(c *gin.Context) {
 
 	items := make([]gin.H, 0, len(invs))
 	for _, inv := range invs {
+		riskLevel, minApprovals := h.invocationPolicyMeta(c.Request.Context(), tenantID, inv.ToolName)
 		items = append(items, gin.H{
 			"id":               inv.ID,
 			"toolName":         inv.ToolName,
@@ -957,9 +967,28 @@ func (h *Handler) ListToolInvocations(c *gin.Context) {
 			"createdAt":        inv.CreatedAt,
 			"conversationId":   inv.ConversationID,
 			"userId":           inv.UserID,
+			"riskLevel":        riskLevel,
+			"minApprovals":     minApprovals,
 		})
 	}
 	common.Success(c, gin.H{"items": items, "state": state})
+}
+
+// invocationPolicyMeta 返回工具对应权限码的风险等级与最低审批人数（只读展示用）。
+func (h *Handler) invocationPolicyMeta(ctx context.Context, tenantID int, toolName string) (string, int) {
+	toolDef := h.svc.tools.GetTool(toolName)
+	if toolDef == nil || toolDef.Resource == "" || toolDef.Action == "" {
+		return "unknown", 0
+	}
+	catalog := authz.Shared()
+	if catalog == nil {
+		return "unknown", 0
+	}
+	def, err := catalog.Lookup(ctx, tenantID, toolDef.Resource+":"+toolDef.Action)
+	if err != nil || def == nil {
+		return "unknown", 0
+	}
+	return def.Policy.RiskLevel, def.Policy.MinApprovals
 }
 
 // ApproveTool handles POST /api/v1/agent/tools/:id/approve

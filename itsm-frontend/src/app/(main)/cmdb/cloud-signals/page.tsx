@@ -40,6 +40,7 @@ import {
 } from '@/lib/hooks/useCloudSignals';
 import { useCloudAccountsQuery } from '@/lib/hooks/useCMDB';
 import { usePermissions } from '@/lib/hooks/use-permissions';
+import { PERM } from '@/lib/permissions';
 import type {
   CloudAlert,
   CloudSignalSyncState,
@@ -162,7 +163,7 @@ function CloudSignalsPageContent() {
   const searchParams = useSearchParams();
   const { message } = App.useApp();
   const { hasPermission } = usePermissions();
-  const canWrite = hasPermission('cmdb', 'write');
+  const canWrite = hasPermission(PERM.cmdb.write);
 
   const activeTab: SignalTab =
     searchParams.get('tab') === 'vulnerabilities' ? 'vulnerabilities' : 'alerts';
