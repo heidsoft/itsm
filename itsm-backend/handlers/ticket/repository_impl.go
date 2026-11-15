@@ -445,6 +445,39 @@ func (r *EntRepository) CloseTicket(ctx context.Context, id int, tenantID int) (
 	return r.toDomain(t), nil
 }
 
+// CloseTicketWithTxHook 以 CAS 把工单置为 closed，并在同一事务内执行 hook。
+//
+// 走底层 TransactionalUpdater（repository/ticket 已具备），而不是自己开事务：
+// 事务边界与版本冲突语义只有一处所有者，本包不该复制第二份。
+//
+// 底层仓储不支持 UpdateWithTxHook 时返回 ErrTxCloserUnavailable，而不是悄悄降级成
+// 「只改状态」——静默降级正是 F1 的成因（列表页关闭看起来成功了，流程却还在跑）。
+var ErrTxCloserUnavailable = fmt.Errorf("ticket repository does not support transactional close")
+
+func (r *EntRepository) CloseTicketWithTxHook(
+	ctx context.Context, ticketID int, version int, tenantID int, hook TxCloseHook,
+) (*Ticket, error) {
+	updater, ok := r.repo.(ticket.TransactionalUpdater)
+	if !ok {
+		return nil, ErrTxCloserUnavailable
+	}
+	closed := ticket.StatusClosed
+	params := &ticket.UpdateParams{Status: &closed, Version: version}
+	updated, err := updater.UpdateWithTxHook(ctx, ticketID, params, tenantID,
+		func(tx *ent.Tx, _ *ticket.Ticket) error {
+			if hook == nil {
+				return nil
+			}
+			// 把事务的 ent client 交给终止器：它必须在这同一个事务里读写流程实例，
+			// 否则「工单状态回滚、实例已终止」会变成反方向的脏状态。
+			return hook(ctx, tx.Client())
+		})
+	if err != nil {
+		return nil, err
+	}
+	return r.toDomain(updated), nil
+}
+
 func (r *EntRepository) EscalateTicket(ctx context.Context, id int, reason string, tenantID int, escalatedBy int) (*Ticket, error) {
 	current, err := r.repo.GetByID(ctx, id, tenantID)
 	if err != nil {

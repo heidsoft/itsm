@@ -2123,6 +2123,25 @@ func advanceTicketWorkflowTx(
 // 自建连接，还会操作 timer 调度器与 BPMN 审计（非事务资源）；这里只做 DB 侧
 // 的原子收口，保证「工单状态」与「流程状态」永远同生共死。
 //
+// TerminateTicketWorkflowTx 供 handlers/ticket 的终态收敛路径调用。
+//
+// 详情页 `/tickets/workflow/close` 早已在自家事务里收口流程，但列表页
+// `POST /tickets/:id/close` 与 `PUT /tickets/:id/status` 走 handlers/ticket，
+// 原先只把工单置 closed，把 running 实例与活跃待办留在库里（浏览器 QA 的 F1）。
+// 那里需要的是一个「在**我这条事务内**终止流程」的能力，因此这里把私有的
+// terminateTicketWorkflowTx 原样导出，而不是让它自建事务——自建事务会失去原子性，
+// 一旦工单状态因版本冲突回滚，流程却已经被终止，方向反过来同样错。
+//
+// txc 必须是调用方事务的 ent client；为空时不做任何事（幂等，兼容未绑定流程）。
+func (s *TicketWorkflowService) TerminateTicketWorkflowTx(
+	ctx context.Context, txc *ent.Client, tenantID, actorUserID, ticketID int, reason string,
+) error {
+	if txc == nil {
+		return nil
+	}
+	return terminateTicketWorkflowTx(ctx, txc, s.logger, tenantID, actorUserID, ticketID, reason)
+}
+
 // 三态：
 //   - 无运行中实例 → nil（幂等，兼容未绑定流程的存量工单）；
 //   - 存在未完成的审批节点待办 → 409 fail-closed，绝不代签或绕过职责分离；

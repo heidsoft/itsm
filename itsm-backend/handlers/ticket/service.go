@@ -9,6 +9,7 @@ import (
 
 	"itsm-backend/common"
 	"itsm-backend/dto"
+	"itsm-backend/ent"
 	"itsm-backend/internal/datascope"
 	repoTicket "itsm-backend/repository/ticket"
 
@@ -27,11 +28,25 @@ type Service struct {
 	productionSvc TicketProductionService
 	slaMonitor    TicketSLAMonitor
 	logger        *zap.SugaredLogger
+	// terminator 在工单进入终态时终止关联 BPMN 流程实例。
+	// nil 表示组装根未接线（测试或精简部署）：此时回落到只改状态的旧行为，
+	// 但会在日志里显式告警，不静默假装流程已收敛。
+	terminator TicketWorkflowTerminator
 }
 
 // NewService creates a new ticket service.
 func NewService(repo Repository, productionSvc TicketProductionService, slaMonitor TicketSLAMonitor, logger *zap.SugaredLogger) *Service {
 	return &Service{repo: repo, productionSvc: productionSvc, slaMonitor: slaMonitor, logger: logger}
+}
+
+// SetWorkflowTerminator 注入终态流程终止器。由组装根调用。
+//
+// 用 setter 而不是加进 NewService 的参数表：NewService 在全仓只有组装根一处调用，
+// 但测试替身遍布各包；改签名会让一批只关心别的用例的测试被迫补参，而它们对流程
+// 终止毫无兴趣。setter 让「接线」成为显式的一步，漏接线也能在日志里被发现。
+func (s *Service) SetWorkflowTerminator(t TicketWorkflowTerminator) *Service {
+	s.terminator = t
+	return s
 }
 
 // PauseSLA 暂停工单 SLA 计时，落到 SLA 领域的权威实现。
@@ -367,6 +382,12 @@ func (s *Service) ResolveTicket(ctx context.Context, ticketID int, resolution st
 
 // CloseTicket closes a ticket.
 // 生命周期写操作做行级校验，不能只校验租户隔离。
+//
+// 关闭是业务终态，必须与「终止关联 BPMN 流程实例」同事务：详情页的
+// `/tickets/workflow/close` 早已如此，但列表页与 `PUT /tickets/:id/status` 走的是
+// 本包，原先只改状态，留下 running 实例与活跃待办，用户完成待办后引擎继续推进
+// （ticket_general_flow 的「升级处理」还是回环），于是"关掉的工单不断冒出新待办"。
+// 收敛点放在这里而不是某个 handler，是因为写 closed 的入口有多个，逐个补必漏。
 func (s *Service) CloseTicket(ctx context.Context, ticketID int, tenantID int, actorID int, actorRole string) (*Ticket, error) {
 	current, err := s.lifecycleGuard(ctx, ticketID, actorID, actorRole, tenantID, "关闭")
 	if err != nil {
@@ -375,12 +396,45 @@ func (s *Service) CloseTicket(ctx context.Context, ticketID int, tenantID int, a
 	if !common.IsValidTicketStatusTransition(current.Status, "closed") {
 		return nil, lifecycleError(fmt.Errorf("%w: from '%s' to 'closed'", ErrTicketInvalidTransition, current.Status))
 	}
-	return s.repo.CloseTicket(ctx, ticketID, tenantID)
+	return s.closeWithWorkflowTermination(ctx, current, tenantID, actorID, "工单关闭")
+}
+
+// closeWithWorkflowTermination 是「写 closed + 终止流程」的唯一实现。
+//
+// 三态：
+//   - 仓储不支持事务钩子 → 回落到只改状态，并 Warnw（不静默：静默降级正是 F1 成因）；
+//   - 未接线终止器 → 同上（测试/精简部署），Warnw 说明流程未收口；
+//   - 已接线 → 同事务写入 + 终止，任一失败整体回滚。
+func (s *Service) closeWithWorkflowTermination(
+	ctx context.Context, current *Ticket, tenantID, actorID int, reason string,
+) (*Ticket, error) {
+	closer, supportsHook := s.repo.(TxTicketCloser)
+	if !supportsHook || s.terminator == nil {
+		if s.terminator == nil {
+			s.logger.Warnw("工单关闭未触发流程收口：组装根未注入 TicketWorkflowTerminator，"+
+				"工单已置 closed 但关联 BPMN 实例可能仍在运行（F1 分叉）",
+				"ticket_id", current.ID, "tenant_id", tenantID)
+		} else {
+			s.logger.Warnw("工单关闭未触发流程收口：仓储不支持事务钩子，无法与状态写入同事务",
+				"ticket_id", current.ID, "tenant_id", tenantID)
+		}
+		return s.repo.CloseTicket(ctx, current.ID, tenantID)
+	}
+
+	hook := func(c context.Context, txc *ent.Client) error {
+		// 把事务 client 原样交给终止器：它必须在这同一个事务里读写流程实例表，
+		// 否则「状态回滚、实例已终止」是反方向的脏状态。
+		return s.terminator.TerminateTicketWorkflowTx(c, txc, tenantID, actorID, current.ID, reason)
+	}
+	return closer.CloseTicketWithTxHook(ctx, current.ID, current.Version, tenantID, hook)
 }
 
 // UpdateStatus updates the status of a ticket.
 // 状态流转是生命周期写操作，行级校验对齐 Update/Delete
 // （写权限 ⊆ 读权限，普通角色仅创建人/受理人/管理员）。
+//
+// 目标状态是 closed 时与 CloseTicket 走同一条终态收敛路径：`PUT /tickets/:id/status`
+// 是与列表页关闭并列的第三个可达入口，只补 `/close` 会漏掉它。
 func (s *Service) UpdateStatus(ctx context.Context, ticketID int, status string, tenantID int, userID int, actorRole string) (*Ticket, error) {
 	current, err := s.lifecycleGuard(ctx, ticketID, userID, actorRole, tenantID, "变更状态")
 	if err != nil {
@@ -388,6 +442,9 @@ func (s *Service) UpdateStatus(ctx context.Context, ticketID int, status string,
 	}
 	if !common.IsValidTicketStatusTransition(current.Status, status) {
 		return nil, lifecycleError(fmt.Errorf("%w: from '%s' to '%s'", ErrTicketInvalidTransition, current.Status, status))
+	}
+	if status == "closed" {
+		return s.closeWithWorkflowTermination(ctx, current, tenantID, userID, "工单状态变更为关闭")
 	}
 	return s.repo.UpdateStatus(ctx, ticketID, status, tenantID)
 }

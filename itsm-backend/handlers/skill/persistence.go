@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"time"
 
 	"itsm-backend/dto"
 )
@@ -123,11 +124,12 @@ func (s *DBDefinitionStore) UpsertDefinition(ctx context.Context, def SkillDefin
 		res, err := s.db.ExecContext(ctx,
 			`UPDATE skill_definitions SET version=$1, title=$2, description=$3, category=$4,
 			 tags=$5, capabilities=$6, required_permissions=$7, input_schema=$8, output_schema=$9,
-			 executor=$10, provider=$11, author=$12, checksum=$13, enabled=$14, updated_at=NOW()
-			 WHERE tenant_id=$15 AND code=$16`,
+			 executor=$10, provider=$11, author=$12, checksum=$13, enabled=$14, updated_at=$15
+			 WHERE tenant_id=$16 AND code=$17`,
 			def.Version, def.Title, def.Description, def.Category,
 			tags, caps, perms, inSchema, outSchema,
-			executor, def.Provider, def.Author, def.Checksum, def.Enabled, def.TenantID, def.Code)
+			executor, def.Provider, def.Author, def.Checksum, def.Enabled,
+			time.Now(), def.TenantID, def.Code)
 		if err != nil {
 			return 0, false, fmt.Errorf("update skill definition %s: %w", def.Code, err)
 		}

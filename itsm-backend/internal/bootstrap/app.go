@@ -789,6 +789,12 @@ func NewApplication() *Application {
 	ticketWorkflowService.SetConnectorManager(connectorManager)
 	ticketWorkflowHandler := ticket_workflow.NewHandler(ticketWorkflowService, database.GetRawDB(), sugar)
 
+	// 终态流程收口接线：handlers/ticket 的关闭路径（列表页 POST /tickets/:id/close、
+	// PUT /tickets/:id/status）必须与详情页 /tickets/workflow/close 一样终止关联
+	// BPMN 实例。不接线时它只会 Warnw 并退回「只改状态」，正是 F1 的分叉；
+	// 这里在 ticketWorkflowService 构造之后补上，两者创建顺序本就如此。
+	ticketHandlerService.SetWorkflowTerminator(ticketWorkflowService)
+
 	// Ticket Automation Rule Controller (service 已于 131 行预创建并注入 V2)
 	// Set notification service dependencies
 	ticketService.SetNotificationService(ticketNotificationService)
