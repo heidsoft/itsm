@@ -207,8 +207,11 @@ itsm-backend/itsm-backend
 itsm-backend/server
 itsm-backend/initialize
 
-# All deploy artifacts (binaries, builds, distributions)
-deploy/
+# Deploy: keep composable templates tracked (compose/nginx/env-example/hooks).
+# Runtime secrets stay ignored via the global .env / .env.* rules above, so a
+# local override that carries secrets (docker-compose.override.yml, real .env)
+# must be added to .gitignore explicitly. This line used to be a blanket
+# `deploy/` ignore that silently swallowed the SaaS deployment manifests.
 dist/
 build-output/
 

@@ -1,0 +1,36 @@
+# ITSM SaaS 边缘代理配置（Caddy 自动 Let's Encrypt）
+# 变量来自 docker-compose.saas.yml 注入的环境：SAAS_DOMAIN / ACME_EMAIL
+{
+    # 证书注册邮箱（Let's Encrypt 要求）
+    email {$ACME_EMAIL}
+    # 生产环境用 Let's Encrypt；内网测试可改 staging 避免额度耗尽：
+    # acme_ca https://acme-staging-v02.api.letsencrypt.org/directory
+}
+
+{$SAAS_DOMAIN} {
+    encode gzip
+
+    # 安全响应头
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "SAMEORIGIN"
+        -Server
+    }
+
+    # 边缘健康检查（供云厂商 L4/L7 探测，不落后端）
+    respond /health 200
+
+    # API：保留 /api 前缀，反代到 backend:8090
+    handle /api/* {
+        reverse_proxy itsm-backend:8090 {
+            health_uri /api/v1/readyz
+            health_interval 30s
+        }
+    }
+
+    # 其它请求（前端 SPA / 静态资源）反代到 frontend:3000
+    handle {
+        reverse_proxy itsm-frontend:3000
+    }
+}
