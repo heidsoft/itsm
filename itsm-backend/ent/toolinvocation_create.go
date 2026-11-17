@@ -272,6 +272,34 @@ func (_c *ToolInvocationCreate) SetNillableRoleSnapshot(v *string) *ToolInvocati
 	return _c
 }
 
+// SetTicketID sets the "ticket_id" field.
+func (_c *ToolInvocationCreate) SetTicketID(v int) *ToolInvocationCreate {
+	_c.mutation.SetTicketID(v)
+	return _c
+}
+
+// SetNillableTicketID sets the "ticket_id" field if the given value is not nil.
+func (_c *ToolInvocationCreate) SetNillableTicketID(v *int) *ToolInvocationCreate {
+	if v != nil {
+		_c.SetTicketID(*v)
+	}
+	return _c
+}
+
+// SetChangeID sets the "change_id" field.
+func (_c *ToolInvocationCreate) SetChangeID(v int) *ToolInvocationCreate {
+	_c.mutation.SetChangeID(v)
+	return _c
+}
+
+// SetNillableChangeID sets the "change_id" field if the given value is not nil.
+func (_c *ToolInvocationCreate) SetNillableChangeID(v *int) *ToolInvocationCreate {
+	if v != nil {
+		_c.SetChangeID(*v)
+	}
+	return _c
+}
+
 // SetConversation sets the "conversation" edge to the Conversation entity.
 func (_c *ToolInvocationCreate) SetConversation(v *Conversation) *ToolInvocationCreate {
 	return _c.SetConversationID(v.ID)
@@ -490,6 +518,14 @@ func (_c *ToolInvocationCreate) createSpec() (*ToolInvocation, *sqlgraph.CreateS
 	if value, ok := _c.mutation.RoleSnapshot(); ok {
 		_spec.SetField(toolinvocation.FieldRoleSnapshot, field.TypeString, value)
 		_node.RoleSnapshot = value
+	}
+	if value, ok := _c.mutation.TicketID(); ok {
+		_spec.SetField(toolinvocation.FieldTicketID, field.TypeInt, value)
+		_node.TicketID = value
+	}
+	if value, ok := _c.mutation.ChangeID(); ok {
+		_spec.SetField(toolinvocation.FieldChangeID, field.TypeInt, value)
+		_node.ChangeID = value
 	}
 	if nodes := _c.mutation.ConversationIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{

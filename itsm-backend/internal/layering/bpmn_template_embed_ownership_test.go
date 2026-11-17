@@ -45,10 +45,14 @@ var bteMigratedTemplates = []string{
 	"ticket_assignment_flow.bpmn", "ticket_general_flow.bpmn",
 }
 
-// bteMigratedDigest 是迁移前 service/bpmn/*.bpmn 按 EmbeddedBPMNDigest 口径
-// 算出的摘要。它是版本账本锚点而不是「本批指标值」：模板内容一旦变化，
+// bteMigratedDigest 是内置模板按 EmbeddedBPMNDigest 口径算出的摘要。
+// 它是版本账本锚点而不是「本批指标值」：模板内容一旦变化，
 // 必须走模板版本升级流程并同步更新本常量，避免初始化组件校验和静默漂移。
-const bteMigratedDigest = "69a25a6808d1ef39a9f29d7a60a5e4d0937c4306c300625051099ce0d15f7ce6"
+//
+// 2026-11-17（Phase B3”）：新增 ddl_ai_approval_flow.bpmn（DDL 工单 AI 审批流
+// 骨架）后按纪律同步锚点。上一版 69a25a68...（迁移前 20 模板集合），本版
+// 046aafd3...（21 模板集合）。新增模板不进部门清单/seeder 定义，不动棘轮基线。
+const bteMigratedDigest = "046aafd36ed4203e0da56082eb242e8b4b5a2c69427129b0722477800dba42e2"
 
 func bteReadBackend(t *testing.T, parts ...string) string {
 	t.Helper()

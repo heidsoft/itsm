@@ -5667,6 +5667,8 @@ var (
 		{Name: "permission_check", Type: field.TypeString, Default: "skipped"},
 		{Name: "permission_reason", Type: field.TypeString, Default: ""},
 		{Name: "role_snapshot", Type: field.TypeString, Default: ""},
+		{Name: "ticket_id", Type: field.TypeInt, Nullable: true},
+		{Name: "change_id", Type: field.TypeInt, Nullable: true},
 		{Name: "conversation_id", Type: field.TypeInt, Nullable: true},
 		{Name: "user_id", Type: field.TypeInt, Nullable: true},
 	}
@@ -5678,13 +5680,13 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "tool_invocations_conversations_tool_invocations",
-				Columns:    []*schema.Column{ToolInvocationsColumns[18]},
+				Columns:    []*schema.Column{ToolInvocationsColumns[20]},
 				RefColumns: []*schema.Column{ConversationsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:     "tool_invocations_users_tool_invocations",
-				Columns:    []*schema.Column{ToolInvocationsColumns[19]},
+				Columns:    []*schema.Column{ToolInvocationsColumns[21]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.SetNull,
 			},

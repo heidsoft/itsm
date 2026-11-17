@@ -182088,6 +182088,10 @@ type ToolInvocationMutation struct {
 	permission_check    *string
 	permission_reason   *string
 	role_snapshot       *string
+	ticket_id           *int
+	addticket_id        *int
+	change_id           *int
+	addchange_id        *int
 	clearedFields       map[string]struct{}
 	conversation        *int
 	clearedconversation bool
@@ -183012,6 +183016,146 @@ func (m *ToolInvocationMutation) ResetRoleSnapshot() {
 	m.role_snapshot = nil
 }
 
+// SetTicketID sets the "ticket_id" field.
+func (m *ToolInvocationMutation) SetTicketID(i int) {
+	m.ticket_id = &i
+	m.addticket_id = nil
+}
+
+// TicketID returns the value of the "ticket_id" field in the mutation.
+func (m *ToolInvocationMutation) TicketID() (r int, exists bool) {
+	v := m.ticket_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTicketID returns the old "ticket_id" field's value of the ToolInvocation entity.
+// If the ToolInvocation object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ToolInvocationMutation) OldTicketID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTicketID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTicketID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTicketID: %w", err)
+	}
+	return oldValue.TicketID, nil
+}
+
+// AddTicketID adds i to the "ticket_id" field.
+func (m *ToolInvocationMutation) AddTicketID(i int) {
+	if m.addticket_id != nil {
+		*m.addticket_id += i
+	} else {
+		m.addticket_id = &i
+	}
+}
+
+// AddedTicketID returns the value that was added to the "ticket_id" field in this mutation.
+func (m *ToolInvocationMutation) AddedTicketID() (r int, exists bool) {
+	v := m.addticket_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearTicketID clears the value of the "ticket_id" field.
+func (m *ToolInvocationMutation) ClearTicketID() {
+	m.ticket_id = nil
+	m.addticket_id = nil
+	m.clearedFields[toolinvocation.FieldTicketID] = struct{}{}
+}
+
+// TicketIDCleared returns if the "ticket_id" field was cleared in this mutation.
+func (m *ToolInvocationMutation) TicketIDCleared() bool {
+	_, ok := m.clearedFields[toolinvocation.FieldTicketID]
+	return ok
+}
+
+// ResetTicketID resets all changes to the "ticket_id" field.
+func (m *ToolInvocationMutation) ResetTicketID() {
+	m.ticket_id = nil
+	m.addticket_id = nil
+	delete(m.clearedFields, toolinvocation.FieldTicketID)
+}
+
+// SetChangeID sets the "change_id" field.
+func (m *ToolInvocationMutation) SetChangeID(i int) {
+	m.change_id = &i
+	m.addchange_id = nil
+}
+
+// ChangeID returns the value of the "change_id" field in the mutation.
+func (m *ToolInvocationMutation) ChangeID() (r int, exists bool) {
+	v := m.change_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldChangeID returns the old "change_id" field's value of the ToolInvocation entity.
+// If the ToolInvocation object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ToolInvocationMutation) OldChangeID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldChangeID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldChangeID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldChangeID: %w", err)
+	}
+	return oldValue.ChangeID, nil
+}
+
+// AddChangeID adds i to the "change_id" field.
+func (m *ToolInvocationMutation) AddChangeID(i int) {
+	if m.addchange_id != nil {
+		*m.addchange_id += i
+	} else {
+		m.addchange_id = &i
+	}
+}
+
+// AddedChangeID returns the value that was added to the "change_id" field in this mutation.
+func (m *ToolInvocationMutation) AddedChangeID() (r int, exists bool) {
+	v := m.addchange_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearChangeID clears the value of the "change_id" field.
+func (m *ToolInvocationMutation) ClearChangeID() {
+	m.change_id = nil
+	m.addchange_id = nil
+	m.clearedFields[toolinvocation.FieldChangeID] = struct{}{}
+}
+
+// ChangeIDCleared returns if the "change_id" field was cleared in this mutation.
+func (m *ToolInvocationMutation) ChangeIDCleared() bool {
+	_, ok := m.clearedFields[toolinvocation.FieldChangeID]
+	return ok
+}
+
+// ResetChangeID resets all changes to the "change_id" field.
+func (m *ToolInvocationMutation) ResetChangeID() {
+	m.change_id = nil
+	m.addchange_id = nil
+	delete(m.clearedFields, toolinvocation.FieldChangeID)
+}
+
 // ClearConversation clears the "conversation" edge to the Conversation entity.
 func (m *ToolInvocationMutation) ClearConversation() {
 	m.clearedconversation = true
@@ -183100,7 +183244,7 @@ func (m *ToolInvocationMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ToolInvocationMutation) Fields() []string {
-	fields := make([]string, 0, 19)
+	fields := make([]string, 0, 21)
 	if m.created_at != nil {
 		fields = append(fields, toolinvocation.FieldCreatedAt)
 	}
@@ -183158,6 +183302,12 @@ func (m *ToolInvocationMutation) Fields() []string {
 	if m.role_snapshot != nil {
 		fields = append(fields, toolinvocation.FieldRoleSnapshot)
 	}
+	if m.ticket_id != nil {
+		fields = append(fields, toolinvocation.FieldTicketID)
+	}
+	if m.change_id != nil {
+		fields = append(fields, toolinvocation.FieldChangeID)
+	}
 	return fields
 }
 
@@ -183204,6 +183354,10 @@ func (m *ToolInvocationMutation) Field(name string) (ent.Value, bool) {
 		return m.PermissionReason()
 	case toolinvocation.FieldRoleSnapshot:
 		return m.RoleSnapshot()
+	case toolinvocation.FieldTicketID:
+		return m.TicketID()
+	case toolinvocation.FieldChangeID:
+		return m.ChangeID()
 	}
 	return nil, false
 }
@@ -183251,6 +183405,10 @@ func (m *ToolInvocationMutation) OldField(ctx context.Context, name string) (ent
 		return m.OldPermissionReason(ctx)
 	case toolinvocation.FieldRoleSnapshot:
 		return m.OldRoleSnapshot(ctx)
+	case toolinvocation.FieldTicketID:
+		return m.OldTicketID(ctx)
+	case toolinvocation.FieldChangeID:
+		return m.OldChangeID(ctx)
 	}
 	return nil, fmt.Errorf("unknown ToolInvocation field %s", name)
 }
@@ -183393,6 +183551,20 @@ func (m *ToolInvocationMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetRoleSnapshot(v)
 		return nil
+	case toolinvocation.FieldTicketID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTicketID(v)
+		return nil
+	case toolinvocation.FieldChangeID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetChangeID(v)
+		return nil
 	}
 	return fmt.Errorf("unknown ToolInvocation field %s", name)
 }
@@ -183407,6 +183579,12 @@ func (m *ToolInvocationMutation) AddedFields() []string {
 	if m.addapproved_by != nil {
 		fields = append(fields, toolinvocation.FieldApprovedBy)
 	}
+	if m.addticket_id != nil {
+		fields = append(fields, toolinvocation.FieldTicketID)
+	}
+	if m.addchange_id != nil {
+		fields = append(fields, toolinvocation.FieldChangeID)
+	}
 	return fields
 }
 
@@ -183419,6 +183597,10 @@ func (m *ToolInvocationMutation) AddedField(name string) (ent.Value, bool) {
 		return m.AddedTenantID()
 	case toolinvocation.FieldApprovedBy:
 		return m.AddedApprovedBy()
+	case toolinvocation.FieldTicketID:
+		return m.AddedTicketID()
+	case toolinvocation.FieldChangeID:
+		return m.AddedChangeID()
 	}
 	return nil, false
 }
@@ -183441,6 +183623,20 @@ func (m *ToolInvocationMutation) AddField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.AddApprovedBy(v)
+		return nil
+	case toolinvocation.FieldTicketID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddTicketID(v)
+		return nil
+	case toolinvocation.FieldChangeID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddChangeID(v)
 		return nil
 	}
 	return fmt.Errorf("unknown ToolInvocation numeric field %s", name)
@@ -183470,6 +183666,12 @@ func (m *ToolInvocationMutation) ClearedFields() []string {
 	}
 	if m.FieldCleared(toolinvocation.FieldUserID) {
 		fields = append(fields, toolinvocation.FieldUserID)
+	}
+	if m.FieldCleared(toolinvocation.FieldTicketID) {
+		fields = append(fields, toolinvocation.FieldTicketID)
+	}
+	if m.FieldCleared(toolinvocation.FieldChangeID) {
+		fields = append(fields, toolinvocation.FieldChangeID)
 	}
 	return fields
 }
@@ -183505,6 +183707,12 @@ func (m *ToolInvocationMutation) ClearField(name string) error {
 		return nil
 	case toolinvocation.FieldUserID:
 		m.ClearUserID()
+		return nil
+	case toolinvocation.FieldTicketID:
+		m.ClearTicketID()
+		return nil
+	case toolinvocation.FieldChangeID:
+		m.ClearChangeID()
 		return nil
 	}
 	return fmt.Errorf("unknown ToolInvocation nullable field %s", name)
@@ -183570,6 +183778,12 @@ func (m *ToolInvocationMutation) ResetField(name string) error {
 		return nil
 	case toolinvocation.FieldRoleSnapshot:
 		m.ResetRoleSnapshot()
+		return nil
+	case toolinvocation.FieldTicketID:
+		m.ResetTicketID()
+		return nil
+	case toolinvocation.FieldChangeID:
+		m.ResetChangeID()
 		return nil
 	}
 	return fmt.Errorf("unknown ToolInvocation field %s", name)

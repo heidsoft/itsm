@@ -108,9 +108,10 @@ func TestBuiltinRolePermissionCodes_Guard(t *testing.T) {
 	for _, c := range roleCodes["end_user"] {
 		endUserGranted[c] = true
 	}
-	for _, forbidden := range []string{"ai:approve", "ai:write", "workflow:read"} {
+	// Phase B5：ai:triage 是 agent 编排面（分诊/SOP 起草）码，自助旅程不进入该面。
+	for _, forbidden := range []string{"ai:approve", "ai:write", "ai:triage", "workflow:read"} {
 		if endUserGranted[forbidden] {
-			t.Errorf("end_user 不得持有 %s：终态接口另有归属码（AI 审批=职责分立 Phase A；workflow:read=/bpmn/ai/templates 管理面码，旅程接口由 ticket:read 守卫）", forbidden)
+			t.Errorf("end_user 不得持有 %s：终态接口另有归属码（AI 审批=职责分立 Phase A；ai:triage=agent 编排面 Phase B5；workflow:read=/bpmn/ai/templates 管理面码，旅程接口由 ticket:read 守卫）", forbidden)
 		}
 	}
 

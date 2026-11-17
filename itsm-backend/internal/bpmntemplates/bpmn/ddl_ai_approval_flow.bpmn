@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                 xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                 xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                 targetNamespace="http://bpmn.io/schema/bpmn">
+
+  <!-- ======================================================== -->
+  <!-- AI Agent 权限适配 Phase B3''：DDL 工单 AI 审批流（骨架）  -->
+  <!-- 提交→AI分析→AI分类→SOP生成(人确认)→SOP反馈→SOP迭代→关闭  -->
+  <!--                                                            -->
+  <!-- ⚠️ 骨架说明：本模板仅定义节点与权限意图，尚未绑定真实 DDL -->
+  <!-- 实体/handler。DDL 工单当前是 ticketType=database-change 预设， -->
+  <!-- 无独立实体与自定义字段值存储；AI 节点工具 analyze_ddl 等已   -->
+  <!-- 注册（Phase B3'），待真实业务载体落地后接 ServiceTask        -->
+  <!-- handler。接线的 ServiceTask 走 exactly-once 锚点，权限走     -->
+  <!-- ai:triage 三重交集 fail-closed（Phase B4）。                 -->
+  <!-- ======================================================== -->
+
+  <bpmn:process id="ddl_ai_approval_flow" name="DDL工单AI审批流(骨架)" isExecutable="true">
+    <bpmn:extensionElements>
+      <bpmn:metaData name="category">change</bpmn:metaData>
+      <bpmn:metaData name="version">0.1.0-skeleton</bpmn:metaData>
+      <bpmn:metaData name="description">DDL 工单 AI 分析/分类/SOP 生成与迭代审批流骨架</bpmn:metaData>
+      <bpmn:metaData name="status">skeleton</bpmn:metaData>
+    </bpmn:extensionElements>
+
+    <!-- 提交 -->
+    <bpmn:startEvent id="StartEvent_DDLSubmit" name="DDL工单提交">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="ticket_type_code">database_change</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:outgoing>Flow_D1</bpmn:outgoing>
+    </bpmn:startEvent>
+
+    <!-- AI 分析：只读工具 analyze_ddl，免审批但落审计 -->
+    <bpmn:serviceTask id="Activity_AIAnalyze" name="AI分析">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="service_task_type">generic_task</bpmn:metaData>
+        <bpmn:metaData name="action">analyze_ddl</bpmn:metaData>
+        <bpmn:metaData name="principal">agent</bpmn:metaData>
+        <bpmn:metaData name="tool_code">analyze_ddl</bpmn:metaData>
+        <bpmn:metaData name="permission_code">ai:triage</bpmn:metaData>
+        <bpmn:metaData name="ai_enabled">true</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_D1</bpmn:incoming>
+      <bpmn:outgoing>Flow_D2</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <!-- AI 分类：只读工具 classify_ddl -->
+    <bpmn:serviceTask id="Activity_AIClassify" name="AI分类">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="service_task_type">generic_task</bpmn:metaData>
+        <bpmn:metaData name="action">classify_ddl</bpmn:metaData>
+        <bpmn:metaData name="principal">agent</bpmn:metaData>
+        <bpmn:metaData name="tool_code">classify_ddl</bpmn:metaData>
+        <bpmn:metaData name="permission_code">ai:triage</bpmn:metaData>
+        <bpmn:metaData name="ai_enabled">true</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_D2</bpmn:incoming>
+      <bpmn:outgoing>Flow_D3</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <!-- SOP 生成：AI 起草(generate_sop) + 人确认(UserTask) -->
+    <bpmn:serviceTask id="Activity_AIGenerateSOP" name="AI起草SOP">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="service_task_type">generic_task</bpmn:metaData>
+        <bpmn:metaData name="action">generate_sop</bpmn:metaData>
+        <bpmn:metaData name="principal">agent</bpmn:metaData>
+        <bpmn:metaData name="tool_code">generate_sop</bpmn:metaData>
+        <bpmn:metaData name="permission_code">ai:triage</bpmn:metaData>
+        <bpmn:metaData name="ai_enabled">true</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_D3</bpmn:incoming>
+      <bpmn:outgoing>Flow_D4</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:userTask id="Activity_SOPConfirm" name="SOP人工确认">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">confirm_sop</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">manager</bpmn:metaData>
+        <bpmn:metaData name="permission_code">ai:approve</bpmn:metaData>
+        <bpmn:metaData name="approval_required">true</bpmn:metaData>
+        <bpmn:metaData name="timeout_hours">24</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_D4</bpmn:incoming>
+      <bpmn:outgoing>Flow_D5</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- SOP 反馈：人填写反馈 -->
+    <bpmn:userTask id="Activity_SOPFeedback" name="SOP反馈">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">sop_feedback</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">technician</bpmn:metaData>
+        <bpmn:metaData name="timeout_hours">48</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_D5</bpmn:incoming>
+      <bpmn:outgoing>Flow_D6</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- SOP 迭代：AI 根据反馈起草迭代稿(refine_sop) -->
+    <bpmn:serviceTask id="Activity_AIRefineSOP" name="AI迭代SOP">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="service_task_type">generic_task</bpmn:metaData>
+        <bpmn:metaData name="action">refine_sop</bpmn:metaData>
+        <bpmn:metaData name="principal">agent</bpmn:metaData>
+        <bpmn:metaData name="tool_code">refine_sop</bpmn:metaData>
+        <bpmn:metaData name="permission_code">ai:triage</bpmn:metaData>
+        <bpmn:metaData name="ai_enabled">true</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_D6</bpmn:incoming>
+      <bpmn:outgoing>Flow_D7</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <!-- 关闭 -->
+    <bpmn:userTask id="Activity_DDLClose" name="工单关闭">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="action">close_ddl_ticket</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">manager</bpmn:metaData>
+        <bpmn:metaData name="permission_code">ticket:close</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_D7</bpmn:incoming>
+      <bpmn:outgoing>Flow_D8</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:endEvent id="EndEvent_DDLComplete" name="DDL流程结束">
+      <bpmn:incoming>Flow_D8</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <!-- 流程连线（严格自洽：每个 flow 唯一定义，incoming/outgoing 匹配） -->
+    <bpmn:sequenceFlow id="Flow_D1" sourceRef="StartEvent_DDLSubmit" targetRef="Activity_AIAnalyze" />
+    <bpmn:sequenceFlow id="Flow_D2" sourceRef="Activity_AIAnalyze" targetRef="Activity_AIClassify" />
+    <bpmn:sequenceFlow id="Flow_D3" sourceRef="Activity_AIClassify" targetRef="Activity_AIGenerateSOP" />
+    <bpmn:sequenceFlow id="Flow_D4" sourceRef="Activity_AIGenerateSOP" targetRef="Activity_SOPConfirm" />
+    <bpmn:sequenceFlow id="Flow_D5" sourceRef="Activity_SOPConfirm" targetRef="Activity_SOPFeedback" />
+    <bpmn:sequenceFlow id="Flow_D6" sourceRef="Activity_SOPFeedback" targetRef="Activity_AIRefineSOP" />
+    <bpmn:sequenceFlow id="Flow_D7" sourceRef="Activity_AIRefineSOP" targetRef="Activity_DDLClose" />
+    <bpmn:sequenceFlow id="Flow_D8" sourceRef="Activity_DDLClose" targetRef="EndEvent_DDLComplete" />
+
+  </bpmn:process>
+</bpmn:definitions>

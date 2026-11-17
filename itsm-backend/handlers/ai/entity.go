@@ -45,6 +45,9 @@ type ToolInvocation struct {
 	PermissionCheck  string `json:"permissionCheck"`  // passed|denied|skipped
 	PermissionReason string `json:"permissionReason"` // 校验/拒绝原因
 	RoleSnapshot     string `json:"roleSnapshot"`     // 调用时角色快照
+	// Phase B6（2026-11-17）：业务单据强关联（可空，0 表示无关联）
+	TicketID int `json:"ticketId"`
+	ChangeID int `json:"changeId"`
 }
 
 // RootCauseAnalysis represents an RCA record for a ticket

@@ -13,6 +13,10 @@ import (
 
 type ToolDefinition = dto.ToolDefinition
 
+// ErrRAGUnavailable 表示 RAG 检索服务未装配，SOP 起草等依赖知识库的工具须明确失败，
+// 而不是解引用 nil 崩溃。与 handlers/ai 的同名 sentinel 各自独立（跨包同名不共享 errors.Is）。
+var ErrRAGUnavailable = fmt.Errorf("rag retrieval service unavailable")
+
 type ToolRegistry struct {
 	rag            *RAGService
 	incident       *IncidentService
@@ -414,6 +418,81 @@ func (t *ToolRegistry) ListTools() []ToolDefinition {
 			ResultSchema: map[string]interface{}{
 				"type": "object",
 			},
+		},
+		// -----------------------------------------------------------------
+		// Phase B3'（2026-11-17）：DDL 审批流 AI 节点工具（骨架）。
+		// 四个工具全部 ReadOnly=true：只读分析/分类/起草，不写业务状态，
+		// 因此按 D4 决策免人工审批（RiskForAction(readOnly)=low→0 审批），
+		// 但每次调用仍落 ToolInvocation 审计（含 ticketId/changeId 强关联）。
+		// 纯规则分析不消耗 LLM；SOP 起草复用 RAG 检索既有知识库。
+		// 文本入参，不依赖工单自定义字段值（DDL 业务载体尚未落地）。
+		// -----------------------------------------------------------------
+		{
+			Name:        "analyze_ddl",
+			Description: "分析一段 DDL/DML SQL 的变更风险：识别语句类型、是否含破坏性操作（DROP/TRUNCATE/无 WHERE 的 UPDATE-DELETE）、是否缺备份与回滚信号，返回结构化风险提示。只读，不改数据库",
+			ReadOnly:    true,
+			Resource:    "ai",
+			Action:      "triage",
+			ArgsSchema: map[string]interface{}{
+				"type": "object",
+				"properties": map[string]interface{}{
+					"sqlText":         map[string]interface{}{"type": "string", "description": "待分析的 SQL 文本"},
+					"ticketId":        map[string]interface{}{"type": "integer", "description": "关联工单 ID（可选，用于审计强关联）"},
+					"backupConfirmed": map[string]interface{}{"type": "boolean", "description": "是否已确认备份（可选）"},
+					"hasRollbackPlan": map[string]interface{}{"type": "boolean", "description": "是否有回滚方案（可选）"},
+				},
+				"required": []string{"sqlText"},
+			},
+			ResultSchema: map[string]interface{}{"type": "object"},
+		},
+		{
+			Name:        "classify_ddl",
+			Description: "对一段 DDL SQL 分类：表/列/索引/约束/视图/其他，并标注变更对象名与建议审批级别。只读，不改数据库",
+			ReadOnly:    true,
+			Resource:    "ai",
+			Action:      "triage",
+			ArgsSchema: map[string]interface{}{
+				"type": "object",
+				"properties": map[string]interface{}{
+					"sqlText":  map[string]interface{}{"type": "string", "description": "待分类的 SQL 文本"},
+					"ticketId": map[string]interface{}{"type": "integer", "description": "关联工单 ID（可选）"},
+				},
+				"required": []string{"sqlText"},
+			},
+			ResultSchema: map[string]interface{}{"type": "object"},
+		},
+		{
+			Name:        "generate_sop",
+			Description: "基于知识库检索结果，为给定主题起草一份 SOP 草稿（步骤/注意事项/回滚要点）。只读起草，须人工确认后才生效",
+			ReadOnly:    true,
+			Resource:    "ai",
+			Action:      "triage",
+			ArgsSchema: map[string]interface{}{
+				"type": "object",
+				"properties": map[string]interface{}{
+					"topic":    map[string]interface{}{"type": "string", "description": "SOP 主题，如「数据库变更回滚」"},
+					"ticketId": map[string]interface{}{"type": "integer", "description": "关联工单 ID（可选）"},
+				},
+				"required": []string{"topic"},
+			},
+			ResultSchema: map[string]interface{}{"type": "object"},
+		},
+		{
+			Name:        "refine_sop",
+			Description: "根据人工反馈为 SOP 草稿生成迭代稿，标注待人工确认。只读起草，不直接覆盖已发布 SOP",
+			ReadOnly:    true,
+			Resource:    "ai",
+			Action:      "triage",
+			ArgsSchema: map[string]interface{}{
+				"type": "object",
+				"properties": map[string]interface{}{
+					"sopDraft": map[string]interface{}{"type": "string", "description": "当前 SOP 草稿"},
+					"feedback": map[string]interface{}{"type": "string", "description": "人工反馈"},
+					"ticketId": map[string]interface{}{"type": "integer", "description": "关联工单 ID（可选）"},
+				},
+				"required": []string{"sopDraft", "feedback"},
+			},
+			ResultSchema: map[string]interface{}{"type": "object"},
 		},
 	}
 }
@@ -910,7 +989,143 @@ func (t *ToolRegistry) Execute(ctx context.Context, tenantID int, name string, a
 			"explain_ai": explain,
 		}, nil
 
+	// Phase B3'：DDL 审批流 AI 节点工具（骨架，纯规则/知识库，确定性）。
+	case "analyze_ddl":
+		sqlText := stringArg(args, "sqlText")
+		if strings.TrimSpace(sqlText) == "" {
+			return nil, fmt.Errorf("analyze_ddl 需要非空 sqlText")
+		}
+		return analyzeDDLRisk(sqlText, boolArg(args, "backupConfirmed"), boolArg(args, "hasRollbackPlan")), nil
+
+	case "classify_ddl":
+		sqlText := stringArg(args, "sqlText")
+		if strings.TrimSpace(sqlText) == "" {
+			return nil, fmt.Errorf("classify_ddl 需要非空 sqlText")
+		}
+		return classifyDDL(sqlText), nil
+
+	case "generate_sop":
+		topic := stringArg(args, "topic")
+		if strings.TrimSpace(topic) == "" {
+			return nil, fmt.Errorf("generate_sop 需要非空 topic")
+		}
+		if t.rag == nil {
+			return nil, ErrRAGUnavailable
+		}
+		articles, err := t.rag.Ask(ctx, tenantID, topic, 5)
+		if err != nil {
+			return nil, err
+		}
+		return map[string]interface{}{
+			"topic":       topic,
+			"references":  articles,
+			"status":      "draft",
+			"needsReview": true,
+		}, nil
+
+	case "refine_sop":
+		draft := stringArg(args, "sopDraft")
+		feedback := stringArg(args, "feedback")
+		if strings.TrimSpace(draft) == "" || strings.TrimSpace(feedback) == "" {
+			return nil, fmt.Errorf("refine_sop 需要非空 sopDraft 与 feedback")
+		}
+		return map[string]interface{}{
+			"sopDraft":    draft,
+			"feedback":    feedback,
+			"status":      "draft",
+			"needsReview": true,
+		}, nil
+
 	default:
 		return nil, fmt.Errorf("unknown tool: %s", name)
+	}
+}
+
+// stringArg / boolArg 统一工具入参取值（JSON 数字经反序列化为 float64，
+// 字符串与布尔按类型断言）；骨架工具只用字符串与布尔，不在此重复数字解析。
+func stringArg(args map[string]interface{}, key string) string {
+	if v, ok := args[key].(string); ok {
+		return v
+	}
+	return ""
+}
+
+func boolArg(args map[string]interface{}, key string) bool {
+	if v, ok := args[key].(bool); ok {
+		return v
+	}
+	return false
+}
+
+// analyzeDDLRisk 是纯规则的 DDL 风险分析（确定性、零外部依赖）。
+// 只做文本信号识别，给出风险等级与提示，绝不声称已执行或校验通过 SQL。
+func analyzeDDLRisk(sqlText string, backupConfirmed, hasRollbackPlan bool) map[string]interface{} {
+	upper := strings.ToUpper(sqlText)
+	signals := []string{}
+	level := "low"
+
+	destructive := []string{"DROP TABLE", "DROP DATABASE", "TRUNCATE", "DROP COLUMN", "RENAME TABLE"}
+	for _, kw := range destructive {
+		if strings.Contains(upper, kw) {
+			signals = append(signals, "含破坏性操作: "+kw)
+			level = "high"
+		}
+	}
+	if strings.Contains(upper, "UPDATE") && !strings.Contains(upper, "WHERE") {
+		signals = append(signals, "UPDATE 缺少 WHERE 条件")
+		level = "high"
+	}
+	if strings.Contains(upper, "DELETE") && !strings.Contains(upper, "WHERE") {
+		signals = append(signals, "DELETE 缺少 WHERE 条件")
+		level = "high"
+	}
+	if !backupConfirmed {
+		signals = append(signals, "未确认备份")
+		if level != "high" {
+			level = "medium"
+		}
+	}
+	if !hasRollbackPlan {
+		signals = append(signals, "缺少回滚方案")
+		if level != "high" {
+			level = "medium"
+		}
+	}
+	if len(signals) == 0 {
+		signals = append(signals, "未识别到明显风险信号（仍需人工复核 SQL 语义）")
+	}
+	return map[string]interface{}{
+		"riskLevel":       level,
+		"signals":         signals,
+		"backupConfirmed": backupConfirmed,
+		"hasRollbackPlan": hasRollbackPlan,
+		"needsReview":     true,
+	}
+}
+
+// classifyDDL 按首关键字对 DDL 分类（确定性规则），标注建议审批级别。
+func classifyDDL(sqlText string) map[string]interface{} {
+	upper := strings.ToUpper(strings.TrimSpace(sqlText))
+	category := "other"
+	switch {
+	case strings.Contains(upper, "CREATE TABLE") || strings.Contains(upper, "ALTER TABLE") || strings.Contains(upper, "DROP TABLE"):
+		category = "table"
+	case strings.Contains(upper, "ADD COLUMN") || strings.Contains(upper, "DROP COLUMN") || strings.Contains(upper, "MODIFY COLUMN") || strings.Contains(upper, "CHANGE COLUMN"):
+		category = "column"
+	case strings.Contains(upper, "INDEX"):
+		category = "index"
+	case strings.Contains(upper, "CONSTRAINT") || strings.Contains(upper, "FOREIGN KEY") || strings.Contains(upper, "PRIMARY KEY"):
+		category = "constraint"
+	case strings.Contains(upper, "CREATE VIEW") || strings.Contains(upper, "DROP VIEW"):
+		category = "view"
+	}
+	suggestedApprovals := 1
+	if category == "table" || strings.Contains(upper, "DROP") {
+		suggestedApprovals = 2
+	}
+	return map[string]interface{}{
+		"category":           category,
+		"suggestedApprovals": suggestedApprovals,
+		"needsReview":        true,
 	}
 }

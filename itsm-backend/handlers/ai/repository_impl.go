@@ -164,6 +164,8 @@ func toToolInvocationDomain(e *ent.ToolInvocation) *ToolInvocation {
 		PermissionCheck:  e.PermissionCheck,
 		PermissionReason: e.PermissionReason,
 		RoleSnapshot:     e.RoleSnapshot,
+		TicketID:         e.TicketID,
+		ChangeID:         e.ChangeID,
 	}
 }
 
@@ -180,6 +182,8 @@ func (r *EntRepository) CreateToolInvocation(ctx context.Context, i *ToolInvocat
 		SetPermissionCheck(i.PermissionCheck).
 		SetPermissionReason(i.PermissionReason).
 		SetRoleSnapshot(i.RoleSnapshot).
+		SetTicketID(i.TicketID).
+		SetChangeID(i.ChangeID).
 		Save(ctx)
 	if err != nil {
 		return nil, err

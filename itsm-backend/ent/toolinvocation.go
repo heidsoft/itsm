@@ -57,6 +57,10 @@ type ToolInvocation struct {
 	PermissionReason string `json:"permission_reason,omitempty"`
 	// 调用时角色快照，便于事后审计
 	RoleSnapshot string `json:"role_snapshot,omitempty"`
+	// 关联工单 ID
+	TicketID int `json:"ticket_id,omitempty"`
+	// 关联变更 ID
+	ChangeID int `json:"change_id,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the ToolInvocationQuery when eager-loading is set.
 	Edges        ToolInvocationEdges `json:"edges"`
@@ -103,7 +107,7 @@ func (*ToolInvocation) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case toolinvocation.FieldNeedsApproval, toolinvocation.FieldDryRun:
 			values[i] = new(sql.NullBool)
-		case toolinvocation.FieldID, toolinvocation.FieldTenantID, toolinvocation.FieldConversationID, toolinvocation.FieldApprovedBy, toolinvocation.FieldUserID:
+		case toolinvocation.FieldID, toolinvocation.FieldTenantID, toolinvocation.FieldConversationID, toolinvocation.FieldApprovedBy, toolinvocation.FieldUserID, toolinvocation.FieldTicketID, toolinvocation.FieldChangeID:
 			values[i] = new(sql.NullInt64)
 		case toolinvocation.FieldToolName, toolinvocation.FieldArguments, toolinvocation.FieldResult, toolinvocation.FieldStatus, toolinvocation.FieldRequestID, toolinvocation.FieldApprovalState, toolinvocation.FieldApprovalReason, toolinvocation.FieldError, toolinvocation.FieldPermissionCheck, toolinvocation.FieldPermissionReason, toolinvocation.FieldRoleSnapshot:
 			values[i] = new(sql.NullString)
@@ -246,6 +250,18 @@ func (_m *ToolInvocation) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.RoleSnapshot = value.String
 			}
+		case toolinvocation.FieldTicketID:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field ticket_id", values[i])
+			} else if value.Valid {
+				_m.TicketID = int(value.Int64)
+			}
+		case toolinvocation.FieldChangeID:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field change_id", values[i])
+			} else if value.Valid {
+				_m.ChangeID = int(value.Int64)
+			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
 		}
@@ -352,6 +368,12 @@ func (_m *ToolInvocation) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("role_snapshot=")
 	builder.WriteString(_m.RoleSnapshot)
+	builder.WriteString(", ")
+	builder.WriteString("ticket_id=")
+	builder.WriteString(fmt.Sprintf("%v", _m.TicketID))
+	builder.WriteString(", ")
+	builder.WriteString("change_id=")
+	builder.WriteString(fmt.Sprintf("%v", _m.ChangeID))
 	builder.WriteByte(')')
 	return builder.String()
 }

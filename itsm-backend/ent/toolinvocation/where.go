@@ -150,6 +150,16 @@ func RoleSnapshot(v string) predicate.ToolInvocation {
 	return predicate.ToolInvocation(sql.FieldEQ(FieldRoleSnapshot, v))
 }
 
+// TicketID applies equality check predicate on the "ticket_id" field. It's identical to TicketIDEQ.
+func TicketID(v int) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldEQ(FieldTicketID, v))
+}
+
+// ChangeID applies equality check predicate on the "change_id" field. It's identical to ChangeIDEQ.
+func ChangeID(v int) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldEQ(FieldChangeID, v))
+}
+
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
 func CreatedAtEQ(v time.Time) predicate.ToolInvocation {
 	return predicate.ToolInvocation(sql.FieldEQ(FieldCreatedAt, v))
@@ -1153,6 +1163,106 @@ func RoleSnapshotEqualFold(v string) predicate.ToolInvocation {
 // RoleSnapshotContainsFold applies the ContainsFold predicate on the "role_snapshot" field.
 func RoleSnapshotContainsFold(v string) predicate.ToolInvocation {
 	return predicate.ToolInvocation(sql.FieldContainsFold(FieldRoleSnapshot, v))
+}
+
+// TicketIDEQ applies the EQ predicate on the "ticket_id" field.
+func TicketIDEQ(v int) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldEQ(FieldTicketID, v))
+}
+
+// TicketIDNEQ applies the NEQ predicate on the "ticket_id" field.
+func TicketIDNEQ(v int) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldNEQ(FieldTicketID, v))
+}
+
+// TicketIDIn applies the In predicate on the "ticket_id" field.
+func TicketIDIn(vs ...int) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldIn(FieldTicketID, vs...))
+}
+
+// TicketIDNotIn applies the NotIn predicate on the "ticket_id" field.
+func TicketIDNotIn(vs ...int) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldNotIn(FieldTicketID, vs...))
+}
+
+// TicketIDGT applies the GT predicate on the "ticket_id" field.
+func TicketIDGT(v int) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldGT(FieldTicketID, v))
+}
+
+// TicketIDGTE applies the GTE predicate on the "ticket_id" field.
+func TicketIDGTE(v int) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldGTE(FieldTicketID, v))
+}
+
+// TicketIDLT applies the LT predicate on the "ticket_id" field.
+func TicketIDLT(v int) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldLT(FieldTicketID, v))
+}
+
+// TicketIDLTE applies the LTE predicate on the "ticket_id" field.
+func TicketIDLTE(v int) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldLTE(FieldTicketID, v))
+}
+
+// TicketIDIsNil applies the IsNil predicate on the "ticket_id" field.
+func TicketIDIsNil() predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldIsNull(FieldTicketID))
+}
+
+// TicketIDNotNil applies the NotNil predicate on the "ticket_id" field.
+func TicketIDNotNil() predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldNotNull(FieldTicketID))
+}
+
+// ChangeIDEQ applies the EQ predicate on the "change_id" field.
+func ChangeIDEQ(v int) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldEQ(FieldChangeID, v))
+}
+
+// ChangeIDNEQ applies the NEQ predicate on the "change_id" field.
+func ChangeIDNEQ(v int) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldNEQ(FieldChangeID, v))
+}
+
+// ChangeIDIn applies the In predicate on the "change_id" field.
+func ChangeIDIn(vs ...int) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldIn(FieldChangeID, vs...))
+}
+
+// ChangeIDNotIn applies the NotIn predicate on the "change_id" field.
+func ChangeIDNotIn(vs ...int) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldNotIn(FieldChangeID, vs...))
+}
+
+// ChangeIDGT applies the GT predicate on the "change_id" field.
+func ChangeIDGT(v int) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldGT(FieldChangeID, v))
+}
+
+// ChangeIDGTE applies the GTE predicate on the "change_id" field.
+func ChangeIDGTE(v int) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldGTE(FieldChangeID, v))
+}
+
+// ChangeIDLT applies the LT predicate on the "change_id" field.
+func ChangeIDLT(v int) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldLT(FieldChangeID, v))
+}
+
+// ChangeIDLTE applies the LTE predicate on the "change_id" field.
+func ChangeIDLTE(v int) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldLTE(FieldChangeID, v))
+}
+
+// ChangeIDIsNil applies the IsNil predicate on the "change_id" field.
+func ChangeIDIsNil() predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldIsNull(FieldChangeID))
+}
+
+// ChangeIDNotNil applies the NotNil predicate on the "change_id" field.
+func ChangeIDNotNil() predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldNotNull(FieldChangeID))
 }
 
 // HasConversation applies the HasEdge predicate on the "conversation" edge.

@@ -52,6 +52,10 @@ const (
 	FieldPermissionReason = "permission_reason"
 	// FieldRoleSnapshot holds the string denoting the role_snapshot field in the database.
 	FieldRoleSnapshot = "role_snapshot"
+	// FieldTicketID holds the string denoting the ticket_id field in the database.
+	FieldTicketID = "ticket_id"
+	// FieldChangeID holds the string denoting the change_id field in the database.
+	FieldChangeID = "change_id"
 	// EdgeConversation holds the string denoting the conversation edge name in mutations.
 	EdgeConversation = "conversation"
 	// EdgeUser holds the string denoting the user edge name in mutations.
@@ -96,6 +100,8 @@ var Columns = []string{
 	FieldPermissionCheck,
 	FieldPermissionReason,
 	FieldRoleSnapshot,
+	FieldTicketID,
+	FieldChangeID,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -232,6 +238,16 @@ func ByPermissionReason(opts ...sql.OrderTermOption) OrderOption {
 // ByRoleSnapshot orders the results by the role_snapshot field.
 func ByRoleSnapshot(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldRoleSnapshot, opts...).ToFunc()
+}
+
+// ByTicketID orders the results by the ticket_id field.
+func ByTicketID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldTicketID, opts...).ToFunc()
+}
+
+// ByChangeID orders the results by the change_id field.
+func ByChangeID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldChangeID, opts...).ToFunc()
 }
 
 // ByConversationField orders the results by conversation field.

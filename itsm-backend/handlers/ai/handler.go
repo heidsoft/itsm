@@ -921,8 +921,11 @@ func (h *Handler) GetToolInvocation(c *gin.Context) {
 		"createdAt":      inv.CreatedAt,
 		"conversationId": inv.ConversationID,
 		"toolName":       inv.ToolName,
-		"riskLevel":      riskLevel,
-		"minApprovals":   minApprovals,
+		// Phase B6：业务单据强关联（0 表示无关联）
+		"ticketId":     inv.TicketID,
+		"changeId":     inv.ChangeID,
+		"riskLevel":    riskLevel,
+		"minApprovals": minApprovals,
 	})
 }
 
@@ -967,8 +970,11 @@ func (h *Handler) ListToolInvocations(c *gin.Context) {
 			"createdAt":        inv.CreatedAt,
 			"conversationId":   inv.ConversationID,
 			"userId":           inv.UserID,
-			"riskLevel":        riskLevel,
-			"minApprovals":     minApprovals,
+			// Phase B6：业务单据强关联（0 表示无关联）
+			"ticketId":     inv.TicketID,
+			"changeId":     inv.ChangeID,
+			"riskLevel":    riskLevel,
+			"minApprovals": minApprovals,
 		})
 	}
 	common.Success(c, gin.H{"items": items, "state": state})

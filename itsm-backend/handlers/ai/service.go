@@ -292,6 +292,7 @@ func (s *Service) ExecuteTool(ctx context.Context, userID, tenantID int, role, n
 
 	// 写工具：创建 pending invocation，等待审批
 	argsStr, _ := json.Marshal(args)
+	ticketRef, changeRef := businessRefsFromArgs(args)
 	inv, err := s.repo.CreateToolInvocation(ctx, &ToolInvocation{
 		TenantID:         tenantID,
 		ToolName:         name,
@@ -303,12 +304,47 @@ func (s *Service) ExecuteTool(ctx context.Context, userID, tenantID int, role, n
 		PermissionCheck:  permCheck,
 		PermissionReason: permReason,
 		RoleSnapshot:     role,
+		TicketID:         ticketRef,
+		ChangeID:         changeRef,
 	})
 	if err != nil {
 		return nil, 0, err
 	}
 
 	return nil, inv.ID, nil
+}
+
+// businessRefsFromArgs 从工具参数中提取业务单据 ID（camelCase）。
+// JSON 反序列化后数字为 float64，直接断言 int 会恒失败；这里兼容
+// int/int64/float64/json.Number/string 五种形态，非法或负数一律视为无关联（0）。
+// Phase B6：这是 ToolInvocation 强关联列的唯一入参解析点，读/写工具共用。
+func businessRefsFromArgs(args map[string]interface{}) (ticketID, changeID int) {
+	toID := func(v interface{}) int {
+		switch n := v.(type) {
+		case int:
+			if n > 0 {
+				return n
+			}
+		case int64:
+			if n > 0 && n <= int64(^uint(0)>>1) {
+				return int(n)
+			}
+		case float64:
+			if n > 0 && n <= float64(^uint(0)>>1) && n == float64(int(n)) {
+				return int(n)
+			}
+		case json.Number:
+			if i, err := n.Int64(); err == nil && i > 0 && i <= int64(^uint(0)>>1) {
+				return int(i)
+			}
+		case string:
+			if i, err := strconv.Atoi(strings.TrimSpace(n)); err == nil && i > 0 {
+				return i
+			}
+		}
+		return 0
+	}
+	return toID(args["ticketId"]), toID(args["changeId"])
 }
 
 // recordToolAudit 统一记录只读工具执行审计，包含 RBAC 校验结果
@@ -318,6 +354,7 @@ func (s *Service) ExecuteTool(ctx context.Context, userID, tenantID int, role, n
 // 保证 DB 抖动时审计丢失可观测、可告警。
 func (s *Service) recordToolAudit(ctx context.Context, tenantID, userID int, role, toolName string, args map[string]interface{}, permCheck, permReason, status string, result *string, needsApproval bool) {
 	argsStr, _ := json.Marshal(args)
+	ticketRef, changeRef := businessRefsFromArgs(args)
 	if _, err := s.repo.CreateToolInvocation(ctx, &ToolInvocation{
 		TenantID:         tenantID,
 		ToolName:         toolName,
@@ -329,6 +366,8 @@ func (s *Service) recordToolAudit(ctx context.Context, tenantID, userID int, rol
 		PermissionCheck:  permCheck,
 		PermissionReason: permReason,
 		RoleSnapshot:     role,
+		TicketID:         ticketRef,
+		ChangeID:         changeRef,
 	}); err != nil {
 		s.logger.Errorw("AI tool audit persistence failed",
 			"operation", "create_tool_invocation",

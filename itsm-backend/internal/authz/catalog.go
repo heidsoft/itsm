@@ -167,6 +167,10 @@ func Definitions() []PermissionDef {
 		// 最终用户审批「AI 代人写操作」违背职责分立。ai:approve 只授管理/一线
 		// 处理角色，且 handler 内还有「须持目标工具 resource:action」的二次校验。
 		{"ai:approve", "审批AI工具调用", "ai", "approve", "审批 AI agent 发起的工具调用请求"},
+		// Phase B5（2026-11-17）：triage/SOP 流程权限面从 ai:read/ai:write 拆出。
+		// DDL AI 审批流的只读分析节点与 SOP 起草节点要求持有此码；
+		// end_user 不授予（自助旅程不进入 agent 编排面）。
+		{"ai:triage", "AI分诊与SOP", "ai", "triage", "调用 AI 分诊/分类与 SOP 起草工具"},
 		{"connector:write", "管理连接器", "connector", "write", "管理连接器配置"},
 		{"connector:read", "查看连接器", "connector", "read", "查看连接器配置与健康状态"},
 		{"email_intake:read", "查看邮件报障", "email_intake", "read", "查看邮件报障会话与分析"},

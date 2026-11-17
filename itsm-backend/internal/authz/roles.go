@@ -44,6 +44,8 @@ func BuiltinRolePermissionCodes() map[string][]string {
 			"sla:read",
 			"report:read",
 			"knowledge:read", "knowledge:write",
+			// Phase B5（2026-11-17）：变更经理发起 DDL 分析/分类与 SOP 起草。
+			"ai:read", "ai:triage",
 		},
 		// 服务目录管理员：负责服务目录、服务请求模板和工单模板配置
 		domainrole.ServiceCatalogAdmin: {
@@ -115,6 +117,8 @@ func BuiltinRolePermissionCodes() map[string][]string {
 			"user:read", "team:read", "department:read",
 			"asset:read", "cmdb:read",
 			"notification:read", "ai:read",
+			// Phase B5（2026-11-17）：一线分诊与 SOP 起草工具。
+			"ai:triage",
 			// 坐席工作流（7）：alert 资源名是单数，路由只声明 alert:*；
 			// 旧兜底表的 alerts:read 从未匹配过任何路由，不再授予。
 			"notification:write", "dashboard:read", "service_catalog:read",
@@ -170,6 +174,8 @@ func BuiltinRolePermissionCodes() map[string][]string {
 			"group:read", "group:write", "org:read", "org:write",
 			"project:read", "project:write",
 			"application:read", "application:write", "ai:read",
+			// Phase B5（2026-11-17）：经理可发起分诊/SOP 起草。
+			"ai:triage",
 			// Phase A（2026-11-17）：部门经理可审批 AI 工具调用（L1 审批角色语义）。
 			"ai:approve",
 		},
@@ -208,6 +214,8 @@ func BuiltinRolePermissionCodes() map[string][]string {
 			"dashboard:read", "group:read", "approval:read",
 			// AI 分派建议/摘要是 IT 运营一线工具，其余运营角色（agent/manager/end_user）均持 ai:read。
 			"ai:read",
+			// Phase B5（2026-11-17）：IT 管理员可发起分诊/SOP 起草。
+			"ai:triage",
 			// Phase A（2026-11-17）：IT 管理员可审批 AI 工具调用（L2 审批角色语义）。
 			"ai:approve",
 		},
@@ -320,6 +328,8 @@ func BuiltinRolePermissionCodes() map[string][]string {
 			"alert:read",
 			"alerts:read",
 			"ai:read",
+			// Phase B5（2026-11-17）：二线处理 DDL 分析/分类与 SOP 起草。
+			"ai:triage",
 			"group:read",
 			// 剥离 bpmn:write。二线技术员的语义是「处理指派给自己的任务」，
 			// 不是「设计/发布/触发流程」；流程定义与实例写权限收归 admin 及以上。

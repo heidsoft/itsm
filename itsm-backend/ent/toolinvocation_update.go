@@ -352,6 +352,60 @@ func (_u *ToolInvocationUpdate) SetNillableRoleSnapshot(v *string) *ToolInvocati
 	return _u
 }
 
+// SetTicketID sets the "ticket_id" field.
+func (_u *ToolInvocationUpdate) SetTicketID(v int) *ToolInvocationUpdate {
+	_u.mutation.ResetTicketID()
+	_u.mutation.SetTicketID(v)
+	return _u
+}
+
+// SetNillableTicketID sets the "ticket_id" field if the given value is not nil.
+func (_u *ToolInvocationUpdate) SetNillableTicketID(v *int) *ToolInvocationUpdate {
+	if v != nil {
+		_u.SetTicketID(*v)
+	}
+	return _u
+}
+
+// AddTicketID adds value to the "ticket_id" field.
+func (_u *ToolInvocationUpdate) AddTicketID(v int) *ToolInvocationUpdate {
+	_u.mutation.AddTicketID(v)
+	return _u
+}
+
+// ClearTicketID clears the value of the "ticket_id" field.
+func (_u *ToolInvocationUpdate) ClearTicketID() *ToolInvocationUpdate {
+	_u.mutation.ClearTicketID()
+	return _u
+}
+
+// SetChangeID sets the "change_id" field.
+func (_u *ToolInvocationUpdate) SetChangeID(v int) *ToolInvocationUpdate {
+	_u.mutation.ResetChangeID()
+	_u.mutation.SetChangeID(v)
+	return _u
+}
+
+// SetNillableChangeID sets the "change_id" field if the given value is not nil.
+func (_u *ToolInvocationUpdate) SetNillableChangeID(v *int) *ToolInvocationUpdate {
+	if v != nil {
+		_u.SetChangeID(*v)
+	}
+	return _u
+}
+
+// AddChangeID adds value to the "change_id" field.
+func (_u *ToolInvocationUpdate) AddChangeID(v int) *ToolInvocationUpdate {
+	_u.mutation.AddChangeID(v)
+	return _u
+}
+
+// ClearChangeID clears the value of the "change_id" field.
+func (_u *ToolInvocationUpdate) ClearChangeID() *ToolInvocationUpdate {
+	_u.mutation.ClearChangeID()
+	return _u
+}
+
 // SetConversation sets the "conversation" edge to the Conversation entity.
 func (_u *ToolInvocationUpdate) SetConversation(v *Conversation) *ToolInvocationUpdate {
 	return _u.SetConversationID(v.ID)
@@ -486,6 +540,24 @@ func (_u *ToolInvocationUpdate) sqlSave(ctx context.Context) (_node int, err err
 	}
 	if value, ok := _u.mutation.RoleSnapshot(); ok {
 		_spec.SetField(toolinvocation.FieldRoleSnapshot, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.TicketID(); ok {
+		_spec.SetField(toolinvocation.FieldTicketID, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedTicketID(); ok {
+		_spec.AddField(toolinvocation.FieldTicketID, field.TypeInt, value)
+	}
+	if _u.mutation.TicketIDCleared() {
+		_spec.ClearField(toolinvocation.FieldTicketID, field.TypeInt)
+	}
+	if value, ok := _u.mutation.ChangeID(); ok {
+		_spec.SetField(toolinvocation.FieldChangeID, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedChangeID(); ok {
+		_spec.AddField(toolinvocation.FieldChangeID, field.TypeInt, value)
+	}
+	if _u.mutation.ChangeIDCleared() {
+		_spec.ClearField(toolinvocation.FieldChangeID, field.TypeInt)
 	}
 	if _u.mutation.ConversationCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -887,6 +959,60 @@ func (_u *ToolInvocationUpdateOne) SetNillableRoleSnapshot(v *string) *ToolInvoc
 	return _u
 }
 
+// SetTicketID sets the "ticket_id" field.
+func (_u *ToolInvocationUpdateOne) SetTicketID(v int) *ToolInvocationUpdateOne {
+	_u.mutation.ResetTicketID()
+	_u.mutation.SetTicketID(v)
+	return _u
+}
+
+// SetNillableTicketID sets the "ticket_id" field if the given value is not nil.
+func (_u *ToolInvocationUpdateOne) SetNillableTicketID(v *int) *ToolInvocationUpdateOne {
+	if v != nil {
+		_u.SetTicketID(*v)
+	}
+	return _u
+}
+
+// AddTicketID adds value to the "ticket_id" field.
+func (_u *ToolInvocationUpdateOne) AddTicketID(v int) *ToolInvocationUpdateOne {
+	_u.mutation.AddTicketID(v)
+	return _u
+}
+
+// ClearTicketID clears the value of the "ticket_id" field.
+func (_u *ToolInvocationUpdateOne) ClearTicketID() *ToolInvocationUpdateOne {
+	_u.mutation.ClearTicketID()
+	return _u
+}
+
+// SetChangeID sets the "change_id" field.
+func (_u *ToolInvocationUpdateOne) SetChangeID(v int) *ToolInvocationUpdateOne {
+	_u.mutation.ResetChangeID()
+	_u.mutation.SetChangeID(v)
+	return _u
+}
+
+// SetNillableChangeID sets the "change_id" field if the given value is not nil.
+func (_u *ToolInvocationUpdateOne) SetNillableChangeID(v *int) *ToolInvocationUpdateOne {
+	if v != nil {
+		_u.SetChangeID(*v)
+	}
+	return _u
+}
+
+// AddChangeID adds value to the "change_id" field.
+func (_u *ToolInvocationUpdateOne) AddChangeID(v int) *ToolInvocationUpdateOne {
+	_u.mutation.AddChangeID(v)
+	return _u
+}
+
+// ClearChangeID clears the value of the "change_id" field.
+func (_u *ToolInvocationUpdateOne) ClearChangeID() *ToolInvocationUpdateOne {
+	_u.mutation.ClearChangeID()
+	return _u
+}
+
 // SetConversation sets the "conversation" edge to the Conversation entity.
 func (_u *ToolInvocationUpdateOne) SetConversation(v *Conversation) *ToolInvocationUpdateOne {
 	return _u.SetConversationID(v.ID)
@@ -1051,6 +1177,24 @@ func (_u *ToolInvocationUpdateOne) sqlSave(ctx context.Context) (_node *ToolInvo
 	}
 	if value, ok := _u.mutation.RoleSnapshot(); ok {
 		_spec.SetField(toolinvocation.FieldRoleSnapshot, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.TicketID(); ok {
+		_spec.SetField(toolinvocation.FieldTicketID, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedTicketID(); ok {
+		_spec.AddField(toolinvocation.FieldTicketID, field.TypeInt, value)
+	}
+	if _u.mutation.TicketIDCleared() {
+		_spec.ClearField(toolinvocation.FieldTicketID, field.TypeInt)
+	}
+	if value, ok := _u.mutation.ChangeID(); ok {
+		_spec.SetField(toolinvocation.FieldChangeID, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedChangeID(); ok {
+		_spec.AddField(toolinvocation.FieldChangeID, field.TypeInt, value)
+	}
+	if _u.mutation.ChangeIDCleared() {
+		_spec.ClearField(toolinvocation.FieldChangeID, field.TypeInt)
 	}
 	if _u.mutation.ConversationCleared() {
 		edge := &sqlgraph.EdgeSpec{

@@ -33,6 +33,10 @@ func (ToolInvocation) Fields() []ent.Field {
 		field.String("permission_check").Default("skipped").Comment("权限校验结果: passed|denied|skipped"),
 		field.String("permission_reason").Default("").Comment("权限校验原因/拒绝原因"),
 		field.String("role_snapshot").Default("").Comment("调用时角色快照，便于事后审计"),
+		// Phase B6（2026-11-17）：业务单据强关联（可空，0 表示无关联）。
+		// 替代 AI 审计底账 inputRef 字符串弱关联，可按工单/变更反查工具调用链。
+		field.Int("ticket_id").Optional().Comment("关联工单 ID"),
+		field.Int("change_id").Optional().Comment("关联变更 ID"),
 	}
 }
 

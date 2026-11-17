@@ -2699,6 +2699,30 @@ Authorization: Bearer <accessToken>
 `POST /api/v1/ai/tickets/{id}/analyze` 同批补 `ticket:read` 双权限（与
 investigate / incident analyze 同口径）。
 
+**DDL/SOP 工具与 `ai:triage`（Phase B3–B5，2026-11-17）**：新增权限码
+`ai:triage`（资源动作 `ai:triage`），授予 technician / agent / manager /
+it_admin / change_manager 与 sysadmin，`end_user` 不授。四个新只读工具
+`analyze_ddl`（SQL 风险分析，纯规则）、`classify_ddl`（DDL 分类，纯规则）、
+`generate_sop`（知识库检索起草 SOP 草稿）、`refine_sop`（按反馈生成迭代稿）
+的 `resource:action` 均为 `ai:triage`，因此经 `POST /api/v1/agent/tools/execute`
+调用时受同一套 Gate 2 RBAC 约束：无 `ai:triage` 的角色被拒并落 `denied` 审计。
+四个工具均 `ReadOnly=true`（免人工审批，D4 决策），`generate_sop`/`refine_sop`
+返回 `status=draft` + `needsReview=true`，须人工确认才生效；SOP 起草依赖 RAG
+装配，未装配时返回明确错误而非空草稿。入参均 camelCase，`ticketId`/`changeId`
+可选，会写入 `ToolInvocation` 的业务外键列（见下）。
+
+**ToolInvocation 业务外键（Phase B6）**：`tool_invocations` 表新增可空列
+`ticket_id` / `change_id`，工具调用审计可按工单/变更反查（替代
+`ai_audit.input_ref` 字符串弱关联）。`GET /api/v1/agent/tools/invocations` 与
+`GET /api/v1/agent/tools/{id}` 的每条记录相应新增只读字段 `ticketId` /
+`changeId`（无关联为 `0`）。迁移见 `migrations/20261117_tool_invocation_business_refs.sql`。
+
+**DDL AI 审批流模板（Phase B3''，骨架）**：内置 BPMN 模板
+`ddl_ai_approval_flow`（`status=skeleton`）定义「提交→AI分析→AI分类→SOP生成
+（人确认）→SOP反馈→SOP迭代→关闭」节点与权限意图元数据，尚未绑定 ServiceTask
+handler、不自动绑定流程。DDL 工单当前仍是 `ticketType=database-change` 预设，
+工单实例不存储 SQL 自定义字段值——本模板是权限骨架，端到端流程待业务载体落地。
+
 **前端码空间单点化**：前端权限码只有一份构建期快照
 `itsm-frontend/src/lib/permissions/catalog.gen.ts`，由
 `cd itsm-backend && go run ./cmd/authz-gen` 从 `internal/authz/catalog.go`

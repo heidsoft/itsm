@@ -3849,6 +3849,16 @@ cd itsm-frontend && npm run test:unit -- --runTestsByPath src/lib/api/__tests__/
 
 无 DDL；权限种子在下次启动播种时自动收敛（`ai:approve` 入库、end_user 的 `ai:write` 撤销由播种器按权威源同步）。
 
+### 1.106 AI Agent 权限适配 Phase B3–B6：新增 ai:triage 码、ToolInvocation 业务外键列（2026-11-17，权限扩大 + 新增 DDL）
+
+**① 新增权限码 `ai:triage`（分诊/SOP 起草面）。** 这是**权限扩大**项：`technician` / `agent` / `manager` / `it_admin` / `change_manager` 与 `sysadmin` 会在下次启动播种时自动获得 `ai:triage`（用于 DDL 分析/分类与 SOP 起草工具）；`end_user` 不获得。它的资源动作是 `ai:triage`，DDL/SOP 四个只读工具（见②）用它做工具级 RBAC（Gate 2）。如你的租户需要对某些角色收紧，请在播种后于角色权限配置中撤销对应码——但注意撤销后这些角色将无法执行 DDL/SOP 工具（fail-closed，符合预期）。
+
+**② 四个新 AI 工具与 DDL 流程骨架（无业务副作用）。** `analyze_ddl` / `classify_ddl` / `generate_sop` / `refine_sop` 注册为只读工具（不写业务状态、免人工审批）；新增内置 BPMN 模板 `ddl_ai_approval_flow`（`status=skeleton`，不进部门清单、不自动绑定任何流程）。**边界**：DDL 工单当前仍是 `ticketType=database-change` 预设，工单实例不存储 SQL 自定义字段值——本批是权限骨架，不是可用的端到端 DDL AI 审批流；模板尚未接 ServiceTask handler，不会自动运行。`generate_sop` 依赖 RAG 检索服务装配，未装配时明确报错（不静默产出空 SOP）。
+
+**③ `tool_invocations` 新增两列（需执行迁移）。** 新增可空列 `ticket_id` / `change_id`（Integer），用于替代 `ai_audit.input_ref` 字符串弱关联，可按工单/变更反查 AI 工具调用链；附 `(tenant_id, ticket_id)` / `(tenant_id, change_id)` 部分索引。**升级动作**：执行迁移 `migrations/20261117_tool_invocation_business_refs.sql`（幂等，`IF NOT EXISTS`，可安全重放）；回滚用同名 `_down.sql`。两列可空，存量行自动为 NULL，不影响既有审计记录。若你的部署走 ent auto-migrate（开发环境），启动时会自动补列。
+
+无破坏性行为变更；唯一需运维动作的是③的迁移（生产）与①的播种后权限复核。
+
 ## 2. 环境变量变更
 
 本次升级**移除了多个"幽灵配置项"**（在示例文件中声明但代码/Compose 从不读取，用户配置了也不生效），并修正了一个 Grafana 密码安全缺陷。
