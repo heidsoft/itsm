@@ -3883,10 +3883,17 @@ cd itsm-frontend && npm run test:unit -- --runTestsByPath src/lib/api/__tests__/
 ### 2.4 新增必填：`AI_SERVICE_TOKEN` / `ITSM_BACKEND_TOKEN`；可选 dev 降级：`AI_SERVICE_AUTH_MODE`（2026-11-17，Phase A）
 
 - **`AI_SERVICE_TOKEN`（必填，生产）**：backend 与 itsm-ai-service 共享的服务间令牌（`X-Service-Token` 头），两侧同值。`docker-compose.prod.yml` 中为 `:?` 必填——缺失时 compose 拒绝启动。sidecar 侧未配置令牌时已从「无鉴权放行」收紧为「非公开端点全部 401（fail-closed）」，后端 triage 调用会全部失败并走降级路径。
-- **`ITSM_BACKEND_TOKEN`（必填，生产）**：sidecar 回连后端（`/api/v1/ai/*`）的 Bearer 令牌。缺失时知识检索/工单分析回连 401、相关 AI 能力降级。
+- **`ITSM_BACKEND_TOKEN`（必填，生产；Phase B 起格式收紧为 service JWT）**：sidecar 回连后端（`/api/v1/ai/*`）的 Bearer 凭证。**必须是 JWT，不是随机串**——后端 `AuthMiddleware` 以 JWT 解析，随机串会 401 → sidecar 静默降级到规则分诊（日志只记错误类型名，不易察觉）。用后端签发工具生成（`JWT_SECRET` 必须与后端同一把密钥）：
+
+  ```bash
+  ITSM_BACKEND_TOKEN=$(JWT_SECRET="$JWT_SECRET" \
+    go run ./itsm-backend/cmd/service-token-gen -tenant-id 1 -ttl 8760h)
+  ```
+
+  签出的 token 带 `principal=service` + 只读载体角色 `audit_admin` + 固定 `tenantId`，后端据此注入零信任主体并落审计。`-tenant-id` 填 sidecar 被允许访问的固定租户，**禁止按请求自报租户**；`-ttl` 默认 1 年（8760h）。轮换：重新签发并把新值注入 `ITSM_BACKEND_TOKEN`，旧 token 到期即失效。**从 Phase A 的随机串升级**：必须重新签发，否则回连 401。
 - **`AI_SERVICE_AUTH_MODE`（可选，仅本地开发）**：设为 `disabled` 时 sidecar 显式降级为无鉴权（等价旧行为）。生产禁止使用；该降级态会在启动日志打 ERROR，并在 `/health` 的 `auth.serviceToken` 持续暴露为 `disabled`。其余任何取值（含未设置）均为鉴权开启。
 
-生成建议：`openssl rand -hex 32`。`.env.prod` 注入，不进镜像、不进 git。
+`AI_SERVICE_TOKEN` 生成建议：`openssl rand -hex 32`（它是共享密钥，不是 JWT，与 `ITSM_BACKEND_TOKEN` 不同）。两者都从 `.env.prod` 注入，不进镜像、不进 git。
 
 ---
 

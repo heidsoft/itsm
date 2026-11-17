@@ -346,9 +346,9 @@ services:
       # 注意与 LLM_BASE_URL 语义不同：那个是厂商端点，这个是本系统后端。
       # 缺省值（http://localhost:8080）在容器网络里必然连不上，必须显式指向服务名。
       - ITSM_BACKEND_URL=${ITSM_BACKEND_URL:-http://itsm-backend:8090}
-      # Phase A：回连令牌与 AI_SERVICE_TOKEN 同源同值即可（后端当前按普通 JWT 消费；
-      # Phase B service principal 落地后语义收紧）。置空会导致回连 401，知识检索/
-      # 工单分析降级，生产必须配置。
+      # Phase B：回连凭证必须是 service JWT（见 .env.prod.example 的签发命令），
+      # 携带签名保护的 principal=service + 只读角色；随机串会被后端 JWT 解析拒绝 →
+      # 回连 401 → sidecar 降级到规则分诊。用 cmd/service-token-gen 生成，tenant 固定。
       - ITSM_BACKEND_TOKEN=${ITSM_BACKEND_TOKEN:?ITSM_BACKEND_TOKEN must be set in prod (sidecar backend callbacks fail without it)}
       - BACKEND_TIMEOUT=${BACKEND_TIMEOUT:-120}
     expose:

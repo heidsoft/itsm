@@ -9,6 +9,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"go.uber.org/zap"
 	"itsm-backend/common"
+	"itsm-backend/internal/authz"
 )
 
 type Claims struct {
@@ -17,7 +18,57 @@ type Claims struct {
 	Role      string `json:"role"`
 	TenantID  int    `json:"tenantId"`
 	TokenType string `json:"tokenType"` // "access" 或 "refresh"
+	// Phase B（2026-11-17）主体标记：空 = human（存量 token 行为不变）；
+	// service = 系统间服务账号。该字段随 JWT 一起签名，调用方无法自行篡改。
+	// 刻意不放进 gin context 的裸键当作授权依据——授权仍以 authz.WithPrincipal
+	// 注入的 request context 为准（ExecuteTool Gate 2.5 从那里读）。
+	Principal string `json:"principal,omitempty"`
 	jwt.RegisteredClaims
+}
+
+// ServicePrincipalRole 是 service 主体 JWT 使用的载体角色。
+//
+// 选 audit_admin 而非新增 service 角色的原因：
+//   - audit_admin 是已存在的全租户只读码集，无任何写/审批权限（roles.go 注释锁定）；
+//   - 它已在角色词表、DB seeder、前端选项里登记，不需要污染 users.role 枚举——
+//     service 是进程身份，不是可登录的人类用户；
+//   - Gate 2.5 对 service 主体仍按 DB 策略零信任判定，载体角色只决定
+//     RequirePermission 这一层的只读边界，不构成提权通道。
+const ServicePrincipalRole = "audit_admin"
+
+// GenerateServiceToken 签发系统间服务账号的受限 access token（Phase B / G3b）。
+//
+// 与 GenerateAccessToken 的差异，除 Principal 标记外：
+//   - UserID=0：service 不是人类用户，不进用户表；审计里以 0 + principal=service 区分；
+//   - 不做吊销/MinIssuedAt 检查：服务凭证的撤销靠轮换签名密钥或更换 token，
+//     不与人类账号的改密/停用生命周期挂钩（见 AuthMiddleware 的分支）。
+//
+// 调用方须把 tenantID 固定为部署环境注入的值，禁止按请求参数自报租户。
+func GenerateServiceToken(username, role string, tenantID int, jwtSecret string, ttl time.Duration) (string, error) {
+	if ttl <= 0 {
+		return "", fmt.Errorf("service token ttl must be positive")
+	}
+	if tenantID <= 0 {
+		return "", fmt.Errorf("service token requires a fixed tenant id")
+	}
+	if role != ServicePrincipalRole {
+		return "", fmt.Errorf("service token role must be %q, got %q", ServicePrincipalRole, role)
+	}
+	claims := Claims{
+		UserID:    0,
+		Username:  username,
+		Role:      role,
+		TenantID:  tenantID,
+		TokenType: "access",
+		Principal: authz.PrincipalService,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ID:        fmt.Sprintf("svc-%d", time.Now().UnixNano()),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(ttl)),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+		},
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return token.SignedString([]byte(jwtSecret))
 }
 
 // 会话凭证的唯一定义：cookie 名称与两类 token 的生命周期。
@@ -223,6 +274,37 @@ func AuthMiddleware(jwtSecret string) gin.HandlerFunc {
 				return
 			}
 
+			// Phase B（2026-11-17）：主体标记校验。principal 随 JWT 签名，
+			// 外部无法篡改，但签发端仍可能误配（例如拿 service token 挂了
+			// 高权限角色）。这里把签发约束在入站再验一次，fail-closed。
+			principal := claims.Principal
+			if principal == "" {
+				principal = authz.PrincipalHuman // 存量 token 行为不变
+			}
+			principalKnown := false
+			for _, p := range authz.AllPrincipals {
+				if p == principal {
+					principalKnown = true
+					break
+				}
+			}
+			if !principalKnown {
+				zap.S().Warnw("AuthMiddleware: unknown principal rejected",
+					"path", c.Request.URL.Path, "principal", principal)
+				common.Fail(c, common.AuthFailedCode, "无效的主体标记")
+				c.Abort()
+				return
+			}
+			if principal == authz.PrincipalService &&
+				(claims.Role != ServicePrincipalRole || claims.UserID != 0 || claims.TenantID <= 0) {
+				zap.S().Warnw("AuthMiddleware: service principal with non-readonly claims rejected",
+					"path", c.Request.URL.Path, "role", claims.Role,
+					"user_id", claims.UserID, "tenant_id", claims.TenantID)
+				common.Fail(c, common.AuthFailedCode, "服务主体凭证不合法")
+				c.Abort()
+				return
+			}
+
 			revoked, revocationErr := isAccessTokenRevoked(c.Request.Context(), tokenString)
 			if revocationErr != nil {
 				zap.S().Errorw("AuthMiddleware: token revocation check failed",
@@ -241,23 +323,27 @@ func AuthMiddleware(jwtSecret string) gin.HandlerFunc {
 
 			// 用户角色变更/停用/改密后，其存量 access token 需立即失效。
 			// 比对 token 签发时间与该用户的最低可接受签发时间（MinIssuedAt）。
-			store := currentTokenRevocationStore()
-			minIAT, minIATErr := store.MinIssuedAt(c.Request.Context(), claims.UserID)
-			if minIATErr != nil {
-				// 查询失败按安全默认拒绝（fail-closed），与吊销检查语义一致。
-				zap.S().Errorw("AuthMiddleware: user token min issued-at check failed",
-					"path", c.Request.URL.Path, "user_id", claims.UserID, "error", minIATErr)
-				common.Fail(c, common.AuthFailedCode, "token状态验证失败")
-				c.Abort()
-				return
-			}
-			if !minIAT.IsZero() && claims.IssuedAt != nil && claims.IssuedAt.Time.Before(minIAT) {
-				zap.S().Warnw("AuthMiddleware: token issued before user permission change, rejected",
-					"path", c.Request.URL.Path, "user_id", claims.UserID,
-					"issued_at", claims.IssuedAt.Time, "min_issued_at", minIAT)
-				common.Fail(c, common.AuthFailedCode, "账号权限已变更，请重新登录")
-				c.Abort()
-				return
+			// service 主体的 UserID=0 不对应真实用户，没有「改密/停用」语义，
+			// 其撤销靠轮换签名密钥或更换 token，故跳过这条人类账号专属检查。
+			if principal == authz.PrincipalHuman {
+				store := currentTokenRevocationStore()
+				minIAT, minIATErr := store.MinIssuedAt(c.Request.Context(), claims.UserID)
+				if minIATErr != nil {
+					// 查询失败按安全默认拒绝（fail-closed），与吊销检查语义一致。
+					zap.S().Errorw("AuthMiddleware: user token min issued-at check failed",
+						"path", c.Request.URL.Path, "user_id", claims.UserID, "error", minIATErr)
+					common.Fail(c, common.AuthFailedCode, "token状态验证失败")
+					c.Abort()
+					return
+				}
+				if !minIAT.IsZero() && claims.IssuedAt != nil && claims.IssuedAt.Time.Before(minIAT) {
+					zap.S().Warnw("AuthMiddleware: token issued before user permission change, rejected",
+						"path", c.Request.URL.Path, "user_id", claims.UserID,
+						"issued_at", claims.IssuedAt.Time, "min_issued_at", minIAT)
+					common.Fail(c, common.AuthFailedCode, "账号权限已变更，请重新登录")
+					c.Abort()
+					return
+				}
 			}
 
 			c.Set("user_id", claims.UserID)
@@ -265,6 +351,12 @@ func AuthMiddleware(jwtSecret string) gin.HandlerFunc {
 			c.Set("role", claims.Role)
 			c.Set("tenant_id", claims.TenantID) // 添加租户ID
 			c.Set("token", tokenString)
+			c.Set("principal", principal)
+
+			// ExecuteTool Gate 2.5 从 request context 读主体（authz.PrincipalFromContext）。
+			// 只写 gin key 不够——handler 传给 service 的是 c.Request.Context()，
+			// 必须把标记注入到那个 context 链上，零信任闸才看得见 service 主体。
+			c.Request = c.Request.WithContext(authz.WithPrincipal(c.Request.Context(), principal))
 
 			// 调试日志：认证成功
 			zap.S().Infow(
@@ -273,6 +365,7 @@ func AuthMiddleware(jwtSecret string) gin.HandlerFunc {
 				"user_id", claims.UserID,
 				"username", claims.Username,
 				"tenant_id", claims.TenantID,
+				"principal", principal,
 			)
 		} else {
 			zap.S().Warnw(
