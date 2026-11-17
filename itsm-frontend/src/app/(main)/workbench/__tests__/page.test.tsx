@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { App } from 'antd';
 import '@testing-library/jest-dom';
 
@@ -104,3 +104,104 @@ describe('工作台默认阶段筛选为「未关闭」（D18）', () => {
   });
 });
 
+
+/**
+ * 工作台搜索框接通回归：
+ * 此前页面未传 onSearch，模板搜索框输入只进本地 state，列表永远不过滤——
+ * 用户感知「搜索框坏了」。修复后：输入 → 防抖(300ms) → queryWorkbench 带 keyword。
+ */
+describe('工作台搜索框接通 keyword 链路', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockQueryWorkbench.mockResolvedValue({
+      items: [ticketItem],
+      total: 1,
+      page: 1,
+      pageSize: 20,
+      totalPages: 1,
+    });
+  });
+
+  it('输入关键字后（防抖）请求携带 keyword', async () => {
+    render(
+      <App>
+        <WorkbenchPage />
+      </App>
+    );
+    await waitFor(() => expect(mockQueryWorkbench).toHaveBeenCalled());
+
+    const input = screen.getByPlaceholderText('搜索标题…');
+    fireEvent.change(input, { target: { value: '数据库故障' } });
+
+    await waitFor(
+      () =>
+        expect(mockQueryWorkbench).toHaveBeenCalledWith(
+          expect.objectContaining({ keyword: '数据库故障' })
+        ),
+      { timeout: 2000 }
+    );
+  });
+
+  it('清空关键字后请求不再携带 keyword', async () => {
+    render(
+      <App>
+        <WorkbenchPage />
+      </App>
+    );
+    await waitFor(() => expect(mockQueryWorkbench).toHaveBeenCalled());
+
+    const input = screen.getByPlaceholderText('搜索标题…');
+    fireEvent.change(input, { target: { value: '数据库故障' } });
+    await waitFor(
+      () =>
+        expect(mockQueryWorkbench).toHaveBeenCalledWith(
+          expect.objectContaining({ keyword: '数据库故障' })
+        ),
+      { timeout: 2000 }
+    );
+
+    fireEvent.change(input, { target: { value: '' } });
+    await waitFor(
+      () =>
+        expect(mockQueryWorkbench).toHaveBeenLastCalledWith(
+          expect.not.objectContaining({ keyword: '数据库故障' })
+        ),
+      { timeout: 2000 }
+    );
+  });
+});
+
+/**
+ * 工作台「筛选」按钮回归：
+ * 此前 onToggle 为空实现、visible 写死 true，按钮点击无反应。修复后可折叠筛选面板。
+ */
+describe('工作台筛选按钮可折叠面板', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockQueryWorkbench.mockResolvedValue({
+      items: [],
+      total: 0,
+      page: 1,
+      pageSize: 20,
+      totalPages: 0,
+    });
+  });
+
+  it('点击「筛选」隐藏面板，再点恢复', async () => {
+    render(
+      <App>
+        <WorkbenchPage />
+      </App>
+    );
+    await waitFor(() => expect(mockQueryWorkbench).toHaveBeenCalled());
+
+    // 面板初始可见（含阶段筛选文案）
+    expect(screen.getByText('生命周期阶段')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: '筛选' }));
+    expect(screen.queryByText('生命周期阶段')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: '筛选' }));
+    expect(screen.getByText('生命周期阶段')).toBeInTheDocument();
+  });
+});

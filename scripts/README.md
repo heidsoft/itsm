@@ -18,7 +18,8 @@
 | 产品功能黑盒 | `python3 scripts/acceptance/product-function-smoke.py --help` | v1.6.58 实测 81 PASS / 3 WARN / 0 FAIL |
 | 部署后验收 | `bash scripts/prod-post-deploy-verify.sh --help` | 24 项验收 |
 | 校验全部 shell 语法 | `make verify-scripts` | 遍历 `scripts/*.sh` 与 `scripts/docs-gate/*.sh` 做 `bash -n` |
-| 门禁脚本自测 | `node --test scripts/__tests__/*.test.js` | CI `docs-gate.yml` 的 `Script Guard Tests` job 整目录执行 |
+| 远端 CI 一致性（本地复现） | `make ci-parity` / `make ci-parity-strict` | `check-ci-parity.sh`：gofumpt pin + 格式欠账 + OpenAPI 漂移；strict 有差异即 exit 1 |
+| 门禁脚本自测 | `make test-scripts` 或 `node --test scripts/__tests__/*.test.js` | CI `docs-gate.yml` 的 `Script Guard Tests` job 整目录执行；`make test` 也包含此步 |
 
 ## 2. 分组
 
@@ -54,6 +55,7 @@
 | `test-trend.js` | `backend-ci.yml:321` |
 | `generate-star-history.mjs` | `star-history.yml:29` |
 | `check-go-toolchain-consistency.sh` / `check-workflow-action-pinning.sh` | `backend-ci.yml:143,149` |
+| `check-ci-parity.sh` | 本地工具（无 CI 调用）：`make ci-parity` / `make ci-parity-strict`，复现远端高频红灯 |
 
 ### 2.4 产品验收 / 发布 / 部署（必留）
 
@@ -88,14 +90,34 @@
 
 ### 2.6 门禁脚本自测 `__tests__/`（必留，已全量接线）
 
-5 个 `node --test` 文件，本地 `node --test scripts/__tests__/*.test.js` 共 37 用例。
-2026-11-14 起 CI `docs-gate.yml` 的 `Script Guard Tests` job **整目录执行**这 5 个文件；
-此前只跑 `docs-gate.test.js`，另外 3 个无 runner。
+12 个 `node --test` 文件，本地 `node --test scripts/__tests__/*.test.js` 共 90 用例
+（2026-11-14 复核，全量约 2 分钟，`docs-gate.test.js` 会实跑门禁脚本，属主要耗时）。
+2026-11-14 起 CI `docs-gate.yml` 的 `Script Guard Tests` job **整目录执行**这 12 个文件；
+历史上 CI 只跑 `docs-gate.test.js`，当时另外 3 个自测文件完全没有 runner（现已全部纳入整目录执行）。
 `api-contract-check.yml:77` 仍单独跑 `check-engineering-contracts.test.js` 作为该 workflow 专属门槛（重复执行无害）。
 
-`docs-gate.yml` 的 `pull_request` / `push` 触发路径同时补齐了 `scripts/__tests__/**` 与
-被测对象（`build-images.sh`、`deploy-prod.sh`、`test-trend.js`、`generate-acl-manifest.js`、
-`docker-compose.prod.yml`），否则改了被测脚本不触发测试，接线仍是假绿。
+自测清单（按新增批次）：
+
+| 文件 | 锁住什么 | 反向验证方式 |
+|:--|:--|:--|
+| `test-coverage-guard.test.js` | `test-coverage-guard.js` 对 `internal/services/**`（G0-b 迁移后的核心服务层，337 生产文件）的管辖；临时 git 仓库做真实 diff 注入，另锁住 legacy `handlers/`、前端 `src/lib/` 不回归、skip 标记生效、无关 `internal/` 不误伤 | 用旧版 classifier（去掉 `internal/services` 匹配）跑本文件必红 |
+| `ci-workflow-contract.test.js` | `backend-ci.yml` 的 AI-eval 管道退出码捕获与主 `go test` 超时、`docs-gate.yml` 整目录 runner 与触发路径、`test-coverage-guard.yml` 双触发段与非阻断观察步骤、`Makefile` 的 `test-scripts` 接线 | 用同一断言函数验证「删掉 `PIPESTATUS[0]` 捕获必红 / 删掉观察步骤必红」，防止断言退化为同义反复 |
+| `docker-optimization.test.js` | 4 个镜像的多阶段 / pinned base / 非 root、4 个 `.dockerignore`、AI 服务 torch 必须用 `--index-url` 而非 `--extra-index-url`、Python builder 的 pip 缓存挂载、`build-images.sh` 四服务覆盖、`make build-images` 真实调用统一构建器 | 用同一断言函数验证「改回 `--extra-index-url` 必红」 |
+| `coverage-guard-strict-diff.test.js` | 前端 glob 候选 `<name>-*.test.ts` 必须能匹配磁盘/ diff 中的兄弟测试（旧实现对含 `*` 的字面路径调 `fs.existsSync`，候选从未生效）；`--strict-diff` 只观察、绝不改变退出码 | 在临时仓库里把守卫源码改回 `tests.includes(c) \|\| fileExists(c)`，用例必红 |
+| `repo-hygiene.test.js` | `test-coverage-guard.json` 与 `itsm-frontend/test-results/.last-run.json` 不得重新入库，且必须被 `.gitignore` 覆盖 | 在内存里模拟「重新 tracked」/「删掉 ignore 规则」，断言函数必红 |
+| `e2e-skip-inventory.test.js` | `docs/testing/e2e-skip-inventory.md` 的逐文件数量、P/G/D 小计与合计必须等于 E2E spec 中的真实 skip 数 | 删行 / 改数量 / 改小计 / 改合计四种变异均必红 |
+| `github-ci-parity.test.js` | 远端 Actions 四类红灯的回归锁：`star-history.yml` 不得直推受保护 main（改为 bot 分支 PR）、gofumpt pin 三处一致、`api-contract-check` 与 `make swagger-gen` 同参数且双触发段含 `internal/services/**`、已提交 OpenAPI 产物含新端点与 `dashboard.*` 定义、两个曾红 Jest 用例锁当前契约、`make` 暴露 parity 入口 | 每种修复都用同一断言函数做「改回旧实现必红」的反向验证（裸 `git push`、pin 漂移、删触发路径、删端点、恢复旧断言） |
+
+`docs-gate.yml` 的 `pull_request` / `push` 触发路径同时补齐了 `scripts/__tests__/**`、
+被测对象（`build-images.sh`、`deploy-prod.sh`、`test-trend.js`、`test-coverage-guard.js`、
+`generate-acl-manifest.js`、`docker-compose.prod.yml`）、**被契约测试读取的三个 workflow**
+（`backend-ci.yml`、`test-coverage-guard.yml`、`frontend-ci.yml`）、
+`itsm-backend/internal/services/**`，以及 `**/Dockerfile*` / `**/.dockerignore` / `Makefile`
+（镜像构建契约的被测对象）；本轮再补 `itsm-frontend/tests/e2e/**`（skip 台账解析对象）与
+`.gitignore`（运行产物忽略规则），台账本身是 `*.md` 已由 `**.md` 覆盖；
+2026-11-14 远端红灯复盘后再补 `star-history.yml`、`api-contract-check.yml`、
+`itsm-backend/docs/**`、`scripts/check-ci-parity.sh` 与两个 Jest 被测文件模式。
+否则改了被测对象不触发测试，接线仍是假绿。
 
 `build-start-scripts.test.js` 的两个断言同批改为「锁语义不锁字面」：
 不再硬编码 `up -d postgres redis minio` 与 `image: itsm-backend:${VERSION:-latest}`，
@@ -118,5 +140,11 @@
 
 1. 新增守卫脚本必须同时给出统一入口（优先加进对应 `run-all.sh`），并在本文登记 CI 接线状态。
 2. 新增门禁自测必须接进 CI；「写了测试但没人跑」视为假绿。
-3. 基线 txt 的修改遵循 C.6.4 棘轮：只降不升，上调须逐处比对、零命中即失败、反向验证改回旧值必红。
-4. 长构建与全量门禁在资源紧张时一律后台执行，避免前台 SIGTERM 137。
+3. 契约类自测若读取某个 workflow / 脚本，**该被测对象必须同时出现在 `docs-gate.yml` 的
+   `pull_request` 与 `push` 触发 `paths:` 中**，否则改被测对象不重跑断言；新增此类测试时一并补路径。
+4. 基线 txt 的修改遵循 C.6.4 棘轮：只降不升，上调须逐处比对、零命中即失败、反向验证改回旧值必红。
+5. 长构建与全量门禁在资源紧张时一律后台执行，避免前台 SIGTERM 137。
+6. 远端 Actions 出现红灯后，先复现再修；修复须同时留一个本地可跑的 parity 检查
+   （`make ci-parity` / `make ci-parity-strict`）和一条契约自测，避免「本地绿、远端红」重演。
+   `check-ci-parity.sh` 检查的是**当前工作树**（含未提交 WIP），CI 检查的是**提交态**；
+   有 WIP 改注解时要以纯 HEAD 隔离树复核一次。

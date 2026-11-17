@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
 
 concurrency:
   group: star-history
@@ -16,8 +17,11 @@ jobs:
   update:
     if: github.repository == 'heidsoft/itsm'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-node@v4
         with:
@@ -28,13 +32,43 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: node scripts/generate-star-history.mjs
 
-      - name: Commit updated chart
+      # main 是受保护分支（require PR + required status checks）。旧实现直接
+      # `git push` 到 main，GITHUB_TOKEN 无 bypass 权限，每日定时运行必然以
+      # GH006 "Protected branch update failed" 失败（2026-11-11/12/13 连续三次）。
+      # 改为推送到固定 bot 分支并维持一个 open PR：变更仍可见、可评审，
+      # 且不会每天制造红灯。
+      - name: Publish chart via pull request
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BOT_BRANCH: bot/star-history
         run: |
+          set -euo pipefail
           if git diff --quiet -- docs/images/star-history.svg; then
+            echo "::notice::Star history chart is up to date; nothing to publish"
             exit 0
           fi
+
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -C "$BOT_BRANCH"
           git add docs/images/star-history.svg
           git commit -m "docs: update star history chart"
-          git push
+          git push --force-with-lease origin "$BOT_BRANCH"
+
+          existing=$(gh pr list --head "$BOT_BRANCH" --state open --json number --jq '.[0].number // empty')
+          if [ -n "$existing" ]; then
+            echo "::notice::Reusing open PR #$existing"
+            gh pr comment "$existing" --body "Star history chart refreshed by the scheduled workflow."
+          else
+            gh pr create \
+              --base main \
+              --head "$BOT_BRANCH" \
+              --title "docs: update star history chart" \
+              --body "Automated refresh of \`docs/images/star-history.svg\` by \`Update Star History\`.
+
+          The job cannot push to protected \`main\` directly (GH006), so it keeps this
+          PR up to date instead. PRs opened with \`GITHUB_TOKEN\` do not trigger
+          workflows, so required checks may show as pending; a maintainer with
+          bypass rights can merge it, or run \`node scripts/generate-star-history.mjs\`
+          locally and push the chart in a normal PR."
+          fi

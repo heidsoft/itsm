@@ -188,6 +188,200 @@ definitions:
       username:
         type: string
     type: object
+  dashboard.DashboardOverview:
+    properties:
+      incidentDistribution:
+        items:
+          $ref: '#/definitions/dashboard.IncidentDistributionData'
+        type: array
+      kpiMetrics:
+        items:
+          $ref: '#/definitions/dashboard.KPIMetric'
+        type: array
+      overview:
+        $ref: '#/definitions/dashboard.DashboardOverviewData'
+      peakHours:
+        items:
+          $ref: '#/definitions/dashboard.PeakHourData'
+        type: array
+      quickActions:
+        items:
+          $ref: '#/definitions/dashboard.QuickAction'
+        type: array
+      recentActivities:
+        items:
+          $ref: '#/definitions/dashboard.RecentActivity'
+        type: array
+      responseTimeDistribution:
+        items:
+          $ref: '#/definitions/dashboard.ResponseTimeDistributionData'
+        type: array
+      satisfactionData:
+        items:
+          $ref: '#/definitions/dashboard.SatisfactionData'
+        type: array
+      slaData:
+        $ref: '#/definitions/dto.SLAComplianceData'
+      teamWorkload:
+        items:
+          $ref: '#/definitions/dashboard.TeamWorkloadData'
+        type: array
+      ticketTrend:
+        items:
+          $ref: '#/definitions/dashboard.TicketTrendData'
+        type: array
+    type: object
+  dashboard.DashboardOverviewData:
+    properties:
+      avgResolutionTime:
+        type: number
+      avgResponseTime:
+        type: number
+      inProgressTickets:
+        type: integer
+      pendingTickets:
+        type: integer
+      resolvedToday:
+        type: integer
+      totalTickets:
+        type: integer
+    type: object
+  dashboard.ErrorResponse:
+    properties:
+      code:
+        type: integer
+      message:
+        type: string
+    type: object
+  dashboard.IncidentDistributionData:
+    properties:
+      category:
+        type: string
+      color:
+        type: string
+      count:
+        type: integer
+    type: object
+  dashboard.KPIMetric:
+    properties:
+      change:
+        description: 变化百分比
+        type: number
+      changeType:
+        description: increase, decrease, stable
+        type: string
+      color:
+        type: string
+      comparable:
+        description: Comparable=false 表示没有可比的上期基线，Change 恒为 0，前端不渲染环比。
+        type: boolean
+      description:
+        type: string
+      id:
+        type: string
+      scope:
+        description: Scope 是这组指标的统计范围：tenant = 全租户，own = 本人创建或受理。
+        type: string
+      title:
+        type: string
+      trend:
+        description: up, down, stable
+        type: string
+      unit:
+        type: string
+      value:
+        type: number
+    type: object
+  dashboard.PeakHourData:
+    properties:
+      avgResponseTime:
+        type: number
+      count:
+        type: integer
+      hour:
+        type: string
+    type: object
+  dashboard.QuickAction:
+    properties:
+      color:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      path:
+        type: string
+      permission:
+        type: string
+      title:
+        type: string
+    type: object
+  dashboard.RecentActivity:
+    properties:
+      description:
+        type: string
+      id:
+        type: string
+      priority:
+        type: string
+      status:
+        type: string
+      timestamp:
+        type: string
+      title:
+        type: string
+      type:
+        description: ticket, incident, change, problem
+        type: string
+      user:
+        type: string
+    type: object
+  dashboard.ResponseTimeDistributionData:
+    properties:
+      avgTime:
+        type: number
+      count:
+        type: integer
+      percentage:
+        type: number
+      timeRange:
+        type: string
+    type: object
+  dashboard.SatisfactionData:
+    properties:
+      month:
+        type: string
+      rating:
+        type: number
+      responses:
+        type: integer
+    type: object
+  dashboard.TeamWorkloadData:
+    properties:
+      activeTickets:
+        type: integer
+      assignee:
+        type: string
+      avgResponseTime:
+        type: number
+      completionRate:
+        type: number
+      ticketCount:
+        type: integer
+    type: object
+  dashboard.TicketTrendData:
+    properties:
+      closed:
+        type: integer
+      date:
+        type: string
+      inProgress:
+        type: integer
+      open:
+        type: integer
+      resolved:
+        type: integer
+    type: object
   dto.AddCITagsRequest:
     properties:
       tagIds:
@@ -1927,6 +2121,11 @@ definitions:
       cloudZone:
         type: string
       criticality:
+        enum:
+        - low
+        - medium
+        - high
+        - critical
         type: string
       description:
         type: string
@@ -1963,6 +2162,12 @@ definitions:
       source:
         type: string
       status:
+        enum:
+        - active
+        - inactive
+        - maintenance
+        - retired
+        - decommissioned
         type: string
       tenantId:
         type: integer
@@ -2081,7 +2286,11 @@ definitions:
         description: 变更描述
         type: string
       impactScope:
-        description: '影响范围: low, medium, high'
+        description: 影响范围
+        enum:
+        - low
+        - medium
+        - high
         type: string
       implementationPlan:
         description: 实施计划
@@ -2096,7 +2305,12 @@ definitions:
         description: 计划开始时间
         type: string
       priority:
-        description: '优先级: low, medium, high, critical'
+        description: 优先级
+        enum:
+        - low
+        - medium
+        - high
+        - critical
         type: string
       relatedTickets:
         description: 相关工单编号
@@ -2104,7 +2318,11 @@ definitions:
           type: string
         type: array
       riskLevel:
-        description: '风险等级: low, medium, high'
+        description: 风险等级
+        enum:
+        - low
+        - medium
+        - high
         type: string
       rollbackPlan:
         description: 回滚计划
@@ -2113,7 +2331,11 @@ definitions:
         description: 变更标题
         type: string
       type:
-        description: '变更类型: normal, standard, emergency'
+        description: 变更类型
+        enum:
+        - normal
+        - standard
+        - emergency
         type: string
     required:
     - title
@@ -2361,6 +2583,11 @@ definitions:
         description: 影响范围
         type: string
       priority:
+        enum:
+        - low
+        - medium
+        - high
+        - critical
         type: string
       rootCause:
         type: string
@@ -2560,11 +2787,14 @@ definitions:
       expiresAt:
         description: 下载链接过期时间
         type: string
+      exportLimit:
+        description: 单次导出上限；用于与页面 COUNT 对账
+        type: integer
       fileSize:
         description: 文件大小（字节）
         type: integer
       fileUrl:
-        description: 导出文件下载地址
+        description: 下载端点 URL（completed 后才有值；绝不回传服务器绝对路径）
         type: string
       status:
         description: 任务状态：pending processing completed failed
@@ -2573,8 +2803,11 @@ definitions:
         description: 导出任务ID
         type: string
       totalCount:
-        description: 导出的CI数量
+        description: 实际写入文件的 CI 数量
         type: integer
+      truncated:
+        description: 命中上限：文件可能未包含全部符合条件的数据
+        type: boolean
     type: object
   dto.GenerateBPMNRequest:
     properties:
@@ -2924,6 +3157,15 @@ definitions:
         example: "2024-01-01T00:00:00Z"
         type: string
     type: object
+  dto.IncidentDistributionData:
+    properties:
+      category:
+        type: string
+      color:
+        type: string
+      count:
+        type: integer
+    type: object
   dto.IncidentEscalationRequest:
     properties:
       autoAssign:
@@ -3120,6 +3362,39 @@ definitions:
         example: 1
         type: integer
     type: object
+  dto.KPIMetricData:
+    properties:
+      alert:
+        type: string
+      change:
+        type: number
+      changeType:
+        type: string
+      color:
+        type: string
+      comparable:
+        description: |-
+          Comparable 标识环比是否可信：false 表示读取者范围内没有可比的上期基线，
+          此时 Change 恒为 0，前端不得渲染"相比上期"。
+        type: boolean
+      description:
+        type: string
+      id:
+        type: string
+      scope:
+        description: Scope 标识本组指标的行级范围：tenant = 全租户，own = 本人创建或受理。
+        type: string
+      target:
+        type: number
+      title:
+        type: string
+      trend:
+        type: string
+      unit:
+        type: string
+      value:
+        type: number
+    type: object
   dto.KnowledgeArticleResponse:
     properties:
       author:
@@ -3137,6 +3412,11 @@ definitions:
         $ref: '#/definitions/dto.KnowledgeFreshness'
       id:
         type: integer
+      isPublished:
+        description: |-
+          IsPublished 与 Status 同源，但显式透出布尔值，避免 API 消费者靠字符串
+          反推可见性（历史响应里该字段恒为 null）。
+        type: boolean
       lastReviewedAt:
         type: string
       reviewIntervalDays:
@@ -3991,6 +4271,87 @@ definitions:
       status:
         type: string
     type: object
+  dto.SLAComplianceData:
+    properties:
+      atRiskTickets:
+        type: integer
+      breachedTickets:
+        type: integer
+      complianceRate:
+        type: number
+      compliantTickets:
+        type: integer
+      resolutionTimeCompliance:
+        type: number
+      responseTimeCompliance:
+        type: number
+      totalTickets:
+        type: integer
+    type: object
+  dto.SatisfactionData:
+    properties:
+      month:
+        type: string
+      rating:
+        type: number
+      responses:
+        type: integer
+    type: object
+  dto.ServiceQualityReport:
+    properties:
+      changeStats:
+        allOf:
+        - $ref: '#/definitions/dto.ChangeStatsResponse'
+        description: change 域未装配时缺省
+      generatedAt:
+        type: string
+      incidentDistribution:
+        items:
+          $ref: '#/definitions/dto.IncidentDistributionData'
+        type: array
+      kpi:
+        items:
+          $ref: '#/definitions/dto.KPIMetricData'
+        type: array
+      metricVersion:
+        type: string
+      metricVersions:
+        additionalProperties:
+          type: string
+        type: object
+      problemStats:
+        allOf:
+        - $ref: '#/definitions/dto.ProblemStatsResponse'
+        description: problem 域未装配时缺省
+      satisfaction:
+        items:
+          $ref: '#/definitions/dto.SatisfactionData'
+        type: array
+      scope:
+        description: KPI 行级口径：tenant | own
+        type: string
+      sla:
+        $ref: '#/definitions/dto.SLAComplianceData'
+      ticketStats:
+        allOf:
+        - $ref: '#/definitions/dto.AnalyticsTicketStatsResponse'
+        description: analytics 未装配时缺省
+      ticketTrend:
+        items:
+          $ref: '#/definitions/dto.TicketTrendData'
+        type: array
+      window:
+        $ref: '#/definitions/dto.ServiceQualityWindow'
+    type: object
+  dto.ServiceQualityWindow:
+    properties:
+      days:
+        type: integer
+      from:
+        type: string
+      to:
+        type: string
+    type: object
   dto.ServiceRequestSLAResponse:
     properties:
       bound:
@@ -4040,6 +4401,25 @@ definitions:
         type: integer
       status:
         type: string
+    type: object
+  dto.TicketTrendData:
+    properties:
+      closed:
+        type: integer
+      completedTickets:
+        type: integer
+      date:
+        type: string
+      inProgress:
+        type: integer
+      newTickets:
+        type: integer
+      open:
+        type: integer
+      pendingTickets:
+        type: integer
+      resolved:
+        type: integer
     type: object
   dto.TicketTrendPoint:
     properties:
@@ -4252,6 +4632,11 @@ definitions:
       cloudZone:
         type: string
       criticality:
+        enum:
+        - low
+        - medium
+        - high
+        - critical
         type: string
       description:
         type: string
@@ -4281,6 +4666,12 @@ definitions:
       source:
         type: string
       status:
+        enum:
+        - active
+        - inactive
+        - maintenance
+        - retired
+        - decommissioned
         type: string
       vendor:
         type: string
@@ -4375,6 +4766,10 @@ definitions:
         allOf:
         - $ref: '#/definitions/dto.ChangeImpact'
         description: 影响范围
+        enum:
+        - low
+        - medium
+        - high
       implementationPlan:
         description: 实施计划
         type: string
@@ -4391,6 +4786,11 @@ definitions:
         allOf:
         - $ref: '#/definitions/dto.ChangePriority'
         description: 优先级
+        enum:
+        - low
+        - medium
+        - high
+        - critical
       relatedTickets:
         description: 相关工单
         items:
@@ -4400,6 +4800,10 @@ definitions:
         allOf:
         - $ref: '#/definitions/dto.ChangeRisk'
         description: 风险等级
+        enum:
+        - low
+        - medium
+        - high
       rollbackPlan:
         description: 回滚计划
         type: string
@@ -4410,6 +4814,10 @@ definitions:
         allOf:
         - $ref: '#/definitions/dto.ChangeType'
         description: 变更类型
+        enum:
+        - normal
+        - standard
+        - emergency
     type: object
   dto.UpdateCloudResourceRequest:
     properties:
@@ -4532,6 +4940,11 @@ definitions:
       impact:
         type: string
       priority:
+        enum:
+        - low
+        - medium
+        - high
+        - critical
         type: string
       rootCause:
         type: string
@@ -4569,6 +4982,19 @@ definitions:
           空串被 omitempty 当未传，字段永远清不掉（AGENTS.md PATCH 指针规则）。
         type: string
       email:
+        type: string
+      mspRole:
+        description: |-
+          MSP 员工身份（provider_admin|provider_agent|customer_user）。
+
+          指针语义：nil=保持不变；空串=清空；非空=设为该身份。
+          它与 RoleIDs 里的「MSP管理员」附加角色是两条互不相通的链路：MSP 工作台
+          门控只认本字段（middleware.IsMSPStaff），不认附加角色。编辑用户时必须
+          能写它，否则「把某人设为 MSP 员工」在产品上无法完成（prod 实测 O4）。
+        enum:
+        - provider_admin
+        - provider_agent
+        - customer_user
         type: string
       name:
         maxLength: 100
@@ -4662,209 +5088,6 @@ definitions:
         type: string
       username:
         type: string
-    type: object
-  handlers.DashboardOverview:
-    properties:
-      incidentDistribution:
-        items:
-          $ref: '#/definitions/handlers.IncidentDistributionData'
-        type: array
-      kpiMetrics:
-        items:
-          $ref: '#/definitions/handlers.KPIMetric'
-        type: array
-      overview:
-        $ref: '#/definitions/handlers.DashboardOverviewData'
-      peakHours:
-        items:
-          $ref: '#/definitions/handlers.PeakHourData'
-        type: array
-      quickActions:
-        items:
-          $ref: '#/definitions/handlers.QuickAction'
-        type: array
-      recentActivities:
-        items:
-          $ref: '#/definitions/handlers.RecentActivity'
-        type: array
-      responseTimeDistribution:
-        items:
-          $ref: '#/definitions/handlers.ResponseTimeDistributionData'
-        type: array
-      satisfactionData:
-        items:
-          $ref: '#/definitions/handlers.SatisfactionData'
-        type: array
-      slaData:
-        $ref: '#/definitions/service.SLAComplianceData'
-      teamWorkload:
-        items:
-          $ref: '#/definitions/handlers.TeamWorkloadData'
-        type: array
-      ticketTrend:
-        items:
-          $ref: '#/definitions/handlers.TicketTrendData'
-        type: array
-    type: object
-  handlers.DashboardOverviewData:
-    properties:
-      avgResolutionTime:
-        type: number
-      avgResponseTime:
-        type: number
-      inProgressTickets:
-        type: integer
-      pendingTickets:
-        type: integer
-      resolvedToday:
-        type: integer
-      totalTickets:
-        type: integer
-    type: object
-  handlers.ErrorResponse:
-    properties:
-      code:
-        type: integer
-      message:
-        type: string
-    type: object
-  handlers.IncidentDistributionData:
-    properties:
-      category:
-        type: string
-      color:
-        type: string
-      count:
-        type: integer
-    type: object
-  handlers.KPIMetric:
-    properties:
-      change:
-        description: 变化百分比
-        type: number
-      changeType:
-        description: increase, decrease, stable
-        type: string
-      color:
-        type: string
-      comparable:
-        description: Comparable=false 表示没有可比的上期基线，Change 恒为 0，前端不渲染环比。
-        type: boolean
-      description:
-        type: string
-      id:
-        type: string
-      scope:
-        description: Scope 是这组指标的统计范围：tenant = 全租户，own = 本人创建或受理。
-        type: string
-      title:
-        type: string
-      trend:
-        description: up, down, stable
-        type: string
-      unit:
-        type: string
-      value:
-        type: number
-    type: object
-  handlers.PeakHourData:
-    properties:
-      avgResponseTime:
-        type: number
-      count:
-        type: integer
-      hour:
-        type: string
-    type: object
-  handlers.QuickAction:
-    properties:
-      color:
-        type: string
-      description:
-        type: string
-      id:
-        type: string
-      path:
-        type: string
-      permission:
-        type: string
-      title:
-        type: string
-    type: object
-  handlers.RecentActivity:
-    properties:
-      description:
-        type: string
-      id:
-        type: string
-      priority:
-        type: string
-      status:
-        type: string
-      timestamp:
-        type: string
-      title:
-        type: string
-      type:
-        description: ticket, incident, change, problem
-        type: string
-      user:
-        type: string
-    type: object
-  handlers.ResponseTimeDistributionData:
-    properties:
-      avgTime:
-        type: number
-      count:
-        type: integer
-      percentage:
-        type: number
-      timeRange:
-        type: string
-    type: object
-  handlers.SLAData:
-    properties:
-      actual:
-        type: number
-      service:
-        type: string
-      target:
-        type: number
-    type: object
-  handlers.SatisfactionData:
-    properties:
-      month:
-        type: string
-      rating:
-        type: number
-      responses:
-        type: integer
-    type: object
-  handlers.TeamWorkloadData:
-    properties:
-      activeTickets:
-        type: integer
-      assignee:
-        type: string
-      avgResponseTime:
-        type: number
-      completionRate:
-        type: number
-      ticketCount:
-        type: integer
-    type: object
-  handlers.TicketTrendData:
-    properties:
-      closed:
-        type: integer
-      date:
-        type: string
-      inProgress:
-        type: integer
-      open:
-        type: integer
-      resolved:
-        type: integer
     type: object
   incident.IncidentReport:
     properties:
@@ -4999,140 +5222,6 @@ definitions:
         type: string
       type:
         type: string
-    type: object
-  service.IncidentDistributionData:
-    properties:
-      category:
-        type: string
-      color:
-        type: string
-      count:
-        type: integer
-    type: object
-  service.KPIMetricData:
-    properties:
-      alert:
-        type: string
-      change:
-        type: number
-      changeType:
-        type: string
-      color:
-        type: string
-      comparable:
-        description: |-
-          Comparable 标识环比是否可信：false 表示读取者范围内没有可比的上期基线，
-          此时 Change 恒为 0，前端不得渲染"相比上期"。
-        type: boolean
-      description:
-        type: string
-      id:
-        type: string
-      scope:
-        description: Scope 标识本组指标的行级范围：tenant = 全租户，own = 本人创建或受理。
-        type: string
-      target:
-        type: number
-      title:
-        type: string
-      trend:
-        type: string
-      unit:
-        type: string
-      value:
-        type: number
-    type: object
-  service.SLAComplianceData:
-    properties:
-      atRiskTickets:
-        type: integer
-      breachedTickets:
-        type: integer
-      complianceRate:
-        type: number
-      compliantTickets:
-        type: integer
-      resolutionTimeCompliance:
-        type: number
-      responseTimeCompliance:
-        type: number
-      totalTickets:
-        type: integer
-    type: object
-  service.SatisfactionData:
-    properties:
-      month:
-        type: string
-      rating:
-        type: number
-      responses:
-        type: integer
-    type: object
-  service.ServiceQualityReport:
-    properties:
-      generatedAt:
-        type: string
-      incidentDistribution:
-        items:
-          $ref: '#/definitions/service.IncidentDistributionData'
-        type: array
-      kpi:
-        items:
-          $ref: '#/definitions/service.KPIMetricData'
-        type: array
-      metricVersion:
-        type: string
-      metricVersions:
-        additionalProperties:
-          type: string
-        type: object
-      satisfaction:
-        items:
-          $ref: '#/definitions/service.SatisfactionData'
-        type: array
-      scope:
-        description: KPI 行级口径：tenant | own
-        type: string
-      sla:
-        $ref: '#/definitions/service.SLAComplianceData'
-      ticketStats:
-        allOf:
-        - $ref: '#/definitions/dto.AnalyticsTicketStatsResponse'
-        description: analytics 未装配时缺省
-      ticketTrend:
-        items:
-          $ref: '#/definitions/service.TicketTrendData'
-        type: array
-      window:
-        $ref: '#/definitions/service.ServiceQualityWindow'
-    type: object
-  service.ServiceQualityWindow:
-    properties:
-      days:
-        type: integer
-      from:
-        type: string
-      to:
-        type: string
-    type: object
-  service.TicketTrendData:
-    properties:
-      closed:
-        type: integer
-      completedTickets:
-        type: integer
-      date:
-        type: string
-      inProgress:
-        type: integer
-      newTickets:
-        type: integer
-      open:
-        type: integer
-      pendingTickets:
-        type: integer
-      resolved:
-        type: integer
     type: object
 info:
   contact: {}
@@ -8964,6 +9053,25 @@ paths:
       summary: 获取导出任务状态
       tags:
       - CMDB
+  /api/v1/cmdb/export/{task_id}/download:
+    get:
+      description: 按任务ID下载导出文件；校验租户、操作人归属与 expires_at
+      parameters:
+      - description: 任务ID
+        in: path
+        name: task_id
+        required: true
+        type: string
+      produces:
+      - application/octet-stream
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+      summary: 下载CMDB导出文件
+      tags:
+      - CMDB
   /api/v1/cmdb/import:
     get:
       consumes:
@@ -9507,12 +9615,12 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/handlers.IncidentDistributionData'
+              $ref: '#/definitions/dashboard.IncidentDistributionData'
             type: array
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/handlers.ErrorResponse'
+            $ref: '#/definitions/dashboard.ErrorResponse'
       summary: 获取事件分布
       tags:
       - Dashboard
@@ -9528,12 +9636,12 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/handlers.KPIMetric'
+              $ref: '#/definitions/dashboard.KPIMetric'
             type: array
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/handlers.ErrorResponse'
+            $ref: '#/definitions/dashboard.ErrorResponse'
       summary: 获取KPI指标
       tags:
       - Dashboard
@@ -9548,11 +9656,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/handlers.DashboardOverview'
+            $ref: '#/definitions/dashboard.DashboardOverview'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/handlers.ErrorResponse'
+            $ref: '#/definitions/dashboard.ErrorResponse'
       summary: 获取Dashboard概览
       tags:
       - Dashboard
@@ -9568,12 +9676,12 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/handlers.QuickAction'
+              $ref: '#/definitions/dashboard.QuickAction'
             type: array
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/handlers.ErrorResponse'
+            $ref: '#/definitions/dashboard.ErrorResponse'
       summary: 获取快速操作
       tags:
       - Dashboard
@@ -9595,12 +9703,12 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/handlers.RecentActivity'
+              $ref: '#/definitions/dashboard.RecentActivity'
             type: array
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/handlers.ErrorResponse'
+            $ref: '#/definitions/dashboard.ErrorResponse'
       summary: 获取最近活动
       tags:
       - Dashboard
@@ -9622,12 +9730,12 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/handlers.SatisfactionData'
+              $ref: '#/definitions/dashboard.SatisfactionData'
             type: array
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/handlers.ErrorResponse'
+            $ref: '#/definitions/dashboard.ErrorResponse'
       summary: 获取满意度数据
       tags:
       - Dashboard
@@ -9635,20 +9743,23 @@ paths:
     get:
       consumes:
       - application/json
-      description: 获取各服务的SLA达成情况
+      description: |-
+        获取租户近30天的SLA合规快照。响应是**单个对象**（complianceRate /
+        responseTimeCompliance / resolutionTimeCompliance / atRiskTickets /
+        breachedTickets / totalTickets / compliantTickets），不是按服务拆分的数组——
+        早期文档写成 {array} SLAData，前端据此定义 SLAData[] 并用 Array.isArray 过滤，
+        于是对象被当成"没有数据"，SLA 面板长期显示"暂无数据"。
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            items:
-              $ref: '#/definitions/handlers.SLAData'
-            type: array
+            $ref: '#/definitions/dto.SLAComplianceData'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/handlers.ErrorResponse'
+            $ref: '#/definitions/dashboard.ErrorResponse'
       summary: 获取SLA数据
       tags:
       - Dashboard
@@ -9663,11 +9774,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/handlers.DashboardOverview'
+            $ref: '#/definitions/dashboard.DashboardOverview'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/handlers.ErrorResponse'
+            $ref: '#/definitions/dashboard.ErrorResponse'
       summary: 获取仪表盘统计数据
       tags:
       - Dashboard
@@ -9686,7 +9797,7 @@ paths:
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/handlers.ErrorResponse'
+            $ref: '#/definitions/dashboard.ErrorResponse'
       summary: 获取系统统计数据
       tags:
       - Dashboard
@@ -9705,7 +9816,7 @@ paths:
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/handlers.ErrorResponse'
+            $ref: '#/definitions/dashboard.ErrorResponse'
       summary: 获取用户统计数据
       tags:
       - Dashboard
@@ -9727,12 +9838,12 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/handlers.TicketTrendData'
+              $ref: '#/definitions/dashboard.TicketTrendData'
             type: array
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/handlers.ErrorResponse'
+            $ref: '#/definitions/dashboard.ErrorResponse'
       summary: 获取工单趋势
       tags:
       - Dashboard
@@ -13259,7 +13370,7 @@ paths:
             - $ref: '#/definitions/common.Response'
             - properties:
                 data:
-                  $ref: '#/definitions/service.ServiceQualityReport'
+                  $ref: '#/definitions/dto.ServiceQualityReport'
               type: object
         "401":
           description: Unauthorized

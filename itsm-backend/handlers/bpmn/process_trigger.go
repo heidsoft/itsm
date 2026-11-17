@@ -431,8 +431,16 @@ func (c *ProcessTriggerHandler) SetDomainConfig(ctx *gin.Context) {
 		common.ParamErrorWithErr(ctx, err, "请求参数错误")
 		return
 	}
+	// 首次写入的配置没有父级可供继承。默认 inherit 会让该层级在
+	// GetEffectiveConfig 中被整条跳过（case inherit: continue），最终返回
+	// 「全链路未命中配置」——用户看到保存成功却查不到任何生效值。
+	// 因此未指定时默认 override，让新增配置能独立生效。
 	if req.InheritMode == "" {
-		req.InheritMode = "inherit"
+		req.InheritMode = dto.InheritModeOverride
+	}
+	if !dto.IsValidInheritMode(req.InheritMode) {
+		common.Fail(ctx, 1001, "inheritMode 必须为 inherit / override / extend")
+		return
 	}
 
 	tenantID, tenantOK := middleware.TenantIDOrUnauthorized(ctx)

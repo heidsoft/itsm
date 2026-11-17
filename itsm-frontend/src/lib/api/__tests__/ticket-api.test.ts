@@ -455,11 +455,21 @@ describe('TicketApi', () => {
   });
 
   describe('getTicketStats', () => {
-    it('should get stats', async () => {
+    it('should get stats without date params (全量口径)', async () => {
       mockGet.mockResolvedValue({ total: 10, open: 5 });
       const result = await TicketApi.getTicketStats();
-      expect(mockGet).toHaveBeenCalledWith('/api/v1/tickets/stats');
+      // getTicketStats(params?) 始终以两个实参调用 httpClient.get。不传日期时第二实参
+      // 是 undefined，后端据此保持「可见范围内全量」旧口径；断言单实参会在 CI 假红。
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/tickets/stats', undefined);
       expect(result.total).toBe(10);
+    });
+
+    it('forwards paired date params unchanged', async () => {
+      mockGet.mockResolvedValue({ total: 3, open: 1 });
+      const params = { dateFrom: '2026-11-01', dateTo: '2026-11-30' };
+      await TicketApi.getTicketStats(params);
+      // dateFrom/dateTo 必须成对透传：缺一端后端返回 400，不允许前端静默补全。
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/tickets/stats', params);
     });
   });
 

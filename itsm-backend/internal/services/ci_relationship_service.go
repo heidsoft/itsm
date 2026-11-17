@@ -412,7 +412,15 @@ func (s *CIRelationshipService) GetCITopology(ctx context.Context, ciID, tenantI
 		}
 	}
 
-	graph := &dto.TopologyGraph{RootCIID: ciID, Depth: maxDepth}
+	// Nodes/Edges 必须显式初始化为空 slice：零值 nil slice 会被序列化成
+	// "edges": null，前端对 list 字段裸调 .map 即 TypeError（历史 bottleneckTasks
+	// 同病）。孤点 CI（无任何关系）是常态而非异常，不能让空图变成 null。
+	graph := &dto.TopologyGraph{
+		RootCIID: ciID,
+		Depth:    maxDepth,
+		Nodes:    make([]dto.TopologyNode, 0, len(nodes)),
+		Edges:    make([]dto.TopologyEdge, 0, len(edges)),
+	}
 	for _, node := range nodes {
 		graph.Nodes = append(graph.Nodes, node)
 	}

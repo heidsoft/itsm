@@ -64,6 +64,8 @@ func (s *GroupService) ListGroups(ctx context.Context, req *dto.ListGroupsReques
 	}
 
 	groups, err := query.
+		// 只取成员 ID，供列表响应填充 memberCount，避免把整份用户档案拉回内存。
+		WithMembers(func(q *ent.UserQuery) { q.Select(user.FieldID) }).
 		Limit(req.PageSize).
 		Offset((req.Page - 1) * req.PageSize).
 		Order(ent.Asc(group.FieldCreatedAt)).

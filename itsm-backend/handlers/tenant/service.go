@@ -14,6 +14,9 @@ import (
 type Service interface {
 	CreateTenant(ctx context.Context, req *dto.CreateTenantRequest) (*ent.Tenant, error)
 	ListTenants(ctx context.Context, req *dto.ListTenantsRequest) ([]*ent.Tenant, int, error)
+	// TenantUsageStats 批量返回租户资源使用读数（缺陷 O8）。
+	// 返回 map 只含查到的租户；缺失项表示「本响应未聚合」，不是 0。
+	TenantUsageStats(ctx context.Context, tenantIDs []int) (map[int]dto.TenantUsageStat, error)
 	GetTenant(ctx context.Context, tenantID int) (*ent.Tenant, error)
 	UpdateTenant(ctx context.Context, tenantID int, req *dto.UpdateTenantRequest) (*ent.Tenant, error)
 	UpdateTenantStatus(ctx context.Context, tenantID int, status string) error

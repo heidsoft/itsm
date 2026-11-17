@@ -40,6 +40,14 @@ func (m *mockTenantService) ListTenants(ctx context.Context, req *dto.ListTenant
 	return nil, 0, args.Error(2)
 }
 
+func (m *mockTenantService) TenantUsageStats(ctx context.Context, tenantIDs []int) (map[int]dto.TenantUsageStat, error) {
+	args := m.Called(ctx, tenantIDs)
+	if stats, ok := args.Get(0).(map[int]dto.TenantUsageStat); ok {
+		return stats, args.Error(1)
+	}
+	return nil, args.Error(1)
+}
+
 func (m *mockTenantService) GetTenant(ctx context.Context, tenantID int) (*ent.Tenant, error) {
 	args := m.Called(ctx, tenantID)
 	if t, ok := args.Get(0).(*ent.Tenant); ok {
@@ -165,6 +173,8 @@ func TestListTenants_Success(t *testing.T) {
 	m := &mockTenantService{}
 	h := newTenantHandler(m)
 	m.On("ListTenants", mock.Anything, mock.Anything).Return([]*ent.Tenant{sampleTenant()}, 1, nil)
+	m.On("TenantUsageStats", mock.Anything, mock.Anything).
+		Return(map[int]dto.TenantUsageStat{}, nil)
 
 	w, c := doJSON(h, http.MethodGet, "/api/v1/tenants", "")
 	h.ListTenants(c)
@@ -176,6 +186,81 @@ func TestListTenants_Success(t *testing.T) {
 	assert.True(t, ok)
 	assert.Equal(t, float64(1), data["total"])
 	m.AssertExpectations(t)
+}
+
+// TestListTenants_IncludesUsageStats 锁缺陷 O8：
+// 此前列表响应不含 userCount / ticketCount，前端 `|| 0` 把 undefined 显示成
+// 「0 用户 0 工单」（实测 Default Tenant 有 3 用户 / 2 工单仍显示 0）。
+func TestListTenants_IncludesUsageStats(t *testing.T) {
+	m := &mockTenantService{}
+	h := newTenantHandler(m)
+	tnt := sampleTenant()
+	tnt.ID = 7
+	m.On("ListTenants", mock.Anything, mock.Anything).Return([]*ent.Tenant{tnt}, 1, nil)
+	m.On("TenantUsageStats", mock.Anything, []int{7}).
+		Return(map[int]dto.TenantUsageStat{7: {UserCount: 3, TicketCount: 2}}, nil)
+
+	w, c := doJSON(h, http.MethodGet, "/api/v1/tenants", "")
+	h.ListTenants(c)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	var resp common.Response
+	assert.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
+	data, ok := resp.Data.(map[string]interface{})
+	assert.True(t, ok)
+	items, ok := data["items"].([]interface{})
+	assert.True(t, ok)
+	assert.Len(t, items, 1)
+	item, ok := items[0].(map[string]interface{})
+	assert.True(t, ok)
+	assert.Equal(t, float64(3), item["userCount"], "用户数必须是真实聚合值，不能是硬编码 0")
+	assert.Equal(t, float64(2), item["ticketCount"], "工单数必须是真实聚合值，不能是硬编码 0")
+	m.AssertExpectations(t)
+}
+
+// TestListTenants_UsageStatsFailureDoesNotFakeZero 锁「聚合失败不得伪造 0」：
+// 统计接口报错时列表仍应成功返回，但两个字段必须缺失（前端显示「—」），
+// 而不是变成 0 —— 否则又回到「0 用户 0 工单」的假读数。
+func TestListTenants_UsageStatsFailureDoesNotFakeZero(t *testing.T) {
+	m := &mockTenantService{}
+	h := newTenantHandler(m)
+	tnt := sampleTenant()
+	tnt.ID = 9
+	m.On("ListTenants", mock.Anything, mock.Anything).Return([]*ent.Tenant{tnt}, 1, nil)
+	m.On("TenantUsageStats", mock.Anything, mock.Anything).
+		Return(nil, assert.AnError)
+
+	w, c := doJSON(h, http.MethodGet, "/api/v1/tenants", "")
+	h.ListTenants(c)
+
+	assert.Equal(t, http.StatusOK, w.Code, "统计聚合失败不应让租户列表整体失败")
+	var resp common.Response
+	assert.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
+	data := resp.Data.(map[string]interface{})
+	items := data["items"].([]interface{})
+	assert.Len(t, items, 1)
+	item := items[0].(map[string]interface{})
+	_, hasUserCount := item["userCount"]
+	_, hasTicketCount := item["ticketCount"]
+	assert.False(t, hasUserCount, "未聚合时 userCount 必须省略，不得输出 0")
+	assert.False(t, hasTicketCount, "未聚合时 ticketCount 必须省略，不得输出 0")
+	// 租户主体信息仍须完整，不能因统计失败而丢字段。
+	assert.Equal(t, tnt.Name, item["name"])
+	m.AssertExpectations(t)
+}
+
+// TestToTenantResponse_OmitsUsageByDefault 锁单实体映射不伪造统计值：
+// 创建 / 详情 / 更新响应都没有做聚合，这三个端点若带 userCount=0 就是假读数。
+func TestToTenantResponse_OmitsUsageByDefault(t *testing.T) {
+	response := dto.ToTenantResponse(sampleTenant())
+	assert.NotNil(t, response)
+	assert.Nil(t, response.UserCount)
+	assert.Nil(t, response.TicketCount)
+
+	payload, err := json.Marshal(response)
+	assert.NoError(t, err)
+	assert.NotContains(t, string(payload), `"userCount"`)
+	assert.NotContains(t, string(payload), `"ticketCount"`)
 }
 
 func TestUpdateTenantStatus_Success(t *testing.T) {

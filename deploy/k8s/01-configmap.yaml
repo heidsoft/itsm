@@ -1,0 +1,23 @@
+# 非敏感配置。敏感项（密码 / 密钥）见 02-secrets.yaml。
+# ⚠️ 若后端镜像依赖 config.yaml，请将 config.yaml.example 挂载为 ConfigMap 并挂到 /app/config。
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: itsm-config
+  namespace: itsm
+data:
+  DEPLOYMENT_MODE: "private"
+  ITSM_AUTO_MIGRATE: "false"
+  ITSM_AUTO_SEED: "false"
+  LOG_LEVEL: "info"
+  GIN_MODE: "release"
+  SERVER_PORT: "8090"
+  # enforce 需要应用以「非 superuser、非 BYPASSRLS、非策略表 owner」的角色连接，
+  # 否则 PostgreSQL 会无条件绕过策略：开关显示开启，隔离实际不存在。当前清单
+  # 未配置 DB_APP_ROLE_USER，连接仍是部署 owner，因此这里用 shadow 观察缺失
+  # 租户上下文的查询；切 enforce 前必须完成 docs/operations/rls-rollout.md 的
+  # 前置步骤，否则后端会按 readiness 探测结果拒绝启动（这是有意的 fail closed）。
+  RLS_MODE: "shadow"
+  NEXT_PUBLIC_API_URL: "/api"
+  NEXT_PUBLIC_ENABLE_AI: "true"
+  CORS_ALLOWED_ORIGINS: "https://itsm.example.com"

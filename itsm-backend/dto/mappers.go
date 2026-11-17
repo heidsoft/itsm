@@ -471,6 +471,9 @@ func ToKnowledgeArticleResponseList(articles []*ent.KnowledgeArticle) []*Knowled
 // ===================================
 
 // ToTenantResponse converts an ent.Tenant to TenantResponse
+//
+// 注意：不填 UserCount / TicketCount —— 聚合是列表端点的事，单实体映射
+// 无法也不知道要去查哪些表。需要资源使用读数时用 ApplyTenantUsage。
 func ToTenantResponse(tenant *ent.Tenant) *TenantResponse {
 	if tenant == nil {
 		return nil

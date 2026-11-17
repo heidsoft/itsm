@@ -75,6 +75,22 @@ type TenantResponse struct {
 	Timezone        string                 `json:"timezone"`
 	CreatedAt       time.Time              `json:"createdAt"`
 	UpdatedAt       time.Time              `json:"updatedAt"`
+
+	// UserCount / TicketCount 是「资源使用」读数（缺陷 O8）。
+	//
+	// 用指针 + omitempty 而不是 int 值：列表端点会按租户聚合填充，而
+	// 单租户详情 / 创建 / 更新响应并不做聚合。声明成 int 会在这些场景
+	// 输出伪造的 0（前端 `record.userCount || 0` 就会把「未计算」显示成
+	// 「0 个用户」——正是此前 Default Tenant 显示 0 用户 0 工单的口径错误）。
+	// nil = 本响应未做聚合，前端应显示「—」而不是 0。
+	UserCount   *int `json:"userCount,omitempty" comment:"租户内活跃用户数（软删已排除）"`
+	TicketCount *int `json:"ticketCount,omitempty" comment:"租户内工单数（软删已排除）"`
+}
+
+// TenantUsageStat 是单租户资源使用读数的内部载体（聚合查询结果）。
+type TenantUsageStat struct {
+	UserCount   int
+	TicketCount int
 }
 
 // TenantInitializationStatusResponse 租户产品基线安装状态。

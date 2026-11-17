@@ -26,7 +26,8 @@
 
 | 文件 | 主题 |
 |:--|:--|
-| [`ai-native-development-plan-2026-11-14.md`](ai-native-development-plan-2026-11-14.md) | AI-Native 六批次后续计划（编排前端闭环 / Skill 身份硬化 / 注册表持久化 / Evaluator 扩展 / 边缘组件硬化 / 编排深化），基于 `7804845bc` 摸底基线 |
+| [`ai-native-development-plan-2026-11-14.md`](ai-native-development-plan-2026-11-14.md) | AI-Native 六批次后续计划（编排前端闭环 / Skill 身份硬化 / 注册表持久化 / Evaluator 扩展 / 边缘组件硬化 / 编排深化），基于 `7804845bc` 摸底基线。**技术内容保留，批次顺序被 [`optimized-improvement-plan-2026-11-14.md`](optimized-improvement-plan-2026-11-14.md) 重排**（商业首发场景 Email-to-Ticket 前置） |
+| [`optimized-improvement-plan-2026-11-14.md`](optimized-improvement-plan-2026-11-14.md) | **Status: draft**。代码现状摸底 + 计划排序优化：把已建成(~85%)却漏出计划的 AI Email-to-Ticket 推为旗舰 W0（硬化+演示+质量门禁+PoC 包+ROADMAP 补录），原 ai-native 批次 A–F 重排为 W1–W6；对齐商业化手册 §3.3/§9 |
 | [`ai-security-operations-blueprint.md`](ai-security-operations-blueprint.md) | 安全运营域 S1–S5 总蓝图 |
 | [`exposure-answer-design.md`](exposure-answer-design.md) | 前置环节 S0：外部安全事件暴露面自答 |
 | [`security-operations-feature-design.md`](security-operations-feature-design.md) | F1–F10 功能规格 |

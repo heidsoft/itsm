@@ -110,6 +110,7 @@ func (h *Handler) ListGroups(c *gin.Context) {
 			Name:        g.Name,
 			Description: g.Description,
 			TenantID:    g.TenantID,
+			MemberCount: len(g.Edges.Members),
 			CreatedAt:   g.CreatedAt,
 			UpdatedAt:   g.UpdatedAt,
 		})

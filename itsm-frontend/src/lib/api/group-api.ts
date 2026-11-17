@@ -6,6 +6,8 @@ export interface Group {
   name: string;
   description?: string;
   tenantId: number;
+  /** 列表接口返回的成员总数（详情接口才带 members[]）。 */
+  memberCount?: number;
   members?: User[];
   createdAt: string;
   updatedAt: string;

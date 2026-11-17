@@ -154,7 +154,45 @@ describe('WorkflowInstanceDetail', () => {
     });
     fireEvent.click(screen.getByText(/执行历史/));
     await waitFor(() => {
-      expect(screen.getByText('PROCESS STARTED')).toBeInTheDocument();
+      // 审计动作经 auditActionTextMap 中文化：PROCESS_STARTED → 流程已启动。
+      // 旧断言 'PROCESS STARTED' 停留在下划线直转空格的实现，已在 CI 假红。
+      expect(screen.getByText('流程已启动')).toBeInTheDocument();
+    });
+    expect(screen.getByText('Start')).toBeInTheDocument();
+    expect(screen.getByText('system')).toBeInTheDocument();
+  });
+
+  it('falls back to space-joined text for unmapped audit actions', async () => {
+    mockGetProcessTimeline.mockResolvedValue([
+      {
+        id: 'log-custom',
+        action: 'CUSTOM_ACTION',
+        activityName: 'Custom',
+        userName: 'operator',
+        timestamp: '2026-01-01T00:00:00Z',
+      },
+    ] as never);
+
+    render(
+      <WorkflowInstanceDetail
+        instanceId="inst-4-custom"
+        initialInstance={{
+          id: 'inst-4-custom',
+          processDefinitionKey: 'proc',
+          businessKey: 'biz',
+          status: 'running',
+          startTime: '2026-01-01T00:00:00Z',
+        }}
+      />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText(/执行历史/)).toBeInTheDocument();
+    });
+    fireEvent.click(screen.getByText(/执行历史/));
+    await waitFor(() => {
+      // 未收录动作保留原文（下划线转空格），是确定性的向后兼容兜底。
+      expect(screen.getByText('CUSTOM ACTION')).toBeInTheDocument();
     });
   });
 

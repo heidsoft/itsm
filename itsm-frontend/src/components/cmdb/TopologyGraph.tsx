@@ -171,7 +171,7 @@ const TopologyGraphViewInner: React.FC<TopologyGraphViewProps> = ({
       setGraph(data);
 
       // 转换节点
-      const flowNodes: Node<any>[] = data.nodes.map((node, index) => ({
+      const flowNodes: Node<any>[] = (data.nodes ?? []).map((node, index) => ({
         id: String(node.id),
         type: 'ci',
         position: calculateNodePosition(index, data.nodes.length),
@@ -183,7 +183,9 @@ const TopologyGraphViewInner: React.FC<TopologyGraphViewProps> = ({
       setNodes(flowNodes);
 
       // 转换边
-      const flowEdges: Edge[] = data.edges.map(edge => ({
+      // ?? [] 防御：后端曾把无关系的孤点 CI 序列化成 "edges": null，
+      // 裸 .map 会 TypeError 崩掉整个详情页。
+      const flowEdges: Edge[] = (data.edges ?? []).map(edge => ({
         id: `e${edge.source}-${edge.target}`,
         source: String(edge.source),
         target: String(edge.target),

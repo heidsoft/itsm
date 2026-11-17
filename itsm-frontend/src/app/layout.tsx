@@ -8,6 +8,7 @@ import { ThemeProvider, ThemeConfig, useTheme } from '@/lib/design-system/theme'
 import { RecentVisitTracker } from '@/components/layout/RecentVisitTracker';
 import { ThemeHtmlClassSync } from '@/components/layout/ThemeHtmlClassSync';
 import { DayjsLocaleSync } from '@/components/layout/DayjsLocaleSync';
+import { HtmlLangSync } from '@/components/layout/HtmlLangSync';
 import ErrorBoundary from '@/components/common/ErrorBoundary';
 import { QueryProvider } from '@/lib/providers/QueryProvider';
 import GlobalShortcutProvider from '@/components/common/GlobalShortcutProvider';
@@ -94,6 +95,7 @@ export default function RootLayout({
           <RecentVisitTracker />
           <ThemeHtmlClassSync />
           <DayjsLocaleSync />
+          <HtmlLangSync />
           <ThemeConfig>
             <AntdProvider>
               <QueryProvider>

@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: itsm-redis
+  namespace: itsm
+  labels: { app: itsm-redis }
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: itsm-redis }
+  template:
+    metadata:
+      labels: { app: itsm-redis }
+    spec:
+      containers:
+        - name: redis
+          image: redis:7-alpine
+          ports: [{ containerPort: 6379 }]
+          args: ["--requirepass", "$(REDIS_PASSWORD)"]
+          env:
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef: { name: itsm-secrets, key: REDIS_PASSWORD }
+          resources:
+            requests: { cpu: "100m", memory: "128Mi" }
+            limits: { cpu: "500m", memory: "512Mi" }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: itsm-redis
+  namespace: itsm
+spec:
+  selector: { app: itsm-redis }
+  ports: [{ port: 6379, targetPort: 6379 }]

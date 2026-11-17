@@ -1,0 +1,39 @@
+# ITSM Deploy Overlay
+#
+# Purpose:
+#   Decouple "build" from "deploy". The base docker-compose.prod.yml builds
+#   images locally (build: contexts) and tags them itsm-backend:${VERSION}.
+#   In CI we instead build & push immutable, version-pinned images to GHCR and
+#   let the server only PULL them. This overlay swaps every local build/tag for
+#   a prebuilt GHCR image selected by ${DEPLOY_TAG}.
+#
+# Usage (run on the deploy host, in the project root):
+#   export DEPLOY_TAG=sha-1a2b3c4        # staging: git sha
+#   # or
+#   export DEPLOY_TAG=v1.2.3             # prod: release tag
+#   docker compose -f docker-compose.prod.yml -f .github/deploy/compose.override.yml pull
+#   docker compose -f docker-compose.prod.yml -f .github/deploy/compose.override.yml up -d
+#
+# Applied automatically by .github/workflows/deploy.yml.
+#
+# Note: setting `build: null` removes the key so compose will NOT build locally
+# and will instead resolve the fully-qualified `image:`.
+
+services:
+  # init, backend and worker all share the backend image
+  itsm-init:
+    build: null
+    image: ghcr.io/heidsoft/itsm-backend:${DEPLOY_TAG}
+
+  itsm-backend:
+    build: null
+    image: ghcr.io/heidsoft/itsm-backend:${DEPLOY_TAG}
+
+  itsm-worker:
+    build: null
+    image: ghcr.io/heidsoft/itsm-backend:${DEPLOY_TAG}
+
+  # frontend is built with target=production in CI (see deploy.yml build-push)
+  itsm-frontend:
+    build: null
+    image: ghcr.io/heidsoft/itsm-frontend:${DEPLOY_TAG}

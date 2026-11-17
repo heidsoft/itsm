@@ -248,6 +248,21 @@ services:
       # AI 能力就绪标记（/api/v1/capabilities 中 ai 的 deploymentReady）
       - ITSM_AI_READY=${ITSM_AI_READY:-}
 
+      # 能力就绪申报（fail-closed：留空即视为未申报，能力矩阵与域内能力面同时降级）
+      #
+      # 这些变量是「部署侧显式申报就绪」，不是功能开关，也不阻断执行：进程内装配
+      # 已完成，未申报只意味着对外不声称 ready。/api/v1/capabilities 的
+      # deploymentReady=false、degradedReason="deployment dependency is not ready"，
+      # 对应菜单入口按能力门控隐藏——这是刻意行为，不要当成故障。
+      #
+      # 云发现（CMDB）：除本项申报外，还需「已装厂商适配器 + 租户凭据解析器 +
+      # Worker」且租户下存在装了适配器的启用云账号；缺一即 unready/unconfigured。
+      - ITSM_CMDB_DISCOVERY_READY=${ITSM_CMDB_DISCOVERY_READY:-}
+      # 三方连接器：需先在租户内启用对应连接器并完成回调验签联调后再申报。
+      - ITSM_FEISHU_READY=${ITSM_FEISHU_READY:-}
+      - ITSM_WECOM_READY=${ITSM_WECOM_READY:-}
+      - ITSM_DINGTALK_READY=${ITSM_DINGTALK_READY:-}
+
       # Guidance sidecar 地址：指向 itsm-ai-service 的受限分诊端点 /triage
       # （默认 localhost:8091；生产由该服务接管，triage 走受限生成路径）
       - GUIDANCE_URL=${GUIDANCE_URL:-http://itsm-ai-service:8000}

@@ -265,17 +265,41 @@ func (r *EntRepository) ListDepartments(ctx context.Context, tenantID int) ([]*D
 	return res, nil
 }
 
+// GetDepartmentTree 返回当前租户的完整部门树。
+// 历史实现只 WithChildren 预加载一层：toDeptDomain 递归读 Edges.Children 时
+// 孙节点的 edges 为空，三层及以上部门在部门流程页直接消失。改为一次平铺查询
+// 后在内存里按 ParentID 组树，深度不再受预加载层数限制。
 func (r *EntRepository) GetDepartmentTree(ctx context.Context, tenantID int) ([]*Department, error) {
 	es, err := r.client.Department.Query().
-		Where(department.TenantID(tenantID), department.ParentIDIsNil(), department.DeletedAtIsNil()).
-		WithChildren(func(q *ent.DepartmentQuery) { q.Where(department.DeletedAtIsNil()) }).
+		Where(department.TenantID(tenantID), department.DeletedAtIsNil()).
+		Order(ent.Asc(department.FieldID)).
 		All(ctx)
 	if err != nil {
 		return nil, err
 	}
-	var res []*Department
+
+	byID := make(map[int]*Department, len(es))
 	for _, e := range es {
-		res = append(res, toDeptDomain(e))
+		d := toDeptDomain(e)
+		d.Children = nil
+		byID[e.ID] = d
+	}
+
+	res := make([]*Department, 0)
+	for _, e := range es {
+		d := byID[e.ID]
+		parentID := e.ParentID
+		// 自引用 / 父已软删 / 父缺失：作为根节点呈现，既不产生环也不丢部门。
+		if parentID == 0 || parentID == e.ID {
+			res = append(res, d)
+			continue
+		}
+		parent, ok := byID[parentID]
+		if !ok {
+			res = append(res, d)
+			continue
+		}
+		parent.Children = append(parent.Children, d)
 	}
 	return res, nil
 }

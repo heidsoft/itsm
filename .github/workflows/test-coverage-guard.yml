@@ -13,6 +13,9 @@ name: test-coverage-guard
 # Triggers:
 #   - PRs and pushes that touch itsm-frontend/src/lib/** or
 #     itsm-backend/handlers|service/*.go (excluding *_test.go).
+#   - Since G0-b the core service layer lives in internal/services/**; that
+#     path is listed too, otherwise 337 production files were outside the
+#     guard's trigger set entirely.
 #   - Changes to scripts/test-coverage-guard.js or this workflow itself.
 #
 # Behavior:
@@ -30,6 +33,7 @@ on:
       - 'itsm-frontend/src/lib/**'
       - 'itsm-backend/handlers/**'
       - 'itsm-backend/service/**'
+      - 'itsm-backend/internal/services/**'
       - 'scripts/test-coverage-guard.js'
       - '.github/workflows/test-coverage-guard.yml'
   pull_request:
@@ -37,6 +41,7 @@ on:
       - 'itsm-frontend/src/lib/**'
       - 'itsm-backend/handlers/**'
       - 'itsm-backend/service/**'
+      - 'itsm-backend/internal/services/**'
       - 'scripts/test-coverage-guard.js'
       - '.github/workflows/test-coverage-guard.yml'
   workflow_dispatch:
@@ -115,6 +120,26 @@ jobs:
           BASE_REF="${{ steps.base.outputs.base }}"
           echo "=== Running test-coverage-guard against $BASE_REF..HEAD ==="
           node scripts/test-coverage-guard.js --base "$BASE_REF" --head HEAD
+
+      - name: Strict-diff observation (non-blocking)
+        if: always()
+        # Observation only — the hard gate is the step above. This measures how
+        # often a source change relies on an on-disk sibling test without
+        # modifying any test in the diff, which is the data needed before the
+        # stricter rule could be promoted. `|| true` is deliberate here: the
+        # observation must never turn a green guard red (or mask a red one).
+        run: |
+          BASE_REF="${{ steps.base.outputs.base }}"
+          echo "=== strict-diff observation against $BASE_REF..HEAD ==="
+          OBS="$(node scripts/test-coverage-guard.js \
+            --base "$BASE_REF" --head HEAD --strict-diff 2>&1 || true)"
+          printf '%s\n' "$OBS"
+          {
+            echo '### strict-diff observation (non-blocking)'
+            echo '```text'
+            printf '%s\n' "$OBS"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Generate JSON report on failure
         if: failure()

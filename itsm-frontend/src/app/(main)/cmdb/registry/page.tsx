@@ -57,6 +57,29 @@ const ENVIRONMENT_OPTIONS = [
 const initialAttrValue = (attr: PendingDiscoveryAttribute): string =>
   attr.currentValue || attr.defaultValue || '';
 
+// 缺失条件的展示文案。
+//
+// 后端下发的是稳定的机器名（discoveryAdapter / cloudAccountWithDiscoveryAdapter /
+// ITSM_CMDB_DISCOVERY_READY …），直接拼进中文句子不可读，而运维真正需要照做的
+// 动作也看不出。这里做一层翻译，但保留后端原名：排查时能对着 API 响应与部署文档
+// 找到同一串字符，不必回头猜它对应哪一项。
+//
+// 未在后端声明的键原样透出，避免新增判定条件时这里悄悄吞掉一条原因。
+const MISSING_REQUIREMENT_LABEL: Record<string, string> = {
+  discoveryAdapter: '未安装任何厂商发现适配器',
+  tenantSecretResolver: '租户凭据解析器未装配',
+  discoveryWorker: '发现任务 Worker 未装配',
+  cloudAccountWithDiscoveryAdapter: '租户下没有可用的云账号（需启用且配好凭据）',
+  ITSM_CMDB_DISCOVERY_READY: '部署未申报 ITSM_CMDB_DISCOVERY_READY',
+};
+
+const describeMissingRequirements = (items: string[] | undefined): string => {
+  if (!items || items.length === 0) return '无';
+  return items
+    .map(key => MISSING_REQUIREMENT_LABEL[key] ?? key)
+    .join('；');
+};
+
 // 状态字符串由执行器落库，展示层只做翻译，不要用 success 之类的展示词反推后端状态。
 const DISCOVERY_JOB_STATUS: Record<string, { label: string; color: string }> = {
   queued: { label: '排队中', color: 'default' },
@@ -563,7 +586,7 @@ export default function ServiceGraphRegistryPage() {
           title="云资源自动发现尚未就绪"
           description={
             discoveryCapability
-              ? `当前状态：${discoveryCapability.state}；缺失条件：${discoveryCapability.missingRequirements.join('、') || '租户配置'}`
+              ? `当前状态：${discoveryCapability.state}；缺失条件：${describeMissingRequirements(discoveryCapability.missingRequirements)}`
               : '无法读取后端能力状态；后端将按未就绪状态拒绝自动发现请求。'
           }
         />

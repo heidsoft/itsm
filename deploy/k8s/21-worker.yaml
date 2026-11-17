@@ -1,0 +1,28 @@
+# 异步执行：command / outbox、SLA 扫描、升级、索引任务。
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: itsm-worker
+  namespace: itsm
+  labels: { app: itsm-worker }
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: itsm-worker }
+  template:
+    metadata:
+      labels: { app: itsm-worker }
+    spec:
+      containers:
+        - name: worker
+          image: ghcr.io/heidsoft/itsm-backend:1.6.9
+          envFrom:
+            - configMapRef: { name: itsm-config }
+            - secretRef: { name: itsm-secrets }
+          env:
+            - { name: ITSM_PROCESS_MODE, value: "worker" }
+            - { name: DB_HOST, value: "itsm-postgres" }
+            - { name: REDIS_HOST, value: "itsm-redis" }
+          resources:
+            requests: { cpu: "250m", memory: "512Mi" }
+            limits: { cpu: "1", memory: "1Gi" }

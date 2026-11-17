@@ -1,8 +1,10 @@
 # ITSM Makefile - 构建和部署自动化
-.PHONY: help build build-backend build-frontend build-images build-parallel build-no-cache deploy deploy-backend deploy-frontend prod-init prod-deploy prod-health prod-status test test-backend test-frontend test-unit lint lint-backend lint-frontend type-check check-contracts docs-gate check-handlers-hygiene fresh-install-gate scope-creep product-drift verify-scripts health dev-health dev-start-docker dev-start-local dev-stop dev-stop-docker dev-stop-local dev-clean dev-reset dev-rebuild dev-backend-local dev-frontend-only dev-seed-demo swagger-gen clean clean-all logs restart status version
+.PHONY: help build build-backend build-frontend build-images build-parallel build-no-cache deploy deploy-backend deploy-frontend prod-init prod-deploy prod-health prod-status test test-backend test-frontend test-scripts test-unit test-e2e lint lint-backend lint-frontend type-check check-contracts docs-gate check-handlers-hygiene fresh-install-gate scope-creep product-drift verify-scripts fmt-backend ci-parity ci-parity-strict health dev-health dev-start-docker dev-start-local dev-stop dev-stop-docker dev-stop-local dev-clean dev-reset dev-rebuild dev-backend-local dev-frontend-only dev-seed-demo swagger-gen clean clean-all logs restart status version
 
 # 默认版本
 VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo "latest")
+# 镜像 registry 前缀（供 build-images 统一构建器使用，如 ghcr.io/heidsoft/）
+REGISTRY ?=
 ENV_FILE ?= .env.prod
 # Go 工具链（本机多版本共存时可用 GO=/path/to/go 覆盖）
 GO ?= go
@@ -78,7 +80,9 @@ logs-backend: ## 查看后端日志
 logs-frontend: ## 查看前端日志
 	docker compose -f $(COMPOSE_FILE) --env-file $(ENV_FILE) logs -f itsm-frontend
 
-test: test-backend test-frontend ## 运行所有测试
+# 单元链路：后端 go test + 前端 jest + 门禁脚本自测。
+# 不含 E2E（需整栈，make test-e2e）与 RLS 专项（需 integration_rls tag）。
+test: test-backend test-frontend test-scripts ## 运行单元/门禁自测链路（不含 E2E、RLS 专项）
 	@echo "$(GREEN)测试完成！$(NC)"
 
 test-backend: ## 运行后端测试
@@ -88,6 +92,10 @@ test-backend: ## 运行后端测试
 test-frontend: ## 运行前端测试
 	@echo "$(BLUE)运行前端测试...$(NC)"
 	cd itsm-frontend && npm test
+
+test-scripts: ## 运行门禁脚本自测（node --test，CI docs-gate 同款命令）
+	@echo "$(BLUE)运行门禁脚本自测...$(NC)"
+	node --test scripts/__tests__/*.test.js
 
 test-unit: ## 运行单元测试
 	cd itsm-backend && go test ./...
@@ -162,7 +170,13 @@ prod-init: ## 生成 .env.prod（不覆盖已有文件），空密钥字段填�
 prod-deploy: deploy ## 部署到生产环境（deploy 别名）
 prod-health: health ## 生产健康检查（health 别名）
 prod-status: status ## 生产状态查询（status 别名）
-build-images: build ## 构建全部镜像（build 别名，支持 VERSION/REGISTRY 变量）
+# 统一构建器：一次构建 backend / frontend / ai-service / guidance_sidecar 四个镜像。
+# 历史上这里是 `build-images: build` 的 compose 别名，只构建 2 个镜像且完全忽略
+# REGISTRY，与 docs/deployment-optimization.md §5 和 dev-commands-reference.md
+# 承诺的用法不符；`make build` 仍保留 compose 语义不变。
+build-images: ## 构建全部 4 个服务镜像（统一构建器，支持 VERSION/REGISTRY）
+	@echo "$(BLUE)构建全部服务镜像 (VERSION=$(VERSION), REGISTRY=$(REGISTRY))...$(NC)"
+	VERSION="$(VERSION)" REGISTRY="$(REGISTRY)" bash scripts/build-images.sh "$(VERSION)"
 
 verify-scripts: ## 校验 scripts 下全部 shell 脚本语法
 	@echo "$(BLUE)校验脚本语法...$(NC)"
@@ -251,6 +265,20 @@ swagger-gen: ## 重新生成 OpenAPI/Swagger 文档（itsm-backend/docs，版本
 	@echo "$(BLUE)生成 Swagger 文档...$(NC)"
 	cd itsm-backend && $(GO) run github.com/swaggo/swag/cmd/swag init -d . -g main.go -o docs --parseDependency --parseInternal
 	@echo "$(GREEN)已更新 itsm-backend/docs/{docs.go,swagger.json,swagger.yaml}$(NC)"
+
+fmt-backend: ## 用 CI 同版本 gofumpt 格式化后端（backend-ci / lint 前置）
+	@echo "$(BLUE)格式化 itsm-backend（gofumpt v0.7.0，与 backend-ci.yml pin 一致）...$(NC)"
+	cd itsm-backend && \
+	  GOBIN="$$($(GO) env GOPATH)/bin"; \
+	  if [ ! -x "$$GOBIN/gofumpt" ]; then GOTOOLCHAIN=auto $(GO) install mvdan.cc/gofumpt@v0.7.0; fi; \
+	  "$$GOBIN/gofumpt" -w .
+	@echo "$(GREEN)完成。请用 git diff --stat 复核，并把格式化改动单独提交。$(NC)"
+
+ci-parity: ## 本地复现远端 CI 高频红灯（报告模式，不阻断）
+	@bash scripts/check-ci-parity.sh
+
+ci-parity-strict: ## 本地复现远端 CI 高频红灯（有差异即失败）
+	@bash scripts/check-ci-parity.sh --strict
 
 status: ## 显示服务状态
 	docker compose -f $(COMPOSE_FILE) --env-file $(ENV_FILE) ps

@@ -63,6 +63,12 @@ export interface Tenant {
   updatedAt?: string;
   expiresAt?: string;
   settings?: Record<string, unknown>;
+  // 资源使用读数（缺陷 O8）。由列表端点按租户聚合填充；详情/创建/更新响应
+  // 不做聚合，字段缺席。缺席语义是「未计算」，**不是** 0 —— 展示层必须显示「—」
+  // 而不是 `|| 0`（Default Tenant 显示「0 用户 0 工单」而实际有 3 用户 2 工单
+  // 正是这个口径错误）。
+  userCount?: number;
+  ticketCount?: number;
 }
 
 export interface TenantListResponse {

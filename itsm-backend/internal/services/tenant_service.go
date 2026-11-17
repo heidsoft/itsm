@@ -10,6 +10,7 @@ import (
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/tenant"
+	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/user"
 	"itsm-backend/internal/commandbus"
 
@@ -205,6 +206,72 @@ func (s *TenantService) ListTenants(ctx context.Context, req *dto.ListTenantsReq
 	}
 
 	return tenants, total, nil
+}
+
+// TenantUsageStats 批量返回若干租户的资源使用读数（缺陷 O8）。
+//
+// 背景：`/admin/tenants` 的「资源使用 N 用户 N 工单」列此前恒为 0——前端读了
+// `userCount` / `ticketCount` 两个字段，但后端 DTO 里根本没有这两个字段，
+// 列表服务也只查 tenants 表、不做任何聚合，前端 `|| 0` 把 undefined 吞成 0。
+//
+// 口径与实现要点：
+//  1. 按租户分组一次查出，**不是**每个租户两次 COUNT——租户表通常只有个位数到
+//     几十行，但 N 租户 × 2 查询在列表轮询下会放大成 N×2 次往返。
+//  2. 用户数排除软删（`users.deleted_at` 非空 = 已删除，见 database/softdelete.go）；
+//     停用（active=false）仍计入「资源使用」，因为它占着席位。
+//  3. 工单数同样受软删拦截器约束，与列表页看到的工单口径一致。
+//  4. 返回 map 只包含**查到了数据**的租户；调用方不得把缺失当成 0——
+//     那正是本轮要修的口径错误。聚合失败整体返回 error，由调用方决定是否降级为
+//     「不披露」（而不是伪造 0）。
+func (s *TenantService) TenantUsageStats(ctx context.Context, tenantIDs []int) (map[int]dto.TenantUsageStat, error) {
+	stats := make(map[int]dto.TenantUsageStat, len(tenantIDs))
+	if len(tenantIDs) == 0 {
+		return stats, nil
+	}
+
+	// 用户数：按 tenant_id 分组计数
+	type userGroupRow struct {
+		TenantID int `json:"tenant_id"`
+		Count    int `json:"count"`
+	}
+	userRows := make([]userGroupRow, 0, len(tenantIDs))
+	err := s.client.User.Query().
+		Where(user.TenantIDIn(tenantIDs...)).
+		GroupBy(user.FieldTenantID).
+		Aggregate(ent.Count()).
+		Scan(ctx, &userRows)
+	if err != nil {
+		s.logger.Errorf("聚合租户用户数失败: %v", err)
+		return nil, fmt.Errorf("聚合租户用户数失败: %w", err)
+	}
+	for _, row := range userRows {
+		stat := stats[row.TenantID]
+		stat.UserCount = row.Count
+		stats[row.TenantID] = stat
+	}
+
+	// 工单数：按 tenant_id 分组计数
+	type ticketGroupRow struct {
+		TenantID int `json:"tenant_id"`
+		Count    int `json:"count"`
+	}
+	ticketRows := make([]ticketGroupRow, 0, len(tenantIDs))
+	err = s.client.Ticket.Query().
+		Where(ticket.TenantIDIn(tenantIDs...)).
+		GroupBy(ticket.FieldTenantID).
+		Aggregate(ent.Count()).
+		Scan(ctx, &ticketRows)
+	if err != nil {
+		s.logger.Errorf("聚合租户工单数失败: %v", err)
+		return nil, fmt.Errorf("聚合租户工单数失败: %w", err)
+	}
+	for _, row := range ticketRows {
+		stat := stats[row.TenantID]
+		stat.TicketCount = row.Count
+		stats[row.TenantID] = stat
+	}
+
+	return stats, nil
 }
 
 // GetTenant 获取租户详情

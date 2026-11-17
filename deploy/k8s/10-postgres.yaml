@@ -1,0 +1,52 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: itsm-postgres-pvc
+  namespace: itsm
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 20Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: itsm-postgres
+  namespace: itsm
+  labels: { app: itsm-postgres }
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: itsm-postgres }
+  template:
+    metadata:
+      labels: { app: itsm-postgres }
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16-alpine
+          ports: [{ containerPort: 5432 }]
+          env:
+            - { name: POSTGRES_DB, value: "itsm" }
+            - { name: POSTGRES_USER, value: "itsm" }
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef: { name: itsm-secrets, key: DB_PASSWORD }
+          volumeMounts:
+            - { name: data, mountPath: /var/lib/postgresql/data }
+          resources:
+            requests: { cpu: "250m", memory: "512Mi" }
+            limits: { cpu: "1", memory: "1Gi" }
+      volumes:
+        - name: data
+          persistentVolumeClaim: { claimName: itsm-postgres-pvc }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: itsm-postgres
+  namespace: itsm
+spec:
+  selector: { app: itsm-postgres }
+  ports: [{ port: 5432, targetPort: 5432 }]

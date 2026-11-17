@@ -38,11 +38,14 @@ type RemoveUserFromGroupRequest struct {
 }
 
 // GroupResponse 组响应
+// MemberCount 让列表页能直接显示成员数，不必为每个组再发一次 /members 请求；
+// 历史前端依赖 members[] 而列表接口从未返回该字段，徽标恒为 0。
 type GroupResponse struct {
 	ID          int       `json:"id"`
 	Name        string    `json:"name"`
 	Description string    `json:"description"`
 	TenantID    int       `json:"tenantId"`
+	MemberCount int       `json:"memberCount"`
 	CreatedAt   time.Time `json:"createdAt"`
 	UpdatedAt   time.Time `json:"updatedAt"`
 }

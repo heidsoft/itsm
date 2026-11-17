@@ -164,6 +164,14 @@ func (e *CustomProcessEngine) HandleBPMNServiceTaskCommand(ctx context.Context, 
 	}
 	current.Variables["_serviceTaskReceipts"] = receipts
 
+	// 变量写入说明（为何此处不走 updateProcessInstanceVariablesCAS）：
+	// 本完成事务在第 119 行已通过 lockServiceTaskCommandLease 取得该命令
+	// 的 lease 行锁——它会阻止 lease 接管与流程推进并发提交，因此事务内
+	// 重新加载的 current.Variables 到 SetVariables 之间不存在已知的并发
+	// 写者；CAS 的重试语义在事务内反而无法安全执行（重试意味着部分写入
+	// 已发生）。lease 失效路径（如手工运维命令）与该写入之间的理论竞争
+	// 由下方 conditional 复核（completed/occurrences 双检）兜底：状态已
+	// 变化时走上面的 stale 分支报错，而不是覆盖写入。
 	if _, err := txc.ProcessInstance.UpdateOneID(current.ID).SetVariables(current.Variables).Save(workflowCtx); err != nil {
 		return fmt.Errorf("保存 ServiceTask 完成凭据与输出失败: %w", err)
 	}

@@ -22,6 +22,9 @@ export interface WorkbenchQuery {
   excludePhase?: string[];
   priority?: string[];
   recordType?: string[];
+  // 标题模糊搜索（后端 LOWER(title) LIKE，大小写不敏感）。与后端
+  // handlers/workbench WorkbenchQuery.Keyword 一一对应。
+  keyword?: string;
   page?: number;
   pageSize?: number;
 }
@@ -41,6 +44,7 @@ export async function queryWorkbench(params: WorkbenchQuery): Promise<WorkbenchR
   if (params.excludePhase?.length) query.set('excludePhase', params.excludePhase.join(','));
   if (params.priority?.length) query.set('priority', params.priority.join(','));
   if (params.recordType?.length) query.set('recordType', params.recordType.join(','));
+  if (params.keyword?.trim()) query.set('keyword', params.keyword.trim());
   if (params.page) query.set('page', String(params.page));
   if (params.pageSize) query.set('pageSize', String(params.pageSize));
 

@@ -269,6 +269,13 @@ jobs:
         # CI red-line: stderr from `go list` must not be silently discarded.
         # Only the known migrations false-positive is filtered; any other
         # compilation/import error fails the step immediately.
+        #
+        # The AI evaluator gate uses a `| tee` pipeline. GitHub Actions'
+        # default shell is `bash -e {0}` WITHOUT pipefail, so a failing
+        # `go test` would be masked by tee's exit code and the step would
+        # stay green. Capture PIPESTATUS[0] explicitly instead of enabling
+        # pipefail for the whole block (which would also change the
+        # `go list | grep` semantics above).
         run: |
           cd itsm-backend
           LIST_ERR=$(mktemp)
@@ -294,7 +301,12 @@ jobs:
           # thresholds are the in-test CI gate; the run is scoped here so
           # failures are easy to spot in PR logs.
           go test ./ai/eval/... -count=1 -short -timeout 120s -v 2>&1 | tee ai-eval.log
-          go test $TESTABLE_PKGS -coverprofile=coverage.out -covermode=set
+          AI_EVAL_STATUS=${PIPESTATUS[0]}
+          if [ "$AI_EVAL_STATUS" -ne 0 ]; then
+            echo "::error::AI evaluator gate failed (exit $AI_EVAL_STATUS)"
+            exit "$AI_EVAL_STATUS"
+          fi
+          go test $TESTABLE_PKGS -coverprofile=coverage.out -covermode=set -timeout 30m
           if [ -f coverage.out ]; then
             go tool cover -func=coverage.out
           fi

@@ -42,6 +42,11 @@ func (i capabilityAdapterInspector) SupportedProviders() []cloud.ProviderSupport
 }
 
 func TestGetCapabilitiesUsesAuthenticatedTenantAndReportsUnreadyRuntime(t *testing.T) {
+	// 本用例聚焦「运行时组件缺失」这一维度，先把部署级开关打开，
+	// 让缺失项只反映 CredentialResolver / Worker 两处未装配。
+	// 开关自身未启用时的行为由 TestDiscoveryCapabilityHonoursReadinessEnv 锁定。
+	t.Setenv(discoveryReadinessEnv, "true")
+
 	gin.SetMode(gin.TestMode)
 	capturedTenantID := 0
 	repo := &mockRepository{listCloudAccountsFn: func(_ context.Context, tenantID int, provider string) ([]*CloudAccount, error) {

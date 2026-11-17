@@ -270,10 +270,13 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
         }
       }
 
-      // 无 DI 的 BPMN 仍是有效业务定义。绝不能用默认模板覆盖，否则下一次
-      // 保存会破坏原流程；让 modeler 显式报告无法渲染并保留原始 XML。
+      // 无 DI 的 BPMN 仍是有效业务定义，绝不能用默认模板覆盖（否则下一次保存
+      // 会破坏原流程）。但也不能警告"无法编辑"：BPMNDesigner 在
+      // import.parse.complete(1500) 会用 bpmnAutoLayout.ensureBpmnDI 注入 DI，
+      // 导入后立即 saveXML 回填父组件，所以画布可渲染、可编辑，保存即固化坐标。
+      // 这里只如实提示"已自动布局"，把原始 XML 原样交给画布。
       if (xmlContent && !xmlContent.includes('<bpmndi:BPMNDiagram')) {
-        message.warning('该流程缺少 BPMN 图形坐标（DI），已保留原始 XML；请导入含 DI 的文件后再编辑');
+        message.warning(t('workflow.designer.missingDIAutoLayout'));
       }
 
 	  const workflowData: WorkflowDefinition = {

@@ -260,7 +260,9 @@ export default function ConfigInheritancePage() {
               </Form.Item>
             </Col>
             <Col span={8}>
-              <Form.Item name="inheritMode" label="继承模式" initialValue="inherit">
+              {/* 默认 override：新增配置没有父级可继承，inherit 会让这条记录在
+                  有效配置解析时被整层跳过，保存成功却查不到任何生效值。 */}
+              <Form.Item name="inheritMode" label="继承模式" initialValue="override">
                 <Select
                   options={[
                     { value: 'inherit', label: 'inherit' },

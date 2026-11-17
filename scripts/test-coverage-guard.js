@@ -32,12 +32,20 @@
  *
  *   Backend (itsm-backend/handlers/<domain>/<name>.go,
  *            itsm-backend/service/<name>_service.go,
- *            itsm-backend/service/<pkg>/<name>.go):
+ *            itsm-backend/service/<pkg>/<name>.go,
+ *            itsm-backend/internal/services/<name>.go):
  *     test candidates (any one of):
  *       <dir>/<name>_test.go
  *       <dir>/<name>_service_test.go        (for service/<name>_service.go)
  *       any *_test.go in the same package    (domain slices use
  *                                             handler_test.go / service_test.go)
+ *
+ *   The service layer was physically moved to internal/services/ (332+ files,
+ *   G0-b / 7063011e5). Until 2026-11-14 both this classifier and the
+ *   workflow's `paths:` filter still targeted the legacy `service/` tree, so
+ *   changes to the core business layer were completely outside this guard.
+ *   Both are now covered; see scripts/__tests__/test-coverage-guard.test.js
+ *   for the injection tests that lock this in.
  *
  * Exemptions (no test required):
  *   - Type-only files: *.d.ts, files inside a types/ directory
@@ -51,10 +59,20 @@
  *
  * Usage:
  *   node scripts/test-coverage-guard.js [--base <ref>] [--head <ref>]
+ *                                       [--json] [--strict-diff]
  *
  * Defaults:
  *   --base  origin/main  (override with TEST_COVERAGE_BASE env var)
  *   --head  HEAD         (override with TEST_COVERAGE_HEAD env var)
+ *
+ * --strict-diff (observation only, 2026-11-14):
+ *   The normal rule accepts a test that merely EXISTS on disk. That is a
+ *   deliberately weak gate: editing a handler in a package that already has
+ *   any *_test.go passes without touching a test. --strict-diff reports the
+ *   stricter question "was a candidate test actually MODIFIED in this diff?"
+ *   as a warning / JSON field, but NEVER changes the exit code. It exists so
+ *   the project can measure how often the weak gate is relied on before
+ *   deciding whether to promote it to a hard rule.
  *
  * Exit codes:
  *   0 - all source changes have a test change (or were exempted)
@@ -92,11 +110,21 @@ function main() {
   const missing = [];
   for (const src of sources) {
     const candidates = testCandidatesFor(src);
-    const matched = candidates.some((c) => tests.includes(c) || fileExists(c));
-    if (!matched) {
+    // A candidate may be a glob (frontend `<name>-*.test.ts`). Both the
+    // on-disk check and the diff check must expand it, otherwise that
+    // candidate is dead weight and a real sibling test is reported missing.
+    if (!candidates.some((c) => candidateSatisfied(c, tests))) {
       missing.push({ src, candidates });
     }
   }
+
+  // Observation-only signal. `candidateChangedInDiff` deliberately ignores
+  // the on-disk state so the number is comparable across CI runs.
+  const strictMissing = args.strictDiff
+    ? sources.filter(
+        (src) => !testCandidatesFor(src).some((c) => candidateChangedInDiff(c, tests))
+      )
+    : null;
 
   if (args.json) {
     process.stdout.write(
@@ -108,6 +136,9 @@ function main() {
           sourceFiles: sources.length,
           testFiles: tests.length,
           missing,
+          strictDiff: strictMissing
+            ? { enabled: true, missingWithoutTestChange: strictMissing }
+            : { enabled: false },
         },
         null,
         2
@@ -115,9 +146,27 @@ function main() {
     );
   } else {
     report(allChanged.length, sources.length, tests.length, missing);
+    if (strictMissing) reportStrictDiff(strictMissing, sources.length);
   }
 
+  // --strict-diff is observation only: never contributes to the exit code.
   process.exit(missing.length === 0 ? 0 : 1);
+}
+
+function reportStrictDiff(strictMissing, srcCount) {
+  const banner = '─'.repeat(72);
+  console.log(banner);
+  console.log(' 🔍 strict-diff observation (NON-BLOCKING — exit code unchanged)');
+  console.log(
+    `    ${strictMissing.length}/${srcCount} source files changed without any` +
+      ` candidate test change in this diff.`
+  );
+  console.log('    The normal gate only requires a test to exist on disk; this');
+  console.log('    section measures how often that weaker rule is relied on.');
+  for (const src of strictMissing) {
+    console.log(`   ::warning::strict-diff: no test change in diff for ${src}`);
+  }
+  console.log(banner);
 }
 
 function report(totalChanged, srcCount, testCount, missing) {
@@ -205,16 +254,19 @@ function isFrontendSource(p) {
 function isBackendSource(p) {
   // Domain-sliced handlers (target architecture):
   //   itsm-backend/handlers/<domain>/<name>.go
-  // Shared business logic:
+  // Shared business logic (legacy layout, still populated):
   //   itsm-backend/service/<name>_service.go
   //   itsm-backend/service/<pkg>/<name>.go
+  // Shared business logic (post-G0-b target layout):
+  //   itsm-backend/internal/services/<name>.go  (and future sub-packages)
   // The legacy itsm-backend/controller/** horizontal layer was deleted in
   // 48eae74a; it is intentionally NOT matched any more.
   // IMPORTANT: must not match *_test.go (those are tests, not source).
   if (/_test\.go$/.test(p)) return false;
   return (
     /^itsm-backend\/handlers\/[^/]+\/[^/]+\.go$/.test(p) ||
-    /^itsm-backend\/service\/(?:[^/]+\/)?[^/]+\.go$/.test(p)
+    /^itsm-backend\/service\/(?:[^/]+\/)?[^/]+\.go$/.test(p) ||
+    /^itsm-backend\/internal\/services\/(?:[^/]+\/)*[^/]+\.go$/.test(p)
   );
 }
 
@@ -308,13 +360,49 @@ function fileExists(rel) {
   }
 }
 
+function globToRegExp(glob) {
+  // Only `*` is used by our candidate patterns; everything else is literal.
+  const body = glob
+    .replace(/[.+?^${}()|[\]\\]/g, '\\$&')
+    .replace(/\*/g, '.*');
+  return new RegExp(`^${body}$`);
+}
+
+/** Was this exact test path (or a glob-expanded sibling) modified in the diff? */
+function candidateChangedInDiff(candidate, tests) {
+  if (!candidate.includes('*')) return tests.includes(candidate);
+  const re = globToRegExp(candidate);
+  return tests.some((t) => re.test(t));
+}
+
+/** Does a candidate test exist on disk OR appear in the diff? */
+function candidateSatisfied(candidate, tests) {
+  if (!candidate.includes('*')) {
+    return tests.includes(candidate) || fileExists(candidate);
+  }
+  if (candidateChangedInDiff(candidate, tests)) return true;
+  // Expand the glob against the real directory on disk. Without this the
+  // frontend `<name>-*.test.ts` / `.test.tsx` candidates were unreachable:
+  // fs.existsSync() was called with a literal path containing `*`.
+  const dir = path.posix.dirname(candidate);
+  const re = globToRegExp(candidate);
+  try {
+    return fs
+      .readdirSync(path.join(REPO_ROOT, dir))
+      .some((entry) => re.test(`${dir}/${entry}`));
+  } catch {
+    return false;
+  }
+}
+
 function parseArgs(argv) {
-  const out = { json: false };
+  const out = { json: false, strictDiff: false };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === '--base') out.base = argv[++i];
     else if (a === '--head') out.head = argv[++i];
     else if (a === '--json') out.json = true;
+    else if (a === '--strict-diff') out.strictDiff = true;
     else if (a === '-h' || a === '--help') {
       printHelp();
       process.exit(0);
@@ -326,11 +414,14 @@ function parseArgs(argv) {
 
 function printHelp() {
   console.log(
-    `Usage: node scripts/test-coverage-guard.js [--base <ref>] [--head <ref>] [--json]\n` +
+    `Usage: node scripts/test-coverage-guard.js [--base <ref>] [--head <ref>] [--json] [--strict-diff]\n` +
       `\n` +
-      `Ensures every modified source file has a corresponding modified test file\n` +
-      `in the diff range. Exits 0 when coverage holds, 1 when a source file\n` +
-      `changed without a test update, 2 on git errors.\n` +
+      `Ensures every modified source file has a corresponding test file on disk\n` +
+      `or in the diff range. Exits 0 when coverage holds, 1 when a source file\n` +
+      `changed without a test, 2 on git errors.\n` +
+      `\n` +
+      `--strict-diff adds a NON-BLOCKING report of source files whose candidate\n` +
+      `tests were not modified in the diff. It never changes the exit code.\n` +
       `\n` +
       `Defaults: --base origin/main  --head HEAD\n` +
       `\n` +

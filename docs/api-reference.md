@@ -2579,7 +2579,7 @@ POST   /api/v1/groups/{id}/members                # 添加成员，权限 group:
 DELETE /api/v1/groups/{id}/members                # 移除成员，权限 group:write，body {userId}
 ```
 
-`GET /groups` 与 `GET /groups/{id}/members` 的 `data` 均为 `{items,total,page,pageSize,totalPages}`：列表元素分别是 `GroupResponse`（`id`/`name`/`description`/`tenantId`/`createdAt`/`updatedAt`）与 `UserDTO`。不存在 `groups`、`members`、`pagination` 键——旧形状已在 [UPGRADE §1.84](../UPGRADE.md) 中退役。
+`GET /groups` 与 `GET /groups/{id}/members` 的 `data` 均为 `{items,total,page,pageSize,totalPages}`：列表元素分别是 `GroupResponse`（`id`/`name`/`description`/`tenantId`/`memberCount`/`createdAt`/`updatedAt`）与 `UserDTO`。`memberCount` 是该组成员的真实总数；列表接口不返回 `members[]`（只有 `GET /groups/{id}` 详情带成员数组），前端成员数徽标应读 `memberCount`。不存在 `groups`、`members`、`pagination` 键——旧形状已在 [UPGRADE §1.84](../UPGRADE.md) 中退役。
 
 ## 角色接口
 
@@ -3261,6 +3261,12 @@ GET /cmdb/items/{id}/topology
 Authorization: Bearer <accessToken>
 ```
 
+响应 `data` 为统一图契约 `{nodes, edges, rootCiId, depth, totalNodes, totalEdges}`。
+**空图契约**：孤点 CI（无任何关系）的 `nodes` 含 root 自身、`edges` 必须序列化为 `[]`
+而非 `null`（2026-11-16 前零值 nil slice 下发 `"edges": null` 曾让前端 `.map` 崩掉拓扑页
+与 CI 详情拓扑 tab，回归锁 `TestGetCITopology_IsolatedCIEdgesNotNull`）。`depth` 缺省 3、
+上限 10；跨租户 CI 返回 404 / code 4004，不泄漏存在性。
+
 ### 云账号 / 云服务 / 云资源接口
 
 `/api/v1/cmdb/cloud-*` 是这三个对象的**唯一**HTTP 表面（读取需 `cmdb:read`，写入需 `cmdb:write`，
@@ -3617,13 +3623,14 @@ Authorization: Bearer <accessToken>
 跨域（事件 / 变更 / 问题 / 工单）待办列表，按统一阶段（phase）聚合。
 
 ```http
-GET /api/v1/workbench?phase=active,submitted&priority=critical&recordType=incident&assigneeId=7&page=1&pageSize=20
+GET /api/v1/workbench?phase=active,submitted&priority=critical&recordType=incident&assigneeId=7&keyword=数据库&page=1&pageSize=20
 Authorization: Bearer <accessToken>
 ```
 
 - `phase` 取值 `draft|submitted|active|resolved|closed`，逗号分隔。阶段到各域 `status` 的映射由 `service/lifecycle` 单点提供并展开成 SQL 谓词，因此 `total`、分页与过滤同口径（不是在分页之后于内存里过滤）。
 - `excludePhase` 取值同 `phase`，逗号分隔，是「未关闭」语义的反向过滤：按域把被排除的阶段映射回 `status` 集合后用 `NOT IN` 排除，其余阶段一律保留。与 `phase`（白名单）互斥使用——前端未显式勾选阶段时默认传 `excludePhase=closed,resolved`，而不是枚举 `draft,submitted,active` 白名单：白名单会漏掉状态无法映射到已知阶段的 `unknown` 单据以及未来新增的阶段；`unknown` 不在任何排除集内，因此天然保留。
 - `recordType` 取值 `incident|change|problem|ticket`；`priority`、`assigneeId` 为可选过滤，`assigneeId` 非法值当前被忽略。
+- `keyword` 可选，标题模糊搜索：`LOWER(title) LIKE` 大小写不敏感，用户输入中的 `%`/`_`/`\` 按 LIKE 元字符转义后**字面匹配**（`ESCAPE '\'`），与其他过滤条件为 AND 组合。
 - `page` 缺省 1，`pageSize` 缺省 20 且只采纳 `1..100`，越界回落默认值而不是报错。
 - 租户上下文取自认证会话，缺失返回 2001 / HTTP 401；该路由实测没有 `RequirePermission` 声明。
 - 响应 `data` 为平台列表信封 `{items,total,page,pageSize,totalPages}`，空结果序列化为 `[]`。

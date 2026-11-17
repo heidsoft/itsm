@@ -260,3 +260,41 @@ func TestCIImpactAnalysis_FiltersForeignAssociations(t *testing.T) {
 	}
 	assert.NotContains(t, w.Body.String(), "tenant-2")
 }
+
+// TestGetCITopology_IsolatedCIEdgesNotNull 是 edges:null 崩溃的回归锁：
+// 孤点 CI（无任何关系）曾是线上「服务图谱全用不了」的根因——后端零值 nil slice
+// 被序列化成 "edges": null，前端 graph.edges.map 对 null 调用直接 TypeError 崩页。
+// 契约：空图必须下发 []，绝不 null。
+func TestGetCITopology_IsolatedCIEdgesNotNull(t *testing.T) {
+	r, client := cmdbTopologyRouter(t)
+	defer client.Close()
+
+	ctx := context.Background()
+	ciType, err := client.CIType.Create().
+		SetName("iso-server").SetTenantID(1).Save(ctx)
+	require.NoError(t, err)
+	isolated, err := client.ConfigurationItem.Create().
+		SetName("isolated-ci").SetCiType("server").SetCiTypeID(ciType.ID).
+		SetStatus("active").SetTenantID(1).Save(ctx)
+	require.NoError(t, err)
+
+	req, _ := http.NewRequest("GET", "/api/v1/cmdb/cis/"+strconv.Itoa(isolated.ID)+"/topology?depth=3", nil)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	require.Equal(t, http.StatusOK, w.Code, "body=%s", w.Body.String())
+	var resp struct {
+		Code int                    `json:"code"`
+		Data map[string]interface{} `json:"data"`
+	}
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
+	assert.Equal(t, 0, resp.Code)
+
+	// 契约核心：edges/nodes 必须是数组（可为空），绝不能是 null。
+	require.NotNil(t, resp.Data["edges"], "edges 序列化为 null 会让前端 .map 崩页，必须下发 []")
+	require.NotNil(t, resp.Data["nodes"], "nodes 序列化为 null 同病")
+	assert.Empty(t, resp.Data["edges"])
+	require.Len(t, resp.Data["nodes"], 1, "孤点 CI 的拓扑必须含 root 自身")
+	assert.Equal(t, float64(1), resp.Data["totalNodes"])
+	assert.Equal(t, float64(0), resp.Data["totalEdges"])
+}

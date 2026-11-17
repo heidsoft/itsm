@@ -52,6 +52,7 @@ import {
 import { useAuthStore } from '@/lib/store/auth-store';
 import { notificationWS } from '@/lib/services/notification-ws';
 import { useI18n } from '@/lib/i18n';
+import { resolveNotificationTitle, notificationTypeKey } from '@/lib/i18n/notification-type';
 import { useRouter } from 'next/navigation';
 
 const { Title, Text } = Typography;
@@ -156,6 +157,11 @@ export default function NotificationsPage() {
 
   // WebSocket 状态
   const [wsConnected, setWsConnected] = useState(false);
+  // 缺陷 O7：此前「未读」计数由「本地拉 pageSize=100 后过滤」推导，>100 条未读即封顶，
+  // 且与顶栏铃铛（服务端 unread-count）口径分叉。此处保存两个权威读数：
+  // allTotal = 服务端 total（不受页长影响），serverUnread = 服务端未读计数。
+  const [allTotal, setAllTotal] = useState(0);
+  const [serverUnread, setServerUnread] = useState(0);
 
   // 加载通知
   const loadNotifications = useCallback(async () => {
@@ -171,6 +177,16 @@ export default function NotificationsPage() {
       setNotifications(all);
       setUnreadNotifications(unreadRes.items.map(toTicketNotification));
       setReadNotifications(readRes.items.map(toTicketNotification));
+      // 计数口径与列表分开：total 来自服务端 COUNT，未读数优先用 unread-count 端点
+      // （与顶栏铃铛同源），端点失败才退回本次 unread 查询的 total 兜底。
+      setAllTotal(allRes.total);
+      try {
+        const unreadCount = await TicketNotificationApi.getUnreadCount();
+        setServerUnread(unreadCount.count);
+      } catch (countError) {
+        console.error('Failed to fetch unread count:', countError);
+        setServerUnread(unreadRes.total);
+      }
     } catch (error) {
       message.error(t('notifications.loadFailed'));
       console.error('Failed to load notifications:', error);
@@ -221,6 +237,10 @@ export default function NotificationsPage() {
         const normalized = toTicketNotification(notification);
         setNotifications(prev => [normalized, ...prev]);
         setUnreadNotifications(prev => [normalized, ...prev]);
+        // 权威计数随推送同步递增：否则新通知进来 badge 仍停在旧值，
+        // 要等下一次整页刷新才对上（O7 的另一半现象）。
+        setAllTotal(prev => prev + 1);
+        setServerUnread(prev => prev + 1);
         message.info(normalized.content);
       });
 
@@ -403,6 +423,12 @@ export default function NotificationsPage() {
     [readNotifications, filterNotifications]
   );
 
+  // 是否有生效筛选：筛选态下 Tab badge 必须反映「筛出来的条数」，
+  // 无筛选时改用服务端权威计数（不受 pageSize=100 页长封顶）。
+  const hasActiveFilter = Boolean(searchText || channelFilter || typeFilter || dateRange);
+  const allBadgeCount = hasActiveFilter ? filteredNotifications.length : allTotal;
+  const unreadBadgeCount = hasActiveFilter ? filteredUnreadNotifications.length : serverUnread;
+
   // 获取偏好值
   const getPreferenceValue = (eventType: string, field: 'email' | 'in_app' | 'sms'): boolean => {
     const pref = preferences.find(p => p.eventType === eventType);
@@ -410,19 +436,16 @@ export default function NotificationsPage() {
     return pref[`${field}_enabled` as keyof NotificationPreferenceItem] as boolean;
   };
 
-  // 获取通知类型标签
-  const getNotificationTypeLabel = (type: string) => {
-    const labels: Record<string, string> = {
-      created: t('notifications.ticketCreated'),
-      assigned: t('notifications.ticketAssigned'),
-      statusChanged: t('notifications.ticketUpdated'),
-      commented: t('notifications.ticketCommented'),
-      slaWarning: t('notifications.slaWarning'),
-      resolved: t('notifications.ticketResolved'),
-      closed: t('notifications.ticketClosed'),
-    };
-    return labels[type] || type;
-  };
+  // 获取通知类型标签。
+  // 词表来自 lib/i18n/notification-type.ts（短枚举 + 偏好长词三套写法的唯一映射源），
+  // 未登记的枚举不再原样透传英文，统一回退「新通知」。
+  const getNotificationTypeLabel = useCallback(
+    (type: string) => {
+      const key = notificationTypeKey(type);
+      return key ? t(`notifications.type.${key}`) : t('notifications.type.info');
+    },
+    [t]
+  );
 
   // 获取渠道图标
   const getChannelIcon = (channel: string) => {
@@ -470,10 +493,11 @@ export default function NotificationsPage() {
         renderItem={notification => {
           // 后端 title 与 content 常常是同一段文本，卡片只在两者不同时再展示正文，
           // 否则同一句话会上下渲染两遍。
-          const titleText =
-            (notification.title || '').trim() ||
-            (notification.content || '').trim() ||
-            getNotificationTypeLabel(notification.type);
+          // 缺陷 O6-A：title 列可能是 event_type 裸枚举（created / status_changed …），
+          // 那段文本不该直接上屏——解析规则收在 resolveNotificationTitle 内。
+          const titleText = resolveNotificationTitle(notification, key =>
+            t(`notifications.type.${key}`)
+          );
           const contentText = (notification.content || '').trim();
           const showContent = contentText.length > 0 && contentText !== titleText;
 
@@ -642,9 +666,7 @@ export default function NotificationsPage() {
         <span>
           <Bell className="mr-1 inline h-4 w-4" />
           {t('notifications.allNotifications')}
-          {filteredUnreadNotifications.length > 0 && (
-            <Badge count={filteredUnreadNotifications.length} className="ml-2" />
-          )}
+          {allBadgeCount > 0 && <Badge count={allBadgeCount} className="ml-2" color="gray" />}
         </span>
       ),
       children: (
@@ -652,8 +674,8 @@ export default function NotificationsPage() {
           {renderFilterBar()}
           <div className="mb-4 flex items-center justify-between">
             <Text>
-              {t('notifications.totalNotifications', { total: filteredNotifications.length })},
-              {t('notifications.unreadCount', { count: filteredUnreadNotifications.length })}
+              {t('notifications.totalNotifications', { total: allBadgeCount })},
+              {t('notifications.unreadCount', { count: unreadBadgeCount })}
             </Text>
             <Space>
               {filteredUnreadNotifications.length > 0 && (
@@ -684,9 +706,7 @@ export default function NotificationsPage() {
         <span>
           <Clock className="mr-1 inline h-4 w-4" />
           {t('notifications.unread')}
-          {filteredUnreadNotifications.length > 0 && (
-            <Badge count={filteredUnreadNotifications.length} className="ml-2" />
-          )}
+          {unreadBadgeCount > 0 && <Badge count={unreadBadgeCount} className="ml-2" />}
         </span>
       ),
       children: (

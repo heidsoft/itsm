@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: itsm-frontend
+  namespace: itsm
+  labels: { app: itsm-frontend }
+spec:
+  replicas: 2
+  selector:
+    matchLabels: { app: itsm-frontend }
+  template:
+    metadata:
+      labels: { app: itsm-frontend }
+    spec:
+      containers:
+        - name: frontend
+          image: ghcr.io/heidsoft/itsm-frontend:1.6.9
+          ports: [{ containerPort: 3000 }]
+          envFrom:
+            - configMapRef: { name: itsm-config }
+          readinessProbe:
+            httpGet: { path: /, port: 3000 }
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          resources:
+            requests: { cpu: "100m", memory: "256Mi" }
+            limits: { cpu: "500m", memory: "512Mi" }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: itsm-frontend
+  namespace: itsm
+spec:
+  selector: { app: itsm-frontend }
+  ports: [{ port: 3000, targetPort: 3000 }]

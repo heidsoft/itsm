@@ -151,7 +151,9 @@ export default function TopologyPage() {
       return;
     }
     const graph = topologyQuery.data;
-    const flowEdges: Edge[] = graph.edges.map(edge => {
+    // edges/nodes 防御 ?? []：后端曾有 nil slice 下发 "edges": null 的病
+    //（同 bottleneckTasks 历史），孤点 CI（无任何关系）时裸 .map 会 TypeError 崩整页。
+    const flowEdges: Edge[] = (graph.edges ?? []).map(edge => {
       // React Flow 11.11.4 的 getMarkerId() 会把 marker 对象所有字段拼成 id（含 = 和 &），
       // 传入 id 字段只影响 <defs> 里的 marker 定义、不影响 <path marker-end> 的引用，
       // 箭头引用因此丢失。这里改用字符串形式 markerEnd + 独立注入全局 <defs>，绕开该 API。
@@ -168,7 +170,7 @@ export default function TopologyPage() {
         markerEnd: markerId,
       };
     });
-    const rawNodes: Node[] = graph.nodes.map(node => ({
+    const rawNodes: Node[] = (graph.nodes ?? []).map(node => ({
       id: String(node.id),
       type: 'ciNode',
       position: { x: 0, y: 0 },

@@ -43,12 +43,17 @@ import {
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { TenantAPI } from '@/lib/api/tenant-api';
-import type { TenantInitializationStatus } from '@/lib/api/api-config';
+import type { Tenant as TenantRecord, TenantInitializationStatus } from '@/lib/api/api-config';
 import { useI18n } from '@/lib/i18n';
+import {
+  getTenantTypeConfig,
+  resolveTenantType,
+  type TranslatorFn,
+  type TenantTypeConfigMap,
+} from '@/lib/tenant/tenant-display';
 
 const { Title, Text } = Typography;
 
-type TranslatorFn = (key: string, params?: Record<string, string | number>) => string;
 
 const getTenantStatusConfig = (t: TranslatorFn) => ({
   active: {
@@ -65,30 +70,14 @@ const getTenantStatusConfig = (t: TranslatorFn) => ({
   deleted: { label: t('tenants.statusLabels.deleted'), color: 'default', icon: AlertCircle },
 });
 
-const getTenantTypeConfig = (t: TranslatorFn) => ({
-  standard: { label: t('tenants.typeLabels.standard'), color: 'blue' },
-  internal: { label: t('tenants.typeLabels.internal'), color: 'cyan' },
-  saasCustomer: { label: t('tenants.typeLabels.saasCustomer'), color: 'green' },
-  mspProvider: { label: t('tenants.typeLabels.mspProvider'), color: 'gold' },
-  mspCustomer: { label: t('tenants.typeLabels.mspCustomer'), color: 'purple' },
-  msp: { label: t('tenants.typeLabels.msp'), color: 'orange' },
-  customer: { label: t('tenants.typeLabels.customer'), color: 'default' },
-});
 
 type TenantStatusKey = 'active' | 'suspended' | 'expired' | 'deleted';
-type TenantTypeKey = 'standard' | 'internal' | 'saasCustomer' | 'mspProvider' | 'mspCustomer' | 'msp' | 'customer';
 
-type Tenant = {
-  id: number;
-  name: string;
-  code: string;
-  domain?: string;
-  type: TenantTypeKey;
-  status: TenantStatusKey;
-  userCount?: number;
-  ticketCount?: number;
-  expiresAt?: string;
-};
+// 单一定义：租户实体用 lib/api/api-config 的 Tenant（含后端真实字段
+// userCount / ticketCount、snake_case type 值域）。此前本页另立一份本地
+// Tenant 类型并靠 `as Tenant[]` 强转，掩盖了「type 值域写成 camelCase」
+// 与「userCount 后端不存在」两处真实不一致（缺陷 O8）。
+type Tenant = TenantRecord;
 
 type InitStatusEntry = TenantInitializationStatus | 'loading' | 'error';
 
@@ -105,7 +94,9 @@ export default function TenantManagement() {
   const { message } = App.useApp();
   const { t } = useI18n();
   const TENANT_STATUS = getTenantStatusConfig(t);
-  const TENANT_TYPES = getTenantTypeConfig(t);
+  // 显式标注类型：getTenantTypeConfig 返回 Record<string, ...>，标注成
+  // TenantTypeConfigMap 让 resolveTenantType 的入参契约在调用点即可见。
+  const TENANT_TYPES: TenantTypeConfigMap = getTenantTypeConfig(t);
   const [tenants, setTenants] = useState<Tenant[]>([]);
   // 列表初值必须为 true：mount 必定发起首次拉取，初值 false 会让首帧先渲染
   // 「租户总数 0」的假统计卡与空表格，再被真实数据覆盖。保存动作另用 actionLoading。
@@ -140,9 +131,11 @@ export default function TenantManagement() {
         type: typeFilter !== 'all' ? typeFilter : undefined,
       });
 
-      setTenants(response.items as Tenant[]);
+      // 不再 `as Tenant[]` 强转：接口返回的就是 TenantListResponse.items，
+      // 强转正是此前「类型与真实响应不一致却无人发现」的根源（缺陷 O8）。
+      setTenants(response.items);
       // 后台串行补齐当前页初始化状态：不阻塞表格渲染，单元格按需点亮
-      void loadInitStatusesFor(response.items as Tenant[]);
+      void loadInitStatusesFor(response.items);
 
       // 计算统计数据
       const total = response.items.length;
@@ -317,8 +310,8 @@ export default function TenantManagement() {
       width: 120,
       render: (_: unknown, record: Tenant) => (
         <div className="space-y-1">
-          <Tag color={TENANT_TYPES[record.type]?.color || 'default'}>
-            {TENANT_TYPES[record.type]?.label || record.type}
+          <Tag color={resolveTenantType(TENANT_TYPES, record.type).color}>
+            {resolveTenantType(TENANT_TYPES, record.type).label}
           </Tag>
           <div className="flex items-center">
             <Tag color={TENANT_STATUS[record.status]?.color || 'default'}>
@@ -336,9 +329,13 @@ export default function TenantManagement() {
         <div className="space-y-1">
           <div className="flex items-center">
             <Users className="w-4 h-4 mr-1 text-gray-400" />
-            <span>{record.userCount || 0} {t('tenants.usage.users')}</span>
+            <span>
+              {record.userCount ?? '—'} {t('tenants.usage.users')}
+            </span>
           </div>
-          <div className="text-xs text-gray-500">{record.ticketCount || 0} {t('tenants.usage.tickets')}</div>
+          <div className="text-xs text-gray-500">
+            {record.ticketCount ?? '—'} {t('tenants.usage.tickets')}
+          </div>
         </div>
       ),
     },

@@ -2110,6 +2110,17 @@ func (app *Application) startBackgroundTasks(ctx context.Context) {
 					if processed > 0 {
 						app.Logger.Infow("BPMN timeout scan completed", "tenant_id", t.ID, "processed", processed)
 					}
+					// 会签 finalizing 卡死恢复：抢占 finalizing 后、系统推进前
+					// 进程崩溃的父任务在此兜底（正常路径毫秒级完成，5 分钟
+					// 宽限后仍未推进即恢复），详见 ScanStuckFinalizingTasks。
+					recovered, err := scanner.ScanStuckFinalizingTasks(tenantCtx, t.ID)
+					if err != nil {
+						app.Logger.Warnw("BPMN finalizing recovery scan failed", "error", err, "tenant_id", t.ID)
+						continue
+					}
+					if recovered > 0 {
+						app.Logger.Infow("BPMN finalizing recovery scan completed", "tenant_id", t.ID, "recovered", recovered)
+					}
 				}
 			}
 		}

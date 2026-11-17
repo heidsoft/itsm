@@ -137,6 +137,27 @@ func TestListGroups_MissingTenantContextFailsClosed(t *testing.T) {
 
 // TestListGroups_TenantBSeesOnlyOwnGroups 反向验证隔离对称：
 // 以 tenantB 身份请求同样无法通过参数读到 tenantA 的组。
+// TestListGroups_ExposesMemberCount 锁住列表响应的成员数契约。
+// 历史前端读 record.members?.length，而列表接口从不返回 members[]，
+// 组管理页的成员数徽标恒为 0；现在由 memberCount 直接提供。
+func TestListGroups_ExposesMemberCount(t *testing.T) {
+	h, _, tenantA, _ := setupGroupTest(t)
+
+	status, env := doGroupList(t, h, tenantA, "")
+	require.Equal(t, http.StatusOK, status)
+
+	var raw struct {
+		Items []map[string]interface{} `json:"items"`
+	}
+	require.NoError(t, json.Unmarshal(env.Data, &raw))
+	require.Len(t, raw.Items, 2)
+	for _, item := range raw.Items {
+		count, ok := item["memberCount"]
+		assert.True(t, ok, "列表响应必须带 memberCount 字段")
+		assert.Equal(t, float64(0), count, "未添加成员时应为 0")
+	}
+}
+
 func TestListGroups_TenantBSeesOnlyOwnGroups(t *testing.T) {
 	h, _, tenantA, tenantB := setupGroupTest(t)
 

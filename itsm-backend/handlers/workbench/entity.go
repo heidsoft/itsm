@@ -32,8 +32,12 @@ type WorkbenchQuery struct {
 	ExcludePhase []string `json:"excludePhase,omitempty"`
 	Priority     []string `json:"priority,omitempty"`
 	RecordType   []string `json:"recordType,omitempty"`
-	Page         int      `json:"page"`
-	PageSize     int      `json:"pageSize"`
+	// Keyword 是标题模糊搜索（LOWER(title) LIKE，转义 %/_/\）。
+	// 工作台此前渲染了搜索框但整条链路没有 keyword 通道，输入任何内容
+	// 列表都不动——用户感知为「搜索框坏了」。此字段补齐该契约。
+	Keyword  string `json:"keyword,omitempty"`
+	Page     int    `json:"page"`
+	PageSize int    `json:"pageSize"`
 
 	// 行级数据权限。零值 DataScopeAll 表示不过滤；
 	// 非管理角色必须显式传入 datascope.DataScopeOwnedOrAssigned。

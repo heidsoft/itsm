@@ -38,16 +38,43 @@ on:
       - 'scripts/build-images.sh'
       - 'scripts/deploy-prod.sh'
       - 'scripts/test-trend.js'
+      - 'scripts/test-coverage-guard.js'
       - 'scripts/generate-acl-manifest.js'
       - 'docker-compose.prod.yml'
+      # gate-unit-tests also asserts CI workflow contracts (pipefail on the
+      # AI-eval pipeline, script-test wiring, guard trigger paths). Editing
+      # one of those workflows must re-run the assertions that read them.
+      - '.github/workflows/backend-ci.yml'
+      - '.github/workflows/test-coverage-guard.yml'
+      - '.github/workflows/frontend-ci.yml'
+      # docker-optimization.test.js 读取镜像构建契约（Dockerfile / dockerignore /
+      # 统一构建器 / Makefile），改这些文件必须重跑断言，否则接线仍是假绿。
+      - '**/Dockerfile*'
+      - '**/.dockerignore'
+      - 'Makefile'
       # Gate C.6 ratchets and wiring checks read these paths directly;
       # without them here, drift introduced by a pure-code PR would never be gated.
       - 'itsm-backend/handlers/**'
       - 'itsm-backend/ent/schema/**'
       - 'itsm-backend/internal/bootstrap/**'
+      - 'itsm-backend/internal/services/**'
       - 'itsm-backend/service/**'
       - 'itsm-frontend/src/app/**'
       - 'itsm-frontend/jest.config.js'
+      # e2e-skip-inventory.test.js 逐个解析 E2E spec 的 skip 数量；
+      # repo-hygiene.test.js 读取 .gitignore 判定运行产物是否被覆盖。
+      # 台账本身是 *.md，已由 '**.md' 覆盖，这里补的是另外两个被测对象。
+      - 'itsm-frontend/tests/e2e/**'
+      - '.gitignore'
+      # github-ci-parity.test.js 读取这些被测对象：star-history 的 PR 发布契约、
+      # api-contract-check 的 swag 命令与双触发段、已提交 OpenAPI 产物、
+      # 两个曾让 frontend-ci 变红的 Jest 用例，以及本地 parity 脚本本身。
+      - '.github/workflows/star-history.yml'
+      - '.github/workflows/api-contract-check.yml'
+      - 'itsm-backend/docs/**'
+      - 'scripts/check-ci-parity.sh'
+      - 'itsm-frontend/src/**/*.test.ts'
+      - 'itsm-frontend/src/**/*.test.tsx'
   push:
     branches: [main, develop]
     paths:
@@ -64,14 +91,40 @@ on:
       - 'scripts/build-images.sh'
       - 'scripts/deploy-prod.sh'
       - 'scripts/test-trend.js'
+      - 'scripts/test-coverage-guard.js'
       - 'scripts/generate-acl-manifest.js'
       - 'docker-compose.prod.yml'
+      # gate-unit-tests 会断言这些 workflow 的契约（AI-eval 管道退出码、
+      # 脚本自测接线、coverage guard 触发路径），改 workflow 必须重跑断言。
+      - '.github/workflows/backend-ci.yml'
+      - '.github/workflows/test-coverage-guard.yml'
+      - '.github/workflows/frontend-ci.yml'
+      # docker-optimization.test.js 读取镜像构建契约（Dockerfile / dockerignore /
+      # 统一构建器 / Makefile），改这些文件必须重跑断言，否则接线仍是假绿。
+      - '**/Dockerfile*'
+      - '**/.dockerignore'
+      - 'Makefile'
       - 'itsm-backend/handlers/**'
       - 'itsm-backend/ent/schema/**'
       - 'itsm-backend/internal/bootstrap/**'
+      - 'itsm-backend/internal/services/**'
       - 'itsm-backend/service/**'
       - 'itsm-frontend/src/app/**'
       - 'itsm-frontend/jest.config.js'
+      # e2e-skip-inventory.test.js 逐个解析 E2E spec 的 skip 数量；
+      # repo-hygiene.test.js 读取 .gitignore 判定运行产物是否被覆盖。
+      # 台账本身是 *.md，已由 '**.md' 覆盖，这里补的是另外两个被测对象。
+      - 'itsm-frontend/tests/e2e/**'
+      - '.gitignore'
+      # github-ci-parity.test.js 读取这些被测对象：star-history 的 PR 发布契约、
+      # api-contract-check 的 swag 命令与双触发段、已提交 OpenAPI 产物、
+      # 两个曾让 frontend-ci 变红的 Jest 用例，以及本地 parity 脚本本身。
+      - '.github/workflows/star-history.yml'
+      - '.github/workflows/api-contract-check.yml'
+      - 'itsm-backend/docs/**'
+      - 'scripts/check-ci-parity.sh'
+      - 'itsm-frontend/src/**/*.test.ts'
+      - 'itsm-frontend/src/**/*.test.tsx'
   workflow_call:
     inputs:
       strict:

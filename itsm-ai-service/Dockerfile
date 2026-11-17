@@ -5,8 +5,9 @@
 # The previous single-stage image pulled in torch + transformers as CUDA
 # wheels, bloating the image past ~3GB. This version:
 #   - Installs into a venv in a builder stage
-#   - Uses CPU-only torch wheels (--extra-index-url .../whl/cpu) to avoid
-#     the multi-GB CUDA packages (override TORCH_INDEX for GPU builds)
+#   - Uses CPU-only torch wheels via a dedicated --index-url (NOT
+#     --extra-index-url, which silently falls back to PyPI's CUDA wheel)
+#   - BuildKit pip cache mounts so repeated builds stay fast
 #   - Copies only the venv + app source into a slim runtime
 #   - Runs as a non-root user
 #   - Healthcheck uses stdlib urllib (no extra dependency at probe time)
@@ -18,8 +19,9 @@ FROM python:3.12-slim-bookworm AS builder
 
 WORKDIR /app
 
-ENV PIP_NO_CACHE_DIR=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1
+# Keep pip's cache enabled: the BuildKit cache mount below persists it across
+# builds. PIP_NO_CACHE_DIR=1 would make those mounts dead weight.
+ENV PIP_DISABLE_PIP_VERSION_CHECK=1
 
 # CPU-only torch index. For GPU builds pass:
 #   --build-arg TORCH_INDEX=https://download.pytorch.org/whl/cu121
@@ -27,10 +29,23 @@ ARG TORCH_INDEX=https://download.pytorch.org/whl/cpu
 
 COPY requirements.txt ./
 
-RUN python -m venv /opt/venv \
+# Install torch FIRST from the dedicated index only.
+#   --index-url (NOT --extra-index-url) is deliberate. With an extra index,
+#   pip still resolves `torch>=2.1.0` (requirements.txt) against PyPI, whose
+#   Linux wheel pulls multi-GB nvidia-* CUDA packages; and if the PyTorch
+#   index is unreachable, pip silently falls back to that CUDA wheel while
+#   the build stays green. Splitting the install keeps step 2 on PyPI for
+#   every other dependency, while the already-installed torch satisfies the
+#   `torch>=2.1.0` constraint so it is never reinstalled from PyPI.
+RUN --mount=type=cache,target=/root/.cache/pip \
+    python -m venv /opt/venv \
     && . /opt/venv/bin/activate \
     && pip install --upgrade pip \
-    && pip install -r requirements.txt --extra-index-url "${TORCH_INDEX}"
+    && pip install --index-url "${TORCH_INDEX}" torch
+
+RUN --mount=type=cache,target=/root/.cache/pip \
+    . /opt/venv/bin/activate \
+    && pip install -r requirements.txt
 
 # ============================================================
 # Stage 2: Runtime

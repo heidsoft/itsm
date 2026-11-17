@@ -202,7 +202,14 @@ func (r *EntRepository) GetToolInvocation(ctx context.Context, id int, tenantID 
 func (r *EntRepository) ListToolInvocations(ctx context.Context, tenantID int, state string) ([]*ToolInvocation, error) {
 	q := r.client.ToolInvocation.Query().
 		Where(toolinvocation.TenantID(tenantID))
-	if state != "" {
+	if state == "pending" {
+		// 「待办」是一个业务状态而不是单个字段取值：AI 发起的调用可能是
+		// 单人待批、双人首审、双人复审。审批人列表必须一次全部看到，
+		// 否则高危操作会卡在 awaiting_second 没人处理。
+		q = q.Where(toolinvocation.ApprovalStateIn(
+			"pending", "pending_agent", "pending_agent_two", "awaiting_second",
+		))
+	} else if state != "" {
 		q = q.Where(toolinvocation.ApprovalStateEQ(state))
 	}
 	invocations, err := q.
@@ -220,7 +227,16 @@ func (r *EntRepository) ListToolInvocations(ctx context.Context, tenantID int, s
 
 // DecideToolInvocation 原子推进审批状态。批准时在同一事务内写入 ai.tool.execute 命令：
 // 审批落库但命令没入箱，会让调用永远停在 pending，且没有可恢复的记录。
-// 审批状态用 pending 条件更新做 CAS，重复审批返回业务冲突而不是再次入箱。
+// 审批状态用「当前状态」条件更新做 CAS，重复/并发审批返回业务冲突而不是再次入箱。
+//
+// 状态机（AI 主体的风险分级人工确认）：
+//
+//	pending           人发起 → approved/rejected（保留历史语义）
+//	pending_agent     AI 发起、单人 → approved/rejected（禁止发起人自批）
+//	pending_agent_two AI 发起、双人 → awaiting_second（第一票，不放行）
+//	awaiting_second   双人复审 → approved/rejected（审批人必须不同于首审人）
+//
+// 只有 approved 分支入箱执行，awaiting_second 绝不产生命令。
 func (r *EntRepository) DecideToolInvocation(ctx context.Context, id, tenantID, actorID int, approve bool, reason string) (*ToolInvocation, error) {
 	tx, err := r.client.Tx(ctx)
 	if err != nil {
@@ -234,19 +250,52 @@ func (r *EntRepository) DecideToolInvocation(ctx context.Context, id, tenantID, 
 	if err != nil {
 		return nil, err
 	}
-	if existing.ApprovalState != "pending" {
+	current := existing.ApprovalState
+	// AI 发起的调用区分「单人审批」与「双人审批」；人发起的 pending 保持历史语义。
+	isAgent := current == "pending_agent" || current == "pending_agent_two" || current == "awaiting_second"
+	switch current {
+	case "pending", "pending_agent", "pending_agent_two", "awaiting_second":
+	default:
 		return nil, common.NewBusinessError(common.ConflictCode, "该工具调用已审批，不能重复处理", "")
 	}
 
-	state := "rejected"
-	if approve {
-		state = "approved"
+	// AI 操作的硬约束：发起人不得审批自己发起的操作。
+	// 提示词注入诱导 LLM 发起写操作后，若能用同一账号「自己批自己」，
+	// 整个人工确认闸门就形同虚设。
+	if isAgent && existing.UserID != 0 && existing.UserID == actorID {
+		return nil, common.NewBusinessError(common.ConflictCode,
+			"发起人不得审批自己发起的 AI 操作，请由另一名审批人确认", "")
 	}
+
+	state := "rejected"
+	enqueue := false
+	if approve {
+		switch current {
+		case "pending_agent_two":
+			// 第一票：只记录首审人并转入复审，绝不放行执行。
+			state = "awaiting_second"
+		case "awaiting_second":
+			// 第二票：必须与首审人是两个人。
+			if existing.ApprovedBy != 0 && existing.ApprovedBy == actorID {
+				return nil, common.NewBusinessError(common.ConflictCode,
+					"双人审批要求两名不同的审批人", "")
+			}
+			state, enqueue = "approved", true
+			reason = fmt.Sprintf("%s | 首审人:%d 复审人:%d", reason, existing.ApprovedBy, actorID)
+		default:
+			state, enqueue = "approved", true
+		}
+	}
+	if !approve {
+		enqueue = false
+	}
+
 	update := tx.ToolInvocation.UpdateOneID(id).
-		Where(toolinvocation.TenantIDEQ(tenantID), toolinvocation.ApprovalStateEQ("pending")).
+		Where(toolinvocation.TenantIDEQ(tenantID), toolinvocation.ApprovalStateEQ(current)).
 		SetApprovalState(state).
 		SetApprovalReason(reason)
-	// approved_by/approved_at 只在批准时写入；拒绝时留着会让人误读成「谁批准了」。
+	// approved_by/approved_at 只在「批准」票写入；拒绝时留着会让人误读成「谁批准了」。
+	// 双人首审写首审人，复审写复审人（首审人已并入 approval_reason 保留审计链）。
 	if approve {
 		update.SetApprovedBy(actorID).SetApprovedAt(time.Now())
 	}
@@ -258,7 +307,7 @@ func (r *EntRepository) DecideToolInvocation(ctx context.Context, id, tenantID, 
 		return nil, err
 	}
 
-	if approve {
+	if enqueue {
 		if _, _, err := commandbus.EnqueueTxIdempotent(ctx, tx, commandbus.EnqueueRequest{
 			TenantID:       tenantID,
 			CommandType:    commandbus.CommandExecuteAITool,
@@ -452,7 +501,8 @@ func (r *EntRepository) ListAIAnalysisResults(ctx context.Context, tenantID int,
 	return res, nil
 }
 
-func (r *EntRepository) GetAIAnalysisResult(ctx context.Context, id int, tenantID int) (*AIAnalysisResult, error) {	e, err := r.client.AIAnalysisResult.Query().
+func (r *EntRepository) GetAIAnalysisResult(ctx context.Context, id int, tenantID int) (*AIAnalysisResult, error) {
+	e, err := r.client.AIAnalysisResult.Query().
 		Where(aianalysisresult.ID(id), aianalysisresult.TenantID(tenantID)).
 		Only(ctx)
 	if err != nil {

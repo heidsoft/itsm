@@ -5,12 +5,14 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
+	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
-	"itsm-backend/middleware"
 	"itsm-backend/internal/services"
+	"itsm-backend/middleware"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/mattn/go-sqlite3"
@@ -82,6 +84,18 @@ func getEffective(t *testing.T, r *gin.Engine, query string) (int, effectiveEnve
 	r.ServeHTTP(w, httptest.NewRequest(http.MethodGet, "/api/v1/domain-configs/effective?"+query, nil))
 
 	var env effectiveEnvelope
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &env), w.Body.String())
+	return w.Code, env
+}
+
+func postDomainConfig(t *testing.T, r *gin.Engine, body string) (int, map[string]interface{}) {
+	t.Helper()
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/domain-configs", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	var env map[string]interface{}
 	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &env), w.Body.String())
 	return w.Code, env
 }
@@ -158,4 +172,57 @@ func TestGetEffectiveDomainConfig_CrossTenantScopeFailsClosed(t *testing.T) {
 	require.Equal(t, http.StatusOK, status)
 	assert.Equal(t, 0, env.Code)
 	assert.Nil(t, env.Data)
+}
+
+// 未显式指定 inheritMode 的新增配置必须能独立生效。历史默认 inherit 会让该
+// 层级在解析时被整条跳过，用户看到「配置已保存」但有效配置始终未命中。
+func TestSetDomainConfig_DefaultsToOverrideAndResolves(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", "file:dc_default_override?mode=memory&cache=shared&_fk=1")
+	defer client.Close()
+
+	r := newDomainConfigTestRouter(t, client, 1)
+	status, _ := postDomainConfig(t, r,
+		`{"configType":"sla_rule","configKey":"response_time","configValue":{"targetMinutes":30}}`)
+	require.Equal(t, http.StatusOK, status)
+
+	code, env := getEffective(t, r, "configType=sla_rule&configKey=response_time")
+	require.Equal(t, http.StatusOK, code)
+	require.NotNil(t, env.Data)
+	assert.Equal(t, dto.InheritModeOverride, env.Data.InheritMode)
+	assert.Equal(t, float64(30), env.Data.Value["targetMinutes"])
+}
+
+func TestSetDomainConfig_RejectsUnknownInheritMode(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", "file:dc_invalid_mode?mode=memory&cache=shared&_fk=1")
+	defer client.Close()
+
+	r := newDomainConfigTestRouter(t, client, 1)
+	status, env := postDomainConfig(t, r,
+		`{"configType":"sla_rule","configKey":"response_time","configValue":{"x":1},"inheritMode":"merge"}`)
+
+	assert.Equal(t, http.StatusBadRequest, status)
+	assert.Equal(t, float64(1001), env["code"])
+}
+
+// extend 必须在嵌套对象上递归合并：子级只改一个字段不应抹掉父级的兄弟字段。
+func TestGetEffectiveDomainConfig_ExtendDeepMergesNestedObjects(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", "file:dc_extend_nested?mode=memory&cache=shared&_fk=1")
+	defer client.Close()
+
+	seedDomainConfig(t, client, 1, 0, 0,
+		map[string]interface{}{"sla": map[string]interface{}{"firstResponse": float64(30), "resolution": float64(240)}},
+		dto.InheritModeOverride)
+	seedDomainConfig(t, client, 1, 5, 0,
+		map[string]interface{}{"sla": map[string]interface{}{"resolution": float64(60)}},
+		dto.InheritModeExtend)
+
+	r := newDomainConfigTestRouter(t, client, 1)
+	status, env := getEffective(t, r, "configType=sla_rule&configKey=response_time&departmentId=5")
+
+	require.Equal(t, http.StatusOK, status)
+	require.NotNil(t, env.Data)
+	merged, ok := env.Data.Value["sla"].(map[string]interface{})
+	require.True(t, ok, "nested sla object must survive the merge: %#v", env.Data.Value)
+	assert.Equal(t, float64(30), merged["firstResponse"])
+	assert.Equal(t, float64(60), merged["resolution"])
 }

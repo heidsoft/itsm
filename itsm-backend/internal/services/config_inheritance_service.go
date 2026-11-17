@@ -59,7 +59,10 @@ func (s *ConfigInheritanceService) GetEffectiveConfig(
 	)
 
 	// Build inheritance chain
-	chain := s.buildInheritanceChain(ctx, tenantID, departmentID, teamID)
+	chain, err := s.buildInheritanceChain(ctx, tenantID, departmentID, teamID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to build inheritance chain: %w", err)
+	}
 
 	var baseConfig map[string]interface{}
 	var resolvedMode string
@@ -86,7 +89,7 @@ func (s *ConfigInheritanceService) GetEffectiveConfig(
 		}
 
 		switch config.InheritMode {
-		case "override":
+		case dto.InheritModeOverride:
 			// Complete replacement at this level, then allow more specific levels to override/extend it.
 			s.logger.Infow(
 				"Config override found",
@@ -98,7 +101,7 @@ func (s *ConfigInheritanceService) GetEffectiveConfig(
 			resolvedSource = level.Source
 			resolvedVersion = config.Version
 
-		case "extend":
+		case dto.InheritModeExtend:
 			// Merge with parent
 			if baseConfig == nil {
 				baseConfig = make(map[string]interface{})
@@ -108,8 +111,18 @@ func (s *ConfigInheritanceService) GetEffectiveConfig(
 			resolvedSource = level.Source
 			resolvedVersion = config.Version
 
-		case "inherit":
+		case dto.InheritModeInherit:
 			// Use parent value (do nothing at this level)
+			continue
+		default:
+			// 历史脏数据或绕过写入口直接改库留下的非法值：不能当成 inherit
+			// 悄悄跳过，必须可观测；但也不要让一次解析整体 500。
+			s.logger.Warnw("Unknown inherit mode, level ignored",
+				"mode", config.InheritMode,
+				"config_type", configType,
+				"config_key", configKey,
+				"source", level.Source,
+			)
 			continue
 		}
 	}
@@ -131,7 +144,7 @@ func (s *ConfigInheritanceService) GetEffectiveConfig(
 func (s *ConfigInheritanceService) buildInheritanceChain(
 	ctx context.Context,
 	tenantID, departmentID, teamID int,
-) []InheritanceLevel {
+) ([]InheritanceLevel, error) {
 	chain := []InheritanceLevel{
 		{TenantID: 0, DepartmentID: 0, TeamID: 0, Source: "global"},        // Global defaults
 		{TenantID: tenantID, DepartmentID: 0, TeamID: 0, Source: "tenant"}, // Tenant level
@@ -139,7 +152,10 @@ func (s *ConfigInheritanceService) buildInheritanceChain(
 
 	if departmentID > 0 {
 		// Get department ancestors
-		deptAncestors := s.getDepartmentAncestors(ctx, tenantID, departmentID)
+		deptAncestors, err := s.getDepartmentAncestors(ctx, tenantID, departmentID)
+		if err != nil {
+			return nil, err
+		}
 		for _, deptID := range deptAncestors {
 			chain = append(chain, InheritanceLevel{
 				TenantID:     tenantID,
@@ -159,19 +175,30 @@ func (s *ConfigInheritanceService) buildInheritanceChain(
 		})
 	}
 
-	return chain
+	return chain, nil
 }
 
-// getDepartmentAncestors returns department IDs from root to specified department
+// getDepartmentAncestors returns department IDs from root to specified department.
+// 只有「部门记录不存在」是合法的链终止（按 ID 存的域配置仍应可解析）；
+// 其余 DB 错误必须向上传播，不能吞掉后伪装成一条更短的继承链。
 func (s *ConfigInheritanceService) getDepartmentAncestors(
 	ctx context.Context,
 	tenantID, departmentID int,
-) []int {
+) ([]int, error) {
 	ancestors := []int{}
+	visited := make(map[int]struct{})
 	currentID := departmentID
 
 	// Traverse up the department tree
 	for currentID > 0 {
+		// ParentID 自引用 / 成环会让原实现无限循环。命中已访问节点即停，
+		// 保留已解析出的链而不是让请求挂死。
+		if _, seen := visited[currentID]; seen {
+			s.logger.Warnw("Department ancestor cycle detected",
+				"tenant_id", tenantID, "department_id", currentID)
+			break
+		}
+		visited[currentID] = struct{}{}
 		ancestors = append([]int{currentID}, ancestors...) // Prepend to get root-first order
 
 		dept, err := s.client.Department.Query().
@@ -182,25 +209,41 @@ func (s *ConfigInheritanceService) getDepartmentAncestors(
 			).
 			Only(ctx)
 		if err != nil {
-			break
+			if ent.IsNotFound(err) {
+				break
+			}
+			return nil, fmt.Errorf("failed to query department %d: %w", currentID, err)
 		}
 
 		currentID = dept.ParentID
 	}
 
-	return ancestors
+	return ancestors, nil
 }
 
-// mergeConfigs merges source into target (source overrides target)
+// mergeConfigs merges source into target (source overrides target).
+// extend 的语义是「在父级配置上叠加」，嵌套对象必须递归合并，否则子级只改
+// 一个字段就会把父级的整个嵌套对象替换掉。
 func (s *ConfigInheritanceService) mergeConfigs(target, source map[string]interface{}) {
 	for k, v := range source {
+		if srcMap, ok := v.(map[string]interface{}); ok {
+			if dstMap, ok := target[k].(map[string]interface{}); ok {
+				s.mergeConfigs(dstMap, srcMap)
+				continue
+			}
+		}
 		target[k] = v
 	}
 }
 
+// cloneConfig 深拷贝，避免 override 后的 extend 写回父级共享的嵌套 map。
 func cloneConfig(source map[string]interface{}) map[string]interface{} {
 	cloned := make(map[string]interface{}, len(source))
 	for k, v := range source {
+		if nested, ok := v.(map[string]interface{}); ok {
+			cloned[k] = cloneConfig(nested)
+			continue
+		}
 		cloned[k] = v
 	}
 	return cloned

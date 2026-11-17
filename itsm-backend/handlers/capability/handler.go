@@ -2,8 +2,6 @@
 package capability
 
 import (
-	"os"
-	"strings"
 	"time"
 
 	"itsm-backend/common"
@@ -267,7 +265,7 @@ func NewHandler(prober *Prober) gin.HandlerFunc {
 			if item.maturity == MaturityDisabled {
 				deploymentReady = false
 				degradedReason = "capability is not included in the current commercial release"
-			} else if item.readinessEnv != "" && !envEnabled(item.readinessEnv) {
+			} else if item.readinessEnv != "" && !common.EnvEnabled(item.readinessEnv) {
 				deploymentReady = false
 				degradedReason = "deployment dependency is not ready"
 			}
@@ -314,14 +312,5 @@ func NewHandler(prober *Prober) gin.HandlerFunc {
 		}
 
 		common.Success(c, gin.H{"items": items, "acceptanceVersion": acceptanceVersion})
-	}
-}
-
-func envEnabled(key string) bool {
-	switch strings.ToLower(strings.TrimSpace(os.Getenv(key))) {
-	case "1", "true", "yes", "on":
-		return true
-	default:
-		return false
 	}
 }

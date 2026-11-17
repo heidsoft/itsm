@@ -44,7 +44,6 @@ interface GlobalShortcutProviderProps {
 
 export default function GlobalShortcutProvider({ children }: GlobalShortcutProviderProps) {
   const [helpVisible, setHelpVisible] = useState(false);
-  const [searchVisible, setSearchVisible] = useState(false);
   const router = useRouter();
   const { collapsed, setCollapsed } = useLayoutStore();
 
@@ -53,25 +52,21 @@ export default function GlobalShortcutProvider({ children }: GlobalShortcutProvi
     setHelpVisible(true);
   }, []);
 
-  // 打开全局搜索
-  const openSearch = useCallback(() => {
-    setSearchVisible(true);
-    // 这里可以后续对接全局搜索组件
-  }, []);
-
   // 切换侧边栏
   const toggleSidebar = useCallback(() => {
     setCollapsed(!collapsed);
   }, [collapsed, setCollapsed]);
 
-  // 注册快捷键
+  // 注册快捷键。
+  // 注意：`ctrl+k` / `cmd+k` 刻意不在此注册 —— 它是「打开全局搜索」，
+  // 唯一注册点在 Header（缺陷 O6-B：此处原先只写一个无消费者的本地状态，
+  // 却同样 preventDefault，与 Header 竞争并让搜索弹窗打不开）。
   useHotkeys('g d', () => router.push('/dashboard'), { preventDefault: true });
   useHotkeys('g t', () => router.push('/tickets'), { preventDefault: true });
   useHotkeys('g c', () => router.push('/cmdb'), { preventDefault: true });
   useHotkeys('g k', () => router.push('/knowledge'), { preventDefault: true });
   useHotkeys('g w', () => router.push('/workflows'), { preventDefault: true });
   useHotkeys('ctrl+n, cmd+n', () => router.push('/tickets/create'), { preventDefault: true });
-  useHotkeys('ctrl+k, cmd+k', openSearch, { preventDefault: true });
   useHotkeys('ctrl+b, cmd+b', toggleSidebar, { preventDefault: true });
   useHotkeys('ctrl+/, cmd+/, ?', openHelp, { preventDefault: true });
 

@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: itsm-backend
+  namespace: itsm
+  labels: { app: itsm-backend }
+spec:
+  replicas: 2
+  selector:
+    matchLabels: { app: itsm-backend }
+  template:
+    metadata:
+      labels: { app: itsm-backend }
+    spec:
+      containers:
+        - name: backend
+          image: ghcr.io/heidsoft/itsm-backend:1.6.9
+          ports: [{ containerPort: 8090 }]
+          envFrom:
+            - configMapRef: { name: itsm-config }
+            - secretRef: { name: itsm-secrets }
+          env:
+            - { name: ITSM_PROCESS_MODE, value: "api" }
+            - { name: DB_HOST, value: "itsm-postgres" }
+            - { name: REDIS_HOST, value: "itsm-redis" }
+          readinessProbe:
+            httpGet: { path: /api/v1/health, port: 8090 }
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: { path: /api/v1/health, port: 8090 }
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          resources:
+            requests: { cpu: "250m", memory: "512Mi" }
+            limits: { cpu: "1", memory: "1Gi" }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: itsm-backend
+  namespace: itsm
+spec:
+  selector: { app: itsm-backend }
+  ports: [{ port: 8090, targetPort: 8090 }]

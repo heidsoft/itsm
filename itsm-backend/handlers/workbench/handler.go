@@ -84,6 +84,12 @@ func (h *Handler) Query(c *gin.Context) {
 		query.RecordType = strings.Split(recordTypeStr, ",")
 	}
 
+	// 标题模糊搜索：与 phase/priority 同一解析位置，参数名与前端 workbench-api
+	// 的 query.set("keyword", ...) 一一对应。
+	if keyword := strings.TrimSpace(c.Query("keyword")); keyword != "" {
+		query.Keyword = keyword
+	}
+
 	response, err := h.service.Query(c.Request.Context(), query)
 	if err != nil {
 		common.RespondError(c, err, "query workbench failed")

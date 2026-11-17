@@ -18,6 +18,7 @@ import {
 } from '@/lib/api/ticket-notification-api';
 import type { GlobalSearchResponse } from '@/lib/api/global-search-api';
 import { notificationWS } from '@/lib/services/notification-ws';
+import { isGlobalSearchShortcut } from '@/lib/shortcuts/global-search-shortcut';
 import { UserMenuDropdown } from './UserMenuDropdown';
 import { NotificationDrawer } from './NotificationDrawer';
 import { GlobalSearch, SearchInput } from './GlobalSearch';
@@ -128,10 +129,13 @@ export const Header: React.FC<HeaderProps> = ({
     return () => clearInterval(interval);
   }, [user?.id, loadNotifications]);
 
-  // Ctrl+K 快捷键打开全局搜索
+  // Ctrl+K 快捷键打开全局搜索。
+  // 单点注册：这是全站唯一打开搜索弹窗的入口（GlobalShortcutProvider 与
+  // GlobalSearch 内的重复监听已移除，见缺陷 O6-B）。判定走共享函数，
+  // 大小写归一化，Shift+K / CapsLock 也能命中。
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+      if (isGlobalSearchShortcut(e)) {
         e.preventDefault();
         setSearchModalVisible(true);
       }

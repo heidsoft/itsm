@@ -4,7 +4,7 @@
 #
 # Previous single-stage image copied the build context into a slim runtime
 # and installed deps as root. This version:
-#   - Builds a venv in a builder stage
+#   - Builds a venv in a builder stage with a BuildKit pip cache mount
 #   - Ships only the venv + app source into a slim runtime
 #   - Runs as a non-root user
 #   - Adds a .dockerignore so local venvs/caches never enter the build context
@@ -16,12 +16,14 @@ FROM python:3.11-slim-bookworm AS builder
 
 WORKDIR /app
 
-ENV PIP_NO_CACHE_DIR=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1
+# PIP_NO_CACHE_DIR is intentionally absent: the BuildKit cache mount persists
+# downloaded wheels between builds.
+ENV PIP_DISABLE_PIP_VERSION_CHECK=1
 
 COPY requirements.txt ./
 
-RUN python -m venv /opt/venv \
+RUN --mount=type=cache,target=/root/.cache/pip \
+    python -m venv /opt/venv \
     && . /opt/venv/bin/activate \
     && pip install --upgrade pip \
     && pip install -r requirements.txt

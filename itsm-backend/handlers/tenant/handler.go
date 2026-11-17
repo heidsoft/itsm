@@ -122,38 +122,7 @@ func (h *Handler) CreateTenant(c *gin.Context) {
 
 // ListTenants lists tenants with pagination
 func (h *Handler) ListTenants(c *gin.Context) {
-	var req dto.ListTenantsRequest
-	if err := c.ShouldBindQuery(&req); err != nil {
-		h.logger.Errorf("参数绑定失败: %v", err)
-		common.ParamErrorWithErr(c, err, "请求参数错误")
-		return
-	}
-
-	tenants, total, err := h.svc.ListTenants(c.Request.Context(), &req)
-	if err != nil {
-		h.logger.Errorf("获取租户列表失败: %v", err)
-		common.FailWithErr(c, err, "操作失败")
-		return
-	}
-
-	// Convert response format
-	tenantResponses := make([]dto.TenantResponse, len(tenants))
-	for i, tenant := range tenants {
-		response := dto.ToTenantResponse(tenant)
-		if response == nil {
-			continue
-		}
-		tenantResponses[i] = *response
-	}
-
-	response := &dto.TenantListResponse{
-		Items:    tenantResponses,
-		Total:    total,
-		Page:     req.Page,
-		PageSize: req.PageSize,
-	}
-
-	common.Success(c, response)
+	h.listTenants(c)
 }
 
 // UpdateTenantStatus updates a tenant's status
@@ -298,6 +267,14 @@ func (h *Handler) recordAudit(c *gin.Context, action string, tenantID int, field
 
 // ListTenantsAdmin lists all tenants for admin (no tenant middleware required)
 func (h *Handler) ListTenantsAdmin(c *gin.Context) {
+	h.listTenants(c)
+}
+
+// listTenants 是两个租户列表端点的共享实现（普通租管面 / 平台管理面）。
+//
+// 合并原因：两处此前是逐字重复的 30 行响应构造，导致任何列表口径改动
+// 都要同步改两遍——缺陷 O8 的「资源使用恒 0」就是这样漏掉的。
+func (h *Handler) listTenants(c *gin.Context) {
 	var req dto.ListTenantsRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
 		h.logger.Errorf("参数绑定失败: %v", err)
@@ -305,7 +282,8 @@ func (h *Handler) ListTenantsAdmin(c *gin.Context) {
 		return
 	}
 
-	tenants, total, err := h.svc.ListTenants(c.Request.Context(), &req)
+	ctx := c.Request.Context()
+	tenants, total, err := h.svc.ListTenants(ctx, &req)
 	if err != nil {
 		h.logger.Errorf("获取租户列表失败: %v", err)
 		common.FailWithErr(c, err, "操作失败")
@@ -313,12 +291,32 @@ func (h *Handler) ListTenantsAdmin(c *gin.Context) {
 	}
 
 	tenantResponses := make([]dto.TenantResponse, len(tenants))
+	tenantIDs := make([]int, 0, len(tenants))
 	for i, tenant := range tenants {
 		response := dto.ToTenantResponse(tenant)
 		if response == nil {
 			continue
 		}
 		tenantResponses[i] = *response
+		tenantIDs = append(tenantIDs, tenant.ID)
+	}
+
+	// 资源使用读数（缺陷 O8）。聚合失败**不**让列表整体失败——租户管理页
+	// 的核心价值是租户本身，统计数字缺失不应把页面打空；此时字段保持 nil
+	// （前端显示「—」而非 0），并在日志留痕。
+	usage, usageErr := h.svc.TenantUsageStats(ctx, tenantIDs)
+	if usageErr != nil {
+		h.logger.Warnw("聚合租户资源使用失败，响应不含统计读数", "error", usageErr)
+	}
+	for i := range tenantResponses {
+		if tenantResponses[i].ID == 0 {
+			continue
+		}
+		if stat, ok := usage[tenantResponses[i].ID]; ok {
+			userCount, ticketCount := stat.UserCount, stat.TicketCount
+			tenantResponses[i].UserCount = &userCount
+			tenantResponses[i].TicketCount = &ticketCount
+		}
 	}
 
 	response := &dto.TenantListResponse{

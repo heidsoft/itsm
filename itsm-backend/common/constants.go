@@ -210,10 +210,15 @@ const (
 	ProcessTaskStatusAssigned  = "assigned"
 	ProcessTaskStatusStarted   = "started"
 	ProcessTaskStatusDelegated = "delegated"
-	ProcessTaskStatusCompleted = "completed"
-	ProcessTaskStatusCancelled = "cancelled"
-	ProcessTaskStatusTimeout   = "timeout"
-	ProcessTaskStatusEscalated = "escalated"
+	// ProcessTaskStatusFinalizing 是会签末票的瞬时状态：投票凑齐阈值后由
+	// claim-once 条件更新抢占（bpmn_task_service.go Vote），随后由系统推进
+	// 父任务。抢占后、推进前进程崩溃会残留该状态，由 TimeoutScanner 的
+	// finalizing 恢复路径认领（见 ScanStuckFinalizingTasks）。
+	ProcessTaskStatusFinalizing = "finalizing"
+	ProcessTaskStatusCompleted  = "completed"
+	ProcessTaskStatusCancelled  = "cancelled"
+	ProcessTaskStatusTimeout    = "timeout"
+	ProcessTaskStatusEscalated  = "escalated"
 )
 
 // ===================================

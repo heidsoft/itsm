@@ -5,6 +5,7 @@ import { Table, Select, Tag, Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { useRouter } from 'next/navigation';
 import { BusinessPageTemplate } from '@/components/layout/BusinessPageTemplate';
+import { useDebounce } from '@/lib/hooks/usePerformance';
 import { useAuthStore } from '@/lib/store/auth-store';
 import { useI18n } from '@/lib/i18n/useI18n';
 import {
@@ -82,6 +83,19 @@ export default function WorkbenchPage() {
   const [priorities, setPriorities] = useState<string[]>([]);
   const [recordTypes, setRecordTypes] = useState<string[]>([]);
 
+  // 标题搜索：模板搜索框每键触发 onSearch，这里只存 state，防抖后进查询链。
+  // 此前页面未传 onSearch，搜索框输入只进模板本地 state，列表永远不过滤。
+  const [search, setSearch] = useState('');
+  const debouncedSearch = useDebounce(search, 300);
+
+  // 搜索词变化时回到第 1 页，避免停在高页码上搜出空页误以为「没有结果」。
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch]);
+
+  // 筛选面板开合：此前 onToggle 是空实现、visible 写死 true，「筛选」按钮点击无反应。
+  const [filtersVisible, setFiltersVisible] = useState(true);
+
   const fetchData = useCallback(async () => {
     setListLoading(true);
     setError(null);
@@ -89,6 +103,7 @@ export default function WorkbenchPage() {
       const query: WorkbenchQuery = {
         page,
         pageSize,
+        keyword: debouncedSearch || undefined,
         priority: priorities.length ? priorities : undefined,
         recordType: recordTypes.length ? recordTypes : undefined,
       };
@@ -110,7 +125,7 @@ export default function WorkbenchPage() {
     } finally {
       setListLoading(false);
     }
-  }, [page, pageSize, phases, priorities, recordTypes, user?.id]);
+  }, [page, pageSize, phases, priorities, recordTypes, debouncedSearch, user?.id]);
 
   useEffect(() => {
     void fetchData();
@@ -255,9 +270,13 @@ export default function WorkbenchPage() {
     <BusinessPageTemplate
       title={t('workbench.title')}
       description={t('workbench.description')}
+      searchPlaceholder={t('workbench.searchPlaceholder')}
+      searchValue={search}
+      onSearch={setSearch}
+      searchLoading={listLoading}
       filters={{
-        visible: true,
-        onToggle: () => {},
+        visible: filtersVisible,
+        onToggle: () => setFiltersVisible(v => !v),
         content: filterContent,
       }}
       extraActions={[

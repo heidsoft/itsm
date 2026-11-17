@@ -1,0 +1,24 @@
+# 一次性数据库迁移 Job。升级前修改镜像标签并重新应用即可触发。
+# 注意：镜像命令需与 itsm-init 入口一致；如后端支持 `ITSM_PROCESS_MODE=migrate` 则直接用。
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: itsm-migrate
+  namespace: itsm
+spec:
+  backoffLimit: 3
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: migrate
+          image: ghcr.io/heidsoft/itsm-backend:1.6.9
+          command: ["./main"]
+          args: ["migrate"]
+          envFrom:
+            - configMapRef: { name: itsm-config }
+            - secretRef: { name: itsm-secrets }
+          env:
+            - { name: ITSM_PROCESS_MODE, value: "migrate" }
+            - { name: DB_HOST, value: "itsm-postgres" }
+            - { name: REDIS_HOST, value: "itsm-redis" }

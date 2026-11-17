@@ -76,16 +76,9 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
     return () => window.clearTimeout(focusTimer);
   }, [open]);
 
-  // Ctrl+K 快捷键
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
-        e.preventDefault();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  // Ctrl+K 快捷键由 Header 单点注册（见 lib/shortcuts/global-search-shortcut.ts）。
+  // 此处原有一个「只 preventDefault、不 open」的 window 监听，与 Header 的注册竞争
+  // 并吞掉默认行为，已移除（缺陷 O6-B）。
 
   const handleItemClick = (item: SearchResult) => {
     const pathMap: Record<string, string> = {

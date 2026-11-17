@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
+	"os"
 	"reflect"
 	"strconv"
 	"strings"
@@ -115,6 +116,15 @@ func StringToInt64(s string, defaultValue int64) int64 {
 func StringToBool(s string) bool {
 	s = strings.ToLower(strings.TrimSpace(s))
 	return s == "true" || s == "1" || s == "yes" || s == "on"
+}
+
+// EnvEnabled 读取环境变量并按其真值语义判断是否启用。
+//
+// 这是「部署级能力就绪开关」的唯一读法。未设置、空串、false/0/no/off 以及任何
+// 无法识别的取值一律视为未启用（fail-closed）：能力矩阵里 readinessEnv 门控必须
+// 与域内能力面得出同一结论，两处各写一份解析就会漂移。
+func EnvEnabled(key string) bool {
+	return StringToBool(os.Getenv(key))
 }
 
 // InSlice 检查元素是否在切片中

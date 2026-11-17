@@ -150,6 +150,15 @@ func (r *repositoryImpl) Query(ctx context.Context, query WorkbenchQuery) (*Work
 		whereClauses = append(whereClauses, fmt.Sprintf("record_type IN (%s)", strings.Join(placeholders, ",")))
 	}
 
+	// 标题模糊搜索：LOWER(title) LIKE，大小写不敏感；用户输入里的 %/_/\ 先
+	// 转义再拼进模式串（值仍走 $N 占位符，非拼接 SQL）。ESCAPE '\' 在
+	// PostgreSQL 与 SQLite 语法一致，enttest(sqlite) 与 prod(pg) 行为对齐。
+	if query.Keyword != "" {
+		pattern := "%" + escapeLikeKeyword(strings.ToLower(query.Keyword)) + "%"
+		whereClauses = append(whereClauses, fmt.Sprintf("LOWER(title) LIKE %s ESCAPE '\\'", nextArg()))
+		args = append(args, pattern)
+	}
+
 	baseQuery := fmt.Sprintf("SELECT * FROM (%s) AS combined", unionSQL)
 	if len(whereClauses) > 0 {
 		baseQuery += " WHERE " + strings.Join(whereClauses, " AND ")
@@ -222,4 +231,14 @@ func (r *repositoryImpl) Query(ctx context.Context, query WorkbenchQuery) (*Work
 		PageSize:   query.PageSize,
 		TotalPages: totalPages,
 	}, nil
+}
+
+// escapeLikeKeyword 转义 LIKE 模式串中的元字符（\ % _），
+// 使搜索关键字按字面匹配。ESCAPE 子句固定为 '\'。
+func escapeLikeKeyword(s string) string {
+	return strings.NewReplacer(
+		`\`, `\\`,
+		`%`, `\%`,
+		`_`, `\_`,
+	).Replace(s)
 }

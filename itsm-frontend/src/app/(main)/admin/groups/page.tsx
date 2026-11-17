@@ -34,6 +34,23 @@ import { formatDateTime } from '@/lib/formatters';
 const { Title, Text } = Typography;
 const { Search: AntSearch } = Input;
 
+// 成员/候选用户都可能超过单页上限；只取第一页会让 >100 人的组在弹窗里
+// 显示不全，保存时还会把未展示的成员误判为「已移除」。
+async function fetchAllPages<T>(
+  fetchPage: (page: number, pageSize: number) => Promise<{ items: T[]; total: number }>,
+): Promise<T[]> {
+  const collected: T[] = [];
+  let page = 1;
+  for (;;) {
+    const response = await fetchPage(page, BACKEND_MAX_PAGE_SIZE);
+    const items = response.items || [];
+    collected.push(...items);
+    if (items.length === 0 || collected.length >= response.total) break;
+    page += 1;
+  }
+  return collected;
+}
+
 const GroupManagement: React.FC = () => {
   const { token } = theme.useToken();
   const { t } = useI18n();
@@ -150,9 +167,11 @@ const GroupManagement: React.FC = () => {
   const loadGroupMembers = async (groupId: number) => {
     setLoadingMembers(true);
     try {
-      const response = await GroupAPI.getMembers(groupId, { page: 1, pageSize: 100 });
-      setGroupMembers(response.items || []);
-      setSelectedUserIds(response.items?.map(m => String(m.id)) || []);
+      const members = await fetchAllPages<User>((page, pageSize) =>
+        GroupAPI.getMembers(groupId, { page, pageSize }),
+      );
+      setGroupMembers(members);
+      setSelectedUserIds(members.map(m => String(m.id)));
     } catch (error) {
       console.error('Failed to load group members:', error);
       message.error(t('groups.messages.loadMembersFailed'));
@@ -164,8 +183,10 @@ const GroupManagement: React.FC = () => {
   // 加载所有用户（用于添加成员）
   const loadAllUsers = async () => {
     try {
-      const response = await UserApi.getUsers({ page: 1, pageSize: BACKEND_MAX_PAGE_SIZE });
-      setAllUsers(response.items || []);
+      const users = await fetchAllPages<User>((page, pageSize) =>
+        UserApi.getUsers({ page, pageSize }),
+      );
+      setAllUsers(users);
     } catch (error) {
       console.error('Failed to load users:', error);
       message.error(t('groups.messages.loadFailed'));
@@ -210,26 +231,36 @@ const GroupManagement: React.FC = () => {
     } catch (error) {
       console.error('Failed to save members:', error);
       message.error(t('groups.messages.saveMembersFailed'));
+      // 串行增删可能已经部分成功，重拉真实成员列表，避免弹窗停留在脏状态。
+      await loadGroupMembers(selectedGroup.id);
     } finally {
       setSavingMembers(false);
     }
   };
 
-  // Transfer 的目标key（已选中的成员）
-  const targetKeys = selectedUserIds.filter(id =>
-    groupMembers.some(m => String(m.id) === id)
-  );
+  // Transfer 的 targetKeys 就是当前选中集合本身。历史实现与 groupMembers
+  // 取交集，导致刚从左侧添加的新成员不在右侧渲染，视觉上「加不进去」。
+  const targetKeys = selectedUserIds;
 
-  // 角色筛选只作用于 Transfer 左侧「可添加」列表；右侧当前成员不受影响，
-  // 否则保存时会误把被筛掉的现有成员当成移除。
-  const filteredUserOptions = allUsers
-    .filter(u => !memberRoleFilter || u.role === memberRoleFilter)
-    .map(u => ({
-      key: String(u.id),
-      title: u.name || u.username || t('groups.members.userFallback', { id: u.id }),
-      description: u.email || u.username || '',
-      role: u.role,
-    }));
+  const selectedIdSet = new Set(selectedUserIds);
+  const toUserOption = (u: User) => ({
+    key: String(u.id),
+    title: u.name || u.username || t('groups.members.userFallback', { id: u.id }),
+    description: u.email || u.username || '',
+    role: u.role,
+  });
+
+  // 角色筛选只作用于左侧「可添加」候选；已选中的成员必须始终留在 dataSource，
+  // 否则 Antd Transfer 右侧会渲染空项，保存时也无法正确计算增删差集。
+  const filteredUserOptions = [
+    ...allUsers
+      .filter(u => selectedIdSet.has(String(u.id)) || !memberRoleFilter || u.role === memberRoleFilter)
+      .map(toUserOption),
+    // 成员可能不在候选用户页里（停用/被过滤），补齐以免右侧丢项。
+    ...groupMembers
+      .filter(m => !allUsers.some(u => String(u.id) === String(m.id)))
+      .map(toUserOption),
+  ];
 
   // 角色标签：显示用户主角色（词表单一源=PRIMARY_ROLE_LABEL）
   const memberRoleTag = (role?: string) => {
@@ -278,7 +309,7 @@ const GroupManagement: React.FC = () => {
       key: 'members',
       width: 120,
       render: (_: unknown, record: Group) => (
-        <Badge count={record.members?.length || 0} showZero color="blue">
+        <Badge count={record.memberCount ?? record.members?.length ?? 0} showZero color="blue">
           <Button
             type="link"
             icon={<Users size={16} />}

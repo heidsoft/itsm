@@ -79,9 +79,18 @@ func (s *Service) providerHasDiscoveryAdapter(provider string) bool {
 	return false
 }
 
-func (s *Service) GetDiscoveryHealth() CapabilityStatus {
+// discoveryDeploymentReadiness 是「这条链路在当前部署里装齐了没有」的唯一判定。
+//
+// 四个维度逐一给出缺失项：适配器注册表、租户凭据解析器、发现 Worker、部署级申报
+// 开关。此前 /capabilities 与 /discovery/health 各写一份同义判断，结果是同一个
+// 部署事实在两个端点上有两种说法——加一个维度就要记得改两处，漏改一处就自相矛盾。
+// 现在两处都从这里取，维度只增一次。
+//
+// 它不看租户数据（不查云账号），因此结论对任何租户都成立；租户维度由
+// GetDiscoveryCapability 在其之上叠加。
+func (s *Service) discoveryDeploymentReadiness() (bool, []string) {
 	adapterReady := s.hasAnyDiscoveryAdapter()
-	missing := make([]string, 0, 3)
+	missing := make([]string, 0, 4)
 	if !adapterReady {
 		missing = append(missing, "discoveryAdapter")
 	}
@@ -91,12 +100,35 @@ func (s *Service) GetDiscoveryHealth() CapabilityStatus {
 	if !s.discoveryRuntime.WorkerReady {
 		missing = append(missing, "discoveryWorker")
 	}
-	ready := adapterReady && s.discoveryRuntime.CredentialResolverReady && s.discoveryRuntime.WorkerReady
+	// 部署级申报与能力矩阵同源：未申报时即使适配器全装齐也不得对外声称就绪。
+	envReady := common.EnvEnabled(discoveryReadinessEnv)
+	if !envReady {
+		missing = append(missing, discoveryReadinessEnv)
+	}
+	return envReady && adapterReady &&
+		s.discoveryRuntime.CredentialResolverReady && s.discoveryRuntime.WorkerReady, missing
+}
+
+// GetDiscoveryHealth 报部署级健康事实。
+//
+// 刻意不再复用 CapabilityStatus：那个结构带 tenantReadiness 字段，而本端点不查
+// 租户账号，根本算不出这个值。此前它把该字段留成 Go 零值下发，于是响应里同时出现
+// "state":"ready"、"missingRequirements":[]、"tenantReadiness":false —— 前两项说
+// 就绪、第三项说没配好。一个端点内部自相矛盾，比两个端点打架更难排查：运维无从
+// 判断该按哪一条去修。
+//
+// 所以这里换成不含租户维度的独立结构：能算的就报，算不了的不报字段，而不是报一个
+// 恒假的布尔值让人误以为是「租户没配账号」。租户维度请查 /cmdb/capabilities。
+func (s *Service) GetDiscoveryHealth() DiscoveryHealthStatus {
+	ready, missing := s.discoveryDeploymentReadiness()
 	state := "ready"
 	if !ready {
 		state = "unready"
 	}
-	return CapabilityStatus{Key: "cmdbDiscovery", State: state, BuildCapability: true, DeploymentReadiness: ready, ActorPermission: true, MissingRequirements: missing}
+	return DiscoveryHealthStatus{
+		Key: "cmdbDiscovery", State: state, BuildCapability: true,
+		DeploymentReadiness: ready, ActorPermission: true, MissingRequirements: missing,
+	}
 }
 
 // ListCloudProviders 返回本产品识别的云厂商清单及其发现能力。
@@ -270,21 +302,44 @@ type CapabilityStatus struct {
 	MissingRequirements []string `json:"missingRequirements"`
 }
 
+// DiscoveryHealthStatus 是部署级健康面的响应结构，刻意**不含** tenantReadiness。
+//
+// 不带这个字段不是遗漏：健康端点不查租户账号，无从判断租户是否配好了。给它留一个
+// 布尔位就意味着必须填一个值，而任何填出来的值都是猜的（此前留零值，恒 false，
+// 与同响应的 state=ready 直接冲突）。不存在的维度就不下发，让调用方去看
+// /cmdb/capabilities 拿租户结论。
+type DiscoveryHealthStatus struct {
+	Key                 string   `json:"key"`
+	State               string   `json:"state"`
+	BuildCapability     bool     `json:"buildCapability"`
+	DeploymentReadiness bool     `json:"deploymentReadiness"`
+	ActorPermission     bool     `json:"actorPermission"`
+	MissingRequirements []string `json:"missingRequirements"`
+}
+
+// discoveryReadinessEnv 是云发现能力的部署级「就绪申报」开关，取值语义与能力矩阵
+// (handlers/capability) 的 readinessEnv 完全一致，两者必须得出同一结论。
+//
+// 注意这是声明层而不是执行闸：未申报为真时，云发现的 job 仍可被创建与执行
+// （与 ITSM_AI_READY 同款语义——未申报不影响 triage 实际可用）。它决定的是
+// 「对外是否声称已就绪」，因此只影响能力面状态与前端门控。
+//
+// 此前域内面只判「注册表装了适配器 + 凭据解析器 + Worker」，完全不看这个开关：
+// 运维在能力矩阵看到 cmdbDiscovery deploymentReady=false / "deployment dependency
+// is not ready"，转到 CMDB 注册页却看到 state=unconfigured、缺失项只有
+// "cloudAccountWithDiscoveryAdapter"——于是按提示配好云账号，矩阵仍然说不就绪，
+// 缺的那条信息（该开关没申报）在两个接口里都看不到。同一条能力给出两种部署
+// 事实，是比「没配好」更难排查的故障。
+const discoveryReadinessEnv = "ITSM_CMDB_DISCOVERY_READY"
+
 func (s *Service) GetDiscoveryCapability(ctx context.Context, tenantID int) (*CapabilityStatus, error) {
 	if tenantID <= 0 {
 		return nil, fmt.Errorf("tenant ID is required")
 	}
-	missing := make([]string, 0, 4)
+	// 部署维度走与健康端点同一份判定：两处若各写一遍，加维度时漏改一处就是
+	// 「health 说就绪、capabilities 说缺东西」这类无法从响应本身发现的矛盾。
 	adapterReady := s.hasAnyDiscoveryAdapter()
-	if !adapterReady {
-		missing = append(missing, "discoveryAdapter")
-	}
-	if !s.discoveryRuntime.CredentialResolverReady {
-		missing = append(missing, "tenantSecretResolver")
-	}
-	if !s.discoveryRuntime.WorkerReady {
-		missing = append(missing, "discoveryWorker")
-	}
+	deploymentReady, missing := s.discoveryDeploymentReadiness()
 	accounts, err := s.repo.ListCloudAccounts(ctx, tenantID, "")
 	if err != nil {
 		return nil, err
@@ -299,7 +354,6 @@ func (s *Service) GetDiscoveryCapability(ctx context.Context, tenantID int) (*Ca
 	if !tenantReady {
 		missing = append(missing, "cloudAccountWithDiscoveryAdapter")
 	}
-	deploymentReady := adapterReady && s.discoveryRuntime.CredentialResolverReady && s.discoveryRuntime.WorkerReady
 	state := "ready"
 	switch {
 	case !adapterReady:

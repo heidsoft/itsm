@@ -1,7 +1,7 @@
 # 🛣️ ITSM Roadmap
 
 > **Source of truth for what is shipping, what is shipping next, and
-> what is parked.** Updated as part of every release. Last synced: 2026-11-15（**本次同步：① F1 最后一条可达路径——飞书侧 `markTaskDeleted` 收口，飞书删任务关工单时同事务终止 BPMN 实例（`f5a046b2f`），至此全仓写 `closed` 的两处位置全部收口；② 按源码复核 v1.7 三项状态位，AI telemetry 与 SLA forecast skill 实为已落地却仍记未完成，本次收口并附证据链，RAG v2 收窄为「hybrid/Mode/渐进披露已落地，chunking 与 re-ranking 仍缺」；③ 此前同批次：F1 收口补全：关闭工单的收敛点从「详情页 handler」下移到工单域 service 层，`CloseTicket` / `UpdateStatus(closed)` 同事务终止 BPMN 实例；同时更正 2026-11-14 记录里「F1 已修复」的过宽结论——原修复只覆盖 `POST /tickets/workflow/close` 一条路径。飞书同步关闭与 F2 剩余一半（triage 缓存回放带 `accepted`）落在在途 connectors / AI 审计批次，未在本批修改，已登记为已知缺口）。上次同步 2026-11-08（事实漂移修正：「当前未发布改进」同步至 CHANGELOG [Unreleased] 最新口径；「当前收敛项」过期「剩余」改写为真实阻断；v1.7 两项提前收口在正文勾选。service/ 迁移收口条目仍待团队评审，本批不登记）。上次同步 2026-11-03：应用市场交付语义闭环并晋升「可用」，能力矩阵 `marketplace` 行同步摘除 pilotReason。此前 2026-10-29：v1.6.16–v1.6.20 五版本条目级回填完成——此前该区间只有 CHANGELOG 无 ROADMAP 条目；v1.6.21–v1.6.34 的增量以 `CHANGELOG.md` 为准，待下个发布节点统一回填。同日：v1.7 两项提前收口确认——AI Evaluator CI gate（v1.6.16 落地，四指标阈值已进 backend-ci）与 Skill Registry UI（v1.6.16 落地）。P0 数据库结构护栏迁移 `20261027_prod_schema_guards.sql` 落地 29 索引/唯一键）。
+> what is parked.** Updated as part of every release. Last synced: 2026-11-15（F1 收口补全：关闭工单的收敛点从「详情页 handler」下移到工单域 service 层，`CloseTicket` / `UpdateStatus(closed)` 同事务终止 BPMN 实例；同时更正 2026-11-14 记录里「F1 已修复」的过宽结论——原修复只覆盖 `POST /tickets/workflow/close` 一条路径。飞书同步关闭与 F2 剩余一半（triage 缓存回放带 `accepted`）落在在途 connectors / AI 审计批次，未在本批修改，已登记为已知缺口）。上次同步 2026-11-08（事实漂移修正：「当前未发布改进」同步至 CHANGELOG [Unreleased] 最新口径；「当前收敛项」过期「剩余」改写为真实阻断；v1.7 两项提前收口在正文勾选。service/ 迁移收口条目仍待团队评审，本批不登记）。上次同步 2026-11-03：应用市场交付语义闭环并晋升「可用」，能力矩阵 `marketplace` 行同步摘除 pilotReason。此前 2026-10-29：v1.6.16–v1.6.20 五版本条目级回填完成——此前该区间只有 CHANGELOG 无 ROADMAP 条目；v1.6.21–v1.6.34 的增量以 `CHANGELOG.md` 为准，待下个发布节点统一回填。同日：v1.7 两项提前收口确认——AI Evaluator CI gate（v1.6.16 落地，四指标阈值已进 backend-ci）与 Skill Registry UI（v1.6.16 落地）。P0 数据库结构护栏迁移 `20261027_prod_schema_guards.sql` 落地 29 索引/唯一键）。
 >
 > Cross-references:
 > - Design outlines: [docs/prd/](./docs/prd)（当前仅 1 篇）+ [plans/](./plans)（专项计划与审计）
@@ -195,15 +195,17 @@ Concretely that means:
       （v1.6.16 提前收口，见头部 2026-10-29 确认；CI 为降级档门禁，LLM 档真实模型验收另计，见「当前收敛项」AI Audit/Evaluator。）
 - [x] **AI telemetry** — capture prompt/response/cost/latency for every
       skill invocation; dashboard at `/api/v1/ai/audit`.
-      （2026-11-15 按源码核实收口：`router/ai_routes.go` 已注册该端点；`ai_audit` 底账
-      覆盖分诊/RCA/摘要/预测/chat/skill 六类场景，promptVersion 与 model 由 provider 自报
-      （报不出写 unknown，此前写死 gpt-4o-mini 的错误已修正）；token 配额与成本口径经
-      `AIQuotaService` 落地，未配置=不限制且如实报 `quotaConfigured=false`，不给猜的单价。）
+      （2026-11-15 按源码核实收口：`router/ai_routes.go` 已注册 `/api/v1/ai/audit`；
+      `ai_audit` 底账覆盖分诊/RCA/摘要/预测/chat/skill 六类场景，promptVersion 与
+      model 由 provider 自报（报不出写 unknown），token 配额与成本口径经 `ai_quota` 落地
+      （未配置=不限制且如实报 quotaConfigured=false，绝不猜单价）。能力矩阵 `ai` 行
+      见 `handlers/capability/handler.go` 的 pilotReason 有完整说明。）
 - [ ] **Knowledge base RAG v2** — chunking strategy improvements,
       re-ranking, hybrid search (BM25 + vector).
-      （部分落地：`internal/services/rag_service.go` 的 `hybridSearch` 开关与 `Mode()` 三态
-      （hybrid/vector/keyword）已落地，渐进式披露（truncated/contentLength + `get_kb_article`
-      按需读全文）与短期/情景记忆层亦已落地。**剩余**：chunking 策略与 re-ranking 未实现；
+      （部分落地：`internal/services/rag_service.go` 已有 `hybridSearch` 开关，
+      `Mode()` 如实返回本次实际走的 hybrid / vector / keyword 供审计底账；
+      渐进式披露（truncated/contentLength 信号位 + `get_kb_article` 按需读全文）
+      与短期/情景记忆层也已落地。**剩余**：chunking 策略与 re-ranking 未实现，
       hybrid 目前是「向量可用则混合」的开关语义，尚未做 BM25 词频打分自身的排序融合。）
 - [x] **Skill registry v1** — declarative skill manifests, hot-pluggable
       pipeline, registry UI.（v1.6.16 提前收口，见头部 2026-10-29 确认；`/admin/skills` 管理面板已落地。）
@@ -217,10 +219,12 @@ Concretely that means:
 - [x] **SLA forecast skill** — predict SLA breach risk per ticket,
       surface on dashboards.
       （2026-11-15 按源码核实收口：`handlers/sla/sla_breach_predictor.go` +
-      `sla_forecast_skill.go` 已落地；`internal/bootstrap/app.go:741` 构造并注入
-      `ai.NewService`，执行点 `handlers/ai/service.go:1023`（优先 skill、失败回退通用预测）；
-      `cmd/ai-eval` 的预测指标由生产 predictor 产出且与人工标注独立，两个回归测试常驻。
-      本项此前记为未完成属文档事实漂移，非新增实现。）
+      `handlers/sla/sla_forecast_skill.go` 已落地；装配 `internal/bootstrap/app.go:741`
+      构造、注入 `ai.NewService`，执行点 `handlers/ai/service.go:1023`（优先走 skill，
+      失败回退通用预测）；`cmd/ai-eval` 的预测指标直接由生产 `SLABreachPredictor` 产出
+      且与人工标注独立，`handlers/sla/sla_forecast_skill_test.go` 与
+      `sla_breach_predictor_test.go` 常驻回归。**注意**：本项此前被记为未完成属
+      文档事实漂移，非新增实现。）
 - [ ] **Full UI i18n** — the UI is Chinese-first through v1.6.x; extract
       the remaining hardcoded strings (currently ~83% of pages) into
       `src/lib/i18n` message catalogs and ship an en-US locale with a

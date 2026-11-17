@@ -1,0 +1,23 @@
+# 演示模式覆盖文件（与 docker-compose.prod.yml 合并使用）
+#
+# 用法：
+#   docker compose -f docker-compose.prod.yml -f docker-compose.demo.yml --env-file .env.prod up -d
+#
+# 作用：为 backend/worker 注入 Email-to-Ticket 的"确认即建单"所需环境变量，
+#       无需修改 docker-compose.prod.yml，也不会留下临时覆盖文件。
+#       变量值可被 .env / --env-file 中的同名变量覆盖（带 :- 默认值）。
+#
+# 注意：仅供演示 / 试用 / PoC。生产默认应不启用（留空 = 观察模式，fail-closed）。
+# 配合演示数据：bash scripts/seed-email-intake-demo.sh
+services:
+  itsm-backend:
+    environment:
+      - EMAIL_INTAKE_MODE=${EMAIL_INTAKE_MODE:-manualConfirm}
+      - EMAIL_INTAKE_AUTOMATION_REPORTER_ID=${EMAIL_INTAKE_AUTOMATION_REPORTER_ID:-1}
+      - EMAIL_INTAKE_DEFAULT_GROUP_ID=${EMAIL_INTAKE_DEFAULT_GROUP_ID:-}
+
+  itsm-worker:
+    environment:
+      - EMAIL_INTAKE_MODE=${EMAIL_INTAKE_MODE:-manualConfirm}
+      - EMAIL_INTAKE_AUTOMATION_REPORTER_ID=${EMAIL_INTAKE_AUTOMATION_REPORTER_ID:-1}
+      - EMAIL_INTAKE_DEFAULT_GROUP_ID=${EMAIL_INTAKE_DEFAULT_GROUP_ID:-}

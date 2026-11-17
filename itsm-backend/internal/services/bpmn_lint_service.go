@@ -210,6 +210,17 @@ func (s *BPMNLintService) lintProcess(process *BPMNProcess, result *dto.BPMNLint
 	}
 	for _, gw := range process.InclusiveGateways {
 		s.lintGateway(prefix, gw.ID, gw.Name, gw.DefaultFlow, adjacency, result, "包容网关")
+		// 包容网关分叉时若所有出边条件都不命中，引擎只打 Warn 日志然后静默
+		// 等待（handleInclusiveGateway !matched 分支）——实例停在网关上无任何
+		// 调度来源。声明 default 分支是 BPMN 语义的标准兜底，缺省时提示。
+		if strings.TrimSpace(gw.DefaultFlow) == "" && len(adjacency[gw.ID]) > 1 {
+			result.Issues = append(result.Issues, &dto.BPMNLintIssue{
+				Severity: "warning", Category: "gateways",
+				ElementID: gw.ID, ElementName: gw.Name,
+				Message: fmt.Sprintf("%s：包容网关 %s 未声明 default 分支，运行时所有出边条件都不命中时实例将静默挂起（无定时器、无信号可唤醒）",
+					prefix, display(gw.Name, gw.ID)),
+			})
+		}
 	}
 
 	// --- 规则组 5：序列流条件 ---
@@ -286,6 +297,33 @@ func (s *BPMNLintService) lintProcess(process *BPMNProcess, result *dto.BPMNLint
 
 	// --- 规则组 8：审批节点能力可执行性---
 	s.lintApprovalNodeCapabilities(process, result)
+
+	// --- 规则组 9：引擎不支持的元素类型拦截 ---
+	// 子流程/调用活动在解析器里有类型（bpmncontracts.BPMNSubProcess /
+	// BPMNCallActivity），但 handleElement 没有对应分支——到达时落入兜底
+	// 路径（markElementDone + executeStep），**整个子流程内容被静默跳过**，
+	// 用户得到「看似跑通实则跳过」的实例。必须在部署期拒绝，而不是让
+	// 运行时静默丢活动。支持之前请展平为顶层元素。
+	if len(process.SubProcesses) > 0 {
+		for _, sp := range process.SubProcesses {
+			result.Issues = append(result.Issues, &dto.BPMNLintIssue{
+				Severity: "error", Category: "structure",
+				ElementID: sp.ID, ElementName: sp.Name,
+				Message: fmt.Sprintf("子流程 %s 暂不被引擎执行（将被静默跳过）：请展平为顶层元素后再部署",
+					display(sp.Name, sp.ID)),
+			})
+		}
+	}
+	if len(process.CallActivities) > 0 {
+		for _, ca := range process.CallActivities {
+			result.Issues = append(result.Issues, &dto.BPMNLintIssue{
+				Severity: "error", Category: "structure",
+				ElementID: ca.ID, ElementName: ca.Name,
+				Message: fmt.Sprintf("调用活动 %s 暂不被引擎执行（将被静默跳过）：请展平为顶层元素后再部署",
+					display(ca.Name, ca.ID)),
+			})
+		}
+	}
 }
 
 func (s *BPMNLintService) lintApprovalRejectionConfiguration(process *BPMNProcess, adjacency map[string][]string, result *dto.BPMNLintResult) {

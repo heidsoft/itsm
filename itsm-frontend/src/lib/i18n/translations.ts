@@ -2521,6 +2521,10 @@ export const translations = {
         saveAndDeployFailed: '保存并部署失败: {message}',
         loadWorkflowFailed: '加载工作流失败',
         loadWorkflowNotFound: '加载工作流失败，该工作流可能不存在',
+        // DI = BPMN 图形坐标。缺 DI 不影响业务定义有效性，画布会在导入时自动布局，
+        // 保存后坐标即固化。提示语不能说成"无法编辑"，否则用户会误以为流程坏了。
+        missingDIAutoLayout:
+          '该流程缺少图形坐标（DI），画布已自动布局；直接保存即可把坐标固化进流程，也支持继续编辑',
         loadWorkflowFailedGeneric: '加载工作流失败',
         loadWorkflowVersionsFailed: '加载工作流版本失败',
         loadWorkflowConfigFailed: '加载工作流配置失败',
@@ -3179,6 +3183,21 @@ export const translations = {
       approvalRequiredDesc: '当有待审批的工单时',
       approvalCompleted: '审批完成',
       approvalCompletedDesc: '当审批结果出来时',
+      // 通知条目标题的类型词表（后端 title 列存 event_type 枚举时按此翻译，
+      // 见 lib/i18n/notification-type.ts 与缺陷 O6-A）
+      type: {
+        created: '新工单创建',
+        assigned: '工单已分配',
+        statusChanged: '工单状态变更',
+        commented: '工单有新评论',
+        slaWarning: 'SLA 预警',
+        slaViolated: 'SLA 违规',
+        resolved: '工单已解决',
+        closed: '工单已关闭',
+        approvalRequired: '待审批',
+        approvalCompleted: '审批完成',
+        info: '新通知',
+      },
       // Filter
       filter: '筛选',
       allChannels: '全部渠道',
@@ -5199,6 +5218,7 @@ export const translations = {
     workbench: {
       title: '统一工作台',
       description: '跨领域待办事项一览',
+      searchPlaceholder: '搜索标题…',
       filters: {
         phase: '生命周期阶段',
         priority: '优先级',
@@ -7558,6 +7578,10 @@ export const translations = {
         saveAndDeployFailed: 'Save and deploy failed: {message}',
         loadWorkflowFailed: 'Failed to load workflow',
         loadWorkflowNotFound: 'Failed to load workflow, it may not exist',
+        // DI = BPMN diagram coordinates. A definition without DI is still valid;
+        // the canvas auto-lays it out on import and the coordinates are persisted on save.
+        missingDIAutoLayout:
+          'This process has no diagram coordinates (DI). The canvas applied an automatic layout; saving will persist the coordinates, and editing stays available',
         loadWorkflowFailedGeneric: 'Failed to load workflow',
         loadWorkflowVersionsFailed: 'Failed to load workflow versions',
         loadWorkflowConfigFailed: 'Failed to load workflow config',
@@ -8219,6 +8243,21 @@ export const translations = {
       approvalRequiredDesc: 'When there are tickets pending approval',
       approvalCompleted: 'Approval Completed',
       approvalCompletedDesc: 'When approval results are available',
+      // Notification item title type labels (backend stores the raw event_type
+      // enum in the title column; translated here — see defect O6-A)
+      type: {
+        created: 'Ticket Created',
+        assigned: 'Ticket Assigned',
+        statusChanged: 'Ticket Status Changed',
+        commented: 'New Ticket Comment',
+        slaWarning: 'SLA Warning',
+        slaViolated: 'SLA Violated',
+        resolved: 'Ticket Resolved',
+        closed: 'Ticket Closed',
+        approvalRequired: 'Pending Approval',
+        approvalCompleted: 'Approval Completed',
+        info: 'New Notification',
+      },
       // Filter
       filter: 'Filter',
       allChannels: 'All Channels',
@@ -10240,6 +10279,7 @@ export const translations = {
     workbench: {
       title: 'Unified Workbench',
       description: 'Cross-domain to-do overview',
+      searchPlaceholder: 'Search by title…',
       filters: {
         phase: 'Lifecycle Phase',
         priority: 'Priority',

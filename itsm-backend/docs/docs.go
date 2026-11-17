@@ -6235,6 +6235,35 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/cmdb/export/{task_id}/download": {
+            "get": {
+                "description": "按任务ID下载导出文件；校验租户、操作人归属与 expires_at",
+                "produces": [
+                    "application/octet-stream"
+                ],
+                "tags": [
+                    "CMDB"
+                ],
+                "summary": "下载CMDB导出文件",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "任务ID",
+                        "name": "task_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "file"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/cmdb/import": {
             "get": {
                 "description": "查询历史导入任务列表",
@@ -7138,14 +7167,14 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/handlers.IncidentDistributionData"
+                                "$ref": "#/definitions/dashboard.IncidentDistributionData"
                             }
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/handlers.ErrorResponse"
+                            "$ref": "#/definitions/dashboard.ErrorResponse"
                         }
                     }
                 }
@@ -7170,14 +7199,14 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/handlers.KPIMetric"
+                                "$ref": "#/definitions/dashboard.KPIMetric"
                             }
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/handlers.ErrorResponse"
+                            "$ref": "#/definitions/dashboard.ErrorResponse"
                         }
                     }
                 }
@@ -7200,13 +7229,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/handlers.DashboardOverview"
+                            "$ref": "#/definitions/dashboard.DashboardOverview"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/handlers.ErrorResponse"
+                            "$ref": "#/definitions/dashboard.ErrorResponse"
                         }
                     }
                 }
@@ -7231,14 +7260,14 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/handlers.QuickAction"
+                                "$ref": "#/definitions/dashboard.QuickAction"
                             }
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/handlers.ErrorResponse"
+                            "$ref": "#/definitions/dashboard.ErrorResponse"
                         }
                     }
                 }
@@ -7272,14 +7301,14 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/handlers.RecentActivity"
+                                "$ref": "#/definitions/dashboard.RecentActivity"
                             }
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/handlers.ErrorResponse"
+                            "$ref": "#/definitions/dashboard.ErrorResponse"
                         }
                     }
                 }
@@ -7313,14 +7342,14 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/handlers.SatisfactionData"
+                                "$ref": "#/definitions/dashboard.SatisfactionData"
                             }
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/handlers.ErrorResponse"
+                            "$ref": "#/definitions/dashboard.ErrorResponse"
                         }
                     }
                 }
@@ -7328,7 +7357,7 @@ const docTemplate = `{
         },
         "/api/v1/dashboard/sla-data": {
             "get": {
-                "description": "获取各服务的SLA达成情况",
+                "description": "获取租户近30天的SLA合规快照。响应是**单个对象**（complianceRate /\nresponseTimeCompliance / resolutionTimeCompliance / atRiskTickets /\nbreachedTickets / totalTickets / compliantTickets），不是按服务拆分的数组——\n早期文档写成 {array} SLAData，前端据此定义 SLAData[] 并用 Array.isArray 过滤，\n于是对象被当成\"没有数据\"，SLA 面板长期显示\"暂无数据\"。",
                 "consumes": [
                     "application/json"
                 ],
@@ -7343,16 +7372,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/handlers.SLAData"
-                            }
+                            "$ref": "#/definitions/dto.SLAComplianceData"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/handlers.ErrorResponse"
+                            "$ref": "#/definitions/dashboard.ErrorResponse"
                         }
                     }
                 }
@@ -7375,13 +7401,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/handlers.DashboardOverview"
+                            "$ref": "#/definitions/dashboard.DashboardOverview"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/handlers.ErrorResponse"
+                            "$ref": "#/definitions/dashboard.ErrorResponse"
                         }
                     }
                 }
@@ -7410,7 +7436,7 @@ const docTemplate = `{
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/handlers.ErrorResponse"
+                            "$ref": "#/definitions/dashboard.ErrorResponse"
                         }
                     }
                 }
@@ -7439,7 +7465,7 @@ const docTemplate = `{
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/handlers.ErrorResponse"
+                            "$ref": "#/definitions/dashboard.ErrorResponse"
                         }
                     }
                 }
@@ -7473,14 +7499,14 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/handlers.TicketTrendData"
+                                "$ref": "#/definitions/dashboard.TicketTrendData"
                             }
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/handlers.ErrorResponse"
+                            "$ref": "#/definitions/dashboard.ErrorResponse"
                         }
                     }
                 }
@@ -13140,7 +13166,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/service.ServiceQualityReport"
+                                            "$ref": "#/definitions/dto.ServiceQualityReport"
                                         }
                                     }
                                 }
@@ -14148,6 +14174,300 @@ const docTemplate = `{
                 },
                 "username": {
                     "type": "string"
+                }
+            }
+        },
+        "dashboard.DashboardOverview": {
+            "type": "object",
+            "properties": {
+                "incidentDistribution": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dashboard.IncidentDistributionData"
+                    }
+                },
+                "kpiMetrics": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dashboard.KPIMetric"
+                    }
+                },
+                "overview": {
+                    "$ref": "#/definitions/dashboard.DashboardOverviewData"
+                },
+                "peakHours": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dashboard.PeakHourData"
+                    }
+                },
+                "quickActions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dashboard.QuickAction"
+                    }
+                },
+                "recentActivities": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dashboard.RecentActivity"
+                    }
+                },
+                "responseTimeDistribution": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dashboard.ResponseTimeDistributionData"
+                    }
+                },
+                "satisfactionData": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dashboard.SatisfactionData"
+                    }
+                },
+                "slaData": {
+                    "$ref": "#/definitions/dto.SLAComplianceData"
+                },
+                "teamWorkload": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dashboard.TeamWorkloadData"
+                    }
+                },
+                "ticketTrend": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dashboard.TicketTrendData"
+                    }
+                }
+            }
+        },
+        "dashboard.DashboardOverviewData": {
+            "type": "object",
+            "properties": {
+                "avgResolutionTime": {
+                    "type": "number"
+                },
+                "avgResponseTime": {
+                    "type": "number"
+                },
+                "inProgressTickets": {
+                    "type": "integer"
+                },
+                "pendingTickets": {
+                    "type": "integer"
+                },
+                "resolvedToday": {
+                    "type": "integer"
+                },
+                "totalTickets": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dashboard.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "dashboard.IncidentDistributionData": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "type": "string"
+                },
+                "color": {
+                    "type": "string"
+                },
+                "count": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dashboard.KPIMetric": {
+            "type": "object",
+            "properties": {
+                "change": {
+                    "description": "变化百分比",
+                    "type": "number"
+                },
+                "changeType": {
+                    "description": "increase, decrease, stable",
+                    "type": "string"
+                },
+                "color": {
+                    "type": "string"
+                },
+                "comparable": {
+                    "description": "Comparable=false 表示没有可比的上期基线，Change 恒为 0，前端不渲染环比。",
+                    "type": "boolean"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "scope": {
+                    "description": "Scope 是这组指标的统计范围：tenant = 全租户，own = 本人创建或受理。",
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "trend": {
+                    "description": "up, down, stable",
+                    "type": "string"
+                },
+                "unit": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "number"
+                }
+            }
+        },
+        "dashboard.PeakHourData": {
+            "type": "object",
+            "properties": {
+                "avgResponseTime": {
+                    "type": "number"
+                },
+                "count": {
+                    "type": "integer"
+                },
+                "hour": {
+                    "type": "string"
+                }
+            }
+        },
+        "dashboard.QuickAction": {
+            "type": "object",
+            "properties": {
+                "color": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "path": {
+                    "type": "string"
+                },
+                "permission": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "dashboard.RecentActivity": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "priority": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "timestamp": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "type": {
+                    "description": "ticket, incident, change, problem",
+                    "type": "string"
+                },
+                "user": {
+                    "type": "string"
+                }
+            }
+        },
+        "dashboard.ResponseTimeDistributionData": {
+            "type": "object",
+            "properties": {
+                "avgTime": {
+                    "type": "number"
+                },
+                "count": {
+                    "type": "integer"
+                },
+                "percentage": {
+                    "type": "number"
+                },
+                "timeRange": {
+                    "type": "string"
+                }
+            }
+        },
+        "dashboard.SatisfactionData": {
+            "type": "object",
+            "properties": {
+                "month": {
+                    "type": "string"
+                },
+                "rating": {
+                    "type": "number"
+                },
+                "responses": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dashboard.TeamWorkloadData": {
+            "type": "object",
+            "properties": {
+                "activeTickets": {
+                    "type": "integer"
+                },
+                "assignee": {
+                    "type": "string"
+                },
+                "avgResponseTime": {
+                    "type": "number"
+                },
+                "completionRate": {
+                    "type": "number"
+                },
+                "ticketCount": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dashboard.TicketTrendData": {
+            "type": "object",
+            "properties": {
+                "closed": {
+                    "type": "integer"
+                },
+                "date": {
+                    "type": "string"
+                },
+                "inProgress": {
+                    "type": "integer"
+                },
+                "open": {
+                    "type": "integer"
+                },
+                "resolved": {
+                    "type": "integer"
                 }
             }
         },
@@ -16620,7 +16940,13 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "criticality": {
-                    "type": "string"
+                    "type": "string",
+                    "enum": [
+                        "low",
+                        "medium",
+                        "high",
+                        "critical"
+                    ]
                 },
                 "description": {
                     "type": "string"
@@ -16671,7 +16997,14 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "status": {
-                    "type": "string"
+                    "type": "string",
+                    "enum": [
+                        "active",
+                        "inactive",
+                        "maintenance",
+                        "retired",
+                        "decommissioned"
+                    ]
                 },
                 "tenantId": {
                     "type": "integer"
@@ -16845,8 +17178,13 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "impactScope": {
-                    "description": "影响范围: low, medium, high",
-                    "type": "string"
+                    "description": "影响范围",
+                    "type": "string",
+                    "enum": [
+                        "low",
+                        "medium",
+                        "high"
+                    ]
                 },
                 "implementationPlan": {
                     "description": "实施计划",
@@ -16865,8 +17203,14 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "priority": {
-                    "description": "优先级: low, medium, high, critical",
-                    "type": "string"
+                    "description": "优先级",
+                    "type": "string",
+                    "enum": [
+                        "low",
+                        "medium",
+                        "high",
+                        "critical"
+                    ]
                 },
                 "relatedTickets": {
                     "description": "相关工单编号",
@@ -16876,8 +17220,13 @@ const docTemplate = `{
                     }
                 },
                 "riskLevel": {
-                    "description": "风险等级: low, medium, high",
-                    "type": "string"
+                    "description": "风险等级",
+                    "type": "string",
+                    "enum": [
+                        "low",
+                        "medium",
+                        "high"
+                    ]
                 },
                 "rollbackPlan": {
                     "description": "回滚计划",
@@ -16888,8 +17237,13 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "type": {
-                    "description": "变更类型: normal, standard, emergency",
-                    "type": "string"
+                    "description": "变更类型",
+                    "type": "string",
+                    "enum": [
+                        "normal",
+                        "standard",
+                        "emergency"
+                    ]
                 }
             }
         },
@@ -17230,7 +17584,13 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "priority": {
-                    "type": "string"
+                    "type": "string",
+                    "enum": [
+                        "low",
+                        "medium",
+                        "high",
+                        "critical"
+                    ]
                 },
                 "rootCause": {
                     "type": "string"
@@ -17495,12 +17855,16 @@ const docTemplate = `{
                     "description": "下载链接过期时间",
                     "type": "string"
                 },
+                "exportLimit": {
+                    "description": "单次导出上限；用于与页面 COUNT 对账",
+                    "type": "integer"
+                },
                 "fileSize": {
                     "description": "文件大小（字节）",
                     "type": "integer"
                 },
                 "fileUrl": {
-                    "description": "导出文件下载地址",
+                    "description": "下载端点 URL（completed 后才有值；绝不回传服务器绝对路径）",
                     "type": "string"
                 },
                 "status": {
@@ -17512,8 +17876,12 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "totalCount": {
-                    "description": "导出的CI数量",
+                    "description": "实际写入文件的 CI 数量",
                     "type": "integer"
+                },
+                "truncated": {
+                    "description": "命中上限：文件可能未包含全部符合条件的数据",
+                    "type": "boolean"
                 }
             }
         },
@@ -18009,6 +18377,20 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.IncidentDistributionData": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "type": "string"
+                },
+                "color": {
+                    "type": "string"
+                },
+                "count": {
+                    "type": "integer"
+                }
+            }
+        },
         "dto.IncidentEscalationRequest": {
             "type": "object",
             "required": [
@@ -18274,6 +18656,52 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.KPIMetricData": {
+            "type": "object",
+            "properties": {
+                "alert": {
+                    "type": "string"
+                },
+                "change": {
+                    "type": "number"
+                },
+                "changeType": {
+                    "type": "string"
+                },
+                "color": {
+                    "type": "string"
+                },
+                "comparable": {
+                    "description": "Comparable 标识环比是否可信：false 表示读取者范围内没有可比的上期基线，\n此时 Change 恒为 0，前端不得渲染\"相比上期\"。",
+                    "type": "boolean"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "scope": {
+                    "description": "Scope 标识本组指标的行级范围：tenant = 全租户，own = 本人创建或受理。",
+                    "type": "string"
+                },
+                "target": {
+                    "type": "number"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "trend": {
+                    "type": "string"
+                },
+                "unit": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "number"
+                }
+            }
+        },
         "dto.KnowledgeArticleResponse": {
             "type": "object",
             "properties": {
@@ -18298,6 +18726,10 @@ const docTemplate = `{
                 },
                 "id": {
                     "type": "integer"
+                },
+                "isPublished": {
+                    "description": "IsPublished 与 Status 同源，但显式透出布尔值，避免 API 消费者靠字符串\n反推可见性（历史响应里该字段恒为 null）。",
+                    "type": "boolean"
                 },
                 "lastReviewedAt": {
                     "type": "string"
@@ -19543,6 +19975,135 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.SLAComplianceData": {
+            "type": "object",
+            "properties": {
+                "atRiskTickets": {
+                    "type": "integer"
+                },
+                "breachedTickets": {
+                    "type": "integer"
+                },
+                "complianceRate": {
+                    "type": "number"
+                },
+                "compliantTickets": {
+                    "type": "integer"
+                },
+                "resolutionTimeCompliance": {
+                    "type": "number"
+                },
+                "responseTimeCompliance": {
+                    "type": "number"
+                },
+                "totalTickets": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.SatisfactionData": {
+            "type": "object",
+            "properties": {
+                "month": {
+                    "type": "string"
+                },
+                "rating": {
+                    "type": "number"
+                },
+                "responses": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.ServiceQualityReport": {
+            "type": "object",
+            "properties": {
+                "changeStats": {
+                    "description": "change 域未装配时缺省",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/dto.ChangeStatsResponse"
+                        }
+                    ]
+                },
+                "generatedAt": {
+                    "type": "string"
+                },
+                "incidentDistribution": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.IncidentDistributionData"
+                    }
+                },
+                "kpi": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.KPIMetricData"
+                    }
+                },
+                "metricVersion": {
+                    "type": "string"
+                },
+                "metricVersions": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "problemStats": {
+                    "description": "problem 域未装配时缺省",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/dto.ProblemStatsResponse"
+                        }
+                    ]
+                },
+                "satisfaction": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.SatisfactionData"
+                    }
+                },
+                "scope": {
+                    "description": "KPI 行级口径：tenant | own",
+                    "type": "string"
+                },
+                "sla": {
+                    "$ref": "#/definitions/dto.SLAComplianceData"
+                },
+                "ticketStats": {
+                    "description": "analytics 未装配时缺省",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/dto.AnalyticsTicketStatsResponse"
+                        }
+                    ]
+                },
+                "ticketTrend": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.TicketTrendData"
+                    }
+                },
+                "window": {
+                    "$ref": "#/definitions/dto.ServiceQualityWindow"
+                }
+            }
+        },
+        "dto.ServiceQualityWindow": {
+            "type": "object",
+            "properties": {
+                "days": {
+                    "type": "integer"
+                },
+                "from": {
+                    "type": "string"
+                },
+                "to": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.ServiceRequestSLAResponse": {
             "type": "object",
             "properties": {
@@ -19616,6 +20177,35 @@ const docTemplate = `{
                 },
                 "status": {
                     "type": "string"
+                }
+            }
+        },
+        "dto.TicketTrendData": {
+            "type": "object",
+            "properties": {
+                "closed": {
+                    "type": "integer"
+                },
+                "completedTickets": {
+                    "type": "integer"
+                },
+                "date": {
+                    "type": "string"
+                },
+                "inProgress": {
+                    "type": "integer"
+                },
+                "newTickets": {
+                    "type": "integer"
+                },
+                "open": {
+                    "type": "integer"
+                },
+                "pendingTickets": {
+                    "type": "integer"
+                },
+                "resolved": {
+                    "type": "integer"
                 }
             }
         },
@@ -19922,7 +20512,13 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "criticality": {
-                    "type": "string"
+                    "type": "string",
+                    "enum": [
+                        "low",
+                        "medium",
+                        "high",
+                        "critical"
+                    ]
                 },
                 "description": {
                     "type": "string"
@@ -19965,7 +20561,14 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "status": {
-                    "type": "string"
+                    "type": "string",
+                    "enum": [
+                        "active",
+                        "inactive",
+                        "maintenance",
+                        "retired",
+                        "decommissioned"
+                    ]
                 },
                 "vendor": {
                     "type": "string"
@@ -20098,6 +20701,11 @@ const docTemplate = `{
                 },
                 "impactScope": {
                     "description": "影响范围",
+                    "enum": [
+                        "low",
+                        "medium",
+                        "high"
+                    ],
                     "allOf": [
                         {
                             "$ref": "#/definitions/dto.ChangeImpact"
@@ -20122,6 +20730,12 @@ const docTemplate = `{
                 },
                 "priority": {
                     "description": "优先级",
+                    "enum": [
+                        "low",
+                        "medium",
+                        "high",
+                        "critical"
+                    ],
                     "allOf": [
                         {
                             "$ref": "#/definitions/dto.ChangePriority"
@@ -20137,6 +20751,11 @@ const docTemplate = `{
                 },
                 "riskLevel": {
                     "description": "风险等级",
+                    "enum": [
+                        "low",
+                        "medium",
+                        "high"
+                    ],
                     "allOf": [
                         {
                             "$ref": "#/definitions/dto.ChangeRisk"
@@ -20153,6 +20772,11 @@ const docTemplate = `{
                 },
                 "type": {
                     "description": "变更类型",
+                    "enum": [
+                        "normal",
+                        "standard",
+                        "emergency"
+                    ],
                     "allOf": [
                         {
                             "$ref": "#/definitions/dto.ChangeType"
@@ -20329,7 +20953,13 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "priority": {
-                    "type": "string"
+                    "type": "string",
+                    "enum": [
+                        "low",
+                        "medium",
+                        "high",
+                        "critical"
+                    ]
                 },
                 "rootCause": {
                     "type": "string"
@@ -20382,6 +21012,15 @@ const docTemplate = `{
                 },
                 "email": {
                     "type": "string"
+                },
+                "mspRole": {
+                    "description": "MSP 员工身份（provider_admin|provider_agent|customer_user）。\n\n指针语义：nil=保持不变；空串=清空；非空=设为该身份。\n它与 RoleIDs 里的「MSP管理员」附加角色是两条互不相通的链路：MSP 工作台\n门控只认本字段（middleware.IsMSPStaff），不认附加角色。编辑用户时必须\n能写它，否则「把某人设为 MSP 员工」在产品上无法完成（prod 实测 O4）。",
+                    "type": "string",
+                    "enum": [
+                        "provider_admin",
+                        "provider_agent",
+                        "customer_user"
+                    ]
                 },
                 "name": {
                     "type": "string",
@@ -20513,314 +21152,6 @@ const docTemplate = `{
                 },
                 "username": {
                     "type": "string"
-                }
-            }
-        },
-        "handlers.DashboardOverview": {
-            "type": "object",
-            "properties": {
-                "incidentDistribution": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/handlers.IncidentDistributionData"
-                    }
-                },
-                "kpiMetrics": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/handlers.KPIMetric"
-                    }
-                },
-                "overview": {
-                    "$ref": "#/definitions/handlers.DashboardOverviewData"
-                },
-                "peakHours": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/handlers.PeakHourData"
-                    }
-                },
-                "quickActions": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/handlers.QuickAction"
-                    }
-                },
-                "recentActivities": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/handlers.RecentActivity"
-                    }
-                },
-                "responseTimeDistribution": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/handlers.ResponseTimeDistributionData"
-                    }
-                },
-                "satisfactionData": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/handlers.SatisfactionData"
-                    }
-                },
-                "slaData": {
-                    "$ref": "#/definitions/service.SLAComplianceData"
-                },
-                "teamWorkload": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/handlers.TeamWorkloadData"
-                    }
-                },
-                "ticketTrend": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/handlers.TicketTrendData"
-                    }
-                }
-            }
-        },
-        "handlers.DashboardOverviewData": {
-            "type": "object",
-            "properties": {
-                "avgResolutionTime": {
-                    "type": "number"
-                },
-                "avgResponseTime": {
-                    "type": "number"
-                },
-                "inProgressTickets": {
-                    "type": "integer"
-                },
-                "pendingTickets": {
-                    "type": "integer"
-                },
-                "resolvedToday": {
-                    "type": "integer"
-                },
-                "totalTickets": {
-                    "type": "integer"
-                }
-            }
-        },
-        "handlers.ErrorResponse": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "integer"
-                },
-                "message": {
-                    "type": "string"
-                }
-            }
-        },
-        "handlers.IncidentDistributionData": {
-            "type": "object",
-            "properties": {
-                "category": {
-                    "type": "string"
-                },
-                "color": {
-                    "type": "string"
-                },
-                "count": {
-                    "type": "integer"
-                }
-            }
-        },
-        "handlers.KPIMetric": {
-            "type": "object",
-            "properties": {
-                "change": {
-                    "description": "变化百分比",
-                    "type": "number"
-                },
-                "changeType": {
-                    "description": "increase, decrease, stable",
-                    "type": "string"
-                },
-                "color": {
-                    "type": "string"
-                },
-                "comparable": {
-                    "description": "Comparable=false 表示没有可比的上期基线，Change 恒为 0，前端不渲染环比。",
-                    "type": "boolean"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "scope": {
-                    "description": "Scope 是这组指标的统计范围：tenant = 全租户，own = 本人创建或受理。",
-                    "type": "string"
-                },
-                "title": {
-                    "type": "string"
-                },
-                "trend": {
-                    "description": "up, down, stable",
-                    "type": "string"
-                },
-                "unit": {
-                    "type": "string"
-                },
-                "value": {
-                    "type": "number"
-                }
-            }
-        },
-        "handlers.PeakHourData": {
-            "type": "object",
-            "properties": {
-                "avgResponseTime": {
-                    "type": "number"
-                },
-                "count": {
-                    "type": "integer"
-                },
-                "hour": {
-                    "type": "string"
-                }
-            }
-        },
-        "handlers.QuickAction": {
-            "type": "object",
-            "properties": {
-                "color": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "path": {
-                    "type": "string"
-                },
-                "permission": {
-                    "type": "string"
-                },
-                "title": {
-                    "type": "string"
-                }
-            }
-        },
-        "handlers.RecentActivity": {
-            "type": "object",
-            "properties": {
-                "description": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "priority": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "timestamp": {
-                    "type": "string"
-                },
-                "title": {
-                    "type": "string"
-                },
-                "type": {
-                    "description": "ticket, incident, change, problem",
-                    "type": "string"
-                },
-                "user": {
-                    "type": "string"
-                }
-            }
-        },
-        "handlers.ResponseTimeDistributionData": {
-            "type": "object",
-            "properties": {
-                "avgTime": {
-                    "type": "number"
-                },
-                "count": {
-                    "type": "integer"
-                },
-                "percentage": {
-                    "type": "number"
-                },
-                "timeRange": {
-                    "type": "string"
-                }
-            }
-        },
-        "handlers.SLAData": {
-            "type": "object",
-            "properties": {
-                "actual": {
-                    "type": "number"
-                },
-                "service": {
-                    "type": "string"
-                },
-                "target": {
-                    "type": "number"
-                }
-            }
-        },
-        "handlers.SatisfactionData": {
-            "type": "object",
-            "properties": {
-                "month": {
-                    "type": "string"
-                },
-                "rating": {
-                    "type": "number"
-                },
-                "responses": {
-                    "type": "integer"
-                }
-            }
-        },
-        "handlers.TeamWorkloadData": {
-            "type": "object",
-            "properties": {
-                "activeTickets": {
-                    "type": "integer"
-                },
-                "assignee": {
-                    "type": "string"
-                },
-                "avgResponseTime": {
-                    "type": "number"
-                },
-                "completionRate": {
-                    "type": "number"
-                },
-                "ticketCount": {
-                    "type": "integer"
-                }
-            }
-        },
-        "handlers.TicketTrendData": {
-            "type": "object",
-            "properties": {
-                "closed": {
-                    "type": "integer"
-                },
-                "date": {
-                    "type": "string"
-                },
-                "inProgress": {
-                    "type": "integer"
-                },
-                "open": {
-                    "type": "integer"
-                },
-                "resolved": {
-                    "type": "integer"
                 }
             }
         },
@@ -21019,208 +21350,6 @@ const docTemplate = `{
                 },
                 "type": {
                     "type": "string"
-                }
-            }
-        },
-        "service.IncidentDistributionData": {
-            "type": "object",
-            "properties": {
-                "category": {
-                    "type": "string"
-                },
-                "color": {
-                    "type": "string"
-                },
-                "count": {
-                    "type": "integer"
-                }
-            }
-        },
-        "service.KPIMetricData": {
-            "type": "object",
-            "properties": {
-                "alert": {
-                    "type": "string"
-                },
-                "change": {
-                    "type": "number"
-                },
-                "changeType": {
-                    "type": "string"
-                },
-                "color": {
-                    "type": "string"
-                },
-                "comparable": {
-                    "description": "Comparable 标识环比是否可信：false 表示读取者范围内没有可比的上期基线，\n此时 Change 恒为 0，前端不得渲染\"相比上期\"。",
-                    "type": "boolean"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "scope": {
-                    "description": "Scope 标识本组指标的行级范围：tenant = 全租户，own = 本人创建或受理。",
-                    "type": "string"
-                },
-                "target": {
-                    "type": "number"
-                },
-                "title": {
-                    "type": "string"
-                },
-                "trend": {
-                    "type": "string"
-                },
-                "unit": {
-                    "type": "string"
-                },
-                "value": {
-                    "type": "number"
-                }
-            }
-        },
-        "service.SLAComplianceData": {
-            "type": "object",
-            "properties": {
-                "atRiskTickets": {
-                    "type": "integer"
-                },
-                "breachedTickets": {
-                    "type": "integer"
-                },
-                "complianceRate": {
-                    "type": "number"
-                },
-                "compliantTickets": {
-                    "type": "integer"
-                },
-                "resolutionTimeCompliance": {
-                    "type": "number"
-                },
-                "responseTimeCompliance": {
-                    "type": "number"
-                },
-                "totalTickets": {
-                    "type": "integer"
-                }
-            }
-        },
-        "service.SatisfactionData": {
-            "type": "object",
-            "properties": {
-                "month": {
-                    "type": "string"
-                },
-                "rating": {
-                    "type": "number"
-                },
-                "responses": {
-                    "type": "integer"
-                }
-            }
-        },
-        "service.ServiceQualityReport": {
-            "type": "object",
-            "properties": {
-                "generatedAt": {
-                    "type": "string"
-                },
-                "incidentDistribution": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/service.IncidentDistributionData"
-                    }
-                },
-                "kpi": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/service.KPIMetricData"
-                    }
-                },
-                "metricVersion": {
-                    "type": "string"
-                },
-                "metricVersions": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "string"
-                    }
-                },
-                "satisfaction": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/service.SatisfactionData"
-                    }
-                },
-                "scope": {
-                    "description": "KPI 行级口径：tenant | own",
-                    "type": "string"
-                },
-                "sla": {
-                    "$ref": "#/definitions/service.SLAComplianceData"
-                },
-                "ticketStats": {
-                    "description": "analytics 未装配时缺省",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/dto.AnalyticsTicketStatsResponse"
-                        }
-                    ]
-                },
-                "ticketTrend": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/service.TicketTrendData"
-                    }
-                },
-                "window": {
-                    "$ref": "#/definitions/service.ServiceQualityWindow"
-                }
-            }
-        },
-        "service.ServiceQualityWindow": {
-            "type": "object",
-            "properties": {
-                "days": {
-                    "type": "integer"
-                },
-                "from": {
-                    "type": "string"
-                },
-                "to": {
-                    "type": "string"
-                }
-            }
-        },
-        "service.TicketTrendData": {
-            "type": "object",
-            "properties": {
-                "closed": {
-                    "type": "integer"
-                },
-                "completedTickets": {
-                    "type": "integer"
-                },
-                "date": {
-                    "type": "string"
-                },
-                "inProgress": {
-                    "type": "integer"
-                },
-                "newTickets": {
-                    "type": "integer"
-                },
-                "open": {
-                    "type": "integer"
-                },
-                "pendingTickets": {
-                    "type": "integer"
-                },
-                "resolved": {
-                    "type": "integer"
                 }
             }
         }
