@@ -37,6 +37,10 @@ func BuiltinRolePermissionCodes() map[string][]string {
 			"release:read", "release:write", "release:approve", "release:rollback",
 			"cmdb:read",
 			"workflow:read", "workflow:write",
+			// bpmn:read/write：工作流子菜单（流程实例/仪表盘/设计器/版本管理）
+			// 的页面消费 /bpmn/* API（2026-11-17 菜单码对齐后菜单闸即 bpmn 码），
+			// 只持 workflow:* 会出现「菜单可见、页面 403」或反向的不可见。
+			"bpmn:read", "bpmn:write",
 			"sla:read",
 			"report:read",
 			"knowledge:read", "knowledge:write",
@@ -50,6 +54,9 @@ func BuiltinRolePermissionCodes() map[string][]string {
 			"ticket_category:read", "ticket_category:create", "ticket_category:update",
 			"ticket_type:read", "ticket_type:manage", "ticket_type:install_preset", "ticket_type:archive",
 			"workflow:read",
+			// bpmn:read：服务目录子页「目录审批/服务目录」菜单与 BPMN 视图菜单
+			// 消费 bpmn:/service_request:/service_catalog: 码（2026-11-17 对齐）。
+			"bpmn:read",
 			"approval:read",
 			"sla:read",
 			"knowledge:read",
@@ -61,6 +68,9 @@ func BuiltinRolePermissionCodes() map[string][]string {
 			"problem:read", "problem:write", "problem:delete",
 			"change:read", "change:write",
 			"knowledge:read", "knowledge:write",
+			// bpmn:read：工作流运营视图菜单（流程实例/监控仪表盘/节点瓶颈分析）
+			// 消费 /bpmn/* API（2026-11-17 菜单码对齐）。
+			"bpmn:read",
 			"cmdb:read", "sla:read", "report:read", "workflow:read", "ai:read",
 		},
 		// 知识管理员：文章生命周期、评审与发布，含 AI 检索面治理
@@ -184,6 +194,9 @@ func BuiltinRolePermissionCodes() map[string][]string {
 			"ticket_type:manage", "ticket_type:install_preset", "ticket_category:read", "ticket_tag:read",
 			"ticket_template:read", "ticket_template:create", "ticket_template:update",
 			"sla:read", "sla:write", "workflow:read", "workflow:write", "bpmn:read",
+			// bpmn:write：流程设计器/版本管理/工作流配置菜单（bpmn:write 闸，
+			// 2026-11-17 菜单码对齐）——流程运营职责的配置面。
+			"bpmn:write",
 			// 规则配置面属流程运营职责；此前接口挂在 system_config:* 上，
 			// it_admin 看得到菜单却恒 403（实测 code 2003）。
 			"automation_rule:read", "automation_rule:write",
@@ -207,7 +220,10 @@ func BuiltinRolePermissionCodes() map[string][]string {
 			"ticket:read", "ticket:write", "ticket:create", "ticket:update",
 			// 建单页分类下拉（/ticket-categories）与工单详情流转进度（state-v2）
 			// 属最终用户旅程，按需授予只读码。
-			"ticket_category:read", "workflow:read",
+			// workflow:read 已退役（2026-11-17）：它闸的工作流子菜单页面消费
+			// bpmn:* API，最终用户「菜单可见、页面 403」；工单详情流程图按需
+			// 拉 /bpmn/process-definitions 失败时有文字版进度兜底（优雅降级）。
+			"ticket_category:read",
 			"knowledge:read", "service_catalog:read",
 			"service_request:read", "service_request:write",
 			"notification:read",
@@ -235,6 +251,16 @@ func BuiltinRolePermissionCodes() map[string][]string {
 			"incident:read", "incident:write", "incident:force-update", "incident:admin",
 			"service_catalog:read", "service_catalog:write", "service_catalog:delete",
 			"service_request:read", "service_request:write", "service_request:provision",
+			// 客户与合同域（email-intake）：租户内客户主数据/支持合同/邮件报障
+			// 工作台的管理责任在租管（2026-11-17 菜单审计补齐，此前菜单不可见）。
+			"email_intake:read", "customer_master:read", "customer_master:write",
+			"support_contract:read", "support_contract:write",
+			// 值班排班、审批链配置、连接器与插件、应用上架管理：租户管理面
+			// （2026-11-17 菜单审计补齐）。msp:write 不授予：客户分配是跨租户
+			// MSP 面，归 msp_manager/msp_admin，租管持 msp:read 只读。
+			"on_call:read", "approval:write",
+			"connector:read", "connector:write",
+			"marketplace_catalog:read",
 			"change:read", "change:write", "change:delete",
 			"problem:read", "problem:write", "problem:delete",
 			"release:read", "release:write", "release:delete",
@@ -478,6 +504,9 @@ func RetiredRolePermissionCodes() map[string][]string {
 			"user:read", "org:read", "department:read", "sla:read",
 			"cmdb:read", "incident:read", "change:read", "problem:read",
 			"bpmn:read", "release:read", "asset:read", "license:read",
+			// 2026-11-17 菜单审计：workflow:read 闸的工作流子菜单页面消费
+			// bpmn:* API，最终用户「菜单可见、页面 403」，一并退役。
+			"workflow:read",
 		},
 	}
 }

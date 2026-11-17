@@ -67,7 +67,11 @@ func TestBuiltinRolePermissionCodes_Guard(t *testing.T) {
 		// 被移除的码登记在 authz.RetiredRolePermissionCodes，播种器从既有安装撤销。
 		"end_user": {
 			"ticket:read", "ticket:write", "ticket:create", "ticket:update",
-			"ticket_category:read", "workflow:read",
+			// 2026-11-17 菜单审计：workflow:read 已退役（登记在
+			// authz.RetiredRolePermissionCodes）——它闸的工作流子菜单页面消费
+			// bpmn:* API，end_user 持有只会「菜单可见、页面 403」；终态旅程
+			// 接口（/tickets/cc/my、state-v2）由 ticket:read 守卫。
+			"ticket_category:read",
 			"knowledge:read", "service_catalog:read",
 			"service_request:read", "service_request:write",
 			"notification:read", "notification:write",
@@ -98,13 +102,15 @@ func TestBuiltinRolePermissionCodes_Guard(t *testing.T) {
 	// ai:approve 已从 ai:write 拆出并只授管理/一线角色；最终用户审批
 	// 「AI 代人写操作」违背职责分立。若有人重新把这两个码授予 end_user，
 	// 此断言立即红。
+	// workflow:read 同锁（2026-11-17 菜单审计）：终态接口由 ticket:read 守卫，
+	// 该码是 /bpmn/ai/templates 管理面码，不应回到 end_user。
 	endUserGranted := make(map[string]bool, len(roleCodes["end_user"]))
 	for _, c := range roleCodes["end_user"] {
 		endUserGranted[c] = true
 	}
-	for _, forbidden := range []string{"ai:approve", "ai:write"} {
+	for _, forbidden := range []string{"ai:approve", "ai:write", "workflow:read"} {
 		if endUserGranted[forbidden] {
-			t.Errorf("end_user 不得持有 %s：最终用户不能审批/管理 AI 代人写操作（职责分立，Phase A 收紧）", forbidden)
+			t.Errorf("end_user 不得持有 %s：终态接口另有归属码（AI 审批=职责分立 Phase A；workflow:read=/bpmn/ai/templates 管理面码，旅程接口由 ticket:read 守卫）", forbidden)
 		}
 	}
 

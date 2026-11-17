@@ -134,14 +134,17 @@ func TestEndUserDoesNotHoldAdminScopedReads(t *testing.T) {
 	}
 }
 
-// TestRuleConfigCodesAreNotWorkflowRead 锁定规则配置面为什么不复用 workflow:read 作读守卫。
+// TestRuleConfigCodesAreNotWorkflowRead 锁定规则配置面不复用 workflow:read 作读守卫。
 //
 // 工单规则列表（automation/assignment）返回租户全部规则的条件、动作与创建人
 // （dto.AutomationRuleResponse 内嵌 creator 的 username/email/role），属运营配置面；
-// 而 workflow:read 同时挂着最终用户自己的旅程接口
-// （/tickets/cc/my、/tickets/:id/workflow/state-v2 等流转进度读），
-// end_user 必须持有它。若规则读也挂 workflow:read，等于给报障人开了整表枚举
-// 租户自动化规则与人员目录的口子——与本文件上一条测试的口径直接冲突。
+// 若规则读挂 workflow:read，等于给持该码的角色开了整表枚举租户自动化规则
+// 与人员目录的口子。
+//
+// 2026-11-17 更新：最终用户旅程接口（/tickets/cc/my、/tickets/:id/workflow/state-v2）
+// 实际由 ticket:read 守卫（router/ticket_routes.go），workflow:read 只守
+// /bpmn/ai/templates 模板管理面——end_user 不再需要也不应持有 workflow:read：
+// 它闸的工作流子菜单页面消费 bpmn:* API，授予只会造成「菜单可见、页面 403」。
 func TestRuleConfigCodesAreNotWorkflowRead(t *testing.T) {
 	roles := BuiltinRolePermissionCodes()
 	endUser := roles[string(domainrole.EndUser)]
@@ -150,8 +153,12 @@ func TestRuleConfigCodesAreNotWorkflowRead(t *testing.T) {
 	for _, c := range endUser {
 		granted[c] = true
 	}
-	if !granted["workflow:read"] {
-		t.Fatal("end_user 必须持有 workflow:read，否则工单详情流转进度与抄送列表不可读")
+	if granted["workflow:read"] {
+		t.Fatal("end_user 不应持有 workflow:read：终态旅程接口由 ticket:read 守卫，" +
+			"workflow:read 是 /bpmn/ai/templates 管理面码")
+	}
+	if !granted["ticket:read"] {
+		t.Fatal("end_user 必须持有 ticket:read：工单详情流转进度（state-v2）与抄送列表由它守卫")
 	}
 
 	defined := make(map[string]bool, len(Definitions()))

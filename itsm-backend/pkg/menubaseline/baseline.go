@@ -39,11 +39,11 @@ func MenuDefinitions() []MenuSpec {
 		// 父子语义不符（审计 3.3-⑨）。改名「客户与合同」：落地页仍是报障工作台
 		// （页内 Tab 即涵盖客户/合同/来源组织/排班），父级名与其下主数据子项自洽。
 		{Name: "客户与合同", Path: "/email-intake", Icon: "Inbox", ParentPath: "", PermissionCode: "email_intake:read", SortOrder: 65, Description: "AI 邮件报障工作台与客户主数据"},
-		{Name: "服务目录", Path: "/service-catalog", Icon: "BookOpen", ParentPath: "", PermissionCode: "service:read", SortOrder: 70, Description: "服务目录"},
+		{Name: "服务目录", Path: "/service-catalog", Icon: "BookOpen", ParentPath: "", PermissionCode: "service_catalog:read", SortOrder: 70, Description: "服务目录"},
 		{Name: "配置管理", Path: "/cmdb", Icon: "Database", ParentPath: "", PermissionCode: "cmdb:read", SortOrder: 75, Description: "配置管理数据库（CMDB）"},
 		{Name: "资产管理", Path: "/assets", Icon: "Monitor", ParentPath: "", PermissionCode: "asset:read", SortOrder: 80, Description: "IT 资产管理"},
 		{Name: "SLA 管理", Path: "/sla", Icon: "Calendar", ParentPath: "", PermissionCode: "sla:read", SortOrder: 90, Description: "SLA 监控与配置"},
-		{Name: "工作流", Path: "/workflow", Icon: "GitMerge", ParentPath: "", PermissionCode: "workflow:read", SortOrder: 100, Description: "工作流自动化"},
+		{Name: "工作流", Path: "/workflow", Icon: "GitMerge", ParentPath: "", PermissionCode: "bpmn:read", SortOrder: 100, Description: "工作流自动化"},
 		{Name: "AI 中心", Path: "/ai/chat", Icon: "Bot", ParentPath: "", PermissionCode: "ai:read", SortOrder: 110, Description: "AI 助手与 AI 能力中心"},
 		// 审批待办只保留一个入口：/approvals/pending 是 redirect 到 /approvals 的兼容壳，
 		// 菜单直接指向 /approvals，避免「待我审批」「审批中心」两个菜单一个目的地。
@@ -132,9 +132,12 @@ func MenuDefinitions() []MenuSpec {
 
 		// ===== 子菜单：服务目录 =====
 		// 「-目录」补丁式后缀不专业（审计报告 3.3-②）；父菜单即服务目录，子项名「目录审批」语义自明。
-		{Name: "目录审批", Path: "/service-catalog/approvals", Icon: "CheckCircle", ParentPath: "/service-catalog", PermissionCode: "service:read", SortOrder: 72},
+		{Name: "目录审批", Path: "/service-catalog/approvals", Icon: "CheckCircle", ParentPath: "/service-catalog", PermissionCode: "service_request:read", SortOrder: 72},
 		// ===== 子菜单：服务目录 · 配置面（2026-10-25 从系统管理归位）=====
-		{Name: "服务目录管理", Path: "/admin/service-catalogs", Icon: "Boxes", ParentPath: "/service-catalog", PermissionCode: "service_catalog:read", SortOrder: 80},
+		// 管理端配置页走写码闸：service_catalog:read 是终端用户浏览目录的
+		// 只读码（roles.go 明确授予 end_user），用它闸管理页会让最终用户
+		// 看到管理菜单（页内写操作全部 403）。
+		{Name: "服务目录管理", Path: "/admin/service-catalogs", Icon: "Boxes", ParentPath: "/service-catalog", PermissionCode: "service_catalog:write", SortOrder: 80},
 
 		// ===== 子菜单：CMDB =====
 		{Name: "配置项列表", Path: "/cmdb/cis", Icon: "Server", ParentPath: "/cmdb", PermissionCode: "cmdb:read", SortOrder: 751},
@@ -162,12 +165,17 @@ func MenuDefinitions() []MenuSpec {
 		{Name: "SLA 定义", Path: "/admin/sla-definitions", Icon: "Clock", ParentPath: "/sla", PermissionCode: "sla:write", SortOrder: 115},
 
 		// ===== 子菜单：工作流 =====
-		{Name: "流程设计器", Path: "/workflow/designer", Icon: "Edit", ParentPath: "/workflow", PermissionCode: "workflow:write", SortOrder: 102},
-		{Name: "流程实例", Path: "/workflow/instances", Icon: "Play", ParentPath: "/workflow", PermissionCode: "workflow:read", SortOrder: 103},
-		{Name: "版本管理", Path: "/workflow/versions", Icon: "History", ParentPath: "/workflow", PermissionCode: "workflow:write", SortOrder: 104},
-		{Name: "监控仪表盘", Path: "/workflow/dashboard", Icon: "Activity", ParentPath: "/workflow", PermissionCode: "workflow:read", SortOrder: 105},
+		// 菜单码与页面消费对齐（2026-11-17 审计）：工作流子页消费
+		// /bpmn/process-definitions|instances|stats|tasks|versions（守卫
+		// bpmn:read/write），旧 workflow:read/write 仅守 /bpmn/ai/templates，
+		// 曾导致持 bpmn 码的角色菜单不可见、持 workflow 码的 end_user
+		// 菜单可见但页面 403。同组「流程 SLA 监控」此前已用 bpmn:read。
+		{Name: "流程设计器", Path: "/workflow/designer", Icon: "Edit", ParentPath: "/workflow", PermissionCode: "bpmn:write", SortOrder: 102},
+		{Name: "流程实例", Path: "/workflow/instances", Icon: "Play", ParentPath: "/workflow", PermissionCode: "bpmn:read", SortOrder: 103},
+		{Name: "版本管理", Path: "/workflow/versions", Icon: "History", ParentPath: "/workflow", PermissionCode: "bpmn:write", SortOrder: 104},
+		{Name: "监控仪表盘", Path: "/workflow/dashboard", Icon: "Activity", ParentPath: "/workflow", PermissionCode: "bpmn:read", SortOrder: 105},
 		// 图标用 Gauge（瓶颈仪表语义），消除与工单统计的 BarChart3 撞车（审计报告 3.3-⑧）。
-		{Name: "节点瓶颈分析", Path: "/workflow/bottlenecks", Icon: "Gauge", ParentPath: "/workflow", PermissionCode: "workflow:read", SortOrder: 106},
+		{Name: "节点瓶颈分析", Path: "/workflow/bottlenecks", Icon: "Gauge", ParentPath: "/workflow", PermissionCode: "bpmn:read", SortOrder: 106},
 		// 与 /admin/tickets/automation-rules 是同一个配置面的两个入口，按管理面取
 		// automation_rule:write：只读角色拿到菜单后每个写按钮都会 403。
 		{Name: "流程触发器", Path: "/workflow/automation", Icon: "Zap", ParentPath: "/workflow", PermissionCode: "automation_rule:write", SortOrder: 107},
@@ -178,7 +186,7 @@ func MenuDefinitions() []MenuSpec {
 		// 会让用户在两处看到同一份待办（审计 3.3-③ 四入口问题的去重动作）。
 		{Name: "操作日志", Path: "/workflow/audit", Icon: "ClipboardList", ParentPath: "/workflow", PermissionCode: "audit:read", SortOrder: 109},
 		// ===== 子菜单：工作流 · 配置面（2026-10-25 从系统管理归位）=====
-		{Name: "工作流配置", Path: "/admin/workflows", Icon: "GitBranch", ParentPath: "/workflow", PermissionCode: "workflow:write", SortOrder: 120},
+		{Name: "工作流配置", Path: "/admin/workflows", Icon: "GitBranch", ParentPath: "/workflow", PermissionCode: "bpmn:write", SortOrder: 120},
 		// 「审批链」易与顶级「我的待办」混淆；此页是审批链定义/节点的配置面，
 		// 与「工作流配置」同轴，改名点明配置语义（审计 3.3-③）。
 		{Name: "审批链配置", Path: "/admin/approval-chains", Icon: "Link", ParentPath: "/workflow", PermissionCode: "approval:write", SortOrder: 125},

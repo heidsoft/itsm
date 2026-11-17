@@ -63,9 +63,11 @@ func (c *DashboardHandler) failInternal(ctx *gin.Context, action string, err err
 func (c *DashboardHandler) RegisterRoutes(r *gin.RouterGroup) {
 	dashboard := r.Group("/bpmn/dashboard")
 	{
-		// 仪表盘
-		dashboard.GET("/metrics", c.GetDashboardMetrics)
-		dashboard.GET("/process/:key/metrics", c.GetProcessMetrics)
+		// 仪表盘与统计面统一挂 bpmn:read：这些都是跨流程的运营指标，
+		// 只挂认证会让任意最终用户枚举租户流程运行画像。审计日志
+		// 路由此前已挂 bpmn:read，这里补齐同家族其余读端点。
+		dashboard.GET("/metrics", middleware.RequirePermission("bpmn", "read"), c.GetDashboardMetrics)
+		dashboard.GET("/process/:key/metrics", middleware.RequirePermission("bpmn", "read"), c.GetProcessMetrics)
 
 		// 审计日志：本家族是该用例唯一 HTTP 表面，读取统一挂 bpmn:read 权限门。
 		// 时间线的唯一表面是 /bpmn/monitoring/instances/:instanceId/timeline；
@@ -75,14 +77,14 @@ func (c *DashboardHandler) RegisterRoutes(r *gin.RouterGroup) {
 		dashboard.GET("/audit-logs/user/:userId", middleware.RequirePermission("bpmn", "read"), c.GetUserActivity)
 
 		// SLA
-		dashboard.GET("/sla/violations", c.GetSLAViolations)
-		dashboard.GET("/sla/compliance", c.GetSLACompliance)
+		dashboard.GET("/sla/violations", middleware.RequirePermission("bpmn", "read"), c.GetSLAViolations)
+		dashboard.GET("/sla/compliance", middleware.RequirePermission("bpmn", "read"), c.GetSLACompliance)
 
 		// 租户统计
-		dashboard.GET("/tenant/stats", c.GetTenantStats)
+		dashboard.GET("/tenant/stats", middleware.RequirePermission("bpmn", "read"), c.GetTenantStats)
 
 		// 瓶颈分析
-		dashboard.GET("/bottlenecks", c.GetBottleneckAnalysis)
+		dashboard.GET("/bottlenecks", middleware.RequirePermission("bpmn", "read"), c.GetBottleneckAnalysis)
 	}
 }
 
