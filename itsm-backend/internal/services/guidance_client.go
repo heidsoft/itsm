@@ -28,6 +28,16 @@ func NewGuidanceClient(baseURL string, logger *zap.SugaredLogger) *GuidanceClien
 	if baseURL == "" {
 		baseURL = "http://localhost:8091"
 	}
+	// Phase A（2026-11-17）：sidecar 已改为 fail-closed——未配令牌时非公开
+	// 端点一律 401。此时本客户端不发 X-Service-Token，所有 triage 调用都会
+	// 失败并走降级路径。启动即告警（不阻断：dev 本地 sidecar 可用
+	// AI_SERVICE_AUTH_MODE=disabled 显式降级），生产必须配置 AI_SERVICE_TOKEN。
+	if tok := os.Getenv("AI_SERVICE_TOKEN"); tok == "" && logger != nil {
+		logger.Errorw(
+			"AI_SERVICE_TOKEN is not set: guidance sidecar is FAIL-CLOSED and will reject every triage call (401). Set AI_SERVICE_TOKEN on both itsm-backend and itsm-ai-service (dev override: AI_SERVICE_AUTH_MODE=disabled on the sidecar).",
+			"component", "guidance_client",
+		)
+	}
 	return &GuidanceClient{
 		baseURL: baseURL,
 		client: &http.Client{

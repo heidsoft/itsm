@@ -160,6 +160,8 @@ func BuiltinRolePermissionCodes() map[string][]string {
 			"group:read", "group:write", "org:read", "org:write",
 			"project:read", "project:write",
 			"application:read", "application:write", "ai:read",
+			// Phase A（2026-11-17）：部门经理可审批 AI 工具调用（L1 审批角色语义）。
+			"ai:approve",
 		},
 		// IT管理员（users.role=it_admin 对齐；服务请求 L2 审批角色）：
 		// ITIL 流程运营所有者——工单类型、SLA、流程绑定与目录配置的落地者。
@@ -193,6 +195,8 @@ func BuiltinRolePermissionCodes() map[string][]string {
 			"dashboard:read", "group:read", "approval:read",
 			// AI 分派建议/摘要是 IT 运营一线工具，其余运营角色（agent/manager/end_user）均持 ai:read。
 			"ai:read",
+			// Phase A（2026-11-17）：IT 管理员可审批 AI 工具调用（L2 审批角色语义）。
+			"ai:approve",
 		},
 		// 最终用户：自助门户最小集——只覆盖「我的工单/服务请求/知识库/通知/仪表盘/AI」
 		// 自助旅程。2026-10-26 收敛：旧口径「其余资源一律只读」让 end_user 拿着
@@ -207,7 +211,11 @@ func BuiltinRolePermissionCodes() map[string][]string {
 			"knowledge:read", "service_catalog:read",
 			"service_request:read", "service_request:write",
 			"notification:read",
-			"notification:write", "dashboard:read", "ai:read", "ai:write",
+			"notification:write", "dashboard:read", "ai:read",
+			// Phase A（2026-11-17）：移除 ai:write。该码历史上同时覆盖「删会话/写反馈」
+			// 与「审批 AI 工具调用」，后者已拆为 ai:approve；最终用户不应审批
+			// AI 代人的写操作（职责分立）。删除会话/反馈等自助操作由存量租户
+			// 按需自授 ai:write（升级说明见 UPGRADE.md）。
 		},
 		// 租户管理员（users.role=admin 对齐）。middleware 的 admin 兜底表已删除，
 		// 本条目即 admin 权限的唯一来源；缺条目会让 roles 表 admin 行成为空集，
@@ -235,6 +243,8 @@ func BuiltinRolePermissionCodes() map[string][]string {
 			"alerts:read", "alerts:write",
 			"audit:read",
 			"ai:read", "ai:write",
+			// Phase A（2026-11-17）：租管可审批 AI 工具调用（历史语义保留）。
+			"ai:approve",
 			"role:read", "role:write", "role:delete",
 			"permission:read",
 			"system_config:read", "system_config:write",

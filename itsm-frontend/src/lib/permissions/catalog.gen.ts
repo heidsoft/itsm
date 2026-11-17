@@ -122,6 +122,7 @@ export const PERMISSION_CATALOG = [
   { code: "audit:read", resource: "audit", action: "read", name: "查看审计", description: "查看审计日志" },
   { code: "ai:read", resource: "ai", action: "read", name: "查看AI能力", description: "查看AI能力和审计" },
   { code: "ai:write", resource: "ai", action: "write", name: "管理AI能力", description: "调用和管理AI能力" },
+  { code: "ai:approve", resource: "ai", action: "approve", name: "审批AI工具调用", description: "审批 AI agent 发起的工具调用请求" },
   { code: "connector:write", resource: "connector", action: "write", name: "管理连接器", description: "管理连接器配置" },
   { code: "connector:read", resource: "connector", action: "read", name: "查看连接器", description: "查看连接器配置与健康状态" },
   { code: "email_intake:read", resource: "email_intake", action: "read", name: "查看邮件报障", description: "查看邮件报障会话与分析" },
@@ -378,6 +379,7 @@ export const PERM = {
   "ai": {
     "read": "ai:read",
     "write": "ai:write",
+    "approve": "ai:approve",
   },
   "connector": {
     "write": "connector:write",

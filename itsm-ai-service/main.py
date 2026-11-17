@@ -11,9 +11,11 @@ import logging
 from config_loader import (
     get_config,
     llm_is_configured,
+    service_token,
     service_token_enabled,
     verify_service_token,
 )
+import config_loader  # noqa: F401  # Phase A：health 三态需要 service_token()
 from api import triage, rca, risk, guidance
 
 # 配置日志
@@ -49,9 +51,16 @@ async def lifespan(app: FastAPI):
     # 即使只 expose 内网，也要让运维从日志和 /health 看得到这个降级态。
     if not service_token_enabled():
         logger.error(
-            "AI_SERVICE_TOKEN is not set: all AI sidecar endpoints are UNAUTHENTICATED. "
-            "Set AI_SERVICE_TOKEN on both itsm-backend and itsm-ai-service to enable "
+            "AI_SERVICE_AUTH_MODE is explicitly set to a dev value: all AI sidecar "
+            "endpoints are UNAUTHENTICATED. This must never be used in production. "
+            "Unset AI_SERVICE_AUTH_MODE and set AI_SERVICE_TOKEN to re-enable "
             "X-Service-Token enforcement."
+        )
+    elif not config_loader.service_token():
+        logger.error(
+            "AI_SERVICE_TOKEN is not set: sidecar is running FAIL-CLOSED — every "
+            "non-public endpoint returns 401. Set AI_SERVICE_TOKEN on both "
+            "itsm-backend and itsm-ai-service to enable X-Service-Token enforcement."
         )
     else:
         logger.info("AI sidecar service-token authentication is enabled")
@@ -149,7 +158,13 @@ async def health_check():
             "reason": "" if configured else "LLM_API_KEY not configured; keyword fallback only",
         },
         "auth": {
-            "serviceToken": "enabled" if service_token_enabled() else "disabled",
+            # Phase A：三态——enabled（令牌生效）/ fail-closed（鉴权开启但未配令牌，
+            # 非公开端点全 401）/ disabled（显式 dev 降级）。
+            "serviceToken": (
+                "enabled"
+                if service_token_enabled() and config_loader.service_token()
+                else ("fail-closed" if service_token_enabled() else "disabled")
+            ),
         },
     }
 

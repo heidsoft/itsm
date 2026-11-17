@@ -62,7 +62,7 @@ func TestApproveToolEnqueuesDurableExecution(t *testing.T) {
 	ctx := context.Background()
 	inv := createPendingInvocation(t, client, tenantID, userID)
 
-	state, err := svc.ApproveTool(ctx, inv.ID, tenantID, userID, true, "允许执行")
+	state, err := svc.ApproveTool(ctx, inv.ID, tenantID, userID, "", true, "允许执行")
 	require.NoError(t, err)
 	require.Equal(t, "approved", state)
 
@@ -93,10 +93,10 @@ func TestApproveToolRejectsDuplicateDecision(t *testing.T) {
 	ctx := context.Background()
 	inv := createPendingInvocation(t, client, tenantID, userID)
 
-	_, err := svc.ApproveTool(ctx, inv.ID, tenantID, userID, true, "第一次")
+	_, err := svc.ApproveTool(ctx, inv.ID, tenantID, userID, "", true, "第一次")
 	require.NoError(t, err)
 
-	_, err = svc.ApproveTool(ctx, inv.ID, tenantID, userID, true, "第二次")
+	_, err = svc.ApproveTool(ctx, inv.ID, tenantID, userID, "", true, "第二次")
 	require.Error(t, err)
 	var bizErr *common.BusinessError
 	require.True(t, errors.As(err, &bizErr))
@@ -116,7 +116,7 @@ func TestRejectToolWritesNoCommand(t *testing.T) {
 	ctx := context.Background()
 	inv := createPendingInvocation(t, client, tenantID, userID)
 
-	state, err := svc.ApproveTool(ctx, inv.ID, tenantID, userID, false, "风险过高")
+	state, err := svc.ApproveTool(ctx, inv.ID, tenantID, userID, "", false, "风险过高")
 	require.NoError(t, err)
 	require.Equal(t, "rejected", state)
 
@@ -178,7 +178,7 @@ func TestApproveToolIsTenantScoped(t *testing.T) {
 		SaveX(ctx)
 	inv := createPendingInvocation(t, client, otherTenant.ID, userID)
 
-	_, err := svc.ApproveTool(ctx, inv.ID, tenantID, userID, true, "")
+	_, err := svc.ApproveTool(ctx, inv.ID, tenantID, userID, "", true, "")
 	require.Error(t, err)
 	require.True(t, ent.IsNotFound(err), "跨租户审批必须表现为资源不存在")
 
@@ -186,4 +186,31 @@ func TestApproveToolIsTenantScoped(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, "pending", stored.ApprovalState)
 	require.Zero(t, client.OperationalCommand.Query().CountX(ctx))
+}
+
+// Phase A（2026-11-17）审批人资格矩阵：
+// 路由 ai:approve 之外，service 层还要求审批人持有目标工具的 resource:action。
+// 空角色（测试/内部调用）沿用旧语义直接放行；super_admin 由 HasResourcePermission
+// 直通。拒绝票不校验资格（宽进严出：叫停不需要资格，放行才需要）。
+func TestApproveToolRequiresToolPermissionWhenRolePresent(t *testing.T) {
+	client, tenantID, userID, svc := newToolDecisionFixture(t)
+	ctx := context.Background()
+	inv := createPendingInvocation(t, client, tenantID, userID) // update_ticket → ticket:write
+
+	// 角色无 ticket:write（end_user 只有读码）→ 放行票必须被拒。
+	_, err := svc.ApproveTool(ctx, inv.ID, tenantID, userID, "end_user", true, "我想放行")
+	require.Error(t, err, "审批人不持目标工具权限时放行票必须被拒")
+	var bizErr *common.BusinessError
+	require.True(t, errors.As(err, &bizErr))
+	require.Equal(t, common.ConflictCode, bizErr.Code)
+
+	stored, err := client.ToolInvocation.Get(ctx, inv.ID)
+	require.NoError(t, err)
+	require.Equal(t, "pending", stored.ApprovalState, "资格不符不得推进审批状态")
+	require.Zero(t, client.OperationalCommand.Query().CountX(ctx), "资格不符不得入箱执行")
+
+	// 拒绝票不受资格校验限制：任何角色都可以叫停 AI。
+	state, err := svc.ApproveTool(ctx, inv.ID, tenantID, userID, "end_user", false, "风险过高")
+	require.NoError(t, err, "拒绝票不做资格校验（宽进严出）")
+	require.Equal(t, "rejected", state)
 }

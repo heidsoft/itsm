@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"go.uber.org/zap"
+	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/ticket"
@@ -348,7 +349,31 @@ func (s *Service) recordToolAudit(ctx context.Context, tenantID, userID int, rol
 // ApproveTool 审批一次工具调用。
 // 审批状态与待执行任务在同一事务内落库（见 Repository.DecideToolInvocation），
 // 因此通过审批不会再因为进程退出或队列满而丢失执行。
-func (s *Service) ApproveTool(ctx context.Context, id int, tenantID, userID int, approve bool, reason string) (string, error) {
+//
+// Phase A（2026-11-17）审批人资格矩阵（路由 ai:approve 之外的二次校验）：
+// 审批人须持有目标工具的 resource:action 权限——只会点按钮而无权执行
+// 该工具的人，不应有权放行 AI 代人执行。拒绝票不改变任何业务状态，
+// 不做资格校验（宽进严出：任何人可叫停 AI，放行才需资格）。
+func (s *Service) ApproveTool(ctx context.Context, id int, tenantID, userID int, role string, approve bool, reason string) (string, error) {
+	if approve {
+		inv, err := s.repo.GetToolInvocation(ctx, id, tenantID)
+		if err != nil {
+			return "", err
+		}
+		toolDef := s.tools.GetTool(inv.ToolName)
+		if toolDef == nil || toolDef.Resource == "" || toolDef.Action == "" {
+			// 工具已下线或定义漏配：fail-closed，宁可不批也不能绕过资格校验。
+			return "", common.NewBusinessError(common.ConflictCode,
+				fmt.Sprintf("工具 %s 定义缺失，无法校验审批资格，拒绝处理", inv.ToolName), "")
+		}
+		if role != "" && !middleware.HasResourcePermission(ctx, s.entClient, role, toolDef.Resource, toolDef.Action, tenantID) {
+			s.logger.Warnw("AI tool approval denied: approver lacks tool permission",
+				"user_id", userID, "tenant_id", tenantID, "role", role,
+				"tool", inv.ToolName, "resource", toolDef.Resource, "action", toolDef.Action)
+			return "", common.NewBusinessError(common.ConflictCode,
+				fmt.Sprintf("审批人须持有 %s:%s 权限才能放行该工具", toolDef.Resource, toolDef.Action), "")
+		}
+	}
 	// 返回仓储层的真实状态：双人审批的第一票是 awaiting_second，
 	// 不能对外谎报 approved（否则前端会以为操作已放行）。
 	decided, err := s.repo.DecideToolInvocation(ctx, id, tenantID, userID, approve, reason)

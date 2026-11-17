@@ -3837,6 +3837,18 @@ cd itsm-frontend && npm run test:unit -- --runTestsByPath src/lib/api/__tests__/
 
 权限码不变（`problem:read` / `problem:write`）。无 DDL、无数据迁移——被移除的桩从未写入任何数据，存量问题关联（Ent 边）不受影响。
 
+### 1.105 AI Agent 权限适配 Phase A：审批权拆码、end_user 收权、服务间令牌 fail-closed（2026-11-17，破坏性：权限收窄 + 部署必填项）
+
+三项安全收紧同时落地，自部署用户须逐一核对：
+
+**① `ai:approve` 拆码与 end_user 收权。** AI 工具审批端点 `POST /api/v1/agent/tools/{id}/approve` 的权限从 `ai:write` 改为新增的 `ai:approve`；内置种子里 `end_user` 不再持有 `ai:write`（也不再持有 `ai:approve`）——最终用户不应审批「AI 代人写操作」。`admin` / `manager` / `it_admin` 显式授予 `ai:approve`，`super_admin` / `sysadmin` 经全码自然持有。**影响**：end_user 的「删除 AI 会话（`DELETE /ai/conversations/:id`）、删除分析结果、`POST /ai/feedback`、`POST /ai/audit`、`PATCH /ai/audit-logs/:id`」将返回 403；确有此需求的存量租户由管理员显式授予 `ai:write`（这些端点仍挂 `ai:write`）。此外 service 层新增**审批人资格矩阵**：放行票的审批人须持有目标工具的 `resource:action` 权限（如审批 `create_ticket` 须持 `ticket:write`）；拒绝票不受资格限制。
+
+**② `POST /api/v1/ai/tickets/{id}/analyze` 补双权限。** 该端点从仅 `ai:read` 改为 `ai:read` + `ticket:read`（与 investigate / incident analyze 同口径）。持 `ai:read` 但无 `ticket:read` 的角色此后 403。
+
+**③ 服务间令牌 fail-closed（部署必读）。** itsm-ai-service 从「未配 `AI_SERVICE_TOKEN` = 不启用鉴权（放行）」收紧为「未配令牌 = 除 `/health` 等公开路径外全部 401」。`docker-compose.prod.yml` 已将 `AI_SERVICE_TOKEN`（backend 与 ai-service 两处）与 `ITSM_BACKEND_TOKEN` 改为**必填**——缺失时 compose 拒绝启动。**升级动作**：在 `.env.prod` 配置三个变量（`AI_SERVICE_TOKEN` 两侧同值，建议 ≥32 字符随机串，如 `openssl rand -hex 32`）。本地开发如需旧行为，在 sidecar 侧显式设置 `AI_SERVICE_AUTH_MODE=disabled`（生产禁止，启动日志与 `/health` 的 `auth.serviceToken=disabled` 会持续暴露该降级态）。`/health` 的 `auth.serviceToken` 从二态改为三态：`enabled` / `fail-closed`（缺令牌）/ `disabled`（显式降级）。
+
+无 DDL；权限种子在下次启动播种时自动收敛（`ai:approve` 入库、end_user 的 `ai:write` 撤销由播种器按权威源同步）。
+
 ## 2. 环境变量变更
 
 本次升级**移除了多个"幽灵配置项"**（在示例文件中声明但代码/Compose 从不读取，用户配置了也不生效），并修正了一个 Grafana 密码安全缺陷。
@@ -3867,6 +3879,14 @@ cd itsm-frontend && npm run test:unit -- --runTestsByPath src/lib/api/__tests__/
 
 ### 2.3 `SERVER_PORT` 仍有效（保留）
 `SERVER_PORT` 通过 `itsm-backend/config.yaml.example` 的 `server.port: ${SERVER_PORT:8080}` 被后端消费，**保留**，请勿删除。`config.yaml` 由后端 `config.LoadConfig()` 加载并做环境变量替换。
+
+### 2.4 新增必填：`AI_SERVICE_TOKEN` / `ITSM_BACKEND_TOKEN`；可选 dev 降级：`AI_SERVICE_AUTH_MODE`（2026-11-17，Phase A）
+
+- **`AI_SERVICE_TOKEN`（必填，生产）**：backend 与 itsm-ai-service 共享的服务间令牌（`X-Service-Token` 头），两侧同值。`docker-compose.prod.yml` 中为 `:?` 必填——缺失时 compose 拒绝启动。sidecar 侧未配置令牌时已从「无鉴权放行」收紧为「非公开端点全部 401（fail-closed）」，后端 triage 调用会全部失败并走降级路径。
+- **`ITSM_BACKEND_TOKEN`（必填，生产）**：sidecar 回连后端（`/api/v1/ai/*`）的 Bearer 令牌。缺失时知识检索/工单分析回连 401、相关 AI 能力降级。
+- **`AI_SERVICE_AUTH_MODE`（可选，仅本地开发）**：设为 `disabled` 时 sidecar 显式降级为无鉴权（等价旧行为）。生产禁止使用；该降级态会在启动日志打 ERROR，并在 `/health` 的 `auth.serviceToken` 持续暴露为 `disabled`。其余任何取值（含未设置）均为鉴权开启。
+
+生成建议：`openssl rand -hex 32`。`.env.prod` 注入，不进镜像、不进 git。
 
 ---
 

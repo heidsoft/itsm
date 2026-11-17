@@ -2690,6 +2690,15 @@ Authorization: Bearer <accessToken>
 （AI 发起双人审批）、`awaiting_second`（首审已过待二审）；AI 发起的调用
 **发起人不可自批**，二审必须来自不同审批人。
 
+**AI 工具审批的权限与资格（Phase A，2026-11-17）**：`POST /api/v1/agent/tools/{id}/approve`
+要求 `ai:approve` 权限码（自 `ai:write` 拆出；`end_user` 不再默认持有）。
+除路由权限外，service 层还有**审批人资格矩阵**二次校验：放行票的审批人必须
+持有目标工具的 `resource:action` 权限（例如审批 `create_ticket` 须持
+`ticket:write`）；工具定义缺失或漏配 Resource/Action 时 fail-closed 拒绝处理。
+拒绝票不做资格校验（宽进严出：任何持 `ai:approve` 的用户都可叫停 AI）。
+`POST /api/v1/ai/tickets/{id}/analyze` 同批补 `ticket:read` 双权限（与
+investigate / incident analyze 同口径）。
+
 **前端码空间单点化**：前端权限码只有一份构建期快照
 `itsm-frontend/src/lib/permissions/catalog.gen.ts`，由
 `cd itsm-backend && go run ./cmd/authz-gen` 从 `internal/authz/catalog.go`

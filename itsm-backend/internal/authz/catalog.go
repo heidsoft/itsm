@@ -162,6 +162,11 @@ func Definitions() []PermissionDef {
 		{"audit:read", "查看审计", "audit", "read", "查看审计日志"},
 		{"ai:read", "查看AI能力", "ai", "read", "查看AI能力和审计"},
 		{"ai:write", "管理AI能力", "ai", "write", "调用和管理AI能力"},
+		// Phase A（2026-11-17）：审批权从 ai:write 中拆出。
+		// end_user 此前持 ai:write 即可审批 AI 工具调用（POST /agent/tools/:id/approve），
+		// 最终用户审批「AI 代人写操作」违背职责分立。ai:approve 只授管理/一线
+		// 处理角色，且 handler 内还有「须持目标工具 resource:action」的二次校验。
+		{"ai:approve", "审批AI工具调用", "ai", "approve", "审批 AI agent 发起的工具调用请求"},
 		{"connector:write", "管理连接器", "connector", "write", "管理连接器配置"},
 		{"connector:read", "查看连接器", "connector", "read", "查看连接器配置与健康状态"},
 		{"email_intake:read", "查看邮件报障", "email_intake", "read", "查看邮件报障会话与分析"},

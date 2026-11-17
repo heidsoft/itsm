@@ -71,7 +71,10 @@ func TestBuiltinRolePermissionCodes_Guard(t *testing.T) {
 			"knowledge:read", "service_catalog:read",
 			"service_request:read", "service_request:write",
 			"notification:read", "notification:write",
-			"dashboard:read", "ai:read", "ai:write",
+			// Phase A（2026-11-17）：end_user 不再持 ai:write——审批权已拆为
+			// ai:approve（最终用户不得审批 AI 代人写操作）。回归锁反向断言见
+			// TestEndUserCannotApproveAITools。
+			"dashboard:read", "ai:read",
 		},
 		// 规则配置面（自动化/分配规则）从 system_config:* 迁出后，管理角色必须持有新码：
 		// 一旦回收，租管与 it_admin 的规则页会重新变成「菜单可见、接口 403」。
@@ -88,6 +91,20 @@ func TestBuiltinRolePermissionCodes_Guard(t *testing.T) {
 			if !granted[c] {
 				t.Errorf("角色 %q 缺少必须持有的权限码 %q", role, c)
 			}
+		}
+	}
+
+	// Phase A（2026-11-17）反向锁：end_user 不得持有 AI 审批/写码。
+	// ai:approve 已从 ai:write 拆出并只授管理/一线角色；最终用户审批
+	// 「AI 代人写操作」违背职责分立。若有人重新把这两个码授予 end_user，
+	// 此断言立即红。
+	endUserGranted := make(map[string]bool, len(roleCodes["end_user"]))
+	for _, c := range roleCodes["end_user"] {
+		endUserGranted[c] = true
+	}
+	for _, forbidden := range []string{"ai:approve", "ai:write"} {
+		if endUserGranted[forbidden] {
+			t.Errorf("end_user 不得持有 %s：最终用户不能审批/管理 AI 代人写操作（职责分立，Phase A 收紧）", forbidden)
 		}
 	}
 

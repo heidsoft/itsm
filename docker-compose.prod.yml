@@ -267,8 +267,9 @@ services:
       # （默认 localhost:8091；生产由该服务接管，triage 走受限生成路径）
       - GUIDANCE_URL=${GUIDANCE_URL:-http://itsm-ai-service:8000}
       # A4：与 itsm-ai-service 共用的服务间令牌（X-Service-Token）。
-      # 两侧同时为空时 sidecar 不启用鉴权，启动日志与 /health 会显式告警。
-      - AI_SERVICE_TOKEN=${AI_SERVICE_TOKEN:-}
+      # Phase A（2026-11-17）：sidecar 已 fail-closed——令牌为空时非公开端点
+      # 全部 401，AI 分诊直接不可用。生产必须配置（.env.prod 注入）。
+      - AI_SERVICE_TOKEN=${AI_SERVICE_TOKEN:?AI_SERVICE_TOKEN must be set in prod (sidecar is fail-closed without it)}
 
       # 告警通知
       - SMTP_HOST=${SMTP_HOST:-}
@@ -332,7 +333,9 @@ services:
       - LOG_LEVEL=${AI_LOG_LEVEL:-info}
       - CORS_ORIGINS=http://itsm-frontend:3000,http://nginx
       # A4：非空时所有非 /health 端点要求 X-Service-Token；后端须注入同一个值。
-      - AI_SERVICE_TOKEN=${AI_SERVICE_TOKEN:-}
+      # Phase A（2026-11-17）：sidecar 已 fail-closed——此处置空会让 AI 分诊全 401，
+      # 生产必须配置（与后端 AI_SERVICE_TOKEN 同值）。
+      - AI_SERVICE_TOKEN=${AI_SERVICE_TOKEN:?AI_SERVICE_TOKEN must be set in prod (sidecar is fail-closed without it)}
       # 直连 LLM provider（OpenAI 兼容）。与后端共用同一套 LLM 凭据。
       - LLM_PROVIDER=${LLM_PROVIDER:-openai}
       - LLM_MODEL=${LLM_MODEL:-gpt-4}
@@ -343,7 +346,10 @@ services:
       # 注意与 LLM_BASE_URL 语义不同：那个是厂商端点，这个是本系统后端。
       # 缺省值（http://localhost:8080）在容器网络里必然连不上，必须显式指向服务名。
       - ITSM_BACKEND_URL=${ITSM_BACKEND_URL:-http://itsm-backend:8090}
-      - ITSM_BACKEND_TOKEN=${ITSM_BACKEND_TOKEN:-}
+      # Phase A：回连令牌与 AI_SERVICE_TOKEN 同源同值即可（后端当前按普通 JWT 消费；
+      # Phase B service principal 落地后语义收紧）。置空会导致回连 401，知识检索/
+      # 工单分析降级，生产必须配置。
+      - ITSM_BACKEND_TOKEN=${ITSM_BACKEND_TOKEN:?ITSM_BACKEND_TOKEN must be set in prod (sidecar backend callbacks fail without it)}
       - BACKEND_TIMEOUT=${BACKEND_TIMEOUT:-120}
     expose:
       - "8000"

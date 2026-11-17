@@ -21,7 +21,13 @@ func SetupAIRoutes(tenant *gin.RouterGroup, h *aiHandler.Handler) {
 		aiGrp.DELETE("/analysis-results/:id", middleware.RequirePermission("ai", "write"), h.DeleteAIAnalysisResult)
 		aiGrp.POST("/analytics", middleware.RequirePermission("ai", "read"), h.GetDeepAnalytics)
 		aiGrp.POST("/predictions", middleware.RequirePermission("ai", "read"), h.GetTrendPrediction)
-		aiGrp.POST("/tickets/:id/analyze", middleware.RequirePermission("ai", "read"), h.AnalyzeTicket)
+		aiGrp.POST("/tickets/:id/analyze",
+			// Phase A（2026-11-17）：补 ticket:read 双权限，与 investigate/incident analyze
+			// 同口径——持 ai:read 但无 ticket:read 的角色此前可触发任意租户内工单分析。
+			middleware.RequirePermission("ai", "read"),
+			middleware.RequirePermission("ticket", "read"),
+			h.AnalyzeTicket,
+		)
 		aiGrp.POST("/incidents/:id/analyze",
 			middleware.RequirePermission("ai", "read"),
 			middleware.RequirePermission("incident", "read"),
@@ -58,6 +64,9 @@ func SetupAIRoutes(tenant *gin.RouterGroup, h *aiHandler.Handler) {
 		agentGrp.GET("/tools/:id", middleware.RequirePermission("ai", "read"), h.GetToolInvocation)
 		// 审批人待办列表：GET /api/v1/agent/tools/invocations?state=pending
 		agentGrp.GET("/tools/invocations", middleware.RequirePermission("ai", "read"), h.ListToolInvocations)
-		agentGrp.POST("/tools/:id/approve", middleware.RequirePermission("ai", "write"), h.ApproveTool)
+		// Phase A（2026-11-17）：审批权从 ai:write 拆出为 ai:approve。
+		// end_user 此前持 ai:write 即可审批 AI 工具调用，违背职责分立；
+		// handler 内还有「审批人须持目标工具 resource:action」二次校验。
+		agentGrp.POST("/tools/:id/approve", middleware.RequirePermission("ai", "approve"), h.ApproveTool)
 	}
 }

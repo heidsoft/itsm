@@ -521,7 +521,7 @@ func precheckRoutePermissions() map[string]map[string]Permission {
 			"/api/v1/admin/skills/*/invoke":                          {Resource: "ai", Action: "read"},
 			"/api/v1/admin/skills/*/promote":                         {Resource: "marketplace", Action: "write"},
 			"/api/v1/admin/sso/providers":                            {Resource: "sso", Action: "write"},
-			"/api/v1/agent/tools/*/approve":                          {Resource: "ai", Action: "write"},
+			"/api/v1/agent/tools/*/approve":                          {Resource: "ai", Action: "approve"},
 			"/api/v1/agent/tools/execute":                            {Resource: "ai", Action: "read"},
 			"/api/v1/ai/analytics":                                   {Resource: "ai", Action: "read"},
 			"/api/v1/ai/audit":                                       {Resource: "ai", Action: "write"},

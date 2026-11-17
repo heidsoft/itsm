@@ -1014,8 +1014,10 @@ func (h *Handler) ApproveTool(c *gin.Context) {
 		return
 	}
 	userID := c.GetInt("user_id")
+	// Phase A：角色传入审批资格矩阵——审批人须持目标工具 resource:action。
+	role := c.GetString("role")
 
-	state, err := h.svc.ApproveTool(c.Request.Context(), id, tenantID, userID, req.Approve, req.Reason)
+	state, err := h.svc.ApproveTool(c.Request.Context(), id, tenantID, userID, role, req.Approve, req.Reason)
 	if err != nil {
 		// 不存在是 404，重复审批是 409，其余内部错误 500——不能一律折叠成 404。
 		common.RespondError(c, err, "工具调用审批失败")

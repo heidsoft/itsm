@@ -199,21 +199,36 @@ def apply_environment_overrides(config: Config) -> Config:
 #
 # Go 后端的 GuidanceClient 调 /triage，三台遗留端点（triage/rca/risk）只允许
 # 同网络内服务调用。令牌由部署环境注入 AI_SERVICE_TOKEN，不进 config.yaml、
-# 不进镜像；空值表示「未启用鉴权」，main.py 会在启动时打 ERROR 并在 /health
-# 暴露 auth.serviceToken=disabled，让这个降级态可观测而不是静默。
+# 不进镜像。
+#
+# Phase A（2026-11-17）：鉴权从「空值=放行」收紧为 fail-closed——未配置令牌
+# 时除 /health 等公开路径外全部 401。本地开发显式设置
+# AI_SERVICE_AUTH_MODE=disabled 降级（等价旧行为），并在启动日志与 /health
+# 暴露 auth.serviceToken=disabled，让降级态可观测而不是静默。
+_DEV_AUTH_MODES = {"disabled", "off", "false", "0"}
+
+
 def service_token() -> str:
     return (os.getenv("AI_SERVICE_TOKEN") or "").strip()
 
 
+def auth_mode() -> str:
+    mode = (os.getenv("AI_SERVICE_AUTH_MODE") or "").strip().lower()
+    return mode if mode else "enforce"
+
+
 def service_token_enabled() -> bool:
-    return bool(service_token())
+    """鉴权总开关：显式 dev 降级关闭，其余（含未设置）一律启用。"""
+    return auth_mode() not in _DEV_AUTH_MODES
 
 
 def verify_service_token(provided: str) -> bool:
-    """常量时间比对；未配置令牌时不启用鉴权（返回 True）。"""
+    """常量时间比对；未配置令牌时拒绝（fail-closed），除非显式 dev 降级。"""
     expected = service_token()
-    if not expected:
+    if not service_token_enabled():
         return True
+    if not expected:
+        return False
     return hmac.compare_digest(provided or "", expected)
 
 

@@ -186,7 +186,7 @@ def check(cond, msg):
 
 def reset_config():
     config_loader._config = None
-    for key in ("LLM_API_KEY", "LLM_PROVIDER", "CORS_ORIGINS", "LLM_BASE_URL", "AI_SERVICE_TOKEN"):
+    for key in ("LLM_API_KEY", "LLM_PROVIDER", "CORS_ORIGINS", "LLM_BASE_URL", "AI_SERVICE_TOKEN", "AI_SERVICE_AUTH_MODE"):
         os.environ.pop(key, None)
 
 
@@ -365,6 +365,20 @@ def test_a4_service_token_and_cors():
     check(config_loader.verify_service_token("wrong") is False, "错误令牌必须拒绝")
     check(config_loader.verify_service_token("") is False, "缺令牌必须拒绝")
 
+    # Phase A（2026-11-17）：fail-closed——未配令牌时不得回退到「无鉴权放行」。
+    os.environ.pop("AI_SERVICE_TOKEN", None)
+    check(config_loader.service_token_enabled() is True, "鉴权开关默认开启，不因缺令牌而关闭")
+    check(config_loader.verify_service_token("") is False, "未配令牌必须拒绝（fail-closed）")
+    check(config_loader.verify_service_token("anything") is False, "未配令牌时任何令牌都必须拒绝")
+
+    # 显式 dev 降级开关：仅限本地开发，生产禁止。
+    os.environ["AI_SERVICE_AUTH_MODE"] = "disabled"
+    check(config_loader.service_token_enabled() is False, "AI_SERVICE_AUTH_MODE=disabled 必须关闭鉴权（dev 降级）")
+    check(config_loader.verify_service_token("") is True, "dev 降级时放行（等价旧行为）")
+    os.environ.pop("AI_SERVICE_AUTH_MODE", None)
+
+    os.environ["AI_SERVICE_TOKEN"] = "unit-test-token"
+
     class _Req:
         def __init__(self, path, token="", method="POST"):
             self.url = types.SimpleNamespace(path=path)
@@ -385,13 +399,24 @@ def test_a4_service_token_and_cors():
         check(await main.service_token_guard(_Req("/api/v1/triage", "", "OPTIONS"), _next) == "PASSED",
               "CORS 预检不得被鉴权拦住")
 
+        # fail-closed 路径：未配令牌时非公开端点必须 401。
+        os.environ.pop("AI_SERVICE_TOKEN", None)
+        fail_closed = await main.service_token_guard(_Req("/triage"), _next)
+        check(isinstance(fail_closed, JSONResponseForAssert) and fail_closed.status_code == 401,
+              "未配令牌时非公开端点必须 401（fail-closed），不得回退到无鉴权")
+        os.environ["AI_SERVICE_TOKEN"] = "unit-test-token"
+
     asyncio.run(run())
 
     health = asyncio.run(main.health_check())
     check(health["auth"]["serviceToken"] == "enabled", "/health 必须暴露鉴权状态")
     reset_config()
     health = asyncio.run(main.health_check())
-    check(health["auth"]["serviceToken"] == "disabled", "未配令牌时降级态必须可观测")
+    check(health["auth"]["serviceToken"] == "fail-closed", "未配令牌时 /health 必须报 fail-closed（不再是 disabled 放行）")
+    os.environ["AI_SERVICE_AUTH_MODE"] = "disabled"
+    health = asyncio.run(main.health_check())
+    check(health["auth"]["serviceToken"] == "disabled", "显式 dev 降级时 /health 必须报 disabled")
+    reset_config()
 
     # 通配符 + allow_credentials 是非法组合：必须自动关掉凭据。
     # stub 环境：added_middleware = [(cls, kw)]；真库环境：user_middleware = [Middleware(cls, *args, **kwargs)]。
