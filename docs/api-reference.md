@@ -2764,6 +2764,8 @@ handler、不自动绑定流程。DDL 工单当前仍是 `ticketType=database-ch
 
 `tools/list` 的 `tools[]` 每项含 `name`/`description`/`inputSchema`（JSON Schema object）与 `annotations`（`readOnlyHint`/`destructiveHint`）；`tools/call` 的 `result` 含 `content[]`（`type:"text"`）与可选 `structuredContent`。
 
+> 🔴 **`outputSchema.type` 恒为 `"object"`**：MCP 规范规定 `outputSchema` 描述的是 `structuredContent`，而 `structuredContent` 必须是 JSON 对象；官方 SDK 的 zod schema 要求 `outputSchema.type` 是**字面量 `"object"`**。ITSM 既有工具里有返回数组的（`list_kb` 等），其原始结果 schema 是 `{"type":"array"}` —— 直接透传会让真实客户端在 zod 校验阶段拒绝**整个** `tools/list` 响应（工具面一个都加载不出来）。因此非 object 型的结果 schema 一律包成 `{"type":"object","properties":{"items":<原schema>},"required":["items"]}`，实际返回的 `structuredContent` 按同一形状给出（数组结果为 `{"items":[...]}`）。
+
 **边界**：未实现 `resources`/`prompts`/`completions`/SSE 流式推送与 stdio 原生进程模式（客户端需用 stdio→HTTP 转发器）；工具面等于既有 AI 工具集，不含 MCP 专属新工具。完整接入说明见 [MCP 接入指南](mcp-integration.md)。
 
 ## 团队管理接口

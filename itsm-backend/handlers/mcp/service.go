@@ -222,11 +222,36 @@ func (s *Service) handleToolsCall(ctx context.Context, req *Request, caller Call
 		// invocation ID 回传便于客户端在 ITSM 审计台账里定位本次调用。
 		result.Meta = map[string]any{"invocationId": invocationID}
 	}
-	// 结构化结果：能序列化成 JSON 对象时同时下发 structuredContent。
-	if obj, ok := res.(map[string]interface{}); ok {
-		result.StructuredContent = obj
+	// 结构化结果：MCP 规范要求 structuredContent 是 JSON 对象。
+	// 工具返回数组时包成 {"items":[...]}，与投影层的 outputSchema
+	// （projectOutputSchema 的 items 包装）保持同一形状 —— schema 与内容
+	// 不一致会让客户端按 schema 校验失败。
+	if structured, ok := wrapStructuredContent(res); ok {
+		result.StructuredContent = structured
 	}
 	return &Response{JSONRPC: "2.0", ID: req.ID, Result: result}
+}
+
+// wrapStructuredContent 把工具结果整形成 MCP 允许的 structuredContent 形状。
+//
+// MCP 规范：structuredContent 是 JSON **对象**。因此：
+//   - map 结果    → 原样作为对象
+//   - slice 结果  → {"items": [...]}
+//   - 标量/其它   → {"value": x}
+//
+// 形状必须与 toolprojection.projectOutputSchema 的包装规则一致，
+// 否则客户端按 outputSchema 校验会失败。
+func wrapStructuredContent(res interface{}) (map[string]interface{}, bool) {
+	switch v := res.(type) {
+	case map[string]interface{}:
+		return v, true
+	case []interface{}:
+		return map[string]interface{}{"items": v}, true
+	case nil:
+		return nil, false
+	default:
+		return map[string]interface{}{"value": v}, true
+	}
 }
 
 // formatResult 把工具结果格式化为 MCP 文本内容。

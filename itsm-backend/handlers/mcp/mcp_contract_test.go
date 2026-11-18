@@ -358,3 +358,69 @@ func TestProjectTools_SkipsInvalidItemsAndKeepsValidOnes(t *testing.T) {
 	require.Len(t, tools, 1, "合法项必须保留")
 	assert.Equal(t, "good", tools[0].Name)
 }
+
+// ---------------------------------------------------------------------------
+// outputSchema 规范契约（真实客户端联调发现）
+// ---------------------------------------------------------------------------
+
+func TestProjectTool_NonObjectResultSchemaIsWrappedAsObject(t *testing.T) {
+	// MCP 规范：outputSchema 描述 structuredContent，而 structuredContent
+	// 必须是 JSON 对象；官方 SDK 的 zod schema 要求 outputSchema.type
+	// 是字面量 "object"。ITSM 既有工具里有返回数组的（ResultSchema.type
+	// = "array"），直接透传会让真实客户端在 zod 校验阶段拒绝整个
+	// tools/list 响应 —— 整条通道不可用，不是单个工具失效。
+	tool, err := mcp.ProjectTool(dto.ToolDefinition{
+		Name:         "list_kb",
+		ReadOnly:     true,
+		ResultSchema: map[string]interface{}{"type": "array"},
+	})
+	require.NoError(t, err)
+	require.NotNil(t, tool.OutputSchema)
+	assert.Equal(t, "object", tool.OutputSchema["type"],
+		"outputSchema.type 必须是 object（SDK 要求字面量）")
+	props, ok := tool.OutputSchema["properties"].(map[string]interface{})
+	require.True(t, ok, "包装后必须有 properties")
+	items, ok := props["items"].(map[string]interface{})
+	require.True(t, ok, "原 schema 应保留在 items 下")
+	assert.Equal(t, "array", items["type"], "原 schema 类型不得丢失")
+}
+
+func TestProjectTool_ObjectResultSchemaKeptAsIs(t *testing.T) {
+	tool, err := mcp.ProjectTool(dto.ToolDefinition{
+		Name:     "get_incident_stats",
+		ReadOnly: true,
+		ResultSchema: map[string]interface{}{
+			"type":       "object",
+			"properties": map[string]interface{}{"open": map[string]interface{}{"type": "integer"}},
+		},
+	})
+	require.NoError(t, err)
+	require.NotNil(t, tool.OutputSchema)
+	assert.Equal(t, "object", tool.OutputSchema["type"])
+	assert.Contains(t, tool.OutputSchema, "properties", "object 型 schema 不应被包装")
+}
+
+func TestToolsList_AllOutputSchemasAreObjectTyped(t *testing.T) {
+	// 全量断言：真实客户端只要遇到一个非 object 的 outputSchema
+	// 就会拒绝整个工具面，所以必须是「全部」合规而不是抽样。
+	cat := &fakeCatalog{tools: []dto.ToolDefinition{
+		{Name: "a", ReadOnly: true, ResultSchema: map[string]interface{}{"type": "object"}},
+		{Name: "b", ReadOnly: true, ResultSchema: map[string]interface{}{"type": "array"}},
+		{Name: "c", ReadOnly: true, ResultSchema: map[string]interface{}{"type": "string"}},
+	}}
+	svc, err := mcp.NewService(mcp.Options{Catalog: cat, Executor: &fakeExecutor{}})
+	require.NoError(t, err)
+
+	resp := svc.Handle(context.Background(), &mcp.Request{
+		JSONRPC: "2.0", ID: json.RawMessage("2"), Method: mcp.MethodToolsList,
+	}, mcp.Caller{TenantID: 1})
+
+	require.NotNil(t, resp)
+	result := resp.Result.(mcp.ListToolsResult)
+	require.NotEmpty(t, result.Tools)
+	for _, tool := range result.Tools {
+		require.NotNil(t, tool.OutputSchema, "工具 %s 应带 outputSchema", tool.Name)
+		assert.Equal(t, "object", tool.OutputSchema["type"],
+			"工具 %s 的 outputSchema.type 必须是 object，否则真实客户端拒绝整个工具面", tool.Name)
+	}
+}

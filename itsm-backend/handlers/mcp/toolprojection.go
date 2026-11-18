@@ -49,7 +49,7 @@ func ProjectTool(def dto.ToolDefinition) (Tool, error) {
 		},
 	}
 	if len(def.ResultSchema) > 0 {
-		out, err := projectSchema(def.ResultSchema, "resultSchema")
+		out, err := projectOutputSchema(def.ResultSchema)
 		if err != nil {
 			return Tool{}, fmt.Errorf("工具 %q 的 resultSchema 非法: %w", def.Name, err)
 		}
@@ -79,6 +79,51 @@ func projectSchema(raw map[string]interface{}, field string) (map[string]any, er
 		out["type"] = "object"
 	}
 	return out, nil
+}
+
+// projectOutputSchema 把工具的结果 schema 归一为 MCP 允许的形态。
+//
+// 🔴 真实客户端联调抓到的兼容性缺陷（2026-11-18）：
+//
+// MCP 规范规定 outputSchema 描述的是 `structuredContent` 字段，而
+// `structuredContent` **必须是 JSON 对象**；官方 SDK 的 zod schema 更严格——
+// `outputSchema.type` 必须是**字面量 "object"**：
+//
+//	outputSchema: z.ZodOptional<z.ZodObject<{
+//	    type: z.ZodLiteral<"object">;   ← 不是 z.ZodString
+//	    ...
+//
+// 而 ITSM 既有工具里有返回数组的（如 list_kb 返回条目数组，其 ResultSchema
+// 是 {"type":"array"}）。直接透传会让**整个 tools/list 响应被客户端拒绝**：
+// SDK 在 zod 校验阶段抛 ZodError，工具面一个都加载不出来——不是个别工具
+// 失效，是整条通道在真实客户端里不可用。
+//
+// 修法：非 object 型（array 等）的结果 schema 包成对象形态，
+// 用 `items` 承载原 schema：
+//
+//	{"type":"array"} → {"type":"object","properties":{"items":{"type":"array"}},"required":["items"]}
+//
+// 这样既满足规范，又保留了原结构信息（不是简单丢弃）。
+// 实际返回的 structuredContent 也按同一形状给出（见 service.go 的
+// wrapStructuredContent），保证 schema 与内容一致。
+func projectOutputSchema(raw map[string]interface{}) (map[string]any, error) {
+	out, err := projectSchema(raw, "resultSchema")
+	if err != nil {
+		return nil, err
+	}
+	// 已是 object 型：原样使用。
+	if t, ok := out["type"].(string); ok && t == "object" {
+		return out, nil
+	}
+	// 非 object 型：包一层 items，保留原 schema 作为其值类型。
+	wrapped := map[string]any{
+		"type": "object",
+		"properties": map[string]any{
+			"items": out,
+		},
+		"required": []string{"items"},
+	}
+	return wrapped, nil
 }
 
 // ProjectTools 批量投影，过滤掉非法项而不是整批失败。

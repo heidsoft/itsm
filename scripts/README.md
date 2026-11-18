@@ -16,6 +16,7 @@
 | API 路径一致性 | `node scripts/check-api-paths.js --json` | 见 `README-check-api-paths.md` |
 | 空卷首装门禁 | `make fresh-install-gate` → `bash scripts/fresh-install-gate.sh` | 产物写 `reports/fresh-install-gate/`，CI 失败时上传 artifact |
 | 产品功能黑盒 | `python3 scripts/acceptance/product-function-smoke.py --help` | v1.6.58 实测 81 PASS / 3 WARN / 0 FAIL |
+| MCP 客户端验收 | `node scripts/acceptance/mcp-client-acceptance.mjs <endpoint> <token>` | 用官方 @modelcontextprotocol/sdk 跑真实协议交互（2026-11-18 实测 19 工具全通过 schema 校验） |
 | 部署后验收 | `bash scripts/prod-post-deploy-verify.sh --help` | 24 项验收 |
 | 校验全部 shell 语法 | `make verify-scripts` | 遍历 `scripts/*.sh` 与 `scripts/docs-gate/*.sh` 做 `bash -n` |
 | 远端 CI 一致性（本地复现） | `make ci-parity` / `make ci-parity-strict` | `check-ci-parity.sh`：gofumpt pin + 格式欠账 + OpenAPI 漂移；strict 有差异即 exit 1 |

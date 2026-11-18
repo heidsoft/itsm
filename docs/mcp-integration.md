@@ -82,6 +82,23 @@ TOKEN=$(go run ./cmd/service-token-gen \
 主体 service 未获授权执行 incident:read，请检查该权限码的 allowedPrincipals 策略
 ```
 
+> 🔴 **改完策略不是立刻生效**：权限判定有两层 5 分钟 TTL 缓存
+> （`middleware` 的角色权限缓存 + `internal/authz` 的运行期策略缓存）。
+> 改完 `allowedPrincipals` 后**最长需等 5 分钟**才会生效，表现为「明明放行了
+> 还是被拒」。这不是 bug，是缓存窗口；排障时先确认是否刚改过策略。
+>
+> 🔴 **存量部署必须先播种 `mcp:read`**：本权限码是 2026-11-18 新增的，
+> 而生产 compose 的 `ITSM_AUTO_SEED=false` —— seeder 不在每次启动跑，
+> **新码不会自动进入已存在的 `permissions` 表**。未播种时端点虽已注册，
+> 但任何角色都会被判 403「权限不足」（DB 里查不到该码）。
+> 升级存量部署须执行迁移：
+>
+> ```bash
+> psql "$DSN" -v ON_ERROR_STOP=1 -f itsm-backend/migrations/20261118_mcp_read_permission.sql
+> ```
+>
+> 该迁移幂等，按租户插入权限码并给 `agent`/`audit_admin` 建立关联。
+
 ---
 
 ## 4. 配置客户端
@@ -231,17 +248,42 @@ initialize  →  （客户端发 notifications/initialized）  →  tools/list /
 
 ---
 
-## 8. 当前边界（诚实说明）
+## 8. 客户端验收脚本
+
+服务端自测（`go test`）覆盖协议形状，但**真实客户端还有额外要求**——官方 SDK 的
+zod schema 会校验 `tools/list` 响应（例如 `outputSchema.type` 必须是字面量
+`"object"`），不合规时**整个工具面加载失败**，服务端契约测试发现不了这类问题。
+
+仓库提供用官方 SDK（Claude Desktop / Claude Code 背后的同一套）跑的验收脚本：
+
+```bash
+npm i @modelcontextprotocol/sdk@1.21.0
+node scripts/acceptance/mcp-client-acceptance.mjs \
+  https://itsm.example.com/api/v1/mcp "$TOKEN"
+```
+
+覆盖：initialize 握手与版本协商、tools/list 的 SDK schema 校验
+（`inputSchema` 与 `outputSchema` 必须 object 型）、tools/call 真实执行、
+未知工具的错误语义、ping。退出码 0 表示「真实 MCP 客户端可用」。
+
+> 2026-11-18 首次跑这个脚本时，它抓出过一个真缺陷：`outputSchema.type`
+> 为 `"array"` 的工具会让官方 SDK 在 zod 校验阶段拒绝**整个** tools/list
+> 响应 —— 不是个别工具失效，是整条通道在真实客户端里不可用。修复方式是把
+> 非 object 型结果 schema 包成 `{"type":"object","properties":{"items":...}}`，
+> 实际返回的 `structuredContent` 按同一形状给出。
+
+## 9. 当前边界（诚实说明）
 
 - **协议**：实现了 `initialize` / `ping` / `tools/list` / `tools/call`；**未实现** `resources`、`prompts`、`completions`、`notifications`，客户端不应依赖它们。
 - **传输**：仅 HTTP POST 单端点；**未实现** SSE 流式推送与 stdio 原生进程模式（需用 `mcp-remote` 之类的转发器）。
 - **能力**：工具面等于 ITSM 既有的 AI 工具集，不含 MCP 专属的新工具。
 - **未完成**：调用限额/计费读面、管理端可配的服务主体放行界面。
-- **未验证**：尚未与真实外部 MCP 客户端做过生产联调；端到端测试覆盖的是「真实中间件链 + 真实 authz + 真实执行链」的服务器侧行为。
+- **已验证**（2026-11-18）：用官方 MCP SDK 1.21.0 跑通完整协议交互（initialize / tools/list 19 个工具全部通过 SDK schema 校验 / tools/call / 未知工具错误语义 / ping），真实实例连生产 Postgres。
+- **未验证**：未在 Claude Desktop GUI 里做端到端点击验证；未做 SSE 流式推送与 stdio 原生进程模式（客户端需用 stdio→HTTP 转发器）；未做多租户并发的权限隔离验证。
 
 ---
 
-## 9. 相关文件
+## 10. 相关文件
 
 | 文件 | 作用 |
 |---|---|
@@ -252,3 +294,5 @@ initialize  →  （客户端发 notifications/initialized）  →  tools/list /
 | `itsm-backend/internal/bootstrap/mcp_assembly.go` | 装配入口（生产与测试共用） |
 | `itsm-backend/cmd/service-token-gen/` | 服务主体令牌签发 |
 | `plans/mcp-subscription-commercialization-design.md` | 托管订阅与套餐权益设计 |
+| `scripts/acceptance/mcp-client-acceptance.mjs` | 真实 MCP 客户端验收脚本（官方 SDK） |
+| `itsm-backend/migrations/20261118_mcp_read_permission.sql` | 存量部署的 `mcp:read` 权限码播种 |

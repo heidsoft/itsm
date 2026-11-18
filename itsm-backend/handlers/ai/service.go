@@ -170,8 +170,29 @@ var ErrRAGUnavailable = fmt.Errorf("rag retrieval service unavailable")
 //	Gate 1: 路由级 RBACMiddleware（/api/v1/agent/* 检查 ai:read/ai:write）— 调用前已完成
 //	Gate 2: 工具级 RBAC（本方法）— 按 ToolDefinition.Resource/Action 校验
 //	Gate 3: 审批流（写工具 !ReadOnly）— 由 NeedsApproval 处理
+//
+// 身份守卫说明（2026-11-18 修正）：
+//
+// 守卫的意图是「无身份不得执行工具」，但**不能只看 userID**：
+// service 主体是**合法的进程身份**，其 JWT 里 user_id 恒为 0（Phase B1 明确
+// service 不是登录用户、不进用户表）。此前这里对 userID<=0 一律拒绝，
+// 导致 service 主体永远无法执行任何工具 —— MCP 通道与 sidecar 回连
+// 全部被挡在门外，且错误信息只说「tool permission denied」，
+// 排障时完全看不出是身份判定把人挡了。
+//
+// 现在按 principal 区分：
+//   - human / agent：userID 必须 > 0（它们是「用户身份」，须有真实 user_id）
+//   - service：userID 恒为 0 属正常，身份由签发时的载体角色 + 运行期策略决定
+//
+// service 主体的实际准入由 Gate 2（载体角色是否持该 resource:action）
+// 与 Gate 2.5（allowedPrincipals 是否含 service）共同决定 —— 放行与否
+// 仍由运行期策略说了算，本守卫只负责「有没有身份」。
 func (s *Service) ExecuteTool(ctx context.Context, userID, tenantID int, role, name string, args map[string]interface{}) (interface{}, int, error) {
-	if userID <= 0 || tenantID <= 0 {
+	principal := authz.PrincipalFromContext(ctx)
+	if tenantID <= 0 {
+		return nil, 0, ErrToolPermissionDenied
+	}
+	if userID <= 0 && principal != authz.PrincipalService {
 		return nil, 0, ErrToolPermissionDenied
 	}
 	if s.tools == nil || s.entClient == nil {
@@ -229,7 +250,6 @@ func (s *Service) ExecuteTool(ctx context.Context, userID, tenantID int, role, n
 	// 这是「AI 安全攻击门槛低」的核心防线：提示词注入只能改变 LLM 想调什么，
 	// 改变不了 DB 里管理员没给 AI 开过的权限。
 	// ---------------------------------------------------------------------
-	principal := authz.PrincipalFromContext(ctx)
 	policyApproval, minApprovals, policyReason := false, 0, ""
 	if principal != authz.PrincipalHuman {
 		catalog := s.catalog
