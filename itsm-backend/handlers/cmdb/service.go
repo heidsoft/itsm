@@ -24,6 +24,10 @@ type Service struct {
 	productionSvc    *ProductionService
 	logger           *zap.SugaredLogger
 	discoveryRuntime DiscoveryRuntime
+	// ciRequirements 是治理看板计算完整率时的必填属性来源（生产实现是
+	// *ConfigurationItemService）。为 nil 表示未装配：治理看板仍可打开，
+	// 但所有 CI 都不可评估（Assessable=0、完整率 0），而不是假装满分。
+	ciRequirements CIRequirementReader
 }
 
 // DiscoveryAdapterInspector 云发现适配器注册表在 CMDB 域内的窄接口。
@@ -165,6 +169,16 @@ func NewServiceWithDiscoveryRuntime(repo Repository, productionSvc *ProductionSe
 		logger:           logger,
 		discoveryRuntime: runtime,
 	}
+}
+
+// WithCIRequirementReader 注入必填属性读取器（治理看板计算属性级完整率用）。
+//
+// 之所以用注入而非改构造函数签名：构造函数有 20+ 处调用（含全部测试），
+// 改签名会把无关改动扩散到每个用例。缺省 nil 的语义是「不可评估」，
+// 明确区别于「都填齐了」——这个区分本身就是本批要修的核心。
+func (s *Service) WithCIRequirementReader(reader CIRequirementReader) *Service {
+	s.ciRequirements = reader
+	return s
 }
 
 // Legacy CMDB use cases remain owned by the production CMDB service aggregate.
@@ -685,12 +699,22 @@ func (s *Service) GetReconciliation(ctx context.Context, tenantID int) (*Reconci
 	return result, nil
 }
 
-// GetGovernanceReport 产出单租户 CMDB 治理看板：质量指标 + 发现差异分类汇总。
+// GetGovernanceReport 产出单租户 CMDB 治理看板。
 //
-// 数据面与 GetReconciliation 同源（云资源全集 + 权威 CI 全集），在其之上消费
-// data_governance.go 的三个纯函数——此前它们只有单测消费，治理指标没有任何
-// HTTP 表面。staleThreshold 固定 7 天（两次周度发现的间隔上限），如需租户级
-// 配置化再走 system_configs，不在本批造第二套配置入口。
+// 数据面分两侧，刻意不同源：
+//   - 对账侧（Diff）：云资源全集 × 有云引用的 CI 全集。比对的是「云上有、账上没有」
+//     这类关系，只有带云引用的 CI 才有意义，沿用 ListCIsForReconciliation。
+//   - 治理侧（Quality/Duplicate）：**全租户 CI 全集**（含手工建账、导入、无云引用）。
+//     旧实现让两侧共用一个基数，导致手工 CI 永远不进入质量视野——而手工建账恰恰
+//     是最容易缺必填属性的那批。
+//
+// 完整率口径：按该 CI 类型实际配置的必填属性定义算（事实来源
+// CIAttributeValidator.RequiredAttributes，经 CIRequirementReader 取得），
+// 不再用「有没有 owner/来源」这种与属性无关的代理指标。没有必填定义的类型
+// 不进分母——否则全新租户（属性定义表为空）会被报成 100% 完整。
+//
+// staleThreshold 固定 7 天（两次周度发现的间隔上限）。租户级配置化需先有真实
+// 需求与配置入口，本批不预造。
 func (s *Service) GetGovernanceReport(ctx context.Context, tenantID int) (*GovernanceReport, error) {
 	const staleThreshold = 7 * 24 * time.Hour
 	now := time.Now()
@@ -699,19 +723,88 @@ func (s *Service) GetGovernanceReport(ctx context.Context, tenantID int) (*Gover
 	if err != nil {
 		return nil, err
 	}
-	cis, err := s.repo.ListCIsForReconciliation(ctx, tenantID)
+	// 对账基数：只有带云引用的 CI 才有「云上是否有对应资源」这个问题。
+	reconcileCIs, err := s.repo.ListCIsForReconciliation(ctx, tenantID)
+	if err != nil {
+		return nil, err
+	}
+	// 治理基数：全租户 CI。
+	everything, err := s.repo.ListCIsForGovernance(ctx, tenantID)
 	if err != nil {
 		return nil, err
 	}
 
-	entries := DiffReconciliation(cis, resources)
+	specs, err := s.requiredAttributeSpecs(ctx, tenantID, everything)
+	if err != nil {
+		// 完整率读不出必填定义时失败关闭：降级成「假设都填齐了」会让治理看板
+		// 与实际数据质量问题反向（这正是本批要修的 fail-open 模式）。
+		s.logger.Errorw("GetGovernanceReport: 读取必填属性定义失败，拒绝输出完整率",
+			"error", err, "tenant_id", tenantID)
+		return nil, fmt.Errorf("读取必填属性定义失败: %w", err)
+	}
+
+	attrMetrics := ComputeAttributeQuality(everything, specs, staleThreshold, now)
+	duplicateGroups := DetectDuplicateGroups(everything)
+
 	report := &GovernanceReport{
-		Quality:        ComputeQualityMetrics(cis, staleThreshold, now),
-		Diff:           CountByAction(entries),
+		Quality: QualityMetrics{
+			Total:                 attrMetrics.Total,
+			Active:                attrMetrics.Active,
+			Retired:               attrMetrics.Retired,
+			Stale:                 attrMetrics.Stale,
+			Orphan:                attrMetrics.Orphan,
+			Incomplete:            attrMetrics.Incomplete,
+			CompletenessPct:       attrMetrics.CompletenessPct,
+			Assessable:            attrMetrics.Assessable,
+			AttributeDefinedTypes: attrMetrics.AssessedTypes,
+			MissingByAttribute:    attrMetrics.MissingByAttribute,
+		},
+		Diff:           CountByAction(DiffReconciliation(reconcileCIs, resources)),
 		CloudResources: len(resources),
-		CIs:            len(cis),
+		// CIs 上报治理基数（全租户）而不是对账基数：调用方拿它当「这个租户有多少
+		// 配置项」用，报成「有多少带云引用的配置项」会小得离谱。
+		CIs:              len(everything),
+		DuplicateGroups:  duplicateGroups,
+		DuplicateCICount: CountDuplicateCIs(duplicateGroups),
+		DuplicateRatePct: DuplicateRatePct(CountDuplicateCIs(duplicateGroups), attrMetrics.Active),
 	}
 	return report, nil
+}
+
+// requiredAttributeSpecs 按「本次 CI 集合里出现过的 ciTypeID」解析必填属性名集合。
+//
+// 只查出现过的类型，不扫全表：类型数量与 CI 数量是两三个数量级的差别，逐类型查
+// 一次即可，不产生 N+1。ciTypeID<=0 的 CI（历史脏数据）跳过——查了也会被判
+// 「类型不存在」，把它们算进分母只会让完整率无缘无故下降。
+func (s *Service) requiredAttributeSpecs(ctx context.Context, tenantID int, cis []*ConfigurationItem) (map[int][]string, error) {
+	if s.ciRequirements == nil {
+		// 未装配读取器：返回空 map，所有 CI 都不可评估（完整率 0、Assessable 0）。
+		// 不返回错误——治理看板仍应能打开，但要如实呈现「没有属性定义可比」。
+		return map[int][]string{}, nil
+	}
+	seen := make(map[int]struct{}, len(cis))
+	for _, ci := range cis {
+		if ci == nil || ci.CITypeID <= 0 {
+			continue
+		}
+		seen[ci.CITypeID] = struct{}{}
+	}
+	specs := make(map[int][]string, len(seen))
+	for ciTypeID := range seen {
+		reqs, err := s.ciRequirements.ListRequiredCIAttributes(ctx, tenantID, ciTypeID)
+		if err != nil {
+			return nil, fmt.Errorf("读取 CI 类型 %d 的必填属性失败: %w", ciTypeID, err)
+		}
+		if len(reqs) == 0 {
+			continue
+		}
+		names := make([]string, 0, len(reqs))
+		for _, req := range reqs {
+			names = append(names, req.Name)
+		}
+		specs[ciTypeID] = names
+	}
+	return specs, nil
 }
 
 // ListPendingDiscoveryResources 返回「发现 deferred、需要人工补全属性」的云资源全集。

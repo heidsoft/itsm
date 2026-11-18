@@ -576,21 +576,63 @@ type ReconciliationResponse struct {
 
 // GovernanceQuality 治理看板质量指标（与 handlers/cmdb.QualityMetrics 同构）。
 type GovernanceQuality struct {
-	Total           int     `json:"total"`
-	Active          int     `json:"active"`
-	Retired         int     `json:"retired"`
-	Stale           int     `json:"stale"`
-	Orphan          int     `json:"orphan"`
-	Incomplete      int     `json:"incomplete"`
+	Total   int `json:"total"`
+	Active  int `json:"active"`
+	Retired int `json:"retired"`
+	Stale   int `json:"stale"`
+	Orphan  int `json:"orphan"`
+	// Incomplete 是「必填属性未齐」的 CI 数，判据来自该 CI 类型的属性定义
+	// （CIAttributeValidator.RequiredAttributes），不按固定字段清单硬编码。
+	// 没有任何必填属性定义的类型不产生 incomplete——那不是「都填齐了」。
+	Incomplete int `json:"incomplete"`
+	// CompletenessPct 的属性级完整率，只在 Assessable 内有意义。
 	CompletenessPct float64 `json:"completenessPct"`
+	// Assessable 是「该 CI 类型存在必填属性定义」的 CI 数，即完整率的有效分母。
+	// 全新租户没有属性定义时 Assessable=0：此时 CompletenessPct 恒为 0 而不是 100，
+	// 否则「一条必填都没配」会被报成「数据完美」。
+	Assessable int `json:"assessable"`
+	// AttributeDefinedTypes 是本次评估中用到的「有必填属性定义」的 CI 类型数，
+	// 便于调用方区分「完整率低」与「根本没配属性定义」。
+	AttributeDefinedTypes int `json:"attributeDefinedTypes"`
+	// MissingByAttribute 汇总最缺的必填属性，按缺失次数降序。
+	// 完整率只说明「有多不齐」，这个列表说明「该补哪个字段」。
+	MissingByAttribute []GovernanceMissingAttribute `json:"missingByAttribute"`
 }
 
-// GovernanceReportResponse 治理看板响应：质量指标 + 发现差异四类分桶。
+// GovernanceMissingAttribute 是单个必填属性在租户内的缺失统计。
+type GovernanceMissingAttribute struct {
+	CITypeID   int    `json:"ciTypeId"`
+	Attribute  string `json:"attribute"`
+	Missing    int    `json:"missing"`
+	Applicable int    `json:"applicable"`
+}
+
+// GovernanceDuplicate 一组判为重复的 CI 及其判重依据。
+// 重复不是二值事实：判重键（identity key）一并下发，调用方才能判断这条告警
+// 来自云身份、资产标签还是主机名+序列号组合。
+type GovernanceDuplicate struct {
+	// Key 是归一化后的判重键（形如 `cloud:aliyun:i-xxx`）。
+	Key string `json:"key"`
+	// Reason 是判重键的语义标签（cloud_identity / asset_tag / serial_name）。
+	Reason    string   `json:"reason"`
+	CIIDs     []int    `json:"ciIds"`
+	CINumbers []string `json:"ciNumbers"`
+}
+
+// GovernanceReportResponse 治理看板响应：质量指标 + 发现差异四类分桶 + 重复组。
 type GovernanceReportResponse struct {
 	Quality        GovernanceQuality `json:"quality"`
 	Diff           map[string]int    `json:"diff"`
 	CloudResources int               `json:"cloudResources"`
 	CIs            int               `json:"cis"`
+	// DuplicateGroups 是 CI 之间的重复聚类结果（此前 duplicate 分桶只统计
+	// 「同一批发现结果里同一资源出现两次」，从不做 CI 间比对，恒为 0）。
+	DuplicateGroups []GovernanceDuplicate `json:"duplicateGroups"`
+	// DuplicateCICount 是参与重复组的 CI 条数（同一组 2 条记 2）。
+	DuplicateCICount int `json:"duplicateCiCount"`
+	// DuplicateRatePct = DuplicateCICount / AssessableCI 的比例，用于对标
+	// ServiceNow 的 duplicate rate < 2% 目标。
+	DuplicateRatePct float64 `json:"duplicateRatePct"`
 }
 
 // CIHistoryResponse CI历史记录响应

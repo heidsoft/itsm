@@ -3421,22 +3421,70 @@ snake_case `job_id`，与平台 camelCase 规则不一致。
 GET /api/v1/cmdb/governance/report
 ```
 
-单租户 CMDB 健康快照，读面权限 `cmdb:read`（与对账同权）。数据面与 `GET /cmdb/reconciliation`
-同源（云资源全集 + 权威 CI 全集），在其之上消费治理纯函数：
+单租户 CMDB 健康快照，读面权限 `cmdb:read`（与对账同权）。
 
-- `quality`：总数/活跃/退役（`lifecycle_status=scrapped`）/陈旧（同步时间超 7 天）/孤儿
-  （无 owner、无 assignee、无任何来源）/不完整/完整率（百分比，0.01 精度）。
-- `diff`：发现差异四类分桶——`add`（发现侧新增未建账）/`noop`（已关联指纹未变）/
-  `retire_confirm`（上次发现的资源本批消失，待人工确认退役）/`duplicate`（同批重复，告警）。
-- `cloudResources` / `cis`：两侧全集行数。
+**三块数据面刻意不同源**（这是 2026-11-18 改造的核心）：
 
-空租户返回全 0 快照（`diff` 四桶全在且为 0），不是 `null`。陈旧阈值固定 7 天
-（两次周度发现的间隔上限）；租户级配置化待有真实需求再走 `system_configs`，不预造配置面。
+| 块 | 基数 | 为什么 |
+| --- | --- | --- |
+| `diff` | 云资源全集 × **带云引用的 CI** | 比对的是「云上有、账上没有」，无云引用的 CI 不参与 |
+| `quality` | **全租户 CI**（含手工/导入/无云引用） | 完整率是资产账问题，手工建账恰恰最容易缺必填项 |
+| `duplicateGroups` | **全租户 CI**（排除 `scrapped`） | 重复建账与「有没有配属性定义」无关 |
 
-契约锁：`handlers/cmdb/governance_report_test.go`（三面数据同源、空租户全 0、读取失败上抛）
-与 `router/cmdb_governance_route_test.go`（真实路由三态：无 `cmdb:read` 403、跨租户只见
-自己的快照、camelCase 响应键）。CLI 侧 `cmdb.governance report` 命令同步接入（路由覆盖率
-棘轮 605 基线保持不变）。
+改造前三者共用一个基数（`ListCIsForReconciliation`，带
+`cloud_resource_ref_id NOT NULL OR cloud_resource_id <> ''` 过滤），后果是
+**所有手工建账的 CI 永远不进入质量视野**。
+
+字段说明：
+
+- `quality.total/active/retired/stale/orphan`：同前。`retired` 判据是
+  `lifecycle_status=scrapped`；`stale` 是同步时间超 7 天（两次周度发现的间隔上限）。
+- `quality.incomplete`：**必填属性未齐**的 CI 数。判据来自该 CI 类型的属性定义
+  （`CIAttributeValidator.RequiredAttributes`，含类型继承链、租户覆盖全局、按
+  `display_order`/`name` 排序），不是固定字段清单。空白串 / `null` / 空数组 / 空对象
+  都算未填。
+- `quality.assessable`：**完整率的有效分母**——「所属 CI 类型存在必填属性定义」的 CI 数。
+- `quality.completenessPct`：`(assessable - incomplete) / assessable`，0.01 精度。
+  🔴 `assessable=0` 时恒为 `0` **且不可解读为「数据完美」**——全新租户的
+  `ci_attribute_definitions` 表是空的（种子只建 8 个 CI 类型，不建属性定义），
+  此时「没有必填项」不等于「都填齐了」。调用方必须以 `assessable` 判断可用性。
+- `quality.attributeDefinedTypes`：参与评估的 CI 类型数，用于区分「完整率低」
+  与「根本没配属性定义」。
+- `quality.missingByAttribute`：`[{ciTypeId, attribute, missing, applicable}]`，
+  按缺失次数降序。完整率只说「有多不齐」，这个列表说「该补哪个字段」。
+- `diff`：四类分桶——`add`/`noop`/`retire_confirm`/`duplicate`。🔴 `duplicate` 仍是
+  **同一批发现结果内同一 CloudResourceID 出现两次**的告警（正常不应发生），
+  **不是** CI 间重复率，两者不同概念。
+- `duplicateGroups`：`[{key, reason, ciIds, ciNumbers}]`，按身份键聚类，组大小 ≥2。
+  `reason` 取 `cloud_identity`（provider+云上资源 ID）/ `asset_tag` / `serial_name`
+  （序列号+归一化名称）。判重键按此优先级取第一个可用的，同一对 CI 不会重复出现在
+  多组里。退役 CI 不参与判重（退役动作本身不该变成质量告警）。
+- `duplicateCiCount` / `duplicateRatePct`：参与重复组的 CI 数 / 在用 CI 总数。
+  对标 ServiceNow 的 duplicate rate < 2% 目标时用后者。
+- `cloudResources` / `cis`：云资源总数 / **全租户 CI 总数**。`cis` 已改为治理基数
+  （改造前上报的是带云引用的 CI 数，对「这个租户有多少配置项」会小得离谱）。
+
+空租户返回全 0 快照（`diff` 四桶全在且为 0，`duplicateGroups`/`missingByAttribute`
+是空数组不是 `null`）。陈旧阈值固定 7 天，租户级配置化待有真实需求再走
+`system_configs`，不预造配置面。
+
+必填属性定义读取失败时**失败关闭**（返回 5xx，不输出残缺快照）——降级成
+「不可评估」会让运维把查询故障看成「还没配属性」。
+
+契约锁：
+- `handlers/cmdb/attribute_quality_test.go`：纯函数层——无定义不得报满分、
+  有 owner 但属性全空必须计 incomplete、空白/nil/空集合算未填、退役仍评估、
+  判重键优先级与稳定性；
+- `handlers/cmdb/governance_report_test.go`：服务层——治理基数含手工 CI、
+  未装配读取器时不可评估而非报错、必填定义读取失败失败关闭、只查出现过的
+  `ciTypeId` 不 N+1；
+- `router/cmdb_governance_route_test.go`：真实 `SetupRoutes` 上跑——无 `cmdb:read`
+  403、跨租户只见自己的快照、camelCase 响应键；另有 `RouteQualityContract`
+  用真实 ent 数据（4 条无云引用 CI + 真实属性定义表）锁 `cis/assessable/
+  incomplete/completenessPct/duplicateCiCount` 的具体数值。
+
+前端 `reports/cmdb-quality` 已改为消费本接口（改造前用硬编码 9 字段在前端自算，
+与后端口径互不相通）。CLI 侧 `cmdb.governance report` 同步接入。
 
 ### 云发现任务（Job 闭环）
 

@@ -634,6 +634,21 @@ func (r *EntRepository) ListCIsForReconciliation(ctx context.Context, tenantID i
 	return results, nil
 }
 
+func (r *EntRepository) ListCIsForGovernance(ctx context.Context, tenantID int) ([]*ConfigurationItem, error) {
+	es, err := r.client.ConfigurationItem.Query().
+		Where(configurationitem.TenantID(tenantID)).
+		Order(ent.Asc(configurationitem.FieldID)).
+		All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	results := make([]*ConfigurationItem, 0, len(es))
+	for _, e := range es {
+		results = append(results, toCIDomain(e))
+	}
+	return results, nil
+}
+
 func (r *EntRepository) GetCIByCloudResourceRefID(ctx context.Context, tenantID int, cloudResourceRefID int) (*ConfigurationItem, error) {
 	e, err := r.client.ConfigurationItem.Query().
 		Where(

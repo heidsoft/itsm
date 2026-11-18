@@ -200,11 +200,18 @@ type ReconciliationResult struct {
 	UnlinkedCIs      []*ConfigurationItem  `json:"unlinkedCis"`
 }
 
-// GovernanceReport 治理看板快照：质量指标（data_governance.QualityMetrics）
-// 与发现差异分桶（data_governance.CountByAction 的键值投影）同源产出。
+// GovernanceReport 治理看板快照：质量指标（属性级完整率）+ 发现差异分桶 +
+// CI 间重复聚类。
+//
+// 三块数据面刻意不同源：Diff 用「带云引用的 CI」（比对的是云资源与账的关系），
+// Quality/Duplicate 用「全租户 CI」（完整率与重复率是资产账问题，手工建账的
+// CI 同样可能缺属性、同样可能重复）。
 type GovernanceReport struct {
-	Quality        QualityMetrics               `json:"quality"`
-	Diff           map[ReconciliationAction]int `json:"diff"`
-	CloudResources int                          `json:"cloudResources"`
-	CIs            int                          `json:"cis"`
+	Quality          QualityMetrics               `json:"quality"`
+	Diff             map[ReconciliationAction]int `json:"diff"`
+	CloudResources   int                          `json:"cloudResources"`
+	CIs              int                          `json:"cis"`
+	DuplicateGroups  []DuplicateGroup             `json:"duplicateGroups"`
+	DuplicateCICount int                          `json:"duplicateCiCount"`
+	DuplicateRatePct float64                      `json:"duplicateRatePct"`
 }

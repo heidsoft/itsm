@@ -33,14 +33,29 @@ func IsOrphanCI(ci *ConfigurationItem) bool {
 }
 
 // QualityMetrics 描述单租户 CMDB 健康快照。
+//
+// 🔴 Incomplete / CompletenessPct 的语义已改为「属性级完整率」，计算入口是
+// attribute_quality.go 的 ComputeAttributeQuality（按该 CI 类型的必填属性定义
+// 判定）。本结构只承载结果，不再由 ComputeQualityMetrics 产出——
+// 后者保留仅为兼容旧单测与其 owner 覆盖率口径，生产路径不再调用。
+// 判据差别很关键：旧口径把「有 owner/来源」当完整，与属性填了多少无关。
 type QualityMetrics struct {
-	Total           int     `json:"total"`
-	Active          int     `json:"active"`
-	Retired         int     `json:"retired"`
-	Stale           int     `json:"stale"`
-	Orphan          int     `json:"orphan"`
-	Incomplete      int     `json:"incomplete"`
+	Total   int `json:"total"`
+	Active  int `json:"active"`
+	Retired int `json:"retired"`
+	Stale   int `json:"stale"`
+	Orphan  int `json:"orphan"`
+	// Incomplete 是必填属性未齐的 CI 数。
+	Incomplete int `json:"incomplete"`
+	// CompletenessPct 只在 Assessable 内有意义；Assessable=0 时恒为 0（不可评估）。
 	CompletenessPct float64 `json:"completenessPct"`
+	// Assessable 是有必填属性定义的 CI 数（完整率分母）。
+	Assessable int `json:"assessable"`
+	// AttributeDefinedTypes 是参与评估的 CI 类型数，用于区分「完整率低」与
+	// 「根本没配属性定义」。
+	AttributeDefinedTypes int `json:"attributeDefinedTypes"`
+	// MissingByAttribute 汇总最缺的必填属性，按缺失次数降序。
+	MissingByAttribute []AttributeMissingStat `json:"missingByAttribute"`
 }
 
 // ComputeQualityMetrics 计算给定 CI 集合的治理指标。threshold 仅对

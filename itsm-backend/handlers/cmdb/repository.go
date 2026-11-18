@@ -46,6 +46,13 @@ type Repository interface {
 	UpdateCloudResource(ctx context.Context, cr *CloudResource) (*CloudResource, error)
 	DeleteCloudResource(ctx context.Context, id int, tenantID int) (int, error)
 	ListCIsForReconciliation(ctx context.Context, tenantID int) ([]*ConfigurationItem, error)
+	// ListCIsForGovernance 返回租户内全部 CI（含手工建账、导入、无云引用者）。
+	//
+	// 为什么不能复用 ListCIsForReconciliation：那个查询带
+	// `CloudResourceRefIDNotNil() OR CloudResourceIDNEQ("")` 过滤，只返回有云引用的
+	// CI。对账（cloud_resource ↔ CI 比对）用它是正确的，但治理指标用它会让所有
+	// 手工建账的 CI 永远不进入质量视野——而手工建账恰恰是最容易缺必填属性的那批。
+	ListCIsForGovernance(ctx context.Context, tenantID int) ([]*ConfigurationItem, error)
 	GetCIByCloudResourceRefID(ctx context.Context, tenantID int, cloudResourceRefID int) (*ConfigurationItem, error)
 	// FindCIByCloudResourceIdentity 按 (provider, 云上资源ID) 找已有配置项。
 	// 手工/导入建的 CI 没有 cloud_resource_ref_id，靠这一路把它们和云上资源

@@ -1,184 +1,55 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { App, Button, Card, Col, Empty, Row, Skeleton, Statistic, Typography } from 'antd';
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Legend,
-  Line,
-  LineChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts';
+import { Alert, App, Button, Card, Col, Empty, Row, Skeleton, Statistic, Table, Tag, Typography } from 'antd';
+import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { RotateCcw } from 'lucide-react';
 
 import { CMDBApi } from '@/lib/api/cmdb-api';
+import type { GovernanceDuplicate, GovernanceReport } from '@/lib/api/cmdb-api';
 
 const { Title, Text } = Typography;
 
 const COLORS = {
   completeness: '#1890ff',
-  accuracy: '#52c41a',
-  consistency: '#faad14',
+  duplicate: '#fa541c',
+  stale: '#faad14',
+  orphan: '#722ed1',
 };
 
-interface QualityData {
-  name: string;
-  count: number;
-  completeness: number;
-  accuracy: number;
-  consistency: number;
-}
-
-interface ConfigurationItem {
-  id: number;
-  name?: string;
-  type?: string;
-  status?: string;
-  environment?: string;
-  criticality?: string;
-  assetTag?: string;
-  serialNumber?: string;
-  assignedTo?: string;
-  ownedBy?: string;
-}
-
-const VALID_STATUSES = new Set(['active', 'inactive', 'maintenance', 'retired']);
-const VALID_CRITICALITIES = new Set(['critical', 'high', 'medium', 'low']);
-const VALID_ENVIRONMENTS = new Set(['production', 'staging', 'development', 'test']);
-
-// CMDB 数据质量维度定义：
-// - completeness：必填核心字段（name/type/status/env/criticality/assetTag/serialNumber/assignedTo/ownedBy）填充率
-// - accuracy：status/criticality 取值落在受控词表内的比例（值合法）
-// - consistency：environment 与 status 的一致性（生产环境必须是 active，staging 可以是 active/maintenance，
-//   其他环境不应为 retired）。不一致的比例即为扣分点。
-const computeQualityForGroup = (items: ConfigurationItem[]): Omit<QualityData, 'name' | 'count'> => {
-  if (items.length === 0) {
-    return { completeness: 0, accuracy: 0, consistency: 0 };
-  }
-
-  const requiredFields: Array<keyof ConfigurationItem> = [
-    'name',
-    'type',
-    'status',
-    'environment',
-    'criticality',
-    'assetTag',
-    'serialNumber',
-    'assignedTo',
-    'ownedBy',
-  ];
-
-  let completeCount = 0;
-  let accurateCount = 0;
-  let consistentCount = 0;
-
-  for (const item of items) {
-    // completeness
-    const filled = requiredFields.filter((f) => {
-      const v = item[f];
-      return v !== undefined && v !== null && String(v).trim() !== '';
-    }).length;
-    if (filled === requiredFields.length) completeCount += 1;
-
-    // accuracy
-    const statusOk = !!item.status && VALID_STATUSES.has(String(item.status));
-    const critOk = !!item.criticality && VALID_CRITICALITIES.has(String(item.criticality));
-    if (statusOk && critOk) accurateCount += 1;
-
-    // consistency
-    const env = String(item.environment || '');
-    const status = String(item.status || '');
-    let envStatusOk = false;
-    if (!env || !VALID_ENVIRONMENTS.has(env)) {
-      // 未填环境按不扣分处理，避免对未打标的 CI 误报
-      envStatusOk = true;
-    } else if (env === 'production') {
-      envStatusOk = status === 'active' || status === 'maintenance';
-    } else if (env === 'staging') {
-      envStatusOk = status === 'active' || status === 'maintenance' || status === 'inactive';
-    } else {
-      envStatusOk = status !== 'retired';
-    }
-    if (envStatusOk) consistentCount += 1;
-  }
-
-  return {
-    completeness: Math.round((completeCount / items.length) * 100),
-    accuracy: Math.round((accurateCount / items.length) * 100),
-    consistency: Math.round((consistentCount / items.length) * 100),
-  };
-};
+// CMDB 数据质量报表。
+//
+// 🔴 所有指标都由后端治理看板计算，本页**不再自算**。
+// 改造前这里用硬编码 9 个字段（name/type/status/environment/criticality/
+// assetTag/serialNumber/assignedTo/ownedBy）在前端算完整度，与后端
+// computeQualityMetrics 的 owner 覆盖率口径互不相通，同一租户在两处能读到
+// 两个不同的完整度；而「哪些字段算必填」本该由租户在「属性定义」里配置，
+// 前端根本读不到那份配置。完整率的事实来源必须是后端的必填属性定义。
+//
+// 因此本页只剩「呈现」职责：拉 /cmdb/governance/report，按返回结构画出图表。
+// 若要新增质量维度，改后端纯函数 + DTO，不要在前端重组口径。
 
 const CMDBQualityReport = () => {
   const { message } = App.useApp();
-  // 数据加载初值必须为 true：mount 必定发起首次拉取，初值 false 会让首帧先渲染
-  // 「暂无 CMDB 配置项」结论，再被真实数据覆盖。
-  const [listLoading, setListLoading] = useState(true);
-  const [qualityData, setQualityData] = useState<QualityData[]>([]);
-  const [overall, setOverall] = useState<{
-    total: number;
-    completeness: number;
-    accuracy: number;
-    consistency: number;
-  } | null>(null);
-  const [hasData, setHasData] = useState<boolean>(false);
+  // 初值必须为 true：mount 必定发起首次拉取，初值 false 会让首帧先渲染
+  // 「暂无数据」结论，再被真实数据覆盖。
+  const [loading, setLoading] = useState(true);
+  const [report, setReport] = useState<GovernanceReport | null>(null);
+  const [failed, setFailed] = useState(false);
 
   const loadData = useCallback(async () => {
-    setListLoading(true);
-    setHasData(false);
+    setLoading(true);
+    setFailed(false);
     try {
-      // 拉取 CI 列表，按 type 分组后计算真实质量指标。
-      // 平台页长上限 100，一次性索要 size:200 会被后端回落成默认 20，
-      // 所以 getAllCIs 按页翻读到 4000 条上限。
-      const collected = await CMDBApi.getAllCIs({}, 4000);
-
-      if (collected.length === 0) {
-        setQualityData([]);
-        setOverall(null);
-        setHasData(false);
-        return;
-      }
-
-      // 按 type 分组
-      const groups = new Map<string, ConfigurationItem[]>();
-      for (const ci of collected) {
-        const key = ci.type || 'unknown';
-        if (!groups.has(key)) groups.set(key, []);
-        groups.get(key)!.push(ci);
-      }
-
-      const sortedTypes = Array.from(groups.entries()).sort((a, b) => b[1].length - a[1].length);
-      const data: QualityData[] = sortedTypes.map(([type, items]) => {
-        const metrics = computeQualityForGroup(items);
-        return {
-          name: type,
-          count: items.length,
-          ...metrics,
-        };
-      });
-
-      // 整体指标（用全部 CI 重新算一次，避免被分组大小加权稀释）
-      const overallMetrics = computeQualityForGroup(collected);
-      setQualityData(data);
-      setOverall({
-        total: collected.length,
-        completeness: overallMetrics.completeness,
-        accuracy: overallMetrics.accuracy,
-        consistency: overallMetrics.consistency,
-      });
-      setHasData(true);
+      const data = await CMDBApi.getGovernanceReport();
+      setReport(data);
     } catch (error) {
-      console.warn('获取 CMDB 数据失败:', error);
+      console.warn('获取 CMDB 治理数据失败:', error);
       message.error('加载CMDB质量数据失败');
-      setQualityData([]);
-      setOverall(null);
+      setReport(null);
+      setFailed(true);
     } finally {
-      setListLoading(false);
+      setLoading(false);
     }
   }, [message]);
 
@@ -186,228 +57,200 @@ const CMDBQualityReport = () => {
     loadData();
   }, [loadData]);
 
-  const renderContent = () => {
-    if (listLoading) {
-      return (
-        <div className="space-y-4">
-          <Row gutter={[16, 16]}>
-            {[0, 1, 2].map((i) => (
-              <Col xs={24} sm={8} key={`skeleton-${i}`}>
-                <Card>
-                  <Skeleton active />
-                </Card>
-              </Col>
-            ))}
-          </Row>
-          <Skeleton active paragraph={{ rows: 6 }} />
-        </div>
-      );
-    }
-
-    if (!hasData || qualityData.length === 0) {
-      return (
-        <Card>
-          <Empty description="暂无 CMDB 配置项，无法计算数据质量" />
-        </Card>
-      );
-    }
-
+  if (loading) {
     return (
-      <>
-        {/* 整体统计 */}
-        <Row gutter={[16, 16]} className="mb-6">
-          <Col xs={24} sm={6}>
-            <Card>
-              <Statistic
-                title="配置项总数"
-                value={overall?.total ?? 0}
-                suffix="项"
-                styles={{ content: { color: COLORS.completeness } }}
-              />
-            </Card>
-          </Col>
-          <Col xs={24} sm={6}>
-            <Card>
-              <Statistic
-                title="整体完整度"
-                value={overall?.completeness ?? 0}
-                suffix="%"
-                styles={{ content: { color: COLORS.completeness } }}
-              />
-            </Card>
-          </Col>
-          <Col xs={24} sm={6}>
-            <Card>
-              <Statistic
-                title="整体准确度"
-                value={overall?.accuracy ?? 0}
-                suffix="%"
-                styles={{ content: { color: COLORS.accuracy } }}
-              />
-            </Card>
-          </Col>
-          <Col xs={24} sm={6}>
-            <Card>
-              <Statistic
-                title="整体一致度"
-                value={overall?.consistency ?? 0}
-                suffix="%"
-                styles={{ content: { color: COLORS.consistency } }}
-              />
-            </Card>
-          </Col>
+      <div className="space-y-4">
+        <Row gutter={[16, 16]}>
+          {[0, 1, 2, 3].map((i) => (
+            <Col xs={24} sm={12} lg={6} key={`skeleton-${i}`}>
+              <Card>
+                <Skeleton active />
+              </Card>
+            </Col>
+          ))}
         </Row>
-
-        {/* 质量指标对比图 */}
-        <Card title="各类型配置项数据质量对比" className="mb-6">
-          <ResponsiveContainer width="100%" height={350}>
-            <BarChart data={qualityData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis domain={[0, 100]} />
-              <Tooltip content={<QualityTooltip />} />
-              <Legend />
-              <Bar dataKey="completeness" name="完整度" fill={COLORS.completeness} />
-              <Bar dataKey="accuracy" name="准确度" fill={COLORS.accuracy} />
-              <Bar dataKey="consistency" name="一致度" fill={COLORS.consistency} />
-            </BarChart>
-          </ResponsiveContainer>
-        </Card>
-
-        {/* 质量趋势 */}
-        <Card title="数据质量趋势（按类型）" className="mb-6">
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={qualityData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis domain={[0, 100]} />
-              <Tooltip content={<QualityTooltip />} />
-              <Legend />
-              <Line
-                type="monotone"
-                dataKey="completeness"
-                name="完整度"
-                stroke={COLORS.completeness}
-                strokeWidth={2}
-              />
-              <Line
-                type="monotone"
-                dataKey="accuracy"
-                name="准确度"
-                stroke={COLORS.accuracy}
-                strokeWidth={2}
-              />
-              <Line
-                type="monotone"
-                dataKey="consistency"
-                name="一致度"
-                stroke={COLORS.consistency}
-                strokeWidth={2}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </Card>
-
-        {/* 数量分布参考 */}
-        <Card title="各类型配置项数量">
-          <ResponsiveContainer width="100%" height={250}>
-            <BarChart data={qualityData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip content={<CountTooltip />} />
-              <Legend />
-              <Bar dataKey="count" name="配置项数量" fill={COLORS.completeness} />
-            </BarChart>
-          </ResponsiveContainer>
-        </Card>
-      </>
+        <Skeleton active paragraph={{ rows: 6 }} />
+      </div>
     );
-  };
+  }
+
+  if (failed || !report) {
+    return (
+      <Card>
+        <Empty description="无法获取 CMDB 治理数据" />
+      </Card>
+    );
+  }
+
+  const { quality, diff, duplicateGroups, duplicateRatePct } = report;
+  // 没有任何必填属性定义时，完整率不可评估——必须显式区分，不能显示 0%。
+  const notAssessable = quality.assessable === 0;
+
+  // 图表数据：把「最缺的必填属性」画成横向条形图，这是唯一可行动的视图
+  const missingData = quality.missingByAttribute.slice(0, 10).map((item) => ({
+    name: `${item.attribute} (类型${item.ciTypeId})`,
+    missing: item.missing,
+    applicable: item.applicable,
+    rate: item.applicable > 0 ? Math.round((item.missing / item.applicable) * 100) : 0,
+  }));
+
+  const diffData = Object.entries(diff).map(([action, count]) => ({ name: action, count }));
+
+  const duplicateColumns = [
+    { title: '判重依据', dataIndex: 'reason', key: 'reason', width: 140,
+      render: (reason: string) => {
+        const LABELS: Record<string, { text: string; color: string }> = {
+          cloud_identity: { text: '云身份相同', color: 'blue' },
+          asset_tag: { text: '资产标签相同', color: 'orange' },
+          serial_name: { text: '序列号+名称相同', color: 'purple' },
+        };
+        const meta = LABELS[reason] ?? { text: reason, color: 'default' };
+        return <Tag color={meta.color}>{meta.text}</Tag>;
+      } },
+    { title: '判重键', dataIndex: 'key', key: 'key', ellipsis: true },
+    { title: '重复 CI', dataIndex: 'ciNumbers', key: 'ciNumbers',
+      render: (numbers: string[]) => (
+        <div className="flex flex-wrap gap-1">
+          {numbers.map((n) => <Tag key={n}>{n}</Tag>)}
+        </div>
+      ) },
+  ];
 
   return (
-    <div className="p-6 bg-gray-50 min-h-full">
+    <>
       <header className="mb-6">
         <Title level={2}>CMDB数据质量报表</Title>
         <p className="text-gray-500 mt-1">
-          基于配置项实际字段填充、字段取值合法性与环境/状态一致性计算。
-          完整度 = 9 项核心字段均已填写；准确度 = status/criticality 在受控词表内；一致度 = 环境与状态组合符合规范。
+          由后端治理看板（/cmdb/governance/report）统一计算：完整率按各 CI 类型配置的必填属性算，
+          重复率按 CI 之间的身份键聚类算。本页只呈现，不再自算口径。
         </p>
       </header>
 
-      {/* 控制栏 */}
       <Card className="mb-6">
         <Row justify="space-between" align="middle">
           <Col>
             <Text className="text-gray-600">配置项数据质量监控</Text>
           </Col>
           <Col>
-            <Button icon={<RotateCcw />} onClick={loadData} loading={listLoading}>
+            <Button icon={<RotateCcw />} onClick={loadData} loading={loading}>
               刷新数据
             </Button>
           </Col>
         </Row>
       </Card>
 
-      {renderContent()}
-    </div>
+      {/* 未配置必填属性时明确告知，而不是显示 0% 完整 */}
+      {notAssessable && (
+        <Alert
+          className="mb-6"
+          type="info"
+          showIcon
+          message="尚未配置必填属性定义，完整率不可评估"
+          description="完整率的分母是「所属 CI 类型已配置必填属性的配置项」。请在 CMDB「属性定义」中为相关 CI 类型标注必填项后，本页才会给出完整率。当前显示的空值不代表数据质量差。"
+        />
+      )}
+
+      <Row gutter={[16, 16]} className="mb-6">
+        <Col xs={24} sm={12} lg={6}>
+          <Card>
+            <Statistic title="配置项总数" value={quality.total} suffix="项" />
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} lg={6}>
+          <Card>
+            <Statistic
+              title={notAssessable ? '整体完整度（不可评估）' : '整体完整度'}
+              value={notAssessable ? '—' : quality.completenessPct}
+              suffix={notAssessable ? undefined : '%'}
+              styles={{ content: { color: COLORS.completeness } }}
+            />
+            <Text type="secondary" className="text-xs">
+              {notAssessable ? '未配置必填属性' : `可评估 ${quality.assessable} 项`}
+            </Text>
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} lg={6}>
+          <Card>
+            <Statistic
+              title="重复率"
+              value={duplicateRatePct}
+              suffix="%"
+              styles={{ content: { color: COLORS.duplicate } }}
+            />
+            <Text type="secondary" className="text-xs">
+              {report.duplicateCiCount} 项参与重复组
+            </Text>
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} lg={6}>
+          <Card>
+            <Statistic
+              title="陈旧 / 孤儿"
+              value={`${quality.stale} / ${quality.orphan}`}
+              styles={{ content: { color: COLORS.stale } }}
+            />
+            <Text type="secondary" className="text-xs">
+              超 7 天未同步 / 无负责人且无来源
+            </Text>
+          </Card>
+        </Col>
+      </Row>
+
+      {/* 必填属性缺口：唯一能直接指导补齐动作的视图 */}
+      <Card title="最缺的必填属性" className="mb-6">
+        {missingData.length === 0 ? (
+          <Empty description={notAssessable ? '未配置必填属性定义' : '必填属性均已填写'} />
+        ) : (
+          <ResponsiveContainer width="100%" height={Math.max(220, missingData.length * 46)}>
+            <BarChart data={missingData} layout="vertical" margin={{ left: 100, right: 32 }}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis type="number" domain={[0, 'dataMax']} />
+              <YAxis type="category" dataKey="name" width={110} />
+              <Tooltip
+                formatter={(value) => [`${value ?? 0} 项`, '']}
+              />
+              <Legend />
+              <Bar dataKey="missing" name="缺失数" fill={COLORS.completeness} />
+              <Bar dataKey="applicable" name="适用数" fill="#d9d9d9" />
+            </BarChart>
+          </ResponsiveContainer>
+        )}
+      </Card>
+
+      {/* 重复组明细 */}
+      <Card title="重复配置项（同实体多笔账）" className="mb-6">
+        {duplicateGroups.length === 0 ? (
+          <Empty description="未发现重复配置项" />
+        ) : (
+          <Table
+            rowKey={(record: GovernanceDuplicate) => record.key}
+            columns={duplicateColumns}
+            dataSource={duplicateGroups}
+            pagination={duplicateGroups.length > 10 ? { pageSize: 10 } : false}
+            size="small"
+          />
+        )}
+      </Card>
+
+      {/* 发现差异分桶 */}
+      <Card title="发现差异分类">
+        <ResponsiveContainer width="100%" height={260}>
+          <BarChart data={diffData}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="name" />
+            <YAxis />
+            <Tooltip />
+            <Legend />
+            <Bar dataKey="count" name="条目数" fill={COLORS.orphan} />
+          </BarChart>
+        </ResponsiveContainer>
+        <Text type="secondary" className="text-xs">
+          云资源 {report.cloudResources} 项 / 配置项 {report.cis} 项。add=未建账、noop=已关联、
+          retire_confirm=云上已消失待确认退役、duplicate=同批重复。
+        </Text>
+      </Card>
+    </>
   );
-};
-
-interface TooltipPayloadEntry {
-  color?: string;
-  name?: string;
-  value?: number | string;
-}
-
-const QualityTooltip = ({
-  active,
-  payload,
-  label,
-}: {
-  active?: boolean;
-  payload?: TooltipPayloadEntry[];
-  label?: string | number;
-}) => {
-  if (active && payload && payload.length) {
-    return (
-      <div className="bg-white p-3 rounded-lg shadow-lg border border-gray-200">
-        <p className="font-semibold text-gray-800 mb-2">{`类型: ${label ?? ''}`}</p>
-        {payload.map((entry, index) => (
-          <p
-            key={`${entry.name ?? 'item'}-${index}`}
-            className="text-sm"
-            style={{ color: entry.color }}
-          >
-            {`${entry.name ?? ''}: ${entry.value ?? 0}%`}
-          </p>
-        ))}
-      </div>
-    );
-  }
-  return null;
-};
-
-const CountTooltip = ({
-  active,
-  payload,
-  label,
-}: {
-  active?: boolean;
-  payload?: TooltipPayloadEntry[];
-  label?: string | number;
-}) => {
-  if (active && payload && payload.length) {
-    return (
-      <div className="bg-white p-3 rounded-lg shadow-lg border border-gray-200">
-        <p className="font-semibold text-gray-800 mb-2">{`类型: ${label ?? ''}`}</p>
-        <p className="text-sm" style={{ color: payload[0].color }}>
-          {`配置项数量: ${payload[0].value ?? 0}`}
-        </p>
-      </div>
-    );
-  }
-  return null;
 };
 
 export default CMDBQualityReport;

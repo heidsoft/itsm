@@ -945,6 +945,10 @@ func NewApplication() *Application {
 		WorkerReady:             discoveryJobExecutor != nil,
 		CIProjector:             discoveryCIProjector,
 	})
+	// 治理看板的属性级完整率需要「该 CI 类型要哪些必填属性」。注入
+	// ConfigurationItemService（它转发的就是 CIAttributeValidator.RequiredAttributes，
+	// 与 CreateCI/UpdateCI/上线门禁共用同一份查询）——不另写一份「哪些属性必填」。
+	cmdbServiceDomain.WithCIRequirementReader(configurationItemService)
 	cmdbHandler := cmdb.NewHandler(cmdbServiceDomain)
 	// 云发现调度器：消费 discovery_sources.schedule。此前该字段全仓无消费者，
 	// 运维填了 cron 既不生效也无任何反馈，云发现只能手动点。

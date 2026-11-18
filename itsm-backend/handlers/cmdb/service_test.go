@@ -43,6 +43,7 @@ type mockRepository struct {
 	updateCloudResourceFn           func(ctx context.Context, cr *CloudResource) (*CloudResource, error)
 	deleteCloudResourceFn           func(ctx context.Context, id int, tenantID int) (int, error)
 	listCIsForReconciliationFn      func(ctx context.Context, tenantID int) ([]*ConfigurationItem, error)
+	listCIsForGovernanceFn          func(ctx context.Context, tenantID int) ([]*ConfigurationItem, error)
 	getCIByCloudResourceRefIDFn     func(ctx context.Context, tenantID int, cloudResourceRefID int) (*ConfigurationItem, error)
 	findCIByCloudResourceIdentityFn func(ctx context.Context, tenantID int, provider, cloudResourceID string) (*ConfigurationItem, error)
 	getCITypeIDByNameFn             func(ctx context.Context, tenantID int, name string) (int, error)
@@ -192,6 +193,18 @@ func (m *mockRepository) DeleteCloudResource(ctx context.Context, id int, tenant
 }
 
 func (m *mockRepository) ListCIsForReconciliation(ctx context.Context, tenantID int) ([]*ConfigurationItem, error) {
+	if m.listCIsForReconciliationFn != nil {
+		return m.listCIsForReconciliationFn(ctx, tenantID)
+	}
+	return nil, nil
+}
+
+func (m *mockRepository) ListCIsForGovernance(ctx context.Context, tenantID int) ([]*ConfigurationItem, error) {
+	if m.listCIsForGovernanceFn != nil {
+		return m.listCIsForGovernanceFn(ctx, tenantID)
+	}
+	// 默认复用对账基数：多数既有用例只关心对账，不想额外声明第二份数据。
+	// 治理专属用例必须显式提供 listCIsForGovernanceFn 才能验证基数差异。
 	if m.listCIsForReconciliationFn != nil {
 		return m.listCIsForReconciliationFn(ctx, tenantID)
 	}

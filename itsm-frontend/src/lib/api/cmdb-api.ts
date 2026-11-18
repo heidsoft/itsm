@@ -77,6 +77,53 @@ export interface CMDBStatsSummary {
   criticalityDistribution: Record<string, number>;
 }
 
+/** 单个必填属性在租户内的缺失统计（后端 GovernanceQuality.missingByAttribute）。 */
+export interface GovernanceMissingAttribute {
+  ciTypeId: number;
+  attribute: string;
+  missing: number;
+  applicable: number;
+}
+
+/**
+ * 治理质量指标。
+ *
+ * 🔴 `assessable` 是完整率的分母：只有「该 CI 类型配置了必填属性定义」的 CI
+ * 才可评估。`assessable === 0` 表示租户还没配任何必填定义——此时
+ * `completenessPct` 恒为 0，页面必须显示「未配置」，不能显示「0% 完整」
+ * （后者会让运维以为是数据烂，实际是没配规则）。
+ */
+export interface GovernanceQuality {
+  total: number;
+  active: number;
+  retired: number;
+  stale: number;
+  orphan: number;
+  incomplete: number;
+  completenessPct: number;
+  assessable: number;
+  attributeDefinedTypes: number;
+  missingByAttribute: GovernanceMissingAttribute[];
+}
+
+/** 一组判为重复的 CI（同一实体建了多笔账）。 */
+export interface GovernanceDuplicate {
+  key: string;
+  reason: 'cloud_identity' | 'asset_tag' | 'serial_name' | string;
+  ciIds: number[];
+  ciNumbers: string[];
+}
+
+export interface GovernanceReport {
+  quality: GovernanceQuality;
+  diff: Record<string, number>;
+  cloudResources: number;
+  cis: number;
+  duplicateGroups: GovernanceDuplicate[];
+  duplicateCiCount: number;
+  duplicateRatePct: number;
+}
+
 export type CMDBCapabilityState = 'disabled' | 'unconfigured' | 'unready' | 'ready';
 
 export interface CMDBRuntimeCapability {
@@ -416,6 +463,18 @@ export class CMDBApi {
     params?: Record<string, unknown>
   ): Promise<Record<string, unknown>> {
     return httpClient.get(`${CMDB_BASE}/reconciliation`, params);
+  }
+
+  /**
+   * CMDB 治理看板（质量指标 + 发现差异分桶 + 重复组）。
+   *
+   * 数据面在服务端算好再下发，前端**不得**再另算一套：
+   * 报表页此前用硬编码 9 个字段在前端自算完整度，与后端治理看板口径互不相通，
+   * 同一租户在两处看到两个数字。完整率的事实来源是该 CI 类型的必填属性定义
+   * （由租户在「属性定义」里配置），只有后端能读到。
+   */
+  static async getGovernanceReport(): Promise<GovernanceReport> {
+    return httpClient.get(`${CMDB_BASE}/governance/report`);
   }
 
   // ==================== Cloud ====================

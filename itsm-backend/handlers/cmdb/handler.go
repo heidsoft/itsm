@@ -356,18 +356,53 @@ func (h *Handler) GetGovernanceReport(c *gin.Context) {
 
 	common.Success(c, &dto.GovernanceReportResponse{
 		Quality: dto.GovernanceQuality{
-			Total:           report.Quality.Total,
-			Active:          report.Quality.Active,
-			Retired:         report.Quality.Retired,
-			Stale:           report.Quality.Stale,
-			Orphan:          report.Quality.Orphan,
-			Incomplete:      report.Quality.Incomplete,
-			CompletenessPct: report.Quality.CompletenessPct,
+			Total:                 report.Quality.Total,
+			Active:                report.Quality.Active,
+			Retired:               report.Quality.Retired,
+			Stale:                 report.Quality.Stale,
+			Orphan:                report.Quality.Orphan,
+			Incomplete:            report.Quality.Incomplete,
+			CompletenessPct:       report.Quality.CompletenessPct,
+			Assessable:            report.Quality.Assessable,
+			AttributeDefinedTypes: report.Quality.AttributeDefinedTypes,
+			MissingByAttribute:    toDTOMissingStats(report.Quality.MissingByAttribute),
 		},
-		Diff:           diff,
-		CloudResources: report.CloudResources,
-		CIs:            report.CIs,
+		Diff:             diff,
+		CloudResources:   report.CloudResources,
+		CIs:              report.CIs,
+		DuplicateGroups:  toDTODuplicateGroups(report.DuplicateGroups),
+		DuplicateCICount: report.DuplicateCICount,
+		DuplicateRatePct: report.DuplicateRatePct,
 	})
+}
+
+// toDTOMissingStats 把域内缺失统计投影到 DTO。空切片给空数组而不是 nil：
+// 前端要能区分「没有缺口」与「字段没下发」。
+func toDTOMissingStats(stats []AttributeMissingStat) []dto.GovernanceMissingAttribute {
+	out := make([]dto.GovernanceMissingAttribute, 0, len(stats))
+	for _, s := range stats {
+		out = append(out, dto.GovernanceMissingAttribute{
+			CITypeID:   s.CITypeID,
+			Attribute:  s.Attribute,
+			Missing:    s.Missing,
+			Applicable: s.Applicable,
+		})
+	}
+	return out
+}
+
+// toDTODuplicateGroups 投影重复组；同样保证空数组不为 nil。
+func toDTODuplicateGroups(groups []DuplicateGroup) []dto.GovernanceDuplicate {
+	out := make([]dto.GovernanceDuplicate, 0, len(groups))
+	for _, g := range groups {
+		out = append(out, dto.GovernanceDuplicate{
+			Key:       g.Key,
+			Reason:    string(g.Reason),
+			CIIDs:     g.CIIDs,
+			CINumbers: g.CINumbers,
+		})
+	}
+	return out
 }
 
 // ListCloudServices 云服务类型列表。
