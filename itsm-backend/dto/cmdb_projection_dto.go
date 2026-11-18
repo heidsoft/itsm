@@ -13,6 +13,12 @@ import (
 // 调用方（如云发现回写 CI）据此区分「数据要人补录」和写入失败，不得靠匹配错误文案。
 var ErrCIAttributeValidation = errors.New("ci attribute validation")
 
+// ErrCIAttributeValidationRequiredOnline 必填属性缺失导致 CI 无法推进为 in_service。
+// 与 ErrCIAttributeValidation 区分：后者是「属性值本身不合法」，在 CreateCI/UpdateCI
+// 时拦下；本 sentinel 专指「生命周期推进到上线态时属性不齐」——生命周期是第三条
+// 写路径，它只改 lifecycle_status、从不碰 attributes，因此需要独立门禁。
+var ErrCIAttributeValidationRequiredOnline = errors.New("ci required attributes missing for online")
+
 type CIAttributeRequirement struct {
 	Name         string   `json:"name"`
 	DisplayName  string   `json:"displayName"`

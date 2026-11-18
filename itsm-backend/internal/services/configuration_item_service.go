@@ -1543,6 +1543,62 @@ func (s *ConfigurationItemService) convertSortField(sortBy string) string {
 // LifecycleChangeParams CI 生命周期单条变更参数。
 type LifecycleChangeParams = dto.LifecycleChangeParams
 
+// ErrCIAttributeValidationRequiredOnline 必填属性缺失导致无法上线。
+// 与 ErrCIAttributeValidation 区分：后者是属性值本身不合法（创建/更新时拦下），
+// 本 sentinel 专指「状态推进到 online 时属性不齐」——handler 据此给 422 并点名缺失项。
+var ErrCIAttributeValidationRequiredOnline = dto.ErrCIAttributeValidationRequiredOnline
+
+// validateRequiredAttributesForOnline 上线前的必填属性完整性校验。
+//
+// 事实来源是 CIAttributeValidator.RequiredAttributes（含类型继承链、租户覆盖全局），
+// 与 CreateCI/UpdateCI 的校验共用同一份查询——不在这里另写一份「该类型要哪些属性」，
+// 否则两处规则必然漂移（那正是属性体系最常见的破法）。
+//
+// 有 DefaultValue 的必填项视为可自动满足：NormalizeAttributes 在缺值时会填默认值，
+// 所以这类定义不构成上线阻碍——但已落库的旧值是空串时仍要拦（创建时填了默认值、
+// 后续被手工清空，不能因为「定义有默认值」就放行）。
+//
+// 查询报错时失败关闭（返回错误拒绝上线），不降级放行：属性定义查询失败意味着
+// 无法判定完整性，此时放行等于放弃门禁。
+func (s *ConfigurationItemService) validateRequiredAttributesForOnline(ctx context.Context, ci *ent.ConfigurationItem, tenantID int) error {
+	if s.attrValidator == nil {
+		return nil
+	}
+	requirements, err := s.attrValidator.RequiredAttributes(ctx, tenantID, ci.CiTypeID)
+	if err != nil {
+		s.logger.Errorw("Failed to load required attributes for online gate",
+			"error", err, "ci_id", ci.ID, "ci_type_id", ci.CiTypeID, "tenant_id", tenantID)
+		return fmt.Errorf("校验必填属性定义失败，无法上线: %w", err)
+	}
+	if len(requirements) == 0 {
+		return nil
+	}
+
+	missing := make([]string, 0, len(requirements))
+	for _, req := range requirements {
+		value, exists := ci.Attributes[req.Name]
+		if exists && value != nil && !isBlankAttributeString(value) {
+			continue
+		}
+		label := req.DisplayName
+		if label == "" {
+			label = req.Name
+		}
+		missing = append(missing, fmt.Sprintf("%s(%s)", label, req.Name))
+	}
+	if len(missing) == 0 {
+		return nil
+	}
+
+	s.logger.Infow("CI online blocked by missing required attributes",
+		"ci_id", ci.ID, "ci_type_id", ci.CiTypeID, "tenant_id", tenantID, "missing", missing)
+	return common.NewValidationError(
+		fmt.Sprintf("该 CI 缺少 %d 个必填属性，无法上线为 in_service：%s。请先在 CI 详情中补齐属性值",
+			len(missing), strings.Join(missing, "、")),
+		ErrCIAttributeValidationRequiredOnline,
+	)
+}
+
 // UpdateLifecycleStatus 按 common 状态机更新 CI 生命周期。
 // 目标 scrapped 走软删除终态（retireCIInTx：停用关系、Status=retired、
 // ExpireAt、审计），必须携带受控退役理由；非法迁移与版本冲突映射 409，
@@ -1575,6 +1631,19 @@ func (s *ConfigurationItemService) UpdateLifecycleStatus(ctx context.Context, id
 	// 状态没变视为幂等成功。
 	if ci.LifecycleStatus == params.Status {
 		return dto.ToCIResponse(ci), nil
+	}
+
+	// 上线门禁：必填属性缺失的 CI 不得进入 in_service（online）。
+	//
+	// 校验器（CIAttributeValidator.NormalizeAttributes）只在 CreateCI/UpdateCI 两个写路径
+	// 上生效，而生命周期推进是第三条写路径——它直接改 lifecycle_status，从不碰
+	// attributes。于是「创建时填过必填项、后来被清空 / 属性定义在创建后才加了新必填项 /
+	// 发现投影落库后未补全」这三类 CI 都能被推进为 online，变成一张「已在服务中」
+	// 却缺关键信息的记录；影响分析、变更评估与权限分配都读这张表。
+	if params.Status == common.CILifecycleStatusOnline {
+		if err := s.validateRequiredAttributesForOnline(ctx, ci, tenantID); err != nil {
+			return nil, err
+		}
 	}
 
 	remark := params.Remark

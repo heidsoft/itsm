@@ -1751,7 +1751,15 @@ func (c *ProductionService) UpdateLifecycleStatus(ctx *gin.Context) {
 	}
 	result, err := c.ciService.UpdateLifecycleStatus(c.operatorContext(ctx), id, tenantID, params, operatorID, operatorName)
 	if err != nil {
-		c.logger.Errorw("Update CI lifecycle status failed", "error", err, "ci_id", id, "status", req.Status, "tenant_id", tenantID)
+		// 必填属性缺失是预期内的客户端前置条件不满足（门禁拦下的正常业务分支），
+		// 记 INFO 而不是 ERROR——按 ERROR 记会让「用户没填属性」污染服务端错误率
+		// 与告警通道，真正的故障反而被淹掉。响应体仍由 RespondError 统一分类（400）。
+		if errors.Is(err, dto.ErrCIAttributeValidationRequiredOnline) {
+			c.logger.Infow("CI online blocked by required attribute gate",
+				"ci_id", id, "tenant_id", tenantID, "operator", operatorName)
+		} else {
+			c.logger.Errorw("Update CI lifecycle status failed", "error", err, "ci_id", id, "status", req.Status, "tenant_id", tenantID)
+		}
 		common.RespondError(ctx, err, "更新生命周期状态失败")
 		return
 	}
