@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/ciattributedefinition"
@@ -147,7 +148,10 @@ func (v *CIAttributeValidator) NormalizeAttributes(ctx context.Context, tenantID
 		}
 
 		if def.Required && (!exists || value == nil || isBlankAttributeString(value)) {
-			return nil, fmt.Errorf("属性 %s 为必填项 (%w)", def.DisplayName, ErrCIAttributeValidation)
+			// 校验失败是用户数据问题，必须是 4xx（400/4000），不能让裸 sentinel 落到 classifyError 兜底成 5001。
+			// 用 common.NewValidationError 包成 *AppError，保留 sentinel 供 errors.Is 分流（投影/发现回写）。
+			return nil, common.NewValidationError(
+				fmt.Sprintf("属性 %s 为必填项", def.DisplayName), ErrCIAttributeValidation)
 		}
 		if !exists || value == nil {
 			continue
@@ -155,7 +159,8 @@ func (v *CIAttributeValidator) NormalizeAttributes(ctx context.Context, tenantID
 
 		normalizedValue, err := normalizeAttributeValue(def, value)
 		if err != nil {
-			return nil, fmt.Errorf("属性 %s 校验失败: %w (%w)", def.DisplayName, err, ErrCIAttributeValidation)
+			return nil, common.NewValidationError(
+				fmt.Sprintf("属性 %s 校验失败: %v", def.DisplayName, err), ErrCIAttributeValidation)
 		}
 		normalized[name] = normalizedValue
 
@@ -165,7 +170,8 @@ func (v *CIAttributeValidator) NormalizeAttributes(ctx context.Context, tenantID
 				return nil, fmt.Errorf("校验属性 %s 唯一性失败: %w", def.DisplayName, err)
 			}
 			if duplicate {
-				return nil, fmt.Errorf("属性 %s 的值必须唯一 (%w)", def.DisplayName, ErrCIAttributeValidation)
+				return nil, common.NewValidationError(
+					fmt.Sprintf("属性 %s 的值必须唯一", def.DisplayName), ErrCIAttributeValidation)
 			}
 		}
 	}
