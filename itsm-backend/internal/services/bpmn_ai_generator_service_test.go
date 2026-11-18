@@ -43,3 +43,20 @@ func TestBPMNTemplateServiceSuggestsBuiltInTemplates(t *testing.T) {
 	require.Equal(t, "incident_emergency_flow", results[0].ID)
 	require.Equal(t, "incident", results[0].ProcessType)
 }
+
+// 节点命名规范必须写进生成与预览两套 prompt，否则 LLM 自由发挥会产出
+// "AI分类/智能分类"、英文 key 直出、公文腔节点名（用户实测抱怨的来源）。
+func TestBPMNAIGeneratorPromptsCarryNodeNamingRules(t *testing.T) {
+	for name, prompt := range map[string]string{
+		"generate": getSystemPrompt(),
+		"preview":  getPreviewSystemPrompt(),
+	} {
+		t.Run(name, func(t *testing.T) {
+			require.Contains(t, prompt, "节点命名要求", "必须含命名规范小节")
+			require.Contains(t, prompt, "中文", "必须要求中文节点名")
+			require.Contains(t, prompt, "禁止", "必须含禁止项")
+			require.Contains(t, prompt, "智能", "必须明确禁止 AI/智能 字样")
+			require.Contains(t, prompt, "工单分类", "必须给出自动化节点的业务命名示例")
+		})
+	}
+}

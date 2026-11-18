@@ -50,7 +50,7 @@
     </userTask>
 
     <!-- 低风险：记录监控 -->
-    <userTask id="Task_LowRisk" name="记录并持续监控">
+    <userTask id="Task_LowRisk" name="记录并监控">
       <incoming>Flow_7</incoming>
       <outgoing>Flow_10</outgoing>
     </userTask>

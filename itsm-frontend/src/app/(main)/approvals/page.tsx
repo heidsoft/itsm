@@ -9,6 +9,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import {
   App,
+  Alert,
   Card,
   Tabs,
   Table,
@@ -44,6 +45,7 @@ import {
 import Link from 'next/link';
 import { httpClient } from '@/lib/api/http-client';
 import { WorkflowApi, type BpmnMyTask } from '@/lib/api/workflow-api';
+import { useBatchTaskDecision, type BatchDecisionResult } from '@/lib/hooks/useBatchTaskDecision';
 import { UserApi, type User } from '@/lib/api/user-api';
 import { useAuthStore } from '@/lib/store/auth-store';
 import { useI18n } from '@/lib/i18n/useI18n';
@@ -235,6 +237,15 @@ export default function ApprovalsCenterPage() {
   const [decisionComment, setDecisionComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
+  // 批量审批
+  const [selectedRowKeys, setSelectedRowKeys] = useState<number[]>([]);
+  const [batchAction, setBatchAction] = useState<'approve' | 'reject' | null>(null);
+  const [batchComment, setBatchComment] = useState('');
+  const [batchResult, setBatchResult] = useState<BatchDecisionResult | null>(null);
+  const { running: batchRunning, runBatch } = useBatchTaskDecision((id, payload) =>
+    WorkflowApi.submitTaskDecision(id, payload)
+  );
+
   // 委托
   const [delegation, setDelegation] = useState<{ task: BpmnMyTask } | null>(null);
   const [delegateToUserId, setDelegateToUserId] = useState<number | undefined>(undefined);
@@ -409,6 +420,40 @@ export default function ApprovalsCenterPage() {
     }
   };
 
+  const openBatch = (action: 'approve' | 'reject') => {
+    if (selectedRowKeys.length === 0) return;
+    setBatchAction(action);
+    setBatchComment('');
+    setBatchResult(null);
+  };
+
+  const submitBatch = async () => {
+    if (!batchAction || selectedRowKeys.length === 0) return;
+    const comment = batchComment.trim();
+    if (batchAction === 'reject' && !comment) {
+      message.warning(t('approvalCenter.rejectCommentRequired'));
+      return;
+    }
+    const result = await runBatch(selectedRowKeys, { action: batchAction, comment });
+    setBatchResult(result);
+    setBatchAction(null);
+    if (result.failedIds.length === 0) {
+      message.success(t('approvalCenter.batchAllSuccess', { count: result.successCount }));
+      setSelectedRowKeys([]);
+    } else {
+      // 失败项保留选中，便于直接重试（H2）；成功项随 loadTasks 刷新移除。
+      setSelectedRowKeys(result.failedIds);
+      message.warning(
+        t('approvalCenter.batchPartialSummary', {
+          success: result.successCount,
+          failed: result.failedIds.length,
+        })
+      );
+    }
+    loadTasks();
+    loadLegacy();
+  };
+
   const openDelegation = async (task: BpmnMyTask) => {
     setDelegation({ task });
     setDelegateToUserId(undefined);
@@ -487,7 +532,7 @@ export default function ApprovalsCenterPage() {
         const purposeKey = taskPurposeKeyMap[(record.taskPurpose || '').toLowerCase()];
         return (
           <div>
-            <div className="font-medium text-gray-900">{text || record.taskDefinitionKey}</div>
+            <div className="font-medium text-gray-900">{text || t('approvalCenter.unnamedNode')}</div>
             {purposeKey && (
               <Text type="secondary" className="text-xs">{t(`approvalCenter.${purposeKey}`)}</Text>
             )}
@@ -813,24 +858,76 @@ export default function ApprovalsCenterPage() {
               children: taskLoading ? (
                 <LoadingSkeleton />
               ) : (
-                <Table
-                  rowKey="id"
-                  dataSource={tasks}
-                  columns={taskColumns}
-                  pagination={pagination}
-                  // 必须 >= 各列固定宽度之和（160+180+180+100+130+130+280=1160），
-                  // 否则自适应列被压扁，中文逐字换行。
-                  scroll={{ x: 1160 }}
-                  locale={{
-                    emptyText: (
-                      <div className="py-12 text-center">
-                        <Clock className="mx-auto mb-3 text-gray-300 w-10 h-10" />
-                        <div className="text-gray-500 mb-1">{t('approvalCenter.emptyTasksTitle')}</div>
-                        <Text type="secondary" className="text-sm">{t('approvalCenter.emptyTasksDesc')}</Text>
-                      </div>
-                    ),
-                  }}
-                />
+                <div className="space-y-3">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Button
+                      type="primary"
+                      disabled={selectedRowKeys.length === 0}
+                      loading={batchRunning}
+                      onClick={() => openBatch('approve')}
+                    >
+                      {t('approvalCenter.batchApprove')}
+                    </Button>
+                    <Button
+                      danger
+                      disabled={selectedRowKeys.length === 0}
+                      loading={batchRunning}
+                      onClick={() => openBatch('reject')}
+                    >
+                      {t('approvalCenter.batchReject')}
+                    </Button>
+                    <Text type="secondary" className="text-sm">
+                      {t('approvalCenter.batchSelected', { count: selectedRowKeys.length })}
+                    </Text>
+                  </div>
+                  {batchResult && batchResult.failedIds.length > 0 && (
+                    <Alert
+                      type="warning"
+                      showIcon
+                      closable={{ onClose: () => setBatchResult(null) }}
+                      title={t('approvalCenter.batchPartialTitle')}
+                      description={
+                        <div className="space-y-1">
+                          <div>
+                            {t('approvalCenter.batchPartialSummary', {
+                              success: batchResult.successCount,
+                              failed: batchResult.failedIds.length,
+                            })}
+                          </div>
+                          <ul className="list-disc pl-5">
+                            {batchResult.failedIds.map((id) => (
+                              <li key={id}>
+                                #{id}：{batchResult.errors[id]}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      }
+                    />
+                  )}
+                  <Table
+                    rowKey="id"
+                    dataSource={tasks}
+                    columns={taskColumns}
+                    pagination={pagination}
+                    rowSelection={{
+                      selectedRowKeys,
+                      onChange: (keys) => setSelectedRowKeys(keys.map((k) => Number(k))),
+                    }}
+                    // 必须 >= 各列固定宽度之和（160+180+180+100+130+130+280=1160），
+                    // 否则自适应列被压扁，中文逐字换行。
+                    scroll={{ x: 1160 }}
+                    locale={{
+                      emptyText: (
+                        <div className="py-12 text-center">
+                          <Clock className="mx-auto mb-3 text-gray-300 w-10 h-10" />
+                          <div className="text-gray-500 mb-1">{t('approvalCenter.emptyTasksTitle')}</div>
+                          <Text type="secondary" className="text-sm">{t('approvalCenter.emptyTasksDesc')}</Text>
+                        </div>
+                      ),
+                    }}
+                  />
+                </div>
               ),
             },
             {
@@ -920,6 +1017,53 @@ export default function ApprovalsCenterPage() {
             </div>
           </div>
         )}
+      </Modal>
+
+      {/* 批量审批弹窗 */}
+      <Modal
+        title={
+          batchAction === 'reject'
+            ? t('approvalCenter.batchRejectTitle')
+            : t('approvalCenter.batchApproveTitle')
+        }
+        open={!!batchAction}
+        onOk={submitBatch}
+        onCancel={() => setBatchAction(null)}
+        okText={
+          batchAction === 'reject'
+            ? t('approvalCenter.confirmReject')
+            : t('approvalCenter.confirmApprove')
+        }
+        okButtonProps={{ danger: batchAction === 'reject', loading: batchRunning }}
+        cancelText={t('approvalCenter.cancel')}
+        destroyOnHidden
+      >
+        <div className="space-y-3">
+          <Text type="secondary">
+            {t('approvalCenter.batchSelected', { count: selectedRowKeys.length })}
+          </Text>
+          <div>
+            <Text type="secondary">
+              {t('approvalCenter.batchCommentLabel')}
+              {batchAction === 'reject'
+                ? t('approvalCenter.commentRequiredSuffix')
+                : t('approvalCenter.commentOptionalSuffix')}
+            </Text>
+            <TextArea
+              rows={3}
+              className="mt-1"
+              value={batchComment}
+              onChange={(e) => setBatchComment(e.target.value)}
+              placeholder={
+                batchAction === 'reject'
+                  ? t('approvalCenter.placeholderReject')
+                  : t('approvalCenter.placeholderApprove')
+              }
+              maxLength={500}
+              showCount
+            />
+          </div>
+        </div>
       </Modal>
 
       {/* 委托弹窗 */}

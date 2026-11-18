@@ -126,7 +126,7 @@ func TestParseWorkflowNodes_TableDriven(t *testing.T) {
 			},
 			wantLen: 1,
 			check: func(t *testing.T, nodes []workflowNode) {
-				assert.Equal(t, "Step 1", nodes[0].Name)
+				assert.Equal(t, "第 1 级审批", nodes[0].Name)
 			},
 			wantErr: false,
 		},

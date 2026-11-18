@@ -208,7 +208,7 @@
     </bpmn:serviceTask>
 
     <!-- 预防措施触发 -->
-    <bpmn:serviceTask id="Activity_TriggerPrevention" name="触发预防措施">
+    <bpmn:serviceTask id="Activity_TriggerPrevention" name="启动预防措施">
       <bpmn:extensionElements>
         <bpmn:metaData name="service_task_type">generic_task</bpmn:metaData>
         <bpmn:metaData name="action">trigger_prevention_measures</bpmn:metaData>

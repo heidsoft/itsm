@@ -558,7 +558,7 @@ func (s *ApprovalService) parseWorkflowNodes(nodesJSON interface{}) ([]workflowN
 			node.Level = i + 1
 		}
 		if node.Name == "" {
-			node.Name = fmt.Sprintf("Step %d", i+1)
+			node.Name = fmt.Sprintf("第 %d 级审批", i+1)
 		}
 		if node.ApprovalMode == "" {
 			node.ApprovalMode = "any"

@@ -37,6 +37,8 @@ import {
 import BpmnModeler from 'bpmn-js/lib/Modeler';
 import itsmModdleDescriptor from './itsm-moddle-descriptor';
 import gridModule from 'diagram-js/lib/features/grid-snapping';
+import { zhTranslateModule } from './bpmnZhTranslate';
+import { defaultNodeName } from './bpmnDefaultNames';
 import { ensureBpmnDI, hasBpmnDiagramWithShapes } from './bpmnAutoLayout';
 import { formatElementType, toShortType, typeSearchTerms } from './bpmnElementTypes';
 import { normalizeNodeProperties, readReferenceId, type ModdleCreate } from './bpmnPropertyWrite';
@@ -283,7 +285,7 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
     }
 
     try {
-      const additionalModules = [gridModule];
+      const additionalModules = [gridModule, zhTranslateModule];
 
       const modeler = new BpmnModeler({
         container: containerRef.current,
@@ -297,6 +299,31 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
 
       modelerRef.current = modeler;
       initAttemptedRef.current = true;
+
+      // 新拖入的节点默认无 name，待办列表会退化成英文 key 直出。
+      // 仅在用户创建节点（shape.create 命令）后补一个中文默认名；导入的存量节点不动。
+      modeler.on(
+        'commandStack.shape.create.postExecuted',
+        (event: { context?: { shape?: { businessObject?: { $type?: string; name?: string } } } }) => {
+          const shape = event?.context?.shape;
+          const businessObject = shape?.businessObject;
+          if (!businessObject || (businessObject.name && businessObject.name.trim())) {
+            return;
+          }
+          const name = defaultNodeName(businessObject.$type ?? '');
+          if (!name) {
+            return;
+          }
+          try {
+            const modeling = modeler.get('modeling') as {
+              updateProperties: (element: unknown, properties: Record<string, unknown>) => void;
+            };
+            modeling.updateProperties(shape, { name });
+          } catch (err) {
+            console.warn('[BPMNDesigner] failed to set default node name', err);
+          }
+        }
+      );
 
       // 在 bpmn-js 完成 XML 解析、准备调用 importDefinitions 渲染之前，
       // 对缺 <bpmndi:BPMNDiagram> 的 Definitions 注入自动布局的 DI。

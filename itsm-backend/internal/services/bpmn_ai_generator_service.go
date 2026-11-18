@@ -322,7 +322,7 @@ func (s *BPMNAIGeneratorService) parseLLMResponse(response string) (string, *Gen
 			metadata = GenerationMetadata{
 				NodeCount:   strings.Count(bpmnXML, "<bpmn:"),
 				Complexity:  "medium",
-				Explanation: "AI生成的BPMN流程",
+				Explanation: "根据业务描述生成的流程",
 			}
 		}
 	} else {
@@ -330,7 +330,7 @@ func (s *BPMNAIGeneratorService) parseLLMResponse(response string) (string, *Gen
 		metadata = GenerationMetadata{
 			NodeCount:   strings.Count(bpmnXML, "<bpmn:"),
 			Complexity:  "medium",
-			Explanation: "AI生成的BPMN流程",
+			Explanation: "根据业务描述生成的流程",
 		}
 	}
 
@@ -366,6 +366,11 @@ func getSystemPrompt() string {
 		"- 如果需要SLA，在节点元数据中添加sla_minutes字段\n" +
 		"- 如果需要通知，在节点元数据中添加notification_channel和notify_roles字段\n" +
 		"- 如果需要审批，添加userTask节点并配置审批角色\n\n" +
+		"节点命名要求：\n" +
+		"- 每个节点的 name 用简短自然的中文动宾短语，站在业务人员视角，例如\"主管审批\"\"分派工单\"\"验证效果\"\"通知申请人\"\n" +
+		"- 自动化节点按它完成的业务动作命名，禁止出现\"AI\"\"智能\"等字样：分类节点叫\"工单分类\"，不叫\"AI分类\"或\"智能分类\"\n" +
+		"- 禁止把英文节点ID当作 name 输出（如 Activity_Approve_L1）；name 必须是给人读的中文\n" +
+		"- 避免公文腔和动宾倒装：用\"通知申请人\"不用\"告知申请人\"，用\"实施解决方案\"不用\"实施解决\"\n\n" +
 		"命名空间要求：\n" +
 		"xmlns:bpmn=\"http://www.omg.org/spec/BPMN/20100524/MODEL\"\n" +
 		"xmlns:bpmndi=\"http://www.omg.org/spec/BPMN/20100524/DI\"\n" +
@@ -416,5 +421,7 @@ func getPreviewSystemPrompt() string {
 		"  \"suggestions\": [\"优化建议1\", \"优化建议2\"]\n" +
 		"}\n\n" +
 		"节点类型可选值：startEvent, endEvent, userTask, serviceTask, exclusiveGateway, parallelGateway, scriptTask, receiveTask, sendTask\n\n" +
+		"节点命名要求：name 用简短自然的中文动宾短语（如\"主管审批\"\"分派工单\"\"验证效果\"）；" +
+		"自动化节点按业务动作命名，禁止\"AI\"\"智能\"字样（分类节点叫\"工单分类\"）；禁止把英文节点ID当 name；避免公文腔（用\"通知申请人\"不用\"告知申请人\"）。\n\n" +
 		"请根据业务需求合理设计流程结构，确保符合企业级ITSM的最佳实践。"
 }

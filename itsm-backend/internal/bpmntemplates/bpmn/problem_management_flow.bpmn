@@ -71,13 +71,13 @@
     </bpmn:exclusiveGateway>
 
     <!-- 实施解决方案 -->
-    <bpmn:userTask id="Activity_Implement" name="实施解决">
+    <bpmn:userTask id="Activity_Implement" name="实施解决方案">
       <bpmn:incoming>Flow_10</bpmn:incoming>
       <bpmn:outgoing>Flow_11</bpmn:outgoing>
     </bpmn:userTask>
 
     <!-- 验证解决 -->
-    <bpmn:userTask id="Activity_Verify" name="验证解决">
+    <bpmn:userTask id="Activity_Verify" name="验证解决效果">
       <bpmn:incoming>Flow_11</bpmn:incoming>
       <bpmn:outgoing>Flow_12</bpmn:outgoing>
     </bpmn:userTask>

@@ -118,7 +118,7 @@ export const ApprovalTimeline: React.FC<ApprovalTimelineProps> = ({
   }, [modalOpen, currentAction, userOptions.length]);
 
   const handleSubmit = async () => {
-    if (!comment.trim()) {
+    if (currentAction === 'reject' && !comment.trim()) {
       message.warning(t('detailTabs.approvalCommentRequired'));
       return;
     }
@@ -271,7 +271,11 @@ export const ApprovalTimeline: React.FC<ApprovalTimelineProps> = ({
             />
           </div>
         )}
-        <div className="mb-1 text-sm text-gray-600">{t('detailTabs.approvalCommentRequired')}</div>
+        <div className="mb-1 text-sm text-gray-600">
+          {currentAction === 'reject'
+            ? t('detailTabs.approvalCommentRequiredLabel')
+            : t('detailTabs.approvalCommentOptionalLabel')}
+        </div>
         <TextArea
           rows={4}
           value={comment}

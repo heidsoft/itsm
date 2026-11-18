@@ -28,7 +28,7 @@
     </bpmn:startEvent>
 
     <!-- ========== 服务分类 ========== -->
-    <bpmn:serviceTask id="Activity_AutoCategorize" name="智能分类">
+    <bpmn:serviceTask id="Activity_AutoCategorize" name="请求分类">
       <bpmn:extensionElements>
         <bpmn:metaData name="service_task_type">generic_task</bpmn:metaData>
         <bpmn:metaData name="action">auto_categorize_request</bpmn:metaData>

@@ -34,7 +34,7 @@
     </exclusiveGateway>
 
     <!-- 拒绝流程 -->
-    <userTask id="Task_Reject" name="告知申请人">
+    <userTask id="Task_Reject" name="通知申请人">
       <incoming>Flow_5</incoming>
       <outgoing>Flow_10</outgoing>
     </userTask>

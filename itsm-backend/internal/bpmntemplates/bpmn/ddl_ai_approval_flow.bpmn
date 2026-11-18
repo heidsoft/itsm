@@ -33,7 +33,7 @@
     </bpmn:startEvent>
 
     <!-- AI 分析：只读工具 analyze_ddl，免审批但落审计 -->
-    <bpmn:serviceTask id="Activity_AIAnalyze" name="AI分析">
+    <bpmn:serviceTask id="Activity_AIAnalyze" name="变更分析">
       <bpmn:extensionElements>
         <bpmn:metaData name="service_task_type">generic_task</bpmn:metaData>
         <bpmn:metaData name="action">analyze_ddl</bpmn:metaData>
@@ -47,7 +47,7 @@
     </bpmn:serviceTask>
 
     <!-- AI 分类：只读工具 classify_ddl -->
-    <bpmn:serviceTask id="Activity_AIClassify" name="AI分类">
+    <bpmn:serviceTask id="Activity_AIClassify" name="变更分类">
       <bpmn:extensionElements>
         <bpmn:metaData name="service_task_type">generic_task</bpmn:metaData>
         <bpmn:metaData name="action">classify_ddl</bpmn:metaData>
@@ -61,7 +61,7 @@
     </bpmn:serviceTask>
 
     <!-- SOP 生成：AI 起草(generate_sop) + 人确认(UserTask) -->
-    <bpmn:serviceTask id="Activity_AIGenerateSOP" name="AI起草SOP">
+    <bpmn:serviceTask id="Activity_AIGenerateSOP" name="起草SOP">
       <bpmn:extensionElements>
         <bpmn:metaData name="service_task_type">generic_task</bpmn:metaData>
         <bpmn:metaData name="action">generate_sop</bpmn:metaData>
@@ -98,7 +98,7 @@
     </bpmn:userTask>
 
     <!-- SOP 迭代：AI 根据反馈起草迭代稿(refine_sop) -->
-    <bpmn:serviceTask id="Activity_AIRefineSOP" name="AI迭代SOP">
+    <bpmn:serviceTask id="Activity_AIRefineSOP" name="修订SOP">
       <bpmn:extensionElements>
         <bpmn:metaData name="service_task_type">generic_task</bpmn:metaData>
         <bpmn:metaData name="action">refine_sop</bpmn:metaData>
