@@ -171,6 +171,15 @@ func Definitions() []PermissionDef {
 		// DDL AI 审批流的只读分析节点与 SOP 起草节点要求持有此码；
 		// end_user 不授予（自助旅程不进入 agent 编排面）。
 		{"ai:triage", "AI分诊与SOP", "ai", "triage", "调用 AI 分诊/分类与 SOP 起草工具"},
+		// MCP 通道（2026-11-18）：对外暴露 ITSM 能力的 Model Context Protocol 服务端。
+		// 只定义 mcp:read 一个码 —— 它是**通道准入**（能否经 MCP 端点发现工具面）。
+		//
+		// 为什么没有 mcp:invoke：调用面不另设码，主体权限判定由既有执行链
+		// （ai.Service.ExecuteTool 的 Gate 2.5）按**工具自身的 resource:action**
+		// 逐个判定，粒度比通道级一刀切更细。若另设 mcp:invoke 并在服务层判定，
+		// 会与执行链的判定重复，形成两套主体判定 —— 这正是本仓要避免的。
+		// 附带好处：mcp:invoke 无路由引用会成为死码，触发 C.6 反向死码守卫。
+		{"mcp:read", "查看MCP工具面", "mcp", "read", "列出 MCP 通道暴露的工具与能力"},
 		{"connector:write", "管理连接器", "connector", "write", "管理连接器配置"},
 		{"connector:read", "查看连接器", "connector", "read", "查看连接器配置与健康状态"},
 		{"email_intake:read", "查看邮件报障", "email_intake", "read", "查看邮件报障会话与分析"},

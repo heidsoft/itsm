@@ -123,6 +123,11 @@ func BuiltinRolePermissionCodes() map[string][]string {
 			// 旧兜底表的 alerts:read 从未匹配过任何路由，不再授予。
 			"notification:write", "dashboard:read", "service_catalog:read",
 			"change:write", "alert:read", "group:read", "bpmn:read",
+			// MCP 通道（2026-11-18）：Agent 是 MCP 的典型客户端（自动化代理
+			// 通过协议发现 ITSM 工具面）。只授 mcp:read（通道准入）；
+			// 调用面不另设通道码 —— 主体权限由执行链按工具自身
+			// resource:action 逐个判定（Gate 2.5），不重复设第二套判定。
+			"mcp:read",
 		},
 		// 安全管理员（等保三员②）
 		domainrole.SecurityAdmin: {
@@ -149,10 +154,16 @@ func BuiltinRolePermissionCodes() map[string][]string {
 			"approval:read", "service_request:read", "service_catalog:read",
 			"knowledge:read", "cmdb:read", "asset:read", "license:read", "vendor:read",
 			"sla:read", "release:read", "workflow:read", "bpmn:read", "task:read",
-			"notification:read", "dashboard:read", "alert:read", "ai:read",
-			"team:read", "department:read", "group:read", "org:read",
-			"project:read", "application:read", "on_call:read", "msp:read",
-		},
+		"notification:read", "dashboard:read", "alert:read", "ai:read",
+		"team:read", "department:read", "group:read", "org:read",
+		"project:read", "application:read", "on_call:read", "msp:read",
+		// MCP 通道（2026-11-18）：audit_admin 是 service 主体的载体角色
+		// （cmd/service-token-gen 签发的 service JWT 固定用它）。
+		// 只授 mcp:read —— 可发现工具面、不可调用：
+		// service 主体默认零信任（AllowedPrincipals 恒为 ["human"]），
+		// 调用需运行期策略显式放行，此处不给角色级调用权。
+		"mcp:read",
+	},
 		// 部门经理（users.role=manager 对齐；服务请求 L1 审批角色）
 		domainrole.Manager: {
 			"ticket:read", "ticket_type:read", "ticket:write", "incident:read",

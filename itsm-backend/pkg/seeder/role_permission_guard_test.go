@@ -56,6 +56,11 @@ func TestBuiltinRolePermissionCodes_Guard(t *testing.T) {
 			// agent 早就持有此码，但技术员漏授导致下拉空、分类恒未选（缺陷 O9）；
 			// 这里把 technician 一并锁进来，防止后续再被「精简权限面」清掉。
 			"ticket_category:read",
+			// MCP 通道（2026-11-18）：Agent 是 MCP 的典型客户端（自动化代理
+			// 通过协议发现 ITSM 工具面）。只授 mcp:read（通道准入）；
+			// 调用面不另设通道码 —— 主体权限由执行链按工具自身
+			// resource:action 逐个判定（Gate 2.5），不重复设第二套判定。
+			"mcp:read",
 		},
 		"technician": {
 			"ticket:create", "ticket:update", "ticket:assign", "ticket:escalate",
@@ -85,6 +90,12 @@ func TestBuiltinRolePermissionCodes_Guard(t *testing.T) {
 		"admin":          {"automation_rule:read", "automation_rule:write", "assignment_rule:read", "assignment_rule:write"},
 		"it_admin":       {"automation_rule:read", "automation_rule:write", "assignment_rule:read", "assignment_rule:write"},
 		"security_admin": {"automation_rule:read", "assignment_rule:read"},
+		// MCP 通道（2026-11-18）：audit_admin 是 service 主体的载体角色
+		// （cmd/service-token-gen 签发的 service JWT 固定用它）。
+		// 必须能发现工具面（mcp:read）；调用面不放行 —— service 主体调用
+		// 须由运行期策略（AllowedPrincipals）按工具自身 resource:action
+		// 显式放行，不靠角色层默认打开。
+		"audit_admin": {"mcp:read"},
 	}
 	for role, codes := range n4Granted {
 		granted := make(map[string]bool, len(roleCodes[role]))
@@ -109,9 +120,11 @@ func TestBuiltinRolePermissionCodes_Guard(t *testing.T) {
 		endUserGranted[c] = true
 	}
 	// Phase B5：ai:triage 是 agent 编排面（分诊/SOP 起草）码，自助旅程不进入该面。
-	for _, forbidden := range []string{"ai:approve", "ai:write", "ai:triage", "workflow:read"} {
+	// MCP 通道（2026-11-18）：mcp:read 是对外协议发现面，end_user 是自助旅程身份，
+	// 不应经 MCP 通道发现工具（那属于 agent/服务账号的编排面）。
+	for _, forbidden := range []string{"ai:approve", "ai:write", "ai:triage", "workflow:read", "mcp:read"} {
 		if endUserGranted[forbidden] {
-			t.Errorf("end_user 不得持有 %s：终态接口另有归属码（AI 审批=职责分立 Phase A；ai:triage=agent 编排面 Phase B5；workflow:read=/bpmn/ai/templates 管理面码，旅程接口由 ticket:read 守卫）", forbidden)
+			t.Errorf("end_user 不得持有 %s：终态接口另有归属码（AI 审批=职责分立 Phase A；ai:triage=agent 编排面 Phase B5；workflow:read=/bpmn/ai/templates 管理面码，旅程接口由 ticket:read 守卫；mcp:read=对外协议发现面，2026-11-18）", forbidden)
 		}
 	}
 

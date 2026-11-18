@@ -60,6 +60,8 @@ import (
 	"itsm-backend/handlers/service_catalog"
 	"itsm-backend/handlers/service_request"
 	"itsm-backend/handlers/skill"
+
+	"itsm-backend/handlers/mcp"
 	"itsm-backend/handlers/sla"
 	slaTemplateHandler "itsm-backend/handlers/sla_template"
 	"itsm-backend/handlers/standard_change"
@@ -250,6 +252,10 @@ type RouterConfig struct {
 
 	// Skill Registry v1
 	SkillHandler *skill.Handler
+
+	// MCP Handler —— 对外暴露 ITSM 能力的 Model Context Protocol 服务端。
+	// 协议面：POST /api/v1/mcp（JSON-RPC 2.0，方法级 dispatch）。
+	MCPHandler *mcp.Handler
 
 	// WebSocket Service
 	WebSocketService *service.WebSocketService
@@ -642,6 +648,13 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 		//   POST   /api/v1/admin/skills/:code/invoke   统一调用入口（ai:read）
 		if config.SkillHandler != nil {
 			config.SkillHandler.RegisterRoutes(tenant.(*gin.RouterGroup))
+		}
+		// ==================== MCP 服务端 ====================
+		// 对外暴露 ITSM 能力的 Model Context Protocol 端点。
+		// 路径：POST /api/v1/mcp（JSON-RPC 2.0；initialize / tools/list / tools/call）
+		// 权限：mcp:read（通道准入）；调用面 mcp:invoke 由服务层按 principal 判定。
+		if config.MCPHandler != nil {
+			config.MCPHandler.RegisterRoutes(tenant.(*gin.RouterGroup))
 		}
 		if config.EmailIntakeHandler != nil {
 			config.EmailIntakeHandler.RegisterRoutes(tenant.(*gin.RouterGroup))

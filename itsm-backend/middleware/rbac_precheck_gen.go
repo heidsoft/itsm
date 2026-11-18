@@ -684,6 +684,7 @@ func precheckRoutePermissions() map[string]map[string]Permission {
 			"/api/v1/marketplace/items/*/install":                    {Resource: "marketplace", Action: "write"},
 			"/api/v1/marketplace/items/*/uninstall":                  {Resource: "marketplace", Action: "write"},
 			"/api/v1/marketplace/items/*/upgrade":                    {Resource: "marketplace", Action: "write"},
+			"/api/v1/mcp":                                            {Resource: "mcp", Action: "read"},
 			"/api/v1/menus":                                          {Resource: "system_config", Action: "write"},
 			"/api/v1/menus/init":                                     {Resource: "system_config", Action: "write"},
 			"/api/v1/msp/allocations":                                {Resource: "msp_allocation", Action: "write"},

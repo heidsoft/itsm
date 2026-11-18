@@ -77,6 +77,7 @@ import (
 	"itsm-backend/handlers/service_request"
 	"itsm-backend/handlers/skill"
 	"itsm-backend/handlers/sla"
+	"itsm-backend/handlers/mcp"
 	slaTemplateHandler "itsm-backend/handlers/sla_template"
 	"itsm-backend/handlers/standard_change"
 	surveyHandler "itsm-backend/handlers/survey"
@@ -1134,6 +1135,40 @@ func NewApplication() *Application {
 		}
 		seedCancel()
 	}
+
+	// ==================== MCP 服务端（对外协议出口） ====================
+	// 把 ITSM 既有能力经 Model Context Protocol 暴露给外部 Agent 客户端
+	// （Claude Desktop / Claude Code / 第三方 Agent 编排器）。
+	//
+	// 本装配刻意「不新增业务能力」：工具面来自既有 toolRegistry，执行链来自
+	// 既有 aiServiceDomain.ExecuteTool（含 Gate 2 角色 RBAC、Gate 2.5 主体
+	// 零信任、写工具审批流与审计落库），交付门禁来自既有 marketplaceSvc。
+	// MCP 只是协议形状的转接层，因此这里不需要新的权限码体系。
+	//
+	// 主体放行说明：service 主体默认零信任（AllowedPrincipals 恒为 ["human"]），
+	// MCP 调用需运行期策略显式放行 mcp:invoke —— 角色层只给了 agent 角色该码，
+	// service 主体须由管理员在权限策略中显式加入 service，符合「AI 主体零权限
+	// 是核心防线」的既有设计。
+	mcpService, mcpErr := mcp.NewService(mcp.Options{
+		Catalog: &mcp.ToolCatalogAdapter{
+			Lister: toolRegistry,
+		},
+		Executor: &mcp.ToolExecutorAdapter{
+			Executor: aiServiceDomain,
+		},
+		Entitlement: &mcp.EntitlementAdapter{
+			Checker: marketplaceSvc,
+		},
+		Logger:  sugar,
+		Version: mcp.Version(),
+	})
+	if mcpErr != nil {
+		// 装配失败属致命配置错误：MCP 通道必须 fail-closed，
+		// 不能退化成「路由在但服务是空壳」。
+		sugar.Fatalw("mcp service assembly failed", "error", mcpErr)
+	}
+	mcpHandler := mcp.NewHandler(mcpService, sugar)
+
 	emailIntakeService := email_intake.NewService(client)
 	emailIntakeHandler := email_intake.NewHandler(emailIntakeService)
 	emailIntakeMode := email_intake.IntakeMode(os.Getenv("EMAIL_INTAKE_MODE"))
@@ -1455,6 +1490,10 @@ func NewApplication() *Application {
 		AccountHandler: accountHandler.NewHandler(userService),
 
 		SkillHandler: skillHandler,
+
+		// MCP 服务端（对外协议出口）：复用既有工具面、执行链与交付门禁，
+		// 不新增业务能力。装配失败已在上面 fail-fast，不会出现空壳路由。
+		MCPHandler: mcpHandler,
 
 		// Global Search
 		GlobalSearchHandler: globalSearchHandler.NewHandler(globalSearchHandler.NewService(client)),
