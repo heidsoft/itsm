@@ -110,6 +110,29 @@ describe('ServiceQualityOverview', () => {
     expect(screen.queryByText('变更总数')).not.toBeInTheDocument();
   });
 
+  it('ticketStats 内部数组为 null 时降级为空表，不让报表中心白屏', async () => {
+    // 🔴 真机缺陷回归：后端 analytics.GetTicketStats 曾用 var 声明分组切片，
+    // 空数据时 Ent Scan 不写入 → JSON null。本组件直接消费后端 DTO（不经过
+    // analytics-service.ts 的 ?? [] 适配层），statusGroups.map() 抛 TypeError
+    // → 从侧边栏点「报表中心」整页崩溃，连带 CMDB 质量报表的菜单入口也断了。
+    const report = buildReport();
+    const malformed = {
+      ...report,
+      ticketStats: { ...report.ticketStats!, statusGroups: null },
+    } as unknown as ServiceQualityReport;
+    mockGetServiceQuality.mockResolvedValue(malformed);
+
+    render(<ServiceQualityOverview />);
+
+    // 块仍在，只是分布为空表——不得落到错误分支，也不得把「块未接入」误报出来
+    expect(await screen.findByText('工单统计')).toBeInTheDocument();
+    expect(screen.queryByText('服务质量总览加载失败')).not.toBeInTheDocument();
+    expect(screen.queryByText('该统计块未接入')).not.toBeInTheDocument();
+    // 该用例里 problem/change 块都有数据，不得因为 statusGroups 异常被误判成块缺省
+    expect(screen.getByText('问题统计')).toBeInTheDocument();
+    expect(screen.getByText('变更统计')).toBeInTheDocument();
+  });
+
   it('加载失败时显示错误与重试入口', async () => {
     mockGetServiceQuality.mockRejectedValue(new Error('service unavailable'));
     render(<ServiceQualityOverview />);

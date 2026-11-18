@@ -403,7 +403,12 @@ func (s *AnalyticsService) exportToPDF(response *dto.DeepAnalyticsResponse) ([]b
 // GetTicketStats 获取工单分析概览（轻量聚合，/api/v1/analytics/tickets 用）
 func (s *AnalyticsService) GetTicketStats(ctx context.Context, tenantID int) (*dto.AnalyticsTicketStatsResponse, error) {
 	// 1. 按状态分组
-	var statusGroups []dto.TicketStatusGroup
+	// 必须初始化为空切片：Ent 的 GroupBy().Scan() 在零行时不会写入目标切片，
+	// 用 var 声明会留下 nil → JSON 序列化为 null → 统一服务质量视图的
+	// ServiceQualityOverview 直接 .map(statusGroups) 会整页崩溃。
+	// 与问题域 ToStatsResponse / 变更域 ToStatsDTO 的空数组归一保持同一契约：
+	// 「块未装配」用块缺省（null）表达，「已装配但无数据」用空数组（[]）表达。
+	statusGroups := make([]dto.TicketStatusGroup, 0)
 	err := s.client.Ticket.Query().
 		Where(ticket.TenantIDEQ(tenantID)).
 		GroupBy(ticket.FieldStatus).
@@ -440,8 +445,8 @@ func (s *AnalyticsService) GetTicketStats(ctx context.Context, tenantID int) (*d
 		trendSlice = append(trendSlice, dto.TicketTrendPoint{Date: day, Count: cnt})
 	}
 
-	// 4. 按优先级
-	var priorityGroups []dto.TicketPriorityGroup
+	// 4. 按优先级（同状态分组：零行时必须是空数组而非 null）
+	priorityGroups := make([]dto.TicketPriorityGroup, 0)
 	err = s.client.Ticket.Query().
 		Where(ticket.TenantIDEQ(tenantID)).
 		GroupBy(ticket.FieldPriority).

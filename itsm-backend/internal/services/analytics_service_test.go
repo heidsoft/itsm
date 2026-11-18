@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"testing"
 	"time"
@@ -430,4 +431,37 @@ func TestAnalyticsService_CalculateMetrics_Count(t *testing.T) {
 
 	assert.Equal(t, 3, point.Count)
 	assert.Equal(t, float64(3), point.Value)
+}
+
+// TestAnalyticsService_GetTicketStats_EmptyTenantArraysNotNil 锁定「已装配但无数据」的
+// 契约：分组字段必须下发空数组而非 null。
+//
+// 为什么必须锁 JSON：Go 里 nil slice 和空 slice 用 assert.NotNil 能区分，但真正让
+// 前端崩的是序列化后的 null。统一服务质量视图的 ServiceQualityOverview 直接消费
+// 这个 DTO（绕过 analytics-service.ts 的 ?? [] 适配层），statusGroups 为 null 时
+// .map() 会抛 TypeError，导致整个报表中心白屏。
+//
+// 「块未装配」的表达是块本身缺省（ServiceQualityReport.TicketStats == nil），
+// 与本测试锁的「块已装配、内部数组为空」是两个不同语义，不得互相替代。
+func TestAnalyticsService_GetTicketStats_EmptyTenantArraysNotNil(t *testing.T) {
+	client, service, ctx := setupAnalyticsTest(t)
+	defer client.Close()
+
+	tenant, err := createAnalyticsTestTenant(ctx, client, "empty-ticket-stats")
+	require.NoError(t, err)
+
+	stats, err := service.GetTicketStats(ctx, tenant.ID)
+	require.NoError(t, err)
+	require.NotNil(t, stats)
+	assert.Equal(t, 0, stats.Total, "空租户工单总数必须为 0")
+	assert.NotNil(t, stats.StatusGroups, "状态分布必须是空数组，不得为 nil")
+	assert.NotNil(t, stats.PriorityGroups, "优先级分布必须是空数组，不得为 nil")
+	assert.NotNil(t, stats.Trend30d, "30 天趋势必须是空数组，不得为 nil")
+
+	encoded, err := json.Marshal(stats)
+	require.NoError(t, err)
+	assert.NotContains(t, string(encoded), "null",
+		"序列化结果不得出现 null：前端直接 .map() 会整页崩溃；got %s", string(encoded))
+	assert.Contains(t, string(encoded), `"statusGroups":[]`)
+	assert.Contains(t, string(encoded), `"priorityGroups":[]`)
 }

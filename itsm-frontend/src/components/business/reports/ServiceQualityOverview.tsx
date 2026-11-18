@@ -231,7 +231,11 @@ export default function ServiceQualityOverview() {
                   <div className="mt-2">
                     <StatusTable
                       nameKey="状态"
-                      rows={report.ticketStats.statusGroups.map(g => ({ name: g.status, count: g.count }))}
+                      // 与 analytics-service.ts 的 (raw.statusGroups ?? []) 同一防御：
+                      // 后端空数据时若下发 null（而非契约要求的 []），这里降级成空表，
+                      // 不让整个报表中心白屏。外层 ticketStats ? 仍保留「块未接入」语义，
+                      // 不会被这个兜底吞掉。
+                      rows={(report.ticketStats.statusGroups ?? []).map(g => ({ name: g.status, count: g.count }))}
                     />
                   </div>
                 </Card>
