@@ -1395,12 +1395,33 @@ func (h *Handler) RetryDiscoveryJob(c *gin.Context) {
 	common.Success(c, toDiscoveryJobDetailResponse(job))
 }
 
+// ListDiscoveryResults handles GET /api/v1/cmdb/discovery/results
+//
+//	@Summary	列出发现差异（逐资源 diff，待人确认）
+//	@Description job_id 缺省 = 列出本租户全部差异；给值时只列该任务的差异。参数非法是 400/1001，不得回落为「不过滤」。
+//	@Tags CMDB-云发现
+//	@Produce json
+//	@Security BearerAuth
+//	@Param job_id query int false "发现任务ID；缺省列出本租户全部差异"
+//	@Success 200 {object} common.Response{data=[]dto.DiscoveryResultResponse}
+//	@Failure 400 {object} common.Response "job_id 不是正整数"
+//	@Failure 401 {object} common.Response "租户上下文缺失"
+//	@Router /api/v1/cmdb/discovery/results [get]
 func (h *Handler) ListDiscoveryResults(c *gin.Context) {
 	tenantID, ok := handlerctx.ResolveTenantID(c)
 	if !ok {
 		return
 	}
-	jobID, _ := common.ParsePositiveIDFromQuery(c, "job_id")
+	// 必须检查第二个返回值：ParsePositiveIDFromQuery 在参数非法时**已经写过 400
+	// 并 Abort**，丢弃 ok 继续往下跑会让服务层收到 jobID=0，被当成「不过滤」列出
+	// 全租户差异；gin 还会在 Abort 之后再写一次 200，响应体变成两个 JSON 对象
+	// 首尾相接，任何标准客户端都无法解析。
+	// 用 IsAborted() 区分「参数缺席」（无响应，按不过滤继续）与「参数非法」
+	// （响应已写出，必须立刻停下），而不是再读一次 query 猜。
+	jobID, ok := common.ParsePositiveIDFromQuery(c, "job_id")
+	if !ok && c.IsAborted() {
+		return
+	}
 	list, err := h.svc.ListDiscoveryResults(c.Request.Context(), tenantID, jobID)
 	if err != nil {
 		common.RespondError(c, err, "操作失败")

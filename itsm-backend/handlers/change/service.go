@@ -853,6 +853,15 @@ func (s *Service) GetCMDBImpactSummary(ctx context.Context, changeID, tenantID i
 		}
 	}
 
+	// 关系计数与开放事件计数必须失败关闭。
+	//
+	// 旧实现写成 `if err == nil { summary.X = count }` —— 查询失败时字段保持 Go
+	// 零值 0，等于把「算不出来」汇报成「风险为零」。这条语义方向是错的：CMDB 是
+	// 变更风险判断的数据依据，数据库读不出来时推荐风险会从 high 掉到 low、
+	// RequiresReview 变成 false、提交门禁随之放行，高风险变更被当成低风险变更。
+	//
+	// 返回错误后由调用方决定降级策略（validateImpactGate 选择 best-effort 放行
+	// 但会留 Warn 日志），而不是在这里伪造一个「看起来正常」的摘要。
 	relCount, err := s.entClient.CIRelationship.Query().
 		Where(
 			cirelationship.TenantID(tenantID),
@@ -869,9 +878,12 @@ func (s *Service) GetCMDBImpactSummary(ctx context.Context, changeID, tenantID i
 			),
 		).
 		Count(ctx)
-	if err == nil {
-		summary.HighRiskDependencyCount = relCount
+	if err != nil {
+		s.logger.Errorw("GetCMDBImpactSummary: 查询高等级依赖失败，拒绝输出摘要",
+			"error", err, "change_id", changeID, "tenant_id", tenantID, "ci_count", len(ciIDs))
+		return nil, fmt.Errorf("查询高风险依赖失败: %w", err)
 	}
+	summary.HighRiskDependencyCount = relCount
 
 	openIncidentCount, err := s.entClient.Incident.Query().
 		Where(
@@ -880,9 +892,12 @@ func (s *Service) GetCMDBImpactSummary(ctx context.Context, changeID, tenantID i
 			incident.StatusNotIn("resolved", "closed"),
 		).
 		Count(ctx)
-	if err == nil {
-		summary.OpenIncidentCount = openIncidentCount
+	if err != nil {
+		s.logger.Errorw("GetCMDBImpactSummary: 查询关联开放事件失败，拒绝输出摘要",
+			"error", err, "change_id", changeID, "tenant_id", tenantID, "ci_count", len(ciIDs))
+		return nil, fmt.Errorf("查询关联开放事件失败: %w", err)
 	}
+	summary.OpenIncidentCount = openIncidentCount
 
 	summary.RecommendedRiskLevel = recommendRiskLevel(
 		summary.TotalAffectedCIs,
