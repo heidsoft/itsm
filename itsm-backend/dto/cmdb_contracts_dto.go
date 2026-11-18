@@ -10,6 +10,32 @@ import "errors"
 // handler 通过 errors.Is 将其映射为 400 参数错误，而不是 500。
 var ErrInvalidRelationshipType = errors.New("invalid CI relationship type")
 
+// ErrInvalidRelationshipGrade 关系的 strength / impact_level 不在四级词表内。
+//
+// 这两个字段是 ent Enum（critical/high/medium/low，见 ent/schema/ci_relationship.go:152,157），
+// 非法值若直落 DB 会撞 check constraint，报出的是 500「服务端故障」——调用方（含 AI Agent
+// 写工具 create_ci_relationship）无法区分「我传错了」与「后端挂了」，也白白做完了
+// 存在性查询与环检测。与关系类型同理，在 service 层做 fail-fast 校验，映射 400。
+var ErrInvalidRelationshipGrade = errors.New("invalid CI relationship strength/impact level")
+
+// IsValidRelationshipStrength 判断关系强度是否在四级词表内（单一源：enum Values）。
+func IsValidRelationshipStrength(v RelationshipStrength) bool {
+	switch v {
+	case StrengthCritical, StrengthHigh, StrengthMedium, StrengthLow:
+		return true
+	}
+	return false
+}
+
+// IsValidImpactLevel 判断影响程度是否在四级词表内（单一源：enum Values）。
+func IsValidImpactLevel(v ImpactLevel) bool {
+	switch v {
+	case ImpactCritical, ImpactHigh, ImpactMedium, ImpactLow:
+		return true
+	}
+	return false
+}
+
 type LifecycleChangeParams struct {
 	Status           string
 	Remark           string

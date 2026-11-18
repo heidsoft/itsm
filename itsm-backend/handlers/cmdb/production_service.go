@@ -706,8 +706,8 @@ func (c *ProductionService) CreateCIRelationship(ctx *gin.Context) {
 
 	result, err := c.ciRelationshipService.CreateCIRelationship(ctx.Request.Context(), &req, tenantID)
 	if err != nil {
-		// 词表收口： 词表外关系类型是客户端参数错误（400），不是服务端故障
-		if errors.Is(err, dto.ErrInvalidRelationshipType) {
+		// 词表收口： 词表外关系类型 / 非法等级值都是客户端参数错误（400），不是服务端故障
+		if errors.Is(err, dto.ErrInvalidRelationshipType) || errors.Is(err, dto.ErrInvalidRelationshipGrade) {
 			common.ParamError(ctx, "请求参数错误")
 			return
 		}
@@ -743,8 +743,8 @@ func (c *ProductionService) UpdateCIRelationship(ctx *gin.Context) {
 
 	result, err := c.ciRelationshipService.UpdateCIRelationship(ctx.Request.Context(), id, tenantID, &req)
 	if err != nil {
-		// 词表收口： 词表外关系类型是客户端参数错误（400），不是服务端故障
-		if errors.Is(err, dto.ErrInvalidRelationshipType) {
+		// 词表收口： 词表外关系类型 / 非法等级值都是客户端参数错误（400），不是服务端故障
+		if errors.Is(err, dto.ErrInvalidRelationshipType) || errors.Is(err, dto.ErrInvalidRelationshipGrade) {
 			common.ParamError(ctx, "请求参数错误")
 			return
 		}

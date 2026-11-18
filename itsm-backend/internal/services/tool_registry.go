@@ -375,7 +375,7 @@ func (t *ToolRegistry) ListTools() []ToolDefinition {
 					"sourceCiId":       map[string]interface{}{"type": "integer", "description": "源 CI ID"},
 					"targetCiId":       map[string]interface{}{"type": "integer", "description": "目标 CI ID"},
 					"relationshipType": map[string]interface{}{"type": "string", "description": "关系类型枚举（如 depends_on/hosts/connects_to/...）"},
-					"strength":         map[string]interface{}{"type": "string", "enum": []any{"strong", "medium", "weak"}, "description": "关系强度"},
+					"strength":         map[string]interface{}{"type": "string", "enum": []any{"critical", "high", "medium", "low"}, "description": "关系强度（四级词表，与 DB enum 同源；默认 medium）"},
 					"description":      map[string]interface{}{"type": "string", "description": "备注"},
 				},
 				"required": []string{"sourceCiId", "targetCiId", "relationshipType"},

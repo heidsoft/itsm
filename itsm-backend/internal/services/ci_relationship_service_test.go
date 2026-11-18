@@ -701,3 +701,158 @@ func TestCreateCIRelationship_SelfLoopIsValidationError(t *testing.T) {
 		t.Fatalf("HTTPStatus = %d, want 400 (%s)", appErr.HTTPStatus, appErr.Message)
 	}
 }
+
+// strength / impact_level 是 ent Enum(critical/high/medium/low)。词表外的值必须在
+// 落库前 fail-fast（400），而不是撞 DB check constraint 被兜底成 500——
+// create_ci_relationship 曾声明 strong/medium/weak，Agent 照 schema 传 "strong"
+// 就只能看到「创建CI关系失败」，无法判断是自己参数错还是后端故障。
+func TestCreateCIRelationship_InvalidGradeIsValidationError(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", "file:ci_rel_grade_invalid?mode=memory&cache=shared&_fk=1")
+	defer client.Close()
+
+	ctx := context.Background()
+	tenant, err := createCMDBTestTenant(ctx, client, "Tenant Grade Invalid", "tenant-grade-invalid", "grade-invalid.example.com")
+	if err != nil {
+		t.Fatalf("创建租户失败: %v", err)
+	}
+	ciType, err := createTestCIType(ctx, client, tenant.ID, "server-grade-invalid")
+	if err != nil {
+		t.Fatalf("创建CI类型失败: %v", err)
+	}
+	source, err := createTestCI(ctx, client, tenant.ID, ciType.ID, "grade-invalid-source")
+	if err != nil {
+		t.Fatalf("创建源CI失败: %v", err)
+	}
+	target, err := createTestCI(ctx, client, tenant.ID, ciType.ID, "grade-invalid-target")
+	if err != nil {
+		t.Fatalf("创建目标CI失败: %v", err)
+	}
+
+	svc := NewCIRelationshipService(client, zaptest.NewLogger(t).Sugar())
+	_, err = svc.CreateCIRelationship(ctx, &dto.CreateCIRelationshipRequest{
+		SourceCIID:       source.ID,
+		TargetCIID:       target.ID,
+		RelationshipType: dto.DependsOn,
+		Strength:         dto.RelationshipStrength("strong"), // 旧 schema 的错值
+	}, tenant.ID)
+
+	if !errors.Is(err, dto.ErrInvalidRelationshipGrade) {
+		t.Fatalf("非法 strength 必须命中 ErrInvalidRelationshipGrade，实际 %T: %v", err, err)
+	}
+	// 服务层只负责把问题分类到 sentinel（handler 用 errors.Is 映射 400）；
+	// 400 的 HTTP 状态由 handler 合约测试锁住。
+	if !strings.Contains(err.Error(), "critical") {
+		t.Fatalf("错误文案未提示允许值，调用方无法自查，实际: %q", err.Error())
+	}
+
+	// 影响度同样收口（Agent 目前不传，但 HTTP 可以直接传）
+	_, err = svc.CreateCIRelationship(ctx, &dto.CreateCIRelationshipRequest{
+		SourceCIID:       source.ID,
+		TargetCIID:       target.ID,
+		RelationshipType: dto.DependsOn,
+		ImpactLevel:      dto.ImpactLevel("major"),
+	}, tenant.ID)
+	if !errors.Is(err, dto.ErrInvalidRelationshipGrade) {
+		t.Fatalf("非法 impactLevel 必须命中 ErrInvalidRelationshipGrade，实际 %T: %v", err, err)
+	}
+}
+
+// 更新侧同样必须在落库前拦下词表外的等级，否则 ent builder 的 EnumValidator
+// 直接报错，classifyError 归为未分类 → 500。
+func TestUpdateCIRelationship_InvalidGradeIsValidationError(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", "file:ci_rel_grade_update_invalid?mode=memory&cache=shared&_fk=1")
+	defer client.Close()
+
+	ctx := context.Background()
+	tenant, err := createCMDBTestTenant(ctx, client, "Tenant Grade Update", "tenant-grade-update", "grade-update.example.com")
+	if err != nil {
+		t.Fatalf("创建租户失败: %v", err)
+	}
+	ciType, err := createTestCIType(ctx, client, tenant.ID, "server-grade-update")
+	if err != nil {
+		t.Fatalf("创建CI类型失败: %v", err)
+	}
+	source, err := createTestCI(ctx, client, tenant.ID, ciType.ID, "grade-update-source")
+	if err != nil {
+		t.Fatalf("创建源CI失败: %v", err)
+	}
+	target, err := createTestCI(ctx, client, tenant.ID, ciType.ID, "grade-update-target")
+	if err != nil {
+		t.Fatalf("创建目标CI失败: %v", err)
+	}
+
+	svc := NewCIRelationshipService(client, zaptest.NewLogger(t).Sugar())
+	rel, err := svc.CreateCIRelationship(ctx, &dto.CreateCIRelationshipRequest{
+		SourceCIID:       source.ID,
+		TargetCIID:       target.ID,
+		RelationshipType: dto.DependsOn,
+	}, tenant.ID)
+	if err != nil {
+		t.Fatalf("前置创建关系失败: %v", err)
+	}
+
+	badStrength := dto.RelationshipStrength("weak")
+	_, err = svc.UpdateCIRelationship(ctx, rel.ID, tenant.ID, &dto.UpdateCIRelationshipRequest{
+		Strength: &badStrength,
+	})
+	if !errors.Is(err, dto.ErrInvalidRelationshipGrade) {
+		t.Fatalf("更新侧非法 strength 必须命中 ErrInvalidRelationshipGrade，实际 %T: %v", err, err)
+	}
+
+	badImpact := dto.ImpactLevel("severe")
+	_, err = svc.UpdateCIRelationship(ctx, rel.ID, tenant.ID, &dto.UpdateCIRelationshipRequest{
+		ImpactLevel: &badImpact,
+	})
+	if !errors.Is(err, dto.ErrInvalidRelationshipGrade) {
+		t.Fatalf("更新侧非法 impactLevel 必须命中 ErrInvalidRelationshipGrade，实际 %T: %v", err, err)
+	}
+
+	// 合法等级必须放行（防止校验写反把正常更新也拒了）
+	goodStrength := dto.StrengthHigh
+	if _, err := svc.UpdateCIRelationship(ctx, rel.ID, tenant.ID, &dto.UpdateCIRelationshipRequest{
+		Strength: &goodStrength,
+	}); err != nil {
+		t.Fatalf("合法 strength=high 应放行，实际: %v", err)
+	}
+}
+
+// 空值表示「用 schema 默认 medium」，必须放行——Agent 的 create_ci_relationship
+// 不传 strength 时走的就是这条路径。
+func TestCreateCIRelationship_EmptyGradeUsesSchemaDefault(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", "file:ci_rel_grade_default?mode=memory&cache=shared&_fk=1")
+	defer client.Close()
+
+	ctx := context.Background()
+	tenant, err := createCMDBTestTenant(ctx, client, "Tenant Grade Default", "tenant-grade-default", "grade-default.example.com")
+	if err != nil {
+		t.Fatalf("创建租户失败: %v", err)
+	}
+	ciType, err := createTestCIType(ctx, client, tenant.ID, "server-grade-default")
+	if err != nil {
+		t.Fatalf("创建CI类型失败: %v", err)
+	}
+	source, err := createTestCI(ctx, client, tenant.ID, ciType.ID, "grade-default-source")
+	if err != nil {
+		t.Fatalf("创建源CI失败: %v", err)
+	}
+	target, err := createTestCI(ctx, client, tenant.ID, ciType.ID, "grade-default-target")
+	if err != nil {
+		t.Fatalf("创建目标CI失败: %v", err)
+	}
+
+	svc := NewCIRelationshipService(client, zaptest.NewLogger(t).Sugar())
+	rel, err := svc.CreateCIRelationship(ctx, &dto.CreateCIRelationshipRequest{
+		SourceCIID:       source.ID,
+		TargetCIID:       target.ID,
+		RelationshipType: dto.DependsOn,
+	}, tenant.ID)
+	if err != nil {
+		t.Fatalf("不传 strength 应使用 schema 默认值，实际: %v", err)
+	}
+	if rel.Strength != dto.StrengthMedium {
+		t.Fatalf("strength 默认值应为 medium，实际 %q", rel.Strength)
+	}
+	if rel.ImpactLevel != dto.ImpactMedium {
+		t.Fatalf("impactLevel 默认值应为 medium，实际 %q", rel.ImpactLevel)
+	}
+}

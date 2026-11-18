@@ -6,12 +6,21 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"itsm-backend/middleware"
 	"itsm-backend/service/cloud"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 )
+
+// withTestTenant 注入租户上下文，模拟已通过认证中间件的请求。
+func withTestTenant(tenantID int) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Set(middleware.TenantContextKey, &middleware.TenantContext{TenantID: tenantID})
+		c.Next()
+	}
+}
 
 type readyAdapterInspector struct{}
 
@@ -38,7 +47,10 @@ func TestDiscoveryHealthReportsInitializedWorker(t *testing.T) {
 	service := NewServiceWithDiscoveryRuntime(nil, nil, zap.NewNop().Sugar(), DiscoveryRuntime{
 		Adapters: readyAdapterInspector{}, CredentialResolverReady: true, WorkerReady: true,
 	})
+	// 健康面现在与域内其余端点同口径，要求租户上下文。
+	// 无认证请求不应能探测本实例的发现链路装配情况。
 	r := gin.New()
+	r.Use(withTestTenant(1))
 	r.GET("/api/v1/cmdb/discovery/health", NewHandler(service).GetDiscoveryHealth)
 
 	recorder := httptest.NewRecorder()
@@ -107,7 +119,10 @@ func TestDiscoveryHealthOmitsTenantDimension(t *testing.T) {
 	service := NewServiceWithDiscoveryRuntime(nil, nil, zap.NewNop().Sugar(), DiscoveryRuntime{
 		Adapters: readyAdapterInspector{}, CredentialResolverReady: true, WorkerReady: true,
 	})
+	// 健康面现在与域内其余端点同口径，要求租户上下文。
+	// 无认证请求不应能探测本实例的发现链路装配情况。
 	r := gin.New()
+	r.Use(withTestTenant(1))
 	r.GET("/api/v1/cmdb/discovery/health", NewHandler(service).GetDiscoveryHealth)
 
 	recorder := httptest.NewRecorder()
@@ -121,4 +136,37 @@ func TestDiscoveryHealthOmitsTenantDimension(t *testing.T) {
 	_, present := body.Data["tenantReadiness"]
 	require.False(t, present,
 		"健康端点算不出租户维度，不能下发该字段（留零值会说谎，填值则是猜的）")
+}
+
+// 域内其余 31 个 handler 都要求租户上下文，健康面曾漏掉这一步：
+// 未认证请求因此能直接读到本实例的发现链路装配情况（缺哪个 adapter、
+// 凭据解析器是否就绪、worker 是否起来了）——那是一张攻击面地图。
+// 本用例锁住「无租户上下文 = 401，且一个字节的装配信息都不下发」。
+func TestDiscoveryHealthRequiresTenantContext(t *testing.T) {
+	t.Setenv(discoveryReadinessEnv, "true")
+
+	gin.SetMode(gin.TestMode)
+	service := NewServiceWithDiscoveryRuntime(nil, nil, zap.NewNop().Sugar(), DiscoveryRuntime{
+		Adapters: readyAdapterInspector{}, CredentialResolverReady: true, WorkerReady: true,
+	})
+	r := gin.New()
+	// 刻意不挂 withTestTenant：模拟未认证/租户上下文丢失的请求。
+	r.GET("/api/v1/cmdb/discovery/health", NewHandler(service).GetDiscoveryHealth)
+
+	recorder := httptest.NewRecorder()
+	r.ServeHTTP(recorder, httptest.NewRequest(http.MethodGet, "/api/v1/cmdb/discovery/health", nil))
+
+	require.Equal(t, http.StatusUnauthorized, recorder.Code,
+		"无租户上下文的健康探测必须 401，body=%s", recorder.Body.String())
+
+	// 响应体不得泄露任何装配细节（missingRequirements 会点名缺哪个 adapter）
+	var body struct {
+		Data map[string]json.RawMessage `json:"data"`
+	}
+	if err := json.Unmarshal(recorder.Body.Bytes(), &body); err == nil {
+		for _, leaked := range []string{"missingRequirements", "deploymentReadiness", "buildCapability", "actorPermission", "state"} {
+			_, present := body.Data[leaked]
+			require.False(t, present, "401 响应不得下发 %q（会泄露装配地图）", leaked)
+		}
+	}
 }

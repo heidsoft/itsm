@@ -187,7 +187,23 @@ func (h *Handler) ListCloudProviders(c *gin.Context) {
 	common.Success(c, &dto.CloudProvidersResponse{Items: items, Total: len(items)})
 }
 
+// GetDiscoveryHealth 发现链路健康面。
+//
+// @Summary  发现链路健康面
+// @Description 返回发现链路的部署级装配状态（buildCapability / deploymentReadiness / actorPermission / missingRequirements）。该端点不查租户账号，因此刻意不下发 tenantReadiness——算不出的字段留 Go 零值会让同一响应自相矛盾。
+// @Tags CMDB-云资源
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} common.Response{data=DiscoveryHealthStatus}
+// @Failure 401 {object} common.Response "租户上下文缺失"
+// @Router /api/v1/cmdb/discovery/health [get]
 func (h *Handler) GetDiscoveryHealth(c *gin.Context) {
+	// 与 /api/v1/cmdb/* 其余端点同口径：响应体不含租户数据，但仍要求租户上下文。
+	// 未认证请求不应能探测本实例的发现链路装配情况（能力面 = 攻击面地图）。
+	// 此前该端点缺这一步，是域内 32 个 handler 里唯一的漏网者。
+	if _, ok := handlerctx.ResolveTenantID(c); !ok {
+		return
+	}
 	health := h.svc.GetDiscoveryHealth()
 	common.Success(c, health)
 }

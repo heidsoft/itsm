@@ -20,11 +20,33 @@ import (
 // handler 通过 errors.Is 将其映射为 400 参数错误，而不是 500。
 var ErrInvalidRelationshipType = dto.ErrInvalidRelationshipType
 
+// ErrInvalidRelationshipGrade 关系的 strength / impact_level 不在四级词表内。
+// 与关系类型同理：非法值若直落 DB 会撞 enum check constraint 报 500，
+// 由 handler 映射为 400 参数错误。
+var ErrInvalidRelationshipGrade = dto.ErrInvalidRelationshipGrade
+
 // validateRelationshipType 校验请求中的关系类型是否在受控词表内（创建与更新共用）。
 func validateRelationshipType(t dto.CIRelationshipType) error {
 	if !schema.IsValidCIRelationshipType(string(t)) {
 		return fmt.Errorf("%w: %q (allowed: depends_on, hosts, hosted_on, connects_to, runs_on, contains, part_of, impacts, impacted_by, owns, owned_by, uses, used_by)",
 			ErrInvalidRelationshipType, string(t))
+	}
+	return nil
+}
+
+// validateRelationshipGrades 校验 strength / impact_level 是否在四级词表内（创建与更新共用）。
+//
+// 空值表示「使用 schema 默认值 medium」，放行。非法值必须在落库前拦下：
+// ent Enum 违反会在 DB 层撞 check constraint，classifyError 归为未分类错误兜底 500，
+// 调用方（尤其 AI Agent 的 create_ci_relationship 工具）只会看到「服务端故障」。
+func validateRelationshipGrades(strength dto.RelationshipStrength, impact dto.ImpactLevel) error {
+	if strength != "" && !dto.IsValidRelationshipStrength(strength) {
+		return fmt.Errorf("%w: strength=%q (allowed: critical, high, medium, low)",
+			ErrInvalidRelationshipGrade, string(strength))
+	}
+	if impact != "" && !dto.IsValidImpactLevel(impact) {
+		return fmt.Errorf("%w: impactLevel=%q (allowed: critical, high, medium, low)",
+			ErrInvalidRelationshipGrade, string(impact))
 	}
 	return nil
 }
@@ -47,6 +69,10 @@ func NewCIRelationshipService(client *ent.Client, logger *zap.SugaredLogger) *CI
 func (s *CIRelationshipService) CreateCIRelationship(ctx context.Context, req *dto.CreateCIRelationshipRequest, tenantID int) (*dto.CIRelationshipResponse, error) {
 	// 词表收口： 关系类型必须在 13 种内置受控词表内，拒绝自由字符串脏值
 	if err := validateRelationshipType(req.RelationshipType); err != nil {
+		return nil, err
+	}
+	// 等级词表收口：strength/impact_level 是 ent Enum，非法值必须在落库前拦下（否则 500）
+	if err := validateRelationshipGrades(req.Strength, req.ImpactLevel); err != nil {
 		return nil, err
 	}
 
@@ -285,6 +311,18 @@ func (s *CIRelationshipService) UpdateCIRelationship(ctx context.Context, id, te
 		if err := validateRelationshipType(*req.RelationshipType); err != nil {
 			return nil, err
 		}
+	}
+	// 等级词表收口：更新侧同样必须在落库前拦下非法 strength/impact_level
+	var updateStrength dto.RelationshipStrength
+	if req.Strength != nil {
+		updateStrength = *req.Strength
+	}
+	var updateImpact dto.ImpactLevel
+	if req.ImpactLevel != nil {
+		updateImpact = *req.ImpactLevel
+	}
+	if err := validateRelationshipGrades(updateStrength, updateImpact); err != nil {
+		return nil, err
 	}
 	update := s.client.CIRelationship.UpdateOneID(id).
 		Where(cirelationship.TenantIDEQ(tenantID))

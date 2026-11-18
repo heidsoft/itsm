@@ -92,10 +92,68 @@ func NewService(repo Repository, entClient *ent.Client, logger *zap.SugaredLogge
 // Change methods
 func (s *Service) CreateChange(ctx context.Context, c *Change) (*Change, error) {
 	s.logger.Infow("Creating change", "title", c.Title, "tenant_id", c.TenantID)
+	// 写入前校验受影响 CI 的归属：affected_cis 是 M2M edge，外键只保证「CI 存在」，
+	// 不保证「属于本租户」。跨租户 CI ID 会被 AddAffectedCiIDs 直接接进关联表，
+	// 于是 A 租户的变更单把 B 租户的资产写进自己的影响面（跨租户数据泄漏），
+	// 而影响摘要查询按 tenant_id 过滤后总数对不上，界面上表现为「关联了却看不到」。
+	if err := s.validateAffectedCIs(ctx, c); err != nil {
+		return nil, err
+	}
 	if creator, ok := s.repo.(workflowCommandCreator); ok {
 		return creator.CreateWithWorkflowCommand(ctx, c)
 	}
 	return s.repo.Create(ctx, c)
+}
+
+// validateAffectedCIs 确保 AffectedCIs 里每个可解析的 ID 都属于当前租户。
+//
+// 非数字项（如标准变更模板里以名称书写的 "服务器"）本就无法建关系，
+// parseAffectedCIIDs 会跳过，这里同样跳过——不新增静默行为。
+//
+// 租户归属不符按 422 返回（而非 404）：调用方传的是本单的受影响 CI 列表，
+// 需要知道"这单里有 CI 不属于你"，而不是"某个资源不存在"。
+// 回退是失败关闭——查询报错时拒绝写入，避免把未校验的关系落库。
+func (s *Service) validateAffectedCIs(ctx context.Context, c *Change) error {
+	if len(c.AffectedCIs) == 0 || s.entClient == nil {
+		return nil
+	}
+	ids := parseAffectedCIIDs(c.AffectedCIs)
+	if len(ids) == 0 {
+		return nil
+	}
+
+	owned, err := s.entClient.ConfigurationItem.Query().
+		Where(
+			configurationitem.TenantID(c.TenantID),
+			configurationitem.IDIn(ids...),
+		).
+		Select(configurationitem.FieldID).
+		All(ctx)
+	if err != nil {
+		s.logger.Errorw("validateAffectedCIs: 查询受影响CI失败，拒绝写入",
+			"error", err, "tenant_id", c.TenantID, "count", len(ids))
+		return common.NewBusinessError(common.ConflictCode,
+			"受影响配置项校验失败，请稍后重试", err.Error())
+	}
+
+	ownedIDs := make(map[int]struct{}, len(owned))
+	for _, ci := range owned {
+		ownedIDs[ci.ID] = struct{}{}
+	}
+	unknown := make([]string, 0, len(ids)-len(ownedIDs))
+	for _, id := range ids {
+		if _, ok := ownedIDs[id]; !ok {
+			unknown = append(unknown, strconv.Itoa(id))
+		}
+	}
+	if len(unknown) > 0 {
+		return common.NewValidationError(
+			fmt.Sprintf("以下受影响 CI 不属于当前租户或不存在：%s。请刷新 CI 列表后重新选择",
+				strings.Join(unknown, "、")),
+			ErrAffectedCIsNotOwned,
+		)
+	}
+	return nil
 }
 
 func (s *Service) GetChange(ctx context.Context, id int, tenantID int) (*Change, error) {
@@ -140,6 +198,12 @@ func (s *Service) UpdateChange(ctx context.Context, c *Change, actorID int, acto
 	// 刚推进的状态覆盖回去，二是让仓储的 StatusEQ 谓词成为真正的乐观锁
 	// （change 无 version 列，状态即版本号）。
 	c.Status = existing.Status
+
+	// 受影响 CI 变更同样要校验租户归属：更新路径会 replace 整个关联表，
+	// 不校验等于从「创建时能不能塞」变成「更新时能不能换一批塞」。
+	if err := s.validateAffectedCIs(ctx, c); err != nil {
+		return nil, err
+	}
 
 	updated, err := s.repo.Update(ctx, c)
 	if err != nil {
@@ -268,6 +332,11 @@ func (s *Service) GetCalendarView(ctx context.Context, tenantID int, startDate, 
 // ErrSubmitGateBlocked 变更提交被影响分析门禁拦截（→ 422 Validation 语义）。
 // 拦截条件：变更绑定了受影响 CI（存在实施风险）但实施计划/回滚计划缺失。
 var ErrSubmitGateBlocked = errors.New("change submit blocked by impact analysis gate")
+
+// ErrAffectedCIsNotOwned 受影响 CI 列表里有不属于当前租户（或已不存在）的 ID。
+// 关联表 change_affected_cis 无 tenant_id，外键只保证「CI 存在」——不校验归属时，
+// A 租户的变更单可以把 B 租户的资产写进自己的影响面。
+var ErrAffectedCIsNotOwned = errors.New("affected CI not owned by tenant")
 
 // validateImpactGate 影响摘要消费门禁（2026-10-21 收口「影响摘要尚未成为提交审批的
 // 后端门禁」）：关键 CI 命中或存在关联开放事件（RequiresReview）时，必须显式声明
