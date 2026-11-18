@@ -119,6 +119,17 @@ def db(sql: str) -> str:
         return ""
 
 
+def prod_log_level() -> str:
+    """prod .env.prod 的 LOG_LEVEL；用于解释日志断言的可见性。"""
+    try:
+        for line in (REPO / ".env.prod").read_text(encoding="utf-8").splitlines():
+            if line.startswith("LOG_LEVEL="):
+                return line.split("=", 1)[1].strip().lower()
+    except Exception:  # noqa: BLE001
+        pass
+    return ""
+
+
 def backend_log_has(needle: str) -> bool:
     try:
         out = subprocess.run(
@@ -156,9 +167,12 @@ def login() -> None:
     if not ok:
         raise SystemExit("login failed, abort")
     d = data.get("data") or {}
-    TENANT_ID = int(d.get("tenantId") or d.get("tenant_id") or 0)
+    # 登录响应把身份挂在 data.user 下（data 顶层只有 expiresIn/user）。
+    user = d.get("user") or {}
+    TENANT_ID = int(user.get("tenantId") or d.get("tenantId") or 0)
     if TENANT_ID <= 0:
-        record("平台", "解析租户上下文", False, message=f"tenantId 缺失: {list(d.keys())[:8]}")
+        record("平台", "解析租户上下文", False,
+               message=f"tenantId 缺失: data={list(d.keys())[:8]} user={list(user.keys())[:8]}")
 
 
 # ---------------------------------------------------------------------------
@@ -175,8 +189,22 @@ def deploy_fingerprint() -> None:
     n = int(rows or 0)
     record("部署指纹", "skill_definitions 种子行数 > 0（批次 C seed 已执行）", n > 0,
            method="DB", path="skill_definitions", message=f"rows={rows}")
-    record("部署指纹", "启动日志含 builtin skills seeded", backend_log_has("builtin skills seeded"),
-           method="logs", path=BACKEND_CONTAINER)
+    # seed 成功日志是 Info 级：prod 用 LOG_LEVEL=error 会主动吞掉它。
+    # 这不是部署缺陷——此时以 skill_definitions 行数作为部署证据，标记 WARN 说明原因。
+    log_level = prod_log_level()
+    quiet_levels = {"error", "fatal", "panic"}
+    seed_logged = backend_log_has("builtin skills seeded")
+    if seed_logged:
+        record("部署指纹", "启动日志含 builtin skills seeded", True,
+               method="logs", path=BACKEND_CONTAINER)
+    elif log_level in quiet_levels and n > 0:
+        record("部署指纹", "启动日志含 builtin skills seeded", False,
+               method="logs", path=BACKEND_CONTAINER, severity="WARN",
+               message=f"LOG_LEVEL={log_level} 抑制 Info 级日志；以 DB rows={rows} 作为 seed 已执行证据")
+    else:
+        record("部署指纹", "启动日志含 builtin skills seeded", False,
+               method="logs", path=BACKEND_CONTAINER,
+               message=f"未见 seed 日志且 LOG_LEVEL={log_level or '-'} rows={rows}")
     record("部署指纹", "启动日志无 seed failed", not backend_log_has("builtin skill seed failed"),
            method="logs", path=BACKEND_CONTAINER)
     http_check("部署指纹", "健康检查", "GET", f"{API}/health")
@@ -248,21 +276,31 @@ def permission_policy() -> None:
                message=f"allowedPrincipals={fresh.get('allowedPrincipals')} requiresApproval={fresh.get('requiresApproval')}")
 
     # ValidatePolicy 负例（闭集规则，必须被拒且不入库）
+    neg: list[tuple[str, int, Any]] = []
     st, d, _ = put_policy(pid, target, risk="low", principals=["human"],
                           requires=True, min_appr=1)
+    neg.append(("低风险强制审批", st, d.get("code")))
     record("权限策略", "负例：低风险不得强制人工审批", d.get("code") != 0,
            method="PUT", path=f"{API}/permissions/{pid}", http=st, code=d.get("code"),
            message=("" if d.get("code") != 0 else "被放行——闭集校验失效"))
     st, d, _ = put_policy(pid, target, risk="banana", principals=["human"],
                           requires=False, min_appr=0)
+    neg.append(("非法 riskLevel", st, d.get("code")))
     record("权限策略", "负例：非法 riskLevel 被拒", d.get("code") != 0,
            method="PUT", path=f"{API}/permissions/{pid}", http=st, code=d.get("code"),
            message=("" if d.get("code") != 0 else "非法枚举被放行"))
     st, d, _ = put_policy(pid, target, risk="medium", principals=["human", "agent"],
                           requires=False, min_appr=0)
+    neg.append(("AI 中风险未开审批", st, d.get("code")))
     record("权限策略", "负例：AI 执行中风险必须开审批", d.get("code") != 0,
            method="PUT", path=f"{API}/permissions/{pid}", http=st, code=d.get("code"),
            message=("" if d.get("code") != 0 else "零信任门禁失效"))
+    # 拒绝语义：闭集校验失败是调用方参数问题，应为 400/1001；
+    # 当前 handler 用 FailWithErr 兜底成 500/5001，前端无法区分「填错」与「服务故障」。
+    sem_ok = all(s == 400 and c == 1001 for _, s, c in neg)
+    record("权限策略", "负例拒绝语义为 400/1001（参数错误）而非 500/5001", sem_ok,
+           method="PUT", path=f"{API}/permissions/{pid}",
+           message="" if sem_ok else "; ".join(f"{n}: http={s} code={c}" for n, s, c in neg))
 
 
 def restore_policy() -> None:
@@ -354,6 +392,17 @@ def gate_agent_principal() -> None:
            method="POST", path=f"{API}/admin/skills/ai.agent_tool/invoke",
            http=st, code=d.get("code") if isinstance(d, dict) else None,
            elapsed_ms=round(el * 1000), message=msg if denied else "被放行——零信任失效")
+    # 拒绝语义：权限拒绝应映射 forbidden(2003/403)，而不是内部错误 5001。
+    # 当前实现把 registry 的 tool-permission-denied 归入 ErrSkillInvoke → 500，
+    # fail-closed 安全目标达成，但操作者看不到「谁缺什么授权」。
+    forbidden_semantics = st == 403 and (d.get("code") == 2003 if isinstance(d, dict) else False)
+    record("Gate2.5", "拒绝语义映射 forbidden(2003/403) 而非 internal(5001)",
+           forbidden_semantics, method="POST",
+           path=f"{API}/admin/skills/ai.agent_tool/invoke", http=st,
+           code=d.get("code") if isinstance(d, dict) else None,
+           message=("" if forbidden_semantics else
+                    f"拒绝已生效但返回 http={st} code={d.get('code') if isinstance(d, dict) else None}，"
+                    "操作者无法区分「无授权」与「服务异常」"))
 
     # 3) 显式授权 agent → pending_agent 队列 + 发起人自批拦截
     st0, d0, _ = call("GET", f"{API}/permissions?pageSize=500")
@@ -372,29 +421,45 @@ def gate_agent_principal() -> None:
     if granted:
         st, d, el = call("POST", f"{API}/admin/skills/ai.agent_tool/invoke",
                          {"input": {"name": tool_name, "args": {}}}, csrf=True)
+        # Skill 统一响应形状：{code, output, latencyMs, metricsTracked, isPilot}，
+        # 工具调用结果在 output 里（不是顶层字段）。ai.agent_tool 命中审批时
+        # output={"status":"approval_pending"}，invocationId 只在 /agent/tools 侧可见。
         inv = (d.get("data") or {}) if isinstance(d, dict) else {}
-        agent_inv = inv.get("invocationId") or (inv.get("invocation") or {}).get("invocationId") or 0
-        ok = st == 200 and d.get("code") == 0 and agent_inv > 0
-        record("Gate2.5", "授权后 agent 调用进入审批（pending_agent）", ok,
+        output = inv.get("output") or {}
+        st_state = output.get("status") if isinstance(output, dict) else None
+        ok = st == 200 and d.get("code") == 0 and st_state in ("approval_pending", "pending")
+        record("Gate2.5", "授权后 agent 调用进入审批（approval_pending）", ok,
                method="POST", path=f"{API}/admin/skills/ai.agent_tool/invoke",
                http=st, code=d.get("code"), elapsed_ms=round(el * 1000),
-               message=("" if ok else str(d.get("message"))[:160]))
+               message=("" if ok else
+                        f"invoke code={d.get('code')} output={output} msg={str(d.get('message'))[:120]}"))
+        # 从待审批队列按「本轮新增 + pending_agent」定位该调用（响应不带 id）。
+        st2, d2, _ = call("GET", f"{API}/agent/tools/invocations?state=pending")
+        lst = ((d2.get("data") or {}).get("items") or []) if isinstance(d2, dict) else []
+        agent_rows = [x for x in lst
+                      if str(x.get("approvalState", "")).startswith("pending_agent")
+                      and int(x.get("id") or x.get("invocationId") or 0) > (inv_id or 0)]
+        found = max(agent_rows, key=lambda x: int(x.get("id") or 0), default=None)
+        agent_inv = int(found.get("id") or 0) if found else 0
+        state_ok = found is not None
+        record("Gate2.5", "审批状态机 pending_agent（非人类 pending）", state_ok,
+               method="GET", path=f"{API}/agent/tools/invocations?state=pending",
+               http=st2, code=d2.get("code") if isinstance(d2, dict) else None,
+               message="" if state_ok else f"待审批队列中未见 pending_agent 行（items={len(lst)}）")
         if agent_inv > 0:
-            st2, d2, _ = call("GET", f"{API}/agent/tools/invocations?state=pending")
-            lst = ((d2.get("data") or {}).get("items") or []) if isinstance(d2, dict) else []
-            found = next((x for x in lst
-                          if x.get("invocationId") == agent_inv or x.get("id") == agent_inv), None)
-            state_ok = found is not None and str(found.get("approvalState", "")).startswith("pending_agent")
-            record("Gate2.5", "审批状态机 pending_agent（非人类 pending）", state_ok,
-                   message="" if state_ok else f"approvalState={found.get('approvalState') if found else '未找到'}")
+            if found is not None:
+                has_meta = "riskLevel" in found and "minApprovals" in found
+                record("Gate2.5", "agent invocation 携带 riskLevel/minApprovals 策略摘要", has_meta,
+                       message=f"riskLevel={found.get('riskLevel')} minApprovals={found.get('minApprovals')} "
+                               f"permissionReason={found.get('permissionReason')}")
             # 发起人自批拦截：admin 是发起人（Invoke 侧注入 userId）
             st3, d3, _ = call("POST", f"{API}/agent/tools/{agent_inv}/approve",
                               {"approve": True, "reason": "QA self-approval probe"}, csrf=True)
-            record("Gate2.5", "发起人自批被拦截（fail-closed）", st3 >= 400 or d3.get("code") not in (0, None),
+            blocked = st3 >= 400 or (isinstance(d3, dict) and d3.get("code") not in (0, None))
+            record("Gate2.5", "发起人自批被拦截（fail-closed）", blocked,
                    method="POST", path=f"{API}/agent/tools/{agent_inv}/approve",
-                   http=st3, code=d3.get("code"),
-                   message=("" if (st3 >= 400 or d3.get("code") not in (0, None))
-                            else "自批被放行——双人/自批门禁失效"))
+                   http=st3, code=d3.get("code") if isinstance(d3, dict) else None,
+                   message=("" if blocked else "自批被放行——双人/自批门禁失效"))
 
 
 def restore_agent_grant() -> None:
@@ -448,12 +513,14 @@ def skill_persistence() -> None:
     record("Skill持久化", "PUT 更新即时落库（UPSERT）", st3 in (200, 201) and d3.get("code") == 0 and rows2 == "v2",
            method="PUT", path=f"{API}/admin/skills/{TEMP_SKILL}", http=st3, code=d3.get("code"),
            message=f"db_version={rows2}")
-    # 决策底账（批次 B 装配）：invoke 内置只读技能 metrics_summary 或 agent_tool 失败路径也应留痕
+    # 决策底账（批次 B 装配）：底账落在 ai_feedbacks（item_type='ai_audit'，
+    # kind='skill:<code>'），不存在名为 ai_audit 的表。
     st4, d4, _ = call("POST", f"{API}/admin/skills/{TEMP_SKILL}/invoke", {"input": {}}, csrf=True)
-    # 自定义技能无 executor → invoke 允许失败，但必须留 ai_audit 底账
-    n_audit = db(f"SELECT count(*) FROM ai_audit WHERE scenario='skill:{TEMP_SKILL}'")
-    record("Skill持久化", "Invoke 失败路径仍写决策底账（ai_audit）", n_audit and int(n_audit) >= 1,
-           method="DB", path="ai_audit", message=f"rows={n_audit} invoke_http={st4}")
+    n_audit = db("SELECT count(*) FROM ai_feedbacks "
+                 f"WHERE item_type='ai_audit' AND kind='skill:{TEMP_SKILL}'")
+    record("Skill持久化", "Invoke 失败路径仍写决策底账（ai_feedbacks/ai_audit）",
+           bool(n_audit) and int(n_audit) >= 1,
+           method="DB", path="ai_feedbacks", message=f"rows={n_audit} invoke_http={st4}")
 
 
 def cleanup_skill() -> None:
@@ -461,13 +528,18 @@ def cleanup_skill() -> None:
     if not TEMP_SKILL:
         return
     st, d, _ = call("DELETE", f"{API}/admin/skills/{TEMP_SKILL}", csrf=True)
-    row = db(f"SELECT enabled FROM skill_definitions WHERE code='{TEMP_SKILL}'")
+    row = db(f"SELECT count(*) FROM skill_definitions WHERE code='{TEMP_SKILL}'")
     ok = st in (200, 201, 204) and d.get("code") in (0, None)
-    record("清理", "禁用临时技能（软删/禁用）", ok, method="DELETE",
+    record("清理", "删除临时技能（运行期 + 持久化）", ok, method="DELETE",
            path=f"{API}/admin/skills/{TEMP_SKILL}", http=st, code=d.get("code"), severity="WARN")
     if ok:
-        record("清理", "DB 行保留且 enabled=false（禁用不删行）", row in ("false", "f", "0"),
-               method="DB", path="skill_definitions", message=f"enabled={row}", severity="WARN")
+        # 实现在 handlers/skill/persistence.go DeleteDefinition 里是硬删
+        # （DELETE FROM skill_definitions）；handler.Delete 的注释却写着
+        # 「标记为 disabled 并保留行」。以行为为准断言硬删，注释漂移单独记 WARN。
+        record("清理", "DB 行已移除（DELETE FROM skill_definitions）", row == "0",
+               method="DB", path="skill_definitions", message=f"rows={row}")
+        record("清理", "handler.Delete 注释与实现一致（注释声称软删保留行）", False,
+               severity="WARN", message="实际硬删；audit/metrics 历史仍保留，行为可接受但注释需同步")
     TEMP_SKILL = ""
 
 
@@ -514,6 +586,7 @@ def investigation_orchestration() -> None:
 # ⑥ BPMN F1：关单终止实例
 # ---------------------------------------------------------------------------
 def bpmn_f1_close_termination() -> None:
+    global TEMP_TICKET
     if not TEMP_TICKET:
         stamp = dt.datetime.now().strftime("%Y%m%d%H%M%S")
         st, d, _ = call("POST", f"{API}/tickets",
@@ -525,6 +598,26 @@ def bpmn_f1_close_termination() -> None:
             record("BPMN F1", "创建测试工单", False, message=str(d.get("message"))[:160], severity="BLOCKED")
             return
     bk = f"ticket:{TEMP_TICKET}"
+    # 状态机单一事实源：new 不能直达 resolved/closed。
+    # 合法收敛链 new → in_progress → resolved，之后才允许 closed。
+    st_s, d_s, _ = call("PUT", f"{API}/tickets/{TEMP_TICKET}/status",
+                        {"status": "in_progress"}, csrf=True)
+    advanced = st_s in (200, 201) and d_s.get("code") == 0
+    record("BPMN F1", "前置：new → in_progress（状态机合法路径）", advanced,
+           method="PUT", path=f"{API}/tickets/{TEMP_TICKET}/status", http=st_s,
+           code=d_s.get("code") if isinstance(d_s, dict) else None,
+           message="" if advanced else str(d_s.get("message"))[:160])
+    if not advanced:
+        return
+    st_r, d_r, _ = call("POST", f"{API}/tickets/{TEMP_TICKET}/resolve",
+                        {"resolution": "QA F1：关闭前先收敛到 resolved"}, csrf=True)
+    resolved = st_r in (200, 201) and d_r.get("code") == 0
+    record("BPMN F1", "前置：in_progress → resolved（closed 仅可从 resolved 迁入）", resolved,
+           method="POST", path=f"{API}/tickets/{TEMP_TICKET}/resolve", http=st_r,
+           code=d_r.get("code") if isinstance(d_r, dict) else None,
+           message="" if resolved else str(d_r.get("message"))[:160])
+    if not resolved:
+        return
     before = db(f"SELECT count(*) FROM process_instances WHERE business_key='{bk}'")
     st, d, el = call("POST", f"{API}/tickets/{TEMP_TICKET}/close", {}, csrf=True)
     ok = st in (200, 201) and d.get("code") == 0
