@@ -6,6 +6,7 @@ import { ApprovalChainStatsCards } from './components/ApprovalChainStats';
 import { ApprovalChainFilters } from './components/ApprovalChainFilters';
 import { ApprovalChainTable } from './components/ApprovalChainTable';
 import { ApprovalChainModal } from './components/ApprovalChainModal';
+import { WorkflowConfigGuide } from '@/components/workflow/WorkflowConfigGuide';
 import type {
   ApprovalChain,
   ApprovalChainFilters as Filters,
@@ -489,6 +490,7 @@ export default function ApprovalChainsPage() {
 
   return (
     <div className="space-y-6">
+      <WorkflowConfigGuide current="approval" />
       {/* 定位说明：本页只配置 BPMN 审批节点的「审批人规则」，流程流转/分支/超时由流程设计器编排 */}
       <Alert
         type="info"

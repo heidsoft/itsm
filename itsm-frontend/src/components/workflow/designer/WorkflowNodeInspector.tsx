@@ -843,6 +843,13 @@ export default function WorkflowNodeInspector({
                 className="mt-2 text-xs"
                 title="审批组中任一成员审批即视为该节点通过"
               />
+              <Text type="secondary" className="mt-1 block text-xs">
+                按业务类型细化审批人、会签/或签与兜底规则，请到{' '}
+                <a href="/admin/approval-chains" target="_blank" rel="noreferrer">
+                  审批链配置
+                </a>
+                。
+              </Text>
             </div>
 
             <Divider className="my-2" />

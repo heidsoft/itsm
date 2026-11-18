@@ -323,6 +323,47 @@ func TestMenuBaseline_ReportsMenuUsesReportRead(t *testing.T) {
 	}
 }
 
+// 工作流子菜单按「配置面 → 监控面」聚簇（2026-11-19 引导式收敛）。
+//
+// 配置面（工作流配置/流程设计器/版本管理/审批链配置/流程触发器）的 SortOrder
+// 必须整体落在监控面（监控仪表盘/流程实例/节点瓶颈/流程 SLA 监控/操作日志）之前，
+// 避免两类入口再次交错，让用户在侧边栏先看到「怎么配」再看到「怎么看」。
+func TestMenuBaseline_WorkflowConfigBeforeMonitoring(t *testing.T) {
+	configPaths := map[string]bool{
+		"/admin/workflows":       true,
+		"/workflow/designer":     true,
+		"/workflow/versions":     true,
+		"/admin/approval-chains": true,
+		"/workflow/automation":   true,
+	}
+	monitorPaths := map[string]bool{
+		"/workflow/dashboard":   true,
+		"/workflow/instances":   true,
+		"/workflow/bottlenecks": true,
+		"/workflow/sla":         true,
+		"/workflow/audit":       true,
+	}
+	maxConfig := -1
+	minMonitor := 1 << 30
+	for _, spec := range menubaseline.MenuDefinitions() {
+		if spec.ParentPath != "/workflow" {
+			continue
+		}
+		if configPaths[spec.Path] && spec.SortOrder > maxConfig {
+			maxConfig = spec.SortOrder
+		}
+		if monitorPaths[spec.Path] && spec.SortOrder < minMonitor {
+			minMonitor = spec.SortOrder
+		}
+	}
+	if maxConfig < 0 || minMonitor == 1<<30 {
+		t.Fatalf("工作流配置面或监控面菜单缺失（maxConfig=%d minMonitor=%d）", maxConfig, minMonitor)
+	}
+	if maxConfig >= minMonitor {
+		t.Errorf("工作流配置面最大 SortOrder %d 应小于监控面最小 SortOrder %d（配置应先于监控）", maxConfig, minMonitor)
+	}
+}
+
 // 「客户与合同」的父子语义。
 //
 // 父级曾是「邮件报障」（AI 报障入口），子项却是客户资料/支持合同/来源组织/值班排班。

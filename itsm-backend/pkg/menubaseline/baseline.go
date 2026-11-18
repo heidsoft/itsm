@@ -165,31 +165,35 @@ func MenuDefinitions() []MenuSpec {
 		{Name: "SLA 定义", Path: "/admin/sla-definitions", Icon: "Clock", ParentPath: "/sla", PermissionCode: "sla:write", SortOrder: 115},
 
 		// ===== 子菜单：工作流 =====
+		// 排序按「配置面 101-105 → 监控面 110-114」两段聚簇（2026-11-19 引导式收敛）：
+		// 配置面（工作流配置/流程设计器/版本管理/审批链配置/流程触发器）相邻，监控面
+		// （监控仪表盘/流程实例/节点瓶颈/流程 SLA 监控/操作日志）相邻，减少配置与监控
+		// 交错带来的「页面多、不知道先点哪个」。文件行序为历史顺序，显示序由 SortOrder 决定。
 		// 菜单码与页面消费对齐（2026-11-17 审计）：工作流子页消费
 		// /bpmn/process-definitions|instances|stats|tasks|versions（守卫
 		// bpmn:read/write），旧 workflow:read/write 仅守 /bpmn/ai/templates，
 		// 曾导致持 bpmn 码的角色菜单不可见、持 workflow 码的 end_user
 		// 菜单可见但页面 403。同组「流程 SLA 监控」此前已用 bpmn:read。
 		{Name: "流程设计器", Path: "/workflow/designer", Icon: "Edit", ParentPath: "/workflow", PermissionCode: "bpmn:write", SortOrder: 102},
-		{Name: "流程实例", Path: "/workflow/instances", Icon: "Play", ParentPath: "/workflow", PermissionCode: "bpmn:read", SortOrder: 103},
-		{Name: "版本管理", Path: "/workflow/versions", Icon: "History", ParentPath: "/workflow", PermissionCode: "bpmn:write", SortOrder: 104},
-		{Name: "监控仪表盘", Path: "/workflow/dashboard", Icon: "Activity", ParentPath: "/workflow", PermissionCode: "bpmn:read", SortOrder: 105},
+		{Name: "流程实例", Path: "/workflow/instances", Icon: "Play", ParentPath: "/workflow", PermissionCode: "bpmn:read", SortOrder: 111},
+		{Name: "版本管理", Path: "/workflow/versions", Icon: "History", ParentPath: "/workflow", PermissionCode: "bpmn:write", SortOrder: 103},
+		{Name: "监控仪表盘", Path: "/workflow/dashboard", Icon: "Activity", ParentPath: "/workflow", PermissionCode: "bpmn:read", SortOrder: 110},
 		// 图标用 Gauge（瓶颈仪表语义），消除与工单统计的 BarChart3 撞车（审计报告 3.3-⑧）。
-		{Name: "节点瓶颈分析", Path: "/workflow/bottlenecks", Icon: "Gauge", ParentPath: "/workflow", PermissionCode: "bpmn:read", SortOrder: 106},
+		{Name: "节点瓶颈分析", Path: "/workflow/bottlenecks", Icon: "Gauge", ParentPath: "/workflow", PermissionCode: "bpmn:read", SortOrder: 112},
 		// 与 /admin/tickets/automation-rules 是同一个配置面的两个入口，按管理面取
 		// automation_rule:write：只读角色拿到菜单后每个写按钮都会 403。
-		{Name: "流程触发器", Path: "/workflow/automation", Icon: "Zap", ParentPath: "/workflow", PermissionCode: "automation_rule:write", SortOrder: 107},
+		{Name: "流程触发器", Path: "/workflow/automation", Icon: "Zap", ParentPath: "/workflow", PermissionCode: "automation_rule:write", SortOrder: 105},
 		// 该页读的是 BPMN 实例 SLA 指标与违规（/bpmn/sla/*，bpmn:read），
 		// 不是 SLA 配置；挂在 SLA 菜单下曾让「SLA 配置」指向监控页（D34-3）。
-		{Name: "流程 SLA 监控", Path: "/workflow/sla", Icon: "Activity", ParentPath: "/workflow", PermissionCode: "bpmn:read", SortOrder: 108, Description: "BPMN 流程 SLA 指标与违规告警"},
+		{Name: "流程 SLA 监控", Path: "/workflow/sla", Icon: "Activity", ParentPath: "/workflow", PermissionCode: "bpmn:read", SortOrder: 113, Description: "BPMN 流程 SLA 指标与违规告警"},
 		// 审批中心菜单已删除：与顶级「我的待办」同一页面（/approvals），一个目的地两个菜单
 		// 会让用户在两处看到同一份待办（审计 3.3-③ 四入口问题的去重动作）。
-		{Name: "操作日志", Path: "/workflow/audit", Icon: "ClipboardList", ParentPath: "/workflow", PermissionCode: "audit:read", SortOrder: 109},
+		{Name: "操作日志", Path: "/workflow/audit", Icon: "ClipboardList", ParentPath: "/workflow", PermissionCode: "audit:read", SortOrder: 114},
 		// ===== 子菜单：工作流 · 配置面（2026-10-25 从系统管理归位）=====
-		{Name: "工作流配置", Path: "/admin/workflows", Icon: "GitBranch", ParentPath: "/workflow", PermissionCode: "bpmn:write", SortOrder: 120},
+		{Name: "工作流配置", Path: "/admin/workflows", Icon: "GitBranch", ParentPath: "/workflow", PermissionCode: "bpmn:write", SortOrder: 101},
 		// 「审批链」易与顶级「我的待办」混淆；此页是审批链定义/节点的配置面，
 		// 与「工作流配置」同轴，改名点明配置语义（审计 3.3-③）。
-		{Name: "审批链配置", Path: "/admin/approval-chains", Icon: "Link", ParentPath: "/workflow", PermissionCode: "approval:write", SortOrder: 125},
+		{Name: "审批链配置", Path: "/admin/approval-chains", Icon: "Link", ParentPath: "/workflow", PermissionCode: "approval:write", SortOrder: 104},
 
 		// ===== 子菜单：AI 助手 =====
 		{Name: "AI 创建工单", Path: "/tickets/ai-create", Icon: "Sparkles", ParentPath: "/ai/chat", PermissionCode: "ai:read", SortOrder: 112},

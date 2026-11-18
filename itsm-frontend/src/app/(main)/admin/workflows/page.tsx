@@ -43,6 +43,7 @@ import type { MenuProps } from 'antd';
 import { WorkflowAPI } from '@/lib/api/workflow-api';
 import { WorkflowType } from '@/types/workflow';
 import { UsageGuideCard } from '@/components/common/UsageGuideCard';
+import { WorkflowConfigGuide } from '@/components/workflow/WorkflowConfigGuide';
 import BPMNDiagramPreview from '@/components/workflow/BPMNDiagramPreview';
 import WorkflowTemplateCatalog from '@/components/workflow/WorkflowTemplateCatalog';
 const { Title, Text } = Typography;
@@ -555,6 +556,8 @@ const WorkflowManagement = () => {
         </Title>
         <Text type="secondary">设计和管理业务流程，配置审批节点和自动化规则</Text>
       </div>
+
+      <WorkflowConfigGuide current="designer" style={{ marginBottom: 16 }} />
 
       <UsageGuideCard
         style={{ marginBottom: 16 }}
