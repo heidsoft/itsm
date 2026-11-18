@@ -507,6 +507,27 @@ func RBACMiddleware(client *ent.Client) gin.HandlerFunc {
 			return
 		}
 
+		// service 主体短路（2026-11-18）。
+		//
+		// service 主体是**进程身份**而非登录用户：JWT 里 user_id 恒为 0，
+		// 它的权限来自签发时固定的只读载体角色（audit_admin），由
+		// AuthMiddleware 校验过（角色必须是 ServicePrincipalRole、
+		// user_id=0、tenant>0）。
+		//
+		// 此前本中间件无条件按 user_id 查用户表，service 主体必然查不到
+		// → 一律 401「用户不存在」。后果是 service token 无法访问任何
+		// /api/v1/* 业务路由（含 MCP 通道）—— Phase B1 落地了主体身份，
+		// 但 RBAC 这一环没打通，既有测试只覆盖到 AuthMiddleware 就停了。
+		//
+		// 这里短路而非「造一条用户记录」：service 主体不该出现在用户表里
+		// （它不是人，无法登录、无法被指派工单、无法承担职责分立）。
+		// 短路后仍由 RequirePermission 按其载体角色判定权限，
+		// 并由 Gate 2.5（authz 主体零信任）决定它能否执行具体动作。
+		if authz.PrincipalFromContext(c.Request.Context()) == authz.PrincipalService {
+			c.Next()
+			return
+		}
+
 		// 从数据库获取用户最新角色信息
 		// 使用请求 ctx，随请求超时/取消传播
 		// 多角色：附带加载 user.roles（m2m 附加角色），权限判定取并集。

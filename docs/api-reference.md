@@ -2730,6 +2730,42 @@ handler、不自动绑定流程。DDL 工单当前仍是 `ticketType=database-ch
 `catalog-contract.test.ts` 双向守卫）。前端组件一律引用生成的 `PERM.*`
 常量，引用码空间不存在的码会在 TypeScript 编译期失败。
 
+## MCP 服务端接口（2026-11-18）
+
+把 ITSM 既有能力经 Model Context Protocol 暴露给外部 Agent 客户端（Claude Desktop / Claude Code / 第三方编排器）。**协议适配层**——工具面复用既有 `ToolRegistry`，执行链复用既有 `ai.Service.ExecuteTool`（含 Gate 2 角色 RBAC、Gate 2.5 主体零信任、写工具审批流与审计），交付门禁复用既有市场交付判定，不新建第二套权限体系。
+
+| 端点 | 权限 | 说明 |
+|:---|:---|:---|
+| `POST /api/v1/mcp` | `mcp:read` | MCP JSON-RPC 2.0 单端点（`initialize`/`ping`/`tools/list`/`tools/call`） |
+
+协议版本 `2025-06-18`；请求与响应均为标准 JSON-RPC 2.0 封装，**HTTP 状态码恒为 200**，失败信息在 body 内（协议错误用 `error` 对象，业务失败用 `result.isError=true`）。
+
+认证：`Authorization: Bearer <token>`。人类主体用登录 access token；服务主体用 `cmd/service-token-gen` 签发的 service JWT（`user_id=0`、载体角色 `audit_admin`、绑定固定租户）。**服务主体默认零权限**——调用具体工具须由管理员在运行期策略把该工具的 `resource:action` 显式放行给 `service`（见「权限码运行期策略与 AI 主体授权」章节）。
+
+工具面按租户动态收敛：市场未上架或租户未安装的工具既不出现在 `tools/list`，直接点名 `tools/call` 也会被拒（`isError=true`）。
+
+请求示例：
+
+```json
+{"jsonrpc":"2.0","id":1,"method":"initialize",
+ "params":{"protocolVersion":"2025-06-18","capabilities":{},
+           "clientInfo":{"name":"my-agent","version":"1.0.0"}}}
+```
+
+响应示例：
+
+```json
+{"jsonrpc":"2.0","id":1,"result":{
+  "protocolVersion":"2025-06-18",
+  "capabilities":{"tools":{"listChanged":false}},
+  "serverInfo":{"name":"cloudmesh-itsm-mcp","version":"1.6.19"},
+  "instructions":"..."}}
+```
+
+`tools/list` 的 `tools[]` 每项含 `name`/`description`/`inputSchema`（JSON Schema object）与 `annotations`（`readOnlyHint`/`destructiveHint`）；`tools/call` 的 `result` 含 `content[]`（`type:"text"`）与可选 `structuredContent`。
+
+**边界**：未实现 `resources`/`prompts`/`completions`/SSE 流式推送与 stdio 原生进程模式（客户端需用 stdio→HTTP 转发器）；工具面等于既有 AI 工具集，不含 MCP 专属新工具。完整接入说明见 [MCP 接入指南](mcp-integration.md)。
+
 ## 团队管理接口
 
 ```http

@@ -77,7 +77,6 @@ import (
 	"itsm-backend/handlers/service_request"
 	"itsm-backend/handlers/skill"
 	"itsm-backend/handlers/sla"
-	"itsm-backend/handlers/mcp"
 	slaTemplateHandler "itsm-backend/handlers/sla_template"
 	"itsm-backend/handlers/standard_change"
 	surveyHandler "itsm-backend/handlers/survey"
@@ -1146,28 +1145,20 @@ func NewApplication() *Application {
 	// MCP 只是协议形状的转接层，因此这里不需要新的权限码体系。
 	//
 	// 主体放行说明：service 主体默认零信任（AllowedPrincipals 恒为 ["human"]），
-	// MCP 调用需运行期策略显式放行 mcp:invoke —— 角色层只给了 agent 角色该码，
-	// service 主体须由管理员在权限策略中显式加入 service，符合「AI 主体零权限
-	// 是核心防线」的既有设计。
-	mcpService, mcpErr := mcp.NewService(mcp.Options{
-		Catalog: &mcp.ToolCatalogAdapter{
-			Lister: toolRegistry,
-		},
-		Executor: &mcp.ToolExecutorAdapter{
-			Executor: aiServiceDomain,
-		},
-		Entitlement: &mcp.EntitlementAdapter{
-			Checker: marketplaceSvc,
-		},
-		Logger:  sugar,
-		Version: mcp.Version(),
+	// 调用面的主体权限由执行链（ExecuteTool 的 Gate 2.5）按**工具自身的
+	// resource:action** 逐个判定 —— service 主体须由管理员在权限策略中按工具码
+	// 显式加入 service，符合「AI 主体零权限是核心防线」的既有设计。
+	mcpHandler, mcpErr := BuildMCPHandler(Dependencies{
+		ToolRegistry: toolRegistry,
+		AIService:    aiServiceDomain,
+		Marketplace:  marketplaceSvc,
+		Logger:       sugar,
 	})
 	if mcpErr != nil {
 		// 装配失败属致命配置错误：MCP 通道必须 fail-closed，
 		// 不能退化成「路由在但服务是空壳」。
 		sugar.Fatalw("mcp service assembly failed", "error", mcpErr)
 	}
-	mcpHandler := mcp.NewHandler(mcpService, sugar)
 
 	emailIntakeService := email_intake.NewService(client)
 	emailIntakeHandler := email_intake.NewHandler(emailIntakeService)
