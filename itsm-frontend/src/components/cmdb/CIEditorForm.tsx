@@ -17,6 +17,7 @@ import {
   getStatusSelectOptions,
 } from './ci-editor-shared';
 import { useI18n } from '@/lib/i18n/useI18n';
+import { UserApi } from '@/lib/api/user-api';
 
 const { TextArea } = Input;
 
@@ -104,6 +105,34 @@ export function CIEditorForm({
     () => new Map(cloudServices.map(service => [service.id, service])),
     [cloudServices]
   );
+
+  // 负责人选择器的候选用户。只在需要时拉一次（100 条足够覆盖常规租户的可选
+  // 负责人范围）；拉取失败时降级为空列表，不阻塞表单其他字段的填写。
+  const [userOptions, setUserOptions] = React.useState<{ label: string; value: number }[]>([]);
+  const [usersLoading, setUsersLoading] = React.useState(false);
+  React.useEffect(() => {
+    let cancelled = false;
+    setUsersLoading(true);
+    UserApi.getUsers({ page: 1, pageSize: 100, status: 'active' })
+      .then(res => {
+        if (cancelled) return;
+        setUserOptions(
+          (res.items || []).map(user => ({
+            label: user.name ? `${user.name}（${user.username}）` : user.username,
+            value: user.id,
+          }))
+        );
+      })
+      .catch(() => {
+        if (!cancelled) setUserOptions([]);
+      })
+      .finally(() => {
+        if (!cancelled) setUsersLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const renderSchemaFieldInput = React.useCallback(
     (field: SchemaField) => {
@@ -227,9 +256,25 @@ export function CIEditorForm({
       <Form.Item label={t('ciEditor.assignedTo')} name='assignedTo'>
         <Input placeholder={t('ciEditor.placeholderOptionalInput', { label: t('ciEditor.assignedTo') })} />
       </Form.Item>
-      <Form.Item label={t('ciEditor.ownedBy')} name='ownedBy'>
-        <Input placeholder={t('ciEditor.placeholderOptionalInput', { label: t('ciEditor.ownedBy') })} />
+      {/* 负责人是行级权限的判定依据：必须是可关联到 users 表的选择器，
+          而不是自由文本。文本无法参与行级过滤，写进去也等于没登记。 */}
+      <Form.Item
+        label={t('ciEditor.ownerId')}
+        name='ownerId'
+        extra={t('ciEditor.ownerIdHelp')}
+        tooltip={t('ciEditor.ownerIdHelp')}
+      >
+        <Select
+          placeholder={t('ciEditor.ownerIdPlaceholder')}
+          allowClear
+          showSearch
+          optionFilterProp='label'
+          loading={usersLoading}
+          options={userOptions}
+          size='middle'
+        />
       </Form.Item>
+
       <Form.Item label={t('ciEditor.discoverySource')} name='discoverySource'>
         <Input placeholder={t('ciEditor.placeholderOptionalInput', { label: t('ciEditor.discoverySource') })} />
       </Form.Item>

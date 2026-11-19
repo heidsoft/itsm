@@ -103,7 +103,8 @@ const EditCIPage: React.FC = () => {
       location: ci.location,
       assetTag: ci.assetTag,
       assignedTo: ci.assignedTo,
-      ownedBy: ci.ownedBy,
+      ownerId: ci.ownerId,
+      departmentId: ci.departmentId,
       environment: ci.environment,
       criticality: ci.criticality,
       discoverySource: ci.discoverySource,
@@ -200,7 +201,10 @@ const EditCIPage: React.FC = () => {
           location: values.location,
           assetTag: values.assetTag,
           assignedTo: values.assignedTo,
-          ownedBy: values.ownedBy,
+          // 用指针语义表达「清空」：选择器被清空时 form 值是 undefined，
+          // 若转成 0 会被服务层当作「不改」，负责人永远卸不掉。
+          ownerId: values.ownerId ?? 0,
+          departmentId: values.departmentId,
           environment: values.environment,
           criticality: values.criticality,
           discoverySource: values.discoverySource,

@@ -1206,6 +1206,10 @@ export const translations = {
       location: '位置',
       assignedTo: '分配给',
       ownedBy: '拥有者',
+      ownerId: '负责人',
+      ownerIdPlaceholder: '选择用户（决定谁能看到这条资产）',
+      ownerIdHelp:
+        '负责人是行级权限的判定依据：普通角色只能看到自己负责的、本部门的、以及尚未归属的资产。留空表示未归属公共资产。',
       discoverySource: '发现源',
       cloudProvider: '云厂商',
       cloudResourceRef: '云资源引用',
@@ -6483,6 +6487,10 @@ export const translations = {
       location: 'Location',
       assignedTo: 'Assigned To',
       ownedBy: 'Owned By',
+      ownerId: 'Owner',
+      ownerIdPlaceholder: 'Select a user (determines who can see this asset)',
+      ownerIdHelp:
+        'The owner is the basis for row-level permission: non-admin roles only see assets they own, assets of their department, and unassigned shared assets. Leave empty to keep it unassigned.',
       discoverySource: 'Discovery Source',
       cloudProvider: 'Cloud Provider',
       cloudResourceRef: 'Cloud Resource Reference',

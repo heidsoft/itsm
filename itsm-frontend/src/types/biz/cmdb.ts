@@ -22,6 +22,12 @@ export interface ConfigurationItem {
   tenantId: number;
   assignedTo?: string;
   ownedBy?: string;
+  // ownerId 是行级权限判定依据；ownedBy 只是该用户的显示名。
+  // ownerId 缺省表示「未归属公共资产」（普通角色也可见）。
+  ownerId?: number;
+  departmentId?: number;
+  lastConfirmedAt?: string;
+  confirmedBy?: number;
   discoverySource?: string;
   source?: string;
   cloudProvider?: string;

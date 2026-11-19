@@ -72,6 +72,8 @@ export interface CIFormValues {
   assetTag?: string;
   assignedTo?: string;
   ownedBy?: string;
+  ownerId?: number;
+  departmentId?: number;
   environment?: string;
   criticality?: string;
   discoverySource?: string;

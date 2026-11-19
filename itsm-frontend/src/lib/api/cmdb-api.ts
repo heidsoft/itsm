@@ -40,6 +40,8 @@ export interface CreateCIRequest {
   location?: string;
   assignedTo?: string;
   ownedBy?: string;
+  ownerId?: number;
+  departmentId?: number;
   discoverySource?: string;
   source?: string;
   description?: string;
@@ -63,6 +65,47 @@ export interface GetCIListRequest {
   environment?: string;
   page?: number;
   pageSize?: number;
+}
+
+// ==================== 数据认证任务（后端 dto/cmdb_certification_dto.go 逐字段对齐） ====================
+
+export interface CICertificationTask {
+  id: number;
+  ciId: number;
+  /** CI 名称（后端批量回填，缺省为空串，不代表「没有 CI」） */
+  ciName?: string;
+  /** pending 待办 / confirmed 已确认；overdue 是 pending 且 dueAt 已过的派生视图 */
+  status: string;
+  assigneeId?: number;
+  confirmedBy?: number;
+  confirmedAt?: string;
+  dueAt?: string;
+  evidence?: string;
+  source?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CICertificationTaskListResponse {
+  items: CICertificationTask[];
+  total: number;
+  pending: number;
+  overdue: number;
+  confirmed: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
+export interface CreateCICertificationTaskRequest {
+  ciId: number;
+  assigneeId?: number;
+  dueAt?: string;
+  evidence?: string;
+}
+
+export interface ConfirmCICertificationTaskRequest {
+  evidence?: string;
 }
 
 // 与后端 dto.CIListResponse 逐字段一致；不要再声明第二套键名。
@@ -583,6 +626,38 @@ export class CMDBApi {
     return httpClient.post<ConfigurationItem>(
       `${CMDB_BASE}/discovery/pending-resources/${id}/register`,
       data,
+    );
+  }
+
+  // ==================== 数据认证任务（CMDB Health / Compliance） ====================
+
+  /**
+   * 认证任务列表。pending/overdue/confirmed 三个计数随列表一并发回，
+   * 页面不必为统计再发三次请求（三处口径漂移是这类统计最常见的问题来源）。
+   */
+  static async listCICertificationTasks(params?: {
+    page?: number;
+    pageSize?: number;
+  }): Promise<CICertificationTaskListResponse> {
+    return httpClient.get<CICertificationTaskListResponse>(
+      `${CMDB_BASE}/certification/tasks`,
+      params,
+    );
+  }
+
+  static async createCICertificationTask(
+    data: CreateCICertificationTaskRequest,
+  ): Promise<CICertificationTask> {
+    return httpClient.post<CICertificationTask>(`${CMDB_BASE}/certification/tasks`, data);
+  }
+
+  static async confirmCICertificationTask(
+    id: number,
+    data?: ConfirmCICertificationTaskRequest,
+  ): Promise<CICertificationTask> {
+    return httpClient.post<CICertificationTask>(
+      `${CMDB_BASE}/certification/tasks/${id}/confirm`,
+      data ?? {},
     );
   }
 

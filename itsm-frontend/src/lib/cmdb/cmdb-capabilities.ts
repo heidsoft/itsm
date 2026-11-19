@@ -55,4 +55,11 @@ export const CMDB_CAPABILITIES = [
     href: '/cmdb/reconciliation',
     capabilityKey: 'cmdbReconciliation',
   },
+  {
+    key: 'data-certification',
+    title: '数据认证',
+    description: '按任务清单确认配置项是否仍然准确，逾期待办持续暴露。',
+    href: '/cmdb/certification',
+    capabilityKey: 'cmdb.certification',
+  },
 ] as const satisfies readonly CMDBCapability[];
