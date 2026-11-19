@@ -90,6 +90,11 @@ type CreateCIRequest struct {
 	Location           string                 `json:"location,omitempty"`
 	AssignedTo         string                 `json:"assignedTo,omitempty"`
 	OwnedBy            string                 `json:"ownedBy,omitempty"`
+	// OwnerID 拥有者用户ID：行级权限（DataScope）的唯一判定载体。
+	// OwnedBy 自由文本是历史字段，只用于展示与存量兼容，不参与权限判定。
+	// 二者可同时给出：服务层以 OwnerID 为准，并把 OwnedBy 覆盖成该用户的显示名。
+	OwnerID      int `json:"ownerId,omitempty"`
+	DepartmentID int `json:"departmentId,omitempty"`
 	DiscoverySource    string                 `json:"discoverySource,omitempty"`
 	Source             string                 `json:"source,omitempty"`
 	LastDiscovered     *time.Time             `json:"lastDiscovered,omitempty"`
@@ -133,7 +138,14 @@ type CIResponse struct {
 	Location        string                 `json:"location,omitempty"`
 	AssignedTo      string                 `json:"assignedTo,omitempty"`
 	OwnedBy         string                 `json:"ownedBy,omitempty"`
-	DiscoverySource string                 `json:"discoverySource,omitempty"`
+	// OwnerID/DepartmentID 回读：编辑页要能回填负责人选择器，也便于前端
+	// 就地判断「这条资产是否已归属」（未归属=公共资产，普通角色也可见）。
+	OwnerID      int `json:"ownerId,omitempty"`
+	DepartmentID int `json:"departmentId,omitempty"`
+	// LastConfirmedAt 数据认证新鲜度：治理看板与列表「确认」列的数据来源。
+	LastConfirmedAt *time.Time `json:"lastConfirmedAt,omitempty"`
+	ConfirmedBy     int        `json:"confirmedBy,omitempty"`
+	DiscoverySource string     `json:"discoverySource,omitempty"`
 	// LastDiscovered 用指针表达「从未被发现」：time.Time 的 omitempty 不生效，
 	// 零值会被序列化成 0001-01-01T00:00:00Z，调用方无法区分「没发现过」和
 	// 「真的在这一天发现过」。
@@ -196,6 +208,12 @@ type UpdateCIRequest struct {
 	Location           string                 `json:"location,omitempty"`
 	AssignedTo         string                 `json:"assignedTo,omitempty"`
 	OwnedBy            string                 `json:"ownedBy,omitempty"`
+	// OwnerID/DepartmentID 用指针区分「没传」与「显式清空」：
+	// 普通 int 的零值无法表达「把负责人清空」，只能表达「不改」，
+	// 而负责人恰恰是最需要能撤销的字段（人一离职，资产必须能释放回公共池）。
+	// nil=不改；指向 0=清空为未归属；指向 >0=指派到该用户/部门。
+	OwnerID            *int                   `json:"ownerId,omitempty"`
+	DepartmentID       *int                   `json:"departmentId,omitempty"`
 	DiscoverySource    string                 `json:"discoverySource,omitempty"`
 	Source             string                 `json:"source,omitempty"`
 	LastDiscovered     *time.Time             `json:"lastDiscovered,omitempty"`

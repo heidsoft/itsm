@@ -10,6 +10,7 @@ import (
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/schema"
+	"itsm-backend/internal/datascope"
 	"itsm-backend/middleware"
 
 	"github.com/gin-gonic/gin"
@@ -421,6 +422,12 @@ func (c *ProductionService) ListCIs(ctx *gin.Context) {
 	}
 	// 分页不来自 ShouldBindQuery：DTO 的分页字段不参与绑定，生效值只由 HTTP 所有者给出。
 	req.Page, req.PageSize = cmdbPagination(ctx)
+
+	// 行级数据权限：业务读面必须注入 scope；管理角色全租户可见，其余按 owner/部门收窄。
+	// 治理看板保持全局（用户拍板），不经过此端点。
+	req.ScopeConfigured = true
+	req.ScopeUserID = ctx.GetInt("user_id")
+	req.ScopeAll = datascope.ForCIReader(ctx.GetString("role")) == datascope.DataScopeAll
 
 	result, err := c.ciService.ListCIs(ctx.Request.Context(), tenantID, &req)
 	if err != nil {

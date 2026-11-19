@@ -18,7 +18,9 @@ import (
 	"itsm-backend/ent/citype"
 	"itsm-backend/ent/configurationitem"
 	"itsm-backend/ent/configurationitemhistory"
+	entuser "itsm-backend/ent/user"
 	entticket "itsm-backend/ent/ticket"
+	"itsm-backend/internal/datascope"
 
 	"go.uber.org/zap"
 )
@@ -59,6 +61,30 @@ func NewConfigurationItemService(client *ent.Client, logger *zap.SugaredLogger, 
 // 事实来源是 CIAttributeValidator，与 CreateCI/UpdateCI 的校验共用同一份查询，避免两处规则漂移。
 func (s *ConfigurationItemService) ListRequiredCIAttributes(ctx context.Context, tenantID, ciTypeID int) ([]CIAttributeRequirement, error) {
 	return s.attrValidator.RequiredAttributes(ctx, tenantID, ciTypeID)
+}
+
+// resolveOwner 校验 owner_id 并返回用于 owned_by 展示文本的显示名。
+//
+// 存在性校验是必须的：owner_id 是行级权限的判定依据，若允许写入一个不存在的
+// 用户ID，该 CI 会永久落在「任何人都无权查看、也无人能认领」的黑洞里——
+// 界面显示「有负责人」，但过滤后谁都看不见它。跨租户的 user_id 同理拒绝，
+// 否则 A 租户能把资产挂到 B 租户的用户，绕过租户隔离。
+func (s *ConfigurationItemService) resolveOwner(ctx context.Context, tenantID, ownerID int) (string, error) {
+	u, err := s.client.User.Query().
+		Where(entuser.IDEQ(ownerID), entuser.TenantIDEQ(tenantID)).
+		Only(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return "", common.NewValidationError(
+				fmt.Sprintf("负责人用户ID %d 不存在或不属于当前租户", ownerID),
+				fmt.Errorf("owner not found: %w", err))
+		}
+		return "", fmt.Errorf("failed to resolve owner: %w", err)
+	}
+	if u.Name != "" {
+		return u.Name, nil
+	}
+	return u.Username, nil
 }
 
 // CreateCI 创建配置项
@@ -115,6 +141,22 @@ func (s *ConfigurationItemService) CreateCI(ctx context.Context, req *dto.Create
 	}
 	if req.OwnedBy != "" {
 		create.SetOwnedBy(req.OwnedBy)
+	}
+	// 行级权限载体：owner_id 是权限判定的唯一依据，owned_by 只是展示文本。
+	// 两者同时给出时以 owner_id 为准，并把 owned_by 覆盖成该用户的显示名，
+	// 避免出现「owner_id=5 但界面显示另一个名字」的自相矛盾数据。
+	if req.OwnerID > 0 {
+		owner, oerr := s.resolveOwner(ctx, tenantID, req.OwnerID)
+		if oerr != nil {
+			return nil, oerr
+		}
+		create.SetOwnerID(req.OwnerID).SetOwnedBy(owner)
+		if req.DepartmentID > 0 {
+			create.SetDepartmentID(req.DepartmentID)
+		}
+	} else if req.DepartmentID > 0 {
+		// 只给部门不给 owner：允许（部门资产池），行级按部门判定。
+		create.SetDepartmentID(req.DepartmentID)
 	}
 	if req.DiscoverySource != "" {
 		create.SetDiscoverySource(req.DiscoverySource)
@@ -335,6 +377,18 @@ func (s *ConfigurationItemService) ListCIs(ctx context.Context, tenantID int, re
 	query := s.client.ConfigurationItem.Query().
 		Where(configurationitem.TenantIDEQ(tenantID), configurationitem.LifecycleStatusNEQ(common.CILifecycleStatusScrapped))
 
+	// 行级数据权限：只有 HTTP handler 显式注入 ScopeConfigured 才应用过滤。
+	// 治理看板走 ListCIsForGovernance（全局质量视图），刻意不接本谓词；
+	// AI 工具/导出等内部调用方走同一 service 但不带 scope，保持租户级旧语义。
+	// 一旦 handler 注入，ScopeUserID<=0（如 service 主体）由 ApplyCIFilter 安全收窄为空集。
+	if req.ScopeConfigured {
+		ds := datascope.DataScopeOwnedOrAssigned
+		if req.ScopeAll {
+			ds = datascope.DataScopeAll
+		}
+		query = datascope.ApplyCIFilter(query, req.ScopeUserID, req.ScopeDepartmentID, ds)
+	}
+
 	// 精确枚举过滤
 	if req.CITypeID != 0 {
 		query = query.Where(configurationitem.CiTypeIDEQ(req.CITypeID))
@@ -529,6 +583,29 @@ func (s *ConfigurationItemService) UpdateCI(ctx context.Context, id, tenantID in
 	}
 	if req.OwnedBy != "" {
 		update.SetOwnedBy(req.OwnedBy)
+	}
+	// 行级权限载体写入（2026-11-19）。用指针区分「不改」与「清空」：
+	// 资产负责人是会变的（离职、转岗、外包结束），必须能解除归属。
+	// 解除归属后 CI 回落为「未归属公共资产」，仍对租户内可见（见 datascope.ApplyCIFilter）。
+	if req.OwnerID != nil {
+		if *req.OwnerID > 0 {
+			owner, oerr := s.resolveOwner(ctx, tenantID, *req.OwnerID)
+			if oerr != nil {
+				return nil, oerr
+			}
+			update.SetOwnerID(*req.OwnerID).SetOwnedBy(owner)
+		} else {
+			update.ClearOwnerID()
+			// 文本展示同步清空，否则界面会出现「已解除归属但仍显示旧负责人」。
+			update.ClearOwnedBy()
+		}
+	}
+	if req.DepartmentID != nil {
+		if *req.DepartmentID > 0 {
+			update.SetDepartmentID(*req.DepartmentID)
+		} else {
+			update.ClearDepartmentID()
+		}
 	}
 	if req.DiscoverySource != "" {
 		update.SetDiscoverySource(req.DiscoverySource)

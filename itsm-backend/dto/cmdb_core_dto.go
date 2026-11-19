@@ -100,6 +100,15 @@ type ListCIRequest struct {
 	TagIDs []int `form:"tagIds"`
 	// WithRelations 是否预加载关系
 	WithRelations bool `form:"withRelations"`
+
+	// 行级权限上下文（由 HTTP handler 从鉴权中间件注入，不参与查询绑定）：
+	// ScopeConfigured=true 才应用过滤；内部可信调用方（AI 工具/导出/测试）不设置，
+	// 保持旧的租户级行为——它们各自的调用链已有权限门，行级过滤是 HTTP 业务读面的额外收窄。
+	// dto 不 import internal/datascope（避免底层包反向依赖），service 层负责转成 DataScope。
+	ScopeConfigured   bool `json:"-"`
+	ScopeUserID       int  `json:"-"`
+	ScopeDepartmentID int  `json:"-"`
+	ScopeAll          bool `json:"-"`
 }
 
 // CIListResponse 配置项列表响应。

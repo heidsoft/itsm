@@ -88,6 +88,22 @@ func ForTicketReader(role string) DataScope {
 	return DataScopeOwnedOrAssigned
 }
 
+// ForCIReader 返回某角色读取 CI（配置项）时的行级范围。
+//
+// 与 ForTicketReader 同构但刻意分开命名：工单与资产的角色判定今天是同一套
+// （管理角色全量、其余收窄），但二者的收窄依据完全不同——工单靠创建人/受理人，
+// CI 靠 owner_id/department_id。合成一个函数会让「改工单口径顺手改了资产口径」
+// 这类跨域误伤无法被 review 拦住；分开命名后，任何一侧的调整都必须显式改名。
+//
+// 治理看板不调用本函数（用户拍板：治理是全局质量视图，见 ListCIsForGovernance），
+// 只有业务读面（列表/拓扑/影响分析）用它。
+func ForCIReader(role string) DataScope {
+	if IsDataScopeAllRole(role) {
+		return DataScopeAll
+	}
+	return DataScopeOwnedOrAssigned
+}
+
 // CanWriteResource 判定 actor 是否可对单据执行写/删操作（行级写权限）。
 //
 // 原则：写权限 ⊆ 读权限。DataScope 决定读不到的单据，同样不允许写/删：
