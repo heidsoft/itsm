@@ -3873,11 +3873,18 @@ cd itsm-frontend && npm run test:unit -- --runTestsByPath src/lib/api/__tests__/
 为准，并把 `owned_by` 覆盖成该用户的**显示名**（`name` 优先，回退 `username`）。
 
 **升级动作**：执行迁移 `migrations/20261119_ci_owner_fk_and_certification.sql`（幂等，
-`ADD COLUMN IF NOT EXISTS`，可安全重放）。迁移会**按租户回填 `owner_id`**
-（用 `COALESCE(NULLIF(username,''), NULLIF(name,'' )` 与存量 `owned_by` 文本匹配），
-因此历史数据里的负责人文本能自动转成真实外键；匹配不上的保持 NULL。回滚用同名
-`_down.sql`（DROP 3 索引 + 4 列，**不删** `ci_certification_tasks`——该表由 ent schema
-管理，auto-migrate 环境自动建）。
+`ADD COLUMN IF NOT EXISTS`，可安全重放）。迁移会**按租户回填 `owner_id`**，分两段：
+先按 `username` 精确匹配（租户内唯一，不会误配），再按 `name` 兜底（**仅当租户内
+该姓名唯一时**才回填）。匹配不上或姓名歧义的保持 NULL，原 `owned_by` 文本保留不删、
+待人工核对后补录。回滚用同名 `_down.sql`（DROP 3 索引 + 4 列，**不删**
+`ci_certification_tasks`——该表由 ent schema 管理，auto-migrate 环境自动建）。
+
+🔴 **为什么姓名兜底要限唯一性**：`name` 不是唯一键。同名两人的租户里，
+`UPDATE ... FROM` 多行命中时 PostgreSQL 会任意挑一行，等于把资产随机挂到某人名下。
+这种「看起来成功」的错误比留 NULL 更坏——NULL 至少能在「未归属资产」清单里被人发现。
+同理不能图省事写成 `COALESCE(NULLIF(username,''), NULLIF(name,''))`：它只取第一个
+非空值，当某用户 `username='zhangsan'` 而 `name='张三'` 时，存量 `owned_by` 里写
+「张三」的行会静默匹配不上（而本批新写路径正是优先写 `name`）。
 
 **② 业务读面开始应用行级过滤（行为变更，请重点核对）。** `GET /api/v1/cmdb/cis`
 （配置项列表）现在按 `DataScope` 收窄：管理角色（`IsDataScopeAllRole`）全租户可见，
