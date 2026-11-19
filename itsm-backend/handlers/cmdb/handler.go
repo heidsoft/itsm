@@ -19,6 +19,10 @@ type Handler struct {
 	// locationFor 用于把来源的 cron 表达式换算成「下次运行时间」回显给运维。
 	// 与调度器同口径（租户时区），否则界面上的时间和实际触发时间会差 8 小时。
 	locationFor func(context.Context, int) *time.Location
+	// certification 数据认证任务 handler（可选装配）。
+	// 为 nil 时相关端点显式 503 unready，而不是 404 —— 前者能被运维看见，
+	// 后者会被误判成「路由写错」。
+	certification *CICertificationHandler
 }
 
 func NewHandler(svc *Service) *Handler {
@@ -1710,4 +1714,40 @@ func toPendingDiscoveryResourceResponse(item *PendingDiscoveryResource) dto.Pend
 		})
 	}
 	return resp
+}
+
+// ------------------------------ 数据认证任务（CI Certification） ------------------------------
+
+// SetCertificationHandler 注入认证任务 handler。
+// 用可选项注入而非改 NewHandler 签名：NewHandler 有 20+ 处调用（含全部测试），
+// 改签名会把无关改动扩散到每个用例；未注入时相关端点显式 503，不静默 404。
+func (h *Handler) SetCertificationHandler(ch *CICertificationHandler) {
+	h.certification = ch
+}
+
+// CreateCICertificationTask POST /cmdb/certification/tasks
+func (h *Handler) CreateCICertificationTask(c *gin.Context) {
+	if h.certification == nil {
+		common.Fail(c, common.ServiceUnavailableCode, "CMDB 数据认证服务未装配")
+		return
+	}
+	h.certification.CreateTask(c)
+}
+
+// ConfirmCICertificationTask POST /cmdb/certification/tasks/:id/confirm
+func (h *Handler) ConfirmCICertificationTask(c *gin.Context) {
+	if h.certification == nil {
+		common.Fail(c, common.ServiceUnavailableCode, "CMDB 数据认证服务未装配")
+		return
+	}
+	h.certification.ConfirmTask(c)
+}
+
+// ListCICertificationTasks GET /cmdb/certification/tasks
+func (h *Handler) ListCICertificationTasks(c *gin.Context) {
+	if h.certification == nil {
+		common.Fail(c, common.ServiceUnavailableCode, "CMDB 数据认证服务未装配")
+		return
+	}
+	h.certification.ListTasks(c)
 }

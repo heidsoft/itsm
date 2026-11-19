@@ -950,6 +950,12 @@ func NewApplication() *Application {
 	// 与 CreateCI/UpdateCI/上线门禁共用同一份查询）——不另写一份「哪些属性必填」。
 	cmdbServiceDomain.WithCIRequirementReader(configurationItemService)
 	cmdbHandler := cmdb.NewHandler(cmdbServiceDomain)
+	// 数据认证任务（CMDB Health / Compliance）：谁在何时确认某 CI 仍准确。
+	// 单次确认落一条 ci_certification_tasks 记录并可回滚（同事务同步 CI 冗余字段），
+	// 治理看板的确认新鲜度读 CI 上的 last_confirmed_at。
+	cmdbHandler.SetCertificationHandler(cmdb.NewCICertificationHandler(
+		cmdb.NewCICertificationService(client, sugar), sugar,
+	))
 	// 云发现调度器：消费 discovery_sources.schedule。此前该字段全仓无消费者，
 	// 运维填了 cron 既不生效也无任何反馈，云发现只能手动点。
 	// 调度走 Service.CreateDiscoveryJob（job 落库与命令入队同事务），

@@ -268,5 +268,16 @@ func SetupCMDBRoutes(
 		cmdb.GET("/reconciliation", middleware.RequirePermission("cmdb", "read"), config.CMDBHandler.GetReconciliation)
 		// 治理看板：质量指标 + 发现差异分桶（read 面，与对账同权）。
 		cmdb.GET("/governance/report", middleware.RequirePermission("cmdb", "read"), config.CMDBHandler.GetGovernanceReport)
+
+		// ------------------------------ 数据认证任务（Certification） ------------------------------
+		// ServiceNow CMDB Health 的 Compliance 维度：记录「谁在何时确认某 CI 仍准确」。
+		// 复用 cmdb:read/cmdb:write，不新增权限码——认证是 CI 的写操作，与创建/更新同权。
+		// 治理看板读确认新鲜度；任务列表与确认入口属日常运维操作。
+		certification := cmdb.Group("/certification")
+		{
+			certification.GET("/tasks", middleware.RequirePermission("cmdb", "read"), config.CMDBHandler.ListCICertificationTasks)
+			certification.POST("/tasks", middleware.RequirePermission("cmdb", "write"), config.CMDBHandler.CreateCICertificationTask)
+			certification.POST("/tasks/:id/confirm", middleware.RequirePermission("cmdb", "write"), config.CMDBHandler.ConfirmCICertificationTask)
+		}
 	}
 }
