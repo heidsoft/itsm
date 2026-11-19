@@ -62,8 +62,23 @@ func (ConfigurationItem) Fields() []ent.Field {
 		field.String("assigned_to").
 			Comment("分配给").
 			Optional(),
-		field.String("owned_by").
-			Comment("拥有者").
+	// 2026-11-19 行级权限改造：owned_by 自由文本 → owner_id 用户 FK。
+	// 保留 owned_by 不删（存量读兼容、列表展示），但它不再是权限判定依据；
+	// 写路径以 owner_id 为准，并把 owned_by 同步成该用户的显示名。
+	field.String("owned_by").
+			Comment("拥有者显示名（历史字段，仅展示；权限判定一律用 owner_id）").
+			Optional(),
+		field.Int("owner_id").
+			Comment("拥有者用户ID（行级权限判定依据，对应 users.id）").
+			Optional(),
+		field.Int("department_id").
+			Comment("归属部门ID（部门级 DataScope 判定依据）").
+			Optional(),
+		field.Time("last_confirmed_at").
+			Comment("最近一次数据认证确认时间（由 ci_certification_tasks 冗余而来）").
+			Optional(),
+		field.Int("confirmed_by").
+			Comment("最近一次数据认证确认人用户ID").
 			Optional(),
 		field.String("ownership_mode").
 			Comment("ownership模式: managed(平台管理)/customer(客户托管)/sla(SLA覆盖)").
@@ -207,5 +222,7 @@ func (ConfigurationItem) Indexes() []ent.Index {
 		index.Fields("tenant_id", "source_id"),
 		index.Fields("tenant_id", "serial_number").Unique(),
 		index.Fields("ownership_mode"),
+		index.Fields("tenant_id", "owner_id"),
+		index.Fields("tenant_id", "department_id"),
 	}
 }

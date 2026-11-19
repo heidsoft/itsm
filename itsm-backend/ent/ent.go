@@ -21,6 +21,7 @@ import (
 	"itsm-backend/ent/changepir"
 	"itsm-backend/ent/changereviewmember"
 	"itsm-backend/ent/ciattributedefinition"
+	"itsm-backend/ent/cicertificationtask"
 	"itsm-backend/ent/cirelationship"
 	"itsm-backend/ent/citag"
 	"itsm-backend/ent/citype"
@@ -221,6 +222,7 @@ func checkColumn(t, c string) error {
 			bpmnpermission.Table:              bpmnpermission.ValidColumn,
 			bootstraptoken.Table:              bootstraptoken.ValidColumn,
 			ciattributedefinition.Table:       ciattributedefinition.ValidColumn,
+			cicertificationtask.Table:         cicertificationtask.ValidColumn,
 			cirelationship.Table:              cirelationship.ValidColumn,
 			citag.Table:                       citag.ValidColumn,
 			citype.Table:                      citype.ValidColumn,

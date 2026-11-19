@@ -505,6 +505,49 @@ var (
 			},
 		},
 	}
+	// CiCertificationTasksColumns holds the columns for the "ci_certification_tasks" table.
+	CiCertificationTasksColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "ci_id", Type: field.TypeInt},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "status", Type: field.TypeString, Default: "pending"},
+		{Name: "assignee_id", Type: field.TypeInt, Nullable: true},
+		{Name: "confirmed_by", Type: field.TypeInt, Nullable: true},
+		{Name: "confirmed_at", Type: field.TypeTime, Nullable: true},
+		{Name: "due_at", Type: field.TypeTime, Nullable: true},
+		{Name: "evidence", Type: field.TypeString, Nullable: true, Size: 2000},
+		{Name: "source", Type: field.TypeString, Default: "manual"},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+	}
+	// CiCertificationTasksTable holds the schema information for the "ci_certification_tasks" table.
+	CiCertificationTasksTable = &schema.Table{
+		Name:       "ci_certification_tasks",
+		Columns:    CiCertificationTasksColumns,
+		PrimaryKey: []*schema.Column{CiCertificationTasksColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "cicertificationtask_tenant_id_ci_id",
+				Unique:  false,
+				Columns: []*schema.Column{CiCertificationTasksColumns[2], CiCertificationTasksColumns[1]},
+			},
+			{
+				Name:    "cicertificationtask_tenant_id_status",
+				Unique:  false,
+				Columns: []*schema.Column{CiCertificationTasksColumns[2], CiCertificationTasksColumns[3]},
+			},
+			{
+				Name:    "cicertificationtask_tenant_id_due_at",
+				Unique:  false,
+				Columns: []*schema.Column{CiCertificationTasksColumns[2], CiCertificationTasksColumns[7]},
+			},
+			{
+				Name:    "cicertificationtask_ci_id_confirmed_at",
+				Unique:  false,
+				Columns: []*schema.Column{CiCertificationTasksColumns[1], CiCertificationTasksColumns[6]},
+			},
+		},
+	}
 	// CiRelationshipsColumns holds the columns for the "ci_relationships" table.
 	CiRelationshipsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -1062,6 +1105,10 @@ var (
 		{Name: "location", Type: field.TypeString, Nullable: true},
 		{Name: "assigned_to", Type: field.TypeString, Nullable: true},
 		{Name: "owned_by", Type: field.TypeString, Nullable: true},
+		{Name: "owner_id", Type: field.TypeInt, Nullable: true},
+		{Name: "department_id", Type: field.TypeInt, Nullable: true},
+		{Name: "last_confirmed_at", Type: field.TypeTime, Nullable: true},
+		{Name: "confirmed_by", Type: field.TypeInt, Nullable: true},
 		{Name: "ownership_mode", Type: field.TypeString, Default: "managed"},
 		{Name: "local_modified_at", Type: field.TypeTime, Nullable: true},
 		{Name: "discovery_source", Type: field.TypeString, Nullable: true},
@@ -1103,19 +1150,19 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "configuration_items_assets_configuration_item",
-				Columns:    []*schema.Column{ConfigurationItemsColumns[44]},
+				Columns:    []*schema.Column{ConfigurationItemsColumns[48]},
 				RefColumns: []*schema.Column{AssetsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:     "configuration_items_ci_types_cis",
-				Columns:    []*schema.Column{ConfigurationItemsColumns[45]},
+				Columns:    []*schema.Column{ConfigurationItemsColumns[49]},
 				RefColumns: []*schema.Column{CiTypesColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 			{
 				Symbol:     "configuration_items_cloud_resources_cis",
-				Columns:    []*schema.Column{ConfigurationItemsColumns[46]},
+				Columns:    []*schema.Column{ConfigurationItemsColumns[50]},
 				RefColumns: []*schema.Column{CloudResourcesColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
@@ -1134,7 +1181,7 @@ var (
 			{
 				Name:    "configurationitem_ci_type_id",
 				Unique:  false,
-				Columns: []*schema.Column{ConfigurationItemsColumns[45]},
+				Columns: []*schema.Column{ConfigurationItemsColumns[49]},
 			},
 			{
 				Name:    "configurationitem_status",
@@ -1149,37 +1196,47 @@ var (
 			{
 				Name:    "configurationitem_cloud_provider",
 				Unique:  false,
-				Columns: []*schema.Column{ConfigurationItemsColumns[26]},
+				Columns: []*schema.Column{ConfigurationItemsColumns[30]},
 			},
 			{
 				Name:    "configurationitem_cloud_account_id",
 				Unique:  false,
-				Columns: []*schema.Column{ConfigurationItemsColumns[27]},
+				Columns: []*schema.Column{ConfigurationItemsColumns[31]},
 			},
 			{
 				Name:    "configurationitem_cloud_region",
 				Unique:  false,
-				Columns: []*schema.Column{ConfigurationItemsColumns[28]},
+				Columns: []*schema.Column{ConfigurationItemsColumns[32]},
 			},
 			{
 				Name:    "configurationitem_cloud_resource_id",
 				Unique:  false,
-				Columns: []*schema.Column{ConfigurationItemsColumns[30]},
+				Columns: []*schema.Column{ConfigurationItemsColumns[34]},
 			},
 			{
 				Name:    "configurationitem_tenant_id_source_id",
 				Unique:  false,
-				Columns: []*schema.Column{ConfigurationItemsColumns[37], ConfigurationItemsColumns[20]},
+				Columns: []*schema.Column{ConfigurationItemsColumns[41], ConfigurationItemsColumns[24]},
 			},
 			{
 				Name:    "configurationitem_tenant_id_serial_number",
 				Unique:  true,
-				Columns: []*schema.Column{ConfigurationItemsColumns[37], ConfigurationItemsColumns[9]},
+				Columns: []*schema.Column{ConfigurationItemsColumns[41], ConfigurationItemsColumns[9]},
 			},
 			{
 				Name:    "configurationitem_ownership_mode",
 				Unique:  false,
-				Columns: []*schema.Column{ConfigurationItemsColumns[15]},
+				Columns: []*schema.Column{ConfigurationItemsColumns[19]},
+			},
+			{
+				Name:    "configurationitem_tenant_id_owner_id",
+				Unique:  false,
+				Columns: []*schema.Column{ConfigurationItemsColumns[41], ConfigurationItemsColumns[15]},
+			},
+			{
+				Name:    "configurationitem_tenant_id_department_id",
+				Unique:  false,
+				Columns: []*schema.Column{ConfigurationItemsColumns[41], ConfigurationItemsColumns[16]},
 			},
 		},
 	}
@@ -6273,6 +6330,7 @@ var (
 		BpmnPermissionsTable,
 		BootstrapTokensTable,
 		CiAttributeDefinitionsTable,
+		CiCertificationTasksTable,
 		CiRelationshipsTable,
 		CiTagsTable,
 		CiTypesTable,

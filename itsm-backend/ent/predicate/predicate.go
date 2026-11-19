@@ -42,6 +42,9 @@ type BootstrapToken func(*sql.Selector)
 // CIAttributeDefinition is the predicate function for ciattributedefinition builders.
 type CIAttributeDefinition func(*sql.Selector)
 
+// CICertificationTask is the predicate function for cicertificationtask builders.
+type CICertificationTask func(*sql.Selector)
+
 // CIRelationship is the predicate function for cirelationship builders.
 type CIRelationship func(*sql.Selector)
 

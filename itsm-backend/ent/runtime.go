@@ -18,6 +18,7 @@ import (
 	"itsm-backend/ent/changepir"
 	"itsm-backend/ent/changereviewmember"
 	"itsm-backend/ent/ciattributedefinition"
+	"itsm-backend/ent/cicertificationtask"
 	"itsm-backend/ent/cirelationship"
 	"itsm-backend/ent/citag"
 	"itsm-backend/ent/citype"
@@ -631,6 +632,38 @@ func init() {
 	ciattributedefinition.DefaultUpdatedAt = ciattributedefinitionDescUpdatedAt.Default.(func() time.Time)
 	// ciattributedefinition.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	ciattributedefinition.UpdateDefaultUpdatedAt = ciattributedefinitionDescUpdatedAt.UpdateDefault.(func() time.Time)
+	cicertificationtaskFields := schema.CICertificationTask{}.Fields()
+	_ = cicertificationtaskFields
+	// cicertificationtaskDescCiID is the schema descriptor for ci_id field.
+	cicertificationtaskDescCiID := cicertificationtaskFields[0].Descriptor()
+	// cicertificationtask.CiIDValidator is a validator for the "ci_id" field. It is called by the builders before save.
+	cicertificationtask.CiIDValidator = cicertificationtaskDescCiID.Validators[0].(func(int) error)
+	// cicertificationtaskDescTenantID is the schema descriptor for tenant_id field.
+	cicertificationtaskDescTenantID := cicertificationtaskFields[1].Descriptor()
+	// cicertificationtask.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
+	cicertificationtask.TenantIDValidator = cicertificationtaskDescTenantID.Validators[0].(func(int) error)
+	// cicertificationtaskDescStatus is the schema descriptor for status field.
+	cicertificationtaskDescStatus := cicertificationtaskFields[2].Descriptor()
+	// cicertificationtask.DefaultStatus holds the default value on creation for the status field.
+	cicertificationtask.DefaultStatus = cicertificationtaskDescStatus.Default.(string)
+	// cicertificationtaskDescEvidence is the schema descriptor for evidence field.
+	cicertificationtaskDescEvidence := cicertificationtaskFields[7].Descriptor()
+	// cicertificationtask.EvidenceValidator is a validator for the "evidence" field. It is called by the builders before save.
+	cicertificationtask.EvidenceValidator = cicertificationtaskDescEvidence.Validators[0].(func(string) error)
+	// cicertificationtaskDescSource is the schema descriptor for source field.
+	cicertificationtaskDescSource := cicertificationtaskFields[8].Descriptor()
+	// cicertificationtask.DefaultSource holds the default value on creation for the source field.
+	cicertificationtask.DefaultSource = cicertificationtaskDescSource.Default.(string)
+	// cicertificationtaskDescCreatedAt is the schema descriptor for created_at field.
+	cicertificationtaskDescCreatedAt := cicertificationtaskFields[9].Descriptor()
+	// cicertificationtask.DefaultCreatedAt holds the default value on creation for the created_at field.
+	cicertificationtask.DefaultCreatedAt = cicertificationtaskDescCreatedAt.Default.(func() time.Time)
+	// cicertificationtaskDescUpdatedAt is the schema descriptor for updated_at field.
+	cicertificationtaskDescUpdatedAt := cicertificationtaskFields[10].Descriptor()
+	// cicertificationtask.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	cicertificationtask.DefaultUpdatedAt = cicertificationtaskDescUpdatedAt.Default.(func() time.Time)
+	// cicertificationtask.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	cicertificationtask.UpdateDefaultUpdatedAt = cicertificationtaskDescUpdatedAt.UpdateDefault.(func() time.Time)
 	cirelationshipFields := schema.CIRelationship{}.Fields()
 	_ = cirelationshipFields
 	// cirelationshipDescTenantID is the schema descriptor for tenant_id field.
@@ -1074,35 +1107,35 @@ func init() {
 	// configurationitem.DefaultCriticality holds the default value on creation for the criticality field.
 	configurationitem.DefaultCriticality = configurationitemDescCriticality.Default.(string)
 	// configurationitemDescOwnershipMode is the schema descriptor for ownership_mode field.
-	configurationitemDescOwnershipMode := configurationitemFields[15].Descriptor()
+	configurationitemDescOwnershipMode := configurationitemFields[19].Descriptor()
 	// configurationitem.DefaultOwnershipMode holds the default value on creation for the ownership_mode field.
 	configurationitem.DefaultOwnershipMode = configurationitemDescOwnershipMode.Default.(string)
 	// configurationitemDescSourceMissingCount is the schema descriptor for source_missing_count field.
-	configurationitemDescSourceMissingCount := configurationitemFields[23].Descriptor()
+	configurationitemDescSourceMissingCount := configurationitemFields[27].Descriptor()
 	// configurationitem.DefaultSourceMissingCount holds the default value on creation for the source_missing_count field.
 	configurationitem.DefaultSourceMissingCount = configurationitemDescSourceMissingCount.Default.(int)
 	// configurationitem.SourceMissingCountValidator is a validator for the "source_missing_count" field. It is called by the builders before save.
 	configurationitem.SourceMissingCountValidator = configurationitemDescSourceMissingCount.Validators[0].(func(int) error)
 	// configurationitemDescTenantID is the schema descriptor for tenant_id field.
-	configurationitemDescTenantID := configurationitemFields[38].Descriptor()
+	configurationitemDescTenantID := configurationitemFields[42].Descriptor()
 	// configurationitem.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
 	configurationitem.TenantIDValidator = configurationitemDescTenantID.Validators[0].(func(int) error)
 	// configurationitemDescVersion is the schema descriptor for version field.
-	configurationitemDescVersion := configurationitemFields[39].Descriptor()
+	configurationitemDescVersion := configurationitemFields[43].Descriptor()
 	// configurationitem.DefaultVersion holds the default value on creation for the version field.
 	configurationitem.DefaultVersion = configurationitemDescVersion.Default.(int)
 	// configurationitemDescCreatedAt is the schema descriptor for created_at field.
-	configurationitemDescCreatedAt := configurationitemFields[40].Descriptor()
+	configurationitemDescCreatedAt := configurationitemFields[44].Descriptor()
 	// configurationitem.DefaultCreatedAt holds the default value on creation for the created_at field.
 	configurationitem.DefaultCreatedAt = configurationitemDescCreatedAt.Default.(func() time.Time)
 	// configurationitemDescUpdatedAt is the schema descriptor for updated_at field.
-	configurationitemDescUpdatedAt := configurationitemFields[41].Descriptor()
+	configurationitemDescUpdatedAt := configurationitemFields[45].Descriptor()
 	// configurationitem.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	configurationitem.DefaultUpdatedAt = configurationitemDescUpdatedAt.Default.(func() time.Time)
 	// configurationitem.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	configurationitem.UpdateDefaultUpdatedAt = configurationitemDescUpdatedAt.UpdateDefault.(func() time.Time)
 	// configurationitemDescLifecycleStatus is the schema descriptor for lifecycle_status field.
-	configurationitemDescLifecycleStatus := configurationitemFields[42].Descriptor()
+	configurationitemDescLifecycleStatus := configurationitemFields[46].Descriptor()
 	// configurationitem.DefaultLifecycleStatus holds the default value on creation for the lifecycle_status field.
 	configurationitem.DefaultLifecycleStatus = configurationitemDescLifecycleStatus.Default.(string)
 	configurationitemhistoryFields := schema.ConfigurationItemHistory{}.Fields()

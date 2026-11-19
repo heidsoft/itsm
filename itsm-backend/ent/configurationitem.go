@@ -48,8 +48,16 @@ type ConfigurationItem struct {
 	Location string `json:"location,omitempty"`
 	// 分配给
 	AssignedTo string `json:"assigned_to,omitempty"`
-	// 拥有者
+	// 拥有者显示名（历史字段，仅展示；权限判定一律用 owner_id）
 	OwnedBy string `json:"owned_by,omitempty"`
+	// 拥有者用户ID（行级权限判定依据，对应 users.id）
+	OwnerID int `json:"owner_id,omitempty"`
+	// 归属部门ID（部门级 DataScope 判定依据）
+	DepartmentID int `json:"department_id,omitempty"`
+	// 最近一次数据认证确认时间（由 ci_certification_tasks 冗余而来）
+	LastConfirmedAt time.Time `json:"last_confirmed_at,omitempty"`
+	// 最近一次数据认证确认人用户ID
+	ConfirmedBy int `json:"confirmed_by,omitempty"`
 	// ownership模式: managed(平台管理)/customer(客户托管)/sla(SLA覆盖)
 	OwnershipMode string `json:"ownership_mode,omitempty"`
 	// 客户本地修改时间，用于三方合并冲突检测
@@ -234,11 +242,11 @@ func (*ConfigurationItem) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case configurationitem.FieldAttributes, configurationitem.FieldCloudMetadata, configurationitem.FieldCloudTags, configurationitem.FieldCloudMetrics:
 			values[i] = new([]byte)
-		case configurationitem.FieldID, configurationitem.FieldCiTypeID, configurationitem.FieldSourceMissingCount, configurationitem.FieldCloudResourceRefID, configurationitem.FieldTenantID, configurationitem.FieldVersion:
+		case configurationitem.FieldID, configurationitem.FieldCiTypeID, configurationitem.FieldOwnerID, configurationitem.FieldDepartmentID, configurationitem.FieldConfirmedBy, configurationitem.FieldSourceMissingCount, configurationitem.FieldCloudResourceRefID, configurationitem.FieldTenantID, configurationitem.FieldVersion:
 			values[i] = new(sql.NullInt64)
 		case configurationitem.FieldCiNumber, configurationitem.FieldName, configurationitem.FieldDescription, configurationitem.FieldCiType, configurationitem.FieldStatus, configurationitem.FieldEnvironment, configurationitem.FieldCriticality, configurationitem.FieldAssetTag, configurationitem.FieldSerialNumber, configurationitem.FieldModel, configurationitem.FieldVendor, configurationitem.FieldLocation, configurationitem.FieldAssignedTo, configurationitem.FieldOwnedBy, configurationitem.FieldOwnershipMode, configurationitem.FieldDiscoverySource, configurationitem.FieldSource, configurationitem.FieldSourceID, configurationitem.FieldCanonicalCloudAccountID, configurationitem.FieldSourceFingerprint, configurationitem.FieldCloudProvider, configurationitem.FieldCloudAccountID, configurationitem.FieldCloudRegion, configurationitem.FieldCloudZone, configurationitem.FieldCloudResourceID, configurationitem.FieldCloudResourceType, configurationitem.FieldCloudSyncStatus, configurationitem.FieldLifecycleStatus:
 			values[i] = new(sql.NullString)
-		case configurationitem.FieldLocalModifiedAt, configurationitem.FieldLastDiscovered, configurationitem.FieldSourceLastSeenAt, configurationitem.FieldCloudSyncTime, configurationitem.FieldCreatedAt, configurationitem.FieldUpdatedAt, configurationitem.FieldEffectiveAt, configurationitem.FieldExpireAt:
+		case configurationitem.FieldLastConfirmedAt, configurationitem.FieldLocalModifiedAt, configurationitem.FieldLastDiscovered, configurationitem.FieldSourceLastSeenAt, configurationitem.FieldCloudSyncTime, configurationitem.FieldCreatedAt, configurationitem.FieldUpdatedAt, configurationitem.FieldEffectiveAt, configurationitem.FieldExpireAt:
 			values[i] = new(sql.NullTime)
 		case configurationitem.ForeignKeys[0]: // asset_configuration_item
 			values[i] = new(sql.NullInt64)
@@ -353,6 +361,30 @@ func (_m *ConfigurationItem) assignValues(columns []string, values []any) error 
 				return fmt.Errorf("unexpected type %T for field owned_by", values[i])
 			} else if value.Valid {
 				_m.OwnedBy = value.String
+			}
+		case configurationitem.FieldOwnerID:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field owner_id", values[i])
+			} else if value.Valid {
+				_m.OwnerID = int(value.Int64)
+			}
+		case configurationitem.FieldDepartmentID:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field department_id", values[i])
+			} else if value.Valid {
+				_m.DepartmentID = int(value.Int64)
+			}
+		case configurationitem.FieldLastConfirmedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field last_confirmed_at", values[i])
+			} else if value.Valid {
+				_m.LastConfirmedAt = value.Time
+			}
+		case configurationitem.FieldConfirmedBy:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field confirmed_by", values[i])
+			} else if value.Valid {
+				_m.ConfirmedBy = int(value.Int64)
 			}
 		case configurationitem.FieldOwnershipMode:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -676,6 +708,18 @@ func (_m *ConfigurationItem) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("owned_by=")
 	builder.WriteString(_m.OwnedBy)
+	builder.WriteString(", ")
+	builder.WriteString("owner_id=")
+	builder.WriteString(fmt.Sprintf("%v", _m.OwnerID))
+	builder.WriteString(", ")
+	builder.WriteString("department_id=")
+	builder.WriteString(fmt.Sprintf("%v", _m.DepartmentID))
+	builder.WriteString(", ")
+	builder.WriteString("last_confirmed_at=")
+	builder.WriteString(_m.LastConfirmedAt.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("confirmed_by=")
+	builder.WriteString(fmt.Sprintf("%v", _m.ConfirmedBy))
 	builder.WriteString(", ")
 	builder.WriteString("ownership_mode=")
 	builder.WriteString(_m.OwnershipMode)

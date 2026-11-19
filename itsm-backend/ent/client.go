@@ -26,6 +26,7 @@ import (
 	"itsm-backend/ent/changepir"
 	"itsm-backend/ent/changereviewmember"
 	"itsm-backend/ent/ciattributedefinition"
+	"itsm-backend/ent/cicertificationtask"
 	"itsm-backend/ent/cirelationship"
 	"itsm-backend/ent/citag"
 	"itsm-backend/ent/citype"
@@ -184,6 +185,8 @@ type Client struct {
 	BootstrapToken *BootstrapTokenClient
 	// CIAttributeDefinition is the client for interacting with the CIAttributeDefinition builders.
 	CIAttributeDefinition *CIAttributeDefinitionClient
+	// CICertificationTask is the client for interacting with the CICertificationTask builders.
+	CICertificationTask *CICertificationTaskClient
 	// CIRelationship is the client for interacting with the CIRelationship builders.
 	CIRelationship *CIRelationshipClient
 	// CITag is the client for interacting with the CITag builders.
@@ -457,6 +460,7 @@ func (c *Client) init() {
 	c.BPMNPermission = NewBPMNPermissionClient(c.config)
 	c.BootstrapToken = NewBootstrapTokenClient(c.config)
 	c.CIAttributeDefinition = NewCIAttributeDefinitionClient(c.config)
+	c.CICertificationTask = NewCICertificationTaskClient(c.config)
 	c.CIRelationship = NewCIRelationshipClient(c.config)
 	c.CITag = NewCITagClient(c.config)
 	c.CIType = NewCITypeClient(c.config)
@@ -686,6 +690,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		BPMNPermission:              NewBPMNPermissionClient(cfg),
 		BootstrapToken:              NewBootstrapTokenClient(cfg),
 		CIAttributeDefinition:       NewCIAttributeDefinitionClient(cfg),
+		CICertificationTask:         NewCICertificationTaskClient(cfg),
 		CIRelationship:              NewCIRelationshipClient(cfg),
 		CITag:                       NewCITagClient(cfg),
 		CIType:                      NewCITypeClient(cfg),
@@ -842,6 +847,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		BPMNPermission:              NewBPMNPermissionClient(cfg),
 		BootstrapToken:              NewBootstrapTokenClient(cfg),
 		CIAttributeDefinition:       NewCIAttributeDefinitionClient(cfg),
+		CICertificationTask:         NewCICertificationTaskClient(cfg),
 		CIRelationship:              NewCIRelationshipClient(cfg),
 		CITag:                       NewCITagClient(cfg),
 		CIType:                      NewCITypeClient(cfg),
@@ -998,14 +1004,14 @@ func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
 		c.AIAnalysisResult, c.Alert, c.Application, c.ApprovalChain, c.ApprovalRecord,
 		c.ApprovalWorkflow, c.Asset, c.AssetLicense, c.AuditLog, c.BPMNPermission,
-		c.BootstrapToken, c.CIAttributeDefinition, c.CIRelationship, c.CITag, c.CIType,
-		c.CMDBExportTask, c.CMDBImportTask, c.CMDBSavedView, c.Change, c.ChangePIR,
-		c.ChangeReviewMember, c.CloudAccount, c.CloudResource, c.CloudService,
-		c.ConfigurationItem, c.ConfigurationItemHistory, c.ConnectorConfig,
-		c.ConnectorInboundDedup, c.Contract, c.Conversation, c.CustomerBranch,
-		c.Department, c.DiscoveryJob, c.DiscoveryResult, c.DiscoverySource,
-		c.DomainConfig, c.EmailConversation, c.EmailIntakeAnalysis,
-		c.EmailOutboundMessage, c.EndpointACL, c.EngineerSkill,
+		c.BootstrapToken, c.CIAttributeDefinition, c.CICertificationTask,
+		c.CIRelationship, c.CITag, c.CIType, c.CMDBExportTask, c.CMDBImportTask,
+		c.CMDBSavedView, c.Change, c.ChangePIR, c.ChangeReviewMember, c.CloudAccount,
+		c.CloudResource, c.CloudService, c.ConfigurationItem,
+		c.ConfigurationItemHistory, c.ConnectorConfig, c.ConnectorInboundDedup,
+		c.Contract, c.Conversation, c.CustomerBranch, c.Department, c.DiscoveryJob,
+		c.DiscoveryResult, c.DiscoverySource, c.DomainConfig, c.EmailConversation,
+		c.EmailIntakeAnalysis, c.EmailOutboundMessage, c.EndpointACL, c.EngineerSkill,
 		c.ExternalContractReference, c.FeishuTicketSync, c.Group,
 		c.InboundEmailMessage, c.Incident, c.IncidentAlert, c.IncidentEscalationRule,
 		c.IncidentEvent, c.IncidentMetric, c.IncidentRule, c.IncidentRuleExecution,
@@ -1042,14 +1048,14 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
 		c.AIAnalysisResult, c.Alert, c.Application, c.ApprovalChain, c.ApprovalRecord,
 		c.ApprovalWorkflow, c.Asset, c.AssetLicense, c.AuditLog, c.BPMNPermission,
-		c.BootstrapToken, c.CIAttributeDefinition, c.CIRelationship, c.CITag, c.CIType,
-		c.CMDBExportTask, c.CMDBImportTask, c.CMDBSavedView, c.Change, c.ChangePIR,
-		c.ChangeReviewMember, c.CloudAccount, c.CloudResource, c.CloudService,
-		c.ConfigurationItem, c.ConfigurationItemHistory, c.ConnectorConfig,
-		c.ConnectorInboundDedup, c.Contract, c.Conversation, c.CustomerBranch,
-		c.Department, c.DiscoveryJob, c.DiscoveryResult, c.DiscoverySource,
-		c.DomainConfig, c.EmailConversation, c.EmailIntakeAnalysis,
-		c.EmailOutboundMessage, c.EndpointACL, c.EngineerSkill,
+		c.BootstrapToken, c.CIAttributeDefinition, c.CICertificationTask,
+		c.CIRelationship, c.CITag, c.CIType, c.CMDBExportTask, c.CMDBImportTask,
+		c.CMDBSavedView, c.Change, c.ChangePIR, c.ChangeReviewMember, c.CloudAccount,
+		c.CloudResource, c.CloudService, c.ConfigurationItem,
+		c.ConfigurationItemHistory, c.ConnectorConfig, c.ConnectorInboundDedup,
+		c.Contract, c.Conversation, c.CustomerBranch, c.Department, c.DiscoveryJob,
+		c.DiscoveryResult, c.DiscoverySource, c.DomainConfig, c.EmailConversation,
+		c.EmailIntakeAnalysis, c.EmailOutboundMessage, c.EndpointACL, c.EngineerSkill,
 		c.ExternalContractReference, c.FeishuTicketSync, c.Group,
 		c.InboundEmailMessage, c.Incident, c.IncidentAlert, c.IncidentEscalationRule,
 		c.IncidentEvent, c.IncidentMetric, c.IncidentRule, c.IncidentRuleExecution,
@@ -1107,6 +1113,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.BootstrapToken.mutate(ctx, m)
 	case *CIAttributeDefinitionMutation:
 		return c.CIAttributeDefinition.mutate(ctx, m)
+	case *CICertificationTaskMutation:
+		return c.CICertificationTask.mutate(ctx, m)
 	case *CIRelationshipMutation:
 		return c.CIRelationship.mutate(ctx, m)
 	case *CITagMutation:
@@ -3115,6 +3123,139 @@ func (c *CIAttributeDefinitionClient) mutate(ctx context.Context, m *CIAttribute
 		return (&CIAttributeDefinitionDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown CIAttributeDefinition mutation op: %q", m.Op())
+	}
+}
+
+// CICertificationTaskClient is a client for the CICertificationTask schema.
+type CICertificationTaskClient struct {
+	config
+}
+
+// NewCICertificationTaskClient returns a client for the CICertificationTask from the given config.
+func NewCICertificationTaskClient(c config) *CICertificationTaskClient {
+	return &CICertificationTaskClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `cicertificationtask.Hooks(f(g(h())))`.
+func (c *CICertificationTaskClient) Use(hooks ...Hook) {
+	c.hooks.CICertificationTask = append(c.hooks.CICertificationTask, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `cicertificationtask.Intercept(f(g(h())))`.
+func (c *CICertificationTaskClient) Intercept(interceptors ...Interceptor) {
+	c.inters.CICertificationTask = append(c.inters.CICertificationTask, interceptors...)
+}
+
+// Create returns a builder for creating a CICertificationTask entity.
+func (c *CICertificationTaskClient) Create() *CICertificationTaskCreate {
+	mutation := newCICertificationTaskMutation(c.config, OpCreate)
+	return &CICertificationTaskCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of CICertificationTask entities.
+func (c *CICertificationTaskClient) CreateBulk(builders ...*CICertificationTaskCreate) *CICertificationTaskCreateBulk {
+	return &CICertificationTaskCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *CICertificationTaskClient) MapCreateBulk(slice any, setFunc func(*CICertificationTaskCreate, int)) *CICertificationTaskCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &CICertificationTaskCreateBulk{err: fmt.Errorf("calling to CICertificationTaskClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*CICertificationTaskCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &CICertificationTaskCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for CICertificationTask.
+func (c *CICertificationTaskClient) Update() *CICertificationTaskUpdate {
+	mutation := newCICertificationTaskMutation(c.config, OpUpdate)
+	return &CICertificationTaskUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *CICertificationTaskClient) UpdateOne(_m *CICertificationTask) *CICertificationTaskUpdateOne {
+	mutation := newCICertificationTaskMutation(c.config, OpUpdateOne, withCICertificationTask(_m))
+	return &CICertificationTaskUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *CICertificationTaskClient) UpdateOneID(id int) *CICertificationTaskUpdateOne {
+	mutation := newCICertificationTaskMutation(c.config, OpUpdateOne, withCICertificationTaskID(id))
+	return &CICertificationTaskUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for CICertificationTask.
+func (c *CICertificationTaskClient) Delete() *CICertificationTaskDelete {
+	mutation := newCICertificationTaskMutation(c.config, OpDelete)
+	return &CICertificationTaskDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *CICertificationTaskClient) DeleteOne(_m *CICertificationTask) *CICertificationTaskDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *CICertificationTaskClient) DeleteOneID(id int) *CICertificationTaskDeleteOne {
+	builder := c.Delete().Where(cicertificationtask.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &CICertificationTaskDeleteOne{builder}
+}
+
+// Query returns a query builder for CICertificationTask.
+func (c *CICertificationTaskClient) Query() *CICertificationTaskQuery {
+	return &CICertificationTaskQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeCICertificationTask},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a CICertificationTask entity by its id.
+func (c *CICertificationTaskClient) Get(ctx context.Context, id int) (*CICertificationTask, error) {
+	return c.Query().Where(cicertificationtask.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *CICertificationTaskClient) GetX(ctx context.Context, id int) *CICertificationTask {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *CICertificationTaskClient) Hooks() []Hook {
+	return c.hooks.CICertificationTask
+}
+
+// Interceptors returns the client interceptors.
+func (c *CICertificationTaskClient) Interceptors() []Interceptor {
+	return c.inters.CICertificationTask
+}
+
+func (c *CICertificationTaskClient) mutate(ctx context.Context, m *CICertificationTaskMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&CICertificationTaskCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&CICertificationTaskUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&CICertificationTaskUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&CICertificationTaskDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown CICertificationTask mutation op: %q", m.Op())
 	}
 }
 
@@ -23572,9 +23713,9 @@ type (
 	hooks struct {
 		AIAnalysisResult, Alert, Application, ApprovalChain, ApprovalRecord,
 		ApprovalWorkflow, Asset, AssetLicense, AuditLog, BPMNPermission,
-		BootstrapToken, CIAttributeDefinition, CIRelationship, CITag, CIType,
-		CMDBExportTask, CMDBImportTask, CMDBSavedView, Change, ChangePIR,
-		ChangeReviewMember, CloudAccount, CloudResource, CloudService,
+		BootstrapToken, CIAttributeDefinition, CICertificationTask, CIRelationship,
+		CITag, CIType, CMDBExportTask, CMDBImportTask, CMDBSavedView, Change,
+		ChangePIR, ChangeReviewMember, CloudAccount, CloudResource, CloudService,
 		ConfigurationItem, ConfigurationItemHistory, ConnectorConfig,
 		ConnectorInboundDedup, Contract, Conversation, CustomerBranch, Department,
 		DiscoveryJob, DiscoveryResult, DiscoverySource, DomainConfig,
@@ -23606,9 +23747,9 @@ type (
 	inters struct {
 		AIAnalysisResult, Alert, Application, ApprovalChain, ApprovalRecord,
 		ApprovalWorkflow, Asset, AssetLicense, AuditLog, BPMNPermission,
-		BootstrapToken, CIAttributeDefinition, CIRelationship, CITag, CIType,
-		CMDBExportTask, CMDBImportTask, CMDBSavedView, Change, ChangePIR,
-		ChangeReviewMember, CloudAccount, CloudResource, CloudService,
+		BootstrapToken, CIAttributeDefinition, CICertificationTask, CIRelationship,
+		CITag, CIType, CMDBExportTask, CMDBImportTask, CMDBSavedView, Change,
+		ChangePIR, ChangeReviewMember, CloudAccount, CloudResource, CloudService,
 		ConfigurationItem, ConfigurationItemHistory, ConnectorConfig,
 		ConnectorInboundDedup, Contract, Conversation, CustomerBranch, Department,
 		DiscoveryJob, DiscoveryResult, DiscoverySource, DomainConfig,

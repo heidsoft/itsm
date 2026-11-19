@@ -222,6 +222,62 @@ func (_c *ConfigurationItemCreate) SetNillableOwnedBy(v *string) *ConfigurationI
 	return _c
 }
 
+// SetOwnerID sets the "owner_id" field.
+func (_c *ConfigurationItemCreate) SetOwnerID(v int) *ConfigurationItemCreate {
+	_c.mutation.SetOwnerID(v)
+	return _c
+}
+
+// SetNillableOwnerID sets the "owner_id" field if the given value is not nil.
+func (_c *ConfigurationItemCreate) SetNillableOwnerID(v *int) *ConfigurationItemCreate {
+	if v != nil {
+		_c.SetOwnerID(*v)
+	}
+	return _c
+}
+
+// SetDepartmentID sets the "department_id" field.
+func (_c *ConfigurationItemCreate) SetDepartmentID(v int) *ConfigurationItemCreate {
+	_c.mutation.SetDepartmentID(v)
+	return _c
+}
+
+// SetNillableDepartmentID sets the "department_id" field if the given value is not nil.
+func (_c *ConfigurationItemCreate) SetNillableDepartmentID(v *int) *ConfigurationItemCreate {
+	if v != nil {
+		_c.SetDepartmentID(*v)
+	}
+	return _c
+}
+
+// SetLastConfirmedAt sets the "last_confirmed_at" field.
+func (_c *ConfigurationItemCreate) SetLastConfirmedAt(v time.Time) *ConfigurationItemCreate {
+	_c.mutation.SetLastConfirmedAt(v)
+	return _c
+}
+
+// SetNillableLastConfirmedAt sets the "last_confirmed_at" field if the given value is not nil.
+func (_c *ConfigurationItemCreate) SetNillableLastConfirmedAt(v *time.Time) *ConfigurationItemCreate {
+	if v != nil {
+		_c.SetLastConfirmedAt(*v)
+	}
+	return _c
+}
+
+// SetConfirmedBy sets the "confirmed_by" field.
+func (_c *ConfigurationItemCreate) SetConfirmedBy(v int) *ConfigurationItemCreate {
+	_c.mutation.SetConfirmedBy(v)
+	return _c
+}
+
+// SetNillableConfirmedBy sets the "confirmed_by" field if the given value is not nil.
+func (_c *ConfigurationItemCreate) SetNillableConfirmedBy(v *int) *ConfigurationItemCreate {
+	if v != nil {
+		_c.SetConfirmedBy(*v)
+	}
+	return _c
+}
+
 // SetOwnershipMode sets the "ownership_mode" field.
 func (_c *ConfigurationItemCreate) SetOwnershipMode(v string) *ConfigurationItemCreate {
 	_c.mutation.SetOwnershipMode(v)
@@ -945,6 +1001,22 @@ func (_c *ConfigurationItemCreate) createSpec() (*ConfigurationItem, *sqlgraph.C
 	if value, ok := _c.mutation.OwnedBy(); ok {
 		_spec.SetField(configurationitem.FieldOwnedBy, field.TypeString, value)
 		_node.OwnedBy = value
+	}
+	if value, ok := _c.mutation.OwnerID(); ok {
+		_spec.SetField(configurationitem.FieldOwnerID, field.TypeInt, value)
+		_node.OwnerID = value
+	}
+	if value, ok := _c.mutation.DepartmentID(); ok {
+		_spec.SetField(configurationitem.FieldDepartmentID, field.TypeInt, value)
+		_node.DepartmentID = value
+	}
+	if value, ok := _c.mutation.LastConfirmedAt(); ok {
+		_spec.SetField(configurationitem.FieldLastConfirmedAt, field.TypeTime, value)
+		_node.LastConfirmedAt = value
+	}
+	if value, ok := _c.mutation.ConfirmedBy(); ok {
+		_spec.SetField(configurationitem.FieldConfirmedBy, field.TypeInt, value)
+		_node.ConfirmedBy = value
 	}
 	if value, ok := _c.mutation.OwnershipMode(); ok {
 		_spec.SetField(configurationitem.FieldOwnershipMode, field.TypeString, value)

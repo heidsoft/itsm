@@ -152,6 +152,18 @@ func (f CIAttributeDefinitionFunc) Mutate(ctx context.Context, m ent.Mutation) (
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.CIAttributeDefinitionMutation", m)
 }
 
+// The CICertificationTaskFunc type is an adapter to allow the use of ordinary
+// function as CICertificationTask mutator.
+type CICertificationTaskFunc func(context.Context, *ent.CICertificationTaskMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f CICertificationTaskFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.CICertificationTaskMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.CICertificationTaskMutation", m)
+}
+
 // The CIRelationshipFunc type is an adapter to allow the use of ordinary
 // function as CIRelationship mutator.
 type CIRelationshipFunc func(context.Context, *ent.CIRelationshipMutation) (ent.Value, error)

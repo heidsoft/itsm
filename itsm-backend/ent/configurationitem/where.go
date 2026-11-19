@@ -130,6 +130,26 @@ func OwnedBy(v string) predicate.ConfigurationItem {
 	return predicate.ConfigurationItem(sql.FieldEQ(FieldOwnedBy, v))
 }
 
+// OwnerID applies equality check predicate on the "owner_id" field. It's identical to OwnerIDEQ.
+func OwnerID(v int) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldEQ(FieldOwnerID, v))
+}
+
+// DepartmentID applies equality check predicate on the "department_id" field. It's identical to DepartmentIDEQ.
+func DepartmentID(v int) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldEQ(FieldDepartmentID, v))
+}
+
+// LastConfirmedAt applies equality check predicate on the "last_confirmed_at" field. It's identical to LastConfirmedAtEQ.
+func LastConfirmedAt(v time.Time) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldEQ(FieldLastConfirmedAt, v))
+}
+
+// ConfirmedBy applies equality check predicate on the "confirmed_by" field. It's identical to ConfirmedByEQ.
+func ConfirmedBy(v int) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldEQ(FieldConfirmedBy, v))
+}
+
 // OwnershipMode applies equality check predicate on the "ownership_mode" field. It's identical to OwnershipModeEQ.
 func OwnershipMode(v string) predicate.ConfigurationItem {
 	return predicate.ConfigurationItem(sql.FieldEQ(FieldOwnershipMode, v))
@@ -1278,6 +1298,206 @@ func OwnedByEqualFold(v string) predicate.ConfigurationItem {
 // OwnedByContainsFold applies the ContainsFold predicate on the "owned_by" field.
 func OwnedByContainsFold(v string) predicate.ConfigurationItem {
 	return predicate.ConfigurationItem(sql.FieldContainsFold(FieldOwnedBy, v))
+}
+
+// OwnerIDEQ applies the EQ predicate on the "owner_id" field.
+func OwnerIDEQ(v int) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldEQ(FieldOwnerID, v))
+}
+
+// OwnerIDNEQ applies the NEQ predicate on the "owner_id" field.
+func OwnerIDNEQ(v int) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldNEQ(FieldOwnerID, v))
+}
+
+// OwnerIDIn applies the In predicate on the "owner_id" field.
+func OwnerIDIn(vs ...int) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldIn(FieldOwnerID, vs...))
+}
+
+// OwnerIDNotIn applies the NotIn predicate on the "owner_id" field.
+func OwnerIDNotIn(vs ...int) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldNotIn(FieldOwnerID, vs...))
+}
+
+// OwnerIDGT applies the GT predicate on the "owner_id" field.
+func OwnerIDGT(v int) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldGT(FieldOwnerID, v))
+}
+
+// OwnerIDGTE applies the GTE predicate on the "owner_id" field.
+func OwnerIDGTE(v int) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldGTE(FieldOwnerID, v))
+}
+
+// OwnerIDLT applies the LT predicate on the "owner_id" field.
+func OwnerIDLT(v int) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldLT(FieldOwnerID, v))
+}
+
+// OwnerIDLTE applies the LTE predicate on the "owner_id" field.
+func OwnerIDLTE(v int) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldLTE(FieldOwnerID, v))
+}
+
+// OwnerIDIsNil applies the IsNil predicate on the "owner_id" field.
+func OwnerIDIsNil() predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldIsNull(FieldOwnerID))
+}
+
+// OwnerIDNotNil applies the NotNil predicate on the "owner_id" field.
+func OwnerIDNotNil() predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldNotNull(FieldOwnerID))
+}
+
+// DepartmentIDEQ applies the EQ predicate on the "department_id" field.
+func DepartmentIDEQ(v int) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldEQ(FieldDepartmentID, v))
+}
+
+// DepartmentIDNEQ applies the NEQ predicate on the "department_id" field.
+func DepartmentIDNEQ(v int) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldNEQ(FieldDepartmentID, v))
+}
+
+// DepartmentIDIn applies the In predicate on the "department_id" field.
+func DepartmentIDIn(vs ...int) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldIn(FieldDepartmentID, vs...))
+}
+
+// DepartmentIDNotIn applies the NotIn predicate on the "department_id" field.
+func DepartmentIDNotIn(vs ...int) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldNotIn(FieldDepartmentID, vs...))
+}
+
+// DepartmentIDGT applies the GT predicate on the "department_id" field.
+func DepartmentIDGT(v int) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldGT(FieldDepartmentID, v))
+}
+
+// DepartmentIDGTE applies the GTE predicate on the "department_id" field.
+func DepartmentIDGTE(v int) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldGTE(FieldDepartmentID, v))
+}
+
+// DepartmentIDLT applies the LT predicate on the "department_id" field.
+func DepartmentIDLT(v int) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldLT(FieldDepartmentID, v))
+}
+
+// DepartmentIDLTE applies the LTE predicate on the "department_id" field.
+func DepartmentIDLTE(v int) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldLTE(FieldDepartmentID, v))
+}
+
+// DepartmentIDIsNil applies the IsNil predicate on the "department_id" field.
+func DepartmentIDIsNil() predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldIsNull(FieldDepartmentID))
+}
+
+// DepartmentIDNotNil applies the NotNil predicate on the "department_id" field.
+func DepartmentIDNotNil() predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldNotNull(FieldDepartmentID))
+}
+
+// LastConfirmedAtEQ applies the EQ predicate on the "last_confirmed_at" field.
+func LastConfirmedAtEQ(v time.Time) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldEQ(FieldLastConfirmedAt, v))
+}
+
+// LastConfirmedAtNEQ applies the NEQ predicate on the "last_confirmed_at" field.
+func LastConfirmedAtNEQ(v time.Time) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldNEQ(FieldLastConfirmedAt, v))
+}
+
+// LastConfirmedAtIn applies the In predicate on the "last_confirmed_at" field.
+func LastConfirmedAtIn(vs ...time.Time) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldIn(FieldLastConfirmedAt, vs...))
+}
+
+// LastConfirmedAtNotIn applies the NotIn predicate on the "last_confirmed_at" field.
+func LastConfirmedAtNotIn(vs ...time.Time) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldNotIn(FieldLastConfirmedAt, vs...))
+}
+
+// LastConfirmedAtGT applies the GT predicate on the "last_confirmed_at" field.
+func LastConfirmedAtGT(v time.Time) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldGT(FieldLastConfirmedAt, v))
+}
+
+// LastConfirmedAtGTE applies the GTE predicate on the "last_confirmed_at" field.
+func LastConfirmedAtGTE(v time.Time) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldGTE(FieldLastConfirmedAt, v))
+}
+
+// LastConfirmedAtLT applies the LT predicate on the "last_confirmed_at" field.
+func LastConfirmedAtLT(v time.Time) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldLT(FieldLastConfirmedAt, v))
+}
+
+// LastConfirmedAtLTE applies the LTE predicate on the "last_confirmed_at" field.
+func LastConfirmedAtLTE(v time.Time) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldLTE(FieldLastConfirmedAt, v))
+}
+
+// LastConfirmedAtIsNil applies the IsNil predicate on the "last_confirmed_at" field.
+func LastConfirmedAtIsNil() predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldIsNull(FieldLastConfirmedAt))
+}
+
+// LastConfirmedAtNotNil applies the NotNil predicate on the "last_confirmed_at" field.
+func LastConfirmedAtNotNil() predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldNotNull(FieldLastConfirmedAt))
+}
+
+// ConfirmedByEQ applies the EQ predicate on the "confirmed_by" field.
+func ConfirmedByEQ(v int) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldEQ(FieldConfirmedBy, v))
+}
+
+// ConfirmedByNEQ applies the NEQ predicate on the "confirmed_by" field.
+func ConfirmedByNEQ(v int) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldNEQ(FieldConfirmedBy, v))
+}
+
+// ConfirmedByIn applies the In predicate on the "confirmed_by" field.
+func ConfirmedByIn(vs ...int) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldIn(FieldConfirmedBy, vs...))
+}
+
+// ConfirmedByNotIn applies the NotIn predicate on the "confirmed_by" field.
+func ConfirmedByNotIn(vs ...int) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldNotIn(FieldConfirmedBy, vs...))
+}
+
+// ConfirmedByGT applies the GT predicate on the "confirmed_by" field.
+func ConfirmedByGT(v int) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldGT(FieldConfirmedBy, v))
+}
+
+// ConfirmedByGTE applies the GTE predicate on the "confirmed_by" field.
+func ConfirmedByGTE(v int) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldGTE(FieldConfirmedBy, v))
+}
+
+// ConfirmedByLT applies the LT predicate on the "confirmed_by" field.
+func ConfirmedByLT(v int) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldLT(FieldConfirmedBy, v))
+}
+
+// ConfirmedByLTE applies the LTE predicate on the "confirmed_by" field.
+func ConfirmedByLTE(v int) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldLTE(FieldConfirmedBy, v))
+}
+
+// ConfirmedByIsNil applies the IsNil predicate on the "confirmed_by" field.
+func ConfirmedByIsNil() predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldIsNull(FieldConfirmedBy))
+}
+
+// ConfirmedByNotNil applies the NotNil predicate on the "confirmed_by" field.
+func ConfirmedByNotNil() predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldNotNull(FieldConfirmedBy))
 }
 
 // OwnershipModeEQ applies the EQ predicate on the "ownership_mode" field.

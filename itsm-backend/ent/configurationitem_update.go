@@ -300,6 +300,107 @@ func (_u *ConfigurationItemUpdate) ClearOwnedBy() *ConfigurationItemUpdate {
 	return _u
 }
 
+// SetOwnerID sets the "owner_id" field.
+func (_u *ConfigurationItemUpdate) SetOwnerID(v int) *ConfigurationItemUpdate {
+	_u.mutation.ResetOwnerID()
+	_u.mutation.SetOwnerID(v)
+	return _u
+}
+
+// SetNillableOwnerID sets the "owner_id" field if the given value is not nil.
+func (_u *ConfigurationItemUpdate) SetNillableOwnerID(v *int) *ConfigurationItemUpdate {
+	if v != nil {
+		_u.SetOwnerID(*v)
+	}
+	return _u
+}
+
+// AddOwnerID adds value to the "owner_id" field.
+func (_u *ConfigurationItemUpdate) AddOwnerID(v int) *ConfigurationItemUpdate {
+	_u.mutation.AddOwnerID(v)
+	return _u
+}
+
+// ClearOwnerID clears the value of the "owner_id" field.
+func (_u *ConfigurationItemUpdate) ClearOwnerID() *ConfigurationItemUpdate {
+	_u.mutation.ClearOwnerID()
+	return _u
+}
+
+// SetDepartmentID sets the "department_id" field.
+func (_u *ConfigurationItemUpdate) SetDepartmentID(v int) *ConfigurationItemUpdate {
+	_u.mutation.ResetDepartmentID()
+	_u.mutation.SetDepartmentID(v)
+	return _u
+}
+
+// SetNillableDepartmentID sets the "department_id" field if the given value is not nil.
+func (_u *ConfigurationItemUpdate) SetNillableDepartmentID(v *int) *ConfigurationItemUpdate {
+	if v != nil {
+		_u.SetDepartmentID(*v)
+	}
+	return _u
+}
+
+// AddDepartmentID adds value to the "department_id" field.
+func (_u *ConfigurationItemUpdate) AddDepartmentID(v int) *ConfigurationItemUpdate {
+	_u.mutation.AddDepartmentID(v)
+	return _u
+}
+
+// ClearDepartmentID clears the value of the "department_id" field.
+func (_u *ConfigurationItemUpdate) ClearDepartmentID() *ConfigurationItemUpdate {
+	_u.mutation.ClearDepartmentID()
+	return _u
+}
+
+// SetLastConfirmedAt sets the "last_confirmed_at" field.
+func (_u *ConfigurationItemUpdate) SetLastConfirmedAt(v time.Time) *ConfigurationItemUpdate {
+	_u.mutation.SetLastConfirmedAt(v)
+	return _u
+}
+
+// SetNillableLastConfirmedAt sets the "last_confirmed_at" field if the given value is not nil.
+func (_u *ConfigurationItemUpdate) SetNillableLastConfirmedAt(v *time.Time) *ConfigurationItemUpdate {
+	if v != nil {
+		_u.SetLastConfirmedAt(*v)
+	}
+	return _u
+}
+
+// ClearLastConfirmedAt clears the value of the "last_confirmed_at" field.
+func (_u *ConfigurationItemUpdate) ClearLastConfirmedAt() *ConfigurationItemUpdate {
+	_u.mutation.ClearLastConfirmedAt()
+	return _u
+}
+
+// SetConfirmedBy sets the "confirmed_by" field.
+func (_u *ConfigurationItemUpdate) SetConfirmedBy(v int) *ConfigurationItemUpdate {
+	_u.mutation.ResetConfirmedBy()
+	_u.mutation.SetConfirmedBy(v)
+	return _u
+}
+
+// SetNillableConfirmedBy sets the "confirmed_by" field if the given value is not nil.
+func (_u *ConfigurationItemUpdate) SetNillableConfirmedBy(v *int) *ConfigurationItemUpdate {
+	if v != nil {
+		_u.SetConfirmedBy(*v)
+	}
+	return _u
+}
+
+// AddConfirmedBy adds value to the "confirmed_by" field.
+func (_u *ConfigurationItemUpdate) AddConfirmedBy(v int) *ConfigurationItemUpdate {
+	_u.mutation.AddConfirmedBy(v)
+	return _u
+}
+
+// ClearConfirmedBy clears the value of the "confirmed_by" field.
+func (_u *ConfigurationItemUpdate) ClearConfirmedBy() *ConfigurationItemUpdate {
+	_u.mutation.ClearConfirmedBy()
+	return _u
+}
+
 // SetOwnershipMode sets the "ownership_mode" field.
 func (_u *ConfigurationItemUpdate) SetOwnershipMode(v string) *ConfigurationItemUpdate {
 	_u.mutation.SetOwnershipMode(v)
@@ -1269,6 +1370,39 @@ func (_u *ConfigurationItemUpdate) sqlSave(ctx context.Context) (_node int, err 
 	if _u.mutation.OwnedByCleared() {
 		_spec.ClearField(configurationitem.FieldOwnedBy, field.TypeString)
 	}
+	if value, ok := _u.mutation.OwnerID(); ok {
+		_spec.SetField(configurationitem.FieldOwnerID, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedOwnerID(); ok {
+		_spec.AddField(configurationitem.FieldOwnerID, field.TypeInt, value)
+	}
+	if _u.mutation.OwnerIDCleared() {
+		_spec.ClearField(configurationitem.FieldOwnerID, field.TypeInt)
+	}
+	if value, ok := _u.mutation.DepartmentID(); ok {
+		_spec.SetField(configurationitem.FieldDepartmentID, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedDepartmentID(); ok {
+		_spec.AddField(configurationitem.FieldDepartmentID, field.TypeInt, value)
+	}
+	if _u.mutation.DepartmentIDCleared() {
+		_spec.ClearField(configurationitem.FieldDepartmentID, field.TypeInt)
+	}
+	if value, ok := _u.mutation.LastConfirmedAt(); ok {
+		_spec.SetField(configurationitem.FieldLastConfirmedAt, field.TypeTime, value)
+	}
+	if _u.mutation.LastConfirmedAtCleared() {
+		_spec.ClearField(configurationitem.FieldLastConfirmedAt, field.TypeTime)
+	}
+	if value, ok := _u.mutation.ConfirmedBy(); ok {
+		_spec.SetField(configurationitem.FieldConfirmedBy, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedConfirmedBy(); ok {
+		_spec.AddField(configurationitem.FieldConfirmedBy, field.TypeInt, value)
+	}
+	if _u.mutation.ConfirmedByCleared() {
+		_spec.ClearField(configurationitem.FieldConfirmedBy, field.TypeInt)
+	}
 	if value, ok := _u.mutation.OwnershipMode(); ok {
 		_spec.SetField(configurationitem.FieldOwnershipMode, field.TypeString, value)
 	}
@@ -2085,6 +2219,107 @@ func (_u *ConfigurationItemUpdateOne) SetNillableOwnedBy(v *string) *Configurati
 // ClearOwnedBy clears the value of the "owned_by" field.
 func (_u *ConfigurationItemUpdateOne) ClearOwnedBy() *ConfigurationItemUpdateOne {
 	_u.mutation.ClearOwnedBy()
+	return _u
+}
+
+// SetOwnerID sets the "owner_id" field.
+func (_u *ConfigurationItemUpdateOne) SetOwnerID(v int) *ConfigurationItemUpdateOne {
+	_u.mutation.ResetOwnerID()
+	_u.mutation.SetOwnerID(v)
+	return _u
+}
+
+// SetNillableOwnerID sets the "owner_id" field if the given value is not nil.
+func (_u *ConfigurationItemUpdateOne) SetNillableOwnerID(v *int) *ConfigurationItemUpdateOne {
+	if v != nil {
+		_u.SetOwnerID(*v)
+	}
+	return _u
+}
+
+// AddOwnerID adds value to the "owner_id" field.
+func (_u *ConfigurationItemUpdateOne) AddOwnerID(v int) *ConfigurationItemUpdateOne {
+	_u.mutation.AddOwnerID(v)
+	return _u
+}
+
+// ClearOwnerID clears the value of the "owner_id" field.
+func (_u *ConfigurationItemUpdateOne) ClearOwnerID() *ConfigurationItemUpdateOne {
+	_u.mutation.ClearOwnerID()
+	return _u
+}
+
+// SetDepartmentID sets the "department_id" field.
+func (_u *ConfigurationItemUpdateOne) SetDepartmentID(v int) *ConfigurationItemUpdateOne {
+	_u.mutation.ResetDepartmentID()
+	_u.mutation.SetDepartmentID(v)
+	return _u
+}
+
+// SetNillableDepartmentID sets the "department_id" field if the given value is not nil.
+func (_u *ConfigurationItemUpdateOne) SetNillableDepartmentID(v *int) *ConfigurationItemUpdateOne {
+	if v != nil {
+		_u.SetDepartmentID(*v)
+	}
+	return _u
+}
+
+// AddDepartmentID adds value to the "department_id" field.
+func (_u *ConfigurationItemUpdateOne) AddDepartmentID(v int) *ConfigurationItemUpdateOne {
+	_u.mutation.AddDepartmentID(v)
+	return _u
+}
+
+// ClearDepartmentID clears the value of the "department_id" field.
+func (_u *ConfigurationItemUpdateOne) ClearDepartmentID() *ConfigurationItemUpdateOne {
+	_u.mutation.ClearDepartmentID()
+	return _u
+}
+
+// SetLastConfirmedAt sets the "last_confirmed_at" field.
+func (_u *ConfigurationItemUpdateOne) SetLastConfirmedAt(v time.Time) *ConfigurationItemUpdateOne {
+	_u.mutation.SetLastConfirmedAt(v)
+	return _u
+}
+
+// SetNillableLastConfirmedAt sets the "last_confirmed_at" field if the given value is not nil.
+func (_u *ConfigurationItemUpdateOne) SetNillableLastConfirmedAt(v *time.Time) *ConfigurationItemUpdateOne {
+	if v != nil {
+		_u.SetLastConfirmedAt(*v)
+	}
+	return _u
+}
+
+// ClearLastConfirmedAt clears the value of the "last_confirmed_at" field.
+func (_u *ConfigurationItemUpdateOne) ClearLastConfirmedAt() *ConfigurationItemUpdateOne {
+	_u.mutation.ClearLastConfirmedAt()
+	return _u
+}
+
+// SetConfirmedBy sets the "confirmed_by" field.
+func (_u *ConfigurationItemUpdateOne) SetConfirmedBy(v int) *ConfigurationItemUpdateOne {
+	_u.mutation.ResetConfirmedBy()
+	_u.mutation.SetConfirmedBy(v)
+	return _u
+}
+
+// SetNillableConfirmedBy sets the "confirmed_by" field if the given value is not nil.
+func (_u *ConfigurationItemUpdateOne) SetNillableConfirmedBy(v *int) *ConfigurationItemUpdateOne {
+	if v != nil {
+		_u.SetConfirmedBy(*v)
+	}
+	return _u
+}
+
+// AddConfirmedBy adds value to the "confirmed_by" field.
+func (_u *ConfigurationItemUpdateOne) AddConfirmedBy(v int) *ConfigurationItemUpdateOne {
+	_u.mutation.AddConfirmedBy(v)
+	return _u
+}
+
+// ClearConfirmedBy clears the value of the "confirmed_by" field.
+func (_u *ConfigurationItemUpdateOne) ClearConfirmedBy() *ConfigurationItemUpdateOne {
+	_u.mutation.ClearConfirmedBy()
 	return _u
 }
 
@@ -3086,6 +3321,39 @@ func (_u *ConfigurationItemUpdateOne) sqlSave(ctx context.Context) (_node *Confi
 	}
 	if _u.mutation.OwnedByCleared() {
 		_spec.ClearField(configurationitem.FieldOwnedBy, field.TypeString)
+	}
+	if value, ok := _u.mutation.OwnerID(); ok {
+		_spec.SetField(configurationitem.FieldOwnerID, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedOwnerID(); ok {
+		_spec.AddField(configurationitem.FieldOwnerID, field.TypeInt, value)
+	}
+	if _u.mutation.OwnerIDCleared() {
+		_spec.ClearField(configurationitem.FieldOwnerID, field.TypeInt)
+	}
+	if value, ok := _u.mutation.DepartmentID(); ok {
+		_spec.SetField(configurationitem.FieldDepartmentID, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedDepartmentID(); ok {
+		_spec.AddField(configurationitem.FieldDepartmentID, field.TypeInt, value)
+	}
+	if _u.mutation.DepartmentIDCleared() {
+		_spec.ClearField(configurationitem.FieldDepartmentID, field.TypeInt)
+	}
+	if value, ok := _u.mutation.LastConfirmedAt(); ok {
+		_spec.SetField(configurationitem.FieldLastConfirmedAt, field.TypeTime, value)
+	}
+	if _u.mutation.LastConfirmedAtCleared() {
+		_spec.ClearField(configurationitem.FieldLastConfirmedAt, field.TypeTime)
+	}
+	if value, ok := _u.mutation.ConfirmedBy(); ok {
+		_spec.SetField(configurationitem.FieldConfirmedBy, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedConfirmedBy(); ok {
+		_spec.AddField(configurationitem.FieldConfirmedBy, field.TypeInt, value)
+	}
+	if _u.mutation.ConfirmedByCleared() {
+		_spec.ClearField(configurationitem.FieldConfirmedBy, field.TypeInt)
 	}
 	if value, ok := _u.mutation.OwnershipMode(); ok {
 		_spec.SetField(configurationitem.FieldOwnershipMode, field.TypeString, value)

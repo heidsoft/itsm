@@ -36,6 +36,8 @@ type Tx struct {
 	BootstrapToken *BootstrapTokenClient
 	// CIAttributeDefinition is the client for interacting with the CIAttributeDefinition builders.
 	CIAttributeDefinition *CIAttributeDefinitionClient
+	// CICertificationTask is the client for interacting with the CICertificationTask builders.
+	CICertificationTask *CICertificationTaskClient
 	// CIRelationship is the client for interacting with the CIRelationship builders.
 	CIRelationship *CIRelationshipClient
 	// CITag is the client for interacting with the CITag builders.
@@ -429,6 +431,7 @@ func (tx *Tx) init() {
 	tx.BPMNPermission = NewBPMNPermissionClient(tx.config)
 	tx.BootstrapToken = NewBootstrapTokenClient(tx.config)
 	tx.CIAttributeDefinition = NewCIAttributeDefinitionClient(tx.config)
+	tx.CICertificationTask = NewCICertificationTaskClient(tx.config)
 	tx.CIRelationship = NewCIRelationshipClient(tx.config)
 	tx.CITag = NewCITagClient(tx.config)
 	tx.CIType = NewCITypeClient(tx.config)

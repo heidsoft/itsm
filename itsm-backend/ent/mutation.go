@@ -21,6 +21,7 @@ import (
 	"itsm-backend/ent/changepir"
 	"itsm-backend/ent/changereviewmember"
 	"itsm-backend/ent/ciattributedefinition"
+	"itsm-backend/ent/cicertificationtask"
 	"itsm-backend/ent/cirelationship"
 	"itsm-backend/ent/citag"
 	"itsm-backend/ent/citype"
@@ -173,6 +174,7 @@ const (
 	TypeBPMNPermission              = "BPMNPermission"
 	TypeBootstrapToken              = "BootstrapToken"
 	TypeCIAttributeDefinition       = "CIAttributeDefinition"
+	TypeCICertificationTask         = "CICertificationTask"
 	TypeCIRelationship              = "CIRelationship"
 	TypeCITag                       = "CITag"
 	TypeCIType                      = "CIType"
@@ -17199,6 +17201,1107 @@ func (m *CIAttributeDefinitionMutation) ResetEdge(name string) error {
 	return fmt.Errorf("unknown CIAttributeDefinition edge %s", name)
 }
 
+// CICertificationTaskMutation represents an operation that mutates the CICertificationTask nodes in the graph.
+type CICertificationTaskMutation struct {
+	config
+	op              Op
+	typ             string
+	id              *int
+	ci_id           *int
+	addci_id        *int
+	tenant_id       *int
+	addtenant_id    *int
+	status          *string
+	assignee_id     *int
+	addassignee_id  *int
+	confirmed_by    *int
+	addconfirmed_by *int
+	confirmed_at    *time.Time
+	due_at          *time.Time
+	evidence        *string
+	source          *string
+	created_at      *time.Time
+	updated_at      *time.Time
+	clearedFields   map[string]struct{}
+	done            bool
+	oldValue        func(context.Context) (*CICertificationTask, error)
+	predicates      []predicate.CICertificationTask
+}
+
+var _ ent.Mutation = (*CICertificationTaskMutation)(nil)
+
+// cicertificationtaskOption allows management of the mutation configuration using functional options.
+type cicertificationtaskOption func(*CICertificationTaskMutation)
+
+// newCICertificationTaskMutation creates new mutation for the CICertificationTask entity.
+func newCICertificationTaskMutation(c config, op Op, opts ...cicertificationtaskOption) *CICertificationTaskMutation {
+	m := &CICertificationTaskMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeCICertificationTask,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withCICertificationTaskID sets the ID field of the mutation.
+func withCICertificationTaskID(id int) cicertificationtaskOption {
+	return func(m *CICertificationTaskMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *CICertificationTask
+		)
+		m.oldValue = func(ctx context.Context) (*CICertificationTask, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().CICertificationTask.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withCICertificationTask sets the old CICertificationTask of the mutation.
+func withCICertificationTask(node *CICertificationTask) cicertificationtaskOption {
+	return func(m *CICertificationTaskMutation) {
+		m.oldValue = func(context.Context) (*CICertificationTask, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m CICertificationTaskMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m CICertificationTaskMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *CICertificationTaskMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *CICertificationTaskMutation) IDs(ctx context.Context) ([]int, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().CICertificationTask.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetCiID sets the "ci_id" field.
+func (m *CICertificationTaskMutation) SetCiID(i int) {
+	m.ci_id = &i
+	m.addci_id = nil
+}
+
+// CiID returns the value of the "ci_id" field in the mutation.
+func (m *CICertificationTaskMutation) CiID() (r int, exists bool) {
+	v := m.ci_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCiID returns the old "ci_id" field's value of the CICertificationTask entity.
+// If the CICertificationTask object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CICertificationTaskMutation) OldCiID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCiID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCiID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCiID: %w", err)
+	}
+	return oldValue.CiID, nil
+}
+
+// AddCiID adds i to the "ci_id" field.
+func (m *CICertificationTaskMutation) AddCiID(i int) {
+	if m.addci_id != nil {
+		*m.addci_id += i
+	} else {
+		m.addci_id = &i
+	}
+}
+
+// AddedCiID returns the value that was added to the "ci_id" field in this mutation.
+func (m *CICertificationTaskMutation) AddedCiID() (r int, exists bool) {
+	v := m.addci_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetCiID resets all changes to the "ci_id" field.
+func (m *CICertificationTaskMutation) ResetCiID() {
+	m.ci_id = nil
+	m.addci_id = nil
+}
+
+// SetTenantID sets the "tenant_id" field.
+func (m *CICertificationTaskMutation) SetTenantID(i int) {
+	m.tenant_id = &i
+	m.addtenant_id = nil
+}
+
+// TenantID returns the value of the "tenant_id" field in the mutation.
+func (m *CICertificationTaskMutation) TenantID() (r int, exists bool) {
+	v := m.tenant_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTenantID returns the old "tenant_id" field's value of the CICertificationTask entity.
+// If the CICertificationTask object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CICertificationTaskMutation) OldTenantID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTenantID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTenantID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTenantID: %w", err)
+	}
+	return oldValue.TenantID, nil
+}
+
+// AddTenantID adds i to the "tenant_id" field.
+func (m *CICertificationTaskMutation) AddTenantID(i int) {
+	if m.addtenant_id != nil {
+		*m.addtenant_id += i
+	} else {
+		m.addtenant_id = &i
+	}
+}
+
+// AddedTenantID returns the value that was added to the "tenant_id" field in this mutation.
+func (m *CICertificationTaskMutation) AddedTenantID() (r int, exists bool) {
+	v := m.addtenant_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetTenantID resets all changes to the "tenant_id" field.
+func (m *CICertificationTaskMutation) ResetTenantID() {
+	m.tenant_id = nil
+	m.addtenant_id = nil
+}
+
+// SetStatus sets the "status" field.
+func (m *CICertificationTaskMutation) SetStatus(s string) {
+	m.status = &s
+}
+
+// Status returns the value of the "status" field in the mutation.
+func (m *CICertificationTaskMutation) Status() (r string, exists bool) {
+	v := m.status
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStatus returns the old "status" field's value of the CICertificationTask entity.
+// If the CICertificationTask object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CICertificationTaskMutation) OldStatus(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStatus is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStatus requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStatus: %w", err)
+	}
+	return oldValue.Status, nil
+}
+
+// ResetStatus resets all changes to the "status" field.
+func (m *CICertificationTaskMutation) ResetStatus() {
+	m.status = nil
+}
+
+// SetAssigneeID sets the "assignee_id" field.
+func (m *CICertificationTaskMutation) SetAssigneeID(i int) {
+	m.assignee_id = &i
+	m.addassignee_id = nil
+}
+
+// AssigneeID returns the value of the "assignee_id" field in the mutation.
+func (m *CICertificationTaskMutation) AssigneeID() (r int, exists bool) {
+	v := m.assignee_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAssigneeID returns the old "assignee_id" field's value of the CICertificationTask entity.
+// If the CICertificationTask object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CICertificationTaskMutation) OldAssigneeID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAssigneeID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAssigneeID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAssigneeID: %w", err)
+	}
+	return oldValue.AssigneeID, nil
+}
+
+// AddAssigneeID adds i to the "assignee_id" field.
+func (m *CICertificationTaskMutation) AddAssigneeID(i int) {
+	if m.addassignee_id != nil {
+		*m.addassignee_id += i
+	} else {
+		m.addassignee_id = &i
+	}
+}
+
+// AddedAssigneeID returns the value that was added to the "assignee_id" field in this mutation.
+func (m *CICertificationTaskMutation) AddedAssigneeID() (r int, exists bool) {
+	v := m.addassignee_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearAssigneeID clears the value of the "assignee_id" field.
+func (m *CICertificationTaskMutation) ClearAssigneeID() {
+	m.assignee_id = nil
+	m.addassignee_id = nil
+	m.clearedFields[cicertificationtask.FieldAssigneeID] = struct{}{}
+}
+
+// AssigneeIDCleared returns if the "assignee_id" field was cleared in this mutation.
+func (m *CICertificationTaskMutation) AssigneeIDCleared() bool {
+	_, ok := m.clearedFields[cicertificationtask.FieldAssigneeID]
+	return ok
+}
+
+// ResetAssigneeID resets all changes to the "assignee_id" field.
+func (m *CICertificationTaskMutation) ResetAssigneeID() {
+	m.assignee_id = nil
+	m.addassignee_id = nil
+	delete(m.clearedFields, cicertificationtask.FieldAssigneeID)
+}
+
+// SetConfirmedBy sets the "confirmed_by" field.
+func (m *CICertificationTaskMutation) SetConfirmedBy(i int) {
+	m.confirmed_by = &i
+	m.addconfirmed_by = nil
+}
+
+// ConfirmedBy returns the value of the "confirmed_by" field in the mutation.
+func (m *CICertificationTaskMutation) ConfirmedBy() (r int, exists bool) {
+	v := m.confirmed_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldConfirmedBy returns the old "confirmed_by" field's value of the CICertificationTask entity.
+// If the CICertificationTask object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CICertificationTaskMutation) OldConfirmedBy(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldConfirmedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldConfirmedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldConfirmedBy: %w", err)
+	}
+	return oldValue.ConfirmedBy, nil
+}
+
+// AddConfirmedBy adds i to the "confirmed_by" field.
+func (m *CICertificationTaskMutation) AddConfirmedBy(i int) {
+	if m.addconfirmed_by != nil {
+		*m.addconfirmed_by += i
+	} else {
+		m.addconfirmed_by = &i
+	}
+}
+
+// AddedConfirmedBy returns the value that was added to the "confirmed_by" field in this mutation.
+func (m *CICertificationTaskMutation) AddedConfirmedBy() (r int, exists bool) {
+	v := m.addconfirmed_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearConfirmedBy clears the value of the "confirmed_by" field.
+func (m *CICertificationTaskMutation) ClearConfirmedBy() {
+	m.confirmed_by = nil
+	m.addconfirmed_by = nil
+	m.clearedFields[cicertificationtask.FieldConfirmedBy] = struct{}{}
+}
+
+// ConfirmedByCleared returns if the "confirmed_by" field was cleared in this mutation.
+func (m *CICertificationTaskMutation) ConfirmedByCleared() bool {
+	_, ok := m.clearedFields[cicertificationtask.FieldConfirmedBy]
+	return ok
+}
+
+// ResetConfirmedBy resets all changes to the "confirmed_by" field.
+func (m *CICertificationTaskMutation) ResetConfirmedBy() {
+	m.confirmed_by = nil
+	m.addconfirmed_by = nil
+	delete(m.clearedFields, cicertificationtask.FieldConfirmedBy)
+}
+
+// SetConfirmedAt sets the "confirmed_at" field.
+func (m *CICertificationTaskMutation) SetConfirmedAt(t time.Time) {
+	m.confirmed_at = &t
+}
+
+// ConfirmedAt returns the value of the "confirmed_at" field in the mutation.
+func (m *CICertificationTaskMutation) ConfirmedAt() (r time.Time, exists bool) {
+	v := m.confirmed_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldConfirmedAt returns the old "confirmed_at" field's value of the CICertificationTask entity.
+// If the CICertificationTask object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CICertificationTaskMutation) OldConfirmedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldConfirmedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldConfirmedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldConfirmedAt: %w", err)
+	}
+	return oldValue.ConfirmedAt, nil
+}
+
+// ClearConfirmedAt clears the value of the "confirmed_at" field.
+func (m *CICertificationTaskMutation) ClearConfirmedAt() {
+	m.confirmed_at = nil
+	m.clearedFields[cicertificationtask.FieldConfirmedAt] = struct{}{}
+}
+
+// ConfirmedAtCleared returns if the "confirmed_at" field was cleared in this mutation.
+func (m *CICertificationTaskMutation) ConfirmedAtCleared() bool {
+	_, ok := m.clearedFields[cicertificationtask.FieldConfirmedAt]
+	return ok
+}
+
+// ResetConfirmedAt resets all changes to the "confirmed_at" field.
+func (m *CICertificationTaskMutation) ResetConfirmedAt() {
+	m.confirmed_at = nil
+	delete(m.clearedFields, cicertificationtask.FieldConfirmedAt)
+}
+
+// SetDueAt sets the "due_at" field.
+func (m *CICertificationTaskMutation) SetDueAt(t time.Time) {
+	m.due_at = &t
+}
+
+// DueAt returns the value of the "due_at" field in the mutation.
+func (m *CICertificationTaskMutation) DueAt() (r time.Time, exists bool) {
+	v := m.due_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDueAt returns the old "due_at" field's value of the CICertificationTask entity.
+// If the CICertificationTask object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CICertificationTaskMutation) OldDueAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDueAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDueAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDueAt: %w", err)
+	}
+	return oldValue.DueAt, nil
+}
+
+// ClearDueAt clears the value of the "due_at" field.
+func (m *CICertificationTaskMutation) ClearDueAt() {
+	m.due_at = nil
+	m.clearedFields[cicertificationtask.FieldDueAt] = struct{}{}
+}
+
+// DueAtCleared returns if the "due_at" field was cleared in this mutation.
+func (m *CICertificationTaskMutation) DueAtCleared() bool {
+	_, ok := m.clearedFields[cicertificationtask.FieldDueAt]
+	return ok
+}
+
+// ResetDueAt resets all changes to the "due_at" field.
+func (m *CICertificationTaskMutation) ResetDueAt() {
+	m.due_at = nil
+	delete(m.clearedFields, cicertificationtask.FieldDueAt)
+}
+
+// SetEvidence sets the "evidence" field.
+func (m *CICertificationTaskMutation) SetEvidence(s string) {
+	m.evidence = &s
+}
+
+// Evidence returns the value of the "evidence" field in the mutation.
+func (m *CICertificationTaskMutation) Evidence() (r string, exists bool) {
+	v := m.evidence
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldEvidence returns the old "evidence" field's value of the CICertificationTask entity.
+// If the CICertificationTask object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CICertificationTaskMutation) OldEvidence(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldEvidence is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldEvidence requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldEvidence: %w", err)
+	}
+	return oldValue.Evidence, nil
+}
+
+// ClearEvidence clears the value of the "evidence" field.
+func (m *CICertificationTaskMutation) ClearEvidence() {
+	m.evidence = nil
+	m.clearedFields[cicertificationtask.FieldEvidence] = struct{}{}
+}
+
+// EvidenceCleared returns if the "evidence" field was cleared in this mutation.
+func (m *CICertificationTaskMutation) EvidenceCleared() bool {
+	_, ok := m.clearedFields[cicertificationtask.FieldEvidence]
+	return ok
+}
+
+// ResetEvidence resets all changes to the "evidence" field.
+func (m *CICertificationTaskMutation) ResetEvidence() {
+	m.evidence = nil
+	delete(m.clearedFields, cicertificationtask.FieldEvidence)
+}
+
+// SetSource sets the "source" field.
+func (m *CICertificationTaskMutation) SetSource(s string) {
+	m.source = &s
+}
+
+// Source returns the value of the "source" field in the mutation.
+func (m *CICertificationTaskMutation) Source() (r string, exists bool) {
+	v := m.source
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSource returns the old "source" field's value of the CICertificationTask entity.
+// If the CICertificationTask object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CICertificationTaskMutation) OldSource(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSource is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSource requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSource: %w", err)
+	}
+	return oldValue.Source, nil
+}
+
+// ResetSource resets all changes to the "source" field.
+func (m *CICertificationTaskMutation) ResetSource() {
+	m.source = nil
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *CICertificationTaskMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *CICertificationTaskMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the CICertificationTask entity.
+// If the CICertificationTask object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CICertificationTaskMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *CICertificationTaskMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *CICertificationTaskMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *CICertificationTaskMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the CICertificationTask entity.
+// If the CICertificationTask object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CICertificationTaskMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *CICertificationTaskMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// Where appends a list predicates to the CICertificationTaskMutation builder.
+func (m *CICertificationTaskMutation) Where(ps ...predicate.CICertificationTask) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the CICertificationTaskMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *CICertificationTaskMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.CICertificationTask, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *CICertificationTaskMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *CICertificationTaskMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (CICertificationTask).
+func (m *CICertificationTaskMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *CICertificationTaskMutation) Fields() []string {
+	fields := make([]string, 0, 11)
+	if m.ci_id != nil {
+		fields = append(fields, cicertificationtask.FieldCiID)
+	}
+	if m.tenant_id != nil {
+		fields = append(fields, cicertificationtask.FieldTenantID)
+	}
+	if m.status != nil {
+		fields = append(fields, cicertificationtask.FieldStatus)
+	}
+	if m.assignee_id != nil {
+		fields = append(fields, cicertificationtask.FieldAssigneeID)
+	}
+	if m.confirmed_by != nil {
+		fields = append(fields, cicertificationtask.FieldConfirmedBy)
+	}
+	if m.confirmed_at != nil {
+		fields = append(fields, cicertificationtask.FieldConfirmedAt)
+	}
+	if m.due_at != nil {
+		fields = append(fields, cicertificationtask.FieldDueAt)
+	}
+	if m.evidence != nil {
+		fields = append(fields, cicertificationtask.FieldEvidence)
+	}
+	if m.source != nil {
+		fields = append(fields, cicertificationtask.FieldSource)
+	}
+	if m.created_at != nil {
+		fields = append(fields, cicertificationtask.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, cicertificationtask.FieldUpdatedAt)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *CICertificationTaskMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case cicertificationtask.FieldCiID:
+		return m.CiID()
+	case cicertificationtask.FieldTenantID:
+		return m.TenantID()
+	case cicertificationtask.FieldStatus:
+		return m.Status()
+	case cicertificationtask.FieldAssigneeID:
+		return m.AssigneeID()
+	case cicertificationtask.FieldConfirmedBy:
+		return m.ConfirmedBy()
+	case cicertificationtask.FieldConfirmedAt:
+		return m.ConfirmedAt()
+	case cicertificationtask.FieldDueAt:
+		return m.DueAt()
+	case cicertificationtask.FieldEvidence:
+		return m.Evidence()
+	case cicertificationtask.FieldSource:
+		return m.Source()
+	case cicertificationtask.FieldCreatedAt:
+		return m.CreatedAt()
+	case cicertificationtask.FieldUpdatedAt:
+		return m.UpdatedAt()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *CICertificationTaskMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case cicertificationtask.FieldCiID:
+		return m.OldCiID(ctx)
+	case cicertificationtask.FieldTenantID:
+		return m.OldTenantID(ctx)
+	case cicertificationtask.FieldStatus:
+		return m.OldStatus(ctx)
+	case cicertificationtask.FieldAssigneeID:
+		return m.OldAssigneeID(ctx)
+	case cicertificationtask.FieldConfirmedBy:
+		return m.OldConfirmedBy(ctx)
+	case cicertificationtask.FieldConfirmedAt:
+		return m.OldConfirmedAt(ctx)
+	case cicertificationtask.FieldDueAt:
+		return m.OldDueAt(ctx)
+	case cicertificationtask.FieldEvidence:
+		return m.OldEvidence(ctx)
+	case cicertificationtask.FieldSource:
+		return m.OldSource(ctx)
+	case cicertificationtask.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case cicertificationtask.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	}
+	return nil, fmt.Errorf("unknown CICertificationTask field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *CICertificationTaskMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case cicertificationtask.FieldCiID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCiID(v)
+		return nil
+	case cicertificationtask.FieldTenantID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTenantID(v)
+		return nil
+	case cicertificationtask.FieldStatus:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStatus(v)
+		return nil
+	case cicertificationtask.FieldAssigneeID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAssigneeID(v)
+		return nil
+	case cicertificationtask.FieldConfirmedBy:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetConfirmedBy(v)
+		return nil
+	case cicertificationtask.FieldConfirmedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetConfirmedAt(v)
+		return nil
+	case cicertificationtask.FieldDueAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDueAt(v)
+		return nil
+	case cicertificationtask.FieldEvidence:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetEvidence(v)
+		return nil
+	case cicertificationtask.FieldSource:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSource(v)
+		return nil
+	case cicertificationtask.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case cicertificationtask.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	}
+	return fmt.Errorf("unknown CICertificationTask field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *CICertificationTaskMutation) AddedFields() []string {
+	var fields []string
+	if m.addci_id != nil {
+		fields = append(fields, cicertificationtask.FieldCiID)
+	}
+	if m.addtenant_id != nil {
+		fields = append(fields, cicertificationtask.FieldTenantID)
+	}
+	if m.addassignee_id != nil {
+		fields = append(fields, cicertificationtask.FieldAssigneeID)
+	}
+	if m.addconfirmed_by != nil {
+		fields = append(fields, cicertificationtask.FieldConfirmedBy)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *CICertificationTaskMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case cicertificationtask.FieldCiID:
+		return m.AddedCiID()
+	case cicertificationtask.FieldTenantID:
+		return m.AddedTenantID()
+	case cicertificationtask.FieldAssigneeID:
+		return m.AddedAssigneeID()
+	case cicertificationtask.FieldConfirmedBy:
+		return m.AddedConfirmedBy()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *CICertificationTaskMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case cicertificationtask.FieldCiID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddCiID(v)
+		return nil
+	case cicertificationtask.FieldTenantID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddTenantID(v)
+		return nil
+	case cicertificationtask.FieldAssigneeID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddAssigneeID(v)
+		return nil
+	case cicertificationtask.FieldConfirmedBy:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddConfirmedBy(v)
+		return nil
+	}
+	return fmt.Errorf("unknown CICertificationTask numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *CICertificationTaskMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(cicertificationtask.FieldAssigneeID) {
+		fields = append(fields, cicertificationtask.FieldAssigneeID)
+	}
+	if m.FieldCleared(cicertificationtask.FieldConfirmedBy) {
+		fields = append(fields, cicertificationtask.FieldConfirmedBy)
+	}
+	if m.FieldCleared(cicertificationtask.FieldConfirmedAt) {
+		fields = append(fields, cicertificationtask.FieldConfirmedAt)
+	}
+	if m.FieldCleared(cicertificationtask.FieldDueAt) {
+		fields = append(fields, cicertificationtask.FieldDueAt)
+	}
+	if m.FieldCleared(cicertificationtask.FieldEvidence) {
+		fields = append(fields, cicertificationtask.FieldEvidence)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *CICertificationTaskMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *CICertificationTaskMutation) ClearField(name string) error {
+	switch name {
+	case cicertificationtask.FieldAssigneeID:
+		m.ClearAssigneeID()
+		return nil
+	case cicertificationtask.FieldConfirmedBy:
+		m.ClearConfirmedBy()
+		return nil
+	case cicertificationtask.FieldConfirmedAt:
+		m.ClearConfirmedAt()
+		return nil
+	case cicertificationtask.FieldDueAt:
+		m.ClearDueAt()
+		return nil
+	case cicertificationtask.FieldEvidence:
+		m.ClearEvidence()
+		return nil
+	}
+	return fmt.Errorf("unknown CICertificationTask nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *CICertificationTaskMutation) ResetField(name string) error {
+	switch name {
+	case cicertificationtask.FieldCiID:
+		m.ResetCiID()
+		return nil
+	case cicertificationtask.FieldTenantID:
+		m.ResetTenantID()
+		return nil
+	case cicertificationtask.FieldStatus:
+		m.ResetStatus()
+		return nil
+	case cicertificationtask.FieldAssigneeID:
+		m.ResetAssigneeID()
+		return nil
+	case cicertificationtask.FieldConfirmedBy:
+		m.ResetConfirmedBy()
+		return nil
+	case cicertificationtask.FieldConfirmedAt:
+		m.ResetConfirmedAt()
+		return nil
+	case cicertificationtask.FieldDueAt:
+		m.ResetDueAt()
+		return nil
+	case cicertificationtask.FieldEvidence:
+		m.ResetEvidence()
+		return nil
+	case cicertificationtask.FieldSource:
+		m.ResetSource()
+		return nil
+	case cicertificationtask.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case cicertificationtask.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown CICertificationTask field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *CICertificationTaskMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *CICertificationTaskMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *CICertificationTaskMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *CICertificationTaskMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *CICertificationTaskMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *CICertificationTaskMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *CICertificationTaskMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown CICertificationTask unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *CICertificationTaskMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown CICertificationTask edge %s", name)
+}
+
 // CIRelationshipMutation represents an operation that mutates the CIRelationship nodes in the graph.
 type CIRelationshipMutation struct {
 	config
@@ -33387,6 +34490,13 @@ type ConfigurationItemMutation struct {
 	location                   *string
 	assigned_to                *string
 	owned_by                   *string
+	owner_id                   *int
+	addowner_id                *int
+	department_id              *int
+	adddepartment_id           *int
+	last_confirmed_at          *time.Time
+	confirmed_by               *int
+	addconfirmed_by            *int
 	ownership_mode             *string
 	local_modified_at          *time.Time
 	discovery_source           *string
@@ -34203,6 +35313,265 @@ func (m *ConfigurationItemMutation) OwnedByCleared() bool {
 func (m *ConfigurationItemMutation) ResetOwnedBy() {
 	m.owned_by = nil
 	delete(m.clearedFields, configurationitem.FieldOwnedBy)
+}
+
+// SetOwnerID sets the "owner_id" field.
+func (m *ConfigurationItemMutation) SetOwnerID(i int) {
+	m.owner_id = &i
+	m.addowner_id = nil
+}
+
+// OwnerID returns the value of the "owner_id" field in the mutation.
+func (m *ConfigurationItemMutation) OwnerID() (r int, exists bool) {
+	v := m.owner_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldOwnerID returns the old "owner_id" field's value of the ConfigurationItem entity.
+// If the ConfigurationItem object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ConfigurationItemMutation) OldOwnerID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldOwnerID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldOwnerID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldOwnerID: %w", err)
+	}
+	return oldValue.OwnerID, nil
+}
+
+// AddOwnerID adds i to the "owner_id" field.
+func (m *ConfigurationItemMutation) AddOwnerID(i int) {
+	if m.addowner_id != nil {
+		*m.addowner_id += i
+	} else {
+		m.addowner_id = &i
+	}
+}
+
+// AddedOwnerID returns the value that was added to the "owner_id" field in this mutation.
+func (m *ConfigurationItemMutation) AddedOwnerID() (r int, exists bool) {
+	v := m.addowner_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearOwnerID clears the value of the "owner_id" field.
+func (m *ConfigurationItemMutation) ClearOwnerID() {
+	m.owner_id = nil
+	m.addowner_id = nil
+	m.clearedFields[configurationitem.FieldOwnerID] = struct{}{}
+}
+
+// OwnerIDCleared returns if the "owner_id" field was cleared in this mutation.
+func (m *ConfigurationItemMutation) OwnerIDCleared() bool {
+	_, ok := m.clearedFields[configurationitem.FieldOwnerID]
+	return ok
+}
+
+// ResetOwnerID resets all changes to the "owner_id" field.
+func (m *ConfigurationItemMutation) ResetOwnerID() {
+	m.owner_id = nil
+	m.addowner_id = nil
+	delete(m.clearedFields, configurationitem.FieldOwnerID)
+}
+
+// SetDepartmentID sets the "department_id" field.
+func (m *ConfigurationItemMutation) SetDepartmentID(i int) {
+	m.department_id = &i
+	m.adddepartment_id = nil
+}
+
+// DepartmentID returns the value of the "department_id" field in the mutation.
+func (m *ConfigurationItemMutation) DepartmentID() (r int, exists bool) {
+	v := m.department_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDepartmentID returns the old "department_id" field's value of the ConfigurationItem entity.
+// If the ConfigurationItem object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ConfigurationItemMutation) OldDepartmentID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDepartmentID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDepartmentID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDepartmentID: %w", err)
+	}
+	return oldValue.DepartmentID, nil
+}
+
+// AddDepartmentID adds i to the "department_id" field.
+func (m *ConfigurationItemMutation) AddDepartmentID(i int) {
+	if m.adddepartment_id != nil {
+		*m.adddepartment_id += i
+	} else {
+		m.adddepartment_id = &i
+	}
+}
+
+// AddedDepartmentID returns the value that was added to the "department_id" field in this mutation.
+func (m *ConfigurationItemMutation) AddedDepartmentID() (r int, exists bool) {
+	v := m.adddepartment_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearDepartmentID clears the value of the "department_id" field.
+func (m *ConfigurationItemMutation) ClearDepartmentID() {
+	m.department_id = nil
+	m.adddepartment_id = nil
+	m.clearedFields[configurationitem.FieldDepartmentID] = struct{}{}
+}
+
+// DepartmentIDCleared returns if the "department_id" field was cleared in this mutation.
+func (m *ConfigurationItemMutation) DepartmentIDCleared() bool {
+	_, ok := m.clearedFields[configurationitem.FieldDepartmentID]
+	return ok
+}
+
+// ResetDepartmentID resets all changes to the "department_id" field.
+func (m *ConfigurationItemMutation) ResetDepartmentID() {
+	m.department_id = nil
+	m.adddepartment_id = nil
+	delete(m.clearedFields, configurationitem.FieldDepartmentID)
+}
+
+// SetLastConfirmedAt sets the "last_confirmed_at" field.
+func (m *ConfigurationItemMutation) SetLastConfirmedAt(t time.Time) {
+	m.last_confirmed_at = &t
+}
+
+// LastConfirmedAt returns the value of the "last_confirmed_at" field in the mutation.
+func (m *ConfigurationItemMutation) LastConfirmedAt() (r time.Time, exists bool) {
+	v := m.last_confirmed_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLastConfirmedAt returns the old "last_confirmed_at" field's value of the ConfigurationItem entity.
+// If the ConfigurationItem object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ConfigurationItemMutation) OldLastConfirmedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLastConfirmedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLastConfirmedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLastConfirmedAt: %w", err)
+	}
+	return oldValue.LastConfirmedAt, nil
+}
+
+// ClearLastConfirmedAt clears the value of the "last_confirmed_at" field.
+func (m *ConfigurationItemMutation) ClearLastConfirmedAt() {
+	m.last_confirmed_at = nil
+	m.clearedFields[configurationitem.FieldLastConfirmedAt] = struct{}{}
+}
+
+// LastConfirmedAtCleared returns if the "last_confirmed_at" field was cleared in this mutation.
+func (m *ConfigurationItemMutation) LastConfirmedAtCleared() bool {
+	_, ok := m.clearedFields[configurationitem.FieldLastConfirmedAt]
+	return ok
+}
+
+// ResetLastConfirmedAt resets all changes to the "last_confirmed_at" field.
+func (m *ConfigurationItemMutation) ResetLastConfirmedAt() {
+	m.last_confirmed_at = nil
+	delete(m.clearedFields, configurationitem.FieldLastConfirmedAt)
+}
+
+// SetConfirmedBy sets the "confirmed_by" field.
+func (m *ConfigurationItemMutation) SetConfirmedBy(i int) {
+	m.confirmed_by = &i
+	m.addconfirmed_by = nil
+}
+
+// ConfirmedBy returns the value of the "confirmed_by" field in the mutation.
+func (m *ConfigurationItemMutation) ConfirmedBy() (r int, exists bool) {
+	v := m.confirmed_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldConfirmedBy returns the old "confirmed_by" field's value of the ConfigurationItem entity.
+// If the ConfigurationItem object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ConfigurationItemMutation) OldConfirmedBy(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldConfirmedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldConfirmedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldConfirmedBy: %w", err)
+	}
+	return oldValue.ConfirmedBy, nil
+}
+
+// AddConfirmedBy adds i to the "confirmed_by" field.
+func (m *ConfigurationItemMutation) AddConfirmedBy(i int) {
+	if m.addconfirmed_by != nil {
+		*m.addconfirmed_by += i
+	} else {
+		m.addconfirmed_by = &i
+	}
+}
+
+// AddedConfirmedBy returns the value that was added to the "confirmed_by" field in this mutation.
+func (m *ConfigurationItemMutation) AddedConfirmedBy() (r int, exists bool) {
+	v := m.addconfirmed_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearConfirmedBy clears the value of the "confirmed_by" field.
+func (m *ConfigurationItemMutation) ClearConfirmedBy() {
+	m.confirmed_by = nil
+	m.addconfirmed_by = nil
+	m.clearedFields[configurationitem.FieldConfirmedBy] = struct{}{}
+}
+
+// ConfirmedByCleared returns if the "confirmed_by" field was cleared in this mutation.
+func (m *ConfigurationItemMutation) ConfirmedByCleared() bool {
+	_, ok := m.clearedFields[configurationitem.FieldConfirmedBy]
+	return ok
+}
+
+// ResetConfirmedBy resets all changes to the "confirmed_by" field.
+func (m *ConfigurationItemMutation) ResetConfirmedBy() {
+	m.confirmed_by = nil
+	m.addconfirmed_by = nil
+	delete(m.clearedFields, configurationitem.FieldConfirmedBy)
 }
 
 // SetOwnershipMode sets the "ownership_mode" field.
@@ -36123,7 +37492,7 @@ func (m *ConfigurationItemMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ConfigurationItemMutation) Fields() []string {
-	fields := make([]string, 0, 45)
+	fields := make([]string, 0, 49)
 	if m.ci_number != nil {
 		fields = append(fields, configurationitem.FieldCiNumber)
 	}
@@ -36168,6 +37537,18 @@ func (m *ConfigurationItemMutation) Fields() []string {
 	}
 	if m.owned_by != nil {
 		fields = append(fields, configurationitem.FieldOwnedBy)
+	}
+	if m.owner_id != nil {
+		fields = append(fields, configurationitem.FieldOwnerID)
+	}
+	if m.department_id != nil {
+		fields = append(fields, configurationitem.FieldDepartmentID)
+	}
+	if m.last_confirmed_at != nil {
+		fields = append(fields, configurationitem.FieldLastConfirmedAt)
+	}
+	if m.confirmed_by != nil {
+		fields = append(fields, configurationitem.FieldConfirmedBy)
 	}
 	if m.ownership_mode != nil {
 		fields = append(fields, configurationitem.FieldOwnershipMode)
@@ -36297,6 +37678,14 @@ func (m *ConfigurationItemMutation) Field(name string) (ent.Value, bool) {
 		return m.AssignedTo()
 	case configurationitem.FieldOwnedBy:
 		return m.OwnedBy()
+	case configurationitem.FieldOwnerID:
+		return m.OwnerID()
+	case configurationitem.FieldDepartmentID:
+		return m.DepartmentID()
+	case configurationitem.FieldLastConfirmedAt:
+		return m.LastConfirmedAt()
+	case configurationitem.FieldConfirmedBy:
+		return m.ConfirmedBy()
 	case configurationitem.FieldOwnershipMode:
 		return m.OwnershipMode()
 	case configurationitem.FieldLocalModifiedAt:
@@ -36396,6 +37785,14 @@ func (m *ConfigurationItemMutation) OldField(ctx context.Context, name string) (
 		return m.OldAssignedTo(ctx)
 	case configurationitem.FieldOwnedBy:
 		return m.OldOwnedBy(ctx)
+	case configurationitem.FieldOwnerID:
+		return m.OldOwnerID(ctx)
+	case configurationitem.FieldDepartmentID:
+		return m.OldDepartmentID(ctx)
+	case configurationitem.FieldLastConfirmedAt:
+		return m.OldLastConfirmedAt(ctx)
+	case configurationitem.FieldConfirmedBy:
+		return m.OldConfirmedBy(ctx)
 	case configurationitem.FieldOwnershipMode:
 		return m.OldOwnershipMode(ctx)
 	case configurationitem.FieldLocalModifiedAt:
@@ -36569,6 +37966,34 @@ func (m *ConfigurationItemMutation) SetField(name string, value ent.Value) error
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetOwnedBy(v)
+		return nil
+	case configurationitem.FieldOwnerID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetOwnerID(v)
+		return nil
+	case configurationitem.FieldDepartmentID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDepartmentID(v)
+		return nil
+	case configurationitem.FieldLastConfirmedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLastConfirmedAt(v)
+		return nil
+	case configurationitem.FieldConfirmedBy:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetConfirmedBy(v)
 		return nil
 	case configurationitem.FieldOwnershipMode:
 		v, ok := value.(string)
@@ -36788,6 +38213,15 @@ func (m *ConfigurationItemMutation) SetField(name string, value ent.Value) error
 // this mutation.
 func (m *ConfigurationItemMutation) AddedFields() []string {
 	var fields []string
+	if m.addowner_id != nil {
+		fields = append(fields, configurationitem.FieldOwnerID)
+	}
+	if m.adddepartment_id != nil {
+		fields = append(fields, configurationitem.FieldDepartmentID)
+	}
+	if m.addconfirmed_by != nil {
+		fields = append(fields, configurationitem.FieldConfirmedBy)
+	}
 	if m.addsource_missing_count != nil {
 		fields = append(fields, configurationitem.FieldSourceMissingCount)
 	}
@@ -36805,6 +38239,12 @@ func (m *ConfigurationItemMutation) AddedFields() []string {
 // was not set, or was not defined in the schema.
 func (m *ConfigurationItemMutation) AddedField(name string) (ent.Value, bool) {
 	switch name {
+	case configurationitem.FieldOwnerID:
+		return m.AddedOwnerID()
+	case configurationitem.FieldDepartmentID:
+		return m.AddedDepartmentID()
+	case configurationitem.FieldConfirmedBy:
+		return m.AddedConfirmedBy()
 	case configurationitem.FieldSourceMissingCount:
 		return m.AddedSourceMissingCount()
 	case configurationitem.FieldTenantID:
@@ -36820,6 +38260,27 @@ func (m *ConfigurationItemMutation) AddedField(name string) (ent.Value, bool) {
 // type.
 func (m *ConfigurationItemMutation) AddField(name string, value ent.Value) error {
 	switch name {
+	case configurationitem.FieldOwnerID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddOwnerID(v)
+		return nil
+	case configurationitem.FieldDepartmentID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddDepartmentID(v)
+		return nil
+	case configurationitem.FieldConfirmedBy:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddConfirmedBy(v)
+		return nil
 	case configurationitem.FieldSourceMissingCount:
 		v, ok := value.(int)
 		if !ok {
@@ -36875,6 +38336,18 @@ func (m *ConfigurationItemMutation) ClearedFields() []string {
 	}
 	if m.FieldCleared(configurationitem.FieldOwnedBy) {
 		fields = append(fields, configurationitem.FieldOwnedBy)
+	}
+	if m.FieldCleared(configurationitem.FieldOwnerID) {
+		fields = append(fields, configurationitem.FieldOwnerID)
+	}
+	if m.FieldCleared(configurationitem.FieldDepartmentID) {
+		fields = append(fields, configurationitem.FieldDepartmentID)
+	}
+	if m.FieldCleared(configurationitem.FieldLastConfirmedAt) {
+		fields = append(fields, configurationitem.FieldLastConfirmedAt)
+	}
+	if m.FieldCleared(configurationitem.FieldConfirmedBy) {
+		fields = append(fields, configurationitem.FieldConfirmedBy)
 	}
 	if m.FieldCleared(configurationitem.FieldLocalModifiedAt) {
 		fields = append(fields, configurationitem.FieldLocalModifiedAt)
@@ -36985,6 +38458,18 @@ func (m *ConfigurationItemMutation) ClearField(name string) error {
 		return nil
 	case configurationitem.FieldOwnedBy:
 		m.ClearOwnedBy()
+		return nil
+	case configurationitem.FieldOwnerID:
+		m.ClearOwnerID()
+		return nil
+	case configurationitem.FieldDepartmentID:
+		m.ClearDepartmentID()
+		return nil
+	case configurationitem.FieldLastConfirmedAt:
+		m.ClearLastConfirmedAt()
+		return nil
+	case configurationitem.FieldConfirmedBy:
+		m.ClearConfirmedBy()
 		return nil
 	case configurationitem.FieldLocalModifiedAt:
 		m.ClearLocalModifiedAt()
@@ -37107,6 +38592,18 @@ func (m *ConfigurationItemMutation) ResetField(name string) error {
 		return nil
 	case configurationitem.FieldOwnedBy:
 		m.ResetOwnedBy()
+		return nil
+	case configurationitem.FieldOwnerID:
+		m.ResetOwnerID()
+		return nil
+	case configurationitem.FieldDepartmentID:
+		m.ResetDepartmentID()
+		return nil
+	case configurationitem.FieldLastConfirmedAt:
+		m.ResetLastConfirmedAt()
+		return nil
+	case configurationitem.FieldConfirmedBy:
+		m.ResetConfirmedBy()
 		return nil
 	case configurationitem.FieldOwnershipMode:
 		m.ResetOwnershipMode()

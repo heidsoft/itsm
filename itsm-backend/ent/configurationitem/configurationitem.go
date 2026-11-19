@@ -44,6 +44,14 @@ const (
 	FieldAssignedTo = "assigned_to"
 	// FieldOwnedBy holds the string denoting the owned_by field in the database.
 	FieldOwnedBy = "owned_by"
+	// FieldOwnerID holds the string denoting the owner_id field in the database.
+	FieldOwnerID = "owner_id"
+	// FieldDepartmentID holds the string denoting the department_id field in the database.
+	FieldDepartmentID = "department_id"
+	// FieldLastConfirmedAt holds the string denoting the last_confirmed_at field in the database.
+	FieldLastConfirmedAt = "last_confirmed_at"
+	// FieldConfirmedBy holds the string denoting the confirmed_by field in the database.
+	FieldConfirmedBy = "confirmed_by"
 	// FieldOwnershipMode holds the string denoting the ownership_mode field in the database.
 	FieldOwnershipMode = "ownership_mode"
 	// FieldLocalModifiedAt holds the string denoting the local_modified_at field in the database.
@@ -201,6 +209,10 @@ var Columns = []string{
 	FieldLocation,
 	FieldAssignedTo,
 	FieldOwnedBy,
+	FieldOwnerID,
+	FieldDepartmentID,
+	FieldLastConfirmedAt,
+	FieldConfirmedBy,
 	FieldOwnershipMode,
 	FieldLocalModifiedAt,
 	FieldDiscoverySource,
@@ -380,6 +392,26 @@ func ByAssignedTo(opts ...sql.OrderTermOption) OrderOption {
 // ByOwnedBy orders the results by the owned_by field.
 func ByOwnedBy(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldOwnedBy, opts...).ToFunc()
+}
+
+// ByOwnerID orders the results by the owner_id field.
+func ByOwnerID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldOwnerID, opts...).ToFunc()
+}
+
+// ByDepartmentID orders the results by the department_id field.
+func ByDepartmentID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldDepartmentID, opts...).ToFunc()
+}
+
+// ByLastConfirmedAt orders the results by the last_confirmed_at field.
+func ByLastConfirmedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldLastConfirmedAt, opts...).ToFunc()
+}
+
+// ByConfirmedBy orders the results by the confirmed_by field.
+func ByConfirmedBy(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldConfirmedBy, opts...).ToFunc()
 }
 
 // ByOwnershipMode orders the results by the ownership_mode field.
