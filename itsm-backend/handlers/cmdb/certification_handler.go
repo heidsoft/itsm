@@ -143,17 +143,28 @@ func (h *CICertificationHandler) ListTasks(c *gin.Context) {
 //
 // 用 errors.Is 而非 ==：服务层用 fmt.Errorf("%w") 包装过 sentinel，
 // 直接比较会漏判并退化成 500，客户端拿到「服务器错误」而实际上是自己传错了。
+//
+// 每个 sentinel 用**各自的具体消息**而不是共用调用点的 msg：曾统一传 msg，
+// 导致「该任务已完成」被改写为「完成认证失败」——客户端看到的是笼统的失败，
+// 无法区分「操作出错该重试」与「状态已变更别重试」。状态码同为 400，
+// 但 message 是唯一能让人（和前端提示文案）区分二者的字段。
 func (h *CICertificationHandler) respondError(c *gin.Context, err error, msg string) {
+	var publicMsg string
 	switch {
-	case errors.Is(err, ErrCITaskAlreadyPending),
-		errors.Is(err, ErrCINotOwned),
-		errors.Is(err, ErrCITaskAlreadyConfirmed),
-		errors.Is(err, ErrCICertificationActorMissing):
-		common.FailWithErr(c, common.NewValidationError(msg, err), msg)
+	case errors.Is(err, ErrCITaskAlreadyPending):
+		publicMsg = ErrCITaskAlreadyPending.Error()
+	case errors.Is(err, ErrCINotOwned):
+		publicMsg = ErrCINotOwned.Error()
+	case errors.Is(err, ErrCITaskAlreadyConfirmed):
+		publicMsg = ErrCITaskAlreadyConfirmed.Error()
+	case errors.Is(err, ErrCICertificationActorMissing):
+		publicMsg = ErrCICertificationActorMissing.Error()
 	default:
 		if h.logger != nil {
 			h.logger.Errorw(msg, "error", err)
 		}
 		common.RespondError(c, err, msg)
+		return
 	}
+	common.FailWithErr(c, common.NewValidationError(publicMsg, err), publicMsg)
 }
