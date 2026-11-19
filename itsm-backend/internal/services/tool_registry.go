@@ -207,7 +207,7 @@ func (t *ToolRegistry) ListTools() []ToolDefinition {
 				"properties": map[string]interface{}{
 					"search":   map[string]interface{}{"type": "string", "description": "按名称/资产标签/序列号/厂商/云资源ID模糊搜索"},
 					"ciNumber": map[string]interface{}{"type": "string", "description": "CI唯一编号精确匹配（如 CI-202609-000001），优先于 search，多轮对话间用它稳定定位同一资产"},
-					"ciType":   map[string]interface{}{"type": "string", "description": "CI类型（租户自定义类型见 /cmdb/ontology）", "enum": []any{"server", "database", "application", "network", "storage", "cloud_resource"}},
+					"ciType":   map[string]interface{}{"type": "string", "description": "CI类型（租户自定义类型见 /cmdb/ontology）", "enum": []any{"cmdb_ci_server", "cmdb_ci_database", "cmdb_ci_vm_instance", "cmdb_ci_ip_switch", "cmdb_ci_ip_firewall", "cmdb_ci_kubernetes", "cmdb_ci_business_service"}},
 					"limit":    map[string]interface{}{"type": "integer", "minimum": 1, "maximum": 100},
 					"offset":   map[string]interface{}{"type": "integer", "minimum": 0},
 				},

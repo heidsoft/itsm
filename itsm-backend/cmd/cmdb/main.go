@@ -13,8 +13,8 @@ import (
 	"itsm-backend/ent/citype"
 	"itsm-backend/handlers/cmdb"
 	"itsm-backend/internal/schema"
-	"itsm-backend/middleware"
 	"itsm-backend/internal/services"
+	"itsm-backend/middleware"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -256,6 +256,10 @@ func initializeBaseData(ctx context.Context, client *ent.Client) error {
 		{"cmdb_ci_vm_instance", "虚拟机实例", "cloud", "#6f42c1"},
 		{"cmdb_ci_database", "数据库", "database", "#fd7e14"},
 		{"cmdb_ci_kubernetes", "Kubernetes资源", "kubernetes", "#20c997"},
+		// 业务服务：让影响分析能从技术资产跨到业务线（ServiceNow CSDM 对标）。
+		// 与 service_catalog_item 分属不同域——这里是 CMDB 本体图节点，不带 SLA/申请表单。
+		// 靠 impacts/depends_on/uses 关系边挂到技术资产，BFS 无需按类型分支。
+		{"cmdb_ci_business_service", "业务服务", "cloud", "#722ed1"},
 	}
 
 	for _, class := range ciClasses {

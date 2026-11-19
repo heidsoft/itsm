@@ -24,6 +24,7 @@ export enum CITypeEnum {
   APPLICATION = 'application',
   NETWORK = 'network',
   STORAGE = 'storage',
+  BUSINESS_SERVICE = 'business_service',
 }
 
 export const CITypeLabels: Record<string, string> = {
@@ -32,4 +33,5 @@ export const CITypeLabels: Record<string, string> = {
   [CITypeEnum.APPLICATION]: '应用系统',
   [CITypeEnum.NETWORK]: '网络设备',
   [CITypeEnum.STORAGE]: '存储设备',
+  [CITypeEnum.BUSINESS_SERVICE]: '业务服务',
 };
