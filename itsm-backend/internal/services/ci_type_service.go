@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"itsm-backend/common"
@@ -13,6 +14,7 @@ import (
 	"itsm-backend/ent/citype"
 	"itsm-backend/ent/configurationitem"
 
+	entsql "entgo.io/ent/dialect/sql"
 	"go.uber.org/zap"
 )
 
@@ -84,6 +86,47 @@ func (s *CITypeService) GetCITypeByID(ctx context.Context, id, tenantID int) (*d
 	return dto.ToCITypeResponse(ciType), nil
 }
 
+// canonicalCITypeCodes 是内置规范类型的 code 白名单，用于列表排序。
+//
+// 背景：ci_types.name 存英文 code（server/database/...），description 存中文名。
+// 新建类型按 created_at 倒序排，于是任何后来创建的测试/临时类型都会挤到首屏，
+// 把「服务器 / 数据库 / 网络设备」这些规范类型推到需要滚动或搜索才能看到的位置
+// ——真机上「资产类型」下拉首屏 8 项曾全是遗留测试类型。
+//
+// 这里只影响**展示顺序**，不做过滤：租户自建类型仍然全部可见，只是排在规范类型之后。
+var canonicalCITypeCodes = []string{
+	"server",
+	"database",
+	"network",
+	"storage",
+	"application",
+	"middleware",
+	"cloud_vm",
+	"kubernetes",
+}
+
+// citeTypeOrderCanonicalFirst 让内置规范类型稳定排在前面，其余按创建时间倒序。
+//
+// 用 CASE 表达式而非二次查询：一次查询完成，翻页语义不变（total 与 ORDER BY 一致），
+// 也不会把排序规则散落到 handler 或前端。
+func citeTypeOrderCanonicalFirst() citype.OrderOption {
+	return func(selector *entsql.Selector) {
+		// 参数化 CASE 分支：把 code 作为占位参数传进驱动，避免把白名单拼进 SQL 文本。
+		args := make([]interface{}, 0, len(canonicalCITypeCodes))
+		var builder strings.Builder
+		builder.WriteString("CASE " + selector.C(citype.FieldName))
+		for i, code := range canonicalCITypeCodes {
+			builder.WriteString(" WHEN ? THEN ")
+			builder.WriteString(strconv.Itoa(i))
+			args = append(args, code)
+		}
+		// 非规范类型统一落到 len(codes)，彼此之间再按 created_at 倒序。
+		builder.WriteString(" ELSE " + strconv.Itoa(len(canonicalCITypeCodes)) + " END")
+		// CASE 值 0..N 本身就是优先级，升序即为「规范类型在前」，不要再加 Desc。
+		selector.OrderExpr(entsql.Expr(builder.String(), args...))
+	}
+}
+
 // ListCITypes 获取CI类型列表
 func (s *CITypeService) ListCITypes(ctx context.Context, tenantID int, page, pageSize int, search string) (*dto.CITypeListResponse, error) {
 	// HTTP 入口的页长夹紧归 common.GetPaginationFromQuery；这一层只兜住绕过 HTTP 的调用方
@@ -106,7 +149,9 @@ func (s *CITypeService) ListCITypes(ctx context.Context, tenantID int, page, pag
 	ciTypes, err := query.
 		Offset((page-1)*pageSize).
 		Limit(pageSize).
+		// 规范类型优先，组内与组间都用 created_at 倒序；
 		// created_at 非唯一列，补 ID 并列键，否则同秒写入的类型在翻页时可能重复或漏出。
+		Order(citeTypeOrderCanonicalFirst()).
 		Order(ent.Desc(citype.FieldCreatedAt), ent.Asc(citype.FieldID)).
 		All(ctx)
 	if err != nil {

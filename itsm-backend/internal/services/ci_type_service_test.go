@@ -173,3 +173,41 @@ func TestIsForeignKeyViolation(t *testing.T) {
 		})
 	}
 }
+
+func TestCITypeService_ListCITypes_CanonicalTypesFirst(t *testing.T) {
+	f := newCITypeDeleteFixture(t)
+	// 先在夹具里已有 server；再造 3 个「后建」的非规范类型，
+	// 它们 created_at 更新，旧排序会把它们排到首屏。
+	for _, name := range []string{"tmp-probe-a", "tmp-probe-b", "tmp-probe-c"} {
+		_, err := f.client.CIType.Create().SetName(name).SetTenantID(f.tenantID).Save(f.ctx)
+		require.NoError(t, err)
+	}
+	// 再造 1 个后建的规范类型（database），它也必须排在非规范类型之前
+	_, err := f.client.CIType.Create().SetName("database").SetTenantID(f.tenantID).Save(f.ctx)
+	require.NoError(t, err)
+
+	svc := f.newService()
+	resp, err := svc.ListCITypes(f.ctx, f.tenantID, 1, 100, "")
+	require.NoError(t, err)
+
+	names := make([]string, 0, len(resp.Items))
+	for _, item := range resp.Items {
+		names = append(names, item.Name)
+	}
+
+	// 规范类型必须整体排在非规范类型之前
+	firstNonCanonical := len(names)
+	for i, n := range names {
+		if n == "tmp-probe-a" || n == "tmp-probe-b" || n == "tmp-probe-c" {
+			if i < firstNonCanonical {
+				firstNonCanonical = i
+			}
+		}
+	}
+	for i, n := range names {
+		if n == "server" || n == "database" {
+			require.Less(t, i, firstNonCanonical,
+				"规范类型 %q 排在第 %d 位，却在非规范类型（第 %d 位）之后：%v", n, i, firstNonCanonical, names)
+		}
+	}
+}
