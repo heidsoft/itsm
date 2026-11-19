@@ -1,5 +1,5 @@
 # ITSM Makefile - 构建和部署自动化
-.PHONY: help build build-backend build-frontend build-images build-parallel build-no-cache deploy deploy-backend deploy-frontend prod-init prod-deploy prod-health prod-status test test-backend test-frontend test-scripts test-unit test-e2e lint lint-backend lint-frontend type-check check-contracts docs-gate check-handlers-hygiene fresh-install-gate scope-creep product-drift verify-scripts fmt-backend ci-parity ci-parity-strict health dev-health dev-start-docker dev-start-local dev-stop dev-stop-docker dev-stop-local dev-clean dev-reset dev-rebuild dev-backend-local dev-frontend-only dev-seed-demo swagger-gen clean clean-all logs restart status version
+.PHONY: help build build-backend build-frontend build-images build-parallel build-no-cache deploy deploy-backend deploy-frontend prod-init prod-deploy prod-health prod-status test test-backend test-frontend test-scripts test-unit test-e2e lint lint-backend lint-frontend type-check check-contracts docs-gate check-handlers-hygiene fresh-install-gate scope-creep product-drift verify-scripts fmt-backend entgen entgen-check ci-parity ci-parity-strict health dev-health dev-start-docker dev-start-local dev-stop dev-stop-docker dev-stop-local dev-clean dev-reset dev-rebuild dev-backend-local dev-frontend-only dev-seed-demo swagger-gen clean clean-all logs restart status version
 
 # 默认版本
 VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo "latest")
@@ -260,6 +260,12 @@ dev-seed-demo: ## 播种演示数据（事件/问题/变更/知识库），幂�
 		ITSM_SEED_CONFIG=config/seed/demo.json \
 		$(GO) run -tags seed_demo .
 	@echo "$(GREEN)完成：使用 admin / admin123 登录即可查看演示数据$(NC)"
+
+entgen: ## 重新生成 ent 代码（隔离暂存 + 差分同步，失败不写 ent/）
+	@bash itsm-backend/scripts/entgen.sh
+
+entgen-check: ## 校验 ent 生成代码与 schema 一致（CI 用，不写盘）
+	@bash itsm-backend/scripts/entgen.sh --check
 
 swagger-gen: ## 重新生成 OpenAPI/Swagger 文档（itsm-backend/docs，版本锁定 go.mod）
 	@echo "$(BLUE)生成 Swagger 文档...$(NC)"

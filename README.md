@@ -296,6 +296,10 @@ go run main.go                           # 启动后端服务
 go test ./...                            # 运行测试
 go build -o itsm-backend main.go         # 构建二进制
 
+# ent 代码生成（在仓库根目录执行；生成到隔离暂存目录后按内容差分同步）
+make entgen                              # 改过 ent/schema/** 后运行
+make entgen-check                        # CI 同款一致性校验，不写盘
+
 # 前端开发
 cd itsm-frontend
 npm install                              # 安装依赖

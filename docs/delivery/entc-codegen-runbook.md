@@ -12,11 +12,36 @@
 | **耗时** | **4 分 40 秒** |
 | 结果 | exit=0，schema 未改时 `ent/` 零 diff（生成是确定性的） |
 
+当前（2026-11-19）：**137 个 schema / 284 个生成文件 / 74.7 万行**，其中
+`ent/mutation.go` 单文件 **19.1 万行**。生成慢的根因是全图串行重写
+（`entc/gen/graph.go:242` 逐个 node 跑模板），不是 ent 运行时本身；
+`make entgen` 解决写入安全与重复编译，真正缩小单图规模需要按域拆 client。
+
 ---
 
 ## 一、标准命令
 
-### 方式 A：预编译二进制（推荐，避免每次重编译 entc）
+### 方式 0：`make entgen`（默认，推荐）
+
+```bash
+cd /Users/heidsoft/Downloads/research/itsm
+make entgen          # 改过 ent/schema/** 之后运行
+make entgen-check    # 只校验一致性，不写 ent/（CI 同款）
+```
+
+流程：按 `go.mod` 锁定 ent 版本 → 编译固定的生成入口 `cmd/entgen`（`entgen` build tag）
+→ 生成到 gitignore 的 `itsm-backend/.cache/entgen/runs/stage-XXXXXX`（每次独立目录，
+不做批量删除）→ 按 SHA-256 只把变化的文件同步进 `ent/`。生成失败或中途被杀时 `ent/` **一个字节都不会被写**，从根上消除
+「生成中断留下数百个半成品、产出 854 文件不可审阅 diff」的事故。
+
+**为什么不用 `ent generate --target` 做暂存**：ent CLI 会把 `--target` 的目录解析成
+生成代码的 package path，暂存目录里的 import 会指向暂存包而不是 `itsm-backend/ent`。
+`cmd/entgen` 直接固定 `gen.Config.Package = "itsm-backend/ent"`，只把 `Target` 指向暂存目录。
+
+可用环境变量：`ENTGEN_MIN_FREE_MB`（默认 6000，低内存机器可下调）、
+`ENTGEN_SKIP_MEM_CHECK=1`（跳过预检，风险自负）、`ENTGEN_MUTATION_BUDGET`（默认 250000 行）。
+
+### 方式 A：预编译 entc 二进制（应急绕行）
 
 ```bash
 cd /Users/heidsoft/Downloads/research/itsm/itsm-backend
@@ -29,7 +54,10 @@ cd ent
 /tmp/entc generate ./schema
 ```
 
-### 方式 B：项目标准入口
+只在 `make entgen` 本身不可用时用；它会**原地写入** `ent/`，中断后须
+`git checkout -- itsm-backend/ent` 恢复。
+
+### 方式 B：项目旧入口（不推荐）
 
 ```bash
 cd /Users/heidsoft/Downloads/research/itsm/itsm-backend
@@ -37,7 +65,8 @@ go generate ./ent
 ```
 
 等价于 `ent/generate.go` 里的 `go run -mod=mod entgo.io/ent/cmd/ent generate ./schema`。
-比方式 A 慢一些（每次都要编译 entc），但最贴近项目约定。
+每次重编译 entc、原地写入，且可能改动 go.mod/go.sum；保留仅为兼容旧脚本。
+
 
 ### 方式 C：后台运行（强烈推荐，可规避超时）
 
