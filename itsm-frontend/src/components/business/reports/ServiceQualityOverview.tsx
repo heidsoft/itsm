@@ -31,6 +31,9 @@ import {
 import { ReloadOutlined } from '@ant-design/icons';
 import { DashboardAPI } from '@/lib/api/dashboard-api';
 import type { ServiceQualityReport } from '@/app/(main)/dashboard/types/dashboard.types';
+import { ticketStatusLabel, ticketPriorityLabel } from '@/constants/ticket';
+import { problemStatusLabel } from '@/constants/problem';
+import { ChangeTypeLabels } from '@/constants/change';
 
 const { Text } = Typography;
 
@@ -235,7 +238,11 @@ export default function ServiceQualityOverview() {
                       // 后端空数据时若下发 null（而非契约要求的 []），这里降级成空表，
                       // 不让整个报表中心白屏。外层 ticketStats ? 仍保留「块未接入」语义，
                       // 不会被这个兜底吞掉。
-                      rows={(report.ticketStats.statusGroups ?? []).map(g => ({ name: g.status, count: g.count }))}
+                      rows={(report.ticketStats.statusGroups ?? []).map(g => ({
+                        // 状态走全产品单一词表（new→新建），未知值原样回退
+                        name: ticketStatusLabel(g.status),
+                        count: g.count,
+                      }))}
                     />
                   </div>
                 </Card>
@@ -268,7 +275,11 @@ export default function ServiceQualityOverview() {
                   <div className="mt-2">
                     <StatusTable
                       nameKey="状态"
-                      rows={report.problemStats.byStatus.map(g => ({ name: g.status, count: g.count }))}
+                      rows={report.problemStats.byStatus.map(g => ({
+                        // 复用 constants/problem.ts 的权威词表，避免英文状态码直出
+                        name: problemStatusLabel(g.status),
+                        count: g.count,
+                      }))}
                     />
                   </div>
                 </Card>
@@ -301,7 +312,14 @@ export default function ServiceQualityOverview() {
                   <div className="mt-2">
                     <StatusTable
                       nameKey="类型"
-                      rows={report.changeStats.byType.map(g => ({ name: String(g.type), count: g.count }))}
+                      rows={report.changeStats.byType.map(g => ({
+                        // 变更类型走 constants/change.ts 的 ChangeTypeLabels，未知值原样回退
+                        name:
+                          ChangeTypeLabels[
+                            String(g.type) as keyof typeof ChangeTypeLabels
+                          ] || String(g.type),
+                        count: g.count,
+                      }))}
                     />
                   </div>
                 </Card>

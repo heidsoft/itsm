@@ -133,6 +133,19 @@ describe('ServiceQualityOverview', () => {
     expect(screen.getByText('变更统计')).toBeInTheDocument();
   });
 
+  it('工单/问题/变更统计的分类名翻译成中文，不直出后端状态码', async () => {
+    // 历史缺陷：三张 StatusTable 直接 name: g.status / String(g.type)，
+    // 报表中心出现 open / in_progress 这类英文状态码，与其它页面文案不一致。
+    const report = buildReport();
+    mockGetServiceQuality.mockResolvedValue(report);
+
+    render(<ServiceQualityOverview />);
+
+    // 'open' → 待处理（工单表与问题表都会出现，故用 findAllByText）
+    expect((await screen.findAllByText('待处理')).length).toBeGreaterThan(0);
+    expect(screen.queryByText('open')).not.toBeInTheDocument();
+  });
+
   it('加载失败时显示错误与重试入口', async () => {
     mockGetServiceQuality.mockRejectedValue(new Error('service unavailable'));
     render(<ServiceQualityOverview />);
