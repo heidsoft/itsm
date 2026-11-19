@@ -60,7 +60,7 @@ type mockRepository struct {
 	getDiscoveryResultFn                   func(ctx context.Context, tenantID, id int) (*DiscoveryResult, error)
 	updateDiscoveryResultFn                func(ctx context.Context, res *DiscoveryResult) error
 	transitionDiscoveryResultFn            func(ctx context.Context, tenantID, id int, fromStatus, toStatus, errorCode, errorMessage string) (int, error)
-	listDiscoveryResultsFn                 func(ctx context.Context, tenantID int, jobID int) ([]*DiscoveryResult, error)
+	listDiscoveryResultsFn                 func(ctx context.Context, tenantID int, jobID int, page, pageSize int) ([]*DiscoveryResult, int, error)
 	findPendingDiscoveryResultFn           func(ctx context.Context, tenantID int, resourceIdentity, afterHash string) (*DiscoveryResult, error)
 
 	// Discovery job 执行链路
@@ -297,11 +297,11 @@ func (m *mockRepository) TransitionDiscoveryResult(ctx context.Context, tenantID
 	return 1, nil
 }
 
-func (m *mockRepository) ListDiscoveryResults(ctx context.Context, tenantID int, jobID int) ([]*DiscoveryResult, error) {
+func (m *mockRepository) ListDiscoveryResults(ctx context.Context, tenantID int, jobID int, page, pageSize int) ([]*DiscoveryResult, int, error) {
 	if m.listDiscoveryResultsFn != nil {
-		return m.listDiscoveryResultsFn(ctx, tenantID, jobID)
+		return m.listDiscoveryResultsFn(ctx, tenantID, jobID, page, pageSize)
 	}
-	return nil, nil
+	return nil, 0, nil
 }
 
 func (m *mockRepository) FindPendingDiscoveryResult(ctx context.Context, tenantID int, resourceIdentity, afterHash string) (*DiscoveryResult, error) {
@@ -1003,15 +1003,16 @@ func TestService_Discovery(t *testing.T) {
 	t.Run("ListDiscoveryResults 透传", func(t *testing.T) {
 		var capturedJobID int
 		repo := &mockRepository{
-			listDiscoveryResultsFn: func(ctx context.Context, tenantID int, jobID int) ([]*DiscoveryResult, error) {
+			listDiscoveryResultsFn: func(ctx context.Context, tenantID int, jobID int, page, pageSize int) ([]*DiscoveryResult, int, error) {
 				capturedJobID = jobID
-				return []*DiscoveryResult{{ID: 1, JobID: jobID}}, nil
+				return []*DiscoveryResult{{ID: 1, JobID: jobID}}, 1, nil
 			},
 		}
 		svc := newTestService(repo)
-		got, err := svc.ListDiscoveryResults(context.Background(), 1, 99)
+		got, total, err := svc.ListDiscoveryResults(context.Background(), 1, 99, 1, 20)
 		require.NoError(t, err)
 		require.Len(t, got, 1)
+		require.Equal(t, 1, total, "total 必须原样回传")
 		require.Equal(t, 99, capturedJobID)
 	})
 }

@@ -1242,12 +1242,12 @@ export class ApiClient {
   async retryDiscoveryJob(id: number | string): Promise<unknown> {
     return request(this.baseURL, 'POST', `/cmdb/discovery/jobs/${id}/retry`, {});
   }
-  // `job_id` (snake) is what the handler reads off the query string; the DTO
+  // The handler reads `jobId` (camelCase, platform-wide convention). The DTO
   // field is an int, so an absent/unparseable value must be omitted rather than
   // sent as 0 — 0 would read as "filter by job 0" and return nothing.
   async listDiscoveryResults(params?: PaginationParams & { jobId?: number }): Promise<unknown> {
     const query: Record<string, string | number | undefined> = {};
-    if (params?.jobId !== undefined) query['job_id'] = params.jobId;
+    if (params?.jobId !== undefined) query['jobId'] = params.jobId;
     if (params?.page !== undefined) query['page'] = params.page;
     if (params?.pageSize !== undefined) query['pageSize'] = params.pageSize;
     return request(this.baseURL, 'GET', '/cmdb/discovery/results', undefined, query);

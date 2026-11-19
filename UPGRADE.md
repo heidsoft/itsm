@@ -864,9 +864,14 @@ cd itsm-frontend && npx jest src/lib/api/__tests__/cmdb-api.test.ts src/lib/__te
    夹具已同步为 `aliyun`。
 
 **未收口项（本片只登记，不改）**：`ListCloudAccounts`/`ListCloudServices` 仍是无上限整表读取，
-「选择器端点」要不要资源上限或改真分页需产品拍板；`GET /api/v1/cmdb/discovery/sources`、
-`/discovery/results` 返回裸数组（无信封键），后者的过滤参数仍绑定 snake_case `job_id`；
-绑定失败的公共文案在仓库里仍是 `Invalid request body` 与 `请求参数错误` 两套并存。
+「选择器端点」要不要资源上限或改真分页需产品拍板；`GET /api/v1/cmdb/discovery/sources`
+返回裸数组（无信封键）；绑定失败的公共文案在仓库里仍是 `Invalid request body` 与 `请求参数错误` 两套并存。
+
+**已收口（破坏性，需调用方跟进）**：`GET /api/v1/cmdb/discovery/results` 的过滤参数
+`job_id` 改名为 `jobId`（平台 camelCase 规则），响应从裸数组改为分页信封
+`{items,total,page,pageSize}`（与同域 `ListDiscoveryJobs` 同口径），新增真分页
+（`page` 默认 1、`pageSize` 默认 20 上限 100）。唯一生产消费方 itsm-cli 已同批同步源码与 dist；
+自研脚本若仍传 `job_id` 会退化为「不过滤列出本租户全部差异」，须改传 `jobId`。
 
 **验证**：
 ```bash

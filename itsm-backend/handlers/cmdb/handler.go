@@ -1433,13 +1433,15 @@ func (h *Handler) RetryDiscoveryJob(c *gin.Context) {
 // ListDiscoveryResults handles GET /api/v1/cmdb/discovery/results
 //
 //	@Summary	列出发现差异（逐资源 diff，待人确认）
-//	@Description job_id 缺省 = 列出本租户全部差异；给值时只列该任务的差异。参数非法是 400/1001，不得回落为「不过滤」。
+//	@Description jobId 缺省 = 列出本租户全部差异；给值时只列该任务的差异。参数非法是 400/1001，不得回落为「不过滤」。
 //	@Tags CMDB-云发现
 //	@Produce json
 //	@Security BearerAuth
-//	@Param job_id query int false "发现任务ID；缺省列出本租户全部差异"
-//	@Success 200 {object} common.Response{data=[]dto.DiscoveryResultResponse}
-//	@Failure 400 {object} common.Response "job_id 不是正整数"
+//	@Param jobId query int false "发现任务ID；缺省列出本租户全部差异"
+//	@Param page query int false "页码，默认 1"
+//	@Param pageSize query int false "页长，默认 20，上限 100"
+//	@Success 200 {object} common.ListResponse{items=dto.DiscoveryResultResponse}
+//	@Failure 400 {object} common.Response "jobId 不是正整数"
 //	@Failure 401 {object} common.Response "租户上下文缺失"
 //	@Router /api/v1/cmdb/discovery/results [get]
 func (h *Handler) ListDiscoveryResults(c *gin.Context) {
@@ -1453,11 +1455,12 @@ func (h *Handler) ListDiscoveryResults(c *gin.Context) {
 	// 首尾相接，任何标准客户端都无法解析。
 	// 用 IsAborted() 区分「参数缺席」（无响应，按不过滤继续）与「参数非法」
 	// （响应已写出，必须立刻停下），而不是再读一次 query 猜。
-	jobID, ok := common.ParsePositiveIDFromQuery(c, "job_id")
+	jobID, ok := common.ParsePositiveIDFromQuery(c, "jobId")
 	if !ok && c.IsAborted() {
 		return
 	}
-	list, err := h.svc.ListDiscoveryResults(c.Request.Context(), tenantID, jobID)
+	pg := common.GetPaginationFromQuery(c)
+	list, total, err := h.svc.ListDiscoveryResults(c.Request.Context(), tenantID, jobID, pg.Page, pg.PageSize)
 	if err != nil {
 		common.RespondError(c, err, "操作失败")
 		return
@@ -1481,7 +1484,7 @@ func (h *Handler) ListDiscoveryResults(c *gin.Context) {
 			UpdatedAt: item.UpdatedAt,
 		})
 	}
-	common.Success(c, resp)
+	common.SuccessWithPagination(c, resp, pg.Page, pg.PageSize, int64(total))
 }
 
 // 差异决策面（apply / reject）。manual 对账策略下 update 只落 pending 结果，

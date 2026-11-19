@@ -91,7 +91,7 @@ func TestDiscoveryCIProjectionEndToEnd(t *testing.T) {
 	require.NotNil(t, db1)
 	assertProjectedCI(t, db1, ciType.ID, "db-1", "inactive", "success")
 
-	results, err := repo.ListDiscoveryResults(ctx, tenantID, job.ID)
+	results, _, err := repo.ListDiscoveryResults(ctx, tenantID, job.ID, 1, 100)
 	require.NoError(t, err)
 	require.Len(t, results, 2)
 	for _, r := range results {
@@ -188,7 +188,7 @@ func TestApplyDiscoveryResultProjectsCI(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, executor.Execute(ctx, tenantID, second.ID))
 
-	results, err := repo.ListDiscoveryResults(ctx, tenantID, second.ID)
+	results, _, err := repo.ListDiscoveryResults(ctx, tenantID, second.ID, 1, 100)
 	require.NoError(t, err)
 	require.Len(t, results, 1)
 	require.Equal(t, DiscoveryResultPending, results[0].Status)

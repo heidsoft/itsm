@@ -3407,9 +3407,9 @@ Authorization: Bearer <accessToken>
 `/api/v1/cmdb/cloud-*` 的 15 条路由已写入 Swagger；此前注解只存在于被删除的 `handlers/cloud`，
 活表面在 Swagger 里零覆盖。
 
-已知未收口（本片只登记，不改）：`GET /api/v1/cmdb/discovery/sources` 与
-`GET /api/v1/cmdb/discovery/results` 返回裸数组、没有信封键，且后者的过滤参数绑定的是
-snake_case `job_id`，与平台 camelCase 规则不一致。
+已知未收口（本片只登记，不改）：`GET /api/v1/cmdb/discovery/sources` 返回裸数组、没有信封键。
+（`GET /api/v1/cmdb/discovery/results` 已收口为 camelCase `jobId` + 真分页 + 分页信封，
+与同域 `ListDiscoveryJobs` 同口径；唯一生产消费方 itsm-cli 已同批同步。）
 
 契约锁：`router/cmdb_cloud_list_route_test.go`（信封键集、页长回落表、别名失效、跨租户收敛、
 凭据不外泄、旧 `/api/v1/cloud/*` 三路径 404）与 `router/cmdb_cloud_authz_route_test.go`（均打在
@@ -3530,7 +3530,7 @@ manual 对账策略下，执行器对「有变化」的资源只落一条 `statu
 ```http
 POST /api/v1/cmdb/discovery/results/{id}/apply     # 应用差异（写回 CloudResource）
 POST /api/v1/cmdb/discovery/results/{id}/reject    {"reason":"可选"}
-GET  /api/v1/cmdb/discovery/results?job_id=42      # 列出差异（含 diff 与 status）
+GET  /api/v1/cmdb/discovery/results?jobId=42&page=1&pageSize=20   # 列出差异（含 diff 与 status），返回 items/total/page/pageSize 信封
 ```
 
 - **只有 `action=update` 且 `status=pending` 可被决策**：`create` 在发现时已落库，

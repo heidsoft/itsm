@@ -194,7 +194,7 @@ func TestDiscoveryJobExecutor_EndToEnd(t *testing.T) {
 	}
 
 	// DiscoveryResult：两条 create。
-	results, err := repo.ListDiscoveryResults(ctx, tenantID, created.ID)
+	results, _, err := repo.ListDiscoveryResults(ctx, tenantID, created.ID, 1, 100)
 	require.NoError(t, err)
 	require.Len(t, results, 2)
 	for _, r := range results {
@@ -549,11 +549,11 @@ func TestDiscoveryJobExecutor_ManualPolicyDeduplicatesPendingResult(t *testing.T
 	require.EqualValues(t, 0, job3.Summary["pending"])
 	require.EqualValues(t, 1, job3.Summary["pendingDuplicates"])
 
-	results, err := repo.ListDiscoveryResults(ctx, tenantID, third.ID)
+	results, _, err := repo.ListDiscoveryResults(ctx, tenantID, third.ID, 1, 100)
 	require.NoError(t, err)
 	require.Empty(t, results, "重复发现不得再落一条 pending 差异")
 
-	all, err := repo.ListDiscoveryResults(ctx, tenantID, 0)
+	all, _, err := repo.ListDiscoveryResults(ctx, tenantID, 0, 1, 100)
 	require.NoError(t, err)
 	pending := 0
 	for _, r := range all {

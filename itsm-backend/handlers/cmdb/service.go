@@ -1040,13 +1040,13 @@ func discoveryJobFingerprint(tenantID int, source *DiscoverySource) string {
 	return hex.EncodeToString(hash[:])
 }
 
-func (s *Service) ListDiscoveryResults(ctx context.Context, tenantID int, jobID int) ([]*DiscoveryResult, error) {
-	s.logger.Infow("Listing discovery results", "tenant_id", tenantID, "job_id", jobID)
-	result, err := s.repo.ListDiscoveryResults(ctx, tenantID, jobID)
+func (s *Service) ListDiscoveryResults(ctx context.Context, tenantID int, jobID int, page, pageSize int) ([]*DiscoveryResult, int, error) {
+	s.logger.Infow("Listing discovery results", "tenant_id", tenantID, "job_id", jobID, "page", page, "page_size", pageSize)
+	result, total, err := s.repo.ListDiscoveryResults(ctx, tenantID, jobID, page, pageSize)
 	if err != nil {
 		s.logger.Errorw("Failed to list discovery results", "error", err, "tenant_id", tenantID, "job_id", jobID)
-		return nil, err
+		return nil, 0, err
 	}
-	s.logger.Infow("Listed discovery results successfully", "count", len(result), "tenant_id", tenantID)
-	return result, nil
+	s.logger.Infow("Listed discovery results successfully", "count", len(result), "total", total, "tenant_id", tenantID)
+	return result, total, nil
 }

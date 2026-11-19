@@ -852,20 +852,35 @@ func (r *EntRepository) CreateDiscoveryJob(ctx context.Context, job *DiscoveryJo
 	}, nil
 }
 
-func (r *EntRepository) ListDiscoveryResults(ctx context.Context, tenantID int, jobID int) ([]*DiscoveryResult, error) {
+func (r *EntRepository) ListDiscoveryResults(ctx context.Context, tenantID int, jobID int, page, pageSize int) ([]*DiscoveryResult, int, error) {
+	if page < 1 {
+		page = 1
+	}
+	if pageSize < 1 || pageSize > 100 {
+		pageSize = 20
+	}
 	q := r.client.DiscoveryResult.Query().Where(discoveryresult.TenantID(tenantID))
 	if jobID > 0 {
 		q = q.Where(discoveryresult.JobID(jobID))
 	}
-	es, err := q.All(ctx)
+	total, err := q.Count(ctx)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
+	}
+	// 单行含 resource_snapshot + diff 两个 JSON 大字段，禁止 All() 整表读；
+	// 与 ListDiscoveryJobs 同口径：Count + 稳定排序 + Offset/Limit。
+	es, err := q.Order(ent.Desc(discoveryresult.FieldCreatedAt), ent.Desc(discoveryresult.FieldID)).
+		Offset((page - 1) * pageSize).
+		Limit(pageSize).
+		All(ctx)
+	if err != nil {
+		return nil, 0, err
 	}
 	results := make([]*DiscoveryResult, 0, len(es))
 	for _, e := range es {
 		results = append(results, discoveryResultFromEnt(e))
 	}
-	return results, nil
+	return results, total, nil
 }
 
 // FindPendingDiscoveryResult 按规范身份 + 目标指纹找未决的 update 差异。

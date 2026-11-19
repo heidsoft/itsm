@@ -86,7 +86,7 @@ type Repository interface {
 	// UpdateDiscoveryJob 全字段写回（执行器 claim/进度/终态推进的持久化通道）。
 	UpdateDiscoveryJob(ctx context.Context, job *DiscoveryJob) error
 	CreateDiscoveryResult(ctx context.Context, res *DiscoveryResult) (*DiscoveryResult, error)
-	ListDiscoveryResults(ctx context.Context, tenantID int, jobID int) ([]*DiscoveryResult, error)
+	ListDiscoveryResults(ctx context.Context, tenantID int, jobID int, page, pageSize int) ([]*DiscoveryResult, int, error)
 	// FindPendingDiscoveryResult 按规范身份 + 目标指纹找未决的 update 差异。
 	// manual 对账策略下资源指纹在被人工应用前不会前进，同一差异会被每轮发现
 	// 重复算出；执行器用它抑制重复待办，而不是让人工 inbox 无限堆积。
