@@ -67,6 +67,14 @@ func TestCMDBGovernanceReportRouteContract(t *testing.T) {
 		assert.Contains(t, w.Body.String(), `"retire_confirm"`, "差异分桶键必须是受控词表: %s", w.Body.String())
 		// 空租户也是全 0 快照，不是 null data
 		assert.NotEqual(t, "null", string(env.Data), "data=%s", string(env.Data))
+		// 确认新鲜度块必须在真实 HTTP 响应里出现且结构完整。
+		// 🔴 这条断言的价值：单元测试只能证明 ComputeCertificationMetrics 算得对，
+		// 证明不了「字段真的走到了 JSON 编码」。上一批的断裂（toCIDomain 未映射）
+		// 正是发生在单测覆盖不到的层——所以要在此处用真实 SetupRoutes 打一遍。
+		assert.Contains(t, w.Body.String(), `"certification"`, "认证块必须出现在响应: %s", w.Body.String())
+		assert.Contains(t, w.Body.String(), `"freshThresholdDays":90`, "阈值天数必须下发: %s", w.Body.String())
+		assert.Contains(t, w.Body.String(), `"freshnessPct":0`, "空租户认证率 0 而非 100: %s", w.Body.String())
+		assert.NotContains(t, w.Body.String(), `"certification":null`, "认证块是结构体不是指针，不能为 null")
 	})
 
 	t.Run("无 cmdb:read 的角色 403", func(t *testing.T) {
@@ -245,6 +253,17 @@ func TestCMDBGovernanceReportRouteQualityContract(t *testing.T) {
 	assert.NotContains(t, body, `"duplicateGroups":null`, "空/非空都必须给数组，不能是 null")
 	// 缺失统计指向 vendor
 	assert.Contains(t, body, `"attribute":"vendor"`)
+	// 🔴 确认新鲜度：四条 CI 全部 online 且都从未确认过。
+	// verified 若是「有简介的 CI 数」会误报 1（外键不影响），并且**不等于 4**——
+	// 这里用真实数据实证「认证分母（4，全部在用）≠ 完整率分母（3，只有类型A可评估）」。
+	// 两个分母合并成同一个值会让这条断言立刻红。
+	assert.Contains(t, body, `"certification"`, "认证块必须出现在响应: %s", body)
+	assert.Contains(t, body, `"verified":4`, "认证分母是在用 CI 数（含无必填定义的类型B）: %s", body)
+	assert.Contains(t, body, `"neverConfirmed":4`, "四条均无 last_confirmed_at: %s", body)
+	assert.Contains(t, body, `"staleConfirmed":0`)
+	assert.Contains(t, body, `"freshConfirmed":0`)
+	assert.Contains(t, body, `"freshnessPct":0`, "无人确认时认证率为 0，不得报 100: %s", body)
+	assert.Contains(t, body, `"freshThresholdDays":90`)
 	// 重复组必须下发成员而非只有计数
 	// 只有重复组成员应出现在 duplicateGroups 里；CI-2 不重复，不该出现
 	for _, ci := range []*ent.ConfigurationItem{ci1, ci3} {
