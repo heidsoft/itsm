@@ -3917,8 +3917,17 @@ cd itsm-frontend && npm run test:unit -- --runTestsByPath src/lib/api/__tests__/
 自由文本时代的「把字段留空」在指针语义下不再等于清空。
 
 **⑤ 能力矩阵标注为 Pilot，不宣称 GA。** `cmdb.certification` 在 `/api/v1/capabilities`
-中标 `MaturityPilot`，三项阻断如实列出：无周期生成器（认证仍需人工逐条发起）、
-治理看板尚未纳入确认新鲜度维度、未经真实租户验收。
+中标 `MaturityPilot`，剩余阻断如实列出：无周期生成器（认证仍需人工逐条发起）、
+未经真实租户验收。
+
+**⑥ `GET /cmdb/governance/report` 响应新增 `certification` 块（纯新增字段）。**
+包含 `verified` / `neverConfirmed` / `staleConfirmed` / `freshConfirmed` /
+`freshnessPct` / `freshThresholdDays`。三桶互斥完备（和恒等于 `verified`），
+可直接画堆叠条。**对接方须注意两个分母不同源**：`certification.verified` 排除退役 CI，
+`quality.assessable` 不排除——不要拿其中一个去校验另一个。`verified=0` 时
+`freshnessPct` 恒为 0，含义是「没有可评估资产」，不是「全部过期」也不是「全部新鲜」。
+阈值当前 90 天，且随响应下发（`freshThresholdDays`），**不要在客户端硬编码**。
+该字段为纯新增，不改变既有字段语义，未升级的旧前端会忽略它、照常工作。
 
 **迁移与回填是两件事**：建列由 ent auto-migrate（开发）或迁移脚本（生产）完成；
 `owner_id` 回填只在迁移脚本里做。生产环境 `ITSM_AUTO_SEED=false` 时务必确认迁移已执行，
