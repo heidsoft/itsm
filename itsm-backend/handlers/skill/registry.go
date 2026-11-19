@@ -395,7 +395,9 @@ func (r *SkillRegistry) InvokeWithMetrics(ctx context.Context, code string, inpu
 		return SkillInvokeResult{}, err
 	}
 	if err := s.Validate(input); err != nil {
-		return SkillInvokeResult{}, fmt.Errorf("%w: %v", ErrSkillValidation, err)
+		// %w 保留调用方错误链（如 *SkillInputError），%w 亦可包装
+		// ErrSkillValidation；用 %v 会切断 errors.Is 判定。
+		return SkillInvokeResult{}, fmt.Errorf("%w: %w", ErrSkillValidation, err)
 	}
 	bs, hasBase := s.(trackedSkill)
 
@@ -412,7 +414,7 @@ func (r *SkillRegistry) InvokeWithMetrics(ctx context.Context, code string, inpu
 			Output:         out,
 			LatencyMs:      elapsed.Milliseconds(),
 			SkippedMetrics: !tracked,
-		}, fmt.Errorf("%w: %v", ErrSkillInvoke, execErr)
+		}, fmt.Errorf("%w: %w", ErrSkillInvoke, execErr)
 	}
 	return SkillInvokeResult{
 		Output:         out,

@@ -16,6 +16,7 @@ import (
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	entrole "itsm-backend/ent/role"
+	"itsm-backend/internal/authz"
 	"itsm-backend/middleware"
 
 	entsql "entgo.io/ent/dialect/sql"
@@ -1043,4 +1044,41 @@ func TestDeleteMenu_UnknownIsNotFound_Mock(t *testing.T) {
 func TestSentinelExists(t *testing.T) {
 	assert.Error(t, ErrPermissionNotInTenant)
 	assert.True(t, errors.Is(ErrPermissionNotInTenant, ErrPermissionNotInTenant))
+}
+
+// 契约：权限策略违反闭集不变量属于管理员输入问题 → 400/1001，
+// 不能兜底成 500/5001（否则前端把「填错策略」显示成「服务故障」）。
+func TestUpdatePermission_InvalidPolicy_MapsParamError_Mock(t *testing.T) {
+	perm := &mockPermissionService{}
+	h := newMockRbacHandler(t, &mockRoleService{}, perm, &mockMenuService{})
+	perm.On("UpdatePermission", mock.Anything, 1, 1, mock.Anything).
+		Return(nil, fmt.Errorf("参数错误: %w", authz.ErrPolicyInvalid))
+
+	w, c := mockCtx(http.MethodPut, "/api/v1/permissions/1",
+		`{"policy":{"riskLevel":"low","allowedPrincipals":["human"],"category":"other","requiresApproval":false,"minApprovals":0,"isActive":true}}`, 1)
+	h.UpdatePermission(c)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code, w.Body.String())
+	var resp common.Response
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
+	assert.Equal(t, common.ParamErrorCode, resp.Code)
+	perm.AssertExpectations(t)
+}
+
+// 契约：目标权限不存在 → 404，而不是 500。
+func TestUpdatePermission_NotFound_MapsNotFound_Mock(t *testing.T) {
+	perm := &mockPermissionService{}
+	h := newMockRbacHandler(t, &mockRoleService{}, perm, &mockMenuService{})
+	perm.On("UpdatePermission", mock.Anything, 1, 1, mock.Anything).
+		Return(nil, fmt.Errorf("权限不存在: %w", &ent.NotFoundError{}))
+
+	w, c := mockCtx(http.MethodPut, "/api/v1/permissions/1",
+		`{"policy":{"riskLevel":"low","allowedPrincipals":["human"],"category":"other","requiresApproval":false,"minApprovals":0,"isActive":true}}`, 1)
+	h.UpdatePermission(c)
+
+	assert.Equal(t, http.StatusNotFound, w.Code, w.Body.String())
+	var resp common.Response
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
+	assert.Equal(t, common.NotFoundCode, resp.Code)
+	perm.AssertExpectations(t)
 }

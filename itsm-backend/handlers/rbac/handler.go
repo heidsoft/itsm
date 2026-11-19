@@ -8,6 +8,8 @@ import (
 
 	"itsm-backend/common"
 	"itsm-backend/dto"
+	"itsm-backend/ent"
+	"itsm-backend/internal/authz"
 	"itsm-backend/middleware"
 
 	"github.com/gin-gonic/gin"
@@ -368,7 +370,18 @@ func (h *Handler) UpdatePermission(c *gin.Context) {
 	}
 	perm, err := h.permissionService.UpdatePermission(c.Request.Context(), id, tenantID, &req)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		// 策略闭集校验失败是管理员输入问题，不是服务故障：
+		// 500/5001 会让前端把「填错」显示成「服务异常」。
+		switch {
+		case errors.Is(err, authz.ErrPolicyInvalid):
+			h.logger.Warnw("invalid permission policy rejected",
+				"permission_id", id, "tenant_id", tenantID, "error", err)
+			common.ParamErrorWithErr(c, err, "权限策略非法")
+		case ent.IsNotFound(err):
+			common.NotFoundWithErr(c, err, "权限不存在")
+		default:
+			common.FailWithErr(c, err, "操作失败")
+		}
 		return
 	}
 	common.Success(c, perm)

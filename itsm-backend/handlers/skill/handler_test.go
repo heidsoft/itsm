@@ -3,11 +3,11 @@ package skill_test
 import (
 	"bytes"
 	"context"
-	"strings"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/gin-gonic/gin"
@@ -15,6 +15,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 
+	"itsm-backend/dto"
 	"itsm-backend/handlers/skill"
 	"itsm-backend/middleware"
 )
@@ -600,7 +601,6 @@ func TestInvoke_EnforcesRequiredPermissions(t *testing.T) {
 	})
 }
 
-
 // ----------------------------------------------------------------------------
 // Skill 调用决策底账（scenario="skill:<code>"，成功/失败都留痕）
 // ----------------------------------------------------------------------------
@@ -723,4 +723,41 @@ func TestInvoke_NilAuditWriterIsNoop(t *testing.T) {
 	w := doRequest(t, r, http.MethodPost, "/api/v1/admin/skills/user.echo/invoke",
 		skill.SkillInvokeRequest{Input: map[string]interface{}{"hello": "world"}})
 	assert.Equal(t, http.StatusOK, w.Code, w.Body.String())
+}
+
+// ----------------------------------------------------------------------------
+// 工具策略拒绝的错误语义（403/2003，而不是 500/5001）
+// ----------------------------------------------------------------------------
+
+// deniedToolSkill 让 Execute 返回被策略拒绝的哨兵错误，模拟 ai.agent_tool
+// 在 Gate 2.5 被拒时的行为。
+type deniedToolSkill struct{}
+
+func (s *deniedToolSkill) Code() string   { return "tool.denied" }
+func (s *deniedToolSkill) Name() string   { return "工具拒绝探针" }
+func (s *deniedToolSkill) Tags() []string { return nil }
+func (s *deniedToolSkill) Manifest() dto.SkillManifest {
+	return dto.SkillManifest{Name: "tool.denied", Version: "v1", Category: "pilot",
+		RequiredPermissions: []string{"ai:read"}}
+}
+func (s *deniedToolSkill) GetMetrics() dto.SkillMetrics { return dto.SkillMetrics{} }
+func (s *deniedToolSkill) Validate(_ interface{}) error { return nil }
+func (s *deniedToolSkill) Execute(_ context.Context, _ interface{}) (interface{}, error) {
+	return nil, fmt.Errorf("%w: principal agent 未获授权 cmdb:write", dto.ErrToolPermissionDenied)
+}
+
+// 契约：策略拒绝是判定结果，必须 403/2003；500/5001 会让操作者
+// 把「无授权」误判成「服务异常」。
+func TestInvoke_ToolPermissionDenied_MapsForbidden(t *testing.T) {
+	reg := skill.NewSkillRegistry()
+	require.NoError(t, reg.Register(&deniedToolSkill{}))
+	r := setupRouter(reg)
+
+	w := doRequest(t, r, http.MethodPost, "/api/v1/admin/skills/tool.denied/invoke", nil)
+
+	require.Equal(t, http.StatusForbidden, w.Code, w.Body.String())
+	var env responseEnvelope
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &env))
+	assert.EqualValues(t, 2003, env.Code)
+	assert.Contains(t, env.Message, "无权执行")
 }

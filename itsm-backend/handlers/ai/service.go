@@ -150,8 +150,11 @@ func (s *Service) ListToolsForTenant(ctx context.Context, tenantID int) []dto.To
 	return s.tools.ListToolsForTenant(ctx, tenantID)
 }
 
-// ErrToolPermissionDenied 工具权限不足
-var ErrToolPermissionDenied = fmt.Errorf("tool permission denied")
+// ErrToolPermissionDenied 工具权限不足。
+//
+// 单一事实源在 dto：handlers/skill 需要在不 import handlers/ai 的前提下
+// 用 errors.Is 判定「拒绝」并映射 403，而不是把它当成内部错误。
+var ErrToolPermissionDenied = dto.ErrToolPermissionDenied
 
 // ErrUnknownTool 未知工具
 var ErrUnknownTool = fmt.Errorf("unknown tool")

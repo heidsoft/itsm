@@ -17,6 +17,7 @@ package authz
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"sort"
 	"strings"
@@ -302,12 +303,28 @@ func (p PermissionPolicy) ApprovalFor(principal string) (needsApproval bool, min
 	return true, min
 }
 
+// ErrPolicyInvalid 表示权限运行期策略违反闭集安全不变量。
+//
+// 策略来自管理员的显式配置，违反不变量属于**调用方输入错误**：HTTP 层必须
+// 映射为参数错误（400/1001），而不是内部错误（500/5001）——否则管理端无法
+// 区分「填错策略」与「服务故障」，也违反错误语义契约。
+var ErrPolicyInvalid = errors.New("invalid permission policy")
+
 // ValidatePolicy 在写入 DB 前、以及从 DB 读出后都做闭集校验。
 // 安全不变量在这里强制，而不是指望调用方自觉：
 //   - 允许 agent 的非低风险操作不能关掉审批；
 //   - 允许 agent 的高/危急风险操作必须双人审批；
 //   - 低风险操作不得要求审批（避免无意义的待办堆积）。
+//
+// 所有违规都包装 ErrPolicyInvalid，供 handler 用 errors.Is 分流。
 func ValidatePolicy(p PermissionPolicy) error {
+	if err := validatePolicyRules(p); err != nil {
+		return fmt.Errorf("%w: %v", ErrPolicyInvalid, err)
+	}
+	return nil
+}
+
+func validatePolicyRules(p PermissionPolicy) error {
 	if !containsString(AllRiskLevels, p.RiskLevel) {
 		return fmt.Errorf("riskLevel %q 非法，仅支持 %s", p.RiskLevel, strings.Join(AllRiskLevels, "/"))
 	}

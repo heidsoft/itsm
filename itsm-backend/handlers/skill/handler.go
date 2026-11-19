@@ -531,10 +531,16 @@ func (h *Handler) Promote(c *gin.Context) {
 
 // Delete DELETE /api/v1/admin/skills/:code
 //
-// 行为：
-//   - 将 Skill 标记为 disabled（status=disabled）但保留历史 metrics；
-//   - 现有 ai_audit / tool_invocations 历史记录不删除。
+// 行为（以实现为准，勿凭「禁用」措辞理解）：
+//   - 从内存注册表 UnregisterScoped，并**硬删** skill_definitions 中的行
+//     （persistence.go:DeleteDefinition 执行 DELETE），不是软删/置 disabled；
+//     skill_definitions 无状态列，保留行会让技能在重启后「复活」。
+//   - 调用历史（tool_invocations / ai_feedbacks 决策底账）不随删除清理，
+//     审计与指标历史仍可回溯。
 //   - builtin Skill 拒绝删除。
+//
+// 响应保留历史契约 {"code","disabled":true}（前端 skill-api.ts 依赖该字段），
+// 语义是「该技能不再可用」，不代表数据库里仍有 disabled 行。
 func (h *Handler) Delete(c *gin.Context) {
 	code := c.Param("code")
 	tenantID := requestTenantID(c)
@@ -565,7 +571,7 @@ func (h *Handler) Delete(c *gin.Context) {
 			h.logger.Infow("skill delete had no persisted row (legacy in-memory only)", "code", code)
 		}
 	}
-	h.logger.Infow("skill disabled", "code", code)
+	h.logger.Infow("skill deleted (hard delete; invocation history retained)", "code", code)
 	common.Success(c, gin.H{"code": code, "disabled": true})
 }
 
@@ -582,7 +588,8 @@ func (h *Handler) Delete(c *gin.Context) {
 // 错误码：
 //   - 404：Skill 不存在
 //   - 400：参数错误 / Validate 失败
-//   - 500：执行失败
+//   - 403：运行期工具策略拒绝（AI 主体未被授权执行该工具，见 dto.ErrToolPermissionDenied）
+//   - 500：执行失败（其它内部错误）
 func (h *Handler) Invoke(c *gin.Context) {
 	code := c.Param("code")
 	var req SkillInvokeRequest
@@ -780,6 +787,12 @@ func failInvoke(c *gin.Context, code string, err error) {
 		common.Fail(c, common.NotFoundCode, "skill not found: "+code)
 	case errors.Is(err, dto.ErrSkillValidation):
 		common.ParamErrorWithErr(c, err, "请求参数错误")
+	case errors.Is(err, dto.ErrToolPermissionDenied):
+		// 拒绝是策略判定结果，不是服务故障：必须给 403 而不是 500。
+		// 原文（哪个主体缺哪个码）只进日志，不进响应，避免泄漏内部授权细节。
+		zap.S().Warnw("skill invoke denied by tool policy",
+			"skill", code, "error", err.Error())
+		common.Forbidden(c, "无权执行该 AI 工具：当前主体未获运行期授权")
 	default:
 		// ErrSkillInvoke 与其它内部错误都映射为 500，但保留 err 链路便于排查。
 		common.FailWithErr(c, err, "操作失败")

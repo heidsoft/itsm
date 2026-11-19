@@ -2,6 +2,7 @@ package authz
 
 import (
 	"context"
+	"errors"
 	"strings"
 	"testing"
 )
@@ -156,5 +157,55 @@ func TestPrincipalFromContext(t *testing.T) {
 	ctx := WithPrincipal(context.Background(), PrincipalAgent)
 	if got := PrincipalFromContext(ctx); got != PrincipalAgent {
 		t.Fatalf("WithPrincipal 未生效，得到 %q", got)
+	}
+}
+
+// 策略非法必须可被 errors.Is(ErrPolicyInvalid) 识别：HTTP 层据此映射
+// 400/1001（参数错误），而不是把管理员填错当成服务故障（500/5001）。
+func TestValidatePolicy_InvalidWrappedSentinel(t *testing.T) {
+	base := PermissionPolicy{
+		RiskLevel:         RiskLow,
+		Category:          CategoryOther,
+		AllowedPrincipals: []string{PrincipalHuman},
+	}
+	badRisk := base
+	badRisk.RiskLevel = "banana"
+	badCategory := base
+	badCategory.Category = "yolo"
+	noPrincipal := base
+	noPrincipal.AllowedPrincipals = nil
+	dupPrincipal := base
+	dupPrincipal.AllowedPrincipals = []string{PrincipalHuman, PrincipalHuman}
+	lowWithApproval := base
+	lowWithApproval.RequiresApproval = true
+	agentNoApproval := base
+	agentNoApproval.RiskLevel = RiskMedium
+	agentNoApproval.AllowedPrincipals = []string{PrincipalHuman, PrincipalAgent}
+	agentHighSingle := base
+	agentHighSingle.RiskLevel = RiskHigh
+	agentHighSingle.AllowedPrincipals = []string{PrincipalHuman, PrincipalAgent}
+	agentHighSingle.RequiresApproval = true
+	agentHighSingle.MinApprovals = 1
+	tooManyApprovals := base
+	tooManyApprovals.MinApprovals = 3
+
+	cases := map[string]PermissionPolicy{
+		"非法 riskLevel":    badRisk,
+		"非法 category":     badCategory,
+		"空 principals":    noPrincipal,
+		"重复 principal":    dupPrincipal,
+		"低风险强制审批":         lowWithApproval,
+		"AI 中风险未开审批":      agentNoApproval,
+		"AI 高风险单人审批":      agentHighSingle,
+		"minApprovals 越界": tooManyApprovals,
+	}
+	for name, p := range cases {
+		err := ValidatePolicy(p)
+		if err == nil {
+			t.Fatalf("%s: 必须被拒绝", name)
+		}
+		if !errors.Is(err, ErrPolicyInvalid) {
+			t.Fatalf("%s: 错误必须包装 ErrPolicyInvalid，实际 %v", name, err)
+		}
 	}
 }

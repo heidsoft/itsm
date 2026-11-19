@@ -534,12 +534,24 @@ def cleanup_skill() -> None:
            path=f"{API}/admin/skills/{TEMP_SKILL}", http=st, code=d.get("code"), severity="WARN")
     if ok:
         # 实现在 handlers/skill/persistence.go DeleteDefinition 里是硬删
-        # （DELETE FROM skill_definitions）；handler.Delete 的注释却写着
-        # 「标记为 disabled 并保留行」。以行为为准断言硬删，注释漂移单独记 WARN。
+        # （DELETE FROM skill_definitions）。断言方式：先断言行为（DB 行已移除），
+        # 再检查 handler 注释是否与行为一致——注释漂移属文档缺陷，不阻断功能。
         record("清理", "DB 行已移除（DELETE FROM skill_definitions）", row == "0",
                method="DB", path="skill_definitions", message=f"rows={row}")
-        record("清理", "handler.Delete 注释与实现一致（注释声称软删保留行）", False,
-               severity="WARN", message="实际硬删；audit/metrics 历史仍保留，行为可接受但注释需同步")
+        handler_src = REPO / "itsm-backend/handlers/skill/handler.go"
+        doc_synced = False
+        doc_msg = "未找到 handler 源码"
+        if handler_src.exists():
+            text = handler_src.read_text(encoding="utf-8")
+            idx = text.find("func (h *Handler) Delete(c *gin.Context)")
+            block = text[max(0, idx - 1200):idx] if idx > 0 else ""
+            claims_soft = ("标记为 disabled" in block) or ("软删" in block)
+            says_hard = ("硬删" in block) or ("硬删除" in block)
+            doc_synced = says_hard and not claims_soft
+            doc_msg = ("注释已声明硬删，与实现一致" if doc_synced
+                       else "注释仍声称软删/disabled，与硬删实现不一致")
+        record("清理", "handler.Delete 注释与实现一致（硬删，历史保留）", doc_synced,
+               severity="PASS" if doc_synced else "WARN", message=doc_msg)
     TEMP_SKILL = ""
 
 
