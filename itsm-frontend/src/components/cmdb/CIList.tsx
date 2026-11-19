@@ -27,7 +27,7 @@ import { useRouter } from 'next/navigation';
 import dayjs from 'dayjs';
 import LoadingEmptyError from '@/components/ui/LoadingEmptyError';
 
-import { CIStatus, CIStatusLabels } from '@/constants/cmdb';
+import { CIStatus, CIStatusLabels, resolveCITypeLabel, ciTypeCodeLabel } from '@/constants/cmdb';
 import type { ConfigurationItem, CIType } from '@/types/biz/cmdb';
 import {
   useCIsQuery,
@@ -35,6 +35,8 @@ import {
   useDeleteCIMutation,
 } from '@/lib/hooks/useCMDB';
 import { useOperationPermissions } from '@/lib/hooks/use-permissions';
+import { buildCloudProviderOptions, buildEnumLabelResolver } from './ci-editor-shared';
+import { useI18n } from '@/lib/i18n';
 import { buildCsv, downloadCsv } from '@/lib/utils/csv-export';
 const statusColors: Record<string, string> = {
   [CIStatus.ACTIVE]: 'green',
@@ -45,14 +47,14 @@ const statusColors: Record<string, string> = {
 
 // ci_types.name 是租户内唯一代码（server/database/...），中文名在 description。
 // 展示层统一优先中文描述，缺失再回退代码/原始类型，避免列表与导出出现英文代码。
-const getCITypeLabel = (types: CIType[], ciTypeId: number | undefined, fallback?: string): string => {
-  const type = types.find(item => item.id === ciTypeId);
-  return type?.description?.trim() || type?.name || fallback || '';
-};
+// 实现抽到 constants/cmdb 的 resolveCITypeLabel，与拓扑、搜索选择器共用同一口径。
+const getCITypeLabel = (types: CIType[], ciTypeId: number | undefined, fallback?: string): string =>
+  resolveCITypeLabel(types, ciTypeId, fallback) || '';
 
 const CIList: React.FC = () => {
   const router = useRouter();
   const { message } = App.useApp();
+  const { t } = useI18n();
   // 写操作按 cmdb:write / cmdb:delete 门控：只读角色不该看到点了就 403 的按钮
   // （审计 3.2-⑥ 按钮级门控）。
   const { cmdb: cmdbPerms } = useOperationPermissions();
@@ -87,6 +89,10 @@ const CIList: React.FC = () => {
   const types: CIType[] = useMemo(() => typesQuery.data ?? [], [typesQuery.data]);
 
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
+
+  // 云厂商枚举与 create/edit 表单同一份词表（aliyun → 阿里云），
+  // 列表列与 CSV 导出共用，避免导出文件里出现英文代码。
+  const cloudProviderLabel = buildEnumLabelResolver(buildCloudProviderOptions(t));
 
   // 搜索框变化：300ms 防抖后自动查询
   // - searchInput 作为受控值提供即时输入反馈
@@ -178,8 +184,8 @@ const CIList: React.FC = () => {
         { title: 'ID', render: item => item.id },
         { title: '名称', render: item => item.name },
         { title: '类型', render: item => getCITypeLabel(types, item.ciTypeId, item.type) },
-        { title: '云厂商', render: item => item.cloudProvider || '' },
-        { title: '状态', render: item => item.status },
+        { title: '云厂商', render: item => cloudProviderLabel(item.cloudProvider) },
+        { title: '状态', render: item => CIStatusLabels[item.status] || item.status },
         { title: '型号', render: item => item.model || '' },
         { title: '厂商', render: item => item.vendor || '' },
         { title: '最后更新', render: item => item.updatedAt || '' },
@@ -226,7 +232,8 @@ const CIList: React.FC = () => {
     {
       title: '云厂商',
       width: 120,
-      render: (_: unknown, record: ConfigurationItem) => record.cloudProvider || '-',
+      render: (_: unknown, record: ConfigurationItem) =>
+        cloudProviderLabel(record.cloudProvider) || '-',
     },
     {
       title: '状态',

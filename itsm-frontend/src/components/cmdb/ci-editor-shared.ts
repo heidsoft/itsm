@@ -44,6 +44,23 @@ export const buildCloudSyncStatusOptions = (t: TranslationFn) => [
   { label: t('ciEditor.cloudSyncStatusOptions.unknown'), value: 'unknown' },
 ];
 
+/**
+ * 枚举值 → 展示文案的反查器。
+ *
+ * 入参必须复用 create/edit 表单使用的同一份选项列表（build*Options），
+ * 这样「同一个枚举值」在整个产品里只有一套中文文案。
+ * 历史缺陷：CI 详情页直接 `ci.environment || '-'` 输出原始值，
+ * 于是表单选「生产」、详情页显示 `production`；选「中」、详情页显示 `medium`。
+ * 未知值原样回退，不做枚举断言，避免新增枚举被吞成空白。
+ */
+export const buildEnumLabelResolver =
+  (options: { label: string; value: string }[]) =>
+  (value?: string | null, placeholder = '-'): string => {
+    if (!value) return placeholder;
+    const hit = options.find(option => option.value === value);
+    return hit ? hit.label : value;
+  };
+
 export type SchemaField = {
   key: string;
   label: string;

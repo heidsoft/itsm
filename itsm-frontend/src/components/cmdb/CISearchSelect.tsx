@@ -11,7 +11,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Select, Tag } from 'antd';
 import { useCIsQuery } from '@/lib/hooks/useCMDB';
 
-import { CIStatusLabels } from '@/constants/cmdb';
+import { CIStatusLabels, ciTypeCodeLabel } from '@/constants/cmdb';
 
 export interface CISelectOption {
   id: number;
@@ -113,7 +113,9 @@ const CISearchSelect: React.FC<CISearchSelectProps> = ({
         label: (
           <span>
             <span>{item.name}</span>
-            {item.type && <Tag style={{ marginLeft: 8 }}>{item.type}</Tag>}
+            {item.type && (
+              <Tag style={{ marginLeft: 8 }}>{ciTypeCodeLabel(item.type)}</Tag>
+            )}
             {item.status && statusLabels[item.status] && (
               <Tag style={{ marginLeft: 0 }}>{statusLabels[item.status]}</Tag>
             )}

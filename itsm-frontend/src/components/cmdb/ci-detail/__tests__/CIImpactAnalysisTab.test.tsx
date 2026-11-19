@@ -8,9 +8,29 @@ import userEvent from '@testing-library/user-event';
 import { CIImpactAnalysisTab } from '../sections/CIImpactAnalysisTab';
 import type { ImpactAnalysisData } from '../types';
 
+import { translations } from '@/lib/i18n/translations';
+
+// 用真实 zh-CN 词表 mock t：`key => key` 会让枚举反查拿到 i18n key，
+// 测试就锁不住「风险等级/优先级直出 high/medium」这个历史缺陷。
+const zhCN = translations['zh-CN'] as unknown as Record<string, unknown>;
+const resolve = (key: string): unknown => {
+  let value: unknown = zhCN;
+  for (const part of key.split('.')) {
+    if (value && typeof value === 'object' && part in value) {
+      value = (value as Record<string, unknown>)[part];
+    } else {
+      return undefined;
+    }
+  }
+  return value;
+};
+
 jest.mock('@/lib/i18n', () => ({
   useI18n: () => ({
-    t: (key: string) => key,
+    t: (key: string) => {
+      const value = resolve(key);
+      return typeof value === 'string' ? value : key;
+    },
   }),
 }));
 
@@ -81,10 +101,15 @@ describe('CIImpactAnalysisTab', () => {
     onAnalyze: jest.fn(),
   };
 
-  it('应该显示风险等级', () => {
+  it('应该把风险等级与优先级翻译成中文，而不是直出后端原始值', () => {
     render(<CIImpactAnalysisTab {...defaultProps} />);
 
-    expect(screen.getByText('high')).toBeInTheDocument();
+    // 历史缺陷：头部与列表项都直出 high/medium/critical。
+    // 风险等级走 RISK_LEVEL_LABELS（high→高），优先级走 criticality 词表。
+    // 头部风险等级 + 列表项 impactLevel 同为 high，故出现多处「高」。
+    expect(screen.getAllByText('高').length).toBeGreaterThan(0);
+    expect(screen.queryByText('high')).not.toBeInTheDocument();
+    expect(screen.queryByText('medium')).not.toBeInTheDocument();
   });
 
   it('应该显示分析摘要', () => {

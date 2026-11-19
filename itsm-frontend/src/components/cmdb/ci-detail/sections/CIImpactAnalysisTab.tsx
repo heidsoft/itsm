@@ -7,6 +7,8 @@ import { Card, Button, Alert, Space, Tag, Typography, List, Tabs, Empty } from '
 import { Network } from 'lucide-react';
 import type { ImpactAnalysisData, ImpactAnalysisItem, AffectedTicket, AffectedIncident } from '../types';
 import { RISK_LEVEL_COLORS, RISK_LEVEL_LABELS } from '../constants';
+import { buildCriticalityOptions, buildEnumLabelResolver } from '../../ci-editor-shared';
+import { useI18n } from '@/lib/i18n';
 
 const { Text } = Typography;
 
@@ -21,6 +23,18 @@ export const CIImpactAnalysisTab: React.FC<CIImpactAnalysisTabProps> = ({
   impactLoading,
   onAnalyze,
 }) => {
+  const { t } = useI18n();
+  // 影响面里的「优先级/重要性/风险等级」与 create/edit 表单同一枚举，复用同一份词表；
+  // 未知值原样回退，避免新枚举被吞成空白。
+  const criticalityLabel = buildEnumLabelResolver(buildCriticalityOptions(t));
+  const riskLevelLabel = buildEnumLabelResolver(
+    Object.entries(RISK_LEVEL_LABELS).map(([value, label]) => ({ value, label }))
+  );
+  // 工单 status / incident status 目前没有全产品单一词表（散落多份 PRIORITY_LABELS），
+  // 这里不做猜测式映射，避免把工单状态套用 CI 状态词表造成语义错配；
+  // 统一词表落地后再接（见 CHANGELOG 待办）。
+  const rawLabel = (value?: string | null) => value || '-';
+
   const renderImpactList = (
     data: ImpactAnalysisItem[] | undefined,
     emptyText: string
@@ -38,14 +52,15 @@ export const CIImpactAnalysisTab: React.FC<CIImpactAnalysisTabProps> = ({
             <Space>
               <Tag
                 color={
-                  item.impactLevel === 'critical'
+                  RISK_LEVEL_COLORS[item.impactLevel] ||
+                  (item.impactLevel === 'critical'
                     ? 'red'
                     : item.impactLevel === 'high'
                       ? 'orange'
-                      : 'blue'
+                      : 'blue')
                 }
               >
-                {item.impactLevel}
+                {riskLevelLabel(item.impactLevel)}
               </Tag>
               <Text>{item.ciName}</Text>
               <Text type="secondary">- {item.ciType}</Text>
@@ -73,9 +88,9 @@ export const CIImpactAnalysisTab: React.FC<CIImpactAnalysisTabProps> = ({
         renderItem={(item: AffectedTicket) => (
           <List.Item>
             <Space>
-              <Tag>{item.status}</Tag>
+              <Tag>{rawLabel(item.status)}</Tag>
               <Text>{item.title}</Text>
-              <Text type="secondary">优先级: {item.priority}</Text>
+              <Text type="secondary">优先级: {criticalityLabel(item.priority)}</Text>
             </Space>
           </List.Item>
         )}
@@ -100,17 +115,18 @@ export const CIImpactAnalysisTab: React.FC<CIImpactAnalysisTabProps> = ({
             <Space>
               <Tag
                 color={
-                  item.severity === 'critical'
+                  RISK_LEVEL_COLORS[item.severity] ||
+                  (item.severity === 'critical'
                     ? 'red'
                     : item.severity === 'high'
                       ? 'orange'
-                      : 'blue'
+                      : 'blue')
                 }
               >
-                {item.severity}
+                {riskLevelLabel(item.severity)}
               </Tag>
               <Text>{item.title}</Text>
-              <Tag>{item.status}</Tag>
+              <Tag>{rawLabel(item.status)}</Tag>
             </Space>
           </List.Item>
         )}
@@ -136,7 +152,7 @@ export const CIImpactAnalysisTab: React.FC<CIImpactAnalysisTabProps> = ({
             description={
               <Space>
                 <Tag color={RISK_LEVEL_COLORS[impactAnalysis.riskLevel]}>
-                  {RISK_LEVEL_LABELS[impactAnalysis.riskLevel]}
+                  {riskLevelLabel(impactAnalysis.riskLevel)}
                 </Tag>
                 <Text>{impactAnalysis.summary}</Text>
               </Space>
