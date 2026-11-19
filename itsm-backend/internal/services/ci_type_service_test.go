@@ -11,8 +11,10 @@ import (
 	"itsm-backend/common"
 	"itsm-backend/database"
 	"itsm-backend/ent"
+	"itsm-backend/ent/citype"
 	"itsm-backend/ent/enttest"
 
+	entsql "entgo.io/ent/dialect/sql"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
@@ -210,4 +212,89 @@ func TestCITypeService_ListCITypes_CanonicalTypesFirst(t *testing.T) {
 				"规范类型 %q 排在第 %d 位，却在非规范类型（第 %d 位）之后：%v", n, i, firstNonCanonical, names)
 		}
 	}
+}
+
+// 方言占位符断言：sqlite 单测跑通不代表 Postgres 跑得通。
+//
+// 曾的缺陷：CASE 表达式硬编码 "?"，sqlite 全绿，真机 Postgres 却报
+// `pq: syntax error at or near "THEN" (42601)`，类型列表接口直接 500。
+// 这里直接断言**生成的 SQL 文本**，不依赖「能不能跑」。
+func TestWriteCanonicalOrderCase_DialectPlaceholders(t *testing.T) {
+	pg := entsql.Dialect("postgres").String(func(b *entsql.Builder) {
+		writeCanonicalOrderCase(b, citype.Table, citype.FieldName)
+	})
+	// Postgres 用 $n 占位符，且不得出现裸 "?"
+	require.NotContains(t, pg, "WHEN ?", "Postgres 不接受 ? 占位符，会报 42601 语法错误")
+	require.Contains(t, pg, "WHEN $1 THEN 0", "首个规范 code 应是 $1 且权重 0")
+	require.Contains(t, pg, fmt.Sprintf("WHEN $%d THEN %d", len(canonicalCITypeCodes), len(canonicalCITypeCodes)-1))
+	// 🔴 标识符必须换成双引号。反引号在 Postgres 里不是合法标识符分隔符，
+	// 真机曾因此在 CASE 处报 `syntax error at or near "THEN" (42601)`。
+	require.NotContains(t, pg, "`", "Postgres 不接受反引号标识符：%s", pg)
+	require.Contains(t, pg, `CASE "ci_types"."name"`, "Postgres 表列名须用双引号：%s", pg)
+
+	sq := entsql.Dialect("sqlite3").String(func(b *entsql.Builder) {
+		writeCanonicalOrderCase(b, citype.Table, citype.FieldName)
+	})
+	require.Contains(t, sq, "WHEN ? THEN 0", "SQLite 保持 ? 占位符")
+	require.NotContains(t, sq, "$1", "SQLite 不认 $n 占位符")
+	require.Contains(t, sq, "CASE `ci_types`.`name`", "SQLite 表列名用反引号：%s", sq)
+}
+
+// 🔴 占位符与参数列表必须一一对应 —— 这才是真机上翻车的那一层。
+//
+// 缺陷史：第一版硬编码 "?"（Postgres 42601 语法错）；第二版改回
+// OrderExprFunc / Dialect(d).Expr，两者内部都是 `Expr(d.String(f))`，
+// 把回调渲染成**字符串**后包进无参 expr，占位符留在 SQL 里而 args 全丢，
+// 真机报 `not enough args to execute query: want 9 got 1`。
+//
+// 所以不能只断言 SQL 文本，必须断言 `Query()` 返回的 args 长度与占位符数目一致。
+func TestCiteTypeOrderCanonicalFirst_ArgsMatchPlaceholders(t *testing.T) {
+	const preWhereArgs = 1 // 模拟 WHERE tenant_id = $1
+
+	for _, tc := range []struct {
+		dialect    string
+		firstParam string
+		caseHead   string
+	}{
+		{"postgres", fmt.Sprintf("WHEN $%d THEN 0", preWhereArgs+1), `CASE "ci_types"."name"`},
+		{"sqlite3", "WHEN ? THEN 0", "CASE `ci_types`.`name`"},
+	} {
+		t.Run(tc.dialect, func(t *testing.T) {
+			sel := entsql.Select("name").From(entsql.Table("ci_types"))
+			sel.SetDialect(tc.dialect)
+			// 模拟真实的 WHERE tenant_id = ? 先占用 1 个参数位
+			sel.Where(entsql.EQ("tenant_id", 7))
+
+			citeTypeOrderCanonicalFirst()(sel)
+
+			q, args := sel.Query()
+			require.NoError(t, sel.Err())
+			require.Contains(t, q, tc.firstParam,
+				"ORDER BY 的第一个占位符必须接在 WHERE 之后，实际 SQL=%s", q)
+			// 标识符引号也必须在真实路径上被锁住：order option 执行时 Selector 的
+			// SelectTable 还没灌入方言，selector.C() 会退回反引号，Postgres 直接 42601。
+			require.Contains(t, q, tc.caseHead,
+				"CASE 的表列名引号不对：%s", q)
+			// 1 个 WHERE + 8 个 code
+			require.Len(t, args, preWhereArgs+len(canonicalCITypeCodes),
+				"占位符与参数数目不匹配说明 args 被丢弃：SQL=%s args=%v", q, args)
+			for i, code := range canonicalCITypeCodes {
+				require.Equal(t, code, args[preWhereArgs+i],
+					"第 %d 个 ORDER BY 参数应是 %q，实际 %v", i+1, code, args[preWhereArgs+i])
+			}
+		})
+	}
+}
+
+// 权重单调递增：保证规范类型按白名单顺序排在前面，非规范类型统一落最后。
+func TestCanonicalCITypeCodes_WeightsAreContiguous(t *testing.T) {
+	require.NotEmpty(t, canonicalCITypeCodes)
+	seen := map[string]bool{}
+	for _, code := range canonicalCITypeCodes {
+		require.False(t, seen[code], "白名单里 %q 重复，CASE 分支权重会错位", code)
+		seen[code] = true
+	}
+	// 白名单长度即「非规范类型」的 ELSE 权重；必须与内置种子类型一一对应，
+	// 少一个就会让某个规范类型被当成非规范排在后面。
+	require.Len(t, canonicalCITypeCodes, 8)
 }

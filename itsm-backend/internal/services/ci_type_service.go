@@ -109,22 +109,48 @@ var canonicalCITypeCodes = []string{
 //
 // 用 CASE 表达式而非二次查询：一次查询完成，翻页语义不变（total 与 ORDER BY 一致），
 // 也不会把排序规则散落到 handler 或前端。
+//
+// 🔴 占位符必须交给 Builder.Arg 生成，不能硬编码 "?":
+// Postgres 的占位符是 $1/$2，MySQL/SQLite 才是 ?。硬编码 "?" 在 sqlite 单测里全绿，
+// 一上真机就是 `pq: syntax error at or near "THEN" (42601)` —— LOWER 到 500。
+// OrderExprFunc 提供的 *Builder 已绑定当前方言，Arg 会据此选格式。
 func citeTypeOrderCanonicalFirst() citype.OrderOption {
 	return func(selector *entsql.Selector) {
-		// 参数化 CASE 分支：把 code 作为占位参数传进驱动，避免把白名单拼进 SQL 文本。
-		args := make([]interface{}, 0, len(canonicalCITypeCodes))
-		var builder strings.Builder
-		builder.WriteString("CASE " + selector.C(citype.FieldName))
-		for i, code := range canonicalCITypeCodes {
-			builder.WriteString(" WHEN ? THEN ")
-			builder.WriteString(strconv.Itoa(i))
-			args = append(args, code)
-		}
-		// 非规范类型统一落到 len(codes)，彼此之间再按 created_at 倒序。
-		builder.WriteString(" ELSE " + strconv.Itoa(len(canonicalCITypeCodes)) + " END")
-		// CASE 值 0..N 本身就是优先级，升序即为「规范类型在前」，不要再加 Desc。
-		selector.OrderExpr(entsql.Expr(builder.String(), args...))
+		// 🔴 必须用 entsql.ExprFunc，不能用 OrderExprFunc / Dialect(d).Expr：
+		// 后两者内部是 `Expr(d.String(f))` —— 先把回调**渲染成字符串**再包进
+		// 无参的 *expr，占位符留在了 SQL 里、args 全被丢掉。表现是
+		// `not enough args to execute query: want 9 got 1`（8 个 code + 1 个 WHERE）。
+		// ExprFunc 内嵌 Builder 并实现 state 接口，Selector.Query 里的
+		// joinOrder -> Builder.join 会 SetDialect/SetTotal 并把 args 回传，
+		// Arg 才能既选对方言占位符（$n / ?）又把值登记进参数列表。
+		//
+		// 🔴 列名也不能用 selector.C(FieldName) 提前拼好：
+		// 此刻 Selector 的 dialect 仍是空串，SelectTable.C 里的 Builder{dialect:""}
+		// 会退回反引号，Postgres 拿到 `` `ci_types`.`name` `` 直接 42601 语法错
+		// （真机报的就是 `syntax error at or near "THEN"`）。
+		// 同理不能用 WriteString 裸拼，那样会绕过 Builder.Quote 的方言修正；
+		// 必须在回调内用 b.Ident，它拿到的 Builder 已由 join 灌入正确方言。
+		selector.OrderExpr(entsql.ExprFunc(func(b *entsql.Builder) {
+			writeCanonicalOrderCase(b, citype.Table, citype.FieldName)
+		}))
 	}
+}
+
+// writeCanonicalOrderCase 写出「规范类型优先」的 CASE 表达式骨架。
+//
+// 抽成独立函数是为了能对**生成的 SQL 文本**做方言断言：
+// sqlite 单测跑通不代表 Postgres 跑得通，占位符格式必须被显式锁住。
+// 表名/列名以原始名传入，由 b.Ident 负责按方言加引号。
+func writeCanonicalOrderCase(b *entsql.Builder, table, column string) {
+	b.WriteString("CASE ")
+	b.Ident(table).WriteByte('.').Ident(column)
+	for i, code := range canonicalCITypeCodes {
+		b.WriteString(" WHEN ").Arg(code)
+		b.WriteString(" THEN " + strconv.Itoa(i))
+	}
+	// 非规范类型统一落到 len(codes)，彼此之间再按 created_at 倒序。
+	b.WriteString(" ELSE " + strconv.Itoa(len(canonicalCITypeCodes)) + " END")
+	// CASE 值 0..N 本身就是优先级，升序即「规范类型在前」，不要再加 Desc。
 }
 
 // ListCITypes 获取CI类型列表
