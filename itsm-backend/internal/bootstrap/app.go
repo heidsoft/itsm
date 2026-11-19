@@ -609,6 +609,9 @@ func NewApplication() *Application {
 	assetLicenseService := assetHandler.NewAssetLicenseService(client, sugar)
 	// CMDB Services
 	ciTypeService := service.NewCITypeService(client, sugar)
+	// 注入原生连接：删除类型时要把**已退役**的 CI 也算作「外键占用」。
+	// Ent 读拦截器会自动过滤 scrapped，只走 Ent 会让预检少算、随后撞 23503。
+	ciTypeService.SetRawDB(database.GetRawDB())
 	ciAttributeDefinitionService := service.NewCIAttributeDefinitionService(client, sugar)
 	ciHistoryService := service.NewCIHistoryService(client, sugar)
 	ciTagService := service.NewCITagService(client, sugar)
