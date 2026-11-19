@@ -149,6 +149,10 @@ func MenuDefinitions() []MenuSpec {
 		{Name: "云服务目录", Path: "/cmdb/cloud-services", Icon: "CloudDrizzle", ParentPath: "/cmdb", PermissionCode: "cmdb:read", SortOrder: 757, Description: "云服务产品目录"},
 		{Name: "服务图谱", Path: "/cmdb/registry", Icon: "Compass", ParentPath: "/cmdb", PermissionCode: "cmdb:read", SortOrder: 758, Description: "Service Graph 注册表"},
 		{Name: "云资源核对", Path: "/cmdb/reconciliation", Icon: "RefreshCw", ParentPath: "/cmdb", PermissionCode: "cmdb:write", SortOrder: 759, Description: "云资源与 CI 核对"},
+		// 数据认证：CMDB Health 的 Compliance 维度。运维按任务清单核对「这条资产还准不准」，
+		// 逾期待办持续暴露。与云资源核对区分：对账比的是「云上有、库里没有」，
+		// 认证问的是「库里有的，人确认过没有」。
+		{Name: "数据认证", Path: "/cmdb/certification", Icon: "ShieldCheck", ParentPath: "/cmdb", PermissionCode: "cmdb:read", SortOrder: 760, Description: "配置项数据认证与确认新鲜度"},
 		// ===== 子菜单：CMDB · 配置面（2026-10-25 从系统管理归位）=====
 		{Name: "配置项类型", Path: "/admin/cmdb-types", Icon: "Database", ParentPath: "/cmdb", PermissionCode: "cmdb:write", SortOrder: 770},
 

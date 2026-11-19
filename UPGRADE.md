@@ -3864,6 +3864,59 @@ cd itsm-frontend && npm run test:unit -- --runTestsByPath src/lib/api/__tests__/
 
 无破坏性行为变更；唯一需运维动作的是③的迁移（生产）与①的播种后权限复核。
 
+### 1.107 CMDB 行级权限：`owned_by` 自由文本 → `owner_id` 用户外键 + 数据认证任务表（2026-11-19，行为变更 + 新增 DDL）
+
+**① `owned_by` 降级为纯展示字段，权限判定改用 `owner_id`（行为变更，需执行迁移）。**
+`configuration_items` 新增可空列 `owner_id`（Integer，指向 `users.id`）、`department_id`
+（Integer）、`last_confirmed_at`（Timestamp）、`confirmed_by`（Integer）。`owned_by`
+**保留不删**（存量读兼容、列表展示），但它在代码里已不再是权限依据：写路径以 `owner_id`
+为准，并把 `owned_by` 覆盖成该用户的**显示名**（`name` 优先，回退 `username`）。
+
+**升级动作**：执行迁移 `migrations/20261119_ci_owner_fk_and_certification.sql`（幂等，
+`ADD COLUMN IF NOT EXISTS`，可安全重放）。迁移会**按租户回填 `owner_id`**
+（用 `COALESCE(NULLIF(username,''), NULLIF(name,'' )` 与存量 `owned_by` 文本匹配），
+因此历史数据里的负责人文本能自动转成真实外键；匹配不上的保持 NULL。回滚用同名
+`_down.sql`（DROP 3 索引 + 4 列，**不删** `ci_certification_tasks`——该表由 ent schema
+管理，auto-migrate 环境自动建）。
+
+**② 业务读面开始应用行级过滤（行为变更，请重点核对）。** `GET /api/v1/cmdb/cis`
+（配置项列表）现在按 `DataScope` 收窄：管理角色（`IsDataScopeAllRole`）全租户可见，
+其余角色只看见 `owner_id = 自己` 或 `department_id = 本部门` 的 CI。**刻意保留一条宽口径**：
+`owner_id` 与 `department_id` **双 NULL** 的 CI 视为**租户公共资产**，所有角色都可见。
+
+🔴 这条宽口径不是偷懒：存量 CI 在迁移后大多没有 owner（回填只能匹配上的才有），
+若把「未归属」判为不可见，上线当天所有非管理角色的 CMDB 列表会**整体变空**——
+那是把共享资产库对一线关停，不是权限收紧。真正想收窄时，请先把资产归属补全（或用
+部门归属），而不是依赖过滤把未归属数据藏起来。
+
+`department_id <= 0` 时不加部门谓词（`DepartmentIDEQ(0)` 会命中零值脏行，等于凭空放行）；
+`user_id <= 0`（如 service 主体）返回空集而非全量。
+
+**治理看板不接行级过滤**（`GET /cmdb/governance/report` 仍是**全租户**质量视图）：
+质量指标若按个人可见范围收窄，运维看到的永远只是自己那几条资产的完整率，
+「租户真实数据质量」这个用途就失去了。这也是端点的读面权限仍是 `cmdb:read` 的原因。
+
+内部调用方（AI 工具、导出、报表）走同一 service 但**不注入 scope**，保持旧的租户级语义
+——它们的调用链各自已有权限门，行级过滤是 HTTP 业务读面的额外收窄。
+
+**③ 新增端点（纯新增，无破坏性）。** `GET|POST /api/v1/cmdb/certification/tasks`、
+`POST /api/v1/cmdb/certification/tasks/{id}/confirm`。复用 `cmdb:read` / `cmdb:write`，
+**不新增权限码**（因此存量租户无需补播种迁移，不会出现「端点已注册但所有角色 403」）。
+详见 `docs/api-reference.md`「CMDB 数据认证任务」。
+
+**④ 前端页面新增。** `src/app/(main)/cmdb/certification`（菜单「CMDB → 数据认证」），
+权限 `cmdb:read`。CI 编辑页的负责人输入从自由文本改为用户选择器（提交 `ownerId`）；
+编辑页显式传 `ownerId: 0` 表示清空——负责人必须能卸掉（离职/转岗），
+自由文本时代的「把字段留空」在指针语义下不再等于清空。
+
+**⑤ 能力矩阵标注为 Pilot，不宣称 GA。** `cmdb.certification` 在 `/api/v1/capabilities`
+中标 `MaturityPilot`，三项阻断如实列出：无周期生成器（认证仍需人工逐条发起）、
+治理看板尚未纳入确认新鲜度维度、未经真实租户验收。
+
+**迁移与回填是两件事**：建列由 ent auto-migrate（开发）或迁移脚本（生产）完成；
+`owner_id` 回填只在迁移脚本里做。生产环境 `ITSM_AUTO_SEED=false` 时务必确认迁移已执行，
+否则 `owner_id` 列不存在会让所有 CI 查询报错。
+
 ## 2. 环境变量变更
 
 本次升级**移除了多个"幽灵配置项"**（在示例文件中声明但代码/Compose 从不读取，用户配置了也不生效），并修正了一个 Grafana 密码安全缺陷。

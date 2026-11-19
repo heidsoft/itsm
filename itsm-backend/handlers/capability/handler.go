@@ -112,6 +112,16 @@ var registry = []definition{
 		key: "cmdbReconciliation", maturity: MaturityPilot, built: true, dependencies: []string{"cmdb", "cmdbDiscovery"}, readinessEnv: "ITSM_CMDB_DISCOVERY_READY",
 		pilotReason: "差异能算、能决策（POST /discovery/results/:id/apply|reject），应用后同步刷新配置项并把反查 ID 记在差异上；但回写目前只覆盖基线内的云主机/Pod 类型，云上连续缺失只把配置项标成同步滞后、不给出退役建议，且缺少真实数据验收。晋升条件：真实数据对账验收 + 覆盖更多资源类型。",
 	},
+	// 数据认证（CMDB Health 的 Compliance 维度）。与「对账」区分：对账问「云上有、
+	// 库里没有」，认证问「库里有的，人确认过没有」，不是同一件事。
+	// 诚实标注：任务创建/确认/列表已闭环（确认与 CI 新鲜度同事务，逾期按 due_at
+	// 派生不存枚举，确认必须带操作人身份，跨租户一律 fail-closed），但尚无周期
+	// 生成器（source 预留 schedule/discovery 却只有 manual 写入路径），治理看板也
+	// 尚未消费「确认新鲜度」维度，因此定 Pilot 而非 GA。
+	{
+		key: "cmdb.certification", maturity: MaturityPilot, built: true, dependencies: []string{"cmdb"},
+		pilotReason: "人工认证闭环已落地：POST /cmdb/certification/tasks 建任务并对同一 CI 的未决任务去重、POST .../:id/confirm 完成确认且与 CI 的 last_confirmed_at/confirmed_by 同事务提交（杜绝「任务已完成但看板仍是旧值」）、GET /cmdb/certification/tasks 分页列表随附 pending/overdue/confirmed 三个同源计数；逾期由 due_at 相对当前时间派生不落枚举，未指定截止时间时服务端默认 30 天（否则逾期统计恒为 0、认证体系等于没有约束）。剩余阻断：① 无周期生成器，认证仍需人工逐条发起——CI 类型与重要性无法驱动自动排期；② 治理看板质量指标尚未纳入确认新鲜度维度，认证结果目前只体现在 CI 字段与任务列表；③ 未经真实租户验收。晋升条件：接入周期生成器 + 治理看板纳入新鲜度维度 + 真实租户验收签字。",
+	},
 	// 2026-10-31 运行时降为 Pilot，与 README 成熟度表、商业能力契约对齐：
 	// 此前矩阵对客户下发 GA，而问题域创建不落 workflow.start、ServiceTask
 	// 副作用与流程完成分属两事务、补偿只支持结束事件且无内置模板。

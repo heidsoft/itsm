@@ -3488,6 +3488,68 @@ GET /api/v1/cmdb/governance/report
 前端 `reports/cmdb-quality` 已改为消费本接口（改造前用硬编码 9 字段在前端自算，
 与后端口径互不相通）。CLI 侧 `cmdb.governance report` 同步接入。
 
+### CMDB 数据认证任务
+
+```http
+GET  /api/v1/cmdb/certification/tasks
+POST /api/v1/cmdb/certification/tasks
+POST /api/v1/cmdb/certification/tasks/{id}/confirm
+```
+
+ServiceNow CMDB Health 的 **Compliance 维度**：记录「谁在何时确认某条 CI 仍然准确」。
+与「云资源核对」区分——核对问「云上有、账上没有」，认证问「账上有的，人确认过没有」。
+读面复用 `cmdb:read`，写面（建任务、完成确认）复用 `cmdb:write`，**不新增权限码**：
+认证本质是对 CI 的写操作，与创建/更新同权。
+
+**建任务** `POST /tasks`，body 为
+`{ciId, assigneeId?, dueAt?, evidence?, source?}`：
+
+- `ciId` 必填，同一租户内的未决（`status=pending`）任务**去重**——对同一 CI 重复发起
+  返回 400 / `4000`（`ErrCITaskAlreadyPending`），避免同一资产在一个周期内堆出多条待办
+  把逾期率算虚高。
+- `dueAt` 缺省时服务端补 **当前时间 + 30 天**。🔴 这不是"友好默认值"，而是必需：
+  `overdue` 由 `due_at` 相对当前时间派生，若允许 `due_at` 为空，逾期统计恒为 0，
+  整个认证体系就没有任何约束力。
+- `assigneeId` 缺省为**发起人**（`user_id`）。跨租户 `ciId` fail-closed（404）。
+- `source` 默认 `manual`；预留 `schedule` / `discovery` 语义但当前只有 `manual`
+  写入路径（无周期生成器，能力矩阵因此定 Pilot）。
+
+**完成确认** `POST /tasks/{id}/confirm`，body 为 `{evidence?}`：
+
+- 必须携带操作人身份；`user_id<=0`（service 主体）直接拒绝
+  （`ErrCICertificationActorMissing`）——否则审计链会出现「系统确认了这条资产」，
+  而数据认证的意义正是「有人签字」。
+- 任务与 CI 的冗余字段 **同事务提交**：`ci_certification_tasks.confirmed_at/confirmed_by`
+  与 `configuration_items.last_confirmed_at/confirmed_by` 一起落库。分两事务会留下
+  「任务已完成但看板仍是旧值」的窗口，治理看板读的是 CI 上的字段。
+- 已确认的任务再次确认返回 400 / `4000`（`ErrCITaskAlreadyConfirmed`）。
+
+**列表** `GET /tasks`，查询参数 `status`（`pending`/`confirmed`，缺省全量）、
+`page`、`pageSize`；`status` 传非法值时按缺省处理。响应：
+
+```json
+{
+  "items": [{"id":1,"ciId":12,"ciName":"prod-db-01","tenantId":1,"status":"pending",
+             "assigneeId":3,"dueAt":"2026-12-19T...","confirmedAt":null,"confirmedBy":0,
+             "evidence":"","source":"manual","createdAt":"..."}],
+  "total": 10, "page": 1, "pageSize": 20, "totalPages": 1,
+  "pending": 7, "overdue": 3, "confirmed": 3
+}
+```
+
+🔴 `pending` / `overdue` / `confirmed` 三个计数与列表**同源同查询**下发，不由前端自算。
+前端自算的话，「筛了状态」之后三个卡片会跟着筛选一起变，运维就无法从卡片判断
+「全局还有多少逾期」——而这正是待办清单的核心信息。`overdue` = `status=pending`
+且 `due_at < now`；逾期**不落枚举**（时间一过自动变逾期，无需后台任务翻转状态）。
+`ciName` 由列表批量 IN 查询补齐，查询失败降级为空串（名称是展示信息，
+不值得让整页 500）。
+
+`configuration_items` 同时新增 `last_confirmed_at` / `confirmed_by` 两列（冗余自
+任务表，供治理看板与列表「确认新鲜度」直接读取，不必 join 任务表）。
+
+契约锁：`handlers/cmdb/certification_task_test.go`（未决去重、跨租户 fail-closed、
+确认与 CI 冗余同事务、重复确认拒绝、缺操作人身份拒绝、逾期由 `due_at` 派生）。
+
 ### 云发现任务（Job 闭环）
 
 `POST /api/v1/cmdb/discovery/jobs` 已从 fail-closed（503）转正：真实校验来源后落
