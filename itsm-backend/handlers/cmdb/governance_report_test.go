@@ -113,6 +113,48 @@ func TestService_GetGovernanceReport(t *testing.T) {
 		}, report.Diff)
 	})
 
+	t.Run("治理看板纳入确认新鲜度且分母与完整率不同源", func(t *testing.T) {
+		// 这一格是能力矩阵里登记的阻断「治理看板未纳入确认新鲜度」的回归锁。
+		// 修好之前 report.Certification 全是零值，本测试会红在 Verified 上。
+		freshConfirm := now.Add(-20 * 24 * time.Hour)  // 90 天阈值内
+		staleConfirm := now.Add(-200 * 24 * time.Hour) // 超 90 天
+		everything := []*ConfigurationItem{
+			{ID: 1, CITypeID: 10, LifecycleStatus: common.CILifecycleStatusOnline,
+				LastConfirmedAt: &freshConfirm}, // 新鲜
+			{ID: 2, CITypeID: 10, LifecycleStatus: common.CILifecycleStatusOnline,
+				LastConfirmedAt: &staleConfirm}, // 确认过但过期
+			{ID: 3, CITypeID: 10, LifecycleStatus: common.CILifecycleStatusOnline},   // 从未确认
+			{ID: 4, CITypeID: 10, LifecycleStatus: common.CILifecycleStatusScrapped}, // 退役不进分母
+		}
+		svc := newTestService(&mockRepository{
+			listCIsForGovernanceFn: func(ctx context.Context, tenantID int) ([]*ConfigurationItem, error) {
+				return everything, nil
+			},
+			listCIsForReconciliationFn: func(ctx context.Context, tenantID int) ([]*ConfigurationItem, error) {
+				return nil, nil
+			},
+		}).WithCIRequirementReader(&stubRequirementReader{byType: map[int][]string{
+			10: {"serial_number"},
+		}})
+
+		report, err := svc.GetGovernanceReport(context.Background(), 1)
+		require.NoError(t, err)
+
+		assert.Equal(t, 3, report.Certification.Verified, "退役 CI 不进认证分母")
+		assert.Equal(t, 1, report.Certification.FreshConfirmed)
+		assert.Equal(t, 1, report.Certification.StaleConfirmed)
+		assert.Equal(t, 1, report.Certification.NeverConfirmed)
+		assert.InDelta(t, 33.33, report.Certification.FreshnessPct, 0.01)
+		assert.Equal(t, 90, report.Certification.FreshThresholdDays,
+			"阈值天数必须随响应下发，前端不能硬编码")
+
+		// 🔴 四个 CI 都有类型 10 的必填定义，完整率分母含退役那条（4），
+		// 认证分母排除它（3）——两者刻意不同源。
+		assert.Equal(t, 4, report.Quality.Assessable, "完整率分母含退役 CI")
+		assert.NotEqual(t, report.Quality.Assessable, report.Certification.Verified,
+			"两个分母必须有可见差异，合并即回归")
+	})
+
 	t.Run("无属性定义时不得报满分", func(t *testing.T) {
 		// 全新租户：CI 建了、字段也填了，但没配任何必填属性定义。
 		// 旧实现会报 100% 完整率；正确行为是「不可评估」。

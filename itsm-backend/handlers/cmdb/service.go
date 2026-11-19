@@ -717,6 +717,14 @@ func (s *Service) GetReconciliation(ctx context.Context, tenantID int) (*Reconci
 // 需求与配置入口，本批不预造。
 func (s *Service) GetGovernanceReport(ctx context.Context, tenantID int) (*GovernanceReport, error) {
 	const staleThreshold = 7 * 24 * time.Hour
+	// 确认新鲜度阈值 90 天。与 staleThreshold 是两把尺子，别混用：
+	// staleThreshold(7d) 判「发现源多久没同步过」，是机器视角的数据时效；
+	// freshThreshold(90d) 判「人多久没担保过这条资产仍准确」，是责任视角。
+	// 取 90 天而非 30 天，是因为认证任务本身缺省周期就是 30 天——若阈值也设 30 天，
+	// 任务一到截止日就同时变「逾期」与「不新鲜」，两个指标会退化成同一个，
+	// 运维看到两个红灯却指向同一件事。90 天 = 约三个认证周期，留出处理余量。
+	// 租户级配置化待有真实需求再走 system_configs，不预造配置面。
+	const freshThreshold = 90 * 24 * time.Hour
 	now := time.Now()
 
 	resources, err := s.repo.ListCloudResources(ctx, tenantID, CloudResourceFilter{})
@@ -745,6 +753,7 @@ func (s *Service) GetGovernanceReport(ctx context.Context, tenantID int) (*Gover
 
 	attrMetrics := ComputeAttributeQuality(everything, specs, staleThreshold, now)
 	duplicateGroups := DetectDuplicateGroups(everything)
+	certMetrics := ComputeCertificationMetrics(everything, freshThreshold, now)
 
 	report := &GovernanceReport{
 		Quality: QualityMetrics{
@@ -759,6 +768,7 @@ func (s *Service) GetGovernanceReport(ctx context.Context, tenantID int) (*Gover
 			AttributeDefinedTypes: attrMetrics.AssessedTypes,
 			MissingByAttribute:    attrMetrics.MissingByAttribute,
 		},
+		Certification:  certMetrics,
 		Diff:           CountByAction(DiffReconciliation(reconcileCIs, resources)),
 		CloudResources: len(resources),
 		// CIs 上报治理基数（全租户）而不是对账基数：调用方拿它当「这个租户有多少

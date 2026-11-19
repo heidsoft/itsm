@@ -76,25 +76,25 @@ type ConfigurationItemStatsResponse struct {
 
 // CreateCIRequest 创建配置项请求
 type CreateCIRequest struct {
-	Name               string                 `json:"name" binding:"required,max=255"`
-	CITypeID           int                    `json:"ciTypeId"`
-	Description        string                 `json:"description"`
-	Status             string                 `json:"status" binding:"required,oneof=active inactive maintenance retired decommissioned"`
-	Environment        string                 `json:"environment,omitempty"`
-	Criticality        string                 `json:"criticality,omitempty" binding:"omitempty,oneof=low medium high critical"`
-	AssetTag           string                 `json:"assetTag,omitempty"`
-	Attributes         map[string]interface{} `json:"attributes,omitempty"`
-	SerialNumber       string                 `json:"serialNumber,omitempty"`
-	Model              string                 `json:"model,omitempty"`
-	Vendor             string                 `json:"vendor,omitempty"`
-	Location           string                 `json:"location,omitempty"`
-	AssignedTo         string                 `json:"assignedTo,omitempty"`
-	OwnedBy            string                 `json:"ownedBy,omitempty"`
+	Name         string                 `json:"name" binding:"required,max=255"`
+	CITypeID     int                    `json:"ciTypeId"`
+	Description  string                 `json:"description"`
+	Status       string                 `json:"status" binding:"required,oneof=active inactive maintenance retired decommissioned"`
+	Environment  string                 `json:"environment,omitempty"`
+	Criticality  string                 `json:"criticality,omitempty" binding:"omitempty,oneof=low medium high critical"`
+	AssetTag     string                 `json:"assetTag,omitempty"`
+	Attributes   map[string]interface{} `json:"attributes,omitempty"`
+	SerialNumber string                 `json:"serialNumber,omitempty"`
+	Model        string                 `json:"model,omitempty"`
+	Vendor       string                 `json:"vendor,omitempty"`
+	Location     string                 `json:"location,omitempty"`
+	AssignedTo   string                 `json:"assignedTo,omitempty"`
+	OwnedBy      string                 `json:"ownedBy,omitempty"`
 	// OwnerID 拥有者用户ID：行级权限（DataScope）的唯一判定载体。
 	// OwnedBy 自由文本是历史字段，只用于展示与存量兼容，不参与权限判定。
 	// 二者可同时给出：服务层以 OwnerID 为准，并把 OwnedBy 覆盖成该用户的显示名。
-	OwnerID      int `json:"ownerId,omitempty"`
-	DepartmentID int `json:"departmentId,omitempty"`
+	OwnerID            int                    `json:"ownerId,omitempty"`
+	DepartmentID       int                    `json:"departmentId,omitempty"`
 	DiscoverySource    string                 `json:"discoverySource,omitempty"`
 	Source             string                 `json:"source,omitempty"`
 	LastDiscovered     *time.Time             `json:"lastDiscovered,omitempty"`
@@ -121,23 +121,23 @@ type CreateCIRequest struct {
 
 // CIResponse 配置项响应
 type CIResponse struct {
-	ID              int                    `json:"id"`
-	CINumber        string                 `json:"ciNumber,omitempty"`
-	Name            string                 `json:"name"`
-	Type            string                 `json:"type"`
-	CITypeID        int                    `json:"ciTypeId"`
-	Description     string                 `json:"description"`
-	Status          string                 `json:"status"`
-	Environment     string                 `json:"environment,omitempty"`
-	Criticality     string                 `json:"criticality,omitempty"`
-	AssetTag        string                 `json:"assetTag,omitempty"`
-	Attributes      map[string]interface{} `json:"attributes,omitempty"`
-	SerialNumber    string                 `json:"serialNumber,omitempty"`
-	Model           string                 `json:"model,omitempty"`
-	Vendor          string                 `json:"vendor,omitempty"`
-	Location        string                 `json:"location,omitempty"`
-	AssignedTo      string                 `json:"assignedTo,omitempty"`
-	OwnedBy         string                 `json:"ownedBy,omitempty"`
+	ID           int                    `json:"id"`
+	CINumber     string                 `json:"ciNumber,omitempty"`
+	Name         string                 `json:"name"`
+	Type         string                 `json:"type"`
+	CITypeID     int                    `json:"ciTypeId"`
+	Description  string                 `json:"description"`
+	Status       string                 `json:"status"`
+	Environment  string                 `json:"environment,omitempty"`
+	Criticality  string                 `json:"criticality,omitempty"`
+	AssetTag     string                 `json:"assetTag,omitempty"`
+	Attributes   map[string]interface{} `json:"attributes,omitempty"`
+	SerialNumber string                 `json:"serialNumber,omitempty"`
+	Model        string                 `json:"model,omitempty"`
+	Vendor       string                 `json:"vendor,omitempty"`
+	Location     string                 `json:"location,omitempty"`
+	AssignedTo   string                 `json:"assignedTo,omitempty"`
+	OwnedBy      string                 `json:"ownedBy,omitempty"`
 	// OwnerID/DepartmentID 回读：编辑页要能回填负责人选择器，也便于前端
 	// 就地判断「这条资产是否已归属」（未归属=公共资产，普通角色也可见）。
 	OwnerID      int `json:"ownerId,omitempty"`
@@ -194,20 +194,20 @@ type ListCIsRequest struct {
 
 // UpdateCIRequest 更新配置项请求
 type UpdateCIRequest struct {
-	CITypeID           int                    `json:"ciTypeId,omitempty"`
-	Name               string                 `json:"name,omitempty"`
-	Description        string                 `json:"description,omitempty"`
-	Status             string                 `json:"status,omitempty" binding:"omitempty,oneof=active inactive maintenance retired decommissioned"`
-	Environment        string                 `json:"environment,omitempty"`
-	Criticality        string                 `json:"criticality,omitempty" binding:"omitempty,oneof=low medium high critical"`
-	AssetTag           string                 `json:"assetTag,omitempty"`
-	Attributes         map[string]interface{} `json:"attributes,omitempty"`
-	SerialNumber       string                 `json:"serialNumber,omitempty"`
-	Model              string                 `json:"model,omitempty"`
-	Vendor             string                 `json:"vendor,omitempty"`
-	Location           string                 `json:"location,omitempty"`
-	AssignedTo         string                 `json:"assignedTo,omitempty"`
-	OwnedBy            string                 `json:"ownedBy,omitempty"`
+	CITypeID     int                    `json:"ciTypeId,omitempty"`
+	Name         string                 `json:"name,omitempty"`
+	Description  string                 `json:"description,omitempty"`
+	Status       string                 `json:"status,omitempty" binding:"omitempty,oneof=active inactive maintenance retired decommissioned"`
+	Environment  string                 `json:"environment,omitempty"`
+	Criticality  string                 `json:"criticality,omitempty" binding:"omitempty,oneof=low medium high critical"`
+	AssetTag     string                 `json:"assetTag,omitempty"`
+	Attributes   map[string]interface{} `json:"attributes,omitempty"`
+	SerialNumber string                 `json:"serialNumber,omitempty"`
+	Model        string                 `json:"model,omitempty"`
+	Vendor       string                 `json:"vendor,omitempty"`
+	Location     string                 `json:"location,omitempty"`
+	AssignedTo   string                 `json:"assignedTo,omitempty"`
+	OwnedBy      string                 `json:"ownedBy,omitempty"`
 	// OwnerID/DepartmentID 用指针区分「没传」与「显式清空」：
 	// 普通 int 的零值无法表达「把负责人清空」，只能表达「不改」，
 	// 而负责人恰恰是最需要能撤销的字段（人一离职，资产必须能释放回公共池）。
@@ -637,12 +637,27 @@ type GovernanceDuplicate struct {
 	CINumbers []string `json:"ciNumbers"`
 }
 
-// GovernanceReportResponse 治理看板响应：质量指标 + 发现差异四类分桶 + 重复组。
+// GovernanceCertification 确认新鲜度（CMDB Health 的 Compliance 维度）。
+//
+// 🔴 三个计数互斥完备：NeverConfirmed + StaleConfirmed + FreshConfirmed 恒等于
+// Verified。下游可放心把三者画成堆叠条/饼图。Verified 与 Quality.Assessable
+// **不是同一分母**：Verified 额外排除了退役 CI（不该要求已退役资产确认仍然准确）。
+type GovernanceCertification struct {
+	Verified           int     `json:"verified"`
+	NeverConfirmed     int     `json:"neverConfirmed"`
+	StaleConfirmed     int     `json:"staleConfirmed"`
+	FreshConfirmed     int     `json:"freshConfirmed"`
+	FreshnessPct       float64 `json:"freshnessPct"`
+	FreshThresholdDays int     `json:"freshThresholdDays"`
+}
+
+// GovernanceReportResponse 治理看板响应：质量指标 + 确认新鲜度 + 发现差异四类分桶 + 重复组。
 type GovernanceReportResponse struct {
-	Quality        GovernanceQuality `json:"quality"`
-	Diff           map[string]int    `json:"diff"`
-	CloudResources int               `json:"cloudResources"`
-	CIs            int               `json:"cis"`
+	Quality        GovernanceQuality       `json:"quality"`
+	Certification  GovernanceCertification `json:"certification"`
+	Diff           map[string]int          `json:"diff"`
+	CloudResources int                     `json:"cloudResources"`
+	CIs            int                     `json:"cis"`
 	// DuplicateGroups 是 CI 之间的重复聚类结果（此前 duplicate 分桶只统计
 	// 「同一批发现结果里同一资源出现两次」，从不做 CI 间比对，恒为 0）。
 	DuplicateGroups []GovernanceDuplicate `json:"duplicateGroups"`

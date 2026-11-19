@@ -39,8 +39,18 @@ type ConfigurationItem struct {
 	CITypeID           int                    `json:"ciTypeId"`
 	TenantID           int                    `json:"tenantId"`
 	Attributes         map[string]interface{} `json:"attributes,omitempty"`
-	CreatedAt          time.Time              `json:"createdAt"`
-	UpdatedAt          time.Time              `json:"updatedAt"`
+	// 行级权限载体与数据认证新鲜度（2026-11-19）。治理看板的「确认新鲜度」
+	// 维度读这两个字段；行级过滤读 OwnerID/DepartmentID。
+	//
+	// 🔴 这里必须真的映射（见 repository_impl.toCIDomain）：上一批只把字段加到了
+	// ent schema 与 DTO，领域实体没接，导致治理层拿到的 CI 全部是零值——
+	// 「治理看板未纳入新鲜度」不是没做展示，是数据根本没流到这一层。
+	OwnerID         int        `json:"ownerId,omitempty"`
+	DepartmentID    int        `json:"departmentId,omitempty"`
+	LastConfirmedAt *time.Time `json:"lastConfirmedAt,omitempty"`
+	ConfirmedBy     int        `json:"confirmedBy,omitempty"`
+	CreatedAt       time.Time  `json:"createdAt"`
+	UpdatedAt       time.Time  `json:"updatedAt"`
 }
 
 // CloudService represents a cloud service/resource type catalog entry.
@@ -200,14 +210,15 @@ type ReconciliationResult struct {
 	UnlinkedCIs      []*ConfigurationItem  `json:"unlinkedCis"`
 }
 
-// GovernanceReport 治理看板快照：质量指标（属性级完整率）+ 发现差异分桶 +
-// CI 间重复聚类。
+// GovernanceReport 治理看板快照：质量指标（属性级完整率）+ 确认新鲜度（认证）
+// + 发现差异分桶 + CI 间重复聚类。
 //
 // 三块数据面刻意不同源：Diff 用「带云引用的 CI」（比对的是云资源与账的关系），
-// Quality/Duplicate 用「全租户 CI」（完整率与重复率是资产账问题，手工建账的
-// CI 同样可能缺属性、同样可能重复）。
+// Quality/Duplicate/Certification 用「全租户 CI」（完整率、重复率、认证率都是
+// 资产账问题，手工建账的 CI 同样可能缺属性、同样可能重复、同样需要有人担保）。
 type GovernanceReport struct {
 	Quality          QualityMetrics               `json:"quality"`
+	Certification    CertificationMetrics         `json:"certification"`
 	Diff             map[ReconciliationAction]int `json:"diff"`
 	CloudResources   int                          `json:"cloudResources"`
 	CIs              int                          `json:"cis"`

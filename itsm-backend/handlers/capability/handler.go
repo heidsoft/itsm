@@ -120,7 +120,7 @@ var registry = []definition{
 	// 尚未消费「确认新鲜度」维度，因此定 Pilot 而非 GA。
 	{
 		key: "cmdb.certification", maturity: MaturityPilot, built: true, dependencies: []string{"cmdb"},
-		pilotReason: "人工认证闭环已落地：POST /cmdb/certification/tasks 建任务并对同一 CI 的未决任务去重、POST .../:id/confirm 完成确认且与 CI 的 last_confirmed_at/confirmed_by 同事务提交（杜绝「任务已完成但看板仍是旧值」）、GET /cmdb/certification/tasks 分页列表随附 pending/overdue/confirmed 三个同源计数；逾期由 due_at 相对当前时间派生不落枚举，未指定截止时间时服务端默认 30 天（否则逾期统计恒为 0、认证体系等于没有约束）。剩余阻断：① 无周期生成器，认证仍需人工逐条发起——CI 类型与重要性无法驱动自动排期；② 治理看板质量指标尚未纳入确认新鲜度维度，认证结果目前只体现在 CI 字段与任务列表；③ 未经真实租户验收。晋升条件：接入周期生成器 + 治理看板纳入新鲜度维度 + 真实租户验收签字。",
+		pilotReason: "人工认证闭环已落地：POST /cmdb/certification/tasks 建任务并对同一 CI 的未决任务去重、POST .../:id/confirm 完成确认且与 CI 的 last_confirmed_at/confirmed_by 同事务提交（杜绝「任务已完成但看板仍是旧值」）、GET /cmdb/certification/tasks 分页列表随附 pending/overdue/confirmed 三个同源计数；逾期由 due_at 相对当前时间派生不落枚举，未指定截止时间时服务端默认 30 天（否则逾期统计恒为 0、认证体系等于没有约束）。治理看板已纳入确认新鲜度（GET /cmdb/governance/report 的 certification 块：neverConfirmed/staleConfirmed/freshConfirmed 三桶互斥完备，分母排除退役 CI，阈值 90 天随响应下发）。剩余阻断：① 无周期生成器，认证仍需人工逐条发起——CI 类型与重要性无法驱动自动排期；② 未经真实租户验收。晋升条件：接入周期生成器 + 真实租户验收签字。",
 	},
 	// 2026-10-31 运行时降为 Pilot，与 README 成熟度表、商业能力契约对齐：
 	// 此前矩阵对客户下发 GA，而问题域创建不落 workflow.start、ServiceTask

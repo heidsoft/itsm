@@ -35,6 +35,14 @@ func toCIDomain(e *ent.ConfigurationItem) *ConfigurationItem {
 	if !e.CloudSyncTime.IsZero() {
 		cloudSyncTime = &e.CloudSyncTime
 	}
+	// 认证新鲜度用同样的零值处理：ent 的 Optional()+Time 生成值类型（读为零值
+	// time.Time），不转指针的话调用方无法区分「从未确认」与「确认于 0001 年」。
+	// 治理看板据此判「从未认证」还是「陈旧」。
+	var lastConfirmedAt *time.Time
+	if !e.LastConfirmedAt.IsZero() {
+		confirmed := e.LastConfirmedAt
+		lastConfirmedAt = &confirmed
+	}
 	return &ConfigurationItem{
 		ID:                 e.ID,
 		CINumber:           ciNumberString(e.CiNumber),
@@ -69,6 +77,10 @@ func toCIDomain(e *ent.ConfigurationItem) *ConfigurationItem {
 		CITypeID:           e.CiTypeID,
 		TenantID:           e.TenantID,
 		Attributes:         e.Attributes,
+		OwnerID:            e.OwnerID,
+		DepartmentID:       e.DepartmentID,
+		LastConfirmedAt:    lastConfirmedAt,
+		ConfirmedBy:        e.ConfirmedBy,
 		CreatedAt:          e.CreatedAt,
 		UpdatedAt:          e.UpdatedAt,
 	}

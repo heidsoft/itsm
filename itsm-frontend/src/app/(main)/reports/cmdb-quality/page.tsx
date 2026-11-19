@@ -82,9 +82,12 @@ const CMDBQualityReport = () => {
     );
   }
 
-  const { quality, diff, duplicateGroups, duplicateRatePct } = report;
+  const { quality, certification, diff, duplicateGroups, duplicateRatePct } = report;
   // 没有任何必填属性定义时，完整率不可评估——必须显式区分，不能显示 0%。
   const notAssessable = quality.assessable === 0;
+  // 认证率同构的不可评估态：没有在用资产时 freshnessPct 恒为 0，
+  // 显示「0%」会被读成「所有资产都过期」，实际是「还没有资产要认证」。
+  const noCertifiable = (certification?.verified ?? 0) === 0;
 
   // 图表数据：把「最缺的必填属性」画成横向条形图，这是唯一可行动的视图
   const missingData = quality.missingByAttribute.slice(0, 10).map((item) => ({
@@ -195,6 +198,80 @@ const CMDBQualityReport = () => {
           </Card>
         </Col>
       </Row>
+
+      {/* 确认新鲜度：CMDB Health 的 Compliance 维度。
+          与完整率是两件事——完整率问「必填属性填齐了吗」，认证问「这些值还有人担保吗」。
+          一条属性全填齐但三年没人确认过的 CI，完整率高而可信度为零。 */}
+      <Card
+        title="确认新鲜度（数据认证）"
+        className="mb-6"
+        extra={
+          <Text type="secondary" className="text-xs">
+            确认于 {certification?.freshThresholdDays ?? 0} 天内视为新鲜
+          </Text>
+        }
+      >
+        {noCertifiable ? (
+          <Empty description="暂无可评估的在用资产" />
+        ) : (
+          <Row gutter={[16, 16]} align="middle">
+            <Col xs={24} lg={8}>
+              <Statistic
+                title="认证率"
+                value={certification.freshnessPct}
+                suffix="%"
+                styles={{ content: { color: COLORS.completeness } }}
+              />
+              <Text type="secondary" className="text-xs">
+                分母为在用且可评估的 {certification.verified} 项
+              </Text>
+            </Col>
+            <Col xs={24} lg={16}>
+              {/* 三桶互斥完备（和恒等于 verified），所以用堆叠条而不是三个独立数字：
+                  运维一眼能看出「空白区（从未确认）」占多大比例。 */}
+              <div className="flex h-8 w-full overflow-hidden rounded">
+                {[
+                  { key: 'fresh', value: certification.freshConfirmed, color: '#52c41a' },
+                  { key: 'stale', value: certification.staleConfirmed, color: '#faad14' },
+                  { key: 'never', value: certification.neverConfirmed, color: '#f5222d' },
+                ].map((seg) => {
+                  const width = `${(seg.value / certification.verified) * 100}%`;
+                  return seg.value > 0 ? (
+                    <div
+                      key={seg.key}
+                      style={{ width, backgroundColor: seg.color }}
+                      className="flex items-center justify-center text-xs text-white"
+                      title={`${seg.value} 项`}
+                    >
+                      {seg.value}
+                    </div>
+                  ) : null;
+                })}
+              </div>
+              <div className="mt-2 flex flex-wrap gap-4 text-xs">
+                <Text>
+                  <span style={{ color: '#52c41a' }}>■</span> 新鲜 {certification.freshConfirmed}
+                </Text>
+                <Text>
+                  <span style={{ color: '#faad14' }}>■</span> 已过期 {certification.staleConfirmed}
+                </Text>
+                <Text>
+                  <span style={{ color: '#f5222d' }}>■</span> 从未确认 {certification.neverConfirmed}
+                </Text>
+              </div>
+              {certification.neverConfirmed > 0 && (
+                <Alert
+                  className="mt-3"
+                  type="warning"
+                  showIcon
+                  message={`${certification.neverConfirmed} 项资产从未被任何人确认过`}
+                  description="「从未确认」与「已过期」不是一回事：过期是确认过但太久，从未确认说明这条资产从来没人认领责任。建议到 CMDB「数据认证」页发起认证任务。"
+                />
+              )}
+            </Col>
+          </Row>
+        )}
+      </Card>
 
       {/* 必填属性缺口：唯一能直接指导补齐动作的视图 */}
       <Card title="最缺的必填属性" className="mb-6">

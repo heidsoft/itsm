@@ -3466,6 +3466,45 @@ GET /api/v1/cmdb/governance/report
 - `cloudResources` / `cis`：云资源总数 / **全租户 CI 总数**。`cis` 已改为治理基数
   （改造前上报的是带云引用的 CI 数，对「这个租户有多少配置项」会小得离谱）。
 
+**`certification`（确认新鲜度，2026-11-19 新增）**：CMDB Health 的 Compliance 维度。
+
+| 字段 | 含义 |
+| --- | --- |
+| `verified` | 认证率分母：**在用**（非 `scrapped`）且可评估的 CI 数 |
+| `neverConfirmed` | 从未被任何人确认过的 CI 数 |
+| `staleConfirmed` | 确认过但距今超过 `freshThresholdDays` 的 CI 数 |
+| `freshConfirmed` | 确认过且在阈值内的 CI 数 |
+| `freshnessPct` | `freshConfirmed / verified`，0.01 精度 |
+| `freshThresholdDays` | 本次判定用的阈值天数（当前 90 天） |
+
+🔴 **三个计数互斥完备**：`neverConfirmed + staleConfirmed + freshConfirmed`
+恒等于 `verified`。这条不变量由 `certification_metrics_test.go` 锁定，
+下游可放心把三桶画成堆叠条。
+
+🔴 **`verified` 与 `quality.assessable` 不是同一个分母**，刻意如此：
+
+| 分母 | 判据 | 为什么 |
+| --- | --- | --- |
+| `quality.assessable` | 所属 CI 类型**有必填属性定义** | 完整率问「属性填齐了吗」，没定义就没得评 |
+| `certification.verified` | 在用的 CI（在上者基础上**再排除退役**） | 不该要求已退役资产「确认仍然准确」 |
+
+两个分母的差异是真实的：退役 CI 仍在 `assessable` 里（它的属性完整性仍值得记录），
+但不在 `verified` 里。合并口径会让一条 1000 项、只有 5 项在用的租户永远显示低认证率。
+
+🔴 **`neverConfirmed` 与 `staleConfirmed` 不能合并成一个「不合格」数字**：
+过期是「确认过但太久」，从未确认是「从来没人认领过责任」——后者的治理优先级更高，
+是资产账的空白区。前端对此单独提示。
+
+`freshThresholdDays` 随响应下发而非只写在文档里：前端要在卡片上写「确认于 N 天内
+视为新鲜」，硬编码 90 会在后端调阈值后静默说谎。
+
+`verified=0` 时 `freshnessPct` 恒为 `0`，含义是**「没有可评估资产」**，不可解读为
+「全部过期」或「全部新鲜」。前端必须显示「暂无可评估的在用资产」。
+
+阈值取 90 天而非 30 天的理由：认证任务缺省周期就是 30 天，若阈值也设 30 天，
+任务一到截止日就同时变「逾期」与「不新鲜」，两个指标退化成同一个——
+运维看到两个红灯却指向同一件事。90 天 ≈ 三个认证周期，留出处理余量。
+
 空租户返回全 0 快照（`diff` 四桶全在且为 0，`duplicateGroups`/`missingByAttribute`
 是空数组不是 `null`）。陈旧阈值固定 7 天，租户级配置化待有真实需求再走
 `system_configs`，不预造配置面。
@@ -3477,9 +3516,14 @@ GET /api/v1/cmdb/governance/report
 - `handlers/cmdb/attribute_quality_test.go`：纯函数层——无定义不得报满分、
   有 owner 但属性全空必须计 incomplete、空白/nil/空集合算未填、退役仍评估、
   判重键优先级与稳定性；
+- `handlers/cmdb/certification_metrics_test.go`：确认新鲜度纯函数——三桶互斥完备、
+  退役不进分母、空集为 0 而非 100、零阈值全过期、分母与 `assessable` 刻意不同源；
+- `handlers/cmdb/ci_mapping_test.go`：`toCIDomain` 必须把 `owner_id`/`department_id`/
+  `last_confirmed_at`/`confirmed_by` 原样映射（曾漏映射导致治理层拿到全零值，
+  看板照常渲染但永远 0%，外部看不出异常），零值时间必须转 nil 指针；
 - `handlers/cmdb/governance_report_test.go`：服务层——治理基数含手工 CI、
   未装配读取器时不可评估而非报错、必填定义读取失败失败关闭、只查出现过的
-  `ciTypeId` 不 N+1；
+  `ciTypeId` 不 N+1、认证分母与完整率分母可见差异；
 - `router/cmdb_governance_route_test.go`：真实 `SetupRoutes` 上跑——无 `cmdb:read`
   403、跨租户只见自己的快照、camelCase 响应键；另有 `RouteQualityContract`
   用真实 ent 数据（4 条无云引用 CI + 真实属性定义表）锁 `cis/assessable/

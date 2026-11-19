@@ -157,8 +157,30 @@ export interface GovernanceDuplicate {
   ciNumbers: string[];
 }
 
+/**
+ * 确认新鲜度（CMDB Health 的 Compliance 维度）。
+ *
+ * 🔴 三个计数互斥完备：neverConfirmed + staleConfirmed + freshConfirmed === verified，
+ * 可以直接画堆叠条。但 verified **不等于** quality.assessable：
+ * 前者额外排除退役 CI（不该要求已退役资产确认仍然准确）。
+ * 页面上两个百分比的分母不同，不能拿其中一个去校验另一个。
+ *
+ * verified === 0 时 freshnessPct 恒为 0，含义是「没有可评估资产」，
+ * 不是「全部过期」，也不是「全部新鲜」。
+ */
+export interface GovernanceCertification {
+  verified: number;
+  neverConfirmed: number;
+  staleConfirmed: number;
+  freshConfirmed: number;
+  freshnessPct: number;
+  /** 后端本次判定用的阈值天数。必须从响应里取，不能在前端硬编码。 */
+  freshThresholdDays: number;
+}
+
 export interface GovernanceReport {
   quality: GovernanceQuality;
+  certification: GovernanceCertification;
   diff: Record<string, number>;
   cloudResources: number;
   cis: number;
