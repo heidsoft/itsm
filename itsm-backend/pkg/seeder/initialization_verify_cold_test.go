@@ -300,8 +300,13 @@ func TestColdVerifyExpectationsAreDeterministicAndIndependent(t *testing.T) {
 	// 102 = 103 - 工单仪表盘（/tickets/dashboard，2026-11-01）：与「工单统计」
 	//       展示同一批指标且满是假控件，页面已删、存量菜单行由
 	//       migrations/20261101_retire_ticket_dashboard_menu.sql 停用。
-	require.Len(t, menuDefinitions(), 102)
-	require.Len(t, menus, 102)
+	// 101 = 102 - 一级「AI 中心」（/ai/chat，2026-11-21 方案 A）：一级导航按技术
+	//       而非业务任务组织、且与顶栏全局「AI 助手」同页，属重复入口；页面与路由
+	//       零改动，存量一级行由 migrations/20261121_retire_ai_center_menu.sql 停用，
+	//       三个 AI 能力页改为挂在 /tickets、/approvals、/audit-logs 业务父级下
+	//       （条目数不变，只换父子关系与名称）。
+	require.Len(t, menuDefinitions(), 101)
+	require.Len(t, menus, 101)
 	for code, expected := range authz.BuiltinRolePermissionCodes() {
 		require.ElementsMatch(t, expected, grants[code], code)
 	}
