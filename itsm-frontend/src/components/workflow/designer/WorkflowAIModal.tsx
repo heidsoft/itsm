@@ -3,7 +3,7 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Alert,
   App,
@@ -25,6 +25,7 @@ import { getBpmnDesignerApi } from './WorkflowCanvas';
 import {
   BPMNAIApi,
   type BPMNEnterpriseType,
+  type BPMNLintIssue,
   type BPMNProcessType,
   type BPMNTemplateSuggestion,
   type GenerateBPMNResponse,
@@ -51,6 +52,8 @@ interface WorkflowAIModalProps {
   currentXML: string;
   workflowName?: string;
   onApplyGeneratedProcess?: (xml: string) => void;
+  /** 打开时默认选中的 tab（generate / optimize / compliance），由工具栏入口决定 */
+  initialTab?: string;
 }
 
 // 优化建议类型
@@ -79,10 +82,18 @@ export default function WorkflowAIModal({
   currentXML,
   workflowName,
   onApplyGeneratedProcess,
+  initialTab,
 }: WorkflowAIModalProps) {
   const { message } = App.useApp();
   const { t } = useI18n();
-  const [activeTab, setActiveTab] = useState('generate');
+  const [activeTab, setActiveTab] = useState(initialTab ?? 'generate');
+
+  // 入口 tab 变化（工具栏点「优化建议」/「合规检查」）时同步选中态。
+  // 依赖 initialTab + visible：每次打开都按入口重置，切换 tab 时 initialTab 不变不会被打断。
+  useEffect(() => {
+    if (visible) setActiveTab(initialTab ?? 'generate');
+  }, [visible, initialTab]);
+
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [previewLoading, setPreviewLoading] = useState(false);
@@ -97,6 +108,28 @@ export default function WorkflowAIModal({
 
   const getErrorMessage = (error: unknown) =>
     error instanceof Error ? error.message : t('workflow.aiModal.requestFailedRetry');
+
+  // 后端 Lint 的 category 是英文技术枚举（structure/events/tasks/...）。
+  // 面向业务用户必须翻译成中文，不能把引擎字段值直接当标题显示。
+  const categoryLabel = (category: string) => {
+    const keyMap: Record<string, string> = {
+      structure: 'workflow.aiModal.categoryStructure',
+      events: 'workflow.aiModal.categoryEvents',
+      tasks: 'workflow.aiModal.categoryTasks',
+      flows: 'workflow.aiModal.categoryFlows',
+      connectivity: 'workflow.aiModal.categoryConnectivity',
+      gateways: 'workflow.aiModal.categoryGateways',
+      approval: 'workflow.aiModal.categoryApproval',
+    };
+    const key = keyMap[category];
+    return key ? t(key) : t('workflow.aiModal.categoryOther');
+  };
+
+  // Lint 结果防御：后端在边界场景可能返回 200 + null body（与生成路径同源），
+  // 直接 result.issues.map 会抛 "Cannot read properties of null"。统一走此函数。
+  const readLintIssues = (
+    result: { issues?: BPMNLintIssue[] } | null | undefined
+  ): BPMNLintIssue[] => (Array.isArray(result?.issues) ? result.issues : []);
 
   // 生成流程
   const handleGenerateProcess = async (values: GenerateFormValues) => {
@@ -138,7 +171,15 @@ export default function WorkflowAIModal({
   };
 
   const handlePreviewProcess = async () => {
-    const values = await form.validateFields(['processName', 'processDescription', 'processType', 'enterpriseType']);
+    // validateFields 在必填项为空时会 reject；若不捕获，会产生未处理的 Promise rejection，
+    // 且 setPreviewLoading(true) 之后的 finally 逻辑不会覆盖它。校验失败直接返回，
+    // Ant Design 表单自身会在字段下标红提示。
+    let values: GenerateFormValues;
+    try {
+      values = await form.validateFields(['processName', 'processDescription', 'processType', 'enterpriseType']);
+    } catch {
+      return;
+    }
     setPreviewLoading(true);
     setGenerationError('');
     try {
@@ -161,7 +202,12 @@ export default function WorkflowAIModal({
   };
 
   const handleLoadTemplateSuggestions = async () => {
-    const values = await form.validateFields(['processDescription', 'processType']);
+    let values: GenerateFormValues;
+    try {
+      values = await form.validateFields(['processDescription', 'processType']);
+    } catch {
+      return;
+    }
     setTemplateLoading(true);
     try {
       const result = await BPMNAIApi.getTemplateSuggestions({
@@ -198,10 +244,18 @@ export default function WorkflowAIModal({
     try {
       message.info(t('workflow.aiModal.analyzing'));
       const result = await BPMNAIApi.lintBPMN(currentXML);
-      const mappedSuggestions: OptimizationSuggestion[] = result.issues.map((issue, index) => ({
+      const issues = readLintIssues(result);
+      // null / 无 issues 视为「分析未产出结果」，而非「校验通过、0 条建议」——
+      // 后者会让后端异常静默伪装成流程健康。
+      if (issues.length === 0) {
+        setSuggestions([]);
+        message.warning(t('workflow.aiModal.lintEmptyResult'));
+        return;
+      }
+      const mappedSuggestions: OptimizationSuggestion[] = issues.map((issue, index) => ({
         id: `lint-${index}`,
         type: issue.severity === 'error' ? 'error' : issue.severity === 'warning' ? 'warning' : 'optimization',
-        title: issue.category,
+        title: categoryLabel(issue.category),
         description: issue.message,
         elementId: issue.elementId,
         severity: issue.severity === 'error' ? 'high' : issue.severity === 'warning' ? 'medium' : 'low',
@@ -222,10 +276,16 @@ export default function WorkflowAIModal({
     try {
       message.info(t('workflow.aiModal.complianceChecking'));
       const result = await BPMNAIApi.lintBPMN(currentXML);
-      const mappedIssues: ComplianceIssue[] = result.issues.map((issue, index) => ({
+      const issues = readLintIssues(result);
+      if (issues.length === 0) {
+        setComplianceIssues([]);
+        message.warning(t('workflow.aiModal.lintEmptyResult'));
+        return;
+      }
+      const mappedIssues: ComplianceIssue[] = issues.map((issue, index) => ({
         id: `lint-${index}`,
         type: issue.severity === 'error' ? 'violation' : issue.severity === 'warning' ? 'warning' : 'suggestion',
-        rule: issue.category,
+        rule: categoryLabel(issue.category),
         description: issue.message,
         elementId: issue.elementId,
         severity: issue.severity === 'error' ? 'high' : issue.severity === 'warning' ? 'medium' : 'low',

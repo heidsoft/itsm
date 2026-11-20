@@ -26,7 +26,7 @@ interface WorkflowToolbarProps {
   serializeBlocked?: boolean;
   onValidate?: () => void;
   validationIssues?: any[];
-  onAIClick?: () => void;
+  onAIClick?: (tab: 'generate' | 'optimize' | 'compliance') => void;
   onTabChange?: (key: string) => void;
 }
 
@@ -105,19 +105,19 @@ export default function WorkflowToolbar({
       key: 'generate',
       icon: <Rocket />,
       label: t('workflow.designer.toolbarAIGenerate'),
-      onClick: onAIClick
+      onClick: () => onAIClick?.('generate')
     },
     {
       key: 'optimize',
       icon: <Bot />,
       label: t('workflow.designer.toolbarAIOptimize'),
-      onClick: onAIClick
+      onClick: () => onAIClick?.('optimize')
     },
     {
       key: 'check',
       icon: <Bug />,
       label: t('workflow.designer.toolbarAICheck'),
-      onClick: onAIClick
+      onClick: () => onAIClick?.('compliance')
     }
   ];
 

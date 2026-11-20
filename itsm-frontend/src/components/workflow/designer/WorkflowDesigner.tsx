@@ -147,6 +147,7 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
 
   // AI模态框状态
   const [showAIModal, setShowAIModal] = useState(false);
+  const [aiModalTab, setAiModalTab] = useState<'generate' | 'optimize' | 'compliance'>('generate');
 
   const handleSelectionChange = useCallback((selection: BpmnNodeSelection | null) => {
     setSelectedNode(selection);
@@ -911,7 +912,10 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
           serializeBlocked={!!serializeError}
           onValidate={validateWorkflow}
           validationIssues={validationIssues}
-          onAIClick={() => setShowAIModal(true)}
+          onAIClick={(tab) => {
+            setAiModalTab(tab);
+            setShowAIModal(true);
+          }}
           onTabChange={handleTabChange}
         />
 
@@ -1218,6 +1222,7 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
         {/* AI辅助模态框 */}
         <WorkflowAIModal
           visible={showAIModal}
+          initialTab={aiModalTab}
           onClose={() => setShowAIModal(false)}
           currentXML={currentXML}
           workflowName={workflow?.name}
