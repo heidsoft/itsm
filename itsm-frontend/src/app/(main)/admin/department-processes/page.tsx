@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
+  Alert,
   Card,
   Tree,
   Table,
@@ -14,10 +15,11 @@ import {
   Modal,
   Form,
   Input,
+  InputNumber,
+  Switch,
   Row,
   Col,
   Statistic,
-  Alert,
   Tooltip,
   Popconfirm,
 } from 'antd';
@@ -27,13 +29,14 @@ import {
   RefreshCw,
   CheckCircle,
   AlertTriangle,
+  Edit,
+  Trash2,
 } from 'lucide-react';
-import type { ProcessBinding} from '@/lib/api/process-binding-api';
+import type { ProcessBinding, ProcessBindingPayload } from '@/lib/api/process-binding-api';
 import { ProcessBindingApi } from '@/lib/api/process-binding-api';
+import { WorkflowApi } from '@/lib/api/workflow-api';
 import type { Department } from '@/lib/services/department-service';
 import { departmentService } from '@/lib/services/department-service';
-
-
 
 interface DepartmentTreeNode {
   title: string;
@@ -41,6 +44,44 @@ interface DepartmentTreeNode {
   icon: React.ReactNode;
   children?: DepartmentTreeNode[];
 }
+
+// 与流程路由页共用同一套枚举口径，避免两页各说各话
+const businessTypeOptions = [
+  { value: 'ticket', label: '工单' },
+  { value: 'incident', label: '事件' },
+  { value: 'change', label: '变更' },
+  { value: 'service_request', label: '服务请求' },
+  { value: 'problem', label: '问题' },
+  { value: 'release', label: '发布' },
+];
+
+const scenarioOptions = [
+  { value: 'alert_handling', label: '告警处理' },
+  { value: 'change_release', label: '变更发布' },
+  { value: 'emergency_change', label: '紧急变更' },
+  { value: 'code_release', label: '代码发布' },
+  { value: 'expense_approval', label: '费用审批' },
+  { value: 'leave_approval', label: '请假审批' },
+  { value: 'recruitment_approval', label: '招聘审批' },
+];
+
+const categoryOptions = [
+  { value: 'operations', label: '运维' },
+  { value: 'rd', label: '研发' },
+  { value: 'finance', label: '财务' },
+  { value: 'hr', label: '人力' },
+  { value: 'general', label: '综合' },
+];
+
+const getScenarioColor = (scenario?: string) => {
+  if (!scenario) return 'default';
+  if (scenario.includes('alert')) return 'red';
+  if (scenario.includes('change')) return 'blue';
+  if (scenario.includes('release')) return 'green';
+  if (scenario.includes('expense') || scenario.includes('budget')) return 'gold';
+  if (scenario.includes('leave') || scenario.includes('recruitment')) return 'purple';
+  return 'default';
+};
 
 export default function DepartmentProcessPage() {
   const { message } = App.useApp();
@@ -53,6 +94,16 @@ export default function DepartmentProcessPage() {
   const [listLoading, setListLoading] = useState(true);
   const [showInitModal, setShowInitModal] = useState(false);
   const [departmentType, setDepartmentType] = useState('operations');
+  const [initSubmitting, setInitSubmitting] = useState(false);
+
+  // 绑定编辑
+  const [showBindingModal, setShowBindingModal] = useState(false);
+  const [editingBinding, setEditingBinding] = useState<ProcessBinding | null>(null);
+  const [bindingSubmitting, setBindingSubmitting] = useState(false);
+  const [processDefinitions, setProcessDefinitions] = useState<Array<{ key: string; name: string }>>([]);
+  const [form] = Form.useForm();
+  // 换部门时 per-dept 状态必须先重置，慢响应后到不得覆盖新选部门（深链竞态套路）
+  const loadSeqRef = useRef(0);
 
   // Load departments
   useEffect(() => {
@@ -62,9 +113,9 @@ export default function DepartmentProcessPage() {
   // Load department processes when selected
   useEffect(() => {
     if (selectedDeptId) {
-      loadDeptProcesses(selectedDeptId);
       const dept = departments.find(d => d.id === selectedDeptId);
       setSelectedDept(dept || null);
+      loadDeptProcesses(selectedDeptId);
     }
   }, [selectedDeptId, departments]);
 
@@ -79,29 +130,143 @@ export default function DepartmentProcessPage() {
   };
 
   const loadDeptProcesses = async (deptId: number) => {
+    const seq = ++loadSeqRef.current;
     setListLoading(true);
     try {
       const data = await ProcessBindingApi.listDepartmentProcesses(deptId);
+      if (seq !== loadSeqRef.current) return;
       setDeptProcesses(data);
     } catch (error) {
+      if (seq !== loadSeqRef.current) return;
       console.error('Failed to load department processes:', error);
       message.error('加载部门流程失败');
     } finally {
-      setListLoading(false);
+      if (seq === loadSeqRef.current) {
+        setListLoading(false);
+      }
+    }
+  };
+
+  const loadProcessDefinitions = async () => {
+    try {
+      const response = await WorkflowApi.getWorkflows({ page: 1, pageSize: 100 });
+      setProcessDefinitions(response.workflows.map(workflow => ({
+        key: workflow.code,
+        name: workflow.name,
+      })));
+    } catch (error) {
+      console.error('Failed to load process definitions:', error);
     }
   };
 
   const handleInitDefaults = async () => {
-    if (!selectedDeptId) return;
-
+    if (!selectedDeptId || initSubmitting) return;
+    // 防重入必须同步置位：Modal onOk 双击同一帧内穿透 state 异步渲染
+    setInitSubmitting(true);
     try {
       await ProcessBindingApi.initDepartmentProcesses(selectedDeptId, departmentType);
       message.success('部门流程初始化成功');
-      loadDeptProcesses(selectedDeptId);
       setShowInitModal(false);
+      loadDeptProcesses(selectedDeptId);
     } catch (error) {
       console.error('Failed to initialize department processes:', error);
-      message.error('初始化部门流程失败');
+      message.error(error instanceof Error ? error.message : '初始化部门流程失败');
+    } finally {
+      setInitSubmitting(false);
+    }
+  };
+
+  const openCreateBinding = () => {
+    setEditingBinding(null);
+    form.resetFields();
+    setShowBindingModal(true);
+  };
+
+  const openEditBinding = (record: ProcessBinding) => {
+    setEditingBinding(record);
+    form.setFieldsValue({
+      businessType: record.businessType,
+      businessSubType: record.businessSubType,
+      processDefinitionKey: record.processDefinitionKey,
+      priority: record.priority,
+      isActive: record.isActive,
+      scenario: record.scenario,
+      category: record.category,
+    });
+    setShowBindingModal(true);
+  };
+
+  const handleSaveBinding = async () => {
+    if (bindingSubmitting) return;
+    let values: Record<string, unknown>;
+    try {
+      values = await form.validateFields();
+    } catch {
+      // 校验拒绝时错误已在表单项内联展示，不再重复弹提示
+      return;
+    }
+    setBindingSubmitting(true);
+    try {
+      // 后端 UpdateBinding 对 isDefault/priority/isActive/departmentId/teamId/scenario/category
+      // 是无条件 Set（全量覆盖语义），编辑时必须回传全部字段，否则未回传项会被清零
+      const payload: ProcessBindingPayload = {
+        businessType: values.businessType as string,
+        businessSubType: (values.businessSubType as string) || undefined,
+        processDefinitionKey: values.processDefinitionKey as string,
+        priority: (values.priority as number) ?? 0,
+        isActive: (values.isActive as boolean) ?? true,
+        departmentId: selectedDeptId ?? undefined,
+        scenario: (values.scenario as string) || undefined,
+        category: (values.category as string) || undefined,
+      };
+      if (editingBinding) {
+        await ProcessBindingApi.update(editingBinding.id, payload);
+        message.success('流程绑定已更新');
+      } else {
+        await ProcessBindingApi.create(payload);
+        message.success('流程绑定已创建');
+      }
+      setShowBindingModal(false);
+      form.resetFields();
+      setEditingBinding(null);
+      if (selectedDeptId) loadDeptProcesses(selectedDeptId);
+    } catch (error) {
+      console.error('Failed to save department process binding:', error);
+      message.error(error instanceof Error ? error.message : '保存流程绑定失败');
+    } finally {
+      setBindingSubmitting(false);
+    }
+  };
+
+  const handleDeleteBinding = async (id: number) => {
+    try {
+      await ProcessBindingApi.delete(id);
+      message.success('流程绑定已删除');
+      if (selectedDeptId) loadDeptProcesses(selectedDeptId);
+    } catch (error) {
+      console.error('Failed to delete department process binding:', error);
+      message.error(error instanceof Error ? error.message : '删除流程绑定失败');
+    }
+  };
+
+  const handleToggleActive = async (record: ProcessBinding) => {
+    try {
+      await ProcessBindingApi.update(record.id, {
+        businessType: record.businessType,
+        processDefinitionKey: record.processDefinitionKey,
+        businessSubType: record.businessSubType,
+        priority: record.priority,
+        isActive: !record.isActive,
+        departmentId: record.departmentId,
+        teamId: record.teamId,
+        scenario: record.scenario,
+        category: record.category,
+      });
+      message.success(!record.isActive ? '已启用' : '已停用');
+      if (selectedDeptId) loadDeptProcesses(selectedDeptId);
+    } catch (error) {
+      console.error('Failed to toggle department process binding:', error);
+      message.error(error instanceof Error ? error.message : '更新流程绑定失败');
     }
   };
 
@@ -121,17 +286,6 @@ export default function DepartmentProcessPage() {
       }));
   };
 
-  // Scenario color mapping
-  const getScenarioColor = (scenario?: string) => {
-    if (!scenario) return 'default';
-    if (scenario.includes('alert')) return 'red';
-    if (scenario.includes('change')) return 'blue';
-    if (scenario.includes('release')) return 'green';
-    if (scenario.includes('expense') || scenario.includes('budget')) return 'gold';
-    if (scenario.includes('leave') || scenario.includes('recruitment')) return 'purple';
-    return 'default';
-  };
-
   // Table columns
   const columns = [
     {
@@ -140,20 +294,22 @@ export default function DepartmentProcessPage() {
       key: 'scenario',
       render: (scenario: string) => (
         <Tag color={getScenarioColor(scenario)}>
-          {scenario || '默认'}
+          {scenarioOptions.find(s => s.value === scenario)?.label || scenario || '默认'}
         </Tag>
       ),
     },
     {
       title: '业务类型',
-      dataIndex:'businessType',
-      key:'businessType',
-      render: (type: string) => <Tag>{type}</Tag>,
+      dataIndex: 'businessType',
+      key: 'businessType',
+      render: (type: string) => (
+        <Tag>{businessTypeOptions.find(t => t.value === type)?.label || type}</Tag>
+      ),
     },
     {
       title: '流程定义',
-      dataIndex:'processDefinitionKey',
-      key:'processDefinitionKey',
+      dataIndex: 'processDefinitionKey',
+      key: 'processDefinitionKey',
       render: (key: string) => <Tag color="cyan">{key}</Tag>,
     },
     {
@@ -165,10 +321,41 @@ export default function DepartmentProcessPage() {
       title: '状态',
       dataIndex: 'isActive',
       key: 'isActive',
-      render: (active: boolean) => (
-        <Tag icon={active ? <CheckCircle /> : <AlertTriangle />} color={active ? 'success' : 'error'}>
-          {active ? '启用' : '停用'}
-        </Tag>
+      render: (active: boolean, record: ProcessBinding) => (
+        <Tooltip title={active ? '点击停用' : '点击启用'}>
+          <Button
+            type="text"
+            size="small"
+            aria-label={active ? '停用绑定' : '启用绑定'}
+            onClick={() => handleToggleActive(record)}
+          >
+            <Tag icon={active ? <CheckCircle /> : <AlertTriangle />} color={active ? 'success' : 'error'}>
+              {active ? '启用' : '停用'}
+            </Tag>
+          </Button>
+        </Tooltip>
+      ),
+    },
+    {
+      title: '操作',
+      key: 'actions',
+      render: (_: unknown, record: ProcessBinding) => (
+        <Space>
+          <Tooltip title="编辑">
+            <Button aria-label="编辑绑定" size="small" icon={<Edit />} onClick={() => openEditBinding(record)} />
+          </Tooltip>
+          <Popconfirm
+            title="确定删除这条流程绑定吗？"
+            okText="删除"
+            cancelText="取消"
+            okType="danger"
+            onConfirm={() => handleDeleteBinding(record.id)}
+          >
+            <Tooltip title="删除">
+              <Button aria-label="删除绑定" size="small" danger icon={<Trash2 />} />
+            </Tooltip>
+          </Popconfirm>
+        </Space>
       ),
     },
   ];
@@ -176,18 +363,12 @@ export default function DepartmentProcessPage() {
   // Statistics
   const stats = {
     total: deptProcesses.length,
-    active: deptProcesses.filter(p => (p as any).isActive).length,
+    active: deptProcesses.filter(p => p.isActive).length,
     scenarios: new Set(deptProcesses.map(p => p.scenario).filter(Boolean)).size,
   };
 
   return (
     <div className="space-y-6">
-      {/* 关联页面入口 */}
-      <Alert
-        type="info"
-        showIcon
-        title="部门流程配置用于查看各部门已绑定的流程"
-      />
       <Card title="部门流程配置">
         <Row gutter={24}>
           {/* Department Tree */}
@@ -253,13 +434,23 @@ export default function DepartmentProcessPage() {
                     <Button
                       type="primary"
                       icon={<Plus />}
-                      onClick={() => setShowInitModal(true)}
+                      onClick={openCreateBinding}
+                    >
+                      新增绑定
+                    </Button>
+                    <Button
+                      icon={<Plus />}
+                      onClick={() => {
+                        // 打开前重置为默认类型，避免上次选择残留
+                        setDepartmentType('operations');
+                        setShowInitModal(true);
+                      }}
                     >
                       初始化默认流程模板
                     </Button>
                     <Button
                       icon={<RefreshCw />}
-                      onClick={() => loadDeptProcesses(selectedDeptId)}
+                      onClick={() => selectedDeptId && loadDeptProcesses(selectedDeptId)}
                     >
                       刷新
                     </Button>
@@ -274,6 +465,7 @@ export default function DepartmentProcessPage() {
                     loading={listLoading}
                     rowKey="id"
                     pagination={false}
+                    locale={{ emptyText: '该部门暂无流程绑定' }}
                   />
                 </Card>
               </>
@@ -289,12 +481,82 @@ export default function DepartmentProcessPage() {
         </Row>
       </Card>
 
+      {/* Binding Create/Edit Modal */}
+      <Modal
+        title={editingBinding ? '编辑流程绑定' : '新增流程绑定'}
+        open={showBindingModal}
+        onCancel={() => {
+          setShowBindingModal(false);
+          setEditingBinding(null);
+          form.resetFields();
+        }}
+        onOk={handleSaveBinding}
+        confirmLoading={bindingSubmitting}
+        okText="保存"
+        cancelText="取消"
+        afterOpenChange={(open) => {
+          // 首次打开时拉流程定义选项；deferred 到动画后避免阻塞首帧
+          if (open && processDefinitions.length === 0) {
+            loadProcessDefinitions();
+          }
+        }}
+      >
+        <Form form={form} layout="vertical" className="mt-4">
+          <Form.Item label="所属部门">
+            <Input disabled value={selectedDept ? `${selectedDept.name} (${selectedDept.code})` : ''} />
+          </Form.Item>
+          <Form.Item
+            name="businessType"
+            label="业务类型"
+            rules={[{ required: true, message: '请选择业务类型' }]}
+          >
+            <Select placeholder="选择业务类型" options={businessTypeOptions} />
+          </Form.Item>
+          <Form.Item name="processDefinitionKey" label="流程定义" rules={[{ required: true, message: '请选择流程定义' }]}>
+            <Select
+              showSearch
+              optionFilterProp="label"
+              placeholder="选择流程定义"
+              loading={processDefinitions.length === 0}
+              options={processDefinitions.map(pd => ({ value: pd.key, label: `${pd.name} (${pd.key})` }))}
+            />
+          </Form.Item>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item name="priority" label="优先级" initialValue={100} tooltip="数字越小优先级越高">
+                <InputNumber min={0} max={1000} style={{ width: '100%' }} />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="isActive" label="启用" valuePropName="checked" initialValue={true}>
+                <Switch />
+              </Form.Item>
+            </Col>
+          </Row>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item name="scenario" label="场景">
+                <Select allowClear placeholder="全部场景" options={scenarioOptions} />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="category" label="部门类别">
+                <Select allowClear placeholder="全部类别" options={categoryOptions} />
+              </Form.Item>
+            </Col>
+          </Row>
+        </Form>
+      </Modal>
+
       {/* Initialize Modal */}
       <Modal
         title="初始化部门流程"
         open={showInitModal}
         onCancel={() => setShowInitModal(false)}
         onOk={handleInitDefaults}
+        confirmLoading={initSubmitting}
+        okText="初始化"
+        cancelText="取消"
       >
         <Alert
           title="将为所选部门创建默认流程模板（不会影响已有配置）"
