@@ -733,13 +733,13 @@ export default function WorkflowNodeInspector({
             <div>
               <Text strong className="text-sm flex items-center mb-2">
                 <UserCheck className="w-3.5 h-3.5 mr-1" />
-                受理人 (assignee)
+                指定处理人
                 <Tag color="blue" className="ml-2 text-xs">单人</Tag>
               </Text>
               <Select
                 allowClear
                 showSearch
-                placeholder="选择受理人（单一用户）"
+                placeholder="选择处理人（单选）"
                 value={currentAssignee || undefined}
                 onChange={value => apply({ assignee: value || '' })}
                 className="w-full"
@@ -759,11 +759,11 @@ export default function WorkflowNodeInspector({
             <div className="mt-3">
               <Text strong className="text-sm flex items-center mb-2">
                 <User className="w-3.5 h-3.5 mr-1" />
-                候选人 (candidateUsers)
+                可选处理人
               </Text>
               <Select
                 mode="multiple"
-                placeholder="选择候选人（多选）"
+                placeholder="选择可选处理人（多选）"
                 value={currentCandidateUsers}
                 onChange={values => apply({ candidateUsers: toCsv(values) })}
                 onSearch={value => {
@@ -782,7 +782,7 @@ export default function WorkflowNodeInspector({
                 size="small"
               />
               <Text type="secondary" className="text-xs mt-1 block">
-                任一候选人可处理该任务
+                这些人中任意一位都能领取并处理该任务
               </Text>
             </div>
 
@@ -791,7 +791,7 @@ export default function WorkflowNodeInspector({
               <Space>
                 <Text strong className="text-sm flex items-center">
                   <Users className="w-3.5 h-3.5 mr-1" />
-                  候选组 (candidateGroups)
+                  审批组
                 </Text>
                 <Badge
                   count={currentCandidateGroups.length}
@@ -858,7 +858,7 @@ export default function WorkflowNodeInspector({
             <div>
               <Text strong className="text-sm flex items-center mb-2">
                 <FileText className="w-3.5 h-3.5 mr-1" />
-                表单键 (formKey)
+                表单键
               </Text>
               <DebouncedInput
                 placeholder="例如：approve_form_v1"
@@ -872,7 +872,7 @@ export default function WorkflowNodeInspector({
             <div className="mt-2">
               <Text strong className="text-sm flex items-center mb-2">
                 <Hash className="w-3.5 h-3.5 mr-1" />
-                优先级 (priority)
+                优先级
               </Text>
               <DebouncedInput
                 type="number"
@@ -889,7 +889,7 @@ export default function WorkflowNodeInspector({
             <div className="mt-2">
               <Text strong className="text-sm flex items-center mb-2">
                 <Clock className="w-3.5 h-3.5 mr-1" />
-                截止时间 (dueDate)
+                截止时间
               </Text>
               <DebouncedInput
                 placeholder="ISO 8601 格式，例如 2026-09-20T18:00:00+08:00"
@@ -903,7 +903,7 @@ export default function WorkflowNodeInspector({
             <div className="mt-2">
               <Text strong className="text-sm flex items-center mb-2">
                 <Timer className="w-3.5 h-3.5 mr-1" />
-                提醒时间 (followUpDate)
+                提醒时间
               </Text>
               <DebouncedInput
                 placeholder="ISO 8601 格式，例如 2026-09-19T09:00:00+08:00"
@@ -1170,7 +1170,7 @@ export default function WorkflowNodeInspector({
             <div>
               <Text strong className="text-sm flex items-center mb-2">
                 <Database className="w-3.5 h-3.5 mr-1" />
-                规则引用 (ruleRef)
+                规则引用
               </Text>
               <DebouncedInput
                 value={currentRuleRef}
@@ -1231,7 +1231,7 @@ export default function WorkflowNodeInspector({
             <div>
               <Text strong className="text-sm flex items-center mb-2">
                 <MessageCircle className="w-3.5 h-3.5 mr-1" />
-                消息引用 (messageRef)
+                消息引用
               </Text>
               <DebouncedInput
                 value={currentMessageRef}
@@ -1244,7 +1244,7 @@ export default function WorkflowNodeInspector({
             <div className="mt-2">
               <Text strong className="text-sm flex items-center mb-2">
                 <Settings className="w-3.5 h-3.5 mr-1" />
-                操作 (operation)
+                操作
               </Text>
               <DebouncedInput
                 value={currentOperation}
@@ -1264,7 +1264,7 @@ export default function WorkflowNodeInspector({
             <div>
               <Text strong className="text-sm flex items-center mb-2">
                 <MessageCircle className="w-3.5 h-3.5 mr-1" />
-                消息引用 (messageRef)
+                消息引用
               </Text>
               <DebouncedInput
                 value={currentMessageRef}
@@ -1516,7 +1516,7 @@ export default function WorkflowNodeInspector({
             <div>
               <Text strong className="text-sm flex items-center mb-2">
                 <MessageCircle className="w-3.5 h-3.5 mr-1" />
-                消息引用 (messageRef)
+                消息引用
               </Text>
               <DebouncedInput
                 value={currentMessageRef}
@@ -1536,7 +1536,7 @@ export default function WorkflowNodeInspector({
             <div>
               <Text strong className="text-sm flex items-center mb-2">
                 <Radio className="w-3.5 h-3.5 mr-1" />
-                信号引用 (signalRef)
+                信号引用
               </Text>
               <DebouncedInput
                 value={currentSignalRef}
@@ -1556,7 +1556,7 @@ export default function WorkflowNodeInspector({
             <div>
               <Text strong className="text-sm flex items-center mb-2">
                 <AlertTriangle className="w-3.5 h-3.5 mr-1" />
-                错误代码 (errorCode)
+                错误代码
               </Text>
               <DebouncedInput
                 value={currentErrorCode}
@@ -1576,7 +1576,7 @@ export default function WorkflowNodeInspector({
             <div>
               <Text strong className="text-sm flex items-center mb-2">
                 <AlertTriangle className="w-3.5 h-3.5 mr-1" />
-                升级代码 (escalationCode)
+                升级代码
               </Text>
               <DebouncedInput
                 value={currentEscalationCode}
