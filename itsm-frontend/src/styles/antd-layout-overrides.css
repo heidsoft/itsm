@@ -140,6 +140,24 @@
   overflow: visible !important;
 }
 
+/* 深色模式：收缩态子菜单 flyout portal 到 body，需要显式给暗色背景与文字色，
+   否则会渲染成白底块（Menu 组件不再写死 theme="light"，由 ConfigProvider 驱动，
+   但 portal 容器脱离了 Sidebar 的 CSS Module 作用域）。 */
+html.dark .ant-menu-submenu-popup .ant-menu,
+html.dark .ant-menu-submenu-popup {
+  background-color: var(--color-bg-elevated) !important;
+  color: var(--color-text-primary) !important;
+}
+html.dark .ant-menu-submenu-popup .ant-menu-item,
+html.dark .ant-menu-submenu-popup .ant-menu-submenu-title {
+  color: var(--color-text-primary) !important;
+}
+html.dark .ant-menu-submenu-popup .ant-menu-item:hover,
+html.dark .ant-menu-submenu-popup .ant-menu-submenu-title:hover {
+  background-color: var(--color-bg-active) !important;
+  color: var(--color-primary-light) !important;
+}
+
 /* ========== Breadcrumb 面包屑 ========== */
 .ant-breadcrumb {
   margin-bottom: 16px;

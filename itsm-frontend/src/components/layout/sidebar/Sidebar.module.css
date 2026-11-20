@@ -290,3 +290,17 @@
   background-color: var(--color-primary-soft) !important;
   color: var(--color-primary-light) !important;
 }
+
+/* 侧栏底部用户名/角色：亮色下有硬编码深色字，暗色侧栏上不可读，需跟随主题变量 */
+:global(html.dark) .userName {
+  color: var(--color-text-primary);
+}
+
+:global(html.dark) .userRole {
+  color: var(--color-text-muted);
+}
+
+:global(html.dark) .userAvatar {
+  background-color: var(--color-primary-soft);
+  color: var(--color-primary-light);
+}

@@ -150,7 +150,9 @@ export const MenuItems: React.FC<MenuItemsProps> = ({ items, selectedKeys, onMen
       inlineIndent={16}
       selectedKeys={selectedKeys}
       items={renderMenuItems(items, onMenuClick)}
-      theme="light"
+      // 不写死亮色主题：让 Menu 继承 AntdProvider 的 ConfigProvider
+      // （darkAlgorithm 跟随 useTheme().isDark）。写死亮色会让收缩态
+      // submenu popup 与 inline 二级菜单在深色模式下出现白底块。
       className={styles.customMenu}
       getPopupContainer={() => document.body}
     />

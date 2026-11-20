@@ -75,6 +75,14 @@ export default function RootLayout({
   return (
     <html lang="zh-CN" suppressHydrationWarning>
       <head>
+        {/* 主题预同步：必须在 SSR 首帧前决定 .dark，避免深色用户刷新时先白后暗（FOUC）。
+            ThemeHtmlClassSync 用 useEffect 同步，挂载晚于首帧，无法防止闪烁。
+            storageKey 与 design-system/theme.tsx 的 itsm-theme 保持一致。 */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var m=localStorage.getItem('itsm-theme');var d=m==='dark'||(m!=='light'&&window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches);var r=document.documentElement;if(d){r.classList.add('dark');r.style.colorScheme='dark';}else{r.style.colorScheme='light';}}catch(e){}})();`,
+          }}
+        />
         {/* 安全相关头部 */}
         <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
         <meta name="theme-color" content="#1890ff" />

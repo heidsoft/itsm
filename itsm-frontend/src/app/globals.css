@@ -19,7 +19,7 @@
 
 .ant-tooltip-inner {
   background-color: var(--color-bg-elevated) !important;
-  color: var(--color-text-inverse) !important;
+  color: var(--color-text-primary) !important;
   border-radius: 4px !important;
   padding: 8px 12px !important;
 }
@@ -36,7 +36,7 @@
 
 .ant-popover-inner {
   background-color: var(--color-bg-elevated) !important;
-  color: var(--color-text-inverse) !important;
+  color: var(--color-text-primary) !important;
   border-radius: 4px !important;
 }
 
@@ -52,7 +52,7 @@
 
 .ant-dropdown-menu {
   background-color: var(--color-bg-elevated) !important;
-  color: var(--color-text-inverse) !important;
+  color: var(--color-text-primary) !important;
   border-radius: 4px !important;
   border: 1px solid rgba(255, 255, 255, 0.1) !important;
   box-shadow: 0 6px 16px 0 rgba(0, 0, 0, 0.08), 0 3px 6px -4px rgba(0, 0, 0, 0.12), 0 9px 28px 8px rgba(0, 0, 0, 0.05) !important;
@@ -60,18 +60,18 @@
 
 .ant-dropdown-menu-item,
 .ant-dropdown-menu-submenu-title {
-  color: var(--color-text-inverse) !important;
+  color: var(--color-text-primary) !important;
 }
 
 .ant-dropdown-menu-item:hover,
 .ant-dropdown-menu-submenu-title:hover {
   background-color: rgba(255, 255, 255, 0.1) !important;
-  color: var(--color-text-inverse) !important;
+  color: var(--color-text-primary) !important;
 }
 
 .ant-dropdown-menu-item-selected {
   background-color: rgba(255, 255, 255, 0.15) !important;
-  color: var(--color-text-inverse) !important;
+  color: var(--color-text-primary) !important;
 }
 
 .ant-dropdown-menu-item.danger {
