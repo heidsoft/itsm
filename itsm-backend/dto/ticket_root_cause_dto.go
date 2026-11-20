@@ -17,7 +17,12 @@ type TicketRootCauseAnalysisResponse struct {
 	ConfidenceScore float64                   `json:"confidenceScore" example:"0.85"`
 	AnalysisMethod  string                    `json:"analysisMethod" example:"automatic"`
 	PromptVersion   string                    `json:"promptVersion" example:"ticket-rca-v1"`
-	GeneratedAt     time.Time                 `json:"generatedAt" example:"2024-01-01T00:00:00Z"`
+	// Degraded 标注「这条结论没有模型参与」。降级结果本身不丢人，冒充模型结果才丢人：
+	// LLM 超时/不可用而回退启发式时，必须置 true 并随响应透出，调用方不得按模型产出来解读。
+	// 与 IncidentAIAnalysisResponse / CreateTicketByAI 同一契约。
+	Degraded       bool      `json:"degraded"`
+	DegradedReason string    `json:"degradedReason,omitempty"`
+	GeneratedAt    time.Time `json:"generatedAt" example:"2024-01-01T00:00:00Z"`
 }
 
 // IncidentAIAnalysisResponse is the production contract for AI-assisted

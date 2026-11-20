@@ -30,6 +30,9 @@ export interface RCAAnalysis {
   confidenceScore: number;
   analysisMethod: string;
   createdAt: string;
+  /** 后端在 LLM 超时/不可用时回退启发式会置 true；UI 不得把降级结果当模型产出展示。 */
+  degraded?: boolean;
+  degradedReason?: string;
 }
 
 export interface AIChatResponse {

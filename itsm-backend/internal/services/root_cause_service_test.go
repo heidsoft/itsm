@@ -10,6 +10,7 @@ import (
 
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
+	"itsm-backend/ent/rootcauseanalysis"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -21,9 +22,14 @@ import (
 type mockRCALLMProvider struct {
 	response string
 	err      error
+	// onChat 在 Chat 返回前触发，用于模拟「LLM 调用期间请求 ctx 被取消」的时序。
+	onChat func()
 }
 
 func (m mockRCALLMProvider) Chat(_ context.Context, _ string, _ []LLMMessage) (string, error) {
+	if m.onChat != nil {
+		m.onChat()
+	}
 	return m.response, m.err
 }
 
@@ -117,6 +123,88 @@ func TestAnalyzeTicket_NoGateway_FallsBackToHeuristic(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, resp.RootCauses, 1)
 	assert.Equal(t, "系统资源不足", resp.RootCauses[0].Title)
+}
+
+// 吞降级标记回归锁：LLM 调用失败时必须显式降级，而不是把启发式结果当模型产出来报。
+// 修复前 AnalyzeTicket 写成 `rootCauses, _, _ :=`，Degraded 恒为 false、
+// AnalysisMethod 恒为 "automatic"，调用方无从区分「模型真产出」与「兜底模板」。
+func TestAnalyzeTicket_LLMFailureIsExplicitlyDegraded(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", testDSN())
+	defer client.Close()
+
+	ticketID := createRCATicket(t, client, 1, "critical")
+
+	gateway := NewLLMGateway(mockRCALLMProvider{err: context.DeadlineExceeded}, nil, nil, "test")
+	svc := NewRootCauseService(client, zaptest.NewLogger(t).Sugar())
+	svc.SetGateway(gateway)
+
+	resp, err := svc.AnalyzeTicket(context.Background(), ticketID, 1)
+	require.NoError(t, err, "LLM 失败属可预期降级，不得让请求失败")
+	assert.True(t, resp.Degraded, "LLM 失败后必须置 degraded=true")
+	assert.Equal(t, "llm_unavailable_or_invalid", resp.DegradedReason)
+	assert.Equal(t, "heuristic", resp.AnalysisMethod, "降级路径的 method 不得写成 automatic")
+	assert.NotEmpty(t, resp.RootCauses, "降级仍应产出启发式候选根因")
+}
+
+// LLM 成功路径必须 degraded=false 且 method=llm —— 与降级路径对称，
+// 防止「反向修复」把恒 true 固化成新缺陷。
+func TestAnalyzeTicket_LLMSuccessIsNotDegraded(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", testDSN())
+	defer client.Close()
+
+	ticketID := createRCATicket(t, client, 1, "high")
+
+	gateway := NewLLMGateway(mockRCALLMProvider{response: `{"root_causes": [
+		{"title": "连接池配置过小", "description": "maxActive=10 不足", "confidence": 0.9, "category": "software"}
+	]}`}, nil, nil, "test")
+	svc := NewRootCauseService(client, zaptest.NewLogger(t).Sugar())
+	svc.SetGateway(gateway)
+
+	resp, err := svc.AnalyzeTicket(context.Background(), ticketID, 1)
+	require.NoError(t, err)
+	assert.False(t, resp.Degraded, "LLM 正常产出不得标记降级")
+	assert.Empty(t, resp.DegradedReason)
+	assert.Equal(t, "llm", resp.AnalysisMethod)
+	assert.Equal(t, "连接池配置过小", resp.RootCauses[0].Title)
+}
+
+// 请求 ctx 在分析过程中被取消时仍必须落库成功。
+// 事故链路：LLM 超时往往伴随请求 ctx 取消 → 旧实现用 Save(ctx) 必然失败 →
+// "failed to save analysis: context canceled" → 未分类 → HTTP 500（实测 500/30s）。
+// 落库改用 context.WithoutCancel + 短超时后，已算出的结论不再因客户端断开而丢弃。
+//
+// 时序建模：工单读取用的是"活"的 ctx（此时未取消），取消发生在 LLM 调用期间，
+// 因此 mock provider 内部触发 cancel —— 这才是生产真实顺序。
+func TestAnalyzeTicket_CancelledDuringAnalysisStillPersists(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", testDSN())
+	defer client.Close()
+
+	ticketID := createRCATicket(t, client, 1, "critical")
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	// LLM 请求进行到一半，上游超时把请求 ctx 掐掉
+	cancelling := mockRCALLMProvider{
+		err:      context.DeadlineExceeded,
+		onChat:   func() { cancel() },
+		response: "",
+	}
+	gateway := NewLLMGateway(cancelling, nil, nil, "test")
+	svc := NewRootCauseService(client, zaptest.NewLogger(t).Sugar())
+	svc.SetGateway(gateway)
+
+	resp, err := svc.AnalyzeTicket(ctx, ticketID, 1)
+	require.NoError(t, err, "ctx 在分析中被取消不得让整单分析失败")
+
+	// 必须真的落库，而不是只在内存里编了个响应
+	saved, qerr := client.RootCauseAnalysis.Query().
+		Where(rootcauseanalysis.TicketIDEQ(ticketID)).
+		All(context.Background())
+	require.NoError(t, qerr)
+	require.Len(t, saved, 1, "分析结果必须落库（这是旧实现 500 的直接来源）")
+	assert.Equal(t, "heuristic", saved[0].AnalysisMethod)
+	assert.True(t, resp.Degraded)
 }
 
 // 租户隔离——跨租户查询必须失败，不允许返回其他租户的工单分析。

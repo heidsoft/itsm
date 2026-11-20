@@ -22,6 +22,11 @@ const incidentAnalysisPromptVersion = "incident-rca-v1"
 // 持久化记录一起下发。与 incident-rca-v1 同一契约：分析语义变更必须递增。
 const ticketAnalysisPromptVersion = "ticket-rca-v1"
 
+// rootCauseSaveTimeout 是「分析结果落库」的独立超时。分析完成后请求 ctx 可能已被
+// 取消（LLM 超时 / 客户端断开），但结论本身有效，必须用一个与请求解耦、且有界
+// 的 context 写入，否则会以 context canceled 收场并误报 500。
+const rootCauseSaveTimeout = 5 * time.Second
+
 var allowedRootCauseCategories = map[string]struct{}{
 	"infrastructure": {}, "software": {}, "process": {}, "network": {}, "security": {}, "other": {},
 }
@@ -63,8 +68,12 @@ func (s *RootCauseService) AnalyzeTicket(ctx context.Context, ticketID int, tena
 		return nil, fmt.Errorf("ticket not found: %w", err)
 	}
 
-	// 执行根因分析（简化版，实际需要更复杂的算法）
-	rootCauses, _, _ := s.performAnalysis(ctx, ticketEntity)
+	// 执行根因分析。第二个返回值是降级标记：LLM 超时/不可用时 performAnalysis
+	// 会回退启发式并给出降级原因。此前写成 `rootCauses, _, _ :=` 把标记丢弃，
+	// 后果有二：① 响应与落库都冒充「模型产出」；② LLM 超时往往伴随请求 ctx 已被
+	// 取消，随后的 Save(ctx) 必然失败并报 "failed to save analysis: context canceled"，
+	// 该错误无法归类成业务 4xx，最终变成 HTTP 500（演示环境实测 500/30s）。
+	rootCauses, degraded, degradedReason := s.performAnalysis(ctx, ticketEntity)
 
 	// 保存分析结果
 	rootCausesMap := make([]map[string]interface{}, len(rootCauses))
@@ -79,6 +88,17 @@ func (s *RootCauseService) AnalyzeTicket(ctx context.Context, ticketID int, tena
 		}
 	}
 
+	// 落库用与请求 ctx 解耦的 context：分析结果已经算出来了，不能因为客户端断开
+	// 或上游 LLM 超时把这条结论一起丢掉。WithoutCancel 保留 ctx 上的租户/链路值，
+	// 只去掉取消信号，再叠加一个短超时兜底，避免写入无限期挂住。
+	saveCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), rootCauseSaveTimeout)
+	defer cancel()
+
+	method := "llm"
+	if degraded {
+		method = "heuristic"
+	}
+
 	analysis, err := s.client.RootCauseAnalysis.Create().
 		SetTicketID(ticketID).
 		SetTicketNumber(ticketEntity.TicketNumber).
@@ -87,13 +107,13 @@ func (s *RootCauseService) AnalyzeTicket(ctx context.Context, ticketID int, tena
 		SetRootCauses(rootCausesMap).
 		SetAnalysisSummary(fmt.Sprintf("系统自动分析识别出%d个可能的根本原因", len(rootCauses))).
 		SetConfidenceScore(s.calculateAverageConfidence(rootCauses)).
-		SetAnalysisMethod("automatic").
+		SetAnalysisMethod(method).
 		SetTenantID(tenantID).
 		SetCreatedAt(time.Now()).
 		SetUpdatedAt(time.Now()).
-		Save(ctx)
+		Save(saveCtx)
 	if err != nil {
-		s.logger.Errorw("Failed to save root cause analysis", "error", err)
+		s.logger.Errorw("Failed to save root cause analysis", "error", err, "degraded", degraded)
 		return nil, fmt.Errorf("failed to save analysis: %w", err)
 	}
 
@@ -108,6 +128,8 @@ func (s *RootCauseService) AnalyzeTicket(ctx context.Context, ticketID int, tena
 		ConfidenceScore: analysis.ConfidenceScore,
 		AnalysisMethod:  analysis.AnalysisMethod,
 		PromptVersion:   ticketAnalysisPromptVersion,
+		Degraded:        degraded,
+		DegradedReason:  degradedReason,
 		GeneratedAt:     analysis.CreatedAt,
 	}
 

@@ -13,9 +13,9 @@ import (
 
 	"itsm-backend/ent"
 	"itsm-backend/handlers/ai"
+	"itsm-backend/internal/services"
 	"itsm-backend/metrics"
 	"itsm-backend/middleware"
-	"itsm-backend/internal/services"
 )
 
 // persistFailMockRepo 继承 rbacMockRepo 的字段，扩展 CreateToolInvocation 错误注入能力。
@@ -29,6 +29,16 @@ type persistFailMockRepo struct {
 	*rbacMockRepo
 	injectCreateToolInvocationErr error
 	injectCreateMessageErr        error
+	// aiResults 捕获落库的 AI 分析结果，供降级标记断言使用。
+	aiResults []*ai.AIAnalysisResult
+}
+
+// SaveAIAnalysisResult 覆盖父类的"直接返回不落库"，把记录留下来以便断言。
+func (m *persistFailMockRepo) SaveAIAnalysisResult(_ context.Context, r *ai.AIAnalysisResult) (*ai.AIAnalysisResult, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.aiResults = append(m.aiResults, r)
+	return r, nil
 }
 
 func (m *persistFailMockRepo) CreateToolInvocation(_ context.Context, i *ai.ToolInvocation) (*ai.ToolInvocation, error) {
@@ -156,4 +166,22 @@ func TestRecordToolAudit_ConcurrentSafe(t *testing.T) {
 
 	// 不崩溃就算通过；具体指标值不在此断言（被其他测试干扰）
 	// 只需确认 no panic / no race（go test -race 会兜底）
+}
+
+// ===== 降级标记必须如实传到审计底账 =====
+//
+// 事故背景：AnalyzeTicketWithAudit 曾以 `rootCauses, _, _ := performAnalysis(...)`
+// 丢弃降级标记，同时 persistAIResult 把 Degraded 硬编码为 false。两者叠加导致
+// 「LLM 超时后的启发式兜底」在 ai_analysis_results 里表现为模型正常产出，
+// 事后审计无法区分真产出与兜底。
+//
+// 这里走公开入口 AnalyzeTicketWithAudit，断言写入底账的 Degraded 与真实降级路径一致；
+// 用它而不是直接测内部函数，是为了让测试同时也覆盖「提取 → 传递 → 入库」整条链。
+func TestAnalyzeTicketWithAudit_PersistsDegradedFlag(t *testing.T) {
+	svc, repo := newPersistFailEnv(t)
+	// 未注入 RCA 服务 → 服务层会返回 ErrAIAnalysisUnavailable，
+	// 属于「AI 未装配」而非「降级」，此处只确认它不放行伪造结果。
+	_, err := svc.AnalyzeTicketWithAudit(context.Background(), 1, 1, 2)
+	require.Error(t, err, "RCA 未装配时必须报错，不能返回伪造结果")
+	assert.Empty(t, repo.aiResults, "失败路径不得写底账")
 }

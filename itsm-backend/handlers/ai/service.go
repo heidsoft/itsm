@@ -877,17 +877,27 @@ func (s *Service) DeleteConversation(ctx context.Context, id, tenantID, userID i
 // Root Cause Analysis
 
 func (s *Service) AnalyzeTicket(ctx context.Context, ticketID int, tenantID int) (interface{}, error) {
+	if s.rca == nil {
+		return nil, dto.ErrAIAnalysisUnavailable
+	}
 	return s.rca.AnalyzeTicket(ctx, ticketID, tenantID)
 }
 
 func (s *Service) AnalyzeTicketWithAudit(ctx context.Context, ticketID int, tenantID int, userID int) (interface{}, error) {
+	// RCA 未装配时必须报错而不是解引用 nil：AnalyzeIncident 早有此守卫，
+	// AnalyzeTicket 之前直接 s.rca.AnalyzeTicket(...)，装配缺失时会 panic，
+	// 表现为 HTTP 500 而非可诊断的错误分类。
+	if s.rca == nil {
+		return nil, dto.ErrAIAnalysisUnavailable
+	}
 	result, err := s.rca.AnalyzeTicket(ctx, ticketID, tenantID)
 	if err != nil {
 		return nil, err
 	}
 	prompt := fmt.Sprintf("AnalyzeTicket ticketID=%d", ticketID)
 	confidence, promptVersion, _ := aiResultTrace(result)
-	s.persistAIResult(ctx, "rca", tenantID, userID, prompt+" promptVersion="+promptVersion, result, "", 0, 0, &confidence)
+	degraded, degradedReason := aiResultDegrade(result)
+	s.persistAIResult(ctx, "rca", tenantID, userID, prompt+" promptVersion="+promptVersion, result, "", 0, 0, &confidence, degraded, degradedReason)
 	return result, nil
 }
 
@@ -905,8 +915,23 @@ func (s *Service) AnalyzeIncidentWithAudit(ctx context.Context, incidentID int, 
 	}
 	prompt := fmt.Sprintf("AnalyzeIncident incidentID=%d", incidentID)
 	confidence, promptVersion, _ := aiResultTrace(result)
-	s.persistAIResult(ctx, "incident_impact", tenantID, userID, prompt+" promptVersion="+promptVersion, result, "", 0, 0, &confidence)
+	degraded, degradedReason := aiResultDegrade(result)
+	s.persistAIResult(ctx, "incident_impact", tenantID, userID, prompt+" promptVersion="+promptVersion, result, "", 0, 0, &confidence, degraded, degradedReason)
 	return result, nil
+}
+
+// aiResultDegrade 提取分析结果是否走了降级路径。落库时把降级标记一起写进去，
+// 否则 ai_analysis_results 里全是 Degraded=false，事后审计无法区分
+// 「模型真产出」与「LLM 超时后的启发式兜底」。
+func aiResultDegrade(result interface{}) (degraded bool, reason string) {
+	switch r := result.(type) {
+	case *dto.TicketRootCauseAnalysisResponse:
+		return r.Degraded, r.DegradedReason
+	case *dto.IncidentAIAnalysisResponse:
+		return r.Degraded, r.DegradedReason
+	default:
+		return false, ""
+	}
 }
 
 // aiResultTrace 从 RCA/事件分析响应中提取置信度与 prompt 版本，供持久化与底账使用。
@@ -1514,7 +1539,7 @@ func parseDate(s string) time.Time {
 // persistAIResult serializes and saves an AI analysis result to the database.
 // Errors are logged but not propagated — analysis results should still be returned
 // to the caller even if persistence fails.
-func (s *Service) persistAIResult(ctx context.Context, analysisType string, tenantID, userID int, prompt string, result interface{}, model string, latencyMs, totalTokens int, confidenceScore *float64) {
+func (s *Service) persistAIResult(ctx context.Context, analysisType string, tenantID, userID int, prompt string, result interface{}, model string, latencyMs, totalTokens int, confidenceScore *float64, degraded bool, degradedReason string) {
 	if s.repo == nil {
 		return
 	}
@@ -1530,7 +1555,15 @@ func (s *Service) persistAIResult(ctx context.Context, analysisType string, tena
 		RequestPrompt: prompt,
 		ResultJSON:    string(resultJSON),
 		Model:         model,
-		Degraded:      false,
+		// 降级标记如实入库：此处曾硬编码 false，使启发式兜底结果在审计底账里
+		// 表现为模型正常产出。降级原因不进列（表无 degraded_reason 字段，
+		// 加列需改 schema + 迁移），改随日志留存，避免为一条标记动表结构。
+		Degraded: degraded,
+	}
+	if degraded {
+		s.logger.Warnw("persistAIResult: degraded analysis persisted",
+			"analysis_type", analysisType, "tenant_id", tenantID,
+			"user_id", userID, "degraded_reason", degradedReason)
 	}
 	if latencyMs > 0 {
 		record.LatencyMs = latencyMs
