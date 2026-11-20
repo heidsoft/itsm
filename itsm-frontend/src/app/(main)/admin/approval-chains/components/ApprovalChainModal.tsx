@@ -102,7 +102,9 @@ export function ApprovalChainModal({
     try {
       setRolesLoading(true);
       const response = await RoleAPI.getRoles({ page: 1, pageSize: 100 });
-      setRoles(response.items);
+      // httpClient 降级路径可能返回结构不全的响应，items 缺失时兜底为空数组，
+      // 否则第二步「审批角色」下拉 roles.map 会抛 TypeError。
+      setRoles(response?.items ?? []);
     } catch (error) {
       message.error('获取角色列表失败');
     } finally {

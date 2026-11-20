@@ -200,7 +200,17 @@ export default function ApprovalChainsPage() {
       setStatsLoading(true);
 
       const response = await httpClient.get<ApprovalChainStats>('/api/v1/approval-chains/stats');
-      setStats(response);
+      // httpClient 在请求中止/超时降级路径会返回 null；不兜底会让 stats 变 null，
+      // 统计卡的 stats.avgStepsPerChain.toFixed(1) 随即抛错整页白屏。
+      setStats(
+        response ?? {
+          total: 0,
+          active: 0,
+          inactive: 0,
+          totalSteps: 0,
+          avgStepsPerChain: 0,
+        }
+      );
     } catch (error) {
       handleError(error, '加载统计数据失败');
     } finally {

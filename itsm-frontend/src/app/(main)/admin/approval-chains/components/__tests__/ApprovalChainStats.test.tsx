@@ -78,4 +78,32 @@ describe('ApprovalChainStatsCards', () => {
     expect(screen.getByText('活跃审批链')).toBeInTheDocument();
     expect(screen.getByText('非活跃审批链')).toBeInTheDocument();
   });
+
+  // 白屏回归：httpClient 在中止/降级路径会返回 null，loadStats 若不兜底，
+  // stats 为 null 时 stats.avgStepsPerChain.toFixed(1) 抛 TypeError 整页崩溃。
+  it('stats 为 null 时不崩溃，四项统计降级显示为 0', () => {
+    render(<ApprovalChainStatsCards stats={null as unknown as ApprovalChainStats} />);
+
+    expect(screen.getByText('总审批链数')).toBeInTheDocument();
+    expect(screen.getByText('平均步骤数')).toBeInTheDocument();
+    // 4 张卡各有 stat title，全部渲染出来即未崩溃
+    expect(document.querySelectorAll('.ant-statistic').length).toBe(4);
+  });
+
+  // 白屏回归：后端字段缺失/类型异常时 toFixed 不能作用在 undefined/字符串上。
+  it('avgStepsPerChain 缺失或非数值时不崩溃', () => {
+    const { rerender } = render(
+      <ApprovalChainStatsCards
+        stats={{ total: 1 } as unknown as ApprovalChainStats}
+      />
+    );
+    expect(document.querySelectorAll('.ant-statistic').length).toBe(4);
+
+    rerender(
+      <ApprovalChainStatsCards
+        stats={{ avgStepsPerChain: 'oops' } as unknown as ApprovalChainStats}
+      />
+    );
+    expect(document.querySelectorAll('.ant-statistic').length).toBe(4);
+  });
 });
