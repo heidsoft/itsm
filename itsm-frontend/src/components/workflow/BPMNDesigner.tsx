@@ -42,6 +42,7 @@ import { defaultNodeName } from './bpmnDefaultNames';
 import { ensureBpmnDI, hasBpmnDiagramWithShapes } from './bpmnAutoLayout';
 import { formatElementType, toShortType, typeSearchTerms } from './bpmnElementTypes';
 import { normalizeNodeProperties, readReferenceId, type ModdleCreate } from './bpmnPropertyWrite';
+import { buildConnectivityIssues, type ConnectivityElement } from './designer/localValidation';
 import { useI18n } from '@/lib/i18n/useI18n';
 
 
@@ -1139,6 +1140,26 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
         }
       });
     });
+
+    // 连通性规则（起止连线完备 / 悬空连线 / 不可达节点 / generic Task）此前只存在于
+    // localValidation.ts 且仅有单测调用，生产校验从未接入。这里从 elementRegistry
+    // 提取轻量视图并合并，确保用户画出不可达节点也能被校验发现。
+    const connectivityElements: ConnectivityElement[] = elementRegistry
+      .filter(() => true)
+      .map((el: any) => ({
+        id: el.id,
+        type: el.type,
+        name: el.businessObject?.name,
+        incoming: (el.incoming || []).map((flow: any) => ({
+          id: flow.id,
+          source: flow.source ? { id: flow.source.id } : null,
+        })),
+        outgoing: (el.outgoing || []).map((flow: any) => ({
+          id: flow.id,
+          target: flow.target ? { id: flow.target.id } : null,
+        })),
+      }));
+    errors.push(...buildConnectivityIssues(connectivityElements, t));
 
     // 显示验证结果
     if (errors.length === 0) {

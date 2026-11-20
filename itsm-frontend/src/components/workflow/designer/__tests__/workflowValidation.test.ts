@@ -1,4 +1,8 @@
-import { mergeLintIssues } from '../workflowValidation';
+import {
+  mergeLintIssues,
+  validationUnavailableIssue,
+  isValidationUnavailable,
+} from '../workflowValidation';
 
 describe('mergeLintIssues', () => {
   it('keeps local issues and appends backend warnings', () => {
@@ -31,5 +35,26 @@ describe('mergeLintIssues', () => {
     ]);
 
     expect(merged[0].type).toBe('info');
+  });
+});
+
+describe('校验不可用的 fail-closed 语义', () => {
+  it('校验服务不可用产生 error 级 issue，部署门禁 some(type===error) 必然拦截', () => {
+    const issues = [validationUnavailableIssue('校验服务暂不可用')];
+
+    // 部署/发布门禁就是这句判定；空数组会误放行，error issue 才会拦截。
+    expect(issues.some(i => i.type === 'error')).toBe(true);
+    expect(isValidationUnavailable(issues)).toBe(true);
+  });
+
+  it('普通流程错误不会被误标成校验不可用', () => {
+    const issues = [{ type: 'error' as const, message: '节点未配置', elementId: 'Task_1' }];
+    expect(issues.some(i => i.type === 'error')).toBe(true);
+    expect(isValidationUnavailable(issues)).toBe(false);
+  });
+
+  it('空数组既非不可用也不应被当成校验通过的替代品（门禁调用方不得再返回 []）', () => {
+    expect(isValidationUnavailable([])).toBe(false);
+    expect([].some(i => (i as { type: string }).type === 'error')).toBe(false);
   });
 });

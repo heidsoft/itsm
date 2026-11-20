@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { App, Alert, Button, Card, Descriptions, Modal, Select, Space, Table, Tag } from 'antd';
 import { Diff, Download, Eye, PlayCircle, RefreshCw, RotateCcw, Trash2 } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
@@ -56,6 +56,10 @@ export default function WorkflowVersionsPage() {
   const [processKeyOptions, setProcessKeyOptions] = useState<{ label: string; value: string }[]>([]);
   // 列表初值必须为 true：mount 必定发起首次拉取，初值 false 会让首帧先渲染空列表。
   const [listLoading, setListLoading] = useState(true);
+  // 加载失败与「真没有版本」必须分流：失败时显示空态会误导用户以为流程没有版本。
+  const [listError, setListError] = useState(false);
+  // 快速切换流程下拉时，前一次 listVersions 的慢响应可能后到覆盖新流程的列表。
+  const loadSeqRef = useRef(0);
   const [versions, setVersions] = useState<BpmnProcessVersion[]>([]);
   const [selectedVersion, setSelectedVersion] = useState<BpmnProcessVersion | null>(null);
   const [comparison, setComparison] = useState<BpmnVersionComparison | null>(null);
@@ -83,20 +87,29 @@ export default function WorkflowVersionsPage() {
   }, []);
 
   const loadVersions = useCallback(async () => {
+    const seq = ++loadSeqRef.current;
     if (!processKey) {
       setVersions([]);
+      setListError(false);
+      setListLoading(false);
       return;
     }
 
     try {
       setListLoading(true);
-      setVersions(await WorkflowAPI.listVersions(processKey));
+      setListError(false);
+      const result = await WorkflowAPI.listVersions(processKey);
+      // 只接受最后一次请求的结果：切流程后旧响应后到不得覆盖新流程列表。
+      if (seq !== loadSeqRef.current) return;
+      setVersions(result);
     } catch (error) {
+      if (seq !== loadSeqRef.current) return;
       console.error('Failed to load workflow versions:', error);
       message.error('加载工作流版本失败');
       setVersions([]);
+      setListError(true);
     } finally {
-      setListLoading(false);
+      if (seq === loadSeqRef.current) setListLoading(false);
     }
   }, [processKey, message]);
 
@@ -327,7 +340,9 @@ export default function WorkflowVersionsPage() {
 
       <Card className="rounded-xl shadow-sm">
         <LoadingEmptyError
-          state={listLoading ? 'loading' : versions.length === 0 ? 'empty' : 'success'}
+          state={
+            listLoading ? 'loading' : listError ? 'error' : versions.length === 0 ? 'empty' : 'success'
+          }
           loadingText="正在加载工作流版本..."
           empty={{
             title: processKey ? '未找到版本数据' : '请先选择流程',
@@ -337,6 +352,13 @@ export default function WorkflowVersionsPage() {
             actionText: processKey ? '重新加载' : undefined,
             onAction: processKey ? loadVersions : undefined,
             showAction: Boolean(processKey),
+          }}
+          error={{
+            title: '版本加载失败',
+            description: '无法加载工作流版本，请检查网络或服务状态后重试。',
+            actionText: '重新加载',
+            onAction: loadVersions,
+            showRetry: true,
           }}
         >
           <Table columns={columns} dataSource={versions} rowKey="id" pagination={{ pageSize: 10 }} />

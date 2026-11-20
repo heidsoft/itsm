@@ -3,7 +3,7 @@
 
 'use client';
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Layout, Tabs, Form, Modal, Tag, Button, Space, Typography, Switch, App } from 'antd';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { History, AlertTriangle, CheckCircle, XCircle, Bug, GitCompare } from 'lucide-react';
@@ -30,7 +30,12 @@ import BPMNDiagramPreview from '../BPMNDiagramPreview';
 
 import type { BpmnNodeSelection } from '../BPMNDesigner';
 import type { WorkflowDefinition, WorkflowVersion, ApprovalConfig } from './WorkflowTypes';
-import { mergeLintIssues, type ValidationIssue } from './workflowValidation';
+import {
+  mergeLintIssues,
+  validationUnavailableIssue,
+  isValidationUnavailable,
+  type ValidationIssue,
+} from './workflowValidation';
 
 const { Content } = Layout;
 const { Text, Title } = Typography;
@@ -126,6 +131,15 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
   const [showValidationPanel, setShowValidationPanel] = useState(false);
   const [validating, setValidating] = useState(false);
   const [autoValidate, setAutoValidate] = useState(true); // 保存前自动校验
+  // 部署/保存部署的重入守卫：必须在 await 校验之前用 ref 同步置位。
+  // React state 异步渲染挡不住同一帧双击；校验存在网络 await 窗口，
+  // 期间按钮的 deploying/saving 仍为 false，双击会触发两次发布。
+  const deployInFlightRef = useRef(false);
+  // 切换流程时，前一次的加载慢响应可能后到覆盖新流程的数据。
+  // 三条加载链路各自独立计数，避免彼此 ++ 导致对方响应被误判过期。
+  const workflowSeqRef = useRef(0);
+  const workflowVersionsSeqRef = useRef(0);
+  const workflowConfigSeqRef = useRef(0);
 
   // 版本对比相关状态
   const [showVersionCompare, setShowVersionCompare] = useState(false);
@@ -243,9 +257,11 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
   // 加载工作流
   const loadWorkflow = async (id: string) => {
     if (id === 'new' || !id) return;
+    const seq = ++workflowSeqRef.current;
 
     try {
       const response = (await WorkflowAPI.getProcessDefinition(id)) as any;
+      if (seq !== workflowSeqRef.current) return;
 
       if (!response || (!response.key && !response.id && !response.name)) {
         message.error(t('workflow.designer.loadWorkflowNotFound'));
@@ -302,9 +318,12 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
         },
       };
 
+      // 二次校验：XML 解码等同步步骤后仍需确认请求未过期。
+      if (seq !== workflowSeqRef.current) return;
       setWorkflow(workflowData);
       setCurrentXML(xmlContent || getDefaultBPMNXML());
     } catch (error) {
+      if (seq !== workflowSeqRef.current) return;
       console.error('加载工作流失败:', error);
       message.error(t('workflow.designer.loadWorkflowFailed'));
       // 加载失败时不能留在空白画布：页面标题会显示"新工作流设计"，
@@ -317,9 +336,11 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
   const loadWorkflowVersions = useCallback(
     async (id: string) => {
       if (id === 'new') return;
+      const seq = ++workflowVersionsSeqRef.current;
 
       try {
         const versions = await WorkflowAPI.listVersions(id);
+        if (seq !== workflowVersionsSeqRef.current) return;
         setWorkflowVersions(
           versions.map(version => ({
             id: version.id,
@@ -332,16 +353,22 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
           }))
         );
       } catch (error) {
+        if (seq !== workflowVersionsSeqRef.current) return;
         console.error('加载工作流版本失败:', error);
+        // 失败必须清空：保留上一个流程的版本列表会显示为当前流程的版本。
+        setWorkflowVersions([]);
+        message.warning(t('workflow.designer.loadWorkflowVersionsFailed'));
       }
     },
-    [t]
+    [t, message]
   );
 
   // 加载工作流配置
   const loadWorkflowConfig = async (key: string) => {
+    const seq = ++workflowConfigSeqRef.current;
     try {
       const response = (await WorkflowAPI.getProcessDefinition(key)) as any;
+      if (seq !== workflowConfigSeqRef.current) return;
       if (response) {
         setApprovalConfig({
           requireApproval: response.requireApproval ?? true,
@@ -352,11 +379,11 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
         });
 
         const slaConfig = response.slaConfig;
-        if (slaConfig && workflow) {
-          setWorkflow({
-            ...workflow,
-            slaConfig: slaConfig,
-          });
+        if (slaConfig) {
+          // 必须用函数式更新：本函数与 loadWorkflow 在同一 effect 内并发调用，
+          // 闭包里的 workflow 恒为初始值 null，条件 `slaConfig && workflow` 永不成立，
+          // 导致 SLA 面板永远是硬编码默认值，后端配置从不回填。
+          setWorkflow(prev => (prev ? { ...prev, slaConfig } : prev));
         }
       }
     } catch (error) {
@@ -410,70 +437,95 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
   };
 
   // 流程校验
-  const validateWorkflow = useCallback(async (showSuccessMessage = false) => {
-    const api = getBpmnDesignerApi();
-    if (!api) {
-      message.warning(t('workflow.designer.designerNotReady'));
-      return [];
-    }
-
-    setValidating(true);
-    try {
-      const localIssues = (await api.validate()) as ValidationIssue[];
-      let issues = localIssues;
-
-      // 本地规则只覆盖画布结构；taskPurpose、审批拒绝策略等语义规则由后端
-      // lint 统一裁决，这里合并结果，避免设计器把后端 warning 显示成“通过”。
-      const xml = await api.getXML();
-      if (xml) {
-        try {
-          const lint = await BPMNAIApi.lintBPMN(xml);
-          issues = mergeLintIssues(localIssues, lint.issues);
-        } catch (error) {
-          console.error('后端流程校验失败:', error);
-          issues = mergeLintIssues(localIssues, [
-            { severity: 'info', category: 'backend', message: t('workflow.designer.validationBackendUnavailable') },
-          ]);
-        }
+  //
+  // 返回值的语义必须让调用方能区分「校验通过」与「校验没跑成」：
+  // 部署/发布门禁用 issues.some(type==='error') 判定，因此任何校验自身失败
+  // （设计器未就绪、本地校验抛错、后端 lint 不可用）都必须返回一条 error issue，
+  // 绝不能 return []——空数组会被当成「通过」，让破坏性流程绕过门禁上线。
+  const validateWorkflow = useCallback(
+    async (showSuccessMessage = false): Promise<ValidationIssue[]> => {
+      const api = getBpmnDesignerApi();
+      if (!api) {
+        message.warning(t('workflow.designer.designerNotReady'));
+        const blocked = [validationUnavailableIssue(t('workflow.designer.validationUnavailable'))];
+        setValidationIssues(blocked);
+        setShowValidationPanel(true);
+        return blocked;
       }
 
-      setValidationIssues(issues);
-      
-      if (issues.length > 0) {
-        const errorCount = issues.filter((i: ValidationIssue) => i.type === 'error').length;
-        const warningCount = issues.filter((i: ValidationIssue) => i.type === 'warning').length;
-        
-        if (showSuccessMessage) {
-          if (errorCount > 0) {
-            message.error(t('workflow.designer.validationErrorsFound', { errorCount, warningCount }));
-          } else if (warningCount > 0) {
-            message.warning(t('workflow.designer.validationWarningsFound', { warningCount }));
-          } else {
-            message.success(t('workflow.designer.validationPassed'));
+      setValidating(true);
+      try {
+        const localIssues = (await api.validate()) as ValidationIssue[];
+
+        // 本地规则只覆盖画布结构；taskPurpose、审批拒绝策略等语义规则由后端
+        // lint 统一裁决，这里合并结果，避免设计器把后端 warning 显示成“通过”。
+        const xml = await api.getXML();
+        let issues = localIssues;
+        let unavailable = false;
+        if (xml) {
+          try {
+            const lint = await BPMNAIApi.lintBPMN(xml);
+            issues = mergeLintIssues(localIssues, lint.issues);
+          } catch (error) {
+            console.error('后端流程校验失败:', error);
+            // 语义规则由后端唯一裁决；后端不可用时不能仅提示 info 就放行部署，
+            // 必须升级为阻断性 error，否则 taskPurpose 等违规流程可绕过门禁。
+            unavailable = true;
+            issues = [
+              ...localIssues,
+              validationUnavailableIssue(t('workflow.designer.validationBackendUnavailableBlocked')),
+            ];
           }
         }
-        
-        // 如果有错误，自动显示校验面板
-        if (errorCount > 0) {
+
+        setValidationIssues(issues);
+
+        const errorCount = issues.filter(i => i.type === 'error').length;
+        const warningCount = issues.filter(i => i.type === 'warning').length;
+
+        if (unavailable) {
+          if (showSuccessMessage) {
+            message.error(t('workflow.designer.validationUnavailable'));
+          }
           setShowValidationPanel(true);
+          return issues;
         }
-        
-        return issues;
-      } else {
+
+        if (issues.length > 0) {
+          if (showSuccessMessage) {
+            if (errorCount > 0) {
+              message.error(t('workflow.designer.validationErrorsFound', { errorCount, warningCount }));
+            } else if (warningCount > 0) {
+              message.warning(t('workflow.designer.validationWarningsFound', { warningCount }));
+            } else {
+              message.success(t('workflow.designer.validationPassed'));
+            }
+          }
+          if (errorCount > 0) {
+            setShowValidationPanel(true);
+          }
+          return issues;
+        }
+
         if (showSuccessMessage) {
           message.success(t('workflow.designer.validationPassedNoIssue'));
         }
         setShowValidationPanel(false);
         return [];
+      } catch (error) {
+        console.error('校验失败:', error);
+        message.error(t('workflow.designer.validationFailed'));
+        // 本地校验整体失败同样是「校验没跑成」，返回阻断 issue 而非空数组。
+        const blocked = [validationUnavailableIssue(t('workflow.designer.validationUnavailable'))];
+        setValidationIssues(blocked);
+        setShowValidationPanel(true);
+        return blocked;
+      } finally {
+        setValidating(false);
       }
-    } catch (error) {
-      console.error('校验失败:', error);
-      message.error(t('workflow.designer.validationFailed'));
-      return [];
-    } finally {
-      setValidating(false);
-    }
-  }, []);
+    },
+    [message, t]
+  );
 
   // 保存工作流
   const handleSave = async () => {
@@ -564,13 +616,22 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
   // 部署工作流
   const handleDeploy = useCallback(async () => {
     if (!workflow || !currentXML) return;
+    // 同步置位，挡住校验 await 窗口内的重复点击（state loading 来不及生效）。
+    if (deployInFlightRef.current) return;
+    deployInFlightRef.current = true;
 
     // 部署前必须校验
     const issues = await validateWorkflow(true);
+    if (isValidationUnavailable(issues)) {
+      message.error(t('workflow.designer.validationUnavailable'));
+      deployInFlightRef.current = false;
+      return;
+    }
     const hasErrors = issues.some((i: ValidationIssue) => i.type === 'error');
     if (hasErrors) {
       message.error(t('workflow.designer.deployErrorTitle'));
       setShowValidationPanel(true);
+      deployInFlightRef.current = false;
       return;
     }
 
@@ -585,22 +646,35 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
       message.error(t('workflow.designer.deployFailed') + ': ' + (error?.message || ''));
     } finally {
       setDeploying(false);
+      deployInFlightRef.current = false;
     }
-  }, [workflow, currentXML, message, loadWorkflowVersions]);
+  }, [workflow, currentXML, message, t, loadWorkflowVersions, validateWorkflow]);
 
   // 保存并部署
   const handleSaveAndDeploy = async () => {
     if (!workflow) return;
+    // 与 handleDeploy 共用同一把锁：两个入口都可能触发发布，必须互相排斥。
+    if (deployInFlightRef.current) return;
+    deployInFlightRef.current = true;
 
     const xml = await resolveLiveXml();
-    if (!xml) return;
+    if (!xml) {
+      deployInFlightRef.current = false;
+      return;
+    }
 
     // 先校验
     const issues = await validateWorkflow(true);
+    if (isValidationUnavailable(issues)) {
+      message.error(t('workflow.designer.validationUnavailable'));
+      deployInFlightRef.current = false;
+      return;
+    }
     const hasErrors = issues.some((i: ValidationIssue) => i.type === 'error');
     if (hasErrors) {
       message.error(t('workflow.designer.deployErrorTitle'));
       setShowValidationPanel(true);
+      deployInFlightRef.current = false;
       return;
     }
 
@@ -668,6 +742,7 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
     } finally {
       setSaving(false);
       setDeploying(false);
+      deployInFlightRef.current = false;
     }
   };
 
@@ -864,7 +939,12 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
                       />
                     </div>
                     <div className="w-full md:w-80 shrink-0 overflow-y-auto bg-white rounded-lg shadow-sm border border-gray-200">
+                      {/* key 绑定节点 id：切换选中节点时强制 remount，
+                          否则 useDebouncedCommit 的 300ms timer 仍携带旧节点 id，
+                          且 externalValue 相同时不重置 localValue，会把 A 的未提交值
+                          延迟写入 B、或让 B 输入框残留 A 的脏值。 */}
                       <WorkflowNodeInspector
+                        key={selectedNode?.id ?? '__none__'}
                         selection={selectedNode}
                         onUpdateProperties={handleUpdateNodeProperties}
                         onRefresh={handleRefreshSelection}
