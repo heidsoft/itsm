@@ -60,3 +60,59 @@ describe('permissions 模块 i18n 契约', () => {
     }
   });
 });
+
+/**
+ * 角色权限页 / 权限矩阵页共用的展示名映射完整性。
+ * 根因：后端权限目录有 58 resource / 24 action，而前端 roles.resourceLabels、
+ * roles.actionLabels 旧版只覆盖 23/12 个，未命中的直接暴露英文 code（ticket_tag、
+ * escalate 等），造成「有的中文有的英文」。本契约读后端 catalog 权威源，确保
+ * 每一个 resource/action 在中英字典里都有翻译。
+ */
+describe('权限展示名 i18n 覆盖全部后端权限码', () => {
+  const fs = require('fs') as typeof import('fs');
+  const path = require('path') as typeof import('path');
+  // 从 __tests__ 向上找到同时含 itsm-backend 与 itsm-frontend 的仓库根。
+  let repoRoot = __dirname;
+  for (let i = 0; i < 12; i++) {
+    if (
+      fs.existsSync(path.join(repoRoot, 'itsm-backend')) &&
+      fs.existsSync(path.join(repoRoot, 'itsm-frontend'))
+    ) {
+      break;
+    }
+    repoRoot = path.dirname(repoRoot);
+  }
+  const catalogSrc = fs.readFileSync(
+    path.join(repoRoot, 'itsm-backend/internal/authz/catalog.go'),
+    'utf-8'
+  );
+  const entries = [...catalogSrc.matchAll(/\{"([^"]+)",\s*"[^"]+",\s*"([^"]+)",\s*"([^"]+)",\s*"[^"]*"\}/g)].map(
+    (m) => ({ code: m[1], resource: m[2], action: m[3] })
+  );
+
+  it('能从后端权威源解析出权限码（防止正则失效导致契约空跑）', () => {
+    expect(entries.length).toBeGreaterThan(100);
+  });
+
+  const resources = [...new Set(entries.map((e) => e.resource))];
+  const actions = [...new Set(entries.map((e) => e.action))];
+
+  for (const locale of ['zh-CN', 'en-US'] as const) {
+    const dict = translations[locale] as unknown as Dict;
+    it(`[${locale}] 全部 ${resources.length} 个 resource 都有中文/英文资源名`, () => {
+      const missing = resources.filter((r) => {
+        const v = lookup(dict, `roles.resourceLabels.${r}`);
+        return typeof v !== 'string' || v.length === 0;
+      });
+      expect(missing).toEqual([]);
+    });
+
+    it(`[${locale}] 全部 ${actions.length} 个 action 都有可读操作名`, () => {
+      const missing = actions.filter((a) => {
+        const v = lookup(dict, `roles.actionLabels.${a}`);
+        return typeof v !== 'string' || v.length === 0;
+      });
+      expect(missing).toEqual([]);
+    });
+  }
+});

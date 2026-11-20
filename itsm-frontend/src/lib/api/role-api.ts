@@ -75,7 +75,9 @@ export class RoleAPI {
   // 获取权限目录，包含 ID、资源、动作等元数据，用于真实角色授权
   static async getPermissionCatalog(): Promise<PermissionCatalogItem[]> {
     const response = await httpClient.get<{ items: PermissionCatalogItem[]; total: number }>('/api/v1/permissions');
-    return response.items;
+    // 请求中止/降级时 httpClient 可能返回 null，直接 .items 会抛错白屏；此处收敛为空数组，
+    // 由调用方 permissionsError / 空态分支给出可见反馈，而不是崩溃。
+    return Array.isArray(response?.items) ? response.items : [];
   }
 
   // 获取权限策略元数据（如 minApprovalsMax），对应 GET /api/v1/permissions/meta

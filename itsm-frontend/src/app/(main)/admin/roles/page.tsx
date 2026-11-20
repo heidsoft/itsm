@@ -55,39 +55,66 @@ interface PermissionModule {
 
 /**
  * 从后端权限目录（PermissionCatalogItem[]）派生前端权限矩阵。
- * - 按 resource 分组
- * - 每组内按 catalog 出现顺序保留 action，去重
- * - resource 展示名优先取 catalog 中 name 字段，缺失时兜底到 i18n 的 resourceLabels，再兜底到 resource 代码
+ * - 按 resource 分组，组内 action 按出现顺序去重
+ * - 分组标题 = i18n 资源名（resourceLabels）优先；未收录时兜底到后端中文 name
+ *   （去掉「查看/管理」等动作前缀），最后才退回 resource 代码。
+ *
+ * 修复要点：旧实现把「该组第一条权限的 name」（如「查看工单」）当整组标题，
+ * 既与组内 action 语义错位，也在两资源共用同名首权限时产生重复标题；
+ * 且 t() 未命中时直接暴露英文 resource code。现统一走资源名口径。
  */
-function derivePermissionModules(
+const RESOURCE_NAME_PREFIXES = ['查看', '管理', '创建', '编辑', '删除', '分配', '审批', '更新'];
+
+function resourceDisplayName(
+  resource: string,
+  firstItem: PermissionCatalogItem | undefined,
+  t: (key: string) => string
+): string {
+  const i18nKey = `roles.resourceLabels.${resource}`;
+  const i18nLabel = t(i18nKey);
+  if (i18nLabel && i18nLabel !== i18nKey) return i18nLabel;
+
+  // 后端 name 是中文动作短语（如「查看工单标签」），去掉动作前缀得到资源名。
+  const backendName = firstItem?.name && firstItem.name !== firstItem.code ? firstItem.name : '';
+  if (backendName) {
+    for (const prefix of RESOURCE_NAME_PREFIXES) {
+      if (backendName.startsWith(prefix) && backendName.length > prefix.length) {
+        return backendName.slice(prefix.length);
+      }
+    }
+    return backendName;
+  }
+  return resource;
+}
+
+/** action 展示名：i18n 命中即用，未命中才退回 code（i18n 已覆盖后端全部 action）。 */
+export function actionDisplay(action: string, t: (key: string) => string): string {
+  const key = `roles.actionLabels.${action}`;
+  const label = t(key);
+  return label && label !== key ? label : action;
+}
+
+export function derivePermissionModules(
   catalog: PermissionCatalogItem[],
   t: (key: string) => string
 ): PermissionModule[] {
-  const grouped = new Map<string, { label: string; actions: string[] }>();
+  const grouped = new Map<string, { firstItem: PermissionCatalogItem; actions: string[] }>();
   for (const item of catalog) {
     const resource = item.resource || '';
     const action = item.action || '';
     if (!resource || !action) continue;
     let bucket = grouped.get(resource);
     if (!bucket) {
-      // name 若与 code 相同，视为无中文，走 i18n 兜底
-      const backendName = item.name && item.name !== item.code ? item.name : undefined;
-      const i18nKey = `roles.resourceLabels.${resource}`;
-      const i18nLabel = t(i18nKey);
-      const fallback = i18nLabel === i18nKey ? undefined : i18nLabel;
-      bucket = {
-        label: backendName || fallback || resource,
-        actions: [],
-      };
+      bucket = { firstItem: item, actions: [] };
       grouped.set(resource, bucket);
     }
     if (!bucket.actions.includes(action)) {
       bucket.actions.push(action);
     }
   }
-  return Array.from(grouped.entries()).map(([resource, { label, actions }]) => ({
+  return Array.from(grouped.entries()).map(([resource, { firstItem, actions }]) => ({
     resource,
-    label,
+    label: resourceDisplayName(resource, firstItem, t),
     actions,
   }));
 }
@@ -128,6 +155,9 @@ export default function RoleManagement() {
   const [permissionCatalog, setPermissionCatalog] = useState<PermissionCatalogItem[]>([]);
   const [permissionsLoading, setPermissionsLoading] = useState(false);
   const [permissionsError, setPermissionsError] = useState<string | null>(null);
+  // 权限矩阵本地搜索 / 折叠：目录 50+ 资源全展开会把弹窗拉得很长，默认折叠 + 搜索定位。
+  const [permissionFilter, setPermissionFilter] = useState('');
+  const [collapsedModules, setCollapsedModules] = useState<Set<string>>(new Set());
 
   // 加载角色数据
   const loadRoles = useCallback(async () => {
@@ -431,53 +461,103 @@ export default function RoleManagement() {
       ) : permissionModules.length === 0 && !permissionsError ? (
         <div className="text-center py-8 text-gray-500">{t('roles.noPermissions')}</div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {permissionModules.map(({ resource, label, actions }) => (
-            <Card
-              key={resource}
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <Input
+              allowClear
+              value={permissionFilter}
+              onChange={e => setPermissionFilter(e.target.value)}
+              placeholder={t('roles.permissionSearchPlaceholder')}
+              aria-label={t('roles.permissionSearchPlaceholder')}
+              prefix={<Search className="w-4 h-4" />}
+            />
+            <Button size="small" onClick={() => setCollapsedModules(new Set())}>
+              {t('roles.expandAllModules')}
+            </Button>
+            <Button
               size="small"
-              title={
-                <div className="flex items-center">
-                  <Shield className="w-4 h-4 mr-2" />
-                  {label}
-                  <Text type="secondary" className="ml-2 text-xs">
-                    {resource}
-                  </Text>
-                </div>
-              }
+              onClick={() => setCollapsedModules(new Set(permissionModules.map(m => m.resource)))}
             >
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">{t('roles.selectAll')}</span>
-                  <Checkbox
-                    aria-label={`${t('roles.selectAll')} ${resource}`}
-                    onChange={e => handleSelectAllModule(resource, e.target.checked)}
-                  />
-                </div>
-                <Divider className="my-2" />
-                <div className="grid grid-cols-2 gap-2">
-                  {actions.map(action => {
-                    const actionI18nKey = `roles.actionLabels.${action}`;
-                    const actionI18nLabel = t(actionI18nKey);
-                    const actionLabel = actionI18nLabel === actionI18nKey ? action : actionI18nLabel;
-                    return (
-                      <div key={action} className="flex items-center">
-                        <Form.Item
-                          name={`${resource}_${action}`}
-                          valuePropName="checked"
-                          className="mb-0"
-                        >
-                          <Checkbox>
-                            <span className="text-sm">{actionLabel}</span>
-                          </Checkbox>
-                        </Form.Item>
+              {t('roles.collapseAllModules')}
+            </Button>
+          </div>
+          <div className="permission-matrix-scroll grid grid-cols-1 md:grid-cols-2 gap-4">
+            {permissionModules
+              .filter(({ resource, label, actions }) => {
+                const q = permissionFilter.trim().toLowerCase();
+                if (!q) return true;
+                return (
+                  resource.toLowerCase().includes(q) ||
+                  label.toLowerCase().includes(q) ||
+                  actions.some(
+                    a =>
+                      a.toLowerCase().includes(q) ||
+                      actionDisplay(a, t).toLowerCase().includes(q)
+                  )
+                );
+              })
+              .map(({ resource, label, actions }) => {
+                const collapsed = collapsedModules.has(resource);
+                return (
+                  <Card
+                    key={resource}
+                    size="small"
+                    className="permission-module-card"
+                    title={
+                      <button
+                        type="button"
+                        className="flex items-center text-left w-full"
+                        aria-label={`${collapsed ? t('roles.expandModule') : t('roles.collapseModule')} ${label}`}
+                        onClick={() =>
+                          setCollapsedModules(prev => {
+                            const next = new Set(prev);
+                            if (next.has(resource)) next.delete(resource);
+                            else next.add(resource);
+                            return next;
+                          })
+                        }
+                      >
+                        <Shield className="w-4 h-4 mr-2 shrink-0" />
+                        <span>{label}</span>
+                        <Text type="secondary" className="ml-2 text-xs">
+                          {actions.length}
+                        </Text>
+                      </button>
+                    }
+                  >
+                    {collapsed ? (
+                      <div className="text-xs text-gray-400">{t('roles.moduleCollapsedHint')}</div>
+                    ) : (
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium">{t('roles.selectAll')}</span>
+                          <Checkbox
+                            aria-label={`${t('roles.selectAll')} ${label}`}
+                            onChange={e => handleSelectAllModule(resource, e.target.checked)}
+                          />
+                        </div>
+                        <Divider className="my-2" />
+                        <div className="grid grid-cols-2 gap-2">
+                          {actions.map(action => (
+                            <div key={action} className="flex items-center">
+                              <Form.Item
+                                name={`${resource}_${action}`}
+                                valuePropName="checked"
+                                className="mb-0"
+                              >
+                                <Checkbox>
+                                  <span className="text-sm">{actionDisplay(action, t)}</span>
+                                </Checkbox>
+                              </Form.Item>
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </Card>
-          ))}
+                    )}
+                  </Card>
+                );
+              })}
+          </div>
         </div>
       )}
     </div>

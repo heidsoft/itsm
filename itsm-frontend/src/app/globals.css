@@ -2271,3 +2271,32 @@ html:not(.dark) .ant-btn-default:focus {
   stroke-width: 1.5px !important;
   stroke-dasharray: 4 3;
 }
+
+/* 角色权限矩阵：权限目录 50+ 资源，容器限高滚动，避免弹窗被拉到一屏之外。
+   卡片标题为可点击按钮，重置掉浏览器默认的 button 外观保持卡片标题观感。 */
+.permission-matrix-scroll {
+  max-height: 46vh;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+.permission-module-card .ant-card-head-title {
+  padding: 0;
+}
+.permission-module-card button {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+}
+.permission-module-card button:focus-visible {
+  outline: 2px solid var(--color-primary, #1677ff);
+  outline-offset: 2px;
+}
+
+/* 权限配置页权限树：默认全展开时数百节点会把页面拉得很长，限高滚动 + 搜索。 */
+.permission-tree-scroll {
+  max-height: 60vh;
+  overflow-y: auto;
+}

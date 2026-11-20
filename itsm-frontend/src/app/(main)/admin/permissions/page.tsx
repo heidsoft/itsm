@@ -411,8 +411,18 @@ const PermissionConfiguration = () => {
       const descriptionKey = `permissions.modules.${i18nKey}.description`;
       const localizedLabel = i18nKey ? t(labelKey) : '';
       const localizedDescription = i18nKey ? t(descriptionKey) : '';
+      // 模块名兜底口径与角色权限页一致：先 permissions.modules，再 roles.resourceLabels
+      // （后者已覆盖后端全部资源），最后才退回英文 resource code。
+      const sharedLabelKey = `roles.resourceLabels.${mod.resource}`;
+      const sharedLabel = t(sharedLabelKey);
+      const resolvedLabel =
+        i18nKey && localizedLabel !== labelKey
+          ? localizedLabel
+          : sharedLabel && sharedLabel !== sharedLabelKey
+            ? sharedLabel
+            : mod.resource;
       result[mod.resource] = {
-        label: i18nKey && localizedLabel !== labelKey ? localizedLabel : mod.resource,
+        label: resolvedLabel,
         icon: meta?.icon ?? Shield,
         description: i18nKey && localizedDescription !== descriptionKey ? localizedDescription : '',
         category: t(`permissions.categories.${categoryKey}`),
@@ -1001,12 +1011,13 @@ const PermissionConfiguration = () => {
         ) : viewMode === 'card' ? (
           renderCardView()
         ) : (
-          <Tree
-            treeData={generateTreeData()}
-            defaultExpandAll
-            showLine
-            className="enterprise-tree"
-          />
+          <div className="permission-tree-scroll">
+            <Tree
+              treeData={generateTreeData()}
+              showLine
+              className="enterprise-tree"
+            />
+          </div>
         )}
       </Card>
 
