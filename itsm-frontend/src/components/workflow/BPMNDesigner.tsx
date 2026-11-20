@@ -1089,7 +1089,8 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
         });
       }
       const implementation = bo.implementation || operationRef;
-      const supported = new Set(['webhook', 'cc_handler', 'ticket_handler', 'change_handler', 'incident_handler', 'service_request_handler', 'notification_handler', 'approval_handler', 'generic_handler']);
+      // 保留历史值兼容已有流程；新增 webhook_task/generic_task 对齐下拉真实写入的 handler 名。
+      const supported = new Set(['webhook', 'webhook_task', 'cc_handler', 'ticket_handler', 'change_handler', 'incident_handler', 'service_request_handler', 'notification_handler', 'approval_handler', 'generic_handler', 'generic_task']);
       if (implementation && !supported.has(implementation)) {
         errors.push({
           type: 'error',

@@ -537,8 +537,8 @@ export default function WorkflowNodeInspector({
     { label: 'HTTP 接口调用（未就绪）', value: 'http', disabled: true },
     { label: 'Java 类调用（未支持）', value: 'java', disabled: true },
     { label: '表达式（未就绪）', value: 'expression', disabled: true },
-    { label: 'Webhook', value: 'webhook' },
-    { label: '系统内置服务（请选择已注册 handler）', value: 'generic_handler' },
+    { label: 'Webhook 回调', value: 'webhook_task' },
+    { label: '系统内置服务（通用任务 handler）', value: 'generic_task' },
     { label: '邮件发送（未就绪）', value: 'mail', disabled: true },
     { label: '自动抄送', value: 'cc_handler' }
   ];
@@ -841,7 +841,7 @@ export default function WorkflowNodeInspector({
                 type="info"
                 showIcon
                 className="mt-2 text-xs"
-                title="审批组中任一成员审批即视为该节点通过"
+                title="审批组指定由哪些人处理该节点；通过规则（任一/全部/阈值/顺序）由上方审批模式决定"
               />
               <Text type="secondary" className="mt-1 block text-xs">
                 按业务类型细化审批人、会签/或签与兜底规则，请到{' '}
@@ -1289,7 +1289,7 @@ export default function WorkflowNodeInspector({
               <DebouncedInput
                 value={currentDefaultFlow}
                 onCommit={value => apply({ default: value })}
-                placeholder="输入默认流转的节点ID"
+                placeholder="输入默认分支连线的 ID"
                 size="small"
               />
               <Text type="secondary" className="text-xs mt-1 block">
@@ -1319,7 +1319,7 @@ export default function WorkflowNodeInspector({
               <DebouncedInput
                 value={currentDefaultFlow}
                 onCommit={value => apply({ default: value })}
-                placeholder="输入默认流转的节点ID"
+                placeholder="输入默认分支连线的 ID"
                 size="small"
               />
             </div>
@@ -1415,7 +1415,7 @@ export default function WorkflowNodeInspector({
                     ? '已启用，关闭将移除定时器配置'
                     : isBoundaryEvent
                       ? '开启后任务超时将中断并走异常路径'
-                      : '开启后按周期自动启动流程'}
+                      : '开启后将在设定时间自动启动流程一次（默认 1 小时后）'}
                 </Text>
               </div>
             )}
