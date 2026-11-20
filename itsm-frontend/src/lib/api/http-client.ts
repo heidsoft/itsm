@@ -392,10 +392,22 @@ class HttpClient {
       logger.warn('开发模式：正在连接到后端服务，如果后端服务未运行，将显示错误');
     }
 
+    // timedOut 记录「本次中止是超时造成的」。
+    // AbortError 在本客户端只有一个来源：下面这个 setTimeout 主动 abort
+    // （RequestConfig 不暴露 signal，调用方无法传入自己的控制器）。
+    // 之所以要单独标记，是因为 catch 分支必须把「超时」和「调用方真取消」分开：
+    // 前者是失败，必须让调用方看到；后者才是可以静默收场的正常中止。
+    let timedOut = false;
+    // 提到 try 外，让 catch 也能清理：fetch 抛网络错误时若不 clearTimeout，
+    // 计时器会活到超时点并在已结束的请求上再 abort 一次（jest 里表现为悬挂计时器）。
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
     try {
       const controller = new AbortController();
       const timeoutMs = config.timeout ?? this.timeout;
-      const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+      timeoutId = setTimeout(() => {
+        timedOut = true;
+        controller.abort();
+      }, timeoutMs);
 
       let response = await fetch(url, {
         ...requestConfig,
@@ -526,9 +538,29 @@ class HttpClient {
       // 自动转换响应数据 key 为 camelCase
       return toCamelCase(responseData.data) as T;
     } catch (error: unknown) {
-      // AbortError 是正常的中止请求，不记录错误日志
+      if (timeoutId !== undefined) {
+        clearTimeout(timeoutId);
+      }
+      // 超时不是「正常中止」，必须抛出去。
+      // 此前这里把 AbortError 一律当作「页面导航中止」并 `return null as T`，
+      // 但本客户端的 AbortController 只由内部超时触发（调用方无法传入 signal），
+      // 于是全站（869 处 httpClient 调用）在超过 30s 时拿到的都是 null 而不是异常。
+      // 后果是界面「点了没反应」：调用方没有 catch 可走，null 又被渲染成未开始态。
+      // AI 调查编排（ticket 详情页 · ai:read）正是典型受害者——后端已正确降级返回
+      // 200，前端却在 30s 处放弃并把结果丢掉。
+      if (timedOut) {
+        const timeoutMs = config.timeout ?? this.timeout;
+        // status=408 让调用方按「请求超时」分流（error-message-handler 与 notify
+        // 都已把 408 归入超时并给了重试文案）；不传业务码，因为超时是客户端
+        // 行为、后端没参与，凭空编一个 code 会让调用方误判成服务端返回。
+        throw new ApiRequestError(
+          `请求超时（${Math.round(timeoutMs / 1000)}s）：服务端处理时间超过客户端等待上限`,
+          408
+        );
+      }
+      // 真正的调用方中止（例如组件卸载、页面切换）才静默收场。
       if (error instanceof Error && error.name === 'AbortError') {
-        logger.debug('Request aborted (page navigation)');
+        logger.debug('Request aborted by caller');
         return null as T;
       }
       logger.error('Request failed:', error);

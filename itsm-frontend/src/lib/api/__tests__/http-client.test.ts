@@ -587,4 +587,55 @@ describe('httpClient', () => {
       });
     });
   });
+
+  describe('超时语义', () => {
+    // 缺陷背景：catch 分支曾把 AbortError 一律当「页面导航中止」并 return null as T。
+    // 但本客户端的 AbortController 只有内部 setTimeout 一个来源（RequestConfig 不
+    // 暴露 signal），所以那个分支实际只在超时时触发 —— 全站 869 处调用点拿不到异常，
+    // 界面表现为「点了没反应」。下面是锁住这个语义的两条对称用例。
+    it('超时必须抛错，不得静默返回 null', async () => {
+      jest.useFakeTimers();
+      try {
+        // 模拟真实时序：fetch 挂起不返回，超时计时器到点后 abort 使其 reject。
+        fetchMock.mockImplementationOnce(
+          (_url: string, init: RequestInit) =>
+            new Promise((_resolve, reject) => {
+              init.signal?.addEventListener('abort', () => {
+                const err = new Error('The operation was aborted.');
+                err.name = 'AbortError';
+                reject(err);
+              });
+            })
+        );
+
+        const pending = httpClient.get('/api/v1/ai/tickets/1/investigate');
+        // 吞掉后续 reject，避免推进 fake timer 时出现 unhandled rejection。
+        const captured = pending.catch((e: unknown) => e);
+        // 请求要先走完 CSRF 微任务链才真正发起 fetch（setTimeout 也在那之后才注册），
+        // 直接 advance 会让时钟空转、计时器根本没登记。先等 fetch 出现再推进。
+        for (let i = 0; i < 50 && fetchMock.mock.calls.length === 0; i += 1) {
+          await Promise.resolve();
+        }
+        expect(fetchMock).toHaveBeenCalledTimes(1);
+
+        await jest.advanceTimersByTimeAsync(31000);
+
+        const err = await captured;
+        expect(err).toBeInstanceOf(ApiRequestError);
+        expect((err as ApiRequestError).status).toBe(408);
+        expect((err as Error).message).toContain('请求超时');
+      } finally {
+        jest.useRealTimers();
+      }
+    });
+
+    it('调用方中止（非超时）仍静默收场返回 null', async () => {
+      // 锁住合法语义：真正的外部取消不该变成报错。
+      // 用 AbortError 且未推进计时器 = 不是本客户端的超时路径。
+      fetchMock.mockRejectedValueOnce(Object.assign(new Error('aborted'), { name: 'AbortError' }));
+
+      const result = await httpClient.get('/api/v1/tickets/1');
+      expect(result).toBeNull();
+    });
+  });
 });
