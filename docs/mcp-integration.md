@@ -200,6 +200,27 @@ initialize  →  （客户端发 notifications/initialized）  →  tools/list /
 }
 ```
 
+响应（写工具：**已受理、待人工审批，尚未执行**）：
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 3,
+  "result": {
+    "content": [{"type": "text", "text": "status=pending_approval\ntool=create_ticket\ninvocation_id=42\nmessage=该工具会产生业务副作用，已提交人工审批，尚未执行。审批通过后由服务端执行器落地。\nnext=请勿声称操作已完成；用 invocation_id 查询审批结果，approved 后才代表已执行。"}],
+    "_meta": {"invocationId": 42, "status": "pending_approval", "pollHint": "GET /api/v1/agent/tools/42"}
+  }
+}
+```
+
+> **写工具的回执不是执行结果。** 写工具恒进人工审批流，`tools/call` 返回的是「受理」回执：
+> - 正文带 `status=pending_approval`，且 `_meta.status` 同值——客户端据此判定「未执行」，不得宣告操作完成；
+> - **不填 `structuredContent`**：工具声明的 `outputSchema` 描述真实产出，待审批不是产出；
+> - **不是 `isError`**：受理属正常业务流，标成错误会诱发客户端重试或告警；
+> - 用 `_meta.invocationId` 或 `_meta.pollHint` 查询审批进展；最终状态是 `approved`（已批准，副作用随后由执行器落地）或 `rejected`（已驳回，不会执行）。
+>
+> 部分主体（如 `agent` / `service`）的审批强度由运行期策略决定：高风险工具可能需要**两名不同审批人**依次批准，首票只进入 `awaiting_second`，仍不放行。发起人不得自批。
+
 响应（业务失败，如权限拒绝）：
 
 ```json
@@ -228,7 +249,7 @@ initialize  →  （客户端发 notifications/initialized）  →  tools/list /
 | 主体准入 | 运行期策略 `allowedPrincipals`（默认仅 human） |
 | 动作权限 | 执行链按工具 `resource:action` 判定（Gate 2） |
 | 租户隔离 | 工具面与执行均按 `tenant_id` 收敛，令牌绑定固定租户 |
-| 写操作 | 恒进人工审批流，不自动执行 |
+| 写操作 | 恒进人工审批流，不自动执行；`tools/call` 返回 `status=pending_approval` 受理回执（非执行结果） |
 | 审计 | 调用落 `ToolInvocation`（含角色快照与审批状态） |
 | CSRF | Bearer 认证自动豁免（无浏览器 cookie 语义）；cookie 会话仍需 CSRF token |
 | 传输 | 生产须走 HTTPS |

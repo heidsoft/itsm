@@ -12,6 +12,7 @@ import (
 	"itsm-backend/common"
 	"itsm-backend/common/handlerctx"
 	"itsm-backend/dto"
+	"itsm-backend/ent"
 	"itsm-backend/internal/authz"
 	"itsm-backend/internal/knowledgeaccess"
 	"itsm-backend/middleware"
@@ -114,9 +115,14 @@ func (h *Handler) ExecuteTool(c *gin.Context) {
 	}
 
 	if invocationID > 0 {
+		// 回执必须如实反映落库的审批态，不能一律写 "pending"：
+		// AI/服务主体发起的写工具会落 pending_agent / pending_agent_two，
+		// 硬编码 "pending" 会让调用方（前端审批页、MCP 客户端、Agent 编排器）
+		// 误判「一人批完即放行」，而实际还卡在 awaiting_second 或需两名不同审批人。
+		approvalState, nextActions := h.pendingApprovalReceipt(c.Request.Context(), invocationID, tenantID)
 		common.Success(c, dto.ToolExecutionResponse{
-			Status: "pending", Summary: "工具操作已提交审批", InvocationID: invocationID,
-			ApprovalState: "pending", NextActions: []string{"等待审批后执行"}, Artifacts: []string{},
+			Status: "pending", Summary: pendingApprovalSummary(approvalState), InvocationID: invocationID,
+			ApprovalState: approvalState, NextActions: nextActions, Artifacts: []string{},
 		})
 		return
 	}
@@ -127,6 +133,63 @@ func (h *Handler) ExecuteTool(c *gin.Context) {
 		"artifacts":   []string{},
 		"data":        res,
 	})
+}
+
+// pendingApprovalReceipt 读取刚创建的 invocation 的**落库**审批态，供执行回执如实返回。
+//
+// 为什么要回读而不是由 Service 返回值携带：ExecuteTool 的返回契约是
+// (result, invocationID, error) 三元组，被 4 条通道复用（HTTP、MCP、聊天工具循环、
+// Skill）。给它加第四个返回值会波及所有调用点与契约测试；回读一次本身也有价值——
+// 若落库状态与预期不符（并发审批已把它推到 awaiting_second/approved），
+// 回执必须以库为准，不能凭调用时的推断。
+//
+// 读取失败不阻断回执：此时退回 "pending" 并附告警，因为「待审批」这个事实
+// 已经由 invocationID>0 确定，状态细分读不到只是信息缺失，不是执行失败。
+func (h *Handler) pendingApprovalReceipt(ctx context.Context, invocationID, tenantID int) (string, []string) {
+	inv, err := h.svc.repo.GetToolInvocation(ctx, invocationID, tenantID)
+	if err != nil || inv == nil || inv.ApprovalState == "" {
+		return "pending", []string{"等待审批后执行"}
+	}
+	return inv.ApprovalState, pendingApprovalNextActions(inv.ApprovalState)
+}
+
+// pendingApprovalNextActions 给出该审批态下调用方应有的下一步，避免调用方
+// 把「已放入审批队列」误读为「已执行」或「一人批完即放行」。
+func pendingApprovalNextActions(state string) []string {
+	switch state {
+	case "pending_agent_two":
+		// AI 发起的双人审批：首票只是转入 awaiting_second，不放行。
+		return []string{"需要两名不同审批人依次批准（首票后进入 awaiting_second）", "发起人不得自批", "审批通过后由执行器落地副作用"}
+	case "awaiting_second":
+		return []string{"已有一名审批人批准，仍需第二名不同审批人复审", "发起人不得自批"}
+	case "pending_agent":
+		return []string{"需要一名非发起人的审批人批准", "发起人不得自批", "审批通过后由执行器落地副作用"}
+	case "approved":
+		return []string{"已通过审批，等待执行器落地副作用", "可查询 invocation 状态确认最终结果"}
+	case "rejected":
+		return []string{"审批已驳回，工具不会执行", "如需重试请重新发起调用"}
+	default:
+		return []string{"等待审批后执行"}
+	}
+}
+
+// pendingApprovalSummary 返回与真实审批态一致的摘要文案。
+// 双人审批与单人审批的摘要必须可区分，否则前端/Agent 无法据此提示审批工作量。
+func pendingApprovalSummary(state string) string {
+	switch state {
+	case "pending_agent_two":
+		return "AI 发起的工具操作已提交，需两名不同审批人批准"
+	case "awaiting_second":
+		return "AI 发起的工具操作已获首票，仍需第二名审批人复审"
+	case "pending_agent":
+		return "AI 发起的工具操作已提交，需一名非发起人审批人批准"
+	case "approved":
+		return "工具操作已通过审批，等待执行"
+	case "rejected":
+		return "工具操作已被驳回"
+	default:
+		return "工具操作已提交审批"
+	}
 }
 
 // Chat handles POST /api/v1/ai/chat
@@ -303,10 +366,10 @@ func (h *Handler) GetConversation(c *gin.Context) {
 		return
 	}
 	// 会话是用户私有的：校验租户 + 属主。他人会话与不存在都走同一条 404 路径，
-	// 不通过错误差异暴露「这个 id 是否存在」。
+	// 不通过错误差异暴露「这个 id 是否存在」。DB 故障必须走 500，不能折叠成 404。
 	messages, err := h.svc.GetConversationMessages(c.Request.Context(), id, tenantID, userID)
 	if err != nil {
-		common.NotFound(c, "会话不存在")
+		respondConversationError(c, err)
 		return
 	}
 	common.Success(c, gin.H{"items": messages})
@@ -330,10 +393,23 @@ func (h *Handler) DeleteConversation(c *gin.Context) {
 		return
 	}
 	if err := h.svc.DeleteConversation(c.Request.Context(), id, tenantID, userID); err != nil {
-		common.NotFound(c, "会话不存在")
+		respondConversationError(c, err)
 		return
 	}
 	common.Success(c, nil)
+}
+
+// respondConversationError 会话读/删的错误分类单一事实源：
+// ent.NotFoundError（真不存在，以及跨租户/跨用户经谓词表现为 not found）统一
+// 404「会话不存在」——保留防枚举语义，不泄露资源存在性；其余（DB 故障等）
+// 交 RespondError 归 500，原始驱动错误只进日志、不进响应。
+func respondConversationError(c *gin.Context, err error) {
+	var notFound *ent.NotFoundError
+	if errors.As(err, &notFound) {
+		common.NotFound(c, "会话不存在")
+		return
+	}
+	common.RespondError(c, err, "会话操作失败")
 }
 
 // ListAIAnalysisResults handles GET /api/v1/ai/analysis-results

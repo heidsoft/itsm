@@ -143,7 +143,37 @@ try {
     check('未知工具按协议报错', true, String(err.message).slice(0, 120));
   }
 
-  console.log('\n[5] ping（存活探测）');
+  console.log('\n[5] 写工具的待审批回执语义（真实副作用工具）');
+  // 写工具恒进人工审批流：tools/call 返回的是「受理」而非执行结果。
+  // 真实客户端（LLM）最容易在这里误判 —— 旧实现返回空正文 + isError=false，
+  // 客户端会宣告「操作已完成」，而副作用尚未发生。
+  const writeTool = listed.tools.find((t) => t.annotations && t.annotations.readOnlyHint === false);
+  if (!writeTool) {
+    console.log('  跳过：工具面中没有写工具（当前主体工具面全为只读）');
+  } else {
+    const result = await client.callTool({ name: writeTool.name, arguments: {} });
+    const text = Array.isArray(result.content) && result.content[0] ? (result.content[0].text || '') : '';
+    if (result.isError === true) {
+      // 未放行该写工具码也是正确行为（主体零权限），此时不产生受理回执。
+      check('写工具未放行时以 isError 表达拒绝', /权限|permission|denied/i.test(text), text.slice(0, 100));
+      console.log('  提示: 当前主体未被运行期策略放行该写工具码');
+    } else if (result._meta && result._meta.status === 'pending_approval') {
+      check('写工具受理回执声明 pending_approval', true, `invocationId=${result._meta.invocationId}`);
+      check('受理回执正文非空且不可误读为已完成',
+        text.length > 0 && /pending_approval/.test(text) && /尚未执行/.test(text), text.slice(0, 120).replace(/\n/g, ' '));
+      check('受理回执不填充 structuredContent（pending 不是工具产出）',
+        result.structuredContent === undefined, result.structuredContent === undefined
+          ? '正确省略' : JSON.stringify(result.structuredContent).slice(0, 80));
+      check('受理回执不以 isError 表达（受理不是错误）', result.isError !== true, 'isError 未置位');
+    } else {
+      // 参数不满足工具契约时执行链会报错，属正常业务失败；
+      // 但「无 _meta 且无错误」的静默成功必须判失败。
+      check('写工具调用要么受理要么明确失败（不得静默成功）',
+        text.length > 0, text.slice(0, 100).replace(/\n/g, ' ') || '正文为空且无错误标记');
+    }
+  }
+
+  console.log('\n[6] ping（存活探测）');
   try {
     await client.ping();
     check('ping 成功', true);

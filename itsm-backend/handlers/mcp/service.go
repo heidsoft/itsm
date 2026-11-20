@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"go.uber.org/zap"
@@ -217,9 +218,38 @@ func (s *Service) handleToolsCall(ctx context.Context, req *Request, caller Call
 			IsError: true,
 		}}
 	}
+	// 写工具走审批流时，执行链返回 (res=nil, invocationID>0, err=nil)：
+	// 语义是「已受理、待人工审批后执行」，**不是**执行成功。
+	//
+	// 此前这里只把 invocationId 塞进 _meta、正文用 formatResult(nil) 得到空串，
+	// isError=false。客户端（Claude Desktop / 第三方 Agent）拿到空内容 +
+	// 无错误标记，只能理解为「调用成功但无返回」，于是会宣告操作已完成——
+	// 而真实副作用还没发生。这正是「Agent 声称已处理、系统其实没动」的典型
+	// 缺口，且它出现在协议层，任何 MCP 客户端都会中招。
+	//
+	// 修法：显式返回 pending 回执（文本 + _meta），且**不填 structuredContent**
+	// ——工具声明的 outputSchema 描述的是工具真实产出，pending 不是产出，
+	// 填了会让客户端按 schema 校验失败或被误读成工具结果。
+	// 不用 isError=true：受理不是错误，标成错误会让客户端触发重试/告警。
+	if invocationID > 0 && res == nil {
+		s.logger.Infow("mcp write tool accepted, pending approval",
+			"tool", params.Name, "tenant_id", caller.TenantID,
+			"principal", caller.Principal, "invocation_id", invocationID)
+		return &Response{JSONRPC: "2.0", ID: req.ID, Result: CallToolResult{
+			Content: Content(formatPendingApproval(params.Name, invocationID)),
+			Meta: map[string]any{
+				"invocationId": invocationID,
+				"status":       "pending_approval",
+				// 提示客户端不要把回执当结果：需轮询 invocation 直到 approved/rejected。
+				"pollHint": "GET /api/v1/agent/tools/" + strconv.Itoa(invocationID),
+			},
+		}}
+	}
+
 	result := CallToolResult{Content: Content(formatResult(res))}
 	if invocationID > 0 {
-		// invocation ID 回传便于客户端在 ITSM 审计台账里定位本次调用。
+		// 只读工具正常不会有 invocationID；此分支保留给「已审批并已执行、
+		// 但有 invocation 记录」的写工具，回传 ID 便于在审计台账里定位。
 		result.Meta = map[string]any{"invocationId": invocationID}
 	}
 	// 结构化结果：MCP 规范要求 structuredContent 是 JSON 对象。
@@ -230,6 +260,22 @@ func (s *Service) handleToolsCall(ctx context.Context, req *Request, caller Call
 		result.StructuredContent = structured
 	}
 	return &Response{JSONRPC: "2.0", ID: req.ID, Result: result}
+}
+
+// formatPendingApproval 生成写工具「已受理待审批」的机器可读回执。
+//
+// 为什么用固定前缀 + key=value 而不是自由文本：MCP 客户端多是 LLM，
+// 回执要能被稳定识别（status=pending_approval 是判据），同时人也能读懂。
+// 明确写出「不要声称操作已完成」——此前空正文会让模型自行补完结论。
+func formatPendingApproval(toolName string, invocationID int) string {
+	return fmt.Sprintf(
+		"status=pending_approval\n"+
+			"tool=%s\n"+
+			"invocation_id=%d\n"+
+			"message=该工具会产生业务副作用，已提交人工审批，尚未执行。审批通过后由服务端执行器落地。\n"+
+			"next=请勿声称操作已完成；用 invocation_id 查询审批结果，approved 后才代表已执行。",
+		toolName, invocationID,
+	)
 }
 
 // wrapStructuredContent 把工具结果整形成 MCP 允许的 structuredContent 形状。
