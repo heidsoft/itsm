@@ -1,7 +1,7 @@
 /**
  * BPMN 监控 API（v2）
  *
- * 对应后端 controller/bpmn_monitoring_controller.go
+ * 对应后端 handlers/bpmn/monitoring.go
  * 路由：/api/v1/bpmn/monitoring
  *
  * 与 bpmn-dashboard-api.ts 的区别：
@@ -129,22 +129,28 @@ export interface BottleneckAnalysis {
 }
 
 // ─── 性能告警 ──────────────────────────────────────────────
+// 与后端 dto.PerformanceAlert 逐字段对齐；/performance/alerts 与 /performance 内嵌共用此形状。
 export interface PerformanceAlert {
-  alertType: string;
+  id: string;
+  type: string;
   severity: string;
   message: string;
-  resourceId?: string;
-  metricValue?: number;
-  threshold?: number;
   timestamp: string;
+  resourceId: string;
+  resourceType: string;
+  value: number;
+  threshold: number;
+  status: string;
 }
 
 // ─── 系统健康 ──────────────────────────────────────────────
+// 与后端 GetSystemHealth 的 camelCase map 对齐：database 是连接状态字符串，不是组件树。
 export interface SystemHealth {
   status: string;
-  components: Record<string, { status: string; message?: string; latencyMs?: number }>;
-  uptimeSeconds: number;
-  version: string;
+  database: string;
+  activeProcesses: number;
+  activeTasks: number;
+  errorCount: number;
 }
 
 // ─── API 类 ────────────────────────────────────────────────
@@ -224,19 +230,12 @@ export class BPMNMonitoringApi {
 
   /** 获取性能告警 */
   static async getPerformanceAlerts(): Promise<PerformanceAlert[]> {
-    const res = await httpClient.get<
-      { data?: PerformanceAlert[] } | PerformanceAlert[]
-    >(`${this.baseUrl}/performance/alerts`);
-    if (Array.isArray(res)) return res;
-    return (res as { data?: PerformanceAlert[] }).data ?? [];
+    return httpClient.get<PerformanceAlert[]>(`${this.baseUrl}/performance/alerts`);
   }
 
   /** 获取系统健康 */
   static async getSystemHealth(): Promise<SystemHealth> {
-    const res = await httpClient.get<{ data?: SystemHealth } & SystemHealth>(
-      `${this.baseUrl}/health`
-    );
-    return (res as { data?: SystemHealth }).data ?? (res as SystemHealth);
+    return httpClient.get<SystemHealth>(`${this.baseUrl}/health`);
   }
 
   /**

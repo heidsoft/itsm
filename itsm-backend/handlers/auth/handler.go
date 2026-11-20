@@ -28,6 +28,17 @@ func (h *Handler) SetSSOService(sso *SSOService) { h.sso = sso }
 // SSOEnabled 报告 SSO 路由是否可注册。
 func (h *Handler) SSOEnabled() bool { return h.sso != nil }
 
+// @Summary 用户自助注册
+// @Description 注册新账号。用户名被占用/自助注册未开放等业务拒绝按分类码返回，不统一压成认证失败。公开端点，无需 Bearer Token。
+// @Tags 认证管理
+// @Accept json
+// @Produce json
+// @Param body body dto.RegisterRequest true "注册请求"
+// @Success 200 {object} common.Response
+// @Failure 400 "参数错误"
+// @Failure 409 "用户名已占用"
+// @Failure 500 "后端故障"
+// @Router /api/v1/auth/register [post]
 func (h *Handler) Register(c *gin.Context) {
 	var req dto.RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -44,6 +55,16 @@ func (h *Handler) Register(c *gin.Context) {
 	common.Success(c, response)
 }
 
+// @Summary 申请密码重置
+// @Description 发起密码找回。service 以 5003 明确表达「邮件服务未配置」，不会让调用方误以为邮箱填错而反复重试。公开端点。
+// @Tags 认证管理
+// @Accept json
+// @Produce json
+// @Param body body dto.ForgotPasswordRequest true "找回请求"
+// @Success 200 {object} common.Response
+// @Failure 400 "参数错误"
+// @Failure 503 "邮件服务未配置(5003)"
+// @Router /api/v1/auth/forgot-password [post]
 func (h *Handler) ForgotPassword(c *gin.Context) {
 	var req dto.ForgotPasswordRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -60,6 +81,16 @@ func (h *Handler) ForgotPassword(c *gin.Context) {
 	common.Success(c, response)
 }
 
+// @Summary 重置密码
+// @Description 凭重置令牌设置新密码；令牌无效/过期返回认证失败。公开端点。
+// @Tags 认证管理
+// @Accept json
+// @Produce json
+// @Param body body dto.PasswordResetRequest true "重置请求"
+// @Success 200 {object} common.Response
+// @Failure 400 "参数错误"
+// @Failure 401 "令牌无效或过期"
+// @Router /api/v1/auth/reset-password [post]
 func (h *Handler) ResetPassword(c *gin.Context) {
 	var req dto.PasswordResetRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -74,6 +105,16 @@ func (h *Handler) ResetPassword(c *gin.Context) {
 	common.Success(c, response)
 }
 
+// @Summary 校验重置令牌
+// @Description 校验密码重置令牌是否有效，供前端在展示重置表单前预检。公开端点。
+// @Tags 认证管理
+// @Accept json
+// @Produce json
+// @Param body body dto.ValidateResetTokenRequest true "令牌校验请求"
+// @Success 200 {object} common.Response
+// @Failure 400 "参数错误"
+// @Failure 401 "令牌无效或过期"
+// @Router /api/v1/auth/validate-reset-token [post]
 func (h *Handler) ValidateResetToken(c *gin.Context) {
 	var req dto.ValidateResetTokenRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -88,6 +129,18 @@ func (h *Handler) ValidateResetToken(c *gin.Context) {
 	common.Success(c, response)
 }
 
+// @Summary 切换租户
+// @Description 为已认证用户切换当前租户，校验其属于目标租户后签发新的 access/refresh token 并写入会话 cookie；越权返回 403。
+// @Tags 认证管理
+// @Accept json
+// @Produce json
+// @Param body body dto.SwitchTenantRequest true "目标租户"
+// @Success 200 {object} common.Response
+// @Failure 400 "参数错误"
+// @Failure 401 "未认证"
+// @Failure 403 "不属于目标租户"
+// @Security BearerAuth
+// @Router /api/v1/auth/switch-tenant [post]
 func (h *Handler) SwitchTenant(c *gin.Context) {
 	var req dto.SwitchTenantRequest
 	if err := c.ShouldBindJSON(&req); err != nil {

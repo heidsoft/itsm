@@ -140,7 +140,10 @@ type ListUserTasksRequest struct {
 	AllTasks bool `json:"-" form:"-"`
 	// ProcessInstanceID 是 process_tasks 的数值外键；列表按 PI-* 业务键过滤尚未收敛，
 	// 故 form:"-"，避免前端传 "PI-xxx" 时 Gin 把它变成 400。
-	ProcessInstanceID    int    `form:"-" json:"processInstanceId"`
+	ProcessInstanceID int `form:"-" json:"processInstanceId"`
+	// ProcessInstanceKey 按实例业务键（PI-*）过滤节点任务，供实例详情「节点任务」页签使用。
+	// service 解析时限定本租户：键不存在或属于其它租户一律返回空，不越权返回他人任务。
+	ProcessInstanceKey   string `form:"processInstanceKey" json:"processInstanceKey"`
 	Status               string `form:"status" json:"status"`
 	ProcessDefinitionKey string `form:"processDefinitionKey" json:"processDefinitionKey"`
 	TenantID             int    `form:"-" json:"tenantId"`
@@ -220,7 +223,7 @@ type TaskCatalog interface {
 	GetTaskStatistics(ctx context.Context, req *TaskStatisticsRequest) (*TaskStatistics, error)
 	ListApprovalDecisions(ctx context.Context, processInstanceKey string) ([]*ent.ProcessApprovalDecision, error)
 	// 会签相关
-	CreateCounterSignTasks(ctx context.Context, parentTaskID string, req *CounterSignRequest) ([]*ent.ProcessTask, error)
+	CreateCounterSignTasks(ctx context.Context, parentTaskID string, req *CounterSignRequest) ([]*BPMNTaskResponse, error)
 	GetCounterSignStatus(ctx context.Context, parentTaskID string) (*CounterSignStatus, error)
 	Vote(ctx context.Context, taskID string, req *VoteRequest) error
 }

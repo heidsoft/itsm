@@ -580,10 +580,10 @@ export class WorkflowApi {
   }
 
   static async listWorkflowTasks(instanceId: string): Promise<WorkflowTask[]> {
-    // 调用后端 BPMN API 获取指定流程实例的任务列表
+    // 按 PI-* 业务键 + 租户过滤指定流程实例的任务（后端 processInstanceKey 解析实例 FK）。
     try {
       const res = await httpClient.get<{ items: BpmnTaskRaw[] }>('/api/v1/bpmn/tasks', {
-        processInstanceId: instanceId,
+        processInstanceKey: instanceId,
         page: 1,
         pageSize: BACKEND_MAX_PAGE_SIZE,
       });
@@ -1136,32 +1136,14 @@ export class WorkflowApi {
    * 获取节点实例列表
    */
   static async getNodeInstances(instanceId: string): Promise<NodeInstance[]> {
-    interface TaskResponse {
-      id?: string;
-      taskId?: string;
-      taskDefinitionKey?: string;
-      name?: string;
-      status?: string;
-      assignee?: string;
-      assigneeName?: string;
-      createdTime?: string;
-      dueDate?: string;
-      [key: string]: unknown;
-    }
-
-    // 后端暂无专用节点实例API，尝试从任务列表获取
+    // 实例详情「节点任务」页签数据源：按 PI-* 业务键 + 租户过滤，返回标准 {items} 信封。
     try {
-      const instance = await WorkflowApi.getInstance(instanceId);
-       
-      const _unused = instance;
-      const tasksRes = await httpClient.get<
-        Array<{
+      const res = await httpClient.get<{
+        items: Array<{
           id: string;
           taskId: string;
-          /** BPMN 元素 ID（如 Activity_Assign）。prod 实测该字段确实下发，
-           *  但此前映射把它整个丢弃，只用 taskId 冒充 nodeId —— taskId 是
-           *  `TASK-Activity_Assign-<雪花>` 这类任务流水号，与 XML 里的元素 ID
-           *  不同，拿去在 BPMN 图上打标记会一个都打不中。 */
+          /** BPMN 元素 ID（如 Activity_Assign）。taskId 是 `TASK-Activity_Assign-<雪花>`
+           *  任务流水号，与 XML 元素 ID 不同，拿去图上打标记会一个都打不中。 */
           taskDefinitionKey?: string;
           taskName?: string;
           name?: string;
@@ -1170,16 +1152,17 @@ export class WorkflowApi {
           assigneeName?: string;
           createdTime?: string;
           dueDate?: string;
-        }>
-      >(`/api/v1/bpmn/tasks?processInstanceId=${instanceId}`);
-      const list = tasksRes || [];
-      return list.map(item => ({
+        }>;
+      }>('/api/v1/bpmn/tasks', {
+        processInstanceKey: instanceId,
+        page: 1,
+        pageSize: BACKEND_MAX_PAGE_SIZE,
+      });
+      return res.items.map(item => ({
         id: item.taskId || item.id || '',
         instanceId: instanceId,
-        // nodeId 必须是 BPMN 元素 ID：前端用它查「这条任务是哪个节点」、
-        // 在 BPMN 图上打「已走过」标记。taskId 是任务流水号，不能顶替。
-        // 后端历史数据可能缺该字段，此时退回 taskId —— 至少详情表还能显示一行，
-        // 只是无法在图上定位（打标记前有 elementRegistry 存在性判断会自然跳过）。
+        // nodeId 必须是 BPMN 元素 ID；历史数据缺 taskDefinitionKey 时退回 taskId，
+        // 至少详情表还能显示一行（图上打标记前有 elementRegistry 存在性判断会自然跳过）。
         nodeId: item.taskDefinitionKey || item.taskId || '',
         nodeName: item.taskName || item.name || '',
         status:

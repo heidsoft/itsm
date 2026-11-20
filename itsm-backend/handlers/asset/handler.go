@@ -429,6 +429,16 @@ func (h *Handler) DeleteLicense(c *gin.Context) {
 }
 
 // GetLicenseStats GET /api/v1/licenses/stats
+// @Summary 获取许可证统计
+// @Description 按当前租户汇总许可证总数与各状态数量，并计算合规率（active/total*100）。采用 fail-closed 语义：total 或任一状态计数查询失败时整体返回错误，绝不以 0 顶替——否则合规率会被伪装成「许可证全部失效」的业务结论。需要 license:read 权限。
+// @Tags 资产管理
+// @Produce json
+// @Success 200 {object} common.Response{data=dto.LicenseStatsResponse} "统计成功，含 total/active/expired/expiringSoon/depleted/complianceRate"
+// @Failure 401 {object} common.Response "未授权或租户上下文缺失"
+// @Failure 403 {object} common.Response "缺少 license:read 权限"
+// @Failure 500 {object} common.Response "统计查询失败（含任一状态维度计数失败）"
+// @Security BearerAuth
+// @Router /api/v1/licenses/stats [get]
 func (h *Handler) GetLicenseStats(c *gin.Context) {
 	tenantID, ok := tenantIDFromCtx(c)
 	if !ok {

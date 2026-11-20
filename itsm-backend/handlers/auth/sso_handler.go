@@ -23,6 +23,16 @@ import (
 // SSOInitiate 处理 POST /api/v1/auth/sso/initiate。
 // 若请求携带有效会话凭证，自动转入绑定模式（state 记录当前用户），
 // 回调时校验会话未变，避免「点绑定结果变成重新登录」。
+// @Summary 发起 SSO 登录
+// @Description 生成授权请求并返回跳转 URL/state；provider 缺省 default。携带有效会话凭证时自动转入绑定模式，回调校验会话未变，避免「点绑定变成重新登录」。公开端点。
+// @Tags 单点登录
+// @Accept json
+// @Produce json
+// @Param body body dto.SSOInitiateRequest false "SSO 发起请求（可为空）"
+// @Success 200 {object} common.Response
+// @Failure 400 "提供方未启用"
+// @Failure 500 "后端故障"
+// @Router /api/v1/auth/sso/initiate [post]
 func (h *Handler) SSOInitiate(c *gin.Context) {
 	var req dto.SSOInitiateRequest
 	// body 允许为空：provider 缺省 "default"。
@@ -45,6 +55,17 @@ func (h *Handler) SSOInitiate(c *gin.Context) {
 
 // SSOCallback 处理 POST /api/v1/auth/sso/callback?provider=xxx。
 // 成功时建立会话（cookie），载荷与账号密码登录同构。
+// @Summary SSO 回调
+// @Description 用授权码与 state 完成登录，建立会话（cookie）并记录登录审计；失败审计为 LOGIN_FAILED。公开端点。
+// @Tags 单点登录
+// @Accept json
+// @Produce json
+// @Param provider query string false "提供方编码"
+// @Param body body dto.SSOCallbackRequest true "回调参数(code/state)"
+// @Success 200 {object} common.Response
+// @Failure 400 "参数错误"
+// @Failure 401 "回调校验失败"
+// @Router /api/v1/auth/sso/callback [post]
 func (h *Handler) SSOCallback(c *gin.Context) {
 	providerCode := strings.TrimSpace(c.Query("provider"))
 	var req dto.SSOCallbackRequest
@@ -68,6 +89,14 @@ func (h *Handler) SSOCallback(c *gin.Context) {
 }
 
 // SSOListEnabledProviders 处理 GET /api/v1/auth/sso/providers（登录页数据源）。
+// @Summary 列出启用的 SSO 提供方
+// @Description 登录页数据源：按 tenantCode 列出已启用提供方，不暴露密钥等配置细节。公开端点。
+// @Tags 单点登录
+// @Produce json
+// @Param tenantCode query string false "租户编码"
+// @Success 200 {object} common.Response "提供方数组"
+// @Failure 500 "查询失败"
+// @Router /api/v1/auth/sso/providers [get]
 func (h *Handler) SSOListEnabledProviders(c *gin.Context) {
 	providers, err := h.sso.ListEnabledProviders(c.Request.Context(), c.Query("tenantCode"))
 	if err != nil {
@@ -78,6 +107,18 @@ func (h *Handler) SSOListEnabledProviders(c *gin.Context) {
 }
 
 // SSOBind 处理 POST /api/v1/auth/sso/bind（已认证）。
+// @Summary 绑定 SSO 身份
+// @Description 为当前已认证用户绑定外部 SSO 身份；user_id 取鉴权上下文，不信任请求体。
+// @Tags 单点登录
+// @Accept json
+// @Produce json
+// @Param body body dto.SSOBindRequest true "绑定请求"
+// @Success 200 {object} common.Response
+// @Failure 400 "参数错误"
+// @Failure 401 "未认证"
+// @Failure 409 "已被绑定"
+// @Security BearerAuth
+// @Router /api/v1/sso/bind [post]
 func (h *Handler) SSOBind(c *gin.Context) {
 	userID := c.GetInt("user_id")
 	if userID == 0 {
@@ -97,6 +138,17 @@ func (h *Handler) SSOBind(c *gin.Context) {
 }
 
 // SSOUnbind 处理 POST /api/v1/auth/sso/unbind（已认证）。
+// @Summary 解绑 SSO 身份
+// @Description 解除当前用户的外部 SSO 身份绑定。
+// @Tags 单点登录
+// @Accept json
+// @Produce json
+// @Param body body dto.SSOUnbindRequest true "解绑请求"
+// @Success 200 {object} common.Response
+// @Failure 400 "参数错误"
+// @Failure 401 "未认证"
+// @Security BearerAuth
+// @Router /api/v1/sso/unbind [post]
 func (h *Handler) SSOUnbind(c *gin.Context) {
 	userID := c.GetInt("user_id")
 	if userID == 0 {
@@ -116,6 +168,15 @@ func (h *Handler) SSOUnbind(c *gin.Context) {
 }
 
 // SSOListIdentities 处理 GET /api/v1/auth/sso/identities（已认证）。
+// @Summary 列出我的 SSO 身份
+// @Description 列出当前用户已绑定的外部身份（不包含凭据）。
+// @Tags 单点登录
+// @Produce json
+// @Success 200 {object} common.Response "身份数组"
+// @Failure 401 "未认证"
+// @Failure 500 "后端故障"
+// @Security BearerAuth
+// @Router /api/v1/sso/identities [get]
 func (h *Handler) SSOListIdentities(c *gin.Context) {
 	userID := c.GetInt("user_id")
 	if userID == 0 {
@@ -131,6 +192,15 @@ func (h *Handler) SSOListIdentities(c *gin.Context) {
 }
 
 // SSOAdminListProviders 处理 GET /api/v1/admin/sso/providers。
+// @Summary 列出 SSO 提供方配置
+// @Description 租户内 SSO 配置管理面，需要 sso:read 权限。
+// @Tags 单点登录
+// @Produce json
+// @Success 200 {object} common.Response "提供方配置数组"
+// @Failure 401 "未认证"
+// @Failure 403 "权限不足"
+// @Security BearerAuth
+// @Router /api/v1/sso/providers [get]
 func (h *Handler) SSOAdminListProviders(c *gin.Context) {
 	tenantID := c.GetInt("tenant_id")
 	pagination := common.GetPaginationFromQuery(c)
@@ -143,6 +213,17 @@ func (h *Handler) SSOAdminListProviders(c *gin.Context) {
 }
 
 // SSOAdminGetProvider 处理 GET /api/v1/admin/sso/providers/:id。
+// @Summary 获取 SSO 提供方配置
+// @Description 按 ID 查询单个提供方配置，需要 sso:read 权限。
+// @Tags 单点登录
+// @Produce json
+// @Param id path int true "提供方ID"
+// @Success 200 {object} common.Response{data=dto.SSOProviderResponse}
+// @Failure 400 "无效ID"
+// @Failure 403 "权限不足"
+// @Failure 404 "提供方不存在"
+// @Security BearerAuth
+// @Router /api/v1/sso/providers/{id} [get]
 func (h *Handler) SSOAdminGetProvider(c *gin.Context) {
 	tenantID := c.GetInt("tenant_id")
 	providerID, err := strconv.Atoi(c.Param("id"))
@@ -159,6 +240,17 @@ func (h *Handler) SSOAdminGetProvider(c *gin.Context) {
 }
 
 // SSOAdminCreateProvider 处理 POST /api/v1/admin/sso/providers。
+// @Summary 创建 SSO 提供方
+// @Description 新建租户级 SSO 提供方配置，需要 sso:write 权限。
+// @Tags 单点登录
+// @Accept json
+// @Produce json
+// @Param body body dto.SSOCreateProviderRequest true "提供方配置"
+// @Success 200 {object} common.Response{data=dto.SSOProviderResponse}
+// @Failure 400 "参数错误"
+// @Failure 403 "权限不足"
+// @Security BearerAuth
+// @Router /api/v1/sso/providers [post]
 func (h *Handler) SSOAdminCreateProvider(c *gin.Context) {
 	tenantID := c.GetInt("tenant_id")
 	var req dto.SSOCreateProviderRequest
@@ -175,6 +267,19 @@ func (h *Handler) SSOAdminCreateProvider(c *gin.Context) {
 }
 
 // SSOAdminUpdateProvider 处理 PUT /api/v1/admin/sso/providers/:id。
+// @Summary 更新 SSO 提供方
+// @Description 局部更新提供方配置，需要 sso:write 权限。
+// @Tags 单点登录
+// @Accept json
+// @Produce json
+// @Param id path int true "提供方ID"
+// @Param body body dto.SSOUpdateProviderRequest true "提供方配置"
+// @Success 200 {object} common.Response{data=dto.SSOProviderResponse}
+// @Failure 400 "参数错误"
+// @Failure 403 "权限不足"
+// @Failure 404 "提供方不存在"
+// @Security BearerAuth
+// @Router /api/v1/sso/providers/{id} [put]
 func (h *Handler) SSOAdminUpdateProvider(c *gin.Context) {
 	tenantID := c.GetInt("tenant_id")
 	providerID, err := strconv.Atoi(c.Param("id"))
@@ -196,6 +301,17 @@ func (h *Handler) SSOAdminUpdateProvider(c *gin.Context) {
 }
 
 // SSOAdminDeleteProvider 处理 DELETE /api/v1/admin/sso/providers/:id。
+// @Summary 删除 SSO 提供方
+// @Description 删除租户级 SSO 提供方配置，需要 sso:write 权限。
+// @Tags 单点登录
+// @Produce json
+// @Param id path int true "提供方ID"
+// @Success 200 {object} common.Response
+// @Failure 400 "无效ID"
+// @Failure 403 "权限不足"
+// @Failure 404 "提供方不存在"
+// @Security BearerAuth
+// @Router /api/v1/sso/providers/{id} [delete]
 func (h *Handler) SSOAdminDeleteProvider(c *gin.Context) {
 	tenantID := c.GetInt("tenant_id")
 	providerID, err := strconv.Atoi(c.Param("id"))

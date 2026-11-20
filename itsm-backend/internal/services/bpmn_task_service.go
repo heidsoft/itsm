@@ -250,6 +250,20 @@ func (s *bpmnTaskService) ListUserTasks(ctx context.Context, req *ListUserTasksR
 	if req.ProcessInstanceID > 0 {
 		query = query.Where(processtask.ProcessInstanceID(req.ProcessInstanceID))
 	}
+	if req.ProcessInstanceKey != "" {
+		// 业务键→数值外键的解析必须带租户谓词：用别人的实例键探测时本租户查不到，
+		// 返回空列表而不是越权命中，也不是把整个租户的待办当成该实例的节点。
+		instance, ierr := s.client.ProcessInstance.Query().
+			Where(processinstance.ProcessInstanceID(req.ProcessInstanceKey), processinstance.TenantID(req.TenantID)).
+			Only(ctx)
+		if ent.IsNotFound(ierr) {
+			return []*ent.ProcessTask{}, 0, nil
+		}
+		if ierr != nil {
+			return nil, 0, fmt.Errorf("按实例键解析任务失败: %w", ierr)
+		}
+		query = query.Where(processtask.ProcessInstanceID(instance.ID))
+	}
 	total, err := query.Count(ctx)
 	if err != nil {
 		return nil, 0, fmt.Errorf("获取任务总数失败: %w", err)
@@ -1247,29 +1261,74 @@ func (s *bpmnTaskService) GetTaskStatistics(ctx context.Context, req *TaskStatis
 	return stats, nil
 }
 
-// CreateCounterSignTasks 创建会签子任务
-func (s *bpmnTaskService) CreateCounterSignTasks(ctx context.Context, parentTaskID string, req *CounterSignRequest) ([]*ent.ProcessTask, error) {
+// resolveCounterSignTask 按数字主键或业务键解析任务，限定本租户。
+// 解析不到（含跨租户键）返回带标识的 not-found，由 handler 映射成 404/4004。
+func resolveCounterSignTask(ctx context.Context, client *ent.Client, taskIDOrKey string, tenantID int) (*ent.ProcessTask, error) {
+	query := client.ProcessTask.Query().Where(processtask.TenantID(tenantID))
+	if numericID, err := strconv.Atoi(taskIDOrKey); err == nil {
+		query = query.Where(processtask.ID(numericID))
+	} else {
+		query = query.Where(processtask.TaskID(taskIDOrKey))
+	}
+	task, err := query.First(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, common.NewNotFoundError(taskIDOrKey)
+		}
+		return nil, fmt.Errorf("获取任务失败: %w", err)
+	}
+	return task, nil
+}
+
+// CreateCounterSignTasks 创建会签子任务，返回 camelCase DTO（不暴露 Ent 模型）。
+func (s *bpmnTaskService) CreateCounterSignTasks(ctx context.Context, parentTaskID string, req *CounterSignRequest) ([]*dto.BPMNTaskResponse, error) {
 	tenantID, err := requireBPMNTenantContext(ctx)
 	if err != nil {
 		return nil, err
 	}
-	return createCounterSignTasksWithClient(ctx, s.client, parentTaskID, tenantID, req)
+	tasks, err := createCounterSignTasksWithClient(ctx, s.client, parentTaskID, tenantID, req)
+	if err != nil {
+		return nil, err
+	}
+
+	instanceIDs := make([]int, 0, len(tasks))
+	seen := make(map[int]bool, len(tasks))
+	for _, task := range tasks {
+		if !seen[task.ProcessInstanceID] {
+			seen[task.ProcessInstanceID] = true
+			instanceIDs = append(instanceIDs, task.ProcessInstanceID)
+		}
+	}
+	instanceMap := make(map[int]*ent.ProcessInstance, len(instanceIDs))
+	if len(instanceIDs) > 0 {
+		instances, ierr := s.client.ProcessInstance.Query().
+			Where(processinstance.IDIn(instanceIDs...), processinstance.TenantID(tenantID)).
+			All(ctx)
+		if ierr != nil {
+			return nil, fmt.Errorf("加载任务所属流程实例失败: %w", ierr)
+		}
+		for _, instance := range instances {
+			instanceMap[instance.ID] = instance
+		}
+	}
+
+	return dto.ToBPMNTaskResponseList(tasks, instanceMap), nil
 }
 
 func createCounterSignTasksWithClient(ctx context.Context, client *ent.Client, parentTaskID string, tenantID int, req *CounterSignRequest) ([]*ent.ProcessTask, error) {
 	if req == nil || len(req.Approvers) == 0 {
-		return nil, fmt.Errorf("会签审批人不能为空")
+		return nil, common.NewBadRequestError("会签审批人不能为空", nil)
 	}
-	// 获取父任务
-	parentTask, err := client.ProcessTask.Query().
-		Where(processtask.TaskID(parentTaskID), processtask.TenantID(tenantID)).
-		First(ctx)
+	// 父任务支持数字主键与业务键两种寻址；解析后一律以父任务的业务键命名子任务，
+	// 保证「按主键创建」与「按业务键创建」产出同一套子任务标识与父子关系。
+	parentTask, err := resolveCounterSignTask(ctx, client, parentTaskID, tenantID)
 	if err != nil {
-		return nil, fmt.Errorf("获取父任务失败: %w", err)
+		return nil, err
 	}
+	canonicalParentID := parentTask.TaskID
 
 	// 生成根任务ID（如果是第一个会签任务）
-	rootTaskID := parentTaskID
+	rootTaskID := canonicalParentID
 	if parentTask.RootTaskID != "" {
 		rootTaskID = parentTask.RootTaskID
 	}
@@ -1281,7 +1340,7 @@ func createCounterSignTasksWithClient(ctx context.Context, client *ent.Client, p
 
 	var tasks []*ent.ProcessTask
 	for i, approver := range req.Approvers {
-		taskID := fmt.Sprintf("%s_countersign_%d", parentTaskID, i)
+		taskID := fmt.Sprintf("%s_countersign_%d", canonicalParentID, i)
 		status := common.ProcessTaskStatusAssigned
 		if req.ApprovalType == "serial" && i > 0 {
 			status = "created"
@@ -1296,7 +1355,7 @@ func createCounterSignTasksWithClient(ctx context.Context, client *ent.Client, p
 			SetAssignee(approver).
 			SetStatus(status).
 			SetPriority(parentTask.Priority).
-			SetParentTaskID(parentTaskID).
+			SetParentTaskID(canonicalParentID).
 			SetRootTaskID(rootTaskID).
 			SetTenantID(parentTask.TenantID).
 			SetCreatedTime(time.Now()).
@@ -1325,22 +1384,30 @@ func createCounterSignTasksWithClient(ctx context.Context, client *ent.Client, p
 	return tasks, nil
 }
 
-// GetCounterSignStatus 获取会签状态
+// GetCounterSignStatus 获取会签状态。
+// 先确认父任务存在（数字主键或业务键均可），不存在/跨租户一律 not-found，
+// 绝不返回一份 total=0 的统计冒充成功；parentTaskId 一律回父任务的业务键。
 func (s *bpmnTaskService) GetCounterSignStatus(ctx context.Context, parentTaskID string) (*CounterSignStatus, error) {
 	tenantID, err := requireBPMNTenantContext(ctx)
 	if err != nil {
 		return nil, err
 	}
+	parent, err := resolveCounterSignTask(ctx, s.client, parentTaskID, tenantID)
+	if err != nil {
+		return nil, err
+	}
+	canonicalParentID := parent.TaskID
+
 	// 获取所有会签子任务
 	subTasks, err := s.client.ProcessTask.Query().
-		Where(processtask.ParentTaskID(parentTaskID), processtask.TenantID(tenantID)).
+		Where(processtask.ParentTaskID(canonicalParentID), processtask.TenantID(tenantID)).
 		All(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("获取会签子任务失败: %w", err)
 	}
 
 	status := &CounterSignStatus{
-		ParentTaskID: parentTaskID,
+		ParentTaskID: canonicalParentID,
 		Total:        len(subTasks),
 		Completed:    0,
 		Approved:     0,
@@ -1368,12 +1435,13 @@ func (s *bpmnTaskService) GetCounterSignStatus(ctx context.Context, parentTaskID
 	}
 
 	threshold := status.Total
-	if parent, err := s.client.ProcessTask.Query().Where(processtask.TaskID(parentTaskID), processtask.TenantID(tenantID)).Only(ctx); err == nil {
-		if value, ok := numericInt(parent.TaskVariables["threshold"]); ok && value > 0 {
-			threshold = value
-		}
+	if value, ok := numericInt(parent.TaskVariables["threshold"]); ok && value > 0 {
+		threshold = value
 	}
-	if status.Approved >= threshold {
+	// 没有子任务时是「尚未发起会签」，不是「0 票即通过」：避免 0>=0 的假批准。
+	if status.Total == 0 {
+		status.Status = "pending"
+	} else if status.Approved >= threshold {
 		status.Status = "approved"
 	} else if status.Approved+status.Pending < threshold {
 		status.Status = "rejected"
@@ -1406,11 +1474,9 @@ func (s *bpmnTaskService) Vote(ctx context.Context, taskID string, req *VoteRequ
 		return fmt.Errorf("开始会签投票事务失败: %w", err)
 	}
 	defer func() { _ = tx.Rollback() }()
-	task, err := s.client.ProcessTask.Query().
-		Where(processtask.TaskID(taskID), processtask.TenantID(tenantID)).
-		First(ctx)
+	task, err := resolveCounterSignTask(ctx, s.client, taskID, tenantID)
 	if err != nil {
-		return fmt.Errorf("获取任务失败: %w", err)
+		return err
 	}
 	engineForAuth := NewCustomProcessEngine(s.client, s.logger).(*CustomProcessEngine)
 	if err := engineForAuth.authorizeTaskActor(ctx, task); err != nil {

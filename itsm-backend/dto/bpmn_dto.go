@@ -2,6 +2,7 @@ package dto
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"itsm-backend/ent"
@@ -149,7 +150,7 @@ func ToBPMNProcessInstanceResponse(p *ent.ProcessInstance) *BPMNProcessInstanceR
 		Status:                  p.Status,
 		CurrentActivityID:       p.CurrentActivityID,
 		CurrentActivityName:     p.CurrentActivityName,
-		Variables:               p.Variables,
+		Variables:               filterEngineControlVariables(p.Variables),
 		StartTime:               p.StartTime,
 		EndTime:                 timeToPtr(p.EndTime),
 		SuspendedTime:           timeToPtr(p.SuspendedTime),
@@ -162,6 +163,22 @@ func ToBPMNProcessInstanceResponse(p *ent.ProcessInstance) *BPMNProcessInstanceR
 		CreatedAt:               p.CreatedAt,
 		UpdatedAt:               p.UpdatedAt,
 	}
+}
+
+// filterEngineControlVariables 去掉引擎控制命名空间（_ 前缀，如 _done_/_commandId）。
+// 这些键是引擎推进的内部状态，不属于对外契约；库里保留，响应里剔除。
+func filterEngineControlVariables(vars map[string]interface{}) map[string]interface{} {
+	if vars == nil {
+		return nil
+	}
+	clean := make(map[string]interface{}, len(vars))
+	for key, value := range vars {
+		if strings.HasPrefix(key, "_") {
+			continue
+		}
+		clean[key] = value
+	}
+	return clean
 }
 
 // ToBPMNProcessInstanceListResponse 批量转换

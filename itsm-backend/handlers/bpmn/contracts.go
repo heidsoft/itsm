@@ -57,10 +57,10 @@ type BPMNSLAProvider interface {
 // ProcessMonitoringProvider 流程监控（指标 / 实例状态 / 时间线 / 告警 / 健康度）
 type ProcessMonitoringProvider interface {
 	GetProcessMetrics(ctx context.Context, req *dto.ProcessMetricsRequest) (*dto.ProcessMetrics, error)
-	GetProcessInstanceStatus(ctx context.Context, processInstanceID int, tenantID int) (*dto.ProcessInstanceStatus, error)
+	GetProcessInstanceStatus(ctx context.Context, processInstanceKey string, tenantID int) (*dto.ProcessInstanceStatus, error)
 	ListProcessInstancesStatus(ctx context.Context, query *dto.ListProcessInstanceStatusQuery) ([]*dto.ProcessInstanceStatus, int, error)
 	GetProcessTimeline(ctx context.Context, processInstanceKey string, tenantID int) ([]*dto.ProcessTimelineEntry, error)
-	GetPerformanceAlerts(ctx context.Context, tenantID int) ([]map[string]interface{}, error)
+	GetPerformanceAlerts(ctx context.Context, tenantID int) ([]*dto.PerformanceAlert, error)
 	GetSystemHealth(ctx context.Context, tenantID int) (map[string]interface{}, error)
 }
 

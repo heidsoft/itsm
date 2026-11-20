@@ -829,7 +829,7 @@ describe('WorkflowApi', () => {
       const result = await WorkflowApi.listWorkflowTasks('inst1');
       expect(result).toHaveLength(1);
       expect(httpClient.get).toHaveBeenCalledWith('/api/v1/bpmn/tasks', {
-        processInstanceId: 'inst1',
+        processInstanceKey: 'inst1',
         page: 1,
         pageSize: 100,
       });
@@ -861,12 +861,17 @@ describe('WorkflowApi', () => {
 
   describe('getNodeInstances', () => {
     it('should get node instances from tasks', async () => {
-      (httpClient.get as jest.Mock)
-        .mockResolvedValueOnce({ id: 'inst1', instanceId: 'inst1', processDefinitionKey: 'wf1', status: 'running', startTime: '2024-01-01' })
-        .mockResolvedValueOnce([{ id: 't1', taskId: 'task1', name: 'Review', status: 'pending', assignee: '5' }]);
+      (httpClient.get as jest.Mock).mockResolvedValueOnce({
+        items: [{ id: 't1', taskId: 'task1', name: 'Review', status: 'pending', assignee: '5' }],
+      });
       const result = await WorkflowApi.getNodeInstances('inst1');
       expect(result).toHaveLength(1);
       expect(result[0].nodeName).toBe('Review');
+      expect(httpClient.get).toHaveBeenCalledWith('/api/v1/bpmn/tasks', {
+        processInstanceKey: 'inst1',
+        page: 1,
+        pageSize: 100,
+      });
     });
 
     /**
@@ -879,9 +884,8 @@ describe('WorkflowApi', () => {
      * 打标记会一个都打不中 —— 图上元素的 id 是 'Activity_Assign'。
      */
     it('nodeId 优先取 taskDefinitionKey（BPMN 元素 ID），而非 taskId 流水号', async () => {
-      (httpClient.get as jest.Mock)
-        .mockResolvedValueOnce({ id: 'inst1', instanceId: 'inst1', processDefinitionKey: 'wf1', status: 'running', startTime: '2024-01-01' })
-        .mockResolvedValueOnce([
+      (httpClient.get as jest.Mock).mockResolvedValueOnce({
+        items: [
           {
             id: 't1',
             taskId: 'TASK-Activity_Assign-1794579980116057665',
@@ -891,7 +895,8 @@ describe('WorkflowApi', () => {
             status: 'completed',
             assignee: '5',
           },
-        ]);
+        ],
+      });
       const result = await WorkflowApi.getNodeInstances('inst1');
       expect(result[0].nodeId).toBe('Activity_Assign');
       expect(result[0].nodeId).not.toBe('TASK-Activity_Assign-1794579980116057665');
@@ -902,9 +907,9 @@ describe('WorkflowApi', () => {
       // 老数据/系统任务可能没有 taskDefinitionKey；此时不能让 nodeId 变空，
       // 否则详情表格整行丢失。退回 taskId 后仍无法在 BPMN 图上定位，
       // 但预览组件打标记前有 elementRegistry 存在性判断会自然跳过。
-      (httpClient.get as jest.Mock)
-        .mockResolvedValueOnce({ id: 'inst1', instanceId: 'inst1', processDefinitionKey: 'wf1', status: 'running', startTime: '2024-01-01' })
-        .mockResolvedValueOnce([{ id: 't2', taskId: 'task-legacy', status: 'completed' }]);
+      (httpClient.get as jest.Mock).mockResolvedValueOnce({
+        items: [{ id: 't2', taskId: 'task-legacy', status: 'completed' }],
+      });
       const result = await WorkflowApi.getNodeInstances('inst1');
       expect(result[0].nodeId).toBe('task-legacy');
     });

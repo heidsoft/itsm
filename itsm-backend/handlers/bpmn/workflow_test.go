@@ -162,7 +162,7 @@ func (f *fakeTaskService) ListApprovalDecisions(ctx context.Context, processInst
 	return f.historyDecisions, f.historyErr
 }
 
-func (f *fakeTaskService) CreateCounterSignTasks(ctx context.Context, parentTaskID string, req *service.CounterSignRequest) ([]*ent.ProcessTask, error) {
+func (f *fakeTaskService) CreateCounterSignTasks(ctx context.Context, parentTaskID string, req *service.CounterSignRequest) ([]*dto.BPMNTaskResponse, error) {
 	return nil, nil
 }
 

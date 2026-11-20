@@ -225,6 +225,20 @@ type ProcessInstanceStatus struct {
 	RiskLevel         string                 `json:"riskLevel"` // low, medium, high
 }
 
+// PerformanceAlert 性能告警（/monitoring/performance/alerts 与 /performance 内嵌共用同一形状）
+type PerformanceAlert struct {
+	ID           string    `json:"id"`
+	Type         string    `json:"type"`     // performance, bottleneck, error
+	Severity     string    `json:"severity"` // info, warning, error, critical
+	Message      string    `json:"message"`
+	Timestamp    time.Time `json:"timestamp"`
+	ResourceID   string    `json:"resourceId"`
+	ResourceType string    `json:"resourceType"`
+	Value        float64   `json:"value"`
+	Threshold    float64   `json:"threshold"`
+	Status       string    `json:"status"` // active, resolved, acknowledged
+}
+
 // ProcessTimelineEntry 流程执行时间线条目
 type ProcessTimelineEntry struct {
 	ID              string                 `json:"id"`

@@ -65,6 +65,15 @@ func resolveTenant(c *gin.Context) (int, bool) {
 }
 
 // ListTemplates 列出预置 SLA 模板及其在当前租户的安装状态
+// @Summary 列出 SLA 模板
+// @Description 列出开箱即用的预置 SLA 模板（只读），需要 sla:read 权限。
+// @Tags SLA模板
+// @Produce json
+// @Success 200 {object} common.Response "模板数组"
+// @Failure 403 "权限不足"
+// @Failure 500 "后端故障"
+// @Security BearerAuth
+// @Router /api/v1/sla/templates [get]
 func (h *Handler) ListTemplates(c *gin.Context) {
 	tid, ok := resolveTenant(c)
 	if !ok {
@@ -90,6 +99,16 @@ func (h *Handler) ListTemplates(c *gin.Context) {
 }
 
 // GetTemplate 获取单个模板详情（含安装状态）
+// @Summary 获取 SLA 模板
+// @Description 按模板 key 查询预置 SLA 模板详情。
+// @Tags SLA模板
+// @Produce json
+// @Param key path string true "模板key"
+// @Success 200 {object} common.Response
+// @Failure 403 "权限不足"
+// @Failure 404 "模板不存在"
+// @Security BearerAuth
+// @Router /api/v1/sla/templates/{key} [get]
 func (h *Handler) GetTemplate(c *gin.Context) {
 	key := c.Param("key")
 	if key == "" {
@@ -122,6 +141,18 @@ func (h *Handler) GetTemplate(c *gin.Context) {
 }
 
 // InstallTemplate 将模板安装到当前租户
+// @Summary 安装 SLA 模板
+// @Description 把预置模板安装为当前租户的 SLA 定义；重复安装按幂等语义处理。需要 sla:write 权限。
+// @Tags SLA模板
+// @Accept json
+// @Produce json
+// @Param key path string true "模板key"
+// @Success 200 {object} common.Response
+// @Failure 403 "权限不足"
+// @Failure 404 "模板不存在"
+// @Failure 409 "已安装或冲突"
+// @Security BearerAuth
+// @Router /api/v1/sla/templates/{key}/install [post]
 func (h *Handler) InstallTemplate(c *gin.Context) {
 	key := c.Param("key")
 	if key == "" {

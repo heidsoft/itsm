@@ -43,6 +43,21 @@ func NewHandler(service *Service) *Handler {
 }
 
 // List handles partial match for GetServiceCatalogs
+// @Summary 查询服务目录
+// @Description 分页查询服务目录（分类/状态/关键字/CI 类型/云服务过滤），页长由平台统一夹紧到 (0,100]。空列表返回 []。兼容路径 GET /api/v1/service-catalog 与 /api/v1/service-catalog-services。
+// @Tags 服务目录
+// @Produce json
+// @Param category query string false "分类"
+// @Param status query string false "状态"
+// @Param keyword query string false "关键字"
+// @Param page query int false "页码" default(1)
+// @Param pageSize query int false "页长" default(20)
+// @Success 200 {object} common.Response "data 含 items/total/page/pageSize"
+// @Failure 400 "参数错误"
+// @Failure 401 "租户上下文缺失"
+// @Failure 500 "后端故障"
+// @Security BearerAuth
+// @Router /api/v1/service-catalogs [get]
 func (h *Handler) List(c *gin.Context) {
 	var req dto.GetServiceCatalogsRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
@@ -85,6 +100,17 @@ func (h *Handler) List(c *gin.Context) {
 }
 
 // Get handles GetServiceCatalogByID
+// @Summary 获取服务目录详情
+// @Description 按 ID 查询服务目录，真不存在返回 404。兼容路径 GET /api/v1/service-catalog-services/{id}。
+// @Tags 服务目录
+// @Produce json
+// @Param id path int true "服务目录ID"
+// @Success 200 {object} common.Response{data=dto.ServiceCatalogResponse}
+// @Failure 400 "无效ID"
+// @Failure 401 "租户上下文缺失"
+// @Failure 404 "不存在或跨租户"
+// @Security BearerAuth
+// @Router /api/v1/service-catalogs/{id} [get]
 func (h *Handler) Get(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -108,6 +134,18 @@ func (h *Handler) Get(c *gin.Context) {
 }
 
 // Create handles CreateServiceCatalog
+// @Summary 创建服务目录
+// @Description 新建服务目录，需要 service_catalog:write 权限。
+// @Tags 服务目录
+// @Accept json
+// @Produce json
+// @Param body body dto.CreateServiceCatalogRequest true "服务目录请求"
+// @Success 200 {object} common.Response{data=dto.ServiceCatalogResponse}
+// @Failure 400 "参数错误"
+// @Failure 403 "权限不足"
+// @Failure 500 "后端故障"
+// @Security BearerAuth
+// @Router /api/v1/service-catalogs [post]
 func (h *Handler) Create(c *gin.Context) {
 	var req dto.CreateServiceCatalogRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -171,6 +209,19 @@ func (h *Handler) Create(c *gin.Context) {
 }
 
 // Update handles UpdateServiceCatalog
+// @Summary 更新服务目录
+// @Description 局部更新服务目录字段，需要 service_catalog:write 权限。
+// @Tags 服务目录
+// @Accept json
+// @Produce json
+// @Param id path int true "服务目录ID"
+// @Param body body dto.UpdateServiceCatalogRequest true "更新请求"
+// @Success 200 {object} common.Response{data=dto.ServiceCatalogResponse}
+// @Failure 400 "参数错误"
+// @Failure 403 "权限不足"
+// @Failure 404 "不存在或跨租户"
+// @Security BearerAuth
+// @Router /api/v1/service-catalogs/{id} [put]
 func (h *Handler) Update(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -241,6 +292,17 @@ func normalizeServiceCatalogRequest(req *dto.CreateServiceCatalogRequest) {
 }
 
 // Delete handles DeleteServiceCatalog
+// @Summary 删除服务目录
+// @Description 删除服务目录，需要 service_catalog:delete 权限。
+// @Tags 服务目录
+// @Produce json
+// @Param id path int true "服务目录ID"
+// @Success 200 {object} common.Response
+// @Failure 400 "无效ID"
+// @Failure 403 "权限不足"
+// @Failure 404 "不存在或跨租户"
+// @Security BearerAuth
+// @Router /api/v1/service-catalogs/{id} [delete]
 func (h *Handler) Delete(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -263,6 +325,17 @@ func (h *Handler) Delete(c *gin.Context) {
 }
 
 // Search handles GET /api/v1/service-catalogs/search?q=xxx
+// @Summary 搜索服务目录
+// @Description 按关键字搜索服务目录，结果与列表同口径分页。
+// @Tags 服务目录
+// @Produce json
+// @Param keyword query string false "关键字"
+// @Param page query int false "页码" default(1)
+// @Success 200 {object} common.Response "分页信封"
+// @Failure 401 "租户上下文缺失"
+// @Failure 500 "后端故障"
+// @Security BearerAuth
+// @Router /api/v1/service-catalogs/search [get]
 func (h *Handler) Search(c *gin.Context) {
 	keyword := c.Query("q")
 	tenantID := c.GetInt("tenant_id")
@@ -296,6 +369,15 @@ func (h *Handler) Search(c *gin.Context) {
 }
 
 // Stats handles GET /api/v1/service-catalogs/stats
+// @Summary 服务目录统计
+// @Description 按分类/状态聚合服务目录数量，供工作台卡片展示。
+// @Tags 服务目录
+// @Produce json
+// @Success 200 {object} common.Response
+// @Failure 401 "租户上下文缺失"
+// @Failure 500 "后端故障"
+// @Security BearerAuth
+// @Router /api/v1/service-catalogs/stats [get]
 func (h *Handler) Stats(c *gin.Context) {
 	tenantID := c.GetInt("tenant_id")
 	if tenantID == 0 {

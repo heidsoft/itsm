@@ -55,17 +55,17 @@ func (h *Handler) toArticleDTO(a *Article) *dto.KnowledgeArticleResponse {
 		status = "published"
 	}
 	return &dto.KnowledgeArticleResponse{
-		ID:        a.ID,
-		Title:     a.Title,
-		Content:   a.Content,
-		Category:  a.Category,
-		Author:    a.AuthorName,
+		ID:          a.ID,
+		Title:       a.Title,
+		Content:     a.Content,
+		Category:    a.Category,
+		Author:      a.AuthorName,
 		Tags:        a.Tags,
 		Status:      status,
 		IsPublished: a.IsPublished,
 		TenantID:    a.TenantID,
-		CreatedAt: a.CreatedAt,
-		UpdatedAt: a.UpdatedAt,
+		CreatedAt:   a.CreatedAt,
+		UpdatedAt:   a.UpdatedAt,
 
 		// 评审状态与发布状态各自独立透出：status 只回答「是否对外可见」，
 		// 发布门禁与前端评审按钮看的是 reviewStatus。
@@ -108,6 +108,18 @@ func (h *Handler) describeFreshness(a *Article) *dto.KnowledgeFreshness {
 }
 
 // CreateArticle handles POST /api/v1/knowledge-articles
+// @Summary 创建知识文章
+// @Description 新建知识文章（草稿）。分类可见性在读取路径按访问者身份过滤；需要 knowledge:write 权限。兼容旧路径 POST /api/v1/knowledge-articles。
+// @Tags 知识管理
+// @Accept json
+// @Produce json
+// @Param body body dto.CreateKnowledgeArticleRequest true "文章创建请求"
+// @Success 200 {object} common.Response{data=dto.KnowledgeArticleResponse}
+// @Failure 400 "参数错误"
+// @Failure 401 "上下文缺失"
+// @Failure 500 "后端故障"
+// @Security BearerAuth
+// @Router /api/v1/knowledge/articles [post]
 func (h *Handler) CreateArticle(c *gin.Context) {
 	var req dto.CreateKnowledgeArticleRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -175,6 +187,18 @@ func (h *Handler) CreateArticle(c *gin.Context) {
 }
 
 // GetArticle handles GET /api/v1/knowledge-articles/:id
+// @Summary 获取知识文章
+// @Description 按 ID 查询文章；不存在与分类不可读统一返回 404（防枚举，调用方无法探测受限文章是否存在），DB 故障返回 500。兼容旧路径 GET /api/v1/knowledge-articles/{id}。
+// @Tags 知识管理
+// @Produce json
+// @Param id path int true "文章ID"
+// @Success 200 {object} common.Response{data=dto.KnowledgeArticleResponse}
+// @Failure 400 "无效ID"
+// @Failure 401 "上下文缺失"
+// @Failure 404 "不存在或无权读取"
+// @Failure 500 "后端故障"
+// @Security BearerAuth
+// @Router /api/v1/knowledge/articles/{id} [get]
 func (h *Handler) GetArticle(c *gin.Context) {
 	id, ok := common.ParsePositiveID(c, "id")
 	if !ok {
@@ -196,7 +220,8 @@ func (h *Handler) GetArticle(c *gin.Context) {
 
 	res, err := h.svc.GetArticle(h.requestContext(c), id, tenantID)
 	if err != nil {
-		common.NotFound(c, "Article not found")
+		// 不存在/分类不可读 → 404（防枚举）；DB 故障 → 500，不得伪装成「文章不存在」。
+		knowledgeArticleError(c, err)
 		return
 	}
 
@@ -204,6 +229,20 @@ func (h *Handler) GetArticle(c *gin.Context) {
 }
 
 // ListArticles handles GET /api/v1/knowledge-articles
+// @Summary 查询知识文章列表
+// @Description 分页列出文章，按分类可见性与时效策略过滤后计数（先过滤再分页，total 为当前访问者真正可见条数）；空列表返回 [] 而非 null。兼容旧路径 GET /api/v1/knowledge-articles。
+// @Tags 知识管理
+// @Produce json
+// @Param page query int false "页码" default(1)
+// @Param pageSize query int false "页长" default(20)
+// @Param category query string false "分类筛选"
+// @Param search query string false "关键字"
+// @Param status query string false "状态筛选(draft|published)"
+// @Success 200 {object} common.Response "data 含 items/total/page/pageSize/totalPages"
+// @Failure 401 "上下文缺失"
+// @Failure 500 "后端故障"
+// @Security BearerAuth
+// @Router /api/v1/knowledge/articles [get]
 func (h *Handler) ListArticles(c *gin.Context) {
 	pg := common.GetPaginationFromQuery(c)
 	category := c.Query("category")
@@ -240,6 +279,19 @@ func (h *Handler) ListArticles(c *gin.Context) {
 }
 
 // UpdateArticle handles PUT /api/v1/knowledge-articles/:id
+// @Summary 更新知识文章
+// @Description 局部更新文章字段（仅请求体中非 nil 字段生效）；前置读取与 GetArticle 同口径：不可读维持 404 防枚举，DB 故障落 500。
+// @Tags 知识管理
+// @Accept json
+// @Produce json
+// @Param id path int true "文章ID"
+// @Param body body dto.UpdateKnowledgeArticleRequest true "文章更新请求"
+// @Success 200 {object} common.Response{data=dto.KnowledgeArticleResponse}
+// @Failure 400 "参数错误"
+// @Failure 404 "不存在或无权访问"
+// @Failure 500 "后端故障"
+// @Security BearerAuth
+// @Router /api/v1/knowledge/articles/{id} [put]
 func (h *Handler) UpdateArticle(c *gin.Context) {
 	id, ok := common.ParsePositiveID(c, "id")
 	if !ok {
@@ -267,7 +319,8 @@ func (h *Handler) UpdateArticle(c *gin.Context) {
 
 	existing, err := h.svc.GetArticle(h.requestContext(c), id, tenantID)
 	if err != nil {
-		common.NotFound(c, "Article not found")
+		// 与 GetArticle 同口径：防枚举的 404 保留，DB 故障不再伪装成 not found。
+		knowledgeArticleError(c, err)
 		return
 	}
 
@@ -325,6 +378,18 @@ func (h *Handler) UpdateArticle(c *gin.Context) {
 //
 // 刻意不提供由客户端写入 last_reviewed_at 的能力：
 // 一旦可写，就能直接把时间改成未来值来消除逾期提醒，L1 会形同虚设。
+// @Summary 记录内容复核
+// @Description 确认文章内容仍然适用，更新 last_reviewed_at 以解除「逾期未复核」的检索过滤；只改复核时间不触碰正文。
+// @Tags 知识管理
+// @Accept json
+// @Produce json
+// @Param id path int true "文章ID"
+// @Success 200 {object} common.Response{data=dto.KnowledgeArticleResponse}
+// @Failure 400 "无效ID"
+// @Failure 404 "不存在或无权访问"
+// @Failure 500 "后端故障"
+// @Security BearerAuth
+// @Router /api/v1/knowledge/articles/{id}/review [post]
 func (h *Handler) MarkArticleReviewed(c *gin.Context) {
 	id, ok := common.ParsePositiveID(c, "id")
 	if !ok {
@@ -346,8 +411,8 @@ func (h *Handler) MarkArticleReviewed(c *gin.Context) {
 
 	res, err := h.svc.MarkArticleReviewed(h.requestContext(c), id, tenantID)
 	if err != nil {
-		// 不存在与已软删统一按未找到返回，避免暴露资源存在性
-		common.NotFound(c, "Article not found")
+		// 不存在/分类不可读 → 404（防枚举）；DB 故障 → 500。
+		knowledgeArticleError(c, err)
 		return
 	}
 
@@ -355,11 +420,36 @@ func (h *Handler) MarkArticleReviewed(c *gin.Context) {
 }
 
 // PublishArticle handles POST /api/v1/knowledge/articles/:id/publish
+// @Summary 发布知识文章
+// @Description 发布前校验 review_status=approved，未通过返回 409；通过后同事务落版本快照并把线上版本指针指向它。需要 knowledge:write 权限。
+// @Tags 知识管理
+// @Accept json
+// @Produce json
+// @Param id path int true "文章ID"
+// @Success 200 {object} common.Response{data=dto.KnowledgeArticleResponse}
+// @Failure 400 "无效ID"
+// @Failure 404 "不存在或无权访问"
+// @Failure 409 "评审未通过"
+// @Failure 500 "后端故障"
+// @Security BearerAuth
+// @Router /api/v1/knowledge/articles/{id}/publish [post]
 func (h *Handler) PublishArticle(c *gin.Context) {
 	h.setArticlePublished(c, true)
 }
 
 // UnpublishArticle handles POST /api/v1/knowledge/articles/:id/unpublish
+// @Summary 撤回知识文章
+// @Description 把文章从可见面撤下并清除线上版本指针；撤回不设评审门槛（撤下永远是安全方向）。需要 knowledge:write 权限。
+// @Tags 知识管理
+// @Accept json
+// @Produce json
+// @Param id path int true "文章ID"
+// @Success 200 {object} common.Response{data=dto.KnowledgeArticleResponse}
+// @Failure 400 "无效ID"
+// @Failure 404 "不存在或无权访问"
+// @Failure 500 "后端故障"
+// @Security BearerAuth
+// @Router /api/v1/knowledge/articles/{id}/unpublish [post]
 func (h *Handler) UnpublishArticle(c *gin.Context) {
 	h.setArticlePublished(c, false)
 }
@@ -396,6 +486,17 @@ func (h *Handler) setArticlePublished(c *gin.Context, published bool) {
 }
 
 // DeleteArticle handles DELETE /api/v1/knowledge-articles/:id
+// @Summary 删除知识文章
+// @Description 软删除文章并同步移除向量索引；删除后不再出现在检索结果。需要 knowledge:delete 权限。
+// @Tags 知识管理
+// @Produce json
+// @Param id path int true "文章ID"
+// @Success 200 {object} common.Response
+// @Failure 400 "无效ID"
+// @Failure 404 "不存在或无权访问"
+// @Failure 500 "后端故障"
+// @Security BearerAuth
+// @Router /api/v1/knowledge/articles/{id} [delete]
 func (h *Handler) DeleteArticle(c *gin.Context) {
 	id, ok := common.ParsePositiveID(c, "id")
 	if !ok {
@@ -425,17 +526,45 @@ func (h *Handler) DeleteArticle(c *gin.Context) {
 
 // GetArticleComments handles GET /api/v1/knowledge/articles/:id/comments
 // 评论尚未落地（无存储模型）：显式返回 unready，而不是空成功伪装成"暂无评论"。
+// @Summary 查询文章评论
+// @Description 文章评论能力当前未落地（无存储模型），端点显式返回 503/5003(unready)，不会用空列表伪装「暂无评论」。
+// @Tags 知识管理
+// @Produce json
+// @Param id path int true "文章ID"
+// @Success 503 {object} common.Response "5003 能力未实现"
+// @Failure 503 "能力未实现(5003)"
+// @Security BearerAuth
+// @Router /api/v1/knowledge/articles/{id}/comments [get]
 func (h *Handler) GetArticleComments(c *gin.Context) {
 	common.Fail(c, common.ServiceUnavailableCode, "知识文章评论功能尚未实现")
 }
 
 // AddArticleComment handles POST /api/v1/knowledge/articles/:id/comments
+// @Summary 添加文章评论
+// @Description 文章评论能力当前未落地（无存储模型），端点显式返回 503/5003(unready)，不会返回假评论对象。
+// @Tags 知识管理
+// @Accept json
+// @Produce json
+// @Param id path int true "文章ID"
+// @Success 503 {object} common.Response "5003 能力未实现"
+// @Failure 503 "能力未实现(5003)"
+// @Security BearerAuth
+// @Router /api/v1/knowledge/articles/{id}/comments [post]
 func (h *Handler) AddArticleComment(c *gin.Context) {
 	common.Fail(c, common.ServiceUnavailableCode, "知识文章评论功能尚未实现")
 }
 
 // ListRestrictedCategories handles GET /api/v1/knowledge/categories/restricted
 // 返回当前租户已被纳管（仅指定角色可读）的知识分类清单。
+// @Summary 查询受限分类
+// @Description 列出当前租户被纳管为「仅授权角色可读」的知识分类（L0 权限边界）。需要 knowledge:write 权限。
+// @Tags 知识管理
+// @Produce json
+// @Success 200 {object} common.Response "分类数组"
+// @Failure 401 "上下文缺失"
+// @Failure 500 "后端故障"
+// @Security BearerAuth
+// @Router /api/v1/knowledge/categories/restricted [get]
 func (h *Handler) ListRestrictedCategories(c *gin.Context) {
 	tenantID := c.GetInt("tenant_id")
 	if tenantID == 0 {
@@ -455,6 +584,17 @@ func (h *Handler) ListRestrictedCategories(c *gin.Context) {
 
 // SetCategoryRestriction handles POST /api/v1/knowledge/categories/restricted
 // 纳管或解除纳管某个知识分类。body: { "category": "财务制度", "restricted": true }
+// @Summary 设置分类可见性
+// @Description 将指定分类标记为受限/非受限（restricted 省略时默认 true）；纳管后该分类对未授权访问者按不可读处理。需要 knowledge:write 权限。
+// @Tags 知识管理
+// @Accept json
+// @Produce json
+// @Param body body object true "{category: string, restricted?: bool}"
+// @Success 200 {object} common.Response "{category, restricted}"
+// @Failure 400 "参数错误"
+// @Failure 500 "后端故障"
+// @Security BearerAuth
+// @Router /api/v1/knowledge/categories/restricted [post]
 func (h *Handler) SetCategoryRestriction(c *gin.Context) {
 	tenantID := c.GetInt("tenant_id")
 	if tenantID == 0 {
@@ -486,6 +626,18 @@ func (h *Handler) SetCategoryRestriction(c *gin.Context) {
 }
 
 // SearchArticles handles POST /api/v1/knowledge/search
+// @Summary 检索知识文章
+// @Description 按关键字检索并做分类级可见性过滤（L0）；pageSize 夹紧到 (0,50]，缺省 20。请求须注入访问者身份，否则受限分类一律不可见（fail-closed）。
+// @Tags 知识管理
+// @Accept json
+// @Produce json
+// @Param body body object true "{query: string(必填), category?: string, pageSize?: int}"
+// @Success 200 {object} common.Response{data=dto.KnowledgeSearchResponse}
+// @Failure 400 "参数错误"
+// @Failure 401 "上下文缺失"
+// @Failure 500 "检索失败"
+// @Security BearerAuth
+// @Router /api/v1/knowledge/search [post]
 func (h *Handler) SearchArticles(c *gin.Context) {
 	var req struct {
 		Query    string `json:"query" binding:"required"`
@@ -557,6 +709,15 @@ func snippet(s string, maxLen int) string {
 }
 
 // GetRecommendations handles GET /api/v1/knowledge/recommendations
+// @Summary 推荐知识文章
+// @Description 基于时效策略与访问者可见性返回推荐文章（Citable 的未过期内容），已纳管的受限分类不可见。需要 knowledge:read 权限。
+// @Tags 知识管理
+// @Produce json
+// @Success 200 {object} common.Response "文章数组"
+// @Failure 401 "上下文缺失"
+// @Failure 500 "后端故障"
+// @Security BearerAuth
+// @Router /api/v1/knowledge/recommendations [get]
 func (h *Handler) GetRecommendations(c *gin.Context) {
 	tenantIDVal, ok := c.Get("tenant_id")
 	if !ok {
@@ -585,6 +746,15 @@ func (h *Handler) GetRecommendations(c *gin.Context) {
 }
 
 // GetRecentArticles handles GET /api/v1/knowledge/recent
+// @Summary 最近知识文章
+// @Description 列出最近更新的文章，同样经分类可见性过滤。需要 knowledge:read 权限。
+// @Tags 知识管理
+// @Produce json
+// @Success 200 {object} common.Response "文章数组"
+// @Failure 401 "上下文缺失"
+// @Failure 500 "后端故障"
+// @Security BearerAuth
+// @Router /api/v1/knowledge/recent [get]
 func (h *Handler) GetRecentArticles(c *gin.Context) {
 	tenantIDVal, ok := c.Get("tenant_id")
 	if !ok {
@@ -613,6 +783,15 @@ func (h *Handler) GetRecentArticles(c *gin.Context) {
 }
 
 // GetCategories handles GET /api/v1/knowledge-articles/categories
+// @Summary 知识文章分类
+// @Description 列出当前租户可见的文章分类（受限分类按权限剔除）。兼容旧路径 GET /api/v1/knowledge-articles/categories。
+// @Tags 知识管理
+// @Produce json
+// @Success 200 {object} common.Response "分类数组"
+// @Failure 401 "上下文缺失"
+// @Failure 500 "后端故障"
+// @Security BearerAuth
+// @Router /api/v1/knowledge/categories [get]
 func (h *Handler) GetCategories(c *gin.Context) {
 	tenantIDVal, ok := c.Get("tenant_id")
 	if !ok {
@@ -637,6 +816,15 @@ func (h *Handler) GetCategories(c *gin.Context) {
 }
 
 // GetStats handles GET /api/v1/knowledge/stats
+// @Summary 知识库统计
+// @Description 统计当前可见范围内文章总数、已发布/草稿数、浏览与点赞数及分类分布；统计读取失败 fail-closed 返回 500。
+// @Tags 知识管理
+// @Produce json
+// @Success 200 {object} common.Response{data=dto.KnowledgeStatsResponse}
+// @Failure 401 "上下文缺失"
+// @Failure 500 "后端故障"
+// @Security BearerAuth
+// @Router /api/v1/knowledge/stats [get]
 func (h *Handler) GetStats(c *gin.Context) {
 	tenantIDVal, ok := c.Get("tenant_id")
 	if !ok {
@@ -662,6 +850,19 @@ func (h *Handler) GetStats(c *gin.Context) {
 
 // ListArticleVersions handles GET /api/v1/knowledge/articles/:id/versions.
 // 版本历史列表（版本号倒序）。2026-10-14 前该端点未注册，前端版本 Tab 打开即报错。
+// @Summary 查询版本历史
+// @Description 按版本号倒序列出文章快照；版本表无 tenant_id，租户隔离经文章归属校验实现。
+// @Tags 知识版本
+// @Produce json
+// @Param id path int true "文章ID"
+// @Param page query int false "页码" default(1)
+// @Param pageSize query int false "页长" default(20)
+// @Success 200 {object} common.Response "分页信封"
+// @Failure 400 "无效ID"
+// @Failure 404 "文章不存在"
+// @Failure 500 "后端故障"
+// @Security BearerAuth
+// @Router /api/v1/knowledge/articles/{id}/versions [get]
 func (h *Handler) ListArticleVersions(c *gin.Context) {
 	id, ok := common.ParsePositiveID(c, "id")
 	if !ok {
@@ -683,6 +884,19 @@ func (h *Handler) ListArticleVersions(c *gin.Context) {
 }
 
 // RestoreArticleVersion handles POST /api/v1/knowledge/articles/:id/versions/:version/restore.
+// @Summary 恢复历史版本
+// @Description 先用当前正文建新快照，再把正文覆写为指定版本内容；恢复动作同样留下新版本，历史链不断。需要 knowledge:write 权限。
+// @Tags 知识版本
+// @Accept json
+// @Produce json
+// @Param id path int true "文章ID"
+// @Param version path int true "版本号"
+// @Success 200 {object} common.Response{data=dto.KnowledgeArticleResponse}
+// @Failure 400 "参数错误"
+// @Failure 404 "文章或版本不存在"
+// @Failure 500 "后端故障"
+// @Security BearerAuth
+// @Router /api/v1/knowledge/articles/{id}/versions/{version}/restore [post]
 func (h *Handler) RestoreArticleVersion(c *gin.Context) {
 	id, ok := common.ParsePositiveID(c, "id")
 	if !ok {
@@ -707,6 +921,19 @@ func (h *Handler) RestoreArticleVersion(c *gin.Context) {
 }
 
 // CompareArticleVersions handles GET /api/v1/knowledge/articles/:id/versions/compare?from&to.
+// @Summary 对比版本差异
+// @Description 按行级 LCS 对比 from/to 两个版本的正文，返回渲染后的 diff 与变更行列表。
+// @Tags 知识版本
+// @Produce json
+// @Param id path int true "文章ID"
+// @Param from query int true "起始版本号"
+// @Param to query int true "目标版本号"
+// @Success 200 {object} common.Response "{diff, changes}"
+// @Failure 400 "参数错误"
+// @Failure 404 "文章或版本不存在"
+// @Failure 500 "后端故障"
+// @Security BearerAuth
+// @Router /api/v1/knowledge/articles/{id}/versions/compare [get]
 func (h *Handler) CompareArticleVersions(c *gin.Context) {
 	id, ok := common.ParsePositiveID(c, "id")
 	if !ok {
@@ -761,14 +988,32 @@ func tenantIDFromContext(c *gin.Context) (int, bool) {
 	return tenantID, true
 }
 
+// respondKnowledgeError 是知识域「读/写文章」错误的统一分流，单一事实源：
+//   - ErrArticleNotFound（分类不可读的防枚举伪装）与 ent.NotFoundError → 404，
+//     两者同码同文案，调用方无法据此探测受限文章是否存在；
+//   - 其余（含 DB 故障、上下文错误）→ common.RespondError 归 500/5001，
+//     原始 driver 错误只进日志、不进响应。
+//
+// 注意：绝不能只写 common.RespondError——ErrArticleNotFound 是裸 errors.New，
+// 未被 classifyError 识别，会被兜成 500，从而泄露「文章存在但不可读」。
+func respondKnowledgeError(c *gin.Context, err error, notFoundMsg, fallbackMsg string) {
+	if errors.Is(err, ErrArticleNotFound) || ent.IsNotFound(err) {
+		common.NotFound(c, notFoundMsg)
+		return
+	}
+	common.RespondError(c, err, fallbackMsg)
+}
+
 // knowledgeVersionError 版本操作错误映射：不存在/非本租户 → 404，其余按错误分类映射，
 // 未分类的落 500。原始错误串只进日志，不进响应。
 func knowledgeVersionError(c *gin.Context, err error) {
-	if errors.Is(err, ErrArticleNotFound) || ent.IsNotFound(err) {
-		common.NotFound(c, "Article or version not found")
-		return
-	}
-	common.RespondError(c, err, "版本操作失败")
+	respondKnowledgeError(c, err, "Article or version not found", "版本操作失败")
+}
+
+// knowledgeArticleError 文章读/前置校验错误映射，与版本路径共用同一分流：
+// 不可读/不存在维持 404（防枚举），DB 故障落 500，不再被误报为「文章不存在」。
+func knowledgeArticleError(c *gin.Context, err error) {
+	respondKnowledgeError(c, err, "Article not found", "操作失败")
 }
 
 // diffChange 单行差异：type 为 added / removed。

@@ -380,13 +380,15 @@ func (h *DashboardHandler) GetKPIMetrics(c *gin.Context) {
 
 // GetTicketTrend 获取工单趋势数据
 // @Summary 获取工单趋势
-// @Description 获取最近几天的工单趋势数据
+// @Description 按天聚合最近 N 天（默认 7 天）的工单趋势：待处理/进行中/已解决/已关闭/新建，并派生已完成与待处理维度。采用 fail-closed 语义：任一维度或任一天计数查询失败时整体返回错误，绝不以 0 顶替——否则看板与服务质量报告会得出完全错误的趋势结论。
 // @Tags Dashboard
 // @Accept json
 // @Produce json
-// @Param days query int false "天数" default(7)
-// @Success 200 {array} TicketTrendData
-// @Failure 500 {object} ErrorResponse
+// @Param days query int false "统计天数（默认 7）" default(7)
+// @Success 200 {object} common.Response{data=[]dto.TicketTrendData} "逐日趋势数据"
+// @Failure 401 {object} common.Response "未授权或租户上下文缺失"
+// @Failure 500 {object} common.Response "趋势查询失败（含任一维度计数失败）"
+// @Security BearerAuth
 // @Router /api/v1/dashboard/ticket-trend [get]
 func (h *DashboardHandler) GetTicketTrend(c *gin.Context) {
 	tenantID, err := middleware.GetTenantID(c)

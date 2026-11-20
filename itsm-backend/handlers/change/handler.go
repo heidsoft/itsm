@@ -31,6 +31,21 @@ func userIDFromCtx(c *gin.Context) (int, bool) {
 	return userID, true
 }
 
+// respondChangeGetError 是变更单读取/前置校验错误的统一分流：
+//   - ent.NotFoundError（真不存在/不属于本租户）与 ErrChangeNotFound → 404；
+//   - 其余（含 repo.Get 的 First 失败、hydrateUsers 的 DB 故障）→ common.RespondError
+//     归 500/5001，原始 driver 错误只进日志。
+//
+// 不得无条件 common.NotFound：那会把「用户表读失败」这类后端故障伪装成
+// 「变更不存在」，既误导调用方也丢失 error 上下文。
+func respondChangeGetError(c *gin.Context, err error, fallback string) {
+	if ent.IsNotFound(err) || errors.Is(err, ErrChangeNotFound) {
+		common.NotFound(c, "Change not found")
+		return
+	}
+	common.RespondError(c, err, fallback)
+}
+
 type Handler struct {
 	svc *Service
 }
@@ -158,7 +173,8 @@ func (h *Handler) GetChange(c *gin.Context) {
 
 	res, err := h.svc.GetChange(c.Request.Context(), id, tenantID)
 	if err != nil {
-		common.NotFound(c, "Change not found")
+		// 真不存在 → 404（防探测边界外资源）；DB 故障 → 500，不伪装成 not found。
+		respondChangeGetError(c, err, "获取变更失败")
 		return
 	}
 
@@ -445,7 +461,7 @@ func (h *Handler) UpdateChange(c *gin.Context) {
 	// First get existing
 	existing, err := h.svc.GetChange(c.Request.Context(), id, tenantID)
 	if err != nil {
-		common.NotFound(c, "Change not found")
+		respondChangeGetError(c, err, "获取变更失败")
 		return
 	}
 
@@ -774,7 +790,7 @@ func (h *Handler) AssignChange(c *gin.Context) {
 
 	existing, err := h.svc.GetChange(c.Request.Context(), id, tenantID)
 	if err != nil {
-		common.NotFound(c, "Change not found")
+		respondChangeGetError(c, err, "获取变更失败")
 		return
 	}
 	actorID := c.GetInt("user_id")

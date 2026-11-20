@@ -227,16 +227,23 @@ def audit_menu_codes(db: dict[str, Any], backend: dict[str, list[str]]) -> None:
 def audit_roles(db: dict[str, Any]) -> None:
     menus = [m for m in db["menus"] if m["visible"] and m["enabled"] and m["code"]]
     menu_codes = {m["code"] for m in menus}
-    # admin（租户管理员）必须能见全部菜单
+    # admin（租户管理员）必须能见全部菜单。
+    # 豁免（2026-11-17 修复批次决策，与 internal/authz/roles.go 注释一致）：
+    #   msp:write——跨租户客户分配属 MSP 运营面，归 msp_manager/msp_admin，
+    #   租管持 msp:read 只读；授予 admin 反而模糊租户边界。
+    admin_exempt = {"msp:write"}
     admin = next((r for r in db["roles"] if r["code"] == "admin"), None)
     if admin:
         got = db["rp"].get(admin["id"], set())
-        miss = sorted(menu_codes - got)
+        miss = sorted((menu_codes - got) - admin_exempt)
+        exempt_held = sorted(admin_exempt & got)
         record("角色覆盖", "租户管理员角色(admin)持有全部菜单权限码", not miss,
                detail=f"缺失 {len(miss)}: {miss[:12]}"
                       + "（admin 权威源 internal/authz/roles.go 与菜单码选型错配；"
                         "当前无用户持有 admin 角色，实际用户为 super_admin 通配）"
-                      if miss else f"覆盖 {len(menu_codes)} 码")
+                      if miss else
+                      (f"覆盖 {len(menu_codes)} 码（豁免 {sorted(admin_exempt)} 未授——跨租户 MSP 分配面归 MSP 角色）"
+                       if not exempt_held else f"覆盖 {len(menu_codes)} 码"))
     super_admin = next((r for r in db["roles"] if r["code"] == "super_admin"), None)
     if super_admin:
         got = db["rp"].get(super_admin["id"], set())

@@ -41,6 +41,14 @@ func (e *CustomProcessEngine) StartProcess(ctx context.Context, processDefinitio
 		return nil, err
 	}
 
+	// 引擎控制命名空间（_ 前缀）不得由调用方注入：与变量 PATCH 同一条写入边界，
+	// 必须在创建实例之前拒绝，被拒绝的启动不得留下任何实例行。
+	for key := range variables {
+		if strings.HasPrefix(key, "_") {
+			return nil, common.NewBadRequestError(fmt.Sprintf("流程内部变量 %s 不允许通过 API 覆盖", key), nil)
+		}
+	}
+
 	// 2. 获取流程定义（固定使用当前租户过滤，不再存在"无过滤跨租户"分支）
 	definition, err := e.client.ProcessDefinition.Query().
 		Where(
@@ -100,6 +108,13 @@ func (e *CustomProcessEngine) StartProcess(ctx context.Context, processDefinitio
 		return nil, err
 	}
 
+	// executeStep 只把推进结果写进库，不回写入参 instance；响应必须重新加载真实落库行，
+	// 否则 currentActivityId 停留在 Start_1、completed 实例缺 endTime，与库里同一行不一致。
+	fresh, err := txc.ProcessInstance.Get(ctx, instance.ID)
+	if err != nil {
+		return nil, fmt.Errorf("重新加载流程实例失败: %w", err)
+	}
+
 	// 6. 记录审计日志 - 流程启动
 	// 从 typed BPMN context 取认证操作人；userName 在事务内按 ID 反查，
 	// 与 recordApprovalDecision 同一模式。
@@ -116,7 +131,7 @@ func (e *CustomProcessEngine) StartProcess(ctx context.Context, processDefinitio
 	if err := tx.Commit(); err != nil {
 		return nil, fmt.Errorf("提交流程启动事务失败: %w", err)
 	}
-	return instance.Unwrap(), nil
+	return fresh, nil
 }
 
 // CompleteTask 完成任务。

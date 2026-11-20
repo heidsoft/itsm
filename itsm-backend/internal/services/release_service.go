@@ -439,7 +439,10 @@ func (s *ReleaseService) UpdateRelease(ctx context.Context, id, tenantID int, re
 }
 
 // ErrInvalidReleaseTransition 表示发布状态机白名单拒绝了本次状态流转。
-// 属于调用方输入错误（应映射为 400），而非服务端内部错误（500）。
+// 这是「请求与服务器当前状态冲突」，不是参数格式错误——handler 已按全局错误
+// 语义规范映射为 HTTP 409 + 业务码 4090（见 handlers/release/handler.go
+// UpdateReleaseStatus / updateReleaseActionStatus 的 errors.Is 分支）。
+// 不要把它降级成 400：客户端会把「被流程防护拦截」误判为输入错误而修参重试。
 // 定义下沉到 dto，此处保留变量别名：errors.Is 仍命中同一个 error 实例。
 var ErrInvalidReleaseTransition = dto.ErrInvalidReleaseTransition
 
@@ -722,32 +725,76 @@ func (s *ReleaseService) DeleteRelease(ctx context.Context, id, tenantID int, ac
 }
 
 // GetReleaseStats 获取发布统计
+//
+// 健壮性铁律：统计口径不允许「静默归零」。任一分状态计数失败都必须 fail-closed
+// 返回错误，不能像旧实现那样 `count, _ :=` 把 DB 错误吞成 0 —— 那会让运维在
+// 数据库异常时看到一个「各状态均为 0」的假健康看板，比直接报错更危险。
+// total 与每个分状态计数都走同一个 countRelease 助手，错误附带 tenant/status
+// 上下文，便于从日志直接定位是哪一维统计失败。
 func (s *ReleaseService) GetReleaseStats(ctx context.Context, tenantID int) (*dto.ReleaseStatsResponse, error) {
-	stats := &dto.ReleaseStatsResponse{}
+	// countRelease 是统计面唯一的计数入口：无条件带租户谓词，可选状态谓词；
+	// 任何 DB 错误都原样上抛（带上下文），由调用方决定 fail-closed。
+	countRelease := func(status ...release.Status) (int, error) {
+		q := s.client.Release.Query().Where(release.TenantIDEQ(tenantID))
+		if len(status) > 0 {
+			q = q.Where(release.StatusEQ(status[0]))
+		}
+		n, err := q.Count(ctx)
+		if err != nil {
+			label := "all"
+			if len(status) > 0 {
+				label = string(status[0])
+			}
+			s.logger.Errorw("Failed to count releases for stats", "error", err, "tenant_id", tenantID, "status", label)
+			return 0, fmt.Errorf("统计发布状态 %s 失败: %w", label, err)
+		}
+		return n, nil
+	}
 
-	total, err := s.client.Release.Query().Where(release.TenantIDEQ(tenantID)).Count(ctx)
+	total, err := countRelease()
 	if err != nil {
-		s.logger.Errorw("Failed to count releases", "error", err)
 		return nil, err
 	}
-	stats.Total = total
 
-	// 统计各状态数量
-	draft, _ := s.client.Release.Query().Where(release.TenantIDEQ(tenantID), release.StatusEQ(release.Status(dto.ReleaseStatusDraft))).Count(ctx)
-	scheduled, _ := s.client.Release.Query().Where(release.TenantIDEQ(tenantID), release.StatusEQ(release.Status(dto.ReleaseStatusScheduled))).Count(ctx)
-	inProgress, _ := s.client.Release.Query().Where(release.TenantIDEQ(tenantID), release.StatusEQ(release.Status(dto.ReleaseStatusInProgress))).Count(ctx)
-	completed, _ := s.client.Release.Query().Where(release.TenantIDEQ(tenantID), release.StatusEQ(release.Status(dto.ReleaseStatusCompleted))).Count(ctx)
-	cancelled, _ := s.client.Release.Query().Where(release.TenantIDEQ(tenantID), release.StatusEQ(release.Status(dto.ReleaseStatusCancelled))).Count(ctx)
-	failed, _ := s.client.Release.Query().Where(release.TenantIDEQ(tenantID), release.StatusEQ(release.Status(dto.ReleaseStatusFailed))).Count(ctx)
-	rolledBack, _ := s.client.Release.Query().Where(release.TenantIDEQ(tenantID), release.StatusEQ(release.Status(dto.ReleaseStatusRolledBack))).Count(ctx)
+	// 逐状态计数：全部走 countRelease，任何一维失败即整体 fail-closed，
+	// 绝不返回「total 有值、分状态静默为 0」的半真半假统计。
+	draft, err := countRelease(release.Status(dto.ReleaseStatusDraft))
+	if err != nil {
+		return nil, err
+	}
+	scheduled, err := countRelease(release.Status(dto.ReleaseStatusScheduled))
+	if err != nil {
+		return nil, err
+	}
+	inProgress, err := countRelease(release.Status(dto.ReleaseStatusInProgress))
+	if err != nil {
+		return nil, err
+	}
+	completed, err := countRelease(release.Status(dto.ReleaseStatusCompleted))
+	if err != nil {
+		return nil, err
+	}
+	cancelled, err := countRelease(release.Status(dto.ReleaseStatusCancelled))
+	if err != nil {
+		return nil, err
+	}
+	failed, err := countRelease(release.Status(dto.ReleaseStatusFailed))
+	if err != nil {
+		return nil, err
+	}
+	rolledBack, err := countRelease(release.Status(dto.ReleaseStatusRolledBack))
+	if err != nil {
+		return nil, err
+	}
 
-	stats.Draft = draft
-	stats.Scheduled = scheduled
-	stats.InProgress = inProgress
-	stats.Completed = completed
-	stats.Cancelled = cancelled
-	stats.Failed = failed
-	stats.RolledBack = rolledBack
-
-	return stats, nil
+	return &dto.ReleaseStatsResponse{
+		Total:      total,
+		Draft:      draft,
+		Scheduled:  scheduled,
+		InProgress: inProgress,
+		Completed:  completed,
+		Cancelled:  cancelled,
+		Failed:     failed,
+		RolledBack: rolledBack,
+	}, nil
 }

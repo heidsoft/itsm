@@ -190,6 +190,18 @@ func ticketStatsToDTO(s *TicketStats) *dto.TicketStatsResponse {
 }
 
 // CreateTicket handles POST /api/v1/tickets
+// @Summary 创建工单
+// @Description 新建工单：校验分类/类型/模板/指派人租户归属，创建成功后返回完整工单 DTO。需要 ticket:create 权限；租户或用户上下文缺失返回 401。
+// @Tags 工单管理
+// @Accept json
+// @Produce json
+// @Param body body dto.CreateTicketRequest true "工单创建请求"
+// @Success 200 {object} common.Response{data=dto.TicketResponse}
+// @Failure 400 "参数错误"
+// @Failure 401 "上下文缺失"
+// @Failure 500 "后端故障"
+// @Security BearerAuth
+// @Router /api/v1/tickets [post]
 func (h *Handler) CreateTicket(c *gin.Context) {
 	var req dto.CreateTicketRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -253,6 +265,18 @@ func (h *Handler) CreateTicket(c *gin.Context) {
 // GetTicket handles GET /api/v1/tickets/:id
 // id 同时接受数字 ID(9)和业务工单号(TKT-202609-000010);
 // 前端 [ticketId] 动态路由会把两者都传进来,需要 fallback 到 GetByNumber。
+// @Summary 获取工单详情
+// @Description 按 ID 或业务工单号（TKT-YYYYMM-XXXXXX）查询当前租户工单；数字走 ID，非数字回退工单号。读取失败按统一分类返回 500，不把 DB 故障伪装成 404。
+// @Tags 工单管理
+// @Produce json
+// @Param id path string true "工单ID或业务工单号"
+// @Success 200 {object} common.Response{data=dto.TicketResponse}
+// @Failure 400 "无效ID"
+// @Failure 401 "上下文缺失"
+// @Failure 404 "工单不存在"
+// @Failure 500 "后端故障"
+// @Security BearerAuth
+// @Router /api/v1/tickets/{id} [get]
 func (h *Handler) GetTicket(c *gin.Context) {
 	idStr := c.Param("id")
 
@@ -283,6 +307,21 @@ func (h *Handler) GetTicket(c *gin.Context) {
 }
 
 // ListTickets handles GET /api/v1/tickets
+// @Summary 查询工单列表
+// @Description 分页查询工单，非管理角色自动收窄到本人创建或指派给自己的记录（行级 DataScope）；筛选条件见 ListTicketsRequest。返回标准信封 data.items/total/page/pageSize/totalPages。
+// @Tags 工单管理
+// @Produce json
+// @Param page query int false "页码" default(1)
+// @Param pageSize query int false "页长" default(20)
+// @Param status query string false "状态筛选"
+// @Param priority query string false "优先级筛选"
+// @Param search query string false "关键字"
+// @Success 200 {object} common.Response "data 含 items/total/page/pageSize/totalPages"
+// @Failure 400 "参数错误"
+// @Failure 401 "上下文缺失"
+// @Failure 500 "后端故障"
+// @Security BearerAuth
+// @Router /api/v1/tickets [get]
 func (h *Handler) ListTickets(c *gin.Context) {
 	var req dto.ListTicketsRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
@@ -353,6 +392,20 @@ func (h *Handler) ListTickets(c *gin.Context) {
 }
 
 // UpdateTicket handles PUT /api/v1/tickets/:id
+// @Summary 更新工单
+// @Description 局部更新工单字段（仅请求体中非 nil 字段生效）；写前按行级权限校验，越权返回 403。需要 ticket:update 权限。
+// @Tags 工单管理
+// @Accept json
+// @Produce json
+// @Param id path int true "工单ID"
+// @Param body body dto.UpdateTicketRequest true "工单更新请求"
+// @Success 200 {object} common.Response{data=dto.TicketResponse}
+// @Failure 400 "参数错误"
+// @Failure 403 "越权"
+// @Failure 404 "工单不存在"
+// @Failure 500 "后端故障"
+// @Security BearerAuth
+// @Router /api/v1/tickets/{id} [put]
 func (h *Handler) UpdateTicket(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -389,6 +442,18 @@ func (h *Handler) UpdateTicket(c *gin.Context) {
 }
 
 // DeleteTicket handles DELETE /api/v1/tickets/:id
+// @Summary 删除工单
+// @Description 删除当前租户工单；仅创建人/指派人或管理员可操作，越权返回 403。需要 ticket:delete 权限。
+// @Tags 工单管理
+// @Produce json
+// @Param id path int true "工单ID"
+// @Success 200 {object} common.Response
+// @Failure 400 "无效ID"
+// @Failure 403 "越权"
+// @Failure 404 "工单不存在"
+// @Failure 500 "后端故障"
+// @Security BearerAuth
+// @Router /api/v1/tickets/{id} [delete]
 func (h *Handler) DeleteTicket(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -416,6 +481,20 @@ func (h *Handler) DeleteTicket(c *gin.Context) {
 }
 
 // UpdateStatus handles PUT /api/v1/tickets/:id/status
+// @Summary 流转工单状态
+// @Description 按状态机推进工单状态（如 open→in_progress→resolved→closed）；非法跃迁返回 409，门禁未满足返回 422。需要 ticket:update 权限。
+// @Tags 工单管理
+// @Accept json
+// @Produce json
+// @Param id path int true "工单ID"
+// @Param body body object true "状态请求 {status: string}"
+// @Success 200 {object} common.Response{data=dto.TicketResponse}
+// @Failure 400 "参数错误或无效ID"
+// @Failure 409 "非法状态跃迁"
+// @Failure 422 "门禁未满足"
+// @Failure 500 "后端故障"
+// @Security BearerAuth
+// @Router /api/v1/tickets/{id}/status [put]
 func (h *Handler) UpdateTicketStatus(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -448,6 +527,18 @@ func (h *Handler) UpdateTicketStatus(c *gin.Context) {
 }
 
 // BatchDelete handles POST /api/v1/tickets/batch-delete
+// @Summary 批量删除工单
+// @Description 按 ID 列表批量软删工单；任一记录越权即整批拒绝（fail-closed），返回实际删除条数。需要 ticket:delete 权限。
+// @Tags 工单管理
+// @Accept json
+// @Produce json
+// @Param body body dto.BatchDeleteRequest true "工单ID列表"
+// @Success 200 {object} common.Response "data.deletedCount"
+// @Failure 400 "参数错误"
+// @Failure 403 "越权"
+// @Failure 500 "后端故障"
+// @Security BearerAuth
+// @Router /api/v1/tickets/batch-delete [post]
 func (h *Handler) BatchDeleteTickets(c *gin.Context) {
 	var req dto.BatchDeleteRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -481,6 +572,18 @@ func (h *Handler) BatchDeleteTickets(c *gin.Context) {
 // 身份只取认证上下文，统计范围与 GET /api/v1/tickets 列表一致。
 // dateFrom/dateTo 成对提供时按创建时间窗口收窄计数器、超期、分布与趋势；
 // 都不传保持「可见范围内全量」的旧口径（工作台卡片依赖它）。
+// @Summary 工单统计
+// @Description 统计当前可见范围内的工单计数器、超期、分布与趋势。dateFrom/dateTo 成对提供时按创建时间窗口收窄；都不传保持全量口径（工作台卡片依赖）。统计读取失败 fail-closed，不返回半截零值。
+// @Tags 工单管理
+// @Produce json
+// @Param dateFrom query string false "起始日期（与 dateTo 成对）"
+// @Param dateTo query string false "结束日期（与 dateFrom 成对）"
+// @Success 200 {object} common.Response{data=dto.TicketStatsResponse}
+// @Failure 400 "时间窗口参数错误"
+// @Failure 401 "上下文缺失"
+// @Failure 500 "后端故障"
+// @Security BearerAuth
+// @Router /api/v1/tickets/stats [get]
 func (h *Handler) GetTicketStats(c *gin.Context) {
 	tenantID, ok := handlerctx.ResolveTenantID(c)
 	if !ok {
@@ -510,6 +613,20 @@ func (h *Handler) GetTicketStats(c *gin.Context) {
 }
 
 // AssignTicket handles POST /api/v1/tickets/:id/assign
+// @Summary 指派工单
+// @Description 把工单指派给指定处理人；校验目标用户属于当前租户且活跃，越权返回 403。需要 ticket:assign 权限。
+// @Tags 工单管理
+// @Accept json
+// @Produce json
+// @Param id path int true "工单ID"
+// @Param body body dto.AssignTicketRequest true "指派请求"
+// @Success 200 {object} common.Response{data=dto.TicketResponse}
+// @Failure 400 "参数错误"
+// @Failure 403 "越权"
+// @Failure 404 "工单不存在"
+// @Failure 500 "后端故障"
+// @Security BearerAuth
+// @Router /api/v1/tickets/{id}/assign [post]
 func (h *Handler) AssignTicket(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -545,6 +662,20 @@ func (h *Handler) AssignTicket(c *gin.Context) {
 }
 
 // EscalateTicket handles POST /api/v1/tickets/:id/escalate
+// @Summary 升级工单
+// @Description 将工单升级到更高优先级/处理层级；升级动作受升级策略约束。需要 ticket:escalate 权限。
+// @Tags 工单管理
+// @Accept json
+// @Produce json
+// @Param id path int true "工单ID"
+// @Param body body dto.EscalateTicketRequest true "升级请求"
+// @Success 200 {object} common.Response{data=dto.TicketResponse}
+// @Failure 400 "参数错误"
+// @Failure 403 "越权"
+// @Failure 404 "工单不存在"
+// @Failure 500 "后端故障"
+// @Security BearerAuth
+// @Router /api/v1/tickets/{id}/escalate [post]
 func (h *Handler) EscalateTicket(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -575,6 +706,19 @@ func (h *Handler) EscalateTicket(c *gin.Context) {
 }
 
 // ResolveTicket handles POST /api/v1/tickets/:id/resolve
+// @Summary 解决工单
+// @Description 将工单置为已解决并记录解决方案；状态机门禁未满足返回 422。需要 ticket:update 权限。
+// @Tags 工单管理
+// @Accept json
+// @Produce json
+// @Param id path int true "工单ID"
+// @Param body body dto.ResolveTicketRequest true "解决请求"
+// @Success 200 {object} common.Response{data=dto.TicketResponse}
+// @Failure 400 "参数错误"
+// @Failure 422 "门禁未满足"
+// @Failure 500 "后端故障"
+// @Security BearerAuth
+// @Router /api/v1/tickets/{id}/resolve [post]
 func (h *Handler) ResolveTicket(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -610,6 +754,19 @@ func (h *Handler) ResolveTicket(c *gin.Context) {
 }
 
 // CloseTicket handles POST /api/v1/tickets/:id/close
+// @Summary 关闭工单
+// @Description 将工单置为已关闭；关闭前校验工单工作流已终止，仍有运行实例时拒绝关闭（409）。需要 ticket:update 权限。
+// @Tags 工单管理
+// @Accept json
+// @Produce json
+// @Param id path int true "工单ID"
+// @Param body body dto.CloseTicketRequest true "关闭请求"
+// @Success 200 {object} common.Response{data=dto.TicketResponse}
+// @Failure 400 "参数错误"
+// @Failure 409 "工作流未终止"
+// @Failure 500 "后端故障"
+// @Security BearerAuth
+// @Router /api/v1/tickets/{id}/close [post]
 func (h *Handler) CloseTicket(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -640,6 +797,19 @@ func (h *Handler) CloseTicket(c *gin.Context) {
 }
 
 // SearchTickets handles GET /api/v1/tickets/search
+// @Summary 搜索工单
+// @Description 按关键字/条件跨工单检索，结果与列表同口径做行级权限过滤。需要 ticket:read 权限。
+// @Tags 工单管理
+// @Produce json
+// @Param keyword query string false "搜索关键字"
+// @Param page query int false "页码" default(1)
+// @Param pageSize query int false "页长" default(20)
+// @Success 200 {object} common.Response "分页信封"
+// @Failure 400 "参数错误"
+// @Failure 401 "上下文缺失"
+// @Failure 500 "后端故障"
+// @Security BearerAuth
+// @Router /api/v1/tickets/search [get]
 func (h *Handler) SearchTickets(c *gin.Context) {
 	keyword := c.Query("q")
 	if keyword == "" {
@@ -666,6 +836,17 @@ func (h *Handler) SearchTickets(c *gin.Context) {
 }
 
 // GetOverdueTickets handles GET /api/v1/tickets/overdue
+// @Summary 查询超期工单
+// @Description 列出当前可见范围内响应/解决时限已超期的工单，用于超期看板与催办。需要 ticket:read 权限。
+// @Tags 工单管理
+// @Produce json
+// @Param page query int false "页码" default(1)
+// @Param pageSize query int false "页长" default(20)
+// @Success 200 {object} common.Response "分页信封"
+// @Failure 401 "上下文缺失"
+// @Failure 500 "后端故障"
+// @Security BearerAuth
+// @Router /api/v1/tickets/overdue [get]
 func (h *Handler) GetOverdueTickets(c *gin.Context) {
 	tenantID, ok := handlerctx.ResolveTenantID(c)
 	if !ok {
@@ -686,6 +867,16 @@ func (h *Handler) GetOverdueTickets(c *gin.Context) {
 }
 
 // GetTicketsByAssignee handles GET /api/v1/tickets/assignee/:assignee_id
+// @Summary 按处理人查询工单
+// @Description 按处理人 ID 列出其工单。该 handler 当前未注册路由，仅为兼容旧前端契约保留；实际查询请走 GET /tickets?assigneeId=。
+// @Tags 工单管理
+// @Produce json
+// @Param assignee_id path int true "处理人ID"
+// @Success 200 {object} common.Response "工单数组"
+// @Failure 401 "上下文缺失"
+// @Failure 500 "后端故障"
+// @Security BearerAuth
+// @Router /api/v1/tickets/assignee/{assignee_id} [get]
 func (h *Handler) GetTicketsByAssignee(c *gin.Context) {
 	assigneeID, err := strconv.Atoi(c.Param("assignee_id"))
 	if err != nil {
@@ -710,6 +901,17 @@ func (h *Handler) GetTicketsByAssignee(c *gin.Context) {
 }
 
 // GetTicketSLAInfo handles GET /api/v1/tickets/:id/sla
+// @Summary 工单SLA信息
+// @Description 返回工单的 SLA 合规明细：响应/解决时限、已耗时、合规率与采样数。需要 ticket:read 权限。
+// @Tags 工单管理
+// @Produce json
+// @Param id path int true "工单ID"
+// @Success 200 {object} common.Response{data=dto.TicketSLAComplianceResponse}
+// @Failure 400 "无效ID"
+// @Failure 404 "工单不存在"
+// @Failure 500 "后端故障"
+// @Security BearerAuth
+// @Router /api/v1/tickets/{id}/sla [get]
 func (h *Handler) GetTicketSLAInfo(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -734,6 +936,18 @@ func (h *Handler) GetTicketSLAInfo(c *gin.Context) {
 }
 
 // ExportTickets handles POST /api/v1/tickets/export
+// @Summary 导出工单
+// @Description 按筛选条件导出工单为 CSV 或 Excel（由 format 指定）；响应为二进制流并带 Content-Disposition 下载头，非 JSON 信封。需要 ticket:export 权限。
+// @Tags 工单管理
+// @Accept json
+// @Produce json
+// @Param body body dto.TicketExportRequest true "导出请求（format=csv|excel）"
+// @Success 200 {string} file "CSV/Excel 二进制流"
+// @Failure 400 "参数错误"
+// @Failure 403 "越权"
+// @Failure 500 "导出失败"
+// @Security BearerAuth
+// @Router /api/v1/tickets/export [post]
 func (h *Handler) ExportTickets(c *gin.Context) {
 	var req dto.TicketExportRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -774,6 +988,18 @@ func ticketExportDisposition(format string) (contentType, filename string) {
 }
 
 // ImportTickets handles POST /api/v1/tickets/import
+// @Summary 导入工单
+// @Description 工单批量导入。当前能力未实现且未注册路由，调用返回显式 5003（未就绪），不会伪装成功。
+// @Tags 工单管理
+// @Accept json
+// @Produce json
+// @Param body body dto.TicketImportRequest true "导入请求"
+// @Success 200 {object} common.Response "成功占位（当前不可达）"
+// @Failure 400 "参数错误"
+// @Failure 500 "后端故障"
+// @Failure 503 "能力未实现(5003)"
+// @Security BearerAuth
+// @Router /api/v1/tickets/import [post]
 func (h *Handler) ImportTickets(c *gin.Context) {
 	var req dto.TicketImportRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -797,6 +1023,17 @@ func (h *Handler) ImportTickets(c *gin.Context) {
 }
 
 // AssignTickets handles POST /api/v1/tickets/assign
+// @Summary 批量指派工单
+// @Description 批量把多个工单指派给同一处理人。该 handler 当前未注册路由，仅为兼容旧前端契约保留。
+// @Tags 工单管理
+// @Accept json
+// @Produce json
+// @Param body body dto.TicketAssignmentRequest true "批量指派请求"
+// @Success 200 {object} common.Response
+// @Failure 400 "参数错误"
+// @Failure 500 "后端故障"
+// @Security BearerAuth
+// @Router /api/v1/tickets/assign [post]
 func (h *Handler) AssignTickets(c *gin.Context) {
 	var req dto.TicketAssignmentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -820,6 +1057,17 @@ func (h *Handler) AssignTickets(c *gin.Context) {
 }
 
 // GetTicketTemplates handles GET /api/v1/tickets/templates
+// @Summary 查询工单模板
+// @Description 分页列出当前租户的工单模板。需要 ticket_template:read 权限。
+// @Tags 工单模板
+// @Produce json
+// @Param page query int false "页码" default(1)
+// @Param pageSize query int false "页长" default(20)
+// @Success 200 {object} common.Response "分页信封"
+// @Failure 401 "上下文缺失"
+// @Failure 500 "后端故障"
+// @Security BearerAuth
+// @Router /api/v1/tickets/templates [get]
 func (h *Handler) GetTicketTemplates(c *gin.Context) {
 	tenantID, ok := handlerctx.ResolveTenantID(c)
 	if !ok {
@@ -844,6 +1092,17 @@ func (h *Handler) GetTicketTemplates(c *gin.Context) {
 }
 
 // GetTicketTemplate handles GET /api/v1/tickets/templates/:id
+// @Summary 获取工单模板
+// @Description 按 ID 查询工单模板详情。需要 ticket_template:read 权限。
+// @Tags 工单模板
+// @Produce json
+// @Param id path int true "模板ID"
+// @Success 200 {object} common.Response{data=dto.TicketTemplate}
+// @Failure 400 "无效ID"
+// @Failure 404 "模板不存在"
+// @Failure 500 "后端故障"
+// @Security BearerAuth
+// @Router /api/v1/tickets/templates/{id} [get]
 func (h *Handler) GetTicketTemplate(c *gin.Context) {
 	templateID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -865,6 +1124,17 @@ func (h *Handler) GetTicketTemplate(c *gin.Context) {
 }
 
 // CreateTicketTemplate handles POST /api/v1/tickets/templates
+// @Summary 创建工单模板
+// @Description 新建工单模板（字段定义、默认值、适用分类）。需要 ticket_template:create 权限。
+// @Tags 工单模板
+// @Accept json
+// @Produce json
+// @Param body body dto.TicketTemplate true "模板定义"
+// @Success 200 {object} common.Response{data=dto.TicketTemplate}
+// @Failure 400 "参数错误"
+// @Failure 500 "后端故障"
+// @Security BearerAuth
+// @Router /api/v1/tickets/templates [post]
 func (h *Handler) CreateTicketTemplate(c *gin.Context) {
 	var tmpl dto.TicketTemplate
 	if err := c.ShouldBindJSON(&tmpl); err != nil {
@@ -886,6 +1156,19 @@ func (h *Handler) CreateTicketTemplate(c *gin.Context) {
 }
 
 // UpdateTicketTemplate handles PUT /api/v1/tickets/templates/:id
+// @Summary 更新工单模板
+// @Description 局部更新工单模板定义。需要 ticket_template:update 权限。
+// @Tags 工单模板
+// @Accept json
+// @Produce json
+// @Param id path int true "模板ID"
+// @Param body body dto.TicketTemplate true "模板定义"
+// @Success 200 {object} common.Response{data=dto.TicketTemplate}
+// @Failure 400 "参数错误"
+// @Failure 404 "模板不存在"
+// @Failure 500 "后端故障"
+// @Security BearerAuth
+// @Router /api/v1/tickets/templates/{id} [put]
 func (h *Handler) UpdateTicketTemplate(c *gin.Context) {
 	templateID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -913,6 +1196,17 @@ func (h *Handler) UpdateTicketTemplate(c *gin.Context) {
 }
 
 // DeleteTicketTemplate handles DELETE /api/v1/tickets/templates/:id
+// @Summary 删除工单模板
+// @Description 删除工单模板。需要 ticket_template:delete 权限。
+// @Tags 工单模板
+// @Produce json
+// @Param id path int true "模板ID"
+// @Success 200 {object} common.Response
+// @Failure 400 "无效ID"
+// @Failure 404 "模板不存在"
+// @Failure 500 "后端故障"
+// @Security BearerAuth
+// @Router /api/v1/tickets/templates/{id} [delete]
 func (h *Handler) DeleteTicketTemplate(c *gin.Context) {
 	templateID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -933,6 +1227,19 @@ func (h *Handler) DeleteTicketTemplate(c *gin.Context) {
 }
 
 // UpdateTicketTemplateStatus handles PUT /api/v1/tickets/templates/:id/status
+// @Summary 切换工单模板状态
+// @Description 启用/停用工单模板；停用后创建工单时不可再引用。需要 ticket_template:update 权限。
+// @Tags 工单模板
+// @Accept json
+// @Produce json
+// @Param id path int true "模板ID"
+// @Param body body object true "状态请求 {status: string}"
+// @Success 200 {object} common.Response{data=dto.TicketTemplate}
+// @Failure 400 "参数错误"
+// @Failure 404 "模板不存在"
+// @Failure 500 "后端故障"
+// @Security BearerAuth
+// @Router /api/v1/tickets/templates/{id}/status [put]
 func (h *Handler) UpdateTicketTemplateStatus(c *gin.Context) {
 	templateID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -966,6 +1273,19 @@ func (h *Handler) UpdateTicketTemplateStatus(c *gin.Context) {
 }
 
 // CopyTicketTemplate handles POST /api/v1/tickets/templates/:id/copy
+// @Summary 复制工单模板
+// @Description 基于现有模板复制一份新模板，可覆盖名称。需要 ticket_template:create 权限。
+// @Tags 工单模板
+// @Accept json
+// @Produce json
+// @Param id path int true "源模板ID"
+// @Param body body object true "复制请求（可选 name）"
+// @Success 200 {object} common.Response{data=dto.TicketTemplate}
+// @Failure 400 "参数错误"
+// @Failure 404 "模板不存在"
+// @Failure 500 "后端故障"
+// @Security BearerAuth
+// @Router /api/v1/tickets/templates/{id}/copy [post]
 func (h *Handler) CopyTicketTemplate(c *gin.Context) {
 	templateID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -998,6 +1318,15 @@ func (h *Handler) CopyTicketTemplate(c *gin.Context) {
 }
 
 // GetTicketTemplateCategories handles GET /api/v1/tickets/templates/categories
+// @Summary 工单模板分类
+// @Description 列出工单模板可用的分类集合。需要 ticket_template:read 权限。
+// @Tags 工单模板
+// @Produce json
+// @Success 200 {object} common.Response "分类数组"
+// @Failure 401 "上下文缺失"
+// @Failure 500 "后端故障"
+// @Security BearerAuth
+// @Router /api/v1/tickets/templates/categories [get]
 func (h *Handler) GetTicketTemplateCategories(c *gin.Context) {
 	tenantID, ok := handlerctx.ResolveTenantID(c)
 	if !ok {
@@ -1013,6 +1342,17 @@ func (h *Handler) GetTicketTemplateCategories(c *gin.Context) {
 }
 
 // GetSubtasks handles GET /api/v1/tickets/:id/subtasks
+// @Summary 查询子任务
+// @Description 列出指定工单下的全部子任务（按创建顺序）。需要 ticket:read 权限。
+// @Tags 工单子任务
+// @Produce json
+// @Param id path int true "父工单ID"
+// @Success 200 {object} common.Response "子任务数组"
+// @Failure 400 "无效ID"
+// @Failure 404 "工单不存在"
+// @Failure 500 "后端故障"
+// @Security BearerAuth
+// @Router /api/v1/tickets/{id}/subtasks [get]
 func (h *Handler) GetSubtasks(c *gin.Context) {
 	parentID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -1040,6 +1380,19 @@ func (h *Handler) GetSubtasks(c *gin.Context) {
 }
 
 // CreateSubtask handles POST /api/v1/tickets/:id/subtasks
+// @Summary 创建子任务
+// @Description 为指定工单新建子任务；父工单必须存在且属于当前租户。需要 ticket:create 权限。
+// @Tags 工单子任务
+// @Accept json
+// @Produce json
+// @Param id path int true "父工单ID"
+// @Param body body dto.CreateSubtaskRequest true "子任务请求"
+// @Success 200 {object} common.Response "子任务对象"
+// @Failure 400 "参数错误"
+// @Failure 404 "工单不存在"
+// @Failure 500 "后端故障"
+// @Security BearerAuth
+// @Router /api/v1/tickets/{id}/subtasks [post]
 func (h *Handler) CreateSubtask(c *gin.Context) {
 	parentID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -1088,6 +1441,20 @@ func (h *Handler) CreateSubtask(c *gin.Context) {
 }
 
 // UpdateSubtask handles PUT /api/v1/tickets/:id/subtasks/:subtask_id
+// @Summary 更新子任务
+// @Description 更新指定子任务（标题/状态/处理人）；路由为 PATCH。需要 ticket:update 权限。
+// @Tags 工单子任务
+// @Accept json
+// @Produce json
+// @Param id path int true "父工单ID"
+// @Param subtask_id path int true "子任务ID"
+// @Param body body object true "子任务更新请求"
+// @Success 200 {object} common.Response "子任务对象"
+// @Failure 400 "参数错误"
+// @Failure 404 "子任务不存在"
+// @Failure 500 "后端故障"
+// @Security BearerAuth
+// @Router /api/v1/tickets/{id}/subtasks/{subtask_id} [patch]
 func (h *Handler) UpdateSubtask(c *gin.Context) {
 	parentID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -1140,6 +1507,18 @@ func (h *Handler) UpdateSubtask(c *gin.Context) {
 }
 
 // DeleteSubtask handles DELETE /api/v1/tickets/:id/subtasks/:subtask_id
+// @Summary 删除子任务
+// @Description 删除指定子任务。需要 ticket:delete 权限。
+// @Tags 工单子任务
+// @Produce json
+// @Param id path int true "父工单ID"
+// @Param subtask_id path int true "子任务ID"
+// @Success 200 {object} common.Response
+// @Failure 400 "无效ID"
+// @Failure 404 "子任务不存在"
+// @Failure 500 "后端故障"
+// @Security BearerAuth
+// @Router /api/v1/tickets/{id}/subtasks/{subtask_id} [delete]
 func (h *Handler) DeleteSubtask(c *gin.Context) {
 	parentID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -1182,6 +1561,19 @@ func (h *Handler) DeleteSubtask(c *gin.Context) {
 // Note: SLA pause/resume require the shared SLA monitor which is not part of
 // the handlers/ticket Service struct. These handlers delegate to the legacy
 // controller for now.
+// @Summary 暂停工单SLA
+// @Description 暂停工单 SLA 计时；必须给出暂停原因。用于等待外部依赖期间的计时豁免。需要 ticket:update 权限。
+// @Tags 工单SLA
+// @Accept json
+// @Produce json
+// @Param id path int true "工单ID"
+// @Param body body object true "暂停请求 {reason: string}"
+// @Success 200 {object} common.Response "data.slaStatus=paused"
+// @Failure 400 "参数错误"
+// @Failure 404 "工单不存在"
+// @Failure 500 "后端故障"
+// @Security BearerAuth
+// @Router /api/v1/tickets/{id}/sla/pause [put]
 func (h *Handler) PauseSLA(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -1214,6 +1606,19 @@ func (h *Handler) PauseSLA(c *gin.Context) {
 }
 
 // ResumeSLA handles PUT /api/v1/tickets/:id/sla/resume
+// @Summary 恢复工单SLA
+// @Description 恢复已暂停的工单 SLA 计时。需要 ticket:update 权限。
+// @Tags 工单SLA
+// @Accept json
+// @Produce json
+// @Param id path int true "工单ID"
+// @Success 200 {object} common.Response "data.slaStatus=active"
+// @Failure 400 "无效ID"
+// @Failure 404 "工单不存在"
+// @Failure 409 "未处于暂停态"
+// @Failure 500 "后端故障"
+// @Security BearerAuth
+// @Router /api/v1/tickets/{id}/sla/resume [put]
 func (h *Handler) ResumeSLA(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -1369,6 +1774,17 @@ func isUserInputUpdateError(err error) bool {
 	return false
 }
 
+// @Summary 工单活动历史
+// @Description 按时间倒序返回工单的状态流转与操作留痕（创建、指派、状态变更、评论等）。需要 ticket:read 权限。
+// @Tags 工单管理
+// @Produce json
+// @Param id path int true "工单ID"
+// @Success 200 {object} common.Response "活动记录数组"
+// @Failure 400 "无效ID"
+// @Failure 404 "工单不存在"
+// @Failure 500 "后端故障"
+// @Security BearerAuth
+// @Router /api/v1/tickets/{id}/history [get]
 func (h *Handler) GetTicketActivity(c *gin.Context) {
 	idParam := c.Param("id")
 	id, err := strconv.Atoi(idParam)

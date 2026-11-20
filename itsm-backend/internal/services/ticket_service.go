@@ -688,8 +688,14 @@ func (s *TicketService) validateCustomFieldValue(ctx context.Context, tenantID i
 		if err != nil {
 			return common.NewBusinessError(common.ParamErrorCode, "字段 "+field.Label+" 的用户无效", "")
 		}
-		exists, _ := s.client.User.Query().Where(user.IDEQ(id), user.TenantIDEQ(tenantID), user.ActiveEQ(true)).Exist(ctx)
-		if !exists {
+		// DB 故障与「记录不存在」必须分开：旧实现用 `exists, _ :=` 吞掉 err，
+		// err!=nil 时 exists=false，把服务端故障伪装成 1001「不存在或无权引用」，
+		// 既误导客户端改参数重试，又丢失 driver 错误日志。
+		userExists, err := s.client.User.Query().Where(user.IDEQ(id), user.TenantIDEQ(tenantID), user.ActiveEQ(true)).Exist(ctx)
+		if err != nil {
+			return fmt.Errorf("校验字段 %s 的用户引用时查询失败: %w", field.Label, err)
+		}
+		if !userExists {
 			return common.NewBusinessError(common.ParamErrorCode, "字段 "+field.Label+" 的用户不存在或无权引用", "")
 		}
 	case dto.CustomFieldTypeDepartment, dto.CustomFieldTypeDepartmentPicker:
@@ -697,8 +703,11 @@ func (s *TicketService) validateCustomFieldValue(ctx context.Context, tenantID i
 		if err != nil {
 			return common.NewBusinessError(common.ParamErrorCode, "字段 "+field.Label+" 的部门无效", "")
 		}
-		exists, _ := s.client.Department.Query().Where(department.IDEQ(id), department.TenantIDEQ(tenantID)).Exist(ctx)
-		if !exists {
+		deptExists, err := s.client.Department.Query().Where(department.IDEQ(id), department.TenantIDEQ(tenantID)).Exist(ctx)
+		if err != nil {
+			return fmt.Errorf("校验字段 %s 的部门引用时查询失败: %w", field.Label, err)
+		}
+		if !deptExists {
 			return common.NewBusinessError(common.ParamErrorCode, "字段 "+field.Label+" 的部门不存在或无权引用", "")
 		}
 	case dto.CustomFieldTypeCI:
@@ -706,8 +715,11 @@ func (s *TicketService) validateCustomFieldValue(ctx context.Context, tenantID i
 		if err != nil {
 			return common.NewBusinessError(common.ParamErrorCode, "字段 "+field.Label+" 的CI无效", "")
 		}
-		exists, _ := s.client.ConfigurationItem.Query().Where(configurationitem.IDEQ(id), configurationitem.TenantIDEQ(tenantID)).Exist(ctx)
-		if !exists {
+		ciExists, err := s.client.ConfigurationItem.Query().Where(configurationitem.IDEQ(id), configurationitem.TenantIDEQ(tenantID)).Exist(ctx)
+		if err != nil {
+			return fmt.Errorf("校验字段 %s 的CI引用时查询失败: %w", field.Label, err)
+		}
+		if !ciExists {
 			return common.NewBusinessError(common.ParamErrorCode, "字段 "+field.Label+" 的CI不存在或无权引用", "")
 		}
 	}

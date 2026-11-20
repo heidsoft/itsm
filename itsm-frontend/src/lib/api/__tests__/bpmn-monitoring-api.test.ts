@@ -96,26 +96,23 @@ describe('BPMNMonitoringApi', () => {
   });
 
   describe('getPerformanceAlerts', () => {
-    it('should return array response directly', async () => {
-      const expected = [{ alertType: 'sla', severity: 'high', message: 'alert', timestamp: '2024-01-01' }];
+    it('should return the unwrapped alert array', async () => {
+      const expected = [{
+        id: '', type: 'error', severity: 'error', message: 'alert',
+        timestamp: '2024-01-01', resourceId: '', resourceType: 'process',
+        value: 1, threshold: 0, status: 'active',
+      }];
       mockGet.mockResolvedValue(expected);
       const res = await BPMNMonitoringApi.getPerformanceAlerts();
       expect(mockGet).toHaveBeenCalledWith('/api/v1/bpmn/monitoring/performance/alerts');
       expect(res).toEqual(expected);
     });
-
-    it('should unwrap data field', async () => {
-      const alerts = [{ alertType: 'sla', severity: 'high', message: 'alert', timestamp: '2024-01-01' }];
-      mockGet.mockResolvedValue({ data: alerts });
-      const res = await BPMNMonitoringApi.getPerformanceAlerts();
-      expect(res).toEqual(alerts);
-    });
   });
 
   describe('getSystemHealth', () => {
     it('should get system health', async () => {
-      const expected = { status: 'healthy', components: {}, uptimeSeconds: 3600, version: '1.0' };
-      mockGet.mockResolvedValue({ data: expected });
+      const expected = { status: 'healthy', database: 'connected', activeProcesses: 2, activeTasks: 3, errorCount: 1 };
+      mockGet.mockResolvedValue(expected);
       const res = await BPMNMonitoringApi.getSystemHealth();
       expect(mockGet).toHaveBeenCalledWith('/api/v1/bpmn/monitoring/health');
       expect(res).toEqual(expected);

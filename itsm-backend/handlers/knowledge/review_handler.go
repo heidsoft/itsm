@@ -81,21 +81,104 @@ func (h *Handler) reviewHandler(action string) gin.HandlerFunc {
 }
 
 // SubmitReview POST /knowledge/articles/:id/review/submit
+// @Summary 提交评审
+// @Description 作者把文章提交送审；当前状态机不允许该动作时返回 409。需要 knowledge:write 权限。
+// @Tags 知识评审
+// @Accept json
+// @Produce json
+// @Param id path int true "文章ID"
+// @Param body body object false "{comment?: string}"
+// @Success 200 {object} common.Response{data=dto.KnowledgeArticleResponse}
+// @Failure 400 "参数错误"
+// @Failure 404 "文章不存在"
+// @Failure 409 "状态机拒绝"
+// @Failure 500 "后端故障"
+// @Security BearerAuth
+// @Router /api/v1/knowledge/articles/{id}/review/submit [post]
 func (h *Handler) SubmitReview(c *gin.Context) { h.reviewHandler(ReviewActionSubmit)(c) }
 
 // ApproveReview POST /knowledge/articles/:id/review/approve
+// @Summary 通过评审
+// @Description 评审人通过文章评审；操作人取鉴权上下文，不信任请求体（防冒充）。需要 knowledge:write 权限。
+// @Tags 知识评审
+// @Accept json
+// @Produce json
+// @Param id path int true "文章ID"
+// @Param body body object false "{comment?: string}"
+// @Success 200 {object} common.Response{data=dto.KnowledgeArticleResponse}
+// @Failure 400 "参数错误"
+// @Failure 403 "非评审人"
+// @Failure 409 "状态机拒绝"
+// @Failure 500 "后端故障"
+// @Security BearerAuth
+// @Router /api/v1/knowledge/articles/{id}/review/approve [post]
 func (h *Handler) ApproveReview(c *gin.Context) { h.reviewHandler(ReviewActionApprove)(c) }
 
 // RejectReview POST /knowledge/articles/:id/review/reject
+// @Summary 驳回评审
+// @Description 评审人驳回文章，必须给出理由（review comment 为空返回 400）。需要 knowledge:write 权限。
+// @Tags 知识评审
+// @Accept json
+// @Produce json
+// @Param id path int true "文章ID"
+// @Param body body object true "{comment: string(必填)}"
+// @Success 200 {object} common.Response{data=dto.KnowledgeArticleResponse}
+// @Failure 400 "缺少驳回理由"
+// @Failure 403 "非评审人"
+// @Failure 409 "状态机拒绝"
+// @Failure 500 "后端故障"
+// @Security BearerAuth
+// @Router /api/v1/knowledge/articles/{id}/review/reject [post]
 func (h *Handler) RejectReview(c *gin.Context) { h.reviewHandler(ReviewActionReject)(c) }
 
 // WithdrawReview POST /knowledge/articles/:id/review/withdraw
+// @Summary 撤回送审
+// @Description 作者撤回已提交但未完成的评审。需要 knowledge:write 权限。
+// @Tags 知识评审
+// @Accept json
+// @Produce json
+// @Param id path int true "文章ID"
+// @Param body body object false "{comment?: string}"
+// @Success 200 {object} common.Response{data=dto.KnowledgeArticleResponse}
+// @Failure 400 "参数错误"
+// @Failure 404 "文章不存在"
+// @Failure 409 "状态机拒绝"
+// @Failure 500 "后端故障"
+// @Security BearerAuth
+// @Router /api/v1/knowledge/articles/{id}/review/withdraw [post]
 func (h *Handler) WithdrawReview(c *gin.Context) { h.reviewHandler(ReviewActionWithdraw)(c) }
 
 // RepublishReview POST /knowledge/articles/:id/review/republish
+// @Summary 重新送审
+// @Description 已通过评审的内容被修改后需重新送审；状态机拒绝非法重提。需要 knowledge:write 权限。
+// @Tags 知识评审
+// @Accept json
+// @Produce json
+// @Param id path int true "文章ID"
+// @Param body body object false "{comment?: string}"
+// @Success 200 {object} common.Response{data=dto.KnowledgeArticleResponse}
+// @Failure 400 "参数错误"
+// @Failure 404 "文章不存在"
+// @Failure 409 "状态机拒绝"
+// @Failure 500 "后端故障"
+// @Security BearerAuth
+// @Router /api/v1/knowledge/articles/{id}/review/republish [post]
 func (h *Handler) RepublishReview(c *gin.Context) { h.reviewHandler(ReviewActionRepubish)(c) }
 
 // ListArticleReviews GET /knowledge/articles/:id/reviews
+// @Summary 查询评审历史
+// @Description 时间倒序返回文章的评审流水（提交/通过/驳回/撤回及操作人与意见）；不可读维持 404 防枚举，DB 故障落 500。
+// @Tags 知识评审
+// @Produce json
+// @Param id path int true "文章ID"
+// @Param page query int false "页码" default(1)
+// @Param pageSize query int false "页长" default(20)
+// @Success 200 {object} common.Response{data=dto.KnowledgeReviewResponse} "分页信封"
+// @Failure 400 "无效ID"
+// @Failure 404 "不存在或无权访问"
+// @Failure 500 "后端故障"
+// @Security BearerAuth
+// @Router /api/v1/knowledge/articles/{id}/reviews [get]
 func (h *Handler) ListArticleReviews(c *gin.Context) {
 	id, ok := common.ParsePositiveID(c, "id")
 	if !ok {
@@ -110,7 +193,8 @@ func (h *Handler) ListArticleReviews(c *gin.Context) {
 	pg := common.GetPaginationFromQuery(c)
 	records, total, err := h.svc.ListReviews(h.requestContext(c), id, tenantID, pg.Page, pg.PageSize)
 	if err != nil {
-		common.NotFound(c, "Article not found")
+		// 不存在/分类不可读 → 404（防枚举）；DB 故障 → 500，不伪装成 not found。
+		knowledgeArticleError(c, err)
 		return
 	}
 

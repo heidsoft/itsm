@@ -165,6 +165,21 @@ func toApprovalDTOs(approvals []*ServiceRequestApproval) []dto.ServiceRequestApp
 	return responses
 }
 
+// Create handles POST /api/v1/service-requests
+//
+//	@Summary	创建服务请求
+//	@Description	基于服务目录创建服务请求，初始状态为 submitted。若目录要求审批则同步解析审批链并起审批流；合规确认（complianceAck）与公网 IP 白名单按目录规则校验。读回失败时退回创建返回的权威实体，不返回 data:null 的假成功。
+//	@Tags	服务请求
+//	@Accept	json
+//	@Produce	json
+//	@Security	BearerAuth
+//	@Param	request	body	dto.CreateServiceRequestRequest	true	"创建服务请求"
+//	@Success	200	{object}	common.Response{data=dto.ServiceRequestResponse}
+//	@Failure	400	{object}	common.Response	"参数错误或合规校验失败"
+//	@Failure	401	{object}	common.Response
+//	@Failure	404	{object}	common.Response	"服务目录不存在"
+//	@Failure	500	{object}	common.Response
+//	@Router	/api/v1/service-requests [post]
 func (h *Handler) Create(c *gin.Context) {
 	var req dto.CreateServiceRequestRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -222,6 +237,20 @@ func (h *Handler) Create(c *gin.Context) {
 	common.Success(c, createdDTO)
 }
 
+// Get handles GET /api/v1/service-requests/:id
+//
+//	@Summary	获取服务请求详情
+//	@Description	按 ID 获取服务请求详情及审批列表。行级可见性：同租户内非相关人员也返回 404（不泄漏存在性）；跨租户统一 404。
+//	@Tags	服务请求
+//	@Produce	json
+//	@Security	BearerAuth
+//	@Param	id	path	int	true	"服务请求ID"
+//	@Success	200	{object}	common.Response{data=dto.ServiceRequestResponse}
+//	@Failure	400	{object}	common.Response
+//	@Failure	401	{object}	common.Response
+//	@Failure	404	{object}	common.Response
+//	@Failure	500	{object}	common.Response
+//	@Router	/api/v1/service-requests/{id} [get]
 func (h *Handler) Get(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
@@ -268,6 +297,19 @@ func (h *Handler) toDTOForActor(req *ServiceRequest, approvals []*ServiceRequest
 }
 
 // ListApprovals returns the approval history for one tenant-scoped service request.
+//
+//	@Summary	获取服务请求审批历史
+//	@Description	按请求 ID 返回该租户内服务请求的审批步骤列表（审批人、状态、意见、时间）。跨租户/不存在的请求返回 404，不暴露 ID 可枚举信号。
+//	@Tags	服务请求
+//	@Produce	json
+//	@Security	BearerAuth
+//	@Param	id	path	int	true	"服务请求ID"
+//	@Success	200	{object}	common.Response{data=[]dto.ServiceRequestApprovalResponse}
+//	@Failure	400	{object}	common.Response
+//	@Failure	401	{object}	common.Response
+//	@Failure	404	{object}	common.Response
+//	@Failure	500	{object}	common.Response
+//	@Router	/api/v1/service-requests/{id}/approvals [get]
 func (h *Handler) ListApprovals(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -294,6 +336,22 @@ func (h *Handler) ListApprovals(c *gin.Context) {
 	common.Success(c, toApprovalDTOs(approvals))
 }
 
+// List handles GET /api/v1/service-requests and GET /api/v1/service-requests/me
+//
+//	@Summary	获取服务请求列表
+//	@Description	分页获取服务请求列表，支持状态/关键字/目录等过滤。行级数据权限：管理角色可见全租户，其余角色仅可见本人发起或分配的请求。/me 别名同样走本 handler，按认证身份收紧到「我的请求」。
+//	@Tags	服务请求
+//	@Produce	json
+//	@Security	BearerAuth
+//	@Param	page	query	int	false	"页码"	default(1)
+//	@Param	pageSize	query	int	false	"每页数量"	default(20)
+//	@Param	status	query	string	false	"按状态过滤"
+//	@Param	keyword	query	string	false	"关键字（标题/编号）"
+//	@Success	200	{object}	common.Response
+//	@Failure	400	{object}	common.Response
+//	@Failure	401	{object}	common.Response
+//	@Failure	500	{object}	common.Response
+//	@Router	/api/v1/service-requests [get]
 func (h *Handler) List(c *gin.Context) {
 	var req dto.GetServiceRequestsRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
@@ -351,6 +409,24 @@ func (h *Handler) List(c *gin.Context) {
 	common.SuccessWithPagination(c, dtos, page, pageSize, int64(total))
 }
 
+// ApplyApproval handles POST /api/v1/service-requests/:id/approval (and /approvals)
+//
+//	@Summary	审批服务请求
+//	@Description	对服务请求执行同意/拒绝（approve/reject）。审批人须为租户内有效用户且不得自审；本级为会签时需满足法定人数才自动进入下一级。BPMN 待办任务与业务状态在同一事务内推进，无关联待办或并发冲突返回 409。两个路由别名（/approval 与 /approvals）共用本 handler。
+//	@Tags	服务请求
+//	@Accept	json
+//	@Produce	json
+//	@Security	BearerAuth
+//	@Param	id	path	int	true	"服务请求ID"
+//	@Param	request	body	dto.ServiceRequestApprovalActionRequest	true	"审批动作（action: approve/reject，comment 意见）"
+//	@Success	200	{object}	common.Response{data=dto.ServiceRequestResponse}
+//	@Failure	400	{object}	common.Response	"参数错误或审批意见缺失"
+//	@Failure	401	{object}	common.Response
+//	@Failure	403	{object}	common.Response	"审批人无权限或自审"
+//	@Failure	404	{object}	common.Response
+//	@Failure	409	{object}	common.Response	"状态冲突/并发冲突/无 BPMN 待办"
+//	@Failure	500	{object}	common.Response
+//	@Router	/api/v1/service-requests/{id}/approval [post]
 func (h *Handler) ApplyApproval(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
@@ -434,6 +510,19 @@ func quorumProgressMessage(req *ServiceRequest, approvals []*ServiceRequestAppro
 	return fmt.Sprintf("本级会签未满足（已批 %d/%d 人），还需 %d 人审批后自动进入下一级", approved, threshold, threshold-approved)
 }
 
+// ListPending handles GET /api/v1/service-requests/approvals/pending
+//
+//	@Summary	获取我的待审服务请求
+//	@Description	返回当前认证审批人的待办收件箱。不接受任何查询过滤条件：状态范围由审批记录的 pending 决定，审批人身份取认证上下文；分页参数由 HTTP 入口夹紧。
+//	@Tags	服务请求
+//	@Produce	json
+//	@Security	BearerAuth
+//	@Param	page	query	int	false	"页码"	default(1)
+//	@Param	pageSize	query	int	false	"每页数量"	default(20)
+//	@Success	200	{object}	common.Response{data=[]dto.ServiceRequestResponse}
+//	@Failure	401	{object}	common.Response
+//	@Failure	500	{object}	common.Response
+//	@Router	/api/v1/service-requests/approvals/pending [get]
 func (h *Handler) ListPending(c *gin.Context) {
 	// 待办审批收件箱不接受任何查询过滤条件：状态范围由审批记录的 pending 决定，
 	// 审批人身份取认证上下文，因此这里没有请求 DTO 可绑定。
@@ -464,6 +553,24 @@ func (h *Handler) ListPending(c *gin.Context) {
 	common.SuccessWithPagination(c, dtos, pagination.Page, pagination.PageSize, int64(total))
 }
 
+// Update handles PUT /api/v1/service-requests/:id
+//
+//	@Summary	更新服务请求
+//	@Description	部分更新服务请求字段，仅 submitted 状态可编辑，且仅发起人或管理员可改。合规确认与公网 IP 白名单按创建时同等规则校验（写路径一致性）。写提交后读回失败时退回 Update 返回的权威实体，不返回 data:null 的假成功。
+//	@Tags	服务请求
+//	@Accept	json
+//	@Produce	json
+//	@Security	BearerAuth
+//	@Param	id	path	int	true	"服务请求ID"
+//	@Param	request	body	dto.UpdateServiceRequestRequest	true	"更新请求"
+//	@Success	200	{object}	common.Response{data=dto.ServiceRequestResponse}
+//	@Failure	400	{object}	common.Response	"参数或合规校验失败"
+//	@Failure	401	{object}	common.Response
+//	@Failure	403	{object}	common.Response	"非发起人或管理员"
+//	@Failure	404	{object}	common.Response
+//	@Failure	409	{object}	common.Response	"非 submitted 状态或版本冲突"
+//	@Failure	500	{object}	common.Response
+//	@Router	/api/v1/service-requests/{id} [put]
 func (h *Handler) Update(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
@@ -511,10 +618,38 @@ func (h *Handler) Update(c *gin.Context) {
 		return
 	}
 
-	fullReq, approvals, _ := h.service.Get(c.Request.Context(), updated.ID, tenantID)
+	// 读回仅用于拼装响应里的审批列表。写已提交，读回失败不能吞成
+	// 200 + data:null 的假成功——客户端会以为更新成功却拿不到任何实体，
+	// 也无法判断审批列表是否刷新。与 Create 端点同口径：读回失败时退回
+	// Update 返回的权威实体（updated），主数据保证完整，仅审批列表降级为空。
+	fullReq, approvals, getErr := h.service.Get(c.Request.Context(), updated.ID, tenantID)
+	if getErr != nil {
+		h.service.logger.Errorw("Update: failed to get updated service request, falling back to updated entity",
+			"error", getErr, "id", updated.ID)
+		common.Success(c, h.toDTO(updated, nil))
+		return
+	}
 	common.Success(c, h.toDTO(fullReq, approvals))
 }
 
+// UpdateStatus handles PUT /api/v1/service-requests/:id/status
+//
+//	@Summary	更新服务请求状态
+//	@Description	推进服务请求状态。不得经本接口绕过审批门禁：审批等效的状态跃迁由 /approval 端点负责（需 service_request:approve 权限）；本端点仅处理普通状态推进。并发版本冲突按 409 返回。
+//	@Tags	服务请求
+//	@Accept	json
+//	@Produce	json
+//	@Security	BearerAuth
+//	@Param	id	path	int	true	"服务请求ID"
+//	@Param	request	body	dto.UpdateServiceRequestStatusRequest	true	"状态更新请求"
+//	@Success	200	{object}	common.Response{data=dto.ServiceRequestResponse}
+//	@Failure	400	{object}	common.Response
+//	@Failure	401	{object}	common.Response
+//	@Failure	403	{object}	common.Response
+//	@Failure	404	{object}	common.Response
+//	@Failure	409	{object}	common.Response	"非法状态流转或并发冲突"
+//	@Failure	500	{object}	common.Response
+//	@Router	/api/v1/service-requests/{id}/status [put]
 func (h *Handler) UpdateStatus(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
@@ -555,6 +690,20 @@ func (h *Handler) UpdateStatus(c *gin.Context) {
 	common.Success(c, h.toDTO(fullReq, approvals))
 }
 
+// Delete handles DELETE /api/v1/service-requests/:id
+//
+//	@Summary	删除服务请求
+//	@Description	删除服务请求。DELETE 幂等：已删除/不存在/跨租户均视为成功，不误报服务器错误。行级写守卫仍生效——非发起人或管理员删除他人请求返回 403。
+//	@Tags	服务请求
+//	@Produce	json
+//	@Security	BearerAuth
+//	@Param	id	path	int	true	"服务请求ID"
+//	@Success	200	{object}	common.Response
+//	@Failure	400	{object}	common.Response
+//	@Failure	401	{object}	common.Response
+//	@Failure	403	{object}	common.Response	"非发起人或管理员"
+//	@Failure	500	{object}	common.Response
+//	@Router	/api/v1/service-requests/{id} [delete]
 func (h *Handler) Delete(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)

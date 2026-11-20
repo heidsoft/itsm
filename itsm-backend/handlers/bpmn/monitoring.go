@@ -1,7 +1,6 @@
 package bpmn
 
 import (
-	"strconv"
 	"time"
 
 	"itsm-backend/common"
@@ -168,12 +167,11 @@ func (c *MonitoringHandler) GetProcessMetricsByKey(ctx *gin.Context) {
 	common.Success(ctx, metrics)
 }
 
-// GetProcessInstanceStatus 获取流程实例状态
+// GetProcessInstanceStatus 获取流程实例状态（按业务键 PI-* 寻址）
 func (c *MonitoringHandler) GetProcessInstanceStatus(ctx *gin.Context) {
-	instanceIDStr := ctx.Param("instanceId")
-	instanceID, err := strconv.Atoi(instanceIDStr)
-	if err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "无效的流程实例ID")
+	processInstanceKey := ctx.Param("instanceId")
+	if processInstanceKey == "" {
+		common.Fail(ctx, common.ParamErrorCode, "流程实例Key不能为空")
 		return
 	}
 
@@ -182,7 +180,7 @@ func (c *MonitoringHandler) GetProcessInstanceStatus(ctx *gin.Context) {
 		return
 	}
 
-	status, err := c.monitoringService.GetProcessInstanceStatus(ctx, instanceID, tenantID)
+	status, err := c.monitoringService.GetProcessInstanceStatus(ctx, processInstanceKey, tenantID)
 	if err != nil {
 		common.RespondError(ctx, err, "获取流程实例状态失败")
 		return

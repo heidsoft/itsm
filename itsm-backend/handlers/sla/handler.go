@@ -47,6 +47,18 @@ func toSLADefinitionDTO(s *SLADefinition) *dto.SLADefinitionResponse {
 }
 
 // CreateSLADefinition handles POST /api/v1/sla/definitions
+// @Summary 创建SLA定义
+// @Description 新建一条SLA定义（响应/解决时限、服务类型、优先级、营业时间与升级规则）。需要 sla:write 权限；租户上下文缺失返回 401。
+// @Tags SLA管理
+// @Accept json
+// @Produce json
+// @Param body body dto.CreateSLADefinitionRequest true "SLA定义"
+// @Success 200 {object} common.Response{data=dto.SLADefinitionResponse}
+// @Failure 400 {object} common.Response "参数错误"
+// @Failure 401 {object} common.Response "租户上下文缺失"
+// @Failure 500 {object} common.Response "后端故障"
+// @Security BearerAuth
+// @Router /api/v1/sla/definitions [post]
 func (h *Handler) CreateSLADefinition(c *gin.Context) {
 	var req dto.CreateSLADefinitionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -82,6 +94,17 @@ func (h *Handler) CreateSLADefinition(c *gin.Context) {
 }
 
 // GetSLADefinition handles GET /api/v1/sla/definitions/:id
+// @Summary 获取SLA定义详情
+// @Description 按 ID 查询当前租户的SLA定义。仅 ent.NotFoundError 映射为 404；DB 故障等后端错误返回 500，不伪装成「定义不存在」。兼容旧路径 /sla/policies/:id。
+// @Tags SLA管理
+// @Produce json
+// @Param id path int true "SLA定义ID"
+// @Success 200 {object} common.Response{data=dto.SLADefinitionResponse}
+// @Failure 400 {object} common.Response "无效ID"
+// @Failure 404 {object} common.Response "定义不存在或跨租户"
+// @Failure 500 {object} common.Response "后端故障"
+// @Security BearerAuth
+// @Router /api/v1/sla/definitions/{id} [get]
 func (h *Handler) GetSLADefinition(c *gin.Context) {
 	idStr := c.Param("id")
 	id, _ := strconv.Atoi(idStr)
@@ -92,7 +115,9 @@ func (h *Handler) GetSLADefinition(c *gin.Context) {
 
 	res, err := h.svc.GetDefinition(c.Request.Context(), id, tenantIDVal)
 	if err != nil {
-		common.NotFound(c, "SLA Definition not found")
+		// 真·不存在（ent.NotFoundError）→ 404；DB 故障等其余错误 → 500，
+		// 不能无条件映射成 404 把后端故障伪装成「定义不存在」。
+		common.RespondError(c, err, "查询SLA定义失败")
 		return
 	}
 
@@ -100,6 +125,17 @@ func (h *Handler) GetSLADefinition(c *gin.Context) {
 }
 
 // ListSLADefinitions handles GET /api/v1/sla/definitions
+// @Summary 列出SLA定义
+// @Description 分页列出当前租户的SLA定义，页长由平台统一夹紧。兼容 /sla 与 /sla/policies。
+// @Tags SLA管理
+// @Produce json
+// @Param page query int false "页码" default(1)
+// @Param pageSize query int false "页长" default(20)
+// @Success 200 {object} common.Response "data 含 items/total/page/pageSize/totalPages"
+// @Failure 401 {object} common.Response "租户上下文缺失"
+// @Failure 500 {object} common.Response "后端故障"
+// @Security BearerAuth
+// @Router /api/v1/sla/definitions [get]
 func (h *Handler) ListSLADefinitions(c *gin.Context) {
 	pg := common.GetPaginationFromQuery(c)
 	tenantIDVal, ok := handlerctx.ResolveTenantID(c)
@@ -122,6 +158,19 @@ func (h *Handler) ListSLADefinitions(c *gin.Context) {
 }
 
 // UpdateSLADefinition handles PUT /api/v1/sla/definitions/:id
+// @Summary 更新SLA定义
+// @Description 按 ID 局部更新SLA定义（仅提交过的字段生效）。前置读取仅 NotFoundError→404，DB 故障→500。兼容旧路径 /sla/policies/:id。
+// @Tags SLA管理
+// @Accept json
+// @Produce json
+// @Param id path int true "SLA定义ID"
+// @Param body body dto.UpdateSLADefinitionRequest true "更新字段"
+// @Success 200 {object} common.Response{data=dto.SLADefinitionResponse}
+// @Failure 400 {object} common.Response "参数错误"
+// @Failure 404 {object} common.Response "定义不存在或跨租户"
+// @Failure 500 {object} common.Response "后端故障"
+// @Security BearerAuth
+// @Router /api/v1/sla/definitions/{id} [put]
 func (h *Handler) UpdateSLADefinition(c *gin.Context) {
 	idStr := c.Param("id")
 	id, _ := strconv.Atoi(idStr)
@@ -138,7 +187,7 @@ func (h *Handler) UpdateSLADefinition(c *gin.Context) {
 
 	existing, err := h.svc.GetDefinition(c.Request.Context(), id, tenantIDVal)
 	if err != nil {
-		common.NotFound(c, "SLA Definition not found")
+		common.RespondError(c, err, "查询SLA定义失败")
 		return
 	}
 
@@ -183,6 +232,16 @@ func (h *Handler) UpdateSLADefinition(c *gin.Context) {
 }
 
 // DeleteSLADefinition handles DELETE /api/v1/sla/definitions/:id
+// @Summary 删除SLA定义
+// @Description 按 ID 删除当前租户的SLA定义；不存在或跨租户返回 404，DB 故障返回 500。
+// @Tags SLA管理
+// @Produce json
+// @Param id path int true "SLA定义ID"
+// @Success 200 {object} common.Response
+// @Failure 404 {object} common.Response "定义不存在或跨租户"
+// @Failure 500 {object} common.Response "后端故障"
+// @Security BearerAuth
+// @Router /api/v1/sla/definitions/{id} [delete]
 func (h *Handler) DeleteSLADefinition(c *gin.Context) {
 	idStr := c.Param("id")
 	id, _ := strconv.Atoi(idStr)
@@ -200,6 +259,17 @@ func (h *Handler) DeleteSLADefinition(c *gin.Context) {
 }
 
 // CreateAlertRule handles POST /api/v1/sla/alert-rules
+// @Summary 创建SLA告警规则
+// @Description 为当前租户的SLA定义创建告警规则（阈值百分比、告警级别、通知渠道）。引用的SLA定义跨租户时拒绝。
+// @Tags SLA管理
+// @Accept json
+// @Produce json
+// @Param body body dto.CreateSLAAlertRuleRequest true "告警规则"
+// @Success 200 {object} common.Response{data=dto.SLAAlertRuleResponse}
+// @Failure 400 {object} common.Response "参数错误或跨租户引用"
+// @Failure 500 {object} common.Response "后端故障"
+// @Security BearerAuth
+// @Router /api/v1/sla/alert-rules [post]
 func (h *Handler) CreateAlertRule(c *gin.Context) {
 	var req dto.CreateSLAAlertRuleRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -228,6 +298,15 @@ func (h *Handler) CreateAlertRule(c *gin.Context) {
 }
 
 // ListAlertRules handles GET /api/v1/sla/alert-rules
+// @Summary 列出SLA告警规则
+// @Description 列出当前租户的SLA告警规则，可按 sla_definition_id 过滤。
+// @Tags SLA管理
+// @Produce json
+// @Success 200 {object} common.Response{data=[]dto.SLAAlertRuleResponse}
+// @Failure 401 {object} common.Response "租户上下文缺失"
+// @Failure 500 {object} common.Response "后端故障"
+// @Security BearerAuth
+// @Router /api/v1/sla/alert-rules [get]
 func (h *Handler) ListAlertRules(c *gin.Context) {
 	tenantIDVal, ok := handlerctx.ResolveTenantID(c)
 	if !ok {
@@ -248,6 +327,16 @@ func (h *Handler) ListAlertRules(c *gin.Context) {
 }
 
 // GetAlertRule handles GET /api/v1/sla/alert-rules/:id
+// @Summary 获取SLA告警规则
+// @Description 按 ID 查询告警规则。仅 NotFoundError→404；DB 故障→500。
+// @Tags SLA管理
+// @Produce json
+// @Param id path int true "告警规则ID"
+// @Success 200 {object} common.Response{data=dto.SLAAlertRuleResponse}
+// @Failure 404 {object} common.Response "规则不存在或跨租户"
+// @Failure 500 {object} common.Response "后端故障"
+// @Security BearerAuth
+// @Router /api/v1/sla/alert-rules/{id} [get]
 func (h *Handler) GetAlertRule(c *gin.Context) {
 	idStr := c.Param("id")
 	id, _ := strconv.Atoi(idStr)
@@ -258,13 +347,26 @@ func (h *Handler) GetAlertRule(c *gin.Context) {
 
 	res, err := h.svc.GetAlertRule(c.Request.Context(), id, tenantIDVal)
 	if err != nil {
-		common.NotFound(c, "SLA Alert Rule not found")
+		// 真·不存在 → 404；DB 故障 → 500，不无条件伪装成「规则不存在」。
+		common.RespondError(c, err, "查询SLA告警规则失败")
 		return
 	}
 	common.Success(c, res)
 }
 
 // UpdateAlertRule handles PUT /api/v1/sla/alert-rules/:id
+// @Summary 更新SLA告警规则
+// @Description 局部更新告警规则。前置读取跨租户/不存在→404，DB 故障→500。
+// @Tags SLA管理
+// @Accept json
+// @Produce json
+// @Param id path int true "告警规则ID"
+// @Param body body dto.UpdateSLAAlertRuleRequest true "更新字段"
+// @Success 200 {object} common.Response{data=dto.SLAAlertRuleResponse}
+// @Failure 404 {object} common.Response "规则不存在或跨租户"
+// @Failure 500 {object} common.Response "后端故障"
+// @Security BearerAuth
+// @Router /api/v1/sla/alert-rules/{id} [put]
 func (h *Handler) UpdateAlertRule(c *gin.Context) {
 	idStr := c.Param("id")
 	id, _ := strconv.Atoi(idStr)
@@ -281,7 +383,7 @@ func (h *Handler) UpdateAlertRule(c *gin.Context) {
 
 	existing, err := h.svc.GetAlertRule(c.Request.Context(), id, tenantIDVal)
 	if err != nil {
-		common.NotFound(c, "SLA Alert Rule not found")
+		common.RespondError(c, err, "查询SLA告警规则失败")
 		return
 	}
 
@@ -310,6 +412,16 @@ func (h *Handler) UpdateAlertRule(c *gin.Context) {
 }
 
 // DeleteAlertRule handles DELETE /api/v1/sla/alert-rules/:id
+// @Summary 删除SLA告警规则
+// @Description 按 ID 删除当前租户的告警规则。
+// @Tags SLA管理
+// @Produce json
+// @Param id path int true "告警规则ID"
+// @Success 200 {object} common.Response
+// @Failure 404 {object} common.Response "规则不存在或跨租户"
+// @Failure 500 {object} common.Response "后端故障"
+// @Security BearerAuth
+// @Router /api/v1/sla/alert-rules/{id} [delete]
 func (h *Handler) DeleteAlertRule(c *gin.Context) {
 	idStr := c.Param("id")
 	id, _ := strconv.Atoi(idStr)
@@ -326,6 +438,13 @@ func (h *Handler) DeleteAlertRule(c *gin.Context) {
 }
 
 // GetSLAMetrics handles GET /api/v1/sla/metrics
+// @Summary 获取SLA指标
+// @Description sla_metrics 表当前无采集写入方，读它只会返回空列表造成「已采集且无异常」的假象，故本端点显式返回 501 声明能力边界。
+// @Tags SLA管理
+// @Produce json
+// @Failure 501 {object} common.Response "指标采集未接入"
+// @Security BearerAuth
+// @Router /api/v1/sla/metrics [get]
 //
 // sla_metrics 表没有写入方（无指标采集任务），读它只会返回空列表。空成功会让
 // 调用方误以为「已采集且无异常」，因此按已声明边界返回 501。
@@ -338,6 +457,17 @@ func (h *Handler) GetSLAMetrics(c *gin.Context) {
 }
 
 // GetSLAViolations handles GET /api/v1/sla/violations
+// @Summary 列出SLA违规记录
+// @Description 分页列出当前租户的SLA违规，支持 resolved 等状态过滤；页长由平台统一夹紧。
+// @Tags SLA管理
+// @Produce json
+// @Param page query int false "页码" default(1)
+// @Param pageSize query int false "页长" default(20)
+// @Success 200 {object} common.Response "data 为标准分页信封"
+// @Failure 401 {object} common.Response "租户上下文缺失"
+// @Failure 500 {object} common.Response "后端故障"
+// @Security BearerAuth
+// @Router /api/v1/sla/violations [get]
 func (h *Handler) GetSLAViolations(c *gin.Context) {
 	tenantIDVal, ok := handlerctx.ResolveTenantID(c)
 	if !ok {
@@ -375,6 +505,18 @@ func (h *Handler) GetSLAViolations(c *gin.Context) {
 }
 
 // UpdateViolationStatus handles PUT /api/v1/sla/violations/:id
+// @Summary 处理SLA违规
+// @Description 将违规标记为已/未处理并记录处理说明；跨租户不可写，DB 故障返回 500。
+// @Tags SLA管理
+// @Accept json
+// @Produce json
+// @Param id path int true "违规ID"
+// @Param body body dto.UpdateSLAViolationRequest true "处理状态与说明"
+// @Success 200 {object} common.Response
+// @Failure 400 {object} common.Response "参数错误"
+// @Failure 500 {object} common.Response "后端故障"
+// @Security BearerAuth
+// @Router /api/v1/sla/violations/{id} [put]
 func (h *Handler) UpdateViolationStatus(c *gin.Context) {
 	idStr := c.Param("id")
 	id, _ := strconv.Atoi(idStr)
@@ -401,6 +543,18 @@ func (h *Handler) UpdateViolationStatus(c *gin.Context) {
 }
 
 // GetSLAMonitoring handles POST /api/v1/sla/monitoring（兼容别名 /sla/monitor）
+// @Summary 获取SLA监控大屏指标
+// @Description 按强制时间窗口（startTime/endTime 为 RFC3339，缺省由服务层套用默认 30 天）返回监控指标快照。无请求体合法；无样本时如实报告 0，不做假成功。
+// @Tags SLA管理
+// @Accept json
+// @Produce json
+// @Param body body dto.SLAMonitoringRequest false "统计窗口（空体用默认）"
+// @Success 200 {object} common.Response{data=dto.SLAMonitoringDashboard}
+// @Failure 400 {object} common.Response "时间格式非法"
+// @Failure 401 {object} common.Response "租户上下文缺失"
+// @Failure 500 {object} common.Response "后端故障"
+// @Security BearerAuth
+// @Router /api/v1/sla/monitoring [post]
 //
 // 请求体中的 startTime/endTime 必须是 RFC3339；缺省时由 Service 套用默认 30 天窗口。
 // 历史实现接受 "30d"/"now" 这类伪值但仓储层从未使用它们，导致大屏指标与实际窗口无关。
@@ -436,6 +590,18 @@ func (h *Handler) GetSLAMonitoring(c *gin.Context) {
 }
 
 // GetSLAPerformance handles GET /api/v1/sla/performance
+// @Summary SLA绩效分维度聚合
+// @Description 按 serviceType / priority 聚合窗口内绩效，供监控大屏表格使用；serviceType、priority 为可选预过滤（限制统计种群，非结果二次筛选）。仅 camelCase 契约。
+// @Tags SLA管理
+// @Produce json
+// @Param dimension query string true "聚合维度：serviceType 或 priority"
+// @Param serviceType query string false "服务类型预过滤"
+// @Param priority query string false "优先级预过滤"
+// @Success 200 {object} common.Response "data 含逐维绩效行与命中扫描上限标记"
+// @Failure 400 {object} common.Response "维度非法"
+// @Failure 500 {object} common.Response "后端故障"
+// @Security BearerAuth
+// @Router /api/v1/sla/performance [get]
 //
 // 监控大屏的「各服务类型绩效」「各优先级绩效」表格数据源。
 // dimension 只接受 serviceType / priority；serviceType、priority 为可选预过滤，
@@ -556,6 +722,16 @@ func failSLAQuery(c *gin.Context, err error, publicMsg string) {
 }
 
 // CheckSLACompliance handles POST /api/v1/sla/check-compliance/:ticketId
+// @Summary 检查单个工单的SLA合规性
+// @Description 基于工单首次响应/解决时间与SLA截止时间判定合规，返回含 actual_response_minutes 的完整结果；判定出的违规会落库，合规则不写违规。
+// @Tags SLA管理
+// @Produce json
+// @Param ticketId path int true "工单ID"
+// @Success 200 {object} common.Response "data 为 SLAComplianceResult"
+// @Failure 400 {object} common.Response "无效工单ID"
+// @Failure 500 {object} common.Response "后端故障"
+// @Security BearerAuth
+// @Router /api/v1/sla/check-compliance/{ticketId} [post]
 // 直接把 Service 返回的 *SLAComplianceResult（含 actual_response_minutes）
 // 透传给前端，而不是仅返回占位 message。
 func (h *Handler) CheckSLACompliance(c *gin.Context) {
@@ -575,6 +751,16 @@ func (h *Handler) CheckSLACompliance(c *gin.Context) {
 }
 
 // GetAlertHistory handles GET /api/v1/sla/alert-history
+// @Summary 列出SLA告警历史
+// @Description 分页列出告警历史，支持过滤；页长由平台统一夹紧（坏值回落默认而非整表读取）。
+// @Tags SLA管理
+// @Produce json
+// @Param page query int false "页码" default(1)
+// @Param pageSize query int false "页长" default(20)
+// @Success 200 {object} common.Response{data=[]dto.SLAAlertHistoryResponse}
+// @Failure 500 {object} common.Response "后端故障"
+// @Security BearerAuth
+// @Router /api/v1/sla/alert-history [get]
 func (h *Handler) GetAlertHistory(c *gin.Context) {
 	tenantIDVal, ok := handlerctx.ResolveTenantID(c)
 	if !ok {
@@ -611,6 +797,15 @@ func (h *Handler) GetAlertHistory(c *gin.Context) {
 }
 
 // GetSLAStats handles GET /api/v1/sla/stats
+// @Summary 获取SLA统计
+// @Description 汇总当前租户的SLA定义、违规与合规统计。工单统计查询失败时整体报错，不以 0 顶替；样本为 0 时如实报告 0。
+// @Tags SLA管理
+// @Produce json
+// @Success 200 {object} common.Response{data=dto.SLAStatsResponse}
+// @Failure 401 {object} common.Response "租户上下文缺失"
+// @Failure 500 {object} common.Response "统计查询失败"
+// @Security BearerAuth
+// @Router /api/v1/sla/stats [get]
 func (h *Handler) GetSLAStats(c *gin.Context) {
 	tenantID, ok := handlerctx.ResolveTenantID(c)
 	if !ok {
@@ -627,6 +822,17 @@ func (h *Handler) GetSLAStats(c *gin.Context) {
 }
 
 // GetSLAComplianceReport handles GET /api/v1/sla/compliance-report
+// @Summary 获取SLA合规报告
+// @Description 按日期范围（RFC3339 或 YYYY-MM-DD）汇总合规率与平均响应/解决时长；非法日期返回 400。
+// @Tags SLA管理
+// @Produce json
+// @Param startDate query string false "开始日期"
+// @Param endDate query string false "结束日期"
+// @Success 200 {object} common.Response{data=dto.SLAComplianceReport}
+// @Failure 400 {object} common.Response "日期格式非法"
+// @Failure 500 {object} common.Response "后端故障"
+// @Security BearerAuth
+// @Router /api/v1/sla/compliance-report [get]
 func (h *Handler) GetSLAComplianceReport(c *gin.Context) {
 	tenantID, ok := handlerctx.ResolveTenantID(c)
 	if !ok {

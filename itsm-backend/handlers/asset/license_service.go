@@ -291,6 +291,19 @@ func (s *AssetLicenseService) DeleteLicense(ctx context.Context, id, tenantID in
 	return nil
 }
 
+// countLicenseStatus 统计单个许可证状态，任一维失败都整体 fail-closed。
+// 旧实现把 4 个状态 Count 的错误吞成 0，DB 故障时 total 有值而各状态全 0，
+// 合规率会被算成 0%，故障看起来像「许可证全部失效」的真实业务结论。
+func countLicenseStatus(ctx context.Context, client *ent.Client, tenantID int, status dto.LicenseStatus) (int, error) {
+	count, err := client.AssetLicense.Query().
+		Where(assetlicense.TenantIDEQ(tenantID), assetlicense.StatusEQ(string(status))).
+		Count(ctx)
+	if err != nil {
+		return 0, fmt.Errorf("统计许可证状态 %s 失败: %w", status, err)
+	}
+	return count, nil
+}
+
 // GetLicenseStats 获取许可证统计
 func (s *AssetLicenseService) GetLicenseStats(ctx context.Context, tenantID int) (*dto.LicenseStatsResponse, error) {
 	stats := &dto.LicenseStatsResponse{}
@@ -302,11 +315,23 @@ func (s *AssetLicenseService) GetLicenseStats(ctx context.Context, tenantID int)
 	}
 	stats.Total = total
 
-	// 统计各状态数量
-	active, _ := s.client.AssetLicense.Query().Where(assetlicense.TenantIDEQ(tenantID), assetlicense.StatusEQ(string(dto.LicenseStatusActive))).Count(ctx)
-	expired, _ := s.client.AssetLicense.Query().Where(assetlicense.TenantIDEQ(tenantID), assetlicense.StatusEQ(string(dto.LicenseStatusExpired))).Count(ctx)
-	expiringSoon, _ := s.client.AssetLicense.Query().Where(assetlicense.TenantIDEQ(tenantID), assetlicense.StatusEQ(string(dto.LicenseStatusExpiringSoon))).Count(ctx)
-	depleted, _ := s.client.AssetLicense.Query().Where(assetlicense.TenantIDEQ(tenantID), assetlicense.StatusEQ(string(dto.LicenseStatusDepleted))).Count(ctx)
+	// 统计各状态数量：任一维失败都必须整体报错，否则合规率是假数据
+	active, err := countLicenseStatus(ctx, s.client, tenantID, dto.LicenseStatusActive)
+	if err != nil {
+		return nil, err
+	}
+	expired, err := countLicenseStatus(ctx, s.client, tenantID, dto.LicenseStatusExpired)
+	if err != nil {
+		return nil, err
+	}
+	expiringSoon, err := countLicenseStatus(ctx, s.client, tenantID, dto.LicenseStatusExpiringSoon)
+	if err != nil {
+		return nil, err
+	}
+	depleted, err := countLicenseStatus(ctx, s.client, tenantID, dto.LicenseStatusDepleted)
+	if err != nil {
+		return nil, err
+	}
 
 	stats.Active = active
 	stats.Expired = expired

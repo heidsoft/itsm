@@ -130,14 +130,16 @@ func TestProcessLifecycleAllowsLegalTransitions(t *testing.T) {
 	})
 }
 
-// 实例不存在时必须是 404 语义，而不是被兜底成 500。
+// 实例不存在时必须是 404 语义，而不是被兜底成 500；文案带上调用方传的标识。
 func TestProcessLifecycleMissingInstanceIsNotFound(t *testing.T) {
 	engine, ctx, _ := lifecycleTestSetup(t, "missing")
 
 	err := engine.TerminateProcess(ctx, "PI-NOT-EXISTENT", "gone")
 	require.Error(t, err)
-	var notFound *ent.NotFoundError
-	assert.True(t, errors.As(err, &notFound), "缺失实例必须是 not-found，实际 %T: %v", err, err)
+	var appErr *common.AppError
+	require.True(t, errors.As(err, &appErr), "缺失实例必须是 not-found AppError，实际 %T: %v", err, err)
+	assert.Equal(t, http.StatusNotFound, appErr.HTTPStatus)
+	assert.Contains(t, appErr.Message, "PI-NOT-EXISTENT", "404 文案必须带上调用方传的标识")
 }
 
 func reloadInstance(t *testing.T, client *ent.Client, id int) *ent.ProcessInstance {

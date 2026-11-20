@@ -259,7 +259,20 @@ func (h *DeliveryHandler) RetryDelivery(c *gin.Context) {
 	}
 
 	command, err := h.client.OperationalCommand.Get(ctx, delivery.OperationalCommandID)
-	if err != nil || command.TenantID != tenantID {
+	if err != nil {
+		// 真不存在 → 404；DB 故障（表缺失/连接抖动）→ 500，
+		// 不与「跨租户」合并，否则后端故障被伪装成「原命令不存在」。
+		if ent.IsNotFound(err) {
+			common.NotFound(c, "原投递命令不存在")
+		} else {
+			h.logger.Errorw("读取原投递命令失败", "delivery_id", deliveryID,
+				"command_id", delivery.OperationalCommandID, "error", err)
+			common.InternalError(c, "读取原投递命令失败")
+		}
+		return
+	}
+	if command.TenantID != tenantID {
+		// 命令存在但属于其他租户：与不存在同码，保留跨租户存在性隐藏。
 		common.NotFound(c, "原投递命令不存在或不属于当前租户")
 		return
 	}

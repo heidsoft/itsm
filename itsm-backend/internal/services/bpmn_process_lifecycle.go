@@ -14,6 +14,7 @@ import (
 	"itsm-backend/ent/processinstance"
 	"itsm-backend/ent/processtask"
 	"itsm-backend/metrics"
+	"itsm-backend/service/bpmn"
 )
 
 // 实例状态词表见 ent/schema/process_instance.go：running / suspended / completed / terminated。
@@ -28,19 +29,27 @@ var instanceLifecycleTable = map[string]instanceTransition{
 	"terminate": {label: "终止", allowed: []string{"running", "suspended"}},
 }
 
-// loadLifecycleInstance 是三个实例流转动作的共同入口：按 PI-* 业务键 + 租户加载实例，
-// 再校验 source 状态。非法迁移返回 conflict，避免把已完成/已终止的实例改回可执行状态
-// 并留下一条假的审计记录。
+// loadLifecycleInstance 是三个实例流转动作的共同入口：数字主键与 PI-* 业务键同口径
+// 寻址（列表 DTO 的 id 就是数字主键，CLI/MCP 直接回传它必须能落到同一行），再校验
+// source 状态。非法迁移返回 conflict，避免把已完成/已终止的实例改回可执行状态
+// 并留下一条假的审计记录；不存在与跨租户一律 404，文案带上调用方传的标识。
 func (e *CustomProcessEngine) loadLifecycleInstance(ctx context.Context, processInstanceID, action string) (*ent.ProcessInstance, error) {
 	tenantID, err := requireBPMNTenantContext(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	instance, err := e.client.ProcessInstance.Query().
-		Where(processinstance.ProcessInstanceID(processInstanceID), processinstance.TenantID(tenantID)).
-		First(ctx)
+	query := e.client.ProcessInstance.Query().Where(processinstance.TenantID(tenantID))
+	if numericID, convErr := strconv.Atoi(processInstanceID); convErr == nil && numericID > 0 {
+		query = query.Where(processinstance.IDEQ(numericID))
+	} else {
+		query = query.Where(processinstance.ProcessInstanceID(processInstanceID))
+	}
+	instance, err := query.First(ctx)
 	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, common.NewNotFoundError(processInstanceID)
+		}
 		return nil, fmt.Errorf("获取流程实例失败: %w", err)
 	}
 
@@ -83,7 +92,7 @@ func (e *CustomProcessEngine) SuspendProcess(ctx context.Context, processInstanc
 			"instance_id", instance.ID, "cancelled", cancelled)
 	}
 
-	userID, userName := extractUserFromContext(ctx)
+	userID, userName := e.lifecycleActor(ctx)
 	if err := e.auditService.RecordAudit(ctx, &AuditContext{
 		ProcessInstanceID:    instance.ID,
 		ProcessInstanceKey:   instance.ProcessInstanceID,
@@ -126,7 +135,7 @@ func (e *CustomProcessEngine) ResumeProcess(ctx context.Context, processInstance
 			"current_activity", instance.CurrentActivityID)
 	}
 
-	userID, userName := extractUserFromContext(ctx)
+	userID, userName := e.lifecycleActor(ctx)
 	if err := e.auditService.RecordAudit(ctx, &AuditContext{
 		ProcessInstanceID:    instance.ID,
 		ProcessInstanceKey:   instance.ProcessInstanceID,
@@ -174,7 +183,7 @@ func (e *CustomProcessEngine) TerminateProcess(ctx context.Context, processInsta
 	// 终止后取消该实例的活跃定时器（同挂起：终止实例不应再有 timer 触发）。
 	e.cancelInstanceTimers(ctx, instance)
 
-	userID, userName := extractUserFromContext(ctx)
+	userID, userName := e.lifecycleActor(ctx)
 	if err := e.auditService.RecordAudit(ctx, &AuditContext{
 		ProcessInstanceID:    instance.ID,
 		ProcessInstanceKey:   instance.ProcessInstanceID,
@@ -297,9 +306,17 @@ func (e *CustomProcessEngine) reregisterInstanceTimers(ctx context.Context, inst
 	return nil
 }
 
-func extractUserFromContext(ctx context.Context) (int, string) {
-	if u, ok := ctx.Value("user").(*ent.User); ok {
-		return u.ID, u.Name
+// lifecycleActor 从认证上下文取操作人：请求链路经 getBPMNTenantContext 注入
+// BPMNUserIDContextKey，与 StartProcess/recordApprovalDecision 同一口径。
+// 旧实现只认 ctx.Value("user")，正常鉴权链路根本不带该键，审计操作人恒为 0。
+func (e *CustomProcessEngine) lifecycleActor(ctx context.Context) (int, string) {
+	userID, _ := ctx.Value(bpmn.BPMNUserIDContextKey).(int)
+	if userID <= 0 {
+		return 0, ""
 	}
-	return 0, ""
+	userName := ""
+	if actor, err := e.client.User.Get(ctx, userID); err == nil {
+		userName = actor.Name
+	}
+	return userID, userName
 }

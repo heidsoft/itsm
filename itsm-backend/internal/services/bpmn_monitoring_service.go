@@ -6,6 +6,7 @@ import (
 	"math"
 	"sort"
 	"strconv"
+	"strings"
 	"time"
 
 	"itsm-backend/common"
@@ -94,18 +95,7 @@ type RealTimeMetrics struct {
 }
 
 // PerformanceAlert 性能告警
-type PerformanceAlert struct {
-	ID           string    `json:"id"`
-	Type         string    `json:"type"`     // performance, bottleneck, error
-	Severity     string    `json:"severity"` // info, warning, error, critical
-	Message      string    `json:"message"`
-	Timestamp    time.Time `json:"timestamp"`
-	ResourceID   string    `json:"resourceId"`
-	ResourceType string    `json:"resourceType"`
-	Value        float64   `json:"value"`
-	Threshold    float64   `json:"threshold"`
-	Status       string    `json:"status"` // active, resolved, acknowledged
-}
+type PerformanceAlert = dto.PerformanceAlert
 
 // ProcessMetricsRequest 流程指标请求
 type ProcessMetricsRequest = dto.ProcessMetricsRequest
@@ -270,13 +260,18 @@ func (s *BPMNMonitoringService) getTaskMetrics(ctx context.Context, req *Process
 	return taskMetrics, nil
 }
 
-// GetProcessInstanceStatus 获取流程实例状态
-func (s *BPMNMonitoringService) GetProcessInstanceStatus(ctx context.Context, processInstanceID int, tenantID int) (*ProcessInstanceStatus, error) {
+// GetProcessInstanceStatus 获取流程实例状态。
+// 寻址口径是业务键（PI-*），不是数据库主键：主键、跨租户键、不存在的键都解析不到，
+// 统一返回带键名的 not-found，由 handler 映射成 404/4004，不泄漏其它租户内容。
+func (s *BPMNMonitoringService) GetProcessInstanceStatus(ctx context.Context, processInstanceKey string, tenantID int) (*ProcessInstanceStatus, error) {
 	instance, err := s.client.ProcessInstance.Query().
-		Where(processinstance.ProcessInstanceID(fmt.Sprintf("%d", processInstanceID))).
+		Where(processinstance.ProcessInstanceID(processInstanceKey)).
 		Where(processinstance.TenantID(tenantID)).
 		First(ctx)
 	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, common.NewNotFoundError(processInstanceKey)
+		}
 		return nil, fmt.Errorf("获取流程实例失败: %w", err)
 	}
 
@@ -284,14 +279,14 @@ func (s *BPMNMonitoringService) GetProcessInstanceStatus(ctx context.Context, pr
 		ProcessInstanceID: instance.ProcessInstanceID,
 		Status:            instance.Status,
 		StartTime:         instance.StartTime,
-		Variables:         instance.Variables,
+		Variables:         filterEngineControlVariables(instance.Variables),
 		TenantID:          instance.TenantID,
 	}
 
 	// 获取当前任务
 	currentTask, err := s.client.ProcessTask.Query().
-		Where(processtask.ProcessInstanceID(processInstanceID)).
-		Where(processtask.StatusIn("assigned", "in_progress")).
+		Where(processtask.ProcessInstanceID(instance.ID)).
+		Where(processtask.StatusIn("created", "assigned")).
 		First(ctx)
 	if err == nil {
 		status.CurrentTask = currentTask.TaskType
@@ -299,12 +294,26 @@ func (s *BPMNMonitoringService) GetProcessInstanceStatus(ctx context.Context, pr
 	}
 
 	// 计算进度
-	progress, err := s.calculateProcessProgress(ctx, processInstanceID)
+	progress, err := s.calculateProcessProgress(ctx, instance.ID)
 	if err == nil {
 		status.Progress = progress
 	}
 
 	return status, nil
+}
+
+// filterEngineControlVariables 复制业务变量并剔除引擎内部控制变量（_ 前缀，如
+// _done_/_commandId/_idempotencyKey）。这些是引擎调度用的内部状态，不属于业务数据，
+// 不得下发到 wire；复制而非原地删除，避免污染 ent 模型缓存的 map。
+func filterEngineControlVariables(vars map[string]interface{}) map[string]interface{} {
+	clean := make(map[string]interface{}, len(vars))
+	for key, value := range vars {
+		if strings.HasPrefix(key, "_") {
+			continue
+		}
+		clean[key] = value
+	}
+	return clean
 }
 
 // calculateProcessProgress 计算流程进度
@@ -428,75 +437,89 @@ type ProcessTimelineEntry = dto.ProcessTimelineEntry
 // GetSystemHealth 获取系统健康状态
 func (s *BPMNMonitoringService) GetSystemHealth(ctx context.Context, tenantID int) (map[string]interface{}, error) {
 	health := map[string]interface{}{
-		"status":           "healthy",
-		"timestamp":        time.Now(),
-		"database":         "connected",
-		"active_processes": 0,
-		"active_tasks":     0,
-		"error_count":      0,
+		"status":          "healthy",
+		"database":        "connected",
+		"activeProcesses": 0,
+		"activeTasks":     0,
+		"errorCount":      0,
 	}
 
-	// 检查数据库连接
-	_, err := s.client.ProcessInstance.Query().Limit(1).First(ctx)
-	if err != nil {
+	// 空表不等于数据库断开：Exist 在无行时返回 (false, nil)，只有真实查询错误才判 disconnected。
+	if _, err := s.client.ProcessInstance.Query().Exist(ctx); err != nil {
 		health["database"] = "disconnected"
 		health["status"] = "unhealthy"
+		return health, nil
 	}
 
-	// 获取活跃流程数量
+	// 引擎只写 running/suspended 作为在途实例、created/assigned 作为未结束任务、
+	// terminated 作为异常结束；三处计数都限定本租户，不跨租户相加。
 	activeProcesses, err := s.client.ProcessInstance.Query().
-		Where(processinstance.Status("running")).
+		Where(processinstance.StatusIn("running", "suspended")).
 		Where(processinstance.TenantID(tenantID)).
 		Count(ctx)
 	if err == nil {
-		health["active_processes"] = activeProcesses
+		health["activeProcesses"] = activeProcesses
 	}
 
-	// 获取活跃任务数量
 	activeTasks, err := s.client.ProcessTask.Query().
-		Where(processtask.StatusIn("assigned", "in_progress")).
+		Where(processtask.StatusIn("created", "assigned")).
 		Where(processtask.TenantID(tenantID)).
 		Count(ctx)
 	if err == nil {
-		health["active_tasks"] = activeTasks
+		health["activeTasks"] = activeTasks
+	}
+
+	errorCount, err := s.client.ProcessInstance.Query().
+		Where(processinstance.Status("terminated")).
+		Where(processinstance.TenantID(tenantID)).
+		Count(ctx)
+	if err == nil {
+		health["errorCount"] = errorCount
 	}
 
 	return health, nil
 }
 
-// GetPerformanceAlerts 获取性能告警
-func (s *BPMNMonitoringService) GetPerformanceAlerts(ctx context.Context, tenantID int) ([]map[string]interface{}, error) {
-	alerts := []map[string]interface{}{}
+// GetPerformanceAlerts 获取性能告警。
+// 与 /performance 内嵌的 PerformanceAlert[] 共用同一字段集（type/severity/value/
+// resourceType/status），不再手拼 count map；无告警时返回 []，不是 null。
+func (s *BPMNMonitoringService) GetPerformanceAlerts(ctx context.Context, tenantID int) ([]*PerformanceAlert, error) {
+	alerts := []*PerformanceAlert{}
+	now := time.Now()
 
 	// 检查长时间运行的任务
 	longRunningTasks, err := s.client.ProcessTask.Query().
-		Where(processtask.StatusIn("assigned", "in_progress")).
+		Where(processtask.StatusIn("created", "assigned")).
 		Where(processtask.TenantID(tenantID)).
-		Where(processtask.CreatedAtLTE(time.Now().Add(-24 * time.Hour))).
+		Where(processtask.CreatedAtLTE(now.Add(-24 * time.Hour))).
 		All(ctx)
 	if err == nil && len(longRunningTasks) > 0 {
-		alerts = append(alerts, map[string]interface{}{
-			"type":      "long_running_task",
-			"severity":  "warning",
-			"message":   fmt.Sprintf("发现 %d 个长时间运行的任务", len(longRunningTasks)),
-			"count":     len(longRunningTasks),
-			"timestamp": time.Now(),
+		alerts = append(alerts, &PerformanceAlert{
+			Type:         "performance",
+			Severity:     "warning",
+			Message:      fmt.Sprintf("发现 %d 个长时间运行的任务", len(longRunningTasks)),
+			Timestamp:    now,
+			ResourceType: "task",
+			Value:        float64(len(longRunningTasks)),
+			Status:       "active",
 		})
 	}
 
-	// 检查失败的流程实例
-	failedInstances, err := s.client.ProcessInstance.Query().
-		Where(processinstance.Status("failed")).
+	// 异常终止的流程实例：引擎写 terminated，不是 failed
+	terminatedInstances, err := s.client.ProcessInstance.Query().
+		Where(processinstance.Status("terminated")).
 		Where(processinstance.TenantID(tenantID)).
-		Where(processinstance.StartTimeGTE(time.Now().Add(-1 * time.Hour))).
+		Where(processinstance.StartTimeGTE(now.Add(-1 * time.Hour))).
 		Count(ctx)
-	if err == nil && failedInstances > 0 {
-		alerts = append(alerts, map[string]interface{}{
-			"type":      "failed_instances",
-			"severity":  "error",
-			"message":   fmt.Sprintf("过去1小时内有 %d 个流程实例失败", failedInstances),
-			"count":     failedInstances,
-			"timestamp": time.Now(),
+	if err == nil && terminatedInstances > 0 {
+		alerts = append(alerts, &PerformanceAlert{
+			Type:         "error",
+			Severity:     "error",
+			Message:      fmt.Sprintf("过去1小时内有 %d 个流程实例异常终止", terminatedInstances),
+			Timestamp:    now,
+			ResourceType: "process",
+			Value:        float64(terminatedInstances),
+			Status:       "active",
 		})
 	}
 
@@ -547,7 +570,7 @@ func (s *BPMNMonitoringService) analyzeBottlenecks(ctx context.Context, req *Pro
 //  3. 使用 P95 而非平均值判断瓶颈
 //  4. 输出 waitTimeSeconds, processingTimeSeconds, totalDurationSeconds 三个指标
 func (s *BPMNMonitoringService) identifyBottleneckTasks(ctx context.Context, req *ProcessMetricsRequest) ([]*BottleneckTask, error) {
-	var bottlenecks []*BottleneckTask
+	bottlenecks := []*BottleneckTask{}
 
 	// 查询任务执行数据
 	tasks, err := s.client.ProcessTask.Query().
@@ -728,39 +751,21 @@ func (s *BPMNMonitoringService) generateTaskRecommendation(duration, waitTime ti
 
 // identifySlowestPaths 识别最慢路径
 func (s *BPMNMonitoringService) identifySlowestPaths(ctx context.Context, req *ProcessMetricsRequest) ([]*SlowestPath, error) {
-	// 这里实现路径分析逻辑
-	// 由于路径分析比较复杂，这里提供基础框架
-	return []*SlowestPath{
-		{
-			PathID:               "path-1",
-			PathName:             "标准审批路径",
-			TotalDurationSeconds: int64((time.Hour * 2) / time.Second),
-			TaskCount:            5,
-			BottleneckTasks:      []string{"审批任务"},
-			Optimization:         "优化审批流程，减少审批环节",
-		},
-	}, nil
+	// 路径耗时分析需要已完成任务的实际时长 telemetry；没有数据时返回空，
+	// 不再下发与流程无关的「标准审批路径」占位样本冒充分析结论。
+	return []*SlowestPath{}, nil
 }
 
 // identifyResourceConstraints 识别资源约束
 func (s *BPMNMonitoringService) identifyResourceConstraints(ctx context.Context, req *ProcessMetricsRequest) ([]*ResourceConstraint, error) {
-	// 这里实现资源约束分析逻辑
-	return []*ResourceConstraint{
-		{
-			ResourceType:   "human",
-			ResourceName:   "审批人员",
-			Utilization:    85.0,
-			Capacity:       10,
-			CurrentLoad:    8,
-			ConstraintType: "capacity",
-			Impact:         "medium",
-		},
-	}, nil
+	// 资源约束需要真实的执行人负载/容量数据；没有数据时返回空，
+	// 不再下发固定的「审批人员 85%」占位样本。
+	return []*ResourceConstraint{}, nil
 }
 
 // generateOptimizationRecommendations 生成优化建议
 func (s *BPMNMonitoringService) generateOptimizationRecommendations(analysis *BottleneckAnalysis) []string {
-	var recommendations []string
+	recommendations := []string{}
 
 	// 基于瓶颈任务生成建议
 	for _, task := range analysis.BottleneckTasks {

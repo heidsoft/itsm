@@ -992,6 +992,18 @@ func (s *DashboardService) GetTicketTrend(ctx context.Context, tenantID int, day
 	return s.getTicketTrend(ctx, tenantID, days)
 }
 
+// countTicketTrendMetric 执行趋势图中单个维度的计数。
+// 任一维度失败必须整体 fail-closed：旧实现用 `count, _ :=` 吞错，DB 故障时
+// 会返回「日期齐全、各维度全 0」的假趋势，服务质量报告与看板据此得出
+// 完全错误的结论。错误带维度名与日期，便于从日志定位具体失败的查询。
+func countTicketTrendMetric(ctx context.Context, query *ent.TicketQuery, metric string, date time.Time) (int, error) {
+	count, err := query.Count(ctx)
+	if err != nil {
+		return 0, fmt.Errorf("统计工单趋势[%s]（%s）失败: %w", metric, date.Format("2006-01-02"), err)
+	}
+	return count, nil
+}
+
 // getTicketTrend 获取工单趋势数据（内部方法）
 func (s *DashboardService) getTicketTrend(ctx context.Context, tenantID int, days int) ([]TicketTrendData, error) {
 	now := time.Now()
@@ -1002,50 +1014,60 @@ func (s *DashboardService) getTicketTrend(ctx context.Context, tenantID int, day
 		dateStart := time.Date(date.Year(), date.Month(), date.Day(), 0, 0, 0, 0, time.Local)
 		dateEnd := dateStart.Add(24*time.Hour - time.Second)
 
-		// 该日期的工单统计（统一状态口径）
-		openCount, _ := s.client.Ticket.Query().
+		// 该日期的工单统计（统一状态口径）。任一维计数失败都不得用 0 顶替。
+		openCount, err := countTicketTrendMetric(ctx, s.client.Ticket.Query().
 			Where(
 				ticket.TenantID(tenantID),
 				ticket.StatusIn(ticketPendingStatuses...),
 				ticket.CreatedAtGTE(dateStart),
 				ticket.CreatedAtLTE(dateEnd),
-			).
-			Count(ctx)
+			), "待处理", date)
+		if err != nil {
+			return nil, err
+		}
 
-		inProgressCount, _ := s.client.Ticket.Query().
+		inProgressCount, err := countTicketTrendMetric(ctx, s.client.Ticket.Query().
 			Where(
 				ticket.TenantID(tenantID),
 				ticket.StatusEQ(common.TicketStatusInProgress),
 				ticket.CreatedAtGTE(dateStart),
 				ticket.CreatedAtLTE(dateEnd),
-			).
-			Count(ctx)
+			), "进行中", date)
+		if err != nil {
+			return nil, err
+		}
 
-		resolvedCount, _ := s.client.Ticket.Query().
+		resolvedCount, err := countTicketTrendMetric(ctx, s.client.Ticket.Query().
 			Where(
 				ticket.TenantID(tenantID),
 				ticket.StatusIn(ticketCompletedStatuses...),
 				ticket.UpdatedAtGTE(dateStart),
 				ticket.UpdatedAtLTE(dateEnd),
-			).
-			Count(ctx)
+			), "已解决", date)
+		if err != nil {
+			return nil, err
+		}
 
-		closedCount, _ := s.client.Ticket.Query().
+		closedCount, err := countTicketTrendMetric(ctx, s.client.Ticket.Query().
 			Where(
 				ticket.TenantID(tenantID),
 				ticket.StatusEQ(common.TicketStatusClosed),
 				ticket.UpdatedAtGTE(dateStart),
 				ticket.UpdatedAtLTE(dateEnd),
-			).
-			Count(ctx)
+			), "已关闭", date)
+		if err != nil {
+			return nil, err
+		}
 
-		newTickets, _ := s.client.Ticket.Query().
+		newTickets, err := countTicketTrendMetric(ctx, s.client.Ticket.Query().
 			Where(
 				ticket.TenantID(tenantID),
 				ticket.CreatedAtGTE(dateStart),
 				ticket.CreatedAtLTE(dateEnd),
-			).
-			Count(ctx)
+			), "新建", date)
+		if err != nil {
+			return nil, err
+		}
 
 		completedTickets := resolvedCount
 		pendingTickets := openCount + inProgressCount

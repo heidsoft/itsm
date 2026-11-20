@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 
+	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/processexecutionhistory"
@@ -137,10 +138,12 @@ func (s *bpmnProcessInstanceService) SetProcessInstanceVariables(ctx context.Con
 	}
 
 	_, err = updateProcessInstanceVariablesCAS(ctx, s.client, instance.ID, instance.TenantID, func(vars map[string]interface{}) error {
-		for key, value := range variables {
+		for key := range variables {
 			if strings.HasPrefix(key, "_") {
-				return fmt.Errorf("流程内部变量 %s 不允许通过 API 覆盖", key)
+				return common.NewBadRequestError(fmt.Sprintf("流程内部变量 %s 不允许通过 API 覆盖", key), nil)
 			}
+		}
+		for key, value := range variables {
 			vars[key] = value
 		}
 		return nil
