@@ -20,7 +20,6 @@ import {
   Alert,
 } from 'antd';
 import { Plus, Edit, Delete, PlayCircle, PauseCircle, Settings, RefreshCw } from 'lucide-react';
-import { UsageGuideCard } from '@/components/common/UsageGuideCard';
 import { isPermissionDeniedError } from '@/lib/api/http-client';
 import type {
   AutomationRule,
@@ -263,19 +262,6 @@ const AutomationRulesPage: React.FC = () => {
           type="info"
           showIcon
           title="条件触发自动处理工单；审批和多阶段流转请使用 BPMN 流程"
-        />
-
-        <UsageGuideCard
-          style={{ marginBottom: 16 }}
-          title="从创建到启用：推荐的配置步骤"
-          intro="自动化规则 = 触发条件 + 执行动作，适用于单工单生命周期内的自动处理；需要多人审批、多阶段流转时用 BPMN 流程设计器。"
-          steps={[
-            '点击"创建规则"，填写名称和优先级（数字越大越先执行）。',
-            '配置触发条件：字段选状态/优先级/类型/分类，操作符选等于/不等于/包含/在列表中；多个条件需同时满足。',
-            '配置执行动作（可多条）：自动分配、发送通知、更新字段、升级、自动关闭。',
-            '保存后先保持禁用，用一张真实工单修改对应字段验证命中效果，再切换启用。',
-            '启用后通过列表的"执行次数"观察规则是否被触发；未命中时检查条件字段值是否完全匹配。',
-          ]}
         />
 
         {loadError ? (

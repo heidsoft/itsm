@@ -4,7 +4,6 @@ import { useCallback, useEffect, useState } from 'react';
 import { Alert, App, Button, Card, Input, List, Modal, Space, Switch, Table, Tag, Typography } from 'antd';
 import { Copy, Pencil, Plus, RotateCcw } from 'lucide-react';
 import { TicketTypeFormModal } from '@/components/business/TicketTypeFormModal';
-import { WorkflowConfigGuide } from '@/components/workflow/WorkflowConfigGuide';
 import { TicketTypeApi } from '@/lib/api/ticketTypeApi';
 import { isPermissionDeniedError, serverErrorMessage } from '@/lib/api/http-client';
 import { usePermissions } from '@/lib/hooks/use-permissions';
@@ -117,7 +116,6 @@ export default function TicketTypesPage() {
         ? '绑定工作流、SLA、分配规则和审批层级后启用，建议创建测试工单验收'
         : '当前角色只有查看权限，新建、编辑、复制、启停和恢复需要 ticket_type:manage，预设安装需要 ticket_type:install_preset'}
     />
-    <WorkflowConfigGuide current="binding" style={{ marginBottom: 16 }} />
     <Input.Search className="mb-4 max-w-sm" allowClear placeholder="搜索名称或编码" onSearch={setKeyword} />
     <div className="mb-3"><label className="inline-flex cursor-pointer items-center gap-2 text-sm text-gray-600"><input type="checkbox" checked={includeArchived} onChange={e => setIncludeArchived(e.target.checked)} />显示已归档类型</label></div>
     {/* 每列显式设置宽度并对长文本列开启 ellipsis，避免列宽被均分导致字段拥挤；总宽超出容器时通过 scroll.x 横向滚动兜底 */}

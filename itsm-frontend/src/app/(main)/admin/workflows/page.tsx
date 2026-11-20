@@ -42,8 +42,6 @@ import {
 import type { MenuProps } from 'antd';
 import { WorkflowAPI } from '@/lib/api/workflow-api';
 import { WorkflowType } from '@/types/workflow';
-import { UsageGuideCard } from '@/components/common/UsageGuideCard';
-import { WorkflowConfigGuide } from '@/components/workflow/WorkflowConfigGuide';
 import BPMNDiagramPreview from '@/components/workflow/BPMNDiagramPreview';
 import WorkflowTemplateCatalog from '@/components/workflow/WorkflowTemplateCatalog';
 const { Title, Text } = Typography;
@@ -556,21 +554,6 @@ const WorkflowManagement = () => {
         </Title>
         <Text type="secondary">设计和管理业务流程，配置审批节点和自动化规则</Text>
       </div>
-
-      <WorkflowConfigGuide current="designer" style={{ marginBottom: 16 }} />
-
-      <UsageGuideCard
-        style={{ marginBottom: 16 }}
-        title="工作流管理怎么用"
-        intro="本页管流程定义（新建/复制/启停/删除），节点编排要去 BPMN 设计器做。"
-        steps={[
-          '新建流程：点"创建工作流"填名称和说明（先存为草稿），进设计器排好节点和连线，再回本页启用。草稿没排好前不能启用。',
-          '行操作：点"设计流程"进设计器；点"复制"基于现有流程生成草稿副本；可启用/停用/删除，启用中的流程不能批量删。',
-          '想从模板导入（比如请假审批）：导入后去设计器确认节点连线完整再保存。',
-          '点"流程路由"进绑定页，把流程关联到工单等业务场景；业务对象满足路由规则时才会启动对应的流程实例。',
-          '验证：启用后建一条匹配的业务数据，去"工作流实例"看执行状态和待办任务，去"工作流审计"看流转记录。',
-        ]}
-      />
 
       <WorkflowTemplateCatalog />
 

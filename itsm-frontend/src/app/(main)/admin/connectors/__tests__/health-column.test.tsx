@@ -33,10 +33,6 @@ jest.mock('@/app/components/PageContainer', () => ({
   PageContainer: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
-jest.mock('@/components/common/UsageGuideCard', () => ({
-  UsageGuideCard: () => null,
-}));
-
 const mocked = connectorService as jest.Mocked<typeof connectorService>;
 
 const manifest = {

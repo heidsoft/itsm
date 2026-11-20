@@ -19,7 +19,6 @@ import {
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { Delete, Edit, FlaskConical, Plus, RefreshCw } from 'lucide-react';
-import { UsageGuideCard } from '@/components/common/UsageGuideCard';
 import { isPermissionDeniedError } from '@/lib/api/http-client';
 import { formatDateTime } from '@/lib/formatters';
 import type {
@@ -336,18 +335,6 @@ export default function AssignmentRulesPage() {
           type="info"
           showIcon
           title="定义匹配条件后，在工单类型中启用自动分配并绑定本规则"
-        />
-
-        <UsageGuideCard
-          style={{ marginBottom: 16 }}
-          title="匹配条件和分配动作怎么写"
-          intro="条件字段：priority（优先级）、status（状态）、category_id（分类 ID）、department_id（部门 ID）。操作符：equals / not_equals / contains / greater_than / less_than。"
-          steps={[
-            '匹配条件示例（全部同时满足才命中）：[{"field":"priority","operator":"equals","value":"urgent"},{"field":"category_id","operator":"equals","value":3}]',
-            '分配动作三选一：{"type":"user","value":5} 直接派给用户 5；{"type":"round_robin","value":[5,8,12]} 在候选里轮询；{"type":"load_balance","value":[5,8,12]} 按负载挑。',
-            '优先级数字越大越靠前。先用"测试"输入一个真实工单 ID 预览命中结果，没问题再启用。',
-            '启用后，新建/接单的工单会按规则自动派单，分配结果记入工单历史。',
-          ]}
         />
 
         {loadError ? (

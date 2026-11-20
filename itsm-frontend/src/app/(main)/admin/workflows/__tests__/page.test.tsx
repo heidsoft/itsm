@@ -36,10 +36,6 @@ jest.mock('@/components/workflow/WorkflowTemplateCatalog', () => ({
   default: () => <div data-testid="template-catalog" />,
 }));
 
-jest.mock('@/components/common/UsageGuideCard', () => ({
-  UsageGuideCard: () => <div data-testid="usage-guide" />,
-}));
-
 // 整页含统计卡片、多列表格与 Dropdown/Modal 传送门，并行 worker 抢 CPU 时单例实测 3–6s，
 // 全局 10s testTimeout 下会假红（与 approvals 页同形态）。
 jest.setTimeout(30000);

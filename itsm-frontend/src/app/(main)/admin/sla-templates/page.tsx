@@ -32,7 +32,6 @@ import {
   type SLATemplate,
   type TemplateInstallFailure,
 } from '@/lib/api/sla-template-api';
-import { UsageGuideCard } from '@/components/common/UsageGuideCard';
 import { formatDateTime } from '@/lib/formatters';
 import {
   formatBusinessHours,
@@ -353,19 +352,6 @@ export default function SLATemplatesPage() {
           按业务类型与优先级预置的 SLA 时限套餐。安装到当前租户后即生成对应 SLA 定义；安装状态记录在服务端，刷新页面不会丢失。
         </Paragraph>
       </div>
-
-      <UsageGuideCard
-        style={{ marginBottom: 16 }}
-        title="SLA 模板怎么用"
-        intro="模板是预置的 SLA 时限套餐。安装到当前租户后生成一条 SLA 定义并参与工单计时，无需逐项手工配置。"
-        steps={[
-          '先看模板行或「查看」详情，确认各优先级的响应 / 解决时限与服务窗口符合组织约定。',
-          '点「安装」（或顶部「批量安装全部推荐模板」）安装到当前租户。安装按租户幂等：重复点击只会跳过，不会产生第二份相同配置。',
-          '「安装状态」列显示服务端记录的安装事实（含安装时间与生成的 SLA 定义编号），刷新页面或改掉定义名称都不会退回「未安装」。',
-          '安装出的定义可在「SLA 定义」页继续调整或停用；模板目录本身是内置的，不会被修改。',
-          '注意：模板里的升级级别只是随定义写入的参考配置，当前没有运行时消费者。超时告警与逐级升级请在「升级规则」「升级矩阵」页面配置，那才是实际生效的入口。',
-        ]}
-      />
 
       {/* 统计卡必须门控：还没拉到数据时渲染成「模板总数 0」会被误读成「没有模板」 */}
       {!loading && (

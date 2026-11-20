@@ -19,7 +19,6 @@ import {
   Typography,
 } from 'antd';
 import { Plus, Trash2, Users } from 'lucide-react';
-import { UsageGuideCard } from '@/components/common/UsageGuideCard';
 import { ChangeReviewApi } from '@/lib/api/';
 import { UserApi, type User } from '@/lib/api/user-api';
 import type {
@@ -196,17 +195,6 @@ const ChangeReviewManagementPage: React.FC = () => {
           </Button>
         </Space>
       </Space>
-
-      <UsageGuideCard
-        style={{ marginBottom: 16 }}
-        intro="评审组负责评审高风险变更和紧急变更；这里维护的是评审组名单，不是审批流程本身。"
-        steps={[
-          '用右上角分段控件在常规评审组与紧急评审组两个名单之间切换。',
-          '点击"新增成员"选择用户并指定角色：主持人组织评审并确认结论，评审成员参与投票，记录人维护会议与决议记录。',
-          '变更工单进入评审阶段时，审批候选人来自这份名单；常规变更配常规评审组，紧急变更配紧急评审组。',
-          '不需要某位成员时直接在列表中移除，不影响历史评审记录。',
-        ]}
-      />
 
       <Card>
         <Alert
