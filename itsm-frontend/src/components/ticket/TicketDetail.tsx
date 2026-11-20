@@ -6,7 +6,7 @@
  * 包含：基本信息、SLA、审批/拒绝/分配/编辑/抄送/删除操作、详情 Tabs（评论/附件/审批链/历史/关联）
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import { TicketApi, type EscalateTicketRequest, type TicketConfigurationItem, type TicketSLAInfo } from '@/lib/api/ticket-api';
 import { TicketStatus, TicketPriority } from '@/constants/taxonomy';
@@ -210,6 +210,10 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
   const [error, setError] = useState<string | null>(null);
   const [assignModalVisible, setAssignModalVisible] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
+  // 编辑保存重入守卫：ref 关闭「同一帧双击」的竞态窗口，editing 驱动按钮 loading。
+  // 请求带 version 乐观锁，重复提交会让第二次请求 409「已被修改」，误导用户以为保存失败。
+  const [editing, setEditing] = useState(false);
+  const editInFlightRef = useRef(false);
   const [ccModalVisible, setCCModalVisible] = useState(false);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -305,6 +309,12 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
   // 单号路由下 ticket 加载完成后即有值；加载前子组件隐藏或禁用。
   const resolvedTicketId: number | undefined = numericId ?? (ticket as { id?: number } | null)?.id;
 
+  // 深链 /tickets/1 → /tickets/2 复用同一组件实例：ticketKey 变化时旧请求仍在途，
+  // 慢响应会覆盖新工单数据，且 ticket/slaInfo/cis 等 per-id 状态不会自动清空（串页）。
+  // 用 generation 守卫：每次 ticketKey 变化先作废旧序号并重置 per-id 状态，
+  // 各 fetch 仅在当前序号仍匹配时才写回状态。
+  const detailSeqRef = useRef(0);
+
   // Get ticket details
   const fetchTicket = useCallback(async () => {
     // 同时支持数字 ID 与业务工单号(例:TKT-202609-000010);
@@ -315,15 +325,18 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
       return;
     }
 
+    const seq = detailSeqRef.current;
     try {
       setLoading(true);
       setError(null);
       const data = await TicketApi.getTicket(ticketKey);
+      if (seq !== detailSeqRef.current) return;
       setTicket(data as Ticket);
     } catch (error) {
+      if (seq !== detailSeqRef.current) return;
       setError(error instanceof Error ? error.message : 'Network error');
     } finally {
-      setLoading(false);
+      if (seq === detailSeqRef.current) setLoading(false);
     }
   }, [ticketKey]);
 
@@ -341,12 +354,13 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
   const fetchSLAInfo = useCallback(async () => {
     // SLA 端点仅接受数字 ID，单号路由需等详情加载后取 ticket.id
     if (!resolvedTicketId) return;
+    const seq = detailSeqRef.current;
     try {
       const data = await TicketApi.getTicketSLA(resolvedTicketId);
-      setSlaInfo(data);
+      if (seq === detailSeqRef.current) setSlaInfo(data);
     } catch (error) {
       // SLA获取失败时不显示SLA信息
-      setSlaInfo(null);
+      if (seq === detailSeqRef.current) setSlaInfo(null);
     }
   }, [resolvedTicketId]);
 
@@ -354,17 +368,32 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
   const fetchCIs = useCallback(async () => {
     // CI 查询端点仅接受数字 ID，单号路由需等详情加载后取 ticket.id
     if (!resolvedTicketId) return;
+    const seq = detailSeqRef.current;
     setCisLoading(true);
     try {
       const data = await TicketApi.getTicketConfigurationItems(resolvedTicketId);
+      if (seq !== detailSeqRef.current) return;
       setCis(Array.isArray(data) ? data : []);
     } catch {
       // CI 查询失败不阻塞工单详情展示
-      setCis([]);
+      if (seq === detailSeqRef.current) setCis([]);
     } finally {
-      setCisLoading(false);
+      if (seq === detailSeqRef.current) setCisLoading(false);
     }
   }, [resolvedTicketId]);
+
+  // ticketKey 变化（深链切换）：先作废旧请求并清空 per-id 状态，避免串页。
+  // 必须放在下面三个数据 effect 之前——effect 按声明顺序执行，重置先于拉取。
+  useEffect(() => {
+    detailSeqRef.current += 1;
+    setTicket(null);
+    setSlaInfo(null);
+    setCis([]);
+    setCisLoading(false);
+    setFormFieldLabels({});
+    setWorkflowActions([]);
+    setError(null);
+  }, [ticketKey]);
 
   useEffect(() => {
     if (ticketKey) {
@@ -635,6 +664,10 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
 
   // Handle edit submit
   const handleEditSubmit = async (values: TicketEditFormValues) => {
+    // 双击守卫：必须在任何 await 之前同步置位，否则两次点击都能越过 ref。
+    if (editInFlightRef.current) return;
+    editInFlightRef.current = true;
+    setEditing(true);
     try {
       // 状态转换验证
       if (values.status && ticket?.status && values.status !== ticket.status) {
@@ -658,6 +691,9 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
       fetchTicket();
     } catch (error) {
       handleError(error, 'updateTicket', t('ticketDetail.editFailed'));
+    } finally {
+      editInFlightRef.current = false;
+      setEditing(false);
     }
   };
 
@@ -1303,7 +1339,13 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
                 >
                   {t('common.cancel')}
                 </Button>
-                <Button type="primary" htmlType="submit" icon={<Save />}>
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  icon={<Save />}
+                  loading={editing}
+                  disabled={editing}
+                >
                   {t('ticketDetail.saveChanges')}
                 </Button>
               </Space>

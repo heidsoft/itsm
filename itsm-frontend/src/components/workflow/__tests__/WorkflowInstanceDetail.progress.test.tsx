@@ -212,4 +212,46 @@ describe('WorkflowInstanceDetail 工作流可用性增强', () => {
 
     expect(mockGetWorkflow).toHaveBeenCalledTimes(1);
   });
+
+  /**
+   * 回归锁：深链 /instances/1 → /instances/2 时组件不卸载，instanceId 变了但
+   * processDefinitionKey 不同。缓存若用布尔量会一直显示第一个实例的图。
+   * 这里断言：定义 Key 变化后切回进度页会重新拉定义并按新实例高亮。
+   */
+  it('定义 Key 变化时重新加载流程图（不复用上一个实例的画布）', async () => {
+    const { rerender } = render(
+      <WorkflowInstanceDetail
+        instanceId="inst-a"
+        initialInstance={{
+          ...(baseInstance as object),
+          processDefinitionKey: 'flow_a',
+          currentActivityId: 'NodeA',
+          currentActivityName: '节点A',
+        } as never}
+      />
+    );
+
+    fireEvent.click(screen.getByText('流程进度'));
+    await waitFor(() => expect(mockGetWorkflow).toHaveBeenCalledWith('flow_a'));
+    expect(await screen.findByTestId('bpmn-preview')).toHaveAttribute('data-active', 'NodeA');
+
+    mockGetWorkflow.mockResolvedValueOnce({ bpmnXml: '<definitions new />' } as never);
+    rerender(
+      <WorkflowInstanceDetail
+        instanceId="inst-b"
+        initialInstance={{
+          ...(baseInstance as object),
+          processDefinitionKey: 'flow_b',
+          currentActivityId: 'NodeB',
+          currentActivityName: '节点B',
+        } as never}
+      />
+    );
+
+    fireEvent.click(screen.getByText('基本信息'));
+    fireEvent.click(screen.getByText('流程进度'));
+    await waitFor(() => expect(mockGetWorkflow).toHaveBeenCalledWith('flow_b'));
+    expect(await screen.findByTestId('bpmn-preview')).toHaveAttribute('data-active', 'NodeB');
+    expect(mockGetWorkflow).toHaveBeenCalledTimes(2);
+  });
 });

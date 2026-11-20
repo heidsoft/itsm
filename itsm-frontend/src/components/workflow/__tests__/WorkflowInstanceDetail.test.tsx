@@ -271,6 +271,49 @@ describe('WorkflowInstanceDetail', () => {
     expect(mockGetProcessTimeline).toHaveBeenCalledTimes(2);
   });
 
+  /**
+   * 回归锁：「刷新」必须重新拉实例摘要，否则运行中的实例在状态/当前节点变化后
+   * 永远显示打开瞬间的快照。此前 loadDetail 用 `summary ? 跳过 : 拉实例` 判断，
+   * initialInstance 一旦有值（列表弹窗场景）getInstance 永远不会再被调用。
+   */
+  it('refresh re-fetches the instance summary even when initialInstance was provided', async () => {
+    const onBack = jest.fn();
+    const initial = {
+      id: 'inst-refresh',
+      processDefinitionKey: 'proc',
+      businessKey: 'biz',
+      status: 'running',
+      currentActivityName: '旧节点',
+      startTime: '2026-01-01T00:00:00Z',
+    };
+
+    render(
+      <WorkflowInstanceDetail instanceId="inst-refresh" initialInstance={initial} onBack={onBack} />
+    );
+
+    await waitFor(() => {
+      expect(mockGetNodeInstances).toHaveBeenCalledTimes(1);
+    });
+    // 首次加载复用列表摘要：不重复拉实例。
+    expect(mockGetInstance).not.toHaveBeenCalled();
+
+    mockGetInstance.mockResolvedValueOnce({
+      id: 'inst-refresh',
+      workflowId: 'proc',
+      businessKey: 'biz',
+      status: 'completed',
+      currentActivityName: '新节点',
+      startTime: new Date('2026-01-01T00:00:00Z'),
+      endTime: new Date('2026-01-01T01:00:00Z'),
+    } as never);
+    fireEvent.click(screen.getByText('刷新'));
+
+    await waitFor(() => {
+      expect(mockGetInstance).toHaveBeenCalledWith('inst-refresh');
+    });
+    expect(await screen.findByText('新节点')).toBeInTheDocument();
+  });
+
   it('falls back gracefully when timeline API rejects', async () => {
     mockGetProcessTimeline.mockRejectedValueOnce(new Error('timeline api down'));
 

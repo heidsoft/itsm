@@ -88,6 +88,9 @@ const ChangeDetail: React.FC = () => {
   const { t } = useI18n();
   const [loading, setLoading] = useState(true);
   const [change, setChange] = useState<Change | null>(null);
+  // 加载失败（5xx/断网）与「真 404」必须分开：都令 change=null，但前者要给重试入口，
+  // 否则真实故障被稳定显示成「404 未找到」，与后端事实分叉且用户无法恢复。
+  const [loadError, setLoadError] = useState(false);
   const [approvalChain, setApprovalChain] = useState<ApprovalChainItem[]>([]);
   const [riskAssessment, setRiskAssessment] = useState<any>(null);
   const [rollbackPlan, setRollbackPlan] = useState<any>(null);
@@ -413,6 +416,7 @@ const ChangeDetail: React.FC = () => {
 
   const loadDetail = async () => {
     setLoading(true);
+    setLoadError(false);
     try {
       const data = await ChangeApi.getChange(Number(id!));
       setChange(data as Change);
@@ -426,7 +430,7 @@ const ChangeDetail: React.FC = () => {
         // console.warn('Failed to load approval summary', e);
       }
     } catch (error) {
-      // console.error(error);
+      setLoadError(true);
       message.error(serverErrorMessage(error, t('changeDetail.loadDetailFailed')));
     } finally {
       setLoading(false);
@@ -554,6 +558,23 @@ const ChangeDetail: React.FC = () => {
         <Skeleton active />
       </Card>
     );
+
+  if (loadError) {
+    return (
+      <Card>
+        <Result
+          status="error"
+          title={t('changeDetail.loadFailed')}
+          subTitle={t('changeDetail.loadDetailFailed')}
+          extra={
+            <Button type="primary" onClick={() => void loadDetail()}>
+              {t('changeDetail.retry')}
+            </Button>
+          }
+        />
+      </Card>
+    );
+  }
 
   if (!change) {
     return (

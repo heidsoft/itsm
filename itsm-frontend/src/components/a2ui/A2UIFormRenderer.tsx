@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { Form, Input, Select, Button, Card, Space, Spin, App } from 'antd';
 import { Send, Bot, CheckCircle } from 'lucide-react';
 import type { A2UIComponent, A2UIDataModel, ValueDef, OptionItem, ActionDef, TextProps } from '@/types/a2ui';
@@ -27,7 +27,8 @@ const A2UIComponentRenderer: React.FC<{
   onModelChange: (path: string, value: unknown) => void;
   onAction: (name: string, context: Record<string, unknown>) => void;
   allComponents: A2UIComponent[];
-}> = ({ component, model, onModelChange, onAction, allComponents }) => {
+  actionBusy?: boolean;
+}> = ({ component, model, onModelChange, onAction, allComponents, actionBusy }) => {
   const compDef = component.component;
   const compType = Object.keys(compDef)[0];
   const props = (compDef as Record<string, unknown>)[compType];
@@ -44,6 +45,7 @@ const A2UIComponentRenderer: React.FC<{
         onModelChange={onModelChange}
         onAction={onAction}
         allComponents={allComponents}
+        actionBusy={actionBusy}
       />
     );
   };
@@ -228,7 +230,8 @@ const A2UIComponentRenderer: React.FC<{
         <Form.Item>
           <Button
             type="primary"
-            disabled={!isEnabled}
+            disabled={!isEnabled || actionBusy}
+            loading={actionBusy && btnProps?.action?.name === 'submit'}
             onClick={() => {
               if (btnProps?.action) {
                 const context: Record<string, unknown> = {};
@@ -265,6 +268,10 @@ export function A2UIFormRenderer() {
   });
   const [userIntent, setUserIntent] = useState('');
   const [loading, setLoading] = useState(false);
+  // 提交重入守卫：ref 关闭同一帧双击窗口（state 由 React 异步渲染，挡不住第二次点击）。
+  // submitting 专用于「提交」按钮的 loading/disabled，不与 sendToAI 的 loading 混用。
+  const actionInFlightRef = useRef(false);
+  const [submitting, setSubmitting] = useState(false);
   const [surfaceId, setSurfaceId] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
 
@@ -374,10 +381,14 @@ export function A2UIFormRenderer() {
   // 处理用户操作
   const handleAction = async (actionName: string, context: Record<string, unknown>) => {
     if (actionName === 'submit' && surfaceId) {
+      // 双击守卫：必须在 await 之前同步置位，否则两次点击都能越过。
+      if (actionInFlightRef.current) return;
+      actionInFlightRef.current = true;
       if (!checkAuth()) {
+        actionInFlightRef.current = false;
         return;
       }
-      setLoading(true);
+      setSubmitting(true);
       try {
         const data = await A2UIApi.handleTicketAction(actionName, surfaceId, context);
 
@@ -404,7 +415,8 @@ export function A2UIFormRenderer() {
       } catch (e) {
         message.error('提交失败');
       } finally {
-        setLoading(false);
+        actionInFlightRef.current = false;
+        setSubmitting(false);
       }
     }
   };
@@ -473,6 +485,7 @@ export function A2UIFormRenderer() {
                   onModelChange={handleModelChange}
                   onAction={handleAction}
                   allComponents={components}
+                  actionBusy={submitting}
                 />
               );
             })}

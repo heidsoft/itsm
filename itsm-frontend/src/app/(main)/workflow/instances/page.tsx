@@ -72,7 +72,17 @@ function WorkflowInstancesContent() {
     terminated: 0,
   });
   const [keyword, setKeyword] = useState(urlWorkflowId);
+  // 搜索框每敲一个字都直接进 loadData 会打出两次请求（实例 + 统计），且在慢网络下
+  // 先发的请求可能后到，把新结果覆盖成旧结果。这里把「输入框值」与「查询值」分离：
+  // keyword 立即响应输入，queryKeyword 停顿后才触发查询。
+  const [queryKeyword, setQueryKeyword] = useState(urlWorkflowId);
+  const loadSeqRef = React.useRef(0);
   const [status, setStatus] = useState<string | undefined>();
+
+  useEffect(() => {
+    const timer = setTimeout(() => setQueryKeyword(keyword), 300);
+    return () => clearTimeout(timer);
+  }, [keyword]);
 
   // URL 参数变化时（例如从流程设计器跳转过来）同步 keyword 并重新查询
   useEffect(() => {
@@ -95,21 +105,25 @@ function WorkflowInstancesContent() {
   const [startForm] = Form.useForm();
 
   const loadData = async () => {
+    const seq = ++loadSeqRef.current;
     try {
       setListLoading(true);
       const [instanceResponse, statsResponse] = await Promise.all([
         WorkflowApi.getInstances({
-          workflowId: keyword || undefined,
+          workflowId: queryKeyword || undefined,
           businessKey: urlBusinessKey || undefined,
           status,
           page: 1,
           pageSize: 50,
         }),
         WorkflowApi.getInstanceStats({
-          processDefinitionKey: keyword || undefined,
+          processDefinitionKey: queryKeyword || undefined,
           status,
         }),
       ]);
+
+      // 慢响应后到时丢弃：否则用户已经输入新关键字，列表却被旧请求的结果覆盖。
+      if (seq !== loadSeqRef.current) return;
 
       const rows = (instanceResponse.instances || []).map(instance => ({
         id: instance.id,
@@ -127,11 +141,12 @@ function WorkflowInstancesContent() {
       setInstances(rows);
       setStats(statsResponse);
     } catch (error) {
+      if (seq !== loadSeqRef.current) return;
       console.error('Failed to load workflow instances:', error);
       message.error('加载工作流实例失败');
       setInstances([]);
     } finally {
-      setListLoading(false);
+      if (seq === loadSeqRef.current) setListLoading(false);
     }
   };
 
@@ -191,7 +206,7 @@ function WorkflowInstancesContent() {
 
   useEffect(() => {
     loadData();
-  }, [keyword, status, urlBusinessKey]);
+  }, [queryKeyword, status, urlBusinessKey]);
 
   // 从业务详情带 instanceId 跳转时直接打开该实例详情，而不是只落在实例列表。
   useEffect(() => {

@@ -5,7 +5,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Card, Tag, Button, Space, Skeleton, message, Typography, Tabs, Modal, Form, Input } from 'antd';
+import { Card, Tag, Button, Space, Skeleton, message, Typography, Tabs, Modal, Form, Input, Empty } from 'antd';
 import { ArrowLeft, Search, Pencil, FlaskConical, ShieldAlert } from 'lucide-react';
 import { useRouter, useParams } from 'next/navigation';
 
@@ -26,8 +26,11 @@ const ProblemDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
   const { t } = useI18n();
   // 支持通过props传入id，或通过useParams获取
   const id = propId || (params?.id as string);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [data, setData] = useState<Problem | null>(null);
+  // 加载失败与「真不存在」必须区分：二者都表现为 data=null，但前者要能重试，
+  // 否则断网/5xx 会被稳定显示成「未找到问题」且没有恢复入口。
+  const [loadError, setLoadError] = useState(false);
   // 状态流转 loading：记录正在提交的目标状态，防止重复点击
   const [updatingStatus, setUpdatingStatus] = useState<ProblemStatus | null>(null);
   // 受控 Tab：用于“启动 RCA”等操作直接跳转到对应面板
@@ -43,10 +46,12 @@ const ProblemDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
   const loadData = async () => {
     if (!id) return;
     setLoading(true);
+    setLoadError(false);
     try {
       const problem = await ProblemApi.getProblem(Number(id));
       setData(problem);
     } catch (error) {
+      setLoadError(true);
       message.error(t('problemDetail.loadDetailFailed'));
     } finally {
       setLoading(false);
@@ -122,6 +127,21 @@ const ProblemDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
     return (
       <Card>
         <Skeleton active />
+      </Card>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <Card>
+        <Empty
+          description={t('problemDetail.loadFailed')}
+          image={Empty.PRESENTED_IMAGE_SIMPLE}
+        >
+          <Button type="primary" onClick={() => void loadData()}>
+            {t('problemDetail.retry')}
+          </Button>
+        </Empty>
       </Card>
     );
   }

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Button, App, Pagination, Select } from 'antd';
 import {
   Plus,
@@ -124,9 +124,14 @@ export default function ProblemListPage() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [total, setTotal] = useState(0);
+  // 筛选/翻页快速连点时，慢响应后到会覆盖新条件的结果（分页总数与表体不一致）。
+  // 列表与看板各用自己的序号，切换视图不会让旧视图的响应污染新视图。
+  const listSeqRef = useRef(0);
+  const kanbanSeqRef = useRef(0);
 
   // ====== 数据获取 ======
   const fetchProblems = useCallback(async () => {
+    const seq = ++listSeqRef.current;
     setListLoading(true);
     setLoadError(false);
     try {
@@ -137,16 +142,18 @@ export default function ProblemListPage() {
         priority: priorityFilter,
         keyword: searchKeyword,
       });
+      if (seq !== listSeqRef.current) return;
       // 后端信封固定返回 items（空结果序列化为 []），不再需要 problems 别名或 || [] 兜底。
       const { items } = response;
       setProblems(items);
       setTotal(response.total);
     } catch (error) {
+      if (seq !== listSeqRef.current) return;
       console.error('Failed to fetch problems:', error);
       message.error(t('problems.getFailed'));
       setLoadError(true);
     } finally {
-      setListLoading(false);
+      if (seq === listSeqRef.current) setListLoading(false);
     }
   }, [page, pageSize, statusFilter, priorityFilter, searchKeyword, t]);
 
@@ -187,6 +194,7 @@ export default function ProblemListPage() {
   };
 
   const fetchProblemsForKanban = useCallback(async () => {
+    const seq = ++kanbanSeqRef.current;
     setListLoading(true);
     setLoadError(false);
     try {
@@ -197,14 +205,16 @@ export default function ProblemListPage() {
         priority: priorityFilter,
         keyword: searchKeyword,
       });
+      if (seq !== kanbanSeqRef.current) return;
       // 看板视图同样只读 items。注意它仍是一次 pageSize=100 的截断读取，
       // 与列表视图是两套请求，刷新时机也不同。
       setProblems(response.items);
     } catch (error) {
+      if (seq !== kanbanSeqRef.current) return;
       console.error('Failed to fetch problems for kanban:', error);
       setLoadError(true);
     } finally {
-      setListLoading(false);
+      if (seq === kanbanSeqRef.current) setListLoading(false);
     }
   }, [statusFilter, priorityFilter, searchKeyword]);
 
@@ -306,6 +316,10 @@ export default function ProblemListPage() {
       priority={priorityFilter}
       page={page}
       pageSize={pageSize}
+      items={problems}
+      total={total}
+      loading={listLoading}
+      onDataChange={fetchProblems}
     />
   );
 

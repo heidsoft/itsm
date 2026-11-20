@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { App, Card, Tabs } from 'antd';
 import { GitBranch, Clock as HistoryIcon } from 'lucide-react';
 import { useParams } from 'next/navigation';
@@ -43,12 +43,17 @@ export default function ChangeDetailPage() {
 
   const [approvals, setApprovals] = useState<ApprovalStep[]>([]);
   const [approvalLoading, setApprovalLoading] = useState(false);
+  // 深链 /changes/1 → /changes/2 复用组件实例：旧 id 的审批请求若慢返回，
+  // 会覆盖新 id 的审批链（且 approvals 不重置）。用 generation 守卫丢弃过期响应。
+  const approvalSeqRef = useRef(0);
 
   const loadApprovals = useCallback(async () => {
     if (!Number.isFinite(numericId) || numericId <= 0) return;
+    const seq = ++approvalSeqRef.current;
     setApprovalLoading(true);
     try {
       const records = await ChangeApi.getChangeApprovals(numericId);
+      if (seq !== approvalSeqRef.current) return;
       const steps: ApprovalStep[] = (records || []).map((r: ChangeApproval, idx: number) => ({
         id: r.id,
         level: idx + 1,
@@ -61,12 +66,20 @@ export default function ChangeDetailPage() {
       }));
       setApprovals(steps);
     } catch (e) {
+      if (seq !== approvalSeqRef.current) return;
       // 静默：Empty 态
       console.warn('load change approvals failed', e);
       setApprovals([]);
     } finally {
-      setApprovalLoading(false);
+      if (seq === approvalSeqRef.current) setApprovalLoading(false);
     }
+  }, [numericId]);
+
+  // id 变化时先清空旧审批链，避免新 id 数据到达前展示上一个变更的审批记录。
+  useEffect(() => {
+    approvalSeqRef.current += 1;
+    setApprovals([]);
+    setApprovalLoading(false);
   }, [numericId]);
 
   useEffect(() => {

@@ -213,34 +213,66 @@ export const WorkflowInstanceDetail: React.FC<WorkflowInstanceDetailProps> = ({
   const [definitionXml, setDefinitionXml] = useState<string | undefined>(undefined);
   const [definitionLoading, setDefinitionLoading] = useState(false);
   const [definitionError, setDefinitionError] = useState<string | undefined>(undefined);
-  const definitionRequestedRef = useRef(false);
+  // 缓存的是「已加载的定义 Key」而不是布尔量：深链从 /instances/1 跳到 /instances/2
+  // 时组件不卸载，布尔量会让第二个实例一直显示第一个实例的流程图。
+  const loadedDefinitionKeyRef = useRef<string | undefined>(undefined);
 
-  const loadDetail = async () => {
+  /**
+   * 首次加载是否可以复用列表行传来的摘要，以及响应乱序守卫。
+   *
+   * 这两个 ref 修的是「刷新按钮点了没反应」这个真实缺陷：此前 loadDetail 用
+   * `summary ? 跳过 : 拉实例` 判断，summary 一旦有值（首次加载或 initialInstance）
+   * 就再也不会重新拉实例 —— 用户在运行中的实例上点刷新，状态、当前节点、结束时
+   * 间永远是打开瞬间的快照。现在只有「首次 + initialInstance」这一条路径可跳过，
+   * 显式刷新和 instanceId 切换都必须重新拉。
+   *
+   * requestSeqRef 处理 modal 复用/深链跳转时的乱序响应：旧请求的慢响应不能覆盖
+   * 新实例的数据，否则会看到 A 实例的摘要配上 B 实例的任务。
+   */
+  const initialSummaryConsumedRef = useRef(false);
+  const requestSeqRef = useRef(0);
+
+  const loadDetail = async (options?: { refresh?: boolean }) => {
     if (!instanceId) return;
+    const seq = ++requestSeqRef.current;
+    // 只有首次、且本实例确实有列表摘要时跳过实例请求；其余一律重新拉。
+    const reuseInitial =
+      !options?.refresh && !initialSummaryConsumedRef.current && Boolean(initialInstance);
+    initialSummaryConsumedRef.current = true;
     try {
       setLoading(true);
       const [instance, fetchedTasks, timeline] = await Promise.all([
-        summary
-          ? Promise.resolve(null)
-          : WorkflowApi.getInstance(instanceId).catch(() => null),
+        reuseInitial ? Promise.resolve(null) : WorkflowApi.getInstance(instanceId).catch(() => null),
         WorkflowApi.getNodeInstances(instanceId).catch(() => [] as NodeInstance[]),
         BPMNDashboardApi.getProcessTimeline(instanceId).catch(() => [] as ProcessAuditLog[]),
       ]);
-
+      // 乱序响应：更晚发起的请求已经接管，本次结果整体丢弃。
+      if (seq !== requestSeqRef.current) return;
       if (instance) {
         setSummary(toSummary(instance));
       }
       setTasks(fetchedTasks || []);
       setAuditLogs(timeline || []);
     } catch (error) {
+      if (seq !== requestSeqRef.current) return;
       console.error('Failed to load instance detail:', error);
       message.error('加载实例详情失败');
     } finally {
-      setLoading(false);
+      if (seq === requestSeqRef.current) setLoading(false);
     }
   };
 
   useEffect(() => {
+    // instanceId 变化（深链 /instances/1 → /instances/2）：先把上一个实例的
+    // 摘要/任务/历史/流程图全部清掉，否则在新数据回来前会看到 A 的摘要配 B 的图，
+    // 甚至因为定义 Key 未变而一直停在 A 的画布上。
+    setSummary(initialInstance);
+    setTasks([]);
+    setAuditLogs([]);
+    setDefinitionXml(undefined);
+    setDefinitionError(undefined);
+    loadedDefinitionKeyRef.current = undefined;
+    initialSummaryConsumedRef.current = false;
     if (autoRefresh) {
       void loadDetail();
     }
@@ -257,13 +289,14 @@ export const WorkflowInstanceDetail: React.FC<WorkflowInstanceDetailProps> = ({
    * 若引用了已删除的节点，BPMNDiagramPreview 会判掉不画高亮而不是崩图。
    */
   const loadDefinition = useCallback(async () => {
-    if (definitionRequestedRef.current) return;
     const key = summary?.processDefinitionKey;
     if (!key || key === '-') {
       setDefinitionError('缺少流程定义 Key，无法渲染流程图');
       return;
     }
-    definitionRequestedRef.current = true;
+    // 同一定义只加载一次；定义 Key 变化（换了实例/换了流程）必须重新拉取。
+    if (loadedDefinitionKeyRef.current === key) return;
+    loadedDefinitionKeyRef.current = key;
     setDefinitionLoading(true);
     setDefinitionError(undefined);
     try {
@@ -276,8 +309,8 @@ export const WorkflowInstanceDetail: React.FC<WorkflowInstanceDetailProps> = ({
       setDefinitionXml(xml);
     } catch (error) {
       console.error('Failed to load process definition:', error);
-      // 失败必须可重试：把 requested 复位，否则用户点了重试也不会再发请求。
-      definitionRequestedRef.current = false;
+      // 失败必须可重试：把缓存复位，否则用户点了重试也不会再发请求。
+      loadedDefinitionKeyRef.current = undefined;
       setDefinitionError('加载流程定义失败');
     } finally {
       setDefinitionLoading(false);
@@ -485,7 +518,7 @@ export const WorkflowInstanceDetail: React.FC<WorkflowInstanceDetailProps> = ({
                 description: definitionError || '未知错误',
                 actionText: '重新加载',
                 onAction: () => {
-                  definitionRequestedRef.current = false;
+                  loadedDefinitionKeyRef.current = undefined;
                   void loadDefinition();
                 },
               }}
@@ -630,7 +663,11 @@ export const WorkflowInstanceDetail: React.FC<WorkflowInstanceDetailProps> = ({
           {summary ? `实例详情 · ${summary.id}` : `实例详情 · ${instanceId}`}
         </span>
       </Space>
-      <Button icon={<RefreshCw className="h-4 w-4" />} onClick={loadDetail} loading={loading}>
+      <Button
+        icon={<RefreshCw className="h-4 w-4" />}
+        onClick={() => void loadDetail({ refresh: true })}
+        loading={loading}
+      >
         刷新
       </Button>
     </div>

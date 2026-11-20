@@ -63,6 +63,21 @@ interface ProblemListProps {
   /** 受控分页：嵌入模式（showHeader=false）下由父级 Pagination 驱动 */
   page?: number;
   pageSize?: number;
+  /**
+   * 受控数据：父级传入后组件不再自己发请求，只负责渲染。
+   *
+   * 嵌入模式下父级（/problems）原本自己拉一份用于分页与空态，组件内部再拉一份
+   * 用于表格——同一份数据两个源、两次请求，筛选/翻页时两个响应竞态，会出现
+   * 「分页显示 N 条但表体是上一页」的自相矛盾界面。父级传 items 即声明「数据
+   * 我负责」，组件退化为纯展示（与 ChangeList 受控模式一致）。
+   */
+  items?: Problem[];
+  /** 受控总数（配合 items 使用） */
+  total?: number;
+  /** 受控加载态（配合 items 使用） */
+  loading?: boolean;
+  /** 数据变化需父级重新拉取（受控模式下删除成功后触发） */
+  onDataChange?: () => void;
 }
 
 const ProblemList: React.FC<ProblemListProps> = ({
@@ -72,13 +87,25 @@ const ProblemList: React.FC<ProblemListProps> = ({
   priority,
   page,
   pageSize,
+  items,
+  total: totalProp,
+  loading: loadingProp,
+  onDataChange,
 }) => {
   const router = useRouter();
   const { message } = App.useApp();
+  const isControlled = items !== undefined;
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<Problem[]>([]);
-  const [total, setTotal] = useState(0);
+  const [internalTotal, setInternalTotal] = useState(0);
   const [form] = Form.useForm();
+  const loadSeqRef = React.useRef(0);
+
+  // 受控模式读父级数据，非受控模式读内部加载结果——渲染只认这一组值，
+  // 避免父级分页/空态与表格 body 来自两个数据源。
+  const displayData = isControlled ? (items ?? []) : data;
+  const displayTotal = isControlled ? (totalProp ?? 0) : internalTotal;
+  const displayLoading = isControlled ? (loadingProp ?? false) : loading;
 
   const [query, setQuery] = useState<ProblemQuery>({
     page: 1,
@@ -98,6 +125,9 @@ const ProblemList: React.FC<ProblemListProps> = ({
   }, [keyword, status, priority, form]);
 
   const loadData = async () => {
+    // 受控模式下数据由父级提供，组件内不得再发请求（否则就是第二份数据源）。
+    if (isControlled) return;
+    const seq = ++loadSeqRef.current;
     setLoading(true);
     try {
       const values = await form.validateFields().catch(() => ({}));
@@ -107,9 +137,12 @@ const ProblemList: React.FC<ProblemListProps> = ({
       });
       // 信封只有一个 items 键，实体只有一份 Problem，
       // 因此这里既不需要多字段 fallback，也不需要 as unknown as 断言。
+      // 慢响应后到会覆盖新条件结果：seq 守卫丢弃过期响应。
+      if (seq !== loadSeqRef.current) return;
       setData(resp.items);
-      setTotal(resp.total);
+      setInternalTotal(resp.total);
     } catch (error) {
+      if (seq !== loadSeqRef.current) return;
       // 只在有实际错误时显示失败消息，不是因为表单验证导致的
       if (
         error &&
@@ -120,7 +153,7 @@ const ProblemList: React.FC<ProblemListProps> = ({
         message.error('加载问题列表失败');
       }
     } finally {
-      setLoading(false);
+      if (seq === loadSeqRef.current) setLoading(false);
     }
   };
 
@@ -159,6 +192,7 @@ const ProblemList: React.FC<ProblemListProps> = ({
           await ProblemApi.deleteProblem(id);
           message.success('删除成功');
           loadData();
+          onDataChange?.();
         } catch (error) {
           message.error('删除失败');
         }
@@ -248,8 +282,8 @@ const ProblemList: React.FC<ProblemListProps> = ({
       <Table
         rowKey="id"
         columns={columns}
-        dataSource={data}
-        loading={loading}
+        dataSource={displayData}
+        loading={displayLoading}
         pagination={false}
         scroll={{ x: 1000 }}
         getPopupContainer={node => node.parentElement || document.body}
@@ -316,7 +350,7 @@ const ProblemList: React.FC<ProblemListProps> = ({
           </Form.Item>
         </Form>
 
-        {data.length === 0 && !loading ? (
+        {displayData.length === 0 && !displayLoading ? (
           <Empty description="暂无问题记录" image={Empty.PRESENTED_IMAGE_SIMPLE}>
             <Button type="primary" onClick={() => router.push('/problems/new')}>
               创建问题
@@ -326,12 +360,12 @@ const ProblemList: React.FC<ProblemListProps> = ({
           <Table
             rowKey="id"
             columns={columns}
-            dataSource={data}
-            loading={loading}
+            dataSource={displayData}
+            loading={displayLoading}
             pagination={{
               current: query.page,
               pageSize: query.pageSize,
-              total: total,
+              total: displayTotal,
               onChange: (page, pageSize) => setQuery(prev => ({ ...prev, page, pageSize })),
               showSizeChanger: true,
               showQuickJumper: true,
