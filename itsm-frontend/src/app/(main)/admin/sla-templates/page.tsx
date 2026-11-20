@@ -320,7 +320,7 @@ export default function SLATemplatesPage() {
               ))}
             </Space>
           ) : (
-            '未配置（升级动作需在「升级规则」「升级矩阵」页面配置）'
+            '未配置（超时处理在「超时升级」页面配置）'
           ),
         },
         {

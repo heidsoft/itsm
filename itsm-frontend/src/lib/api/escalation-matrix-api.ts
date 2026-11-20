@@ -44,13 +44,21 @@ export const DEFAULT_ESCALATION_MATRIX: EscalationMatrix = {
 };
 
 export class EscalationMatrixApi {
-  /** 获取当前租户生效的升级矩阵。后端总会返回矩阵（自定义或内置默认），空响应视为不可用并抛出。 */
+  /** 获取当前租户生效的超时升级配置（后端资源名 escalation-matrices）。空响应视为不可用并抛出。 */
   static async getMatrix(): Promise<EscalationMatrix> {
     const matrix = await httpClient.get<EscalationMatrix | null>('/api/v1/escalation-matrices');
     if (!matrix || typeof matrix !== 'object' || Object.keys(matrix).length === 0) {
-      throw new Error('升级矩阵返回为空，无法确认当前生效配置');
+      throw new Error('超时升级配置返回为空，无法确认当前生效配置');
     }
     return matrix;
+  }
+
+  /**
+   * 保存整份升级矩阵（PUT 全量覆盖，需 sla:write）。
+   * 后端 SetMatrix 是先落库（system_configs）成功才更新缓存，返回成功即已持久化。
+   */
+  static async setMatrix(matrix: EscalationMatrix): Promise<void> {
+    await httpClient.put('/api/v1/escalation-matrices', matrix);
   }
 }
 

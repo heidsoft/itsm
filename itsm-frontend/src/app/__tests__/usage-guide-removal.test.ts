@@ -46,6 +46,10 @@ describe('用法引导卡片全站下线', () => {
       '本页配置的是 SLA 阈值告警，不是升级矩阵',
       '本页展示后端当前生效的升级矩阵',
     ];
+    // 2026-11-21 升级矩阵页已整体删除（并入「超时升级」双 Tab），路由目录不得复活
+    expect(
+      fs.existsSync(path.join(srcRoot, 'app/(main)/admin/escalation-matrices')),
+    ).toBe(false);
     const offenders = walk(path.join(srcRoot, 'app'))
       .filter(file => path.basename(file) !== SELF)
       .filter(file => {

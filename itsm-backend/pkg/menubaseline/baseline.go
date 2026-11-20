@@ -163,9 +163,12 @@ func MenuDefinitions() []MenuSpec {
 		// ===== 子菜单：SLA =====
 		{Name: "SLA 监控", Path: "/sla-monitor", Icon: "Activity", ParentPath: "/sla", PermissionCode: "sla:read", SortOrder: 92},
 		// ===== 子菜单：SLA · 配置面（2026-10-25 从系统管理归位）=====
-		{Name: "升级规则", Path: "/admin/escalation-rules", Icon: "AlertTriangle", ParentPath: "/sla", PermissionCode: "sla:write", SortOrder: 100},
-		{Name: "升级矩阵", Path: "/admin/escalation-matrices", Icon: "TrendingUp", ParentPath: "/sla", PermissionCode: "sla:read", SortOrder: 105},
-		{Name: "SLA 模板", Path: "/admin/sla-templates", Icon: "Layers", ParentPath: "/sla", PermissionCode: "sla:write", SortOrder: 110},
+		// 2026-11-21 合并收敛：「升级规则」与「升级矩阵」本质是同一超时处理流程的两阶段
+		// （规则=按 SLA 百分比发告警；矩阵=超时后按优先级逐级上报），拆两个菜单让用户
+		// 分不清。现合并为「超时升级」一页双 Tab（/admin/escalation-rules），旧「升级矩阵」
+		// 页面已整体删除（不留重定向），存量菜单行由迁移 20261121_merge_escalation_menus.sql 停用。
+		{Name: "超时升级", Path: "/admin/escalation-rules", Icon: "Timer", ParentPath: "/sla", PermissionCode: "sla:write", SortOrder: 100},
+	{Name: "SLA 模板", Path: "/admin/sla-templates", Icon: "Layers", ParentPath: "/sla", PermissionCode: "sla:write", SortOrder: 110},
 		{Name: "SLA 定义", Path: "/admin/sla-definitions", Icon: "Clock", ParentPath: "/sla", PermissionCode: "sla:write", SortOrder: 115},
 
 		// ===== 子菜单：工作流 =====

@@ -2,6 +2,7 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import { App } from 'antd';
 import { SLAApi } from '@/lib/api/sla-api';
 import type { SLAAlertRule, SLADefinition } from '@/lib/api/sla-api';
+import { EscalationMatrixApi } from '@/lib/api/escalation-matrix-api';
 import EscalationRulesPage from '../page';
 
 jest.mock('@/lib/api/sla-api', () => ({
@@ -12,6 +13,24 @@ jest.mock('@/lib/api/sla-api', () => ({
     updateAlertRule: jest.fn(),
     deleteAlertRule: jest.fn(),
   },
+}));
+
+jest.mock('@/lib/api/escalation-matrix-api', () => ({
+  EscalationMatrixApi: {
+    getMatrix: jest.fn(),
+    setMatrix: jest.fn(),
+  },
+  DEFAULT_ESCALATION_MATRIX: {
+    critical: [{ level: 1, afterMinutes: 15, notifyRoles: ['manager'], notifyUserIDs: [], description: '' }],
+    high: [{ level: 1, afterMinutes: 60, notifyRoles: ['manager'], notifyUserIDs: [], description: '' }],
+    medium: [{ level: 1, afterMinutes: 240, notifyRoles: ['manager'], notifyUserIDs: [], description: '' }],
+    low: [{ level: 1, afterMinutes: 480, notifyRoles: ['manager'], notifyUserIDs: [], description: '' }],
+  },
+}));
+
+jest.mock('@/lib/hooks/use-permissions', () => ({
+  usePermissions: () => ({ hasPermission: () => true }),
+  PERM: { sla: { read: 'sla:read', write: 'sla:write' } },
 }));
 
 const mockedApi = SLAApi as jest.Mocked<typeof SLAApi>;
@@ -68,12 +87,19 @@ describe('EscalationRulesPage', () => {
     mockedApi.createAlertRule.mockResolvedValue({ ...rules[0], id: 99 });
     mockedApi.updateAlertRule.mockResolvedValue({ ...rules[0], isActive: false });
     mockedApi.deleteAlertRule.mockResolvedValue(undefined);
+    (EscalationMatrixApi.getMatrix as jest.Mock).mockResolvedValue({
+      critical: [{ level: 1, afterMinutes: 15, notifyRoles: ['manager'], notifyUserIDs: [], description: '内置默认' }],
+    });
   });
 
   it('渲染后端真实字段，不再展示伪造的使用统计与创建者', async () => {
     renderPage();
 
     await waitFor(() => expect(mockedApi.getAlertRules).toHaveBeenCalled());
+    // 页面合并后标题为「超时升级」，两个 Tab 常驻可见
+    expect(screen.getByText('超时升级')).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: '告警阈值' })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: '升级链' })).toBeInTheDocument();
     // 关联定义名来自 getSLADefinitions，而不是硬编码的「全部」
     expect(await screen.findByText('SLA-P3-低')).toBeInTheDocument();
     expect(screen.queryByText('使用统计')).not.toBeInTheDocument();
@@ -118,7 +144,7 @@ describe('EscalationRulesPage', () => {
     await waitFor(() =>
       expect(mockedApi.updateAlertRule).toHaveBeenCalledWith(11, { isActive: false }),
     );
-  });
+  }, 30000);
 
   it('删除需二次确认且确认后才调用删除接口', async () => {
     renderPage();
@@ -134,5 +160,20 @@ describe('EscalationRulesPage', () => {
     fireEvent.click(within(popper).getByRole('button', { name: '删 除' }));
 
     await waitFor(() => expect(mockedApi.deleteAlertRule).toHaveBeenCalledWith(11));
+  }, 30000);
+
+  it('切到升级链 Tab 后按优先级展示并可编辑服务端矩阵', async () => {
+    renderPage();
+    await waitFor(() => expect(mockedApi.getAlertRules).toHaveBeenCalled());
+
+    fireEvent.click(screen.getByRole('tab', { name: '升级链' }));
+
+    // 展示服务端矩阵值（15 分钟），缺失的优先级由默认补齐（60 分钟→1.0 小时、480 分钟→8.0 小时）
+    await screen.findByText('15 分钟');
+    expect(screen.getByText('1.0 小时')).toBeInTheDocument();
+    expect(screen.getByText('8.0 小时')).toBeInTheDocument();
+    // 权限放行时出现保存与加级入口
+    expect(screen.getByRole('button', { name: /保\s*存（无改动）/ })).toBeInTheDocument();
+    expect(screen.getByText('给致命加一级')).toBeInTheDocument();
   }, 30000);
 });

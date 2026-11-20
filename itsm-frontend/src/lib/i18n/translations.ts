@@ -4231,16 +4231,6 @@ export const translations = {
       serviceRequest: '服务请求模板',
       preview: '预览',
     },
-    // 升级矩阵
-    escalationMatrices: {
-      title: '升级矩阵',
-      description: '配置事件升级矩阵',
-      matrixName: '矩阵名称',
-      matrixType: '矩阵类型',
-      preview: '预览',
-      create: '新建矩阵',
-      edit: '编辑矩阵',
-    },
     // 升级规则
     escalationRulesPage: {
       title: '升级规则',
@@ -9277,16 +9267,6 @@ export const translations = {
       change: '变更Template',
       serviceRequest: 'Service RequestTemplate',
       preview: '预览',
-    },
-    // 升级矩阵
-    escalationMatrices: {
-      title: 'Escalation矩阵',
-      description: '配置EventEscalation矩阵',
-      matrixName: '矩阵Name',
-      matrixType: '矩阵Type',
-      preview: '预览',
-      create: 'Create 矩阵',
-      edit: 'Edit矩阵',
     },
     // 升级规则
     escalationRulesPage: {

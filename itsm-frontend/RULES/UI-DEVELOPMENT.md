@@ -471,4 +471,57 @@ find src -name "*.tsx" -exec wc -l {} \; | awk '$1 > 800 {print $2, $1" lines"}'
 | 文件 | 用途 |
 |------|------|
 | `UI-DEVELOPMENT.md` | 开发规范和解决方案示例 |
+
+---
+
+## 12. 产品语言与 UI 命名治理（2026-11-21 起强制）
+
+> 依据《CloudMesh Product Language Governance》。本节是仓库内落地口径，
+> 自动化门禁：`src/app/__tests__/product-language-governance.test.ts`。
+
+### 12.1 六条判据
+
+| 判据 | 含义 |
+|------|------|
+| Business First | 按业务任务 / 业务对象 / 操作行为组织，不按技术实现组织 |
+| User Language First | 用企业 IT、运维、服务管理人员熟悉的术语 |
+| Function over Technology | 描述用户能做什么，不优先描述底层用了什么 |
+| Simple and Precise | 简洁、明确、可理解；禁抽象、夸张、营销化 |
+| Consistency | 同一概念在菜单、页面、表格、按钮、文档用统一名称 |
+| AI as Capability | AI 是产品能力，不是所有功能的命名装饰 |
+
+### 12.2 命名验收 6 问（新名称必须全过）
+
+1. 用户不看说明能否理解用途？
+2. 是否对应真实存在的业务能力？
+3. 是否符合 ITSM / ITOM / CMDB / DevOps 惯用术语？
+4. 是否与已有菜单和术语保持一致？
+5. 去掉「AI / 智能 / 智慧」前缀后是否仍然准确？
+6. 是否有更简单、准确的表达？
+
+任一不过 → 重新命名。
+
+### 12.3 禁止与允许
+
+- **禁止**一级导航使用缺少业务含义的抽象名（如把技术能力聚成「XX 中心」），以及「中枢 / 作战室 / 全域 / 智慧 / 赋能 / 闭环 / 生态」等装饰词。
+- **禁止**给普通 CRUD、查询、统计、规则匹配机械添加 `AI / 智能 / 智慧 / Agent / Copilot / GPT / 自动驾驶` 前缀；仅因后台接了 LLM 不构成命名理由。
+- **禁止**同一功能多个入口、多个叫法；禁止没有实际功能支撑的菜单与按钮；禁止把未实现能力放进正式导航。
+- **允许**具体且真实的 AI 能力名：`AI 故障分析`、`AI 工单摘要`、`AI 辅助诊断`、`AI 知识推荐`、`Agent 执行记录`、`Agent 运行状态`。
+- 按钮用明确动作（保存 / 提交 / 审批 / 执行 / 重试 / 取消）；状态名准确反映实际业务状态。
+
+### 12.4 改名必须同步的六处（只改显示文本 = 破坏功能）
+
+| 处 | 文件 |
+|----|------|
+| 菜单名 / 图标 / 权限码 | `itsm-backend/pkg/menubaseline/baseline.go` |
+| 存量数据 | `itsm-backend/migrations/*_up.sql` + `_down.sql`（基线 add-only：改名靠 `(tenantID, path)` upsert，停用 / 删行必须写迁移） |
+| 面包屑 | `src/components/layout/header/breadcrumb-utils.ts` |
+| i18n 词条 | `src/lib/i18n/translations.ts`（zh / en 成对；无消费方的死词条一并清理） |
+| 交叉引用 | 其他页面说明、Alert、空态、按钮文案 |
+| 测试与守卫 | 页面测试、API 测试断言、`usage-guide-removal.test.ts` |
+
+### 12.5 已落地 / 待治理
+
+- ✅ 2026-11-21：「升级规则」+「升级矩阵」合并为单页双 Tab **「超时升级」**（`/admin/escalation-rules?tab=chains`），旧页整体删除、不留重定向；SLA 菜单 5→4 项；i18n 中英夹杂死词条清理；API 报错文案统一为业务名。
+- ⚠️ **待拍板**：一级导航「AI 中心」（`/ai/chat`）以技术而非业务任务命名，下挂 4 个真实 AI 能力页。收敛涉及路由、权限与演示环境，需独立评审，不在改名批次内擅自处理。
 | `FRONTEND-NO-GO.md` | 负面清单（禁止的反模式），含自检命令 |

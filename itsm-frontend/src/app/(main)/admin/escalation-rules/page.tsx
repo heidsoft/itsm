@@ -1,8 +1,9 @@
 'use client';
 
-import { Bell, Copy, Edit, Eye, Plus, Search, Trash2 } from 'lucide-react';
+import { Bell, Copy, Edit, Eye, Plus, Search, Timer, Trash2 } from 'lucide-react';
 
 import React, { useEffect, useMemo, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { SLAApi } from '@/lib/api/sla-api';
 import type { SLAAlertRule, SLADefinition } from '@/lib/api/sla-api';
 import type { ColumnsType } from 'antd/es/table';
@@ -24,9 +25,11 @@ import {
   Statistic,
   Switch,
   Table,
+  Tabs,
   Tag,
   Typography,
 } from 'antd';
+import EscalationChainEditor from '@/components/sla/EscalationChainEditor';
 
 const { Title, Text } = Typography;
 
@@ -63,6 +66,11 @@ interface AlertRuleFormValues {
 
 export default function EscalationRulesPage() {
   const { message } = App.useApp();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  // ?tab=chains 直达升级链（收藏/外链支持）；非法值回落阈值 Tab
+  const initialTab = searchParams.get('tab') === 'chains' ? 'chains' : 'thresholds';
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [form] = Form.useForm<AlertRuleFormValues>();
 
   const [rules, setRules] = useState<SLAAlertRule[]>([]);
@@ -340,18 +348,31 @@ export default function EscalationRulesPage() {
 
   return (
     <div style={{ padding: 24 }}>
-      <div style={{ marginBottom: 24 }}>
+      <div style={{ marginBottom: 16 }}>
         <Title level={4} style={{ marginBottom: 8 }}>
           <Space>
-            <Bell size={20} />
-            SLA 告警规则
+            <Timer size={20} />
+            超时升级
           </Space>
         </Title>
         <Text type="secondary">
-          为 SLA 定义配置告警阈值：工单耗时达到阈值百分比时按渠道发出预警 / 严重 / 紧急告警
+          工单长时间没人处理时自动催办：先按 SLA 百分比发告警，超时后按优先级逐级上报
         </Text>
       </div>
 
+      <Tabs
+        activeKey={activeTab}
+        onChange={(key) => {
+          setActiveTab(key);
+          // 同步地址栏：直达链可刷新/收藏，回到阈值时清掉参数
+          router.replace(key === 'chains' ? '/admin/escalation-rules?tab=chains' : '/admin/escalation-rules');
+        }}
+        items={[
+          {
+            key: 'thresholds',
+            label: '告警阈值',
+            children: (
+              <>
       {/* 统计卡必须门控：还没拉到数据时渲染成「告警规则总数 0」会被误读成「没有配置任何告警规则」 */}
       {!loading && (
       <Row gutter={16} style={{ marginBottom: 16 }}>
@@ -438,9 +459,19 @@ export default function EscalationRulesPage() {
           dataSource={filteredRules}
           loading={loading}
           pagination={{ showSizeChanger: true, showTotal: (total) => `共 ${total} 条规则` }}
-          locale={{ emptyText: '暂无升级规则，点击「新建规则」为 SLA 定义配置告警' }}
+          locale={{ emptyText: '暂无告警规则，点击「新建规则」为 SLA 定义配置阈值' }}
         />
       </Card>
+              </>
+            ),
+          },
+          {
+            key: 'chains',
+            label: '升级链',
+            children: <EscalationChainEditor />,
+          },
+        ]}
+      />
 
       <Modal
         title={selectedRule ? '编辑升级规则' : '新建升级规则'}
