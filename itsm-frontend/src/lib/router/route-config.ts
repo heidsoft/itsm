@@ -439,30 +439,10 @@ export const routes: RouteConfig[] = [
       },
     ],
   },
-  {
-    path: '/ai',
-    name: 'ai',
-    title: '智能助手',
-    icon: 'Bot',
-    permissions: rp(PERM.ai.read),
-    meta: {
-      requireAuth: true,
-      breadcrumb: true,
-    },
-    children: [
-      {
-        path: '/ai/chat',
-        name: 'ai-chat',
-        title: 'AI 问答',
-        component: 'AIChat',
-        permissions: rp(PERM.ai.read),
-        meta: {
-          requireAuth: true,
-          keepAlive: true,
-        },
-      },
-    ],
-  },
+  // 2026-11-21 方案 A：原「智能助手」(/ai) + 「AI 问答」(/ai/chat) 死配置已删除。
+  // 菜单完全由后端 /api/v1/auth/menus 驱动；问答入口是顶栏全局「AI 助手」，
+  // 三个业务能力页的可见性由后端菜单 + ai capability 门控决定。
+  // 旧名「智能助手」带机械前缀，留在配置里就是命名噪声；页面与路由零改动。
   {
     path: '/cmdb',
     name: 'cmdb',

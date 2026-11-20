@@ -402,3 +402,52 @@ func TestMenuBaseline_CustomerContractChildren(t *testing.T) {
 		t.Errorf("值班排班的父菜单是 %q，应为 /incidents", onCallParent)
 	}
 }
+
+// 「AI 中心」一级导航退役与三个 AI 能力页按业务归位（2026-11-21 方案 A）。
+//
+// 一级导航按技术（AI）而非业务任务组织，且与顶栏全局「AI 助手」指向同一
+// /ai/chat 页面，属于重复入口。三个真实能力页按使用者与业务对象挂回
+// /tickets、/approvals、/audit-logs，权限码 ai:read 与页面路由零改动。
+// 存量库旧一级行由 migrations/20261121_retire_ai_center_menu.sql 停用，
+// 三行子菜单的更名与重挂由 upsertBaselineMenu 按 (tenantID,path) 自动完成。
+func TestMenuBaseline_AICenterRetiredAndCapabilitiesRehomed(t *testing.T) {
+	byPath := map[string]menubaseline.MenuSpec{}
+	for _, spec := range menubaseline.MenuDefinitions() {
+		if _, dup := byPath[spec.Path]; dup {
+			t.Errorf("菜单基线出现重复 path %s", spec.Path)
+		}
+		byPath[spec.Path] = spec
+	}
+	if spec, ok := byPath["/ai/chat"]; ok {
+		t.Errorf("菜单基线仍有 /ai/chat（%q）：一级技术聚合入口已退役，问答只保留顶栏全局入口", spec.Name)
+	}
+
+	want := map[string]struct{ name, parent string }{
+		"/tickets/ai-create": {name: "AI 创建工单", parent: "/tickets"},
+		"/ai/approval":       {name: "工具调用审批", parent: "/approvals"},
+		"/ai/audit":          {name: "AI 效果评估", parent: "/audit-logs"},
+	}
+	for path, w := range want {
+		spec, ok := byPath[path]
+		if !ok {
+			t.Errorf("菜单基线缺少 %s：AI 能力页归位后不应丢失入口", path)
+			continue
+		}
+		if spec.Name != w.name {
+			t.Errorf("菜单 %s 的名称是 %q，应为 %q", path, spec.Name, w.name)
+		}
+		if spec.ParentPath != w.parent {
+			t.Errorf("菜单 %s 的父级是 %q，应为 %q（按业务归位，不是技术聚合）", path, spec.ParentPath, w.parent)
+		}
+		if spec.PermissionCode != "ai:read" {
+			t.Errorf("菜单 %s 的权限码是 %q，应保持不变 ai:read", path, spec.PermissionCode)
+		}
+	}
+
+	// 反向锁：三个业务父级必须真实存在于基线，否则重挂会得到悬挂父级。
+	for _, parent := range []string{"/tickets", "/approvals", "/audit-logs"} {
+		if _, ok := byPath[parent]; !ok {
+			t.Errorf("业务父级菜单 %s 不存在，子菜单重挂后不可达", parent)
+		}
+	}
+}

@@ -15,6 +15,31 @@ import type { MenuItem as ApiMenuItem } from '@/lib/api/menu-api';
 
 export type BreadcrumbItem = NonNullable<BreadcrumbProps['items']>[number];
 
+/**
+ * 业务归位后的精确路径面包屑（优先于逐段兜底）。
+ *
+ * 四个 AI 能力页的 URL 仍是历史技术路径 /ai/*（页面路由零改动），但菜单已按业务
+ * 归位到工单管理 / 我的待办 / 审计日志。若继续按 URL 段逐段翻译，/ai/audit 会显示
+ * 「AI 助手 / 操作日志」（那是 /workflow/audit 的段名），与菜单叫法自相矛盾；
+ * /ai/chat 也会出现「AI 助手 / AI 助手」重复段。精确匹配直接给业务面包屑，
+ * 不暴露已下线的一级技术聚合层。
+ */
+const BUSINESS_PATH_BREADCRUMBS: Record<string, BreadcrumbItem[]> = {
+  '/ai/chat': [{ title: 'AI 助手' }],
+  '/tickets/ai-create': [
+    { title: '工单管理', href: '/tickets' },
+    { title: 'AI 创建工单' },
+  ],
+  '/ai/approval': [
+    { title: '我的待办', href: '/approvals' },
+    { title: '工具调用审批' },
+  ],
+  '/ai/audit': [
+    { title: '审计日志', href: '/audit-logs' },
+    { title: 'AI 效果评估' },
+  ],
+};
+
 // 通用路由段语义映射（菜单配置未覆盖的路径段兜底）
 const SEGMENT_LABELS: Record<string, string> = {
   dashboard: '服务台',
@@ -78,9 +103,9 @@ const SEGMENT_LABELS: Record<string, string> = {
   approvals: '审批',
   pending: '待我审批',
   msp: '客户管理',
-  ai: 'AI助手',
-  chat: 'AI对话',
-  'ai-create': 'AI创建工单',
+  ai: 'AI 助手',
+  chat: 'AI 助手',
+  'ai-create': 'AI 创建工单',
   analytics: '统计分析',
   templates: '模板管理',
   types: '类型管理',
@@ -120,6 +145,9 @@ export function buildBreadcrumb(pathname: string): BreadcrumbItem[] {
     return items;
   }
 
+  const exact = BUSINESS_PATH_BREADCRUMBS[pathname];
+  if (exact) return [...items, ...exact];
+
   const segments = pathname.split('/').filter(Boolean);
   let acc = '';
 
@@ -152,6 +180,9 @@ export function useBuildBreadcrumb(pathname: string): BreadcrumbItem[] {
   if (!pathname || pathname === '/' || pathname === '/dashboard') {
     return items;
   }
+
+  const exact = BUSINESS_PATH_BREADCRUMBS[pathname];
+  if (exact) return [...items, ...exact];
 
   const labelMap = new Map<string, string>();
   if (menus) {

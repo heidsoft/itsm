@@ -45,6 +45,10 @@ export const capabilityPathRules: Array<[string, string]> = [
   ['/applications', 'application'],
   ['/admin/tags', 'tag'],
   ['/tickets/templates', 'template'],
+  // AI 建单虽按业务归位到工单域，仍是 AI 能力：与顶栏「AI 助手」、
+  // /ai/approval、/ai/audit 同受 ai capability 门控，避免 AI 未申报就绪时
+  // 只有这一个入口还亮着（统一可见性，方案 A）。
+  ['/tickets/ai-create', 'ai'],
 ];
 
 export function capabilityForPath(path?: string): string | undefined {

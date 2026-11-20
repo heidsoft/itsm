@@ -44,7 +44,10 @@ func MenuDefinitions() []MenuSpec {
 		{Name: "资产管理", Path: "/assets", Icon: "Monitor", ParentPath: "", PermissionCode: "asset:read", SortOrder: 80, Description: "IT 资产管理"},
 		{Name: "SLA 管理", Path: "/sla", Icon: "Calendar", ParentPath: "", PermissionCode: "sla:read", SortOrder: 90, Description: "SLA 监控与配置"},
 		{Name: "工作流", Path: "/workflow", Icon: "GitMerge", ParentPath: "", PermissionCode: "bpmn:read", SortOrder: 100, Description: "工作流自动化"},
-		{Name: "AI 中心", Path: "/ai/chat", Icon: "Bot", ParentPath: "", PermissionCode: "ai:read", SortOrder: 110, Description: "AI 助手与 AI 能力中心"},
+		// 2026-11-21 方案 A：原一级「AI 中心」(/ai/chat) 已下线。
+		// 它按技术聚合了 4 个业务上互不相干的能力，且与顶栏全局「AI 助手」指向同一页面
+		// （重复入口）。问答只保留顶栏全局入口；三个业务能力页见下方「AI 能力按业务归位」。
+		// 旧一级行由 migrations/20261121_retire_ai_center_menu.sql 停用，勿再补回。
 		// 审批待办只保留一个入口：/approvals/pending 是 redirect 到 /approvals 的兼容壳，
 		// 菜单直接指向 /approvals，避免「待我审批」「审批中心」两个菜单一个目的地。
 		// 页面只消费 GET /bpmn/tasks（实测无任何 approval:* 调用），故按数据源取 task:read。
@@ -168,7 +171,7 @@ func MenuDefinitions() []MenuSpec {
 		// 分不清。现合并为「超时升级」一页双 Tab（/admin/escalation-rules），旧「升级矩阵」
 		// 页面已整体删除（不留重定向），存量菜单行由迁移 20261121_merge_escalation_menus.sql 停用。
 		{Name: "超时升级", Path: "/admin/escalation-rules", Icon: "Timer", ParentPath: "/sla", PermissionCode: "sla:write", SortOrder: 100},
-	{Name: "SLA 模板", Path: "/admin/sla-templates", Icon: "Layers", ParentPath: "/sla", PermissionCode: "sla:write", SortOrder: 110},
+		{Name: "SLA 模板", Path: "/admin/sla-templates", Icon: "Layers", ParentPath: "/sla", PermissionCode: "sla:write", SortOrder: 110},
 		{Name: "SLA 定义", Path: "/admin/sla-definitions", Icon: "Clock", ParentPath: "/sla", PermissionCode: "sla:write", SortOrder: 115},
 
 		// ===== 子菜单：工作流 =====
@@ -202,10 +205,18 @@ func MenuDefinitions() []MenuSpec {
 		// 与「工作流配置」同轴，改名点明配置语义（审计 3.3-③）。
 		{Name: "审批链配置", Path: "/admin/approval-chains", Icon: "Link", ParentPath: "/workflow", PermissionCode: "approval:write", SortOrder: 104},
 
-		// ===== 子菜单：AI 助手 =====
-		{Name: "AI 创建工单", Path: "/tickets/ai-create", Icon: "Sparkles", ParentPath: "/ai/chat", PermissionCode: "ai:read", SortOrder: 112},
-		{Name: "AI 评估与审计", Path: "/ai/audit", Icon: "ShieldCheck", ParentPath: "/ai/chat", PermissionCode: "ai:read", SortOrder: 113},
-		{Name: "AI 审批", Path: "/ai/approval", Icon: "ShieldAlert", ParentPath: "/ai/chat", PermissionCode: "ai:read", SortOrder: 114},
+		// ===== AI 能力按业务归位（2026-11-21 方案 A）=====
+		// 原一级「AI 中心」(/ai/chat) 以技术而非业务任务组织导航，且顶栏已有全局
+		// 「AI 助手」直达同一页面（重复入口）。现取消该一级行，三个真实能力页按
+		// 使用者与业务对象挂回各自业务域；权限码 ai:read 与页面路由均不变。
+		// 名称按 §12.2 验收 6 问收敛：「AI 创建工单」是真实能力名，保留；
+		// 「AI 评估与审计」→「AI 效果评估」（页面是近 30 天按场景的效果评估）；
+		// 「AI 审批」→「工具调用审批」（页面是 AI 工具调用的审批队列，去掉 AI 仍准确）。
+		// 存量库：旧一级行由 migrations/20261121_retire_ai_center_menu.sql 停用，
+		// 三行子菜单由 upsertBaselineMenu 按 (tenantID,path) 自动更名并重挂父级。
+		{Name: "AI 创建工单", Path: "/tickets/ai-create", Icon: "Sparkles", ParentPath: "/tickets", PermissionCode: "ai:read", SortOrder: 26, Description: "用自然语言生成并提交工单"},
+		{Name: "工具调用审批", Path: "/ai/approval", Icon: "ShieldAlert", ParentPath: "/approvals", PermissionCode: "ai:read", SortOrder: 116, Description: "待审批的 AI 工具调用"},
+		{Name: "AI 效果评估", Path: "/ai/audit", Icon: "ShieldCheck", ParentPath: "/audit-logs", PermissionCode: "ai:read", SortOrder: 211, Description: "AI 能力近 30 天按场景的效果评估"},
 
 		// ===== 子菜单：MSP 客户管理 =====
 		// 该页是 MSP 把客户分配给服务人员/团队（客户分配），不是「子页」占位（D34-1）。

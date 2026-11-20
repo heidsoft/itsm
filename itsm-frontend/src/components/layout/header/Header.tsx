@@ -23,6 +23,8 @@ import { UserMenuDropdown } from './UserMenuDropdown';
 import { NotificationDrawer } from './NotificationDrawer';
 import { GlobalSearch, SearchInput } from './GlobalSearch';
 import { buildBreadcrumb, useBuildBreadcrumb } from './breadcrumb-utils';
+import { useCapabilities } from '@/lib/hooks/useCapabilities';
+import { AI_ASSISTANT_PATH, shouldShowAIAssistant } from './ai-assistant-visibility';
 import styles from './Header.module.css';
 
 const { Header: AntHeader } = Layout;
@@ -53,6 +55,16 @@ export const Header: React.FC<HeaderProps> = ({
   const { isDark, toggleTheme } = useTheme();
   const { language, changeLanguage } = useI18n();
   useAuthStoreHydration();
+
+  // 顶栏「AI 助手」与侧栏 AI 能力页统一受 ai capability 门控（统一可见性）：
+  // 权限码管「这个人能不能用」，capability 管「这个部署形态有没有」，两者取交集。
+  // 能力矩阵加载中按 fail-closed 隐藏，避免先闪一下再消失。
+  const { capabilities, isLoading: capabilitiesLoading } = useCapabilities();
+  const showAIAssistant = shouldShowAIAssistant({
+    capabilities,
+    capabilitiesLoading,
+    permissionGranted: hasPermission(PERM.ai.read) || isAdmin(),
+  });
 
   // 动态菜单驱动的面包屑：与 Sidebar 共享 useUserMenusQuery 缓存，
   // 未传入自定义 breadcrumb 时优先用 hook 版（带菜单 label），失败时回退到 segment 兜底
@@ -269,15 +281,15 @@ export const Header: React.FC<HeaderProps> = ({
             onOpen={handleOpenSearch}
           />
 
-          {/* AI 助手入口：权限码与后端 permissions 表对齐（ai:read），admin 默认放行 */}
-          {hasPermission(PERM.ai.read) || isAdmin() ? (
-            <Tooltip title="AI助手">
+          {/* AI 助手入口：权限码与 ai capability 双重门控，与侧栏 AI 页同一可见性口径 */}
+          {showAIAssistant ? (
+            <Tooltip title="AI 助手">
               <Button
                 type="text"
                 className={styles.actionButton}
-                onClick={() => router.push('/ai/chat')}
-                aria-label="AI助手"
-                title="AI助手"
+                onClick={() => router.push(AI_ASSISTANT_PATH)}
+                aria-label="AI 助手"
+                title="AI 助手"
               >
                 <Bot size={18} />
               </Button>

@@ -14,6 +14,7 @@ import { LAYOUT_CONFIG } from '@/config/layout.config';
 import styles from './Sidebar.module.css';
 import type { MenuItem } from './menu-config';
 import { capabilityForPath } from './menu-config';
+import { isCapabilityVisible } from '@/lib/api/capability-api';
 import { getIconByName } from './icons';
 import { MenuItems } from './MenuItems';
 import { useUserMenusQuery } from '@/lib/hooks/useUserMenusQuery';
@@ -162,7 +163,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse, mobile 
     menus.flatMap(menu => {
       const key = menu.capabilityKey || capabilityForPath(menu.path);
       const capability = key ? capabilities.find(item => item.key === key) : undefined;
-      if (key && (!capability || capability.maturity === 'disabled' || !capability.buildAvailable || !capability.deploymentReady || !capability.tenantReady)) {
+      if (key && !isCapabilityVisible(capability)) {
         return [];
       }
       const children = menu.children ? filterByCapability(menu.children) : undefined;

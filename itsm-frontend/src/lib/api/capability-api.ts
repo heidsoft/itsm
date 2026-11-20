@@ -41,18 +41,27 @@ export interface CapabilityResponse {
 export const getCapabilities = (): Promise<CapabilityResponse> =>
   httpClient.get<CapabilityResponse>('/api/v1/capabilities');
 
+/**
+ * 能力可见性统一判据（fail-closed）：侧栏菜单与顶栏入口共用。
+ *
+ * 与 capabilityAllows 的差别：这里只回答「这个部署形态有没有这个能力」，
+ * 不判具体 action。缺条目 / maturity=disabled / 任一 ready 位为 false 都视为不可见，
+ * 避免「侧栏整条消失、顶栏按钮却永远亮着」的双口径。
+ */
+export const isCapabilityVisible = (capability: ProductCapabilityState | undefined): boolean =>
+  Boolean(
+    capability &&
+      capability.maturity !== 'disabled' &&
+      capability.buildAvailable &&
+      capability.deploymentReady &&
+      capability.tenantReady
+  );
+
 export const capabilityAllows = (
   capabilities: ProductCapabilityState[],
   key: string,
   action = 'read'
 ): boolean => {
   const capability = capabilities.find(item => item.key === key);
-  return Boolean(
-    capability &&
-      capability.maturity !== 'disabled' &&
-      capability.buildAvailable &&
-      capability.deploymentReady &&
-      capability.tenantReady &&
-      capability.allowedActions.includes(action)
-  );
+  return isCapabilityVisible(capability) && Boolean(capability?.allowedActions.includes(action));
 };

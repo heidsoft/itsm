@@ -6,7 +6,7 @@ import { redirect } from 'next/navigation';
  * 这里必须落到**运行概览**（/workflow/dashboard），不能落到流程定义管理。
  * 历史原因：本页曾 redirect 到 /admin/workflows（元数据 CRUD 页：新建/复制/启停/删除）。
  * 后果是用户点侧边栏的「工作流」（menubaseline 里它是 ParentPath 为空的顶级菜单，
- * SortOrder 100，与「SLA 管理」「AI 中心」同级），却被弹进「管理功能 → 工作流配置」这个
+ * SortOrder 100，与「SLA 管理」等其它业务域同级），却被弹进「管理功能 → 工作流配置」这个
  * 系统管理子项，看到的是一张流程定义表格 —— 既不是"我的流程跑到哪了"，
  * 也不在预期位置，属于审计口径的父子语义错位。
  *
