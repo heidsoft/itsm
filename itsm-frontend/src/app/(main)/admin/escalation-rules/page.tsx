@@ -7,7 +7,6 @@ import { SLAApi } from '@/lib/api/sla-api';
 import type { SLAAlertRule, SLADefinition } from '@/lib/api/sla-api';
 import type { ColumnsType } from 'antd/es/table';
 import {
-  Alert,
   App,
   Button,
   Card,
@@ -351,19 +350,6 @@ export default function EscalationRulesPage() {
         <Text type="secondary">
           为 SLA 定义配置告警阈值：工单耗时达到阈值百分比时按渠道发出预警 / 严重 / 紧急告警
         </Text>
-        <Alert
-          type="info"
-          showIcon
-          style={{ marginTop: 12 }}
-          title="本页配置的是 SLA 阈值告警，不是升级矩阵"
-          description={
-            <span>
-              升级矩阵（优先级 → 通知角色链，如 15 分钟未响应升级至部门经理）在
-              <a href="/admin/escalation-matrices">升级矩阵</a>
-              页面配置。两者常被混为一谈，但触发时机与产出完全不同：告警规则产出通知，升级矩阵驱动工单升级。
-            </span>
-          }
-        />
       </div>
 
       {/* 统计卡必须门控：还没拉到数据时渲染成「告警规则总数 0」会被误读成「没有配置任何告警规则」 */}

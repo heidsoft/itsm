@@ -1,9 +1,10 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-// 2026-11-20 决策：管理/配置类页面顶部的「XX 怎么用」UsageGuideCard 与
-// 「流程配置路线」WorkflowConfigGuide 全站统一下线。它们默认折叠但展开后
-// 每页 4–6 段操作说明，在演示环境里喧宾夺主；页面顶部一句话说明、页面内
+// 2026-11-20 决策：管理/配置类页面顶部的「XX 怎么用」UsageGuideCard、
+// 「流程配置路线」WorkflowConfigGuide，以及「本页配置/本页展示…」定位说明
+// Alert 全站统一下线。它们默认折叠但展开后每页 4–6 段操作说明，或常驻一行
+// 冗长的职责解释，在演示环境里喧宾夺主；页面顶部一句话说明、页面内真实业务
 // Alert 与表单字段提示才是就近可用的信息。此守卫防止死面被复制回来。
 
 const srcRoot = path.join(process.cwd(), 'src');
@@ -40,6 +41,10 @@ describe('用法引导卡片全站下线', () => {
       '怎么理解和使用升级矩阵',
       '怎么配置、怎么测试',
       '启用后如何测试和使用连接器',
+      '先设计流程并编排审批节点',
+      '本页配置 BPMN 审批节点的审批人规则',
+      '本页配置的是 SLA 阈值告警，不是升级矩阵',
+      '本页展示后端当前生效的升级矩阵',
     ];
     const offenders = walk(path.join(srcRoot, 'app'))
       .filter(file => path.basename(file) !== SELF)

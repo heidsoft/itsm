@@ -196,12 +196,6 @@ export default function EscalationMatricesPage() {
         />
       )}
 
-      <Alert
-        title="本页展示后端当前生效的升级矩阵；租户自定义矩阵由运维按 SLA 策略维护"
-        type="info"
-        showIcon
-      />
-
       <Row gutter={[16, 16]}>
         <Col xs={24} sm={8}>
           <Card>

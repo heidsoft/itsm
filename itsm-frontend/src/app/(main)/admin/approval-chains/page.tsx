@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { Alert, App, Tag, Typography } from 'antd';
+import { App, Tag, Typography } from 'antd';
 import { ApprovalChainStatsCards } from './components/ApprovalChainStats';
 import { ApprovalChainFilters } from './components/ApprovalChainFilters';
 import { ApprovalChainTable } from './components/ApprovalChainTable';
@@ -499,14 +499,6 @@ export default function ApprovalChainsPage() {
 
   return (
     <div className="space-y-6">
-      {/* 定位说明：本页只配置 BPMN 审批节点的「审批人规则」，流程流转/分支/超时由流程设计器编排 */}
-      <Alert
-        type="info"
-        showIcon
-        title="本页配置 BPMN 审批节点的审批人规则（审批人/会签/或签/兜底），流程的流转、分支与超时请在「流程设计器」中编排。"
-        className="mb-4"
-      />
-
       {/* 统计卡片 */}
       <ApprovalChainStatsCards stats={stats} loading={statsLoading} />
 
