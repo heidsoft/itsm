@@ -20,14 +20,14 @@ type MenuSpec struct {
 func MenuDefinitions() []MenuSpec {
 	return []MenuSpec{
 		// ===== 顶级主菜单（parent_path 为空） =====
-		{Name: "服务台", Path: "/dashboard", Icon: "LayoutDashboard", PermissionCode: "", SortOrder: 10, Description: "服务台概览"},
+		{Name: "服务台", Path: "/dashboard", Icon: "LayoutDashboard", PermissionCode: "dashboard:read", SortOrder: 10, Description: "服务台概览"},
 		// 个人工作台：页面早已存在（数据源 GET /api/v1/workbench，要求 dashboard:read），
 		// 但从未挂过菜单，0 入口 0 引用，功能对用户不可达。
 		// 命名带「我的」与顶级「服务台」（运营概览）区分——审计报告 3.3-①「三个台」病灶。
 		{Name: "我的工作台", Path: "/workbench", Icon: "List", ParentPath: "", PermissionCode: "dashboard:read", SortOrder: 12, Description: "个人工作台"},
-		{Name: "服务请求", Path: "/service-requests", Icon: "FileText", ParentPath: "", PermissionCode: "ticket:read", SortOrder: 20, Description: "服务请求管理"},
+		{Name: "服务请求", Path: "/service-requests", Icon: "FileText", ParentPath: "", PermissionCode: "service_request:read", SortOrder: 20, Description: "服务请求管理"},
 		{Name: "工单管理", Path: "/tickets", Icon: "FileText", ParentPath: "", PermissionCode: "ticket:read", SortOrder: 23, Description: "工单管理"},
-		{Name: "我的请求", Path: "/my-requests", Icon: "User", ParentPath: "", PermissionCode: "ticket:read", SortOrder: 25, Description: "我的服务请求"},
+		{Name: "我的请求", Path: "/my-requests", Icon: "User", ParentPath: "", PermissionCode: "service_request:read", SortOrder: 25, Description: "我的服务请求"},
 		{Name: "事件管理", Path: "/incidents", Icon: "AlertCircle", ParentPath: "", PermissionCode: "incident:read", SortOrder: 30, Description: "事件管理"},
 		// 命名对齐 Description「重大事件作战室」，同时消除「NOC工作台」与「我的工作台」的「台」字撞车（审计报告 3.3-①）。
 		{Name: "NOC 作战室", Path: "/noc", Icon: "Activity", ParentPath: "", PermissionCode: "incident:read", SortOrder: 35, Description: "重大事件作战室"},
@@ -198,7 +198,7 @@ func MenuDefinitions() []MenuSpec {
 		{Name: "流程 SLA 监控", Path: "/workflow/sla", Icon: "Activity", ParentPath: "/workflow", PermissionCode: "bpmn:read", SortOrder: 113, Description: "BPMN 流程 SLA 指标与违规告警"},
 		// 审批中心菜单已删除：与顶级「我的待办」同一页面（/approvals），一个目的地两个菜单
 		// 会让用户在两处看到同一份待办（审计 3.3-③ 四入口问题的去重动作）。
-		{Name: "操作日志", Path: "/workflow/audit", Icon: "ClipboardList", ParentPath: "/workflow", PermissionCode: "audit:read", SortOrder: 114},
+		{Name: "操作日志", Path: "/workflow/audit", Icon: "ClipboardList", ParentPath: "/workflow", PermissionCode: "bpmn:read", SortOrder: 114},
 		// ===== 子菜单：工作流 · 配置面（2026-10-25 从系统管理归位）=====
 		{Name: "工作流配置", Path: "/admin/workflows", Icon: "GitBranch", ParentPath: "/workflow", PermissionCode: "bpmn:write", SortOrder: 101},
 		// 「审批链」易与顶级「我的待办」混淆；此页是审批链定义/节点的配置面，
