@@ -21,13 +21,17 @@
 
 ## PR-02 · 菜单与路由一致性
 
-分支：`audit/menu-route-consistency`（待创建）
+分支：`audit/menu-route-consistency`
+
+本轮以 `de8d8cf54f9905420efb471530dadf6083e7e345` 为基准。PR-01 [#115](https://github.com/heidsoft/itsm/pull/115) 已合并。首装修复 [#114](https://github.com/heidsoft/itsm/pull/114) 已合并。合并后的[首装 CI](https://github.com/heidsoft/itsm/actions/runs/44894838965) 仍因两对重复索引失败。
+
+PR-02 步骤 A 更新四个系统菜单的基线展示码，并检查菜单路径唯一且有实际页面。既有数据库须在正常菜单基线同步后才能看到新值。应用回滚可恢复旧基线。对已同步的存量库，可由管理员按升级前记录恢复这四项菜单配置。API 授权和存量数据迁移另行评审。
 
 **最小方案（分两步，避免把权限变更混进低风险批次）**：
 
 步骤 A（低风险，仅显示元数据）：
 - `baseline.go` 把 `/service-requests`、`/my-requests` 改为 `service_request:read`，`/workflow/audit` 改为 `bpmn:read`，`/dashboard` 改为 `dashboard:read`。
-- 扩展 `baseline_guard_test.go`：断言这四条码值；新增"菜单路径→`page.tsx` 存在"的前端源码扫描测试。
+- 为四条基线展示码增加 Go 回归。复用 C.6.6 的路由可达性检查，并增加重复路径检测。
 - 修正 `docs/product/frontend-menu-and-features.md` 的 102→101 与退役入口描述。
 
 步骤 B（需审批，改 API 授权）：
@@ -52,9 +56,9 @@
 ## 顺序与依赖
 
 ```
-PR #114 (首装, 待合并)
+PR #114（首装修复，已合并）
    ↓ 独立
-PR-01 (生产配置) ── 本批已实施
+PR-01（生产配置，已合并）
    ↓ 独立
 PR-02 步骤 A (显示元数据) → 步骤 B (API 授权, 需审批)
    ↓ 独立

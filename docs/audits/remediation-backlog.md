@@ -8,7 +8,7 @@
 
 | ID | 问题 | 状态 | 处置 |
 |:---|:---|:---|:---|
-| AUDIT-001 | 空卷首装被 `mcp:read` 迁移打断 | `resolved`（PR #114 未合并） | 合并 PR #114；不要重复实现 |
+| AUDIT-001 | 空卷首装被 `mcp:read` 迁移打断 | `resolved`（PR #114 已合并） | 继续跟踪 AUDIT-002 的首装门禁 |
 | AUDIT-002 | `configuration_items` 重复索引阻断 fresh-install 门禁 | `confirmed` | 待审批；在 `duplicateIndexPairs` 补两对，保留 Ent 索引 |
 | AUDIT-003 | Release 静默降级为 git-log 说明、无测试证据/制品校验 | `confirmed` | PR-04（先做 G1/G4/G6 硬门禁，后做结构守卫） |
 
@@ -19,7 +19,7 @@
 | AUDIT-010 | `/tickets/types` 菜单/路由权限码不一致 | `confirmed` | PR-02：改路由为 `ticket_type:read`，重生成 precheck，补 HTTP 负例 | 权限变更，需审批 |
 | AUDIT-011 | 服务请求两菜单用 `ticket:read` | `confirmed` | PR-02：基线码改 `service_request:read` | 低风险（仅显示） |
 | AUDIT-012 | `/workflow/audit` 用 `audit:read` | `confirmed` | PR-02：基线码改 `bpmn:read` | 低风险（仅显示） |
-| AUDIT-013 | 存量租户 AI 归位/重命名依赖手动端点 | `partial` | PR-02：迁移补 `name/parent_id` 修正 + 双租户测试 | 数据迁移，需审批 |
+| AUDIT-013 | 存量租户 AI 归位/重命名依赖手动端点 | `confirmed` | PR-02：迁移补 `name/parent_id` 修正 + 双租户测试 | 数据迁移，需审批 |
 | AUDIT-020~022 | 权限停用语义、DBOnly L3 回退、缓存广播 | `confirmed`/`suspected` | RBAC 专项分支，逐条补真实 DB 负例后修复 | 权限语义变更，需审批 |
 | AUDIT-023 | 权限/角色缺 DB 唯一约束 | `confirmed` | 版本化迁移 + 存量重复检测 | 数据库结构，需审批 |
 | AUDIT-024 | seeder 回退清单资源名漂移 | `confirmed` | 删除回退清单或从 catalog 派生 | 低风险 |
@@ -44,7 +44,7 @@
 | AUDIT-015 | 菜单文档 102→101 漂移 | `confirmed` | 重新生成表格 + docs-gate 禁止退役字符串 |
 | AUDIT-016/017 | 菜单 fixture 假绿、缺跨层守卫 | `confirmed` | 改为读基线；新增路径/码守卫 |
 | AUDIT-046~049 | token、z-index、表格/弹窗 overflow、i18n | `confirmed`/`suspected` | PR-05 分批 |
-| AUDIT-055 | 博客数字标题待核实 | `verify` | 核实来源后改写 |
+| AUDIT-055 | 博客数字标题待核实 | `suspected` | 核实来源后改写 |
 | F-01(rbac) | `PermissionDefinition` 死模型 | `confirmed` | 标记退役或版本化删表，不接入 RBAC |
 
 ## 已解决/不要重复
