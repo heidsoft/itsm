@@ -16,7 +16,15 @@
 具体行：`admin/permissions/page.tsx:821,1102,1113`、`reports/cmdb-quality/page.tsx:147,263`、`components/change/ChangeDetail.tsx:1031`、`ai/approval/page.tsx:403`、`components/sla/EscalationChainEditor.tsx:230`、`cmdb/certification/page.tsx:260`。
 这些是历史 AntD v6 迁移后的**回归**，不是未完成迁移；正确做法是修调用点，不上调基线。
 
-另外 `scripts/check-unicode-punctuation.sh:17-19` 在 macOS BSD grep 下 `grep -P` 报 invalid option，但 `|| true` 使脚本输出"未发现智能引号"并 exit 0——**假绿**。
+另外 `scripts/check-unicode-punctuation.sh:17-19` 在 macOS BSD grep 下 `grep -P` 报 invalid option，但 `|| true` 使脚本输出"未发现智能引号"并 exit 0——**假绿**（未在本批修复，仍为 suspected）。
+
+### 本轮已验证修复（AUDIT-060，状态 resolved）
+
+- 6 处 `Alert.message` → `title`、2 处 `Space.direction` → `orientation`、1 处 `Statistic.valueStyle` → `styles.content`；未上调任何基线。
+- 精简两处超长 Alert 描述。`scripts/check-alert-verbosity.js` 同时识别 `title`，借此暴露并修正了 `cmdb/cloud-signals/page.tsx:636` 一处此前隐形的 64 字描述——这正是"只认 message"造成的假绿。
+- `tools/check-antd-direction.sh` 的反向保护移除已退役的重定向壳 `workflow/ticket-approval/page.tsx`，改为锁定本轮真正迁移的两处文件。
+- 验证：三个守卫 exit 0；`npm run type-check` exit 0；注入旧写法/长描述后相应守卫 exit 1，还原后 exit 0。
+- 未做浏览器视觉回归；结构性发现 AUDIT-040~049 状态不变，仍为 confirmed/suspected。
 
 ## 2. 结构性发现
 
