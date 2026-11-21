@@ -61,9 +61,36 @@ func SetupAIRoutes(tenant *gin.RouterGroup, h *aiHandler.Handler) {
 	{
 		agentGrp.GET("/tools", middleware.RequirePermission("ai", "read"), h.ListTools)
 		agentGrp.POST("/tools/execute", middleware.RequirePermission("ai", "read"), h.ExecuteTool)
+		// 预演：跑完真实判定链但不执行、不建待审批行（2026-11-21）。
+		//
+		// 权限用 ai:read：预演零业务副作用，只读权限者应当能判断自己「能不能写」；
+		// 若按 ai:write 门控，会出现「无写权限者无法预演、只能真调一次才知道被拒」
+		// 的悖论，而真调恰恰要建待审批行。
+		//
+		// 放在 /tools/execute 之后与静态段并列：Gin 静态段优先于 :id 参数段，
+		// 与 GET /tools/invocations 的既有共存关系一致，不会劫持 GET /tools/:id。
+		agentGrp.POST("/tools/dry-run", middleware.RequirePermission("ai", "read"), h.DryRunTool)
 		agentGrp.GET("/tools/:id", middleware.RequirePermission("ai", "read"), h.GetToolInvocation)
+		// 复核既有调用：按原发起主体 + 当前策略重新判定（2026-11-21）。
+		//
+		// 与 dry-run 的分工：dry-run 问「现在调这个工具会不会被允许」，
+		// 本端点问「队列里这条已经排着的调用，现在还该放行吗」。
+		// 审批效力取决于批准那一刻的判定，不是排队时的——这是两者不能合并的原因。
+		//
+		// 权限用 ai:read（只读判定、零副作用、不改审批状态）；真正的审批动作
+		// 仍在 POST /tools/:id/approve 上受 ai:approve 门控。
+		// 注意路径必须写在 /tools/:id 之后仍可共存：Gin 的静态段与参数段不冲突，
+		// 但 :id 会匹配 "invocations"，故使用更长的静态前缀区分。
+		agentGrp.POST("/tools/invocations/:id/review", middleware.RequirePermission("ai", "read"), h.ReviewToolInvocation)
 		// 审批人待办列表：GET /api/v1/agent/tools/invocations?state=pending
 		agentGrp.GET("/tools/invocations", middleware.RequirePermission("ai", "read"), h.ListToolInvocations)
+		// 运行轮次证据链：GET /api/v1/agent/runs/:runId/invocations
+		//
+		// 审计回放的唯一读面：一次 Agent 运行（一轮对话 / 一次调查 / 一次 MCP
+		// 会话）的全部工具调用按时间正序取出，含每步的策略版本与审批态。
+		// 复用 ai:read 而不新增权限码——它读的是同域同类数据，只是换了
+		// 聚合维度；新增码还会撞 dead-codes 基线（只减不增）。
+		agentGrp.GET("/runs/:runId/invocations", middleware.RequirePermission("ai", "read"), h.ListRunInvocations)
 		// Phase A（2026-11-17）：审批权从 ai:write 拆出为 ai:approve。
 		// end_user 此前持 ai:write 即可审批 AI 工具调用，违背职责分立；
 		// handler 内还有「审批人须持目标工具 resource:action」二次校验。

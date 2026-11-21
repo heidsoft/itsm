@@ -61,6 +61,10 @@ type ToolInvocation struct {
 	TicketID int `json:"ticket_id,omitempty"`
 	// 关联变更 ID
 	ChangeID int `json:"change_id,omitempty"`
+	// 放行判据的策略指纹（决策输入哈希）
+	PolicyVersion string `json:"policy_version,omitempty"`
+	// 运行轮次标识，跨请求串联同一轮 Agent 行为
+	RunID string `json:"run_id,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the ToolInvocationQuery when eager-loading is set.
 	Edges        ToolInvocationEdges `json:"edges"`
@@ -109,7 +113,7 @@ func (*ToolInvocation) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullBool)
 		case toolinvocation.FieldID, toolinvocation.FieldTenantID, toolinvocation.FieldConversationID, toolinvocation.FieldApprovedBy, toolinvocation.FieldUserID, toolinvocation.FieldTicketID, toolinvocation.FieldChangeID:
 			values[i] = new(sql.NullInt64)
-		case toolinvocation.FieldToolName, toolinvocation.FieldArguments, toolinvocation.FieldResult, toolinvocation.FieldStatus, toolinvocation.FieldRequestID, toolinvocation.FieldApprovalState, toolinvocation.FieldApprovalReason, toolinvocation.FieldError, toolinvocation.FieldPermissionCheck, toolinvocation.FieldPermissionReason, toolinvocation.FieldRoleSnapshot:
+		case toolinvocation.FieldToolName, toolinvocation.FieldArguments, toolinvocation.FieldResult, toolinvocation.FieldStatus, toolinvocation.FieldRequestID, toolinvocation.FieldApprovalState, toolinvocation.FieldApprovalReason, toolinvocation.FieldError, toolinvocation.FieldPermissionCheck, toolinvocation.FieldPermissionReason, toolinvocation.FieldRoleSnapshot, toolinvocation.FieldPolicyVersion, toolinvocation.FieldRunID:
 			values[i] = new(sql.NullString)
 		case toolinvocation.FieldCreatedAt, toolinvocation.FieldApprovedAt:
 			values[i] = new(sql.NullTime)
@@ -262,6 +266,18 @@ func (_m *ToolInvocation) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.ChangeID = int(value.Int64)
 			}
+		case toolinvocation.FieldPolicyVersion:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field policy_version", values[i])
+			} else if value.Valid {
+				_m.PolicyVersion = value.String
+			}
+		case toolinvocation.FieldRunID:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field run_id", values[i])
+			} else if value.Valid {
+				_m.RunID = value.String
+			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
 		}
@@ -374,6 +390,12 @@ func (_m *ToolInvocation) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("change_id=")
 	builder.WriteString(fmt.Sprintf("%v", _m.ChangeID))
+	builder.WriteString(", ")
+	builder.WriteString("policy_version=")
+	builder.WriteString(_m.PolicyVersion)
+	builder.WriteString(", ")
+	builder.WriteString("run_id=")
+	builder.WriteString(_m.RunID)
 	builder.WriteByte(')')
 	return builder.String()
 }

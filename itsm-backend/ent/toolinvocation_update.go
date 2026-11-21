@@ -406,6 +406,34 @@ func (_u *ToolInvocationUpdate) ClearChangeID() *ToolInvocationUpdate {
 	return _u
 }
 
+// SetPolicyVersion sets the "policy_version" field.
+func (_u *ToolInvocationUpdate) SetPolicyVersion(v string) *ToolInvocationUpdate {
+	_u.mutation.SetPolicyVersion(v)
+	return _u
+}
+
+// SetNillablePolicyVersion sets the "policy_version" field if the given value is not nil.
+func (_u *ToolInvocationUpdate) SetNillablePolicyVersion(v *string) *ToolInvocationUpdate {
+	if v != nil {
+		_u.SetPolicyVersion(*v)
+	}
+	return _u
+}
+
+// SetRunID sets the "run_id" field.
+func (_u *ToolInvocationUpdate) SetRunID(v string) *ToolInvocationUpdate {
+	_u.mutation.SetRunID(v)
+	return _u
+}
+
+// SetNillableRunID sets the "run_id" field if the given value is not nil.
+func (_u *ToolInvocationUpdate) SetNillableRunID(v *string) *ToolInvocationUpdate {
+	if v != nil {
+		_u.SetRunID(*v)
+	}
+	return _u
+}
+
 // SetConversation sets the "conversation" edge to the Conversation entity.
 func (_u *ToolInvocationUpdate) SetConversation(v *Conversation) *ToolInvocationUpdate {
 	return _u.SetConversationID(v.ID)
@@ -558,6 +586,12 @@ func (_u *ToolInvocationUpdate) sqlSave(ctx context.Context) (_node int, err err
 	}
 	if _u.mutation.ChangeIDCleared() {
 		_spec.ClearField(toolinvocation.FieldChangeID, field.TypeInt)
+	}
+	if value, ok := _u.mutation.PolicyVersion(); ok {
+		_spec.SetField(toolinvocation.FieldPolicyVersion, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.RunID(); ok {
+		_spec.SetField(toolinvocation.FieldRunID, field.TypeString, value)
 	}
 	if _u.mutation.ConversationCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -1013,6 +1047,34 @@ func (_u *ToolInvocationUpdateOne) ClearChangeID() *ToolInvocationUpdateOne {
 	return _u
 }
 
+// SetPolicyVersion sets the "policy_version" field.
+func (_u *ToolInvocationUpdateOne) SetPolicyVersion(v string) *ToolInvocationUpdateOne {
+	_u.mutation.SetPolicyVersion(v)
+	return _u
+}
+
+// SetNillablePolicyVersion sets the "policy_version" field if the given value is not nil.
+func (_u *ToolInvocationUpdateOne) SetNillablePolicyVersion(v *string) *ToolInvocationUpdateOne {
+	if v != nil {
+		_u.SetPolicyVersion(*v)
+	}
+	return _u
+}
+
+// SetRunID sets the "run_id" field.
+func (_u *ToolInvocationUpdateOne) SetRunID(v string) *ToolInvocationUpdateOne {
+	_u.mutation.SetRunID(v)
+	return _u
+}
+
+// SetNillableRunID sets the "run_id" field if the given value is not nil.
+func (_u *ToolInvocationUpdateOne) SetNillableRunID(v *string) *ToolInvocationUpdateOne {
+	if v != nil {
+		_u.SetRunID(*v)
+	}
+	return _u
+}
+
 // SetConversation sets the "conversation" edge to the Conversation entity.
 func (_u *ToolInvocationUpdateOne) SetConversation(v *Conversation) *ToolInvocationUpdateOne {
 	return _u.SetConversationID(v.ID)
@@ -1195,6 +1257,12 @@ func (_u *ToolInvocationUpdateOne) sqlSave(ctx context.Context) (_node *ToolInvo
 	}
 	if _u.mutation.ChangeIDCleared() {
 		_spec.ClearField(toolinvocation.FieldChangeID, field.TypeInt)
+	}
+	if value, ok := _u.mutation.PolicyVersion(); ok {
+		_spec.SetField(toolinvocation.FieldPolicyVersion, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.RunID(); ok {
+		_spec.SetField(toolinvocation.FieldRunID, field.TypeString, value)
 	}
 	if _u.mutation.ConversationCleared() {
 		edge := &sqlgraph.EdgeSpec{

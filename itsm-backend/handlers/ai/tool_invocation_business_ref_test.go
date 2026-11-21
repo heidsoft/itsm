@@ -96,6 +96,13 @@ func (r *bizRefRepo) ListToolInvocations(_ context.Context, _ int, _ string) ([]
 	return []*ai.ToolInvocation{{ID: 1, TicketID: 501, ChangeID: 601, ToolName: "analyze_ddl", Status: "success"}}, nil
 }
 
+func (r *bizRefRepo) ListToolInvocationsByRun(_ context.Context, _ int, runID string) ([]*ai.ToolInvocation, error) {
+	if runID == "" {
+		return []*ai.ToolInvocation{}, nil
+	}
+	return []*ai.ToolInvocation{{ID: 1, TicketID: 501, ChangeID: 601, ToolName: "analyze_ddl", Status: "success", RunID: runID}}, nil
+}
+
 // 锁定 GET invocations 详情与列表响应都暴露 B6 业务外键，防止文档与实现漂移。
 func TestToolInvocationBizRefsInHTTPResponse(t *testing.T) {
 	repo := &bizRefRepo{}

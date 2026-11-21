@@ -3,6 +3,7 @@ package ai
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -190,70 +191,91 @@ var ErrRAGUnavailable = fmt.Errorf("rag retrieval service unavailable")
 // service 主体的实际准入由 Gate 2（载体角色是否持该 resource:action）
 // 与 Gate 2.5（allowedPrincipals 是否含 service）共同决定 —— 放行与否
 // 仍由运行期策略说了算，本守卫只负责「有没有身份」。
-func (s *Service) ExecuteTool(ctx context.Context, userID, tenantID int, role, name string, args map[string]interface{}) (interface{}, int, error) {
-	principal := authz.PrincipalFromContext(ctx)
+// toolDecision 是一次工具调用判定的**完整结论**。
+//
+// 存在的唯一理由：预演（DryRunTool）与真实执行（ExecuteTool）必须给出同一个答案。
+// 如果两处各写一份判定逻辑，最坏的失败形态是「预演说可以、真调被拒」——
+// 那比不提供预演更糟，因为调用方会按预演结论去编排后续动作，然后在真实执行时
+// 炸在半路，且中间已经产生了不可回退的副作用。
+//
+// 因此：判定逻辑只此一处，两个入口都只消费本结构；任何新增判定条件
+// （新的 Gate、新的策略字段）只能加在这里，不得在某个入口单独加。
+type toolDecision struct {
+	// 工具定义（判定依据，也是 needsApproval 的来源）
+	Tool *dto.ToolDefinition
+	// Gate 2 结论
+	PermCheck  string // passed | denied
+	PermReason string
+	// 综合结论：Gate 2 与 Gate 2.5 都通过才为 true
+	Allowed bool
+	// Gate 2.5 结论（仅非 human 主体参与）
+	NeedsApproval bool
+	MinApprovals  int
+	RiskLevel     string
+	// PolicyVersion 三态：""=无策略参与 / "unknown"=读不出 / 指纹
+	PolicyVersion string
+}
+
+// evaluateToolCall 跑完 Gate 2 + Gate 2.5，返回判定结论。
+//
+// 不执行任何副作用（不落审计、不执行工具、不建待审批行）——副作用由调用方
+// 按自己的语义决定，因为预演与真实执行的副作用本就不同（前者只审计，后者
+// 还要真正执行或建待审批）。把副作用留在外面，是让「判定同源」这件事可验证的前提。
+//
+// ⚠️ principal 显式作为参数而不是从 ctx 读取，这看似绕远但是必要的：
+// 「按哪个主体判定」与「谁发起了这次请求」在复核场景里是**两个不同的值**
+// （审批人按 AI 主体复核一条 AI 发起的调用）。若从 ctx 隐式取，复核就会
+// 用审批人自己的身份去判定 AI 的调用，得出与真实执行完全无关的结论——
+// 而这种错误在代码里看不出来，只有对比测试能发现。
+func (s *Service) evaluateToolCall(ctx context.Context, tenantID int, userID int, role, name, principal string) (*toolDecision, error) {
 	if tenantID <= 0 {
-		return nil, 0, ErrToolPermissionDenied
+		return nil, ErrToolPermissionDenied
 	}
+	// service 主体 userID 恒为 0 属正常（见 ExecuteTool 上方身份守卫说明）。
 	if userID <= 0 && principal != authz.PrincipalService {
-		return nil, 0, ErrToolPermissionDenied
+		return nil, ErrToolPermissionDenied
 	}
 	if s.tools == nil || s.entClient == nil {
-		return nil, 0, ErrToolUnavailable
+		return nil, ErrToolUnavailable
 	}
-
-	// Gate 2: 工具级 RBAC 校验
-	permCheck := "passed"
-	permReason := ""
-	allowed := true
 
 	toolDef := s.tools.GetTool(name)
 	if toolDef == nil {
-		// 未知工具：记录 denied 审计，返回错误
-		s.recordToolAudit(ctx, tenantID, userID, role, name, args, "denied", "unknown tool", "", nil, false)
-		return nil, 0, ErrUnknownTool
+		return nil, ErrUnknownTool
 	}
-
-	// 工具定义完整性校验：Resource/Action 必须显式声明。
-	// 漏配时 fail-closed，且审计里写明是配置缺陷而非用户越权——
-	// 否则空值会在 middleware.AuthorizeResource 的通配匹配里产生意外放行
-	// （该入口也已显式拒绝空值，这里是更早、更可诊断的一道）。
+	// 定义完整性：漏配 Resource/Action 必须 fail-closed，而不是靠下游通配匹配放行。
 	if toolDef.Resource == "" || toolDef.Action == "" {
-		reason := fmt.Sprintf("tool %s missing resource/action declaration", name)
-		s.logger.Errorw("AI tool definition incomplete",
-			"tool", name, "resource", toolDef.Resource, "action", toolDef.Action)
-		s.recordToolAudit(ctx, tenantID, userID, role, name, args, "denied", reason, "", nil, false)
-		return nil, 0, fmt.Errorf("%w: %s", ErrToolPermissionDenied, reason)
+		return nil, fmt.Errorf("%w: tool %s missing resource/action declaration",
+			ErrToolPermissionDenied, name)
 	}
 
-	{
-		if role != "" && middleware.HasResourcePermission(ctx, s.entClient, role, toolDef.Resource, toolDef.Action, tenantID) {
-			permCheck = "passed"
-		} else {
-			permCheck = "denied"
-			permReason = fmt.Sprintf("role=%s lacks %s:%s", role, toolDef.Resource, toolDef.Action)
-			allowed = false
-			s.logger.Warnw("AI tool RBAC denied",
-				"user_id", userID, "tenant_id", tenantID, "role", role,
-				"tool", name, "resource", toolDef.Resource, "action", toolDef.Action,
-				"enforce", true)
-		}
+	d := &toolDecision{
+		Tool:      toolDef,
+		PermCheck: "passed",
+		Allowed:   true,
+		RiskLevel: "unknown",
 	}
 
-	// ---------------------------------------------------------------------
+	// Gate 2: 角色 RBAC（human 与 agent 都走这一道，agent 还要再过 Gate 2.5）
+	if role != "" && middleware.HasResourcePermission(ctx, s.entClient, role, toolDef.Resource, toolDef.Action, tenantID) {
+		d.PermCheck = "passed"
+	} else {
+		d.PermCheck = "denied"
+		d.PermReason = fmt.Sprintf("role=%s lacks %s:%s", role, toolDef.Resource, toolDef.Action)
+		d.Allowed = false
+	}
+
 	// Gate 2.5: AI 主体零信任（运行期 DB 策略）
 	//
-	// 人发起的操作继续走上面的角色 RBAC；LLM / skill 自主决定调用工具时
-	// 调用方用 authz.WithPrincipal(ctx, "agent") 标记，这里再做一次判定：
-	//   1. 该 resource:action 必须在 DB 权限目录里登记且启用；
-	//   2. 该码的 AllowedPrincipals 必须显式包含 agent（默认只有 human → 零权限）；
+	// 人发起的操作继续走角色 RBAC；LLM / skill 自主决定调用工具时调用方用
+	// authz.WithPrincipal(ctx, "agent") 标记，这里再做一次判定：
+	//   1. 该 resource:action 必须在 DB 权限目录登记且启用；
+	//   2. AllowedPrincipals 必须显式包含该主体（默认只有 human → 零权限）；
 	//   3. 按风险等级算出需要的人类确认人数。
 	// 任何一步读不出来都 deny —— 不回退到编译期引导清单。
 	//
 	// 这是「AI 安全攻击门槛低」的核心防线：提示词注入只能改变 LLM 想调什么，
 	// 改变不了 DB 里管理员没给 AI 开过的权限。
-	// ---------------------------------------------------------------------
-	policyApproval, minApprovals, policyReason := false, 0, ""
 	if principal != authz.PrincipalHuman {
 		catalog := s.catalog
 		if catalog == nil {
@@ -262,60 +284,128 @@ func (s *Service) ExecuteTool(ctx context.Context, userID, tenantID int, role, n
 		code := toolDef.Resource + ":" + toolDef.Action
 		needs, min, err := catalog.AuthorizePrincipal(ctx, tenantID, code, principal)
 		if err != nil {
-			reason := fmt.Sprintf("AI 主体 %s 未获授权 %s: %v", principal, code, err)
-			permCheck, permReason, allowed = "denied", reason, false
-			s.logger.Warnw("AI tool denied by runtime permission catalog",
-				"tenant_id", tenantID, "user_id", userID, "tool", name,
-				"code", code, "principal", principal, "reason", err)
+			// 被拒时仍写 unknown：审计必须能区分「策略说不许」与「策略读不出来」。
+			d.PolicyVersion = authz.PolicyVersionUnknown
+			d.PermCheck = "denied"
+			d.PermReason = fmt.Sprintf("AI 主体 %s 未获授权 %s: %v", principal, code, err)
+			d.Allowed = false
+			d.LogDenial(s, tenantID, userID, name, code, principal, err)
 		} else {
-			policyApproval, minApprovals = needs, min
-			risk := "unknown"
+			d.NeedsApproval, d.MinApprovals = needs, min
 			if def, lerr := catalog.Lookup(ctx, tenantID, code); lerr == nil && def != nil {
-				risk = def.Policy.RiskLevel
-			}
-			policyReason = fmt.Sprintf("principal=%s risk=%s minApprovals=%d", principal, risk, minApprovals)
-			if permReason != "" {
-				permReason += " | " + policyReason
+				d.RiskLevel = def.Policy.RiskLevel
+				d.PolicyVersion = def.PolicyVersion()
 			} else {
-				permReason = policyReason
+				// 放行已发生但版本取不到：写 unknown 而非空串（空串意为「无策略参与」，
+				// 会把这次调用错误归类到 human 路径）。
+				d.PolicyVersion = authz.PolicyVersionUnknown
+			}
+			policyReason := fmt.Sprintf("principal=%s risk=%s minApprovals=%d policyVersion=%s",
+				principal, d.RiskLevel, d.MinApprovals, d.PolicyVersion)
+			if d.PermReason != "" {
+				d.PermReason += " | " + policyReason
+			} else {
+				d.PermReason = policyReason
 			}
 		}
+	}
+
+	// 写工具恒需审批；agent 主体按风险策略追加审批。
+	//
+	// MinApprovals 兜底：人的写操作恒为「1 名审批人」——落库的
+	// approval_state="pending" 就是这个语义（见 approvalStateFor）。
+	// Gate 2.5 只对非 human 主体计算审批人数，若不在此兜底，human 的写工具
+	// 会出现「needsApproval=true 但 minApprovals=0」：审批进度分母为 0，
+	// 进度条恒满，审批人会以为「已经批够了」，而库里仍是 pending。
+	// 这是预演暴露出来的既有判定缺口，兜底放在这里而不是 handler：
+	// 两个入口共用同一个结构，修一次即两边同时正确。
+	if !toolDef.ReadOnly && d.MinApprovals < 1 {
+		d.MinApprovals = 1
+	}
+	d.NeedsApproval = d.NeedsApproval || !toolDef.ReadOnly
+	return d, nil
+}
+
+// LogDenial 记录主体策略拒绝（判定函数内只记日志，不落审计——
+// 落审计是调用方的副作用，预演与真实执行的审计形态不同）。
+func (d *toolDecision) LogDenial(s *Service, tenantID, userID int, name, code, principal string, err error) {
+	s.logger.Warnw("AI tool denied by runtime permission catalog",
+		"tenant_id", tenantID, "user_id", userID, "tool", name,
+		"code", code, "principal", principal, "reason", err)
+}
+
+// approvalStateFor 把「是否需要审批 + 需几人 + 主体」映射成落库的审批态。
+//
+//	pending           = 人发起，单人审批（保留既有语义）
+//	pending_agent     = AI 发起，单人审批 + 禁止发起人自批
+//	pending_agent_two = AI 发起，双人审批 + 禁止发起人自批 + 两名不同审批人
+//
+// principal 同样显式传入：复核模式要按被复核调用的原主体推导审批态，
+// 而不是按当前请求者（那样会给一条 AI 发起的调用算出 pending）。
+func approvalStateFor(principal string, minApprovals int) string {
+	if principal == authz.PrincipalHuman {
+		return "pending"
+	}
+	if minApprovals >= 2 {
+		return "pending_agent_two"
+	}
+	return "pending_agent"
+}
+
+// ExecuteTool 执行 AI 工具（真实副作用的唯一入口）
+//
+// userID 和 role 用于 Gate 2 RBAC 校验。判定逻辑本身在 evaluateToolCall，
+// 本方法只按判定结论决定副作用：只读直接执行、写工具建待审批行。
+// 这样「预演问会不会被允许」与「真调是否被允许」不可能给出两个答案。
+func (s *Service) ExecuteTool(ctx context.Context, userID, tenantID int, role, name string, args map[string]interface{}) (interface{}, int, error) {
+	// 真实执行的主体恒为请求者本人：这条通道不接受外部指定主体。
+	principal := authz.PrincipalFromContext(ctx)
+	// 判定逻辑集中在 evaluateToolCall：预演与真实执行必须给出同一个答案。
+	// 这里只负责「按判定结论执行副作用」，不再自己算判定。
+	d, err := s.evaluateToolCall(ctx, tenantID, userID, role, name, principal)
+	if err != nil {
+		// 未知工具 / 定义漏配 / 依赖缺失：仍要落审计，否则这类失败在
+		// tool_invocations 里完全不可见（只剩一条 warn 日志）。
+		// 判定函数不碰副作用正是为了让调用方在这里决定记什么。
+		switch {
+		case errors.Is(err, ErrUnknownTool):
+			s.recordToolAudit(ctx, tenantID, userID, role, name, args, "denied", "unknown tool", "", nil, false, "")
+		case errors.Is(err, ErrToolPermissionDenied):
+			s.recordToolAudit(ctx, tenantID, userID, role, name, args, "denied", err.Error(), "", nil, false, "")
+		}
+		return nil, 0, err
 	}
 
 	// Authorization is mandatory; feature flags must never bypass it.
-	if !allowed {
-		s.recordToolAudit(ctx, tenantID, userID, role, name, args, permCheck, permReason, "", nil, false)
-		return nil, 0, fmt.Errorf("%w: %s", ErrToolPermissionDenied, permReason)
+	if !d.Allowed {
+		s.recordToolAudit(ctx, tenantID, userID, role, name, args,
+			d.PermCheck, d.PermReason, "", nil, false, d.PolicyVersion)
+		return nil, 0, fmt.Errorf("%w: %s", ErrToolPermissionDenied, d.PermReason)
 	}
 
-	// Check if needs approval：写工具恒需审批；agent 主体按风险策略追加审批。
-	needsApproval := !toolDef.ReadOnly || policyApproval
-
-	if !needsApproval {
-		res, err := s.tools.Execute(ctx, tenantID, name, args)
+	if !d.NeedsApproval {
+		res, execErr := s.tools.Execute(ctx, tenantID, name, args)
 		// 只读工具执行也记录审计（AGENTS.md: AI tool invocation must produce audit logs）
-		// 同步写入 RBAC 校验结果字段
-		if err == nil {
-			s.recordToolAudit(ctx, tenantID, userID, role, name, args, permCheck, permReason, "executed", nil, false)
+		if execErr == nil {
+			s.recordToolAudit(ctx, tenantID, userID, role, name, args,
+				d.PermCheck, d.PermReason, "executed", nil, false, d.PolicyVersion)
 		}
-		return res, 0, err
+		return res, 0, execErr
 	}
 
-	// 待审批状态同时承载「需要几个人批准」：
-	//   pending           = 人发起，单人审批（保留既有语义与测试）
-	//   pending_agent     = AI 发起，单人审批 + 禁止发起人自批
-	//   pending_agent_two = AI 发起，双人审批 + 禁止发起人自批 + 两名不同审批人
-	approvalState := "pending"
-	if principal != authz.PrincipalHuman {
-		approvalState = "pending_agent"
-		if minApprovals >= 2 {
-			approvalState = "pending_agent_two"
-		}
-	}
+	approvalState := approvalStateFor(principal, d.MinApprovals)
 
 	// 写工具：创建 pending invocation，等待审批
 	argsStr, _ := json.Marshal(args)
 	ticketRef, changeRef := businessRefsFromArgs(args)
+	// 待审批记录同样要带 policyVersion / run_id / request_id：审批可能发生在
+	// 几分钟后甚至跨进程重启，那时 context 早已消失；只有落库的这三个值能把
+	// 「批准执行」这一步挂回原来那次判定与那一轮运行。
+	_, runID := EnsureRunID(ctx)
+	var requestID string
+	if rid, ok := middleware.RequestIDFromContext(ctx); ok {
+		requestID = rid
+	}
 	inv, err := s.repo.CreateToolInvocation(ctx, &ToolInvocation{
 		TenantID:         tenantID,
 		ToolName:         name,
@@ -324,11 +414,14 @@ func (s *Service) ExecuteTool(ctx context.Context, userID, tenantID int, role, n
 		NeedsApproval:    true,
 		ApprovalState:    approvalState,
 		UserID:           userID,
-		PermissionCheck:  permCheck,
-		PermissionReason: permReason,
+		PermissionCheck:  d.PermCheck,
+		PermissionReason: d.PermReason,
 		RoleSnapshot:     role,
 		TicketID:         ticketRef,
 		ChangeID:         changeRef,
+		PolicyVersion:    d.PolicyVersion,
+		RunID:            runID,
+		RequestID:        requestID,
 	})
 	if err != nil {
 		return nil, 0, err
@@ -375,9 +468,258 @@ func businessRefsFromArgs(args map[string]interface{}) (ticketID, changeID int) 
 // 审计写入失败不能用 _, _ = 吞掉，走结构化错误日志 +
 // itsm_ai_persist_errors_total{operation="create_tool_invocation"} 计数器埋点，
 // 保证 DB 抖动时审计丢失可观测、可告警。
-func (s *Service) recordToolAudit(ctx context.Context, tenantID, userID int, role, toolName string, args map[string]interface{}, permCheck, permReason, status string, result *string, needsApproval bool) {
+//
+// policyVersion 是本次判定的策略指纹（见 ExecuteTool 的三态说明）。
+// 显式作为参数传入而不是在函数内重新读取目录：判定与记录必须是同一个快照，
+// 否则「记录下来的版本」可能已是判定之后又被管理员改过的新版本。
+// DryRunTool 预演一次工具调用：跑完真实的判定链，但不执行、不建待审批行。
+//
+// 为什么需要它（而不是让调用方「试着调一次看看」）：
+//   - 写工具真调会产生一条待审批记录，审批人真的会去批，操作真的会发生；
+//     调用方想知道「会不会被允许」，却在过程中制造了一个真实待办。
+//   - 只读工具真调会真的查库/调外部系统，在编排阶段做可行性判断时是浪费，
+//     对某些工具有副作用风险（外部系统调用并非全都幂等）。
+//
+// 返回值与真实执行的对应关系是本次实现的核心契约：
+//
+//	Allowed       ← 同 evaluateToolCall（Gate 2 + Gate 2.5 结论）
+//	NeedsApproval ← 同上
+//	MinApprovals  ← 同上
+//
+// 因此「预演 allowed=true 而真调被拒」在代码层面不可能出现：只有一份判定。
+//
+// 唯一允许的差异是副作用：预演只落一条 dry_run=true 的审计行，
+// 且**不创建**任何 pending invocation —— 否则审批队列里会出现永远不该被批的行。
+func (s *Service) DryRunTool(ctx context.Context, userID, tenantID int, role, name string, args map[string]interface{}) (*dto.ToolDryRunResponse, error) {
+	// 普通模式：按请求者自己的主体判定。
+	return s.dryRunForPrincipal(ctx, userID, tenantID, role, name, args,
+		authz.PrincipalFromContext(ctx), 0, "")
+}
+
+// ReviewInvocation 复核一条**既有**工具调用：按它当时的发起主体与当前策略重新判定。
+//
+// 与 DryRunTool 的区别不是「换个参数」，而是回答一个不同的问题：
+//
+//	DryRunTool(agent 主体)  → 「AI 现在调用这个工具，会被允许吗」
+//	ReviewInvocation        → 「审批队列里这条 AI 发起的调用，现在还该放行吗」
+//
+// 审批人需要的是后者。批一条几小时前排队的写操作前，必须知道「策略在这段时间
+// 有没有改过、改了以后这条还合规吗」——只看落库时的 policy_version 只能知道
+// 「当时合规」，不能回答「现在合规」。
+//
+// 为什么按**原发起主体**判定而不是按审批人自己：审批人对该工具的权限是
+// 「有没有资格批」（`ApproveTool` 已单独校验），而这次调用能不能执行取决于
+// AI 主体是否仍被授权。按审批人自己的身份判定会得出一个与真实执行无关的结论
+// ——审批人通常是管理员，永远 allowed=true，复核就失去意义。
+//
+// 不做任何越权扩张：复核只读判定，零副作用，且不修改被复核记录的任何字段。
+func (s *Service) ReviewInvocation(ctx context.Context, invocationID, tenantID, userID int, role string) (*dto.ToolDryRunResponse, error) {
+	if invocationID <= 0 {
+		return nil, fmt.Errorf("%w: invocation id is required", ErrToolPermissionDenied)
+	}
+	// 租户谓词在仓储层强制：只按 id 查会让任何人都能复核别人的调用。
+	// 查不到时返回 ent.NotFoundError，由 handler 映射成 404——「记录不存在」
+	// 与「记录存在但不可复核」是两种处置，不能合并。
+	inv, err := s.repo.GetToolInvocation(ctx, invocationID, tenantID)
+	if err != nil {
+		return nil, err
+	}
+	if s.tools == nil || s.tools.GetTool(inv.ToolName) == nil {
+		// 工具已下线：复核无法进行，且必须明确说明是「工具没了」而不是「被拒」。
+		return nil, fmt.Errorf("%w: tool %s no longer registered", ErrUnknownTool, inv.ToolName)
+	}
+
+	// 从落库的审批态推导原发起主体：pending_agent* / awaiting_second 都是
+	// AI 发起后才可能出现的态；pending 是人发起。用审批态推导而不是新增一列
+	// 「principal」，是因为审批态本就是它的函数——同一事实存两份必然漂移。
+	originPrincipal := authz.PrincipalHuman
+	switch inv.ApprovalState {
+	case "pending_agent", "pending_agent_two", "awaiting_second":
+		originPrincipal = authz.PrincipalAgent
+	}
+
+	var args map[string]interface{}
+	if inv.Arguments != "" {
+		if uerr := json.Unmarshal([]byte(inv.Arguments), &args); uerr != nil {
+			// 参数已损坏：不能拿一份读不懂的输入去判定，那会给审批人一个
+			// 建立在空参数之上的结论（比拒绝更危险）。
+			return nil, fmt.Errorf("%w: invocation %d arguments are unreadable",
+				ErrToolPermissionDenied, invocationID)
+		}
+	}
+	if args == nil {
+		args = map[string]interface{}{}
+	}
+
+	// role 用被复核记录的 role_snapshot：Gate 2 判的是「发起时的载体角色是否
+	// 持该权限」，用审批人当前角色代替会让结论与执行链不一致。
+	return s.dryRunForPrincipal(ctx, userID, tenantID, inv.RoleSnapshot, inv.ToolName, args,
+		originPrincipal, inv.ID, inv.PolicyVersion)
+}
+
+// dryRunForPrincipal 是预演的唯一实现：普通预演与复核共用，只是判定主体不同。
+//
+// 单点实现是「预演结论 = 真实执行结论」这条契约的技术保障：如果复核另写一份，
+// 两条路径就会各自漂移，而审批人看到的结论与执行链的断言再也无法对齐。
+func (s *Service) dryRunForPrincipal(
+	ctx context.Context,
+	userID, tenantID int,
+	role, name string,
+	args map[string]interface{},
+	principal string,
+	reviewedInvocationID int,
+	baselinePolicyVersion string,
+) (*dto.ToolDryRunResponse, error) {
+	d, err := s.evaluateToolCall(ctx, tenantID, userID, role, name, principal)
+	if err != nil {
+		// 未知工具 / 定义漏配 / 依赖缺失：这些不是「判定结论」，是请求本身不成立。
+		// 与 ExecuteTool 一致地落一条 denied 审计，让排查有据可依。
+		if errors.Is(err, ErrUnknownTool) || errors.Is(err, ErrToolPermissionDenied) {
+			s.recordDryRunAudit(ctx, tenantID, userID, role, name, args, "denied", err.Error(), "")
+		}
+		return nil, err
+	}
+
+	resp := &dto.ToolDryRunResponse{
+		DryRun:             true,
+		ToolName:           name,
+		Allowed:            d.Allowed,
+		NeedsApproval:      d.Allowed && d.NeedsApproval,
+		RiskLevel:          d.RiskLevel,
+		PolicyVersion:      d.PolicyVersion,
+		Reason:             d.PermReason,
+		EvaluatedPrincipal: principal,
+	}
+	// 只有「会被允许且需要审批」时才有审批态而言；被拒或无需审批时留空，
+	// 避免调用方把 pending_agent 误读成「已经受理了」。
+	if resp.NeedsApproval {
+		resp.ApprovalState = approvalStateFor(principal, d.MinApprovals)
+		resp.MinApprovals = d.MinApprovals
+	}
+	if !d.Allowed && resp.Reason == "" {
+		resp.Reason = "工具调用被拒绝"
+	}
+
+	// 复核模式：附带与被复核记录的策略指纹比对结论。
+	// 这段逻辑必须由服务端算，不能交给前端拼字符串——「同指纹 ⟺ 同判据」
+	// 是本项目的核心不变量，前端各自实现一份比较必然出现口径分歧。
+	if reviewedInvocationID > 0 {
+		resp.InvocationID = reviewedInvocationID
+		resp.BaselinePolicyVersion = baselinePolicyVersion
+		resp.PolicyComparison = comparePolicyVersions(baselinePolicyVersion, d.PolicyVersion)
+	}
+
+	// 预演必须留痕：审计回答「谁在何时预演了什么、当时判定是什么」。
+	// 少了这条，预演就成了一个无法追溯的只读通道——恰恰是审计系统最该覆盖的部分。
+	status := "dry_run_allowed"
+	if !d.Allowed {
+		status = "dry_run_denied"
+	}
+	auditID := s.recordDryRunAudit(ctx, tenantID, userID, role, name, args,
+		status, resp.Reason, d.PolicyVersion)
+	resp.AuditID = auditID
+
+	// 被拒不是系统错误：预演的职责就是如实报告「不行」，用 error 表达会让
+	// 调用方把「预期结论」当成「调用失败」，从而重试或告警。
+	return resp, nil
+}
+
+// comparePolicyVersions 比对两次判定的策略指纹，返回四态结论。
+//
+// 四态的划分依据是「能否据此断言放行判据未变」，而不是「字符串是否相等」：
+//
+//	两侧都空串 → not_applicable：两次判定都没有策略参与（human 路径），
+//	             没有可比对象，断言「未变」与断言「已变」都是错的；
+//	任一侧 unknown → unknown：读不出指纹就不能断言未变。**不得**归入
+//	             identical——「策略信息缺失」伪装成「策略未变」是审计场景里
+//	             最危险的假阴性；
+//	相等 → identical：指纹是判定输入的 SHA-256，相等 ⟺ 判据相等；
+//	不等 → changed：判据已变，原结论不能沿用。
+//
+// 注意空串与 unknown 同时出现时返回 unknown 而非 not_applicable：
+// 后者要求**两侧**都无策略参与，只要有一侧「本该有却读不出」，就属于信息缺失。
+func comparePolicyVersions(baseline, current string) string {
+	hasMissing := baseline == authz.PolicyVersionUnknown || current == authz.PolicyVersionUnknown
+	if hasMissing {
+		return dto.PolicyComparisonUnknown
+	}
+	if baseline == "" && current == "" {
+		return dto.PolicyComparisonNotApplicable
+	}
+	if baseline == current {
+		return dto.PolicyComparisonIdentical
+	}
+	// 一侧空串另一侧有指纹：发生在「当年无策略参与、如今有策略参与」的
+	// 策略体系升级场景，判据实质已变，必须报 changed 而不是 unknown。
+	return dto.PolicyComparisonChanged
+}
+
+// recordDryRunAudit 落一条 dry_run=true 的审计行，返回行 ID（失败返回 0）。
+//
+// 与 recordToolAudit 分开而不是给它加一个布尔参数：两者写入的
+// status / approval_state 语义完全不同（预演恒为 "none"，不参与审批流转），
+// 一个参数化函数会让「预演行不小心带上 approval_state=pending」成为可能。
+func (s *Service) recordDryRunAudit(ctx context.Context, tenantID, userID int, role, toolName string, args map[string]interface{}, status, reason, policyVersion string) int {
 	argsStr, _ := json.Marshal(args)
 	ticketRef, changeRef := businessRefsFromArgs(args)
+	_, runID := EnsureRunID(ctx)
+	var requestID string
+	if rid, ok := middleware.RequestIDFromContext(ctx); ok {
+		requestID = rid
+	}
+	permCheck := "passed"
+	if strings.HasPrefix(status, "dry_run_denied") {
+		permCheck = "denied"
+	}
+	inv, err := s.repo.CreateToolInvocation(ctx, &ToolInvocation{
+		TenantID:      tenantID,
+		ToolName:      toolName,
+		Arguments:     string(argsStr),
+		Status:        status,
+		NeedsApproval: false,
+		// 预演不进入审批流：approval_state 必须是与待办查询不相交的取值，
+		// 否则一条从未被调度的记录会出现在审批人的待办列表里。
+		ApprovalState:    "none",
+		UserID:           userID,
+		PermissionCheck:  permCheck,
+		PermissionReason: reason,
+		RoleSnapshot:     role,
+		TicketID:         ticketRef,
+		ChangeID:         changeRef,
+		PolicyVersion:    policyVersion,
+		RunID:            runID,
+		RequestID:        requestID,
+		DryRun:           true,
+	})
+	if err != nil {
+		s.logger.Errorw("AI tool dry-run audit persistence failed",
+			"operation", "create_tool_invocation",
+			"tenant_id", tenantID,
+			"user_id", userID,
+			"tool_name", toolName,
+			"error", err,
+		)
+		metrics.AIPersistErrors.WithLabelValues(
+			"create_tool_invocation",
+			"dry_run",
+			strconv.Itoa(tenantID),
+		).Inc()
+		return 0
+	}
+	return inv.ID
+}
+
+func (s *Service) recordToolAudit(ctx context.Context, tenantID, userID int, role, toolName string, args map[string]interface{}, permCheck, permReason, status string, result *string, needsApproval bool, policyVersion string) {
+	argsStr, _ := json.Marshal(args)
+	ticketRef, changeRef := businessRefsFromArgs(args)
+	// run_id 与 request_id 在审计点补齐，让「同一轮 Agent 的动作」可整体取出。
+	// 用 EnsureRunID 而不是只用 RunIDFromContext：单发 HTTP 工具调用没有上游
+	// 注入 run_id，此时仍应给它一个独立轮次，而不是留空导致证据链断在这里。
+	_, runID := EnsureRunID(ctx)
+	var requestID string
+	if rid, ok := middleware.RequestIDFromContext(ctx); ok {
+		requestID = rid
+	}
 	if _, err := s.repo.CreateToolInvocation(ctx, &ToolInvocation{
 		TenantID:         tenantID,
 		ToolName:         toolName,
@@ -391,6 +733,9 @@ func (s *Service) recordToolAudit(ctx context.Context, tenantID, userID int, rol
 		RoleSnapshot:     role,
 		TicketID:         ticketRef,
 		ChangeID:         changeRef,
+		PolicyVersion:    policyVersion,
+		RunID:            runID,
+		RequestID:        requestID,
 	}); err != nil {
 		s.logger.Errorw("AI tool audit persistence failed",
 			"operation", "create_tool_invocation",
@@ -673,6 +1018,15 @@ func (s *Service) ChatStream(
 	onDelta func(string),
 ) (int, string, error) {
 	s.logger.Infow("AI ChatStream", "query", query, "tenantID", tenantID, "convID", convID, "role", role)
+
+	// 一轮对话 = 一个运行轮次。LLM 在这一轮里可能发起多次工具调用（查单、
+	// 检索知识、挂 CI），它们必须共享同一个 run_id，否则「这个 Agent 这一轮
+	// 做了什么」在数据层仍然无解——这正是本批要修的结构性缺口。
+	//
+	// 必须在 execTool 闭包之前注入：闭包捕获的是这里的 ctx，晚一步就只在
+	// 部分调用上生效（那种「一半有 run_id 一半没有」的记录比完全没有更难排查）。
+	ctx, runID := EnsureRunID(ctx)
+	s.logger.Infow("AI ChatStream run started", "run_id", runID, "tenantID", tenantID)
 
 	if s.rag == nil {
 		return 0, "", fmt.Errorf("RAG service not initialized")

@@ -5556,6 +5556,14 @@ func init() {
 	toolinvocationDescRoleSnapshot := toolinvocationFields[18].Descriptor()
 	// toolinvocation.DefaultRoleSnapshot holds the default value on creation for the role_snapshot field.
 	toolinvocation.DefaultRoleSnapshot = toolinvocationDescRoleSnapshot.Default.(string)
+	// toolinvocationDescPolicyVersion is the schema descriptor for policy_version field.
+	toolinvocationDescPolicyVersion := toolinvocationFields[21].Descriptor()
+	// toolinvocation.DefaultPolicyVersion holds the default value on creation for the policy_version field.
+	toolinvocation.DefaultPolicyVersion = toolinvocationDescPolicyVersion.Default.(string)
+	// toolinvocationDescRunID is the schema descriptor for run_id field.
+	toolinvocationDescRunID := toolinvocationFields[22].Descriptor()
+	// toolinvocation.DefaultRunID holds the default value on creation for the run_id field.
+	toolinvocation.DefaultRunID = toolinvocationDescRunID.Default.(string)
 	userFields := schema.User{}.Fields()
 	_ = userFields
 	// userDescUsername is the schema descriptor for username field.

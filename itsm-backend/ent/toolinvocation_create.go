@@ -300,6 +300,34 @@ func (_c *ToolInvocationCreate) SetNillableChangeID(v *int) *ToolInvocationCreat
 	return _c
 }
 
+// SetPolicyVersion sets the "policy_version" field.
+func (_c *ToolInvocationCreate) SetPolicyVersion(v string) *ToolInvocationCreate {
+	_c.mutation.SetPolicyVersion(v)
+	return _c
+}
+
+// SetNillablePolicyVersion sets the "policy_version" field if the given value is not nil.
+func (_c *ToolInvocationCreate) SetNillablePolicyVersion(v *string) *ToolInvocationCreate {
+	if v != nil {
+		_c.SetPolicyVersion(*v)
+	}
+	return _c
+}
+
+// SetRunID sets the "run_id" field.
+func (_c *ToolInvocationCreate) SetRunID(v string) *ToolInvocationCreate {
+	_c.mutation.SetRunID(v)
+	return _c
+}
+
+// SetNillableRunID sets the "run_id" field if the given value is not nil.
+func (_c *ToolInvocationCreate) SetNillableRunID(v *string) *ToolInvocationCreate {
+	if v != nil {
+		_c.SetRunID(*v)
+	}
+	return _c
+}
+
 // SetConversation sets the "conversation" edge to the Conversation entity.
 func (_c *ToolInvocationCreate) SetConversation(v *Conversation) *ToolInvocationCreate {
 	return _c.SetConversationID(v.ID)
@@ -385,6 +413,14 @@ func (_c *ToolInvocationCreate) defaults() {
 		v := toolinvocation.DefaultRoleSnapshot
 		_c.mutation.SetRoleSnapshot(v)
 	}
+	if _, ok := _c.mutation.PolicyVersion(); !ok {
+		v := toolinvocation.DefaultPolicyVersion
+		_c.mutation.SetPolicyVersion(v)
+	}
+	if _, ok := _c.mutation.RunID(); !ok {
+		v := toolinvocation.DefaultRunID
+		_c.mutation.SetRunID(v)
+	}
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -424,6 +460,12 @@ func (_c *ToolInvocationCreate) check() error {
 	}
 	if _, ok := _c.mutation.RoleSnapshot(); !ok {
 		return &ValidationError{Name: "role_snapshot", err: errors.New(`ent: missing required field "ToolInvocation.role_snapshot"`)}
+	}
+	if _, ok := _c.mutation.PolicyVersion(); !ok {
+		return &ValidationError{Name: "policy_version", err: errors.New(`ent: missing required field "ToolInvocation.policy_version"`)}
+	}
+	if _, ok := _c.mutation.RunID(); !ok {
+		return &ValidationError{Name: "run_id", err: errors.New(`ent: missing required field "ToolInvocation.run_id"`)}
 	}
 	return nil
 }
@@ -526,6 +568,14 @@ func (_c *ToolInvocationCreate) createSpec() (*ToolInvocation, *sqlgraph.CreateS
 	if value, ok := _c.mutation.ChangeID(); ok {
 		_spec.SetField(toolinvocation.FieldChangeID, field.TypeInt, value)
 		_node.ChangeID = value
+	}
+	if value, ok := _c.mutation.PolicyVersion(); ok {
+		_spec.SetField(toolinvocation.FieldPolicyVersion, field.TypeString, value)
+		_node.PolicyVersion = value
+	}
+	if value, ok := _c.mutation.RunID(); ok {
+		_spec.SetField(toolinvocation.FieldRunID, field.TypeString, value)
+		_node.RunID = value
 	}
 	if nodes := _c.mutation.ConversationIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{

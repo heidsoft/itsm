@@ -31,6 +31,15 @@ type Repository interface {
 	GetToolInvocation(ctx context.Context, id int, tenantID int) (*ToolInvocation, error)
 	DecideToolInvocation(ctx context.Context, id, tenantID, actorID int, approve bool, reason string) (*ToolInvocation, error)
 	ListToolInvocations(ctx context.Context, tenantID int, state string) ([]*ToolInvocation, error)
+	// ListToolInvocationsByRun 按运行轮次取出该轮全部工具调用（含只读审计行）。
+	//
+	// 存在的理由：审计要求「不可抵赖 + 可回放」，而一次 Agent 会话的多次调用
+	// 此前只能按 id 逐条看。run_id 贯穿后，这一条查询就是「这个 Agent 这一轮
+	// 做了什么」的唯一读面——判定依据（policy_version）、审批态、结果一次取出。
+	//
+	// 必须带 tenant_id 谓词：run_id 是客户端可影响的字符串，仅按 run 查等于
+	// 允许跨租户读取他人运行记录。
+	ListToolInvocationsByRun(ctx context.Context, tenantID int, runID string) ([]*ToolInvocation, error)
 
 	// Root Cause Analysis
 	CreateRCA(ctx context.Context, r *RootCauseAnalysis) (*RootCauseAnalysis, error)

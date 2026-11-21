@@ -41,9 +41,9 @@ const (
 // investigationActionWhitelist 是 suggestedActions 允许引用的写工具。
 // 白名单外的动作一律丢弃——综合模型自由发挥出的未知动作不得进入契约。
 var investigationActionWhitelist = map[string]bool{
-	"create_ticket":    true,
-	"update_ticket":    true,
-	"link_ticket_ci":   true,
+	"create_ticket":          true,
+	"update_ticket":          true,
+	"link_ticket_ci":         true,
 	"create_ci_relationship": true,
 	"delete_ci_relationship": true,
 }
@@ -84,6 +84,12 @@ type TicketInvestigationResponse struct {
 	ImpactedServices   []string                       `json:"impactedServices,omitempty"`
 	SuggestedActions   []InvestigationSuggestedAction `json:"suggestedActions,omitempty"`
 	AuditID            int64                          `json:"auditId,omitempty"`
+	// RunID 本次调查编排的运行轮次标识（2026-11-21）。
+	//
+	// 回传的理由：调用方拿到它就能直接查
+	// GET /api/v1/agent/runs/{runId}/invocations 取回这一轮的完整证据链
+	// （每步的工具、参数、策略版本、审批态、结果），而不必自行拼接。
+	RunID string `json:"runId,omitempty"`
 }
 
 // ticketBrief 调查链的工单输入（最小字段集）。
@@ -136,6 +142,12 @@ var ErrInvestigationTicketNotFound = errors.New("investigation ticket not found"
 func (s *Service) InvestigateTicket(ctx context.Context, ticketID, tenantID, userID int, role string) (*TicketInvestigationResponse, error) {
 	started := time.Now()
 
+	// 一次调查编排 = 一个运行轮次。此后的每一步 ExecuteTool 都落在同一个
+	// run_id 下，事后可「一次取出这次调查做了哪些动作、每步依据哪版策略放行」。
+	// 放在入口而不是每个步骤：步骤级各造 ID 会让证据链重新碎成 N 段，
+	// 正是本批要修的问题本身。
+	ctx, runID := EnsureRunID(ctx)
+
 	brief, err := s.loadTicketBrief(ctx, ticketID, tenantID)
 	if err != nil {
 		return nil, err
@@ -147,6 +159,9 @@ func (s *Service) InvestigateTicket(ctx context.Context, ticketID, tenantID, use
 		PromptVersion: investigationPromptVersion,
 		Steps:         []InvestigationStep{},
 	}
+	// 把 run_id 回传：前端/编排器据此可直接拉取该轮的完整证据链，
+	// 而不必从 N 条工具调用记录里自行拼接。
+	resp.RunID = runID
 
 	query := strings.TrimSpace(brief.Title + " " + brief.Description)
 

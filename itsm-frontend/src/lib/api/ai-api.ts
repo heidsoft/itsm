@@ -57,6 +57,11 @@ export interface TicketInvestigationResponse {
   suggestedActions?: InvestigationSuggestedAction[];
   /** 服务端决策底账行 ID：有值时有用/不准反馈直接 PATCH /ai/audit-logs/:id 翻转 */
   auditId?: number;
+  /**
+   * 本次调查编排的运行轮次标识。拿到它即可用 aiGetRunInvocations(runId)
+   * 取回这一轮的全部工具调用证据链，无需自行从零散记录里拼接。
+   */
+  runId?: string;
 }
 
 export interface RagAnswer {
@@ -317,9 +322,12 @@ export async function aiGetAuditLogs(params: {
   if (params.kind) query.set('kind', params.kind);
   if (params.days) query.set('days', String(params.days));
   const qs = query.toString();
-  // 字面量路径 + 拼接，避免模板内三元表达式，保证 api-contract 测试可静态解析路径
-  const url = '/api/v1/ai/audit-logs' + (qs ? `?${qs}` : '');
-  return httpClient.get<AIAuditLogsResponse>(url);
+  // 字面量路径 + 拼接，避免模板内三元表达式，保证 api-contract 测试可静态解析路径。
+  // 变量名必须全文件唯一：契约测试的 staticBases 是文件级 name→path 映射，
+  // 同名的 `const url` 会后写覆盖前写，让先定义的那个端点永远拿不到真实校验
+  // （此前 ai-api.ts 里两个 `url` 已让 /ai/audit-logs 长期处于这种假绿状态）。
+  const auditLogsUrl = '/api/v1/ai/audit-logs' + (qs ? `?${qs}` : '');
+  return httpClient.get<AIAuditLogsResponse>(auditLogsUrl);
 }
 
 // Audit Console 的 Accept/Revoke：翻转单条 ai_feedbacks 行的 accepted 列，
@@ -397,6 +405,75 @@ export interface ToolApproval {
   riskLevel?: string;
   /** 需要多少个互不相同的人类审批人（来自权限码策略） */
   minApprovals?: number;
+  /**
+   * 放行判据的策略指纹。三态**不做前端归一化**：
+   * 空串 = 该概念在记录产出时还不存在（历史行）；
+   * `unknown` = 概念存在但本次读不出策略（需运维介入）；
+   * 其余 = 实际放行依据的内容哈希（前 16 字节 hex）。
+   * 三者如上不可合并——合并后「有多少次调用拿不到策略版本」这个指标就失效。
+   */
+  policyVersion?: string;
+  /** 逻辑运行轮次（跨请求串联同一轮 Agent 行为）。空串=未归属任何轮次。 */
+  runId?: string;
+}
+
+/** 运行轮次证据链响应（对齐后端 GET /api/v1/agent/runs/:runId/invocations） */
+export interface ToolRunInvocationsResponse {
+  items: ToolApproval[];
+  runId: string;
+  count: number;
+}
+
+/**
+ * 工具调用预演结论（对齐后端 POST /api/v1/agent/tools/dry-run）。
+ *
+ * 字段与真实执行判定**同源**（后端只有一个判定函数），因此这里看到的
+ * allowed / needsApproval / minApprovals 就是真调时会得到的答案。
+ * 唯一的差别是副作用：预演不执行工具、不建待审批行。
+ */
+export interface ToolDryRunResult {
+  /** 恒为 true，用于一眼确认「这不是执行结果」。 */
+  dryRun: boolean;
+  toolName: string;
+  /** Gate 2 与 Gate 2.5 是否都通过。 */
+  allowed: boolean;
+  /** 若此刻真调，是被受理等待审批（true）还是立刻执行（false）。 */
+  needsApproval: boolean;
+  /** 需要几名互不相同的人类审批人（0 = 不需要审批）。 */
+  minApprovals: number;
+  /** 若真调会落到哪个审批态（pending/pending_agent/...），无需审批时为空。 */
+  approvalState?: string;
+  /** 该工具权限码的运行期风险分级；unknown = 目录不可读。 */
+  riskLevel?: string;
+  /** 策略版本三态：空串=无策略参与 / unknown=读不出 / 指纹=实际依据。 */
+  policyVersion?: string;
+  /** 判定理由（拒绝原因或放行时的策略摘要）。 */
+  reason?: string;
+  /** 本次预演落下的审计行 ID（dry_run=true）。 */
+  auditId?: number;
+
+  // --- 以下字段仅「复核既有调用」模式返回 ---
+
+  /**
+   * 本次判定实际使用的主体（human / agent / service）。
+   *
+   * 必须展示在界面上：同一个工具在 human 与 agent 两个主体下结论可能完全不同
+   * （agent 多一道 Gate 2.5）。不说明「按谁判的」，`allowed=false` 会被
+   * 审批人读成「这个工具本身不能用」。
+   */
+  evaluatedPrincipal?: string;
+  /** 被复核的调用记录 ID（普通预演为 0）。 */
+  invocationId?: number;
+  /** 被复核记录**当时**落库的策略指纹（三态，不归一化）。 */
+  baselinePolicyVersion?: string;
+  /**
+   * 两次判定的策略比对结论，由后端计算（四态）：
+   * - `not_applicable`：至少一侧无策略参与，比较无意义；
+   * - `identical`：判据未变，本次复核结论即原判定结论；
+   * - `changed`：策略已改，原结论不能直接沿用；
+   * - `unknown`：至少一侧读不出指纹，**不能**断言「未变」。
+   */
+  policyComparison?: 'not_applicable' | 'identical' | 'changed' | 'unknown';
 }
 
 export interface ToolApprovalListResponse {
@@ -413,8 +490,33 @@ export interface ToolApproveRequest {
 // 对应后端 GET /api/v1/agent/tools/invocations?state=pending
 export async function aiGetToolApprovals(state = 'pending'): Promise<ToolApprovalListResponse> {
   // 字面量路径 + 拼接，避免模板内三元表达式，保证 api-contract 测试可静态解析路径
-  const url = '/api/v1/agent/tools/invocations?state=' + encodeURIComponent(state);
-  return httpClient.get<ToolApprovalListResponse>(url);
+  const approvalsUrl = '/api/v1/agent/tools/invocations?state=' + encodeURIComponent(state);
+  return httpClient.get<ToolApprovalListResponse>(approvalsUrl);
+}
+
+/**
+ * 取回某个运行轮次的完整证据链：这一轮 Agent 依次调了哪些工具、每步依据哪版策略放行。
+ * 对应后端 GET /api/v1/agent/runs/:runId/invocations
+ *
+ * 与审批列表的区别：审批列表按「状态」聚合待办，回答「我该批哪几条」；
+ * 本接口按「轮次」聚合行为，回答「这条调用背后整轮做了什么」。
+ * 审批人只看到孤立一条调用时无法判断该不该批——上下文正是这一轮的前序动作。
+ *
+ * runId 为空时不发请求：后端对该值返回 400，前端静默请求只会产生无意义错误日志。
+ */
+export async function aiGetRunInvocations(runId: string): Promise<ToolRunInvocationsResponse> {
+  const trimmed = (runId ?? '').trim();
+  if (!trimmed) {
+    // 与后端「空 runId → 400」同语义的本地短路，返回同形状的空结果。
+    return { items: [], runId: '', count: 0 };
+  }
+  // 路径直接写在调用点上（含 `${trimmed}` 动态段），不先拼进 const：
+  // 契约测试按文件名级 name→path 静态映射解析，只取 `const x = '字面量'`，
+  // 把动态段藏进 const 会让解析器只看到前缀 `/api/v1/agent/runs/`，
+  // 于是这条真实路由被判成漂移——这是「写法迁就工具」，不能反过来。
+  return httpClient.get<ToolRunInvocationsResponse>(
+    `/api/v1/agent/runs/${encodeURIComponent(trimmed)}/invocations`
+  );
 }
 
 // 通过 / 驳回某条工具调用审批
@@ -424,6 +526,55 @@ export async function aiApproveTool(
   req: ToolApproveRequest
 ): Promise<{ invocationId: number; approvalState: string }> {
   return httpClient.post(`/api/v1/agent/tools/${id}/approve`, req);
+}
+
+/**
+ * 预演：现在调用这个工具会发生什么。对应后端 POST /api/v1/agent/tools/dry-run
+ *
+ * 后端只跑判定链（Gate 2 角色 RBAC + Gate 2.5 主体策略 + 审批人数），
+ * **不执行工具、不创建待审批行**，只落一条 dry_run=true 的审计。
+ * 因此它不会在审批队列里留下任何东西，可以放心在展示层调用。
+ *
+ * 为什么审批页需要它：审批人看到的每一条待办都缺一个关键信息——
+ * 「我点通过，实际会发生什么、还差几个人点头」。这条接口回答的正是后者，
+ * 且答案与真实执行同源（后端 evaluateToolCall 单一判定），不会两边不一致。
+ *
+ * 被拒不是接口错误：后端对「判定为不允许」返回 200 + allowed=false，
+ * 所以调用方不需要 try/catch 区分，按 allowed 分支渲染即可。
+ */
+export async function aiDryRunTool(
+  name: string,
+  args: Record<string, unknown> = {}
+): Promise<ToolDryRunResult> {
+  // 路径写成字面量、不拼进 const：契约测试按文件名级 name→path 静态映射解析，
+  // 藏进变量会让这条真实路由被判成漂移（同一个坑在 aiGetRunInvocations 上也踩过）。
+  return httpClient.post<ToolDryRunResult>('/api/v1/agent/tools/dry-run', {
+    name,
+    args,
+  });
+}
+
+/**
+ * 复核一条既有调用：按它**当时的发起主体**与**当前策略**重新判定。
+ * 对应后端 POST /api/v1/agent/tools/invocations/:id/review
+ *
+ * 与 aiDryRunTool 的区别不是参数不同，而是回答的问题不同：
+ * - aiDryRunTool            → 「我现在调用这个工具会被允许吗」（按调用者自己判定）
+ * - aiReviewToolInvocation  → 「队列里这条调用，现在还该放行吗」（按原发起主体判定）
+ *
+ * 审批人需要的是后者。用前者做审批前的核对有一个隐蔽且致命的缺陷：
+ * 审批人通常是管理员，他当然持有该工具的权限，于是预演永远 `allowed=true`
+ * ——这条结论回答的是「管理员能不能做」，而审批要判断的是「AI 能不能做」。
+ *
+ * 零副作用：不执行工具、不推进审批状态；审批动作仍在 aiApproveTool（ai:approve）。
+ */
+export async function aiReviewToolInvocation(invocationId: number): Promise<ToolDryRunResult> {
+  // 动态段直接写在模板串里（与 aiGetRunInvocations 同一纪律）：
+  // 把 id 拼进 const 再传会让契约测试只解析到前缀，误判为路由漂移。
+  return httpClient.post<ToolDryRunResult>(
+    `/api/v1/agent/tools/invocations/${encodeURIComponent(String(invocationId))}/review`,
+    {}
+  );
 }
 
 // ==================== 合并自 legacy AIService（src/lib/services/ai-service.ts） ====================
@@ -961,6 +1112,19 @@ export class AIApi {
   /** 通过 / 驳回工具调用审批。对应 POST /api/v1/agent/tools/:id/approve */
   static async approveTool(id: number, req: ToolApproveRequest): Promise<{ invocationId: number; approvalState: string }> {
     return aiApproveTool(id, req);
+  }
+
+  /** 取回某运行轮次的完整证据链。对应 GET /api/v1/agent/runs/:runId/invocations */
+  static async getRunInvocations(runId: string): Promise<ToolRunInvocationsResponse> {
+    return aiGetRunInvocations(runId);
+  }
+
+  /** 预演工具调用的判定结论（不执行、不建待办）。对应 POST /api/v1/agent/tools/dry-run */
+  static async dryRunTool(
+    name: string,
+    args: Record<string, unknown> = {}
+  ): Promise<ToolDryRunResult> {
+    return aiDryRunTool(name, args);
   }
 
   static chatStream(

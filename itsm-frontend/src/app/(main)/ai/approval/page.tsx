@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   Card,
   Table,
@@ -19,8 +19,12 @@ import { CheckCircle2, XCircle, RefreshCw, ShieldAlert } from 'lucide-react';
 import {
   aiGetToolApprovals,
   aiApproveTool,
+  aiGetRunInvocations,
+  aiReviewToolInvocation,
   type ToolApproval,
   type ToolApprovalListResponse,
+  type ToolRunInvocationsResponse,
+  type ToolDryRunResult,
 } from '@/lib/api/ai-api';
 import { useAuthStoreHydration } from '@/lib/store/auth-store';
 import { usePermissions } from '@/lib/hooks/use-permissions';
@@ -75,6 +79,87 @@ const RISK_LABELS: Record<string, string> = {
   unknown: '未知',
 };
 
+/** 判定主体的人类可读名。不暴露 principal 的引擎取值（human/agent/service）。 */
+const PRINCIPAL_LABELS: Record<string, string> = {
+  human: '人类',
+  agent: 'AI',
+  service: '服务',
+};
+
+/**
+ * 策略比对四态的展示口径。
+ *
+ * 四态**不可合并**，这是本组件存在的核心理由：
+ * - identical     → 「判据未变」，原结论可沿用（安心点通过）
+ * - changed       → 「策略已改」，原结论不能沿用（须按新策略重判）
+ * - unknown       → 「读不出策略」，不能断言未变（提示运维，别当作没变）
+ * - not_applicable→ 「本就不涉及策略」，比较无意义（而非「未变」）
+ *
+ * 把 unknown 显示成 identical 是最危险的假阴性：审批人会以为策略没动过，
+ * 实际上系统根本没读到策略。因此 unknown 必须显式给出红色提示且文案
+ * 不得出现「未变」二字。
+ */
+const POLICY_COMPARISON_LABELS: Record<
+  NonNullable<ToolDryRunResult['policyComparison']>,
+  { label: string; color: string; hint: string }
+> = {
+  identical: {
+    label: '策略未变',
+    color: 'green',
+    hint: '两次判定的策略指纹相同。指纹取自风险级/允许主体/是否需审批/审批人数/是否启用，'
+      + '相同即表示放行判据未变，本次复核结论与原判定一致。',
+  },
+  changed: {
+    label: '策略已变更',
+    color: 'red',
+    hint: '排队期间该权限码的策略被修改（风险级、允许主体或审批人数任一变化都会改指纹）。'
+      + '原判定结论不能直接沿用，请按本次复核结论判断。',
+  },
+  unknown: {
+    label: '策略版本不可读',
+    color: 'red',
+    hint: '至少一侧未能取得策略指纹，因此**不能**断言策略未变。'
+      + '这不等于「没变化」——请检查权限目录是否可用后再决定。',
+  },
+  not_applicable: {
+    label: '不涉及策略比对',
+    color: 'default',
+    hint: '两次判定均无策略参与（人类主体走角色 RBAC，不查策略信封），没有可比对的对象。'
+      + '既不表示「未变」也不表示「已变」。',
+  },
+};
+
+const PolicyComparisonNote: React.FC<{
+  comparison: NonNullable<ToolDryRunResult['policyComparison']>;
+  baseline?: string;
+  current?: string;
+}> = ({ comparison, baseline, current }) => {
+  // 未知取值不静默渲染成「未变」：后端新增态时前端必须显式暴露，而不是
+  // 让它悄悄落进一个看似安全的默认分支。
+  const view = POLICY_COMPARISON_LABELS[comparison];
+  if (!view) {
+    return (
+      <Text type="danger" style={{ fontSize: 12 }}>
+        策略比对结果无法识别（{comparison}），请勿据此判断策略是否变更。
+      </Text>
+    );
+  }
+  return (
+    <TooltipWrapper text={view.hint}>
+      <Space size={6} wrap>
+        <Text type="secondary" style={{ fontSize: 12 }}>
+          策略比对
+        </Text>
+        <Tag color={view.color}>{view.label}</Tag>
+        <Text type="secondary" style={{ fontSize: 12 }}>
+          记录时 {baseline ? baseline.slice(0, 8) : '（无）'} → 当前{' '}
+          {current ? current.slice(0, 8) : '（无）'}
+        </Text>
+      </Space>
+    </TooltipWrapper>
+  );
+};
+
 const riskColor = (r?: string): string => {
   switch (r) {
     case 'low':
@@ -106,6 +191,60 @@ const prettyArgs = (raw?: string): string => {
   }
 };
 
+/** 展开行持有的「整轮证据链」状态。runId 与 items 必须成对存，防止串台。 */
+interface ToolRunChain {
+  runId: string;
+  loading: boolean;
+  items: ToolApproval[];
+  error?: string;
+}
+
+/**
+ * 展开行持有的「决策复核」状态。
+ *
+ * 与 ToolRunChain 一样按记录 id 分桶，理由相同且更紧迫：复核是**逐条**的
+ * （每条调用按各自的工具、参数与原发起主体判定），单值 state 下同时展开
+ * A、B 两行，后发请求落地时会把 A 的复核结论画到 B 上——而复核结论直接
+ * 影响「这个人要不要点通过」，串台等于让审批人按别人的结论做决定。
+ *
+ * key 用记录 id而不是 runId：同一轮里可能有多条待批调用，各有各的判定输入。
+ * 这也是按 id 而非 runId 的**硬理由**：复核接口的入参就是记录 id。
+ */
+interface ToolPreflight {
+  toolName: string;
+  loading: boolean;
+  result?: ToolDryRunResult;
+  error?: string;
+}
+
+/**
+ * 策略版本三态的展示口径。**不在展示层归一化**：
+ * 空串（历史行）与 unknown（读不出）含义不同，前者是「当时没这概念」，
+ * 后者是「有这概念但这次没取到」——后者意味着运维该查一下策略目录。
+ * 把两者都显示成「-」会让后一种故障永远不被发现。
+ */
+const policyVersionView = (v?: string): { label: string; hint: string; color: string } => {
+  if (!v) {
+    return {
+      label: '历史记录',
+      hint: '该调用发生在策略版本字段上线之前，因此未记录放行依据的版本。',
+      color: 'default',
+    };
+  }
+  if (v === 'unknown') {
+    return {
+      label: '未取到',
+      hint: '本次放行时未能读取策略目录，无法追溯依据哪一版策略。需检查权限目录是否可用。',
+      color: 'red',
+    };
+  }
+  return {
+    label: v.slice(0, 8),
+    hint: `完整指纹 ${v}；相同指纹 ⟺ 放行判据（风险级/允许主体/是否需审批/审批人数/是否启用）相同。`,
+    color: 'blue',
+  };
+};
+
 const AIApprovalQueue: React.FC = () => {
   const { message } = App.useApp();
   useAuthStoreHydration();
@@ -120,6 +259,18 @@ const AIApprovalQueue: React.FC = () => {
   const [state, setState] = useState<string>('pending');
   const [rejectId, setRejectId] = useState<number | null>(null);
   const [rejectReason, setRejectReason] = useState('');
+  // 展开某条调用时按运行轮次取回的整轮证据链，**按 runId 分桶**。
+  //
+  // 为什么不是单个 chain 变量：antd Table 的 expandable 默认允许多行同时展开，
+  // 单值状态下后展开的行会把先展开行的内容顶掉，先展开那行则永远停在「加载中」。
+  // 这是「一次只放一个」的假实现——按下两行就能复现。
+  const [runChains, setRunChains] = useState<Record<string, ToolRunChain>>({});
+  // 每个 runId 一条序号：同一轮被重复展开（收起再展开）时，只有最后一次响应能落地。
+  const runSeqRef = useRef<Record<string, number>>({});
+  // 决策复核结果，按记录 id 分桶（理由见 ToolPreflight 注释）。
+  const [preflights, setPreflights] = useState<Record<number, ToolPreflight>>({});
+  // 每条记录一条序号，规则同 runSeqRef。
+  const preflightSeqRef = useRef<Record<number, number>>({});
 
   const fetchList = useCallback(async () => {
     setListLoading(true);
@@ -136,6 +287,81 @@ const AIApprovalQueue: React.FC = () => {
   useEffect(() => {
     fetchList();
   }, [fetchList]);
+
+  // 展开行时拉取该轮证据链。收起不拉取（审批人只想收起时不该产生请求）。
+  const handleExpand = useCallback(async (expanded: boolean, record: ToolApproval) => {
+    if (!expanded) return;
+    const rid = (record.runId ?? '').trim();
+
+    // 复核：与轮次链**并列**发起，互不阻塞。
+    //
+    // 无 runId 的记录同样要复核：历史行没有轮次，但仍是一条待批调用，
+    // 审批人依旧需要知道「批了会发生什么」。若跟着 runId 一起跳过，
+    // 恰好在最缺少上下文的历史行上不给复核。
+    const rid4Preflight = record.id;
+    const pSeq = (preflightSeqRef.current[rid4Preflight] ?? 0) + 1;
+    preflightSeqRef.current[rid4Preflight] = pSeq;
+    setPreflights(prev => ({
+      ...prev,
+      [rid4Preflight]: { toolName: record.toolName, loading: true },
+    }));
+    void (async () => {
+      try {
+        // 复核既有调用，而不是「按我自己预演一次」。
+        //
+        // 这个区别决定了这个功能有没有意义：
+        //   aiDryRunTool(record.toolName, args) 按**当前登录者**（审批人）判定，
+        //   而审批人通常持有该工具权限 → 结论永远是 allowed=true。
+        //   审批人要回答的是「这条 **AI 发起**的调用现在还合不合规」，
+        //   所以必须按原发起主体判定：aiReviewToolInvocation 用落库的
+        //   role_snapshot 与 approval_state 推导原主体，并带回两份策略指纹的比对。
+        //
+        // 参数不需要再传：后端从被复核记录的 arguments 读取，读不出就拒绝复核
+        // （拿一份读不懂的输入去判定，比拒绝更危险）。
+        const res = await aiReviewToolInvocation(record.id);
+        if (preflightSeqRef.current[rid4Preflight] !== pSeq) return;
+        setPreflights(prev => ({
+          ...prev,
+          [rid4Preflight]: { toolName: record.toolName, loading: false, result: res },
+        }));
+      } catch (e) {
+        // 先校验序号再判定是否是过期响应——并发展开两行时，后到响应
+        // 不得覆盖先到结论（这条纪律对预演比轮次链更关键：预演结论直接
+        // 决定审批人点不点通过）。
+        if (preflightSeqRef.current[rid4Preflight] !== pSeq) return;
+        // 与轮次链同一纪律：失败不伪装成「没有结论」。
+        setPreflights(prev => ({
+          ...prev,
+          [rid4Preflight]: {
+            toolName: record.toolName,
+            loading: false,
+            error: (e as Error).message,
+          },
+        }));
+      }
+    })();
+
+    // 无轮次的记录不发起请求：这是历史行的正常形态，不是错误，由渲染层说明。
+    if (!rid) return;
+
+    // 同步自增序号，await 之前占位——await 之后再取号会让后发请求先落地。
+    const seq = (runSeqRef.current[rid] ?? 0) + 1;
+    runSeqRef.current[rid] = seq;
+    setRunChains(prev => ({ ...prev, [rid]: { runId: rid, loading: true, items: [] } }));
+    try {
+      const res: ToolRunInvocationsResponse = await aiGetRunInvocations(rid);
+      if (runSeqRef.current[rid] !== seq) return; // 同一轮已有更新的一次展开，丢弃过期响应
+      setRunChains(prev => ({ ...prev, [rid]: { runId: rid, loading: false, items: res.items ?? [] } }));
+    } catch (e) {
+      if (runSeqRef.current[rid] !== seq) return;
+      // 加载失败与「这一轮确实没动作」必须分流：都返回空数组会让审批人
+      // 以为「前面什么都没有」，从而低估这次调用的风险。
+      setRunChains(prev => ({
+        ...prev,
+        [rid]: { runId: rid, loading: false, items: [], error: (e as Error).message },
+      }));
+    }
+  }, []);
 
   const handleApprove = async (id: number) => {
     try {
@@ -198,6 +424,20 @@ const AIApprovalQueue: React.FC = () => {
           {prettyArgs(v).length > 120 ? '…' : ''}
         </Text>
       ),
+    },
+    {
+      title: '放行依据',
+      dataIndex: 'policyVersion',
+      key: 'policyVersion',
+      width: 110,
+      render: (v: string) => {
+        const view = policyVersionView(v);
+        return (
+          <TooltipWrapper text={view.hint}>
+            <Tag color={view.color}>{view.label}</Tag>
+          </TooltipWrapper>
+        );
+      },
     },
     {
       title: '权限校验',
@@ -309,10 +549,13 @@ const AIApprovalQueue: React.FC = () => {
           columns={columns}
           pagination={{ pageSize: 20, showTotal: (t) => `共 ${t} 条` }}
           expandable={{
+            onExpand: handleExpand,
             expandedRowRender: (r) => (
-              <pre style={{ margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-all', fontSize: 12 }}>
-                {prettyArgs(r.arguments)}
-              </pre>
+              <ExpandedInvocation
+                record={r}
+                chain={runChains[(r.runId ?? '').trim()]}
+                preflight={preflights[r.id]}
+              />
             ),
           }}
           locale={{ emptyText: <Empty description="当前筛选条件下没有待处理项" /> }}
@@ -348,6 +591,201 @@ const TooltipWrapper: React.FC<{ text?: string; children: React.ReactElement }> 
     <span title={text} style={{ cursor: 'help' }}>
       {children}
     </span>
+  );
+};
+
+/**
+ * 展开行：本次调用参数 + 同一运行轮次的完整证据链。
+ *
+ * 为什么审批人需要整轮而不是单条：审批一个写操作前要判断「这个动作合不合理」，
+ * 答案在上下文里——这一轮 Agent 前面查了什么、看到了什么。只看孤立的
+ * create_ticket 无法区分「按调查结论建单」与「凭空建单」。
+ *
+ * chain 由父组件按 runId 成对持有，这里只按 runId 匹配当前行：
+ * 展开 A 后立刻展开 B、而 A 的响应后才返回时，不会把 B 的链画到 A 上。
+ */
+const ExpandedInvocation: React.FC<{
+  record: ToolApproval;
+  chain: ToolRunChain | null;
+  preflight: ToolPreflight | null;
+}> = ({ record, chain, preflight }) => {
+  const ownRunId = (record.runId ?? '').trim();
+  // 只有 chain 属于本行时才展示，否则视为尚未加载（不是「空轮次」）。
+  const chainForThisRow = chain && chain.runId === ownRunId ? chain : null;
+  // 复核结论按记录 id 分桶，父组件已保证 key 正确；这里再校验工具名，
+  // 防止「同一 id 的旧结论落到已变更的记录上」这种理论串台。
+  const preflightForThisRow =
+    preflight && preflight.toolName === record.toolName ? preflight : null;
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div>
+        <Text type="secondary" style={{ fontSize: 12 }}>
+          本次调用参数
+        </Text>
+        <pre style={{ margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-all', fontSize: 12 }}>
+          {prettyArgs(record.arguments)}
+        </pre>
+      </div>
+
+      <div>
+        <Text type="secondary" style={{ fontSize: 12 }}>
+          决策复核（按发起时的主体与当前策略重新判定）
+        </Text>
+        {!preflightForThisRow && (
+          <div style={{ marginTop: 4 }}>
+            <Text type="secondary" style={{ fontSize: 12 }}>
+              正在核对判定结论…
+            </Text>
+          </div>
+        )}
+        {preflightForThisRow?.loading && (
+          <div style={{ marginTop: 4 }}>
+            <Text type="secondary" style={{ fontSize: 12 }}>
+              校验中…
+            </Text>
+          </div>
+        )}
+        {preflightForThisRow?.error && (
+          <div style={{ marginTop: 4 }}>
+            <Text type="danger" style={{ fontSize: 12 }}>
+              复核失败：{preflightForThisRow.error}（这不等于该操作会被拒绝，请重试）
+            </Text>
+          </div>
+        )}
+        {preflightForThisRow?.result && (
+          <div style={{ marginTop: 4, display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <Space size={6} wrap>
+              {preflightForThisRow.result.allowed ? (
+                <Tag color="green">判定通过</Tag>
+              ) : (
+                <Tag color="red">判定拒绝</Tag>
+              )}
+              {/* 主体必须显示：同一工具在 human / agent 下结论可能不同，
+                  不说明「按谁判的」，判定拒绝会被读成「工具本身不能用」。 */}
+              {preflightForThisRow.result.evaluatedPrincipal && (
+                <TooltipWrapper
+                  text={
+                    preflightForThisRow.result.evaluatedPrincipal === 'agent'
+                      ? '按 AI 主体的策略判定（Gate 2.5 零信任）；不是按您自己的权限判定'
+                      : '按人类主体的角色 RBAC 判定'
+                  }
+                >
+                  <Tag color="purple">
+                    按 {PRINCIPAL_LABELS[preflightForThisRow.result.evaluatedPrincipal] ??
+                      preflightForThisRow.result.evaluatedPrincipal} 主体判定
+                  </Tag>
+                </TooltipWrapper>
+              )}
+              {preflightForThisRow.result.needsApproval ? (
+                <Tag color="orange">
+                  需 {preflightForThisRow.result.minApprovals} 人审批
+                </Tag>
+              ) : (
+                <Tag color="default">无需审批，批准即刻执行</Tag>
+              )}
+              {preflightForThisRow.result.riskLevel && (
+                <Tag color={preflightForThisRow.result.riskLevel === 'unknown' ? 'red' : 'blue'}>
+                  风险 {preflightForThisRow.result.riskLevel}
+                </Tag>
+              )}
+              {preflightForThisRow.result.approvalState && (
+                <Tag color={stateColor(preflightForThisRow.result.approvalState)}>
+                  {STATE_LABELS[preflightForThisRow.result.approvalState] ??
+                    preflightForThisRow.result.approvalState}
+                </Tag>
+              )}
+            </Space>
+            {(() => {
+              // 三态展示口径与本行的 policyVersion 完全一致，不在这里另立一套。
+              const pv = policyVersionView(preflightForThisRow.result.policyVersion);
+              return (
+                <TooltipWrapper text={pv.hint}>
+                  <Space size={6}>
+                    <Text type="secondary" style={{ fontSize: 12 }}>
+                      当前放行依据
+                    </Text>
+                    <Tag color={pv.color}>{pv.label}</Tag>
+                  </Space>
+                </TooltipWrapper>
+              );
+            })()}
+            {preflightForThisRow.result.policyComparison && (
+              <PolicyComparisonNote
+                comparison={preflightForThisRow.result.policyComparison}
+                baseline={preflightForThisRow.result.baselinePolicyVersion}
+                current={preflightForThisRow.result.policyVersion}
+              />
+            )}
+            {preflightForThisRow.result.reason && (
+              <Text type="secondary" style={{ fontSize: 12 }}>
+                {preflightForThisRow.result.reason}
+              </Text>
+            )}
+          </div>
+        )}
+      </div>
+
+      <div>
+        <Text type="secondary" style={{ fontSize: 12 }}>
+          {ownRunId ? '同一轮次的全部动作（按发生顺序）' : '运行轮次上下文'}
+        </Text>
+        {!ownRunId && (
+          <div style={{ marginTop: 4 }}>
+            <Text type="secondary" style={{ fontSize: 12 }}>
+              该记录未归属任何运行轮次（早于轮次标识上线），无法追溯前序动作。
+            </Text>
+          </div>
+        )}
+        {ownRunId && chainForThisRow?.loading && (
+          <div style={{ marginTop: 4 }}>
+            <Text type="secondary" style={{ fontSize: 12 }}>
+              加载中…
+            </Text>
+          </div>
+        )}
+        {ownRunId && chainForThisRow?.error && (
+          <div style={{ marginTop: 4 }}>
+            <Text type="danger" style={{ fontSize: 12 }}>
+              加载轮次记录失败：{chainForThisRow.error}（这不等于该轮没有动作，请重试）
+            </Text>
+          </div>
+        )}
+        {ownRunId && chainForThisRow && !chainForThisRow.loading && !chainForThisRow.error && (
+          chainForThisRow.items.length === 0 ? (
+            <div style={{ marginTop: 4 }}>
+              <Text type="secondary" style={{ fontSize: 12 }}>
+                该轮次没有可读的工具调用记录。
+              </Text>
+            </div>
+          ) : (
+            <div style={{ marginTop: 4, display: 'flex', flexDirection: 'column', gap: 4 }}>
+              {chainForThisRow.items.map((it, idx) => {
+                const isCurrent = it.id === record.id;
+                const pv = policyVersionView(it.policyVersion);
+                return (
+                  <Space key={it.id} size={6} wrap>
+                    <Text type="secondary" style={{ fontSize: 12 }}>
+                      {idx + 1}.
+                    </Text>
+                    <Tag color={isCurrent ? 'blue' : 'default'}>{it.toolName}</Tag>
+                    <Tag color={stateColor(it.approvalState)}>{STATE_LABELS[it.approvalState] ?? it.approvalState}</Tag>
+                    <TooltipWrapper text={pv.hint}>
+                      <Tag color={pv.color}>{pv.label}</Tag>
+                    </TooltipWrapper>
+                    {isCurrent && (
+                      <Text type="secondary" style={{ fontSize: 12 }}>
+                        ← 当前条目
+                      </Text>
+                    )}
+                  </Space>
+                );
+              })}
+            </div>
+          )
+        )}
+      </div>
+    </div>
   );
 };
 

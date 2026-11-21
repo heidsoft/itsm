@@ -2717,6 +2717,240 @@ it_admin / change_manager 与 sysadmin，`end_user` 不授。四个新只读工�
 `GET /api/v1/agent/tools/{id}` 的每条记录相应新增只读字段 `ticketId` /
 `changeId`（无关联为 `0`）。迁移见 `migrations/20261117_tool_invocation_business_refs.sql`。
 
+**审计可回放：策略版本与运行轮次（2026-11-21）**
+
+`tool_invocations` 新增两列，三者（`policy_version`、`run_id`、既有 `request_id`）
+共同构成「不可抵赖审计」的最小证据链。迁移见
+`migrations/20261121_tool_invocation_policy_run.sql`。
+
+| 字段 | 语义 | 取值 |
+|:--|:--|:--|
+| `policyVersion` | 本次**放行判据**的内容指纹，取自当时命中的权限策略信封 | 32 位 hex / `"unknown"` / `""` |
+| `runId` | 运行轮次标识，跨请求串联同一轮 Agent 行为 | `run_`+32 位 hex / `""` |
+| `requestId` | 单次 HTTP 请求标识，与 `auditlogs.request_id` 对齐 | 请求链路 ID / `""` |
+
+`policyVersion` 的三态**不得互相冒充**，读面原样返回不做美化：
+
+- `""` —— 本次判定**没有策略参与**（human 主体走 Gate 2 角色 RBAC，与策略信封无关）；
+- `"unknown"` —— 有策略语义但**读不出来**（目录不可用 / 定义缺失），此时判定已 fail-closed 拒绝；
+- 32 位 hex —— 决策输入的 SHA-256 前 16 字节。把该值与当前 DB 策略重算的指纹比对，
+  相等即证明放行依据未变，不等即证明策略在此期间被改过。这就是「回放」。
+
+指纹只覆盖**影响鉴权结果**的字段（riskLevel / allowedPrincipals / requiresApproval /
+minApprovals / isActive），不含 displayName / icon / color / i18nKey / sortOrder：
+管理员调整展示不应让此后所有审计记录的版本号「看起来都变了」。
+
+`runId` 与 `requestId` 是**两个维度**，不可互相冒充：前者是「一次逻辑运行」
+（一轮对话 / 一次调查编排 / 一次 MCP 会话，可跨多个 HTTP 请求），后者是
+「一次 HTTP 请求」。空串 `runId` 表示该调用不属于任何可标识的运行轮次（如单发
+HTTP 工具调用）；`EnsureRunID` 在审计点会为这类调用兜底生成独立轮次。
+
+**新增读面：`GET /api/v1/agent/runs/{runId}/invocations`**（权限 `ai:read`）
+
+按运行轮次取出该轮全部工具调用（含只读审计行），**时间正序**（证据链按
+「先判定、再审批、后执行」的顺序读，倒序会把因果读反）。单条记录字段与
+`GET /api/v1/agent/tools/invocations` 完全一致。
+
+响应形如：
+
+```json
+{"code": 0, "message": "success", "data": {
+  "runId": "run_3f2a...",
+  "count": 2,
+  "items": [
+    {"id": 41, "toolName": "list_tickets", "runId": "run_3f2a...",
+     "policyVersion": "a1b2c3...", "approvalState": "auto", "permissionCheck": "passed"},
+    {"id": 42, "toolName": "update_ticket", "runId": "run_3f2a...",
+     "policyVersion": "a1b2c3...", "approvalState": "pending_agent_two",
+     "needsApproval": true}
+  ]
+}}
+```
+
+边界与约束：
+
+- `runId` 为空返回 `400`（`1001`），**不返回空集**：空集会让调用方误判
+  「这轮什么都没做」，而实际是参数缺失。
+- `runId` 长度上限 64 字符（当前生成格式为 `run_` + 32 hex），超长返回 `400`。
+- **跨租户隔离**：`runId` 是调用方可传的路径参数，仓储层强制带 `tenant_id` 谓词。
+  只按 `runId` 查等于允许任何人用撞库串读出他人的运行记录（工具名、参数、结果、
+  审批态全在其中）。
+- 复用 `ai:read` 而不新增权限码：读的是同域同类数据，只是换了聚合维度；
+  新增码会撞 dead-codes 基线（只减不增）。
+
+`POST /api/v1/ai/tickets/{id}/investigate` 的响应新增 `runId`：调用方拿到它即可
+直接拉取该次调查编排的完整证据链，不必自行拼接。
+
+**决策预演与复核：`dry_run` 列的真实消费方（2026-11-21）**
+
+`tool_invocations.dry_run` 自建表起就存在于生产库（由 ent `Schema.Create` 生成），
+但改动前在 `handlers/ai/` 全域**零消费方**：实体无字段、仓储不映射、服务不写入、
+handler 不暴露。这是「字段即声明」的第三例——数据库看起来支持预演，实际没有任何
+代码能产生或读取预演记录；于是问「现在调这个工具会发生什么」只能真调一次：
+写工具会留下一条真实待审批待办（审批人真的会去批、操作真的会发生），
+只读工具会真的查库/调外部系统。
+
+迁移见 `migrations/20261121_tool_invocation_dry_run.sql`（幂等 `ADD COLUMN IF NOT EXISTS`
+加部分索引 `(tenant_id, approval_state) WHERE dry_run = false`）。**必须写迁移而不能
+只靠 ent 自动建列**：生产与 SaaS 的 backend/worker 以 `ITSM_AUTO_MIGRATE=false` 运行，
+仅 bootstrap job 开启；凡「表在建列之前就已存在」的实例（从更早版本升级、或表由历史
+迁移手工建过）在 `AUTO_MIGRATE=false` 下永远拿不到这一列，写入会直接报列不存在。
+
+**端点一：`POST /api/v1/agent/tools/dry-run`**（权限 `ai:read`）
+
+问「现在调用这个工具会发生什么」：跑完完整判定链（Gate 2 角色 RBAC +
+Gate 2.5 主体策略 + 审批人数计算），但**不执行工具、不创建待审批行**，
+只落一条 `dry_run=true` 的审计。
+
+```json
+{"name": "update_ticket", "args": {"ticketId": 1, "status": "resolved"}}
+```
+
+判定通过（需双人审批）：
+
+```json
+{"code": 0, "message": "success", "data": {
+  "dryRun": true, "toolName": "update_ticket",
+  "allowed": true, "needsApproval": true, "minApprovals": 2,
+  "approvalState": "pending_agent_two", "riskLevel": "high",
+  "policyVersion": "a1b2c3...",
+  "reason": "principal=agent risk=high minApprovals=2 policyVersion=a1b2c3...",
+  "evaluatedPrincipal": "agent", "auditId": 43
+}}
+```
+
+判定拒绝——**仍是 HTTP 200**：
+
+```json
+{"code": 0, "message": "success", "data": {
+  "dryRun": true, "allowed": false, "needsApproval": false, "minApprovals": 0,
+  "riskLevel": "high", "policyVersion": "unknown",
+  "reason": "AI 主体 agent 未获授权 ticket:write",
+  "evaluatedPrincipal": "agent", "auditId": 44
+}}
+```
+
+**核心契约：`allowed` / `needsApproval` / `minApprovals` / `riskLevel` / `policyVersion`
+五项必须与真实执行完全一致。** 两者共用同一份 `Service.evaluateToolCall`（判定逻辑
+只此一处，两个入口都只消费其结论），故「预演说可以、真调被拒」在代码层面不可能出现。
+若判定分叉，预演比不提供更糟：调用方会按预演结论编排后续动作，然后在真实执行时
+炸在半路，而中间已产生不可回退的副作用。
+
+边界：
+
+- **权限用 `ai:read` 而非 `ai:write`。** 预演零业务副作用；按 `ai:write` 门控会造出
+  「无写权限者无法预演，只能真调一次才知道被拒」的悖论，而真调恰恰会建待审批行。
+- **必须带真实用户身份**（`userID > 0`）。service 主体（`userID=0`）被拒绝：预演是
+  「替某个用户问会发生什么」，service 主体没有可归属的用户，其结论也会污染审计。
+- **必留痕**：落 `status=dry_run_allowed|dry_run_denied`、`approval_state="none"`、
+  `needs_approval=false`、`dry_run=true`，带 `policyVersion`/`runId`/`requestId`。
+  少了这条，预演就成了无法追溯的只读通道。
+- **被拒不是错误**：`allowed=false` 走 200 正常返回，用 5xx 表达会让调用方把预期
+  结论当成调用失败从而重试或告警。仅未知工具/定义漏配/依赖缺失才返回业务错误。
+- 不返回 `invocationId`：预演不建待审批行，给非零 ID 会让 MCP 客户端误判「已排入审批」。
+
+**端点二：`POST /api/v1/agent/tools/invocations/{id}/review`**（权限 `ai:read`）
+
+复核一条**既有**工具调用：按它**当时的发起主体**与**当前策略**重新判定，
+并报出两次判定的策略指纹比对结论。零副作用，不执行工具、不推进审批状态、
+不修改被复核记录的任何字段。
+
+与预演的区别不是「换个参数」，而是回答一个不同的问题：
+
+- `DryRunTool` → 「AI 现在调用这个工具，会被允许吗」
+- `ReviewInvocation` → 「审批队列里这条 AI 发起的调用，现在还该放行吗」
+
+审批人需要的是后者。队列里的记录可能排队数小时，批一条几小时前的 AI 写操作前
+必须知道「策略改了没有、现在这条还合规吗」。落库的 `policyVersion` 只能回答
+「当时依据哪版策略」，**不能回答「现在是否仍然放行」**——而审批的效力取决于
+**批准那一刻**的判定，不是排队时的。
+
+**必须按原发起主体判定，不能按审批人自己。** 审批人对该工具的权限是「有没有资格批」
+（`ApproveTool` 已单独校验），而这次调用能不能执行取决于 AI 主体是否仍被授权。
+按审批人身份判定会得出与真实执行无关的结论——审批人通常是管理员，
+`allowed` 永远为 `true`，复核就失去意义。因此 `evaluateToolCall` 与
+`approvalStateFor` 的 `principal` 是**显式参数**而非从 ctx 隐式读取：
+「按哪个主体判定」与「谁发起了这次请求」在复核场景里是两个不同的值，
+隐式取会让复核用错身份，而这种错误在代码里看不出来，只有对比测试能发现。
+
+复核模式额外返回三个字段：
+
+| 字段 | 语义 |
+|:--|:--|
+| `evaluatedPrincipal` | 本次判定实际使用的主体。普通模式恒为请求者自己的主体；复核模式由被复核记录的来源推导。**必须回显**：同一工具在 human 与 agent 两个主体下结论可能完全不同（agent 多一道 Gate 2.5），不说「按谁判的」，`allowed=false` 会被读成「这个工具不能用」 |
+| `invocationId` | 被复核的调用记录 ID（普通模式为 0） |
+| `baselinePolicyVersion` | 被复核记录在**当时**记录的策略指纹，原样透出、不归一化 |
+| `policyComparison` | 两次判定的策略比对结论，四态不可合并（见下） |
+
+`policyComparison` 四态：
+
+| 取值 | 含义 |
+|:--|:--|
+| `not_applicable` | 两侧都无策略参与（human 路径不查目录），比对无意义 |
+| `identical` | 指纹相同 ⟺ 放行判据未变，批准后与排队时结论一致 |
+| `changed` | 指纹不同，策略在排队期间被改过——**审批人须重新判断**，不能凭「当时合规」放行 |
+| `unknown` | 至少一侧读不出策略指纹，无法断言是否一致 |
+
+**比对刻意由服务端计算而不是交给前端比较字符串**：指纹相同 ⟺ 放行判据相同是本项目
+的核心不变量，让前端各自实现一份比较逻辑，必然出现「UI 说没变、实际要求变了」的分歧。
+
+错误映射：工具已下线或记录参数损坏 → **409**（`common.FailWithErr`，不伪装成 404，
+因为记录本身可能存在）；记录不存在 → 404；依赖未就绪 → 503。
+
+**读面分流（两个方向相反，属设计意图，不是疏漏）：**
+
+- `GET /api/v1/agent/tools/invocations`（审批待办）**一律排除** `dry_run=true`，
+  无论 `state` 取什么值。审批队列的每一行都对应一次真实待发生的副作用，审批人点
+  「通过」会真的放行写操作；预演行混进来会让人对一条**从未被调度、也不需要放行**
+  的记录点通过——放行一个不存在的操作，与漏批一个真实操作同样危险，且更难发现
+  （列表看起来完全正常）。
+- `GET /api/v1/agent/runs/{runId}/invocations`（运行回放）**包含**预演行，但每条记录
+  带 `dryRun` 字段供区分。回放回答「这一轮发生了什么」，预演是一次真实的判定动作，
+  应当保留；但消费方必须能分辨，否则会把「问一下」读成「做过」。
+- `GET /api/v1/agent/tools/{id}`（详情）同样返回 `dryRun`——只在一处暴露会造成
+  「列表有、详情缺」的字段级漂移，比彻底缺字段更危险。
+
+**顺带修掉一处既有判定缺口：** `evaluateToolCall` 原先只对非 human 主体由 Gate 2.5
+计算 `minApprovals`，导致 human 的写工具出现「`needsApproval=true` 但 `minApprovals=0`」
+——审批进度分母为 0、进度条恒满，审批人会以为「已经批够了」，而库里仍是 `pending`。
+现于判定收敛点兜底（写工具 `minApprovals` 至少 1），预演与真实执行两侧同时正确。
+该缺陷由新写的预演断言真实打红后暴露，非预防性改动。
+
+**两层防护之间的缝隙：谁保证「复核」没被悄悄改回「预演」？**
+
+复核与预演是两条端点、两个 URL，但**函数签名完全相同**（都是「传一个东西，
+拿回 `ToolDryRunResult`」），因此存在一种退化方式：把 `aiReviewToolInvocation`
+的实现改回调 `/api/v1/agent/tools/dry-run`。此时页面照样能跑、类型照样通过、
+返回结构照样兼容——唯一的差别是判定主体从「原发起 AI」变回「当前审批人」，
+也就是这个功能要消灭的那个缺陷本身。
+
+实测（2026-11-21）这条注入**穿透了两层既有防护**：
+
+1. 审批页的 `audit-replay.test.tsx` mock 的是 `aiReviewToolInvocation` **函数符号**，
+   它只能锁住「页面把 `record.id` 传给了复核函数」，改函数内部 URL 不影响断言，
+   **21 个用例全绿**。
+2. `api-contract.test.ts` 也拦不住：`dry-run` 本身是一条真实注册的后端路由，
+   逐段匹配成功。契约测试校验的是「路径是否存在」，不是「这条路径是否被用在了
+   正确的语义场景」。
+
+能看见它的唯一位置是 `httpClient` 调用层——即 `src/lib/api/__tests__/ai-api.test.ts`
+中的「工具调用判定端点（预演 / 复核）」组（5 例）。其中一条是**具名反向断言**
+（`expect(calledPaths).not.toContain('/api/v1/agent/tools/dry-run')`）而不是只做
+正向相等，目的是让「退回预演」失败在一条名字说得清问题的断言上，而不是混在
+一长串正向期望里读不出退化类型。另有三条同组断言一并锁定：
+
+- 复核**不传 `name`/`args`**（请求体必须是 `{}`）。参数由后端从被复核记录的
+  `arguments` 读取；允许前端重传就等于允许前端决定判定输入，复核会退化成
+  「披着复核外衣的新预演」，而且前端可以说谎。
+- 复核 URL 必须带记录 id 段（`invocations/42/review`），且 id 经
+  `encodeURIComponent` 不会拼出额外路径段。
+- 预演 URL 不含任何记录 id 段，两者不可互换。
+
+**教训的一般形式**：当一个新端点与既有端点的**入参/出参结构兼容**、只差语义时，
+mock 函数符号的测试与只校验路径存在性的契约测试都无法发现退化，必须在
+URL 层（或等价的最底层调用点）补具名断言。这类缝隙同样适用于
+`aiDryRunTool` 与将来的 `ActionFlow` 触发接口。
+
 **DDL AI 审批流模板（Phase B3''，骨架）**：内置 BPMN 模板
 `ddl_ai_approval_flow`（`status=skeleton`）定义「提交→AI分析→AI分类→SOP生成
 （人确认）→SOP反馈→SOP迭代→关闭」节点与权限意图元数据，尚未绑定 ServiceTask

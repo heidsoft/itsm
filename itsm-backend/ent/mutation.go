@@ -183589,6 +183589,8 @@ type ToolInvocationMutation struct {
 	addticket_id        *int
 	change_id           *int
 	addchange_id        *int
+	policy_version      *string
+	run_id              *string
 	clearedFields       map[string]struct{}
 	conversation        *int
 	clearedconversation bool
@@ -184653,6 +184655,78 @@ func (m *ToolInvocationMutation) ResetChangeID() {
 	delete(m.clearedFields, toolinvocation.FieldChangeID)
 }
 
+// SetPolicyVersion sets the "policy_version" field.
+func (m *ToolInvocationMutation) SetPolicyVersion(s string) {
+	m.policy_version = &s
+}
+
+// PolicyVersion returns the value of the "policy_version" field in the mutation.
+func (m *ToolInvocationMutation) PolicyVersion() (r string, exists bool) {
+	v := m.policy_version
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPolicyVersion returns the old "policy_version" field's value of the ToolInvocation entity.
+// If the ToolInvocation object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ToolInvocationMutation) OldPolicyVersion(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPolicyVersion is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPolicyVersion requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPolicyVersion: %w", err)
+	}
+	return oldValue.PolicyVersion, nil
+}
+
+// ResetPolicyVersion resets all changes to the "policy_version" field.
+func (m *ToolInvocationMutation) ResetPolicyVersion() {
+	m.policy_version = nil
+}
+
+// SetRunID sets the "run_id" field.
+func (m *ToolInvocationMutation) SetRunID(s string) {
+	m.run_id = &s
+}
+
+// RunID returns the value of the "run_id" field in the mutation.
+func (m *ToolInvocationMutation) RunID() (r string, exists bool) {
+	v := m.run_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRunID returns the old "run_id" field's value of the ToolInvocation entity.
+// If the ToolInvocation object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ToolInvocationMutation) OldRunID(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRunID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRunID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRunID: %w", err)
+	}
+	return oldValue.RunID, nil
+}
+
+// ResetRunID resets all changes to the "run_id" field.
+func (m *ToolInvocationMutation) ResetRunID() {
+	m.run_id = nil
+}
+
 // ClearConversation clears the "conversation" edge to the Conversation entity.
 func (m *ToolInvocationMutation) ClearConversation() {
 	m.clearedconversation = true
@@ -184741,7 +184815,7 @@ func (m *ToolInvocationMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ToolInvocationMutation) Fields() []string {
-	fields := make([]string, 0, 21)
+	fields := make([]string, 0, 23)
 	if m.created_at != nil {
 		fields = append(fields, toolinvocation.FieldCreatedAt)
 	}
@@ -184805,6 +184879,12 @@ func (m *ToolInvocationMutation) Fields() []string {
 	if m.change_id != nil {
 		fields = append(fields, toolinvocation.FieldChangeID)
 	}
+	if m.policy_version != nil {
+		fields = append(fields, toolinvocation.FieldPolicyVersion)
+	}
+	if m.run_id != nil {
+		fields = append(fields, toolinvocation.FieldRunID)
+	}
 	return fields
 }
 
@@ -184855,6 +184935,10 @@ func (m *ToolInvocationMutation) Field(name string) (ent.Value, bool) {
 		return m.TicketID()
 	case toolinvocation.FieldChangeID:
 		return m.ChangeID()
+	case toolinvocation.FieldPolicyVersion:
+		return m.PolicyVersion()
+	case toolinvocation.FieldRunID:
+		return m.RunID()
 	}
 	return nil, false
 }
@@ -184906,6 +184990,10 @@ func (m *ToolInvocationMutation) OldField(ctx context.Context, name string) (ent
 		return m.OldTicketID(ctx)
 	case toolinvocation.FieldChangeID:
 		return m.OldChangeID(ctx)
+	case toolinvocation.FieldPolicyVersion:
+		return m.OldPolicyVersion(ctx)
+	case toolinvocation.FieldRunID:
+		return m.OldRunID(ctx)
 	}
 	return nil, fmt.Errorf("unknown ToolInvocation field %s", name)
 }
@@ -185061,6 +185149,20 @@ func (m *ToolInvocationMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetChangeID(v)
+		return nil
+	case toolinvocation.FieldPolicyVersion:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPolicyVersion(v)
+		return nil
+	case toolinvocation.FieldRunID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRunID(v)
 		return nil
 	}
 	return fmt.Errorf("unknown ToolInvocation field %s", name)
@@ -185281,6 +185383,12 @@ func (m *ToolInvocationMutation) ResetField(name string) error {
 		return nil
 	case toolinvocation.FieldChangeID:
 		m.ResetChangeID()
+		return nil
+	case toolinvocation.FieldPolicyVersion:
+		m.ResetPolicyVersion()
+		return nil
+	case toolinvocation.FieldRunID:
+		m.ResetRunID()
 		return nil
 	}
 	return fmt.Errorf("unknown ToolInvocation field %s", name)

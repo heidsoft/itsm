@@ -16,6 +16,8 @@ package authz
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -272,6 +274,46 @@ func DerivePolicy(resource, action string) PermissionPolicy {
 		IsSystem:          true,
 	}
 }
+
+// PolicyVersion 返回该策略**决策输入**的内容指纹。
+//
+// 为什么是内容指纹而不是自增版本号：
+//   - 自增号需要额外的版本账本表与「谁在什么时候改到第几版」的写入纪律，
+//     而策略真源就在 permissions.description 里，多一份账本必然漂移；
+//   - 内容指纹让「同一版本字符串 ⟺ 同一套放行判据」成为可验证的等式：
+//     事后拿调用记录里的 policyVersion 与当前 DB 策略重算的指纹比对，
+//     相等即证明放行依据未变，不等即证明策略在此期间被改过。这就是回放。
+//
+// 只覆盖影响鉴权结果的字段（风险等级 / 允许主体 / 是否需审批 / 审批人数 / 是否启用），
+// 不含 displayName/icon/color/i18nKey/sortOrder —— 管理员调整展示不应改变
+// 「这次放行依据哪一版策略」的答案。AllowedPrincipals 先排序再参与计算，
+// 避免「数组顺序不同但语义相同」被算成两个版本。
+func (p PermissionPolicy) PolicyVersion() string {
+	principals := append([]string(nil), p.AllowedPrincipals...)
+	sort.Strings(principals)
+	deciding := struct {
+		RiskLevel         string   `json:"riskLevel"`
+		AllowedPrincipals []string `json:"allowedPrincipals"`
+		RequiresApproval  bool     `json:"requiresApproval"`
+		MinApprovals      int      `json:"minApprovals"`
+		IsActive          bool     `json:"isActive"`
+	}{p.RiskLevel, principals, p.RequiresApproval, p.MinApprovals, p.IsActive}
+	buf, err := json.Marshal(deciding)
+	if err != nil {
+		// 该结构只含基本类型，序列化不会失败；真失败时返回空串，
+		// 调用方按「无法回答」处理，绝不伪造一个看起来像版本的字符串。
+		return ""
+	}
+	sum := sha256.Sum256(buf)
+	return hex.EncodeToString(sum[:16])
+}
+
+// PolicyVersionUnknown 是「策略不可读 / 未能取到指纹」的显式哨兵值。
+//
+// 刻意不用空串表达同一种情况：空串在 SQL 里既可能是 NULL 也可能是没写，
+// 而审计需要区分「当时确实没有策略可依据」与「我们没记下来」。
+// 采用固定字面量让读面可以直接 grep，也不会与真实指纹（32 位十六进制）混淆。
+const PolicyVersionUnknown = "unknown"
 
 // Allows 判断该策略是否允许某主体类型执行。
 func (p PermissionPolicy) Allows(principal string) bool {

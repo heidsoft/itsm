@@ -8,6 +8,7 @@ import (
 	"math"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"itsm-backend/common"
 	"itsm-backend/common/handlerctx"
@@ -133,6 +134,131 @@ func (h *Handler) ExecuteTool(c *gin.Context) {
 		"artifacts":   []string{},
 		"data":        res,
 	})
+}
+
+// DryRunTool handles POST /api/v1/agent/tools/dry-run
+//
+// 预演：现在调用这个工具会发生什么。跑完真实判定链（Gate 2 角色 RBAC +
+// Gate 2.5 主体策略 + 审批人数），但**不执行工具、不建待审批行**。
+//
+// 与 POST /tools/execute 的关系：判定只有一份（service.evaluateToolCall），
+// 所以两者对「是否允许 / 是否需审批 / 需要几人」的回答必然一致；
+// 差别只在副作用。调用方可以用本接口在真正调用前确认可行性，
+// 而不必为此制造一条真实的待审批待办。
+//
+// 权限用 ai:read 而不是 ai:write：预演不产生任何业务副作用，
+// 只读权限者预演自己的可调工具是合理需求；若用 ai:write 会出现
+// 「有读权限但无写权限的人无法判断自己能不能写」的悖论。
+func (h *Handler) DryRunTool(c *gin.Context) {
+	var req struct {
+		Name string                 `json:"name" binding:"required"`
+		Args map[string]interface{} `json:"args"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.ParamErrorWithErr(c, err, "请求参数错误")
+		return
+	}
+
+	tenantID := c.GetInt("tenant_id")
+	if tenantID <= 0 {
+		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		return
+	}
+	if h.svc.tools == nil {
+		common.Fail(c, common.ServiceUnavailableCode, "AI 工具注册表未就绪")
+		return
+	}
+	if req.Args == nil {
+		req.Args = map[string]interface{}{}
+	}
+
+	userID := c.GetInt("user_id")
+	// service 主体 userID 恒为 0 属正常（与 ExecuteTool 同一身份守卫口径）。
+	// 但预演是「替某个用户问会发生什么」，service 主体没有可归属的用户，
+	// 且预演本身不需要真实副作用，故此处要求真实用户身份。
+	if userID <= 0 {
+		common.AuthFailed(c, "用户信息缺失")
+		return
+	}
+	role := c.GetString("role")
+
+	resp, err := h.svc.DryRunTool(c.Request.Context(), userID, tenantID, role, req.Name, req.Args)
+	if err != nil {
+		if errors.Is(err, ErrToolUnavailable) {
+			common.Fail(c, common.ServiceUnavailableCode, "AI 工具权限服务未就绪")
+			return
+		}
+		if errors.Is(err, ErrUnknownTool) {
+			common.Fail(c, common.UnknownToolCode, "工具不存在")
+			return
+		}
+		if errors.Is(err, ErrToolPermissionDenied) {
+			// 定义漏配属于服务端配置缺陷，不是调用方越权：用 500 而非 403，
+			// 否则运维会去查权限表，而真因在工具注册里。
+			common.FailWithErr(c, err, "工具定义不完整")
+			return
+		}
+		common.FailWithErr(c, err, "预演失败")
+		return
+	}
+	common.Success(c, resp)
+}
+
+// ReviewToolInvocation handles POST /api/v1/agent/tools/invocations/:id/review
+//
+// 复核一条既有工具调用：按它**当时的发起主体**与**当前策略**重新判定，
+// 并报出两次判定的策略指纹比对结论。零副作用，不执行工具、不推进审批状态。
+//
+// 存在的业务理由：审批队列里的记录可能排队数小时。审批人批一条几小时前的
+// AI 写操作前必须知道「策略改了没有、现在这条还合规吗」。落库的 policyVersion
+// 只能回答「当时依据哪版策略」，不能回答「现在是否仍然放行」——而审批的
+// 效力取决于**批准那一刻**的判定，不是排队时的。
+//
+// 权限用 ai:read：复核是只读判定，不产生任何副作用。审批动作本身仍由
+// POST /tools/:id/approve（ai:write）门控，两者不可混用。
+func (h *Handler) ReviewToolInvocation(c *gin.Context) {
+	idStr := c.Param("id")
+	invocationID, err := strconv.Atoi(idStr)
+	if err != nil || invocationID <= 0 {
+		common.Fail(c, common.ParamErrorCode, "invalid invocation id")
+		return
+	}
+	tenantID := c.GetInt("tenant_id")
+	if tenantID <= 0 {
+		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		return
+	}
+	if h.svc.tools == nil {
+		common.Fail(c, common.ServiceUnavailableCode, "AI 工具注册表未就绪")
+		return
+	}
+	userID := c.GetInt("user_id")
+	if userID <= 0 {
+		common.AuthFailed(c, "用户信息缺失")
+		return
+	}
+
+	resp, reviewErr := h.svc.ReviewInvocation(c.Request.Context(), invocationID, tenantID, userID, c.GetString("role"))
+	if reviewErr != nil {
+		switch {
+		case errors.Is(reviewErr, ErrToolUnavailable):
+			common.Fail(c, common.ServiceUnavailableCode, "AI 工具权限服务未就绪")
+		case errors.Is(reviewErr, ErrUnknownTool):
+			// 工具已下线或记录参数损坏：不是「被拒」，也不该伪装成 404
+			// （记录本身可能存在）。用 409 表达「当前不可复核」。
+			common.FailWithErr(c, reviewErr, "该调用当前不可复核")
+		case errors.Is(reviewErr, ErrToolPermissionDenied):
+			common.Fail(c, common.ParamErrorCode, "缺少调用记录标识")
+		case ent.IsNotFound(reviewErr):
+			common.Fail(c, common.NotFoundCode, "invocation not found")
+		default:
+			h.svc.logger.Warnw("AI tool invocation review failed",
+				"tenant_id", tenantID, "invocation_id", invocationID, "error", reviewErr)
+			common.FailWithErr(c, reviewErr, "复核失败")
+		}
+		return
+	}
+	common.Success(c, resp)
 }
 
 // pendingApprovalReceipt 读取刚创建的 invocation 的**落库**审批态，供执行回执如实返回。
@@ -985,24 +1111,57 @@ func (h *Handler) GetToolInvocation(c *gin.Context) {
 		common.Fail(c, common.NotFoundCode, "invocation not found")
 		return
 	}
-	riskLevel, minApprovals := h.invocationPolicyMeta(c.Request.Context(), tenantID, inv.ToolName)
-	common.Success(c, gin.H{
-		"id":             inv.ID,
-		"status":         inv.Status,
-		"result":         inv.Result,
-		"error":          inv.Error,
-		"needsApproval":  inv.NeedsApproval,
-		"approvalState":  inv.ApprovalState,
-		"requestId":      inv.RequestID,
-		"createdAt":      inv.CreatedAt,
-		"conversationId": inv.ConversationID,
-		"toolName":       inv.ToolName,
+	// 统一走 toolInvocationView：此前这里手写一份 gin.H，导致新增审计字段
+	// （policyVersion/runId）只在列表页出现、详情页缺失。审计字段的字段级
+	// 漂移比缺字段更糟——详情页是复查单条调用时唯一会看的页面。
+	common.Success(c, h.toolInvocationView(c.Request.Context(), tenantID, inv))
+}
+
+// invocationPolicyMeta 返回该工具对应权限码的风险摘要，供展示面使用。
+// 策略不可读时返回 unknown/0：展示面不因目录不可读整体失败，
+// 安全判定仍以执行时 Gate 2.5 严格路径为准。
+
+// toolInvocationView 把工具调用记录序列化成 API 响应体。
+//
+// 收敛成单一函数而不是三处各写一份 gin.H：字段集合一旦分叉，
+// 必然出现「详情页有、列表页没有」的字段级漂移——审计字段尤其不能这样，
+// 复查时看不到策略版本就等于没记。
+//
+// policyVersion 原样透出三态（空串 / unknown / 指纹），不在此处做解释性改写：
+// 读面把语义翻译成「人类友好」会掩盖「读不出来」与「无策略参与」的区别。
+func (h *Handler) toolInvocationView(ctx context.Context, tenantID int, inv *ToolInvocation) gin.H {
+	riskLevel, minApprovals := h.invocationPolicyMeta(ctx, tenantID, inv.ToolName)
+	return gin.H{
+		"id":               inv.ID,
+		"toolName":         inv.ToolName,
+		"arguments":        inv.Arguments,
+		"result":           inv.Result,
+		"error":            inv.Error,
+		"status":           inv.Status,
+		"needsApproval":    inv.NeedsApproval,
+		"approvalState":    inv.ApprovalState,
+		"approvalReason":   inv.ApprovalReason,
+		"permissionCheck":  inv.PermissionCheck,
+		"permissionReason": inv.PermissionReason,
+		"requestId":        inv.RequestID,
+		"createdAt":        inv.CreatedAt,
+		"conversationId":   inv.ConversationID,
+		"userId":           inv.UserID,
 		// Phase B6：业务单据强关联（0 表示无关联）
 		"ticketId":     inv.TicketID,
 		"changeId":     inv.ChangeID,
 		"riskLevel":    riskLevel,
 		"minApprovals": minApprovals,
-	})
+		// 审计回放（2026-11-21）
+		"policyVersion": inv.PolicyVersion,
+		"runId":         inv.RunID,
+		// 预演标记（2026-11-21）。读面必须带上它：审批队列虽然已把
+		// dry_run=true 排除在外，但「按运行轮次」读面（ListRunInvocations）
+		// 与详情读面会同时出现真实调用与预演记录，消费方（前端调用链视图、
+		// 事后审计）只有拿到这个布尔值才能区分「这一步真的发生了」与
+		// 「这一步只是在问会发生什么」。漏掉它，预演就会在回放里被当成真实动作。
+		"dryRun": inv.DryRun,
+	}
 }
 
 // ListToolInvocations handles GET /api/v1/agent/tools/invocations
@@ -1032,28 +1191,53 @@ func (h *Handler) ListToolInvocations(c *gin.Context) {
 
 	items := make([]gin.H, 0, len(invs))
 	for _, inv := range invs {
-		riskLevel, minApprovals := h.invocationPolicyMeta(c.Request.Context(), tenantID, inv.ToolName)
-		items = append(items, gin.H{
-			"id":               inv.ID,
-			"toolName":         inv.ToolName,
-			"arguments":        inv.Arguments,
-			"status":           inv.Status,
-			"needsApproval":    inv.NeedsApproval,
-			"approvalState":    inv.ApprovalState,
-			"approvalReason":   inv.ApprovalReason,
-			"permissionCheck":  inv.PermissionCheck,
-			"permissionReason": inv.PermissionReason,
-			"createdAt":        inv.CreatedAt,
-			"conversationId":   inv.ConversationID,
-			"userId":           inv.UserID,
-			// Phase B6：业务单据强关联（0 表示无关联）
-			"ticketId":     inv.TicketID,
-			"changeId":     inv.ChangeID,
-			"riskLevel":    riskLevel,
-			"minApprovals": minApprovals,
-		})
+		items = append(items, h.toolInvocationView(c.Request.Context(), tenantID, inv))
 	}
 	common.Success(c, gin.H{"items": items, "state": state})
+}
+
+// ListRunInvocations handles GET /api/v1/agent/runs/:runId/invocations
+//
+// 按运行轮次返回该轮全部工具调用（含只读审计行），按时间正序。
+// 这是「不可抵赖审计」的读面：调用链按发生顺序排列，每步带
+// policyVersion（依据哪版策略放行）与 approvalState（是否需要及是否通过审批）。
+//
+// 跨租户隔离：run_id 是调用方可传的字符串，仓储层强制带 tenant_id 谓词；
+// 若只按 run_id 查，任何人都能读到别人的运行记录。
+//
+// 空 run_id 返回 400 而不是全表：空串语义是「不属于任何运行轮次」，
+// 没有可聚合的内容，静默返回空集会让调用方以为「这轮什么都没做」。
+func (h *Handler) ListRunInvocations(c *gin.Context) {
+	runID := strings.TrimSpace(c.Param("runId"))
+	tenantID := c.GetInt("tenant_id")
+	if tenantID == 0 {
+		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		return
+	}
+	if runID == "" {
+		common.Fail(c, common.ParamErrorCode, "runId 不能为空")
+		return
+	}
+	// 长度上限：run_id 是客户端可控字符串，超长值会让索引查询退化为扫表，
+	// 也会污染审计日志。64 字符足以覆盖当前生成格式（run_ + 32 hex）。
+	if len(runID) > 64 {
+		common.Fail(c, common.ParamErrorCode, "runId 过长")
+		return
+	}
+
+	invs, err := h.svc.repo.ListToolInvocationsByRun(c.Request.Context(), tenantID, runID)
+	if err != nil {
+		h.svc.logger.Warnw("按运行轮次查询工具调用失败",
+			"error", err, "tenantID", tenantID, "runId", runID)
+		common.Fail(c, common.InternalErrorCode, "查询运行轮次记录失败")
+		return
+	}
+
+	items := make([]gin.H, 0, len(invs))
+	for _, inv := range invs {
+		items = append(items, h.toolInvocationView(c.Request.Context(), tenantID, inv))
+	}
+	common.Success(c, gin.H{"items": items, "runId": runID, "count": len(items)})
 }
 
 // invocationPolicyMeta 返回工具对应权限码的风险等级与最低审批人数（只读展示用）。

@@ -48,6 +48,28 @@ type ToolInvocation struct {
 	// Phase B6（2026-11-17）：业务单据强关联（可空，0 表示无关联）
 	TicketID int `json:"ticketId"`
 	ChangeID int `json:"changeId"`
+	// 审计回放（2026-11-21）：策略版本与运行轮次。
+	//
+	// PolicyVersion 三态：
+	//   ""        → 本次判定无策略参与（human 主体走角色 RBAC）；
+	//   "unknown" → 有策略语义但读不出来（已 fail-closed 拒绝）；
+	//   32 位 hex → 决策输入指纹，可与 DB 现值重算比对。
+	//
+	// RunID 空串 → 不属于任何可标识的运行轮次。
+	PolicyVersion string `json:"policyVersion"`
+	RunID         string `json:"runId"`
+	// DryRun 标记这条记录是「预演」而非真实调用（2026-11-21 起真实写入）。
+	//
+	// 语义：预演跑完完整的判定链（Gate 2 角色 RBAC + Gate 2.5 主体策略 +
+	// 审批人数计算），但**不执行工具、不创建待审批行**，只把决策结论落成一条
+	// dry_run=true 的审计记录。
+	//
+	// 为什么必须独立成列而不是靠 status 或 approval_state 区分：
+	//   - status 表达「执行结果」（success/failed/...），预演没有执行结果；
+	//   - approval_state 表达「审批走到哪一步」，预演根本不进审批流。
+	// 用其中任何一个兼职，都会让审批列表/执行统计把预演当成真实调用计数。
+	// 因此 dry_run 行的 approval_state 恒为 "none"，且被待办查询显式排除。
+	DryRun bool `json:"dryRun"`
 }
 
 // RootCauseAnalysis represents an RCA record for a ticket

@@ -40,6 +40,23 @@ type Definition struct {
 	Policy      PermissionPolicy
 }
 
+// PolicyVersion 返回该定义当前策略的决策输入指纹。
+//
+// 存在的理由：调用点（AI 执行链、审批读面）需要把「这次放行依据哪一版策略」
+// 写进审计记录。若每处都写 def.Policy.PolicyVersion()，将来指纹算法变更时
+// 会有多处需要同步；收敛成一个方法后只有一个算法实现。
+func (d Definition) PolicyVersion() string {
+	if d.Code == "" {
+		// 空定义（未取到行）不可能是有效决策依据，返回 unknown 而不是
+		// 伪造一个指纹，否则审计里会出现「有版本但没定义」的自相矛盾记录。
+		return PolicyVersionUnknown
+	}
+	if v := d.Policy.PolicyVersion(); v != "" {
+		return v
+	}
+	return PolicyVersionUnknown
+}
+
 // Catalog 是鉴权调用方需要的最小读面（便于单测注入 fake）。
 type Catalog interface {
 	Lookup(ctx context.Context, tenantID int, code string) (*Definition, error)

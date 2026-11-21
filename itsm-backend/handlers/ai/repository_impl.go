@@ -3,6 +3,7 @@ package ai
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"itsm-backend/common"
@@ -166,6 +167,9 @@ func toToolInvocationDomain(e *ent.ToolInvocation) *ToolInvocation {
 		RoleSnapshot:     e.RoleSnapshot,
 		TicketID:         e.TicketID,
 		ChangeID:         e.ChangeID,
+		PolicyVersion:    e.PolicyVersion,
+		RunID:            e.RunID,
+		DryRun:           e.DryRun,
 	}
 }
 
@@ -184,6 +188,9 @@ func (r *EntRepository) CreateToolInvocation(ctx context.Context, i *ToolInvocat
 		SetRoleSnapshot(i.RoleSnapshot).
 		SetTicketID(i.TicketID).
 		SetChangeID(i.ChangeID).
+		SetPolicyVersion(i.PolicyVersion).
+		SetRunID(i.RunID).
+		SetDryRun(i.DryRun).
 		Save(ctx)
 	if err != nil {
 		return nil, err
@@ -201,11 +208,50 @@ func (r *EntRepository) GetToolInvocation(ctx context.Context, id int, tenantID 
 	return toToolInvocationDomain(e), nil
 }
 
+// ListToolInvocationsByRun 按运行轮次取出该轮全部工具调用，按创建时间正序。
+//
+// 正序而非倒序：调用链要按「先判定、再审批、后执行」的时间顺序读，
+// 倒序会把因果读反。
+//
+// runID 为空时返回空集而不是全表：空串语义是「不属于任何运行轮次」，
+// 按它查询没有意义，若落进全表扫描等于把租户内所有历史调用都吐出来。
+func (r *EntRepository) ListToolInvocationsByRun(ctx context.Context, tenantID int, runID string) ([]*ToolInvocation, error) {
+	if strings.TrimSpace(runID) == "" || tenantID <= 0 {
+		return []*ToolInvocation{}, nil
+	}
+	invocations, err := r.client.ToolInvocation.Query().
+		Where(
+			toolinvocation.TenantIDEQ(tenantID),
+			toolinvocation.RunIDEQ(runID),
+		).
+		Order(ent.Asc(toolinvocation.FieldCreatedAt), ent.Asc(toolinvocation.FieldID)).
+		All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	out := make([]*ToolInvocation, 0, len(invocations))
+	for _, e := range invocations {
+		out = append(out, toToolInvocationDomain(e))
+	}
+	return out, nil
+}
+
 // ListToolInvocations 按租户 + 审批状态列出工具调用记录，按创建时间倒序。
 // state 为空时返回该租户全部调用；传 "pending" 即审批人待办。
+//
+// 预演记录（dry_run=true）**一律排除**，无论 state 取什么值。
+//
+// 理由不是「预演不重要」，而是「预演不是调用」：审批队列的每一行都对应一次
+// 真实待发生的副作用，审批人点「通过」会真的放行一个写操作。若预演行混进来，
+// 审批人会对一条从未被调度执行、也不需要放行的记录点通过——放行一个不存在的
+// 操作，与漏批一个真实操作同样危险，且更难发现（列表看起来正常）。
+// 预演的产出是决策结论，读它应走 dry-run 接口本身的响应，而不是审批待办。
 func (r *EntRepository) ListToolInvocations(ctx context.Context, tenantID int, state string) ([]*ToolInvocation, error) {
 	q := r.client.ToolInvocation.Query().
-		Where(toolinvocation.TenantID(tenantID))
+		Where(
+			toolinvocation.TenantID(tenantID),
+			toolinvocation.DryRunEQ(false),
+		)
 	if state == "pending" {
 		// 「待办」是一个业务状态而不是单个字段取值：AI 发起的调用可能是
 		// 单人待批、双人首审、双人复审。审批人列表必须一次全部看到，

@@ -13,8 +13,8 @@ import (
 
 	"itsm-backend/ent"
 	"itsm-backend/handlers/ai"
-	"itsm-backend/middleware"
 	"itsm-backend/internal/services"
+	"itsm-backend/middleware"
 )
 
 // rbacMockRepo 记录 CreateToolInvocation 调用，其余方法返回零值。
@@ -127,6 +127,21 @@ func (m *rbacMockRepo) ListToolInvocations(_ context.Context, _ int, _ string) (
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	return m.toolInvocations, nil
+}
+
+// ListToolInvocationsByRun 按运行轮次过滤 mock 里的调用记录。
+// 真实仓储按 (tenant_id, run_id) 查；mock 也照同一口径过滤，
+// 否则「按 run 取证据链」的测试会拿到全量记录而假绿。
+func (m *rbacMockRepo) ListToolInvocationsByRun(_ context.Context, _ int, runID string) ([]*ai.ToolInvocation, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	out := make([]*ai.ToolInvocation, 0, len(m.toolInvocations))
+	for _, inv := range m.toolInvocations {
+		if inv.RunID == runID && runID != "" {
+			out = append(out, inv)
+		}
+	}
+	return out, nil
 }
 
 // rbacTestEnv 统一构造 Service + mock repo，开启硬编码权限模式以便无 DB 测试。

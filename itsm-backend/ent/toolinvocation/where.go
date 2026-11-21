@@ -160,6 +160,16 @@ func ChangeID(v int) predicate.ToolInvocation {
 	return predicate.ToolInvocation(sql.FieldEQ(FieldChangeID, v))
 }
 
+// PolicyVersion applies equality check predicate on the "policy_version" field. It's identical to PolicyVersionEQ.
+func PolicyVersion(v string) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldEQ(FieldPolicyVersion, v))
+}
+
+// RunID applies equality check predicate on the "run_id" field. It's identical to RunIDEQ.
+func RunID(v string) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldEQ(FieldRunID, v))
+}
+
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
 func CreatedAtEQ(v time.Time) predicate.ToolInvocation {
 	return predicate.ToolInvocation(sql.FieldEQ(FieldCreatedAt, v))
@@ -1263,6 +1273,136 @@ func ChangeIDIsNil() predicate.ToolInvocation {
 // ChangeIDNotNil applies the NotNil predicate on the "change_id" field.
 func ChangeIDNotNil() predicate.ToolInvocation {
 	return predicate.ToolInvocation(sql.FieldNotNull(FieldChangeID))
+}
+
+// PolicyVersionEQ applies the EQ predicate on the "policy_version" field.
+func PolicyVersionEQ(v string) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldEQ(FieldPolicyVersion, v))
+}
+
+// PolicyVersionNEQ applies the NEQ predicate on the "policy_version" field.
+func PolicyVersionNEQ(v string) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldNEQ(FieldPolicyVersion, v))
+}
+
+// PolicyVersionIn applies the In predicate on the "policy_version" field.
+func PolicyVersionIn(vs ...string) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldIn(FieldPolicyVersion, vs...))
+}
+
+// PolicyVersionNotIn applies the NotIn predicate on the "policy_version" field.
+func PolicyVersionNotIn(vs ...string) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldNotIn(FieldPolicyVersion, vs...))
+}
+
+// PolicyVersionGT applies the GT predicate on the "policy_version" field.
+func PolicyVersionGT(v string) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldGT(FieldPolicyVersion, v))
+}
+
+// PolicyVersionGTE applies the GTE predicate on the "policy_version" field.
+func PolicyVersionGTE(v string) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldGTE(FieldPolicyVersion, v))
+}
+
+// PolicyVersionLT applies the LT predicate on the "policy_version" field.
+func PolicyVersionLT(v string) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldLT(FieldPolicyVersion, v))
+}
+
+// PolicyVersionLTE applies the LTE predicate on the "policy_version" field.
+func PolicyVersionLTE(v string) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldLTE(FieldPolicyVersion, v))
+}
+
+// PolicyVersionContains applies the Contains predicate on the "policy_version" field.
+func PolicyVersionContains(v string) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldContains(FieldPolicyVersion, v))
+}
+
+// PolicyVersionHasPrefix applies the HasPrefix predicate on the "policy_version" field.
+func PolicyVersionHasPrefix(v string) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldHasPrefix(FieldPolicyVersion, v))
+}
+
+// PolicyVersionHasSuffix applies the HasSuffix predicate on the "policy_version" field.
+func PolicyVersionHasSuffix(v string) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldHasSuffix(FieldPolicyVersion, v))
+}
+
+// PolicyVersionEqualFold applies the EqualFold predicate on the "policy_version" field.
+func PolicyVersionEqualFold(v string) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldEqualFold(FieldPolicyVersion, v))
+}
+
+// PolicyVersionContainsFold applies the ContainsFold predicate on the "policy_version" field.
+func PolicyVersionContainsFold(v string) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldContainsFold(FieldPolicyVersion, v))
+}
+
+// RunIDEQ applies the EQ predicate on the "run_id" field.
+func RunIDEQ(v string) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldEQ(FieldRunID, v))
+}
+
+// RunIDNEQ applies the NEQ predicate on the "run_id" field.
+func RunIDNEQ(v string) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldNEQ(FieldRunID, v))
+}
+
+// RunIDIn applies the In predicate on the "run_id" field.
+func RunIDIn(vs ...string) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldIn(FieldRunID, vs...))
+}
+
+// RunIDNotIn applies the NotIn predicate on the "run_id" field.
+func RunIDNotIn(vs ...string) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldNotIn(FieldRunID, vs...))
+}
+
+// RunIDGT applies the GT predicate on the "run_id" field.
+func RunIDGT(v string) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldGT(FieldRunID, v))
+}
+
+// RunIDGTE applies the GTE predicate on the "run_id" field.
+func RunIDGTE(v string) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldGTE(FieldRunID, v))
+}
+
+// RunIDLT applies the LT predicate on the "run_id" field.
+func RunIDLT(v string) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldLT(FieldRunID, v))
+}
+
+// RunIDLTE applies the LTE predicate on the "run_id" field.
+func RunIDLTE(v string) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldLTE(FieldRunID, v))
+}
+
+// RunIDContains applies the Contains predicate on the "run_id" field.
+func RunIDContains(v string) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldContains(FieldRunID, v))
+}
+
+// RunIDHasPrefix applies the HasPrefix predicate on the "run_id" field.
+func RunIDHasPrefix(v string) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldHasPrefix(FieldRunID, v))
+}
+
+// RunIDHasSuffix applies the HasSuffix predicate on the "run_id" field.
+func RunIDHasSuffix(v string) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldHasSuffix(FieldRunID, v))
+}
+
+// RunIDEqualFold applies the EqualFold predicate on the "run_id" field.
+func RunIDEqualFold(v string) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldEqualFold(FieldRunID, v))
+}
+
+// RunIDContainsFold applies the ContainsFold predicate on the "run_id" field.
+func RunIDContainsFold(v string) predicate.ToolInvocation {
+	return predicate.ToolInvocation(sql.FieldContainsFold(FieldRunID, v))
 }
 
 // HasConversation applies the HasEdge predicate on the "conversation" edge.

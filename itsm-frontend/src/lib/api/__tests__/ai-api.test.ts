@@ -10,6 +10,8 @@ import {
   aiClassifyTicket,
   aiSuggestSolutions,
   aiIntelligentSearch,
+  aiDryRunTool,
+  aiReviewToolInvocation,
   AIApi,
 } from '../ai-api';
 import { httpClient } from '../http-client';
@@ -179,6 +181,71 @@ describe('AI API', () => {
         pageSize: 20,
         totalPages: 3,
       });
+    });
+  });
+
+  /**
+   * 预演 vs 复核：两条不同的端点，必须分别校验 URL。
+   *
+   * 为什么这组断言非写不可（2026-11-21 实测留下的教训）：
+   *   审批页的 `audit-replay.test.tsx` mock 的是 `aiReviewToolInvocation`
+   *   **函数符号**，因此它只能锁住「页面把 record.id 传给了复核函数」。
+   *   我做过一次反向验证——把本文件的复核实现偷偷改回调
+   *   `/api/v1/agent/tools/dry-run`（即退回「按审批人自己的身份判定」，
+   *   正是这个功能要消灭的那个缺陷），21 个前端测试**全绿**。
+   *
+   *   而 `api-contract.test.ts` 也拦不住：`dry-run` 本身是一条真实注册的
+   *   后端路由，逐段匹配成功。于是「语义退化为另一个函数」在两层防护之间
+   *   形成缝隙——路径合法、函数调用形式也合法，只有**语义**错了。
+   *
+   *   唯一能看见它的位置就是这里：在 httpClient 这一层断言被调用的 URL
+   *   是 invocations/:id/review 而不是 dry-run，且两者不可互换。
+   */
+  describe('工具调用判定端点（预演 / 复核）', () => {
+    it('预演打到 dry-run，且不包含任何记录 id 段', async () => {
+      mockPost.mockResolvedValue({ dryRun: true, allowed: true });
+      await aiDryRunTool('create_ticket', { title: 't' });
+      expect(mockPost).toHaveBeenCalledWith('/api/v1/agent/tools/dry-run', {
+        name: 'create_ticket',
+        args: { title: 't' },
+      });
+    });
+
+    it('复核打到 invocations/:id/review，并携带记录 id', async () => {
+      mockPost.mockResolvedValue({ dryRun: true, allowed: true });
+      await aiReviewToolInvocation(42);
+      expect(mockPost).toHaveBeenCalledWith(
+        '/api/v1/agent/tools/invocations/42/review',
+        {}
+      );
+    });
+
+    // 反向断言：复核绝不能命中 dry-run。写成独立用例而不是只断言上面的
+    // 正向相等，是为了让「误退回预演」这条注入失败在一条**具名**断言上，
+    // 而不是混在正向期望里让人读不出是哪一种退化。
+    it('复核不得退化回 dry-run（退回即按审批人身份判定）', async () => {
+      mockPost.mockResolvedValue({ dryRun: true, allowed: true });
+      await aiReviewToolInvocation(7);
+      const calledPaths = mockPost.mock.calls.map(call => call[0]);
+      expect(calledPaths).not.toContain('/api/v1/agent/tools/dry-run');
+      expect(calledPaths).toContain('/api/v1/agent/tools/invocations/7/review');
+    });
+
+    // 复核不带工具名/参数：判据必须来自被复核记录的 arguments 与 role_snapshot，
+    // 由前端重传参数会让「复核」变成披着复核外衣的新预演（前端可以说谎）。
+    it('复核不传 name/args，避免前端伪造判定输入', async () => {
+      mockPost.mockResolvedValue({ dryRun: true, allowed: true });
+      await aiReviewToolInvocation(9);
+      expect(mockPost.mock.calls[0][1]).toEqual({});
+    });
+
+    it('id 经 encodeURIComponent 编码，不会拼出额外路径段', async () => {
+      mockPost.mockResolvedValue({ dryRun: true, allowed: true });
+      // 正常数字 id 不应被破坏
+      await aiReviewToolInvocation(12345);
+      expect(mockPost.mock.calls[0][0]).toBe(
+        '/api/v1/agent/tools/invocations/12345/review'
+      );
     });
   });
 

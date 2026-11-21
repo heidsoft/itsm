@@ -56,6 +56,10 @@ const (
 	FieldTicketID = "ticket_id"
 	// FieldChangeID holds the string denoting the change_id field in the database.
 	FieldChangeID = "change_id"
+	// FieldPolicyVersion holds the string denoting the policy_version field in the database.
+	FieldPolicyVersion = "policy_version"
+	// FieldRunID holds the string denoting the run_id field in the database.
+	FieldRunID = "run_id"
 	// EdgeConversation holds the string denoting the conversation edge name in mutations.
 	EdgeConversation = "conversation"
 	// EdgeUser holds the string denoting the user edge name in mutations.
@@ -102,6 +106,8 @@ var Columns = []string{
 	FieldRoleSnapshot,
 	FieldTicketID,
 	FieldChangeID,
+	FieldPolicyVersion,
+	FieldRunID,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -135,6 +141,10 @@ var (
 	DefaultPermissionReason string
 	// DefaultRoleSnapshot holds the default value on creation for the "role_snapshot" field.
 	DefaultRoleSnapshot string
+	// DefaultPolicyVersion holds the default value on creation for the "policy_version" field.
+	DefaultPolicyVersion string
+	// DefaultRunID holds the default value on creation for the "run_id" field.
+	DefaultRunID string
 )
 
 // OrderOption defines the ordering options for the ToolInvocation queries.
@@ -248,6 +258,16 @@ func ByTicketID(opts ...sql.OrderTermOption) OrderOption {
 // ByChangeID orders the results by the change_id field.
 func ByChangeID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldChangeID, opts...).ToFunc()
+}
+
+// ByPolicyVersion orders the results by the policy_version field.
+func ByPolicyVersion(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldPolicyVersion, opts...).ToFunc()
+}
+
+// ByRunID orders the results by the run_id field.
+func ByRunID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldRunID, opts...).ToFunc()
 }
 
 // ByConversationField orders the results by conversation field.
