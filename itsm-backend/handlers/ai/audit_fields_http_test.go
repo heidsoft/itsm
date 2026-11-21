@@ -91,9 +91,11 @@ func (r *auditFieldsRepo) invocation(id int, runID string) *ai.ToolInvocation {
 func (r *auditFieldsRepo) CreateConversation(_ context.Context, c *ai.Conversation) (*ai.Conversation, error) {
 	return c, nil
 }
+
 func (r *auditFieldsRepo) GetConversation(_ context.Context, id, _, _ int) (*ai.Conversation, error) {
 	return &ai.Conversation{ID: id}, nil
 }
+
 func (r *auditFieldsRepo) ListConversations(_ context.Context, _, _ int) ([]*ai.Conversation, error) {
 	return nil, nil
 }
@@ -101,24 +103,31 @@ func (r *auditFieldsRepo) DeleteConversation(_ context.Context, _, _, _ int) err
 func (r *auditFieldsRepo) CreateMessage(_ context.Context, m *ai.Message) (*ai.Message, error) {
 	return m, nil
 }
+
 func (r *auditFieldsRepo) GetMessages(_ context.Context, _ int, _ int) ([]*ai.Message, error) {
 	return nil, nil
 }
+
 func (r *auditFieldsRepo) CreateRCA(_ context.Context, x *ai.RootCauseAnalysis) (*ai.RootCauseAnalysis, error) {
 	return x, nil
 }
+
 func (r *auditFieldsRepo) GetRCAByTicket(_ context.Context, _ int, _ int) (*ai.RootCauseAnalysis, error) {
 	return nil, nil
 }
+
 func (r *auditFieldsRepo) UpdateRCA(_ context.Context, x *ai.RootCauseAnalysis) (*ai.RootCauseAnalysis, error) {
 	return x, nil
 }
+
 func (r *auditFieldsRepo) SaveAIAnalysisResult(_ context.Context, a *ai.AIAnalysisResult) (*ai.AIAnalysisResult, error) {
 	return a, nil
 }
+
 func (r *auditFieldsRepo) ListAIAnalysisResults(_ context.Context, _ int, _ string, _ int) ([]*ai.AIAnalysisResult, error) {
 	return nil, nil
 }
+
 func (r *auditFieldsRepo) GetAIAnalysisResult(_ context.Context, id, _ int) (*ai.AIAnalysisResult, error) {
 	return &ai.AIAnalysisResult{ID: id}, nil
 }
