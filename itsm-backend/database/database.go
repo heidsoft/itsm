@@ -166,6 +166,13 @@ var duplicateIndexPairs = [][2]string{
 	{"cmdb_export_tasks_task_id_key", "cmdbexporttask_task_id"},
 	{"cmdb_import_tasks_task_id_key", "cmdbimporttask_task_id"},
 	{"configurationitem_tenant_id_source_id", "configuration_items_source_expand_idx"},
+	// 2026-11-21 第三轮：20261119_ci_owner_fk_and_certification.sql 手写建的
+	// ci_tenant_owner_idx / ci_tenant_department_idx 与 Ent 已声明的等价索引
+	// configurationitem_tenant_id_owner_id / configurationitem_tenant_id_department_id
+	// 语义重复（列、顺序、谓词一致）。保留 Ent 版本（bootstrap auto-migrate 每次重建），
+	// 删除手写重复；fresh-install 门禁（scripts/fresh-install-gate.sh）因此为 0。
+	{"configurationitem_tenant_id_owner_id", "ci_tenant_owner_idx"},
+	{"configurationitem_tenant_id_department_id", "ci_tenant_department_idx"},
 	{"discoveryjob_status_lease_expires_at", "discovery_jobs_claim_idx"},
 	{"discoveryjob_tenant_id_operation_source_id_idempotency_key", "discovery_jobs_idempotency_expand_idx"},
 	{"discoveryresult_tenant_id_job_id_resource_identity", "discovery_results_identity_expand_idx"},
