@@ -400,7 +400,7 @@ const ControlPlanePanel: React.FC<{ state: ControlPlaneState; onRefresh: () => v
                   近期没有真实调用被拒
                 </Text>
               ) : (
-                <Space direction="vertical" size={2} style={{ width: '100%' }}>
+                <Space orientation="vertical" size={2} style={{ width: '100%' }}>
                   {data.recentDenial.slice(0, 3).map(d => (
                     <Text key={d.id} style={{ fontSize: 12 }} ellipsis>
                       <Tag color="red">{d.toolName}</Tag>

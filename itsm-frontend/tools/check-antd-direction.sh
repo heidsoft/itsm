@@ -48,7 +48,10 @@ ORIENTATION_FILES=(
   'src/app/(main)/ai/audit/page.tsx'
   'src/app/(main)/email-intake/on-call/page.tsx'
   'src/app/(main)/admin/config-inheritance/page.tsx'
-  'src/app/(main)/workflow/ticket-approval/page.tsx'
+  # workflow/ticket-approval 已退役为 /approvals 的重定向壳，不再含 Space；
+  # 改为锁定本轮真正迁移的两处，防止 direction 回退。
+  'src/app/(main)/ai/approval/page.tsx'
+  'src/components/sla/EscalationChainEditor.tsx'
 )
 for f in "${ORIENTATION_FILES[@]}"; do
   full="$REPO_ROOT/$f"

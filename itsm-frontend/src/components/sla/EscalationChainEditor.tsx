@@ -227,7 +227,7 @@ export default function EscalationChainEditor() {
       key: 'afterMinutes',
       width: 170,
       render: (v: number, record: EditorRow) => canEdit ? (
-        <Space direction="vertical" size={0}>
+        <Space orientation="vertical" size={0}>
           <InputNumber
             min={1}
             max={43200}

@@ -638,7 +638,7 @@ function CloudSignalsPageContent() {
           showIcon
           style={{ marginBottom: 16 }}
           title="还没有云信号同步记录"
-          description="同步按云账号执行：先在云账号中配置 secret:// 或 env:// 凭据引用，worker 下一轮同步后会在这里写入状态。"
+          description="先在云账号配置 secret:// 或 env:// 凭据，下一轮同步后显示状态。"
         />
       ) : hasUnavailable ? (
         <Alert
