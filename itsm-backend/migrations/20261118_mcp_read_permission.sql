@@ -72,14 +72,32 @@ WHERE NOT EXISTS (
 -- Step 2: 建立角色关联（agent / audit_admin）
 --
 -- 用码字取角色 id，不硬编码 id —— 角色 id 在不同部署里不同。
+--
+-- 🔴 全新安装必须跳过，而不是抛错（2026-11-21 fresh-install-gate run 44871855241 实证）：
+--   internal/bootstrap/app.go 的 InitializeStorage 先执行本迁移流，再在 AutoSeed
+--   分支里执行 seeder。空卷上此刻 tenants 为空，Step 1 的 INSERT ... FROM tenants
+--   必然插入 0 行，旧版 DO 块据此 RAISE EXCEPTION，整条初始化链中断
+--   （pq: mcp:read 权限码插入失败（tenant_id=1） (P0001)），backend/worker/frontend
+--   全部起不来。本迁移的职责是「给存量部署补码」；全新安装由 seeder 按
+--   authz.Definitions() / BuiltinRolePermissionCodes() 为新建租户播种同一批码。
+--
+--   同时去掉 tenant_id=1 的硬编码判定：默认租户 id 不保证是 1，
+--   应按「租户存在但码没落库」判定失败，而不是按某个固定 id。
 DO $$
 DECLARE
-    perm_id INTEGER;
+    tenant_count INTEGER;
+    seeded_count INTEGER;
     role_rec RECORD;
 BEGIN
-    SELECT id INTO perm_id FROM permissions WHERE code = 'mcp:read' AND tenant_id = 1 LIMIT 1;
-    IF perm_id IS NULL THEN
-        RAISE EXCEPTION 'mcp:read 权限码插入失败（tenant_id=1）';
+    SELECT count(*) INTO tenant_count FROM tenants;
+    IF tenant_count = 0 THEN
+        RAISE NOTICE 'tenants 表为空（全新安装，seeder 尚未运行）：跳过 mcp:read 角色关联播种';
+        RETURN;
+    END IF;
+
+    SELECT count(*) INTO seeded_count FROM permissions WHERE code = 'mcp:read';
+    IF seeded_count = 0 THEN
+        RAISE EXCEPTION 'mcp:read 权限码插入失败（已存在 % 个租户）', tenant_count;
     END IF;
 
     FOR role_rec IN

@@ -107,10 +107,23 @@ func (m *Migrator) GetPendingMigrations(ctx context.Context, available []Migrati
 		appliedVersions[mig.Version] = true
 		expected := checksumSQL(migrationSQLFor(mig.Version, available))
 		if mig.Checksum != "" && expected != "" && mig.Checksum != expected {
-			return nil, fmt.Errorf(
-				"migration checksum mismatch for %s: applied=%s current=%s",
-				mig.Version, mig.Checksum, expected,
-			)
+			// 已发布迁移的内容被有意修正时，只有「当前内容精确等于评审过的那一份」
+			// 才降级为告警（见 superseded.go）。再次漂移仍然硬失败。
+			if sup, ok := supersededMigrations[mig.Version]; ok && sup.AllowedChecksum == expected {
+				if m.logger != nil {
+					m.logger.Warnw("migration content superseded by reviewed correction",
+						"version", mig.Version,
+						"applied_checksum", mig.Checksum,
+						"current_checksum", expected,
+						"reason", sup.Reason,
+					)
+				}
+			} else {
+				return nil, fmt.Errorf(
+					"migration checksum mismatch for %s: applied=%s current=%s",
+					mig.Version, mig.Checksum, expected,
+				)
+			}
 		}
 	}
 
