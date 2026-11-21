@@ -26,7 +26,7 @@
 | AUDIT-025 | 重复初始化覆盖托管菜单字段 | `confirmed` | 明确所有权清单或纳入保护 | 低风险 |
 | AUDIT-051 | 备份调度未被部署验收强制 | `confirmed` | 文档 + 部署后断言 | 低风险 |
 | AUDIT-053 | 重复索引（同 AUDIT-002） | `confirmed` | 见 P0 | 需审批 |
-| AUDIT-060 | `lint:antd` / 方向守卫 / P0 文案守卫红 | `confirmed` | PR-05 机械修复，不上调基线 | 低风险 |
+| AUDIT-060 | `lint:antd` / 方向守卫 / P0 文案守卫红 | `resolved`（本批已验证，三项守卫 exit 0） | 已修 9 处旧 API 调用 + 文案守卫识别 `title`；浏览器视觉回归仍待执行 | 低风险 |
 | AUDIT-061 | 两套 Sidebar CSS Module 导致暗色规则失效 | `confirmed`+`suspected` | PR-05：统一 import + 模块一致性守卫 + 浏览器验证 | 需浏览器证据 |
 | AUDIT-062 | 禁用态 Select 选项同色 | `confirmed`+`suspected` | PR-05：层叠修复 + `select-option-states.test.ts` | 需浏览器证据 |
 | AUDIT-063~065 | 平板宽度、移动遮罩 z-index、尺寸真源三方矛盾 | `confirmed` | PR-05：统一 token/选择器 | 需浏览器证据 |

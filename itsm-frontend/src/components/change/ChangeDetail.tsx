@@ -1032,7 +1032,7 @@ const ChangeDetail: React.FC = () => {
           type='warning'
           showIcon
           style={{ marginBottom: 16 }}
-          message='租户内没有具备变更审批权限的用户'
+          title='租户内没有具备变更审批权限的用户'
           description='请选择审批人后重新提交。若所选用户没有 change:approve 权限，审批时会被拒绝，请优先选择「系统运维」「系统管理员」或「变更经理」角色的用户。'
         />
         <UserSelect
