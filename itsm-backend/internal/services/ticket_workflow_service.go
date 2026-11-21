@@ -2079,6 +2079,28 @@ func advanceTicketWorkflowTx(
 			fmt.Sprintf("ticketId=%d taskId=%s", ticketID, task.TaskID))
 	}
 
+	// P0-2：接受事务内把流程实例变量 requester_id 写成接受人（服务台）。
+	// 引擎认领语义（bpmn_process_executor.go resolveTaskAssignment）回退顺序是
+	// requester_id/triggered_by/assignee_id：不写这份变量，推进出来的活跃待办
+	// （工单处理）会落在发起人名下，与 ticket.assignee_id 不一致。
+	// 与ticket域的「发起人」是否分离：ticket.requester_id 仍是发起人，这里只改
+	// 进程实例变量（待办认领维度），不回写 ticket 域。
+	if actorUserID > 0 {
+		if inst, ierr := txc.ProcessInstance.Get(ctx, task.ProcessInstanceID); ierr == nil && inst != nil {
+			merged := make(map[string]interface{}, len(inst.Variables)+1)
+			for k, v := range inst.Variables {
+				merged[k] = v
+			}
+			merged["requester_id"] = actorUserID
+			if _, uerr := txc.ProcessInstance.UpdateOneID(inst.ID).
+				SetVariables(merged).
+				Save(ctx); uerr != nil {
+				logger.Warnw("写入接受人流程变量失败（非阻断，继续推进）",
+					"error", uerr, "ticket_id", ticketID, "instance_id", inst.ID)
+			}
+		}
+	}
+
 	// 刻意不写 approvalAction / approvalResult：作业推进不是审批签名，
 	// 带这些变量会让引擎的 recordApprovalDecision 往不可变审计表写假账。
 	variables := map[string]interface{}{
