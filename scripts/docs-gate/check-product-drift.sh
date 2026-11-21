@@ -549,9 +549,16 @@ check_menu_baseline_paths() {
       sort -u
   )"
 
-  local paths p hit=0 total=0
+  local paths duplicates p hit=0 total=0
   # 只取结构体的 Path 字段：`[,{] Path:` 前面必须是分隔符，因此不会命中 ParentPath（其前缀是字母）。
-  paths="$(grep -oE '[,{] Path: "[^"]+"' "${bl}" | sed -E 's/.*Path: "([^"]+)"/\1/' | sort -u)"
+  paths="$(grep -oE '[,{] Path: "[^"]+"' "${bl}" | sed -E 's/.*Path: "([^"]+)"/\1/' | sort)"
+  duplicates="$(printf '%s\n' "${paths}" | uniq -d)"
+  while IFS= read -r p; do
+    [ -n "${p}" ] || continue
+    hit=$((hit + 1))
+    fail "菜单基线 path ${p} 重复定义"
+  done <<<"${duplicates}"
+
   while IFS= read -r p; do
     [ -n "${p}" ] || continue
     total=$((total + 1))
@@ -561,7 +568,7 @@ check_menu_baseline_paths() {
     hit=$((hit + 1))
     waived "C.6.6" "${p}" ||
       fail "菜单基线 path ${p} 没有对应的前端页面（侧边栏点了就是 404 死链）"
-  done <<<"${paths}"
+  done <<<"$(printf '%s\n' "${paths}" | uniq)"
 
   if [ "${hit}" -eq 0 ]; then
     pass "菜单基线 ${total} 条 path 全部解析到真实页面"

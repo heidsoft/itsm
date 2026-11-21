@@ -1,6 +1,6 @@
 # 前端菜单与功能映射梳理
 
-> 适用范围：`itsm-frontend` + `itsm-backend` v1.6.x 收尾期；最后同步时间：2026-11-01（工单仪表盘退役：菜单基线摘除 `/tickets/dashboard`，条数由 103 收紧为 102，§3.2/§8.2/§9 同步收口；规则配置面三条菜单码按 `pkg/menubaseline/baseline.go` 复核纠正为 `assignment_rule:write` / `automation_rule:write`）。
+> 适用范围：CloudMesh 前后端。最后同步时间：2026-11-21。菜单基线为 101 条，工单仪表盘和独立 AI 助手入口已退役。
 > 用途：把"前端页面 ↔ 后端菜单 ↔ API 入口 ↔ 能力治理"四个视角统一到一张图，作为菜单收口与下阶段补齐的参考。
 >
 > 本文是 docs/product/ 家族的新增文档，与 `ai-automation-status.md` 并列，专注"菜单/页面/功能"层。菜单事实以 `pkg/menubaseline/baseline.go` 为准，不以本文为准。
@@ -13,8 +13,8 @@
 
 - **前端没有静态菜单配置**。`itsm-frontend/src/components/layout/sidebar/menu-config.ts` 仅保留 `MenuItem` 类型与 `capabilityPathRules`，没有任何 `const getMenuConfig()` 静态数组。
 - **菜单唯一来源是后端**：登录用户通过 `GET /api/v1/auth/menus` 获取当前租户 + 角色 + 权限过滤后的菜单树。
-- **后端 `pkg/menubaseline/baseline.go::MenuDefinitions()` 是种子真理**（`itsm-backend/pkg/menubaseline/baseline.go:20`）：102 条菜单（30 顶级 + 72 子级）由 `pkg/seeder/seeder.go:1895 seedMenus` 两遍写入 `menu` 表（顶级 → 子级按 `parent_path` 反查）。`pkg/seeder/seeder.go:1890 menuDefinitions()` 只是转调。
-- **条数有测试棘轮**：`pkg/seeder/initialization_verify_cold_test.go:303` 断言 `require.Len(menuDefinitions(), 102)`，增删菜单必须同步该数字。
+- **后端 `pkg/menubaseline/baseline.go::MenuDefinitions()` 是种子真理**（`itsm-backend/pkg/menubaseline/baseline.go:20`）：101 条菜单（29 顶级 + 72 子级）由 `pkg/seeder/seeder.go:1895 seedMenus` 两遍写入 `menu` 表（顶级 → 子级按 `parent_path` 反查）。`pkg/seeder/seeder.go:1890 menuDefinitions()` 只是转调。
+- **条数有测试棘轮**：`pkg/seeder/initialization_verify_cold_test.go:303` 断言 `require.Len(menuDefinitions(), 101)`，增删菜单必须同步该数字。
 - **种子是 add-only**：`seedMenus` / `InitMenusFromBaseline` 只会新增与更新条目，不会停用基线里已摘除的 path。因此菜单退役必须配套一条按 path 收窄、不带 tenant 与主键的停用迁移（如 `migrations/20261101_retire_ticket_dashboard_menu.sql`），否则存量租户侧边栏会留一条指向已删页面的死链。
 - **运行时入口**：`MenuService.GetUserMenus`（`handlers/rbac/menu_service_impl.go`）→ `dto.MenuTreeResponse{Main, Admin}`。
 - **前端缓存**：`useUserMenusQuery`（`src/lib/hooks/useUserMenusQuery.ts`）走 React Query，5 分钟 staleTime；菜单管理端 CRUD 后派发 `MENUS_UPDATED_EVENT` 自动 invalidate。
@@ -26,7 +26,7 @@ seedMenus → menu 表（tenant_id + path 唯一）
                 ↑
         upsertMenu (两遍 upsert)
                 ↑
-   menuDefinitions() = 102 条菜单种子（唯一真理）
+   menuDefinitions() = 101 条菜单种子（唯一真理）
 
 登录后:
   GET /api/v1/auth/menus
@@ -70,10 +70,10 @@ seedMenus → menu 表（tenant_id + path 唯一）
 
 | # | sort | path | name | icon | permission | main/admin | 备注 |
 |---|-----:|------|------|------|------------|------------|------|
-| 1 | 10 | `/dashboard` | 服务台 | LayoutDashboard | （无） | main | 默认登录入口 |
-| 2 | 20 | `/service-requests` | 服务请求 | FileText | `ticket:read` | main | 用户面向的工单请求 |
+| 1 | 10 | `/dashboard` | 服务台 | LayoutDashboard | `dashboard:read` | main | 默认登录入口 |
+| 2 | 20 | `/service-requests` | 服务请求 | FileText | `service_request:read` | main | 用户面向的工单请求 |
 | 3 | 23 | `/tickets` | 工单管理 | FileText | `ticket:read` | main | **2026-08-30 归位新增**，从 service-requests 子菜单提到顶级 |
-| 4 | 25 | `/my-requests` | 我的请求 | User | `ticket:read` | main |  |
+| 4 | 25 | `/my-requests` | 我的请求 | User | `service_request:read` | main |  |
 | 5 | 30 | `/incidents` | 事件管理 | AlertCircle | `incident:read` | main |  |
 | 6 | 35 | `/noc` | NOC工作台 | Activity | `incident:read` | main | 重大事件作战室 |
 | 7 | 40 | `/problems` | 问题管理 | HelpCircle | `problem:read` | main |  |
@@ -85,7 +85,6 @@ seedMenus → menu 表（tenant_id + path 唯一）
 | 13 | 80 | `/assets` | 资产管理 | Monitor | `asset:read` | main |  |
 | 14 | 90 | `/sla` | SLA 管理 | Calendar | `sla:read` | main |  |
 | 15 | 100 | `/workflow` | 工作流 | GitMerge | `workflow:read` | main |  |
-| 16 | 110 | `/ai/chat` | AI 助手 | Bot | `ai:read` | main |  |
 | 17 | 115 | `/approvals/pending` | 待我审批 | CheckCircle | `task:read` | main | 菜单码随页面数据源（`GET /bpmn/tasks`），由 `pkg/menubaseline/baseline_guard_test.go` 钉住 |
 | 18 | 120 | `/msp` | 客户管理 | Building | `msp:read` | main | **MSP 门控**：`IsMSPEnabled()=false` 时被 `filterMSPMenus` 剔除 |
 | 19 | 130 | `/releases` | 发布管理 | Rocket | `release:read` | main |  |
@@ -215,15 +214,17 @@ seedMenus → menu 表（tenant_id + path 唯一）
 | 106 | `/workflow/bottlenecks` | 节点瓶颈分析 | `workflow:read` | BarChart3 |
 | 107 | `/workflow/automation` | 自动化规则 | `automation_rule:write` | Zap |
 | 108 | `/approvals` | 审批中心 | `task:read` | CheckSquare |
-| 109 | `/workflow/audit` | 操作日志 | `audit:read` | ClipboardList |
+| 109 | `/workflow/audit` | 操作日志 | `bpmn:read` | ClipboardList |
 
-### 3.13 AI 助手 `/ai/chat`
+### 3.13 归入业务菜单的 AI 功能
+
+独立的 `/ai/chat` 菜单已退役。
 
 | sort | path | name | permission | icon |
 |-----:|------|------|------------|------|
-| 112 | `/tickets/ai-create` | AI 创建工单 | `ai:read` | Sparkles |
-| 113 | `/ai/audit` | AI 评估与审计 | `ai:read` | ShieldCheck |
-| 114 | `/ai/approval` | AI 审批 | `ai:read` | ShieldAlert |
+| 26 | `/tickets/ai-create` | AI 创建工单 | `ai:read` | Sparkles |
+| 211 | `/ai/audit` | AI 效果评估 | `ai:read` | ShieldCheck |
+| 116 | `/ai/approval` | 工具调用审批 | `ai:read` | ShieldAlert |
 
 ### 3.14 客户管理（MSP）`/msp`
 
