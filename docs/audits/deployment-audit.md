@@ -92,6 +92,10 @@ rollback: 撤销收敛项后手写索引不会自动重建（迁移已入账）�
 approval: 数据库结构改动，需人工审批
 ```
 
+### AUDIT-002 本轮已验证修复
+
+基准 `a2103b16`。`database/database.go` 的 `duplicateIndexPairs` 增加两对：`configurationitem_tenant_id_owner_id` 保留、`ci_tenant_owner_idx` 删除；`configurationitem_tenant_id_department_id` 保留、`ci_tenant_department_idx` 删除。收敛逻辑抽出可测内核 `ensureIndexConvergenceWithPairs`，新增真实 Postgres 回归：夹具造出两对同列索引后，调用一次删除 2 个且保留 Ent 索引，重复调用删除 0 个，保留方缺失时拒绝删除并不动冗余方。静态守卫同时锁住两对的方向。未改写任何已发布迁移 SQL，账本 checksum 不变。
+
 ## 4. 部署验收清单（PR-01 交付物）
 
 见 `docs/audits/remediation-backlog.md` 的 PR-01 条目；清单覆盖：env 示例安全、迁移/播种职责、RLS 模式与 readiness、备份与恢复演练、镜像固定、健康与资源限制。
