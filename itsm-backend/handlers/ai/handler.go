@@ -1196,6 +1196,48 @@ func (h *Handler) ListToolInvocations(c *gin.Context) {
 	common.Success(c, gin.H{"items": items, "state": state})
 }
 
+// ControlPlaneOverview handles GET /api/v1/agent/control-plane
+//
+// 一次请求返回 AI 工具控制面的当前状态：工具可见面（按当前角色）、
+// 待批队列（四种审批态分别计数）、策略配置面（配了/没配/配坏了）、
+// 最近拒绝（仅真实调用，排除预演）。
+//
+// 为什么需要一个聚合读面（《Agent 控制面差距报告》P2-5）：
+// 现在判断「策略是否生效」要分别调 /permissions/:id/policy 与
+// /agent/tools/invocations?state=pending，再自己拿工具清单比可见性——
+// 三个真源、三次请求，运维只能人工拼装，「昨天改的策略到底生效没有」
+// 这个最常见的问题没有确定答案。
+//
+// **本端点不做任何判定**：不跑 evaluateToolCall、不重算 Gate 2/Gate 2.5。
+// 一旦聚合面自己判定一次，它就成了第二个判定点，与真实执行路径分叉——
+// 那正是本项目明令禁止的。「现在是什么样」走本端点，
+// 「允不允许」走 dry-run / review。
+//
+// 失败语义：任一真源读失败即整单 500，绝不返回部分数据。
+// 半真半假的运维视图比没有视图更危险——看到「0 个待批」会让人以为
+// 队列已清空，而实际是查询失败了。
+func (h *Handler) ControlPlaneOverview(c *gin.Context) {
+	tenantID := c.GetInt("tenant_id")
+	role := c.GetString("role")
+	if tenantID <= 0 || role == "" {
+		common.Fail(c, common.AuthFailedCode, "缺少有效身份上下文")
+		return
+	}
+	if h.svc.entClient == nil || h.svc.tools == nil {
+		common.Fail(c, common.ServiceUnavailableCode, "AI 工具权限服务未就绪")
+		return
+	}
+
+	overview, err := h.svc.GetControlPlaneOverview(c.Request.Context(), tenantID, role)
+	if err != nil {
+		h.svc.logger.Warnw("聚合控制面读面失败", "error", err, "tenantID", tenantID, "role", role)
+		common.Fail(c, common.InternalErrorCode, "聚合控制面数据失败")
+		return
+	}
+
+	common.Success(c, overview)
+}
+
 // ListRunInvocations handles GET /api/v1/agent/runs/:runId/invocations
 //
 // 按运行轮次返回该轮全部工具调用（含只读审计行），按时间正序。

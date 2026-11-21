@@ -12,6 +12,7 @@ import {
   aiIntelligentSearch,
   aiDryRunTool,
   aiReviewToolInvocation,
+  aiGetControlPlane,
   AIApi,
 } from '../ai-api';
 import { httpClient } from '../http-client';
@@ -246,6 +247,41 @@ describe('AI API', () => {
       expect(mockPost.mock.calls[0][0]).toBe(
         '/api/v1/agent/tools/invocations/12345/review'
       );
+    });
+  });
+
+  /**
+   * 控制面聚合读面的 URL 守卫。
+   *
+   * 为什么这条必须断言到 httpClient 层而不是 mock 函数符号：
+   * 「聚合面被悄悄改回逐项调用」不会造成任何类型错误——四个子查询各有
+   * 合法签名，拼起来仍然能返回数据，只是丢掉了「同一时刻快照」这个唯一价值。
+   * 只有这里能看见「发出去的是几个请求、打到哪些路径」。
+   */
+  describe('控制面聚合读面', () => {
+    it('走单个 GET /api/v1/agent/control-plane', async () => {
+      mockGet.mockResolvedValue({ tenantId: 1, role: 'admin' });
+      await aiGetControlPlane();
+      expect(mockGet).toHaveBeenCalledTimes(1);
+      expect(mockGet.mock.calls[0][0]).toBe('/api/v1/agent/control-plane');
+    });
+
+    // 反向断言：聚合面必须一次性取回。若实现退化成并发调四个子查询，
+    // 请求数会 >1，本用例红在 toHaveBeenCalledTimes(1)。
+    it('不得并发退化为多次子查询（会丢掉同一时刻快照语义）', async () => {
+      mockGet.mockResolvedValue({ tenantId: 1 });
+      await aiGetControlPlane();
+      const calledPaths = mockGet.mock.calls.map(call => call[0]);
+      expect(calledPaths).not.toContain('/api/v1/agent/tools/invocations');
+      expect(calledPaths).not.toContain('/api/v1/agent/tools');
+      expect(calledPaths.filter(p => String(p).includes('control-plane'))).toHaveLength(1);
+    });
+
+    // 聚合面是只读：绝不能用 POST（预演/复核是 POST，误用会让每次刷新都落审计）。
+    it('必须是 GET，不得是 POST（否则每次刷新都会落审计行）', async () => {
+      mockGet.mockResolvedValue({ tenantId: 1 });
+      await aiGetControlPlane();
+      expect(mockPost).not.toHaveBeenCalled();
     });
   });
 

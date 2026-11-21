@@ -56,6 +56,12 @@ func (r *auditFieldsRepo) ListToolInvocations(_ context.Context, _ int, state st
 	}, nil
 }
 
+// CountToolInvocationsByApprovalState 对齐真实仓储的分组计数口径。
+// 两条 mock 记录都是 approval_state="pending_agent_two" 且非预演。
+func (r *auditFieldsRepo) CountToolInvocationsByApprovalState(_ context.Context, _ int) (map[string]int, error) {
+	return map[string]int{"pending_agent_two": 2}, nil
+}
+
 func (r *auditFieldsRepo) ListToolInvocationsByRun(_ context.Context, _ int, runID string) ([]*ai.ToolInvocation, error) {
 	r.lastRunID = runID
 	if runID == "" {

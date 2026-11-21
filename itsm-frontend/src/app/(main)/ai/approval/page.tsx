@@ -21,10 +21,12 @@ import {
   aiApproveTool,
   aiGetRunInvocations,
   aiReviewToolInvocation,
+  aiGetControlPlane,
   type ToolApproval,
   type ToolApprovalListResponse,
   type ToolRunInvocationsResponse,
   type ToolDryRunResult,
+  type AgentControlPlaneOverview,
 } from '@/lib/api/ai-api';
 import { useAuthStoreHydration } from '@/lib/store/auth-store';
 import { usePermissions } from '@/lib/hooks/use-permissions';
@@ -218,6 +220,20 @@ interface ToolPreflight {
 }
 
 /**
+ * 控制面概览的加载状态。
+ *
+ * `error` 必须与「确实没有任何待批」分开：两者在界面上都会让表格是空的，
+ * 但含义完全相反——前者是「读不到」，后者是「读到了、队列干净」。
+ * 把读失败渲染成空态，运维会以为队列已清空而不再处理；
+ * 而真正的失败（后端 500、权限不足、超时）就这样被掩盖了。
+ */
+interface ControlPlaneState {
+  loading: boolean;
+  data?: AgentControlPlaneOverview;
+  error?: string;
+}
+
+/**
  * 策略版本三态的展示口径。**不在展示层归一化**：
  * 空串（历史行）与 unknown（读不出）含义不同，前者是「当时没这概念」，
  * 后者是「有这概念但这次没取到」——后者意味着运维该查一下策略目录。
@@ -243,6 +259,167 @@ const policyVersionView = (v?: string): { label: string; hint: string; color: st
     hint: `完整指纹 ${v}；相同指纹 ⟺ 放行判据（风险级/允许主体/是否需审批/审批人数/是否启用）相同。`,
     color: 'blue',
   };
+};
+
+/**
+ * 控制面概览面板：把「队列 / 策略覆盖 / 工具可见面 / 最近拒绝」四个事实面
+ * 放在审批队列上方，一次看清。
+ *
+ * 为什么放在这一页而不是新开一页：审批人打开这一页的真实问题是
+ * 「我现在该处理什么、还有多少没处理、为什么有些调用一直被我挡」。
+ * 这三问的答案分散在四个接口里，运维只能靠人工拼装——
+ * 于是一个最常见的问题「昨天改了策略到底生效没有」没有确定答案。
+ *
+ * 展示纪律：
+ * - 策略三类**分开显示**（已配置 / 未配置 / 配置损坏）。合并任意两类都会让
+ *   风险面被低估，尤其是「配置损坏」——它看起来配了策略，鉴权时却全拒。
+ * - 队列四态**分开显示**，`awaitingSecond` 标出「已有一票待二审」，
+ *   因为那批已经批了一半、再不处理就卡住了。
+ * - 工具面显示 `visible / total` 并回显**当前角色**：同一租户同一时刻，
+ *   管理员看到 14 个、普通技术员看到 6 个，不说明按谁算的数字没有含义。
+ */
+const ControlPlanePanel: React.FC<{ state: ControlPlaneState; onRefresh: () => void }> = ({
+  state,
+  onRefresh,
+}) => {
+  const { data, loading, error } = state;
+
+  // 读失败必须显式告知，且**不落成空态**：后端任一真源失败即整单 500
+  // （fail-closed）。若这里渲染成「0 待批」，运维会以为队列已清空而不再处理。
+  if (error) {
+    return (
+      <Card size="small" style={{ borderColor: '#ffccc7' }}>
+        <Space align="center">
+          <Text type="danger" strong>
+            控制面状态读取失败
+          </Text>
+          <Text type="secondary">
+            {error}——这不代表队列为空，请重试或检查后端
+          </Text>
+          <a onClick={onRefresh}>
+            <RefreshCw size={14} /> 重试
+          </a>
+        </Space>
+      </Card>
+    );
+  }
+
+  return (
+    <Card
+      size="small"
+      loading={loading && !data}
+      title={
+        <Space size={8}>
+          <ShieldAlert size={16} color="#1677ff" />
+          <Text strong>控制面状态</Text>
+          {data && (
+            <Text type="secondary" style={{ fontSize: 12 }}>
+              采集于 {formatDateTime(data.gatheredAt)}
+            </Text>
+          )}
+        </Space>
+      }
+      extra={
+        <a onClick={onRefresh}>
+          <RefreshCw size={14} /> 刷新
+        </a>
+      }
+    >
+      {data && (
+        <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
+          {/* 待批队列：四态分开。awaitingSecond 单独高亮因为首票不放行、最容易卡住。 */}
+          <div>
+            <Text type="secondary" style={{ fontSize: 12 }}>待批队列</Text>
+            <div style={{ marginTop: 4 }}>
+              <Space size={6} wrap>
+                <Tag color={data.queue.pending > 0 ? 'gold' : 'default'}>
+                  待审批 {data.queue.pending}
+                </Tag>
+                <Tag color={data.queue.pendingAgent > 0 ? 'gold' : 'default'}>
+                  AI 待批 {data.queue.pendingAgent}
+                </Tag>
+                <Tag color={data.queue.pendingAgentTwo > 0 ? 'volcano' : 'default'}>
+                  AI 待双人 {data.queue.pendingAgentTwo}
+                </Tag>
+                <Tag color={data.queue.awaitingSecond > 0 ? 'red' : 'default'}>
+                  已一票待二审 {data.queue.awaitingSecond}
+                </Tag>
+              </Space>
+              <div style={{ marginTop: 4 }}>
+                <Text type="secondary" style={{ fontSize: 12 }}>
+                  合计 {data.queue.total} 条
+                  {data.queue.awaitingSecond > 0 && '（含已批一半的，需尽快安排第二人复审）'}
+                </Text>
+              </div>
+            </div>
+          </div>
+
+          {/* 策略覆盖：三类分开，unreadable 用红色因为它是 fail-closed 全拒。 */}
+          <div>
+            <Text type="secondary" style={{ fontSize: 12 }}>策略覆盖</Text>
+            <div style={{ marginTop: 4 }}>
+              <Space size={6} wrap>
+                <Tag color="blue">已配置 {data.policies.withPolicy}</Tag>
+                <Tag color="default">未配置 {data.policies.policyFree}</Tag>
+                <Tag color={data.policies.unreadable > 0 ? 'red' : 'default'}>
+                  配置损坏 {data.policies.unreadable}
+                </Tag>
+              </Space>
+              <div style={{ marginTop: 4 }}>
+                <Text type="secondary" style={{ fontSize: 12 }}>
+                  共 {data.policies.total} 个权限点
+                  {data.policies.unreadable > 0 &&
+                    '；「配置损坏」表示策略解不出，这类权限点当前一律拒绝'}
+                </Text>
+              </div>
+            </div>
+          </div>
+
+          {/* 工具可见面：必须回显角色，否则数字没有确定含义。 */}
+          <div>
+            <Text type="secondary" style={{ fontSize: 12 }}>工具可见性</Text>
+            <div style={{ marginTop: 4 }}>
+              <Text strong>
+                {data.visibleTools} / {data.totalTools}
+              </Text>
+              <Text type="secondary" style={{ fontSize: 12 }}> 个工具当前角色可用</Text>
+              <div style={{ marginTop: 4 }}>
+                <Text type="secondary" style={{ fontSize: 12 }}>
+                  按角色「{data.role}」计算；被挡住的工具也列出，便于判断是否策略过严
+                </Text>
+              </div>
+            </div>
+          </div>
+
+          {/* 最近拒绝：不含预演行，只列真实被拦的调用。 */}
+          <div>
+            <Text type="secondary" style={{ fontSize: 12 }}>最近被拒</Text>
+            <div style={{ marginTop: 4 }}>
+              {data.recentDenial.length === 0 ? (
+                <Text type="secondary" style={{ fontSize: 12 }}>
+                  近期没有真实调用被拒
+                </Text>
+              ) : (
+                <Space direction="vertical" size={2} style={{ width: '100%' }}>
+                  {data.recentDenial.slice(0, 3).map(d => (
+                    <Text key={d.id} style={{ fontSize: 12 }} ellipsis>
+                      <Tag color="red">{d.toolName}</Tag>
+                      {d.reason || '策略不允许'}
+                    </Text>
+                  ))}
+                  {data.recentDenial.length > 3 && (
+                    <Text type="secondary" style={{ fontSize: 12 }}>
+                      另有 {data.recentDenial.length - 3} 条
+                    </Text>
+                  )}
+                </Space>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </Card>
+  );
 };
 
 const AIApprovalQueue: React.FC = () => {
@@ -272,6 +449,32 @@ const AIApprovalQueue: React.FC = () => {
   // 每条记录一条序号，规则同 runSeqRef。
   const preflightSeqRef = useRef<Record<number, number>>({});
 
+  // 控制面概览：初值 loading=true（mount 必定发起首次拉取）。
+  const [controlPlane, setControlPlane] = useState<ControlPlaneState>({ loading: true });
+  // 概览请求的 generation 序号。
+  //
+  // 为什么需要：概览会被「刷新」按钮与队列状态切换重复触发，两次请求并发时
+  // 先发后到的响应会把新数据顶掉（界面上表现为「点了刷新，数字反而回到旧的」）。
+  // 单值 state + 无守卫是这类竞态的典型形态，且它不会报错，只会让运维
+  // 看到一个过期快照——比读失败更难发现。
+  const controlPlaneSeqRef = useRef(0);
+
+  const fetchControlPlane = useCallback(async () => {
+    const seq = ++controlPlaneSeqRef.current;
+    setControlPlane(prev => ({ ...prev, loading: true, error: undefined }));
+    try {
+      const data = await aiGetControlPlane();
+      // 只有最后一次请求能落地：中途被超越的响应直接丢弃，
+      // 否则先发后到会覆盖新结果（本仓踩过的深链竞态同一形态）。
+      if (seq !== controlPlaneSeqRef.current) return;
+      setControlPlane({ loading: false, data });
+    } catch (e) {
+      if (seq !== controlPlaneSeqRef.current) return;
+      // 失败不吞掉、也不落成空态：把错误留在 state 里由面板显式渲染。
+      setControlPlane({ loading: false, error: (e as Error).message });
+    }
+  }, []);
+
   const fetchList = useCallback(async () => {
     setListLoading(true);
     try {
@@ -287,6 +490,19 @@ const AIApprovalQueue: React.FC = () => {
   useEffect(() => {
     fetchList();
   }, [fetchList]);
+
+  useEffect(() => {
+    fetchControlPlane();
+  }, [fetchControlPlane]);
+
+  // 「刷新」按钮：两个读面必须一起刷。
+  //
+  // 只刷其中一个会让面板与表格互相矛盾——例如队列已批完（表格空了），
+  // 而概览还显示「待双人 3」。运维无法判断是哪个过期了。
+  const refreshAll = useCallback(() => {
+    fetchControlPlane();
+    fetchList();
+  }, [fetchControlPlane, fetchList]);
 
   // 展开行时拉取该轮证据链。收起不拉取（审批人只想收起时不该产生请求）。
   const handleExpand = useCallback(async (expanded: boolean, record: ToolApproval) => {
@@ -534,11 +750,13 @@ const AIApprovalQueue: React.FC = () => {
             onChange={(v) => setState(v)}
             options={Object.entries(STATE_LABELS).map(([k, label]) => ({ value: k, label }))}
           />
-          <a onClick={fetchList}>
+          <a onClick={refreshAll}>
             <RefreshCw size={16} /> 刷新
           </a>
         </Space>
       </Space>
+
+      <ControlPlanePanel state={controlPlane} onRefresh={fetchControlPlane} />
 
       <Card>
         <Table

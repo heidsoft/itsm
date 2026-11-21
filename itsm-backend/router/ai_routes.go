@@ -91,6 +91,16 @@ func SetupAIRoutes(tenant *gin.RouterGroup, h *aiHandler.Handler) {
 		// 复用 ai:read 而不新增权限码——它读的是同域同类数据，只是换了
 		// 聚合维度；新增码还会撞 dead-codes 基线（只减不增）。
 		agentGrp.GET("/runs/:runId/invocations", middleware.RequirePermission("ai", "read"), h.ListRunInvocations)
+		// 控制面聚合读面：GET /api/v1/agent/control-plane
+		//
+		// 一次请求返回工具可见面 / 待批队列 / 策略配置面 / 最近拒绝。
+		// 与上面几个读面的关系是「聚合」而非「替代」：它内部复用
+		// HasResourcePermission 与 ListToolInvocations 的真源，不新增判定。
+		//
+		// 权限用 ai:read：纯只读聚合，零副作用、不改任何状态。
+		// 放在 /runs/:runId 之后、静态段 control-plane 与 /tools/:id 不冲突
+		// （不同前缀），不会劫持任何既有路由。
+		agentGrp.GET("/control-plane", middleware.RequirePermission("ai", "read"), h.ControlPlaneOverview)
 		// Phase A（2026-11-17）：审批权从 ai:write 拆出为 ai:approve。
 		// end_user 此前持 ai:write 即可审批 AI 工具调用，违背职责分立；
 		// handler 内还有「审批人须持目标工具 resource:action」二次校验。

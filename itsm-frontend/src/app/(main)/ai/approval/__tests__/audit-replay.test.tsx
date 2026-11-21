@@ -37,6 +37,10 @@ jest.mock('@/lib/api/ai-api', () => ({
   // 调用处的 try/catch 会把它吞成「复核失败」，测试仍全绿却掩盖了真问题。
   // 这不属于本文件断言范围，但 mock 与真实导出集合不一致本身就是缺陷源。
   aiReviewToolInvocation: jest.fn(),
+  // 控制面聚合读面同理：页面 mount 即调它。缺了它 aiGetControlPlane 是
+  // undefined，调用抛 TypeError 被 catch 成「控制面读取失败」——
+  // 本文件的断言不会红，但页面会永远停在错误态，属 mock 漂移导致的假绿。
+  aiGetControlPlane: jest.fn(),
 }));
 
 import AIApprovalQueue from '../page';

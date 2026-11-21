@@ -129,6 +129,21 @@ func (m *rbacMockRepo) ListToolInvocations(_ context.Context, _ int, _ string) (
 	return m.toolInvocations, nil
 }
 
+// CountToolInvocationsByApprovalState 按 approval_state 分组统计 mock 里的记录。
+// 与真实仓储同口径（排除 dry_run 预演行），否则聚合读面的队列断言会假绿。
+func (m *rbacMockRepo) CountToolInvocationsByApprovalState(_ context.Context, _ int) (map[string]int, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	counts := make(map[string]int, len(m.toolInvocations))
+	for _, inv := range m.toolInvocations {
+		if inv.DryRun {
+			continue
+		}
+		counts[inv.ApprovalState]++
+	}
+	return counts, nil
+}
+
 // ListToolInvocationsByRun 按运行轮次过滤 mock 里的调用记录。
 // 真实仓储按 (tenant_id, run_id) 查；mock 也照同一口径过滤，
 // 否则「按 run 取证据链」的测试会拿到全量记录而假绿。

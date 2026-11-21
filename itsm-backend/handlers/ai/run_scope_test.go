@@ -161,3 +161,85 @@ func TestCreateToolInvocationPersistsPolicyVersionAndRunID(t *testing.T) {
 	require.Equal(t, "9f86d081884c7d659a2feaa0c55ad015", loaded.PolicyVersion)
 	require.Equal(t, "pending_agent", loaded.ApprovalState, "审批态不能被新字段挤掉")
 }
+
+// CountToolInvocationsByApprovalState 的仓储层守卫（2026-11-21）。
+//
+// 为什么要单独测仓储而不是只经聚合面间接验证：聚合面用例用的是 sqlite 内存库
+// + 真实仓储，但队列断言只覆盖「四态分离」；分组计数的**谓词**（dry_run 排除、
+// 租户隔离）若写错，聚合面那边只有 fail-closed 用例能碰上，精确性无锁。
+//
+// 另外这层必须用真实 SQL 跑：ent 的 GroupBy().Scan() 在零行时**不写目标切片**，
+// 且列名映射靠 struct tag（`json:"count"`）——mock 永远看不出这两类错。
+func TestCountToolInvocationsByApprovalStateIsExactAndScoped(t *testing.T) {
+	f := newRunScopeRepo(t)
+	ctx := context.Background()
+
+	seedApproval := func(tenantID, userID int, state string, dryRun bool) {
+		_, err := f.repo.CreateToolInvocation(ctx, &ToolInvocation{
+			TenantID:        tenantID,
+			UserID:          userID,
+			ToolName:        "create_ticket",
+			Arguments:       "{}",
+			Status:          "pending",
+			ApprovalState:   state,
+			PermissionCheck: "passed",
+			DryRun:          dryRun,
+		})
+		require.NoError(t, err)
+	}
+
+	// 本租户：四种待批态各按不同条数播种，故意让 pending=1 与其它态不同，
+	// 这样「pending 被算成四态之和」的错误会立刻显形。
+	seedApproval(f.tenantA, f.userA, "pending", false)
+	seedApproval(f.tenantA, f.userA, "pending_agent", false)
+	seedApproval(f.tenantA, f.userA, "pending_agent", false)
+	seedApproval(f.tenantA, f.userA, "pending_agent_two", false)
+	seedApproval(f.tenantA, f.userA, "pending_agent_two", false)
+	seedApproval(f.tenantA, f.userA, "pending_agent_two", false)
+	seedApproval(f.tenantA, f.userA, "awaiting_second", false)
+	seedApproval(f.tenantA, f.userA, "awaiting_second", false)
+	seedApproval(f.tenantA, f.userA, "awaiting_second", false)
+	seedApproval(f.tenantA, f.userA, "awaiting_second", false)
+
+	// 预演行：dry_run=true，不得计入任何队列。
+	// 用 pending 态播种是因为那是最容易被误算进 Pending 的一类。
+	seedApproval(f.tenantA, f.userA, "pending", true)
+	seedApproval(f.tenantA, f.userA, "awaiting_second", true)
+
+	// 他人租户：全部四态各一条，一条都不该出现在本租户计数里。
+	seedApproval(f.tenantB, f.userB, "pending", false)
+	seedApproval(f.tenantB, f.userB, "pending_agent", false)
+	seedApproval(f.tenantB, f.userB, "pending_agent_two", false)
+	seedApproval(f.tenantB, f.userB, "awaiting_second", false)
+
+	counts, err := f.repo.CountToolInvocationsByApprovalState(ctx, f.tenantA)
+	require.NoError(t, err)
+
+	require.Equal(t, 1, counts["pending"],
+		"pending 必须是单态精确计数；若等于四态之和，说明用了 state=\"pending\" 的合并查询")
+	require.Equal(t, 2, counts["pending_agent"])
+	require.Equal(t, 3, counts["pending_agent_two"])
+	require.Equal(t, 4, counts["awaiting_second"],
+		"awaiting_second 独立计数：已有一票、首票不放行，最容易卡住")
+
+	// 预演行与跨租户行都不得出现：总数必须等于 1+2+3+4。
+	total := 0
+	for _, n := range counts {
+		total += n
+	}
+	require.Equal(t, 10, total,
+		"总数 10 = 本租户真实待批；多出来就是预演行或他人租户混入")
+}
+
+// 空租户必须返回空 map 而不是 nil：nil 序列化成 null，{} 序列化成 {}，
+// 调用方无法区分「查询没跑」与「确实没有待批」。
+func TestCountToolInvocationsByApprovalStateEmptyTenantReturnsEmptyMap(t *testing.T) {
+	f := newRunScopeRepo(t)
+	ctx := context.Background()
+
+	counts, err := f.repo.CountToolInvocationsByApprovalState(ctx, f.tenantA)
+	require.NoError(t, err)
+	require.NotNil(t, counts, "返回 nil map 会让空队列与查询失败在序列化后不可区分")
+	require.Empty(t, counts)
+	require.Equal(t, 0, counts["pending"], "空 map 读缺失键必须得 0，而不是 panic")
+}

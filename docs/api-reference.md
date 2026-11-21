@@ -2951,6 +2951,127 @@ mock 函数符号的测试与只校验路径存在性的契约测试都无法发
 URL 层（或等价的最底层调用点）补具名断言。这类缝隙同样适用于
 `aiDryRunTool` 与将来的 `ActionFlow` 触发接口。
 
+### 控制面聚合读面：`GET /api/v1/agent/control-plane`
+
+**权限 `ai:read`**。零副作用（纯 GET，不建行、不推进审批、不落审计）。
+
+存在的理由是一个具体的运维问题：「昨天改了策略，到底生效没有？」这个问题的
+答案分散在三个真源和三次请求里——`GET /permissions/{id}/policy`（策略正文）、
+`GET /agent/tools/invocations?state=pending`（待批队列）、`GET /agent/tools`
+（工具可见面）。分开取会得到一个**不对应任何真实时刻**的拼装结果：各表在三次
+请求之间仍在变，而运维正是拿这个数字去判断「改了策略之后可见面有没有变化」。
+
+```json
+{
+  "code": 0,
+  "data": {
+    "tenantId": 1,
+    "role": "admin",
+    "toolSurface": [
+      { "name": "create_ticket", "resource": "ticket", "action": "write",
+        "readOnly": false, "visible": true, "riskLevel": "medium" },
+      { "name": "delete_ci", "resource": "ci", "action": "delete",
+        "readOnly": false, "visible": false, "riskLevel": "high" }
+    ],
+    "visibleTools": 1,
+    "totalTools": 2,
+    "queue": { "pending": 1, "pendingAgent": 0,
+               "pendingAgentTwo": 2, "awaitingSecond": 1, "total": 4 },
+    "policies": { "total": 42, "withPolicy": 38, "policyFree": 3, "unreadable": 1 },
+    "recentDenial": [
+      { "id": 9001, "toolName": "delete_ci", "userId": 7, "roleSnapshot": "technician",
+        "permissionCheck": "passed",
+        "reason": "AI 主体 agent 未获授权 ci:delete",
+        "policyVersion": "3f8a1c0d9e2b4a76", "runId": "run_a1b2c3",
+        "createdAt": "2026-11-21T10:12:44+08:00" }
+    ],
+    "gatheredAt": "2026-11-21T12:00:00+08:00"
+  }
+}
+```
+
+**它不做判定，只做聚合。** 这是本端点最重要的约束：
+
+- 工具可见性直接调用 `middleware.HasResourcePermission`——与
+  `GET /agent/tools` **完全同一个函数**，不另写一套可见性规则；
+- 待批队列直接走仓储的分组计数（与审批待办同源的 `dry_run=false` 排除规则）；
+- 策略计数直接读 `permissions` 表的既有列，用与鉴权相同的严格解码器。
+
+**绝不在聚合面里跑 `evaluateToolCall`。** 一旦它自己判定一次，就会与真实执行
+路径形成第二个判定点——而这正是本项目明令禁止的分叉。「允许不允许」的问题
+走 `POST /agent/tools/dry-run` 或 `POST /agent/tools/invocations/{id}/review`。
+
+#### `queue` 四态不可合并
+
+| 字段 | 含义 | 处理人 |
+|:--|:--|:--|
+| `pending` | 人发起，任一人审批即可 | 任一审批人 |
+| `pendingAgent` | AI 发起、单人审批 | 任一审批人（不得发起人自批） |
+| `pendingAgentTwo` | AI 发起、双人审批，**尚无人投第一票** | 两位不同审批人 |
+| `awaitingSecond` | **已有一票**，等第二个不同的人复审（首票不放行） | 另一位审批人 |
+
+把后两者合并成「AI 待批 3 条」会直接误导运维：`awaitingSecond` 那批
+**已经有人批过一半**、再不处理就卡住了；而 `pendingAgentTwo` 是还没人开始的。
+两者的紧急程度完全不同。
+
+#### `policies` 三类不可合并
+
+| 字段 | 含义 | 鉴权时的实际行为 |
+|:--|:--|:--|
+| `withPolicy` | 管理员显式配置了合法策略信封 | 真正读取该策略 |
+| `policyFree` | 无信封（空描述或纯文本旧描述） | 走 `DerivePolicy` 推导（AI 主体默认零权限） |
+| `unreadable` | 信封存在但解不出（坏 JSON / 未知版本 / 策略非法） | **fail-closed，一律拒绝** |
+
+`unreadable` 是三类里最危险的一类。它看起来配了策略，但鉴权时严格解码失败
+会全拒。并进 `withPolicy` 会让运维以为已生效；并进 `policyFree` 会让运维
+以为只是没配。两种合并都让**最需要被看见的一类彻底隐身**。
+
+#### `recentDenial` 只含真实拒绝
+
+过滤条件是 `status = 'denied'` **且** `dry_run = false`，两者都必须精确匹配：
+
+- `status` 用**精确相等**而非前缀/子串：预演拒绝的 `status` 是
+  `dry_run_denied`，用 `LIKE 'denied%'` 会漏掉它（它不以 `denied` 开头），
+  但用**子串匹配** `%denied%` 会把它吸进来——被吸进来的后果是运维去排查一个
+  根本不存在的拦截。
+- `dry_run = false` 是**独立的第二条防线**。实测发现：仅靠 `status` 精确匹配时，
+  这条防线在测试里**不可被证明**（预演行的 status 是 `dry_run_denied`，本来
+  就不匹配）。因此回归锁里有一条专门构造「`dry_run=true` 且 `status='denied'`」
+  的用例——这是唯一能区分两道防线的输入，也是真实可能出现的形态（把预演做成
+  「可审批草稿」的产品诉求，最省事的实现就是给预演行写 `status='denied'` 或复用
+  真实审计写入函数）。
+
+上限 10 条固定，不参数化：参数化会诱导调用方传 1000 然后在页面上渲染一整屏
+历史拒绝，那时它就不再是「最近」了。只取拒绝而不取全量，是因为允许的调用量
+随时间线性增长且绝大多数无异常，而拒绝是**稀疏事件**——十条就足以看出
+「哪个工具一直在被挡」。
+
+#### 读面 fail-closed
+
+任一真源读失败就整单报错（500），**不返回「其余真实 + 该项空」**。
+
+半真半假的运维视图比没有视图更危险：界面显示「0 个待批」会让运维以为队列
+已经清空而停止处理，而实际是查询失败。前端因此只需要处理两种结果——拿到
+完整快照，或者明确失败（页面上必须显式报「这不代表队列为空」）。
+
+#### `role` 必须回显
+
+同一租户、同一时刻，管理员看到 14 个工具可见、普通技术员看到 6 个。
+不说明「按谁算的」，界面上的「可见工具数」就没有确定含义。
+
+#### 内部约定
+
+- 查询超时 5 秒，用 `context.WithTimeout(context.WithoutCancel(ctx), 5s)` 派生：
+  调用方（运维页面轮询）断开不应让已经跑完一半的查询白费，也不应让慢查询
+  继续占用数据库连接。5s 与 root_cause 落库同一口径。
+- `gatheredAt` 必须返回。读面是多真源的快照，不标时刻就无法解释
+  「为什么我刷新后数字变了」——各表在此期间可能各自在变。
+- 队列计数走仓储的 `CountToolInvocationsByApprovalState` 而非逐态调用
+  `ListToolInvocations`：后者的 `state="pending"` 是**四态合并的业务语义**
+  （审批页需要一次看全，否则高危操作会卡在 `awaitingSecond` 无人处理），
+  拿它当单态计数会让 `pending` 变成四态之和、`total` 被重复累加。
+  合并语义不能改（审批页依赖它），所以精确分组只能另开一条读面。
+
 **DDL AI 审批流模板（Phase B3''，骨架）**：内置 BPMN 模板
 `ddl_ai_approval_flow`（`status=skeleton`）定义「提交→AI分析→AI分类→SOP生成
 （人确认）→SOP反馈→SOP迭代→关闭」节点与权限意图元数据，尚未绑定 ServiceTask

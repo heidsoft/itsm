@@ -31,6 +31,22 @@ type Repository interface {
 	GetToolInvocation(ctx context.Context, id int, tenantID int) (*ToolInvocation, error)
 	DecideToolInvocation(ctx context.Context, id, tenantID, actorID int, approve bool, reason string) (*ToolInvocation, error)
 	ListToolInvocations(ctx context.Context, tenantID int, state string) ([]*ToolInvocation, error)
+	// CountToolInvocationsByApprovalState 按审批态分组计数（键 = approval_state）。
+	//
+	// 为什么必须新增而不是复用 ListToolInvocations 逐态调用：
+	// ListToolInvocations 的 state="pending" 是**业务语义的合并查询**——它一次
+	// 返回 pending / pending_agent / pending_agent_two / awaiting_second 四种态
+	// （审批页需要一次看全，否则高危操作会卡在 awaiting_second 无人处理）。
+	// 拿它当「单态计数」用，Pending 会变成四态之和，而其余三态各自又精确，
+	// 于是 Total 被重复累加（实测：期望 10、实得 19）。
+	//
+	// 合并语义不能改（审批页依赖它），所以精确分组只能另开一条读面。
+	// 顺带解决一个真实开销：为计数把整行捞回来，待批队列一大就是
+	// 「查 500 行只为了知道 500 这个数字」。
+	//
+	// dry_run 排除规则必须在这里与 ListToolInvocations 保持一致——
+	// 预演行不是调用，任何队列视图都不该把它算进待办。
+	CountToolInvocationsByApprovalState(ctx context.Context, tenantID int) (map[string]int, error)
 	// ListToolInvocationsByRun 按运行轮次取出该轮全部工具调用（含只读审计行）。
 	//
 	// 存在的理由：审计要求「不可抵赖 + 可回放」，而一次 Agent 会话的多次调用

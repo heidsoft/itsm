@@ -481,6 +481,92 @@ export interface ToolApprovalListResponse {
   state: string;
 }
 
+// ==================== 控制面聚合读面 ====================
+// 对齐后端 GET /api/v1/agent/control-plane。
+// 字段名与后端 ControlPlaneOverview 逐一对齐，不做前端改名——改名会让
+// 「后端加了字段但前端没消费」这种漂移无法被 grep 发现。
+
+/**
+ * 策略配置面的三类计数。**三类不可合并**，前端必须分别展示：
+ *
+ * - `withPolicy`  —— 管理员显式配置了合法策略信封，鉴权时会被真正读取；
+ * - `policyFree`  —— 没有策略信封（空描述或纯文本旧描述），鉴权走
+ *                    DerivePolicy 推导（AI 主体默认零权限）；
+ * - `unreadable`  —— 信封存在但解不出（坏 JSON / 未知版本），鉴权时
+ *                    fail-closed 一律拒绝。
+ *
+ * 把 `unreadable` 并进 `withPolicy` 会让运维以为已生效；并进 `policyFree`
+ * 会让运维以为只是没配。两者都让**最危险的一类彻底隐身**。
+ */
+export interface AgentControlPlanePolicySummary {
+  total: number;
+  withPolicy: number;
+  policyFree: number;
+  unreadable: number;
+}
+
+/**
+ * 待批队列四种状态分别计数。**不合并**，因为它们的处理人不同：
+ * - `pending`          人发起，任一人审批即可；
+ * - `pendingAgent`     AI 发起，单人审批；
+ * - `pendingAgentTwo`  AI 发起，双人审批，尚无人投第一票；
+ * - `awaitingSecond`   已有一票，等第二个不同的人复审（**首票不放行**）。
+ *
+ * 合并后两者会误导运维：awaitingSecond 那批已经批了一半、再不处理就卡住了。
+ */
+export interface AgentControlPlaneQueueSummary {
+  pending: number;
+  pendingAgent: number;
+  pendingAgentTwo: number;
+  awaitingSecond: number;
+  total: number;
+}
+
+/** 最近一次被拒绝的判定（只读投影，不含预演行）。 */
+export interface AgentControlPlaneRecentDenial {
+  id: number;
+  toolName: string;
+  userId: number;
+  roleSnapshot: string;
+  permissionCheck: string;
+  reason: string;
+  /** 策略版本三态：空串=无策略参与 / unknown=读不出 / 指纹=实际依据。 */
+  policyVersion: string;
+  runId: string;
+  createdAt: string;
+}
+
+/** 单个工具的可见性（与 GET /agent/tools 同源）。 */
+export interface AgentControlPlaneToolSurface {
+  name: string;
+  resource: string;
+  action: string;
+  readOnly: boolean;
+  /** 该角色此刻能否看到/调用此工具。false 也要展示——运维需要看到「有哪些工具被挡住」。 */
+  visible: boolean;
+  /** 风险分级；`unknown` = 权限目录不可读，不是「无风险」。 */
+  riskLevel: string;
+}
+
+/** 控制面聚合快照。 */
+export interface AgentControlPlaneOverview {
+  tenantId: number;
+  /**
+   * 本次请求的调用者角色。**必须展示**：同一租户同一时刻，
+   * 管理员看到 14 个工具可见、普通技术员看到 6 个——不说明「按谁算的」，
+   * 界面上的「可见工具数」就没有确定含义。
+   */
+  role: string;
+  toolSurface: AgentControlPlaneToolSurface[];
+  visibleTools: number;
+  totalTools: number;
+  queue: AgentControlPlaneQueueSummary;
+  policies: AgentControlPlanePolicySummary;
+  recentDenial: AgentControlPlaneRecentDenial[];
+  /** 采集时刻（RFC3339）。多真源快照不标时间就无法解释「刷新后数字怎么变了」。 */
+  gatheredAt: string;
+}
+
 export interface ToolApproveRequest {
   approve: boolean;
   reason?: string;
@@ -575,6 +661,27 @@ export async function aiReviewToolInvocation(invocationId: number): Promise<Tool
     `/api/v1/agent/tools/invocations/${encodeURIComponent(String(invocationId))}/review`,
     {}
   );
+}
+
+/**
+ * 控制面聚合快照：一次请求拿到「AI 工具控制面」当前的四个事实面。
+ * 对应后端 GET /api/v1/agent/control-plane（ai:read）
+ *
+ * 为什么需要聚合而不是让前端并发调四个接口：
+ * - **口径一致性**：待批队列、策略覆盖、工具可见面必须来自同一时刻的同一批谓词。
+ *   四次独立请求之间各表仍在变，拼出来的「可见工具 14 / 待批 3 / 策略 20」并不对应
+ *   任何真实时刻，运维无法据此判断「改了策略到底生效没有」。
+ * - **fail-closed 语义**：后端任一真源读失败就整单报错（500），前端只需要处理
+ *   两种结果——拿到完整快照，或者明确失败。部分数据比没有数据更危险：
+ *   「待批 0 条」会让运维以为队列清空了，而实际是查询失败。
+ *
+ * 本接口**不做任何判定**：可见性来自与 GET /agent/tools 同一个权限函数，
+ * 队列来自与审批页同源的仓储查询。它只回答「现在是什么样」，
+ * 「允许不允许」走 aiDryRunTool / aiReviewToolInvocation。
+ */
+export async function aiGetControlPlane(): Promise<AgentControlPlaneOverview> {
+  // 路径写成字面量、不拼进 const：契约测试按文件名级 name→path 静态映射解析。
+  return httpClient.get<AgentControlPlaneOverview>('/api/v1/agent/control-plane');
 }
 
 // ==================== 合并自 legacy AIService（src/lib/services/ai-service.ts） ====================

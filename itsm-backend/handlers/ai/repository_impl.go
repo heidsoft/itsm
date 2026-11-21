@@ -275,6 +275,45 @@ func (r *EntRepository) ListToolInvocations(ctx context.Context, tenantID int, s
 	return out, nil
 }
 
+// CountToolInvocationsByApprovalState 按审批态分组计数。
+//
+// 存在的理由与 ListToolInvocations 的合并语义直接相关：后者 state="pending"
+// 一次返回四种待批态（审批页需要一次看全），所以它**无法**被用来取单态的
+// 精确条数——Pending 会被算成四态之和。聚合读面要的是「pending 几条、
+// pending_agent 几条」这种精确数字，只能另开一条读面。
+//
+// dry_run 排除规则与 ListToolInvocations 一致（预演不是调用，不进任何队列视图），
+// 且这条规则只在此处与那里各写一次——两处若出现分歧，审批页与聚合面就会
+// 对同一队列报出不同数字，而没有任何测试会替发现它。
+func (r *EntRepository) CountToolInvocationsByApprovalState(ctx context.Context, tenantID int) (map[string]int, error) {
+	type approvalStateRow struct {
+		ApprovalState string `json:"approval_state"`
+		Count         int    `json:"count"`
+	}
+
+	var rows []approvalStateRow
+	err := r.client.ToolInvocation.Query().
+		Where(
+			toolinvocation.TenantID(tenantID),
+			toolinvocation.DryRunEQ(false),
+		).
+		GroupBy(toolinvocation.FieldApprovalState).
+		Aggregate(ent.Count()).
+		Scan(ctx, &rows)
+	if err != nil {
+		return nil, err
+	}
+
+	// 必须初始化为空 map 而不是 nil：调用方（聚合读面）会直接读四个键，
+	// nil map 读值返回 0 虽然不 panic，但把 nil 往下传会让「空队列」
+	// 与「查询没跑」在序列化后不可区分（nil → null，{} → {}）。
+	counts := make(map[string]int, len(rows))
+	for _, row := range rows {
+		counts[row.ApprovalState] = row.Count
+	}
+	return counts, nil
+}
+
 // DecideToolInvocation 原子推进审批状态。批准时在同一事务内写入 ai.tool.execute 命令：
 // 审批落库但命令没入箱，会让调用永远停在 pending，且没有可恢复的记录。
 // 审批状态用「当前状态」条件更新做 CAS，重复/并发审批返回业务冲突而不是再次入箱。
