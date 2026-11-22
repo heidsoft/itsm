@@ -4,7 +4,7 @@
  * 防止 Alert 同时写 message + 长 description 导致冗余引导
  * 用法: node scripts/check-alert-verbosity.js
  *
- * 规则: Alert 组件如果同时有 message 和 description，
+ * 规则: Alert 组件如果同时有 message/title（AntD 6 用 title）和 description，
  * description 文本长度不应超过 60 字符（约 30 个汉字）。
  * 超过则认为冗余，应合并到 message 或删除。
  */
@@ -60,8 +60,9 @@ function checkFile(filePath) {
     }
 
     if (inAlert) {
-      // Track message prop
-      if (/message\s*=/.test(line)) {
+      // AntD 6 把 Alert.message 改名为 title；两者都要继续受同一条文案守卫约束。
+      // 只认 message 会让迁移后的 Alert 长描述静默逃过检查。
+      if (/(message|title)\s*=/.test(line)) {
         const val = extractStringFromProp(line);
         if (val) messageValue = val;
       }

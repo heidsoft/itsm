@@ -148,8 +148,8 @@ const CMDBQualityReport = () => {
           className="mb-6"
           type="info"
           showIcon
-          title="尚未配置必填属性定义，完整率不可评估"
-          description="完整率的分母是「所属 CI 类型已配置必填属性的配置项」。请在 CMDB「属性定义」中为相关 CI 类型标注必填项后，本页才会给出完整率。当前显示的空值不代表数据质量差。"
+          title="尚未配置必填属性，完整率不可评估"
+          description="空值不代表数据质量差；请在 CMDB「属性定义」中标注必填项。"
         />
       )}
 

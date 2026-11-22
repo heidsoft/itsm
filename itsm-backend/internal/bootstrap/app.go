@@ -512,7 +512,9 @@ func NewApplication() *Application {
 		}
 	}
 	connectorMarket := marketplace.New()
-	connectorHandler := connectorHandler.NewHandler(connectorManager, connector.Default(), connectorMarket, sugar)
+	// 注入 ent client：Send/Test 需按 manifest 声明的 required_permissions 校验调用方，
+	// 判定走 middleware.HasResourcePermission 单一真源（与 skill handler 同构）。
+	connectorHandler := connectorHandler.NewHandler(connectorManager, connector.Default(), connectorMarket, sugar, client)
 	connectorHandler.SetAuditRecorder(domainCommon.NewEntRepository(client))
 	alertHandler := connectorAlert.NewHandler(alertRegistry, connectorManager, client, alertDevelopmentMode())
 	connectorEncryptionKey := os.Getenv("CONNECTOR_CONFIG_ENCRYPTION_KEY")
@@ -1104,6 +1106,7 @@ func NewApplication() *Application {
 	aiServiceDomain.SetEntClient(client)
 	// AI 主体零信任判定共享同一个注册表：权限策略改完，AI 执行链立即生效。
 	aiServiceDomain.SetPermissionCatalog(authz.Shared())
+	toolExecutor.SetApprovedToolGuard(aiServiceDomain)
 	aiHandler := ai.NewHandler(aiServiceDomain)
 
 	// Skill Registry：在 ai.Service 装配完成后注入内置 Skill。
@@ -1169,10 +1172,11 @@ func NewApplication() *Application {
 	// resource:action** 逐个判定 —— service 主体须由管理员在权限策略中按工具码
 	// 显式加入 service，符合「AI 主体零权限是核心防线」的既有设计。
 	mcpHandler, mcpErr := BuildMCPHandler(Dependencies{
-		ToolRegistry: toolRegistry,
-		AIService:    aiServiceDomain,
-		Marketplace:  marketplaceSvc,
-		Logger:       sugar,
+		VisibilityChecker: mcpVisibilityAdapter{client: client},
+		ToolRegistry:      toolRegistry,
+		AIService:         aiServiceDomain,
+		Marketplace:       marketplaceSvc,
+		Logger:            sugar,
 	})
 	if mcpErr != nil {
 		// 装配失败属致命配置错误：MCP 通道必须 fail-closed，

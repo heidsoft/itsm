@@ -26,6 +26,7 @@ func TestConnectorRotateSecretRouteRegistered(t *testing.T) {
 		connector.Default(),
 		marketplace.New(),
 		zap.NewNop().Sugar(),
+		nil, // 本用例只验证路由注册，不触发 required_permissions 校验
 	)
 
 	engine := gin.New()

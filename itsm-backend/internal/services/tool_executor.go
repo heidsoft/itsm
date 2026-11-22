@@ -11,6 +11,15 @@ import (
 	"go.uber.org/zap"
 )
 
+// ApprovedToolGuard reuses the Action Gateway decision at execution time.
+type ApprovedToolGuard interface {
+	RevalidateApprovedTool(context.Context, int, int, string, string, string) (bool, string, error)
+}
+
+type approvedToolRunner interface {
+	Execute(context.Context, int, string, map[string]interface{}) (interface{}, error)
+}
+
 // ToolExecutor 执行审批通过的 AI 写工具。
 //
 // 执行入口只来自 operational_commands（ai.tool.execute）：进程内 channel 在缓冲满时
@@ -19,7 +28,8 @@ import (
 // 重放必须由操作者显式发起，不能由重试自动完成。
 type ToolExecutor struct {
 	client *ent.Client
-	tools  *ToolRegistry
+	tools  approvedToolRunner
+	guard  ApprovedToolGuard
 	logger *zap.SugaredLogger
 }
 
@@ -29,6 +39,8 @@ func NewToolExecutor(client *ent.Client, tools *ToolRegistry, logger *zap.Sugare
 	}
 	return &ToolExecutor{client: client, tools: tools, logger: logger}
 }
+
+func (e *ToolExecutor) SetApprovedToolGuard(guard ApprovedToolGuard) { e.guard = guard }
 
 // HandleCommand 是 ai.tool.execute 的 outbox handler；AggregateID 即 invocation id。
 func (e *ToolExecutor) HandleCommand(ctx context.Context, cmd *ent.OperationalCommand) error {
@@ -99,6 +111,22 @@ func (e *ToolExecutor) ExecuteApprovedInvocation(ctx context.Context, invocation
 		return fmt.Errorf("tool invocation %d is not claimable (status=%s)", invocationID, latest.Status)
 	}
 
+	// Revalidate the persisted initiating identity, never the approver's context.
+	allowed, reason := false, "approved tool guard unavailable"
+	if e.guard != nil {
+		var guardErr error
+		allowed, reason, guardErr = e.guard.RevalidateApprovedTool(ctx, tenantID, inv.UserID, inv.RoleSnapshot, inv.ToolName, inv.PolicyVersion)
+		if guardErr != nil {
+			allowed, reason = false, "approved tool revalidation failed"
+		}
+	}
+	if !allowed {
+		if reason == "" {
+			reason = "approved tool permission denied"
+		}
+		return e.finalize(ctx, invocationID, tenantID, nil, &approvedToolDenial{reason: reason})
+	}
+
 	var args map[string]interface{}
 	if inv.Arguments != "" {
 		if err := json.Unmarshal([]byte(inv.Arguments), &args); err != nil {
@@ -110,6 +138,10 @@ func (e *ToolExecutor) ExecuteApprovedInvocation(ctx context.Context, invocation
 	res, execErr := e.tools.Execute(ctx, tenantID, inv.ToolName, withInvocationUser(args, inv.UserID))
 	return e.finalize(ctx, invocationID, tenantID, res, execErr)
 }
+
+type approvedToolDenial struct{ reason string }
+
+func (e *approvedToolDenial) Error() string { return e.reason }
 
 // finalize 把工具执行结果写回 ToolInvocation（成功/失败两态）。
 func (e *ToolExecutor) finalize(ctx context.Context, invocationID, tenantID int, res interface{}, execErr error) error {
@@ -134,6 +166,9 @@ func (e *ToolExecutor) finalize(ctx context.Context, invocationID, tenantID int,
 		SetStatus(status)
 	if status == "failed" {
 		update.SetError(errText)
+		if denial, ok := execErr.(*approvedToolDenial); ok {
+			update.SetPermissionCheck("denied").SetPermissionReason(denial.reason)
+		}
 	} else {
 		update.SetResult(result)
 	}

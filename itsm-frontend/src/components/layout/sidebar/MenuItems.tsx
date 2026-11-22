@@ -7,7 +7,10 @@
 import React from 'react';
 import { Menu, Badge } from 'antd';
 import type { MenuProps } from 'antd';
-import styles from '../Sidebar.module.css';
+// 必须与 Sidebar.tsx 使用同一份 CSS Module：CSS Modules 按文件哈希类名，
+// 之前从父目录引入同名模块，导致本组件渲染的 .customMenu 永远匹配不到
+// sidebar/Sidebar.module.css 中的暗色菜单项覆盖规则。
+import styles from './Sidebar.module.css';
 import type { MenuItem } from './menu-config';
 
 interface MenuItemsProps {

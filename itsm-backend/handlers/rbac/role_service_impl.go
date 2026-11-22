@@ -575,7 +575,7 @@ func (s *roleServiceImpl) writePermissionChangeAudit(ctx context.Context, roleEn
 //
 // 权限码的运行期真源是 DB permissions 行；本实现只负责读写那一行，
 // 不再内联任何 resource/action 字典。策略以版本化信封存在 description 里，
-// 变更后通过 authz.Shared().Invalidate 让所有鉴权消费方立即看到。
+// 变更后通过 middleware.InvalidateAuthzCaches 让所有鉴权消费方（含其它副本）立即看到。
 type permissionServiceImpl struct {
 	client *ent.Client
 	logger *zap.SugaredLogger
@@ -675,7 +675,7 @@ func (s *permissionServiceImpl) createPermission(ctx context.Context, req *dto.C
 	if err != nil {
 		return nil, fmt.Errorf("创建权限失败: %w", err)
 	}
-	authz.Shared().Invalidate(tenantID)
+	middleware.InvalidateAuthzCaches(tenantID)
 	return s.toPermissionResponse(permEntity), nil
 }
 
@@ -753,7 +753,10 @@ func (s *permissionServiceImpl) UpdatePermission(ctx context.Context, id, tenant
 	if err != nil {
 		return nil, fmt.Errorf("更新权限失败: %w", err)
 	}
-	authz.Shared().Invalidate(tenantID)
+	middleware.InvalidateAuthzCaches(tenantID)
+	// 停用状态属于人工 RBAC 判定输入（middleware 的 role→permission 缓存），
+	// 只失效 authz.Registry 会让人类用户在 TTL 窗口内继续持有已停用的码。
+	middleware.InvalidateAllPermissionCachesEx()
 	s.logger.Infow("permission policy updated",
 		"tenant_id", tenantID, "code", existing.Code,
 		"risk", policy.RiskLevel, "principals", policy.AllowedPrincipals,
@@ -787,7 +790,9 @@ func (s *permissionServiceImpl) DeletePermission(ctx context.Context, id, tenant
 		SetDescription(encoded).Save(ctx); err != nil {
 		return fmt.Errorf("停用权限失败: %w", err)
 	}
-	authz.Shared().Invalidate(tenantID)
+	middleware.InvalidateAuthzCaches(tenantID)
+	// 同上：必须同步失效人工 RBAC 的缓存，否则停用只影响 AI 判定链。
+	middleware.InvalidateAllPermissionCachesEx()
 	return nil
 }
 
@@ -838,7 +843,7 @@ func (s *permissionServiceImpl) InitDefaultPermissions(ctx context.Context, tena
 		}
 		created++
 	}
-	authz.Shared().Invalidate(tenantID)
+	middleware.InvalidateAuthzCaches(tenantID)
 	s.logger.Infow("permission bootstrap reconciled", "tenant_id", tenantID, "created", created, "total", len(authz.Definitions()))
 	return nil
 }

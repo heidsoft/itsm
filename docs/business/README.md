@@ -22,7 +22,7 @@
 - **产品能力边界**：[`docs/product/open-source-release-capability.md`](../product/open-source-release-capability.md)、[`docs/product/itsm-commercial-capability-contract.md`](../product/itsm-commercial-capability-contract.md)
 - **竞品与行业**：[`docs/product/servicenow-gap-analysis.md`](../product/servicenow-gap-analysis.md)、[`docs/product/industry-verticals-analysis-2026-08-01.md`](../product/industry-verticals-analysis-2026-08-01.md)
 - **前置商业化蓝图**：[`plans/open-source-commercialization-2026q3-blueprint.md`](../../plans/open-source-commercialization-2026q3-blueprint.md)、[`plans/cmdb-commercialization-blueprint.md`](../../plans/cmdb-commercialization-blueprint.md)
-- **社区运营雏形**：[`output/growth/05-community-playbook.md`](../../output/growth/05-community-playbook.md)、[`output/growth/README.md`](../../output/growth/README.md)
+- **社区运营**：早期 growth 草案未纳入本仓库版本管理，仓库内没有可引用的正式文档；此前指向 `output/growth/` 的链接长期失效，已移除而非补造占位文件。
 - **标签与 Issue 治理**：[`docs/label-schema.md`](../label-schema.md)
 - **架构治理（ADR）**：[`docs/architecture/`](../architecture/)
 

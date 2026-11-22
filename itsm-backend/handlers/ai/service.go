@@ -216,6 +216,27 @@ type toolDecision struct {
 	PolicyVersion string
 }
 
+// RevalidateApprovedTool uses the persisted policy fingerprint to recover the
+// original principal: empty means human; every nonempty value means agent.
+// ApprovalState cannot recover it after approval has changed that state.
+func (s *Service) RevalidateApprovedTool(ctx context.Context, tenantID, userID int, role, name, storedPolicyVersion string) (bool, string, error) {
+	principal := authz.PrincipalHuman
+	if storedPolicyVersion != "" {
+		principal = authz.PrincipalAgent
+	}
+	d, err := s.evaluateToolCall(ctx, tenantID, userID, role, name, principal)
+	if err != nil {
+		return false, "approved tool revalidation unavailable", err
+	}
+	if !d.Allowed {
+		return false, d.PermReason, nil
+	}
+	if d.PolicyVersion == authz.PolicyVersionUnknown || d.PolicyVersion != storedPolicyVersion {
+		return false, "approved tool policy fingerprint changed or unavailable", nil
+	}
+	return true, "", nil
+}
+
 // evaluateToolCall 跑完 Gate 2 + Gate 2.5，返回判定结论。
 //
 // 不执行任何副作用（不落审计、不执行工具、不建待审批行）——副作用由调用方

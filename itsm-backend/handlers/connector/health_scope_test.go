@@ -91,7 +91,7 @@ func newTwoTenantFixture(t *testing.T) (*Handler, *map[int]int) {
 			t.Fatalf("provision tenant %d: %v", tenant, err)
 		}
 	}
-	return NewHandler(mgr, reg, marketplace.New(), zap.NewNop().Sugar()), &calls
+	return NewHandler(mgr, reg, marketplace.New(), zap.NewNop().Sugar(), nil), &calls
 }
 
 func callGET(t *testing.T, h *Handler, tenantID int, method string, path string, fn func(*gin.Context)) *httptest.ResponseRecorder {

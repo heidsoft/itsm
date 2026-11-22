@@ -622,6 +622,40 @@ func (h *Handler) Invoke(c *gin.Context) {
 		return
 	}
 	userID := c.GetInt("user_id")
+
+	// 归属门禁（第一道）：任何后续判定之前先确定执行对象的租户视角。
+	// 注册表进程级共享，租户 A 注册的自定义技能对租户 B 必须表现为「不存在」。
+	// 查不到即 404 并返回——否则旧路径会带着 entryErr != nil 继续往下走，
+	// 第二道 requiredPermissions 门禁被整段跳过，执行入口按全局 code 命中
+	// 别人的技能，形成跨租户执行 + 权限声明双重绕过。
+	entry, entryErr := h.registry.GetEntryScoped(tenantID, code)
+	if entryErr != nil {
+		h.logger.Infow("skill invoke denied by tenant scope",
+			"skill", code, "tenant_id", tenantID)
+		// 查不到（含跨租户探测）也是一次被拒的调用，沿用执行失败的底账口径：
+		// ok=false + errorClass=not_found；响应不区分「不存在」与「不属于你」。
+		h.recordInvokeAudit(c.Request.Context(), tenantID, userID, code, "", false, 0,
+			classifyInvokeError(entryErr))
+		failInvoke(c, code, entryErr)
+		return
+	}
+
+	// InputSchema 执行前校验（第三道）：manifest 声明的 required/type/enum
+	// 此前只在发现面暴露、从不消费。必须在身份字段注入**之前**校验原始入参——
+	// 否则注入的 tenantId/userId/role 会污染调用方入参，让 additionalProperties
+	// 之类的约束误判，也让「调用方少传了必填字段」被注入字段掩盖。
+	// 校验失败按 validation 分类落失败底账并返回 400，不执行技能。
+	if schemaErr := validateSkillInput(entry.Manifest.InputSchema, input); schemaErr != nil {
+		h.logger.Infow("skill invoke rejected by inputSchema",
+			"skill", code, "tenant_id", tenantID, "error", schemaErr.Error())
+		h.recordInvokeAudit(c.Request.Context(), tenantID, userID, code, entry.Version, false, 0,
+			classifyInvokeError(schemaErr))
+		failInvoke(c, code, schemaErr)
+		return
+	}
+
+	// 身份字段注入放在 InputSchema 校验之后：只覆盖认证上下文来源的值，
+	// 且不会被 schema 校验误当作调用方入参。
 	input["tenantId"] = tenantID
 	input["userId"] = userID
 	input["role"] = c.GetString("role")
@@ -644,12 +678,11 @@ func (h *Handler) Invoke(c *gin.Context) {
 		}
 	}
 
-	// 执行前校验 skill 声明的 RequiredPermissions。
+	// 执行前校验 skill 声明的 RequiredPermissions（第二道，无条件执行）。
 	// 该字段此前只存不验：manifests 里声明了 ticket:write 之类的 skill，
 	// 任何持 ai:read 的角色都能调用，声明等于装饰。
 	// 空列表不校验（字段可选，保持向后兼容）。
-	entry, entryErr := h.registry.GetEntryScoped(tenantID, code)
-	if entryErr == nil && !h.enforceRequiredPermissions(c, entry) {
+	if !h.enforceRequiredPermissions(c, entry, tenantID) {
 		return
 	}
 
@@ -657,12 +690,9 @@ func (h *Handler) Invoke(c *gin.Context) {
 	defer cancel()
 
 	// skill 版本进底账 prompt_version 列：技能无 prompt 语义，版本是最近的口径标识。
-	entryVersion := ""
-	if entryErr == nil {
-		entryVersion = entry.Version
-	}
+	entryVersion := entry.Version
 
-	result, err := h.registry.InvokeWithMetrics(ctx, code, input)
+	result, err := h.registry.InvokeWithMetrics(ctx, tenantID, code, input)
 	if err != nil {
 		// 失败也留痕：稳定错误分类进 suggestion，不写错误原文（可能携带
 		// LLM provider 或内部细节）。审计是 best-effort，写失败不改变响应语义。
@@ -672,9 +702,6 @@ func (h *Handler) Invoke(c *gin.Context) {
 	}
 	h.recordInvokeAudit(ctx, tenantID, userID, code, entryVersion, true, result.LatencyMs, "")
 
-	if entryErr != nil {
-		entry, _ = h.registry.GetEntryScoped(tenantID, code)
-	}
 	resp := SkillInvokeResponse{
 		Code:           code,
 		Output:         result.Output,
@@ -687,17 +714,18 @@ func (h *Handler) Invoke(c *gin.Context) {
 
 // enforceRequiredPermissions 校验调用方是否持有 skill manifest 声明的全部权限码。
 // 任一不满足即返回 false（响应已写入），全部满足或列表为空返回 true。
+// tenantID 由 Invoke 显式传入（已通过 ResolveTenantID 解析），不从 gin context
+// 二次读取，避免归属判定与权限判定用上不同的租户。
 //
 // 权限码格式为 "resource:action"（如 ticket:write），与 catalog.go 一致；
 // 拆分后走 middleware.HasResourcePermission 单一真源，避免本地再实现一套匹配。
 // 格式非法的码按不满足处理（fail-closed）：声明了无法解析的权限码，
 // 说明 manifest 本身有问题，不应放行。
-func (h *Handler) enforceRequiredPermissions(c *gin.Context, entry dto.SkillEntry) bool {
+func (h *Handler) enforceRequiredPermissions(c *gin.Context, entry dto.SkillEntry, tenantID int) bool {
 	if len(entry.RequiredPerms) == 0 {
 		return true
 	}
 	role := c.GetString("role")
-	tenantID := c.GetInt("tenant_id")
 	ctx := c.Request.Context()
 	for _, perm := range entry.RequiredPerms {
 		resource, action, ok := strings.Cut(perm, ":")

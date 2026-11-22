@@ -35,6 +35,8 @@ func ProjectTool(def dto.ToolDefinition) (Tool, error) {
 		return Tool{}, fmt.Errorf("工具 %q 的 argsSchema 非法: %w", def.Name, err)
 	}
 	tool := Tool{
+		Resource:    def.Resource,
+		Action:      def.Action,
 		Name:        def.Name,
 		Description: def.Description,
 		InputSchema: input,

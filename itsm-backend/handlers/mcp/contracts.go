@@ -53,3 +53,9 @@ type Entitlement struct {
 	// Reason 在拒绝时说明原因（未上架 / 未安装 / 未授权），用于审计与客户端提示。
 	Reason string
 }
+
+// VisibilityChecker 仅收敛列举面，复用既有 RBAC 单一真源。
+// 它不授予执行权限；执行授权仍由 ExecuteTool 的 Gate 2/2.5 唯一负责。
+type VisibilityChecker interface {
+	HasPermission(ctx context.Context, role, resource, action string, tenantID int) bool
+}

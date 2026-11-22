@@ -60,6 +60,30 @@ initialization_component_attempts, initialization_managed_records
 Every write uses a system context with reason. Runtime tables are asserted empty
 by `TestSeedAllProductDefaultsDoNotCreateBusinessSamples`.
 
+### Managed-record ledger (implemented scope)
+
+`initialization_managed_records` is the runtime ledger of which stable keys a
+component registered under a scope. It is written inside
+`componentTransaction.Complete` (same transaction as the installation reaching
+`succeeded`, so a failed ledger write rolls the whole component back) and read
+through `SQLStore.ListManagedRecords(scope)`, which requires an explicit,
+validated scope and never performs an unscoped scan.
+
+What is actually reconciled today is **record-level registration**: on each
+successful component run, each `Plan.Actions[].SourceKey` is upserted with its
+`source_version`, `manifest_checksum`, `ownership_mode='managed'` and the real
+`last_applied_values` (the apply result summary). Replays are idempotent and
+update the version/checksum; they do not overwrite `deprecated` or
+`local_modified_at`.
+
+Field-level reconciliation (`managed_fields`, `stable_key_aliases`,
+`local_modified_at` change detection, and the create/update/revoke/conflict/orphan
+three-way merge) is **not implemented** — the columns exist but stay at their
+DDL defaults and are raw-projected by the read API. The "managed fields are
+reconciled" wording in the P0 row above is the target contract, not today's
+behavior. See `docs/engineering/initialization-managed-records-ledger-design.md`
+for the design and acceptance criteria.
+
 ## Compatibility contract
 
 - Supported database: PostgreSQL for production; SQLite is test-only.

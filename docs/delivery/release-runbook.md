@@ -33,14 +33,17 @@ gh pr list --state open --search "label:release-blocker"
 ```markdown
 ## [1.6.12] - 2026-10-15
 
-### Added
-- ...
+### 发布说明
+
+- 工单列表支持按处理人筛选。值班组可以快速找到待跟进的工单。
+- 升级前请备份数据库；如需执行迁移，在此写明命令和验证方法。
 
 ### Fixed
-- ...
+
+- 在此记录内部修复、实现和测试细节。
 ```
 
-**必须包含分类小节**（Added / Changed / Fixed / Security / Tooling 中适用的），否则 GitHub Release 会回退到自动生成笔记。
+每个新版本在对应版本标题下写一节 `### 发布说明`。每条先写用户看得见的变化，涉及升级时再补充前置条件、迁移和验证步骤。维护者记录继续放在 Added、Changed、Fixed 等小节。预览命令为 `bash scripts/release-notes.sh v1.6.12`。
 
 ### 1.3 使用准备脚本（推荐）
 
@@ -130,7 +133,7 @@ gh release view v1.6.12 --json assets --jq '.assets[].name'
 - `itsm-v1.6.12-backends.zip`
 - `itsm-v1.6.12-frontend.zip`
 
-Release body 应包含 CHANGELOG 提取的内容（非自动生成笔记）。
+新版本的 Release 正文来自对应版本的「发布说明」小节。旧版本没有这个小节时，发布流程读取该版本的完整条目。
 
 ### 4.2 Docker 镜像
 
@@ -185,7 +188,7 @@ gh workflow run release.yml -f tag=v1.6.12
 
 ### CHANGELOG 提取为空
 
-Release body 会回退到 GitHub 自动生成的笔记。修复：补充 CHANGELOG 条目后重跑。
+发布流程会报错。检查目标 tag 的版本标题和「发布说明」是否存在且有正文，再按版本流程重新准备发布。
 
 ### Docker 镜像推送失败
 

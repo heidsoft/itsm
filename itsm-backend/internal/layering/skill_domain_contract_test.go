@@ -170,7 +170,7 @@ func TestSkillCatalogContractShape(t *testing.T) {
 		"GetScoped(tenantID int, code string) (dto.Skill, error)",
 		"RegisterScoped(tenantID int, skill dto.Skill) error",
 		"UnregisterScoped(tenantID int, code string) error",
-		"InvokeWithMetrics(ctx context.Context, code string, input interface{}) (dto.SkillInvokeResult, error)",
+		"InvokeWithMetrics(ctx context.Context, tenantID int, code string, input interface{}) (dto.SkillInvokeResult, error)",
 	} {
 		if !strings.Contains(squashSpace(contract), squashSpace(decl)) {
 			t.Errorf("handlers/skill/contracts.go 契约签名漂移：%q", decl)

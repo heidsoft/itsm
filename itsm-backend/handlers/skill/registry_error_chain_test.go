@@ -34,7 +34,7 @@ func TestInvokeWithMetrics_PreservesExecErrorChain(t *testing.T) {
 	reg := NewSkillRegistry()
 	require.NoError(t, reg.Register(&deniedToolErrorSkill{code: "tool.denied"}))
 
-	_, err := reg.InvokeWithMetrics(context.Background(), "tool.denied", map[string]interface{}{})
+	_, err := reg.InvokeWithMetrics(context.Background(), 1, "tool.denied", map[string]interface{}{})
 	require.Error(t, err)
 	require.True(t, errors.Is(err, ErrSkillInvoke), "必须保留 ErrSkillInvoke")
 	require.True(t, errors.Is(err, dto.ErrToolPermissionDenied),

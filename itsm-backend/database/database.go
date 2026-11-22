@@ -166,6 +166,11 @@ var duplicateIndexPairs = [][2]string{
 	{"cmdb_export_tasks_task_id_key", "cmdbexporttask_task_id"},
 	{"cmdb_import_tasks_task_id_key", "cmdbimporttask_task_id"},
 	{"configurationitem_tenant_id_source_id", "configuration_items_source_expand_idx"},
+	// 20261119_ci_owner_fk_and_certification.sql:76-77 与 ent/schema/configurationitem.go
+	// 各自建了同列索引（fresh-install 门禁实测两对重复）。保留 Ent 声明的那一份，
+	// 删除迁移写死的那一份——不改写已发布迁移内容（账本 checksum 已固化）。
+	{"configurationitem_tenant_id_owner_id", "ci_tenant_owner_idx"},
+	{"configurationitem_tenant_id_department_id", "ci_tenant_department_idx"},
 	{"discoveryjob_status_lease_expires_at", "discovery_jobs_claim_idx"},
 	{"discoveryjob_tenant_id_operation_source_id_idempotency_key", "discovery_jobs_idempotency_expand_idx"},
 	{"discoveryresult_tenant_id_job_id_resource_identity", "discovery_results_identity_expand_idx"},
@@ -205,13 +210,19 @@ var safeIndexName = regexp.MustCompile(`^[a-z_][a-z0-9_]*$`)
 //
 // 必须在全部迁移（含无日期脚本）之后调用，见 duplicateIndexPairs 的注释。
 func EnsureIndexConvergence(ctx context.Context, db *sql.DB) (int, error) {
+	return ensureIndexConvergenceWithPairs(ctx, db, duplicateIndexPairs)
+}
+
+// ensureIndexConvergenceWithPairs 是收敛逻辑的可测内核：真实部署使用全量表，
+// 回归测试只注入与被测缺陷相关的索引对，避免隔离库因其它索引不存在而误报。
+func ensureIndexConvergenceWithPairs(ctx context.Context, db *sql.DB, pairs [][2]string) (int, error) {
 	if db == nil {
 		return 0, errors.New("ensure index convergence: nil database handle")
 	}
 
 	var errs []error
 	dropped := 0
-	for _, pair := range duplicateIndexPairs {
+	for _, pair := range pairs {
 		keep, redundant := pair[0], pair[1]
 		if !safeIndexName.MatchString(keep) || !safeIndexName.MatchString(redundant) {
 			errs = append(errs, fmt.Errorf("index convergence: 非法索引名 %q/%q", keep, redundant))

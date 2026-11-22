@@ -19,6 +19,7 @@ type Service struct {
 	catalog     ToolCatalog
 	executor    ToolExecutor
 	entitlement EntitlementChecker
+	visibility  VisibilityChecker
 	logger      *zap.SugaredLogger
 	version     string
 }
@@ -28,6 +29,7 @@ type Options struct {
 	Catalog     ToolCatalog
 	Executor    ToolExecutor
 	Entitlement EntitlementChecker
+	Visibility  VisibilityChecker
 	Logger      *zap.SugaredLogger
 	Version     string
 }
@@ -50,6 +52,7 @@ func NewService(opts Options) (*Service, error) {
 		catalog:     opts.Catalog,
 		executor:    opts.Executor,
 		entitlement: opts.Entitlement,
+		visibility:  opts.Visibility,
 		logger:      opts.Logger,
 		version:     opts.Version,
 	}, nil
@@ -128,7 +131,8 @@ func (s *Service) handleInitialize(req *Request) *Response {
 
 // handleToolsList 返回该租户权益内的工具面。
 //
-// 可见性判定 = 工具自身存在 ∧ 交付权益允许。
+// 可见性判定 = 工具投影成功 ∧ 交付权益允许 ∧ 角色 RBAC 允许。
+// 这里只隐藏工具，不授予执行权限；执行链 Gate 2/2.5 保持唯一执行判定。
 // 权益检查失败时不静默放行 —— fail-closed，宁可少列工具不可越权。
 func (s *Service) handleToolsList(ctx context.Context, req *Request, caller Caller) *Response {
 	defs := s.catalog.ListToolsForTenant(ctx, caller.TenantID)
@@ -144,6 +148,11 @@ func (s *Service) handleToolsList(ctx context.Context, req *Request, caller Call
 		if !allowed {
 			s.logger.Debugw("mcp tool hidden by entitlement",
 				"tool", t.Name, "tenant_id", caller.TenantID, "reason", reason)
+			continue
+		}
+		// 未装配 RBAC 时隐藏全部工具，与 AI 缺少权限依赖时 fail-closed 对齐。
+		if s.visibility == nil || !s.visibility.HasPermission(ctx, caller.Role, t.Resource, t.Action, caller.TenantID) {
+			s.logger.Debugw("mcp tool hidden by RBAC", "tool", t.Name, "tenant_id", caller.TenantID, "role", caller.Role)
 			continue
 		}
 		visible = append(visible, t)

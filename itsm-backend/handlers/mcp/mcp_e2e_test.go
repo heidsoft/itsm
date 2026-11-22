@@ -18,8 +18,8 @@ import (
 	"itsm-backend/config"
 	domainrole "itsm-backend/domain/role"
 	"itsm-backend/ent"
-	"itsm-backend/ent/user"
 	"itsm-backend/ent/enttest"
+	"itsm-backend/ent/user"
 	"itsm-backend/handlers/ai"
 	"itsm-backend/handlers/mcp"
 	"itsm-backend/internal/authz"
@@ -48,9 +48,9 @@ const e2eJWTSecret = "mcp-e2e-jwt-secret"
 
 // e2eFixture 是端到端测试的装配夹具。
 type e2eFixture struct {
-	router    *gin.Engine
-	client    *ent.Client
-	tenant    int
+	router     *gin.Engine
+	client     *ent.Client
+	tenant     int
 	sysadminID int
 	endUserID  int
 }
@@ -92,10 +92,11 @@ func setupMCPEndToEnd(t *testing.T) *e2eFixture {
 	// 装配入口与生产同一条路径（bootstrap.BuildMCPHandler），
 	// 测试自己拼一套接线的话，测的就不是生产真正跑的那条路径。
 	mcpHandler, err := bootstrap.BuildMCPHandler(bootstrap.Dependencies{
-		ToolRegistry: toolRegistry,
-		AIService:    aiService,
-		Marketplace:  marketplaceSvc,
-		Logger:       logger,
+		VisibilityChecker: visibilityFunc(func(context.Context, string, string, string, int) bool { return true }),
+		ToolRegistry:      toolRegistry,
+		AIService:         aiService,
+		Marketplace:       marketplaceSvc,
+		Logger:            logger,
 	})
 	require.NoError(t, err, "MCP handler 装配失败")
 

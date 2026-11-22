@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -28,7 +29,8 @@ import (
 // DefinitionStore 是 skill 元数据持久化所需的窄接口。
 type DefinitionStore interface {
 	// UpsertDefinition 按 (tenantID, code) 幂等写入；checksum 与库中一致时
-	// 不做任何写入并返回 changed=false。返回写入后的行 ID。
+	// 不做任何写入并返回 changed=false。返回写入后的行 ID；因并发竞争而
+	// 判定无需写入时也返回 (0, false, nil)。
 	UpsertDefinition(ctx context.Context, def SkillDefinitionRow) (id int64, changed bool, err error)
 	// LoadGlobalDefinitions 读全部全局内置技能行（tenant_id=0）。
 	LoadGlobalDefinitions(ctx context.Context) ([]SkillDefinitionRow, error)
@@ -43,22 +45,22 @@ type DefinitionStore interface {
 
 // SkillDefinitionRow 是 skill_definitions 表的行视图（与迁移 DDL 一一对应）。
 type SkillDefinitionRow struct {
-	Code               string
-	Version            string
-	Title              string
-	Description        string
-	Category           string
-	Tags               []string
-	Capabilities       []string
+	Code                string
+	Version             string
+	Title               string
+	Description         string
+	Category            string
+	Tags                []string
+	Capabilities        []string
 	RequiredPermissions []string
-	InputSchema        map[string]interface{}
-	OutputSchema       map[string]interface{}
-	Executor           map[string]interface{}
-	Provider           string
-	Author             string
-	Checksum           string
-	Enabled            bool
-	TenantID           int64
+	InputSchema         map[string]interface{}
+	OutputSchema        map[string]interface{}
+	Executor            map[string]interface{}
+	Provider            string
+	Author              string
+	Checksum            string
+	Enabled             bool
+	TenantID            int64
 }
 
 // DBDefinitionStore 基于 database/sql 的实现（生产：PostgreSQL；测试：SQLite）。
@@ -102,6 +104,14 @@ func mustUnmarshalObject(raw []byte) map[string]interface{} {
 }
 
 // UpsertDefinition 幂等写入：checksum 相同则跳过（changed=false）。
+//
+// 快速路径的 SELECT 只是避免无谓写入；幂等本身由迁移 023 的唯一约束
+// UNIQUE (tenant_id, code) + 单条 ON CONFLICT 语句保证。不能退回
+// 「先查再 INSERT」：多副本同时首启时两个调用方都会查到 ErrNoRows，
+// 一个 INSERT 成功、另一个撞 23505，seed 失败并降级成内存注册表。
+//
+// DO UPDATE 的 WHERE 让并发同 payload 的输家匹配不到行：RETURNING 无行
+// 即 changed=false，不刷 updated_at。
 func (s *DBDefinitionStore) UpsertDefinition(ctx context.Context, def SkillDefinitionRow) (int64, bool, error) {
 	if s == nil || s.db == nil {
 		return 0, false, fmt.Errorf("definition store not initialized")
@@ -110,53 +120,44 @@ func (s *DBDefinitionStore) UpsertDefinition(ctx context.Context, def SkillDefin
 	err := s.db.QueryRowContext(ctx,
 		`SELECT checksum FROM skill_definitions WHERE tenant_id=$1 AND code=$2`,
 		def.TenantID, def.Code).Scan(&existingChecksum)
-	switch {
-	case err == nil:
-		if existingChecksum == def.Checksum {
-			return 0, false, nil
-		}
-		tags, _ := marshalJSONField(def.Tags)
-		caps, _ := marshalJSONField(def.Capabilities)
-		perms, _ := marshalJSONField(def.RequiredPermissions)
-		inSchema, _ := marshalJSONField(def.InputSchema)
-		outSchema, _ := marshalJSONField(def.OutputSchema)
-		executor, _ := marshalJSONField(def.Executor)
-		res, err := s.db.ExecContext(ctx,
-			`UPDATE skill_definitions SET version=$1, title=$2, description=$3, category=$4,
-			 tags=$5, capabilities=$6, required_permissions=$7, input_schema=$8, output_schema=$9,
-			 executor=$10, provider=$11, author=$12, checksum=$13, enabled=$14, updated_at=$15
-			 WHERE tenant_id=$16 AND code=$17`,
-			def.Version, def.Title, def.Description, def.Category,
-			tags, caps, perms, inSchema, outSchema,
-			executor, def.Provider, def.Author, def.Checksum, def.Enabled,
-			time.Now(), def.TenantID, def.Code)
-		if err != nil {
-			return 0, false, fmt.Errorf("update skill definition %s: %w", def.Code, err)
-		}
-		affected, _ := res.RowsAffected()
-		return affected, true, nil
-	case err == sql.ErrNoRows:
-		tags, _ := marshalJSONField(def.Tags)
-		caps, _ := marshalJSONField(def.Capabilities)
-		perms, _ := marshalJSONField(def.RequiredPermissions)
-		inSchema, _ := marshalJSONField(def.InputSchema)
-		outSchema, _ := marshalJSONField(def.OutputSchema)
-		executor, _ := marshalJSONField(def.Executor)
-		var id int64
-		err := s.db.QueryRowContext(ctx,
-			`INSERT INTO skill_definitions (`+definitionColumns+`)
-			 VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
-			 RETURNING id`,
-			def.Code, def.Version, def.Title, def.Description, def.Category,
-			tags, caps, perms, inSchema, outSchema,
-			executor, def.Provider, def.Author, def.Checksum, def.Enabled, def.TenantID).Scan(&id)
-		if err != nil {
-			return 0, false, fmt.Errorf("insert skill definition %s: %w", def.Code, err)
-		}
-		return id, true, nil
-	default:
+	if err == nil && existingChecksum == def.Checksum {
+		return 0, false, nil
+	}
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return 0, false, fmt.Errorf("lookup skill definition %s: %w", def.Code, err)
 	}
+
+	tags, _ := marshalJSONField(def.Tags)
+	caps, _ := marshalJSONField(def.Capabilities)
+	perms, _ := marshalJSONField(def.RequiredPermissions)
+	inSchema, _ := marshalJSONField(def.InputSchema)
+	outSchema, _ := marshalJSONField(def.OutputSchema)
+	executor, _ := marshalJSONField(def.Executor)
+
+	var id int64
+	err = s.db.QueryRowContext(ctx,
+		`INSERT INTO skill_definitions (`+definitionColumns+`)
+		 VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
+		 ON CONFLICT (tenant_id, code) DO UPDATE SET
+		   version=$2, title=$3, description=$4, category=$5,
+		   tags=$6, capabilities=$7, required_permissions=$8,
+		   input_schema=$9, output_schema=$10, executor=$11,
+		   provider=$12, author=$13, checksum=$14, enabled=$15,
+		   updated_at=$17
+		 WHERE skill_definitions.checksum <> EXCLUDED.checksum
+		 RETURNING id`,
+		def.Code, def.Version, def.Title, def.Description, def.Category,
+		tags, caps, perms, inSchema, outSchema,
+		executor, def.Provider, def.Author, def.Checksum, def.Enabled,
+		def.TenantID, time.Now()).Scan(&id)
+	if errors.Is(err, sql.ErrNoRows) {
+		// 并发赢家已用相同 checksum 落库：无需写入，也不是错误。
+		return 0, false, nil
+	}
+	if err != nil {
+		return 0, false, fmt.Errorf("upsert skill definition %s: %w", def.Code, err)
+	}
+	return id, true, nil
 }
 
 func scanDefinitions(rows *sql.Rows) ([]SkillDefinitionRow, error) {

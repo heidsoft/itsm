@@ -13,6 +13,8 @@ import (
 	"itsm-backend/connector"
 	"itsm-backend/connector/marketplace"
 	"itsm-backend/dto"
+	"itsm-backend/ent"
+	"itsm-backend/middleware"
 
 	domainCommon "itsm-backend/handlers/common"
 
@@ -28,14 +30,18 @@ type Handler struct {
 	logger   *zap.SugaredLogger
 	store    *connector.PersistentConfigStore
 	auditRec AuditRecorder
+	// client 用于 Send/Test 时按 DB 授权数据校验 manifest 声明的 RequiredPermissions。
+	// 与 skill.Handler 同构：判定走 middleware.HasResourcePermission 单一真源，
+	// client 丢失在 DBOnly 模式下会 fail-closed（构造必须保留，见接线测试）。
+	client *ent.Client
 }
 
 // NewHandler creates a new connector handler
-func NewHandler(mgr *connector.Manager, reg *connector.Registry, mkt *marketplace.Market, logger *zap.SugaredLogger) *Handler {
+func NewHandler(mgr *connector.Manager, reg *connector.Registry, mkt *marketplace.Market, logger *zap.SugaredLogger, client *ent.Client) *Handler {
 	if logger == nil {
 		logger = zap.NewNop().Sugar()
 	}
-	return &Handler{manager: mgr, market: mkt, registry: reg, logger: logger}
+	return &Handler{manager: mgr, market: mkt, registry: reg, logger: logger, client: client}
 }
 
 // SetAuditRecorder 注入审计写入器，用于 rotate-secret 等需要写 audit_log 的端点。
@@ -59,6 +65,50 @@ func (h *Handler) requireStore(ctx *gin.Context) bool {
 		}
 		common.Fail(ctx, common.InternalErrorCode, "连接器配置持久化未就绪，拒绝保存")
 		return false
+	}
+	return true
+}
+
+// enforceRequiredPermissions 校验调用方是否持有连接器 manifest 声明的全部权限码。
+// 任一不满足即返回 false（响应已写入），全部满足或声明为空返回 true。
+//
+// 背景：required_permissions 此前参与注册校验、checksum、DTO 投影，但执行侧零消费——
+// 只持 connector:write 的角色可借飞书连接器绕过 ticket:write/cmdb:write 对外发消息。
+//
+// 权限码格式为 "resource:action"（与 catalog.go 一致）；拆分后走
+// middleware.HasResourcePermission 单一真源，避免本地再实现一套匹配。
+// 格式非法的码按不满足处理（fail-closed）：声明了无法解析的权限码说明 manifest 有问题。
+// manifest 未命中（未知连接器）放行，交由 manager.Send 报未知连接器——不是权限判定失败，
+// 与 skill.Handler 在 GetEntryScoped 失败时放行的口径一致。
+func (h *Handler) enforceRequiredPermissions(ctx *gin.Context, name string) bool {
+	reg := h.registry
+	if reg == nil {
+		reg = connector.Default()
+	}
+	manifest, ok := reg.GetManifest(name)
+	if !ok || len(manifest.RequiredPermissions) == 0 {
+		return true
+	}
+	role := ctx.GetString("role")
+	tenantID := ctx.GetInt("tenant_id")
+	for _, perm := range manifest.RequiredPermissions {
+		resource, action, valid := strings.Cut(perm, ":")
+		if !valid || resource == "" || action == "" {
+			if h.logger != nil {
+				h.logger.Warnw("connector declares malformed requiredPermission",
+					"connector", name, "permission", perm)
+			}
+			common.Forbidden(ctx, "连接器权限声明格式错误: "+perm)
+			return false
+		}
+		if !middleware.HasResourcePermission(ctx.Request.Context(), h.client, role, resource, action, tenantID) {
+			if h.logger != nil {
+				h.logger.Warnw("connector send denied by requiredPermissions",
+					"connector", name, "permission", perm, "role", role, "tenant_id", tenantID)
+			}
+			common.Forbidden(ctx, "无权限使用该连接器: 缺少 "+perm)
+			return false
+		}
 	}
 	return true
 }
@@ -248,6 +298,9 @@ func (h *Handler) Send(ctx *gin.Context) {
 		return
 	}
 	tenantID := ctx.GetInt("tenant_id")
+	if !h.enforceRequiredPermissions(ctx, name) {
+		return
+	}
 	msg := &connector.Message{
 		Channel:  req.Channel,
 		Type:     req.Type,
@@ -281,6 +334,9 @@ func (h *Handler) Test(ctx *gin.Context) {
 	}
 	if channel == "" {
 		common.Fail(ctx, common.ParamErrorCode, "settings.debug_channel not configured for "+name)
+		return
+	}
+	if !h.enforceRequiredPermissions(ctx, name) {
 		return
 	}
 	if err := h.manager.Send(ctx.Request.Context(), tenantID, name, &connector.Message{

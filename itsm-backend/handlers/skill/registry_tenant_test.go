@@ -111,15 +111,23 @@ func TestSkillRegistry_ScopedInvokeRejectsForeignSkill(t *testing.T) {
 	reg := NewSkillRegistry()
 	foreign := &scopedTestSkill{code: "tenant1.skill"}
 	require.NoError(t, reg.RegisterScoped(1, foreign))
+	require.NoError(t, reg.Register(&scopedTestSkill{code: "builtin.echo"}))
 
-	// 调用入口先 GetEntryScoped 再 InvokeWithMetrics；跨租户在第一步就被挡下，
-	// 技能实现根本不会被执行（calls 保持 0）。
-	if _, err := reg.GetEntryScoped(2, "tenant1.skill"); err == nil {
-		if _, err := reg.Invoke(context.Background(), "tenant1.skill", nil); err != nil {
-			t.Fatalf("invoke: %v", err)
-		}
-	}
+	// 直接打执行入口，不再包一层「先 GetEntryScoped 成功才调用」的条件：
+	// 旧实现用无租户视角的 Get(code)，这里会返回成功并真的跑掉别人的技能，
+	// 原测试的 if 条件让它一次都没走到，属假绿。
+	_, err := reg.InvokeWithMetrics(context.Background(), 2, "tenant1.skill", nil)
+	require.True(t, errors.Is(err, ErrSkillNotFound),
+		"跨租户调用必须在执行入口被拒，而不是靠调用方先查一次")
 	require.Equal(t, 0, foreign.calls, "跨租户调用不得执行目标技能")
+
+	// 本租户与内置技能仍可执行——防止把租户门禁改成「一律拒绝」。
+	_, err = reg.InvokeWithMetrics(context.Background(), 1, "tenant1.skill", nil)
+	require.NoError(t, err)
+	require.Equal(t, 1, foreign.calls, "本租户调用应正常执行")
+
+	_, err = reg.InvokeWithMetrics(context.Background(), 2, "builtin.echo", nil)
+	require.NoError(t, err, "内置技能对所有租户可执行")
 }
 
 func TestSkillRegistry_EntryCarriesOwner(t *testing.T) {

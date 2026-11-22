@@ -374,8 +374,13 @@ func checkURLInference(ctx context.Context, client *ent.Client, role, method, pa
 	resource := parts[3]
 	action := methodToAction(method)
 
-	// Check role has this resource:action permission
-	if hasResourcePermissionFromRole(role, resource, action) {
+	// 必须走与 L4 / 路由级 RequirePermission 相同的 DB 感知判定：
+	// 原实现在这里回退到 hasResourcePermissionFromRole（编译期角色默认值），
+	// 于是 DBOnly 下管理员撤销的权限仍可能经 URL 推断放行——L4 虽已按模式 gate，
+	// 但 L3 在它之前就已经返回 true，等于整条 gate 被绕过。
+	// checkRolePermissionFromDB 委托 AuthorizeResource，保留 DBOnly 三态语义：
+	// configured 以 DB 为准、unconfigured 仍可用默认兜底、unavailable fail-closed。
+	if checkRolePermissionFromDB(ctx, client, role, resource, action, tenantID) {
 		zap.S().Debugw("URL inference permission granted",
 			"path", path, "method", method,
 			"inferred_resource", resource, "inferred_action", action)
