@@ -17,6 +17,7 @@ import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zaptest"
 
+	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
 	"itsm-backend/ent/itemversion"
@@ -33,11 +34,12 @@ import (
 // 因为门禁挂在 Invoke 上——只测 service 判定证明不了调用真的被挡住。
 
 type entitlementFixture struct {
-	router  *gin.Engine
-	handler *skill.Handler
-	client  *ent.Client
-	svc     *marketplaceService.Service
-	tenant  int
+	router   *gin.Engine
+	handler  *skill.Handler
+	registry *skill.SkillRegistry
+	client   *ent.Client
+	svc      *marketplaceService.Service
+	tenant   int
 }
 
 func newEntitlementFixture(t *testing.T, dsn string) *entitlementFixture {
@@ -58,7 +60,7 @@ func newEntitlementFixture(t *testing.T, dsn string) *entitlementFixture {
 	h := skill.NewHandler(registry, zap.NewNop().Sugar(), client)
 	h.SetSkillEntitlements(svc)
 
-	f := &entitlementFixture{handler: h, client: client, svc: svc, tenant: 1}
+	f := &entitlementFixture{handler: h, registry: registry, client: client, svc: svc, tenant: 1}
 
 	r := gin.New()
 	r.Use(gin.Recovery())
@@ -89,6 +91,27 @@ func (f *entitlementFixture) registerRuntimeSkill(t *testing.T, code string) {
 		"executor":            map[string]any{"target": "echo"},
 	})
 	require.Equal(t, http.StatusOK, w.Code, w.Body.String())
+}
+
+// builtinEchoSkill 是 owner=0 的平台内置技能。市场交付门禁的跨租户用例要只隔离
+// 「装了什么」这一个维度：若用 RegisterScoped 注册，技能归属会先于安装记录把
+// 另一个租户挡成 404，测的就不是安装隔离了。
+type builtinEchoSkill struct{ *dto.BaseSkill }
+
+func newBuiltinEchoSkill(code string) *builtinEchoSkill {
+	return &builtinEchoSkill{BaseSkill: dto.NewBaseSkill(code, code, "v1", "pilot", nil,
+		[]string{"marketplace:read"}, nil)}
+}
+
+func (s *builtinEchoSkill) Manifest() dto.SkillManifest { return s.BuildManifest() }
+func (s *builtinEchoSkill) Validate(interface{}) error  { return nil }
+func (s *builtinEchoSkill) Execute(context.Context, interface{}) (interface{}, error) {
+	return "ok", nil
+}
+
+func (f *entitlementFixture) registerBuiltinRuntimeSkill(t *testing.T, code string) {
+	t.Helper()
+	require.NoError(t, f.registry.Register(newBuiltinEchoSkill(code)))
 }
 
 // publishSkillItem 建一个已上架的技能商品，其 1.0.0 版本行交付指定技能码。
@@ -175,11 +198,12 @@ func TestInvoke_DeliveredSkillRequiresInstallation(t *testing.T) {
 }
 
 // TestInvoke_CrossTenantInstallationDoesNotGrant B 租户的安装记录不能给 A 租户开调用权。
+// 技能按平台内置(owner=0)注册，确保唯一变量是「谁装了商品」而不是技能归属。
 func TestInvoke_CrossTenantInstallationDoesNotGrant(t *testing.T) {
 	f := newEntitlementFixture(t, "skill_gate_cross_tenant")
 	ctx := context.Background()
 
-	f.registerRuntimeSkill(t, "ai.triage")
+	f.registerBuiltinRuntimeSkill(t, "ai.triage")
 	itemID := f.publishSkillItem(t, "triage-skill", "ai.triage")
 
 	_, err := f.svc.InstallItem(ctx, 2, itemID, "2001")

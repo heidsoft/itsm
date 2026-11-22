@@ -371,26 +371,31 @@ func (r *SkillRegistry) entries(skills []Skill) []SkillEntry {
 // SkillInvokeResult 值类型唯一实现在 dto 包；此处保留同名别名以保持域包公开 API。
 type SkillInvokeResult = dto.SkillInvokeResult
 
-// Invoke 是 Skill 的统一运行时调用入口。
+// Invoke 是 Skill 的统一运行时调用入口（按租户收口）。
 //
 // 调用流程：
-//  1. Get(code) 查找 Skill
+//  1. GetScoped(tenantID, code) 查找 Skill：内置技能(owner=0)与本租户技能可见，
+//     其它租户的技能按「不存在」处理
 //  2. Validate(input) 校验输入
 //  3. 计时 + 调用 Execute
 //  4. 若 Skill 嵌入了 *BaseSkill，自动累计 TotalCalls / SuccessRate / AvgLatencyMs
 //  5. 返回结果
 //
 // 返回错误：
-//   - code 不存在：ErrSkillNotFound
+//   - code 不存在或不属于该租户：ErrSkillNotFound
 //   - input 不合法：ErrSkillValidation + 详细原因
 //   - Execute 抛错：ErrSkillInvoke 包装
-func (r *SkillRegistry) Invoke(ctx context.Context, code string, input interface{}) (interface{}, error) {
-	return r.invokeWithMetrics(ctx, code, input)
+func (r *SkillRegistry) Invoke(ctx context.Context, tenantID int, code string, input interface{}) (interface{}, error) {
+	return r.invokeWithMetrics(ctx, tenantID, code, input)
 }
 
 // InvokeWithMetrics 同 Invoke，但额外返回 latency 与 metrics 记录状态（用于管理面板调试）。
-func (r *SkillRegistry) InvokeWithMetrics(ctx context.Context, code string, input interface{}) (SkillInvokeResult, error) {
-	s, err := r.Get(code)
+//
+// 🔴 执行对象必须走 GetScoped，不能用无租户视角的 Get：注册表进程级共享，
+// Get(code) 会让「scoped 查找失败但 code 全局存在」的请求跑掉别人的技能，
+// 同时绕过 handler 挂在 scoped entry 上的 requiredPermissions 门禁。
+func (r *SkillRegistry) InvokeWithMetrics(ctx context.Context, tenantID int, code string, input interface{}) (SkillInvokeResult, error) {
+	s, err := r.GetScoped(tenantID, code)
 	if err != nil {
 		return SkillInvokeResult{}, err
 	}
@@ -423,8 +428,8 @@ func (r *SkillRegistry) InvokeWithMetrics(ctx context.Context, code string, inpu
 	}, nil
 }
 
-func (r *SkillRegistry) invokeWithMetrics(ctx context.Context, code string, input interface{}) (interface{}, error) {
-	res, err := r.InvokeWithMetrics(ctx, code, input)
+func (r *SkillRegistry) invokeWithMetrics(ctx context.Context, tenantID int, code string, input interface{}) (interface{}, error) {
+	res, err := r.InvokeWithMetrics(ctx, tenantID, code, input)
 	return res.Output, err
 }
 
