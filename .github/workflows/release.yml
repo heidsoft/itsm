@@ -3,8 +3,7 @@ name: Build & Release
 # Purpose:
 #   Produce public release artifacts from version tags.
 # Trigger:
-#   Push a tag like v1.0.2. Manual dispatch is intentionally not enabled
-#   because releases must map to immutable git tags.
+#   Push a version tag or manually rerun a release for an existing tag.
 # Outputs:
 #   - GitHub Release zip archives for backend binaries and frontend standalone
 #   - GHCR images ghcr.io/heidsoft/itsm-backend and ghcr.io/heidsoft/itsm-frontend
@@ -42,6 +41,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && format('refs/tags/{0}', inputs.tag) || github.ref }}
 
       - name: Set up Go
         uses: actions/setup-go@v7
@@ -73,6 +74,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && format('refs/tags/{0}', inputs.tag) || github.ref }}
 
       - name: Set up Node.js
         uses: actions/setup-node@v6
@@ -129,22 +132,21 @@ jobs:
 
       - name: Resolve version
         id: resolve_version
+        env:
+          REQUESTED_TAG: ${{ inputs.tag }}
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            VERSION="${{ inputs.tag }}"
-            if [[ ! "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+ ]]; then
-              echo "::error::Invalid tag format: $VERSION"
-              exit 1
-            fi
-            # 验证 tag 存在
-            git fetch --tags
-            if ! git rev-parse "$VERSION" >/dev/null 2>&1; then
-              echo "::error::Tag $VERSION does not exist"
-              exit 1
-            fi
-            git checkout "$VERSION"
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+            VERSION="$REQUESTED_TAG"
           else
             VERSION="${GITHUB_REF#refs/tags/}"
+          fi
+          if [[ ! "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?$ ]]; then
+            echo "::error::Invalid tag format: $VERSION"
+            exit 1
+          fi
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+            git fetch origin "refs/tags/$VERSION:refs/tags/$VERSION"
+            git checkout --detach "refs/tags/$VERSION"
           fi
           echo "VERSION=$VERSION" >> "$GITHUB_OUTPUT"
           echo "Version: $VERSION"
@@ -169,28 +171,16 @@ jobs:
           zip -r ../itsm-${{ steps.resolve_version.outputs.VERSION }}-frontend.zip frontend/
 
       - name: Extract release notes from CHANGELOG
-        id: notes
+        env:
+          RELEASE_TAG: ${{ steps.resolve_version.outputs.VERSION }}
         run: |
-          VERSION="${{ steps.resolve_version.outputs.VERSION }}"
-          VERSION_NO_V="${VERSION#v}"
+          git show "${GITHUB_SHA}:scripts/release-notes.sh" > "$RUNNER_TEMP/itsm-release-notes.sh"
+          bash "$RUNNER_TEMP/itsm-release-notes.sh" "$RELEASE_TAG" > release-notes.md
 
-          # 从 CHANGELOG.md 提取当前版本条目
-          # 从 ## [version] 到下一个 ## [ 或文件末尾
-          awk -v ver="$VERSION_NO_V" '
-            $0 ~ "## \\[" ver "\\]" { found=1; next }
-            found && /^## \[/ { exit }
-            found && NF { print }
-          ' CHANGELOG.md > release-notes.md
-
-          if [ ! -s release-notes.md ]; then
-            echo "::warning::CHANGELOG.md 未找到 $VERSION_NO_V 条目，使用自动生成"
-            echo "use_auto=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "use_auto=false" >> "$GITHUB_OUTPUT"
-            echo "提取 $VERSION_NO_V Release Notes:"
-            head -20 release-notes.md
-            echo "..."
-          fi
+      - name: Verify release notes quality
+        run: |
+          git show "${GITHUB_SHA}:scripts/check-release-notes-quality.sh" > "$RUNNER_TEMP/itsm-check-release-notes-quality.sh"
+          bash "$RUNNER_TEMP/itsm-check-release-notes-quality.sh" release-notes.md
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
@@ -198,19 +188,19 @@ jobs:
           files: |
             itsm-${{ steps.resolve_version.outputs.VERSION }}-backends.zip
             itsm-${{ steps.resolve_version.outputs.VERSION }}-frontend.zip
-          body_path: ${{ steps.notes.outputs.use_auto == 'true' && '' || 'release-notes.md' }}
-          generate_release_notes: ${{ steps.notes.outputs.use_auto == 'true' }}
+          tag_name: ${{ steps.resolve_version.outputs.VERSION }}
+          body_path: release-notes.md
           make_latest: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Release summary
         run: |
-          echo "## Release ${{ github.ref_name }} 完成" >> "$GITHUB_STEP_SUMMARY"
+          echo "## Release ${{ steps.resolve_version.outputs.VERSION }} 完成" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
           echo "| 产物 | 状态 |" >> "$GITHUB_STEP_SUMMARY"
           echo "|------|------|" >> "$GITHUB_STEP_SUMMARY"
-          echo "| GitHub Release | https://github.com/${{ github.repository }}/releases/tag/${{ github.ref_name }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| GitHub Release | https://github.com/${{ github.repository }}/releases/tag/${{ steps.resolve_version.outputs.VERSION }} |" >> "$GITHUB_STEP_SUMMARY"
           echo "| Backend 镜像 | \`ghcr.io/${{ github.repository_owner }}/itsm-backend:${{ steps.resolve_version.outputs.VERSION }}\` |" >> "$GITHUB_STEP_SUMMARY"
           echo "| Frontend 镜像 | \`ghcr.io/${{ github.repository_owner }}/itsm-frontend:${{ steps.resolve_version.outputs.VERSION }}\` |" >> "$GITHUB_STEP_SUMMARY"
           echo "| Backend 二进制 | \`itsm-${{ steps.resolve_version.outputs.VERSION }}-backends.zip\` |" >> "$GITHUB_STEP_SUMMARY"
@@ -236,7 +226,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
         with:
-          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
+          ref: ${{ github.event_name == 'workflow_dispatch' && format('refs/tags/{0}', inputs.tag) || github.ref }}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
@@ -250,13 +240,13 @@ jobs:
 
       - name: Resolve version for container tags
         id: container_version
+        env:
+          REQUESTED_TAG: ${{ inputs.tag }}
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "VERSION=${{ inputs.tag }}" >> "$GITHUB_OUTPUT"
-            echo "IS_TAG=true" >> "$GITHUB_OUTPUT"
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+            echo "VERSION=$REQUESTED_TAG" >> "$GITHUB_OUTPUT"
           else
             echo "VERSION=${GITHUB_REF#refs/tags/}" >> "$GITHUB_OUTPUT"
-            echo "IS_TAG=true" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Extract Docker metadata
@@ -265,10 +255,9 @@ jobs:
         with:
           images: ${{ matrix.image }}
           tags: |
-            type=ref,event=branch
-            type=ref,event=tag
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=${{ steps.container_version.outputs.VERSION }}
+            type=semver,pattern={{version}},value=${{ steps.container_version.outputs.VERSION }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ steps.container_version.outputs.VERSION }}
             type=raw,value=latest,enable=true
           labels: |
             org.opencontainers.image.title=ITSM ${{ matrix.name }}

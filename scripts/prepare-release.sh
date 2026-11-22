@@ -101,7 +101,7 @@ if ! grep -qF "$CHANGELOG_HEADER" "$CHANGELOG"; then
 fi
 
 # 检查日期
-if grep -qF "${CHANGELOG_HEADER}] - ${TODAY}" "$CHANGELOG"; then
+if grep -qF "${CHANGELOG_HEADER} - ${TODAY}" "$CHANGELOG"; then
   info "  CHANGELOG 条目: OK（日期 ${TODAY}）"
 else
   EXPECTED_LINE=$(grep -nF "$CHANGELOG_HEADER" "$CHANGELOG" | head -1)
@@ -112,35 +112,7 @@ fi
 # ── Step 3: 提取 Release Notes ────────────────────────────────────────────────
 info "Step 3/6: 提取 Release Notes"
 
-# 从 CHANGELOG 提取当前版本的条目（从 ## [version] 到下一个 ## [ 或文件末尾）
-extract_changelog_section() {
-  local version="$1"
-  local file="$2"
-  local in_section=false
-  local section=""
-
-  while IFS= read -r line; do
-    if [[ "$line" == "## [${version}]"* ]]; then
-      in_section=true
-      continue
-    fi
-    if $in_section; then
-      if [[ "$line" == "## ["* ]]; then
-        break
-      fi
-      section+="$line"$'\n'
-    fi
-  done < "$file"
-
-  echo "$section" | sed '/^$/d' | awk 'NR<=100'
-}
-
-RELEASE_NOTES=$(extract_changelog_section "$VERSION_NO_V" "$CHANGELOG")
-
-if [[ -z "$RELEASE_NOTES" ]]; then
-  error "无法从 CHANGELOG.md 提取 $VERSION_NO_V 的发布说明"
-  exit 1
-fi
+RELEASE_NOTES=$(bash "$(dirname "$0")/release-notes.sh" "$VERSION" "$CHANGELOG")
 
 NOTES_LINE_COUNT=$(echo "$RELEASE_NOTES" | wc -l | tr -d ' ')
 info "  提取 $NOTES_LINE_COUNT 行 Release Notes"

@@ -10,7 +10,7 @@
 |:---|:---|:---|:---|
 | AUDIT-001 | 空卷首装被 `mcp:read` 迁移打断 | `resolved`（PR #114 已合并） | 继续跟踪 AUDIT-002 的首装门禁 |
 | AUDIT-002 | `configuration_items` 重复索引阻断 fresh-install 门禁 | `resolved`（本批已验证） | 已在 `duplicateIndexPairs` 补两对，保留 Ent 索引；真实 PG 回归覆盖删除/幂等/缺失保留方 |
-| AUDIT-003 | Release 静默降级为 git-log 说明、无测试证据/制品校验 | `confirmed` | PR-04（先做 G1/G4/G6 硬门禁，后做结构守卫） |
+| AUDIT-003 | Release 静默降级为 git-log 说明、无测试证据/制品校验 | `resolved`（G1/G3/G4 已验证） | 发布说明按版本提取、缺失即失败；manifest provenance 统一到 tag；新增文案门禁 |
 
 ## P1
 
