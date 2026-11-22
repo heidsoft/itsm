@@ -5,7 +5,7 @@
  * 包含：基本信息、根因分析、影响评估、事件分类的编辑入口
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Card,
   Descriptions,
@@ -138,24 +138,42 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
   const [impactForm] = Form.useForm();
   const [categoryForm] = Form.useForm();
 
+  const seqRef = useRef(0);
+
+  // 先切换代际并清空旧对象，后续拉取 effect 才能使用新 id 的代际。
+  useEffect(() => {
+    seqRef.current++;
+    setData(null);
+    setLoadError(false);
+    setRootCauseData(null);
+    setImpactData(null);
+    setClassificationData(null);
+    setAnalysisLoading(false);
+    return () => { seqRef.current++; };
+  }, [id]);
+
   const loadData = async () => {
     if (!id) return;
+    const seq = seqRef.current;
     setLoading(true);
     setLoadError(false);
     try {
       const resp = await IncidentAPI.getIncident(Number(id));
+      if (seq !== seqRef.current) return;
       setData(resp as unknown as Incident);
     } catch (error) {
+      if (seq !== seqRef.current) return;
       setLoadError(true);
       handleError(error, 'loadIncident', '加载事件详情失败');
     } finally {
-      setLoading(false);
+      if (seq === seqRef.current) setLoading(false);
     }
   };
 
   // 加载分析数据（根因分析、影响评估、事件分类）
   const loadAnalysisData = useCallback(async () => {
     if (!id) return;
+    const seq = seqRef.current;
     setAnalysisLoading(true);
     try {
       const incidentId = Number(id);
@@ -167,6 +185,7 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
         IncidentAPI.getIncidentClassification(incidentId).catch(() => null),
       ]);
 
+      if (seq !== seqRef.current) return;
       if (rootCause.status === 'fulfilled') {
         setRootCauseData(rootCause.value || null);
       }
@@ -179,7 +198,7 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
     } catch (error) {
       console.error('加载分析数据失败:', error);
     } finally {
-      setAnalysisLoading(false);
+      if (seq === seqRef.current) setAnalysisLoading(false);
     }
   }, [id]);
 
@@ -196,10 +215,10 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
 
   // 当数据加载完成后，异步加载分析数据
   useEffect(() => {
-    if (data?.id) {
+    if (data?.id === Number(id)) {
       loadAnalysisData();
     }
-  }, [data?.id, loadAnalysisData]);
+  }, [id, data?.id, loadAnalysisData]);
 
   const handleEscalate = () => {
     form.setFieldsValue({
