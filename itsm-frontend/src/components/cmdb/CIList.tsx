@@ -130,7 +130,10 @@ const CIList: React.FC = () => {
     Modal.confirm({
       title: '确认删除',
       content: '确定要删除此配置项吗？相关关系也将受到影响。',
-      onOk: () => deleteMutation.mutateAsync(String(id)).catch(() => {}),
+      onOk: () => deleteMutation.mutateAsync(String(id)).catch(error => {
+        // 单删在调用点反馈，避免共享 mutation 给批量删除逐条重复弹错。
+        message.error(error instanceof Error ? error.message : '删除配置项失败');
+      }),
     });
   };
 

@@ -92,7 +92,7 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
   // 支持通过props传入id，或通过useParams获取
   const id = propId || (params?.id as string);
   const { handleError } = useErrorHandler();
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
   const [data, setData] = useState<Incident | null>(null);
   const [escalateModalVisible, setEscalateModalVisible] = useState(false);
