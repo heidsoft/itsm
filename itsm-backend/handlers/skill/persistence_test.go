@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"path/filepath"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/gin-gonic/gin"
@@ -29,13 +30,24 @@ import (
 
 func newDefinitionTestDB(t *testing.T) *sql.DB {
 	t.Helper()
+	// 文件库 + WAL + busy_timeout：并发用例需要多个真实连接；内存共享缓存
+	// 会在写锁竞争时直接返回 SQLITE_LOCKED，掩盖被测的幂等语义。
 	dsn := "file:" + filepath.Join(t.TempDir(), "skilldef") +
-		"?mode=memory&cache=shared"
+		"?_busy_timeout=10000&_journal_mode=WAL&_synchronous=NORMAL"
 	db, err := sql.Open("sqlite3", dsn)
 	require.NoError(t, err)
+	db.SetMaxOpenConns(16)
 	t.Cleanup(func() { _ = db.Close() })
 
-	_, err = db.Exec(`
+	createDefinitionTable(t, db)
+	return db
+}
+
+// createDefinitionTable 建与迁移 023 等价的测试表（JSONB 在 SQLite 里是 TEXT）。
+// 独立的竞态注入用例也要用同一张表，故把 DDL 抽出来共享。
+func createDefinitionTable(t *testing.T, db *sql.DB) {
+	t.Helper()
+	_, err := db.Exec(`
 CREATE TABLE skill_definitions (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     code TEXT NOT NULL,
@@ -59,7 +71,6 @@ CREATE TABLE skill_definitions (
     UNIQUE (tenant_id, code)
 )`)
 	require.NoError(t, err)
-	return db
 }
 
 // newBuiltinLikeSkill 构造一个注册到 owner=0（全局）的技能替身——
@@ -248,4 +259,126 @@ func TestUpsertDefinition_StoresJSONFields(t *testing.T) {
 	assert.Equal(t, []string{"ai:read"}, rows[0].RequiredPermissions)
 	raw, _ := json.Marshal(rows[0].Executor)
 	assert.True(t, strings.Contains(string(raw), "echo"), fmt.Sprintf("executor 往返失真: %s", raw))
+}
+
+// concurrentUpsertRow 构造并发回归用的最小合法行；checksum 与 version 绑定，
+// 便于终局断言「落库行不会把不同版本的字段混在一起」。
+func concurrentUpsertRow(code, version, checksum string, tenantID int64) skill.SkillDefinitionRow {
+	return skill.SkillDefinitionRow{
+		Code: code, Version: version, Title: code,
+		Tags:                []string{"seed"},
+		Capabilities:        []string{},
+		RequiredPermissions: []string{"marketplace:read"},
+		InputSchema:         map[string]interface{}{},
+		OutputSchema:        map[string]interface{}{},
+		Executor:            map[string]interface{}{"target": "echo"},
+		Checksum:            checksum,
+		Enabled:             true,
+		TenantID:            tenantID,
+	}
+}
+
+type upsertResult struct {
+	err     error
+	changed bool
+}
+
+// runConcurrentUpserts 用起跑闸门把 N 个调用同时放出去；不依赖 sleep。
+func runConcurrentUpserts(t *testing.T, n int, row func(i int) skill.SkillDefinitionRow, store *skill.DBDefinitionStore) []upsertResult {
+	t.Helper()
+	ctx := context.Background()
+	start := make(chan struct{})
+	results := make(chan upsertResult, n)
+	var wg sync.WaitGroup
+	for i := 0; i < n; i++ {
+		wg.Add(1)
+		go func(idx int) {
+			defer wg.Done()
+			<-start
+			_, changed, err := store.UpsertDefinition(ctx, row(idx))
+			results <- upsertResult{err: err, changed: changed}
+		}(i)
+	}
+	close(start)
+	wg.Wait()
+	close(results)
+	out := []upsertResult{}
+	for r := range results {
+		out = append(out, r)
+	}
+	require.Len(t, out, n)
+	return out
+}
+
+// TestUpsertDefinition_ConcurrentSameChecksum 锁住多副本首启的核心竞态：
+// 旧实现「SELECT → INSERT」会让输家撞 UNIQUE，seed 失败并降级内存注册表。
+func TestUpsertDefinition_ConcurrentSameChecksum(t *testing.T) {
+	db := newDefinitionTestDB(t)
+	store := skill.NewDBDefinitionStore(db)
+	row := concurrentUpsertRow("ai.concurrent", "v1", "sha256:stable", 0)
+
+	results := runConcurrentUpserts(t, 8, func(int) skill.SkillDefinitionRow { return row }, store)
+	changedCount := 0
+	for _, r := range results {
+		require.NoError(t, r.err, "并发同 checksum 不得产生唯一约束错误")
+		if r.changed {
+			changedCount++
+		}
+	}
+	assert.LessOrEqual(t, changedCount, 1, "只有第一个落库的调用可以报告 changed")
+	assert.Equal(t, 1, countDefinitionRows(t, db), "并发 seed 不得新增重复行")
+
+	var gotChecksum string
+	require.NoError(t, db.QueryRow(`SELECT checksum FROM skill_definitions`).Scan(&gotChecksum))
+	assert.Equal(t, "sha256:stable", gotChecksum)
+}
+
+// TestUpsertDefinition_ConcurrentChecksumEvolution 锁住 checksum 演进：
+// 同一 code 的两个版本同时写入，最终只剩一行且字段组合自洽。
+func TestUpsertDefinition_ConcurrentChecksumEvolution(t *testing.T) {
+	db := newDefinitionTestDB(t)
+	store := skill.NewDBDefinitionStore(db)
+	versions := map[string]string{"sha256:v1": "v1", "sha256:v2": "v2"}
+
+	results := runConcurrentUpserts(t, 6, func(i int) skill.SkillDefinitionRow {
+		if i%2 == 0 {
+			return concurrentUpsertRow("ai.evolve", "v1", "sha256:v1", 0)
+		}
+		return concurrentUpsertRow("ai.evolve", "v2", "sha256:v2", 0)
+	}, store)
+	for _, r := range results {
+		require.NoError(t, r.err, "checksum 演进的并发写不得报错")
+	}
+	assert.Equal(t, 1, countDefinitionRows(t, db), "演进只更新既有行")
+
+	var checksum, version string
+	require.NoError(t, db.QueryRow(`SELECT checksum, version FROM skill_definitions`).Scan(&checksum, &version))
+	assert.Equal(t, versions[checksum], version, "checksum 与 version 必须同行自洽")
+}
+
+// TestUpsertDefinition_ConcurrentTenantsKeepIsolation 锁住 UPSERT 的冲突键：
+// 漏掉 tenant_id 会把两个租户的同名技能合并成一行，属跨租户数据污染。
+func TestUpsertDefinition_ConcurrentTenantsKeepIsolation(t *testing.T) {
+	db := newDefinitionTestDB(t)
+	store := skill.NewDBDefinitionStore(db)
+
+	results := runConcurrentUpserts(t, 6, func(i int) skill.SkillDefinitionRow {
+		tenantID := int64(1 + i%2)
+		return concurrentUpsertRow("tenant.shared.code", "v1", "sha256:same", tenantID)
+	}, store)
+	for _, r := range results {
+		require.NoError(t, r.err, "跨租户同 code 不得互相冲突")
+	}
+	assert.Equal(t, 2, countDefinitionRows(t, db), "两个租户必须各有一行")
+
+	rows, err := db.Query(`SELECT tenant_id FROM skill_definitions ORDER BY tenant_id`)
+	require.NoError(t, err)
+	defer rows.Close()
+	tenants := []int{}
+	for rows.Next() {
+		var id int
+		require.NoError(t, rows.Scan(&id))
+		tenants = append(tenants, id)
+	}
+	assert.Equal(t, []int{1, 2}, tenants)
 }
